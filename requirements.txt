@@ -1,0 +1,10 @@
+# requirements.txt
+
+streamlit
+pandas
+numpy
+scikit-learn
+matplotlib
+seaborn
+joblib
+scipy # Optional, but needed for LHS feature
