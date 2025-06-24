@@ -209,19 +209,16 @@ create_data_visualization <- function(data, data_type) {
   predictor_cols <- names(data)[-ncol(data)]
   
   if (length(predictor_cols) >= 2) {
-    p <- plot_ly(data, x = ~get(predictor_cols[1]), y = ~get(predictor_cols[2]), 
-                 z = ~get(target_col), type = "scatter3d", mode = "markers",
-                 color = ~get(target_col), colorscale = "Viridis") %>%
-      layout(scene = list(
-        xaxis = list(title = predictor_cols[1]),
-        yaxis = list(title = predictor_cols[2]),
-        zaxis = list(title = target_col)
-      ))
+    p <- ggplot(data, aes_string(x = predictor_cols[1], y = predictor_cols[2], color = target_col)) +
+      geom_point(alpha = 0.7) +
+      scale_color_viridis_c() +
+      labs(x = predictor_cols[1], y = predictor_cols[2], color = target_col) +
+      theme_minimal()
   } else {
-    p <- plot_ly(data, x = ~get(predictor_cols[1]), y = ~get(target_col),
-                 type = "scatter", mode = "markers") %>%
-      layout(xaxis = list(title = predictor_cols[1]),
-             yaxis = list(title = target_col))
+    p <- ggplot(data, aes_string(x = predictor_cols[1], y = target_col)) +
+      geom_point(alpha = 0.7, color = "steelblue") +
+      labs(x = predictor_cols[1], y = target_col) +
+      theme_minimal()
   }
   
   return(p)
@@ -456,11 +453,11 @@ create_pred_vs_actual_plot <- function(trained_models, model_name, data_split) {
   
   target_col <- names(data_split$test)[ncol(data_split$test)]
   
-  plot_ly(predictions, x = ~get(target_col), y = ~.pred, type = "scatter", mode = "markers") %>%
-    add_lines(x = range(predictions[[target_col]]), y = range(predictions[[target_col]]), 
-              line = list(color = "red", dash = "dash")) %>%
-    layout(xaxis = list(title = "Actual"), yaxis = list(title = "Predicted"),
-           title = paste("Predicted vs Actual -", model_name))
+  ggplot(predictions, aes(x = .data[[target_col]], y = .pred)) +
+    geom_point(alpha = 0.6) +
+    geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+    labs(x = "Actual", y = "Predicted", title = paste("Predicted vs Actual -", model_name)) +
+    theme_minimal()
 }
 
 create_residual_plot <- function(trained_models, model_name, data_split) {
@@ -485,10 +482,11 @@ create_residual_plot <- function(trained_models, model_name, data_split) {
   target_col <- names(data_split$test)[ncol(data_split$test)]
   predictions$residuals <- predictions[[target_col]] - predictions$.pred
   
-  plot_ly(predictions, x = ~.pred, y = ~residuals, type = "scatter", mode = "markers") %>%
-    add_hline(y = 0, line = list(color = "red", dash = "dash")) %>%
-    layout(xaxis = list(title = "Predicted"), yaxis = list(title = "Residuals"),
-           title = paste("Residual Plot -", model_name))
+  ggplot(predictions, aes(x = .pred, y = residuals)) +
+    geom_point(alpha = 0.6) +
+    geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+    labs(x = "Predicted", y = "Residuals", title = paste("Residual Plot -", model_name)) +
+    theme_minimal()
 }
 
 create_feature_importance_plot <- function(trained_models, model_name) {
@@ -509,14 +507,14 @@ create_feature_importance_plot <- function(trained_models, model_name) {
       importance = runif(5, 0, 1)
     )
     
-    plot_ly(importance_data, x = ~importance, y = ~reorder(feature, importance), 
-            type = "bar", orientation = "h") %>%
-      layout(xaxis = list(title = "Importance"), yaxis = list(title = "Features"),
-             title = paste("Feature Importance -", model_name))
+    ggplot(importance_data, aes(x = importance, y = reorder(feature, importance))) +
+      geom_col(fill = "steelblue") +
+      labs(x = "Importance", y = "Features", title = paste("Feature Importance -", model_name)) +
+      theme_minimal()
   } else {
-    plot_ly() %>%
-      add_text(x = 0.5, y = 0.5, text = "Feature importance not available for this model type") %>%
-      layout(xaxis = list(showticklabels = FALSE), yaxis = list(showticklabels = FALSE))
+    ggplot() +
+      annotate("text", x = 0.5, y = 0.5, label = "Feature importance not available for this model type") +
+      theme_void()
   }
 }
 
@@ -529,9 +527,11 @@ create_learning_curves_plot <- function(trained_models, model_name, data_split) 
     rmse = rmse_values
   )
   
-  plot_ly(learning_data, x = ~sample_size, y = ~rmse, type = "scatter", mode = "lines+markers") %>%
-    layout(xaxis = list(title = "Training Sample Size"), yaxis = list(title = "RMSE"),
-           title = paste("Learning Curve -", model_name))
+  ggplot(learning_data, aes(x = sample_size, y = rmse)) +
+    geom_line(color = "blue", size = 1) +
+    geom_point(color = "red", size = 2) +
+    labs(x = "Training Sample Size", y = "RMSE", title = paste("Learning Curve -", model_name)) +
+    theme_minimal()
 }
 
 create_model_comparison_plot <- function(trained_models, metric = "rmse", show_confidence = TRUE) {
@@ -540,15 +540,18 @@ create_model_comparison_plot <- function(trained_models, metric = "rmse", show_c
     select(wflow_id, .metric, mean, std_err)
   
   if (show_confidence) {
-    plot_ly(comparison_data, x = ~reorder(wflow_id, mean), y = ~mean, 
-            error_y = list(array = ~std_err), type = "scatter", mode = "markers") %>%
-      layout(xaxis = list(title = "Model"), yaxis = list(title = toupper(metric)),
-             title = paste("Model Comparison -", toupper(metric)))
+    ggplot(comparison_data, aes(x = reorder(wflow_id, mean), y = mean)) +
+      geom_point(size = 3) +
+      geom_errorbar(aes(ymin = mean - std_err, ymax = mean + std_err), width = 0.2) +
+      labs(x = "Model", y = toupper(metric), title = paste("Model Comparison -", toupper(metric))) +
+      theme_minimal() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
   } else {
-    plot_ly(comparison_data, x = ~reorder(wflow_id, mean), y = ~mean, 
-            type = "bar") %>%
-      layout(xaxis = list(title = "Model"), yaxis = list(title = toupper(metric)),
-             title = paste("Model Comparison -", toupper(metric)))
+    ggplot(comparison_data, aes(x = reorder(wflow_id, mean), y = mean)) +
+      geom_col(fill = "steelblue") +
+      labs(x = "Model", y = toupper(metric), title = paste("Model Comparison -", toupper(metric))) +
+      theme_minimal() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
   }
 }
 
@@ -563,10 +566,12 @@ create_overfitting_analysis_plot <- function(trained_models) {
     rmse = c(train_rmse, val_rmse)
   )
   
-  plot_ly(overfitting_data, x = ~model, y = ~rmse, color = ~dataset, 
-          type = "scatter", mode = "markers+lines") %>%
-    layout(xaxis = list(title = "Model"), yaxis = list(title = "RMSE"),
-           title = "Overfitting Analysis")
+  ggplot(overfitting_data, aes(x = model, y = rmse, color = dataset, group = dataset)) +
+    geom_line(size = 1) +
+    geom_point(size = 3) +
+    labs(x = "Model", y = "RMSE", title = "Overfitting Analysis", color = "Dataset") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 }
 
 create_training_progress_plot <- function(trained_models) {
@@ -578,21 +583,23 @@ create_training_progress_plot <- function(trained_models) {
     rmse = rmse_progress
   )
   
-  plot_ly(progress_data, x = ~iteration, y = ~rmse, type = "scatter", mode = "lines+markers") %>%
-    layout(xaxis = list(title = "Iteration"), yaxis = list(title = "RMSE"),
-           title = "Training Progress")
+  ggplot(progress_data, aes(x = iteration, y = rmse)) +
+    geom_line(color = "blue", size = 1) +
+    geom_point(color = "red", size = 2) +
+    labs(x = "Iteration", y = "RMSE", title = "Training Progress") +
+    theme_minimal()
 }
 
 create_performance_history_plot <- function(model_registry) {
   if (nrow(model_registry) == 0) {
-    plot_ly() %>%
-      add_text(x = 0.5, y = 0.5, text = "No models in registry") %>%
-      layout(xaxis = list(showticklabels = FALSE), yaxis = list(showticklabels = FALSE))
+    ggplot() +
+      annotate("text", x = 0.5, y = 0.5, label = "No models in registry") +
+      theme_void()
   } else {
-    plot_ly(model_registry, x = ~deployed_date, y = ~runif(nrow(model_registry), 0.8, 0.95), 
-            color = ~model_type, type = "scatter", mode = "markers") %>%
-      layout(xaxis = list(title = "Deployment Date"), yaxis = list(title = "Performance"),
-             title = "Model Performance History")
+    ggplot(model_registry, aes(x = deployed_date, y = runif(nrow(model_registry), 0.8, 0.95), color = model_type)) +
+      geom_point(size = 3) +
+      labs(x = "Deployment Date", y = "Performance", title = "Model Performance History", color = "Model Type") +
+      theme_minimal()
   }
 }
 
@@ -644,8 +651,12 @@ get_prediction_input_values <- function(input, data) {
   return(values)
 }
 
-# Progress Bar Function (placeholder for Shiny)
+# Progress Bar Function (using standard Shiny)
 updateProgressBar <- function(session, id, value, title = NULL) {
-  # This would be implemented with shinyWidgets or similar
-  # For now, it's a placeholder
+  # Update progress bar using standard Shiny/HTML
+  session$sendCustomMessage("updateProgress", list(
+    id = "progress_bar",
+    value = value,
+    title = title
+  ))
 }

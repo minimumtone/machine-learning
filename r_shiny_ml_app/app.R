@@ -4,7 +4,7 @@
 library(shiny)
 library(shinydashboard)
 library(DT)
-library(plotly)
+# library(plotly) # Optional dependency - commented out for compatibility
 library(tidymodels)
 library(workflowsets)
 library(workflows)
@@ -89,7 +89,7 @@ ui <- dashboardPage(
           box(
             title = "Data Visualization", status = "success", solidHeader = TRUE,
             width = 12,
-            plotlyOutput("data_plot", height = "400px")
+            plotOutput("data_plot", height = "400px")
           )
         )
       ),
@@ -251,7 +251,12 @@ ui <- dashboardPage(
             checkboxInput("parallel_processing", "Enable Parallel Processing", value = TRUE),
             numericInput("n_cores", "Number of Cores:", value = 2, min = 1, max = 8),
             br(),
-            progressBar(id = "training_progress", value = 0, title = "Training Progress")
+            div(id = "training_progress", 
+                style = "margin-top: 10px;",
+                h5("Training Progress"),
+                div(class = "progress", 
+                    div(class = "progress-bar", role = "progressbar", 
+                        style = "width: 0%", id = "progress_bar")))
           ),
           
           box(
@@ -265,7 +270,7 @@ ui <- dashboardPage(
           box(
             title = "Real-time Performance", status = "warning", solidHeader = TRUE,
             width = 12,
-            plotlyOutput("training_progress_plot", height = "400px")
+            plotOutput("training_progress_plot", height = "400px")
           )
         )
       ),
@@ -286,7 +291,7 @@ ui <- dashboardPage(
           box(
             title = "Prediction vs Actual", status = "info", solidHeader = TRUE,
             width = 8,
-            plotlyOutput("pred_vs_actual_plot", height = "400px")
+            plotOutput("pred_vs_actual_plot", height = "400px")
           )
         ),
         
@@ -294,13 +299,13 @@ ui <- dashboardPage(
           box(
             title = "Residual Analysis", status = "success", solidHeader = TRUE,
             width = 6,
-            plotlyOutput("residual_plot", height = "350px")
+            plotOutput("residual_plot", height = "350px")
           ),
           
           box(
             title = "Feature Importance", status = "warning", solidHeader = TRUE,
             width = 6,
-            plotlyOutput("feature_importance_plot", height = "350px")
+            plotOutput("feature_importance_plot", height = "350px")
           )
         ),
         
@@ -308,7 +313,7 @@ ui <- dashboardPage(
           box(
             title = "Learning Curves", status = "danger", solidHeader = TRUE,
             width = 12,
-            plotlyOutput("learning_curves_plot", height = "400px")
+            plotOutput("learning_curves_plot", height = "400px")
           )
         )
       ),
@@ -341,13 +346,13 @@ ui <- dashboardPage(
           box(
             title = "Performance Comparison", status = "success", solidHeader = TRUE,
             width = 6,
-            plotlyOutput("model_comparison_plot", height = "400px")
+            plotOutput("model_comparison_plot", height = "400px")
           ),
           
           box(
             title = "Overfitting Analysis", status = "warning", solidHeader = TRUE,
             width = 6,
-            plotlyOutput("overfitting_plot", height = "400px")
+            plotOutput("overfitting_plot", height = "400px")
           )
         ),
         
@@ -435,7 +440,7 @@ ui <- dashboardPage(
           box(
             title = "Model Performance History", status = "success", solidHeader = TRUE,
             width = 12,
-            plotlyOutput("performance_history_plot", height = "400px")
+            plotOutput("performance_history_plot", height = "400px")
           )
         )
       )
@@ -466,7 +471,7 @@ server <- function(input, output, session) {
       random_seed = input$random_seed
     )
     
-    showNotification("Dataset generated successfully!", type = "success")
+    showNotification("Dataset generated successfully!", type = "message")
   })
   
   output$data_preview <- DT::renderDataTable({
@@ -474,26 +479,28 @@ server <- function(input, output, session) {
     DT::datatable(values$raw_data, options = list(scrollX = TRUE))
   })
   
-  output$data_plot <- renderPlotly({
+  output$data_plot <- renderPlot({
     req(values$raw_data)
     create_data_visualization(values$raw_data, input$data_type)
   })
   
   # Scenario Selection
-  observe({
+  observeEvent(input$scenario_category, {
+    req(input$scenario_category)
     scenarios <- get_scenarios_by_category(input$scenario_category)
     updateSelectInput(session, "specific_scenario", 
                      choices = scenarios)
   })
   
   observeEvent(input$load_scenario, {
+    req(input$scenario_category, input$specific_scenario)
     values$selected_scenario <- load_scenario_data(
       input$scenario_category, 
       input$specific_scenario
     )
     values$raw_data <- values$selected_scenario$data
     
-    showNotification("Scenario loaded successfully!", type = "success")
+    showNotification("Scenario loaded successfully!", type = "message")
   })
   
   output$scenario_description <- renderText({
@@ -527,10 +534,10 @@ server <- function(input, output, session) {
       stratified = input$stratified
     )
     
-    showNotification("Data split completed!", type = "success")
+    showNotification("Data split completed!", type = "message")
   })
   
-  observe({
+  observeEvent(list(values$data_split, input$preprocessing_steps), {
     req(values$data_split, input$preprocessing_steps)
     
     values$recipe <- create_preprocessing_recipe(
@@ -560,7 +567,7 @@ server <- function(input, output, session) {
       models = input$selected_models
     )
     
-    showNotification("Workflow set created!", type = "success")
+    showNotification("Workflow set created!", type = "message")
   })
   
   output$workflow_summary <- renderText({
@@ -591,7 +598,7 @@ server <- function(input, output, session) {
     )
     
     updateProgressBar(session, "training_progress", value = 100, title = "Training Complete!")
-    showNotification("Model training completed!", type = "success")
+    showNotification("Model training completed!", type = "message")
     
     # Update model choices for evaluation
     model_choices <- names(values$trained_models)
@@ -605,7 +612,7 @@ server <- function(input, output, session) {
     "Training completed successfully. Check model evaluation for results."
   })
   
-  output$training_progress_plot <- renderPlotly({
+  output$training_progress_plot <- renderPlot({
     req(values$trained_models)
     create_training_progress_plot(values$trained_models)
   })
@@ -616,22 +623,22 @@ server <- function(input, output, session) {
     get_model_metrics(values$trained_models, input$eval_model)
   })
   
-  output$pred_vs_actual_plot <- renderPlotly({
+  output$pred_vs_actual_plot <- renderPlot({
     req(values$trained_models, input$eval_model, values$data_split)
     create_pred_vs_actual_plot(values$trained_models, input$eval_model, values$data_split)
   })
   
-  output$residual_plot <- renderPlotly({
+  output$residual_plot <- renderPlot({
     req(values$trained_models, input$eval_model, values$data_split)
     create_residual_plot(values$trained_models, input$eval_model, values$data_split)
   })
   
-  output$feature_importance_plot <- renderPlotly({
+  output$feature_importance_plot <- renderPlot({
     req(values$trained_models, input$eval_model)
     create_feature_importance_plot(values$trained_models, input$eval_model)
   })
   
-  output$learning_curves_plot <- renderPlotly({
+  output$learning_curves_plot <- renderPlot({
     req(values$trained_models, input$eval_model, values$data_split)
     create_learning_curves_plot(values$trained_models, input$eval_model, values$data_split)
   })
@@ -642,12 +649,12 @@ server <- function(input, output, session) {
     create_model_rankings(values$trained_models, input$comparison_metric)
   })
   
-  output$model_comparison_plot <- renderPlotly({
+  output$model_comparison_plot <- renderPlot({
     req(values$trained_models)
     create_model_comparison_plot(values$trained_models, input$comparison_metric, input$show_confidence)
   })
   
-  output$overfitting_plot <- renderPlotly({
+  output$overfitting_plot <- renderPlot({
     req(values$trained_models)
     create_overfitting_analysis_plot(values$trained_models)
   })
@@ -693,7 +700,7 @@ server <- function(input, output, session) {
     
     values$model_registry <- rbind(values$model_registry, new_model)
     
-    showNotification("Model deployed successfully!", type = "success")
+    showNotification("Model deployed successfully!", type = "message")
   })
   
   # Model Management
@@ -701,7 +708,7 @@ server <- function(input, output, session) {
     values$model_registry
   })
   
-  output$performance_history_plot <- renderPlotly({
+  output$performance_history_plot <- renderPlot({
     req(values$model_registry)
     create_performance_history_plot(values$model_registry)
   })
