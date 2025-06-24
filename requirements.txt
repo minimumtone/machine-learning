@@ -1,6 +1,7 @@
 # requirements.txt
 
 streamlit
+streamlit-aggrid
 pandas
 numpy
 scikit-learn
