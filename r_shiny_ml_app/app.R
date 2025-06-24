@@ -712,6 +712,142 @@ server <- function(input, output, session) {
     req(values$model_registry)
     create_performance_history_plot(values$model_registry)
   })
+  
+  # Download Handler for Tar Archives
+  output$download_model <- downloadHandler(
+    filename = function() {
+      paste0("materials_ml_models_", Sys.Date(), ".tar.gz")
+    },
+    content = function(file) {
+      # Create temporary directory for files to archive
+      temp_dir <- tempdir()
+      archive_dir <- file.path(temp_dir, "ml_models_archive")
+      dir.create(archive_dir, recursive = TRUE, showWarnings = FALSE)
+      
+      # Create subdirectories
+      models_dir <- file.path(archive_dir, "models")
+      data_dir <- file.path(archive_dir, "data")
+      reports_dir <- file.path(archive_dir, "reports")
+      dir.create(models_dir, recursive = TRUE, showWarnings = FALSE)
+      dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
+      dir.create(reports_dir, recursive = TRUE, showWarnings = FALSE)
+      
+      # Save trained models if available
+      if (!is.null(values$trained_models)) {
+        tryCatch({
+          # Save workflow set as RDS
+          saveRDS(values$trained_models, file.path(models_dir, "trained_models.rds"))
+          
+          # Save individual model files based on selected export formats
+          if ("rds" %in% input$export_formats) {
+            saveRDS(values$trained_models, file.path(models_dir, "models_rds_format.rds"))
+          }
+          
+          # Create model summary report
+          model_summary <- data.frame(
+            model_id = names(values$trained_models$result),
+            model_type = sapply(values$trained_models$result, function(x) class(x)[1]),
+            created_date = Sys.time(),
+            stringsAsFactors = FALSE
+          )
+          write.csv(model_summary, file.path(reports_dir, "model_summary.csv"), row.names = FALSE)
+        }, error = function(e) {
+          warning("Error saving models: ", e$message)
+        })
+      }
+      
+      # Save datasets if available
+      if (!is.null(values$raw_data)) {
+        tryCatch({
+          write.csv(values$raw_data, file.path(data_dir, "raw_data.csv"), row.names = FALSE)
+        }, error = function(e) {
+          warning("Error saving raw data: ", e$message)
+        })
+      }
+      
+      if (!is.null(values$data_split)) {
+        tryCatch({
+          # Save training data
+          train_data <- training(values$data_split)
+          write.csv(train_data, file.path(data_dir, "training_data.csv"), row.names = FALSE)
+          
+          # Save testing data
+          test_data <- testing(values$data_split)
+          write.csv(test_data, file.path(data_dir, "testing_data.csv"), row.names = FALSE)
+        }, error = function(e) {
+          warning("Error saving split data: ", e$message)
+        })
+      }
+      
+      # Save scenario information if available
+      if (!is.null(values$current_scenario)) {
+        tryCatch({
+          scenario_info <- list(
+            scenario = values$current_scenario,
+            category = input$scenario_category,
+            generated_date = Sys.time()
+          )
+          saveRDS(scenario_info, file.path(reports_dir, "scenario_info.rds"))
+        }, error = function(e) {
+          warning("Error saving scenario info: ", e$message)
+        })
+      }
+      
+      # Save model registry if available
+      if (!is.null(values$model_registry) && nrow(values$model_registry) > 0) {
+        tryCatch({
+          write.csv(values$model_registry, file.path(reports_dir, "model_registry.csv"), row.names = FALSE)
+        }, error = function(e) {
+          warning("Error saving model registry: ", e$message)
+        })
+      }
+      
+      # Create README file for the archive
+      readme_content <- paste(
+        "Materials Engineering ML Models Archive",
+        "=====================================",
+        "",
+        paste("Generated on:", Sys.time()),
+        paste("Archive contains:"),
+        "- models/: Trained machine learning models",
+        "- data/: Training and testing datasets", 
+        "- reports/: Model summaries and metadata",
+        "",
+        "Files included:",
+        paste("- Models:", ifelse(!is.null(values$trained_models), "Yes", "No")),
+        paste("- Raw Data:", ifelse(!is.null(values$raw_data), "Yes", "No")),
+        paste("- Split Data:", ifelse(!is.null(values$data_split), "Yes", "No")),
+        paste("- Scenario Info:", ifelse(!is.null(values$current_scenario), "Yes", "No")),
+        paste("- Model Registry:", ifelse(!is.null(values$model_registry) && nrow(values$model_registry) > 0, "Yes", "No")),
+        "",
+        "This archive was created by the Materials Engineering ML Platform",
+        "using the tidymodels ecosystem in R.",
+        sep = "\n"
+      )
+      writeLines(readme_content, file.path(archive_dir, "README.txt"))
+      
+      # Create the tar.gz archive
+      tryCatch({
+        # Change to temp directory to create relative paths in archive
+        old_wd <- getwd()
+        setwd(temp_dir)
+        
+        # Create tar.gz archive
+        tar(file, files = basename(archive_dir), compression = "gzip")
+        
+        # Restore working directory
+        setwd(old_wd)
+        
+        # Clean up temporary directory
+        unlink(archive_dir, recursive = TRUE)
+        
+      }, error = function(e) {
+        setwd(old_wd)
+        stop("Error creating tar archive: ", e$message)
+      })
+    },
+    contentType = "application/gzip"
+  )
 }
 
 # Run the application
