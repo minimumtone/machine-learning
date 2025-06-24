@@ -11,7 +11,7 @@ library(tune)
 library(yardstick)
 library(dplyr)
 library(ggplot2)
-library(plotly)
+# library(plotly) # Optional dependency
 library(purrr)
 library(randomForest)
 library(glmnet)
