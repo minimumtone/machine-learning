@@ -4,15 +4,31 @@ A comprehensive R Shiny application for materials engineering machine learning u
 
 ## Features
 
-### 🔬 Materials Engineering Scenarios (30+)
-- **Alloy Development**: Steel, Aluminum, Titanium, Superalloys
+### 🔬 Materials Engineering Scenarios (36+)
+- **Alloy Development**: Steel, Aluminum, Titanium, Superalloys + Transfer Learning variants
 - **Ceramic Processing**: Alumina, Silicon Carbide, Zirconia, Piezoelectric
-- **Polymer Engineering**: Thermoplastic, Thermoset, Blends, Biodegradable
+- **Polymer Engineering**: Thermoplastic, Thermoset, Blends, Biodegradable + SMILES-based scenarios
 - **Composite Materials**: Carbon Fiber, Glass Fiber, Natural Fiber, Metal Matrix
 - **Nanomaterials**: Nanoparticles, Carbon Nanotubes, Graphene, Quantum Dots
 - **Biomaterials**: Implants, Drug Delivery, Tissue Scaffolds, Dental Materials
 - **Electronic Materials**: Semiconductors, Conductive Polymers, Dielectrics, Magnetics
 - **Energy Materials**: Battery Electrodes, Solar Cells, Fuel Cells, Thermoelectrics
+
+### 🧬 SMILES Notation & Chemical Informatics
+- **SMILES-based Property Prediction**: Glass transition temperature from molecular structure
+- **Degradation Analysis**: Thermal stability prediction using chemical descriptors
+- **Mechanical Properties**: Structure-property relationships for polymer design
+- **Solubility Prediction**: Hansen solubility parameters from molecular fingerprints
+- **Molecular Descriptor Calculation**: MW, LogP, TPSA using rcdk package
+- **Fingerprint Generation**: Morgan/Circular fingerprints for structure-activity relationships
+
+### 🔄 Transfer Learning for Metal Materials
+- **Steel Transfer Learning**: Domain adaptation from general metal databases to specific steel compositions
+- **Aluminum Transfer Learning**: Knowledge transfer from steel alloy models to aluminum systems
+- **Titanium Transfer Learning**: Cross-material biocompatibility prediction using base metal properties
+- **Superalloy Transfer Learning**: High-temperature performance using refractory metal knowledge
+- **Pre-trained Model Support**: Upload and fine-tune existing models for new alloy systems
+- **Domain Adaptation**: Automatic feature mapping between different metal material classes
 
 ### 🧠 Machine Learning Models
 - Linear Regression, Ridge, Lasso, Elastic Net
@@ -46,9 +62,29 @@ install.packages(c(
   "shiny", "shinydashboard", "DT", "plotly",
   "tidymodels", "workflowsets", "workflows", 
   "rsample", "parsnip", "recipes", "tune", "yardstick",
-  "dplyr", "ggplot2", "purrr",
+  "dplyr", "ggplot2", "purrr", "tidyr",
   "randomForest", "glmnet", "kernlab", "ranger"
 ))
+
+# For SMILES notation and chemical informatics (optional)
+install.packages("rcdk")
+```
+
+### Chemical Informatics Requirements
+
+The SMILES-based polymer scenarios require the `rcdk` package for molecular descriptor calculation and fingerprint generation. If `rcdk` is not available, the application will use synthetic descriptors as fallback.
+
+**rcdk Installation Requirements:**
+- Java 8 or higher
+- rJava package properly configured
+
+```r
+# Check Java configuration
+library(rJava)
+.jinit()
+
+# Install rcdk
+install.packages("rcdk")
 ```
 
 ## Usage

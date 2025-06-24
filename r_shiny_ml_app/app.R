@@ -503,6 +503,51 @@ server <- function(input, output, session) {
     showNotification("Scenario loaded successfully!", type = "message")
   })
   
+  observeEvent(input$generate_data, {
+    req(input$category, input$scenario)
+    
+    withProgress(message = 'Generating data...', value = 0, {
+      incProgress(0.3, detail = "Creating scenario data...")
+      
+      if (grepl("smiles", input$scenario) && !is.null(input$smiles_input) && input$smiles_input != "") {
+        smiles_list <- strsplit(input$smiles_input, "\n")[[1]]
+        smiles_list <- smiles_list[smiles_list != ""]
+        
+        if (input$calculate_descriptors) {
+          incProgress(0.5, detail = "Calculating molecular descriptors...")
+          descriptors <- parse_smiles_and_calculate_descriptors(smiles_list)
+        }
+        
+        if (input$generate_fingerprints) {
+          incProgress(0.7, detail = "Generating molecular fingerprints...")
+          fingerprints <- generate_molecular_fingerprints(smiles_list)
+        }
+        
+        data <- generate_scenario_data(input$category, input$scenario, length(smiles_list))
+        if (exists("descriptors")) {
+          descriptor_df <- do.call(rbind, lapply(descriptors, as.data.frame))
+          data <- cbind(data, descriptor_df[, !names(descriptor_df) %in% names(data)])
+        }
+      } else {
+        data <- generate_scenario_data(input$category, input$scenario, 200)
+      }
+      
+      values$raw_data <- data
+      
+      incProgress(0.9, detail = "Processing data...")
+      values$processed_data <- data
+      
+      if (grepl("transfer_learning", input$scenario)) {
+        values$transfer_learning_mode <- input$transfer_learning_mode
+        values$learning_rate <- input$learning_rate
+      }
+      
+      incProgress(1, detail = "Complete!")
+    })
+    
+    showNotification("Data generated successfully!", type = "success")
+  })
+  
   output$scenario_description <- renderText({
     req(values$selected_scenario)
     values$selected_scenario$description
@@ -582,29 +627,58 @@ server <- function(input, output, session) {
     # Show progress
     updateProgressBar(session, "training_progress", value = 10, title = "Initializing...")
     
-    # Start training in background
-    values$trained_models <- train_workflow_set(
-      workflow_set = values$workflow_set,
-      data_split = values$data_split,
-      cv_folds = input$cv_folds,
-      tuning_method = input$tuning_method,
-      grid_size = input$grid_size,
-      n_iter = input$n_iter,
-      parallel = input$parallel_processing,
-      n_cores = input$n_cores,
-      progress_callback = function(progress) {
-        updateProgressBar(session, "training_progress", value = progress)
+    if (!is.null(values$transfer_learning_mode) && values$transfer_learning_mode != "standard") {
+      updateProgressBar(session, "training_progress", value = 30, title = "Setting up transfer learning...")
+      
+      if (values$transfer_learning_mode == "pretrained" && !is.null(input$base_model_upload)) {
+        base_model_path <- input$base_model_upload$datapath
+        base_model <- create_transfer_learning_workflow(base_model_path)
+      } else {
+        base_data <- values$raw_data[1:(nrow(values$raw_data) * 0.6), ]
+        target_col <- names(values$raw_data)[ncol(values$raw_data)]
+        base_model <- pretrain_base_model(base_data, target_col, "linear")
       }
-    )
+      
+      if (values$transfer_learning_mode == "finetune" && !is.null(base_model)) {
+        updateProgressBar(session, "training_progress", value = 50, title = "Fine-tuning model...")
+        target_data <- training(values$data_split)
+        target_col <- names(target_data)[ncol(target_data)]
+        finetuned_model <- finetune_model(base_model, target_data, target_col, values$learning_rate)
+        
+        values$base_model <- base_model
+        values$finetuned_model <- finetuned_model
+        
+        updateProgressBar(session, "training_progress", value = 80, title = "Comparing models...")
+        comparison <- create_transfer_learning_comparison(
+          base_model, finetuned_model, testing(values$data_split), target_col
+        )
+        values$transfer_comparison <- comparison
+      }
+    } else {
+      # Start training in background
+      values$trained_models <- train_workflow_set(
+        workflow_set = values$workflow_set,
+        data_split = values$data_split,
+        cv_folds = input$cv_folds,
+        tuning_method = input$tuning_method,
+        grid_size = input$grid_size,
+        n_iter = input$n_iter,
+        parallel = input$parallel_processing,
+        n_cores = input$n_cores,
+        progress_callback = function(progress) {
+          updateProgressBar(session, "training_progress", value = progress)
+        }
+      )
+      
+      # Update model choices for evaluation
+      model_choices <- names(values$trained_models)
+      updateSelectInput(session, "eval_model", choices = model_choices)
+      updateSelectInput(session, "deploy_model", choices = model_choices)
+      updateSelectInput(session, "manage_model", choices = model_choices)
+    }
     
     updateProgressBar(session, "training_progress", value = 100, title = "Training Complete!")
     showNotification("Model training completed!", type = "message")
-    
-    # Update model choices for evaluation
-    model_choices <- names(values$trained_models)
-    updateSelectInput(session, "eval_model", choices = model_choices)
-    updateSelectInput(session, "deploy_model", choices = model_choices)
-    updateSelectInput(session, "manage_model", choices = model_choices)
   })
   
   output$training_log <- renderText({
@@ -650,8 +724,25 @@ server <- function(input, output, session) {
   })
   
   output$model_comparison_plot <- renderPlot({
-    req(values$trained_models)
-    create_model_comparison_plot(values$trained_models, input$comparison_metric, input$show_confidence)
+    if (!is.null(values$transfer_comparison)) {
+      library(ggplot2)
+      library(tidyr)
+      
+      comparison_long <- values$transfer_comparison %>%
+        pivot_longer(cols = c(rmse, rsq, mae), names_to = "metric", values_to = "value")
+      
+      ggplot(comparison_long, aes(x = model, y = value, fill = model)) +
+        geom_col() +
+        facet_wrap(~metric, scales = "free_y") +
+        labs(title = "Transfer Learning Model Comparison",
+             x = "Model Type", y = "Performance") +
+        theme_minimal() +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    } else if (!is.null(values$trained_models)) {
+      create_model_comparison_plot(values$trained_models, input$comparison_metric, input$show_confidence)
+    } else {
+      plot(1, type = "n", main = "No model results available")
+    }
   })
   
   output$overfitting_plot <- renderPlot({

@@ -8,7 +8,11 @@ get_scenarios_by_category <- function(category) {
       "Steel Alloy Optimization" = "steel_alloy",
       "Aluminum Alloy Design" = "aluminum_alloy", 
       "Titanium Alloy Processing" = "titanium_alloy",
-      "Superalloy Development" = "superalloy"
+      "Superalloy Development" = "superalloy",
+      "Steel Transfer Learning" = "steel_transfer_learning",
+      "Aluminum Transfer Learning" = "aluminum_transfer_learning",
+      "Titanium Transfer Learning" = "titanium_transfer_learning",
+      "Superalloy Transfer Learning" = "superalloy_transfer_learning"
     ),
     ceramic = list(
       "Alumina Ceramic Sintering" = "alumina_ceramic",
@@ -20,7 +24,21 @@ get_scenarios_by_category <- function(category) {
       "Thermoplastic Processing" = "thermoplastic",
       "Thermoset Curing" = "thermoset",
       "Polymer Blend Optimization" = "polymer_blend",
-      "Biodegradable Polymer Design" = "biodegradable_polymer"
+      "Biodegradable Polymer Design" = "biodegradable_polymer",
+      "SMILES-based Properties" = "polymer_smiles_properties",
+      "SMILES Degradation Analysis" = "polymer_degradation_smiles",
+      "SMILES Mechanical Properties" = "polymer_mechanical_smiles",
+      "SMILES Solubility Prediction" = "polymer_solubility_smiles"
+    ),
+    alloy = list(
+      "Steel Alloy Optimization" = "steel_alloy",
+      "Aluminum Alloy Design" = "aluminum_alloy",
+      "Titanium Alloy Processing" = "titanium_alloy",
+      "Superalloy Development" = "superalloy",
+      "Steel Transfer Learning" = "steel_transfer_learning",
+      "Aluminum Transfer Learning" = "aluminum_transfer_learning", 
+      "Titanium Transfer Learning" = "titanium_transfer_learning",
+      "Superalloy Transfer Learning" = "superalloy_transfer_learning",
     ),
     composite = list(
       "Carbon Fiber Composites" = "carbon_fiber",
@@ -230,6 +248,202 @@ get_scenario_info <- function(category, scenario) {
       )
     ),
     
+    # SMILES-based Polymer Scenarios
+    polymer_smiles_properties = list(
+      description = "Prediction of polymer properties from SMILES notation and molecular fingerprints, focusing on structure-property relationships for thermoplastic design and optimization.",
+      variables = c(
+        "SMILES: Simplified molecular input line entry system notation",
+        "Morgan Fingerprint: Circular molecular fingerprint (radius=2)",
+        "Molecular Weight (g/mol): Calculated from SMILES structure",
+        "LogP: Octanol-water partition coefficient",
+        "TPSA: Topological polar surface area (Ų)",
+        "Glass Transition Temperature (°C): Target thermal property"
+      ),
+      relationships = c(
+        "Aromatic rings increase glass transition temperature",
+        "Flexible chains reduce Tg and increase ductility",
+        "Polar groups increase intermolecular interactions",
+        "Molecular weight affects processing viscosity"
+      )
+    ),
+    
+    polymer_degradation_smiles = list(
+      description = "Prediction of polymer thermal degradation from molecular structure using SMILES notation and chemical descriptors for stability assessment.",
+      variables = c(
+        "SMILES: Polymer repeat unit structure",
+        "Molecular Weight (g/mol): Average molecular weight",
+        "Bond Dissociation Energy (kJ/mol): Weakest bond strength",
+        "Aromatic Content (%): Fraction of aromatic rings",
+        "Heteroatom Count: Number of N, O, S atoms",
+        "Degradation Temperature (°C): 5% weight loss temperature"
+      ),
+      relationships = c(
+        "Aromatic structures increase thermal stability",
+        "Weak bonds (C-O, C-N) reduce degradation temperature",
+        "Higher molecular weight improves thermal stability",
+        "Heteroatoms can catalyze degradation reactions"
+      )
+    ),
+    
+    polymer_mechanical_smiles = list(
+      description = "Prediction of mechanical properties from polymer molecular structure using SMILES-based descriptors and fingerprinting for materials design.",
+      variables = c(
+        "SMILES: Polymer backbone structure",
+        "Crystallinity Index: Calculated from structure regularity",
+        "Chain Flexibility: Rotational bond count",
+        "Cross-link Density: Estimated from functional groups",
+        "Molecular Weight (g/mol): Number average MW",
+        "Tensile Strength (MPa): Ultimate tensile strength"
+      ),
+      relationships = c(
+        "Regular structures increase crystallinity and strength",
+        "Flexible chains reduce modulus but increase toughness",
+        "Cross-linking increases strength and brittleness",
+        "Higher MW generally improves mechanical properties"
+      )
+    ),
+    
+    polymer_solubility_smiles = list(
+      description = "Prediction of polymer solubility parameters from SMILES notation using group contribution methods and molecular descriptors.",
+      variables = c(
+        "SMILES: Polymer repeat unit structure",
+        "Hansen Solubility Parameters: δd, δp, δh components",
+        "Polar Surface Area (Ų): Topological polar surface area",
+        "Hydrogen Bond Donors: Count of H-bond donor groups",
+        "Hydrogen Bond Acceptors: Count of H-bond acceptor groups",
+        "Solubility Parameter (MPa^0.5): Hildebrand parameter"
+      ),
+      relationships = c(
+        "Polar groups increase hydrogen bonding component",
+        "Aromatic rings contribute to dispersion forces",
+        "Hydrogen bonding groups dominate solubility behavior",
+        "Molecular symmetry affects crystallization tendency"
+      )
+    ),
+    
+    # Transfer Learning Metal Scenarios
+    steel_transfer_learning = list(
+      description = "Transfer learning for steel alloy property prediction using pre-trained models from general metal databases, demonstrating domain adaptation from broad materials data to specific steel compositions.",
+      variables = c(
+        "Base Model Features: General metal properties (density, melting point, crystal structure)",
+        "Steel-Specific Features: Carbon content (%), alloying elements",
+        "Processing Parameters: Heat treatment temperature, cooling rate",
+        "Microstructure: Grain size, phase fractions",
+        "Target Properties: Yield strength, ultimate tensile strength, hardness"
+      ),
+      relationships = c(
+        "Pre-trained features capture fundamental metal behavior",
+        "Fine-tuning adapts to steel-specific composition effects",
+        "Processing parameters modify microstructure-property relationships",
+        "Transfer learning reduces data requirements for new steel grades"
+      )
+    ),
+    
+    aluminum_transfer_learning = list(
+      description = "Transfer learning for aluminum alloy design using knowledge from steel alloy models, focusing on precipitation hardening and age-hardening mechanisms across different metal systems.",
+      variables = c(
+        "Source Domain: Steel alloy composition and properties",
+        "Target Domain: Aluminum alloy composition (Cu, Mg, Si content)",
+        "Shared Features: Elastic modulus, thermal properties, grain size",
+        "Domain-Specific Features: Precipitation kinetics, solutionizing temperature",
+        "Target Properties: Age-hardening response, corrosion resistance"
+      ),
+      relationships = c(
+        "Fundamental strengthening mechanisms transfer between metals",
+        "Precipitation hardening principles apply across alloy systems",
+        "Domain adaptation accounts for different crystal structures",
+        "Shared processing-property relationships enable knowledge transfer"
+      )
+    ),
+    
+    titanium_transfer_learning = list(
+      description = "Transfer learning for titanium alloy biocompatibility prediction using models pre-trained on general biomedical materials, demonstrating cross-material knowledge transfer.",
+      variables = c(
+        "Base Model: Biocompatibility data from various materials",
+        "Titanium Features: Alpha/beta phase balance, oxygen content",
+        "Surface Properties: Roughness, oxide layer thickness",
+        "Mechanical Match: Elastic modulus similarity to bone",
+        "Target Properties: Cell adhesion, corrosion resistance, biocompatibility"
+      ),
+      relationships = c(
+        "General biocompatibility principles transfer across materials",
+        "Surface properties dominate biological response",
+        "Mechanical property matching reduces stress shielding",
+        "Transfer learning leverages broader biomedical materials database"
+      )
+    ),
+    
+    superalloy_transfer_learning = list(
+      description = "Transfer learning for superalloy high-temperature performance using models trained on refractory metals, focusing on creep resistance and oxidation behavior knowledge transfer.",
+      variables = c(
+        "Source Domain: Refractory metal high-temperature data",
+        "Target Domain: Nickel-based superalloy composition",
+        "Shared Features: Melting point, thermal expansion, diffusion rates",
+        "Superalloy-Specific: Gamma prime precipitation, carbide formation",
+        "Target Properties: Creep life, oxidation resistance, thermal fatigue"
+      ),
+      relationships = c(
+        "High-temperature deformation mechanisms are transferable",
+        "Oxidation kinetics follow similar principles across metals",
+        "Diffusion-controlled processes share common physics",
+        "Transfer learning captures complex multi-component interactions"
+      )
+    ),
+    
+    polymer_degradation_smiles = list(
+      description = "Prediction of polymer thermal degradation behavior from SMILES notation using molecular descriptors and structural features.",
+      variables = c(
+        "SMILES: Polymer repeat unit structure",
+        "MACCS Keys: 166-bit structural fingerprint",
+        "Aromatic Fraction: Percentage of aromatic carbons",
+        "Heteroatom Count: Number of non-carbon atoms",
+        "Rotatable Bonds: Molecular flexibility indicator",
+        "Degradation Temperature (°C): Thermal stability measure"
+      ),
+      relationships = c(
+        "Aromatic structures improve thermal stability",
+        "Heteroatoms can create weak points",
+        "Flexible chains degrade at lower temperatures",
+        "Crosslinking improves thermal resistance"
+      )
+    ),
+    
+    polymer_solubility_prediction = list(
+      description = "Prediction of polymer solubility parameters from SMILES notation using Hansen solubility parameters and molecular descriptors.",
+      variables = c(
+        "SMILES: Polymer chemical structure",
+        "RDKit Descriptors: Molecular property descriptors",
+        "Hansen δD: Dispersion parameter (MPa^0.5)",
+        "Hansen δP: Polar parameter (MPa^0.5)", 
+        "Hansen δH: Hydrogen bonding parameter (MPa^0.5)",
+        "Solubility Parameter (MPa^0.5): Total Hansen parameter"
+      ),
+      relationships = c(
+        "Polar groups increase δP and δH components",
+        "Aromatic rings contribute to δD component",
+        "Hydrogen bonding groups affect δH significantly",
+        "Total solubility parameter affects compatibility"
+      )
+    ),
+    
+    polymer_mechanical_smiles = list(
+      description = "Prediction of mechanical properties from polymer SMILES notation using molecular fingerprints and structural descriptors for materials design.",
+      variables = c(
+        "SMILES: Polymer backbone structure",
+        "Atom Pair Fingerprint: Structural connectivity fingerprint",
+        "Chain Flexibility: Calculated rotatable bond ratio",
+        "Crystallinity Index: Structural regularity measure",
+        "Crosslink Density: Estimated from structure",
+        "Young's Modulus (GPa): Target mechanical property"
+      ),
+      relationships = c(
+        "Rigid backbones increase modulus",
+        "Crystalline regions enhance stiffness",
+        "Crosslinking improves mechanical properties",
+        "Side chain bulkiness affects packing"
+      )
+    ),
+    
     # Composite Materials Scenarios
     carbon_fiber = list(
       description = "Optimization of carbon fiber reinforced composites for aerospace applications, focusing on fiber-matrix interface, processing conditions, and mechanical performance.",
@@ -264,107 +478,217 @@ get_scenario_info <- function(category, scenario) {
         "Higher concentration leads to more nucleation sites",
         "pH affects precursor solubility and nucleation"
       )
-    ),
-    
-    # Energy Materials Scenarios
-    battery_electrode = list(
-      description = "Optimization of battery electrode materials for energy storage applications, focusing on capacity, cycling stability, and rate capability.",
-      variables = c(
-        "Active Material Content (%): Electrochemically active fraction",
-        "Particle Size (nm): Material dimension",
-        "Binder Content (%): Adhesive fraction",
-        "Porosity (%): Electrolyte accessibility",
-        "Specific Capacity (mAh/g): Target energy storage"
-      ),
-      relationships = c(
-        "Higher active material content increases capacity",
-        "Smaller particles improve rate capability",
-        "Optimal binder content balances adhesion and conductivity",
-        "Porosity affects electrolyte penetration"
-      )
     )
   )
-  
-  return(scenarios_info[[scenario]])
 }
 
 generate_scenario_data <- function(category, scenario, n_samples = 200) {
   set.seed(42)
   
-  if (scenario == "steel_alloy") {
+  if (scenario == "polymer_smiles_properties") {
+    smiles_strings <- sample(c(
+      "CC(C)(C)c1ccc(O)cc1", "CCc1ccc(O)cc1", "c1ccc2c(c1)ccc3c2ccc4c3cccc4",
+      "CC(C)c1ccc(C(C)(C)C)cc1", "c1ccc(cc1)c2ccccc2", "CCCCc1ccc(O)cc1",
+      "CC(C)(C)c1ccc(C(=O)O)cc1", "c1ccc(cc1)C(c2ccccc2)c3ccccc3"
+    ), n_samples, replace = TRUE)
+    
+    molecular_weight <- ifelse(grepl("CC\\(C\\)\\(C\\)", smiles_strings), 
+                              runif(n_samples, 200, 400),
+                              runif(n_samples, 100, 250))
+    logp <- ifelse(grepl("O", smiles_strings), 
+                   runif(n_samples, 1, 4),
+                   runif(n_samples, 3, 6))
+    tpsa <- ifelse(grepl("O", smiles_strings), 
+                   runif(n_samples, 20, 80),
+                   runif(n_samples, 0, 20))
+    
+    glass_transition_temp <- 50 + 0.3 * molecular_weight + 
+                           ifelse(grepl("c1ccc", smiles_strings), 40, 0) +
+                           ifelse(grepl("O", smiles_strings), 20, 0) +
+                           rnorm(n_samples, 0, 10)
+    
+    data.frame(smiles = smiles_strings, molecular_weight, logp, tpsa, 
+               glass_transition_temp = pmax(glass_transition_temp, -50))
+  
+  } else if (scenario == "polymer_degradation_smiles") {
+    smiles_strings <- sample(c(
+      "CC(C)OC(=O)C", "CCOC(=O)C=C", "c1ccc(cc1)C(=O)O",
+      "CC(C)(C)OC(=O)C", "CCN(CC)C(=O)C", "c1ccc2c(c1)ccc3c2cccc3"
+    ), n_samples, replace = TRUE)
+    
+    molecular_weight <- runif(n_samples, 1000, 50000)
+    aromatic_content <- ifelse(grepl("c1ccc", smiles_strings), 
+                              runif(n_samples, 30, 80),
+                              runif(n_samples, 0, 20))
+    heteroatom_count <- nchar(gsub("[^NOSPFClBrI]", "", smiles_strings))
+    
+    degradation_temp <- 200 + 0.002 * molecular_weight + 
+                       2 * aromatic_content - 10 * heteroatom_count +
+                       rnorm(n_samples, 0, 15)
+    
+    data.frame(smiles = smiles_strings, molecular_weight, aromatic_content,
+               heteroatom_count, degradation_temp = pmax(degradation_temp, 150))
+  
+  } else if (scenario == "polymer_mechanical_smiles") {
+    smiles_strings <- sample(c(
+      "CC(C)(C)c1ccc(cc1)C(C)(C)C", "c1ccc(cc1)c2ccccc2", "CCN(CC)C(=O)C",
+      "CC(C)c1ccc(C(C)(C)C)cc1", "c1ccc2c(c1)ccc3c2cccc3", "CCOC(=O)C=C"
+    ), n_samples, replace = TRUE)
+    
+    molecular_weight <- runif(n_samples, 5000, 100000)
+    crystallinity_index <- ifelse(grepl("CC\\(C\\)\\(C\\)", smiles_strings), 
+                                 runif(n_samples, 60, 90),
+                                 runif(n_samples, 20, 60))
+    chain_flexibility <- nchar(gsub("[^C]", "", smiles_strings)) / nchar(smiles_strings)
+    
+    tensile_strength <- 20 + 0.001 * molecular_weight + 
+                       2 * crystallinity_index - 50 * chain_flexibility +
+                       rnorm(n_samples, 0, 10)
+    
+    data.frame(smiles = smiles_strings, molecular_weight, crystallinity_index,
+               chain_flexibility, tensile_strength = pmax(tensile_strength, 10))
+  
+  } else if (scenario == "polymer_solubility_smiles") {
+    smiles_strings <- sample(c(
+      "CC(C)OC(=O)C", "c1ccc(cc1)O", "CCN(CC)C(=O)C",
+      "CC(C)(C)c1ccc(O)cc1", "CCOC(=O)C=C", "c1ccc2c(c1)ccc3c2cccc3"
+    ), n_samples, replace = TRUE)
+    
+    polar_surface_area <- ifelse(grepl("O", smiles_strings), 
+                                runif(n_samples, 40, 120),
+                                runif(n_samples, 0, 40))
+    h_bond_donors <- nchar(gsub("[^O]H", "", smiles_strings))
+    h_bond_acceptors <- nchar(gsub("[^ON]", "", smiles_strings))
+    
+    solubility_parameter <- 15 + 0.5 * polar_surface_area + 
+                           2 * h_bond_donors + 1.5 * h_bond_acceptors +
+                           rnorm(n_samples, 0, 2)
+    
+    data.frame(smiles = smiles_strings, polar_surface_area, h_bond_donors,
+               h_bond_acceptors, solubility_parameter = pmax(solubility_parameter, 10))
+  
+  } else if (scenario == "steel_transfer_learning") {
+    base_features <- data.frame(
+      density = runif(n_samples, 7.6, 8.1),
+      melting_point = runif(n_samples, 1450, 1550),
+      crystal_structure = sample(c("BCC", "FCC", "Mixed"), n_samples, replace = TRUE)
+    )
+    
+    steel_features <- data.frame(
+      carbon_content = runif(n_samples, 0.1, 1.5),
+      manganese_content = runif(n_samples, 0.3, 2.0),
+      heat_treatment_temp = runif(n_samples, 800, 1200)
+    )
+    
+    base_strength <- 200 + 100 * (base_features$density - 7.8) + 
+                    0.1 * (base_features$melting_point - 1500)
+    
+    steel_adjustment <- 300 * steel_features$carbon_content + 
+                       50 * steel_features$manganese_content +
+                       0.2 * (steel_features$heat_treatment_temp - 1000)
+    
+    tensile_strength <- base_strength + steel_adjustment + rnorm(n_samples, 0, 20)
+    
+    cbind(base_features, steel_features, 
+          tensile_strength = pmax(tensile_strength, 200))
+  
+  } else if (scenario == "aluminum_transfer_learning") {
+    source_features <- data.frame(
+      elastic_modulus = runif(n_samples, 60, 80),
+      thermal_conductivity = runif(n_samples, 150, 250),
+      grain_size = runif(n_samples, 10, 100)
+    )
+    
+    aluminum_features <- data.frame(
+      copper_content = runif(n_samples, 1, 6),
+      magnesium_content = runif(n_samples, 0.5, 3),
+      aging_temp = runif(n_samples, 150, 200)
+    )
+    
+    base_strength <- 100 + 2 * source_features$elastic_modulus - 
+                    0.5 * source_features$grain_size
+    
+    aluminum_adjustment <- 40 * aluminum_features$copper_content + 
+                          25 * aluminum_features$magnesium_content +
+                          0.5 * aluminum_features$aging_temp
+    
+    yield_strength <- base_strength + aluminum_adjustment + rnorm(n_samples, 0, 15)
+    
+    cbind(source_features, aluminum_features,
+          yield_strength = pmax(yield_strength, 100))
+  
+  } else if (scenario == "titanium_transfer_learning") {
+    base_features <- data.frame(
+      biocompatibility_score = runif(n_samples, 0.6, 1.0),
+      surface_roughness = runif(n_samples, 0.1, 2.0),
+      elastic_modulus = runif(n_samples, 100, 120)
+    )
+    
+    titanium_features <- data.frame(
+      vanadium_content = runif(n_samples, 0, 6),
+      aluminum_content = runif(n_samples, 4, 8),
+      oxygen_content = runif(n_samples, 0.1, 0.4)
+    )
+    
+    base_compatibility <- 50 + 30 * base_features$biocompatibility_score - 
+                         10 * base_features$surface_roughness +
+                         0.2 * (base_features$elastic_modulus - 110)
+    
+    titanium_adjustment <- -2 * titanium_features$vanadium_content + 
+                          3 * titanium_features$aluminum_content -
+                          20 * titanium_features$oxygen_content
+    
+    biocompatibility_index <- base_compatibility + titanium_adjustment + rnorm(n_samples, 0, 5)
+    
+    cbind(base_features, titanium_features,
+          biocompatibility_index = pmax(biocompatibility_index, 20))
+  
+  } else if (scenario == "superalloy_transfer_learning") {
+    source_features <- data.frame(
+      melting_point = runif(n_samples, 1400, 1700),
+      thermal_expansion = runif(n_samples, 10, 20),
+      diffusion_rate = runif(n_samples, 0.1, 1.0)
+    )
+    
+    superalloy_features <- data.frame(
+      chromium_content = runif(n_samples, 15, 25),
+      aluminum_content = runif(n_samples, 3, 8),
+      service_temp = runif(n_samples, 800, 1200)
+    )
+    
+    base_performance <- 100 + 0.05 * (source_features$melting_point - 1550) - 
+                       2 * source_features$thermal_expansion +
+                       20 * source_features$diffusion_rate
+    
+    superalloy_adjustment <- 3 * superalloy_features$chromium_content + 
+                            5 * superalloy_features$aluminum_content +
+                            0.1 * superalloy_features$service_temp
+    
+    creep_life <- base_performance + superalloy_adjustment + rnorm(n_samples, 0, 10)
+    
+    cbind(source_features, superalloy_features,
+          creep_life = pmax(creep_life, 50))
+  
+  } else if (scenario == "steel_alloy") {
     carbon_content <- runif(n_samples, 0.1, 1.5)
     manganese_content <- runif(n_samples, 0.3, 2.0)
     heat_treatment_temp <- runif(n_samples, 800, 1200)
     cooling_rate <- runif(n_samples, 1, 100)
     
-    tensile_strength <- 300 + 400 * carbon_content + 50 * manganese_content + 
-                      0.1 * heat_treatment_temp + 2 * cooling_rate + 
-                      rnorm(n_samples, 0, 30)
+    tensile_strength <- 300 + 200 * carbon_content + 50 * manganese_content + 
+                       0.1 * heat_treatment_temp - 0.5 * cooling_rate +
+                       rnorm(n_samples, 0, 20)
     
     data.frame(carbon_content, manganese_content, heat_treatment_temp, 
                cooling_rate, tensile_strength = pmax(tensile_strength, 200))
                
-  } else if (scenario == "aluminum_alloy") {
-    copper_content <- runif(n_samples, 1, 6)
-    magnesium_content <- runif(n_samples, 0.5, 3)
-    solution_temp <- runif(n_samples, 480, 520)
-    aging_time <- runif(n_samples, 1, 48)
-    
-    yield_strength <- 100 + 50 * copper_content + 30 * magnesium_content + 
-                     0.5 * solution_temp + 5 * log(aging_time) + 
-                     rnorm(n_samples, 0, 20)
-    
-    data.frame(copper_content, magnesium_content, solution_temp, 
-               aging_time, yield_strength = pmax(yield_strength, 80))
-               
-  } else if (scenario == "carbon_fiber") {
-    fiber_volume_fraction <- runif(n_samples, 30, 70)
-    surface_treatment <- sample(c(1, 2, 3), n_samples, replace = TRUE)
-    cure_pressure <- runif(n_samples, 0.1, 1.0)
-    cure_temperature <- runif(n_samples, 120, 180)
-    
-    tensile_modulus <- 50 + 2 * fiber_volume_fraction + 20 * surface_treatment + 
-                      30 * cure_pressure + 0.2 * cure_temperature + 
-                      rnorm(n_samples, 0, 10)
-    
-    data.frame(fiber_volume_fraction, surface_treatment, cure_pressure, 
-               cure_temperature, tensile_modulus = pmax(tensile_modulus, 30))
-               
-  } else if (scenario == "nanoparticle") {
-    synthesis_temp <- runif(n_samples, 200, 800)
-    reaction_time <- runif(n_samples, 5, 120)
-    precursor_conc <- runif(n_samples, 0.01, 0.5)
-    ph_level <- runif(n_samples, 2, 12)
-    
-    particle_size <- 10 + 0.01 * synthesis_temp - 0.05 * reaction_time + 
-                    5 * precursor_conc - 0.5 * ph_level + 
-                    rnorm(n_samples, 0, 2)
-    
-    data.frame(synthesis_temp, reaction_time, precursor_conc, 
-               ph_level, particle_size = pmax(particle_size, 1))
-               
-  } else if (scenario == "battery_electrode") {
-    active_material <- runif(n_samples, 70, 95)
-    particle_size <- runif(n_samples, 50, 500)
-    binder_content <- runif(n_samples, 2, 10)
-    porosity <- runif(n_samples, 20, 50)
-    
-    specific_capacity <- 100 + 2 * active_material - 0.1 * particle_size - 
-                        5 * binder_content + 1 * porosity + 
-                        rnorm(n_samples, 0, 10)
-    
-    data.frame(active_material, particle_size, binder_content, 
-               porosity, specific_capacity = pmax(specific_capacity, 50))
-               
   } else {
-    # Default scenario data generation for any missing scenarios
-    x1 <- runif(n_samples, 0, 100)
-    x2 <- runif(n_samples, 0, 100)
-    x3 <- runif(n_samples, 0, 100)
-    x4 <- runif(n_samples, 0, 100)
-    
-    y <- 50 + 0.5 * x1 + 0.3 * x2 + 0.2 * x3 + 0.1 * x4 + 
-        rnorm(n_samples, 0, 5)
+    # Default scenario
+    x1 <- runif(n_samples, 0, 10)
+    x2 <- runif(n_samples, 0, 10)
+    x3 <- runif(n_samples, 0, 10)
+    x4 <- runif(n_samples, 0, 10)
+    y <- 2 * x1 + 3 * x2 - x3 + 0.5 * x4 + rnorm(n_samples, 0, 5)
     
     data.frame(x1, x2, x3, x4, y = pmax(y, 10))
   }
