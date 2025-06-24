@@ -201,9 +201,9 @@ cv_folds <- vfold_cv(thermal_train, v = 5)
 
 # Define multiple models
 models <- list(
-  "Linear" = linear_reg() %>% set_engine("lm"),
-  "Ridge" = linear_reg(penalty = 0.1, mixture = 0) %>% set_engine("glmnet"),
-  "Random Forest" = rand_forest(trees = 100) %>% set_engine("randomForest")
+  "Linear" = linear_reg() %>% set_engine("lm") %>% set_mode("regression"),
+  "Ridge" = linear_reg(penalty = 0.1, mixture = 0) %>% set_engine("glmnet") %>% set_mode("regression"),
+  "Random Forest" = rand_forest(trees = 100) %>% set_engine("randomForest") %>% set_mode("regression")
 )
 
 # Evaluate all models
