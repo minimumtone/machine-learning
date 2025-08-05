@@ -174,7 +174,7 @@ def plot_bollinger_bands(data, signals, window=20, num_std=2.0):
     return fig
 
 def plot_portfolio_performance(signals, initial_capital=100000):
-    """資産推移グラフを作成"""
+    """資産推移グラフを作成（ホールド戦略との比較付き）"""
     trading_data = signals[signals['signal'] != 0].copy()
     if len(trading_data) == 0:
         return go.Figure()
@@ -202,14 +202,26 @@ def plot_portfolio_performance(signals, initial_capital=100000):
         portfolio_value.append(current_value)
         dates.append(date)
     
+    initial_price = signals['price'].iloc[0]
+    bitcoin_amount = initial_capital / initial_price
+    hold_values = signals['price'] * bitcoin_amount
+    
     fig = go.Figure()
     
     fig.add_trace(go.Scatter(
         x=dates,
         y=portfolio_value,
         mode='lines',
-        name='ポートフォリオ価値',
+        name='ボリンジャーバンド戦略',
         line=dict(color='blue', width=3)
+    ))
+    
+    fig.add_trace(go.Scatter(
+        x=signals.index,
+        y=hold_values,
+        mode='lines',
+        name='ホールド戦略（放置）',
+        line=dict(color='orange', width=2, dash='dot')
     ))
     
     fig.add_hline(
@@ -219,15 +231,24 @@ def plot_portfolio_performance(signals, initial_capital=100000):
         annotation_text="初期資本"
     )
     
-    final_value = portfolio_value[-1]
-    total_return = (final_value - initial_capital) / initial_capital
+    final_value_strategy = portfolio_value[-1]
+    final_value_hold = hold_values.iloc[-1]
+    strategy_return = (final_value_strategy - initial_capital) / initial_capital
+    hold_return = (final_value_hold - initial_capital) / initial_capital
+    outperformance = strategy_return - hold_return
     
     fig.update_layout(
-        title=f'📈 資産推移グラフ (初期資本: ${initial_capital:,.0f}, 最終価値: ${final_value:,.0f}, リターン: {total_return:.1%})',
+        title=f'📈 資産推移グラフ比較<br>戦略: ${final_value_strategy:,.0f} ({strategy_return:.1%}) vs ホールド: ${final_value_hold:,.0f} ({hold_return:.1%})<br>アウトパフォーマンス: {outperformance:.1%}',
         xaxis_title='日付',
         yaxis_title='ポートフォリオ価値 (USD)',
         hovermode='x unified',
-        height=500
+        height=500,
+        legend=dict(
+            yanchor="top",
+            y=0.99,
+            xanchor="left",
+            x=0.01
+        )
     )
     
     return fig
