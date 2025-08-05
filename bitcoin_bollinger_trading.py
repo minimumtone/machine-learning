@@ -90,27 +90,22 @@ def backtest_strategy(data, window=20, num_std=2.0, holding_days=2):
         'trading_returns': trading_returns
     }
 
-def optimize_parameters(data, holding_days=2):
-    """パラメータ最適化"""
-    def objective(params):
-        window, num_std = int(params[0]), params[1]
-        if window < 5 or window > 50 or num_std < 0.5 or num_std > 4:
-            return -999  # 制約違反
-        
-        result = backtest_strategy(data, window, num_std, holding_days)
-        return -result['total_return']  # 最大化のため負の値を返す
-    
+def optimize_parameters(data):
+    """パラメータ最適化（1-30日の保有期間を含む）"""
     best_result = None
     best_params = None
     best_return = -999
     
-    for window in range(10, 31, 5):
-        for num_std in np.arange(1.0, 3.1, 0.5):
-            result = backtest_strategy(data, window, float(num_std), holding_days)
-            if result['total_return'] > best_return:
-                best_return = result['total_return']
-                best_params = (window, num_std)
-                best_result = result
+    holding_days_range = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 30]
+    
+    for window in range(10, 31, 5):  # 10, 15, 20, 25, 30
+        for num_std in np.arange(1.0, 3.1, 0.5):  # 1.0, 1.5, 2.0, 2.5, 3.0
+            for holding_days in holding_days_range:
+                result = backtest_strategy(data, window, float(num_std), holding_days)
+                if result['total_return'] > best_return:
+                    best_return = result['total_return']
+                    best_params = (window, num_std, holding_days)
+                    best_result = result
     
     return best_params, best_result
 
@@ -302,21 +297,21 @@ def main():
     st.write(f"期間: {data.index[0].strftime('%Y-%m-%d')} から {data.index[-1].strftime('%Y-%m-%d')}")
     
     if st.sidebar.button("パラメータ最適化実行"):
-        with st.spinner("最適パラメータを計算中..."):
+        with st.spinner("最適パラメータを計算中（1-30日の保有期間を含む）..."):
             best_params, best_result = optimize_parameters(data)
             
             st.session_state['best_params'] = best_params
             st.session_state['best_result'] = best_result
     
     if 'best_params' in st.session_state:
-        default_window, default_std = st.session_state['best_params']
-        st.sidebar.success(f"最適化完了! 最適パラメータ: 期間={default_window}, 標準偏差={default_std:.1f}")
+        default_window, default_std, default_holding = st.session_state['best_params']
+        st.sidebar.success(f"最適化完了! 最適パラメータ: 期間={default_window}, 標準偏差={default_std:.1f}, 保有日数={default_holding}")
     else:
-        default_window, default_std = 20, 2.0
+        default_window, default_std, default_holding = 20, 2.0, 2
     
     window = st.sidebar.slider("ボリンジャーバンド期間", 5, 50, default_window)
     num_std = st.sidebar.slider("標準偏差倍数", 0.5, 4.0, default_std, 0.1)
-    holding_days = st.sidebar.slider("保有日数", 1, 7, 2)
+    holding_days = st.sidebar.slider("保有日数", 1, 30, default_holding)
     
     with st.spinner("バックテスト実行中..."):
         result = backtest_strategy(data, window, num_std, holding_days)
@@ -380,7 +375,7 @@ def main():
         best_result = st.session_state['best_result']
         best_params = st.session_state['best_params']
         
-        st.write(f"**最適パラメータ:** 期間={best_params[0]}, 標準偏差={best_params[1]:.1f}")
+        st.write(f"**最適パラメータ:** 期間={best_params[0]}, 標準偏差={best_params[1]:.1f}, 保有日数={best_params[2]}")
         st.write(f"**最大総収益率:** {best_result['total_return']:.2%}")
         st.write(f"**勝率:** {best_result['win_rate']:.1%}")
         st.write(f"**取引回数:** {best_result['num_trades']}")
