@@ -20,11 +20,14 @@ st.title("₿ Bitcoin ボリンジャーバンド取引システム")
 st.markdown("**2日後の売買で利益最大化するパラメータ最適化システム**")
 
 @st.cache_data
-def load_bitcoin_data(period="2y"):
-    """過去2年間のビットコイン価格データを取得"""
+def load_bitcoin_data(start_date=None, end_date=None, period="2y"):
+    """ビットコイン価格データを取得（期間指定またはデフォルト2年間）"""
     try:
         btc = yf.Ticker("BTC-USD")
-        data = btc.history(period=period)
+        if start_date and end_date:
+            data = btc.history(start=start_date, end=end_date)
+        else:
+            data = btc.history(period=period)
         return data
     except Exception as e:
         st.error(f"データ取得エラー: {e}")
@@ -286,8 +289,35 @@ def plot_cumulative_returns(trading_returns):
 def main():
     st.sidebar.header("パラメータ設定")
     
-    with st.spinner("Bitcoinデータを読み込み中..."):
-        data = load_bitcoin_data()
+    st.sidebar.subheader("📅 バックテスト期間選択")
+    use_historical = st.sidebar.checkbox("10年前からの期間を選択", value=False)
+    
+    if use_historical:
+        from datetime import datetime, timedelta
+        
+        current_year = datetime.now().year
+        start_year = st.sidebar.selectbox(
+            "開始年を選択",
+            range(current_year - 10, current_year),
+            index=5  # デフォルトは5年前
+        )
+        
+        start_month = st.sidebar.selectbox(
+            "開始月を選択",
+            range(1, 13),
+            index=0  # デフォルトは1月
+        )
+        
+        start_date = datetime(start_year, start_month, 1)
+        end_date = start_date + timedelta(days=365)
+        
+        st.sidebar.info(f"選択期間: {start_date.strftime('%Y-%m-%d')} から {end_date.strftime('%Y-%m-%d')}")
+        
+        with st.spinner("選択された期間のBitcoinデータを読み込み中..."):
+            data = load_bitcoin_data(start_date=start_date, end_date=end_date)
+    else:
+        with st.spinner("Bitcoinデータを読み込み中..."):
+            data = load_bitcoin_data()
     
     if data is None:
         st.error("データの読み込みに失敗しました")
