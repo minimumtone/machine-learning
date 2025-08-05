@@ -9,3 +9,5 @@ matplotlib
 seaborn
 joblib
 scipy # Optional, but needed for LHS feature
+yfinance
+plotly
