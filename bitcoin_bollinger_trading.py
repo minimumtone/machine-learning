@@ -173,6 +173,100 @@ def plot_bollinger_bands(data, signals, window=20, num_std=2.0):
     
     return fig
 
+def plot_portfolio_performance(signals, initial_capital=100000):
+    """資産推移グラフを作成"""
+    trading_data = signals[signals['signal'] != 0].copy()
+    if len(trading_data) == 0:
+        return go.Figure()
+    
+    trading_data = trading_data.sort_index()
+    
+    portfolio_value = [initial_capital]
+    dates = [trading_data.index[0]]
+    cash = initial_capital
+    position = 0
+    
+    for i, (date, row) in enumerate(trading_data.iterrows()):
+        if row['signal'] == 1 and cash > 0:  # 買いシグナル
+            position = cash / row['price']
+            cash = 0
+        elif row['signal'] == -1 and position > 0:  # 売りシグナル
+            cash = position * row['price']
+            position = 0
+        
+        if position > 0:
+            current_value = position * row['price']
+        else:
+            current_value = cash
+            
+        portfolio_value.append(current_value)
+        dates.append(date)
+    
+    fig = go.Figure()
+    
+    fig.add_trace(go.Scatter(
+        x=dates,
+        y=portfolio_value,
+        mode='lines',
+        name='ポートフォリオ価値',
+        line=dict(color='blue', width=3)
+    ))
+    
+    fig.add_hline(
+        y=initial_capital,
+        line_dash="dash",
+        line_color="gray",
+        annotation_text="初期資本"
+    )
+    
+    final_value = portfolio_value[-1]
+    total_return = (final_value - initial_capital) / initial_capital
+    
+    fig.update_layout(
+        title=f'📈 資産推移グラフ (初期資本: ${initial_capital:,.0f}, 最終価値: ${final_value:,.0f}, リターン: {total_return:.1%})',
+        xaxis_title='日付',
+        yaxis_title='ポートフォリオ価値 (USD)',
+        hovermode='x unified',
+        height=500
+    )
+    
+    return fig
+
+def plot_cumulative_returns(trading_returns):
+    """累積リターンの推移グラフを作成"""
+    if len(trading_returns) == 0:
+        return go.Figure()
+    
+    cumulative_returns = (1 + trading_returns['strategy_returns']).cumprod() - 1
+    
+    fig = go.Figure()
+    
+    fig.add_trace(go.Scatter(
+        x=cumulative_returns.index,
+        y=cumulative_returns * 100,
+        mode='lines',
+        name='累積リターン',
+        line=dict(color='green', width=3),
+        fill='tonexty'
+    ))
+    
+    fig.add_hline(
+        y=0,
+        line_dash="dash",
+        line_color="gray",
+        annotation_text="ブレークイーブン"
+    )
+    
+    fig.update_layout(
+        title='📊 累積リターンの推移',
+        xaxis_title='日付',
+        yaxis_title='累積リターン (%)',
+        hovermode='x unified',
+        height=400
+    )
+    
+    return fig
+
 def main():
     st.sidebar.header("パラメータ設定")
     
@@ -222,6 +316,15 @@ def main():
     
     fig = plot_bollinger_bands(data, result['signals'], window, num_std)
     st.plotly_chart(fig, use_container_width=True)
+    
+    st.subheader("📈 資産推移グラフ")
+    portfolio_fig = plot_portfolio_performance(result['signals'], initial_capital=100000)
+    st.plotly_chart(portfolio_fig, use_container_width=True)
+    
+    if len(result['trading_returns']) > 0:
+        st.subheader("📊 累積リターンの推移")
+        cumulative_fig = plot_cumulative_returns(result['trading_returns'])
+        st.plotly_chart(cumulative_fig, use_container_width=True)
     
     if len(result['trading_returns']) > 0:
         st.subheader("取引詳細")
