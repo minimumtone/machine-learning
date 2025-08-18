@@ -6,11 +6,15 @@ FDMによる熱伝導方程式の数値解から偏微分方程式を逆算す�
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib
 import streamlit as st
 from scipy.optimize import minimize
 from scipy.ndimage import gaussian_filter
 import sympy as sp
 from typing import Tuple, List, Dict, Callable
+
+matplotlib.rcParams['font.family'] = ['IPAGothic', 'IPAPGothic', 'DejaVu Sans']
+plt.rcParams['axes.unicode_minus'] = False
 try:
     import torch
     from pinns_discovery import PINNsHeatSolver, PINNsBurgersSolver
@@ -255,9 +259,19 @@ class PDESymbolicRegression:
         best_result = min(results.values(), key=lambda x: x['mse'])
         best_alpha = abs(best_result['params'][0]) if best_result['params'] else 0.01
         
+        all_results = []
+        for formula_name, result_data in results.items():
+            all_results.append({
+                'formula': formula_name,
+                'mse': result_data['mse'],
+                'params': result_data['params'],
+                'description': result_data['description']
+            })
+        
         return {
-            'all_results': results,
-            'best_alpha': best_alpha
+            'all_results': all_results,
+            'best_alpha': best_alpha,
+            'optimization_details': {'method': 'direct_evaluation', 'status': 'completed'}
         }
     
     def discover_burgers_equation(self) -> Dict:
@@ -322,9 +336,19 @@ class PDESymbolicRegression:
         else:
             best_nu = abs(best_result['params'][0]) if best_result['params'] else 0.01
         
+        all_results = []
+        for formula_name, result_data in results.items():
+            all_results.append({
+                'formula': formula_name,
+                'mse': result_data['mse'],
+                'params': result_data['params'],
+                'description': result_data['description']
+            })
+        
         return {
-            'all_results': results,
-            'best_nu': best_nu
+            'all_results': all_results,
+            'best_nu': best_nu,
+            'optimization_details': {'method': 'direct_evaluation', 'status': 'completed'}
         }
 
 def create_pde_discovery_app():
@@ -520,10 +544,8 @@ def create_pde_discovery_app():
                 st.success("✅ 数値解計算完了!")
                 
                 with st.spinner("偏微分方程式を発見中..."):
-                    pde_regression = PDESymbolicRegression(max_iter=max_iter, 
-                                                         use_multiple_methods=use_multiple_methods,
-                                                         use_higher_order=use_higher_order)
-                    results = pde_regression.discover_heat_equation(u_numerical, fdm.dx, fdm.dt)
+                    pde_regression = PDESymbolicRegression(u_numerical, fdm.x, fdm.t)
+                    results = pde_regression.discover_heat_equation()
                     
                 theoretical_param = alpha_or_nu
                 param_name = "α"
@@ -538,10 +560,8 @@ def create_pde_discovery_app():
                 st.success("✅ 数値解計算完了!")
                 
                 with st.spinner("偏微分方程式を発見中..."):
-                    pde_regression = PDESymbolicRegression(max_iter=max_iter, 
-                                                         use_multiple_methods=use_multiple_methods,
-                                                         use_higher_order=use_higher_order)
-                    results = pde_regression.discover_burgers_equation(u_numerical, fdm.dx, fdm.dt)
+                    pde_regression = PDESymbolicRegression(u_numerical, fdm.x, fdm.t)
+                    results = pde_regression.discover_burgers_equation()
                     
                 theoretical_param = alpha_or_nu
                 param_name = "ν"

@@ -9,10 +9,14 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
+import matplotlib
 import streamlit as st
 from typing import Dict, List, Tuple, Callable
 import time
 from scipy.optimize import minimize
+
+matplotlib.rcParams['font.family'] = ['IPAGothic', 'IPAPGothic', 'DejaVu Sans']
+plt.rcParams['axes.unicode_minus'] = False
 
 class PINN(nn.Module):
     """Physics-Informed Neural Network"""
