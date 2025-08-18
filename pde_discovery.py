@@ -17,7 +17,7 @@ matplotlib.rcParams['font.family'] = ['IPAGothic', 'IPAPGothic', 'DejaVu Sans']
 plt.rcParams['axes.unicode_minus'] = False
 try:
     import torch
-    from pinns_discovery import PINNsHeatSolver, PINNsBurgersSolver
+    from pinns_discovery import PINNsHeatSolver, PINNsBurgersSolver, PINNsDiffusionSolver
     PINNS_AVAILABLE = True
 except ImportError:
     PINNS_AVAILABLE = False
@@ -139,6 +139,62 @@ class BurgersFDM:
             u[n+1, :] = self.boundary_conditions(u[n+1, :], n+1)
         
         return u
+
+
+class DiffusionFDM:
+    """有限差分法による1次元拡散方程式の数値解法（合金系原子拡散）"""
+    
+    def __init__(self, L: float = 0.02, T_final: float = 3600.0, 
+                 nx: int = 50, nt: int = 100, D: float = 1e-11):
+        """
+        Parameters:
+        L: 空間領域の長さ (m)
+        T_final: 最終時刻 (s)
+        nx: 空間格子点数
+        nt: 時間格子点数
+        D: 拡散係数 (m²/s)
+        """
+        self.L = L
+        self.T_final = T_final
+        self.nx = nx
+        self.nt = nt
+        self.D = D
+        
+        self.dx = L / (nx - 1)
+        self.dt = T_final / (nt - 1)
+        self.x = np.linspace(0, L, nx)
+        self.t = np.linspace(0, T_final, nt)
+        
+        self.r = D * self.dt / (self.dx**2)
+        if self.r > 0.5:
+            import streamlit as st
+            st.warning(f"拡散安定性条件違反: r = {self.r:.3f} > 0.5")
+    
+    def initial_condition(self, x: np.ndarray) -> np.ndarray:
+        """初期条件: 拡散カップル（左半分が濃度1、右半分が濃度0）"""
+        return np.where(x <= self.L/2, 1.0, 0.0)
+    
+    def boundary_conditions(self, u: np.ndarray, n: int) -> np.ndarray:
+        """境界条件: ゼロフラックス（∂c/∂x = 0）"""
+        u[0] = u[1]    # 左境界
+        u[-1] = u[-2]  # 右境界
+        return u
+    
+    def solve(self) -> np.ndarray:
+        """FDMによる拡散方程式の数値解"""
+        u = np.zeros((self.nt, self.nx))
+        
+        u[0, :] = self.initial_condition(self.x)
+        u[0, :] = self.boundary_conditions(u[0, :], 0)
+        
+        for n in range(self.nt - 1):
+            for i in range(1, self.nx - 1):
+                u[n+1, i] = u[n, i] + self.r * (u[n, i+1] - 2*u[n, i] + u[n, i-1])
+            
+            u[n+1, :] = self.boundary_conditions(u[n+1, :], n+1)
+        
+        return u
+
 
 class NumericalDerivatives:
     """数値微分計算クラス"""
@@ -350,6 +406,69 @@ class PDESymbolicRegression:
             'best_nu': best_nu,
             'optimization_details': {'method': 'direct_evaluation', 'status': 'completed'}
         }
+    
+    def discover_diffusion_equation(self) -> Dict:
+        """拡散方程式の発見"""
+        
+        formulas = {
+            "∂c/∂t = c₁ × ∂²c/∂x²": {
+                "func": lambda p, u, dudx, d2udx2: p[0] * d2udx2,
+                "params": [1e-11],
+                "description": "標準的な拡散方程式"
+            },
+            "∂c/∂t = c₁ × c × ∂²c/∂x²": {
+                "func": lambda p, u, dudx, d2udx2: p[0] * u * d2udx2,
+                "params": [1e-11],
+                "description": "濃度依存拡散方程式"
+            },
+            "∂c/∂t = c₁ × ∂²c/∂x² + c₂ × ∂c/∂x": {
+                "func": lambda p, u, dudx, d2udx2: p[0] * d2udx2 + p[1] * dudx,
+                "params": [1e-11, 0.0],
+                "description": "対流項付き拡散方程式"
+            },
+            "∂c/∂t = c₁ × (1-c) × ∂²c/∂x²": {
+                "func": lambda p, u, dudx, d2udx2: p[0] * (1 - u) * d2udx2,
+                "params": [1e-11],
+                "description": "相互拡散方程式"
+            }
+        }
+        
+        results = {}
+        
+        for name, formula_info in formulas.items():
+            func = formula_info["func"]
+            initial_params = formula_info["params"]
+            
+            try:
+                mse = self.evaluate_pde_formula(func, initial_params)
+                optimal_params = initial_params
+            except Exception as e:
+                mse = np.inf
+                optimal_params = initial_params
+            
+            results[name] = {
+                'mse': mse,
+                'params': optimal_params,
+                'description': formula_info["description"]
+            }
+        
+        best_result = min(results.values(), key=lambda x: x['mse'])
+        best_D = abs(best_result['params'][0]) if best_result['params'] else 1e-11
+        
+        all_results = []
+        for formula_name, result_data in results.items():
+            all_results.append({
+                'formula': formula_name,
+                'mse': result_data['mse'],
+                'params': result_data['params'],
+                'description': result_data['description']
+            })
+        
+        return {
+            'all_results': all_results,
+            'best_D': best_D,
+            'optimization_details': {'method': 'direct_evaluation', 'status': 'completed'}
+        }
 
 def create_pde_discovery_app():
     """Streamlit PDE発見アプリ"""
@@ -359,7 +478,7 @@ def create_pde_discovery_app():
     
     equation_type = st.selectbox(
         "🧮 方程式タイプを選択",
-        ["熱伝導方程式", "Burgers方程式"],
+        ["熱伝導方程式", "Burgers方程式", "拡散方程式"],
         help="発見したい偏微分方程式のタイプを選択してください"
     )
     
@@ -381,7 +500,7 @@ def create_pde_discovery_app():
         2. 数値微分による偏微分項の計算
         3. シンボリック回帰による PDE 構造の発見
         """)
-    else:
+    elif equation_type == "Burgers方程式":
         st.markdown("""
         有限差分法(FDM)で生成したBurgers方程式の数値解から、
         元の偏微分方程式を逆算するシンボリック回帰システムです。
@@ -393,21 +512,62 @@ def create_pde_discovery_app():
         2. 数値微分による偏微分項の計算
         3. シンボリック回帰による非線形PDE構造の発見
         """)
+    else:
+        st.markdown("""
+        有限差分法(FDM)で生成した拡散方程式の数値解から、
+        元の偏微分方程式を逆算するシンボリック回帰システムです。
+        
+        **対象方程式**: ∂c/∂t = D × ∂²c/∂x²
+        
+        **手順:**
+        1. FDMによる拡散方程式の数値解生成（拡散カップル初期条件）
+        2. 数値微分による偏微分項の計算
+        3. シンボリック回帰による拡散係数Dの逆解析
+        """)
     
+    st.sidebar.header("📊 観測データ")
+    uploaded_file = st.sidebar.file_uploader(
+        "観測データをアップロード (CSV)", 
+        type=["csv"],
+        help="時間、空間、濃度データを含むCSVファイル（列名: t, x, c）"
+    )
+    
+    observational_data = None
+    if uploaded_file is not None:
+        try:
+            observational_data = pd.read_csv(uploaded_file)
+            if all(col in observational_data.columns for col in ['t', 'x', 'c']):
+                st.sidebar.success(f"✅ データ読み込み完了 ({len(observational_data)} 点)")
+                st.sidebar.write(f"時間範囲: {observational_data['t'].min():.2f} - {observational_data['t'].max():.2f}")
+                st.sidebar.write(f"空間範囲: {observational_data['x'].min():.4f} - {observational_data['x'].max():.4f}")
+            else:
+                st.sidebar.error("❌ CSVファイルには 't', 'x', 'c' 列が必要です")
+                observational_data = None
+        except Exception as e:
+            st.sidebar.error(f"❌ ファイル読み込みエラー: {str(e)}")
+
     if solver_type == "有限差分法 (FDM)":
         st.sidebar.header("⚙️ FDMパラメータ")
         
         col1, col2 = st.sidebar.columns(2)
         with col1:
             nx = st.number_input("空間格子点数", min_value=20, max_value=100, value=50)
-            alpha_or_nu = st.number_input(
-                "熱拡散係数 α" if equation_type == "熱伝導方程式" else "粘性係数 ν",
-                min_value=0.001, max_value=0.1, value=0.01, format="%.3f"
+            alpha_or_nu_or_D = st.number_input(
+                "熱拡散係数 α" if equation_type == "熱伝導方程式" 
+                else "粘性係数 ν" if equation_type == "Burgers方程式"
+                else "拡散係数 D",
+                min_value=1e-15 if equation_type == "拡散方程式" else 0.001,
+                max_value=1e-6 if equation_type == "拡散方程式" else 0.1,
+                value=1e-11 if equation_type == "拡散方程式" else 0.01,
+                format="%.2e" if equation_type == "拡散方程式" else "%.3f"
             )
         
         with col2:
             nt = st.number_input("時間格子点数", min_value=50, max_value=200, value=100)
-            T_final = st.number_input("最終時刻", min_value=0.1, max_value=2.0, value=1.0 if equation_type == "熱伝導方程式" else 0.5)
+            if equation_type == "拡散方程式":
+                T_final = st.number_input("最終時刻 (s)", min_value=100.0, max_value=10000.0, value=3600.0)
+            else:
+                T_final = st.number_input("最終時刻", min_value=0.1, max_value=2.0, value=1.0 if equation_type == "熱伝導方程式" else 0.5)
         
         st.sidebar.header("🎯 最適化設定")
         max_iter = st.sidebar.number_input("最適化反復回数", min_value=100, max_value=5000, value=1000, step=100)
@@ -421,9 +581,14 @@ def create_pde_discovery_app():
         with col1:
             epochs = st.number_input("エポック数", min_value=1000, max_value=20000, value=8000, step=1000)
             hidden_dim = st.number_input("隠れ層次元", min_value=20, max_value=200, value=50, step=10)
-            alpha_or_nu = st.number_input(
-                "熱拡散係数 α" if equation_type == "熱伝導方程式" else "粘性係数 ν",
-                min_value=0.001, max_value=0.1, value=0.01, format="%.3f"
+            alpha_or_nu_or_D_pinns = st.number_input(
+                "熱拡散係数 α" if equation_type == "熱伝導方程式" 
+                else "粘性係数 ν" if equation_type == "Burgers方程式"
+                else "拡散係数 D",
+                min_value=1e-15 if equation_type == "拡散方程式" else 0.001,
+                max_value=1e-6 if equation_type == "拡散方程式" else 0.1,
+                value=1e-11 if equation_type == "拡散方程式" else 0.01,
+                format="%.2e" if equation_type == "拡散方程式" else "%.3f"
             )
         
         with col2:
@@ -452,7 +617,7 @@ def create_pde_discovery_app():
             
             if equation_type == "熱伝導方程式":
                 with st.spinner("PINNsによる熱伝導方程式の解法中..."):
-                    solver = PINNsHeatSolver(alpha=alpha_or_nu, hidden_dim=hidden_dim, num_layers=num_layers)
+                    solver = PINNsHeatSolver(alpha=alpha_or_nu_or_D_pinns, hidden_dim=hidden_dim, num_layers=num_layers)
                     training_results = solver.train(epochs=epochs, lr=learning_rate, n_points=n_points, 
                                                   progress_callback=progress_callback)
                     
@@ -491,9 +656,9 @@ def create_pde_discovery_app():
                     with col3:
                         st.metric("境界条件損失", f"{training_results['bc_loss']:.6f}")
                     
-            else:  # Burgers方程式
+            elif equation_type == "Burgers方程式":
                 with st.spinner("PINNsによるBurgers方程式の解法中..."):
-                    solver = PINNsBurgersSolver(nu=alpha_or_nu, hidden_dim=hidden_dim, num_layers=num_layers)
+                    solver = PINNsBurgersSolver(nu=alpha_or_nu_or_D_pinns, hidden_dim=hidden_dim, num_layers=num_layers)
                     training_results = solver.train(epochs=epochs, lr=learning_rate, n_points=n_points, 
                                                   progress_callback=progress_callback)
                     
@@ -532,13 +697,54 @@ def create_pde_discovery_app():
                     with col3:
                         st.metric("境界条件損失", f"{training_results['bc_loss']:.6f}")
             
+            else:  # 拡散方程式
+                with st.spinner("PINNsによる拡散方程式の解法中..."):
+                    solver = PINNsDiffusionSolver(D=alpha_or_nu_or_D_pinns, hidden_dim=hidden_dim, num_layers=num_layers)
+                    training_results = solver.train(epochs=epochs, lr=learning_rate, n_points=n_points, 
+                                                  progress_callback=progress_callback)
+                    
+                    x_test = np.linspace(0, 0.02, 50)
+                    t_test = np.linspace(0, 3600, 50)
+                    X_test, T_test = np.meshgrid(x_test, t_test)
+                    u_numerical = solver.predict(X_test, T_test)
+                    
+                    st.subheader("📈 PINNs拡散方程式の解")
+                    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+                    
+                    im1 = ax1.imshow(u_numerical, aspect='auto', origin='lower', 
+                                   extent=[0, 0.02, 0, 3600], cmap='plasma')
+                    ax1.set_xlabel('空間 x (m)')
+                    ax1.set_ylabel('時間 t (s)')
+                    ax1.set_title('PINNs濃度分布 c(x,t)')
+                    plt.colorbar(im1, ax=ax1)
+                    
+                    time_indices = [0, 12, 25, 37, 49]
+                    for i in time_indices:
+                        ax2.plot(x_test, u_numerical[i, :], label=f't = {t_test[i]:.0f}s')
+                    ax2.set_xlabel('空間 x (m)')
+                    ax2.set_ylabel('濃度 c')
+                    ax2.set_title('各時刻での濃度分布')
+                    ax2.legend()
+                    ax2.grid(True)
+                    
+                    st.pyplot(fig)
+                    
+                    st.subheader("🎯 PINNs訓練結果")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("最終損失", f"{training_results['final_loss']:.6f}")
+                    with col2:
+                        st.metric("PDE損失", f"{training_results['pde_loss']:.6f}")
+                    with col3:
+                        st.metric("境界条件損失", f"{training_results['bc_loss']:.6f}")
+            
             progress_bar.empty()
             status_text.empty()
             
         else:  # FDM solver
             if equation_type == "熱伝導方程式":
                 with st.spinner("FDMによる数値解計算中..."):
-                    fdm = HeatConductionFDM(nx=nx, nt=nt, alpha=alpha_or_nu, T_final=T_final)
+                    fdm = HeatConductionFDM(nx=nx, nt=nt, alpha=alpha_or_nu_or_D, T_final=T_final)
                     u_numerical = fdm.solve()
                 
                 st.success("✅ 数値解計算完了!")
@@ -547,14 +753,14 @@ def create_pde_discovery_app():
                     pde_regression = PDESymbolicRegression(u_numerical, fdm.x, fdm.t)
                     results = pde_regression.discover_heat_equation()
                     
-                theoretical_param = alpha_or_nu
+                theoretical_param = alpha_or_nu_or_D
                 param_name = "α"
                 equation_title = "温度分布の時間発展"
                 y_label = "温度 u"
                 
-            else:
+            elif equation_type == "Burgers方程式":
                 with st.spinner("FDMによる数値解計算中..."):
-                    fdm = BurgersFDM(nx=nx, nt=nt, nu=alpha_or_nu, T_final=T_final)
+                    fdm = BurgersFDM(nx=nx, nt=nt, nu=alpha_or_nu_or_D, T_final=T_final)
                     u_numerical = fdm.solve()
                 
                 st.success("✅ 数値解計算完了!")
@@ -563,10 +769,26 @@ def create_pde_discovery_app():
                     pde_regression = PDESymbolicRegression(u_numerical, fdm.x, fdm.t)
                     results = pde_regression.discover_burgers_equation()
                     
-                theoretical_param = alpha_or_nu
+                theoretical_param = alpha_or_nu_or_D
                 param_name = "ν"
                 equation_title = "速度分布の時間発展（衝撃波形成）"
                 y_label = "速度 u"
+                
+            else:  # 拡散方程式
+                with st.spinner("FDMによる数値解計算中..."):
+                    fdm = DiffusionFDM(nx=nx, nt=nt, D=alpha_or_nu_or_D, T_final=T_final)
+                    u_numerical = fdm.solve()
+                
+                st.success("✅ 数値解計算完了!")
+                
+                with st.spinner("偏微分方程式を発見中..."):
+                    pde_regression = PDESymbolicRegression(u_numerical, fdm.x, fdm.t)
+                    results = pde_regression.discover_diffusion_equation()
+                    
+                theoretical_param = alpha_or_nu_or_D
+                param_name = "D"
+                equation_title = "濃度分布の時間発展（拡散カップル）"
+                y_label = "濃度 c"
             
             st.subheader("📊 FDM数値解の可視化")
             
@@ -627,8 +849,10 @@ def create_pde_discovery_app():
             
             if equation_type == "熱伝導方程式":
                 discovered_param = results['best_alpha']
-            else:
+            elif equation_type == "Burgers方程式":
                 discovered_param = results['best_nu']
+            else:  # 拡散方程式
+                discovered_param = results['best_D']
             
             col1, col2, col3 = st.columns(3)
             

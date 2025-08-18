@@ -260,6 +260,121 @@ class PINNsBurgersSolver:
         
         return u_pred.reshape(x.shape)
 
+
+class PINNsDiffusionSolver:
+    """PINNsによる拡散方程式の解法"""
+    
+    def __init__(self, D: float = 1e-11, L: float = 0.02, T_final: float = 3600.0,
+                 hidden_dim: int = 50, num_layers: int = 4):
+        self.D = D
+        self.L = L
+        self.T_final = T_final
+        
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.model = PINN(input_dim=2, hidden_dim=hidden_dim, output_dim=1, num_layers=num_layers).to(self.device)
+        
+    def initial_condition(self, x: torch.Tensor) -> torch.Tensor:
+        """初期条件: 拡散カップル"""
+        return torch.where(x <= self.L/2, torch.ones_like(x), torch.zeros_like(x))
+    
+    def boundary_condition(self, t: torch.Tensor) -> torch.Tensor:
+        """境界条件: ゼロフラックス"""
+        return torch.zeros_like(t)
+    
+    def pde_residual(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
+        """PDE残差の計算"""
+        xt = torch.cat([x, t], dim=1)
+        xt.requires_grad_(True)
+        
+        c = self.model(xt)
+        
+        c_t = torch.autograd.grad(c, xt, grad_outputs=torch.ones_like(c), 
+                                 create_graph=True, retain_graph=True)[0][:, 1:2]
+        
+        c_x = torch.autograd.grad(c, xt, grad_outputs=torch.ones_like(c), 
+                                 create_graph=True, retain_graph=True)[0][:, 0:1]
+        
+        c_xx = torch.autograd.grad(c_x, xt, grad_outputs=torch.ones_like(c_x), 
+                                  create_graph=True, retain_graph=True)[0][:, 0:1]
+        
+        pde_residual = c_t - self.D * c_xx
+        
+        return pde_residual
+    
+    def train(self, epochs: int = 8000, lr: float = 0.0005, n_points: int = 2000,
+              progress_callback: Callable = None) -> Dict:
+        """PINNsの訓練"""
+        
+        optimizer = optim.Adam(self.model.parameters(), lr=lr)
+        scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=1000, gamma=0.9)
+        
+        x_pde = torch.rand(n_points, 1, device=self.device) * self.L
+        t_pde = torch.rand(n_points, 1, device=self.device) * self.T_final
+        
+        x_ic = torch.rand(n_points//4, 1, device=self.device) * self.L
+        t_ic = torch.zeros(n_points//4, 1, device=self.device)
+        
+        x_bc1 = torch.zeros(n_points//8, 1, device=self.device)
+        x_bc2 = torch.ones(n_points//8, 1, device=self.device) * self.L
+        t_bc = torch.rand(n_points//4, 1, device=self.device) * self.T_final
+        
+        losses = []
+        
+        for epoch in range(epochs):
+            optimizer.zero_grad()
+            
+            pde_loss = torch.mean(self.pde_residual(x_pde, t_pde)**2)
+            
+            xt_ic = torch.cat([x_ic, t_ic], dim=1)
+            c_ic_pred = self.model(xt_ic)
+            c_ic_true = self.initial_condition(x_ic)
+            ic_loss = torch.mean((c_ic_pred - c_ic_true)**2)
+            
+            x_bc1.requires_grad_(True)
+            x_bc2.requires_grad_(True)
+            xt_bc1 = torch.cat([x_bc1, t_bc[:len(x_bc1)]], dim=1)
+            xt_bc2 = torch.cat([x_bc2, t_bc[:len(x_bc2)]], dim=1)
+            c_bc1 = self.model(xt_bc1)
+            c_bc2 = self.model(xt_bc2)
+            
+            dc_dx_bc1 = torch.autograd.grad(c_bc1, x_bc1, torch.ones_like(c_bc1), create_graph=True)[0]
+            dc_dx_bc2 = torch.autograd.grad(c_bc2, x_bc2, torch.ones_like(c_bc2), create_graph=True)[0]
+            bc_loss = torch.mean(dc_dx_bc1**2) + torch.mean(dc_dx_bc2**2)
+            
+            total_loss = pde_loss + 10 * ic_loss + 10 * bc_loss
+            
+            total_loss.backward()
+            optimizer.step()
+            scheduler.step()
+            
+            losses.append(total_loss.item())
+            
+            if progress_callback and epoch % 100 == 0:
+                progress_callback(epoch, epochs, total_loss.item())
+        
+        return {
+            'losses': losses,
+            'final_loss': losses[-1],
+            'pde_loss': pde_loss.item(),
+            'ic_loss': ic_loss.item(),
+            'bc_loss': bc_loss.item()
+        }
+    
+    def predict(self, x: np.ndarray, t: np.ndarray) -> np.ndarray:
+        """予測"""
+        self.model.eval()
+        
+        x_tensor = torch.tensor(x.flatten(), dtype=torch.float32, device=self.device).reshape(-1, 1)
+        t_tensor = torch.tensor(t.flatten(), dtype=torch.float32, device=self.device).reshape(-1, 1)
+        
+        xt = torch.cat([x_tensor, t_tensor], dim=1)
+        
+        with torch.no_grad():
+            c_pred = self.model(xt).cpu().numpy()
+        
+        return c_pred.reshape(x.shape)
+
+
 class PINNsSymbolicRegression:
     """PINNsベースのシンボリック回帰"""
     
@@ -334,7 +449,7 @@ def create_pinns_app():
     
     equation_type = st.selectbox(
         "🧮 方程式タイプを選択",
-        ["熱伝導方程式", "Burgers方程式"],
+        ["熱伝導方程式", "Burgers方程式", "拡散方程式"],
         help="発見したい偏微分方程式のタイプを選択してください"
     )
     
@@ -345,12 +460,19 @@ def create_pinns_app():
         
         **対象方程式**: ∂u/∂t = α × ∂²u/∂x²
         """)
-    else:
+    elif equation_type == "Burgers方程式":
         st.markdown("""
         Physics-Informed Neural Networks (PINNs)でBurgers方程式を解き、
         その結果から元の偏微分方程式を発見するシステムです。
         
         **対象方程式**: ∂u/∂t + u×∂u/∂x = ν×∂²u/∂x²
+        """)
+    else:
+        st.markdown("""
+        Physics-Informed Neural Networks (PINNs)で拡散方程式を解き、
+        その結果から元の偏微分方程式を発見するシステムです。
+        
+        **対象方程式**: ∂c/∂t = D × ∂²c/∂x²
         """)
     
     st.sidebar.header("🔧 PINNs パラメータ")
@@ -361,8 +483,10 @@ def create_pinns_app():
         hidden_dim = st.number_input("隠れ層次元", min_value=20, max_value=200, value=50, step=10)
         if equation_type == "熱伝導方程式":
             param = st.number_input("熱拡散係数 α", min_value=0.001, max_value=0.1, value=0.01, format="%.3f")
-        else:
+        elif equation_type == "Burgers方程式":
             param = st.number_input("粘性係数 ν", min_value=0.001, max_value=0.1, value=0.01, format="%.3f")
+        else:
+            param = st.number_input("拡散係数 D", min_value=1e-15, max_value=1e-6, value=1e-11, format="%.2e")
     
     with col2:
         num_layers = st.number_input("ネットワーク層数", min_value=3, max_value=8, value=4)
@@ -397,7 +521,7 @@ def create_pinns_app():
             theoretical_param = param
             param_name = "α"
             
-        else:  # Burgers方程式
+        elif equation_type == "Burgers方程式":
             with st.spinner("PINNsによるBurgers方程式の解法中..."):
                 solver = PINNsBurgersSolver(nu=param, hidden_dim=hidden_dim, num_layers=num_layers)
                 training_results = solver.train(epochs=epochs, lr=learning_rate, n_points=n_points, 
@@ -410,6 +534,20 @@ def create_pinns_app():
                 
             theoretical_param = param
             param_name = "ν"
+            
+        else:  # 拡散方程式
+            with st.spinner("PINNsによる拡散方程式の解法中..."):
+                solver = PINNsDiffusionSolver(D=param, hidden_dim=hidden_dim, num_layers=num_layers)
+                training_results = solver.train(epochs=epochs, lr=learning_rate, n_points=n_points, 
+                                              progress_callback=progress_callback)
+                
+                x_test = np.linspace(0, 0.02, 50)
+                t_test = np.linspace(0, 3600, 50)
+                X_test, T_test = np.meshgrid(x_test, t_test)
+                u_pred = solver.predict(X_test, T_test)
+                
+            theoretical_param = param
+            param_name = "D"
         
         st.success("✅ PINNs解法完了!")
         
@@ -458,11 +596,18 @@ def create_pinns_app():
                             "params": [param],
                         }
                     }
-                else:
+                elif equation_type == "Burgers方程式":
                     formulas = {
                         "∂u/∂t = -c₁ × u × ∂u/∂x + c₂ × ∂²u/∂x²": {
                             "func": lambda p, u, dudx, d2udx2: -p[0] * u * dudx + p[1] * d2udx2,
                             "params": [1.0, param],
+                        }
+                    }
+                else:  # 拡散方程式
+                    formulas = {
+                        "∂c/∂t = c₁ × ∂²c/∂x²": {
+                            "func": lambda p, u, dudx, d2udx2: p[0] * d2udx2,
+                            "params": [param],
                         }
                     }
                 
@@ -487,10 +632,17 @@ def create_pinns_app():
                     st.write(f"発見されたパラメータ: {result['params']}")
                     
                     if len(result['params']) > 0:
-                        discovered_param = abs(result['params'][0]) if equation_type == "熱伝導方程式" else abs(result['params'][-1])
+                        if equation_type == "熱伝導方程式" or equation_type == "拡散方程式":
+                            discovered_param = abs(result['params'][0])
+                        else:
+                            discovered_param = abs(result['params'][-1])
                         error = abs(discovered_param - theoretical_param) / theoretical_param * 100
-                        st.write(f"理論値 {param_name}: {theoretical_param:.4f}")
-                        st.write(f"発見値 {param_name}: {discovered_param:.4f}")
+                        if equation_type == "拡散方程式":
+                            st.write(f"理論値 {param_name}: {theoretical_param:.2e}")
+                            st.write(f"発見値 {param_name}: {discovered_param:.2e}")
+                        else:
+                            st.write(f"理論値 {param_name}: {theoretical_param:.4f}")
+                            st.write(f"発見値 {param_name}: {discovered_param:.4f}")
                         st.write(f"相対誤差: {error:.2f}%")
                         
                         if error < 10:
