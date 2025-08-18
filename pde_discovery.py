@@ -754,6 +754,10 @@ def create_pde_discovery_app():
                     u_numerical = solver.predict(X_test, T_test)
                     
                     st.subheader("📈 PINNs拡散方程式の解")
+                    
+                    plt.rcParams['font.family'] = ['IPAGothic', 'IPAPGothic', 'DejaVu Sans']
+                    plt.rcParams['axes.unicode_minus'] = False
+                    
                     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
                     
                     im1 = ax1.imshow(u_numerical, aspect='auto', origin='lower', 
