@@ -762,17 +762,17 @@ def create_pde_discovery_app():
                     
                     im1 = ax1.imshow(u_numerical, aspect='auto', origin='lower', 
                                    extent=[0, 0.02, 0, 3600], cmap='plasma')
-                    ax1.set_xlabel('空間 x (m)')
-                    ax1.set_ylabel('時間 t (s)')
-                    ax1.set_title('PINNs濃度分布 c(x,t)')
+                    ax1.set_xlabel('Space x (m)')
+                    ax1.set_ylabel('Time t (s)')
+                    ax1.set_title('PINNs Concentration Distribution c(x,t)')
                     plt.colorbar(im1, ax=ax1)
                     
                     time_indices = [0, 12, 25, 37, 49]
                     for i in time_indices:
                         ax2.plot(x_test, u_numerical[i, :], label=f't = {t_test[i]:.0f}s')
-                    ax2.set_xlabel('空間 x (m)')
-                    ax2.set_ylabel('濃度 c')
-                    ax2.set_title('各時刻での濃度分布')
+                    ax2.set_xlabel('Space x (m)')
+                    ax2.set_ylabel('Concentration c')
+                    ax2.set_title('Concentration Distribution at Different Times')
                     ax2.legend()
                     ax2.grid(True)
                     
