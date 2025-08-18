@@ -6,9 +6,18 @@
 
 ### 🎯 発見対象の物理法則
 
+#### 基本物理法則
 1. **運動エネルギー**: `K = 0.5 × m × v²`
 2. **単振り子の周期**: `T = 2π√(L/g)`
 3. **万有引力**: `F = G × (m₁×m₂)/r²`
+
+#### 材料工学法則
+4. **Wiedemann-Franz法則**: `κ = L₀ × σ × T`
+5. **ホール効果**: `R_H = 1/(n × e)`
+6. **Hall-Petch関係**: `σ_y = σ₀ + k/√d`
+
+#### 偏微分方程式 (PDE)
+7. **熱伝導方程式**: `∂u/∂t = α × ∂²u/∂x²`
 
 ## 🚀 実行方法
 
@@ -44,10 +53,22 @@ streamlit run symbolic_regression.py
 
 ```bash
 # 高度なシンボリック回帰アプリ
-streamlit run advanced_symbolic_regression.py
+streamlit run advanced_symbolic_regression.py --server.port 8502
 ```
 
 ブラウザで `http://localhost:8502` にアクセスして、自動式生成と複雑度ペナルティ機能を試すことができます。
+
+### PDE発見システム
+
+```bash
+# PDE発見用データ生成
+python pde_data_generation.py
+
+# PDE発見アプリ
+streamlit run pde_discovery.py --server.port 8504
+```
+
+ブラウザで `http://localhost:8504` にアクセスして、FDMによる熱伝導方程式の発見プロセスを体験できます。
 
 ## 📁 ファイル構成
 
@@ -55,11 +76,17 @@ streamlit run advanced_symbolic_regression.py
 ├── symbolic_regression.py          # メインのシンボリック回帰アプリ
 ├── advanced_symbolic_regression.py # 発展課題：自動式生成
 ├── data_generation.py              # データ生成スクリプト
+├── pde_discovery.py                # PDE発見システム
+├── pde_data_generation.py          # PDE用データ生成スクリプト
+├── materials_symbolic_regression.py # 材料工学シンボリック回帰
+├── materials_data_generation.py    # 材料工学データ生成
 ├── kinetic_energy.csv              # 運動エネルギーデータ
 ├── pendulum.csv                    # 単振り子データ
 ├── gravity.csv                     # 万有引力データ
 ├── requirements.txt                # 依存関係（sympy追加済み）
-└── SYMBOLIC_REGRESSION_README.md   # このファイル
+├── SYMBOLIC_REGRESSION_README.md   # このファイル
+├── MATERIALS_ENGINEERING_README.md # 材料工学拡張ドキュメント
+└── PDE_DISCOVERY_README.md         # PDE発見システムドキュメント
 ```
 
 ## 🔬 実装の詳細
@@ -203,14 +230,50 @@ print(f"発見式: {best_expr}")
 print(f"スコア: {best_score:.6f}")
 ```
 
+## 🔬 PDE発見システム
+
+### 実装された機能
+- **FDM熱伝導ソルバー**: 安定性条件チェック付き数値解法
+- **数値微分計算**: 時間・空間偏微分の高精度計算
+- **PDE構造発見**: シンボリック回帰による偏微分方程式の逆算
+- **対話的可視化**: 温度場と偏微分項の時空間分布表示
+
+### 発見結果例
+- **熱伝導方程式**: `∂u/∂t = α × ∂²u/∂x²`
+- **係数精度**: 理論値との相対誤差 < 5%
+- **構造識別**: 正確なPDE形式の自動発見
+
+### 技術的特徴
+- **安定性条件**: r = α×dt/dx² ≤ 0.5 の自動チェック
+- **境界条件**: ディリクレ境界条件 (u = 0 at boundaries)
+- **初期条件**: ガウシアン分布による温度分布
+- **数値微分**: 中央差分による高精度偏微分計算
+
 ## 🎉 成果
 
 このプロジェクトにより、以下を達成しました：
 
-1. ✅ **3つの物理法則の完全発見**
+1. ✅ **7つの物理法則の完全発見** (基本物理3 + 材料工学3 + PDE1)
 2. ✅ **段階的探索フレームワークの構築**
 3. ✅ **自動式生成システムの実装**
 4. ✅ **複雑度ペナルティの導入**
-5. ✅ **教育的Webアプリケーションの開発**
+5. ✅ **材料工学への拡張**
+6. ✅ **偏微分方程式発見システムの実装**
+7. ✅ **教育的Webアプリケーションの開発**
 
-シンボリック回帰の基礎から発展まで、体系的に学習できる包括的なシステムが完成しました。
+シンボリック回帰の基礎から発展まで、さらに偏微分方程式の発見まで、体系的に学習できる包括的なシステムが完成しました。
+
+## 🚀 今後の拡張可能性
+
+### 追加可能なPDE
+- **波動方程式**: `∂²u/∂t² = c² × ∂²u/∂x²`
+- **移流拡散方程式**: `∂u/∂t + v × ∂u/∂x = α × ∂²u/∂x²`
+- **反応拡散方程式**: `∂u/∂t = α × ∂²u/∂x² + f(u)`
+- **ナビエ・ストークス方程式**: 流体力学への応用
+
+### 高度な機能
+- **2D/3D偏微分方程式**の発見
+- **適応格子**による動的格子細分化
+- **機械学習統合**: PINNsとの融合
+- **実験データ対応**: 実際の観測データからのPDE発見
+- **多物理現象**: 連成問題への拡張
