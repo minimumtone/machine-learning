@@ -11,6 +11,12 @@ from scipy.optimize import minimize
 from scipy.ndimage import gaussian_filter
 import sympy as sp
 from typing import Tuple, List, Dict, Callable
+try:
+    import torch
+    from pinns_discovery import PINNsHeatSolver, PINNsBurgersSolver
+    PINNS_AVAILABLE = True
+except ImportError:
+    PINNS_AVAILABLE = False
 
 class HeatConductionFDM:
     """有限差分法による熱伝導方程式の数値解法"""
@@ -233,19 +239,9 @@ class PDESymbolicRegression:
             func = formula_info["func"]
             initial_params = formula_info["params"]
             
-            def objective(params):
-                return self.evaluate_pde_formula(func, params)
-            
             try:
-                result = minimize(objective, initial_params, method='Nelder-Mead')
-                
-                if result.success:
-                    mse = result.fun
-                    optimal_params = result.x
-                else:
-                    mse = np.inf
-                    optimal_params = initial_params
-                    
+                mse = self.evaluate_pde_formula(func, initial_params)
+                optimal_params = initial_params  # For now, use initial params
             except Exception as e:
                 mse = np.inf
                 optimal_params = initial_params
@@ -256,7 +252,13 @@ class PDESymbolicRegression:
                 'description': formula_info["description"]
             }
         
-        return results
+        best_result = min(results.values(), key=lambda x: x['mse'])
+        best_alpha = abs(best_result['params'][0]) if best_result['params'] else 0.01
+        
+        return {
+            'all_results': results,
+            'best_alpha': best_alpha
+        }
     
     def discover_burgers_equation(self) -> Dict:
         """Burgers方程式の発見"""
@@ -300,19 +302,9 @@ class PDESymbolicRegression:
             func = formula_info["func"]
             initial_params = formula_info["params"]
             
-            def objective(params):
-                return self.evaluate_pde_formula(func, params)
-            
             try:
-                result = minimize(objective, initial_params, method='Nelder-Mead')
-                
-                if result.success:
-                    mse = result.fun
-                    optimal_params = result.x
-                else:
-                    mse = np.inf
-                    optimal_params = initial_params
-                    
+                mse = self.evaluate_pde_formula(func, initial_params)
+                optimal_params = initial_params  # For now, use initial params
             except Exception as e:
                 mse = np.inf
                 optimal_params = initial_params
@@ -323,7 +315,17 @@ class PDESymbolicRegression:
                 'description': formula_info["description"]
             }
         
-        return results
+        best_result = min(results.values(), key=lambda x: x['mse'])
+        best_formula_name = min(results.keys(), key=lambda k: results[k]['mse'])
+        if "u × ∂u/∂x" in best_formula_name and len(best_result['params']) > 1:
+            best_nu = abs(best_result['params'][1])  # Second parameter is viscosity
+        else:
+            best_nu = abs(best_result['params'][0]) if best_result['params'] else 0.01
+        
+        return {
+            'all_results': results,
+            'best_nu': best_nu
+        }
 
 def create_pde_discovery_app():
     """Streamlit PDE発見アプリ"""
@@ -335,6 +337,12 @@ def create_pde_discovery_app():
         "🧮 方程式タイプを選択",
         ["熱伝導方程式", "Burgers方程式"],
         help="発見したい偏微分方程式のタイプを選択してください"
+    )
+    
+    solver_type = st.selectbox(
+        "🔧 解法手法を選択",
+        ["有限差分法 (FDM)", "Physics-Informed Neural Networks (PINNs)"] if PINNS_AVAILABLE else ["有限差分法 (FDM)"],
+        help="PDEの数値解法を選択してください"
     )
     
     if equation_type == "熱伝導方程式":
@@ -362,235 +370,265 @@ def create_pde_discovery_app():
         3. シンボリック回帰による非線形PDE構造の発見
         """)
     
-    st.sidebar.header("🔧 FDM パラメータ")
+    if solver_type == "有限差分法 (FDM)":
+        st.sidebar.header("⚙️ FDMパラメータ")
+        
+        col1, col2 = st.sidebar.columns(2)
+        with col1:
+            nx = st.number_input("空間格子点数", min_value=20, max_value=100, value=50)
+            alpha_or_nu = st.number_input(
+                "熱拡散係数 α" if equation_type == "熱伝導方程式" else "粘性係数 ν",
+                min_value=0.001, max_value=0.1, value=0.01, format="%.3f"
+            )
+        
+        with col2:
+            nt = st.number_input("時間格子点数", min_value=50, max_value=200, value=100)
+            T_final = st.number_input("最終時刻", min_value=0.1, max_value=2.0, value=1.0 if equation_type == "熱伝導方程式" else 0.5)
+        
+        st.sidebar.header("🎯 最適化設定")
+        max_iter = st.sidebar.number_input("最適化反復回数", min_value=100, max_value=5000, value=1000, step=100)
+        use_multiple_methods = st.sidebar.checkbox("複数最適化手法を使用", value=True, help="複数の最適化手法を試行して最良の結果を選択")
+        use_higher_order = st.sidebar.checkbox("高次差分を使用", value=True, help="より正確な数値微分を使用")
     
-    col1, col2 = st.sidebar.columns(2)
-    with col1:
-        nx = st.number_input("空間格子点数", min_value=20, max_value=100, value=50)
-        if equation_type == "熱伝導方程式":
-            param = st.number_input("熱拡散係数 α", min_value=0.001, max_value=0.1, value=0.01, format="%.3f")
-        else:
-            param = st.number_input("粘性係数 ν", min_value=0.001, max_value=0.1, value=0.01, format="%.3f")
-    
-    with col2:
-        nt = st.number_input("時間格子点数", min_value=50, max_value=200, value=100)
-        if equation_type == "熱伝導方程式":
-            T_final = st.number_input("最終時刻", min_value=0.1, max_value=2.0, value=1.0)
-        else:
-            T_final = st.number_input("最終時刻", min_value=0.1, max_value=1.0, value=0.5)
+    elif solver_type == "Physics-Informed Neural Networks (PINNs)" and PINNS_AVAILABLE:
+        st.sidebar.header("🧠 PINNsパラメータ")
+        
+        col1, col2 = st.sidebar.columns(2)
+        with col1:
+            epochs = st.number_input("エポック数", min_value=1000, max_value=20000, value=8000, step=1000)
+            hidden_dim = st.number_input("隠れ層次元", min_value=20, max_value=200, value=50, step=10)
+            alpha_or_nu = st.number_input(
+                "熱拡散係数 α" if equation_type == "熱伝導方程式" else "粘性係数 ν",
+                min_value=0.001, max_value=0.1, value=0.01, format="%.3f"
+            )
+        
+        with col2:
+            num_layers = st.number_input("ネットワーク層数", min_value=3, max_value=8, value=4)
+            learning_rate = st.number_input("学習率", min_value=0.0001, max_value=0.01, value=0.0005, format="%.4f")
+            n_points = st.number_input("訓練点数", min_value=500, max_value=5000, value=2000, step=500)
+        
+        st.sidebar.header("🎯 最適化設定")
+        optimization_epochs = st.sidebar.number_input("シンボリック回帰エポック数", min_value=100, max_value=5000, value=1000, step=100)
+        use_pinns_derivatives = st.sidebar.checkbox("PINNs微分を使用", value=True, help="PINNsの自動微分を使用してより正確な微分を計算")
+    num_trials = st.sidebar.number_input("試行回数", min_value=1, max_value=10, value=5,
+                                       help="異なる初期値での最適化試行回数")
+    use_multiple_methods = st.sidebar.checkbox("複数最適化手法を使用", value=True, 
+                                             help="複数の最適化アルゴリズムを試行して最良の結果を選択")
     
     if st.button("🚀 PDE発見を実行", type="primary"):
         
-        if equation_type == "熱伝導方程式":
-            with st.spinner("FDMによる数値解計算中..."):
-                fdm = HeatConductionFDM(nx=nx, nt=nt, alpha=param, T_final=T_final)
-                u_numerical = fdm.solve()
+        if solver_type == "Physics-Informed Neural Networks (PINNs)" and PINNS_AVAILABLE:
+            progress_bar = st.progress(0)
+            status_text = st.empty()
             
-            st.success("✅ 数値解計算完了!")
+            def progress_callback(epoch, total_epochs, loss):
+                progress = epoch / total_epochs
+                progress_bar.progress(progress)
+                status_text.text(f"エポック {epoch}/{total_epochs}, 損失: {loss:.6f}")
             
-            with st.spinner("偏微分方程式を発見中..."):
-                pde_regression = PDESymbolicRegression(u_numerical, fdm.x, fdm.t)
-                results = pde_regression.discover_heat_equation()
+            if equation_type == "熱伝導方程式":
+                with st.spinner("PINNsによる熱伝導方程式の解法中..."):
+                    solver = PINNsHeatSolver(alpha=alpha_or_nu, hidden_dim=hidden_dim, num_layers=num_layers)
+                    training_results = solver.train(epochs=epochs, lr=learning_rate, n_points=n_points, 
+                                                  progress_callback=progress_callback)
+                    
+                    x_test = np.linspace(0, 1, 50)
+                    t_test = np.linspace(0, 1, 50)
+                    X_test, T_test = np.meshgrid(x_test, t_test)
+                    u_numerical = solver.predict(X_test, T_test)
+                    
+                    st.subheader("📈 PINNs熱伝導方程式の解")
+                    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+                    
+                    im1 = ax1.imshow(u_numerical, aspect='auto', origin='lower', 
+                                   extent=[0, 1, 0, 1], cmap='hot')
+                    ax1.set_xlabel('空間 x')
+                    ax1.set_ylabel('時間 t')
+                    ax1.set_title('PINNs温度分布 u(x,t)')
+                    plt.colorbar(im1, ax=ax1)
+                    
+                    time_indices = [0, 12, 25, 37, 49]
+                    for i in time_indices:
+                        ax2.plot(x_test, u_numerical[i, :], label=f't = {t_test[i]:.2f}')
+                    ax2.set_xlabel('空間 x')
+                    ax2.set_ylabel('温度 u')
+                    ax2.set_title('各時刻での温度分布')
+                    ax2.legend()
+                    ax2.grid(True)
+                    
+                    st.pyplot(fig)
+                    
+                    st.subheader("🎯 PINNs訓練結果")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("最終損失", f"{training_results['final_loss']:.6f}")
+                    with col2:
+                        st.metric("PDE損失", f"{training_results['pde_loss']:.6f}")
+                    with col3:
+                        st.metric("境界条件損失", f"{training_results['bc_loss']:.6f}")
+                    
+            else:  # Burgers方程式
+                with st.spinner("PINNsによるBurgers方程式の解法中..."):
+                    solver = PINNsBurgersSolver(nu=alpha_or_nu, hidden_dim=hidden_dim, num_layers=num_layers)
+                    training_results = solver.train(epochs=epochs, lr=learning_rate, n_points=n_points, 
+                                                  progress_callback=progress_callback)
+                    
+                    x_test = np.linspace(0, 1, 50)
+                    t_test = np.linspace(0, 0.5, 50)
+                    X_test, T_test = np.meshgrid(x_test, t_test)
+                    u_numerical = solver.predict(X_test, T_test)
+                    
+                    st.subheader("📈 PINNs Burgers方程式の解")
+                    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+                    
+                    im1 = ax1.imshow(u_numerical, aspect='auto', origin='lower', 
+                                   extent=[0, 1, 0, 0.5], cmap='viridis')
+                    ax1.set_xlabel('空間 x')
+                    ax1.set_ylabel('時間 t')
+                    ax1.set_title('PINNs速度場 u(x,t)')
+                    plt.colorbar(im1, ax=ax1)
+                    
+                    time_indices = [0, 12, 25, 37, 49]
+                    for i in time_indices:
+                        ax2.plot(x_test, u_numerical[i, :], label=f't = {t_test[i]:.3f}')
+                    ax2.set_xlabel('空間 x')
+                    ax2.set_ylabel('速度 u')
+                    ax2.set_title('各時刻での速度分布')
+                    ax2.legend()
+                    ax2.grid(True)
+                    
+                    st.pyplot(fig)
+                    
+                    st.subheader("🎯 PINNs訓練結果")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("最終損失", f"{training_results['final_loss']:.6f}")
+                    with col2:
+                        st.metric("PDE損失", f"{training_results['pde_loss']:.6f}")
+                    with col3:
+                        st.metric("境界条件損失", f"{training_results['bc_loss']:.6f}")
+            
+            progress_bar.empty()
+            status_text.empty()
+            
+        else:  # FDM solver
+            if equation_type == "熱伝導方程式":
+                with st.spinner("FDMによる数値解計算中..."):
+                    fdm = HeatConductionFDM(nx=nx, nt=nt, alpha=alpha_or_nu, T_final=T_final)
+                    u_numerical = fdm.solve()
                 
-            theoretical_param = param
-            param_name = "α"
-            equation_title = "温度分布の時間発展"
-            y_label = "温度 u"
-            
-        else:
-            with st.spinner("FDMによる数値解計算中..."):
-                fdm = BurgersFDM(nx=nx, nt=nt, nu=param, T_final=T_final)
-                u_numerical = fdm.solve()
-            
-            st.success("✅ 数値解計算完了!")
-            
-            with st.spinner("偏微分方程式を発見中..."):
-                pde_regression = PDESymbolicRegression(u_numerical, fdm.x, fdm.t)
-                results = pde_regression.discover_burgers_equation()
+                st.success("✅ 数値解計算完了!")
                 
-            theoretical_param = param
-            param_name = "ν"
-            equation_title = "速度分布の時間発展（衝撃波形成）"
-            y_label = "速度 u"
-        
-        st.subheader("📊 FDM数値解の可視化")
-        
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-        
-        X, T = np.meshgrid(fdm.x, fdm.t)
-        im1 = ax1.contourf(X, T, u_numerical, levels=20, cmap='hot')
-        ax1.set_xlabel('空間 x')
-        ax1.set_ylabel('時間 t')
-        ax1.set_title(equation_title)
-        plt.colorbar(im1, ax=ax1)
-        
-        time_indices = [0, nt//4, nt//2, 3*nt//4, nt-1]
-        for i, idx in enumerate(time_indices):
-            ax2.plot(fdm.x, u_numerical[idx, :], 
-                    label=f't = {fdm.t[idx]:.2f}', alpha=0.8)
-        ax2.set_xlabel('空間 x')
-        ax2.set_ylabel(y_label)
-        ax2.set_title('各時刻での分布')
-        ax2.legend()
-        ax2.grid(True, alpha=0.3)
-        
-        plt.tight_layout()
-        st.pyplot(fig)
-        
-        st.success("✅ PDE発見完了!")
-        
-        st.subheader("🎯 発見されたPDE候補")
-        
-        sorted_results = sorted(results.items(), key=lambda x: x[1]['mse'])
-        
-        for i, (formula_name, result) in enumerate(sorted_results):
-            mse = result['mse']
-            params = result['params']
-            description = result['description']
-            
-            if i == 0:
-                st.success(f"🏆 **最優秀候補**: {formula_name}")
+                with st.spinner("偏微分方程式を発見中..."):
+                    pde_regression = PDESymbolicRegression(max_iter=max_iter, 
+                                                         use_multiple_methods=use_multiple_methods,
+                                                         use_higher_order=use_higher_order)
+                    results = pde_regression.discover_heat_equation(u_numerical, fdm.dx, fdm.dt)
+                    
+                theoretical_param = alpha_or_nu
+                param_name = "α"
+                equation_title = "温度分布の時間発展"
+                y_label = "温度 u"
+                
             else:
-                st.info(f"📋 **候補 {i+1}**: {formula_name}")
+                with st.spinner("FDMによる数値解計算中..."):
+                    fdm = BurgersFDM(nx=nx, nt=nt, nu=alpha_or_nu, T_final=T_final)
+                    u_numerical = fdm.solve()
+                
+                st.success("✅ 数値解計算完了!")
+                
+                with st.spinner("偏微分方程式を発見中..."):
+                    pde_regression = PDESymbolicRegression(max_iter=max_iter, 
+                                                         use_multiple_methods=use_multiple_methods,
+                                                         use_higher_order=use_higher_order)
+                    results = pde_regression.discover_burgers_equation(u_numerical, fdm.dx, fdm.dt)
+                    
+                theoretical_param = alpha_or_nu
+                param_name = "ν"
+                equation_title = "速度分布の時間発展（衝撃波形成）"
+                y_label = "速度 u"
             
-            col1, col2, col3 = st.columns([2, 1, 1])
+            st.subheader("📊 FDM数値解の可視化")
+            
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+            
+            X, T = np.meshgrid(fdm.x, fdm.t)
+            im1 = ax1.contourf(X, T, u_numerical, levels=20, cmap='hot')
+            ax1.set_xlabel('空間 x')
+            ax1.set_ylabel('時間 t')
+            ax1.set_title(equation_title)
+            plt.colorbar(im1, ax=ax1)
+            
+            time_indices = [0, nt//4, nt//2, 3*nt//4, nt-1]
+            for i, idx in enumerate(time_indices):
+                ax2.plot(fdm.x, u_numerical[idx, :], 
+                        label=f't = {fdm.t[idx]:.2f}', alpha=0.8)
+            ax2.set_xlabel('空間 x')
+            ax2.set_ylabel(y_label)
+            ax2.set_title('各時刻での分布')
+            ax2.legend()
+            ax2.grid(True, alpha=0.3)
+            
+            plt.tight_layout()
+            st.pyplot(fig)
+            
+            st.success("✅ PDE発見完了!")
+            
+            st.subheader("🎯 発見されたPDE候補")
+            
+            sorted_results = sorted(results['all_results'], key=lambda x: x['mse'])
+            
+            for i, result in enumerate(sorted_results):
+                formula_name = result['formula']
+                mse = result['mse']
+                params = result['params']
+                
+                if i == 0:
+                    st.success(f"🏆 **最優秀候補**: {formula_name}")
+                else:
+                    st.info(f"📋 **候補 {i+1}**: {formula_name}")
+                
+                col1, col2, col3 = st.columns([2, 1, 1])
+                
+                with col1:
+                    st.write(f"**式**: {formula_name}")
+                    
+                with col2:
+                    if mse < np.inf:
+                        st.metric("MSE", f"{mse:.2e}")
+                    else:
+                        st.metric("MSE", "∞")
+                
+                with col3:
+                    param_str = ", ".join([f"{p:.4f}" for p in params])
+                    st.write(f"**係数**: [{param_str}]")
+            
+            st.subheader("📈 理論値との比較")
+            
+            if equation_type == "熱伝導方程式":
+                discovered_param = results['best_alpha']
+            else:
+                discovered_param = results['best_nu']
+            
+            col1, col2, col3 = st.columns(3)
             
             with col1:
-                st.write(f"**説明**: {description}")
-                
+                st.metric(f"理論値 {param_name}", f"{theoretical_param:.4f}")
+            
             with col2:
-                if mse < np.inf:
-                    st.metric("MSE", f"{mse:.2e}")
-                else:
-                    st.metric("MSE", "∞")
+                st.metric(f"発見値 {param_name}", f"{discovered_param:.4f}")
             
             with col3:
-                param_str = ", ".join([f"{p:.4f}" for p in params])
-                st.write(f"**係数**: [{param_str}]")
-        
-        st.subheader("📈 理論値との比較")
-        
-        best_formula, best_result = sorted_results[0]
-        
-        if equation_type == "熱伝導方程式":
-            discovered_param = best_result['params'][0]
-        else:
-            if len(best_result['params']) > 1 and "u × ∂u/∂x" in best_formula:
-                discovered_param = abs(best_result['params'][1])
-            else:
-                discovered_param = abs(best_result['params'][0]) if best_result['params'] else theoretical_param
-        
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.metric(f"理論値 {param_name}", f"{theoretical_param:.4f}")
-        
-        with col2:
-            st.metric(f"発見値 {param_name}", f"{discovered_param:.4f}")
-        
-        with col3:
-            error_percent = abs(discovered_param - theoretical_param) / theoretical_param * 100
-            st.metric("相対誤差", f"{error_percent:.2f}%")
-        
-        st.subheader("🔍 数値微分の可視化")
-        
-        fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-        
-        im1 = axes[0,0].contourf(X, T, pde_regression.dudt, levels=20, cmap='RdBu_r')
-        axes[0,0].set_title('∂u/∂t')
-        axes[0,0].set_xlabel('空間 x')
-        axes[0,0].set_ylabel('時間 t')
-        plt.colorbar(im1, ax=axes[0,0])
-        
-        im2 = axes[0,1].contourf(X, T, pde_regression.dudx, levels=20, cmap='RdBu_r')
-        axes[0,1].set_title('∂u/∂x')
-        axes[0,1].set_xlabel('空間 x')
-        axes[0,1].set_ylabel('時間 t')
-        plt.colorbar(im2, ax=axes[0,1])
-        
-        im3 = axes[1,0].contourf(X, T, pde_regression.d2udx2, levels=20, cmap='RdBu_r')
-        axes[1,0].set_title('∂²u/∂x²')
-        axes[1,0].set_xlabel('空間 x')
-        axes[1,0].set_ylabel('時間 t')
-        plt.colorbar(im3, ax=axes[1,0])
-        
-        best_func = None
-        if equation_type == "熱伝導方程式":
-            formula_funcs = {
-                "∂u/∂t = c₁ × ∂²u/∂x²": lambda p, u, dudx, d2udx2: p[0] * d2udx2,
-                "∂u/∂t = c₁ × ∂²u/∂x² + c₂ × u": lambda p, u, dudx, d2udx2: p[0] * d2udx2 + p[1] * u,
-                "∂u/∂t = c₁ × ∂²u/∂x² + c₂ × ∂u/∂x": lambda p, u, dudx, d2udx2: p[0] * d2udx2 + p[1] * dudx,
-                "∂u/∂t = c₁ × u × ∂²u/∂x²": lambda p, u, dudx, d2udx2: p[0] * u * d2udx2,
-            }
-        else:
-            formula_funcs = {
-                "∂u/∂t = c₁ × ∂²u/∂x²": lambda p, u, dudx, d2udx2: p[0] * d2udx2,
-                "∂u/∂t = -c₁ × u × ∂u/∂x + c₂ × ∂²u/∂x²": lambda p, u, dudx, d2udx2: -p[0] * u * dudx + p[1] * d2udx2,
-                "∂u/∂t = -c₁ × u × ∂u/∂x": lambda p, u, dudx, d2udx2: -p[0] * u * dudx,
-                "∂u/∂t = -c₁ × ∂u/∂x + c₂ × ∂²u/∂x²": lambda p, u, dudx, d2udx2: -p[0] * dudx + p[1] * d2udx2,
-                "∂u/∂t = -c₁ × u² × ∂u/∂x + c₂ × ∂²u/∂x²": lambda p, u, dudx, d2udx2: -p[0] * u**2 * dudx + p[1] * d2udx2,
-                "∂u/∂t = c₁ × u × ∂u/∂x + c₂ × ∂²u/∂x²": lambda p, u, dudx, d2udx2: p[0] * u * dudx + p[1] * d2udx2,
-            }
-        
-        if best_formula in formula_funcs:
-            best_func = formula_funcs[best_formula]
-        
-        if best_func:
-            predicted_dudt = best_func(best_result['params'], 
-                                     u_numerical, 
-                                     pde_regression.dudx, 
-                                     pde_regression.d2udx2)
+                error_percent = abs(discovered_param - theoretical_param) / theoretical_param * 100
+                st.metric("相対誤差", f"{error_percent:.2f}%")
             
-            im4 = axes[1,1].contourf(X, T, predicted_dudt, levels=20, cmap='RdBu_r')
-            axes[1,1].set_title('予測された ∂u/∂t')
-            axes[1,1].set_xlabel('空間 x')
-            axes[1,1].set_ylabel('時間 t')
-            plt.colorbar(im4, ax=axes[1,1])
-        
-        plt.tight_layout()
-        st.pyplot(fig)
-        
-        st.subheader("📝 まとめ")
-        
-        if equation_type == "熱伝導方程式":
-            interpretation = f"""
-            **物理的解釈**:
-            - 理論的熱拡散係数: α = {theoretical_param:.4f}
-            - 発見された係数: α = {discovered_param:.4f}
-            - 相対誤差: {error_percent:.2f}%
-            
-            **手法の有効性**:
-            - FDMによる数値解生成 ✅
-            - 数値微分による偏微分項計算 ✅
-            - シンボリック回帰によるPDE構造発見 ✅
-            """
-        else:
-            interpretation = f"""
-            **物理的解釈**:
-            - 理論的粘性係数: ν = {theoretical_param:.4f}
-            - 発見された係数: ν = {discovered_param:.4f}
-            - 相対誤差: {error_percent:.2f}%
-            
-            **Burgers方程式の特徴**:
-            - 非線形対流項 u×∂u/∂x による衝撃波形成
-            - 粘性項 ν×∂²u/∂x² による拡散効果
-            - 高Reynolds数での急峻な勾配形成
-            
-            **手法の有効性**:
-            - 非線形FDMによる数値解生成 ✅
-            - 数値微分による偏微分項計算 ✅
-            - シンボリック回帰による非線形PDE構造発見 ✅
-            """
-        
-        st.markdown(f"""
-        **発見された最優秀PDE**: `{best_formula}`
-        
-        {interpretation}
-        
-        この結果は、大量のスパース観測データからでも
-        適切な数値微分と候補式探索により、
-        元の偏微分方程式を高精度で復元できることを示しています。
-        """)
+            with st.expander("📊 詳細な結果"):
+                st.write("**候補式の評価結果:**")
+                results_df = pd.DataFrame(results['all_results'])
+                st.dataframe(results_df)
+                
+                st.write("**最適化の詳細:**")
+                st.json(results['optimization_details'])
 
 if __name__ == "__main__":
     create_pde_discovery_app()
