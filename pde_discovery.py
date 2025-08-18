@@ -13,7 +13,7 @@ from scipy.ndimage import gaussian_filter
 import sympy as sp
 from typing import Tuple, List, Dict, Callable
 
-matplotlib.rcParams['font.family'] = ['DejaVu Sans', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', 'Takao', 'IPAexGothic', 'IPAPGothic', 'VL PGothic', 'Noto Sans CJK JP']
+matplotlib.rcParams['font.family'] = ['IPAGothic', 'IPAPGothic', 'DejaVu Sans']
 plt.rcParams['axes.unicode_minus'] = False
 try:
     import torch
