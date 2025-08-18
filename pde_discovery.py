@@ -6,11 +6,15 @@ FDMによる熱伝導方程式の数値解から偏微分方程式を逆算す�
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib
 import streamlit as st
 from scipy.optimize import minimize
 from scipy.ndimage import gaussian_filter
 import sympy as sp
 from typing import Tuple, List, Dict, Callable
+
+matplotlib.rcParams['font.family'] = ['DejaVu Sans', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', 'Takao', 'IPAexGothic', 'IPAPGothic', 'VL PGothic', 'Noto Sans CJK JP']
+plt.rcParams['axes.unicode_minus'] = False
 try:
     import torch
     from pinns_discovery import PINNsHeatSolver, PINNsBurgersSolver
