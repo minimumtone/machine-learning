@@ -231,6 +231,36 @@ class NumericalDerivatives:
         
         return d2udx2
 
+class ComplexityCalculator:
+    """モデル複雑度計算システム"""
+    
+    def __init__(self):
+        self.operator_weights = {
+            'linear': 1,      
+            'quadratic': 2,   
+            'derivative1': 2, 
+            'derivative2': 3, 
+            'nonlinear': 3,   
+            'interaction': 2  
+        }
+    
+    def calculate_pde_complexity(self, formula_name: str, params: List[float]) -> float:
+        """PDE式の複雑度計算"""
+        complexity = 0
+        
+        complexity += len(params)
+        
+        if "∂²u/∂x²" in formula_name:
+            complexity += self.operator_weights['derivative2']
+        if "∂u/∂x" in formula_name:
+            complexity += self.operator_weights['derivative1']
+        if "u" in formula_name and "∂" not in formula_name:
+            complexity += self.operator_weights['linear']
+        if "u × ∂" in formula_name or "u²" in formula_name:
+            complexity += self.operator_weights['nonlinear']
+        
+        return complexity
+
 class PDESymbolicRegression:
     """偏微分方程式のシンボリック回帰"""
     
@@ -251,9 +281,9 @@ class PDESymbolicRegression:
         """PDE候補式の評価"""
         if mask is None:
             mask = np.ones_like(self.u, dtype=bool)
-            mask[0, :] = False  # 初期条件
-            mask[:, 0] = False  # 左境界
-            mask[:, -1] = False # 右境界
+            mask[0, :] = False  
+            mask[:, 0] = False  
+            mask[:, -1] = False 
         
         try:
             predicted = formula_func(params, self.u, self.dudx, self.d2udx2)
@@ -266,6 +296,25 @@ class PDESymbolicRegression:
             
         except Exception as e:
             return np.inf
+    
+    def calculate_bic(self, likelihood: float, n_params: int, n_data: int) -> float:
+        """BIC計算: -2ln(L) + k×ln(n)"""
+        return -2 * np.log(likelihood) + n_params * np.log(n_data)
+    
+    def calculate_aic(self, likelihood: float, n_params: int) -> float:
+        """AIC計算: -2ln(L) + 2k"""
+        return -2 * np.log(likelihood) + 2 * n_params
+    
+    def calculate_likelihood(self, mse: float, n_data: int) -> float:
+        """MSEから尤度を計算"""
+        sigma_squared = mse
+        return np.exp(-n_data * np.log(2 * np.pi * sigma_squared) / 2 - n_data * mse / (2 * sigma_squared))
+    
+    def calculate_model_weights(self, bic_scores: np.ndarray) -> np.ndarray:
+        """ベイズモデル重み計算"""
+        delta_bic = bic_scores - np.min(bic_scores)
+        weights = np.exp(-0.5 * delta_bic)
+        return weights / np.sum(weights)
     
     def discover_heat_equation(self) -> Dict:
         """熱伝導方程式の発見"""
@@ -407,8 +456,11 @@ class PDESymbolicRegression:
             'optimization_details': {'method': 'direct_evaluation', 'status': 'completed'}
         }
     
-    def discover_diffusion_equation(self) -> Dict:
-        """拡散方程式の発見"""
+    def discover_diffusion_equation(self, use_exhaustive_search: bool = False, max_complexity: int = 3) -> Dict:
+        """拡散方程式の発見（ベイズ的モデル選択対応）"""
+        
+        if use_exhaustive_search:
+            return self.exhaustive_search_diffusion(max_complexity)
         
         formulas = {
             "∂c/∂t = c₁ × ∂²c/∂x²": {
@@ -433,41 +485,118 @@ class PDESymbolicRegression:
             }
         }
         
-        results = {}
+        candidates = []
+        complexity_calc = ComplexityCalculator()
         
         for name, formula_info in formulas.items():
-            func = formula_info["func"]
-            initial_params = formula_info["params"]
-            
-            try:
-                mse = self.evaluate_pde_formula(func, initial_params)
-                optimal_params = initial_params
-            except Exception as e:
-                mse = np.inf
-                optimal_params = initial_params
-            
-            results[name] = {
-                'mse': mse,
-                'params': optimal_params,
-                'description': formula_info["description"]
-            }
-        
-        best_result = min(results.values(), key=lambda x: x['mse'])
-        best_D = abs(best_result['params'][0]) if best_result['params'] else 1e-11
-        
-        all_results = []
-        for formula_name, result_data in results.items():
-            all_results.append({
-                'formula': formula_name,
-                'mse': result_data['mse'],
-                'params': result_data['params'],
-                'description': result_data['description']
+            candidates.append({
+                'name': name,
+                'func': formula_info['func'],
+                'params': formula_info['params'],
+                'complexity': complexity_calc.calculate_pde_complexity(name, formula_info['params'])
             })
         
+        return self._evaluate_candidates_bayesian(candidates)
+    
+    def exhaustive_search_diffusion(self, max_complexity: int = 4) -> Dict:
+        """拡散方程式の全状態探索"""
+        
+        base_terms = {
+            "∂²c/∂x²": lambda p, u, dudx, d2udx2: p[0] * d2udx2,
+            "∂c/∂x": lambda p, u, dudx, d2udx2: p[0] * dudx,
+            "c": lambda p, u, dudx, d2udx2: p[0] * u,
+            "c²": lambda p, u, dudx, d2udx2: p[0] * u**2,
+            "c × ∂c/∂x": lambda p, u, dudx, d2udx2: p[0] * u * dudx,
+            "c × ∂²c/∂x²": lambda p, u, dudx, d2udx2: p[0] * u * d2udx2
+        }
+        
+        all_candidates = []
+        complexity_calc = ComplexityCalculator()
+        
+        from itertools import combinations
+        
+        for complexity in range(1, max_complexity + 1):
+            for term_combo in combinations(base_terms.keys(), complexity):
+                formula_name = " + ".join([f"c{i+1} × {term}" for i, term in enumerate(term_combo)])
+                
+                def combined_func(params, u, dudx, d2udx2, terms=term_combo):
+                    result = np.zeros_like(u)
+                    param_idx = 0
+                    for term in terms:
+                        result += base_terms[term]([params[param_idx]], u, dudx, d2udx2)
+                        param_idx += 1
+                    return result
+                
+                initial_params = [0.01] * len(term_combo)
+                
+                all_candidates.append({
+                    'name': f"∂c/∂t = {formula_name}",
+                    'func': combined_func,
+                    'params': initial_params,
+                    'complexity': complexity_calc.calculate_pde_complexity(formula_name, initial_params)
+                })
+        
+        return self._evaluate_candidates_bayesian(all_candidates)
+    
+    def _evaluate_candidates_bayesian(self, candidates: List[Dict]) -> Dict:
+        """候補式のベイズ評価"""
+        results = []
+        n_data = np.sum(np.ones_like(self.u)[1:-1, 1:-1])  
+        
+        for candidate in candidates:
+            try:
+                mse = self.evaluate_pde_formula(candidate['func'], candidate['params'])
+                likelihood = self.calculate_likelihood(mse, n_data)
+                n_params = len(candidate['params'])
+                
+                bic = self.calculate_bic(likelihood, n_params, n_data)
+                aic = self.calculate_aic(likelihood, n_params)
+                
+                results.append({
+                    'name': candidate['name'],
+                    'mse': mse,
+                    'likelihood': likelihood,
+                    'bic': bic,
+                    'aic': aic,
+                    'complexity': candidate['complexity'],
+                    'params': candidate['params'],
+                    'n_params': n_params
+                })
+            except Exception as e:
+                continue
+        
+        if not results:
+            return {'best_model': None, 'all_results': [], 'model_weights': []}
+        
+        bic_scores = np.array([r['bic'] for r in results])
+        model_weights = self.calculate_model_weights(bic_scores)
+        
+        best_idx = np.argmin(bic_scores)
+        best_model = results[best_idx]
+        
+        for i, result in enumerate(results):
+            result['model_weight'] = model_weights[i]
+            result['posterior_prob'] = model_weights[i]
+        
         return {
-            'all_results': all_results,
-            'best_D': best_D,
-            'optimization_details': {'method': 'direct_evaluation', 'status': 'completed'}
+            'best_model': best_model,
+            'all_results': sorted(results, key=lambda x: x['bic']),
+            'model_weights': model_weights,
+            'bayesian_model_average': self._calculate_model_average(results, model_weights)
+        }
+    
+    def _calculate_model_average(self, results: List[Dict], weights: np.ndarray) -> Dict:
+        """ベイズモデル平均化"""
+        if not results:
+            return {}
+        
+        avg_params = np.zeros(max(len(r['params']) for r in results))
+        avg_complexity = np.sum([r['complexity'] * w for r, w in zip(results, weights)])
+        
+        return {
+            'average_complexity': avg_complexity,
+            'model_uncertainty': np.std([r['mse'] for r in results]),
+            'parameter_uncertainty': np.std([r['params'][0] if r['params'] else 0 for r in results])
         }
 
 def create_pde_discovery_app():
@@ -561,6 +690,14 @@ def create_pde_discovery_app():
             T_final = st.number_input("最終時刻 (s)", min_value=100.0, max_value=10000.0, value=3600.0)
         else:
             T_final = st.number_input("最終時刻", min_value=0.1, max_value=2.0, value=1.0 if equation_type == "熱伝導方程式" else 0.5)
+    
+    st.sidebar.subheader("🧮 ベイズ的モデル選択")
+    use_bayesian = st.sidebar.checkbox("ベイズ評価を使用", value=True)
+    use_exhaustive = st.sidebar.checkbox("全状態探索（軽量計算時）", value=False)
+    max_complexity = st.sidebar.slider("最大複雑度", 1, 5, 3) if use_exhaustive else 3
+    
+    if use_exhaustive:
+        st.sidebar.warning("⚠️ 全状態探索は計算時間が長くなる場合があります")
     
     if PINNS_AVAILABLE:
         st.sidebar.header("🧠 PINNsパラメータ（PDE発見）")
@@ -803,47 +940,87 @@ def create_pde_discovery_app():
                 results = pde_regression.discover_burgers_equation()
             else:  # 拡散方程式
                 pde_regression = PDESymbolicRegression(u_numerical, fdm.x, fdm.t)
-                results = pde_regression.discover_diffusion_equation()
+                results = pde_regression.discover_diffusion_equation(
+                    use_exhaustive_search=use_exhaustive, 
+                    max_complexity=max_complexity
+                )
         
         st.success("✅ PDE発見完了!")
         
         st.subheader("🎯 発見されたPDE候補")
         
-        sorted_results = sorted(results['all_results'], key=lambda x: x['mse'])
-        
-        for i, result in enumerate(sorted_results):
-            formula_name = result['formula']
-            mse = result['mse']
-            params = result['params']
+        if 'best_model' in results and results['best_model']:
+            best = results['best_model']
+            st.success(f"🏆 **最優秀候補**: {best['name']}")
             
-            if i == 0:
-                st.success(f"🏆 **最優秀候補**: {formula_name}")
-            else:
-                st.info(f"📋 **候補 {i+1}**: {formula_name}")
+            col1a, col1b, col1c = st.columns(3)
+            with col1a:
+                st.metric("MSE", f"{best['mse']:.2e}")
+            with col1b:
+                st.metric("BIC", f"{best['bic']:.1f}")
+            with col1c:
+                st.metric("事後確率", f"{best['posterior_prob']:.3f}")
             
-            col1, col2, col3 = st.columns([2, 1, 1])
+            st.info(f"**最適パラメータ**: {', '.join([f'{p:.2e}' for p in best['params']])}")
             
-            with col1:
-                st.write(f"**式**: {formula_name}")
+            if results['all_results']:
+                st.subheader("📊 候補モデル比較（ベイズ評価）")
                 
-            with col2:
-                if mse < np.inf:
-                    st.metric("MSE", f"{mse:.2e}")
-                else:
-                    st.metric("MSE", "∞")
+                comparison_data = []
+                for result in results['all_results'][:10]:  
+                    comparison_data.append({
+                        'モデル': result['name'],
+                        'MSE': f"{result['mse']:.2e}",
+                        'BIC': f"{result['bic']:.1f}",
+                        'AIC': f"{result['aic']:.1f}",
+                        '事後確率': f"{result['posterior_prob']:.3f}",
+                        '複雑度': result['complexity']
+                    })
+                
+                st.dataframe(pd.DataFrame(comparison_data))
+                
+                if 'bayesian_model_average' in results:
+                    bma = results['bayesian_model_average']
+                    st.subheader("🎯 ベイズモデル平均化")
+                    st.write(f"**平均複雑度**: {bma.get('average_complexity', 0):.2f}")
+                    st.write(f"**モデル不確実性**: {bma.get('model_uncertainty', 0):.2e}")
+                    st.write(f"**パラメータ不確実性**: {bma.get('parameter_uncertainty', 0):.2e}")
+        else:
+            sorted_results = sorted(results['all_results'], key=lambda x: x['mse'])
             
-            with col3:
-                param_str = ", ".join([f"{p:.4f}" for p in params])
-                st.write(f"**係数**: [{param_str}]")
+            for i, result in enumerate(sorted_results):
+                formula_name = result.get('formula', result.get('name', ''))
+                mse = result['mse']
+                params = result['params']
+                
+                if i == 0:
+                    st.success(f"🏆 **最優秀候補**: {formula_name}")
+                else:
+                    st.info(f"📋 **候補 {i+1}**: {formula_name}")
+                
+                col1, col2, col3 = st.columns([2, 1, 1])
+                
+                with col1:
+                    st.write(f"**式**: {formula_name}")
+                    
+                with col2:
+                    if mse < np.inf:
+                        st.metric("MSE", f"{mse:.2e}")
+                    else:
+                        st.metric("MSE", "∞")
+                
+                with col3:
+                    param_str = ", ".join([f"{p:.4f}" for p in params])
+                    st.write(f"**係数**: [{param_str}]")
         
         st.subheader("📈 理論値との比較")
         
         if equation_type == "熱伝導方程式":
-            discovered_param = results['best_alpha']
+            discovered_param = results.get('best_alpha', results['best_model']['params'][0] if results.get('best_model') and results['best_model'].get('params') else 0)
         elif equation_type == "Burgers方程式":
-            discovered_param = results['best_nu']
+            discovered_param = results.get('best_nu', results['best_model']['params'][0] if results.get('best_model') and results['best_model'].get('params') else 0)
         else:  # 拡散方程式
-            discovered_param = results['best_D']
+            discovered_param = results.get('best_D', results['best_model']['params'][0] if results.get('best_model') and results['best_model'].get('params') else 0)
         
         col1, col2, col3 = st.columns(3)
         
