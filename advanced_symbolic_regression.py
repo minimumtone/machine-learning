@@ -323,9 +323,9 @@ def main():
             
             ax.scatter(complexities, scores, alpha=0.6, label='Total Score')
             ax.scatter(complexities, mses, alpha=0.6, label='MSE only')
-            ax.set_xlabel('複雑度')
-            ax.set_ylabel('スコア')
-            ax.set_title('複雑度 vs スコア（オッカムの剃刀効果）')
+            ax.set_xlabel('Complexity')
+            ax.set_ylabel('Score')
+            ax.set_title('Complexity vs Score (Occam\'s Razor Effect)')
             ax.legend()
             
             plt.tight_layout()

@@ -735,8 +735,8 @@ def create_pde_discovery_app():
             
             theoretical_param = alpha_or_nu_or_D
             param_name = "α"
-            equation_title = "温度分布の時間発展"
-            y_label = "温度 u"
+            equation_title = "Temperature Evolution (Heat Conduction)"
+            y_label = "Temperature u"
             
         elif equation_type == "Burgers方程式":
             with st.spinner("FDMによる数値解計算中..."):
@@ -747,8 +747,8 @@ def create_pde_discovery_app():
             
             theoretical_param = alpha_or_nu_or_D
             param_name = "ν"
-            equation_title = "速度分布の時間発展（衝撃波形成）"
-            y_label = "速度 u"
+            equation_title = "Velocity Evolution (Burgers Equation)"
+            y_label = "Velocity u"
             
         else:  # 拡散方程式
             with st.spinner("FDMによる数値解計算中..."):
@@ -759,8 +759,8 @@ def create_pde_discovery_app():
             
             theoretical_param = alpha_or_nu_or_D
             param_name = "D"
-            equation_title = "濃度分布の時間発展（拡散カップル）"
-            y_label = "濃度 c"
+            equation_title = "Concentration Evolution (Diffusion Couple)"
+            y_label = "Concentration c"
         
         st.subheader("📊 FDM数値解の可視化")
         
@@ -768,8 +768,8 @@ def create_pde_discovery_app():
         
         X, T = np.meshgrid(fdm.x, fdm.t)
         im1 = ax1.contourf(X, T, u_numerical, levels=20, cmap='hot')
-        ax1.set_xlabel('空間 x')
-        ax1.set_ylabel('時間 t')
+        ax1.set_xlabel('Space x')
+        ax1.set_ylabel('Time t')
         ax1.set_title(equation_title)
         plt.colorbar(im1, ax=ax1)
         
@@ -777,9 +777,9 @@ def create_pde_discovery_app():
         for i, idx in enumerate(time_indices):
             ax2.plot(fdm.x, u_numerical[idx, :], 
                     label=f't = {fdm.t[idx]:.2f}', alpha=0.8)
-        ax2.set_xlabel('空間 x')
+        ax2.set_xlabel('Space x')
         ax2.set_ylabel(y_label)
-        ax2.set_title('各時刻での分布')
+        ax2.set_title('Distribution at Different Times')
         ax2.legend()
         ax2.grid(True, alpha=0.3)
         
@@ -813,17 +813,17 @@ def create_pde_discovery_app():
                     
                     im1 = ax1.imshow(u_numerical, aspect='auto', origin='lower', 
                                    extent=[0, 1, 0, 1], cmap='hot')
-                    ax1.set_xlabel('空間 x')
-                    ax1.set_ylabel('時間 t')
-                    ax1.set_title('PINNs温度分布 u(x,t)')
+                    ax1.set_xlabel('Space x')
+                    ax1.set_ylabel('Time t')
+                    ax1.set_title('PINNs Temperature Distribution u(x,t)')
                     plt.colorbar(im1, ax=ax1)
                     
                     time_indices = [0, 12, 25, 37, 49]
                     for i in time_indices:
                         ax2.plot(x_test, u_numerical[i, :], label=f't = {t_test[i]:.2f}')
-                    ax2.set_xlabel('空間 x')
-                    ax2.set_ylabel('温度 u')
-                    ax2.set_title('各時刻での温度分布')
+                    ax2.set_xlabel('Space x')
+                    ax2.set_ylabel('Temperature u')
+                    ax2.set_title('Temperature Distribution at Different Times')
                     ax2.legend()
                     ax2.grid(True)
                     
@@ -854,17 +854,17 @@ def create_pde_discovery_app():
                     
                     im1 = ax1.imshow(u_numerical, aspect='auto', origin='lower', 
                                    extent=[0, 1, 0, 0.5], cmap='viridis')
-                    ax1.set_xlabel('空間 x')
-                    ax1.set_ylabel('時間 t')
-                    ax1.set_title('PINNs速度場 u(x,t)')
+                    ax1.set_xlabel('Space x')
+                    ax1.set_ylabel('Time t')
+                    ax1.set_title('PINNs Velocity Field u(x,t)')
                     plt.colorbar(im1, ax=ax1)
                     
                     time_indices = [0, 12, 25, 37, 49]
                     for i in time_indices:
                         ax2.plot(x_test, u_numerical[i, :], label=f't = {t_test[i]:.3f}')
-                    ax2.set_xlabel('空間 x')
-                    ax2.set_ylabel('速度 u')
-                    ax2.set_title('各時刻での速度分布')
+                    ax2.set_xlabel('Space x')
+                    ax2.set_ylabel('Velocity u')
+                    ax2.set_title('Velocity Distribution at Different Times')
                     ax2.legend()
                     ax2.grid(True)
                     
