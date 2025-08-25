@@ -603,6 +603,19 @@ class PDESymbolicRegression:
 def create_pde_discovery_app():
     """Streamlit PDE発見アプリ"""
     
+    st.markdown("""
+    <style>
+    /* Force Japanese fonts for all HTML elements */
+    html, body, div, span, p, h1, h2, h3, h4, h5, h6, label, button, input, select, textarea,
+    .main .block-container, .sidebar .sidebar-content, 
+    [data-testid="stSidebar"], [data-testid="stMain"],
+    .stSelectbox, .stTextInput, .stButton, .stMarkdown, .stTitle, .stHeader, .stSubheader,
+    [class*="css-"], [class*="st-"], * {
+        font-family: 'IPAGothic', 'IPAPGothic', sans-serif !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
     st.title("🔬 偏微分方程式発見システム (PDE Discovery)")
     st.markdown("---")
     

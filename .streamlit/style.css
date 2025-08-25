@@ -1,14 +1,21 @@
-/* Force Japanese fonts for all HTML text */
-html, body, [class*="css"], div, span, p, h1, h2, h3, h4, h5, h6, label, button, input, select, textarea {
-    font-family: 'IPAGothic', 'IPAPGothic', 'Hiragino Sans', 'Yu Gothic', 'Meiryo' !important;
+/* Force Japanese fonts for all HTML text - more specific selectors */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
+
+html, body, div, span, p, h1, h2, h3, h4, h5, h6, label, button, input, select, textarea,
+.main .block-container, .sidebar .sidebar-content, 
+[data-testid="stSidebar"], [data-testid="stMain"],
+.stSelectbox > div, .stTextInput > div, .stButton > button,
+.stMarkdown, .stTitle, .stHeader, .stSubheader,
+[class*="css-"], [class*="st-"] {
+    font-family: 'IPAGothic', 'IPAPGothic', 'Noto Sans JP', sans-serif !important;
 }
 
-/* Specifically target Streamlit components */
-.stSelectbox, .stTextInput, .stButton, .stMarkdown, .stTitle, .stHeader, .stSubheader {
-    font-family: 'IPAGothic', 'IPAPGothic', 'Hiragino Sans', 'Yu Gothic', 'Meiryo' !important;
-}
-
-/* Override any Chinese font usage */
+/* Prevent Chinese fonts completely */
 * {
-    font-family: 'IPAGothic', 'IPAPGothic', 'Hiragino Sans', 'Yu Gothic', 'Meiryo' !important;
+    font-family: 'IPAGothic', 'IPAPGothic', 'Noto Sans JP', sans-serif !important;
+}
+
+/* Force Japanese fonts on all Streamlit elements */
+.css-1d391kg, .css-12oz5g7, .css-1y4p8pa, .css-2trqyj, .css-1v0mbdj {
+    font-family: 'IPAGothic', 'IPAPGothic', 'Noto Sans JP', sans-serif !important;
 }
