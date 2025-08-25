@@ -38,6 +38,16 @@
 - **学習内容**: 決定木、ランダムフォレスト、ブースティング、特徴量重要度
 - **データセット**: Boston Dataset, Heart Disease Dataset
 
+### 7. シンボリック回帰 (`symbolic_regression.py`, `advanced_symbolic_regression.py`)
+- **概要**: 物理法則の自動発見とシンボリック回帰
+- **学習内容**: 式探索、定数最適化、複雑度ペナルティ
+- **データセット**: 運動エネルギー、単振り子、万有引力
+
+### 8. LaSR (`lasr_app.py`)
+- **概要**: LLMガイド付きシンボリック回帰（最新研究）
+- **学習内容**: コンセプトライブラリ、LLM統合、進化的アルゴリズム
+- **データセット**: 物理法則データセット + ユーザーヒント
+
 ## 使用方法
 
 ### 統合管理アプリケーション
@@ -66,6 +76,8 @@ pip install -r requirements.txt
 4. **交差検証・ブートストラップ** - モデル評価
 5. **分類分析** - 分類手法の比較
 6. **決定木・アンサンブル** - 高度な手法
+7. **シンボリック回帰** - 物理法則発見の基礎
+8. **LaSR** - 最新のLLMガイド付き発見手法
 
 ## テスト
 
@@ -94,6 +106,11 @@ machine-learning/
 ├── cross_validation_analysis.py      # 交差検証・ブートストラップ
 ├── classification_analysis.py        # 分類分析
 ├── tree_methods_analysis.py          # 決定木・アンサンブル
+├── symbolic_regression.py            # シンボリック回帰
+├── advanced_symbolic_regression.py   # 高度なシンボリック回帰
+├── lasr_symbolic_regression.py       # LaSRアルゴリズム実装
+├── lasr_app.py                       # LaSR Streamlitアプリ
+├── pde_discovery.py                  # PDE発見システム
 ├── test_statistical_programs.py      # テストスイート
 ├── requirements.txt                  # 依存パッケージ
 └── README.md                         # このファイル
@@ -107,6 +124,8 @@ machine-learning/
 - **pandas** - データ操作
 - **numpy** - 数値計算
 - **matplotlib/seaborn** - データ可視化
+- **sympy** - シンボリック計算
+- **openai** - LLM統合（LaSR用）
 - **pytest** - テストフレームワーク
 
 ## ライセンス

@@ -27,6 +27,8 @@ st.title("🤖 発展課題：自動シンボリック回帰")
 st.markdown("""
 このアプリは、式の自動生成と複雑度ペナルティを導入した高度なシンボリック回帰システムです。
 SymPyを使用して数式を自動的に生成し、オッカムの剃刀の原理に基づいて最適な式を選択します。
+
+**新機能**: [LaSR (Library-Augmented Symbolic Regression)](/lasr_app) - LLMガイド付きコンセプト発見
 """)
 
 class SymbolicRegressor:

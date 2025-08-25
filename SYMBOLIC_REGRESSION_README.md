@@ -267,6 +267,32 @@ print(f"スコア: {best_score:.6f}")
 
 シンボリック回帰の基礎から発展まで、さらに偏微分方程式の発見まで、体系的に学習できる包括的なシステムが完成しました。
 
+## 🧠 LaSR (Library-Augmented Symbolic Regression)
+
+### 新機能: LLMガイド付きシンボリック回帰
+
+**LaSR**は、NeurIPS 2024論文「Symbolic Regression with a Learned Concept Library」に基づく最新のシンボリック回帰手法です。
+
+#### 主要特徴
+- **コンセプトライブラリ**: 自然言語で表現された数学的概念を学習・進化
+- **LLMガイド**: GPT-3.5/GPT-4による式生成・変異・交叉操作
+- **3段階アルゴリズム**: 仮説進化 → コンセプト抽出 → コンセプト進化
+
+#### 実行方法
+```bash
+# LaSRアプリケーション
+streamlit run lasr_app.py --server.port 8505
+```
+
+#### 実装ファイル
+- `lasr_symbolic_regression.py` - LaSRアルゴリズム実装
+- `lasr_app.py` - LaSR用Streamlitアプリ
+
+#### 性能向上
+- Feynman方程式データセットで72/100の正解率（従来手法は59/100）
+- 学習されたコンセプトによる解釈可能性の向上
+- ユーザーヒントによる探索の効率化
+
 ## 🚀 今後の拡張可能性
 
 ### 追加可能なPDE
@@ -281,3 +307,4 @@ print(f"スコア: {best_score:.6f}")
 - **機械学習統合**: PINNsとの融合
 - **実験データ対応**: 実際の観測データからのPDE発見
 - **多物理現象**: 連成問題への拡張
+- **LaSRとPINNsの融合**: 物理制約付きLLMガイド発見
