@@ -13,7 +13,8 @@ from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode, DataReturnMode
 import warnings
 warnings.filterwarnings('ignore')
 
-plt.rcParams['font.family'] = ['DejaVu Sans', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', 'Takao', 'IPAexGothic', 'IPAPGothic', 'VL PGothic', 'Noto Sans CJK JP']
+plt.rcParams['font.family'] = ['IPAGothic', 'IPAPGothic']
+plt.rcParams['font.sans-serif'] = ['IPAGothic', 'IPAPGothic']
 plt.rcParams['axes.unicode_minus'] = False
 
 st.set_page_config(

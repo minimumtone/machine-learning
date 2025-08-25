@@ -13,7 +13,8 @@ from scipy.ndimage import gaussian_filter
 import sympy as sp
 from typing import Tuple, List, Dict, Callable
 
-matplotlib.rcParams['font.family'] = ['IPAGothic', 'IPAPGothic', 'DejaVu Sans']
+matplotlib.rcParams['font.family'] = ['IPAGothic', 'IPAPGothic']
+matplotlib.rcParams['font.sans-serif'] = ['IPAGothic', 'IPAPGothic']
 plt.rcParams['axes.unicode_minus'] = False
 try:
     import torch
@@ -892,7 +893,8 @@ def create_pde_discovery_app():
                     
                     st.subheader("📈 PINNs拡散方程式の解")
                     
-                    plt.rcParams['font.family'] = ['IPAGothic', 'IPAPGothic', 'DejaVu Sans']
+                    plt.rcParams['font.family'] = ['IPAGothic', 'IPAPGothic']
+                    plt.rcParams['font.sans-serif'] = ['IPAGothic', 'IPAPGothic']
                     plt.rcParams['axes.unicode_minus'] = False
                     
                     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))

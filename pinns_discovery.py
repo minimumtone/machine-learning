@@ -15,7 +15,8 @@ from typing import Dict, List, Tuple, Callable
 import time
 from scipy.optimize import minimize
 
-matplotlib.rcParams['font.family'] = ['IPAGothic', 'IPAPGothic', 'DejaVu Sans']
+matplotlib.rcParams['font.family'] = ['IPAGothic', 'IPAPGothic']
+matplotlib.rcParams['font.sans-serif'] = ['IPAGothic', 'IPAPGothic']
 plt.rcParams['axes.unicode_minus'] = False
 
 class PINN(nn.Module):
