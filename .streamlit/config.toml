@@ -1,0 +1,9 @@
+[theme]
+font = "sans serif"
+
+[browser]
+gatherUsageStats = false
+
+# Force Japanese fonts in HTML rendering
+[server]
+headless = true

@@ -1,0 +1,14 @@
+/* Force Japanese fonts for all HTML text */
+html, body, [class*="css"], div, span, p, h1, h2, h3, h4, h5, h6, label, button, input, select, textarea {
+    font-family: 'IPAGothic', 'IPAPGothic', 'Hiragino Sans', 'Yu Gothic', 'Meiryo' !important;
+}
+
+/* Specifically target Streamlit components */
+.stSelectbox, .stTextInput, .stButton, .stMarkdown, .stTitle, .stHeader, .stSubheader {
+    font-family: 'IPAGothic', 'IPAPGothic', 'Hiragino Sans', 'Yu Gothic', 'Meiryo' !important;
+}
+
+/* Override any Chinese font usage */
+* {
+    font-family: 'IPAGothic', 'IPAPGothic', 'Hiragino Sans', 'Yu Gothic', 'Meiryo' !important;
+}
