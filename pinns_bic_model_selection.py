@@ -255,13 +255,14 @@ class FullStateSearchBIC:
                 return 1e10
         
         if 'c × ∂²u/∂x²' in candidate['name']:
-            initial_params = [1e-11] * candidate['n_params']  # Good for diffusion
+            initial_params = [1e-11] * candidate['n_params']
+            bounds = [(1e-15, 1e-6)] * candidate['n_params']
         elif 'c × u' in candidate['name'] or 'c × ∂u/∂x' in candidate['name']:
-            initial_params = [1e-13] * candidate['n_params']  # Smaller for other terms
+            initial_params = [1e-9] * candidate['n_params']
+            bounds = [(1e-15, 1e-3)] * candidate['n_params']
         else:
-            initial_params = [1e-12] * candidate['n_params']  # Default
-        
-        bounds = [(1e-15, 1e-8)] * candidate['n_params']
+            initial_params = [1e-10] * candidate['n_params']
+            bounds = [(1e-15, 1e-5)] * candidate['n_params']
         
         try:
             result = minimize(objective, initial_params, method='L-BFGS-B', bounds=bounds)
@@ -279,21 +280,22 @@ class FullStateSearchBIC:
         
         n_data = (self.u.shape[0] - 2) * (self.u.shape[1] - 2)
         
-        likelihood = np.exp(-n_data * mse / 2)
+        sigma_squared = mse + 1e-15  # Add small value to prevent division by zero
+        log_likelihood = -0.5 * n_data * (np.log(2 * np.pi * sigma_squared) + 1)
         
-        bic = -2 * np.log(likelihood + 1e-10) + candidate['n_params'] * np.log(n_data)
-        
-        aic = -2 * np.log(likelihood + 1e-10) + 2 * candidate['n_params']
+        bic = -2 * log_likelihood + candidate['n_params'] * np.log(n_data)
+        aic = -2 * log_likelihood + 2 * candidate['n_params']
         
         return {
             'name': candidate['name'],
             'mse': mse,
-            'likelihood': likelihood,
+            'log_likelihood': log_likelihood,
             'bic': bic,
             'aic': aic,
             'n_params': candidate['n_params'],
             'complexity': candidate['complexity'],
-            'optimized_params': optimized_params
+            'optimized_params': optimized_params,
+            'optimization_success': result.success if hasattr(result, 'success') else False
         }
     
     def calculate_model_weights(self, bic_scores: np.ndarray) -> np.ndarray:
@@ -347,6 +349,7 @@ def create_results_table(results: List[Dict]) -> pd.DataFrame:
             '複雑さ (k)': result['n_params'],
             'BICスコア': f"{result['bic']:.5f}",
             '事後確率': f"{result['posterior_prob']:.3f}",
+            '最適化成功': "✓" if result.get('optimization_success', False) else "✗",
             '最適化パラメータ': ', '.join([f"{p:.2e}" for p in result['optimized_params']])
         })
     
