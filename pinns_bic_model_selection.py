@@ -344,22 +344,22 @@ def visualize_results(search_results: Dict, true_D: float):
     
     colors = ['red' if i == 0 else 'blue' for i in range(len(bic_scores))]
     bars = ax1.bar(range(len(bic_scores)), bic_scores, color=colors, alpha=0.7)
-    ax1.set_xlabel('候補式')
-    ax1.set_ylabel('BICスコア')
-    ax1.set_title('BICスコア比較（低いほど良い）')
+    ax1.set_xlabel('Candidate Formula')
+    ax1.set_ylabel('BIC Score')
+    ax1.set_title('BIC Score Comparison (Lower is Better)')
     ax1.set_xticks(range(len(model_names)))
-    ax1.set_xticklabels([f"式{i+1}" for i in range(len(model_names))], rotation=45)
+    ax1.set_xticklabels([f"Formula {i+1}" for i in range(len(model_names))], rotation=45)
     
     bars[0].set_color('red')
     bars[0].set_alpha(1.0)
     
     posterior_probs = [r['posterior_prob'] for r in results[:10]]
     ax2.bar(range(len(posterior_probs)), posterior_probs, color='green', alpha=0.7)
-    ax2.set_xlabel('候補式')
-    ax2.set_ylabel('事後確率')
-    ax2.set_title('モデルの事後確率')
+    ax2.set_xlabel('Candidate Formula')
+    ax2.set_ylabel('Posterior Probability')
+    ax2.set_title('Model Posterior Probability')
     ax2.set_xticks(range(len(model_names)))
-    ax2.set_xticklabels([f"式{i+1}" for i in range(len(model_names))], rotation=45)
+    ax2.set_xticklabels([f"Formula {i+1}" for i in range(len(model_names))], rotation=45)
     
     plt.tight_layout()
     st.pyplot(fig)
@@ -440,17 +440,17 @@ def main():
         
         X, T = np.meshgrid(fdm_solver.x, fdm_solver.t)
         im1 = ax1.contourf(X, T, u_numerical, levels=20, cmap='viridis')
-        ax1.set_xlabel('位置 x (m)')
-        ax1.set_ylabel('時間 t (s)')
-        ax1.set_title('拡散方程式の数値解')
-        plt.colorbar(im1, ax=ax1, label='濃度 u')
+        ax1.set_xlabel('Position x (m)')
+        ax1.set_ylabel('Time t (s)')
+        ax1.set_title('Numerical Solution of Diffusion Equation')
+        plt.colorbar(im1, ax=ax1, label='Concentration u')
         
         time_indices = [0, nt//4, nt//2, 3*nt//4, nt-1]
         for i in time_indices:
             ax2.plot(fdm_solver.x, u_numerical[i, :], label=f't = {fdm_solver.t[i]:.0f}s')
-        ax2.set_xlabel('位置 x (m)')
-        ax2.set_ylabel('濃度 u')
-        ax2.set_title('時間発展による濃度分布の変化')
+        ax2.set_xlabel('Position x (m)')
+        ax2.set_ylabel('Concentration u')
+        ax2.set_title('Evolution of Concentration Distribution over Time')
         ax2.legend()
         ax2.grid(True, alpha=0.3)
         
