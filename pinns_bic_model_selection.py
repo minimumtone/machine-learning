@@ -426,33 +426,80 @@ def main():
     st.sidebar.subheader("🔍 探索パラメータ")
     max_complexity = st.sidebar.slider("最大複雑度", 2, 5, 4)
     
+    st.sidebar.subheader("🔊 ノイズ設定")
+    noise_level = st.sidebar.slider("ノイズレベル (%)", 0.0, 10.0, 0.0, 0.1)
+    st.sidebar.caption("観測データに追加するガウシアンノイズの標準偏差（データの標準偏差に対する割合）")
+    
     if st.sidebar.button("🚀 拡散方程式発見を開始", type="primary"):
         
         st.write("## Step 1: 問題の定式化とデータ準備")
         
         with st.spinner("FDMによる拡散方程式の数値解を生成中..."):
             fdm_solver = DiffusionFDM(L=L, T_final=T_final, nx=nx, nt=nt, D=D_true)
-            u_numerical = fdm_solver.solve()
+            u_clean = fdm_solver.solve()
+            
+            if noise_level > 0:
+                np.random.seed(42)  # 再現性のため
+                noise_std = noise_level / 100.0 * np.std(u_clean)
+                noise = np.random.normal(0, noise_std, u_clean.shape)
+                u_numerical = u_clean + noise
+                st.info(f"✨ ノイズレベル {noise_level}% を追加（標準偏差: {noise_std:.2e}）")
+            else:
+                u_numerical = u_clean
         
         st.success("✅ 数値解生成完了")
         
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
-        
-        X, T = np.meshgrid(fdm_solver.x, fdm_solver.t)
-        im1 = ax1.contourf(X, T, u_numerical, levels=20, cmap='viridis')
-        ax1.set_xlabel('Position x (m)')
-        ax1.set_ylabel('Time t (s)')
-        ax1.set_title('Numerical Solution of Diffusion Equation')
-        plt.colorbar(im1, ax=ax1, label='Concentration u')
-        
-        time_indices = [0, nt//4, nt//2, 3*nt//4, nt-1]
-        for i in time_indices:
-            ax2.plot(fdm_solver.x, u_numerical[i, :], label=f't = {fdm_solver.t[i]:.0f}s')
-        ax2.set_xlabel('Position x (m)')
-        ax2.set_ylabel('Concentration u')
-        ax2.set_title('Evolution of Concentration Distribution over Time')
-        ax2.legend()
-        ax2.grid(True, alpha=0.3)
+        if noise_level > 0:
+            fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 12))
+            
+            X, T = np.meshgrid(fdm_solver.x, fdm_solver.t)
+            im1 = ax1.contourf(X, T, u_clean, levels=20, cmap='viridis')
+            ax1.set_xlabel('Position x (m)')
+            ax1.set_ylabel('Time t (s)')
+            ax1.set_title('Clean Numerical Solution')
+            plt.colorbar(im1, ax=ax1, label='Concentration u')
+            
+            im2 = ax2.contourf(X, T, u_numerical, levels=20, cmap='viridis')
+            ax2.set_xlabel('Position x (m)')
+            ax2.set_ylabel('Time t (s)')
+            ax2.set_title(f'Noisy Data (Noise Level: {noise_level}%)')
+            plt.colorbar(im2, ax=ax2, label='Concentration u')
+            
+            time_indices = [0, nt//4, nt//2, 3*nt//4, nt-1]
+            for i in time_indices:
+                ax3.plot(fdm_solver.x, u_clean[i, :], label=f't = {fdm_solver.t[i]:.0f}s', linestyle='-')
+            ax3.set_xlabel('Position x (m)')
+            ax3.set_ylabel('Concentration u')
+            ax3.set_title('Clean Data Evolution')
+            ax3.legend()
+            ax3.grid(True, alpha=0.3)
+            
+            for i in time_indices:
+                ax4.plot(fdm_solver.x, u_numerical[i, :], label=f't = {fdm_solver.t[i]:.0f}s', linestyle='-', alpha=0.8)
+            ax4.set_xlabel('Position x (m)')
+            ax4.set_ylabel('Concentration u')
+            ax4.set_title('Noisy Data Evolution')
+            ax4.legend()
+            ax4.grid(True, alpha=0.3)
+            
+        else:
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+            
+            X, T = np.meshgrid(fdm_solver.x, fdm_solver.t)
+            im1 = ax1.contourf(X, T, u_numerical, levels=20, cmap='viridis')
+            ax1.set_xlabel('Position x (m)')
+            ax1.set_ylabel('Time t (s)')
+            ax1.set_title('Numerical Solution of Diffusion Equation')
+            plt.colorbar(im1, ax=ax1, label='Concentration u')
+            
+            time_indices = [0, nt//4, nt//2, 3*nt//4, nt-1]
+            for i in time_indices:
+                ax2.plot(fdm_solver.x, u_numerical[i, :], label=f't = {fdm_solver.t[i]:.0f}s')
+            ax2.set_xlabel('Position x (m)')
+            ax2.set_ylabel('Concentration u')
+            ax2.set_title('Evolution of Concentration Distribution over Time')
+            ax2.legend()
+            ax2.grid(True, alpha=0.3)
         
         plt.tight_layout()
         st.pyplot(fig)
@@ -484,6 +531,11 @@ def main():
             - 真の拡散方程式 ∂u/∂t = D × ∂²u/∂x² が最良のBICスコアを獲得
             - より複雑な式は不要なパラメータによりペナルティを受ける
             - 単純すぎる式はデータ適合度が悪くスコアが悪化
+            
+            **ノイズの影響:**
+            - ノイズレベルが高いほど、より複雑なモデルが選択される傾向
+            - BICスコアの差が小さくなり、モデル選択の不確実性が増加
+            - 事後確率の分布がより均等になる
             """)
             
         else:
