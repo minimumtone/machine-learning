@@ -337,32 +337,76 @@ def visualize_results(search_results: Dict, true_D: float):
     
     results = search_results['results']
     
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+    st.write(f"**可視化データ**: {len(results)}個の候補式を処理中...")
     
     bic_scores = [r['bic'] for r in results[:10]]
+    posterior_probs = [r['posterior_prob'] for r in results[:10]]
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("最良BICスコア", f"{min(bic_scores):.1f}")
+    with col2:
+        st.metric("最高事後確率", f"{max(posterior_probs):.3f}")
+    with col3:
+        st.metric("BICスコア範囲", f"{max(bic_scores) - min(bic_scores):.1f}")
+    
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+    
     model_names = [r['name'].replace('∂u/∂t = ', '') for r in results[:10]]
     
-    colors = ['red' if i == 0 else 'blue' for i in range(len(bic_scores))]
-    bars = ax1.bar(range(len(bic_scores)), bic_scores, color=colors, alpha=0.7)
+    colors = ['red' if i == 0 else 'lightblue' for i in range(len(bic_scores))]
+    bars1 = ax1.bar(range(len(bic_scores)), bic_scores, color=colors, alpha=0.8, edgecolor='black', linewidth=1)
     ax1.set_xlabel('Candidate Formula')
     ax1.set_ylabel('BIC Score')
     ax1.set_title('BIC Score Comparison (Lower is Better)')
     ax1.set_xticks(range(len(model_names)))
     ax1.set_xticklabels([f"Formula {i+1}" for i in range(len(model_names))], rotation=45)
+    ax1.grid(True, alpha=0.3, axis='y')
     
-    bars[0].set_color('red')
-    bars[0].set_alpha(1.0)
+    bars1[0].set_color('red')
+    bars1[0].set_alpha(1.0)
+    bars1[0].set_linewidth(2)
     
-    posterior_probs = [r['posterior_prob'] for r in results[:10]]
-    ax2.bar(range(len(posterior_probs)), posterior_probs, color='green', alpha=0.7)
+    for i, (bar, score) in enumerate(zip(bars1, bic_scores)):
+        height = bar.get_height()
+        ax1.text(bar.get_x() + bar.get_width()/2., height + 0.1,
+                f'{score:.1f}', ha='center', va='bottom', fontsize=9)
+    
+    colors2 = ['darkgreen' if i == 0 else 'lightgreen' for i in range(len(posterior_probs))]
+    bars2 = ax2.bar(range(len(posterior_probs)), posterior_probs, color=colors2, alpha=0.8, edgecolor='black', linewidth=1)
     ax2.set_xlabel('Candidate Formula')
     ax2.set_ylabel('Posterior Probability')
     ax2.set_title('Model Posterior Probability')
     ax2.set_xticks(range(len(model_names)))
     ax2.set_xticklabels([f"Formula {i+1}" for i in range(len(model_names))], rotation=45)
+    ax2.grid(True, alpha=0.3, axis='y')
+    
+    bars2[0].set_color('darkgreen')
+    bars2[0].set_alpha(1.0)
+    bars2[0].set_linewidth(2)
+    
+    for i, (bar, prob) in enumerate(zip(bars2, posterior_probs)):
+        height = bar.get_height()
+        ax2.text(bar.get_x() + bar.get_width()/2., height + 0.01,
+                f'{prob:.3f}', ha='center', va='bottom', fontsize=9)
     
     plt.tight_layout()
     st.pyplot(fig)
+    
+    st.write("### 📊 BICスコアと事後確率の詳細比較")
+    comparison_data = []
+    for i, result in enumerate(results[:5]):  # 上位5つのみ表示
+        comparison_data.append({
+            "順位": i + 1,
+            "候補式": result['name'].replace('∂u/∂t = ', ''),
+            "BICスコア": f"{result['bic']:.1f}",
+            "事後確率": f"{result['posterior_prob']:.3f}",
+            "MSE": f"{result['mse']:.2e}"
+        })
+    
+    import pandas as pd
+    comparison_df = pd.DataFrame(comparison_data)
+    st.dataframe(comparison_df, use_container_width=True)
     
     best_model = search_results['best_model']
     if best_model:
