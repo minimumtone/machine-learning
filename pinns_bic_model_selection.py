@@ -238,25 +238,44 @@ class FullStateSearchBIC:
         
         def objective(params):
             try:
+                if np.any(np.isnan(params)) or np.any(np.isinf(params)):
+                    return 1e10
+                
                 predicted = candidate['func'](params, self.u[1:-1, 1:-1], 
                                              self.dudx[1:-1, 1:-1], 
                                              self.d2udx2[1:-1, 1:-1])
                 target = self.dudt[1:-1, 1:-1]
                 
+                if np.any(np.isnan(predicted)) or np.any(np.isinf(predicted)):
+                    return 1e10
+                
                 mse = np.mean((predicted - target)**2)
-                return mse
-            except:
+                return mse if np.isfinite(mse) else 1e10
+            except Exception as e:
                 return 1e10
         
-        initial_params = [1e-11] * candidate['n_params']
+        if 'c × ∂²u/∂x²' in candidate['name']:
+            initial_params = [1e-11] * candidate['n_params']  # Good for diffusion
+        elif 'c × u' in candidate['name'] or 'c × ∂u/∂x' in candidate['name']:
+            initial_params = [1e-13] * candidate['n_params']  # Smaller for other terms
+        else:
+            initial_params = [1e-12] * candidate['n_params']  # Default
+        
+        bounds = [(1e-15, 1e-8)] * candidate['n_params']
         
         try:
-            result = minimize(objective, initial_params, method='L-BFGS-B')
+            result = minimize(objective, initial_params, method='L-BFGS-B', bounds=bounds)
+            if not result.success:
+                result = minimize(objective, initial_params, method='Nelder-Mead')
+                if not result.success:
+                    alt_initial = [p * 10 for p in initial_params]
+                    result = minimize(objective, alt_initial, method='L-BFGS-B', bounds=bounds)
             optimized_params = result.x
             mse = result.fun
-        except:
+        except Exception as e:
             optimized_params = initial_params
             mse = objective(initial_params)
+            result = type('obj', (object,), {'success': False})()
         
         n_data = (self.u.shape[0] - 2) * (self.u.shape[1] - 2)
         
