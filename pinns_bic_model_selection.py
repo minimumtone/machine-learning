@@ -326,7 +326,7 @@ def create_results_table(results: List[Dict]) -> pd.DataFrame:
             '候補式': result['name'],
             'データ適合度 (MSE)': f"{result['mse']:.2e}",
             '複雑さ (k)': result['n_params'],
-            'BICスコア': f"{result['bic']:.1f}",
+            'BICスコア': f"{result['bic']:.5f}",
             '事後確率': f"{result['posterior_prob']:.3f}",
             '最適化パラメータ': ', '.join([f"{p:.2e}" for p in result['optimized_params']])
         })
@@ -345,11 +345,11 @@ def visualize_results(search_results: Dict, true_D: float):
     
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("最良BICスコア", f"{min(bic_scores):.1f}")
+        st.metric("最良BICスコア", f"{min(bic_scores):.5f}")
     with col2:
         st.metric("最高事後確率", f"{max(posterior_probs):.3f}")
     with col3:
-        st.metric("BICスコア範囲", f"{max(bic_scores) - min(bic_scores):.1f}")
+        st.metric("BICスコア範囲", f"{max(bic_scores) - min(bic_scores):.5f}")
     
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
     
@@ -371,7 +371,7 @@ def visualize_results(search_results: Dict, true_D: float):
     for i, (bar, score) in enumerate(zip(bars1, bic_scores)):
         height = bar.get_height()
         ax1.text(bar.get_x() + bar.get_width()/2., height + 0.1,
-                f'{score:.1f}', ha='center', va='bottom', fontsize=9)
+                f'{score:.5f}', ha='center', va='bottom', fontsize=9)
     
     colors2 = ['darkgreen' if i == 0 else 'lightgreen' for i in range(len(posterior_probs))]
     bars2 = ax2.bar(range(len(posterior_probs)), posterior_probs, color=colors2, alpha=0.8, edgecolor='black', linewidth=1)
@@ -400,7 +400,7 @@ def visualize_results(search_results: Dict, true_D: float):
         comparison_data.append({
             "順位": i + 1,
             "候補式": result['name'].replace('∂u/∂t = ', ''),
-            "BICスコア": f"{result['bic']:.1f}",
+            "BICスコア": f"{result['bic']:.5f}",
             "事後確率": f"{result['posterior_prob']:.3f}",
             "MSE": f"{result['mse']:.2e}"
         })
@@ -417,7 +417,7 @@ def visualize_results(search_results: Dict, true_D: float):
         
         with col1:
             st.write(f"**発見された式**: {best_model['name']}")
-            st.write(f"**BICスコア**: {best_model['bic']:.1f}")
+            st.write(f"**BICスコア**: {best_model['bic']:.5f}")
             st.write(f"**事後確率**: {best_model['posterior_prob']:.3f}")
             st.write(f"**MSE**: {best_model['mse']:.2e}")
         
