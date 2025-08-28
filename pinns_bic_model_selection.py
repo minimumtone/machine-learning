@@ -195,18 +195,18 @@ class FullStateSearchBIC:
         for complexity in range(1, max_complexity + 1):
             st.write(f"**複雑度 {complexity}** の候補式を生成中...")
             
-            if complexity == 1:
-                for term_name, term_info in base_terms.items():
-                    if term_info["complexity"] <= complexity:
-                        candidates.append({
-                            'name': f"∂u/∂t = {term_name}",
-                            'terms': [term_name],
-                            'func': term_info['func'],
-                            'n_params': 1,
-                            'complexity': complexity
-                        })
+            for term_name, term_info in base_terms.items():
+                if term_info["complexity"] == complexity:
+                    candidates.append({
+                        'name': f"∂u/∂t = {term_name}",
+                        'terms': [term_name],
+                        'func': term_info['func'],
+                        'n_params': 1,
+                        'complexity': complexity
+                    })
+                    st.write(f"  - 単一項: {term_name}")
             
-            else:
+            if complexity > 1:
                 for n_terms in range(2, min(complexity + 1, 4)):  # 最大3項まで
                     for term_combo in combinations(base_terms.keys(), n_terms):
                         total_complexity = sum(base_terms[term]["complexity"] for term in term_combo)
@@ -229,6 +229,7 @@ class FullStateSearchBIC:
                                 'n_params': len(term_combo),
                                 'complexity': total_complexity
                             })
+                            st.write(f"  - 組み合わせ: {formula_name}")
         
         return candidates
     
