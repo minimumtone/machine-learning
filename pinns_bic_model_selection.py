@@ -212,7 +212,7 @@ class FullStateSearchBIC:
                         total_complexity = sum(base_terms[term]["complexity"] for term in term_combo)
                         if total_complexity <= complexity:
                             
-                            def make_combined_func(terms):
+                            def make_combined_func(terms=term_combo):
                                 def combined_func(params, u, dudx, d2udx2):
                                     result = np.zeros_like(u)
                                     for i, term in enumerate(terms):
