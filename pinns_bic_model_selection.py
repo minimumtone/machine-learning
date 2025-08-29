@@ -268,9 +268,11 @@ class FullStateSearchBIC:
             result = minimize(objective, initial_params, method='L-BFGS-B', bounds=bounds)
             if not result.success:
                 result = minimize(objective, initial_params, method='Nelder-Mead')
+                
                 if not result.success:
                     alt_initial = [p * 10 for p in initial_params]
                     result = minimize(objective, alt_initial, method='L-BFGS-B', bounds=bounds)
+            
             optimized_params = result.x
             mse = result.fun
         except Exception as e:
