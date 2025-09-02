@@ -193,7 +193,11 @@ class NonlinearDiffusionPINN(nn.Module):
 
         D_A0 = self._D_self(self.net_DA, torch.zeros(1, 1, device=device))
         D_B1 = self._D_self(self.net_DB, torch.ones(1, 1, device=device))
-        loss_D_bc = ((D_A0 - 0.0) ** 2 + (D_B1 - 0.0) ** 2).squeeze()
+        D_A1 = self._D_self(self.net_DA, torch.ones(1, 1, device=device))
+        D_B0 = self._D_self(self.net_DB, torch.zeros(1, 1, device=device))
+        
+        loss_D_bc = ((D_A0 - 0.0) ** 2 + (D_B1 - 0.0) ** 2 + 
+                     (D_A1 - 0.05) ** 2 + (D_B0 - 0.05) ** 2).squeeze()
 
         total = loss_data + lambda_pde * loss_pde + lambda_ic * loss_ic + lambda_bc * loss_bc + lambda_Dbc * loss_D_bc
         return total, loss_data, loss_pde, loss_ic, loss_bc, loss_D_bc
@@ -252,7 +256,7 @@ def run_darken_pinn_training():
 
     epochs = 30000
     learning_rate = 2e-4
-    lambda_pde, lambda_ic, lambda_bc, lambda_Dbc = 1.0, 2.0, 0.5, 10.0
+    lambda_pde, lambda_ic, lambda_bc, lambda_Dbc = 1.0, 2.0, 0.5, 20.0  # 純物質効果を強化
 
     optimizer = torch.optim.Adam(pinn.parameters(), lr=learning_rate, weight_decay=1e-5)
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.99995)

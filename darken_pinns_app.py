@@ -53,6 +53,8 @@ def create_darken_pinns_app():
         lambda_pde = st.number_input("PDE loss weight", min_value=0.1, max_value=10.0, value=1.0, format="%.1f")
         lambda_ic = st.number_input("IC loss weight", min_value=0.1, max_value=10.0, value=2.0, format="%.1f")
         lambda_bc = st.number_input("BC loss weight", min_value=0.1, max_value=10.0, value=0.5, format="%.1f")
+        lambda_Dbc = st.number_input("純物質効果重み λ_Dbc", min_value=0.1, max_value=50.0, value=20.0, step=0.5, 
+                                    help="D_A(0)=0, D_B(1)=0, D_A(1)=0.05, D_B(0)=0.05の純物質境界条件の重み")
     
     st.sidebar.header("🏗️ Network Architecture")
     hidden_dim_C = st.sidebar.number_input("Concentration network hidden dim", min_value=32, max_value=128, value=64, step=16)
@@ -108,7 +110,6 @@ def create_darken_pinns_app():
             R=R, T=T, Omega=Omega
         ).to(device)
         
-        lambda_Dbc = 10.0
         optimizer = torch.optim.Adam(pinn.parameters(), lr=learning_rate, weight_decay=1e-5)
         scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.99995)
         
