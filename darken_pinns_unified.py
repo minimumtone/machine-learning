@@ -23,6 +23,7 @@ Darken Model: D̃(C) = C_B·D_A(C) + C_A·D_B(C) + (RT/Ω)·∂lnγ/∂C
 """
 
 import sys
+import os
 import time
 import argparse
 import numpy as np
@@ -347,7 +348,7 @@ def run_standalone_training():
         plt.title('Training Loss History - Enhanced Pure Substance Constraints')
         plt.legend()
         plt.grid(True, which="both", ls="--")
-        plt.savefig('/home/ubuntu/repos/machine-learning/darken_loss_history_unified.png', dpi=150, bbox_inches='tight')
+        plt.savefig(os.path.join(os.getcwd(), 'darken_loss_history_unified.png'), dpi=150, bbox_inches='tight')
         plt.show()
 
     C_plot = torch.linspace(0, 1, 200, device=device).view(-1, 1)
@@ -362,7 +363,7 @@ def run_standalone_training():
     plt.title('Darken Model – True vs. PINN')
     plt.legend()
     plt.grid(True)
-    plt.savefig('/home/ubuntu/repos/machine-learning/darken_diffusion_comparison_unified.png', dpi=150, bbox_inches='tight')
+    plt.savefig(os.path.join(os.getcwd(), 'darken_diffusion_comparison_unified.png'), dpi=150, bbox_inches='tight')
     plt.show()
 
     with torch.no_grad():
@@ -378,7 +379,7 @@ def run_standalone_training():
     plt.title('Learned Self‑Diffusion Coefficients with Pure Substance Constraints')
     plt.legend()
     plt.grid(True)
-    plt.savefig('/home/ubuntu/repos/machine-learning/darken_self_diffusion_unified.png', dpi=150, bbox_inches='tight')
+    plt.savefig(os.path.join(os.getcwd(), 'darken_self_diffusion_unified.png'), dpi=150, bbox_inches='tight')
     plt.show()
 
     print('Visualization finished.')
@@ -451,7 +452,15 @@ def create_streamlit_app():
     hidden_dim_C = st.sidebar.number_input("Concentration network hidden dim", min_value=32, max_value=128, value=64, step=16)
     hidden_dim_D = st.sidebar.number_input("Diffusion network hidden dim", min_value=16, max_value=64, value=32, step=8)
     
-    if st.button("🚀 Start Enhanced Darken PINNs Training", type="primary"):
+    if 'training_in_progress' not in st.session_state:
+        st.session_state.training_in_progress = False
+    
+    button_disabled = st.session_state.training_in_progress
+    button_text = "⏳ Training in Progress..." if button_disabled else "🚀 Start Enhanced Darken PINNs Training"
+    
+    if st.button(button_text, type="primary", disabled=button_disabled):
+        st.session_state.training_in_progress = True
+        
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         st.info(f"Using device: {device}")
         
@@ -571,6 +580,9 @@ def create_streamlit_app():
                     loss_chart_placeholder.plotly_chart(fig_loss, use_container_width=True)
         
         training_time = time.time() - start_time
+        
+        st.session_state.training_in_progress = False
+        
         st.success(f"✅ Enhanced training completed in {training_time:.2f} seconds!")
         
         pinn.eval()
