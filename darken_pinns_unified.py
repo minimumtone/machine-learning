@@ -396,10 +396,15 @@ def run_standalone_training():
 def create_streamlit_app():
     """Create Streamlit web interface for interactive Darken PINNs"""
     if not STREAMLIT_AVAILABLE:
-        st.error("Streamlit and Plotly are required for the web interface. Please install them.")
+        print("Streamlit and Plotly are required for the web interface. Please install them.")
+        return
+    
+    try:
+        import streamlit as st
+        st.set_page_config(page_title="Darken Model PINNs - Unified", layout="wide")
+    except Exception:
         return
 
-    st.set_page_config(page_title="Darken Model PINNs - Unified", layout="wide")
     
     st.title("🧠 Darken Model Physics-Informed Neural Networks (Unified)")
     st.markdown("---")
@@ -753,8 +758,18 @@ def main():
         print(f"Enhanced pure substance constraints successfully enforced!")
 
 
+def is_streamlit_context():
+    """Check if we're running in Streamlit context"""
+    try:
+        import streamlit as st
+        from streamlit.runtime.scriptrunner import get_script_run_ctx
+        return get_script_run_ctx() is not None
+    except:
+        return False
+
 if __name__ == '__main__':
-    main()
-else:
-    if STREAMLIT_AVAILABLE:
-        create_streamlit_app()
+    if is_streamlit_context() or 'streamlit' in sys.argv[0].lower():
+        if STREAMLIT_AVAILABLE:
+            create_streamlit_app()
+    else:
+        main()
