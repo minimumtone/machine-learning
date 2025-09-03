@@ -102,8 +102,10 @@ class NonlinearDiffusionPINN(nn.Module):
     """
     Enhanced Darken Model PINNs with pure substance boundary conditions
     """
+    R_GAS_CONSTANT = 8.314  # J/(mol·K) - Universal gas constant
+    
     def __init__(self, layers_C, layers_DA, layers_DB, layers_gamma,
-                 C_left, C_right, L=1.0, R=8.314, T=300.0, Omega=25000.0):
+                 C_left, C_right, L=1.0, T=300.0, Omega=25000.0):
         super().__init__()
         self.net_C = self._build_net(layers_C, final_activation=nn.Sigmoid())
         self.net_DA = self._build_net(layers_DA)
@@ -113,10 +115,10 @@ class NonlinearDiffusionPINN(nn.Module):
         self.C_left = C_left
         self.C_right = C_right
         self.L = L
-        self.R = R
+        self.R = self.R_GAS_CONSTANT  # Always use the protected constant
         self.T = T
         self.Omega = Omega
-        self.RT_Omega = (R * T) / Omega
+        self.RT_Omega = (self.R_GAS_CONSTANT * T) / Omega
         
         self.gamma_scale = 0.5
         self.thermo_clip_val = 0.1
@@ -423,7 +425,7 @@ def create_streamlit_app():
     
     col1, col2 = st.sidebar.columns(2)
     with col1:
-        R = st.number_input("Gas constant R", min_value=1.0, max_value=20.0, value=8.314, format="%.3f")
+        st.info("🔒 Gas constant R = 8.314 J/(mol·K) (protected physical constant)")
         T = st.number_input("Temperature T (K)", min_value=200.0, max_value=500.0, value=300.0, format="%.1f")
         Omega = st.number_input("Molar volume Ω", min_value=10000.0, max_value=50000.0, value=25000.0, format="%.0f")
     
@@ -498,7 +500,7 @@ def create_streamlit_app():
         pinn = NonlinearDiffusionPINN(
             layers_C, layers_DA, layers_DB, layers_gamma,
             C_left=C_left, C_right=C_right, L=L_domain,
-            R=R, T=T, Omega=Omega
+            T=T, Omega=Omega
         ).to(device)
         
         optimizer = torch.optim.Adam(pinn.parameters(), lr=learning_rate, weight_decay=1e-5)
