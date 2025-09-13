@@ -122,9 +122,7 @@ def detect_language(path: Path) -> str:
 
 def scan_sources(root: Path, include_ext: Tuple[str, ...], ignore_dirs: Tuple[str, ...]) -> List[Path]:
     files: List[Path] = []
-    for p in root.rglob("*"):
-        if any(ignored in p.parts for ignored in ignore_dirs):
-            continue
+    for p in root.glob("*"):
         if p.is_file() and p.suffix.lower() in include_ext:
             files.append(p)
     return files
