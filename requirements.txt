@@ -9,3 +9,4 @@ matplotlib
 seaborn
 joblib
 scipy # Optional, but needed for LHS feature
+plotly # For interactive CVM visualizations
