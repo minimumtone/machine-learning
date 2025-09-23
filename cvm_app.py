@@ -8,7 +8,8 @@ from scipy.optimize import minimize
 # import plotly.express as px
 # from plotly.subplots import make_subplots
 
-plt.rcParams['font.family'] = ['DejaVu Sans', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', 'Takao', 'IPAexGothic', 'IPAPGothic', 'VL PGothic', 'Noto Sans CJK JP']
+plt.rcParams['font.family'] = ['IPAPGothic', 'IPAexGothic', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', 'VL PGothic']
+plt.rcParams['font.sans-serif'] = ['IPAPGothic', 'IPAexGothic', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', 'VL PGothic']
 plt.rcParams['axes.unicode_minus'] = False
 
 st.set_page_config(
