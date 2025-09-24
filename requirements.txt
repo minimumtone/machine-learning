@@ -9,4 +9,7 @@ matplotlib
 seaborn
 joblib
 scipy # Optional, but needed for LHS feature
-
+torch # For PINNs applications
+sympy # For symbolic regression and PDE discovery
+plotly # For interactive visualizations
+tqdm # For progress bars in training loops
