@@ -22,18 +22,48 @@ matplotlib.rcParams['font.family'] = ['IPAGothic', 'IPAPGothic', 'DejaVu Sans']
 plt.rcParams['axes.unicode_minus'] = False
 
 class KalmanFilter:
-    """カルマンフィルタによるデータ同化"""
+    """
+    カルマンフィルタによるデータ同化
+    
+    線形ガウシアンシステムに対する最適ベイズ推定器。
+    状態空間モデル:
+        x_{k+1} = F * x_k + w_k,  w_k ~ N(0, Q)
+        y_k = H * x_k + v_k,      v_k ~ N(0, R)
+    
+    予測ステップ (Forecast):
+        x_{k|k-1} = F * x_{k-1|k-1}
+        P_{k|k-1} = F * P_{k-1|k-1} * F^T + Q
+    
+    更新ステップ (Analysis):
+        K_k = P_{k|k-1} * H^T * (H * P_{k|k-1} * H^T + R)^{-1}
+        x_{k|k} = x_{k|k-1} + K_k * (y_k - H * x_{k|k-1})
+        P_{k|k} = (I - K_k * H) * P_{k|k-1}
+    """
     
     def __init__(self, F: np.ndarray, H: np.ndarray, Q: np.ndarray, R: np.ndarray,
                  x0: np.ndarray, P0: np.ndarray):
         """
+        カルマンフィルタの初期化
+        
         Parameters:
-        F: 状態遷移行列 (n_states x n_states)
-        H: 観測行列 (n_obs x n_states)
-        Q: システムノイズ共分散行列 (n_states x n_states)
-        R: 観測ノイズ共分散行列 (n_obs x n_obs)
-        x0: 初期状態 (n_states,)
-        P0: 初期共分散行列 (n_states x n_states)
+        -----------
+        F : np.ndarray, shape (n_states, n_states)
+            状態遷移行列。線形システムの動力学を表現
+        H : np.ndarray, shape (n_obs, n_states)
+            観測行列。状態から観測への線形変換
+        Q : np.ndarray, shape (n_states, n_states)
+            システムノイズ共分散行列。プロセスの不確実性
+        R : np.ndarray, shape (n_obs, n_obs)
+            観測ノイズ共分散行列。測定の不確実性
+        x0 : np.ndarray, shape (n_states,)
+            初期状態ベクトル
+        P0 : np.ndarray, shape (n_states, n_states)
+            初期共分散行列。初期状態の不確実性
+        
+        Notes:
+        ------
+        - Q, R, P0は正定値行列である必要があります
+        - システムの可観測性・可制御性を事前に確認してください
         """
         self.F = F
         self.H = H
@@ -103,20 +133,52 @@ class KalmanFilter:
         }
 
 class ParticleFilter:
-    """パーティクルフィルタによるデータ同化"""
+    """
+    パーティクルフィルタによるデータ同化
+    
+    非線形・非ガウシアンシステムに対するベイズ推定器。
+    モンテカルロサンプリングによる近似推論を実行。
+    
+    アルゴリズム:
+    1. 予測: x_k^{(i)} = f(x_{k-1}^{(i)}) + w_k^{(i)}
+    2. 重み更新: w_k^{(i)} ∝ w_{k-1}^{(i)} * p(y_k | x_k^{(i)})
+    3. 正規化: w_k^{(i)} = w_k^{(i)} / Σ_j w_k^{(j)}
+    4. リサンプリング: 有効サンプルサイズが閾値以下の場合実行
+    
+    有効サンプルサイズ: N_eff = 1 / Σ_i (w_i)^2
+    """
     
     def __init__(self, n_particles: int, state_dim: int, obs_dim: int,
                  transition_func: Callable, observation_func: Callable,
                  process_noise_func: Callable, obs_noise_std: float):
         """
+        パーティクルフィルタの初期化
+        
         Parameters:
-        n_particles: パーティクル数
-        state_dim: 状態次元
-        obs_dim: 観測次元
-        transition_func: 状態遷移関数
-        observation_func: 観測関数
-        process_noise_func: プロセスノイズ生成関数
-        obs_noise_std: 観測ノイズ標準偏差
+        -----------
+        n_particles : int
+            パーティクル数。多いほど精度向上、計算コスト増加
+            推奨: 状態次元の10-100倍程度
+        state_dim : int
+            状態ベクトルの次元数
+        obs_dim : int
+            観測ベクトルの次元数
+        transition_func : Callable
+            状態遷移関数 f(x_k) -> x_{k+1}
+            非線形関数も対応可能
+        observation_func : Callable
+            観測関数 h(x_k) -> y_k
+            非線形観測モデルに対応
+        process_noise_func : Callable
+            プロセスノイズ生成関数
+            任意の確率分布から生成可能
+        obs_noise_std : float
+            観測ノイズの標準偏差
+            
+        Notes:
+        ------
+        - パーティクル数は次元の呪いの影響を受けます
+        - リサンプリング頻度は有効サンプルサイズで制御されます
         """
         self.n_particles = n_particles
         self.state_dim = state_dim
@@ -202,20 +264,51 @@ class ParticleFilter:
         }
 
 class EnsembleKalmanFilter:
-    """アンサンブルカルマンフィルタによるデータ同化"""
+    """
+    アンサンブルカルマンフィルタによるデータ同化
+    
+    高次元非線形システムに対するカルマンフィルタの拡張。
+    アンサンブル統計により共分散行列を近似的に計算。
+    
+    アルゴリズム:
+    1. 予測: X_k^f = f(X_{k-1}^a) + W_k
+    2. アンサンブル平均: x̄_k^f = (1/N) Σ_i X_k^{f,i}
+    3. 共分散近似: P_k^f ≈ (1/(N-1)) (X_k^f - x̄_k^f)(X_k^f - x̄_k^f)^T
+    4. カルマンゲイン: K_k = P_xy (P_yy + R)^{-1}
+    5. 更新: X_k^{a,i} = X_k^{f,i} + K_k (y_k + ε_i - h(X_k^{f,i}))
+    
+    ここで、ε_i ~ N(0, R)は観測ノイズの摂動
+    """
     
     def __init__(self, n_ensemble: int, state_dim: int, obs_dim: int,
                  transition_func: Callable, observation_func: Callable,
                  process_noise_std: float, obs_noise_std: float):
         """
+        アンサンブルカルマンフィルタの初期化
+        
         Parameters:
-        n_ensemble: アンサンブルサイズ
-        state_dim: 状態次元
-        obs_dim: 観測次元
-        transition_func: 状態遷移関数
-        observation_func: 観測関数
-        process_noise_std: プロセスノイズ標準偏差
-        obs_noise_std: 観測ノイズ標準偏差
+        -----------
+        n_ensemble : int
+            アンサンブルサイズ。共分散行列の近似精度に影響
+            推奨: 状態次元の2-4倍程度（最低20以上）
+        state_dim : int
+            状態ベクトルの次元数
+        obs_dim : int
+            観測ベクトルの次元数
+        transition_func : Callable
+            状態遷移関数。非線形モデルに対応
+        observation_func : Callable
+            観測関数。非線形観測モデルに対応
+        process_noise_std : float
+            プロセスノイズの標準偏差
+        obs_noise_std : float
+            観測ノイズの標準偏差
+            
+        Notes:
+        ------
+        - アンサンブルサイズは計算コストと精度のトレードオフ
+        - 局所化技法により高次元システムでの性能向上可能
+        - スプレッド（アンサンブル分散）の監視が重要
         """
         self.n_ensemble = n_ensemble
         self.state_dim = state_dim
@@ -659,25 +752,87 @@ def create_data_assimilation_app():
                 )
                 st.plotly_chart(fig, use_container_width=True)
     
-    with st.expander("📖 使用方法"):
+    with st.expander("📖 使用方法・理論背景"):
         st.markdown("""
         
-        - **ローレンツ方程式**: カオス的な非線形動力学系
-        - **ランダムウォーク**: 確率的な時系列モデル
-        - **AR(1)モデル**: 自己回帰モデル
-        - **ローカルレベル+トレンド**: 構造時系列モデル
+        ```
+        dx/dt = σ(y - x)
+        dy/dt = x(ρ - z) - y  
+        dz/dt = xy - βz
+        ```
+        - **用途**: カオス的動力学、気象モデル、非線形制御
+        - **特徴**: 決定論的だが予測困難、初期値敏感性
+        - **パラメータ調整**: σ=10, ρ=28, β=8/3で典型的なカオス挙動
         
-        - **カルマンフィルタ**: 線形ガウシアンシステムの最適推定
-        - **パーティクルフィルタ**: 非線形・非ガウシアンシステム対応
-        - **アンサンブルカルマンフィルタ**: 高次元システム向け
+        ```
+        x_{t+1} = x_t + w_t,  w_t ~ N(0, σ²)
+        ```
+        - **用途**: 株価モデル、ブラウン運動、拡散過程
+        - **特徴**: 非定常、分散が時間とともに増加
+        - **パラメータ調整**: プロセスノイズで変動の大きさを制御
         
-        1. **予測ステップ**: モデルによる状態予測
-        2. **更新ステップ**: 観測データによる状態修正
-        3. **品質管理**: イノベーション統計による診断
+        ```
+        x_{t+1} = φx_t + w_t,  w_t ~ N(0, σ²)
+        ```
+        - **用途**: 経済時系列、信号処理、回帰分析
+        - **特徴**: |φ| < 1で定常、φ = 1でランダムウォーク
+        - **パラメータ調整**: φで自己相関の強さを制御
         
-        - **RMSE**: 推定精度
-        - **対数尤度**: モデル適合度
-        - **イノベーション統計**: フィルタ性能診断
+        ```
+        レベル: μ_{t+1} = μ_t + β_t + η_t
+        トレンド: β_{t+1} = β_t + ζ_t
+        観測: y_t = μ_t + ε_t
+        ```
+        - **用途**: 経済指標、人口動態、トレンド分析
+        - **特徴**: 滑らかなトレンド変化、構造変化対応
+        - **パラメータ調整**: レベル・トレンドノイズで滑らかさ制御
+        
+        
+        - **適用条件**: 線形システム、ガウシアンノイズ
+        - **利点**: 最適解、計算効率良好、理論的保証
+        - **制限**: 非線形システムには不適用
+        - **パラメータ選択**: Q/R比で予測と観測の信頼度バランス
+        
+        - **適用条件**: 任意の非線形・非ガウシアンシステム
+        - **利点**: 柔軟性、多峰性分布対応
+        - **制限**: 高次元で性能劣化（次元の呪い）
+        - **パラメータ選択**: パーティクル数は状態次元の10-100倍
+        
+        - **適用条件**: 高次元非線形システム
+        - **利点**: 高次元対応、計算効率、実装容易
+        - **制限**: アンサンブルサイズに依存する近似精度
+        - **パラメータ選択**: アンサンブルサイズは状態次元の2-4倍
+        
+        
+        ```
+        RMSE = √(1/N Σ(x_true - x_est)²)
+        ```
+        - **解釈**: 推定誤差の大きさ、小さいほど良好
+        - **単位**: 状態変数と同じ単位
+        
+        ```
+        LL = Σ log p(y_t | y_{1:t-1})
+        ```
+        - **解釈**: モデルの観測データ適合度、大きいほど良好
+        - **用途**: モデル選択、パラメータ推定
+        
+        ```
+        ν_t = y_t - H x_{t|t-1}  (予測残差)
+        ```
+        - **解釈**: フィルタ性能診断、白色性・正規性を確認
+        - **診断**: 系統的バイアスや異常値の検出
+        
+        
+        1. **データ特性の把握**: 線形性、ガウシアン性、次元数を確認
+        2. **手法選択**: 
+           - 線形 → カルマンフィルタ
+           - 非線形・低次元 → パーティクルフィルタ  
+           - 非線形・高次元 → アンサンブルカルマンフィルタ
+        3. **パラメータ調整**: 
+           - ノイズ分散: 小さすぎると過学習、大きすぎると追従性悪化
+           - サンプルサイズ: 計算コストと精度のバランス
+        4. **診断**: イノベーション統計、RMSE推移、尤度値を監視
+        5. **検証**: 独立データでの性能確認、交差検証の実施
         """)
 
 if __name__ == "__main__":
