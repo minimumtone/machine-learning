@@ -573,40 +573,43 @@ def create_comparison_section():
             """)
 
 def main():
-    """メイン関数"""
+    """メイン関数 - 統合画面表示"""
     
-    st.sidebar.header("📋 学習セクション")
-    section = st.sidebar.selectbox(
-        "学習したいセクションを選択:",
-        [
-            "理論の基礎",
-            "インタラクティブ計算",
-            "相図の計算",
-            "近似手法の比較"
-        ]
-    )
+    st.title("🔬 クラスター変分法（CVM）学習プラットフォーム")
+    st.markdown("二元系合金の統計熱力学を基礎から理解するための教育アプリケーション")
     
-    if section == "理論の基礎":
-        create_theory_explanation()
-    elif section == "インタラクティブ計算":
-        create_interactive_calculator()
-    elif section == "相図の計算":
-        create_phase_diagram()
-    elif section == "近似手法の比較":
-        create_comparison_section()
+    st.markdown("---")
+    create_theory_explanation()
     
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("""
-    **参考文献:**
-    - Kikuchi, R. (1951). A theory of cooperative phenomena. Physical Review, 81(6), 988-1003.
-    - Sanchez, J. M., & de Fontaine, D. (1978). The fcc Ising model in the cluster variation approximation. Physical Review B, 17(7), 2926-2936.
+    st.markdown("---")
+    create_interactive_calculator()
     
-    **学習のポイント:**
-    1. 格子統計の基本概念を理解する
-    2. 近似レベルの違いを把握する  
-    3. 相図の物理的意味を考える
-    4. 実際の合金系への応用を考察する
-    """)
+    st.markdown("---") 
+    create_phase_diagram()
+    
+    st.markdown("---")
+    create_comparison_section()
+    
+    st.markdown("---")
+    st.markdown("## 📚 参考文献・学習ポイント")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        **参考文献:**
+        - Kikuchi, R. (1951). A theory of cooperative phenomena. Physical Review, 81(6), 988-1003.
+        - Sanchez, J. M., & de Fontaine, D. (1978). The fcc Ising model in the cluster variation approximation. Physical Review B, 17(7), 2926-2936.
+        """)
+    
+    with col2:
+        st.markdown("""
+        **学習のポイント:**
+        1. 格子統計の基本概念を理解する
+        2. 近似レベルの違いを把握する  
+        3. 相図の物理的意味を考える
+        4. 実際の合金系への応用を考察する
+        """)
 
 if __name__ == "__main__":
     main()
