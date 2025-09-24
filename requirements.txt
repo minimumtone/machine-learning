@@ -9,8 +9,4 @@ matplotlib
 seaborn
 joblib
 scipy # Optional, but needed for LHS feature
-sympy # For symbolic computation in symbolic regression
-torch>=1.12.0
-torchvision>=0.13.0
-tqdm
-plotly
+
