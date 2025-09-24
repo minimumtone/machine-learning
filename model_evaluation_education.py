@@ -476,8 +476,8 @@ if st.button("🚀 モデル訓練・評価を実行", type="primary"):
     
     axes[0, 0].bar(range(len(results_df)), results_df["訓練R²"], alpha=0.7, label="訓練R²", color='blue')
     axes[0, 0].bar(range(len(results_df)), results_df["テストR²"], alpha=0.7, label="テストR²", color='red')
-    axes[0, 0].set_title("R²スコア比較")
-    axes[0, 0].set_xlabel("モデル")
+    axes[0, 0].set_title("R² Score Comparison")
+    axes[0, 0].set_xlabel("Model")
     axes[0, 0].set_ylabel("R²")
     axes[0, 0].set_xticks(range(len(results_df)))
     axes[0, 0].set_xticklabels([name.split("（")[0] for name in results_df["モデル"]], rotation=45)
@@ -486,8 +486,8 @@ if st.button("🚀 モデル訓練・評価を実行", type="primary"):
     
     axes[0, 1].bar(range(len(results_df)), results_df["訓練RMSE"], alpha=0.7, label="訓練RMSE", color='blue')
     axes[0, 1].bar(range(len(results_df)), results_df["テストRMSE"], alpha=0.7, label="テストRMSE", color='red')
-    axes[0, 1].set_title("RMSE比較")
-    axes[0, 1].set_xlabel("モデル")
+    axes[0, 1].set_title("RMSE Comparison")
+    axes[0, 1].set_xlabel("Model")
     axes[0, 1].set_ylabel("RMSE")
     axes[0, 1].set_xticks(range(len(results_df)))
     axes[0, 1].set_xticklabels([name.split("（")[0] for name in results_df["モデル"]], rotation=45)
@@ -496,9 +496,9 @@ if st.button("🚀 モデル訓練・評価を実行", type="primary"):
     
     colors = ['red' if x > 0.2 else 'orange' if x > 0.1 else 'green' for x in results_df["過学習指標"]]
     axes[1, 0].bar(range(len(results_df)), results_df["過学習指標"], color=colors, alpha=0.7)
-    axes[1, 0].set_title("過学習指標（訓練R² - テストR²）")
-    axes[1, 0].set_xlabel("モデル")
-    axes[1, 0].set_ylabel("過学習指標")
+    axes[1, 0].set_title("Overfitting Index (Train R² - Test R²)")
+    axes[1, 0].set_xlabel("Model")
+    axes[1, 0].set_ylabel("Overfitting Index")
     axes[1, 0].set_xticks(range(len(results_df)))
     axes[1, 0].set_xticklabels([name.split("（")[0] for name in results_df["モデル"]], rotation=45)
     axes[1, 0].axhline(y=0.1, color='orange', linestyle='--', alpha=0.7, label='注意ライン')
@@ -508,18 +508,18 @@ if st.button("🚀 モデル訓練・評価を実行", type="primary"):
     
     axes[1, 1].errorbar(range(len(results_df)), results_df["CV平均R²"], 
                        yerr=results_df["CV標準偏差"], fmt='o', capsize=5, capthick=2)
-    axes[1, 1].set_title("クロスバリデーション結果")
-    axes[1, 1].set_xlabel("モデル")
-    axes[1, 1].set_ylabel("CV平均R² ± 標準偏差")
+    axes[1, 1].set_title("Cross Validation Results")
+    axes[1, 1].set_xlabel("Model")
+    axes[1, 1].set_ylabel("CV Mean R² ± Std Dev")
     axes[1, 1].set_xticks(range(len(results_df)))
     axes[1, 1].set_xticklabels([name.split("（")[0] for name in results_df["モデル"]], rotation=45)
     axes[1, 1].grid(True, alpha=0.3)
     
     colors_div = ['red' if x < 0.1 else 'orange' if x < 0.3 else 'green' for x in results_df["予測多様性"]]
     axes[2, 0].bar(range(len(results_df)), results_df["予測多様性"], color=colors_div, alpha=0.7)
-    axes[2, 0].set_title("予測多様性（単一値化検出）")
-    axes[2, 0].set_xlabel("モデル")
-    axes[2, 0].set_ylabel("予測多様性")
+    axes[2, 0].set_title("Prediction Diversity (Single Value Detection)")
+    axes[2, 0].set_xlabel("Model")
+    axes[2, 0].set_ylabel("Prediction Diversity")
     axes[2, 0].set_xticks(range(len(results_df)))
     axes[2, 0].set_xticklabels([name.split("（")[0] for name in results_df["モデル"]], rotation=45)
     axes[2, 0].axhline(y=0.1, color='red', linestyle='--', alpha=0.7, label='単一値化ライン')
@@ -535,9 +535,9 @@ if st.button("🚀 モデル訓練・評価を実行", type="primary"):
     axes[2, 1].plot([worst_model["テスト実測値"].min(), worst_model["テスト実測値"].max()], 
                    [worst_model["テスト実測値"].min(), worst_model["テスト実測値"].max()], 
                    'k--', alpha=0.8, label='理想線')
-    axes[2, 1].set_title(f"最悪モデルの予測 vs 実測\n({worst_model['モデル']})")
-    axes[2, 1].set_xlabel("実測値")
-    axes[2, 1].set_ylabel("予測値")
+    axes[2, 1].set_title(f"Worst Model Prediction vs Actual\n({worst_model['モデル']})")
+    axes[2, 1].set_xlabel("Actual Values")
+    axes[2, 1].set_ylabel("Predicted Values")
     axes[2, 1].legend()
     axes[2, 1].grid(True, alpha=0.3)
     
