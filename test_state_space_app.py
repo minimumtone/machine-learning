@@ -4,7 +4,10 @@
 
 import sys
 import numpy as np
-from state_space_model_app import *
+from state_space_model_app import (
+    KalmanFilter, ParticleFilter, EnsembleKalmanFilter,
+    generate_lorenz_data, generate_simple_model_data
+)
 
 def test_basic_functionality():
     """基本機能のテスト"""

@@ -39,7 +39,7 @@ class KalmanFilter:
         self.H = H
         self.Q = Q
         self.R = R
-        self.x = x0.copy()
+        self.x = x0.reshape(-1, 1) if x0.ndim == 1 else x0.copy()
         self.P = P0.copy()
         
         self.n_states = F.shape[0]
@@ -69,9 +69,10 @@ class KalmanFilter:
         
         det_S = np.linalg.det(S)
         if det_S > 0:
-            self.log_likelihood += -0.5 * (np.log(2 * np.pi * det_S) + y.T @ np.linalg.inv(S) @ y)
+            ll_increment = -0.5 * (np.log(2 * np.pi * det_S) + y.T @ np.linalg.inv(S) @ y)
+            self.log_likelihood += float(ll_increment.item() if hasattr(ll_increment, 'item') else ll_increment)
         
-        self.innovations_history.append(y.copy())
+        self.innovations_history.append(y.flatten())
     
     def assimilate(self, observations: np.ndarray) -> Dict:
         """データ同化実行"""
@@ -85,12 +86,12 @@ class KalmanFilter:
         
         for t in range(n_timesteps):
             x_pred, P_pred = self.predict()
-            self.predictions_history.append(x_pred.copy())
+            self.predictions_history.append(x_pred.flatten())
             
-            z = observations[t].reshape(-1, 1) if observations[t].ndim == 0 else observations[t].reshape(-1, 1)
+            z = observations[t].reshape(-1, 1)
             self.update(z, x_pred, P_pred)
             
-            self.states_history.append(self.x.copy())
+            self.states_history.append(self.x.flatten())
             self.covariances_history.append(self.P.copy())
         
         return {
@@ -242,7 +243,7 @@ class EnsembleKalmanFilter:
         
         X = self.ensemble - x_mean
         
-        H_ensemble = np.array([self.observation_func(member) for member in self.ensemble])
+        H_ensemble = np.array([self.observation_func(member).flatten() for member in self.ensemble])
         h_mean = np.mean(H_ensemble, axis=0)
         
         Y = H_ensemble - h_mean
@@ -254,7 +255,7 @@ class EnsembleKalmanFilter:
         
         for i in range(self.n_ensemble):
             obs_noise = np.random.randn(self.obs_dim) * self.obs_noise_std
-            innovation = observation + obs_noise - H_ensemble[i]
+            innovation = observation.flatten() + obs_noise - H_ensemble[i]
             self.ensemble[i] = self.ensemble[i] + K @ innovation
     
     def assimilate(self, observations: np.ndarray) -> Dict:
