@@ -620,7 +620,7 @@ def create_app():
             for c in search_results['all_candidates']
         ])
         
-        st.dataframe(results_df, width="container")
+        st.dataframe(results_df, width="stretch")
         
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
         
