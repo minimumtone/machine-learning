@@ -1,18 +1,15 @@
 """
-拡散方程式発見システム - PINNsとBICモデル選択
-Physics-Informed Neural Networks (PINNs) と Bayesian Information Criterion (BIC) を用いた
-拡散方程式のパラメータ発見システム
+拡散方程式の拡散係数発見システム - PINNsによる逆問題解法
+Physics-Informed Neural Networks (PINNs) を用いた拡散係数の推定
 
-完全な自己完結型ファイル - 外部インポートなし
+FDMで生成した疑似実験データから、PINNsが拡散係数Dを逆問題として求めます。
+完全な自己完結型ファイル
 """
 
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
-from typing import List, Tuple, Dict, Any, Callable, Optional
-import pandas as pd
-from scipy.optimize import curve_fit, differential_evolution
-from itertools import product
+from typing import Dict, Any, Callable, Optional
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -64,26 +61,30 @@ if PINNS_AVAILABLE:
 
 
     class PINNsDiffusionSolver:
-        """PINNsを用いた拡散方程式ソルバー
+        """PINNsを用いた拡散方程式の逆問題ソルバー
         
         ∂u/∂t = D × ∂²u/∂x²
+        
+        データから拡散係数Dを推定します。
         """
         
-        def __init__(self, D: float = 1e-9, L: float = 0.02, T_final: float = 3600.0,
-                     hidden_dim: int = 50, num_layers: int = 4):
+        def __init__(self, L: float = 0.02, T_final: float = 3600.0,
+                     hidden_dim: int = 50, num_layers: int = 4, D_init: float = 1e-9):
             """
             Args:
-                D: 拡散係数 [m²/s]
                 L: 空間領域の長さ [m]
                 T_final: 最終時間 [s]
                 hidden_dim: 隠れ層の次元
                 num_layers: 隠れ層の数
+                D_init: 拡散係数の初期値 [m²/s]
             """
-            self.D = D
             self.L = L
             self.T_final = T_final
             self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
             self.model = DiffusionPINN(hidden_dim=hidden_dim, num_layers=num_layers).to(self.device)
+            
+            log_D_init = np.log(D_init)
+            self.log_D = nn.Parameter(torch.tensor([log_D_init], dtype=torch.float32, device=self.device))
             
         def initial_condition(self, x: torch.Tensor) -> torch.Tensor:
             """初期条件: u(x, 0) = sin(πx/L)"""
@@ -112,43 +113,57 @@ if PINNS_AVAILABLE:
             u_xx = torch.autograd.grad(u_x, x, grad_outputs=torch.ones_like(u_x),
                                       create_graph=True)[0]
             
-            residual = u_t - self.D * u_xx
+            D = torch.exp(self.log_D)
+            residual = u_t - D * u_xx
             return residual
         
         def train(self, epochs: int = 5000, lr: float = 0.001, n_points: int = 2000,
+                 u_data: np.ndarray = None, x_data: np.ndarray = None, t_data: np.ndarray = None,
                  progress_callback: Optional[Callable] = None) -> Dict[str, float]:
-            """PINNsの訓練
+            """PINNsの訓練（逆問題：Dを発見）
             
             Args:
                 epochs: エポック数
                 lr: 学習率
-                n_points: サンプリング点数
+                n_points: PDE残差計算用サンプリング点数
+                u_data: FDMから得た濃度データ
+                x_data: 空間座標データ
+                t_data: 時間座標データ
                 progress_callback: 進捗コールバック関数
             
             Returns:
-                訓練結果の辞書
+                訓練結果の辞書（discovered_D含む）
             """
-            optimizer = optim.Adam(self.model.parameters(), lr=lr)
+            optimizer = optim.Adam(list(self.model.parameters()) + [self.log_D], lr=lr)
             scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=500, factor=0.5)
+            
+            if u_data is not None:
+                x_data_tensor = torch.FloatTensor(x_data).to(self.device)
+                t_data_tensor = torch.FloatTensor(t_data).to(self.device)
+                u_data_tensor = torch.FloatTensor(u_data).to(self.device)
             
             for epoch in range(epochs):
                 optimizer.zero_grad()
                 
+                if u_data is not None:
+                    u_pred = self.model(x_data_tensor, t_data_tensor)
+                    data_loss = torch.mean((u_pred - u_data_tensor) ** 2)
+                else:
+                    data_loss = torch.tensor(0.0, device=self.device)
+                
                 x_pde = torch.rand(n_points, 1, device=self.device) * self.L
                 t_pde = torch.rand(n_points, 1, device=self.device) * self.T_final
+                pde_loss = torch.mean(self.pde_residual(x_pde, t_pde) ** 2)
                 
                 x_ic = torch.rand(n_points // 4, 1, device=self.device) * self.L
                 t_ic = torch.zeros(n_points // 4, 1, device=self.device)
+                u_ic_pred = self.model(x_ic, t_ic)
+                u_ic_true = self.initial_condition(x_ic)
+                ic_loss = torch.mean((u_ic_pred - u_ic_true) ** 2)
                 
                 t_bc = torch.rand(n_points // 4, 1, device=self.device) * self.T_final
                 x_bc_left = torch.zeros(n_points // 4, 1, device=self.device)
                 x_bc_right = torch.ones(n_points // 4, 1, device=self.device) * self.L
-                
-                pde_loss = torch.mean(self.pde_residual(x_pde, t_pde) ** 2)
-                
-                u_ic_pred = self.model(x_ic, t_ic)
-                u_ic_true = self.initial_condition(x_ic)
-                ic_loss = torch.mean((u_ic_pred - u_ic_true) ** 2)
                 
                 u_bc_left_pred = self.model(x_bc_left, t_bc)
                 u_bc_left_true = self.boundary_condition_left(t_bc)
@@ -160,7 +175,7 @@ if PINNS_AVAILABLE:
                 
                 bc_loss = bc_left_loss + bc_right_loss
                 
-                loss = pde_loss + 10.0 * ic_loss + 10.0 * bc_loss
+                loss = data_loss + 0.1 * pde_loss + 10.0 * ic_loss + 10.0 * bc_loss
                 
                 loss.backward()
                 optimizer.step()
@@ -169,10 +184,15 @@ if PINNS_AVAILABLE:
                 if progress_callback is not None and epoch % 100 == 0:
                     progress_callback(epoch, epochs, loss.item())
             
+            discovered_D = torch.exp(self.log_D).item()
+            
             return {
                 'final_loss': loss.item(),
+                'data_loss': data_loss.item() if u_data is not None else 0.0,
                 'pde_loss': pde_loss.item(),
-                'bc_loss': bc_loss.item()
+                'ic_loss': ic_loss.item(),
+                'bc_loss': bc_loss.item(),
+                'discovered_D': discovered_D
             }
         
         def predict(self, X: np.ndarray, T: np.ndarray) -> np.ndarray:
@@ -254,250 +274,22 @@ class DiffusionFDM:
         return self.u
 
 
-class NumericalDerivatives:
-    """数値微分計算クラス"""
-    
-    @staticmethod
-    def compute_dt(u: np.ndarray, dt: float) -> np.ndarray:
-        """時間微分の計算"""
-        dudt = np.zeros_like(u)
-        dudt[1:-1, :] = (u[2:, :] - u[:-2, :]) / (2 * dt)
-        dudt[0, :] = (u[1, :] - u[0, :]) / dt
-        dudt[-1, :] = (u[-1, :] - u[-2, :]) / dt
-        return dudt
-    
-    @staticmethod
-    def compute_dx(u: np.ndarray, dx: float) -> np.ndarray:
-        """空間微分の計算"""
-        dudx = np.zeros_like(u)
-        dudx[:, 1:-1] = (u[:, 2:] - u[:, :-2]) / (2 * dx)
-        dudx[:, 0] = (u[:, 1] - u[:, 0]) / dx
-        dudx[:, -1] = (u[:, -1] - u[:, -2]) / dx
-        return dudx
-    
-    @staticmethod
-    def compute_d2x(u: np.ndarray, dx: float) -> np.ndarray:
-        """空間2階微分の計算"""
-        d2udx2 = np.zeros_like(u)
-        d2udx2[:, 1:-1] = (u[:, 2:] - 2 * u[:, 1:-1] + u[:, :-2]) / (dx ** 2)
-        d2udx2[:, 0] = (u[:, 2] - 2 * u[:, 1] + u[:, 0]) / (dx ** 2)
-        d2udx2[:, -1] = (u[:, -1] - 2 * u[:, -2] + u[:, -3]) / (dx ** 2)
-        return d2udx2
-
-
-class ComplexityCalculator:
-    """モデル複雑度計算クラス"""
-    
-    def __init__(self):
-        self.term_complexity = {
-            'constant': 1,
-            'linear': 1,
-            'quadratic': 2,
-            'interaction': 2,
-            'derivative_1': 1,
-            'derivative_2': 2
-        }
-    
-    def calculate_pde_complexity(self, formula_name: str) -> int:
-        """PDE式の複雑度を計算"""
-        complexity = 0
-        
-        if '∂u/∂t' in formula_name or 'dudt' in formula_name:
-            complexity += self.term_complexity['derivative_1']
-        
-        if '∂²u/∂x²' in formula_name or 'd2udx2' in formula_name:
-            complexity += self.term_complexity['derivative_2']
-        
-        if '∂u/∂x' in formula_name or 'dudx' in formula_name:
-            complexity += self.term_complexity['derivative_1']
-        
-        if 'u²' in formula_name or 'u**2' in formula_name:
-            complexity += self.term_complexity['quadratic']
-        elif 'u' in formula_name and '∂u' not in formula_name:
-            complexity += self.term_complexity['linear']
-        
-        return max(complexity, 1)
-
-
-class FullStateSearch:
-    """完全状態探索によるPDE発見"""
-    
-    def __init__(self, u: np.ndarray, x: np.ndarray, t: np.ndarray):
-        self.u = u
-        self.x = x
-        self.t = t
-        self.dx = x[1] - x[0]
-        self.dt = t[1] - t[0]
-        
-        self.derivatives = NumericalDerivatives()
-        self.complexity_calc = ComplexityCalculator()
-        
-        self.dudt = self.derivatives.compute_dt(u, self.dt)
-        self.dudx = self.derivatives.compute_dx(u, self.dx)
-        self.d2udx2 = self.derivatives.compute_d2x(u, self.dx)
-    
-    def evaluate_pde_formula(self, formula_func: Callable, params: List[float], 
-                           mask: Optional[np.ndarray] = None) -> float:
-        """PDE候補式の評価"""
-        if mask is None:
-            mask = np.ones_like(self.u, dtype=bool)
-        
-        try:
-            residual = formula_func(params)
-            mse = np.mean(residual[mask] ** 2)
-            return mse
-        except:
-            return np.inf
-    
-    def calculate_bic(self, mse: float, n_params: int, n_samples: int) -> float:
-        """BIC (Bayesian Information Criterion) の計算"""
-        return n_samples * np.log(mse + 1e-10) + n_params * np.log(n_samples)
-    
-    def calculate_aic(self, mse: float, n_params: int, n_samples: int) -> float:
-        """AIC (Akaike Information Criterion) の計算"""
-        return n_samples * np.log(mse + 1e-10) + 2 * n_params
-    
-    def search_diffusion_equation(self, param_range: Tuple[float, float] = (1e-11, 1e-7)) -> Dict[str, Any]:
-        """拡散方程式の探索: ∂u/∂t = c × ∂²u/∂x²"""
-        
-        candidates = []
-        n_samples = np.prod(self.u.shape)
-        
-        mask = (self.u > 0.01) & (np.abs(self.d2udx2) > 1e-6)
-        
-        def formula_simple(params):
-            c = params[0]
-            return self.dudt - c * self.d2udx2
-        
-        try:
-            bounds = [param_range]
-            result = differential_evolution(
-                lambda p: self.evaluate_pde_formula(formula_simple, p, mask),
-                bounds, maxiter=1000, seed=42, tol=1e-10
-            )
-            params = result.x.tolist()
-            mse = result.fun
-        except:
-            params = [(param_range[0] + param_range[1]) / 2]
-            mse = self.evaluate_pde_formula(formula_simple, params, mask)
-        
-        n_params = 1
-        bic = self.calculate_bic(mse, n_params, n_samples)
-        aic = self.calculate_aic(mse, n_params, n_samples)
-        complexity = self.complexity_calc.calculate_pde_complexity('c × ∂²u/∂x²')
-        
-        candidates.append({
-            'name': '∂u/∂t = c × ∂²u/∂x²',
-            'formula': 'c × ∂²u/∂x²',
-            'optimized_params': params if isinstance(params, list) else params.tolist(),
-            'mse': mse,
-            'bic': bic,
-            'aic': aic,
-            'complexity': complexity,
-            'n_params': n_params
-        })
-        
-        def formula_with_drift(params):
-            c1, c2 = params
-            return self.dudt - c1 * self.d2udx2 - c2 * self.dudx
-        
-        try:
-            bounds = [param_range, (-1e-5, 1e-5)]
-            result = differential_evolution(
-                lambda p: self.evaluate_pde_formula(formula_with_drift, p, mask),
-                bounds, maxiter=1000, seed=42
-            )
-            params = result.x.tolist()
-            mse = result.fun
-        except:
-            params = [(param_range[0] + param_range[1]) / 2, 0.0]
-            mse = self.evaluate_pde_formula(formula_with_drift, params, mask)
-        
-        n_params = 2
-        bic = self.calculate_bic(mse, n_params, n_samples)
-        aic = self.calculate_aic(mse, n_params, n_samples)
-        complexity = self.complexity_calc.calculate_pde_complexity('c1 × ∂²u/∂x² + c2 × ∂u/∂x')
-        
-        candidates.append({
-            'name': '∂u/∂t = c1 × ∂²u/∂x² + c2 × ∂u/∂x',
-            'formula': 'c1 × ∂²u/∂x² + c2 × ∂u/∂x',
-            'optimized_params': params if isinstance(params, list) else params.tolist(),
-            'mse': mse,
-            'bic': bic,
-            'aic': aic,
-            'complexity': complexity,
-            'n_params': n_params
-        })
-        
-        def formula_nonlinear(params):
-            c1, c2 = params
-            return self.dudt - c1 * self.d2udx2 - c2 * self.u * self.dudx
-        
-        try:
-            bounds = [param_range, (-1e-5, 1e-5)]
-            result = differential_evolution(
-                lambda p: self.evaluate_pde_formula(formula_nonlinear, p, mask),
-                bounds, maxiter=1000, seed=42
-            )
-            params = result.x.tolist()
-            mse = result.fun
-        except:
-            params = [(param_range[0] + param_range[1]) / 2, 0.0]
-            mse = self.evaluate_pde_formula(formula_nonlinear, params, mask)
-        
-        n_params = 2
-        bic = self.calculate_bic(mse, n_params, n_samples)
-        aic = self.calculate_aic(mse, n_params, n_samples)
-        complexity = self.complexity_calc.calculate_pde_complexity('c1 × ∂²u/∂x² + c2 × u × ∂u/∂x')
-        
-        candidates.append({
-            'name': '∂u/∂t = c1 × ∂²u/∂x² + c2 × u × ∂u/∂x',
-            'formula': 'c1 × ∂²u/∂x² + c2 × u × ∂u/∂x',
-            'optimized_params': params if isinstance(params, list) else params.tolist(),
-            'mse': mse,
-            'bic': bic,
-            'aic': aic,
-            'complexity': complexity,
-            'n_params': n_params
-        })
-        
-        candidates_sorted = sorted(candidates, key=lambda x: x['bic'])
-        
-        bic_values = np.array([c['bic'] for c in candidates_sorted])
-        bic_min = np.min(bic_values)
-        delta_bic = bic_values - bic_min
-        weights = np.exp(-0.5 * delta_bic)
-        posterior_probs = weights / np.sum(weights)
-        
-        for i, candidate in enumerate(candidates_sorted):
-            candidate['posterior_prob'] = posterior_probs[i]
-        
-        best_model = candidates_sorted[0]
-        
-        return {
-            'best_model': best_model,
-            'all_candidates': candidates_sorted,
-            'posterior_probabilities': posterior_probs.tolist()
-        }
-
-
 def create_app():
     """Streamlitアプリケーションの作成"""
     
     st.set_page_config(page_title="拡散方程式発見システム", layout="wide")
     
-    st.title("🔬 拡散方程式発見システム")
+    st.title("🔬 拡散係数発見システム")
     
     if not PINNS_AVAILABLE:
         st.warning("⚠️ PyTorchがインストールされていません。PINNs機能を使用するにはPyTorchをインストールしてください。")
-    st.markdown("### Physics-Informed Neural Networks (PINNs) と Bayesian Information Criterion (BIC)")
+    st.markdown("### Physics-Informed Neural Networks (PINNs) による逆問題解法")
     
     st.markdown("""
-    このアプリケーションは、以下の手順で拡散方程式のパラメータを発見します：
+    このアプリケーションは、以下の手順で拡散係数を発見します：
     
-    1. **📊 数値データ生成**: 有限差分法(FDM)で拡散方程式を解く
-    2. **🔍 完全状態探索**: 候補式を全探索しBICで評価
-    3. **🧠 PINNs検証** (オプション): 発見した式をPINNsで検証
+    1. **📊 疑似実験データ生成**: 有限差分法(FDM)で拡散方程式を解く
+    2. **🧠 PINNsによる発見**: データから拡散係数Dを逆問題として求める
     
     **対象方程式**: ∂u/∂t = D × ∂²u/∂x² (拡散方程式)
     """)
@@ -542,9 +334,9 @@ def create_app():
         help="データに加えるガウスノイズの標準偏差"
     )
     
-    if st.button("🚀 拡散方程式発見を開始", type="primary"):
+    if st.button("🚀 拡散係数発見を開始", type="primary"):
         
-        st.header("Step 1: 数値データ生成 (FDM)")
+        st.header("Step 1: 疑似実験データ生成 (FDM)")
         
         with st.spinner("有限差分法で拡散方程式を解いています..."):
             fdm = DiffusionFDM(L=L, T_final=T_final, nx=nx, nt=nt, D=D_true)
@@ -554,7 +346,7 @@ def create_app():
                 noise = np.random.normal(0, noise_level, u_numerical.shape)
                 u_numerical = u_numerical + noise
         
-        st.success("✅ 数値解の計算完了")
+        st.success("✅ 疑似実験データの生成完了")
         
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
         
@@ -562,7 +354,7 @@ def create_app():
                        extent=[0, L, 0, T_final], cmap='viridis')
         ax1.set_xlabel('Position x (m)')
         ax1.set_ylabel('Time t (s)')
-        ax1.set_title('FDM: Concentration Distribution c(x,t)')
+        ax1.set_title('FDM: Pseudo-Experimental Data c(x,t)')
         plt.colorbar(im, ax=ax1, label='Concentration c')
         
         time_indices = [0, nt//4, nt//2, 3*nt//4, nt-1]
@@ -570,216 +362,190 @@ def create_app():
             ax2.plot(fdm.x, u_numerical[i, :], label=f't = {fdm.t[i]:.0f}s', linewidth=2)
         ax2.set_xlabel('Position x (m)')
         ax2.set_ylabel('Concentration c')
-        ax2.set_title('Concentration Distribution at Different Times')
+        ax2.set_title('Concentration at Different Times')
         ax2.legend()
         ax2.grid(True, alpha=0.3)
         
         plt.tight_layout()
         st.pyplot(fig)
         
-        st.header("Step 2: 完全状態探索とBICモデル選択")
-        
-        with st.spinner("候補式を探索中..."):
-            searcher = FullStateSearch(u_numerical, fdm.x, fdm.t)
-            search_results = searcher.search_diffusion_equation(param_range=(1e-11, 1e-7))
-        
-        st.session_state['search_results'] = search_results
+        st.session_state['u_numerical'] = u_numerical
+        st.session_state['fdm'] = fdm
         st.session_state['L'] = L
         st.session_state['T_final'] = T_final
         st.session_state['D_true'] = D_true
+    
+    if PINNS_AVAILABLE and 'u_numerical' in st.session_state:
+        st.write("---")
+        st.header("Step 2: PINNsによる拡散係数の発見")
         
-        st.success("✅ 探索完了")
+        st.markdown("""
+        疑似実験データ（FDMで生成）を訓練データとして、PINNsが拡散係数Dを逆問題として推定します。
+        ニューラルネットワークは、データへのフィッティングと物理法則（PDE、初期条件、境界条件）を
+        同時に満たすように訓練されます。
+        """)
         
-        st.subheader("🏆 最優秀モデル (BIC基準)")
-        best_model = search_results['best_model']
-        
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("モデル", best_model['name'])
-        with col2:
-            st.metric("MSE", f"{best_model['mse']:.2e}")
-        with col3:
-            st.metric("BIC", f"{best_model['bic']:.1f}")
-        with col4:
-            st.metric("事後確率", f"{best_model['posterior_prob']:.3f}")
-        
-        st.info(f"**最適パラメータ**: {', '.join([f'{p:.2e}' for p in best_model['optimized_params']])}")
-        
-        st.subheader("📊 全候補モデルの比較")
-        
-        results_df = pd.DataFrame([
-            {
-                'モデル': c['name'],
-                'MSE': f"{c['mse']:.2e}",
-                'BIC': f"{c['bic']:.1f}",
-                'AIC': f"{c['aic']:.1f}",
-                '事後確率': f"{c['posterior_prob']:.3f}",
-                '複雑度': c['complexity'],
-                'パラメータ数': c['n_params']
-            }
-            for c in search_results['all_candidates']
-        ])
-        
-        st.dataframe(results_df, width="stretch")
-        
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
-        
-        models = [c['name'][:30] + '...' if len(c['name']) > 30 else c['name'] 
-                 for c in search_results['all_candidates']]
-        bic_scores = [c['bic'] for c in search_results['all_candidates']]
-        
-        colors = ['green' if i == 0 else 'steelblue' for i in range(len(models))]
-        ax1.barh(models, bic_scores, color=colors)
-        ax1.set_xlabel('BIC Score (lower is better)')
-        ax1.set_title('BIC Comparison')
-        ax1.invert_yaxis()
-        
-        posterior_probs = [c['posterior_prob'] for c in search_results['all_candidates']]
-        colors = ['green' if i == 0 else 'coral' for i in range(len(models))]
-        ax2.barh(models, posterior_probs, color=colors)
-        ax2.set_xlabel('Posterior Probability')
-        ax2.set_title('Model Posterior Probabilities')
-        ax2.invert_yaxis()
-        
-        plt.tight_layout()
-        st.pyplot(fig)
-        
-        st.subheader("📈 理論値との比較")
-        
-        discovered_D = best_model['optimized_params'][0]
-        
+        st.subheader("🎛️ PINNs訓練パラメータ")
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("真の拡散係数 D", f"{D_true:.2e} m²/s")
+            epochs = st.number_input("訓練エポック数", 1000, 20000, 5000, 1000)
         with col2:
-            st.metric("発見された拡散係数", f"{discovered_D:.2e} m²/s")
+            hidden_dim = st.number_input("隠れ層の次元", 20, 100, 50, 10)
         with col3:
-            error = abs(discovered_D - D_true) / D_true * 100
-            st.metric("相対誤差", f"{error:.1f}%")
-    
-    if PINNS_AVAILABLE and 'search_results' in st.session_state:
-        search_results = st.session_state['search_results']
-        best_model = search_results['best_model']
-        L = st.session_state['L']
-        T_final = st.session_state['T_final']
-        D_true = st.session_state['D_true']
+            num_layers = st.number_input("隠れ層の数", 2, 8, 4, 1)
         
-        if True:
-            st.write("---")
-            st.write("## 🧠 オプション: PINNsによる検証")
-            st.markdown("""
-            シンボリック回帰で発見された拡散係数を使用して、PINNsでも同じ方程式を解き、
-            結果を比較します。これにより、発見された方程式の妥当性を検証できます。
-            """)
+        if st.button("🧠 PINNsで拡散係数を発見"):
+            u_numerical = st.session_state['u_numerical']
+            fdm = st.session_state['fdm']
+            L = st.session_state['L']
+            T_final = st.session_state['T_final']
+            D_true = st.session_state['D_true']
             
-            if st.button("🧠 PINNsで検証"):
-                if best_model and len(best_model['optimized_params']) > 0:
-                    discovered_D = best_model['optimized_params'][0]
-                    
-                    st.subheader("🧠 PINNsによる拡散方程式の解法")
-                    st.info(f"発見された拡散係数 D = {discovered_D:.2e} を使用してPINNsを訓練します")
-                    
-                    progress_bar = st.progress(0)
-                    status_text = st.empty()
-                    
-                    def progress_callback(epoch, total_epochs, loss):
-                        progress = epoch / total_epochs
-                        progress_bar.progress(progress)
-                        status_text.text(f"エポック {epoch}/{total_epochs}, 損失: {loss:.6f}")
-                    
-                    epochs = 5000
-                    hidden_dim = 50
-                    num_layers = 4
-                    learning_rate = 0.0005
-                    n_points = 2000
-                    
-                    with st.spinner("PINNsによる拡散方程式の解法中..."):
-                        solver = PINNsDiffusionSolver(
-                            D=discovered_D, 
-                            L=L,
-                            T_final=T_final,
-                            hidden_dim=hidden_dim, 
-                            num_layers=num_layers
-                        )
-                        training_results = solver.train(
-                            epochs=epochs, 
-                            lr=learning_rate, 
-                            n_points=n_points, 
-                            progress_callback=progress_callback
-                        )
-                        
-                        x_test = np.linspace(0, L, 50)
-                        t_test = np.linspace(0, T_final, 50)
-                        X_test, T_test = np.meshgrid(x_test, t_test)
-                        u_pinns = solver.predict(X_test, T_test)
-                    
-                    progress_bar.empty()
-                    status_text.empty()
-                    
-                    st.success("✅ PINNs訓練完了!")
-                    
-                    st.subheader("📈 PINNs拡散方程式の解")
-                    
-                    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
-                    
-                    im1 = ax1.imshow(u_pinns, aspect='auto', origin='lower', 
-                                   extent=[0, L, 0, T_final], cmap='plasma')
-                    ax1.set_xlabel('Position x (m)')
-                    ax1.set_ylabel('Time t (s)')
-                    ax1.set_title('PINNs: Concentration Distribution c(x,t)')
-                    plt.colorbar(im1, ax=ax1, label='Concentration c')
-                    
-                    time_indices = [0, 12, 25, 37, 49]
-                    for i in time_indices:
-                        ax2.plot(x_test, u_pinns[i, :], label=f't = {t_test[i]:.0f}s', linewidth=2)
-                    ax2.set_xlabel('Position x (m)')
-                    ax2.set_ylabel('Concentration c')
-                    ax2.set_title('Concentration Distribution at Different Times')
-                    ax2.legend()
-                    ax2.grid(True, alpha=0.3)
-                    
-                    plt.tight_layout()
-                    st.pyplot(fig)
-                    
-                    st.subheader("🎯 PINNs訓練結果")
-                    col1, col2, col3 = st.columns(3)
-                    with col1:
-                        st.metric("最終損失", f"{training_results['final_loss']:.6f}")
-                    with col2:
-                        st.metric("PDE損失", f"{training_results['pde_loss']:.6f}")
-                    with col3:
-                        st.metric("境界条件損失", f"{training_results['bc_loss']:.6f}")
-                    
-                    st.subheader("📊 シンボリック回帰 vs PINNs 比較")
-                    st.markdown("""
-                    **シンボリック回帰**: データから数式を直接発見（BIC基準で最適モデル選択）  
-                    **PINNs**: 物理法則を制約として組み込んだニューラルネットワーク
-                    """)
-                    
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.write("**シンボリック回帰で発見された式**")
-                        st.write(best_model['name'])
-                        st.metric("発見された拡散係数", f"{discovered_D:.2e}")
-                        st.metric("真の拡散係数", f"{D_true:.2e}")
-                        error = abs(discovered_D - D_true) / D_true * 100
-                        st.metric("相対誤差", f"{error:.1f}%")
-                    
-                    with col2:
-                        st.write("**PINNsによる検証**")
-                        st.write("∂u/∂t = D × ∂²u/∂x² を解いた結果")
-                        st.metric("使用した拡散係数", f"{discovered_D:.2e}")
-                        st.metric("PDE損失（フィッティング精度）", f"{training_results['pde_loss']:.6f}")
-                        
-                        if training_results['pde_loss'] < 0.01:
-                            st.success("✅ 高精度でPDEを満たしています")
-                        elif training_results['pde_loss'] < 0.1:
-                            st.info("ℹ️ 妥当な精度でPDEを満たしています")
-                        else:
-                            st.warning("⚠️ PDE損失が高いです。訓練パラメータの調整が必要かもしれません")
-                    
-                else:
-                    st.error("❌ シンボリック回帰による最適モデルが見つかりません。先に拡散方程式発見を実行してください。")
+            st.subheader("🧠 PINNsによる訓練")
+            st.info("データから拡散係数Dを推定しています...")
+            
+            X_grid, T_grid = np.meshgrid(fdm.x, fdm.t)
+            x_data = X_grid.flatten().reshape(-1, 1)
+            t_data = T_grid.flatten().reshape(-1, 1)
+            u_data = u_numerical.flatten().reshape(-1, 1)
+            
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            
+            def progress_callback(epoch, total_epochs, loss):
+                progress = epoch / total_epochs
+                progress_bar.progress(progress)
+                status_text.text(f"エポック {epoch}/{total_epochs}, 損失: {loss:.6f}")
+            
+            D_init = 1e-9
+            learning_rate = 0.001
+            n_points = 2000
+            
+            with st.spinner("PINNsによる拡散係数の推定中..."):
+                solver = PINNsDiffusionSolver(
+                    L=L,
+                    T_final=T_final,
+                    hidden_dim=hidden_dim,
+                    num_layers=num_layers,
+                    D_init=D_init
+                )
+                training_results = solver.train(
+                    epochs=epochs,
+                    lr=learning_rate,
+                    n_points=n_points,
+                    u_data=u_data,
+                    x_data=x_data,
+                    t_data=t_data,
+                    progress_callback=progress_callback
+                )
+                
+                x_test = np.linspace(0, L, 50)
+                t_test = np.linspace(0, T_final, 50)
+                X_test, T_test = np.meshgrid(x_test, t_test)
+                u_pinns = solver.predict(X_test, T_test)
+            
+            progress_bar.empty()
+            status_text.empty()
+            
+            st.success("✅ PINNs訓練完了！拡散係数を発見しました")
+            
+            discovered_D = training_results['discovered_D']
+            
+            st.subheader("🎯 発見された拡散係数")
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("真の拡散係数 D", f"{D_true:.2e} m²/s")
+            with col2:
+                st.metric("発見された拡散係数", f"{discovered_D:.2e} m²/s", 
+                         delta=f"{discovered_D - D_true:.2e}")
+            with col3:
+                error = abs(discovered_D - D_true) / D_true * 100
+                st.metric("相対誤差", f"{error:.1f}%")
+            
+            if error < 10:
+                st.success("✅ 高精度で拡散係数を推定できました！")
+            elif error < 30:
+                st.info("ℹ️ 妥当な精度で拡散係数を推定できました")
+            else:
+                st.warning("⚠️ 推定精度が低いです。訓練パラメータの調整が必要かもしれません")
+            
+            st.subheader("📊 訓練結果")
+            col1, col2, col3, col4, col5 = st.columns(5)
+            with col1:
+                st.metric("総損失", f"{training_results['final_loss']:.6f}")
+            with col2:
+                st.metric("データ損失", f"{training_results['data_loss']:.6f}")
+            with col3:
+                st.metric("PDE損失", f"{training_results['pde_loss']:.6f}")
+            with col4:
+                st.metric("初期条件損失", f"{training_results['ic_loss']:.6f}")
+            with col5:
+                st.metric("境界条件損失", f"{training_results['bc_loss']:.6f}")
+            
+            st.subheader("📈 FDMデータ vs PINN予測の比較")
+            
+            fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+            
+            im1 = axes[0, 0].imshow(u_numerical, aspect='auto', origin='lower',
+                                   extent=[0, L, 0, T_final], cmap='viridis')
+            axes[0, 0].set_xlabel('Position x (m)')
+            axes[0, 0].set_ylabel('Time t (s)')
+            axes[0, 0].set_title('FDM: Pseudo-Experimental Data')
+            plt.colorbar(im1, ax=axes[0, 0], label='Concentration c')
+            
+            im2 = axes[0, 1].imshow(u_pinns, aspect='auto', origin='lower',
+                                   extent=[0, L, 0, T_final], cmap='viridis')
+            axes[0, 1].set_xlabel('Position x (m)')
+            axes[0, 1].set_ylabel('Time t (s)')
+            axes[0, 1].set_title(f'PINNs Prediction (D = {discovered_D:.2e})')
+            plt.colorbar(im2, ax=axes[0, 1], label='Concentration c')
+            
+            time_indices = [0, 12, 25, 37, 49]
+            for i in time_indices:
+                axes[1, 0].plot(fdm.x, u_numerical[int(i * fdm.nt / 50), :],
+                              label=f't = {fdm.t[int(i * fdm.nt / 50)]:.0f}s', linewidth=2, linestyle='--')
+                axes[1, 0].plot(x_test, u_pinns[i, :], linewidth=2)
+            axes[1, 0].set_xlabel('Position x (m)')
+            axes[1, 0].set_ylabel('Concentration c')
+            axes[1, 0].set_title('FDM (dashed) vs PINNs (solid)')
+            axes[1, 0].grid(True, alpha=0.3)
+            
+            X_grid_test, T_grid_test = np.meshgrid(fdm.x, fdm.t)
+            u_pinns_full = solver.predict(X_grid_test, T_grid_test)
+            error_map = np.abs(u_numerical - u_pinns_full)
+            
+            im3 = axes[1, 1].imshow(error_map, aspect='auto', origin='lower',
+                                   extent=[0, L, 0, T_final], cmap='hot')
+            axes[1, 1].set_xlabel('Position x (m)')
+            axes[1, 1].set_ylabel('Time t (s)')
+            axes[1, 1].set_title('Absolute Error |FDM - PINNs|')
+            plt.colorbar(im3, ax=axes[1, 1], label='Error')
+            
+            plt.tight_layout()
+            st.pyplot(fig)
+            
+            st.subheader("📝 まとめ")
+            st.markdown(f"""
+            **手法**: Physics-Informed Neural Networks (PINNs) による逆問題解法
+            
+            **入力**: FDMで生成した疑似実験データ（濃度分布 c(x,t)）
+            
+            **出力**: 拡散係数 D = {discovered_D:.2e} m²/s
+            
+            **精度**: 相対誤差 {error:.1f}%
+            
+            **訓練戦略**: 
+            - データフィッティング損失（FDMとの一致度）
+            - PDE損失（物理法則の満足度）
+            - 初期条件・境界条件損失
+            
+            PINNsは、データと物理法則を同時に学習することで、
+            ノイズを含むデータからでも頑健に拡散係数を推定できます。
+            """)
+
+    elif not PINNS_AVAILABLE:
+        st.info("💡 PINNsライブラリが利用できません。PyTorchをインストールしてPINNs機能を有効にしてください。")
 
 
 if __name__ == "__main__":
