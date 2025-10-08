@@ -207,26 +207,36 @@ class DiffusionFDM:
             L: 空間領域の長さ [m]
             T_final: 最終時間 [s]
             nx: 空間グリッド数
-            nt: 時間ステップ数
+            nt: 時間ステップ数（安定性条件違反時は自動調整）
             D: 拡散係数 [m²/s]
         """
         self.L = L
         self.T_final = T_final
         self.nx = nx
-        self.nt = nt
         self.D = D
         
         self.dx = L / (nx - 1)
         self.dt = T_final / (nt - 1)
         
-        self.x = np.linspace(0, L, nx)
-        self.t = np.linspace(0, T_final, nt)
+        r = D * self.dt / (self.dx ** 2)
+        if r > 0.5:
+            dt_max = 0.5 * (self.dx ** 2) / D
+            nt_required = int(np.ceil(T_final / dt_max)) + 1
+            
+            st.warning(f"⚠️ 安定性条件違反を検出: r = {r:.3f} > 0.5")
+            st.info(f"📝 自動修正: 時間ステップ数を {nt} → {nt_required} に調整しました")
+            
+            self.nt = nt_required
+            self.dt = T_final / (self.nt - 1)
+            self.r = D * self.dt / (self.dx ** 2)
+        else:
+            self.nt = nt
+            self.r = r
         
-        self.r = D * self.dt / (self.dx ** 2)
-        if self.r > 0.5:
-            st.warning(f"⚠️ 安定性条件違反: r = {self.r:.3f} > 0.5")
+        self.x = np.linspace(0, L, self.nx)
+        self.t = np.linspace(0, T_final, self.nt)
         
-        self.u = np.zeros((nt, nx))
+        self.u = np.zeros((self.nt, self.nx))
     
     def initial_condition(self):
         """初期条件の設定"""
