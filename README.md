@@ -38,6 +38,12 @@
 - **学習内容**: 決定木、ランダムフォレスト、ブースティング、特徴量重要度
 - **データセット**: Boston Dataset, Heart Disease Dataset
 
+### 7. ガラボッティ―コーエン対称性 (`gallavotti_cohen_symmetry.py`)
+- **概要**: 非平衡統計力学における揺らぎの定理の体感
+- **学習内容**: マルコフジャンプ過程、エントロピー生成、GC対称性、揺らぎの定理
+- **モデル**: 外部駆動下の二状態マルコフ過程
+- **詳細**: [GC_SYMMETRY_README.md](GC_SYMMETRY_README.md) を参照
+
 ## 使用方法
 
 ### 統合管理アプリケーション
@@ -49,6 +55,9 @@ streamlit run statistical_analysis_manager.py
 ```bash
 # 例: Boston住宅価格分析
 streamlit run boston_housing_analysis.py
+
+# ガラボッティ―コーエン対称性
+streamlit run gallavotti_cohen_symmetry.py
 ```
 
 ## インストール
