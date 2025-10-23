@@ -3,7 +3,7 @@
 darken_pinns_unified.py - Unified Darken Model PINNs Implementation
 
 This unified file combines all Darken PINNs functionality:
-- Core PINN implementation with enhanced pure substance boundary conditions
+- Core PINN implementation for diffusion pair concentration ranges
 - Streamlit web interface for interactive visualization
 - Standalone training script capability
 - Verification and testing functions
@@ -13,16 +13,15 @@ Usage:
   streamlit run darken_pinns_unified.py             # Run Streamlit app
   python darken_pinns_unified.py --verify           # Run verification tests
 
-Enhanced Pure Substance Boundary Conditions:
-- D_A(0) = 0.0   (component A cannot diffuse in pure B)
-- D_B(1) = 0.0   (component B cannot diffuse in pure A)  
-- D_A(1) = 0.05  (maximum self-diffusion for component A)
-- D_B(0) = 0.05  (maximum self-diffusion for component B)
+Diffusion Pair Focus:
+- Calculations restricted to realistic concentration ranges C ∈ [0.1, 0.9]
+- Avoids pure substance extremes for practical diffusion applications
 
 Darken Model: D̃(C) = C_B·D_A(C) + C_A·D_B(C) + (RT/Ω)·∂lnγ/∂C
 """
 
 import sys
+import os
 import time
 import argparse
 import numpy as np
@@ -100,7 +99,7 @@ def solve_nonlinear_diffusion_fdm(C_left, C_right, L=1.0, T_end=10.0, Nx=101, Nt
 
 class NonlinearDiffusionPINN(nn.Module):
     """
-    Enhanced Darken Model PINNs with pure substance boundary conditions
+    Darken Model PINNs for diffusion pair concentration ranges
     """
     def __init__(self, layers_C, layers_DA, layers_DB, layers_gamma,
                  C_left, C_right, L=1.0, R=8.314, T=300.0, Omega=25000.0):
@@ -155,7 +154,7 @@ class NonlinearDiffusionPINN(nn.Module):
         if not C.requires_grad:
             C.requires_grad_(True)
         
-        C_A = torch.clamp(C, 1e-6, 1.0 - 1e-6)
+        C_A = torch.clamp(C, 0.1, 0.9)
         C_B = 1.0 - C_A
         
         D_A = self._D_self(self.net_DA, C_A)
@@ -176,9 +175,11 @@ class NonlinearDiffusionPINN(nn.Module):
         return C_pred
 
     def loss(self, t_data, x_data, C_data, t_pde, x_pde, t_ic, x_ic, t_bc,
-             lambda_pde, lambda_ic, lambda_bc, lambda_Dbc):
+             lambda_pde, lambda_ic, lambda_bc):
         """
-        Enhanced loss function with pure substance boundary conditions
+        Loss function for diffusion pair concentration ranges:
+        - Calculations restricted to C ∈ [0.1, 0.9] for realistic diffusion pairs
+        - Avoids pure substance extremes for practical applications
         """
         C_pred_data = self.forward(t_data, x_data)
         loss_data = torch.mean((C_pred_data - C_data) ** 2)
@@ -214,23 +215,15 @@ class NonlinearDiffusionPINN(nn.Module):
         dC_dx_bc_L = torch.autograd.grad(C_bc_L, x_bc_L, grad_outputs=torch.ones_like(C_bc_L), create_graph=True)[0]
         loss_bc = torch.mean(dC_dx_bc_0**2) + torch.mean(dC_dx_bc_L**2)
 
-        D_A0 = self._D_self(self.net_DA, torch.zeros(1, 1, device=device))
-        D_B1 = self._D_self(self.net_DB, torch.ones(1, 1, device=device))
-        D_A1 = self._D_self(self.net_DA, torch.ones(1, 1, device=device))
-        D_B0 = self._D_self(self.net_DB, torch.zeros(1, 1, device=device))
-        
-        loss_D_bc = ((D_A0 - 0.0) ** 2 + (D_B1 - 0.0) ** 2 + 
-                     (D_A1 - 0.05) ** 2 + (D_B0 - 0.05) ** 2).squeeze()
-
-        total = loss_data + lambda_pde * loss_pde + lambda_ic * loss_ic + lambda_bc * loss_bc + lambda_Dbc * loss_D_bc
-        return total, loss_data, loss_pde, loss_ic, loss_bc, loss_D_bc
+        total = loss_data + lambda_pde * loss_pde + lambda_ic * loss_ic + lambda_bc * loss_bc
+        return total, loss_data, loss_pde, loss_ic, loss_bc
 
 
 def run_standalone_training():
     """Run standalone Darken PINNs training with matplotlib visualization"""
     print("=== Darken Model PINNs - Standalone Training ===\n")
     
-    C_left_true, C_right_true = 0.0, 1.0
+    C_left_true, C_right_true = 0.2, 0.8
     L_domain, T_domain = 1.0, 10.0
     Nx_fdm, Nt_fdm = 101, 2001
 
@@ -277,7 +270,7 @@ def run_standalone_training():
 
     epochs = 30000
     learning_rate = 2e-4
-    lambda_pde, lambda_ic, lambda_bc, lambda_Dbc = 1.0, 2.0, 0.5, 20.0  # Enhanced pure substance weighting
+    lambda_pde, lambda_ic, lambda_bc = 1.0, 2.0, 0.5
 
     optimizer = torch.optim.Adam(pinn.parameters(), lr=learning_rate, weight_decay=1e-5)
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.99995)
@@ -286,7 +279,7 @@ def run_standalone_training():
     C_eval_point = torch.tensor([[0.5]], device=device, dtype=torch.float32)
     true_D_tilde_eval = true_diffusion_coefficient(0.5)
 
-    loss_history = {'total': [], 'data': [], 'pde': [], 'ic': [], 'bc': [], 'D_bc': []}
+    loss_history = {'total': [], 'data': [], 'pde': [], 'ic': [], 'bc': []}
 
     start = time.time()
     pbar = tqdm(range(1, epochs + 1), desc="Training Progress")
@@ -294,9 +287,9 @@ def run_standalone_training():
         pinn.train()
         optimizer.zero_grad()
 
-        total, loss_data, loss_pde, loss_ic, loss_bc, loss_D_bc = pinn.loss(
+        total, loss_data, loss_pde, loss_ic, loss_bc = pinn.loss(
             t_data, x_data, C_data, t_pde, x_pde, t_ic, x_ic, t_bc,
-            lambda_pde, lambda_ic, lambda_bc, lambda_Dbc)
+            lambda_pde, lambda_ic, lambda_bc)
         
         if torch.isnan(total):
             print(f"\nNaN detected at epoch {epoch}. Stopping training.")
@@ -314,7 +307,6 @@ def run_standalone_training():
         loss_history['pde'].append(loss_pde.item())
         loss_history['ic'].append(loss_ic.item())
         loss_history['bc'].append(loss_bc.item())
-        loss_history['D_bc'].append(loss_D_bc.item())
 
         pbar.set_postfix({
             'Loss': f'{total.item():.3e}',
@@ -340,14 +332,13 @@ def run_standalone_training():
         plt.plot(loss_history['pde'], label='PDE Loss', alpha=0.7)
         plt.plot(loss_history['ic'], label='IC Loss', alpha=0.7)
         plt.plot(loss_history['bc'], label='BC Loss', alpha=0.7)
-        plt.plot(loss_history['D_bc'], label='D-BC Loss (Pure Substance)', alpha=0.7)
         plt.xlabel('Epoch')
         plt.ylabel('Loss')
         plt.yscale('log')
-        plt.title('Training Loss History - Enhanced Pure Substance Constraints')
+        plt.title('Training Loss History - Diffusion Pair Focus')
         plt.legend()
         plt.grid(True, which="both", ls="--")
-        plt.savefig('/home/ubuntu/repos/machine-learning/darken_loss_history_unified.png', dpi=150, bbox_inches='tight')
+        plt.savefig(os.path.join(os.getcwd(), 'darken_loss_history_unified.png'), dpi=150, bbox_inches='tight')
         plt.show()
 
     C_plot = torch.linspace(0, 1, 200, device=device).view(-1, 1)
@@ -362,7 +353,7 @@ def run_standalone_training():
     plt.title('Darken Model – True vs. PINN')
     plt.legend()
     plt.grid(True)
-    plt.savefig('/home/ubuntu/repos/machine-learning/darken_diffusion_comparison_unified.png', dpi=150, bbox_inches='tight')
+    plt.savefig(os.path.join(os.getcwd(), 'darken_diffusion_comparison_unified.png'), dpi=150, bbox_inches='tight')
     plt.show()
 
     with torch.no_grad():
@@ -371,14 +362,12 @@ def run_standalone_training():
     plt.figure(figsize=(7, 5))
     plt.plot(C_plot_np, D_A_pred, 'b-', lw=2, label='PINN D_A(C)')
     plt.plot(C_plot_np, D_B_pred, 'g-', lw=2, label='PINN D_B(C)')
-    plt.axhline(y=0.0, color='k', linestyle=':', alpha=0.5, label='Pure substance constraint')
-    plt.axhline(y=0.05, color='k', linestyle=':', alpha=0.5)
     plt.xlabel('C')
     plt.ylabel('Self‑diffusion coefficient')
-    plt.title('Learned Self‑Diffusion Coefficients with Pure Substance Constraints')
+    plt.title('Learned Self‑Diffusion Coefficients for Diffusion Pairs')
     plt.legend()
     plt.grid(True)
-    plt.savefig('/home/ubuntu/repos/machine-learning/darken_self_diffusion_unified.png', dpi=150, bbox_inches='tight')
+    plt.savefig(os.path.join(os.getcwd(), 'darken_self_diffusion_unified.png'), dpi=150, bbox_inches='tight')
     plt.show()
 
     print('Visualization finished.')
@@ -410,13 +399,13 @@ def create_streamlit_app():
     st.markdown("---")
     
     st.markdown("""
-    **Enhanced Darken拡散モデル**を用いた非線形拡散方程式をPINNsで解くシステムです。
+    **Darken拡散モデル**を用いた非線形拡散方程式をPINNsで解くシステムです。
     
     **対象方程式**: ∂C/∂t = ∂/∂x [D̃(C) ∂C/∂x]
     
     **Darkenモデル**: D̃(C) = C_B·D_A(C) + C_A·D_B(C) + (RT/Ω)·∂lnγ/∂C
     
-    **純物質境界条件**: D_A(0)=0, D_B(1)=0, D_A(1)=0.05, D_B(0)=0.05
+    **拡散対濃度範囲**: C ∈ [0.1, 0.9] (純物質極限を避けた現実的な範囲)
     """)
     
     st.sidebar.header("🔧 Darken Model Parameters")
@@ -428,8 +417,8 @@ def create_streamlit_app():
         Omega = st.number_input("Molar volume Ω", min_value=10000.0, max_value=50000.0, value=25000.0, format="%.0f")
     
     with col2:
-        C_left = st.number_input("Left boundary C", min_value=0.0, max_value=1.0, value=0.0, format="%.2f")
-        C_right = st.number_input("Right boundary C", min_value=0.0, max_value=1.0, value=1.0, format="%.2f")
+        C_left = st.number_input("Left boundary C", min_value=0.1, max_value=0.9, value=0.2, format="%.2f")
+        C_right = st.number_input("Right boundary C", min_value=0.1, max_value=0.9, value=0.8, format="%.2f")
         L_domain = st.number_input("Domain length L", min_value=0.5, max_value=2.0, value=1.0, format="%.2f")
     
     st.sidebar.header("🎯 Training Parameters")
@@ -444,14 +433,20 @@ def create_streamlit_app():
         lambda_pde = st.number_input("PDE loss weight", min_value=0.1, max_value=10.0, value=1.0, format="%.1f")
         lambda_ic = st.number_input("IC loss weight", min_value=0.1, max_value=10.0, value=2.0, format="%.1f")
         lambda_bc = st.number_input("BC loss weight", min_value=0.1, max_value=10.0, value=0.5, format="%.1f")
-        lambda_Dbc = st.number_input("純物質効果重み λ_Dbc", min_value=0.1, max_value=50.0, value=20.0, step=0.5, 
-                                    help="D_A(0)=0, D_B(1)=0, D_A(1)=0.05, D_B(0)=0.05の純物質境界条件の重み")
     
     st.sidebar.header("🏗️ Network Architecture")
     hidden_dim_C = st.sidebar.number_input("Concentration network hidden dim", min_value=32, max_value=128, value=64, step=16)
     hidden_dim_D = st.sidebar.number_input("Diffusion network hidden dim", min_value=16, max_value=64, value=32, step=8)
     
-    if st.button("🚀 Start Enhanced Darken PINNs Training", type="primary"):
+    if 'training_in_progress' not in st.session_state:
+        st.session_state.training_in_progress = False
+    
+    button_disabled = st.session_state.training_in_progress
+    button_text = "⏳ Training in Progress..." if button_disabled else "🚀 Start Darken PINNs Training"
+    
+    if st.button(button_text, type="primary", disabled=button_disabled):
+        st.session_state.training_in_progress = True
+        
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         st.info(f"Using device: {device}")
         
@@ -504,7 +499,7 @@ def create_streamlit_app():
         optimizer = torch.optim.Adam(pinn.parameters(), lr=learning_rate, weight_decay=1e-5)
         scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.99995)
         
-        loss_history = {'total': [], 'data': [], 'pde': [], 'ic': [], 'bc': [], 'D_bc': []}
+        loss_history = {'total': [], 'data': [], 'pde': [], 'ic': [], 'bc': []}
         
         C_eval_point = torch.tensor([[0.5]], device=device, dtype=torch.float32)
         true_D_tilde_eval = true_diffusion_coefficient(0.5)
@@ -516,9 +511,9 @@ def create_streamlit_app():
             pinn.train()
             optimizer.zero_grad()
             
-            total, loss_data, loss_pde, loss_ic, loss_bc, loss_D_bc = pinn.loss(
+            total, loss_data, loss_pde, loss_ic, loss_bc = pinn.loss(
                 t_data, x_data, C_data, t_pde, x_pde, t_ic, x_ic, t_bc,
-                lambda_pde, lambda_ic, lambda_bc, lambda_Dbc)
+                lambda_pde, lambda_ic, lambda_bc)
             
             if torch.isnan(total):
                 st.error(f"NaN detected at epoch {epoch}. Stopping training.")
@@ -534,7 +529,6 @@ def create_streamlit_app():
             loss_history['pde'].append(loss_pde.item())
             loss_history['ic'].append(loss_ic.item())
             loss_history['bc'].append(loss_bc.item())
-            loss_history['D_bc'].append(loss_D_bc.item())
             
             progress = epoch / epochs
             progress_bar.progress(progress)
@@ -558,10 +552,9 @@ def create_streamlit_app():
                     fig_loss.add_trace(go.Scatter(y=loss_history['pde'], name='PDE Loss', line=dict(color='green')))
                     fig_loss.add_trace(go.Scatter(y=loss_history['ic'], name='IC Loss', line=dict(color='orange')))
                     fig_loss.add_trace(go.Scatter(y=loss_history['bc'], name='BC Loss', line=dict(color='purple')))
-                    fig_loss.add_trace(go.Scatter(y=loss_history['D_bc'], name='Pure Substance Loss', line=dict(color='brown')))
                     
                     fig_loss.update_layout(
-                        title="Enhanced Training Loss History (Real-time)",
+                        title="Training Loss History - Diffusion Pair Focus (Real-time)",
                         xaxis_title="Epoch",
                         yaxis_title="Loss",
                         yaxis_type="log",
@@ -571,7 +564,10 @@ def create_streamlit_app():
                     loss_chart_placeholder.plotly_chart(fig_loss, use_container_width=True)
         
         training_time = time.time() - start_time
-        st.success(f"✅ Enhanced training completed in {training_time:.2f} seconds!")
+        
+        st.session_state.training_in_progress = False
+        
+        st.success(f"✅ Diffusion pair training completed in {training_time:.2f} seconds!")
         
         pinn.eval()
         
@@ -584,25 +580,22 @@ def create_streamlit_app():
                 "Data Loss": f"{loss_history['data'][-1]:.2e}",
                 "PDE Loss": f"{loss_history['pde'][-1]:.2e}",
                 "IC Loss": f"{loss_history['ic'][-1]:.2e}",
-                "BC Loss": f"{loss_history['bc'][-1]:.2e}",
-                "Pure Substance Loss": f"{loss_history['D_bc'][-1]:.2e}"
+                "BC Loss": f"{loss_history['bc'][-1]:.2e}"
             }
             
             for metric, value in final_metrics.items():
                 st.metric(metric, value)
         
         with col2:
-            st.subheader("🎯 Pure Substance Constraints")
+            st.subheader("🎯 Diffusion Pair Range")
             with torch.no_grad():
-                D_A0 = pinn._D_self(pinn.net_DA, torch.zeros(1, 1, device=device)).item()
-                D_B1 = pinn._D_self(pinn.net_DB, torch.ones(1, 1, device=device)).item()
-                D_A1 = pinn._D_self(pinn.net_DA, torch.ones(1, 1, device=device)).item()
-                D_B0 = pinn._D_self(pinn.net_DB, torch.zeros(1, 1, device=device)).item()
+                C_range = torch.linspace(0.1, 0.9, 5).view(-1, 1).to(device)
+                D_A_range = pinn._D_self(pinn.net_DA, C_range)
+                D_B_range = pinn._D_self(pinn.net_DB, C_range)
             
-            st.metric("D_A(0)", f"{D_A0:.4f}", "Target: 0.0000")
-            st.metric("D_B(1)", f"{D_B1:.4f}", "Target: 0.0000")
-            st.metric("D_A(1)", f"{D_A1:.4f}", "Target: 0.0500")
-            st.metric("D_B(0)", f"{D_B0:.4f}", "Target: 0.0500")
+            st.write("**Concentration Range**: C ∈ [0.1, 0.9]")
+            for i, c in enumerate([0.1, 0.325, 0.55, 0.775, 0.9]):
+                st.metric(f"C = {c:.3f}", f"D_A: {D_A_range[i].item():.4f}, D_B: {D_B_range[i].item():.4f}")
         
         st.subheader("📈 Enhanced Results Visualization")
         
@@ -618,8 +611,8 @@ def create_streamlit_app():
         
         fig_diffusion = make_subplots(
             rows=2, cols=2,
-            subplot_titles=('Mutual Diffusion Coefficient D̃(C)', 'Self-Diffusion with Pure Substance Constraints', 
-                          'Activity Coefficient lnγ(C)', 'Enhanced Training Loss History'),
+            subplot_titles=('Mutual Diffusion Coefficient D̃(C)', 'Self-Diffusion for Diffusion Pairs', 
+                          'Activity Coefficient lnγ(C)', 'Training Loss History'),
             specs=[[{"secondary_y": False}, {"secondary_y": False}],
                    [{"secondary_y": False}, {"secondary_y": False}]]
         )
@@ -646,8 +639,6 @@ def create_streamlit_app():
             row=1, col=2
         )
         
-        fig_diffusion.add_hline(y=0.0, line_dash="dot", line_color="gray", row=1, col=2)
-        fig_diffusion.add_hline(y=0.05, line_dash="dot", line_color="gray", row=1, col=2)
         
         fig_diffusion.add_trace(
             go.Scatter(x=C_plot_np.flatten(), y=ln_gamma_pred.flatten(), 
@@ -657,10 +648,6 @@ def create_streamlit_app():
         
         fig_diffusion.add_trace(
             go.Scatter(y=loss_history['total'], name='Total Loss', line=dict(color='red')),
-            row=2, col=2
-        )
-        fig_diffusion.add_trace(
-            go.Scatter(y=loss_history['D_bc'], name='Pure Substance Loss', line=dict(color='brown')),
             row=2, col=2
         )
         
@@ -674,16 +661,16 @@ def create_streamlit_app():
         fig_diffusion.update_yaxes(title_text="lnγ", row=2, col=1)
         fig_diffusion.update_yaxes(title_text="Loss", type="log", row=2, col=2)
         
-        fig_diffusion.update_layout(height=800, showlegend=True, title_text="Enhanced Darken Model PINNs Results")
+        fig_diffusion.update_layout(height=800, showlegend=True, title_text="Darken Model PINNs Results - Diffusion Pair Focus")
         
         st.plotly_chart(fig_diffusion, use_container_width=True)
         
-        st.success("🎉 Enhanced Darken Model PINNs analysis completed successfully!")
+        st.success("🎉 Darken Model PINNs analysis for diffusion pairs completed successfully!")
 
 
-def verify_pure_substance_constraints():
-    """Verification function for pure substance boundary conditions"""
-    print("Enhanced Pure Substance Boundary Conditions Verification")
+def verify_diffusion_pair_constraints():
+    """Verification function for diffusion pair concentration range restrictions"""
+    print("Diffusion Pair Concentration Range Verification")
     print("=" * 60)
     
     device = torch.device('cpu')
@@ -692,37 +679,37 @@ def verify_pure_substance_constraints():
 
     pinn = NonlinearDiffusionPINN(
         layers_C, layers_DA, layers_DB, layers_gamma,
-        C_left=0.0, C_right=1.0, L=1.0
+        C_left=0.2, C_right=0.8, L=1.0
     ).to(device)
 
+    C_test_range = torch.linspace(0.1, 0.9, 9).view(-1, 1).to(device)
+    
     with torch.no_grad():
-        D_A0 = pinn._D_self(pinn.net_DA, torch.zeros(1, 1, device=device))
-        D_B1 = pinn._D_self(pinn.net_DB, torch.ones(1, 1, device=device))
-        D_A1 = pinn._D_self(pinn.net_DA, torch.ones(1, 1, device=device))
-        D_B0 = pinn._D_self(pinn.net_DB, torch.zeros(1, 1, device=device))
+        D_A_range = pinn._D_self(pinn.net_DA, C_test_range)
+        D_B_range = pinn._D_self(pinn.net_DB, C_test_range)
 
-    print('Initial values (before training):')
-    print(f'D_A(0) = {D_A0.item():.6f} (target: 0.0)')
-    print(f'D_B(1) = {D_B1.item():.6f} (target: 0.0)')
-    print(f'D_A(1) = {D_A1.item():.6f} (target: 0.05)')
-    print(f'D_B(0) = {D_B0.item():.6f} (target: 0.05)')
+    print('Diffusion coefficients across concentration range:')
+    for i, c in enumerate(C_test_range.flatten()):
+        print(f'C = {c:.1f}: D_A = {D_A_range[i].item():.4f}, D_B = {D_B_range[i].item():.4f}')
     
     t_test = torch.rand(10, 1, device=device)
     x_test = torch.rand(10, 1, device=device)
-    C_test = torch.rand(10, 1, device=device)
+    C_test = 0.1 + 0.8 * torch.rand(10, 1, device=device)
     
-    total_loss, data_loss, pde_loss, ic_loss, bc_loss, D_bc_loss = pinn.loss(
+    total_loss, data_loss, pde_loss, ic_loss, bc_loss = pinn.loss(
         t_test, x_test, C_test, t_test, x_test, t_test, x_test, t_test,
-        lambda_pde=1.0, lambda_ic=2.0, lambda_bc=0.5, lambda_Dbc=20.0
+        lambda_pde=1.0, lambda_ic=2.0, lambda_bc=0.5
     )
     
-    print(f'\nEnhanced loss function test:')
+    print(f'\nLoss function test:')
     print(f'Total loss: {total_loss.item():.6f}')
-    print(f'D_bc loss (4 constraints): {D_bc_loss.item():.6f}')
-    print(f'Lambda_Dbc weight: 20.0 (enhanced from 10.0)')
+    print(f'Data loss: {data_loss.item():.6f}')
+    print(f'PDE loss: {pde_loss.item():.6f}')
+    print(f'IC loss: {ic_loss.item():.6f}')
+    print(f'BC loss: {bc_loss.item():.6f}')
     
-    print('\n✅ Enhanced loss function with 4 boundary conditions implemented successfully!')
-    print('✅ All four pure substance constraints: D_A(0)=0, D_B(1)=0, D_A(1)=0.05, D_B(0)=0.05')
+    print('\n✅ Diffusion pair concentration range restrictions implemented successfully!')
+    print('✅ Calculations restricted to C ∈ [0.1, 0.9] for realistic diffusion pairs')
     
     return True
 
@@ -750,12 +737,12 @@ def main():
         return
     
     if args.verify:
-        verify_pure_substance_constraints()
+        verify_diffusion_pair_constraints()
     else:
         results = run_standalone_training()
         print(f"\n=== Training Summary ===")
         print(f"Final loss: {results['final_loss']:.3e}")
-        print(f"Enhanced pure substance constraints successfully enforced!")
+        print(f"Diffusion pair concentration range restrictions successfully implemented!")
 
 
 def is_streamlit_context():

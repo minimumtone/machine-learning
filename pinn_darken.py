@@ -27,6 +27,7 @@ Required packages
     tqdm
 """
 
+import os
 import time
 import numpy as np
 import matplotlib.pyplot as plt
@@ -326,7 +327,7 @@ def run_darken_pinn_training():
         plt.title('Training Loss History')
         plt.legend()
         plt.grid(True, which="both", ls="--")
-        plt.savefig('/home/ubuntu/repos/machine-learning/darken_loss_history.png', dpi=150, bbox_inches='tight')
+        plt.savefig(os.path.join(os.getcwd(), 'darken_loss_history.png'), dpi=150, bbox_inches='tight')
         plt.show()
     else:
         print("No loss history to plot.")
@@ -343,7 +344,7 @@ def run_darken_pinn_training():
     plt.title('Darken Model – True vs. PINN')
     plt.legend()
     plt.grid(True)
-    plt.savefig('/home/ubuntu/repos/machine-learning/darken_diffusion_comparison.png', dpi=150, bbox_inches='tight')
+    plt.savefig(os.path.join(os.getcwd(), 'darken_diffusion_comparison.png'), dpi=150, bbox_inches='tight')
     plt.show()
 
     with torch.no_grad():
@@ -357,7 +358,7 @@ def run_darken_pinn_training():
     plt.title('Learned self‑diffusion coefficients')
     plt.legend()
     plt.grid(True)
-    plt.savefig('/home/ubuntu/repos/machine-learning/darken_self_diffusion.png', dpi=150, bbox_inches='tight')
+    plt.savefig(os.path.join(os.getcwd(), 'darken_self_diffusion.png'), dpi=150, bbox_inches='tight')
     plt.show()
 
     with torch.no_grad():
@@ -369,7 +370,7 @@ def run_darken_pinn_training():
     plt.title('Learned activity‑coefficient (log)')
     plt.legend()
     plt.grid(True)
-    plt.savefig('/home/ubuntu/repos/machine-learning/darken_activity_coefficient.png', dpi=150, bbox_inches='tight')
+    plt.savefig(os.path.join(os.getcwd(), 'darken_activity_coefficient.png'), dpi=150, bbox_inches='tight')
     plt.show()
 
     T_grid_plot, X_grid_plot = np.meshgrid(t_fdm, x_fdm)
@@ -397,7 +398,7 @@ def run_darken_pinn_training():
     axs[2].set_xlabel('t')
     fig.colorbar(im2, ax=axs[2])
     plt.tight_layout()
-    plt.savefig('/home/ubuntu/repos/machine-learning/darken_concentration_heatmap.png', dpi=150, bbox_inches='tight')
+    plt.savefig(os.path.join(os.getcwd(), 'darken_concentration_heatmap.png'), dpi=150, bbox_inches='tight')
     plt.show()
 
     times_to_plot = [0.0, 5.0, 9.9]
@@ -416,7 +417,7 @@ def run_darken_pinn_training():
         axes[i].legend()
     axes[0].set_ylabel('Concentration C')
     plt.tight_layout()
-    plt.savefig('/home/ubuntu/repos/machine-learning/darken_concentration_profiles.png', dpi=150, bbox_inches='tight')
+    plt.savefig(os.path.join(os.getcwd(), 'darken_concentration_profiles.png'), dpi=150, bbox_inches='tight')
     plt.show()
 
     print('Visualization finished.')
