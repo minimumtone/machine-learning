@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 diffusion_couple_pinns.py - 拡散対実験データからのPINNs最適化プログラム
 
@@ -17,16 +16,23 @@ Darken Model:
     D̃(C) = C_B·D_A(C) + C_A·D_B(C) + (RT/Ω)·∂lnγ/∂C
 """
 
+import os
 import time
 import numpy as np
+import matplotlib
+matplotlib.use('TkAgg')  # Windows互換のバックエンド
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 from tqdm import tqdm
-import streamlit as st
-import pandas as pd
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+
+try:
+    import streamlit as st
+    import pandas as pd
+    import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
+except ImportError:
+    pass  # Streamlit関連はオプション
 
 # GPU設定
 if torch.cuda.is_available():
@@ -377,7 +383,7 @@ def demonstrate_pure_substance_constraints():
     axes[1].set_ylim(-0.01, 0.06)
     
     plt.tight_layout()
-    save_path = '/home/ubuntu/repos/machine-learning/diffusion_couple_demo.png'
+    save_path = os.path.join(os.getcwd(), 'diffusion_couple_demo.png')
     plt.savefig(save_path, dpi=150, bbox_inches='tight')
     print(f'  デモンストレーション図を保存: {save_path}')
     plt.show()
