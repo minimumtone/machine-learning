@@ -119,7 +119,10 @@ if PINNS_AVAILABLE:
         
         def train(self, epochs: int = 5000, lr: float = 0.001, n_points: int = 2000,
                  u_data: np.ndarray = None, x_data: np.ndarray = None, t_data: np.ndarray = None,
-                 progress_callback: Optional[Callable] = None) -> Dict[str, float]:
+                 progress_callback: Optional[Callable] = None,
+                 data_weight: float = 1.0, pde_weight: float = 0.1, 
+                 ic_weight: float = 10.0, bc_weight: float = 10.0,
+                 loss_chart_placeholder = None) -> Dict[str, float]:
             """PINNsの訓練（逆問題：Dを発見）
             
             Args:
@@ -130,12 +133,26 @@ if PINNS_AVAILABLE:
                 x_data: 空間座標データ
                 t_data: 時間座標データ
                 progress_callback: 進捗コールバック関数
+                data_weight: データ損失の重み
+                pde_weight: PDE損失の重み
+                ic_weight: 初期条件損失の重み
+                bc_weight: 境界条件損失の重み
+                loss_chart_placeholder: st.empty()プレースホルダー（損失グラフ用）
             
             Returns:
                 訓練結果の辞書（discovered_D含む）
             """
             optimizer = optim.Adam(list(self.model.parameters()) + [self.log_D], lr=lr)
             scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=500, factor=0.5)
+            
+            loss_history = {
+                'epoch': [],
+                'total_loss': [],
+                'data_loss': [],
+                'pde_loss': [],
+                'ic_loss': [],
+                'bc_loss': []
+            }
             
             if u_data is not None:
                 x_data_tensor = torch.FloatTensor(x_data).to(self.device)
@@ -175,14 +192,40 @@ if PINNS_AVAILABLE:
                 
                 bc_loss = bc_left_loss + bc_right_loss
                 
-                loss = data_loss + 0.1 * pde_loss + 10.0 * ic_loss + 10.0 * bc_loss
+                loss = data_weight * data_loss + pde_weight * pde_loss + ic_weight * ic_loss + bc_weight * bc_loss
                 
                 loss.backward()
                 optimizer.step()
                 scheduler.step(loss)
                 
-                if progress_callback is not None and epoch % 100 == 0:
-                    progress_callback(epoch, epochs, loss.item())
+                if epoch % 100 == 0:
+                    loss_history['epoch'].append(epoch)
+                    loss_history['total_loss'].append(loss.item())
+                    loss_history['data_loss'].append(data_loss.item() if u_data is not None else 0.0)
+                    loss_history['pde_loss'].append(pde_loss.item())
+                    loss_history['ic_loss'].append(ic_loss.item())
+                    loss_history['bc_loss'].append(bc_loss.item())
+                    
+                    if progress_callback is not None:
+                        progress_callback(epoch, epochs, loss.item(), 
+                                        data_loss.item() if u_data is not None else 0.0,
+                                        pde_loss.item(), ic_loss.item(), bc_loss.item())
+                    
+                    if loss_chart_placeholder is not None and len(loss_history['epoch']) > 1:
+                        fig, ax = plt.subplots(figsize=(10, 6))
+                        ax.plot(loss_history['epoch'], loss_history['total_loss'], 'k-', linewidth=2, label='Total Loss')
+                        ax.plot(loss_history['epoch'], loss_history['data_loss'], 'b-', linewidth=1.5, label='Data Loss')
+                        ax.plot(loss_history['epoch'], loss_history['pde_loss'], 'r-', linewidth=1.5, label='PDE Loss')
+                        ax.plot(loss_history['epoch'], loss_history['ic_loss'], 'g-', linewidth=1.5, label='Initial Condition Loss')
+                        ax.plot(loss_history['epoch'], loss_history['bc_loss'], 'm-', linewidth=1.5, label='Boundary Condition Loss')
+                        ax.set_xlabel('Epoch')
+                        ax.set_ylabel('Loss Value')
+                        ax.set_title('Loss Function Progression')
+                        ax.set_yscale('log')
+                        ax.legend()
+                        ax.grid(True, alpha=0.3)
+                        loss_chart_placeholder.pyplot(fig)
+                        plt.close(fig)
             
             discovered_D = torch.exp(self.log_D).item()
             
@@ -192,7 +235,8 @@ if PINNS_AVAILABLE:
                 'pde_loss': pde_loss.item(),
                 'ic_loss': ic_loss.item(),
                 'bc_loss': bc_loss.item(),
-                'discovered_D': discovered_D
+                'discovered_D': discovered_D,
+                'loss_history': loss_history
             }
         
         def predict(self, X: np.ndarray, T: np.ndarray) -> np.ndarray:
@@ -220,33 +264,43 @@ if PINNS_AVAILABLE:
 class DiffusionFDM:
     """有限差分法による拡散方程式の数値解法"""
     
-    def __init__(self, L: float = 0.02, T_final: float = 3600.0, 
+    def __init__(self, L: float = 0.02, T_final: float = 3600.0,
                  nx: int = 50, nt: int = 100, D: float = 1e-9):
         """
         Args:
             L: 空間領域の長さ [m]
             T_final: 最終時間 [s]
             nx: 空間グリッド数
-            nt: 時間ステップ数
+            nt: 時間ステップ数（安定性条件違反時は自動調整）
             D: 拡散係数 [m²/s]
         """
         self.L = L
         self.T_final = T_final
         self.nx = nx
-        self.nt = nt
         self.D = D
         
         self.dx = L / (nx - 1)
         self.dt = T_final / (nt - 1)
         
-        self.x = np.linspace(0, L, nx)
-        self.t = np.linspace(0, T_final, nt)
+        r = D * self.dt / (self.dx ** 2)
+        if r > 0.5:
+            dt_max = 0.5 * (self.dx ** 2) / D
+            nt_required = int(np.ceil(T_final / dt_max)) + 1
+            
+            st.warning(f"⚠️ 安定性条件違反を検出: r = {r:.3f} > 0.5")
+            st.info(f"📝 自動修正: 時間ステップ数を {nt} → {nt_required} に調整しました")
+            
+            self.nt = nt_required
+            self.dt = T_final / (self.nt - 1)
+            self.r = D * self.dt / (self.dx ** 2)
+        else:
+            self.nt = nt
+            self.r = r
         
-        self.r = D * self.dt / (self.dx ** 2)
-        if self.r > 0.5:
-            st.warning(f"⚠️ 安定性条件違反: r = {self.r:.3f} > 0.5")
+        self.x = np.linspace(0, L, self.nx)
+        self.t = np.linspace(0, T_final, self.nt)
         
-        self.u = np.zeros((nt, nx))
+        self.u = np.zeros((self.nt, self.nx))
     
     def initial_condition(self):
         """初期条件の設定"""
@@ -348,6 +402,8 @@ def create_app():
         
         st.success("✅ 疑似実験データの生成完了")
         
+        st.info(f"📊 FDMデータ検証: u_numerical min: {u_numerical.min():.4f}, max: {u_numerical.max():.4f}")
+        
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
         
         im = ax1.imshow(u_numerical, aspect='auto', origin='lower',
@@ -394,6 +450,25 @@ def create_app():
         with col3:
             num_layers = st.number_input("隠れ層の数", 2, 8, 4, 1)
         
+        st.subheader("⚖️ 損失関数の係数")
+        st.markdown("""
+        損失関数の各項の重みを調整できます。  
+        **総損失 = data_weight × データ損失 + pde_weight × PDE損失 + ic_weight × 初期条件損失 + bc_weight × 境界条件損失**
+        """)
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            data_weight = st.number_input("データ損失の重み", 0.0, 100.0, 1.0, 0.1, 
+                                         help="FDM疑似実験データへのフィッティングの重要度")
+        with col2:
+            pde_weight = st.number_input("PDE損失の重み", 0.0, 10.0, 0.1, 0.1,
+                                        help="物理法則（拡散方程式）の満足度の重要度")
+        with col3:
+            ic_weight = st.number_input("初期条件損失の重み", 0.0, 100.0, 10.0, 1.0,
+                                       help="初期条件の満足度の重要度")
+        with col4:
+            bc_weight = st.number_input("境界条件損失の重み", 0.0, 100.0, 10.0, 1.0,
+                                       help="境界条件の満足度の重要度")
+        
         if st.button("🧠 PINNsで拡散係数を発見"):
             u_numerical = st.session_state['u_numerical']
             fdm = st.session_state['fdm']
@@ -411,24 +486,44 @@ def create_app():
             
             progress_bar = st.progress(0)
             status_text = st.empty()
+            loss_chart_placeholder = st.empty()
             
-            def progress_callback(epoch, total_epochs, loss):
+            def progress_callback(epoch, total_epochs, loss, data_loss=0.0, pde_loss=0.0, ic_loss=0.0, bc_loss=0.0):
                 progress = epoch / total_epochs
                 progress_bar.progress(progress)
-                status_text.text(f"エポック {epoch}/{total_epochs}, 損失: {loss:.6f}")
+                status_text.text(f"エポック {epoch}/{total_epochs}, 総損失: {loss:.6f} | データ: {data_loss:.6f} | PDE: {pde_loss:.6f} | IC: {ic_loss:.6f} | BC: {bc_loss:.6f}")
             
             D_init = 1e-9
             learning_rate = 0.001
             n_points = 2000
             
+            st.subheader("🔍 PINN 初期予測 (訓練前)")
+            solver = PINNsDiffusionSolver(
+                L=L,
+                T_final=T_final,
+                hidden_dim=hidden_dim,
+                num_layers=num_layers,
+                D_init=D_init
+            )
+            
+            x_test = np.linspace(0, L, 50)
+            t_test = np.linspace(0, T_final, 50)
+            X_test, T_test = np.meshgrid(x_test, t_test)
+            u_pinns_initial = solver.predict(X_test, T_test)
+            
+            fig_init, ax_init = plt.subplots(figsize=(8, 6))
+            im_init = ax_init.imshow(u_pinns_initial, aspect='auto', origin='lower',
+                                    extent=[0, L, 0, T_final], cmap='viridis')
+            ax_init.set_xlabel('Position x (m)')
+            ax_init.set_ylabel('Time t (s)')
+            ax_init.set_title('PINN Initial Prediction (before training)')
+            plt.colorbar(im_init, ax=ax_init, label='Concentration c')
+            st.pyplot(fig_init)
+            plt.close(fig_init)
+            
+            st.info(f"初期予測 min: {u_pinns_initial.min():.4f}, max: {u_pinns_initial.max():.4f}")
+            
             with st.spinner("PINNsによる拡散係数の推定中..."):
-                solver = PINNsDiffusionSolver(
-                    L=L,
-                    T_final=T_final,
-                    hidden_dim=hidden_dim,
-                    num_layers=num_layers,
-                    D_init=D_init
-                )
                 training_results = solver.train(
                     epochs=epochs,
                     lr=learning_rate,
@@ -436,12 +531,14 @@ def create_app():
                     u_data=u_data,
                     x_data=x_data,
                     t_data=t_data,
-                    progress_callback=progress_callback
+                    progress_callback=progress_callback,
+                    data_weight=data_weight,
+                    pde_weight=pde_weight,
+                    ic_weight=ic_weight,
+                    bc_weight=bc_weight,
+                    loss_chart_placeholder=loss_chart_placeholder
                 )
                 
-                x_test = np.linspace(0, L, 50)
-                t_test = np.linspace(0, T_final, 50)
-                X_test, T_test = np.meshgrid(x_test, t_test)
                 u_pinns = solver.predict(X_test, T_test)
             
             progress_bar.empty()
@@ -482,6 +579,24 @@ def create_app():
                 st.metric("初期条件損失", f"{training_results['ic_loss']:.6f}")
             with col5:
                 st.metric("境界条件損失", f"{training_results['bc_loss']:.6f}")
+            
+            st.subheader("📉 損失関数の推移")
+            if 'loss_history' in training_results and len(training_results['loss_history']['epoch']) > 0:
+                fig_loss, ax_loss = plt.subplots(figsize=(12, 6))
+                history = training_results['loss_history']
+                ax_loss.plot(history['epoch'], history['total_loss'], 'k-', linewidth=2, label='Total Loss')
+                ax_loss.plot(history['epoch'], history['data_loss'], 'b-', linewidth=1.5, label='Data Loss')
+                ax_loss.plot(history['epoch'], history['pde_loss'], 'r-', linewidth=1.5, label='PDE Loss')
+                ax_loss.plot(history['epoch'], history['ic_loss'], 'g-', linewidth=1.5, label='Initial Condition Loss')
+                ax_loss.plot(history['epoch'], history['bc_loss'], 'm-', linewidth=1.5, label='Boundary Condition Loss')
+                ax_loss.set_xlabel('Epoch')
+                ax_loss.set_ylabel('Loss Value')
+                ax_loss.set_title('Loss Function Progression (Full Training)')
+                ax_loss.set_yscale('log')
+                ax_loss.legend(loc='best')
+                ax_loss.grid(True, alpha=0.3)
+                st.pyplot(fig_loss)
+                plt.close(fig_loss)
             
             st.subheader("📈 FDMデータ vs PINN予測の比較")
             
