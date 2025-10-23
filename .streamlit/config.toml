@@ -1,0 +1,12 @@
+[theme]
+font = "sans serif"
+
+[browser]
+gatherUsageStats = false
+
+[server]
+headless = true
+
+[global]
+# Force Japanese fonts
+font = "IPAGothic"

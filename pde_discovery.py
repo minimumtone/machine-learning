@@ -13,7 +13,8 @@ from scipy.ndimage import gaussian_filter
 import sympy as sp
 from typing import Tuple, List, Dict, Callable
 
-matplotlib.rcParams['font.family'] = ['IPAGothic', 'IPAPGothic', 'DejaVu Sans']
+matplotlib.rcParams['font.family'] = ['IPAGothic', 'IPAPGothic']
+matplotlib.rcParams['font.sans-serif'] = ['IPAGothic', 'IPAPGothic']
 plt.rcParams['axes.unicode_minus'] = False
 try:
     import torch
@@ -602,6 +603,19 @@ class PDESymbolicRegression:
 def create_pde_discovery_app():
     """Streamlit PDE発見アプリ"""
     
+    st.markdown("""
+    <style>
+    /* Force Japanese fonts for all HTML elements */
+    html, body, div, span, p, h1, h2, h3, h4, h5, h6, label, button, input, select, textarea,
+    .main .block-container, .sidebar .sidebar-content, 
+    [data-testid="stSidebar"], [data-testid="stMain"],
+    .stSelectbox, .stTextInput, .stButton, .stMarkdown, .stTitle, .stHeader, .stSubheader,
+    [class*="css-"], [class*="st-"], * {
+        font-family: 'IPAGothic', 'IPAPGothic', sans-serif !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
     st.title("🔬 偏微分方程式発見システム (PDE Discovery)")
     st.markdown("---")
     
@@ -892,7 +906,8 @@ def create_pde_discovery_app():
                     
                     st.subheader("📈 PINNs拡散方程式の解")
                     
-                    plt.rcParams['font.family'] = ['IPAGothic', 'IPAPGothic', 'DejaVu Sans']
+                    plt.rcParams['font.family'] = ['IPAGothic', 'IPAPGothic']
+                    plt.rcParams['font.sans-serif'] = ['IPAGothic', 'IPAPGothic']
                     plt.rcParams['axes.unicode_minus'] = False
                     
                     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
