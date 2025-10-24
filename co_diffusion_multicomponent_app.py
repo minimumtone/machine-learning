@@ -161,9 +161,9 @@ class MulticomponentDiffusionSolver:
         
         return C0
     
-    def solve(self, C0, t_total, nt=500):
+    def solve(self, C0, t_total, nt=500, auto_adjust=True):
         """
-        多成分拡散方程式を解く
+        多成分拡散方程式を解く（安定性自動調整機能付き）
         
         Parameters:
         -----------
@@ -172,7 +172,9 @@ class MulticomponentDiffusionSolver:
         t_total : float
             総時間 [s]
         nt : int
-            時間ステップ数
+            時間ステップ数（初期値）
+        auto_adjust : bool
+            安定性条件違反時に自動調整するか
         
         Returns:
         --------
@@ -181,6 +183,21 @@ class MulticomponentDiffusionSolver:
         t_array : ndarray
             時間配列 [s]
         """
+        max_D = 0
+        for element in self.elements:
+            composition = {el: 0.5 for el in self.elements}
+            D = self.calculate_diffusion_coefficient(element, composition)
+            max_D = max(max_D, D)
+        
+        dt_initial = t_total / nt
+        alpha_max = max_D * dt_initial / (self.dx**2)
+        
+        if alpha_max > 0.5 and auto_adjust:
+            nt_required = int(np.ceil(max_D * t_total / (0.4 * self.dx**2)))
+            st.info(f"⚙️ 安定性自動調整: α={alpha_max:.3f} > 0.5 を検出")
+            st.info(f"📊 時間ステップ数を {nt} → {nt_required} に自動調整しました")
+            nt = nt_required
+        
         t_array = np.linspace(0, t_total, nt)
         dt = t_array[1] - t_array[0]
         
@@ -188,6 +205,9 @@ class MulticomponentDiffusionSolver:
         C_history[0] = C0.copy()
         
         C_current = C0.copy()
+        
+        progress_bar = st.progress(0)
+        status_text = st.empty()
         
         for n in range(1, nt):
             C_new = C_current.copy()
@@ -198,8 +218,6 @@ class MulticomponentDiffusionSolver:
                 D = self.calculate_diffusion_coefficient(element, composition)
                 
                 alpha = D * dt / (self.dx**2)
-                if alpha > 0.5:
-                    st.warning(f"警告: {element}の安定性パラメータ α={alpha:.3f} > 0.5")
                 
                 for j in range(1, self.nx-1):
                     d2C_dx2 = (C_current[i, j+1] - 2*C_current[i, j] + C_current[i, j-1]) / (self.dx**2)
@@ -210,6 +228,14 @@ class MulticomponentDiffusionSolver:
             
             C_current = C_new
             C_history[n] = C_current
+            
+            if n % max(1, nt // 10) == 0:
+                progress = n / (nt - 1)
+                progress_bar.progress(progress)
+                status_text.text(f"計算中... {100*progress:.0f}% ({n}/{nt-1})")
+        
+        progress_bar.progress(1.0)
+        status_text.text("✅ 計算完了！")
         
         return C_history, t_array
 
@@ -431,11 +457,11 @@ def main():
         st.session_state['current_frame'] = frame_idx
         
         fig = create_frame_by_frame_animation(solver, C_history, t_array, frame_idx)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
         
         st.subheader("📋 各元素の濃度情報")
         df = create_concentration_table(solver, C_history, t_array, frame_idx)
-        st.dataframe(df, use_container_width=True)
+        st.dataframe(df, width='stretch')
         
         with st.expander("🔍 詳細情報"):
             st.markdown(f"""
