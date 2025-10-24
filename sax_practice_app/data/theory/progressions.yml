@@ -1,0 +1,181 @@
+progressions:
+  ii_v_i:
+    name: "ii-V-I"
+    name_ja: "ii-V-I"
+    description: "The most important progression in jazz. Foundation of countless standards."
+    description_ja: "ジャズで最も重要な進行。無数のスタンダードの基礎。"
+    form: ["ii", "V", "I"]
+    bars: 3
+    style: "swing"
+    tempo: 120
+    difficulty: 1
+    
+  blues_12bar:
+    name: "12-Bar Blues"
+    name_ja: "12小節ブルース"
+    description: "Classic blues form. Essential for any jazz musician."
+    description_ja: "クラシックなブルース形式。ジャズミュージシャンに不可欠。"
+    form: ["I7", "I7", "I7", "I7", "IV7", "IV7", "I7", "I7", "V7", "IV7", "I7", "V7"]
+    bars: 12
+    style: "swing"
+    tempo: 120
+    difficulty: 1
+    
+  rhythm_changes_a:
+    name: "Rhythm Changes (A section)"
+    name_ja: "リズムチェンジ(Aセクション)"
+    description: "Based on 'I Got Rhythm'. Common in bebop."
+    description_ja: "「I Got Rhythm」に基づく。ビバップでよく使われる。"
+    form: ["I", "vi", "ii", "V", "I", "vi", "ii", "V"]
+    bars: 8
+    style: "swing"
+    tempo: 200
+    difficulty: 3
+    
+  autumn_leaves:
+    name: "Autumn Leaves"
+    name_ja: "枯葉"
+    description: "One of the most popular jazz standards for learning."
+    description_ja: "学習用として最も人気のあるジャズスタンダードの一つ。"
+    form: ["ii", "V", "I", "IV", "vii", "III", "vi", "vi"]
+    bars: 8
+    style: "swing"
+    tempo: 140
+    difficulty: 2
+    
+  all_the_things:
+    name: "All The Things You Are"
+    name_ja: "オール・ザ・シングス・ユー・アー"
+    description: "Complex changes through multiple keys. Advanced standard."
+    description_ja: "複数のキーを通る複雑な進行。上級スタンダード。"
+    form: ["ii", "V", "I", "IV", "vii", "III", "vi", "ii", "V", "I", "IV", "vii", "III", "vi", "ii", "V"]
+    bars: 16
+    style: "swing"
+    tempo: 160
+    difficulty: 4
+    
+  days_of_wine:
+    name: "Days of Wine and Roses"
+    name_ja: "酒とバラの日々"
+    description: "Beautiful melody with interesting harmonic movement."
+    description_ja: "美しいメロディーと興味深い和声進行。"
+    form: ["I", "vi", "ii", "V", "I", "IV", "vii", "III"]
+    bars: 8
+    style: "ballad"
+    tempo: 80
+    difficulty: 2
+    
+  minor_blues:
+    name: "Minor Blues"
+    name_ja: "マイナーブルース"
+    description: "Blues in minor key. Darker, more intense sound."
+    description_ja: "マイナーキーのブルース。より暗く激しい響き。"
+    form: ["i", "i", "i", "i", "iv", "iv", "i", "i", "v", "iv", "i", "v"]
+    bars: 12
+    style: "swing"
+    tempo: 120
+    difficulty: 2
+    
+  turnaround:
+    name: "I-VI-ii-V Turnaround"
+    name_ja: "I-VI-ii-Vターンアラウンド"
+    description: "Classic turnaround to return to the top of the form."
+    description_ja: "形式の先頭に戻るための古典的なターンアラウンド。"
+    form: ["I", "VI", "ii", "V"]
+    bars: 4
+    style: "swing"
+    tempo: 120
+    difficulty: 1
+    
+  coltrane_changes:
+    name: "Coltrane Changes"
+    name_ja: "コルトレーンチェンジ"
+    description: "Advanced harmonic substitution. Moves through three tonal centers."
+    description_ja: "高度な和声代理。3つの調性中心を移動。"
+    form: ["I", "III", "VI", "II", "V", "I"]
+    bars: 6
+    style: "swing"
+    tempo: 280
+    difficulty: 5
+    
+  lady_bird:
+    name: "Lady Bird"
+    name_ja: "レディ・バード"
+    description: "Tadd Dameron composition. Half-step key changes."
+    description_ja: "タッド・ダメロンの作曲。半音のキーチェンジ。"
+    form: ["I", "vi", "ii", "V", "I", "vi", "ii", "V"]
+    bars: 8
+    style: "swing"
+    tempo: 160
+    difficulty: 3
+    
+  stella:
+    name: "Stella By Starlight"
+    name_ja: "ステラ・バイ・スターライト"
+    description: "Complex harmony with many ii-V's. Advanced level."
+    description_ja: "多くのii-Vを含む複雑な和声。上級レベル。"
+    form: ["ii", "V", "I", "IV", "vii", "III", "vi", "ii", "V", "I"]
+    bars: 10
+    style: "ballad"
+    tempo: 100
+    difficulty: 4
+
+chord_types:
+  maj7:
+    name: "Major 7th"
+    name_ja: "メジャー7th"
+    intervals: [0, 4, 7, 11]
+    scales: ["ionian", "lydian"]
+    
+  min7:
+    name: "Minor 7th"
+    name_ja: "マイナー7th"
+    intervals: [0, 3, 7, 10]
+    scales: ["dorian", "aeolian", "phrygian"]
+    
+  7:
+    name: "Dominant 7th"
+    name_ja: "ドミナント7th"
+    intervals: [0, 4, 7, 10]
+    scales: ["mixolydian", "bebop_dominant", "whole_tone"]
+    
+  min7b5:
+    name: "Half-Diminished"
+    name_ja: "ハーフディミニッシュ"
+    intervals: [0, 3, 6, 10]
+    scales: ["locrian", "diminished_half_whole"]
+    
+  dim7:
+    name: "Diminished 7th"
+    name_ja: "ディミニッシュ7th"
+    intervals: [0, 3, 6, 9]
+    scales: ["diminished_whole_half"]
+
+styles:
+  swing:
+    name: "Swing"
+    name_ja: "スイング"
+    swing_ratio: 0.67
+    description: "Classic jazz feel with triplet-based eighth notes"
+    description_ja: "3連符ベースの8分音符による古典的なジャズのフィール"
+    
+  latin:
+    name: "Latin"
+    name_ja: "ラテン"
+    swing_ratio: 0.5
+    description: "Straight eighth notes with Latin rhythms"
+    description_ja: "ラテンリズムによるストレートな8分音符"
+    
+  bossa:
+    name: "Bossa Nova"
+    name_ja: "ボサノヴァ"
+    swing_ratio: 0.5
+    description: "Brazilian style with gentle syncopation"
+    description_ja: "穏やかなシンコペーションを持つブラジル風"
+    
+  ballad:
+    name: "Ballad"
+    name_ja: "バラード"
+    swing_ratio: 0.67
+    description: "Slow tempo with expressive phrasing"
+    description_ja: "表現豊かなフレージングを持つスローテンポ"
