@@ -16,6 +16,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import time
 from scipy.integrate import odeint
+from scipy.special import erf
 
 st.set_page_config(
     page_title="Co系超合金多成分拡散解析",
@@ -131,9 +132,9 @@ class MulticomponentDiffusionSolver:
         
         return abs(D)
     
-    def setup_initial_conditions(self, left_composition, right_composition):
+    def setup_initial_conditions(self, left_composition, right_composition, interface_width=50e-6):
         """
-        初期条件を設定（拡散対）
+        初期条件を設定（拡散対）- 滑らかなerror function遷移
         
         Parameters:
         -----------
@@ -141,6 +142,8 @@ class MulticomponentDiffusionSolver:
             左側の組成（モル分率）
         right_composition : dict
             右側の組成（モル分率）
+        interface_width : float
+            界面遷移領域の幅 [m] (デフォルト: 50 μm)
         
         Returns:
         --------
@@ -153,11 +156,7 @@ class MulticomponentDiffusionSolver:
             C_left = left_composition.get(element, 0.0)
             C_right = right_composition.get(element, 0.0)
             
-            C0[i, :] = np.where(self.x < 0, C_left, C_right)
-            
-            transition_width = 5 * self.dx
-            mask = np.abs(self.x) < transition_width
-            C0[i, mask] = C_left + (C_right - C_left) * (self.x[mask] / transition_width + 0.5)
+            C0[i, :] = C_left + (C_right - C_left) * 0.5 * (1.0 + erf(self.x / interface_width))
         
         return C0
     
@@ -395,12 +394,14 @@ def main():
     nx = st.sidebar.slider("空間分割数", 50, 500, 200, 50)
     nt = st.sidebar.slider("時間ステップ数", 100, 1000, 500, 100)
     L_um = st.sidebar.slider("拡散対長さ (μm)", 100, 1000, 600, 50)
+    interface_width_um = st.sidebar.slider("界面遷移幅 (μm)", 10, 200, 50, 10)
     
     if st.sidebar.button("🚀 計算実行", type="primary"):
         with st.spinner("計算中..."):
             T_kelvin = T_celsius + 273.15
             t_total = t_hours * 3600  # 秒に変換
             L = L_um * 1e-6  # mに変換
+            interface_width = interface_width_um * 1e-6  # mに変換
             
             solver = MulticomponentDiffusionSolver(
                 elements=elements,
@@ -409,7 +410,7 @@ def main():
                 T=T_kelvin
             )
             
-            C0 = solver.setup_initial_conditions(left_comp, right_comp)
+            C0 = solver.setup_initial_conditions(left_comp, right_comp, interface_width=interface_width)
             
             C_history, t_array = solver.solve(C0, t_total, nt)
             
