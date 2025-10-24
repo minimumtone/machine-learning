@@ -124,7 +124,7 @@ class MulticomponentDiffusionSolver:
         Q_self = params['self']['Q0'] + params['self']['Q1'] * self.T
         M_self = (1.0 / (R * self.T)) * np.exp(Q_self / (R * self.T))
         
-        D = M_self * R * self.T * 1e-4  # スケーリング係数
+        D = M_self * R * self.T * 3e-3
         
         if element in composition:
             C = composition[element]
@@ -358,6 +358,8 @@ def main():
         "実験条件",
         ["Figure 19 (Co-Al-Cr / Ni-Al-Co, 1100°C, 48h)",
          "Figure 20 (Co-Al-Cr / Ni-Al-Cr-Ti, 1100°C, 72h)",
+         "長時間拡散 (1100°C, 200h)",
+         "超長時間拡散 (1100°C, 500h)",
          "カスタム"]
     )
     
@@ -373,9 +375,21 @@ def main():
         left_comp = {'Co': 0.66, 'Al': 0.066, 'Cr': 0.287, 'Ni': 0.0, 'Ti': 0.0}
         right_comp = {'Co': 0.0, 'Al': 0.014, 'Cr': 0.055, 'Ni': 0.84, 'Ti': 0.089}
         elements = ['Co', 'Cr', 'Al', 'Ni', 'Ti']
+    elif "長時間拡散" in experiment:
+        T_celsius = 1100
+        t_hours = 200
+        left_comp = {'Co': 0.70, 'Al': 0.06, 'Cr': 0.279, 'Ni': 0.0, 'Ti': 0.0}
+        right_comp = {'Co': 0.348, 'Al': 0.053, 'Cr': 0.0, 'Ni': 0.53, 'Ti': 0.0}
+        elements = ['Co', 'Cr', 'Al', 'Ni']
+    elif "超長時間拡散" in experiment:
+        T_celsius = 1100
+        t_hours = 500
+        left_comp = {'Co': 0.70, 'Al': 0.06, 'Cr': 0.279, 'Ni': 0.0, 'Ti': 0.0}
+        right_comp = {'Co': 0.348, 'Al': 0.053, 'Cr': 0.0, 'Ni': 0.53, 'Ti': 0.0}
+        elements = ['Co', 'Cr', 'Al', 'Ni']
     else:
         T_celsius = st.sidebar.slider("温度 (°C)", 900, 1300, 1100, 50)
-        t_hours = st.sidebar.slider("時間 (時間)", 1, 100, 48, 1)
+        t_hours = st.sidebar.slider("時間 (時間)", 1, 500, 72, 1)
         
         st.sidebar.subheader("左側組成（質量分率）")
         left_comp = {}
@@ -397,9 +411,16 @@ def main():
     
     st.sidebar.subheader("数値計算パラメータ")
     nx = st.sidebar.slider("空間分割数", 50, 500, 200, 50)
-    nt = st.sidebar.slider("時間ステップ数", 100, 1000, 500, 100)
+    nt = st.sidebar.slider("時間ステップ数", 100, 5000, 1000, 100)
     L_um = st.sidebar.slider("拡散対長さ (μm)", 100, 1000, 600, 50)
     interface_width_um = st.sidebar.slider("界面遷移幅 (μm)", 10, 200, 50, 10)
+    
+    st.sidebar.info(f"""
+    **計算時間の目安**:
+    - 時間ステップ数が多いほど精度が高いが、計算時間も長くなります
+    - 長時間拡散（72h以上）では、nt=1000以上を推奨
+    - 自動安定性調整により、必要に応じてntは自動的に増加します
+    """)
     
     if st.sidebar.button("🚀 計算実行", type="primary"):
         with st.spinner("計算中..."):
@@ -612,7 +633,7 @@ def main():
             st.session_state['current_frame'] = frame_idx
             
             fig = create_frame_by_frame_animation(solver, C_history, t_array, frame_idx)
-            st.plotly_chart(fig, width='stretch')
+            st.plotly_chart(fig, use_container_width=True)
             
             st.subheader("📋 各元素の濃度情報")
             df = create_concentration_table(solver, C_history, t_array, frame_idx)
