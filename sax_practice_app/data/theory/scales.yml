@@ -1,0 +1,173 @@
+scales:
+  major:
+    name: "Major Scale"
+    name_ja: "メジャースケール"
+    intervals: [0, 2, 4, 5, 7, 9, 11]
+    description: "The most fundamental scale in Western music. Bright and happy sound."
+    description_ja: "西洋音楽の最も基本的なスケール。明るく幸せな響き。"
+    difficulty: 1
+    
+  dorian:
+    name: "Dorian Mode"
+    name_ja: "ドリアンモード"
+    intervals: [0, 2, 3, 5, 7, 9, 10]
+    description: "Minor scale with raised 6th. Common in jazz for minor ii chords."
+    description_ja: "6度が上がったマイナースケール。ジャズのマイナーiiコードでよく使われる。"
+    difficulty: 2
+    
+  mixolydian:
+    name: "Mixolydian Mode"
+    name_ja: "ミクソリディアンモード"
+    intervals: [0, 2, 4, 5, 7, 9, 10]
+    description: "Major scale with flatted 7th. Perfect for dominant 7th chords."
+    description_ja: "7度が下がったメジャースケール。ドミナント7thコードに最適。"
+    difficulty: 2
+    
+  natural_minor:
+    name: "Natural Minor Scale"
+    name_ja: "ナチュラルマイナースケール"
+    intervals: [0, 2, 3, 5, 7, 8, 10]
+    description: "Basic minor scale. Sad and melancholic sound."
+    description_ja: "基本的なマイナースケール。悲しく憂鬱な響き。"
+    difficulty: 1
+    
+  harmonic_minor:
+    name: "Harmonic Minor Scale"
+    name_ja: "ハーモニックマイナースケール"
+    intervals: [0, 2, 3, 5, 7, 8, 11]
+    description: "Minor scale with raised 7th. Exotic, Middle Eastern flavor."
+    description_ja: "7度が上がったマイナースケール。エキゾチックで中東風の響き。"
+    difficulty: 2
+    
+  melodic_minor:
+    name: "Melodic Minor Scale"
+    name_ja: "メロディックマイナースケール"
+    intervals: [0, 2, 3, 5, 7, 9, 11]
+    description: "Minor scale with raised 6th and 7th. Very important in jazz."
+    description_ja: "6度と7度が上がったマイナースケール。ジャズで非常に重要。"
+    difficulty: 2
+    
+  major_blues:
+    name: "Major Blues Scale"
+    name_ja: "メジャーブルーススケール"
+    intervals: [0, 2, 3, 4, 7, 9]
+    description: "Major pentatonic with added blue note (b3)."
+    description_ja: "メジャーペンタトニックにブルーノート(♭3)を追加。"
+    difficulty: 2
+    
+  minor_blues:
+    name: "Minor Blues Scale"
+    name_ja: "マイナーブルーススケール"
+    intervals: [0, 3, 5, 6, 7, 10]
+    description: "Minor pentatonic with added blue note (b5). Essential for blues."
+    description_ja: "マイナーペンタトニックにブルーノート(♭5)を追加。ブルースに不可欠。"
+    difficulty: 2
+    
+  bebop_major:
+    name: "Bebop Major Scale"
+    name_ja: "ビバップメジャースケール"
+    intervals: [0, 2, 4, 5, 7, 8, 9, 11]
+    description: "Major scale with added chromatic passing tone. 8 notes for swing feel."
+    description_ja: "半音階の経過音を追加したメジャースケール。スイング感のための8音。"
+    difficulty: 3
+    
+  bebop_dominant:
+    name: "Bebop Dominant Scale"
+    name_ja: "ビバップドミナントスケール"
+    intervals: [0, 2, 4, 5, 7, 9, 10, 11]
+    description: "Mixolydian with added major 7th. Perfect for V7 chords."
+    description_ja: "長7度を追加したミクソリディアン。V7コードに最適。"
+    difficulty: 3
+    
+  whole_tone:
+    name: "Whole Tone Scale"
+    name_ja: "ホールトーンスケール"
+    intervals: [0, 2, 4, 6, 8, 10]
+    description: "All whole steps. Dreamy, floating sound. Used for augmented chords."
+    description_ja: "全て全音。夢のような浮遊感のある響き。オーギュメントコードに使用。"
+    difficulty: 3
+    
+  diminished_half_whole:
+    name: "Diminished Half-Whole"
+    name_ja: "ディミニッシュ(半全)"
+    intervals: [0, 1, 3, 4, 6, 7, 9, 10]
+    description: "Alternating half and whole steps. For diminished and dominant 7b9 chords."
+    description_ja: "半音と全音を交互に。ディミニッシュとドミナント7♭9コードに。"
+    difficulty: 4
+    
+  diminished_whole_half:
+    name: "Diminished Whole-Half"
+    name_ja: "ディミニッシュ(全半)"
+    intervals: [0, 2, 3, 5, 6, 8, 9, 11]
+    description: "Alternating whole and half steps. For diminished chords."
+    description_ja: "全音と半音を交互に。ディミニッシュコードに。"
+    difficulty: 4
+    
+  lydian:
+    name: "Lydian Mode"
+    name_ja: "リディアンモード"
+    intervals: [0, 2, 4, 6, 7, 9, 11]
+    description: "Major scale with raised 4th. Bright, uplifting sound."
+    description_ja: "4度が上がったメジャースケール。明るく高揚感のある響き。"
+    difficulty: 2
+    
+  phrygian:
+    name: "Phrygian Mode"
+    name_ja: "フリジアンモード"
+    intervals: [0, 1, 3, 5, 7, 8, 10]
+    description: "Minor scale with flatted 2nd. Spanish, exotic flavor."
+    description_ja: "2度が下がったマイナースケール。スペイン風でエキゾチック。"
+    difficulty: 3
+    
+  aeolian:
+    name: "Aeolian Mode"
+    name_ja: "エオリアンモード"
+    intervals: [0, 2, 3, 5, 7, 8, 10]
+    description: "Natural minor scale. Same as natural minor."
+    description_ja: "ナチュラルマイナースケール。ナチュラルマイナーと同じ。"
+    difficulty: 1
+    
+  locrian:
+    name: "Locrian Mode"
+    name_ja: "ロクリアンモード"
+    intervals: [0, 1, 3, 5, 6, 8, 10]
+    description: "Most unstable mode. Used for half-diminished chords."
+    description_ja: "最も不安定なモード。ハーフディミニッシュコードに使用。"
+    difficulty: 4
+
+patterns:
+  ascending:
+    name: "Ascending"
+    name_ja: "上昇"
+    description: "Play scale from bottom to top"
+    description_ja: "スケールを下から上へ演奏"
+    
+  descending:
+    name: "Descending"
+    name_ja: "下降"
+    description: "Play scale from top to bottom"
+    description_ja: "スケールを上から下へ演奏"
+    
+  ascending_descending:
+    name: "Up and Down"
+    name_ja: "往復"
+    description: "Play scale up then down"
+    description_ja: "スケールを上昇してから下降"
+    
+  thirds:
+    name: "Thirds"
+    name_ja: "3度"
+    description: "Play in intervals of thirds (1-3, 2-4, 3-5...)"
+    description_ja: "3度の音程で演奏 (1-3, 2-4, 3-5...)"
+    
+  fourths:
+    name: "Fourths"
+    name_ja: "4度"
+    description: "Play in intervals of fourths (1-4, 2-5, 3-6...)"
+    description_ja: "4度の音程で演奏 (1-4, 2-5, 3-6...)"
+    
+  1235:
+    name: "1-2-3-5 Pattern"
+    name_ja: "1-2-3-5パターン"
+    description: "Common bebop pattern (1-2-3-5, 2-3-4-6...)"
+    description_ja: "一般的なビバップパターン (1-2-3-5, 2-3-4-6...)"
