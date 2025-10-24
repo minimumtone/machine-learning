@@ -422,93 +422,242 @@ def main():
             st.success("✅ 計算完了！")
     
     if 'C_history' in st.session_state:
-        st.header("📊 結果の可視化")
-        
         solver = st.session_state['solver']
         C_history = st.session_state['C_history']
         t_array = st.session_state['t_array']
         
-        col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 1, 4])
+        tab1, tab2 = st.tabs(["📊 結果の可視化", "📐 拡散係数の計算過程"])
         
-        with col1:
-            if st.button("⏮️ 最初"):
-                st.session_state['current_frame'] = 0
-        
-        with col2:
-            if st.button("◀️ 前"):
-                if st.session_state['current_frame'] > 0:
-                    st.session_state['current_frame'] -= 1
-        
-        with col3:
-            if st.button("▶️ 次"):
-                if st.session_state['current_frame'] < len(t_array) - 1:
-                    st.session_state['current_frame'] += 1
-        
-        with col4:
-            if st.button("⏭️ 最後"):
-                st.session_state['current_frame'] = len(t_array) - 1
-        
-        frame_idx = st.slider(
-            "フレーム選択",
-            0,
-            len(t_array) - 1,
-            st.session_state.get('current_frame', 0),
-            key='frame_slider'
-        )
-        st.session_state['current_frame'] = frame_idx
-        
-        fig = create_frame_by_frame_animation(solver, C_history, t_array, frame_idx)
-        st.plotly_chart(fig, width='stretch')
-        
-        st.subheader("📋 各元素の濃度情報")
-        df = create_concentration_table(solver, C_history, t_array, frame_idx)
-        st.dataframe(df, width='stretch')
-        
-        with st.expander("🔍 詳細情報"):
+        with tab2:
+            st.header("📐 Table 4から拡散係数を計算する過程")
+            
             st.markdown(f"""
-            - **温度**: {solver.T - 273.15:.0f} °C ({solver.T:.2f} K)
-            - **時間**: {t_array[frame_idx] / 3600:.2f} 時間
-            - **空間分割数**: {solver.nx}
-            - **時間ステップ数**: {len(t_array)}
-            - **拡散対長さ**: {solver.L * 1e6:.0f} μm
             
-            - **フレーム番号**: {frame_idx + 1} / {len(t_array)}
-            - **経過時間**: {t_array[frame_idx]:.1f} 秒 ({t_array[frame_idx] / 3600:.2f} 時間)
-            - **進行度**: {100 * frame_idx / (len(t_array) - 1):.1f}%
+            拡散係数 D は、CALPHAD法による移動度記述を使用して計算されます：
             
-            このフレームでは、以下の元素の拡散を計算しています：
+            ```
+            Q_self = Q0 + Q1 × T
+            M_self = (1/(R×T)) × exp(Q_self/(R×T))
+            D = M_self × R × T × 10⁻⁴
+            ```
+            
+            ここで：
+            - `Q0`, `Q1`: Table 4の移動度パラメータ
+            - `T`: 温度 [K] = **{solver.T:.2f} K ({solver.T - 273.15:.0f}°C)**
+            - `R`: 気体定数 = 8.314 J/(mol·K)
+            - `M_self`: 移動度 [mol·m/(J·s)]
+            - `D`: 拡散係数 [m²/s]
             """)
             
+            st.markdown("---")
+            st.subheader(f"2. 各元素の拡散係数計算（T = {solver.T:.2f} K）")
+            
+            calc_results = []
             for element in solver.elements:
-                st.markdown(f"- **{element}**: Fick's Second Law に基づく拡散")
+                if element in solver.mobility_params:
+                    params = solver.mobility_params[element]
+                    Q0 = params['self']['Q0']
+                    Q1 = params['self']['Q1']
+                    
+                    Q_self = Q0 + Q1 * solver.T
+                    RT = R * solver.T
+                    M_self = (1.0 / RT) * np.exp(Q_self / RT)
+                    D_base = M_self * RT * 1e-4
+                    
+                    C_avg = 0.5
+                    D_with_conc = D_base * (1.0 + 0.5 * C_avg)
+                    
+                    calc_results.append({
+                        'element': element,
+                        'Q0': Q0,
+                        'Q1': Q1,
+                        'Q_self': Q_self,
+                        'M_self': M_self,
+                        'D_base': D_base,
+                        'D_with_conc': D_with_conc
+                    })
             
-            st.markdown("""
-            論文Table 4の移動度パラメータを使用：
-            - Co: Q = -301795 - 72.25*T (J/mol)
-            - Cr: Q = -235000 - 82.0*T (J/mol)
-            - Al: Q = -126719 - 95.09*T (J/mol)
-            - Ni: Q = -287000 - 77.93*T (J/mol)
-            - Ti: Q = -261183 - 75.82*T (J/mol)
+            calc_results.sort(key=lambda x: x['D_base'], reverse=True)
+            
+            for i, result in enumerate(calc_results, 1):
+                with st.expander(f"**{i}. {result['element']} の計算** (D = {result['D_base']:.2e} m²/s)", expanded=(i==1)):
+                    st.markdown(f"""
+                    - Q0 = {result['Q0']:.0f} J/mol
+                    - Q1 = {result['Q1']:.2f} J/(mol·K)
+                    
+                    ```
+                    Q_self = Q0 + Q1 × T
+                           = {result['Q0']:.0f} + ({result['Q1']:.2f}) × {solver.T:.2f}
+                           = {result['Q_self']:.2f} J/mol
+                    ```
+                    
+                    ```
+                    R × T = 8.314 × {solver.T:.2f} = {R * solver.T:.2f} J/mol
+                    
+                    Q_self / (R×T) = {result['Q_self']:.2f} / {R * solver.T:.2f}
+                                    = {result['Q_self'] / (R * solver.T):.2f}
+                    
+                    M_self = (1/(R×T)) × exp(Q_self/(R×T))
+                           = {1.0/(R * solver.T):.2e} × exp({result['Q_self'] / (R * solver.T):.2f})
+                           = {result['M_self']:.2e} mol·m/(J·s)
+                    ```
+                    
+                    ```
+                    D = M_self × R × T × 10⁻⁴
+                      = {result['M_self']:.2e} × 8.314 × {solver.T:.2f} × 10⁻⁴
+                      = {result['D_base']:.2e} m²/s
+                    ```
+                    
+                    ```
+                    D = D_base × (1 + 0.5 × C)
+                      = {result['D_base']:.2e} × (1 + 0.5 × 0.5)
+                      = {result['D_with_conc']:.2e} m²/s
+                    ```
+                    """)
+            
+            st.markdown("---")
+            st.subheader("3. 拡散係数の比較")
+            
+            comparison_data = []
+            for result in calc_results:
+                comparison_data.append({
+                    '元素': result['element'],
+                    '拡散係数 D [m²/s]': f"{result['D_base']:.2e}",
+                    '相対速度': f"{result['D_base'] / calc_results[-1]['D_base']:.1f}倍"
+                })
+            
+            df_comparison = pd.DataFrame(comparison_data)
+            st.dataframe(df_comparison, width='stretch')
+            
+            st.info(f"""
+            **重要な観察**:
+            - **{calc_results[0]['element']} が最も速く拡散** ({calc_results[0]['D_base']:.2e} m²/s)
+            - **{calc_results[-1]['element']} が最も遅い** ({calc_results[-1]['D_base']:.2e} m²/s)
+            - 速度差: 約 {calc_results[0]['D_base'] / calc_results[-1]['D_base']:.0f} 倍
+            
+            拡散が速い元素ほど、数値計算の安定性条件が厳しくなります。
             """)
+            
+            st.markdown("---")
+            st.subheader("4. 安定性パラメータ α の計算")
+            
+            st.markdown(f"""
+            有限差分法の安定性条件：
+            ```
+            α = D × Δt / (Δx)² < 0.5
+            ```
+            
+            現在の計算パラメータ：
+            - Δx = {solver.dx:.2e} m
+            - Δt = {t_array[1] - t_array[0]:.2f} s
+            - (Δx)² = {solver.dx**2:.2e} m²
+            """)
+            
+            dt = t_array[1] - t_array[0]
+            stability_data = []
+            for result in calc_results:
+                alpha = result['D_base'] * dt / (solver.dx**2)
+                status = "✅ 安定" if alpha < 0.5 else "⚠️ 不安定"
+                stability_data.append({
+                    '元素': result['element'],
+                    '拡散係数 D [m²/s]': f"{result['D_base']:.2e}",
+                    '安定性パラメータ α': f"{alpha:.3f}",
+                    '状態': status
+                })
+            
+            df_stability = pd.DataFrame(stability_data)
+            st.dataframe(df_stability, width='stretch')
+            
+            max_alpha = max([result['D_base'] * dt / (solver.dx**2) for result in calc_results])
+            if max_alpha < 0.5:
+                st.success(f"✅ すべての元素で α < 0.5 を満たしています（最大 α = {max_alpha:.3f}）")
+            else:
+                st.warning(f"⚠️ 一部の元素で α > 0.5 です（最大 α = {max_alpha:.3f}）。時間ステップが自動調整されました。")
         
-        st.subheader("💾 データダウンロード")
-        
-        csv_data = []
-        for i in range(solver.nx):
-            row = {'距離_um': solver.x[i] * 1e6}
-            for j, element in enumerate(solver.elements):
-                row[f'{element}_質量分率'] = C_history[frame_idx, j, i]
-            csv_data.append(row)
-        
-        df_csv = pd.DataFrame(csv_data)
-        csv = df_csv.to_csv(index=False).encode('utf-8')
-        
-        st.download_button(
-            label="📥 現在のフレームをCSVでダウンロード",
-            data=csv,
-            file_name=f'diffusion_frame_{frame_idx}.csv',
-            mime='text/csv'
-        )
+        with tab1:
+            st.header("📊 結果の可視化")
+            
+            col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 1, 4])
+            
+            with col1:
+                if st.button("⏮️ 最初"):
+                    st.session_state['current_frame'] = 0
+            
+            with col2:
+                if st.button("◀️ 前"):
+                    if st.session_state['current_frame'] > 0:
+                        st.session_state['current_frame'] -= 1
+            
+            with col3:
+                if st.button("▶️ 次"):
+                    if st.session_state['current_frame'] < len(t_array) - 1:
+                        st.session_state['current_frame'] += 1
+            
+            with col4:
+                if st.button("⏭️ 最後"):
+                    st.session_state['current_frame'] = len(t_array) - 1
+            
+            frame_idx = st.slider(
+                "フレーム選択",
+                0,
+                len(t_array) - 1,
+                st.session_state.get('current_frame', 0),
+                key='frame_slider'
+            )
+            st.session_state['current_frame'] = frame_idx
+            
+            fig = create_frame_by_frame_animation(solver, C_history, t_array, frame_idx)
+            st.plotly_chart(fig, width='stretch')
+            
+            st.subheader("📋 各元素の濃度情報")
+            df = create_concentration_table(solver, C_history, t_array, frame_idx)
+            st.dataframe(df, width='stretch')
+            
+            with st.expander("🔍 詳細情報"):
+                st.markdown(f"""
+                - **温度**: {solver.T - 273.15:.0f} °C ({solver.T:.2f} K)
+                - **時間**: {t_array[frame_idx] / 3600:.2f} 時間
+                - **空間分割数**: {solver.nx}
+                - **時間ステップ数**: {len(t_array)}
+                - **拡散対長さ**: {solver.L * 1e6:.0f} μm
+                
+                - **フレーム番号**: {frame_idx + 1} / {len(t_array)}
+                - **経過時間**: {t_array[frame_idx]:.1f} 秒 ({t_array[frame_idx] / 3600:.2f} 時間)
+                - **進行度**: {100 * frame_idx / (len(t_array) - 1):.1f}%
+                
+                このフレームでは、以下の元素の拡散を計算しています：
+                """)
+                
+                for element in solver.elements:
+                    st.markdown(f"- **{element}**: Fick's Second Law に基づく拡散")
+                
+                st.markdown("""
+                論文Table 4の移動度パラメータを使用：
+                - Co: Q = -301795 - 72.25*T (J/mol)
+                - Cr: Q = -235000 - 82.0*T (J/mol)
+                - Al: Q = -126719 - 95.09*T (J/mol)
+                - Ni: Q = -287000 - 77.93*T (J/mol)
+                - Ti: Q = -261183 - 75.82*T (J/mol)
+                """)
+            
+            st.subheader("💾 データダウンロード")
+            
+            csv_data = []
+            for i in range(solver.nx):
+                row = {'距離_um': solver.x[i] * 1e6}
+                for j, element in enumerate(solver.elements):
+                    row[f'{element}_質量分率'] = C_history[frame_idx, j, i]
+                csv_data.append(row)
+            
+            df_csv = pd.DataFrame(csv_data)
+            csv = df_csv.to_csv(index=False).encode('utf-8')
+            
+            st.download_button(
+                label="📥 現在のフレームをCSVでダウンロード",
+                data=csv,
+                file_name=f'diffusion_frame_{frame_idx}.csv',
+                mime='text/csv'
+            )
 
 
 if __name__ == "__main__":
