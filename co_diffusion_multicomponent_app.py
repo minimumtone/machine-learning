@@ -275,9 +275,14 @@ def create_frame_by_frame_animation(solver, C_history, t_array, frame_idx):
     
     time_hours = t_array[frame_idx] / 3600
     
+    if frame_idx == 0:
+        frame_label = f'<b>フレーム {frame_idx+1}/{len(t_array)} - 初期条件 (t=0)</b><br>'
+    else:
+        frame_label = f'<b>フレーム {frame_idx+1}/{len(t_array)}</b><br>'
+    
     fig.update_layout(
         title=dict(
-            text=f'<b>フレーム {frame_idx+1}/{len(t_array)}</b><br>' +
+            text=frame_label +
                  f'時間: {time_hours:.2f} 時間 ({t_array[frame_idx]:.1f} 秒)<br>' +
                  f'温度: {solver.T-273.15:.0f} °C ({solver.T:.2f} K)<br>' +
                  f'<span style="font-size:14px">各元素の濃度分布を表示（質量分率）</span>',
@@ -613,20 +618,37 @@ def main():
             df = create_concentration_table(solver, C_history, t_array, frame_idx)
             st.dataframe(df, width='stretch')
             
+            if frame_idx == 0:
+                st.info("📌 **フレーム 0 は初期条件です** - 拡散開始前の濃度分布を表示しています（t = 0）")
+            
             with st.expander("🔍 詳細情報"):
-                st.markdown(f"""
-                - **温度**: {solver.T - 273.15:.0f} °C ({solver.T:.2f} K)
-                - **時間**: {t_array[frame_idx] / 3600:.2f} 時間
-                - **空間分割数**: {solver.nx}
-                - **時間ステップ数**: {len(t_array)}
-                - **拡散対長さ**: {solver.L * 1e6:.0f} μm
-                
-                - **フレーム番号**: {frame_idx + 1} / {len(t_array)}
-                - **経過時間**: {t_array[frame_idx]:.1f} 秒 ({t_array[frame_idx] / 3600:.2f} 時間)
-                - **進行度**: {100 * frame_idx / (len(t_array) - 1):.1f}%
-                
-                このフレームでは、以下の元素の拡散を計算しています：
-                """)
+                if frame_idx == 0:
+                    st.markdown(f"""
+                    
+                    このフレームは拡散開始前の初期濃度分布を表示しています。
+                    
+                    - **温度**: {solver.T - 273.15:.0f} °C ({solver.T:.2f} K)
+                    - **空間分割数**: {solver.nx}
+                    - **時間ステップ数**: {len(t_array)}
+                    - **拡散対長さ**: {solver.L * 1e6:.0f} μm
+                    - **界面遷移幅**: 滑らかなerror function遷移
+                    
+                    初期条件は、左側と右側の組成から計算された拡散対です。
+                    """)
+                else:
+                    st.markdown(f"""
+                    - **温度**: {solver.T - 273.15:.0f} °C ({solver.T:.2f} K)
+                    - **時間**: {t_array[frame_idx] / 3600:.2f} 時間
+                    - **空間分割数**: {solver.nx}
+                    - **時間ステップ数**: {len(t_array)}
+                    - **拡散対長さ**: {solver.L * 1e6:.0f} μm
+                    
+                    - **フレーム番号**: {frame_idx + 1} / {len(t_array)}
+                    - **経過時間**: {t_array[frame_idx]:.1f} 秒 ({t_array[frame_idx] / 3600:.2f} 時間)
+                    - **進行度**: {100 * frame_idx / (len(t_array) - 1):.1f}%
+                    
+                    このフレームでは、以下の元素の拡散を計算しています：
+                    """)
                 
                 for element in solver.elements:
                     st.markdown(f"- **{element}**: Fick's Second Law に基づく拡散")
