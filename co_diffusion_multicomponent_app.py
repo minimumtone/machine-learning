@@ -196,12 +196,11 @@ class MulticomponentDiffusionSolver:
             
             C_new = C_current.copy()
             for i in range(self.n_elements):
-                J_right = -D_matrix[i, 1:] * (C_current[i, 1:] - C_current[i, :-1]) / self.dx
-                J_left = -D_matrix[i, :-1] * (C_current[i, 1:] - C_current[i, :-1]) / self.dx
+                J_interfaces = -D_matrix[i, 1:] * (C_current[i, 1:] - C_current[i, :-1]) / self.dx
 
-                dJ_dx = (J_right - J_left) / self.dx
+                dJ_dx = (J_interfaces[1:] - J_interfaces[:-1]) / self.dx
 
-                C_new[i, 1:-1] += dt * dJ_dx
+                C_new[i, 1:-1] += dt * (-dJ_dx)
             
             C_new[:, 0] = C_new[:, 1]
             C_new[:, -1] = C_new[:, -2]
