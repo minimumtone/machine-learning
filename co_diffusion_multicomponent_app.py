@@ -403,9 +403,7 @@ def main():
     L_um = st.sidebar.slider("拡散対長さ (μm)", 100, 1000, 600, 50)
     interface_width_um = st.sidebar.slider("界面遷移幅 (μm)", 10, 200, 50, 10)
     
-    run_calculation = st.sidebar.button("🚀 計算実行", type="primary") or ('C_history' not in st.session_state)
-    
-    if run_calculation:
+    if st.sidebar.button("🚀 計算実行", type="primary"):
         with st.spinner("計算中..."):
             T_kelvin = T_celsius + 273.15
             t_total = t_hours * 3600  # 秒に変換
