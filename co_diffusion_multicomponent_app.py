@@ -16,7 +16,6 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import time
 from scipy.integrate import odeint
-from scipy.special import erf
 
 st.set_page_config(
     page_title="Co系超合金多成分拡散解析",
@@ -134,7 +133,7 @@ class MulticomponentDiffusionSolver:
     
     def setup_initial_conditions(self, left_composition, right_composition, interface_width=50e-6):
         """
-        初期条件を設定（拡散対）- 滑らかなerror function遷移
+        初期条件を設定（拡散対）- ステップ状の急峻な界面
         
         Parameters:
         -----------
@@ -143,7 +142,7 @@ class MulticomponentDiffusionSolver:
         right_composition : dict
             右側の組成（モル分率）
         interface_width : float
-            界面遷移領域の幅 [m] (デフォルト: 50 μm)
+            未使用（互換性のため残す）
         
         Returns:
         --------
@@ -152,11 +151,14 @@ class MulticomponentDiffusionSolver:
         """
         C0 = np.zeros((self.n_elements, self.nx))
         
+        interface_index = self.nx // 2
+        
         for i, element in enumerate(self.elements):
             C_left = left_composition.get(element, 0.0)
             C_right = right_composition.get(element, 0.0)
             
-            C0[i, :] = C_left + (C_right - C_left) * 0.5 * (1.0 + erf(self.x / interface_width))
+            C0[i, :interface_index] = C_left
+            C0[i, interface_index:] = C_right
         
         return C0
     
