@@ -9,5 +9,5 @@ tiktoken>=0.12.0
 streamlit>=1.40.0
 plotly>=5.24.0
 pandas>=2.2.0
-numpy>=2.3.0
+numpy>=1.24.0,<2.0.0
 PyMuPDF>=1.26.0
