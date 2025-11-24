@@ -24,8 +24,12 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import time
 from io import StringIO
+import os
 import warnings
 warnings.filterwarnings('ignore')
+
+# Get the directory where this script is located
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ページ設定
 st.set_page_config(
@@ -71,7 +75,8 @@ LIBRARY_CAPABILITIES = {
 def load_lithium_battery_data():
     """リチウム電池材料データセットの読み込み"""
     try:
-        df = pd.read_csv('/home/ubuntu/repos/machine-learning/lithium_battery_materials.csv')
+        data_path = os.path.join(SCRIPT_DIR, 'lithium_battery_materials.csv')
+        df = pd.read_csv(data_path)
         metadata = {
             "name": "リチウム電池材料データ",
             "description": "材料組成と物性の関係を示すデータセット",
@@ -90,7 +95,8 @@ def load_lithium_battery_data():
 def load_heat_conduction_data():
     """熱伝導データセットの読み込み"""
     try:
-        df = pd.read_csv('/home/ubuntu/repos/machine-learning/heat_conduction_single.csv')
+        data_path = os.path.join(SCRIPT_DIR, 'heat_conduction_single.csv')
+        df = pd.read_csv(data_path)
         metadata = {
             "name": "熱伝導シミュレーションデータ",
             "description": "時間・空間における温度分布の変化",
@@ -109,7 +115,8 @@ def load_heat_conduction_data():
 def load_burgers_data():
     """Burgers方程式データセットの読み込み"""
     try:
-        df = pd.read_csv('/home/ubuntu/repos/machine-learning/burgers_single.csv')
+        data_path = os.path.join(SCRIPT_DIR, 'burgers_single.csv')
+        df = pd.read_csv(data_path)
         metadata = {
             "name": "Burgers方程式データ",
             "description": "非線形偏微分方程式の数値解",
