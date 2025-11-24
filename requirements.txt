@@ -13,3 +13,7 @@ torch # For PINNs applications
 sympy # For symbolic regression and PDE discovery
 plotly # For interactive visualizations
 tqdm # For progress bars in training loops
+ase # Atomic Simulation Environment for molecular dynamics
+mace-torch # Machine Learning Potential (MACE) for accurate force calculations
+stmol # Streamlit component for molecular visualization
+py3Dmol # 3D molecular visualization library
