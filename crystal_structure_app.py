@@ -42,7 +42,8 @@ class CrystalGeometry:
     - f_i ∈ {0, 1}: chemical species (0=A, 1=B)
     """
 
-    def __init__(self, structure_type: str = "FCC", size: int = 2):
+    def __init__(self, structure_type: str = "FCC", size: int = 2, 
+                 positional_sigma: float = 0.0, random_seed: int = None):
         """
         Initialize crystal geometry
 
@@ -50,10 +51,14 @@ class CrystalGeometry:
             structure_type: "SC" (Simple Cubic), "BCC" (Body-Centered Cubic),
                           "FCC" (Face-Centered Cubic)
             size: Supercell size (N×N×N), default=2 for data reduction
+            positional_sigma: Positional disorder parameter (σ/a), 0.0 = perfect lattice
+            random_seed: Random seed for positional disorder
         """
         self.structure_type = structure_type
         self.size = size
         self.lattice_constant = 1.0  # Normalized to 1.0
+        self.positional_sigma = positional_sigma
+        self.random_seed = random_seed
 
         # Generate lattice vectors (basis vectors)
         self.basis_vectors = self._get_basis_vectors()
@@ -113,7 +118,16 @@ class CrystalGeometry:
                         positions.append(base_pos + np.array([a / 2, 0, a / 2]))  # Face 2
                         positions.append(base_pos + np.array([0, a / 2, a / 2]))  # Face 3
 
-        return np.array(positions)
+        positions = np.array(positions)
+        
+        # Add positional disorder if requested
+        if self.positional_sigma > 0:
+            rng = np.random.default_rng(self.random_seed)
+            sigma_abs = self.positional_sigma * self.lattice_constant
+            noise = rng.normal(scale=sigma_abs, size=positions.shape)
+            positions = positions + noise
+            
+        return positions
 
     def assign_species(self, concentration_B: float, random_seed: int = None):
         """
@@ -200,10 +214,12 @@ class WarrenCowleySRO:
     Warren-Cowley Short Range Order Parameter Calculator
 
     Mathematical Definition:
-    α_n = 1 - P_n(B|A) / c_B
+    α_n = 1 - P_n(B|A) / c_B  (shell-based)
+    α_k = 1 - P_k(B|A) / c_B  (k-NN based)
 
     where:
-    - P_n(B|A): Conditional probability of finding B at n-th neighbor of A
+    - P_n(B|A): Conditional probability of finding B at n-th neighbor shell of A
+    - P_k(B|A): Conditional probability of finding B among k nearest neighbors of A
     - c_B: Overall concentration of B
     - α ≈ 0: Random (disordered)
     - α < 0: Ordered (A-B alternating)
@@ -219,6 +235,8 @@ class WarrenCowleySRO:
     def __init__(self, crystal: CrystalGeometry):
         self.crystal = crystal
         self.distance_matrix, self.nn_distance = crystal.calculate_neighbor_distances()
+        self.n_atoms = len(crystal.positions)
+        self.species = crystal.species
 
     def calculate_alpha(self, shell: int = 1, tolerance: float = 0.1) -> float:
         """
@@ -288,6 +306,230 @@ class WarrenCowleySRO:
             return "Ordered Structure (規則構造: A-B alternating)"
         else:  # alpha > 0.1
             return "Clustered Structure (クラスター構造: A-A, B-B preference)"
+    
+    def _compute_knn_indices(self, k: int) -> np.ndarray:
+        """
+        Compute k-nearest neighbor indices for each atom
+        
+        Args:
+            k: Number of nearest neighbors
+            
+        Returns:
+            N×k array of neighbor indices
+        """
+        knn_indices = np.zeros((self.n_atoms, k), dtype=int)
+        
+        for i in range(self.n_atoms):
+            # Get distances from atom i to all others
+            distances = self.distance_matrix[i].copy()
+            # Set self-distance to infinity to exclude it
+            distances[i] = np.inf
+            # Get indices of k nearest neighbors
+            knn_indices[i] = np.argsort(distances)[:k]
+            
+        return knn_indices
+    
+    def calculate_alpha_knn(self, k: int) -> float:
+        """
+        Calculate Warren-Cowley SRO parameter using k-nearest neighbors
+        
+        Mathematical Definition:
+        For each A atom i, consider its k nearest neighbors N_k(i).
+        p_i(B|A; k) = (# of B atoms in N_k(i)) / k
+        P_k(B|A) = (1/N_A) Σ_{i ∈ A} p_i(B|A; k)
+        α_k = 1 - P_k(B|A) / c_B
+        
+        Args:
+            k: Number of nearest neighbors (e.g., k=5 for "5nn")
+            
+        Returns:
+            α_k: k-NN Warren-Cowley SRO parameter
+        """
+        # Calculate overall concentration of B
+        c_B = np.mean(self.species)
+        
+        # Handle edge cases
+        if c_B == 0.0 or c_B == 1.0:
+            return 0.0  # No disorder when all atoms are same type
+        
+        # Get A atom indices
+        A_atoms = np.where(self.species == 0)[0]
+        
+        if len(A_atoms) == 0:
+            return 0.0
+        
+        # Compute k-NN indices for all atoms
+        knn_indices = self._compute_knn_indices(k)
+        
+        # Calculate P_k(B|A)
+        p_values = []
+        for a_idx in A_atoms:
+            neighbors = knn_indices[a_idx]
+            # Count B atoms among k nearest neighbors
+            n_B_neighbors = np.sum(self.species[neighbors] == 1)
+            p_i = n_B_neighbors / k
+            p_values.append(p_i)
+        
+        P_k_B_given_A = np.mean(p_values)
+        
+        # Calculate α_k
+        alpha_k = 1.0 - (P_k_B_given_A / c_B)
+        
+        return alpha_k
+    
+    def calculate_alpha_knn_multi(self, k_values: list) -> dict:
+        """
+        Calculate α_k for multiple k values
+        
+        Args:
+            k_values: List of k values (e.g., [1, 2, 3, 4, 5])
+            
+        Returns:
+            Dictionary mapping k -> α_k
+        """
+        results = {}
+        for k in k_values:
+            results[k] = self.calculate_alpha_knn(k)
+        return results
+
+
+# ============================================================================
+# Structural SRO Calculator: Geometric Correlation
+# ============================================================================
+
+class StructuralSRO:
+    """
+    Structural Short Range Order Calculator
+    
+    Unlike chemical SRO (which measures species correlations on a fixed lattice),
+    structural SRO measures correlations of geometric descriptors (bond lengths,
+    coordination environments) that arise from positional disorder.
+    
+    Mathematical Definition:
+    For a geometric descriptor q_i (e.g., mean distance to k nearest neighbors):
+    β_k = ⟨(q_i - ⟨q⟩)(q_j - ⟨q⟩)⟩_{pairs} / Var(q)
+    
+    where pairs are k-nearest neighbors.
+    
+    Interpretation:
+    - β ≈ 0: No structural correlation (random positional disorder)
+    - β > 0: Similar environments cluster together
+    - β < 0: Dissimilar environments are neighbors (anti-correlation)
+    """
+    
+    def __init__(self, crystal: CrystalGeometry):
+        self.crystal = crystal
+        self.distance_matrix, self.nn_distance = crystal.calculate_neighbor_distances()
+        self.n_atoms = len(crystal.positions)
+        
+    def _compute_geometric_descriptor(self, k: int) -> np.ndarray:
+        """
+        Compute geometric descriptor q_i for each atom
+        
+        q_i = mean distance to k nearest neighbors
+        
+        Args:
+            k: Number of nearest neighbors
+            
+        Returns:
+            Array of q_i values (length N)
+        """
+        q_values = np.zeros(self.n_atoms)
+        
+        for i in range(self.n_atoms):
+            # Get distances from atom i to all others
+            distances = self.distance_matrix[i].copy()
+            # Set self-distance to infinity to exclude it
+            distances[i] = np.inf
+            # Get k nearest neighbor distances
+            knn_distances = np.sort(distances)[:k]
+            # Compute mean distance
+            q_values[i] = np.mean(knn_distances)
+            
+        return q_values
+    
+    def calculate_structural_sro_knn(self, k: int) -> float:
+        """
+        Calculate structural SRO parameter using k-nearest neighbors
+        
+        Mathematical Definition:
+        1. Compute geometric descriptor: q_i = mean distance to k nearest neighbors
+        2. Compute mean and variance: ⟨q⟩, Var(q)
+        3. For each atom i and its k nearest neighbors j:
+           Compute (q_i - ⟨q⟩)(q_j - ⟨q⟩)
+        4. Average over all pairs and normalize:
+           β_k = ⟨(q_i - ⟨q⟩)(q_j - ⟨q⟩)⟩ / Var(q)
+        
+        Args:
+            k: Number of nearest neighbors
+            
+        Returns:
+            β_k: Structural SRO parameter
+        """
+        # Compute geometric descriptor for all atoms
+        q_values = self._compute_geometric_descriptor(k)
+        
+        # Compute mean and variance
+        q_mean = np.mean(q_values)
+        q_var = np.var(q_values)
+        
+        # Handle edge case: no variance (perfect lattice)
+        if q_var < 1e-10:
+            return 0.0
+        
+        # Compute centered values
+        q_centered = q_values - q_mean
+        
+        # Compute k-NN indices
+        knn_indices = np.zeros((self.n_atoms, k), dtype=int)
+        for i in range(self.n_atoms):
+            distances = self.distance_matrix[i].copy()
+            distances[i] = np.inf
+            knn_indices[i] = np.argsort(distances)[:k]
+        
+        # Compute correlation over all neighbor pairs
+        correlations = []
+        for i in range(self.n_atoms):
+            for j in knn_indices[i]:
+                correlation = q_centered[i] * q_centered[j]
+                correlations.append(correlation)
+        
+        # Average and normalize
+        beta_k = np.mean(correlations) / q_var
+        
+        return beta_k
+    
+    def calculate_structural_sro_multi(self, k_values: list) -> dict:
+        """
+        Calculate β_k for multiple k values
+        
+        Args:
+            k_values: List of k values (e.g., [1, 2, 3, 4, 5])
+            
+        Returns:
+            Dictionary mapping k -> β_k
+        """
+        results = {}
+        for k in k_values:
+            results[k] = self.calculate_structural_sro_knn(k)
+        return results
+    
+    def interpret_beta(self, beta: float) -> str:
+        """
+        Interpret the meaning of β value
+        
+        Args:
+            beta: Structural SRO parameter
+            
+        Returns:
+            Interpretation string
+        """
+        if abs(beta) < 0.1:
+            return "No Structural Correlation (構造相関なし)"
+        elif beta > 0.1:
+            return "Positive Structural Correlation (類似環境がクラスター化)"
+        else:  # beta < -0.1
+            return "Negative Structural Correlation (異なる環境が隣接)"
 
 
 # ============================================================================
@@ -389,8 +631,25 @@ def main():
         help="For reproducibility"
     )
 
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("Structural Disorder")
+    
+    positional_sigma = st.sidebar.slider(
+        "位置ゆらぎ σ/a (Positional Disorder)",
+        min_value=0.0,
+        max_value=0.1,
+        value=0.0,
+        step=0.01,
+        help="Gaussian positional disorder parameter (σ/a). 0.0 = perfect lattice, >0 = structural disorder"
+    )
+
     # Generate crystal structure
-    crystal = CrystalGeometry(structure_type=structure_type, size=size)
+    crystal = CrystalGeometry(
+        structure_type=structure_type, 
+        size=size,
+        positional_sigma=positional_sigma,
+        random_seed=random_seed
+    )
     crystal.assign_species(concentration_B=concentration, random_seed=random_seed)
 
     # Get state representation
@@ -468,24 +727,115 @@ def main():
     これが**E(3)不変性（ユークリッド変換に対する不変性）**です。
     """)
 
-    # Calculate SRO parameter
+    # Calculate SRO parameters
     st.subheader("秩序パラメータ計算 (Order Parameter Calculation)")
 
     sro_calculator = WarrenCowleySRO(crystal)
-    alpha = sro_calculator.calculate_alpha(shell=1)
-    interpretation = sro_calculator.interpret_alpha(alpha)
-
+    
+    # Traditional shell-based SRO
+    alpha_shell = sro_calculator.calculate_alpha(shell=1)
+    interpretation_shell = sro_calculator.interpret_alpha(alpha_shell)
+    
+    # k-NN Chemical SRO (for k=1,2,3,4,5)
+    k_values = [1, 2, 3, 4, 5]
+    alpha_knn_results = sro_calculator.calculate_alpha_knn_multi(k_values)
+    
+    # Structural SRO (if positional disorder is present)
+    if positional_sigma > 0:
+        structural_sro = StructuralSRO(crystal)
+        beta_knn_results = structural_sro.calculate_structural_sro_multi(k_values)
+    
+    # Display Chemical SRO
+    st.markdown("### 化学的短範囲秩序 (Chemical SRO)")
+    
     col1, col2 = st.columns(2)
     with col1:
-        st.metric("Warren-Cowley SRO (α)", f"{alpha:.4f}")
+        st.metric("Shell-based α₁", f"{alpha_shell:.4f}")
+        st.caption("Traditional nearest neighbor shell")
     with col2:
-        st.metric("判定 (Interpretation)", interpretation)
-
+        st.metric("判定 (Interpretation)", interpretation_shell)
+    
+    # Display k-NN Chemical SRO
+    st.markdown("**k-NN Chemical SRO (α_k for k=1,2,3,4,5):**")
+    
+    knn_cols = st.columns(5)
+    for idx, k in enumerate(k_values):
+        with knn_cols[idx]:
+            st.metric(f"α_{k}", f"{alpha_knn_results[k]:.4f}")
+    
+    # Plot k-NN Chemical SRO
+    fig_chem = go.Figure()
+    fig_chem.add_trace(go.Scatter(
+        x=k_values,
+        y=[alpha_knn_results[k] for k in k_values],
+        mode='lines+markers',
+        name='Chemical SRO (α_k)',
+        line=dict(color='blue', width=2),
+        marker=dict(size=10)
+    ))
+    fig_chem.add_hline(y=0, line_dash="dash", line_color="gray", 
+                       annotation_text="Random (α=0)")
+    fig_chem.update_layout(
+        title="k-NN Chemical SRO vs k",
+        xaxis_title="k (number of nearest neighbors)",
+        yaxis_title="α_k",
+        height=400
+    )
+    st.plotly_chart(fig_chem, use_container_width=True)
+    
+    # Display Structural SRO if applicable
+    if positional_sigma > 0:
+        st.markdown("### 構造的短範囲秩序 (Structural SRO)")
+        st.info("""
+        構造SROは、位置ゆらぎによる幾何学的記述子（平均結合長など）の相関を測定します。
+        化学SROとは異なり、格子の位置的無秩序に起因する構造相関を捉えます。
+        """)
+        
+        # Display k-NN Structural SRO
+        st.markdown("**k-NN Structural SRO (β_k for k=1,2,3,4,5):**")
+        
+        struct_cols = st.columns(5)
+        for idx, k in enumerate(k_values):
+            with struct_cols[idx]:
+                st.metric(f"β_{k}", f"{beta_knn_results[k]:.4f}")
+        
+        # Plot k-NN Structural SRO
+        fig_struct = go.Figure()
+        fig_struct.add_trace(go.Scatter(
+            x=k_values,
+            y=[beta_knn_results[k] for k in k_values],
+            mode='lines+markers',
+            name='Structural SRO (β_k)',
+            line=dict(color='green', width=2),
+            marker=dict(size=10)
+        ))
+        fig_struct.add_hline(y=0, line_dash="dash", line_color="gray", 
+                           annotation_text="No Correlation (β=0)")
+        fig_struct.update_layout(
+            title="k-NN Structural SRO vs k",
+            xaxis_title="k (number of nearest neighbors)",
+            yaxis_title="β_k",
+            height=400
+        )
+        st.plotly_chart(fig_struct, use_container_width=True)
+        
+        st.markdown(f"""
+        **解釈:**
+        - β ≈ 0: 構造相関なし（ランダムな位置ゆらぎ）
+        - β > 0: 類似環境がクラスター化
+        - β < 0: 異なる環境が隣接（反相関）
+        """)
+    else:
+        st.info("""
+        💡 **構造SROを計算するには**: サイドバーの「位置ゆらぎ σ/a」を0より大きく設定してください。
+        位置的無秩序がない場合、構造SROは定義されません。
+        """)
+    
     st.markdown(f"""
     **計算詳細:**
-    - 第1近接殻（Nearest Neighbors）での計算
     - 濃度 c_B = {concentration:.3f}
-    - α = {alpha:.4f}
+    - 位置ゆらぎ σ/a = {positional_sigma:.3f}
+    - Shell-based α₁ = {alpha_shell:.4f}
     """)
 
     # ========================================================================
@@ -791,7 +1141,199 @@ def main():
         - 統計的性質は、十分なサンプリングで収束
         - 境界効果は、周期境界条件で緩和可能
 
-        ### 5.6 実装上の注意点
+        ### 5.6 SQS と無秩序指標の設計：化学SRO vs 構造SRO
+
+        #### Special Quasirandom Structure (SQS) とは
+
+        **SQS（Special Quasirandom Structure）**は、有限サイズの超格子で完全ランダム合金の統計的性質を
+        最もよく模倣する原子配置です。Zunger et al. (1990) によって提案され、第一原理計算における
+        ランダム合金のモデル化に広く使用されています。
+
+        #### 完全ランダム合金の数学的定義
+
+        完全ランダム合金では、任意の近接殻 $n$ において：
+
+        $$P_n(B|A) = c_B$$
+
+        これは、A原子の周りのB原子の条件付き確率が、全体濃度 $c_B$ に等しいことを意味します。
+        Warren-Cowley SROパラメータで表現すると：
+
+        $$\\alpha_n = 1 - \\frac{P_n(B|A)}{c_B} = 1 - \\frac{c_B}{c_B} = 0$$
+
+        つまり、**すべての近接殻で $\\alpha_n = 0$** が完全ランダムの条件です。
+
+        #### 有限サイズの制約とSQSの必要性
+
+        しかし、有限サイズの超格子では、すべての殻で同時に $\\alpha_n = 0$ を達成することは
+        **数学的に不可能**です。これは以下の理由によります：
+
+        1. **離散性の制約**: 原子数が有限のため、濃度を厳密に実現できない
+        2. **幾何学的制約**: 周期境界条件により、遠方の殻で相関が生じる
+        3. **組み合わせ的制約**: 配置の自由度が限られている
+
+        #### SQSの最適化問題としての定式化
+
+        SQSは、以下の評価関数 $J$ を最小化する配置として定義されます：
+
+        $$J(\\text{config}) = \\sum_{n=1}^{N_{\\text{shell}}} w_n \\alpha_n^2(\\text{config})$$
+
+        ここで：
+        - $w_n$: 第 $n$ 近接殻の重み（通常、近い殻ほど大きい）
+        - $\\alpha_n(\\text{config})$: 配置 config における第 $n$ 殻のSROパラメータ
+        - $N_{\\text{shell}}$: 考慮する近接殻の数
+
+        **最適なSQS**は：
+
+        $$\\text{SQS} = \\arg\\min_{\\text{config}} J(\\text{config})$$
+
+        この定式化により、SQSは「Warren-Cowley SROパラメータ空間における原点 $(0,0,\\ldots,0)$ に
+        最も近い配置」として幾何学的に理解できます。
+
+        #### 化学SRO vs 構造SRO：本質的な違い
+
+        本アプリでは、**2種類の短範囲秩序**を区別します：
+
+        **1. 化学的短範囲秩序（Chemical SRO）**
+
+        - **定義**: 固定された格子上での化学種（A vs B）の配置相関
+        - **パラメータ**: Warren-Cowley $\\alpha_k$
+        - **測定対象**: 占有変数 $\\sigma_i \\in \\{0, 1\\}$ の相関
+        - **物理的意味**: 「どの原子がどこにいるか」の秩序
+        - **数式**: 
+          $$\\alpha_k = 1 - \\frac{P_k(B|A)}{c_B}$$
+        - **応用**: 合金の相分離、規則-不規則転移、SQS設計
+
+        **2. 構造的短範囲秩序（Structural SRO）**
+
+        - **定義**: 位置的無秩序による幾何学的記述子の相関
+        - **パラメータ**: 構造相関係数 $\\beta_k$
+        - **測定対象**: 幾何学的記述子 $q_i$ （例: 平均結合長）の相関
+        - **物理的意味**: 「原子の局所環境の類似性」の秩序
+        - **数式**: 
+          $$\\beta_k = \\frac{\\langle (q_i - \\langle q \\rangle)(q_j - \\langle q \\rangle) \\rangle_{\\text{pairs}}}{\\text{Var}(q)}$$
+        - **応用**: アモルファス材料、液体、高エントロピー合金の構造解析
+
+        **重要な区別**:
+        - 化学SROは**離散的**（A or B）、構造SROは**連続的**（距離、角度など）
+        - 化学SROは理想格子で定義可能、構造SROは位置ゆらぎが必要
+        - 両者は独立に存在可能（例: 化学的にランダムだが構造的に相関がある）
+
+        #### 本アプリとSQSの関係
+
+        本アプリで計算するWarren-Cowley SROパラメータ $\\alpha_k$ は、SQSの品質を評価する
+        **直接的かつ定量的な指標**として機能します：
+
+        **1. アンサンブル平均アプローチ（本アプリ）**
+
+        - 複数のランダム配置を生成: $\\{\\text{config}_1, \\text{config}_2, \\ldots, \\text{config}_M\\}$
+        - 各配置で $\\alpha_k$ を計算
+        - アンサンブル平均: $\\langle \\alpha_k \\rangle_{\\text{ensemble}} \\approx 0$
+        - **利点**: 統計的信頼性、実装が容易
+        - **欠点**: 多数の配置が必要、各配置は最適ではない
+
+        **2. 単一最適配置アプローチ（SQS）**
+
+        - 最適化により単一配置を生成: $\\text{config}_{\\text{SQS}}$
+        - その配置で $\\alpha_k(\\text{SQS}) \\approx 0$ （すべての $k$ で）
+        - **利点**: 単一配置で完全ランダムを近似、DFT計算に最適
+        - **欠点**: 最適化が必要、実装が複雑
+
+        **相補的な関係**:
+        - 本アプリ: $\\alpha_k$ の統計的振る舞いを理解 → SQSの理論的基礎
+        - SQSツール（ATAT等）: 最適配置を生成 → 実用的な材料設計
+
+        #### k-NN拡張の意義
+
+        従来のWarren-Cowley SROは**近接殻ベース**（第1殻、第2殻...）でしたが、
+        本アプリでは**k-NN（k nearest neighbors）ベース**に拡張しました：
+
+        **k-NN拡張の利点**:
+        1. **位置ゆらぎへの頑健性**: 殻の境界が曖昧な場合でも定義可能
+        2. **マルチスケール解析**: $k=1,2,3,4,5$ で異なる長さスケールの秩序を捉える
+        3. **機械学習との親和性**: k-NN記述子はGNNの自然な入力
+        4. **構造SROとの統一**: 同じk-NN枠組みで化学・構造SROを計算可能
+
+        **数式**:
+        $$\\alpha_k = 1 - \\frac{1}{N_A c_B} \\sum_{i \\in A} \\frac{\\#\\{j \\in \\text{kNN}(i) : j \\in B\\}}{k}$$
+
+        ここで、$\\text{kNN}(i)$ は原子 $i$ の $k$ 個の最近接原子の集合です。
+
+        #### SQS生成アルゴリズムの概要
+
+        実用的なSQS生成には、以下のアルゴリズムが使用されます：
+
+        **1. Monte Carlo法（ATAT/mcsqs）**
+        - ランダムな原子交換を繰り返し、$J$ を最小化
+        - Metropolis基準で配置を受理/棄却
+        - 最も広く使用されている手法
+
+        **2. 遺伝的アルゴリズム**
+        - 配置を「遺伝子」として扱い、交叉・突然変異で進化
+        - 並列化が容易
+
+        **3. クラスター展開法**
+        - 配置エネルギーをクラスター相互作用で展開
+        - 高精度だが計算コストが高い
+
+        #### 実用的応用例
+
+        **1. 第一原理計算（DFT）**
+        - ランダム合金の電子状態計算
+        - 格子定数、弾性定数の予測
+        - 例: Al-Cu, Ni-Fe合金
+
+        **2. 高エントロピー合金（HEA）**
+        - 多成分系（5元素以上）のモデル化
+        - 相安定性の評価
+        - 例: CoCrFeNiMn（Cantor合金）
+
+        **3. 材料設計**
+        - 新規合金の探索
+        - 物性予測（硬度、耐食性など）
+        - 機械学習との組み合わせ
+
+        #### 本アプリでのSQS概念の確認方法
+
+        **手順**:
+        1. **Interactive Mode**で濃度0.5、FCC、サイズ2×2×2を設定
+        2. Random Seedを変更しながら、複数の配置で $\\alpha_1$ を計算
+        3. **Sweep Mode**で濃度全域（0.05〜0.95）をスキャン
+        4. $\\alpha$ の平均値が0付近に収束することを確認
+        5. **k-NN SRO**で $\\alpha_1, \\alpha_2, \\ldots, \\alpha_5$ を観察
+        6. 位置ゆらぎを追加して**構造SRO** $\\beta_k$ を計算
+
+        **期待される結果**:
+        - ランダム配置のアンサンブル平均: $\\langle \\alpha_k \\rangle \\approx 0$
+        - 個々の配置: $\\alpha_k \\neq 0$ （統計的ゆらぎ）
+        - 標準偏差: $\\sigma(\\alpha_k) \\sim 1/\\sqrt{N}$ （$N$: 原子数）
+
+        #### 既存SQSツールとの比較
+
+        | ツール | 目的 | 手法 | 本アプリとの関係 |
+        |--------|------|------|------------------|
+        | **ATAT/mcsqs** | SQS生成 | Monte Carlo | 本アプリで理論理解→ATATで実用生成 |
+        | **SOD** | 秩序度計算 | 統計解析 | 本アプリと類似（教育的実装） |
+        | **icet** | クラスター展開 | 機械学習 | 本アプリのk-NN SROが入力特徴量 |
+        | **sqsgenerator** | Python実装 | 遺伝的 | 本アプリで評価関数を理解 |
+
+        #### まとめ：無秩序指標の設計指針
+
+        **化学SRO（$\\alpha_k$）の使い方**:
+        - 合金の化学的無秩序度の定量化
+        - SQS配置の品質評価
+        - 相分離・規則化の検出
+
+        **構造SRO（$\\beta_k$）の使い方**:
+        - アモルファス・液体の構造相関
+        - 位置的無秩序の定量化
+        - 高エントロピー合金の局所環境解析
+
+        **両者の統合**:
+        - 化学的にランダムだが構造的に相関がある系（例: 液体合金）
+        - 化学的に秩序化しているが構造的に無秩序な系（例: 規則合金の格子欠陥）
+        - k-NN枠組みで統一的に扱える
+
+        ### 5.7 実装上の注意点
 
         #### 距離計算の効率化
 
