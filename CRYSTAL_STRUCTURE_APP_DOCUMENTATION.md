@@ -2,10 +2,17 @@
 
 ## Crystal Structure Analysis Application - Comprehensive Documentation
 
-**バージョン:** 1.0.0  
+**バージョン:** 2.0.0  
 **作成日:** 2025年11月24日  
+**更新日:** 2025年11月25日  
 **開発:** Devin AI  
 **ライセンス:** MIT License
+
+**新機能 (v2.0.0):**
+- k-NN化学的短範囲秩序 (Chemical SRO) 計算 (k=1,2,3,4,5)
+- 構造的短範囲秩序 (Structural SRO) 計算
+- 位置的無秩序パラメータ (Positional Disorder)
+- 拡張されたSQS理論解説
 
 ---
 
@@ -14,10 +21,12 @@
 1. [概要](#概要)
 2. [理論的背景](#理論的背景)
 3. [数学的基礎](#数学的基礎)
-4. [実装詳細](#実装詳細)
-5. [使用方法](#使用方法)
-6. [検証戦略](#検証戦略)
-7. [参考文献](#参考文献)
+4. [k-NN SRO拡張](#k-nn-sro拡張)
+5. [構造的短範囲秩序](#構造的短範囲秩序)
+6. [実装詳細](#実装詳細)
+7. [使用方法](#使用方法)
+8. [検証戦略](#検証戦略)
+9. [参考文献](#参考文献)
 
 ---
 
@@ -186,6 +195,198 @@ distance_matrix = squareform(pdist(positions, metric='euclidean'))
 
 # αの計算は距離行列のみに依存 → E(3)不変
 alpha = self.calculate_alpha(shell=1)
+```
+
+---
+
+## k-NN SRO拡張
+
+### k-NN化学的短範囲秩序の理論
+
+従来のWarren-Cowley SROパラメータは**近接殻ベース**（第1殻、第2殻...）で定義されていましたが、v2.0.0では**k-NN（k nearest neighbors）ベース**に拡張しました。
+
+#### 数学的定義
+
+各A原子 $i$ について、その $k$ 個の最近接原子 $\text{kNN}(i)$ を考えます。
+
+$$p_i(B|A; k) = \frac{\#\{j \in \text{kNN}(i) : j \in B\}}{k}$$
+
+全A原子で平均化：
+
+$$P_k(B|A) = \frac{1}{N_A} \sum_{i \in A} p_i(B|A; k)$$
+
+k-NN Warren-Cowley SROパラメータ：
+
+$$\alpha_k = 1 - \frac{P_k(B|A)}{c_B}$$
+
+ここで、$c_B$ は全体濃度（グローバル）を使用します。
+
+#### k-NN拡張の利点
+
+1. **位置ゆらぎへの頑健性**: 殻の境界が曖昧な場合でも定義可能
+2. **マルチスケール解析**: $k=1,2,3,4,5$ で異なる長さスケールの秩序を捉える
+3. **機械学習との親和性**: k-NN記述子はGraph Neural Networksの自然な入力
+4. **構造SROとの統一**: 同じk-NN枠組みで化学・構造SROを計算可能
+
+#### 実装
+
+```python
+def calculate_alpha_knn(self, k: int) -> float:
+    """
+    Calculate Warren-Cowley SRO parameter using k-nearest neighbors
+    
+    For each A atom i, consider its k nearest neighbors N_k(i).
+    p_i(B|A; k) = (# of B atoms in N_k(i)) / k
+    P_k(B|A) = (1/N_A) Σ_{i ∈ A} p_i(B|A; k)
+    α_k = 1 - P_k(B|A) / c_B
+    """
+    # Compute k-NN indices for all atoms
+    knn_indices = self._compute_knn_indices(k)
+    
+    # Calculate P_k(B|A)
+    p_values = []
+    for a_idx in A_atoms:
+        neighbors = knn_indices[a_idx]
+        n_B_neighbors = np.sum(self.species[neighbors] == 1)
+        p_i = n_B_neighbors / k
+        p_values.append(p_i)
+    
+    P_k_B_given_A = np.mean(p_values)
+    alpha_k = 1.0 - (P_k_B_given_A / c_B)
+    
+    return alpha_k
+```
+
+#### 使用例
+
+```python
+# k=1,2,3,4,5 の化学的SROを計算
+k_values = [1, 2, 3, 4, 5]
+alpha_knn_results = sro_calculator.calculate_alpha_knn_multi(k_values)
+
+# 結果: {1: -0.052, 2: 0.013, 3: -0.021, 4: 0.008, 5: -0.015}
+```
+
+---
+
+## 構造的短範囲秩序
+
+### 化学SRO vs 構造SRO
+
+本アプリでは、**2種類の短範囲秩序**を明確に区別します：
+
+| 特性 | 化学的SRO | 構造的SRO |
+|------|-----------|-----------|
+| **定義** | 固定格子上の化学種配置相関 | 位置的無秩序による幾何学的相関 |
+| **パラメータ** | $\alpha_k$ | $\beta_k$ |
+| **測定対象** | 占有変数 $\sigma_i \in \{0,1\}$ | 幾何学的記述子 $q_i \in \mathbb{R}$ |
+| **物理的意味** | 「どの原子がどこにいるか」 | 「原子の局所環境の類似性」 |
+| **応用** | 合金の相分離、SQS設計 | アモルファス、液体、HEA |
+
+### 構造SROの数学的定義
+
+#### 幾何学的記述子
+
+各原子 $i$ について、幾何学的記述子 $q_i$ を定義します。例えば：
+
+$$q_i = \frac{1}{k} \sum_{j \in \text{kNN}(i)} d_{ij}$$
+
+ここで、$d_{ij}$ は原子 $i$ と $j$ の距離です。これは「$k$ 個の最近接原子までの平均距離」を表します。
+
+#### 構造相関係数
+
+全原子で平均と分散を計算：
+
+$$\langle q \rangle = \frac{1}{N} \sum_{i=1}^{N} q_i$$
+
+$$\text{Var}(q) = \frac{1}{N} \sum_{i=1}^{N} (q_i - \langle q \rangle)^2$$
+
+各原子 $i$ とその $k$ 個の最近接原子 $j$ について、相関を計算：
+
+$$\beta_k = \frac{1}{\text{Var}(q)} \cdot \frac{1}{Nk} \sum_{i=1}^{N} \sum_{j \in \text{kNN}(i)} (q_i - \langle q \rangle)(q_j - \langle q \rangle)$$
+
+#### 解釈
+
+- $\beta_k \approx 0$: 構造相関なし（ランダムな位置ゆらぎ）
+- $\beta_k > 0$: 正の相関（類似環境がクラスター化）
+- $\beta_k < 0$: 負の相関（異なる環境が隣接）
+
+### 位置的無秩序パラメータ
+
+理想格子位置 $\mathbf{r}_i^{(0)}$ に対して、Gaussianノイズを追加：
+
+$$\mathbf{r}_i = \mathbf{r}_i^{(0)} + \boldsymbol{\epsilon}_i$$
+
+ここで、$\boldsymbol{\epsilon}_i \sim \mathcal{N}(0, \sigma_{\text{pos}}^2 a^2 \mathbf{I})$
+
+- $\sigma_{\text{pos}}$: 位置的無秩序パラメータ（無次元、$\sigma/a$）
+- $a$: 格子定数
+- 推奨範囲: $0 \leq \sigma_{\text{pos}} \leq 0.1$
+
+### 実装
+
+```python
+class StructuralSRO:
+    """Structural Short Range Order Calculator"""
+    
+    def calculate_structural_sro_knn(self, k: int) -> float:
+        """
+        Calculate structural SRO parameter using k-nearest neighbors
+        
+        1. Compute geometric descriptor: q_i = mean distance to k nearest neighbors
+        2. Compute mean and variance: ⟨q⟩, Var(q)
+        3. For each atom i and its k nearest neighbors j:
+           Compute (q_i - ⟨q⟩)(q_j - ⟨q⟩)
+        4. Average over all pairs and normalize:
+           β_k = ⟨(q_i - ⟨q⟩)(q_j - ⟨q⟩)⟩ / Var(q)
+        """
+        # Compute geometric descriptor for all atoms
+        q_values = self._compute_geometric_descriptor(k)
+        
+        # Compute mean and variance
+        q_mean = np.mean(q_values)
+        q_var = np.var(q_values)
+        
+        # Handle edge case: no variance (perfect lattice)
+        if q_var < 1e-10:
+            return 0.0
+        
+        # Compute centered values
+        q_centered = q_values - q_mean
+        
+        # Compute k-NN indices
+        knn_indices = self._compute_knn_indices(k)
+        
+        # Compute correlation over all neighbor pairs
+        correlations = []
+        for i in range(self.n_atoms):
+            for j in knn_indices[i]:
+                correlation = q_centered[i] * q_centered[j]
+                correlations.append(correlation)
+        
+        # Average and normalize
+        beta_k = np.mean(correlations) / q_var
+        
+        return beta_k
+```
+
+### 使用例
+
+```python
+# 位置的無秩序を追加
+crystal = CrystalGeometry(
+    structure_type="FCC", 
+    size=2,
+    positional_sigma=0.05,  # 5% positional disorder
+    random_seed=42
+)
+
+# 構造SROを計算
+structural_sro = StructuralSRO(crystal)
+beta_knn_results = structural_sro.calculate_structural_sro_multi([1, 2, 3, 4, 5])
+
+# 結果: {1: 0.234, 2: 0.187, 3: 0.145, 4: 0.112, 5: 0.089}
+# 正の相関 → 類似環境がクラスター化
 ```
 
 ---
