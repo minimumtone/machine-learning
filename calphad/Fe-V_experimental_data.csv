@@ -1,0 +1,16 @@
+x_V,T_K,data_type,phase
+0.3,1000,Tc_measurement,transition
+0.48,1050,Tc_measurement,transition
+0.55,1080,Tc_measurement,transition
+0.567,1070,Tc_measurement,transition
+0.614,1040,Tc_measurement,transition
+0.7,980,Tc_measurement,transition
+0.75,920,Tc_measurement,transition
+0.3,1023,TEM_observation,B2
+0.3,773,TEM_observation,B2+A2
+0.3,723,TEM_observation,A2
+0.35,823,TEM_observation,B2+A2
+0.35,773,TEM_observation,B2+A2
+0.35,723,TEM_observation,A2
+0.4,773,TEM_observation,B2+A2
+0.4,723,TEM_observation,A2
