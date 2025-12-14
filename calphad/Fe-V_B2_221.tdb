@@ -119,9 +119,9 @@ $ SIGMA
 $-------------------------------------------------------------------------------
  PHASE SIGMA % 3 8 4 18 !
  CONSTITUENT SIGMA :FE:V:FE,V:!
- PARAMETER G(SIGMA,FE:V:FE;0) 298.15 +8*GFCCFE+4*DHV+18*DHFE
+ PARAMETER G(SIGMA,FE:V:FE;0) 298.15 +8*GFCCFE+4*GHSERV+18*GHSERFE
    -163218+41.607*T; 6000 N !
- PARAMETER G(SIGMA,FE:V:V;0)  298.15 +8*GFCCFE+4*DHV+18*DHV
+ PARAMETER G(SIGMA,FE:V:V;0)  298.15 +8*GFCCFE+4*GHSERV+18*GHSERV
    -183967-43.718*T; 6000 N !
 $-------------------------------------------------------------------------------
 $ B2_221 - 8 sublattice B2 ordered phase (2x2x1 supercell)
