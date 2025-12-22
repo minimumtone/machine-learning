@@ -1253,7 +1253,605 @@ def analyze_kl_divergence(
 
 
 # =============================================================================
-# Main Workflow Functions
+# Large-Scale Candidate Generation and Selection
+# =============================================================================
+
+def generate_large_candidate_pool(
+    structure: CrystalStructure,
+    n_candidates_per_composition: int = 5000,
+    pair_potential_k: float = DEFAULT_PAIR_POTENTIAL_K,
+    verbose: bool = True,
+) -> Tuple[List[Configuration], Dict[str, List[Configuration]]]:
+    """
+    Generate a large pool of candidate structures using multiple strategies.
+    
+    Strategies used:
+    1. Random configurations (for baseline and diversity)
+    2. SA-optimized configurations (pair potential minimization)
+    3. KL-maximization SA (direct ordering optimization)
+    4. Site-specific substitution patterns
+    
+    Args:
+        structure: CrystalStructure object
+        n_candidates_per_composition: Number of candidates per composition
+        pair_potential_k: Exponent for pair potential
+        verbose: Print progress messages
+    
+    Returns:
+        Tuple of (all_candidates, candidates_by_composition)
+    """
+    # Composition specifications: (n_ni, n_si)
+    compositions = [
+        (32, 16),  # Stoichiometric
+        (34, 14),  # Ni-rich
+        (30, 18),  # Si-rich
+    ]
+    
+    candidates_by_composition: Dict[str, List[Configuration]] = {}
+    all_candidates: List[Configuration] = []
+    seen_hashes: Set[str] = set()
+    
+    # Build pair list for SA
+    pair_list = build_pair_list_with_weights(structure, SA_CUTOFF, pair_potential_k)
+    
+    for n_ni, n_si in compositions:
+        comp_key = f"Ni{n_ni}Si{n_si}"
+        candidates_by_composition[comp_key] = []
+        
+        if verbose:
+            print(f"  Generating candidates for {comp_key}...")
+        
+        config_idx = 0
+        
+        # Strategy 1: Random configurations (40% of candidates)
+        n_random = int(n_candidates_per_composition * 0.4)
+        for i in range(n_random):
+            seed = hash((comp_key, "random", i)) % (2**31)
+            config = generate_random_configuration(structure, n_ni, n_si, seed)
+            config_hash = config.get_occupancy_hash()
+            
+            if config_hash not in seen_hashes:
+                seen_hashes.add(config_hash)
+                config.structure_id = f"CAND_{comp_key}_{config_idx:05d}"
+                config.group = "candidate"
+                config.metadata["strategy"] = "random"
+                candidates_by_composition[comp_key].append(config)
+                all_candidates.append(config)
+                config_idx += 1
+        
+        if verbose:
+            print(f"    - Random: {config_idx} unique structures")
+        
+        # Strategy 2: SA-optimized (pair potential minimization) (30% of candidates)
+        n_sa = int(n_candidates_per_composition * 0.3)
+        sa_collected = 0
+        sa_run = 0
+        
+        while sa_collected < n_sa and sa_run < n_sa * 5:
+            seed = hash((comp_key, "sa", sa_run)) % (2**31)
+            
+            # Vary SA parameters for diversity
+            T_initial = 5.0 + (sa_run % 10) * 2.0
+            cooling_rate = 0.90 + (sa_run % 5) * 0.02
+            
+            final_config, trajectory = simulated_annealing(
+                structure=structure,
+                n_ni=n_ni,
+                n_si=n_si,
+                pair_list=pair_list,
+                T_initial=T_initial,
+                cooling_rate=cooling_rate,
+                random_seed=seed,
+                collect_trajectory=True,
+            )
+            
+            # Sample from trajectory
+            if trajectory:
+                # Sample at different points in trajectory
+                sample_indices = [
+                    len(trajectory) // 4,
+                    len(trajectory) // 2,
+                    3 * len(trajectory) // 4,
+                    len(trajectory) - 1,
+                ]
+                
+                for idx in sample_indices:
+                    if sa_collected >= n_sa:
+                        break
+                    if idx < len(trajectory):
+                        _, config = trajectory[idx]
+                        config_hash = config.get_occupancy_hash()
+                        
+                        if config_hash not in seen_hashes:
+                            seen_hashes.add(config_hash)
+                            config.structure_id = f"CAND_{comp_key}_{config_idx:05d}"
+                            config.group = "candidate"
+                            config.metadata["strategy"] = "sa_pair_potential"
+                            config.metadata["sa_T_initial"] = T_initial
+                            candidates_by_composition[comp_key].append(config)
+                            all_candidates.append(config)
+                            config_idx += 1
+                            sa_collected += 1
+            
+            sa_run += 1
+        
+        if verbose:
+            print(f"    - SA (pair potential): {sa_collected} unique structures")
+        
+        # Strategy 3: Site-specific substitutions (20% of candidates)
+        n_site_specific = int(n_candidates_per_composition * 0.2)
+        site_collected = 0
+        
+        # Calculate how many substitutions needed for this composition
+        # Stoichiometric is 32 Ni, 16 Si
+        # For Ni34Si14: need 2 more Ni (Si->Ni substitutions on Si1)
+        # For Ni30Si18: need 2 more Si (Ni->Si substitutions on Ni1 or Ni2)
+        
+        sublattice_indices = structure.get_sublattice_indices()
+        
+        if n_ni == 32 and n_si == 16:
+            # Stoichiometric - create antisite defect pairs
+            for trial in range(n_site_specific):
+                seed = hash((comp_key, "site_specific", trial)) % (2**31)
+                random.seed(seed)
+                
+                # Random antisite: swap one Ni with one Si
+                occupancy = [site.ideal_species for site in structure.sites]
+                
+                # Choose random Ni site and Si site to swap
+                ni_sites = sublattice_indices["Ni1"] + sublattice_indices["Ni2"]
+                si_sites = sublattice_indices["Si1"]
+                
+                ni_to_swap = random.choice(ni_sites)
+                si_to_swap = random.choice(si_sites)
+                
+                occupancy[ni_to_swap] = "Si"
+                occupancy[si_to_swap] = "Ni"
+                
+                config = Configuration(
+                    structure_id=f"CAND_{comp_key}_{config_idx:05d}",
+                    group="candidate",
+                    composition=comp_key,
+                    occupancy=occupancy,
+                    n_ni=n_ni,
+                    n_si=n_si,
+                    metadata={"strategy": "antisite_pair", "trial": trial},
+                )
+                
+                config_hash = config.get_occupancy_hash()
+                if config_hash not in seen_hashes:
+                    seen_hashes.add(config_hash)
+                    candidates_by_composition[comp_key].append(config)
+                    all_candidates.append(config)
+                    config_idx += 1
+                    site_collected += 1
+        
+        elif n_ni > 32:
+            # Ni-rich: Si->Ni substitutions
+            n_excess_ni = n_ni - 32
+            for trial in range(n_site_specific):
+                seed = hash((comp_key, "site_specific", trial)) % (2**31)
+                random.seed(seed)
+                
+                occupancy = [site.ideal_species for site in structure.sites]
+                si_sites = sublattice_indices["Si1"].copy()
+                random.shuffle(si_sites)
+                
+                for i in range(min(n_excess_ni, len(si_sites))):
+                    occupancy[si_sites[i]] = "Ni"
+                
+                config = Configuration(
+                    structure_id=f"CAND_{comp_key}_{config_idx:05d}",
+                    group="candidate",
+                    composition=comp_key,
+                    occupancy=occupancy,
+                    n_ni=sum(1 for s in occupancy if s == "Ni"),
+                    n_si=sum(1 for s in occupancy if s == "Si"),
+                    metadata={"strategy": "si_to_ni_substitution", "trial": trial},
+                )
+                
+                config_hash = config.get_occupancy_hash()
+                if config_hash not in seen_hashes:
+                    seen_hashes.add(config_hash)
+                    candidates_by_composition[comp_key].append(config)
+                    all_candidates.append(config)
+                    config_idx += 1
+                    site_collected += 1
+        
+        else:
+            # Si-rich: Ni->Si substitutions
+            n_excess_si = n_si - 16
+            for trial in range(n_site_specific):
+                seed = hash((comp_key, "site_specific", trial)) % (2**31)
+                random.seed(seed)
+                
+                occupancy = [site.ideal_species for site in structure.sites]
+                
+                # Randomly choose Ni1 or Ni2 sublattice
+                if random.random() < 0.5:
+                    ni_sites = sublattice_indices["Ni1"].copy()
+                else:
+                    ni_sites = sublattice_indices["Ni2"].copy()
+                random.shuffle(ni_sites)
+                
+                for i in range(min(n_excess_si, len(ni_sites))):
+                    occupancy[ni_sites[i]] = "Si"
+                
+                config = Configuration(
+                    structure_id=f"CAND_{comp_key}_{config_idx:05d}",
+                    group="candidate",
+                    composition=comp_key,
+                    occupancy=occupancy,
+                    n_ni=sum(1 for s in occupancy if s == "Ni"),
+                    n_si=sum(1 for s in occupancy if s == "Si"),
+                    metadata={"strategy": "ni_to_si_substitution", "trial": trial},
+                )
+                
+                config_hash = config.get_occupancy_hash()
+                if config_hash not in seen_hashes:
+                    seen_hashes.add(config_hash)
+                    candidates_by_composition[comp_key].append(config)
+                    all_candidates.append(config)
+                    config_idx += 1
+                    site_collected += 1
+        
+        if verbose:
+            print(f"    - Site-specific: {site_collected} unique structures")
+        
+        # Strategy 4: Additional random to fill remaining (10%)
+        n_remaining = n_candidates_per_composition - len(candidates_by_composition[comp_key])
+        for i in range(n_remaining):
+            seed = hash((comp_key, "fill", i)) % (2**31)
+            config = generate_random_configuration(structure, n_ni, n_si, seed)
+            config_hash = config.get_occupancy_hash()
+            
+            if config_hash not in seen_hashes:
+                seen_hashes.add(config_hash)
+                config.structure_id = f"CAND_{comp_key}_{config_idx:05d}"
+                config.group = "candidate"
+                config.metadata["strategy"] = "random_fill"
+                candidates_by_composition[comp_key].append(config)
+                all_candidates.append(config)
+                config_idx += 1
+        
+        if verbose:
+            print(f"    - Total for {comp_key}: {len(candidates_by_composition[comp_key])} structures")
+    
+    return all_candidates, candidates_by_composition
+
+
+def calculate_baseline_distribution_by_composition(
+    structure: CrystalStructure,
+    candidates_by_composition: Dict[str, List[Configuration]],
+    neighbor_list: Dict[int, List[Tuple[int, float]]],
+    n_baseline_samples: int = 1000,
+) -> Dict[str, Dict[str, float]]:
+    """
+    Calculate baseline distribution Q(σ) separately for each composition.
+    
+    Uses random configurations from the candidate pool to estimate Q(σ).
+    
+    Args:
+        structure: CrystalStructure object
+        candidates_by_composition: Candidates grouped by composition
+        neighbor_list: Pre-calculated neighbor list
+        n_baseline_samples: Number of random samples for baseline estimation
+    
+    Returns:
+        Dictionary mapping composition to baseline distribution Q(σ)
+    """
+    baseline_by_composition: Dict[str, Dict[str, float]] = {}
+    
+    for comp_key, candidates in candidates_by_composition.items():
+        # Use random strategy candidates for baseline
+        random_candidates = [
+            c for c in candidates 
+            if c.metadata.get("strategy") in ["random", "random_fill"]
+        ]
+        
+        # If not enough random candidates, use all candidates
+        if len(random_candidates) < n_baseline_samples:
+            random_candidates = candidates
+        
+        # Sample for baseline
+        sample_size = min(n_baseline_samples, len(random_candidates))
+        baseline_sample = random_candidates[:sample_size]
+        
+        # Calculate baseline distribution
+        all_counts = defaultdict(int)
+        total = 0
+        
+        for config in baseline_sample:
+            environments = calculate_local_environments(structure, config, neighbor_list)
+            for env in environments:
+                key = env.to_key()
+                all_counts[key] += 1
+                total += 1
+        
+        baseline_by_composition[comp_key] = {
+            key: count / total for key, count in all_counts.items()
+        }
+    
+    return baseline_by_composition
+
+
+def rank_and_select_top_structures(
+    structure: CrystalStructure,
+    candidates_by_composition: Dict[str, List[Configuration]],
+    baseline_by_composition: Dict[str, Dict[str, float]],
+    neighbor_list: Dict[int, List[Tuple[int, float]]],
+    n_select: int = 256,
+    composition_ratio: Optional[Dict[str, int]] = None,
+    verbose: bool = True,
+) -> List[Configuration]:
+    """
+    Rank all candidates by KL divergence and select top structures.
+    
+    Args:
+        structure: CrystalStructure object
+        candidates_by_composition: Candidates grouped by composition
+        baseline_by_composition: Baseline Q(σ) for each composition
+        neighbor_list: Pre-calculated neighbor list
+        n_select: Total number of structures to select
+        composition_ratio: Optional dict specifying how many to select per composition
+                          If None, selects proportionally or by pure KL ranking
+        verbose: Print progress messages
+    
+    Returns:
+        List of selected Configuration objects (sorted by KL divergence descending)
+    """
+    # Calculate KL divergence for all candidates
+    all_results: List[Tuple[float, Configuration]] = []
+    
+    for comp_key, candidates in candidates_by_composition.items():
+        baseline_Q = baseline_by_composition[comp_key]
+        
+        if verbose:
+            print(f"  Calculating KL divergence for {comp_key} ({len(candidates)} candidates)...")
+        
+        for config in candidates:
+            environments = calculate_local_environments(structure, config, neighbor_list)
+            P = calculate_environment_distribution(environments)
+            kl_value = calculate_kl_divergence(P, baseline_Q)
+            
+            config.metadata["kl_divergence"] = kl_value
+            all_results.append((kl_value, config))
+    
+    # Sort by KL divergence (descending - highest first)
+    all_results.sort(key=lambda x: x[0], reverse=True)
+    
+    if verbose:
+        print(f"  KL divergence range: {all_results[-1][0]:.4f} - {all_results[0][0]:.4f}")
+    
+    # Select top structures
+    if composition_ratio is not None:
+        # Select specified number per composition
+        selected: List[Configuration] = []
+        results_by_comp: Dict[str, List[Tuple[float, Configuration]]] = defaultdict(list)
+        
+        for kl, config in all_results:
+            results_by_comp[config.composition].append((kl, config))
+        
+        for comp_key, n_select_comp in composition_ratio.items():
+            comp_results = results_by_comp.get(comp_key, [])
+            for i, (kl, config) in enumerate(comp_results[:n_select_comp]):
+                config.structure_id = f"SEL_{i:03d}_{comp_key}"
+                config.group = "selected"
+                selected.append(config)
+        
+        # Sort selected by KL divergence
+        selected.sort(key=lambda c: c.metadata.get("kl_divergence", 0), reverse=True)
+    else:
+        # Select top n_select overall
+        selected = []
+        for i, (kl, config) in enumerate(all_results[:n_select]):
+            config.structure_id = f"SEL_{i:03d}"
+            config.group = "selected"
+            selected.append(config)
+    
+    if verbose:
+        # Report composition distribution
+        comp_counts = defaultdict(int)
+        for config in selected:
+            comp_counts[config.composition] += 1
+        print(f"  Selected {len(selected)} structures:")
+        for comp, count in sorted(comp_counts.items()):
+            print(f"    - {comp}: {count}")
+    
+    return selected
+
+
+def run_full_workflow_with_selection(
+    output_dir: str = "project_Ni2Si",
+    n_candidates_per_composition: int = 5000,
+    n_select: int = 256,
+    pair_potential_k: float = DEFAULT_PAIR_POTENTIAL_K,
+    composition_ratio: Optional[Dict[str, int]] = None,
+    verbose: bool = True,
+) -> Dict:
+    """
+    Run the complete workflow with large-scale candidate generation and selection.
+    
+    This function:
+    1. Creates the project directory structure
+    2. Generates the crystal structure and site mapping
+    3. Generates a large candidate pool (thousands of structures)
+    4. Calculates composition-specific baseline Q(σ)
+    5. Ranks all candidates by KL divergence
+    6. Selects top 256 structures with highest ordering
+    7. Creates VASP input files for selected structures
+    
+    Args:
+        output_dir: Output directory path
+        n_candidates_per_composition: Number of candidates to generate per composition
+        n_select: Number of structures to select (default: 256)
+        pair_potential_k: Exponent for pair potential (default: 1)
+        composition_ratio: Optional dict specifying selection per composition
+        verbose: Print progress messages
+    
+    Returns:
+        Dictionary with workflow results
+    """
+    if verbose:
+        print("=" * 70)
+        print("δ-Ni₂Si Antisite Defect Formation Energy Analysis")
+        print("Large-Scale Candidate Generation and Selection Workflow")
+        print("=" * 70)
+    
+    # Create directory structure
+    if verbose:
+        print("\n[1/7] Creating project directory structure...")
+    dirs = create_project_directory(output_dir)
+    
+    # Generate crystal structure
+    if verbose:
+        print("[2/7] Generating crystal structure and site mapping...")
+    structure = generate_ni2si_supercell()
+    
+    # Save site mapping
+    site_mapping_path = os.path.join(dirs["structures"], "site_mapping.json")
+    save_site_mapping(structure, site_mapping_path)
+    if verbose:
+        print(f"  - Site mapping saved to: {site_mapping_path}")
+        print(f"  - Total atoms: {len(structure.sites)}")
+    
+    # Build neighbor list
+    if verbose:
+        print("[3/7] Building neighbor list...")
+    neighbor_list = build_neighbor_list(structure, KL_CUTOFF)
+    
+    # Generate large candidate pool
+    if verbose:
+        print(f"[4/7] Generating large candidate pool ({n_candidates_per_composition} per composition)...")
+    all_candidates, candidates_by_composition = generate_large_candidate_pool(
+        structure=structure,
+        n_candidates_per_composition=n_candidates_per_composition,
+        pair_potential_k=pair_potential_k,
+        verbose=verbose,
+    )
+    
+    if verbose:
+        print(f"  - Total candidates generated: {len(all_candidates)}")
+    
+    # Calculate composition-specific baseline distributions
+    if verbose:
+        print("[5/7] Calculating composition-specific baseline distributions...")
+    baseline_by_composition = calculate_baseline_distribution_by_composition(
+        structure=structure,
+        candidates_by_composition=candidates_by_composition,
+        neighbor_list=neighbor_list,
+    )
+    
+    # Rank and select top structures
+    if verbose:
+        print(f"[6/7] Ranking candidates and selecting top {n_select} structures...")
+    selected_configs = rank_and_select_top_structures(
+        structure=structure,
+        candidates_by_composition=candidates_by_composition,
+        baseline_by_composition=baseline_by_composition,
+        neighbor_list=neighbor_list,
+        n_select=n_select,
+        composition_ratio=composition_ratio,
+        verbose=verbose,
+    )
+    
+    # Generate VASP input files for selected structures
+    if verbose:
+        print("[7/7] Generating VASP input files for selected structures...")
+    
+    # Save INCAR template
+    incar_template = generate_incar(selected_configs[0])
+    incar_path = os.path.join(dirs["vasp_runs"], "INCAR_template")
+    with open(incar_path, 'w') as f:
+        f.write(incar_template)
+    
+    # Save KPOINTS
+    kpoints_content = generate_kpoints()
+    kpoints_path = os.path.join(dirs["vasp_runs"], "KPOINTS")
+    with open(kpoints_path, 'w') as f:
+        f.write(kpoints_content)
+    
+    # Save POSCAR files for selected structures
+    for config in selected_configs:
+        poscar_content = generate_poscar(structure, config)
+        poscar_path = os.path.join(dirs["structures"], f"POSCAR_{config.structure_id}")
+        with open(poscar_path, 'w') as f:
+            f.write(poscar_content)
+    
+    if verbose:
+        print(f"  - POSCAR files saved to: {dirs['structures']}")
+        print(f"  - INCAR template saved to: {incar_path}")
+        print(f"  - KPOINTS saved to: {kpoints_path}")
+    
+    # Save results to CSV
+    import csv
+    csv_path = os.path.join(dirs["analysis"], "energy_kl.csv")
+    with open(csv_path, 'w', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=[
+            "structure_id", "composition", "n_ni", "n_si", 
+            "kl_divergence", "strategy", "energy", "mag_mom"
+        ])
+        writer.writeheader()
+        for config in selected_configs:
+            writer.writerow({
+                "structure_id": config.structure_id,
+                "composition": config.composition,
+                "n_ni": config.n_ni,
+                "n_si": config.n_si,
+                "kl_divergence": config.metadata.get("kl_divergence", ""),
+                "strategy": config.metadata.get("strategy", ""),
+                "energy": "",  # To be filled after VASP calculations
+                "mag_mom": "",  # To be filled after VASP calculations
+            })
+    
+    # Save candidate pool statistics
+    stats_path = os.path.join(dirs["analysis"], "candidate_pool_stats.json")
+    stats = {
+        "total_candidates": len(all_candidates),
+        "candidates_per_composition": {
+            comp: len(configs) for comp, configs in candidates_by_composition.items()
+        },
+        "selected_count": len(selected_configs),
+        "kl_range": {
+            "min": min(c.metadata.get("kl_divergence", 0) for c in selected_configs),
+            "max": max(c.metadata.get("kl_divergence", 0) for c in selected_configs),
+        },
+        "composition_distribution": {
+            comp: sum(1 for c in selected_configs if c.composition == comp)
+            for comp in candidates_by_composition.keys()
+        },
+    }
+    with open(stats_path, 'w') as f:
+        json.dump(stats, f, indent=2)
+    
+    if verbose:
+        print(f"  - Results saved to: {csv_path}")
+        print(f"  - Statistics saved to: {stats_path}")
+        print("\n" + "=" * 70)
+        print("Workflow completed successfully!")
+        print("=" * 70)
+        print(f"\nSummary:")
+        print(f"  - Generated {len(all_candidates)} candidate structures")
+        print(f"  - Selected top {len(selected_configs)} by KL divergence (highest ordering)")
+        print(f"\nNext steps:")
+        print(f"1. Copy POTCAR files to {dirs['vasp_runs']}")
+        print(f"2. Submit VASP jobs for {len(selected_configs)} selected structures")
+        print(f"3. Update {csv_path} with calculated energies")
+        print(f"4. Run LOBSTER for COHP/COOP analysis")
+    
+    return {
+        "structure": structure,
+        "all_candidates": all_candidates,
+        "candidates_by_composition": candidates_by_composition,
+        "selected_configurations": selected_configs,
+        "baseline_by_composition": baseline_by_composition,
+        "directories": dirs,
+        "statistics": stats,
+    }
+
+
+# =============================================================================
+# Main Workflow Functions (Legacy - kept for backward compatibility)
 # =============================================================================
 
 def create_project_directory(base_path: str) -> Dict[str, str]:

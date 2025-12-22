@@ -28,23 +28,22 @@ Each Wyckoff 4c position generates 4 equivalent sites through space group operat
 3. (-x, 3/4, -z)
 4. (1/2+x, 1/4, 1/2-z)
 
-## Structure Sampling
+## Structure Sampling (Large-Scale Selection Workflow)
 
-### Group A: Random Baseline (100 structures)
+The workflow generates a large candidate pool and selects the top 256 structures with highest short-range order (KL divergence).
 
-Purpose: Calculate baseline distribution Q(σ) for KL divergence
+### Candidate Generation Strategies
 
-| Composition | Count | Description |
-|-------------|-------|-------------|
-| Ni₃₂Si₁₆ | 40 | Stoichiometric |
-| Ni₃₄Si₁₄ | 30 | Ni-rich |
-| Ni₃₀Si₁₈ | 30 | Si-rich |
+For each composition (Ni₃₂Si₁₆, Ni₃₄Si₁₄, Ni₃₀Si₁₈), candidates are generated using multiple strategies:
 
-### Group B: SA-Optimized (100 structures)
+| Strategy | Proportion | Description |
+|----------|------------|-------------|
+| Random | 40% | Uniform random configurations (also used for baseline Q(σ)) |
+| SA (pair potential) | 30% | Simulated annealing with pair potential minimization |
+| Site-specific | 20% | Targeted substitutions on specific sublattices |
+| Random fill | 10% | Additional random to ensure diversity |
 
-Purpose: Find low-energy ordered configurations
-
-Simulated annealing with pair potential Hamiltonian:
+### Pair Potential Hamiltonian
 
 ```
 H = Σ_{i<j} ε_αβ / r_ij^k
@@ -57,14 +56,28 @@ Parameters:
 - Cutoff: r_ij < 3.5 Å
 - Default k = 1 (configurable)
 
-### Group C: Specific Defect Configurations (56 structures)
+### Selection Process
 
-Purpose: Site-specific substitutions for DVM comparison
+1. Generate large candidate pool (default: 5000 per composition = 15000 total)
+2. Calculate composition-specific baseline Q(σ) from random configurations
+3. Calculate KL divergence for all candidates against their composition's baseline
+4. Rank all candidates by KL divergence (descending)
+5. Select top 256 structures with highest ordering
 
-- Ni1-only substitutions: 1, 2, 4, 8 atoms × 3 trials = 12 structures
-- Ni2-only substitutions: 1, 2, 4, 8 atoms × 3 trials = 12 structures
-- Si1-only substitutions: 1, 2, 4, 8 atoms × 2 trials = 8 structures
-- Additional mixed patterns: 24 structures
+### Compositions
+
+| Composition | Description |
+|-------------|-------------|
+| Ni₃₂Si₁₆ | Stoichiometric |
+| Ni₃₄Si₁₄ | Ni-rich (2 excess Ni) |
+| Ni₃₀Si₁₈ | Si-rich (2 excess Si) |
+
+### Legacy Workflow (Group-based)
+
+The original group-based workflow is still available via `run_full_workflow()`:
+- Group A: 100 random baseline structures
+- Group B: 100 SA-optimized structures  
+- Group C: 56 specific defect configurations
 
 ## VASP Calculation Parameters
 
@@ -128,28 +141,59 @@ where:
 ### Command Line
 
 ```bash
-# Run the full workflow
+# Run the full workflow with large-scale selection (recommended)
 python ni2si_antisite_analysis.py
 
 # Run with Streamlit interface
 streamlit run ni2si_antisite_analysis.py -- --streamlit
 ```
 
-### Python API
+### Python API (Recommended: Large-Scale Selection)
 
 ```python
-from ni2si_antisite_analysis import (
-    generate_ni2si_supercell,
-    generate_group_a_structures,
-    generate_group_b_structures,
-    generate_group_c_structures,
-    run_full_workflow,
+from ni2si_antisite_analysis import run_full_workflow_with_selection
+
+# Run the complete workflow with large-scale candidate generation
+# Generates ~15000 candidates and selects top 256 by KL divergence
+results = run_full_workflow_with_selection(
+    output_dir="project_Ni2Si",
+    n_candidates_per_composition=5000,  # 5000 × 3 compositions = 15000 total
+    n_select=256,                        # Select top 256 by KL divergence
+    pair_potential_k=1.0,
+    verbose=True
 )
 
-# Generate crystal structure
-structure = generate_ni2si_supercell()
+# Access results
+selected_configs = results["selected_configurations"]  # Top 256 structures
+all_candidates = results["all_candidates"]             # All generated candidates
+statistics = results["statistics"]                     # Selection statistics
+```
 
-# Generate all configurations
+### Customizing Selection
+
+```python
+from ni2si_antisite_analysis import run_full_workflow_with_selection
+
+# Specify exact number per composition
+results = run_full_workflow_with_selection(
+    output_dir="project_Ni2Si",
+    n_candidates_per_composition=10000,  # More candidates for better selection
+    n_select=256,
+    composition_ratio={
+        "Ni32Si16": 100,  # 100 stoichiometric
+        "Ni34Si14": 78,   # 78 Ni-rich
+        "Ni30Si18": 78,   # 78 Si-rich
+    },
+    verbose=True
+)
+```
+
+### Legacy API (Group-based)
+
+```python
+from ni2si_antisite_analysis import run_full_workflow
+
+# Original workflow: 256 structures (100 random + 100 SA + 56 specific)
 results = run_full_workflow(
     output_dir="project_Ni2Si",
     pair_potential_k=1.0,
