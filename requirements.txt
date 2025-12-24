@@ -17,3 +17,6 @@ ase # Atomic Simulation Environment for molecular dynamics
 mace-torch # Machine Learning Potential (MACE) for accurate force calculations
 stmol # Streamlit component for molecular visualization
 py3Dmol # 3D molecular visualization library
+mp-api # Materials Project API client
+pymatgen # Python Materials Genomics library
+mendeleev # Periodic table and element properties
