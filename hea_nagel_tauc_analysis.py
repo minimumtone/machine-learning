@@ -1308,7 +1308,8 @@ def create_streamlit_app():
     workflow = st.session_state.workflow
     
     # Tabs
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+        "📚 理論解説",
         "📊 Data Input",
         "🧮 Descriptors",
         "🤖 Classification",
@@ -1317,6 +1318,414 @@ def create_streamlit_app():
     ])
     
     with tab1:
+        st.header("📚 Nagel-Tauc理論の直感的理解")
+        
+        st.markdown("""
+        ## なぜNagel-Tauc理論が非晶質・HEA解析に必要なのか？
+        
+        非晶質（アモルファス）金属やHEAの安定性は、単に混合エンタルピー（ΔH_mix）や
+        原子サイズミスマッチだけでは説明できません。**電子構造**、特に**フェルミ準位近傍の
+        状態密度（DOS）の低下**が、相選択（結晶化するか、アモルファスが残るか）に
+        大きく影響することがあります。
+        
+        Nagel-Tauc理論（1975年）は、この電子的安定化のメカニズムを説明します。
+        """)
+        
+        # Example selection
+        example_choice = st.selectbox(
+            "例題を選択",
+            ["例題1: 擬ギャップとエネルギー安定化", 
+             "例題2: 1D Nearly-Free Electron モデル",
+             "例題3: 構造因子S(k)との関係",
+             "まとめ: 非晶質解析への応用"]
+        )
+        
+        st.markdown("---")
+        
+        if example_choice == "例題1: 擬ギャップとエネルギー安定化":
+            st.subheader("例題1: 擬ギャップによるエネルギー安定化")
+            
+            st.markdown("""
+            ### 概念
+            
+            状態密度（DOS）に「谷」（擬ギャップ）があり、フェルミ準位（E_F）がその谷に
+            位置すると、占有電子の平均エネルギーが下がり、系が安定化します。
+            
+            **スライダーを動かして、以下を観察してください：**
+            1. 擬ギャップの位置を変えると、E_Fとの相対位置が変わる
+            2. E_Fが谷に入ると、電子エネルギーが下がる
+            3. 電子濃度（e/a）を変えると、E_Fの位置が変わる
+            """)
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("#### パラメータ設定")
+                e_a_toy = st.slider("電子濃度 e/a", 1.0, 12.0, 8.0, 0.1, 
+                                   help="電子濃度を変えるとフェルミ準位が移動します")
+                gap_center = st.slider("擬ギャップ中心位置 (eV)", -5.0, 5.0, 0.0, 0.1,
+                                      help="擬ギャップの中心エネルギー")
+                gap_depth = st.slider("擬ギャップ深さ", 0.0, 1.0, 0.5, 0.05,
+                                     help="0=谷なし, 1=完全なギャップ")
+                gap_width = st.slider("擬ギャップ幅 (eV)", 0.5, 3.0, 1.0, 0.1)
+            
+            # Calculate toy DOS model
+            E = np.linspace(-10, 10, 500)
+            
+            # Base DOS (constant)
+            DOS_base = 1.0
+            
+            # Gaussian dip for pseudo-gap
+            gaussian_dip = gap_depth * np.exp(-((E - gap_center) / gap_width)**2)
+            DOS = DOS_base - gaussian_dip
+            DOS = np.maximum(DOS, 0.01)  # Ensure positive
+            
+            # Fermi level from e/a (simplified model)
+            # E_F scales roughly with (e/a)^(2/3) in free electron model
+            E_F = -5 + (e_a_toy / 12.0) * 10  # Simple linear mapping for demo
+            
+            # Calculate electronic energy
+            occupied_mask = E <= E_F
+            E_el = np.trapz(E[occupied_mask] * DOS[occupied_mask], E[occupied_mask])
+            N_EF = np.interp(E_F, E, DOS)
+            
+            with col2:
+                st.markdown("#### 結果")
+                st.metric("フェルミ準位 E_F", f"{E_F:.2f} eV")
+                st.metric("N(E_F) 状態密度", f"{N_EF:.3f}")
+                st.metric("電子エネルギー", f"{E_el:.2f} eV")
+                
+                # Stability indicator
+                if N_EF < 0.7:
+                    st.success("✓ E_Fが擬ギャップ内 → 安定化")
+                else:
+                    st.warning("E_Fが擬ギャップ外")
+            
+            # Plot DOS
+            fig = go.Figure()
+            
+            # DOS curve
+            fig.add_trace(go.Scatter(
+                x=E, y=DOS, mode='lines', name='DOS',
+                line=dict(color='blue', width=2),
+                fill='tozeroy', fillcolor='rgba(0,100,255,0.2)'
+            ))
+            
+            # Fermi level
+            fig.add_vline(x=E_F, line_dash="dash", line_color="red",
+                         annotation_text=f"E_F = {E_F:.1f} eV")
+            
+            # Pseudo-gap region
+            fig.add_vrect(x0=gap_center-gap_width, x1=gap_center+gap_width,
+                         fillcolor="yellow", opacity=0.2, line_width=0,
+                         annotation_text="擬ギャップ領域")
+            
+            fig.update_layout(
+                title="玩具モデル: 状態密度と擬ギャップ",
+                xaxis_title="エネルギー E (eV)",
+                yaxis_title="状態密度 N(E)",
+                height=400
+            )
+            st.plotly_chart(fig, use_container_width=True)
+            
+            st.markdown("""
+            ### 物理的解釈
+            
+            - **N(E_F)が低い** → フェルミ準位近傍の電子状態が少ない → 電子エネルギーが低い → **安定**
+            - **e/aを変える** → E_Fが移動 → 擬ギャップとの相対位置が変わる
+            - **最適なe/a** → E_Fが擬ギャップの中心に来る → 最も安定
+            
+            これが「電子濃度がHEA/非晶質の安定性に影響する」理由です。
+            """)
+        
+        elif example_choice == "例題2: 1D Nearly-Free Electron モデル":
+            st.subheader("例題2: バンド折り畳みとギャップ開口")
+            
+            st.markdown("""
+            ### 概念
+            
+            結晶では、周期的なポテンシャルにより自由電子のバンドが「折り畳まれ」、
+            ブリルアンゾーン境界でバンドギャップが開きます。
+            
+            **Nagel-Tauc条件: 2k_F ≈ K_p**
+            
+            - k_F: フェルミ波数（電子濃度で決まる）
+            - K_p: 逆格子ベクトル（結晶構造で決まる）
+            
+            この条件が満たされると、フェルミ面がブリルアンゾーン境界と相互作用し、
+            E_F近傍にギャップ（擬ギャップ）が形成されます。
+            """)
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                a_lattice = st.slider("格子定数 a (Å)", 2.0, 5.0, 3.6, 0.1)
+                U0 = st.slider("ポテンシャル強度 U₀ (eV)", 0.0, 2.0, 0.5, 0.1,
+                              help="0=空格子近似, >0=ギャップ開口")
+                e_a_nfe = st.slider("電子濃度 e/a (NFE)", 0.5, 3.0, 1.5, 0.1)
+            
+            # Calculate 1D NFE bands
+            k_max = np.pi / a_lattice
+            k = np.linspace(-k_max, k_max, 200)
+            
+            # Free electron constant
+            h2m = 3.80998212  # eV·Å²
+            
+            # Empty lattice bands (folded)
+            G = 2 * np.pi / a_lattice  # Reciprocal lattice vector
+            
+            # Band 1: E = h2m * k^2
+            E1_ela = h2m * k**2
+            
+            # Band 2: E = h2m * (k + G)^2 and (k - G)^2
+            E2_ela_plus = h2m * (k + G)**2
+            E2_ela_minus = h2m * (k - G)**2
+            
+            # NFE: Gap opens at zone boundary
+            # At k = ±π/a, gap = 2|U0|
+            # Simple 2-band model near zone boundary
+            E_avg = (E1_ela + np.minimum(E2_ela_plus, E2_ela_minus)) / 2
+            E_diff = np.abs(E1_ela - np.minimum(E2_ela_plus, E2_ela_minus))
+            
+            E1_nfe = E_avg - np.sqrt((E_diff/2)**2 + U0**2)
+            E2_nfe = E_avg + np.sqrt((E_diff/2)**2 + U0**2)
+            
+            # Fermi wave vector and energy
+            # n = e/a / V_atom, k_F = (3π²n)^(1/3) for 3D
+            # For 1D demo: k_F ∝ e/a
+            V_atom = a_lattice**3 / 4  # FCC
+            n = e_a_nfe / V_atom
+            k_F = (3 * np.pi**2 * n)**(1/3)
+            E_F_nfe = h2m * k_F**2
+            
+            # 2k_F / K_p ratio
+            K_p = G  # First reciprocal vector
+            ratio_2kF_Kp = 2 * k_F / K_p
+            
+            with col2:
+                st.markdown("#### Nagel-Tauc パラメータ")
+                st.metric("k_F (フェルミ波数)", f"{k_F:.3f} Å⁻¹")
+                st.metric("K_p (逆格子)", f"{K_p:.3f} Å⁻¹")
+                st.metric("2k_F / K_p", f"{ratio_2kF_Kp:.3f}")
+                
+                if 0.9 < ratio_2kF_Kp < 1.1:
+                    st.success("✓ Nagel-Tauc条件満足 (2k_F ≈ K_p)")
+                else:
+                    st.info(f"2k_F/K_p = {ratio_2kF_Kp:.2f}")
+            
+            # Plot bands
+            fig = go.Figure()
+            
+            # ELA bands
+            fig.add_trace(go.Scatter(x=k, y=E1_ela, mode='lines', name='ELA Band 1',
+                                    line=dict(color='lightblue', dash='dot')))
+            fig.add_trace(go.Scatter(x=k, y=np.minimum(E2_ela_plus, E2_ela_minus), 
+                                    mode='lines', name='ELA Band 2',
+                                    line=dict(color='lightgreen', dash='dot')))
+            
+            # NFE bands
+            fig.add_trace(go.Scatter(x=k, y=E1_nfe, mode='lines', name='NFE Band 1',
+                                    line=dict(color='blue', width=2)))
+            fig.add_trace(go.Scatter(x=k, y=E2_nfe, mode='lines', name='NFE Band 2',
+                                    line=dict(color='green', width=2)))
+            
+            # Fermi level
+            fig.add_hline(y=E_F_nfe, line_dash="dash", line_color="red",
+                         annotation_text=f"E_F ≈ {E_F_nfe:.1f} eV")
+            
+            # Zone boundary
+            fig.add_vline(x=k_max, line_dash="dot", line_color="gray")
+            fig.add_vline(x=-k_max, line_dash="dot", line_color="gray")
+            
+            fig.update_layout(
+                title="1D Nearly-Free Electron バンド構造",
+                xaxis_title="波数 k (Å⁻¹)",
+                yaxis_title="エネルギー E (eV)",
+                yaxis_range=[0, min(20, max(E2_nfe))],
+                height=400
+            )
+            st.plotly_chart(fig, use_container_width=True)
+            
+            st.markdown(f"""
+            ### 観察ポイント
+            
+            1. **U₀ = 0** (空格子近似): バンドが交差する
+            2. **U₀ > 0**: ゾーン境界でギャップが開く（ギャップ ≈ 2U₀ = {2*U0:.1f} eV）
+            3. **e/aを変える**: k_Fが変化し、E_Fがギャップに近づく/離れる
+            4. **2k_F ≈ K_p**: フェルミ面がゾーン境界に接触 → 擬ギャップ形成
+            
+            **注意**: これは教育用の玩具モデルです。実際のHEA/非晶質は多元素・強散乱系であり、
+            定量的予測にはDFT計算が必要です。
+            """)
+        
+        elif example_choice == "例題3: 構造因子S(k)との関係":
+            st.subheader("例題3: 非晶質の構造因子と電子散乱")
+            
+            st.markdown("""
+            ### 概念
+            
+            非晶質（アモルファス）には結晶のような周期性がありませんが、
+            **短距離秩序**（Short-Range Order, SRO）があります。
+            
+            構造因子 S(k) は、X線/中性子回折で測定でき、特定の波数 k_p で
+            ピーク（主ピークやFSDP）を持ちます。この k_p は：
+            
+            **k_p ≈ 2π / r₁**
+            
+            （r₁ は最近接原子間距離）
+            
+            Nagel-Tauc理論では、**2k_F ≈ k_p** のとき、電子が強く散乱され、
+            E_F近傍に擬ギャップが形成されます。
+            """)
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                r1 = st.slider("最近接距離 r₁ (Å)", 2.0, 4.0, 2.8, 0.1,
+                              help="原子間の平均最近接距離")
+                e_a_sk = st.slider("電子濃度 e/a (S(k))", 1.0, 3.0, 1.8, 0.1)
+                V_atom_sk = st.slider("原子体積 (Å³)", 10.0, 20.0, 12.0, 0.5)
+            
+            # Calculate k_p from r1
+            k_p = 2 * np.pi / r1
+            
+            # Calculate k_F from e/a
+            n_sk = e_a_sk / V_atom_sk
+            k_F_sk = (3 * np.pi**2 * n_sk)**(1/3)
+            
+            # 2k_F / k_p ratio
+            ratio_sk = 2 * k_F_sk / k_p
+            
+            with col2:
+                st.markdown("#### Nagel-Tauc パラメータ")
+                st.metric("k_p (構造因子ピーク)", f"{k_p:.3f} Å⁻¹")
+                st.metric("2k_F", f"{2*k_F_sk:.3f} Å⁻¹")
+                st.metric("2k_F / k_p", f"{ratio_sk:.3f}")
+                
+                if 0.9 < ratio_sk < 1.1:
+                    st.success("✓ Nagel-Tauc条件満足!")
+                    st.markdown("→ 擬ギャップ形成 → 電子的安定化")
+            
+            # Generate toy S(k)
+            k_range = np.linspace(0.5, 10, 300)
+            
+            # Main peak at k_p
+            S_k = 1.0 + 2.0 * np.exp(-((k_range - k_p) / 0.5)**2)
+            # Add some oscillations
+            S_k += 0.3 * np.exp(-((k_range - 2*k_p) / 0.8)**2)
+            
+            # Plot S(k)
+            fig = go.Figure()
+            
+            fig.add_trace(go.Scatter(
+                x=k_range, y=S_k, mode='lines', name='S(k)',
+                line=dict(color='purple', width=2),
+                fill='tozeroy', fillcolor='rgba(128,0,128,0.2)'
+            ))
+            
+            # k_p position
+            fig.add_vline(x=k_p, line_dash="solid", line_color="purple",
+                         annotation_text=f"k_p = {k_p:.2f}")
+            
+            # 2k_F position
+            fig.add_vline(x=2*k_F_sk, line_dash="dash", line_color="red",
+                         annotation_text=f"2k_F = {2*k_F_sk:.2f}")
+            
+            fig.update_layout(
+                title="構造因子 S(k) と電子散乱",
+                xaxis_title="波数 k (Å⁻¹)",
+                yaxis_title="S(k)",
+                height=400
+            )
+            st.plotly_chart(fig, use_container_width=True)
+            
+            st.markdown("""
+            ### 非晶質解析への応用
+            
+            実験で測定すべきもの：
+            1. **S(k)** (XRD/中性子回折) → k_p を特定
+            2. **DOS** (光電子分光/DFT) → E_F近傍の擬ギャップを確認
+            3. **組成** → e/a を計算
+            
+            これらが整合すれば、Nagel-Tauc機構による安定化を支持できます。
+            
+            **重要**: 非晶質では「ブリルアンゾーン境界」ではなく、
+            「構造因子のピーク k_p」が散乱の主役です。
+            """)
+        
+        else:  # まとめ
+            st.subheader("まとめ: Nagel-Tauc理論と非晶質/HEA解析")
+            
+            st.markdown("""
+            ### 理論の核心
+            
+            Nagel-Tauc理論の本質は以下の因果連鎖です：
+            
+            ```
+            電子濃度(e/a) → フェルミ波数(k_F) → 散乱条件(2k_F ≈ k_p) 
+                         → 擬ギャップ形成 → E_F近傍のDOS低下 → 電子エネルギー利得 → 安定化
+            ```
+            
+            ### なぜ非晶質/HEA解析に必要か？
+            
+            1. **相選択の理解**: 結晶化するか、アモルファスが残るか、単相固溶体が出るかは、
+               熱力学的因子（ΔH_mix, ΔS_mix）だけでなく、電子構造も影響する
+            
+            2. **e/a依存性の説明**: 「形成能がMizutaniの電子濃度に依存する」という観測は、
+               Nagel-Tauc機構で物理的に説明できる可能性がある
+            
+            3. **実験設計の指針**: 
+               - どのe/aで安定化が期待できるか予測
+               - DFT DOSで擬ギャップを確認
+               - S(k)測定でk_pを特定し、2k_F ≈ k_pを検証
+            
+            ### 実験・計算ワークフロー
+            
+            ```
+            ┌─────────────────────────────────────────────────────────────┐
+            │  1. 記述子整備                                              │
+            │     組成 → VEC(e/a), 電気陰性度, 原子半径差, ΔH_mix等      │
+            └─────────────────────────────────────────────────────────────┘
+                                        ↓
+            ┌─────────────────────────────────────────────────────────────┐
+            │  2. 統計モデル                                              │
+            │     形成/非形成の分類 → e/a依存性の定量化                   │
+            └─────────────────────────────────────────────────────────────┘
+                                        ↓
+            ┌─────────────────────────────────────────────────────────────┐
+            │  3. 候補選定 (DOE)                                          │
+            │     e/a閾値近傍の組成を優先的に選択                         │
+            └─────────────────────────────────────────────────────────────┘
+                                        ↓
+            ┌─────────────────────────────────────────────────────────────┐
+            │  4. 第一原理計算                                            │
+            │     SQS構造生成 → VASP DOS計算 → 擬ギャップ指標抽出         │
+            └─────────────────────────────────────────────────────────────┘
+                                        ↓
+            ┌─────────────────────────────────────────────────────────────┐
+            │  5. 相関解析                                                │
+            │     e/a vs 擬ギャップ深さ vs 形成能 の三者相関              │
+            └─────────────────────────────────────────────────────────────┘
+            ```
+            
+            ### 注意点
+            
+            - **玩具モデルの限界**: NFE/ELAは概念理解用。HEAの定量予測にはDFTが必要
+            - **Mizutaniパラメータ**: 単純VECと異なる場合がある。文献定義を確認
+            - **構造の不確定性**: SQSサイズ、原子配置のばらつきが結果に影響
+            - **複数配置のアンサンブル**: 単一構造ではなく、複数配置の平均・分散を評価
+            """)
+            
+            st.info("""
+            **次のステップ**: 
+            「Data Input」タブで組成データを入力し、「Nagel-Tauc Analysis」タブで
+            実際の解析を行ってください。
+            """)
+        
+        st.markdown("---")
+        st.caption("参考文献: Nagel, S.R. & Tauc, J. (1975). Phys. Rev. Lett. 35, 380")
+    
+    with tab2:
         st.header("Data Input")
         
         st.subheader("Add Composition Manually")
@@ -1354,7 +1763,7 @@ def create_streamlit_app():
                          'mizutani_e_a': c.mizutani_e_a} for c in workflow.compositions]
             st.dataframe(pd.DataFrame(comp_data))
     
-    with tab2:
+    with tab3:
         st.header("Descriptor Calculation")
         
         if st.button("Calculate Descriptors"):
@@ -1380,7 +1789,7 @@ def create_streamlit_app():
                                   color='is_hea', title='Atomic Size Difference (δ)')
                 st.plotly_chart(fig)
     
-    with tab3:
+    with tab4:
         st.header("HEA Formation Classification")
         
         model_type = st.selectbox("Model Type", 
@@ -1413,7 +1822,7 @@ def create_streamlit_app():
             else:
                 st.warning("Please calculate descriptors first")
     
-    with tab4:
+    with tab5:
         st.header("First-Principles Workflow")
         
         st.markdown("""
@@ -1449,7 +1858,7 @@ def create_streamlit_app():
             else:
                 st.warning("Please add compositions first")
     
-    with tab5:
+    with tab6:
         st.header("Nagel-Tauc Analysis")
         
         st.markdown("""
