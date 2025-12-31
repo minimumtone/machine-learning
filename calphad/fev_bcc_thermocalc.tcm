@@ -1,0 +1,109 @@
+@@ Fe-V BCC Metastable Phase Diagram Calculation
+@@ Thermo-Calc Macro File
+@@ 
+@@ This macro calculates the metastable BCC phase diagram for Fe-V system
+@@ considering only BCC_A2 and B2_221 phases (excluding FCC_A1 and SIGMA)
+@@
+@@ Usage in Thermo-Calc Console:
+@@   MACRO_FILE_READ fev_bcc_thermocalc.tcm
+@@
+@@ Prerequisites:
+@@   - Fe-V_B2_221.tdb must be in the same directory or specify full path
+@@
+
+@@ ============================================================
+@@ STEP 1: Initialize and load database
+@@ ============================================================
+GO DATA
+
+@@ Read the TDB file (adjust path as needed)
+SWITCH_DATABASE TDB
+READ_DATABASE Fe-V_B2_221.tdb
+
+@@ Define system components
+DEFINE_SYSTEM FE V
+
+@@ ============================================================
+@@ STEP 2: Reject stable phases (FCC, SIGMA) for metastable diagram
+@@ ============================================================
+@@ We only want BCC_A2 and B2_221 phases
+REJECT_PHASE FCC_A1
+REJECT_PHASE SIGMA
+REJECT_PHASE LIQUID
+
+@@ Restore BCC phases
+RESTORE_PHASE BCC_A2
+RESTORE_PHASE B2_221
+
+@@ List active phases
+LIST_PHASE_STATUS
+
+@@ ============================================================
+@@ STEP 3: Set calculation conditions
+@@ ============================================================
+GO POLY
+
+@@ Set reference state
+SET_REFERENCE_STATE FE BCC_A2 * 1E5
+SET_REFERENCE_STATE V BCC_A2 * 1E5
+
+@@ ============================================================
+@@ STEP 4: Calculate phase diagram
+@@ ============================================================
+GO MAP
+
+@@ Set mapping conditions
+SET_MAP_CONDITION 1 T 800 2000 25
+SET_MAP_CONDITION 2 X(V) 0 1 0.02
+SET_MAP_CONDITION P 101325
+
+@@ Calculate the phase diagram
+CALCULATE_MAP
+
+@@ ============================================================
+@@ STEP 5: Plot the phase diagram
+@@ ============================================================
+GO POST
+
+@@ Set plot axes
+SET_PLOT_AXIS X X(V) 0 1
+SET_PLOT_AXIS Y T 800 2000
+
+@@ Set plot title
+SET_PLOT_TITLE Fe-V Metastable BCC Phase Diagram (BCC_A2 + B2_221)
+
+@@ Plot the diagram
+PLOT_DIAGRAM
+
+@@ ============================================================
+@@ STEP 6: Export data (optional)
+@@ ============================================================
+@@ Uncomment the following lines to export data
+@@ EXPORT_DIAGRAM Fe-V_BCC_diagram.dat
+
+@@ ============================================================
+@@ Alternative: Step-by-step equilibrium calculation
+@@ ============================================================
+@@ If MAP doesn't work, use step equilibrium:
+@@
+@@ GO POLY
+@@ SET_CONDITION P 101325
+@@ SET_CONDITION N 1
+@@ SET_CONDITION X(V) 0.5
+@@ SET_CONDITION T 1000
+@@ CALCULATE_EQUILIBRIUM
+@@ LIST_EQUILIBRIUM
+
+@@ ============================================================
+@@ Notes:
+@@ ============================================================
+@@ - This macro creates a metastable BCC phase diagram
+@@ - FCC_A1 and SIGMA phases are rejected (not considered)
+@@ - Only BCC_A2 (disordered) and B2_221 (ordered) phases are active
+@@ - Temperature range: 800-2000 K
+@@ - Composition range: 0-100% V
+@@ - The B2_221 phase uses 8 sublattices (2x2x1 supercell)
+@@ - Formation energies are from DFT calculations (Book1.xlsx)
+@@
+@@ For questions, contact: satoshi minamoto
+@@ ============================================================
