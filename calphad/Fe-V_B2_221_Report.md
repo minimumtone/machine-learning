@@ -32,60 +32,42 @@ DFT計算による原子あたりエネルギーは、組成に対して明確�
 
 ### 2.3 参照エネルギー
 
-純Fe（Fe8V0）および純V（Fe0V8）の配置がDFTで収束しなかったため、Ceder et al.の文献値を参照エネルギーとして採用した：
+純Fe（Fe8V0）および純V（Fe0V8）の配置がDFTで収束しなかったため、Wang et al.の文献値を参照エネルギーとして採用した：
 
-- **E_Fe_ref** = -8.2748 eV/atom（BCC Fe、Ceder et al.）
-- **E_V_ref** = -8.9632 eV/atom（BCC V、Ceder et al.）
+- **E_Fe_ref** = -8.2748 eV/atom（BCC Fe、Wang et al.）
+- **E_V_ref** = -8.9632 eV/atom（BCC V、Wang et al.）
 
-参照: https://ceder.berkeley.edu/publications/Calphad.pdf
+参照: Wang et al., https://ceder.berkeley.edu/publications/Calphad.pdf
 
-### 2.4 Vegard則との整合性
+### 2.4 短範囲規則度（SRO）解析
 
-Ceder参照エネルギーを用いて、DFTデータとVegard則（線形内挿）との整合性を確認した。
-
-![Ceder Reference Analysis](report_figures/09_ceder_reference_analysis.png)
-
-**Figure 3b**: DFT energy comparison with Ceder reference energies and Vegard's law. Left: Energy vs composition showing converged (green) and unconverged (red) data against the linear Vegard line. Right: Deviation from Vegard's law by composition.
-
-### 2.5 短範囲規則度（SRO）解析
-
-各配置の短範囲規則度（Warren-Cowley SROパラメータ）を計算し、Vegard則からの偏差との関係を解析した。
+各配置の短範囲規則度（Warren-Cowley SROパラメータ）を計算し、エネルギーとの関係を解析した。
 
 ![SRO Vegard Analysis](report_figures/10_sro_vegard_analysis.png)
 
-**Figure 3c**: Short-range order (SRO) analysis. (a) SRO vs energy deviation for converged data. (b) Sublattice order vs energy deviation. (c) SRO distribution by composition. (d) Comparison of converged and unconverged data.
+**Figure 3b**: Short-range order (SRO) analysis. (a) SRO vs energy deviation for converged data. (b) Sublattice order vs energy deviation. (c) SRO distribution by composition. (d) Comparison of converged and unconverged data.
 
 **SROの解釈:**
 - SRO < 0: Fe-V異種原子対が優先（規則化傾向）
 - SRO > 0: Fe-Fe/V-V同種原子対が優先（クラスター化傾向）
 - SRO ≈ 0: ランダム分布
 
-### 2.6 乱雑構造とVegard則
+**SRO統計:**
+- 乱雑構造（|SRO| < 0.2）: 106個
+- 規則構造（SRO < -0.2）: 40個
+- クラスター構造（SRO > 0.2）: 45個
 
-乱雑構造（|SRO| < 0.2）がVegard則に従うことを確認した。
+### 2.5 未収束データの補正
 
-![Random Vegard Analysis](report_figures/11_random_vegard_analysis.png)
-
-**Figure 3d**: Verification that random structures follow Vegard's law. (a) All converged data colored by SRO. (b) Random structures (|SRO|<0.2) closely follow the Vegard line. (c) Deviation from Vegard by structure type. (d) Linear fit of SRO vs energy deviation.
-
-**結果:**
-- 乱雑構造（|SRO| < 0.2）: 106個、Vegard則からの偏差 = +0.003 eV/atom（ほぼゼロ）
-- 規則構造（SRO < -0.2）: 40個、偏差 = +0.036 eV/atom
-- クラスター構造（SRO > 0.2）: 45個、偏差 = +0.018 eV/atom
-
-この結果は、乱雑構造がVegard則に従い、Ceder参照エネルギーがDFTデータと整合していることを示す。
-
-### 2.7 未収束データの補正
-
-未収束データは収束データと比較して系統的に高いエネルギーを示す。各組成における収束データの平均値（または収束データがない場合はVegard則）をターゲットとして、未収束データを補正した。
+未収束データは収束データと比較して系統的に高いエネルギーを示す。各組成における収束データの平均値（または収束データがない場合は線形内挿）をターゲットとして、未収束データを補正した。
 
 ![Unconverged Correction](report_figures/12_unconverged_correction.png)
 
-**Figure 3e**: Unconverged data correction. (a) Before correction showing converged (green) and unconverged (red) data. (b) After correction with unconverged data (blue) shifted to match converged data pattern. (c) Correction factors applied by composition. (d) Formation energy distribution after correction.
+**Figure 3c**: Unconverged data correction. (a) Before correction showing converged (green) and unconverged (red) data. (b) After correction with unconverged data (blue) shifted to match converged data pattern. (c) Correction factors applied by composition. (d) Formation energy distribution after correction.
 
 **補正方法:**
 - 収束データがある組成: 未収束データの平均を収束データの平均に合わせる
-- 収束データがない組成（n_V=0,1,8）: Vegard則をターゲットとする
+- 収束データがない組成（n_V=0,1,8）: 線形内挿をターゲットとする
 
 ## 3. 形成エネルギー計算
 
