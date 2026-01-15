@@ -13,7 +13,9 @@ Key features:
 
 Geometric relationships:
 - B2 structure (AB): r_A + r_B = (sqrt(3)/2) * a
-- L12 structure (A3B): r_A + r_B = a/sqrt(2)
+- L12 structure (A3B): Two contact conditions
+  - A-A contact (major-major): 2*r_major = a/sqrt(2)
+  - A-B contact (major-minor): r_major + r_minor = a/sqrt(2)
 """
 
 import itertools
@@ -270,9 +272,16 @@ class HEARadiusCalculator:
                     d_calc = radii[idx_A] + radii[idx_B]
                     res.append(d_calc - d_obs)
                 elif c.structure_type == "L12":
-                    d_obs = a / np.sqrt(2)
-                    d_calc = radii[idx_A] + radii[idx_B]
-                    res.append(d_calc - d_obs)
+                    r_A = radii[idx_A]
+                    r_B = radii[idx_B]
+                    if c.count_A > c.count_B:
+                        r_major = r_A
+                        r_minor = r_B
+                    else:
+                        r_major = r_B
+                        r_minor = r_A
+                    res.append(2 * r_major - a / np.sqrt(2))
+                    res.append(r_major + r_minor - a / np.sqrt(2))
 
             return np.array(res)
 
@@ -359,7 +368,11 @@ class HEARadiusCalculator:
         radii: Dict[str, float],
         compounds: List[CompoundData]
     ) -> pd.DataFrame:
-        """Compare calculated lattice constants with DFT values."""
+        """Compare calculated lattice constants with DFT values.
+        
+        For L12 structures, calculates three lattice constants based on
+        three contact conditions and reports the average.
+        """
         results = []
 
         for c in compounds:
@@ -372,7 +385,16 @@ class HEARadiusCalculator:
             if c.structure_type == "B2":
                 a_calc = (2 / np.sqrt(3)) * (r_A + r_B)
             else:
-                a_calc = np.sqrt(2) * (r_A + r_B)
+                if c.count_A > c.count_B:
+                    r_major = r_A
+                    r_minor = r_B
+                else:
+                    r_major = r_B
+                    r_minor = r_A
+                a_AA = np.sqrt(2) * 2 * r_major
+                a_AB = np.sqrt(2) * (r_major + r_minor)
+                a_BB = 2 * r_minor
+                a_calc = (a_AA + a_AB + a_BB) / 3
 
             a_dft = c.lattice_constant
             error = a_calc - a_dft
