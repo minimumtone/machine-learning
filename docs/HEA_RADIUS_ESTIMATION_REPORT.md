@@ -30,7 +30,7 @@
 
 ### 2.2 データ分布の可視化
 
-![データ分布](../hea_radius_output/data_distribution.png)
+![データ分布](assets/data_distribution.png)
 
 左図は構造タイプの分布を示し、L12構造が全体の約66%を占めている。右図は最も頻繁に出現する上位20元素を示している。
 
@@ -50,13 +50,13 @@ L12構造のRMSEがB2構造より大幅に小さいことが注目される。�
 
 ### 3.2 格子定数のパリティプロット
 
-![パリティプロット](../hea_radius_output/parity_plots_by_structure.png)
+![パリティプロット](assets/parity_plots_by_structure.png)
 
 上図は、DFT計算による格子定数と有効原子半径から計算した格子定数の比較を示す。理想的な一致はy=x線上に位置する。B2構造では散らばりが大きいが、L12構造では良好な一致が見られる。
 
 ### 3.3 誤差分布
 
-![誤差分布](../hea_radius_output/error_distributions.png)
+![誤差分布](assets/error_distributions.png)
 
 上段は絶対誤差、下段は相対誤差の分布を示す。L12構造の誤差分布はB2構造より狭く、より精度の高い予測が可能であることを示している。
 
@@ -64,13 +64,13 @@ L12構造のRMSEがB2構造より大幅に小さいことが注目される。�
 
 ### 4.1 B2 vs L12 散布図
 
-![B2 vs L12](../hea_radius_output/b2_vs_l12_radii.png)
+![B2 vs L12](assets/b2_vs_l12_radii.png)
 
 B2構造とL12構造で計算された有効原子半径の相関を示す。相関係数は高いが、完全な一致ではなく、構造依存性が存在することを示している。
 
 ### 4.2 HEA主要元素の半径比較
 
-![HEA元素比較](../hea_radius_output/hea_elements_radii_comparison.png)
+![HEA元素比較](assets/hea_elements_radii_comparison.png)
 
 HEAで頻繁に使用される遷移金属元素について、B2、L12、統合、およびPauling半径を比較した。多くの元素でB2半径がL12半径より小さい傾向が見られる。
 
@@ -93,7 +93,7 @@ HEAで頻繁に使用される遷移金属元素について、B2、L12、統合
 
 ### 5.2 元素除外の影響の可視化
 
-![元素除外比較](../hea_radius_output/element_exclusion_comparison.png)
+![元素除外比較](assets/element_exclusion_comparison.png)
 
 ### 5.3 分析結果
 
@@ -116,7 +116,7 @@ HEAで頻繁に使用される遷移金属元素について、B2、L12、統合
 
 ### 6.2 誤差分布
 
-![5元系誤差分布](../hea_radius_output/hea_5element_error_dist.png)
+![5元系誤差分布](assets/hea_5element_error_dist.png)
 
 5元系組み合わせの格子定数RMSEと相対誤差の分布を示す。多くの組み合わせで低いRMSEが達成されている。
 
