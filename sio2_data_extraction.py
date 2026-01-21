@@ -2,13 +2,17 @@
 """
 SiO2 Physical Properties Data Extraction Script
 
-This script extracts SiO2 (silicon dioxide) physical property data from multiple sources:
-1. AFLOW database (REST API)
-2. Crystallography Open Database (COD)
-3. Open Quantum Materials Database (OQMD)
-4. Synthetic data generation based on physical models
+This script extracts SiO2 (silicon dioxide) physical property data from real databases
+with proper literature citations. No synthetic data generation.
 
-Target: 10,000 data entries
+Data sources:
+1. Materials Project API
+2. AFLOW database (REST API)
+3. Crystallography Open Database (COD)
+4. Open Quantum Materials Database (OQMD)
+5. Published literature and handbooks
+
+All entries include proper reference citations (DOI, database ID, or publication info).
 """
 
 import pandas as pd
@@ -17,89 +21,10 @@ import requests
 import json
 import time
 import os
-from typing import Dict, List, Optional, Tuple
-from dataclasses import dataclass, field
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import hashlib
+from typing import Dict, List, Optional, Set
 import warnings
 warnings.filterwarnings('ignore')
-
-# Constants for SiO2 polymorphs
-SIO2_POLYMORPHS = [
-    'alpha-quartz', 'beta-quartz', 'alpha-cristobalite', 'beta-cristobalite',
-    'alpha-tridymite', 'beta-tridymite', 'coesite', 'stishovite', 'seifertite',
-    'keatite', 'moganite', 'fused_silica', 'amorphous', 'silica_glass',
-    'silica_aerogel', 'mesoporous_silica', 'fumed_silica', 'colloidal_silica'
-]
-
-# Physical constants
-R_GAS = 8.314  # J/(mol*K)
-AVOGADRO = 6.022e23
-
-# Reference properties for SiO2 polymorphs (experimental values)
-REFERENCE_PROPERTIES = {
-    'alpha-quartz': {
-        'density': 2.648, 'melting_point': 1713, 'thermal_conductivity': 12.0,
-        'youngs_modulus': 78, 'bulk_modulus': 37.8, 'band_gap': 8.9,
-        'refractive_index_o': 1.544, 'refractive_index_e': 1.553,
-        'lattice_a': 4.9133, 'lattice_c': 5.4053, 'space_group': 'P3121',
-        'dielectric_constant': 4.5, 'hardness_mohs': 7.0
-    },
-    'beta-quartz': {
-        'density': 2.53, 'thermal_conductivity': 10.0,
-        'youngs_modulus': 72, 'bulk_modulus': 35.0, 'band_gap': 8.5,
-        'lattice_a': 4.999, 'lattice_c': 5.457, 'space_group': 'P6222',
-        'dielectric_constant': 4.3
-    },
-    'alpha-cristobalite': {
-        'density': 2.32, 'melting_point': 1728, 'thermal_conductivity': 1.5,
-        'youngs_modulus': 65, 'bulk_modulus': 16.0, 'band_gap': 8.4,
-        'lattice_a': 4.9709, 'lattice_c': 6.9278, 'space_group': 'P41212',
-        'dielectric_constant': 4.2
-    },
-    'beta-cristobalite': {
-        'density': 2.20, 'thermal_conductivity': 1.3,
-        'youngs_modulus': 60, 'bulk_modulus': 14.0,
-        'lattice_a': 7.16, 'space_group': 'Fd3m',
-        'dielectric_constant': 4.0
-    },
-    'coesite': {
-        'density': 2.911, 'thermal_conductivity': 5.0,
-        'youngs_modulus': 160, 'bulk_modulus': 96.0, 'band_gap': 9.0,
-        'lattice_a': 7.14, 'lattice_b': 12.38, 'lattice_c': 7.17,
-        'space_group': 'C2/c', 'hardness_mohs': 7.5
-    },
-    'stishovite': {
-        'density': 4.287, 'thermal_conductivity': 15.0,
-        'youngs_modulus': 500, 'bulk_modulus': 313.0, 'band_gap': 10.5,
-        'lattice_a': 4.1773, 'lattice_c': 2.6654, 'space_group': 'P42/mnm',
-        'hardness_mohs': 9.5
-    },
-    'seifertite': {
-        'density': 4.294, 'bulk_modulus': 328.0,
-        'lattice_a': 4.097, 'lattice_b': 5.046, 'lattice_c': 4.495,
-        'space_group': 'Pbcn'
-    },
-    'keatite': {
-        'density': 3.011, 'lattice_a': 7.48, 'lattice_c': 8.77,
-        'space_group': 'P43212'
-    },
-    'fused_silica': {
-        'density': 2.20, 'melting_point': 1713, 'thermal_conductivity': 1.4,
-        'youngs_modulus': 72, 'bulk_modulus': 36.0, 'band_gap': 9.0,
-        'refractive_index_o': 1.4585, 'dielectric_constant': 3.8,
-        'specific_heat': 730, 'thermal_expansion': 0.55
-    },
-    'amorphous': {
-        'density': 2.20, 'thermal_conductivity': 1.4,
-        'youngs_modulus': 70, 'bulk_modulus': 35.0, 'band_gap': 8.5,
-        'refractive_index_o': 1.46, 'dielectric_constant': 3.9,
-        'specific_heat': 700
-    },
-    'silica_aerogel': {
-        'density': 0.1, 'thermal_conductivity': 0.02,
-        'refractive_index_o': 1.05, 'dielectric_constant': 1.5
-    }
-}
 
 # CSV column names (matching the original file structure)
 CSV_COLUMNS = [
@@ -127,50 +52,182 @@ CSV_COLUMNS = [
 ]
 
 
+class DataDeduplicator:
+    """Track and prevent duplicate entries."""
+    
+    def __init__(self):
+        self.seen_hashes: Set[str] = set()
+    
+    def _compute_hash(self, entry: Dict) -> str:
+        """Compute hash of key properties to detect duplicates."""
+        key_fields = [
+            'crystal_structure', 'density_g/cm3', 'lattice_a_angstrom',
+            'lattice_b_angstrom', 'lattice_c_angstrom', 'space_group',
+            'band_gap_eV', 'bulk_modulus_GPa'
+        ]
+        hash_str = ""
+        for field in key_fields:
+            val = entry.get(field, '')
+            if val != '' and val is not None:
+                if isinstance(val, float):
+                    hash_str += f"{field}:{val:.4f}|"
+                else:
+                    hash_str += f"{field}:{val}|"
+        return hashlib.md5(hash_str.encode()).hexdigest()
+    
+    def is_duplicate(self, entry: Dict) -> bool:
+        """Check if entry is a duplicate."""
+        h = self._compute_hash(entry)
+        if h in self.seen_hashes:
+            return True
+        self.seen_hashes.add(h)
+        return False
+
+
+class MaterialsProjectExtractor:
+    """Extract SiO2 data from Materials Project API."""
+    
+    BASE_URL = "https://api.materialsproject.org"
+    
+    def __init__(self, api_key: Optional[str] = None):
+        self.api_key = api_key or os.environ.get('MP_API_KEY', '')
+        self.session = requests.Session()
+        if self.api_key:
+            self.session.headers.update({'X-API-KEY': self.api_key})
+    
+    def search_sio2_entries(self, max_entries: int = 5000) -> List[Dict]:
+        """Search for SiO2 entries in Materials Project."""
+        entries = []
+        
+        if not self.api_key:
+            print("    Warning: No Materials Project API key provided")
+            return entries
+        
+        try:
+            url = f"{self.BASE_URL}/materials/summary/"
+            params = {
+                'formula': 'SiO2',
+                '_limit': min(max_entries, 1000),
+                '_fields': 'material_id,formula_pretty,density,band_gap,formation_energy_per_atom,'
+                          'energy_above_hull,volume,nsites,symmetry,structure'
+            }
+            
+            response = self.session.get(url, params=params, timeout=60)
+            if response.status_code == 200:
+                data = response.json()
+                if 'data' in data:
+                    entries = data['data']
+                    print(f"    Retrieved {len(entries)} entries from Materials Project")
+        except Exception as e:
+            print(f"    Materials Project extraction error: {e}")
+        
+        return entries
+    
+    def parse_entry(self, entry: Dict) -> Dict:
+        """Parse Materials Project entry to standard format."""
+        result = {col: '' for col in CSV_COLUMNS}
+        
+        try:
+            material_id = entry.get('material_id', '')
+            
+            symmetry = entry.get('symmetry', {})
+            if isinstance(symmetry, dict):
+                result['space_group'] = symmetry.get('symbol', '')
+                crystal_system = symmetry.get('crystal_system', '')
+                result['crystal_structure'] = self._classify_structure(result['space_group'], crystal_system)
+            
+            if 'density' in entry and entry['density']:
+                result['density_g/cm3'] = entry['density']
+            
+            if 'band_gap' in entry and entry['band_gap']:
+                result['band_gap_eV'] = entry['band_gap']
+                result['bandgap_eV'] = entry['band_gap']
+            
+            if 'formation_energy_per_atom' in entry and entry['formation_energy_per_atom']:
+                result['std_enthalpy_kJ/mol'] = entry['formation_energy_per_atom'] * 3 * 96.485
+            
+            if 'volume' in entry and entry['volume']:
+                result['volume_angstrom3'] = entry['volume']
+            
+            structure = entry.get('structure', {})
+            if isinstance(structure, dict):
+                lattice = structure.get('lattice', {})
+                if lattice:
+                    result['lattice_a_angstrom'] = lattice.get('a', '')
+                    result['lattice_b_angstrom'] = lattice.get('b', '')
+                    result['lattice_c_angstrom'] = lattice.get('c', '')
+                    result['lattice_alpha_deg'] = lattice.get('alpha', '')
+                    result['lattice_beta_deg'] = lattice.get('beta', '')
+                    result['lattice_gamma_deg'] = lattice.get('gamma', '')
+            
+            result['reference'] = f"Materials Project:{material_id}, DOI:10.17188/1190959"
+            result['notes'] = f"DFT calculation, {entry.get('formula_pretty', 'SiO2')}"
+            
+        except Exception as e:
+            print(f"    Error parsing MP entry: {e}")
+        
+        return result
+    
+    def _classify_structure(self, spacegroup: str, crystal_system: str) -> str:
+        """Classify SiO2 structure based on space group."""
+        sg_map = {
+            'P3_121': 'alpha-quartz', 'P3_221': 'alpha-quartz',
+            'P3121': 'alpha-quartz', 'P3221': 'alpha-quartz',
+            'P6_222': 'beta-quartz', 'P6_422': 'beta-quartz',
+            'P6222': 'beta-quartz', 'P6422': 'beta-quartz',
+            'P4_12_12': 'alpha-cristobalite', 'P4_32_12': 'alpha-cristobalite',
+            'P41212': 'alpha-cristobalite', 'P43212': 'alpha-cristobalite',
+            'Fd-3m': 'beta-cristobalite', 'Fd3m': 'beta-cristobalite',
+            'C222_1': 'alpha-tridymite', 'C2221': 'alpha-tridymite',
+            'P6_3/mmc': 'beta-tridymite', 'P63/mmc': 'beta-tridymite',
+            'C2/c': 'coesite',
+            'P4_2/mnm': 'stishovite', 'P42/mnm': 'stishovite',
+            'Pbcn': 'seifertite',
+            'I-43d': 'melanophlogite'
+        }
+        
+        for sg, struct in sg_map.items():
+            if sg in str(spacegroup):
+                return struct
+        
+        return f'SiO2_{crystal_system}' if crystal_system else 'SiO2_MP'
+
+
 class AFLOWExtractor:
     """Extract SiO2 data from AFLOW database."""
     
-    BASE_URL = "http://aflowlib.duke.edu/AFLOWDATA/ICSD_WEB"
-    API_URL = "http://aflow.org/API/aflux/"
+    API_URL = "http://aflowlib.org/API/aflux/"
     
     def __init__(self):
         self.session = requests.Session()
         self.session.headers.update({'User-Agent': 'SiO2-DataExtractor/1.0'})
     
-    def search_sio2_entries(self, max_entries: int = 2000) -> List[Dict]:
+    def search_sio2_entries(self, max_entries: int = 5000) -> List[Dict]:
         """Search for SiO2 entries in AFLOW database."""
         entries = []
         
-        # AFLOW AFLUX query for SiO2
-        query_params = {
-            'species': 'Si,O',
-            'nspecies': 2,
-            'format': 'json'
-        }
-        
         try:
-            # Try different AFLOW API endpoints
-            urls_to_try = [
-                f"{self.API_URL}?species(Si,O),nspecies(2),paging(1,{max_entries})",
-                f"http://aflow.org/API/aflux/?species(Si,O),nspecies(2),format(json),paging(1,{min(max_entries, 500)})"
-            ]
+            query = f"species(Si,O),nspecies(2),paging(1,{min(max_entries, 500)})"
+            url = f"{self.API_URL}?{query}"
             
-            for url in urls_to_try:
+            response = self.session.get(url, timeout=120)
+            if response.status_code == 200:
                 try:
-                    response = self.session.get(url, timeout=60)
-                    if response.status_code == 200:
-                        data = response.json()
-                        if isinstance(data, list):
-                            entries.extend(data)
-                        elif isinstance(data, dict) and 'entries' in data:
-                            entries.extend(data['entries'])
-                        break
-                except Exception as e:
-                    print(f"AFLOW query failed for {url}: {e}")
-                    continue
-                    
+                    data = response.json()
+                    if isinstance(data, list):
+                        entries = data
+                    elif isinstance(data, dict) and 'entries' in data:
+                        entries = data['entries']
+                except json.JSONDecodeError:
+                    lines = response.text.strip().split('\n')
+                    for line in lines:
+                        try:
+                            entry = json.loads(line)
+                            entries.append(entry)
+                        except:
+                            continue
         except Exception as e:
-            print(f"AFLOW extraction error: {e}")
+            print(f"    AFLOW extraction error: {e}")
         
         return entries[:max_entries]
     
@@ -179,12 +236,12 @@ class AFLOWExtractor:
         result = {col: '' for col in CSV_COLUMNS}
         
         try:
-            # Determine crystal structure type
+            auid = entry.get('auid', entry.get('aurl', ''))
+            
             spacegroup = entry.get('spacegroup_relax', entry.get('spacegroup', ''))
             result['space_group'] = spacegroup
-            result['crystal_structure'] = self._classify_structure(spacegroup, entry)
+            result['crystal_structure'] = self._classify_structure(spacegroup)
             
-            # Lattice parameters
             if 'geometry' in entry:
                 geom = entry['geometry']
                 if isinstance(geom, list) and len(geom) >= 6:
@@ -195,166 +252,39 @@ class AFLOWExtractor:
                     result['lattice_beta_deg'] = geom[4]
                     result['lattice_gamma_deg'] = geom[5]
             
-            # Volume and density
             if 'volume_cell' in entry:
                 result['volume_angstrom3'] = entry['volume_cell']
             if 'density' in entry:
                 result['density_g/cm3'] = entry['density']
             
-            # Electronic properties
-            if 'Egap' in entry:
+            if 'Egap' in entry and entry['Egap']:
                 result['band_gap_eV'] = entry['Egap']
                 result['bandgap_eV'] = entry['Egap']
             
-            # Elastic properties
-            if 'Bvoigt' in entry:
+            if 'Bvoigt' in entry and entry['Bvoigt']:
                 result['bulk_modulus_GPa'] = entry['Bvoigt']
-            if 'Gvoigt' in entry:
+            if 'Gvoigt' in entry and entry['Gvoigt']:
                 result['shear_modulus_GPa'] = entry['Gvoigt']
             if 'poisson_ratio' in entry:
                 result['poissons_ratio'] = entry['poisson_ratio']
-                result['poisson_ratio'] = entry['poisson_ratio']
             
-            # Formation energy
-            if 'enthalpy_formation_atom' in entry:
-                # Convert eV/atom to kJ/mol (SiO2 has 3 atoms)
+            if 'enthalpy_formation_atom' in entry and entry['enthalpy_formation_atom']:
                 result['std_enthalpy_kJ/mol'] = entry['enthalpy_formation_atom'] * 3 * 96.485
             
-            # Reference
-            result['reference'] = f"AFLOW:{entry.get('auid', entry.get('aurl', 'unknown'))}"
+            result['reference'] = f"AFLOW:{auid}, Curtarolo et al. Comp. Mat. Sci. 58, 218 (2012), DOI:10.1016/j.commatsci.2012.02.005"
+            result['notes'] = f"AFLOW DFT calculation"
             
         except Exception as e:
-            print(f"Error parsing AFLOW entry: {e}")
+            print(f"    Error parsing AFLOW entry: {e}")
         
         return result
     
-    def _classify_structure(self, spacegroup: str, entry: Dict) -> str:
+    def _classify_structure(self, spacegroup: str) -> str:
         """Classify SiO2 structure based on space group."""
         sg_map = {
             'P3121': 'alpha-quartz', 'P3221': 'alpha-quartz',
             'P6222': 'beta-quartz', 'P6422': 'beta-quartz',
             'P41212': 'alpha-cristobalite', 'P43212': 'alpha-cristobalite',
-            'Fd3m': 'beta-cristobalite', 'Fd-3m': 'beta-cristobalite',
-            'C2221': 'alpha-tridymite',
-            'P63/mmc': 'beta-tridymite',
-            'C2/c': 'coesite',
-            'P42/mnm': 'stishovite',
-            'Pbcn': 'seifertite',
-            'I-43d': 'melanophlogite'
-        }
-        
-        for sg, struct in sg_map.items():
-            if sg in str(spacegroup):
-                return struct
-        
-        return 'SiO2_computed'
-
-
-class CODExtractor:
-    """Extract SiO2 data from Crystallography Open Database."""
-    
-    BASE_URL = "https://www.crystallography.net/cod"
-    SEARCH_URL = "https://www.crystallography.net/cod/result"
-    
-    def __init__(self):
-        self.session = requests.Session()
-        self.session.headers.update({'User-Agent': 'SiO2-DataExtractor/1.0'})
-    
-    def search_sio2_entries(self, max_entries: int = 2000) -> List[Dict]:
-        """Search for SiO2 entries in COD."""
-        entries = []
-        
-        try:
-            # COD search API
-            search_url = f"{self.BASE_URL}/search.php"
-            params = {
-                'formula': 'Si O2',
-                'format': 'json',
-                'limit': max_entries
-            }
-            
-            response = self.session.get(search_url, params=params, timeout=60)
-            if response.status_code == 200:
-                try:
-                    data = response.json()
-                    if isinstance(data, list):
-                        entries = data
-                    elif isinstance(data, dict):
-                        entries = data.get('results', [])
-                except json.JSONDecodeError:
-                    # Try parsing as text
-                    lines = response.text.strip().split('\n')
-                    for line in lines:
-                        if line.strip().isdigit():
-                            entries.append({'cod_id': line.strip()})
-        except Exception as e:
-            print(f"COD search error: {e}")
-        
-        # Fetch detailed data for each entry
-        detailed_entries = []
-        for entry in entries[:max_entries]:
-            try:
-                cod_id = entry.get('cod_id', entry.get('file', ''))
-                if cod_id:
-                    detail = self._fetch_entry_details(cod_id)
-                    if detail:
-                        detailed_entries.append(detail)
-            except Exception as e:
-                continue
-        
-        return detailed_entries
-    
-    def _fetch_entry_details(self, cod_id: str) -> Optional[Dict]:
-        """Fetch detailed information for a COD entry."""
-        try:
-            url = f"{self.BASE_URL}/{cod_id}.json"
-            response = self.session.get(url, timeout=30)
-            if response.status_code == 200:
-                return response.json()
-        except Exception:
-            pass
-        return None
-    
-    def parse_entry(self, entry: Dict) -> Dict:
-        """Parse COD entry to standard format."""
-        result = {col: '' for col in CSV_COLUMNS}
-        
-        try:
-            # Lattice parameters
-            result['lattice_a_angstrom'] = entry.get('a', '')
-            result['lattice_b_angstrom'] = entry.get('b', '')
-            result['lattice_c_angstrom'] = entry.get('c', '')
-            result['lattice_alpha_deg'] = entry.get('alpha', 90)
-            result['lattice_beta_deg'] = entry.get('beta', 90)
-            result['lattice_gamma_deg'] = entry.get('gamma', 90)
-            
-            # Space group
-            result['space_group'] = entry.get('sg', entry.get('spacegroup', ''))
-            
-            # Volume
-            result['volume_angstrom3'] = entry.get('vol', '')
-            
-            # Z value
-            result['Z_formula_units'] = entry.get('Z', '')
-            
-            # Classify structure
-            result['crystal_structure'] = self._classify_structure(result['space_group'])
-            
-            # Reference
-            cod_id = entry.get('file', entry.get('cod_id', 'unknown'))
-            result['reference'] = f"COD:{cod_id}"
-            
-        except Exception as e:
-            print(f"Error parsing COD entry: {e}")
-        
-        return result
-    
-    def _classify_structure(self, spacegroup: str) -> str:
-        """Classify structure based on space group."""
-        sg_map = {
-            'P3121': 'alpha-quartz', 'P3221': 'alpha-quartz',
-            'P6222': 'beta-quartz', 'P6422': 'beta-quartz',
-            'P41212': 'alpha-cristobalite',
             'Fd3m': 'beta-cristobalite', 'Fd-3m': 'beta-cristobalite',
             'C2221': 'alpha-tridymite',
             'P63/mmc': 'beta-tridymite',
@@ -367,7 +297,146 @@ class CODExtractor:
             if sg in str(spacegroup):
                 return struct
         
-        return 'SiO2_crystallographic'
+        return 'SiO2_AFLOW'
+
+
+class CODExtractor:
+    """Extract SiO2 data from Crystallography Open Database."""
+    
+    SEARCH_URL = "https://www.crystallography.net/cod/result"
+    CIF_URL = "https://www.crystallography.net/cod"
+    
+    def __init__(self):
+        self.session = requests.Session()
+        self.session.headers.update({'User-Agent': 'SiO2-DataExtractor/1.0'})
+    
+    def search_sio2_entries(self, max_entries: int = 5000) -> List[Dict]:
+        """Search for SiO2 entries in COD."""
+        entries = []
+        
+        try:
+            params = {
+                'formula': 'O2 Si',
+                'format': 'json'
+            }
+            
+            response = self.session.get(self.SEARCH_URL, params=params, timeout=60)
+            if response.status_code == 200:
+                try:
+                    data = response.json()
+                    if isinstance(data, list):
+                        entries = data[:max_entries]
+                except json.JSONDecodeError:
+                    lines = response.text.strip().split('\n')
+                    for line in lines[:max_entries]:
+                        cod_id = line.strip()
+                        if cod_id.isdigit():
+                            entries.append({'file': cod_id})
+        except Exception as e:
+            print(f"    COD search error: {e}")
+        
+        detailed_entries = []
+        for i, entry in enumerate(entries[:max_entries]):
+            if i % 50 == 0 and i > 0:
+                print(f"    Fetching COD entry {i}/{len(entries)}...")
+            try:
+                cod_id = entry.get('file', entry.get('cod_id', ''))
+                if cod_id:
+                    detail = self._fetch_entry_details(cod_id)
+                    if detail:
+                        detailed_entries.append(detail)
+                time.sleep(0.1)
+            except Exception:
+                continue
+        
+        return detailed_entries
+    
+    def _fetch_entry_details(self, cod_id: str) -> Optional[Dict]:
+        """Fetch detailed information for a COD entry."""
+        try:
+            url = f"{self.CIF_URL}/{cod_id}.json"
+            response = self.session.get(url, timeout=30)
+            if response.status_code == 200:
+                data = response.json()
+                data['cod_id'] = cod_id
+                return data
+        except Exception:
+            pass
+        return None
+    
+    def parse_entry(self, entry: Dict) -> Dict:
+        """Parse COD entry to standard format."""
+        result = {col: '' for col in CSV_COLUMNS}
+        
+        try:
+            cod_id = entry.get('cod_id', entry.get('file', ''))
+            
+            result['lattice_a_angstrom'] = entry.get('a', '')
+            result['lattice_b_angstrom'] = entry.get('b', '')
+            result['lattice_c_angstrom'] = entry.get('c', '')
+            result['lattice_alpha_deg'] = entry.get('alpha', 90)
+            result['lattice_beta_deg'] = entry.get('beta', 90)
+            result['lattice_gamma_deg'] = entry.get('gamma', 90)
+            
+            result['space_group'] = entry.get('sg', entry.get('spacegroup', ''))
+            result['crystal_structure'] = self._classify_structure(result['space_group'])
+            
+            result['volume_angstrom3'] = entry.get('vol', '')
+            result['Z_formula_units'] = entry.get('Z', '')
+            
+            if result['volume_angstrom3'] and result['Z_formula_units']:
+                try:
+                    vol = float(result['volume_angstrom3'])
+                    z = int(result['Z_formula_units'])
+                    molar_mass = 60.084
+                    density = (z * molar_mass) / (vol * 0.6022)
+                    result['density_g/cm3'] = round(density, 3)
+                except:
+                    pass
+            
+            authors = entry.get('authors', '')
+            journal = entry.get('journal', '')
+            year = entry.get('year', '')
+            doi = entry.get('doi', '')
+            
+            ref_parts = [f"COD:{cod_id}"]
+            if authors:
+                ref_parts.append(authors)
+            if journal:
+                ref_parts.append(journal)
+            if year:
+                ref_parts.append(f"({year})")
+            if doi:
+                ref_parts.append(f"DOI:{doi}")
+            
+            result['reference'] = ', '.join(ref_parts)
+            result['notes'] = 'X-ray crystallography'
+            
+        except Exception as e:
+            print(f"    Error parsing COD entry: {e}")
+        
+        return result
+    
+    def _classify_structure(self, spacegroup: str) -> str:
+        """Classify structure based on space group."""
+        sg_map = {
+            'P 3_1 2 1': 'alpha-quartz', 'P 3_2 2 1': 'alpha-quartz',
+            'P3121': 'alpha-quartz', 'P3221': 'alpha-quartz',
+            'P 6_2 2 2': 'beta-quartz', 'P6222': 'beta-quartz',
+            'P 4_1 2_1 2': 'alpha-cristobalite', 'P41212': 'alpha-cristobalite',
+            'F d -3 m': 'beta-cristobalite', 'Fd-3m': 'beta-cristobalite',
+            'C 2 2 2_1': 'alpha-tridymite', 'C2221': 'alpha-tridymite',
+            'P 6_3/m m c': 'beta-tridymite', 'P63/mmc': 'beta-tridymite',
+            'C 2/c': 'coesite', 'C2/c': 'coesite',
+            'P 4_2/m n m': 'stishovite', 'P42/mnm': 'stishovite',
+            'P b c n': 'seifertite', 'Pbcn': 'seifertite'
+        }
+        
+        for sg, struct in sg_map.items():
+            if sg in str(spacegroup):
+                return struct
+        
+        return 'SiO2_COD'
 
 
 class OQMDExtractor:
@@ -379,12 +448,11 @@ class OQMDExtractor:
         self.session = requests.Session()
         self.session.headers.update({'User-Agent': 'SiO2-DataExtractor/1.0'})
     
-    def search_sio2_entries(self, max_entries: int = 2000) -> List[Dict]:
+    def search_sio2_entries(self, max_entries: int = 5000) -> List[Dict]:
         """Search for SiO2 entries in OQMD."""
         entries = []
         
         try:
-            # OQMD API query
             url = f"{self.BASE_URL}/formationenergy"
             params = {
                 'composition': 'SiO2',
@@ -392,7 +460,7 @@ class OQMDExtractor:
                 'format': 'json'
             }
             
-            response = self.session.get(url, params=params, timeout=60)
+            response = self.session.get(url, params=params, timeout=120)
             if response.status_code == 200:
                 data = response.json()
                 if 'data' in data:
@@ -400,7 +468,7 @@ class OQMDExtractor:
                 elif isinstance(data, list):
                     entries = data
         except Exception as e:
-            print(f"OQMD search error: {e}")
+            print(f"    OQMD search error: {e}")
         
         return entries[:max_entries]
     
@@ -409,31 +477,39 @@ class OQMDExtractor:
         result = {col: '' for col in CSV_COLUMNS}
         
         try:
-            # Formation energy
-            if 'delta_e' in entry:
-                result['std_enthalpy_kJ/mol'] = entry['delta_e'] * 96.485  # eV to kJ/mol
+            entry_id = entry.get('entry_id', entry.get('id', ''))
             
-            # Band gap
-            if 'band_gap' in entry:
+            if 'delta_e' in entry and entry['delta_e'] is not None:
+                result['std_enthalpy_kJ/mol'] = entry['delta_e'] * 96.485
+            
+            if 'band_gap' in entry and entry['band_gap'] is not None:
                 result['band_gap_eV'] = entry['band_gap']
                 result['bandgap_eV'] = entry['band_gap']
             
-            # Volume
-            if 'volume' in entry:
+            if 'volume' in entry and entry['volume']:
                 result['volume_angstrom3'] = entry['volume']
             
-            # Space group
             if 'spacegroup' in entry:
                 result['space_group'] = entry['spacegroup']
                 result['crystal_structure'] = self._classify_structure(entry['spacegroup'])
             else:
                 result['crystal_structure'] = 'SiO2_OQMD'
             
-            # Reference
-            result['reference'] = f"OQMD:{entry.get('entry_id', entry.get('id', 'unknown'))}"
+            if 'unit_cell' in entry:
+                uc = entry['unit_cell']
+                if isinstance(uc, dict):
+                    result['lattice_a_angstrom'] = uc.get('a', '')
+                    result['lattice_b_angstrom'] = uc.get('b', '')
+                    result['lattice_c_angstrom'] = uc.get('c', '')
+                    result['lattice_alpha_deg'] = uc.get('alpha', '')
+                    result['lattice_beta_deg'] = uc.get('beta', '')
+                    result['lattice_gamma_deg'] = uc.get('gamma', '')
+            
+            result['reference'] = f"OQMD:{entry_id}, Saal et al. JOM 65, 1501 (2013), DOI:10.1007/s11837-013-0755-4"
+            result['notes'] = 'OQMD DFT calculation'
             
         except Exception as e:
-            print(f"Error parsing OQMD entry: {e}")
+            print(f"    Error parsing OQMD entry: {e}")
         
         return result
     
@@ -443,7 +519,7 @@ class OQMDExtractor:
             'P3121': 'alpha-quartz', 'P3221': 'alpha-quartz',
             'P6222': 'beta-quartz',
             'P41212': 'alpha-cristobalite',
-            'Fd3m': 'beta-cristobalite',
+            'Fd3m': 'beta-cristobalite', 'Fd-3m': 'beta-cristobalite',
             'C2/c': 'coesite',
             'P42/mnm': 'stishovite'
         }
@@ -455,384 +531,375 @@ class OQMDExtractor:
         return 'SiO2_OQMD'
 
 
-class SyntheticDataGenerator:
-    """Generate synthetic SiO2 property data based on physical models."""
+class LiteratureDataExtractor:
+    """Extract SiO2 data from published literature and handbooks."""
     
     def __init__(self):
-        np.random.seed(42)
+        pass
     
-    def generate_temperature_dependent_data(self, n_samples: int = 2000) -> List[Dict]:
-        """Generate temperature-dependent property variations."""
+    def get_handbook_data(self) -> List[Dict]:
+        """Get SiO2 data from standard handbooks and review papers."""
         entries = []
         
-        for polymorph, base_props in REFERENCE_PROPERTIES.items():
-            # Generate data at different temperatures
-            temps = np.linspace(100, 1500, n_samples // len(REFERENCE_PROPERTIES))
-            
-            for T in temps:
-                entry = self._generate_temp_entry(polymorph, base_props, T)
-                entries.append(entry)
+        # CRC Handbook data
+        crc_data = [
+            {
+                'crystal_structure': 'alpha-quartz',
+                'density_g/cm3': 2.648,
+                'melting_point_degC': 1713,
+                'refractive_index_o': 1.5442,
+                'refractive_index_e': 1.5533,
+                'hardness_Mohs': 7.0,
+                'reference': 'CRC Handbook of Chemistry and Physics, 97th ed., Haynes (2016-2017), DOI:10.1201/9781315380476',
+                'notes': 'Room temperature values'
+            },
+            {
+                'crystal_structure': 'alpha-quartz',
+                'thermal_conductivity_W/(m*K)': 12.0,
+                'specific_heat_J/(kg*K)': 740,
+                'thermal_expansion_1e-6/K': 13.7,
+                'reference': 'CRC Handbook of Chemistry and Physics, 97th ed., Haynes (2016-2017), DOI:10.1201/9781315380476',
+                'notes': 'Thermal properties parallel to c-axis'
+            },
+            {
+                'crystal_structure': 'alpha-quartz',
+                'thermal_conductivity_W/(m*K)': 6.8,
+                'thermal_expansion_1e-6/K': 7.5,
+                'reference': 'CRC Handbook of Chemistry and Physics, 97th ed., Haynes (2016-2017), DOI:10.1201/9781315380476',
+                'notes': 'Thermal properties perpendicular to c-axis'
+            },
+            {
+                'crystal_structure': 'fused_silica',
+                'density_g/cm3': 2.20,
+                'melting_point_degC': 1713,
+                'thermal_conductivity_W/(m*K)': 1.4,
+                'specific_heat_J/(kg*K)': 730,
+                'thermal_expansion_1e-6/K': 0.55,
+                'refractive_index_o': 1.4585,
+                'dielectric_constant': 3.8,
+                'reference': 'CRC Handbook of Chemistry and Physics, 97th ed., Haynes (2016-2017), DOI:10.1201/9781315380476',
+                'notes': 'Amorphous silica glass'
+            },
+            {
+                'crystal_structure': 'stishovite',
+                'density_g/cm3': 4.287,
+                'hardness_Mohs': 9.5,
+                'reference': 'CRC Handbook of Chemistry and Physics, 97th ed., Haynes (2016-2017), DOI:10.1201/9781315380476',
+                'notes': 'High-pressure polymorph'
+            },
+            {
+                'crystal_structure': 'coesite',
+                'density_g/cm3': 2.911,
+                'reference': 'CRC Handbook of Chemistry and Physics, 97th ed., Haynes (2016-2017), DOI:10.1201/9781315380476',
+                'notes': 'High-pressure polymorph'
+            },
+            {
+                'crystal_structure': 'alpha-cristobalite',
+                'density_g/cm3': 2.32,
+                'reference': 'CRC Handbook of Chemistry and Physics, 97th ed., Haynes (2016-2017), DOI:10.1201/9781315380476',
+                'notes': 'Low-temperature cristobalite'
+            },
+            {
+                'crystal_structure': 'beta-cristobalite',
+                'density_g/cm3': 2.20,
+                'reference': 'CRC Handbook of Chemistry and Physics, 97th ed., Haynes (2016-2017), DOI:10.1201/9781315380476',
+                'notes': 'High-temperature cristobalite'
+            },
+            {
+                'crystal_structure': 'alpha-tridymite',
+                'density_g/cm3': 2.26,
+                'reference': 'CRC Handbook of Chemistry and Physics, 97th ed., Haynes (2016-2017), DOI:10.1201/9781315380476',
+                'notes': 'Low-temperature tridymite'
+            }
+        ]
         
-        return entries
-    
-    def _generate_temp_entry(self, polymorph: str, base_props: Dict, T: float) -> Dict:
-        """Generate entry at specific temperature."""
-        result = {col: '' for col in CSV_COLUMNS}
-        result['crystal_structure'] = polymorph
+        for data in crc_data:
+            entry = {col: '' for col in CSV_COLUMNS}
+            entry.update(data)
+            entries.append(entry)
         
-        T_ref = 298.15  # Reference temperature
+        # Landolt-Bornstein data
+        lb_data = [
+            {
+                'crystal_structure': 'alpha-quartz',
+                'lattice_a_angstrom': 4.9133,
+                'lattice_c_angstrom': 5.4053,
+                'lattice_alpha_deg': 90,
+                'lattice_beta_deg': 90,
+                'lattice_gamma_deg': 120,
+                'space_group': 'P3121',
+                'Z_formula_units': 3,
+                'reference': 'Landolt-Bornstein III/29a, Every & McCurdy (1992), Springer',
+                'notes': 'Room temperature X-ray diffraction'
+            },
+            {
+                'crystal_structure': 'alpha-quartz',
+                'elastic_C11_GPa': 87.26,
+                'elastic_C12_GPa': 6.57,
+                'elastic_C13_GPa': 11.95,
+                'elastic_C14_GPa': -17.18,
+                'elastic_C33_GPa': 105.8,
+                'elastic_C44_GPa': 57.15,
+                'elastic_C66_GPa': 40.35,
+                'bulk_modulus_GPa': 37.67,
+                'reference': 'Landolt-Bornstein III/29a, Every & McCurdy (1992), Springer',
+                'notes': 'Mean experimental elastic constants'
+            },
+            {
+                'crystal_structure': 'alpha-quartz',
+                'dielectric_constant_parallel': 4.60,
+                'dielectric_constant_perp': 4.52,
+                'reference': 'Landolt-Bornstein, Mason AIP Handbook (1957)',
+                'notes': 'Dielectric constants at 1 kHz'
+            },
+            {
+                'crystal_structure': 'stishovite',
+                'elastic_C11_GPa': 453,
+                'elastic_C12_GPa': 211,
+                'elastic_C13_GPa': 203,
+                'elastic_C33_GPa': 776,
+                'elastic_C44_GPa': 252,
+                'elastic_C66_GPa': 302,
+                'reference': 'Weidner et al. J Geophys Res 87:4740-4746 (1982), DOI:10.1029/JB087iB06p04740',
+                'notes': 'Brillouin scattering measurement'
+            }
+        ]
         
-        # Density (thermal expansion)
-        if 'density' in base_props:
-            alpha = base_props.get('thermal_expansion', 0.5) * 1e-6
-            result['density_g/cm3'] = base_props['density'] * (1 - alpha * (T - T_ref))
+        for data in lb_data:
+            entry = {col: '' for col in CSV_COLUMNS}
+            entry.update(data)
+            entries.append(entry)
         
-        # Thermal conductivity (Umklapp scattering model)
-        if 'thermal_conductivity' in base_props:
-            k_ref = base_props['thermal_conductivity']
-            result['thermal_conductivity_W/(m*K)'] = k_ref * (T_ref / T) ** 0.5
-            result['thermal_conductivity_W/mK'] = result['thermal_conductivity_W/(m*K)']
+        # Research paper data
+        paper_data = [
+            # Wang et al. 2015
+            {
+                'crystal_structure': 'alpha-quartz',
+                'density_g/cm3': 2.648,
+                'bulk_modulus_GPa': 37.8,
+                'elastic_C11_GPa': 86.6,
+                'elastic_C12_GPa': 6.74,
+                'elastic_C13_GPa': 12.4,
+                'elastic_C14_GPa': 17.8,
+                'elastic_C33_GPa': 106.4,
+                'elastic_C44_GPa': 58.0,
+                'elastic_C66_GPa': 40.3,
+                'reference': 'Wang et al. Phys Chem Minerals 42:203-212 (2015), DOI:10.1007/s00269-014-0711-z',
+                'notes': 'Elastic constants at ambient pressure'
+            },
+            {
+                'crystal_structure': 'alpha-quartz',
+                'density_g/cm3': 2.742,
+                'bulk_modulus_GPa': 46.9,
+                'elastic_C11_GPa': 90.3,
+                'elastic_C12_GPa': 15.4,
+                'elastic_C13_GPa': 23.7,
+                'elastic_C14_GPa': 10.7,
+                'elastic_C33_GPa': 122.3,
+                'elastic_C44_GPa': 62.4,
+                'elastic_C66_GPa': 37.5,
+                'reference': 'Wang et al. Phys Chem Minerals 42:203-212 (2015), DOI:10.1007/s00269-014-0711-z',
+                'notes': 'Elastic constants at 1.5 GPa'
+            },
+            {
+                'crystal_structure': 'alpha-quartz',
+                'density_g/cm3': 2.897,
+                'elastic_C11_GPa': 103.4,
+                'elastic_C12_GPa': 35.6,
+                'elastic_C13_GPa': 38.9,
+                'elastic_C14_GPa': 3.8,
+                'elastic_C33_GPa': 160.1,
+                'elastic_C44_GPa': 65.9,
+                'elastic_C66_GPa': 33.9,
+                'reference': 'Wang et al. Phys Chem Minerals 42:203-212 (2015), DOI:10.1007/s00269-014-0711-z',
+                'notes': 'Elastic constants at 4.4 GPa'
+            },
+            # Ogi et al. 2006
+            {
+                'crystal_structure': 'alpha-quartz',
+                'density_g/cm3': 2.6497,
+                'bulk_modulus_GPa': 37.74,
+                'elastic_C11_GPa': 87.17,
+                'elastic_C12_GPa': 6.61,
+                'elastic_C13_GPa': 12.02,
+                'elastic_C14_GPa': -18.23,
+                'elastic_C33_GPa': 105.80,
+                'elastic_C44_GPa': 58.27,
+                'elastic_C66_GPa': 40.28,
+                'debye_temp_K': 563,
+                'reference': 'Ogi et al. J Appl Phys 100:053511 (2006), DOI:10.1063/1.2335684',
+                'notes': 'Resonant ultrasound spectroscopy measurement'
+            },
+            # Levien et al. 1980
+            {
+                'crystal_structure': 'alpha-quartz',
+                'lattice_a_angstrom': 4.9133,
+                'lattice_c_angstrom': 5.4053,
+                'volume_angstrom3': 113.0,
+                'Z_formula_units': 3,
+                'space_group': 'P3121',
+                'reference': 'Levien et al. Am Mineral 65:920-930 (1980)',
+                'notes': 'Room temperature X-ray diffraction'
+            },
+            {
+                'crystal_structure': 'alpha-quartz',
+                'lattice_a_angstrom': 4.902,
+                'lattice_c_angstrom': 5.400,
+                'volume_angstrom3': 112.4,
+                'Z_formula_units': 3,
+                'space_group': 'P3121',
+                'reference': 'Levien et al. Am Mineral 65:920-930 (1980)',
+                'notes': 'At 2.07 GPa'
+            },
+            {
+                'crystal_structure': 'alpha-quartz',
+                'lattice_a_angstrom': 4.876,
+                'lattice_c_angstrom': 5.364,
+                'volume_angstrom3': 110.5,
+                'Z_formula_units': 3,
+                'space_group': 'P3121',
+                'reference': 'Levien et al. Am Mineral 65:920-930 (1980)',
+                'notes': 'At 5.58 GPa'
+            },
+            # Stishovite data
+            {
+                'crystal_structure': 'stishovite',
+                'density_g/cm3': 4.287,
+                'bulk_modulus_GPa': 313,
+                'lattice_a_angstrom': 4.1773,
+                'lattice_c_angstrom': 2.6654,
+                'volume_angstrom3': 46.54,
+                'Z_formula_units': 2,
+                'space_group': 'P42/mnm',
+                'reference': 'Yamanaka et al. Phys Chem Minerals 29:633-641 (2002), DOI:10.1007/s00269-002-0257-3',
+                'notes': 'Rutile structure, 6-coordinate Si'
+            },
+            {
+                'crystal_structure': 'stishovite',
+                'density_g/cm3': 4.287,
+                'elastic_C11_GPa': 455,
+                'elastic_C12_GPa': 199,
+                'elastic_C13_GPa': 192,
+                'elastic_C33_GPa': 762,
+                'elastic_C44_GPa': 258,
+                'elastic_C66_GPa': 321,
+                'bulk_modulus_GPa': 306,
+                'reference': 'Jiang et al. Phys Earth Planet Inter 172:235-240 (2009), DOI:10.1016/j.pepi.2008.09.017',
+                'notes': 'Brillouin scattering, experimental'
+            },
+            # Coesite data
+            {
+                'crystal_structure': 'coesite',
+                'density_g/cm3': 2.911,
+                'bulk_modulus_GPa': 97.5,
+                'lattice_a_angstrom': 7.14,
+                'lattice_b_angstrom': 12.38,
+                'lattice_c_angstrom': 7.17,
+                'lattice_beta_deg': 120.34,
+                'volume_angstrom3': 548.0,
+                'Z_formula_units': 16,
+                'space_group': 'C2/c',
+                'reference': 'Levien & Prewitt Am Mineral 66:324-333 (1981)',
+                'notes': 'Monoclinic high-pressure phase'
+            },
+            # Seifertite data
+            {
+                'crystal_structure': 'seifertite',
+                'density_g/cm3': 4.294,
+                'bulk_modulus_GPa': 328,
+                'lattice_a_angstrom': 4.097,
+                'lattice_b_angstrom': 5.046,
+                'lattice_c_angstrom': 4.495,
+                'volume_angstrom3': 92.9,
+                'Z_formula_units': 4,
+                'space_group': 'Pbcn',
+                'reference': 'Grocholski et al. Am Mineral 98:1420-1428 (2013), DOI:10.2138/am.2013.4409',
+                'notes': 'Ultra-high pressure phase, >40 GPa formation'
+            },
+            # Malitson optical data
+            {
+                'crystal_structure': 'fused_silica',
+                'density_g/cm3': 2.20,
+                'refractive_index_o': 1.4585,
+                'Sellmeier_B1': 0.6961663,
+                'Sellmeier_B2': 0.4079426,
+                'Sellmeier_B3': 0.8974794,
+                'Sellmeier_C1_um2': 0.0684043,
+                'Sellmeier_C2_um2': 0.1162414,
+                'Sellmeier_C3_um2': 9.896161,
+                'reference': 'Malitson J Opt Soc Am 55:1205-1209 (1965), DOI:10.1364/JOSA.55.001205',
+                'notes': 'Sellmeier coefficients for fused silica'
+            },
+            # Fontanella dielectric data
+            {
+                'crystal_structure': 'alpha-quartz',
+                'dielectric_constant_perp': 4.520,
+                'dielectric_constant_parallel': 4.638,
+                'reference': 'Fontanella et al. J Appl Phys 45:2852 (1974), DOI:10.1063/1.1663690',
+                'notes': 'Dielectric constants at 1 kHz, 300K'
+            },
+            # Aerogel data
+            {
+                'crystal_structure': 'silica_aerogel',
+                'density_g/cm3': 0.1,
+                'thermal_conductivity_W/(m*K)': 0.015,
+                'reference': 'Hrubesh J Non-Cryst Solids 225:335-342 (1998), DOI:10.1016/S0022-3093(98)00135-5',
+                'notes': 'Thermal conductivity 13-20 mW/mK, porosity >90%'
+            },
+            {
+                'crystal_structure': 'silica_aerogel',
+                'density_g/cm3': 0.15,
+                'thermal_conductivity_W/(m*K)': 0.02,
+                'reference': 'Dorcheh & Abbasi J Mater Proc Tech 199:10-26 (2008), DOI:10.1016/j.jmatprotec.2007.10.060',
+                'notes': 'BET 500-1000 m2/g, pore 5-100 nm'
+            },
+            # Mesoporous silica
+            {
+                'crystal_structure': 'mesoporous_silica_MCM41',
+                'reference': 'Beck et al. J Am Chem Soc 114:10834 (1992), DOI:10.1021/ja00053a020',
+                'notes': 'BET 1000-1200 m2/g, pore 2-3 nm, hexagonal'
+            },
+            {
+                'crystal_structure': 'mesoporous_silica_SBA15',
+                'reference': 'Zhao et al. Science 279:548-552 (1998), DOI:10.1126/science.279.5350.548',
+                'notes': 'BET 600-1000 m2/g, pore 5-30 nm, hexagonal'
+            },
+            # Band gap data
+            {
+                'crystal_structure': 'alpha-quartz',
+                'band_gap_eV': 8.9,
+                'bandgap_eV': 8.9,
+                'reference': 'Weinberg et al. J Appl Phys 50:5757 (1979), DOI:10.1063/1.326717',
+                'notes': 'Optical band gap measurement'
+            },
+            {
+                'crystal_structure': 'fused_silica',
+                'band_gap_eV': 9.0,
+                'bandgap_eV': 9.0,
+                'reference': 'DiStefano & Eastman Solid State Commun 9:2259 (1971), DOI:10.1016/0038-1098(71)90643-0',
+                'notes': 'Photoemission measurement'
+            },
+            # Thermodynamic data
+            {
+                'crystal_structure': 'alpha-quartz',
+                'std_enthalpy_kJ/mol': -910.7,
+                'std_entropy_J/(mol*K)': 41.46,
+                'reference': 'NIST-JANAF Thermochemical Tables, Chase (1998), DOI:10.18434/T42S31',
+                'notes': 'Standard thermodynamic data at 298.15 K'
+            },
+            {
+                'crystal_structure': 'fused_silica',
+                'std_enthalpy_kJ/mol': -903.5,
+                'std_entropy_J/(mol*K)': 46.9,
+                'reference': 'NIST-JANAF Thermochemical Tables, Chase (1998), DOI:10.18434/T42S31',
+                'notes': 'Amorphous SiO2 at 298.15 K'
+            }
+        ]
         
-        # Specific heat (Debye model approximation)
-        if 'specific_heat' in base_props:
-            cp_ref = base_props['specific_heat']
-            # Simplified temperature dependence
-            result['specific_heat_J/(kg*K)'] = cp_ref * (1 + 0.0001 * (T - T_ref))
-        
-        # Elastic moduli (temperature softening)
-        if 'youngs_modulus' in base_props:
-            E_ref = base_props['youngs_modulus']
-            result['youngs_modulus_GPa'] = E_ref * (1 - 0.0001 * (T - T_ref))
-        
-        if 'bulk_modulus' in base_props:
-            K_ref = base_props['bulk_modulus']
-            result['bulk_modulus_GPa'] = K_ref * (1 - 0.00008 * (T - T_ref))
-        
-        # Lattice parameters (thermal expansion)
-        if 'lattice_a' in base_props:
-            a_ref = base_props['lattice_a']
-            alpha_lin = base_props.get('thermal_expansion', 0.5) * 1e-6 / 3
-            result['lattice_a_angstrom'] = a_ref * (1 + alpha_lin * (T - T_ref))
-        
-        if 'lattice_c' in base_props:
-            c_ref = base_props['lattice_c']
-            alpha_lin = base_props.get('thermal_expansion', 0.5) * 1e-6 / 3
-            result['lattice_c_angstrom'] = c_ref * (1 + alpha_lin * (T - T_ref))
-        
-        # Band gap (Varshni model)
-        if 'band_gap' in base_props:
-            Eg_0 = base_props['band_gap']
-            alpha_v = 5e-4  # eV/K typical
-            beta_v = 300  # K typical
-            result['band_gap_eV'] = Eg_0 - alpha_v * T**2 / (T + beta_v)
-            result['bandgap_eV'] = result['band_gap_eV']
-        
-        # Refractive index (thermo-optic effect)
-        if 'refractive_index_o' in base_props:
-            n_ref = base_props['refractive_index_o']
-            dn_dT = 1e-5  # typical thermo-optic coefficient
-            result['refractive_index_o'] = n_ref + dn_dT * (T - T_ref)
-        
-        # Dielectric constant
-        if 'dielectric_constant' in base_props:
-            eps_ref = base_props['dielectric_constant']
-            result['dielectric_constant'] = eps_ref * (1 + 0.0001 * (T - T_ref))
-        
-        # Space group
-        if 'space_group' in base_props:
-            result['space_group'] = base_props['space_group']
-        
-        result['notes'] = f'Temperature={T:.1f}K, synthetic data based on physical models'
-        result['reference'] = 'Synthetic:temperature_model'
-        
-        return result
-    
-    def generate_pressure_dependent_data(self, n_samples: int = 2000) -> List[Dict]:
-        """Generate pressure-dependent property variations."""
-        entries = []
-        
-        for polymorph, base_props in REFERENCE_PROPERTIES.items():
-            # Generate data at different pressures (0 to 50 GPa)
-            pressures = np.linspace(0, 50, n_samples // len(REFERENCE_PROPERTIES))
-            
-            for P in pressures:
-                entry = self._generate_pressure_entry(polymorph, base_props, P)
-                entries.append(entry)
-        
-        return entries
-    
-    def _generate_pressure_entry(self, polymorph: str, base_props: Dict, P: float) -> Dict:
-        """Generate entry at specific pressure."""
-        result = {col: '' for col in CSV_COLUMNS}
-        result['crystal_structure'] = polymorph
-        
-        # Bulk modulus for compression calculation
-        K0 = base_props.get('bulk_modulus', 37.0)  # GPa
-        K0_prime = 4.0  # typical dK/dP
-        
-        # Birch-Murnaghan EOS for volume compression
-        if 'density' in base_props:
-            rho_0 = base_props['density']
-            # Simplified compression
-            V_V0 = (1 + K0_prime * P / K0) ** (-1/K0_prime)
-            result['density_g/cm3'] = rho_0 / V_V0
-        
-        # Lattice parameters under pressure
-        if 'lattice_a' in base_props:
-            a_0 = base_props['lattice_a']
-            result['lattice_a_angstrom'] = a_0 * (1 + K0_prime * P / K0) ** (-1/(3*K0_prime))
-        
-        if 'lattice_c' in base_props:
-            c_0 = base_props['lattice_c']
-            result['lattice_c_angstrom'] = c_0 * (1 + K0_prime * P / K0) ** (-1/(3*K0_prime))
-        
-        # Bulk modulus increases with pressure
-        result['bulk_modulus_GPa'] = K0 + K0_prime * P
-        
-        # Band gap (pressure coefficient)
-        if 'band_gap' in base_props:
-            Eg_0 = base_props['band_gap']
-            dEg_dP = 0.05  # eV/GPa typical for wide-gap insulators
-            result['band_gap_eV'] = Eg_0 + dEg_dP * P
-            result['bandgap_eV'] = result['band_gap_eV']
-        
-        # Refractive index (pressure dependence)
-        if 'refractive_index_o' in base_props:
-            n_0 = base_props['refractive_index_o']
-            dn_dP = 0.001  # per GPa
-            result['refractive_index_o'] = n_0 + dn_dP * P
-        
-        # Space group
-        if 'space_group' in base_props:
-            result['space_group'] = base_props['space_group']
-        
-        result['notes'] = f'Pressure={P:.2f}GPa, synthetic data based on EOS models'
-        result['reference'] = 'Synthetic:pressure_model'
-        
-        return result
-    
-    def generate_wavelength_dependent_data(self, n_samples: int = 1500) -> List[Dict]:
-        """Generate wavelength-dependent optical properties."""
-        entries = []
-        
-        # Sellmeier coefficients for fused silica
-        B1, B2, B3 = 0.6961663, 0.4079426, 0.8974794
-        C1, C2, C3 = 0.0684043, 0.1162414, 9.896161  # um^2
-        
-        wavelengths = np.linspace(0.2, 3.5, n_samples)  # um
-        
-        for lam in wavelengths:
-            result = {col: '' for col in CSV_COLUMNS}
-            result['crystal_structure'] = 'fused_silica'
-            
-            # Sellmeier equation
-            lam2 = lam ** 2
-            n2 = 1 + B1*lam2/(lam2-C1) + B2*lam2/(lam2-C2) + B3*lam2/(lam2-C3)
-            n = np.sqrt(n2)
-            
-            result['refractive_index_o'] = n
-            result['Sellmeier_B1'] = B1
-            result['Sellmeier_B2'] = B2
-            result['Sellmeier_B3'] = B3
-            result['Sellmeier_C1_um2'] = C1
-            result['Sellmeier_C2_um2'] = C2
-            result['Sellmeier_C3_um2'] = C3
-            
-            result['notes'] = f'Wavelength={lam*1000:.1f}nm, Sellmeier dispersion model'
-            result['reference'] = 'Synthetic:Sellmeier_model'
-            
-            entries.append(result)
-        
-        return entries
-    
-    def generate_composition_variations(self, n_samples: int = 1500) -> List[Dict]:
-        """Generate data for doped/modified SiO2."""
-        entries = []
-        
-        dopants = ['Ge', 'Ti', 'Al', 'B', 'P', 'F', 'N', 'Er', 'Yb', 'Ce']
-        
-        for dopant in dopants:
-            concentrations = np.linspace(0.001, 0.1, n_samples // len(dopants))
-            
-            for conc in concentrations:
-                result = {col: '' for col in CSV_COLUMNS}
-                result['crystal_structure'] = f'SiO2:{dopant}'
-                
-                # Base properties from fused silica
-                base = REFERENCE_PROPERTIES['fused_silica']
-                
-                # Modify properties based on dopant
-                if dopant == 'Ge':
-                    result['refractive_index_o'] = base['refractive_index_o'] + 0.1 * conc
-                    result['density_g/cm3'] = base['density'] + 0.5 * conc
-                elif dopant == 'Ti':
-                    result['refractive_index_o'] = base['refractive_index_o'] + 0.15 * conc
-                    result['band_gap_eV'] = base['band_gap'] - 2.0 * conc
-                elif dopant == 'Al':
-                    result['density_g/cm3'] = base['density'] - 0.1 * conc
-                elif dopant == 'B':
-                    result['refractive_index_o'] = base['refractive_index_o'] - 0.05 * conc
-                elif dopant == 'F':
-                    result['refractive_index_o'] = base['refractive_index_o'] - 0.03 * conc
-                    result['density_g/cm3'] = base['density'] - 0.2 * conc
-                elif dopant in ['Er', 'Yb', 'Ce']:
-                    result['refractive_index_o'] = base['refractive_index_o'] + 0.02 * conc
-                
-                result['dielectric_constant'] = base['dielectric_constant'] * (1 + 0.5 * conc)
-                result['thermal_conductivity_W/(m*K)'] = base['thermal_conductivity'] * (1 - 0.3 * conc)
-                
-                result['notes'] = f'{dopant}-doped SiO2, concentration={conc*100:.2f}%'
-                result['reference'] = 'Synthetic:doping_model'
-                
-                entries.append(result)
-        
-        return entries
-    
-    def generate_nanostructure_data(self, n_samples: int = 1000) -> List[Dict]:
-        """Generate data for nanostructured SiO2."""
-        entries = []
-        
-        # Particle sizes from 1 nm to 1000 nm
-        sizes = np.logspace(0, 3, n_samples)
-        
-        for size in sizes:
-            result = {col: '' for col in CSV_COLUMNS}
-            
-            if size < 10:
-                result['crystal_structure'] = 'silica_nanoparticle'
-            elif size < 100:
-                result['crystal_structure'] = 'colloidal_silica'
-            else:
-                result['crystal_structure'] = 'fumed_silica'
-            
-            # Size-dependent properties
-            base = REFERENCE_PROPERTIES['amorphous']
-            
-            # Surface area effect on density
-            result['density_g/cm3'] = base['density'] * (1 - 0.1 / size)
-            
-            # Band gap quantum confinement (for very small particles)
-            if size < 5:
-                Eg_bulk = base.get('band_gap', 8.5)
-                result['band_gap_eV'] = Eg_bulk + 1.0 / size**2
-                result['bandgap_eV'] = result['band_gap_eV']
-            
-            # Refractive index (effective medium)
-            n_bulk = base.get('refractive_index_o', 1.46)
-            porosity = 0.3 * np.exp(-size/100)
-            result['refractive_index_o'] = 1 + (n_bulk - 1) * (1 - porosity)
-            
-            result['notes'] = f'Particle size={size:.1f}nm, nanostructure model'
-            result['reference'] = 'Synthetic:nanostructure_model'
-            
-            entries.append(result)
-        
-        return entries
-    
-    def generate_elastic_constants_data(self, n_samples: int = 500) -> List[Dict]:
-        """Generate elastic constants data at various conditions."""
-        entries = []
-        
-        # Elastic constants for alpha-quartz (reference values in GPa)
-        C11_ref, C12_ref, C13_ref = 86.6, 6.74, 12.4
-        C14_ref, C33_ref, C44_ref, C66_ref = 17.8, 106.4, 58.0, 40.3
-        
-        # Generate at different pressures
-        pressures = np.linspace(0, 10, n_samples // 2)
-        for P in pressures:
-            result = {col: '' for col in CSV_COLUMNS}
-            result['crystal_structure'] = 'alpha-quartz'
-            
-            # Pressure derivatives (typical values)
-            dC11_dP, dC33_dP = 8.5, 12.0
-            dC12_dP, dC13_dP = 3.0, 4.5
-            dC44_dP, dC66_dP = 2.5, 2.0
-            
-            result['elastic_C11_GPa'] = C11_ref + dC11_dP * P
-            result['elastic_C12_GPa'] = C12_ref + dC12_dP * P
-            result['elastic_C13_GPa'] = C13_ref + dC13_dP * P
-            result['elastic_C14_GPa'] = C14_ref
-            result['elastic_C33_GPa'] = C33_ref + dC33_dP * P
-            result['elastic_C44_GPa'] = C44_ref + dC44_dP * P
-            result['elastic_C66_GPa'] = C66_ref + dC66_dP * P
-            
-            result['notes'] = f'Elastic constants at P={P:.2f}GPa'
-            result['reference'] = 'Synthetic:elastic_pressure_model'
-            entries.append(result)
-        
-        # Generate at different temperatures
-        temps = np.linspace(100, 800, n_samples // 2)
-        for T in temps:
-            result = {col: '' for col in CSV_COLUMNS}
-            result['crystal_structure'] = 'alpha-quartz'
-            
-            T_ref = 298.15
-            # Temperature softening coefficients
-            dC_dT = -0.02  # GPa/K typical
-            
-            result['elastic_C11_GPa'] = C11_ref + dC_dT * (T - T_ref)
-            result['elastic_C12_GPa'] = C12_ref + dC_dT * 0.5 * (T - T_ref)
-            result['elastic_C13_GPa'] = C13_ref + dC_dT * 0.5 * (T - T_ref)
-            result['elastic_C14_GPa'] = C14_ref
-            result['elastic_C33_GPa'] = C33_ref + dC_dT * 1.2 * (T - T_ref)
-            result['elastic_C44_GPa'] = C44_ref + dC_dT * 0.8 * (T - T_ref)
-            result['elastic_C66_GPa'] = C66_ref + dC_dT * 0.6 * (T - T_ref)
-            
-            result['notes'] = f'Elastic constants at T={T:.1f}K'
-            result['reference'] = 'Synthetic:elastic_temperature_model'
-            entries.append(result)
-        
-        return entries
-    
-    def generate_thin_film_data(self, n_samples: int = 500) -> List[Dict]:
-        """Generate thin film SiO2 property data."""
-        entries = []
-        
-        # Film thicknesses from 1 nm to 10 um
-        thicknesses = np.logspace(0, 4, n_samples)
-        
-        deposition_methods = ['thermal_SiO2', 'PECVD_SiO2', 'LPCVD_SiO2', 'sputtered_SiO2', 'ALD_SiO2']
-        
-        for thickness in thicknesses:
-            method = np.random.choice(deposition_methods)
-            result = {col: '' for col in CSV_COLUMNS}
-            result['crystal_structure'] = method
-            
-            # Base properties depend on deposition method
-            if method == 'thermal_SiO2':
-                n_base = 1.46
-                eps_base = 3.9
-                density_base = 2.20
-            elif method == 'PECVD_SiO2':
-                n_base = 1.44 + np.random.uniform(-0.02, 0.02)
-                eps_base = 3.9 + np.random.uniform(-0.2, 0.2)
-                density_base = 2.15
-            elif method == 'LPCVD_SiO2':
-                n_base = 1.45
-                eps_base = 3.85
-                density_base = 2.18
-            elif method == 'sputtered_SiO2':
-                n_base = 1.47 + np.random.uniform(-0.03, 0.03)
-                eps_base = 4.0 + np.random.uniform(-0.3, 0.3)
-                density_base = 2.10
-            else:  # ALD
-                n_base = 1.46
-                eps_base = 3.9
-                density_base = 2.20
-            
-            result['refractive_index_o'] = n_base
-            result['dielectric_constant'] = eps_base
-            result['density_g/cm3'] = density_base
-            
-            # Stress effects for thin films
-            if thickness < 100:
-                result['youngs_modulus_GPa'] = 70 + 5 * np.log10(thickness + 1)
-            else:
-                result['youngs_modulus_GPa'] = 72
-            
-            result['notes'] = f'Thin film, thickness={thickness:.1f}nm, {method}'
-            result['reference'] = 'Synthetic:thin_film_model'
-            entries.append(result)
+        for data in paper_data:
+            entry = {col: '' for col in CSV_COLUMNS}
+            entry.update(data)
+            entries.append(entry)
         
         return entries
 
@@ -843,35 +910,34 @@ class DataMerger:
     def __init__(self, original_csv_path: str):
         self.original_data = pd.read_csv(original_csv_path)
         self.all_data = []
+        self.deduplicator = DataDeduplicator()
     
-    def add_entries(self, entries: List[Dict]):
-        """Add entries to the collection."""
-        self.all_data.extend(entries)
+    def add_entries(self, entries: List[Dict], source: str = ""):
+        """Add entries to the collection, checking for duplicates."""
+        added = 0
+        for entry in entries:
+            if not self.deduplicator.is_duplicate(entry):
+                self.all_data.append(entry)
+                added += 1
+        if source:
+            print(f"    Added {added} unique entries from {source} (skipped {len(entries) - added} duplicates)")
     
     def merge_and_deduplicate(self) -> pd.DataFrame:
         """Merge all data and remove duplicates."""
-        # Convert to DataFrame
         new_df = pd.DataFrame(self.all_data)
         
-        # Ensure all columns exist
         for col in CSV_COLUMNS:
             if col not in new_df.columns:
                 new_df[col] = ''
         
-        # Reorder columns
         new_df = new_df[CSV_COLUMNS]
-        
-        # Combine with original data
         combined = pd.concat([self.original_data, new_df], ignore_index=True)
-        
-        # Remove exact duplicates
         combined = combined.drop_duplicates()
         
         return combined
     
     def validate_data(self, df: pd.DataFrame) -> pd.DataFrame:
         """Validate and clean data."""
-        # Convert numeric columns
         numeric_cols = [
             'density_g/cm3', 'melting_point_degC', 'thermal_conductivity_W/(m*K)',
             'youngs_modulus_GPa', 'bulk_modulus_GPa', 'band_gap_eV',
@@ -882,121 +948,91 @@ class DataMerger:
             if col in df.columns:
                 df[col] = pd.to_numeric(df[col], errors='coerce')
         
-        # Remove rows with all empty values (except crystal_structure)
         value_cols = [c for c in df.columns if c not in ['crystal_structure', 'notes', 'reference']]
         df = df.dropna(subset=value_cols, how='all')
+        
+        df = df[df['reference'].notna() & (df['reference'] != '')]
         
         return df
 
 
 def main():
     """Main extraction workflow."""
-    print("=" * 60)
+    print("=" * 70)
     print("SiO2 Physical Properties Data Extraction")
-    print("Target: 10,000 data entries")
-    print("=" * 60)
+    print("Real data only with proper literature citations")
+    print("=" * 70)
     
-    # Initialize extractors
+    mp = MaterialsProjectExtractor()
     aflow = AFLOWExtractor()
     cod = CODExtractor()
     oqmd = OQMDExtractor()
-    synth = SyntheticDataGenerator()
+    lit = LiteratureDataExtractor()
     
-    # Original data path
     original_csv = "/home/ubuntu/attachments/5c26f888-d2bd-45eb-9e2e-4ad49f84501a/sio2_properties.csv"
     
-    # Initialize merger
     merger = DataMerger(original_csv)
     
-    all_entries = []
-    
-    # 1. Extract from AFLOW
-    print("\n[1/7] Extracting from AFLOW database...")
+    print("\n[1/5] Extracting from Materials Project...")
     try:
-        aflow_entries = aflow.search_sio2_entries(max_entries=1500)
-        parsed_aflow = [aflow.parse_entry(e) for e in aflow_entries]
-        all_entries.extend(parsed_aflow)
-        print(f"    Retrieved {len(parsed_aflow)} entries from AFLOW")
+        mp_entries = mp.search_sio2_entries(max_entries=5000)
+        parsed_mp = [mp.parse_entry(e) for e in mp_entries if e]
+        parsed_mp = [e for e in parsed_mp if e.get('reference')]
+        merger.add_entries(parsed_mp, "Materials Project")
+    except Exception as e:
+        print(f"    Materials Project extraction failed: {e}")
+    
+    print("\n[2/5] Extracting from AFLOW database...")
+    try:
+        aflow_entries = aflow.search_sio2_entries(max_entries=5000)
+        parsed_aflow = [aflow.parse_entry(e) for e in aflow_entries if e]
+        parsed_aflow = [e for e in parsed_aflow if e.get('reference')]
+        merger.add_entries(parsed_aflow, "AFLOW")
     except Exception as e:
         print(f"    AFLOW extraction failed: {e}")
     
-    # 2. Extract from COD
-    print("\n[2/7] Extracting from COD database...")
+    print("\n[3/5] Extracting from COD database...")
     try:
-        cod_entries = cod.search_sio2_entries(max_entries=1000)
-        parsed_cod = [cod.parse_entry(e) for e in cod_entries]
-        all_entries.extend(parsed_cod)
-        print(f"    Retrieved {len(parsed_cod)} entries from COD")
+        cod_entries = cod.search_sio2_entries(max_entries=2000)
+        parsed_cod = [cod.parse_entry(e) for e in cod_entries if e]
+        parsed_cod = [e for e in parsed_cod if e.get('reference')]
+        merger.add_entries(parsed_cod, "COD")
     except Exception as e:
         print(f"    COD extraction failed: {e}")
     
-    # 3. Extract from OQMD
-    print("\n[3/7] Extracting from OQMD database...")
+    print("\n[4/5] Extracting from OQMD database...")
     try:
-        oqmd_entries = oqmd.search_sio2_entries(max_entries=1000)
-        parsed_oqmd = [oqmd.parse_entry(e) for e in oqmd_entries]
-        all_entries.extend(parsed_oqmd)
-        print(f"    Retrieved {len(parsed_oqmd)} entries from OQMD")
+        oqmd_entries = oqmd.search_sio2_entries(max_entries=5000)
+        parsed_oqmd = [oqmd.parse_entry(e) for e in oqmd_entries if e]
+        parsed_oqmd = [e for e in parsed_oqmd if e.get('reference')]
+        merger.add_entries(parsed_oqmd, "OQMD")
     except Exception as e:
         print(f"    OQMD extraction failed: {e}")
     
-    # 4. Generate temperature-dependent data
-    print("\n[4/7] Generating temperature-dependent data...")
-    temp_data = synth.generate_temperature_dependent_data(n_samples=2500)
-    all_entries.extend(temp_data)
-    print(f"    Generated {len(temp_data)} temperature-dependent entries")
+    print("\n[5/5] Extracting from published literature...")
+    try:
+        lit_entries = lit.get_handbook_data()
+        merger.add_entries(lit_entries, "Literature")
+    except Exception as e:
+        print(f"    Literature extraction failed: {e}")
     
-    # 5. Generate pressure-dependent data
-    print("\n[5/7] Generating pressure-dependent data...")
-    pressure_data = synth.generate_pressure_dependent_data(n_samples=2500)
-    all_entries.extend(pressure_data)
-    print(f"    Generated {len(pressure_data)} pressure-dependent entries")
-    
-    # 6. Generate wavelength-dependent optical data
-    print("\n[6/7] Generating wavelength-dependent optical data...")
-    optical_data = synth.generate_wavelength_dependent_data(n_samples=1500)
-    all_entries.extend(optical_data)
-    print(f"    Generated {len(optical_data)} optical dispersion entries")
-    
-    # 7. Generate composition and nanostructure data
-    print("\n[7/9] Generating composition and nanostructure data...")
-    comp_data = synth.generate_composition_variations(n_samples=1500)
-    nano_data = synth.generate_nanostructure_data(n_samples=1000)
-    all_entries.extend(comp_data)
-    all_entries.extend(nano_data)
-    print(f"    Generated {len(comp_data)} composition variation entries")
-    print(f"    Generated {len(nano_data)} nanostructure entries")
-    
-    # 8. Generate elastic constants data
-    print("\n[8/9] Generating elastic constants data...")
-    elastic_data = synth.generate_elastic_constants_data(n_samples=500)
-    all_entries.extend(elastic_data)
-    print(f"    Generated {len(elastic_data)} elastic constants entries")
-    
-    # 9. Generate thin film data
-    print("\n[9/9] Generating thin film data...")
-    film_data = synth.generate_thin_film_data(n_samples=500)
-    all_entries.extend(film_data)
-    print(f"    Generated {len(film_data)} thin film entries")
-    
-    # Merge all data
-    print("\n" + "=" * 60)
+    print("\n" + "=" * 70)
     print("Merging and validating data...")
-    merger.add_entries(all_entries)
     final_df = merger.merge_and_deduplicate()
     final_df = merger.validate_data(final_df)
     
-    # Save results
     output_path = "/home/ubuntu/repos/machine-learning/sio2_properties_extended.csv"
     final_df.to_csv(output_path, index=False)
     
-    print(f"\nFinal dataset: {len(final_df)} entries")
+    print(f"\nFinal dataset: {len(final_df)} entries (all with proper citations)")
     print(f"Saved to: {output_path}")
     
-    # Summary statistics
-    print("\n" + "=" * 60)
+    print("\n" + "=" * 70)
     print("Summary by crystal structure:")
     print(final_df['crystal_structure'].value_counts().head(20))
+    
+    ref_count = final_df['reference'].notna().sum()
+    print(f"\nEntries with references: {ref_count}/{len(final_df)} ({100*ref_count/len(final_df):.1f}%)")
     
     return final_df
 
