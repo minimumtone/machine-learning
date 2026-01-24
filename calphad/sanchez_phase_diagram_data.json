@@ -1,0 +1,128 @@
+{
+  "metadata": {
+    "source": "Sanchez et al., Phys. Rev. B 54, 8958 (1996)",
+    "description": "Digitized metastable Fe-V BCC phase diagram with B2 ordered phase",
+    "units": {
+      "temperature": "K",
+      "composition": "mole fraction V"
+    },
+    "phases": ["A2", "B2", "A2+B2"],
+    "notes": "B2 phase is metastable. Thin and thick lines calculated from pairwise interactions at 1133 K and 1473 K respectively."
+  },
+  "phase_boundaries": {
+    "A2_B2_left": {
+      "description": "A2/B2 boundary on Fe-rich side (left curve)",
+      "points": [
+        {"x_V": 0.18, "T": 1100},
+        {"x_V": 0.20, "T": 1050},
+        {"x_V": 0.22, "T": 1000},
+        {"x_V": 0.24, "T": 950},
+        {"x_V": 0.26, "T": 900},
+        {"x_V": 0.28, "T": 850},
+        {"x_V": 0.30, "T": 800},
+        {"x_V": 0.32, "T": 750},
+        {"x_V": 0.34, "T": 700}
+      ]
+    },
+    "A2_B2_right": {
+      "description": "A2/B2 boundary on V-rich side (right curve)",
+      "points": [
+        {"x_V": 0.82, "T": 1100},
+        {"x_V": 0.80, "T": 1050},
+        {"x_V": 0.78, "T": 1000},
+        {"x_V": 0.76, "T": 950},
+        {"x_V": 0.74, "T": 900},
+        {"x_V": 0.72, "T": 850},
+        {"x_V": 0.70, "T": 800},
+        {"x_V": 0.68, "T": 750},
+        {"x_V": 0.66, "T": 700}
+      ]
+    },
+    "B2_A2B2_left": {
+      "description": "B2/(A2+B2) boundary on Fe-rich side (lower left)",
+      "points": [
+        {"x_V": 0.34, "T": 700},
+        {"x_V": 0.36, "T": 650},
+        {"x_V": 0.38, "T": 600},
+        {"x_V": 0.40, "T": 550},
+        {"x_V": 0.42, "T": 500},
+        {"x_V": 0.44, "T": 450},
+        {"x_V": 0.46, "T": 400},
+        {"x_V": 0.48, "T": 350},
+        {"x_V": 0.50, "T": 300}
+      ]
+    },
+    "B2_A2B2_right": {
+      "description": "B2/(A2+B2) boundary on V-rich side (lower right)",
+      "points": [
+        {"x_V": 0.66, "T": 700},
+        {"x_V": 0.64, "T": 650},
+        {"x_V": 0.62, "T": 600},
+        {"x_V": 0.60, "T": 550},
+        {"x_V": 0.58, "T": 500},
+        {"x_V": 0.56, "T": 450},
+        {"x_V": 0.54, "T": 400},
+        {"x_V": 0.52, "T": 350},
+        {"x_V": 0.50, "T": 300}
+      ]
+    }
+  },
+  "experimental_data": {
+    "description": "Experimental data points from Sanchez et al.",
+    "B2_points": [
+      {"x_V": 0.47, "T": 800, "symbol": "filled_circle"},
+      {"x_V": 0.53, "T": 800, "symbol": "filled_circle"},
+      {"x_V": 0.50, "T": 850, "symbol": "filled_circle"},
+      {"x_V": 0.55, "T": 850, "symbol": "filled_circle"},
+      {"x_V": 0.50, "T": 900, "symbol": "filled_circle"},
+      {"x_V": 0.55, "T": 900, "symbol": "filled_circle"},
+      {"x_V": 0.60, "T": 900, "symbol": "filled_circle"}
+    ],
+    "sigma_points": [
+      {"x_V": 0.39, "T": 800, "symbol": "open_square"},
+      {"x_V": 0.61, "T": 800, "symbol": "open_square"},
+      {"x_V": 0.61, "T": 900, "symbol": "open_square"}
+    ],
+    "A2_points": [
+      {"x_V": 0.22, "T": 800, "symbol": "filled_triangle"},
+      {"x_V": 0.22, "T": 850, "symbol": "filled_triangle"},
+      {"x_V": 0.22, "T": 900, "symbol": "filled_triangle"}
+    ],
+    "A2_B2_points": [
+      {"x_V": 0.39, "T": 900, "symbol": "crossed_square"},
+      {"x_V": 0.61, "T": 850, "symbol": "crossed_square"}
+    ]
+  },
+  "alloy_compositions": {
+    "description": "Alloy compositions studied experimentally",
+    "alloys": [
+      {"name": "Fe0.78V0.22", "x_V": 0.22},
+      {"name": "Fe0.53V0.47", "x_V": 0.47},
+      {"name": "Fe0.39V0.61", "x_V": 0.61},
+      {"name": "Fe0.37V0.63", "x_V": 0.63}
+    ]
+  },
+  "fitting_targets": {
+    "description": "Target points for CALPHAD parameter optimization",
+    "phase_boundary_points": [
+      {"x_V": 0.20, "T": 1050, "phase_left": "A2", "phase_right": "B2"},
+      {"x_V": 0.25, "T": 925, "phase_left": "A2", "phase_right": "B2"},
+      {"x_V": 0.30, "T": 800, "phase_left": "A2", "phase_right": "B2"},
+      {"x_V": 0.35, "T": 675, "phase_left": "B2", "phase_right": "A2+B2"},
+      {"x_V": 0.40, "T": 550, "phase_left": "B2", "phase_right": "A2+B2"},
+      {"x_V": 0.45, "T": 425, "phase_left": "B2", "phase_right": "A2+B2"},
+      {"x_V": 0.50, "T": 300, "phase_left": "B2", "phase_right": "A2+B2"},
+      {"x_V": 0.55, "T": 425, "phase_left": "B2", "phase_right": "A2+B2"},
+      {"x_V": 0.60, "T": 550, "phase_left": "B2", "phase_right": "A2+B2"},
+      {"x_V": 0.65, "T": 675, "phase_left": "B2", "phase_right": "A2+B2"},
+      {"x_V": 0.70, "T": 800, "phase_left": "A2", "phase_right": "B2"},
+      {"x_V": 0.75, "T": 925, "phase_left": "A2", "phase_right": "B2"},
+      {"x_V": 0.80, "T": 1050, "phase_left": "A2", "phase_right": "B2"}
+    ],
+    "critical_point": {
+      "description": "Top of B2 dome (approximate)",
+      "x_V": 0.50,
+      "T": 1100
+    }
+  }
+}
