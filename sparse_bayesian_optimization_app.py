@@ -1551,7 +1551,7 @@ if st.session_state.optimization_done:
     with st.expander("📊 要約統計量", expanded=False):
         st.markdown("各次元の基本統計量です。赤色の行は有効次元（正解ラベル）を示します。")
         styled_stats = plot_summary_statistics(X_eda, y_eda, problem)
-        st.dataframe(styled_stats, use_container_width=True)
+        st.dataframe(styled_stats, width='stretch')
     
     with st.expander("🔗 相関分析", expanded=False):
         corr_method = st.radio(
@@ -1567,9 +1567,9 @@ if st.session_state.optimization_done:
         
         col1, col2 = st.columns(2)
         with col1:
-            st.plotly_chart(fig_corr, use_container_width=True)
+            st.plotly_chart(fig_corr, width='stretch')
         with col2:
-            st.plotly_chart(fig_target_corr, use_container_width=True)
+            st.plotly_chart(fig_target_corr, width='stretch')
         
         st.markdown(f"""
         **解釈のヒント:**
@@ -1605,7 +1605,7 @@ if st.session_state.optimization_done:
                 with st.spinner("対散布図を生成中..."):
                     fig_scatter = plot_scatter_matrix(X_eda, y_eda, problem, selected_dims)
                     if fig_scatter:
-                        st.plotly_chart(fig_scatter, use_container_width=True)
+                        st.plotly_chart(fig_scatter, width='stretch')
             else:
                 st.warning("2〜8次元を選択してください")
     
@@ -1623,14 +1623,14 @@ if st.session_state.optimization_done:
             
             col1, col2 = st.columns([1, 2])
             with col1:
-                st.plotly_chart(fig_var, use_container_width=True)
+                st.plotly_chart(fig_var, width='stretch')
                 st.markdown(f"""
                 **累積寄与率:**
                 - PC1-2: {(explained_var[0]+explained_var[1])*100:.1f}%
                 - PC1-3: {(explained_var[0]+explained_var[1]+explained_var[2])*100:.1f}%
                 """)
             with col2:
-                st.plotly_chart(fig_biplot, use_container_width=True)
+                st.plotly_chart(fig_biplot, width='stretch')
         
         st.markdown("""
         **Biplotの見方:**
@@ -1667,7 +1667,7 @@ if st.session_state.optimization_done:
             'mu': '{:.4f}',
             'sigma': '{:.4f}',
             'ei': '{:.6f}'
-        }), use_container_width=True)
+        }), width='stretch')
 
         st.markdown("#### 詳細インスペクター")
         selected_iter = st.slider(
@@ -1710,7 +1710,7 @@ if st.session_state.optimization_done:
                     'Relevance (1/ℓ)': f"{1/ls:.4f}" if ls > 0 else "∞",
                     'Type': "Effective" if i in problem.eff_dim else "Ineffective"
                 })
-            st.dataframe(pd.DataFrame(ls_data), use_container_width=True)
+            st.dataframe(pd.DataFrame(ls_data), width='stretch')
 
         # Download button
         csv = log_df.to_csv(index=False)
@@ -1791,7 +1791,7 @@ if st.session_state.optimization_done:
                                                      mode=mode_val, normalize=normalize, 
                                                      log_y=log_y, top_k=top_k)
             if fig_ls_ts:
-                st.plotly_chart(fig_ls_ts, use_container_width=True)
+                st.plotly_chart(fig_ls_ts, width='stretch')
                 
                 st.info("""
                 **解釈:**
@@ -1831,14 +1831,14 @@ if st.session_state.optimization_done:
             
             fig_sweep = plot_1d_sweep(problem, X_train, y_train)
             if fig_sweep:
-                st.plotly_chart(fig_sweep, use_container_width=True)
+                st.plotly_chart(fig_sweep, width='stretch')
 
     st.markdown("---")
 
     if method != "Random Search" and iteration_log:
         fig_ard = plot_ard_evolution(iteration_log, problem)
         if fig_ard:
-            st.plotly_chart(fig_ard, use_container_width=True)
+            st.plotly_chart(fig_ard, width='stretch')
 
             st.info("""
             **ARD進化ヒートマップの解釈:**
@@ -1911,7 +1911,7 @@ if st.session_state.optimization_done:
 
     if gp_model is not None:
         fig_relevance = plot_relevance_comparison(X_train, y_train, gp_model, problem)
-        st.plotly_chart(fig_relevance, use_container_width=True)
+        st.plotly_chart(fig_relevance, width='stretch')
 
         st.markdown("#### 🔍 詳細情報")
         col1, col2 = st.columns(2)
@@ -1935,7 +1935,7 @@ if st.session_state.optimization_done:
                 "Type": ["Effective" if i in problem.eff_dim else "Ineffective"
                         for i in range(problem.n_dim)]
             }
-            st.dataframe(ls_df_data, use_container_width=True)
+            st.dataframe(ls_df_data, width='stretch')
     else:
         st.warning("Random Searchでは変数重要度の推定は行われません。")
 
@@ -1952,7 +1952,7 @@ if st.session_state.optimization_done:
     """)
 
     fig_trace = plot_optimization_trace(history, method)
-    st.plotly_chart(fig_trace, use_container_width=True)
+    st.plotly_chart(fig_trace, width='stretch')
 
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -1974,7 +1974,7 @@ if st.session_state.optimization_done:
 
     if problem.name == "Rosenbrock":
         fig_2d = plot_2d_exploration(X_train, y_train, problem, len(history))
-        st.plotly_chart(fig_2d, use_container_width=True)
+        st.plotly_chart(fig_2d, width='stretch')
 
         st.markdown("#### 📈 探索の集中度")
         x0_std = np.std(X_train[:, 0])
