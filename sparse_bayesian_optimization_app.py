@@ -19,6 +19,7 @@ import re
 import time
 from pathlib import Path
 from multiprocessing import Pool, cpu_count
+from concurrent.futures import ThreadPoolExecutor
 from jinja2 import Template
 
 
@@ -392,22 +393,48 @@ def expected_improvement(X, gp, y_max, xi=0.01):
     return ei
 
 
-def propose_location(acquisition, gp, y_max, bounds, n_restarts=25):
-    dim = bounds.shape[0]
-    min_val = float('inf')
-    min_x = None
-
+def _optimize_single_restart(args):
+    """Single restart optimization for parallel execution."""
+    x0, bounds, acquisition, gp, y_max = args
+    
     def min_obj(X):
         return -acquisition(X.reshape(1, -1), gp, y_max)
+    
+    res = minimize(min_obj, x0, bounds=bounds, method='L-BFGS-B')
+    return res.fun, res.x
 
-    for _ in range(n_restarts):
-        x0 = np.random.uniform(bounds[:, 0], bounds[:, 1], size=dim)
-        res = minimize(min_obj, x0, bounds=bounds, method='L-BFGS-B')
-        if res.fun < min_val:
-            min_val = res.fun
-            min_x = res.x
 
-    return min_x
+def propose_location(acquisition, gp, y_max, bounds, n_restarts=25, n_threads=None):
+    """
+    Propose the next sampling location by maximizing the acquisition function.
+    Uses thread parallelization for faster optimization with multiple restarts.
+    
+    Parameters:
+    - acquisition: Acquisition function (e.g., expected_improvement)
+    - gp: Fitted Gaussian Process model
+    - y_max: Current best observed value
+    - bounds: Array of (lower, upper) bounds for each dimension
+    - n_restarts: Number of random restarts for optimization
+    - n_threads: Number of threads for parallel optimization (default: min(n_restarts, cpu_count))
+    """
+    dim = bounds.shape[0]
+    
+    if n_threads is None:
+        n_threads = min(n_restarts, cpu_count())
+    
+    x0_list = [np.random.uniform(bounds[:, 0], bounds[:, 1], size=dim) 
+               for _ in range(n_restarts)]
+    
+    args_list = [(x0, bounds, acquisition, gp, y_max) for x0 in x0_list]
+    
+    if n_threads > 1:
+        with ThreadPoolExecutor(max_workers=n_threads) as executor:
+            results = list(executor.map(_optimize_single_restart, args_list))
+    else:
+        results = [_optimize_single_restart(args) for args in args_list]
+    
+    best_idx = np.argmin([r[0] for r in results])
+    return results[best_idx][1]
 
 
 
@@ -1490,7 +1517,19 @@ if st.session_state.optimization_done:
     st.markdown("---")
     st.subheader("🔍 Exploratory Data Analysis (EDA)")
     st.markdown("""
-    データの傾向を把握するための探索的データ分析です。
+    **なぜEDAが重要か？**
+    
+    最適化の前に、データの性質を確認することで「単純な相関係数」がどうなっているかを見ます。
+    これは「相関係数が低くても（0に近い）、実は重要な変数がある」ことを示す前振りです。
+    
+    **Lasso（線形モデル）の限界:**
+    - Lassoは $y = w_1x_1 + w_2x_2 + ...$ という線形性を仮定
+    - Rosenbrock関数のような強い相互作用（$x_1$ と $x_2$ が絡み合う）を持つ非線形問題では、
+      重要な変数を「重要ではない（係数0）」と誤判定することがあります
+    
+    **GP-ARD（非線形モデル）の強み:**
+    - ARDは局所的な距離の変化を見るため、非線形な関係を正しく捉えられます
+    - 長さスケール $\\ell_d$ が大きい次元は無視され、小さい次元は重要と判断されます
     """)
     
     eda_dataset = st.radio(
@@ -1818,9 +1857,51 @@ if st.session_state.optimization_done:
         st.warning("Random Searchでは変数重要度の推定は行われません。")
 
     st.markdown("---")
-    st.subheader("3️⃣ Mental Model")
+    st.subheader("3️⃣ Mental Model: Lasso vs GP-ARD")
+    
+    with st.expander("📚 なぜLassoは非線形関数で失敗するのか？", expanded=True):
+        st.markdown("""
+        ### 数学的背景
+        
+        #### A. Lasso (Least Absolute Shrinkage and Selection Operator)
+        Lassoは以下の式を最小化します：
+        """)
+        st.latex(r"\text{Minimize} \sum (y - \mathbf{w}^T \mathbf{x})^2 + \lambda ||\mathbf{w}||_1")
+        st.markdown("""
+        **特徴:**
+        - 重みベクトル $\\mathbf{w}$ の L1 ノルム（絶対値和）にペナルティをかけます
+        - これにより、不要な特徴量の重みが完全に **0** になります（スパース性）
+        
+        **弱点:**
+        - モデルが **線形** であること
+        - $y = x_1^2$ や $y = x_1 x_2$ のような関係を $w_1 x_1$ で表現しようとすると失敗します
+        
+        #### B. GP-ARD (Gaussian Process with ARD Kernel)
+        GPはカーネル関数 $k(\\mathbf{x}, \\mathbf{x}')$ を用いて類似度を測ります。ARDカーネル（Matérn や RBF）は以下のように定義されます：
+        """)
+        st.latex(r"k(\mathbf{x}, \mathbf{x}') = \sigma_f^2 \exp \left( - \sum_{d=1}^{D} \frac{(x_d - x_d')^2}{2 \ell_d^2} \right)")
+        st.markdown("""
+        **$\\ell_d$ (Length Scale):** 次元 $d$ 方向の「特徴的な長さ」です。
+        
+        **スパース性のメカニズム:**
+        - もし次元 $d$ が重要でなければ、その次元の値 $x_d$ がどう変わろうと $y$ は変わりません
+        - GP はこれを **$\\ell_d \\to \\infty$** （非常に大きな値）にすることで表現します
+        - 分母が無限大になれば、$\\frac{(x_d - x_d')^2}{2 \\ell_d^2} \\to 0$ となり、その次元の距離は無視されます
+        
+        **重要度:** 逆数 $\\frac{1}{\\ell_d}$ が「重要度（Relevance）」として解釈できます。
+        
+        ---
+        
+        ### Rosenbrock関数での失敗例
+        
+        Rosenbrock関数: $f(x_0, x_1) = (1-x_0)^2 + 100(x_1 - x_0^2)^2$
+        
+        - **原点付近で対称性**があるため、$x_0$ と $y$ の線形相関が出にくい
+        - Lassoは $x_0, x_1$ の重要度を**ゼロと誤判定**することがある
+        - これはバグではなく、**線形モデルの限界**を示す良い例です
+        """)
+    
     st.markdown("""
-
     **上段 (Lasso):** 線形回帰の係数。線形で近似できる範囲での重要度を示します。
 
     **下段 (GP-ARD):** ガウス過程のARDカーネルによる関連度。非線形な相互作用を含めた真の重要度を示します。
