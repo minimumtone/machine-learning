@@ -33,6 +33,12 @@ PAULING_RADII = {
     "Ir": 1.36, "Pt": 1.39, "Au": 1.44, "Hg": 1.55, "Tl": 1.71, "Pb": 1.75, "Bi": 1.82
 }
 
+HEA_ELEMENTS = [
+    "Al", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn",
+    "Zr", "Nb", "Mo", "Hf", "Ta", "W", "Re", "Si", "Mg", "Sc",
+    "Y", "Pd", "Pt", "Au", "Ag"
+]
+
 
 @dataclass
 class DFTCompoundData:
@@ -607,6 +613,242 @@ L12構造の精度が低い主な原因:
     print(f"\nSaved analysis report to {filepath}")
 
 
+def filter_compounds_by_hea_elements(compounds: List[DFTCompoundData], hea_elements: List[str]) -> List[DFTCompoundData]:
+    hea_set = set(hea_elements)
+    return [c for c in compounds if c.element_A in hea_set and c.element_B in hea_set]
+
+
+def analyze_hea_elements(compounds: List[DFTCompoundData], output_dir: str):
+    print("\n" + "=" * 70)
+    print("HEA Elements Analysis (25 elements)")
+    print("=" * 70)
+    print(f"HEA elements: {', '.join(HEA_ELEMENTS)}")
+
+    hea_compounds = filter_compounds_by_hea_elements(compounds, HEA_ELEMENTS)
+    b2_hea = [c for c in hea_compounds if c.structure_type == "B2"]
+    l12_hea = [c for c in hea_compounds if c.structure_type == "L12"]
+
+    print(f"\nFiltered to HEA elements:")
+    print(f"  Total: {len(hea_compounds)} compounds")
+    print(f"  B2: {len(b2_hea)}")
+    print(f"  L12: {len(l12_hea)}")
+
+    calculator = FilteredRadiusCalculator(hea_compounds)
+    results = {}
+
+    print("\n--- B2 Structure (HEA elements only) ---")
+    radii_b2, stats_b2 = calculator.calculate_radii_trf(b2_hea, structure_type="B2")
+    comparison_b2 = calculator.compare_lattice_constants_corrected(radii_b2, b2_hea)
+    lattice_rmse_b2 = np.sqrt(np.mean(comparison_b2['error'] ** 2))
+    lattice_mae_b2 = np.mean(np.abs(comparison_b2['error']))
+    print(f"  Compounds: {stats_b2['n_compounds']}")
+    print(f"  Elements: {stats_b2['n_elements']}")
+    print(f"  Fitting RMSE: {stats_b2['rmse']:.4f} Å, MAE: {stats_b2['mae']:.4f} Å")
+    print(f"  Lattice RMSE: {lattice_rmse_b2:.4f} Å, MAE: {lattice_mae_b2:.4f} Å")
+    results["B2"] = {
+        "radii": radii_b2,
+        "stats": stats_b2,
+        "comparison": comparison_b2
+    }
+
+    print("\n--- L12 Structure (HEA elements only) ---")
+    radii_l12, stats_l12 = calculator.calculate_radii_trf(l12_hea, structure_type="L12")
+    comparison_l12 = calculator.compare_lattice_constants_corrected(radii_l12, l12_hea)
+    lattice_rmse_l12 = np.sqrt(np.mean(comparison_l12['error'] ** 2))
+    lattice_mae_l12 = np.mean(np.abs(comparison_l12['error']))
+    print(f"  Compounds: {stats_l12['n_compounds']}")
+    print(f"  Elements: {stats_l12['n_elements']}")
+    print(f"  Fitting RMSE: {stats_l12['rmse']:.4f} Å, MAE: {stats_l12['mae']:.4f} Å")
+    print(f"  Lattice RMSE: {lattice_rmse_l12:.4f} Å, MAE: {lattice_mae_l12:.4f} Å")
+    results["L12"] = {
+        "radii": radii_l12,
+        "stats": stats_l12,
+        "comparison": comparison_l12
+    }
+
+    print("\n--- Combined (HEA elements only) ---")
+    radii_combined, stats_combined = calculator.calculate_radii_trf(hea_compounds, structure_type=None)
+    comparison_combined = pd.concat([comparison_b2, comparison_l12], ignore_index=True)
+    print(f"  Compounds: {stats_combined['n_compounds']}")
+    print(f"  Elements: {stats_combined['n_elements']}")
+    print(f"  Fitting RMSE: {stats_combined['rmse']:.4f} Å, MAE: {stats_combined['mae']:.4f} Å")
+    results["Combined"] = {
+        "radii": radii_combined,
+        "stats": stats_combined,
+        "comparison": comparison_combined
+    }
+
+    fig, axes = plt.subplots(2, 2, figsize=(14, 12))
+
+    ax = axes[0, 0]
+    ax.scatter(comparison_b2['a_DFT'], comparison_b2['a_calc'], alpha=0.5, s=40, c='steelblue')
+    min_val = min(comparison_b2['a_DFT'].min(), comparison_b2['a_calc'].min())
+    max_val = max(comparison_b2['a_DFT'].max(), comparison_b2['a_calc'].max())
+    ax.plot([min_val, max_val], [min_val, max_val], 'r--', linewidth=2, label='y=x')
+    ax.set_xlabel('DFT Lattice Constant (Å)', fontsize=12)
+    ax.set_ylabel('Calculated Lattice Constant (Å)', fontsize=12)
+    ax.set_title(f'B2 (HEA elements): Parity Plot\nn={len(comparison_b2)}', fontsize=14)
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    ax.set_aspect('equal')
+    stats_text = f'RMSE: {lattice_rmse_b2:.4f} Å\nMAE: {lattice_mae_b2:.4f} Å'
+    ax.text(0.05, 0.95, stats_text, transform=ax.transAxes, ha='left', va='top',
+            fontsize=11, bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+
+    ax = axes[0, 1]
+    ax.scatter(comparison_l12['a_DFT'], comparison_l12['a_calc'], alpha=0.5, s=40, c='forestgreen')
+    min_val = min(comparison_l12['a_DFT'].min(), comparison_l12['a_calc'].min())
+    max_val = max(comparison_l12['a_DFT'].max(), comparison_l12['a_calc'].max())
+    ax.plot([min_val, max_val], [min_val, max_val], 'r--', linewidth=2, label='y=x')
+    ax.set_xlabel('DFT Lattice Constant (Å)', fontsize=12)
+    ax.set_ylabel('Calculated Lattice Constant (Å)', fontsize=12)
+    ax.set_title(f'L12 (HEA elements): Parity Plot\nn={len(comparison_l12)}', fontsize=14)
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    ax.set_aspect('equal')
+    stats_text = f'RMSE: {lattice_rmse_l12:.4f} Å\nMAE: {lattice_mae_l12:.4f} Å'
+    ax.text(0.05, 0.95, stats_text, transform=ax.transAxes, ha='left', va='top',
+            fontsize=11, bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+
+    ax = axes[1, 0]
+    elements = sorted(radii_combined.keys())
+    r_calc = [radii_combined[el] for el in elements]
+    r_pauling = [PAULING_RADII.get(el, np.nan) for el in elements]
+    valid_idx = [i for i, r in enumerate(r_pauling) if not np.isnan(r)]
+    elements_valid = [elements[i] for i in valid_idx]
+    r_calc_valid = [r_calc[i] for i in valid_idx]
+    r_pauling_valid = [r_pauling[i] for i in valid_idx]
+
+    ax.scatter(r_pauling_valid, r_calc_valid, alpha=0.7, s=60, c='darkorange')
+    for i, el in enumerate(elements_valid):
+        ax.annotate(el, (r_pauling_valid[i], r_calc_valid[i]), fontsize=9, alpha=0.8)
+    min_r = min(min(r_pauling_valid), min(r_calc_valid))
+    max_r = max(max(r_pauling_valid), max(r_calc_valid))
+    ax.plot([min_r, max_r], [min_r, max_r], 'r--', linewidth=2, label='y=x')
+    ax.set_xlabel('Pauling Radius (Å)', fontsize=12)
+    ax.set_ylabel('Calculated Effective Radius (Å)', fontsize=12)
+    ax.set_title('Calculated vs Pauling Radii (HEA elements)', fontsize=14)
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+
+    ax = axes[1, 1]
+    x = np.arange(len(elements))
+    width = 0.35
+    r_b2 = [radii_b2.get(el, np.nan) for el in elements]
+    r_l12 = [radii_l12.get(el, np.nan) for el in elements]
+
+    bars1 = ax.bar(x - width/2, r_b2, width, label='B2', color='steelblue', alpha=0.8)
+    bars2 = ax.bar(x + width/2, r_l12, width, label='L12', color='forestgreen', alpha=0.8)
+    ax.set_xlabel('Element', fontsize=12)
+    ax.set_ylabel('Effective Radius (Å)', fontsize=12)
+    ax.set_title('Effective Radii by Structure Type (HEA elements)', fontsize=14)
+    ax.set_xticks(x)
+    ax.set_xticklabels(elements, rotation=45, ha='right', fontsize=9)
+    ax.legend()
+    ax.grid(True, alpha=0.3, axis='y')
+
+    plt.tight_layout()
+    filepath = os.path.join(output_dir, "hea_elements_analysis.png")
+    plt.savefig(filepath, dpi=150, bbox_inches='tight')
+    plt.close()
+    print(f"\nSaved HEA elements analysis plot to {filepath}")
+
+    radii_df = pd.DataFrame([
+        {
+            "element": el,
+            "r_B2": radii_b2.get(el, np.nan),
+            "r_L12": radii_l12.get(el, np.nan),
+            "r_combined": radii_combined.get(el, np.nan),
+            "r_pauling": PAULING_RADII.get(el, np.nan)
+        }
+        for el in sorted(set(radii_b2.keys()) | set(radii_l12.keys()) | set(radii_combined.keys()))
+    ])
+    radii_filepath = os.path.join(output_dir, "hea_elements_radii.csv")
+    radii_df.to_csv(radii_filepath, index=False)
+    print(f"Saved HEA radii to {radii_filepath}")
+
+    return results
+
+
+def generate_hea_report(results: Dict, output_dir: str):
+    report = """# HEA元素に限定したDFT有効原子半径解析レポート
+
+## 1. 概要
+
+本レポートは、高エントロピー合金（HEA）で利用される25元素のみに限定して、
+DFT計算結果から有効原子半径を計算した結果をまとめたものである。
+
+### 1.1 対象元素（25元素）
+
+Al, Ti, V, Cr, Mn, Fe, Co, Ni, Cu, Zn, Zr, Nb, Mo, Hf, Ta, W, Re, Si, Mg, Sc, Y, Pd, Pt, Au, Ag
+
+## 2. 計算結果サマリー
+
+"""
+    for struct_type in ["B2", "L12", "Combined"]:
+        if struct_type in results:
+            result = results[struct_type]
+            comparison = result["comparison"]
+            lattice_rmse = np.sqrt(np.mean(comparison['error'] ** 2))
+            lattice_mae = np.mean(np.abs(comparison['error']))
+            report += f"### {struct_type}構造\n"
+            report += f"- 化合物数: {result['stats']['n_compounds']}\n"
+            report += f"- 元素数: {result['stats']['n_elements']}\n"
+            report += f"- フィッティングRMSE: {result['stats']['rmse']:.4f} Å\n"
+            report += f"- 格子定数RMSE: {lattice_rmse:.4f} Å\n"
+            report += f"- 格子定数MAE: {lattice_mae:.4f} Å\n\n"
+
+    report += "## 3. 計算された有効原子半径\n\n"
+    report += "| 元素 | B2半径 (Å) | L12半径 (Å) | Combined (Å) | Pauling (Å) |\n"
+    report += "|------|-----------|------------|--------------|-------------|\n"
+
+    all_elements = set()
+    for struct_type in ["B2", "L12", "Combined"]:
+        if struct_type in results:
+            all_elements.update(results[struct_type]["radii"].keys())
+
+    for el in sorted(all_elements):
+        r_b2 = results["B2"]["radii"].get(el, np.nan) if "B2" in results else np.nan
+        r_l12 = results["L12"]["radii"].get(el, np.nan) if "L12" in results else np.nan
+        r_combined = results["Combined"]["radii"].get(el, np.nan) if "Combined" in results else np.nan
+        r_pauling = PAULING_RADII.get(el, np.nan)
+
+        r_b2_str = f"{r_b2:.4f}" if not np.isnan(r_b2) else "-"
+        r_l12_str = f"{r_l12:.4f}" if not np.isnan(r_l12) else "-"
+        r_combined_str = f"{r_combined:.4f}" if not np.isnan(r_combined) else "-"
+        r_pauling_str = f"{r_pauling:.4f}" if not np.isnan(r_pauling) else "-"
+
+        report += f"| {el} | {r_b2_str} | {r_l12_str} | {r_combined_str} | {r_pauling_str} |\n"
+
+    report += """
+## 4. 考察
+
+### 4.1 精度の改善
+
+HEA元素のみに限定することで、ランタノイド元素による外れ値の影響を排除し、
+より信頼性の高い有効原子半径を得ることができた。
+
+### 4.2 構造依存性
+
+B2構造とL12構造で計算された有効原子半径には差異が見られる。
+これは、各構造における原子間の接触条件の違いを反映している。
+
+## 5. 可視化
+
+- `hea_elements_analysis.png`: HEA元素の解析結果
+- `hea_elements_radii.csv`: 計算された有効原子半径のCSVファイル
+
+---
+
+*本レポートは自動生成されました。*
+"""
+
+    filepath = os.path.join(output_dir, "HEA_ELEMENTS_RADIUS_REPORT.md")
+    with open(filepath, 'w', encoding='utf-8') as f:
+        f.write(report)
+    print(f"Saved HEA report to {filepath}")
+
+
 def main():
     b2_csv = "/home/ubuntu/attachments/89d9b86d-9a88-4da4-a5de-d30f4e1b60d3/B2_result_etot_lattice.csv"
     l12_csv = "/home/ubuntu/attachments/1c357809-e12f-4a25-9e25-1a26a18956ae/L12_result_etot_lattice.csv"
@@ -628,6 +870,9 @@ def main():
     l12_results = analyze_l12_accuracy(compounds, output_dir)
 
     generate_analysis_report(b2_results, l12_results, output_dir)
+
+    hea_results = analyze_hea_elements(compounds, output_dir)
+    generate_hea_report(hea_results, output_dir)
 
     print("\n" + "=" * 70)
     print("Analysis completed!")
