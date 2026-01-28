@@ -613,9 +613,14 @@ L12構造の精度が低い主な原因:
     print(f"\nSaved analysis report to {filepath}")
 
 
+EXCLUDED_COMPOUNDS = ["Co1Mo1", "Mo1Co1"]
+
+
 def filter_compounds_by_hea_elements(compounds: List[DFTCompoundData], hea_elements: List[str]) -> List[DFTCompoundData]:
     hea_set = set(hea_elements)
-    return [c for c in compounds if c.element_A in hea_set and c.element_B in hea_set]
+    filtered = [c for c in compounds if c.element_A in hea_set and c.element_B in hea_set]
+    filtered = [c for c in filtered if c.directory not in EXCLUDED_COMPOUNDS]
+    return filtered
 
 
 def analyze_hea_elements(compounds: List[DFTCompoundData], output_dir: str):
@@ -733,15 +738,17 @@ def analyze_hea_elements(compounds: List[DFTCompoundData], output_dir: str):
 
     ax = axes[1, 1]
     x = np.arange(len(elements))
-    width = 0.35
+    width = 0.25
+    r_pauling_bar = [PAULING_RADII.get(el, np.nan) for el in elements]
     r_b2 = [radii_b2.get(el, np.nan) for el in elements]
     r_l12 = [radii_l12.get(el, np.nan) for el in elements]
 
-    bars1 = ax.bar(x - width/2, r_b2, width, label='B2', color='steelblue', alpha=0.8)
-    bars2 = ax.bar(x + width/2, r_l12, width, label='L12', color='forestgreen', alpha=0.8)
+    bars0 = ax.bar(x - width, r_pauling_bar, width, label='Pauling', color='darkorange', alpha=0.8)
+    bars1 = ax.bar(x, r_b2, width, label='B2', color='steelblue', alpha=0.8)
+    bars2 = ax.bar(x + width, r_l12, width, label='L12', color='forestgreen', alpha=0.8)
     ax.set_xlabel('Element', fontsize=12)
     ax.set_ylabel('Effective Radius (Å)', fontsize=12)
-    ax.set_title('Effective Radii by Structure Type (HEA elements)', fontsize=14)
+    ax.set_title('Effective Radii Comparison: Pauling vs B2 vs L12 (HEA elements)', fontsize=14)
     ax.set_xticks(x)
     ax.set_xticklabels(elements, rotation=45, ha='right', fontsize=9)
     ax.legend()
