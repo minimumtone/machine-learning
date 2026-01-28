@@ -716,25 +716,39 @@ def analyze_hea_elements(compounds: List[DFTCompoundData], output_dir: str):
             fontsize=11, bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
 
     ax = axes[1, 0]
-    elements = sorted(radii_combined.keys())
-    r_calc = [radii_combined[el] for el in elements]
-    r_pauling = [PAULING_RADII.get(el, np.nan) for el in elements]
-    valid_idx = [i for i, r in enumerate(r_pauling) if not np.isnan(r)]
-    elements_valid = [elements[i] for i in valid_idx]
-    r_calc_valid = [r_calc[i] for i in valid_idx]
-    r_pauling_valid = [r_pauling[i] for i in valid_idx]
+    elements = sorted(radii_b2.keys())
+    r_b2_list = [radii_b2.get(el, np.nan) for el in elements]
+    r_pauling_b2 = [PAULING_RADII.get(el, np.nan) for el in elements]
+    valid_idx_b2 = [i for i, (rb, rp) in enumerate(zip(r_b2_list, r_pauling_b2)) if not np.isnan(rb) and not np.isnan(rp)]
+    elements_b2 = [elements[i] for i in valid_idx_b2]
+    r_b2_valid = [r_b2_list[i] for i in valid_idx_b2]
+    r_pauling_b2_valid = [r_pauling_b2[i] for i in valid_idx_b2]
 
-    ax.scatter(r_pauling_valid, r_calc_valid, alpha=0.7, s=60, c='darkorange')
-    for i, el in enumerate(elements_valid):
-        ax.annotate(el, (r_pauling_valid[i], r_calc_valid[i]), fontsize=9, alpha=0.8)
-    min_r = min(min(r_pauling_valid), min(r_calc_valid))
-    max_r = max(max(r_pauling_valid), max(r_calc_valid))
+    ax.scatter(r_pauling_b2_valid, r_b2_valid, alpha=0.7, s=60, c='steelblue', label='B2')
+    for i, el in enumerate(elements_b2):
+        ax.annotate(el, (r_pauling_b2_valid[i], r_b2_valid[i]), fontsize=9, alpha=0.8)
+
+    elements_l12 = sorted(radii_l12.keys())
+    r_l12_list = [radii_l12.get(el, np.nan) for el in elements_l12]
+    r_pauling_l12 = [PAULING_RADII.get(el, np.nan) for el in elements_l12]
+    valid_idx_l12 = [i for i, (rl, rp) in enumerate(zip(r_l12_list, r_pauling_l12)) if not np.isnan(rl) and not np.isnan(rp)]
+    elements_l12_valid = [elements_l12[i] for i in valid_idx_l12]
+    r_l12_valid = [r_l12_list[i] for i in valid_idx_l12]
+    r_pauling_l12_valid = [r_pauling_l12[i] for i in valid_idx_l12]
+
+    ax.scatter(r_pauling_l12_valid, r_l12_valid, alpha=0.7, s=60, c='forestgreen', marker='s', label='L12')
+
+    all_pauling = r_pauling_b2_valid + r_pauling_l12_valid
+    all_calc = r_b2_valid + r_l12_valid
+    min_r = min(min(all_pauling), min(all_calc))
+    max_r = max(max(all_pauling), max(all_calc))
     ax.plot([min_r, max_r], [min_r, max_r], 'r--', linewidth=2, label='y=x')
     ax.set_xlabel('Pauling Radius (Å)', fontsize=12)
-    ax.set_ylabel('Calculated Effective Radius (Å)', fontsize=12)
-    ax.set_title('Calculated vs Pauling Radii (HEA elements)', fontsize=14)
+    ax.set_ylabel('Effective Radius (Å)', fontsize=12)
+    ax.set_title('Effective Radius vs Pauling Radius (HEA elements)', fontsize=14)
     ax.legend()
     ax.grid(True, alpha=0.3)
+    ax.set_aspect('equal')
 
     ax = axes[1, 1]
     x = np.arange(len(elements))
