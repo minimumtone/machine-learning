@@ -403,6 +403,51 @@ class ReportGenerator:
         plt.close()
         print(f"Saved parity plot to {filepath}")
 
+    def plot_parity_separate(
+        self,
+        comparison_df: pd.DataFrame,
+        structure_type: str,
+        filename: str
+    ) -> None:
+        """Create separate parity plot for B2 or L12 structure."""
+        data = comparison_df[comparison_df['structure_type'] == structure_type]
+
+        if len(data) == 0:
+            print(f"No data for {structure_type} structure")
+            return
+
+        fig, ax = plt.subplots(figsize=(10, 10))
+
+        rmse = np.sqrt(np.mean(data['error'] ** 2))
+        mae = np.mean(np.abs(data['error']))
+        mean_rel_error = np.mean(np.abs(data['rel_error_pct']))
+
+        ax.scatter(data['a_DFT'], data['a_calc'], alpha=0.5, s=40, c='steelblue', edgecolors='none')
+
+        all_vals = list(data['a_DFT']) + list(data['a_calc'])
+        min_val, max_val = min(all_vals), max(all_vals)
+        margin = (max_val - min_val) * 0.05
+        ax.plot([min_val - margin, max_val + margin],
+                [min_val - margin, max_val + margin],
+                'r--', linewidth=2, alpha=0.8, label='y=x (ideal)')
+
+        ax.set_xlabel('DFT Lattice Constant (Å)', fontsize=14)
+        ax.set_ylabel('Calculated Lattice Constant from Effective Radii (Å)', fontsize=14)
+        ax.set_title(f'{structure_type} Structure: DFT vs Calculated Lattice Constants\n(n={len(data)} compounds)', fontsize=16)
+        ax.legend(loc='upper left', fontsize=12)
+        ax.set_aspect('equal')
+        ax.grid(True, alpha=0.3)
+
+        stats_text = f'RMSE: {rmse:.4f} Å\nMAE: {mae:.4f} Å\nMean |Rel. Error|: {mean_rel_error:.2f}%'
+        ax.text(0.95, 0.05, stats_text, transform=ax.transAxes, ha='right', va='bottom',
+                fontsize=12, bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+
+        filepath = os.path.join(self.output_dir, filename)
+        plt.tight_layout()
+        plt.savefig(filepath, dpi=150, bbox_inches='tight')
+        plt.close()
+        print(f"Saved {structure_type} parity plot to {filepath}")
+
     def plot_radius_comparison(
         self,
         radii_b2: Dict[str, float],
@@ -707,6 +752,18 @@ def main():
         comparison_combined,
         "DFT vs Calculated Lattice Constants",
         "parity_plot_combined.png"
+    )
+
+    report_gen.plot_parity_separate(
+        comparison_combined,
+        "B2",
+        "parity_plot_B2.png"
+    )
+
+    report_gen.plot_parity_separate(
+        comparison_combined,
+        "L12",
+        "parity_plot_L12.png"
     )
 
     report_gen.plot_radius_comparison(
