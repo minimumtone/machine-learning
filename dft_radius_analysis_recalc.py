@@ -457,6 +457,10 @@ def analyze_l12_accuracy(compounds: List[DFTCompoundData], output_dir: str):
     l12_compounds = [c for c in compounds if c.structure_type == "L12"]
     print(f"\nTotal L12 compounds: {len(l12_compounds)}")
 
+    if len(l12_compounds) == 0:
+        print("No L12 compounds found. Skipping L12 analysis.")
+        return None
+
     lattice_values = [c.lattice_constant for c in l12_compounds]
     print(f"Lattice constant range: {min(lattice_values):.3f} - {max(lattice_values):.3f} Å")
     print(f"Mean: {np.mean(lattice_values):.3f} Å, Std: {np.std(lattice_values):.3f} Å")
@@ -720,46 +724,69 @@ def analyze_hea_elements(compounds: List[DFTCompoundData], output_dir: str):
     print(f"  B2: {len(b2_hea)}")
     print(f"  L12: {len(l12_hea)}")
 
+    if len(hea_compounds) == 0:
+        print("No HEA compounds found. Skipping HEA analysis.")
+        return None
+
     calculator = FilteredRadiusCalculator(hea_compounds)
     results = {}
 
-    print("\n--- B2 Structure (HEA elements only) ---")
-    radii_b2, stats_b2 = calculator.calculate_radii_trf(b2_hea, structure_type="B2")
-    comparison_b2 = calculator.compare_lattice_constants_corrected(radii_b2, b2_hea)
-    lattice_rmse_b2 = np.sqrt(np.mean(comparison_b2['error'] ** 2))
-    lattice_mae_b2 = np.mean(np.abs(comparison_b2['error']))
-    print(f"  Compounds: {stats_b2['n_compounds']}")
-    print(f"  Elements: {stats_b2['n_elements']}")
-    print(f"  Fitting RMSE: {stats_b2['rmse']:.4f} Å, MAE: {stats_b2['mae']:.4f} Å")
-    print(f"  Lattice RMSE: {lattice_rmse_b2:.4f} Å, MAE: {lattice_mae_b2:.4f} Å")
-    results["B2"] = {
-        "radii": radii_b2,
-        "stats": stats_b2,
-        "comparison": comparison_b2
-    }
+    radii_b2 = {}
+    comparison_b2 = pd.DataFrame()
+    lattice_rmse_b2 = 0
+    lattice_mae_b2 = 0
+    
+    if len(b2_hea) > 0:
+        print("\n--- B2 Structure (HEA elements only) ---")
+        radii_b2, stats_b2 = calculator.calculate_radii_trf(b2_hea, structure_type="B2")
+        comparison_b2 = calculator.compare_lattice_constants_corrected(radii_b2, b2_hea)
+        lattice_rmse_b2 = np.sqrt(np.mean(comparison_b2['error'] ** 2))
+        lattice_mae_b2 = np.mean(np.abs(comparison_b2['error']))
+        print(f"  Compounds: {stats_b2['n_compounds']}")
+        print(f"  Elements: {stats_b2['n_elements']}")
+        print(f"  Fitting RMSE: {stats_b2['rmse']:.4f} Å, MAE: {stats_b2['mae']:.4f} Å")
+        print(f"  Lattice RMSE: {lattice_rmse_b2:.4f} Å, MAE: {lattice_mae_b2:.4f} Å")
+        results["B2"] = {
+            "radii": radii_b2,
+            "stats": stats_b2,
+            "comparison": comparison_b2
+        }
+    else:
+        print("\n--- B2 Structure (HEA elements only) ---")
+        print("  No B2 compounds found.")
 
-    print("\n--- L12 Structure (HEA elements only) ---")
-    radii_l12, stats_l12 = calculator.calculate_radii_trf(l12_hea, structure_type="L12")
-    comparison_l12 = calculator.compare_lattice_constants_corrected(radii_l12, l12_hea)
-    lattice_rmse_l12 = np.sqrt(np.mean(comparison_l12['error'] ** 2))
-    lattice_mae_l12 = np.mean(np.abs(comparison_l12['error']))
-    print(f"  Compounds: {stats_l12['n_compounds']}")
-    print(f"  Elements: {stats_l12['n_elements']}")
-    print(f"  Fitting RMSE: {stats_l12['rmse']:.4f} Å, MAE: {stats_l12['mae']:.4f} Å")
-    print(f"  Lattice RMSE: {lattice_rmse_l12:.4f} Å, MAE: {lattice_mae_l12:.4f} Å")
-    results["L12"] = {
-        "radii": radii_l12,
-        "stats": stats_l12,
-        "comparison": comparison_l12
-    }
+    radii_l12 = {}
+    comparison_l12 = pd.DataFrame()
+    lattice_rmse_l12 = 0
+    lattice_mae_l12 = 0
+    
+    if len(l12_hea) > 0:
+        print("\n--- L12 Structure (HEA elements only) ---")
+        radii_l12, stats_l12 = calculator.calculate_radii_trf(l12_hea, structure_type="L12")
+        comparison_l12 = calculator.compare_lattice_constants_corrected(radii_l12, l12_hea)
+        lattice_rmse_l12 = np.sqrt(np.mean(comparison_l12['error'] ** 2))
+        lattice_mae_l12 = np.mean(np.abs(comparison_l12['error']))
+        print(f"  Compounds: {stats_l12['n_compounds']}")
+        print(f"  Elements: {stats_l12['n_elements']}")
+        print(f"  Fitting RMSE: {stats_l12['rmse']:.4f} Å, MAE: {stats_l12['mae']:.4f} Å")
+        print(f"  Lattice RMSE: {lattice_rmse_l12:.4f} Å, MAE: {lattice_mae_l12:.4f} Å")
+        results["L12"] = {
+            "radii": radii_l12,
+            "stats": stats_l12,
+            "comparison": comparison_l12
+        }
+    else:
+        print("\n--- L12 Structure (HEA elements only) ---")
+        print("  No L12 compounds found.")
 
     print("\n--- Combined (HEA elements only) ---")
     radii_combined, stats_combined = calculator.calculate_radii_trf(hea_compounds, structure_type=None)
-    comparison_combined = pd.concat([comparison_b2, comparison_l12], ignore_index=True)
+    comparisons_to_concat = [df for df in [comparison_b2, comparison_l12] if len(df) > 0]
+    comparison_combined = pd.concat(comparisons_to_concat, ignore_index=True) if comparisons_to_concat else pd.DataFrame()
     print(f"  Compounds: {stats_combined['n_compounds']}")
     print(f"  Elements: {stats_combined['n_elements']}")
     print(f"  Fitting RMSE: {stats_combined['rmse']:.4f} Å, MAE: {stats_combined['mae']:.4f} Å")
-    results["Combined"] = {
+    results["combined"] = {
         "radii": radii_combined,
         "stats": stats_combined,
         "comparison": comparison_combined
@@ -768,37 +795,41 @@ def analyze_hea_elements(compounds: List[DFTCompoundData], output_dir: str):
     fig, axes = plt.subplots(2, 2, figsize=(14, 12))
 
     ax = axes[0, 0]
-    ax.scatter(comparison_b2['a_DFT'], comparison_b2['a_calc'], alpha=0.5, s=40, c='steelblue')
-    min_val = min(comparison_b2['a_DFT'].min(), comparison_b2['a_calc'].min())
-    max_val = max(comparison_b2['a_DFT'].max(), comparison_b2['a_calc'].max())
-    ax.plot([min_val, max_val], [min_val, max_val], 'r--', linewidth=2, label='y=x')
+    if len(comparison_b2) > 0:
+        ax.scatter(comparison_b2['a_DFT'], comparison_b2['a_calc'], alpha=0.5, s=40, c='steelblue')
+        min_val = min(comparison_b2['a_DFT'].min(), comparison_b2['a_calc'].min())
+        max_val = max(comparison_b2['a_DFT'].max(), comparison_b2['a_calc'].max())
+        ax.plot([min_val, max_val], [min_val, max_val], 'r--', linewidth=2, label='y=x')
+        stats_text = f'RMSE: {lattice_rmse_b2:.4f} Å\nMAE: {lattice_mae_b2:.4f} Å'
+        ax.text(0.05, 0.95, stats_text, transform=ax.transAxes, ha='left', va='top',
+                fontsize=11, bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+    else:
+        ax.text(0.5, 0.5, 'No B2 data', transform=ax.transAxes, ha='center', va='center', fontsize=14)
     ax.set_xlabel('DFT Lattice Constant (Å)', fontsize=12)
     ax.set_ylabel('Calculated Lattice Constant (Å)', fontsize=12)
     ax.set_title(f'B2 (HEA elements): Parity Plot\nn={len(comparison_b2)}', fontsize=14)
     ax.legend()
     ax.grid(True, alpha=0.3)
-    ax.set_aspect('equal')
-    stats_text = f'RMSE: {lattice_rmse_b2:.4f} Å\nMAE: {lattice_mae_b2:.4f} Å'
-    ax.text(0.05, 0.95, stats_text, transform=ax.transAxes, ha='left', va='top',
-            fontsize=11, bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
 
     ax = axes[0, 1]
-    ax.scatter(comparison_l12['a_DFT'], comparison_l12['a_calc'], alpha=0.5, s=40, c='forestgreen')
-    min_val = min(comparison_l12['a_DFT'].min(), comparison_l12['a_calc'].min())
-    max_val = max(comparison_l12['a_DFT'].max(), comparison_l12['a_calc'].max())
-    ax.plot([min_val, max_val], [min_val, max_val], 'r--', linewidth=2, label='y=x')
+    if len(comparison_l12) > 0:
+        ax.scatter(comparison_l12['a_DFT'], comparison_l12['a_calc'], alpha=0.5, s=40, c='forestgreen')
+        min_val = min(comparison_l12['a_DFT'].min(), comparison_l12['a_calc'].min())
+        max_val = max(comparison_l12['a_DFT'].max(), comparison_l12['a_calc'].max())
+        ax.plot([min_val, max_val], [min_val, max_val], 'r--', linewidth=2, label='y=x')
+        stats_text = f'RMSE: {lattice_rmse_l12:.4f} Å\nMAE: {lattice_mae_l12:.4f} Å'
+        ax.text(0.05, 0.95, stats_text, transform=ax.transAxes, ha='left', va='top',
+                fontsize=11, bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+    else:
+        ax.text(0.5, 0.5, 'No L12 data', transform=ax.transAxes, ha='center', va='center', fontsize=14)
     ax.set_xlabel('DFT Lattice Constant (Å)', fontsize=12)
     ax.set_ylabel('Calculated Lattice Constant (Å)', fontsize=12)
     ax.set_title(f'L12 (HEA elements): Parity Plot\nn={len(comparison_l12)}', fontsize=14)
     ax.legend()
     ax.grid(True, alpha=0.3)
-    ax.set_aspect('equal')
-    stats_text = f'RMSE: {lattice_rmse_l12:.4f} Å\nMAE: {lattice_mae_l12:.4f} Å'
-    ax.text(0.05, 0.95, stats_text, transform=ax.transAxes, ha='left', va='top',
-            fontsize=11, bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
 
     ax = axes[1, 0]
-    elements = sorted(radii_b2.keys())
+    elements = sorted(set(radii_b2.keys()) | set(radii_l12.keys()))
     r_b2_list = [radii_b2.get(el, np.nan) for el in elements]
     r_pauling_b2 = [PAULING_RADII.get(el, np.nan) for el in elements]
     valid_idx_b2 = [i for i, (rb, rp) in enumerate(zip(r_b2_list, r_pauling_b2)) if not np.isnan(rb) and not np.isnan(rp)]
@@ -806,9 +837,10 @@ def analyze_hea_elements(compounds: List[DFTCompoundData], output_dir: str):
     r_b2_valid = [r_b2_list[i] for i in valid_idx_b2]
     r_pauling_b2_valid = [r_pauling_b2[i] for i in valid_idx_b2]
 
-    ax.scatter(r_pauling_b2_valid, r_b2_valid, alpha=0.7, s=60, c='steelblue', label='B2')
-    for i, el in enumerate(elements_b2):
-        ax.annotate(el, (r_pauling_b2_valid[i], r_b2_valid[i]), fontsize=9, alpha=0.8)
+    if r_b2_valid:
+        ax.scatter(r_pauling_b2_valid, r_b2_valid, alpha=0.7, s=60, c='steelblue', label='B2')
+        for i, el in enumerate(elements_b2):
+            ax.annotate(el, (r_pauling_b2_valid[i], r_b2_valid[i]), fontsize=9, alpha=0.8)
 
     elements_l12 = sorted(radii_l12.keys())
     r_l12_list = [radii_l12.get(el, np.nan) for el in elements_l12]
@@ -818,35 +850,37 @@ def analyze_hea_elements(compounds: List[DFTCompoundData], output_dir: str):
     r_l12_valid = [r_l12_list[i] for i in valid_idx_l12]
     r_pauling_l12_valid = [r_pauling_l12[i] for i in valid_idx_l12]
 
-    ax.scatter(r_pauling_l12_valid, r_l12_valid, alpha=0.7, s=60, c='forestgreen', marker='s', label='L12')
+    if r_l12_valid:
+        ax.scatter(r_pauling_l12_valid, r_l12_valid, alpha=0.7, s=60, c='forestgreen', marker='s', label='L12')
 
     all_pauling = r_pauling_b2_valid + r_pauling_l12_valid
     all_calc = r_b2_valid + r_l12_valid
-    min_r = min(min(all_pauling), min(all_calc))
-    max_r = max(max(all_pauling), max(all_calc))
-    ax.plot([min_r, max_r], [min_r, max_r], 'r--', linewidth=2, label='y=x')
+    if all_pauling and all_calc:
+        min_r = min(min(all_pauling), min(all_calc))
+        max_r = max(max(all_pauling), max(all_calc))
+        ax.plot([min_r, max_r], [min_r, max_r], 'r--', linewidth=2, label='y=x')
     ax.set_xlabel('Pauling Radius (Å)', fontsize=12)
     ax.set_ylabel('Effective Radius (Å)', fontsize=12)
     ax.set_title('Effective Radius vs Pauling Radius (HEA elements)', fontsize=14)
     ax.legend()
     ax.grid(True, alpha=0.3)
-    ax.set_aspect('equal')
 
     ax = axes[1, 1]
-    x = np.arange(len(elements))
-    width = 0.25
-    r_pauling_bar = [PAULING_RADII.get(el, np.nan) for el in elements]
-    r_b2 = [radii_b2.get(el, np.nan) for el in elements]
-    r_l12 = [radii_l12.get(el, np.nan) for el in elements]
+    if elements:
+        x = np.arange(len(elements))
+        width = 0.25
+        r_pauling_bar = [PAULING_RADII.get(el, np.nan) for el in elements]
+        r_b2 = [radii_b2.get(el, np.nan) for el in elements]
+        r_l12 = [radii_l12.get(el, np.nan) for el in elements]
 
-    bars0 = ax.bar(x - width, r_pauling_bar, width, label='Pauling', color='darkorange', alpha=0.8)
-    bars1 = ax.bar(x, r_b2, width, label='B2', color='steelblue', alpha=0.8)
-    bars2 = ax.bar(x + width, r_l12, width, label='L12', color='forestgreen', alpha=0.8)
+        ax.bar(x - width, r_pauling_bar, width, label='Pauling', color='darkorange', alpha=0.8)
+        ax.bar(x, r_b2, width, label='B2', color='steelblue', alpha=0.8)
+        ax.bar(x + width, r_l12, width, label='L12', color='forestgreen', alpha=0.8)
+        ax.set_xticks(x)
+        ax.set_xticklabels(elements, rotation=45, ha='right', fontsize=9)
     ax.set_xlabel('Element', fontsize=12)
     ax.set_ylabel('Effective Radius (Å)', fontsize=12)
     ax.set_title('Effective Radii Comparison: Pauling vs B2 vs L12 (HEA elements)', fontsize=14)
-    ax.set_xticks(x)
-    ax.set_xticklabels(elements, rotation=45, ha='right', fontsize=9)
     ax.legend()
     ax.grid(True, alpha=0.3, axis='y')
 
