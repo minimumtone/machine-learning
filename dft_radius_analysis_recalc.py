@@ -619,7 +619,7 @@ def analyze_l12_accuracy(compounds: List[DFTCompoundData], output_dir: str):
     return results
 
 
-def generate_analysis_report(b2_results: Dict, l12_results: Dict, output_dir: str):
+def generate_analysis_report(b2_results: Dict, l12_results: Optional[Dict], output_dir: str):
     report = """# DFT有効原子半径解析レポート
 
 ## 1. B2構造解析（格子定数 ≈ 4.0 Å）
@@ -627,29 +627,34 @@ def generate_analysis_report(b2_results: Dict, l12_results: Dict, output_dir: st
 ### 1.1 フィルタリング結果
 
 """
-    for label, result in b2_results.items():
-        a_min, a_max = result["range"]
-        report += f"#### {label}\n"
-        report += f"- 化合物数: {result['n_compounds']}\n"
-        report += f"- 元素数: {result['stats']['n_elements']}\n"
-        report += f"- フィッティングRMSE: {result['stats']['rmse']:.4f} Å\n"
-        report += f"- フィッティングMAE: {result['stats']['mae']:.4f} Å\n\n"
+    if b2_results:
+        for label, result in b2_results.items():
+            a_min, a_max = result["range"]
+            report += f"#### {label}\n"
+            report += f"- 化合物数: {result['n_compounds']}\n"
+            report += f"- 元素数: {result['stats']['n_elements']}\n"
+            report += f"- フィッティングRMSE: {result['stats']['rmse']:.4f} Å\n"
+            report += f"- フィッティングMAE: {result['stats']['mae']:.4f} Å\n\n"
 
-    if "3.8-4.2 Å (narrow)" in b2_results:
-        result = b2_results["3.8-4.2 Å (narrow)"]
-        report += "### 1.2 計算された有効原子半径（a ∈ [3.8, 4.2] Å）\n\n"
-        report += "| 元素 | 計算半径 (Å) | Pauling半径 (Å) | 差 (Å) |\n"
-        report += "|------|-------------|-----------------|--------|\n"
-        for el in sorted(result["radii"].keys()):
-            r_calc = result["radii"][el]
-            r_pauling = PAULING_RADII.get(el, np.nan)
-            diff = r_calc - r_pauling if not np.isnan(r_pauling) else np.nan
-            report += f"| {el} | {r_calc:.4f} | {r_pauling:.4f} | {diff:+.4f} |\n"
+        if "3.8-4.2 Å (narrow)" in b2_results:
+            result = b2_results["3.8-4.2 Å (narrow)"]
+            report += "### 1.2 計算された有効原子半径（a ∈ [3.8, 4.2] Å）\n\n"
+            report += "| 元素 | 計算半径 (Å) | Pauling半径 (Å) | 差 (Å) |\n"
+            report += "|------|-------------|-----------------|--------|\n"
+            for el in sorted(result["radii"].keys()):
+                r_calc = result["radii"][el]
+                r_pauling = PAULING_RADII.get(el, np.nan)
+                diff = r_calc - r_pauling if not np.isnan(r_pauling) else np.nan
+                report += f"| {el} | {r_calc:.4f} | {r_pauling:.4f} | {diff:+.4f} |\n"
+    else:
+        report += "B2データがありません。\n\n"
 
     report += """
 ## 2. L12構造精度調査
 
-### 2.1 問題の特定
+"""
+    if l12_results:
+        report += """### 2.1 問題の特定
 
 L12構造の精度が低い主な原因:
 
@@ -662,17 +667,19 @@ L12構造の精度が低い主な原因:
 ### 2.2 フィルタリングによる改善
 
 """
-    for key, result in l12_results.items():
-        if key == "no_lanthanides":
-            report += f"#### ランタノイド除外\n"
-        else:
-            report += f"#### 格子定数 ≤ {key} Å\n"
-        report += f"- 化合物数: {result['n_compounds']}\n"
-        report += f"- 元素数: {result['stats']['n_elements']}\n"
-        report += f"- フィッティングRMSE: {result['stats']['rmse']:.4f} Å\n"
-        comparison = result["comparison"]
-        lattice_rmse = np.sqrt(np.mean(comparison['error'] ** 2))
-        report += f"- 格子定数RMSE: {lattice_rmse:.4f} Å\n\n"
+        for key, result in l12_results.items():
+            if key == "no_lanthanides":
+                report += f"#### ランタノイド除外\n"
+            else:
+                report += f"#### 格子定数 ≤ {key} Å\n"
+            report += f"- 化合物数: {result['n_compounds']}\n"
+            report += f"- 元素数: {result['stats']['n_elements']}\n"
+            report += f"- フィッティングRMSE: {result['stats']['rmse']:.4f} Å\n"
+            comparison = result["comparison"]
+            lattice_rmse = np.sqrt(np.mean(comparison['error'] ** 2))
+            report += f"- 格子定数RMSE: {lattice_rmse:.4f} Å\n\n"
+    else:
+        report += "L12データがありません。\n\n"
 
     report += """
 ### 2.3 推奨事項
@@ -974,7 +981,11 @@ def detect_outliers_and_recalculate(
     return recalc_dirs
 
 
-def generate_hea_report(results: Dict, output_dir: str):
+def generate_hea_report(results: Optional[Dict], output_dir: str):
+    if results is None:
+        print("No HEA results to generate report.")
+        return
+        
     report = """# HEA元素に限定したDFT有効原子半径解析レポート
 
 ## 1. 概要
@@ -989,7 +1000,7 @@ Al, Ti, V, Cr, Mn, Fe, Co, Ni, Cu, Zn, Zr, Nb, Mo, Hf, Ta, W, Re, Si, Mg, Sc, Y,
 ## 2. 計算結果サマリー
 
 """
-    for struct_type in ["B2", "L12", "Combined"]:
+    for struct_type in ["B2", "L12", "combined"]:
         if struct_type in results:
             result = results[struct_type]
             comparison = result["comparison"]
