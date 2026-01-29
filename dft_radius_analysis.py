@@ -8,6 +8,7 @@ This script provides:
 Author: Devin AI
 """
 
+import argparse
 import os
 import re
 from dataclasses import dataclass
@@ -871,9 +872,36 @@ B2構造とL12構造で計算された有効原子半径には差異が見られ
 
 
 def main():
-    b2_csv = "/home/ubuntu/attachments/89d9b86d-9a88-4da4-a5de-d30f4e1b60d3/B2_result_etot_lattice.csv"
-    l12_csv = "/home/ubuntu/attachments/1c357809-e12f-4a25-9e25-1a26a18956ae/L12_result_etot_lattice.csv"
-    output_dir = "docs/dft_radius_output"
+    parser = argparse.ArgumentParser(
+        description="DFT Effective Radius Analysis Script",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Example usage:
+  python dft_radius_analysis.py --b2 B2_result_etot_lattice.csv --l12 L12_result_etot_lattice.csv
+  python dft_radius_analysis.py --b2 B2_result_etot_lattice.csv --l12 L12_result_etot_lattice.csv --output results/
+        """
+    )
+    parser.add_argument(
+        "--b2", "-b",
+        required=True,
+        help="Path to B2 structure CSV file (B2_result_etot_lattice.csv)"
+    )
+    parser.add_argument(
+        "--l12", "-l",
+        required=True,
+        help="Path to L12 structure CSV file (L12_result_etot_lattice.csv)"
+    )
+    parser.add_argument(
+        "--output", "-o",
+        default="dft_radius_output",
+        help="Output directory (default: dft_radius_output)"
+    )
+
+    args = parser.parse_args()
+
+    b2_csv = args.b2
+    l12_csv = args.l12
+    output_dir = args.output
 
     os.makedirs(output_dir, exist_ok=True)
 
