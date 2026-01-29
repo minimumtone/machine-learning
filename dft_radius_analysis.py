@@ -55,7 +55,7 @@ class DFTCompoundData:
 
 
 class DFTDataLoader:
-    def __init__(self, b2_csv_path: str, l12_csv_path: str):
+    def __init__(self, b2_csv_path: str = None, l12_csv_path: str = None):
         self.b2_csv_path = b2_csv_path
         self.l12_csv_path = l12_csv_path
 
@@ -71,56 +71,136 @@ class DFTDataLoader:
                 return match.group(1), match.group(2), 3, 1
         return None, None, 0, 0
 
+    def _detect_structure_type(self, dirname: str) -> Optional[str]:
+        if re.match(r'([A-Z][a-z]?)1([A-Z][a-z]?)1$', dirname):
+            return "B2"
+        elif re.match(r'([A-Z][a-z]?)3([A-Z][a-z]?)1$', dirname):
+            return "L12"
+        elif re.match(r'([A-Z][a-z]?)1([A-Z][a-z]?)3$', dirname):
+            return "L12"
+        return None
+
+    def load_from_directory(self, base_dir: str) -> List[DFTCompoundData]:
+        compounds = []
+        
+        for subdir in os.listdir(base_dir):
+            subdir_path = os.path.join(base_dir, subdir)
+            if not os.path.isdir(subdir_path):
+                continue
+            
+            structure_type = self._detect_structure_type(subdir)
+            if structure_type is None:
+                continue
+            
+            outcar_path = os.path.join(subdir_path, "OUTCAR")
+            contcar_path = os.path.join(subdir_path, "CONTCAR")
+            
+            if not os.path.exists(outcar_path) or not os.path.exists(contcar_path):
+                continue
+            
+            energy = self._parse_outcar_energy(outcar_path)
+            lattice_constant = self._parse_contcar_lattice(contcar_path)
+            
+            if energy is None or lattice_constant is None:
+                continue
+            if abs(energy) > 1e9:
+                continue
+            
+            el_A, el_B, count_A, count_B = self._parse_directory_name(subdir, structure_type)
+            if el_A is None:
+                continue
+            
+            composition = f"{el_A}{count_A}{el_B}{count_B}"
+            compounds.append(DFTCompoundData(
+                directory=subdir,
+                composition=composition,
+                structure_type=structure_type,
+                element_A=el_A,
+                element_B=el_B,
+                count_A=count_A,
+                count_B=count_B,
+                lattice_constant=lattice_constant,
+                energy=energy
+            ))
+        
+        return compounds
+
+    def _parse_outcar_energy(self, outcar_path: str) -> Optional[float]:
+        try:
+            with open(outcar_path, 'r') as f:
+                lines = f.readlines()
+            for line in reversed(lines):
+                if "free  energy   TOTEN" in line:
+                    parts = line.split()
+                    return float(parts[4])
+        except Exception:
+            pass
+        return None
+
+    def _parse_contcar_lattice(self, contcar_path: str) -> Optional[float]:
+        try:
+            with open(contcar_path, 'r') as f:
+                lines = f.readlines()
+            scale = float(lines[1].strip())
+            a_vec = [float(x) for x in lines[2].split()]
+            a_length = np.sqrt(sum(x**2 for x in a_vec)) * scale
+            return a_length
+        except Exception:
+            pass
+        return None
+
     def load_data(self) -> List[DFTCompoundData]:
         compounds = []
         
-        b2_df = pd.read_csv(self.b2_csv_path)
-        for _, row in b2_df.iterrows():
-            if pd.isna(row['E_tot[eV]']) or pd.isna(row['a[Ang]']):
-                continue
-            energy = row['E_tot[eV]']
-            if abs(energy) > 1e9:
-                continue
-            el_A, el_B, count_A, count_B = self._parse_directory_name(row['directory'], "B2")
-            if el_A is None:
-                continue
-            if '/backup' in row['directory']:
-                continue
-            compounds.append(DFTCompoundData(
-                directory=row['directory'],
-                composition=row['composition'],
-                structure_type="B2",
-                element_A=el_A,
-                element_B=el_B,
-                count_A=count_A,
-                count_B=count_B,
-                lattice_constant=row['a[Ang]'],
-                energy=energy
-            ))
+        if self.b2_csv_path and os.path.exists(self.b2_csv_path):
+            b2_df = pd.read_csv(self.b2_csv_path)
+            for _, row in b2_df.iterrows():
+                if pd.isna(row['E_tot[eV]']) or pd.isna(row['a[Ang]']):
+                    continue
+                energy = row['E_tot[eV]']
+                if abs(energy) > 1e9:
+                    continue
+                el_A, el_B, count_A, count_B = self._parse_directory_name(row['directory'], "B2")
+                if el_A is None:
+                    continue
+                if '/backup' in row['directory']:
+                    continue
+                compounds.append(DFTCompoundData(
+                    directory=row['directory'],
+                    composition=row['composition'],
+                    structure_type="B2",
+                    element_A=el_A,
+                    element_B=el_B,
+                    count_A=count_A,
+                    count_B=count_B,
+                    lattice_constant=row['a[Ang]'],
+                    energy=energy
+                ))
 
-        l12_df = pd.read_csv(self.l12_csv_path)
-        for _, row in l12_df.iterrows():
-            if pd.isna(row['E_tot[eV]']) or pd.isna(row['a[Ang]']):
-                continue
-            energy = row['E_tot[eV]']
-            if abs(energy) > 1e9:
-                continue
-            el_A, el_B, count_A, count_B = self._parse_directory_name(row['directory'], "L12")
-            if el_A is None:
-                continue
-            if '/backup' in row['directory']:
-                continue
-            compounds.append(DFTCompoundData(
-                directory=row['directory'],
-                composition=row['composition'],
-                structure_type="L12",
-                element_A=el_A,
-                element_B=el_B,
-                count_A=count_A,
-                count_B=count_B,
-                lattice_constant=row['a[Ang]'],
-                energy=energy
-            ))
+        if self.l12_csv_path and os.path.exists(self.l12_csv_path):
+            l12_df = pd.read_csv(self.l12_csv_path)
+            for _, row in l12_df.iterrows():
+                if pd.isna(row['E_tot[eV]']) or pd.isna(row['a[Ang]']):
+                    continue
+                energy = row['E_tot[eV]']
+                if abs(energy) > 1e9:
+                    continue
+                el_A, el_B, count_A, count_B = self._parse_directory_name(row['directory'], "L12")
+                if el_A is None:
+                    continue
+                if '/backup' in row['directory']:
+                    continue
+                compounds.append(DFTCompoundData(
+                    directory=row['directory'],
+                    composition=row['composition'],
+                    structure_type="L12",
+                    element_A=el_A,
+                    element_B=el_B,
+                    count_A=count_A,
+                    count_B=count_B,
+                    lattice_constant=row['a[Ang]'],
+                    energy=energy
+                ))
 
         return compounds
 
@@ -877,18 +957,28 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Example usage:
+  # Scan directories for VASP output files (auto-detect B2/L12 from directory names)
+  python dft_radius_analysis.py --dir /path/to/BCC_B2 --dir /path/to/FCC_L12
+  
+  # Or use CSV files directly
   python dft_radius_analysis.py --b2 B2_result_etot_lattice.csv --l12 L12_result_etot_lattice.csv
-  python dft_radius_analysis.py --b2 B2_result_etot_lattice.csv --l12 L12_result_etot_lattice.csv --output results/
+  
+  # Specify output directory
+  python dft_radius_analysis.py --dir /path/to/data --output results/
         """
     )
     parser.add_argument(
+        "--dir", "-d",
+        action="append",
+        dest="dirs",
+        help="Directory to scan for VASP output files (can be specified multiple times)"
+    )
+    parser.add_argument(
         "--b2", "-b",
-        required=True,
         help="Path to B2 structure CSV file (B2_result_etot_lattice.csv)"
     )
     parser.add_argument(
         "--l12", "-l",
-        required=True,
         help="Path to L12 structure CSV file (L12_result_etot_lattice.csv)"
     )
     parser.add_argument(
@@ -899,18 +989,34 @@ Example usage:
 
     args = parser.parse_args()
 
-    b2_csv = args.b2
-    l12_csv = args.l12
     output_dir = args.output
-
     os.makedirs(output_dir, exist_ok=True)
 
     print("=" * 70)
     print("DFT Effective Radius Analysis")
     print("=" * 70)
 
-    loader = DFTDataLoader(b2_csv, l12_csv)
-    compounds = loader.load_data()
+    compounds = []
+    
+    if args.dirs:
+        loader = DFTDataLoader()
+        for dir_path in args.dirs:
+            if os.path.isdir(dir_path):
+                print(f"\nScanning directory: {dir_path}")
+                dir_compounds = loader.load_from_directory(dir_path)
+                compounds.extend(dir_compounds)
+                print(f"  Found {len(dir_compounds)} compounds")
+    
+    if args.b2 or args.l12:
+        loader = DFTDataLoader(args.b2, args.l12)
+        csv_compounds = loader.load_data()
+        compounds.extend(csv_compounds)
+    
+    if not compounds:
+        print("\nNo data found. Please specify --dir or --b2/--l12 options.")
+        print("Use --help for usage information.")
+        return
+
     print(f"\nLoaded {len(compounds)} compounds")
     print(f"  B2: {len([c for c in compounds if c.structure_type == 'B2'])}")
     print(f"  L12: {len([c for c in compounds if c.structure_type == 'L12'])}")
