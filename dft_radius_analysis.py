@@ -11,6 +11,7 @@ Author: Devin AI
 import argparse
 import os
 import re
+import subprocess
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
@@ -872,6 +873,73 @@ def analyze_hea_elements(compounds: List[DFTCompoundData], output_dir: str):
     return results
 
 
+def detect_outliers_and_recalculate(
+    compounds: List[DFTCompoundData],
+    radii: Dict[str, float],
+    base_dirs: List[str],
+    error_threshold: float = 0.3,
+    np_cores: int = 24,
+    dry_run: bool = False
+) -> List[str]:
+    print("\n" + "=" * 70)
+    print("Outlier Detection and Recalculation")
+    print("=" * 70)
+    print(f"Error threshold: |error| > {error_threshold} Å")
+
+    calculator = FilteredRadiusCalculator(compounds)
+    comparison = calculator.compare_lattice_constants_corrected(radii, compounds)
+
+    comparison['abs_error'] = np.abs(comparison['error'])
+    outliers = comparison[comparison['abs_error'] > error_threshold]
+
+    print(f"\nFound {len(outliers)} outliers:")
+    for _, row in outliers.iterrows():
+        print(f"  {row['directory']}: DFT={row['a_DFT']:.4f} Å, calc={row['a_calc']:.4f} Å, error={row['error']:.4f} Å")
+
+    if len(outliers) == 0:
+        print("No outliers found. No recalculation needed.")
+        return []
+
+    recalc_dirs = []
+    for _, row in outliers.iterrows():
+        dirname = row['directory']
+        for base_dir in base_dirs:
+            full_path = os.path.join(base_dir, dirname)
+            if os.path.isdir(full_path):
+                recalc_dirs.append(full_path)
+                break
+
+    print(f"\nDirectories to recalculate: {len(recalc_dirs)}")
+
+    if dry_run:
+        print("\n[DRY RUN] Would execute the following commands:")
+        for dir_path in recalc_dirs:
+            print(f"  cd {dir_path} && mpirun -np {np_cores} $VASPBIN")
+        return recalc_dirs
+
+    print("\nStarting recalculations...")
+    for i, dir_path in enumerate(recalc_dirs, 1):
+        print(f"\n[{i}/{len(recalc_dirs)}] Recalculating: {dir_path}")
+        try:
+            result = subprocess.run(
+                f"cd {dir_path} && mpirun -np {np_cores} $VASPBIN",
+                shell=True,
+                capture_output=True,
+                text=True
+            )
+            if result.returncode == 0:
+                print(f"  Completed successfully")
+            else:
+                print(f"  Failed with return code {result.returncode}")
+                if result.stderr:
+                    print(f"  Error: {result.stderr[:200]}")
+        except Exception as e:
+            print(f"  Exception: {e}")
+
+    print(f"\nRecalculation completed for {len(recalc_dirs)} directories")
+    return recalc_dirs
+
+
 def generate_hea_report(results: Dict, output_dir: str):
     report = """# HEA元素に限定したDFT有効原子半径解析レポート
 
@@ -965,6 +1033,12 @@ Example usage:
   
   # Specify output directory
   python dft_radius_analysis.py --dir /path/to/data --output results/
+  
+  # Recalculate outliers (|error| > 0.3 A)
+  python dft_radius_analysis.py --dir /path/to/BCC_B2 --recalc --threshold 0.3
+  
+  # Dry run (show what would be recalculated without running)
+  python dft_radius_analysis.py --dir /path/to/BCC_B2 --recalc --dry-run
         """
     )
     parser.add_argument(
@@ -986,6 +1060,28 @@ Example usage:
         default="dft_radius_output",
         help="Output directory (default: dft_radius_output)"
     )
+    parser.add_argument(
+        "--recalc",
+        action="store_true",
+        help="Recalculate outliers with VASP"
+    )
+    parser.add_argument(
+        "--threshold", "-t",
+        type=float,
+        default=0.3,
+        help="Error threshold for outlier detection (default: 0.3 A)"
+    )
+    parser.add_argument(
+        "--np",
+        type=int,
+        default=24,
+        help="Number of MPI processes for VASP (default: 24)"
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be recalculated without running VASP"
+    )
 
     args = parser.parse_args()
 
@@ -997,6 +1093,7 @@ Example usage:
     print("=" * 70)
 
     compounds = []
+    base_dirs = []
     
     if args.dirs:
         loader = DFTDataLoader()
@@ -1005,6 +1102,7 @@ Example usage:
                 print(f"\nScanning directory: {dir_path}")
                 dir_compounds = loader.load_from_directory(dir_path)
                 compounds.extend(dir_compounds)
+                base_dirs.append(dir_path)
                 print(f"  Found {len(dir_compounds)} compounds")
     
     if args.b2 or args.l12:
@@ -1028,6 +1126,21 @@ Example usage:
 
     hea_results = analyze_hea_elements(compounds, output_dir)
     generate_hea_report(hea_results, output_dir)
+
+    if args.recalc and base_dirs:
+        hea_compounds = filter_compounds_by_hea_elements(compounds, HEA_ELEMENTS)
+        combined_radii = hea_results.get("combined", {}).get("radii", {})
+        if combined_radii:
+            detect_outliers_and_recalculate(
+                hea_compounds,
+                combined_radii,
+                base_dirs,
+                error_threshold=args.threshold,
+                np_cores=args.np,
+                dry_run=args.dry_run
+            )
+        else:
+            print("\nWarning: No radii available for outlier detection")
 
     print("\n" + "=" * 70)
     print("Analysis completed!")
