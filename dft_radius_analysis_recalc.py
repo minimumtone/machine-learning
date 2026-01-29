@@ -1128,19 +1128,34 @@ Example usage:
     generate_hea_report(hea_results, output_dir)
 
     if args.recalc and base_dirs:
-        hea_compounds = filter_compounds_by_hea_elements(compounds, HEA_ELEMENTS)
-        combined_radii = hea_results.get("combined", {}).get("radii", {})
-        if combined_radii:
+        b2_compounds = [c for c in compounds if c.structure_type == "B2"]
+        l12_compounds = [c for c in compounds if c.structure_type == "L12"]
+        
+        if b2_compounds:
+            print("\n--- B2 Outlier Detection ---")
+            calculator = FilteredRadiusCalculator(b2_compounds)
+            radii_b2, _ = calculator.calculate_radii_trf(b2_compounds, structure_type="B2")
             detect_outliers_and_recalculate(
-                hea_compounds,
-                combined_radii,
+                b2_compounds,
+                radii_b2,
                 base_dirs,
                 error_threshold=args.threshold,
                 np_cores=args.np,
                 dry_run=args.dry_run
             )
-        else:
-            print("\nWarning: No radii available for outlier detection")
+        
+        if l12_compounds:
+            print("\n--- L12 Outlier Detection ---")
+            calculator = FilteredRadiusCalculator(l12_compounds)
+            radii_l12, _ = calculator.calculate_radii_trf(l12_compounds, structure_type="L12")
+            detect_outliers_and_recalculate(
+                l12_compounds,
+                radii_l12,
+                base_dirs,
+                error_threshold=args.threshold,
+                np_cores=args.np,
+                dry_run=args.dry_run
+            )
 
     print("\n" + "=" * 70)
     print("Analysis completed!")
