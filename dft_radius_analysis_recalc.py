@@ -706,7 +706,7 @@ L12構造の精度が低い主な原因:
     print(f"\nSaved analysis report to {filepath}")
 
 
-EXCLUDED_COMPOUNDS = ["Co1Mo1", "Mo1Co1"]
+EXCLUDED_COMPOUNDS = ["Co1Mo1", "Mo1Co1", "Al1Ce1", "Ce1Al1"]
 
 
 def filter_compounds_by_hea_elements(compounds: List[DFTCompoundData], hea_elements: List[str]) -> List[DFTCompoundData]:
