@@ -278,13 +278,27 @@ def plotly_parity(
     all_wf: List[str] = []
     all_fs: List[str] = []
 
+    # Fix #10: de-duplicate by (workflow, feature_set, sample_index)
+    # When multiple seeds / folds produce predictions for the same sample,
+    # keep only the first occurrence to avoid misleading scatter density.
+    seen_keys: set = set()
+
     for r in runs:
         if r.y_test_true is not None and r.y_test_pred is not None:
-            n = len(r.y_test_true)
-            all_true.extend(r.y_test_true.tolist())
-            all_pred.extend(r.y_test_pred.tolist())
-            all_wf.extend([r.workflow] * n)
-            all_fs.extend([r.feature_set] * n)
+            test_indices = getattr(r, "test_indices", None)
+            for i in range(len(r.y_test_true)):
+                if test_indices is not None:
+                    key = (r.workflow, r.feature_set, int(test_indices[i]))
+                else:
+                    # Fallback: use (wf, fs, true_value) as rough key
+                    key = (r.workflow, r.feature_set, float(r.y_test_true[i]))
+                if key in seen_keys:
+                    continue
+                seen_keys.add(key)
+                all_true.append(float(r.y_test_true[i]))
+                all_pred.append(float(r.y_test_pred[i]))
+                all_wf.append(r.workflow)
+                all_fs.append(r.feature_set)
 
     fig = go.Figure()
 
