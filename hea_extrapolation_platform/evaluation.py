@@ -38,13 +38,17 @@ class ValidityScore:
 
     @property
     def total(self) -> float:
-        """Weighted total score (higher = better)."""
+        """Weighted total score (higher = better).
+
+        Positive weights sum to 1.0 (0.30 + 0.20 + 0.30 + 0.20).
+        leak_penalty is subtracted as a penalty term.
+        """
         return (
-            0.25 * self.effect_size
+            0.30 * self.effect_size
             + 0.20 * self.stability
-            + 0.25 * self.generalisation
+            + 0.30 * self.generalisation
             - 0.15 * self.leak_penalty
-            + 0.15 * self.extrapolation_safety
+            + 0.20 * self.extrapolation_safety
         )
 
     def to_dict(self) -> Dict[str, float]:
@@ -167,10 +171,14 @@ class FeatureValidityEvaluator:
         # Both improve -> high score; divergent -> low
         if rand_improve > 0 and block_improve > 0:
             return min(1.0, 0.5 + 0.5 * min(rand_improve, block_improve))
-        elif rand_improve <= 0 and block_improve <= 0:
+        elif rand_improve < 0 and block_improve < 0:
+            # Both degrade -> low but not worst
             return 0.3
+        elif rand_improve == 0 and block_improve == 0:
+            # Zero improvement is neutral
+            return 0.5
         else:
-            return 0.1  # divergent
+            return 0.1  # divergent (one improves, other degrades)
 
     @staticmethod
     def _leak_penalty(

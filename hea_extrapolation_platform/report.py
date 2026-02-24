@@ -141,12 +141,19 @@ class ReportGenerator:
         if perf_records:
             df_perf = pd.DataFrame(perf_records)
             pivot_rmse = df_perf.groupby(["Feature Set", "Split"])["RMSE_test"].mean().unstack(fill_value=0)
-            lines.append(pivot_rmse.to_markdown())
+            try:
+                lines.append(pivot_rmse.to_markdown())
+            except ImportError:
+                # tabulate not installed – fall back to plain string repr
+                lines.append(pivot_rmse.to_string())
             lines.append("")
             lines.append("### R$^2$ (Test) by Feature Set x Split Policy")
             lines.append("")
             pivot_r2 = df_perf.groupby(["Feature Set", "Split"])["R2_test"].mean().unstack(fill_value=0)
-            lines.append(pivot_r2.to_markdown())
+            try:
+                lines.append(pivot_r2.to_markdown())
+            except ImportError:
+                lines.append(pivot_r2.to_string())
             lines.append("")
 
         # ---- 4. OOD Analysis ----

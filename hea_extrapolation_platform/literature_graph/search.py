@@ -252,7 +252,7 @@ class LiteratureSearchEngine:
         feature_freq: Dict[str, int] = {}
         for r in results:
             for feat in r.workflow.key_features:
-                feat_lower = feat.strip()
+                feat_lower = feat.strip().lower()
                 feature_freq[feat_lower] = feature_freq.get(feat_lower, 0) + 1
 
         feature_counts = sorted(feature_freq.items(), key=lambda x: -x[1])

@@ -211,14 +211,19 @@ def plot_validity_ranking(
     fig, ax = plt.subplots(figsize=(14, max(6, len(fs_names) * 1.2)))
 
     y_pos = np.arange(len(fs_names))
-    left = np.zeros(len(fs_names))
+    left_pos = np.zeros(len(fs_names))  # accumulator for positive bars
+    left_neg = np.zeros(len(fs_names))  # accumulator for negative bars
 
     for dim, label, color in zip(dims, dim_labels, colors):
         vals = np.array([getattr(s, dim) for s in scores])
         if dim == "leak_penalty":
-            vals = -vals  # show as negative contribution
-        ax.barh(y_pos, vals, left=left, height=0.6, label=label, color=color)
-        left += vals
+            # Show leak penalty as a separate negative bar from zero,
+            # so it does not shift the positive bar stack.
+            ax.barh(y_pos, -vals, left=left_neg, height=0.6, label=label, color=color)
+            left_neg -= vals
+        else:
+            ax.barh(y_pos, vals, left=left_pos, height=0.6, label=label, color=color)
+            left_pos += vals
 
     # Overlay total score as marker
     totals = [s.total for s in scores]

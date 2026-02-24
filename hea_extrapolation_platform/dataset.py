@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 # Common HEA element pools
 _POOL_3D = ["Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu"]
 _POOL_REFRACTORY = ["Ti", "V", "Cr", "Zr", "Nb", "Mo", "Hf", "Ta", "W"]
-_POOL_LIGHT = ["Al", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni"]
+_POOL_LIGHT = ["Mg", "Al", "Si", "Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni"]
 
 
 def _random_composition(

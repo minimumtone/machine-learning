@@ -33,6 +33,15 @@ class _ElementDB:
         symbol, atomic_number, vec, electronegativity (Pauling),
         atomic_radius, melting_point (K), atomic_mass (u),
         d_electrons, bulk_modulus_approx (GPa), atomic_volume (A^3)
+
+    d_elec convention:
+        Number of d-electrons in the *ground-state atomic* configuration.
+        For transition metals this is the occupancy of the (n-1)d subshell.
+        E.g. Ni = [Ar] 3d8 4s2 → d_elec = 8 (not 10).
+        Cu = [Ar] 3d10 4s1 → d_elec = 10.
+        This convention follows Mizutani (2010) for HEA solid-solution
+        strengthening models. If a different convention is needed (e.g.
+        d_elec based on metallic bonding state), override _DATA accordingly.
     """
 
     _DATA: Dict[str, Dict[str, float]] = {
@@ -289,7 +298,13 @@ def compute_features_single(
 
     # ---- FS_THERMO ----
     abs_dH = abs(dH_mix)
-    omega = (Tm_avg * dS_mix / abs_dH) if abs_dH > 1e-6 else 1e6
+    # Omega parameter: clip to a sensible maximum instead of 1e6 to avoid
+    # downstream numerical issues (e.g. ss_formation = omega * dS_mix).
+    _OMEGA_MAX = 100.0
+    if abs_dH > 1e-6:
+        omega = min(Tm_avg * dS_mix / abs_dH, _OMEGA_MAX)
+    else:
+        omega = _OMEGA_MAX
     ss_formation = omega * dS_mix  # higher -> more likely solid-solution
     # Phase separation risk: positive dH + low omega -> higher risk
     phase_sep_risk = max(0.0, dH_mix) / (omega + 1.0)
