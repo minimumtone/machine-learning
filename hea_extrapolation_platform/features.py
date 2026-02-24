@@ -156,11 +156,17 @@ class _ElementDB:
 # ---------------------------------------------------------------------------
 
 class FeatureSetName(str, Enum):
-    """Enumeration of feature set identifiers."""
+    """Enumeration of feature set identifiers.
+
+    Every non-base set *includes* FS_BASE columns by design (base is
+    always a prerequisite).  The ``value`` is a simple identifier used
+    as a dict key throughout the platform; see :class:`FeatureCatalog`
+    for the actual column lists.
+    """
     FS_BASE = "FS_BASE"
-    FS_THERMO = "FS_BASE+FS_THERMO"
-    FS_SIZE = "FS_BASE+FS_SIZE"
-    FS_ELECTRON = "FS_BASE+FS_ELECTRON"
+    FS_THERMO = "FS_THERMO"
+    FS_SIZE = "FS_SIZE"
+    FS_ELECTRON = "FS_ELECTRON"
     FS_ALL = "FS_ALL"
 
 

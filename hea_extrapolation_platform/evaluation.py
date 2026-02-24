@@ -40,8 +40,12 @@ class ValidityScore:
     def total(self) -> float:
         """Weighted total score (higher = better).
 
-        Positive weights sum to 1.0 (0.30 + 0.20 + 0.30 + 0.20).
-        leak_penalty is subtracted as a penalty term.
+        Positive-direction weights: 0.30 + 0.20 + 0.30 + 0.20 = 1.00.
+        leak_penalty is subtracted with weight 0.15.
+
+        Score range:
+          - Best case (all 1.0, no leak):  1.00
+          - Worst case (all 0.0, max leak): -0.15
         """
         return (
             0.30 * self.effect_size
@@ -168,14 +172,17 @@ class FeatureValidityEvaluator:
         block_rmse = float(np.mean([r.rmse_test for r in block_runs]))
         rand_improve = (base_rmse - rand_rmse) / base_rmse
         block_improve = (base_rmse - block_rmse) / base_rmse
-        # Both improve -> high score; divergent -> low
-        if rand_improve > 0 and block_improve > 0:
+        # Both improve -> high score; divergent -> low.
+        # Use a small tolerance for "no change" to avoid dead-code with
+        # exact floating-point zero comparisons.
+        _eps = 1e-9
+        if rand_improve > _eps and block_improve > _eps:
             return min(1.0, 0.5 + 0.5 * min(rand_improve, block_improve))
-        elif rand_improve < 0 and block_improve < 0:
+        elif rand_improve < -_eps and block_improve < -_eps:
             # Both degrade -> low but not worst
             return 0.3
-        elif rand_improve == 0 and block_improve == 0:
-            # Zero improvement is neutral
+        elif abs(rand_improve) <= _eps and abs(block_improve) <= _eps:
+            # Negligible change from baseline is neutral
             return 0.5
         else:
             return 0.1  # divergent (one improves, other degrades)

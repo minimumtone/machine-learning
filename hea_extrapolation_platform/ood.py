@@ -79,6 +79,11 @@ class OODDetector:
         self._fitted = False
         self._train_composite: Optional[np.ndarray] = None
         self._ood_threshold: float = 0.0
+        # Normalization params saved at fit-time for consistent scoring
+        self._maha_min: float = 0.0
+        self._maha_max: float = 1.0
+        self._knn_min: float = 0.0
+        self._knn_max: float = 1.0
 
     # ------------------------------------------------------------------
     # Fit
@@ -109,17 +114,30 @@ class OODDetector:
             logger.warning("Covariance matrix singular – using pseudo-inverse")
             self._cov_inv = np.linalg.pinv(cov)
 
-        # kNN setup
+        # kNN setup — use k+1 neighbours so that when querying training
+        # data we can drop the self-reference (distance-0 hit).
         actual_k = min(self._k, X_scaled.shape[0] - 1)
         if actual_k < 1:
             actual_k = 1
-        self._nn = NearestNeighbors(n_neighbors=actual_k, metric="euclidean")
+        self._nn = NearestNeighbors(n_neighbors=actual_k + 1, metric="euclidean")
         self._nn.fit(X_scaled)
 
-        # Compute training set scores for threshold calibration
+        # Compute training set scores for threshold calibration.
+        # _knn_batch_train excludes self-reference (first column).
         maha_train = self._mahalanobis_batch(X_scaled)
-        knn_train = self._knn_batch(X_scaled)
-        composite_train = self._combine(maha_train, knn_train)
+        knn_train = self._knn_batch_train(X_scaled)
+
+        # Save training min/max for consistent normalization at score-time
+        self._maha_min = float(maha_train.min())
+        self._maha_max = float(maha_train.max())
+        self._knn_min = float(knn_train.min())
+        self._knn_max = float(knn_train.max())
+
+        composite_train = self._combine(
+            maha_train, knn_train,
+            maha_min=self._maha_min, maha_max=self._maha_max,
+            knn_min=self._knn_min, knn_max=self._knn_max,
+        )
         self._train_composite = composite_train
         self._ood_threshold = float(np.quantile(composite_train, self._threshold_q))
 
@@ -151,7 +169,11 @@ class OODDetector:
 
         maha = self._mahalanobis_batch(X_scaled)
         knn = self._knn_batch(X_scaled)
-        composite = self._combine(maha, knn)
+        composite = self._combine(
+            maha, knn,
+            maha_min=self._maha_min, maha_max=self._maha_max,
+            knn_min=self._knn_min, knn_max=self._knn_max,
+        )
 
         is_ood = composite > self._ood_threshold
         n_ood = int(is_ood.sum())
@@ -182,23 +204,51 @@ class OODDetector:
         ])
         return dists
 
-    def _knn_batch(self, X_scaled: np.ndarray) -> np.ndarray:
-        """Compute mean kNN distance for each row."""
+    def _knn_batch_train(self, X_scaled: np.ndarray) -> np.ndarray:
+        """Compute mean kNN distance for training data (excludes self).
+
+        The fitted NearestNeighbors uses k+1 neighbours.  The first
+        column is always the query point itself (distance ≈ 0), so we
+        drop it.
+        """
         dists, _ = self._nn.kneighbors(X_scaled)
-        return dists.mean(axis=1)
+        return dists[:, 1:].mean(axis=1)
+
+    def _knn_batch(self, X_scaled: np.ndarray) -> np.ndarray:
+        """Compute mean kNN distance for query data (no self-reference).
+
+        Query points are not part of the fitted index, so there is no
+        self-reference.  However, the fitted model has k+1 neighbours;
+        we take only the first k columns to keep the same semantics as
+        training.
+        """
+        dists, _ = self._nn.kneighbors(X_scaled)
+        return dists[:, :self._k].mean(axis=1)
 
     @staticmethod
     def _combine(
         maha: np.ndarray,
         knn: np.ndarray,
+        maha_min: float,
+        maha_max: float,
+        knn_min: float,
+        knn_max: float,
         w_maha: float = 0.5,
         w_knn: float = 0.5,
     ) -> np.ndarray:
-        """Normalise and combine Mahalanobis + kNN into [0, 1] composite."""
-        def _norm(arr: np.ndarray) -> np.ndarray:
-            lo, hi = arr.min(), arr.max()
+        """Normalise and combine Mahalanobis + kNN into composite score.
+
+        Normalization uses training-set min/max so that fit() and
+        score() operate on the same scale.  Query scores may exceed
+        [0, 1] when they are further from the training distribution
+        than any training sample – this is intentional.
+        """
+        def _norm(arr: np.ndarray, lo: float, hi: float) -> np.ndarray:
             if hi - lo < 1e-12:
                 return np.zeros_like(arr)
             return (arr - lo) / (hi - lo)
 
-        return w_maha * _norm(maha) + w_knn * _norm(knn)
+        return (
+            w_maha * _norm(maha, maha_min, maha_max)
+            + w_knn * _norm(knn, knn_min, knn_max)
+        )

@@ -335,8 +335,8 @@ def _build_results_tab() -> None:
             label="Workflow Filter",
         )
         filter_fs = gr.Dropdown(
-            choices=["All", "FS_BASE", "FS_BASE+FS_THERMO",
-                     "FS_BASE+FS_SIZE", "FS_BASE+FS_ELECTRON", "FS_ALL"],
+            choices=["All", "FS_BASE", "FS_THERMO",
+                     "FS_SIZE", "FS_ELECTRON", "FS_ALL"],
             value="All",
             label="Feature Set Filter",
         )
@@ -394,8 +394,8 @@ def _build_ood_tab() -> None:
     gr.Markdown("## OOD (Out-of-Distribution) Map & Candidates")
 
     fs_selector = gr.Dropdown(
-        choices=["FS_BASE", "FS_BASE+FS_THERMO",
-                 "FS_BASE+FS_SIZE", "FS_BASE+FS_ELECTRON", "FS_ALL"],
+        choices=["FS_BASE", "FS_THERMO",
+                 "FS_SIZE", "FS_ELECTRON", "FS_ALL"],
         value="FS_ALL",
         label="Feature Set for OOD Map",
     )

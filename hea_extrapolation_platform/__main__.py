@@ -103,14 +103,20 @@ def cmd_run(args: argparse.Namespace) -> None:
         )
         figure_paths["Parity Plot"] = plot_parity(runs, fig_dir)
 
-        # OOD maps per feature set
+        # OOD maps per feature set — use actual train/test split indices
+        # stored by the runner to avoid size mismatch with ood_res.is_ood.
         for fs_key, ood_res in ood_results.items():
             from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
             try:
                 fs_enum = FeatureSetName(fs_key)
                 cols = FeatureCatalog.columns(fs_enum)
-                X_train_vis = features_df[cols]
-                X_test_vis = features_df[cols]
+                split_indices = runner.ood_split_indices.get(fs_key)
+                if split_indices is None:
+                    logger.warning("No OOD split indices for %s, skipping plot", fs_key)
+                    continue
+                train_idx_vis, test_idx_vis = split_indices
+                X_train_vis = features_df[cols].iloc[train_idx_vis]
+                X_test_vis = features_df[cols].iloc[test_idx_vis]
                 fig_path = plot_ood_map_pca(
                     X_train_vis, X_test_vis, ood_res, fig_dir,
                     filename=f"ood_map_pca_{fs_key}.png",
