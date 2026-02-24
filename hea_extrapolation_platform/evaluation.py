@@ -1,0 +1,219 @@
+"""
+Feature Validity Evaluation Engine
+特徴量妥当性評価エンジン
+
+Scores each feature set along five axes:
+  1. Effect size   - performance delta vs FS_BASE
+  2. Stability     - variance across seeds / folds
+  3. Generalisation - sign consistency between RandomCV and Block splits
+  4. Leak suspicion - Random-only improvement with Block degradation
+  5. Extrapolation safety - uncertainty behaviour on OOD points
+"""
+
+from __future__ import annotations
+
+import logging
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
+import pandas as pd
+
+from hea_extrapolation_platform.features import FeatureSetName
+from hea_extrapolation_platform.workflows import RunResult
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class ValidityScore:
+    """Feature-set validity score across five dimensions."""
+
+    feature_set: str
+    effect_size: float = 0.0
+    stability: float = 0.0
+    generalisation: float = 0.0
+    leak_penalty: float = 0.0
+    extrapolation_safety: float = 0.0
+
+    @property
+    def total(self) -> float:
+        """Weighted total score (higher = better)."""
+        return (
+            0.25 * self.effect_size
+            + 0.20 * self.stability
+            + 0.25 * self.generalisation
+            - 0.15 * self.leak_penalty
+            + 0.15 * self.extrapolation_safety
+        )
+
+    def to_dict(self) -> Dict[str, float]:
+        return {
+            "feature_set": self.feature_set,
+            "effect_size": round(self.effect_size, 4),
+            "stability": round(self.stability, 4),
+            "generalisation": round(self.generalisation, 4),
+            "leak_penalty": round(self.leak_penalty, 4),
+            "extrapolation_safety": round(self.extrapolation_safety, 4),
+            "total": round(self.total, 4),
+        }
+
+
+class FeatureValidityEvaluator:
+    """Evaluate feature-set validity from a collection of RunResult objects.
+
+    Usage::
+
+        evaluator = FeatureValidityEvaluator()
+        scores = evaluator.evaluate(runs, ood_errors)
+    """
+
+    def evaluate(
+        self,
+        runs: List[RunResult],
+        ood_errors: Optional[Dict[str, Dict[str, np.ndarray]]] = None,
+    ) -> List[ValidityScore]:
+        """Compute validity scores for every feature set present in *runs*.
+
+        Parameters
+        ----------
+        runs : list of RunResult
+            All experiment run results.
+        ood_errors : dict, optional
+            {feature_set: {"errors": ..., "uncertainties": ..., "is_ood": ...}}
+            Per-sample data for extrapolation safety assessment.
+
+        Returns
+        -------
+        list of ValidityScore, sorted by total descending.
+        """
+        # Group runs by feature set
+        fs_runs: Dict[str, List[RunResult]] = {}
+        for r in runs:
+            fs_runs.setdefault(r.feature_set, []).append(r)
+
+        # Identify baseline (FS_BASE) performance
+        base_key = FeatureSetName.FS_BASE.value
+        base_rmse = self._mean_test_rmse(fs_runs.get(base_key, []))
+
+        scores: List[ValidityScore] = []
+        for fs_name, fs_run_list in fs_runs.items():
+            vs = ValidityScore(feature_set=fs_name)
+
+            # 1. Effect size
+            fs_rmse = self._mean_test_rmse(fs_run_list)
+            if base_rmse > 0:
+                vs.effect_size = max(0.0, (base_rmse - fs_rmse) / base_rmse)
+            else:
+                vs.effect_size = 0.0
+
+            # 2. Stability (inverse of coefficient of variation of RMSE across runs)
+            rmses = [r.rmse_test for r in fs_run_list if r.rmse_test > 0]
+            if len(rmses) > 1:
+                cv = float(np.std(rmses) / np.mean(rmses)) if np.mean(rmses) > 0 else 1.0
+                vs.stability = max(0.0, 1.0 - cv)
+            else:
+                vs.stability = 0.5  # neutral
+
+            # 3. Generalisation (Random vs Block sign consistency)
+            random_runs = [r for r in fs_run_list if "Random" in r.split_policy]
+            block_runs = [r for r in fs_run_list if "Block" in r.split_policy or "Composition" in r.split_policy]
+            vs.generalisation = self._generalisation_score(random_runs, block_runs, base_rmse)
+
+            # 4. Leak suspicion
+            vs.leak_penalty = self._leak_penalty(random_runs, block_runs, base_rmse)
+
+            # 5. Extrapolation safety
+            if ood_errors and fs_name in ood_errors:
+                vs.extrapolation_safety = self._extrapolation_safety(
+                    ood_errors[fs_name]
+                )
+            else:
+                vs.extrapolation_safety = 0.5  # neutral when data not available
+
+            scores.append(vs)
+
+        scores.sort(key=lambda s: s.total, reverse=True)
+        logger.info(
+            "Validity evaluation complete. Top feature set: %s (total=%.4f)",
+            scores[0].feature_set if scores else "N/A",
+            scores[0].total if scores else 0.0,
+        )
+        return scores
+
+    # ------------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _mean_test_rmse(runs: List[RunResult]) -> float:
+        if not runs:
+            return 0.0
+        return float(np.mean([r.rmse_test for r in runs]))
+
+    @staticmethod
+    def _generalisation_score(
+        random_runs: List[RunResult],
+        block_runs: List[RunResult],
+        base_rmse: float,
+    ) -> float:
+        """Score [0, 1]: both splits improve -> 1, divergent -> 0."""
+        if not random_runs or not block_runs or base_rmse <= 0:
+            return 0.5
+        rand_rmse = float(np.mean([r.rmse_test for r in random_runs]))
+        block_rmse = float(np.mean([r.rmse_test for r in block_runs]))
+        rand_improve = (base_rmse - rand_rmse) / base_rmse
+        block_improve = (base_rmse - block_rmse) / base_rmse
+        # Both improve -> high score; divergent -> low
+        if rand_improve > 0 and block_improve > 0:
+            return min(1.0, 0.5 + 0.5 * min(rand_improve, block_improve))
+        elif rand_improve <= 0 and block_improve <= 0:
+            return 0.3
+        else:
+            return 0.1  # divergent
+
+    @staticmethod
+    def _leak_penalty(
+        random_runs: List[RunResult],
+        block_runs: List[RunResult],
+        base_rmse: float,
+    ) -> float:
+        """Detect leak: Random improves a lot but Block degrades."""
+        if not random_runs or not block_runs or base_rmse <= 0:
+            return 0.0
+        rand_rmse = float(np.mean([r.rmse_test for r in random_runs]))
+        block_rmse = float(np.mean([r.rmse_test for r in block_runs]))
+        rand_improve = (base_rmse - rand_rmse) / base_rmse
+        block_change = (base_rmse - block_rmse) / base_rmse
+        if rand_improve > 0.05 and block_change < -0.02:
+            return min(1.0, rand_improve - block_change)
+        return 0.0
+
+    @staticmethod
+    def _extrapolation_safety(ood_data: Dict[str, np.ndarray]) -> float:
+        """Score [0, 1] based on uncertainty + error behaviour on OOD points.
+
+        Desired: uncertainty increases for OOD, errors do not explode.
+        """
+        errors = np.asarray(ood_data.get("errors", []))
+        uncertainties = np.asarray(ood_data.get("uncertainties", []))
+        is_ood = np.asarray(ood_data.get("is_ood", []), dtype=bool)
+
+        if len(errors) == 0 or is_ood.sum() == 0 or (~is_ood).sum() == 0:
+            return 0.5
+
+        ood_err = np.abs(errors[is_ood])
+        id_err = np.abs(errors[~is_ood])
+        # Ratio of OOD error to ID error (want < 2x)
+        ratio = ood_err.mean() / max(id_err.mean(), 1e-6)
+        err_score = max(0.0, 1.0 - (ratio - 1.0) / 2.0)
+
+        # Uncertainty should increase for OOD
+        if len(uncertainties) > 0 and is_ood.sum() > 0 and (~is_ood).sum() > 0:
+            ood_unc = uncertainties[is_ood].mean()
+            id_unc = uncertainties[~is_ood].mean()
+            unc_score = 1.0 if ood_unc > id_unc else 0.5
+        else:
+            unc_score = 0.5
+
+        return 0.6 * err_score + 0.4 * unc_score
