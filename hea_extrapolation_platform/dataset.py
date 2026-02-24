@@ -29,7 +29,9 @@ logger = logging.getLogger(__name__)
 # Common HEA element pools
 _POOL_3D = ["Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu"]
 _POOL_REFRACTORY = ["Ti", "V", "Cr", "Zr", "Nb", "Mo", "Hf", "Ta", "W"]
-_POOL_LIGHT = ["Mg", "Al", "Si", "Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni"]
+# Elements for lightweight-containing HEAs (includes light elements Mg, Al, Si, Sc
+# alongside common 3d transition metals for realistic alloy generation).
+_POOL_LIGHT_CONTAINING = ["Mg", "Al", "Si", "Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni"]
 
 
 def _random_composition(
@@ -123,7 +125,7 @@ def generate_hea_dataset(
 
     available = _ElementDB.available_elements()
     # Bias toward common HEA elements
-    common_pool = list(set(_POOL_3D + _POOL_REFRACTORY + _POOL_LIGHT))
+    common_pool = list(set(_POOL_3D + _POOL_REFRACTORY + _POOL_LIGHT_CONTAINING))
     common_pool = [e for e in common_pool if e in available]
 
     compositions: List[Dict[str, float]] = []
