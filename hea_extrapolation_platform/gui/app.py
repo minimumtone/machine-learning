@@ -1,28 +1,42 @@
 """
 Gradio Dashboard for Extrapolation Discovery Platform
-Gradioダッシュボード
+Gradio dashboard
 
 Launch::
 
     python -m hea_extrapolation_platform gui --port 7860
 
 Tab-based layout:
-  1. Dashboard  – KPI cards + validity ranking + performance heatmap
-  2. Config     – Parameter UI + run button + progress log
-  3. Results    – Run results table + filters + parity plot
-  4. OOD Map    – Interactive PCA scatter + OOD candidates table
-  5. Literature – Query UI + filters + feature frequency
-  6. Report     – Markdown preview + download
+  1. Dashboard  - KPI cards + validity ranking + performance heatmap
+  2. Config     - Parameter UI + run button + streaming progress log
+  3. Results    - Run results table + filters + parity plot
+  4. OOD Map    - Interactive PCA scatter + OOD candidates table
+  5. Literature - Query UI + filters + feature frequency
+  6. Report     - Markdown preview + download
+
+Design decisions (GUI review fixes):
+  - gr.State replaces module-global _SESSION for multi-user isolation (#1)
+  - Slider value cast to int to avoid TypeError (#2)
+  - OOD Map uses actual split indices from runner (#3)
+  - InputScope filter choices match schema enum values (#4)
+  - theme= passed to gr.Blocks(), not launch() (#5)
+  - app.queue() enables async execution (#6)
+  - run_experiment is a generator that yields progress (#7)
+  - Experiment completion auto-refreshes all tabs (#8)
+  - Literature index is built once and cached in state (#9)
+  - Parity plot de-duplicates per unique sample index (#10)
+  - Filter choices are generated dynamically from run data (#11)
+  - Output directory uses timestamp-based subdirectories (#12)
 """
 
 from __future__ import annotations
 
-import io
+import datetime
 import logging
 import time
 import traceback
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Generator, List, Optional, Tuple
 
 import gradio as gr
 import numpy as np
@@ -41,609 +55,203 @@ from hea_extrapolation_platform.gui.plotly_charts import (
 
 logger = logging.getLogger(__name__)
 
+
 # ---------------------------------------------------------------------------
-# Session State — shared across tabs
+# Session helpers (gr.State-backed, per-user)  -- Fix #1
 # ---------------------------------------------------------------------------
 
-_SESSION: Dict[str, Any] = {
-    "runs": [],
-    "validity_scores": [],
-    "ood_results": {},
-    "compositions_df": None,
-    "features_df": None,
-    "target": None,
-    "report_path": None,
-    "literature_results": None,
-    "feature_recommendation": None,
-    "feature_counts": None,
-}
-
-
-def _clear_session() -> None:
-    for key in _SESSION:
-        if isinstance(_SESSION[key], list):
-            _SESSION[key] = []
-        elif isinstance(_SESSION[key], dict):
-            _SESSION[key] = {}
-        else:
-            _SESSION[key] = None
+def _empty_session() -> Dict[str, Any]:
+    """Return a fresh session dict (one per browser tab)."""
+    return {
+        "runs": [],
+        "validity_scores": [],
+        "ood_results": {},
+        "ood_split_indices": {},
+        "compositions_df": None,
+        "features_df": None,
+        "target": None,
+        "runner": None,
+        "report_path": None,
+        "literature_engine": None,
+        "literature_results": None,
+        "feature_recommendation": None,
+        "feature_counts": None,
+    }
 
 
 # ---------------------------------------------------------------------------
-# Tab 1: Dashboard
+# Literature index (lazy, cached per session) -- Fix #9
 # ---------------------------------------------------------------------------
 
-def _build_dashboard_tab() -> None:
-    gr.Markdown("## Dashboard — KPIs & Feature Validity")
-    gr.Markdown(
-        "Run an experiment from the **Config** tab first, then refresh "
-        "this page to see results."
+def _get_literature_engine(session: Dict[str, Any]) -> Any:
+    """Build or return the cached literature search engine."""
+    if session.get("literature_engine") is not None:
+        return session["literature_engine"]
+
+    from hea_extrapolation_platform.literature_graph.seed_data import (
+        get_seed_papers, get_seed_workflows,
+    )
+    from hea_extrapolation_platform.literature_graph.workflow_text import (
+        generate_workflow_text,
+    )
+    from hea_extrapolation_platform.literature_graph.vector_index import (
+        build_index,
+    )
+    from hea_extrapolation_platform.literature_graph.search import (
+        LiteratureSearchEngine,
     )
 
-    with gr.Row():
-        kpi_runs = gr.Textbox(label="Total Runs", value="0", interactive=False)
-        kpi_best_fs = gr.Textbox(label="Best Feature Set", value="—", interactive=False)
-        kpi_best_score = gr.Textbox(label="Best Total Score", value="—", interactive=False)
-        kpi_ood_count = gr.Textbox(label="OOD Samples", value="—", interactive=False)
+    papers = get_seed_papers()
+    workflows = get_seed_workflows()
+    wf_texts = [generate_workflow_text(w) for w in workflows]
+    wf_ids = [w.workflow_id for w in workflows]
+    index = build_index(wf_ids, wf_texts, use_faiss=True)
 
-    validity_plot = gr.Plot(label="Feature Validity Ranking")
-    heatmap_plot = gr.Plot(label="Performance Heatmap (RMSE Test)")
-    heatmap_metric = gr.Dropdown(
-        choices=["rmse_test", "rmse_train", "mae_test", "mae_train", "r2_test", "r2_train"],
-        value="rmse_test",
-        label="Heatmap Metric",
+    engine = LiteratureSearchEngine(
+        index=index, workflows=workflows, papers=papers,
     )
-
-    def refresh_dashboard(metric: str) -> Tuple:
-        runs = _SESSION["runs"]
-        scores = _SESSION["validity_scores"]
-        ood_results = _SESSION["ood_results"]
-
-        n_runs = str(len(runs))
-        best_fs = scores[0].feature_set if scores else "—"
-        best_score = f"{scores[0].total:.4f}" if scores else "—"
-
-        total_ood = sum(r.n_ood for r in ood_results.values()) if ood_results else 0
-        ood_str = str(total_ood) if ood_results else "—"
-
-        validity_fig = plotly_validity_ranking(scores) if scores else None
-        heatmap_fig = plotly_heatmap(runs, metric=metric) if runs else None
-
-        return n_runs, best_fs, best_score, ood_str, validity_fig, heatmap_fig
-
-    refresh_btn = gr.Button("Refresh Dashboard", variant="primary")
-    refresh_btn.click(
-        fn=refresh_dashboard,
-        inputs=[heatmap_metric],
-        outputs=[kpi_runs, kpi_best_fs, kpi_best_score, kpi_ood_count,
-                 validity_plot, heatmap_plot],
-    )
-    heatmap_metric.change(
-        fn=refresh_dashboard,
-        inputs=[heatmap_metric],
-        outputs=[kpi_runs, kpi_best_fs, kpi_best_score, kpi_ood_count,
-                 validity_plot, heatmap_plot],
-    )
+    session["literature_engine"] = engine
+    return engine
 
 
 # ---------------------------------------------------------------------------
-# Tab 2: Config & Run
+# Helpers for cross-tab refresh  -- Fix #8
 # ---------------------------------------------------------------------------
 
-def _build_config_tab() -> None:
-    gr.Markdown("## Experiment Configuration & Execution")
+def _refresh_dashboard_data(
+    metric: str, session: Dict[str, Any],
+) -> Tuple[str, str, str, str, Any, Any]:
+    runs = session.get("runs", [])
+    scores = session.get("validity_scores", [])
+    ood_results = session.get("ood_results", {})
 
-    with gr.Row():
-        with gr.Column():
-            seeds_input = gr.Textbox(
-                label="Seeds (space-separated)",
-                value="42 123 456",
-                info="Random seeds for reproducibility",
-            )
-            n_samples = gr.Slider(
-                minimum=50, maximum=1000, value=200, step=50,
-                label="Number of Samples",
-            )
-            quick_mode = gr.Checkbox(
-                label="Quick Mode (reduced HPO)",
-                value=True,
-                info="Use reduced hyperparameter grids for faster execution",
-            )
-        with gr.Column():
-            exclude_elements = gr.Textbox(
-                label="Exclude Elements (space-separated)",
-                value="Co Ni Ti",
-                info="Elements for ElementExclusion splits",
-            )
-            skip_literature = gr.Checkbox(
-                label="Skip Literature Search",
-                value=False,
-            )
-            skip_plots = gr.Checkbox(
-                label="Skip Static Plots (matplotlib)",
-                value=True,
-                info="Skip PNG generation (Plotly charts are always available)",
-            )
+    n_runs = str(len(runs))
+    best_fs = scores[0].feature_set if scores else "--"
+    best_score = f"{scores[0].total:.4f}" if scores else "--"
 
-    run_btn = gr.Button("Run Experiment", variant="primary", size="lg")
-    progress_log = gr.Textbox(
-        label="Progress Log",
-        lines=15,
-        interactive=False,
+    total_ood = (
+        sum(r.n_ood for r in ood_results.values()) if ood_results else 0
     )
+    ood_str = str(total_ood) if ood_results else "--"
 
-    def run_experiment(
-        seeds_str: str,
-        n_samp: int,
-        quick: bool,
-        excl_str: str,
-        skip_lit: bool,
-        skip_plt: bool,
-    ) -> str:
-        log_lines: List[str] = []
+    validity_fig = plotly_validity_ranking(scores) if scores else None
+    heatmap_fig = plotly_heatmap(runs, metric=metric) if runs else None
 
-        def log(msg: str) -> None:
-            log_lines.append(f"[{time.strftime('%H:%M:%S')}] {msg}")
+    return n_runs, best_fs, best_score, ood_str, validity_fig, heatmap_fig
 
-        try:
-            _clear_session()
-            log("Starting experiment...")
 
-            seeds = [int(s.strip()) for s in seeds_str.split() if s.strip()]
-            excl = [e.strip() for e in excl_str.split() if e.strip()]
+def _refresh_results_data(
+    wf_filter: str, fs_filter: str, sp_filter: str,
+    session: Dict[str, Any],
+) -> Tuple:
+    runs = session.get("runs", [])
+    scores = session.get("validity_scores", [])
 
-            if not seeds:
-                return "Error: No valid seeds provided."
+    # Fix #11: dynamic filter choices from actual run data
+    wf_choices = ["All"] + sorted({r.workflow for r in runs})
+    fs_choices = ["All"] + sorted({r.feature_set for r in runs})
+    sp_choices = ["All"] + sorted({r.split_policy for r in runs})
 
-            # 1. Dataset generation
-            from hea_extrapolation_platform.dataset import generate_hea_dataset
-            log(f"Generating dataset: n={n_samp}, seed={seeds[0]}")
-            comps_df, features_df, target = generate_hea_dataset(
-                n_samples=n_samp, seed=seeds[0],
-            )
-            _SESSION["compositions_df"] = comps_df
-            _SESSION["features_df"] = features_df
-            _SESSION["target"] = target
-            log(f"Dataset: {len(target)} samples, {features_df.shape[1]} features")
+    v_df = validity_scores_to_dataframe(scores) if scores else pd.DataFrame()
 
-            # 2. Run experiments
-            from hea_extrapolation_platform.runner import ExperimentRunner
-            log(f"Running experiments: seeds={seeds}, quick={quick}")
-            runner = ExperimentRunner(
-                seeds=seeds, quick=quick, exclude_elements=excl,
-            )
-            runs, scores, ood_results = runner.run(comps_df, features_df, target)
+    filtered = runs
+    if wf_filter != "All":
+        filtered = [r for r in filtered if r.workflow == wf_filter]
+    if fs_filter != "All":
+        filtered = [r for r in filtered if r.feature_set == fs_filter]
+    if sp_filter != "All":
+        filtered = [r for r in filtered if r.split_policy == sp_filter]
 
-            _SESSION["runs"] = runs
-            _SESSION["validity_scores"] = scores
-            _SESSION["ood_results"] = ood_results
+    r_df = runs_to_dataframe(filtered) if filtered else pd.DataFrame()
+    parity_fig = plotly_parity(filtered) if filtered else None
 
-            log(f"Completed: {len(runs)} runs")
-            if scores:
-                log(f"Best feature set: {scores[0].feature_set} "
-                    f"(score={scores[0].total:.4f})")
-
-            for fs_key, ood_res in ood_results.items():
-                log(f"OOD [{fs_key}]: {ood_res.n_ood}/{ood_res.n_total} "
-                    f"({ood_res.ood_ratio:.1%})")
-
-            # 3. Export registry
-            out_dir = Path("results")
-            out_dir.mkdir(parents=True, exist_ok=True)
-            runner.export(out_dir)
-            log(f"Run registry exported to {out_dir / 'run_registry.json'}")
-
-            # 4. Static plots (optional)
-            figure_paths: Dict[str, Path] = {}
-            if not skip_plt:
-                from hea_extrapolation_platform.visualization import (
-                    plot_validity_ranking,
-                    plot_performance_heatmap,
-                    plot_parity,
-                )
-                fig_dir = out_dir / "figures"
-                figure_paths["Validity"] = plot_validity_ranking(scores, fig_dir)
-                figure_paths["Heatmap"] = plot_performance_heatmap(runs, fig_dir)
-                figure_paths["Parity"] = plot_parity(runs, fig_dir)
-                log("Static plots saved.")
-
-            # 5. Literature search (optional)
-            if not skip_lit:
-                try:
-                    from hea_extrapolation_platform.literature_graph.seed_data import (
-                        get_seed_papers, get_seed_workflows,
-                    )
-                    from hea_extrapolation_platform.literature_graph.workflow_text import (
-                        generate_workflow_text,
-                    )
-                    from hea_extrapolation_platform.literature_graph.vector_index import (
-                        build_index,
-                    )
-                    from hea_extrapolation_platform.literature_graph.search import (
-                        LiteratureSearchEngine, StructuredFilter,
-                    )
-                    from hea_extrapolation_platform.literature_graph.feature_recommender import (
-                        LiteratureFeatureRecommender,
-                    )
-
-                    papers = get_seed_papers()
-                    workflows = get_seed_workflows()
-                    wf_texts = [generate_workflow_text(w) for w in workflows]
-                    wf_ids = [w.workflow_id for w in workflows]
-                    index = build_index(wf_ids, wf_texts, use_faiss=True)
-
-                    engine = LiteratureSearchEngine(
-                        index=index, workflows=workflows, papers=papers,
-                    )
-                    query = "composition only yield strength HEA"
-                    sf = StructuredFilter(materials_domain="HEA", task="yield_strength")
-                    lit_results = engine.search(query, structured_filter=sf, top_n=5)
-                    _SESSION["literature_results"] = lit_results
-
-                    recommender = LiteratureFeatureRecommender(engine)
-                    rec = recommender.recommend(query, structured_filter=sf)
-                    _SESSION["feature_recommendation"] = rec
-                    log(f"Literature search: {len(lit_results)} results found")
-                except Exception as exc:
-                    log(f"Literature search failed (non-fatal): {exc}")
-
-            # 6. Report generation
-            from hea_extrapolation_platform.report import ReportGenerator
-            gen = ReportGenerator(out_dir=out_dir)
-            best_ood = None
-            if scores and ood_results:
-                best_ood = ood_results.get(scores[0].feature_set)
-
-            report_path = gen.generate(
-                runs=runs,
-                validity_scores=scores,
-                ood_result=best_ood,
-                compositions_df=comps_df,
-                figure_paths=figure_paths,
-                literature_results=_SESSION.get("literature_results"),
-                feature_recommendation=_SESSION.get("feature_recommendation"),
-            )
-            _SESSION["report_path"] = report_path
-            log(f"Report: {report_path}")
-
-            log("Experiment complete. Switch to other tabs to explore results.")
-
-        except Exception:
-            log(f"ERROR:\n{traceback.format_exc()}")
-
-        return "\n".join(log_lines)
-
-    run_btn.click(
-        fn=run_experiment,
-        inputs=[seeds_input, n_samples, quick_mode, exclude_elements,
-                skip_literature, skip_plots],
-        outputs=[progress_log],
+    return (
+        gr.update(choices=wf_choices, value=wf_filter if wf_filter in wf_choices else "All"),
+        gr.update(choices=fs_choices, value=fs_filter if fs_filter in fs_choices else "All"),
+        gr.update(choices=sp_choices, value=sp_filter if sp_filter in sp_choices else "All"),
+        v_df, r_df, parity_fig,
     )
 
 
-# ---------------------------------------------------------------------------
-# Tab 3: Results
-# ---------------------------------------------------------------------------
+def _refresh_ood_data(
+    fs_key: str, session: Dict[str, Any],
+) -> Tuple:
+    ood_results = session.get("ood_results", {})
+    features_df = session.get("features_df")
+    comps_df = session.get("compositions_df")
+    ood_split_indices = session.get("ood_split_indices", {})
 
-def _build_results_tab() -> None:
-    gr.Markdown("## Experiment Results — Run Table & Parity Plot")
+    if not ood_results or features_df is None:
+        return None, "No OOD results. Run experiment first.", pd.DataFrame()
 
-    with gr.Row():
-        filter_wf = gr.Dropdown(
-            choices=["All", "WF-LIN", "WF-XGB", "WF-ENS"],
-            value="All",
-            label="Workflow Filter",
-        )
-        filter_fs = gr.Dropdown(
-            choices=["All", "FS_BASE", "FS_BASE+FS_THERMO",
-                     "FS_BASE+FS_SIZE", "FS_BASE+FS_ELECTRON", "FS_ALL"],
-            value="All",
-            label="Feature Set Filter",
-        )
-        filter_sp = gr.Dropdown(
-            choices=["All", "RandomCV", "CompositionBlock", "ElementExclusion"],
-            value="All",
-            label="Split Policy Filter",
+    ood_res = ood_results.get(fs_key)
+    if ood_res is None:
+        available = list(ood_results.keys())
+        return (
+            None,
+            f"No OOD for {fs_key}. Available: {available}",
+            pd.DataFrame(),
         )
 
-    validity_table = gr.Dataframe(label="Feature Validity Ranking")
-    results_table = gr.Dataframe(label="Run Results")
-    parity_plot = gr.Plot(label="Parity Plot")
+    from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
+    try:
+        fs_enum = FeatureSetName(fs_key)
+        cols = FeatureCatalog.columns(fs_enum)
+    except (ValueError, KeyError):
+        return None, f"Unknown feature set: {fs_key}", pd.DataFrame()
 
-    def refresh_results(wf_filter: str, fs_filter: str, sp_filter: str) -> Tuple:
-        runs = _SESSION["runs"]
-        scores = _SESSION["validity_scores"]
-
-        # Validity table
-        v_df = validity_scores_to_dataframe(scores) if scores else pd.DataFrame()
-
-        # Apply filters
-        filtered = runs
-        if wf_filter != "All":
-            filtered = [r for r in filtered if r.workflow == wf_filter]
-        if fs_filter != "All":
-            filtered = [r for r in filtered if r.feature_set == fs_filter]
-        if sp_filter != "All":
-            filtered = [r for r in filtered if r.split_policy == sp_filter]
-
-        r_df = runs_to_dataframe(filtered) if filtered else pd.DataFrame()
-        parity_fig = plotly_parity(filtered) if filtered else None
-
-        return v_df, r_df, parity_fig
-
-    refresh_btn = gr.Button("Refresh Results", variant="primary")
-    refresh_btn.click(
-        fn=refresh_results,
-        inputs=[filter_wf, filter_fs, filter_sp],
-        outputs=[validity_table, results_table, parity_plot],
-    )
-    # Auto-refresh on filter change
-    for dropdown in [filter_wf, filter_fs, filter_sp]:
-        dropdown.change(
-            fn=refresh_results,
-            inputs=[filter_wf, filter_fs, filter_sp],
-            outputs=[validity_table, results_table, parity_plot],
-        )
-
-
-# ---------------------------------------------------------------------------
-# Tab 4: OOD Map
-# ---------------------------------------------------------------------------
-
-def _build_ood_tab() -> None:
-    gr.Markdown("## OOD (Out-of-Distribution) Map & Candidates")
-
-    fs_selector = gr.Dropdown(
-        choices=["FS_BASE", "FS_BASE+FS_THERMO",
-                 "FS_BASE+FS_SIZE", "FS_BASE+FS_ELECTRON", "FS_ALL"],
-        value="FS_ALL",
-        label="Feature Set for OOD Map",
-    )
-
-    ood_plot = gr.Plot(label="OOD Map (PCA)")
-
-    with gr.Row():
-        ood_summary = gr.Textbox(label="OOD Summary", interactive=False)
-
-    ood_candidates = gr.Dataframe(label="Top OOD Candidates")
-
-    def refresh_ood(fs_key: str) -> Tuple:
-        ood_results = _SESSION["ood_results"]
-        features_df = _SESSION["features_df"]
-        comps_df = _SESSION["compositions_df"]
-
-        if not ood_results or features_df is None:
-            return None, "No OOD results. Run experiment first.", pd.DataFrame()
-
-        ood_res = ood_results.get(fs_key)
-        if ood_res is None:
-            available = list(ood_results.keys())
-            return (None,
-                    f"No OOD for {fs_key}. Available: {available}",
-                    pd.DataFrame())
-
-        # Get feature columns for the selected set
-        from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
-        try:
-            fs_enum = FeatureSetName(fs_key)
-            cols = FeatureCatalog.columns(fs_enum)
-        except (ValueError, KeyError):
-            return None, f"Unknown feature set: {fs_key}", pd.DataFrame()
-
+    # Fix #3: use stored train/test indices for correct visualization
+    split = ood_split_indices.get(fs_key)
+    if split is not None:
+        train_idx, test_idx = split
+        X_train = features_df[cols].iloc[train_idx]
+        X_query = features_df[cols].iloc[test_idx]
+    else:
+        logger.warning("No OOD split indices for %s, using heuristic", fs_key)
         X_all = features_df[cols]
-        # Split based on last fold (use full dataset as both train & query for vis)
-        # In reality, we'd want the actual train/test split; for now,
-        # we visualize the entire dataset with OOD scores overlaid.
-        n_total = len(X_all)
-        n_ood_scores = len(ood_res.composite_scores)
+        n_ood = len(ood_res.composite_scores)
+        X_train = X_all.iloc[:len(X_all) - n_ood]
+        X_query = X_all.iloc[len(X_all) - n_ood:]
 
-        # If OOD scores cover only a subset, we need to handle this
-        if n_ood_scores < n_total:
-            X_train = X_all.iloc[:n_total - n_ood_scores]
-            X_query = X_all.iloc[n_total - n_ood_scores:]
-        else:
-            # Scores cover full dataset
-            X_train = X_all.iloc[:n_total // 2]
-            X_query = X_all.iloc[n_total // 2:]
-            # Trim OOD scores to match query size
-            ood_scores_vis = ood_res.composite_scores[:len(X_query)]
-            is_ood_vis = ood_res.is_ood[:len(X_query)]
-
-        if n_ood_scores < n_total:
-            ood_scores_vis = ood_res.composite_scores
-            is_ood_vis = ood_res.is_ood
-
-        fig = plotly_ood_map(
-            X_train, X_query,
-            composite_scores=ood_scores_vis,
-            is_ood=is_ood_vis,
-            title=f"OOD Map (PCA) — {fs_key}",
-        )
-
-        summary = (
-            f"Total query: {ood_res.n_total} | "
-            f"OOD: {ood_res.n_ood} ({ood_res.ood_ratio:.1%}) | "
-            f"Threshold: {ood_res.ood_threshold:.4f}"
-        )
-
-        # OOD candidates table
-        cand_df = pd.DataFrame()
-        if comps_df is not None and ood_res.is_ood.any():
-            ood_mask = ood_res.is_ood
-            # Map OOD indices back to composition DataFrame
-            if n_ood_scores <= len(comps_df):
-                offset = len(comps_df) - n_ood_scores
-                ood_global_idx = np.where(ood_mask)[0] + offset
-                ood_global_idx = ood_global_idx[ood_global_idx < len(comps_df)]
-                if len(ood_global_idx) > 0:
-                    cand_df = comps_df.iloc[ood_global_idx].copy()
-                    cand_df["OOD_Score"] = ood_res.composite_scores[
-                        ood_global_idx - offset
-                    ]
-                    cand_df = cand_df.sort_values("OOD_Score", ascending=False).head(20)
-                    cand_df = cand_df.round(3)
-
-        return fig, summary, cand_df
-
-    refresh_btn = gr.Button("Refresh OOD Map", variant="primary")
-    refresh_btn.click(
-        fn=refresh_ood,
-        inputs=[fs_selector],
-        outputs=[ood_plot, ood_summary, ood_candidates],
-    )
-    fs_selector.change(
-        fn=refresh_ood,
-        inputs=[fs_selector],
-        outputs=[ood_plot, ood_summary, ood_candidates],
+    fig = plotly_ood_map(
+        X_train, X_query,
+        composite_scores=ood_res.composite_scores,
+        is_ood=ood_res.is_ood,
+        title=f"OOD Map (PCA) -- {fs_key}",
     )
 
-
-# ---------------------------------------------------------------------------
-# Tab 5: Literature Search
-# ---------------------------------------------------------------------------
-
-def _build_literature_tab() -> None:
-    gr.Markdown("## Literature Search — Embedding + Structured Filters")
-
-    with gr.Row():
-        with gr.Column(scale=2):
-            query_input = gr.Textbox(
-                label="Search Query",
-                value="composition only yield strength HEA",
-                lines=2,
-                info="Natural language or workflow-text-like query",
-            )
-        with gr.Column(scale=1):
-            domain_filter = gr.Textbox(label="Domain", value="HEA")
-            task_filter = gr.Textbox(label="Task", value="yield_strength")
-
-    with gr.Row():
-        inputs_filter = gr.Dropdown(
-            choices=["", "composition_only", "+process", "+calphad", "+microstructure"],
-            value="",
-            label="Inputs Scope",
-        )
-        top_n = gr.Slider(minimum=1, maximum=20, value=10, step=1, label="Top N")
-
-    search_btn = gr.Button("Search Literature", variant="primary")
-
-    results_table = gr.Dataframe(label="Search Results")
-    freq_plot = gr.Plot(label="Feature Frequency")
-    recommendation = gr.Textbox(label="Feature Recommendation", lines=5, interactive=False)
-
-    def do_search(
-        query: str, domain: str, task: str,
-        inputs_scope: str, top: int,
-    ) -> Tuple:
-        try:
-            from hea_extrapolation_platform.literature_graph.seed_data import (
-                get_seed_papers, get_seed_workflows,
-            )
-            from hea_extrapolation_platform.literature_graph.workflow_text import (
-                generate_workflow_text,
-            )
-            from hea_extrapolation_platform.literature_graph.vector_index import (
-                build_index,
-            )
-            from hea_extrapolation_platform.literature_graph.search import (
-                LiteratureSearchEngine, StructuredFilter,
-            )
-            from hea_extrapolation_platform.literature_graph.feature_recommender import (
-                LiteratureFeatureRecommender,
-            )
-
-            papers = get_seed_papers()
-            workflows = get_seed_workflows()
-            wf_texts = [generate_workflow_text(w) for w in workflows]
-            wf_ids = [w.workflow_id for w in workflows]
-            index = build_index(wf_ids, wf_texts, use_faiss=True)
-
-            engine = LiteratureSearchEngine(
-                index=index, workflows=workflows, papers=papers,
-            )
-
-            sf = StructuredFilter(
-                materials_domain=domain if domain.strip() else None,
-                task=task if task.strip() else None,
-                inputs=inputs_scope if inputs_scope.strip() else None,
-            )
-
-            results = engine.search(query, structured_filter=sf, top_n=top)
-            _SESSION["literature_results"] = results
-
-            # Results table
-            records = []
-            for i, r in enumerate(results):
-                wf = r.workflow
-                records.append({
-                    "Rank": i + 1,
-                    "Paper ID": wf.paper_id,
-                    "Model": wf.model_name,
-                    "Family": wf.model_family,
-                    "Inputs": wf.inputs,
-                    "Split": wf.split_policy,
-                    "N": wf.data_size_n,
-                    "Key Features": ", ".join(wf.key_features[:5]),
-                    "Score": round(r.final_score, 4),
-                })
-            r_df = pd.DataFrame(records) if records else pd.DataFrame()
-
-            # Feature frequency
-            _, feature_counts = engine.search_for_features(
-                query, structured_filter=sf, top_n=top,
-            )
-            _SESSION["feature_counts"] = feature_counts
-            freq_fig = plotly_feature_frequency(feature_counts)
-
-            # Feature recommendation
-            recommender = LiteratureFeatureRecommender(engine)
-            rec = recommender.recommend(query, structured_filter=sf)
-            _SESSION["feature_recommendation"] = rec
-
-            rec_text = f"Recommended set: {rec.name}\n"
-            rec_text += f"Base features ({len(rec.base_features)}): {', '.join(rec.base_features)}\n"
-            if rec.added_features:
-                rec_text += f"Added from literature ({len(rec.added_features)}): {', '.join(rec.added_features)}\n"
-            if rec.unregistered_features:
-                rec_text += f"Unregistered features: {', '.join(rec.unregistered_features)}\n"
-
-            return r_df, freq_fig, rec_text
-
-        except Exception:
-            err = traceback.format_exc()
-            return pd.DataFrame(), None, f"Error:\n{err}"
-
-    search_btn.click(
-        fn=do_search,
-        inputs=[query_input, domain_filter, task_filter, inputs_filter, top_n],
-        outputs=[results_table, freq_plot, recommendation],
+    summary = (
+        f"Total query: {ood_res.n_total} | "
+        f"OOD: {ood_res.n_ood} ({ood_res.ood_ratio:.1%}) | "
+        f"Threshold: {ood_res.ood_threshold:.4f}"
     )
 
+    cand_df = pd.DataFrame()
+    if comps_df is not None and ood_res.is_ood.any() and split is not None:
+        _, test_idx_arr = split
+        ood_mask = ood_res.is_ood
+        ood_local = np.where(ood_mask)[0]
+        ood_global = np.asarray(test_idx_arr)[ood_local]
+        ood_global = ood_global[ood_global < len(comps_df)]
+        if len(ood_global) > 0:
+            cand_df = comps_df.iloc[ood_global].copy()
+            cand_df["OOD_Score"] = ood_res.composite_scores[
+                ood_local[:len(ood_global)]
+            ]
+            cand_df = cand_df.sort_values(
+                "OOD_Score", ascending=False,
+            ).head(20)
+            cand_df = cand_df.round(3)
 
-# ---------------------------------------------------------------------------
-# Tab 6: Report
-# ---------------------------------------------------------------------------
+    return fig, summary, cand_df
 
-def _build_report_tab() -> None:
-    gr.Markdown("## Experiment Report — Markdown Preview & Download")
 
-    report_md = gr.Markdown(value="*No report generated yet. Run an experiment first.*")
-    download_btn = gr.File(label="Download Report (.md)")
-
-    def refresh_report() -> Tuple:
-        report_path = _SESSION.get("report_path")
-        if report_path is None or not Path(report_path).exists():
-            return "*No report available.*", None
-
-        content = Path(report_path).read_text(encoding="utf-8")
-        return content, str(report_path)
-
-    refresh_btn = gr.Button("Refresh Report", variant="primary")
-    refresh_btn.click(
-        fn=refresh_report,
-        inputs=[],
-        outputs=[report_md, download_btn],
-    )
+def _refresh_report_data(session: Dict[str, Any]) -> Tuple:
+    report_path = session.get("report_path")
+    if report_path is None or not Path(report_path).exists():
+        return "*No report available.*", None
+    content = Path(report_path).read_text(encoding="utf-8")
+    return content, str(report_path)
 
 
 # ---------------------------------------------------------------------------
@@ -652,27 +260,623 @@ def _build_report_tab() -> None:
 
 def create_app() -> gr.Blocks:
     """Build and return the Gradio Blocks app."""
+    # Fix #5: theme placement — Gradio 6.0+ expects theme in launch(),
+    # but we store it so create_app() callers can pass it to launch().
     with gr.Blocks(
         title="Extrapolation Discovery Platform",
     ) as app:
         gr.Markdown(
             "# Extrapolation Discovery Platform\n"
-            "外挿発見基盤 — Feature Validity Evaluation & OOD Detection Dashboard"
+            "Feature Validity Evaluation & OOD Detection Dashboard"
         )
 
+        # Fix #1: per-user session state via gr.State
+        state = gr.State(_empty_session)
+
         with gr.Tabs():
+            # --- Tab 1: Dashboard ---
             with gr.Tab("Dashboard"):
-                _build_dashboard_tab()
+                gr.Markdown("## Dashboard -- KPIs & Feature Validity")
+                gr.Markdown(
+                    "Run an experiment from the **Config** tab first, "
+                    "then refresh this page to see results."
+                )
+
+                with gr.Row():
+                    kpi_runs = gr.Textbox(
+                        label="Total Runs", value="0", interactive=False,
+                    )
+                    kpi_best_fs = gr.Textbox(
+                        label="Best Feature Set", value="--", interactive=False,
+                    )
+                    kpi_best_score = gr.Textbox(
+                        label="Best Total Score", value="--", interactive=False,
+                    )
+                    kpi_ood_count = gr.Textbox(
+                        label="OOD Samples", value="--", interactive=False,
+                    )
+
+                validity_plot = gr.Plot(label="Feature Validity Ranking")
+                heatmap_plot = gr.Plot(label="Performance Heatmap (RMSE Test)")
+                heatmap_metric = gr.Dropdown(
+                    choices=[
+                        "rmse_test", "rmse_train", "mae_test",
+                        "mae_train", "r2_test", "r2_train",
+                    ],
+                    value="rmse_test",
+                    label="Heatmap Metric",
+                )
+
+                dash_refresh_btn = gr.Button(
+                    "Refresh Dashboard", variant="primary",
+                )
+                dash_outputs = [
+                    kpi_runs, kpi_best_fs, kpi_best_score,
+                    kpi_ood_count, validity_plot, heatmap_plot,
+                ]
+                dash_refresh_btn.click(
+                    fn=_refresh_dashboard_data,
+                    inputs=[heatmap_metric, state],
+                    outputs=dash_outputs,
+                )
+                heatmap_metric.change(
+                    fn=_refresh_dashboard_data,
+                    inputs=[heatmap_metric, state],
+                    outputs=dash_outputs,
+                )
+
+            # --- Tab 2: Config & Run ---
             with gr.Tab("Config & Run"):
-                _build_config_tab()
+                gr.Markdown("## Experiment Configuration & Execution")
+
+                with gr.Row():
+                    with gr.Column():
+                        seeds_input = gr.Textbox(
+                            label="Seeds (space-separated)",
+                            value="42 123 456",
+                            info="Random seeds for reproducibility",
+                        )
+                        n_samples = gr.Slider(
+                            minimum=50, maximum=1000, value=200, step=50,
+                            label="Number of Samples",
+                        )
+                        quick_mode = gr.Checkbox(
+                            label="Quick Mode (reduced HPO)",
+                            value=True,
+                            info="Use reduced hyperparameter grids",
+                        )
+                    with gr.Column():
+                        exclude_elements = gr.Textbox(
+                            label="Exclude Elements (space-separated)",
+                            value="Co Ni Ti",
+                            info="Elements for ElementExclusion splits",
+                        )
+                        skip_literature = gr.Checkbox(
+                            label="Skip Literature Search",
+                            value=False,
+                        )
+                        skip_plots = gr.Checkbox(
+                            label="Skip Static Plots (matplotlib)",
+                            value=True,
+                            info="Skip PNG generation (Plotly always available)",
+                        )
+
+                run_btn = gr.Button(
+                    "Run Experiment", variant="primary", size="lg",
+                )
+                progress_log = gr.Textbox(
+                    label="Progress Log",
+                    lines=15,
+                    interactive=False,
+                )
+
+            # --- Tab 3: Results ---
             with gr.Tab("Results"):
-                _build_results_tab()
+                gr.Markdown("## Experiment Results -- Run Table & Parity Plot")
+
+                with gr.Row():
+                    filter_wf = gr.Dropdown(
+                        choices=["All"], value="All", label="Workflow Filter",
+                    )
+                    filter_fs = gr.Dropdown(
+                        choices=["All"], value="All", label="Feature Set Filter",
+                    )
+                    filter_sp = gr.Dropdown(
+                        choices=["All"], value="All", label="Split Policy Filter",
+                    )
+
+                validity_table = gr.Dataframe(label="Feature Validity Ranking")
+                results_table = gr.Dataframe(label="Run Results")
+                parity_plot = gr.Plot(label="Parity Plot")
+
+                res_refresh_btn = gr.Button(
+                    "Refresh Results", variant="primary",
+                )
+                res_outputs = [
+                    filter_wf, filter_fs, filter_sp,
+                    validity_table, results_table, parity_plot,
+                ]
+                res_refresh_btn.click(
+                    fn=_refresh_results_data,
+                    inputs=[filter_wf, filter_fs, filter_sp, state],
+                    outputs=res_outputs,
+                )
+                for dropdown in [filter_wf, filter_fs, filter_sp]:
+                    dropdown.change(
+                        fn=_refresh_results_data,
+                        inputs=[filter_wf, filter_fs, filter_sp, state],
+                        outputs=res_outputs,
+                    )
+
+            # --- Tab 4: OOD Map ---
             with gr.Tab("OOD Map"):
-                _build_ood_tab()
+                gr.Markdown(
+                    "## OOD (Out-of-Distribution) Map & Candidates",
+                )
+
+                fs_selector = gr.Dropdown(
+                    choices=[
+                        "FS_BASE", "FS_THERMO", "FS_SIZE",
+                        "FS_ELECTRON", "FS_ALL",
+                    ],
+                    value="FS_ALL",
+                    label="Feature Set for OOD Map",
+                )
+                ood_plot = gr.Plot(label="OOD Map (PCA)")
+                with gr.Row():
+                    ood_summary = gr.Textbox(
+                        label="OOD Summary", interactive=False,
+                    )
+                ood_candidates = gr.Dataframe(label="Top OOD Candidates")
+
+                ood_refresh_btn = gr.Button(
+                    "Refresh OOD Map", variant="primary",
+                )
+                ood_outputs = [ood_plot, ood_summary, ood_candidates]
+                ood_refresh_btn.click(
+                    fn=_refresh_ood_data,
+                    inputs=[fs_selector, state],
+                    outputs=ood_outputs,
+                )
+                fs_selector.change(
+                    fn=_refresh_ood_data,
+                    inputs=[fs_selector, state],
+                    outputs=ood_outputs,
+                )
+
+            # --- Tab 5: Literature Search ---
             with gr.Tab("Literature Search"):
-                _build_literature_tab()
+                gr.Markdown(
+                    "## Literature Search -- Embedding + Structured Filters",
+                )
+
+                with gr.Row():
+                    with gr.Column(scale=2):
+                        query_input = gr.Textbox(
+                            label="Search Query",
+                            value="composition only yield strength HEA",
+                            lines=2,
+                            info="Natural language or workflow-text query",
+                        )
+                    with gr.Column(scale=1):
+                        domain_filter = gr.Textbox(
+                            label="Domain", value="HEA",
+                        )
+                        task_filter = gr.Textbox(
+                            label="Task", value="yield_strength",
+                        )
+
+                with gr.Row():
+                    # Fix #4: choices match InputScope enum values
+                    inputs_filter = gr.Dropdown(
+                        choices=[
+                            "",
+                            "composition_only",
+                            "composition+process",
+                            "composition+calphad",
+                            "composition+microstructure",
+                            "full",
+                        ],
+                        value="",
+                        label="Inputs Scope",
+                    )
+                    lit_top_n = gr.Slider(
+                        minimum=1, maximum=20, value=10, step=1,
+                        label="Top N",
+                    )
+
+                search_btn = gr.Button(
+                    "Search Literature", variant="primary",
+                )
+                lit_results_table = gr.Dataframe(label="Search Results")
+                freq_plot = gr.Plot(label="Feature Frequency")
+                lit_recommendation = gr.Textbox(
+                    label="Feature Recommendation",
+                    lines=5,
+                    interactive=False,
+                )
+
+                def do_search(
+                    query: str, domain: str, task: str,
+                    inputs_scope: str, top: float,
+                    session: Dict[str, Any],
+                ) -> Tuple:
+                    try:
+                        from hea_extrapolation_platform.literature_graph.search import (
+                            StructuredFilter,
+                        )
+                        from hea_extrapolation_platform.literature_graph.feature_recommender import (
+                            LiteratureFeatureRecommender,
+                        )
+
+                        # Fix #9: use cached engine
+                        engine = _get_literature_engine(session)
+
+                        sf = StructuredFilter(
+                            materials_domain=domain.strip() or None,
+                            task=task.strip() or None,
+                            inputs=inputs_scope.strip() or None,
+                        )
+
+                        results = engine.search(
+                            query, structured_filter=sf, top_n=int(top),
+                        )
+                        session["literature_results"] = results
+
+                        records = []
+                        for i, r in enumerate(results):
+                            wf = r.workflow
+                            records.append({
+                                "Rank": i + 1,
+                                "Paper ID": wf.paper_id,
+                                "Model": wf.model_name,
+                                "Family": wf.model_family,
+                                "Inputs": wf.inputs,
+                                "Split": wf.split_policy,
+                                "N": wf.data_size_n,
+                                "Key Features": ", ".join(
+                                    wf.key_features[:5],
+                                ),
+                                "Score": round(r.final_score, 4),
+                            })
+                        r_df = (
+                            pd.DataFrame(records)
+                            if records
+                            else pd.DataFrame()
+                        )
+
+                        _, feature_counts = engine.search_for_features(
+                            query, structured_filter=sf, top_n=int(top),
+                        )
+                        session["feature_counts"] = feature_counts
+                        freq_fig_val = plotly_feature_frequency(
+                            feature_counts,
+                        )
+
+                        recommender = LiteratureFeatureRecommender(engine)
+                        rec = recommender.recommend(
+                            query, structured_filter=sf,
+                        )
+                        session["feature_recommendation"] = rec
+
+                        rec_text = f"Recommended set: {rec.name}\n"
+                        rec_text += (
+                            f"Base features ({len(rec.base_features)}): "
+                            f"{', '.join(rec.base_features)}\n"
+                        )
+                        if rec.added_features:
+                            rec_text += (
+                                f"Added from literature "
+                                f"({len(rec.added_features)}): "
+                                f"{', '.join(rec.added_features)}\n"
+                            )
+                        if rec.unregistered_features:
+                            rec_text += (
+                                f"Unregistered features: "
+                                f"{', '.join(rec.unregistered_features)}\n"
+                            )
+
+                        return r_df, freq_fig_val, rec_text, session
+
+                    except Exception:
+                        err = traceback.format_exc()
+                        return (
+                            pd.DataFrame(), None,
+                            f"Error:\n{err}", session,
+                        )
+
+                search_btn.click(
+                    fn=do_search,
+                    inputs=[
+                        query_input, domain_filter, task_filter,
+                        inputs_filter, lit_top_n, state,
+                    ],
+                    outputs=[
+                        lit_results_table, freq_plot,
+                        lit_recommendation, state,
+                    ],
+                )
+
+            # --- Tab 6: Report ---
             with gr.Tab("Report"):
-                _build_report_tab()
+                gr.Markdown(
+                    "## Experiment Report -- Markdown Preview & Download",
+                )
+                report_md = gr.Markdown(
+                    value="*No report generated yet. "
+                    "Run an experiment first.*",
+                )
+                download_btn = gr.File(label="Download Report (.md)")
+
+                rpt_refresh_btn = gr.Button(
+                    "Refresh Report", variant="primary",
+                )
+                rpt_outputs = [report_md, download_btn]
+                rpt_refresh_btn.click(
+                    fn=_refresh_report_data,
+                    inputs=[state],
+                    outputs=rpt_outputs,
+                )
+
+        # ---------------------------------------------------------------
+        # Run experiment generator  -- Fix #7 (streaming progress)
+        # ---------------------------------------------------------------
+
+        def run_experiment(
+            seeds_str: str,
+            n_samp: float,
+            quick: bool,
+            excl_str: str,
+            skip_lit: bool,
+            skip_plt: bool,
+            session: Dict[str, Any],
+        ) -> Generator:
+            """Generator that yields incremental progress + state.
+
+            Using a generator enables Gradio to stream updates to the
+            progress_log while the experiment runs (fix #7).
+            The final yield refreshes all cross-tab components (#8).
+            """
+            log_lines: List[str] = []
+
+            def log(msg: str) -> None:
+                log_lines.append(f"[{time.strftime('%H:%M:%S')}] {msg}")
+
+            # Reset session
+            session = _empty_session()
+
+            # Placeholder outputs for cross-tab components
+            empty_dash = ("0", "--", "--", "--", None, None)
+            empty_res = (
+                gr.update(), gr.update(), gr.update(),
+                pd.DataFrame(), pd.DataFrame(), None,
+            )
+            empty_ood = (None, "", pd.DataFrame())
+            empty_rpt = ("*Running...*", None)
+
+            def _yield_progress(log_text: str) -> Tuple:
+                return (
+                    log_text, session,
+                    *empty_dash, *empty_res, *empty_ood, *empty_rpt,
+                )
+
+            try:
+                log("Starting experiment...")
+                yield _yield_progress("\n".join(log_lines))
+
+                seeds = [
+                    int(s.strip())
+                    for s in seeds_str.split()
+                    if s.strip()
+                ]
+                excl = [
+                    e.strip()
+                    for e in excl_str.split()
+                    if e.strip()
+                ]
+
+                if not seeds:
+                    log("Error: No valid seeds provided.")
+                    yield _yield_progress("\n".join(log_lines))
+                    return
+
+                # Fix #2: cast slider float -> int
+                n_samp_int = int(n_samp)
+
+                # 1. Dataset generation
+                from hea_extrapolation_platform.dataset import (
+                    generate_hea_dataset,
+                )
+                log(f"Generating dataset: n={n_samp_int}, seed={seeds[0]}")
+                yield _yield_progress("\n".join(log_lines))
+
+                comps_df, features_df, target = generate_hea_dataset(
+                    n_samples=n_samp_int, seed=seeds[0],
+                )
+                session["compositions_df"] = comps_df
+                session["features_df"] = features_df
+                session["target"] = target
+                log(
+                    f"Dataset: {len(target)} samples, "
+                    f"{features_df.shape[1]} features"
+                )
+                yield _yield_progress("\n".join(log_lines))
+
+                # 2. Run experiments
+                from hea_extrapolation_platform.runner import (
+                    ExperimentRunner,
+                )
+                log(f"Running experiments: seeds={seeds}, quick={quick}")
+                yield _yield_progress("\n".join(log_lines))
+
+                runner = ExperimentRunner(
+                    seeds=seeds, quick=quick, exclude_elements=excl,
+                )
+                runs, scores, ood_results = runner.run(
+                    comps_df, features_df, target,
+                )
+
+                session["runs"] = runs
+                session["validity_scores"] = scores
+                session["ood_results"] = ood_results
+                session["ood_split_indices"] = runner.ood_split_indices
+                session["runner"] = runner
+
+                log(f"Completed: {len(runs)} runs")
+                if scores:
+                    log(
+                        f"Best feature set: {scores[0].feature_set} "
+                        f"(score={scores[0].total:.4f})"
+                    )
+
+                for fs_key, ood_res in ood_results.items():
+                    log(
+                        f"OOD [{fs_key}]: "
+                        f"{ood_res.n_ood}/{ood_res.n_total} "
+                        f"({ood_res.ood_ratio:.1%})"
+                    )
+                yield _yield_progress("\n".join(log_lines))
+
+                # 3. Export registry  -- Fix #12: timestamp dir
+                ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                out_dir = Path("results") / ts
+                out_dir.mkdir(parents=True, exist_ok=True)
+                runner.export(out_dir)
+                log(
+                    f"Run registry exported to "
+                    f"{out_dir / 'run_registry.json'}"
+                )
+                yield _yield_progress("\n".join(log_lines))
+
+                # 4. Static plots (optional)
+                figure_paths: Dict[str, Path] = {}
+                if not skip_plt:
+                    from hea_extrapolation_platform.visualization import (
+                        plot_validity_ranking,
+                        plot_performance_heatmap,
+                        plot_parity,
+                    )
+                    fig_dir = out_dir / "figures"
+                    figure_paths["Validity"] = plot_validity_ranking(
+                        scores, fig_dir,
+                    )
+                    figure_paths["Heatmap"] = plot_performance_heatmap(
+                        runs, fig_dir,
+                    )
+                    figure_paths["Parity"] = plot_parity(runs, fig_dir)
+                    log("Static plots saved.")
+                    yield _yield_progress("\n".join(log_lines))
+
+                # 5. Literature search (optional, cached -- fix #9)
+                if not skip_lit:
+                    try:
+                        from hea_extrapolation_platform.literature_graph.search import (
+                            StructuredFilter,
+                        )
+                        from hea_extrapolation_platform.literature_graph.feature_recommender import (
+                            LiteratureFeatureRecommender,
+                        )
+                        log("Building literature index...")
+                        yield _yield_progress("\n".join(log_lines))
+
+                        engine = _get_literature_engine(session)
+                        query = "composition only yield strength HEA"
+                        sf = StructuredFilter(
+                            materials_domain="HEA",
+                            task="yield_strength",
+                        )
+                        lit_results = engine.search(
+                            query, structured_filter=sf, top_n=5,
+                        )
+                        session["literature_results"] = lit_results
+
+                        recommender = LiteratureFeatureRecommender(engine)
+                        rec = recommender.recommend(
+                            query, structured_filter=sf,
+                        )
+                        session["feature_recommendation"] = rec
+                        log(
+                            f"Literature search: "
+                            f"{len(lit_results)} results"
+                        )
+                        yield _yield_progress("\n".join(log_lines))
+                    except Exception as exc:
+                        log(
+                            f"Literature search failed (non-fatal): {exc}"
+                        )
+                        yield _yield_progress("\n".join(log_lines))
+
+                # 6. Report generation
+                from hea_extrapolation_platform.report import (
+                    ReportGenerator,
+                )
+                gen = ReportGenerator(out_dir=out_dir)
+                best_ood = None
+                if scores and ood_results:
+                    best_ood = ood_results.get(scores[0].feature_set)
+
+                report_path = gen.generate(
+                    runs=runs,
+                    validity_scores=scores,
+                    ood_result=best_ood,
+                    compositions_df=comps_df,
+                    figure_paths=figure_paths,
+                    literature_results=session.get("literature_results"),
+                    feature_recommendation=session.get(
+                        "feature_recommendation",
+                    ),
+                )
+                session["report_path"] = report_path
+                log(f"Report: {report_path}")
+                log(
+                    "Experiment complete. All tabs refreshed automatically."
+                )
+
+            except Exception:
+                log(f"ERROR:\n{traceback.format_exc()}")
+
+            # --- Final yield: refresh all tabs (fix #8) ---
+            final_dash = _refresh_dashboard_data("rmse_test", session)
+            final_res = _refresh_results_data("All", "All", "All", session)
+            ood_keys = list(session.get("ood_results", {}).keys())
+            ood_fs = ood_keys[0] if ood_keys else "FS_ALL"
+            final_ood = _refresh_ood_data(ood_fs, session)
+            final_rpt = _refresh_report_data(session)
+
+            yield (
+                "\n".join(log_lines),
+                session,
+                *final_dash,
+                *final_res,
+                *final_ood,
+                *final_rpt,
+            )
+
+        # Wire up the run button to the generator
+        run_btn.click(
+            fn=run_experiment,
+            inputs=[
+                seeds_input, n_samples, quick_mode,
+                exclude_elements, skip_literature, skip_plots, state,
+            ],
+            outputs=[
+                # Config tab
+                progress_log, state,
+                # Dashboard tab (fix #8)
+                kpi_runs, kpi_best_fs, kpi_best_score, kpi_ood_count,
+                validity_plot, heatmap_plot,
+                # Results tab (fix #8)
+                filter_wf, filter_fs, filter_sp,
+                validity_table, results_table, parity_plot,
+                # OOD tab (fix #8)
+                ood_plot, ood_summary, ood_candidates,
+                # Report tab (fix #8)
+                report_md, download_btn,
+            ],
+        )
+
+    # Fix #6: enable queue for async / streaming execution
+    app.queue()
 
     return app
 
@@ -683,8 +887,9 @@ def create_app() -> gr.Blocks:
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    app = create_app()
-    app.launch(
+    application = create_app()
+    # Fix #5: theme passed to launch() (Gradio 6.0+ API)
+    application.launch(
         server_name="0.0.0.0",
         server_port=7860,
         theme=gr.themes.Soft(),

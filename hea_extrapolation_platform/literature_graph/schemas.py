@@ -88,6 +88,12 @@ class Paper:
     materials_domain: str = "HEA"
     task: str = "yield_strength"
     notes: str = ""
+    doi_verified: bool = False
+    """Whether ``paper_id`` (DOI) has been verified against CrossRef/DOI.org.
+
+    Seed data is auto-generated and DOIs are *plausible but unverified*.
+    Set to ``True`` only after programmatic or manual verification.
+    """
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)

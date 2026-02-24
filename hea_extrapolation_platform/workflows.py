@@ -156,13 +156,16 @@ class WorkflowLIN(BaseWorkflow):
         train_s = _score(y_train.values, y_train_pred)
         test_s = _score(y_test.values, y_test_pred)
 
-        # Extract standardised coefficients
-        scaler: StandardScaler = pipe.named_steps["scaler"]
+        # Extract standardised coefficients.
+        # Ridge inside the Pipeline sees *already-standardised* X (via the
+        # preceding StandardScaler step).  Therefore ``coef_raw[j]`` already
+        # represents "change in y per 1-std change in X_j".  To express
+        # the coefficient in units of "std_y per std_X", we only divide by
+        # std_y — multiplying by std_X again would double-count scaling.
         model: Ridge = pipe.named_steps["model"]
         coef_raw = model.coef_
-        std_X = scaler.scale_
         std_y = float(np.std(y_train.values)) if np.std(y_train.values) > 0 else 1.0
-        coef_std = coef_raw * std_X / std_y
+        coef_std = coef_raw / std_y
 
         result = RunResult(
             workflow=self.name,

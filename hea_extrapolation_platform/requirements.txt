@@ -1,25 +1,36 @@
 # Extrapolation Discovery Platform - Dependencies
 # 外挿発見基盤 依存パッケージ
+#
+# Install core only:  pip install -r requirements.txt
+# Install everything: pip install -r requirements.txt  (uncomment optional lines)
 
-# Core (required)
+# ── Core (required) ──────────────────────────────────────────────────
 numpy>=1.24
 pandas>=2.0
 scikit-learn>=1.3
-scipy>=1.10
+scipy>=1.10            # Mahalanobis distance in ood.py
 matplotlib>=3.7
 
-# Tabular output (required for report markdown tables)
-tabulate>=0.9
+# ── Tabular output (required for report markdown tables) ─────────────
+tabulate>=0.9          # Used by report.py to_markdown(); has try/except fallback
 
-# XGBoost (optional – falls back to sklearn GradientBoosting if absent)
+# ── Optional: XGBoost ────────────────────────────────────────────────
+# Falls back to sklearn GradientBoostingRegressor if absent.
+# Needed by: workflows.py (WorkflowXGB)
 xgboost>=1.7
 
-# GUI – Gradio dashboard + interactive charts
+# ── Optional: GUI (Gradio dashboard + Plotly interactive charts) ─────
+# Needed by: gui/app.py, gui/plotly_charts.py
+# Not required for CLI-only usage.
 gradio>=4.0
 plotly>=5.18
 
-# Literature graph – vector search (optional – falls back to numpy cosine)
+# ── Optional: Literature graph – vector search ───────────────────────
+# Falls back to numpy cosine similarity if absent.
+# Needed by: literature_graph/vector_index.py
 # faiss-cpu>=1.7
 
-# Literature graph – embedding (optional – falls back to TF-IDF)
+# ── Optional: Literature graph – sentence embedding ──────────────────
+# Falls back to TF-IDF bag-of-words if absent.
+# Needed by: literature_graph/vector_index.py
 # sentence-transformers>=2.2

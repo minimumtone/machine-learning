@@ -130,6 +130,11 @@ class ExperimentRunner:
     def registry(self) -> RunRegistry:
         return self._registry
 
+    @property
+    def ood_split_indices(self) -> Dict[str, Tuple[np.ndarray, np.ndarray]]:
+        """Return {feature_set: (train_indices, test_indices)} used for OOD."""
+        return getattr(self, "_ood_split_indices", {})
+
     def _build_workflows(self) -> Dict[str, BaseWorkflow]:
         return {
             "WF-LIN": WorkflowLIN(),
@@ -186,6 +191,9 @@ class ExperimentRunner:
         )
 
         ood_results: Dict[str, OODResult] = {}
+        # Store the train/test indices used for OOD detection so callers
+        # (e.g. __main__.py visualization) can reconstruct X_train/X_test.
+        self._ood_split_indices: Dict[str, Tuple[np.ndarray, np.ndarray]] = {}
         ood_errors_for_eval: Dict[str, Dict[str, np.ndarray]] = {}
 
         run_count = 0
@@ -234,64 +242,17 @@ class ExperimentRunner:
 
                         fold_idx += 1
 
-                # OOD detection per feature set
-                # We fit on training data and score on test data to avoid
-                # self-scoring leak.  To guarantee index alignment between
-                # OOD flags and ensemble prediction errors, we find an ENS
-                # run that shares the *same* test_indices, rather than relying
-                # on size equality (which could match by coincidence).
+                # OOD detection per feature set (dedicated split).
                 fs_key = fs_name.value
                 if fs_key not in ood_results:
-                    try:
-                        X_train_ood = X_fs.iloc[train_idx]
-                        X_test_ood = X_fs.iloc[test_idx]
-                        ood_test_indices = np.asarray(test_idx)
-
-                        detector = OODDetector(k=10)
-                        detector.fit(X_train_ood)
-                        ood_res = detector.score(X_test_ood)
+                    ood_res = self._run_ood_detection(
+                        X_fs, target, compositions_df, fs_key,
+                    )
+                    if ood_res is not None:
                         ood_results[fs_key] = ood_res
-
-                        # Find an ENS run whose test_indices match the OOD
-                        # partition exactly (same indices, same order).
-                        ens_runs = [
-                            r for r in self._registry.runs
-                            if r.feature_set == fs_key and r.workflow == "WF-ENS"
-                               and r.test_indices is not None
-                        ]
-                        matched_ens = None
-                        for er in reversed(ens_runs):
-                            if np.array_equal(
-                                np.asarray(er.test_indices), ood_test_indices
-                            ):
-                                matched_ens = er
-                                break
-
-                        if matched_ens is not None:
-                            pred_std = np.array(
-                                matched_ens.artifacts.get("pred_std_test", [])
-                            )
-                            if (
-                                matched_ens.y_test_true is not None
-                                and matched_ens.y_test_pred is not None
-                                and len(pred_std) > 0
-                            ):
-                                errors = (
-                                    matched_ens.y_test_true
-                                    - matched_ens.y_test_pred
-                                )
-                                ood_errors_for_eval[fs_key] = {
-                                    "errors": errors,
-                                    "uncertainties": pred_std,
-                                    "is_ood": ood_res.is_ood,
-                                }
-                        else:
-                            logger.info(
-                                "No ENS run with matching test_indices "
-                                "for OOD eval on %s", fs_key,
-                            )
-                    except Exception:
-                        logger.exception("OOD detection failed for %s", fs_key)
+                        self._collect_ood_errors_for_eval(
+                            fs_key, ood_res, ood_errors_for_eval,
+                        )
 
         # Evaluation
         evaluator = FeatureValidityEvaluator()
@@ -308,6 +269,99 @@ class ExperimentRunner:
         )
 
         return self._registry.runs, validity_scores, ood_results
+
+    # ------------------------------------------------------------------
+    # Private helpers extracted from run() for readability
+    # ------------------------------------------------------------------
+
+    def _run_ood_detection(
+        self,
+        X_fs: pd.DataFrame,
+        target: pd.Series,
+        compositions_df: pd.DataFrame,
+        fs_key: str,
+    ) -> Optional[OODResult]:
+        """Run OOD detection on *one* feature set.
+
+        Uses a dedicated RandomCV split (first seed, first fold) so OOD
+        detection is deterministic and independent of the main experiment
+        loop.
+
+        Returns
+        -------
+        OODResult or None if detection failed.
+        """
+        try:
+            ood_splitter = RandomCVSplitter(n_folds=5, seed=self._seeds[0])
+            ood_folds = list(ood_splitter.split(
+                X_fs, target, compositions=compositions_df
+            ))
+            ood_train_idx, ood_test_idx = ood_folds[0]  # first fold
+            X_train_ood = X_fs.iloc[ood_train_idx]
+            X_test_ood = X_fs.iloc[ood_test_idx]
+
+            detector = OODDetector(k=10)
+            detector.fit(X_train_ood)
+            ood_res = detector.score(X_test_ood)
+
+            self._ood_split_indices[fs_key] = (
+                np.asarray(ood_train_idx),
+                np.asarray(ood_test_idx),
+            )
+            return ood_res
+        except Exception:
+            logger.exception("OOD detection failed for %s", fs_key)
+            return None
+
+    def _collect_ood_errors_for_eval(
+        self,
+        fs_key: str,
+        ood_res: OODResult,
+        ood_errors_for_eval: Dict[str, Dict[str, np.ndarray]],
+    ) -> None:
+        """Match an ENS run to the OOD partition and collect prediction errors.
+
+        The matched ENS run must share *exactly* the same ``test_indices``
+        as the OOD split to guarantee a valid comparison.
+        """
+        ood_test_indices = self._ood_split_indices[fs_key][1]
+
+        ens_runs = [
+            r for r in self._registry.runs
+            if r.feature_set == fs_key and r.workflow == "WF-ENS"
+               and r.test_indices is not None
+        ]
+        matched_ens = None
+        for er in reversed(ens_runs):
+            if np.array_equal(
+                np.asarray(er.test_indices), ood_test_indices
+            ):
+                matched_ens = er
+                break
+
+        if matched_ens is not None:
+            pred_std = np.array(
+                matched_ens.artifacts.get("pred_std_test", [])
+            )
+            if (
+                matched_ens.y_test_true is not None
+                and matched_ens.y_test_pred is not None
+                and len(pred_std) > 0
+            ):
+                errors = (
+                    matched_ens.y_test_true
+                    - matched_ens.y_test_pred
+                )
+                ood_errors_for_eval[fs_key] = {
+                    "errors": errors,
+                    "uncertainties": pred_std,
+                    "is_ood": ood_res.is_ood,
+                }
+        else:
+            logger.info(
+                "No ENS run with matching test_indices "
+                "for OOD eval on %s", fs_key,
+            )
 
     def export(self, out_dir: Path) -> None:
         """Export run registry to JSON."""
