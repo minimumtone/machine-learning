@@ -236,57 +236,60 @@ class ExperimentRunner:
 
                 # OOD detection per feature set
                 # We fit on training data and score on test data to avoid
-                # self-scoring leak (Fix #5).
+                # self-scoring leak.  To guarantee index alignment between
+                # OOD flags and ensemble prediction errors, we find an ENS
+                # run that shares the *same* test_indices, rather than relying
+                # on size equality (which could match by coincidence).
                 fs_key = fs_name.value
                 if fs_key not in ood_results:
                     try:
-                        # Use the last split's train/test partition for OOD
-                        # detection so we score held-out data, not training data.
-                        last_train_idx = train_idx
-                        last_test_idx = test_idx
-                        X_train_ood = X_fs.iloc[last_train_idx]
-                        X_test_ood = X_fs.iloc[last_test_idx]
+                        X_train_ood = X_fs.iloc[train_idx]
+                        X_test_ood = X_fs.iloc[test_idx]
+                        ood_test_indices = np.asarray(test_idx)
 
                         detector = OODDetector(k=10)
                         detector.fit(X_train_ood)
                         ood_res = detector.score(X_test_ood)
                         ood_results[fs_key] = ood_res
 
-                        # Collect OOD error data for evaluation
-                        # Use ensemble runs for uncertainty
+                        # Find an ENS run whose test_indices match the OOD
+                        # partition exactly (same indices, same order).
                         ens_runs = [
                             r for r in self._registry.runs
                             if r.feature_set == fs_key and r.workflow == "WF-ENS"
+                               and r.test_indices is not None
                         ]
-                        if ens_runs:
-                            last_ens = ens_runs[-1]
+                        matched_ens = None
+                        for er in reversed(ens_runs):
+                            if np.array_equal(
+                                np.asarray(er.test_indices), ood_test_indices
+                            ):
+                                matched_ens = er
+                                break
+
+                        if matched_ens is not None:
                             pred_std = np.array(
-                                last_ens.artifacts.get("pred_std_test", [])
+                                matched_ens.artifacts.get("pred_std_test", [])
                             )
                             if (
-                                last_ens.y_test_true is not None
-                                and last_ens.y_test_pred is not None
-                                and last_ens.test_indices is not None
+                                matched_ens.y_test_true is not None
+                                and matched_ens.y_test_pred is not None
                                 and len(pred_std) > 0
                             ):
-                                errors = last_ens.y_test_true - last_ens.y_test_pred
-                                # Fix #4: ood_res.is_ood is aligned with the
-                                # test set (X_test_ood), not the full dataset.
-                                # Both errors and is_ood have length = len(test_idx).
-                                n_test = len(last_ens.y_test_true)
-                                n_ood = len(ood_res.is_ood)
-                                if n_test == n_ood:
-                                    ood_errors_for_eval[fs_key] = {
-                                        "errors": errors,
-                                        "uncertainties": pred_std,
-                                        "is_ood": ood_res.is_ood,
-                                    }
-                                else:
-                                    logger.warning(
-                                        "OOD/test size mismatch for %s: "
-                                        "test=%d, ood=%d – skipping eval data",
-                                        fs_key, n_test, n_ood,
-                                    )
+                                errors = (
+                                    matched_ens.y_test_true
+                                    - matched_ens.y_test_pred
+                                )
+                                ood_errors_for_eval[fs_key] = {
+                                    "errors": errors,
+                                    "uncertainties": pred_std,
+                                    "is_ood": ood_res.is_ood,
+                                }
+                        else:
+                            logger.info(
+                                "No ENS run with matching test_indices "
+                                "for OOD eval on %s", fs_key,
+                            )
                     except Exception:
                         logger.exception("OOD detection failed for %s", fs_key)
 

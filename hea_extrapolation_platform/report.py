@@ -185,7 +185,10 @@ class ReportGenerator:
                 # Format as table
                 top_ood_display = top_ood.copy()
                 top_ood_display["OOD_score"] = ood_scores_arr[sort_idx]
-                lines.append(top_ood_display.round(3).to_markdown())
+                try:
+                    lines.append(top_ood_display.round(3).to_markdown())
+                except ImportError:
+                    lines.append(top_ood_display.round(3).to_string())
                 lines.append("")
             else:
                 lines.append("No OOD samples detected.")
