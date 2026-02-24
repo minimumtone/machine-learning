@@ -1,0 +1,55 @@
+@@ =============================================================
+@@ Fe-V B2_221 Thermo-Calc Macro: Metastable BCC Phase Diagram
+@@ =============================================================
+@@ Purpose: Reproduce pycalphad Section 5.2 (BinaryStrategy metastable)
+@@          Calculate metastable BCC phase diagram (B2_221 + BCC_A2 only)
+@@
+@@ Usage: MACRO_FILE_READ 03_phase_diagram_metastable.TCM
+@@ Prerequisites: Fe-V_B2_221_VASP.tdb in working directory
+@@ =============================================================
+
+@@ --- STEP 1: Load database ---
+GO DATA
+SWITCH_DATABASE TDB
+READ_DATABASE Fe-V_B2_221_VASP.tdb
+DEFINE_SYSTEM FE V
+
+@@ --- STEP 2: Reject non-BCC phases ---
+REJECT_PHASE LIQUID
+REJECT_PHASE FCC_A1
+REJECT_PHASE SIGMA
+
+@@ Confirm only BCC_A2 and B2_221 are active
+RESTORE_PHASE BCC_A2
+RESTORE_PHASE B2_221
+LIST_PHASE_STATUS
+
+GET_DATA
+
+@@ --- STEP 3: Set up mapping ---
+GO MAP
+
+SET_MAP_CONDITION 1 T 300 3000 25
+SET_MAP_CONDITION 2 X(V) 0 1 0.01
+SET_MAP_CONDITION P 101325
+
+@@ --- STEP 4: Calculate ---
+CALCULATE_MAP
+
+@@ --- STEP 5: Plot ---
+GO POST
+
+SET_PLOT_AXIS X X(V) 0 1
+SET_PLOT_AXIS Y T 300 3000
+
+SET_PLOT_TITLE Fe-V Metastable BCC Phase Diagram (B2_221 + BCC_A2)
+PLOT_DIAGRAM
+SAVE_DIAGRAM fev_metastable_bcc_diagram
+
+@@ =============================================================
+@@ Notes:
+@@ - Only BCC_A2 (disordered) and B2_221 (ordered) phases active
+@@ - LIQUID, FCC_A1, SIGMA are suspended
+@@ - This corresponds to pycalphad BinaryStrategy with ['BCC_A2', 'B2_221']
+@@ - Compare output with pycalphad Figure 09
+@@ =============================================================
