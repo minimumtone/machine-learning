@@ -191,7 +191,8 @@ class LiteratureSearchEngine:
         top_n = top_n or self._final_top_n
 
         # Stage 1: Embedding retrieval
-        query_vec = embed_workflow_texts([query])
+        # fit=False: reuse the vectorizer fitted on the corpus
+        query_vec = embed_workflow_texts([query], fit=False)
         candidates = self._index.search(query_vec[0], top_k=self._embedding_top_k)
 
         if not candidates:

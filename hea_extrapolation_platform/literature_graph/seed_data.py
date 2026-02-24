@@ -666,6 +666,17 @@ def _build_seed_edges(
     return edges
 
 
+def get_seed_papers() -> List[Paper]:
+    """Return seed Paper objects (public API)."""
+    return _build_seed_papers()
+
+
+def get_seed_workflows() -> List[Workflow]:
+    """Return seed Workflow objects (public API)."""
+    papers = _build_seed_papers()
+    return _build_seed_workflows(papers)
+
+
 def generate_seed_data(out_dir: Path) -> Tuple[List[Paper], List[Workflow], List[Edge]]:
     """Generate and save seed JSONL files.
 
