@@ -233,21 +233,47 @@ class NumpyFlatIndex(VectorIndex):
 # Embedding helpers
 # ---------------------------------------------------------------------------
 
-def _tfidf_embed(texts: List[str], max_features: int = 512) -> np.ndarray:
+# Module-level cache for TF-IDF vectorizer so queries use the same vocabulary
+_tfidf_vectorizer: Any = None
+
+
+def _tfidf_embed(
+    texts: List[str],
+    max_features: int = 512,
+    *,
+    fit: bool = True,
+) -> np.ndarray:
     """Lightweight TF-IDF embedding fallback.
 
-    Returns an (N, max_features) matrix of float32.
+    Parameters
+    ----------
+    texts : list of str
+    max_features : int
+    fit : bool
+        If True, fit a new vectorizer on *texts* (corpus mode).
+        If False, transform *texts* using the previously fitted vectorizer
+        (query mode).  Falls back to fitting if no vectorizer exists.
+
+    Returns
+    -------
+    np.ndarray of shape (N, dim)
     """
+    global _tfidf_vectorizer
     from sklearn.feature_extraction.text import TfidfVectorizer  # type: ignore
 
-    vectorizer = TfidfVectorizer(max_features=max_features)
-    matrix = vectorizer.fit_transform(texts).toarray().astype(np.float32)
+    if fit or _tfidf_vectorizer is None:
+        _tfidf_vectorizer = TfidfVectorizer(max_features=max_features)
+        matrix = _tfidf_vectorizer.fit_transform(texts).toarray().astype(np.float32)
+    else:
+        matrix = _tfidf_vectorizer.transform(texts).toarray().astype(np.float32)
     return matrix
 
 
 def embed_workflow_texts(
     texts: List[str],
     model_name: str = "all-MiniLM-L6-v2",
+    *,
+    fit: bool = True,
 ) -> np.ndarray:
     """Generate embeddings for a list of workflow texts.
 
@@ -277,7 +303,7 @@ def embed_workflow_texts(
         logger.warning(
             "sentence-transformers not available. Falling back to TF-IDF embeddings."
         )
-        vectors = _tfidf_embed(texts)
+        vectors = _tfidf_embed(texts, fit=fit)
         logger.info("Embedded %d texts with TF-IDF, dim=%d", len(texts), vectors.shape[1])
         return vectors
 
