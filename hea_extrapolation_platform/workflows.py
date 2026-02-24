@@ -146,7 +146,7 @@ class WorkflowLIN(BaseWorkflow):
 
         pipe = Pipeline([
             ("scaler", StandardScaler()),
-            ("model", Ridge(alpha=self._alpha, random_state=seed)),
+            ("model", Ridge(alpha=self._alpha)),
         ])
         pipe.fit(X_train.values, y_train.values)
 
@@ -353,7 +353,8 @@ class WorkflowENS(BaseWorkflow):
                 random_state=seed,
             )
         else:
-            model = Ridge(alpha=1.0, random_state=seed)
+            # Ridge has no randomness; random_state is not a valid parameter.
+            model = Ridge(alpha=1.0)
         return Pipeline([
             ("scaler", StandardScaler()),
             ("model", model),

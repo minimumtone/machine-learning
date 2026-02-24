@@ -234,13 +234,22 @@ class ExperimentRunner:
 
                         fold_idx += 1
 
-                # OOD detection per feature set (using last seed's full data)
+                # OOD detection per feature set
+                # We fit on training data and score on test data to avoid
+                # self-scoring leak (Fix #5).
                 fs_key = fs_name.value
                 if fs_key not in ood_results:
                     try:
+                        # Use the last split's train/test partition for OOD
+                        # detection so we score held-out data, not training data.
+                        last_train_idx = train_idx
+                        last_test_idx = test_idx
+                        X_train_ood = X_fs.iloc[last_train_idx]
+                        X_test_ood = X_fs.iloc[last_test_idx]
+
                         detector = OODDetector(k=10)
-                        detector.fit(X_fs)
-                        ood_res = detector.score(X_fs)
+                        detector.fit(X_train_ood)
+                        ood_res = detector.score(X_test_ood)
                         ood_results[fs_key] = ood_res
 
                         # Collect OOD error data for evaluation
@@ -261,12 +270,23 @@ class ExperimentRunner:
                                 and len(pred_std) > 0
                             ):
                                 errors = last_ens.y_test_true - last_ens.y_test_pred
-                                is_ood_test = ood_res.is_ood[last_ens.test_indices]
-                                ood_errors_for_eval[fs_key] = {
-                                    "errors": errors,
-                                    "uncertainties": pred_std,
-                                    "is_ood": is_ood_test,
-                                }
+                                # Fix #4: ood_res.is_ood is aligned with the
+                                # test set (X_test_ood), not the full dataset.
+                                # Both errors and is_ood have length = len(test_idx).
+                                n_test = len(last_ens.y_test_true)
+                                n_ood = len(ood_res.is_ood)
+                                if n_test == n_ood:
+                                    ood_errors_for_eval[fs_key] = {
+                                        "errors": errors,
+                                        "uncertainties": pred_std,
+                                        "is_ood": ood_res.is_ood,
+                                    }
+                                else:
+                                    logger.warning(
+                                        "OOD/test size mismatch for %s: "
+                                        "test=%d, ood=%d – skipping eval data",
+                                        fs_key, n_test, n_ood,
+                                    )
                     except Exception:
                         logger.exception("OOD detection failed for %s", fs_key)
 

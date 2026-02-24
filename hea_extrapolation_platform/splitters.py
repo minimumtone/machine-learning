@@ -174,10 +174,19 @@ class ElementExclusionSplitter(BaseSplitter):
     ) -> None:
         self._target_elements = target_elements or ["Co", "Ni", "Ti"]
         self._min_test_size = min_test_size
-        self._actual_n_splits = len(self._target_elements)
+        self._actual_n_splits: Optional[int] = None  # set after split()
 
     def n_splits(self) -> int:
-        return self._actual_n_splits
+        """Return the number of valid folds.
+
+        Before ``split()`` has been called, returns the *maximum possible*
+        number of folds (i.e. ``len(target_elements)``).  After ``split()``
+        has completed, returns the *actual* number of folds that were
+        yielded (may be fewer if elements were skipped).
+        """
+        if self._actual_n_splits is not None:
+            return self._actual_n_splits
+        return len(self._target_elements)
 
     def split(
         self,
