@@ -260,10 +260,10 @@ def _refresh_report_data(session: Dict[str, Any]) -> Tuple:
 
 def create_app() -> gr.Blocks:
     """Build and return the Gradio Blocks app."""
-    # Fix #5: theme placement — Gradio 6.0+ expects theme in launch(),
-    # but we store it so create_app() callers can pass it to launch().
+    # Fix #5: theme passed to gr.Blocks() constructor
     with gr.Blocks(
         title="Extrapolation Discovery Platform",
+        theme=gr.themes.Soft(),
     ) as app:
         gr.Markdown(
             "# Extrapolation Discovery Platform\n"
@@ -664,11 +664,21 @@ def create_app() -> gr.Blocks:
                 log("Starting experiment...")
                 yield _yield_progress("\n".join(log_lines))
 
-                seeds = [
-                    int(s.strip())
-                    for s in seeds_str.split()
-                    if s.strip()
-                ]
+                # Validate seeds input
+                try:
+                    seeds = [
+                        int(s.strip())
+                        for s in seeds_str.split()
+                        if s.strip()
+                    ]
+                except ValueError:
+                    log(
+                        "Error: Seeds must be space-separated integers "
+                        "(e.g. 42 123 456). Got: " + repr(seeds_str)
+                    )
+                    yield _yield_progress("\n".join(log_lines))
+                    return
+
                 excl = [
                     e.strip()
                     for e in excl_str.split()
@@ -676,7 +686,10 @@ def create_app() -> gr.Blocks:
                 ]
 
                 if not seeds:
-                    log("Error: No valid seeds provided.")
+                    log(
+                        "Error: No valid seeds provided. "
+                        "Enter space-separated integers (e.g. 42 123 456)."
+                    )
                     yield _yield_progress("\n".join(log_lines))
                     return
 
@@ -888,9 +901,8 @@ def create_app() -> gr.Blocks:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     application = create_app()
-    # Fix #5: theme passed to launch() (Gradio 6.0+ API)
+    # Fix #5: theme is set in gr.Blocks() constructor above
     application.launch(
         server_name="0.0.0.0",
         server_port=7860,
-        theme=gr.themes.Soft(),
     )

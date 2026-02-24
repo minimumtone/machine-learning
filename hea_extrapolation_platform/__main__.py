@@ -313,11 +313,11 @@ def cmd_gui(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     app = create_app()
+    # theme is set in gr.Blocks() inside create_app()
     app.launch(
         server_name="0.0.0.0",
         server_port=args.port,
         share=args.share,
-        theme=gr.themes.Soft(),
     )
 
 
