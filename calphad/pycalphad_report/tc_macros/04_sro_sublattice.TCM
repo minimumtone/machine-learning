@@ -1,0 +1,182 @@
+@@ =============================================================
+@@ Fe-V B2_221 Thermo-Calc Macro: SRO / Sublattice Occupancy
+@@ =============================================================
+@@ Purpose: Reproduce pycalphad Sections 8-11 (SRO analysis)
+@@          Extract B2_221 sublattice occupancies at multiple
+@@          temperatures to verify order-disorder transition
+@@
+@@ Usage: MACRO_FILE_READ 04_sro_sublattice.TCM
+@@ Prerequisites: Fe-V_B2_221_VASP.tdb in working directory
+@@ =============================================================
+
+@@ --- STEP 1: Load database ---
+GO DATA
+SWITCH_DATABASE TDB
+READ_DATABASE Fe-V_B2_221_VASP.tdb
+DEFINE_SYSTEM FE V
+
+@@ Reject non-BCC phases (metastable BCC equilibrium)
+REJECT_PHASE LIQUID
+REJECT_PHASE FCC_A1
+REJECT_PHASE SIGMA
+
+RESTORE_PHASE BCC_A2
+RESTORE_PHASE B2_221
+
+GET_DATA
+
+@@ =============================================================
+@@ STEP 2: x(V) = 0.5 - Temperature sweep
+@@ =============================================================
+@@ This is the key composition for B2 ordering
+@@ Expect eta -> 0 at ~2725 K (from pycalphad results)
+
+GO POLY
+SET_REFERENCE_STATE FE BCC_A2 * 1E5
+SET_REFERENCE_STATE V BCC_A2 * 1E5
+
+SET_CONDITION P 101325
+SET_CONDITION N 1
+SET_CONDITION X(V) 0.5
+SET_CONDITION T 500
+
+CALCULATE_EQUILIBRIUM
+
+@@ Display sublattice occupancies
+@@ Y(B2_221,V,#) gives V site fraction on sublattice #
+LIST_EQUILIBRIUM
+
+@@ Step over temperature: 300 - 3000 K, step 50 K
+SET_AXIS_VARIABLE 1 T 300 3000 50
+
+STEP_WITH_OPTIONS
+
+@@ --- Post-processing ---
+GO POST
+
+@@ Plot V occupancy on sublattice 1 (A-site representative)
+SET_PLOT_AXIS X T 300 3000
+SET_PLOT_AXIS Y Y(B2_221,V,1) 0 1
+SET_PLOT_TITLE B2_221 V Occupancy on Sublattice 1 (x_V=0.5)
+PLOT_DIAGRAM
+SAVE_DIAGRAM sro_yV_sl1_xV05
+
+@@ Plot V occupancy on sublattice 5 (B-site representative)
+SET_PLOT_AXIS X T 300 3000
+SET_PLOT_AXIS Y Y(B2_221,V,5) 0 1
+SET_PLOT_TITLE B2_221 V Occupancy on Sublattice 5 (x_V=0.5)
+PLOT_DIAGRAM
+SAVE_DIAGRAM sro_yV_sl5_xV05
+
+@@ =============================================================
+@@ STEP 3: x(V) = 0.25 - Temperature sweep
+@@ =============================================================
+
+GO POLY
+SET_CONDITION X(V) 0.25
+SET_CONDITION T 500
+
+CALCULATE_EQUILIBRIUM
+LIST_EQUILIBRIUM
+
+SET_AXIS_VARIABLE 1 T 300 3000 50
+STEP_WITH_OPTIONS
+
+GO POST
+SET_PLOT_AXIS X T 300 3000
+SET_PLOT_AXIS Y Y(B2_221,V,1) 0 1
+SET_PLOT_TITLE B2_221 V Occupancy on Sublattice 1 (x_V=0.25)
+PLOT_DIAGRAM
+SAVE_DIAGRAM sro_yV_sl1_xV025
+
+@@ =============================================================
+@@ STEP 4: x(V) = 0.375 - Temperature sweep
+@@ =============================================================
+
+GO POLY
+SET_CONDITION X(V) 0.375
+SET_CONDITION T 500
+
+CALCULATE_EQUILIBRIUM
+LIST_EQUILIBRIUM
+
+SET_AXIS_VARIABLE 1 T 300 3000 50
+STEP_WITH_OPTIONS
+
+GO POST
+SET_PLOT_AXIS X T 300 3000
+SET_PLOT_AXIS Y Y(B2_221,V,1) 0 1
+SET_PLOT_TITLE B2_221 V Occupancy on Sublattice 1 (x_V=0.375)
+PLOT_DIAGRAM
+SAVE_DIAGRAM sro_yV_sl1_xV0375
+
+@@ =============================================================
+@@ STEP 5: Extract ordering parameter eta from post-processing
+@@ =============================================================
+@@ In Thermo-Calc, the ordering parameter can be computed as:
+@@   eta = |Y(B2_221,V,1) - Y(B2_221,V,5)|
+@@
+@@ where sublattices 1-4 are A-sites and 5-8 are B-sites in the
+@@ 2x2x1 B2 supercell. By symmetry, Y(V,1)=Y(V,2)=Y(V,3)=Y(V,4)
+@@ and Y(V,5)=Y(V,6)=Y(V,7)=Y(V,8) at equilibrium.
+@@
+@@ To verify this in TC, check LIST_EQUILIBRIUM output at a given T.
+@@
+@@ For the Warren-Cowley SRO parameter alpha_1:
+@@   P_VFe = yA*(1-yB) + (1-yA)*yB
+@@   alpha_1 = 1 - P_VFe / (2*x_V*(1-x_V))
+@@ where yA = Y(B2_221,V,1), yB = Y(B2_221,V,5)
+
+@@ =============================================================
+@@ STEP 6: Tabular output for validation
+@@ =============================================================
+@@ The following single-point calculations allow direct comparison
+@@ with pycalphad Table (Section 8.2)
+
+@@ T = 500 K, x(V) = 0.5
+GO POLY
+SET_CONDITION T 500
+SET_CONDITION X(V) 0.5
+CALCULATE_EQUILIBRIUM
+LIST_EQUILIBRIUM
+
+@@ T = 1000 K, x(V) = 0.5
+SET_CONDITION T 1000
+CALCULATE_EQUILIBRIUM
+LIST_EQUILIBRIUM
+
+@@ T = 1500 K, x(V) = 0.5
+SET_CONDITION T 1500
+CALCULATE_EQUILIBRIUM
+LIST_EQUILIBRIUM
+
+@@ T = 2000 K, x(V) = 0.5
+SET_CONDITION T 2000
+CALCULATE_EQUILIBRIUM
+LIST_EQUILIBRIUM
+
+@@ T = 2500 K, x(V) = 0.5
+SET_CONDITION T 2500
+CALCULATE_EQUILIBRIUM
+LIST_EQUILIBRIUM
+
+@@ T = 3000 K, x(V) = 0.5
+SET_CONDITION T 3000
+CALCULATE_EQUILIBRIUM
+LIST_EQUILIBRIUM
+
+@@ =============================================================
+@@ Expected results (from pycalphad):
+@@   T=500K:  eta=0.545 (fully ordered)
+@@   T=1000K: eta=0.554 (ordered)
+@@   T=1500K: eta=0.408 (partially ordered)
+@@   T=2000K: eta=0.219 (partially disordered)
+@@   T=2500K: eta=0.071 (nearly disordered)
+@@   T=3000K: eta=0.037 (disordered)
+@@
+@@ Transition temperature: ~2725 K (eta -> 0)
+@@ =============================================================
+
+@@ =============================================================
+@@ END OF MACRO
+@@ =============================================================

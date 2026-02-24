@@ -1,0 +1,91 @@
+@@ =============================================================
+@@ Fe-V B2_221 Thermo-Calc Macro: Phase Fractions
+@@ =============================================================
+@@ Purpose: Reproduce pycalphad Section 7 (Phase fractions)
+@@          Calculate phase fractions as function of composition
+@@          at multiple temperatures
+@@
+@@ Usage: MACRO_FILE_READ 06_phase_fractions.TCM
+@@ Prerequisites: Fe-V_B2_221_VASP.tdb in working directory
+@@ =============================================================
+
+@@ --- STEP 1: Load database ---
+GO DATA
+SWITCH_DATABASE TDB
+READ_DATABASE Fe-V_B2_221_VASP.tdb
+DEFINE_SYSTEM FE V
+
+GET_DATA
+
+@@ --- STEP 2: Phase fractions at T=500 K ---
+GO POLY
+SET_CONDITION P 101325
+SET_CONDITION N 1
+SET_CONDITION T 500
+SET_CONDITION X(V) 0.01
+
+@@ All phases active
+CHANGE_STATUS PHASE LIQUID ENTERED 1
+CHANGE_STATUS PHASE FCC_A1 ENTERED 1
+CHANGE_STATUS PHASE BCC_A2 ENTERED 1
+CHANGE_STATUS PHASE SIGMA ENTERED 1
+CHANGE_STATUS PHASE B2_221 ENTERED 1
+
+CALCULATE_EQUILIBRIUM
+
+SET_AXIS_VARIABLE 1 X(V) 0.01 0.99 0.02
+STEP_WITH_OPTIONS
+
+GO POST
+SET_PLOT_AXIS X X(V) 0 1
+SET_PLOT_AXIS Y NP(*) 0 1
+SET_PLOT_TITLE Phase Fractions at T=500 K
+PLOT_DIAGRAM
+SAVE_DIAGRAM phase_fractions_500K
+
+@@ --- STEP 3: Phase fractions at T=1000 K ---
+GO POLY
+SET_CONDITION T 1000
+SET_AXIS_VARIABLE 1 X(V) 0.01 0.99 0.02
+STEP_WITH_OPTIONS
+
+GO POST
+SET_PLOT_AXIS X X(V) 0 1
+SET_PLOT_AXIS Y NP(*) 0 1
+SET_PLOT_TITLE Phase Fractions at T=1000 K
+PLOT_DIAGRAM
+SAVE_DIAGRAM phase_fractions_1000K
+
+@@ --- STEP 4: Phase fractions at T=1500 K ---
+GO POLY
+SET_CONDITION T 1500
+SET_AXIS_VARIABLE 1 X(V) 0.01 0.99 0.02
+STEP_WITH_OPTIONS
+
+GO POST
+SET_PLOT_AXIS X X(V) 0 1
+SET_PLOT_AXIS Y NP(*) 0 1
+SET_PLOT_TITLE Phase Fractions at T=1500 K
+PLOT_DIAGRAM
+SAVE_DIAGRAM phase_fractions_1500K
+
+@@ --- STEP 5: Phase fractions at T=2000 K ---
+GO POLY
+SET_CONDITION T 2000
+SET_AXIS_VARIABLE 1 X(V) 0.01 0.99 0.02
+STEP_WITH_OPTIONS
+
+GO POST
+SET_PLOT_AXIS X X(V) 0 1
+SET_PLOT_AXIS Y NP(*) 0 1
+SET_PLOT_TITLE Phase Fractions at T=2000 K
+PLOT_DIAGRAM
+SAVE_DIAGRAM phase_fractions_2000K
+
+@@ =============================================================
+@@ Notes:
+@@ - NP(*) gives mole fraction of each phase
+@@ - Compare with pycalphad Figure 07
+@@ - Expected: B2_221 dominant in mid-composition range
+@@   BCC_A2 at edges, SIGMA at high V content
+@@ =============================================================

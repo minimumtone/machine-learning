@@ -1,0 +1,55 @@
+@@ =============================================================
+@@ Fe-V B2_221 Thermo-Calc Macro: Full Equilibrium Phase Diagram
+@@ =============================================================
+@@ Purpose: Reproduce pycalphad Section 5.1 (BinaryStrategy full)
+@@          Calculate full equilibrium phase diagram with all 5 phases
+@@
+@@ Usage: MACRO_FILE_READ 02_phase_diagram_full.TCM
+@@ Prerequisites: Fe-V_B2_221_VASP.tdb in working directory
+@@ =============================================================
+
+@@ --- STEP 1: Load database ---
+GO DATA
+SWITCH_DATABASE TDB
+READ_DATABASE Fe-V_B2_221_VASP.tdb
+DEFINE_SYSTEM FE V
+
+@@ Confirm all phases are active
+LIST_PHASE_STATUS
+
+GET_DATA
+
+@@ --- STEP 2: Set up mapping conditions ---
+GO MAP
+
+@@ All 5 phases active: LIQUID, FCC_A1, BCC_A2, SIGMA, B2_221
+@@ Temperature range: 300-3000 K (matching pycalphad)
+@@ Composition range: x(V) = 0-1
+
+SET_MAP_CONDITION 1 T 300 3000 25
+SET_MAP_CONDITION 2 X(V) 0 1 0.01
+SET_MAP_CONDITION P 101325
+
+@@ --- STEP 3: Calculate phase diagram ---
+CALCULATE_MAP
+
+@@ --- STEP 4: Plot ---
+GO POST
+
+SET_PLOT_AXIS X X(V) 0 1
+SET_PLOT_AXIS Y T 300 3000
+
+SET_PLOT_TITLE Fe-V Full Equilibrium Phase Diagram (All 5 Phases)
+PLOT_DIAGRAM
+SAVE_DIAGRAM fev_full_phase_diagram
+
+@@ --- STEP 5: Export data for comparison ---
+@@ EXPORT_DIAGRAM fev_full_phase_diagram.dat
+
+@@ =============================================================
+@@ Notes:
+@@ - Active phases: LIQUID, FCC_A1, BCC_A2, SIGMA, B2_221
+@@ - This corresponds to pycalphad BinaryStrategy with all phases
+@@ - B2_221 uses 8 sublattices (2x2x1 supercell, 256 endmembers)
+@@ - Compare output with pycalphad Figure 08
+@@ =============================================================

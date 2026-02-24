@@ -1,0 +1,84 @@
+@@ =============================================================
+@@ Fe-V B2_221 Thermo-Calc Macro: Driving Force Analysis
+@@ =============================================================
+@@ Purpose: Reproduce pycalphad Section 4 (Driving force)
+@@          Compare B2_221 vs BCC_A2 Gibbs energy difference
+@@
+@@ Usage: MACRO_FILE_READ 05_driving_force.TCM
+@@ Prerequisites: Fe-V_B2_221_VASP.tdb in working directory
+@@ =============================================================
+
+@@ --- STEP 1: Load database ---
+GO DATA
+SWITCH_DATABASE TDB
+READ_DATABASE Fe-V_B2_221_VASP.tdb
+DEFINE_SYSTEM FE V
+
+GET_DATA
+
+@@ --- STEP 2: Calculate driving force at T=1000 K ---
+@@ Driving force = GM(BCC_A2) - GM(B2_221)
+
+GO POLY
+
+@@ Only BCC phases for direct comparison
+CHANGE_STATUS PHASE LIQUID SUSPENDED
+CHANGE_STATUS PHASE FCC_A1 SUSPENDED
+CHANGE_STATUS PHASE SIGMA SUSPENDED
+CHANGE_STATUS PHASE BCC_A2 ENTERED 1
+CHANGE_STATUS PHASE B2_221 ENTERED 1
+
+SET_CONDITION P 101325
+SET_CONDITION N 1
+SET_CONDITION T 1000
+SET_CONDITION X(V) 0.01
+
+CALCULATE_EQUILIBRIUM
+
+@@ Step over composition
+SET_AXIS_VARIABLE 1 X(V) 0.01 0.99 0.02
+STEP_WITH_OPTIONS
+
+@@ --- Post-processing ---
+GO POST
+
+@@ Plot Gibbs energy of both phases
+SET_PLOT_AXIS X X(V) 0 1
+SET_PLOT_AXIS Y GM(*) -120000 10000
+SET_PLOT_TITLE Driving Force: B2_221 vs BCC_A2 at T=1000 K
+PLOT_DIAGRAM
+SAVE_DIAGRAM driving_force_1000K
+
+@@ --- STEP 3: Temperature series ---
+@@ T = 500 K
+GO POLY
+SET_CONDITION T 500
+SET_AXIS_VARIABLE 1 X(V) 0.01 0.99 0.02
+STEP_WITH_OPTIONS
+
+GO POST
+SET_PLOT_AXIS X X(V) 0 1
+SET_PLOT_AXIS Y GM(*) -120000 10000
+SET_PLOT_TITLE Driving Force: B2_221 vs BCC_A2 at T=500 K
+PLOT_DIAGRAM
+SAVE_DIAGRAM driving_force_500K
+
+@@ T = 2000 K
+GO POLY
+SET_CONDITION T 2000
+SET_AXIS_VARIABLE 1 X(V) 0.01 0.99 0.02
+STEP_WITH_OPTIONS
+
+GO POST
+SET_PLOT_AXIS X X(V) 0 1
+SET_PLOT_AXIS Y GM(*) -120000 10000
+SET_PLOT_TITLE Driving Force: B2_221 vs BCC_A2 at T=2000 K
+PLOT_DIAGRAM
+SAVE_DIAGRAM driving_force_2000K
+
+@@ =============================================================
+@@ Notes:
+@@ - Positive driving force means B2_221 is more stable than BCC_A2
+@@ - Compare with pycalphad Figure 03 (driving force analysis)
+@@ - At T=1000K, maximum driving force ~49 kJ/mol near x_V=0.5
+@@ =============================================================

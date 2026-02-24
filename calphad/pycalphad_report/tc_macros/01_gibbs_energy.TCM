@@ -1,0 +1,168 @@
+@@ =============================================================
+@@ Fe-V B2_221 Thermo-Calc Macro: Gibbs Free Energy Surfaces
+@@ =============================================================
+@@ Purpose: Reproduce pycalphad Section 2 (Gibbs energy surfaces)
+@@          and Section 3 (all-phase Gibbs energy comparison)
+@@
+@@ Usage: MACRO_FILE_READ 01_gibbs_energy.TCM
+@@ Prerequisites: Fe-V_B2_221_VASP.tdb in working directory
+@@ =============================================================
+
+@@ --- STEP 1: Load database ---
+GO DATA
+SWITCH_DATABASE TDB
+READ_DATABASE Fe-V_B2_221_VASP.tdb
+DEFINE_SYSTEM FE V
+
+@@ List all phases to confirm loading
+LIST_PHASE_STATUS
+
+GET_DATA
+
+@@ --- STEP 2: B2_221 Gibbs energy at multiple temperatures ---
+@@ Corresponding to pycalphad calculate() for Gibbs surfaces
+
+@@ (a) T = 300 K
+GO POLY
+SET_CONDITION P 101325
+SET_CONDITION N 1
+SET_CONDITION T 300
+
+@@ Sweep x(V) from 0.01 to 0.99
+SET_CONDITION X(V) 0.01
+
+@@ Reject all phases except B2_221 for single-phase energy
+CHANGE_STATUS PHASE LIQUID SUSPENDED
+CHANGE_STATUS PHASE FCC_A1 SUSPENDED
+CHANGE_STATUS PHASE BCC_A2 SUSPENDED
+CHANGE_STATUS PHASE SIGMA SUSPENDED
+CHANGE_STATUS PHASE B2_221 ENTERED 1
+
+CALCULATE_EQUILIBRIUM
+
+@@ Step over composition
+SET_AXIS_VARIABLE 1 X(V) 0.01 0.99 0.02
+
+STEP_WITH_OPTIONS
+
+@@ --- STEP 3: Post-processing for T=300 K ---
+GO POST
+
+SET_PLOT_FORMAT GNUPLOT
+SET_PLOT_AXIS X X(V) 0 1
+SET_PLOT_AXIS Y GM(*) -140000 20000
+
+SET_PLOT_TITLE B2_221 Gibbs Energy at T=300 K
+PLOT_DIAGRAM
+SAVE_DIAGRAM b2_221_gibbs_300K
+
+@@ --- STEP 4: Repeat for T=500, 800, 1000, 1200, 1500, 2000, 2500 K ---
+@@ T = 500 K
+GO POLY
+SET_CONDITION T 500
+SET_AXIS_VARIABLE 1 X(V) 0.01 0.99 0.02
+STEP_WITH_OPTIONS
+
+GO POST
+SET_PLOT_AXIS X X(V) 0 1
+SET_PLOT_AXIS Y GM(*) -140000 20000
+SET_PLOT_TITLE B2_221 Gibbs Energy at T=500 K
+PLOT_DIAGRAM
+SAVE_DIAGRAM b2_221_gibbs_500K
+
+@@ T = 800 K
+GO POLY
+SET_CONDITION T 800
+SET_AXIS_VARIABLE 1 X(V) 0.01 0.99 0.02
+STEP_WITH_OPTIONS
+
+GO POST
+SET_PLOT_AXIS X X(V) 0 1
+SET_PLOT_AXIS Y GM(*) -140000 20000
+SET_PLOT_TITLE B2_221 Gibbs Energy at T=800 K
+PLOT_DIAGRAM
+SAVE_DIAGRAM b2_221_gibbs_800K
+
+@@ T = 1000 K
+GO POLY
+SET_CONDITION T 1000
+SET_AXIS_VARIABLE 1 X(V) 0.01 0.99 0.02
+STEP_WITH_OPTIONS
+
+GO POST
+SET_PLOT_AXIS X X(V) 0 1
+SET_PLOT_AXIS Y GM(*) -140000 20000
+SET_PLOT_TITLE B2_221 Gibbs Energy at T=1000 K
+PLOT_DIAGRAM
+SAVE_DIAGRAM b2_221_gibbs_1000K
+
+@@ T = 1500 K
+GO POLY
+SET_CONDITION T 1500
+SET_AXIS_VARIABLE 1 X(V) 0.01 0.99 0.02
+STEP_WITH_OPTIONS
+
+GO POST
+SET_PLOT_AXIS X X(V) 0 1
+SET_PLOT_AXIS Y GM(*) -140000 20000
+SET_PLOT_TITLE B2_221 Gibbs Energy at T=1500 K
+PLOT_DIAGRAM
+SAVE_DIAGRAM b2_221_gibbs_1500K
+
+@@ T = 2000 K
+GO POLY
+SET_CONDITION T 2000
+SET_AXIS_VARIABLE 1 X(V) 0.01 0.99 0.02
+STEP_WITH_OPTIONS
+
+GO POST
+SET_PLOT_AXIS X X(V) 0 1
+SET_PLOT_AXIS Y GM(*) -140000 20000
+SET_PLOT_TITLE B2_221 Gibbs Energy at T=2000 K
+PLOT_DIAGRAM
+SAVE_DIAGRAM b2_221_gibbs_2000K
+
+@@ T = 2500 K
+GO POLY
+SET_CONDITION T 2500
+SET_AXIS_VARIABLE 1 X(V) 0.01 0.99 0.02
+STEP_WITH_OPTIONS
+
+GO POST
+SET_PLOT_AXIS X X(V) 0 1
+SET_PLOT_AXIS Y GM(*) -140000 20000
+SET_PLOT_TITLE B2_221 Gibbs Energy at T=2500 K
+PLOT_DIAGRAM
+SAVE_DIAGRAM b2_221_gibbs_2500K
+
+@@ --- STEP 5: All-phase Gibbs comparison at T=1000 K ---
+@@ Corresponding to pycalphad Section 3
+
+GO POLY
+
+@@ Restore all phases for comparison
+CHANGE_STATUS PHASE LIQUID ENTERED 1
+CHANGE_STATUS PHASE FCC_A1 ENTERED 1
+CHANGE_STATUS PHASE BCC_A2 ENTERED 1
+CHANGE_STATUS PHASE SIGMA ENTERED 1
+CHANGE_STATUS PHASE B2_221 ENTERED 1
+
+SET_CONDITION T 1000
+SET_CONDITION P 101325
+SET_CONDITION N 1
+SET_CONDITION X(V) 0.01
+
+SET_AXIS_VARIABLE 1 X(V) 0.01 0.99 0.02
+STEP_WITH_OPTIONS
+
+@@ Plot all-phase comparison
+GO POST
+SET_PLOT_AXIS X X(V) 0 1
+SET_PLOT_AXIS Y GM(*) -140000 20000
+SET_PLOT_TITLE All Phases Gibbs Energy Comparison at T=1000 K
+PLOT_DIAGRAM
+SAVE_DIAGRAM all_phases_gibbs_1000K
+
+@@ =============================================================
+@@ END OF MACRO
+@@ =============================================================
