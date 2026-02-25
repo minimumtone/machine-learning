@@ -121,7 +121,12 @@ def _get_literature_engine(session: Dict[str, Any]) -> Any:
 def _build_integration_status_md(
     runner: Optional[Any],
 ) -> str:
-    """Build a Markdown table showing integration status."""
+    """Build a Markdown summary showing integration status.
+
+    This is displayed inside a collapsible Accordion so that
+    casual users never need to see it.  Power users can expand
+    the panel to inspect backend connectivity.
+    """
     from hea_extrapolation_platform.integrations.mlflow_tracker import (
         is_mlflow_available,
     )
@@ -129,55 +134,59 @@ def _build_integration_status_md(
         is_feast_available,
     )
 
-    mlflow_pkg = "Installed" if is_mlflow_available() else "Not installed"
-    feast_pkg = "Installed" if is_feast_available() else "Not installed"
+    mlflow_pkg = "Installed" if is_mlflow_available() else "Fallback"
+    feast_pkg = "Installed" if is_feast_available() else "Fallback"
 
     if runner is None:
-        mlflow_state = "--"
-        feast_state = "--"
-        mint_state = "--"
-        mlflow_detail = "Run experiment to see status"
-        feast_detail = "Run experiment to see status"
-        mint_detail = "Run experiment to see status"
+        return (
+            "Experiment not yet executed.\n\n"
+            "All integrations are **automatically enabled** when you "
+            "run an experiment.  No configuration required."
+        )
+
+    # MLflow
+    if runner.tracker.is_mlflow_active:
+        mlflow_icon = "Active"
+        mlflow_detail = f"Tracking URI: {runner.tracker.get_tracking_uri()}"
     else:
-        # MLflow
-        if runner.tracker.is_mlflow_active:
-            mlflow_state = "Active (MLflow server)"
-            mlflow_detail = f"Tracking URI: {runner.tracker.get_tracking_uri()}"
-        else:
-            tracked = runner.tracker.list_runs()
-            mlflow_state = "Active (in-memory fallback)"
-            mlflow_detail = f"{len(tracked)} run(s) tracked in memory"
+        tracked = runner.tracker.list_runs()
+        mlflow_icon = "Active (in-memory)"
+        mlflow_detail = f"{len(tracked)} run(s) tracked"
 
-        # Feast
-        if runner.feature_store.is_feast_active:
-            store_info = runner.feature_store.get_store_info()
-            feast_state = "Active (Feast server)"
-            feast_detail = f"Repo: {store_info.get('repo_path', 'N/A')}"
-        else:
-            sets = runner.feature_store.list_feature_sets()
-            feast_state = "Active (built-in catalog)"
-            feast_detail = f"{len(sets)} feature set(s) managed"
+    # Feast
+    if runner.feature_store.is_feast_active:
+        store_info = runner.feature_store.get_store_info()
+        feast_icon = "Active"
+        feast_detail = f"Repo: {store_info.get('repo_path', 'N/A')}"
+    else:
+        sets = runner.feature_store.list_feature_sets()
+        feast_icon = "Active (built-in)"
+        feast_detail = f"{len(sets)} feature set(s) managed"
 
-        # MInt
-        if runner.mint_registry is not None:
-            wfs = runner.mint_registry.list_workflows()
-            mint_state = f"Active ({len(wfs)} workflows)"
-            names = ", ".join(w["name"] for w in wfs)
-            mint_detail = names
-        else:
-            mint_state = "Disabled"
-            mint_detail = "Enable in Config tab"
+    # MInt
+    if runner.mint_registry is not None:
+        wfs = runner.mint_registry.list_workflows()
+        mint_icon = f"Active ({len(wfs)} workflows)"
+        names = ", ".join(w["name"] for w in wfs)
+        mint_detail = names
+    else:
+        mint_icon = "Standby"
+        mint_detail = "No MInt server connected; using built-in workflows"
 
     lines = [
-        "| Integration | Package | Status | Details |",
-        "|---|---|---|---|",
-        f"| **MLflow** (experiment tracking) | {mlflow_pkg} "
-        f"| {mlflow_state} | {mlflow_detail} |",
-        f"| **Feast** (feature store) | {feast_pkg} "
-        f"| {feast_state} | {feast_detail} |",
-        f"| **MInt** (workflow adapters) | Built-in "
-        f"| {mint_state} | {mint_detail} |",
+        "### Data Pipeline",
+        "",
+        "```",
+        "Feast (Feature Store)  -->  Experiment Runner  -->  MLflow (Tracking)",
+        "                                   |                       ",
+        "                            MInt (Workflows)               ",
+        "```",
+        "",
+        "| Component | Mode | Details |",
+        "|---|---|---|",
+        f"| **MLflow** -- Experiment Tracking | {mlflow_icon} ({mlflow_pkg}) | {mlflow_detail} |",
+        f"| **Feast** -- Feature Store | {feast_icon} ({feast_pkg}) | {feast_detail} |",
+        f"| **MInt** -- Workflow Adapters | {mint_icon} | {mint_detail} |",
     ]
     return "\n".join(lines)
 
@@ -370,11 +379,14 @@ def create_app() -> gr.Blocks:
                         label="OOD Samples", value="--", interactive=False,
                     )
 
-                # --- Integration Status Panel ---
-                gr.Markdown("### Integration Status")
-                integration_status = gr.Markdown(
-                    _build_integration_status_md(None),
-                )
+                # --- Integration Status (collapsible, hidden by default) ---
+                with gr.Accordion(
+                    "System Details (MLflow / Feast / MInt)",
+                    open=False,
+                ):
+                    integration_status = gr.Markdown(
+                        _build_integration_status_md(None),
+                    )
 
                 validity_plot = gr.Plot(label="Feature Validity Ranking")
                 heatmap_plot = gr.Plot(label="Performance Heatmap (RMSE Test)")
@@ -442,50 +454,14 @@ def create_app() -> gr.Blocks:
                             info="Skip PNG generation (Plotly always available)",
                         )
 
+                # Integrations are always enabled behind the scenes.
+                # Users do not need to configure them.
                 gr.Markdown(
-                    "### Integrations (optional)\n\n"
-                    "Enable external tool integrations to enhance "
-                    "experiment tracking, feature management, and "
-                    "workflow execution. All integrations fall back "
-                    "gracefully if the external package is not installed."
+                    "All experiment tracking (MLflow), feature management "
+                    "(Feast), and workflow execution (MInt) are "
+                    "**automatically enabled**.  "
+                    "Results are recorded and managed transparently."
                 )
-                with gr.Row():
-                    with gr.Column():
-                        use_mlflow = gr.Checkbox(
-                            label="MLflow Tracking",
-                            value=False,
-                            info="Log runs to MLflow (requires mlflow package)",
-                        )
-                        gr.Markdown(
-                            "<small>"
-                            "Params, metrics, artifacts auto-logged. "
-                            "Enables experiment comparison in MLflow UI."
-                            "</small>",
-                        )
-                    with gr.Column():
-                        use_feast = gr.Checkbox(
-                            label="Feast Feature Store",
-                            value=False,
-                            info="Use Feast for feature management (requires feast package)",
-                        )
-                        gr.Markdown(
-                            "<small>"
-                            "Feature versioning and Training-Serving Skew "
-                            "prevention. Reuse features across experiments."
-                            "</small>",
-                        )
-                    with gr.Column():
-                        use_mint = gr.Checkbox(
-                            label="MInt Workflow Adapters",
-                            value=False,
-                            info="Run MInt-wrapped workflows in addition to built-in",
-                        )
-                        gr.Markdown(
-                            "<small>"
-                            "Adds MInt-LIN, MInt-XGB, MInt-ENS workflows. "
-                            "Supports wrapped, local, and remote execution."
-                            "</small>",
-                        )
 
                 run_btn = gr.Button(
                     "Run Experiment", variant="primary", size="lg",
@@ -755,9 +731,6 @@ def create_app() -> gr.Blocks:
             excl_str: str,
             skip_lit: bool,
             skip_plt: bool,
-            enable_mlflow: bool,
-            enable_feast: bool,
-            enable_mint: bool,
             session: Dict[str, Any],
         ) -> Generator:
             """Generator that yields incremental progress + state.
@@ -854,9 +827,9 @@ def create_app() -> gr.Blocks:
 
                 runner = ExperimentRunner(
                     seeds=seeds, quick=quick, exclude_elements=excl,
-                    use_mlflow=enable_mlflow,
-                    use_feast=enable_feast,
-                    use_mint=enable_mint,
+                    use_mlflow=True,
+                    use_feast=True,
+                    use_mint=True,
                 )
                 runs, scores, ood_results = runner.run(
                     comps_df, features_df, target,
@@ -870,16 +843,14 @@ def create_app() -> gr.Blocks:
 
                 log(f"Completed: {len(runs)} runs")
 
-                # Log integration status
-                if runner.tracker.is_mlflow_active:
-                    log(
-                        f"MLflow tracking: {runner.tracker.get_tracking_uri()}"
-                    )
-                if runner.feature_store.is_feast_active:
-                    log("Feast feature store: active")
+                # Log integration status (transparent to user)
+                tracked = runner.tracker.list_runs()
+                log(f"Experiment tracking: {len(tracked)} run(s) recorded")
+                fs_sets = runner.feature_store.list_feature_sets()
+                log(f"Feature store: {len(fs_sets)} feature set(s) managed")
                 if runner.mint_registry is not None:
                     n_mint = len(runner.mint_registry.list_workflows())
-                    log(f"MInt workflows: {n_mint} registered")
+                    log(f"Workflow engine: {n_mint} workflow(s) executed")
 
                 if scores:
                     log(
@@ -1016,7 +987,7 @@ def create_app() -> gr.Blocks:
             inputs=[
                 seeds_input, n_samples, quick_mode,
                 exclude_elements, skip_literature, skip_plots,
-                use_mlflow, use_feast, use_mint, state,
+                state,
             ],
             outputs=[
                 # Config tab
