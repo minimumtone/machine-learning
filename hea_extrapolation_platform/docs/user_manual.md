@@ -1,7 +1,7 @@
 # Extrapolation Discovery Platform 取扱説明書
 
-**バージョン**: 1.0  
-**最終更新**: 2026-02-24  
+**バージョン**: 1.1  
+**最終更新**: 2026-02-25  
 **対象ユーザー**: 材料科学研究者・データサイエンティスト（初心者向け）
 
 ---
@@ -22,8 +22,13 @@
 6. [CLI（コマンドライン）操作ガイド](#6-cliコマンドライン操作ガイド)
 7. [設定パラメータ詳細](#7-設定パラメータ詳細)
 8. [結果の読み方・解釈ガイド](#8-結果の読み方解釈ガイド)
-9. [エラー対処・トラブルシューティング](#9-エラー対処トラブルシューティング)
-10. [FAQ（よくある質問）](#10-faqよくある質問)
+9. [外部統合機能（MLflow / Feast / MInt）](#9-外部統合機能mlflow--feast--mint)
+   - [9.1 MLflow（実験トラッキング）](#91-mlflow実験トラッキング)
+   - [9.2 Feast（特徴量ストア）](#92-feast特徴量ストア)
+   - [9.3 MInt（ワークフローアダプタ）](#93-mintワークフローアダプタ)
+   - [9.4 統合ステータスの確認](#94-統合ステータスの確認)
+10. [エラー対処・トラブルシューティング](#10-エラー対処トラブルシューティング)
+11. [FAQ（よくある質問）](#11-faqよくある質問)
 
 ---
 
@@ -539,9 +544,177 @@ Total Score は以下の5つのサブスコアの加重平均です：
 
 ---
 
-## 9. エラー対処・トラブルシューティング
+## 9. 外部統合機能（MLflow / Feast / MInt）
 
-### 9.1 Seeds入力エラー
+本プラットフォームは、外部ツールとの統合により、実験管理・特徴量バージョニング・ワークフロー拡張の機能を提供します。いずれも**オプション**であり、未インストールの場合は自動的にフォールバック（インメモリ実装）に切り替わります。
+
+### 統合の有効化（GUI）
+
+Config & Run タブの「**Integrations**」セクションで、各統合を有効/無効にできます：
+
+![Configタブの統合設定](screenshots/config_integrations_enabled.png)
+
+各チェックボックスの下に、その統合が提供する機能の説明が表示されています。
+
+### 統合の有効化（CLI）
+
+```bash
+# 全統合有効
+python -m hea_extrapolation_platform run --quick --use-mlflow --use-feast --use-mint
+
+# MLflowのみ有効
+python -m hea_extrapolation_platform run --quick --use-mlflow
+
+# 統合なし（従来動作）
+python -m hea_extrapolation_platform run --quick
+```
+
+### 9.1 MLflow（実験トラッキング）
+
+MLflowは実験の**パラメータ・メトリクス・アーティファクト**を自動記録する実験管理ツールです。
+
+#### MLflowが提供する強化点
+
+| 機能 | 説明 |
+|------|------|
+| **実験の完全な再現性** | 全パラメータ（seed, split, feature set, workflow）が自動記録され、過去実験を完全に再現可能 |
+| **実験比較の高速化** | ワークフロー間・特徴量セット間の性能を並列比較。手動集計が不要 |
+| **モデルバージョニング** | 各実験のモデルを自動保存、過去のベストモデルに即座に戻れる |
+| **チーム共有** | MLflowサーバーを立てれば、チーム全員で実験結果を共有・検索可能 |
+| **失敗実験の記録** | 実験が例外で失敗した場合も`FAILED`ステータスで記録（リソースリーク防止） |
+
+#### インストール方法
+
+```bash
+pip install mlflow
+```
+
+#### 動作モード
+
+- **MLflowサーバー接続時**: `MLFLOW_TRACKING_URI`環境変数で指定したサーバーに記録
+- **ローカルモード**: `./mlruns`ディレクトリにローカル保存
+- **フォールバック**: MLflow未インストール時はインメモリディクショナリで代替
+
+#### 記録されるデータ
+
+各実験ランで以下が自動記録されます：
+
+| カテゴリ | 例 |
+|------------|------|
+| **パラメータ** | `seed=42`, `split=RandomCV`, `feature_set=FS_ALL`, `workflow=WF-XGB` |
+| **メトリクス** | `rmse_test=58.85`, `r2_test=0.621`, `ood_ratio=0.075` |
+| **タグ** | `platform_version`, `n_samples`, `quick_mode` |
+| **サマリー** | 全ランの統計情報（総ラン数、ベストスコア、実行時間） |
+
+### 9.2 Feast（特徴量ストア）
+
+Feastは特徴量の**バージョニング・管理・配信**を行う特徴量ストアです。
+
+#### Feastが提供する強化点
+
+| 機能 | 説明 |
+|------|------|
+| **特徴量バージョニング** | 特徴量セットの変更履歴を追跡。「いつ、何を変えたか」が明確に |
+| **特徴量の一元管理** | 全特徴量セットを中央カタログで管理。チーム全体で同じ特徴量定義を共有 |
+| **特徴量と実験の紐付け** | どのバージョンの特徴量セットでどの実験結果が出たか完全に追跡可能 |
+| **特徴量妥当性の長期トレンド** | 特徴量セットの改版ごとに妥当性スコアの推移を可視化 |
+| **オフライン対応** | Feastサーバーがなくてもローカルファイルストアで動作 |
+
+#### インストール方法
+
+```bash
+pip install feast
+```
+
+#### 動作モード
+
+- **Feastサーバー接続時**: `FEAST_REPO_PATH`環境変数で指定したFeastリポジトリを使用
+- **フォールバック**: Feast未インストール時はビルトインカタログ（Pythonディクショナリ）で代替
+
+#### 管理されるデータ
+
+5つの特徴量セットがカタログ管理されます：
+
+| 特徴量セット | 含まれる特徴量 | 用途 |
+|----------------|----------------|------|
+| **FS_BASE** | VEC, delta_r, dH_mix, dS_mix, delta_EN, Tm_avg, r_avg, mass_avg | 基本特徴量（ベースライン） |
+| **FS_SIZE** | FS_BASE + omega, lambda_param, elastic_mismatch | サイズ効果重視 |
+| **FS_THERMO** | FS_BASE + omega, lambda_param, Tm_range | 熱力学特性重視 |
+| **FS_ELECTRON** | FS_BASE + d_elec_avg, itinerant_elec_avg | 電子構造重視 |
+| **FS_ALL** | 上記全ての統合 | 包括的評価 |
+
+### 9.3 MInt（ワークフローアダプタ）
+
+MInt（Materials Informatics）アダプタは、外部ワークフローシステムとの接続を提供します。
+
+#### MIntが提供する強化点
+
+| 機能 | 説明 |
+|------|------|
+| **ワークフロー拡張** | ビルトイン3ワークフローに加え、MIntラップ3ワークフローが追加（計6ワークフロー） |
+| **3つの実行モード** | WRAPPED（ビルトインラップ）、LOCAL（サブプロセス）、REMOTE（REST API） |
+| **自動パイプライン化** | Feastから特徴量取得 → MIntワークフロー実行 → MLflowに結果記録 |
+| **外部システム接続** | REST API経由で外部の材料インフォマティクスプラットフォームと連携可能 |
+
+#### MIntワークフロー一覧
+
+MIntを有効にすると、以下のワークフローが追加されます：
+
+| ワークフロー | モデル | 説明 |
+|----------------|--------|------|
+| **MInt-LIN** | LinearRegression | MIntラップ線形モデル |
+| **MInt-XGB** | XGBoost | MIntラップ勾配ブースティング |
+| **MInt-ENS** | Ensemble | MIntラップアンサンブル |
+
+実験結果のResultsタブでは、ビルトインワークフロー（WF-LIN, WF-XGB, WF-ENS）とMIntワークフロー（MInt-LIN, MInt-XGB, MInt-ENS）の両方の結果が表示されます：
+
+![ResultsタブでのMIntワークフロー表示](screenshots/results_with_mint.png)
+
+### 9.4 統合ステータスの確認
+
+実験実行後、Dashboardタブの下部に**統合ステータスパネル**が表示されます：
+
+![Dashboardの統合ステータスパネル](screenshots/dashboard_with_results.png)
+
+このパネルには以下の情報が表示されます：
+
+| 列 | 説明 |
+|------|------|
+| **Integration** | 統合名（MLflow / Feast / MInt） |
+| **Package** | パッケージのインストール状況（Installed / Not installed / Built-in） |
+| **Status** | 動作状況（Active (MLflow server) / Active (in-memory fallback) / Disabled） |
+| **Details** | 詳細情報（トラッキングURI、特徴量セット数、ワークフロー名） |
+
+#### ステータスの例
+
+- **MLflow**: `Active (in-memory fallback)` — MLflow未インストールでインメモリ記録を使用中
+- **Feast**: `Active (built-in catalog)` — 5特徴量セットをビルトインカタログで管理中
+- **MInt**: `Active (3 workflows)` — MInt-LIN, MInt-XGB, MInt-ENSが稼働中
+
+### 9.5 統合の相乗効果
+
+3つの統合を同時に有効にすると、以下の相乗効果が得られます：
+
+1. **完全な追跡可能性**: Feastで管理された特徴量セットのバージョンと、MLflowで記録された実験結果が完全に紐付けられる
+2. **自動パイプライン**: Feastから特徴量取得 → MIntワークフロー実行 → MLflowに結果記録の全自動パイプライン
+3. **特徴量妥当性の長期トレンド**: Feastで管理された特徴量セットの改版ごとに、MLflowで妥当性スコアの推移を可視化
+4. **材料開発の知識基盤**: 「どの元素記述子が外換に強いか」の知見がチーム全体で検索・再利用可能な形で蓄積
+
+### 9.6 統合のトラブルシューティング
+
+| 問題 | 原因 | 対処法 |
+|--------|------|--------|
+| MLflowがインメモリフォールバックのまま | mlflow未インストール | `pip install mlflow` を実行 |
+| Feastがビルトインカタログのまま | feast未インストール | `pip install feast` を実行 |
+| MIntワークフローが表示されない | ConfigでMIntが無効 | Configタブで「Enable MInt」チェックボックスをオン |
+| MLflow UIが起動しない | mlflowコマンド未インストール | `pip install mlflow` 後、`mlflow ui` で起動 |
+| 統合ステータスが「--」のまま | 実験未実行 | Config & Runタブで実験を実行してください |
+
+---
+
+## 10. エラー対処・トラブルシューティング
+
+### 10.1 Seeds入力エラー
 
 Seeds欄に整数以外の値（文字列など）を入力して実行すると、以下のエラーメッセージが表示されます：
 
@@ -551,7 +724,7 @@ Seeds欄に整数以外の値（文字列など）を入力して実行すると
 
 **対処法**: Seeds欄にスペース区切りの整数を入力してください（例: `42 123 456`）
 
-### 9.2 よくあるエラーと対処法
+### 10.2 よくあるエラーと対処法
 
 | エラー | 原因 | 対処法 |
 |--------|------|--------|
@@ -562,14 +735,14 @@ Seeds欄に整数以外の値（文字列など）を入力して実行すると
 | `Seeds must be space-separated integers` | Seeds欄に不正な値 | 整数をスペース区切りで入力 |
 | テーブルが空 / グラフが表示されない | 実験未実行 | Config & Run タブで実験を実行してください |
 
-### 9.3 実行が遅い場合
+### 10.3 実行が遅い場合
 
 - **`--quick` モードを使用**: ハイパーパラメータ探索を簡略化
 - **`--n-samples` を小さくする**: サンプル数を50〜100に設定
 - **`--no-plots` を指定**: matplotlib図表生成をスキップ
 - **`--no-literature` を指定**: 文献検索をスキップ
 
-### 9.4 全依存パッケージの一括インストール
+### 10.4 全依存パッケージの一括インストール
 
 問題が続く場合は、requirements.txt から一括インストールし直してください：
 
@@ -579,7 +752,7 @@ pip install -r hea_extrapolation_platform/requirements.txt
 
 ---
 
-## 10. FAQ（よくある質問）
+## 11. FAQ（よくある質問）
 
 ### Q1. 実験にどのくらい時間がかかりますか？
 
@@ -643,6 +816,11 @@ hea_extrapolation_platform/
   │   ├── __init__.py
   │   ├── app.py               # Gradioアプリ本体
   │   └── plotly_charts.py     # Plotlyインタラクティブチャート
+  ├── integrations/
+  │   ├── __init__.py
+  │   ├── mlflow_tracker.py    # MLflow実験トラッキングアダプタ
+  │   ├── feast_store.py       # Feast特徴量ストアアダプタ
+  │   └── mint_adapter.py      # MIntワークフローアダプタ
   ├── literature_graph/
   │   ├── __init__.py
   │   ├── schemas.py           # データスキーマ定義
@@ -653,7 +831,7 @@ hea_extrapolation_platform/
   │   └── feature_recommender.py  # 特徴量推薦
   └── docs/
       ├── user_manual.md       # この取扱説明書
-      └── manual_screenshots/  # スクリーンショット
+      └── screenshots/         # スクリーンショット
 ```
 
 ---

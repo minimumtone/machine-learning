@@ -303,84 +303,90 @@ class ExperimentRunner:
 
         run_count = 0
 
-        for seed in self._seeds:
-            splitters = self._build_splitters(seed)
+        try:
+            for seed in self._seeds:
+                splitters = self._build_splitters(seed)
 
-            for fs_name in feature_sets:
-                # Select feature columns for this set
-                cols = FeatureCatalog.columns(fs_name)
-                X_fs = features_all[cols].copy()
+                for fs_name in feature_sets:
+                    # Select feature columns for this set
+                    cols = FeatureCatalog.columns(fs_name)
+                    X_fs = features_all[cols].copy()
 
-                for sp_name, splitter in splitters.items():
-                    fold_idx = 0
-                    for train_idx, test_idx in splitter.split(
-                        X_fs, target, compositions=compositions_df
-                    ):
-                        X_train = X_fs.iloc[train_idx].reset_index(drop=True)
-                        X_test = X_fs.iloc[test_idx].reset_index(drop=True)
-                        y_train = target.iloc[train_idx].reset_index(drop=True)
-                        y_test = target.iloc[test_idx].reset_index(drop=True)
+                    for sp_name, splitter in splitters.items():
+                        fold_idx = 0
+                        for train_idx, test_idx in splitter.split(
+                            X_fs, target, compositions=compositions_df
+                        ):
+                            X_train = X_fs.iloc[train_idx].reset_index(drop=True)
+                            X_test = X_fs.iloc[test_idx].reset_index(drop=True)
+                            y_train = target.iloc[train_idx].reset_index(drop=True)
+                            y_test = target.iloc[test_idx].reset_index(drop=True)
 
-                        for wf_name, wf in workflows.items():
-                            try:
-                                result = wf.run(
-                                    X_train, y_train, X_test, y_test,
-                                    seed=seed,
-                                    feature_set=fs_name.value,
-                                    split_policy=sp_name,
-                                    fold=fold_idx,
-                                    test_indices=test_idx,
-                                )
-                                self._registry.add(result)
-                                run_count += 1
-
-                                if run_count % 20 == 0:
-                                    logger.info(
-                                        "Progress: %d runs completed (%.1f sec)",
-                                        run_count, time.time() - t_start,
+                            for wf_name, wf in workflows.items():
+                                try:
+                                    result = wf.run(
+                                        X_train, y_train, X_test, y_test,
+                                        seed=seed,
+                                        feature_set=fs_name.value,
+                                        split_policy=sp_name,
+                                        fold=fold_idx,
+                                        test_indices=test_idx,
                                     )
-                            except Exception:
-                                logger.exception(
-                                    "Run failed: wf=%s fs=%s sp=%s seed=%d fold=%d",
-                                    wf_name, fs_name.value, sp_name, seed, fold_idx,
-                                )
+                                    self._registry.add(result)
+                                    run_count += 1
 
-                        fold_idx += 1
+                                    if run_count % 20 == 0:
+                                        logger.info(
+                                            "Progress: %d runs completed (%.1f sec)",
+                                            run_count, time.time() - t_start,
+                                        )
+                                except Exception:
+                                    logger.exception(
+                                        "Run failed: wf=%s fs=%s sp=%s seed=%d fold=%d",
+                                        wf_name, fs_name.value, sp_name, seed, fold_idx,
+                                    )
 
-                # OOD detection per feature set (dedicated split).
-                fs_key = fs_name.value
-                if fs_key not in ood_results:
-                    ood_res = self._run_ood_detection(
-                        X_fs, target, compositions_df, fs_key,
-                    )
-                    if ood_res is not None:
-                        ood_results[fs_key] = ood_res
-                        self._collect_ood_errors_for_eval(
-                            fs_key, ood_res, ood_errors_for_eval,
+                            fold_idx += 1
+
+                    # OOD detection per feature set (dedicated split).
+                    fs_key = fs_name.value
+                    if fs_key not in ood_results:
+                        ood_res = self._run_ood_detection(
+                            X_fs, target, compositions_df, fs_key,
                         )
+                        if ood_res is not None:
+                            ood_results[fs_key] = ood_res
+                            self._collect_ood_errors_for_eval(
+                                fs_key, ood_res, ood_errors_for_eval,
+                            )
 
-        # Evaluation
-        evaluator = FeatureValidityEvaluator()
-        validity_scores = evaluator.evaluate(
-            self._registry.runs,
-            ood_errors=ood_errors_for_eval,
-        )
+            # Evaluation
+            evaluator = FeatureValidityEvaluator()
+            validity_scores = evaluator.evaluate(
+                self._registry.runs,
+                ood_errors=ood_errors_for_eval,
+            )
 
-        elapsed = time.time() - t_start
-        logger.info(
-            "Experiment complete: %d runs in %.1f sec. Top feature set: %s",
-            run_count, elapsed,
-            validity_scores[0].feature_set if validity_scores else "N/A",
-        )
+            elapsed = time.time() - t_start
+            logger.info(
+                "Experiment complete: %d runs in %.1f sec. Top feature set: %s",
+                run_count, elapsed,
+                validity_scores[0].feature_set if validity_scores else "N/A",
+            )
 
-        # Log experiment summary to MLflow
-        self._tracker.log_experiment_summary(
-            n_runs=run_count,
-            validity_scores=validity_scores,
-            ood_results=ood_results,
-            elapsed_sec=elapsed,
-        )
-        self._tracker.end_run()
+            # Log experiment summary to MLflow
+            self._tracker.log_experiment_summary(
+                n_runs=run_count,
+                validity_scores=validity_scores,
+                ood_results=ood_results,
+                elapsed_sec=elapsed,
+            )
+            self._tracker.end_run()
+
+        except Exception:
+            # Ensure MLflow run is properly closed even on failure
+            self._tracker.end_run(status="FAILED")
+            raise
 
         return self._registry.runs, validity_scores, ood_results
 

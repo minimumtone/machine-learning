@@ -115,15 +115,84 @@ def _get_literature_engine(session: Dict[str, Any]) -> Any:
 
 
 # ---------------------------------------------------------------------------
+# Integration status helper
+# ---------------------------------------------------------------------------
+
+def _build_integration_status_md(
+    runner: Optional[Any],
+) -> str:
+    """Build a Markdown table showing integration status."""
+    from hea_extrapolation_platform.integrations.mlflow_tracker import (
+        is_mlflow_available,
+    )
+    from hea_extrapolation_platform.integrations.feast_store import (
+        is_feast_available,
+    )
+
+    mlflow_pkg = "Installed" if is_mlflow_available() else "Not installed"
+    feast_pkg = "Installed" if is_feast_available() else "Not installed"
+
+    if runner is None:
+        mlflow_state = "--"
+        feast_state = "--"
+        mint_state = "--"
+        mlflow_detail = "Run experiment to see status"
+        feast_detail = "Run experiment to see status"
+        mint_detail = "Run experiment to see status"
+    else:
+        # MLflow
+        if runner.tracker.is_mlflow_active:
+            mlflow_state = "Active (MLflow server)"
+            mlflow_detail = f"Tracking URI: {runner.tracker.get_tracking_uri()}"
+        else:
+            tracked = runner.tracker.list_runs()
+            mlflow_state = "Active (in-memory fallback)"
+            mlflow_detail = f"{len(tracked)} run(s) tracked in memory"
+
+        # Feast
+        if runner.feature_store.is_feast_active:
+            store_info = runner.feature_store.get_store_info()
+            feast_state = "Active (Feast server)"
+            feast_detail = f"Repo: {store_info.get('repo_path', 'N/A')}"
+        else:
+            sets = runner.feature_store.list_feature_sets()
+            feast_state = "Active (built-in catalog)"
+            feast_detail = f"{len(sets)} feature set(s) managed"
+
+        # MInt
+        if runner.mint_registry is not None:
+            wfs = runner.mint_registry.list_workflows()
+            mint_state = f"Active ({len(wfs)} workflows)"
+            names = ", ".join(w["name"] for w in wfs)
+            mint_detail = names
+        else:
+            mint_state = "Disabled"
+            mint_detail = "Enable in Config tab"
+
+    lines = [
+        "| Integration | Package | Status | Details |",
+        "|---|---|---|---|",
+        f"| **MLflow** (experiment tracking) | {mlflow_pkg} "
+        f"| {mlflow_state} | {mlflow_detail} |",
+        f"| **Feast** (feature store) | {feast_pkg} "
+        f"| {feast_state} | {feast_detail} |",
+        f"| **MInt** (workflow adapters) | Built-in "
+        f"| {mint_state} | {mint_detail} |",
+    ]
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
 # Helpers for cross-tab refresh  -- Fix #8
 # ---------------------------------------------------------------------------
 
 def _refresh_dashboard_data(
     metric: str, session: Dict[str, Any],
-) -> Tuple[str, str, str, str, Any, Any]:
+) -> Tuple[str, str, str, str, str, Any, Any]:
     runs = session.get("runs", [])
     scores = session.get("validity_scores", [])
     ood_results = session.get("ood_results", {})
+    runner = session.get("runner")
 
     n_runs = str(len(runs))
     best_fs = scores[0].feature_set if scores else "--"
@@ -134,10 +203,15 @@ def _refresh_dashboard_data(
     )
     ood_str = str(total_ood) if ood_results else "--"
 
+    integration_md = _build_integration_status_md(runner)
+
     validity_fig = plotly_validity_ranking(scores) if scores else None
     heatmap_fig = plotly_heatmap(runs, metric=metric) if runs else None
 
-    return n_runs, best_fs, best_score, ood_str, validity_fig, heatmap_fig
+    return (
+        n_runs, best_fs, best_score, ood_str,
+        integration_md, validity_fig, heatmap_fig,
+    )
 
 
 def _refresh_results_data(
@@ -296,6 +370,12 @@ def create_app() -> gr.Blocks:
                         label="OOD Samples", value="--", interactive=False,
                     )
 
+                # --- Integration Status Panel ---
+                gr.Markdown("### Integration Status")
+                integration_status = gr.Markdown(
+                    _build_integration_status_md(None),
+                )
+
                 validity_plot = gr.Plot(label="Feature Validity Ranking")
                 heatmap_plot = gr.Plot(label="Performance Heatmap (RMSE Test)")
                 heatmap_metric = gr.Dropdown(
@@ -312,7 +392,8 @@ def create_app() -> gr.Blocks:
                 )
                 dash_outputs = [
                     kpi_runs, kpi_best_fs, kpi_best_score,
-                    kpi_ood_count, validity_plot, heatmap_plot,
+                    kpi_ood_count, integration_status,
+                    validity_plot, heatmap_plot,
                 ]
                 dash_refresh_btn.click(
                     fn=_refresh_dashboard_data,
@@ -361,23 +442,50 @@ def create_app() -> gr.Blocks:
                             info="Skip PNG generation (Plotly always available)",
                         )
 
-                gr.Markdown("### Integrations (optional)")
+                gr.Markdown(
+                    "### Integrations (optional)\n\n"
+                    "Enable external tool integrations to enhance "
+                    "experiment tracking, feature management, and "
+                    "workflow execution. All integrations fall back "
+                    "gracefully if the external package is not installed."
+                )
                 with gr.Row():
-                    use_mlflow = gr.Checkbox(
-                        label="MLflow Tracking",
-                        value=False,
-                        info="Log runs to MLflow (requires mlflow package)",
-                    )
-                    use_feast = gr.Checkbox(
-                        label="Feast Feature Store",
-                        value=False,
-                        info="Use Feast for feature management (requires feast package)",
-                    )
-                    use_mint = gr.Checkbox(
-                        label="MInt Workflow Adapters",
-                        value=False,
-                        info="Run MInt-wrapped workflows in addition to built-in",
-                    )
+                    with gr.Column():
+                        use_mlflow = gr.Checkbox(
+                            label="MLflow Tracking",
+                            value=False,
+                            info="Log runs to MLflow (requires mlflow package)",
+                        )
+                        gr.Markdown(
+                            "<small>"
+                            "Params, metrics, artifacts auto-logged. "
+                            "Enables experiment comparison in MLflow UI."
+                            "</small>",
+                        )
+                    with gr.Column():
+                        use_feast = gr.Checkbox(
+                            label="Feast Feature Store",
+                            value=False,
+                            info="Use Feast for feature management (requires feast package)",
+                        )
+                        gr.Markdown(
+                            "<small>"
+                            "Feature versioning and Training-Serving Skew "
+                            "prevention. Reuse features across experiments."
+                            "</small>",
+                        )
+                    with gr.Column():
+                        use_mint = gr.Checkbox(
+                            label="MInt Workflow Adapters",
+                            value=False,
+                            info="Run MInt-wrapped workflows in addition to built-in",
+                        )
+                        gr.Markdown(
+                            "<small>"
+                            "Adds MInt-LIN, MInt-XGB, MInt-ENS workflows. "
+                            "Supports wrapped, local, and remote execution."
+                            "</small>",
+                        )
 
                 run_btn = gr.Button(
                     "Run Experiment", variant="primary", size="lg",
@@ -667,7 +775,8 @@ def create_app() -> gr.Blocks:
             session = _empty_session()
 
             # Placeholder outputs for cross-tab components
-            empty_dash = ("0", "--", "--", "--", None, None)
+            empty_dash = ("0", "--", "--", "--",
+                          _build_integration_status_md(None), None, None)
             empty_res = (
                 gr.update(), gr.update(), gr.update(),
                 pd.DataFrame(), pd.DataFrame(), None,
@@ -914,7 +1023,7 @@ def create_app() -> gr.Blocks:
                 progress_log, state,
                 # Dashboard tab (fix #8)
                 kpi_runs, kpi_best_fs, kpi_best_score, kpi_ood_count,
-                validity_plot, heatmap_plot,
+                integration_status, validity_plot, heatmap_plot,
                 # Results tab (fix #8)
                 filter_wf, filter_fs, filter_sp,
                 validity_table, results_table, parity_plot,
