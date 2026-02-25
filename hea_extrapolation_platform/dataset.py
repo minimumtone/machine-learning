@@ -54,22 +54,26 @@ def _random_composition(
 
 
 def _yield_strength_proxy(
-    composition: Dict[str, float],
+    feat: Dict[str, float],
     rng: np.random.Generator,
     noise_std: float = 50.0,
 ) -> float:
     """Compute a synthetic yield strength (MPa) using a simplified
     solid-solution strengthening model.
 
+    Parameters
+    ----------
+    feat:
+        Pre-computed feature dict (from FS_ALL).
+
+    Notes
+    -----
     YS ~ base + k1 * delta_r * sqrt(VEC) + k2 * |dH_mix| + k3 * dS_mix
          + k4 * Tm_avg / 1000 + noise
 
     This is deliberately an *approximate* physics-inspired proxy, not a
     real predictive model.  The noise term simulates experimental scatter.
     """
-    from hea_extrapolation_platform.features import compute_features_single
-
-    feat = compute_features_single(composition)
     base = 200.0
     ys = (
         base
@@ -129,8 +133,10 @@ def generate_hea_dataset(
     common_pool = [e for e in common_pool if e in available]
 
     compositions: List[Dict[str, float]] = []
-    targets: List[float] = []
     all_elements_set: set = set()
+
+    # Compute targets after feature computation to avoid recomputing
+    # compute_features_single twice per sample.
 
     for i in range(n_samples):
         n_elems = rng.integers(min_elements, max_elements + 1)
@@ -145,8 +151,7 @@ def generate_hea_dataset(
         comp = _random_composition(chosen, rng)
         compositions.append(comp)
         all_elements_set.update(chosen)
-        ys = _yield_strength_proxy(comp, rng, noise_std=noise_std)
-        targets.append(ys)
+        # target is computed after feature computation (avoid double feature calc)
 
     # Build composition DataFrame (sparse: NaN -> 0)
     all_elems_sorted = sorted(all_elements_set)
@@ -159,6 +164,11 @@ def generate_hea_dataset(
     # Build features DataFrame (all features)
     features_df = compute_features(compositions, FeatureSetName.FS_ALL)
 
+    # Compute target from the *already computed* FS_ALL features
+    targets = [
+        _yield_strength_proxy(f, rng, noise_std=noise_std)
+        for f in features_df.to_dict(orient="records")
+    ]
     target = pd.Series(targets, name="yield_strength_MPa")
 
     logger.info(

@@ -183,6 +183,12 @@ class ElementExclusionSplitter(BaseSplitter):
         number of folds (i.e. ``len(target_elements)``).  After ``split()``
         has completed, returns the *actual* number of folds that were
         yielded (may be fewer if elements were skipped).
+
+        .. warning::
+            ``_actual_n_splits`` is only updated when the ``split()``
+            generator has been **fully consumed**.  Calling ``n_splits()``
+            while iterating through ``split()`` will still return the
+            pre-split estimate.
         """
         if self._actual_n_splits is not None:
             return self._actual_n_splits

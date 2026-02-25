@@ -119,6 +119,7 @@ class OODDetector:
         actual_k = min(self._k, X_scaled.shape[0] - 1)
         if actual_k < 1:
             actual_k = 1
+        self._actual_k = actual_k  # save for consistent use in score()
         self._nn = NearestNeighbors(n_neighbors=actual_k + 1, metric="euclidean")
         self._nn.fit(X_scaled)
 
@@ -219,11 +220,12 @@ class OODDetector:
 
         Query points are not part of the fitted index, so there is no
         self-reference.  However, the fitted model has k+1 neighbours;
-        we take only the first k columns to keep the same semantics as
-        training.
+        we take only the first ``_actual_k`` columns to keep the same
+        semantics as training (``_actual_k`` may be < ``_k`` when the
+        training set is small).
         """
         dists, _ = self._nn.kneighbors(X_scaled)
-        return dists[:, :self._k].mean(axis=1)
+        return dists[:, :self._actual_k].mean(axis=1)
 
     @staticmethod
     def _combine(

@@ -338,6 +338,106 @@ def _refresh_report_data(session: Dict[str, Any]) -> Tuple:
 
 
 # ---------------------------------------------------------------------------
+# Literature search callback (module-level for testability)
+# ---------------------------------------------------------------------------
+
+
+def _do_literature_search(
+    query: str, domain: str, task: str,
+    inputs_scope: str, top: float,
+    session: Dict[str, Any],
+) -> Tuple:
+    """Execute a literature search and return results for the GUI.
+
+    Extracted to module level so it can be unit-tested independently
+    of the Gradio app factory.
+    """
+    try:
+        from hea_extrapolation_platform.literature_graph.search import (
+            StructuredFilter,
+        )
+        from hea_extrapolation_platform.literature_graph.feature_recommender import (
+            LiteratureFeatureRecommender,
+        )
+
+        # Fix #9: use cached engine
+        engine = _get_literature_engine(session)
+
+        sf = StructuredFilter(
+            materials_domain=domain.strip() or None,
+            task=task.strip() or None,
+            inputs=inputs_scope.strip() or None,
+        )
+
+        results = engine.search(
+            query, structured_filter=sf, top_n=int(top),
+        )
+        session["literature_results"] = results
+
+        records = []
+        for i, r in enumerate(results):
+            wf = r.workflow
+            records.append({
+                "Rank": i + 1,
+                "Paper ID": wf.paper_id,
+                "Model": wf.model_name,
+                "Family": wf.model_family,
+                "Inputs": wf.inputs,
+                "Split": wf.split_policy,
+                "N": wf.data_size_n,
+                "Key Features": ", ".join(
+                    wf.key_features[:5],
+                ),
+                "Score": round(r.final_score, 4),
+            })
+        r_df = (
+            pd.DataFrame(records)
+            if records
+            else pd.DataFrame()
+        )
+
+        _, feature_counts = engine.search_for_features(
+            query, structured_filter=sf, top_n=int(top),
+        )
+        session["feature_counts"] = feature_counts
+        freq_fig_val = plotly_feature_frequency(
+            feature_counts,
+        )
+
+        recommender = LiteratureFeatureRecommender(engine)
+        rec = recommender.recommend(
+            query, structured_filter=sf,
+        )
+        session["feature_recommendation"] = rec
+
+        rec_text = f"Recommended set: {rec.name}\n"
+        rec_text += (
+            f"Base features ({len(rec.base_features)}): "
+            f"{', '.join(rec.base_features)}\n"
+        )
+        if rec.added_features:
+            rec_text += (
+                f"Added from literature "
+                f"({len(rec.added_features)}): "
+                f"{', '.join(rec.added_features)}\n"
+            )
+        if rec.unregistered_features:
+            rec_text += (
+                f"Unregistered features: "
+                f"{', '.join(rec.unregistered_features)}\n"
+            )
+
+        return r_df, freq_fig_val, rec_text, session
+
+    except Exception:
+        err = traceback.format_exc()
+        return (
+            pd.DataFrame(), None,
+            f"Error:\n{err}", session,
+        )
+
+
+# ---------------------------------------------------------------------------
 # Main App Factory
 # ---------------------------------------------------------------------------
 
@@ -598,97 +698,8 @@ def create_app() -> gr.Blocks:
                     interactive=False,
                 )
 
-                def do_search(
-                    query: str, domain: str, task: str,
-                    inputs_scope: str, top: float,
-                    session: Dict[str, Any],
-                ) -> Tuple:
-                    try:
-                        from hea_extrapolation_platform.literature_graph.search import (
-                            StructuredFilter,
-                        )
-                        from hea_extrapolation_platform.literature_graph.feature_recommender import (
-                            LiteratureFeatureRecommender,
-                        )
-
-                        # Fix #9: use cached engine
-                        engine = _get_literature_engine(session)
-
-                        sf = StructuredFilter(
-                            materials_domain=domain.strip() or None,
-                            task=task.strip() or None,
-                            inputs=inputs_scope.strip() or None,
-                        )
-
-                        results = engine.search(
-                            query, structured_filter=sf, top_n=int(top),
-                        )
-                        session["literature_results"] = results
-
-                        records = []
-                        for i, r in enumerate(results):
-                            wf = r.workflow
-                            records.append({
-                                "Rank": i + 1,
-                                "Paper ID": wf.paper_id,
-                                "Model": wf.model_name,
-                                "Family": wf.model_family,
-                                "Inputs": wf.inputs,
-                                "Split": wf.split_policy,
-                                "N": wf.data_size_n,
-                                "Key Features": ", ".join(
-                                    wf.key_features[:5],
-                                ),
-                                "Score": round(r.final_score, 4),
-                            })
-                        r_df = (
-                            pd.DataFrame(records)
-                            if records
-                            else pd.DataFrame()
-                        )
-
-                        _, feature_counts = engine.search_for_features(
-                            query, structured_filter=sf, top_n=int(top),
-                        )
-                        session["feature_counts"] = feature_counts
-                        freq_fig_val = plotly_feature_frequency(
-                            feature_counts,
-                        )
-
-                        recommender = LiteratureFeatureRecommender(engine)
-                        rec = recommender.recommend(
-                            query, structured_filter=sf,
-                        )
-                        session["feature_recommendation"] = rec
-
-                        rec_text = f"Recommended set: {rec.name}\n"
-                        rec_text += (
-                            f"Base features ({len(rec.base_features)}): "
-                            f"{', '.join(rec.base_features)}\n"
-                        )
-                        if rec.added_features:
-                            rec_text += (
-                                f"Added from literature "
-                                f"({len(rec.added_features)}): "
-                                f"{', '.join(rec.added_features)}\n"
-                            )
-                        if rec.unregistered_features:
-                            rec_text += (
-                                f"Unregistered features: "
-                                f"{', '.join(rec.unregistered_features)}\n"
-                            )
-
-                        return r_df, freq_fig_val, rec_text, session
-
-                    except Exception:
-                        err = traceback.format_exc()
-                        return (
-                            pd.DataFrame(), None,
-                            f"Error:\n{err}", session,
-                        )
-
                 search_btn.click(
-                    fn=do_search,
+                    fn=_do_literature_search,
                     inputs=[
                         query_input, domain_filter, task_filter,
                         inputs_filter, lit_top_n, state,
@@ -744,8 +755,10 @@ def create_app() -> gr.Blocks:
             def log(msg: str) -> None:
                 log_lines.append(f"[{time.strftime('%H:%M:%S')}] {msg}")
 
-            # Reset session
-            session = _empty_session()
+            # Reset session — intentionally discard the incoming gr.State
+            # value and start fresh so that stale data from a previous run
+            # does not leak into the new experiment.
+            session = _empty_session()  # noqa: F841 (shadows parameter)
 
             # Placeholder outputs for cross-tab components
             empty_dash = ("0", "--", "--", "--",
