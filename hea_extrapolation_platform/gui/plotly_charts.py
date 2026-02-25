@@ -676,7 +676,11 @@ def build_summary_stats_md(
         variances = features_df.var().sort_values(ascending=False)
         top_features = list(variances.head(10).index)
         desc = features_df[top_features].describe().round(3)
-        lines.append(desc.to_markdown())
+        try:
+            lines.append(desc.to_markdown())
+        except ImportError:
+            # tabulate not installed — degrade gracefully
+            lines.append(desc.to_string())
     else:
         lines.append("No features available.")
 

@@ -1078,6 +1078,8 @@ def create_app() -> gr.Blocks:
                 bar_label: str = "",
                 summary_tuple: Optional[Tuple] = None,
             ) -> Tuple:
+                nonlocal last_pct
+                last_pct = pct
                 bar_html = _build_progress_bar_html(pct, bar_label)
                 summ = summary_tuple if summary_tuple else empty_summary
                 return (
@@ -1085,6 +1087,9 @@ def create_app() -> gr.Blocks:
                     *summ,
                     *empty_dash, *empty_res, *empty_ood, *empty_rpt,
                 )
+
+            succeeded = False
+            last_pct = 0
 
             try:
                 log("Starting experiment...")
@@ -1328,13 +1333,22 @@ def create_app() -> gr.Blocks:
                 log(
                     "Experiment complete. All tabs refreshed automatically."
                 )
+                succeeded = True
 
             except Exception:
                 log(f"ERROR:\n{traceback.format_exc()}")
 
             # --- Final yield: refresh all tabs (fix #8) ---
-            final_bar = _build_progress_bar_html(100, "Complete")
-            final_summary = _refresh_data_summary(session)
+            if succeeded:
+                final_bar = _build_progress_bar_html(100, "Complete")
+            else:
+                final_bar = _build_progress_bar_html(
+                    last_pct, "Error \u2014 see log",
+                )
+            try:
+                final_summary = _refresh_data_summary(session)
+            except Exception:
+                final_summary = empty_summary
             final_dash = _refresh_dashboard_data("rmse_test", session)
             final_res = _refresh_results_data("All", "All", "All", session)
             ood_keys = list(session.get("ood_results", {}).keys())
