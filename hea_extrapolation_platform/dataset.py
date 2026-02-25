@@ -306,8 +306,8 @@ def generate_hea_dataset(
         comp_records.append(rec)
     compositions_df = pd.DataFrame(comp_records)
 
-    # Build features DataFrame (all features)
-    features_df = compute_features(compositions, FeatureSetName.FS_ALL)
+    # Build features DataFrame (all features including MAGPIE)
+    features_df = compute_features(compositions, feature_set=None)
 
     # Compute target from the *already computed* FS_ALL features
     features_records = features_df.to_dict(orient="records")

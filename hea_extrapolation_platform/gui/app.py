@@ -544,7 +544,7 @@ def _handle_csv_upload(
         )
 
         # Compute features
-        features_df = compute_features(compositions, FeatureSetName.FS_ALL)
+        features_df = compute_features(compositions, feature_set=None)
 
         # Extract or synthesize target — aligned to valid rows
         if target_col_clean and target_col_clean in raw.columns:
@@ -906,7 +906,7 @@ def create_app() -> gr.Blocks:
                 fs_selector = gr.Dropdown(
                     choices=[
                         "FS_BASE", "FS_THERMO", "FS_SIZE",
-                        "FS_ELECTRON", "FS_ALL",
+                        "FS_ELECTRON", "FS_ALL", "FS_MAGPIE",
                     ],
                     value="FS_ALL",
                     label="Feature Set for OOD Map",

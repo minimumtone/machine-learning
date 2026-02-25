@@ -7,14 +7,19 @@ Provides systematic feature set construction from alloy compositions:
   FS_THERMO   - Thermodynamic proxy features (solid-solution index, phase separation risk)
   FS_SIZE     - Atomic size / elastic mismatch features
   FS_ELECTRON - Electronic structure proxy features (d-electron, DOS proxy)
-  FS_ALL      - Union of all feature sets
+  FS_ALL      - Union of all domain-specific feature sets
+  FS_MAGPIE   - MAGPIE features (Ward et al. 2016 / matminer-compatible)
+                22 elemental properties x 6 statistics = 132 composition-weighted
+                descriptors following the matminer ElementProperty featurizer.
+                Reference: Ward et al., npj Comput. Mater. 2, 16028 (2016).
 """
 
 from __future__ import annotations
 
 import logging
+from collections import Counter
 from enum import Enum
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 import pandas as pd
@@ -44,58 +49,146 @@ class _ElementDB:
         d_elec based on metallic bonding state), override _DATA accordingly.
     """
 
+    # fmt: off
+    # Core properties: Z, vec, en, r, Tm, mass, d_elec, B, Vm
+    # MAGPIE additions (Ward et al. 2016 / matminer ElementProperty):
+    #   mendeleev_no  - Pettifor Mendeleev number
+    #   column        - Periodic table group number
+    #   row           - Periodic table period number
+    #   cov_r         - Covalent radius (pm)
+    #   Ns/Np/Nd/Nf_val - Valence shell electron occupancy (s/p/d/f)
+    #   bandgap       - Ground-state bandgap (eV), 0 for metals
+    #   magmom        - Ground-state magnetic moment (muB/atom)
+    #   space_group   - Ground-state crystal space group number
+    # Sources: CRC Handbook, ASM, pymatgen, Pettifor (1984)
     _DATA: Dict[str, Dict[str, float]] = {
         "Al": {"Z": 13, "vec": 3, "en": 1.61, "r": 1.43, "Tm": 933,
-               "mass": 26.98, "d_elec": 0, "B": 76, "Vm": 10.0},
+               "mass": 26.98, "d_elec": 0, "B": 76, "Vm": 10.0,
+               "mendeleev_no": 80, "column": 13, "row": 3, "cov_r": 121,
+               "Ns_val": 2, "Np_val": 1, "Nd_val": 0, "Nf_val": 0,
+               "bandgap": 0.0, "magmom": 0.0, "space_group": 225},
         "Ti": {"Z": 22, "vec": 4, "en": 1.54, "r": 1.47, "Tm": 1941,
-               "mass": 47.87, "d_elec": 2, "B": 110, "Vm": 10.6},
+               "mass": 47.87, "d_elec": 2, "B": 110, "Vm": 10.6,
+               "mendeleev_no": 51, "column": 4, "row": 4, "cov_r": 160,
+               "Ns_val": 2, "Np_val": 0, "Nd_val": 2, "Nf_val": 0,
+               "bandgap": 0.0, "magmom": 0.0, "space_group": 194},
         "V":  {"Z": 23, "vec": 5, "en": 1.63, "r": 1.34, "Tm": 2183,
-               "mass": 50.94, "d_elec": 3, "B": 160, "Vm": 8.3},
+               "mass": 50.94, "d_elec": 3, "B": 160, "Vm": 8.3,
+               "mendeleev_no": 54, "column": 5, "row": 4, "cov_r": 153,
+               "Ns_val": 2, "Np_val": 0, "Nd_val": 3, "Nf_val": 0,
+               "bandgap": 0.0, "magmom": 0.0, "space_group": 229},
         "Cr": {"Z": 24, "vec": 6, "en": 1.66, "r": 1.28, "Tm": 2180,
-               "mass": 52.00, "d_elec": 5, "B": 160, "Vm": 7.2},
+               "mass": 52.00, "d_elec": 5, "B": 160, "Vm": 7.2,
+               "mendeleev_no": 57, "column": 6, "row": 4, "cov_r": 139,
+               "Ns_val": 1, "Np_val": 0, "Nd_val": 5, "Nf_val": 0,
+               "bandgap": 0.0, "magmom": 0.0, "space_group": 229},
         "Mn": {"Z": 25, "vec": 7, "en": 1.55, "r": 1.27, "Tm": 1519,
-               "mass": 54.94, "d_elec": 5, "B": 120, "Vm": 7.4},
+               "mass": 54.94, "d_elec": 5, "B": 120, "Vm": 7.4,
+               "mendeleev_no": 60, "column": 7, "row": 4, "cov_r": 139,
+               "Ns_val": 2, "Np_val": 0, "Nd_val": 5, "Nf_val": 0,
+               "bandgap": 0.0, "magmom": 0.0, "space_group": 217},
         "Fe": {"Z": 26, "vec": 8, "en": 1.83, "r": 1.26, "Tm": 1811,
-               "mass": 55.85, "d_elec": 6, "B": 170, "Vm": 7.1},
+               "mass": 55.85, "d_elec": 6, "B": 170, "Vm": 7.1,
+               "mendeleev_no": 61, "column": 8, "row": 4, "cov_r": 132,
+               "Ns_val": 2, "Np_val": 0, "Nd_val": 6, "Nf_val": 0,
+               "bandgap": 0.0, "magmom": 2.22, "space_group": 229},
         "Co": {"Z": 27, "vec": 9, "en": 1.88, "r": 1.25, "Tm": 1768,
-               "mass": 58.93, "d_elec": 7, "B": 180, "Vm": 6.7},
+               "mass": 58.93, "d_elec": 7, "B": 180, "Vm": 6.7,
+               "mendeleev_no": 64, "column": 9, "row": 4, "cov_r": 126,
+               "Ns_val": 2, "Np_val": 0, "Nd_val": 7, "Nf_val": 0,
+               "bandgap": 0.0, "magmom": 1.72, "space_group": 194},
         "Ni": {"Z": 28, "vec": 10, "en": 1.91, "r": 1.24, "Tm": 1728,
-               "mass": 58.69, "d_elec": 8, "B": 180, "Vm": 6.6},
+               "mass": 58.69, "d_elec": 8, "B": 180, "Vm": 6.6,
+               "mendeleev_no": 67, "column": 10, "row": 4, "cov_r": 124,
+               "Ns_val": 2, "Np_val": 0, "Nd_val": 8, "Nf_val": 0,
+               "bandgap": 0.0, "magmom": 0.61, "space_group": 225},
         "Cu": {"Z": 29, "vec": 11, "en": 1.90, "r": 1.28, "Tm": 1358,
-               "mass": 63.55, "d_elec": 10, "B": 140, "Vm": 7.1},
+               "mass": 63.55, "d_elec": 10, "B": 140, "Vm": 7.1,
+               "mendeleev_no": 72, "column": 11, "row": 4, "cov_r": 132,
+               "Ns_val": 1, "Np_val": 0, "Nd_val": 10, "Nf_val": 0,
+               "bandgap": 0.0, "magmom": 0.0, "space_group": 225},
         "Zn": {"Z": 30, "vec": 12, "en": 1.65, "r": 1.34, "Tm": 693,
-               "mass": 65.38, "d_elec": 10, "B": 70, "Vm": 9.2},
+               "mass": 65.38, "d_elec": 10, "B": 70, "Vm": 9.2,
+               "mendeleev_no": 76, "column": 12, "row": 4, "cov_r": 122,
+               "Ns_val": 2, "Np_val": 0, "Nd_val": 10, "Nf_val": 0,
+               "bandgap": 0.0, "magmom": 0.0, "space_group": 194},
         "Zr": {"Z": 40, "vec": 4, "en": 1.33, "r": 1.60, "Tm": 2128,
-               "mass": 91.22, "d_elec": 2, "B": 94, "Vm": 14.0},
+               "mass": 91.22, "d_elec": 2, "B": 94, "Vm": 14.0,
+               "mendeleev_no": 48, "column": 4, "row": 5, "cov_r": 175,
+               "Ns_val": 2, "Np_val": 0, "Nd_val": 2, "Nf_val": 0,
+               "bandgap": 0.0, "magmom": 0.0, "space_group": 194},
         "Nb": {"Z": 41, "vec": 5, "en": 1.60, "r": 1.46, "Tm": 2750,
-               "mass": 92.91, "d_elec": 4, "B": 170, "Vm": 10.8},
+               "mass": 92.91, "d_elec": 4, "B": 170, "Vm": 10.8,
+               "mendeleev_no": 53, "column": 5, "row": 5, "cov_r": 164,
+               "Ns_val": 1, "Np_val": 0, "Nd_val": 4, "Nf_val": 0,
+               "bandgap": 0.0, "magmom": 0.0, "space_group": 229},
         "Mo": {"Z": 42, "vec": 6, "en": 2.16, "r": 1.39, "Tm": 2896,
-               "mass": 95.95, "d_elec": 5, "B": 230, "Vm": 9.4},
+               "mass": 95.95, "d_elec": 5, "B": 230, "Vm": 9.4,
+               "mendeleev_no": 56, "column": 6, "row": 5, "cov_r": 154,
+               "Ns_val": 1, "Np_val": 0, "Nd_val": 5, "Nf_val": 0,
+               "bandgap": 0.0, "magmom": 0.0, "space_group": 229},
         "Hf": {"Z": 72, "vec": 4, "en": 1.30, "r": 1.59, "Tm": 2506,
-               "mass": 178.49, "d_elec": 2, "B": 110, "Vm": 13.4},
+               "mass": 178.49, "d_elec": 2, "B": 110, "Vm": 13.4,
+               "mendeleev_no": 50, "column": 4, "row": 6, "cov_r": 175,
+               "Ns_val": 2, "Np_val": 0, "Nd_val": 2, "Nf_val": 14,
+               "bandgap": 0.0, "magmom": 0.0, "space_group": 194},
         "Ta": {"Z": 73, "vec": 5, "en": 1.50, "r": 1.46, "Tm": 3290,
-               "mass": 180.95, "d_elec": 3, "B": 200, "Vm": 10.9},
+               "mass": 180.95, "d_elec": 3, "B": 200, "Vm": 10.9,
+               "mendeleev_no": 52, "column": 5, "row": 6, "cov_r": 170,
+               "Ns_val": 2, "Np_val": 0, "Nd_val": 3, "Nf_val": 14,
+               "bandgap": 0.0, "magmom": 0.0, "space_group": 229},
         "W":  {"Z": 74, "vec": 6, "en": 2.36, "r": 1.39, "Tm": 3695,
-               "mass": 183.84, "d_elec": 4, "B": 310, "Vm": 9.5},
+               "mass": 183.84, "d_elec": 4, "B": 310, "Vm": 9.5,
+               "mendeleev_no": 55, "column": 6, "row": 6, "cov_r": 162,
+               "Ns_val": 2, "Np_val": 0, "Nd_val": 4, "Nf_val": 14,
+               "bandgap": 0.0, "magmom": 0.0, "space_group": 229},
         "Re": {"Z": 75, "vec": 7, "en": 1.90, "r": 1.37, "Tm": 3459,
-               "mass": 186.21, "d_elec": 5, "B": 370, "Vm": 8.9},
+               "mass": 186.21, "d_elec": 5, "B": 370, "Vm": 8.9,
+               "mendeleev_no": 58, "column": 7, "row": 6, "cov_r": 151,
+               "Ns_val": 2, "Np_val": 0, "Nd_val": 5, "Nf_val": 14,
+               "bandgap": 0.0, "magmom": 0.0, "space_group": 194},
         "Pd": {"Z": 46, "vec": 10, "en": 2.20, "r": 1.37, "Tm": 1828,
-               "mass": 106.42, "d_elec": 10, "B": 180, "Vm": 8.6},
+               "mass": 106.42, "d_elec": 10, "B": 180, "Vm": 8.6,
+               "mendeleev_no": 69, "column": 10, "row": 5, "cov_r": 139,
+               "Ns_val": 0, "Np_val": 0, "Nd_val": 10, "Nf_val": 0,
+               "bandgap": 0.0, "magmom": 0.0, "space_group": 225},
         "Ag": {"Z": 47, "vec": 11, "en": 1.93, "r": 1.44, "Tm": 1235,
-               "mass": 107.87, "d_elec": 10, "B": 100, "Vm": 10.3},
+               "mass": 107.87, "d_elec": 10, "B": 100, "Vm": 10.3,
+               "mendeleev_no": 71, "column": 11, "row": 5, "cov_r": 145,
+               "Ns_val": 1, "Np_val": 0, "Nd_val": 10, "Nf_val": 0,
+               "bandgap": 0.0, "magmom": 0.0, "space_group": 225},
         "Pt": {"Z": 78, "vec": 10, "en": 2.28, "r": 1.39, "Tm": 2041,
-               "mass": 195.08, "d_elec": 9, "B": 230, "Vm": 9.1},
+               "mass": 195.08, "d_elec": 9, "B": 230, "Vm": 9.1,
+               "mendeleev_no": 68, "column": 10, "row": 6, "cov_r": 136,
+               "Ns_val": 1, "Np_val": 0, "Nd_val": 9, "Nf_val": 14,
+               "bandgap": 0.0, "magmom": 0.0, "space_group": 225},
         "Au": {"Z": 79, "vec": 11, "en": 2.54, "r": 1.44, "Tm": 1337,
-               "mass": 196.97, "d_elec": 10, "B": 220, "Vm": 10.2},
+               "mass": 196.97, "d_elec": 10, "B": 220, "Vm": 10.2,
+               "mendeleev_no": 70, "column": 11, "row": 6, "cov_r": 136,
+               "Ns_val": 1, "Np_val": 0, "Nd_val": 10, "Nf_val": 14,
+               "bandgap": 0.0, "magmom": 0.0, "space_group": 225},
         "Si": {"Z": 14, "vec": 4, "en": 1.90, "r": 1.18, "Tm": 1687,
-               "mass": 28.09, "d_elec": 0, "B": 100, "Vm": 12.1},
+               "mass": 28.09, "d_elec": 0, "B": 100, "Vm": 12.1,
+               "mendeleev_no": 85, "column": 14, "row": 3, "cov_r": 111,
+               "Ns_val": 2, "Np_val": 2, "Nd_val": 0, "Nf_val": 0,
+               "bandgap": 1.12, "magmom": 0.0, "space_group": 227},
         "Mg": {"Z": 12, "vec": 2, "en": 1.31, "r": 1.60, "Tm": 923,
-               "mass": 24.31, "d_elec": 0, "B": 45, "Vm": 14.0},
+               "mass": 24.31, "d_elec": 0, "B": 45, "Vm": 14.0,
+               "mendeleev_no": 73, "column": 2, "row": 3, "cov_r": 141,
+               "Ns_val": 2, "Np_val": 0, "Nd_val": 0, "Nf_val": 0,
+               "bandgap": 0.0, "magmom": 0.0, "space_group": 194},
         "Sc": {"Z": 21, "vec": 3, "en": 1.36, "r": 1.64, "Tm": 1814,
-               "mass": 44.96, "d_elec": 1, "B": 57, "Vm": 15.0},
+               "mass": 44.96, "d_elec": 1, "B": 57, "Vm": 15.0,
+               "mendeleev_no": 19, "column": 3, "row": 4, "cov_r": 170,
+               "Ns_val": 2, "Np_val": 0, "Nd_val": 1, "Nf_val": 0,
+               "bandgap": 0.0, "magmom": 0.0, "space_group": 194},
         "Y":  {"Z": 39, "vec": 3, "en": 1.22, "r": 1.80, "Tm": 1799,
-               "mass": 88.91, "d_elec": 1, "B": 41, "Vm": 19.9},
+               "mass": 88.91, "d_elec": 1, "B": 41, "Vm": 19.9,
+               "mendeleev_no": 12, "column": 3, "row": 5, "cov_r": 190,
+               "Ns_val": 2, "Np_val": 0, "Nd_val": 1, "Nf_val": 0,
+               "bandgap": 0.0, "magmom": 0.0, "space_group": 194},
     }
+    # fmt: on
 
     # Miedema binary mixing enthalpies (kJ/mol).
     # Sources: de Boer et al. (1988), Takeuchi & Inoue (2005).
@@ -216,12 +309,19 @@ class FeatureSetName(str, Enum):
     always a prerequisite).  The ``value`` is a simple identifier used
     as a dict key throughout the platform; see :class:`FeatureCatalog`
     for the actual column lists.
+
+    FS_MAGPIE is an independent, general-purpose compositional feature
+    set following Ward et al. (2016) / matminer's ElementProperty
+    featurizer.  It computes 6 statistics (mean, avg_dev, range,
+    maximum, minimum, mode) for each of 22 elemental properties,
+    yielding 132 features.
     """
     FS_BASE = "FS_BASE"
     FS_THERMO = "FS_THERMO"
     FS_SIZE = "FS_SIZE"
     FS_ELECTRON = "FS_ELECTRON"
     FS_ALL = "FS_ALL"
+    FS_MAGPIE = "FS_MAGPIE"
 
 
 # Column-name constants for each group
@@ -253,6 +353,46 @@ _ELECTRON_COLS = [
     "itinerant_proxy",  # itinerant electron proxy (VEC * EN_avg)
 ]
 
+# ---------------------------------------------------------------------------
+# MAGPIE feature definitions (Ward et al. 2016 / matminer ElementProperty)
+# ---------------------------------------------------------------------------
+# 22 elemental properties × 6 statistics = 132 features.
+# Property keys map to _ElementDB._DATA keys or are derived at runtime.
+
+_MAGPIE_PROP_KEYS: List[Tuple[str, str]] = [
+    # (display_name, _DATA key or "DERIVED:xxx")
+    ("Number", "Z"),
+    ("MendeleevNumber", "mendeleev_no"),
+    ("AtomicWeight", "mass"),
+    ("MeltingT", "Tm"),
+    ("Column", "column"),
+    ("Row", "row"),
+    ("CovalentRadius", "cov_r"),
+    ("Electronegativity", "en"),
+    ("NsValence", "Ns_val"),
+    ("NpValence", "Np_val"),
+    ("NdValence", "Nd_val"),
+    ("NfValence", "Nf_val"),
+    ("NValence", "DERIVED:N_valence"),
+    ("NsUnfilled", "DERIVED:Ns_unfilled"),
+    ("NpUnfilled", "DERIVED:Np_unfilled"),
+    ("NdUnfilled", "DERIVED:Nd_unfilled"),
+    ("NfUnfilled", "DERIVED:Nf_unfilled"),
+    ("NUnfilled", "DERIVED:N_unfilled"),
+    ("GSvolume_pa", "Vm"),
+    ("GSbandgap", "bandgap"),
+    ("GSmagmom", "magmom"),
+    ("SpaceGroupNumber", "space_group"),
+]
+
+_MAGPIE_STATS = ["mean", "avg_dev", "range", "maximum", "minimum", "mode"]
+
+# Build MAGPIE column names: "MagpieData {stat} {property}"
+_MAGPIE_COLS: List[str] = []
+for _prop_name, _ in _MAGPIE_PROP_KEYS:
+    for _stat in _MAGPIE_STATS:
+        _MAGPIE_COLS.append(f"MagpieData {_stat} {_prop_name}")
+
 
 class FeatureCatalog:
     """Registry that maps FeatureSetName -> list of column names."""
@@ -263,6 +403,7 @@ class FeatureCatalog:
         FeatureSetName.FS_SIZE: _BASE_COLS + _SIZE_COLS,
         FeatureSetName.FS_ELECTRON: _BASE_COLS + _ELECTRON_COLS,
         FeatureSetName.FS_ALL: _BASE_COLS + _THERMO_COLS + _SIZE_COLS + _ELECTRON_COLS,
+        FeatureSetName.FS_MAGPIE: _MAGPIE_COLS,
     }
 
     @classmethod
@@ -273,7 +414,14 @@ class FeatureCatalog:
     @classmethod
     def all_columns(cls) -> List[str]:
         """Return all unique column names across every feature set."""
-        return list(cls._SETS[FeatureSetName.FS_ALL])
+        seen: set = set()
+        result: List[str] = []
+        for cols in cls._SETS.values():
+            for c in cols:
+                if c not in seen:
+                    seen.add(c)
+                    result.append(c)
+        return result
 
     @classmethod
     def list_sets(cls) -> List[FeatureSetName]:
@@ -301,6 +449,135 @@ def _delta_percent(values: np.ndarray, fracs: np.ndarray) -> float:
     return 100.0 * float(np.sqrt(np.dot(fracs, ((1 - values / avg) ** 2))))
 
 
+# ---------------------------------------------------------------------------
+# MAGPIE statistics (matminer-compatible)
+# ---------------------------------------------------------------------------
+
+def _magpie_avg_dev(values: np.ndarray, fracs: np.ndarray) -> float:
+    """Composition-weighted mean absolute deviation from the weighted mean.
+
+    This matches matminer's ``avg_dev`` statistic for ElementProperty.
+    avg_dev = sum_i( x_i * |p_i - mean| )
+    """
+    mean = float(np.dot(fracs, values))
+    return float(np.dot(fracs, np.abs(values - mean)))
+
+
+def _magpie_mode(values: np.ndarray, fracs: np.ndarray) -> float:
+    """Mode of the elemental property weighted by composition.
+
+    Following matminer convention: the property value of the element
+    with the highest atomic fraction.  If multiple elements share the
+    maximum fraction, return the mean of their property values.
+    """
+    max_frac = float(np.max(fracs))
+    mask = np.isclose(fracs, max_frac, atol=1e-10)
+    return float(np.mean(values[mask]))
+
+
+def _get_magpie_property_values(
+    props: List[Dict[str, float]],
+    key: str,
+) -> np.ndarray:
+    """Extract property array for one MAGPIE property.
+
+    Handles both direct _DATA keys and derived properties (prefixed
+    with ``DERIVED:``).
+    """
+    if not key.startswith("DERIVED:"):
+        return np.array([p[key] for p in props], dtype=np.float64)
+
+    derived_name = key.split(":", 1)[1]
+    n = len(props)
+    result = np.zeros(n, dtype=np.float64)
+
+    for i, p in enumerate(props):
+        ns = p["Ns_val"]
+        np_val = p["Np_val"]
+        nd = p["Nd_val"]
+        nf = p["Nf_val"]
+
+        if derived_name == "N_valence":
+            result[i] = ns + np_val + nd + nf
+        elif derived_name == "Ns_unfilled":
+            result[i] = (2 - ns) if ns > 0 else 0
+        elif derived_name == "Np_unfilled":
+            result[i] = (6 - np_val) if np_val > 0 else 0
+        elif derived_name == "Nd_unfilled":
+            result[i] = (10 - nd) if nd > 0 else 0
+        elif derived_name == "Nf_unfilled":
+            result[i] = (14 - nf) if nf > 0 else 0
+        elif derived_name == "N_unfilled":
+            ns_u = (2 - ns) if ns > 0 else 0
+            np_u = (6 - np_val) if np_val > 0 else 0
+            nd_u = (10 - nd) if nd > 0 else 0
+            nf_u = (14 - nf) if nf > 0 else 0
+            result[i] = ns_u + np_u + nd_u + nf_u
+        else:
+            raise ValueError(f"Unknown derived MAGPIE property: {derived_name}")
+
+    return result
+
+
+def _compute_magpie_stats(
+    values: np.ndarray,
+    fracs: np.ndarray,
+) -> Dict[str, float]:
+    """Compute the 6 MAGPIE statistics for one property.
+
+    Returns dict with keys: mean, avg_dev, range, maximum, minimum, mode.
+    """
+    w_mean = float(np.dot(fracs, values))
+    w_avg_dev = _magpie_avg_dev(values, fracs)
+    v_max = float(np.max(values))
+    v_min = float(np.min(values))
+    v_range = v_max - v_min
+    v_mode = _magpie_mode(values, fracs)
+
+    return {
+        "mean": w_mean,
+        "avg_dev": w_avg_dev,
+        "range": v_range,
+        "maximum": v_max,
+        "minimum": v_min,
+        "mode": v_mode,
+    }
+
+
+def compute_magpie_features(
+    elems: List[str],
+    fracs: np.ndarray,
+    props: List[Dict[str, float]],
+) -> Dict[str, float]:
+    """Compute all 132 MAGPIE features for one composition.
+
+    Parameters
+    ----------
+    elems : list of str
+        Element symbols.
+    fracs : np.ndarray
+        Normalised atomic fractions (same order as *elems*).
+    props : list of dict
+        Per-element property dicts from ``_ElementDB.get()``.
+
+    Returns
+    -------
+    dict
+        Feature name -> value.  132 features total
+        (22 properties x 6 statistics).
+    """
+    result: Dict[str, float] = {}
+
+    for prop_name, data_key in _MAGPIE_PROP_KEYS:
+        values = _get_magpie_property_values(props, data_key)
+        stats = _compute_magpie_stats(values, fracs)
+        for stat_name, stat_val in stats.items():
+            col = f"MagpieData {stat_name} {prop_name}"
+            result[col] = stat_val
+
+    return result
+
+
 def compute_features_single(
     composition: Dict[str, float],
 ) -> Dict[str, float]:
@@ -314,7 +591,7 @@ def compute_features_single(
     Returns
     -------
     dict
-        Feature name -> value.  Contains columns from FS_ALL.
+        Feature name -> value.  Contains columns from FS_ALL and FS_MAGPIE.
     """
     R_GAS = 8.314  # J/(mol K)
 
@@ -384,7 +661,10 @@ def compute_features_single(
     en_avg = _weighted_avg(en_arr, fracs)
     itinerant_proxy = VEC * en_avg  # proxy for itinerant electron behaviour
 
-    return {
+    # ---- FS_MAGPIE ----
+    magpie_feats = compute_magpie_features(elems, fracs, props)
+
+    result = {
         # BASE
         "r_avg": r_avg,
         "delta_r": delta_r,
@@ -406,11 +686,14 @@ def compute_features_single(
         "d_elec_std": d_elec_std,
         "itinerant_proxy": itinerant_proxy,
     }
+    # Merge MAGPIE features into the result dict
+    result.update(magpie_feats)
+    return result
 
 
 def compute_features(
     compositions: Sequence[Dict[str, float]],
-    feature_set: FeatureSetName = FeatureSetName.FS_ALL,
+    feature_set: Optional[FeatureSetName] = FeatureSetName.FS_ALL,
 ) -> pd.DataFrame:
     """Compute features for a list of compositions.
 
@@ -418,8 +701,9 @@ def compute_features(
     ----------
     compositions : list of dict
         Each dict maps element symbol -> atomic fraction.
-    feature_set : FeatureSetName
-        Which feature set to return.
+    feature_set : FeatureSetName or None
+        Which feature set to return.  If ``None``, return *all*
+        computed columns (domain-specific + MAGPIE).
 
     Returns
     -------
@@ -428,7 +712,7 @@ def compute_features(
     """
     logger.info(
         "Computing features for %d compositions (set=%s)",
-        len(compositions), feature_set.value,
+        len(compositions), feature_set.value if feature_set else "ALL_COLUMNS",
     )
     records: List[Dict[str, float]] = []
     for i, comp in enumerate(compositions):
@@ -440,6 +724,11 @@ def compute_features(
             raise
 
     df_all = pd.DataFrame(records)
+
+    if feature_set is None:
+        # Return all computed columns (domain + MAGPIE)
+        return df_all
+
     cols = FeatureCatalog.columns(feature_set)
     missing = [c for c in cols if c not in df_all.columns]
     if missing:
