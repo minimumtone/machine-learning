@@ -71,6 +71,18 @@ def cmd_run(args: argparse.Namespace) -> None:
     logger.info("Starting experiment: seeds=%s, n_samples=%d, quick=%s",
                 seeds, args.n_samples, args.quick)
 
+    # Integration flags
+    use_mlflow = getattr(args, "use_mlflow", False)
+    use_feast = getattr(args, "use_feast", False)
+    use_mint = getattr(args, "use_mint", False)
+
+    if use_mlflow:
+        logger.info("MLflow tracking enabled")
+    if use_feast:
+        logger.info("Feast feature store enabled")
+    if use_mint:
+        logger.info("MInt workflow adapters enabled")
+
     # 1. Dataset generation
     t0 = time.time()
     comps_df, features_df, target = generate_hea_dataset(
@@ -80,13 +92,20 @@ def cmd_run(args: argparse.Namespace) -> None:
     logger.info("Dataset generated in %.1f sec: %d samples, %d features",
                 time.time() - t0, len(target), features_df.shape[1])
 
-    # 2. Experiment execution
+    # 2. Experiment execution (with optional integrations)
     runner = ExperimentRunner(
         seeds=seeds,
         quick=args.quick,
         exclude_elements=args.exclude_elements,
+        use_mlflow=use_mlflow,
+        use_feast=use_feast,
+        use_mint=use_mint,
     )
     runs, validity_scores, ood_results = runner.run(comps_df, features_df, target)
+
+    # Log integration status
+    if runner.tracker.is_mlflow_active:
+        logger.info("MLflow tracking URI: %s", runner.tracker.get_tracking_uri())
 
     # 3. Export run registry
     runner.export(out_dir)
@@ -194,6 +213,15 @@ def cmd_run(args: argparse.Namespace) -> None:
     print(f"\nDone. {len(runs)} runs completed in {total_elapsed:.1f}s.")
     print(f"Report: {report_path}")
     print(f"Run registry: {out_dir / 'run_registry.json'}")
+
+    # Print integration status
+    if runner.tracker.is_mlflow_active:
+        print(f"MLflow UI: {runner.tracker.get_tracking_uri()}")
+    if runner.feature_store.is_feast_active:
+        print("Feast feature store: active")
+    if runner.mint_registry is not None:
+        n_mint = len(runner.mint_registry.list_workflows())
+        print(f"MInt workflows: {n_mint} registered")
 
 
 # ---------------------------------------------------------------------------
@@ -352,6 +380,13 @@ def build_parser() -> argparse.ArgumentParser:
                        help="Skip figure generation")
     p_run.add_argument("--no-literature", action="store_true",
                        help="Skip literature search")
+    # Integration options
+    p_run.add_argument("--use-mlflow", action="store_true",
+                       help="Enable MLflow experiment tracking")
+    p_run.add_argument("--use-feast", action="store_true",
+                       help="Enable Feast feature store")
+    p_run.add_argument("--use-mint", action="store_true",
+                       help="Enable MInt workflow adapters")
     p_run.set_defaults(func=cmd_run)
 
     # --- search ---

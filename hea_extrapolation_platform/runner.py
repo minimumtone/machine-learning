@@ -5,8 +5,11 @@ Experiment Runner for Extrapolation Discovery Platform
 Orchestrates the full experiment grid:
   3 workflows x 3 split policies x 3 seeds x 5 feature sets = 135 runs
 
-Provides MLflow-style run tracking with:
+Provides experiment tracking with:
   - Run registry (in-memory + JSON export)
+  - MLflow integration (optional — falls back to in-memory)
+  - Feast feature store integration (optional — falls back to FeatureCatalog)
+  - MInt workflow adapter integration (optional — falls back to built-in)
   - Progress logging
   - Single-pass execution (all outputs captured in one run)
 
@@ -45,6 +48,19 @@ from hea_extrapolation_platform.workflows import (
 )
 from hea_extrapolation_platform.ood import OODDetector, OODResult
 from hea_extrapolation_platform.evaluation import FeatureValidityEvaluator, ValidityScore
+from hea_extrapolation_platform.integrations.mlflow_tracker import (
+    MLflowTracker,
+    is_mlflow_available,
+)
+from hea_extrapolation_platform.integrations.feast_store import (
+    FeastFeatureStore,
+    is_feast_available,
+)
+from hea_extrapolation_platform.integrations.mint_adapter import (
+    MIntWorkflowAdapter,
+    MIntWorkflowConfig,
+    MIntWorkflowRegistry,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -113,6 +129,20 @@ class ExperimentRunner:
         If True, use reduced hyperparameter grids for faster execution.
     exclude_elements : list of str
         Elements to use for ElementExclusion splits (default ["Co", "Ni", "Ti"]).
+    mlflow_tracker : MLflowTracker or None
+        Optional MLflow tracker for experiment logging.  If None and
+        ``use_mlflow=True``, a default tracker is created.
+    feature_store : FeastFeatureStore or None
+        Optional Feast feature store for feature management.
+    mint_registry : MIntWorkflowRegistry or None
+        Optional MInt workflow registry.  If provided, MInt workflows
+        are executed *in addition to* built-in workflows.
+    use_mlflow : bool
+        If True, create a default MLflow tracker when none is provided.
+    use_feast : bool
+        If True, create a default Feast store when none is provided.
+    use_mint : bool
+        If True, create a default MInt registry when none is provided.
     """
 
     def __init__(
@@ -120,15 +150,63 @@ class ExperimentRunner:
         seeds: Optional[List[int]] = None,
         quick: bool = False,
         exclude_elements: Optional[List[str]] = None,
+        mlflow_tracker: Optional[MLflowTracker] = None,
+        feature_store: Optional[FeastFeatureStore] = None,
+        mint_registry: Optional[MIntWorkflowRegistry] = None,
+        use_mlflow: bool = False,
+        use_feast: bool = False,
+        use_mint: bool = False,
     ) -> None:
         self._seeds = seeds or [42, 123, 456]
         self._quick = quick
         self._exclude_elements = exclude_elements or ["Co", "Ni", "Ti"]
         self._registry = RunRegistry()
 
+        # MLflow tracker
+        if mlflow_tracker is not None:
+            self._tracker = mlflow_tracker
+        elif use_mlflow:
+            self._tracker = MLflowTracker(
+                experiment_name="extrapolation_discovery",
+                enabled=True,
+            )
+        else:
+            self._tracker = MLflowTracker(enabled=False)
+
+        # Feast feature store
+        if feature_store is not None:
+            self._feature_store = feature_store
+        elif use_feast:
+            self._feature_store = FeastFeatureStore(enabled=True)
+        else:
+            self._feature_store = FeastFeatureStore(enabled=False)
+
+        # MInt workflow registry
+        if mint_registry is not None:
+            self._mint_registry = mint_registry
+        elif use_mint:
+            self._mint_registry = MIntWorkflowRegistry.create_default()
+        else:
+            self._mint_registry = None
+
     @property
     def registry(self) -> RunRegistry:
         return self._registry
+
+    @property
+    def tracker(self) -> MLflowTracker:
+        """Return the MLflow tracker instance."""
+        return self._tracker
+
+    @property
+    def feature_store(self) -> FeastFeatureStore:
+        """Return the Feast feature store instance."""
+        return self._feature_store
+
+    @property
+    def mint_registry(self) -> Optional[MIntWorkflowRegistry]:
+        """Return the MInt workflow registry (or None)."""
+        return self._mint_registry
 
     @property
     def ood_split_indices(self) -> Dict[str, Tuple[np.ndarray, np.ndarray]]:
@@ -176,7 +254,20 @@ class ExperimentRunner:
         """
         t_start = time.time()
         workflows = self._build_workflows()
+
+        # Add MInt workflows if registry is provided
+        if self._mint_registry is not None:
+            for wf_info in self._mint_registry.list_workflows():
+                wf_name = wf_info["name"]
+                if wf_name not in workflows:
+                    adapter = self._mint_registry.get_adapter(wf_name)
+                    workflows[wf_name] = adapter
+                    logger.info("Added MInt workflow: %s", wf_name)
+
         feature_sets = FeatureCatalog.list_sets()
+
+        # Store features in Feast store if enabled
+        self._feature_store.store_features(features_all)
 
         total_expected = (
             len(workflows)
@@ -188,6 +279,20 @@ class ExperimentRunner:
             "Starting experiment: %d workflows x %d seeds x %d feature sets "
             "(estimated ~%d runs)",
             len(workflows), len(self._seeds), len(feature_sets), total_expected,
+        )
+
+        # Start MLflow parent run for the entire experiment
+        self._tracker.start_run(
+            run_name=f"experiment_{int(t_start)}",
+            tags={
+                "seeds": str(self._seeds),
+                "quick": str(self._quick),
+                "n_feature_sets": str(len(feature_sets)),
+                "n_workflows": str(len(workflows)),
+                "mlflow_active": str(self._tracker.is_mlflow_active),
+                "feast_active": str(self._feature_store.is_feast_active),
+                "mint_active": str(self._mint_registry is not None),
+            },
         )
 
         ood_results: Dict[str, OODResult] = {}
@@ -267,6 +372,15 @@ class ExperimentRunner:
             run_count, elapsed,
             validity_scores[0].feature_set if validity_scores else "N/A",
         )
+
+        # Log experiment summary to MLflow
+        self._tracker.log_experiment_summary(
+            n_runs=run_count,
+            validity_scores=validity_scores,
+            ood_results=ood_results,
+            elapsed_sec=elapsed,
+        )
+        self._tracker.end_run()
 
         return self._registry.runs, validity_scores, ood_results
 

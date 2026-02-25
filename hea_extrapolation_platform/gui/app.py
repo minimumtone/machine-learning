@@ -361,6 +361,24 @@ def create_app() -> gr.Blocks:
                             info="Skip PNG generation (Plotly always available)",
                         )
 
+                gr.Markdown("### Integrations (optional)")
+                with gr.Row():
+                    use_mlflow = gr.Checkbox(
+                        label="MLflow Tracking",
+                        value=False,
+                        info="Log runs to MLflow (requires mlflow package)",
+                    )
+                    use_feast = gr.Checkbox(
+                        label="Feast Feature Store",
+                        value=False,
+                        info="Use Feast for feature management (requires feast package)",
+                    )
+                    use_mint = gr.Checkbox(
+                        label="MInt Workflow Adapters",
+                        value=False,
+                        info="Run MInt-wrapped workflows in addition to built-in",
+                    )
+
                 run_btn = gr.Button(
                     "Run Experiment", variant="primary", size="lg",
                 )
@@ -629,6 +647,9 @@ def create_app() -> gr.Blocks:
             excl_str: str,
             skip_lit: bool,
             skip_plt: bool,
+            enable_mlflow: bool,
+            enable_feast: bool,
+            enable_mint: bool,
             session: Dict[str, Any],
         ) -> Generator:
             """Generator that yields incremental progress + state.
@@ -724,6 +745,9 @@ def create_app() -> gr.Blocks:
 
                 runner = ExperimentRunner(
                     seeds=seeds, quick=quick, exclude_elements=excl,
+                    use_mlflow=enable_mlflow,
+                    use_feast=enable_feast,
+                    use_mint=enable_mint,
                 )
                 runs, scores, ood_results = runner.run(
                     comps_df, features_df, target,
@@ -736,6 +760,18 @@ def create_app() -> gr.Blocks:
                 session["runner"] = runner
 
                 log(f"Completed: {len(runs)} runs")
+
+                # Log integration status
+                if runner.tracker.is_mlflow_active:
+                    log(
+                        f"MLflow tracking: {runner.tracker.get_tracking_uri()}"
+                    )
+                if runner.feature_store.is_feast_active:
+                    log("Feast feature store: active")
+                if runner.mint_registry is not None:
+                    n_mint = len(runner.mint_registry.list_workflows())
+                    log(f"MInt workflows: {n_mint} registered")
+
                 if scores:
                     log(
                         f"Best feature set: {scores[0].feature_set} "
@@ -870,7 +906,8 @@ def create_app() -> gr.Blocks:
             fn=run_experiment,
             inputs=[
                 seeds_input, n_samples, quick_mode,
-                exclude_elements, skip_literature, skip_plots, state,
+                exclude_elements, skip_literature, skip_plots,
+                use_mlflow, use_feast, use_mint, state,
             ],
             outputs=[
                 # Config tab

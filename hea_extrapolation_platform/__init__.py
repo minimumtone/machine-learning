@@ -24,6 +24,7 @@ runner         Experiment orchestrator with MLflow-style tracking
 Sub-packages
 ------------
 literature_graph   Literature metadata graph (JSONL + FAISS embedding search)
+integrations       External tool adapters (MLflow, Feast, MInt)
 """
 
 __version__ = "0.1.0"

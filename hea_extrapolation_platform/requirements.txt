@@ -34,3 +34,18 @@ plotly>=5.18
 # Falls back to TF-IDF bag-of-words if absent.
 # Needed by: literature_graph/vector_index.py
 # sentence-transformers>=2.2
+
+# ── Optional: MLflow experiment tracking ──────────────────────────
+# Falls back to in-memory run tracking if absent.
+# Needed by: integrations/mlflow_tracker.py
+# mlflow>=2.8
+
+# ── Optional: Feast feature store ───────────────────────────────
+# Falls back to built-in FeatureCatalog if absent.
+# Needed by: integrations/feast_store.py
+# feast>=0.34
+
+# ── Optional: MInt remote workflows (REST API) ───────────────────
+# Only needed for remote MInt workflows (not for wrapped/local).
+# Needed by: integrations/mint_adapter.py (remote type only)
+# requests>=2.28
