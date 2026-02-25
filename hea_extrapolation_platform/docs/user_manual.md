@@ -372,7 +372,14 @@ GUIは **6つのタブ** で構成されています。以下、各タブの操�
 
 実験結果の**詳細データ**と**Parity Plot**を確認する画面です。
 
-#### フィルタとテーブル
+#### 初期状態（実験実行前）
+
+実験実行前は、テーブルやグラフは空の状態です。
+
+![Results 初期状態](screenshots_v3/02_results_initial.png)
+*図5.3.0: Results初期状態 — 実験実行前はテーブルが空*
+
+#### フィルタとテーブル（実験実行後）
 
 ![Results タブ](screenshots_v3/09_results_with_data.png)
 *図5.3.1: Results画面 — Feature Validity Rankingテーブル（上）とRun Resultsテーブル（下）*
@@ -435,6 +442,13 @@ GUIは **6つのタブ** で構成されています。以下、各タブの操�
 ### 5.4 OOD Map（外挿マップ）
 
 OOD（Out-of-Distribution）サンプルの分布をPCA 2次元マップで可視化する画面です。
+
+#### 初期状態（実験実行前）
+
+![OOD Map 初期状態](screenshots_v3/03_ood_map_initial.png)
+*図5.4.0: OOD Map初期状態 — 実験実行前はマップが空*
+
+#### データ表示状態（実験実行後）
 
 ![OOD Map](screenshots_v3/11_ood_map_with_data.png)
 *図5.4.1: OOD Map — PCA 2次元可視化。色はOODスコアを示す（赤=OOD、緑=In-Distribution）*
@@ -525,6 +539,11 @@ Unregistered features: vec, ds_mix, tm_avg, cold_work_pct, ...
 ### 5.6 Report（レポート）
 
 実験結果をMarkdownレポートとしてプレビュー・ダウンロードする画面です。
+
+#### 初期状態（実験実行前）
+
+![Report 初期状態](screenshots_v3/05_report_initial.png)
+*図5.6.0: Report初期状態 — 実験実行前はレポートが空*
 
 #### レポートプレビュー（上部）
 
