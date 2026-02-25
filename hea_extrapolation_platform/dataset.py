@@ -55,8 +55,7 @@ def _random_composition(
 
 def _yield_strength_proxy(
     feat: Dict[str, float],
-    rng: np.random.Generator,
-    noise_std: float = 50.0,
+    noise: float,
 ) -> float:
     """Compute a synthetic yield strength (MPa) using a simplified
     solid-solution strengthening model.
@@ -65,6 +64,9 @@ def _yield_strength_proxy(
     ----------
     feat:
         Pre-computed feature dict (from FS_ALL).
+    noise:
+        Pre-drawn noise value (MPa). This is drawn during composition
+        generation to preserve the exact RNG draw order for a given seed.
 
     Notes
     -----
@@ -85,8 +87,8 @@ def _yield_strength_proxy(
         - 2.0 * feat["phase_sep_risk"]
         + 0.5 * feat["elastic_mismatch"]
     )
-    # Add noise
-    ys += rng.normal(0.0, noise_std)
+    # Add pre-drawn noise
+    ys += noise
     return max(ys, 50.0)  # floor at 50 MPa
 
 
@@ -133,6 +135,7 @@ def generate_hea_dataset(
     common_pool = [e for e in common_pool if e in available]
 
     compositions: List[Dict[str, float]] = []
+    noise_values: List[float] = []
     all_elements_set: set = set()
 
     # Compute targets after feature computation to avoid recomputing
@@ -151,7 +154,8 @@ def generate_hea_dataset(
         comp = _random_composition(chosen, rng)
         compositions.append(comp)
         all_elements_set.update(chosen)
-        # target is computed after feature computation (avoid double feature calc)
+        # Draw noise here to preserve RNG draw order for a given seed.
+        noise_values.append(float(rng.normal(0.0, noise_std)))
 
     # Build composition DataFrame (sparse: NaN -> 0)
     all_elems_sorted = sorted(all_elements_set)
@@ -165,9 +169,10 @@ def generate_hea_dataset(
     features_df = compute_features(compositions, FeatureSetName.FS_ALL)
 
     # Compute target from the *already computed* FS_ALL features
+    features_records = features_df.to_dict(orient="records")
     targets = [
-        _yield_strength_proxy(f, rng, noise_std=noise_std)
-        for f in features_df.to_dict(orient="records")
+        _yield_strength_proxy(f, noise)
+        for f, noise in zip(features_records, noise_values)
     ]
     target = pd.Series(targets, name="yield_strength_MPa")
 
