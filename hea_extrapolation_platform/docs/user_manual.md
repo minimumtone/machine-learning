@@ -656,10 +656,10 @@ python -m hea_extrapolation_platform gui --share
 
 | セット名 | 含まれる特徴量 | 特徴 |
 |----------|-------------|------|
-| **FS_BASE** | VEC, dH_mix, dS_mix, delta_r, Tm_avg, delta_EN, mass_avg, r_avg | 基本的な組成記述子（8特徴量） |
-| **FS_THERMO** | FS_BASE + omega, ss_formation | 熱力学パラメータを追加（10特徴量） |
-| **FS_SIZE** | FS_BASE + mismatch_PGS, elastic_mismatch | サイズ効果パラメータを追加（10特徴量） |
-| **FS_ELECTRON** | FS_BASE + e_per_a, phi_pauling | 電子構造パラメータを追加（10特徴量） |
+| **FS_BASE** | r_avg, delta_r, dS_mix, dH_mix, VEC, delta_EN, Tm_avg, mass_avg | 基本的な組成記述子（8特徴量） |
+| **FS_THERMO** | FS_BASE + omega, ss_formation, phase_sep_risk | 熱力学パラメータを追加（11特徴量） |
+| **FS_SIZE** | FS_BASE + Vm_var, elastic_mismatch | サイズ効果パラメータを追加（10特徴量） |
+| **FS_ELECTRON** | FS_BASE + d_elec_avg, d_elec_std, itinerant_proxy | 電子構造パラメータを追加（11特徴量） |
 | **FS_ALL** | 上記全ての特徴量を統合 | 全特徴量（16特徴量） |
 
 > **使い分けのヒント**: まず FS_ALL で全体像を把握し、次に各サブセット（FS_THERMO, FS_SIZE, FS_ELECTRON）の寄与を比較するのが効率的です。
