@@ -223,6 +223,7 @@ def generate_hea_dataset(
     all_elements_set: set = set()
     rejected_total = 0
     reject_limit = _MAX_REJECT_RATIO * n_samples
+    filter_relaxed = False
 
     for pool, n_pool, label in [
         (pool_fcc, n_fcc, "FCC"),
@@ -240,22 +241,40 @@ def generate_hea_dataset(
             # Draw noise *before* the filter check to preserve RNG order
             noise_val = float(rng.standard_normal())
 
-            # Stability filter
+            # Stability filter (disabled once reject limit is exceeded)
             try:
                 feat = compute_features_single(comp)
             except Exception:
                 rejected_total += 1
-                if rejected_total > reject_limit:
-                    break
+                if rejected_total > reject_limit and not filter_relaxed:
+                    filter_relaxed = True
+                    logger.warning(
+                        "Reject limit (%d) reached at %s pool; "
+                        "disabling stability filter for remaining samples",
+                        reject_limit, label,
+                    )
                 continue
 
-            if _passes_stability_filter(feat) or rejected_total > reject_limit:
+            if filter_relaxed or _passes_stability_filter(feat):
                 compositions.append(comp)
                 noise_values.append(noise_val)
                 all_elements_set.update(chosen)
                 accepted += 1
             else:
                 rejected_total += 1
+                if rejected_total > reject_limit and not filter_relaxed:
+                    filter_relaxed = True
+                    logger.warning(
+                        "Reject limit (%d) reached at %s pool; "
+                        "disabling stability filter for remaining samples",
+                        reject_limit, label,
+                    )
+
+    if len(compositions) < n_samples:
+        logger.warning(
+            "Generated %d / %d requested samples (shortfall due to "
+            "feature computation errors)", len(compositions), n_samples,
+        )
 
     logger.info(
         "Composition generation: %d accepted, %d rejected by stability filter",
