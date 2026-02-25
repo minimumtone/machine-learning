@@ -43,5 +43,5 @@ error_tot=$(tail -7 error_tot.txt | head -1 | awk '{print $1}')
 #echo "$mass mass" > $results
 #echo "$stress stress" >> $results
 #echo "$error_tot error_tot" >> $results
-echo "$error_tot error_tot" > $results
+echo "$error_tot error_total" > $results
 
