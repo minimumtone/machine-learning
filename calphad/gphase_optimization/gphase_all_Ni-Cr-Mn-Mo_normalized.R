@@ -107,16 +107,16 @@ for (i in c(1:length(numEXP))){
         caldata  <-   c(sum(as.numeric(system(cmdFE[i],intern = TRUE)[nmoles])),
                         sum(as.numeric(system(cmdNI[i],intern = TRUE)[nmoles])),
                         sum(as.numeric(system(cmdSI[i],intern = TRUE)[nmoles])),
-                        sum(as.numeric(system(cmdMO[i],intern = TRUE)[nmoles])),
                         sum(as.numeric(system(cmdMN[i],intern = TRUE)[nmoles])),
+                        sum(as.numeric(system(cmdMO[i],intern = TRUE)[nmoles])),
                         sum(as.numeric(system(cmdCR[i],intern = TRUE)[nmoles])))
 # G相が分離している場合    
         }else if (length(nmoles) >= 2){  
         caldata  <-   c(sum(as.numeric(system(cmdFE[i],intern = TRUE)[nmoles])),
                         sum(as.numeric(system(cmdNI[i],intern = TRUE)[nmoles])),
                         sum(as.numeric(system(cmdSI[i],intern = TRUE)[nmoles])),
-                        sum(as.numeric(system(cmdMO[i],intern = TRUE)[nmoles])),
                         sum(as.numeric(system(cmdMN[i],intern = TRUE)[nmoles])),
+                        sum(as.numeric(system(cmdMO[i],intern = TRUE)[nmoles])),
                         sum(as.numeric(system(cmdCR[i],intern = TRUE)[nmoles])))
         caldata   <-   10*caldata
         }
