@@ -164,7 +164,14 @@ class WorkflowLIN(BaseWorkflow):
         # std_y — multiplying by std_X again would double-count scaling.
         model: Ridge = pipe.named_steps["model"]
         coef_raw = model.coef_
-        std_y = float(np.std(y_train.values)) if np.std(y_train.values) > 0 else 1.0
+        # Use ddof=1 (sample std) and guard against single-sample or
+        # constant-y edge cases where std would be 0.
+        if len(y_train) > 1:
+            std_y = float(np.std(y_train.values, ddof=1))
+        else:
+            std_y = 0.0
+        if std_y < 1e-12:
+            std_y = 1.0  # avoid division by zero; coefficients stay in raw units
         coef_std = coef_raw / std_y
 
         result = RunResult(

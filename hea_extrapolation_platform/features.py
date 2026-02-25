@@ -308,10 +308,14 @@ def compute_features_single(
     # downstream numerical issues (e.g. ss_formation = omega * dS_mix).
     _OMEGA_MAX = 100.0
     if abs_dH > 1e-6:
-        omega = min(Tm_avg * dS_mix / abs_dH, _OMEGA_MAX)
+        omega_raw = Tm_avg * dS_mix / abs_dH
+        omega = min(omega_raw, _OMEGA_MAX)
     else:
+        omega_raw = _OMEGA_MAX
         omega = _OMEGA_MAX
-    ss_formation = omega * dS_mix  # higher -> more likely solid-solution
+    # Use the *unclipped* omega for ss_formation so that the thermodynamic
+    # relationship is preserved even when omega itself is capped for display.
+    ss_formation = omega_raw * dS_mix  # higher -> more likely solid-solution
     # Phase separation risk: positive dH + low omega -> higher risk
     phase_sep_risk = max(0.0, dH_mix) / (omega + 1.0)
 
