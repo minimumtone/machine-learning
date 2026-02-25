@@ -1,0 +1,21 @@
+@@@ 49.tcm 
+@@go da 
+@@sw user ./Gver.6.60.TDB 
+@@s-c X(Ni)=0.007 X(Si)=0.0048 X(Mn)=0.0141 X(Mo)=0.0032 X(Cr)=0 X(C)=0.0074 X(P)=0.00005 .00096	 
+@@c-e 
+@@c-e 
+@@li-eq 49S.PLE AXCP  
+@@s-c T=1800 
+@@c-e 
+@@c-trans G_PHASE T 
+@@li-eq 49T.PLE AXCP 
+
+@@exit 
+@@exit	
+
+
+
+
+
+
+

@@ -1,0 +1,21 @@
+@@@ 38.tcm 
+go da 
+sw user ./Gver.6.60.TDB 
+d-sys Fe Ni Si Mn Mo Cr C P S  
+rej pha CR3SI1_S CR3SI1_L
+get
+go p-3 
+s-c N=1 P=1e5 T=673.15	  
+s-c X(Ni)=0.0895 X(Si)=0.02854 X(Mn)=0.00679 X(Mo)=0.01276 X(Cr)=0.21135 X(C)=0.00201 X(P)=0.00051 X(S)=0.00027
+c-e 
+c-e 
+li-eq 38S.PLE AXCP  
+s-c T=1800 
+c-e 
+c-trans G_PHASE T 
+li-eq 38T.PLE AXCP 
+
+exit 
+exit	  
+
+

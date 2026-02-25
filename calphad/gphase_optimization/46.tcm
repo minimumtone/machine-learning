@@ -1,0 +1,21 @@
+@@@ 46.tcm 
+@@go da 
+@@sw user ./Gver.6.60.TDB 
+@@s-c X(Ni)=0.0032 X(Si)=0.0046 X(Mn)=0.0032 X(Mo)=0.0032 X(Cr)=0 X(C)=0.0065 X(P)=0.00009 .0036	 
+@@c-e 
+@@c-e 
+@@li-eq 46S.PLE AXCP  
+@@s-c T=1800 
+@@c-e 
+@@c-trans G_PHASE T 
+@@li-eq 46T.PLE AXCP 
+
+@@exit 
+@@exit	
+
+
+
+
+
+
+
