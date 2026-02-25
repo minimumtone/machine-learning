@@ -1,0 +1,22 @@
+
+import math, os
+
+# os.system("Console.sh opt.tcm > /dev/null")
+# os.system("cp all_exec.sh all_exe.sh")
+# os.system("sh all_exe.sh > /dev/null")
+os.system("cp 01-67_HUS22.tcm all.tcm")
+os.system("Console.sh all.tcm > /dev/null")
+# os.system("cp 05.tcm 05a.tcm")
+# os.system("Console.sh 05a.tcm > /dev/null")
+# os.system("cp 08.tcm 08a.tcm")
+# os.system("Console.sh 08a.tcm > /dev/null")
+# os.system("cp 21.tcm 21a.tcm")
+# os.system("Console.sh 21a.tcm > /dev/null")
+# os.system("cp 45.tcm 45a.tcm")
+# os.system("Console.sh 45a.tcm > /dev/null")
+# os.system("cp 66.tcm 66a.tcm")
+# os.system("Console.sh 66a.tcm > /dev/null")
+# os.system("cp 67.tcm 67a.tcm")
+# os.system("Console.sh 67a.tcm > /dev/null")
+os.system("R --vanilla --slave < gphase_all.R")
+os.system("cp error_tot.txt error_tot")
