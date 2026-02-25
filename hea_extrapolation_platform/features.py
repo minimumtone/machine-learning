@@ -97,27 +97,81 @@ class _ElementDB:
                "mass": 88.91, "d_elec": 1, "B": 41, "Vm": 19.9},
     }
 
-    # Simplified Miedema binary mixing enthalpies (kJ/mol)
+    # Miedema binary mixing enthalpies (kJ/mol).
+    # Sources: de Boer et al. (1988), Takeuchi & Inoue (2005).
+    # Coverage expanded from 52 to ~120 pairs for common HEA elements.
     _DELTA_H_BINARY: Dict[tuple, float] = {
+        # --- 3d transition metal pairs ---
         ("Co", "Cr"): -4, ("Co", "Fe"): -1, ("Co", "Mn"): -5,
         ("Co", "Ni"): 0,  ("Cr", "Fe"): -1, ("Cr", "Mn"): 2,
         ("Cr", "Ni"): -7, ("Fe", "Mn"): 0,  ("Fe", "Ni"): -2,
-        ("Mn", "Ni"): -8, ("Ti", "V"): -2,  ("Ti", "Cr"): -7,
-        ("Ti", "Fe"): -17, ("Ti", "Ni"): -35, ("Ti", "Co"): -28,
-        ("V", "Cr"): -2,  ("V", "Fe"): -7,  ("V", "Ni"): -18,
-        ("Cu", "Ni"): 4,  ("Cu", "Co"): 6,  ("Cu", "Fe"): 13,
-        ("Cu", "Mn"): 4,  ("Cu", "Cr"): 12,
+        ("Mn", "Ni"): -8, ("Co", "V"): -14, ("Cr", "V"): -2,
+        ("Fe", "V"): -7,  ("Mn", "V"): -1,  ("Ni", "V"): -18,
+        ("Co", "Cu"): 6,  ("Cr", "Cu"): 12, ("Fe", "Cu"): 13,
+        ("Mn", "Cu"): 4,  ("Ni", "Cu"): 4,  ("V", "Cu"): 5,
+        # --- Ti binary pairs ---
+        ("Ti", "V"): -2,  ("Ti", "Cr"): -7, ("Ti", "Mn"): -8,
+        ("Ti", "Fe"): -17, ("Ti", "Co"): -28, ("Ti", "Ni"): -35,
+        ("Ti", "Cu"): -9, ("Ti", "Zn"): -15,
+        # --- Al binary pairs ---
         ("Al", "Co"): -19, ("Al", "Cr"): -10, ("Al", "Fe"): -11,
         ("Al", "Mn"): -19, ("Al", "Ni"): -22, ("Al", "Ti"): -30,
-        ("Al", "Cu"): -1,  ("Al", "Zr"): -44,
-        ("Zr", "Ti"): 0,  ("Zr", "Ni"): -49, ("Zr", "Cu"): -23,
-        ("Zr", "Co"): -41, ("Zr", "Fe"): -25,
-        ("Nb", "Ti"): 2,  ("Nb", "Zr"): 4,  ("Mo", "Ti"): -4,
-        ("Ta", "Ti"): 1,  ("W", "Ti"): -6,
-        ("Hf", "Ti"): 0,  ("Hf", "Ni"): -42, ("Hf", "Co"): -35,
-        ("Nb", "Ni"): -30, ("Mo", "Ni"): -7,  ("Ta", "Ni"): -29,
-        ("W", "Ni"): -3,   ("Nb", "Co"): -25, ("Mo", "Co"): -5,
-        ("Nb", "Fe"): -16, ("Mo", "Fe"): -2,
+        ("Al", "Cu"): -1,  ("Al", "V"): -16, ("Al", "Zr"): -44,
+        ("Al", "Nb"): -18, ("Al", "Mo"): -5, ("Al", "Hf"): -39,
+        ("Al", "Ta"): -19, ("Al", "W"): -2,  ("Al", "Si"): -4,
+        ("Al", "Mg"): -2,  ("Al", "Sc"): -38,
+        # --- Refractory pairs (4d/5d) ---
+        ("Nb", "Ti"): 2,   ("Nb", "Zr"): 4,   ("Nb", "Hf"): 4,
+        ("Nb", "Ta"): 0,   ("Nb", "Mo"): -6,  ("Nb", "W"): -8,
+        ("Nb", "V"): -1,   ("Nb", "Cr"): -7,  ("Nb", "Mn"): -4,
+        ("Nb", "Fe"): -16, ("Nb", "Co"): -25, ("Nb", "Ni"): -30,
+        ("Nb", "Cu"): 3,
+        ("Mo", "Ti"): -4,  ("Mo", "Zr"): -6,  ("Mo", "Hf"): -4,
+        ("Mo", "Ta"): -5,  ("Mo", "W"): 0,    ("Mo", "V"): -1,
+        ("Mo", "Cr"): 0,   ("Mo", "Mn"): -5,  ("Mo", "Fe"): -2,
+        ("Mo", "Co"): -5,  ("Mo", "Ni"): -7,  ("Mo", "Cu"): 19,
+        ("Ta", "Ti"): 1,   ("Ta", "Zr"): 3,   ("Ta", "Hf"): 3,
+        ("Ta", "V"): -1,   ("Ta", "Cr"): -7,  ("Ta", "Mn"): -5,
+        ("Ta", "Fe"): -15, ("Ta", "Co"): -24, ("Ta", "Ni"): -29,
+        ("Ta", "Cu"): 2,   ("Ta", "W"): -7,
+        ("W", "Ti"): -6,   ("W", "Zr"): -9,   ("W", "Hf"): -6,
+        ("W", "V"): -1,    ("W", "Cr"): 1,    ("W", "Mn"): -4,
+        ("W", "Fe"): -1,   ("W", "Co"): -1,   ("W", "Ni"): -3,
+        ("W", "Cu"): 22,
+        ("Hf", "Ti"): 0,   ("Hf", "Zr"): 0,   ("Hf", "V"): -2,
+        ("Hf", "Cr"): -9,  ("Hf", "Mn"): -12, ("Hf", "Fe"): -21,
+        ("Hf", "Co"): -35, ("Hf", "Ni"): -42, ("Hf", "Cu"): -17,
+        ("Zr", "Ti"): 0,   ("Zr", "V"): -4,   ("Zr", "Cr"): -12,
+        ("Zr", "Mn"): -15, ("Zr", "Fe"): -25, ("Zr", "Co"): -41,
+        ("Zr", "Ni"): -49, ("Zr", "Cu"): -23,
+        # --- Mg pairs (important: many are positive/near-zero) ---
+        ("Mg", "Ti"): -4,  ("Mg", "V"): 0,    ("Mg", "Cr"): 2,
+        ("Mg", "Mn"): -3,  ("Mg", "Fe"): 4,   ("Mg", "Co"): 3,
+        ("Mg", "Ni"): -4,  ("Mg", "Cu"): -3,  ("Mg", "Zn"): -4,
+        ("Mg", "Al"): -2,  ("Mg", "Si"): -3,  ("Mg", "Sc"): -7,
+        ("Mg", "Zr"): -6,  ("Mg", "Nb"): 3,   ("Mg", "Mo"): 10,
+        ("Mg", "Hf"): -4,  ("Mg", "Ta"): 13,  ("Mg", "W"): 13,
+        # --- Si pairs ---
+        ("Si", "Ti"): -66, ("Si", "V"): -48,  ("Si", "Cr"): -37,
+        ("Si", "Mn"): -37, ("Si", "Fe"): -35, ("Si", "Co"): -38,
+        ("Si", "Ni"): -40, ("Si", "Cu"): -19, ("Si", "Zr"): -84,
+        ("Si", "Nb"): -56, ("Si", "Mo"): -35, ("Si", "Hf"): -80,
+        # --- Sc pairs ---
+        ("Sc", "Ti"): -4,  ("Sc", "V"): -4,   ("Sc", "Cr"): -4,
+        ("Sc", "Fe"): -15, ("Sc", "Co"): -22, ("Sc", "Ni"): -27,
+        # --- Precious/rare (Re, Pd, Pt, Au, Ag, Y) ---
+        ("Re", "Ti"): -8,  ("Re", "Cr"): -6,  ("Re", "Fe"): -1,
+        ("Re", "Ni"): -9,  ("Re", "W"): -3,   ("Re", "Mo"): -2,
+        ("Pd", "Ti"): -52, ("Pd", "Cr"): -3,  ("Pd", "Fe"): -4,
+        ("Pd", "Co"): -1,  ("Pd", "Ni"): 0,   ("Pd", "Cu"): -14,
+        ("Pt", "Ti"): -74, ("Pt", "Cr"): -12, ("Pt", "Fe"): -6,
+        ("Pt", "Ni"): -5,  ("Pt", "Cu"): -12,
+        ("Au", "Ti"): -48, ("Au", "Cr"): 3,   ("Au", "Fe"): 3,
+        ("Au", "Ni"): -9,  ("Au", "Cu"): -9,  ("Au", "Al"): -22,
+        ("Ag", "Ti"): -15, ("Ag", "Cr"): 15,  ("Ag", "Fe"): 15,
+        ("Ag", "Ni"): 15,  ("Ag", "Cu"): 2,   ("Ag", "Al"): -4,
+        ("Y", "Ti"): 5,    ("Y", "Cr"): 2,    ("Y", "Fe"): -1,
+        ("Y", "Ni"): -31,  ("Y", "Al"): -38,
     }
 
     @classmethod
@@ -304,11 +358,12 @@ def compute_features_single(
 
     # ---- FS_THERMO ----
     abs_dH = abs(dH_mix)
-    # Omega parameter: clip to a sensible maximum instead of 1e6 to avoid
-    # downstream numerical issues (e.g. ss_formation = omega * dS_mix).
-    _OMEGA_MAX = 100.0
+    # Omega parameter (Yang & Zhang 2012): Ω = Tm * ΔS_mix / |ΔH_mix|
+    # Units: dS_mix is J/(mol·K), dH_mix is kJ/mol → convert kJ to J (*1000).
+    # Typical real-HEA Ω ∈ [1, 50]; clip at 10 to keep it a useful discriminator.
+    _OMEGA_MAX = 10.0
     if abs_dH > 1e-6:
-        omega = min(Tm_avg * dS_mix / abs_dH, _OMEGA_MAX)
+        omega = min(Tm_avg * dS_mix / (abs_dH * 1000.0), _OMEGA_MAX)
     else:
         omega = _OMEGA_MAX
     # Use the clipped omega for ss_formation to avoid extreme feature values
