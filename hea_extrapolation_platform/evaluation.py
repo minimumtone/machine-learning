@@ -103,6 +103,14 @@ class FeatureValidityEvaluator:
         # Identify baseline (FS_BASE) performance
         base_key = FeatureSetName.FS_BASE.value
         base_rmse = self._mean_test_rmse(fs_runs.get(base_key, []))
+        if base_rmse <= 0:
+            # FS_BASE has no runs or all-zero RMSE — cannot compute meaningful
+            # effect sizes so every feature set will get 0.
+            logger.warning(
+                "Baseline (FS_BASE) RMSE is 0 or has no runs; "
+                "effect_size for all feature sets will be 0. "
+                "Check that FS_BASE experiments completed successfully."
+            )
 
         scores: List[ValidityScore] = []
         for fs_name, fs_run_list in fs_runs.items():
@@ -113,13 +121,6 @@ class FeatureValidityEvaluator:
             if base_rmse > 0:
                 vs.effect_size = max(0.0, (base_rmse - fs_rmse) / base_rmse)
             else:
-                # FS_BASE has no runs or all-zero RMSE — cannot compute
-                # meaningful effect sizes so every feature set gets 0.
-                logger.warning(
-                    "Baseline (FS_BASE) RMSE is 0 or has no runs; "
-                    "effect_size for all feature sets will be 0. "
-                    "Check that FS_BASE experiments completed successfully."
-                )
                 vs.effect_size = 0.0
 
             # 2. Stability (inverse of coefficient of variation of RMSE across runs)
