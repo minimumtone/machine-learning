@@ -74,14 +74,31 @@ def _random_composition(
     """Generate a random composition with fraction bounds.
 
     Uses a Dirichlet distribution and rejects samples where any
-    fraction falls outside [min_frac, max_frac].
+    fraction falls outside [min_frac, max_frac].  When the bounds
+    are infeasible for the given number of elements (e.g. n=2 with
+    max_frac=0.35), ``max_frac`` is automatically relaxed so that
+    the constraint is satisfiable.
     """
     n = len(elements)
+    # Feasibility guard: n * max_frac must be >= 1.0 for fractions
+    # that sum to 1.0 to exist within [min_frac, max_frac].
+    effective_max = max_frac
+    if n * max_frac < 1.0:
+        effective_max = 1.0  # relax max_frac for small n
+    _MAX_ITER = 10_000
+    for _ in range(_MAX_ITER):
+        fracs = rng.dirichlet(np.ones(n) * 2.0)
+        if np.all(fracs >= min_frac) and np.all(fracs <= effective_max):
+            return {e: float(f) for e, f in zip(elements, fracs)}
+    # Fallback: accept last draw with only min_frac constraint
+    logger.warning(
+        "Composition sampling did not converge in %d iterations for "
+        "%d elements; relaxing max_frac constraint", _MAX_ITER, n,
+    )
     while True:
         fracs = rng.dirichlet(np.ones(n) * 2.0)
-        if np.all(fracs >= min_frac) and np.all(fracs <= max_frac):
-            break
-    return {e: float(f) for e, f in zip(elements, fracs)}
+        if np.all(fracs >= min_frac):
+            return {e: float(f) for e, f in zip(elements, fracs)}
 
 
 def _passes_stability_filter(feat: Dict[str, float]) -> bool:
