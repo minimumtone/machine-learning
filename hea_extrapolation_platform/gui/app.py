@@ -525,25 +525,34 @@ def _handle_csv_upload(
                 None, None, None, pd.DataFrame(), session,
             )
 
-        # Build compositions list
+        # Build compositions list, tracking valid row indices to keep
+        # all DataFrames aligned (rows with all-zero elements are dropped).
+        valid_indices: List[int] = []
         compositions = []
-        for _, row in raw[elem_cols].iterrows():
+        for idx, row in raw[elem_cols].iterrows():
             comp = {
                 e: float(v) for e, v in row.items()
                 if float(v) > 0
             }
             if comp:
                 compositions.append(comp)
+                valid_indices.append(idx)
 
-        # Composition DataFrame
-        comps_df = raw[elem_cols].copy()
+        # Composition DataFrame — only keep rows that produced a composition
+        comps_df = (
+            raw.loc[valid_indices, elem_cols].copy().reset_index(drop=True)
+        )
 
         # Compute features
         features_df = compute_features(compositions, FeatureSetName.FS_ALL)
 
-        # Extract or synthesize target
+        # Extract or synthesize target — aligned to valid rows
         if target_col_clean and target_col_clean in raw.columns:
-            target = raw[target_col_clean].copy()
+            target = (
+                raw.loc[valid_indices, target_col_clean]
+                .copy()
+                .reset_index(drop=True)
+            )
             target.name = target_col_clean
         else:
             target = pd.Series(
