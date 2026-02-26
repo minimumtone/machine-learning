@@ -4,7 +4,7 @@ import math, os
 # os.system("Console.sh opt.tcm > /dev/null")
 # os.system("cp all_exec.sh all_exe.sh")
 # os.system("sh all_exe.sh > /dev/null")
-os.system("cp 01-67_HUS22.tcm all.tcm")
+os.system("cp 01-67_all.tcm all.tcm")
 os.system("Console.sh all.tcm > /dev/null")
 # os.system("cp 05.tcm 05a.tcm")
 # os.system("Console.sh 05a.tcm > /dev/null")

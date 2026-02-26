@@ -16,7 +16,7 @@ results=$2
 
 # dprepro $params cantilever.template cantilever.i
 #/home/minamoto/Desktop/gphase_dakota/dprepro $params Gver6.14.TDB.temp Gver6.14.TDB 
-./dprepro $params Gver.6.60.TDB.temp Gver.6.60.TDB 
+./dprepro $params Gver.6.53.TDB.temp Gver.6.53.TDB 
 
 ############################################################################### 
 ##

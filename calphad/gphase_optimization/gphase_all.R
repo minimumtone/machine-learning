@@ -55,7 +55,7 @@ numEXP    <-  formatC(EXPdat, width = 2, flag = "0")
 #numEXP   <- c("01", "38", "42", "61", "64", "65")
 # データの抽出
 gphaseEXP <- gphaseEXP[EXPdat,]
-filenames   <-  paste(numEXP, "S.PLE", sep="")
+(filenames   <-  paste(numEXP, "S.PLE", sep=""))
 
 
 
@@ -132,12 +132,12 @@ for (i in c(1:length(numEXP))){
 
     diffcomp0     <-  expdata - caldata
     barplot(diffcomp0, names.arg=c("Fe","Ni","Si","Mn","Mo","Cr"), ylim=c(-0.4, 0.4), main=filenames[i]); grid(); abline(h=0 , col=2)
-     diffcomp0[1]   <-   0.25*diffcomp0[1]   # for Fe
+     diffcomp0[1]   <-   1*diffcomp0[1]   # for Fe
      diffcomp0[2]   <-   1*diffcomp0[2]   # for Ni
      diffcomp0[3]   <-   1*diffcomp0[3]   # for Si
      diffcomp0[4]   <-   1*diffcomp0[4]   # for Mn 
      diffcomp0[5]   <-   1*diffcomp0[5]   # for Mo 
-     diffcomp0[6]   <-   0.25*diffcomp0[6]   # for Cr 
+     diffcomp0[6]   <-   1*diffcomp0[6]   # for Cr 
 #    diffcomp       <-  expdata / caldata
     error1exp[i]  <-  sum(abs(diffcomp0))
     }
