@@ -1,3 +1,4 @@
+# single evaluation of cantilever at nominal
 
 environment
   tabular_data
@@ -9,7 +10,7 @@ environment
 method
   id_method = 'HS'  
   hybrid sequential
-   method_pointer_list = 'EG'
+  method_pointer_list = 'EG' 
 #  method_pointer_list = 'RS' 'EG' 'CG'
 
 
@@ -19,45 +20,43 @@ method
 #    sample_type random
 #    samples = 30
     sample_type lhs
-    samples = 5
+    samples = 60
 
 
 method
   id_method = 'EG'     
   efficient_global
-    initial_samples 406
-    seed = 123456
+  seed = 123456
 
 
 method
   id_method = 'CG'     
   conmin_frcg
-    convergence_tolerance 1.0e-2
-    constraint_tolerance  100
+    convergence_tolerance 1.0e-8
+#    constraint_tolerance  1.0e+2
 
 
 model
   single
 
-
 variables
   continuous_design = 27
-    upper_bounds   27*5e5
-    initial_point  27*0.0    
-    lower_bounds   27*-5e5 
-    descriptors   'V001' 'V002' 'V003' 'V004' 'V005' 'V006' 'V007' 'V008' 'V009' 'V010' 'V011' 'V012' 'V013' 'V014' 'V015' 'V016' 'V017' 'V018' 'V019' 'V020' 'V021' 'V022'  'V023' 'V024' 'V025' 'V026' 'V027'
+    upper_bounds    3e5    3e5    3e5    3e5    3e5    3e5    3e5   3e5     3e5    3e5    3e5    3e5    3e5    3e5     3e5   3e5    3e5    3e5    3e5    3e5    3e5    3e5     3e5    3e5    3e5    3e5   3e5 
+    initial_point   -1.0e6    -1.0e6    -1.0e6    -1.0e6    -1.0e6    -1.0e6    -1.0e6   -1.0e6     -1.0e6    -1.0e6    -1.0e6    -1.0e6    -1.0e6    -1.0e6     -1.0e6   -1.0e6    -1.0e6    -1.0e6    -1.0e6    -1.0e6    -1.0e6    -1.0e6      -1.0e6   -1.0e6    -1.0e6    -1.0e6   -1.0e6   
+    lower_bounds   -3.0e6   -3.0e6   -3.0e6   -3.0e6   -3.0e6   -3.0e6   -3.0e6  -3.0e6    -3.0e6   -3.0e6   -3.0e6   -3.0e6   -3.0e6   -3.0e6   -3.0e6   -3.0e6   -3.0e6   -3.0e6   -3.0e6   -3.0e6   -3.0e6   -3.0e6    -3.0e6   -3.0e6   -3.0e6   -3.0e6   -3.0e6 
+    descriptors    'V001' 'V002' 'V003' 'V004' 'V005' 'V006' 'V007' 'V008' 'V009' 'V010' 'V011' 'V012' 'V013' 'V014' 'V015' 'V016' 'V017' 'V018' 'V019' 'V020' 'V021' 'V022'  'V023' 'V024' 'V025' 'V026' 'V027'
 
 
 
 interface
-  analysis_drivers 'driver.sh'      # For Linux/Mac
+  analysis_drivers 'driver.sh'                         # For Linux/Mac
   fork
-   work_directory named 'wd/trial'
+   work_directory named './wd/trial'
      directory_tag directory_save
-     link_files 'Gver.6.60.TDB.temp'  'gphase_all.R' 'exp_data_for_dakota_opti.csv'  '*.tcm' '*.sh' '*.py' 'dprepro'
-#   parameters_file 'params.in'
+     link_files 'Gver.6.53.TDB.temp'  'gphase_all.R' 'exp_data_for_dakota_opti.csv'  '*.tcm' '*.py' 'dprepro'
+   parameters_file 'params.in'
    results_file 'error_tot.txt'
-   asynchronous evaluation_concurrency 12
+   asynchronous evaluation_concurrency 8
 
 
 # responses
