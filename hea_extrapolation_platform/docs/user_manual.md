@@ -1,6 +1,6 @@
 # Extrapolation Discovery Platform 取扱説明書
 
-**バージョン**: 2.0  
+**バージョン**: 3.0  
 **最終更新**: 2026-02-25  
 **対象ユーザー**: 材料科学研究者・データサイエンティスト（初心者〜中級者）
 
@@ -12,6 +12,7 @@
    - [1.1 このプラットフォームについて](#11-このプラットフォームについて)
    - [1.2 用語説明](#12-用語説明)
    - [1.3 v2.0 での主な変更点](#13-v20-での主な変更点)
+   - [1.4 v3.0 での主な変更点（MAGPIE特徴量追加）](#14-v30-での主な変更点magpie特徴量追加)
 2. [動作環境・前提条件](#2-動作環境前提条件)
 3. [インストール](#3-インストール)
    - [3.1 リポジトリの取得](#31-リポジトリの取得)
@@ -24,11 +25,12 @@
    - [4.2 CLI（コマンドライン）での実行](#42-cliコマンドラインでの実行)
 5. [GUI操作ガイド（タブ別詳細）](#5-gui操作ガイドタブ別詳細)
    - [5.1 Dashboard（ダッシュボード）](#51-dashboardダッシュボード)
-   - [5.2 Config & Run（設定・実行）](#52-config--run設定実行)
-   - [5.3 Results（実験結果）](#53-results実験結果)
-   - [5.4 OOD Map（外挿マップ）](#54-ood-map外挿マップ)
-   - [5.5 Literature Search（文献検索）](#55-literature-search文献検索)
-   - [5.6 Report（レポート）](#56-reportレポート)
+   - [5.2 Data Summary（データ要約）](#52-data-summaryデータ要約)
+   - [5.3 Config & Run（設定・実行）](#53-config--run設定実行)
+   - [5.4 Results（実験結果）](#54-results実験結果)
+   - [5.5 OOD Map（外挿マップ）](#55-ood-map外挿マップ)
+   - [5.6 Literature Search（文献検索）](#56-literature-search文献検索)
+   - [5.7 Report（レポート）](#57-reportレポート)
 6. [CLI操作ガイド](#6-cli操作ガイド)
    - [6.1 run コマンド（実験実行）](#61-run-コマンド実験実行)
    - [6.2 search コマンド（文献検索）](#62-search-コマンド文献検索)
@@ -36,6 +38,7 @@
    - [6.4 gui コマンド（GUI起動）](#64-gui-コマンドgui起動)
 7. [設定パラメータ詳細](#7-設定パラメータ詳細)
    - [7.1 特徴量セット（Feature Sets）](#71-特徴量セットfeature-sets)
+   - [7.1.1 MAGPIE特徴量の詳細](#711-magpie特徴量の詳細)
    - [7.2 ワークフロー（Workflows）](#72-ワークフローworkflows)
    - [7.3 分割方式（Split Policies）](#73-分割方式split-policies)
 8. [結果の読み方・解釈ガイド](#8-結果の読み方解釈ガイド)
@@ -73,7 +76,7 @@ HEA（高エントロピー合金）を例題として、以下の処理を**ボ
 | ステップ | 内容 | 例 |
 |----------|------|------|
 | 1. データ生成 | 合成HEAデータセットの作成 | 50〜1000サンプル |
-| 2. 特徴量セット比較 | 5種類の特徴量セットを体系的に評価 | FS_BASE, FS_THERMO, FS_SIZE, FS_ELECTRON, FS_ALL |
+| 2. 特徴量セット比較 | 6種類の特徴量セットを体系的に評価 | FS_BASE, FS_THERMO, FS_SIZE, FS_ELECTRON, FS_ALL, FS_MAGPIE |
 | 3. ワークフロー実行 | 複数の機械学習モデルで交差検証 | 線形モデル、XGBoost、アンサンブル + MIntワークフロー |
 | 4. 分割方式テスト | 3種類のデータ分割で汎化性能を検証 | ランダム、組成ブロック、元素除外 |
 | 5. OOD検出 | kNN距離ベースのOODサンプル検出 | PCA可視化 + 候補組成提案 |
@@ -86,7 +89,7 @@ HEA（高エントロピー合金）を例題として、以下の処理を**ボ
 
 | 用語 | 説明 | 具体例 |
 |------|------|--------|
-| **Feature Set（特徴量セット）** | モデルに入力する変数の組み合わせ | FS_BASE = VEC, dH_mix, dS_mix, delta_r 等 |
+| **Feature Set（特徴量セット）** | モデルに入力する変数の組み合わせ | FS_BASE = VEC, dH_mix, dS_mix, delta_r 等、FS_MAGPIE = 132元素特徴量 |
 | **Workflow（ワークフロー）** | 機械学習モデルの種類 | WF-LIN（線形）、WF-XGB（XGBoost）、WF-ENS（アンサンブル） |
 | **Split Policy（分割方式）** | データの訓練/テスト分割方法 | RandomCV、CompositionBlock、ElementExclusion |
 | **OOD（Out-of-Distribution）** | 訓練データの分布から外れたサンプル（外挿領域） | kNN距離が閾値を超えるデータ点 |
@@ -107,6 +110,22 @@ v1.2からの主な改善点：
 | **評価警告** | ベースライン比較ループ内で多重発火 | ループ外で1回のみ発火 |
 | **熱力学特徴量** | omega極端値の可能性 | クリップ処理で数値安定性確保 |
 | **スクリーンショット** | v2（8枚） | v3（17枚、全タブ網羅） |
+
+### 1.4 v3.0 での主な変更点（MAGPIE特徴量追加）
+
+v2.0からの主な改善点：
+
+| 項目 | v2.0 | v3.0 |
+|------|------|------|
+| **特徴量セット** | 5種類（FS_BASE〜FS_ALL） | 6種類（+ FS_MAGPIE、132特徴量） |
+| **MAGPIE特徴量** | 未実装 | 22元素物性 × 6統計量 = 132特徴量 |
+| **Data Summaryタブ** | 未実装 | 要約統計量・チャート・相関ヒートマップ |
+| **プログレスバー** | なし | ML訓練のリアルタイム進捗表示 |
+| **総特徴量数** | 16（ドメイン特徴量） | 148（16ドメイン + 132 MAGPIE） |
+| **スクリーンショット** | v3（17枚） | v4（24枚、MAGPIE・データ要約含む） |
+| **元素DBバグ修正** | -- | Nf_val=14→ 0（6th-period元素） |
+
+> **MAGPIEとは**: Materials-Agnostic Platform for Informatics and Exploration の略で、Wardら（2016年）が提案した元素特徴量計算手法です。各元素の物理・化学的性質（原子番号、電気陰性度、融点、価電子数等）から、組成加重の統計量（平均、偏差、範囲、最大、最小、最頻値）を計算します。matminerライブラリのElementPropertyフィーチャライザーと互換の計算方式を採用しています。
 
 ---
 
@@ -231,11 +250,12 @@ CLIの詳細は [6. CLI操作ガイド](#6-cli操作ガイド) を参照して�
 
 ## 5. GUI操作ガイド（タブ別詳細）
 
-GUIは **6つのタブ** で構成されています。以下、各タブの操作方法を画面キャプチャ付きで詳しく説明します。
+GUIは **7つのタブ** で構成されています。以下、各タブの操作方法を画面キャプチャ付きで詳しく説明します。
 
 | タブ名 | 役割 | いつ使うか |
 |--------|------|-----------|
 | **Dashboard** | 実験全体の概要表示 | 実験後に結果の概要を確認 |
+| **Data Summary** | データセットの要約統計量・可視化 | 特徴量の分布・相関を確認するとき |
 | **Config & Run** | 実験パラメータ設定と実行 | 実験を開始するとき |
 | **Results** | 詳細な結果テーブルとグラフ | 個別のランを詳しく調べるとき |
 | **OOD Map** | 外挿領域の可視化 | OODサンプルの分布を確認するとき |
@@ -252,7 +272,7 @@ GUIは **6つのタブ** で構成されています。以下、各タブの操�
 
 起動直後は、まだ実験が実行されていないため、KPIカードは「0」や「--」と表示されます。
 
-![Dashboard 初期状態](screenshots_v3/00_dashboard_initial.png)
+![Dashboard 初期状態](screenshots_v4/00_dashboard_initial.png)
 *図5.1.1: Dashboard初期状態 — KPIカードは未実行を示す「0」「--」表示*
 
 **画面構成**:
@@ -272,19 +292,21 @@ GUIは **6つのタブ** で構成されています。以下、各タブの操�
 
 実験を実行した後のダッシュボードです。KPIカードに実際の数値が表示され、グラフも描画されます。
 
-![Dashboard データ表示](screenshots_v3/07_dashboard_with_data.png)
-*図5.1.2: Dashboard実験完了後 — 1170ラン実行、最良特徴量セットはFS_ALL（スコア0.3428）*
+![Dashboard データ表示](screenshots_v4/23_dashboard_magpie_kpi.png)
+*図5.1.2: Dashboard実験完了後 — 1404ラン実行、最良特徴量セットはFS_ELECTRON（スコア0.5238）、FS_MAGPIE含む6特徴量セットのランキング表示*
 
 **読み方のポイント**:
-- **Total Runs = 1170**: 3シード x 5特徴量セット x 3分割方式 x 6ワークフロー x (複数fold) の組み合わせ
-- **Best Feature Set = FS_ALL**: 全特徴量を使ったセットが最も良い総合スコア
-- **Best Total Score = 0.3428**: 妥当性スコア（0〜1の範囲、高いほど良い）
-- **OOD Samples = 0**: OODと判定されたサンプルはなし（今回のデータでは外挿サンプルがない）
+- **Total Runs = 1404**: 3シード x 6特徴量セット x 3分割方式 x 6ワークフロー x (複数fold) の組み合わせ
+- **Best Feature Set = FS_ELECTRON**: 電子構造特徴量セットが最も良い総合スコア
+- **Best Total Score = 0.5238**: 妥当性スコア（0〜1の範囲、高いほど良い）
+- **OOD Samples = 21**: OODと判定されたサンプル数（各特徴量セットでのOOD検出結果の合計）
+
+> **ポイント**: Feature Validity RankingグラフにはFS_MAGPIEが表示され、他の特徴量セットとの比較が可能です。
 
 #### Performance Heatmap（性能ヒートマップ）
 
-![Dashboard ヒートマップ](screenshots_v3/08_dashboard_heatmap.png)
-*図5.1.3: Performance Heatmap — RMSE Testを表示。色が薄い（値が小さい）ほど予測精度が良い*
+![Dashboard ヒートマップ](screenshots_v4/08_dashboard_heatmap.png)
+*図5.1.3: Performance Heatmap — RMSE Testを表示。色が薄い（値が小さい）ほど予測精度が良い。FS_MAGPIEの行が追加されている*
 
 **ヒートマップの操作方法**:
 
@@ -299,14 +321,47 @@ GUIは **6つのタブ** で構成されています。以下、各タブの操�
 
 ---
 
-### 5.2 Config & Run（設定・実行）
+### 5.2 Data Summary（データ要約）
+
+データセットの**要約統計量**と**特徴量の分布・相関**を確認する画面です。実験実行後に自動的にデータが反映されます。
+
+#### 概要表示
+
+![Data Summary 概要](screenshots_v4/19_data_summary_overview.png)
+*図5.2.1: Data Summary概要 — 200サンプル、148特徴量（16ドメイン + 132 MAGPIE）の要約統計量*
+
+**画面構成**:
+
+| 要素 | 説明 |
+|------|------|
+| **Dataset Info** | サンプル数・特徴量数・目的変数の基本情報 |
+| **Summary Statistics** | 各特徴量の平均・標準偏差・最小・最大・四分位数 |
+| **Top Features by Variance** | 分散が大きい上位特徴量のリスト（MAGPIE特徴量含む） |
+| **Distribution Charts** | 目的変数・主要特徴量のヒストグラム |
+| **Correlation Heatmap** | 特徴量間の相関行列ヒートマップ |
+
+#### チャート表示
+
+![Data Summary チャート](screenshots_v4/20_data_summary_charts.png)
+*図5.2.2: Data Summaryチャート — 目的変数の分布ヒストグラムと特徴量の相関ヒートマップ*
+
+**チャートの読み方**:
+- **ヒストグラム**: 目的変数（yield_strength等）の分布を確認。正規分布に近い形が望ましい
+- **相関ヒートマップ**: 特徴量間の相関を色で表示。赤は正の相関、青は負の相関
+- **Top Features**: MagpieData MeltingT mean、MagpieData AtomicWeight mean 等のMAGPIE特徴量が上位に表示される場合、これらの元素物性が目的変数と強い関連を持つことを示す
+
+> **ポイント**: MAGPIE特徴量を追加すると、特徴量数が16→148に大幅に増加します。Data Summaryタブで各特徴量の分布を事前に確認し、異常値や偏りがないかチェックすることをお勧めします。
+
+---
+
+### 5.3 Config & Run（設定・実行）
 
 実験のパラメータを設定し、**ボタン1つで実行を開始**する画面です。
 
 #### 設定画面（初期状態）
 
-![Config & Run 初期状態](screenshots_v3/01_config_initial.png)
-*図5.2.1: Config & Run初期状態 — デフォルト設定で即実行可能*
+![Config & Run 初期状態](screenshots_v4/01_config_initial.png)
+*図5.3.1: Config & Run初期状態 — デフォルト設定で即実行可能*
 
 **設定項目の詳細**:
 
@@ -337,38 +392,41 @@ GUIは **6つのタブ** で構成されています。以下、各タブの操�
 
 #### 実行完了後の画面
 
-![Config 実行完了後](screenshots_v3/06_config_after_run.png)
-*図5.2.2: 実験完了後のConfig画面 — Progress Logに全処理のログが表示される*
+![Config 実行中](screenshots_v4/17_config_magpie_progress.png)
+*図5.3.2: 実行中のConfig画面 — プログレスバーが20%進捗を表示、148特徴量（MAGPIE含む）の処理状況*
+
+![Config 実行完了後](screenshots_v4/18_config_magpie_complete.png)
+*図5.3.3: 実験完了後のConfig画面 — 1404ラン完了、FS_MAGPIE含む6特徴量セットのOOD結果表示*
 
 **Progress Log の読み方**:
 
 ```
-[06:16:36] Starting experiment...              <- 実験開始
-[06:16:36] Generating dataset: n=50, seed=42   <- データ生成（サンプル数とシード）
-[06:16:36] Dataset: 50 samples, 16 features    <- データセット情報
-[06:16:36] Running experiments: seeds=[42, 123, 456], quick=True  <- 実験パラメータ
-[06:17:59] Completed: 1170 runs                <- 完了したラン数
-[06:17:59] Experiment tracking: 1 run(s) recorded     <- MLflow記録
-[06:17:59] Feature store: 5 feature set(s) managed    <- Feast管理
-[06:17:59] Workflow engine: 3 workflow(s) executed     <- MInt実行
-[06:17:59] Best feature set: FS_ALL (score=0.3428)    <- 最良の特徴量セット
-[06:17:59] OOD [FS_BASE]: 0/10 (0.0%)         <- 各特徴量セットのOOD結果
-[06:17:59] OOD [FS_THERMO]: 0/10 (0.0%)
-[06:17:59] OOD [FS_SIZE]: 0/10 (0.0%)
-[06:17:59] OOD [FS_ELECTRON]: 0/10 (0.0%)
-[06:17:59] OOD [FS_ALL]: 0/10 (0.0%)
-[06:17:59] Run registry exported to results/20260225_061759/run_registry.json
-[06:17:59] Building literature index...        <- 文献インデックス構築
-[06:17:59] Literature search: 5 results        <- 文献検索結果
-[06:17:59] Report: results/20260225_061759/experiment_report.md
-[06:17:59] Experiment complete. All tabs refreshed automatically.  <- 完了
+[23:16:11] Starting experiment...              <- 実験開始
+[23:16:11] Generating dataset: n=200, seed=42  <- データ生成（サンプル数とシード）
+[23:16:11] Dataset: 200 samples, 148 features  <- 148特徴量（16ドメイン + 132 MAGPIE）
+[23:16:11] Running experiments: seeds=[42, 123, 456], quick=True
+[23:20:32] Completed: 1404 runs                <- 6特徴量セットでの完了ラン数
+[23:20:32] Experiment tracking: 1 run(s) recorded     <- MLflow記録
+[23:20:32] Feature store: 6 feature set(s) managed    <- Feast管理（FS_MAGPIE追加）
+[23:20:32] Workflow engine: 3 workflow(s) executed     <- MInt実行
+[23:20:32] Best feature set: FS_ELECTRON (score=0.5238) <- 最良の特徴量セット
+[23:20:32] OOD [FS_BASE]: 3/40 (7.5%)         <- 各特徴量セットのOOD結果
+[23:20:32] OOD [FS_THERMO]: 3/40 (7.5%)
+[23:20:32] OOD [FS_SIZE]: 3/40 (7.5%)
+[23:20:32] OOD [FS_ELECTRON]: 3/40 (7.5%)
+[23:20:32] OOD [FS_ALL]: 3/40 (7.5%)
+[23:20:32] OOD [FS_MAGPIE]: 9/40 (22.5%)      <- MAGPIEのOOD結果
+[23:20:32] Run registry exported to results/...
+[23:20:32] Experiment complete. All tabs refreshed automatically.
 ```
+
+> **注目**: FS_MAGPIEのOOD率が22.5%と他のセット（7.5%）より高いのは、132次元の特徴量空間ではkNN距離が大きくなりやすい（次元の呪い）ためです。
 
 > **注意**: 実験実行中はブラウザを閉じないでください。実行そのものは中断されませんが、Progress Logの更新が止まります。
 
 ---
 
-### 5.3 Results（実験結果）
+### 5.4 Results（実験結果）
 
 実験結果の**詳細データ**と**Parity Plot**を確認する画面です。
 
@@ -376,17 +434,17 @@ GUIは **6つのタブ** で構成されています。以下、各タブの操�
 
 実験実行前は、テーブルやグラフは空の状態です。
 
-![Results 初期状態](screenshots_v3/02_results_initial.png)
-*図5.3.0: Results初期状態 — 実験実行前はテーブルが空*
+![Results 初期状態](screenshots_v4/02_results_initial.png)
+*図5.4.0: Results初期状態 — 実験実行前はテーブルが空*
 
 #### フィルタとテーブル（実験実行後）
 
-![Results タブ](screenshots_v3/09_results_with_data.png)
-*図5.3.1: Results画面 — Feature Validity Rankingテーブル（上）とRun Resultsテーブル（下）*
+![Results タブ](screenshots_v4/21_results_magpie_ranking.png)
+*図5.4.1: Results画面 — Feature Validity RankingにFS_MAGPIEが6位として表示（Total=0.3404）*
 
 **画面上部のフィルタ**:
 - **Workflow Filter**: ワークフロー（WF-LIN, WF-XGB, WF-ENS, MInt-LIN, MInt-XGB, MInt-ENS）で絞り込み
-- **Feature Set Filter**: 特徴量セット（FS_BASE, FS_THERMO, FS_SIZE, FS_ELECTRON, FS_ALL）で絞り込み
+- **Feature Set Filter**: 特徴量セット（FS_BASE, FS_THERMO, FS_SIZE, FS_ELECTRON, FS_ALL, **FS_MAGPIE**）で絞り込み
 - **Split Policy Filter**: 分割方式（RandomCV, CompositionBlock, ElementExclusion）で絞り込み
 
 > **ヒント**: 「All」を選択すると全データが表示されます。複数のフィルタを組み合わせて、特定の条件の結果だけを素早く確認できます。
@@ -406,11 +464,11 @@ GUIは **6つのタブ** で構成されています。以下、各タブの操�
 | **Extrap. Safety** | 外挿安全性スコア | 高いほど良い |
 | **Total** | 総合スコア（上記の加重平均） | 高いほど良い |
 
-> **実験例での結果**: FS_ALL（Total=0.3428）が1位、FS_SIZE（Total=0.2849）が5位。全特徴量を使うセットが最もバランスが良い結果となっています。
+> **実験例での結果**: FS_ELECTRON（Total=0.5238）が1位、FS_MAGPIE（Total=0.3404）が6位。MAGPIEは132特徴量と多いため、次元の呪いの影響でランキングが下がる場合があります。特徴量選択との併用が推奨されます。
 
 #### Run Results テーブル
 
-個々のランの**詳細メトリクス**を表示します。1170ランすべてのデータが確認できます。
+個々のランの**詳細メトリクス**を表示します。1404ランすべてのデータが確認できます。
 
 | カラム | 説明 |
 |--------|------|
@@ -426,8 +484,8 @@ GUIは **6つのタブ** で構成されています。以下、各タブの操�
 
 #### Parity Plot（予測精度の可視化）
 
-![Parity Plot](screenshots_v3/10_results_parity_plot.png)
-*図5.3.2: Parity Plot（テストセット）-- 対角線に近いほど予測精度が高い*
+![Parity Plot](screenshots_v4/10_results_parity_plot.png)
+*図5.4.2: Parity Plot（テストセット）-- 対角線に近いほど予測精度が高い*
 
 **Parity Plotの読み方**:
 - **横軸**: True Value（実測値）
@@ -439,51 +497,52 @@ GUIは **6つのタブ** で構成されています。以下、各タブの操�
 
 ---
 
-### 5.4 OOD Map（外挿マップ）
+### 5.5 OOD Map（外挿マップ）
 
 OOD（Out-of-Distribution）サンプルの分布をPCA 2次元マップで可視化する画面です。
 
 #### 初期状態（実験実行前）
 
-![OOD Map 初期状態](screenshots_v3/03_ood_map_initial.png)
-*図5.4.0: OOD Map初期状態 — 実験実行前はマップが空*
+![OOD Map 初期状態](screenshots_v4/03_ood_map_initial.png)
+*図5.5.0: OOD Map初期状態 — 実験実行前はマップが空*
 
 #### データ表示状態（実験実行後）
 
-![OOD Map](screenshots_v3/11_ood_map_with_data.png)
-*図5.4.1: OOD Map — PCA 2次元可視化。色はOODスコアを示す（赤=OOD、緑=In-Distribution）*
+![OOD Map ドロップダウン](screenshots_v4/22_ood_map_magpie_dropdown.png)
+*図5.5.1: OOD Map — Feature SetドロップダウンにFS_MAGPIEが追加されている*
 
 **画面構成**:
 
 | 要素 | 説明 |
 |------|------|
-| **Feature Set for OOD Map** | 表示する特徴量セットの選択ドロップダウン |
+| **Feature Set for OOD Map** | 表示する特徴量セットの選択ドロップダウン（FS_MAGPIE含む6選択肢） |
 | **OOD Map (PCA)** | PCA 2次元散布図。軸はPC1, PC2（各軸の寄与率%つき） |
 | **色スケール** | OODスコア。0（緑、In-Distribution）〜 0.6+（赤、OOD） |
 | **大きい丸** | 訓練データ |
 | **小さい丸** | テスト（クエリ）データ |
 | **OOD Summary** | OODサンプルの統計情報 |
+| **Top OOD Candidates** | OODスコアが高いサンプルの組成テーブル |
 
 **OOD Summaryの読み方**:
 ```
-Total query: 10 | OOD: 0 (0.0%) | Threshold: 0.7102
+Total query: 40 | OOD: 3 (7.5%) | Threshold: 0.6393
 ```
-- **Total query = 10**: テストサンプル数
-- **OOD = 0 (0.0%)**: OODと判定されたサンプル数（0 = 全てIn-Distribution）
-- **Threshold = 0.7102**: OOD判定の閾値（kNN距離がこの値を超えるとOOD）
+- **Total query = 40**: テストサンプル数
+- **OOD = 3 (7.5%)**: OODと判定されたサンプル数
+- **Threshold = 0.6393**: OOD判定の閾値（kNN距離がこの値を超えるとOOD）
 
-> **ポイント**: OODが0%の場合、テストデータはすべて訓練データの分布内にあることを意味します。実際の材料探索では、新しい合金組成がOODとして検出された場合、追加実験が必要な領域を示しています。
+> **FS_MAGPIEでのOOD**: FS_MAGPIEを選択すると、132次元のMAGPIE特徴量空間でのOOD検出が行われます。高次元空間ではkNN距離が大きくなりやすいため、OOD率が他のセットより高くなる場合があります。実験例ではFS_MAGPIE: 9/40 (22.5%)、他のセット: 3/40 (7.5%)でした。
 
 ---
 
-### 5.5 Literature Search（文献検索）
+### 5.6 Literature Search（文献検索）
 
 文献データベースからembedding類似度で関連論文を検索する画面です。
 
 #### 検索インターフェース
 
-![Literature Search 初期状態](screenshots_v3/12_literature_search_initial.png)
-*図5.5.1: Literature Search初期状態 — クエリとフィルタを設定して検索*
+![Literature Search 初期状態](screenshots_v4/12_literature_search_initial.png)
+*図5.6.1: Literature Search初期状態 — クエリとフィルタを設定して検索*
 
 **検索パラメータ**:
 
@@ -497,8 +556,8 @@ Total query: 10 | OOD: 0 (0.0%) | Threshold: 0.7102
 
 #### 検索結果
 
-![Literature Search 検索結果](screenshots_v3/13_literature_search_results.png)
-*図5.5.2: 検索結果 — 10件の類似論文がランキング表示される*
+![Literature Search 検索結果](screenshots_v4/13_literature_search_results.png)
+*図5.6.2: 検索結果 — 10件の類似論文がランキング表示される*
 
 **検索結果テーブルの読み方**:
 
@@ -516,8 +575,8 @@ Total query: 10 | OOD: 0 (0.0%) | Threshold: 0.7102
 
 #### Feature Frequency（特徴量頻度グラフ）と推薦
 
-![Feature Frequency](screenshots_v3/14_literature_feature_frequency.png)
-*図5.5.3: Feature Frequency — 文献中での特徴量の使用頻度と推薦*
+![Feature Frequency](screenshots_v4/14_literature_feature_frequency.png)
+*図5.6.3: Feature Frequency — 文献中での特徴量の使用頻度と推薦*
 
 **Feature Frequency グラフ**:
 - 横棒グラフで、検索にヒットした論文群での特徴量使用頻度を表示
@@ -536,36 +595,36 @@ Unregistered features: vec, ds_mix, tm_avg, cold_work_pct, ...
 
 ---
 
-### 5.6 Report（レポート）
+### 5.7 Report（レポート）
 
 実験結果をMarkdownレポートとしてプレビュー・ダウンロードする画面です。
 
 #### 初期状態（実験実行前）
 
-![Report 初期状態](screenshots_v3/05_report_initial.png)
-*図5.6.0: Report初期状態 — 実験実行前はレポートが空*
+![Report 初期状態](screenshots_v4/05_report_initial.png)
+*図5.7.0: Report初期状態 — 実験実行前はレポートが空*
 
 #### レポートプレビュー（上部）
 
-![Report 上部](screenshots_v3/15_report_with_data.png)
-*図5.6.1: Report画面上部 — 実験サマリーとFeature Set Validity Ranking*
+![Report 上部](screenshots_v4/15_report_with_data.png)
+*図5.7.1: Report画面上部 — 実験サマリーとFeature Set Validity Ranking（FS_MAGPIE含む6セット）*
 
 **レポートの内容構成**:
 
 | セクション | 内容 |
 |-----------|------|
-| **1. Experiment Summary** | 総ラン数、特徴量セット一覧、ワークフロー一覧、分割方式、所要時間 |
-| **2. Feature Set Validity Ranking** | 5要素スコアの表 |
+| **1. Experiment Summary** | 総ラン数（1404）、特徴量セット一覧（6種類）、ワークフロー一覧、分割方式、所要時間 |
+| **2. Feature Set Validity Ranking** | 5要素スコアの表（FS_MAGPIE含む） |
 | **3. Split-wise Performance Comparison** | 分割方式別のRMSE, R$^2$の比較表 |
-| **4. OOD Analysis** | OODサンプル数、閾値、判定結果 |
+| **4. OOD Analysis** | OODサンプル数、閾値、判定結果（各セットのOOD率） |
 | **5. OOD Region Candidate Compositions** | OODとして検出された合金組成の候補リスト |
 | **6. Figures** | 生成されたプロット画像 |
 | **7. Literature Near-Neighbour WF Evidence** | 文献検索の類似ワークフロー |
 
 #### レポートプレビュー（下部）
 
-![Report 下部](screenshots_v3/16_report_scrolled.png)
-*図5.6.2: Report画面下部 — OOD分析と文献近傍ワークフロー*
+![Report 下部](screenshots_v4/16_report_scrolled.png)
+*図5.7.2: Report画面下部 — OOD分析と文献近傍ワークフロー*
 
 **ダウンロード方法**:
 - レポート下部の **「Download Report (MD)」** ボタンをクリックすると、Markdownファイルがダウンロードされます
@@ -652,7 +711,7 @@ python -m hea_extrapolation_platform gui --share
 
 ### 7.1 特徴量セット（Feature Sets）
 
-プラットフォームには5種類の特徴量セットがプリセットされています：
+プラットフォームには6種類の特徴量セットがプリセットされています：
 
 | セット名 | 含まれる特徴量 | 特徴 |
 |----------|-------------|------|
@@ -660,9 +719,71 @@ python -m hea_extrapolation_platform gui --share
 | **FS_THERMO** | FS_BASE + omega, ss_formation, phase_sep_risk | 熱力学パラメータを追加（11特徴量） |
 | **FS_SIZE** | FS_BASE + Vm_var, elastic_mismatch | サイズ効果パラメータを追加（10特徴量） |
 | **FS_ELECTRON** | FS_BASE + d_elec_avg, d_elec_std, itinerant_proxy | 電子構造パラメータを追加（11特徴量） |
-| **FS_ALL** | 上記全ての特徴量を統合 | 全特徴量（16特徴量） |
+| **FS_ALL** | 上記全ての特徴量を統合 | 全ドメイン特徴量（16特徴量） |
+| **FS_MAGPIE** | 22個の元素物性の6統計量（mean, avg_dev, range, max, min, mode） | MAGPIE特徴量（132特徴量） |
 
-> **使い分けのヒント**: まず FS_ALL で全体像を把握し、次に各サブセット（FS_THERMO, FS_SIZE, FS_ELECTRON）の寄与を比較するのが効率的です。
+> **使い分けのヒント**: まず FS_ALL で全体像を把握し、次に各サブセット（FS_THERMO, FS_SIZE, FS_ELECTRON）の寄与を比較します。FS_MAGPIEは元素物性ベースの大規模特徴量セットで、特徴量選択と組み合わせて使うと効果的です。
+
+### 7.1.1 MAGPIE特徴量の詳細
+
+FS_MAGPIEは、Wardら（2016年）が提案したMAGPIEアプローチに基づき、各元素の物理・化学的性質から組成加重の統計量を計算します。matminerライブラリの`ElementProperty`フィーチャライザーと互換の計算方式を採用しています。
+
+#### 22個の元素物性
+
+| # | 物性名 | 説明 | データソース |
+|---|---------|------|------------|
+| 1 | Number | 原子番号 (Z) | 元素DB |
+| 2 | MendeleevNumber | メンデレーフ番号 | 元素DB |
+| 3 | AtomicWeight | 原子量 | 元素DB |
+| 4 | MeltingT | 融点 (K) | 元素DB |
+| 5 | Column | 周期表の族（列） | 元素DB |
+| 6 | Row | 周期表の周期（行） | 元素DB |
+| 7 | CovalentRadius | 共有結合半径 (Å) | 元素DB |
+| 8 | Electronegativity | 電気陰性度 (Pauling) | 元素DB |
+| 9 | NsValence | s軌道価電子数 | 元素DB |
+| 10 | NpValence | p軌道価電子数 | 元素DB |
+| 11 | NdValence | d軌道価電子数 | 元素DB |
+| 12 | NfValence | f軌道価電子数 | 元素DB |
+| 13 | NValence | 全価電子数 (= Ns+Np+Nd+Nf) | 導出値 |
+| 14 | NsUnfilled | s軌道空き数 | 導出値 |
+| 15 | NpUnfilled | p軌道空き数 | 導出値 |
+| 16 | NdUnfilled | d軌道空き数 | 導出値 |
+| 17 | NfUnfilled | f軌道空き数 | 導出値 |
+| 18 | NUnfilled | 全空き軌道数 (= Ns+Np+Nd+Nf unfilled) | 導出値 |
+| 19 | GSvolume_pa | 基底状態原子体積 (Å$^3$) | 元素DB |
+| 20 | GSbandgap | 基底状態バンドギャップ (eV) | 元素DB |
+| 21 | GSmagmom | 基底状態磁気モーメント (μ_B) | 元素DB |
+| 22 | SpaceGroupNumber | 空間群番号 | 元素DB |
+
+#### 6種類の統計量
+
+各元素物性に対して、以下の6つの組成加重統計量を計算します：
+
+| 統計量 | 計算方法 | 意味 |
+|---------|---------|------|
+| **mean** | $\sum_i x_i \cdot f_i$ | 組成加重平均 |
+| **avg_dev** | $\sum_i f_i \cdot |x_i - \text{mean}|$ | 組成加重平均偏差 |
+| **range** | $\max(x) - \min(x)$ | 範囲（最大-最小） |
+| **maximum** | $\max(x_i)$ | 元素物性の最大値 |
+| **minimum** | $\min(x_i)$ | 元素物性の最小値 |
+| **mode** | 最頻値（最も組成比が高い元素の値） | 主要元素の物性値 |
+
+> $x_i$ = 元素 $i$ の物性値、$f_i$ = 元素 $i$ の組成分率
+
+#### 特徴量名の命名規則
+
+```
+MagpieData {statistic} {property}
+```
+
+例:
+- `MagpieData mean MeltingT` = 融点の組成加重平均
+- `MagpieData avg_dev Electronegativity` = 電気陰性度の組成加重平均偏差
+- `MagpieData range NValence` = 全価電子数の範囲
+
+合計: 22物性 × 6統計量 = **132特徴量**
+
+> **注意（Nf_valバグ修正）**: 6th-period元素（Hf, Ta, W, Re, Pt, Au）の`NfValence`は、matminer/MAGPIEの慣例に従い**0**（充填済み4f$^{14}$はコア殊であり価電子ではない）としています。これはv3.0で修正された重要なバグフィックスです。
 
 ### 7.2 ワークフロー（Workflows）
 
@@ -930,10 +1051,11 @@ python -m hea_extrapolation_platform gui --port 7870
 
 **Q5: 新しい特徴量セットを追加するには？**
 
-> A: `features.py` の `FEATURE_SETS` 辞書に新しいエントリを追加してください。例：
+> A: `features.py` の `FeatureCatalog._SETS` 辞書に新しいエントリを追加してください。例：
 > ```python
-> FEATURE_SETS["FS_CUSTOM"] = ["VEC", "dH_mix", "my_new_feature"]
+> FeatureCatalog._SETS[FeatureSetName.FS_CUSTOM] = ["VEC", "dH_mix", "my_new_feature"]
 > ```
+> v3.0で追加されたFS_MAGPIEも同じ仕組みで登録されています。MAGPIEの132特徴量は`_MAGPIE_COLS`リストで自動生成されます。
 
 **Q6: 文献データベースを拡張するには？**
 
@@ -963,7 +1085,7 @@ python -m hea_extrapolation_platform gui --port 7870
 hea_extrapolation_platform/
 +-- __init__.py              # パッケージ初期化
 +-- __main__.py              # CLIエントリポイント
-+-- features.py              # 特徴量セット定義
++-- features.py              # 特徴量セット定義（MAGPIE含む）
 +-- dataset.py               # HEAデータセット生成
 +-- splitters.py             # データ分割方式
 +-- workflows.py             # ワークフロー定義（WF-LIN, WF-XGB, WF-ENS）
@@ -989,7 +1111,7 @@ hea_extrapolation_platform/
 |   +-- vector_index.py      # FAISS/TF-IDF ベクトルインデックス
 +-- docs/
 |   +-- user_manual.md       # 本ドキュメント
-|   +-- screenshots_v3/      # スクリーンショット（17枚）
+|   +-- screenshots_v4/      # スクリーンショット（24枚、MAGPIE・Data Summary含む）
 +-- results/                 # 実験結果の出力先
     +-- YYYYMMDD_HHMMSS/     # タイムスタンプ付きディレクトリ
 ```
@@ -1003,7 +1125,8 @@ hea_extrapolation_platform/
 | **v1.0** | 2026-02-24 | 初版リリース（コアモジュール10個 + 文献グラフ） |
 | **v1.1** | 2026-02-24 | GUI（Gradio）+ CLI追加、Plotlyチャート、13件のバグ修正 |
 | **v1.2** | 2026-02-25 | Seamless Integration（MLflow/Feast/MInt自動統合）、取扱説明書初版 |
-| **v2.0** | 2026-02-25 | 取扱説明書改訂（本版）、RNG再現性修正、評価警告修正、熱力学安定性修正、スクリーンショット17枚 |
+| **v2.0** | 2026-02-25 | 取扱説明書改訂、RNG再現性修正、評価警告修正、熱力学安定性修正、スクリーンショット17枚 |
+| **v3.0** | 2026-02-25 | MAGPIE特徴量追加（22元素物性×6統計量=132特徴量）、Nf_valバグ修正（6th-period元素）、Data Summaryタブ追加、MLプログレスバー追加、スクリーンショット24枚 |
 
 ---
 

@@ -14,7 +14,7 @@ Provides interactive equivalents of the matplotlib-based visualization module:
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple  # noqa: F401
 
 import numpy as np
 import pandas as pd
@@ -477,3 +477,211 @@ def validity_scores_to_dataframe(scores: List[Any]) -> pd.DataFrame:
             "Total": round(s.total, 4),
         })
     return pd.DataFrame(records)
+
+
+# ---------------------------------------------------------------------------
+# 8. Dataset Summary Statistics
+# ---------------------------------------------------------------------------
+
+def plotly_target_histogram(
+    target: pd.Series,
+    title: str = "Target Distribution",
+) -> go.Figure:
+    """Histogram of the target variable.
+
+    Parameters
+    ----------
+    target : pd.Series
+        Target values (e.g. yield strength).
+    title : str
+
+    Returns
+    -------
+    go.Figure
+    """
+    fig = go.Figure(data=go.Histogram(
+        x=target.values,
+        nbinsx=30,
+        marker_color="#4C72B0",
+        hovertemplate="Range: %{x}<br>Count: %{y}<extra></extra>",
+    ))
+    fig.update_layout(
+        title=title,
+        xaxis_title=target.name or "Value",
+        yaxis_title="Count",
+        template="plotly_white",
+        height=350,
+    )
+    return fig
+
+
+def plotly_composition_heatmap(
+    compositions_df: pd.DataFrame,
+    title: str = "Element Composition Heatmap",
+) -> go.Figure:
+    """Heatmap showing element fractions across all samples.
+
+    Parameters
+    ----------
+    compositions_df : pd.DataFrame
+        Composition table (element columns, fraction values).
+    title : str
+
+    Returns
+    -------
+    go.Figure
+    """
+    # Only show elements that are actually present (non-zero)
+    non_zero_cols = [
+        c for c in compositions_df.columns
+        if compositions_df[c].sum() > 0
+    ]
+    if not non_zero_cols:
+        fig = go.Figure()
+        fig.update_layout(title=title, annotations=[
+            dict(text="No data", xref="paper", yref="paper",
+                 x=0.5, y=0.5, showarrow=False, font_size=20)
+        ])
+        return fig
+
+    # Show mean composition per element as a bar chart
+    means = compositions_df[non_zero_cols].mean().sort_values(ascending=False)
+    stds = compositions_df[non_zero_cols].std()
+
+    fig = go.Figure(data=go.Bar(
+        x=list(means.index),
+        y=list(means.values),
+        error_y=dict(
+            type="data",
+            array=[stds[c] for c in means.index],
+            visible=True,
+        ),
+        marker_color="#55A868",
+        hovertemplate="Element: %{x}<br>Mean: %{y:.3f}<extra></extra>",
+    ))
+    fig.update_layout(
+        title=title,
+        xaxis_title="Element",
+        yaxis_title="Mean Atomic Fraction",
+        template="plotly_white",
+        height=350,
+    )
+    return fig
+
+
+def plotly_feature_correlation(
+    features_df: pd.DataFrame,
+    max_features: int = 15,
+    title: str = "Feature Correlation Matrix",
+) -> go.Figure:
+    """Correlation heatmap of selected features.
+
+    Parameters
+    ----------
+    features_df : pd.DataFrame
+        Feature matrix.
+    max_features : int
+        Maximum number of features to show (picks highest-variance).
+    title : str
+
+    Returns
+    -------
+    go.Figure
+    """
+    if features_df.empty:
+        fig = go.Figure()
+        fig.update_layout(title=title)
+        return fig
+
+    # Select top-variance features for readability
+    variances = features_df.var().sort_values(ascending=False)
+    selected = list(variances.head(max_features).index)
+    sub = features_df[selected]
+    corr = sub.corr()
+
+    fig = go.Figure(data=go.Heatmap(
+        z=corr.values,
+        x=list(corr.columns),
+        y=list(corr.index),
+        colorscale="RdBu_r",
+        zmin=-1, zmax=1,
+        text=np.round(corr.values, 2),
+        texttemplate="%{text}",
+        hovertemplate=(
+            "%{y} vs %{x}<br>Corr: %{z:.3f}<extra></extra>"
+        ),
+        colorbar=dict(title="Correlation"),
+    ))
+    fig.update_layout(
+        title=title,
+        template="plotly_white",
+        height=max(450, len(selected) * 35 + 100),
+        width=max(500, len(selected) * 40 + 100),
+    )
+    return fig
+
+
+def build_summary_stats_md(
+    compositions_df: Optional[pd.DataFrame],
+    features_df: Optional[pd.DataFrame],
+    target: Optional[pd.Series],
+) -> str:
+    """Build a Markdown summary of dataset statistics.
+
+    Parameters
+    ----------
+    compositions_df : pd.DataFrame or None
+    features_df : pd.DataFrame or None
+    target : pd.Series or None
+
+    Returns
+    -------
+    str
+        Markdown text.
+    """
+    if compositions_df is None or target is None:
+        return (
+            "No dataset loaded yet.\n\n"
+            "Generate data from the **Config** tab or upload a CSV "
+            "using the **Upload** button above."
+        )
+
+    lines = ["### Dataset Overview\n"]
+    lines.append(f"| Item | Value |")
+    lines.append("|---|---|")
+    lines.append(f"| Samples | {len(target)} |")
+
+    # Composition info
+    non_zero = [
+        c for c in compositions_df.columns
+        if compositions_df[c].sum() > 0
+    ]
+    lines.append(f"| Elements | {len(non_zero)} ({', '.join(non_zero)}) |")
+
+    # Feature info
+    if features_df is not None:
+        lines.append(f"| Features | {features_df.shape[1]} |")
+
+    # Target stats
+    lines.append(f"| Target | {target.name or 'unknown'} |")
+    lines.append(f"| Target Min | {target.min():.2f} |")
+    lines.append(f"| Target Max | {target.max():.2f} |")
+    lines.append(f"| Target Mean | {target.mean():.2f} |")
+    lines.append(f"| Target Std | {target.std():.2f} |")
+    lines.append(f"| Target Median | {target.median():.2f} |")
+
+    lines.append("")
+    lines.append("### Feature Statistics (Top 10 by Variance)\n")
+    if features_df is not None and not features_df.empty:
+        variances = features_df.var().sort_values(ascending=False)
+        top_features = list(variances.head(10).index)
+        desc = features_df[top_features].describe().round(3)
+        try:
+            lines.append(desc.to_markdown())
+        except ImportError:
+            # tabulate not installed — degrade gracefully
+            lines.append(desc.to_string())
+    else:
+        lines.append("No features available.")
+
+    return "\n".join(lines)

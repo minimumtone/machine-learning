@@ -7,12 +7,13 @@ Launch::
     python -m hea_extrapolation_platform gui --port 7860
 
 Tab-based layout:
-  1. Dashboard  - KPI cards + validity ranking + performance heatmap
-  2. Config     - Parameter UI + run button + streaming progress log
-  3. Results    - Run results table + filters + parity plot
-  4. OOD Map    - Interactive PCA scatter + OOD candidates table
-  5. Literature - Query UI + filters + feature frequency
-  6. Report     - Markdown preview + download
+  1. Dashboard     - KPI cards + validity ranking + performance heatmap
+  2. Data Summary  - Dataset statistics, composition/target plots, CSV upload
+  3. Config & Run  - Parameter UI + run button + progress bar + streaming log
+  4. Results       - Run results table + filters + parity plot
+  5. OOD Map       - Interactive PCA scatter + OOD candidates table
+  6. Literature    - Query UI + filters + feature frequency
+  7. Report        - Markdown preview + download
 
 Design decisions (GUI review fixes):
   - gr.State replaces module-global _SESSION for multi-user isolation (#1)
@@ -43,10 +44,14 @@ import numpy as np
 import pandas as pd
 
 from hea_extrapolation_platform.gui.plotly_charts import (
+    build_summary_stats_md,
+    plotly_composition_heatmap,
+    plotly_feature_correlation,
     plotly_feature_frequency,
     plotly_heatmap,
     plotly_ood_map,
     plotly_parity,
+    plotly_target_histogram,
     plotly_uncertainty_ood,
     plotly_validity_ranking,
     runs_to_dataframe,
@@ -438,6 +443,189 @@ def _do_literature_search(
 
 
 # ---------------------------------------------------------------------------
+# Data Summary helpers
+# ---------------------------------------------------------------------------
+
+def _refresh_data_summary(
+    session: Dict[str, Any],
+) -> Tuple:
+    """Refresh the Data Summary tab from session state."""
+    comps_df = session.get("compositions_df")
+    features_df = session.get("features_df")
+    target = session.get("target")
+
+    stats_md = build_summary_stats_md(comps_df, features_df, target)
+
+    if comps_df is not None and target is not None:
+        target_fig = plotly_target_histogram(target)
+        comp_fig = plotly_composition_heatmap(comps_df)
+    else:
+        target_fig = None
+        comp_fig = None
+
+    if features_df is not None and not features_df.empty:
+        corr_fig = plotly_feature_correlation(features_df)
+    else:
+        corr_fig = None
+
+    desc_df = pd.DataFrame()
+    if features_df is not None and not features_df.empty:
+        desc_df = features_df.describe().round(3).reset_index()
+        desc_df.rename(columns={"index": "Statistic"}, inplace=True)
+
+    return stats_md, target_fig, comp_fig, corr_fig, desc_df
+
+
+def _handle_csv_upload(
+    file_obj: Any,
+    target_col: str,
+    session: Dict[str, Any],
+) -> Tuple:
+    """Handle CSV file upload and compute features.
+
+    Expected CSV format: element columns (atomic fractions summing to ~1)
+    plus an optional target column.  Non-element columns that are not
+    the target column are silently ignored during feature computation.
+
+    Returns the same tuple shape as ``_refresh_data_summary`` plus the
+    updated session.
+    """
+    if file_obj is None:
+        return (
+            build_summary_stats_md(None, None, None),
+            None, None, None, pd.DataFrame(), session,
+        )
+
+    try:
+        file_path = file_obj.name if hasattr(file_obj, "name") else str(file_obj)
+        raw = pd.read_csv(file_path)
+
+        if raw.empty:
+            return (
+                "Uploaded CSV is empty.",
+                None, None, None, pd.DataFrame(), session,
+            )
+
+        from hea_extrapolation_platform.features import (
+            _ElementDB,
+            compute_features,
+            FeatureSetName,
+        )
+
+        available = set(_ElementDB.available_elements())
+        target_col_clean = target_col.strip()
+
+        # Identify element columns (columns whose names are known elements)
+        elem_cols = [c for c in raw.columns if c in available]
+
+        if not elem_cols:
+            return (
+                "No element columns found in CSV. "
+                "Column names must match element symbols (e.g. Fe, Ni, Co).",
+                None, None, None, pd.DataFrame(), session,
+            )
+
+        # Build compositions list, tracking valid row indices to keep
+        # all DataFrames aligned (rows with all-zero elements are dropped).
+        valid_indices: List[int] = []
+        compositions = []
+        for idx, row in raw[elem_cols].iterrows():
+            comp = {
+                e: float(v) for e, v in row.items()
+                if float(v) > 0
+            }
+            if comp:
+                compositions.append(comp)
+                valid_indices.append(idx)
+
+        # Composition DataFrame — only keep rows that produced a composition
+        comps_df = (
+            raw.loc[valid_indices, elem_cols].copy().reset_index(drop=True)
+        )
+
+        # Compute features
+        features_df = compute_features(compositions, feature_set=None)
+
+        # Extract or synthesize target — aligned to valid rows
+        if target_col_clean and target_col_clean in raw.columns:
+            target = (
+                raw.loc[valid_indices, target_col_clean]
+                .copy()
+                .reset_index(drop=True)
+            )
+            target.name = target_col_clean
+        else:
+            target = pd.Series(
+                np.zeros(len(compositions)),
+                name="(no target column)",
+            )
+
+        session["compositions_df"] = comps_df
+        session["features_df"] = features_df
+        session["target"] = target
+
+        stats_md = build_summary_stats_md(comps_df, features_df, target)
+        target_fig = plotly_target_histogram(target)
+        comp_fig = plotly_composition_heatmap(comps_df)
+        corr_fig = plotly_feature_correlation(features_df)
+        desc_df = features_df.describe().round(3).reset_index()
+        desc_df.rename(columns={"index": "Statistic"}, inplace=True)
+
+        return stats_md, target_fig, comp_fig, corr_fig, desc_df, session
+
+    except Exception:
+        err = traceback.format_exc()
+        return (
+            f"Error loading CSV:\n```\n{err}\n```",
+            None, None, None, pd.DataFrame(), session,
+        )
+
+
+# ---------------------------------------------------------------------------
+# Progress bar HTML builder
+# ---------------------------------------------------------------------------
+
+def _build_progress_bar_html(
+    pct: int,
+    label: str = "",
+) -> str:
+    """Return an HTML string for a styled progress bar.
+
+    Parameters
+    ----------
+    pct:
+        Percentage complete (0-100).
+    label:
+        Short text displayed below the bar (e.g. "Run 3/10 — FS_ALL").
+    """
+    pct = max(0, min(100, pct))
+    # Pick colour based on progress
+    if pct < 30:
+        bar_color = "#4C72B0"      # blue
+    elif pct < 70:
+        bar_color = "#55A868"      # green
+    else:
+        bar_color = "#C44E52"      # red-ish accent for final stretch
+
+    inner_text = f"{pct}%" if pct > 8 else ""
+    return (
+        f'<div style="margin: 10px 0;">'
+        f'<div style="background: #e0e0e0; border-radius: 8px; '
+        f'height: 28px; overflow: hidden;">'
+        f'<div style="background: {bar_color}; '
+        f'height: 100%; width: {pct}%; border-radius: 8px; '
+        f'transition: width 0.3s; display: flex; '
+        f'align-items: center; justify-content: center; '
+        f'color: white; font-size: 13px; font-weight: bold;">'
+        f'{inner_text}'
+        f'</div></div>'
+        f'<div style="text-align: center; margin-top: 4px; '
+        f'color: #666; font-size: 12px;">{label}</div>'
+        f'</div>'
+    )
+
+
+# ---------------------------------------------------------------------------
 # Main App Factory
 # ---------------------------------------------------------------------------
 
@@ -518,7 +706,86 @@ def create_app() -> gr.Blocks:
                     outputs=dash_outputs,
                 )
 
-            # --- Tab 2: Config & Run ---
+            # --- Tab 2: Data Summary ---
+            with gr.Tab("Data Summary"):
+                gr.Markdown(
+                    "## Data Summary\n"
+                    "View summary statistics for the current dataset "
+                    "(generated or uploaded)."
+                )
+
+                with gr.Accordion(
+                    "Upload CSV Dataset", open=False,
+                ):
+                    gr.Markdown(
+                        "Upload a CSV file with element columns "
+                        "(e.g. Fe, Ni, Co) as atomic fractions and "
+                        "an optional target column."
+                    )
+                    with gr.Row():
+                        csv_upload = gr.File(
+                            label="Upload CSV",
+                            file_types=[".csv"],
+                        )
+                        csv_target_col = gr.Textbox(
+                            label="Target Column Name",
+                            value="yield_strength_MPa",
+                            info="Name of the target column in CSV",
+                        )
+                    csv_upload_btn = gr.Button(
+                        "Load CSV", variant="secondary",
+                    )
+
+                summary_stats_md = gr.Markdown(
+                    build_summary_stats_md(None, None, None),
+                )
+
+                with gr.Row():
+                    target_hist_plot = gr.Plot(
+                        label="Target Distribution",
+                    )
+                    comp_bar_plot = gr.Plot(
+                        label="Element Composition (Mean +/- Std)",
+                    )
+
+                corr_heatmap_plot = gr.Plot(
+                    label="Feature Correlation Matrix",
+                )
+
+                with gr.Accordion(
+                    "Full Feature Statistics", open=False,
+                ):
+                    feature_stats_table = gr.Dataframe(
+                        label="Descriptive Statistics (all features)",
+                    )
+
+                summary_refresh_btn = gr.Button(
+                    "Refresh Summary", variant="primary",
+                )
+
+                summary_outputs = [
+                    summary_stats_md, target_hist_plot,
+                    comp_bar_plot, corr_heatmap_plot,
+                    feature_stats_table,
+                ]
+                summary_refresh_btn.click(
+                    fn=_refresh_data_summary,
+                    inputs=[state],
+                    outputs=summary_outputs,
+                )
+
+                csv_upload_outputs = [
+                    summary_stats_md, target_hist_plot,
+                    comp_bar_plot, corr_heatmap_plot,
+                    feature_stats_table, state,
+                ]
+                csv_upload_btn.click(
+                    fn=_handle_csv_upload,
+                    inputs=[csv_upload, csv_target_col, state],
+                    outputs=csv_upload_outputs,
+                )
+
+            # --- Tab 3: Config & Run ---
             with gr.Tab("Config & Run"):
                 gr.Markdown("## Experiment Configuration & Execution")
 
@@ -566,13 +833,33 @@ def create_app() -> gr.Blocks:
                 run_btn = gr.Button(
                     "Run Experiment", variant="primary", size="lg",
                 )
+
+                # --- Progress bar (HTML-based for real-time updates) ---
+                progress_bar_html = gr.HTML(
+                    value=(
+                        '<div style="margin: 10px 0;">'
+                        '<div style="background: #e0e0e0; border-radius: 8px; '
+                        'height: 28px; overflow: hidden;">'
+                        '<div id="exp-progress" style="background: #4C72B0; '
+                        'height: 100%; width: 0%; border-radius: 8px; '
+                        'transition: width 0.3s; display: flex; '
+                        'align-items: center; justify-content: center; '
+                        'color: white; font-size: 13px; font-weight: bold;">'
+                        '</div></div>'
+                        '<div style="text-align: center; margin-top: 4px; '
+                        'color: #666; font-size: 12px;">Waiting to start...</div>'
+                        '</div>'
+                    ),
+                    label="Progress",
+                )
+
                 progress_log = gr.Textbox(
                     label="Progress Log",
                     lines=15,
                     interactive=False,
                 )
 
-            # --- Tab 3: Results ---
+            # --- Tab 4: Results ---
             with gr.Tab("Results"):
                 gr.Markdown("## Experiment Results -- Run Table & Parity Plot")
 
@@ -610,7 +897,7 @@ def create_app() -> gr.Blocks:
                         outputs=res_outputs,
                     )
 
-            # --- Tab 4: OOD Map ---
+            # --- Tab 5: OOD Map ---
             with gr.Tab("OOD Map"):
                 gr.Markdown(
                     "## OOD (Out-of-Distribution) Map & Candidates",
@@ -619,7 +906,7 @@ def create_app() -> gr.Blocks:
                 fs_selector = gr.Dropdown(
                     choices=[
                         "FS_BASE", "FS_THERMO", "FS_SIZE",
-                        "FS_ELECTRON", "FS_ALL",
+                        "FS_ELECTRON", "FS_ALL", "FS_MAGPIE",
                     ],
                     value="FS_ALL",
                     label="Feature Set for OOD Map",
@@ -646,7 +933,7 @@ def create_app() -> gr.Blocks:
                     outputs=ood_outputs,
                 )
 
-            # --- Tab 5: Literature Search ---
+            # --- Tab 6: Literature Search ---
             with gr.Tab("Literature Search"):
                 gr.Markdown(
                     "## Literature Search -- Embedding + Structured Filters",
@@ -748,7 +1035,18 @@ def create_app() -> gr.Blocks:
 
             Using a generator enables Gradio to stream updates to the
             progress_log while the experiment runs (fix #7).
-            The final yield refreshes all cross-tab components (#8).
+            The final yield refreshes all cross-tab components (#8)
+            and the Data Summary tab.
+
+            Progress bar phases (approximate):
+              0%   Starting
+             10%   Dataset generated
+             20%   Runner initialised
+             60%   Experiments completed
+             70%   Registry exported
+             80%   Static plots done
+             90%   Literature search done
+            100%   Report generated — complete
             """
             log_lines: List[str] = []
 
@@ -769,16 +1067,35 @@ def create_app() -> gr.Blocks:
             )
             empty_ood = (None, "", pd.DataFrame())
             empty_rpt = ("*Running...*", None)
+            empty_summary = (
+                build_summary_stats_md(None, None, None),
+                None, None, None, pd.DataFrame(),
+            )
 
-            def _yield_progress(log_text: str) -> Tuple:
+            def _yield_progress(
+                log_text: str,
+                pct: int = 0,
+                bar_label: str = "",
+                summary_tuple: Optional[Tuple] = None,
+            ) -> Tuple:
+                nonlocal last_pct
+                last_pct = pct
+                bar_html = _build_progress_bar_html(pct, bar_label)
+                summ = summary_tuple if summary_tuple else empty_summary
                 return (
-                    log_text, session,
+                    bar_html, log_text, session,
+                    *summ,
                     *empty_dash, *empty_res, *empty_ood, *empty_rpt,
                 )
 
+            succeeded = False
+            last_pct = 0
+
             try:
                 log("Starting experiment...")
-                yield _yield_progress("\n".join(log_lines))
+                yield _yield_progress(
+                    "\n".join(log_lines), 0, "Initialising...",
+                )
 
                 # Validate seeds input
                 try:
@@ -792,7 +1109,9 @@ def create_app() -> gr.Blocks:
                         "Error: Seeds must be space-separated integers "
                         "(e.g. 42 123 456). Got: " + repr(seeds_str)
                     )
-                    yield _yield_progress("\n".join(log_lines))
+                    yield _yield_progress(
+                        "\n".join(log_lines), 0, "Error",
+                    )
                     return
 
                 excl = [
@@ -806,18 +1125,23 @@ def create_app() -> gr.Blocks:
                         "Error: No valid seeds provided. "
                         "Enter space-separated integers (e.g. 42 123 456)."
                     )
-                    yield _yield_progress("\n".join(log_lines))
+                    yield _yield_progress(
+                        "\n".join(log_lines), 0, "Error",
+                    )
                     return
 
                 # Fix #2: cast slider float -> int
                 n_samp_int = int(n_samp)
 
-                # 1. Dataset generation
+                # 1. Dataset generation  (0% -> 10%)
                 from hea_extrapolation_platform.dataset import (
                     generate_hea_dataset,
                 )
                 log(f"Generating dataset: n={n_samp_int}, seed={seeds[0]}")
-                yield _yield_progress("\n".join(log_lines))
+                yield _yield_progress(
+                    "\n".join(log_lines), 5,
+                    f"Generating {n_samp_int} samples...",
+                )
 
                 comps_df, features_df, target = generate_hea_dataset(
                     n_samples=n_samp_int, seed=seeds[0],
@@ -829,14 +1153,25 @@ def create_app() -> gr.Blocks:
                     f"Dataset: {len(target)} samples, "
                     f"{features_df.shape[1]} features"
                 )
-                yield _yield_progress("\n".join(log_lines))
+                # Build data-summary tuple now that we have data
+                data_summary = _refresh_data_summary(session)
 
-                # 2. Run experiments
+                yield _yield_progress(
+                    "\n".join(log_lines), 10,
+                    "Dataset ready",
+                    summary_tuple=data_summary,
+                )
+
+                # 2. Run experiments  (10% -> 60%)
                 from hea_extrapolation_platform.runner import (
                     ExperimentRunner,
                 )
                 log(f"Running experiments: seeds={seeds}, quick={quick}")
-                yield _yield_progress("\n".join(log_lines))
+                yield _yield_progress(
+                    "\n".join(log_lines), 20,
+                    "Training models...",
+                    summary_tuple=data_summary,
+                )
 
                 runner = ExperimentRunner(
                     seeds=seeds, quick=quick, exclude_elements=excl,
@@ -877,9 +1212,13 @@ def create_app() -> gr.Blocks:
                         f"{ood_res.n_ood}/{ood_res.n_total} "
                         f"({ood_res.ood_ratio:.1%})"
                     )
-                yield _yield_progress("\n".join(log_lines))
+                yield _yield_progress(
+                    "\n".join(log_lines), 60,
+                    f"{len(runs)} runs complete",
+                    summary_tuple=data_summary,
+                )
 
-                # 3. Export registry  -- Fix #12: timestamp dir
+                # 3. Export registry  -- Fix #12: timestamp dir  (60% -> 70%)
                 ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
                 out_dir = Path("results") / ts
                 out_dir.mkdir(parents=True, exist_ok=True)
@@ -888,9 +1227,13 @@ def create_app() -> gr.Blocks:
                     f"Run registry exported to "
                     f"{out_dir / 'run_registry.json'}"
                 )
-                yield _yield_progress("\n".join(log_lines))
+                yield _yield_progress(
+                    "\n".join(log_lines), 70,
+                    "Results exported",
+                    summary_tuple=data_summary,
+                )
 
-                # 4. Static plots (optional)
+                # 4. Static plots (optional)  (70% -> 80%)
                 figure_paths: Dict[str, Path] = {}
                 if not skip_plt:
                     from hea_extrapolation_platform.visualization import (
@@ -907,9 +1250,14 @@ def create_app() -> gr.Blocks:
                     )
                     figure_paths["Parity"] = plot_parity(runs, fig_dir)
                     log("Static plots saved.")
-                    yield _yield_progress("\n".join(log_lines))
+                    yield _yield_progress(
+                        "\n".join(log_lines), 80,
+                        "Plots saved",
+                        summary_tuple=data_summary,
+                    )
 
                 # 5. Literature search (optional, cached -- fix #9)
+                # (80% -> 90%)
                 if not skip_lit:
                     try:
                         from hea_extrapolation_platform.literature_graph.search import (
@@ -919,7 +1267,11 @@ def create_app() -> gr.Blocks:
                             LiteratureFeatureRecommender,
                         )
                         log("Building literature index...")
-                        yield _yield_progress("\n".join(log_lines))
+                        yield _yield_progress(
+                            "\n".join(log_lines), 85,
+                            "Literature search...",
+                            summary_tuple=data_summary,
+                        )
 
                         engine = _get_literature_engine(session)
                         query = "composition only yield strength HEA"
@@ -941,14 +1293,22 @@ def create_app() -> gr.Blocks:
                             f"Literature search: "
                             f"{len(lit_results)} results"
                         )
-                        yield _yield_progress("\n".join(log_lines))
+                        yield _yield_progress(
+                            "\n".join(log_lines), 90,
+                            "Literature done",
+                            summary_tuple=data_summary,
+                        )
                     except Exception as exc:
                         log(
                             f"Literature search failed (non-fatal): {exc}"
                         )
-                        yield _yield_progress("\n".join(log_lines))
+                        yield _yield_progress(
+                            "\n".join(log_lines), 90,
+                            "Literature skipped (error)",
+                            summary_tuple=data_summary,
+                        )
 
-                # 6. Report generation
+                # 6. Report generation  (90% -> 100%)
                 from hea_extrapolation_platform.report import (
                     ReportGenerator,
                 )
@@ -973,11 +1333,22 @@ def create_app() -> gr.Blocks:
                 log(
                     "Experiment complete. All tabs refreshed automatically."
                 )
+                succeeded = True
 
             except Exception:
                 log(f"ERROR:\n{traceback.format_exc()}")
 
             # --- Final yield: refresh all tabs (fix #8) ---
+            if succeeded:
+                final_bar = _build_progress_bar_html(100, "Complete")
+            else:
+                final_bar = _build_progress_bar_html(
+                    last_pct, "Error \u2014 see log",
+                )
+            try:
+                final_summary = _refresh_data_summary(session)
+            except Exception:
+                final_summary = empty_summary
             final_dash = _refresh_dashboard_data("rmse_test", session)
             final_res = _refresh_results_data("All", "All", "All", session)
             ood_keys = list(session.get("ood_results", {}).keys())
@@ -986,8 +1357,10 @@ def create_app() -> gr.Blocks:
             final_rpt = _refresh_report_data(session)
 
             yield (
+                final_bar,
                 "\n".join(log_lines),
                 session,
+                *final_summary,
                 *final_dash,
                 *final_res,
                 *final_ood,
@@ -1003,8 +1376,12 @@ def create_app() -> gr.Blocks:
                 state,
             ],
             outputs=[
-                # Config tab
-                progress_log, state,
+                # Config tab — progress bar + log
+                progress_bar_html, progress_log, state,
+                # Data Summary tab
+                summary_stats_md, target_hist_plot,
+                comp_bar_plot, corr_heatmap_plot,
+                feature_stats_table,
                 # Dashboard tab (fix #8)
                 kpi_runs, kpi_best_fs, kpi_best_score, kpi_ood_count,
                 integration_status, validity_plot, heatmap_plot,
