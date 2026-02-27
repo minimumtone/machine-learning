@@ -96,11 +96,11 @@ caldata   <-   c(0,0,0,0,0,0)  # Fe, Ni, Si, Mn, Mo, Cr
 
 for (i in c(1:length(numEXP))){
     moles   <-   system(cmdMoles[i], intern=T)   # for Moles
-    moles_tot   <-   sum(as.numeric(moles))
+    moles_tot   <-   sum(as.numeric(moles), na.rm=TRUE)
     dfs     <-   system(cmdDF[i], intern=T)      # for DF
-    nmoles  <-   which(as.numeric(moles)!=0.0)
+    nmoles  <-   which(!is.na(as.numeric(moles)) & as.numeric(moles)!=0.0)
 # G相が出ていない場合
-    if (moles_tot == 0.0){
+    if (is.na(moles_tot) || moles_tot == 0.0){
         caldata  <-   c(0,0,0,0,0,0)
         }else if (length(nmoles) == 1){
 # G相が一つしか出ていない場合 
@@ -150,6 +150,7 @@ write(error_total, file="error_tot.txt")
 
 
 ### plot each data
+tryCatch({
 par(mfrow=c(1,1))
 par(mar=c(5,5,5,8))
 par(xpd=T)   # 枠外への描画を許可
@@ -160,6 +161,7 @@ par(xpd=T)   # 枠外への描画を許可
 
 color=c("lightblue", "lightcyan", "lavender", "mistyrose", "cornsilk", "lightgreen")
 
+cat("DEBUG: nrow(visdata)=", nrow(visdata), " expected=", 2*length(numEXP), "\n")
 colnames(visdata) <- c("Fe", "Ni", "Si", "Mn", "Mo", "Cr")
 # rownames(visdata) <- rev(numEXP)
 labexp  <-  paste(numEXP,"Exp")
@@ -175,4 +177,7 @@ for (j in 1:ncol(visdata2)) {
         txt <- 1.00*round(visdata2[,j], 3)
         txt[txt=="0"] <- NA; text(yl, xl, txt,cex=0.5)
         }
+}, error = function(e) {
+  cat("WARNING: Visualization error (non-fatal):", conditionMessage(e), "\n")
+})
 

@@ -53,7 +53,7 @@ interface
   fork
    work_directory named './wd/trial'
      directory_tag directory_save
-     link_files 'Gver.6.53.TDB.temp'  'gphase_all.R' 'exp_data_for_dakota_opti.csv'  '*.tcm' '*.py' 'dprepro'
+     link_files 'Gver.6.53.TDB.temp'  'gphase_all.R' 'exp_data_for_dakota_opti.csv'  '*.tcm' '*.sh' '*.py' 'dprepro'
    parameters_file 'params.in'
    results_file 'error_tot.txt'
    asynchronous evaluation_concurrency 8
