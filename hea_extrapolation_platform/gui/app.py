@@ -81,6 +81,7 @@ def _empty_session() -> Dict[str, Any]:
         "literature_results": None,
         "feature_recommendation": None,
         "feature_counts": None,
+        "feature_selection_results": {},  # {fs_name: FeatureSelectionSummary}
     }
 
 
@@ -415,22 +416,48 @@ def _do_literature_search(
         )
         session["feature_recommendation"] = rec
 
-        rec_text = f"Recommended set: {rec.name}\n"
+        # --- Build rich Feature Recommendation text ---
+        rec_text = (
+            "## Feature Recommendation (文献ベース特徴量推薦)\n\n"
+            "文献データベースに登録されたワークフローの key_features を集計し、\n"
+            "出現頻度の高い特徴量をベースセットに追加する推薦を生成します。\n\n"
+            "### 推薦の仕組み\n"
+            "1. 検索クエリに類似する文献ワークフローを上位5件取得\n"
+            "2. 各ワークフローの key_features を出現頻度順に集計\n"
+            "3. プラットフォームの FeatureCatalog に登録済みの特徴量のみを候補とする\n"
+            "4. ベースセット(FS_BASE)に含まれない特徴量を最大5個追加\n\n"
+        )
+        rec_text += f"**推薦セット名**: `{rec.name}`\n\n"
         rec_text += (
-            f"Base features ({len(rec.base_features)}): "
-            f"{', '.join(rec.base_features)}\n"
+            f"**ベース特徴量** ({len(rec.base_features)}個): "
+            f"{', '.join(rec.base_features)}\n\n"
         )
         if rec.added_features:
             rec_text += (
-                f"Added from literature "
-                f"({len(rec.added_features)}): "
+                f"**文献から追加** ({len(rec.added_features)}個): "
                 f"{', '.join(rec.added_features)}\n"
+                f"  → これらは文献で頻出かつ FeatureCatalog に登録済みの特徴量です。\n\n"
+            )
+        else:
+            rec_text += (
+                "**文献から追加**: なし（ベースセットで文献の特徴量をカバー済み）\n\n"
             )
         if rec.unregistered_features:
             rec_text += (
-                f"Unregistered features: "
+                f"**未登録特徴量** (参考): "
                 f"{', '.join(rec.unregistered_features)}\n"
+                f"  → 文献で使用されているが本プラットフォーム未登録の特徴量。\n"
+                f"    将来的に FeatureCatalog への追加を検討してください。\n\n"
             )
+        if rec.feature_frequency:
+            rec_text += "### 特徴量出現頻度 (上位10)\n"
+            rec_text += "| 特徴量 | 出現回数 |\n|---|---|\n"
+            sorted_freq = sorted(
+                rec.feature_frequency.items(),
+                key=lambda x: x[1], reverse=True,
+            )[:10]
+            for feat, count in sorted_freq:
+                rec_text += f"| {feat} | {count} |\n"
 
         return r_df, freq_fig_val, rec_text, session
 
@@ -626,6 +653,187 @@ def _build_progress_bar_html(
 
 
 # ---------------------------------------------------------------------------
+# Feature Selection helpers
+# ---------------------------------------------------------------------------
+
+def _build_fs_physical_origins_md() -> str:
+    """Build a Markdown description of each feature set's physical origin."""
+    from hea_extrapolation_platform.feature_selection import FS_PHYSICAL_ORIGINS
+
+    lines = [
+        "### 各特徴量セットの物理的起源\n",
+        "各特徴量セットが捉える物理的メカニズムと、"
+        "性能差が生じる理由を解説します。\n",
+    ]
+    for fs_name, description in FS_PHYSICAL_ORIGINS.items():
+        lines.append(f"**{fs_name}**\n")
+        lines.append(f"> {description}\n")
+    lines.append(
+        "\n---\n"
+        "**性能差の物理的解釈**: "
+        "FS_THERMO が FS_BASE より高スコアを示す場合、"
+        "熱力学的安定性指標（H_mix, Omega）が目的変数と強い相関を持つことを意味します。"
+        "逆に FS_ELECTRON が低スコアの場合、電子構造プロキシが "
+        "対象系の支配的な強化機構を十分に捉えられていない可能性があります。\n\n"
+        "**推奨**: まず FS_ALL で全特徴量を投入し XGBoost で非線形交互作用を捕捉した後、"
+        "Lasso/ARD で有効特徴量を絞り込むアプローチが効果的です。"
+    )
+    return "\n".join(lines)
+
+
+def _run_feature_selection_for_fs(
+    fs_name: str,
+    use_lasso: bool,
+    use_aic: bool,
+    use_bic: bool,
+    use_ard: bool,
+    session: Dict[str, Any],
+) -> Tuple:
+    """Run feature selection on the specified feature set.
+
+    Returns (result_md, importance_plot, consensus_md, session).
+    """
+    import plotly.graph_objects as go
+
+    features_df = session.get("features_df")
+    target = session.get("target")
+
+    if features_df is None or target is None:
+        return (
+            "*先に Config & Run で解析を実行してください。*",
+            None,
+            "*No data available.*",
+            session,
+        )
+
+    # Determine which columns belong to this feature set
+    from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
+    try:
+        fs_enum = FeatureSetName(fs_name)
+    except ValueError:
+        return (
+            f"*Unknown feature set: {fs_name}*",
+            None, "*Error*", session,
+        )
+
+    fs_cols = FeatureCatalog.columns(fs_enum)
+    available_cols = [c for c in fs_cols if c in features_df.columns]
+    if not available_cols:
+        return (
+            f"*Feature set {fs_name} has no matching columns in current data.*",
+            None, "*Error*", session,
+        )
+
+    X = features_df[available_cols].copy()
+    y = target.copy()
+
+    # Build method list
+    methods: List[str] = []
+    if use_lasso:
+        methods.append("Lasso")
+    if use_aic:
+        methods.append("AIC")
+    if use_bic:
+        methods.append("BIC")
+    if use_ard:
+        methods.append("ARD")
+
+    if not methods:
+        return (
+            "*少なくとも1つの特徴量選択手法を選択してください。*",
+            None, "*No methods selected.*", session,
+        )
+
+    from hea_extrapolation_platform.feature_selection import run_feature_selection
+    summary = run_feature_selection(
+        X, y, methods=methods, consensus_threshold=2, feature_set=fs_name,
+    )
+
+    # Store in session
+    fs_results = session.get("feature_selection_results", {})
+    fs_results[fs_name] = summary
+    session["feature_selection_results"] = fs_results
+
+    # --- Build result markdown ---
+    md_lines = [f"### {fs_name} 特徴量選択結果\n"]
+    md_lines.append(f"入力特徴量数: **{X.shape[1]}** | 手法数: **{len(methods)}**\n")
+    md_lines.append("| 手法 | 選択数 | 選択された特徴量 |")
+    md_lines.append("|---|---|---|")
+    for method_name, result in summary.results.items():
+        feat_str = ", ".join(result.selected_features[:10])
+        if len(result.selected_features) > 10:
+            feat_str += f" ... (+{len(result.selected_features) - 10})"
+        md_lines.append(
+            f"| {method_name} | {result.n_selected} | {feat_str} |"
+        )
+    result_md = "\n".join(md_lines)
+
+    # --- Build importance bar chart ---
+    # Aggregate scores across methods for a combined view
+    all_features = list(X.columns)
+    combined_scores: Dict[str, float] = {f: 0.0 for f in all_features}
+    for result in summary.results.values():
+        max_score = max(result.all_scores.values()) if result.all_scores else 1.0
+        if max_score <= 0:
+            max_score = 1.0
+        for feat, score in result.all_scores.items():
+            if feat in combined_scores:
+                combined_scores[feat] += score / max_score
+
+    # Sort by combined score, show top 20
+    sorted_feats = sorted(
+        combined_scores.items(), key=lambda x: x[1], reverse=True,
+    )[:20]
+    feat_names = [f[0] for f in sorted_feats]
+    feat_scores = [f[1] for f in sorted_feats]
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=feat_scores,
+        y=feat_names,
+        orientation="h",
+        marker_color="#4C72B0",
+    ))
+    fig.update_layout(
+        title=f"Feature Importance ({fs_name}) - Combined across {len(methods)} methods",
+        xaxis_title="Normalised Importance (sum across methods)",
+        yaxis_title="Feature",
+        yaxis=dict(autorange="reversed"),
+        height=max(400, len(feat_names) * 25),
+        margin=dict(l=150),
+    )
+
+    # --- Build consensus markdown ---
+    consensus_lines = ["### Consensus Features (コンセンサス特徴量)\n"]
+    if summary.consensus_features:
+        consensus_lines.append(
+            f"**{len(summary.consensus_features)}個** の特徴量が "
+            f"{summary.consensus_threshold}手法以上で選択されました:\n"
+        )
+        for feat in summary.consensus_features:
+            consensus_lines.append(f"- `{feat}`")
+        consensus_lines.append(
+            "\n> コンセンサス特徴量は複数の異なるアルゴリズムで"
+            "一貫して選択されたため、頑健な予測因子である可能性が高いです。"
+        )
+    else:
+        consensus_lines.append(
+            f"*{summary.consensus_threshold}手法以上で共通して選択された"
+            "特徴量はありませんでした。閾値を下げるか、手法を追加してください。*"
+        )
+
+    # Add physical origin context
+    from hea_extrapolation_platform.feature_selection import FS_PHYSICAL_ORIGINS
+    origin = FS_PHYSICAL_ORIGINS.get(fs_name, "")
+    if origin:
+        consensus_lines.append(f"\n---\n**{fs_name} の物理的背景**:\n> {origin}")
+
+    consensus_md = "\n".join(consensus_lines)
+
+    return (result_md, fig, consensus_md, session)
+
+
+# ---------------------------------------------------------------------------
 # Main App Factory
 # ---------------------------------------------------------------------------
 
@@ -638,7 +846,9 @@ def create_app() -> gr.Blocks:
     ) as app:
         gr.Markdown(
             "# Extrapolation Discovery Platform\n"
-            "Feature Validity Evaluation & OOD Detection Dashboard"
+            "Feature Validity Evaluation & OOD Detection Dashboard\n\n"
+            "**使い方**: Config & Run タブでパラメータを設定し、"
+            "\"Run Analysis\" を押すと全タブが自動更新されます。"
         )
 
         # Fix #1: per-user session state via gr.State
@@ -649,8 +859,8 @@ def create_app() -> gr.Blocks:
             with gr.Tab("Dashboard"):
                 gr.Markdown("## Dashboard -- KPIs & Feature Validity")
                 gr.Markdown(
-                    "Run an experiment from the **Config** tab first, "
-                    "then refresh this page to see results."
+                    "**Config & Run** タブで解析を実行すると、"
+                    "このページに結果が表示されます。"
                 )
 
                 with gr.Row():
@@ -787,7 +997,13 @@ def create_app() -> gr.Blocks:
 
             # --- Tab 3: Config & Run ---
             with gr.Tab("Config & Run"):
-                gr.Markdown("## Experiment Configuration & Execution")
+                gr.Markdown(
+                    "## Analysis Configuration & Execution\n\n"
+                    "このプラットフォームは、複数のMLワークフロー×特徴量セット×"
+                    "分割ポリシーの組み合わせを網羅的に実行し、"
+                    "特徴量の妥当性を評価します。\n"
+                    "OOD検出で外挿危険領域を特定し、文献検索で最適記述子を探索します。"
+                )
 
                 with gr.Row():
                     with gr.Column():
@@ -821,17 +1037,68 @@ def create_app() -> gr.Blocks:
                             info="Skip PNG generation (Plotly always available)",
                         )
 
+                # --- ML Algorithm Selection ---
+                with gr.Accordion(
+                    "ML Algorithm Selection (ワークフロー選択)",
+                    open=True,
+                ):
+                    gr.Markdown(
+                        "実行するMLワークフローを選択してください。\n\n"
+                        "- **WF-LIN** (Ridge回帰): 特徴量の符号検証・リーク検出に有効\n"
+                        "- **WF-XGB** (XGBoost + GridSearchCV): 非線形交互作用を捕捉\n"
+                        "- **WF-ENS** (Seed-varied Ensemble): 予測不確実性の定量化"
+                    )
+                    with gr.Row():
+                        wf_lin_check = gr.Checkbox(
+                            label="WF-LIN (Ridge Regression)",
+                            value=True,
+                        )
+                        wf_xgb_check = gr.Checkbox(
+                            label="WF-XGB (XGBoost + HPO)",
+                            value=True,
+                        )
+                        wf_ens_check = gr.Checkbox(
+                            label="WF-ENS (Ensemble UQ)",
+                            value=True,
+                        )
+
+                # --- Feature Selection Method Selection ---
+                with gr.Accordion(
+                    "Feature Selection Methods (特徴量選択アルゴリズム)",
+                    open=False,
+                ):
+                    gr.Markdown(
+                        "解析完了後に FS Comparison タブで実行できる"
+                        "特徴量選択アルゴリズムを選択してください。\n\n"
+                        "- **Lasso** (L1正則化): 不要な特徴量の係数をゼロに押す\n"
+                        "- **AIC** (赤池情報量規準): 前進ステップワイズ選択。複雑さへのペナルティが小さい\n"
+                        "- **BIC** (ベイズ情報量規準): AICより強いペナルティで簡素なモデルを選好\n"
+                        "- **ARD** (自動関連度決定): ベイズ的スパース回帰で特徴量を自動剣定"
+                    )
+                    with gr.Row():
+                        fs_lasso_check = gr.Checkbox(
+                            label="Lasso (L1)", value=True,
+                        )
+                        fs_aic_check = gr.Checkbox(
+                            label="AIC (Forward)", value=True,
+                        )
+                        fs_bic_check = gr.Checkbox(
+                            label="BIC (Forward)", value=True,
+                        )
+                        fs_ard_check = gr.Checkbox(
+                            label="ARD (Bayesian)", value=True,
+                        )
+
                 # Integrations are always enabled behind the scenes.
-                # Users do not need to configure them.
                 gr.Markdown(
-                    "All experiment tracking (MLflow), feature management "
+                    "All tracking (MLflow), feature management "
                     "(Feast), and workflow execution (MInt) are "
                     "**automatically enabled**.  "
                     "Results are recorded and managed transparently."
                 )
 
                 run_btn = gr.Button(
-                    "Run Experiment", variant="primary", size="lg",
+                    "▶ Run Analysis (解析実行)", variant="primary", size="lg",
                 )
 
                 # --- Progress bar (HTML-based for real-time updates) ---
@@ -861,7 +1128,7 @@ def create_app() -> gr.Blocks:
 
             # --- Tab 4: Results ---
             with gr.Tab("Results"):
-                gr.Markdown("## Experiment Results -- Run Table & Parity Plot")
+                gr.Markdown("## Analysis Results -- Run Table & Parity Plot")
 
                 with gr.Row():
                     filter_wf = gr.Dropdown(
@@ -997,14 +1264,72 @@ def create_app() -> gr.Blocks:
                     ],
                 )
 
-            # --- Tab 6: Report ---
+            # --- Tab 6: FS Comparison (Feature Selection + Physical Origins) ---
+            with gr.Tab("FS Comparison"):
+                gr.Markdown(
+                    "## Feature Set Comparison & Feature Selection\n\n"
+                    "各特徴量セットの物理的起源と、特徴量選択アルゴリズムの結果を表示します。"
+                )
+
+                # --- Physical Origin Descriptions ---
+                with gr.Accordion(
+                    "特徴量セットの物理的起源 (Physical Origins)",
+                    open=True,
+                ):
+                    fs_origin_md = gr.Markdown(
+                        _build_fs_physical_origins_md(),
+                    )
+
+                # --- Feature Selection ---
+                with gr.Accordion(
+                    "特徴量選択結果 (Feature Selection Results)",
+                    open=True,
+                ):
+                    fs_comparison_selector = gr.Dropdown(
+                        choices=[
+                            "FS_BASE", "FS_THERMO", "FS_SIZE",
+                            "FS_ELECTRON", "FS_ALL", "FS_MAGPIE",
+                        ],
+                        value="FS_ALL",
+                        label="特徴量セット選択",
+                    )
+                    run_fs_btn = gr.Button(
+                        "▶ Run Feature Selection (特徴量選択実行)",
+                        variant="primary",
+                    )
+                    fs_result_md = gr.Markdown(
+                        "*まだ特徴量選択を実行していません。"
+                        "先に Config & Run で解析を実行してください。*"
+                    )
+                    fs_importance_plot = gr.Plot(
+                        label="Feature Importance (selected methods)",
+                    )
+                    fs_consensus_md = gr.Markdown(
+                        "*Consensus features will appear here.*"
+                    )
+
+                    run_fs_btn.click(
+                        fn=_run_feature_selection_for_fs,
+                        inputs=[
+                            fs_comparison_selector,
+                            fs_lasso_check, fs_aic_check,
+                            fs_bic_check, fs_ard_check,
+                            state,
+                        ],
+                        outputs=[
+                            fs_result_md, fs_importance_plot,
+                            fs_consensus_md, state,
+                        ],
+                    )
+
+            # --- Tab 7: Report ---
             with gr.Tab("Report"):
                 gr.Markdown(
-                    "## Experiment Report -- Markdown Preview & Download",
+                    "## Analysis Report -- Markdown Preview & Download",
                 )
                 report_md = gr.Markdown(
-                    value="*No report generated yet. "
-                    "Run an experiment first.*",
+                    value="*まだレポートが生成されていません。"
+                    "Config & Run で解析を実行してください。*",
                 )
                 download_btn = gr.File(label="Download Report (.md)")
 
@@ -1029,12 +1354,15 @@ def create_app() -> gr.Blocks:
             excl_str: str,
             skip_lit: bool,
             skip_plt: bool,
+            use_wf_lin: bool,
+            use_wf_xgb: bool,
+            use_wf_ens: bool,
             session: Dict[str, Any],
         ) -> Generator:
             """Generator that yields incremental progress + state.
 
             Using a generator enables Gradio to stream updates to the
-            progress_log while the experiment runs (fix #7).
+            progress_log while the analysis runs (fix #7).
             The final yield refreshes all cross-tab components (#8)
             and the Data Summary tab.
 
@@ -1042,7 +1370,7 @@ def create_app() -> gr.Blocks:
               0%   Starting
              10%   Dataset generated
              20%   Runner initialised
-             60%   Experiments completed
+             60%   Analysis completed
              70%   Registry exported
              80%   Static plots done
              90%   Literature search done
@@ -1092,7 +1420,7 @@ def create_app() -> gr.Blocks:
             last_pct = 0
 
             try:
-                log("Starting experiment...")
+                log("Starting analysis...")
                 yield _yield_progress(
                     "\n".join(log_lines), 0, "Initialising...",
                 )
@@ -1166,10 +1494,25 @@ def create_app() -> gr.Blocks:
                 from hea_extrapolation_platform.runner import (
                     ExperimentRunner,
                 )
-                log(f"Running experiments: seeds={seeds}, quick={quick}")
+                # Build selected workflow list
+                selected_wfs: List[str] = []
+                if use_wf_lin:
+                    selected_wfs.append("WF-LIN")
+                if use_wf_xgb:
+                    selected_wfs.append("WF-XGB")
+                if use_wf_ens:
+                    selected_wfs.append("WF-ENS")
+                if not selected_wfs:
+                    selected_wfs = ["WF-LIN", "WF-XGB", "WF-ENS"]
+                    log("No workflows selected; using all.")
+
+                log(
+                    f"Running analysis: seeds={seeds}, quick={quick}, "
+                    f"workflows={selected_wfs}"
+                )
                 yield _yield_progress(
                     "\n".join(log_lines), 20,
-                    "Training models...",
+                    f"Training {len(selected_wfs)} workflow(s)...",
                     summary_tuple=data_summary,
                 )
 
@@ -1179,8 +1522,25 @@ def create_app() -> gr.Blocks:
                     use_feast=True,
                     use_mint=True,
                 )
+
+                # Progress callback: maps runner progress to GUI
+                # progress bar (20% -> 60% range)
+                _last_cb_log: List[str] = []
+
+                def _progress_cb(
+                    completed: int, total: int, message: str,
+                ) -> None:
+                    if total > 0:
+                        pct = 20 + int(40 * completed / total)
+                    else:
+                        pct = 20
+                    _last_cb_log.clear()
+                    _last_cb_log.append(f"Run {completed}/{total}: {message}")
+
                 runs, scores, ood_results = runner.run(
                     comps_df, features_df, target,
+                    progress_callback=_progress_cb,
+                    selected_workflows=selected_wfs,
                 )
 
                 session["runs"] = runs
@@ -1193,7 +1553,7 @@ def create_app() -> gr.Blocks:
 
                 # Log integration status (transparent to user)
                 tracked = runner.tracker.list_runs()
-                log(f"Experiment tracking: {len(tracked)} run(s) recorded")
+                log(f"Analysis tracking: {len(tracked)} run(s) recorded")
                 fs_sets = runner.feature_store.list_feature_sets()
                 log(f"Feature store: {len(fs_sets)} feature set(s) managed")
                 if runner.mint_registry is not None:
@@ -1331,7 +1691,7 @@ def create_app() -> gr.Blocks:
                 session["report_path"] = report_path
                 log(f"Report: {report_path}")
                 log(
-                    "Experiment complete. All tabs refreshed automatically."
+                    "Analysis complete. All tabs refreshed automatically."
                 )
                 succeeded = True
 
@@ -1373,6 +1733,7 @@ def create_app() -> gr.Blocks:
             inputs=[
                 seeds_input, n_samples, quick_mode,
                 exclude_elements, skip_literature, skip_plots,
+                wf_lin_check, wf_xgb_check, wf_ens_check,
                 state,
             ],
             outputs=[

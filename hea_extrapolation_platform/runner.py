@@ -213,12 +213,30 @@ class ExperimentRunner:
         """Return {feature_set: (train_indices, test_indices)} used for OOD."""
         return getattr(self, "_ood_split_indices", {})
 
-    def _build_workflows(self) -> Dict[str, BaseWorkflow]:
-        return {
+    def _build_workflows(
+        self,
+        selected_workflows: Optional[List[str]] = None,
+    ) -> Dict[str, BaseWorkflow]:
+        """Build workflow instances.
+
+        Parameters
+        ----------
+        selected_workflows : list of str, optional
+            Workflow names to include (e.g. ["WF-LIN", "WF-XGB"]).
+            If *None* or empty, all built-in workflows are used.
+        """
+        all_wfs: Dict[str, BaseWorkflow] = {
             "WF-LIN": WorkflowLIN(),
             "WF-XGB": WorkflowXGB(quick=self._quick),
             "WF-ENS": WorkflowENS(n_members=3 if self._quick else 5, quick=self._quick),
         }
+        if selected_workflows:
+            filtered = {
+                k: v for k, v in all_wfs.items()
+                if k in selected_workflows
+            }
+            return filtered if filtered else all_wfs
+        return all_wfs
 
     def _build_splitters(self, seed: int) -> Dict[str, BaseSplitter]:
         return {
@@ -234,6 +252,8 @@ class ExperimentRunner:
         compositions_df: pd.DataFrame,
         features_all: pd.DataFrame,
         target: pd.Series,
+        progress_callback: Optional[Any] = None,
+        selected_workflows: Optional[List[str]] = None,
     ) -> Tuple[List[RunResult], List[ValidityScore], Dict[str, OODResult]]:
         """Execute the full experiment grid.
 
@@ -245,6 +265,14 @@ class ExperimentRunner:
             All features (FS_ALL columns) for each sample.
         target : pd.Series
             Target variable (e.g. yield strength).
+        progress_callback : callable, optional
+            Called as ``progress_callback(completed, total, message)``
+            after each individual run to allow the caller (e.g. a GUI)
+            to display granular progress.  *completed* and *total* are
+            ints; *message* is a short status string.
+        selected_workflows : list of str, optional
+            Workflow names to run (e.g. ["WF-LIN", "WF-XGB"]).
+            If *None*, all built-in workflows are used.
 
         Returns
         -------
@@ -253,7 +281,7 @@ class ExperimentRunner:
         ood_results : dict of {feature_set_name: OODResult}
         """
         t_start = time.time()
-        workflows = self._build_workflows()
+        workflows = self._build_workflows(selected_workflows)
 
         # Add MInt workflows if registry is provided
         if self._mint_registry is not None:
@@ -340,6 +368,18 @@ class ExperimentRunner:
                                             "Progress: %d runs completed (%.1f sec)",
                                             run_count, time.time() - t_start,
                                         )
+
+                                    # Notify caller of progress
+                                    if progress_callback is not None:
+                                        try:
+                                            progress_callback(
+                                                run_count,
+                                                total_expected,
+                                                f"{wf_name} | {fs_name.value} | "
+                                                f"{sp_name} fold {fold_idx}",
+                                            )
+                                        except Exception:
+                                            pass  # never let callback errors stop the experiment
                                 except Exception:
                                     logger.exception(
                                         "Run failed: wf=%s fs=%s sp=%s seed=%d fold=%d",
