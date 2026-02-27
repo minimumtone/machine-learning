@@ -1246,10 +1246,8 @@ def create_app() -> gr.Blocks:
                 )
                 lit_results_table = gr.Dataframe(label="Search Results")
                 freq_plot = gr.Plot(label="Feature Frequency")
-                lit_recommendation = gr.Textbox(
-                    label="Feature Recommendation",
-                    lines=5,
-                    interactive=False,
+                lit_recommendation = gr.Markdown(
+                    value="*Search to see feature recommendations.*",
                 )
 
                 search_btn.click(
