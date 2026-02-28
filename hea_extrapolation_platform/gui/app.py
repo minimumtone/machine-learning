@@ -1746,10 +1746,13 @@ def create_app() -> gr.Blocks:
                         # csv_result[0] (Markdown banner)
                         log(
                             "ERROR: CSV loading failed. "
-                            "Check Data Summary tab for details."
                         )
+                        # Surface the error summary from
+                        # _handle_csv_upload to the Data Summary tab
+                        error_summary = csv_result[:5]
                         yield _yield_progress(
                             "\n".join(log_lines), 0, "CSV Error",
+                            summary_tuple=error_summary,
                         )
                         return
                     log(
