@@ -51,6 +51,7 @@ from hea_extrapolation_platform.gui.plotly_charts import (
     plotly_composition_heatmap,
     plotly_feature_correlation,
     plotly_feature_frequency,
+    plotly_fs_grouped_bar,
     plotly_heatmap,
     plotly_ood_map,
     plotly_parity,
@@ -232,12 +233,197 @@ def _refresh_dashboard_data(
     )
 
 
+def _build_physical_interpretation_md(
+    runs: List,
+    scores: List,
+    ood_results: Dict[str, Any],
+) -> str:
+    """Build Markdown with physical interpretation of analysis results."""
+    if not runs or not scores:
+        return (
+            "*解析を実行すると、ここに物理的考察と "
+            "FS比較サマリーが表示されます。*"
+        )
+
+    from hea_extrapolation_platform.feature_selection import FS_PHYSICAL_ORIGINS
+
+    lines: List[str] = []
+
+    # --- FS Comparison Table ---
+    lines.append("### Feature Set 比較サマリー\n")
+
+    fs_data: Dict[str, List] = {}
+    for r in runs:
+        fs_data.setdefault(r.feature_set, []).append(r)
+
+    score_map = {s.feature_set: s for s in scores}
+    best_fs = scores[0].feature_set if scores else ""
+
+    lines.append(
+        "| FS | 特徴量数 | RMSE(Test) Mean | R$^2$(Test) Mean "
+        "| Validity Total | 推奨 |"
+    )
+    lines.append("|---|---|---|---|---|---|")
+
+    _fs_sizes = {
+        "FS_BASE": 8, "FS_THERMO": 11, "FS_SIZE": 10,
+        "FS_ELECTRON": 11, "FS_ALL": 16, "FS_MAGPIE": 132,
+    }
+
+    for fs_name in sorted(fs_data.keys()):
+        fs_runs = fs_data[fs_name]
+        rmses = [r.rmse_test for r in fs_runs if r.rmse_test > 0]
+        r2s = [r.r2_test for r in fs_runs]
+        n_feat = _fs_sizes.get(fs_name, "?")
+        rmse_mean = f"{np.mean(rmses):.2f}" if rmses else "N/A"
+        r2_mean = f"{np.mean(r2s):.4f}" if r2s else "N/A"
+        vs = score_map.get(fs_name)
+        total = f"{vs.total:.4f}" if vs else "N/A"
+        recommend = "**Best**" if fs_name == best_fs else ""
+        lines.append(
+            f"| {fs_name} | {n_feat} | {rmse_mean} "
+            f"| {r2_mean} | {total} | {recommend} |"
+        )
+
+    lines.append("")
+
+    # --- Best FS recommendation ---
+    if scores:
+        best = scores[0]
+        lines.append(f"### 推奨特徴量セット: **{best.feature_set}**\n")
+        lines.append(
+            f"- 総合妥当性スコア: {best.total:.4f}\n"
+            f"- 効果量: {best.effect_size:.4f} / "
+            f"安定性: {best.stability:.4f} / "
+            f"汎化性: {best.generalisation:.4f}\n"
+            f"- 外挿安全性: {best.extrapolation_safety:.4f} / "
+            f"リークペナルティ: {best.leak_penalty:.4f}"
+        )
+        lines.append("")
+
+    # --- Physical Interpretation ---
+    lines.append("### 物理的考察\n")
+
+    if scores and len(scores) >= 2:
+        best = scores[0]
+        second = scores[1]
+        origin_best = FS_PHYSICAL_ORIGINS.get(best.feature_set, "")
+        origin_second = FS_PHYSICAL_ORIGINS.get(second.feature_set, "")
+
+        lines.append(
+            f"**{best.feature_set}** が最も高い妥当性スコア "
+            f"({best.total:.4f}) を示しました。"
+        )
+        if origin_best:
+            lines.append(f"> {origin_best}\n")
+
+        delta = best.total - second.total
+        if delta < 0.05:
+            lines.append(
+                f"2位の **{second.feature_set}** "
+                f"({second.total:.4f}) との差は小さく、"
+                "両方の特徴量セットが同等に有効である可能性があります。"
+            )
+        else:
+            lines.append(
+                f"2位の **{second.feature_set}** "
+                f"({second.total:.4f}) と比較して "
+                f"{delta:.4f} の差があり、"
+                f"**{best.feature_set}** が明確に優位です。"
+            )
+        lines.append("")
+
+        # Interpret based on which FS is best
+        if "THERMO" in best.feature_set:
+            lines.append(
+                "**解釈**: 熱力学的安定性指標（Omega, H$_{mix}$, "
+                "ss\\_formation）が予測に支配的であり、"
+                "固溶体の安定性が目的変数を強く支配していることを示唆します。"
+            )
+        elif "ELECTRON" in best.feature_set:
+            lines.append(
+                "**解釈**: 電子構造プロキシ（d電子数、VEC×電気陰性度）が"
+                "予測に有効であり、電子バンド構造が物性を支配していることを示唆します。"
+            )
+        elif "SIZE" in best.feature_set:
+            lines.append(
+                "**解釈**: 原子サイズ・弾性不整合指標が予測に有効であり、"
+                "格子歪みによる固溶体強化が支配的メカニズムであることを示唆します。"
+            )
+        elif "MAGPIE" in best.feature_set:
+            lines.append(
+                "**解釈**: 132個のMAGPIE記述子が最も有効であり、"
+                "高次元の組成情報が予測に寄与しています。"
+                "データ量が十分な場合に有効ですが、過学習リスクに注意してください。"
+            )
+        elif "ALL" in best.feature_set:
+            lines.append(
+                "**解釈**: ドメイン固有の16特徴量の組み合わせが最も有効であり、"
+                "複数の物理メカニズム（格子歪み、熱力学、電子構造）の"
+                "相互作用が目的変数を決定していることを示唆します。"
+            )
+        elif "BASE" in best.feature_set:
+            lines.append(
+                "**解釈**: 基本記述子（delta\\_r, VEC, S$_{mix}$）のみで"
+                "十分な予測精度が得られ、Hume-Rothery則に基づく"
+                "単純なモデルが有効であることを示唆します。"
+            )
+        lines.append("")
+
+    # --- OOD interpretation ---
+    if ood_results:
+        lines.append("### OOD検出サマリー\n")
+        for fs_key, ood_res in sorted(ood_results.items()):
+            ratio_pct = ood_res.ood_ratio * 100
+            lines.append(
+                f"- **{fs_key}**: {ood_res.n_ood}/{ood_res.n_total} "
+                f"({ratio_pct:.1f}%) がOOD判定"
+            )
+        lines.append("")
+        # Interpretation
+        avg_ratio = np.mean(
+            [r.ood_ratio for r in ood_results.values()]
+        )
+        if avg_ratio > 0.2:
+            lines.append(
+                "**注意**: OOD比率が20%超です。データの分布がトレーニング領域から"
+                "大きく外れている可能性があり、外挿予測の信頼性に注意が必要です。"
+            )
+        elif avg_ratio > 0.1:
+            lines.append(
+                "OOD比率10-20%: 一部のサンプルが訓練データの分布外にあります。"
+                "これらのサンプルの予測値は信頼性が低い可能性があります。"
+            )
+        else:
+            lines.append(
+                "OOD比率10%未満: テストデータの大部分が訓練データの"
+                "分布内にあり、予測は比較的信頼できます。"
+            )
+
+    # --- Judgment guide ---
+    lines.append("\n### 結果の読み方ガイド\n")
+    lines.append(
+        "| 指標 | 高い場合の解釈 | 低い場合の解釈 |\n"
+        "|---|---|---|\n"
+        "| RMSE(Test) | 予測精度が低い（悪い） | 予測精度が高い（良い） |\n"
+        "| R$^2$(Test) | 目的変数の分散をよく説明 | 予測力が不十分 |\n"
+        "| Effect Size | 特徴量セットの違いによる性能差が大きい | 差が小さい |\n"
+        "| Stability | シード間での結果が安定 | 結果のばらつきが大きい |\n"
+        "| Generalisation | 分割方法に依らず汎化 | 特定分割でのみ好成績 |\n"
+        "| Extrap. Safety | OOD領域でも精度を維持 | 外挿で精度低下 |\n"
+        "| Leak Penalty | データリークの疑い（要注意） | リーク無し |"
+    )
+
+    return "\n".join(lines)
+
+
 def _refresh_results_data(
     wf_filter: str, fs_filter: str, sp_filter: str,
     session: Dict[str, Any],
 ) -> Tuple:
     runs = session.get("runs", [])
     scores = session.get("validity_scores", [])
+    ood_results = session.get("ood_results", {})
 
     # Fix #11: dynamic filter choices from actual run data
     wf_choices = ["All"] + sorted({r.workflow for r in runs})
@@ -257,11 +443,17 @@ def _refresh_results_data(
     r_df = runs_to_dataframe(filtered) if filtered else pd.DataFrame()
     parity_fig = plotly_parity(filtered) if filtered else None
 
+    # Physical interpretation + FS comparison
+    interp_md = _build_physical_interpretation_md(runs, scores, ood_results)
+
+    # FS comparison grouped bar chart
+    fs_bar_fig = plotly_fs_grouped_bar(runs) if runs else None
+
     return (
         gr.update(choices=wf_choices, value=wf_filter if wf_filter in wf_choices else "All"),
         gr.update(choices=fs_choices, value=fs_filter if fs_filter in fs_choices else "All"),
         gr.update(choices=sp_choices, value=sp_filter if sp_filter in sp_choices else "All"),
-        v_df, r_df, parity_fig,
+        v_df, r_df, parity_fig, interp_md, fs_bar_fig,
     )
 
 
@@ -575,7 +767,7 @@ def _refresh_data_summary(
         comp_fig = None
 
     if features_df is not None and not features_df.empty:
-        corr_fig = plotly_feature_correlation(features_df)
+        corr_fig = plotly_feature_correlation(features_df, target=target)
     else:
         corr_fig = None
 
@@ -777,7 +969,7 @@ def _handle_csv_upload(
         stats_md = build_summary_stats_md(comps_df, features_df, target)
         target_fig = plotly_target_histogram(target)
         comp_fig = plotly_composition_heatmap(comps_df)
-        corr_fig = plotly_feature_correlation(features_df)
+        corr_fig = plotly_feature_correlation(features_df, target=target)
         # .copy() defragments the frame to avoid PerformanceWarning / SIGSEGV
         desc_df = features_df.copy().describe().round(3).reset_index()
         desc_df.rename(columns={"index": "Statistic"}, inplace=True)
@@ -1378,10 +1570,29 @@ def create_app() -> gr.Blocks:
                     outputs=dash_outputs,
                 )
 
-            # --- Tab 4: Results ---
+            # --- Tab 4: Results & FS Comparison ---
             with gr.Tab("Results"):
-                gr.Markdown("## Analysis Results -- Run Table & Parity Plot")
+                gr.Markdown(
+                    "## Analysis Results & Physical Interpretation\n\n"
+                    "解析結果の数値データ・パリティプロット・FS比較・"
+                    "物理的考察を統合表示します。"
+                )
 
+                # --- Physical Interpretation + FS Comparison ---
+                with gr.Accordion(
+                    "物理的考察 & FS 比較サマリー "
+                    "(Physical Interpretation & FS Comparison)",
+                    open=True,
+                ):
+                    results_interp_md = gr.Markdown(
+                        "*解析を実行すると、ここに物理的考察と "
+                        "FS比較サマリーが表示されます。*"
+                    )
+                    results_fs_bar_plot = gr.Plot(
+                        label="Feature Set 性能比較 (Grouped Bar)",
+                    )
+
+                # --- Filters ---
                 with gr.Row():
                     filter_wf = gr.Dropdown(
                         choices=["All"], value="All", label="Workflow Filter",
@@ -1403,6 +1614,7 @@ def create_app() -> gr.Blocks:
                 res_outputs = [
                     filter_wf, filter_fs, filter_sp,
                     validity_table, results_table, parity_plot,
+                    results_interp_md, results_fs_bar_plot,
                 ]
                 res_refresh_btn.click(
                     fn=_refresh_results_data,
@@ -1658,6 +1870,7 @@ def create_app() -> gr.Blocks:
             empty_res = (
                 gr.update(), gr.update(), gr.update(),
                 pd.DataFrame(), pd.DataFrame(), None,
+                "*Running...*", None,
             )
             empty_ood = (None, "", pd.DataFrame())
             empty_rpt = ("*Running...*", None)
@@ -2135,9 +2348,10 @@ def create_app() -> gr.Blocks:
                 # Dashboard tab (fix #8)
                 kpi_runs, kpi_best_fs, kpi_best_score, kpi_ood_count,
                 integration_status, validity_plot, heatmap_plot,
-                # Results tab (fix #8)
+                # Results tab (fix #8) — now includes interpretation + FS bar
                 filter_wf, filter_fs, filter_sp,
                 validity_table, results_table, parity_plot,
+                results_interp_md, results_fs_bar_plot,
                 # OOD tab (fix #8)
                 ood_plot, ood_summary, ood_candidates,
                 # Report tab (fix #8)

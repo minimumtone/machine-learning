@@ -589,15 +589,26 @@ def plotly_composition_heatmap(
 
 def plotly_feature_correlation(
     features_df: pd.DataFrame,
-    max_features: int = 15,
-    title: str = "Feature Correlation Matrix",
+    target: Optional[pd.Series] = None,
+    max_features: int = 8,
+    title: str = "Feature Correlation & Pair-Plot Matrix",
 ) -> go.Figure:
-    """Correlation heatmap of selected features.
+    """Pair-plot style correlation matrix.
+
+    Layout:
+      - **Lower triangle**: 2-D density contour (memory-efficient)
+      - **Diagonal**: Histogram of each variable
+      - **Upper triangle**: Correlation coefficient (text annotation)
+
+    The *target* variable (if provided) is appended as the first
+    column so users can assess feature--target relationships.
 
     Parameters
     ----------
     features_df : pd.DataFrame
         Feature matrix.
+    target : pd.Series or None
+        Target variable to include in the matrix.
     max_features : int
         Maximum number of features to show (picks highest-variance).
     title : str
@@ -606,39 +617,174 @@ def plotly_feature_correlation(
     -------
     go.Figure
     """
+    from plotly.subplots import make_subplots
+
     if features_df.empty:
         fig = go.Figure()
         fig.update_layout(title=title)
         return fig
 
-    # Select top-variance features for readability
-    variances = features_df.var().sort_values(ascending=False)
+    # Build combined DataFrame: target + top-variance features
+    df = features_df.copy()
+    variances = df.var().sort_values(ascending=False)
     selected = list(variances.head(max_features).index)
-    sub = features_df[selected]
-    corr = sub.corr()
+    df = df[selected]
 
-    # Flip rows so the diagonal runs from top-left to bottom-right
-    # (conventional heatmap orientation).
-    corr_flipped = corr.iloc[::-1]
+    if target is not None and len(target) == len(df):
+        tname = target.name if target.name else "Target"
+        df.insert(0, tname, target.values)
+        cols = [tname] + selected
+    else:
+        cols = selected
 
-    fig = go.Figure(data=go.Heatmap(
-        z=corr_flipped.values,
-        x=list(corr_flipped.columns),
-        y=list(corr_flipped.index),
-        colorscale="RdBu_r",
-        zmin=-1, zmax=1,
-        text=np.round(corr_flipped.values, 2),
-        texttemplate="%{text}",
-        hovertemplate=(
-            "%{y} vs %{x}<br>Corr: %{z:.3f}<extra></extra>"
-        ),
-        colorbar=dict(title="Correlation"),
-    ))
+    n = len(cols)
+    if n < 2:
+        fig = go.Figure()
+        fig.update_layout(title=title)
+        return fig
+
+    corr = df[cols].corr()
+
+    fig = make_subplots(
+        rows=n, cols=n,
+        horizontal_spacing=0.02,
+        vertical_spacing=0.02,
+    )
+
+    # Colour palette for correlation text
+    def _corr_color(r: float) -> str:
+        if abs(r) >= 0.7:
+            return "#d32f2f" if r > 0 else "#1565c0"
+        if abs(r) >= 0.4:
+            return "#e65100" if r > 0 else "#0277bd"
+        return "#616161"
+
+    def _corr_size(r: float) -> int:
+        if abs(r) >= 0.7:
+            return 22
+        if abs(r) >= 0.4:
+            return 18
+        return 14
+
+    for i in range(n):
+        for j in range(n):
+            row = i + 1
+            col = j + 1
+            xi = df[cols[j]].values
+            yi = df[cols[i]].values
+
+            if i == j:
+                # --- Diagonal: histogram ---
+                fig.add_trace(
+                    go.Histogram(
+                        x=xi, nbinsx=30,
+                        marker_color="#4C72B0",
+                        opacity=0.75,
+                        showlegend=False,
+                    ),
+                    row=row, col=col,
+                )
+            elif i > j:
+                # --- Lower triangle: 2-D density contour ---
+                # Sub-sample if too many points to keep rendering fast
+                _max_pts = 500
+                if len(xi) > _max_pts:
+                    idx = np.random.default_rng(42).choice(
+                        len(xi), _max_pts, replace=False,
+                    )
+                    xi_s, yi_s = xi[idx], yi[idx]
+                else:
+                    xi_s, yi_s = xi, yi
+                fig.add_trace(
+                    go.Histogram2dContour(
+                        x=xi_s, y=yi_s,
+                        colorscale="Blues",
+                        showscale=False,
+                        ncontours=8,
+                        contours_coloring="fill",
+                        showlegend=False,
+                        hovertemplate=(
+                            f"{cols[j]}: %{{x:.2f}}<br>"
+                            f"{cols[i]}: %{{y:.2f}}"
+                            "<extra></extra>"
+                        ),
+                    ),
+                    row=row, col=col,
+                )
+            else:
+                # --- Upper triangle: correlation coefficient ---
+                r_val = corr.iloc[i, j]
+                fig.add_trace(
+                    go.Scatter(
+                        x=[0.5], y=[0.5],
+                        mode="text",
+                        text=[f"{r_val:.2f}"],
+                        textfont=dict(
+                            size=_corr_size(r_val),
+                            color=_corr_color(r_val),
+                        ),
+                        showlegend=False,
+                        hovertemplate=(
+                            f"{cols[j]} vs {cols[i]}<br>"
+                            f"r = {r_val:.3f}<extra></extra>"
+                        ),
+                    ),
+                    row=row, col=col,
+                )
+                fig.update_xaxes(
+                    range=[0, 1], showticklabels=False,
+                    showgrid=False, row=row, col=col,
+                )
+                fig.update_yaxes(
+                    range=[0, 1], showticklabels=False,
+                    showgrid=False, row=row, col=col,
+                )
+
+    # Axis labels: only left-most column (y) and bottom row (x)
+    for i in range(n):
+        # Left y-axis labels
+        fig.update_yaxes(
+            title_text=cols[i] if i != 0 or target is None else
+            f"<b>{cols[i]}</b>",
+            row=i + 1, col=1,
+            title_font=dict(size=11),
+            tickfont=dict(size=8),
+        )
+        # Bottom x-axis labels
+        fig.update_xaxes(
+            title_text=cols[i] if i != 0 or target is None else
+            f"<b>{cols[i]}</b>",
+            row=n, col=i + 1,
+            title_font=dict(size=11),
+            tickfont=dict(size=8),
+        )
+        # Hide tick labels on interior cells
+        for j in range(n):
+            if j > 0:
+                fig.update_yaxes(
+                    showticklabels=False, row=i + 1, col=j + 1,
+                )
+            if i < n - 1:
+                fig.update_xaxes(
+                    showticklabels=False, row=i + 1, col=j + 1,
+                )
+
+    cell_px = 150
+    total = n * cell_px + 120
     fig.update_layout(
-        title=title,
+        title=dict(
+            text=(
+                f"{title}<br>"
+                "<span style='font-size:12px; color:#666;'>"
+                "下三角: 2D密度等高線 | 対角: ヒストグラム | "
+                "上三角: 相関係数 (赤=正, 青=負)"
+                "</span>"
+            ),
+        ),
         template="plotly_white",
-        height=max(450, len(selected) * 35 + 100),
-        width=max(500, len(selected) * 40 + 100),
+        height=max(700, total),
+        width=max(700, total),
+        showlegend=False,
     )
     return fig
 
