@@ -33,6 +33,7 @@ Design decisions (GUI review fixes):
 from __future__ import annotations
 
 import datetime
+import gc
 import html as html_mod
 import logging
 import queue
@@ -598,7 +599,14 @@ def _export_ood_csv(
     if not rows:
         return gr.update(value=None, visible=False)
 
-    export_df = pd.DataFrame(rows)
+    # Columnar construction to avoid DataFrame fragmentation / SIGSEGV
+    if rows:
+        col_names = list(rows[0].keys())
+        export_df = pd.DataFrame(
+            {k: [r[k] for r in rows] for k in col_names}
+        )
+    else:
+        export_df = pd.DataFrame()
     # Sort: OOD samples first, then by score descending
     export_df = export_df.sort_values(
         ["is_OOD", "OOD_Score"], ascending=[False, False],
@@ -672,11 +680,13 @@ def _do_literature_search(
                 ),
                 "Score": round(r.final_score, 4),
             })
-        r_df = (
-            pd.DataFrame(records)
-            if records
-            else pd.DataFrame()
-        )
+        if records:
+            col_names = list(records[0].keys())
+            r_df = pd.DataFrame(
+                {k: [rec[k] for rec in records] for k in col_names}
+            )
+        else:
+            r_df = pd.DataFrame()
 
         _, feature_counts = engine.search_for_features(
             query, structured_filter=sf, top_n=int(top),
@@ -749,6 +759,32 @@ def _do_literature_search(
 # Data Summary helpers
 # ---------------------------------------------------------------------------
 
+def _consolidate_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Return a consolidated (single-block) copy of *df*.
+
+    ``pd.DataFrame`` built from heterogeneous sources may carry one
+    internal memory block per column (fragmented BlockManager).
+    Operations like ``.describe()`` or ``.corr()`` on such a frame can
+    trigger a SIGSEGV in the pandas/numpy C layer.
+
+    Rebuilding from the underlying numpy array guarantees a single
+    contiguous block for homogeneous-dtype frames (all float64).
+    For mixed-dtype frames the columnar rebuild is used instead.
+    """
+    if df.empty:
+        return df
+    try:
+        # Fast path: all-numeric frame -> single numpy block
+        arr = df.to_numpy(dtype="float64", na_value=np.nan)
+        return pd.DataFrame(arr, columns=df.columns, index=df.index)
+    except (ValueError, TypeError):
+        # Mixed dtypes — rebuild from dict-of-lists (columnar)
+        return pd.DataFrame(
+            {c: df[c].tolist() for c in df.columns},
+            index=df.index,
+        )
+
+
 def _refresh_data_summary(
     session: Dict[str, Any],
 ) -> Tuple:
@@ -756,6 +792,13 @@ def _refresh_data_summary(
     comps_df = session.get("compositions_df")
     features_df = session.get("features_df")
     target = session.get("target")
+
+    # Consolidate features_df to a single memory block before heavy
+    # numpy operations (.describe(), .corr()) that can SIGSEGV on
+    # fragmented DataFrames.
+    if features_df is not None and not features_df.empty:
+        features_df = _consolidate_df(features_df)
+        session["features_df"] = features_df
 
     stats_md = build_summary_stats_md(comps_df, features_df, target)
 
@@ -773,8 +816,6 @@ def _refresh_data_summary(
 
     desc_df = pd.DataFrame()
     if features_df is not None and not features_df.empty:
-        # features_df is now built columnar (non-fragmented) in
-        # compute_features(); no extra .copy() needed.
         desc_df = features_df.describe().round(3).reset_index()
         desc_df.rename(columns={"index": "Statistic"}, inplace=True)
 
@@ -2143,6 +2184,12 @@ def create_app() -> gr.Blocks:
                 runs = _result_holder["runs"]
                 scores = _result_holder["scores"]
                 ood_results = _result_holder["ood"]
+
+                # Free thread-local temporaries and consolidate memory
+                # before the heavy post-processing phase that builds
+                # DataFrames for every tab.
+                del _result_holder
+                gc.collect()
 
                 session["runs"] = runs
                 session["validity_scores"] = scores

@@ -139,7 +139,11 @@ class ReportGenerator:
                 "R2_test": r.r2_test,
             })
         if perf_records:
-            df_perf = pd.DataFrame(perf_records)
+            # Columnar construction to avoid DataFrame fragmentation
+            col_names = list(perf_records[0].keys())
+            df_perf = pd.DataFrame(
+                {k: [r[k] for r in perf_records] for k in col_names}
+            )
             pivot_rmse = df_perf.groupby(["Feature Set", "Split"])["RMSE_test"].mean().unstack(fill_value=0)
             try:
                 lines.append(pivot_rmse.to_markdown())

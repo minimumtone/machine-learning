@@ -264,7 +264,12 @@ def plot_performance_heatmap(
             "split_policy": r.split_policy,
             metric: getattr(r, metric),
         })
-    df = pd.DataFrame(records)
+    # Columnar construction to avoid DataFrame fragmentation / SIGSEGV
+    if records:
+        col_names = list(records[0].keys())
+        df = pd.DataFrame({k: [rec[k] for rec in records] for k in col_names})
+    else:
+        df = pd.DataFrame()
     pivot = df.groupby(["feature_set", "split_policy"])[metric].mean().unstack(fill_value=0)
 
     fig, ax = plt.subplots(figsize=(12, max(6, len(pivot) * 1.0)))

@@ -86,25 +86,33 @@ class RunRegistry:
         return len(self._runs)
 
     def to_dataframe(self) -> pd.DataFrame:
-        """Convert all runs to a summary DataFrame."""
-        records = []
+        """Convert all runs to a summary DataFrame.
+
+        Uses columnar (dict-of-lists) construction to avoid DataFrame
+        fragmentation that can cause SIGSEGV in numpy/pandas C layer.
+        """
+        if not self._runs:
+            return pd.DataFrame()
+        col_names = [
+            "workflow", "feature_set", "split_policy", "seed", "fold",
+            "rmse_train", "rmse_test", "mae_train", "mae_test",
+            "r2_train", "r2_test", "elapsed_sec",
+        ]
+        columns: dict = {k: [] for k in col_names}
         for r in self._runs:
-            rec = {
-                "workflow": r.workflow,
-                "feature_set": r.feature_set,
-                "split_policy": r.split_policy,
-                "seed": r.seed,
-                "fold": r.fold,
-                "rmse_train": r.rmse_train,
-                "rmse_test": r.rmse_test,
-                "mae_train": r.mae_train,
-                "mae_test": r.mae_test,
-                "r2_train": r.r2_train,
-                "r2_test": r.r2_test,
-                "elapsed_sec": r.elapsed_sec,
-            }
-            records.append(rec)
-        return pd.DataFrame(records)
+            columns["workflow"].append(r.workflow)
+            columns["feature_set"].append(r.feature_set)
+            columns["split_policy"].append(r.split_policy)
+            columns["seed"].append(r.seed)
+            columns["fold"].append(r.fold)
+            columns["rmse_train"].append(r.rmse_train)
+            columns["rmse_test"].append(r.rmse_test)
+            columns["mae_train"].append(r.mae_train)
+            columns["mae_test"].append(r.mae_test)
+            columns["r2_train"].append(r.r2_train)
+            columns["r2_test"].append(r.r2_test)
+            columns["elapsed_sec"].append(r.elapsed_sec)
+        return pd.DataFrame(columns)
 
     def export_json(self, path: Path) -> None:
         """Export run summaries to JSON."""

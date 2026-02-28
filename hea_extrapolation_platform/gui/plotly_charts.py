@@ -26,6 +26,24 @@ from sklearn.preprocessing import StandardScaler
 logger = logging.getLogger(__name__)
 
 
+def _records_to_df(records: List[Dict[str, Any]]) -> pd.DataFrame:
+    """Build a DataFrame from a list-of-dicts using columnar construction.
+
+    ``pd.DataFrame(list_of_dicts)`` creates one internal memory block per
+    dict key, leading to a fragmented BlockManager.  Downstream numpy
+    interop (``.describe()``, ``.corr()``, Plotly charting) on such a
+    frame can trigger a SIGSEGV in the pandas/numpy C layer.
+
+    Building from ``{col: [values]}`` creates a single consolidated block.
+    """
+    if not records:
+        return pd.DataFrame()
+    col_names = list(records[0].keys())
+    return pd.DataFrame({k: [r[k] for r in records] for k in col_names})
+
+logger = logging.getLogger(__name__)
+
+
 # ---------------------------------------------------------------------------
 # 1. OOD Cluster Map (PCA)
 # ---------------------------------------------------------------------------
@@ -234,7 +252,7 @@ def plotly_heatmap(
             "split_policy": r.split_policy,
             metric: getattr(r, metric, 0.0),
         })
-    df = pd.DataFrame(records)
+    df = _records_to_df(records)
     pivot = df.groupby(["feature_set", "split_policy"])[metric].mean().unstack(fill_value=0)
 
     fig = go.Figure(data=go.Heatmap(
@@ -477,7 +495,7 @@ def runs_to_dataframe(runs: List[Any]) -> pd.DataFrame:
             "R² (Test)": round(r.r2_test, 4),
             "Time (s)": round(r.elapsed_sec, 2),
         })
-    return pd.DataFrame(records)
+    return _records_to_df(records)
 
 
 def validity_scores_to_dataframe(scores: List[Any]) -> pd.DataFrame:
@@ -494,7 +512,7 @@ def validity_scores_to_dataframe(scores: List[Any]) -> pd.DataFrame:
             "Extrap. Safety": round(s.extrapolation_safety, 4),
             "Total": round(s.total, 4),
         })
-    return pd.DataFrame(records)
+    return _records_to_df(records)
 
 
 # ---------------------------------------------------------------------------
@@ -643,7 +661,14 @@ def plotly_feature_correlation(
         fig.update_layout(title=title)
         return fig
 
-    corr = df[cols].corr()
+    # Consolidate to single memory block before .corr() to prevent
+    # SIGSEGV in numpy C layer on fragmented DataFrames.
+    try:
+        _arr = df[cols].to_numpy(dtype="float64")
+        _tmp = pd.DataFrame(_arr, columns=cols, index=df.index)
+    except (ValueError, TypeError):
+        _tmp = df[cols]
+    corr = _tmp.corr()
 
     fig = make_subplots(
         rows=n, cols=n,
@@ -989,7 +1014,14 @@ def build_summary_stats_md(
     if features_df is not None and not features_df.empty:
         variances = features_df.var().sort_values(ascending=False)
         top_features = list(variances.head(10).index)
-        desc = features_df[top_features].describe().round(3)
+        # Consolidate subset to single block before .describe()
+        _sub = features_df[top_features]
+        try:
+            _arr = _sub.to_numpy(dtype="float64")
+            _sub = pd.DataFrame(_arr, columns=top_features, index=_sub.index)
+        except (ValueError, TypeError):
+            pass
+        desc = _sub.describe().round(3)
         try:
             lines.append(desc.to_markdown())
         except ImportError:
@@ -1131,7 +1163,7 @@ def plotly_fs_boxplot(
             "split_policy": r.split_policy,
             metric: getattr(r, metric, 0.0),
         })
-    df = pd.DataFrame(records)
+    df = _records_to_df(records)
 
     _colors = [
         "#4C72B0", "#55A868", "#C44E52", "#CCB974",
@@ -1205,7 +1237,7 @@ def plotly_fs_grouped_bar(
             "split_policy": r.split_policy,
             metric: getattr(r, metric, 0.0),
         })
-    df = pd.DataFrame(records)
+    df = _records_to_df(records)
     pivot = df.groupby(["feature_set", "split_policy"])[metric].mean().unstack(fill_value=0)
 
     _split_colors = {
