@@ -584,6 +584,72 @@ def _refresh_data_summary(
     return stats_md, target_fig, comp_fig, corr_fig, desc_df
 
 
+def _make_error_banner(title: str, detail: str) -> str:
+    """Return a prominent Markdown/HTML error banner for the GUI."""
+    return (
+        f'<div style="background:#fff0f0; border:2px solid #e53e3e; '
+        f'border-radius:8px; padding:16px; margin:8px 0;">'
+        f'<span style="font-size:1.3em; font-weight:bold; color:#c53030;">'
+        f'\u26a0\ufe0f {title}</span><br/>'
+        f'<span style="color:#742a2a;">{detail}</span></div>'
+    )
+
+
+def _detect_element_columns(
+    columns: List[str],
+    available: set,
+) -> Tuple[List[str], Dict[str, str]]:
+    """Detect element columns with flexible name matching.
+
+    Supports:
+      - Exact element symbols: ``Fe``, ``Ni``, ``Co``
+      - ``_frac`` suffix: ``Al_frac``, ``Fe_frac``
+      - ``_at`` / ``_at%`` suffix: ``Al_at``, ``Fe_at%``
+      - ``_wt`` / ``_wt%`` suffix: ``Al_wt``, ``Fe_wt%``
+      - Case-insensitive matching: ``al``, ``FE``, ``ni_Frac``
+
+    Returns
+    -------
+    elem_cols : list[str]
+        Original column names that matched.
+    col_to_elem : dict[str, str]
+        Mapping from original column name to canonical element symbol.
+    """
+    import re
+    # Common suffixes to strip (order matters — longest first)
+    _SUFFIXES = re.compile(
+        r'[_\s]+(frac|at%|at|wt%|wt|fraction|pct|percent|ratio)$',
+        re.IGNORECASE,
+    )
+    # Map lowercased element symbols for case-insensitive lookup
+    available_lower = {e.lower(): e for e in available}
+
+    elem_cols: List[str] = []
+    col_to_elem: Dict[str, str] = {}
+    seen_elements: set = set()  # track already-matched canonical symbols
+
+    for col in columns:
+        # 1) Try exact match first
+        if col in available:
+            if col not in seen_elements:
+                elem_cols.append(col)
+                col_to_elem[col] = col
+                seen_elements.add(col)
+            continue
+
+        # 2) Strip known suffixes and try again
+        stripped = _SUFFIXES.sub('', col).strip()
+
+        # 3) Case-insensitive lookup
+        canon = available_lower.get(stripped.lower())
+        if canon is not None and canon not in seen_elements:
+            elem_cols.append(col)
+            col_to_elem[col] = canon
+            seen_elements.add(canon)
+
+    return elem_cols, col_to_elem
+
+
 def _handle_csv_upload(
     file_obj: Any,
     target_col: str,
@@ -594,6 +660,10 @@ def _handle_csv_upload(
     Expected CSV format: element columns (atomic fractions summing to ~1)
     plus an optional target column.  Non-element columns that are not
     the target column are silently ignored during feature computation.
+
+    Element column detection is flexible — supports bare symbols
+    (``Fe``), ``_frac`` suffix (``Al_frac``), ``_at%``, ``_wt%``,
+    and case-insensitive variants.
 
     Returns the same tuple shape as ``_refresh_data_summary`` plus the
     updated session.
@@ -610,7 +680,10 @@ def _handle_csv_upload(
 
         if raw.empty:
             return (
-                "Uploaded CSV is empty.",
+                _make_error_banner(
+                    "CSV is empty",
+                    "アップロードされたCSVにデータ行がありません。",
+                ),
                 None, None, None, pd.DataFrame(), session,
             )
 
@@ -623,33 +696,58 @@ def _handle_csv_upload(
         available = set(_ElementDB.available_elements())
         target_col_clean = target_col.strip()
 
-        # Identify element columns (columns whose names are known elements)
-        elem_cols = [c for c in raw.columns if c in available]
+        # Flexible element column detection
+        elem_cols, col_to_elem = _detect_element_columns(
+            list(raw.columns), available,
+        )
 
         if not elem_cols:
+            sample_cols = ", ".join(list(raw.columns)[:10])
+            avail_str = ", ".join(sorted(available)[:15])
             return (
-                "No element columns found in CSV. "
-                "Column names must match element symbols (e.g. Fe, Ni, Co).",
+                _make_error_banner(
+                    "元素列が見つかりません",
+                    "CSVの列名から元素記号を検出できませんでした。<br/>"
+                    f"<b>CSVの列名（先頭10列）</b>: <code>{sample_cols}</code><br/>"
+                    f"<b>対応している元素記号</b>: <code>{avail_str}</code><br/><br/>"
+                    "以下の命名規則に対応しています:<br/>"
+                    "<code>Fe</code>, <code>Fe_frac</code>, "
+                    "<code>Fe_at%</code>, <code>Fe_wt%</code> "
+                    "（大文字小文字不問）",
+                ),
                 None, None, None, pd.DataFrame(), session,
             )
 
-        # Build compositions list, tracking valid row indices to keep
-        # all DataFrames aligned (rows with all-zero elements are dropped).
+        # Build compositions list using canonical element symbols.
+        # Track valid row indices to keep all DataFrames aligned
+        # (rows with all-zero elements are dropped).
         valid_indices: List[int] = []
         compositions = []
         for idx, row in raw[elem_cols].iterrows():
             comp = {
-                e: float(v) for e, v in row.items()
+                col_to_elem[c]: float(v)
+                for c, v in row.items()
                 if float(v) > 0
             }
             if comp:
                 compositions.append(comp)
                 valid_indices.append(idx)
 
-        # Composition DataFrame — only keep rows that produced a composition
-        comps_df = (
-            raw.loc[valid_indices, elem_cols].copy().reset_index(drop=True)
+        if not compositions:
+            return (
+                _make_error_banner(
+                    "有効な組成データなし",
+                    "検出された元素列の値がすべて 0 です。"
+                    "原子分率が正の値を持つ行が必要です。",
+                ),
+                None, None, None, pd.DataFrame(), session,
+            )
+
+        # Composition DataFrame — rename to canonical element symbols
+        comps_df = raw.loc[valid_indices, elem_cols].copy().reset_index(
+            drop=True,
         )
+        comps_df.columns = [col_to_elem[c] for c in comps_df.columns]
 
         # Compute features
         features_df = compute_features(compositions, feature_set=None)
@@ -684,7 +782,11 @@ def _handle_csv_upload(
     except Exception:
         err = traceback.format_exc()
         return (
-            f"Error loading CSV:\n```\n{err}\n```",
+            _make_error_banner(
+                "CSV読み込みエラー",
+                f"<pre style='background:#fff5f5; padding:8px; "
+                f"overflow-x:auto;'>{err}</pre>",
+            ),
             None, None, None, pd.DataFrame(), session,
         )
 
@@ -919,7 +1021,7 @@ def _run_feature_selection_for_fs(
 # ---------------------------------------------------------------------------
 
 # Current PR / build version tag shown in the GUI title bar.
-_GUI_VERSION_TAG = "PR#112"
+_GUI_VERSION_TAG = "PR#113"
 
 
 def create_app() -> gr.Blocks:
@@ -941,147 +1043,7 @@ def create_app() -> gr.Blocks:
         state = gr.State(_empty_session)
 
         with gr.Tabs():
-            # --- Tab 1: Dashboard ---
-            with gr.Tab("Dashboard"):
-                gr.Markdown("## Dashboard -- KPIs & Feature Validity")
-                gr.Markdown(
-                    "**Config & Run** タブで解析を実行すると、"
-                    "このページに結果が表示されます。"
-                )
-
-                with gr.Row():
-                    kpi_runs = gr.Textbox(
-                        label="Total Runs", value="0", interactive=False,
-                    )
-                    kpi_best_fs = gr.Textbox(
-                        label="Best Feature Set", value="--", interactive=False,
-                    )
-                    kpi_best_score = gr.Textbox(
-                        label="Best Total Score", value="--", interactive=False,
-                    )
-                    kpi_ood_count = gr.Textbox(
-                        label="OOD Samples", value="--", interactive=False,
-                    )
-
-                # --- Integration Status (collapsible, hidden by default) ---
-                with gr.Accordion(
-                    "System Details (MLflow / Feast / MInt)",
-                    open=False,
-                ):
-                    integration_status = gr.Markdown(
-                        _build_integration_status_md(None),
-                    )
-
-                validity_plot = gr.Plot(label="Feature Validity Ranking")
-                heatmap_plot = gr.Plot(label="Performance Heatmap (RMSE Test)")
-                heatmap_metric = gr.Dropdown(
-                    choices=[
-                        "rmse_test", "rmse_train", "mae_test",
-                        "mae_train", "r2_test", "r2_train",
-                    ],
-                    value="rmse_test",
-                    label="Heatmap Metric",
-                )
-
-                dash_refresh_btn = gr.Button(
-                    "Refresh Dashboard", variant="primary",
-                )
-                dash_outputs = [
-                    kpi_runs, kpi_best_fs, kpi_best_score,
-                    kpi_ood_count, integration_status,
-                    validity_plot, heatmap_plot,
-                ]
-                dash_refresh_btn.click(
-                    fn=_refresh_dashboard_data,
-                    inputs=[heatmap_metric, state],
-                    outputs=dash_outputs,
-                )
-                heatmap_metric.change(
-                    fn=_refresh_dashboard_data,
-                    inputs=[heatmap_metric, state],
-                    outputs=dash_outputs,
-                )
-
-            # --- Tab 2: Data Summary ---
-            with gr.Tab("Data Summary"):
-                gr.Markdown(
-                    "## Data Summary\n"
-                    "View summary statistics for the current dataset "
-                    "(generated or uploaded)."
-                )
-
-                with gr.Accordion(
-                    "Upload CSV Dataset", open=False,
-                ):
-                    gr.Markdown(
-                        "Upload a CSV file with element columns "
-                        "(e.g. Fe, Ni, Co) as atomic fractions and "
-                        "an optional target column."
-                    )
-                    with gr.Row():
-                        csv_upload = gr.File(
-                            label="Upload CSV",
-                            file_types=[".csv"],
-                        )
-                        csv_target_col = gr.Textbox(
-                            label="Target Column Name",
-                            value="yield_strength_MPa",
-                            info="Name of the target column in CSV",
-                        )
-                    csv_upload_btn = gr.Button(
-                        "Load CSV", variant="secondary",
-                    )
-
-                summary_stats_md = gr.Markdown(
-                    build_summary_stats_md(None, None, None),
-                )
-
-                with gr.Row():
-                    target_hist_plot = gr.Plot(
-                        label="Target Distribution",
-                    )
-                    comp_bar_plot = gr.Plot(
-                        label="Element Composition (Mean +/- Std)",
-                    )
-
-                corr_heatmap_plot = gr.Plot(
-                    label="Feature Correlation Matrix",
-                )
-
-                with gr.Accordion(
-                    "Full Feature Statistics", open=False,
-                ):
-                    feature_stats_table = gr.Dataframe(
-                        label="Descriptive Statistics (all features)",
-                    )
-
-                summary_refresh_btn = gr.Button(
-                    "Refresh Summary", variant="primary",
-                )
-
-                summary_outputs = [
-                    summary_stats_md, target_hist_plot,
-                    comp_bar_plot, corr_heatmap_plot,
-                    feature_stats_table,
-                ]
-                summary_refresh_btn.click(
-                    fn=_refresh_data_summary,
-                    inputs=[state],
-                    outputs=summary_outputs,
-                )
-
-                csv_upload_outputs = [
-                    summary_stats_md, target_hist_plot,
-                    comp_bar_plot, corr_heatmap_plot,
-                    feature_stats_table, state,
-                ]
-                csv_upload_btn.click(
-                    fn=_handle_csv_upload,
-                    inputs=[csv_upload, csv_target_col, state],
-                    outputs=csv_upload_outputs,
-                )
-
-            # --- Tab 3: Config & Run ---
+            # --- Tab 1: Config & Run ---
             with gr.Tab("Config & Run"):
                 gr.Markdown(
                     "## Analysis Configuration & Execution\n\n"
@@ -1212,6 +1174,144 @@ def create_app() -> gr.Blocks:
                     interactive=False,
                 )
 
+            # --- Tab 2: Data Summary (CSV Upload + Statistics) ---
+            with gr.Tab("Data Summary"):
+                gr.Markdown(
+                    "## Data Summary\n"
+                    "データセットの概要統計を確認できます。"
+                    "CSVファイルをアップロードして独自データを解析することも可能です。"
+                )
+
+                # CSV Upload — visible at top level (not hidden)
+                gr.Markdown(
+                    "### CSV データ読み込み\n"
+                    "元素組成列（例: Fe, Ni, Co）を原子分率で含むCSVファイルと、"
+                    "目的変数の列名を指定してください。"
+                )
+                with gr.Row():
+                    csv_upload = gr.File(
+                        label="Upload CSV",
+                        file_types=[".csv"],
+                    )
+                    csv_target_col = gr.Textbox(
+                        label="Target Column Name",
+                        value="yield_strength_MPa",
+                        info="Name of the target column in CSV",
+                    )
+                csv_upload_btn = gr.Button(
+                    "\U0001F4C2 Load CSV (CSV読み込み)", variant="secondary",
+                )
+
+                summary_stats_md = gr.Markdown(
+                    build_summary_stats_md(None, None, None),
+                )
+
+                with gr.Row():
+                    target_hist_plot = gr.Plot(
+                        label="Target Distribution",
+                    )
+                    comp_bar_plot = gr.Plot(
+                        label="Element Composition (Mean +/- Std)",
+                    )
+
+                corr_heatmap_plot = gr.Plot(
+                    label="Feature Correlation Matrix",
+                )
+
+                with gr.Accordion(
+                    "Full Feature Statistics", open=False,
+                ):
+                    feature_stats_table = gr.Dataframe(
+                        label="Descriptive Statistics (all features)",
+                    )
+
+                summary_refresh_btn = gr.Button(
+                    "Refresh Summary", variant="primary",
+                )
+
+                summary_outputs = [
+                    summary_stats_md, target_hist_plot,
+                    comp_bar_plot, corr_heatmap_plot,
+                    feature_stats_table,
+                ]
+                summary_refresh_btn.click(
+                    fn=_refresh_data_summary,
+                    inputs=[state],
+                    outputs=summary_outputs,
+                )
+
+                csv_upload_outputs = [
+                    summary_stats_md, target_hist_plot,
+                    comp_bar_plot, corr_heatmap_plot,
+                    feature_stats_table, state,
+                ]
+                csv_upload_btn.click(
+                    fn=_handle_csv_upload,
+                    inputs=[csv_upload, csv_target_col, state],
+                    outputs=csv_upload_outputs,
+                )
+
+            # --- Tab 3: Dashboard ---
+            with gr.Tab("Dashboard"):
+                gr.Markdown("## Dashboard -- KPIs & Feature Validity")
+                gr.Markdown(
+                    "**Config & Run** タブで解析を実行すると、"
+                    "このページに結果が表示されます。"
+                )
+
+                with gr.Row():
+                    kpi_runs = gr.Textbox(
+                        label="Total Runs", value="0", interactive=False,
+                    )
+                    kpi_best_fs = gr.Textbox(
+                        label="Best Feature Set", value="--", interactive=False,
+                    )
+                    kpi_best_score = gr.Textbox(
+                        label="Best Total Score", value="--", interactive=False,
+                    )
+                    kpi_ood_count = gr.Textbox(
+                        label="OOD Samples", value="--", interactive=False,
+                    )
+
+                # --- Integration Status (collapsible, hidden by default) ---
+                with gr.Accordion(
+                    "System Details (MLflow / Feast / MInt)",
+                    open=False,
+                ):
+                    integration_status = gr.Markdown(
+                        _build_integration_status_md(None),
+                    )
+
+                validity_plot = gr.Plot(label="Feature Validity Ranking")
+                heatmap_plot = gr.Plot(label="Performance Heatmap (RMSE Test)")
+                heatmap_metric = gr.Dropdown(
+                    choices=[
+                        "rmse_test", "rmse_train", "mae_test",
+                        "mae_train", "r2_test", "r2_train",
+                    ],
+                    value="rmse_test",
+                    label="Heatmap Metric",
+                )
+
+                dash_refresh_btn = gr.Button(
+                    "Refresh Dashboard", variant="primary",
+                )
+                dash_outputs = [
+                    kpi_runs, kpi_best_fs, kpi_best_score,
+                    kpi_ood_count, integration_status,
+                    validity_plot, heatmap_plot,
+                ]
+                dash_refresh_btn.click(
+                    fn=_refresh_dashboard_data,
+                    inputs=[heatmap_metric, state],
+                    outputs=dash_outputs,
+                )
+                heatmap_metric.change(
+                    fn=_refresh_dashboard_data,
+                    inputs=[heatmap_metric, state],
+                    outputs=dash_outputs,
+                )
+
             # --- Tab 4: Results ---
             with gr.Tab("Results"):
                 gr.Markdown("## Analysis Results -- Run Table & Parity Plot")
@@ -1250,7 +1350,7 @@ def create_app() -> gr.Blocks:
                         outputs=res_outputs,
                     )
 
-            # --- Tab 5: OOD Map ---
+            # --- Tab 5: OOD Map (Out-of-Distribution) ---
             with gr.Tab("OOD Map"):
                 gr.Markdown(
                     "## OOD (Out-of-Distribution) Map & Candidates",
@@ -1300,7 +1400,65 @@ def create_app() -> gr.Blocks:
                     outputs=[ood_csv_file],
                 )
 
-            # --- Tab 6: Literature Search ---
+            # --- Tab 6: FS Comparison (Feature Selection + Physical Origins) ---
+            with gr.Tab("FS Comparison"):
+                gr.Markdown(
+                    "## Feature Set Comparison & Feature Selection\n\n"
+                    "各特徴量セットの物理的起源と、特徴量選択アルゴリズムの結果を表示します。"
+                )
+
+                # --- Physical Origin Descriptions ---
+                with gr.Accordion(
+                    "特徴量セットの物理的起源 (Physical Origins)",
+                    open=True,
+                ):
+                    fs_origin_md = gr.Markdown(
+                        _build_fs_physical_origins_md(),
+                    )
+
+                # --- Feature Selection ---
+                with gr.Accordion(
+                    "特徴量選択結果 (Feature Selection Results)",
+                    open=True,
+                ):
+                    fs_comparison_selector = gr.Dropdown(
+                        choices=[
+                            "FS_BASE", "FS_THERMO", "FS_SIZE",
+                            "FS_ELECTRON", "FS_ALL", "FS_MAGPIE",
+                        ],
+                        value="FS_ALL",
+                        label="特徴量セット選択",
+                    )
+                    run_fs_btn = gr.Button(
+                        "▶ Run Feature Selection (特徴量選択実行)",
+                        variant="primary",
+                    )
+                    fs_result_md = gr.Markdown(
+                        "*まだ特徴量選択を実行していません。"
+                        "先に Config & Run で解析を実行してください。*"
+                    )
+                    fs_importance_plot = gr.Plot(
+                        label="Feature Importance (selected methods)",
+                    )
+                    fs_consensus_md = gr.Markdown(
+                        "*Consensus features will appear here.*"
+                    )
+
+                    run_fs_btn.click(
+                        fn=_run_feature_selection_for_fs,
+                        inputs=[
+                            fs_comparison_selector,
+                            fs_lasso_check, fs_aic_check,
+                            fs_bic_check, fs_ard_check,
+                            state,
+                        ],
+                        outputs=[
+                            fs_result_md, fs_importance_plot,
+                            fs_consensus_md, state,
+                        ],
+                    )
+
+            # --- Tab 7: Literature Search ---
             with gr.Tab("Literature Search"):
                 gr.Markdown(
                     "## Literature Search -- Embedding + Structured Filters",
@@ -1362,65 +1520,7 @@ def create_app() -> gr.Blocks:
                     ],
                 )
 
-            # --- Tab 6: FS Comparison (Feature Selection + Physical Origins) ---
-            with gr.Tab("FS Comparison"):
-                gr.Markdown(
-                    "## Feature Set Comparison & Feature Selection\n\n"
-                    "各特徴量セットの物理的起源と、特徴量選択アルゴリズムの結果を表示します。"
-                )
-
-                # --- Physical Origin Descriptions ---
-                with gr.Accordion(
-                    "特徴量セットの物理的起源 (Physical Origins)",
-                    open=True,
-                ):
-                    fs_origin_md = gr.Markdown(
-                        _build_fs_physical_origins_md(),
-                    )
-
-                # --- Feature Selection ---
-                with gr.Accordion(
-                    "特徴量選択結果 (Feature Selection Results)",
-                    open=True,
-                ):
-                    fs_comparison_selector = gr.Dropdown(
-                        choices=[
-                            "FS_BASE", "FS_THERMO", "FS_SIZE",
-                            "FS_ELECTRON", "FS_ALL", "FS_MAGPIE",
-                        ],
-                        value="FS_ALL",
-                        label="特徴量セット選択",
-                    )
-                    run_fs_btn = gr.Button(
-                        "▶ Run Feature Selection (特徴量選択実行)",
-                        variant="primary",
-                    )
-                    fs_result_md = gr.Markdown(
-                        "*まだ特徴量選択を実行していません。"
-                        "先に Config & Run で解析を実行してください。*"
-                    )
-                    fs_importance_plot = gr.Plot(
-                        label="Feature Importance (selected methods)",
-                    )
-                    fs_consensus_md = gr.Markdown(
-                        "*Consensus features will appear here.*"
-                    )
-
-                    run_fs_btn.click(
-                        fn=_run_feature_selection_for_fs,
-                        inputs=[
-                            fs_comparison_selector,
-                            fs_lasso_check, fs_aic_check,
-                            fs_bic_check, fs_ard_check,
-                            state,
-                        ],
-                        outputs=[
-                            fs_result_md, fs_importance_plot,
-                            fs_consensus_md, state,
-                        ],
-                    )
-
-            # --- Tab 7: Report ---
+            # --- Tab 8: Report ---
             with gr.Tab("Report"):
                 gr.Markdown(
                     "## Analysis Report -- Markdown Preview & Download",
