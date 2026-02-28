@@ -994,6 +994,34 @@ def _handle_csv_upload(
 # Progress bar HTML builder
 # ---------------------------------------------------------------------------
 
+def _build_log_html(log_text: str) -> str:
+    """Wrap log text in a scrollable HTML container that auto-scrolls.
+
+    Uses a unique element ID and inline ``<script>`` to scroll the
+    container to the bottom each time Gradio updates the HTML.
+    """
+    # Escape HTML entities in log text, preserve newlines
+    safe = html_mod.escape(log_text)
+    lines_html = safe.replace("\n", "<br/>")
+    return (
+        '<div id="progress-log-container" style="'
+        "background: #1e1e1e; color: #d4d4d4; "
+        "font-family: 'Consolas','Monaco','Courier New',monospace; "
+        "font-size: 12px; line-height: 1.5; "
+        "padding: 10px 12px; border-radius: 6px; "
+        "height: 320px; overflow-y: auto; "
+        "white-space: pre-wrap; word-break: break-all; "
+        "border: 1px solid #333;"
+        '">'
+        f"{lines_html}"
+        "</div>"
+        "<script>"
+        "(function(){var c=document.getElementById('progress-log-container');"
+        "if(c)c.scrollTop=c.scrollHeight;})();"
+        "</script>"
+    )
+
+
 def _build_progress_bar_html(
     pct: int,
     label: str = "",
@@ -1428,10 +1456,9 @@ def create_app() -> gr.Blocks:
                     label="Progress",
                 )
 
-                progress_log = gr.Textbox(
+                progress_log = gr.HTML(
+                    value=_build_log_html("Waiting to start..."),
                     label="Progress Log",
-                    lines=15,
-                    interactive=False,
                 )
 
             # --- Tab 2: Data Summary (Statistics only) ---
@@ -1860,9 +1887,10 @@ def create_app() -> gr.Blocks:
                 nonlocal last_pct
                 last_pct = pct
                 bar_html = _build_progress_bar_html(pct, bar_label)
+                log_html = _build_log_html(log_text)
                 summ = summary_tuple if summary_tuple else empty_summary
                 return (
-                    bar_html, log_text, session,
+                    bar_html, log_html, session,
                     *summ,
                     *empty_dash, *empty_res, *empty_ood, *empty_rpt,
                 )
@@ -2291,7 +2319,7 @@ def create_app() -> gr.Blocks:
 
             yield (
                 final_bar,
-                "\n".join(log_lines),
+                _build_log_html("\n".join(log_lines)),
                 session,
                 *final_summary,
                 *final_dash,
