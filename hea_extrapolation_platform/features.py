@@ -723,7 +723,7 @@ def compute_features(
             logger.exception("Feature computation failed for sample %d: %s", i, comp)
             raise
 
-    df_all = pd.DataFrame(records)
+    df_all = pd.DataFrame(records).copy()  # .copy() defragments the frame
 
     if feature_set is None:
         # Return all computed columns (domain + MAGPIE)

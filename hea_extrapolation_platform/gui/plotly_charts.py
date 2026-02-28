@@ -843,7 +843,7 @@ def build_summary_stats_md(
     if features_df is not None and not features_df.empty:
         variances = features_df.var().sort_values(ascending=False)
         top_features = list(variances.head(10).index)
-        desc = features_df[top_features].describe().round(3)
+        desc = features_df[top_features].copy().describe().round(3)
         try:
             lines.append(desc.to_markdown())
         except ImportError:

@@ -581,7 +581,8 @@ def _refresh_data_summary(
 
     desc_df = pd.DataFrame()
     if features_df is not None and not features_df.empty:
-        desc_df = features_df.describe().round(3).reset_index()
+        # .copy() defragments the frame to avoid PerformanceWarning / SIGSEGV
+        desc_df = features_df.copy().describe().round(3).reset_index()
         desc_df.rename(columns={"index": "Statistic"}, inplace=True)
 
     return stats_md, target_fig, comp_fig, corr_fig, desc_df
@@ -777,7 +778,8 @@ def _handle_csv_upload(
         target_fig = plotly_target_histogram(target)
         comp_fig = plotly_composition_heatmap(comps_df)
         corr_fig = plotly_feature_correlation(features_df)
-        desc_df = features_df.describe().round(3).reset_index()
+        # .copy() defragments the frame to avoid PerformanceWarning / SIGSEGV
+        desc_df = features_df.copy().describe().round(3).reset_index()
         desc_df.rename(columns={"index": "Statistic"}, inplace=True)
 
         return stats_md, target_fig, comp_fig, corr_fig, desc_df, session
