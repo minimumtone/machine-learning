@@ -1432,32 +1432,12 @@ def create_app() -> gr.Blocks:
                     interactive=False,
                 )
 
-            # --- Tab 2: Data Summary (CSV Upload + Statistics) ---
+            # --- Tab 2: Data Summary (Statistics only) ---
             with gr.Tab("Data Summary"):
                 gr.Markdown(
                     "## Data Summary\n"
                     "データセットの概要統計を確認できます。"
-                    "CSVファイルをアップロードして独自データを解析することも可能です。"
-                )
-
-                # CSV Upload — visible at top level (not hidden)
-                gr.Markdown(
-                    "### CSV データ読み込み\n"
-                    "元素組成列（例: Fe, Ni, Co）を原子分率で含むCSVファイルと、"
-                    "目的変数の列名を指定してください。"
-                )
-                with gr.Row():
-                    csv_upload = gr.File(
-                        label="Upload CSV",
-                        file_types=[".csv"],
-                    )
-                    csv_target_col = gr.Textbox(
-                        label="Target Column Name",
-                        value="yield_strength_MPa",
-                        info="Name of the target column in CSV",
-                    )
-                csv_upload_btn = gr.Button(
-                    "\U0001F4C2 Load CSV (CSV読み込み)", variant="secondary",
+                    "CSVアップロードは **Config & Run** タブから行ってください。"
                 )
 
                 summary_stats_md = gr.Markdown(
@@ -1498,16 +1478,6 @@ def create_app() -> gr.Blocks:
                     outputs=summary_outputs,
                 )
 
-                csv_upload_outputs = [
-                    summary_stats_md, target_hist_plot,
-                    comp_bar_plot, corr_heatmap_plot,
-                    feature_stats_table, state,
-                ]
-                csv_upload_btn.click(
-                    fn=_handle_csv_upload,
-                    inputs=[csv_upload, csv_target_col, state],
-                    outputs=csv_upload_outputs,
-                )
 
             # --- Tab 3: Dashboard ---
             with gr.Tab("Dashboard"):
