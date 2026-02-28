@@ -335,6 +335,87 @@ def _refresh_ood_data(
     return fig, summary, cand_df
 
 
+def _export_ood_csv(
+    fs_key: str, session: Dict[str, Any],
+) -> Any:
+    """Export OOD-flagged data to a temporary CSV and return a gr.update.
+
+    Builds a DataFrame that includes:
+      - composition columns from the original dataset
+      - feature values for the selected feature set
+      - OOD composite score and boolean flag
+
+    Returns ``gr.update(value=path, visible=True)`` on success,
+    or ``gr.update(value=None, visible=False)`` when no data is available.
+    """
+    import tempfile
+
+    ood_results = session.get("ood_results", {})
+    features_df = session.get("features_df")
+    comps_df = session.get("compositions_df")
+    target = session.get("target")
+    ood_split_indices = session.get("ood_split_indices", {})
+
+    if not ood_results or features_df is None:
+        return gr.update(value=None, visible=False)
+
+    ood_res = ood_results.get(fs_key)
+    if ood_res is None:
+        return gr.update(value=None, visible=False)
+
+    from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
+    try:
+        fs_enum = FeatureSetName(fs_key)
+        cols = FeatureCatalog.columns(fs_enum)
+    except (ValueError, KeyError):
+        return gr.update(value=None, visible=False)
+
+    split = ood_split_indices.get(fs_key)
+    if split is None:
+        return gr.update(value=None, visible=False)
+
+    _, test_idx_arr = split
+    test_idx_arr = np.asarray(test_idx_arr)
+
+    # Build export dataframe for ALL test (query) samples
+    rows: List[Dict[str, Any]] = []
+    for local_i, global_i in enumerate(test_idx_arr):
+        if global_i >= len(features_df):
+            continue
+        row: Dict[str, Any] = {}
+        # Add composition columns if available
+        if comps_df is not None and global_i < len(comps_df):
+            for c in comps_df.columns:
+                row[c] = comps_df.iloc[global_i][c]
+        # Add target if available
+        if target is not None and global_i < len(target):
+            row["target"] = target.iloc[global_i]
+        # Add feature values
+        for c in cols:
+            if c in features_df.columns:
+                row[c] = features_df.iloc[global_i][c]
+        # Add OOD info
+        if local_i < len(ood_res.composite_scores):
+            row["OOD_Score"] = round(float(ood_res.composite_scores[local_i]), 4)
+            row["is_OOD"] = bool(ood_res.is_ood[local_i])
+        rows.append(row)
+
+    if not rows:
+        return gr.update(value=None, visible=False)
+
+    export_df = pd.DataFrame(rows)
+    # Sort: OOD samples first, then by score descending
+    export_df = export_df.sort_values(
+        ["is_OOD", "OOD_Score"], ascending=[False, False],
+    ).reset_index(drop=True)
+
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    tmp_path = Path(tempfile.gettempdir()) / f"ood_{fs_key}_{timestamp}.csv"
+    export_df.to_csv(tmp_path, index=False, encoding="utf-8-sig")
+
+    return gr.update(value=str(tmp_path), visible=True)
+
+
 def _refresh_report_data(session: Dict[str, Any]) -> Tuple:
     report_path = session.get("report_path")
     if report_path is None or not Path(report_path).exists():
@@ -837,15 +918,20 @@ def _run_feature_selection_for_fs(
 # Main App Factory
 # ---------------------------------------------------------------------------
 
+# Current PR / build version tag shown in the GUI title bar.
+_GUI_VERSION_TAG = "PR#112"
+
+
 def create_app() -> gr.Blocks:
     """Build and return the Gradio Blocks app."""
     # Fix #5: theme passed to gr.Blocks() constructor
     with gr.Blocks(
-        title="Extrapolation Discovery Platform",
+        title=f"Extrapolation Discovery Platform ({_GUI_VERSION_TAG})",
         theme=gr.themes.Soft(),
     ) as app:
         gr.Markdown(
-            "# Extrapolation Discovery Platform\n"
+            f"# Extrapolation Discovery Platform &ensp;"
+            f"<small style='color:#888;'>({_GUI_VERSION_TAG})</small>\n"
             "Feature Validity Evaluation & OOD Detection Dashboard\n\n"
             "**使い方**: Config & Run タブでパラメータを設定し、"
             "\"Run Analysis\" を押すと全タブが自動更新されます。"
@@ -1185,9 +1271,18 @@ def create_app() -> gr.Blocks:
                     )
                 ood_candidates = gr.Dataframe(label="Top OOD Candidates")
 
-                ood_refresh_btn = gr.Button(
-                    "Refresh OOD Map", variant="primary",
+                with gr.Row():
+                    ood_refresh_btn = gr.Button(
+                        "Refresh OOD Map", variant="primary",
+                    )
+                    ood_csv_btn = gr.Button(
+                        "\u2b07 Download OOD Candidates CSV",
+                        variant="secondary",
+                    )
+                ood_csv_file = gr.File(
+                    label="OOD CSV Download", visible=False,
                 )
+
                 ood_outputs = [ood_plot, ood_summary, ood_candidates]
                 ood_refresh_btn.click(
                     fn=_refresh_ood_data,
@@ -1198,6 +1293,11 @@ def create_app() -> gr.Blocks:
                     fn=_refresh_ood_data,
                     inputs=[fs_selector, state],
                     outputs=ood_outputs,
+                )
+                ood_csv_btn.click(
+                    fn=_export_ood_csv,
+                    inputs=[fs_selector, state],
+                    outputs=[ood_csv_file],
                 )
 
             # --- Tab 6: Literature Search ---
