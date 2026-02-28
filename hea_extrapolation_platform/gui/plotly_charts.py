@@ -913,7 +913,7 @@ def plotly_fs_radar(
             r=vals_closed,
             theta=labels_closed,
             fill="toself",
-            fillcolor=color.replace(")", ", 0.1)").replace("rgb", "rgba") if "rgb" in color else None,
+            fillcolor=f"rgba({int(color[1:3], 16)}, {int(color[3:5], 16)}, {int(color[5:7], 16)}, 0.1)" if color.startswith("#") else None,
             opacity=0.7,
             name=f"{s.feature_set} (total={s.total:.3f})",
             line=dict(color=color, width=2),
