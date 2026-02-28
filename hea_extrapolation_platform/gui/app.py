@@ -337,15 +337,16 @@ def _refresh_ood_data(
 
 def _export_ood_csv(
     fs_key: str, session: Dict[str, Any],
-) -> Optional[str]:
-    """Export OOD-flagged data to a temporary CSV and return the file path.
+) -> Any:
+    """Export OOD-flagged data to a temporary CSV and return a gr.update.
 
     Builds a DataFrame that includes:
       - composition columns from the original dataset
       - feature values for the selected feature set
       - OOD composite score and boolean flag
 
-    Returns *None* (hidden File component) when no data is available.
+    Returns ``gr.update(value=path, visible=True)`` on success,
+    or ``gr.update(value=None, visible=False)`` when no data is available.
     """
     import tempfile
 
@@ -356,22 +357,22 @@ def _export_ood_csv(
     ood_split_indices = session.get("ood_split_indices", {})
 
     if not ood_results or features_df is None:
-        return None
+        return gr.update(value=None, visible=False)
 
     ood_res = ood_results.get(fs_key)
     if ood_res is None:
-        return None
+        return gr.update(value=None, visible=False)
 
     from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
     try:
         fs_enum = FeatureSetName(fs_key)
         cols = FeatureCatalog.columns(fs_enum)
     except (ValueError, KeyError):
-        return None
+        return gr.update(value=None, visible=False)
 
     split = ood_split_indices.get(fs_key)
     if split is None:
-        return None
+        return gr.update(value=None, visible=False)
 
     _, test_idx_arr = split
     test_idx_arr = np.asarray(test_idx_arr)
@@ -400,7 +401,7 @@ def _export_ood_csv(
         rows.append(row)
 
     if not rows:
-        return None
+        return gr.update(value=None, visible=False)
 
     export_df = pd.DataFrame(rows)
     # Sort: OOD samples first, then by score descending
@@ -412,7 +413,7 @@ def _export_ood_csv(
     tmp_path = Path(tempfile.gettempdir()) / f"ood_{fs_key}_{timestamp}.csv"
     export_df.to_csv(tmp_path, index=False, encoding="utf-8-sig")
 
-    return str(tmp_path)
+    return gr.update(value=str(tmp_path), visible=True)
 
 
 def _refresh_report_data(session: Dict[str, Any]) -> Tuple:
