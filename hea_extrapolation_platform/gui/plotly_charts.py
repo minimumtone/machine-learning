@@ -21,6 +21,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 logger = logging.getLogger(__name__)
 
@@ -55,9 +56,14 @@ def plotly_ood_map(
     -------
     go.Figure
     """
-    pca = PCA(n_components=2)
     X_all = pd.concat([X_train, X_query], axis=0, ignore_index=True)
-    coords = pca.fit_transform(X_all.values)
+    # Standardise features before PCA so that no single feature
+    # (e.g. atomic weight ~50-200) dominates the variance and
+    # causes PC1 ≈ 100%, PC2 ≈ 0%.
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X_all.values)
+    pca = PCA(n_components=2)
+    coords = pca.fit_transform(X_scaled)
     n_train = len(X_train)
     var_ratio = pca.explained_variance_ratio_
 
@@ -119,8 +125,8 @@ def plotly_ood_map(
 
     fig.update_layout(
         title=title,
-        xaxis_title=f"PC1 ({var_ratio[0]*100:.1f}%)",
-        yaxis_title=f"PC2 ({var_ratio[1]*100:.1f}%)",
+        xaxis_title=f"PC1 — 第1主成分 ({var_ratio[0]*100:.1f}% 分散説明)",
+        yaxis_title=f"PC2 — 第2主成分 ({var_ratio[1]*100:.1f}% 分散説明)",
         template="plotly_white",
         dragmode="lasso",
         height=600,
@@ -191,8 +197,9 @@ def plotly_validity_ranking(
 
     fig.update_layout(
         barmode="relative",
-        title="Feature Set Validity Ranking",
-        xaxis_title="Score",
+        title="Feature Set Validity Ranking — 特徴量セット妥当性ランキング",
+        xaxis_title="妥当性スコア (Score) — 高いほど良い",
+        yaxis_title="特徴量セット (Feature Set)",
         template="plotly_white",
         height=max(400, len(fs_names) * 80),
         legend=dict(orientation="h", yanchor="bottom", y=-0.3),
@@ -244,10 +251,20 @@ def plotly_heatmap(
         colorbar=dict(title=metric.upper()),
     ))
 
+    # Human-readable metric labels
+    _metric_labels = {
+        "rmse_test": "RMSE (Test) — 小さいほど良い",
+        "rmse_train": "RMSE (Train) — 小さいほど良い",
+        "mae_test": "MAE (Test) — 小さいほど良い",
+        "mae_train": "MAE (Train) — 小さいほど良い",
+        "r2_test": "R\u00b2 (Test) — 1に近いほど良い",
+        "r2_train": "R\u00b2 (Train) — 1に近いほど良い",
+    }
+    metric_display = _metric_labels.get(metric, metric.upper())
     fig.update_layout(
-        title=f"Performance Comparison ({metric})",
-        xaxis_title="Split Policy",
-        yaxis_title="Feature Set",
+        title=f"パフォーマンスヒートマップ: {metric_display}",
+        xaxis_title="分割方法 (Split Policy)",
+        yaxis_title="特徴量セット (Feature Set)",
         template="plotly_white",
         height=max(400, len(pivot) * 60 + 200),
     )
@@ -331,8 +348,8 @@ def plotly_parity(
 
     fig.update_layout(
         title=title,
-        xaxis_title="True Value",
-        yaxis_title="Predicted Value",
+        xaxis_title="実測値 (True Value)",
+        yaxis_title="予測値 (Predicted Value)",
         template="plotly_white",
         height=600,
         width=600,
@@ -380,9 +397,9 @@ def plotly_uncertainty_ood(
     ))
 
     fig.update_layout(
-        title="Uncertainty vs OOD Score",
-        xaxis_title="OOD Score",
-        yaxis_title="Prediction Uncertainty (std)",
+        title="予測不確実性 vs OODスコア",
+        xaxis_title="OODスコア — 高いほど分布外",
+        yaxis_title="予測不確実性 (std) — 高いほどばらつきが大きい",
         template="plotly_white",
         height=500,
     )
@@ -429,7 +446,8 @@ def plotly_feature_frequency(
 
     fig.update_layout(
         title=title,
-        xaxis_title="Count (papers)",
+        xaxis_title="出現論文数 (Count) — 多いほど有効性が高い",
+        yaxis_title="記述子 (Feature)",
         yaxis=dict(autorange="reversed"),
         template="plotly_white",
         height=max(300, len(names) * 30 + 100),
@@ -599,13 +617,17 @@ def plotly_feature_correlation(
     sub = features_df[selected]
     corr = sub.corr()
 
+    # Flip rows so the diagonal runs from top-left to bottom-right
+    # (conventional heatmap orientation).
+    corr_flipped = corr.iloc[::-1]
+
     fig = go.Figure(data=go.Heatmap(
-        z=corr.values,
-        x=list(corr.columns),
-        y=list(corr.index),
+        z=corr_flipped.values,
+        x=list(corr_flipped.columns),
+        y=list(corr_flipped.index),
         colorscale="RdBu_r",
         zmin=-1, zmax=1,
-        text=np.round(corr.values, 2),
+        text=np.round(corr_flipped.values, 2),
         texttemplate="%{text}",
         hovertemplate=(
             "%{y} vs %{x}<br>Corr: %{z:.3f}<extra></extra>"
@@ -617,6 +639,152 @@ def plotly_feature_correlation(
         template="plotly_white",
         height=max(450, len(selected) * 35 + 100),
         width=max(500, len(selected) * 40 + 100),
+    )
+    return fig
+
+
+def plotly_pairwise_scatter(
+    features_df: pd.DataFrame,
+    target: Optional[pd.Series] = None,
+    max_features: int = 6,
+    max_samples: int = 300,
+    title: str = "Pairwise Feature Plot (Top Variance)",
+) -> go.Figure:
+    """Lightweight pairwise feature plot using 2D density contours.
+
+    Instead of ``px.scatter_matrix`` (which creates O(n_dim^2 * n_samples)
+    WebGL points and can cause memory errors for large datasets), this
+    implementation builds a custom subplot grid with:
+
+    * **Off-diagonal**: ``go.Histogram2dContour`` — density contour, very
+      lightweight even for thousands of samples.
+    * **Diagonal**: ``go.Histogram`` — univariate distribution.
+
+    A small random subsample of scatter points is overlaid so individual
+    data points remain visible.
+
+    Parameters
+    ----------
+    features_df : pd.DataFrame
+        Feature matrix.
+    target : pd.Series or None
+        Optional target variable used for colour coding of scatter overlay.
+    max_features : int
+        Maximum number of features to include (picks highest-variance).
+    max_samples : int
+        Maximum number of scatter points to overlay (subsampled).
+    title : str
+
+    Returns
+    -------
+    go.Figure
+    """
+    from plotly.subplots import make_subplots
+
+    if features_df.empty:
+        fig = go.Figure()
+        fig.update_layout(title=title, annotations=[
+            dict(text="No data", xref="paper", yref="paper",
+                 x=0.5, y=0.5, showarrow=False, font_size=20)
+        ])
+        return fig
+
+    # Select top-variance features for readability
+    variances = features_df.var().sort_values(ascending=False)
+    selected = list(variances.head(max_features).index)
+    sub = features_df[selected].copy()
+    n_dim = len(selected)
+
+    # Short labels for display
+    short = {c: c.replace("MagpieData ", "").replace("_", " ")
+             for c in selected}
+
+    # Subsample for scatter overlay to limit memory
+    if len(sub) > max_samples:
+        idx = sub.sample(max_samples, random_state=0).index
+    else:
+        idx = sub.index
+
+    # Target colour array for subsample
+    has_target = target is not None and len(target) == len(sub)
+    if has_target:
+        color_arr = target.loc[idx].values
+        color_label = str(target.name) if target.name else "Target"
+    else:
+        color_arr = None
+        color_label = None
+
+    fig = make_subplots(
+        rows=n_dim, cols=n_dim,
+        shared_xaxes=True, shared_yaxes=True,
+        horizontal_spacing=0.02, vertical_spacing=0.02,
+    )
+
+    for i in range(n_dim):
+        for j in range(n_dim):
+            row, col = i + 1, j + 1
+            xi = selected[j]  # x-axis feature
+            yi = selected[i]  # y-axis feature
+
+            if i == j:
+                # Diagonal — histogram
+                fig.add_trace(
+                    go.Histogram(
+                        x=sub[xi].values,
+                        nbinsx=30,
+                        marker_color="rgba(76, 114, 176, 0.6)",
+                        showlegend=False,
+                    ),
+                    row=row, col=col,
+                )
+            else:
+                # Off-diagonal — 2D density contour (lightweight)
+                fig.add_trace(
+                    go.Histogram2dContour(
+                        x=sub[xi].values,
+                        y=sub[yi].values,
+                        colorscale="Blues",
+                        showscale=False,
+                        ncontours=10,
+                        showlegend=False,
+                    ),
+                    row=row, col=col,
+                )
+                # Scatter overlay (subsampled)
+                scatter_kw: dict = dict(
+                    x=sub.loc[idx, xi].values,
+                    y=sub.loc[idx, yi].values,
+                    mode="markers",
+                    showlegend=False,
+                )
+                if color_arr is not None:
+                    scatter_kw["marker"] = dict(
+                        size=2, color=color_arr, colorscale="Viridis",
+                        opacity=0.5,
+                        showscale=(i == 0 and j == 1),
+                        colorbar=dict(title=color_label)
+                        if (i == 0 and j == 1) else None,
+                    )
+                else:
+                    scatter_kw["marker"] = dict(
+                        size=2, color="rgba(76, 114, 176, 0.4)",
+                    )
+                fig.add_trace(go.Scatter(**scatter_kw), row=row, col=col)
+
+            # Axis labels on edges only
+            if i == n_dim - 1:
+                fig.update_xaxes(title_text=short[xi], row=row, col=col,
+                                 title_font_size=9, tickfont_size=7)
+            if j == 0:
+                fig.update_yaxes(title_text=short[yi], row=row, col=col,
+                                 title_font_size=9, tickfont_size=7)
+
+    fig.update_layout(
+        template="plotly_white",
+        title=title,
+        height=max(500, n_dim * 110 + 80),
+        width=max(600, n_dim * 120 + 80),
+        margin=dict(l=60, r=20, t=60, b=40),
     )
     return fig
 
@@ -685,3 +853,638 @@ def build_summary_stats_md(
         lines.append("No features available.")
 
     return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# 14. FS Comparison: Radar Chart (validity dimensions per feature set)
+# ---------------------------------------------------------------------------
+
+def plotly_fs_radar(
+    scores: List[Any],
+) -> go.Figure:
+    """Radar (spider) chart comparing validity dimensions across feature sets.
+
+    Each axis is one validity dimension; each feature set is a polygon.
+    This makes it easy to see which FS is strong/weak on each axis.
+
+    Parameters
+    ----------
+    scores : list of ValidityScore
+        Sorted by total score (descending).
+
+    Returns
+    -------
+    go.Figure
+    """
+    if not scores:
+        fig = go.Figure()
+        fig.update_layout(
+            title="FS Radar — 実験を実行してください",
+            annotations=[dict(
+                text="No data", xref="paper", yref="paper",
+                x=0.5, y=0.5, showarrow=False, font_size=20,
+            )],
+        )
+        return fig
+
+    dims = [
+        ("effect_size", "Effect Size\n(効果量)"),
+        ("stability", "Stability\n(安定性)"),
+        ("generalisation", "Generalisation\n(汎化性)"),
+        ("extrapolation_safety", "Extrap. Safety\n(外挿安全性)"),
+    ]
+    dim_keys = [d[0] for d in dims]
+    dim_labels = [d[1] for d in dims]
+
+    # Colour palette for up to 8 feature sets
+    _colors = [
+        "#4C72B0", "#55A868", "#C44E52", "#CCB974",
+        "#8172B3", "#64B5CD", "#DD8452", "#A1C9F4",
+    ]
+
+    fig = go.Figure()
+    for i, s in enumerate(scores):
+        vals = [getattr(s, k) for k in dim_keys]
+        # Close the polygon
+        vals_closed = vals + [vals[0]]
+        labels_closed = dim_labels + [dim_labels[0]]
+        color = _colors[i % len(_colors)]
+        fig.add_trace(go.Scatterpolar(
+            r=vals_closed,
+            theta=labels_closed,
+            fill="toself",
+            fillcolor=color.replace(")", ", 0.1)").replace("rgb", "rgba") if "rgb" in color else None,
+            opacity=0.7,
+            name=f"{s.feature_set} (total={s.total:.3f})",
+            line=dict(color=color, width=2),
+            hovertemplate=(
+                "%{theta}: %{r:.3f}<extra>" + s.feature_set + "</extra>"
+            ),
+        ))
+
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(visible=True, range=[0, 1]),
+        ),
+        title="特徴量セット比較レーダーチャート — FS Comparison Radar",
+        template="plotly_white",
+        height=550,
+        legend=dict(orientation="h", yanchor="bottom", y=-0.25),
+    )
+    return fig
+
+
+# ---------------------------------------------------------------------------
+# 15. FS Comparison: Box Plot (metric distribution per feature set)
+# ---------------------------------------------------------------------------
+
+def plotly_fs_boxplot(
+    runs: List[Any],
+    metric: str = "rmse_test",
+) -> go.Figure:
+    """Box plot showing metric distribution per feature set.
+
+    Each box shows the spread of the metric across seeds/folds/splits
+    for one feature set, making it easy to compare both central tendency
+    and variability.
+
+    Parameters
+    ----------
+    runs : list of RunResult
+    metric : str
+        Metric attribute name (default 'rmse_test').
+
+    Returns
+    -------
+    go.Figure
+    """
+    _metric_labels = {
+        "rmse_test": "RMSE (Test) — 小さいほど良い",
+        "rmse_train": "RMSE (Train)",
+        "mae_test": "MAE (Test) — 小さいほど良い",
+        "mae_train": "MAE (Train)",
+        "r2_test": "R$^2$ (Test) — 1に近いほど良い",
+        "r2_train": "R$^2$ (Train)",
+    }
+
+    if not runs:
+        fig = go.Figure()
+        fig.update_layout(
+            title="FS Box Plot — 実験を実行してください",
+            annotations=[dict(
+                text="No data", xref="paper", yref="paper",
+                x=0.5, y=0.5, showarrow=False, font_size=20,
+            )],
+        )
+        return fig
+
+    records = []
+    for r in runs:
+        records.append({
+            "feature_set": r.feature_set,
+            "split_policy": r.split_policy,
+            metric: getattr(r, metric, 0.0),
+        })
+    df = pd.DataFrame(records)
+
+    _colors = [
+        "#4C72B0", "#55A868", "#C44E52", "#CCB974",
+        "#8172B3", "#64B5CD", "#DD8452", "#A1C9F4",
+    ]
+    fs_names = sorted(df["feature_set"].unique())
+
+    fig = go.Figure()
+    for i, fs in enumerate(fs_names):
+        subset = df[df["feature_set"] == fs]
+        color = _colors[i % len(_colors)]
+        fig.add_trace(go.Box(
+            y=subset[metric],
+            name=fs,
+            marker_color=color,
+            boxpoints="all",
+            jitter=0.3,
+            pointpos=-1.5,
+            hovertemplate=f"{fs}<br>{metric}: %{{y:.3f}}<extra></extra>",
+        ))
+
+    metric_display = _metric_labels.get(metric, metric.upper())
+    fig.update_layout(
+        title=f"特徴量セット別メトリクス分布 — {metric_display}",
+        yaxis_title=metric_display,
+        xaxis_title="特徴量セット (Feature Set)",
+        template="plotly_white",
+        height=500,
+        showlegend=False,
+    )
+    return fig
+
+
+# ---------------------------------------------------------------------------
+# 16. FS Comparison: Grouped Bar (mean metric per FS × split policy)
+# ---------------------------------------------------------------------------
+
+def plotly_fs_grouped_bar(
+    runs: List[Any],
+    metric: str = "rmse_test",
+) -> go.Figure:
+    """Grouped bar chart: mean metric per feature set, grouped by split policy.
+
+    Parameters
+    ----------
+    runs : list of RunResult
+    metric : str
+
+    Returns
+    -------
+    go.Figure
+    """
+    _metric_labels = {
+        "rmse_test": "RMSE (Test)",
+        "rmse_train": "RMSE (Train)",
+        "mae_test": "MAE (Test)",
+        "mae_train": "MAE (Train)",
+        "r2_test": "R$^2$ (Test)",
+        "r2_train": "R$^2$ (Train)",
+    }
+
+    if not runs:
+        fig = go.Figure()
+        fig.update_layout(title="FS Grouped Bar — 実験を実行してください")
+        return fig
+
+    records = []
+    for r in runs:
+        records.append({
+            "feature_set": r.feature_set,
+            "split_policy": r.split_policy,
+            metric: getattr(r, metric, 0.0),
+        })
+    df = pd.DataFrame(records)
+    pivot = df.groupby(["feature_set", "split_policy"])[metric].mean().unstack(fill_value=0)
+
+    _split_colors = {
+        "RandomCV": "#4C72B0",
+        "CompositionBlock": "#55A868",
+        "ElementExclusion": "#C44E52",
+    }
+
+    fig = go.Figure()
+    for sp_col in pivot.columns:
+        color = _split_colors.get(sp_col, "#8C8C8C")
+        fig.add_trace(go.Bar(
+            x=list(pivot.index),
+            y=pivot[sp_col].values,
+            name=sp_col,
+            marker_color=color,
+            hovertemplate=f"{sp_col}<br>%{{x}}: %{{y:.3f}}<extra></extra>",
+        ))
+
+    metric_display = _metric_labels.get(metric, metric.upper())
+    fig.update_layout(
+        barmode="group",
+        title=f"特徴量セット × 分割方法 — {metric_display}",
+        xaxis_title="特徴量セット (Feature Set)",
+        yaxis_title=metric_display,
+        template="plotly_white",
+        height=500,
+        legend=dict(orientation="h", yanchor="bottom", y=-0.2),
+    )
+    return fig
+
+
+# ---------------------------------------------------------------------------
+# 17. FS Comparison: Summary Table (Markdown)
+# ---------------------------------------------------------------------------
+
+def build_fs_comparison_summary_md(
+    runs: List[Any],
+    scores: List[Any],
+) -> str:
+    """Build a Markdown summary comparing feature sets.
+
+    Includes: mean/std of RMSE(Test), R$^2$(Test) per FS,
+    validity ranking, and a recommendation.
+
+    Parameters
+    ----------
+    runs : list of RunResult
+    scores : list of ValidityScore
+
+    Returns
+    -------
+    str  Markdown text.
+    """
+    if not runs or not scores:
+        return (
+            "### FS Comparison Summary\n\n"
+            "実験を実行すると、ここに特徴量セットの比較結果が表示されます。"
+        )
+
+    # Group runs by feature set
+    fs_data: Dict[str, List[Any]] = {}
+    for r in runs:
+        fs_data.setdefault(r.feature_set, []).append(r)
+
+    lines = [
+        "### FS Comparison Summary — 特徴量セット比較サマリー\n",
+        "| FS | 特徴量数 | RMSE(Test) Mean | RMSE(Test) Std | "
+        "R$^2$(Test) Mean | Validity Total | 推奨 |",
+        "|---|---|---|---|---|---|---|",
+    ]
+
+    # Feature set sizes (approximate)
+    _fs_sizes = {
+        "FS_BASE": 8, "FS_THERMO": 11, "FS_SIZE": 10,
+        "FS_ELECTRON": 11, "FS_ALL": 16, "FS_MAGPIE": 132,
+    }
+
+    # Build score lookup
+    score_map = {s.feature_set: s for s in scores}
+    best_fs = scores[0].feature_set if scores else ""
+
+    for fs_name in sorted(fs_data.keys()):
+        fs_runs = fs_data[fs_name]
+        rmses = [r.rmse_test for r in fs_runs if r.rmse_test > 0]
+        r2s = [r.r2_test for r in fs_runs]
+        n_feat = _fs_sizes.get(fs_name, "?")
+        rmse_mean = f"{np.mean(rmses):.2f}" if rmses else "N/A"
+        rmse_std = f"{np.std(rmses):.2f}" if len(rmses) > 1 else "N/A"
+        r2_mean = f"{np.mean(r2s):.4f}" if r2s else "N/A"
+        vs = score_map.get(fs_name)
+        total = f"{vs.total:.4f}" if vs else "N/A"
+        recommend = "**Best**" if fs_name == best_fs else ""
+        lines.append(
+            f"| {fs_name} | {n_feat} | {rmse_mean} | {rmse_std} | "
+            f"{r2_mean} | {total} | {recommend} |"
+        )
+
+    lines.append("")
+    lines.append("---")
+    lines.append("")
+
+    # Recommendation text
+    if scores:
+        best = scores[0]
+        lines.append(f"**推奨特徴量セット: {best.feature_set}**\n")
+        lines.append(
+            f"- 総合妥当性スコア: {best.total:.4f}\n"
+            f"- 効果量 (Effect Size): {best.effect_size:.4f}\n"
+            f"- 安定性 (Stability): {best.stability:.4f}\n"
+            f"- 汎化性 (Generalisation): {best.generalisation:.4f}\n"
+            f"- 外挿安全性 (Extrap. Safety): {best.extrapolation_safety:.4f}\n"
+            f"- リークペナルティ: {best.leak_penalty:.4f}"
+        )
+        lines.append("")
+
+        # Interpretation guide
+        lines.append("#### 判断のポイント\n")
+        if best.total >= 0.6:
+            lines.append(
+                "- Total Score ≥ 0.6: **良好**。この特徴量セットは安定した予測性能を持ち、"
+                "外挿にも比較的安全です。"
+            )
+        elif best.total >= 0.4:
+            lines.append(
+                "- Total Score 0.4〜0.6: **中程度**。改善の余地があります。"
+                "他の特徴量セットとの組み合わせを検討してください。"
+            )
+        else:
+            lines.append(
+                "- Total Score < 0.4: **要改善**。特徴量の選択を見直すか、"
+                "データの質を確認してください。"
+            )
+
+        if best.leak_penalty > 0.1:
+            lines.append(
+                f"\n- **注意**: Leak Penalty = {best.leak_penalty:.4f} > 0.1。"
+                "データリークの可能性があります。分割方法を変えて再評価してください。"
+            )
+
+        # Compare best vs MAGPIE
+        magpie_score = score_map.get("FS_MAGPIE")
+        if magpie_score and best.feature_set != "FS_MAGPIE":
+            if magpie_score.total > best.total - 0.05:
+                lines.append(
+                    f"\n- **参考**: FS\\_MAGPIE (total={magpie_score.total:.4f}) も"
+                    "同程度のスコアです。132個の特徴量を使う大規模セットで、"
+                    "データ量が十分であれば高い予測性能が期待できます。"
+                )
+
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# 18. FS Comparison: Train vs Test metric scatter
+# ---------------------------------------------------------------------------
+
+def plotly_fs_train_vs_test(
+    runs: List[Any],
+    metric_base: str = "rmse",
+) -> go.Figure:
+    """Scatter plot of train metric vs test metric per feature set.
+
+    Points near the diagonal = no overfitting.
+    Points far above = overfitting (train << test).
+
+    Parameters
+    ----------
+    runs : list of RunResult
+    metric_base : str
+        Base metric name ('rmse', 'mae', 'r2'). Train and test
+        columns are inferred as ``{base}_train`` / ``{base}_test``.
+
+    Returns
+    -------
+    go.Figure
+    """
+    train_key = f"{metric_base}_train"
+    test_key = f"{metric_base}_test"
+
+    _metric_labels = {
+        "rmse": "RMSE",
+        "mae": "MAE",
+        "r2": "R$^2$",
+    }
+    label = _metric_labels.get(metric_base, metric_base.upper())
+
+    if not runs:
+        fig = go.Figure()
+        fig.update_layout(title=f"Train vs Test {label} — 実験を実行してください")
+        return fig
+
+    _colors = {
+        "FS_BASE": "#4C72B0", "FS_THERMO": "#55A868",
+        "FS_SIZE": "#C44E52", "FS_ELECTRON": "#CCB974",
+        "FS_ALL": "#8172B3", "FS_MAGPIE": "#64B5CD",
+    }
+    _symbols = {
+        "RandomCV": "circle", "CompositionBlock": "square",
+        "ElementExclusion": "diamond",
+    }
+
+    fig = go.Figure()
+
+    # Group by feature set
+    fs_groups: Dict[str, List[Any]] = {}
+    for r in runs:
+        fs_groups.setdefault(r.feature_set, []).append(r)
+
+    for fs_name, fs_runs in sorted(fs_groups.items()):
+        trains = [getattr(r, train_key, 0.0) for r in fs_runs]
+        tests = [getattr(r, test_key, 0.0) for r in fs_runs]
+        splits = [r.split_policy for r in fs_runs]
+        symbols = [_symbols.get(sp, "circle") for sp in splits]
+        color = _colors.get(fs_name, "#8C8C8C")
+
+        fig.add_trace(go.Scatter(
+            x=trains,
+            y=tests,
+            mode="markers",
+            marker=dict(color=color, size=8, opacity=0.7),
+            name=fs_name,
+            customdata=list(zip(splits, [r.seed for r in fs_runs])),
+            hovertemplate=(
+                f"{fs_name}<br>"
+                f"{label}(Train): %{{x:.3f}}<br>"
+                f"{label}(Test): %{{y:.3f}}<br>"
+                "Split: %{customdata[0]}<br>"
+                "Seed: %{customdata[1]}<extra></extra>"
+            ),
+        ))
+
+    # Diagonal (y=x)
+    all_vals = []
+    for r in runs:
+        all_vals.append(getattr(r, train_key, 0.0))
+        all_vals.append(getattr(r, test_key, 0.0))
+    if all_vals:
+        lo = min(all_vals)
+        hi = max(all_vals)
+        margin = (hi - lo) * 0.05 if hi > lo else 0.1
+        fig.add_trace(go.Scatter(
+            x=[lo - margin, hi + margin],
+            y=[lo - margin, hi + margin],
+            mode="lines",
+            line=dict(color="black", dash="dash", width=1),
+            name="y = x (過学習なし)",
+            showlegend=True,
+        ))
+
+    fig.update_layout(
+        title=f"Train vs Test {label} — 対角線から離れるほど過学習の兆候",
+        xaxis_title=f"{label} (Train)",
+        yaxis_title=f"{label} (Test)",
+        template="plotly_white",
+        height=500,
+        legend=dict(orientation="h", yanchor="bottom", y=-0.25),
+    )
+    return fig
+
+
+# ---------------------------------------------------------------------------
+# 19. Knowledge Graph Visualization
+# ---------------------------------------------------------------------------
+
+def plotly_knowledge_graph(
+    kg: Any,
+    layout: str = "spring",
+    highlight_type: Optional[str] = None,
+) -> go.Figure:
+    """Interactive Plotly visualization of the knowledge graph.
+
+    Uses NetworkX layout algorithms to position nodes, then renders
+    with Plotly scatter + lines.
+
+    Parameters
+    ----------
+    kg : KnowledgeGraph
+        The knowledge graph instance.
+    layout : str
+        Layout algorithm: 'spring', 'circular', 'kamada_kawai', 'shell'.
+    highlight_type : str, optional
+        If set, highlight nodes of this type.
+
+    Returns
+    -------
+    go.Figure
+    """
+    try:
+        import networkx as nx
+    except ImportError:
+        fig = go.Figure()
+        fig.update_layout(
+            title="Knowledge Graph — networkxが必要です",
+            annotations=[dict(
+                text="pip install networkx", xref="paper", yref="paper",
+                x=0.5, y=0.5, showarrow=False, font_size=16,
+            )],
+        )
+        return fig
+
+    graph = kg.graph
+    if graph.number_of_nodes() == 0:
+        fig = go.Figure()
+        fig.update_layout(
+            title="Knowledge Graph — ノードなし",
+            annotations=[dict(
+                text="実験を実行するとグラフが構築されます",
+                xref="paper", yref="paper",
+                x=0.5, y=0.5, showarrow=False, font_size=16,
+            )],
+        )
+        return fig
+
+    # Compute layout positions
+    _layout_funcs = {
+        "spring": lambda g: nx.spring_layout(g, k=2.0, iterations=50, seed=42),
+        "circular": nx.circular_layout,
+        "kamada_kawai": nx.kamada_kawai_layout,
+        "shell": nx.shell_layout,
+    }
+    layout_fn = _layout_funcs.get(layout, _layout_funcs["spring"])
+    try:
+        pos = layout_fn(graph)
+    except Exception:
+        pos = nx.spring_layout(graph, k=2.0, iterations=50, seed=42)
+
+    # Node type -> color and size
+    _type_colors = {
+        "experiment": "#4C72B0",
+        "feature_set": "#55A868",
+        "feature": "#CCB974",
+        "model": "#C44E52",
+        "paper": "#8172B3",
+        "workflow": "#64B5CD",
+        "split_policy": "#DD8452",
+    }
+    _type_sizes = {
+        "experiment": 8,
+        "feature_set": 18,
+        "feature": 10,
+        "model": 16,
+        "paper": 14,
+        "workflow": 12,
+        "split_policy": 14,
+    }
+
+    fig = go.Figure()
+
+    # Draw edges first (as lines)
+    edge_x = []
+    edge_y = []
+    for u, v in graph.edges():
+        if u in pos and v in pos:
+            x0, y0 = pos[u]
+            x1, y1 = pos[v]
+            edge_x.extend([x0, x1, None])
+            edge_y.extend([y0, y1, None])
+
+    fig.add_trace(go.Scatter(
+        x=edge_x, y=edge_y,
+        mode="lines",
+        line=dict(width=0.5, color="#888"),
+        hoverinfo="none",
+        showlegend=False,
+    ))
+
+    # Draw nodes grouped by type (for legend)
+    type_groups: Dict[str, list] = {}
+    for node_id in graph.nodes():
+        ntype = graph.nodes[node_id].get("node_type", "unknown")
+        type_groups.setdefault(ntype, []).append(node_id)
+
+    _type_labels_jp = {
+        "experiment": "実験ラン",
+        "feature_set": "特徴量セット",
+        "feature": "個別特徴量",
+        "model": "モデル",
+        "paper": "論文",
+        "workflow": "文献WF",
+        "split_policy": "分割方法",
+    }
+
+    for ntype, node_ids in type_groups.items():
+        xs = [pos[nid][0] for nid in node_ids if nid in pos]
+        ys = [pos[nid][1] for nid in node_ids if nid in pos]
+        labels = [
+            graph.nodes[nid].get("label", nid) for nid in node_ids if nid in pos
+        ]
+        color = _type_colors.get(ntype, "#8C8C8C")
+        size = _type_sizes.get(ntype, 10)
+        display_name = _type_labels_jp.get(ntype, ntype)
+
+        # Highlight effect
+        if highlight_type and ntype == highlight_type:
+            size = size + 6
+            opacity = 1.0
+        elif highlight_type:
+            opacity = 0.3
+        else:
+            opacity = 0.8
+
+        fig.add_trace(go.Scatter(
+            x=xs, y=ys,
+            mode="markers+text" if size >= 14 else "markers",
+            marker=dict(
+                color=color, size=size, opacity=opacity,
+                line=dict(width=1, color="white"),
+            ),
+            text=labels if size >= 14 else None,
+            textposition="top center",
+            textfont=dict(size=9),
+            name=f"{display_name} ({len(node_ids)})",
+            hovertext=labels,
+            hovertemplate="%{hovertext}<extra>" + display_name + "</extra>",
+        ))
+
+    fig.update_layout(
+        title="知識グラフ — Knowledge Graph",
+        template="plotly_white",
+        showlegend=True,
+        legend=dict(orientation="h", yanchor="bottom", y=-0.15),
+        height=650,
+        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        hovermode="closest",
+    )
+    return fig

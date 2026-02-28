@@ -626,12 +626,15 @@ def _detect_element_columns(
 
     elem_cols: List[str] = []
     col_to_elem: Dict[str, str] = {}
+    seen_elements: set = set()  # track already-matched canonical symbols
 
     for col in columns:
         # 1) Try exact match first
         if col in available:
-            elem_cols.append(col)
-            col_to_elem[col] = col
+            if col not in seen_elements:
+                elem_cols.append(col)
+                col_to_elem[col] = col
+                seen_elements.add(col)
             continue
 
         # 2) Strip known suffixes and try again
@@ -639,9 +642,10 @@ def _detect_element_columns(
 
         # 3) Case-insensitive lookup
         canon = available_lower.get(stripped.lower())
-        if canon is not None:
+        if canon is not None and canon not in seen_elements:
             elem_cols.append(col)
             col_to_elem[col] = canon
+            seen_elements.add(canon)
 
     return elem_cols, col_to_elem
 
