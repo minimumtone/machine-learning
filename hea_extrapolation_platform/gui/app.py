@@ -33,6 +33,7 @@ Design decisions (GUI review fixes):
 from __future__ import annotations
 
 import datetime
+import html as html_mod
 import logging
 import time
 import traceback
@@ -1135,7 +1136,7 @@ def create_app() -> gr.Blocks:
                         'border-left:4px solid #4CAF50; border-radius:4px; '
                         'margin:4px 0; font-size:14px;">'
                         f'\u2705 <b>データソース</b>: '
-                        f'<code>{fname}</code> を使用します'
+                        f'<code>{html_mod.escape(fname)}</code> を使用します'
                         '（Number of Samples は無視されます）'
                         '</div>'
                     )
