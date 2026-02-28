@@ -33,6 +33,7 @@ Design decisions (GUI review fixes):
 from __future__ import annotations
 
 import datetime
+import html as html_mod
 import logging
 import time
 import traceback
@@ -1021,7 +1022,7 @@ def _run_feature_selection_for_fs(
 # ---------------------------------------------------------------------------
 
 # Current PR / build version tag shown in the GUI title bar.
-_GUI_VERSION_TAG = "PR#113"
+_GUI_VERSION_TAG = "PR#114"
 
 
 def create_app() -> gr.Blocks:
@@ -1053,6 +1054,33 @@ def create_app() -> gr.Blocks:
                     "OOD検出で外挿危険領域を特定し、文献検索で最適記述子を探索します。"
                 )
 
+                # --- Data Source Selection ---
+                gr.Markdown(
+                    "### データソース選択\n"
+                    "**方法 A**: CSVファイルをアップロードして独自データで解析\n\n"
+                    "**方法 B**: CSVを指定しなければ、組込みサンプルデータを自動生成"
+                )
+                with gr.Row():
+                    run_csv_upload = gr.File(
+                        label="\U0001F4C2 CSV Upload (任意)",
+                        file_types=[".csv"],
+                    )
+                    run_csv_target = gr.Textbox(
+                        label="Target Column Name",
+                        value="yield_strength_MPa",
+                        info="CSVの目的変数の列名",
+                    )
+                csv_status_html = gr.HTML(
+                    value=(
+                        '<div style="padding:8px 12px; background:#e8f4fd; '
+                        'border-left:4px solid #2196F3; border-radius:4px; '
+                        'margin:4px 0; font-size:14px;">'
+                        '\U0001F4CA <b>データソース</b>: '
+                        'サンプルデータ自動生成モード（CSVをアップロードすると切替）'
+                        '</div>'
+                    ),
+                )
+
                 with gr.Row():
                     with gr.Column():
                         seeds_input = gr.Textbox(
@@ -1063,6 +1091,7 @@ def create_app() -> gr.Blocks:
                         n_samples = gr.Slider(
                             minimum=50, maximum=1000, value=200, step=50,
                             label="Number of Samples",
+                            info="CSVアップロード時は無視されます",
                         )
                         quick_mode = gr.Checkbox(
                             label="Quick Mode (reduced HPO)",
@@ -1084,6 +1113,39 @@ def create_app() -> gr.Blocks:
                             value=True,
                             info="Skip PNG generation (Plotly always available)",
                         )
+
+                # Update CSV status when file is uploaded/removed
+                def _update_csv_status(file_obj: Any) -> str:
+                    if file_obj is None:
+                        return (
+                            '<div style="padding:8px 12px; background:#e8f4fd; '
+                            'border-left:4px solid #2196F3; border-radius:4px; '
+                            'margin:4px 0; font-size:14px;">'
+                            '\U0001F4CA <b>データソース</b>: '
+                            'サンプルデータ自動生成モード'
+                            '（CSVをアップロードすると切替）'
+                            '</div>'
+                        )
+                    fname = (
+                        file_obj.name.split("/")[-1]
+                        if hasattr(file_obj, "name")
+                        else "uploaded.csv"
+                    )
+                    return (
+                        '<div style="padding:8px 12px; background:#e8f5e9; '
+                        'border-left:4px solid #4CAF50; border-radius:4px; '
+                        'margin:4px 0; font-size:14px;">'
+                        f'\u2705 <b>データソース</b>: '
+                        f'<code>{html_mod.escape(fname)}</code> を使用します'
+                        '（Number of Samples は無視されます）'
+                        '</div>'
+                    )
+
+                run_csv_upload.change(
+                    fn=_update_csv_status,
+                    inputs=[run_csv_upload],
+                    outputs=[csv_status_html],
+                )
 
                 # --- ML Algorithm Selection ---
                 with gr.Accordion(
@@ -1555,6 +1617,8 @@ def create_app() -> gr.Blocks:
             use_wf_lin: bool,
             use_wf_xgb: bool,
             use_wf_ens: bool,
+            csv_file: Any,
+            csv_target: str,
             session: Dict[str, Any],
         ) -> Generator:
             """Generator that yields incremental progress + state.
@@ -1659,26 +1723,67 @@ def create_app() -> gr.Blocks:
                 # Fix #2: cast slider float -> int
                 n_samp_int = int(n_samp)
 
-                # 1. Dataset generation  (0% -> 10%)
-                from hea_extrapolation_platform.dataset import (
-                    generate_hea_dataset,
-                )
-                log(f"Generating dataset: n={n_samp_int}, seed={seeds[0]}")
-                yield _yield_progress(
-                    "\n".join(log_lines), 5,
-                    f"Generating {n_samp_int} samples...",
-                )
+                # 1. Dataset loading / generation  (0% -> 10%)
+                if csv_file is not None:
+                    # --- Use uploaded CSV ---
+                    log("Loading uploaded CSV...")
+                    yield _yield_progress(
+                        "\n".join(log_lines), 5,
+                        "Loading CSV...",
+                    )
+                    csv_result = _handle_csv_upload(
+                        csv_file, csv_target, session,
+                    )
+                    # _handle_csv_upload returns
+                    # (stats_md, fig, fig, fig, df, session)
+                    # — session is updated in-place with
+                    # compositions_df, features_df, target.
+                    session = csv_result[-1]
+                    comps_df = session.get("compositions_df")
+                    features_df = session.get("features_df")
+                    target = session.get("target")
+                    if comps_df is None or features_df is None:
+                        # CSV loading failed — the error is in
+                        # csv_result[0] (Markdown banner)
+                        log(
+                            "ERROR: CSV loading failed. "
+                        )
+                        # Surface the error summary from
+                        # _handle_csv_upload to the Data Summary tab
+                        error_summary = csv_result[:5]
+                        yield _yield_progress(
+                            "\n".join(log_lines), 0, "CSV Error",
+                            summary_tuple=error_summary,
+                        )
+                        return
+                    log(
+                        f"CSV loaded: {len(target)} samples, "
+                        f"{features_df.shape[1]} features"
+                    )
+                else:
+                    # --- Generate sample dataset ---
+                    from hea_extrapolation_platform.dataset import (
+                        generate_hea_dataset,
+                    )
+                    log(
+                        f"Generating dataset: "
+                        f"n={n_samp_int}, seed={seeds[0]}"
+                    )
+                    yield _yield_progress(
+                        "\n".join(log_lines), 5,
+                        f"Generating {n_samp_int} samples...",
+                    )
 
-                comps_df, features_df, target = generate_hea_dataset(
-                    n_samples=n_samp_int, seed=seeds[0],
-                )
-                session["compositions_df"] = comps_df
-                session["features_df"] = features_df
-                session["target"] = target
-                log(
-                    f"Dataset: {len(target)} samples, "
-                    f"{features_df.shape[1]} features"
-                )
+                    comps_df, features_df, target = generate_hea_dataset(
+                        n_samples=n_samp_int, seed=seeds[0],
+                    )
+                    session["compositions_df"] = comps_df
+                    session["features_df"] = features_df
+                    session["target"] = target
+                    log(
+                        f"Dataset: {len(target)} samples, "
+                        f"{features_df.shape[1]} features"
+                    )
                 # Build data-summary tuple now that we have data
                 data_summary = _refresh_data_summary(session)
 
@@ -1932,6 +2037,7 @@ def create_app() -> gr.Blocks:
                 seeds_input, n_samples, quick_mode,
                 exclude_elements, skip_literature, skip_plots,
                 wf_lin_check, wf_xgb_check, wf_ens_check,
+                run_csv_upload, run_csv_target,
                 state,
             ],
             outputs=[
