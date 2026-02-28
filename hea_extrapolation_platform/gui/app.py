@@ -618,7 +618,7 @@ def _detect_element_columns(
     import re
     # Common suffixes to strip (order matters — longest first)
     _SUFFIXES = re.compile(
-        r'[_\s]*(frac|at%|at|wt%|wt|fraction|pct|percent|ratio)$',
+        r'[_\s]+(frac|at%|at|wt%|wt|fraction|pct|percent|ratio)$',
         re.IGNORECASE,
     )
     # Map lowercased element symbols for case-insensitive lookup
