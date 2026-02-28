@@ -584,6 +584,68 @@ def _refresh_data_summary(
     return stats_md, target_fig, comp_fig, corr_fig, desc_df
 
 
+def _make_error_banner(title: str, detail: str) -> str:
+    """Return a prominent Markdown/HTML error banner for the GUI."""
+    return (
+        f'<div style="background:#fff0f0; border:2px solid #e53e3e; '
+        f'border-radius:8px; padding:16px; margin:8px 0;">'
+        f'<span style="font-size:1.3em; font-weight:bold; color:#c53030;">'
+        f'\u26a0\ufe0f {title}</span><br/>'
+        f'<span style="color:#742a2a;">{detail}</span></div>'
+    )
+
+
+def _detect_element_columns(
+    columns: List[str],
+    available: set,
+) -> Tuple[List[str], Dict[str, str]]:
+    """Detect element columns with flexible name matching.
+
+    Supports:
+      - Exact element symbols: ``Fe``, ``Ni``, ``Co``
+      - ``_frac`` suffix: ``Al_frac``, ``Fe_frac``
+      - ``_at`` / ``_at%`` suffix: ``Al_at``, ``Fe_at%``
+      - ``_wt`` / ``_wt%`` suffix: ``Al_wt``, ``Fe_wt%``
+      - Case-insensitive matching: ``al``, ``FE``, ``ni_Frac``
+
+    Returns
+    -------
+    elem_cols : list[str]
+        Original column names that matched.
+    col_to_elem : dict[str, str]
+        Mapping from original column name to canonical element symbol.
+    """
+    import re
+    # Common suffixes to strip (order matters — longest first)
+    _SUFFIXES = re.compile(
+        r'[_\s]*(frac|at%|at|wt%|wt|fraction|pct|percent|ratio)$',
+        re.IGNORECASE,
+    )
+    # Map lowercased element symbols for case-insensitive lookup
+    available_lower = {e.lower(): e for e in available}
+
+    elem_cols: List[str] = []
+    col_to_elem: Dict[str, str] = {}
+
+    for col in columns:
+        # 1) Try exact match first
+        if col in available:
+            elem_cols.append(col)
+            col_to_elem[col] = col
+            continue
+
+        # 2) Strip known suffixes and try again
+        stripped = _SUFFIXES.sub('', col).strip()
+
+        # 3) Case-insensitive lookup
+        canon = available_lower.get(stripped.lower())
+        if canon is not None:
+            elem_cols.append(col)
+            col_to_elem[col] = canon
+
+    return elem_cols, col_to_elem
+
+
 def _handle_csv_upload(
     file_obj: Any,
     target_col: str,
@@ -594,6 +656,10 @@ def _handle_csv_upload(
     Expected CSV format: element columns (atomic fractions summing to ~1)
     plus an optional target column.  Non-element columns that are not
     the target column are silently ignored during feature computation.
+
+    Element column detection is flexible — supports bare symbols
+    (``Fe``), ``_frac`` suffix (``Al_frac``), ``_at%``, ``_wt%``,
+    and case-insensitive variants.
 
     Returns the same tuple shape as ``_refresh_data_summary`` plus the
     updated session.
@@ -610,7 +676,10 @@ def _handle_csv_upload(
 
         if raw.empty:
             return (
-                "Uploaded CSV is empty.",
+                _make_error_banner(
+                    "CSV is empty",
+                    "アップロードされたCSVにデータ行がありません。",
+                ),
                 None, None, None, pd.DataFrame(), session,
             )
 
@@ -623,33 +692,58 @@ def _handle_csv_upload(
         available = set(_ElementDB.available_elements())
         target_col_clean = target_col.strip()
 
-        # Identify element columns (columns whose names are known elements)
-        elem_cols = [c for c in raw.columns if c in available]
+        # Flexible element column detection
+        elem_cols, col_to_elem = _detect_element_columns(
+            list(raw.columns), available,
+        )
 
         if not elem_cols:
+            sample_cols = ", ".join(list(raw.columns)[:10])
+            avail_str = ", ".join(sorted(available)[:15])
             return (
-                "No element columns found in CSV. "
-                "Column names must match element symbols (e.g. Fe, Ni, Co).",
+                _make_error_banner(
+                    "元素列が見つかりません",
+                    "CSVの列名から元素記号を検出できませんでした。<br/>"
+                    f"<b>CSVの列名（先頭10列）</b>: <code>{sample_cols}</code><br/>"
+                    f"<b>対応している元素記号</b>: <code>{avail_str}</code><br/><br/>"
+                    "以下の命名規則に対応しています:<br/>"
+                    "<code>Fe</code>, <code>Fe_frac</code>, "
+                    "<code>Fe_at%</code>, <code>Fe_wt%</code> "
+                    "（大文字小文字不問）",
+                ),
                 None, None, None, pd.DataFrame(), session,
             )
 
-        # Build compositions list, tracking valid row indices to keep
-        # all DataFrames aligned (rows with all-zero elements are dropped).
+        # Build compositions list using canonical element symbols.
+        # Track valid row indices to keep all DataFrames aligned
+        # (rows with all-zero elements are dropped).
         valid_indices: List[int] = []
         compositions = []
         for idx, row in raw[elem_cols].iterrows():
             comp = {
-                e: float(v) for e, v in row.items()
+                col_to_elem[c]: float(v)
+                for c, v in row.items()
                 if float(v) > 0
             }
             if comp:
                 compositions.append(comp)
                 valid_indices.append(idx)
 
-        # Composition DataFrame — only keep rows that produced a composition
-        comps_df = (
-            raw.loc[valid_indices, elem_cols].copy().reset_index(drop=True)
+        if not compositions:
+            return (
+                _make_error_banner(
+                    "有効な組成データなし",
+                    "検出された元素列の値がすべて 0 です。"
+                    "原子分率が正の値を持つ行が必要です。",
+                ),
+                None, None, None, pd.DataFrame(), session,
+            )
+
+        # Composition DataFrame — rename to canonical element symbols
+        comps_df = raw.loc[valid_indices, elem_cols].copy().reset_index(
+            drop=True,
         )
+        comps_df.columns = [col_to_elem[c] for c in comps_df.columns]
 
         # Compute features
         features_df = compute_features(compositions, feature_set=None)
@@ -684,7 +778,11 @@ def _handle_csv_upload(
     except Exception:
         err = traceback.format_exc()
         return (
-            f"Error loading CSV:\n```\n{err}\n```",
+            _make_error_banner(
+                "CSV読み込みエラー",
+                f"<pre style='background:#fff5f5; padding:8px; "
+                f"overflow-x:auto;'>{err}</pre>",
+            ),
             None, None, None, pd.DataFrame(), session,
         )
 
