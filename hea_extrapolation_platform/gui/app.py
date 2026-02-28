@@ -35,6 +35,8 @@ from __future__ import annotations
 import datetime
 import html as html_mod
 import logging
+import queue
+import threading
 import time
 import traceback
 from pathlib import Path
@@ -1826,25 +1828,106 @@ def create_app() -> gr.Blocks:
                     use_mint=True,
                 )
 
-                # Progress callback: maps runner progress to GUI
-                # progress bar (20% -> 60% range)
-                _last_cb_log: List[str] = []
+                # --- Real-time log capture via threading ---
+                # Install a custom logging handler on the package
+                # logger so that all INFO+ messages from runner.py,
+                # ood.py, etc. are captured into log_lines and
+                # streamed to the GUI in real time.
+                log_q: queue.Queue[str] = queue.Queue()
+                _cur_pct = [20]  # mutable container for progress %
+
+                class _LogCapture(logging.Handler):
+                    """Handler that forwards log records to a queue."""
+                    def emit(self, record: logging.LogRecord) -> None:
+                        try:
+                            log_q.put(self.format(record))
+                        except Exception:
+                            pass
+
+                _cap = _LogCapture()
+                _cap.setFormatter(
+                    logging.Formatter(
+                        "[%(asctime)s] %(message)s",
+                        datefmt="%H:%M:%S",
+                    ),
+                )
+                _cap.setLevel(logging.INFO)
+                pkg_logger = logging.getLogger(
+                    "hea_extrapolation_platform",
+                )
+                pkg_logger.addHandler(_cap)
+                pkg_logger.setLevel(logging.INFO)
 
                 def _progress_cb(
                     completed: int, total: int, message: str,
                 ) -> None:
                     if total > 0:
-                        pct = 20 + int(40 * completed / total)
-                    else:
-                        pct = 20
-                    _last_cb_log.clear()
-                    _last_cb_log.append(f"Run {completed}/{total}: {message}")
+                        _cur_pct[0] = 20 + int(40 * completed / total)
 
-                runs, scores, ood_results = runner.run(
-                    comps_df, features_df, target,
-                    progress_callback=_progress_cb,
-                    selected_workflows=selected_wfs,
+                # Run the experiment in a background thread so
+                # the generator can yield log updates in real time.
+                _result_holder: Dict[str, Any] = {}
+
+                def _run_in_thread() -> None:
+                    try:
+                        r, s, o = runner.run(
+                            comps_df, features_df, target,
+                            progress_callback=_progress_cb,
+                            selected_workflows=selected_wfs,
+                        )
+                        _result_holder["runs"] = r
+                        _result_holder["scores"] = s
+                        _result_holder["ood"] = o
+                    except Exception:
+                        _result_holder["error"] = traceback.format_exc()
+
+                thread = threading.Thread(
+                    target=_run_in_thread, daemon=True,
                 )
+                thread.start()
+
+                # Poll for new log messages and yield them
+                while thread.is_alive():
+                    _drained = False
+                    while not log_q.empty():
+                        try:
+                            msg = log_q.get_nowait()
+                            log_lines.append(msg)
+                            _drained = True
+                        except queue.Empty:
+                            break
+                    if _drained:
+                        yield _yield_progress(
+                            "\n".join(log_lines),
+                            _cur_pct[0],
+                            f"Training... ({_cur_pct[0]}%)",
+                            summary_tuple=data_summary,
+                        )
+                    time.sleep(0.5)
+
+                # Drain remaining log messages after thread ends
+                while not log_q.empty():
+                    try:
+                        log_lines.append(log_q.get_nowait())
+                    except queue.Empty:
+                        break
+
+                # Remove the capture handler
+                pkg_logger.removeHandler(_cap)
+
+                # Check for errors from the thread
+                if "error" in _result_holder:
+                    log(f"ERROR:\n{_result_holder['error']}")
+                    yield _yield_progress(
+                        "\n".join(log_lines), _cur_pct[0],
+                        "Error",
+                        summary_tuple=data_summary,
+                    )
+                    return
+
+                runs = _result_holder["runs"]
+                scores = _result_holder["scores"]
+                ood_results = _result_holder["ood"]
 
                 session["runs"] = runs
                 session["validity_scores"] = scores
