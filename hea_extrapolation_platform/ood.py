@@ -223,6 +223,13 @@ class OODDetector:
         dists = np.array([
             mahalanobis(x, self._mean, self._cov_inv) for x in X_scaled
         ])
+        # scipy.mahalanobis computes np.sqrt(dot(dot(delta, VI), delta))
+        # without clamping the inner product.  Floating-point noise can
+        # make the quadratic form slightly negative (e.g. -1e-15),
+        # especially with 150+ features or pseudo-inverse cov_inv,
+        # producing NaN from sqrt.  Clamp to zero to prevent silent
+        # NaN propagation into composite scores.
+        np.maximum(dists, 0.0, out=dists)
         return dists
 
     def _knn_batch_train(self, X_scaled: np.ndarray) -> np.ndarray:
