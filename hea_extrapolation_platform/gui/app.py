@@ -268,8 +268,8 @@ def _build_physical_interpretation_md(
     lines.append("|---|---|---|---|---|---|")
 
     _fs_sizes = {
-        "FS_BASE": 8, "FS_THERMO": 11, "FS_SIZE": 10,
-        "FS_ELECTRON": 11, "FS_ALL": 16, "FS_MAGPIE": 132,
+        "FS_BASE": 8, "FS_THERMO": 11, "FS_SIZE": 12,
+        "FS_ELECTRON": 11, "FS_ALL": 18, "FS_MAGPIE": 132,
     }
 
     for fs_name in sorted(fs_data.keys()):
@@ -2325,14 +2325,22 @@ def create_app() -> gr.Blocks:
                 )
                 gen = ReportGenerator(out_dir=out_dir)
                 best_ood = None
+                best_ood_test_indices = None
                 if scores and ood_results:
-                    best_ood = ood_results.get(scores[0].feature_set)
+                    best_fs = scores[0].feature_set
+                    best_ood = ood_results.get(best_fs)
+                    split_info = session.get(
+                        "ood_split_indices", {},
+                    ).get(best_fs)
+                    if split_info is not None:
+                        best_ood_test_indices = split_info[1]
 
                 report_path = gen.generate(
                     runs=runs,
                     validity_scores=scores,
                     ood_result=best_ood,
                     compositions_df=comps_df,
+                    ood_test_indices=best_ood_test_indices,
                     figure_paths=figure_paths,
                     literature_results=session.get("literature_results"),
                     feature_recommendation=session.get(

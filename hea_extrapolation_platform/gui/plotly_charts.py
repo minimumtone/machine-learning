@@ -1315,8 +1315,8 @@ def build_fs_comparison_summary_md(
 
     # Feature set sizes (approximate)
     _fs_sizes = {
-        "FS_BASE": 8, "FS_THERMO": 11, "FS_SIZE": 10,
-        "FS_ELECTRON": 11, "FS_ALL": 16, "FS_MAGPIE": 132,
+        "FS_BASE": 8, "FS_THERMO": 11, "FS_SIZE": 12,
+        "FS_ELECTRON": 11, "FS_ALL": 18, "FS_MAGPIE": 132,
     }
 
     # Build score lookup
