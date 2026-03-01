@@ -350,9 +350,14 @@ class ExperimentRunner:
                 splitters = self._build_splitters(seed)
 
                 for fs_name in feature_sets:
-                    # Select feature columns for this set
+                    # Select feature columns for this set.
+                    # Rebuild from numpy to get a single contiguous block;
+                    # column-subset slicing on a wide DataFrame (150+ cols)
+                    # creates a fragmented BlockManager that triggers
+                    # PerformanceWarning and can SIGSEGV downstream.
                     cols = FeatureCatalog.columns(fs_name)
-                    X_fs = features_all[cols].copy()
+                    _arr = features_all[cols].to_numpy(dtype="float64")
+                    X_fs = pd.DataFrame(_arr, columns=cols, index=features_all.index)
 
                     for sp_name, splitter in splitters.items():
                         fold_idx = 0

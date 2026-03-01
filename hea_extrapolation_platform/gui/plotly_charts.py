@@ -643,17 +643,22 @@ def plotly_feature_correlation(
         fig.update_layout(title=title)
         return fig
 
-    # Build combined DataFrame: target + top-variance features
-    df = features_df.copy()
-    variances = df.var().sort_values(ascending=False)
+    # Build combined DataFrame: target + top-variance features.
+    # Avoid df.insert() which fragments the BlockManager; instead
+    # build the final DataFrame in one shot via pd.concat.
+    variances = features_df.var().sort_values(ascending=False)
     selected = list(variances.head(max_features).index)
-    df = df[selected]
 
-    if target is not None and len(target) == len(df):
+    if target is not None and len(target) == len(features_df):
         tname = target.name if target.name else "Target"
-        df.insert(0, tname, target.values)
+        df = pd.concat(
+            [target.rename(tname).reset_index(drop=True),
+             features_df[selected].reset_index(drop=True)],
+            axis=1,
+        )
         cols = [tname] + selected
     else:
+        df = features_df[selected].copy()
         cols = selected
 
     n = len(cols)

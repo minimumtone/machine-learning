@@ -1178,7 +1178,10 @@ def _run_feature_selection_for_fs(
             None, "*Error*", session,
         )
 
-    X = features_df[available_cols].copy()
+    # Rebuild from numpy to get a single contiguous block; column-subset
+    # slicing on a wide DataFrame can create a fragmented BlockManager.
+    _arr = features_df[available_cols].to_numpy(dtype="float64")
+    X = pd.DataFrame(_arr, columns=available_cols)
     y = target.copy()
 
     # Build method list
