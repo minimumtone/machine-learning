@@ -299,12 +299,14 @@ def generate_hea_dataset(
     )
 
     # Build composition DataFrame (sparse: missing element -> 0)
+    # Use dict-of-lists (columnar) construction to avoid DataFrame
+    # fragmentation that can cause SIGSEGV in numpy/pandas C layer.
     all_elems_sorted = sorted(all_elements_set)
-    comp_records = []
-    for comp in compositions:
-        rec = {e: comp.get(e, 0.0) for e in all_elems_sorted}
-        comp_records.append(rec)
-    compositions_df = pd.DataFrame(comp_records)
+    comp_columns = {
+        e: [comp.get(e, 0.0) for comp in compositions]
+        for e in all_elems_sorted
+    }
+    compositions_df = pd.DataFrame(comp_columns)
 
     # Build features DataFrame (all features including MAGPIE)
     features_df = compute_features(compositions, feature_set=None)

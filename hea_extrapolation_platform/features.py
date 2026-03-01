@@ -343,6 +343,8 @@ _THERMO_COLS = [
 ]
 
 _SIZE_COLS = [
+    "B_avg",            # bulk modulus average (GPa) — Hall-Petch proxy
+    "Vm_avg",           # atomic volume average (Å³) — packing density
     "Vm_var",           # atomic volume variance
     "elastic_mismatch", # elastic (bulk modulus) mismatch index
 ]
@@ -679,6 +681,8 @@ def compute_features_single(
         "ss_formation": ss_formation,
         "phase_sep_risk": phase_sep_risk,
         # SIZE
+        "B_avg": B_avg,           # bulk modulus average (GPa)
+        "Vm_avg": Vm_avg,         # atomic volume average (Å³)
         "Vm_var": Vm_var,
         "elastic_mismatch": elastic_mismatch,
         # ELECTRON
@@ -723,7 +727,21 @@ def compute_features(
             logger.exception("Feature computation failed for sample %d: %s", i, comp)
             raise
 
-    df_all = pd.DataFrame(records)
+    # Build DataFrame from dict-of-lists (columnar) instead of
+    # list-of-dicts (row-wise).  pd.DataFrame(list-of-dicts) creates
+    # one internal memory block per dict key, leading to a highly
+    # fragmented BlockManager (148+ blocks for MAGPIE features).
+    # Downstream .describe() / numpy interop on such a frame can
+    # trigger a SIGSEGV in the pandas/numpy C layer.
+    # Building from {col: [values]} creates a single consolidated block.
+    if records:
+        col_names = list(records[0].keys())
+        columns_dict = {
+            k: [r[k] for r in records] for k in col_names
+        }
+        df_all = pd.DataFrame(columns_dict)
+    else:
+        df_all = pd.DataFrame()
 
     if feature_set is None:
         # Return all computed columns (domain + MAGPIE)
@@ -733,4 +751,4 @@ def compute_features(
     missing = [c for c in cols if c not in df_all.columns]
     if missing:
         raise RuntimeError(f"Missing columns after computation: {missing}")
-    return df_all[cols].copy()
+    return df_all[cols]

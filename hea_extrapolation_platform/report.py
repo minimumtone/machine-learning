@@ -57,6 +57,7 @@ class ReportGenerator:
         validity_scores: List[ValidityScore],
         ood_result: Optional[OODResult] = None,
         compositions_df: Optional[pd.DataFrame] = None,
+        ood_test_indices: Optional[np.ndarray] = None,
         figure_paths: Optional[Dict[str, Path]] = None,
         extra_sections: Optional[Dict[str, str]] = None,
         literature_results: Optional[List[Any]] = None,
@@ -71,6 +72,11 @@ class ReportGenerator:
         ood_result : OODResult, optional
         compositions_df : pd.DataFrame, optional
             Full composition table for OOD candidate listing.
+        ood_test_indices : np.ndarray, optional
+            Integer indices (into *compositions_df*) of the samples that were
+            scored for OOD.  ``ood_result.is_ood`` has the same length as this
+            array.  **Required** for correct OOD composition lookup; without it
+            the composition table will be mis-indexed.
         figure_paths : dict, optional
             {label: Path} for figures to embed.
         extra_sections : dict, optional
@@ -139,7 +145,11 @@ class ReportGenerator:
                 "R2_test": r.r2_test,
             })
         if perf_records:
-            df_perf = pd.DataFrame(perf_records)
+            # Columnar construction to avoid DataFrame fragmentation
+            col_names = list(perf_records[0].keys())
+            df_perf = pd.DataFrame(
+                {k: [r[k] for r in perf_records] for k in col_names}
+            )
             pivot_rmse = df_perf.groupby(["Feature Set", "Split"])["RMSE_test"].mean().unstack(fill_value=0)
             try:
                 lines.append(pivot_rmse.to_markdown())
@@ -175,14 +185,26 @@ class ReportGenerator:
         if ood_result is not None and compositions_df is not None:
             ood_mask = ood_result.is_ood
             if ood_mask.sum() > 0:
-                ood_comps = compositions_df.iloc[np.where(ood_mask)[0]]
+                # ood_mask indexes into the OOD *test partition*, not the full
+                # compositions_df.  Map back via ood_test_indices when provided.
+                if ood_test_indices is not None:
+                    global_ood_idx = ood_test_indices[np.where(ood_mask)[0]]
+                else:
+                    # Fallback (legacy callers): assume ood_mask indexes directly.
+                    # This will be wrong when OOD test set != full dataset but
+                    # is kept for backward compatibility.
+                    global_ood_idx = np.where(ood_mask)[0]
+                    logger.warning(
+                        "report.generate: ood_test_indices not provided; "
+                        "OOD composition lookup may be incorrect."
+                    )
+                ood_comps = compositions_df.iloc[global_ood_idx]
                 # Show top 10 by OOD score
                 ood_scores_arr = ood_result.composite_scores[ood_mask]
                 sort_idx = np.argsort(-ood_scores_arr)[:10]
                 top_ood = ood_comps.iloc[sort_idx]
                 lines.append("Top 10 OOD candidates (highest OOD score):")
                 lines.append("")
-                # Format as table
                 top_ood_display = top_ood.copy()
                 top_ood_display["OOD_score"] = ood_scores_arr[sort_idx]
                 try:
