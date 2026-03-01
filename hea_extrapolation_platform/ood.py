@@ -227,9 +227,9 @@ class OODDetector:
         # without clamping the inner product.  Floating-point noise can
         # make the quadratic form slightly negative (e.g. -1e-15),
         # especially with 150+ features or pseudo-inverse cov_inv,
-        # producing NaN from sqrt.  Clamp to zero to prevent silent
-        # NaN propagation into composite scores.
-        np.maximum(dists, 0.0, out=dists)
+        # producing NaN from sqrt.  np.maximum(NaN, 0) still returns NaN,
+        # so we must use nan_to_num to replace any NaN with 0.0.
+        np.nan_to_num(dists, nan=0.0, copy=False)
         return dists
 
     def _knn_batch_train(self, X_scaled: np.ndarray) -> np.ndarray:
