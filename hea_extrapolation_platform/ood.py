@@ -16,6 +16,7 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
+from scipy.spatial.distance import mahalanobis
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
 
@@ -100,7 +101,17 @@ class OODDetector:
                      X_train.shape[0], X_train.shape[1])
 
         self._scaler = StandardScaler()
-        X_scaled = self._scaler.fit_transform(X_train.values)
+        # pandas 3.0 DataFrame.values returns F-contiguous (column-major) arrays.
+        # StandardScaler.fit_transform() preserves the memory layout of its input,
+        # so X_scaled inherits F-contiguous layout.  When rows are sliced from an
+        # F-contiguous 2-D array (e.g. X_scaled[i]), the resulting 1-D view has a
+        # stride equal to the column pitch (n_samples * itemsize) rather than 1
+        # element.  Passing such a non-unit-stride vector to
+        # scipy.spatial.distance.mahalanobis triggers an internal BLAS/LAPACK call
+        # that assumes stride-1 layout, causing a Segmentation Fault.
+        # np.ascontiguousarray() forces a C-order (row-major) copy so that every
+        # row slice is a contiguous 1-D array with stride=itemsize.
+        X_scaled = np.ascontiguousarray(self._scaler.fit_transform(X_train.values))
 
         # Mahalanobis setup
         self._mean = X_scaled.mean(axis=0)
@@ -171,7 +182,11 @@ class OODDetector:
         if not self._fitted:
             raise RuntimeError("OODDetector.fit() must be called before score()")
 
-        X_scaled = self._scaler.transform(X_query.values)
+        # Same C-contiguous guarantee as in fit(): the scaler's transform() output
+        # inherits the memory layout of the input DataFrame slice, which under
+        # pandas 3.0 is F-contiguous.  Force row-major layout here so that
+        # mahalanobis row slices are stride-1 contiguous vectors.
+        X_scaled = np.ascontiguousarray(self._scaler.transform(X_query.values))
 
         maha = self._mahalanobis_batch(X_scaled)
         knn = self._knn_batch(X_scaled)
@@ -204,20 +219,10 @@ class OODDetector:
     # ------------------------------------------------------------------
 
     def _mahalanobis_batch(self, X_scaled: np.ndarray) -> np.ndarray:
-        """Compute Mahalanobis distance for each row.
-
-        Uses vectorised einsum instead of a Python loop over rows,
-        which reduces the complexity from O(n * d²) with per-row
-        scipy calls to a single O(n * d²) matrix operation.
-        """
-        diff = X_scaled - self._mean
-        # einsum('ij,jk,ik->i') computes diag(diff @ cov_inv @ diff.T)
-        dists = np.sqrt(
-            np.maximum(
-                np.einsum("ij,jk,ik->i", diff, self._cov_inv, diff),
-                0.0,  # clamp negative values from floating-point noise
-            )
-        )
+        """Compute Mahalanobis distance for each row."""
+        dists = np.array([
+            mahalanobis(x, self._mean, self._cov_inv) for x in X_scaled
+        ])
         return dists
 
     def _knn_batch_train(self, X_scaled: np.ndarray) -> np.ndarray:
@@ -231,32 +236,15 @@ class OODDetector:
         return dists[:, 1:].mean(axis=1)
 
     def _knn_batch(self, X_scaled: np.ndarray) -> np.ndarray:
-        """Compute mean kNN distance for query data.
+        """Compute mean kNN distance for query data (no self-reference).
 
-        Query points are *usually* not part of the fitted index, so
-        there is no self-reference to skip.  However, if a caller
-        passes training-set samples as queries (e.g. due to an
-        overlapping random split), the first neighbour may be the
-        query itself (distance ≈ 0).  We guard against this by
-        dropping any near-zero first column, mirroring the training
-        behaviour.
-
-        The fitted model uses ``k+1`` neighbours; we always take
-        ``_actual_k`` *non-self* distances.
+        Query points are not part of the fitted index, so there is no
+        self-reference.  However, the fitted model has k+1 neighbours;
+        we take only the first ``_actual_k`` columns to keep the same
+        semantics as training (``_actual_k`` may be < ``_k`` when the
+        training set is small).
         """
         dists, _ = self._nn.kneighbors(X_scaled)
-        # If the closest neighbour has distance ≈ 0, it is likely a
-        # self-reference (query point in the training set).  Drop it
-        # row-by-row and take the next _actual_k neighbours instead.
-        _EPS = 1e-10
-        self_hit = dists[:, 0] < _EPS
-        if self_hit.any():
-            # For rows with self-hit: use columns [1 : _actual_k+1]
-            # For other rows: use columns [0 : _actual_k]
-            result = np.empty(len(dists), dtype=np.float64)
-            result[self_hit] = dists[self_hit, 1 : self._actual_k + 1].mean(axis=1)
-            result[~self_hit] = dists[~self_hit, : self._actual_k].mean(axis=1)
-            return result
         return dists[:, :self._actual_k].mean(axis=1)
 
     @staticmethod
