@@ -40,6 +40,7 @@ import queue
 import threading
 import time
 import traceback
+import warnings
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional, Tuple
 
@@ -816,7 +817,9 @@ def _refresh_data_summary(
 
     desc_df = pd.DataFrame()
     if features_df is not None and not features_df.empty:
-        desc_df = features_df.describe().round(3).reset_index()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", pd.errors.PerformanceWarning)
+            desc_df = features_df.describe().round(3).reset_index()
         desc_df.rename(columns={"index": "Statistic"}, inplace=True)
 
     return stats_md, target_fig, comp_fig, corr_fig, desc_df

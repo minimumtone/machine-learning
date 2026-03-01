@@ -14,6 +14,7 @@ Provides interactive equivalents of the matplotlib-based visualization module:
 from __future__ import annotations
 
 import logging
+import warnings
 from typing import Any, Dict, List, Optional, Sequence, Tuple  # noqa: F401
 
 import numpy as np
@@ -1021,7 +1022,9 @@ def build_summary_stats_md(
             _sub = pd.DataFrame(_arr, columns=top_features, index=_sub.index)
         except (ValueError, TypeError):
             pass
-        desc = _sub.describe().round(3)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", pd.errors.PerformanceWarning)
+            desc = _sub.describe().round(3)
         try:
             lines.append(desc.to_markdown())
         except ImportError:
