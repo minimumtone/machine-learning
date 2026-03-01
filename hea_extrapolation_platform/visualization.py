@@ -95,7 +95,12 @@ def plot_ood_map_pca(
 
     pca = PCA(n_components=2)
     X_all = pd.concat([X_train, X_query], axis=0, ignore_index=True)
-    coords = pca.fit_transform(X_all.values)
+    # Rebuild from numpy to guarantee a single contiguous block;
+    # column-subset / iloc slices create fragmented BlockManagers
+    # that SIGSEGV when .values is accessed in the C layer.
+    coords = pca.fit_transform(
+        X_all.to_numpy(dtype="float64", na_value=np.nan)
+    )
     n_train = len(X_train)
 
     fig, ax = plt.subplots(figsize=(12, 9))
@@ -162,7 +167,10 @@ def plot_ood_map_umap(
 
     reducer = UMAP(n_components=2, random_state=42, n_neighbors=15)
     X_all = pd.concat([X_train, X_query], axis=0, ignore_index=True)
-    coords = reducer.fit_transform(X_all.values)
+    # Rebuild from numpy to avoid fragmented BlockManager SIGSEGV
+    coords = reducer.fit_transform(
+        X_all.to_numpy(dtype="float64", na_value=np.nan)
+    )
     n_train = len(X_train)
 
     fig, ax = plt.subplots(figsize=(12, 9))
