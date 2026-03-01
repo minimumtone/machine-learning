@@ -16,7 +16,6 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-from scipy.spatial.distance import mahalanobis
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
 
@@ -205,10 +204,20 @@ class OODDetector:
     # ------------------------------------------------------------------
 
     def _mahalanobis_batch(self, X_scaled: np.ndarray) -> np.ndarray:
-        """Compute Mahalanobis distance for each row."""
-        dists = np.array([
-            mahalanobis(x, self._mean, self._cov_inv) for x in X_scaled
-        ])
+        """Compute Mahalanobis distance for each row.
+
+        Uses vectorised einsum instead of a Python loop over rows,
+        which reduces the complexity from O(n * d²) with per-row
+        scipy calls to a single O(n * d²) matrix operation.
+        """
+        diff = X_scaled - self._mean
+        # einsum('ij,jk,ik->i') computes diag(diff @ cov_inv @ diff.T)
+        dists = np.sqrt(
+            np.maximum(
+                np.einsum("ij,jk,ik->i", diff, self._cov_inv, diff),
+                0.0,  # clamp negative values from floating-point noise
+            )
+        )
         return dists
 
     def _knn_batch_train(self, X_scaled: np.ndarray) -> np.ndarray:
@@ -222,15 +231,32 @@ class OODDetector:
         return dists[:, 1:].mean(axis=1)
 
     def _knn_batch(self, X_scaled: np.ndarray) -> np.ndarray:
-        """Compute mean kNN distance for query data (no self-reference).
+        """Compute mean kNN distance for query data.
 
-        Query points are not part of the fitted index, so there is no
-        self-reference.  However, the fitted model has k+1 neighbours;
-        we take only the first ``_actual_k`` columns to keep the same
-        semantics as training (``_actual_k`` may be < ``_k`` when the
-        training set is small).
+        Query points are *usually* not part of the fitted index, so
+        there is no self-reference to skip.  However, if a caller
+        passes training-set samples as queries (e.g. due to an
+        overlapping random split), the first neighbour may be the
+        query itself (distance ≈ 0).  We guard against this by
+        dropping any near-zero first column, mirroring the training
+        behaviour.
+
+        The fitted model uses ``k+1`` neighbours; we always take
+        ``_actual_k`` *non-self* distances.
         """
         dists, _ = self._nn.kneighbors(X_scaled)
+        # If the closest neighbour has distance ≈ 0, it is likely a
+        # self-reference (query point in the training set).  Drop it
+        # row-by-row and take the next _actual_k neighbours instead.
+        _EPS = 1e-10
+        self_hit = dists[:, 0] < _EPS
+        if self_hit.any():
+            # For rows with self-hit: use columns [1 : _actual_k+1]
+            # For other rows: use columns [0 : _actual_k]
+            result = np.empty(len(dists), dtype=np.float64)
+            result[self_hit] = dists[self_hit, 1 : self._actual_k + 1].mean(axis=1)
+            result[~self_hit] = dists[~self_hit, : self._actual_k].mean(axis=1)
+            return result
         return dists[:, :self._actual_k].mean(axis=1)
 
     @staticmethod

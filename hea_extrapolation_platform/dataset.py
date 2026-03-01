@@ -90,15 +90,23 @@ def _random_composition(
         fracs = rng.dirichlet(np.ones(n) * 2.0)
         if np.all(fracs >= min_frac) and np.all(fracs <= effective_max):
             return {e: float(f) for e, f in zip(elements, fracs)}
-    # Fallback: accept last draw with only min_frac constraint
+    # Fallback: accept last draw with only min_frac constraint.
+    # Bound the fallback loop to avoid infinite loops when min_frac
+    # is infeasible (e.g. n=2, min_frac>=0.5 makes both constraints
+    # almost impossible to satisfy simultaneously).
+    _FALLBACK_ITER = _MAX_ITER * 10
     logger.warning(
         "Composition sampling did not converge in %d iterations for "
         "%d elements; relaxing max_frac constraint", _MAX_ITER, n,
     )
-    while True:
+    for _ in range(_FALLBACK_ITER):
         fracs = rng.dirichlet(np.ones(n) * 2.0)
         if np.all(fracs >= min_frac):
             return {e: float(f) for e, f in zip(elements, fracs)}
+    raise RuntimeError(
+        f"Cannot sample composition with {n} elements and "
+        f"min_frac={min_frac} after {_MAX_ITER + _FALLBACK_ITER} attempts"
+    )
 
 
 def _passes_stability_filter(feat: Dict[str, float]) -> bool:
@@ -206,8 +214,12 @@ def generate_hea_dataset(
     max_elements : int
         Maximum number of constituent elements per alloy.
     noise_std : float
-        Kept for API compatibility; strength noise is now proportional
-        to predicted YS (7 % coefficient of variation).
+        .. deprecated::
+            This parameter is retained for backward API compatibility
+            only.  Strength noise is now proportional to predicted YS
+            (7 % coefficient of variation); the absolute ``noise_std``
+            value is **ignored**.  It will be removed in a future
+            release.
 
     Returns
     -------
@@ -218,6 +230,15 @@ def generate_hea_dataset(
     target : pd.Series
         Yield strength (MPa).
     """
+    import warnings
+    if noise_std != 50.0:
+        warnings.warn(
+            "noise_std is deprecated and ignored; strength noise is now "
+            "proportional (7 % CV). This parameter will be removed in a "
+            "future release.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
     rng = np.random.default_rng(seed)
     logger.info(
         "Generating HEA dataset: n=%d, seed=%d, elements=%d-%d",

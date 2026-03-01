@@ -75,6 +75,10 @@ class RunRegistry:
     def __init__(self) -> None:
         self._runs: List[RunResult] = []
 
+    def reset(self) -> None:
+        """Clear all stored runs (useful when calling run() multiple times)."""
+        self._runs.clear()
+
     def add(self, run: RunResult) -> None:
         self._runs.append(run)
 
@@ -169,6 +173,7 @@ class ExperimentRunner:
         self._quick = quick
         self._exclude_elements = exclude_elements or ["Co", "Ni", "Ti"]
         self._registry = RunRegistry()
+        self._ood_split_indices: Dict[str, Tuple[np.ndarray, np.ndarray]] = {}
 
         # MLflow tracker
         if mlflow_tracker is not None:
@@ -219,7 +224,7 @@ class ExperimentRunner:
     @property
     def ood_split_indices(self) -> Dict[str, Tuple[np.ndarray, np.ndarray]]:
         """Return {feature_set: (train_indices, test_indices)} used for OOD."""
-        return getattr(self, "_ood_split_indices", {})
+        return self._ood_split_indices
 
     def _build_workflows(
         self,
@@ -332,12 +337,13 @@ class ExperimentRunner:
         )
 
         ood_results: Dict[str, OODResult] = {}
-        # Store the train/test indices used for OOD detection so callers
-        # (e.g. __main__.py visualization) can reconstruct X_train/X_test.
-        self._ood_split_indices: Dict[str, Tuple[np.ndarray, np.ndarray]] = {}
+        # Reset per-run state so repeated calls don't accumulate.
+        self._registry.reset()
+        self._ood_split_indices.clear()
         ood_errors_for_eval: Dict[str, Dict[str, np.ndarray]] = {}
 
         run_count = 0
+        fail_count = 0
 
         try:
             for seed in self._seeds:
@@ -389,6 +395,7 @@ class ExperimentRunner:
                                         except Exception:
                                             pass  # never let callback errors stop the experiment
                                 except Exception:
+                                    fail_count += 1
                                     logger.exception(
                                         "Run failed: wf=%s fs=%s sp=%s seed=%d fold=%d",
                                         wf_name, fs_name.value, sp_name, seed, fold_idx,
@@ -417,8 +424,9 @@ class ExperimentRunner:
 
             elapsed = time.time() - t_start
             logger.info(
-                "Experiment complete: %d runs in %.1f sec. Top feature set: %s",
-                run_count, elapsed,
+                "Experiment complete: %d runs (%d failed) in %.1f sec. "
+                "Top feature set: %s",
+                run_count, fail_count, elapsed,
                 validity_scores[0].feature_set if validity_scores else "N/A",
             )
 

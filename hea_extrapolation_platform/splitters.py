@@ -107,8 +107,17 @@ class CompositionBlockSplitter(BaseSplitter):
             raise ValueError(f"n_folds must be >= 2, got {n_folds}")
         self._n_folds = n_folds
         self._seed = seed
+        self._actual_n_splits: Optional[int] = None
 
     def n_splits(self) -> int:
+        """Return number of folds.
+
+        Before ``split()`` has been fully consumed, returns the
+        *requested* number of folds.  After ``split()`` completes,
+        returns the *actual* number of non-empty clusters yielded.
+        """
+        if self._actual_n_splits is not None:
+            return self._actual_n_splits
         return self._n_folds
 
     def split(
@@ -142,12 +151,16 @@ class CompositionBlockSplitter(BaseSplitter):
             [int((labels == k).sum()) for k in range(actual_k)],
         )
 
+        actual_folds = 0
         for fold_label in range(actual_k):
             test_mask = labels == fold_label
             if test_mask.sum() == 0:
                 logger.warning("Empty cluster %d – skipping fold", fold_label)
                 continue
+            actual_folds += 1
             yield all_idx[~test_mask], all_idx[test_mask]
+
+        self._actual_n_splits = actual_folds
 
 
 class ElementExclusionSplitter(BaseSplitter):

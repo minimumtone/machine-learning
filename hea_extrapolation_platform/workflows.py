@@ -392,7 +392,10 @@ class WorkflowENS(BaseWorkflow):
         train_preds_list: List[np.ndarray] = []
 
         for m in range(self._n_members):
-            member_seed = seed * 1000 + m
+            # Use a large prime multiplier to avoid seed collisions.
+            # The old formula (seed * 1000 + m) collides when
+            # seed=1001,m=0 and seed=1,m=1000 (both → 1001000).
+            member_seed = (seed + m * 10_000_007) % (2**31)
             pipe = self._make_member(member_seed)
             pipe.fit(X_train.values, y_train.values)
             preds_list.append(pipe.predict(X_test.values))

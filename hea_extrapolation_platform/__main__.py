@@ -304,7 +304,12 @@ def cmd_report(args: argparse.Namespace) -> None:
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Load runs from JSON
+    # Load runs from JSON.
+    # NOTE: The JSON registry only stores scalar metrics; per-sample
+    # arrays (y_test_true, y_test_pred, test_indices) and artefacts
+    # (params, artifacts) are NOT persisted.  Report generation from
+    # a saved registry therefore cannot produce parity plots or OOD
+    # composition tables.  A warning is emitted so the user knows.
     df = pd.read_json(registry_path, orient="records")
     runs = []
     for _, row in df.iterrows():
@@ -322,6 +327,12 @@ def cmd_report(args: argparse.Namespace) -> None:
             r2_test=float(row["r2_test"]),
             elapsed_sec=float(row["elapsed_sec"]),
         ))
+    logger.warning(
+        "Loaded %d runs from JSON; y_test_true/y_test_pred/test_indices "
+        "are unavailable — parity plots and OOD composition lookup will "
+        "be skipped in the regenerated report.",
+        len(runs),
+    )
 
     evaluator = FeatureValidityEvaluator()
     validity_scores = evaluator.evaluate(runs)
