@@ -486,18 +486,30 @@ def _refresh_ood_data(
     except (ValueError, KeyError):
         return None, f"Unknown feature set: {fs_key}", pd.DataFrame()
 
-    # Fix #3: use stored train/test indices for correct visualization
+    # Fix #3: use stored train/test indices for correct visualization.
+    # Rebuild from numpy after column-subset + iloc to avoid fragmented
+    # BlockManager that can SIGSEGV in downstream .values / PCA calls.
     split = ood_split_indices.get(fs_key)
     if split is not None:
         train_idx, test_idx = split
-        X_train = features_df[cols].iloc[train_idx]
-        X_query = features_df[cols].iloc[test_idx]
+        X_train = pd.DataFrame(
+            features_df[cols].iloc[train_idx].to_numpy(dtype="float64"),
+            columns=cols,
+        )
+        X_query = pd.DataFrame(
+            features_df[cols].iloc[test_idx].to_numpy(dtype="float64"),
+            columns=cols,
+        )
     else:
         logger.warning("No OOD split indices for %s, using heuristic", fs_key)
-        X_all = features_df[cols]
+        X_all_arr = features_df[cols].to_numpy(dtype="float64")
         n_ood = len(ood_res.composite_scores)
-        X_train = X_all.iloc[:len(X_all) - n_ood]
-        X_query = X_all.iloc[len(X_all) - n_ood:]
+        X_train = pd.DataFrame(
+            X_all_arr[:len(X_all_arr) - n_ood], columns=cols,
+        )
+        X_query = pd.DataFrame(
+            X_all_arr[len(X_all_arr) - n_ood:], columns=cols,
+        )
 
     fig = plotly_ood_map(
         X_train, X_query,

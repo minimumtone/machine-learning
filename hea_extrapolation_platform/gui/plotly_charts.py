@@ -79,8 +79,13 @@ def plotly_ood_map(
     # Standardise features before PCA so that no single feature
     # (e.g. atomic weight ~50-200) dominates the variance and
     # causes PC1 ≈ 100%, PC2 ≈ 0%.
+    # Rebuild from numpy to guarantee a single contiguous memory block;
+    # column-subset / iloc slices create fragmented BlockManagers that
+    # can SIGSEGV in the numpy C layer when .values is accessed.
     scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X_all.values)
+    X_scaled = scaler.fit_transform(
+        X_all.to_numpy(dtype="float64", na_value=np.nan)
+    )
     pca = PCA(n_components=2)
     coords = pca.fit_transform(X_scaled)
     n_train = len(X_train)
@@ -869,7 +874,9 @@ def plotly_pairwise_scatter(
     # Select top-variance features for readability
     variances = features_df.var().sort_values(ascending=False)
     selected = list(variances.head(max_features).index)
-    sub = features_df[selected].copy()
+    # Rebuild from numpy to avoid fragmented BlockManager (SIGSEGV risk)
+    _sub_arr = features_df[selected].to_numpy(dtype="float64", na_value=np.nan)
+    sub = pd.DataFrame(_sub_arr, columns=selected, index=features_df.index)
     n_dim = len(selected)
 
     # Short labels for display

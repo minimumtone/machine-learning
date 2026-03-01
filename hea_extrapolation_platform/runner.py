@@ -364,8 +364,18 @@ class ExperimentRunner:
                         for train_idx, test_idx in splitter.split(
                             X_fs, target, compositions=compositions_df
                         ):
-                            X_train = X_fs.iloc[train_idx].reset_index(drop=True)
-                            X_test = X_fs.iloc[test_idx].reset_index(drop=True)
+                            # Rebuild from numpy after iloc to guarantee
+                            # a single contiguous memory block; iloc on a
+                            # wide DataFrame creates fragmented views that
+                            # SIGSEGV when .values is accessed downstream.
+                            X_train = pd.DataFrame(
+                                X_fs.iloc[train_idx].to_numpy(dtype="float64"),
+                                columns=cols,
+                            )
+                            X_test = pd.DataFrame(
+                                X_fs.iloc[test_idx].to_numpy(dtype="float64"),
+                                columns=cols,
+                            )
                             y_train = target.iloc[train_idx].reset_index(drop=True)
                             y_test = target.iloc[test_idx].reset_index(drop=True)
 
@@ -478,8 +488,17 @@ class ExperimentRunner:
                 X_fs, target, compositions=compositions_df
             ))
             ood_train_idx, ood_test_idx = ood_folds[0]  # first fold
-            X_train_ood = X_fs.iloc[ood_train_idx]
-            X_test_ood = X_fs.iloc[ood_test_idx]
+            # Rebuild from numpy after iloc to avoid fragmented
+            # BlockManager that can SIGSEGV in .values calls.
+            _cols = X_fs.columns
+            X_train_ood = pd.DataFrame(
+                X_fs.iloc[ood_train_idx].to_numpy(dtype="float64"),
+                columns=_cols,
+            )
+            X_test_ood = pd.DataFrame(
+                X_fs.iloc[ood_test_idx].to_numpy(dtype="float64"),
+                columns=_cols,
+            )
 
             detector = OODDetector(k=10)
             detector.fit(X_train_ood)
