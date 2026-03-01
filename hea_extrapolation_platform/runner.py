@@ -171,11 +171,19 @@ def _run_job(
     X_fs: np.ndarray,
     feature_cols: List[str],
     y: np.ndarray,
+    mint_configs: Optional[Dict[str, "MIntWorkflowConfig"]] = None,
 ) -> RunResult:
     """Execute a single training run.  Pure function — no side effects.
 
     X_fs must be C-contiguous so that row slices have unit stride, avoiding
     the BLAS SIGSEGV that occurs with F-contiguous (pandas 3.0) layouts.
+
+    Parameters
+    ----------
+    mint_configs : dict, optional
+        Mapping of MInt workflow name → MIntWorkflowConfig.  When the job's
+        ``wf_name`` is not a built-in workflow, the config is used to
+        reconstruct a ``MIntWorkflowAdapter`` in the worker process.
     """
     import pandas as _pd
 
@@ -194,7 +202,16 @@ def _run_job(
             n_members=3 if job.quick else 5, quick=job.quick
         ),
     }
-    wf = wf_map[job.wf_name]
+
+    if job.wf_name in wf_map:
+        wf = wf_map[job.wf_name]
+    elif mint_configs is not None and job.wf_name in mint_configs:
+        wf = MIntWorkflowAdapter(config=mint_configs[job.wf_name])
+    else:
+        raise KeyError(
+            f"Unknown workflow '{job.wf_name}'. "
+            f"Built-in: {list(wf_map)}, MInt: {list(mint_configs or {})}"
+        )
 
     return wf.run(
         X_train, y_train, X_test, y_test,
@@ -304,14 +321,21 @@ class ExperimentRunner:
         """Execute the full experiment grid in 5 phases."""
         t_start = time.time()
 
+        # Reset per-run state so repeated calls don't accumulate stale data.
+        self._registry._runs.clear()
+        self._ood_split_indices.clear()
+
         self._feature_store.store_features(features_all)
 
         all_wf_names = ["WF-LIN", "WF-XGB", "WF-ENS"]
+        mint_configs: Dict[str, MIntWorkflowConfig] = {}
         if self._mint_registry is not None:
             for wf_info in self._mint_registry.list_workflows():
                 wf_name = wf_info["name"]
                 if wf_name not in all_wf_names:
                     all_wf_names.append(wf_name)
+                    cfg = self._mint_registry.get_config(wf_name)
+                    mint_configs[wf_name] = cfg
                     logger.info("Added MInt workflow: %s", wf_name)
         wf_names = (
             [w for w in all_wf_names if w in (selected_workflows or all_wf_names)]
@@ -345,7 +369,8 @@ class ExperimentRunner:
             )
 
             all_results = self._phase3_train(
-                jobs, features_all, feature_sets, y_arr, progress_callback
+                jobs, features_all, feature_sets, y_arr,
+                progress_callback, mint_configs or None,
             )
             self._registry.add_many(all_results)
 
@@ -471,6 +496,7 @@ class ExperimentRunner:
         feature_sets: List[FeatureSetName],
         y_arr: np.ndarray,
         progress_callback: Optional[Any],
+        mint_configs: Optional[Dict[str, MIntWorkflowConfig]] = None,
     ) -> List[RunResult]:
         """Train all jobs, optionally in parallel.
 
@@ -509,7 +535,7 @@ class ExperimentRunner:
             for job in jobs:
                 arr, cols = fs_arrays[job.fs_name]
                 try:
-                    result = _run_job(job, arr, cols, y_arr)
+                    result = _run_job(job, arr, cols, y_arr, mint_configs)
                     all_results.append(result)
                 except Exception:
                     logger.exception(
@@ -538,6 +564,7 @@ class ExperimentRunner:
                         fs_arrays[job.fs_name][0],
                         fs_arrays[job.fs_name][1],
                         y_arr,
+                        mint_configs,
                     ): job
                     for job in jobs
                 }
