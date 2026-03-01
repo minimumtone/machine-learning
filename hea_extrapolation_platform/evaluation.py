@@ -124,7 +124,10 @@ class FeatureValidityEvaluator:
                 vs.effect_size = 0.0
 
             # 2. Stability (inverse of coefficient of variation of RMSE across runs)
-            rmses = [r.rmse_test for r in fs_run_list if r.rmse_test > 0]
+            rmses = [
+                r.rmse_test for r in fs_run_list
+                if r.rmse_test > 0 and np.isfinite(r.rmse_test)
+            ]
             if len(rmses) > 1:
                 cv = float(np.std(rmses) / np.mean(rmses)) if np.mean(rmses) > 0 else 1.0
                 vs.stability = max(0.0, 1.0 - cv)
@@ -132,8 +135,10 @@ class FeatureValidityEvaluator:
                 vs.stability = 0.5  # neutral
 
             # 3. Generalisation (Random vs Block sign consistency)
-            random_runs = [r for r in fs_run_list if "Random" in r.split_policy]
-            block_runs = [r for r in fs_run_list if "Block" in r.split_policy or "Composition" in r.split_policy]
+            # Use exact policy names to avoid accidentally matching
+            # ElementExclusion or future split policies.
+            random_runs = [r for r in fs_run_list if r.split_policy == "RandomCV"]
+            block_runs = [r for r in fs_run_list if r.split_policy == "CompositionBlock"]
             vs.generalisation = self._generalisation_score(random_runs, block_runs, base_rmse)
 
             # 4. Leak suspicion

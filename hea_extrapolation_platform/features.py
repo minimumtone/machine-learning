@@ -172,6 +172,14 @@ class _ElementDB:
                "mendeleev_no": 85, "column": 14, "row": 3, "cov_r": 111,
                "Ns_val": 2, "Np_val": 2, "Nd_val": 0, "Nf_val": 0,
                "bandgap": 1.12, "magmom": 0.0, "space_group": 227},
+        # Carbon — interstitial element important for carbide-strengthened HEAs.
+        # B (bulk modulus) uses diamond value; Vm uses graphite molar volume
+        # divided by Avogadro (approximate, since C is typically interstitial).
+        "C":  {"Z": 6, "vec": 4, "en": 2.55, "r": 0.77, "Tm": 3823,
+               "mass": 12.01, "d_elec": 0, "B": 443, "Vm": 5.3,
+               "mendeleev_no": 95, "column": 14, "row": 2, "cov_r": 76,
+               "Ns_val": 2, "Np_val": 2, "Nd_val": 0, "Nf_val": 0,
+               "bandgap": 5.47, "magmom": 0.0, "space_group": 227},
         "Mg": {"Z": 12, "vec": 2, "en": 1.31, "r": 1.60, "Tm": 923,
                "mass": 24.31, "d_elec": 0, "B": 45, "Vm": 14.0,
                "mendeleev_no": 73, "column": 2, "row": 3, "cov_r": 141,
