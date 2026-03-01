@@ -343,6 +343,8 @@ _THERMO_COLS = [
 ]
 
 _SIZE_COLS = [
+    "B_avg",            # bulk modulus average (GPa) — Hall-Petch proxy
+    "Vm_avg",           # atomic volume average (Å³) — packing density
     "Vm_var",           # atomic volume variance
     "elastic_mismatch", # elastic (bulk modulus) mismatch index
 ]
@@ -679,6 +681,8 @@ def compute_features_single(
         "ss_formation": ss_formation,
         "phase_sep_risk": phase_sep_risk,
         # SIZE
+        "B_avg": B_avg,           # bulk modulus average (GPa)
+        "Vm_avg": Vm_avg,         # atomic volume average (Å³)
         "Vm_var": Vm_var,
         "elastic_mismatch": elastic_mismatch,
         # ELECTRON

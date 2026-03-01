@@ -80,11 +80,16 @@ class RunResult:
 
 
 def _score(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, float]:
-    return {
-        "rmse": float(np.sqrt(mean_squared_error(y_true, y_pred))),
-        "mae": float(mean_absolute_error(y_true, y_pred)),
-        "r2": float(r2_score(y_true, y_pred)),
-    }
+    """Compute RMSE, MAE, R².
+
+    When fewer than 2 samples are present, r2_score is undefined; we
+    return NaN rather than letting sklearn emit an UndefinedMetricWarning
+    and propagate NaN through subsequent computations.
+    """
+    rmse = float(np.sqrt(mean_squared_error(y_true, y_pred)))
+    mae = float(mean_absolute_error(y_true, y_pred))
+    r2 = float(r2_score(y_true, y_pred)) if len(y_true) >= 2 else float("nan")
+    return {"rmse": rmse, "mae": mae, "r2": r2}
 
 
 # ---------------------------------------------------------------------------
@@ -266,11 +271,11 @@ class WorkflowXGB(BaseWorkflow):
         grid = GridSearchCV(
             pipe,
             self._param_grid(),
-            cv=min(self._n_cv, len(X_train)),
+            cv=max(2, min(self._n_cv, len(X_train))),
             scoring="neg_root_mean_squared_error",
             refit=True,
             n_jobs=1,
-            error_score="raise",
+            error_score=np.nan,  # skip failing folds instead of raising
         )
         grid.fit(X_train.values, y_train.values)
 

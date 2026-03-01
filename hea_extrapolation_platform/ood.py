@@ -105,8 +105,11 @@ class OODDetector:
 
         # Mahalanobis setup
         self._mean = X_scaled.mean(axis=0)
-        cov = np.cov(X_scaled, rowvar=False)
-        # Regularise for numerical stability
+        # np.cov returns a 0-d array when n_features==1; atleast_2d normalises
+        # that so downstream np.eye() and np.linalg.inv() always see a 2-D matrix.
+        cov = np.atleast_2d(np.cov(X_scaled, rowvar=False))
+        # Regularise for numerical stability (also handles rank-deficient case
+        # when n_train < n_features, e.g. FS_MAGPIE with a small fold).
         cov += np.eye(cov.shape[0]) * 1e-6
         try:
             self._cov_inv = np.linalg.inv(cov)
@@ -118,7 +121,10 @@ class OODDetector:
         # data we can drop the self-reference (distance-0 hit).
         actual_k = min(self._k, X_scaled.shape[0] - 1)
         if actual_k < 1:
-            actual_k = 1
+            raise ValueError(
+                f"OODDetector requires at least 2 training samples, "
+                f"got {X_scaled.shape[0]}. Cannot fit kNN with k={self._k}."
+            )
         self._actual_k = actual_k  # save for consistent use in score()
         self._nn = NearestNeighbors(n_neighbors=actual_k + 1, metric="euclidean")
         self._nn.fit(X_scaled)

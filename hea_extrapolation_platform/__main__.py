@@ -114,16 +114,17 @@ def cmd_run(args: argparse.Namespace) -> None:
     figure_paths = {}
     if not args.no_plots:
         logger.info("Generating figures...")
-        figure_paths["Validity Ranking"] = plot_validity_ranking(
-            validity_scores, fig_dir,
-        )
-        figure_paths["Performance Heatmap"] = plot_performance_heatmap(
-            runs, fig_dir,
-        )
-        figure_paths["Parity Plot"] = plot_parity(runs, fig_dir)
+        for fig_label, fig_fn in [
+            ("Validity Ranking", lambda: plot_validity_ranking(validity_scores, fig_dir)),
+            ("Performance Heatmap", lambda: plot_performance_heatmap(runs, fig_dir)),
+            ("Parity Plot", lambda: plot_parity(runs, fig_dir)),
+        ]:
+            try:
+                figure_paths[fig_label] = fig_fn()
+            except Exception as exc:
+                logger.warning("Figure '%s' failed (non-fatal): %s", fig_label, exc)
 
-        # OOD maps per feature set — use actual train/test split indices
-        # stored by the runner to avoid size mismatch with ood_res.is_ood.
+        # OOD maps per feature set
         for fs_key, ood_res in ood_results.items():
             from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
             try:
@@ -191,14 +192,19 @@ def cmd_run(args: argparse.Namespace) -> None:
     gen = ReportGenerator(out_dir=out_dir)
     # Best OOD result for report
     best_ood = None
+    best_ood_test_indices = None
     if validity_scores and ood_results:
         best_fs = validity_scores[0].feature_set
         best_ood = ood_results.get(best_fs)
+        split_info = runner.ood_split_indices.get(best_fs)
+        if split_info is not None:
+            best_ood_test_indices = split_info[1]  # (train_idx, test_idx)[1]
 
     report_path = gen.generate(
         runs=runs,
         validity_scores=validity_scores,
         ood_result=best_ood,
+        ood_test_indices=best_ood_test_indices,
         compositions_df=comps_df,
         figure_paths=figure_paths,
         literature_results=literature_results,
