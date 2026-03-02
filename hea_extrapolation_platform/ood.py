@@ -230,7 +230,7 @@ class OODDetector:
             )
             for x in X_scaled
         ])
-        return np.nan_to_num(dists, nan=0.0, posinf=0.0, neginf=0.0)
+        return np.nan_to_num(dists, nan=0.0, posinf=1e12, neginf=0.0)
 
     def _knn_batch_train(self, X_scaled: np.ndarray) -> np.ndarray:
         """Compute mean kNN distance for training data (excludes self).
