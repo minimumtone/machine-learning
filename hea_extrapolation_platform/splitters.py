@@ -133,7 +133,14 @@ class CompositionBlockSplitter(BaseSplitter):
             )
 
         scaler = StandardScaler()
-        comp_scaled = scaler.fit_transform(compositions.values)
+        # CRITICAL: Force C-contiguous layout before BLAS calls in
+        # StandardScaler / KMeans.  pandas 3.0 .values on fragmented
+        # DataFrames returns F-contiguous arrays → SIGSEGV in BLAS.
+        comp_scaled = scaler.fit_transform(
+            np.ascontiguousarray(
+                compositions.to_numpy(dtype="float64", na_value=np.nan)
+            )
+        )
 
         actual_k = min(self._n_folds, len(compositions))
         km = KMeans(

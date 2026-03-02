@@ -33,6 +33,7 @@ Design decisions (GUI review fixes):
 from __future__ import annotations
 
 import datetime
+import faulthandler
 import gc
 import html as html_mod
 import logging
@@ -43,6 +44,9 @@ import traceback
 import warnings
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional, Tuple
+
+# Print a Python traceback on SIGSEGV instead of silently crashing.
+faulthandler.enable()
 
 import gradio as gr
 import numpy as np
@@ -1189,9 +1193,12 @@ def _run_feature_selection_for_fs(
             None, "*Error*", session,
         )
 
-    # Rebuild from numpy to get a single contiguous block; column-subset
-    # slicing on a wide DataFrame can create a fragmented BlockManager.
-    _arr = features_df[available_cols].to_numpy(dtype="float64")
+    # Rebuild from numpy to get a single C-contiguous block; column-subset
+    # slicing on a wide DataFrame can create a fragmented BlockManager
+    # whose .values is F-contiguous, causing SIGSEGV in BLAS.
+    _arr = np.ascontiguousarray(
+        features_df[available_cols].to_numpy(dtype="float64", na_value=np.nan)
+    )
     X = pd.DataFrame(_arr, columns=available_cols)
     y = target.copy()
 
