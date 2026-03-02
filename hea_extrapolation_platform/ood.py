@@ -101,17 +101,16 @@ class OODDetector:
                      X_train.shape[0], X_train.shape[1])
 
         self._scaler = StandardScaler()
-        # pandas 3.0 DataFrame.values returns F-contiguous (column-major) arrays.
-        # StandardScaler.fit_transform() preserves the memory layout of its input,
-        # so X_scaled inherits F-contiguous layout.  When rows are sliced from an
-        # F-contiguous 2-D array (e.g. X_scaled[i]), the resulting 1-D view has a
-        # stride equal to the column pitch (n_samples * itemsize) rather than 1
-        # element.  Passing such a non-unit-stride vector to
-        # scipy.spatial.distance.mahalanobis triggers an internal BLAS/LAPACK call
-        # that assumes stride-1 layout, causing a Segmentation Fault.
-        # np.ascontiguousarray() forces a C-order (row-major) copy so that every
-        # row slice is a contiguous 1-D array with stride=itemsize.
-        X_scaled = np.ascontiguousarray(self._scaler.fit_transform(X_train.values))
+        # CRITICAL: Force C-contiguous layout at the DataFrame → numpy boundary.
+        # pandas 3.0 DataFrame.values returns F-contiguous (column-major) arrays
+        # when the BlockManager is fragmented.  StandardScaler preserves layout,
+        # so X_scaled inherits F-contiguous.  Row slices of an F-contiguous 2-D
+        # array have non-unit stride, which causes scipy.spatial.distance.
+        # mahalanobis (and BLAS/LAPACK in general) to SIGSEGV.
+        X_train_arr = np.ascontiguousarray(
+            X_train.to_numpy(dtype="float64", na_value=np.nan)
+        )
+        X_scaled = np.ascontiguousarray(self._scaler.fit_transform(X_train_arr))
 
         # Mahalanobis setup
         self._mean = X_scaled.mean(axis=0)
@@ -182,11 +181,11 @@ class OODDetector:
         if not self._fitted:
             raise RuntimeError("OODDetector.fit() must be called before score()")
 
-        # Same C-contiguous guarantee as in fit(): the scaler's transform() output
-        # inherits the memory layout of the input DataFrame slice, which under
-        # pandas 3.0 is F-contiguous.  Force row-major layout here so that
-        # mahalanobis row slices are stride-1 contiguous vectors.
-        X_scaled = np.ascontiguousarray(self._scaler.transform(X_query.values))
+        # Same C-contiguous guarantee as in fit().
+        X_query_arr = np.ascontiguousarray(
+            X_query.to_numpy(dtype="float64", na_value=np.nan)
+        )
+        X_scaled = np.ascontiguousarray(self._scaler.transform(X_query_arr))
 
         maha = self._mahalanobis_batch(X_scaled)
         knn = self._knn_batch(X_scaled)
@@ -219,11 +218,19 @@ class OODDetector:
     # ------------------------------------------------------------------
 
     def _mahalanobis_batch(self, X_scaled: np.ndarray) -> np.ndarray:
-        """Compute Mahalanobis distance for each row."""
+        """Compute Mahalanobis distance for each row.
+
+        Clamps NaN/Inf results (caused by floating-point noise in the
+        covariance inverse) to 0.0 so downstream normalisation doesn't
+        propagate NaN into the composite score.
+        """
         dists = np.array([
-            mahalanobis(x, self._mean, self._cov_inv) for x in X_scaled
+            mahalanobis(
+                np.ascontiguousarray(x), self._mean, self._cov_inv
+            )
+            for x in X_scaled
         ])
-        return dists
+        return np.nan_to_num(dists, nan=0.0, posinf=0.0, neginf=0.0)
 
     def _knn_batch_train(self, X_scaled: np.ndarray) -> np.ndarray:
         """Compute mean kNN distance for training data (excludes self).

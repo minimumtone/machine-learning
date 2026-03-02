@@ -487,28 +487,25 @@ def _refresh_ood_data(
         return None, f"Unknown feature set: {fs_key}", pd.DataFrame()
 
     # Fix #3: use stored train/test indices for correct visualization.
-    # Rebuild from numpy after column-subset + iloc to avoid fragmented
-    # BlockManager that can SIGSEGV in downstream .values / PCA calls.
+    # CRITICAL: Force C-contiguous layout.  Column-subset + iloc on a
+    # DataFrame creates fragmented views whose .values is F-contiguous,
+    # causing SIGSEGV in downstream PCA / StandardScaler calls.
+    X_fs_arr = np.ascontiguousarray(
+        features_df[cols].to_numpy(dtype="float64", na_value=np.nan)
+    )
     split = ood_split_indices.get(fs_key)
     if split is not None:
         train_idx, test_idx = split
-        X_train = pd.DataFrame(
-            features_df[cols].iloc[train_idx].to_numpy(dtype="float64"),
-            columns=cols,
-        )
-        X_query = pd.DataFrame(
-            features_df[cols].iloc[test_idx].to_numpy(dtype="float64"),
-            columns=cols,
-        )
+        X_train = pd.DataFrame(X_fs_arr[train_idx], columns=cols)
+        X_query = pd.DataFrame(X_fs_arr[test_idx], columns=cols)
     else:
         logger.warning("No OOD split indices for %s, using heuristic", fs_key)
-        X_all_arr = features_df[cols].to_numpy(dtype="float64")
         n_ood = len(ood_res.composite_scores)
         X_train = pd.DataFrame(
-            X_all_arr[:len(X_all_arr) - n_ood], columns=cols,
+            X_fs_arr[:len(X_fs_arr) - n_ood], columns=cols,
         )
         X_query = pd.DataFrame(
-            X_all_arr[len(X_all_arr) - n_ood:], columns=cols,
+            X_fs_arr[len(X_fs_arr) - n_ood:], columns=cols,
         )
 
     fig = plotly_ood_map(
@@ -773,22 +770,24 @@ def _do_literature_search(
 # ---------------------------------------------------------------------------
 
 def _consolidate_df(df: pd.DataFrame) -> pd.DataFrame:
-    """Return a consolidated (single-block) copy of *df*.
+    """Return a consolidated (single C-contiguous block) copy of *df*.
 
     ``pd.DataFrame`` built from heterogeneous sources may carry one
     internal memory block per column (fragmented BlockManager).
     Operations like ``.describe()`` or ``.corr()`` on such a frame can
     trigger a SIGSEGV in the pandas/numpy C layer.
 
-    Rebuilding from the underlying numpy array guarantees a single
-    contiguous block for homogeneous-dtype frames (all float64).
+    Rebuilding via ``np.ascontiguousarray`` guarantees a single
+    C-contiguous block for homogeneous-dtype frames (all float64).
     For mixed-dtype frames the columnar rebuild is used instead.
     """
     if df.empty:
         return df
     try:
-        # Fast path: all-numeric frame -> single numpy block
-        arr = df.to_numpy(dtype="float64", na_value=np.nan)
+        # Fast path: all-numeric frame -> single C-contiguous numpy block
+        arr = np.ascontiguousarray(
+            df.to_numpy(dtype="float64", na_value=np.nan)
+        )
         return pd.DataFrame(arr, columns=df.columns, index=df.index)
     except (ValueError, TypeError):
         # Mixed dtypes — rebuild from dict-of-lists (columnar)
