@@ -305,11 +305,15 @@ class MIntWorkflowAdapter:
             output_path = tmp / "output.json"
 
             train_df = X_train.copy()
-            train_df["__target__"] = y_train.values
+            train_df["__target__"] = np.ascontiguousarray(
+                y_train.to_numpy(dtype="float64")
+            )
             train_df.to_csv(train_path, index=False)
 
             test_df = X_test.copy()
-            test_df["__target__"] = y_test.values
+            test_df["__target__"] = np.ascontiguousarray(
+                y_test.to_numpy(dtype="float64")
+            )
             test_df.to_csv(test_path, index=False)
 
             # Execute script
@@ -424,9 +428,13 @@ class MIntWorkflowAdapter:
 
         # Prepare payload
         train_data = X_train.copy()
-        train_data["__target__"] = y_train.values
+        train_data["__target__"] = np.ascontiguousarray(
+            y_train.to_numpy(dtype="float64")
+        )
         test_data = X_test.copy()
-        test_data["__target__"] = y_test.values
+        test_data["__target__"] = np.ascontiguousarray(
+            y_test.to_numpy(dtype="float64")
+        )
 
         payload = {
             "train_data": train_data.to_dict(orient="records"),
