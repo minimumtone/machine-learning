@@ -1317,7 +1317,7 @@ def _run_feature_selection_for_fs(
 # ---------------------------------------------------------------------------
 
 # Current PR / build version tag shown in the GUI title bar.
-_GUI_VERSION_TAG = "PR#125"
+_GUI_VERSION_TAG = "PR#126"
 
 
 def create_app() -> gr.Blocks:
@@ -1379,6 +1379,10 @@ def create_app() -> gr.Blocks:
                         'サンプルデータ自動生成モード（CSVをアップロードすると切替）'
                         '</div>'
                     ),
+                )
+                csv_read_btn = gr.Button(
+                    "\U0001F4D6 CSV読み込み (Read CSV)",
+                    variant="secondary",
                 )
 
                 with gr.Row():
@@ -1446,6 +1450,84 @@ def create_app() -> gr.Blocks:
                     inputs=[run_csv_upload],
                     outputs=[csv_status_html],
                 )
+
+                # --- CSV Read button handler ---
+                # Reads the uploaded CSV and updates Data Summary
+                # tab without running the full analysis.
+                def _read_csv_preview(
+                    file_obj: Any,
+                    target_col: str,
+                    session: Dict[str, Any],
+                ) -> Tuple:
+                    """Read CSV and preview in Data Summary tab."""
+                    if file_obj is None:
+                        no_file_html = (
+                            '<div style="padding:8px 12px; '
+                            'background:#fff3e0; '
+                            'border-left:4px solid #FF9800; '
+                            'border-radius:4px; '
+                            'margin:4px 0; font-size:14px;">'
+                            '\u26a0\ufe0f <b>CSVファイルが選択されて'
+                            'いません</b>: '
+                            'まずCSVファイルをアップロードしてください。'
+                            '</div>'
+                        )
+                        return (
+                            no_file_html,
+                            build_summary_stats_md(None, None, None),
+                            None, None, None, pd.DataFrame(),
+                            session,
+                        )
+                    result = _handle_csv_upload(
+                        file_obj, target_col, session,
+                    )
+                    # result = (stats_md, fig, fig, fig, df, session)
+                    updated_session = result[-1]
+                    stats_md = result[0]
+                    # Build status HTML
+                    if updated_session.get("compositions_df") is not None:
+                        n_samples = len(
+                            updated_session["compositions_df"]
+                        )
+                        n_features = (
+                            updated_session["features_df"].shape[1]
+                        )
+                        fname = (
+                            file_obj.name.split("/")[-1]
+                            if hasattr(file_obj, "name")
+                            else "uploaded.csv"
+                        )
+                        status_html = (
+                            '<div style="padding:8px 12px; '
+                            'background:#e8f5e9; '
+                            'border-left:4px solid #4CAF50; '
+                            'border-radius:4px; '
+                            'margin:4px 0; font-size:14px;">'
+                            f'\u2705 <b>CSV読み込み完了</b>: '
+                            f'<code>{html_mod.escape(fname)}</code>'
+                            f' — {n_samples}サンプル, '
+                            f'{n_features}特徴量 '
+                            '（Data Summaryタブで確認できます）'
+                            '</div>'
+                        )
+                    else:
+                        # Error case — stats_md contains the error
+                        status_html = (
+                            '<div style="padding:8px 12px; '
+                            'background:#ffebee; '
+                            'border-left:4px solid #F44336; '
+                            'border-radius:4px; '
+                            'margin:4px 0; font-size:14px;">'
+                            '\u274c <b>CSV読み込みエラー</b>: '
+                            'Data Summaryタブでエラー詳細を確認して'
+                            'ください。'
+                            '</div>'
+                        )
+                    return (
+                        status_html,
+                        *result[:-1],  # stats_md, figs, df
+                        updated_session,
+                    )
 
                 # --- ML Algorithm Selection ---
                 with gr.Accordion(
@@ -1579,6 +1661,22 @@ def create_app() -> gr.Blocks:
                     fn=_refresh_data_summary,
                     inputs=[state],
                     outputs=summary_outputs,
+                )
+
+                # Wire CSV Read button (defined in Config & Run tab)
+                # to update Data Summary components cross-tab.
+                csv_read_btn.click(
+                    fn=_read_csv_preview,
+                    inputs=[
+                        run_csv_upload, run_csv_target, state,
+                    ],
+                    outputs=[
+                        csv_status_html,
+                        summary_stats_md, target_hist_plot,
+                        comp_bar_plot, corr_heatmap_plot,
+                        feature_stats_table,
+                        state,
+                    ],
                 )
 
 
