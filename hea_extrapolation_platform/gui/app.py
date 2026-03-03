@@ -1529,20 +1529,6 @@ def create_app() -> gr.Blocks:
                         updated_session,
                     )
 
-                csv_read_btn.click(
-                    fn=_read_csv_preview,
-                    inputs=[
-                        run_csv_upload, run_csv_target, state,
-                    ],
-                    outputs=[
-                        csv_status_html,
-                        summary_stats_md, target_hist_plot,
-                        comp_bar_plot, corr_heatmap_plot,
-                        feature_stats_table,
-                        state,
-                    ],
-                )
-
                 # --- ML Algorithm Selection ---
                 with gr.Accordion(
                     "ML Algorithm Selection (ワークフロー選択)",
@@ -1675,6 +1661,22 @@ def create_app() -> gr.Blocks:
                     fn=_refresh_data_summary,
                     inputs=[state],
                     outputs=summary_outputs,
+                )
+
+                # Wire CSV Read button (defined in Config & Run tab)
+                # to update Data Summary components cross-tab.
+                csv_read_btn.click(
+                    fn=_read_csv_preview,
+                    inputs=[
+                        run_csv_upload, run_csv_target, state,
+                    ],
+                    outputs=[
+                        csv_status_html,
+                        summary_stats_md, target_hist_plot,
+                        comp_bar_plot, corr_heatmap_plot,
+                        feature_stats_table,
+                        state,
+                    ],
                 )
 
 
