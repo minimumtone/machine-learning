@@ -27,6 +27,36 @@ from sklearn.preprocessing import StandardScaler
 logger = logging.getLogger(__name__)
 
 
+def _to_list(arr) -> list:
+    """Convert any array-like to a plain Python list.
+
+    Plotly internally deep-copies template objects (including Histogram,
+    Marker, Pattern, etc.) when ``update_layout(template=...)`` is called.
+    If *any* numpy array is attached to the figure at that moment, the
+    deep-copy can trigger C-extension finalizers on F-contiguous arrays
+    produced by pandas 3.0, causing a SIGSEGV.
+
+    By converting every data payload to a plain Python ``list`` *before*
+    it reaches Plotly, we guarantee that Plotly never holds a reference
+    to a numpy array and the deep-copy path stays in pure-Python land.
+    """
+    if arr is None:
+        return []
+    if isinstance(arr, np.ndarray):
+        return arr.tolist()
+    if isinstance(arr, pd.Series):
+        return arr.tolist()
+    if isinstance(arr, pd.Index):
+        return arr.tolist()
+    if isinstance(arr, list):
+        return arr
+    # Fallback — try generic conversion
+    try:
+        return list(arr)
+    except TypeError:
+        return [arr]
+
+
 def _records_to_df(records: List[Dict[str, Any]]) -> pd.DataFrame:
     """Build a DataFrame from a list-of-dicts using columnar construction.
 
@@ -94,8 +124,8 @@ def plotly_ood_map(
 
     # Training points
     fig.add_trace(go.Scatter(
-        x=coords[:n_train, 0],
-        y=coords[:n_train, 1],
+        x=_to_list(coords[:n_train, 0]),
+        y=_to_list(coords[:n_train, 1]),
         mode="markers",
         marker=dict(color="grey", opacity=0.3, size=6),
         name="Train",
@@ -110,11 +140,11 @@ def plotly_ood_map(
     # In-distribution query points
     if in_dist_mask.any():
         fig.add_trace(go.Scatter(
-            x=query_x[in_dist_mask],
-            y=query_y[in_dist_mask],
+            x=_to_list(query_x[in_dist_mask]),
+            y=_to_list(query_y[in_dist_mask]),
             mode="markers",
             marker=dict(
-                color=composite_scores[in_dist_mask],
+                color=_to_list(composite_scores[in_dist_mask]),
                 colorscale="RdYlGn_r",
                 size=8,
                 colorbar=dict(title="OOD Score"),
@@ -130,11 +160,11 @@ def plotly_ood_map(
     # OOD query points — red ring markers
     if is_ood.any():
         fig.add_trace(go.Scatter(
-            x=query_x[is_ood],
-            y=query_y[is_ood],
+            x=_to_list(query_x[is_ood]),
+            y=_to_list(query_y[is_ood]),
             mode="markers",
             marker=dict(
-                color=composite_scores[is_ood],
+                color=_to_list(composite_scores[is_ood]),
                 colorscale="RdYlGn_r",
                 size=12,
                 line=dict(width=2, color="red"),
@@ -265,11 +295,11 @@ def plotly_heatmap(
     )
 
     fig = go.Figure(data=go.Heatmap(
-        z=pivot_arr,
+        z=_to_list(pivot_arr),
         x=list(pivot.columns),
         y=list(pivot.index),
         colorscale="YlOrRd",
-        text=np.round(pivot_arr, 2),
+        text=np.round(pivot_arr, 2).tolist(),
         texttemplate="%{text}",
         hovertemplate=(
             "Feature Set: %{y}<br>Split: %{x}<br>"
@@ -406,11 +436,11 @@ def plotly_uncertainty_ood(
     go.Figure
     """
     fig = go.Figure(data=go.Scatter(
-        x=ood_scores,
-        y=uncertainties,
+        x=_to_list(ood_scores),
+        y=_to_list(uncertainties),
         mode="markers",
         marker=dict(
-            color=np.abs(errors),
+            color=_to_list(np.abs(errors)),
             colorscale="Hot",
             size=8,
             colorbar=dict(title="|Error|"),
@@ -545,7 +575,7 @@ def plotly_target_histogram(
     go.Figure
     """
     fig = go.Figure(data=go.Histogram(
-        x=np.ascontiguousarray(target.to_numpy(dtype="float64")),
+        x=target.to_numpy(dtype="float64").tolist(),
         nbinsx=30,
         marker_color="#4C72B0",
         hovertemplate="Range: %{x}<br>Count: %{y}<extra></extra>",
@@ -595,10 +625,10 @@ def plotly_composition_heatmap(
 
     fig = go.Figure(data=go.Bar(
         x=list(means.index),
-        y=list(means.to_numpy()),
+        y=means.to_numpy().tolist(),
         error_y=dict(
             type="data",
-            array=[stds[c] for c in means.index],
+            array=[float(stds[c]) for c in means.index],
             visible=True,
         ),
         marker_color="#55A868",
@@ -713,12 +743,14 @@ def plotly_feature_correlation(
             col = j + 1
             xi = np.ascontiguousarray(df[cols[j]].to_numpy(dtype="float64"))
             yi = np.ascontiguousarray(df[cols[i]].to_numpy(dtype="float64"))
+            xi_list = xi.tolist()
+            yi_list = yi.tolist()
 
             if i == j:
                 # --- Diagonal: histogram ---
                 fig.add_trace(
                     go.Histogram(
-                        x=xi, nbinsx=30,
+                        x=xi_list, nbinsx=30,
                         marker_color="#4C72B0",
                         opacity=0.75,
                         showlegend=False,
@@ -738,7 +770,7 @@ def plotly_feature_correlation(
                     xi_s, yi_s = xi, yi
                 fig.add_trace(
                     go.Histogram2dContour(
-                        x=xi_s, y=yi_s,
+                        x=_to_list(xi_s), y=_to_list(yi_s),
                         colorscale="Blues",
                         showscale=False,
                         ncontours=8,
@@ -921,7 +953,7 @@ def plotly_pairwise_scatter(
                 # Diagonal — histogram
                 fig.add_trace(
                     go.Histogram(
-                        x=np.ascontiguousarray(sub[xi].to_numpy()),
+                        x=sub[xi].to_numpy().tolist(),
                         nbinsx=30,
                         marker_color="rgba(76, 114, 176, 0.6)",
                         showlegend=False,
@@ -932,8 +964,8 @@ def plotly_pairwise_scatter(
                 # Off-diagonal — 2D density contour (lightweight)
                 fig.add_trace(
                     go.Histogram2dContour(
-                        x=np.ascontiguousarray(sub[xi].to_numpy()),
-                        y=np.ascontiguousarray(sub[yi].to_numpy()),
+                        x=sub[xi].to_numpy().tolist(),
+                        y=sub[yi].to_numpy().tolist(),
                         colorscale="Blues",
                         showscale=False,
                         ncontours=10,
@@ -943,14 +975,14 @@ def plotly_pairwise_scatter(
                 )
                 # Scatter overlay (subsampled)
                 scatter_kw: dict = dict(
-                    x=np.ascontiguousarray(sub.loc[idx, xi].to_numpy()),
-                    y=np.ascontiguousarray(sub.loc[idx, yi].to_numpy()),
+                    x=sub.loc[idx, xi].to_numpy().tolist(),
+                    y=sub.loc[idx, yi].to_numpy().tolist(),
                     mode="markers",
                     showlegend=False,
                 )
                 if color_arr is not None:
                     scatter_kw["marker"] = dict(
-                        size=2, color=color_arr, colorscale="Viridis",
+                        size=2, color=_to_list(color_arr), colorscale="Viridis",
                         opacity=0.5,
                         showscale=(i == 0 and j == 1),
                         colorbar=dict(title=color_label)
@@ -1200,7 +1232,7 @@ def plotly_fs_boxplot(
         subset = df[df["feature_set"] == fs]
         color = _colors[i % len(_colors)]
         fig.add_trace(go.Box(
-            y=subset[metric],
+            y=_to_list(subset[metric]),
             name=fs,
             marker_color=color,
             boxpoints="all",
@@ -1275,7 +1307,7 @@ def plotly_fs_grouped_bar(
         color = _split_colors.get(sp_col, "#8C8C8C")
         fig.add_trace(go.Bar(
             x=list(pivot.index),
-            y=np.ascontiguousarray(pivot[sp_col].to_numpy(dtype="float64")),
+            y=pivot[sp_col].to_numpy(dtype="float64").tolist(),
             name=sp_col,
             marker_color=color,
             hovertemplate=f"{sp_col}<br>%{{x}}: %{{y:.3f}}<extra></extra>",

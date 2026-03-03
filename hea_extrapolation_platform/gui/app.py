@@ -38,7 +38,6 @@ from __future__ import annotations
 
 import datetime
 import faulthandler
-import gc
 import html as html_mod
 import logging
 import queue
@@ -2326,17 +2325,30 @@ def create_app() -> gr.Blocks:
                 scores = _result_holder["scores"]
                 ood_results = _result_holder["ood"]
 
-                # Free thread-local temporaries and consolidate memory
-                # before the heavy post-processing phase that builds
-                # DataFrames for every tab.
+                # Free the thread-local dict (but do NOT call
+                # gc.collect() — forcing a collection cycle can
+                # trigger SIGSEGV when numpy/pandas C-extension
+                # finalizers run on F-contiguous arrays).
                 del _result_holder
-                gc.collect()
 
                 session["runs"] = runs
                 session["validity_scores"] = scores
                 session["ood_results"] = ood_results
                 session["ood_split_indices"] = runner.ood_split_indices
                 session["runner"] = runner
+
+                # Consolidate DataFrames to single C-contiguous
+                # blocks BEFORE the post-processing functions
+                # (plotly charts with PCA/StandardScaler, .corr(),
+                # .describe()) touch them.  Fragmented BlockManager
+                # frames from pandas 3.0 produce F-contiguous
+                # .values that SIGSEGV in BLAS/LAPACK.
+                if features_df is not None and not features_df.empty:
+                    features_df = _consolidate_df(features_df)
+                    session["features_df"] = features_df
+                if comps_df is not None and not comps_df.empty:
+                    comps_df = _consolidate_df(comps_df)
+                    session["compositions_df"] = comps_df
 
                 log(f"Completed: {len(runs)} runs")
 
