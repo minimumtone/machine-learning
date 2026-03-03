@@ -6,14 +6,18 @@ Launch::
 
     python -m hea_extrapolation_platform gui --port 7860
 
-Tab-based layout:
-  1. Dashboard     - KPI cards + validity ranking + performance heatmap
-  2. Data Summary  - Dataset statistics, composition/target plots, CSV upload
-  3. Config & Run  - Parameter UI + run button + progress bar + streaming log
-  4. Results       - Run results table + filters + parity plot
-  5. OOD Map       - Interactive PCA scatter + OOD candidates table
-  6. Literature    - Query UI + filters + feature frequency
-  7. Report        - Markdown preview + download
+Tab-based layout (3-phase workflow):
+  1. 前処理 (Data Preparation)
+     - Config & Run  - CSV upload + parameter UI + run button + progress bar
+     - Data Summary  - Dataset statistics, composition/target plots
+  2. 解析 (Analysis)
+     - Dashboard     - KPI cards + validity ranking + performance heatmap
+     - Results       - Run results table + filters + parity plot
+     - OOD Map       - Interactive PCA scatter + OOD candidates table
+     - FS Comparison - Feature selection + physical origins
+  3. 後処理 (Post-processing)
+     - Literature    - Query UI + filters + feature frequency
+     - Report        - Markdown preview + download
 
 Design decisions (GUI review fixes):
   - gr.State replaces module-global _SESSION for multi-user isolation (#1)
@@ -1313,7 +1317,7 @@ def _run_feature_selection_for_fs(
 # ---------------------------------------------------------------------------
 
 # Current PR / build version tag shown in the GUI title bar.
-_GUI_VERSION_TAG = "PR#114"
+_GUI_VERSION_TAG = "PR#125"
 
 
 def create_app() -> gr.Blocks:
@@ -1327,16 +1331,21 @@ def create_app() -> gr.Blocks:
             f"# Extrapolation Discovery Platform &ensp;"
             f"<small style='color:#888;'>({_GUI_VERSION_TAG})</small>\n"
             "Feature Validity Evaluation & OOD Detection Dashboard\n\n"
-            "**使い方**: Config & Run タブでパラメータを設定し、"
-            "\"Run Analysis\" を押すと全タブが自動更新されます。"
+            "**使い方**: **前処理** → **解析** → **後処理** の順にタブを進めてください。"
+            "まず Config & Run でCSVアップロード＆解析実行し、結果を各タブで確認します。"
         )
 
         # Fix #1: per-user session state via gr.State
         state = gr.State(_empty_session)
 
         with gr.Tabs():
+          # =============================================================
+          # Phase 1: 前処理 (Data Preparation)
+          # =============================================================
+          with gr.Tab("1. 前処理 (Data Preparation)"):
+            with gr.Tabs():
             # --- Tab 1: Config & Run ---
-            with gr.Tab("Config & Run"):
+              with gr.Tab("Config & Run"):
                 gr.Markdown(
                     "## Analysis Configuration & Execution\n\n"
                     "このプラットフォームは、複数のMLワークフロー×特徴量セット×"
@@ -1526,8 +1535,8 @@ def create_app() -> gr.Blocks:
                     label="Progress Log",
                 )
 
-            # --- Tab 2: Data Summary (Statistics only) ---
-            with gr.Tab("Data Summary"):
+              # --- Tab 2: Data Summary (Statistics only) ---
+              with gr.Tab("Data Summary"):
                 gr.Markdown(
                     "## Data Summary\n"
                     "データセットの概要統計を確認できます。"
@@ -1573,8 +1582,13 @@ def create_app() -> gr.Blocks:
                 )
 
 
-            # --- Tab 3: Dashboard ---
-            with gr.Tab("Dashboard"):
+          # =============================================================
+          # Phase 2: 解析 (Analysis)
+          # =============================================================
+          with gr.Tab("2. 解析 (Analysis)"):
+            with gr.Tabs():
+              # --- Tab 3: Dashboard ---
+              with gr.Tab("Dashboard"):
                 gr.Markdown("## Dashboard -- KPIs & Feature Validity")
                 gr.Markdown(
                     "**Config & Run** タブで解析を実行すると、"
@@ -1634,8 +1648,8 @@ def create_app() -> gr.Blocks:
                     outputs=dash_outputs,
                 )
 
-            # --- Tab 4: Results & FS Comparison ---
-            with gr.Tab("Results"):
+              # --- Tab 4: Results & FS Comparison ---
+              with gr.Tab("Results"):
                 gr.Markdown(
                     "## Analysis Results & Physical Interpretation\n\n"
                     "解析結果の数値データ・パリティプロット・FS比較・"
@@ -1692,8 +1706,8 @@ def create_app() -> gr.Blocks:
                         outputs=res_outputs,
                     )
 
-            # --- Tab 5: OOD Map (Out-of-Distribution) ---
-            with gr.Tab("OOD Map"):
+              # --- Tab 5: OOD Map (Out-of-Distribution) ---
+              with gr.Tab("OOD Map"):
                 gr.Markdown(
                     "## OOD (Out-of-Distribution) Map & Candidates",
                 )
@@ -1742,8 +1756,8 @@ def create_app() -> gr.Blocks:
                     outputs=[ood_csv_file],
                 )
 
-            # --- Tab 6: FS Comparison (Feature Selection + Physical Origins) ---
-            with gr.Tab("FS Comparison"):
+              # --- Tab 6: FS Comparison (Feature Selection + Physical Origins) ---
+              with gr.Tab("FS Comparison"):
                 gr.Markdown(
                     "## Feature Set Comparison & Feature Selection\n\n"
                     "各特徴量セットの物理的起源と、特徴量選択アルゴリズムの結果を表示します。"
@@ -1800,8 +1814,13 @@ def create_app() -> gr.Blocks:
                         ],
                     )
 
-            # --- Tab 7: Literature Search ---
-            with gr.Tab("Literature Search"):
+          # =============================================================
+          # Phase 3: 後処理 (Post-processing)
+          # =============================================================
+          with gr.Tab("3. 後処理 (Post-processing)"):
+            with gr.Tabs():
+              # --- Tab 7: Literature Search ---
+              with gr.Tab("Literature Search"):
                 gr.Markdown(
                     "## Literature Search -- Embedding + Structured Filters",
                 )
@@ -1862,8 +1881,8 @@ def create_app() -> gr.Blocks:
                     ],
                 )
 
-            # --- Tab 8: Report ---
-            with gr.Tab("Report"):
+              # --- Tab 8: Report ---
+              with gr.Tab("Report"):
                 gr.Markdown(
                     "## Analysis Report -- Markdown Preview & Download",
                 )
