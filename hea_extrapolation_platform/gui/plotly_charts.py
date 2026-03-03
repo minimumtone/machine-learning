@@ -28,19 +28,34 @@ from sklearn.preprocessing import StandardScaler
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# SIGSEGV Prevention: Set global default template ONCE at import time.
+# SIGSEGV Prevention — disable plotly template deepcopy entirely.
 #
-# Plotly internally ``deepcopy()``s template objects every time
-# ``fig.update_layout(template="plotly_white")`` is called.  After 702 ML
-# runs, the process holds many F-contiguous numpy arrays (pandas 3.0).
-# The deep-copy triggers C-extension constructors (Histogram, Marker,
-# Pattern, etc.) that SIGSEGV on those arrays.
+# Plotly internally ``deepcopy()``s the active template object every time
+# ``fig.update_layout()`` is called — even when **no** ``template=``
+# parameter is passed.  The deep-copy reconstructs C-extension backed
+# validator objects (Histogram, Marker, Pattern, Layout …).  After 702 ML
+# runs the process holds many F-contiguous numpy arrays (pandas 3.0) and
+# the reconstruction path triggers a SIGSEGV inside those C extensions.
 #
-# By setting the default template here and NEVER passing ``template=``
-# to ``update_layout()``, we completely eliminate the per-figure deepcopy
-# code path that causes the crash.
+# Fix:
+#   1. Set the default template to ``plotly_white`` once.
+#   2. Monkey-patch ``Template.__deepcopy__`` so that ``copy.deepcopy()``
+#      returns the *same* object instead of reconstructing it.  The
+#      template is effectively immutable in our usage so sharing one
+#      instance across figures is safe and completely eliminates the
+#      dangerous C-extension reconstruction code path.
 # ---------------------------------------------------------------------------
 pio.templates.default = "plotly_white"
+
+from plotly.graph_objs.layout._template import (  # noqa: E402
+    Template as _PlotlyTemplate,
+)
+
+def _template_no_deepcopy(self: "_PlotlyTemplate", memo: dict) -> "_PlotlyTemplate":
+    """Return *self* instead of deep-copying — prevents SIGSEGV."""
+    return self
+
+_PlotlyTemplate.__deepcopy__ = _template_no_deepcopy  # type: ignore[attr-defined]
 
 
 def _to_list(arr) -> list:
