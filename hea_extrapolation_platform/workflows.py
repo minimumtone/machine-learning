@@ -305,7 +305,7 @@ class WorkflowLASSO(BaseWorkflow):
         steps: List[Tuple[str, Any]] = [
             ("scaler", StandardScaler()),
             *_make_pca_step(X_train.shape[1], self._dim_reduction),
-            ("model", LassoCV(cv=min(5, len(X_train)), random_state=seed, max_iter=10000)),
+            ("model", LassoCV(cv=max(2, min(5, len(X_train))), random_state=seed, max_iter=10000)),
         ]
         pipe = Pipeline(steps)
         pipe.fit(_safe_np(X_train), _safe_np(y_train))
@@ -558,10 +558,11 @@ class WorkflowXGB(BaseWorkflow):
         # Feature importance from tree model
         model_step = best_pipe.named_steps["model"]
         if hasattr(model_step, "feature_importances_"):
-            fi = dict(zip(
-                X_train.columns,
-                model_step.feature_importances_.tolist(),
-            ))
+            fi_raw = model_step.feature_importances_.tolist()
+            if len(fi_raw) == X_train.shape[1]:
+                fi = dict(zip(X_train.columns, fi_raw))
+            else:
+                fi = {f"PC{i}": float(v) for i, v in enumerate(fi_raw)}
         else:
             fi = {}
 
