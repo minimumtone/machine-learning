@@ -234,7 +234,9 @@ class ElementExclusionSplitter(BaseSplitter):
                     "Element '%s' not found in composition columns – skipping", elem
                 )
                 continue
-            test_mask = compositions[elem].values > 0
+            test_mask = np.ascontiguousarray(
+                compositions[elem].to_numpy(dtype="float64")
+            ) > 0
             n_test = int(test_mask.sum())
             n_train = int((~test_mask).sum())
             if n_test < self._min_test_size:

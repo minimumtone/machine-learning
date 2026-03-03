@@ -160,7 +160,7 @@ class _BuiltinFeatureStore:
         result = self._data[available].copy()
 
         if entity_df is not None and "sample_id" in entity_df.columns:
-            ids = entity_df["sample_id"].values
+            ids = np.ascontiguousarray(entity_df["sample_id"].to_numpy())
             result = result.iloc[ids].reset_index(drop=True)
 
         return result

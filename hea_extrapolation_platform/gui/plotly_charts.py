@@ -545,7 +545,7 @@ def plotly_target_histogram(
     go.Figure
     """
     fig = go.Figure(data=go.Histogram(
-        x=target.values,
+        x=np.ascontiguousarray(target.to_numpy(dtype="float64")),
         nbinsx=30,
         marker_color="#4C72B0",
         hovertemplate="Range: %{x}<br>Count: %{y}<extra></extra>",
@@ -595,7 +595,7 @@ def plotly_composition_heatmap(
 
     fig = go.Figure(data=go.Bar(
         x=list(means.index),
-        y=list(means.values),
+        y=list(means.to_numpy()),
         error_y=dict(
             type="data",
             array=[stds[c] for c in means.index],
