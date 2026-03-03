@@ -138,10 +138,15 @@ def _run_lasso(
 ) -> FeatureSelectionResult:
     """L1-regularised regression (LassoCV) for feature selection."""
     scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X.values)
+    # CRITICAL: Force C-contiguous layout before BLAS calls.
+    # pandas 3.0 .values on fragmented DataFrames returns F-contiguous
+    # arrays which cause SIGSEGV in BLAS/LAPACK routines.
+    X_scaled = scaler.fit_transform(
+        np.ascontiguousarray(X.to_numpy(dtype="float64", na_value=np.nan))
+    )
 
     model = LassoCV(cv=min(cv, len(X)), max_iter=10000, random_state=42)
-    model.fit(X_scaled, y.values)
+    model.fit(X_scaled, np.ascontiguousarray(y.to_numpy(dtype="float64")))
 
     coefs = np.abs(model.coef_)
     all_scores = dict(zip(X.columns, coefs.tolist()))
@@ -204,9 +209,12 @@ def _forward_stepwise_ic(
     best_ic = np.inf
     scaler = StandardScaler()
     X_scaled = pd.DataFrame(
-        scaler.fit_transform(X.values), columns=X.columns, index=X.index,
+        scaler.fit_transform(
+            np.ascontiguousarray(X.to_numpy(dtype="float64", na_value=np.nan))
+        ),
+        columns=X.columns, index=X.index,
     )
-    y_arr = y.values
+    y_arr = np.ascontiguousarray(y.to_numpy(dtype="float64"))
 
     for step in range(min(max_features, len(remaining))):
         best_feat = None
@@ -214,7 +222,9 @@ def _forward_stepwise_ic(
 
         for feat in remaining:
             trial = selected + [feat]
-            X_trial = X_scaled[trial].values
+            X_trial = np.ascontiguousarray(
+                X_scaled[trial].to_numpy(dtype="float64", na_value=np.nan)
+            )
             model = LinearRegression()
             model.fit(X_trial, y_arr)
             y_pred = model.predict(X_trial)
@@ -268,10 +278,12 @@ def _run_ard(
     Features whose precision grows very large are effectively pruned.
     """
     scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X.values)
+    X_scaled = scaler.fit_transform(
+        np.ascontiguousarray(X.to_numpy(dtype="float64", na_value=np.nan))
+    )
 
     model = ARDRegression(max_iter=500, compute_score=True)
-    model.fit(X_scaled, y.values)
+    model.fit(X_scaled, np.ascontiguousarray(y.to_numpy(dtype="float64")))
 
     coefs = np.abs(model.coef_)
     all_scores = dict(zip(X.columns, coefs.tolist()))

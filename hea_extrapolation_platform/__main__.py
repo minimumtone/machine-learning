@@ -25,6 +25,7 @@ Usage::
 from __future__ import annotations
 
 import argparse
+import faulthandler
 import json
 import logging
 import sys
@@ -34,6 +35,11 @@ from typing import List, Optional
 
 import numpy as np
 import pandas as pd
+
+# Enable faulthandler so that SIGSEGV prints a Python traceback
+# instead of silently crashing.  This is invaluable for diagnosing
+# BLAS/LAPACK crashes caused by F-contiguous array layouts.
+faulthandler.enable()
 
 
 def _setup_logging(verbose: bool = False) -> None:
@@ -135,8 +141,14 @@ def cmd_run(args: argparse.Namespace) -> None:
                     logger.warning("No OOD split indices for %s, skipping plot", fs_key)
                     continue
                 train_idx_vis, test_idx_vis = split_indices
-                X_train_vis = features_df[cols].iloc[train_idx_vis]
-                X_test_vis = features_df[cols].iloc[test_idx_vis]
+                # CRITICAL: Force C-contiguous layout.  Column-subset +
+                # iloc creates fragmented DataFrames whose .values is
+                # F-contiguous, causing SIGSEGV in PCA / StandardScaler.
+                _fs_arr = np.ascontiguousarray(
+                    features_df[cols].to_numpy(dtype="float64", na_value=np.nan)
+                )
+                X_train_vis = pd.DataFrame(_fs_arr[train_idx_vis], columns=cols)
+                X_test_vis = pd.DataFrame(_fs_arr[test_idx_vis], columns=cols)
                 fig_path = plot_ood_map_pca(
                     X_train_vis, X_test_vis, ood_res, fig_dir,
                     filename=f"ood_map_pca_{fs_key}.png",

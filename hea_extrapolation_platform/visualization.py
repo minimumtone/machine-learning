@@ -95,12 +95,13 @@ def plot_ood_map_pca(
 
     pca = PCA(n_components=2)
     X_all = pd.concat([X_train, X_query], axis=0, ignore_index=True)
-    # Rebuild from numpy to guarantee a single contiguous block;
-    # column-subset / iloc slices create fragmented BlockManagers
-    # that SIGSEGV when .values is accessed in the C layer.
-    coords = pca.fit_transform(
+    # CRITICAL: Force C-contiguous layout.  pandas 3.0 DataFrame.values
+    # returns F-contiguous arrays from fragmented BlockManagers, causing
+    # SIGSEGV in BLAS/LAPACK calls inside PCA.
+    X_arr = np.ascontiguousarray(
         X_all.to_numpy(dtype="float64", na_value=np.nan)
     )
+    coords = pca.fit_transform(X_arr)
     n_train = len(X_train)
 
     fig, ax = plt.subplots(figsize=(12, 9))
@@ -167,10 +168,11 @@ def plot_ood_map_umap(
 
     reducer = UMAP(n_components=2, random_state=42, n_neighbors=15)
     X_all = pd.concat([X_train, X_query], axis=0, ignore_index=True)
-    # Rebuild from numpy to avoid fragmented BlockManager SIGSEGV
-    coords = reducer.fit_transform(
+    # CRITICAL: Force C-contiguous layout to avoid SIGSEGV
+    X_arr = np.ascontiguousarray(
         X_all.to_numpy(dtype="float64", na_value=np.nan)
     )
+    coords = reducer.fit_transform(X_arr)
     n_train = len(X_train)
 
     fig, ax = plt.subplots(figsize=(12, 9))
@@ -286,9 +288,13 @@ def plot_performance_heatmap(
     else:
         df = pd.DataFrame()
     pivot = df.groupby(["feature_set", "split_policy"])[metric].mean().unstack(fill_value=0)
+    # Force C-contiguous for pivot array used in imshow
+    pivot_arr = np.ascontiguousarray(
+        pivot.to_numpy(dtype="float64", na_value=0.0)
+    )
 
     fig, ax = plt.subplots(figsize=(12, max(6, len(pivot) * 1.0)))
-    im = ax.imshow(pivot.values, cmap="YlOrRd", aspect="auto")
+    im = ax.imshow(pivot_arr, cmap="YlOrRd", aspect="auto")
     cbar = fig.colorbar(im, ax=ax)
     cbar.set_label(metric.upper())
 
@@ -300,7 +306,7 @@ def plot_performance_heatmap(
     # Annotate cells
     for i in range(len(pivot.index)):
         for j in range(len(pivot.columns)):
-            val = pivot.values[i, j]
+            val = pivot_arr[i, j]
             ax.text(j, i, f"{val:.1f}", ha="center", va="center",
                     fontsize=_BASE_FONT * 1.4, color="black")
 

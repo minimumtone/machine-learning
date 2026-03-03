@@ -91,11 +91,38 @@ logger = logging.getLogger(__name__)
 # Run Registry
 # ---------------------------------------------------------------------------
 
+def safe_array(source: Any, dtype: str = "float64") -> np.ndarray:
+    """Convert *source* to a C-contiguous numpy array.
+
+    This is the single choke-point for every DataFrame → numpy conversion
+    in the platform.  pandas 3.0 returns F-contiguous (column-major) arrays
+    from ``.values`` and ``.to_numpy()`` when the BlockManager is fragmented.
+    Many C extensions (BLAS, LAPACK, scipy, sklearn) assume C-contiguous
+    (row-major) layout and SIGSEGV on F-contiguous input.
+
+    Accepts: DataFrame, Series, ndarray, or list.
+    Returns: C-contiguous ndarray with requested dtype.
+    """
+    if isinstance(source, pd.DataFrame):
+        arr = source.to_numpy(dtype=dtype, na_value=np.nan)
+    elif isinstance(source, pd.Series):
+        arr = source.to_numpy(dtype=dtype)
+    elif isinstance(source, np.ndarray):
+        arr = np.array(source, dtype=dtype)
+    else:
+        arr = np.asarray(source, dtype=dtype)
+    return np.ascontiguousarray(arr)
+
+
 class RunRegistry:
     """In-memory registry of experiment runs with JSON export."""
 
     def __init__(self) -> None:
         self._runs: List[RunResult] = []
+
+    def reset(self) -> None:
+        """Clear all stored runs (called at the start of each run())."""
+        self._runs.clear()
 
     def add(self, run: RunResult) -> None:
         self._runs.append(run)
@@ -171,14 +198,24 @@ def _run_job(
     X_fs: np.ndarray,
     feature_cols: List[str],
     y: np.ndarray,
+    mint_configs: Optional[Dict[str, "MIntWorkflowConfig"]] = None,
 ) -> RunResult:
     """Execute a single training run.  Pure function — no side effects.
 
     X_fs must be C-contiguous so that row slices have unit stride, avoiding
     the BLAS SIGSEGV that occurs with F-contiguous (pandas 3.0) layouts.
+
+    Parameters
+    ----------
+    mint_configs : dict, optional
+        Mapping of MInt workflow name → MIntWorkflowConfig.  When the job's
+        ``wf_name`` is not a built-in workflow, the config is used to
+        reconstruct a ``MIntWorkflowAdapter`` in the worker process.
     """
     import pandas as _pd
 
+    # Row slices of a C-contiguous 2-D array are themselves contiguous.
+    # Wrap them in DataFrames only for the workflow API.
     X_train = _pd.DataFrame(X_fs[job.train_idx], columns=feature_cols)
     X_test  = _pd.DataFrame(X_fs[job.test_idx],  columns=feature_cols)
     y_train = _pd.Series(y[job.train_idx])
@@ -194,7 +231,19 @@ def _run_job(
             n_members=3 if job.quick else 5, quick=job.quick
         ),
     }
-    wf = wf_map[job.wf_name]
+
+    if job.wf_name in wf_map:
+        wf = wf_map[job.wf_name]
+    elif mint_configs is not None and job.wf_name in mint_configs:
+        from hea_extrapolation_platform.integrations.mint_adapter import (
+            MIntWorkflowAdapter,
+        )
+        wf = MIntWorkflowAdapter(config=mint_configs[job.wf_name])
+    else:
+        raise KeyError(
+            f"Unknown workflow '{job.wf_name}'. "
+            f"Built-in: {list(wf_map)}, MInt: {list(mint_configs or {})}"
+        )
 
     return wf.run(
         X_train, y_train, X_test, y_test,
@@ -304,14 +353,34 @@ class ExperimentRunner:
         """Execute the full experiment grid in 5 phases."""
         t_start = time.time()
 
+        # ── Reset per-run state so repeated GUI calls don't accumulate ──
+        self._registry.reset()
+        self._ood_split_indices.clear()
+
+        # ── Consolidate features_all to a single C-contiguous block ──
+        # This is the ROOT FIX for the SIGSEGV: pandas DataFrames built from
+        # heterogeneous sources (CSV upload, concat, column-subset) carry a
+        # fragmented BlockManager whose .values returns F-contiguous arrays.
+        # We rebuild once here so every downstream consumer (Phase 3 training,
+        # Phase 4 OOD, post-processing visualizations) gets safe arrays.
+        _cols = list(features_all.columns)
+        features_all = pd.DataFrame(
+            safe_array(features_all),
+            columns=_cols,
+            index=features_all.index,
+        )
+
         self._feature_store.store_features(features_all)
 
         all_wf_names = ["WF-LIN", "WF-XGB", "WF-ENS"]
+        mint_configs: Dict[str, MIntWorkflowConfig] = {}
         if self._mint_registry is not None:
             for wf_info in self._mint_registry.list_workflows():
                 wf_name = wf_info["name"]
                 if wf_name not in all_wf_names:
                     all_wf_names.append(wf_name)
+                    cfg = self._mint_registry.get_config(wf_name)
+                    mint_configs[wf_name] = cfg
                     logger.info("Added MInt workflow: %s", wf_name)
         wf_names = (
             [w for w in all_wf_names if w in (selected_workflows or all_wf_names)]
@@ -345,7 +414,8 @@ class ExperimentRunner:
             )
 
             all_results = self._phase3_train(
-                jobs, features_all, feature_sets, y_arr, progress_callback
+                jobs, features_all, feature_sets, y_arr,
+                progress_callback, mint_configs or None,
             )
             self._registry.add_many(all_results)
 
@@ -471,6 +541,7 @@ class ExperimentRunner:
         feature_sets: List[FeatureSetName],
         y_arr: np.ndarray,
         progress_callback: Optional[Any],
+        mint_configs: Optional[Dict[str, MIntWorkflowConfig]] = None,
     ) -> List[RunResult]:
         """Train all jobs, optionally in parallel.
 
@@ -483,7 +554,7 @@ class ExperimentRunner:
         fs_arrays: Dict[str, Tuple[np.ndarray, List[str]]] = {}
         for fs_name in feature_sets:
             cols = list(FeatureCatalog.columns(fs_name))
-            arr = np.ascontiguousarray(features_all[cols].values, dtype=float)
+            arr = safe_array(features_all[cols])
             fs_arrays[fs_name.value] = (arr, cols)
             logger.debug(
                 "Phase 3 prep: %s → array shape=%s C-contiguous=%s",
@@ -509,7 +580,7 @@ class ExperimentRunner:
             for job in jobs:
                 arr, cols = fs_arrays[job.fs_name]
                 try:
-                    result = _run_job(job, arr, cols, y_arr)
+                    result = _run_job(job, arr, cols, y_arr, mint_configs)
                     all_results.append(result)
                 except Exception:
                     logger.exception(
@@ -538,6 +609,7 @@ class ExperimentRunner:
                         fs_arrays[job.fs_name][0],
                         fs_arrays[job.fs_name][1],
                         y_arr,
+                        mint_configs,
                     ): job
                     for job in jobs
                 }
@@ -603,7 +675,7 @@ class ExperimentRunner:
             cols = list(FeatureCatalog.columns(fs_name))
 
             # C-contiguous slices — same pattern as Phase 3
-            X_fs_arr = np.ascontiguousarray(features_all[cols].values, dtype=float)
+            X_fs_arr = safe_array(features_all[cols])
             X_train_ood = pd.DataFrame(X_fs_arr[ood_train_idx], columns=cols)
             X_test_ood  = pd.DataFrame(X_fs_arr[ood_test_idx],  columns=cols)
 

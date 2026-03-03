@@ -16,7 +16,6 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-from scipy.spatial.distance import mahalanobis
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
 
@@ -101,31 +100,33 @@ class OODDetector:
                      X_train.shape[0], X_train.shape[1])
 
         self._scaler = StandardScaler()
-        # pandas 3.0 DataFrame.values returns F-contiguous (column-major) arrays.
-        # StandardScaler.fit_transform() preserves the memory layout of its input,
-        # so X_scaled inherits F-contiguous layout.  When rows are sliced from an
-        # F-contiguous 2-D array (e.g. X_scaled[i]), the resulting 1-D view has a
-        # stride equal to the column pitch (n_samples * itemsize) rather than 1
-        # element.  Passing such a non-unit-stride vector to
-        # scipy.spatial.distance.mahalanobis triggers an internal BLAS/LAPACK call
-        # that assumes stride-1 layout, causing a Segmentation Fault.
-        # np.ascontiguousarray() forces a C-order (row-major) copy so that every
-        # row slice is a contiguous 1-D array with stride=itemsize.
-        X_scaled = np.ascontiguousarray(self._scaler.fit_transform(X_train.values))
+        # ── CRITICAL: Force C-contiguous layout at every boundary ──
+        # pandas 3.0 DataFrame.values / .to_numpy() returns F-contiguous
+        # (column-major) arrays when the BlockManager is fragmented.
+        # BLAS/LAPACK routines called by StandardScaler, np.cov,
+        # np.linalg.inv, and NearestNeighbors assume C-contiguous layout
+        # and SIGSEGV on F-contiguous input.  We force C-contiguous on
+        # every intermediate array to guarantee safe memory layout.
+        X_train_arr = np.ascontiguousarray(
+            X_train.to_numpy(dtype="float64", na_value=np.nan)
+        )
+        X_scaled = np.ascontiguousarray(self._scaler.fit_transform(X_train_arr))
 
-        # Mahalanobis setup
-        self._mean = X_scaled.mean(axis=0)
+        # Mahalanobis setup — all intermediates forced C-contiguous
+        self._mean = np.ascontiguousarray(X_scaled.mean(axis=0))
         # np.cov returns a 0-d array when n_features==1; atleast_2d normalises
         # that so downstream np.eye() and np.linalg.inv() always see a 2-D matrix.
-        cov = np.atleast_2d(np.cov(X_scaled, rowvar=False))
+        cov = np.ascontiguousarray(
+            np.atleast_2d(np.cov(X_scaled, rowvar=False))
+        )
         # Regularise for numerical stability (also handles rank-deficient case
         # when n_train < n_features, e.g. FS_MAGPIE with a small fold).
         cov += np.eye(cov.shape[0]) * 1e-6
         try:
-            self._cov_inv = np.linalg.inv(cov)
+            self._cov_inv = np.ascontiguousarray(np.linalg.inv(cov))
         except np.linalg.LinAlgError:
             logger.warning("Covariance matrix singular – using pseudo-inverse")
-            self._cov_inv = np.linalg.pinv(cov)
+            self._cov_inv = np.ascontiguousarray(np.linalg.pinv(cov))
 
         # kNN setup — use k+1 neighbours so that when querying training
         # data we can drop the self-reference (distance-0 hit).
@@ -182,11 +183,11 @@ class OODDetector:
         if not self._fitted:
             raise RuntimeError("OODDetector.fit() must be called before score()")
 
-        # Same C-contiguous guarantee as in fit(): the scaler's transform() output
-        # inherits the memory layout of the input DataFrame slice, which under
-        # pandas 3.0 is F-contiguous.  Force row-major layout here so that
-        # mahalanobis row slices are stride-1 contiguous vectors.
-        X_scaled = np.ascontiguousarray(self._scaler.transform(X_query.values))
+        # Same C-contiguous guarantee as in fit().
+        X_query_arr = np.ascontiguousarray(
+            X_query.to_numpy(dtype="float64", na_value=np.nan)
+        )
+        X_scaled = np.ascontiguousarray(self._scaler.transform(X_query_arr))
 
         maha = self._mahalanobis_batch(X_scaled)
         knn = self._knn_batch(X_scaled)
@@ -219,11 +220,30 @@ class OODDetector:
     # ------------------------------------------------------------------
 
     def _mahalanobis_batch(self, X_scaled: np.ndarray) -> np.ndarray:
-        """Compute Mahalanobis distance for each row."""
-        dists = np.array([
-            mahalanobis(x, self._mean, self._cov_inv) for x in X_scaled
-        ])
-        return dists
+        """Compute Mahalanobis distance for each row — vectorised.
+
+        Uses a fully vectorised implementation instead of the per-row
+        ``scipy.spatial.distance.mahalanobis`` call that was the root
+        cause of SIGSEGV: scipy's mahalanobis internally calls BLAS on
+        each 1-D row slice, and when the parent array has unexpected
+        strides the BLAS routine crashes.
+
+        The vectorised form ``sqrt(diag((X-μ) @ Σ⁻¹ @ (X-μ)ᵀ))``
+        processes the entire matrix in one BLAS call, which is both
+        safer (single contiguous buffer) and ~100× faster.
+
+        Clamps NaN/Inf results (caused by floating-point noise in the
+        covariance inverse) so downstream normalisation stays finite.
+        """
+        diff = np.ascontiguousarray(X_scaled - self._mean)  # (n, p)
+        # diff @ cov_inv → (n, p);  element-wise * diff → (n, p)
+        # sum over axis=1 → (n,)   — this is the squared Mahalanobis
+        left = np.ascontiguousarray(diff @ self._cov_inv)   # (n, p)
+        sq = np.sum(left * diff, axis=1)                    # (n,)
+        # Clamp negative values (numerical noise) before sqrt
+        sq = np.maximum(sq, 0.0)
+        dists = np.sqrt(sq)
+        return np.nan_to_num(dists, nan=0.0, posinf=1e12, neginf=0.0)
 
     def _knn_batch_train(self, X_scaled: np.ndarray) -> np.ndarray:
         """Compute mean kNN distance for training data (excludes self).
@@ -232,7 +252,8 @@ class OODDetector:
         column is always the query point itself (distance ≈ 0), so we
         drop it.
         """
-        dists, _ = self._nn.kneighbors(X_scaled)
+        X_safe = np.ascontiguousarray(X_scaled)
+        dists, _ = self._nn.kneighbors(X_safe)
         return dists[:, 1:].mean(axis=1)
 
     def _knn_batch(self, X_scaled: np.ndarray) -> np.ndarray:
@@ -244,7 +265,8 @@ class OODDetector:
         semantics as training (``_actual_k`` may be < ``_k`` when the
         training set is small).
         """
-        dists, _ = self._nn.kneighbors(X_scaled)
+        X_safe = np.ascontiguousarray(X_scaled)
+        dists, _ = self._nn.kneighbors(X_safe)
         return dists[:, :self._actual_k].mean(axis=1)
 
     @staticmethod

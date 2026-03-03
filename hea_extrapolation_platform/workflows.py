@@ -26,6 +26,26 @@ from sklearn.preprocessing import StandardScaler
 
 logger = logging.getLogger(__name__)
 
+
+def _safe_np(source: Any) -> np.ndarray:
+    """Return a C-contiguous float64 array from DataFrame / Series / ndarray.
+
+    pandas 3.0 may return F-contiguous (column-major) arrays from
+    ``.values`` / ``.to_numpy()`` when the BlockManager is fragmented.
+    BLAS/LAPACK routines inside StandardScaler, Ridge, XGBoost, and
+    NearestNeighbors assume C-contiguous (row-major) layout and can
+    SIGSEGV on F-contiguous input.  This helper guarantees C-contiguous.
+    """
+    if isinstance(source, pd.DataFrame):
+        arr = source.to_numpy(dtype="float64", na_value=np.nan)
+    elif isinstance(source, pd.Series):
+        arr = source.to_numpy(dtype="float64")
+    elif isinstance(source, np.ndarray):
+        arr = np.array(source, dtype="float64")
+    else:
+        arr = np.asarray(source, dtype="float64")
+    return np.ascontiguousarray(arr)
+
 try:
     from xgboost import XGBRegressor
 
@@ -153,13 +173,13 @@ class WorkflowLIN(BaseWorkflow):
             ("scaler", StandardScaler()),
             ("model", Ridge(alpha=self._alpha)),
         ])
-        pipe.fit(X_train.values, y_train.values)
+        pipe.fit(_safe_np(X_train), _safe_np(y_train))
 
-        y_train_pred = pipe.predict(X_train.values)
-        y_test_pred = pipe.predict(X_test.values)
+        y_train_pred = pipe.predict(_safe_np(X_train))
+        y_test_pred = pipe.predict(_safe_np(X_test))
 
-        train_s = _score(y_train.values, y_train_pred)
-        test_s = _score(y_test.values, y_test_pred)
+        train_s = _score(_safe_np(y_train), y_train_pred)
+        test_s = _score(_safe_np(y_test), y_test_pred)
 
         # Extract standardised coefficients.
         # Ridge inside the Pipeline sees *already-standardised* X (via the
@@ -172,7 +192,7 @@ class WorkflowLIN(BaseWorkflow):
         # Use ddof=1 (sample std) and guard against single-sample or
         # constant-y edge cases where std would be 0.
         if len(y_train) > 1:
-            std_y = float(np.std(y_train.values, ddof=1))
+            std_y = float(np.std(_safe_np(y_train), ddof=1))
         else:
             std_y = 0.0
         if std_y < 1e-12:
@@ -191,14 +211,14 @@ class WorkflowLIN(BaseWorkflow):
             mae_test=test_s["mae"],
             r2_train=train_s["r2"],
             r2_test=test_s["r2"],
-            y_test_true=y_test.values.copy(),
+            y_test_true=_safe_np(y_test).copy(),
             y_test_pred=y_test_pred.copy(),
             test_indices=kwargs.get("test_indices"),
             params={"alpha": self._alpha},
             artifacts={
                 "coef_raw": dict(zip(X_train.columns, coef_raw.tolist())),
                 "coef_std": dict(zip(X_train.columns, coef_std.tolist())),
-                "residuals_test": (y_test.values - y_test_pred).tolist(),
+                "residuals_test": (_safe_np(y_test) - y_test_pred).tolist(),
             },
             elapsed_sec=time.time() - t0,
         )
@@ -277,14 +297,14 @@ class WorkflowXGB(BaseWorkflow):
             n_jobs=1,
             error_score=np.nan,  # skip failing folds instead of raising
         )
-        grid.fit(X_train.values, y_train.values)
+        grid.fit(_safe_np(X_train), _safe_np(y_train))
 
         best_pipe = grid.best_estimator_
-        y_train_pred = best_pipe.predict(X_train.values)
-        y_test_pred = best_pipe.predict(X_test.values)
+        y_train_pred = best_pipe.predict(_safe_np(X_train))
+        y_test_pred = best_pipe.predict(_safe_np(X_test))
 
-        train_s = _score(y_train.values, y_train_pred)
-        test_s = _score(y_test.values, y_test_pred)
+        train_s = _score(_safe_np(y_train), y_train_pred)
+        test_s = _score(_safe_np(y_test), y_test_pred)
 
         # Feature importance from tree model
         model_step = best_pipe.named_steps["model"]
@@ -308,7 +328,7 @@ class WorkflowXGB(BaseWorkflow):
             mae_test=test_s["mae"],
             r2_train=train_s["r2"],
             r2_test=test_s["r2"],
-            y_test_true=y_test.values.copy(),
+            y_test_true=_safe_np(y_test).copy(),
             y_test_pred=y_test_pred.copy(),
             test_indices=kwargs.get("test_indices"),
             params=grid.best_params_,
@@ -397,9 +417,9 @@ class WorkflowENS(BaseWorkflow):
             # seed=1001,m=0 and seed=1,m=1000 (both → 1001000).
             member_seed = (seed + m * 10_000_007) % (2**31)
             pipe = self._make_member(member_seed)
-            pipe.fit(X_train.values, y_train.values)
-            preds_list.append(pipe.predict(X_test.values))
-            train_preds_list.append(pipe.predict(X_train.values))
+            pipe.fit(_safe_np(X_train), _safe_np(y_train))
+            preds_list.append(pipe.predict(_safe_np(X_test)))
+            train_preds_list.append(pipe.predict(_safe_np(X_train)))
 
         preds_arr = np.stack(preds_list, axis=0)  # (n_members, n_test)
         train_preds_arr = np.stack(train_preds_list, axis=0)
@@ -408,8 +428,8 @@ class WorkflowENS(BaseWorkflow):
         y_test_std = preds_arr.std(axis=0)
         y_train_pred = train_preds_arr.mean(axis=0)
 
-        train_s = _score(y_train.values, y_train_pred)
-        test_s = _score(y_test.values, y_test_pred)
+        train_s = _score(_safe_np(y_train), y_train_pred)
+        test_s = _score(_safe_np(y_test), y_test_pred)
 
         result = RunResult(
             workflow=self.name,
@@ -423,7 +443,7 @@ class WorkflowENS(BaseWorkflow):
             mae_test=test_s["mae"],
             r2_train=train_s["r2"],
             r2_test=test_s["r2"],
-            y_test_true=y_test.values.copy(),
+            y_test_true=_safe_np(y_test).copy(),
             y_test_pred=y_test_pred.copy(),
             test_indices=kwargs.get("test_indices"),
             params={"n_members": self._n_members, "base": self._base_workflow},

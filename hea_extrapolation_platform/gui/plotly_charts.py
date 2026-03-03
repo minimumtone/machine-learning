@@ -76,16 +76,15 @@ def plotly_ood_map(
     go.Figure
     """
     X_all = pd.concat([X_train, X_query], axis=0, ignore_index=True)
-    # Standardise features before PCA so that no single feature
-    # (e.g. atomic weight ~50-200) dominates the variance and
-    # causes PC1 ≈ 100%, PC2 ≈ 0%.
-    # Rebuild from numpy to guarantee a single contiguous memory block;
-    # column-subset / iloc slices create fragmented BlockManagers that
-    # can SIGSEGV in the numpy C layer when .values is accessed.
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(
+    # CRITICAL: Force C-contiguous layout before StandardScaler / PCA.
+    # pandas 3.0 DataFrame.values returns F-contiguous (column-major) arrays
+    # when the BlockManager is fragmented.  BLAS/LAPACK calls inside
+    # StandardScaler and PCA assume C-contiguous and SIGSEGV otherwise.
+    X_arr = np.ascontiguousarray(
         X_all.to_numpy(dtype="float64", na_value=np.nan)
     )
+    scaler = StandardScaler()
+    X_scaled = np.ascontiguousarray(scaler.fit_transform(X_arr))
     pca = PCA(n_components=2)
     coords = pca.fit_transform(X_scaled)
     n_train = len(X_train)
@@ -260,13 +259,17 @@ def plotly_heatmap(
         })
     df = _records_to_df(records)
     pivot = df.groupby(["feature_set", "split_policy"])[metric].mean().unstack(fill_value=0)
+    # Force C-contiguous for pivot.values used by Plotly/numpy
+    pivot_arr = np.ascontiguousarray(
+        pivot.to_numpy(dtype="float64", na_value=0.0)
+    )
 
     fig = go.Figure(data=go.Heatmap(
-        z=pivot.values,
+        z=pivot_arr,
         x=list(pivot.columns),
         y=list(pivot.index),
         colorscale="YlOrRd",
-        text=np.round(pivot.values, 2),
+        text=np.round(pivot_arr, 2),
         texttemplate="%{text}",
         hovertemplate=(
             "Feature Set: %{y}<br>Split: %{x}<br>"
@@ -672,10 +675,12 @@ def plotly_feature_correlation(
         fig.update_layout(title=title)
         return fig
 
-    # Consolidate to single memory block before .corr() to prevent
-    # SIGSEGV in numpy C layer on fragmented DataFrames.
+    # Consolidate to single C-contiguous memory block before .corr()
+    # to prevent SIGSEGV in numpy C layer on fragmented DataFrames.
     try:
-        _arr = df[cols].to_numpy(dtype="float64")
+        _arr = np.ascontiguousarray(
+            df[cols].to_numpy(dtype="float64", na_value=np.nan)
+        )
         _tmp = pd.DataFrame(_arr, columns=cols, index=df.index)
     except (ValueError, TypeError):
         _tmp = df[cols]
@@ -706,8 +711,8 @@ def plotly_feature_correlation(
         for j in range(n):
             row = i + 1
             col = j + 1
-            xi = df[cols[j]].values
-            yi = df[cols[i]].values
+            xi = np.ascontiguousarray(df[cols[j]].to_numpy(dtype="float64"))
+            yi = np.ascontiguousarray(df[cols[i]].to_numpy(dtype="float64"))
 
             if i == j:
                 # --- Diagonal: histogram ---
@@ -874,8 +879,10 @@ def plotly_pairwise_scatter(
     # Select top-variance features for readability
     variances = features_df.var().sort_values(ascending=False)
     selected = list(variances.head(max_features).index)
-    # Rebuild from numpy to avoid fragmented BlockManager (SIGSEGV risk)
-    _sub_arr = features_df[selected].to_numpy(dtype="float64", na_value=np.nan)
+    # Rebuild from C-contiguous numpy to avoid fragmented BlockManager (SIGSEGV risk)
+    _sub_arr = np.ascontiguousarray(
+        features_df[selected].to_numpy(dtype="float64", na_value=np.nan)
+    )
     sub = pd.DataFrame(_sub_arr, columns=selected, index=features_df.index)
     n_dim = len(selected)
 
@@ -892,7 +899,7 @@ def plotly_pairwise_scatter(
     # Target colour array for subsample
     has_target = target is not None and len(target) == len(sub)
     if has_target:
-        color_arr = target.loc[idx].values
+        color_arr = np.ascontiguousarray(target.loc[idx].to_numpy(dtype="float64"))
         color_label = str(target.name) if target.name else "Target"
     else:
         color_arr = None
@@ -914,7 +921,7 @@ def plotly_pairwise_scatter(
                 # Diagonal — histogram
                 fig.add_trace(
                     go.Histogram(
-                        x=sub[xi].values,
+                        x=np.ascontiguousarray(sub[xi].to_numpy()),
                         nbinsx=30,
                         marker_color="rgba(76, 114, 176, 0.6)",
                         showlegend=False,
@@ -925,8 +932,8 @@ def plotly_pairwise_scatter(
                 # Off-diagonal — 2D density contour (lightweight)
                 fig.add_trace(
                     go.Histogram2dContour(
-                        x=sub[xi].values,
-                        y=sub[yi].values,
+                        x=np.ascontiguousarray(sub[xi].to_numpy()),
+                        y=np.ascontiguousarray(sub[yi].to_numpy()),
                         colorscale="Blues",
                         showscale=False,
                         ncontours=10,
@@ -936,8 +943,8 @@ def plotly_pairwise_scatter(
                 )
                 # Scatter overlay (subsampled)
                 scatter_kw: dict = dict(
-                    x=sub.loc[idx, xi].values,
-                    y=sub.loc[idx, yi].values,
+                    x=np.ascontiguousarray(sub.loc[idx, xi].to_numpy()),
+                    y=np.ascontiguousarray(sub.loc[idx, yi].to_numpy()),
                     mode="markers",
                     showlegend=False,
                 )
@@ -1030,7 +1037,9 @@ def build_summary_stats_md(
         # Consolidate subset to single block before .describe()
         _sub = features_df[top_features]
         try:
-            _arr = _sub.to_numpy(dtype="float64")
+            _arr = np.ascontiguousarray(
+                _sub.to_numpy(dtype="float64", na_value=np.nan)
+            )
             _sub = pd.DataFrame(_arr, columns=top_features, index=_sub.index)
         except (ValueError, TypeError):
             pass
@@ -1266,7 +1275,7 @@ def plotly_fs_grouped_bar(
         color = _split_colors.get(sp_col, "#8C8C8C")
         fig.add_trace(go.Bar(
             x=list(pivot.index),
-            y=pivot[sp_col].values,
+            y=np.ascontiguousarray(pivot[sp_col].to_numpy(dtype="float64")),
             name=sp_col,
             marker_color=color,
             hovertemplate=f"{sp_col}<br>%{{x}}: %{{y:.3f}}<extra></extra>",
