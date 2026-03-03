@@ -1536,12 +1536,22 @@ def create_app() -> gr.Blocks:
                     gr.Markdown(
                         "実行するMLワークフローを選択してください。\n\n"
                         "- **WF-LIN** (Ridge回帰): 特徴量の符号検証・リーク検出に有効\n"
+                        "- **WF-LASSO** (Lasso回帰): L1正則化によるスパース特徴量選択\n"
+                        "- **WF-ARD** (ARD回帰): ベイズ的自動関連度決定\n"
                         "- **WF-XGB** (XGBoost + GridSearchCV): 非線形交互作用を捕捉\n"
                         "- **WF-ENS** (Seed-varied Ensemble): 予測不確実性の定量化"
                     )
                     with gr.Row():
                         wf_lin_check = gr.Checkbox(
                             label="WF-LIN (Ridge Regression)",
+                            value=True,
+                        )
+                        wf_lasso_check = gr.Checkbox(
+                            label="WF-LASSO (Lasso L1)",
+                            value=True,
+                        )
+                        wf_ard_check = gr.Checkbox(
+                            label="WF-ARD (Bayesian ARD)",
                             value=True,
                         )
                         wf_xgb_check = gr.Checkbox(
@@ -1552,6 +1562,22 @@ def create_app() -> gr.Blocks:
                             label="WF-ENS (Ensemble UQ)",
                             value=True,
                         )
+
+                # --- Dimensionality Reduction ---
+                with gr.Accordion(
+                    "Dimensionality Reduction (次元削減)",
+                    open=True,
+                ):
+                    gr.Markdown(
+                        "PCA による次元削減を各ワークフローのパイプラインに組み込みます。\n\n"
+                        "- **ON (デフォルト)**: StandardScaler 後に PCA（分散95%保持）を適用。"
+                        "高次元特徴量の多重共線性を緩和し、学習を安定化します。\n"
+                        "- **OFF**: 次元削減なし。全特徴量をそのまま使用します。"
+                    )
+                    dim_reduction_check = gr.Checkbox(
+                        label="次元削減を行う (Apply PCA Dimensionality Reduction)",
+                        value=True,
+                    )
 
                 # --- Feature Selection Method Selection ---
                 with gr.Accordion(
@@ -2011,8 +2037,11 @@ def create_app() -> gr.Blocks:
             skip_lit: bool,
             skip_plt: bool,
             use_wf_lin: bool,
+            use_wf_lasso: bool,
+            use_wf_ard: bool,
             use_wf_xgb: bool,
             use_wf_ens: bool,
+            use_dim_reduction: bool,
             csv_file: Any,
             csv_target: str,
             session: Dict[str, Any],
@@ -2199,12 +2228,16 @@ def create_app() -> gr.Blocks:
                 selected_wfs: List[str] = []
                 if use_wf_lin:
                     selected_wfs.append("WF-LIN")
+                if use_wf_lasso:
+                    selected_wfs.append("WF-LASSO")
+                if use_wf_ard:
+                    selected_wfs.append("WF-ARD")
                 if use_wf_xgb:
                     selected_wfs.append("WF-XGB")
                 if use_wf_ens:
                     selected_wfs.append("WF-ENS")
                 if not selected_wfs:
-                    selected_wfs = ["WF-LIN", "WF-XGB", "WF-ENS"]
+                    selected_wfs = ["WF-LIN", "WF-LASSO", "WF-ARD", "WF-XGB", "WF-ENS"]
                     log("No workflows selected; using all.")
 
                 log(
@@ -2222,6 +2255,7 @@ def create_app() -> gr.Blocks:
                     use_mlflow=True,
                     use_feast=True,
                     use_mint=True,
+                    dim_reduction=use_dim_reduction,
                 )
 
                 # --- Real-time log capture via threading ---
@@ -2542,7 +2576,9 @@ def create_app() -> gr.Blocks:
             inputs=[
                 seeds_input, n_samples, quick_mode,
                 exclude_elements, skip_literature, skip_plots,
-                wf_lin_check, wf_xgb_check, wf_ens_check,
+                wf_lin_check, wf_lasso_check, wf_ard_check,
+                wf_xgb_check, wf_ens_check,
+                dim_reduction_check,
                 run_csv_upload, run_csv_target,
                 state,
             ],

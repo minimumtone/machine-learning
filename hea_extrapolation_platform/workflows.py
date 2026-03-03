@@ -18,7 +18,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import Ridge
+from sklearn.decomposition import PCA
+from sklearn.linear_model import ARDRegression, Lasso, LassoCV, Ridge
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
@@ -140,6 +141,33 @@ class BaseWorkflow(ABC):
 # ---------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------
+# Dimensionality-reduction helper
+# ---------------------------------------------------------------------------
+
+
+def _make_pca_step(
+    n_features: int,
+    dim_reduction: bool,
+    variance_ratio: float = 0.95,
+) -> List[Tuple[str, Any]]:
+    """Return pipeline steps for optional PCA dimensionality reduction.
+
+    When *dim_reduction* is True a PCA step is inserted **after** scaling
+    that retains *variance_ratio* (default 95 %) of total variance.
+    ``n_components`` is capped at ``min(n_samples, n_features)`` by sklearn
+    automatically, so this is safe even for small datasets.
+
+    Returns a list of ``(name, estimator)`` tuples ready for
+    ``Pipeline(steps=[...])``.
+    """
+    if not dim_reduction or n_features <= 2:
+        return []
+    # Keep at most n_features components; PCA will further clamp to
+    # min(n_samples, n_features) internally.
+    return [("pca", PCA(n_components=variance_ratio, svd_solver="full"))]
+
+
 class WorkflowLIN(BaseWorkflow):
     """Linear regression workflow.
 
@@ -153,8 +181,9 @@ class WorkflowLIN(BaseWorkflow):
 
     name = "WF-LIN"
 
-    def __init__(self, alpha: float = 1.0) -> None:
+    def __init__(self, alpha: float = 1.0, dim_reduction: bool = True) -> None:
         self._alpha = alpha
+        self._dim_reduction = dim_reduction
 
     def run(
         self,
@@ -169,10 +198,12 @@ class WorkflowLIN(BaseWorkflow):
         logger.debug("WF-LIN: train=%d, test=%d, features=%d",
                       len(X_train), len(X_test), X_train.shape[1])
 
-        pipe = Pipeline([
+        steps: List[Tuple[str, Any]] = [
             ("scaler", StandardScaler()),
+            *_make_pca_step(X_train.shape[1], self._dim_reduction),
             ("model", Ridge(alpha=self._alpha)),
-        ])
+        ]
+        pipe = Pipeline(steps)
         pipe.fit(_safe_np(X_train), _safe_np(y_train))
 
         y_train_pred = pipe.predict(_safe_np(X_train))
@@ -214,11 +245,226 @@ class WorkflowLIN(BaseWorkflow):
             y_test_true=_safe_np(y_test).copy(),
             y_test_pred=y_test_pred.copy(),
             test_indices=kwargs.get("test_indices"),
-            params={"alpha": self._alpha},
+            params={"alpha": self._alpha, "dim_reduction": self._dim_reduction},
             artifacts={
-                "coef_raw": dict(zip(X_train.columns, coef_raw.tolist())),
-                "coef_std": dict(zip(X_train.columns, coef_std.tolist())),
+                "coef_raw": (
+                    dict(zip(X_train.columns, coef_raw.tolist()))
+                    if len(coef_raw) == X_train.shape[1]
+                    else {f"PC{i}": float(c) for i, c in enumerate(coef_raw)}
+                ),
+                "coef_std": (
+                    dict(zip(X_train.columns, coef_std.tolist()))
+                    if len(coef_std) == X_train.shape[1]
+                    else {f"PC{i}": float(c) for i, c in enumerate(coef_std)}
+                ),
                 "residuals_test": (_safe_np(y_test) - y_test_pred).tolist(),
+                "n_components": (
+                    pipe.named_steps["pca"].n_components_
+                    if "pca" in pipe.named_steps else X_train.shape[1]
+                ),
+            },
+            elapsed_sec=time.time() - t0,
+        )
+        return result
+
+
+# ---------------------------------------------------------------------------
+# WF-LASSO: Lasso regression (L1 regularisation)
+# ---------------------------------------------------------------------------
+
+
+class WorkflowLASSO(BaseWorkflow):
+    """Lasso (L1) regression workflow.
+
+    Purpose:
+    - Sparse feature selection via L1 penalty
+    - Identifies which features can be zeroed out
+    - Complementary to Ridge (L2) for feature importance analysis
+
+    Uses LassoCV to automatically select the best alpha.
+    """
+
+    name = "WF-LASSO"
+
+    def __init__(self, dim_reduction: bool = True) -> None:
+        self._dim_reduction = dim_reduction
+
+    def run(
+        self,
+        X_train: pd.DataFrame,
+        y_train: pd.Series,
+        X_test: pd.DataFrame,
+        y_test: pd.Series,
+        seed: int = 42,
+        **kwargs: Any,
+    ) -> RunResult:
+        t0 = time.time()
+        logger.debug("WF-LASSO: train=%d, test=%d, features=%d",
+                      len(X_train), len(X_test), X_train.shape[1])
+
+        steps: List[Tuple[str, Any]] = [
+            ("scaler", StandardScaler()),
+            *_make_pca_step(X_train.shape[1], self._dim_reduction),
+            ("model", LassoCV(cv=min(5, len(X_train)), random_state=seed, max_iter=10000)),
+        ]
+        pipe = Pipeline(steps)
+        pipe.fit(_safe_np(X_train), _safe_np(y_train))
+
+        y_train_pred = pipe.predict(_safe_np(X_train))
+        y_test_pred = pipe.predict(_safe_np(X_test))
+
+        train_s = _score(_safe_np(y_train), y_train_pred)
+        test_s = _score(_safe_np(y_test), y_test_pred)
+
+        model: LassoCV = pipe.named_steps["model"]
+        coef_raw = model.coef_
+        n_nonzero = int(np.sum(np.abs(coef_raw) > 1e-10))
+
+        if len(y_train) > 1:
+            std_y = float(np.std(_safe_np(y_train), ddof=1))
+        else:
+            std_y = 0.0
+        if std_y < 1e-12:
+            std_y = 1.0
+        coef_std = coef_raw / std_y
+
+        result = RunResult(
+            workflow=self.name,
+            feature_set=kwargs.get("feature_set", ""),
+            split_policy=kwargs.get("split_policy", ""),
+            seed=seed,
+            fold=kwargs.get("fold", 0),
+            rmse_train=train_s["rmse"],
+            rmse_test=test_s["rmse"],
+            mae_train=train_s["mae"],
+            mae_test=test_s["mae"],
+            r2_train=train_s["r2"],
+            r2_test=test_s["r2"],
+            y_test_true=_safe_np(y_test).copy(),
+            y_test_pred=y_test_pred.copy(),
+            test_indices=kwargs.get("test_indices"),
+            params={"alpha": float(model.alpha_), "dim_reduction": self._dim_reduction},
+            artifacts={
+                "coef_raw": (
+                    dict(zip(X_train.columns, coef_raw.tolist()))
+                    if len(coef_raw) == X_train.shape[1]
+                    else {f"PC{i}": float(c) for i, c in enumerate(coef_raw)}
+                ),
+                "coef_std": (
+                    dict(zip(X_train.columns, coef_std.tolist()))
+                    if len(coef_std) == X_train.shape[1]
+                    else {f"PC{i}": float(c) for i, c in enumerate(coef_std)}
+                ),
+                "n_nonzero_features": n_nonzero,
+                "residuals_test": (_safe_np(y_test) - y_test_pred).tolist(),
+                "n_components": (
+                    pipe.named_steps["pca"].n_components_
+                    if "pca" in pipe.named_steps else X_train.shape[1]
+                ),
+            },
+            elapsed_sec=time.time() - t0,
+        )
+        return result
+
+
+# ---------------------------------------------------------------------------
+# WF-ARD: Automatic Relevance Determination (Bayesian sparse regression)
+# ---------------------------------------------------------------------------
+
+
+class WorkflowARD(BaseWorkflow):
+    """ARD (Automatic Relevance Determination) Bayesian regression workflow.
+
+    Purpose:
+    - Bayesian sparse feature importance estimation
+    - Automatic pruning of irrelevant features via per-feature precision
+    - Uncertainty-aware coefficient estimation
+    """
+
+    name = "WF-ARD"
+
+    def __init__(self, dim_reduction: bool = True) -> None:
+        self._dim_reduction = dim_reduction
+
+    def run(
+        self,
+        X_train: pd.DataFrame,
+        y_train: pd.Series,
+        X_test: pd.DataFrame,
+        y_test: pd.Series,
+        seed: int = 42,
+        **kwargs: Any,
+    ) -> RunResult:
+        t0 = time.time()
+        logger.debug("WF-ARD: train=%d, test=%d, features=%d",
+                      len(X_train), len(X_test), X_train.shape[1])
+
+        steps: List[Tuple[str, Any]] = [
+            ("scaler", StandardScaler()),
+            *_make_pca_step(X_train.shape[1], self._dim_reduction),
+            ("model", ARDRegression(max_iter=500)),
+        ]
+        pipe = Pipeline(steps)
+        pipe.fit(_safe_np(X_train), _safe_np(y_train))
+
+        y_train_pred = pipe.predict(_safe_np(X_train))
+        y_test_pred = pipe.predict(_safe_np(X_test))
+
+        train_s = _score(_safe_np(y_train), y_train_pred)
+        test_s = _score(_safe_np(y_test), y_test_pred)
+
+        model: ARDRegression = pipe.named_steps["model"]
+        coef_raw = model.coef_
+        # ARD's lambda_ gives per-feature precision (inverse variance)
+        # Higher lambda_ = less relevant feature
+        relevance = 1.0 / (model.lambda_ + 1e-10)
+        relevance_norm = relevance / relevance.max() if relevance.max() > 0 else relevance
+
+        if len(y_train) > 1:
+            std_y = float(np.std(_safe_np(y_train), ddof=1))
+        else:
+            std_y = 0.0
+        if std_y < 1e-12:
+            std_y = 1.0
+        coef_std = coef_raw / std_y
+
+        result = RunResult(
+            workflow=self.name,
+            feature_set=kwargs.get("feature_set", ""),
+            split_policy=kwargs.get("split_policy", ""),
+            seed=seed,
+            fold=kwargs.get("fold", 0),
+            rmse_train=train_s["rmse"],
+            rmse_test=test_s["rmse"],
+            mae_train=train_s["mae"],
+            mae_test=test_s["mae"],
+            r2_train=train_s["r2"],
+            r2_test=test_s["r2"],
+            y_test_true=_safe_np(y_test).copy(),
+            y_test_pred=y_test_pred.copy(),
+            test_indices=kwargs.get("test_indices"),
+            params={"dim_reduction": self._dim_reduction},
+            artifacts={
+                "coef_raw": (
+                    dict(zip(X_train.columns, coef_raw.tolist()))
+                    if len(coef_raw) == X_train.shape[1]
+                    else {f"PC{i}": float(c) for i, c in enumerate(coef_raw)}
+                ),
+                "coef_std": (
+                    dict(zip(X_train.columns, coef_std.tolist()))
+                    if len(coef_std) == X_train.shape[1]
+                    else {f"PC{i}": float(c) for i, c in enumerate(coef_std)}
+                ),
+                "relevance_scores": (
+                    dict(zip(X_train.columns, relevance_norm.tolist()))
+                    if len(relevance_norm) == X_train.shape[1]
+                    else {f"PC{i}": float(r) for i, r in enumerate(relevance_norm)}
+                ),
+                "residuals_test": (_safe_np(y_test) - y_test_pred).tolist(),
+                "n_components": (
+                    pipe.named_steps["pca"].n_components_
+                    if "pca" in pipe.named_steps else X_train.shape[1]
+                ),
             },
             elapsed_sec=time.time() - t0,
         )
@@ -240,9 +486,10 @@ class WorkflowXGB(BaseWorkflow):
 
     name = "WF-XGB"
 
-    def __init__(self, n_cv: int = 3, quick: bool = False) -> None:
+    def __init__(self, n_cv: int = 3, quick: bool = False, dim_reduction: bool = True) -> None:
         self._n_cv = n_cv
         self._quick = quick
+        self._dim_reduction = dim_reduction
 
     def _get_estimator(self, seed: int) -> Any:
         if _XGB_AVAILABLE:
@@ -283,10 +530,12 @@ class WorkflowXGB(BaseWorkflow):
         logger.debug("WF-XGB: train=%d, test=%d, features=%d",
                       len(X_train), len(X_test), X_train.shape[1])
 
-        pipe = Pipeline([
+        steps: List[Tuple[str, Any]] = [
             ("scaler", StandardScaler()),
+            *_make_pca_step(X_train.shape[1], self._dim_reduction),
             ("model", self._get_estimator(seed)),
-        ])
+        ]
+        pipe = Pipeline(steps)
 
         grid = GridSearchCV(
             pipe,
@@ -364,10 +613,12 @@ class WorkflowENS(BaseWorkflow):
         n_members: int = 5,
         base_workflow: Optional[str] = "xgb",
         quick: bool = False,
+        dim_reduction: bool = True,
     ) -> None:
         self._n_members = n_members
         self._base_workflow = base_workflow
         self._quick = quick
+        self._dim_reduction = dim_reduction
 
     def _make_member(self, seed: int) -> Pipeline:
         if self._base_workflow == "xgb" and _XGB_AVAILABLE:
@@ -390,10 +641,12 @@ class WorkflowENS(BaseWorkflow):
         else:
             # Ridge has no randomness; random_state is not a valid parameter.
             model = Ridge(alpha=1.0)
-        return Pipeline([
+        steps: List[Tuple[str, Any]] = [
             ("scaler", StandardScaler()),
+            *_make_pca_step(132, self._dim_reduction),  # estimate; PCA caps internally
             ("model", model),
-        ])
+        ]
+        return Pipeline(steps)
 
     def run(
         self,
@@ -462,6 +715,8 @@ class WorkflowENS(BaseWorkflow):
 
 WORKFLOW_REGISTRY: Dict[str, type] = {
     "WF-LIN": WorkflowLIN,
+    "WF-LASSO": WorkflowLASSO,
+    "WF-ARD": WorkflowARD,
     "WF-XGB": WorkflowXGB,
     "WF-ENS": WorkflowENS,
 }
@@ -481,4 +736,4 @@ def get_workflow(name: str, **kwargs: Any) -> BaseWorkflow:
         raise ValueError(
             f"Unknown workflow '{name}'. Available: {list(WORKFLOW_REGISTRY.keys())}"
         )
-    return WORKFLOW_REGISTRY[name](**kwargs)
+    return WORKFLOW_REGISTRY[name](**kwargs)  # type: ignore[call-arg]
