@@ -13,8 +13,6 @@ Scores each feature set along five axes:
 from __future__ import annotations
 
 import logging
-import math
-import statistics
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 

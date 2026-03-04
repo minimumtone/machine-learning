@@ -88,12 +88,6 @@ def install() -> None:
     # --- Patch DataFrame.to_numpy ---
     _orig_df_to_numpy = pd.DataFrame.to_numpy
 
-    def _safe_df_to_numpy(self, dtype=None, copy=False, na_value=pd.api.types.pandas_dtype("O") if False else object(), **kwargs):
-        # Call original with all arguments
-        arr = _orig_df_to_numpy(self, dtype=dtype, copy=copy, na_value=na_value, **kwargs)
-        return _ensure_c_contiguous(arr)
-
-    # Fix the signature to match the original more closely
     def _patched_df_to_numpy(self, *args, **kwargs):
         arr = _orig_df_to_numpy(self, *args, **kwargs)
         return _ensure_c_contiguous(arr)
