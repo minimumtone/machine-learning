@@ -180,7 +180,6 @@ def plotly_ood_map(
         title=title,
         xaxis_title=f"PC1 — 第1主成分 ({var_ratio[0]*100:.1f}% 分散説明)",
         yaxis_title=f"PC2 — 第2主成分 ({var_ratio[1]*100:.1f}% 分散説明)",
-        template="plotly_white",
         dragmode="lasso",
         height=600,
     )
@@ -253,7 +252,6 @@ def plotly_validity_ranking(
         title="Feature Set Validity Ranking — 特徴量セット妥当性ランキング",
         xaxis_title="妥当性スコア (Score) — 高いほど良い",
         yaxis_title="特徴量セット (Feature Set)",
-        template="plotly_white",
         height=max(400, len(fs_names) * 80),
         legend=dict(orientation="h", yanchor="bottom", y=-0.3),
     )
@@ -322,7 +320,6 @@ def plotly_heatmap(
         title=f"パフォーマンスヒートマップ: {metric_display}",
         xaxis_title="分割方法 (Split Policy)",
         yaxis_title="特徴量セット (Feature Set)",
-        template="plotly_white",
         height=max(400, len(pivot) * 60 + 200),
     )
     return fig
@@ -407,7 +404,6 @@ def plotly_parity(
         title=title,
         xaxis_title="実測値 (True Value)",
         yaxis_title="予測値 (Predicted Value)",
-        template="plotly_white",
         height=600,
         width=600,
     )
@@ -457,7 +453,6 @@ def plotly_uncertainty_ood(
         title="予測不確実性 vs OODスコア",
         xaxis_title="OODスコア — 高いほど分布外",
         yaxis_title="予測不確実性 (std) — 高いほどばらつきが大きい",
-        template="plotly_white",
         height=500,
     )
     return fig
@@ -506,7 +501,6 @@ def plotly_feature_frequency(
         xaxis_title="出現論文数 (Count) — 多いほど有効性が高い",
         yaxis_title="記述子 (Feature)",
         yaxis=dict(autorange="reversed"),
-        template="plotly_white",
         height=max(300, len(names) * 30 + 100),
     )
     return fig
@@ -584,7 +578,6 @@ def plotly_target_histogram(
         title=title,
         xaxis_title=target.name or "Value",
         yaxis_title="Count",
-        template="plotly_white",
         height=350,
     )
     return fig
@@ -638,7 +631,6 @@ def plotly_composition_heatmap(
         title=title,
         xaxis_title="Element",
         yaxis_title="Mean Atomic Fraction",
-        template="plotly_white",
         height=350,
     )
     return fig
@@ -854,7 +846,6 @@ def plotly_feature_correlation(
                 "</span>"
             ),
         ),
-        template="plotly_white",
         height=max(700, total),
         width=max(700, total),
         showlegend=False,
@@ -1003,7 +994,6 @@ def plotly_pairwise_scatter(
                                  title_font_size=9, tickfont_size=7)
 
     fig.update_layout(
-        template="plotly_white",
         title=title,
         height=max(500, n_dim * 110 + 80),
         width=max(600, n_dim * 120 + 80),
@@ -1161,7 +1151,6 @@ def plotly_fs_radar(
             radialaxis=dict(visible=True, range=[0, 1]),
         ),
         title="特徴量セット比較レーダーチャート — FS Comparison Radar",
-        template="plotly_white",
         height=550,
         legend=dict(orientation="h", yanchor="bottom", y=-0.25),
     )
@@ -1246,7 +1235,6 @@ def plotly_fs_boxplot(
         title=f"特徴量セット別メトリクス分布 — {metric_display}",
         yaxis_title=metric_display,
         xaxis_title="特徴量セット (Feature Set)",
-        template="plotly_white",
         height=500,
         showlegend=False,
     )
@@ -1319,7 +1307,6 @@ def plotly_fs_grouped_bar(
         title=f"特徴量セット × 分割方法 — {metric_display}",
         xaxis_title="特徴量セット (Feature Set)",
         yaxis_title=metric_display,
-        template="plotly_white",
         height=500,
         legend=dict(orientation="h", yanchor="bottom", y=-0.2),
     )
@@ -1552,7 +1539,6 @@ def plotly_fs_train_vs_test(
         title=f"Train vs Test {label} — 対角線から離れるほど過学習の兆候",
         xaxis_title=f"{label} (Train)",
         yaxis_title=f"{label} (Test)",
-        template="plotly_white",
         height=500,
         legend=dict(orientation="h", yanchor="bottom", y=-0.25),
     )
@@ -1717,7 +1703,6 @@ def plotly_knowledge_graph(
 
     fig.update_layout(
         title="知識グラフ — Knowledge Graph",
-        template="plotly_white",
         showlegend=True,
         legend=dict(orientation="h", yanchor="bottom", y=-0.15),
         height=650,
