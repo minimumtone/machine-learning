@@ -46,13 +46,37 @@ the original numpy memory block.
 
 from __future__ import annotations
 
+import contextlib
+import gc
 import logging
+from typing import Iterator
+
 import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
 
 _INSTALLED = False
+
+
+@contextlib.contextmanager
+def gc_disabled() -> Iterator[None]:
+    """Context manager that disables the cyclic garbage collector.
+
+    During plotly chart creation and other critical operations, GC can
+    trigger C-extension finalizers on F-contiguous numpy arrays left
+    over from pandas 3.0 operations.  These finalizers crash with
+    SIGSEGV.  Disabling GC during these operations prevents the crash.
+
+    Reference counting still frees non-cyclic objects normally.
+    """
+    was_enabled = gc.isenabled()
+    gc.disable()
+    try:
+        yield
+    finally:
+        if was_enabled:
+            gc.enable()
 
 
 def safe_float(x: object) -> float:
@@ -153,8 +177,20 @@ def install() -> None:
     except Exception as exc:  # noqa: BLE001
         logger.warning("plotly Template patch skipped: %s", exc)
 
+    # --- Disable cyclic GC globally ---
+    # GC triggers C-extension finalizers on F-contiguous numpy arrays
+    # left over from pandas 3.0 operations. These finalizers crash with
+    # SIGSEGV during plotly chart creation, literature search, and other
+    # operations.  Disabling GC is safe because:
+    # 1. Reference counting still frees non-cyclic objects immediately
+    # 2. GUI sessions are short-lived (~100s)
+    # 3. Memory usage is bounded (~310 MB peak)
+    # 4. Process exit reclaims all memory
+    gc.disable()
+    logger.info("Cyclic garbage collector disabled to prevent SIGSEGV")
+
     _INSTALLED = True
     logger.info(
         "pandas C-contiguous compatibility patches installed "
-        "(DataFrame.to_numpy, Series.to_numpy, .values, plotly Template)"
+        "(DataFrame.to_numpy, Series.to_numpy, .values, plotly Template, GC disabled)"
     )
