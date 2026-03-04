@@ -235,11 +235,11 @@ def _run_job(
         WorkflowXGB,
     )
     _dr = job.dim_reduction
-    _pca = _dr or job.force_pca  # force_pca=True → always PCA ON
+    _pca = _dr or job.force_pca  # force_pca=True → always PCA ON (WF-LIN only)
     wf_map: Dict[str, Any] = {
         "WF-LIN": WorkflowLIN(dim_reduction=_pca),
-        "WF-LASSO": WorkflowLASSO(dim_reduction=_pca),
-        "WF-ARD": WorkflowARD(dim_reduction=_pca),
+        "WF-LASSO": WorkflowLASSO(dim_reduction=_dr),
+        "WF-ARD": WorkflowARD(dim_reduction=_dr),
         "WF-RF": WorkflowRF(quick=job.quick, dim_reduction=_dr),
         "WF-XGB": WorkflowXGB(quick=job.quick, dim_reduction=_dr),
         "WF-ENS": WorkflowENS(
