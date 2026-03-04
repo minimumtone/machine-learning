@@ -1381,9 +1381,13 @@ def build_fs_comparison_summary_md(
         rmses = [r.rmse_test for r in fs_runs if r.rmse_test > 0]
         r2s = [r.r2_test for r in fs_runs]
         n_feat = _fs_sizes.get(fs_name, "?")
-        rmse_mean = f"{np.mean(rmses):.2f}" if rmses else "N/A"
-        rmse_std = f"{np.std(rmses):.2f}" if len(rmses) > 1 else "N/A"
-        r2_mean = f"{np.mean(r2s):.4f}" if r2s else "N/A"
+        rmse_mean = f"{sum(rmses)/len(rmses):.2f}" if rmses else "N/A"
+        if len(rmses) > 1:
+            _rm = sum(rmses) / len(rmses)
+            rmse_std = f"{(sum((x - _rm)**2 for x in rmses) / len(rmses))**0.5:.2f}"
+        else:
+            rmse_std = "N/A"
+        r2_mean = f"{sum(r2s)/len(r2s):.4f}" if r2s else "N/A"
         vs = score_map.get(fs_name)
         total = f"{vs.total:.4f}" if vs else "N/A"
         recommend = "**Best**" if fs_name == best_fs else ""

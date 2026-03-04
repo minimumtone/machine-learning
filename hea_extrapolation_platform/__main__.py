@@ -33,13 +33,18 @@ import time
 from pathlib import Path
 from typing import List, Optional
 
-import numpy as np
-import pandas as pd
-
 # Enable faulthandler so that SIGSEGV prints a Python traceback
 # instead of silently crashing.  This is invaluable for diagnosing
 # BLAS/LAPACK crashes caused by F-contiguous array layouts.
 faulthandler.enable()
+
+# Install pandas C-contiguous patches BEFORE importing numpy/pandas.
+# This is the global SIGSEGV fix for pandas 3.0's F-contiguous layout.
+from hea_extrapolation_platform._compat import install as _install_compat
+_install_compat()
+
+import numpy as np
+import pandas as pd
 
 
 def _setup_logging(verbose: bool = False) -> None:

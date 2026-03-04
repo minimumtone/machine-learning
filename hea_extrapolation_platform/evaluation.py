@@ -13,6 +13,8 @@ Scores each feature set along five axes:
 from __future__ import annotations
 
 import logging
+import math
+import statistics
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -129,7 +131,10 @@ class FeatureValidityEvaluator:
                 if r.rmse_test > 0 and np.isfinite(r.rmse_test)
             ]
             if len(rmses) > 1:
-                cv = float(np.std(rmses) / np.mean(rmses)) if np.mean(rmses) > 0 else 1.0
+                _mean = sum(rmses) / len(rmses)
+                _var = sum((x - _mean) ** 2 for x in rmses) / len(rmses)
+                _std = _var ** 0.5
+                cv = _std / _mean if _mean > 0 else 1.0
                 vs.stability = max(0.0, 1.0 - cv)
             else:
                 vs.stability = 0.5  # neutral
@@ -170,7 +175,10 @@ class FeatureValidityEvaluator:
     def _mean_test_rmse(runs: List[RunResult]) -> float:
         if not runs:
             return 0.0
-        return float(np.mean([r.rmse_test for r in runs]))
+        # Use pure Python to avoid numpy C-extension SIGSEGV on
+        # pandas 3.0 F-contiguous memory (even for list-of-floats).
+        vals = [float(r.rmse_test) for r in runs]
+        return sum(vals) / len(vals)
 
     @staticmethod
     def _generalisation_score(
@@ -181,8 +189,10 @@ class FeatureValidityEvaluator:
         """Score [0, 1]: both splits improve -> 1, divergent -> 0."""
         if not random_runs or not block_runs or base_rmse <= 0:
             return 0.5
-        rand_rmse = float(np.mean([r.rmse_test for r in random_runs]))
-        block_rmse = float(np.mean([r.rmse_test for r in block_runs]))
+        _rand_vals = [float(r.rmse_test) for r in random_runs]
+        _block_vals = [float(r.rmse_test) for r in block_runs]
+        rand_rmse = sum(_rand_vals) / len(_rand_vals)
+        block_rmse = sum(_block_vals) / len(_block_vals)
         rand_improve = (base_rmse - rand_rmse) / base_rmse
         block_improve = (base_rmse - block_rmse) / base_rmse
         # Both improve -> high score; divergent -> low.
@@ -209,8 +219,10 @@ class FeatureValidityEvaluator:
         """Detect leak: Random improves a lot but Block degrades."""
         if not random_runs or not block_runs or base_rmse <= 0:
             return 0.0
-        rand_rmse = float(np.mean([r.rmse_test for r in random_runs]))
-        block_rmse = float(np.mean([r.rmse_test for r in block_runs]))
+        _rand_vals = [float(r.rmse_test) for r in random_runs]
+        _block_vals = [float(r.rmse_test) for r in block_runs]
+        rand_rmse = sum(_rand_vals) / len(_rand_vals)
+        block_rmse = sum(_block_vals) / len(_block_vals)
         rand_improve = (base_rmse - rand_rmse) / base_rmse
         block_change = (base_rmse - block_rmse) / base_rmse
         if rand_improve > 0.05 and block_change < -0.02:
@@ -223,9 +235,9 @@ class FeatureValidityEvaluator:
 
         Desired: uncertainty increases for OOD, errors do not explode.
         """
-        errors = np.asarray(ood_data.get("errors", []))
-        uncertainties = np.asarray(ood_data.get("uncertainties", []))
-        is_ood = np.asarray(ood_data.get("is_ood", []), dtype=bool)
+        errors = np.ascontiguousarray(np.asarray(ood_data.get("errors", [])))
+        uncertainties = np.ascontiguousarray(np.asarray(ood_data.get("uncertainties", [])))
+        is_ood = np.ascontiguousarray(np.asarray(ood_data.get("is_ood", []), dtype=bool))
 
         if len(errors) == 0 or is_ood.sum() == 0 or (~is_ood).sum() == 0:
             return 0.5

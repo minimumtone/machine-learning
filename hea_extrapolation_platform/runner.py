@@ -700,8 +700,8 @@ class ExperimentRunner:
                 ood_res = detector.score(X_test_ood)
                 ood_results[fs_key] = ood_res
                 self._ood_split_indices[fs_key] = (
-                    np.asarray(ood_train_idx),
-                    np.asarray(ood_test_idx),
+                    np.ascontiguousarray(np.asarray(ood_train_idx)),
+                    np.ascontiguousarray(np.asarray(ood_test_idx)),
                 )
 
                 try:
@@ -752,7 +752,7 @@ class ExperimentRunner:
         ood_test_idx: np.ndarray,
         out: Dict[str, Dict[str, np.ndarray]],
     ) -> None:
-        ood_test_indices = np.asarray(ood_test_idx)
+        ood_test_indices = np.ascontiguousarray(np.asarray(ood_test_idx))
         ens_runs = [
             r for r in self._registry.runs
             if r.feature_set == fs_key
@@ -761,22 +761,31 @@ class ExperimentRunner:
         ]
         matched = None
         for er in reversed(ens_runs):
-            if np.array_equal(np.asarray(er.test_indices), ood_test_indices):
+            if np.array_equal(
+                np.ascontiguousarray(np.asarray(er.test_indices)),
+                ood_test_indices,
+            ):
                 matched = er
                 break
         if matched is None:
             logger.info("No matching ENS run for OOD eval on %s", fs_key)
             return
-        pred_std = np.array(matched.artifacts.get("pred_std_test", []))
+        pred_std = np.ascontiguousarray(
+            np.array(matched.artifacts.get("pred_std_test", []))
+        )
         if (
             matched.y_test_true is not None
             and matched.y_test_pred is not None
             and len(pred_std) > 0
         ):
+            _errors = np.ascontiguousarray(
+                matched.y_test_true - matched.y_test_pred
+            )
+            _is_ood = np.ascontiguousarray(np.asarray(ood_res.is_ood))
             out[fs_key] = {
-                "errors":        matched.y_test_true - matched.y_test_pred,
+                "errors":        _errors,
                 "uncertainties": pred_std,
-                "is_ood":        ood_res.is_ood,
+                "is_ood":        _is_ood,
             }
 
     def export(self, out_dir: Path) -> None:
