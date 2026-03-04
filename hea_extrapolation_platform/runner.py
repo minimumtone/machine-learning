@@ -64,7 +64,9 @@ from hea_extrapolation_platform.splitters import (
 from hea_extrapolation_platform.workflows import (
     BaseWorkflow,
     RunResult,
+    WorkflowARD,
     WorkflowENS,
+    WorkflowLASSO,
     WorkflowLIN,
     WorkflowXGB,
 )
@@ -187,6 +189,7 @@ class _Job(NamedTuple):
     train_idx: np.ndarray
     test_idx: np.ndarray
     quick: bool
+    dim_reduction: bool = True
 
 
 # ---------------------------------------------------------------------------
@@ -222,13 +225,17 @@ def _run_job(
     y_test  = _pd.Series(y[job.test_idx])
 
     from hea_extrapolation_platform.workflows import (
-        WorkflowLIN, WorkflowXGB, WorkflowENS,
+        WorkflowARD, WorkflowENS, WorkflowLASSO, WorkflowLIN, WorkflowXGB,
     )
+    _dr = job.dim_reduction
     wf_map: Dict[str, Any] = {
-        "WF-LIN": WorkflowLIN(),
-        "WF-XGB": WorkflowXGB(quick=job.quick),
+        "WF-LIN": WorkflowLIN(dim_reduction=_dr),
+        "WF-LASSO": WorkflowLASSO(dim_reduction=_dr),
+        "WF-ARD": WorkflowARD(dim_reduction=_dr),
+        "WF-XGB": WorkflowXGB(quick=job.quick, dim_reduction=_dr),
         "WF-ENS": WorkflowENS(
-            n_members=3 if job.quick else 5, quick=job.quick
+            n_members=3 if job.quick else 5, quick=job.quick,
+            dim_reduction=_dr,
         ),
     }
 
@@ -287,9 +294,11 @@ class ExperimentRunner:
         use_mlflow: bool = False,
         use_feast: bool = False,
         use_mint: bool = False,
+        dim_reduction: bool = True,
     ) -> None:
         self._seeds = seeds or [42, 123, 456]
         self._quick = quick
+        self._dim_reduction = dim_reduction
         self._exclude_elements = exclude_elements or ["Co", "Ni", "Ti"]
         self._n_workers = n_workers if n_workers is not None else os.cpu_count()
         self._registry = RunRegistry()
@@ -372,7 +381,7 @@ class ExperimentRunner:
 
         self._feature_store.store_features(features_all)
 
-        all_wf_names = ["WF-LIN", "WF-XGB", "WF-ENS"]
+        all_wf_names = ["WF-LIN", "WF-LASSO", "WF-ARD", "WF-XGB", "WF-ENS"]
         mint_configs: Dict[str, MIntWorkflowConfig] = {}
         if self._mint_registry is not None:
             for wf_info in self._mint_registry.list_workflows():
@@ -526,6 +535,7 @@ class ExperimentRunner:
                                 train_idx=train_idx,
                                 test_idx=test_idx,
                                 quick=self._quick,
+                                dim_reduction=self._dim_reduction,
                             ))
         logger.debug("Phase 2: %d jobs", len(jobs))
         return jobs
