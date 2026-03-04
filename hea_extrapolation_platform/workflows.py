@@ -19,6 +19,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import ARDRegression, Lasso, LassoCV, Ridge
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import GridSearchCV
@@ -329,7 +330,7 @@ class WorkflowLASSO(BaseWorkflow):
         steps: List[Tuple[str, Any]] = [
             ("scaler", StandardScaler()),
             *_make_pca_step(X_train.shape[1], self._dim_reduction),
-            ("model", LassoCV(cv=max(2, min(5, len(X_train))), random_state=seed, max_iter=10000)),
+            ("model", LassoCV(cv=max(2, min(10, len(X_train))), random_state=seed, max_iter=10000)),
         ]
         pipe = Pipeline(steps)
         pipe.fit(_safe_np(X_train), _safe_np(y_train))
@@ -510,7 +511,7 @@ class WorkflowXGB(BaseWorkflow):
 
     name = "WF-XGB"
 
-    def __init__(self, n_cv: int = 3, quick: bool = False, dim_reduction: bool = True) -> None:
+    def __init__(self, n_cv: int = 10, quick: bool = False, dim_reduction: bool = True) -> None:
         self._n_cv = n_cv
         self._quick = quick
         self._dim_reduction = dim_reduction
@@ -735,6 +736,119 @@ class WorkflowENS(BaseWorkflow):
 
 
 # ---------------------------------------------------------------------------
+# WF-RF: Random Forest
+# ---------------------------------------------------------------------------
+
+
+class WorkflowRF(BaseWorkflow):
+    """Random Forest workflow with grid-search hyperparameter optimisation.
+
+    Purpose:
+    - Non-linear regression with ensemble of decision trees
+    - Feature importance via impurity-based measures
+    - Robust to overfitting with proper tuning
+    - Captures non-linear interactions without gradient boosting bias
+
+    Uses 10-fold CV by default for hyperparameter tuning.
+    """
+
+    name = "WF-RF"
+
+    def __init__(self, n_cv: int = 10, quick: bool = False, dim_reduction: bool = True) -> None:
+        self._n_cv = n_cv
+        self._quick = quick
+        self._dim_reduction = dim_reduction
+
+    def _param_grid(self) -> Dict[str, List[Any]]:
+        if self._quick:
+            return {
+                "model__n_estimators": [100],
+                "model__max_depth": [None],
+                "model__min_samples_split": [2],
+            }
+        return {
+            "model__n_estimators": [100, 200, 500],
+            "model__max_depth": [None, 10, 20],
+            "model__min_samples_split": [2, 5],
+        }
+
+    def run(
+        self,
+        X_train: pd.DataFrame,
+        y_train: pd.Series,
+        X_test: pd.DataFrame,
+        y_test: pd.Series,
+        seed: int = 42,
+        **kwargs: Any,
+    ) -> RunResult:
+        t0 = time.time()
+        logger.debug("WF-RF: train=%d, test=%d, features=%d",
+                      len(X_train), len(X_test), X_train.shape[1])
+
+        steps: List[Tuple[str, Any]] = [
+            ("scaler", StandardScaler()),
+            *_make_pca_step(X_train.shape[1], self._dim_reduction),
+            ("model", RandomForestRegressor(
+                random_state=seed, n_jobs=1,
+            )),
+        ]
+        pipe = Pipeline(steps)
+
+        grid = GridSearchCV(
+            pipe,
+            self._param_grid(),
+            cv=max(2, min(self._n_cv, len(X_train))),
+            scoring="neg_root_mean_squared_error",
+            refit=True,
+            n_jobs=1,
+            error_score=np.nan,
+        )
+        grid.fit(_safe_np(X_train), _safe_np(y_train))
+
+        best_pipe = grid.best_estimator_
+        y_train_pred = best_pipe.predict(_safe_np(X_train))
+        y_test_pred = best_pipe.predict(_safe_np(X_test))
+
+        train_s = _score(_safe_np(y_train), y_train_pred)
+        test_s = _score(_safe_np(y_test), y_test_pred)
+
+        # Feature importance from tree model
+        model_step = best_pipe.named_steps["model"]
+        if hasattr(model_step, "feature_importances_"):
+            fi_raw = model_step.feature_importances_.tolist()
+            if "pca" not in best_pipe.named_steps:
+                fi = dict(zip(X_train.columns, fi_raw))
+            else:
+                fi = {f"PC{i}": float(v) for i, v in enumerate(fi_raw)}
+        else:
+            fi = {}
+
+        result = RunResult(
+            workflow=self.name,
+            feature_set=kwargs.get("feature_set", ""),
+            split_policy=kwargs.get("split_policy", ""),
+            seed=seed,
+            fold=kwargs.get("fold", 0),
+            rmse_train=train_s["rmse"],
+            rmse_test=test_s["rmse"],
+            mae_train=train_s["mae"],
+            mae_test=test_s["mae"],
+            r2_train=train_s["r2"],
+            r2_test=test_s["r2"],
+            y_test_true=_safe_np(y_test).copy(),
+            y_test_pred=y_test_pred.copy(),
+            test_indices=kwargs.get("test_indices"),
+            params=grid.best_params_,
+            artifacts={
+                "feature_importance": fi,
+                "cv_results_best_score": float(grid.best_score_),
+            },
+            elapsed_sec=time.time() - t0,
+        )
+        return result
+
+
+# ---------------------------------------------------------------------------
 # Workflow registry
 # ---------------------------------------------------------------------------
 
@@ -743,6 +857,7 @@ WORKFLOW_REGISTRY: Dict[str, type] = {
     "WF-LASSO": WorkflowLASSO,
     "WF-ARD": WorkflowARD,
     "WF-XGB": WorkflowXGB,
+    "WF-RF": WorkflowRF,
     "WF-ENS": WorkflowENS,
 }
 

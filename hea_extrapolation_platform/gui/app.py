@@ -64,6 +64,7 @@ from hea_extrapolation_platform.gui.plotly_charts import (
     plotly_heatmap,
     plotly_ood_map,
     plotly_parity,
+    plotly_parity_per_algorithm,
     plotly_target_histogram,
     plotly_uncertainty_ood,
     plotly_validity_ranking,
@@ -449,7 +450,7 @@ def _refresh_results_data(
         filtered = [r for r in filtered if r.split_policy == sp_filter]
 
     r_df = runs_to_dataframe(filtered) if filtered else pd.DataFrame()
-    parity_fig = plotly_parity(filtered) if filtered else None
+    parity_fig = plotly_parity_per_algorithm(filtered) if filtered else None
 
     # Physical interpretation + FS comparison
     interp_md = _build_physical_interpretation_md(runs, scores, ood_results)
@@ -1537,6 +1538,7 @@ def create_app() -> gr.Blocks:
                         "- **WF-LIN** (Ridge回帰): 特徴量の符号検証・リーク検出に有効\n"
                         "- **WF-LASSO** (Lasso回帰): L1正則化によるスパース特徴量選択\n"
                         "- **WF-ARD** (ARD回帰): ベイズ的自動関連度決定\n"
+                        "- **WF-RF** (Random Forest + GridSearchCV): アンサンブル決定木による非線形回帰\n"
                         "- **WF-XGB** (XGBoost + GridSearchCV): 非線形交互作用を捕捉\n"
                         "- **WF-ENS** (Seed-varied Ensemble): 予測不確実性の定量化"
                     )
@@ -1551,6 +1553,10 @@ def create_app() -> gr.Blocks:
                         )
                         wf_ard_check = gr.Checkbox(
                             label="WF-ARD (Bayesian ARD)",
+                            value=True,
+                        )
+                        wf_rf_check = gr.Checkbox(
+                            label="WF-RF (Random Forest + HPO)",
                             value=True,
                         )
                         wf_xgb_check = gr.Checkbox(
@@ -2038,6 +2044,7 @@ def create_app() -> gr.Blocks:
             use_wf_lin: bool,
             use_wf_lasso: bool,
             use_wf_ard: bool,
+            use_wf_rf: bool,
             use_wf_xgb: bool,
             use_wf_ens: bool,
             use_dim_reduction: bool,
@@ -2231,12 +2238,14 @@ def create_app() -> gr.Blocks:
                     selected_wfs.append("WF-LASSO")
                 if use_wf_ard:
                     selected_wfs.append("WF-ARD")
+                if use_wf_rf:
+                    selected_wfs.append("WF-RF")
                 if use_wf_xgb:
                     selected_wfs.append("WF-XGB")
                 if use_wf_ens:
                     selected_wfs.append("WF-ENS")
                 if not selected_wfs:
-                    selected_wfs = ["WF-LIN", "WF-LASSO", "WF-ARD", "WF-XGB", "WF-ENS"]
+                    selected_wfs = ["WF-LIN", "WF-LASSO", "WF-ARD", "WF-RF", "WF-XGB", "WF-ENS"]
                     log("No workflows selected; using all.")
 
                 log(
@@ -2576,7 +2585,7 @@ def create_app() -> gr.Blocks:
                 seeds_input, n_samples, quick_mode,
                 exclude_elements, skip_literature, skip_plots,
                 wf_lin_check, wf_lasso_check, wf_ard_check,
-                wf_xgb_check, wf_ens_check,
+                wf_rf_check, wf_xgb_check, wf_ens_check,
                 dim_reduction_check,
                 run_csv_upload, run_csv_target,
                 state,

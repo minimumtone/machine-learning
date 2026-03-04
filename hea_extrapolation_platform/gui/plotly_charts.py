@@ -411,6 +411,162 @@ def plotly_parity(
 
 
 # ---------------------------------------------------------------------------
+# 4b. Per-Algorithm Parity Plots with Generalization Performance
+# ---------------------------------------------------------------------------
+
+# Colour palette for workflows (colour-blind safe)
+_WF_COLORS: Dict[str, str] = {
+    "WF-LIN": "#4C72B0",
+    "WF-LASSO": "#55A868",
+    "WF-ARD": "#C44E52",
+    "WF-RF": "#8172B2",
+    "WF-XGB": "#CCB974",
+    "WF-ENS": "#64B5CD",
+}
+
+
+def plotly_parity_per_algorithm(
+    runs: List[Any],
+    title: str = "Per-Algorithm Parity Plot (Test Set) — アルゴリズム別パリティプロット",
+) -> go.Figure:
+    """Interactive parity plot with one trace per ML algorithm.
+
+    Each workflow is shown in a different colour.  An annotation box
+    displays generalization performance (RMSE_test, R²_test) for each
+    algorithm, averaged across all feature sets and seeds.
+
+    Parameters
+    ----------
+    runs : list of RunResult
+    title : str
+
+    Returns
+    -------
+    go.Figure
+    """
+    # Group data by workflow
+    wf_data: Dict[str, Dict[str, List[float]]] = {}
+    seen_keys: set = set()
+
+    for r in runs:
+        if r.y_test_true is None or r.y_test_pred is None:
+            continue
+        test_indices = getattr(r, "test_indices", None)
+        wf = r.workflow
+        if wf not in wf_data:
+            wf_data[wf] = {"true": [], "pred": [], "rmse": [], "r2": []}
+        for i in range(len(r.y_test_true)):
+            if test_indices is not None:
+                key = (r.workflow, r.feature_set, int(test_indices[i]))
+            else:
+                key = (r.workflow, r.feature_set, float(r.y_test_true[i]))
+            if key in seen_keys:
+                continue
+            seen_keys.add(key)
+            wf_data[wf]["true"].append(float(r.y_test_true[i]))
+            wf_data[wf]["pred"].append(float(r.y_test_pred[i]))
+
+    # Compute per-workflow average metrics from RunResult objects
+    wf_metrics: Dict[str, Dict[str, float]] = {}
+    wf_runs_grouped: Dict[str, List[Any]] = {}
+    for r in runs:
+        wf_runs_grouped.setdefault(r.workflow, []).append(r)
+    for wf, wf_run_list in wf_runs_grouped.items():
+        rmses = [float(r.rmse_test) for r in wf_run_list if r.rmse_test > 0]
+        r2s = [float(r.r2_test) for r in wf_run_list]
+        wf_metrics[wf] = {
+            "rmse_test": sum(rmses) / len(rmses) if rmses else 0.0,
+            "r2_test": sum(r2s) / len(r2s) if r2s else 0.0,
+        }
+
+    fig = go.Figure()
+
+    # Global min/max for y=x line
+    all_vals: List[float] = []
+
+    for wf in sorted(wf_data.keys()):
+        d = wf_data[wf]
+        if not d["true"]:
+            continue
+        color = _WF_COLORS.get(wf, "#999999")
+        m = wf_metrics.get(wf, {})
+        rmse_str = f"{m.get('rmse_test', 0):.2f}"
+        r2_str = f"{m.get('r2_test', 0):.4f}"
+        legend_label = f"{wf} (RMSE={rmse_str}, R²={r2_str})"
+
+        fig.add_trace(go.Scatter(
+            x=d["true"],
+            y=d["pred"],
+            mode="markers",
+            marker=dict(color=color, opacity=0.5, size=6,
+                        line=dict(width=0.3, color="black")),
+            name=legend_label,
+            hovertemplate=(
+                f"<b>{wf}</b><br>"
+                "True: %{x:.1f}<br>Pred: %{y:.1f}"
+                "<extra></extra>"
+            ),
+        ))
+        all_vals.extend(d["true"])
+        all_vals.extend(d["pred"])
+
+    # y = x reference line
+    if all_vals:
+        lo = min(all_vals)
+        hi = max(all_vals)
+        margin = (hi - lo) * 0.05
+        fig.add_trace(go.Scatter(
+            x=[lo - margin, hi + margin],
+            y=[lo - margin, hi + margin],
+            mode="lines",
+            line=dict(color="black", dash="dash", width=1),
+            name="y = x",
+            showlegend=True,
+        ))
+
+    # Build performance summary annotation
+    perf_lines: List[str] = []
+    for wf in sorted(wf_metrics.keys()):
+        m = wf_metrics[wf]
+        perf_lines.append(
+            f"{wf}: RMSE={m['rmse_test']:.2f}, R²={m['r2_test']:.4f}"
+        )
+    perf_text = "<br>".join(perf_lines) if perf_lines else "No data"
+
+    fig.update_layout(
+        title=title,
+        xaxis_title="実測値 (True Value)",
+        yaxis_title="予測値 (Predicted Value)",
+        height=700,
+        width=800,
+        legend=dict(
+            orientation="v",
+            yanchor="top",
+            y=0.99,
+            xanchor="left",
+            x=0.01,
+            bgcolor="rgba(255,255,255,0.8)",
+            font=dict(size=11),
+        ),
+        annotations=[
+            dict(
+                text=f"<b>汎化性能 (Generalization)</b><br>{perf_text}",
+                xref="paper", yref="paper",
+                x=0.98, y=0.02,
+                xanchor="right", yanchor="bottom",
+                showarrow=False,
+                font=dict(size=10),
+                bgcolor="rgba(255,255,255,0.85)",
+                bordercolor="#ccc",
+                borderwidth=1,
+                borderpad=6,
+            ),
+        ],
+    )
+    return fig
+
+
+# ---------------------------------------------------------------------------
 # 5. Uncertainty vs OOD Score
 # ---------------------------------------------------------------------------
 
