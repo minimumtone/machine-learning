@@ -13,8 +13,9 @@ Scores each feature set along five axes:
 from __future__ import annotations
 
 import logging
+import math
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -22,12 +23,15 @@ import pandas as pd
 from hea_extrapolation_platform.features import FeatureSetName
 from hea_extrapolation_platform.workflows import RunResult
 
+if TYPE_CHECKING:
+    from hea_extrapolation_platform.multicollinearity import MulticollinearityReport
+
 logger = logging.getLogger(__name__)
 
 
 @dataclass
 class ValidityScore:
-    """Feature-set validity score across five dimensions."""
+    """Feature-set validity score across six dimensions."""
 
     feature_set: str
     effect_size: float = 0.0
@@ -35,6 +39,7 @@ class ValidityScore:
     generalisation: float = 0.0
     leak_penalty: float = 0.0
     extrapolation_safety: float = 0.0
+    multicollinearity_penalty: float = 0.0
 
     @property
     def total(self) -> float:
@@ -42,10 +47,11 @@ class ValidityScore:
 
         Positive-direction weights: 0.30 + 0.20 + 0.30 + 0.20 = 1.00.
         leak_penalty is subtracted with weight 0.15.
+        multicollinearity_penalty is subtracted with weight 0.10.
 
         Score range:
-          - Best case (all 1.0, no leak):  1.00
-          - Worst case (all 0.0, max leak): -0.15
+          - Best case (all 1.0, no penalties):  1.00
+          - Worst case (all 0.0, max penalties): -0.25
         """
         return (
             0.30 * self.effect_size
@@ -53,6 +59,7 @@ class ValidityScore:
             + 0.30 * self.generalisation
             - 0.15 * self.leak_penalty
             + 0.20 * self.extrapolation_safety
+            - 0.10 * self.multicollinearity_penalty
         )
 
     def to_dict(self) -> Dict[str, float]:
@@ -63,6 +70,7 @@ class ValidityScore:
             "generalisation": round(self.generalisation, 4),
             "leak_penalty": round(self.leak_penalty, 4),
             "extrapolation_safety": round(self.extrapolation_safety, 4),
+            "multicollinearity_penalty": round(self.multicollinearity_penalty, 4),
             "total": round(self.total, 4),
         }
 
@@ -80,6 +88,7 @@ class FeatureValidityEvaluator:
         self,
         runs: List[RunResult],
         ood_errors: Optional[Dict[str, Dict[str, np.ndarray]]] = None,
+        mc_reports: Optional[Dict[str, "MulticollinearityReport"]] = None,
     ) -> List[ValidityScore]:
         """Compute validity scores for every feature set present in *runs*.
 
@@ -90,6 +99,9 @@ class FeatureValidityEvaluator:
         ood_errors : dict, optional
             {feature_set: {"errors": ..., "uncertainties": ..., "is_ood": ...}}
             Per-sample data for extrapolation safety assessment.
+        mc_reports : dict, optional
+            {feature_set: MulticollinearityReport} from Phase 0.
+            Used to compute multicollinearity_penalty.
 
         Returns
         -------
@@ -155,6 +167,13 @@ class FeatureValidityEvaluator:
             else:
                 vs.extrapolation_safety = 0.5  # neutral when data not available
 
+            # 6. Multicollinearity penalty (Phase 0)
+            if mc_reports and fs_name in mc_reports:
+                rpt = mc_reports[fs_name]
+                vs.multicollinearity_penalty = min(1.0, rpt.high_vif_ratio)
+            else:
+                vs.multicollinearity_penalty = 0.0  # no info = neutral
+
             scores.append(vs)
 
         scores.sort(key=lambda s: s.total, reverse=True)
@@ -198,7 +217,10 @@ class FeatureValidityEvaluator:
         # exact floating-point zero comparisons.
         _eps = 1e-9
         if rand_improve > _eps and block_improve > _eps:
-            return min(1.0, 0.5 + 0.5 * min(rand_improve, block_improve))
+            # Use geometric mean instead of min to avoid bottleneck
+            # (Review: min causes asymmetric improvements to be undervalued)
+            geo_mean = math.sqrt(rand_improve * block_improve)
+            return min(1.0, 0.5 + 0.5 * geo_mean)
         elif rand_improve < -_eps and block_improve < -_eps:
             # Both degrade -> low but not worst
             return 0.3
@@ -246,11 +268,17 @@ class FeatureValidityEvaluator:
         ratio = ood_err.mean() / max(id_err.mean(), 1e-6)
         err_score = max(0.0, 1.0 - (ratio - 1.0) / 2.0)
 
-        # Uncertainty should increase for OOD
+        # Uncertainty should increase for OOD — use gradient score
+        # (Review: binary score doesn't reflect magnitude of uncertainty increase)
         if len(uncertainties) > 0 and is_ood.sum() > 0 and (~is_ood).sum() > 0:
-            ood_unc = uncertainties[is_ood].mean()
-            id_unc = uncertainties[~is_ood].mean()
-            unc_score = 1.0 if ood_unc > id_unc else 0.5
+            ood_unc = float(uncertainties[is_ood].mean())
+            id_unc = float(uncertainties[~is_ood].mean())
+            if id_unc > 1e-10:
+                unc_ratio = ood_unc / id_unc
+                # ratio=1 → 0.5, ratio=2 → 1.0, ratio<1 → 0.0
+                unc_score = max(0.0, min(1.0, 0.5 * unc_ratio))
+            else:
+                unc_score = 1.0 if ood_unc > 1e-10 else 0.5
         else:
             unc_score = 0.5
 
