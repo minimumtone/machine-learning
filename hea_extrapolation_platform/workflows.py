@@ -89,6 +89,30 @@ class RunResult:
     artifacts: Dict[str, Any] = field(default_factory=dict)
     elapsed_sec: float = 0.0
 
+    def __post_init__(self) -> None:
+        """Enforce plain Python floats and C-contiguous numpy arrays.
+
+        pandas 3.0 produces numpy scalars that retain references to
+        F-contiguous memory blocks.  Converting metrics to ``float()``
+        severs these references.  numpy arrays stored in the result are
+        forced C-contiguous to prevent downstream SIGSEGV.
+        """
+        # Sever numpy scalar references to F-contiguous memory
+        self.rmse_train = float(self.rmse_train)
+        self.rmse_test = float(self.rmse_test)
+        self.mae_train = float(self.mae_train)
+        self.mae_test = float(self.mae_test)
+        self.r2_train = float(self.r2_train)
+        self.r2_test = float(self.r2_test)
+        self.elapsed_sec = float(self.elapsed_sec)
+        # Ensure all stored numpy arrays are C-contiguous
+        if self.y_test_true is not None:
+            self.y_test_true = np.ascontiguousarray(self.y_test_true)
+        if self.y_test_pred is not None:
+            self.y_test_pred = np.ascontiguousarray(self.y_test_pred)
+        if self.test_indices is not None:
+            self.test_indices = np.ascontiguousarray(self.test_indices)
+
     def metrics_dict(self) -> Dict[str, float]:
         return {
             "rmse_train": self.rmse_train,

@@ -284,8 +284,8 @@ def _build_physical_interpretation_md(
         rmses = [r.rmse_test for r in fs_runs if r.rmse_test > 0]
         r2s = [r.r2_test for r in fs_runs]
         n_feat = _fs_sizes.get(fs_name, "?")
-        rmse_mean = f"{np.mean(rmses):.2f}" if rmses else "N/A"
-        r2_mean = f"{np.mean(r2s):.4f}" if r2s else "N/A"
+        rmse_mean = f"{sum(rmses)/len(rmses):.2f}" if rmses else "N/A"
+        r2_mean = f"{sum(r2s)/len(r2s):.4f}" if r2s else "N/A"
         vs = score_map.get(fs_name)
         total = f"{vs.total:.4f}" if vs else "N/A"
         recommend = "**Best**" if fs_name == best_fs else ""
@@ -390,9 +390,8 @@ def _build_physical_interpretation_md(
             )
         lines.append("")
         # Interpretation
-        avg_ratio = np.mean(
-            [r.ood_ratio for r in ood_results.values()]
-        )
+        _ratios = [float(r.ood_ratio) for r in ood_results.values()]
+        avg_ratio = sum(_ratios) / len(_ratios) if _ratios else 0.0
         if avg_ratio > 0.2:
             lines.append(
                 "**注意**: OOD比率が20%超です。データの分布がトレーニング領域から"
