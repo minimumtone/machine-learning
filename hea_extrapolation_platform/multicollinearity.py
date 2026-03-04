@@ -16,8 +16,8 @@ Design:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field, asdict
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -47,7 +47,7 @@ PRIORITY_KEEP = [
 # 3.1.1  compute_vif() — VIF calculation
 # ---------------------------------------------------------------------------
 
-def compute_vif(X: pd.DataFrame, max_condition: float = 1e12) -> pd.Series:
+def compute_vif(X: pd.DataFrame) -> pd.Series:
     """Compute Variance Inflation Factor for each feature.
 
     VIF_j = 1 / (1 - R^2_j) where R^2_j is from regressing X_j on all others.
