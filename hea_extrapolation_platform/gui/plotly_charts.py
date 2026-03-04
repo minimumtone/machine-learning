@@ -473,7 +473,8 @@ def plotly_parity_per_algorithm(
         wf_runs_grouped.setdefault(r.workflow, []).append(r)
     for wf, wf_run_list in wf_runs_grouped.items():
         rmses = [float(r.rmse_test) for r in wf_run_list if r.rmse_test > 0]
-        r2s = [float(r.r2_test) for r in wf_run_list]
+        r2s = [float(r.r2_test) for r in wf_run_list
+               if not (r.r2_test != r.r2_test)]  # exclude NaN
         wf_metrics[wf] = {
             "rmse_test": sum(rmses) / len(rmses) if rmses else 0.0,
             "r2_test": sum(r2s) / len(r2s) if r2s else 0.0,
