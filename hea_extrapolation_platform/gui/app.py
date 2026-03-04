@@ -562,7 +562,7 @@ def _build_physical_interpretation_md(
             f"+ 0.20 \\times {best.extrapolation_safety:.4f} "
             f"- 0.15 \\times {best.leak_penalty:.4f} "
             f"- 0.10 \\times {best.multicollinearity_penalty:.4f} "
-            f"= **{best.total:.4f}**$$\n"
+            f"= \\mathbf{{{best.total:.4f}}}$$\n"
         )
         lines.append("---\n")
 
