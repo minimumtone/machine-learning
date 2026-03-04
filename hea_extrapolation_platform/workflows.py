@@ -249,12 +249,12 @@ class WorkflowLIN(BaseWorkflow):
             artifacts={
                 "coef_raw": (
                     dict(zip(X_train.columns, coef_raw.tolist()))
-                    if len(coef_raw) == X_train.shape[1]
+                    if "pca" not in pipe.named_steps
                     else {f"PC{i}": float(c) for i, c in enumerate(coef_raw)}
                 ),
                 "coef_std": (
                     dict(zip(X_train.columns, coef_std.tolist()))
-                    if len(coef_std) == X_train.shape[1]
+                    if "pca" not in pipe.named_steps
                     else {f"PC{i}": float(c) for i, c in enumerate(coef_std)}
                 ),
                 "residuals_test": (_safe_np(y_test) - y_test_pred).tolist(),
@@ -347,12 +347,12 @@ class WorkflowLASSO(BaseWorkflow):
             artifacts={
                 "coef_raw": (
                     dict(zip(X_train.columns, coef_raw.tolist()))
-                    if len(coef_raw) == X_train.shape[1]
+                    if "pca" not in pipe.named_steps
                     else {f"PC{i}": float(c) for i, c in enumerate(coef_raw)}
                 ),
                 "coef_std": (
                     dict(zip(X_train.columns, coef_std.tolist()))
-                    if len(coef_std) == X_train.shape[1]
+                    if "pca" not in pipe.named_steps
                     else {f"PC{i}": float(c) for i, c in enumerate(coef_std)}
                 ),
                 "n_nonzero_features": n_nonzero,
@@ -447,17 +447,17 @@ class WorkflowARD(BaseWorkflow):
             artifacts={
                 "coef_raw": (
                     dict(zip(X_train.columns, coef_raw.tolist()))
-                    if len(coef_raw) == X_train.shape[1]
+                    if "pca" not in pipe.named_steps
                     else {f"PC{i}": float(c) for i, c in enumerate(coef_raw)}
                 ),
                 "coef_std": (
                     dict(zip(X_train.columns, coef_std.tolist()))
-                    if len(coef_std) == X_train.shape[1]
+                    if "pca" not in pipe.named_steps
                     else {f"PC{i}": float(c) for i, c in enumerate(coef_std)}
                 ),
                 "relevance_scores": (
                     dict(zip(X_train.columns, relevance_norm.tolist()))
-                    if len(relevance_norm) == X_train.shape[1]
+                    if "pca" not in pipe.named_steps
                     else {f"PC{i}": float(r) for i, r in enumerate(relevance_norm)}
                 ),
                 "residuals_test": (_safe_np(y_test) - y_test_pred).tolist(),
@@ -559,7 +559,7 @@ class WorkflowXGB(BaseWorkflow):
         model_step = best_pipe.named_steps["model"]
         if hasattr(model_step, "feature_importances_"):
             fi_raw = model_step.feature_importances_.tolist()
-            if len(fi_raw) == X_train.shape[1]:
+            if "pca" not in best_pipe.named_steps:
                 fi = dict(zip(X_train.columns, fi_raw))
             else:
                 fi = {f"PC{i}": float(v) for i, v in enumerate(fi_raw)}
