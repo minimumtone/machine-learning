@@ -411,6 +411,161 @@ def _build_physical_interpretation_md(
                 "分布内にあり、予測は比較的信頼できます。"
             )
 
+    # --- Score formula explanation ---
+    lines.append("\n### スコア算出式の詳細\n")
+    lines.append(
+        "本プラットフォームは、各特徴量セットの**総合妥当性スコア (Total Validity Score)** を "
+        "以下の重み付き線形結合で算出し、ランキングします。\n"
+    )
+    lines.append(
+        "$$\\text{Total} = "
+        "0.30 \\times \\text{Effect Size} "
+        "+ 0.20 \\times \\text{Stability} "
+        "+ 0.30 \\times \\text{Generalisation} "
+        "+ 0.20 \\times \\text{Extrap. Safety} "
+        "- 0.15 \\times \\text{Leak Penalty} "
+        "- 0.10 \\times \\text{MC Penalty}$$\n"
+    )
+    lines.append(
+        "> スコア範囲: 最良 1.00（全成分 1.0・ペナルティ 0）〜 "
+        "最悪 −0.25（全成分 0・ペナルティ最大）\n"
+    )
+    lines.append("---\n")
+
+    # 1. Effect Size
+    lines.append("#### 1. Effect Size（効果量）— 重み 0.30\n")
+    lines.append(
+        "FS\\_BASE を基準とし、対象特徴量セットが RMSE(Test) を "
+        "どれだけ改善したかを測定します。\n"
+    )
+    lines.append(
+        "$$\\text{Effect Size} = \\max\\!\\left(0,\\; "
+        "\\frac{\\text{RMSE}_{\\text{BASE}} - \\text{RMSE}_{\\text{FS}}}"
+        "{\\text{RMSE}_{\\text{BASE}}}\\right)$$\n"
+    )
+    lines.append(
+        "- 値域: \\[0, 1\\]。FS\\_BASE 自身は常に 0。"
+        "BASE より悪い場合も 0（負値はクリップ）。\n"
+    )
+
+    # 2. Stability
+    lines.append("#### 2. Stability（安定性）— 重み 0.20\n")
+    lines.append(
+        "全ラン（シード × fold × split）の RMSE(Test) の "
+        "変動係数 (CV) の逆数で、再現性を評価します。\n"
+    )
+    lines.append(
+        "$$\\text{CV} = \\frac{\\sigma_{\\text{RMSE}}}{\\mu_{\\text{RMSE}}}, "
+        "\\quad \\text{Stability} = \\max(0,\\; 1 - \\text{CV})$$\n"
+    )
+    lines.append(
+        "- CV が小さいほど安定（Stability → 1.0）。"
+        "ランが 1 件の場合は中立値 0.5。\n"
+    )
+
+    # 3. Generalisation
+    lines.append("#### 3. Generalisation（汎化性）— 重み 0.30\n")
+    lines.append(
+        "RandomCV と CompositionBlock の両分割で "
+        "FS\\_BASE に対する RMSE 改善率を比較し、汎化の一貫性を評価します。\n"
+    )
+    lines.append(
+        "$$\\Delta_{\\text{rand}} = "
+        "\\frac{\\text{RMSE}_{\\text{BASE}} - \\text{RMSE}_{\\text{RandomCV}}}"
+        "{\\text{RMSE}_{\\text{BASE}}}, \\quad "
+        "\\Delta_{\\text{block}} = "
+        "\\frac{\\text{RMSE}_{\\text{BASE}} - \\text{RMSE}_{\\text{Block}}}"
+        "{\\text{RMSE}_{\\text{BASE}}}$$\n"
+    )
+    lines.append(
+        "| 条件 | スコア |\n"
+        "|---|---|\n"
+        "| 両方改善 ($\\Delta > 0$) | $0.5 + 0.5 \\times \\sqrt{\\Delta_{rand} \\cdot \\Delta_{block}}$ (幾何平均) |\n"
+        "| 両方悪化 | 0.30 |\n"
+        "| 片方のみ改善（乖離） | 0.10 |\n"
+        "| 変化なし | 0.50 (中立) |\n"
+    )
+
+    # 4. Leak Penalty
+    lines.append("#### 4. Leak Penalty（リーク検出）— 重み −0.15\n")
+    lines.append(
+        "RandomCV のみ大幅改善し CompositionBlock が悪化する場合、"
+        "データリーク（目的変数の間接漏洩）の疑いを検出します。\n"
+    )
+    lines.append(
+        "$$\\text{Leak Penalty} = \\begin{cases}"
+        "\\min(1,\\; \\Delta_{\\text{rand}} - \\Delta_{\\text{block}}) "
+        "& \\text{if } \\Delta_{\\text{rand}} > 0.05 \\text{ and } \\Delta_{\\text{block}} < -0.02 \\\\"
+        "0 & \\text{otherwise}"
+        "\\end{cases}$$\n"
+    )
+    lines.append(
+        "- 0 = リークなし、1.0 = 強いリーク疑い。"
+        "Total スコアから **減算** されます。\n"
+    )
+
+    # 5. Extrapolation Safety
+    lines.append("#### 5. Extrapolation Safety（外挿安全性）— 重み 0.20\n")
+    lines.append(
+        "OOD サンプルに対する **誤差スコア** と **不確実性スコア** の加重平均です。\n"
+    )
+    lines.append(
+        "$$\\text{Extrap. Safety} = 0.6 \\times \\text{err\\_score} "
+        "+ 0.4 \\times \\text{unc\\_score}$$\n"
+    )
+    lines.append(
+        "**誤差スコア (err\\_score):** OOD 誤差が ID 誤差の何倍かで評価\n\n"
+        "$$r = \\frac{\\overline{|\\text{error}|_{\\text{OOD}}}}"
+        "{\\overline{|\\text{error}|_{\\text{ID}}}}, \\quad "
+        "\\text{err\\_score} = \\max\\!\\left(0,\\; 1 - \\frac{r - 1}{2}\\right)$$\n\n"
+        "- $r = 1$（OOD と ID が同精度）→ 1.0、$r = 3$ → 0.0\n"
+    )
+    lines.append(
+        "**不確実性スコア (unc\\_score):** OOD で不確実性が適切に増加するか\n\n"
+        "$$u = \\frac{\\overline{\\text{unc}_{\\text{OOD}}}}"
+        "{\\overline{\\text{unc}_{\\text{ID}}}}, \\quad "
+        "\\text{unc\\_score} = \\begin{cases}"
+        "\\max(0, \\min(1, 0.5u - 0.5)) & u \\ge 1 \\\\"
+        "0 & u < 1"
+        "\\end{cases}$$\n\n"
+        "- $u < 1$（OOD の方が不確実性が低い — 異常）→ 0.0\n"
+        "- $u = 1$ → 0.5、$u = 2$ → 1.0\n"
+    )
+
+    # 6. Multicollinearity Penalty
+    lines.append("#### 6. Multicollinearity Penalty（多重共線性ペナルティ）— 重み −0.10\n")
+    lines.append(
+        "Phase 0 で算出された **高 VIF 比率** をそのままペナルティとします。\n"
+    )
+    lines.append(
+        "$$\\text{MC Penalty} = \\min\\!\\left(1,\\; "
+        "\\frac{\\text{VIF} > 10 \\text{ の特徴量数}}"
+        "{\\text{特徴量数}}\\right)$$\n"
+    )
+    lines.append(
+        "- VIF (Variance Inflation Factor) は `LinearRegression(fit_intercept=True)` で算出。\n"
+        "- 閾値: VIF > 10 → 高い多重共線性。"
+        " 30% 超で WF-LIN / WF-LASSO / WF-ARD を自動ブロック。\n"
+        "- 0.0 = 共線性なし、1.0 = 全特徴量が高 VIF。\n"
+    )
+    lines.append("---\n")
+
+    # --- Worked example for best FS ---
+    if scores:
+        best = scores[0]
+        lines.append(f"#### 計算例: **{best.feature_set}**\n")
+        lines.append(
+            f"$$\\text{{Total}} = "
+            f"0.30 \\times {best.effect_size:.4f} "
+            f"+ 0.20 \\times {best.stability:.4f} "
+            f"+ 0.30 \\times {best.generalisation:.4f} "
+            f"+ 0.20 \\times {best.extrapolation_safety:.4f} "
+            f"- 0.15 \\times {best.leak_penalty:.4f} "
+            f"- 0.10 \\times {best.multicollinearity_penalty:.4f} "
+            f"= \\mathbf{{{best.total:.4f}}}$$\n"
+        )
+        lines.append("---\n")
+
     # --- Judgment guide ---
     lines.append("\n### 結果の読み方ガイド\n")
     lines.append(
@@ -422,7 +577,8 @@ def _build_physical_interpretation_md(
         "| Stability | シード間での結果が安定 | 結果のばらつきが大きい |\n"
         "| Generalisation | 分割方法に依らず汎化 | 特定分割でのみ好成績 |\n"
         "| Extrap. Safety | OOD領域でも精度を維持 | 外挿で精度低下 |\n"
-        "| Leak Penalty | データリークの疑い（要注意） | リーク無し |"
+        "| Leak Penalty | データリークの疑い（要注意） | リーク無し |\n"
+        "| MC Penalty | 多重共線性が高い（線形モデル不安定） | 共線性なし |"
     )
 
     return "\n".join(lines)

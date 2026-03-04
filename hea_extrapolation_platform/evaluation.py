@@ -275,8 +275,8 @@ class FeatureValidityEvaluator:
             id_unc = float(uncertainties[~is_ood].mean())
             if id_unc > 1e-10:
                 unc_ratio = ood_unc / id_unc
-                # ratio=1 → 0.5, ratio=2 → 1.0, ratio<1 → 0.0
-                unc_score = max(0.0, min(1.0, 0.5 * unc_ratio))
+                # ratio<1 → 0.0, ratio=1 → 0.5, ratio=2 → 1.0
+                unc_score = max(0.0, min(1.0, 0.5 * unc_ratio - 0.5)) if unc_ratio >= 1.0 else 0.0
             else:
                 unc_score = 1.0 if ood_unc > 1e-10 else 0.5
         else:
