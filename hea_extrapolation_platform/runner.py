@@ -68,6 +68,7 @@ from hea_extrapolation_platform.workflows import (
     WorkflowENS,
     WorkflowLASSO,
     WorkflowLIN,
+    WorkflowRF,
     WorkflowXGB,
 )
 from hea_extrapolation_platform.ood import OODDetector, OODResult
@@ -225,13 +226,15 @@ def _run_job(
     y_test  = _pd.Series(y[job.test_idx])
 
     from hea_extrapolation_platform.workflows import (
-        WorkflowARD, WorkflowENS, WorkflowLASSO, WorkflowLIN, WorkflowXGB,
+        WorkflowARD, WorkflowENS, WorkflowLASSO, WorkflowLIN, WorkflowRF,
+        WorkflowXGB,
     )
     _dr = job.dim_reduction
     wf_map: Dict[str, Any] = {
         "WF-LIN": WorkflowLIN(dim_reduction=_dr),
         "WF-LASSO": WorkflowLASSO(dim_reduction=_dr),
         "WF-ARD": WorkflowARD(dim_reduction=_dr),
+        "WF-RF": WorkflowRF(quick=job.quick, dim_reduction=_dr),
         "WF-XGB": WorkflowXGB(quick=job.quick, dim_reduction=_dr),
         "WF-ENS": WorkflowENS(
             n_members=3 if job.quick else 5, quick=job.quick,
@@ -381,7 +384,7 @@ class ExperimentRunner:
 
         self._feature_store.store_features(features_all)
 
-        all_wf_names = ["WF-LIN", "WF-LASSO", "WF-ARD", "WF-XGB", "WF-ENS"]
+        all_wf_names = ["WF-LIN", "WF-LASSO", "WF-ARD", "WF-RF", "WF-XGB", "WF-ENS"]
         mint_configs: Dict[str, MIntWorkflowConfig] = {}
         if self._mint_registry is not None:
             for wf_info in self._mint_registry.list_workflows():
