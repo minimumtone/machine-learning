@@ -86,6 +86,7 @@ def _empty_session() -> Dict[str, Any]:
         "validity_scores": [],
         "ood_results": {},
         "ood_split_indices": {},
+        "mc_reports": {},  # Phase 0 multicollinearity reports
         "compositions_df": None,
         "features_df": None,
         "target": None,
@@ -307,7 +308,8 @@ def _build_physical_interpretation_md(
             f"安定性: {best.stability:.4f} / "
             f"汎化性: {best.generalisation:.4f}\n"
             f"- 外挿安全性: {best.extrapolation_safety:.4f} / "
-            f"リークペナルティ: {best.leak_penalty:.4f}"
+            f"リークペナルティ: {best.leak_penalty:.4f}\n"
+            f"- 多重共線性ペナルティ: {best.multicollinearity_penalty:.4f}"
         )
         lines.append("")
 
@@ -2377,6 +2379,7 @@ def create_app() -> gr.Blocks:
                 session["validity_scores"] = scores
                 session["ood_results"] = ood_results
                 session["ood_split_indices"] = runner.ood_split_indices
+                session["mc_reports"] = runner.mc_reports or {}
                 session["runner"] = runner
 
                 # Consolidate DataFrames to single C-contiguous
@@ -2402,6 +2405,19 @@ def create_app() -> gr.Blocks:
                 if runner.mint_registry is not None:
                     n_mint = len(runner.mint_registry.list_workflows())
                     log(f"Workflow engine: {n_mint} workflow(s) executed")
+
+                # Log Phase 0 multicollinearity results
+                mc_rpts = session.get("mc_reports", {})
+                if mc_rpts:
+                    for _fs_key, _rpt in mc_rpts.items():
+                        log(
+                            f"Phase 0 [{_fs_key}]: "
+                            f"{_rpt.n_features_before}D->{_rpt.n_features_after}D "
+                            f"(VIF_high={_rpt.high_vif_count}, "
+                            f"level={_rpt.multicollinearity_level}) "
+                            f"allowed={_rpt.recommended_workflows} "
+                            f"blocked={_rpt.blocked_workflows}"
+                        )
 
                 if scores:
                     log(

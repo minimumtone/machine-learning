@@ -86,6 +86,10 @@ from hea_extrapolation_platform.integrations.mint_adapter import (
     MIntWorkflowConfig,
     MIntWorkflowRegistry,
 )
+from hea_extrapolation_platform.multicollinearity import (
+    MulticollinearityReport,
+    run_phase0_multicollinearity,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -191,6 +195,7 @@ class _Job(NamedTuple):
     test_idx: np.ndarray
     quick: bool
     dim_reduction: bool = True
+    force_pca: bool = False  # moderate VIF: force PCA on for linear models
 
 
 # ---------------------------------------------------------------------------
@@ -230,10 +235,11 @@ def _run_job(
         WorkflowXGB,
     )
     _dr = job.dim_reduction
+    _pca = _dr or job.force_pca  # force_pca=True → always PCA ON
     wf_map: Dict[str, Any] = {
-        "WF-LIN": WorkflowLIN(dim_reduction=_dr),
-        "WF-LASSO": WorkflowLASSO(dim_reduction=_dr),
-        "WF-ARD": WorkflowARD(dim_reduction=_dr),
+        "WF-LIN": WorkflowLIN(dim_reduction=_pca),
+        "WF-LASSO": WorkflowLASSO(dim_reduction=_pca),
+        "WF-ARD": WorkflowARD(dim_reduction=_pca),
         "WF-RF": WorkflowRF(quick=job.quick, dim_reduction=_dr),
         "WF-XGB": WorkflowXGB(quick=job.quick, dim_reduction=_dr),
         "WF-ENS": WorkflowENS(
@@ -306,6 +312,7 @@ class ExperimentRunner:
         self._n_workers = n_workers if n_workers is not None else os.cpu_count()
         self._registry = RunRegistry()
         self._ood_split_indices: Dict[str, Tuple[np.ndarray, np.ndarray]] = {}
+        self._mc_reports: Optional[Dict[str, MulticollinearityReport]] = None
 
         if mlflow_tracker is not None:
             self._tracker = mlflow_tracker
@@ -353,6 +360,11 @@ class ExperimentRunner:
     @property
     def ood_split_indices(self) -> Dict[str, Tuple[np.ndarray, np.ndarray]]:
         return self._ood_split_indices
+
+    @property
+    def mc_reports(self) -> Optional[Dict[str, MulticollinearityReport]]:
+        """Multicollinearity reports from Phase 0 (None before run)."""
+        return self._mc_reports
 
     def run(
         self,
@@ -416,10 +428,28 @@ class ExperimentRunner:
         )
 
         try:
+            # ── Phase 0: Multicollinearity diagnostics & model selection ──
+            mc_reports = run_phase0_multicollinearity(
+                features_all, feature_sets, wf_names, len(features_all),
+            )
+            self._mc_reports = mc_reports
+            if progress_callback is not None:
+                try:
+                    progress_callback(
+                        0, 0,
+                        f"Phase 0 complete: multicollinearity diagnosed "
+                        f"for {len(mc_reports)} feature sets",
+                    )
+                except Exception:
+                    pass
+
             fold_plan = self._phase1_precompute_folds(
                 compositions_df, features_all, target
             )
-            jobs = self._phase2_build_jobs(feature_sets, wf_names, fold_plan)
+            jobs = self._phase2_build_jobs(
+                feature_sets, wf_names, fold_plan,
+                mc_reports=mc_reports,
+            )
             logger.info(
                 "Starting experiment: %d jobs, %d workers",
                 len(jobs), self._n_workers,
@@ -436,7 +466,9 @@ class ExperimentRunner:
                 features_all, feature_sets, fold_plan
             )
 
-            validity_scores = self._phase5_evaluate(ood_errors_for_eval)
+            validity_scores = self._phase5_evaluate(
+                ood_errors_for_eval, mc_reports=mc_reports,
+            )
 
             elapsed = time.time() - t_start
             run_count = len(all_results)
@@ -517,8 +549,10 @@ class ExperimentRunner:
         feature_sets: List[FeatureSetName],
         wf_names: List[str],
         fold_plan: Dict[str, List[Tuple[np.ndarray, np.ndarray]]],
+        mc_reports: Optional[Dict[str, MulticollinearityReport]] = None,
     ) -> List[_Job]:
         jobs: List[_Job] = []
+        blocked_count = 0
         for seed in self._seeds:
             splitter_folds = {
                 "CompositionBlock": fold_plan["CompositionBlock"],
@@ -526,12 +560,30 @@ class ExperimentRunner:
                 "RandomCV":         fold_plan[f"RandomCV_seed{seed}"],
             }
             for fs_name in feature_sets:
+                fs_key = fs_name.value
+
+                # ── Model selection filter from Phase 0 ──
+                if mc_reports and fs_key in mc_reports:
+                    allowed_wf = set(mc_reports[fs_key].recommended_workflows)
+                else:
+                    allowed_wf = set(wf_names)  # fallback: all allowed
+
+                # ── PCA force flag from Phase 0 ──
+                force_pca = bool(
+                    mc_reports
+                    and fs_key in mc_reports
+                    and mc_reports[fs_key].multicollinearity_level == 'moderate'
+                )
+
                 for sp_name, folds in splitter_folds.items():
                     for fold_idx, (train_idx, test_idx) in enumerate(folds):
                         for wf_name in wf_names:
+                            if wf_name not in allowed_wf:
+                                blocked_count += 1
+                                continue  # blocked workflow
                             jobs.append(_Job(
                                 wf_name=wf_name,
-                                fs_name=fs_name.value,
+                                fs_name=fs_key,
                                 sp_name=sp_name,
                                 seed=seed,
                                 fold=fold_idx,
@@ -539,8 +591,15 @@ class ExperimentRunner:
                                 test_idx=test_idx,
                                 quick=self._quick,
                                 dim_reduction=self._dim_reduction,
+                                force_pca=force_pca,
                             ))
-        logger.debug("Phase 2: %d jobs", len(jobs))
+        if blocked_count > 0:
+            logger.info(
+                "Phase 2: %d jobs (%d blocked by multicollinearity filter)",
+                len(jobs), blocked_count,
+            )
+        else:
+            logger.debug("Phase 2: %d jobs", len(jobs))
         return jobs
 
     # ------------------------------------------------------------------
@@ -737,11 +796,13 @@ class ExperimentRunner:
     def _phase5_evaluate(
         self,
         ood_errors_for_eval: Dict[str, Dict[str, np.ndarray]],
+        mc_reports: Optional[Dict[str, MulticollinearityReport]] = None,
     ) -> List[ValidityScore]:
         evaluator = FeatureValidityEvaluator()
         return evaluator.evaluate(
             self._registry.runs,
             ood_errors=ood_errors_for_eval,
+            mc_reports=mc_reports,
         )
 
     # ------------------------------------------------------------------
