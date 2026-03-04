@@ -125,8 +125,36 @@ def install() -> None:
 
     pd.Series.values = _safe_series_values  # type: ignore[assignment]
 
+    # --- Patch plotly Template.__deepcopy__ ---
+    # plotly's update_layout() internally deepcopies the global Template
+    # object.  During deepcopy, Parcoords.__init__ and other validators
+    # reconstruct numpy arrays via C extensions.  If any F-contiguous
+    # arrays are reachable from the template graph, the C extension
+    # crashes with SIGSEGV.
+    #
+    # Fix: replace Template.__deepcopy__ with a no-op that returns self.
+    # Templates are effectively immutable singletons so sharing is safe.
+    try:
+        import plotly.graph_objs.layout as _plotly_layout
+        import plotly.io as pio
+
+        _Template = _plotly_layout.Template
+
+        def _template_deepcopy_noop(self, memo=None):  # type: ignore[override]
+            """Return *self* instead of deepcopying — avoids SIGSEGV."""
+            return self
+
+        _Template.__deepcopy__ = _template_deepcopy_noop
+
+        # Set global default so individual calls don't need template=
+        pio.templates.default = "plotly_white"
+
+        logger.info("plotly Template.__deepcopy__ safety patch installed")
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("plotly Template patch skipped: %s", exc)
+
     _INSTALLED = True
     logger.info(
         "pandas C-contiguous compatibility patches installed "
-        "(DataFrame.to_numpy, Series.to_numpy, .values)"
+        "(DataFrame.to_numpy, Series.to_numpy, .values, plotly Template)"
     )
