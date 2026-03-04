@@ -113,7 +113,10 @@ def remove_perfect_collinear(
             break
         # Use C-contiguous values for corr computation
         corr = df.corr().abs()
-        np.fill_diagonal(corr.values, 0.0)
+        # pandas 3.0: .values may be read-only; use writable numpy copy
+        corr_arr = np.ascontiguousarray(corr.to_numpy(dtype='float64'))
+        np.fill_diagonal(corr_arr, 0.0)
+        corr = pd.DataFrame(corr_arr, index=corr.index, columns=corr.columns)
         max_corr = float(corr.max().max())
         if max_corr < threshold:
             break
