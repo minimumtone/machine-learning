@@ -1216,6 +1216,16 @@ def _handle_generic_csv(
         )
 
     # Build features DataFrame from selected columns
+    # Safety: remove target from features to prevent data leakage
+    feature_cols = [c for c in feature_cols if c != target_col_clean]
+    if not feature_cols:
+        return (
+            _make_error_banner(
+                "説明変数が選択されていません",
+                "目的変数以外の数値列を説明変数として選択してください。",
+            ),
+            None, None, None, pd.DataFrame(), session,
+        )
     features_df = raw_valid[feature_cols].copy().reset_index(drop=True)
     # Fill NaN with column median for numeric columns
     for col in features_df.columns:
@@ -1958,7 +1968,9 @@ def create_app() -> gr.Blocks:
                     except Exception:
                         err = traceback.format_exc()
                         err_html = _make_error_banner(
-                            "CSV読み込みエラー", err,
+                            "CSV読み込みエラー",
+                            f"<pre style='background:#fff5f5; padding:8px; "
+                            f"overflow-x:auto;'>{html_mod.escape(err)}</pre>",
                         )
                         return (
                             err_html, err_html,
