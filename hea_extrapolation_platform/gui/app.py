@@ -1109,7 +1109,7 @@ def _analyze_csv_format(
     if missing_cols:
         top_missing = sorted(missing_cols, key=lambda x: -x[1])[:5]
         warn_items = [
-            f"<code>{c}</code> ({n}件, {p:.1f}%)"
+            f"<code>{html_mod.escape(c)}</code> ({n}件, {p:.1f}%)"
             for c, n, p in top_missing
         ]
         warn_lines.append(
@@ -1117,7 +1117,7 @@ def _analyze_csv_format(
         )
     if constant_cols:
         warn_lines.append(
-            f'定数列 (分散0): <code>{", ".join(constant_cols[:5])}</code>'
+            f'定数列 (分散0): <code>{html_mod.escape(", ".join(constant_cols[:5]))}</code>'
         )
     if not numeric_cols:
         warn_lines.append('数値列が見つかりません。説明変数・目的変数を選択できません。')
