@@ -1018,14 +1018,19 @@ def _make_error_banner(title: str, detail: str) -> str:
 
 def _analyze_csv_format(
     file_path: str,
-) -> Tuple[pd.DataFrame, str, str]:
-    """Analyze CSV format and return (DataFrame, format_report_html, diagnostics_md).
+) -> Tuple[pd.DataFrame, str, List[str], List[str]]:
+    """Analyze CSV format and return analysis results.
 
-    The report includes:
-      - File name, encoding hint, row/column counts
-      - Per-column: name, dtype, non-null count, sample values
-      - Missing values summary
-      - Warnings for problematic data
+    Returns
+    -------
+    raw : pd.DataFrame
+        The loaded DataFrame.
+    format_html : str
+        HTML report with per-column analysis.
+    numeric_cols : list[str]
+        Names of numeric columns.
+    string_cols : list[str]
+        Names of string/object columns.
     """
     import os
 
@@ -1986,16 +1991,18 @@ def create_app() -> gr.Blocks:
                             if hasattr(file_obj, "name")
                             else str(file_obj)
                         )
-                        raw_cols = pd.read_csv(
-                            file_path, nrows=0,
-                        ).columns.tolist()
+                        raw_peek = pd.read_csv(
+                            file_path, nrows=5,
+                        )
                         numeric = [
-                            c for c in raw_cols
-                            if c != target_col
+                            c for c in raw_peek.columns
+                            if pd.api.types.is_numeric_dtype(raw_peek[c])
+                            and c != target_col
                         ]
                         # Keep currently selected features minus target
                         new_val = [
-                            f for f in all_features if f != target_col
+                            f for f in all_features
+                            if f != target_col and f in numeric
                         ]
                         return gr.update(
                             choices=numeric, value=new_val,
