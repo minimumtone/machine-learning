@@ -1901,6 +1901,7 @@ def create_app() -> gr.Blocks:
                             gr.update(choices=[], value=[]),
                             gr.update(open=False),
                             gr.update(open=False),
+                            [],                      # empty numeric cols
                         )
 
                     try:
