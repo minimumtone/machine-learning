@@ -1836,6 +1836,10 @@ def create_app() -> gr.Blocks:
                     "\U0001F4D6 CSV読み込み (Read CSV)",
                     variant="secondary",
                 )
+                # Hidden state to store numeric column names from
+                # the initial full-file analysis so that
+                # _on_target_change does not need to re-read the CSV.
+                csv_numeric_cols_state = gr.State(value=[])
 
                 with gr.Row():
                     with gr.Column():
@@ -1927,7 +1931,7 @@ def create_app() -> gr.Blocks:
 
                         # Auto-select target: last numeric column as guess
                         default_target = (
-                            numeric_cols[0] if numeric_cols else None
+                            numeric_cols[-1] if numeric_cols else None
                         )
                         # Auto-select features: all numeric except target
                         default_features = [
@@ -1948,6 +1952,7 @@ def create_app() -> gr.Blocks:
                             ),
                             gr.update(open=True),   # open format accordion
                             gr.update(open=True),   # open column role accordion
+                            numeric_cols,            # store for _on_target_change
                         )
                     except Exception:
                         err = traceback.format_exc()
@@ -1960,6 +1965,7 @@ def create_app() -> gr.Blocks:
                             gr.update(choices=[], value=[]),
                             gr.update(open=True),
                             gr.update(open=False),
+                            [],                      # empty numeric cols
                         )
 
                 run_csv_upload.change(
@@ -1972,6 +1978,7 @@ def create_app() -> gr.Blocks:
                         csv_feature_checks,
                         csv_format_accordion,
                         col_role_accordion,
+                        csv_numeric_cols_state,
                     ],
                 )
 
@@ -1980,41 +1987,34 @@ def create_app() -> gr.Blocks:
                 def _on_target_change(
                     target_col: Optional[str],
                     all_features: List[str],
-                    file_obj: Any,
+                    numeric_cols_cached: List[str],
                 ) -> Any:
-                    """Remove target from feature selection."""
-                    if file_obj is None or not target_col:
+                    """Remove target from feature selection.
+
+                    Uses the cached numeric_cols list from the initial
+                    full-file analysis instead of re-reading the CSV,
+                    ensuring consistent dtype detection.
+                    """
+                    if not target_col or not numeric_cols_cached:
                         return gr.update()
-                    try:
-                        file_path = (
-                            file_obj.name
-                            if hasattr(file_obj, "name")
-                            else str(file_obj)
-                        )
-                        raw_peek = pd.read_csv(
-                            file_path, nrows=5,
-                        )
-                        numeric = [
-                            c for c in raw_peek.columns
-                            if pd.api.types.is_numeric_dtype(raw_peek[c])
-                            and c != target_col
-                        ]
-                        # Keep currently selected features minus target
-                        new_val = [
-                            f for f in all_features
-                            if f != target_col and f in numeric
-                        ]
-                        return gr.update(
-                            choices=numeric, value=new_val,
-                        )
-                    except Exception:
-                        return gr.update()
+                    numeric = [
+                        c for c in numeric_cols_cached
+                        if c != target_col
+                    ]
+                    # Keep currently selected features minus target
+                    new_val = [
+                        f for f in all_features
+                        if f != target_col and f in numeric
+                    ]
+                    return gr.update(
+                        choices=numeric, value=new_val,
+                    )
 
                 run_csv_target.change(
                     fn=_on_target_change,
                     inputs=[
                         run_csv_target, csv_feature_checks,
-                        run_csv_upload,
+                        csv_numeric_cols_state,
                     ],
                     outputs=[csv_feature_checks],
                 )
