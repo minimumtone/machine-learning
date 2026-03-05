@@ -1012,6 +1012,245 @@ def _make_error_banner(title: str, detail: str) -> str:
     )
 
 
+# ---------------------------------------------------------------------------
+# CSV format analysis
+# ---------------------------------------------------------------------------
+
+def _analyze_csv_format(
+    file_path: str,
+) -> Tuple[pd.DataFrame, str, str]:
+    """Analyze CSV format and return (DataFrame, format_report_html, diagnostics_md).
+
+    The report includes:
+      - File name, encoding hint, row/column counts
+      - Per-column: name, dtype, non-null count, sample values
+      - Missing values summary
+      - Warnings for problematic data
+    """
+    import os
+
+    fname = os.path.basename(file_path)
+    raw = pd.read_csv(file_path)
+    n_rows, n_cols = raw.shape
+
+    # Per-column analysis
+    col_info: List[Dict[str, str]] = []
+    numeric_cols: List[str] = []
+    string_cols: List[str] = []
+    datetime_cols: List[str] = []
+    missing_cols: List[Tuple[str, int, float]] = []
+    constant_cols: List[str] = []
+
+    for col in raw.columns:
+        dtype = str(raw[col].dtype)
+        non_null = int(raw[col].notna().sum())
+        n_missing = n_rows - non_null
+        pct_missing = n_missing / n_rows * 100 if n_rows > 0 else 0.0
+
+        # Sample values (first 3 non-null)
+        sample_vals = raw[col].dropna().head(3).tolist()
+        sample_str = ", ".join(str(v) for v in sample_vals)
+        if len(sample_str) > 60:
+            sample_str = sample_str[:57] + "..."
+
+        is_numeric = pd.api.types.is_numeric_dtype(raw[col])
+        if is_numeric:
+            numeric_cols.append(col)
+            dtype_label = "numeric"
+        elif pd.api.types.is_datetime64_any_dtype(raw[col]):
+            datetime_cols.append(col)
+            dtype_label = "datetime"
+        else:
+            string_cols.append(col)
+            dtype_label = "string"
+
+        if n_missing > 0:
+            missing_cols.append((col, n_missing, pct_missing))
+
+        if is_numeric and raw[col].nunique() <= 1:
+            constant_cols.append(col)
+
+        col_info.append({
+            "name": col,
+            "dtype": dtype,
+            "dtype_label": dtype_label,
+            "non_null": str(non_null),
+            "missing": str(n_missing),
+            "pct_missing": f"{pct_missing:.1f}%",
+            "sample": sample_str,
+        })
+
+    # Build HTML report
+    lines: List[str] = []
+    lines.append(
+        f'<div style="background:#f8f9fa; border:1px solid #dee2e6; '
+        f'border-radius:8px; padding:16px; margin:8px 0;">'
+    )
+    lines.append(
+        f'<h3 style="margin-top:0;">CSV書式確認</h3>'
+    )
+    lines.append(
+        f'<b>ファイル名</b>: <code>{html_mod.escape(fname)}</code><br/>'
+        f'<b>サイズ</b>: {n_rows} 行 &times; {n_cols} 列<br/>'
+        f'<b>数値列</b>: {len(numeric_cols)} 列 / '
+        f'<b>文字列列</b>: {len(string_cols)} 列'
+    )
+    if datetime_cols:
+        lines.append(f' / <b>日時列</b>: {len(datetime_cols)} 列')
+    lines.append('<br/>')
+
+    # Warnings
+    warn_lines: List[str] = []
+    if missing_cols:
+        top_missing = sorted(missing_cols, key=lambda x: -x[1])[:5]
+        warn_items = [
+            f"<code>{c}</code> ({n}件, {p:.1f}%)"
+            for c, n, p in top_missing
+        ]
+        warn_lines.append(
+            f'欠損値あり: {", ".join(warn_items)}'
+        )
+    if constant_cols:
+        warn_lines.append(
+            f'定数列 (分散0): <code>{", ".join(constant_cols[:5])}</code>'
+        )
+    if not numeric_cols:
+        warn_lines.append('数値列が見つかりません。説明変数・目的変数を選択できません。')
+
+    if warn_lines:
+        lines.append(
+            '<div style="background:#fff3cd; border-left:4px solid #ffc107; '
+            'padding:8px 12px; margin:8px 0; border-radius:4px;">'
+        )
+        lines.append('<b>注意:</b><br/>')
+        for w in warn_lines:
+            lines.append(f'&bull; {w}<br/>')
+        lines.append('</div>')
+
+    # Column table
+    lines.append(
+        '<table style="width:100%; border-collapse:collapse; '
+        'font-size:13px; margin-top:8px;">'
+    )
+    lines.append(
+        '<tr style="background:#e9ecef;">'
+        '<th style="padding:4px 8px; text-align:left;">列名</th>'
+        '<th style="padding:4px 8px; text-align:left;">型</th>'
+        '<th style="padding:4px 8px; text-align:right;">非NULL</th>'
+        '<th style="padding:4px 8px; text-align:right;">欠損</th>'
+        '<th style="padding:4px 8px; text-align:left;">サンプル値</th>'
+        '</tr>'
+    )
+    for ci in col_info:
+        bg = "#fff" if ci["dtype_label"] != "string" else "#f8f8f8"
+        icon = {
+            "numeric": "&#x1F522;",
+            "string": "&#x1F524;",
+            "datetime": "&#x1F4C5;",
+        }.get(ci["dtype_label"], "")
+        lines.append(
+            f'<tr style="background:{bg}; border-bottom:1px solid #eee;">'
+            f'<td style="padding:4px 8px;"><code>{html_mod.escape(ci["name"])}</code></td>'
+            f'<td style="padding:4px 8px;">{icon} {ci["dtype_label"]}</td>'
+            f'<td style="padding:4px 8px; text-align:right;">{ci["non_null"]}</td>'
+            f'<td style="padding:4px 8px; text-align:right;">{ci["missing"]}</td>'
+            f'<td style="padding:4px 8px; font-size:12px;">{html_mod.escape(ci["sample"])}</td>'
+            f'</tr>'
+        )
+    lines.append('</table>')
+    lines.append('</div>')
+
+    format_html = "\n".join(lines)
+
+    return raw, format_html, numeric_cols, string_cols
+
+
+def _handle_generic_csv(
+    raw: pd.DataFrame,
+    feature_cols: List[str],
+    target_col: str,
+    session: Dict[str, Any],
+) -> Tuple:
+    """Handle a generic CSV (non-HEA) with user-selected columns.
+
+    Instead of computing HEA-specific features, uses the user-selected
+    numeric columns directly as features.
+
+    Returns the same tuple shape as ``_handle_csv_upload``.
+    """
+    if not feature_cols:
+        return (
+            _make_error_banner(
+                "説明変数が選択されていません",
+                "少なくとも1つの数値列を説明変数として選択してください。",
+            ),
+            None, None, None, pd.DataFrame(), session,
+        )
+
+    target_col_clean = target_col.strip() if target_col else ""
+    if not target_col_clean or target_col_clean not in raw.columns:
+        return (
+            _make_error_banner(
+                "目的変数が選択されていません",
+                "Dropdown から目的変数を1つ選択してください。",
+            ),
+            None, None, None, pd.DataFrame(), session,
+        )
+
+    # Drop rows where target is NaN
+    valid_mask = raw[target_col_clean].notna()
+    raw_valid = raw.loc[valid_mask].copy().reset_index(drop=True)
+
+    if raw_valid.empty:
+        return (
+            _make_error_banner(
+                "有効なデータ行なし",
+                "目的変数列の値がすべてNaNです。",
+            ),
+            None, None, None, pd.DataFrame(), session,
+        )
+
+    # Build features DataFrame from selected columns
+    features_df = raw_valid[feature_cols].copy().reset_index(drop=True)
+    # Fill NaN with column median for numeric columns
+    for col in features_df.columns:
+        if features_df[col].isna().any():
+            median_val = features_df[col].median()
+            features_df[col] = features_df[col].fillna(
+                median_val if pd.notna(median_val) else 0.0
+            )
+    # Ensure all float64
+    features_df = features_df.astype("float64")
+
+    # Consolidate to C-contiguous
+    features_df = _consolidate_df(features_df)
+
+    # Build target
+    target = raw_valid[target_col_clean].astype("float64").reset_index(
+        drop=True,
+    )
+    target.name = target_col_clean
+
+    # Use features_df as both compositions_df and features_df
+    # (compositions_df is only used for HEA-specific plots;
+    #  for generic CSV we pass features_df as placeholder)
+    comps_df = features_df.copy()
+
+    session["compositions_df"] = comps_df
+    session["features_df"] = features_df
+    session["target"] = target
+    session["csv_mode"] = "generic"  # flag for downstream
+
+    stats_md = build_summary_stats_md(comps_df, features_df, target)
+    target_fig = plotly_target_histogram(target)
+    comp_fig = None  # no element composition for generic CSV
+    corr_fig = plotly_feature_correlation(features_df, target=target)
+    desc_df = features_df.describe().round(3).reset_index()
+    desc_df.rename(columns={"index": "Statistic"}, inplace=True)
+
+    return stats_md, target_fig, comp_fig, corr_fig, desc_df, session
+
+
 def _detect_element_columns(
     columns: List[str],
     available: set,
@@ -1071,16 +1310,20 @@ def _handle_csv_upload(
     file_obj: Any,
     target_col: str,
     session: Dict[str, Any],
+    selected_features: Optional[List[str]] = None,
+    force_generic: bool = False,
 ) -> Tuple:
     """Handle CSV file upload and compute features.
 
-    Expected CSV format: element columns (atomic fractions summing to ~1)
-    plus an optional target column.  Non-element columns that are not
-    the target column are silently ignored during feature computation.
+    Supports two modes:
 
-    Element column detection is flexible — supports bare symbols
-    (``Fe``), ``_frac`` suffix (``Al_frac``), ``_at%``, ``_wt%``,
-    and case-insensitive variants.
+    **HEA mode** (default when element columns are detected):
+      Element columns (atomic fractions) are used to compute
+      domain-specific HEA features via ``compute_features()``.
+
+    **Generic mode** (when no element columns or ``force_generic=True``):
+      User-selected numeric columns are used directly as features.
+      ``selected_features`` specifies which columns to use.
 
     Returns the same tuple shape as ``_refresh_data_summary`` plus the
     updated session.
@@ -1111,33 +1354,34 @@ def _handle_csv_upload(
         )
 
         available = set(_ElementDB.available_elements())
-        target_col_clean = target_col.strip()
+        target_col_clean = target_col.strip() if target_col else ""
 
         # Flexible element column detection
         elem_cols, col_to_elem = _detect_element_columns(
             list(raw.columns), available,
         )
 
-        if not elem_cols:
-            sample_cols = ", ".join(list(raw.columns)[:10])
-            avail_str = ", ".join(sorted(available)[:15])
-            return (
-                _make_error_banner(
-                    "元素列が見つかりません",
-                    "CSVの列名から元素記号を検出できませんでした。<br/>"
-                    f"<b>CSVの列名（先頭10列）</b>: <code>{sample_cols}</code><br/>"
-                    f"<b>対応している元素記号</b>: <code>{avail_str}</code><br/><br/>"
-                    "以下の命名規則に対応しています:<br/>"
-                    "<code>Fe</code>, <code>Fe_frac</code>, "
-                    "<code>Fe_at%</code>, <code>Fe_wt%</code> "
-                    "（大文字小文字不問）",
-                ),
-                None, None, None, pd.DataFrame(), session,
+        # Decide mode: HEA vs Generic
+        use_generic = force_generic or (not elem_cols)
+
+        if use_generic:
+            # --- Generic CSV mode ---
+            feat_cols = selected_features or []
+            if not feat_cols:
+                # Auto-select all numeric columns except target
+                feat_cols = [
+                    c for c in raw.columns
+                    if pd.api.types.is_numeric_dtype(raw[c])
+                    and c != target_col_clean
+                ]
+            return _handle_generic_csv(
+                raw, feat_cols, target_col_clean, session,
             )
 
+        # --- HEA mode ---
+        session["csv_mode"] = "hea"
+
         # Build compositions list using canonical element symbols.
-        # Track valid row indices to keep all DataFrames aligned
-        # (rows with all-zero elements are dropped).
         valid_indices: List[int] = []
         compositions = []
         for idx, row in raw[elem_cols].iterrows():
@@ -1191,8 +1435,6 @@ def _handle_csv_upload(
         target_fig = plotly_target_histogram(target)
         comp_fig = plotly_composition_heatmap(comps_df)
         corr_fig = plotly_feature_correlation(features_df, target=target)
-        # features_df is now built columnar (non-fragmented) in
-        # compute_features(); no extra .copy() needed.
         desc_df = features_df.describe().round(3).reset_index()
         desc_df.rename(columns={"index": "Statistic"}, inplace=True)
 
@@ -1522,11 +1764,6 @@ def create_app() -> gr.Blocks:
                         label="\U0001F4C2 CSV Upload (任意)",
                         file_types=[".csv"],
                     )
-                    run_csv_target = gr.Textbox(
-                        label="Target Column Name",
-                        value="yield_strength_MPa",
-                        info="CSVの目的変数の列名",
-                    )
                 csv_status_html = gr.HTML(
                     value=(
                         '<div style="padding:8px 12px; background:#e8f4fd; '
@@ -1537,6 +1774,59 @@ def create_app() -> gr.Blocks:
                         '</div>'
                     ),
                 )
+
+                # --- CSV Format Analysis Panel ---
+                with gr.Accordion(
+                    "CSV書式確認 (CSV Format Analysis)",
+                    open=False,
+                ) as csv_format_accordion:
+                    csv_format_html = gr.HTML(
+                        value=(
+                            '<div style="padding:12px; color:#888; '
+                            'font-size:14px;">'
+                            'CSVファイルをアップロードすると、'
+                            'ここに書式分析結果が表示されます。'
+                            '</div>'
+                        ),
+                    )
+
+                # --- Column Role Assignment ---
+                with gr.Accordion(
+                    "説明因子・目的変数の選択 "
+                    "(Feature / Target Column Selection)",
+                    open=False,
+                ) as col_role_accordion:
+                    gr.Markdown(
+                        "CSVの数値列から **目的変数** (1列) と "
+                        "**説明因子** (複数列) を選択してください。\n\n"
+                        "HEA組成データ (元素列あり) の場合は自動で "
+                        "HEA特徴量が計算されます。\n"
+                        "一般的なCSVの場合は選択した数値列がそのまま "
+                        "説明変数として使用されます。"
+                    )
+                    with gr.Row():
+                        run_csv_target = gr.Dropdown(
+                            label="目的変数 (Target Variable)",
+                            choices=[],
+                            value=None,
+                            interactive=True,
+                            info="予測対象の数値列を1つ選択",
+                        )
+                        csv_mode_radio = gr.Radio(
+                            label="CSV Mode",
+                            choices=["auto", "HEA (元素列)", "Generic (汎用)"],
+                            value="auto",
+                            info="auto: 元素列を自動検出",
+                        )
+                    csv_feature_checks = gr.CheckboxGroup(
+                        label="説明因子 (Explanatory Variables)",
+                        choices=[],
+                        value=[],
+                        interactive=True,
+                        info="説明変数として使用する数値列を選択 "
+                        "(目的変数は自動除外)",
+                    )
+
                 csv_read_btn = gr.Button(
                     "\U0001F4D6 CSV読み込み (Read CSV)",
                     variant="secondary",
@@ -1575,10 +1865,18 @@ def create_app() -> gr.Blocks:
                             info="Skip PNG generation (Plotly always available)",
                         )
 
-                # Update CSV status when file is uploaded/removed
-                def _update_csv_status(file_obj: Any) -> str:
+                # --- CSV upload handler: analyze format + populate dropdowns ---
+                def _on_csv_upload(file_obj: Any) -> Tuple:
+                    """When CSV is uploaded, analyze format and populate column selectors."""
                     if file_obj is None:
-                        return (
+                        empty_format = (
+                            '<div style="padding:12px; color:#888; '
+                            'font-size:14px;">'
+                            'CSVファイルをアップロードすると、'
+                            'ここに書式分析結果が表示されます。'
+                            '</div>'
+                        )
+                        status = (
                             '<div style="padding:8px 12px; background:#e8f4fd; '
                             'border-left:4px solid #2196F3; border-radius:4px; '
                             'margin:4px 0; font-size:14px;">'
@@ -1587,25 +1885,131 @@ def create_app() -> gr.Blocks:
                             '（CSVをアップロードすると切替）'
                             '</div>'
                         )
-                    fname = (
-                        file_obj.name.split("/")[-1]
-                        if hasattr(file_obj, "name")
-                        else "uploaded.csv"
-                    )
-                    return (
-                        '<div style="padding:8px 12px; background:#e8f5e9; '
-                        'border-left:4px solid #4CAF50; border-radius:4px; '
-                        'margin:4px 0; font-size:14px;">'
-                        f'\u2705 <b>データソース</b>: '
-                        f'<code>{html_mod.escape(fname)}</code> を使用します'
-                        '（Number of Samples は無視されます）'
-                        '</div>'
-                    )
+                        return (
+                            status,
+                            empty_format,
+                            gr.update(choices=[], value=None),
+                            gr.update(choices=[], value=[]),
+                            gr.update(open=False),
+                            gr.update(open=False),
+                        )
+
+                    try:
+                        file_path = (
+                            file_obj.name
+                            if hasattr(file_obj, "name")
+                            else str(file_obj)
+                        )
+                        raw, format_html, numeric_cols, string_cols = (
+                            _analyze_csv_format(file_path)
+                        )
+
+                        fname = (
+                            file_obj.name.split("/")[-1]
+                            if hasattr(file_obj, "name")
+                            else "uploaded.csv"
+                        )
+                        status = (
+                            '<div style="padding:8px 12px; background:#e8f5e9; '
+                            'border-left:4px solid #4CAF50; border-radius:4px; '
+                            'margin:4px 0; font-size:14px;">'
+                            f'\u2705 <b>データソース</b>: '
+                            f'<code>{html_mod.escape(fname)}</code> '
+                            f'({raw.shape[0]}行 &times; {raw.shape[1]}列) '
+                            '— 目的変数と説明因子を選択してください'
+                            '</div>'
+                        )
+
+                        # Auto-select target: last numeric column as guess
+                        default_target = (
+                            numeric_cols[0] if numeric_cols else None
+                        )
+                        # Auto-select features: all numeric except target
+                        default_features = [
+                            c for c in numeric_cols
+                            if c != default_target
+                        ]
+
+                        return (
+                            status,
+                            format_html,
+                            gr.update(
+                                choices=numeric_cols,
+                                value=default_target,
+                            ),
+                            gr.update(
+                                choices=numeric_cols,
+                                value=default_features,
+                            ),
+                            gr.update(open=True),   # open format accordion
+                            gr.update(open=True),   # open column role accordion
+                        )
+                    except Exception:
+                        err = traceback.format_exc()
+                        err_html = _make_error_banner(
+                            "CSV読み込みエラー", err,
+                        )
+                        return (
+                            err_html, err_html,
+                            gr.update(choices=[], value=None),
+                            gr.update(choices=[], value=[]),
+                            gr.update(open=True),
+                            gr.update(open=False),
+                        )
 
                 run_csv_upload.change(
-                    fn=_update_csv_status,
+                    fn=_on_csv_upload,
                     inputs=[run_csv_upload],
-                    outputs=[csv_status_html],
+                    outputs=[
+                        csv_status_html,
+                        csv_format_html,
+                        run_csv_target,
+                        csv_feature_checks,
+                        csv_format_accordion,
+                        col_role_accordion,
+                    ],
+                )
+
+                # When target changes, update feature checkboxes
+                # to exclude the target from the feature list.
+                def _on_target_change(
+                    target_col: Optional[str],
+                    all_features: List[str],
+                    file_obj: Any,
+                ) -> Any:
+                    """Remove target from feature selection."""
+                    if file_obj is None or not target_col:
+                        return gr.update()
+                    try:
+                        file_path = (
+                            file_obj.name
+                            if hasattr(file_obj, "name")
+                            else str(file_obj)
+                        )
+                        raw_cols = pd.read_csv(
+                            file_path, nrows=0,
+                        ).columns.tolist()
+                        numeric = [
+                            c for c in raw_cols
+                            if c != target_col
+                        ]
+                        # Keep currently selected features minus target
+                        new_val = [
+                            f for f in all_features if f != target_col
+                        ]
+                        return gr.update(
+                            choices=numeric, value=new_val,
+                        )
+                    except Exception:
+                        return gr.update()
+
+                run_csv_target.change(
+                    fn=_on_target_change,
+                    inputs=[
+                        run_csv_target, csv_feature_checks,
+                        run_csv_upload,
+                    ],
+                    outputs=[csv_feature_checks],
                 )
 
                 # --- CSV Read button handler ---
@@ -1613,7 +2017,9 @@ def create_app() -> gr.Blocks:
                 # tab without running the full analysis.
                 def _read_csv_preview(
                     file_obj: Any,
-                    target_col: str,
+                    target_col: Optional[str],
+                    selected_features: List[str],
+                    csv_mode: str,
                     session: Dict[str, Any],
                 ) -> Tuple:
                     """Read CSV and preview in Data Summary tab."""
@@ -1635,19 +2041,26 @@ def create_app() -> gr.Blocks:
                             None, None, None, pd.DataFrame(),
                             session,
                         )
+                    force_generic = (csv_mode == "Generic (汎用)")
+                    target_str = target_col if target_col else ""
                     result = _handle_csv_upload(
-                        file_obj, target_col, session,
+                        file_obj, target_str, session,
+                        selected_features=selected_features or None,
+                        force_generic=force_generic,
                     )
                     # result = (stats_md, fig, fig, fig, df, session)
                     updated_session = result[-1]
                     stats_md = result[0]
                     # Build status HTML
                     if updated_session.get("compositions_df") is not None:
-                        n_samples = len(
+                        n_samp = len(
                             updated_session["compositions_df"]
                         )
-                        n_features = (
+                        n_feat = (
                             updated_session["features_df"].shape[1]
+                        )
+                        mode_label = updated_session.get(
+                            "csv_mode", "auto",
                         )
                         fname = (
                             file_obj.name.split("/")[-1]
@@ -1662,8 +2075,9 @@ def create_app() -> gr.Blocks:
                             'margin:4px 0; font-size:14px;">'
                             f'\u2705 <b>CSV読み込み完了</b>: '
                             f'<code>{html_mod.escape(fname)}</code>'
-                            f' — {n_samples}サンプル, '
-                            f'{n_features}特徴量 '
+                            f' — {n_samp}サンプル, '
+                            f'{n_feat}特徴量 '
+                            f'(mode: {mode_label}) '
                             '（Data Summaryタブで確認できます）'
                             '</div>'
                         )
@@ -1856,7 +2270,9 @@ def create_app() -> gr.Blocks:
                 csv_read_btn.click(
                     fn=_read_csv_preview,
                     inputs=[
-                        run_csv_upload, run_csv_target, state,
+                        run_csv_upload, run_csv_target,
+                        csv_feature_checks, csv_mode_radio,
+                        state,
                     ],
                     outputs=[
                         csv_status_html,
@@ -2207,7 +2623,9 @@ def create_app() -> gr.Blocks:
             use_wf_ens: bool,
             use_dim_reduction: bool,
             csv_file: Any,
-            csv_target: str,
+            csv_target: Optional[str],
+            csv_features: List[str],
+            csv_mode: str,
             session: Dict[str, Any],
         ) -> Generator:
             """Generator that yields incremental progress + state.
@@ -2322,8 +2740,12 @@ def create_app() -> gr.Blocks:
                         "\n".join(log_lines), 5,
                         "Loading CSV...",
                     )
+                    force_generic = (csv_mode == "Generic (汎用)")
+                    target_str = csv_target if csv_target else ""
                     csv_result = _handle_csv_upload(
-                        csv_file, csv_target, session,
+                        csv_file, target_str, session,
+                        selected_features=csv_features or None,
+                        force_generic=force_generic,
                     )
                     # _handle_csv_upload returns
                     # (stats_md, fig, fig, fig, df, session)
@@ -2347,9 +2769,11 @@ def create_app() -> gr.Blocks:
                             summary_tuple=error_summary,
                         )
                         return
+                    csv_mode_label = session.get("csv_mode", "unknown")
                     log(
                         f"CSV loaded: {len(target)} samples, "
-                        f"{features_df.shape[1]} features"
+                        f"{features_df.shape[1]} features "
+                        f"(mode: {csv_mode_label})"
                     )
                 else:
                     # --- Generate sample dataset ---
@@ -2760,6 +3184,7 @@ def create_app() -> gr.Blocks:
                 wf_rf_check, wf_xgb_check, wf_ens_check,
                 dim_reduction_check,
                 run_csv_upload, run_csv_target,
+                csv_feature_checks, csv_mode_radio,
                 state,
             ],
             outputs=[
