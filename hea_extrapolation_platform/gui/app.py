@@ -1967,16 +1967,33 @@ def create_app() -> gr.Blocks:
                         default_target = (
                             numeric_cols[-1] if numeric_cols else None
                         )
-                        # Auto-select features: all numeric except target,
-                        # constant columns (variance=0), and ID-like columns
-                        _id_like = {"id", "index", "entry_id", "row_id",
-                                    "sample_id", "no", "number"}
+                        # Auto-select features: all numeric except target
+                        # and uninformative columns detected by heuristic.
                         _const_set = set(constant_cols)
+                        _uninformative: set = set(_const_set)
+                        for _col in numeric_cols:
+                            if _col == default_target or _col in _const_set:
+                                continue
+                            _s = raw[_col].dropna()
+                            if len(_s) == 0:
+                                _uninformative.add(_col)
+                                continue
+                            # Detect ID-like: integer, all unique, monotonic
+                            _is_int = _s.dtype.kind in ("i", "u") or (
+                                _s.dtype.kind == "f"
+                                and (_s == _s.astype(int)).all()
+                            )
+                            _all_unique = _s.nunique() == len(_s)
+                            _monotonic = (
+                                _s.is_monotonic_increasing
+                                or _s.is_monotonic_decreasing
+                            )
+                            if _is_int and _all_unique and _monotonic:
+                                _uninformative.add(_col)
                         default_features = [
                             c for c in numeric_cols
                             if c != default_target
-                            and c not in _const_set
-                            and c.lower() not in _id_like
+                            and c not in _uninformative
                         ]
                         # Feature checkbox choices: all numeric except
                         # target (users can still manually select
