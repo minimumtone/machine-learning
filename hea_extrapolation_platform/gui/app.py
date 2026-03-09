@@ -1031,6 +1031,8 @@ def _analyze_csv_format(
         Names of numeric columns.
     string_cols : list[str]
         Names of string/object columns.
+    constant_cols : list[str]
+        Names of numeric columns with zero variance (nunique <= 1).
     """
     import os
 
@@ -1167,7 +1169,7 @@ def _analyze_csv_format(
 
     format_html = "\n".join(lines)
 
-    return raw, format_html, numeric_cols, string_cols
+    return raw, format_html, numeric_cols, string_cols, constant_cols
 
 
 def _handle_generic_csv(
@@ -1941,7 +1943,7 @@ def create_app() -> gr.Blocks:
                             if hasattr(file_obj, "name")
                             else str(file_obj)
                         )
-                        raw, format_html, numeric_cols, string_cols = (
+                        raw, format_html, numeric_cols, string_cols, constant_cols = (
                             _analyze_csv_format(file_path)
                         )
 
@@ -1965,8 +1967,21 @@ def create_app() -> gr.Blocks:
                         default_target = (
                             numeric_cols[-1] if numeric_cols else None
                         )
-                        # Auto-select features: all numeric except target
+                        # Auto-select features: all numeric except target,
+                        # constant columns (variance=0), and ID-like columns
+                        _id_like = {"id", "index", "entry_id", "row_id",
+                                    "sample_id", "no", "number"}
+                        _const_set = set(constant_cols)
                         default_features = [
+                            c for c in numeric_cols
+                            if c != default_target
+                            and c not in _const_set
+                            and c.lower() not in _id_like
+                        ]
+                        # Feature checkbox choices: all numeric except
+                        # target (users can still manually select
+                        # constant/ID cols if they want)
+                        feature_choices = [
                             c for c in numeric_cols
                             if c != default_target
                         ]
@@ -1979,7 +1994,7 @@ def create_app() -> gr.Blocks:
                                 value=default_target,
                             ),
                             gr.update(
-                                choices=numeric_cols,
+                                choices=feature_choices,
                                 value=default_features,
                             ),
                             gr.update(open=True),   # open format accordion
