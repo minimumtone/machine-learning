@@ -1402,7 +1402,7 @@ def _handle_csv_upload(
 
         if use_generic:
             # --- Generic CSV mode ---
-            feat_cols = selected_features or []
+            feat_cols = selected_features if selected_features is not None else []
             if not feat_cols:
                 # Auto-select all numeric columns except target
                 feat_cols = [
@@ -2087,7 +2087,7 @@ def create_app() -> gr.Blocks:
                     target_str = target_col if target_col else ""
                     result = _handle_csv_upload(
                         file_obj, target_str, session,
-                        selected_features=selected_features or None,
+                        selected_features=selected_features,
                         force_generic=force_generic,
                         force_hea=force_hea,
                     )
@@ -2788,7 +2788,7 @@ def create_app() -> gr.Blocks:
                     target_str = csv_target if csv_target else ""
                     csv_result = _handle_csv_upload(
                         csv_file, target_str, session,
-                        selected_features=csv_features or None,
+                        selected_features=csv_features,
                         force_generic=force_generic,
                         force_hea=force_hea,
                     )
