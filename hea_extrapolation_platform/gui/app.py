@@ -1731,7 +1731,7 @@ def _run_feature_selection_for_fs(
 # ---------------------------------------------------------------------------
 
 # Current PR / build version tag shown in the GUI title bar.
-_GUI_VERSION_TAG = "PR#126"
+_GUI_VERSION_TAG = "PR#137"
 
 
 def create_app() -> gr.Blocks:
