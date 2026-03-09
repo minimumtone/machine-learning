@@ -644,6 +644,8 @@ class ExperimentRunner:
                 fs_name.value, arr.shape, arr.flags["C_CONTIGUOUS"],
             )
 
+        # Filter jobs to only those whose feature set was successfully prepared
+        jobs = [j for j in jobs if j.fs_name in fs_arrays]
         all_results: List[RunResult] = []
         n_total = len(jobs)
         completed = 0
