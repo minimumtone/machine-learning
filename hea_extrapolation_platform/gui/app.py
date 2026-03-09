@@ -1327,6 +1327,7 @@ def _handle_csv_upload(
     session: Dict[str, Any],
     selected_features: Optional[List[str]] = None,
     force_generic: bool = False,
+    force_hea: bool = False,
 ) -> Tuple:
     """Handle CSV file upload and compute features.
 
@@ -1339,6 +1340,13 @@ def _handle_csv_upload(
     **Generic mode** (when no element columns or ``force_generic=True``):
       User-selected numeric columns are used directly as features.
       ``selected_features`` specifies which columns to use.
+
+    Parameters
+    ----------
+    force_hea : bool
+        When True (user selected "HEA (元素列)" mode), require element
+        columns to exist.  If none are detected, return an error banner
+        instead of silently falling back to generic mode.
 
     Returns the same tuple shape as ``_refresh_data_summary`` plus the
     updated session.
@@ -1377,6 +1385,19 @@ def _handle_csv_upload(
         )
 
         # Decide mode: HEA vs Generic
+        if force_hea and not elem_cols:
+            return (
+                _make_error_banner(
+                    "HEAモード選択エラー",
+                    "元素列が検出されませんでした。"
+                    "HEA (元素列) モードを使用するには、"
+                    "元素名 (例: Fe, Ni, Co) または元素分率 "
+                    "(例: Fe_frac, Ni_at%) の列が必要です。"
+                    "<br>自動検出 (auto) または汎用 (Generic) "
+                    "モードをお試しください。",
+                ),
+                None, None, None, pd.DataFrame(), session,
+            )
         use_generic = force_generic or (not elem_cols)
 
         if use_generic:
@@ -2062,11 +2083,13 @@ def create_app() -> gr.Blocks:
                             session,
                         )
                     force_generic = (csv_mode == "Generic (汎用)")
+                    force_hea = (csv_mode == "HEA (元素列)")
                     target_str = target_col if target_col else ""
                     result = _handle_csv_upload(
                         file_obj, target_str, session,
                         selected_features=selected_features or None,
                         force_generic=force_generic,
+                        force_hea=force_hea,
                     )
                     # result = (stats_md, fig, fig, fig, df, session)
                     updated_session = result[-1]
@@ -2761,11 +2784,13 @@ def create_app() -> gr.Blocks:
                         "Loading CSV...",
                     )
                     force_generic = (csv_mode == "Generic (汎用)")
+                    force_hea = (csv_mode == "HEA (元素列)")
                     target_str = csv_target if csv_target else ""
                     csv_result = _handle_csv_upload(
                         csv_file, target_str, session,
                         selected_features=csv_features or None,
                         force_generic=force_generic,
+                        force_hea=force_hea,
                     )
                     # _handle_csv_upload returns
                     # (stats_md, fig, fig, fig, df, session)
