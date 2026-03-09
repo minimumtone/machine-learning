@@ -1181,15 +1181,19 @@ def _handle_generic_csv(
     """Handle a generic CSV (non-HEA) with user-selected columns.
 
     Instead of computing HEA-specific features, uses the user-selected
-    numeric columns directly as features.
+    columns directly as features.  Numeric columns are used as-is;
+    string/categorical columns are automatically one-hot encoded.
 
     Returns the same tuple shape as ``_handle_csv_upload``.
     """
+    # Strip [文字列] annotation tag added by the UI
+    feature_cols = [c.replace(" [文字列]", "") for c in feature_cols]
+
     if not feature_cols:
         return (
             _make_error_banner(
                 "説明変数が選択されていません",
-                "少なくとも1つの数値列を説明変数として選択してください。",
+                "少なくとも1つの列を説明変数として選択してください。",
             ),
             None, None, None, pd.DataFrame(), session,
         )
@@ -1224,20 +1228,52 @@ def _handle_generic_csv(
         return (
             _make_error_banner(
                 "説明変数が選択されていません",
-                "目的変数以外の数値列を説明変数として選択してください。",
+                "目的変数以外の列を説明変数として選択してください。",
             ),
             None, None, None, pd.DataFrame(), session,
         )
-    features_df = raw_valid[feature_cols].copy().reset_index(drop=True)
-    # Fill NaN with column median for numeric columns
-    for col in features_df.columns:
-        if features_df[col].isna().any():
-            median_val = features_df[col].median()
-            features_df[col] = features_df[col].fillna(
-                median_val if pd.notna(median_val) else 0.0
-            )
-    # Ensure all float64
-    features_df = features_df.astype("float64")
+
+    # Separate numeric and string columns
+    numeric_feat_cols = [
+        c for c in feature_cols
+        if pd.api.types.is_numeric_dtype(raw_valid[c])
+    ]
+    string_feat_cols = [
+        c for c in feature_cols
+        if not pd.api.types.is_numeric_dtype(raw_valid[c])
+    ]
+
+    # Build numeric features
+    parts: List[pd.DataFrame] = []
+    if numeric_feat_cols:
+        num_df = raw_valid[numeric_feat_cols].copy()
+        # Fill NaN with column median
+        for col in num_df.columns:
+            if num_df[col].isna().any():
+                median_val = num_df[col].median()
+                num_df[col] = num_df[col].fillna(
+                    median_val if pd.notna(median_val) else 0.0
+                )
+        num_df = num_df.astype("float64")
+        parts.append(num_df)
+
+    # One-hot encode string columns
+    if string_feat_cols:
+        for col in string_feat_cols:
+            s = raw_valid[col].fillna("_NA_").astype(str)
+            dummies = pd.get_dummies(s, prefix=col, dtype="float64")
+            parts.append(dummies)
+
+    if not parts:
+        return (
+            _make_error_banner(
+                "有効な特徴量がありません",
+                "選択された列から特徴量を生成できませんでした。",
+            ),
+            None, None, None, pd.DataFrame(), session,
+        )
+
+    features_df = pd.concat(parts, axis=1).reset_index(drop=True)
 
     # Consolidate to C-contiguous
     features_df = _consolidate_df(features_df)
@@ -1835,12 +1871,13 @@ def create_app() -> gr.Blocks:
                     open=False,
                 ) as col_role_accordion:
                     gr.Markdown(
-                        "CSVの数値列から **目的変数** (1列) と "
+                        "CSVの列から **目的変数** (数値列1つ) と "
                         "**説明因子** (複数列) を選択してください。\n\n"
-                        "HEA組成データ (元素列あり) の場合は自動で "
-                        "HEA特徴量が計算されます。\n"
-                        "一般的なCSVの場合は選択した数値列がそのまま "
-                        "説明変数として使用されます。"
+                        "- **数値列**: そのまま説明変数として使用\n"
+                        "- **文字列列** (元素名など): 自動で特徴量に"
+                        "変換 (One-Hot Encoding)\n"
+                        "- HEA組成データ (元素列あり) の場合は自動で "
+                        "HEA特徴量が計算されます。"
                     )
                     with gr.Row():
                         run_csv_target = gr.Dropdown(
@@ -1861,18 +1898,18 @@ def create_app() -> gr.Blocks:
                         choices=[],
                         value=[],
                         interactive=True,
-                        info="説明変数として使用する数値列を選択 "
-                        "(目的変数は自動除外)",
+                        info="説明変数として使用する列を選択 "
+                        "(数値列・文字列列とも選択可、目的変数は自動除外)",
                     )
 
                 csv_read_btn = gr.Button(
                     "\U0001F4D6 CSV読み込み (Read CSV)",
                     variant="secondary",
                 )
-                # Hidden state to store numeric column names from
-                # the initial full-file analysis so that
+                # Hidden state to store all selectable column names
+                # from the initial full-file analysis so that
                 # _on_target_change does not need to re-read the CSV.
-                csv_numeric_cols_state = gr.State(value=[])
+                csv_all_cols_state = gr.State(value=[])
 
                 with gr.Row():
                     with gr.Column():
@@ -1967,8 +2004,15 @@ def create_app() -> gr.Blocks:
                         default_target = (
                             numeric_cols[-1] if numeric_cols else None
                         )
+
+                        # Build all selectable columns:
+                        # numeric + string (for feature generation)
+                        all_cols = numeric_cols + string_cols
+
                         # Auto-select features: all numeric except target
                         # and uninformative columns detected by heuristic.
+                        # String columns are NOT auto-selected but
+                        # available for manual selection.
                         _const_set = set(constant_cols)
                         _uninformative: set = set(_const_set)
                         for _col in numeric_cols:
@@ -1995,11 +2039,13 @@ def create_app() -> gr.Blocks:
                             if c != default_target
                             and c not in _uninformative
                         ]
-                        # Feature checkbox choices: all numeric except
-                        # target (users can still manually select
-                        # constant/ID cols if they want)
+                        # Feature checkbox choices: all columns except
+                        # target. Annotate string cols with [文字列] tag
+                        # so users can distinguish types.
+                        _str_set = set(string_cols)
                         feature_choices = [
-                            c for c in numeric_cols
+                            (f"{c} [文字列]" if c in _str_set else c)
+                            for c in all_cols
                             if c != default_target
                         ]
 
@@ -2016,7 +2062,12 @@ def create_app() -> gr.Blocks:
                             ),
                             gr.update(open=True),   # open format accordion
                             gr.update(open=True),   # open column role accordion
-                            numeric_cols,            # store for _on_target_change
+                            # Store annotated choices (with [文字列] tags)
+                            # so _on_target_change can rebuild properly
+                            [
+                                (f"{c} [文字列]" if c in _str_set else c)
+                                for c in all_cols
+                            ],
                         )
                     except Exception:
                         err = traceback.format_exc()
@@ -2044,7 +2095,7 @@ def create_app() -> gr.Blocks:
                         csv_feature_checks,
                         csv_format_accordion,
                         col_role_accordion,
-                        csv_numeric_cols_state,
+                        csv_all_cols_state,
                     ],
                 )
 
@@ -2053,34 +2104,35 @@ def create_app() -> gr.Blocks:
                 def _on_target_change(
                     target_col: Optional[str],
                     all_features: List[str],
-                    numeric_cols_cached: List[str],
+                    all_cols_cached: List[str],
                 ) -> Any:
                     """Remove target from feature selection.
 
-                    Uses the cached numeric_cols list from the initial
-                    full-file analysis instead of re-reading the CSV,
-                    ensuring consistent dtype detection.
+                    Uses the cached all_cols list from the initial
+                    full-file analysis instead of re-reading the CSV.
+                    Preserves [文字列] annotations on string columns.
                     """
-                    if not target_col or not numeric_cols_cached:
+                    if not target_col or not all_cols_cached:
                         return gr.update()
-                    numeric = [
-                        c for c in numeric_cols_cached
+                    choices = [
+                        c for c in all_cols_cached
                         if c != target_col
                     ]
                     # Keep currently selected features minus target
+                    # (strip [文字列] tag for comparison)
                     new_val = [
                         f for f in all_features
-                        if f != target_col and f in numeric
+                        if f.replace(" [文字列]", "") != target_col
                     ]
                     return gr.update(
-                        choices=numeric, value=new_val,
+                        choices=choices, value=new_val,
                     )
 
                 run_csv_target.change(
                     fn=_on_target_change,
                     inputs=[
                         run_csv_target, csv_feature_checks,
-                        csv_numeric_cols_state,
+                        csv_all_cols_state,
                     ],
                     outputs=[csv_feature_checks],
                 )
