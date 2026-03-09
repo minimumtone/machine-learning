@@ -2935,11 +2935,37 @@ def create_app() -> gr.Blocks:
 
                 def _run_in_thread() -> None:
                     try:
-                        r, s, o = runner.run(
-                            comps_df, features_df, target,
-                            progress_callback=_progress_cb,
-                            selected_workflows=selected_wfs,
+                        csv_mode_label = session.get(
+                            "csv_mode", "hea",
                         )
+                        if csv_mode_label == "generic":
+                            # Generic CSV: override FeatureCatalog
+                            # so runner uses CSV columns as a single
+                            # feature set instead of HEA-specific ones.
+                            from hea_extrapolation_platform.features import (  # noqa: E501
+                                FeatureCatalog as _FC,
+                                FeatureSetName as _FSN,
+                            )
+                            _orig_sets = dict(_FC._SETS)
+                            try:
+                                csv_cols = list(features_df.columns)
+                                _FC._SETS = {
+                                    k: csv_cols
+                                    for k in _FC._SETS
+                                }
+                                r, s, o = runner.run(
+                                    features_df, features_df, target,
+                                    progress_callback=_progress_cb,
+                                    selected_workflows=selected_wfs,
+                                )
+                            finally:
+                                _FC._SETS = _orig_sets
+                        else:
+                            r, s, o = runner.run(
+                                comps_df, features_df, target,
+                                progress_callback=_progress_cb,
+                                selected_workflows=selected_wfs,
+                            )
                         _result_holder["runs"] = r
                         _result_holder["scores"] = s
                         _result_holder["ood"] = o

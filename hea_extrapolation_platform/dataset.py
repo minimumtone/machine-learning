@@ -43,6 +43,10 @@ logger = logging.getLogger(__name__)
 _POOL_FCC = ["Co", "Cr", "Fe", "Mn", "Ni", "Cu", "Al"]
 
 # BCC-type: refractory HEAs (VEC < ~6.87 when equimolar)
+# NOTE: Cr appears in both _POOL_FCC and _POOL_BCC intentionally.
+# Cr is a common constituent in both Cantor-type FCC alloys (e.g.
+# CoCrFeMnNi) and refractory BCC alloys (e.g. CrMoNbTaV).  The
+# duplication allows realistic sampling from both structural families.
 _POOL_BCC = ["Mo", "Nb", "Ta", "Ti", "V", "W", "Hf", "Zr", "Cr"]
 
 # Mixed-phase candidates: elements that appear in both families
@@ -231,14 +235,13 @@ def generate_hea_dataset(
         Yield strength (MPa).
     """
     import warnings
-    if noise_std != 50.0:
-        warnings.warn(
-            "noise_std is deprecated and ignored; strength noise is now "
-            "proportional (7 % CV). This parameter will be removed in a "
-            "future release.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
+    warnings.warn(
+        "noise_std is deprecated and ignored; strength noise is now "
+        "proportional (7 % CV). This parameter will be removed in a "
+        "future release.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     rng = np.random.default_rng(seed)
     logger.info(
         "Generating HEA dataset: n=%d, seed=%d, elements=%d-%d",

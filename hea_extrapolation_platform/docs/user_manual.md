@@ -93,7 +93,7 @@ HEA（高エントロピー合金）を例題として、以下の処理を**ボ
 | **Workflow（ワークフロー）** | 機械学習モデルの種類 | WF-LIN（線形）、WF-XGB（XGBoost）、WF-ENS（アンサンブル） |
 | **Split Policy（分割方式）** | データの訓練/テスト分割方法 | RandomCV、CompositionBlock、ElementExclusion |
 | **OOD（Out-of-Distribution）** | 訓練データの分布から外れたサンプル（外挿領域） | kNN距離が閾値を超えるデータ点 |
-| **Validity Score（妥当性スコア）** | 特徴量セットの総合品質スコア（0〜1） | 5要素の加重平均 |
+| **Validity Score（妥当性スコア）** | 特徴量セットの総合品質スコア（0〜1） | 6要素の加重平均 |
 | **Parity Plot** | 予測値 vs 実測値の散布図 | 対角線に近いほど精度が高い |
 | **KPI（Key Performance Indicator）** | 性能の主要指標 | Total Runs, Best Score, OOD Samples |
 | **Seed（乱数シード）** | 再現性を確保するための初期値 | 42, 123, 456 |
@@ -614,7 +614,7 @@ Unregistered features: vec, ds_mix, tm_avg, cold_work_pct, ...
 | セクション | 内容 |
 |-----------|------|
 | **1. Experiment Summary** | 総ラン数（1404）、特徴量セット一覧（6種類）、ワークフロー一覧、分割方式、所要時間 |
-| **2. Feature Set Validity Ranking** | 5要素スコアの表（FS_MAGPIE含む） |
+| **2. Feature Set Validity Ranking** | 6要素スコアの表（FS_MAGPIE含む） |
 | **3. Split-wise Performance Comparison** | 分割方式別のRMSE, R$^2$の比較表 |
 | **4. OOD Analysis** | OODサンプル数、閾値、判定結果（各セットのOOD率） |
 | **5. OOD Region Candidate Compositions** | OODとして検出された合金組成の候補リスト |
@@ -717,9 +717,9 @@ python -m hea_extrapolation_platform gui --share
 |----------|-------------|------|
 | **FS_BASE** | r_avg, delta_r, dS_mix, dH_mix, VEC, delta_EN, Tm_avg, mass_avg | 基本的な組成記述子（8特徴量） |
 | **FS_THERMO** | FS_BASE + omega, ss_formation, phase_sep_risk | 熱力学パラメータを追加（11特徴量） |
-| **FS_SIZE** | FS_BASE + Vm_var, elastic_mismatch | サイズ効果パラメータを追加（10特徴量） |
+| **FS_SIZE** | FS_BASE + B_avg, Vm_avg, Vm_var, elastic_mismatch | サイズ効果パラメータを追加（12特徴量） |
 | **FS_ELECTRON** | FS_BASE + d_elec_avg, d_elec_std, itinerant_proxy | 電子構造パラメータを追加（11特徴量） |
-| **FS_ALL** | 上記全ての特徴量を統合 | 全ドメイン特徴量（16特徴量） |
+| **FS_ALL** | 上記全ての特徴量を統合 | 全ドメイン特徴量（18特徴量） |
 | **FS_MAGPIE** | 22個の元素物性の6統計量（mean, avg_dev, range, max, min, mode） | MAGPIE特徴量（132特徴量） |
 
 > **使い分けのヒント**: まず FS_ALL で全体像を把握し、次に各サブセット（FS_THERMO, FS_SIZE, FS_ELECTRON）の寄与を比較します。FS_MAGPIEは元素物性ベースの大規模特徴量セットで、特徴量選択と組み合わせて使うと効果的です。
@@ -790,6 +790,9 @@ MagpieData {statistic} {property}
 | ワークフロー | モデル | 特徴 | 向いている場面 |
 |-------------|-------|------|--------------|
 | **WF-LIN** | Ridge回帰 | 線形・解釈しやすい | ベースライン、特徴量の線形効果確認 |
+| **WF-LASSO** | Lasso回帰 | スパース・特徴量選択内蔵 | 重要特徴量の自動選択、次元削減 |
+| **WF-ARD** | ARD回帰（自動関連度決定） | ベイズ的スパース推定 | 不確実性を考慮した特徴量選択 |
+| **WF-RF** | ランダムフォレスト | 非線形・特徴量重要度 | 非線形関係の捕捉、特徴量重要度の算出 |
 | **WF-XGB** | XGBoost | 非線形・高精度 | 複雑な非線形関係がある場合 |
 | **WF-ENS** | Ridge + XGBoostの平均 | バランス型 | ロバストな予測が必要な場合 |
 | **MInt-LIN** | MInt経由のRidge回帰 | MInt統合 | MIntワークフローとの互換性確認 |
@@ -810,22 +813,24 @@ MagpieData {statistic} {property}
 
 ## 8. 結果の読み方・解釈ガイド
 
-### 8.1 妥当性スコア（Validity Score）の5要素
+### 8.1 妥当性スコア（Validity Score）の6要素
 
-妥当性スコアは以下の5つのサブスコアの加重平均で計算されます：
+妥当性スコアは以下の6つのサブスコアの加重和で計算されます：
 
 | サブスコア | 重み | 計算方法 | 解釈 |
 |-----------|------|---------|------|
-| **Effect Size** | 0.25 | ベースライン（FS_BASE）からのRMSE改善率 | 大きい = 特徴量追加の効果がある |
-| **Stability** | 0.20 | シード間のスコア標準偏差の逆数 | 大きい = シードを変えても結果が安定 |
-| **Generalisation** | 0.20 | 1 - (test_RMSE - train_RMSE)/train_RMSE | 大きい = 過学習していない |
-| **Leak Penalty** | 0.15 | OODリーク率の減点 | 0 = リークなし（理想） |
-| **Extrap. Safety** | 0.20 | ElementExclusion分割での性能維持率 | 大きい = 外挿に強い |
+| **Effect Size** | +0.30 | ベースライン（FS_BASE）からのRMSE改善率 | 大きい = 特徴量追加の効果がある |
+| **Stability** | +0.20 | シード間のスコア標準偏差の逆数 | 大きい = シードを変えても結果が安定 |
+| **Generalisation** | +0.30 | 1 - (test_RMSE - train_RMSE)/train_RMSE | 大きい = 過学習していない |
+| **Leak Penalty** | −0.15 | OODリーク率の減点 | 0 = リークなし（理想） |
+| **Extrap. Safety** | +0.20 | ElementExclusion分割での性能維持率 | 大きい = 外挿に強い |
+| **Multicollinearity Penalty** | −0.10 | VIF > 10 の特徴量比率 | 0 = 多重共線性なし（理想） |
 
 **計算式**:
 ```
-Total = 0.25 x Effect Size + 0.20 x Stability + 0.20 x Generalisation
-      + 0.15 x (1 - Leak Penalty) + 0.20 x Extrap. Safety
+Total = 0.30 x Effect Size + 0.20 x Stability + 0.30 x Generalisation
+      - 0.15 x Leak Penalty + 0.20 x Extrap. Safety
+      - 0.10 x Multicollinearity Penalty
 ```
 
 > **実験例での解釈**: FS_ALL (Total=0.3428) vs FS_SIZE (Total=0.2849)。FS_ALLはStabilityが0.764と高く（FS_SIZEは0.753）、Generalisationが0.3（FS_SIZEは0.1）と大きく優れています。
@@ -838,6 +843,8 @@ OOD検出はkNN（k近傍法）距離ベースで行われます：
 2. 距離分布の95パーセンタイルを閾値として設定
 3. テストデータの各サンプルについてkNN距離を計算
 4. 閾値を超えたサンプルをOOD（外挿）と判定
+
+> **注意**: 現在のOOD検出は交差検証の **fold-0のみ** を使用しています。これは計算コストと速度のトレードオフによる設計判断です。fold-0の分割がデータの偏りを含む場合、OOD率が実際と異なる可能性があります。将来のバージョンで全fold平均への拡張を予定しています。
 
 **OOD率の解釈**:
 - **0%**: テストデータは訓練データの分布内（外挿なし）

@@ -119,13 +119,14 @@ class ReportGenerator:
         # ---- 2. Feature Validity Ranking ----
         lines.append("## 2. Feature Set Validity Ranking")
         lines.append("")
-        lines.append("| Rank | Feature Set | Effect Size | Stability | Generalisation | Leak Penalty | Extrap. Safety | **Total** |")
-        lines.append("|------|-------------|-------------|-----------|----------------|--------------|----------------|-----------|")
+        lines.append("| Rank | Feature Set | Effect Size | Stability | Generalisation | Leak Penalty | Extrap. Safety | MC Penalty | **Total** |")
+        lines.append("|------|-------------|-------------|-----------|----------------|--------------|----------------|------------|-----------|")
         for i, s in enumerate(validity_scores):
             lines.append(
                 f"| {i+1} | {s.feature_set} | {s.effect_size:.4f} | "
                 f"{s.stability:.4f} | {s.generalisation:.4f} | "
                 f"{s.leak_penalty:.4f} | {s.extrapolation_safety:.4f} | "
+                f"{s.multicollinearity_penalty:.4f} | "
                 f"**{s.total:.4f}** |"
             )
         lines.append("")

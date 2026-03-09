@@ -41,7 +41,11 @@ import concurrent.futures
 import json
 import logging
 import os
-import resource
+try:
+    import resource
+    _HAS_RESOURCE = True
+except ImportError:
+    _HAS_RESOURCE = False  # Windows
 import time
 from dataclasses import asdict
 from pathlib import Path
@@ -626,6 +630,13 @@ class ExperimentRunner:
         fs_arrays: Dict[str, Tuple[np.ndarray, List[str]]] = {}
         for fs_name in feature_sets:
             cols = list(FeatureCatalog.columns(fs_name))
+            missing = [c for c in cols if c not in features_all.columns]
+            if missing:
+                logger.warning(
+                    "Feature set %s skipped: columns not in data: %s",
+                    fs_name.value, missing[:5],
+                )
+                continue  # skip this FS — columns not present
             arr = safe_array(features_all[cols])
             fs_arrays[fs_name.value] = (arr, cols)
             logger.debug(
@@ -639,10 +650,13 @@ class ExperimentRunner:
         _t0 = time.time()
 
         def _log_progress(n: int, last_job: _Job) -> None:
-            try:
-                rss_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-            except Exception:
-                rss_kb = -1
+            if _HAS_RESOURCE:
+                try:
+                    rss_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+                except Exception:
+                    rss_kb = -1
+            else:
+                rss_kb = -1  # Windows: resource module not available
             logger.info(
                 "Progress: %d / %d runs (%.1f sec, RSS peak ~%d MB)",
                 n, n_total, time.time() - _t0, rss_kb // 1024,
@@ -752,9 +766,12 @@ class ExperimentRunner:
             X_test_ood  = pd.DataFrame(X_fs_arr[ood_test_idx],  columns=cols)
 
             try:
-                try:
-                    rss_pre = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-                except Exception:
+                if _HAS_RESOURCE:
+                    try:
+                        rss_pre = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+                    except Exception:
+                        rss_pre = -1
+                else:
                     rss_pre = -1
 
                 detector = OODDetector(k=10)
@@ -766,9 +783,12 @@ class ExperimentRunner:
                     np.ascontiguousarray(np.asarray(ood_test_idx)),
                 )
 
-                try:
-                    rss_post = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-                except Exception:
+                if _HAS_RESOURCE:
+                    try:
+                        rss_post = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+                    except Exception:
+                        rss_post = -1
+                else:
                     rss_post = -1
                 logger.debug(
                     "OOD %s: %d/%d flagged, RSS delta ~%d MB",
