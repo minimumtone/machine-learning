@@ -644,33 +644,43 @@ def _refresh_ood_data(
             pd.DataFrame(),
         )
 
-    from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
-    try:
-        fs_enum = FeatureSetName(fs_key)
-        cols = FeatureCatalog.columns(fs_enum)
-    except (ValueError, KeyError):
-        return None, f"Unknown feature set: {fs_key}", pd.DataFrame()
+    # In generic CSV mode, features_df already contains exactly the
+    # user-selected columns (numeric + one-hot encoded strings).
+    # FeatureCatalog columns are HEA-specific and won't exist.
+    csv_mode = session.get("csv_mode", "hea")
+    if csv_mode == "generic":
+        cols = list(features_df.columns)
+    else:
+        from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
+        try:
+            fs_enum = FeatureSetName(fs_key)
+            cols = FeatureCatalog.columns(fs_enum)
+        except (ValueError, KeyError):
+            return None, f"Unknown feature set: {fs_key}", pd.DataFrame()
 
     # Fix #3: use stored train/test indices for correct visualization.
     # CRITICAL: Force C-contiguous layout.  Column-subset + iloc on a
     # DataFrame creates fragmented views whose .values is F-contiguous,
     # causing SIGSEGV in downstream PCA / StandardScaler calls.
+    available_cols = [c for c in cols if c in features_df.columns]
+    if not available_cols:
+        return None, f"No matching columns for {fs_key}", pd.DataFrame()
     X_fs_arr = np.ascontiguousarray(
-        features_df[cols].to_numpy(dtype="float64", na_value=np.nan)
+        features_df[available_cols].to_numpy(dtype="float64", na_value=np.nan)
     )
     split = ood_split_indices.get(fs_key)
     if split is not None:
         train_idx, test_idx = split
-        X_train = pd.DataFrame(X_fs_arr[train_idx], columns=cols)
-        X_query = pd.DataFrame(X_fs_arr[test_idx], columns=cols)
+        X_train = pd.DataFrame(X_fs_arr[train_idx], columns=available_cols)
+        X_query = pd.DataFrame(X_fs_arr[test_idx], columns=available_cols)
     else:
         logger.warning("No OOD split indices for %s, using heuristic", fs_key)
         n_ood = len(ood_res.composite_scores)
         X_train = pd.DataFrame(
-            X_fs_arr[:len(X_fs_arr) - n_ood], columns=cols,
+            X_fs_arr[:len(X_fs_arr) - n_ood], columns=available_cols,
         )
         X_query = pd.DataFrame(
-            X_fs_arr[len(X_fs_arr) - n_ood:], columns=cols,
+            X_fs_arr[len(X_fs_arr) - n_ood:], columns=available_cols,
         )
 
     fig = plotly_ood_map(
@@ -734,12 +744,17 @@ def _export_ood_csv(
     if ood_res is None:
         return gr.update(value=None, visible=False)
 
-    from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
-    try:
-        fs_enum = FeatureSetName(fs_key)
-        cols = FeatureCatalog.columns(fs_enum)
-    except (ValueError, KeyError):
-        return gr.update(value=None, visible=False)
+    # In generic CSV mode, use features_df columns directly
+    csv_mode = session.get("csv_mode", "hea")
+    if csv_mode == "generic":
+        cols = list(features_df.columns)
+    else:
+        from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
+        try:
+            fs_enum = FeatureSetName(fs_key)
+            cols = FeatureCatalog.columns(fs_enum)
+        except (ValueError, KeyError):
+            return gr.update(value=None, visible=False)
 
     split = ood_split_indices.get(fs_key)
     if split is None:
