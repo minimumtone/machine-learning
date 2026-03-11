@@ -119,16 +119,40 @@ class ReportGenerator:
         # ---- 2. Feature Validity Ranking ----
         lines.append("## 2. Feature Set Validity Ranking")
         lines.append("")
-        lines.append("| Rank | Feature Set | Effect Size | Stability | Generalisation | Leak Penalty | Extrap. Safety | **Total** |")
-        lines.append("|------|-------------|-------------|-----------|----------------|--------------|----------------|-----------|")
+        lines.append("| Rank | Feature Set | Effect Size | Stability | Generalisation | Leak Penalty | Extrap. Safety | RMSE (95% CI) | **Total** |")
+        lines.append("|------|-------------|-------------|-----------|----------------|--------------|----------------|---------------|-----------|")
         for i, s in enumerate(validity_scores):
+            # Format Bootstrap CI if available (#9)
+            if s.rmse_mean > 0 and s.rmse_ci_lower != s.rmse_ci_upper:
+                ci_str = f"{s.rmse_mean:.3f} [{s.rmse_ci_lower:.3f}, {s.rmse_ci_upper:.3f}]"
+            elif s.rmse_mean > 0:
+                ci_str = f"{s.rmse_mean:.3f}"
+            else:
+                ci_str = "N/A"
             lines.append(
                 f"| {i+1} | {s.feature_set} | {s.effect_size:.4f} | "
                 f"{s.stability:.4f} | {s.generalisation:.4f} | "
                 f"{s.leak_penalty:.4f} | {s.extrapolation_safety:.4f} | "
+                f"{ci_str} | "
                 f"**{s.total:.4f}** |"
             )
         lines.append("")
+
+        # ---- 2b. Leak Suspect Features (#7) ----
+        any_leaks = any(s.leak_suspects for s in validity_scores)
+        if any_leaks:
+            lines.append("### Leak Suspect Features")
+            lines.append("")
+            lines.append(
+                "Features with |corr(feature, target)| > 0.85 detected in Phase 0:"
+            )
+            lines.append("")
+            lines.append("| Feature Set | Feature | |Correlation| |")
+            lines.append("|-------------|---------|---------------|")
+            for s in validity_scores:
+                for feat, corr_val in s.leak_suspects.items():
+                    lines.append(f"| {s.feature_set} | {feat} | {corr_val:.4f} |")
+            lines.append("")
 
         # ---- 3. Performance Comparison ----
         lines.append("## 3. Split-wise Performance Comparison")

@@ -271,10 +271,10 @@ def _build_physical_interpretation_md(
     best_fs = scores[0].feature_set if scores else ""
 
     lines.append(
-        "| FS | 特徴量数 | RMSE(Test) Mean | R$^2$(Test) Mean "
-        "| Validity Total | 推奨 |"
+        "| FS | 特徴量数 | RMSE (95% CI) | R$^2$(Test) Mean "
+        "| Validity Total | Leak | 推奨 |"
     )
-    lines.append("|---|---|---|---|---|---|")
+    lines.append("|---|---|---|---|---|---|---|")
 
     _fs_sizes = {
         "FS_BASE": 8, "FS_THERMO": 11, "FS_SIZE": 12,
@@ -286,14 +286,28 @@ def _build_physical_interpretation_md(
         rmses = [r.rmse_test for r in fs_runs if r.rmse_test > 0]
         r2s = [r.r2_test for r in fs_runs]
         n_feat = _fs_sizes.get(fs_name, "?")
-        rmse_mean = f"{sum(rmses)/len(rmses):.2f}" if rmses else "N/A"
         r2_mean = f"{sum(r2s)/len(r2s):.4f}" if r2s else "N/A"
         vs = score_map.get(fs_name)
         total = f"{vs.total:.4f}" if vs else "N/A"
         recommend = "**Best**" if fs_name == best_fs else ""
+        # Bootstrap CI (#9)
+        if vs and getattr(vs, "rmse_mean", 0) > 0:
+            ci_lo = getattr(vs, "rmse_ci_lower", 0)
+            ci_hi = getattr(vs, "rmse_ci_upper", 0)
+            if ci_lo != ci_hi:
+                rmse_str = f"{vs.rmse_mean:.2f} [{ci_lo:.2f}, {ci_hi:.2f}]"
+            else:
+                rmse_str = f"{vs.rmse_mean:.2f}"
+        elif rmses:
+            rmse_str = f"{sum(rmses)/len(rmses):.2f}"
+        else:
+            rmse_str = "N/A"
+        # Leak suspects (#7)
+        n_leaks = len(getattr(vs, "leak_suspects", {})) if vs else 0
+        leak_str = f"⚠{n_leaks}" if n_leaks > 0 else "-"
         lines.append(
-            f"| {fs_name} | {n_feat} | {rmse_mean} "
-            f"| {r2_mean} | {total} | {recommend} |"
+            f"| {fs_name} | {n_feat} | {rmse_str} "
+            f"| {r2_mean} | {total} | {leak_str} | {recommend} |"
         )
 
     lines.append("")
