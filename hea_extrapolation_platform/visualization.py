@@ -221,9 +221,11 @@ def plot_validity_ranking(
     _ensure_dir(out_dir)
 
     fs_names = [s.feature_set for s in scores]
-    dims = ["effect_size", "stability", "generalisation", "leak_penalty", "extrapolation_safety"]
-    dim_labels = ["Effect Size", "Stability", "Generalisation", "-Leak Penalty", "Extrap. Safety"]
-    colors = ["#4C72B0", "#55A868", "#C44E52", "#8C8C8C", "#CCB974"]
+    dims = ["effect_size", "stability", "generalisation", "leak_penalty",
+            "multicollinearity_penalty", "extrapolation_safety"]
+    dim_labels = ["Effect Size", "Stability", "Generalisation", "-Leak Penalty",
+                  "-MC Penalty", "Extrap. Safety"]
+    colors = ["#4C72B0", "#55A868", "#C44E52", "#8C8C8C", "#B07C4C", "#CCB974"]
 
     fig, ax = plt.subplots(figsize=(14, max(6, len(fs_names) * 1.2)))
 

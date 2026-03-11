@@ -207,6 +207,18 @@ def plotly_validity_ranking(
         hovertemplate="-Leak: %{x:.3f}<extra>%{y}</extra>",
     ))
 
+    # Multicollinearity penalty as negative bar
+    mc_vals = [-getattr(s, "multicollinearity_penalty", 0.0) for s in scores]
+    if any(v != 0.0 for v in mc_vals):
+        fig.add_trace(go.Bar(
+            y=fs_names,
+            x=mc_vals,
+            name="-MC Penalty",
+            orientation="h",
+            marker_color="#B07C4C",
+            hovertemplate="-MC Penalty: %{x:.3f}<extra>%{y}</extra>",
+        ))
+
     # Total score overlay
     totals = [s.total for s in scores]
     fig.add_trace(go.Scatter(
@@ -380,6 +392,110 @@ def plotly_parity(
         template="plotly_white",
         height=600,
         width=600,
+    )
+    return fig
+
+
+# ---------------------------------------------------------------------------
+# 4b. Parity Plot Per Algorithm
+# ---------------------------------------------------------------------------
+
+# Distinct colour palette for workflow traces
+_WF_COLORS = {
+    "WF-LIN":   "#4C72B0",
+    "WF-LASSO": "#DD8452",
+    "WF-ARD":   "#55A868",
+    "WF-RF":    "#C44E52",
+    "WF-XGB":   "#8172B3",
+    "WF-ENS":   "#CCB974",
+}
+
+
+def plotly_parity_per_algorithm(
+    runs: List[Any],
+    title: str = "Parity Plot by Algorithm (Test Set)",
+) -> go.Figure:
+    """Interactive parity plot coloured by workflow (algorithm).
+
+    Each workflow gets its own trace so the legend can toggle them.
+    De-duplicates by (workflow, feature_set, sample_index) like
+    ``plotly_parity``.
+
+    Parameters
+    ----------
+    runs : list of RunResult
+    title : str
+
+    Returns
+    -------
+    go.Figure
+    """
+    # Collect per-workflow data
+    wf_data: Dict[str, Dict[str, list]] = {}
+    seen_keys: set = set()
+
+    for r in runs:
+        if r.y_test_true is None or r.y_test_pred is None:
+            continue
+        test_indices = getattr(r, "test_indices", None)
+        wf = r.workflow
+        if wf not in wf_data:
+            wf_data[wf] = {"true": [], "pred": [], "fs": []}
+        for i in range(len(r.y_test_true)):
+            if test_indices is not None:
+                key = (wf, r.feature_set, int(test_indices[i]))
+            else:
+                key = (wf, r.feature_set, float(r.y_test_true[i]))
+            if key in seen_keys:
+                continue
+            seen_keys.add(key)
+            wf_data[wf]["true"].append(float(r.y_test_true[i]))
+            wf_data[wf]["pred"].append(float(r.y_test_pred[i]))
+            wf_data[wf]["fs"].append(r.feature_set)
+
+    fig = go.Figure()
+    all_vals: List[float] = []
+
+    for wf_name in sorted(wf_data.keys()):
+        d = wf_data[wf_name]
+        color = _WF_COLORS.get(wf_name, "#999999")
+        all_vals.extend(d["true"])
+        all_vals.extend(d["pred"])
+        fig.add_trace(go.Scatter(
+            x=d["true"],
+            y=d["pred"],
+            mode="markers",
+            marker=dict(color=color, opacity=0.4, size=6,
+                        line=dict(width=0.3, color="black")),
+            customdata=d["fs"],
+            hovertemplate=(
+                "True: %{x:.1f}<br>Pred: %{y:.1f}<br>"
+                f"WF: {wf_name}<br>"
+                "FS: %{customdata}<extra></extra>"
+            ),
+            name=wf_name,
+        ))
+
+    if all_vals:
+        lo = min(all_vals)
+        hi = max(all_vals)
+        margin = (hi - lo) * 0.05
+        fig.add_trace(go.Scatter(
+            x=[lo - margin, hi + margin],
+            y=[lo - margin, hi + margin],
+            mode="lines",
+            line=dict(color="black", dash="dash", width=1),
+            name="y = x",
+            showlegend=True,
+        ))
+
+    fig.update_layout(
+        title=title,
+        xaxis_title="実測値 (True Value)",
+        yaxis_title="予測値 (Predicted Value)",
+        template="plotly_white",
+        height=600,
+        width=700,
     )
     return fig
 

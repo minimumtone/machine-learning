@@ -737,7 +737,7 @@ class WorkflowENS(BaseWorkflow):
                 ens_param_grid = {
                     "model__n_estimators": [100, 200],
                     "model__max_depth": [3, 5],
-                } if _XGB_AVAILABLE and self._base_workflow == "xgb" else {
+                } if self._base_workflow == "xgb" else {
                     "model__alpha": [0.1, 1.0, 10.0],
                 }
                 ens_grid = GridSearchCV(
