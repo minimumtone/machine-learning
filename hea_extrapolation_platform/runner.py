@@ -768,6 +768,15 @@ class ExperimentRunner:
             fs_key = fs_name.value
             cols = list(FeatureCatalog.columns(fs_name))
 
+            # Guard: skip feature sets with missing columns (same as Phase 3)
+            missing = [c for c in cols if c not in features_all.columns]
+            if missing:
+                logger.warning(
+                    "OOD: Feature set %s skipped: columns not in data: %s",
+                    fs_key, missing[:5],
+                )
+                continue
+
             # C-contiguous slices — same pattern as Phase 3
             X_fs_arr = safe_array(features_all[cols])
             X_train_ood = pd.DataFrame(X_fs_arr[ood_train_idx], columns=cols)
