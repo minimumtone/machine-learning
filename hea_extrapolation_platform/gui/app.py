@@ -3079,6 +3079,11 @@ def create_app() -> gr.Blocks:
                             _orig_sets = dict(_FC._SETS)
                             try:
                                 csv_cols = list(features_df.columns)
+                                # Generic CSV has no domain-specific feature
+                                # sets. Map FS_ALL to the CSV columns and
+                                # run only FS_ALL so every workflow sees the
+                                # same full column set (workflow comparison
+                                # is the analysis; FS comparison is N/A).
                                 _FC._SETS = {
                                     k: csv_cols
                                     for k in _FC._SETS
@@ -3087,6 +3092,7 @@ def create_app() -> gr.Blocks:
                                     features_df, features_df, target,
                                     progress_callback=_progress_cb,
                                     selected_workflows=selected_wfs,
+                                    selected_feature_sets=["FS_ALL"],
                                 )
                             finally:
                                 _FC._SETS = _orig_sets

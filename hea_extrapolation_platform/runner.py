@@ -377,6 +377,7 @@ class ExperimentRunner:
         target: pd.Series,
         progress_callback: Optional[Any] = None,
         selected_workflows: Optional[List[str]] = None,
+        selected_feature_sets: Optional[List[str]] = None,
     ) -> Tuple[List[RunResult], List[ValidityScore], Dict[str, OODResult]]:
         """Execute the full experiment grid in 5 phases."""
         t_start = time.time()
@@ -415,6 +416,11 @@ class ExperimentRunner:
         )
 
         feature_sets = FeatureCatalog.list_sets()
+        if selected_feature_sets is not None:
+            feature_sets = [
+                fs for fs in feature_sets
+                if fs.value in selected_feature_sets
+            ]
         y_arr = np.asarray(target, dtype=float)
 
         self._tracker.start_run(

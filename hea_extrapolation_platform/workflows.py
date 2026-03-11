@@ -646,7 +646,7 @@ class WorkflowENS(BaseWorkflow):
         self._quick = quick
         self._dim_reduction = dim_reduction
 
-    def _make_member(self, seed: int) -> Pipeline:
+    def _make_member(self, seed: int, n_features: int = 132) -> Pipeline:
         if self._base_workflow == "xgb" and _XGB_AVAILABLE:
             model = XGBRegressor(
                 n_estimators=100 if self._quick else 200,
@@ -669,7 +669,7 @@ class WorkflowENS(BaseWorkflow):
             model = Ridge(alpha=1.0)
         steps: List[Tuple[str, Any]] = [
             ("scaler", StandardScaler()),
-            *_make_pca_step(132, self._dim_reduction),  # estimate; PCA caps internally
+            *_make_pca_step(n_features, self._dim_reduction),
             ("model", model),
         ]
         return Pipeline(steps)
@@ -690,12 +690,13 @@ class WorkflowENS(BaseWorkflow):
         preds_list: List[np.ndarray] = []
         train_preds_list: List[np.ndarray] = []
 
+        n_features = X_train.shape[1]
         for m in range(self._n_members):
             # Use a large prime multiplier to avoid seed collisions.
             # The old formula (seed * 1000 + m) collides when
             # seed=1001,m=0 and seed=1,m=1000 (both → 1001000).
             member_seed = (seed + m * 10_000_007) % (2**31)
-            pipe = self._make_member(member_seed)
+            pipe = self._make_member(member_seed, n_features=n_features)
             pipe.fit(_safe_np(X_train), _safe_np(y_train))
             preds_list.append(pipe.predict(_safe_np(X_test)))
             train_preds_list.append(pipe.predict(_safe_np(X_train)))
