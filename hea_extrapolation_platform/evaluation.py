@@ -8,6 +8,7 @@ Scores each feature set along six axes:
   3. Generalisation - sign consistency between RandomCV and Block splits
   4. Leak suspicion - Random-only improvement with Block degradation
   5. Extrapolation safety - uncertainty behaviour on OOD points
+  6. Multicollinearity penalty - VIF-based collinearity penalty (Phase 0)
 """
 
 from __future__ import annotations
