@@ -234,12 +234,13 @@ def plot_validity_ranking(
     left_neg = np.zeros(len(fs_names))  # accumulator for negative bars
 
     for dim, label, color in zip(dims, dim_labels, colors):
-        vals = np.array([getattr(s, dim) for s in scores])
-        if dim == "leak_penalty":
-            # Show leak penalty as a separate negative bar from zero,
-            # so it does not shift the positive bar stack.
-            ax.barh(y_pos, -vals, left=left_neg, height=0.6, label=label, color=color)
-            left_neg -= vals
+        vals = np.array([getattr(s, dim, 0.0) for s in scores])
+        if dim in ("leak_penalty", "multicollinearity_penalty"):
+            # Show penalties as separate negative bars from zero,
+            # so they do not shift the positive bar stack.
+            if np.any(vals != 0.0):
+                ax.barh(y_pos, -vals, left=left_neg, height=0.6, label=label, color=color)
+                left_neg -= vals
         else:
             ax.barh(y_pos, vals, left=left_pos, height=0.6, label=label, color=color)
             left_pos += vals

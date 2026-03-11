@@ -196,7 +196,7 @@ class _ElementDB:
                "Ns_val": 2, "Np_val": 0, "Nd_val": 1, "Nf_val": 0,
                "bandgap": 0.0, "magmom": 0.0, "space_group": 194},
         # --- Extended elements (pymatgen-sourced, added for broad dataset coverage) ---
-        "Ba": {"Z": 56, "vec": 2, "en": 0.89, "r": 2.150, "Tm": 1000, "mass": 137.33, "d_elec": 10, "B": 10, "Vm": 38.2, "mendeleev_no": 14, "column": 2, "row": 6, "cov_r": 253, "Ns_val": 2, "Np_val": 0, "Nd_val": 0, "Nf_val": 0, "bandgap": 0.0, "magmom": 0.0, "space_group": 229},
+        "Ba": {"Z": 56, "vec": 2, "en": 0.89, "r": 2.150, "Tm": 1000, "mass": 137.33, "d_elec": 0, "B": 10, "Vm": 38.2, "mendeleev_no": 14, "column": 2, "row": 6, "cov_r": 253, "Ns_val": 2, "Np_val": 0, "Nd_val": 0, "Nf_val": 0, "bandgap": 0.0, "magmom": 0.0, "space_group": 229},
         "Be": {"Z": 4, "vec": 2, "en": 1.57, "r": 1.050, "Tm": 1560, "mass": 9.01, "d_elec": 0, "B": 130, "Vm": 4.8, "mendeleev_no": 77, "column": 2, "row": 2, "cov_r": 112, "Ns_val": 2, "Np_val": 0, "Nd_val": 0, "Nf_val": 0, "bandgap": 0.0, "magmom": 0.0, "space_group": 194},
         "Bi": {"Z": 83, "vec": 15, "en": 2.02, "r": 1.600, "Tm": 544, "mass": 208.98, "d_elec": 10, "B": 31, "Vm": 21.3, "mendeleev_no": 87, "column": 15, "row": 6, "cov_r": 143, "Ns_val": 2, "Np_val": 3, "Nd_val": 0, "Nf_val": 0, "bandgap": 0.0, "magmom": 0.0, "space_group": 166},
         "Br": {"Z": 35, "vec": 17, "en": 2.96, "r": 1.150, "Tm": 266, "mass": 79.90, "d_elec": 0, "B": 1, "Vm": 19.8, "mendeleev_no": 98, "column": 17, "row": 4, "cov_r": 94, "Ns_val": 2, "Np_val": 5, "Nd_val": 0, "Nf_val": 0, "bandgap": 0.0, "magmom": 0.0, "space_group": 64},
