@@ -606,28 +606,44 @@ class WorkflowXGB(BaseWorkflow):
             and len(X_train) >= 20
         ):
             try:
+                from sklearn.model_selection import train_test_split as _tts
+
                 # Apply the scaler (and optionally PCA) from the best pipeline
-                # to transform train and test data for early stopping
                 preprocessor = Pipeline(
                     [(name, step) for name, step in best_pipe.steps if name != "model"]
                 )
                 X_tr_transformed = preprocessor.transform(_safe_np(X_train))
-                X_te_transformed = preprocessor.transform(_safe_np(X_test))
+
+                # Split *training* data into train/validation for early stopping
+                # to avoid leaking the held-out test set into model selection.
+                X_tr_es, X_val_es, y_tr_es, y_val_es = _tts(
+                    X_tr_transformed, _safe_np(y_train),
+                    test_size=0.2, random_state=seed,
+                )
 
                 # Clone the best model's params but allow more estimators
                 es_params = best_model.get_params()
                 es_params["n_estimators"] = max(es_params.get("n_estimators", 200), 500)
+                es_params["early_stopping_rounds"] = 20
                 es_model = XGBRegressor(**es_params)
                 es_model.fit(
-                    np.ascontiguousarray(X_tr_transformed),
-                    _safe_np(y_train),
-                    eval_set=[(np.ascontiguousarray(X_te_transformed), _safe_np(y_test))],
+                    np.ascontiguousarray(X_tr_es),
+                    y_tr_es,
+                    eval_set=[(np.ascontiguousarray(X_val_es), y_val_es)],
                     verbose=False,
                 )
-                # Check if early stopping actually triggered (best_iteration set)
+                # Check if early stopping actually triggered
                 if hasattr(es_model, "best_iteration") and es_model.best_iteration > 0:
-                    # Replace the model step in the pipeline
-                    best_pipe.steps[-1] = ("model", es_model)
+                    # Retrain on full training data with optimal n_estimators
+                    final_params = es_model.get_params()
+                    final_params["n_estimators"] = es_model.best_iteration + 1
+                    final_params.pop("early_stopping_rounds", None)
+                    final_model = XGBRegressor(**final_params)
+                    final_model.fit(
+                        np.ascontiguousarray(X_tr_transformed),
+                        _safe_np(y_train),
+                    )
+                    best_pipe.steps[-1] = ("model", final_model)
                     used_early_stop = True
                     logger.debug(
                         "WF-XGB early stop: best_iteration=%d (was n_estimators=%d)",
