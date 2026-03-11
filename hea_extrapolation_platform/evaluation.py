@@ -35,6 +35,7 @@ class ValidityScore:
     generalisation: float = 0.0
     leak_penalty: float = 0.0
     extrapolation_safety: float = 0.0
+    multicollinearity_penalty: float = 0.0
 
     @property
     def total(self) -> float:
@@ -42,10 +43,11 @@ class ValidityScore:
 
         Positive-direction weights: 0.30 + 0.20 + 0.30 + 0.20 = 1.00.
         leak_penalty is subtracted with weight 0.15.
+        multicollinearity_penalty is subtracted with weight 0.10.
 
         Score range:
-          - Best case (all 1.0, no leak):  1.00
-          - Worst case (all 0.0, max leak): -0.15
+          - Best case (all 1.0, no penalties):  1.00
+          - Worst case (all 0.0, max penalties): -0.25
         """
         return (
             0.30 * self.effect_size
@@ -53,6 +55,7 @@ class ValidityScore:
             + 0.30 * self.generalisation
             - 0.15 * self.leak_penalty
             + 0.20 * self.extrapolation_safety
+            - 0.10 * self.multicollinearity_penalty
         )
 
     def to_dict(self) -> Dict[str, float]:
@@ -63,6 +66,7 @@ class ValidityScore:
             "generalisation": round(self.generalisation, 4),
             "leak_penalty": round(self.leak_penalty, 4),
             "extrapolation_safety": round(self.extrapolation_safety, 4),
+            "multicollinearity_penalty": round(self.multicollinearity_penalty, 4),
             "total": round(self.total, 4),
         }
 
@@ -80,6 +84,7 @@ class FeatureValidityEvaluator:
         self,
         runs: List[RunResult],
         ood_errors: Optional[Dict[str, Dict[str, np.ndarray]]] = None,
+        mc_reports: Optional[Dict[str, Any]] = None,
     ) -> List[ValidityScore]:
         """Compute validity scores for every feature set present in *runs*.
 
@@ -90,6 +95,9 @@ class FeatureValidityEvaluator:
         ood_errors : dict, optional
             {feature_set: {"errors": ..., "uncertainties": ..., "is_ood": ...}}
             Per-sample data for extrapolation safety assessment.
+        mc_reports : dict, optional
+            {feature_set: MulticollinearityReport} from Phase 0.
+            Used to compute multicollinearity_penalty.
 
         Returns
         -------
@@ -151,6 +159,12 @@ class FeatureValidityEvaluator:
                 )
             else:
                 vs.extrapolation_safety = 0.5  # neutral when data not available
+
+            # 6. Multicollinearity penalty
+            if mc_reports and fs_name in mc_reports:
+                vs.multicollinearity_penalty = self._multicollinearity_penalty(
+                    mc_reports[fs_name]
+                )
 
             scores.append(vs)
 
@@ -215,6 +229,22 @@ class FeatureValidityEvaluator:
         block_change = (base_rmse - block_rmse) / base_rmse
         if rand_improve > 0.05 and block_change < -0.02:
             return min(1.0, rand_improve - block_change)
+        return 0.0
+
+    @staticmethod
+    def _multicollinearity_penalty(mc_report: Any) -> float:
+        """Penalty [0, 1] based on multicollinearity diagnostics.
+
+        High multicollinearity -> high penalty (up to 1.0).
+        Moderate -> moderate penalty.
+        Low -> 0.
+        """
+        level = getattr(mc_report, 'multicollinearity_level', 'low')
+        if level == 'high':
+            return 1.0
+        elif level == 'moderate':
+            ratio = getattr(mc_report, 'high_vif_ratio', 0.0)
+            return min(1.0, 0.3 + 0.7 * ratio)
         return 0.0
 
     @staticmethod

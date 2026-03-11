@@ -6,14 +6,18 @@ Launch::
 
     python -m hea_extrapolation_platform gui --port 7860
 
-Tab-based layout:
-  1. Dashboard     - KPI cards + validity ranking + performance heatmap
-  2. Data Summary  - Dataset statistics, composition/target plots, CSV upload
-  3. Config & Run  - Parameter UI + run button + progress bar + streaming log
-  4. Results       - Run results table + filters + parity plot
-  5. OOD Map       - Interactive PCA scatter + OOD candidates table
-  6. Literature    - Query UI + filters + feature frequency
-  7. Report        - Markdown preview + download
+Tab-based layout (3-phase workflow):
+  1. 前処理 (Data Preparation)
+     - Config & Run  - CSV upload + parameter UI + run button + progress bar
+     - Data Summary  - Dataset statistics, composition/target plots
+  2. 解析 (Analysis)
+     - Dashboard     - KPI cards + validity ranking + performance heatmap
+     - Results       - Run results table + filters + parity plot
+     - OOD Map       - Interactive PCA scatter + OOD candidates table
+     - FS Comparison - Feature selection + physical origins
+  3. 後処理 (Post-processing)
+     - Literature    - Query UI + filters + feature frequency
+     - Report        - Markdown preview + download
 
 Design decisions (GUI review fixes):
   - gr.State replaces module-global _SESSION for multi-user isolation (#1)
@@ -34,7 +38,6 @@ from __future__ import annotations
 
 import datetime
 import faulthandler
-import gc
 import html as html_mod
 import logging
 import queue
@@ -61,6 +64,7 @@ from hea_extrapolation_platform.gui.plotly_charts import (
     plotly_heatmap,
     plotly_ood_map,
     plotly_parity,
+    plotly_parity_per_algorithm,
     plotly_target_histogram,
     plotly_uncertainty_ood,
     plotly_validity_ranking,
@@ -82,6 +86,7 @@ def _empty_session() -> Dict[str, Any]:
         "validity_scores": [],
         "ood_results": {},
         "ood_split_indices": {},
+        "mc_reports": {},  # Phase 0 multicollinearity reports
         "compositions_df": None,
         "features_df": None,
         "target": None,
@@ -214,29 +219,33 @@ def _build_integration_status_md(
 def _refresh_dashboard_data(
     metric: str, session: Dict[str, Any],
 ) -> Tuple[str, str, str, str, str, Any, Any]:
-    runs = session.get("runs", [])
-    scores = session.get("validity_scores", [])
-    ood_results = session.get("ood_results", {})
-    runner = session.get("runner")
+    try:
+        runs = session.get("runs", [])
+        scores = session.get("validity_scores", [])
+        ood_results = session.get("ood_results", {})
+        runner = session.get("runner")
 
-    n_runs = str(len(runs))
-    best_fs = scores[0].feature_set if scores else "--"
-    best_score = f"{scores[0].total:.4f}" if scores else "--"
+        n_runs = str(len(runs))
+        best_fs = scores[0].feature_set if scores else "--"
+        best_score = f"{scores[0].total:.4f}" if scores else "--"
 
-    total_ood = (
-        sum(r.n_ood for r in ood_results.values()) if ood_results else 0
-    )
-    ood_str = str(total_ood) if ood_results else "--"
+        total_ood = (
+            sum(r.n_ood for r in ood_results.values()) if ood_results else 0
+        )
+        ood_str = str(total_ood) if ood_results else "--"
 
-    integration_md = _build_integration_status_md(runner)
+        integration_md = _build_integration_status_md(runner)
 
-    validity_fig = plotly_validity_ranking(scores) if scores else None
-    heatmap_fig = plotly_heatmap(runs, metric=metric) if runs else None
+        validity_fig = plotly_validity_ranking(scores) if scores else None
+        heatmap_fig = plotly_heatmap(runs, metric=metric) if runs else None
 
-    return (
-        n_runs, best_fs, best_score, ood_str,
-        integration_md, validity_fig, heatmap_fig,
-    )
+        return (
+            n_runs, best_fs, best_score, ood_str,
+            integration_md, validity_fig, heatmap_fig,
+        )
+    except Exception:
+        logger.exception("_refresh_dashboard_data failed")
+        return ("0", "--", "--", "--", _build_integration_status_md(None), None, None)
 
 
 def _build_physical_interpretation_md(
@@ -281,8 +290,8 @@ def _build_physical_interpretation_md(
         rmses = [r.rmse_test for r in fs_runs if r.rmse_test > 0]
         r2s = [r.r2_test for r in fs_runs]
         n_feat = _fs_sizes.get(fs_name, "?")
-        rmse_mean = f"{np.mean(rmses):.2f}" if rmses else "N/A"
-        r2_mean = f"{np.mean(r2s):.4f}" if r2s else "N/A"
+        rmse_mean = f"{sum(rmses)/len(rmses):.2f}" if rmses else "N/A"
+        r2_mean = f"{sum(r2s)/len(r2s):.4f}" if r2s else "N/A"
         vs = score_map.get(fs_name)
         total = f"{vs.total:.4f}" if vs else "N/A"
         recommend = "**Best**" if fs_name == best_fs else ""
@@ -303,7 +312,8 @@ def _build_physical_interpretation_md(
             f"安定性: {best.stability:.4f} / "
             f"汎化性: {best.generalisation:.4f}\n"
             f"- 外挿安全性: {best.extrapolation_safety:.4f} / "
-            f"リークペナルティ: {best.leak_penalty:.4f}"
+            f"リークペナルティ: {best.leak_penalty:.4f}\n"
+            f"- 多重共線性ペナルティ: {best.multicollinearity_penalty:.4f}"
         )
         lines.append("")
 
@@ -387,9 +397,8 @@ def _build_physical_interpretation_md(
             )
         lines.append("")
         # Interpretation
-        avg_ratio = np.mean(
-            [r.ood_ratio for r in ood_results.values()]
-        )
+        _ratios = [float(r.ood_ratio) for r in ood_results.values()]
+        avg_ratio = sum(_ratios) / len(_ratios) if _ratios else 0.0
         if avg_ratio > 0.2:
             lines.append(
                 "**注意**: OOD比率が20%超です。データの分布がトレーニング領域から"
@@ -406,6 +415,161 @@ def _build_physical_interpretation_md(
                 "分布内にあり、予測は比較的信頼できます。"
             )
 
+    # --- Score formula explanation ---
+    lines.append("\n### スコア算出式の詳細\n")
+    lines.append(
+        "本プラットフォームは、各特徴量セットの**総合妥当性スコア (Total Validity Score)** を "
+        "以下の重み付き線形結合で算出し、ランキングします。\n"
+    )
+    lines.append(
+        "$$\\text{Total} = "
+        "0.30 \\times \\text{Effect Size} "
+        "+ 0.20 \\times \\text{Stability} "
+        "+ 0.30 \\times \\text{Generalisation} "
+        "+ 0.20 \\times \\text{Extrap. Safety} "
+        "- 0.15 \\times \\text{Leak Penalty} "
+        "- 0.10 \\times \\text{MC Penalty}$$\n"
+    )
+    lines.append(
+        "> スコア範囲: 最良 1.00（全成分 1.0・ペナルティ 0）〜 "
+        "最悪 −0.25（全成分 0・ペナルティ最大）\n"
+    )
+    lines.append("---\n")
+
+    # 1. Effect Size
+    lines.append("#### 1. Effect Size（効果量）— 重み 0.30\n")
+    lines.append(
+        "FS\\_BASE を基準とし、対象特徴量セットが RMSE(Test) を "
+        "どれだけ改善したかを測定します。\n"
+    )
+    lines.append(
+        "$$\\text{Effect Size} = \\max\\!\\left(0,\\; "
+        "\\frac{\\text{RMSE}_{\\text{BASE}} - \\text{RMSE}_{\\text{FS}}}"
+        "{\\text{RMSE}_{\\text{BASE}}}\\right)$$\n"
+    )
+    lines.append(
+        "- 値域: \\[0, 1\\]。FS\\_BASE 自身は常に 0。"
+        "BASE より悪い場合も 0（負値はクリップ）。\n"
+    )
+
+    # 2. Stability
+    lines.append("#### 2. Stability（安定性）— 重み 0.20\n")
+    lines.append(
+        "全ラン（シード × fold × split）の RMSE(Test) の "
+        "変動係数 (CV) の逆数で、再現性を評価します。\n"
+    )
+    lines.append(
+        "$$\\text{CV} = \\frac{\\sigma_{\\text{RMSE}}}{\\mu_{\\text{RMSE}}}, "
+        "\\quad \\text{Stability} = \\max(0,\\; 1 - \\text{CV})$$\n"
+    )
+    lines.append(
+        "- CV が小さいほど安定（Stability → 1.0）。"
+        "ランが 1 件の場合は中立値 0.5。\n"
+    )
+
+    # 3. Generalisation
+    lines.append("#### 3. Generalisation（汎化性）— 重み 0.30\n")
+    lines.append(
+        "RandomCV と CompositionBlock の両分割で "
+        "FS\\_BASE に対する RMSE 改善率を比較し、汎化の一貫性を評価します。\n"
+    )
+    lines.append(
+        "$$\\Delta_{\\text{rand}} = "
+        "\\frac{\\text{RMSE}_{\\text{BASE}} - \\text{RMSE}_{\\text{RandomCV}}}"
+        "{\\text{RMSE}_{\\text{BASE}}}, \\quad "
+        "\\Delta_{\\text{block}} = "
+        "\\frac{\\text{RMSE}_{\\text{BASE}} - \\text{RMSE}_{\\text{Block}}}"
+        "{\\text{RMSE}_{\\text{BASE}}}$$\n"
+    )
+    lines.append(
+        "| 条件 | スコア |\n"
+        "|---|---|\n"
+        "| 両方改善 ($\\Delta > 0$) | $0.5 + 0.5 \\times \\sqrt{\\Delta_{rand} \\cdot \\Delta_{block}}$ (幾何平均) |\n"
+        "| 両方悪化 | 0.30 |\n"
+        "| 片方のみ改善（乖離） | 0.10 |\n"
+        "| 変化なし | 0.50 (中立) |\n"
+    )
+
+    # 4. Leak Penalty
+    lines.append("#### 4. Leak Penalty（リーク検出）— 重み −0.15\n")
+    lines.append(
+        "RandomCV のみ大幅改善し CompositionBlock が悪化する場合、"
+        "データリーク（目的変数の間接漏洩）の疑いを検出します。\n"
+    )
+    lines.append(
+        "$$\\text{Leak Penalty} = \\begin{cases}"
+        "\\min(1,\\; \\Delta_{\\text{rand}} - \\Delta_{\\text{block}}) "
+        "& \\text{if } \\Delta_{\\text{rand}} > 0.05 \\text{ and } \\Delta_{\\text{block}} < -0.02 \\\\"
+        "0 & \\text{otherwise}"
+        "\\end{cases}$$\n"
+    )
+    lines.append(
+        "- 0 = リークなし、1.0 = 強いリーク疑い。"
+        "Total スコアから **減算** されます。\n"
+    )
+
+    # 5. Extrapolation Safety
+    lines.append("#### 5. Extrapolation Safety（外挿安全性）— 重み 0.20\n")
+    lines.append(
+        "OOD サンプルに対する **誤差スコア** と **不確実性スコア** の加重平均です。\n"
+    )
+    lines.append(
+        "$$\\text{Extrap. Safety} = 0.6 \\times \\text{err\\_score} "
+        "+ 0.4 \\times \\text{unc\\_score}$$\n"
+    )
+    lines.append(
+        "**誤差スコア (err\\_score):** OOD 誤差が ID 誤差の何倍かで評価\n\n"
+        "$$r = \\frac{\\overline{|\\text{error}|_{\\text{OOD}}}}"
+        "{\\overline{|\\text{error}|_{\\text{ID}}}}, \\quad "
+        "\\text{err\\_score} = \\max\\!\\left(0,\\; 1 - \\frac{r - 1}{2}\\right)$$\n\n"
+        "- $r = 1$（OOD と ID が同精度）→ 1.0、$r = 3$ → 0.0\n"
+    )
+    lines.append(
+        "**不確実性スコア (unc\\_score):** OOD で不確実性が適切に増加するか\n\n"
+        "$$u = \\frac{\\overline{\\text{unc}_{\\text{OOD}}}}"
+        "{\\overline{\\text{unc}_{\\text{ID}}}}, \\quad "
+        "\\text{unc\\_score} = \\begin{cases}"
+        "\\max(0, \\min(1, 0.5u - 0.5)) & u \\ge 1 \\\\"
+        "0 & u < 1"
+        "\\end{cases}$$\n\n"
+        "- $u < 1$（OOD の方が不確実性が低い — 異常）→ 0.0\n"
+        "- $u = 1$ → 0.5、$u = 2$ → 1.0\n"
+    )
+
+    # 6. Multicollinearity Penalty
+    lines.append("#### 6. Multicollinearity Penalty（多重共線性ペナルティ）— 重み −0.10\n")
+    lines.append(
+        "Phase 0 で算出された **高 VIF 比率** をそのままペナルティとします。\n"
+    )
+    lines.append(
+        "$$\\text{MC Penalty} = \\min\\!\\left(1,\\; "
+        "\\frac{\\text{VIF} > 10 \\text{ の特徴量数}}"
+        "{\\text{特徴量数}}\\right)$$\n"
+    )
+    lines.append(
+        "- VIF (Variance Inflation Factor) は `LinearRegression(fit_intercept=True)` で算出。\n"
+        "- 閾値: VIF > 10 → 高い多重共線性。"
+        " 30% 超で WF-LIN / WF-LASSO / WF-ARD を自動ブロック。\n"
+        "- 0.0 = 共線性なし、1.0 = 全特徴量が高 VIF。\n"
+    )
+    lines.append("---\n")
+
+    # --- Worked example for best FS ---
+    if scores:
+        best = scores[0]
+        lines.append(f"#### 計算例: **{best.feature_set}**\n")
+        lines.append(
+            f"$$\\text{{Total}} = "
+            f"0.30 \\times {best.effect_size:.4f} "
+            f"+ 0.20 \\times {best.stability:.4f} "
+            f"+ 0.30 \\times {best.generalisation:.4f} "
+            f"+ 0.20 \\times {best.extrapolation_safety:.4f} "
+            f"- 0.15 \\times {best.leak_penalty:.4f} "
+            f"- 0.10 \\times {best.multicollinearity_penalty:.4f} "
+            f"= \\mathbf{{{best.total:.4f}}}$$\n"
+        )
+        lines.append("---\n")
+
     # --- Judgment guide ---
     lines.append("\n### 結果の読み方ガイド\n")
     lines.append(
@@ -417,7 +581,8 @@ def _build_physical_interpretation_md(
         "| Stability | シード間での結果が安定 | 結果のばらつきが大きい |\n"
         "| Generalisation | 分割方法に依らず汎化 | 特定分割でのみ好成績 |\n"
         "| Extrap. Safety | OOD領域でも精度を維持 | 外挿で精度低下 |\n"
-        "| Leak Penalty | データリークの疑い（要注意） | リーク無し |"
+        "| Leak Penalty | データリークの疑い（要注意） | リーク無し |\n"
+        "| MC Penalty | 多重共線性が高い（線形モデル不安定） | 共線性なし |"
     )
 
     return "\n".join(lines)
@@ -427,122 +592,144 @@ def _refresh_results_data(
     wf_filter: str, fs_filter: str, sp_filter: str,
     session: Dict[str, Any],
 ) -> Tuple:
-    runs = session.get("runs", [])
-    scores = session.get("validity_scores", [])
-    ood_results = session.get("ood_results", {})
+    try:
+        runs = session.get("runs", [])
+        scores = session.get("validity_scores", [])
+        ood_results = session.get("ood_results", {})
 
-    # Fix #11: dynamic filter choices from actual run data
-    wf_choices = ["All"] + sorted({r.workflow for r in runs})
-    fs_choices = ["All"] + sorted({r.feature_set for r in runs})
-    sp_choices = ["All"] + sorted({r.split_policy for r in runs})
+        # Fix #11: dynamic filter choices from actual run data
+        wf_choices = ["All"] + sorted({r.workflow for r in runs})
+        fs_choices = ["All"] + sorted({r.feature_set for r in runs})
+        sp_choices = ["All"] + sorted({r.split_policy for r in runs})
 
-    v_df = validity_scores_to_dataframe(scores) if scores else pd.DataFrame()
+        v_df = validity_scores_to_dataframe(scores) if scores else pd.DataFrame()
 
-    filtered = runs
-    if wf_filter != "All":
-        filtered = [r for r in filtered if r.workflow == wf_filter]
-    if fs_filter != "All":
-        filtered = [r for r in filtered if r.feature_set == fs_filter]
-    if sp_filter != "All":
-        filtered = [r for r in filtered if r.split_policy == sp_filter]
+        filtered = runs
+        if wf_filter != "All":
+            filtered = [r for r in filtered if r.workflow == wf_filter]
+        if fs_filter != "All":
+            filtered = [r for r in filtered if r.feature_set == fs_filter]
+        if sp_filter != "All":
+            filtered = [r for r in filtered if r.split_policy == sp_filter]
 
-    r_df = runs_to_dataframe(filtered) if filtered else pd.DataFrame()
-    parity_fig = plotly_parity(filtered) if filtered else None
+        r_df = runs_to_dataframe(filtered) if filtered else pd.DataFrame()
+        parity_fig = plotly_parity_per_algorithm(filtered) if filtered else None
 
-    # Physical interpretation + FS comparison
-    interp_md = _build_physical_interpretation_md(runs, scores, ood_results)
+        # Physical interpretation + FS comparison
+        interp_md = _build_physical_interpretation_md(runs, scores, ood_results)
 
-    # FS comparison grouped bar chart
-    fs_bar_fig = plotly_fs_grouped_bar(runs) if runs else None
+        # FS comparison grouped bar chart
+        fs_bar_fig = plotly_fs_grouped_bar(runs) if runs else None
 
-    return (
-        gr.update(choices=wf_choices, value=wf_filter if wf_filter in wf_choices else "All"),
-        gr.update(choices=fs_choices, value=fs_filter if fs_filter in fs_choices else "All"),
-        gr.update(choices=sp_choices, value=sp_filter if sp_filter in sp_choices else "All"),
-        v_df, r_df, parity_fig, interp_md, fs_bar_fig,
-    )
+        return (
+            gr.update(choices=wf_choices, value=wf_filter if wf_filter in wf_choices else "All"),
+            gr.update(choices=fs_choices, value=fs_filter if fs_filter in fs_choices else "All"),
+            gr.update(choices=sp_choices, value=sp_filter if sp_filter in sp_choices else "All"),
+            v_df, r_df, parity_fig, interp_md, fs_bar_fig,
+        )
+    except Exception:
+        logger.exception("_refresh_results_data failed")
+        return (
+            gr.update(), gr.update(), gr.update(),
+            pd.DataFrame(), pd.DataFrame(), None,
+            "*Error refreshing results — see server log.*", None,
+        )
 
 
 def _refresh_ood_data(
     fs_key: str, session: Dict[str, Any],
 ) -> Tuple:
-    ood_results = session.get("ood_results", {})
-    features_df = session.get("features_df")
-    comps_df = session.get("compositions_df")
-    ood_split_indices = session.get("ood_split_indices", {})
-
-    if not ood_results or features_df is None:
-        return None, "No OOD results. Run experiment first.", pd.DataFrame()
-
-    ood_res = ood_results.get(fs_key)
-    if ood_res is None:
-        available = list(ood_results.keys())
-        return (
-            None,
-            f"No OOD for {fs_key}. Available: {available}",
-            pd.DataFrame(),
-        )
-
-    from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
     try:
-        fs_enum = FeatureSetName(fs_key)
-        cols = FeatureCatalog.columns(fs_enum)
-    except (ValueError, KeyError):
-        return None, f"Unknown feature set: {fs_key}", pd.DataFrame()
+        ood_results = session.get("ood_results", {})
+        features_df = session.get("features_df")
+        comps_df = session.get("compositions_df")
+        ood_split_indices = session.get("ood_split_indices", {})
 
-    # Fix #3: use stored train/test indices for correct visualization.
-    # CRITICAL: Force C-contiguous layout.  Column-subset + iloc on a
-    # DataFrame creates fragmented views whose .values is F-contiguous,
-    # causing SIGSEGV in downstream PCA / StandardScaler calls.
-    X_fs_arr = np.ascontiguousarray(
-        features_df[cols].to_numpy(dtype="float64", na_value=np.nan)
-    )
-    split = ood_split_indices.get(fs_key)
-    if split is not None:
-        train_idx, test_idx = split
-        X_train = pd.DataFrame(X_fs_arr[train_idx], columns=cols)
-        X_query = pd.DataFrame(X_fs_arr[test_idx], columns=cols)
-    else:
-        logger.warning("No OOD split indices for %s, using heuristic", fs_key)
-        n_ood = len(ood_res.composite_scores)
-        X_train = pd.DataFrame(
-            X_fs_arr[:len(X_fs_arr) - n_ood], columns=cols,
+        if not ood_results or features_df is None:
+            return None, "No OOD results. Run experiment first.", pd.DataFrame()
+
+        ood_res = ood_results.get(fs_key)
+        if ood_res is None:
+            available = list(ood_results.keys())
+            return (
+                None,
+                f"No OOD for {fs_key}. Available: {available}",
+                pd.DataFrame(),
+            )
+
+        # In generic CSV mode, features_df already contains exactly the
+        # user-selected columns (numeric + one-hot encoded strings).
+        # FeatureCatalog columns are HEA-specific and won't exist.
+        csv_mode = session.get("csv_mode", "hea")
+        if csv_mode == "generic":
+            cols = list(features_df.columns)
+        else:
+            from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
+            try:
+                fs_enum = FeatureSetName(fs_key)
+                cols = FeatureCatalog.columns(fs_enum)
+            except (ValueError, KeyError):
+                return None, f"Unknown feature set: {fs_key}", pd.DataFrame()
+
+        # Fix #3: use stored train/test indices for correct visualization.
+        # CRITICAL: Force C-contiguous layout.  Column-subset + iloc on a
+        # DataFrame creates fragmented views whose .values is F-contiguous,
+        # causing SIGSEGV in downstream PCA / StandardScaler calls.
+        available_cols = [c for c in cols if c in features_df.columns]
+        if not available_cols:
+            return None, f"No matching columns for {fs_key}", pd.DataFrame()
+        X_fs_arr = np.ascontiguousarray(
+            features_df[available_cols].to_numpy(dtype="float64", na_value=np.nan)
         )
-        X_query = pd.DataFrame(
-            X_fs_arr[len(X_fs_arr) - n_ood:], columns=cols,
+        split = ood_split_indices.get(fs_key)
+        if split is not None:
+            train_idx, test_idx = split
+            X_train = pd.DataFrame(X_fs_arr[train_idx], columns=available_cols)
+            X_query = pd.DataFrame(X_fs_arr[test_idx], columns=available_cols)
+        else:
+            logger.warning("No OOD split indices for %s, using heuristic", fs_key)
+            n_ood = len(ood_res.composite_scores)
+            X_train = pd.DataFrame(
+                X_fs_arr[:len(X_fs_arr) - n_ood], columns=available_cols,
+            )
+            X_query = pd.DataFrame(
+                X_fs_arr[len(X_fs_arr) - n_ood:], columns=available_cols,
+            )
+
+        fig = plotly_ood_map(
+            X_train, X_query,
+            composite_scores=ood_res.composite_scores,
+            is_ood=ood_res.is_ood,
+            title=f"OOD Map (PCA) -- {fs_key}",
         )
 
-    fig = plotly_ood_map(
-        X_train, X_query,
-        composite_scores=ood_res.composite_scores,
-        is_ood=ood_res.is_ood,
-        title=f"OOD Map (PCA) -- {fs_key}",
-    )
+        summary = (
+            f"Total query: {ood_res.n_total} | "
+            f"OOD: {ood_res.n_ood} ({ood_res.ood_ratio:.1%}) | "
+            f"Threshold: {ood_res.ood_threshold:.4f}"
+        )
 
-    summary = (
-        f"Total query: {ood_res.n_total} | "
-        f"OOD: {ood_res.n_ood} ({ood_res.ood_ratio:.1%}) | "
-        f"Threshold: {ood_res.ood_threshold:.4f}"
-    )
+        cand_df = pd.DataFrame()
+        if comps_df is not None and ood_res.is_ood.any() and split is not None:
+            _, test_idx_arr = split
+            ood_mask = ood_res.is_ood
+            ood_local = np.where(ood_mask)[0]
+            ood_global = np.asarray(test_idx_arr)[ood_local]
+            ood_global = ood_global[ood_global < len(comps_df)]
+            if len(ood_global) > 0:
+                cand_df = comps_df.iloc[ood_global].copy()
+                cand_df["OOD_Score"] = ood_res.composite_scores[
+                    ood_local[:len(ood_global)]
+                ]
+                cand_df = cand_df.sort_values(
+                    "OOD_Score", ascending=False,
+                ).head(20)
+                cand_df = cand_df.round(3)
 
-    cand_df = pd.DataFrame()
-    if comps_df is not None and ood_res.is_ood.any() and split is not None:
-        _, test_idx_arr = split
-        ood_mask = ood_res.is_ood
-        ood_local = np.where(ood_mask)[0]
-        ood_global = np.asarray(test_idx_arr)[ood_local]
-        ood_global = ood_global[ood_global < len(comps_df)]
-        if len(ood_global) > 0:
-            cand_df = comps_df.iloc[ood_global].copy()
-            cand_df["OOD_Score"] = ood_res.composite_scores[
-                ood_local[:len(ood_global)]
-            ]
-            cand_df = cand_df.sort_values(
-                "OOD_Score", ascending=False,
-            ).head(20)
-            cand_df = cand_df.round(3)
-
-    return fig, summary, cand_df
+        return fig, summary, cand_df
+    except Exception:
+        logger.exception("_refresh_ood_data failed for fs_key=%s", fs_key)
+        return None, f"Error refreshing OOD data for {fs_key} — see server log.", pd.DataFrame()
 
 
 def _export_ood_csv(
@@ -558,87 +745,100 @@ def _export_ood_csv(
     Returns ``gr.update(value=path, visible=True)`` on success,
     or ``gr.update(value=None, visible=False)`` when no data is available.
     """
-    import tempfile
-
-    ood_results = session.get("ood_results", {})
-    features_df = session.get("features_df")
-    comps_df = session.get("compositions_df")
-    target = session.get("target")
-    ood_split_indices = session.get("ood_split_indices", {})
-
-    if not ood_results or features_df is None:
-        return gr.update(value=None, visible=False)
-
-    ood_res = ood_results.get(fs_key)
-    if ood_res is None:
-        return gr.update(value=None, visible=False)
-
-    from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
     try:
-        fs_enum = FeatureSetName(fs_key)
-        cols = FeatureCatalog.columns(fs_enum)
-    except (ValueError, KeyError):
+        import tempfile
+
+        ood_results = session.get("ood_results", {})
+        features_df = session.get("features_df")
+        comps_df = session.get("compositions_df")
+        target = session.get("target")
+        ood_split_indices = session.get("ood_split_indices", {})
+
+        if not ood_results or features_df is None:
+            return gr.update(value=None, visible=False)
+
+        ood_res = ood_results.get(fs_key)
+        if ood_res is None:
+            return gr.update(value=None, visible=False)
+
+        # In generic CSV mode, use features_df columns directly
+        csv_mode = session.get("csv_mode", "hea")
+        if csv_mode == "generic":
+            cols = list(features_df.columns)
+        else:
+            from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
+            try:
+                fs_enum = FeatureSetName(fs_key)
+                cols = FeatureCatalog.columns(fs_enum)
+            except (ValueError, KeyError):
+                return gr.update(value=None, visible=False)
+
+        split = ood_split_indices.get(fs_key)
+        if split is None:
+            return gr.update(value=None, visible=False)
+
+        _, test_idx_arr = split
+        test_idx_arr = np.asarray(test_idx_arr)
+
+        # Build export dataframe for ALL test (query) samples
+        rows: List[Dict[str, Any]] = []
+        for local_i, global_i in enumerate(test_idx_arr):
+            if global_i >= len(features_df):
+                continue
+            row: Dict[str, Any] = {}
+            # Add composition columns if available
+            if comps_df is not None and global_i < len(comps_df):
+                for c in comps_df.columns:
+                    row[c] = comps_df.iloc[global_i][c]
+            # Add target if available
+            if target is not None and global_i < len(target):
+                row["target"] = target.iloc[global_i]
+            # Add feature values
+            for c in cols:
+                if c in features_df.columns:
+                    row[c] = features_df.iloc[global_i][c]
+            # Add OOD info
+            if local_i < len(ood_res.composite_scores):
+                row["OOD_Score"] = round(float(ood_res.composite_scores[local_i]), 4)
+                row["is_OOD"] = bool(ood_res.is_ood[local_i])
+            rows.append(row)
+
+        if not rows:
+            return gr.update(value=None, visible=False)
+
+        # Columnar construction to avoid DataFrame fragmentation / SIGSEGV
+        if rows:
+            col_names = list(rows[0].keys())
+            export_df = pd.DataFrame(
+                {k: [r[k] for r in rows] for k in col_names}
+            )
+        else:
+            export_df = pd.DataFrame()
+        # Sort: OOD samples first, then by score descending
+        export_df = export_df.sort_values(
+            ["is_OOD", "OOD_Score"], ascending=[False, False],
+        ).reset_index(drop=True)
+
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        tmp_path = Path(tempfile.gettempdir()) / f"ood_{fs_key}_{timestamp}.csv"
+        export_df.to_csv(tmp_path, index=False, encoding="utf-8-sig")
+
+        return gr.update(value=str(tmp_path), visible=True)
+    except Exception:
+        logger.exception("_export_ood_csv failed for fs_key=%s", fs_key)
         return gr.update(value=None, visible=False)
-
-    split = ood_split_indices.get(fs_key)
-    if split is None:
-        return gr.update(value=None, visible=False)
-
-    _, test_idx_arr = split
-    test_idx_arr = np.asarray(test_idx_arr)
-
-    # Build export dataframe for ALL test (query) samples
-    rows: List[Dict[str, Any]] = []
-    for local_i, global_i in enumerate(test_idx_arr):
-        if global_i >= len(features_df):
-            continue
-        row: Dict[str, Any] = {}
-        # Add composition columns if available
-        if comps_df is not None and global_i < len(comps_df):
-            for c in comps_df.columns:
-                row[c] = comps_df.iloc[global_i][c]
-        # Add target if available
-        if target is not None and global_i < len(target):
-            row["target"] = target.iloc[global_i]
-        # Add feature values
-        for c in cols:
-            if c in features_df.columns:
-                row[c] = features_df.iloc[global_i][c]
-        # Add OOD info
-        if local_i < len(ood_res.composite_scores):
-            row["OOD_Score"] = round(float(ood_res.composite_scores[local_i]), 4)
-            row["is_OOD"] = bool(ood_res.is_ood[local_i])
-        rows.append(row)
-
-    if not rows:
-        return gr.update(value=None, visible=False)
-
-    # Columnar construction to avoid DataFrame fragmentation / SIGSEGV
-    if rows:
-        col_names = list(rows[0].keys())
-        export_df = pd.DataFrame(
-            {k: [r[k] for r in rows] for k in col_names}
-        )
-    else:
-        export_df = pd.DataFrame()
-    # Sort: OOD samples first, then by score descending
-    export_df = export_df.sort_values(
-        ["is_OOD", "OOD_Score"], ascending=[False, False],
-    ).reset_index(drop=True)
-
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    tmp_path = Path(tempfile.gettempdir()) / f"ood_{fs_key}_{timestamp}.csv"
-    export_df.to_csv(tmp_path, index=False, encoding="utf-8-sig")
-
-    return gr.update(value=str(tmp_path), visible=True)
 
 
 def _refresh_report_data(session: Dict[str, Any]) -> Tuple:
-    report_path = session.get("report_path")
-    if report_path is None or not Path(report_path).exists():
-        return "*No report available.*", None
-    content = Path(report_path).read_text(encoding="utf-8")
-    return content, str(report_path)
+    try:
+        report_path = session.get("report_path")
+        if report_path is None or not Path(report_path).exists():
+            return "*No report available.*", None
+        content = Path(report_path).read_text(encoding="utf-8")
+        return content, str(report_path)
+    except Exception:
+        logger.exception("_refresh_report_data failed")
+        return "*Error loading report — see server log.*", None
 
 
 # ---------------------------------------------------------------------------
@@ -805,39 +1005,46 @@ def _refresh_data_summary(
     session: Dict[str, Any],
 ) -> Tuple:
     """Refresh the Data Summary tab from session state."""
-    comps_df = session.get("compositions_df")
-    features_df = session.get("features_df")
-    target = session.get("target")
+    try:
+        comps_df = session.get("compositions_df")
+        features_df = session.get("features_df")
+        target = session.get("target")
 
-    # Consolidate features_df to a single memory block before heavy
-    # numpy operations (.describe(), .corr()) that can SIGSEGV on
-    # fragmented DataFrames.
-    if features_df is not None and not features_df.empty:
-        features_df = _consolidate_df(features_df)
-        session["features_df"] = features_df
+        # Consolidate features_df to a single memory block before heavy
+        # numpy operations (.describe(), .corr()) that can SIGSEGV on
+        # fragmented DataFrames.
+        if features_df is not None and not features_df.empty:
+            features_df = _consolidate_df(features_df)
+            session["features_df"] = features_df
 
-    stats_md = build_summary_stats_md(comps_df, features_df, target)
+        stats_md = build_summary_stats_md(comps_df, features_df, target)
 
-    if comps_df is not None and target is not None:
-        target_fig = plotly_target_histogram(target)
-        comp_fig = plotly_composition_heatmap(comps_df)
-    else:
-        target_fig = None
-        comp_fig = None
+        if comps_df is not None and target is not None:
+            target_fig = plotly_target_histogram(target)
+            comp_fig = plotly_composition_heatmap(comps_df)
+        else:
+            target_fig = None
+            comp_fig = None
 
-    if features_df is not None and not features_df.empty:
-        corr_fig = plotly_feature_correlation(features_df, target=target)
-    else:
-        corr_fig = None
+        if features_df is not None and not features_df.empty:
+            corr_fig = plotly_feature_correlation(features_df, target=target)
+        else:
+            corr_fig = None
 
-    desc_df = pd.DataFrame()
-    if features_df is not None and not features_df.empty:
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", pd.errors.PerformanceWarning)
-            desc_df = features_df.describe().round(3).reset_index()
-        desc_df.rename(columns={"index": "Statistic"}, inplace=True)
+        desc_df = pd.DataFrame()
+        if features_df is not None and not features_df.empty:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", pd.errors.PerformanceWarning)
+                desc_df = features_df.describe().round(3).reset_index()
+            desc_df.rename(columns={"index": "Statistic"}, inplace=True)
 
-    return stats_md, target_fig, comp_fig, corr_fig, desc_df
+        return stats_md, target_fig, comp_fig, corr_fig, desc_df
+    except Exception:
+        logger.exception("_refresh_data_summary failed")
+        return (
+            build_summary_stats_md(None, None, None),
+            None, None, None, pd.DataFrame(),
+        )
 
 
 def _make_error_banner(title: str, detail: str) -> str:
@@ -849,6 +1056,298 @@ def _make_error_banner(title: str, detail: str) -> str:
         f'\u26a0\ufe0f {title}</span><br/>'
         f'<span style="color:#742a2a;">{detail}</span></div>'
     )
+
+
+# ---------------------------------------------------------------------------
+# CSV format analysis
+# ---------------------------------------------------------------------------
+
+def _analyze_csv_format(
+    file_path: str,
+) -> Tuple[pd.DataFrame, str, List[str], List[str]]:
+    """Analyze CSV format and return analysis results.
+
+    Returns
+    -------
+    raw : pd.DataFrame
+        The loaded DataFrame.
+    format_html : str
+        HTML report with per-column analysis.
+    numeric_cols : list[str]
+        Names of numeric columns.
+    string_cols : list[str]
+        Names of string/object columns.
+    constant_cols : list[str]
+        Names of numeric columns with zero variance (nunique <= 1).
+    """
+    import os
+
+    fname = os.path.basename(file_path)
+    raw = pd.read_csv(file_path)
+    n_rows, n_cols = raw.shape
+
+    # Per-column analysis
+    col_info: List[Dict[str, str]] = []
+    numeric_cols: List[str] = []
+    string_cols: List[str] = []
+    datetime_cols: List[str] = []
+    missing_cols: List[Tuple[str, int, float]] = []
+    constant_cols: List[str] = []
+
+    for col in raw.columns:
+        dtype = str(raw[col].dtype)
+        non_null = int(raw[col].notna().sum())
+        n_missing = n_rows - non_null
+        pct_missing = n_missing / n_rows * 100 if n_rows > 0 else 0.0
+
+        # Sample values (first 3 non-null)
+        sample_vals = raw[col].dropna().head(3).tolist()
+        sample_str = ", ".join(str(v) for v in sample_vals)
+        if len(sample_str) > 60:
+            sample_str = sample_str[:57] + "..."
+
+        is_numeric = pd.api.types.is_numeric_dtype(raw[col])
+        if is_numeric:
+            numeric_cols.append(col)
+            dtype_label = "numeric"
+        elif pd.api.types.is_datetime64_any_dtype(raw[col]):
+            datetime_cols.append(col)
+            dtype_label = "datetime"
+        else:
+            string_cols.append(col)
+            dtype_label = "string"
+
+        if n_missing > 0:
+            missing_cols.append((col, n_missing, pct_missing))
+
+        if is_numeric and raw[col].nunique() <= 1:
+            constant_cols.append(col)
+
+        col_info.append({
+            "name": col,
+            "dtype": dtype,
+            "dtype_label": dtype_label,
+            "non_null": str(non_null),
+            "missing": str(n_missing),
+            "pct_missing": f"{pct_missing:.1f}%",
+            "sample": sample_str,
+        })
+
+    # Build HTML report
+    lines: List[str] = []
+    lines.append(
+        f'<div style="background:#f8f9fa; border:1px solid #dee2e6; '
+        f'border-radius:8px; padding:16px; margin:8px 0;">'
+    )
+    lines.append(
+        f'<h3 style="margin-top:0;">CSV書式確認</h3>'
+    )
+    lines.append(
+        f'<b>ファイル名</b>: <code>{html_mod.escape(fname)}</code><br/>'
+        f'<b>サイズ</b>: {n_rows} 行 &times; {n_cols} 列<br/>'
+        f'<b>数値列</b>: {len(numeric_cols)} 列 / '
+        f'<b>文字列列</b>: {len(string_cols)} 列'
+    )
+    if datetime_cols:
+        lines.append(f' / <b>日時列</b>: {len(datetime_cols)} 列')
+    lines.append('<br/>')
+
+    # Warnings
+    warn_lines: List[str] = []
+    if missing_cols:
+        top_missing = sorted(missing_cols, key=lambda x: -x[1])[:5]
+        warn_items = [
+            f"<code>{html_mod.escape(c)}</code> ({n}件, {p:.1f}%)"
+            for c, n, p in top_missing
+        ]
+        warn_lines.append(
+            f'欠損値あり: {", ".join(warn_items)}'
+        )
+    if constant_cols:
+        warn_lines.append(
+            f'定数列 (分散0): <code>{html_mod.escape(", ".join(constant_cols[:5]))}</code>'
+        )
+    if not numeric_cols:
+        warn_lines.append('数値列が見つかりません。説明変数・目的変数を選択できません。')
+
+    if warn_lines:
+        lines.append(
+            '<div style="background:#fff3cd; border-left:4px solid #ffc107; '
+            'padding:8px 12px; margin:8px 0; border-radius:4px;">'
+        )
+        lines.append('<b>注意:</b><br/>')
+        for w in warn_lines:
+            lines.append(f'&bull; {w}<br/>')
+        lines.append('</div>')
+
+    # Column table
+    lines.append(
+        '<table style="width:100%; border-collapse:collapse; '
+        'font-size:13px; margin-top:8px;">'
+    )
+    lines.append(
+        '<tr style="background:#e9ecef;">'
+        '<th style="padding:4px 8px; text-align:left;">列名</th>'
+        '<th style="padding:4px 8px; text-align:left;">型</th>'
+        '<th style="padding:4px 8px; text-align:right;">非NULL</th>'
+        '<th style="padding:4px 8px; text-align:right;">欠損</th>'
+        '<th style="padding:4px 8px; text-align:left;">サンプル値</th>'
+        '</tr>'
+    )
+    for ci in col_info:
+        bg = "#fff" if ci["dtype_label"] != "string" else "#f8f8f8"
+        icon = {
+            "numeric": "&#x1F522;",
+            "string": "&#x1F524;",
+            "datetime": "&#x1F4C5;",
+        }.get(ci["dtype_label"], "")
+        lines.append(
+            f'<tr style="background:{bg}; border-bottom:1px solid #eee;">'
+            f'<td style="padding:4px 8px;"><code>{html_mod.escape(ci["name"])}</code></td>'
+            f'<td style="padding:4px 8px;">{icon} {ci["dtype_label"]}</td>'
+            f'<td style="padding:4px 8px; text-align:right;">{ci["non_null"]}</td>'
+            f'<td style="padding:4px 8px; text-align:right;">{ci["missing"]}</td>'
+            f'<td style="padding:4px 8px; font-size:12px;">{html_mod.escape(ci["sample"])}</td>'
+            f'</tr>'
+        )
+    lines.append('</table>')
+    lines.append('</div>')
+
+    format_html = "\n".join(lines)
+
+    return raw, format_html, numeric_cols, string_cols, constant_cols
+
+
+def _handle_generic_csv(
+    raw: pd.DataFrame,
+    feature_cols: List[str],
+    target_col: str,
+    session: Dict[str, Any],
+) -> Tuple:
+    """Handle a generic CSV (non-HEA) with user-selected columns.
+
+    Instead of computing HEA-specific features, uses the user-selected
+    columns directly as features.  Numeric columns are used as-is;
+    string/categorical columns are automatically one-hot encoded.
+
+    Returns the same tuple shape as ``_handle_csv_upload``.
+    """
+    # Strip [文字列] annotation tag added by the UI
+    feature_cols = [c.replace(" [文字列]", "") for c in feature_cols]
+
+    if not feature_cols:
+        return (
+            _make_error_banner(
+                "説明変数が選択されていません",
+                "少なくとも1つの列を説明変数として選択してください。",
+            ),
+            None, None, None, pd.DataFrame(), session,
+        )
+
+    target_col_clean = target_col.strip() if target_col else ""
+    if not target_col_clean or target_col_clean not in raw.columns:
+        return (
+            _make_error_banner(
+                "目的変数が選択されていません",
+                "Dropdown から目的変数を1つ選択してください。",
+            ),
+            None, None, None, pd.DataFrame(), session,
+        )
+
+    # Drop rows where target is NaN
+    valid_mask = raw[target_col_clean].notna()
+    raw_valid = raw.loc[valid_mask].copy().reset_index(drop=True)
+
+    if raw_valid.empty:
+        return (
+            _make_error_banner(
+                "有効なデータ行なし",
+                "目的変数列の値がすべてNaNです。",
+            ),
+            None, None, None, pd.DataFrame(), session,
+        )
+
+    # Build features DataFrame from selected columns
+    # Safety: remove target from features to prevent data leakage
+    feature_cols = [c for c in feature_cols if c != target_col_clean]
+    if not feature_cols:
+        return (
+            _make_error_banner(
+                "説明変数が選択されていません",
+                "目的変数以外の列を説明変数として選択してください。",
+            ),
+            None, None, None, pd.DataFrame(), session,
+        )
+
+    # Separate numeric and string columns
+    numeric_feat_cols = [
+        c for c in feature_cols
+        if pd.api.types.is_numeric_dtype(raw_valid[c])
+    ]
+    string_feat_cols = [
+        c for c in feature_cols
+        if not pd.api.types.is_numeric_dtype(raw_valid[c])
+    ]
+
+    # Build numeric features
+    parts: List[pd.DataFrame] = []
+    if numeric_feat_cols:
+        num_df = raw_valid[numeric_feat_cols].copy()
+        # Fill NaN with column median
+        for col in num_df.columns:
+            if num_df[col].isna().any():
+                median_val = num_df[col].median()
+                num_df[col] = num_df[col].fillna(
+                    median_val if pd.notna(median_val) else 0.0
+                )
+        num_df = num_df.astype("float64")
+        parts.append(num_df)
+
+    # One-hot encode string columns
+    if string_feat_cols:
+        for col in string_feat_cols:
+            s = raw_valid[col].fillna("_NA_").astype(str)
+            dummies = pd.get_dummies(s, prefix=col, dtype="float64")
+            parts.append(dummies)
+
+    if not parts:
+        return (
+            _make_error_banner(
+                "有効な特徴量がありません",
+                "選択された列から特徴量を生成できませんでした。",
+            ),
+            None, None, None, pd.DataFrame(), session,
+        )
+
+    features_df = pd.concat(parts, axis=1).reset_index(drop=True)
+
+    # Consolidate to C-contiguous
+    features_df = _consolidate_df(features_df)
+
+    # Build target
+    target = raw_valid[target_col_clean].astype("float64").reset_index(
+        drop=True,
+    )
+    target.name = target_col_clean
+
+    # Use features_df as both compositions_df and features_df
+    # (compositions_df is only used for HEA-specific plots;
+    #  for generic CSV we pass features_df as placeholder)
+    comps_df = features_df.copy()
+
+    session["compositions_df"] = comps_df
+    session["features_df"] = features_df
+    session["target"] = target
+    session["csv_mode"] = "generic"  # flag for downstream
+
+    stats_md = build_summary_stats_md(comps_df, features_df, target)
+    target_fig = plotly_target_histogram(target)
+    comp_fig = None  # no element composition for generic CSV
+    corr_fig = plotly_feature_correlation(features_df, target=target)
+    desc_df = features_df.describe().round(3).reset_index()
+    desc_df.rename(columns={"index": "Statistic"}, inplace=True)
+
+    return stats_md, target_fig, comp_fig, corr_fig, desc_df, session
 
 
 def _detect_element_columns(
@@ -910,16 +1409,28 @@ def _handle_csv_upload(
     file_obj: Any,
     target_col: str,
     session: Dict[str, Any],
+    selected_features: Optional[List[str]] = None,
+    force_generic: bool = False,
+    force_hea: bool = False,
 ) -> Tuple:
     """Handle CSV file upload and compute features.
 
-    Expected CSV format: element columns (atomic fractions summing to ~1)
-    plus an optional target column.  Non-element columns that are not
-    the target column are silently ignored during feature computation.
+    Supports two modes:
 
-    Element column detection is flexible — supports bare symbols
-    (``Fe``), ``_frac`` suffix (``Al_frac``), ``_at%``, ``_wt%``,
-    and case-insensitive variants.
+    **HEA mode** (default when element columns are detected):
+      Element columns (atomic fractions) are used to compute
+      domain-specific HEA features via ``compute_features()``.
+
+    **Generic mode** (when no element columns or ``force_generic=True``):
+      User-selected numeric columns are used directly as features.
+      ``selected_features`` specifies which columns to use.
+
+    Parameters
+    ----------
+    force_hea : bool
+        When True (user selected "HEA (元素列)" mode), require element
+        columns to exist.  If none are detected, return an error banner
+        instead of silently falling back to generic mode.
 
     Returns the same tuple shape as ``_refresh_data_summary`` plus the
     updated session.
@@ -950,33 +1461,47 @@ def _handle_csv_upload(
         )
 
         available = set(_ElementDB.available_elements())
-        target_col_clean = target_col.strip()
+        target_col_clean = target_col.strip() if target_col else ""
 
         # Flexible element column detection
         elem_cols, col_to_elem = _detect_element_columns(
             list(raw.columns), available,
         )
 
-        if not elem_cols:
-            sample_cols = ", ".join(list(raw.columns)[:10])
-            avail_str = ", ".join(sorted(available)[:15])
+        # Decide mode: HEA vs Generic
+        if force_hea and not elem_cols:
             return (
                 _make_error_banner(
-                    "元素列が見つかりません",
-                    "CSVの列名から元素記号を検出できませんでした。<br/>"
-                    f"<b>CSVの列名（先頭10列）</b>: <code>{sample_cols}</code><br/>"
-                    f"<b>対応している元素記号</b>: <code>{avail_str}</code><br/><br/>"
-                    "以下の命名規則に対応しています:<br/>"
-                    "<code>Fe</code>, <code>Fe_frac</code>, "
-                    "<code>Fe_at%</code>, <code>Fe_wt%</code> "
-                    "（大文字小文字不問）",
+                    "HEAモード選択エラー",
+                    "元素列が検出されませんでした。"
+                    "HEA (元素列) モードを使用するには、"
+                    "元素名 (例: Fe, Ni, Co) または元素分率 "
+                    "(例: Fe_frac, Ni_at%) の列が必要です。"
+                    "<br>自動検出 (auto) または汎用 (Generic) "
+                    "モードをお試しください。",
                 ),
                 None, None, None, pd.DataFrame(), session,
             )
+        use_generic = force_generic or (not elem_cols)
+
+        if use_generic:
+            # --- Generic CSV mode ---
+            feat_cols = selected_features if selected_features is not None else []
+            if not feat_cols:
+                # Auto-select all numeric columns except target
+                feat_cols = [
+                    c for c in raw.columns
+                    if pd.api.types.is_numeric_dtype(raw[c])
+                    and c != target_col_clean
+                ]
+            return _handle_generic_csv(
+                raw, feat_cols, target_col_clean, session,
+            )
+
+        # --- HEA mode ---
+        session["csv_mode"] = "hea"
 
         # Build compositions list using canonical element symbols.
-        # Track valid row indices to keep all DataFrames aligned
-        # (rows with all-zero elements are dropped).
         valid_indices: List[int] = []
         compositions = []
         for idx, row in raw[elem_cols].iterrows():
@@ -1030,8 +1555,6 @@ def _handle_csv_upload(
         target_fig = plotly_target_histogram(target)
         comp_fig = plotly_composition_heatmap(comps_df)
         corr_fig = plotly_feature_correlation(features_df, target=target)
-        # features_df is now built columnar (non-fragmented) in
-        # compute_features(); no extra .copy() needed.
         desc_df = features_df.describe().round(3).reset_index()
         desc_df.rename(columns={"index": "Statistic"}, inplace=True)
 
@@ -1305,7 +1828,9 @@ def _run_feature_selection_for_fs(
 
     consensus_md = "\n".join(consensus_lines)
 
-    return (result_md, fig, consensus_md, session)
+    # Return consensus_features so the Gradio handler can reflect them
+    # back into csv_feature_checks automatically.
+    return (result_md, fig, consensus_md, session, summary.consensus_features)
 
 
 # ---------------------------------------------------------------------------
@@ -1313,7 +1838,7 @@ def _run_feature_selection_for_fs(
 # ---------------------------------------------------------------------------
 
 # Current PR / build version tag shown in the GUI title bar.
-_GUI_VERSION_TAG = "PR#114"
+_GUI_VERSION_TAG = "PR#137"
 
 
 def create_app() -> gr.Blocks:
@@ -1327,16 +1852,21 @@ def create_app() -> gr.Blocks:
             f"# Extrapolation Discovery Platform &ensp;"
             f"<small style='color:#888;'>({_GUI_VERSION_TAG})</small>\n"
             "Feature Validity Evaluation & OOD Detection Dashboard\n\n"
-            "**使い方**: Config & Run タブでパラメータを設定し、"
-            "\"Run Analysis\" を押すと全タブが自動更新されます。"
+            "**使い方**: **前処理** → **解析** → **後処理** の順にタブを進めてください。"
+            "まず Config & Run でCSVアップロード＆解析実行し、結果を各タブで確認します。"
         )
 
         # Fix #1: per-user session state via gr.State
         state = gr.State(_empty_session)
 
         with gr.Tabs():
+          # =============================================================
+          # Phase 1: 前処理 (Data Preparation)
+          # =============================================================
+          with gr.Tab("1. 前処理 (Data Preparation)"):
+            with gr.Tabs():
             # --- Tab 1: Config & Run ---
-            with gr.Tab("Config & Run"):
+              with gr.Tab("Config & Run"):
                 gr.Markdown(
                     "## Analysis Configuration & Execution\n\n"
                     "このプラットフォームは、複数のMLワークフロー×特徴量セット×"
@@ -1356,11 +1886,6 @@ def create_app() -> gr.Blocks:
                         label="\U0001F4C2 CSV Upload (任意)",
                         file_types=[".csv"],
                     )
-                    run_csv_target = gr.Textbox(
-                        label="Target Column Name",
-                        value="yield_strength_MPa",
-                        info="CSVの目的変数の列名",
-                    )
                 csv_status_html = gr.HTML(
                     value=(
                         '<div style="padding:8px 12px; background:#e8f4fd; '
@@ -1371,6 +1896,68 @@ def create_app() -> gr.Blocks:
                         '</div>'
                     ),
                 )
+
+                # --- CSV Format Analysis Panel ---
+                with gr.Accordion(
+                    "CSV書式確認 (CSV Format Analysis)",
+                    open=False,
+                ) as csv_format_accordion:
+                    csv_format_html = gr.HTML(
+                        value=(
+                            '<div style="padding:12px; color:#888; '
+                            'font-size:14px;">'
+                            'CSVファイルをアップロードすると、'
+                            'ここに書式分析結果が表示されます。'
+                            '</div>'
+                        ),
+                    )
+
+                # --- Column Role Assignment ---
+                with gr.Accordion(
+                    "説明因子・目的変数の選択 "
+                    "(Feature / Target Column Selection)",
+                    open=False,
+                ) as col_role_accordion:
+                    gr.Markdown(
+                        "CSVの列から **目的変数** (数値列1つ) と "
+                        "**説明因子** (複数列) を選択してください。\n\n"
+                        "- **数値列**: そのまま説明変数として使用\n"
+                        "- **文字列列** (元素名など): 自動で特徴量に"
+                        "変換 (One-Hot Encoding)\n"
+                        "- HEA組成データ (元素列あり) の場合は自動で "
+                        "HEA特徴量が計算されます。"
+                    )
+                    with gr.Row():
+                        run_csv_target = gr.Dropdown(
+                            label="目的変数 (Target Variable)",
+                            choices=[],
+                            value=None,
+                            interactive=True,
+                            info="予測対象の数値列を1つ選択",
+                        )
+                        csv_mode_radio = gr.Radio(
+                            label="CSV Mode",
+                            choices=["auto", "HEA (元素列)", "Generic (汎用)"],
+                            value="auto",
+                            info="auto: 元素列を自動検出",
+                        )
+                    csv_feature_checks = gr.CheckboxGroup(
+                        label="説明因子 (Explanatory Variables)",
+                        choices=[],
+                        value=[],
+                        interactive=True,
+                        info="説明変数として使用する列を選択 "
+                        "(数値列・文字列列とも選択可、目的変数は自動除外)",
+                    )
+
+                csv_read_btn = gr.Button(
+                    "\U0001F4D6 CSV読み込み (Read CSV)",
+                    variant="secondary",
+                )
+                # Hidden state to store all selectable column names
+                # from the initial full-file analysis so that
+                # _on_target_change does not need to re-read the CSV.
+                csv_all_cols_state = gr.State(value=[])
 
                 with gr.Row():
                     with gr.Column():
@@ -1405,10 +1992,18 @@ def create_app() -> gr.Blocks:
                             info="Skip PNG generation (Plotly always available)",
                         )
 
-                # Update CSV status when file is uploaded/removed
-                def _update_csv_status(file_obj: Any) -> str:
+                # --- CSV upload handler: analyze format + populate dropdowns ---
+                def _on_csv_upload(file_obj: Any) -> Tuple:
+                    """When CSV is uploaded, analyze format and populate column selectors."""
                     if file_obj is None:
-                        return (
+                        empty_format = (
+                            '<div style="padding:12px; color:#888; '
+                            'font-size:14px;">'
+                            'CSVファイルをアップロードすると、'
+                            'ここに書式分析結果が表示されます。'
+                            '</div>'
+                        )
+                        status = (
                             '<div style="padding:8px 12px; background:#e8f4fd; '
                             'border-left:4px solid #2196F3; border-radius:4px; '
                             'margin:4px 0; font-size:14px;">'
@@ -1417,26 +2012,268 @@ def create_app() -> gr.Blocks:
                             '（CSVをアップロードすると切替）'
                             '</div>'
                         )
-                    fname = (
-                        file_obj.name.split("/")[-1]
-                        if hasattr(file_obj, "name")
-                        else "uploaded.csv"
-                    )
-                    return (
-                        '<div style="padding:8px 12px; background:#e8f5e9; '
-                        'border-left:4px solid #4CAF50; border-radius:4px; '
-                        'margin:4px 0; font-size:14px;">'
-                        f'\u2705 <b>データソース</b>: '
-                        f'<code>{html_mod.escape(fname)}</code> を使用します'
-                        '（Number of Samples は無視されます）'
-                        '</div>'
-                    )
+                        return (
+                            status,
+                            empty_format,
+                            gr.update(choices=[], value=None),
+                            gr.update(choices=[], value=[]),
+                            gr.update(open=False),
+                            gr.update(open=False),
+                            [],                      # empty numeric cols
+                        )
+
+                    try:
+                        file_path = (
+                            file_obj.name
+                            if hasattr(file_obj, "name")
+                            else str(file_obj)
+                        )
+                        raw, format_html, numeric_cols, string_cols, constant_cols = (
+                            _analyze_csv_format(file_path)
+                        )
+
+                        fname = (
+                            file_obj.name.split("/")[-1]
+                            if hasattr(file_obj, "name")
+                            else "uploaded.csv"
+                        )
+                        status = (
+                            '<div style="padding:8px 12px; background:#e8f5e9; '
+                            'border-left:4px solid #4CAF50; border-radius:4px; '
+                            'margin:4px 0; font-size:14px;">'
+                            f'\u2705 <b>データソース</b>: '
+                            f'<code>{html_mod.escape(fname)}</code> '
+                            f'({raw.shape[0]}行 &times; {raw.shape[1]}列) '
+                            '— 目的変数と説明因子を選択してください'
+                            '</div>'
+                        )
+
+                        # Auto-select target: last numeric column as guess
+                        default_target = (
+                            numeric_cols[-1] if numeric_cols else None
+                        )
+
+                        # Build all selectable columns:
+                        # numeric + string (for feature generation)
+                        all_cols = numeric_cols + string_cols
+
+                        # Auto-select features: all numeric except target
+                        # and uninformative columns detected by heuristic.
+                        # String columns are NOT auto-selected but
+                        # available for manual selection.
+                        _const_set = set(constant_cols)
+                        _uninformative: set = set(_const_set)
+                        for _col in numeric_cols:
+                            if _col == default_target or _col in _const_set:
+                                continue
+                            _s = raw[_col].dropna()
+                            if len(_s) == 0:
+                                _uninformative.add(_col)
+                                continue
+                            # Detect ID-like: integer, all unique, monotonic
+                            _is_int = _s.dtype.kind in ("i", "u") or (
+                                _s.dtype.kind == "f"
+                                and (_s == _s.astype(int)).all()
+                            )
+                            _all_unique = _s.nunique() == len(_s)
+                            _monotonic = (
+                                _s.is_monotonic_increasing
+                                or _s.is_monotonic_decreasing
+                            )
+                            if _is_int and _all_unique and _monotonic:
+                                _uninformative.add(_col)
+                        default_features = [
+                            c for c in numeric_cols
+                            if c != default_target
+                            and c not in _uninformative
+                        ]
+                        # Feature checkbox choices: all columns except
+                        # target. Annotate string cols with [文字列] tag
+                        # so users can distinguish types.
+                        _str_set = set(string_cols)
+                        feature_choices = [
+                            (f"{c} [文字列]" if c in _str_set else c)
+                            for c in all_cols
+                            if c != default_target
+                        ]
+
+                        return (
+                            status,
+                            format_html,
+                            gr.update(
+                                choices=numeric_cols,
+                                value=default_target,
+                            ),
+                            gr.update(
+                                choices=feature_choices,
+                                value=default_features,
+                            ),
+                            gr.update(open=True),   # open format accordion
+                            gr.update(open=True),   # open column role accordion
+                            # Store annotated choices (with [文字列] tags)
+                            # so _on_target_change can rebuild properly
+                            [
+                                (f"{c} [文字列]" if c in _str_set else c)
+                                for c in all_cols
+                            ],
+                        )
+                    except Exception:
+                        err = traceback.format_exc()
+                        err_html = _make_error_banner(
+                            "CSV読み込みエラー",
+                            f"<pre style='background:#fff5f5; padding:8px; "
+                            f"overflow-x:auto;'>{html_mod.escape(err)}</pre>",
+                        )
+                        return (
+                            err_html, err_html,
+                            gr.update(choices=[], value=None),
+                            gr.update(choices=[], value=[]),
+                            gr.update(open=True),
+                            gr.update(open=False),
+                            [],                      # empty numeric cols
+                        )
 
                 run_csv_upload.change(
-                    fn=_update_csv_status,
+                    fn=_on_csv_upload,
                     inputs=[run_csv_upload],
-                    outputs=[csv_status_html],
+                    outputs=[
+                        csv_status_html,
+                        csv_format_html,
+                        run_csv_target,
+                        csv_feature_checks,
+                        csv_format_accordion,
+                        col_role_accordion,
+                        csv_all_cols_state,
+                    ],
                 )
+
+                # When target changes, update feature checkboxes
+                # to exclude the target from the feature list.
+                def _on_target_change(
+                    target_col: Optional[str],
+                    all_features: List[str],
+                    all_cols_cached: List[str],
+                ) -> Any:
+                    """Remove target from feature selection.
+
+                    Uses the cached all_cols list from the initial
+                    full-file analysis instead of re-reading the CSV.
+                    Preserves [文字列] annotations on string columns.
+                    """
+                    if not target_col or not all_cols_cached:
+                        return gr.update()
+                    choices = [
+                        c for c in all_cols_cached
+                        if c != target_col
+                    ]
+                    # Keep currently selected features minus target
+                    # (strip [文字列] tag for comparison)
+                    new_val = [
+                        f for f in all_features
+                        if f.replace(" [文字列]", "") != target_col
+                    ]
+                    return gr.update(
+                        choices=choices, value=new_val,
+                    )
+
+                run_csv_target.change(
+                    fn=_on_target_change,
+                    inputs=[
+                        run_csv_target, csv_feature_checks,
+                        csv_all_cols_state,
+                    ],
+                    outputs=[csv_feature_checks],
+                )
+
+                # --- CSV Read button handler ---
+                # Reads the uploaded CSV and updates Data Summary
+                # tab without running the full analysis.
+                def _read_csv_preview(
+                    file_obj: Any,
+                    target_col: Optional[str],
+                    selected_features: List[str],
+                    csv_mode: str,
+                    session: Dict[str, Any],
+                ) -> Tuple:
+                    """Read CSV and preview in Data Summary tab."""
+                    if file_obj is None:
+                        no_file_html = (
+                            '<div style="padding:8px 12px; '
+                            'background:#fff3e0; '
+                            'border-left:4px solid #FF9800; '
+                            'border-radius:4px; '
+                            'margin:4px 0; font-size:14px;">'
+                            '\u26a0\ufe0f <b>CSVファイルが選択されて'
+                            'いません</b>: '
+                            'まずCSVファイルをアップロードしてください。'
+                            '</div>'
+                        )
+                        return (
+                            no_file_html,
+                            build_summary_stats_md(None, None, None),
+                            None, None, None, pd.DataFrame(),
+                            session,
+                        )
+                    force_generic = (csv_mode == "Generic (汎用)")
+                    force_hea = (csv_mode == "HEA (元素列)")
+                    target_str = target_col if target_col else ""
+                    result = _handle_csv_upload(
+                        file_obj, target_str, session,
+                        selected_features=selected_features,
+                        force_generic=force_generic,
+                        force_hea=force_hea,
+                    )
+                    # result = (stats_md, fig, fig, fig, df, session)
+                    updated_session = result[-1]
+                    stats_md = result[0]
+                    # Build status HTML
+                    if updated_session.get("compositions_df") is not None:
+                        n_samp = len(
+                            updated_session["compositions_df"]
+                        )
+                        n_feat = (
+                            updated_session["features_df"].shape[1]
+                        )
+                        mode_label = updated_session.get(
+                            "csv_mode", "auto",
+                        )
+                        fname = (
+                            file_obj.name.split("/")[-1]
+                            if hasattr(file_obj, "name")
+                            else "uploaded.csv"
+                        )
+                        status_html = (
+                            '<div style="padding:8px 12px; '
+                            'background:#e8f5e9; '
+                            'border-left:4px solid #4CAF50; '
+                            'border-radius:4px; '
+                            'margin:4px 0; font-size:14px;">'
+                            f'\u2705 <b>CSV読み込み完了</b>: '
+                            f'<code>{html_mod.escape(fname)}</code>'
+                            f' — {n_samp}サンプル, '
+                            f'{n_feat}特徴量 '
+                            f'(mode: {mode_label}) '
+                            '（Data Summaryタブで確認できます）'
+                            '</div>'
+                        )
+                    else:
+                        # Error case — stats_md contains the error
+                        status_html = (
+                            '<div style="padding:8px 12px; '
+                            'background:#ffebee; '
+                            'border-left:4px solid #F44336; '
+                            'border-radius:4px; '
+                            'margin:4px 0; font-size:14px;">'
+                            '\u274c <b>CSV読み込みエラー</b>: '
+                            'Data Summaryタブでエラー詳細を確認して'
+                            'ください。'
+                            '</div>'
+                        )
+                    return (
+                        status_html,
+                        *result[:-1],  # stats_md, figs, df
+                        updated_session,
+                    )
 
                 # --- ML Algorithm Selection ---
                 with gr.Accordion(
@@ -1446,12 +2283,27 @@ def create_app() -> gr.Blocks:
                     gr.Markdown(
                         "実行するMLワークフローを選択してください。\n\n"
                         "- **WF-LIN** (Ridge回帰): 特徴量の符号検証・リーク検出に有効\n"
+                        "- **WF-LASSO** (Lasso回帰): L1正則化によるスパース特徴量選択\n"
+                        "- **WF-ARD** (ARD回帰): ベイズ的自動関連度決定\n"
+                        "- **WF-RF** (Random Forest + GridSearchCV): アンサンブル決定木による非線形回帰\n"
                         "- **WF-XGB** (XGBoost + GridSearchCV): 非線形交互作用を捕捉\n"
                         "- **WF-ENS** (Seed-varied Ensemble): 予測不確実性の定量化"
                     )
                     with gr.Row():
                         wf_lin_check = gr.Checkbox(
                             label="WF-LIN (Ridge Regression)",
+                            value=True,
+                        )
+                        wf_lasso_check = gr.Checkbox(
+                            label="WF-LASSO (Lasso L1)",
+                            value=True,
+                        )
+                        wf_ard_check = gr.Checkbox(
+                            label="WF-ARD (Bayesian ARD)",
+                            value=True,
+                        )
+                        wf_rf_check = gr.Checkbox(
+                            label="WF-RF (Random Forest + HPO)",
                             value=True,
                         )
                         wf_xgb_check = gr.Checkbox(
@@ -1462,6 +2314,22 @@ def create_app() -> gr.Blocks:
                             label="WF-ENS (Ensemble UQ)",
                             value=True,
                         )
+
+                # --- Dimensionality Reduction ---
+                with gr.Accordion(
+                    "Dimensionality Reduction (次元削減)",
+                    open=True,
+                ):
+                    gr.Markdown(
+                        "PCA による次元削減を各ワークフローのパイプラインに組み込みます。\n\n"
+                        "- **ON (デフォルト)**: StandardScaler 後に PCA（分散95%保持）を適用。"
+                        "高次元特徴量の多重共線性を緩和し、学習を安定化します。\n"
+                        "- **OFF**: 次元削減なし。全特徴量をそのまま使用します。"
+                    )
+                    dim_reduction_check = gr.Checkbox(
+                        label="次元削減を行う (Apply PCA Dimensionality Reduction)",
+                        value=True,
+                    )
 
                 # --- Feature Selection Method Selection ---
                 with gr.Accordion(
@@ -1526,8 +2394,8 @@ def create_app() -> gr.Blocks:
                     label="Progress Log",
                 )
 
-            # --- Tab 2: Data Summary (Statistics only) ---
-            with gr.Tab("Data Summary"):
+              # --- Tab 2: Data Summary (Statistics only) ---
+              with gr.Tab("Data Summary"):
                 gr.Markdown(
                     "## Data Summary\n"
                     "データセットの概要統計を確認できます。"
@@ -1572,9 +2440,32 @@ def create_app() -> gr.Blocks:
                     outputs=summary_outputs,
                 )
 
+                # Wire CSV Read button (defined in Config & Run tab)
+                # to update Data Summary components cross-tab.
+                csv_read_btn.click(
+                    fn=_read_csv_preview,
+                    inputs=[
+                        run_csv_upload, run_csv_target,
+                        csv_feature_checks, csv_mode_radio,
+                        state,
+                    ],
+                    outputs=[
+                        csv_status_html,
+                        summary_stats_md, target_hist_plot,
+                        comp_bar_plot, corr_heatmap_plot,
+                        feature_stats_table,
+                        state,
+                    ],
+                )
 
-            # --- Tab 3: Dashboard ---
-            with gr.Tab("Dashboard"):
+
+          # =============================================================
+          # Phase 2: 解析 (Analysis)
+          # =============================================================
+          with gr.Tab("2. 解析 (Analysis)"):
+            with gr.Tabs():
+              # --- Tab 3: Dashboard ---
+              with gr.Tab("Dashboard"):
                 gr.Markdown("## Dashboard -- KPIs & Feature Validity")
                 gr.Markdown(
                     "**Config & Run** タブで解析を実行すると、"
@@ -1634,8 +2525,8 @@ def create_app() -> gr.Blocks:
                     outputs=dash_outputs,
                 )
 
-            # --- Tab 4: Results & FS Comparison ---
-            with gr.Tab("Results"):
+              # --- Tab 4: Results & FS Comparison ---
+              with gr.Tab("Results"):
                 gr.Markdown(
                     "## Analysis Results & Physical Interpretation\n\n"
                     "解析結果の数値データ・パリティプロット・FS比較・"
@@ -1692,8 +2583,8 @@ def create_app() -> gr.Blocks:
                         outputs=res_outputs,
                     )
 
-            # --- Tab 5: OOD Map (Out-of-Distribution) ---
-            with gr.Tab("OOD Map"):
+              # --- Tab 5: OOD Map (Out-of-Distribution) ---
+              with gr.Tab("OOD Map"):
                 gr.Markdown(
                     "## OOD (Out-of-Distribution) Map & Candidates",
                 )
@@ -1742,8 +2633,8 @@ def create_app() -> gr.Blocks:
                     outputs=[ood_csv_file],
                 )
 
-            # --- Tab 6: FS Comparison (Feature Selection + Physical Origins) ---
-            with gr.Tab("FS Comparison"):
+              # --- Tab 6: FS Comparison (Feature Selection + Physical Origins) ---
+              with gr.Tab("FS Comparison"):
                 gr.Markdown(
                     "## Feature Set Comparison & Feature Selection\n\n"
                     "各特徴量セットの物理的起源と、特徴量選択アルゴリズムの結果を表示します。"
@@ -1797,11 +2688,17 @@ def create_app() -> gr.Blocks:
                         outputs=[
                             fs_result_md, fs_importance_plot,
                             fs_consensus_md, state,
+                            csv_feature_checks,
                         ],
                     )
 
-            # --- Tab 7: Literature Search ---
-            with gr.Tab("Literature Search"):
+          # =============================================================
+          # Phase 3: 後処理 (Post-processing)
+          # =============================================================
+          with gr.Tab("3. 後処理 (Post-processing)"):
+            with gr.Tabs():
+              # --- Tab 7: Literature Search ---
+              with gr.Tab("Literature Search"):
                 gr.Markdown(
                     "## Literature Search -- Embedding + Structured Filters",
                 )
@@ -1862,8 +2759,8 @@ def create_app() -> gr.Blocks:
                     ],
                 )
 
-            # --- Tab 8: Report ---
-            with gr.Tab("Report"):
+              # --- Tab 8: Report ---
+              with gr.Tab("Report"):
                 gr.Markdown(
                     "## Analysis Report -- Markdown Preview & Download",
                 )
@@ -1895,10 +2792,16 @@ def create_app() -> gr.Blocks:
             skip_lit: bool,
             skip_plt: bool,
             use_wf_lin: bool,
+            use_wf_lasso: bool,
+            use_wf_ard: bool,
+            use_wf_rf: bool,
             use_wf_xgb: bool,
             use_wf_ens: bool,
+            use_dim_reduction: bool,
             csv_file: Any,
-            csv_target: str,
+            csv_target: Optional[str],
+            csv_features: List[str],
+            csv_mode: str,
             session: Dict[str, Any],
         ) -> Generator:
             """Generator that yields incremental progress + state.
@@ -2013,8 +2916,14 @@ def create_app() -> gr.Blocks:
                         "\n".join(log_lines), 5,
                         "Loading CSV...",
                     )
+                    force_generic = (csv_mode == "Generic (汎用)")
+                    force_hea = (csv_mode == "HEA (元素列)")
+                    target_str = csv_target if csv_target else ""
                     csv_result = _handle_csv_upload(
-                        csv_file, csv_target, session,
+                        csv_file, target_str, session,
+                        selected_features=csv_features,
+                        force_generic=force_generic,
+                        force_hea=force_hea,
                     )
                     # _handle_csv_upload returns
                     # (stats_md, fig, fig, fig, df, session)
@@ -2038,9 +2947,11 @@ def create_app() -> gr.Blocks:
                             summary_tuple=error_summary,
                         )
                         return
+                    csv_mode_label = session.get("csv_mode", "unknown")
                     log(
                         f"CSV loaded: {len(target)} samples, "
-                        f"{features_df.shape[1]} features"
+                        f"{features_df.shape[1]} features "
+                        f"(mode: {csv_mode_label})"
                     )
                 else:
                     # --- Generate sample dataset ---
@@ -2083,12 +2994,18 @@ def create_app() -> gr.Blocks:
                 selected_wfs: List[str] = []
                 if use_wf_lin:
                     selected_wfs.append("WF-LIN")
+                if use_wf_lasso:
+                    selected_wfs.append("WF-LASSO")
+                if use_wf_ard:
+                    selected_wfs.append("WF-ARD")
+                if use_wf_rf:
+                    selected_wfs.append("WF-RF")
                 if use_wf_xgb:
                     selected_wfs.append("WF-XGB")
                 if use_wf_ens:
                     selected_wfs.append("WF-ENS")
                 if not selected_wfs:
-                    selected_wfs = ["WF-LIN", "WF-XGB", "WF-ENS"]
+                    selected_wfs = ["WF-LIN", "WF-LASSO", "WF-ARD", "WF-RF", "WF-XGB", "WF-ENS"]
                     log("No workflows selected; using all.")
 
                 log(
@@ -2106,6 +3023,7 @@ def create_app() -> gr.Blocks:
                     use_mlflow=True,
                     use_feast=True,
                     use_mint=True,
+                    dim_reduction=use_dim_reduction,
                 )
 
                 # --- Real-time log capture via threading ---
@@ -2150,11 +3068,43 @@ def create_app() -> gr.Blocks:
 
                 def _run_in_thread() -> None:
                     try:
-                        r, s, o = runner.run(
-                            comps_df, features_df, target,
-                            progress_callback=_progress_cb,
-                            selected_workflows=selected_wfs,
+                        csv_mode_label = session.get(
+                            "csv_mode", "hea",
                         )
+                        if csv_mode_label == "generic":
+                            # Generic CSV: override FeatureCatalog
+                            # so runner uses CSV columns as a single
+                            # feature set instead of HEA-specific ones.
+                            from hea_extrapolation_platform.features import (  # noqa: E501
+                                FeatureCatalog as _FC,
+                                FeatureSetName as _FSN,
+                            )
+                            _orig_sets = dict(_FC._SETS)
+                            try:
+                                csv_cols = list(features_df.columns)
+                                # Generic CSV has no domain-specific feature
+                                # sets. Map FS_ALL to the CSV columns and
+                                # run only FS_ALL so every workflow sees the
+                                # same full column set (workflow comparison
+                                # is the analysis; FS comparison is N/A).
+                                _FC._SETS = {
+                                    k: csv_cols
+                                    for k in _FC._SETS
+                                }
+                                r, s, o = runner.run(
+                                    features_df, features_df, target,
+                                    progress_callback=_progress_cb,
+                                    selected_workflows=selected_wfs,
+                                    selected_feature_sets=["FS_ALL"],
+                                )
+                            finally:
+                                _FC._SETS = _orig_sets
+                        else:
+                            r, s, o = runner.run(
+                                comps_df, features_df, target,
+                                progress_callback=_progress_cb,
+                                selected_workflows=selected_wfs,
+                            )
                         _result_holder["runs"] = r
                         _result_holder["scores"] = s
                         _result_holder["ood"] = o
@@ -2209,17 +3159,31 @@ def create_app() -> gr.Blocks:
                 scores = _result_holder["scores"]
                 ood_results = _result_holder["ood"]
 
-                # Free thread-local temporaries and consolidate memory
-                # before the heavy post-processing phase that builds
-                # DataFrames for every tab.
+                # Free the thread-local dict (but do NOT call
+                # gc.collect() — forcing a collection cycle can
+                # trigger SIGSEGV when numpy/pandas C-extension
+                # finalizers run on F-contiguous arrays).
                 del _result_holder
-                gc.collect()
 
                 session["runs"] = runs
                 session["validity_scores"] = scores
                 session["ood_results"] = ood_results
                 session["ood_split_indices"] = runner.ood_split_indices
+                session["mc_reports"] = runner.mc_reports or {}
                 session["runner"] = runner
+
+                # Consolidate DataFrames to single C-contiguous
+                # blocks BEFORE the post-processing functions
+                # (plotly charts with PCA/StandardScaler, .corr(),
+                # .describe()) touch them.  Fragmented BlockManager
+                # frames from pandas 3.0 produce F-contiguous
+                # .values that SIGSEGV in BLAS/LAPACK.
+                if features_df is not None and not features_df.empty:
+                    features_df = _consolidate_df(features_df)
+                    session["features_df"] = features_df
+                if comps_df is not None and not comps_df.empty:
+                    comps_df = _consolidate_df(comps_df)
+                    session["compositions_df"] = comps_df
 
                 log(f"Completed: {len(runs)} runs")
 
@@ -2231,6 +3195,19 @@ def create_app() -> gr.Blocks:
                 if runner.mint_registry is not None:
                     n_mint = len(runner.mint_registry.list_workflows())
                     log(f"Workflow engine: {n_mint} workflow(s) executed")
+
+                # Log Phase 0 multicollinearity results
+                mc_rpts = session.get("mc_reports", {})
+                if mc_rpts:
+                    for _fs_key, _rpt in mc_rpts.items():
+                        log(
+                            f"Phase 0 [{_fs_key}]: "
+                            f"{_rpt.n_features_before}D->{_rpt.n_features_after}D "
+                            f"(VIF_high={_rpt.high_vif_count}, "
+                            f"level={_rpt.multicollinearity_level}) "
+                            f"allowed={_rpt.recommended_workflows} "
+                            f"blocked={_rpt.blocked_workflows}"
+                        )
 
                 if scores:
                     log(
@@ -2413,8 +3390,11 @@ def create_app() -> gr.Blocks:
             inputs=[
                 seeds_input, n_samples, quick_mode,
                 exclude_elements, skip_literature, skip_plots,
-                wf_lin_check, wf_xgb_check, wf_ens_check,
+                wf_lin_check, wf_lasso_check, wf_ard_check,
+                wf_rf_check, wf_xgb_check, wf_ens_check,
+                dim_reduction_check,
                 run_csv_upload, run_csv_target,
+                csv_feature_checks, csv_mode_radio,
                 state,
             ],
             outputs=[

@@ -41,7 +41,11 @@ import concurrent.futures
 import json
 import logging
 import os
-import resource
+try:
+    import resource
+    _HAS_RESOURCE = True
+except ImportError:
+    _HAS_RESOURCE = False  # Windows
 import time
 from dataclasses import asdict
 from pathlib import Path
@@ -64,8 +68,11 @@ from hea_extrapolation_platform.splitters import (
 from hea_extrapolation_platform.workflows import (
     BaseWorkflow,
     RunResult,
+    WorkflowARD,
     WorkflowENS,
+    WorkflowLASSO,
     WorkflowLIN,
+    WorkflowRF,
     WorkflowXGB,
 )
 from hea_extrapolation_platform.ood import OODDetector, OODResult
@@ -82,6 +89,10 @@ from hea_extrapolation_platform.integrations.mint_adapter import (
     MIntWorkflowAdapter,
     MIntWorkflowConfig,
     MIntWorkflowRegistry,
+)
+from hea_extrapolation_platform.multicollinearity import (
+    MulticollinearityReport,
+    run_phase0_multicollinearity,
 )
 
 logger = logging.getLogger(__name__)
@@ -187,6 +198,8 @@ class _Job(NamedTuple):
     train_idx: np.ndarray
     test_idx: np.ndarray
     quick: bool
+    dim_reduction: bool = True
+    force_pca: bool = False  # moderate VIF: force PCA on for linear models
 
 
 # ---------------------------------------------------------------------------
@@ -222,13 +235,20 @@ def _run_job(
     y_test  = _pd.Series(y[job.test_idx])
 
     from hea_extrapolation_platform.workflows import (
-        WorkflowLIN, WorkflowXGB, WorkflowENS,
+        WorkflowARD, WorkflowENS, WorkflowLASSO, WorkflowLIN, WorkflowRF,
+        WorkflowXGB,
     )
+    _dr = job.dim_reduction
+    _pca = _dr or job.force_pca  # force_pca=True → always PCA ON (WF-LIN only)
     wf_map: Dict[str, Any] = {
-        "WF-LIN": WorkflowLIN(),
-        "WF-XGB": WorkflowXGB(quick=job.quick),
+        "WF-LIN": WorkflowLIN(dim_reduction=_pca),
+        "WF-LASSO": WorkflowLASSO(dim_reduction=_dr),
+        "WF-ARD": WorkflowARD(dim_reduction=_dr),
+        "WF-RF": WorkflowRF(quick=job.quick, dim_reduction=_dr),
+        "WF-XGB": WorkflowXGB(quick=job.quick, dim_reduction=_dr),
         "WF-ENS": WorkflowENS(
-            n_members=3 if job.quick else 5, quick=job.quick
+            n_members=3 if job.quick else 5, quick=job.quick,
+            dim_reduction=_dr,
         ),
     }
 
@@ -287,13 +307,16 @@ class ExperimentRunner:
         use_mlflow: bool = False,
         use_feast: bool = False,
         use_mint: bool = False,
+        dim_reduction: bool = True,
     ) -> None:
         self._seeds = seeds or [42, 123, 456]
         self._quick = quick
+        self._dim_reduction = dim_reduction
         self._exclude_elements = exclude_elements or ["Co", "Ni", "Ti"]
         self._n_workers = n_workers if n_workers is not None else os.cpu_count()
         self._registry = RunRegistry()
         self._ood_split_indices: Dict[str, Tuple[np.ndarray, np.ndarray]] = {}
+        self._mc_reports: Optional[Dict[str, MulticollinearityReport]] = None
 
         if mlflow_tracker is not None:
             self._tracker = mlflow_tracker
@@ -342,6 +365,11 @@ class ExperimentRunner:
     def ood_split_indices(self) -> Dict[str, Tuple[np.ndarray, np.ndarray]]:
         return self._ood_split_indices
 
+    @property
+    def mc_reports(self) -> Optional[Dict[str, MulticollinearityReport]]:
+        """Multicollinearity reports from Phase 0 (None before run)."""
+        return self._mc_reports
+
     def run(
         self,
         compositions_df: pd.DataFrame,
@@ -349,6 +377,7 @@ class ExperimentRunner:
         target: pd.Series,
         progress_callback: Optional[Any] = None,
         selected_workflows: Optional[List[str]] = None,
+        selected_feature_sets: Optional[List[str]] = None,
     ) -> Tuple[List[RunResult], List[ValidityScore], Dict[str, OODResult]]:
         """Execute the full experiment grid in 5 phases."""
         t_start = time.time()
@@ -372,7 +401,7 @@ class ExperimentRunner:
 
         self._feature_store.store_features(features_all)
 
-        all_wf_names = ["WF-LIN", "WF-XGB", "WF-ENS"]
+        all_wf_names = ["WF-LIN", "WF-LASSO", "WF-ARD", "WF-RF", "WF-XGB", "WF-ENS"]
         mint_configs: Dict[str, MIntWorkflowConfig] = {}
         if self._mint_registry is not None:
             for wf_info in self._mint_registry.list_workflows():
@@ -387,6 +416,11 @@ class ExperimentRunner:
         )
 
         feature_sets = FeatureCatalog.list_sets()
+        if selected_feature_sets is not None:
+            feature_sets = [
+                fs for fs in feature_sets
+                if fs.value in selected_feature_sets
+            ]
         y_arr = np.asarray(target, dtype=float)
 
         self._tracker.start_run(
@@ -404,10 +438,28 @@ class ExperimentRunner:
         )
 
         try:
+            # ── Phase 0: Multicollinearity diagnostics & model selection ──
+            mc_reports = run_phase0_multicollinearity(
+                features_all, feature_sets, wf_names, len(features_all),
+            )
+            self._mc_reports = mc_reports
+            if progress_callback is not None:
+                try:
+                    progress_callback(
+                        0, 0,
+                        f"Phase 0 complete: multicollinearity diagnosed "
+                        f"for {len(mc_reports)} feature sets",
+                    )
+                except Exception:
+                    pass
+
             fold_plan = self._phase1_precompute_folds(
                 compositions_df, features_all, target
             )
-            jobs = self._phase2_build_jobs(feature_sets, wf_names, fold_plan)
+            jobs = self._phase2_build_jobs(
+                feature_sets, wf_names, fold_plan,
+                mc_reports=mc_reports,
+            )
             logger.info(
                 "Starting experiment: %d jobs, %d workers",
                 len(jobs), self._n_workers,
@@ -424,7 +476,9 @@ class ExperimentRunner:
                 features_all, feature_sets, fold_plan
             )
 
-            validity_scores = self._phase5_evaluate(ood_errors_for_eval)
+            validity_scores = self._phase5_evaluate(
+                ood_errors_for_eval, mc_reports=mc_reports,
+            )
 
             elapsed = time.time() - t_start
             run_count = len(all_results)
@@ -505,8 +559,10 @@ class ExperimentRunner:
         feature_sets: List[FeatureSetName],
         wf_names: List[str],
         fold_plan: Dict[str, List[Tuple[np.ndarray, np.ndarray]]],
+        mc_reports: Optional[Dict[str, MulticollinearityReport]] = None,
     ) -> List[_Job]:
         jobs: List[_Job] = []
+        blocked_count = 0
         for seed in self._seeds:
             splitter_folds = {
                 "CompositionBlock": fold_plan["CompositionBlock"],
@@ -514,20 +570,46 @@ class ExperimentRunner:
                 "RandomCV":         fold_plan[f"RandomCV_seed{seed}"],
             }
             for fs_name in feature_sets:
+                fs_key = fs_name.value
+
+                # ── Model selection filter from Phase 0 ──
+                if mc_reports and fs_key in mc_reports:
+                    allowed_wf = set(mc_reports[fs_key].recommended_workflows)
+                else:
+                    allowed_wf = set(wf_names)  # fallback: all allowed
+
+                # ── PCA force flag from Phase 0 ──
+                force_pca = bool(
+                    mc_reports
+                    and fs_key in mc_reports
+                    and mc_reports[fs_key].multicollinearity_level == 'moderate'
+                )
+
                 for sp_name, folds in splitter_folds.items():
                     for fold_idx, (train_idx, test_idx) in enumerate(folds):
                         for wf_name in wf_names:
+                            if wf_name not in allowed_wf:
+                                blocked_count += 1
+                                continue  # blocked workflow
                             jobs.append(_Job(
                                 wf_name=wf_name,
-                                fs_name=fs_name.value,
+                                fs_name=fs_key,
                                 sp_name=sp_name,
                                 seed=seed,
                                 fold=fold_idx,
                                 train_idx=train_idx,
                                 test_idx=test_idx,
                                 quick=self._quick,
+                                dim_reduction=self._dim_reduction,
+                                force_pca=force_pca,
                             ))
-        logger.debug("Phase 2: %d jobs", len(jobs))
+        if blocked_count > 0:
+            logger.info(
+                "Phase 2: %d jobs (%d blocked by multicollinearity filter)",
+                len(jobs), blocked_count,
+            )
+        else:
+            logger.debug("Phase 2: %d jobs", len(jobs))
         return jobs
 
     # ------------------------------------------------------------------
@@ -554,6 +636,37 @@ class ExperimentRunner:
         fs_arrays: Dict[str, Tuple[np.ndarray, List[str]]] = {}
         for fs_name in feature_sets:
             cols = list(FeatureCatalog.columns(fs_name))
+            missing = [c for c in cols if c not in features_all.columns]
+            if missing:
+                logger.warning(
+                    "Feature set %s skipped: columns not in data: %s",
+                    fs_name.value, missing[:5],
+                )
+                continue  # skip this FS — columns not present
+
+            # ── Near-zero variance removal ──
+            # Remove columns whose std across the entire dataset is below
+            # NZV_STD_THRESHOLD.  Such columns carry no information for any
+            # model and can destabilise PCA / matrix inversions.
+            # NOTE: threshold is applied to the full dataset (not per-fold)
+            # to keep column lists consistent across all folds/seeds.
+            NZV_STD_THRESHOLD = 1e-6
+            X_fs = features_all[cols]
+            stds = X_fs.std()
+            nzv_cols = stds[stds < NZV_STD_THRESHOLD].index.tolist()
+            if nzv_cols:
+                logger.info(
+                    "Phase 3 NZV: %s — dropping %d near-zero-variance columns: %s",
+                    fs_name.value, len(nzv_cols), nzv_cols,
+                )
+                cols = [c for c in cols if c not in nzv_cols]
+            if not cols:
+                logger.warning(
+                    "Feature set %s skipped: all columns removed by NZV filter",
+                    fs_name.value,
+                )
+                continue
+
             arr = safe_array(features_all[cols])
             fs_arrays[fs_name.value] = (arr, cols)
             logger.debug(
@@ -561,16 +674,21 @@ class ExperimentRunner:
                 fs_name.value, arr.shape, arr.flags["C_CONTIGUOUS"],
             )
 
+        # Filter jobs to only those whose feature set was successfully prepared
+        jobs = [j for j in jobs if j.fs_name in fs_arrays]
         all_results: List[RunResult] = []
         n_total = len(jobs)
         completed = 0
         _t0 = time.time()
 
         def _log_progress(n: int, last_job: _Job) -> None:
-            try:
-                rss_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-            except Exception:
-                rss_kb = -1
+            if _HAS_RESOURCE:
+                try:
+                    rss_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+                except Exception:
+                    rss_kb = -1
+            else:
+                rss_kb = -1  # Windows: resource module not available
             logger.info(
                 "Progress: %d / %d runs (%.1f sec, RSS peak ~%d MB)",
                 n, n_total, time.time() - _t0, rss_kb // 1024,
@@ -680,9 +798,12 @@ class ExperimentRunner:
             X_test_ood  = pd.DataFrame(X_fs_arr[ood_test_idx],  columns=cols)
 
             try:
-                try:
-                    rss_pre = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-                except Exception:
+                if _HAS_RESOURCE:
+                    try:
+                        rss_pre = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+                    except Exception:
+                        rss_pre = -1
+                else:
                     rss_pre = -1
 
                 detector = OODDetector(k=10)
@@ -690,13 +811,16 @@ class ExperimentRunner:
                 ood_res = detector.score(X_test_ood)
                 ood_results[fs_key] = ood_res
                 self._ood_split_indices[fs_key] = (
-                    np.asarray(ood_train_idx),
-                    np.asarray(ood_test_idx),
+                    np.ascontiguousarray(np.asarray(ood_train_idx)),
+                    np.ascontiguousarray(np.asarray(ood_test_idx)),
                 )
 
-                try:
-                    rss_post = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-                except Exception:
+                if _HAS_RESOURCE:
+                    try:
+                        rss_post = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+                    except Exception:
+                        rss_post = -1
+                else:
                     rss_post = -1
                 logger.debug(
                     "OOD %s: %d/%d flagged, RSS delta ~%d MB",
@@ -724,11 +848,13 @@ class ExperimentRunner:
     def _phase5_evaluate(
         self,
         ood_errors_for_eval: Dict[str, Dict[str, np.ndarray]],
+        mc_reports: Optional[Dict[str, MulticollinearityReport]] = None,
     ) -> List[ValidityScore]:
         evaluator = FeatureValidityEvaluator()
         return evaluator.evaluate(
             self._registry.runs,
             ood_errors=ood_errors_for_eval,
+            mc_reports=mc_reports,
         )
 
     # ------------------------------------------------------------------
@@ -742,7 +868,7 @@ class ExperimentRunner:
         ood_test_idx: np.ndarray,
         out: Dict[str, Dict[str, np.ndarray]],
     ) -> None:
-        ood_test_indices = np.asarray(ood_test_idx)
+        ood_test_indices = np.ascontiguousarray(np.asarray(ood_test_idx))
         ens_runs = [
             r for r in self._registry.runs
             if r.feature_set == fs_key
@@ -751,22 +877,31 @@ class ExperimentRunner:
         ]
         matched = None
         for er in reversed(ens_runs):
-            if np.array_equal(np.asarray(er.test_indices), ood_test_indices):
+            if np.array_equal(
+                np.ascontiguousarray(np.asarray(er.test_indices)),
+                ood_test_indices,
+            ):
                 matched = er
                 break
         if matched is None:
             logger.info("No matching ENS run for OOD eval on %s", fs_key)
             return
-        pred_std = np.array(matched.artifacts.get("pred_std_test", []))
+        pred_std = np.ascontiguousarray(
+            np.array(matched.artifacts.get("pred_std_test", []))
+        )
         if (
             matched.y_test_true is not None
             and matched.y_test_pred is not None
             and len(pred_std) > 0
         ):
+            _errors = np.ascontiguousarray(
+                matched.y_test_true - matched.y_test_pred
+            )
+            _is_ood = np.ascontiguousarray(np.asarray(ood_res.is_ood))
             out[fs_key] = {
-                "errors":        matched.y_test_true - matched.y_test_pred,
+                "errors":        _errors,
                 "uncertainties": pred_std,
-                "is_ood":        ood_res.is_ood,
+                "is_ood":        _is_ood,
             }
 
     def export(self, out_dir: Path) -> None:
