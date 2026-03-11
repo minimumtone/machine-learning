@@ -2,7 +2,7 @@
 Feature Validity Evaluation Engine
 特徴量妥当性評価エンジン
 
-Scores each feature set along five axes:
+Scores each feature set along six axes:
   1. Effect size   - performance delta vs FS_BASE
   2. Stability     - variance across seeds / folds
   3. Generalisation - sign consistency between RandomCV and Block splits
