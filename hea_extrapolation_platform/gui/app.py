@@ -219,29 +219,33 @@ def _build_integration_status_md(
 def _refresh_dashboard_data(
     metric: str, session: Dict[str, Any],
 ) -> Tuple[str, str, str, str, str, Any, Any]:
-    runs = session.get("runs", [])
-    scores = session.get("validity_scores", [])
-    ood_results = session.get("ood_results", {})
-    runner = session.get("runner")
+    try:
+        runs = session.get("runs", [])
+        scores = session.get("validity_scores", [])
+        ood_results = session.get("ood_results", {})
+        runner = session.get("runner")
 
-    n_runs = str(len(runs))
-    best_fs = scores[0].feature_set if scores else "--"
-    best_score = f"{scores[0].total:.4f}" if scores else "--"
+        n_runs = str(len(runs))
+        best_fs = scores[0].feature_set if scores else "--"
+        best_score = f"{scores[0].total:.4f}" if scores else "--"
 
-    total_ood = (
-        sum(r.n_ood for r in ood_results.values()) if ood_results else 0
-    )
-    ood_str = str(total_ood) if ood_results else "--"
+        total_ood = (
+            sum(r.n_ood for r in ood_results.values()) if ood_results else 0
+        )
+        ood_str = str(total_ood) if ood_results else "--"
 
-    integration_md = _build_integration_status_md(runner)
+        integration_md = _build_integration_status_md(runner)
 
-    validity_fig = plotly_validity_ranking(scores) if scores else None
-    heatmap_fig = plotly_heatmap(runs, metric=metric) if runs else None
+        validity_fig = plotly_validity_ranking(scores) if scores else None
+        heatmap_fig = plotly_heatmap(runs, metric=metric) if runs else None
 
-    return (
-        n_runs, best_fs, best_score, ood_str,
-        integration_md, validity_fig, heatmap_fig,
-    )
+        return (
+            n_runs, best_fs, best_score, ood_str,
+            integration_md, validity_fig, heatmap_fig,
+        )
+    except Exception:
+        logger.exception("_refresh_dashboard_data failed")
+        return ("0", "--", "--", "--", _build_integration_status_md(None), None, None)
 
 
 def _build_physical_interpretation_md(
@@ -588,132 +592,144 @@ def _refresh_results_data(
     wf_filter: str, fs_filter: str, sp_filter: str,
     session: Dict[str, Any],
 ) -> Tuple:
-    runs = session.get("runs", [])
-    scores = session.get("validity_scores", [])
-    ood_results = session.get("ood_results", {})
+    try:
+        runs = session.get("runs", [])
+        scores = session.get("validity_scores", [])
+        ood_results = session.get("ood_results", {})
 
-    # Fix #11: dynamic filter choices from actual run data
-    wf_choices = ["All"] + sorted({r.workflow for r in runs})
-    fs_choices = ["All"] + sorted({r.feature_set for r in runs})
-    sp_choices = ["All"] + sorted({r.split_policy for r in runs})
+        # Fix #11: dynamic filter choices from actual run data
+        wf_choices = ["All"] + sorted({r.workflow for r in runs})
+        fs_choices = ["All"] + sorted({r.feature_set for r in runs})
+        sp_choices = ["All"] + sorted({r.split_policy for r in runs})
 
-    v_df = validity_scores_to_dataframe(scores) if scores else pd.DataFrame()
+        v_df = validity_scores_to_dataframe(scores) if scores else pd.DataFrame()
 
-    filtered = runs
-    if wf_filter != "All":
-        filtered = [r for r in filtered if r.workflow == wf_filter]
-    if fs_filter != "All":
-        filtered = [r for r in filtered if r.feature_set == fs_filter]
-    if sp_filter != "All":
-        filtered = [r for r in filtered if r.split_policy == sp_filter]
+        filtered = runs
+        if wf_filter != "All":
+            filtered = [r for r in filtered if r.workflow == wf_filter]
+        if fs_filter != "All":
+            filtered = [r for r in filtered if r.feature_set == fs_filter]
+        if sp_filter != "All":
+            filtered = [r for r in filtered if r.split_policy == sp_filter]
 
-    r_df = runs_to_dataframe(filtered) if filtered else pd.DataFrame()
-    parity_fig = plotly_parity_per_algorithm(filtered) if filtered else None
+        r_df = runs_to_dataframe(filtered) if filtered else pd.DataFrame()
+        parity_fig = plotly_parity_per_algorithm(filtered) if filtered else None
 
-    # Physical interpretation + FS comparison
-    interp_md = _build_physical_interpretation_md(runs, scores, ood_results)
+        # Physical interpretation + FS comparison
+        interp_md = _build_physical_interpretation_md(runs, scores, ood_results)
 
-    # FS comparison grouped bar chart
-    fs_bar_fig = plotly_fs_grouped_bar(runs) if runs else None
+        # FS comparison grouped bar chart
+        fs_bar_fig = plotly_fs_grouped_bar(runs) if runs else None
 
-    return (
-        gr.update(choices=wf_choices, value=wf_filter if wf_filter in wf_choices else "All"),
-        gr.update(choices=fs_choices, value=fs_filter if fs_filter in fs_choices else "All"),
-        gr.update(choices=sp_choices, value=sp_filter if sp_filter in sp_choices else "All"),
-        v_df, r_df, parity_fig, interp_md, fs_bar_fig,
-    )
+        return (
+            gr.update(choices=wf_choices, value=wf_filter if wf_filter in wf_choices else "All"),
+            gr.update(choices=fs_choices, value=fs_filter if fs_filter in fs_choices else "All"),
+            gr.update(choices=sp_choices, value=sp_filter if sp_filter in sp_choices else "All"),
+            v_df, r_df, parity_fig, interp_md, fs_bar_fig,
+        )
+    except Exception:
+        logger.exception("_refresh_results_data failed")
+        return (
+            gr.update(), gr.update(), gr.update(),
+            pd.DataFrame(), pd.DataFrame(), None,
+            "*Error refreshing results — see server log.*", None,
+        )
 
 
 def _refresh_ood_data(
     fs_key: str, session: Dict[str, Any],
 ) -> Tuple:
-    ood_results = session.get("ood_results", {})
-    features_df = session.get("features_df")
-    comps_df = session.get("compositions_df")
-    ood_split_indices = session.get("ood_split_indices", {})
+    try:
+        ood_results = session.get("ood_results", {})
+        features_df = session.get("features_df")
+        comps_df = session.get("compositions_df")
+        ood_split_indices = session.get("ood_split_indices", {})
 
-    if not ood_results or features_df is None:
-        return None, "No OOD results. Run experiment first.", pd.DataFrame()
+        if not ood_results or features_df is None:
+            return None, "No OOD results. Run experiment first.", pd.DataFrame()
 
-    ood_res = ood_results.get(fs_key)
-    if ood_res is None:
-        available = list(ood_results.keys())
-        return (
-            None,
-            f"No OOD for {fs_key}. Available: {available}",
-            pd.DataFrame(),
+        ood_res = ood_results.get(fs_key)
+        if ood_res is None:
+            available = list(ood_results.keys())
+            return (
+                None,
+                f"No OOD for {fs_key}. Available: {available}",
+                pd.DataFrame(),
+            )
+
+        # In generic CSV mode, features_df already contains exactly the
+        # user-selected columns (numeric + one-hot encoded strings).
+        # FeatureCatalog columns are HEA-specific and won't exist.
+        csv_mode = session.get("csv_mode", "hea")
+        if csv_mode == "generic":
+            cols = list(features_df.columns)
+        else:
+            from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
+            try:
+                fs_enum = FeatureSetName(fs_key)
+                cols = FeatureCatalog.columns(fs_enum)
+            except (ValueError, KeyError):
+                return None, f"Unknown feature set: {fs_key}", pd.DataFrame()
+
+        # Fix #3: use stored train/test indices for correct visualization.
+        # CRITICAL: Force C-contiguous layout.  Column-subset + iloc on a
+        # DataFrame creates fragmented views whose .values is F-contiguous,
+        # causing SIGSEGV in downstream PCA / StandardScaler calls.
+        available_cols = [c for c in cols if c in features_df.columns]
+        if not available_cols:
+            return None, f"No matching columns for {fs_key}", pd.DataFrame()
+        X_fs_arr = np.ascontiguousarray(
+            features_df[available_cols].to_numpy(dtype="float64", na_value=np.nan)
+        )
+        split = ood_split_indices.get(fs_key)
+        if split is not None:
+            train_idx, test_idx = split
+            X_train = pd.DataFrame(X_fs_arr[train_idx], columns=available_cols)
+            X_query = pd.DataFrame(X_fs_arr[test_idx], columns=available_cols)
+        else:
+            logger.warning("No OOD split indices for %s, using heuristic", fs_key)
+            n_ood = len(ood_res.composite_scores)
+            X_train = pd.DataFrame(
+                X_fs_arr[:len(X_fs_arr) - n_ood], columns=available_cols,
+            )
+            X_query = pd.DataFrame(
+                X_fs_arr[len(X_fs_arr) - n_ood:], columns=available_cols,
+            )
+
+        fig = plotly_ood_map(
+            X_train, X_query,
+            composite_scores=ood_res.composite_scores,
+            is_ood=ood_res.is_ood,
+            title=f"OOD Map (PCA) -- {fs_key}",
         )
 
-    # In generic CSV mode, features_df already contains exactly the
-    # user-selected columns (numeric + one-hot encoded strings).
-    # FeatureCatalog columns are HEA-specific and won't exist.
-    csv_mode = session.get("csv_mode", "hea")
-    if csv_mode == "generic":
-        cols = list(features_df.columns)
-    else:
-        from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
-        try:
-            fs_enum = FeatureSetName(fs_key)
-            cols = FeatureCatalog.columns(fs_enum)
-        except (ValueError, KeyError):
-            return None, f"Unknown feature set: {fs_key}", pd.DataFrame()
-
-    # Fix #3: use stored train/test indices for correct visualization.
-    # CRITICAL: Force C-contiguous layout.  Column-subset + iloc on a
-    # DataFrame creates fragmented views whose .values is F-contiguous,
-    # causing SIGSEGV in downstream PCA / StandardScaler calls.
-    available_cols = [c for c in cols if c in features_df.columns]
-    if not available_cols:
-        return None, f"No matching columns for {fs_key}", pd.DataFrame()
-    X_fs_arr = np.ascontiguousarray(
-        features_df[available_cols].to_numpy(dtype="float64", na_value=np.nan)
-    )
-    split = ood_split_indices.get(fs_key)
-    if split is not None:
-        train_idx, test_idx = split
-        X_train = pd.DataFrame(X_fs_arr[train_idx], columns=available_cols)
-        X_query = pd.DataFrame(X_fs_arr[test_idx], columns=available_cols)
-    else:
-        logger.warning("No OOD split indices for %s, using heuristic", fs_key)
-        n_ood = len(ood_res.composite_scores)
-        X_train = pd.DataFrame(
-            X_fs_arr[:len(X_fs_arr) - n_ood], columns=available_cols,
-        )
-        X_query = pd.DataFrame(
-            X_fs_arr[len(X_fs_arr) - n_ood:], columns=available_cols,
+        summary = (
+            f"Total query: {ood_res.n_total} | "
+            f"OOD: {ood_res.n_ood} ({ood_res.ood_ratio:.1%}) | "
+            f"Threshold: {ood_res.ood_threshold:.4f}"
         )
 
-    fig = plotly_ood_map(
-        X_train, X_query,
-        composite_scores=ood_res.composite_scores,
-        is_ood=ood_res.is_ood,
-        title=f"OOD Map (PCA) -- {fs_key}",
-    )
+        cand_df = pd.DataFrame()
+        if comps_df is not None and ood_res.is_ood.any() and split is not None:
+            _, test_idx_arr = split
+            ood_mask = ood_res.is_ood
+            ood_local = np.where(ood_mask)[0]
+            ood_global = np.asarray(test_idx_arr)[ood_local]
+            ood_global = ood_global[ood_global < len(comps_df)]
+            if len(ood_global) > 0:
+                cand_df = comps_df.iloc[ood_global].copy()
+                cand_df["OOD_Score"] = ood_res.composite_scores[
+                    ood_local[:len(ood_global)]
+                ]
+                cand_df = cand_df.sort_values(
+                    "OOD_Score", ascending=False,
+                ).head(20)
+                cand_df = cand_df.round(3)
 
-    summary = (
-        f"Total query: {ood_res.n_total} | "
-        f"OOD: {ood_res.n_ood} ({ood_res.ood_ratio:.1%}) | "
-        f"Threshold: {ood_res.ood_threshold:.4f}"
-    )
-
-    cand_df = pd.DataFrame()
-    if comps_df is not None and ood_res.is_ood.any() and split is not None:
-        _, test_idx_arr = split
-        ood_mask = ood_res.is_ood
-        ood_local = np.where(ood_mask)[0]
-        ood_global = np.asarray(test_idx_arr)[ood_local]
-        ood_global = ood_global[ood_global < len(comps_df)]
-        if len(ood_global) > 0:
-            cand_df = comps_df.iloc[ood_global].copy()
-            cand_df["OOD_Score"] = ood_res.composite_scores[
-                ood_local[:len(ood_global)]
-            ]
-            cand_df = cand_df.sort_values(
-                "OOD_Score", ascending=False,
-            ).head(20)
-            cand_df = cand_df.round(3)
-
-    return fig, summary, cand_df
+        return fig, summary, cand_df
+    except Exception:
+        logger.exception("_refresh_ood_data failed for fs_key=%s", fs_key)
+        return None, f"Error refreshing OOD data for {fs_key} — see server log.", pd.DataFrame()
 
 
 def _export_ood_csv(
@@ -729,92 +745,100 @@ def _export_ood_csv(
     Returns ``gr.update(value=path, visible=True)`` on success,
     or ``gr.update(value=None, visible=False)`` when no data is available.
     """
-    import tempfile
+    try:
+        import tempfile
 
-    ood_results = session.get("ood_results", {})
-    features_df = session.get("features_df")
-    comps_df = session.get("compositions_df")
-    target = session.get("target")
-    ood_split_indices = session.get("ood_split_indices", {})
+        ood_results = session.get("ood_results", {})
+        features_df = session.get("features_df")
+        comps_df = session.get("compositions_df")
+        target = session.get("target")
+        ood_split_indices = session.get("ood_split_indices", {})
 
-    if not ood_results or features_df is None:
-        return gr.update(value=None, visible=False)
-
-    ood_res = ood_results.get(fs_key)
-    if ood_res is None:
-        return gr.update(value=None, visible=False)
-
-    # In generic CSV mode, use features_df columns directly
-    csv_mode = session.get("csv_mode", "hea")
-    if csv_mode == "generic":
-        cols = list(features_df.columns)
-    else:
-        from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
-        try:
-            fs_enum = FeatureSetName(fs_key)
-            cols = FeatureCatalog.columns(fs_enum)
-        except (ValueError, KeyError):
+        if not ood_results or features_df is None:
             return gr.update(value=None, visible=False)
 
-    split = ood_split_indices.get(fs_key)
-    if split is None:
+        ood_res = ood_results.get(fs_key)
+        if ood_res is None:
+            return gr.update(value=None, visible=False)
+
+        # In generic CSV mode, use features_df columns directly
+        csv_mode = session.get("csv_mode", "hea")
+        if csv_mode == "generic":
+            cols = list(features_df.columns)
+        else:
+            from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
+            try:
+                fs_enum = FeatureSetName(fs_key)
+                cols = FeatureCatalog.columns(fs_enum)
+            except (ValueError, KeyError):
+                return gr.update(value=None, visible=False)
+
+        split = ood_split_indices.get(fs_key)
+        if split is None:
+            return gr.update(value=None, visible=False)
+
+        _, test_idx_arr = split
+        test_idx_arr = np.asarray(test_idx_arr)
+
+        # Build export dataframe for ALL test (query) samples
+        rows: List[Dict[str, Any]] = []
+        for local_i, global_i in enumerate(test_idx_arr):
+            if global_i >= len(features_df):
+                continue
+            row: Dict[str, Any] = {}
+            # Add composition columns if available
+            if comps_df is not None and global_i < len(comps_df):
+                for c in comps_df.columns:
+                    row[c] = comps_df.iloc[global_i][c]
+            # Add target if available
+            if target is not None and global_i < len(target):
+                row["target"] = target.iloc[global_i]
+            # Add feature values
+            for c in cols:
+                if c in features_df.columns:
+                    row[c] = features_df.iloc[global_i][c]
+            # Add OOD info
+            if local_i < len(ood_res.composite_scores):
+                row["OOD_Score"] = round(float(ood_res.composite_scores[local_i]), 4)
+                row["is_OOD"] = bool(ood_res.is_ood[local_i])
+            rows.append(row)
+
+        if not rows:
+            return gr.update(value=None, visible=False)
+
+        # Columnar construction to avoid DataFrame fragmentation / SIGSEGV
+        if rows:
+            col_names = list(rows[0].keys())
+            export_df = pd.DataFrame(
+                {k: [r[k] for r in rows] for k in col_names}
+            )
+        else:
+            export_df = pd.DataFrame()
+        # Sort: OOD samples first, then by score descending
+        export_df = export_df.sort_values(
+            ["is_OOD", "OOD_Score"], ascending=[False, False],
+        ).reset_index(drop=True)
+
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        tmp_path = Path(tempfile.gettempdir()) / f"ood_{fs_key}_{timestamp}.csv"
+        export_df.to_csv(tmp_path, index=False, encoding="utf-8-sig")
+
+        return gr.update(value=str(tmp_path), visible=True)
+    except Exception:
+        logger.exception("_export_ood_csv failed for fs_key=%s", fs_key)
         return gr.update(value=None, visible=False)
-
-    _, test_idx_arr = split
-    test_idx_arr = np.asarray(test_idx_arr)
-
-    # Build export dataframe for ALL test (query) samples
-    rows: List[Dict[str, Any]] = []
-    for local_i, global_i in enumerate(test_idx_arr):
-        if global_i >= len(features_df):
-            continue
-        row: Dict[str, Any] = {}
-        # Add composition columns if available
-        if comps_df is not None and global_i < len(comps_df):
-            for c in comps_df.columns:
-                row[c] = comps_df.iloc[global_i][c]
-        # Add target if available
-        if target is not None and global_i < len(target):
-            row["target"] = target.iloc[global_i]
-        # Add feature values
-        for c in cols:
-            if c in features_df.columns:
-                row[c] = features_df.iloc[global_i][c]
-        # Add OOD info
-        if local_i < len(ood_res.composite_scores):
-            row["OOD_Score"] = round(float(ood_res.composite_scores[local_i]), 4)
-            row["is_OOD"] = bool(ood_res.is_ood[local_i])
-        rows.append(row)
-
-    if not rows:
-        return gr.update(value=None, visible=False)
-
-    # Columnar construction to avoid DataFrame fragmentation / SIGSEGV
-    if rows:
-        col_names = list(rows[0].keys())
-        export_df = pd.DataFrame(
-            {k: [r[k] for r in rows] for k in col_names}
-        )
-    else:
-        export_df = pd.DataFrame()
-    # Sort: OOD samples first, then by score descending
-    export_df = export_df.sort_values(
-        ["is_OOD", "OOD_Score"], ascending=[False, False],
-    ).reset_index(drop=True)
-
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    tmp_path = Path(tempfile.gettempdir()) / f"ood_{fs_key}_{timestamp}.csv"
-    export_df.to_csv(tmp_path, index=False, encoding="utf-8-sig")
-
-    return gr.update(value=str(tmp_path), visible=True)
 
 
 def _refresh_report_data(session: Dict[str, Any]) -> Tuple:
-    report_path = session.get("report_path")
-    if report_path is None or not Path(report_path).exists():
-        return "*No report available.*", None
-    content = Path(report_path).read_text(encoding="utf-8")
-    return content, str(report_path)
+    try:
+        report_path = session.get("report_path")
+        if report_path is None or not Path(report_path).exists():
+            return "*No report available.*", None
+        content = Path(report_path).read_text(encoding="utf-8")
+        return content, str(report_path)
+    except Exception:
+        logger.exception("_refresh_report_data failed")
+        return "*Error loading report — see server log.*", None
 
 
 # ---------------------------------------------------------------------------
@@ -981,39 +1005,46 @@ def _refresh_data_summary(
     session: Dict[str, Any],
 ) -> Tuple:
     """Refresh the Data Summary tab from session state."""
-    comps_df = session.get("compositions_df")
-    features_df = session.get("features_df")
-    target = session.get("target")
+    try:
+        comps_df = session.get("compositions_df")
+        features_df = session.get("features_df")
+        target = session.get("target")
 
-    # Consolidate features_df to a single memory block before heavy
-    # numpy operations (.describe(), .corr()) that can SIGSEGV on
-    # fragmented DataFrames.
-    if features_df is not None and not features_df.empty:
-        features_df = _consolidate_df(features_df)
-        session["features_df"] = features_df
+        # Consolidate features_df to a single memory block before heavy
+        # numpy operations (.describe(), .corr()) that can SIGSEGV on
+        # fragmented DataFrames.
+        if features_df is not None and not features_df.empty:
+            features_df = _consolidate_df(features_df)
+            session["features_df"] = features_df
 
-    stats_md = build_summary_stats_md(comps_df, features_df, target)
+        stats_md = build_summary_stats_md(comps_df, features_df, target)
 
-    if comps_df is not None and target is not None:
-        target_fig = plotly_target_histogram(target)
-        comp_fig = plotly_composition_heatmap(comps_df)
-    else:
-        target_fig = None
-        comp_fig = None
+        if comps_df is not None and target is not None:
+            target_fig = plotly_target_histogram(target)
+            comp_fig = plotly_composition_heatmap(comps_df)
+        else:
+            target_fig = None
+            comp_fig = None
 
-    if features_df is not None and not features_df.empty:
-        corr_fig = plotly_feature_correlation(features_df, target=target)
-    else:
-        corr_fig = None
+        if features_df is not None and not features_df.empty:
+            corr_fig = plotly_feature_correlation(features_df, target=target)
+        else:
+            corr_fig = None
 
-    desc_df = pd.DataFrame()
-    if features_df is not None and not features_df.empty:
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", pd.errors.PerformanceWarning)
-            desc_df = features_df.describe().round(3).reset_index()
-        desc_df.rename(columns={"index": "Statistic"}, inplace=True)
+        desc_df = pd.DataFrame()
+        if features_df is not None and not features_df.empty:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", pd.errors.PerformanceWarning)
+                desc_df = features_df.describe().round(3).reset_index()
+            desc_df.rename(columns={"index": "Statistic"}, inplace=True)
 
-    return stats_md, target_fig, comp_fig, corr_fig, desc_df
+        return stats_md, target_fig, comp_fig, corr_fig, desc_df
+    except Exception:
+        logger.exception("_refresh_data_summary failed")
+        return (
+            build_summary_stats_md(None, None, None),
+            None, None, None, pd.DataFrame(),
+        )
 
 
 def _make_error_banner(title: str, detail: str) -> str:
