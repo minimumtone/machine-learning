@@ -606,9 +606,11 @@ class WorkflowXGB(BaseWorkflow):
             and len(X_train) >= 20
         ):
             try:
+                from sklearn.base import clone as _clone
                 from sklearn.model_selection import train_test_split as _tts
 
                 # Apply the scaler (and optionally PCA) from the best pipeline
+                # to transform training data for early stopping probe.
                 preprocessor = Pipeline(
                     [(name, step) for name, step in best_pipe.steps if name != "model"]
                 )
@@ -621,7 +623,7 @@ class WorkflowXGB(BaseWorkflow):
                     test_size=0.2, random_state=seed,
                 )
 
-                # Clone the best model's params but allow more estimators
+                # Probe: find optimal n_estimators via early stopping
                 es_params = best_model.get_params()
                 es_params["n_estimators"] = max(es_params.get("n_estimators", 200), 500)
                 es_params["early_stopping_rounds"] = 20
@@ -634,16 +636,14 @@ class WorkflowXGB(BaseWorkflow):
                 )
                 # Check if early stopping actually triggered (stopped before max budget)
                 if hasattr(es_model, "best_iteration") and es_model.best_iteration < es_params["n_estimators"] - 1:
-                    # Retrain on full training data with optimal n_estimators
-                    final_params = es_model.get_params()
-                    final_params["n_estimators"] = es_model.best_iteration + 1
-                    final_params.pop("early_stopping_rounds", None)
-                    final_model = XGBRegressor(**final_params)
-                    final_model.fit(
-                        np.ascontiguousarray(X_tr_transformed),
-                        _safe_np(y_train),
-                    )
-                    best_pipe.steps[-1] = ("model", final_model)
+                    # Clone the full pipeline and refit from raw data with
+                    # the optimal n_estimators.  This avoids the double-transform
+                    # bug that would occur if we inserted a model trained on
+                    # pre-transformed data back into the pipeline.
+                    optimal_n = es_model.best_iteration + 1
+                    best_pipe = _clone(best_pipe)
+                    best_pipe.set_params(model__n_estimators=optimal_n)
+                    best_pipe.fit(_safe_np(X_train), _safe_np(y_train))
                     used_early_stop = True
                     logger.debug(
                         "WF-XGB early stop: best_iteration=%d (was n_estimators=%d)",
