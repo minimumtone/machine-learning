@@ -640,10 +640,12 @@ class WorkflowXGB(BaseWorkflow):
                     # the optimal n_estimators.  This avoids the double-transform
                     # bug that would occur if we inserted a model trained on
                     # pre-transformed data back into the pipeline.
+                    # Use a temp variable so best_pipe stays fitted if fit() fails.
                     optimal_n = es_model.best_iteration + 1
-                    best_pipe = _clone(best_pipe)
-                    best_pipe.set_params(model__n_estimators=optimal_n)
-                    best_pipe.fit(_safe_np(X_train), _safe_np(y_train))
+                    cloned_pipe = _clone(best_pipe)
+                    cloned_pipe.set_params(model__n_estimators=optimal_n)
+                    cloned_pipe.fit(_safe_np(X_train), _safe_np(y_train))
+                    best_pipe = cloned_pipe  # only reassign after successful fit
                     used_early_stop = True
                     logger.debug(
                         "WF-XGB early stop: best_iteration=%d (was n_estimators=%d)",
