@@ -120,6 +120,8 @@ def as_serializable(obj: object) -> object:
         converted = [as_serializable(item) for item in obj]
         return type(obj)(converted) if isinstance(obj, tuple) else converted
     if isinstance(obj, np.ndarray):
+        if obj.ndim == 0:
+            return as_serializable(obj.item())
         return [as_serializable(item) for item in obj.tolist()]
     if isinstance(obj, (np.integer,)):
         return int(obj)
