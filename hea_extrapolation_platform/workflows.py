@@ -632,8 +632,8 @@ class WorkflowXGB(BaseWorkflow):
                     eval_set=[(np.ascontiguousarray(X_val_es), y_val_es)],
                     verbose=False,
                 )
-                # Check if early stopping actually triggered
-                if hasattr(es_model, "best_iteration") and es_model.best_iteration > 0:
+                # Check if early stopping actually triggered (stopped before max budget)
+                if hasattr(es_model, "best_iteration") and es_model.best_iteration < es_params["n_estimators"] - 1:
                     # Retrain on full training data with optimal n_estimators
                     final_params = es_model.get_params()
                     final_params["n_estimators"] = es_model.best_iteration + 1
