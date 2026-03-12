@@ -689,10 +689,13 @@ def runs_to_dataframe(runs: List[Any]) -> pd.DataFrame:
 
 
 def validity_scores_to_dataframe(scores: List[Any]) -> pd.DataFrame:
-    """Convert list of ValidityScore to a summary DataFrame."""
+    """Convert list of ValidityScore to a summary DataFrame.
+
+    Includes Bootstrap 95% CI for RMSE (#9) and leak suspect count (#7).
+    """
     records = []
     for i, s in enumerate(scores):
-        records.append({
+        rec: Dict[str, Any] = {
             "Rank": i + 1,
             "Feature Set": s.feature_set,
             "Effect Size": round(s.effect_size, 4),
@@ -701,7 +704,21 @@ def validity_scores_to_dataframe(scores: List[Any]) -> pd.DataFrame:
             "Leak Penalty": round(s.leak_penalty, 4),
             "Extrap. Safety": round(s.extrapolation_safety, 4),
             "Total": round(s.total, 4),
-        })
+        }
+        # Bootstrap CI (#9)
+        rmse_mean = getattr(s, "rmse_mean", 0.0)
+        ci_lo = getattr(s, "rmse_ci_lower", 0.0)
+        ci_hi = getattr(s, "rmse_ci_upper", 0.0)
+        if rmse_mean > 0 and ci_lo != ci_hi:
+            rec["RMSE 95%CI"] = f"{rmse_mean:.3f} [{ci_lo:.3f}, {ci_hi:.3f}]"
+        elif rmse_mean > 0:
+            rec["RMSE 95%CI"] = f"{rmse_mean:.3f}"
+        else:
+            rec["RMSE 95%CI"] = "N/A"
+        # Leak suspects (#7)
+        suspects = getattr(s, "leak_suspects", {})
+        rec["Leak Suspects"] = len(suspects) if suspects else 0
+        records.append(rec)
     return _records_to_df(records)
 
 

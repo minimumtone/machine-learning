@@ -29,6 +29,23 @@ from sklearn.preprocessing import StandardScaler
 logger = logging.getLogger(__name__)
 
 
+def _get_inner_n_jobs() -> int:
+    """Return the n_jobs for inner estimators (GridSearchCV, RandomForest, etc.).
+
+    Problem (#11): When ``RandomizedSearchCV(n_jobs=-1)`` runs inside a
+    ``ProcessPoolExecutor`` worker, both compete for CPU cores.  The inner
+    parallelism should be limited to 1 per worker to avoid resource contention.
+
+    Respects ``HEA_INNER_N_JOBS`` environment variable.  Defaults to 1.
+    """
+    import os
+    raw = os.environ.get("HEA_INNER_N_JOBS", "1")
+    try:
+        return max(1, int(raw))
+    except ValueError:
+        return 1
+
+
 def _safe_np(source: Any) -> np.ndarray:
     """Return a C-contiguous float64 array from DataFrame / Series / ndarray.
 
@@ -521,7 +538,7 @@ class WorkflowXGB(BaseWorkflow):
             return XGBRegressor(
                 objective="reg:squarederror",
                 random_state=seed,
-                n_jobs=1,
+                n_jobs=_get_inner_n_jobs(),
                 verbosity=0,
             )
         else:
@@ -562,18 +579,82 @@ class WorkflowXGB(BaseWorkflow):
         ]
         pipe = Pipeline(steps)
 
+        _inner_jobs = _get_inner_n_jobs()
         grid = GridSearchCV(
             pipe,
             self._param_grid(),
             cv=max(2, min(self._n_cv, len(X_train))),
             scoring="neg_root_mean_squared_error",
             refit=True,
-            n_jobs=1,
+            n_jobs=_inner_jobs,
             error_score=np.nan,  # skip failing folds instead of raising
         )
         grid.fit(_safe_np(X_train), _safe_np(y_train))
 
+        # ── Early stopping refinement (#3) ──
+        # After GridSearchCV finds the best hyperparameters, retrain the
+        # best model with early_stopping to find the optimal n_estimators.
+        # This reduces overfitting and training cost.
         best_pipe = grid.best_estimator_
+        best_model = best_pipe.named_steps["model"]
+        used_early_stop = False
+
+        if (
+            _XGB_AVAILABLE
+            and isinstance(best_model, XGBRegressor)
+            and not self._quick
+            and len(X_train) >= 20
+        ):
+            try:
+                from sklearn.base import clone as _clone
+                from sklearn.model_selection import train_test_split as _tts
+
+                # Apply the scaler (and optionally PCA) from the best pipeline
+                # to transform training data for early stopping probe.
+                preprocessor = Pipeline(
+                    [(name, step) for name, step in best_pipe.steps if name != "model"]
+                )
+                X_tr_transformed = preprocessor.transform(_safe_np(X_train))
+
+                # Split *training* data into train/validation for early stopping
+                # to avoid leaking the held-out test set into model selection.
+                X_tr_es, X_val_es, y_tr_es, y_val_es = _tts(
+                    X_tr_transformed, _safe_np(y_train),
+                    test_size=0.2, random_state=seed,
+                )
+
+                # Probe: find optimal n_estimators via early stopping
+                es_params = best_model.get_params()
+                es_params["n_estimators"] = max(es_params.get("n_estimators", 200), 500)
+                es_params["early_stopping_rounds"] = 20
+                es_model = XGBRegressor(**es_params)
+                es_model.fit(
+                    np.ascontiguousarray(X_tr_es),
+                    y_tr_es,
+                    eval_set=[(np.ascontiguousarray(X_val_es), y_val_es)],
+                    verbose=False,
+                )
+                # Check if early stopping actually triggered (stopped before max budget)
+                if hasattr(es_model, "best_iteration") and es_model.best_iteration < es_params["n_estimators"] - 1:
+                    # Clone the full pipeline and refit from raw data with
+                    # the optimal n_estimators.  This avoids the double-transform
+                    # bug that would occur if we inserted a model trained on
+                    # pre-transformed data back into the pipeline.
+                    # Use a temp variable so best_pipe stays fitted if fit() fails.
+                    optimal_n = es_model.best_iteration + 1
+                    cloned_pipe = _clone(best_pipe)
+                    cloned_pipe.set_params(model__n_estimators=optimal_n)
+                    cloned_pipe.fit(_safe_np(X_train), _safe_np(y_train))
+                    best_pipe = cloned_pipe  # only reassign after successful fit
+                    used_early_stop = True
+                    logger.debug(
+                        "WF-XGB early stop: best_iteration=%d (was n_estimators=%d)",
+                        es_model.best_iteration,
+                        es_params.get("n_estimators", 200),
+                    )
+            except Exception:
+                logger.debug("WF-XGB early stopping failed, using GridSearchCV result")
+
         y_train_pred = best_pipe.predict(_safe_np(X_train))
         y_test_pred = best_pipe.predict(_safe_np(X_test))
 
@@ -610,6 +691,7 @@ class WorkflowXGB(BaseWorkflow):
             artifacts={
                 "feature_importance": fi,
                 "cv_results_best_score": float(grid.best_score_),
+                "early_stopping_used": used_early_stop,
             },
             elapsed_sec=time.time() - t0,
         )
@@ -653,7 +735,7 @@ class WorkflowENS(BaseWorkflow):
                 max_depth=4,
                 learning_rate=0.1,
                 random_state=seed,
-                n_jobs=1,
+                n_jobs=_get_inner_n_jobs(),
                 verbosity=0,
             )
         elif self._base_workflow == "xgb":
@@ -785,11 +867,12 @@ class WorkflowRF(BaseWorkflow):
         logger.debug("WF-RF: train=%d, test=%d, features=%d",
                       len(X_train), len(X_test), X_train.shape[1])
 
+        _inner_jobs = _get_inner_n_jobs()
         steps: List[Tuple[str, Any]] = [
             ("scaler", StandardScaler()),
             *_make_pca_step(X_train.shape[1], self._dim_reduction),
             ("model", RandomForestRegressor(
-                random_state=seed, n_jobs=1,
+                random_state=seed, n_jobs=_inner_jobs,
             )),
         ]
         pipe = Pipeline(steps)
@@ -800,7 +883,7 @@ class WorkflowRF(BaseWorkflow):
             cv=max(2, min(self._n_cv, len(X_train))),
             scoring="neg_root_mean_squared_error",
             refit=True,
-            n_jobs=1,
+            n_jobs=_inner_jobs,
             error_score=np.nan,
         )
         grid.fit(_safe_np(X_train), _safe_np(y_train))

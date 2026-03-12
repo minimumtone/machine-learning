@@ -34,6 +34,7 @@ VIF_HIGH_THRESHOLD = 10.0       # VIF > this → 'high multicollinearity'
 VIF_MODERATE_THRESHOLD = 5.0    # VIF > this → 'moderate'
 HIGH_VIF_RATIO_CUTOFF = 0.30    # high VIF feature ratio above this → block linear models
 MAGPIE_DIM_THRESHOLD = 100      # n_features >= this → 'high-dimensional'
+LEAK_CORR_THRESHOLD = 0.85      # |corr(feature, target)| > this → suspected leak (#7)
 
 # Priority columns to KEEP when breaking collinear ties
 # (physically interpretable HEA descriptors preferred over derived statistics)
@@ -165,6 +166,56 @@ def remove_constant_columns(
 # 3.1.4  MulticollinearityReport — diagnostic report dataclass
 # ---------------------------------------------------------------------------
 
+def detect_target_leakage(
+    X: pd.DataFrame,
+    y: pd.Series,
+    threshold: float = LEAK_CORR_THRESHOLD,
+) -> Dict[str, float]:
+    """Detect features with suspiciously high correlation to the target (#7).
+
+    Returns a dict of ``{feature_name: abs_correlation}`` for features
+    where ``|corr(feature, target)| > threshold``.
+
+    These features are likely leaky — they encode the target directly
+    (e.g. GSvolume_pa ≈ lattice parameter ≈ proxy for energy).
+
+    Parameters
+    ----------
+    X : DataFrame
+        Feature matrix (already cleaned of constant / collinear columns).
+    y : Series
+        Target vector.
+    threshold : float
+        Absolute Pearson correlation cutoff (default 0.85).
+
+    Returns
+    -------
+    dict of {feature_name: abs_correlation}, sorted descending.
+    """
+    suspects: Dict[str, float] = {}
+    y_arr = np.ascontiguousarray(np.asarray(y, dtype='float64'))
+    y_std = float(np.std(y_arr))
+    if y_std < 1e-10:
+        return suspects  # constant target — no leakage possible
+
+    for col in X.columns:
+        x_arr = np.ascontiguousarray(X[col].to_numpy(dtype='float64'))
+        if np.std(x_arr) < 1e-10:
+            continue
+        # Pearson correlation via numpy (avoids pandas overhead)
+        corr = float(np.corrcoef(x_arr, y_arr)[0, 1])
+        abs_corr = abs(corr)
+        if abs_corr > threshold:
+            suspects[col] = round(abs_corr, 4)
+            logger.warning(
+                'Leak suspect: %s has |corr(feature, target)| = %.4f (> %.2f)',
+                col, abs_corr, threshold,
+            )
+
+    # Sort descending by correlation
+    return dict(sorted(suspects.items(), key=lambda kv: -kv[1]))
+
+
 @dataclass
 class MulticollinearityReport:
     """Diagnostic result for one feature set."""
@@ -180,6 +231,11 @@ class MulticollinearityReport:
     multicollinearity_level: str   # 'low' | 'moderate' | 'high'
     recommended_workflows: List[str]
     blocked_workflows: List[str]
+    leak_suspects: Dict[str, float] = None  # type: ignore[assignment]  # {feat: |corr|}
+
+    def __post_init__(self) -> None:
+        if self.leak_suspects is None:
+            self.leak_suspects = {}
 
     @property
     def high_vif_ratio(self) -> float:
@@ -199,6 +255,7 @@ class MulticollinearityReport:
             'high_vif_ratio': round(self.high_vif_ratio, 4),
             'recommended_workflows': self.recommended_workflows,
             'blocked_workflows': self.blocked_workflows,
+            'leak_suspects': self.leak_suspects,
         }
 
 
@@ -269,10 +326,17 @@ def run_phase0_multicollinearity(
     feature_sets: List[FeatureSetName],
     all_workflows: List[str],
     n_samples: int,
+    target: Optional[pd.Series] = None,
 ) -> Dict[str, MulticollinearityReport]:
     """Run full multicollinearity pipeline for every feature set.
 
     Called by runner.py before Phase 1. Returns {fs_name: MulticollinearityReport}.
+
+    Parameters
+    ----------
+    target : Series, optional
+        When provided, runs leak detection (#7) — flags features with
+        ``|corr(feature, target)| > 0.85``.
     """
     reports: Dict[str, MulticollinearityReport] = {}
 
@@ -318,6 +382,17 @@ def run_phase0_multicollinearity(
         else:
             level = 'low'
 
+        # Step C2: Leak detection (#7) — flag features highly correlated with target
+        leak_suspects: Dict[str, float] = {}
+        if target is not None and X_fs.shape[1] > 0:
+            leak_suspects = detect_target_leakage(X_fs, target)
+            if leak_suspects:
+                logger.warning(
+                    'Phase 0 [%s]: %d leak suspect(s): %s',
+                    fs_key, len(leak_suspects),
+                    ', '.join(f'{k}={v:.4f}' for k, v in leak_suspects.items()),
+                )
+
         # Step D: Model selection
         report = MulticollinearityReport(
             feature_set=fs_key,
@@ -331,6 +406,7 @@ def run_phase0_multicollinearity(
             multicollinearity_level=level,
             recommended_workflows=[],
             blocked_workflows=[],
+            leak_suspects=leak_suspects,
         )
         allowed, blocked, reason = select_workflows_for_feature_set(
             report, all_workflows, n_samples
@@ -341,10 +417,10 @@ def run_phase0_multicollinearity(
 
         logger.info(
             'Phase 0 [%s]: %dD→%dD (dropped const=%d perfect=%d) '
-            'VIF_high=%d VIF_mod=%d level=%s | %s',
+            'VIF_high=%d VIF_mod=%d level=%s leak=%d | %s',
             fs_key, n_before, len(vif),
             len(dropped_const), len(dropped_perfect),
-            high_count, mod_count, level, reason,
+            high_count, mod_count, level, len(leak_suspects), reason,
         )
 
     return reports
