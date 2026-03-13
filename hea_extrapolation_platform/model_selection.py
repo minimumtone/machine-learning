@@ -496,11 +496,15 @@ def nested_cv_evaluate(
 
             # Inner RandomizedSearchCV
             try:
+                # Materialise inner CV splits as a list — a generator
+                # would be exhausted after the first parameter combo.
+                inner_splits = list(inner_cv.split(X_train, inner_labels))
+
                 search = RandomizedSearchCV(
                     estimator=pipe_clone,
                     param_distributions=cand.param_distributions,
                     n_iter=min(n_iter, _count_param_combinations(cand.param_distributions)),
-                    cv=inner_cv.split(X_train, inner_labels),
+                    cv=inner_splits,
                     scoring="neg_root_mean_squared_error",
                     n_jobs=n_jobs,
                     random_state=random_state,

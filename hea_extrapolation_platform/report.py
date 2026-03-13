@@ -375,7 +375,7 @@ class ReportGenerator:
             lines.append("")
 
         # ---- 10. Next Experiment Proposal ----
-        lines.append("## 9. Next Experiment Proposal")
+        lines.append("## 10. Next Experiment Proposal")
         lines.append("")
         if validity_scores:
             best = validity_scores[0]
