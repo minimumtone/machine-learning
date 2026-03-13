@@ -26,6 +26,7 @@ import numpy as np
 import pandas as pd
 
 from hea_extrapolation_platform.evaluation import ValidityScore
+from hea_extrapolation_platform.model_selection import ModelSelectionResult
 from hea_extrapolation_platform.ood import OODResult
 from hea_extrapolation_platform.workflows import RunResult
 
@@ -62,6 +63,7 @@ class ReportGenerator:
         extra_sections: Optional[Dict[str, str]] = None,
         literature_results: Optional[List[Any]] = None,
         feature_recommendation: Optional[Any] = None,
+        model_selection_result: Optional[ModelSelectionResult] = None,
     ) -> Path:
         """Write full Markdown report.
 
@@ -85,6 +87,8 @@ class ReportGenerator:
             Top literature WF matches for evidence section.
         feature_recommendation : FeatureRecommendation, optional
             Literature-derived feature set recommendation.
+        model_selection_result : ModelSelectionResult, optional
+            Nested CV model selection result.
 
         Returns
         -------
@@ -303,8 +307,61 @@ class ReportGenerator:
             lines.append("Literature-based feature recommendation was not performed.")
             lines.append("")
 
-        # ---- 9. Next Experiment Proposal ----
-        lines.append("## 9. Next Experiment Proposal")
+        # ---- 9. Model Selection (Nested CV) ----
+        lines.append("## 9. Model Selection (Nested CV)")
+        lines.append("")
+        if model_selection_result is not None:
+            ms = model_selection_result
+            lines.append(f"- **Best model**: `{ms.best_name}`")
+            lines.append(
+                f"- **Outer CV RMSE**: "
+                f"{ms.best_mean_rmse:.4f} \u00b1 {ms.best_std_rmse:.4f}"
+            )
+            if ms.n_features_selected is not None:
+                lines.append(
+                    f"- **Selected features**: {ms.n_features_selected}"
+                )
+            if ms.best_params:
+                lines.append(
+                    f"- **Hyperparameters**: `{ms.best_params}`"
+                )
+            lines.append(f"- **Elapsed**: {ms.elapsed_sec:.1f} sec")
+            lines.append("")
+            lines.append(
+                "| Model | Mean RMSE | Std RMSE | Features |"
+            )
+            lines.append(
+                "|-------|-----------|----------|----------|"
+            )
+            sorted_cands = sorted(
+                ms.all_candidates, key=lambda c: c.mean_rmse,
+            )
+            for c in sorted_cands:
+                n_feat = (
+                    str(c.median_n_features)
+                    if c.median_n_features is not None
+                    else "all"
+                )
+                marker = " **Best**" if c.name == ms.best_name else ""
+                lines.append(
+                    f"| {c.name}{marker} | {c.mean_rmse:.4f} "
+                    f"| {c.std_rmse:.4f} | {n_feat} |"
+                )
+            lines.append("")
+            if ms.selected_features:
+                lines.append("### Selected Features")
+                lines.append("")
+                for i, feat in enumerate(ms.selected_features, 1):
+                    lines.append(f"{i}. `{feat}`")
+                lines.append("")
+        else:
+            lines.append(
+                "Model selection was not performed."
+            )
+            lines.append("")
+
+        # ---- 10. Next Experiment Proposal ----
+        lines.append("## 10. Next Experiment Proposal")
         lines.append("")
         if validity_scores:
             best = validity_scores[0]

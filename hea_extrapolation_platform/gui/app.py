@@ -97,6 +97,7 @@ def _empty_session() -> Dict[str, Any]:
         "feature_recommendation": None,
         "feature_counts": None,
         "feature_selection_results": {},  # {fs_name: FeatureSelectionSummary}
+        "model_selection_result": None,  # ModelSelectionResult from Phase 6
     }
 
 
@@ -2356,6 +2357,40 @@ def create_app() -> gr.Blocks:
                             label="ARD (Bayesian)", value=True,
                         )
 
+                # --- Model Selection (Nested CV) ---
+                with gr.Accordion(
+                    "Model Selection — Nested CV (モデル選択)",
+                    open=True,
+                ):
+                    gr.Markdown(
+                        "Nested CV（外側=評価、内側=HPO）で複数モデルを公正に比較し、"
+                        "最適モデルを自動選択します。\n\n"
+                        "- **外側CV**: StratifiedKFold（目的変数の分位ビニング）\n"
+                        "- **内側CV**: RandomizedSearchCV でハイパーパラメータ最適化\n"
+                        "- **候補**: Lasso, Ridge, ARD, SelLasso+XGB, SelARD+RF, RF, XGB\n"
+                        "- **選択基準**: 外側CVの平均RMSE最小。同等なら疎なモデルを優先"
+                    )
+                    model_sel_check = gr.Checkbox(
+                        label="モデル選択を行う (Run Model Selection)",
+                        value=True,
+                    )
+                    with gr.Row():
+                        ms_n_outer = gr.Slider(
+                            minimum=2, maximum=10, value=5, step=1,
+                            label="Outer CV Folds",
+                            info="外側CVの分割数（デフォルト5）",
+                        )
+                        ms_n_inner = gr.Slider(
+                            minimum=2, maximum=5, value=3, step=1,
+                            label="Inner CV Folds",
+                            info="内側CVの分割数（デフォルト3）",
+                        )
+                        ms_n_iter = gr.Slider(
+                            minimum=5, maximum=100, value=20, step=5,
+                            label="HPO Iterations",
+                            info="RandomizedSearchCV反復数",
+                        )
+
                 # Integrations are always enabled behind the scenes.
                 gr.Markdown(
                     "All tracking (MLflow), feature management "
@@ -2560,6 +2595,17 @@ def create_app() -> gr.Blocks:
                 validity_table = gr.Dataframe(label="Feature Validity Ranking")
                 results_table = gr.Dataframe(label="Run Results")
                 parity_plot = gr.Plot(label="Parity Plot")
+
+                # --- Model Selection Results ---
+                with gr.Accordion(
+                    "Model Selection Results — Nested CV "
+                    "(モデル選択結果)",
+                    open=True,
+                ):
+                    model_sel_md = gr.Markdown(
+                        "*モデル選択を有効にして解析を実行すると、"
+                        "ここに Nested CV の結果が表示されます。*"
+                    )
 
                 res_refresh_btn = gr.Button(
                     "Refresh Results", variant="primary",
@@ -2795,6 +2841,10 @@ def create_app() -> gr.Blocks:
             use_wf_xgb: bool,
             use_wf_ens: bool,
             use_dim_reduction: bool,
+            use_model_sel: bool,
+            ms_outer: float,
+            ms_inner: float,
+            ms_iter: float,
             csv_file: Any,
             csv_target: Optional[str],
             csv_features: List[str],
@@ -2836,6 +2886,7 @@ def create_app() -> gr.Blocks:
                 pd.DataFrame(), pd.DataFrame(), None,
                 "*Running...*", None,
             )
+            empty_ms = "*Running...*"
             empty_ood = (None, "", pd.DataFrame())
             empty_rpt = ("*Running...*", None)
             empty_summary = (
@@ -2857,7 +2908,8 @@ def create_app() -> gr.Blocks:
                 return (
                     bar_html, log_html, session,
                     *summ,
-                    *empty_dash, *empty_res, *empty_ood, *empty_rpt,
+                    *empty_dash, *empty_res, empty_ms,
+                    *empty_ood, *empty_rpt,
                 )
 
             succeeded = False
@@ -3314,7 +3366,88 @@ def create_app() -> gr.Blocks:
                             summary_tuple=data_summary,
                         )
 
-                # 6. Report generation  (90% -> 100%)
+                # 5.5  Model Selection — Nested CV  (optional)
+                ms_md_text = (
+                    "*モデル選択は無効です。Config & Run の"
+                    "『モデル選択を行う』を有効にしてください。*"
+                )
+                if use_model_sel:
+                    log("Phase 6: Nested CV model selection...")
+                    yield _yield_progress(
+                        "\n".join(log_lines), 92,
+                        "Model selection (Nested CV)...",
+                        summary_tuple=data_summary,
+                    )
+                    try:
+                        ms_result = runner.run_model_selection(
+                            features_df, target,
+                            out_dir=out_dir,
+                            n_outer=int(ms_outer),
+                            n_inner=int(ms_inner),
+                            n_iter=int(ms_iter),
+                            progress_callback=_progress_cb,
+                        )
+                        session["model_selection_result"] = ms_result
+                        # Build summary markdown
+                        _ms_lines = [
+                            "### Nested CV Model Selection Results",
+                            "",
+                            f"- **Best model**: {ms_result.best_name}",
+                            f"- **Outer RMSE (mean +/- std)**: "
+                            f"{ms_result.best_mean_rmse:.4f} "
+                            f"+/- {ms_result.best_std_rmse:.4f}",
+                        ]
+                        if ms_result.selected_features:
+                            _ms_lines.append(
+                                f"- **Selected features** "
+                                f"({len(ms_result.selected_features)}): "
+                                + ", ".join(
+                                    ms_result.selected_features[:20]
+                                )
+                            )
+                            if len(ms_result.selected_features) > 20:
+                                _ms_lines.append("  ...")
+                        if ms_result.model_path:
+                            _ms_lines.append(
+                                f"- **Saved model**: "
+                                f"`{ms_result.model_path}`"
+                            )
+                        _ms_lines.append("")
+                        _ms_lines.append(
+                            "| Candidate | Outer RMSE (mean) "
+                            "| Outer RMSE (std) | # Features |"
+                        )
+                        _ms_lines.append(
+                            "|-----------|-------------------"
+                            "|-------------------|------------|"
+                        )
+                        for cr in ms_result.all_candidates:
+                            _ms_lines.append(
+                                f"| {cr.name} "
+                                f"| {cr.mean_rmse:.4f} "
+                                f"| {cr.std_rmse:.4f} "
+                                f"| {cr.median_n_features} |"
+                            )
+                        ms_md_text = "\n".join(_ms_lines)
+                        log(
+                            f"Model selection: best={ms_result.best_name} "
+                            f"RMSE={ms_result.best_mean_rmse:.4f}"
+                        )
+                    except Exception as ms_exc:
+                        log(
+                            f"Model selection failed (non-fatal): "
+                            f"{ms_exc}"
+                        )
+                        ms_md_text = (
+                            f"Model selection failed: {ms_exc}"
+                        )
+                    yield _yield_progress(
+                        "\n".join(log_lines), 95,
+                        "Model selection done",
+                        summary_tuple=data_summary,
+                    )
+
+                # 6. Report generation  (95% -> 100%)
                 from hea_extrapolation_platform.report import (
                     ReportGenerator,
                 )
@@ -3340,6 +3473,9 @@ def create_app() -> gr.Blocks:
                     literature_results=session.get("literature_results"),
                     feature_recommendation=session.get(
                         "feature_recommendation",
+                    ),
+                    model_selection_result=session.get(
+                        "model_selection_result",
                     ),
                 )
                 session["report_path"] = report_path
@@ -3370,6 +3506,53 @@ def create_app() -> gr.Blocks:
             final_ood = _refresh_ood_data(ood_fs, session)
             final_rpt = _refresh_report_data(session)
 
+            # Model selection markdown
+            ms_result_obj = session.get("model_selection_result")
+            if ms_result_obj is not None:
+                _fms = [
+                    "### Nested CV Model Selection Results",
+                    "",
+                    f"- **Best model**: {ms_result_obj.best_name}",
+                    f"- **Outer RMSE (mean +/- std)**: "
+                    f"{ms_result_obj.best_mean_rmse:.4f} "
+                    f"+/- {ms_result_obj.best_std_rmse:.4f}",
+                ]
+                if ms_result_obj.selected_features:
+                    _fms.append(
+                        f"- **Selected features** "
+                        f"({len(ms_result_obj.selected_features)}): "
+                        + ", ".join(
+                            ms_result_obj.selected_features[:20]
+                        )
+                    )
+                if ms_result_obj.model_path:
+                    _fms.append(
+                        f"- **Saved model**: "
+                        f"`{ms_result_obj.model_path}`"
+                    )
+                _fms.append("")
+                _fms.append(
+                    "| Candidate | Outer RMSE (mean) "
+                    "| Outer RMSE (std) | # Features |"
+                )
+                _fms.append(
+                    "|-----------|-------------------"
+                    "|-------------------|------------|"
+                )
+                for _cr in ms_result_obj.all_candidates:
+                    _fms.append(
+                        f"| {_cr.name} "
+                        f"| {_cr.mean_rmse:.4f} "
+                        f"| {_cr.std_rmse:.4f} "
+                        f"| {_cr.median_n_features} |"
+                    )
+                final_ms_md = "\n".join(_fms)
+            else:
+                final_ms_md = (
+                    "*モデル選択を有効にして解析を実行すると、"
+                    "ここに Nested CV の結果が表示されます。*"
+                )
+
             yield (
                 final_bar,
                 _build_log_html("\n".join(log_lines)),
@@ -3377,6 +3560,7 @@ def create_app() -> gr.Blocks:
                 *final_summary,
                 *final_dash,
                 *final_res,
+                final_ms_md,
                 *final_ood,
                 *final_rpt,
             )
@@ -3390,6 +3574,7 @@ def create_app() -> gr.Blocks:
                 wf_lin_check, wf_lasso_check, wf_ard_check,
                 wf_rf_check, wf_xgb_check, wf_ens_check,
                 dim_reduction_check,
+                model_sel_check, ms_n_outer, ms_n_inner, ms_n_iter,
                 run_csv_upload, run_csv_target,
                 csv_feature_checks, csv_mode_radio,
                 state,
@@ -3408,6 +3593,8 @@ def create_app() -> gr.Blocks:
                 filter_wf, filter_fs, filter_sp,
                 validity_table, results_table, parity_plot,
                 results_interp_md, results_fs_bar_plot,
+                # Model Selection results
+                model_sel_md,
                 # OOD tab (fix #8)
                 ood_plot, ood_summary, ood_candidates,
                 # Report tab (fix #8)

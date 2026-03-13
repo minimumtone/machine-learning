@@ -95,6 +95,10 @@ from hea_extrapolation_platform.multicollinearity import (
     run_phase0_multicollinearity,
 )
 from hea_extrapolation_platform.feature_selection import run_feature_selection
+from hea_extrapolation_platform.model_selection import (
+    ModelSelectionResult,
+    run_model_selection,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -315,6 +319,7 @@ class ExperimentRunner:
         self._registry = RunRegistry()
         self._ood_split_indices: Dict[str, Tuple[np.ndarray, np.ndarray]] = {}
         self._mc_reports: Optional[Dict[str, MulticollinearityReport]] = None
+        self._model_selection_result: Optional[ModelSelectionResult] = None
         self._effective_cols: Dict[str, List[str]] = {}
 
         # Unified interface: passing an object implies "use it".
@@ -374,6 +379,11 @@ class ExperimentRunner:
     def mc_reports(self) -> Optional[Dict[str, MulticollinearityReport]]:
         """Multicollinearity reports from Phase 0 (None before run)."""
         return self._mc_reports
+
+    @property
+    def model_selection_result(self) -> Optional[ModelSelectionResult]:
+        """Model selection result from Phase 6 (None if not run)."""
+        return self._model_selection_result
 
     def run(
         self,
@@ -557,6 +567,58 @@ class ExperimentRunner:
             raise
 
         return self._registry.runs, validity_scores, ood_results
+
+    # ------------------------------------------------------------------
+    # Phase 6: Model Selection (Nested CV)
+    # ------------------------------------------------------------------
+
+    def run_model_selection(
+        self,
+        features_all: pd.DataFrame,
+        target: pd.Series,
+        out_dir: Optional[Path] = None,
+        n_outer: int = 5,
+        n_inner: int = 3,
+        n_iter: int = 20,
+        progress_callback: Optional[Any] = None,
+    ) -> ModelSelectionResult:
+        """Phase 6: Nested CV model selection.
+
+        Runs *after* the standard 5-phase experiment so it does not
+        interfere with existing results.  Uses the best feature set's
+        effective columns (from Phase 0 + Phase 0.5) as input.
+        """
+        # Pick the best feature set's effective columns
+        best_cols: Optional[List[str]] = None
+        for fs_key, cols in self._effective_cols.items():
+            if best_cols is None or len(cols) > len(best_cols):
+                best_cols = cols
+
+        if best_cols is None:
+            best_cols = list(features_all.columns)
+
+        X = features_all[best_cols]
+
+        def _ms_callback(msg: str) -> None:
+            logger.info("Model selection: %s", msg)
+            if progress_callback is not None:
+                try:
+                    progress_callback(0, 0, f"Phase 6: {msg}")
+                except Exception:
+                    pass
+
+        result = run_model_selection(
+            X, target,
+            out_dir=out_dir,
+            n_outer=n_outer,
+            n_inner=n_inner,
+            n_iter=n_iter,
+            quick=self._quick,
+            random_state=self._seeds[0] if self._seeds else 42,
+            progress_callback=_ms_callback,
+        )
+        self._model_selection_result = result
+        return result
 
     # ------------------------------------------------------------------
     # Phase 1: Pre-compute fold splits (minimum necessary calls)
