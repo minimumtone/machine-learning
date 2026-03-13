@@ -94,6 +94,7 @@ from hea_extrapolation_platform.multicollinearity import (
     MulticollinearityReport,
     run_phase0_multicollinearity,
 )
+from hea_extrapolation_platform.feature_selection import run_feature_selection
 
 logger = logging.getLogger(__name__)
 
@@ -317,6 +318,7 @@ class ExperimentRunner:
         self._registry = RunRegistry()
         self._ood_split_indices: Dict[str, Tuple[np.ndarray, np.ndarray]] = {}
         self._mc_reports: Optional[Dict[str, MulticollinearityReport]] = None
+        self._effective_cols: Dict[str, List[str]] = {}
 
         if mlflow_tracker is not None:
             self._tracker = mlflow_tracker
@@ -443,12 +445,64 @@ class ExperimentRunner:
                 features_all, feature_sets, wf_names, len(features_all),
             )
             self._mc_reports = mc_reports
+
+            # ── Compute effective columns per feature set ──
+            # Phase 0 identifies constant / perfectly-collinear columns
+            # to drop.  Until now these drops were *not* reflected in
+            # the actual training arrays — Phase 3 still used the
+            # original FeatureCatalog columns.  Fix: subtract drops.
+            self._effective_cols = {}
+            for _fs in feature_sets:
+                _fs_key = _fs.value
+                _orig = [c for c in FeatureCatalog.columns(_fs)
+                         if c in features_all.columns]
+                if mc_reports and _fs_key in mc_reports:
+                    _rpt = mc_reports[_fs_key]
+                    _dropped = set(_rpt.dropped_constant + _rpt.dropped_perfect)
+                    _orig = [c for c in _orig if c not in _dropped]
+                self._effective_cols[_fs_key] = _orig
+                logger.info(
+                    "Effective columns [%s]: %d features (after Phase 0 drops)",
+                    _fs_key, len(_orig),
+                )
+
+            # ── Phase 0.5: Feature selection on cleaned columns ──
+            # Lasso-based feature selection removes uninformative
+            # features before training.  This addresses the issue
+            # where high-dimensional / collinear features were passed
+            # straight to learning without any selection step.
+            for _fs_key, _cols in list(self._effective_cols.items()):
+                if len(_cols) <= 3:
+                    continue  # too few to select from
+                try:
+                    _X_fs = features_all[_cols]
+                    _fs_summary = run_feature_selection(
+                        _X_fs, target,
+                        methods=["Lasso"],
+                        feature_set=_fs_key,
+                    )
+                    _lasso = _fs_summary.results.get("Lasso")
+                    if _lasso and _lasso.selected_features:
+                        _sel = _lasso.selected_features
+                        if len(_sel) >= 2:
+                            logger.info(
+                                "Feature selection [%s]: %d → %d features",
+                                _fs_key, len(_cols), len(_sel),
+                            )
+                            self._effective_cols[_fs_key] = _sel
+                except Exception:
+                    logger.warning(
+                        "Feature selection failed for %s; using all cleaned features",
+                        _fs_key,
+                    )
+
             if progress_callback is not None:
                 try:
                     progress_callback(
                         0, 0,
                         f"Phase 0 complete: multicollinearity diagnosed "
-                        f"for {len(mc_reports)} feature sets",
+                        f"for {len(mc_reports)} feature sets, "
+                        f"feature selection applied",
                     )
                 except Exception:
                     pass
@@ -635,7 +689,12 @@ class ExperimentRunner:
         # Build one C-contiguous array per feature set (not per seed/job)
         fs_arrays: Dict[str, Tuple[np.ndarray, List[str]]] = {}
         for fs_name in feature_sets:
-            cols = list(FeatureCatalog.columns(fs_name))
+            # Use effective columns (Phase 0 drops + feature selection)
+            # instead of the raw FeatureCatalog columns.
+            cols = self._effective_cols.get(
+                fs_name.value,
+                list(FeatureCatalog.columns(fs_name)),
+            )
             missing = [c for c in cols if c not in features_all.columns]
             if missing:
                 logger.warning(
@@ -766,7 +825,10 @@ class ExperimentRunner:
 
         for fs_name in feature_sets:
             fs_key = fs_name.value
-            cols = list(FeatureCatalog.columns(fs_name))
+            # Use effective columns (Phase 0 drops + feature selection)
+            cols = self._effective_cols.get(
+                fs_key, list(FeatureCatalog.columns(fs_name)),
+            )
 
             # Guard: skip feature sets with missing columns (same as Phase 3)
             missing = [c for c in cols if c not in features_all.columns]

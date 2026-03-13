@@ -537,9 +537,12 @@ class WorkflowXGB(BaseWorkflow):
                 "model__learning_rate": [0.1],
             }
         return {
-            "model__n_estimators": [100, 200],
-            "model__max_depth": [3, 5],
+            "model__n_estimators": [100, 300],
+            "model__max_depth": [3, 6],
             "model__learning_rate": [0.05, 0.1],
+            "model__subsample": [0.8, 1.0],
+            "model__colsample_bytree": [0.8, 1.0],
+            "model__min_child_weight": [1, 5],
         }
 
     def run(
@@ -555,9 +558,10 @@ class WorkflowXGB(BaseWorkflow):
         logger.debug("WF-XGB: train=%d, test=%d, features=%d",
                       len(X_train), len(X_test), X_train.shape[1])
 
+        # Tree models are scale-invariant and do not need StandardScaler.
+        # PCA destroys physically meaningful feature axes and hurts
+        # interpretability (feature importance becomes meaningless).
         steps: List[Tuple[str, Any]] = [
-            ("scaler", StandardScaler()),
-            *_make_pca_step(X_train.shape[1], self._dim_reduction),
             ("model", self._get_estimator(seed)),
         ]
         pipe = Pipeline(steps)
@@ -656,6 +660,8 @@ class WorkflowENS(BaseWorkflow):
                 n_jobs=1,
                 verbosity=0,
             )
+            # Tree: no scaler / PCA needed
+            return Pipeline([("model", model)])
         elif self._base_workflow == "xgb":
             from sklearn.ensemble import GradientBoostingRegressor
             model = GradientBoostingRegressor(
@@ -664,15 +670,17 @@ class WorkflowENS(BaseWorkflow):
                 learning_rate=0.1,
                 random_state=seed,
             )
+            # Tree: no scaler / PCA needed
+            return Pipeline([("model", model)])
         else:
-            # Ridge has no randomness; random_state is not a valid parameter.
+            # Linear model (Ridge): keep scaler + optional PCA
             model = Ridge(alpha=1.0)
-        steps: List[Tuple[str, Any]] = [
-            ("scaler", StandardScaler()),
-            *_make_pca_step(n_features, self._dim_reduction),
-            ("model", model),
-        ]
-        return Pipeline(steps)
+            steps: List[Tuple[str, Any]] = [
+                ("scaler", StandardScaler()),
+                *_make_pca_step(n_features, self._dim_reduction),
+                ("model", model),
+            ]
+            return Pipeline(steps)
 
     def run(
         self,
@@ -768,9 +776,11 @@ class WorkflowRF(BaseWorkflow):
                 "model__min_samples_split": [2],
             }
         return {
-            "model__n_estimators": [100, 200, 500],
-            "model__max_depth": [None, 10, 20],
+            "model__n_estimators": [200, 500],
+            "model__max_depth": [None, 15],
             "model__min_samples_split": [2, 5],
+            "model__min_samples_leaf": [1, 2],
+            "model__max_features": ["sqrt", 1.0],
         }
 
     def run(
@@ -786,9 +796,10 @@ class WorkflowRF(BaseWorkflow):
         logger.debug("WF-RF: train=%d, test=%d, features=%d",
                       len(X_train), len(X_test), X_train.shape[1])
 
+        # Tree models are scale-invariant and do not need StandardScaler.
+        # PCA destroys physically meaningful feature axes and hurts
+        # interpretability (feature importance becomes meaningless).
         steps: List[Tuple[str, Any]] = [
-            ("scaler", StandardScaler()),
-            *_make_pca_step(X_train.shape[1], self._dim_reduction),
             ("model", RandomForestRegressor(
                 random_state=seed, n_jobs=1,
             )),
