@@ -260,7 +260,7 @@ def _run_job(
     else:
         raise KeyError(
             f"Unknown workflow '{job.wf_name}'. "
-            f"Built-in: {list(wf_map)}, MInt: {list(mint_configs or {})}"
+            f"Built-in: {list(_BUILTIN_FACTORIES)}, MInt: {list(mint_configs or {})}"
         )
 
     return wf.run(
@@ -811,15 +811,19 @@ class ExperimentRunner:
         """Run OOD detection once per feature set.
 
         Uses **multiple folds across all seeds** for more representative OOD
-        detection.  Each fold produces an OOD composite score per sample;
-        the final score is the mean across folds.  This avoids the previous
-        bias of relying on a single fold/seed pair.
+        detection.  Each fold may have a *different* test set (different seeds
+        shuffle differently), so scores are accumulated into a global
+        per-sample array and averaged only where a sample was scored by
+        multiple folds.  The primary fold (seed 0, fold 0) is used for ENS
+        error collection.
 
         Runs *after* all training so the full RunRegistry is available
         for ENS error collection.
         """
         ood_results: Dict[str, OODResult] = {}
         ood_errors_for_eval: Dict[str, Dict[str, np.ndarray]] = {}
+
+        n_samples = len(features_all)
 
         # Collect all RandomCV folds across all seeds for ensemble OOD
         all_ood_folds: List[Tuple[np.ndarray, np.ndarray]] = []
@@ -861,8 +865,11 @@ class ExperimentRunner:
             X_fs_arr = safe_array(features_all[cols])
 
             try:
-                # Ensemble OOD: run detector on each fold and average scores
-                fold_composites: List[np.ndarray] = []
+                # Per-sample accumulation: scores are mapped back to global
+                # sample indices so that averaging is meaningful even when
+                # different seeds produce different test sets.
+                score_sum = np.zeros(n_samples, dtype=np.float64)
+                score_count = np.zeros(n_samples, dtype=np.int32)
                 primary_res: Optional[OODResult] = None
 
                 for fold_i, (tr_idx, te_idx) in enumerate(all_ood_folds):
@@ -871,27 +878,38 @@ class ExperimentRunner:
                     detector = OODDetector(k=10)
                     detector.fit(X_tr)
                     res = detector.score(X_te)
-                    fold_composites.append(res.composite_scores)
+                    # Map scores back to global sample indices
+                    score_sum[te_idx] += res.composite_scores
+                    score_count[te_idx] += 1
                     if fold_i == 0:
                         primary_res = res
 
                 if primary_res is None:
                     continue
 
-                # Average composite scores across folds for more stable OOD
-                if len(fold_composites) > 1:
-                    avg_composite = np.mean(fold_composites, axis=0)
-                    avg_threshold = float(np.quantile(avg_composite, 0.95))
-                    is_ood_avg = avg_composite > avg_threshold
+                # Build OOD result using primary fold's test indices.
+                # For samples scored by multiple folds, use the average;
+                # otherwise use the single score.
+                primary_te = ood_test_idx
+                scored_mask = score_count[primary_te] > 0
+                avg_scores = np.where(
+                    scored_mask,
+                    score_sum[primary_te] / np.maximum(score_count[primary_te], 1),
+                    primary_res.composite_scores,
+                )
+
+                if len(all_ood_folds) > 1:
+                    avg_threshold = float(np.quantile(avg_scores, 0.95))
+                    is_ood_avg = avg_scores > avg_threshold
                     n_ood = int(is_ood_avg.sum())
                     ood_res = OODResult(
                         mahalanobis_scores=primary_res.mahalanobis_scores,
                         knn_scores=primary_res.knn_scores,
-                        composite_scores=avg_composite,
-                        is_ood=is_ood_avg,
+                        composite_scores=np.ascontiguousarray(avg_scores),
+                        is_ood=np.ascontiguousarray(is_ood_avg),
                         ood_threshold=avg_threshold,
-                        ood_ratio=n_ood / max(len(avg_composite), 1),
-                        n_total=len(avg_composite),
+                        ood_ratio=n_ood / max(len(avg_scores), 1),
+                        n_total=len(avg_scores),
                         n_ood=n_ood,
                     )
                 else:
@@ -906,7 +924,7 @@ class ExperimentRunner:
                 logger.debug(
                     "OOD %s: %d/%d flagged (ensemble over %d folds)",
                     fs_key, ood_res.n_ood, ood_res.n_total,
-                    len(fold_composites),
+                    len(all_ood_folds),
                 )
 
                 self._collect_ood_errors(
