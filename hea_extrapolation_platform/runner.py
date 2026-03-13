@@ -322,6 +322,7 @@ class ExperimentRunner:
         self._registry = RunRegistry()
         self._ood_split_indices: Dict[str, Tuple[np.ndarray, np.ndarray]] = {}
         self._mc_reports: Optional[Dict[str, MulticollinearityReport]] = None
+        self._nested_cv_summary: Optional[Any] = None  # NestedCVSummary
 
         if mlflow_tracker is not None:
             self._tracker = mlflow_tracker
@@ -374,6 +375,11 @@ class ExperimentRunner:
     def mc_reports(self) -> Optional[Dict[str, MulticollinearityReport]]:
         """Multicollinearity reports from Phase 0 (None before run)."""
         return self._mc_reports
+
+    @property
+    def nested_cv_summary(self) -> Optional[Any]:
+        """Nested CV summary from Phase 5b (None if not run)."""
+        return self._nested_cv_summary
 
     def run(
         self,
@@ -478,6 +484,13 @@ class ExperimentRunner:
 
             validity_scores = self._phase5_evaluate(
                 ood_errors_for_eval, mc_reports=mc_reports,
+            )
+
+            # ── Phase 5b: Nested CV model selection (optional) ──
+            self._nested_cv_summary = self._phase5b_nested_cv(
+                features_all, feature_sets, target,
+                validity_scores=validity_scores,
+                progress_callback=progress_callback,
             )
 
             elapsed = time.time() - t_start
@@ -861,6 +874,78 @@ class ExperimentRunner:
                 "uncertainties": pred_std,
                 "is_ood":        _is_ood,
             }
+
+    # ------------------------------------------------------------------
+    # Phase 5b: Nested CV model selection
+    # ------------------------------------------------------------------
+
+    def _phase5b_nested_cv(
+        self,
+        features_all: pd.DataFrame,
+        feature_sets: List[FeatureSetName],
+        target: pd.Series,
+        validity_scores: Optional[List[ValidityScore]] = None,
+        progress_callback: Optional[Any] = None,
+    ) -> Optional[Any]:
+        """Run nested CV on the best feature set for optimal model selection.
+
+        Uses the top-ranked feature set from Phase 5 evaluation.
+        Returns NestedCVSummary or None if nested CV is skipped.
+        """
+        from hea_extrapolation_platform.model_selection import run_nested_cv
+        from hea_extrapolation_platform.features import FeatureCatalog
+
+        if not validity_scores:
+            logger.info("Phase 5b: skipping nested CV (no validity scores)")
+            return None
+
+        best_fs_name = validity_scores[0].feature_set
+        logger.info("Phase 5b: running nested CV on best feature set: %s", best_fs_name)
+
+        if progress_callback is not None:
+            try:
+                progress_callback(
+                    0, 0,
+                    f"Phase 5b: nested CV on {best_fs_name}",
+                )
+            except Exception:
+                pass
+
+        # Get feature columns for the best feature set
+        try:
+            fs_enum = FeatureSetName(best_fs_name)
+            cols = FeatureCatalog.columns(fs_enum)
+            available_cols = [c for c in cols if c in features_all.columns]
+            if not available_cols:
+                logger.warning("Phase 5b: no columns for %s", best_fs_name)
+                return None
+
+            X_fs = features_all[available_cols]
+            y = target
+
+            summary = run_nested_cv(
+                X=X_fs,
+                y=y,
+                feature_names=available_cols,
+                n_outer=5,
+                n_inner=3,
+                n_iter=20,
+                random_state=self._seeds[0],
+                progress_callback=progress_callback,
+            )
+
+            logger.info(
+                "Phase 5b complete: best=%s (RMSE=%.4f), %d features, %.1f sec",
+                summary.best_model_name,
+                summary.best_mean_rmse,
+                len(summary.best_selected_features),
+                summary.elapsed_sec,
+            )
+            return summary
+
+        except Exception:
+            logger.exception("Phase 5b: nested CV failed")
+            return None
 
     def export(self, out_dir: Path) -> None:
         self._registry.export_json(out_dir / "run_registry.json")

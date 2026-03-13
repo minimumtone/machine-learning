@@ -62,6 +62,7 @@ class ReportGenerator:
         extra_sections: Optional[Dict[str, str]] = None,
         literature_results: Optional[List[Any]] = None,
         feature_recommendation: Optional[Any] = None,
+        nested_cv_summary: Optional[Any] = None,
     ) -> Path:
         """Write full Markdown report.
 
@@ -326,7 +327,54 @@ class ReportGenerator:
             lines.append("Literature-based feature recommendation was not performed.")
             lines.append("")
 
-        # ---- 9. Next Experiment Proposal ----
+        # ---- 9. Nested CV Model Selection ----
+        lines.append("## 9. Nested CV Model Selection")
+        lines.append("")
+        if nested_cv_summary is not None:
+            lines.append(
+                f"Best model: **{nested_cv_summary.best_model_name}** "
+                f"(outer CV RMSE = {nested_cv_summary.best_mean_rmse:.4f})"
+            )
+            lines.append("")
+            lines.append(f"Selection reason: {nested_cv_summary.selection_reason}")
+            lines.append("")
+            lines.append(f"Elapsed time: {nested_cv_summary.elapsed_sec:.1f} sec")
+            lines.append("")
+
+            # Model comparison table
+            lines.append("### Model Comparison (Outer CV)")
+            lines.append("")
+            lines.append(
+                "| Model | Mean RMSE | Std RMSE | Median Selected Features |"
+            )
+            lines.append("|-------|-----------|----------|--------------------------|")
+            for mr in sorted(
+                nested_cv_summary.model_results,
+                key=lambda m: m.mean_rmse,
+            ):
+                marker = " **Best**" if mr.name == nested_cv_summary.best_model_name else ""
+                lines.append(
+                    f"| {mr.name}{marker} | {mr.mean_rmse:.4f} | "
+                    f"{mr.std_rmse:.4f} | {mr.median_n_selected:.0f} |"
+                )
+            lines.append("")
+
+            # Selected features
+            if nested_cv_summary.best_selected_features:
+                lines.append("### Selected Features (Consensus)")
+                lines.append("")
+                lines.append(
+                    "Features selected in majority of outer CV folds:"
+                )
+                lines.append("")
+                for feat in nested_cv_summary.best_selected_features:
+                    lines.append(f"- {feat}")
+                lines.append("")
+        else:
+            lines.append("Nested CV model selection was not performed.")
+            lines.append("")
+
+        # ---- 10. Next Experiment Proposal ----
         lines.append("## 9. Next Experiment Proposal")
         lines.append("")
         if validity_scores:
@@ -351,7 +399,7 @@ class ReportGenerator:
 
         # ---- Extra sections ----
         if extra_sections:
-            sec_num = 10
+            sec_num = 11
             for title, body in extra_sections.items():
                 lines.append(f"## {sec_num}. {title}")
                 lines.append("")

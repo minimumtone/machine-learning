@@ -97,6 +97,7 @@ def _empty_session() -> Dict[str, Any]:
         "feature_recommendation": None,
         "feature_counts": None,
         "feature_selection_results": {},  # {fs_name: FeatureSelectionSummary}
+        "nested_cv_summary": None,  # NestedCVSummary from Phase 5b
     }
 
 
@@ -2550,6 +2551,7 @@ def create_app() -> gr.Blocks:
                 session["ood_results"] = ood_results
                 session["ood_split_indices"] = runner.ood_split_indices
                 session["mc_reports"] = runner.mc_reports or {}
+                session["nested_cv_summary"] = runner.nested_cv_summary
                 session["runner"] = runner
 
                 # Consolidate DataFrames to single C-contiguous
@@ -2601,6 +2603,26 @@ def create_app() -> gr.Blocks:
                         f"{ood_res.n_ood}/{ood_res.n_total} "
                         f"({ood_res.ood_ratio:.1%})"
                     )
+
+                # Log Phase 5b nested CV results
+                ncv = session.get("nested_cv_summary")
+                if ncv is not None:
+                    log(
+                        f"Nested CV: best={ncv.best_model_name} "
+                        f"(RMSE={ncv.best_mean_rmse:.4f}), "
+                        f"{len(ncv.best_selected_features)} features, "
+                        f"{ncv.elapsed_sec:.1f}s"
+                    )
+                    for mr in sorted(
+                        ncv.model_results,
+                        key=lambda m: m.mean_rmse,
+                    ):
+                        tag = " <-- BEST" if mr.name == ncv.best_model_name else ""
+                        log(
+                            f"  {mr.name}: "
+                            f"RMSE={mr.mean_rmse:.4f}+/-{mr.std_rmse:.4f}, "
+                            f"features={mr.median_n_selected:.0f}{tag}"
+                        )
                 yield _yield_progress(
                     "\n".join(log_lines), 60,
                     f"{len(runs)} runs complete",
@@ -2724,6 +2746,7 @@ def create_app() -> gr.Blocks:
                     feature_recommendation=session.get(
                         "feature_recommendation",
                     ),
+                    nested_cv_summary=session.get("nested_cv_summary"),
                 )
                 session["report_path"] = report_path
                 log(f"Report: {report_path}")
