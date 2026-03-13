@@ -23,6 +23,7 @@ import pandas as pd
 
 from hea_extrapolation_platform.features import FeatureSetName
 from hea_extrapolation_platform.workflows import RunResult
+from hea_extrapolation_platform._compat import as_serializable
 
 if TYPE_CHECKING:
     from hea_extrapolation_platform.multicollinearity import MulticollinearityReport
@@ -59,6 +60,14 @@ class ValidityScore:
         default_factory=lambda: dict(_DEFAULT_WEIGHTS), repr=False,
     )
 
+    # Bootstrap 95% CI for RMSE_test (#9)
+    rmse_ci_lower: float = 0.0
+    rmse_ci_upper: float = 0.0
+    rmse_mean: float = 0.0
+
+    # Leak suspects from Phase 0 (#7)
+    leak_suspects: Dict[str, float] = field(default_factory=dict)
+
     @property
     def total(self) -> float:
         """Weighted total score (higher = better).
@@ -84,7 +93,7 @@ class ValidityScore:
         )
 
     def to_dict(self) -> Dict[str, float]:
-        return {
+        d: Dict[str, Any] = {
             "feature_set": self.feature_set,
             "effect_size": round(self.effect_size, 4),
             "stability": round(self.stability, 4),
@@ -93,7 +102,13 @@ class ValidityScore:
             "extrapolation_safety": round(self.extrapolation_safety, 4),
             "multicollinearity_penalty": round(self.multicollinearity_penalty, 4),
             "total": round(self.total, 4),
+            "rmse_mean": round(self.rmse_mean, 4),
+            "rmse_ci_lower": round(self.rmse_ci_lower, 4),
+            "rmse_ci_upper": round(self.rmse_ci_upper, 4),
         }
+        if self.leak_suspects:
+            d["leak_suspects"] = self.leak_suspects
+        return d
 
 
 class FeatureValidityEvaluator:
@@ -193,8 +208,16 @@ class FeatureValidityEvaluator:
             block_runs = [r for r in fs_run_list if r.split_policy == "CompositionBlock"]
             vs.generalisation = self._generalisation_score(random_runs, block_runs, base_rmse)
 
-            # 4. Leak suspicion
-            vs.leak_penalty = self._leak_penalty(random_runs, block_runs, base_rmse)
+            # 4. Leak suspicion (combine behavioural + correlation-based)
+            behavioural_penalty = self._leak_penalty(random_runs, block_runs, base_rmse)
+            corr_penalty = 0.0
+            if mc_reports and fs_name in mc_reports and mc_reports[fs_name].leak_suspects:
+                # Scale: 1 suspect at 0.85 → 0.3, 3+ suspects → capped at 1.0
+                n_suspects = len(mc_reports[fs_name].leak_suspects)
+                max_corr = max(mc_reports[fs_name].leak_suspects.values())
+                corr_penalty = min(1.0, n_suspects * 0.3 * max_corr)
+                vs.leak_suspects = mc_reports[fs_name].leak_suspects
+            vs.leak_penalty = min(1.0, max(behavioural_penalty, corr_penalty))
 
             # 5. Extrapolation safety
             if ood_errors and fs_name in ood_errors:
@@ -211,6 +234,11 @@ class FeatureValidityEvaluator:
             else:
                 vs.multicollinearity_penalty = 0.0  # no info = neutral
 
+            # 7. Bootstrap 95% CI for RMSE_test (#9)
+            vs.rmse_mean, vs.rmse_ci_lower, vs.rmse_ci_upper = (
+                self._bootstrap_ci(rmses)
+            )
+
             scores.append(vs)
 
         scores.sort(key=lambda s: s.total, reverse=True)
@@ -224,6 +252,47 @@ class FeatureValidityEvaluator:
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
+
+    @staticmethod
+    def _bootstrap_ci(
+        values: List[float],
+        n_bootstrap: int = 1000,
+        confidence: float = 0.95,
+        seed: int = 42,
+    ) -> Tuple[float, float, float]:
+        """Compute Bootstrap confidence interval for the mean (#9).
+
+        Parameters
+        ----------
+        values : list of float
+            Sample values (e.g. RMSE_test across CV folds/seeds).
+        n_bootstrap : int
+            Number of bootstrap resamples.
+        confidence : float
+            Confidence level (default 0.95 → 95% CI).
+        seed : int
+            Random seed for reproducibility.
+
+        Returns
+        -------
+        (mean, ci_lower, ci_upper)
+        """
+        if len(values) < 2:
+            m = values[0] if values else 0.0
+            return m, m, m
+
+        arr = np.array(values, dtype=float)
+        rng = np.random.RandomState(seed)
+        boot_means = np.empty(n_bootstrap, dtype=float)
+        n = len(arr)
+        for i in range(n_bootstrap):
+            sample = arr[rng.randint(0, n, size=n)]
+            boot_means[i] = sample.mean()
+
+        alpha = 1.0 - confidence
+        ci_lower = float(np.percentile(boot_means, 100 * alpha / 2))
+        ci_upper = float(np.percentile(boot_means, 100 * (1 - alpha / 2)))
+        return float(arr.mean()), ci_lower, ci_upper
 
     @staticmethod
     def _mean_test_rmse(runs: List[RunResult]) -> float:

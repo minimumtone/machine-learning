@@ -99,6 +99,7 @@ from hea_extrapolation_platform.model_selection import (
     ModelSelectionResult,
     run_model_selection,
 )
+from hea_extrapolation_platform._compat import as_serializable
 
 logger = logging.getLogger(__name__)
 
@@ -172,9 +173,17 @@ class RunRegistry:
         return pd.DataFrame(columns)
 
     def export_json(self, path: Path) -> None:
+        """Export runs to JSON with numpy-safe serialization.
+
+        Uses ``as_serializable`` to convert numpy types (float32, int64,
+        ndarray, bool\_) to JSON-safe Python builtins before writing.
+        This prevents ``TypeError`` on ``json.dump`` (#5).
+        """
         df = self.to_dataframe()
         path.parent.mkdir(parents=True, exist_ok=True)
-        df.to_json(path, orient="records", indent=2, force_ascii=False)
+        records = as_serializable(df.to_dict(orient="records"))
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(records, f, indent=2, ensure_ascii=False)
         logger.info("Exported %d runs to %s", len(self._runs), path)
 
 
@@ -453,9 +462,10 @@ class ExperimentRunner:
         )
 
         try:
-            # ── Phase 0: Multicollinearity diagnostics & model selection ──
+            # ── Phase 0: Multicollinearity diagnostics & leak detection ──
             mc_reports = run_phase0_multicollinearity(
                 features_all, feature_sets, wf_names, len(features_all),
+                target=target,
             )
             self._mc_reports = mc_reports
 

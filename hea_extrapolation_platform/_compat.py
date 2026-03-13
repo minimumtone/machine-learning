@@ -90,6 +90,62 @@ def safe_float(x: object) -> float:
     return float(x)
 
 
+def as_serializable(obj: object) -> object:
+    """Recursively convert numpy / pandas types to JSON-safe Python builtins.
+
+    Problem (#5): ``json.dump`` raises ``TypeError`` on ``numpy.float32``,
+    ``numpy.int64``, ``numpy.ndarray``, ``numpy.bool_``, etc.
+
+    This function walks a nested dict / list structure and converts:
+      - numpy integer types  → ``int``
+      - numpy float types    → ``float``
+      - numpy bool\_         → ``bool``
+      - numpy ndarray        → ``list`` (recursive)
+      - numpy generic        → appropriate Python scalar
+      - pandas Series        → ``list``
+      - pandas DataFrame     → ``list`` of dicts (``records`` orient)
+      - ``NaN`` / ``Inf``    → ``None`` (JSON has no NaN literal)
+
+    Usage::
+
+        import json
+        report = {"rmse": np.float64(0.42), "fi": np.array([1, 2, 3])}
+        json.dump(as_serializable(report), f)
+    """
+    import math
+
+    if isinstance(obj, dict):
+        return {as_serializable(k): as_serializable(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        converted = [as_serializable(item) for item in obj]
+        return type(obj)(converted) if isinstance(obj, tuple) else converted
+    if isinstance(obj, np.ndarray):
+        if obj.ndim == 0:
+            return as_serializable(obj.item())
+        return [as_serializable(item) for item in obj.tolist()]
+    if isinstance(obj, (np.integer,)):
+        return int(obj)
+    if isinstance(obj, (np.floating,)):
+        val = float(obj)
+        if math.isnan(val) or math.isinf(val):
+            return None
+        return val
+    if isinstance(obj, np.bool_):
+        return bool(obj)
+    if isinstance(obj, np.generic):
+        return obj.item()
+    if isinstance(obj, float):
+        if math.isnan(obj) or math.isinf(obj):
+            return None
+        return obj
+    # pandas types
+    if isinstance(obj, pd.Series):
+        return [as_serializable(item) for item in obj.tolist()]
+    if isinstance(obj, pd.DataFrame):
+        return [as_serializable(row) for row in obj.to_dict(orient="records")]
+    return obj
+
+
 def _ensure_c_contiguous(arr: np.ndarray) -> np.ndarray:
     """Return *arr* as C-contiguous if it isn't already."""
     if arr.ndim == 0:
