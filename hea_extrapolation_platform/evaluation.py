@@ -30,6 +30,18 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+# Default weight configuration for ValidityScore.total.
+# Positive-direction weights sum to 1.00; penalty weights are subtracted.
+_DEFAULT_WEIGHTS: Dict[str, float] = {
+    "effect_size": 0.30,
+    "stability": 0.20,
+    "generalisation": 0.30,
+    "leak_penalty": -0.15,
+    "extrapolation_safety": 0.20,
+    "multicollinearity_penalty": -0.10,
+}
+
+
 @dataclass
 class ValidityScore:
     """Feature-set validity score across six dimensions."""
@@ -42,25 +54,33 @@ class ValidityScore:
     extrapolation_safety: float = 0.0
     multicollinearity_penalty: float = 0.0
 
+    # Weights can be overridden per-instance via FeatureValidityEvaluator
+    _weights: Dict[str, float] = field(
+        default_factory=lambda: dict(_DEFAULT_WEIGHTS), repr=False,
+    )
+
     @property
     def total(self) -> float:
         """Weighted total score (higher = better).
 
-        Positive-direction weights: 0.30 + 0.20 + 0.30 + 0.20 = 1.00.
-        leak_penalty is subtracted with weight 0.15.
-        multicollinearity_penalty is subtracted with weight 0.10.
+        Uses weights from ``_weights`` dict (configurable via
+        ``FeatureValidityEvaluator(weights=...)``).  Default weights:
+          effect_size=0.30, stability=0.20, generalisation=0.30,
+          leak_penalty=-0.15, extrapolation_safety=0.20,
+          multicollinearity_penalty=-0.10.
 
         Score range:
           - Best case (all 1.0, no penalties):  1.00
           - Worst case (all 0.0, max penalties): -0.25
         """
+        w = self._weights
         return (
-            0.30 * self.effect_size
-            + 0.20 * self.stability
-            + 0.30 * self.generalisation
-            - 0.15 * self.leak_penalty
-            + 0.20 * self.extrapolation_safety
-            - 0.10 * self.multicollinearity_penalty
+            w.get("effect_size", 0.30) * self.effect_size
+            + w.get("stability", 0.20) * self.stability
+            + w.get("generalisation", 0.30) * self.generalisation
+            + w.get("leak_penalty", -0.15) * self.leak_penalty
+            + w.get("extrapolation_safety", 0.20) * self.extrapolation_safety
+            + w.get("multicollinearity_penalty", -0.10) * self.multicollinearity_penalty
         )
 
     def to_dict(self) -> Dict[str, float]:
@@ -83,7 +103,23 @@ class FeatureValidityEvaluator:
 
         evaluator = FeatureValidityEvaluator()
         scores = evaluator.evaluate(runs, ood_errors)
+
+        # Custom weights:
+        evaluator = FeatureValidityEvaluator(weights={
+            "effect_size": 0.40,
+            "stability": 0.20,
+            "generalisation": 0.20,
+            "leak_penalty": -0.15,
+            "extrapolation_safety": 0.10,
+            "multicollinearity_penalty": -0.10,
+        })
     """
+
+    def __init__(
+        self,
+        weights: Optional[Dict[str, float]] = None,
+    ) -> None:
+        self._weights = dict(weights) if weights else dict(_DEFAULT_WEIGHTS)
 
     def evaluate(
         self,
@@ -127,7 +163,7 @@ class FeatureValidityEvaluator:
 
         scores: List[ValidityScore] = []
         for fs_name, fs_run_list in fs_runs.items():
-            vs = ValidityScore(feature_set=fs_name)
+            vs = ValidityScore(feature_set=fs_name, _weights=self._weights)
 
             # 1. Effect size
             fs_rmse = self._mean_test_rmse(fs_run_list)
@@ -221,7 +257,7 @@ class FeatureValidityEvaluator:
             # Use geometric mean instead of min to avoid bottleneck
             # (Review: min causes asymmetric improvements to be undervalued)
             geo_mean = math.sqrt(rand_improve * block_improve)
-            return min(1.0, 0.5 + 0.5 * geo_mean)
+            return min(1.0, geo_mean)
         elif rand_improve < -_eps and block_improve < -_eps:
             # Both degrade -> low but not worst
             return 0.3

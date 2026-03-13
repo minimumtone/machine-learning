@@ -29,24 +29,7 @@ from sklearn.preprocessing import StandardScaler
 logger = logging.getLogger(__name__)
 
 
-def _safe_np(source: Any) -> np.ndarray:
-    """Return a C-contiguous float64 array from DataFrame / Series / ndarray.
-
-    pandas 3.0 may return F-contiguous (column-major) arrays from
-    ``.values`` / ``.to_numpy()`` when the BlockManager is fragmented.
-    BLAS/LAPACK routines inside StandardScaler, Ridge, XGBoost, and
-    NearestNeighbors assume C-contiguous (row-major) layout and can
-    SIGSEGV on F-contiguous input.  This helper guarantees C-contiguous.
-    """
-    if isinstance(source, pd.DataFrame):
-        arr = source.to_numpy(dtype="float64", na_value=np.nan)
-    elif isinstance(source, pd.Series):
-        arr = source.to_numpy(dtype="float64")
-    elif isinstance(source, np.ndarray):
-        arr = np.array(source, dtype="float64")
-    else:
-        arr = np.asarray(source, dtype="float64")
-    return np.ascontiguousarray(arr)
+from hea_extrapolation_platform._utils import safe_array as _safe_np  # noqa: E402
 
 try:
     from xgboost import XGBRegressor

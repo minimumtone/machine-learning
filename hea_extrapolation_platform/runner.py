@@ -103,27 +103,10 @@ logger = logging.getLogger(__name__)
 # Run Registry
 # ---------------------------------------------------------------------------
 
-def safe_array(source: Any, dtype: str = "float64") -> np.ndarray:
-    """Convert *source* to a C-contiguous numpy array.
+from hea_extrapolation_platform._utils import safe_array  # noqa: E402
 
-    This is the single choke-point for every DataFrame → numpy conversion
-    in the platform.  pandas 3.0 returns F-contiguous (column-major) arrays
-    from ``.values`` and ``.to_numpy()`` when the BlockManager is fragmented.
-    Many C extensions (BLAS, LAPACK, scipy, sklearn) assume C-contiguous
-    (row-major) layout and SIGSEGV on F-contiguous input.
-
-    Accepts: DataFrame, Series, ndarray, or list.
-    Returns: C-contiguous ndarray with requested dtype.
-    """
-    if isinstance(source, pd.DataFrame):
-        arr = source.to_numpy(dtype=dtype, na_value=np.nan)
-    elif isinstance(source, pd.Series):
-        arr = source.to_numpy(dtype=dtype)
-    elif isinstance(source, np.ndarray):
-        arr = np.array(source, dtype=dtype)
-    else:
-        arr = np.asarray(source, dtype=dtype)
-    return np.ascontiguousarray(arr)
+# Re-export for backward compatibility
+__all__ = ["safe_array"]
 
 
 class RunRegistry:
@@ -150,28 +133,38 @@ class RunRegistry:
         return len(self._runs)
 
     def to_dataframe(self) -> pd.DataFrame:
-        """Convert all runs to a summary DataFrame (columnar construction)."""
+        """Convert all runs to a summary DataFrame (columnar construction).
+
+        Column names are derived dynamically from ``RunResult`` dataclass
+        fields, excluding non-scalar fields (numpy arrays, dicts) that
+        cannot be represented as DataFrame columns.
+        """
+        import dataclasses as _dc
+
         if not self._runs:
             return pd.DataFrame()
+
+        # Dynamically extract scalar column names from RunResult fields.
+        # Exclude ndarray / dict fields that are not suitable for tabular
+        # representation (y_test_true, y_test_pred, test_indices, params,
+        # artifacts).
+        _SKIP_TYPES = (np.ndarray, dict)
         col_names = [
-            "workflow", "feature_set", "split_policy", "seed", "fold",
-            "rmse_train", "rmse_test", "mae_train", "mae_test",
-            "r2_train", "r2_test", "elapsed_sec",
+            f.name for f in _dc.fields(RunResult)
+            if f.default_factory is not dict.__class__  # exclude dict fields
+            and not (
+                isinstance(getattr(self._runs[0], f.name, None), _SKIP_TYPES)
+            )
+        ]
+        # Fallback: filter to fields whose first-run value is a scalar
+        col_names = [
+            name for name in col_names
+            if not isinstance(getattr(self._runs[0], name, None), (np.ndarray, dict))
         ]
         columns: Dict[str, list] = {k: [] for k in col_names}
         for r in self._runs:
-            columns["workflow"].append(r.workflow)
-            columns["feature_set"].append(r.feature_set)
-            columns["split_policy"].append(r.split_policy)
-            columns["seed"].append(r.seed)
-            columns["fold"].append(r.fold)
-            columns["rmse_train"].append(r.rmse_train)
-            columns["rmse_test"].append(r.rmse_test)
-            columns["mae_train"].append(r.mae_train)
-            columns["mae_test"].append(r.mae_test)
-            columns["r2_train"].append(r.r2_train)
-            columns["r2_test"].append(r.r2_test)
-            columns["elapsed_sec"].append(r.elapsed_sec)
+            for col in col_names:
+                columns[col].append(getattr(r, col))
         return pd.DataFrame(columns)
 
     def export_json(self, path: Path) -> None:
@@ -241,20 +234,24 @@ def _run_job(
     )
     _dr = job.dim_reduction
     _pca = _dr or job.force_pca  # force_pca=True → always PCA ON (WF-LIN only)
-    wf_map: Dict[str, Any] = {
-        "WF-LIN": WorkflowLIN(dim_reduction=_pca),
-        "WF-LASSO": WorkflowLASSO(dim_reduction=_dr),
-        "WF-ARD": WorkflowARD(dim_reduction=_dr),
-        "WF-RF": WorkflowRF(quick=job.quick, dim_reduction=_dr),
-        "WF-XGB": WorkflowXGB(quick=job.quick, dim_reduction=_dr),
-        "WF-ENS": WorkflowENS(
+
+    # Lazy instantiation: create only the one workflow needed for this job.
+    # Previously all 6 workflows were instantiated per job, wasting resources
+    # when running hundreds of parallel jobs via ProcessPoolExecutor.
+    _BUILTIN_FACTORIES = {
+        "WF-LIN":   lambda: WorkflowLIN(dim_reduction=_pca),
+        "WF-LASSO": lambda: WorkflowLASSO(dim_reduction=_dr),
+        "WF-ARD":   lambda: WorkflowARD(dim_reduction=_dr),
+        "WF-RF":    lambda: WorkflowRF(quick=job.quick, dim_reduction=_dr),
+        "WF-XGB":   lambda: WorkflowXGB(quick=job.quick, dim_reduction=_dr),
+        "WF-ENS":   lambda: WorkflowENS(
             n_members=3 if job.quick else 5, quick=job.quick,
             dim_reduction=_dr,
         ),
     }
 
-    if job.wf_name in wf_map:
-        wf = wf_map[job.wf_name]
+    if job.wf_name in _BUILTIN_FACTORIES:
+        wf = _BUILTIN_FACTORIES[job.wf_name]()
     elif mint_configs is not None and job.wf_name in mint_configs:
         from hea_extrapolation_platform.integrations.mint_adapter import (
             MIntWorkflowAdapter,
@@ -320,7 +317,11 @@ class ExperimentRunner:
         self._mc_reports: Optional[Dict[str, MulticollinearityReport]] = None
         self._effective_cols: Dict[str, List[str]] = {}
 
+        # Unified interface: passing an object implies "use it".
+        # The boolean flags (use_mlflow, use_feast, use_mint) are kept for
+        # backward compatibility but are redundant when the object is given.
         if mlflow_tracker is not None:
+            use_mlflow = True
             self._tracker = mlflow_tracker
         elif use_mlflow:
             self._tracker = MLflowTracker(
@@ -330,6 +331,7 @@ class ExperimentRunner:
             self._tracker = MLflowTracker(enabled=False)
 
         if feature_store is not None:
+            use_feast = True
             self._feature_store = feature_store
         elif use_feast:
             self._feature_store = FeastFeatureStore(enabled=True)
@@ -337,6 +339,7 @@ class ExperimentRunner:
             self._feature_store = FeastFeatureStore(enabled=False)
 
         if mint_registry is not None:
+            use_mint = True
             self._mint_registry = mint_registry
         elif use_mint:
             self._mint_registry = MIntWorkflowRegistry.create_default()
@@ -807,20 +810,35 @@ class ExperimentRunner:
     ) -> Tuple[Dict[str, OODResult], Dict[str, Dict[str, np.ndarray]]]:
         """Run OOD detection once per feature set.
 
-        Uses the first fold of the first seed's RandomCV split.
+        Uses **multiple folds across all seeds** for more representative OOD
+        detection.  Each fold produces an OOD composite score per sample;
+        the final score is the mean across folds.  This avoids the previous
+        bias of relying on a single fold/seed pair.
+
         Runs *after* all training so the full RunRegistry is available
         for ENS error collection.
         """
         ood_results: Dict[str, OODResult] = {}
         ood_errors_for_eval: Dict[str, Dict[str, np.ndarray]] = {}
 
-        first_seed = self._seeds[0]
-        ood_train_idx, ood_test_idx = fold_plan[f"RandomCV_seed{first_seed}"][0]
+        # Collect all RandomCV folds across all seeds for ensemble OOD
+        all_ood_folds: List[Tuple[np.ndarray, np.ndarray]] = []
+        for seed in self._seeds:
+            key = f"RandomCV_seed{seed}"
+            if key in fold_plan:
+                all_ood_folds.append(fold_plan[key][0])  # first fold per seed
+        if not all_ood_folds:
+            logger.warning("Phase 4: No RandomCV folds available for OOD")
+            return ood_results, ood_errors_for_eval
+
+        # Primary fold (used for ENS error collection and split indices)
+        ood_train_idx, ood_test_idx = all_ood_folds[0]
 
         logger.info(
             "Phase 4: OOD for %d feature sets "
-            "(train=%d, test=%d, seed=%d fold=0)",
-            len(feature_sets), len(ood_train_idx), len(ood_test_idx), first_seed,
+            "(ensemble over %d folds, primary train=%d test=%d)",
+            len(feature_sets), len(all_ood_folds),
+            len(ood_train_idx), len(ood_test_idx),
         )
 
         for fs_name in feature_sets:
@@ -839,40 +857,56 @@ class ExperimentRunner:
                 )
                 continue
 
-            # C-contiguous slices — same pattern as Phase 3
+            # C-contiguous feature array — shared across folds
             X_fs_arr = safe_array(features_all[cols])
-            X_train_ood = pd.DataFrame(X_fs_arr[ood_train_idx], columns=cols)
-            X_test_ood  = pd.DataFrame(X_fs_arr[ood_test_idx],  columns=cols)
 
             try:
-                if _HAS_RESOURCE:
-                    try:
-                        rss_pre = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-                    except Exception:
-                        rss_pre = -1
-                else:
-                    rss_pre = -1
+                # Ensemble OOD: run detector on each fold and average scores
+                fold_composites: List[np.ndarray] = []
+                primary_res: Optional[OODResult] = None
 
-                detector = OODDetector(k=10)
-                detector.fit(X_train_ood)
-                ood_res = detector.score(X_test_ood)
+                for fold_i, (tr_idx, te_idx) in enumerate(all_ood_folds):
+                    X_tr = pd.DataFrame(X_fs_arr[tr_idx], columns=cols)
+                    X_te = pd.DataFrame(X_fs_arr[te_idx], columns=cols)
+                    detector = OODDetector(k=10)
+                    detector.fit(X_tr)
+                    res = detector.score(X_te)
+                    fold_composites.append(res.composite_scores)
+                    if fold_i == 0:
+                        primary_res = res
+
+                if primary_res is None:
+                    continue
+
+                # Average composite scores across folds for more stable OOD
+                if len(fold_composites) > 1:
+                    avg_composite = np.mean(fold_composites, axis=0)
+                    avg_threshold = float(np.quantile(avg_composite, 0.95))
+                    is_ood_avg = avg_composite > avg_threshold
+                    n_ood = int(is_ood_avg.sum())
+                    ood_res = OODResult(
+                        mahalanobis_scores=primary_res.mahalanobis_scores,
+                        knn_scores=primary_res.knn_scores,
+                        composite_scores=avg_composite,
+                        is_ood=is_ood_avg,
+                        ood_threshold=avg_threshold,
+                        ood_ratio=n_ood / max(len(avg_composite), 1),
+                        n_total=len(avg_composite),
+                        n_ood=n_ood,
+                    )
+                else:
+                    ood_res = primary_res
+
                 ood_results[fs_key] = ood_res
                 self._ood_split_indices[fs_key] = (
                     np.ascontiguousarray(np.asarray(ood_train_idx)),
                     np.ascontiguousarray(np.asarray(ood_test_idx)),
                 )
 
-                if _HAS_RESOURCE:
-                    try:
-                        rss_post = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-                    except Exception:
-                        rss_post = -1
-                else:
-                    rss_post = -1
                 logger.debug(
-                    "OOD %s: %d/%d flagged, RSS delta ~%d MB",
+                    "OOD %s: %d/%d flagged (ensemble over %d folds)",
                     fs_key, ood_res.n_ood, ood_res.n_total,
-                    (rss_post - rss_pre) // 1024,
+                    len(fold_composites),
                 )
 
                 self._collect_ood_errors(
@@ -916,20 +950,22 @@ class ExperimentRunner:
         out: Dict[str, Dict[str, np.ndarray]],
     ) -> None:
         ood_test_indices = np.ascontiguousarray(np.asarray(ood_test_idx))
+        ood_key = ood_test_indices.tobytes()
+
+        # O(1) lookup via hash dict instead of O(n) linear scan with
+        # np.array_equal.  Build a dict keyed by test_indices.tobytes().
         ens_runs = [
             r for r in self._registry.runs
             if r.feature_set == fs_key
             and r.workflow == "WF-ENS"
             and r.test_indices is not None
         ]
-        matched = None
-        for er in reversed(ens_runs):
-            if np.array_equal(
-                np.ascontiguousarray(np.asarray(er.test_indices)),
-                ood_test_indices,
-            ):
-                matched = er
-                break
+        ens_index: Dict[bytes, "RunResult"] = {}
+        for er in ens_runs:
+            key = np.ascontiguousarray(np.asarray(er.test_indices)).tobytes()
+            ens_index[key] = er  # last write wins (most recent run)
+
+        matched = ens_index.get(ood_key)
         if matched is None:
             logger.info("No matching ENS run for OOD eval on %s", fs_key)
             return

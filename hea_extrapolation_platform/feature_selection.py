@@ -194,13 +194,29 @@ def _run_bic_forward(
     return _forward_stepwise_ic(X, y, criterion="bic", max_features=max_features)
 
 
+_AIC_BIC_MAX_FEATURES = 30  # Skip AIC/BIC forward stepwise when n_features > this
+
+
 def _forward_stepwise_ic(
     X: pd.DataFrame,
     y: pd.Series,
     criterion: str = "aic",
     max_features: int = 20,
-) -> FeatureSelectionResult:
-    """Forward stepwise feature selection with information criterion."""
+) -> Optional[FeatureSelectionResult]:
+    """Forward stepwise feature selection with information criterion.
+
+    Returns None if n_features > _AIC_BIC_MAX_FEATURES to avoid O(n²)
+    bottleneck on high-dimensional feature sets (e.g. FS_MAGPIE with 132+
+    features).
+    """
+    if X.shape[1] > _AIC_BIC_MAX_FEATURES:
+        method_name = "AIC" if criterion == "aic" else "BIC"
+        logger.info(
+            "%s skipped: %d features > threshold %d (O(n²) bottleneck)",
+            method_name, X.shape[1], _AIC_BIC_MAX_FEATURES,
+        )
+        return None
+
     from sklearn.linear_model import LinearRegression
 
     n = len(y)
@@ -355,6 +371,9 @@ def run_feature_selection(
             continue
         try:
             result = func(X, y)
+            if result is None:
+                # Method chose to skip (e.g. AIC/BIC with too many features)
+                continue
             results[method_name] = result
             logger.info(
                 "Feature selection [%s] on %s: %d / %d features selected",
