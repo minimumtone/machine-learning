@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -115,14 +116,14 @@ class NestedCVModelResult:
         """Serialise for JSON export."""
         return {
             "name": self.name,
-            "mean_rmse": round(self.mean_rmse, 6),
-            "std_rmse": round(self.std_rmse, 6),
+            "mean_rmse": _safe_round(self.mean_rmse),
+            "std_rmse": _safe_round(self.std_rmse),
             "median_n_selected": self.median_n_selected,
-            "outer_scores": [round(s, 6) for s in self.outer_scores],
+            "outer_scores": [_safe_round(s) for s in self.outer_scores],
             "fold_results": [
                 {
                     "fold_idx": fr.fold_idx,
-                    "rmse_test": round(fr.rmse_test, 6),
+                    "rmse_test": _safe_round(fr.rmse_test),
                     "n_selected_features": fr.n_selected_features,
                     "selected_feature_names": fr.selected_feature_names,
                     "best_params": {
@@ -148,7 +149,7 @@ class NestedCVSummary:
     def to_dict(self) -> Dict[str, Any]:
         return {
             "best_model_name": self.best_model_name,
-            "best_mean_rmse": round(self.best_mean_rmse, 6),
+            "best_mean_rmse": _safe_round(self.best_mean_rmse),
             "best_selected_features": self.best_selected_features,
             "selection_reason": self.selection_reason,
             "elapsed_sec": round(self.elapsed_sec, 2),
@@ -156,12 +157,20 @@ class NestedCVSummary:
         }
 
 
+def _safe_round(v: float, n: int = 6) -> Optional[float]:
+    """Round *v* to *n* decimals, returning ``None`` for inf/nan."""
+    if not math.isfinite(v):
+        return None
+    return round(v, n)
+
+
 def _serializable_value(v: Any) -> Any:
     """Convert a single value to JSON-serialisable form."""
     if isinstance(v, (np.integer,)):
         return int(v)
     if isinstance(v, (np.floating,)):
-        return float(v)
+        fv = float(v)
+        return fv if math.isfinite(fv) else None
     if isinstance(v, np.bool_):
         return bool(v)
     if isinstance(v, np.ndarray):

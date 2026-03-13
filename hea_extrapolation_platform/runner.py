@@ -923,6 +923,10 @@ class ExperimentRunner:
             X_fs = features_all[available_cols]
             y = target
 
+            # Do NOT forward the GUI progress_callback here — its
+            # mapping (20 + 40*pct) is designed for Phase 3 and would
+            # make the progress bar regress from 60% back to ~20%.
+            # Phase 5b progress is reported via logger instead.
             summary = run_nested_cv(
                 X=X_fs,
                 y=y,
@@ -931,7 +935,7 @@ class ExperimentRunner:
                 n_inner=3,
                 n_iter=20,
                 random_state=self._seeds[0],
-                progress_callback=progress_callback,
+                progress_callback=None,
             )
 
             logger.info(
