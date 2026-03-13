@@ -601,10 +601,15 @@ class WorkflowXGB(BaseWorkflow):
 
                 # Apply the scaler (and optionally PCA) from the best pipeline
                 # to transform training data for early stopping probe.
-                preprocessor = Pipeline(
-                    [(name, step) for name, step in best_pipe.steps if name != "model"]
-                )
-                X_tr_transformed = preprocessor.transform(_safe_np(X_train))
+                pre_steps = [
+                    (name, step) for name, step in best_pipe.steps
+                    if name != "model"
+                ]
+                if pre_steps:
+                    preprocessor = Pipeline(pre_steps)
+                    X_tr_transformed = preprocessor.transform(_safe_np(X_train))
+                else:
+                    X_tr_transformed = _safe_np(X_train)
 
                 # Split *training* data into train/validation for early stopping
                 # to avoid leaking the held-out test set into model selection.

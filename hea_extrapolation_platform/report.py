@@ -409,7 +409,7 @@ class ReportGenerator:
 
         # ---- Extra sections ----
         if extra_sections:
-            sec_num = 10
+            sec_num = 11
             for title, body in extra_sections.items():
                 lines.append(f"## {sec_num}. {title}")
                 lines.append("")

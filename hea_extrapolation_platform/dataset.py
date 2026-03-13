@@ -235,13 +235,14 @@ def generate_hea_dataset(
         Yield strength (MPa).
     """
     import warnings
-    warnings.warn(
-        "noise_std is deprecated and ignored; strength noise is now "
-        "proportional (7 % CV). This parameter will be removed in a "
-        "future release.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
+    if noise_std != 50.0:
+        warnings.warn(
+            "noise_std is deprecated and ignored; strength noise is now "
+            "proportional (7 % CV). This parameter will be removed in a "
+            "future release.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
     rng = np.random.default_rng(seed)
     logger.info(
         "Generating HEA dataset: n=%d, seed=%d, elements=%d-%d",
