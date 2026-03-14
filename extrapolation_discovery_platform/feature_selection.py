@@ -176,7 +176,8 @@ def _run_aic_forward(
     penalises overfitting via out-of-sample evaluation, so no explicit
     AIC penalty term is added (that would double-penalise complexity).
     The 'aic' label is retained for backward compatibility; the method
-    is less conservative than BIC-style (fewer CV folds → less penalty).
+    is less conservative than BIC-style (more CV folds → larger training
+    sets per fold → easier to detect marginal improvements → more features).
     """
     return _forward_stepwise_ic(X, y, criterion="aic", max_features=max_features)
 
@@ -189,9 +190,11 @@ def _run_bic_forward(
     """Forward stepwise selection using CV-based error with BIC-style stopping.
 
     Uses cross-validated MSE as the selection criterion.  Compared to the
-    AIC variant this uses more CV folds, producing a stronger implicit
-    regularisation and thus fewer selected features — preferring parsimony.
-    The 'bic' label is retained for backward compatibility.
+    AIC variant this uses fewer CV folds, meaning smaller training sets
+    per fold and noisier error estimates — making marginal feature gains
+    harder to detect, so the procedure stops earlier with fewer features,
+    preferring parsimony.  The 'bic' label is retained for backward
+    compatibility.
     """
     return _forward_stepwise_ic(X, y, criterion="bic", max_features=max_features)
 
@@ -239,11 +242,14 @@ def _forward_stepwise_ic(
     # CV already penalises overfitting through out-of-sample evaluation,
     # so we do NOT layer an explicit AIC/BIC penalty on top (that would
     # double-penalise complexity).  We differentiate "aic" vs "bic" by
-    # using fewer folds for AIC (lighter penalty) and more for BIC.
+    # fold count: more folds → larger training sets → easier to detect
+    # marginal improvements → more features selected (AIC = permissive).
+    # Fewer folds → smaller training sets → noisier estimates → stops
+    # earlier with fewer features (BIC = conservative / parsimonious).
     if criterion == "aic":
-        cv_folds = min(n, 5)       # 5-fold (lighter regularisation)
-    else:  # bic — more folds → stronger implicit penalty
-        cv_folds = min(n, 10)      # 10-fold or LOO
+        cv_folds = min(n, 10)      # 10-fold (more data per fold → more features)
+    else:  # bic — fewer folds → more conservative
+        cv_folds = min(n, 5)       # 5-fold (less data per fold → fewer features)
 
     for step in range(min(max_features, len(remaining))):
         best_feat = None
