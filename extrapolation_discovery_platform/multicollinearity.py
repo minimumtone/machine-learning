@@ -2,7 +2,7 @@
 Multicollinearity Diagnostics & Model Selection Module
 多重共線性診断・モデル自動選択モジュール
 
-Phase 0 of the experiment pipeline: diagnose multicollinearity per feature set,
+Phase 1 of the experiment pipeline: diagnose multicollinearity per feature set,
 remove constant / perfectly collinear columns, compute VIF, and automatically
 select which ML workflows are appropriate for each feature set.
 
@@ -321,7 +321,7 @@ def select_workflows_for_feature_set(
 
 
 # ---------------------------------------------------------------------------
-# 4.2  run_phase0_multicollinearity() — Phase 0 integration function
+# 4.2  run_phase0_multicollinearity() — Phase 1 integration function
 # ---------------------------------------------------------------------------
 
 def run_phase0_multicollinearity(
@@ -349,7 +349,7 @@ def run_phase0_multicollinearity(
         # Ensure only columns present in features_all are used
         available_cols = [c for c in cols if c in features_all.columns]
         if not available_cols:
-            logger.warning('Phase 0: no columns available for %s, skipping', fs_key)
+            logger.warning('Phase 1: no columns available for %s, skipping', fs_key)
             continue
 
         X_fs = features_all[available_cols].copy()
@@ -391,7 +391,7 @@ def run_phase0_multicollinearity(
             leak_suspects = detect_target_leakage(X_fs, target)
             if leak_suspects:
                 logger.warning(
-                    'Phase 0 [%s]: %d leak suspect(s): %s',
+                    'Phase 1 [%s]: %d leak suspect(s): %s',
                     fs_key, len(leak_suspects),
                     ', '.join(f'{k}={v:.4f}' for k, v in leak_suspects.items()),
                 )
@@ -419,7 +419,7 @@ def run_phase0_multicollinearity(
         reports[fs_key] = report
 
         logger.info(
-            'Phase 0 [%s]: %dD→%dD (dropped const=%d perfect=%d) '
+            'Phase 1 [%s]: %dD→%dD (dropped const=%d perfect=%d) '
             'VIF_high=%d VIF_mod=%d level=%s leak=%d | %s',
             fs_key, n_before, len(vif),
             len(dropped_const), len(dropped_perfect),

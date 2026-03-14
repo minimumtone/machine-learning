@@ -1,11 +1,12 @@
-"""
-ML Workflow Module for HEA Extrapolation Platform
-MLワークフローモジュール
+"""ML Workflow Module for Extrapolation Discovery Platform.
 
-Three workflow templates:
-  WF-LIN  - Linear regression (coefficient analysis, residual diagnostics)
-  WF-XGB  - XGBoost with hyperparameter optimisation
-  WF-ENS  - Seed-varied ensemble for uncertainty quantification
+Workflow templates:
+  WF-LIN   - Linear regression (Ridge, coefficient analysis)
+  WF-LASSO - Lasso regression (L1 sparse feature selection)
+  WF-ARD   - Bayesian ARD regression (automatic relevance determination)
+  WF-XGB   - XGBoost with hyperparameter optimisation
+  WF-ENS   - Seed-varied ensemble for uncertainty quantification
+  WF-RF    - Random Forest with hyperparameter optimisation
 """
 
 from __future__ import annotations
@@ -29,36 +30,15 @@ from sklearn.preprocessing import StandardScaler
 logger = logging.getLogger(__name__)
 
 
-from extrapolation_discovery_platform._utils import safe_array as _safe_np  # noqa: E402
+from extrapolation_discovery_platform._utils import (  # noqa: E402
+    get_safe_n_jobs,
+    safe_array as _safe_np,
+)
 
 
-def _get_inner_n_jobs() -> int:
-    """Return the n_jobs for inner estimators (GridSearchCV, RandomForest, etc.).
-
-    Problem (#11): When ``RandomizedSearchCV(n_jobs=-1)`` runs inside a
-    ``ProcessPoolExecutor`` worker, both compete for CPU cores.  The inner
-    parallelism should be limited to 1 per worker to avoid resource contention.
-
-    Respects ``HEA_INNER_N_JOBS`` environment variable.  Defaults to 1.
-
-    WARNING: Setting HEA_INNER_N_JOBS > 1 while n_workers > 1 in
-    ExperimentRunner causes n_workers × HEA_INNER_N_JOBS-fold CPU
-    over-subscription, leading to thread contention that can prevent
-    model convergence and produce unstable / suppressed R² values.
-    Only set HEA_INNER_N_JOBS > 1 when n_workers == 1 (serial mode).
-
-    Safety: When ``_INSIDE_WORKER`` flag is set (by _run_job in runner.py),
-    we force n_jobs=1 regardless of the environment variable to prevent
-    double parallelization between ProcessPoolExecutor and GridSearchCV.
-    """
-    import os
-    if os.environ.get("_EDP_INSIDE_WORKER", ""):
-        return 1  # always serial inside a worker process
-    raw = os.environ.get("HEA_INNER_N_JOBS", "1")
-    try:
-        return max(1, int(raw))
-    except ValueError:
-        return 1
+# ---------------------------------------------------------------------------
+# XGBoost / fallback factory  (Issue M — single creation point)
+# ---------------------------------------------------------------------------
 
 try:
     from xgboost import XGBRegressor
@@ -66,7 +46,23 @@ try:
     _XGB_AVAILABLE = True
 except ImportError:
     _XGB_AVAILABLE = False
-    logger.warning("xgboost not installed – WF-XGB will fall back to GradientBoosting")
+    logger.warning("xgboost not installed -- WF-XGB will fall back to GradientBoosting")
+
+
+def _make_xgb_or_fallback(seed: int, n_jobs: int = 1, **kwargs) -> object:
+    """Create an XGBRegressor or GradientBoostingRegressor fallback."""
+    if _XGB_AVAILABLE:
+        return XGBRegressor(
+            objective="reg:squarederror",
+            random_state=seed,
+            n_jobs=n_jobs,
+            verbosity=0,
+            **kwargs,
+        )
+    from sklearn.ensemble import GradientBoostingRegressor
+    _GB_PARAMS = {"n_estimators", "max_depth", "learning_rate", "subsample", "random_state"}
+    gb_kwargs = {k: v for k, v in kwargs.items() if k in _GB_PARAMS}
+    return GradientBoostingRegressor(random_state=seed, **gb_kwargs)
 
 
 # ---------------------------------------------------------------------------
@@ -76,7 +72,7 @@ except ImportError:
 
 @dataclass
 class RunResult:
-    """Container for a single workflow run result (MLflow-style)."""
+    """Container for a single workflow run result."""
 
     workflow: str
     feature_set: str
@@ -138,16 +134,70 @@ class RunResult:
 
 
 def _score(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, float]:
-    """Compute RMSE, MAE, R².
-
-    When fewer than 2 samples are present, r2_score is undefined; we
-    return NaN rather than letting sklearn emit an UndefinedMetricWarning
-    and propagate NaN through subsequent computations.
-    """
+    """Compute RMSE, MAE, R2."""
     rmse = float(np.sqrt(mean_squared_error(y_true, y_pred)))
     mae = float(mean_absolute_error(y_true, y_pred))
     r2 = float(r2_score(y_true, y_pred)) if len(y_true) >= 2 else float("nan")
     return {"rmse": rmse, "mae": mae, "r2": r2}
+
+
+# ---------------------------------------------------------------------------
+# Shared helpers  (Issues A, B, C)
+# ---------------------------------------------------------------------------
+
+
+def _safe_std_y(y_train: np.ndarray) -> float:
+    """Compute sample std of y, clamped to 1.0 for degenerate cases."""
+    if len(y_train) > 1:
+        std_y = float(np.std(y_train, ddof=1))
+    else:
+        std_y = 0.0
+    return std_y if std_y >= 1e-12 else 1.0
+
+
+def _coef_to_dict(
+    columns: pd.Index,
+    coef: np.ndarray,
+    pipe: Pipeline,
+) -> Dict[str, float]:
+    """Map coefficient array to a {name: value} dict, handling PCA."""
+    if "pca" not in pipe.named_steps:
+        return dict(zip(columns, coef.tolist()))
+    return {f"PC{i}": float(c) for i, c in enumerate(coef)}
+
+
+def _make_result(
+    workflow_name: str,
+    train_s: Dict[str, float],
+    test_s: Dict[str, float],
+    y_test: pd.Series,
+    y_test_pred: np.ndarray,
+    t0: float,
+    seed: int,
+    params: Dict[str, Any],
+    artifacts: Dict[str, Any],
+    **kwargs: Any,
+) -> RunResult:
+    """Build a RunResult from common arguments (eliminates 6x duplication)."""
+    return RunResult(
+        workflow=workflow_name,
+        feature_set=kwargs.get("feature_set", ""),
+        split_policy=kwargs.get("split_policy", ""),
+        seed=seed,
+        fold=kwargs.get("fold", 0),
+        rmse_train=train_s["rmse"],
+        rmse_test=test_s["rmse"],
+        mae_train=train_s["mae"],
+        mae_test=test_s["mae"],
+        r2_train=train_s["r2"],
+        r2_test=test_s["r2"],
+        y_test_true=_safe_np(y_test).copy(),
+        y_test_pred=y_test_pred.copy(),
+        test_indices=kwargs.get("test_indices"),
+        params=params,
+        artifacts=artifacts,
+        elapsed_sec=time.time() - t0,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -174,11 +224,6 @@ class BaseWorkflow(ABC):
 
 
 # ---------------------------------------------------------------------------
-# WF-LIN: Linear regression
-# ---------------------------------------------------------------------------
-
-
-# ---------------------------------------------------------------------------
 # Dimensionality-reduction helper
 # ---------------------------------------------------------------------------
 
@@ -188,33 +233,19 @@ def _make_pca_step(
     dim_reduction: bool,
     variance_ratio: float = 0.95,
 ) -> List[Tuple[str, Any]]:
-    """Return pipeline steps for optional PCA dimensionality reduction.
-
-    When *dim_reduction* is True a PCA step is inserted **after** scaling
-    that retains *variance_ratio* (default 95 %) of total variance.
-    ``n_components`` is capped at ``min(n_samples, n_features)`` by sklearn
-    automatically, so this is safe even for small datasets.
-
-    Returns a list of ``(name, estimator)`` tuples ready for
-    ``Pipeline(steps=[...])``.
-    """
+    """Return pipeline steps for optional PCA dimensionality reduction."""
     if not dim_reduction or n_features <= 2:
         return []
-    # Keep at most n_features components; PCA will further clamp to
-    # min(n_samples, n_features) internally.
     return [("pca", PCA(n_components=variance_ratio, svd_solver="full"))]
 
 
+# ---------------------------------------------------------------------------
+# WF-LIN: Linear regression
+# ---------------------------------------------------------------------------
+
+
 class WorkflowLIN(BaseWorkflow):
-    """Linear regression workflow.
-
-    Purpose:
-    - Feature sign validation
-    - Monotonicity check
-    - Leak detection via residual analysis
-
-    Uses Ridge (alpha=1.0) for numerical stability.
-    """
+    """Linear regression workflow (Ridge, alpha=1.0)."""
 
     name = "WF-LIN"
 
@@ -249,60 +280,26 @@ class WorkflowLIN(BaseWorkflow):
         train_s = _score(_safe_np(y_train), y_train_pred)
         test_s = _score(_safe_np(y_test), y_test_pred)
 
-        # Extract standardised coefficients.
-        # Ridge inside the Pipeline sees *already-standardised* X (via the
-        # preceding StandardScaler step).  Therefore ``coef_raw[j]`` already
-        # represents "change in y per 1-std change in X_j".  To express
-        # the coefficient in units of "std_y per std_X", we only divide by
-        # std_y — multiplying by std_X again would double-count scaling.
         model: Ridge = pipe.named_steps["model"]
         coef_raw = model.coef_
-        # Use ddof=1 (sample std) and guard against single-sample or
-        # constant-y edge cases where std would be 0.
-        if len(y_train) > 1:
-            std_y = float(np.std(_safe_np(y_train), ddof=1))
-        else:
-            std_y = 0.0
-        if std_y < 1e-12:
-            std_y = 1.0  # avoid division by zero; coefficients stay in raw units
+        std_y = _safe_std_y(_safe_np(y_train))
         coef_std = coef_raw / std_y
 
-        result = RunResult(
-            workflow=self.name,
-            feature_set=kwargs.get("feature_set", ""),
-            split_policy=kwargs.get("split_policy", ""),
-            seed=seed,
-            fold=kwargs.get("fold", 0),
-            rmse_train=train_s["rmse"],
-            rmse_test=test_s["rmse"],
-            mae_train=train_s["mae"],
-            mae_test=test_s["mae"],
-            r2_train=train_s["r2"],
-            r2_test=test_s["r2"],
-            y_test_true=_safe_np(y_test).copy(),
-            y_test_pred=y_test_pred.copy(),
-            test_indices=kwargs.get("test_indices"),
+        return _make_result(
+            self.name, train_s, test_s,
+            y_test, y_test_pred, t0, seed,
             params={"alpha": self._alpha, "dim_reduction": self._dim_reduction},
             artifacts={
-                "coef_raw": (
-                    dict(zip(X_train.columns, coef_raw.tolist()))
-                    if "pca" not in pipe.named_steps
-                    else {f"PC{i}": float(c) for i, c in enumerate(coef_raw)}
-                ),
-                "coef_std": (
-                    dict(zip(X_train.columns, coef_std.tolist()))
-                    if "pca" not in pipe.named_steps
-                    else {f"PC{i}": float(c) for i, c in enumerate(coef_std)}
-                ),
+                "coef_raw": _coef_to_dict(X_train.columns, coef_raw, pipe),
+                "coef_std": _coef_to_dict(X_train.columns, coef_std, pipe),
                 "residuals_test": (_safe_np(y_test) - y_test_pred).tolist(),
                 "n_components": (
                     pipe.named_steps["pca"].n_components_
                     if "pca" in pipe.named_steps else X_train.shape[1]
                 ),
             },
-            elapsed_sec=time.time() - t0,
+            **kwargs,
         )
-        return result
 
 
 # ---------------------------------------------------------------------------
@@ -311,15 +308,7 @@ class WorkflowLIN(BaseWorkflow):
 
 
 class WorkflowLASSO(BaseWorkflow):
-    """Lasso (L1) regression workflow.
-
-    Purpose:
-    - Sparse feature selection via L1 penalty
-    - Identifies which features can be zeroed out
-    - Complementary to Ridge (L2) for feature importance analysis
-
-    Uses LassoCV to automatically select the best alpha.
-    """
+    """Lasso (L1) regression workflow with LassoCV for alpha selection."""
 
     name = "WF-LASSO"
 
@@ -342,7 +331,10 @@ class WorkflowLASSO(BaseWorkflow):
         steps: List[Tuple[str, Any]] = [
             ("scaler", StandardScaler()),
             *_make_pca_step(X_train.shape[1], self._dim_reduction),
-            ("model", LassoCV(cv=max(2, min(10, len(X_train))), random_state=seed, max_iter=10000)),
+            ("model", LassoCV(
+                cv=max(2, min(10, len(X_train))),
+                random_state=seed, max_iter=10000,
+            )),
         ]
         pipe = Pipeline(steps)
         pipe.fit(_safe_np(X_train), _safe_np(y_train))
@@ -356,42 +348,16 @@ class WorkflowLASSO(BaseWorkflow):
         model: LassoCV = pipe.named_steps["model"]
         coef_raw = model.coef_
         n_nonzero = int(np.sum(np.abs(coef_raw) > 1e-10))
-
-        if len(y_train) > 1:
-            std_y = float(np.std(_safe_np(y_train), ddof=1))
-        else:
-            std_y = 0.0
-        if std_y < 1e-12:
-            std_y = 1.0
+        std_y = _safe_std_y(_safe_np(y_train))
         coef_std = coef_raw / std_y
 
-        result = RunResult(
-            workflow=self.name,
-            feature_set=kwargs.get("feature_set", ""),
-            split_policy=kwargs.get("split_policy", ""),
-            seed=seed,
-            fold=kwargs.get("fold", 0),
-            rmse_train=train_s["rmse"],
-            rmse_test=test_s["rmse"],
-            mae_train=train_s["mae"],
-            mae_test=test_s["mae"],
-            r2_train=train_s["r2"],
-            r2_test=test_s["r2"],
-            y_test_true=_safe_np(y_test).copy(),
-            y_test_pred=y_test_pred.copy(),
-            test_indices=kwargs.get("test_indices"),
+        return _make_result(
+            self.name, train_s, test_s,
+            y_test, y_test_pred, t0, seed,
             params={"alpha": float(model.alpha_), "dim_reduction": self._dim_reduction},
             artifacts={
-                "coef_raw": (
-                    dict(zip(X_train.columns, coef_raw.tolist()))
-                    if "pca" not in pipe.named_steps
-                    else {f"PC{i}": float(c) for i, c in enumerate(coef_raw)}
-                ),
-                "coef_std": (
-                    dict(zip(X_train.columns, coef_std.tolist()))
-                    if "pca" not in pipe.named_steps
-                    else {f"PC{i}": float(c) for i, c in enumerate(coef_std)}
-                ),
+                "coef_raw": _coef_to_dict(X_train.columns, coef_raw, pipe),
+                "coef_std": _coef_to_dict(X_train.columns, coef_std, pipe),
                 "n_nonzero_features": n_nonzero,
                 "residuals_test": (_safe_np(y_test) - y_test_pred).tolist(),
                 "n_components": (
@@ -399,9 +365,8 @@ class WorkflowLASSO(BaseWorkflow):
                     if "pca" in pipe.named_steps else X_train.shape[1]
                 ),
             },
-            elapsed_sec=time.time() - t0,
+            **kwargs,
         )
-        return result
 
 
 # ---------------------------------------------------------------------------
@@ -410,13 +375,7 @@ class WorkflowLASSO(BaseWorkflow):
 
 
 class WorkflowARD(BaseWorkflow):
-    """ARD (Automatic Relevance Determination) Bayesian regression workflow.
-
-    Purpose:
-    - Bayesian sparse feature importance estimation
-    - Automatic pruning of irrelevant features via per-feature precision
-    - Uncertainty-aware coefficient estimation
-    """
+    """ARD Bayesian regression workflow."""
 
     name = "WF-ARD"
 
@@ -452,60 +411,27 @@ class WorkflowARD(BaseWorkflow):
 
         model: ARDRegression = pipe.named_steps["model"]
         coef_raw = model.coef_
-        # ARD's lambda_ gives per-feature precision (inverse variance)
-        # Higher lambda_ = less relevant feature
         relevance = 1.0 / (model.lambda_ + 1e-10)
         relevance_norm = relevance / relevance.max() if relevance.max() > 0 else relevance
-
-        if len(y_train) > 1:
-            std_y = float(np.std(_safe_np(y_train), ddof=1))
-        else:
-            std_y = 0.0
-        if std_y < 1e-12:
-            std_y = 1.0
+        std_y = _safe_std_y(_safe_np(y_train))
         coef_std = coef_raw / std_y
 
-        result = RunResult(
-            workflow=self.name,
-            feature_set=kwargs.get("feature_set", ""),
-            split_policy=kwargs.get("split_policy", ""),
-            seed=seed,
-            fold=kwargs.get("fold", 0),
-            rmse_train=train_s["rmse"],
-            rmse_test=test_s["rmse"],
-            mae_train=train_s["mae"],
-            mae_test=test_s["mae"],
-            r2_train=train_s["r2"],
-            r2_test=test_s["r2"],
-            y_test_true=_safe_np(y_test).copy(),
-            y_test_pred=y_test_pred.copy(),
-            test_indices=kwargs.get("test_indices"),
+        return _make_result(
+            self.name, train_s, test_s,
+            y_test, y_test_pred, t0, seed,
             params={"dim_reduction": self._dim_reduction},
             artifacts={
-                "coef_raw": (
-                    dict(zip(X_train.columns, coef_raw.tolist()))
-                    if "pca" not in pipe.named_steps
-                    else {f"PC{i}": float(c) for i, c in enumerate(coef_raw)}
-                ),
-                "coef_std": (
-                    dict(zip(X_train.columns, coef_std.tolist()))
-                    if "pca" not in pipe.named_steps
-                    else {f"PC{i}": float(c) for i, c in enumerate(coef_std)}
-                ),
-                "relevance_scores": (
-                    dict(zip(X_train.columns, relevance_norm.tolist()))
-                    if "pca" not in pipe.named_steps
-                    else {f"PC{i}": float(r) for i, r in enumerate(relevance_norm)}
-                ),
+                "coef_raw": _coef_to_dict(X_train.columns, coef_raw, pipe),
+                "coef_std": _coef_to_dict(X_train.columns, coef_std, pipe),
+                "relevance_scores": _coef_to_dict(X_train.columns, relevance_norm, pipe),
                 "residuals_test": (_safe_np(y_test) - y_test_pred).tolist(),
                 "n_components": (
                     pipe.named_steps["pca"].n_components_
                     if "pca" in pipe.named_steps else X_train.shape[1]
                 ),
             },
-            elapsed_sec=time.time() - t0,
+            **kwargs,
         )
-        return result
 
 
 # ---------------------------------------------------------------------------
@@ -514,12 +440,7 @@ class WorkflowARD(BaseWorkflow):
 
 
 class WorkflowXGB(BaseWorkflow):
-    """XGBoost workflow with grid-search hyperparameter optimisation.
-
-    Purpose:
-    - Capture non-linear interactions
-    - Permutation importance
-    """
+    """XGBoost workflow with grid-search hyperparameter optimisation."""
 
     name = "WF-XGB"
 
@@ -528,18 +449,8 @@ class WorkflowXGB(BaseWorkflow):
         self._quick = quick
         self._dim_reduction = dim_reduction
 
-    def _get_estimator(self, seed: int) -> Any:
-        if _XGB_AVAILABLE:
-            return XGBRegressor(
-                objective="reg:squarederror",
-                random_state=seed,
-                n_jobs=_get_inner_n_jobs(),
-                verbosity=0,
-            )
-        else:
-            from sklearn.ensemble import GradientBoostingRegressor
-            logger.info("Using GradientBoostingRegressor as XGBoost fallback")
-            return GradientBoostingRegressor(random_state=seed)
+    def _get_estimator(self, seed: int) -> object:
+        return _make_xgb_or_fallback(seed, n_jobs=get_safe_n_jobs())
 
     def _param_grid(self) -> Dict[str, List[Any]]:
         if self._quick:
@@ -555,7 +466,6 @@ class WorkflowXGB(BaseWorkflow):
             "model__subsample": [0.8, 1.0],
         }
         if _XGB_AVAILABLE:
-            # XGBoost-specific params (not supported by GradientBoostingRegressor)
             grid["model__colsample_bytree"] = [0.8, 1.0]
             grid["model__min_child_weight"] = [1, 5]
         return grid
@@ -573,15 +483,12 @@ class WorkflowXGB(BaseWorkflow):
         logger.debug("WF-XGB: train=%d, test=%d, features=%d",
                       len(X_train), len(X_test), X_train.shape[1])
 
-        # Tree models are scale-invariant and do not need StandardScaler.
-        # PCA destroys physically meaningful feature axes and hurts
-        # interpretability (feature importance becomes meaningless).
         steps: List[Tuple[str, Any]] = [
             ("model", self._get_estimator(seed)),
         ]
         pipe = Pipeline(steps)
 
-        _inner_jobs = _get_inner_n_jobs()
+        _inner_jobs = get_safe_n_jobs()
         grid = GridSearchCV(
             pipe,
             self._param_grid(),
@@ -589,25 +496,10 @@ class WorkflowXGB(BaseWorkflow):
             scoring="neg_root_mean_squared_error",
             refit=True,
             n_jobs=_inner_jobs,
-            error_score=np.nan,  # skip failing folds instead of raising
+            error_score=np.nan,
         )
         grid.fit(_safe_np(X_train), _safe_np(y_train))
 
-        # ── Early stopping refinement (#3) ──
-        # After GridSearchCV finds the best hyperparameters, we probe for
-        # the optimal n_estimators via early stopping on a held-out
-        # validation split of the training data.
-        #
-        # NOTE on pipeline state consistency:
-        # The probe trains a standalone XGBRegressor on pre-transformed
-        # data to find best_iteration.  The final model is then re-fit
-        # from *raw* data through the full pipeline (clone → set_params
-        # → fit), so the StandardScaler/PCA are re-fit consistently and
-        # the pipeline state matches the final n_estimators.  The only
-        # approximation is that the optimal iteration count was determined
-        # under a slightly different scaler fit (80% of training data).
-        # This is acceptable because tree models are scale-invariant and
-        # our pipeline currently has no scaler/PCA for tree workflows.
         best_pipe = grid.best_estimator_
         best_model = best_pipe.named_steps["model"]
         used_early_stop = False
@@ -622,10 +514,6 @@ class WorkflowXGB(BaseWorkflow):
                 from sklearn.base import clone as _clone
                 from sklearn.model_selection import train_test_split as _tts
 
-                # For the early stopping probe, we work on raw data since
-                # tree-model pipelines have no preprocessor steps (scaler/
-                # PCA were removed for tree workflows).  If preprocessor
-                # steps exist (future change), transform consistently.
                 pre_steps = [
                     (name, step) for name, step in best_pipe.steps
                     if name != "model"
@@ -636,14 +524,11 @@ class WorkflowXGB(BaseWorkflow):
                 else:
                     X_tr_transformed = _safe_np(X_train)
 
-                # Split *training* data into train/validation for early stopping
-                # to avoid leaking the held-out test set into model selection.
                 X_tr_es, X_val_es, y_tr_es, y_val_es = _tts(
                     X_tr_transformed, _safe_np(y_train),
                     test_size=0.2, random_state=seed,
                 )
 
-                # Probe: find optimal n_estimators via early stopping
                 es_params = best_model.get_params()
                 es_params["n_estimators"] = max(es_params.get("n_estimators", 200), 500)
                 es_params["early_stopping_rounds"] = 20
@@ -654,22 +539,19 @@ class WorkflowXGB(BaseWorkflow):
                     eval_set=[(np.ascontiguousarray(X_val_es), y_val_es)],
                     verbose=False,
                 )
-                # Check if early stopping actually triggered (stopped before max budget)
-                if hasattr(es_model, "best_iteration") and es_model.best_iteration < es_params["n_estimators"] - 1:
-                    # Clone the full pipeline and refit from raw data with
-                    # the optimal n_estimators.  This ensures the full
-                    # pipeline (including any preprocessor) is re-fit
-                    # consistently with the final iteration count.
+                if (
+                    hasattr(es_model, "best_iteration")
+                    and es_model.best_iteration < es_params["n_estimators"] - 1
+                ):
                     optimal_n = es_model.best_iteration + 1
                     cloned_pipe = _clone(best_pipe)
                     cloned_pipe.set_params(model__n_estimators=optimal_n)
                     cloned_pipe.fit(_safe_np(X_train), _safe_np(y_train))
-                    best_pipe = cloned_pipe  # only reassign after successful fit
+                    best_pipe = cloned_pipe
                     used_early_stop = True
                     logger.debug(
-                        "WF-XGB early stop: best_iteration=%d (was n_estimators=%d)",
+                        "WF-XGB early stop: best_iteration=%d",
                         es_model.best_iteration,
-                        es_params.get("n_estimators", 200),
                     )
             except Exception:
                 logger.debug("WF-XGB early stopping failed, using GridSearchCV result")
@@ -680,41 +562,25 @@ class WorkflowXGB(BaseWorkflow):
         train_s = _score(_safe_np(y_train), y_train_pred)
         test_s = _score(_safe_np(y_test), y_test_pred)
 
-        # Feature importance from tree model
         model_step = best_pipe.named_steps["model"]
         if hasattr(model_step, "feature_importances_"):
-            fi_raw = model_step.feature_importances_.tolist()
-            if "pca" not in best_pipe.named_steps:
-                fi = dict(zip(X_train.columns, fi_raw))
-            else:
-                fi = {f"PC{i}": float(v) for i, v in enumerate(fi_raw)}
+            fi = _coef_to_dict(
+                X_train.columns, model_step.feature_importances_, best_pipe,
+            )
         else:
             fi = {}
 
-        result = RunResult(
-            workflow=self.name,
-            feature_set=kwargs.get("feature_set", ""),
-            split_policy=kwargs.get("split_policy", ""),
-            seed=seed,
-            fold=kwargs.get("fold", 0),
-            rmse_train=train_s["rmse"],
-            rmse_test=test_s["rmse"],
-            mae_train=train_s["mae"],
-            mae_test=test_s["mae"],
-            r2_train=train_s["r2"],
-            r2_test=test_s["r2"],
-            y_test_true=_safe_np(y_test).copy(),
-            y_test_pred=y_test_pred.copy(),
-            test_indices=kwargs.get("test_indices"),
+        return _make_result(
+            self.name, train_s, test_s,
+            y_test, y_test_pred, t0, seed,
             params=grid.best_params_,
             artifacts={
                 "feature_importance": fi,
                 "cv_results_best_score": float(grid.best_score_),
                 "early_stopping_used": used_early_stop,
             },
-            elapsed_sec=time.time() - t0,
+            **kwargs,
         )
-        return result
 
 
 # ---------------------------------------------------------------------------
@@ -723,15 +589,7 @@ class WorkflowXGB(BaseWorkflow):
 
 
 class WorkflowENS(BaseWorkflow):
-    """Seed-varied ensemble workflow for uncertainty quantification.
-
-    Runs the same model template with different random seeds and reports
-    mean prediction and prediction standard deviation.
-
-    Purpose:
-    - Prediction variance in extrapolation regions
-    - Safety evaluation
-    """
+    """Seed-varied ensemble workflow for uncertainty quantification."""
 
     name = "WF-ENS"
 
@@ -748,29 +606,16 @@ class WorkflowENS(BaseWorkflow):
         self._dim_reduction = dim_reduction
 
     def _make_member(self, seed: int, n_features: int = 132) -> Pipeline:
-        if self._base_workflow == "xgb" and _XGB_AVAILABLE:
-            model = XGBRegressor(
+        if self._base_workflow == "xgb":
+            model = _make_xgb_or_fallback(
+                seed,
+                n_jobs=get_safe_n_jobs(),
                 n_estimators=100 if self._quick else 200,
                 max_depth=4,
                 learning_rate=0.1,
-                random_state=seed,
-                n_jobs=_get_inner_n_jobs(),
-                verbosity=0,
             )
-            # Tree: no scaler / PCA needed
-            return Pipeline([("model", model)])
-        elif self._base_workflow == "xgb":
-            from sklearn.ensemble import GradientBoostingRegressor
-            model = GradientBoostingRegressor(
-                n_estimators=100 if self._quick else 200,
-                max_depth=4,
-                learning_rate=0.1,
-                random_state=seed,
-            )
-            # Tree: no scaler / PCA needed
             return Pipeline([("model", model)])
         else:
-            # Linear model (Ridge): keep scaler + optional PCA
             model = Ridge(alpha=1.0)
             steps: List[Tuple[str, Any]] = [
                 ("scaler", StandardScaler()),
@@ -797,16 +642,13 @@ class WorkflowENS(BaseWorkflow):
 
         n_features = X_train.shape[1]
         for m in range(self._n_members):
-            # Use a large prime multiplier to avoid seed collisions.
-            # The old formula (seed * 1000 + m) collides when
-            # seed=1001,m=0 and seed=1,m=1000 (both → 1001000).
             member_seed = (seed + m * 10_000_007) % (2**31)
             pipe = self._make_member(member_seed, n_features=n_features)
             pipe.fit(_safe_np(X_train), _safe_np(y_train))
             preds_list.append(pipe.predict(_safe_np(X_test)))
             train_preds_list.append(pipe.predict(_safe_np(X_train)))
 
-        preds_arr = np.stack(preds_list, axis=0)  # (n_members, n_test)
+        preds_arr = np.stack(preds_list, axis=0)
         train_preds_arr = np.stack(train_preds_list, axis=0)
 
         y_test_pred = preds_arr.mean(axis=0)
@@ -816,29 +658,16 @@ class WorkflowENS(BaseWorkflow):
         train_s = _score(_safe_np(y_train), y_train_pred)
         test_s = _score(_safe_np(y_test), y_test_pred)
 
-        result = RunResult(
-            workflow=self.name,
-            feature_set=kwargs.get("feature_set", ""),
-            split_policy=kwargs.get("split_policy", ""),
-            seed=seed,
-            fold=kwargs.get("fold", 0),
-            rmse_train=train_s["rmse"],
-            rmse_test=test_s["rmse"],
-            mae_train=train_s["mae"],
-            mae_test=test_s["mae"],
-            r2_train=train_s["r2"],
-            r2_test=test_s["r2"],
-            y_test_true=_safe_np(y_test).copy(),
-            y_test_pred=y_test_pred.copy(),
-            test_indices=kwargs.get("test_indices"),
+        return _make_result(
+            self.name, train_s, test_s,
+            y_test, y_test_pred, t0, seed,
             params={"n_members": self._n_members, "base": self._base_workflow},
             artifacts={
                 "pred_std_test": y_test_std.tolist(),
                 "pred_mean_test": y_test_pred.tolist(),
             },
-            elapsed_sec=time.time() - t0,
+            **kwargs,
         )
-        return result
 
 
 # ---------------------------------------------------------------------------
@@ -847,16 +676,7 @@ class WorkflowENS(BaseWorkflow):
 
 
 class WorkflowRF(BaseWorkflow):
-    """Random Forest workflow with grid-search hyperparameter optimisation.
-
-    Purpose:
-    - Non-linear regression with ensemble of decision trees
-    - Feature importance via impurity-based measures
-    - Robust to overfitting with proper tuning
-    - Captures non-linear interactions without gradient boosting bias
-
-    Uses 10-fold CV by default for hyperparameter tuning.
-    """
+    """Random Forest workflow with grid-search HPO."""
 
     name = "WF-RF"
 
@@ -893,10 +713,7 @@ class WorkflowRF(BaseWorkflow):
         logger.debug("WF-RF: train=%d, test=%d, features=%d",
                       len(X_train), len(X_test), X_train.shape[1])
 
-        # Tree models are scale-invariant and do not need StandardScaler.
-        # PCA destroys physically meaningful feature axes and hurts
-        # interpretability (feature importance becomes meaningless).
-        _inner_jobs = _get_inner_n_jobs()
+        _inner_jobs = get_safe_n_jobs()
         steps: List[Tuple[str, Any]] = [
             ("model", RandomForestRegressor(
                 random_state=seed, n_jobs=_inner_jobs,
@@ -922,40 +739,24 @@ class WorkflowRF(BaseWorkflow):
         train_s = _score(_safe_np(y_train), y_train_pred)
         test_s = _score(_safe_np(y_test), y_test_pred)
 
-        # Feature importance from tree model
         model_step = best_pipe.named_steps["model"]
         if hasattr(model_step, "feature_importances_"):
-            fi_raw = model_step.feature_importances_.tolist()
-            if "pca" not in best_pipe.named_steps:
-                fi = dict(zip(X_train.columns, fi_raw))
-            else:
-                fi = {f"PC{i}": float(v) for i, v in enumerate(fi_raw)}
+            fi = _coef_to_dict(
+                X_train.columns, model_step.feature_importances_, best_pipe,
+            )
         else:
             fi = {}
 
-        result = RunResult(
-            workflow=self.name,
-            feature_set=kwargs.get("feature_set", ""),
-            split_policy=kwargs.get("split_policy", ""),
-            seed=seed,
-            fold=kwargs.get("fold", 0),
-            rmse_train=train_s["rmse"],
-            rmse_test=test_s["rmse"],
-            mae_train=train_s["mae"],
-            mae_test=test_s["mae"],
-            r2_train=train_s["r2"],
-            r2_test=test_s["r2"],
-            y_test_true=_safe_np(y_test).copy(),
-            y_test_pred=y_test_pred.copy(),
-            test_indices=kwargs.get("test_indices"),
+        return _make_result(
+            self.name, train_s, test_s,
+            y_test, y_test_pred, t0, seed,
             params=grid.best_params_,
             artifacts={
                 "feature_importance": fi,
                 "cv_results_best_score": float(grid.best_score_),
             },
-            elapsed_sec=time.time() - t0,
+            **kwargs,
         )
-        return result
 
 
 # ---------------------------------------------------------------------------
@@ -973,15 +774,7 @@ WORKFLOW_REGISTRY: Dict[str, type] = {
 
 
 def get_workflow(name: str, **kwargs: Any) -> BaseWorkflow:
-    """Instantiate a workflow by name.
-
-    Parameters
-    ----------
-    name : str
-        One of 'WF-LIN', 'WF-XGB', 'WF-ENS'.
-    **kwargs
-        Forwarded to the workflow constructor.
-    """
+    """Instantiate a workflow by name."""
     if name not in WORKFLOW_REGISTRY:
         raise ValueError(
             f"Unknown workflow '{name}'. Available: {list(WORKFLOW_REGISTRY.keys())}"

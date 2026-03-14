@@ -86,7 +86,7 @@ def _empty_session() -> Dict[str, Any]:
         "validity_scores": [],
         "ood_results": {},
         "ood_split_indices": {},
-        "mc_reports": {},  # Phase 0 multicollinearity reports
+        "mc_reports": {},  # Phase 1 multicollinearity reports
         "compositions_df": None,
         "features_df": None,
         "target": None,
@@ -566,7 +566,7 @@ def _build_physical_interpretation_md(
     # 6. Multicollinearity Penalty
     lines.append("#### 6. Multicollinearity Penalty（多重共線性ペナルティ）— 重み −0.10\n")
     lines.append(
-        "Phase 0 で算出された **高 VIF 比率** をそのままペナルティとします。\n"
+        "Phase 1 で算出された **高 VIF 比率** をそのままペナルティとします。\n"
     )
     lines.append(
         "$$\\text{MC Penalty} = \\min\\!\\left(1,\\; "
@@ -2642,11 +2642,11 @@ def create_app() -> gr.Blocks:
                 open=True,
             ):
                 gr.Markdown(
-                    "Phase 0 のマルチコリニアリティ解析で検出された"
+                    "Phase 1 のマルチコリニアリティ解析で検出された"
                     "**高相関特徴量 (|r| > 閾値)** を自動的に除外します。\n\n"
                     "- リーク特徴量はターゲット変数の代理変数として機能し、"
                     "訓練時は高 R² を示しますがテスト時に性能が大幅に低下します\n"
-                    "- 自動除外を有効にすると、Phase 0 で検出された"
+                    "- 自動除外を有効にすると、Phase 1 で検出された"
                     "|r| > 閾値 の特徴量が学習データから除外されます\n"
                     "- 閾値はデフォルト 0.85（推奨）ですが、"
                     "ドメイン知識に基づいて調整可能です"
@@ -2655,7 +2655,7 @@ def create_app() -> gr.Blocks:
                     label="リーク特徴量を自動除外する "
                     "(Auto-exclude leaked features)",
                     value=True,
-                    info="Phase 0 で |r| > 閾値 の特徴量を学習から除外",
+                    info="Phase 1 で |r| > 閾値 の特徴量を学習から除外",
                 )
                 leak_corr_threshold = gr.Slider(
                     minimum=0.50, maximum=0.99, value=0.85, step=0.01,
@@ -3006,7 +3006,7 @@ def create_app() -> gr.Blocks:
           with gr.Tab("📖 Model Info"):
             gr.Markdown(
                 "## 機械学習ログ — ML Training History\n\n"
-                "解析実行後、各ランのメトリクス・Phase 0 解析結果・"
+                "解析実行後、各ランのメトリクス・Phase 1 解析結果・"
                 "トラッカー情報を閲覧できます。\n"
                 "**Refresh** ボタンで最新情報を取得してください。"
             )
@@ -3030,7 +3030,7 @@ def create_app() -> gr.Blocks:
                 )
 
             with gr.Accordion(
-                "Phase 0 マルチコリニアリティ & リーク検出", open=True,
+                "Phase 1 マルチコリニアリティ & リーク検出", open=True,
             ):
                 mc_report_md = gr.Markdown(
                     "*まだ解析を実行していません。*"
@@ -3051,7 +3051,7 @@ def create_app() -> gr.Blocks:
                 gr.Markdown(
                     "解析完了後に `results/<timestamp>/experiment_log.json` "
                     "が自動生成されます。\n"
-                    "全ラン・Phase 0 レポート・有効特徴量列・トラッカー情報を含む"
+                    "全ラン・Phase 1 レポート・有効特徴量列・トラッカー情報を含む"
                     "包括的なデバッグログです。"
                 )
                 experiment_log_download = gr.File(
@@ -3094,7 +3094,7 @@ def create_app() -> gr.Blocks:
                     else _pd.DataFrame()
                 )
 
-                # --- Phase 0 Multicollinearity Reports ---
+                # --- Phase 1 Multicollinearity Reports ---
                 mc_lines: List[str] = []
                 mc_rpts = session.get("mc_reports", {})
                 if mc_rpts:
@@ -3134,17 +3134,17 @@ def create_app() -> gr.Blocks:
                         mc_lines.append("")
                 else:
                     mc_lines.append(
-                        "*Phase 0 レポートがありません。"
+                        "*Phase 1 レポートがありません。"
                         "解析を実行してください。*"
                     )
 
-                # --- Phase 0.5 Feature Selection summaries ---
+                # --- Phase 2 Feature Selection summaries ---
                 if runner_obj is not None:
                     fs_sums = runner_obj.fs_summaries
                     if fs_sums:
                         mc_lines.append("---")
                         mc_lines.append(
-                            "## Phase 0.5: 特徴量選択 "
+                            "## Phase 2: 特徴量選択 "
                             "(Feature Selection)"
                         )
                         for fs_key, fs_sum in fs_sums.items():
@@ -3809,12 +3809,12 @@ def create_app() -> gr.Blocks:
                     n_mint = len(runner.mint_registry.list_workflows())
                     log(f"Workflow engine: {n_mint} workflow(s) executed")
 
-                # Log Phase 0 multicollinearity results
+                # Log Phase 1 multicollinearity results
                 mc_rpts = session.get("mc_reports", {})
                 if mc_rpts:
                     for _fs_key, _rpt in mc_rpts.items():
                         log(
-                            f"Phase 0 [{_fs_key}]: "
+                            f"Phase 1 [{_fs_key}]: "
                             f"{_rpt.n_features_before}D->{_rpt.n_features_after}D "
                             f"(VIF_high={_rpt.high_vif_count}, "
                             f"level={_rpt.multicollinearity_level}) "
@@ -3863,28 +3863,15 @@ def create_app() -> gr.Blocks:
                     summary_tuple=data_summary,
                 )
 
-                # 4. Static plots (optional)  (70% -> 80%)
+                # 4. Static plots removed (matplotlib visualization.py
+                # consolidated into plotly_charts.py).  The GUI uses
+                # interactive Plotly charts exclusively.
                 figure_paths: Dict[str, Path] = {}
-                if not skip_plt:
-                    from extrapolation_discovery_platform.visualization import (
-                        plot_validity_ranking,
-                        plot_performance_heatmap,
-                        plot_parity,
-                    )
-                    fig_dir = out_dir / "figures"
-                    figure_paths["Validity"] = plot_validity_ranking(
-                        scores, fig_dir,
-                    )
-                    figure_paths["Heatmap"] = plot_performance_heatmap(
-                        runs, fig_dir,
-                    )
-                    figure_paths["Parity"] = plot_parity(runs, fig_dir)
-                    log("Static plots saved.")
-                    yield _yield_progress(
-                        "\n".join(log_lines), 80,
-                        "Plots saved",
-                        summary_tuple=data_summary,
-                    )
+                yield _yield_progress(
+                    "\n".join(log_lines), 80,
+                    "Continuing...",
+                    summary_tuple=data_summary,
+                )
 
                 # 5. Literature search (optional, cached -- fix #9)
                 # (80% -> 90%)

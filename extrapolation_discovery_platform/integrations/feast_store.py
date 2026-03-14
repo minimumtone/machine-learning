@@ -1,35 +1,4 @@
-"""
-Feast Feature Store Integration for Extrapolation Discovery Platform
-Feast特徴量ストアアダプタ
-
-Provides a thin adapter that registers and retrieves feature sets via
-Feast.  Falls back to the built-in FeatureCatalog when Feast is not
-installed.
-
-Concepts
---------
-- **FeatureView** : a Feast feature view corresponds to one FeatureSet
-  (e.g. FS_BASE, FS_THERMO).  Each view contains the feature columns
-  for that set.
-- **Entity** : the entity is a sample (alloy composition) identified by
-  ``sample_id``.
-- **FeatureService** : a Feast feature service groups multiple views
-  for convenient retrieval (e.g. FS_ALL = FS_BASE + FS_THERMO + ...).
-
-Usage::
-
-    from extrapolation_discovery_platform.integrations.feast_store import (
-        FeastFeatureStore,
-        is_feast_available,
-    )
-
-    store = FeastFeatureStore(repo_path="feature_repo/")
-    store.register_feature_set("FS_BASE", columns=["r_avg", "delta_r", ...])
-    df = store.get_features("FS_ALL", entity_df=entity_df)
-
-NOTE: Feast is optional.  When not installed, all operations transparently
-delegate to the built-in ``FeatureCatalog``.
-"""
+"""Feast feature store adapter — falls back to built-in FeatureCatalog."""
 
 from __future__ import annotations
 
@@ -41,10 +10,6 @@ import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
-
-# ---------------------------------------------------------------------------
-# Availability check
-# ---------------------------------------------------------------------------
 
 try:
     import feast
@@ -65,18 +30,8 @@ def is_feast_available() -> bool:
     return _FEAST_AVAILABLE
 
 
-# ---------------------------------------------------------------------------
-# Built-in fallback (wraps FeatureCatalog)
-# ---------------------------------------------------------------------------
-
-
 class _BuiltinFeatureStore:
-    """Fallback feature store using the platform's FeatureCatalog.
-
-    This is used when Feast is not installed.  It provides the same API
-    surface as ``FeastFeatureStore`` but delegates to the built-in
-    feature catalog and stores feature data in-memory.
-    """
+    """In-memory feature store (used when Feast is absent)."""
 
     def __init__(self) -> None:
         self._data: Optional[pd.DataFrame] = None
@@ -106,19 +61,7 @@ class _BuiltinFeatureStore:
         feature_set_name: str,
         entity_df: Optional[pd.DataFrame] = None,
     ) -> pd.DataFrame:
-        """Retrieve features for a given set name.
-
-        Parameters
-        ----------
-        feature_set_name : str
-            Name of the feature set (e.g. 'FS_BASE', 'FS_ALL', or custom).
-        entity_df : DataFrame or None
-            If provided, join on index to filter rows.
-
-        Returns
-        -------
-        pd.DataFrame
-        """
+        """Retrieve features for a given set name."""
         from extrapolation_discovery_platform.features import (
             FeatureCatalog,
             FeatureSetName,
@@ -197,28 +140,8 @@ class _BuiltinFeatureStore:
         return self._versions.get(name, 1)
 
 
-# ---------------------------------------------------------------------------
-# Feast Feature Store (real implementation)
-# ---------------------------------------------------------------------------
-
-
 class FeastFeatureStore:
-    """Unified feature store wrapping Feast or built-in fallback.
-
-    Parameters
-    ----------
-    repo_path : str or Path or None
-        Path to the Feast feature repo directory.  Only used when Feast
-        is installed.  Set to None to auto-create a temporary repo.
-    enabled : bool
-        If False, always use the built-in fallback (no Feast).
-
-    Examples
-    --------
-    >>> store = FeastFeatureStore()
-    >>> store.store_features(features_df)
-    >>> X = store.get_features("FS_BASE")
-    """
+    """Unified feature store — delegates to Feast or built-in fallback."""
 
     def __init__(
         self,
@@ -265,11 +188,7 @@ class FeastFeatureStore:
     def register_feature_set(
         self, name: str, columns: List[str],
     ) -> None:
-        """Register a feature set.
-
-        With Feast: creates/updates a FeatureView.
-        Without Feast: stores the column mapping in memory.
-        """
+        """Register a feature set (Feast FeatureView or in-memory)."""
         if self._use_feast and self._feast_store is not None:
             logger.info(
                 "Registering Feast FeatureView: %s (%d features)",
@@ -282,11 +201,7 @@ class FeastFeatureStore:
             self._fallback.register_feature_set(name, columns)
 
     def store_features(self, df: pd.DataFrame) -> None:
-        """Store feature data.
-
-        With Feast: writes to the offline store (Parquet/BigQuery).
-        Without Feast: stores in memory.
-        """
+        """Store feature data (Feast offline store or in-memory)."""
         if self._use_feast and self._feast_store is not None:
             # Write to Feast offline store
             logger.info("Storing %d samples to Feast offline store", len(df))
@@ -301,12 +216,7 @@ class FeastFeatureStore:
         feature_set_name: str,
         entity_df: Optional[pd.DataFrame] = None,
     ) -> pd.DataFrame:
-        """Retrieve features for a given set.
-
-        With Feast: calls ``get_historical_features()`` or
-        ``get_online_features()``.
-        Without Feast: uses built-in FeatureCatalog + in-memory data.
-        """
+        """Retrieve features for a given set."""
         if self._use_feast and self._feast_store is not None:
             try:
                 # Attempt Feast historical feature retrieval
