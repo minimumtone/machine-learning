@@ -330,6 +330,7 @@ def run_phase0_multicollinearity(
     all_workflows: List[str],
     n_samples: int,
     target: Optional[pd.Series] = None,
+    leak_corr_threshold: float = LEAK_CORR_THRESHOLD,
 ) -> Dict[str, MulticollinearityReport]:
     """Run full multicollinearity pipeline for every feature set.
 
@@ -339,7 +340,9 @@ def run_phase0_multicollinearity(
     ----------
     target : Series, optional
         When provided, runs leak detection (#7) — flags features with
-        ``|corr(feature, target)| > 0.85``.
+        ``|corr(feature, target)| > leak_corr_threshold``.
+    leak_corr_threshold : float
+        Absolute Pearson correlation cutoff for leak detection (default 0.85).
     """
     reports: Dict[str, MulticollinearityReport] = {}
 
@@ -388,7 +391,7 @@ def run_phase0_multicollinearity(
         # Step C2: Leak detection (#7) — flag features highly correlated with target
         leak_suspects: Dict[str, float] = {}
         if target is not None and X_fs.shape[1] > 0:
-            leak_suspects = detect_target_leakage(X_fs, target)
+            leak_suspects = detect_target_leakage(X_fs, target, threshold=leak_corr_threshold)
             if leak_suspects:
                 logger.warning(
                     'Phase 1 [%s]: %d leak suspect(s): %s',

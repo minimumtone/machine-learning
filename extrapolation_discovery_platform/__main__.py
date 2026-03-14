@@ -104,7 +104,11 @@ def _run_plots(runs, out_dir, logger):
         )
         fig_dir = out_dir / "figures"
         fig_dir.mkdir(parents=True, exist_ok=True)
-        best_runs = sorted(runs, key=lambda r: r.r2_test, reverse=True)
+        best_runs = sorted(
+            runs,
+            key=lambda r: r.r2_test if not np.isnan(r.r2_test) else float('-inf'),
+            reverse=True,
+        )
         if best_runs:
             fig = plotly_parity(best_runs[:1], title="Parity Plot (Best Model)")
             parity_path = fig_dir / "parity_best.html"

@@ -417,6 +417,7 @@ class ExperimentRunner:
             mc_reports = run_phase0_multicollinearity(
                 features_all, feature_sets, wf_names, len(features_all),
                 target=target,
+                leak_corr_threshold=self._leak_corr_threshold,
             )
             self._mc_reports = mc_reports
 
