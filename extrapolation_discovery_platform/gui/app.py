@@ -1653,10 +1653,9 @@ _GUI_VERSION_TAG = "PR#127"
 
 def create_app() -> gr.Blocks:
     """Build and return the Gradio Blocks app."""
-    # Fix #5: theme passed to gr.Blocks() constructor
+    # Gradio 6.0: theme moved from Blocks() to launch().
     with gr.Blocks(
         title=f"Extrapolation Discovery Platform ({_GUI_VERSION_TAG})",
-        theme=gr.themes.Soft(),
     ) as app:
         gr.Markdown(
             f"# Extrapolation Discovery Platform &ensp;"
@@ -3105,8 +3104,8 @@ def create_app() -> gr.Blocks:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     application = create_app()
-    # Fix #5: theme is set in gr.Blocks() constructor above
     application.launch(
         server_name="0.0.0.0",
         server_port=7860,
+        theme=gr.themes.Soft(),
     )

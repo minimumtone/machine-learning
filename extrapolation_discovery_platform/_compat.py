@@ -99,7 +99,7 @@ def as_serializable(obj: object) -> object:
     This function walks a nested dict / list structure and converts:
       - numpy integer types  → ``int``
       - numpy float types    → ``float``
-      - numpy bool\_         → ``bool``
+      - ``numpy.bool_``       → ``bool``
       - numpy ndarray        → ``list`` (recursive)
       - numpy generic        → appropriate Python scalar
       - pandas Series        → ``list``
