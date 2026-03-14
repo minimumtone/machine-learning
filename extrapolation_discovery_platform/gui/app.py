@@ -232,7 +232,7 @@ def _refresh_dashboard_data(
         # Show best model's R² (Test) as the primary KPI — much more
         # informative than the abstract validity total score.
         if runs:
-            best_run = max(runs, key=lambda r: r.r2_test)
+            best_run = max(runs, key=lambda r: r.r2_test if not np.isnan(r.r2_test) else float('-inf'))
             best_score = (
                 f"R²={best_run.r2_test:.4f} "
                 f"({best_run.workflow}/{best_run.feature_set})"

@@ -16,7 +16,6 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-from scipy.stats import norm as _scipy_norm
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
 
