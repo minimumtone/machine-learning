@@ -1,34 +1,4 @@
-"""
-MLflow Integration for Extrapolation Discovery Platform
-MLflow実験追跡アダプタ
-
-Provides a thin adapter that logs experiment runs, parameters, metrics,
-and artifacts to MLflow.  Falls back to the built-in RunRegistry when
-MLflow is not installed.
-
-Usage::
-
-    from extrapolation_discovery_platform.integrations.mlflow_tracker import (
-        MLflowTracker,
-        is_mlflow_available,
-    )
-
-    tracker = MLflowTracker(experiment_name="HEA_extrapolation")
-    tracker.start_run(run_name="WF-XGB_FS_ALL_seed42")
-    tracker.log_params({"workflow": "WF-XGB", "seed": 42})
-    tracker.log_metrics({"rmse_test": 12.3, "r2_test": 0.85})
-    tracker.log_artifact("/path/to/figure.png")
-    tracker.end_run()
-
-    # Or use as context manager:
-    with tracker.run_context("WF-XGB_FS_ALL_seed42") as run_id:
-        tracker.log_params({...})
-        tracker.log_metrics({...})
-
-NOTE: MLflow is optional.  ``is_mlflow_available()`` returns False when
-the package is not installed, and ``MLflowTracker`` silently falls back
-to in-memory tracking (no external server required).
-"""
+"""MLflow experiment tracker — falls back to in-memory store when mlflow is absent."""
 
 from __future__ import annotations
 
@@ -40,10 +10,6 @@ from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional, Sequence
 
 logger = logging.getLogger(__name__)
-
-# ---------------------------------------------------------------------------
-# Availability check
-# ---------------------------------------------------------------------------
 
 try:
     import mlflow
@@ -63,14 +29,9 @@ def is_mlflow_available() -> bool:
     return _MLFLOW_AVAILABLE
 
 
-# ---------------------------------------------------------------------------
-# In-memory fallback (no external dependency)
-# ---------------------------------------------------------------------------
-
-
 @dataclass
 class _InMemoryRun:
-    """Lightweight run record used when MLflow is unavailable."""
+    """Single tracked run (in-memory fallback)."""
 
     run_id: str
     run_name: str
@@ -84,7 +45,7 @@ class _InMemoryRun:
 
 
 class _InMemoryStore:
-    """Drop-in replacement for MLflow tracking when the package is absent."""
+    """In-memory replacement for MLflow tracking."""
 
     def __init__(self) -> None:
         self._runs: Dict[str, _InMemoryRun] = {}
@@ -134,31 +95,8 @@ class _InMemoryStore:
         return self._runs.get(run_id)
 
 
-# ---------------------------------------------------------------------------
-# MLflow Tracker (unified API)
-# ---------------------------------------------------------------------------
-
-
 class MLflowTracker:
-    """Unified experiment tracker wrapping MLflow or in-memory fallback.
-
-    Parameters
-    ----------
-    experiment_name : str
-        MLflow experiment name (created if not exists).
-    tracking_uri : str or None
-        MLflow tracking URI.  ``None`` uses the default (local ``./mlruns``).
-        Ignored when MLflow is not installed.
-    enabled : bool
-        If False, all operations are no-ops (useful for quick testing).
-
-    Examples
-    --------
-    >>> tracker = MLflowTracker("my_experiment")
-    >>> with tracker.run_context("run_001") as run_id:
-    ...     tracker.log_params({"seed": "42", "workflow": "WF-XGB"})
-    ...     tracker.log_metrics({"rmse_test": 12.3})
-    """
+    """Unified experiment tracker — delegates to MLflow or in-memory store."""
 
     def __init__(
         self,
@@ -238,13 +176,7 @@ class MLflowTracker:
         run_name: str = "",
         tags: Optional[Dict[str, str]] = None,
     ) -> Generator[str, None, None]:
-        """Context manager for a tracked run.
-
-        Yields
-        ------
-        str
-            The run ID.
-        """
+        """Context manager for a tracked run. Yields run ID."""
         run_id = self.start_run(run_name=run_name, tags=tags)
         try:
             yield run_id
@@ -311,16 +243,7 @@ class MLflowTracker:
     # ----- Convenience: log a RunResult -----
 
     def log_run_result(self, run_result: Any) -> None:
-        """Log a ``workflows.RunResult`` dataclass to the tracker.
-
-        Extracts params, metrics, and artifacts from a RunResult and logs
-        them all at once.
-
-        Parameters
-        ----------
-        run_result : RunResult
-            A completed workflow run result.
-        """
+        """Log a RunResult's params + metrics to the tracker."""
         if not self._enabled:
             return
 
@@ -348,19 +271,7 @@ class MLflowTracker:
         ood_results: Dict[str, Any],
         elapsed_sec: float,
     ) -> None:
-        """Log high-level experiment summary as a parent run.
-
-        Parameters
-        ----------
-        n_runs : int
-            Total number of workflow runs completed.
-        validity_scores : sequence
-            List of ValidityScore objects.
-        ood_results : dict
-            Feature-set -> OODResult mapping.
-        elapsed_sec : float
-            Total experiment elapsed time.
-        """
+        """Log experiment-level summary metrics."""
         if not self._enabled:
             return
 
@@ -391,11 +302,7 @@ class MLflowTracker:
     # ----- Query runs (for comparison) -----
 
     def list_runs(self) -> List[Dict[str, Any]]:
-        """Return summary of all tracked runs.
-
-        Returns list of dicts with keys: run_id, run_name, params, metrics,
-        status.
-        """
+        """Return summary of all tracked runs."""
         if self._use_mlflow:
             client = MlflowClient()
             experiment = client.get_experiment_by_name(self._experiment_name)

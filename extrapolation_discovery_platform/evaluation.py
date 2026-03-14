@@ -8,7 +8,7 @@ Scores each feature set along six axes:
   3. Generalisation - sign consistency between RandomCV and Block splits
   4. Leak suspicion - Random-only improvement with Block degradation
   5. Extrapolation safety - uncertainty behaviour on OOD points
-  6. Multicollinearity penalty - VIF-based collinearity penalty (Phase 0)
+  6. Multicollinearity penalty - VIF-based collinearity penalty (Phase 1)
 """
 
 from __future__ import annotations
@@ -65,7 +65,7 @@ class ValidityScore:
     rmse_ci_upper: float = 0.0
     rmse_mean: float = 0.0
 
-    # Leak suspects from Phase 0 (#7)
+    # Leak suspects from Phase 1 (#7)
     leak_suspects: Dict[str, float] = field(default_factory=dict)
 
     @property
@@ -152,7 +152,7 @@ class FeatureValidityEvaluator:
             {feature_set: {"errors": ..., "uncertainties": ..., "is_ood": ...}}
             Per-sample data for extrapolation safety assessment.
         mc_reports : dict, optional
-            {feature_set: MulticollinearityReport} from Phase 0.
+            {feature_set: MulticollinearityReport} from Phase 1.
             Used to compute multicollinearity_penalty.
 
         Returns
@@ -227,7 +227,7 @@ class FeatureValidityEvaluator:
             else:
                 vs.extrapolation_safety = 0.5  # neutral when data not available
 
-            # 6. Multicollinearity penalty (Phase 0)
+            # 6. Multicollinearity penalty (Phase 1)
             if mc_reports and fs_name in mc_reports:
                 rpt = mc_reports[fs_name]
                 vs.multicollinearity_penalty = min(1.0, rpt.high_vif_ratio)

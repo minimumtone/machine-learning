@@ -24,7 +24,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import ARDRegression, LassoCV
+from sklearn.linear_model import ARDRegression, LassoCV, LinearRegression
+from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import StandardScaler
 
 logger = logging.getLogger(__name__)
@@ -170,12 +171,14 @@ def _run_aic_forward(
     y: pd.Series,
     max_features: int = 20,
 ) -> FeatureSelectionResult:
-    """Forward stepwise selection using AIC (Akaike Information Criterion).
+    """Forward stepwise selection using CV-based error with AIC-style stopping.
 
-    AIC = n * ln(RSS/n) + 2k
-    where n = sample size, k = number of parameters.
-    Lower AIC is better. AIC penalises complexity less than BIC,
-    so it tends to select more features.
+    Uses cross-validated MSE as the selection criterion.  CV already
+    penalises overfitting via out-of-sample evaluation, so no explicit
+    AIC penalty term is added (that would double-penalise complexity).
+    The 'aic' label is retained for backward compatibility; the method
+    is less conservative than BIC-style (more CV folds → larger training
+    sets per fold → easier to detect marginal improvements → more features).
     """
     return _forward_stepwise_ic(X, y, criterion="aic", max_features=max_features)
 
@@ -185,11 +188,14 @@ def _run_bic_forward(
     y: pd.Series,
     max_features: int = 20,
 ) -> FeatureSelectionResult:
-    """Forward stepwise selection using BIC (Bayesian Information Criterion).
+    """Forward stepwise selection using CV-based error with BIC-style stopping.
 
-    BIC = n * ln(RSS/n) + k * ln(n)
-    BIC penalises model complexity more strongly than AIC,
-    so it tends to select fewer features — preferring parsimony.
+    Uses cross-validated MSE as the selection criterion.  Compared to the
+    AIC variant this uses fewer CV folds, meaning smaller training sets
+    per fold and noisier error estimates — making marginal feature gains
+    harder to detect, so the procedure stops earlier with fewer features,
+    preferring parsimony.  The 'bic' label is retained for backward
+    compatibility.
     """
     return _forward_stepwise_ic(X, y, criterion="bic", max_features=max_features)
 
@@ -217,12 +223,11 @@ def _forward_stepwise_ic(
         )
         return None
 
-    from sklearn.linear_model import LinearRegression
 
     n = len(y)
     remaining = list(X.columns)
     selected: List[str] = []
-    best_ic = np.inf
+    best_score = np.inf
     scaler = StandardScaler()
     X_scaled = pd.DataFrame(
         scaler.fit_transform(
@@ -232,9 +237,29 @@ def _forward_stepwise_ic(
     )
     y_arr = np.ascontiguousarray(y.to_numpy(dtype="float64"))
 
+    # Use cross-validated MSE directly as the selection score.
+    # CV already penalises overfitting through out-of-sample evaluation,
+    # so we do NOT layer an explicit AIC/BIC penalty on top (that would
+    # double-penalise complexity).  We differentiate "aic" vs "bic" by
+    # fold count: more folds → larger training sets → easier to detect
+    # marginal improvements → more features selected (AIC = permissive).
+    # Fewer folds → smaller training sets → noisier estimates → stops
+    # earlier with fewer features (BIC = conservative / parsimonious).
+    # AIC: 10-fold (more data per fold → easier to detect marginal improvements → more features)
+    # BIC: 5-fold  (less data per fold → noisier estimates → stops earlier → fewer features)
+    # max(2, ...) guarantees at least 2 folds so cross_val_score never receives
+    # cv=1 (which would raise ValueError) or cv=n (leave-one-out) on small datasets
+    # where LinearRegression overfits perfectly (MSE≈0 → IC diverges to -∞).
+    # max_folds is also capped at n//2 so each fold always has >= 2 training samples.
+    _max_folds = max(2, n // 2)
+    if criterion == "aic":
+        cv_folds = max(2, min(_max_folds, 10))
+    else:  # bic — fewer folds → more conservative
+        cv_folds = max(2, min(_max_folds, 5))
+
     for step in range(min(max_features, len(remaining))):
         best_feat = None
-        best_ic_step = np.inf
+        best_score_step = np.inf
 
         for feat in remaining:
             trial = selected + [feat]
@@ -242,28 +267,22 @@ def _forward_stepwise_ic(
                 X_scaled[trial].to_numpy(dtype="float64", na_value=np.nan)
             )
             model = LinearRegression()
-            model.fit(X_trial, y_arr)
-            y_pred = model.predict(X_trial)
-            rss = float(np.sum((y_arr - y_pred) ** 2))
-            k = len(trial) + 1  # +1 for intercept
+            # CV-based MSE (negative by sklearn convention)
+            cv_mse = -cross_val_score(
+                model, X_trial, y_arr,
+                cv=cv_folds, scoring="neg_mean_squared_error",
+            ).mean()
 
-            if rss <= 0:
-                ic = -np.inf
-            elif criterion == "aic":
-                ic = n * np.log(rss / n) + 2 * k
-            else:  # bic
-                ic = n * np.log(rss / n) + k * np.log(n)
-
-            if ic < best_ic_step:
-                best_ic_step = ic
+            if cv_mse < best_score_step:
+                best_score_step = cv_mse
                 best_feat = feat
 
-        if best_feat is None or best_ic_step >= best_ic:
+        if best_feat is None or best_score_step >= best_score:
             break  # no improvement
 
         selected.append(best_feat)
         remaining.remove(best_feat)
-        best_ic = best_ic_step
+        best_score = best_score_step
 
     # Compute importance as order of selection (first selected = most important)
     importance = {}

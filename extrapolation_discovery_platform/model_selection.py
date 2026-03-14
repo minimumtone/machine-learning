@@ -37,10 +37,12 @@ from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import KBinsDiscretizer, StandardScaler
+from scipy.stats import loguniform, randint, uniform
 
-from extrapolation_discovery_platform._utils import safe_array
+from extrapolation_discovery_platform._utils import get_safe_n_jobs, safe_array
 
 logger = logging.getLogger(__name__)
+
 
 # Try importing optional packages
 try:
@@ -80,7 +82,10 @@ def make_stratify_labels(y: np.ndarray, n_bins: int = 5) -> np.ndarray:
     n_unique = len(np.unique(y_arr))
     bins = min(n_bins, max(2, n_unique))
 
-    kb = KBinsDiscretizer(n_bins=bins, encode="ordinal", strategy="quantile")
+    kb = KBinsDiscretizer(
+        n_bins=bins, encode="ordinal", strategy="quantile",
+        subsample=None,
+    )
     labels = kb.fit_transform(y_arr).astype(int).ravel()
     return labels
 
@@ -207,7 +212,7 @@ def build_candidate_pipelines(
         ("scaler", StandardScaler()),
         ("est", LassoCV(
             alphas=np.logspace(-6, 2, 30 if quick else 50),
-            cv=3, max_iter=10000, n_jobs=-1,
+            cv=3, max_iter=10000, n_jobs=1,
         )),
     ])
     candidates.append(("Lasso", pipe_lasso, None))
@@ -233,7 +238,7 @@ def build_candidate_pipelines(
     if _XGB_AVAILABLE:
         lasso_for_sel = LassoCV(
             alphas=np.logspace(-6, 2, 30 if quick else 50),
-            cv=3, max_iter=10000, n_jobs=-1,
+            cv=3, max_iter=10000, n_jobs=1,
         )
         sel_lasso = SelectFromModel(lasso_for_sel, threshold="median")
         pipe_sel_lasso_xgb = Pipeline([
@@ -248,17 +253,17 @@ def build_candidate_pipelines(
         ])
         if quick:
             param_dist_lxgb = {
-                "est__n_estimators": [100, 200],
-                "est__max_depth": [3, 6],
-                "est__learning_rate": [0.05, 0.1],
+                "est__n_estimators": randint(100, 300),
+                "est__max_depth": randint(3, 7),
+                "est__learning_rate": loguniform(0.03, 0.2),
             }
         else:
             param_dist_lxgb = {
-                "est__n_estimators": [100, 200, 400],
-                "est__max_depth": [3, 6, 8],
-                "est__learning_rate": [0.01, 0.05, 0.1],
-                "est__subsample": [0.8, 1.0],
-                "est__colsample_bytree": [0.8, 1.0],
+                "est__n_estimators": randint(50, 500),
+                "est__max_depth": randint(3, 10),
+                "est__learning_rate": loguniform(0.005, 0.3),
+                "est__subsample": uniform(0.6, 0.4),
+                "est__colsample_bytree": uniform(0.6, 0.4),
             }
         candidates.append(("SelLasso_XGB", pipe_sel_lasso_xgb, param_dist_lxgb))
 
@@ -274,15 +279,15 @@ def build_candidate_pipelines(
         ])
         if quick:
             param_dist_arf = {
-                "est__n_estimators": [100, 200],
-                "est__max_depth": [None, 10],
+                "est__n_estimators": randint(100, 300),
+                "est__max_depth": [None, 10, 20],
             }
         else:
             param_dist_arf = {
-                "est__n_estimators": [200, 400],
-                "est__max_depth": [None, 10, 20],
-                "est__min_samples_split": [2, 5],
-                "est__min_samples_leaf": [1, 2],
+                "est__n_estimators": randint(100, 600),
+                "est__max_depth": [None, 10, 20, 40],
+                "est__min_samples_split": randint(2, 10),
+                "est__min_samples_leaf": randint(1, 5),
             }
         candidates.append(("SelARD_RF", pipe_sel_ard_rf, param_dist_arf))
 
@@ -302,14 +307,14 @@ def build_candidate_pipelines(
         ])
         if quick:
             param_dist_rxgb = {
-                "est__n_estimators": [100, 200],
-                "est__max_depth": [3, 6],
+                "est__n_estimators": randint(100, 300),
+                "est__max_depth": randint(3, 7),
             }
         else:
             param_dist_rxgb = {
-                "est__n_estimators": [100, 200, 400],
-                "est__max_depth": [3, 6],
-                "est__learning_rate": [0.01, 0.05, 0.1],
+                "est__n_estimators": randint(50, 500),
+                "est__max_depth": randint(3, 10),
+                "est__learning_rate": loguniform(0.005, 0.3),
             }
         candidates.append(("SelRidge_XGB", pipe_sel_ridge_xgb, param_dist_rxgb))
 
@@ -320,15 +325,15 @@ def build_candidate_pipelines(
         ])
         if quick:
             param_dist_rf = {
-                "est__n_estimators": [100, 200],
-                "est__max_depth": [None, 10],
+                "est__n_estimators": randint(100, 300),
+                "est__max_depth": [None, 10, 20],
             }
         else:
             param_dist_rf = {
-                "est__n_estimators": [200, 400, 800],
+                "est__n_estimators": randint(100, 1000),
                 "est__max_depth": [None, 10, 20, 40],
-                "est__min_samples_split": [2, 5, 10],
-                "est__min_samples_leaf": [1, 2, 4],
+                "est__min_samples_split": randint(2, 15),
+                "est__min_samples_leaf": randint(1, 6),
                 "est__max_features": ["sqrt", "log2", None],
             }
         candidates.append(("RF", pipe_rf, param_dist_rf))
@@ -345,18 +350,18 @@ def build_candidate_pipelines(
         ])
         if quick:
             param_dist_xgb = {
-                "est__n_estimators": [100, 200],
-                "est__max_depth": [3, 6],
-                "est__learning_rate": [0.05, 0.1],
+                "est__n_estimators": randint(100, 300),
+                "est__max_depth": randint(3, 7),
+                "est__learning_rate": loguniform(0.03, 0.2),
             }
         else:
             param_dist_xgb = {
-                "est__n_estimators": [100, 200, 400, 800],
-                "est__max_depth": [3, 6, 8, 12],
-                "est__learning_rate": [0.01, 0.03, 0.05, 0.1],
-                "est__subsample": [0.6, 0.8, 1.0],
-                "est__colsample_bytree": [0.6, 0.8, 1.0],
-                "est__min_child_weight": [1, 3, 5],
+                "est__n_estimators": randint(50, 1000),
+                "est__max_depth": randint(3, 13),
+                "est__learning_rate": loguniform(0.005, 0.3),
+                "est__subsample": uniform(0.5, 0.5),
+                "est__colsample_bytree": uniform(0.5, 0.5),
+                "est__min_child_weight": randint(1, 8),
             }
         candidates.append(("XGB", pipe_xgb, param_dist_xgb))
 
@@ -426,9 +431,12 @@ def nested_cv_evaluate(
         y_te = pd.Series(y_arr[outer_test_idx])
 
         inner_labels = make_stratify_labels(y_tr.values, n_bins=min(5, n_inner))
-        inner_cv = StratifiedKFold(
+        _skf = StratifiedKFold(
             n_splits=n_inner, shuffle=True, random_state=random_state,
         )
+        # Pre-compute splits using discretised labels so that
+        # RandomizedSearchCV never calls split(X, y_continuous).
+        inner_cv = list(_skf.split(safe_array(X_tr), inner_labels))
 
         for name, pipeline, param_dist in candidates:
             msg = f"Fold {fold_i + 1}/{n_outer}: {name}"
@@ -449,7 +457,7 @@ def nested_cv_evaluate(
                         cv=inner_cv,
                         scoring="neg_root_mean_squared_error",
                         random_state=random_state,
-                        n_jobs=-1,
+                        n_jobs=get_safe_n_jobs(),
                         error_score=np.nan,
                     )
                     search.fit(
@@ -514,13 +522,17 @@ def nested_cv_evaluate(
 
 
 def _count_param_combinations(param_dist: Dict[str, Any]) -> int:
-    """Count total combinations in a param grid (for n_iter capping)."""
+    """Estimate total combinations (for n_iter capping).
+
+    Discrete lists are counted exactly; continuous distributions
+    contribute a fixed budget of 10 each.
+    """
     total = 1
     for values in param_dist.values():
         if isinstance(values, (list, tuple)):
             total *= len(values)
         else:
-            total *= 10  # distributions: assume ~10 samples
+            total *= 10  # scipy.stats distributions: assume ~10 samples
     return total
 
 
@@ -652,7 +664,23 @@ def refit_and_save(
     pipe = clone(pipeline_template)
 
     if best_params:
-        pipe.set_params(**best_params)
+        try:
+            pipe.set_params(**best_params)
+        except Exception:
+            logger.warning(
+                "Failed to set best_params for %s — using defaults",
+                best_candidate.name,
+            )
+    elif best_params is None:
+        # best_params is None (e.g. LassoCV selects alpha internally).
+        # This is expected for CV-based estimators.  For HPO-based
+        # candidates (XGB, RF) it means all folds failed — log a warning.
+        if param_dist is not None:
+            logger.warning(
+                "No best_params found for %s (all folds may have failed) "
+                "— refitting with default hyperparameters",
+                best_candidate.name,
+            )
 
     X_arr = safe_array(X)
     y_arr = safe_array(y).ravel()

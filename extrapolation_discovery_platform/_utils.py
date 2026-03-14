@@ -14,6 +14,22 @@ import numpy as np
 import pandas as pd
 
 
+def get_safe_n_jobs() -> int:
+    """Return n_jobs safe for use inside nested parallelism contexts.
+
+    When running inside a ``ProcessPoolExecutor`` worker (signalled by
+    ``_EDP_INSIDE_WORKER``), always returns 1 to avoid CPU over-subscription.
+    Otherwise respects the ``HEA_INNER_N_JOBS`` env-var (default ``"1"``).
+    """
+    import os
+    if os.environ.get("_EDP_INSIDE_WORKER", ""):
+        return 1
+    try:
+        return max(1, int(os.environ.get("HEA_INNER_N_JOBS", "1")))
+    except ValueError:
+        return 1
+
+
 def safe_array(source: Any, dtype: str = "float64") -> np.ndarray:
     """Convert *source* to a C-contiguous numpy array.
 

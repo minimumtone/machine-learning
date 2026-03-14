@@ -1,38 +1,7 @@
-"""
-Experiment Runner for Extrapolation Discovery Platform
-実験オーケストレータ
+"""Experiment Runner — orchestrates the 7-phase ML pipeline.
 
-設計方針 (PR#116 redesign)
---------------------------
-旧実装は `seed > fs > splitter > fold > workflow` の5重ループを1つの run() メソッドに
-詰め込んでいた。この構造には3つの根本的な問題があった:
-
-  1. **重複計算**: CompositionBlock/ElementExclusion の分割はデータにのみ依存し
-     seed・fs とは無関係だが、旧実装は seed x fs = 18 回再計算していた。
-     RandomCV も seed が同じなら fs が変わっても同じ fold になる。
-
-  2. **ループ内 OOD**: OOD 検出が「seed ループ内 fs ループの末尾」で実行されていた
-     ため、タイミングが不明確で fs の X コピーが長寿命になっていた。
-
-  3. **逐次実行**: 全ジョブが直列実行されていた。各ジョブは入力/出力が
-     完全に独立しており、ProcessPoolExecutor による並列化が可能。
-
-新スキーム: 5 フェーズ
-----------------------
-  Phase 1 – 分割事前計算 (最小回数)
-      CompositionBlock/ElementExclusion: 1 回
-      RandomCV: seed 毎に 1 回 (fs に非依存)
-
-  Phase 2 – ジョブリスト構築
-      _Job NamedTuple (スカラ + インデックス配列のみ)
-
-  Phase 3 – 並列学習 (ProcessPoolExecutor)
-      各 worker は C-contiguous numpy 配列からスライスして学習
-      n_workers=1 で逐次実行 (デバッグ用)
-
-  Phase 4 – OOD (全学習完了後、fs 毎に 1 回)
-
-  Phase 5 – 評価・ログ
+Phases: 1 Multicollinearity  2 Fold-precompute   3 Feature-selection
+        4 Job-list build     5 Parallel training  6 OOD  7 Evaluate
 """
 
 from __future__ import annotations
@@ -41,6 +10,7 @@ import concurrent.futures
 import json
 import logging
 import os
+from collections import defaultdict
 try:
     import resource
     _HAS_RESOURCE = True
@@ -104,14 +74,7 @@ from extrapolation_discovery_platform._compat import as_serializable
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
-# Run Registry
-# ---------------------------------------------------------------------------
-
 from extrapolation_discovery_platform._utils import safe_array  # noqa: E402
-
-# Re-export for backward compatibility
-__all__ = ["safe_array"]
 
 
 class RunRegistry:
@@ -121,7 +84,6 @@ class RunRegistry:
         self._runs: List[RunResult] = []
 
     def reset(self) -> None:
-        """Clear all stored runs (called at the start of each run())."""
         self._runs.clear()
 
     def add(self, run: RunResult) -> None:
@@ -138,33 +100,17 @@ class RunRegistry:
         return len(self._runs)
 
     def to_dataframe(self) -> pd.DataFrame:
-        """Convert all runs to a summary DataFrame (columnar construction).
-
-        Column names are derived dynamically from ``RunResult`` dataclass
-        fields, excluding non-scalar fields (numpy arrays, dicts) that
-        cannot be represented as DataFrame columns.
-        """
+        """Convert all runs to a summary DataFrame."""
         import dataclasses as _dc
 
         if not self._runs:
             return pd.DataFrame()
 
-        # Dynamically extract scalar column names from RunResult fields.
-        # Exclude ndarray / dict fields that are not suitable for tabular
-        # representation (y_test_true, y_test_pred, test_indices, params,
-        # artifacts).
         _SKIP_TYPES = (np.ndarray, dict)
         col_names = [
             f.name for f in _dc.fields(RunResult)
-            if f.default_factory is not dict.__class__  # exclude dict fields
-            and not (
-                isinstance(getattr(self._runs[0], f.name, None), _SKIP_TYPES)
-            )
-        ]
-        # Fallback: filter to fields whose first-run value is a scalar
-        col_names = [
-            name for name in col_names
-            if not isinstance(getattr(self._runs[0], name, None), (np.ndarray, dict))
+            if not isinstance(getattr(self._runs[0], f.name, None), _SKIP_TYPES)
+            and getattr(self._runs[0], f.name, None) is not None
         ]
         columns: Dict[str, list] = {k: [] for k in col_names}
         for r in self._runs:
@@ -173,12 +119,7 @@ class RunRegistry:
         return pd.DataFrame(columns)
 
     def export_json(self, path: Path) -> None:
-        """Export runs to JSON with numpy-safe serialization.
-
-        Uses ``as_serializable`` to convert numpy types (float32, int64,
-        ndarray, ``bool_``) to JSON-safe Python builtins before writing.
-        This prevents ``TypeError`` on ``json.dump`` (#5).
-        """
+        """Export runs to JSON (numpy-safe serialization)."""
         df = self.to_dataframe()
         path.parent.mkdir(parents=True, exist_ok=True)
         records = as_serializable(df.to_dict(orient="records"))
@@ -192,11 +133,7 @@ class RunRegistry:
 # ---------------------------------------------------------------------------
 
 class _Job(NamedTuple):
-    """All information needed to execute one (wf, fs, sp, seed, fold) run.
-
-    Only scalars and index arrays — no DataFrames.  The worker slices its
-    own train/test views from the shared feature array.
-    """
+    """Lightweight, picklable job descriptor for one training run."""
     wf_name: str
     fs_name: str
     sp_name: str
@@ -209,10 +146,6 @@ class _Job(NamedTuple):
     force_pca: bool = False  # moderate VIF: force PCA on for linear models
 
 
-# ---------------------------------------------------------------------------
-# Top-level worker function (module-level for pickling)
-# ---------------------------------------------------------------------------
-
 def _run_job(
     job: _Job,
     X_fs: np.ndarray,
@@ -220,18 +153,7 @@ def _run_job(
     y: np.ndarray,
     mint_configs: Optional[Dict[str, "MIntWorkflowConfig"]] = None,
 ) -> RunResult:
-    """Execute a single training run.  Pure function — no side effects.
-
-    X_fs must be C-contiguous so that row slices have unit stride, avoiding
-    the BLAS SIGSEGV that occurs with F-contiguous (pandas 3.0) layouts.
-
-    Parameters
-    ----------
-    mint_configs : dict, optional
-        Mapping of MInt workflow name → MIntWorkflowConfig.  When the job's
-        ``wf_name`` is not a built-in workflow, the config is used to
-        reconstruct a ``MIntWorkflowAdapter`` in the worker process.
-    """
+    """Execute one training run (pure, picklable)."""
     import os as _os
     import pandas as _pd
 
@@ -410,13 +332,23 @@ class ExperimentRunner:
 
     @property
     def mc_reports(self) -> Optional[Dict[str, MulticollinearityReport]]:
-        """Multicollinearity reports from Phase 0 (None before run)."""
+        """Multicollinearity reports from Phase 1 (None before run)."""
         return self._mc_reports
 
     @property
     def model_selection_result(self) -> Optional[ModelSelectionResult]:
-        """Model selection result from Phase 6 (None if not run)."""
+        """Model selection result (None if not run)."""
         return self._model_selection_result
+
+    @property
+    def fs_summaries(self) -> Dict[str, Any]:
+        """Feature selection summaries from Phase 2 (empty before run)."""
+        return getattr(self, "_fs_summaries", {})
+
+    @property
+    def effective_cols(self) -> Dict[str, List[str]]:
+        """Effective columns per feature set after Phases 1-2."""
+        return self._effective_cols
 
     def run(
         self,
@@ -427,19 +359,14 @@ class ExperimentRunner:
         selected_workflows: Optional[List[str]] = None,
         selected_feature_sets: Optional[List[str]] = None,
     ) -> Tuple[List[RunResult], List[ValidityScore], Dict[str, OODResult]]:
-        """Execute the full experiment grid in 5 phases."""
+        """Execute the full experiment grid in 7 phases."""
         t_start = time.time()
 
         # ── Reset per-run state so repeated GUI calls don't accumulate ──
         self._registry.reset()
         self._ood_split_indices.clear()
 
-        # ── Consolidate features_all to a single C-contiguous block ──
-        # This is the ROOT FIX for the SIGSEGV: pandas DataFrames built from
-        # heterogeneous sources (CSV upload, concat, column-subset) carry a
-        # fragmented BlockManager whose .values returns F-contiguous arrays.
-        # We rebuild once here so every downstream consumer (Phase 3 training,
-        # Phase 4 OOD, post-processing visualizations) gets safe arrays.
+        # Rebuild as C-contiguous to prevent BLAS SIGSEGV from F-order arrays
         _cols = list(features_all.columns)
         features_all = pd.DataFrame(
             safe_array(features_all),
@@ -486,23 +413,15 @@ class ExperimentRunner:
         )
 
         try:
-            # ── Phase 0: Multicollinearity diagnostics & leak detection ──
+            # ── Phase 1: Multicollinearity diagnostics & leak detection ──
             mc_reports = run_phase0_multicollinearity(
                 features_all, feature_sets, wf_names, len(features_all),
                 target=target,
+                leak_corr_threshold=self._leak_corr_threshold,
             )
             self._mc_reports = mc_reports
 
-            # ── Compute effective columns per feature set ──
-            # Phase 0 identifies constant / perfectly-collinear columns
-            # to drop.  Until now these drops were *not* reflected in
-            # the actual training arrays — Phase 3 still used the
-            # original FeatureCatalog columns.  Fix: subtract drops.
-            #
-            # Additionally, if leak_auto_exclude is enabled, features
-            # with |correlation(feature, target)| > leak_corr_threshold
-            # are excluded.  These "leak" features act as proxy variables
-            # for the target, inflating train R² but collapsing test R².
+            # ── Effective columns per feature set (subtract Phase 1 drops) ──
             self._effective_cols = {}
             for _fs in feature_sets:
                 _fs_key = _fs.value
@@ -513,8 +432,8 @@ class ExperimentRunner:
                     _dropped = set(_rpt.dropped_constant + _rpt.dropped_perfect)
                     _orig = [c for c in _orig if c not in _dropped]
                     # Auto-exclude leaked features (high |r| with target)
-                    if self._leak_auto_exclude and _rpt.leaked_features:
-                        _leak_set = set(_rpt.leaked_features)
+                    if self._leak_auto_exclude and _rpt.leak_suspects:
+                        _leak_set = set(_rpt.leak_suspects.keys())
                         _before = len(_orig)
                         _orig = [c for c in _orig if c not in _leak_set]
                         if _before != len(_orig):
@@ -529,30 +448,18 @@ class ExperimentRunner:
                             )
                 self._effective_cols[_fs_key] = _orig
                 logger.info(
-                    "Effective columns [%s]: %d features (after Phase 0 drops)",
+                    "Effective columns [%s]: %d features (after Phase 1 drops)",
                     _fs_key, len(_orig),
                 )
 
-            # ── Phase 1: Precompute folds (moved before Phase 0.5) ──
-            # Compute fold_plan early so Phase 0.5 can use
-            # training indices to avoid data leakage.
-            fold_plan = self._phase1_precompute_folds(
+            # ── Phase 3: Precompute folds ──
+            fold_plan = self._phase3_precompute_folds(
                 compositions_df, features_all, target
             )
 
-            # ── Phase 0.5: Feature selection on cleaned columns ──
-            # Lasso-based feature selection removes uninformative
-            # features before training.  This addresses the issue
-            # where high-dimensional / collinear features were passed
-            # straight to learning without any selection step.
-            #
-            # FIX (data leakage): feature selection MUST use only training
-            # indices from the primary split.  Running LassoCV on the full
-            # dataset (including the test fold) leaks target information
-            # through feature selection, causing inflated train R² and
-            # suppressed / unreliable test R².  Use CompositionBlock fold-0
-            # train indices as a representative training subset.
+            # ── Phase 2: Feature selection (train-only to prevent leakage) ──
             _primary_train_idx = fold_plan["CompositionBlock"][0][0]
+            self._fs_summaries: Dict[str, Any] = {}  # store for GUI display
 
             for _fs_key, _cols in list(self._effective_cols.items()):
                 if len(_cols) <= 3:
@@ -563,20 +470,41 @@ class ExperimentRunner:
                     _y_train = target.iloc[_primary_train_idx]
                     _fs_summary = run_feature_selection(
                         _X_fs_train, _y_train,
-                        methods=["Lasso"],
+                        methods=None,  # ALL methods: Lasso, AIC, BIC, ARD
+                        consensus_threshold=2,
                         feature_set=_fs_key,
                     )
-                    _lasso = _fs_summary.results.get("Lasso")
-                    if _lasso and _lasso.selected_features:
-                        _sel = _lasso.selected_features
-                        if len(_sel) >= 2:
+                    self._fs_summaries[_fs_key] = _fs_summary
+
+                    # Prefer consensus features (selected by >= 2 methods)
+                    if _fs_summary.consensus_features and len(_fs_summary.consensus_features) >= 2:
+                        _sel = _fs_summary.consensus_features
+                        logger.info(
+                            "Feature selection [%s]: %d → %d consensus features"
+                            " (%d methods, train-only, n_train=%d)",
+                            _fs_key, len(_cols), len(_sel),
+                            len(_fs_summary.results),
+                            len(_primary_train_idx),
+                        )
+                        self._effective_cols[_fs_key] = _sel
+                    else:
+                        # Fall back to Lasso-only if consensus is too small
+                        _lasso = _fs_summary.results.get("Lasso")
+                        if _lasso and _lasso.selected_features and len(_lasso.selected_features) >= 2:
+                            _sel = _lasso.selected_features
                             logger.info(
                                 "Feature selection [%s]: %d → %d features"
-                                " (train-only, n_train=%d)",
+                                " (Lasso fallback, train-only, n_train=%d)",
                                 _fs_key, len(_cols), len(_sel),
                                 len(_primary_train_idx),
                             )
                             self._effective_cols[_fs_key] = _sel
+                    # Log per-method results
+                    for _m_name, _m_res in _fs_summary.results.items():
+                        logger.info(
+                            "  %s [%s]: %d features selected",
+                            _m_name, _fs_key, _m_res.n_selected,
+                        )
                 except Exception:
                     logger.warning(
                         "Feature selection failed for %s; using all cleaned features",
@@ -587,13 +515,13 @@ class ExperimentRunner:
                 try:
                     progress_callback(
                         0, 0,
-                        f"Phase 0 complete: multicollinearity diagnosed "
-                        f"for {len(mc_reports)} feature sets, "
-                        f"feature selection applied",
+                        f"Phases 1-2 complete: multicollinearity + feature "
+                        f"selection for {len(mc_reports)} feature sets",
                     )
                 except Exception:
                     pass
-            jobs = self._phase2_build_jobs(
+            # ── Phase 4: Build job list ──
+            jobs = self._phase4_build_jobs(
                 feature_sets, wf_names, fold_plan,
                 mc_reports=mc_reports,
             )
@@ -602,18 +530,60 @@ class ExperimentRunner:
                 len(jobs), self._n_workers,
             )
 
-            all_results = self._phase3_train(
+            # ── Phase 5: Parallel training ──
+            all_results = self._phase5_train(
                 jobs, features_all, feature_sets, y_arr,
                 progress_callback, mint_configs or None,
             )
             self._registry.add_many(all_results)
 
+            # Log each run as a separate tracked entry
+            self._tracker.end_run()
+            for _rr in all_results:
+                try:
+                    _run_label = (
+                        f"{_rr.workflow}_{_rr.feature_set}"
+                        f"_{_rr.split_policy}_s{_rr.seed}_f{_rr.fold}"
+                    )
+                    self._tracker.start_run(run_name=_run_label)
+                    self._tracker.log_run_result(_rr)
+                    self._tracker.end_run()
+                except Exception:
+                    logger.debug(
+                        "Failed to log run result to tracker: %s %s",
+                        _rr.workflow, _rr.feature_set,
+                    )
+                    try:
+                        self._tracker.end_run(status="FAILED")
+                    except Exception:
+                        pass
+
+            # Register effective columns per feature set with Feast store
+            for _fs_key, _fs_cols in self._effective_cols.items():
+                try:
+                    self._feature_store.register_feature_set(
+                        _fs_key, _fs_cols,
+                    )
+                except Exception:
+                    logger.debug(
+                        "Failed to register feature set %s in Feast",
+                        _fs_key,
+                    )
+
+            # Re-open a summary run to log experiment summary
+            self._tracker.start_run(
+                run_name=f"experiment_summary_{int(t_start)}",
+                tags={"type": "experiment_summary"},
+            )
+
+            # ── Phase 6: OOD detection ──
             self._ood_split_indices = {}
-            ood_results, ood_errors_for_eval = self._phase4_ood(
+            ood_results, ood_errors_for_eval = self._phase6_ood(
                 features_all, feature_sets, fold_plan
             )
 
-            validity_scores = self._phase5_evaluate(
+            # ── Phase 7: Evaluation ──
+            validity_scores = self._phase7_evaluate(
                 ood_errors_for_eval, mc_reports=mc_reports,
             )
 
@@ -638,10 +608,6 @@ class ExperimentRunner:
 
         return self._registry.runs, validity_scores, ood_results
 
-    # ------------------------------------------------------------------
-    # Phase 6: Model Selection (Nested CV)
-    # ------------------------------------------------------------------
-
     def run_model_selection(
         self,
         features_all: pd.DataFrame,
@@ -652,19 +618,38 @@ class ExperimentRunner:
         n_iter: int = 20,
         progress_callback: Optional[Any] = None,
     ) -> ModelSelectionResult:
-        """Phase 6: Nested CV model selection.
-
-        Runs *after* the standard 5-phase experiment so it does not
-        interfere with existing results.  Uses the best feature set's
-        effective columns (from Phase 0 + Phase 0.5) as input.
-        """
-        # Pick the best feature set's effective columns
+        """Optional nested-CV model selection (runs after the 7-phase grid)."""
+        # Pick effective columns for the best-performing feature set.
         best_cols: Optional[List[str]] = None
-        for fs_key, cols in self._effective_cols.items():
-            if best_cols is None or len(cols) > len(best_cols):
-                best_cols = cols
+        if self._registry.runs:
+            rmse_sums: dict = defaultdict(float)
+            rmse_counts: dict = defaultdict(int)
+            for r in self._registry.runs:
+                if np.isfinite(r.rmse_test) and r.rmse_test > 0:
+                    rmse_sums[r.feature_set] += r.rmse_test
+                    rmse_counts[r.feature_set] += 1
+            if rmse_sums:
+                best_fs = min(
+                    rmse_sums,
+                    key=lambda k: rmse_sums[k] / max(rmse_counts[k], 1),
+                )
+                best_cols = self._effective_cols.get(best_fs)
+                logger.info(
+                    "run_model_selection: best feature set by mean RMSE = %s "
+                    "(%d cols, mean_rmse=%.4f)",
+                    best_fs, len(best_cols or []),
+                    rmse_sums[best_fs] / max(rmse_counts[best_fs], 1),
+                )
 
-        if best_cols is None:
+        # Fallback: pick by FS priority
+        _FS_PRIORITY = ["FS_BASE", "FS_THERMO", "FS_SIZE", "FS_ELECTRON", "FS_ALL", "FS_MAGPIE"]
+        if not best_cols:
+            for fs_key in _FS_PRIORITY:
+                if fs_key in self._effective_cols and self._effective_cols[fs_key]:
+                    best_cols = self._effective_cols[fs_key]
+                    break
+
+        if not best_cols:
             best_cols = list(features_all.columns)
 
         X = features_all[best_cols]
@@ -673,7 +658,7 @@ class ExperimentRunner:
             logger.info("Model selection: %s", msg)
             if progress_callback is not None:
                 try:
-                    progress_callback(0, 0, f"Phase 6: {msg}")
+                    progress_callback(0, 0, f"Model selection: {msg}")
                 except Exception:
                     pass
 
@@ -690,47 +675,36 @@ class ExperimentRunner:
         self._model_selection_result = result
         return result
 
-    # ------------------------------------------------------------------
-    # Phase 1: Pre-compute fold splits (minimum necessary calls)
-    # ------------------------------------------------------------------
-
-    def _phase1_precompute_folds(
+    def _phase3_precompute_folds(
         self,
         compositions_df: pd.DataFrame,
         features_all: pd.DataFrame,
         target: pd.Series,
     ) -> Dict[str, List[Tuple[np.ndarray, np.ndarray]]]:
-        """Compute all splits exactly once.
-
-        CompositionBlock and ElementExclusion depend only on compositions,
-        not on seed or feature set.  The old runner re-computed them
-        seed × fs = 18 times.  Here each is computed once.
-
-        RandomCV depends on seed but not feature set.  Computed once per seed.
-        """
+        """Phase 3: compute all splits exactly once."""
         fold_plan: Dict[str, List[Tuple[np.ndarray, np.ndarray]]] = {}
 
-        logger.debug("Phase 1: CompositionBlock (once)")
+        logger.debug("Phase 3: CompositionBlock (once)")
         cb = CompositionBlockSplitter(n_folds=5, seed=self._seeds[0])
         fold_plan["CompositionBlock"] = list(
             cb.split(features_all, target, compositions=compositions_df)
         )
 
-        logger.debug("Phase 1: ElementExclusion (once)")
+        logger.debug("Phase 3: ElementExclusion (once)")
         ee = ElementExclusionSplitter(target_elements=self._exclude_elements)
         fold_plan["ElementExclusion"] = list(
             ee.split(features_all, target, compositions=compositions_df)
         )
 
         for seed in self._seeds:
-            logger.debug("Phase 1: RandomCV seed=%d", seed)
+            logger.debug("Phase 3: RandomCV seed=%d", seed)
             rc = RandomCVSplitter(n_folds=5, seed=seed)
             fold_plan[f"RandomCV_seed{seed}"] = list(
                 rc.split(features_all, target, compositions=compositions_df)
             )
 
         logger.info(
-            "Phase 1 complete: CompositionBlock=%d folds, "
+            "Phase 3 complete: CompositionBlock=%d folds, "
             "ElementExclusion=%d folds, RandomCV=%d folds/seed × %d seeds",
             len(fold_plan["CompositionBlock"]),
             len(fold_plan["ElementExclusion"]),
@@ -739,11 +713,7 @@ class ExperimentRunner:
         )
         return fold_plan
 
-    # ------------------------------------------------------------------
-    # Phase 2: Build job list (no DataFrame duplication)
-    # ------------------------------------------------------------------
-
-    def _phase2_build_jobs(
+    def _phase4_build_jobs(
         self,
         feature_sets: List[FeatureSetName],
         wf_names: List[str],
@@ -761,7 +731,7 @@ class ExperimentRunner:
             for fs_name in feature_sets:
                 fs_key = fs_name.value
 
-                # ── Model selection filter from Phase 0 ──
+                # ── Model selection filter from Phase 1 ──
                 if mc_reports and fs_key in mc_reports:
                     recs = mc_reports[fs_key].recommended_workflows
                     # If recommended_workflows is empty, allow all
@@ -770,7 +740,7 @@ class ExperimentRunner:
                 else:
                     allowed_wf = set(wf_names)  # fallback: all allowed
 
-                # ── PCA force flag from Phase 0 ──
+                # ── PCA force flag from Phase 1 ──
                 force_pca = bool(
                     mc_reports
                     and fs_key in mc_reports
@@ -797,18 +767,14 @@ class ExperimentRunner:
                             ))
         if blocked_count > 0:
             logger.info(
-                "Phase 2: %d jobs (%d blocked by multicollinearity filter)",
+                "Phase 4: %d jobs (%d blocked by multicollinearity filter)",
                 len(jobs), blocked_count,
             )
         else:
-            logger.debug("Phase 2: %d jobs", len(jobs))
+            logger.debug("Phase 4: %d jobs", len(jobs))
         return jobs
 
-    # ------------------------------------------------------------------
-    # Phase 3: Training (serial or parallel)
-    # ------------------------------------------------------------------
-
-    def _phase3_train(
+    def _phase5_train(
         self,
         jobs: List[_Job],
         features_all: pd.DataFrame,
@@ -817,18 +783,10 @@ class ExperimentRunner:
         progress_callback: Optional[Any],
         mint_configs: Optional[Dict[str, MIntWorkflowConfig]] = None,
     ) -> List[RunResult]:
-        """Train all jobs, optionally in parallel.
-
-        Feature matrices are prepared once per feature set as C-contiguous
-        numpy arrays, eliminating the pandas F-contiguous layout issue
-        (root cause of the BLAS SIGSEGV bugs encountered previously).
-        Each worker receives a read-only view and slices its own train/test.
-        """
-        # Build one C-contiguous array per feature set (not per seed/job)
+        """Phase 5: train all jobs (serial or parallel)."""
+        # Build one C-contiguous array per feature set
         fs_arrays: Dict[str, Tuple[np.ndarray, List[str]]] = {}
         for fs_name in feature_sets:
-            # Use effective columns (Phase 0 drops + feature selection)
-            # instead of the raw FeatureCatalog columns.
             cols = self._effective_cols.get(
                 fs_name.value,
                 list(FeatureCatalog.columns(fs_name)),
@@ -843,7 +801,7 @@ class ExperimentRunner:
             arr = safe_array(features_all[cols])
             fs_arrays[fs_name.value] = (arr, cols)
             logger.debug(
-                "Phase 3 prep: %s → array shape=%s C-contiguous=%s",
+                "Phase 5 prep: %s → array shape=%s C-contiguous=%s",
                 fs_name.value, arr.shape, arr.flags["C_CONTIGUOUS"],
             )
 
@@ -928,33 +886,18 @@ class ExperimentRunner:
                             pass
 
         logger.info(
-            "Phase 3 complete: %d / %d runs in %.1f sec",
+            "Phase 5 complete: %d / %d runs in %.1f sec",
             len(all_results), n_total, time.time() - _t0,
         )
         return all_results
 
-    # ------------------------------------------------------------------
-    # Phase 4: OOD detection (once per fs, after all training)
-    # ------------------------------------------------------------------
-
-    def _phase4_ood(
+    def _phase6_ood(
         self,
         features_all: pd.DataFrame,
         feature_sets: List[FeatureSetName],
         fold_plan: Dict[str, List[Tuple[np.ndarray, np.ndarray]]],
     ) -> Tuple[Dict[str, OODResult], Dict[str, Dict[str, np.ndarray]]]:
-        """Run OOD detection once per feature set.
-
-        Uses **multiple folds across all seeds** for more representative OOD
-        detection.  Each fold may have a *different* test set (different seeds
-        shuffle differently), so scores are accumulated into a global
-        per-sample array and averaged only where a sample was scored by
-        multiple folds.  The primary fold (seed 0, fold 0) is used for ENS
-        error collection.
-
-        Runs *after* all training so the full RunRegistry is available
-        for ENS error collection.
-        """
+        """Phase 6: OOD detection (once per feature set, multi-fold ensemble)."""
         ood_results: Dict[str, OODResult] = {}
         ood_errors_for_eval: Dict[str, Dict[str, np.ndarray]] = {}
 
@@ -967,14 +910,14 @@ class ExperimentRunner:
             if key in fold_plan:
                 all_ood_folds.append(fold_plan[key][0])  # first fold per seed
         if not all_ood_folds:
-            logger.warning("Phase 4: No RandomCV folds available for OOD")
+            logger.warning("Phase 6: No RandomCV folds available for OOD")
             return ood_results, ood_errors_for_eval
 
         # Primary fold (used for ENS error collection and split indices)
         ood_train_idx, ood_test_idx = all_ood_folds[0]
 
         logger.info(
-            "Phase 4: OOD for %d feature sets "
+            "Phase 6: OOD for %d feature sets "
             "(ensemble over %d folds, primary train=%d test=%d)",
             len(feature_sets), len(all_ood_folds),
             len(ood_train_idx), len(ood_test_idx),
@@ -982,12 +925,11 @@ class ExperimentRunner:
 
         for fs_name in feature_sets:
             fs_key = fs_name.value
-            # Use effective columns (Phase 0 drops + feature selection)
             cols = self._effective_cols.get(
                 fs_key, list(FeatureCatalog.columns(fs_name)),
             )
 
-            # Guard: skip feature sets with missing columns (same as Phase 3)
+            # Skip feature sets with missing columns
             missing = [c for c in cols if c not in features_all.columns]
             if missing:
                 logger.warning(
@@ -1000,9 +942,6 @@ class ExperimentRunner:
             X_fs_arr = safe_array(features_all[cols])
 
             try:
-                # Per-sample accumulation: scores are mapped back to global
-                # sample indices so that averaging is meaningful even when
-                # different seeds produce different test sets.
                 score_sum = np.zeros(n_samples, dtype=np.float64)
                 score_count = np.zeros(n_samples, dtype=np.int32)
                 primary_res: Optional[OODResult] = None
@@ -1022,9 +961,6 @@ class ExperimentRunner:
                 if primary_res is None:
                     continue
 
-                # Build OOD result using primary fold's test indices.
-                # For samples scored by multiple folds, use the average;
-                # otherwise use the single score.
                 primary_te = ood_test_idx
                 scored_mask = score_count[primary_te] > 0
                 avg_scores = np.where(
@@ -1034,7 +970,7 @@ class ExperimentRunner:
                 )
 
                 if len(all_ood_folds) > 1:
-                    avg_threshold = float(np.quantile(avg_scores, 0.95))
+                    avg_threshold = primary_res.ood_threshold
                     is_ood_avg = avg_scores > avg_threshold
                     n_ood = int(is_ood_avg.sum())
                     ood_res = OODResult(
@@ -1070,16 +1006,12 @@ class ExperimentRunner:
                 logger.exception("OOD detection failed for %s", fs_key)
 
         logger.info(
-            "Phase 4 complete: OOD done for %d / %d feature sets",
+            "Phase 6 complete: OOD done for %d / %d feature sets",
             len(ood_results), len(feature_sets),
         )
         return ood_results, ood_errors_for_eval
 
-    # ------------------------------------------------------------------
-    # Phase 5: Evaluation
-    # ------------------------------------------------------------------
-
-    def _phase5_evaluate(
+    def _phase7_evaluate(
         self,
         ood_errors_for_eval: Dict[str, Dict[str, np.ndarray]],
         mc_reports: Optional[Dict[str, MulticollinearityReport]] = None,
@@ -1105,8 +1037,6 @@ class ExperimentRunner:
         ood_test_indices = np.ascontiguousarray(np.asarray(ood_test_idx))
         ood_key = ood_test_indices.tobytes()
 
-        # O(1) lookup via hash dict instead of O(n) linear scan with
-        # np.array_equal.  Build a dict keyed by test_indices.tobytes().
         ens_runs = [
             r for r in self._registry.runs
             if r.feature_set == fs_key
@@ -1142,3 +1072,74 @@ class ExperimentRunner:
 
     def export(self, out_dir: Path) -> None:
         self._registry.export_json(out_dir / "run_registry.json")
+
+    def export_experiment_log(self, out_dir: Path) -> Path:
+        """Write experiment log (JSON) with all phases' metadata."""
+        import datetime as _dt
+
+        log_path = out_dir / "experiment_log.json"
+        out_dir.mkdir(parents=True, exist_ok=True)
+
+        # Per-run metrics
+        run_records = []
+        for r in self._registry.runs:
+            run_records.append({
+                "workflow": r.workflow,
+                "feature_set": r.feature_set,
+                "split_policy": r.split_policy,
+                "seed": int(r.seed),
+                "fold": int(r.fold),
+                "rmse_train": round(float(r.rmse_train), 6),
+                "rmse_test": round(float(r.rmse_test), 6),
+                "r2_train": round(float(r.r2_train), 6),
+                "r2_test": round(float(r.r2_test), 6),
+                "mae_train": round(float(r.mae_train), 6),
+                "mae_test": round(float(r.mae_test), 6),
+                "elapsed_sec": round(float(r.elapsed_sec), 3),
+                "params": {k: str(v) for k, v in (r.params or {}).items()},
+            })
+
+        # Phase 1 multicollinearity summary
+        mc_summary = {}
+        for fs_key, rpt in (self._mc_reports or {}).items():
+            mc_summary[fs_key] = {
+                "n_features_before": rpt.n_features_before,
+                "n_features_after": rpt.n_features_after,
+                "dropped_constant": rpt.dropped_constant,
+                "dropped_perfect": rpt.dropped_perfect,
+                "high_vif_count": rpt.high_vif_count,
+                "moderate_vif_count": rpt.moderate_vif_count,
+                "multicollinearity_level": rpt.multicollinearity_level,
+                "high_vif_ratio": round(rpt.high_vif_ratio, 4),
+                "recommended_workflows": rpt.recommended_workflows,
+                "blocked_workflows": rpt.blocked_workflows,
+                "leak_suspects": rpt.leak_suspects or {},
+            }
+
+        # Effective columns
+        eff_cols = {
+            k: {"n_features": len(v), "columns": v}
+            for k, v in self._effective_cols.items()
+        }
+
+        # Tracker summary
+        tracker_runs = self._tracker.list_runs()
+
+        log_data = {
+            "timestamp": _dt.datetime.now().isoformat(),
+            "seeds": self._seeds,
+            "quick": self._quick,
+            "n_runs": len(self._registry.runs),
+            "leak_auto_exclude": self._leak_auto_exclude,
+            "leak_corr_threshold": self._leak_corr_threshold,
+            "multicollinearity_reports": mc_summary,
+            "effective_columns": eff_cols,
+            "runs": run_records,
+            "tracker_runs": as_serializable(tracker_runs),
+        }
+
+        with open(log_path, "w", encoding="utf-8") as f:
+            json.dump(as_serializable(log_data), f, indent=2,
+                      ensure_ascii=False)
+        logger.info("Experiment log written to %s", log_path)
+        return log_path

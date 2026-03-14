@@ -2,7 +2,7 @@
 Multicollinearity Diagnostics & Model Selection Module
 多重共線性診断・モデル自動選択モジュール
 
-Phase 0 of the experiment pipeline: diagnose multicollinearity per feature set,
+Phase 1 of the experiment pipeline: diagnose multicollinearity per feature set,
 remove constant / perfectly collinear columns, compute VIF, and automatically
 select which ML workflows are appropriate for each feature set.
 
@@ -16,7 +16,7 @@ Design:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
@@ -58,6 +58,13 @@ def compute_vif(X: pd.DataFrame) -> pd.Series:
       - Near-singular design -> VIF = inf
 
     Returns pd.Series sorted descending by VIF.
+
+    .. note::
+       This implementation is O(p²) because it fits one LinearRegression per
+       feature.  For small feature sets (FS_BASE ~10 cols) this is negligible,
+       but for FS_MAGPIE (~132 cols) it means 132 regressions.  In practice
+       this is still fast (< 1 s for n ≤ 1000), but callers with very large
+       feature sets should be aware of the quadratic scaling.
     """
     from sklearn.linear_model import LinearRegression
 
@@ -231,11 +238,7 @@ class MulticollinearityReport:
     multicollinearity_level: str   # 'low' | 'moderate' | 'high'
     recommended_workflows: List[str]
     blocked_workflows: List[str]
-    leak_suspects: Dict[str, float] = None  # type: ignore[assignment]  # {feat: |corr|}
-
-    def __post_init__(self) -> None:
-        if self.leak_suspects is None:
-            self.leak_suspects = {}
+    leak_suspects: Dict[str, float] = field(default_factory=dict)  # {feat: |corr|}
 
     @property
     def high_vif_ratio(self) -> float:
@@ -318,7 +321,7 @@ def select_workflows_for_feature_set(
 
 
 # ---------------------------------------------------------------------------
-# 4.2  run_phase0_multicollinearity() — Phase 0 integration function
+# 4.2  run_phase0_multicollinearity() — Phase 1 integration function
 # ---------------------------------------------------------------------------
 
 def run_phase0_multicollinearity(
@@ -327,6 +330,7 @@ def run_phase0_multicollinearity(
     all_workflows: List[str],
     n_samples: int,
     target: Optional[pd.Series] = None,
+    leak_corr_threshold: float = LEAK_CORR_THRESHOLD,
 ) -> Dict[str, MulticollinearityReport]:
     """Run full multicollinearity pipeline for every feature set.
 
@@ -336,7 +340,9 @@ def run_phase0_multicollinearity(
     ----------
     target : Series, optional
         When provided, runs leak detection (#7) — flags features with
-        ``|corr(feature, target)| > 0.85``.
+        ``|corr(feature, target)| > leak_corr_threshold``.
+    leak_corr_threshold : float
+        Absolute Pearson correlation cutoff for leak detection (default 0.85).
     """
     reports: Dict[str, MulticollinearityReport] = {}
 
@@ -346,7 +352,7 @@ def run_phase0_multicollinearity(
         # Ensure only columns present in features_all are used
         available_cols = [c for c in cols if c in features_all.columns]
         if not available_cols:
-            logger.warning('Phase 0: no columns available for %s, skipping', fs_key)
+            logger.warning('Phase 1: no columns available for %s, skipping', fs_key)
             continue
 
         X_fs = features_all[available_cols].copy()
@@ -385,10 +391,10 @@ def run_phase0_multicollinearity(
         # Step C2: Leak detection (#7) — flag features highly correlated with target
         leak_suspects: Dict[str, float] = {}
         if target is not None and X_fs.shape[1] > 0:
-            leak_suspects = detect_target_leakage(X_fs, target)
+            leak_suspects = detect_target_leakage(X_fs, target, threshold=leak_corr_threshold)
             if leak_suspects:
                 logger.warning(
-                    'Phase 0 [%s]: %d leak suspect(s): %s',
+                    'Phase 1 [%s]: %d leak suspect(s): %s',
                     fs_key, len(leak_suspects),
                     ', '.join(f'{k}={v:.4f}' for k, v in leak_suspects.items()),
                 )
@@ -416,7 +422,7 @@ def run_phase0_multicollinearity(
         reports[fs_key] = report
 
         logger.info(
-            'Phase 0 [%s]: %dD→%dD (dropped const=%d perfect=%d) '
+            'Phase 1 [%s]: %dD→%dD (dropped const=%d perfect=%d) '
             'VIF_high=%d VIF_mod=%d level=%s leak=%d | %s',
             fs_key, n_before, len(vif),
             len(dropped_const), len(dropped_perfect),

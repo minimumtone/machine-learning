@@ -149,7 +149,7 @@ class ReportGenerator:
             lines.append("### Leak Suspect Features")
             lines.append("")
             lines.append(
-                "Features with |corr(feature, target)| > 0.85 detected in Phase 0:"
+                "Features with |corr(feature, target)| > 0.85 detected in Phase 1:"
             )
             lines.append("")
             lines.append("| Feature Set | Feature | |Correlation| |")

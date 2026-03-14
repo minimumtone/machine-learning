@@ -57,157 +57,118 @@ def _setup_logging(verbose: bool = False) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Sub-command: run
+# Sub-command: run  (broken into step helpers for readability)
 # ---------------------------------------------------------------------------
 
-def cmd_run(args: argparse.Namespace) -> None:
-    """Execute the experiment grid."""
+def _run_generate_dataset(args, logger):
+    """Step 1: generate or load dataset."""
     from extrapolation_discovery_platform.dataset import generate_hea_dataset
-    from extrapolation_discovery_platform.runner import ExperimentRunner
-    from extrapolation_discovery_platform.visualization import (
-        plot_ood_map_pca,
-        plot_validity_ranking,
-        plot_performance_heatmap,
-        plot_parity,
-        plot_uncertainty_vs_ood,
-    )
-    from extrapolation_discovery_platform.report import ReportGenerator
 
-    out_dir = Path(args.out)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    fig_dir = out_dir / "figures"
-
-    seeds: List[int] = args.seeds
-    logger = logging.getLogger("cli.run")
-    logger.info("Starting experiment: seeds=%s, n_samples=%d, quick=%s",
-                seeds, args.n_samples, args.quick)
-
-    # Integration flags
-    use_mlflow = getattr(args, "use_mlflow", False)
-    use_feast = getattr(args, "use_feast", False)
-    use_mint = getattr(args, "use_mint", False)
-
-    if use_mlflow:
-        logger.info("MLflow tracking enabled")
-    if use_feast:
-        logger.info("Feast feature store enabled")
-    if use_mint:
-        logger.info("MInt workflow adapters enabled")
-
-    # 1. Dataset generation
     t0 = time.time()
     comps_df, features_df, target = generate_hea_dataset(
         n_samples=args.n_samples,
-        seed=seeds[0],
+        seed=args.seeds[0],
     )
     logger.info("Dataset generated in %.1f sec: %d samples, %d features",
                 time.time() - t0, len(target), features_df.shape[1])
+    return comps_df, features_df, target
 
-    # 2. Experiment execution (with optional integrations)
+
+def _run_experiment(args, comps_df, features_df, target, logger):
+    """Step 2: execute experiment grid."""
+    from extrapolation_discovery_platform.runner import ExperimentRunner
+
     runner = ExperimentRunner(
-        seeds=seeds,
+        seeds=args.seeds,
         quick=args.quick,
         exclude_elements=args.exclude_elements,
-        use_mlflow=use_mlflow,
-        use_feast=use_feast,
-        use_mint=use_mint,
+        use_mlflow=getattr(args, "use_mlflow", False),
+        use_feast=getattr(args, "use_feast", False),
+        use_mint=getattr(args, "use_mint", False),
     )
-    runs, validity_scores, ood_results = runner.run(comps_df, features_df, target)
-
-    # Log integration status
+    runs, validity_scores, ood_results = runner.run(
+        comps_df, features_df, target,
+    )
     if runner.tracker.is_mlflow_active:
-        logger.info("MLflow tracking URI: %s", runner.tracker.get_tracking_uri())
+        logger.info("MLflow tracking URI: %s",
+                    runner.tracker.get_tracking_uri())
+    return runner, runs, validity_scores, ood_results
 
-    # 3. Export run registry
-    runner.export(out_dir)
 
-    # 4. Visualisation
+def _run_plots(runs, out_dir, logger):
+    """Step 3: generate plotly figures."""
     figure_paths = {}
-    if not args.no_plots:
-        logger.info("Generating figures...")
-        for fig_label, fig_fn in [
-            ("Validity Ranking", lambda: plot_validity_ranking(validity_scores, fig_dir)),
-            ("Performance Heatmap", lambda: plot_performance_heatmap(runs, fig_dir)),
-            ("Parity Plot", lambda: plot_parity(runs, fig_dir)),
-        ]:
-            try:
-                figure_paths[fig_label] = fig_fn()
-            except Exception as exc:
-                logger.warning("Figure '%s' failed (non-fatal): %s", fig_label, exc)
+    try:
+        from extrapolation_discovery_platform.gui.plotly_charts import (
+            plotly_parity,
+        )
+        fig_dir = out_dir / "figures"
+        fig_dir.mkdir(parents=True, exist_ok=True)
+        best_runs = sorted(
+            runs,
+            key=lambda r: r.r2_test if not np.isnan(r.r2_test) else float('-inf'),
+            reverse=True,
+        )
+        if best_runs:
+            fig = plotly_parity(best_runs[:1], title="Parity Plot (Best Model)")
+            parity_path = fig_dir / "parity_best.html"
+            fig.write_html(str(parity_path))
+            figure_paths["Parity (best)"] = parity_path
+            logger.info("Parity plot saved to %s", parity_path)
+    except Exception as exc:
+        logger.warning("Plotly figures failed (non-fatal): %s", exc)
+    return figure_paths
 
-        # OOD maps per feature set
-        for fs_key, ood_res in ood_results.items():
-            from extrapolation_discovery_platform.features import FeatureCatalog, FeatureSetName
-            try:
-                fs_enum = FeatureSetName(fs_key)
-                cols = FeatureCatalog.columns(fs_enum)
-                split_indices = runner.ood_split_indices.get(fs_key)
-                if split_indices is None:
-                    logger.warning("No OOD split indices for %s, skipping plot", fs_key)
-                    continue
-                train_idx_vis, test_idx_vis = split_indices
-                # CRITICAL: Force C-contiguous layout.  Column-subset +
-                # iloc creates fragmented DataFrames whose .values is
-                # F-contiguous, causing SIGSEGV in PCA / StandardScaler.
-                _fs_arr = np.ascontiguousarray(
-                    features_df[cols].to_numpy(dtype="float64", na_value=np.nan)
-                )
-                X_train_vis = pd.DataFrame(_fs_arr[train_idx_vis], columns=cols)
-                X_test_vis = pd.DataFrame(_fs_arr[test_idx_vis], columns=cols)
-                fig_path = plot_ood_map_pca(
-                    X_train_vis, X_test_vis, ood_res, fig_dir,
-                    filename=f"ood_map_pca_{fs_key}.png",
-                    title=f"OOD Map (PCA) - {fs_key}",
-                )
-                figure_paths[f"OOD Map - {fs_key}"] = fig_path
-            except Exception as exc:
-                logger.warning("Failed to plot OOD map for %s: %s", fs_key, exc)
 
-    # 5. Literature search (optional)
-    literature_results = None
-    feature_rec = None
-    if not args.no_literature:
-        try:
-            from extrapolation_discovery_platform.literature_graph.seed_data import (
-                get_seed_papers,
-                get_seed_workflows,
-            )
-            from extrapolation_discovery_platform.literature_graph.workflow_text import (
-                generate_workflow_text,
-            )
-            from extrapolation_discovery_platform.literature_graph.vector_index import (
-                build_index,
-            )
-            from extrapolation_discovery_platform.literature_graph.search import (
-                LiteratureSearchEngine,
-                StructuredFilter,
-            )
-            from extrapolation_discovery_platform.literature_graph.feature_recommender import (
-                LiteratureFeatureRecommender,
-            )
+def _run_literature_search(logger):
+    """Step 4: optional literature search."""
+    try:
+        from extrapolation_discovery_platform.literature_graph.seed_data import (
+            get_seed_papers, get_seed_workflows,
+        )
+        from extrapolation_discovery_platform.literature_graph.workflow_text import (
+            generate_workflow_text,
+        )
+        from extrapolation_discovery_platform.literature_graph.vector_index import (
+            build_index,
+        )
+        from extrapolation_discovery_platform.literature_graph.search import (
+            LiteratureSearchEngine, StructuredFilter,
+        )
+        from extrapolation_discovery_platform.literature_graph.feature_recommender import (
+            LiteratureFeatureRecommender,
+        )
 
-            papers = get_seed_papers()
-            workflows = get_seed_workflows()
-            wf_texts = [generate_workflow_text(w) for w in workflows]
-            wf_ids = [w.workflow_id for w in workflows]
-            index = build_index(wf_ids, wf_texts, use_faiss=True)
+        papers = get_seed_papers()
+        workflows = get_seed_workflows()
+        wf_texts = [generate_workflow_text(w) for w in workflows]
+        wf_ids = [w.workflow_id for w in workflows]
+        index = build_index(wf_ids, wf_texts, use_faiss=True)
 
-            engine = LiteratureSearchEngine(
-                index=index, workflows=workflows, papers=papers,
-            )
-            query = "composition only yield strength HEA"
-            sf = StructuredFilter(materials_domain="HEA", task="yield_strength")
-            literature_results = engine.search(query, structured_filter=sf, top_n=5)
+        engine = LiteratureSearchEngine(
+            index=index, workflows=workflows, papers=papers,
+        )
+        query = "composition only yield strength HEA"
+        sf = StructuredFilter(materials_domain="HEA", task="yield_strength")
+        lit_results = engine.search(query, structured_filter=sf, top_n=5)
 
-            recommender = LiteratureFeatureRecommender(engine)
-            feature_rec = recommender.recommend(query, structured_filter=sf)
-            logger.info("Literature search complete: %d results", len(literature_results))
-        except Exception as exc:
-            logger.warning("Literature search failed (non-fatal): %s", exc)
+        recommender = LiteratureFeatureRecommender(engine)
+        feature_rec = recommender.recommend(query, structured_filter=sf)
+        logger.info("Literature search complete: %d results",
+                    len(lit_results))
+        return lit_results, feature_rec
+    except Exception as exc:
+        logger.warning("Literature search failed (non-fatal): %s", exc)
+        return None, None
 
-    # 6. Report generation
-    gen = ReportGenerator(out_dir=out_dir)
-    # Best OOD result for report
+
+def _run_report(
+    runs, validity_scores, ood_results, runner, comps_df,
+    figure_paths, literature_results, feature_rec, out_dir, logger,
+):
+    """Step 5: generate HTML report."""
+    from extrapolation_discovery_platform.report import ReportGenerator
+
     best_ood = None
     best_ood_test_indices = None
     if validity_scores and ood_results:
@@ -215,9 +176,10 @@ def cmd_run(args: argparse.Namespace) -> None:
         best_ood = ood_results.get(best_fs)
         split_info = runner.ood_split_indices.get(best_fs)
         if split_info is not None:
-            best_ood_test_indices = split_info[1]  # (train_idx, test_idx)[1]
+            best_ood_test_indices = split_info[1]
 
-    report_path = gen.generate(
+    gen = ReportGenerator(out_dir=out_dir)
+    return gen.generate(
         runs=runs,
         validity_scores=validity_scores,
         ood_result=best_ood,
@@ -228,23 +190,55 @@ def cmd_run(args: argparse.Namespace) -> None:
         feature_recommendation=feature_rec,
     )
 
-    total_elapsed = time.time() - t0
-    logger.info(
-        "Experiment complete: %d runs, report at %s (%.1f sec total)",
-        len(runs), report_path, total_elapsed,
+
+def cmd_run(args: argparse.Namespace) -> None:
+    """Execute the experiment grid."""
+    logger = logging.getLogger("cli.run")
+    logger.info("Starting experiment: seeds=%s, n_samples=%d, quick=%s",
+                args.seeds, args.n_samples, args.quick)
+
+    out_dir = Path(args.out)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    t0 = time.time()
+
+    # 1. Dataset
+    comps_df, features_df, target = _run_generate_dataset(args, logger)
+
+    # 2. Experiment
+    runner, runs, validity_scores, ood_results = _run_experiment(
+        args, comps_df, features_df, target, logger,
     )
+    runner.export(out_dir)
+
+    # 3. Plots
+    figure_paths = (
+        _run_plots(runs, out_dir, logger) if not args.no_plots else {}
+    )
+
+    # 4. Literature
+    lit_results, feature_rec = (
+        _run_literature_search(logger)
+        if not args.no_literature else (None, None)
+    )
+
+    # 5. Report
+    report_path = _run_report(
+        runs, validity_scores, ood_results, runner, comps_df,
+        figure_paths, lit_results, feature_rec, out_dir, logger,
+    )
+
+    total_elapsed = time.time() - t0
+    logger.info("Experiment complete: %d runs, report at %s (%.1f sec)",
+                len(runs), report_path, total_elapsed)
     print(f"\nDone. {len(runs)} runs completed in {total_elapsed:.1f}s.")
     print(f"Report: {report_path}")
     print(f"Run registry: {out_dir / 'run_registry.json'}")
-
-    # Print integration status
     if runner.tracker.is_mlflow_active:
         print(f"MLflow UI: {runner.tracker.get_tracking_uri()}")
     if runner.feature_store.is_feast_active:
         print("Feast feature store: active")
     if runner.mint_registry is not None:
-        n_mint = len(runner.mint_registry.list_workflows())
-        print(f"MInt workflows: {n_mint} registered")
+        print(f"MInt workflows: {len(runner.mint_registry.list_workflows())} registered")
 
 
 # ---------------------------------------------------------------------------
