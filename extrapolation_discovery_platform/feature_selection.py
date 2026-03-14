@@ -246,10 +246,17 @@ def _forward_stepwise_ic(
     # marginal improvements → more features selected (AIC = permissive).
     # Fewer folds → smaller training sets → noisier estimates → stops
     # earlier with fewer features (BIC = conservative / parsimonious).
+    # AIC: 10-fold (more data per fold → easier to detect marginal improvements → more features)
+    # BIC: 5-fold  (less data per fold → noisier estimates → stops earlier → fewer features)
+    # max(2, ...) guarantees at least 2 folds so cross_val_score never receives
+    # cv=1 (which would raise ValueError) or cv=n (leave-one-out) on small datasets
+    # where LinearRegression overfits perfectly (MSE≈0 → IC diverges to -∞).
+    # max_folds is also capped at n//2 so each fold always has >= 2 training samples.
+    _max_folds = max(2, n // 2)
     if criterion == "aic":
-        cv_folds = min(n, 10)      # 10-fold (more data per fold → more features)
+        cv_folds = max(2, min(_max_folds, 10))
     else:  # bic — fewer folds → more conservative
-        cv_folds = min(n, 5)       # 5-fold (less data per fold → fewer features)
+        cv_folds = max(2, min(_max_folds, 5))
 
     for step in range(min(max_features, len(remaining))):
         best_feat = None

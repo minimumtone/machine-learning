@@ -16,6 +16,7 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
+from scipy.stats import norm as _scipy_norm
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
 
@@ -46,7 +47,7 @@ class OODDetector:
 
     Usage::
 
-        detector = OODDetector(k=10, threshold_quantile=0.95)
+        detector = OODDetector(k=10, threshold_sigma=2.0)
         detector.fit(X_train)
         result = detector.score(X_query)
 
@@ -54,23 +55,49 @@ class OODDetector:
     ----------
     k : int
         Number of neighbours for kNN distance (default 10).
-    threshold_quantile : float
-        Quantile on training distances to set OOD threshold (default 0.95).
+    threshold_sigma : float
+        Number of standard deviations above the training composite mean
+        used to set the OOD threshold (default 2.0, ~97.7% in-distribution
+        coverage under Gaussian assumption).
+
+        The old ``threshold_quantile`` API set a *relative* quantile of the
+        training-set scores, which always flagged exactly ``(1-q)*100%`` of
+        training samples as OOD regardless of the query set.  This made the
+        OOD ratio for training-like queries a fixed constant rather than a
+        meaningful measure of distributional shift.
+
+        ``threshold_sigma`` sets an **absolute** threshold: a query sample is
+        flagged OOD only when its composite score exceeds
+        ``mean_train + threshold_sigma * std_train``.  Training samples
+        themselves are flagged only if they are genuine outliers within the
+        training set.
+    threshold_quantile : float, optional
+        Deprecated.  Raises ``DeprecationWarning`` and is ignored; pass
+        ``threshold_sigma`` instead.
     """
 
     def __init__(
         self,
         k: int = 10,
-        threshold_quantile: float = 0.95,
+        threshold_sigma: float = 2.0,
+        threshold_quantile: float = None,  # type: ignore[assignment]
     ) -> None:
         if k < 1:
             raise ValueError(f"k must be >= 1, got {k}")
-        if not 0 < threshold_quantile < 1:
-            raise ValueError(
-                f"threshold_quantile must be in (0,1), got {threshold_quantile}"
+        if threshold_quantile is not None:
+            import warnings
+            warnings.warn(
+                "OODDetector: threshold_quantile is deprecated and ignored. "
+                "The relative-quantile approach always flags a fixed fraction "
+                "of training samples as OOD, which is misleading. "
+                "Use threshold_sigma (default 2.0) instead.",
+                DeprecationWarning,
+                stacklevel=2,
             )
+        if threshold_sigma <= 0:
+            raise ValueError(f"threshold_sigma must be > 0, got {threshold_sigma}")
         self._k = k
-        self._threshold_q = threshold_quantile
+        self._threshold_sigma = threshold_sigma
         self._scaler: Optional[StandardScaler] = None
         self._cov_inv: Optional[np.ndarray] = None
         self._mean: Optional[np.ndarray] = None
@@ -159,24 +186,24 @@ class OODDetector:
         )
         self._train_composite = composite_train
 
-        # Use mean + k*std for an absolute statistical threshold instead
-        # of a relative percentile.  The old approach (quantile-based)
-        # always flagged exactly (1-q)% of training data as OOD regardless
-        # of how tightly clustered the data was.  A statistical threshold
-        # only flags samples that are genuinely far from the mean.
-        #
-        # We map the quantile parameter to a z-multiplier so existing
-        # callers don't need to change their API:
-        #   q=0.95 → z≈1.645, q=0.99 → z≈2.326
-        from scipy.stats import norm as _norm_dist
-        z_mult = _norm_dist.ppf(self._threshold_q)
+        # Absolute threshold: mean + threshold_sigma × std.
+        # This is calibrated in actual score units so that query-set OOD
+        # rates reflect genuine distributional shifts rather than being a
+        # fixed fraction of the training distribution.
         mean_c = float(composite_train.mean())
         std_c = float(composite_train.std())
-        self._ood_threshold = mean_c + z_mult * std_c
+        if std_c < 1e-12:
+            # All training composite scores are identical (e.g. perfectly
+            # homogeneous dataset or single sample); use a small epsilon so
+            # the threshold is just above the training score.
+            std_c = 1e-6
+        self._ood_threshold = mean_c + self._threshold_sigma * std_c
 
         self._fitted = True
-        logger.info("OOD detector fitted. Threshold (z=%.2f, q=%.2f) = %.4f",
-                     z_mult, self._threshold_q, self._ood_threshold)
+        logger.info(
+            "OOD detector fitted. Threshold (mean=%.4f + %.1f×std=%.4f) = %.4f",
+            mean_c, self._threshold_sigma, std_c, self._ood_threshold,
+        )
         return self
 
     # ------------------------------------------------------------------

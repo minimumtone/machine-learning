@@ -16,7 +16,7 @@ Design:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
@@ -231,11 +231,7 @@ class MulticollinearityReport:
     multicollinearity_level: str   # 'low' | 'moderate' | 'high'
     recommended_workflows: List[str]
     blocked_workflows: List[str]
-    leak_suspects: Dict[str, float] = None  # type: ignore[assignment]  # {feat: |corr|}
-
-    def __post_init__(self) -> None:
-        if self.leak_suspects is None:
-            self.leak_suspects = {}
+    leak_suspects: Dict[str, float] = field(default_factory=dict)  # {feat: |corr|}
 
     @property
     def high_vif_ratio(self) -> float:

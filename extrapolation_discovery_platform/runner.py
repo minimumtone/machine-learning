@@ -150,21 +150,14 @@ class RunRegistry:
             return pd.DataFrame()
 
         # Dynamically extract scalar column names from RunResult fields.
-        # Exclude ndarray / dict fields that are not suitable for tabular
-        # representation (y_test_true, y_test_pred, test_indices, params,
-        # artifacts).
+        # Include only fields whose first-run value is a plain scalar
+        # (int, float, str, bool).  Excludes ndarray, dict, and None
+        # fields (y_test_true, y_test_pred, test_indices, params, artifacts).
         _SKIP_TYPES = (np.ndarray, dict)
         col_names = [
             f.name for f in _dc.fields(RunResult)
-            if f.default_factory is not dict.__class__  # exclude dict fields
-            and not (
-                isinstance(getattr(self._runs[0], f.name, None), _SKIP_TYPES)
-            )
-        ]
-        # Fallback: filter to fields whose first-run value is a scalar
-        col_names = [
-            name for name in col_names
-            if not isinstance(getattr(self._runs[0], name, None), (np.ndarray, dict))
+            if not isinstance(getattr(self._runs[0], f.name, None), _SKIP_TYPES)
+            and getattr(self._runs[0], f.name, None) is not None
         ]
         columns: Dict[str, list] = {k: [] for k in col_names}
         for r in self._runs:
@@ -734,11 +727,40 @@ class ExperimentRunner:
         interfere with existing results.  Uses the best feature set's
         effective columns (from Phase 0 + Phase 0.5) as input.
         """
-        # Pick the best feature set's effective columns
+        # Pick the effective columns for the best-performing feature set.
+        # Strategy (in priority order):
+        #   1. Use the registry runs to find the feature set with the lowest
+        #      mean test RMSE across all workflows and folds.
+        #   2. Fall back to the feature set with the most features (old
+        #      behaviour) if no runs are available.
+        #   3. Fall back to all columns if effective_cols is empty.
         best_cols: Optional[List[str]] = None
-        for fs_key, cols in self._effective_cols.items():
-            if best_cols is None or len(cols) > len(best_cols):
-                best_cols = cols
+        if self._registry.runs:
+            from collections import defaultdict
+            rmse_sums: dict = defaultdict(float)
+            rmse_counts: dict = defaultdict(int)
+            for r in self._registry.runs:
+                if np.isfinite(r.rmse_test) and r.rmse_test > 0:
+                    rmse_sums[r.feature_set] += r.rmse_test
+                    rmse_counts[r.feature_set] += 1
+            if rmse_sums:
+                best_fs = min(
+                    rmse_sums,
+                    key=lambda k: rmse_sums[k] / max(rmse_counts[k], 1),
+                )
+                best_cols = self._effective_cols.get(best_fs)
+                logger.info(
+                    "run_model_selection: best feature set by mean RMSE = %s "
+                    "(%d cols, mean_rmse=%.4f)",
+                    best_fs, len(best_cols or []),
+                    rmse_sums[best_fs] / max(rmse_counts[best_fs], 1),
+                )
+
+        # Fallback: most features (least aggressively filtered)
+        if best_cols is None:
+            for fs_key, cols in self._effective_cols.items():
+                if best_cols is None or len(cols) > len(best_cols):
+                    best_cols = cols
 
         if best_cols is None:
             best_cols = list(features_all.columns)
@@ -1110,7 +1132,12 @@ class ExperimentRunner:
                 )
 
                 if len(all_ood_folds) > 1:
-                    avg_threshold = float(np.quantile(avg_scores, 0.95))
+                    # Re-use the primary detector's threshold (mean + sigma*std)
+                    # rather than computing a new relative quantile on the
+                    # averaged scores.  The quantile approach would always flag
+                    # a fixed 5% as OOD regardless of actual distributional
+                    # shift, defeating the purpose of ensemble averaging.
+                    avg_threshold = primary_res.ood_threshold
                     is_ood_avg = avg_scores > avg_threshold
                     n_ood = int(is_ood_avg.sum())
                     ood_res = OODResult(

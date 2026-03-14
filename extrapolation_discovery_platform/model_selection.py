@@ -42,6 +42,30 @@ from extrapolation_discovery_platform._utils import safe_array
 
 logger = logging.getLogger(__name__)
 
+
+def _get_safe_n_jobs() -> int:
+    """Return n_jobs safe for use inside nested parallelism contexts.
+
+    Both ``RandomizedSearchCV`` and inner estimators like ``LassoCV`` must
+    use n_jobs=1 (or a capped value) when they run inside a
+    ``ProcessPoolExecutor`` worker.  Having both layers use n_jobs=-1
+    causes CPU over-subscription that prevents model convergence and
+    produces suppressed / unstable R² values.
+
+    Respects the ``HEA_INNER_N_JOBS`` env-var (default "1") so advanced
+    users can tune parallelism without touching source code.
+    Force-returns 1 when ``_EDP_INSIDE_WORKER`` is set (set by
+    runner._run_job to signal that we are already inside a worker).
+    """
+    import os
+    if os.environ.get("_EDP_INSIDE_WORKER", ""):
+        return 1
+    try:
+        return max(1, int(os.environ.get("HEA_INNER_N_JOBS", "1")))
+    except ValueError:
+        return 1
+
+
 # Try importing optional packages
 try:
     from xgboost import XGBRegressor
@@ -449,7 +473,7 @@ def nested_cv_evaluate(
                         cv=inner_cv,
                         scoring="neg_root_mean_squared_error",
                         random_state=random_state,
-                        n_jobs=-1,
+                        n_jobs=_get_safe_n_jobs(),
                         error_score=np.nan,
                     )
                     search.fit(
