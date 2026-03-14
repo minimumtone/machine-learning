@@ -3070,7 +3070,8 @@ def create_app() -> gr.Blocks:
                 runner_obj = session.get("runner")
                 session_runs = list(session.get("runs", []))
                 session_runs.sort(
-                    key=lambda r: r.r2_test, reverse=True,
+                    key=lambda r: r.r2_test if not np.isnan(r.r2_test) else float('-inf'),
+                    reverse=True,
                 )
 
                 for r in session_runs:
