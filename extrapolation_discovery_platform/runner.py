@@ -513,8 +513,8 @@ class ExperimentRunner:
                     _dropped = set(_rpt.dropped_constant + _rpt.dropped_perfect)
                     _orig = [c for c in _orig if c not in _dropped]
                     # Auto-exclude leaked features (high |r| with target)
-                    if self._leak_auto_exclude and _rpt.leaked_features:
-                        _leak_set = set(_rpt.leaked_features)
+                    if self._leak_auto_exclude and _rpt.leak_suspects:
+                        _leak_set = set(_rpt.leak_suspects.keys())
                         _before = len(_orig)
                         _orig = [c for c in _orig if c not in _leak_set]
                         if _before != len(_orig):
