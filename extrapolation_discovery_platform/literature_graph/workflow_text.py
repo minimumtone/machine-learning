@@ -25,7 +25,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from hea_extrapolation_platform.literature_graph.schemas import Paper, Workflow
+from extrapolation_discovery_platform.literature_graph.schemas import Paper, Workflow
 
 
 def generate_workflow_text(

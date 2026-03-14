@@ -21,9 +21,9 @@ from collections import Counter
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set, Tuple
 
-from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
-from hea_extrapolation_platform.literature_graph.schemas import Workflow
-from hea_extrapolation_platform.literature_graph.search import (
+from extrapolation_discovery_platform.features import FeatureCatalog, FeatureSetName
+from extrapolation_discovery_platform.literature_graph.schemas import Workflow
+from extrapolation_discovery_platform.literature_graph.search import (
     LiteratureSearchEngine,
     SearchResult,
     StructuredFilter,

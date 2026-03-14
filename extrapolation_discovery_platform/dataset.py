@@ -26,7 +26,7 @@ from typing import Dict, List, Tuple
 import numpy as np
 import pandas as pd
 
-from hea_extrapolation_platform.features import (
+from extrapolation_discovery_platform.features import (
     _ElementDB,
     compute_features,
     compute_features_single,

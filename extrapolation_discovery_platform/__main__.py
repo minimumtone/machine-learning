@@ -5,20 +5,20 @@ CLIエントリポイント
 Usage::
 
     # Quick experiment run
-    python -m hea_extrapolation_platform run --quick --out results/
+    python -m extrapolation_discovery_platform run --quick --out results/
 
     # Full 135-run experiment
-    python -m hea_extrapolation_platform run --seeds 42 123 456 --out results/
+    python -m extrapolation_discovery_platform run --seeds 42 123 456 --out results/
 
     # Literature search
-    python -m hea_extrapolation_platform search \
+    python -m extrapolation_discovery_platform search \
         --query "composition only yield strength HEA" --top 10
 
     # Launch Gradio GUI
-    python -m hea_extrapolation_platform gui --port 7860
+    python -m extrapolation_discovery_platform gui --port 7860
 
     # Re-generate report from existing registry
-    python -m hea_extrapolation_platform report \
+    python -m extrapolation_discovery_platform report \
         --registry results/run_registry.json --out results/
 """
 
@@ -40,7 +40,7 @@ faulthandler.enable()
 
 # Install pandas C-contiguous patches BEFORE importing numpy/pandas.
 # This is the global SIGSEGV fix for pandas 3.0's F-contiguous layout.
-from hea_extrapolation_platform._compat import install as _install_compat
+from extrapolation_discovery_platform._compat import install as _install_compat
 _install_compat()
 
 import numpy as np
@@ -62,16 +62,16 @@ def _setup_logging(verbose: bool = False) -> None:
 
 def cmd_run(args: argparse.Namespace) -> None:
     """Execute the experiment grid."""
-    from hea_extrapolation_platform.dataset import generate_hea_dataset
-    from hea_extrapolation_platform.runner import ExperimentRunner
-    from hea_extrapolation_platform.visualization import (
+    from extrapolation_discovery_platform.dataset import generate_hea_dataset
+    from extrapolation_discovery_platform.runner import ExperimentRunner
+    from extrapolation_discovery_platform.visualization import (
         plot_ood_map_pca,
         plot_validity_ranking,
         plot_performance_heatmap,
         plot_parity,
         plot_uncertainty_vs_ood,
     )
-    from hea_extrapolation_platform.report import ReportGenerator
+    from extrapolation_discovery_platform.report import ReportGenerator
 
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -137,7 +137,7 @@ def cmd_run(args: argparse.Namespace) -> None:
 
         # OOD maps per feature set
         for fs_key, ood_res in ood_results.items():
-            from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
+            from extrapolation_discovery_platform.features import FeatureCatalog, FeatureSetName
             try:
                 fs_enum = FeatureSetName(fs_key)
                 cols = FeatureCatalog.columns(fs_enum)
@@ -168,21 +168,21 @@ def cmd_run(args: argparse.Namespace) -> None:
     feature_rec = None
     if not args.no_literature:
         try:
-            from hea_extrapolation_platform.literature_graph.seed_data import (
+            from extrapolation_discovery_platform.literature_graph.seed_data import (
                 get_seed_papers,
                 get_seed_workflows,
             )
-            from hea_extrapolation_platform.literature_graph.workflow_text import (
+            from extrapolation_discovery_platform.literature_graph.workflow_text import (
                 generate_workflow_text,
             )
-            from hea_extrapolation_platform.literature_graph.vector_index import (
+            from extrapolation_discovery_platform.literature_graph.vector_index import (
                 build_index,
             )
-            from hea_extrapolation_platform.literature_graph.search import (
+            from extrapolation_discovery_platform.literature_graph.search import (
                 LiteratureSearchEngine,
                 StructuredFilter,
             )
-            from hea_extrapolation_platform.literature_graph.feature_recommender import (
+            from extrapolation_discovery_platform.literature_graph.feature_recommender import (
                 LiteratureFeatureRecommender,
             )
 
@@ -253,15 +253,15 @@ def cmd_run(args: argparse.Namespace) -> None:
 
 def cmd_search(args: argparse.Namespace) -> None:
     """Execute literature search."""
-    from hea_extrapolation_platform.literature_graph.seed_data import (
+    from extrapolation_discovery_platform.literature_graph.seed_data import (
         get_seed_papers,
         get_seed_workflows,
     )
-    from hea_extrapolation_platform.literature_graph.workflow_text import (
+    from extrapolation_discovery_platform.literature_graph.workflow_text import (
         generate_workflow_text,
     )
-    from hea_extrapolation_platform.literature_graph.vector_index import build_index
-    from hea_extrapolation_platform.literature_graph.search import (
+    from extrapolation_discovery_platform.literature_graph.vector_index import build_index
+    from extrapolation_discovery_platform.literature_graph.search import (
         LiteratureSearchEngine,
         StructuredFilter,
     )
@@ -304,12 +304,12 @@ def cmd_search(args: argparse.Namespace) -> None:
 
 def cmd_report(args: argparse.Namespace) -> None:
     """Re-generate report from existing run registry."""
-    from hea_extrapolation_platform.report import ReportGenerator
-    from hea_extrapolation_platform.evaluation import (
+    from extrapolation_discovery_platform.report import ReportGenerator
+    from extrapolation_discovery_platform.evaluation import (
         FeatureValidityEvaluator,
         ValidityScore,
     )
-    from hea_extrapolation_platform.workflows import RunResult
+    from extrapolation_discovery_platform.workflows import RunResult
 
     logger = logging.getLogger("cli.report")
 
@@ -368,7 +368,7 @@ def cmd_gui(args: argparse.Namespace) -> None:
     """Launch Gradio dashboard."""
     try:
         import gradio as gr
-        from hea_extrapolation_platform.gui.app import create_app
+        from extrapolation_discovery_platform.gui.app import create_app
     except ImportError as exc:
         print(f"Error: {exc}")
         print("Install Gradio with: pip install gradio plotly")
@@ -389,7 +389,7 @@ def cmd_gui(args: argparse.Namespace) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="hea_extrapolation_platform",
+        prog="extrapolation_discovery_platform",
         description="Extrapolation Discovery Platform — CLI",
     )
     parser.add_argument("-v", "--verbose", action="store_true",

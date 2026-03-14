@@ -186,7 +186,7 @@ source .venv/bin/activate
 ### 3.3 依存パッケージのインストール
 
 ```bash
-pip install -r hea_extrapolation_platform/requirements.txt
+pip install -r extrapolation_discovery_platform/requirements.txt
 ```
 
 ### 3.4 インストールの確認
@@ -194,7 +194,7 @@ pip install -r hea_extrapolation_platform/requirements.txt
 以下のコマンドでインポートが正常に動作するか確認してください：
 
 ```bash
-python -c "from hea_extrapolation_platform.runner import ExperimentRunner; print('OK')"
+python -c "from extrapolation_discovery_platform.runner import ExperimentRunner; print('OK')"
 ```
 
 `OK` と表示されれば、インストール成功です。
@@ -220,7 +220,7 @@ pip install sentence-transformers
 ### 4.1 GUI（グラフィカルユーザーインターフェース）の起動
 
 ```bash
-python -m hea_extrapolation_platform gui --port 7860
+python -m extrapolation_discovery_platform gui --port 7860
 ```
 
 起動後、ブラウザで **http://localhost:7860** を開いてください。
@@ -229,7 +229,7 @@ python -m hea_extrapolation_platform gui --port 7860
 
 ```bash
 # 公開URL付きで起動
-python -m hea_extrapolation_platform gui --port 7860 --share
+python -m extrapolation_discovery_platform gui --port 7860 --share
 ```
 
 ### 4.2 CLI（コマンドライン）での実行
@@ -238,10 +238,10 @@ GUIを使わずに直接実行することもできます：
 
 ```bash
 # クイック実行（小規模テスト・初回確認用）
-python -m hea_extrapolation_platform run --quick --n-samples 50
+python -m extrapolation_discovery_platform run --quick --n-samples 50
 
 # 本番実行（フルスケール）
-python -m hea_extrapolation_platform run --seeds 42 123 456 --n-samples 200
+python -m extrapolation_discovery_platform run --seeds 42 123 456 --n-samples 200
 ```
 
 CLIの詳細は [6. CLI操作ガイド](#6-cli操作ガイド) を参照してください。
@@ -640,19 +640,19 @@ GUIを使わずに、コマンドラインから全機能を利用できます�
 
 ```bash
 # 基本的な使い方
-python -m hea_extrapolation_platform run [オプション]
+python -m extrapolation_discovery_platform run [オプション]
 
 # クイック実行（テスト用・約1〜2分）
-python -m hea_extrapolation_platform run --quick --n-samples 50
+python -m extrapolation_discovery_platform run --quick --n-samples 50
 
 # 本番実行（フルスケール・約5〜10分）
-python -m hea_extrapolation_platform run --seeds 42 123 456 --n-samples 200
+python -m extrapolation_discovery_platform run --seeds 42 123 456 --n-samples 200
 
 # シード1つだけで高速実行
-python -m hea_extrapolation_platform run --quick --n-samples 50 --seeds 42
+python -m extrapolation_discovery_platform run --quick --n-samples 50 --seeds 42
 
 # 文献検索をスキップ
-python -m hea_extrapolation_platform run --quick --n-samples 50 --skip-literature
+python -m extrapolation_discovery_platform run --quick --n-samples 50 --skip-literature
 ```
 
 **オプション一覧**:
@@ -673,36 +673,36 @@ python -m hea_extrapolation_platform run --quick --n-samples 50 --skip-literatur
 
 ```bash
 # 文献検索
-python -m hea_extrapolation_platform search "composition only yield strength HEA"
+python -m extrapolation_discovery_platform search "composition only yield strength HEA"
 
 # ドメイン・タスク指定
-python -m hea_extrapolation_platform search "HEA prediction" --domain HEA --task yield_strength
+python -m extrapolation_discovery_platform search "HEA prediction" --domain HEA --task yield_strength
 
 # 結果数指定
-python -m hea_extrapolation_platform search "XGBoost alloy" --top-n 5
+python -m extrapolation_discovery_platform search "XGBoost alloy" --top-n 5
 ```
 
 ### 6.3 report コマンド（レポート生成）
 
 ```bash
 # 最新の実験結果からレポート生成
-python -m hea_extrapolation_platform report
+python -m extrapolation_discovery_platform report
 
 # 出力先指定
-python -m hea_extrapolation_platform report --output my_report.md
+python -m extrapolation_discovery_platform report --output my_report.md
 ```
 
 ### 6.4 gui コマンド（GUI起動）
 
 ```bash
 # デフォルトポートで起動
-python -m hea_extrapolation_platform gui
+python -m extrapolation_discovery_platform gui
 
 # ポート指定
-python -m hea_extrapolation_platform gui --port 8080
+python -m extrapolation_discovery_platform gui --port 8080
 
 # 公開URL付きで起動
-python -m hea_extrapolation_platform gui --share
+python -m extrapolation_discovery_platform gui --share
 ```
 
 ---
@@ -980,7 +980,7 @@ pip install gradio
 **解決策**:
 ```bash
 python -m pip install --upgrade pip
-pip install -r hea_extrapolation_platform/requirements.txt
+pip install -r extrapolation_discovery_platform/requirements.txt
 ```
 
 ### 10.2 GUI起動時のエラー
@@ -992,7 +992,7 @@ pip install -r hea_extrapolation_platform/requirements.txt
 **解決策**:
 ```bash
 # 別のポートで起動
-python -m hea_extrapolation_platform gui --port 7870
+python -m extrapolation_discovery_platform gui --port 7870
 ```
 
 #### エラー: ブラウザでページが表示されない
@@ -1082,7 +1082,7 @@ python -m hea_extrapolation_platform gui --port 7870
 ## 付録A: ファイル構成
 
 ```
-hea_extrapolation_platform/
+extrapolation_discovery_platform/
 +-- __init__.py              # パッケージ初期化
 +-- __main__.py              # CLIエントリポイント
 +-- features.py              # 特徴量セット定義（MAGPIE含む）

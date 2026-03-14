@@ -50,18 +50,18 @@ from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 import numpy as np
 import pandas as pd
 
-from hea_extrapolation_platform.features import (
+from extrapolation_discovery_platform.features import (
     FeatureCatalog,
     FeatureSetName,
     compute_features,
 )
-from hea_extrapolation_platform.splitters import (
+from extrapolation_discovery_platform.splitters import (
     BaseSplitter,
     CompositionBlockSplitter,
     ElementExclusionSplitter,
     RandomCVSplitter,
 )
-from hea_extrapolation_platform.workflows import (
+from extrapolation_discovery_platform.workflows import (
     BaseWorkflow,
     RunResult,
     WorkflowARD,
@@ -71,26 +71,29 @@ from hea_extrapolation_platform.workflows import (
     WorkflowRF,
     WorkflowXGB,
 )
-from hea_extrapolation_platform.ood import OODDetector, OODResult
-from hea_extrapolation_platform.evaluation import FeatureValidityEvaluator, ValidityScore
-from hea_extrapolation_platform.integrations.mlflow_tracker import (
+from extrapolation_discovery_platform.ood import OODDetector, OODResult
+from extrapolation_discovery_platform.evaluation import FeatureValidityEvaluator, ValidityScore
+from extrapolation_discovery_platform.integrations.mlflow_tracker import (
     MLflowTracker,
     is_mlflow_available,
 )
-from hea_extrapolation_platform.integrations.feast_store import (
+from extrapolation_discovery_platform.integrations.feast_store import (
     FeastFeatureStore,
     is_feast_available,
 )
-from hea_extrapolation_platform.integrations.mint_adapter import (
+from extrapolation_discovery_platform.integrations.mint_adapter import (
     MIntWorkflowAdapter,
     MIntWorkflowConfig,
     MIntWorkflowRegistry,
 )
-from hea_extrapolation_platform.multicollinearity import (
+from extrapolation_discovery_platform.multicollinearity import (
     MulticollinearityReport,
     run_phase0_multicollinearity,
 )
-from hea_extrapolation_platform._compat import as_serializable
+from extrapolation_discovery_platform.feature_selection import (
+    run_feature_selection,
+)
+from extrapolation_discovery_platform._compat import as_serializable
 
 logger = logging.getLogger(__name__)
 
@@ -239,7 +242,7 @@ def _run_job(
     y_train = _pd.Series(y[job.train_idx])
     y_test  = _pd.Series(y[job.test_idx])
 
-    from hea_extrapolation_platform.workflows import (
+    from extrapolation_discovery_platform.workflows import (
         WorkflowARD, WorkflowENS, WorkflowLASSO, WorkflowLIN, WorkflowRF,
         WorkflowXGB,
     )
@@ -260,7 +263,7 @@ def _run_job(
     if job.wf_name in wf_map:
         wf = wf_map[job.wf_name]
     elif mint_configs is not None and job.wf_name in mint_configs:
-        from hea_extrapolation_platform.integrations.mint_adapter import (
+        from extrapolation_discovery_platform.integrations.mint_adapter import (
             MIntWorkflowAdapter,
         )
         wf = MIntWorkflowAdapter(config=mint_configs[job.wf_name])
@@ -455,6 +458,42 @@ class ExperimentRunner:
                 target=target,
             )
             self._mc_reports = mc_reports
+
+            # ── Phase 0b: Feature selection on cleaned columns ──
+            # Run Lasso-based feature selection on the multicollinearity-
+            # cleaned columns to further reduce dimensionality.
+            # Only for feature sets with > 10 features (where selection
+            # matters). Updates mc_report.cleaned_columns in-place.
+            for fs in feature_sets:
+                fs_key = fs.value
+                mc_rpt = mc_reports.get(fs_key)
+                if mc_rpt is None or len(mc_rpt.cleaned_columns) <= 10:
+                    continue
+                try:
+                    avail = [c for c in mc_rpt.cleaned_columns
+                             if c in features_all.columns]
+                    if len(avail) <= 10:
+                        continue
+                    X_sel = features_all[avail]
+                    fs_summary = run_feature_selection(
+                        X_sel, target,
+                        methods=["Lasso"],
+                        consensus_threshold=1,
+                        feature_set=fs_key,
+                    )
+                    if fs_summary.consensus_features:
+                        mc_rpt.cleaned_columns = fs_summary.consensus_features
+                        logger.info(
+                            "Phase 0b [%s]: feature selection %d→%d columns",
+                            fs_key, len(avail),
+                            len(fs_summary.consensus_features),
+                        )
+                except Exception:
+                    logger.debug(
+                        "Phase 0b [%s]: feature selection skipped (error)",
+                        fs_key,
+                    )
+
             if progress_callback is not None:
                 try:
                     progress_callback(
@@ -645,11 +684,19 @@ class ExperimentRunner:
         Each worker receives a read-only view and slices its own train/test.
         """
         # Build one C-contiguous array per feature set (not per seed/job)
+        # Use cleaned columns from Phase 0 multicollinearity when available,
+        # falling back to the full FeatureCatalog columns otherwise.
         fs_arrays: Dict[str, Tuple[np.ndarray, List[str]]] = {}
         for fs_name in feature_sets:
-            cols = list(FeatureCatalog.columns(fs_name))
+            fs_key = fs_name.value
+            mc_report = (self._mc_reports or {}).get(fs_key)
+            if mc_report and mc_report.cleaned_columns:
+                cols = [c for c in mc_report.cleaned_columns
+                        if c in features_all.columns]
+            else:
+                cols = list(FeatureCatalog.columns(fs_name))
             arr = safe_array(features_all[cols])
-            fs_arrays[fs_name.value] = (arr, cols)
+            fs_arrays[fs_key] = (arr, cols)
             logger.debug(
                 "Phase 3 prep: %s → array shape=%s C-contiguous=%s",
                 fs_name.value, arr.shape, arr.flags["C_CONTIGUOUS"],
@@ -766,7 +813,13 @@ class ExperimentRunner:
 
         for fs_name in feature_sets:
             fs_key = fs_name.value
-            cols = list(FeatureCatalog.columns(fs_name))
+            # Use cleaned columns from Phase 0 (same as Phase 3)
+            mc_report = (self._mc_reports or {}).get(fs_key)
+            if mc_report and mc_report.cleaned_columns:
+                cols = [c for c in mc_report.cleaned_columns
+                        if c in features_all.columns]
+            else:
+                cols = list(FeatureCatalog.columns(fs_name))
 
             # C-contiguous slices — same pattern as Phase 3
             X_fs_arr = safe_array(features_all[cols])

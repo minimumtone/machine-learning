@@ -18,7 +18,7 @@ Concepts
 
 Usage::
 
-    from hea_extrapolation_platform.integrations.feast_store import (
+    from extrapolation_discovery_platform.integrations.feast_store import (
         FeastFeatureStore,
         is_feast_available,
     )
@@ -119,7 +119,7 @@ class _BuiltinFeatureStore:
         -------
         pd.DataFrame
         """
-        from hea_extrapolation_platform.features import (
+        from extrapolation_discovery_platform.features import (
             FeatureCatalog,
             FeatureSetName,
         )
@@ -167,7 +167,7 @@ class _BuiltinFeatureStore:
 
     def list_feature_sets(self) -> Dict[str, Dict[str, Any]]:
         """List all known feature sets with metadata."""
-        from hea_extrapolation_platform.features import (
+        from extrapolation_discovery_platform.features import (
             FeatureCatalog,
             FeatureSetName,
         )

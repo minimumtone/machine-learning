@@ -16,24 +16,24 @@ search           Two-stage search (embedding + structured filter)
 feature_recommender  FeatureSet generation from literature evidence
 """
 
-from hea_extrapolation_platform.literature_graph.schemas import (  # noqa: F401
+from extrapolation_discovery_platform.literature_graph.schemas import (  # noqa: F401
     Paper,
     Workflow,
     Edge,
     load_jsonl,
 )
-from hea_extrapolation_platform.literature_graph.search import (  # noqa: F401
+from extrapolation_discovery_platform.literature_graph.search import (  # noqa: F401
     LiteratureSearchEngine,
     SearchResult,
     StructuredFilter,
 )
-from hea_extrapolation_platform.literature_graph.vector_index import (  # noqa: F401
+from extrapolation_discovery_platform.literature_graph.vector_index import (  # noqa: F401
     VectorIndex,
 )
-from hea_extrapolation_platform.literature_graph.feature_recommender import (  # noqa: F401
+from extrapolation_discovery_platform.literature_graph.feature_recommender import (  # noqa: F401
     LiteratureFeatureRecommender,
     FeatureRecommendation,
 )
-from hea_extrapolation_platform.literature_graph.workflow_text import (  # noqa: F401
+from extrapolation_discovery_platform.literature_graph.workflow_text import (  # noqa: F401
     generate_workflow_text,
 )

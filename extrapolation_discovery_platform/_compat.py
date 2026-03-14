@@ -34,7 +34,7 @@ Usage
 -----
 Import this module as early as possible (in ``__init__.py``)::
 
-    from hea_extrapolation_platform._compat import install as _install_compat
+    from extrapolation_discovery_platform._compat import install as _install_compat
     _install_compat()
 
 The install function is idempotent; calling it multiple times is safe.

@@ -20,7 +20,7 @@ Concepts
 
 Usage::
 
-    from hea_extrapolation_platform.integrations.mint_adapter import (
+    from extrapolation_discovery_platform.integrations.mint_adapter import (
         MIntWorkflowAdapter,
         MIntWorkflowConfig,
         MIntWorkflowRegistry,
@@ -198,7 +198,7 @@ class MIntWorkflowAdapter:
 
     def _load_wrapped_workflow(self, workflow_name: str) -> Any:
         """Load a built-in workflow by name."""
-        from hea_extrapolation_platform.workflows import get_workflow
+        from extrapolation_discovery_platform.workflows import get_workflow
 
         extra = dict(self._config.extra_params)
         return get_workflow(workflow_name, **extra)
@@ -289,7 +289,7 @@ class MIntWorkflowAdapter:
         3. Reads the output JSON
         4. Converts to RunResult
         """
-        from hea_extrapolation_platform.workflows import RunResult
+        from extrapolation_discovery_platform.workflows import RunResult
 
         t0 = time.time()
         script = self._config.script_path
@@ -411,7 +411,7 @@ class MIntWorkflowAdapter:
           Body: { train_data, test_data, seed, params }
           Response: { metrics, predictions, params, artifacts }
         """
-        from hea_extrapolation_platform.workflows import RunResult
+        from extrapolation_discovery_platform.workflows import RunResult
 
         t0 = time.time()
         endpoint = self._config.api_endpoint

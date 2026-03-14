@@ -4,7 +4,7 @@ Gradio dashboard
 
 Launch::
 
-    python -m hea_extrapolation_platform gui --port 7860
+    python -m extrapolation_discovery_platform gui --port 7860
 
 Tab-based layout (3-phase workflow):
   1. 前処理 (Data Preparation)
@@ -55,7 +55,7 @@ import gradio as gr
 import numpy as np
 import pandas as pd
 
-from hea_extrapolation_platform.gui.plotly_charts import (
+from extrapolation_discovery_platform.gui.plotly_charts import (
     build_summary_stats_md,
     plotly_composition_heatmap,
     plotly_feature_correlation,
@@ -109,16 +109,16 @@ def _get_literature_engine(session: Dict[str, Any]) -> Any:
     if session.get("literature_engine") is not None:
         return session["literature_engine"]
 
-    from hea_extrapolation_platform.literature_graph.seed_data import (
+    from extrapolation_discovery_platform.literature_graph.seed_data import (
         get_seed_papers, get_seed_workflows,
     )
-    from hea_extrapolation_platform.literature_graph.workflow_text import (
+    from extrapolation_discovery_platform.literature_graph.workflow_text import (
         generate_workflow_text,
     )
-    from hea_extrapolation_platform.literature_graph.vector_index import (
+    from extrapolation_discovery_platform.literature_graph.vector_index import (
         build_index,
     )
-    from hea_extrapolation_platform.literature_graph.search import (
+    from extrapolation_discovery_platform.literature_graph.search import (
         LiteratureSearchEngine,
     )
 
@@ -148,10 +148,10 @@ def _build_integration_status_md(
     casual users never need to see it.  Power users can expand
     the panel to inspect backend connectivity.
     """
-    from hea_extrapolation_platform.integrations.mlflow_tracker import (
+    from extrapolation_discovery_platform.integrations.mlflow_tracker import (
         is_mlflow_available,
     )
-    from hea_extrapolation_platform.integrations.feast_store import (
+    from extrapolation_discovery_platform.integrations.feast_store import (
         is_feast_available,
     )
 
@@ -256,7 +256,7 @@ def _build_physical_interpretation_md(
             "FS比較サマリーが表示されます。*"
         )
 
-    from hea_extrapolation_platform.feature_selection import FS_PHYSICAL_ORIGINS
+    from extrapolation_discovery_platform.feature_selection import FS_PHYSICAL_ORIGINS
 
     lines: List[str] = []
 
@@ -658,7 +658,7 @@ def _refresh_ood_data(
             pd.DataFrame(),
         )
 
-    from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
+    from extrapolation_discovery_platform.features import FeatureCatalog, FeatureSetName
     try:
         fs_enum = FeatureSetName(fs_key)
         cols = FeatureCatalog.columns(fs_enum)
@@ -748,7 +748,7 @@ def _export_ood_csv(
     if ood_res is None:
         return gr.update(value=None, visible=False)
 
-    from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
+    from extrapolation_discovery_platform.features import FeatureCatalog, FeatureSetName
     try:
         fs_enum = FeatureSetName(fs_key)
         cols = FeatureCatalog.columns(fs_enum)
@@ -832,10 +832,10 @@ def _do_literature_search(
     of the Gradio app factory.
     """
     try:
-        from hea_extrapolation_platform.literature_graph.search import (
+        from extrapolation_discovery_platform.literature_graph.search import (
             StructuredFilter,
         )
-        from hea_extrapolation_platform.literature_graph.feature_recommender import (
+        from extrapolation_discovery_platform.literature_graph.feature_recommender import (
             LiteratureFeatureRecommender,
         )
 
@@ -1118,7 +1118,7 @@ def _handle_csv_upload(
                 None, None, None, pd.DataFrame(), session,
             )
 
-        from hea_extrapolation_platform.features import (
+        from extrapolation_discovery_platform.features import (
             _ElementDB,
             compute_features,
             FeatureSetName,
@@ -1358,7 +1358,7 @@ def _build_progress_bar_html(
 
 def _build_fs_physical_origins_md() -> str:
     """Build a Markdown description of each feature set's physical origin."""
-    from hea_extrapolation_platform.feature_selection import FS_PHYSICAL_ORIGINS
+    from extrapolation_discovery_platform.feature_selection import FS_PHYSICAL_ORIGINS
 
     lines = [
         "### 各特徴量セットの物理的起源\n",
@@ -1407,7 +1407,7 @@ def _run_feature_selection_for_fs(
         )
 
     # Determine which columns belong to this feature set
-    from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
+    from extrapolation_discovery_platform.features import FeatureCatalog, FeatureSetName
     try:
         fs_enum = FeatureSetName(fs_name)
     except ValueError:
@@ -1450,7 +1450,7 @@ def _run_feature_selection_for_fs(
             None, "*No methods selected.*", session,
         )
 
-    from hea_extrapolation_platform.feature_selection import run_feature_selection
+    from extrapolation_discovery_platform.feature_selection import run_feature_selection
     summary = run_feature_selection(
         X, y, methods=methods, consensus_threshold=2, feature_set=fs_name,
     )
@@ -1529,7 +1529,7 @@ def _run_feature_selection_for_fs(
         )
 
     # Add physical origin context
-    from hea_extrapolation_platform.feature_selection import FS_PHYSICAL_ORIGINS
+    from extrapolation_discovery_platform.feature_selection import FS_PHYSICAL_ORIGINS
     origin = FS_PHYSICAL_ORIGINS.get(fs_name, "")
     if origin:
         consensus_lines.append(f"\n---\n**{fs_name} の物理的背景**:\n> {origin}")
@@ -2633,7 +2633,7 @@ def create_app() -> gr.Blocks:
                     )
                 else:
                     # --- Generate sample dataset ---
-                    from hea_extrapolation_platform.dataset import (
+                    from extrapolation_discovery_platform.dataset import (
                         generate_hea_dataset,
                     )
                     log(
@@ -2665,7 +2665,7 @@ def create_app() -> gr.Blocks:
                 )
 
                 # 2. Run experiments  (10% -> 60%)
-                from hea_extrapolation_platform.runner import (
+                from extrapolation_discovery_platform.runner import (
                     ExperimentRunner,
                 )
                 # Build selected workflow list
@@ -2750,7 +2750,7 @@ def create_app() -> gr.Blocks:
                 )
                 _cap.setLevel(logging.INFO)
                 pkg_logger = logging.getLogger(
-                    "hea_extrapolation_platform",
+                    "extrapolation_discovery_platform",
                 )
                 pkg_logger.addHandler(_cap)
                 pkg_logger.setLevel(logging.INFO)
@@ -2913,7 +2913,7 @@ def create_app() -> gr.Blocks:
                 # 4. Static plots (optional)  (70% -> 80%)
                 figure_paths: Dict[str, Path] = {}
                 if not skip_plt:
-                    from hea_extrapolation_platform.visualization import (
+                    from extrapolation_discovery_platform.visualization import (
                         plot_validity_ranking,
                         plot_performance_heatmap,
                         plot_parity,
@@ -2937,10 +2937,10 @@ def create_app() -> gr.Blocks:
                 # (80% -> 90%)
                 if not skip_lit:
                     try:
-                        from hea_extrapolation_platform.literature_graph.search import (
+                        from extrapolation_discovery_platform.literature_graph.search import (
                             StructuredFilter,
                         )
-                        from hea_extrapolation_platform.literature_graph.feature_recommender import (
+                        from extrapolation_discovery_platform.literature_graph.feature_recommender import (
                             LiteratureFeatureRecommender,
                         )
                         log("Building literature index...")
@@ -2986,7 +2986,7 @@ def create_app() -> gr.Blocks:
                         )
 
                 # 6. Report generation  (90% -> 100%)
-                from hea_extrapolation_platform.report import (
+                from extrapolation_discovery_platform.report import (
                     ReportGenerator,
                 )
                 gen = ReportGenerator(out_dir=out_dir)
