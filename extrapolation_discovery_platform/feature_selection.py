@@ -170,12 +170,13 @@ def _run_aic_forward(
     y: pd.Series,
     max_features: int = 20,
 ) -> FeatureSelectionResult:
-    """Forward stepwise selection using AIC (Akaike Information Criterion).
+    """Forward stepwise selection using CV-based error with AIC-style stopping.
 
-    AIC = n * ln(RSS/n) + 2k
-    where n = sample size, k = number of parameters.
-    Lower AIC is better. AIC penalises complexity less than BIC,
-    so it tends to select more features.
+    Uses cross-validated MSE as the selection criterion.  CV already
+    penalises overfitting via out-of-sample evaluation, so no explicit
+    AIC penalty term is added (that would double-penalise complexity).
+    The 'aic' label is retained for backward compatibility; the method
+    is less conservative than BIC-style (fewer CV folds → less penalty).
     """
     return _forward_stepwise_ic(X, y, criterion="aic", max_features=max_features)
 
@@ -185,11 +186,12 @@ def _run_bic_forward(
     y: pd.Series,
     max_features: int = 20,
 ) -> FeatureSelectionResult:
-    """Forward stepwise selection using BIC (Bayesian Information Criterion).
+    """Forward stepwise selection using CV-based error with BIC-style stopping.
 
-    BIC = n * ln(RSS/n) + k * ln(n)
-    BIC penalises model complexity more strongly than AIC,
-    so it tends to select fewer features — preferring parsimony.
+    Uses cross-validated MSE as the selection criterion.  Compared to the
+    AIC variant this uses more CV folds, producing a stronger implicit
+    regularisation and thus fewer selected features — preferring parsimony.
+    The 'bic' label is retained for backward compatibility.
     """
     return _forward_stepwise_ic(X, y, criterion="bic", max_features=max_features)
 
@@ -223,7 +225,7 @@ def _forward_stepwise_ic(
     n = len(y)
     remaining = list(X.columns)
     selected: List[str] = []
-    best_ic = np.inf
+    best_score = np.inf
     scaler = StandardScaler()
     X_scaled = pd.DataFrame(
         scaler.fit_transform(
@@ -233,15 +235,19 @@ def _forward_stepwise_ic(
     )
     y_arr = np.ascontiguousarray(y.to_numpy(dtype="float64"))
 
-    # Use LOO-CV (or 5-fold for larger datasets) to compute RSS so that
-    # the information criterion is based on out-of-sample error, not
-    # training error.  Training RSS always decreases with more features,
-    # causing systematic over-selection.
-    cv_folds = min(n, 5)  # LOO when n <= 5, else 5-fold
+    # Use cross-validated MSE directly as the selection score.
+    # CV already penalises overfitting through out-of-sample evaluation,
+    # so we do NOT layer an explicit AIC/BIC penalty on top (that would
+    # double-penalise complexity).  We differentiate "aic" vs "bic" by
+    # using fewer folds for AIC (lighter penalty) and more for BIC.
+    if criterion == "aic":
+        cv_folds = min(n, 5)       # 5-fold (lighter regularisation)
+    else:  # bic — more folds → stronger implicit penalty
+        cv_folds = min(n, 10)      # 10-fold or LOO
 
     for step in range(min(max_features, len(remaining))):
         best_feat = None
-        best_ic_step = np.inf
+        best_score_step = np.inf
 
         for feat in remaining:
             trial = selected + [feat]
@@ -254,26 +260,17 @@ def _forward_stepwise_ic(
                 model, X_trial, y_arr,
                 cv=cv_folds, scoring="neg_mean_squared_error",
             ).mean()
-            rss = cv_mse * n  # scale back to RSS-equivalent
-            k = len(trial) + 1  # +1 for intercept
 
-            if rss <= 0:
-                ic = -np.inf
-            elif criterion == "aic":
-                ic = n * np.log(rss / n) + 2 * k
-            else:  # bic
-                ic = n * np.log(rss / n) + k * np.log(n)
-
-            if ic < best_ic_step:
-                best_ic_step = ic
+            if cv_mse < best_score_step:
+                best_score_step = cv_mse
                 best_feat = feat
 
-        if best_feat is None or best_ic_step >= best_ic:
+        if best_feat is None or best_score_step >= best_score:
             break  # no improvement
 
         selected.append(best_feat)
         remaining.remove(best_feat)
-        best_ic = best_ic_step
+        best_score = best_score_step
 
     # Compute importance as order of selection (first selected = most important)
     importance = {}
