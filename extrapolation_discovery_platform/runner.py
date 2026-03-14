@@ -41,7 +41,11 @@ import concurrent.futures
 import json
 import logging
 import os
-import resource
+try:
+    import resource
+    _HAS_RESOURCE = True
+except ImportError:
+    _HAS_RESOURCE = False  # Windows
 import time
 from dataclasses import asdict
 from pathlib import Path
@@ -90,8 +94,10 @@ from extrapolation_discovery_platform.multicollinearity import (
     MulticollinearityReport,
     run_phase0_multicollinearity,
 )
-from extrapolation_discovery_platform.feature_selection import (
-    run_feature_selection,
+from extrapolation_discovery_platform.feature_selection import run_feature_selection
+from extrapolation_discovery_platform.model_selection import (
+    ModelSelectionResult,
+    run_model_selection,
 )
 from extrapolation_discovery_platform._compat import as_serializable
 
@@ -102,27 +108,10 @@ logger = logging.getLogger(__name__)
 # Run Registry
 # ---------------------------------------------------------------------------
 
-def safe_array(source: Any, dtype: str = "float64") -> np.ndarray:
-    """Convert *source* to a C-contiguous numpy array.
+from extrapolation_discovery_platform._utils import safe_array  # noqa: E402
 
-    This is the single choke-point for every DataFrame → numpy conversion
-    in the platform.  pandas 3.0 returns F-contiguous (column-major) arrays
-    from ``.values`` and ``.to_numpy()`` when the BlockManager is fragmented.
-    Many C extensions (BLAS, LAPACK, scipy, sklearn) assume C-contiguous
-    (row-major) layout and SIGSEGV on F-contiguous input.
-
-    Accepts: DataFrame, Series, ndarray, or list.
-    Returns: C-contiguous ndarray with requested dtype.
-    """
-    if isinstance(source, pd.DataFrame):
-        arr = source.to_numpy(dtype=dtype, na_value=np.nan)
-    elif isinstance(source, pd.Series):
-        arr = source.to_numpy(dtype=dtype)
-    elif isinstance(source, np.ndarray):
-        arr = np.array(source, dtype=dtype)
-    else:
-        arr = np.asarray(source, dtype=dtype)
-    return np.ascontiguousarray(arr)
+# Re-export for backward compatibility
+__all__ = ["safe_array"]
 
 
 class RunRegistry:
@@ -149,35 +138,45 @@ class RunRegistry:
         return len(self._runs)
 
     def to_dataframe(self) -> pd.DataFrame:
-        """Convert all runs to a summary DataFrame (columnar construction)."""
+        """Convert all runs to a summary DataFrame (columnar construction).
+
+        Column names are derived dynamically from ``RunResult`` dataclass
+        fields, excluding non-scalar fields (numpy arrays, dicts) that
+        cannot be represented as DataFrame columns.
+        """
+        import dataclasses as _dc
+
         if not self._runs:
             return pd.DataFrame()
+
+        # Dynamically extract scalar column names from RunResult fields.
+        # Exclude ndarray / dict fields that are not suitable for tabular
+        # representation (y_test_true, y_test_pred, test_indices, params,
+        # artifacts).
+        _SKIP_TYPES = (np.ndarray, dict)
         col_names = [
-            "workflow", "feature_set", "split_policy", "seed", "fold",
-            "rmse_train", "rmse_test", "mae_train", "mae_test",
-            "r2_train", "r2_test", "elapsed_sec",
+            f.name for f in _dc.fields(RunResult)
+            if f.default_factory is not dict.__class__  # exclude dict fields
+            and not (
+                isinstance(getattr(self._runs[0], f.name, None), _SKIP_TYPES)
+            )
+        ]
+        # Fallback: filter to fields whose first-run value is a scalar
+        col_names = [
+            name for name in col_names
+            if not isinstance(getattr(self._runs[0], name, None), (np.ndarray, dict))
         ]
         columns: Dict[str, list] = {k: [] for k in col_names}
         for r in self._runs:
-            columns["workflow"].append(r.workflow)
-            columns["feature_set"].append(r.feature_set)
-            columns["split_policy"].append(r.split_policy)
-            columns["seed"].append(r.seed)
-            columns["fold"].append(r.fold)
-            columns["rmse_train"].append(r.rmse_train)
-            columns["rmse_test"].append(r.rmse_test)
-            columns["mae_train"].append(r.mae_train)
-            columns["mae_test"].append(r.mae_test)
-            columns["r2_train"].append(r.r2_train)
-            columns["r2_test"].append(r.r2_test)
-            columns["elapsed_sec"].append(r.elapsed_sec)
+            for col in col_names:
+                columns[col].append(getattr(r, col))
         return pd.DataFrame(columns)
 
     def export_json(self, path: Path) -> None:
         """Export runs to JSON with numpy-safe serialization.
 
         Uses ``as_serializable`` to convert numpy types (float32, int64,
-        ndarray, bool\_) to JSON-safe Python builtins before writing.
+        ndarray, ``bool_``) to JSON-safe Python builtins before writing.
         This prevents ``TypeError`` on ``json.dump`` (#5).
         """
         df = self.to_dataframe()
@@ -248,20 +247,24 @@ def _run_job(
     )
     _dr = job.dim_reduction
     _pca = _dr or job.force_pca  # force_pca=True → always PCA ON (WF-LIN only)
-    wf_map: Dict[str, Any] = {
-        "WF-LIN": WorkflowLIN(dim_reduction=_pca),
-        "WF-LASSO": WorkflowLASSO(dim_reduction=_dr),
-        "WF-ARD": WorkflowARD(dim_reduction=_dr),
-        "WF-RF": WorkflowRF(quick=job.quick, dim_reduction=_dr),
-        "WF-XGB": WorkflowXGB(quick=job.quick, dim_reduction=_dr),
-        "WF-ENS": WorkflowENS(
+
+    # Lazy instantiation: create only the one workflow needed for this job.
+    # Previously all 6 workflows were instantiated per job, wasting resources
+    # when running hundreds of parallel jobs via ProcessPoolExecutor.
+    _BUILTIN_FACTORIES = {
+        "WF-LIN":   lambda: WorkflowLIN(dim_reduction=_pca),
+        "WF-LASSO": lambda: WorkflowLASSO(dim_reduction=_dr),
+        "WF-ARD":   lambda: WorkflowARD(dim_reduction=_dr),
+        "WF-RF":    lambda: WorkflowRF(quick=job.quick, dim_reduction=_dr),
+        "WF-XGB":   lambda: WorkflowXGB(quick=job.quick, dim_reduction=_dr),
+        "WF-ENS":   lambda: WorkflowENS(
             n_members=3 if job.quick else 5, quick=job.quick,
             dim_reduction=_dr,
         ),
     }
 
-    if job.wf_name in wf_map:
-        wf = wf_map[job.wf_name]
+    if job.wf_name in _BUILTIN_FACTORIES:
+        wf = _BUILTIN_FACTORIES[job.wf_name]()
     elif mint_configs is not None and job.wf_name in mint_configs:
         from extrapolation_discovery_platform.integrations.mint_adapter import (
             MIntWorkflowAdapter,
@@ -270,7 +273,7 @@ def _run_job(
     else:
         raise KeyError(
             f"Unknown workflow '{job.wf_name}'. "
-            f"Built-in: {list(wf_map)}, MInt: {list(mint_configs or {})}"
+            f"Built-in: {list(_BUILTIN_FACTORIES)}, MInt: {list(mint_configs or {})}"
         )
 
     return wf.run(
@@ -325,8 +328,14 @@ class ExperimentRunner:
         self._registry = RunRegistry()
         self._ood_split_indices: Dict[str, Tuple[np.ndarray, np.ndarray]] = {}
         self._mc_reports: Optional[Dict[str, MulticollinearityReport]] = None
+        self._model_selection_result: Optional[ModelSelectionResult] = None
+        self._effective_cols: Dict[str, List[str]] = {}
 
+        # Unified interface: passing an object implies "use it".
+        # The boolean flags (use_mlflow, use_feast, use_mint) are kept for
+        # backward compatibility but are redundant when the object is given.
         if mlflow_tracker is not None:
+            use_mlflow = True
             self._tracker = mlflow_tracker
         elif use_mlflow:
             self._tracker = MLflowTracker(
@@ -336,6 +345,7 @@ class ExperimentRunner:
             self._tracker = MLflowTracker(enabled=False)
 
         if feature_store is not None:
+            use_feast = True
             self._feature_store = feature_store
         elif use_feast:
             self._feature_store = FeastFeatureStore(enabled=True)
@@ -343,6 +353,7 @@ class ExperimentRunner:
             self._feature_store = FeastFeatureStore(enabled=False)
 
         if mint_registry is not None:
+            use_mint = True
             self._mint_registry = mint_registry
         elif use_mint:
             self._mint_registry = MIntWorkflowRegistry.create_default()
@@ -377,6 +388,11 @@ class ExperimentRunner:
     def mc_reports(self) -> Optional[Dict[str, MulticollinearityReport]]:
         """Multicollinearity reports from Phase 0 (None before run)."""
         return self._mc_reports
+
+    @property
+    def model_selection_result(self) -> Optional[ModelSelectionResult]:
+        """Model selection result from Phase 6 (None if not run)."""
+        return self._model_selection_result
 
     def run(
         self,
@@ -423,18 +439,12 @@ class ExperimentRunner:
             [w for w in all_wf_names if w in (selected_workflows or all_wf_names)]
         )
 
-        all_feature_sets = FeatureCatalog.list_sets()
-        if selected_feature_sets:
-            _sel = set(selected_feature_sets)
-            feature_sets = [fs for fs in all_feature_sets if fs.value in _sel]
-            if not feature_sets:
-                feature_sets = all_feature_sets
-                logger.warning(
-                    "No matching feature sets for %s; using all.",
-                    selected_feature_sets,
-                )
-        else:
-            feature_sets = all_feature_sets
+        feature_sets = FeatureCatalog.list_sets()
+        if selected_feature_sets is not None:
+            feature_sets = [
+                fs for fs in feature_sets
+                if fs.value in selected_feature_sets
+            ]
         y_arr = np.asarray(target, dtype=float)
 
         self._tracker.start_run(
@@ -459,39 +469,54 @@ class ExperimentRunner:
             )
             self._mc_reports = mc_reports
 
-            # ── Phase 0b: Feature selection on cleaned columns ──
-            # Run Lasso-based feature selection on the multicollinearity-
-            # cleaned columns to further reduce dimensionality.
-            # Only for feature sets with > 10 features (where selection
-            # matters). Updates mc_report.cleaned_columns in-place.
-            for fs in feature_sets:
-                fs_key = fs.value
-                mc_rpt = mc_reports.get(fs_key)
-                if mc_rpt is None or len(mc_rpt.cleaned_columns) <= 10:
-                    continue
+            # ── Compute effective columns per feature set ──
+            # Phase 0 identifies constant / perfectly-collinear columns
+            # to drop.  Until now these drops were *not* reflected in
+            # the actual training arrays — Phase 3 still used the
+            # original FeatureCatalog columns.  Fix: subtract drops.
+            self._effective_cols = {}
+            for _fs in feature_sets:
+                _fs_key = _fs.value
+                _orig = [c for c in FeatureCatalog.columns(_fs)
+                         if c in features_all.columns]
+                if mc_reports and _fs_key in mc_reports:
+                    _rpt = mc_reports[_fs_key]
+                    _dropped = set(_rpt.dropped_constant + _rpt.dropped_perfect)
+                    _orig = [c for c in _orig if c not in _dropped]
+                self._effective_cols[_fs_key] = _orig
+                logger.info(
+                    "Effective columns [%s]: %d features (after Phase 0 drops)",
+                    _fs_key, len(_orig),
+                )
+
+            # ── Phase 0.5: Feature selection on cleaned columns ──
+            # Lasso-based feature selection removes uninformative
+            # features before training.  This addresses the issue
+            # where high-dimensional / collinear features were passed
+            # straight to learning without any selection step.
+            for _fs_key, _cols in list(self._effective_cols.items()):
+                if len(_cols) <= 3:
+                    continue  # too few to select from
                 try:
-                    avail = [c for c in mc_rpt.cleaned_columns
-                             if c in features_all.columns]
-                    if len(avail) <= 10:
-                        continue
-                    X_sel = features_all[avail]
-                    fs_summary = run_feature_selection(
-                        X_sel, target,
+                    _X_fs = features_all[_cols]
+                    _fs_summary = run_feature_selection(
+                        _X_fs, target,
                         methods=["Lasso"],
-                        consensus_threshold=1,
-                        feature_set=fs_key,
+                        feature_set=_fs_key,
                     )
-                    if fs_summary.consensus_features:
-                        mc_rpt.cleaned_columns = fs_summary.consensus_features
-                        logger.info(
-                            "Phase 0b [%s]: feature selection %d→%d columns",
-                            fs_key, len(avail),
-                            len(fs_summary.consensus_features),
-                        )
+                    _lasso = _fs_summary.results.get("Lasso")
+                    if _lasso and _lasso.selected_features:
+                        _sel = _lasso.selected_features
+                        if len(_sel) >= 2:
+                            logger.info(
+                                "Feature selection [%s]: %d → %d features",
+                                _fs_key, len(_cols), len(_sel),
+                            )
+                            self._effective_cols[_fs_key] = _sel
                 except Exception:
-                    logger.debug(
-                        "Phase 0b [%s]: feature selection skipped (error)",
-                        fs_key,
+                    logger.warning(
+                        "Feature selection failed for %s; using all cleaned features",
+                        _fs_key,
                     )
 
             if progress_callback is not None:
@@ -499,7 +524,8 @@ class ExperimentRunner:
                     progress_callback(
                         0, 0,
                         f"Phase 0 complete: multicollinearity diagnosed "
-                        f"for {len(mc_reports)} feature sets",
+                        f"for {len(mc_reports)} feature sets, "
+                        f"feature selection applied",
                     )
                 except Exception:
                     pass
@@ -551,6 +577,58 @@ class ExperimentRunner:
             raise
 
         return self._registry.runs, validity_scores, ood_results
+
+    # ------------------------------------------------------------------
+    # Phase 6: Model Selection (Nested CV)
+    # ------------------------------------------------------------------
+
+    def run_model_selection(
+        self,
+        features_all: pd.DataFrame,
+        target: pd.Series,
+        out_dir: Optional[Path] = None,
+        n_outer: int = 5,
+        n_inner: int = 3,
+        n_iter: int = 20,
+        progress_callback: Optional[Any] = None,
+    ) -> ModelSelectionResult:
+        """Phase 6: Nested CV model selection.
+
+        Runs *after* the standard 5-phase experiment so it does not
+        interfere with existing results.  Uses the best feature set's
+        effective columns (from Phase 0 + Phase 0.5) as input.
+        """
+        # Pick the best feature set's effective columns
+        best_cols: Optional[List[str]] = None
+        for fs_key, cols in self._effective_cols.items():
+            if best_cols is None or len(cols) > len(best_cols):
+                best_cols = cols
+
+        if best_cols is None:
+            best_cols = list(features_all.columns)
+
+        X = features_all[best_cols]
+
+        def _ms_callback(msg: str) -> None:
+            logger.info("Model selection: %s", msg)
+            if progress_callback is not None:
+                try:
+                    progress_callback(0, 0, f"Phase 6: {msg}")
+                except Exception:
+                    pass
+
+        result = run_model_selection(
+            X, target,
+            out_dir=out_dir,
+            n_outer=n_outer,
+            n_inner=n_inner,
+            n_iter=n_iter,
+            quick=self._quick,
+            random_state=self._seeds[0] if self._seeds else 42,
+            progress_callback=_ms_callback,
+        )
+        self._model_selection_result = result
+        return result
 
     # ------------------------------------------------------------------
     # Phase 1: Pre-compute fold splits (minimum necessary calls)
@@ -684,34 +762,43 @@ class ExperimentRunner:
         Each worker receives a read-only view and slices its own train/test.
         """
         # Build one C-contiguous array per feature set (not per seed/job)
-        # Use cleaned columns from Phase 0 multicollinearity when available,
-        # falling back to the full FeatureCatalog columns otherwise.
         fs_arrays: Dict[str, Tuple[np.ndarray, List[str]]] = {}
         for fs_name in feature_sets:
-            fs_key = fs_name.value
-            mc_report = (self._mc_reports or {}).get(fs_key)
-            if mc_report and mc_report.cleaned_columns:
-                cols = [c for c in mc_report.cleaned_columns
-                        if c in features_all.columns]
-            else:
-                cols = list(FeatureCatalog.columns(fs_name))
+            # Use effective columns (Phase 0 drops + feature selection)
+            # instead of the raw FeatureCatalog columns.
+            cols = self._effective_cols.get(
+                fs_name.value,
+                list(FeatureCatalog.columns(fs_name)),
+            )
+            missing = [c for c in cols if c not in features_all.columns]
+            if missing:
+                logger.warning(
+                    "Feature set %s skipped: columns not in data: %s",
+                    fs_name.value, missing[:5],
+                )
+                continue  # skip this FS — columns not present
             arr = safe_array(features_all[cols])
-            fs_arrays[fs_key] = (arr, cols)
+            fs_arrays[fs_name.value] = (arr, cols)
             logger.debug(
                 "Phase 3 prep: %s → array shape=%s C-contiguous=%s",
                 fs_name.value, arr.shape, arr.flags["C_CONTIGUOUS"],
             )
 
+        # Filter jobs to only those whose feature set was successfully prepared
+        jobs = [j for j in jobs if j.fs_name in fs_arrays]
         all_results: List[RunResult] = []
         n_total = len(jobs)
         completed = 0
         _t0 = time.time()
 
         def _log_progress(n: int, last_job: _Job) -> None:
-            try:
-                rss_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-            except Exception:
-                rss_kb = -1
+            if _HAS_RESOURCE:
+                try:
+                    rss_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+                except Exception:
+                    rss_kb = -1
+            else:
+                rss_kb = -1  # Windows: resource module not available
             logger.info(
                 "Progress: %d / %d runs (%.1f sec, RSS peak ~%d MB)",
                 n, n_total, time.time() - _t0, rss_kb // 1024,
@@ -795,60 +882,121 @@ class ExperimentRunner:
     ) -> Tuple[Dict[str, OODResult], Dict[str, Dict[str, np.ndarray]]]:
         """Run OOD detection once per feature set.
 
-        Uses the first fold of the first seed's RandomCV split.
+        Uses **multiple folds across all seeds** for more representative OOD
+        detection.  Each fold may have a *different* test set (different seeds
+        shuffle differently), so scores are accumulated into a global
+        per-sample array and averaged only where a sample was scored by
+        multiple folds.  The primary fold (seed 0, fold 0) is used for ENS
+        error collection.
+
         Runs *after* all training so the full RunRegistry is available
         for ENS error collection.
         """
         ood_results: Dict[str, OODResult] = {}
         ood_errors_for_eval: Dict[str, Dict[str, np.ndarray]] = {}
 
-        first_seed = self._seeds[0]
-        ood_train_idx, ood_test_idx = fold_plan[f"RandomCV_seed{first_seed}"][0]
+        n_samples = len(features_all)
+
+        # Collect all RandomCV folds across all seeds for ensemble OOD
+        all_ood_folds: List[Tuple[np.ndarray, np.ndarray]] = []
+        for seed in self._seeds:
+            key = f"RandomCV_seed{seed}"
+            if key in fold_plan:
+                all_ood_folds.append(fold_plan[key][0])  # first fold per seed
+        if not all_ood_folds:
+            logger.warning("Phase 4: No RandomCV folds available for OOD")
+            return ood_results, ood_errors_for_eval
+
+        # Primary fold (used for ENS error collection and split indices)
+        ood_train_idx, ood_test_idx = all_ood_folds[0]
 
         logger.info(
             "Phase 4: OOD for %d feature sets "
-            "(train=%d, test=%d, seed=%d fold=0)",
-            len(feature_sets), len(ood_train_idx), len(ood_test_idx), first_seed,
+            "(ensemble over %d folds, primary train=%d test=%d)",
+            len(feature_sets), len(all_ood_folds),
+            len(ood_train_idx), len(ood_test_idx),
         )
 
         for fs_name in feature_sets:
             fs_key = fs_name.value
-            # Use cleaned columns from Phase 0 (same as Phase 3)
-            mc_report = (self._mc_reports or {}).get(fs_key)
-            if mc_report and mc_report.cleaned_columns:
-                cols = [c for c in mc_report.cleaned_columns
-                        if c in features_all.columns]
-            else:
-                cols = list(FeatureCatalog.columns(fs_name))
+            # Use effective columns (Phase 0 drops + feature selection)
+            cols = self._effective_cols.get(
+                fs_key, list(FeatureCatalog.columns(fs_name)),
+            )
 
-            # C-contiguous slices — same pattern as Phase 3
+            # Guard: skip feature sets with missing columns (same as Phase 3)
+            missing = [c for c in cols if c not in features_all.columns]
+            if missing:
+                logger.warning(
+                    "OOD: Feature set %s skipped: columns not in data: %s",
+                    fs_key, missing[:5],
+                )
+                continue
+
+            # C-contiguous feature array — shared across folds
             X_fs_arr = safe_array(features_all[cols])
-            X_train_ood = pd.DataFrame(X_fs_arr[ood_train_idx], columns=cols)
-            X_test_ood  = pd.DataFrame(X_fs_arr[ood_test_idx],  columns=cols)
 
             try:
-                try:
-                    rss_pre = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-                except Exception:
-                    rss_pre = -1
+                # Per-sample accumulation: scores are mapped back to global
+                # sample indices so that averaging is meaningful even when
+                # different seeds produce different test sets.
+                score_sum = np.zeros(n_samples, dtype=np.float64)
+                score_count = np.zeros(n_samples, dtype=np.int32)
+                primary_res: Optional[OODResult] = None
 
-                detector = OODDetector(k=10)
-                detector.fit(X_train_ood)
-                ood_res = detector.score(X_test_ood)
+                for fold_i, (tr_idx, te_idx) in enumerate(all_ood_folds):
+                    X_tr = pd.DataFrame(X_fs_arr[tr_idx], columns=cols)
+                    X_te = pd.DataFrame(X_fs_arr[te_idx], columns=cols)
+                    detector = OODDetector(k=10)
+                    detector.fit(X_tr)
+                    res = detector.score(X_te)
+                    # Map scores back to global sample indices
+                    score_sum[te_idx] += res.composite_scores
+                    score_count[te_idx] += 1
+                    if fold_i == 0:
+                        primary_res = res
+
+                if primary_res is None:
+                    continue
+
+                # Build OOD result using primary fold's test indices.
+                # For samples scored by multiple folds, use the average;
+                # otherwise use the single score.
+                primary_te = ood_test_idx
+                scored_mask = score_count[primary_te] > 0
+                avg_scores = np.where(
+                    scored_mask,
+                    score_sum[primary_te] / np.maximum(score_count[primary_te], 1),
+                    primary_res.composite_scores,
+                )
+
+                if len(all_ood_folds) > 1:
+                    avg_threshold = float(np.quantile(avg_scores, 0.95))
+                    is_ood_avg = avg_scores > avg_threshold
+                    n_ood = int(is_ood_avg.sum())
+                    ood_res = OODResult(
+                        mahalanobis_scores=primary_res.mahalanobis_scores,
+                        knn_scores=primary_res.knn_scores,
+                        composite_scores=np.ascontiguousarray(avg_scores),
+                        is_ood=np.ascontiguousarray(is_ood_avg),
+                        ood_threshold=avg_threshold,
+                        ood_ratio=n_ood / max(len(avg_scores), 1),
+                        n_total=len(avg_scores),
+                        n_ood=n_ood,
+                    )
+                else:
+                    ood_res = primary_res
+
                 ood_results[fs_key] = ood_res
                 self._ood_split_indices[fs_key] = (
                     np.ascontiguousarray(np.asarray(ood_train_idx)),
                     np.ascontiguousarray(np.asarray(ood_test_idx)),
                 )
 
-                try:
-                    rss_post = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-                except Exception:
-                    rss_post = -1
                 logger.debug(
-                    "OOD %s: %d/%d flagged, RSS delta ~%d MB",
+                    "OOD %s: %d/%d flagged (ensemble over %d folds)",
                     fs_key, ood_res.n_ood, ood_res.n_total,
-                    (rss_post - rss_pre) // 1024,
+                    len(all_ood_folds),
                 )
 
                 self._collect_ood_errors(
@@ -892,20 +1040,22 @@ class ExperimentRunner:
         out: Dict[str, Dict[str, np.ndarray]],
     ) -> None:
         ood_test_indices = np.ascontiguousarray(np.asarray(ood_test_idx))
+        ood_key = ood_test_indices.tobytes()
+
+        # O(1) lookup via hash dict instead of O(n) linear scan with
+        # np.array_equal.  Build a dict keyed by test_indices.tobytes().
         ens_runs = [
             r for r in self._registry.runs
             if r.feature_set == fs_key
             and r.workflow == "WF-ENS"
             and r.test_indices is not None
         ]
-        matched = None
-        for er in reversed(ens_runs):
-            if np.array_equal(
-                np.ascontiguousarray(np.asarray(er.test_indices)),
-                ood_test_indices,
-            ):
-                matched = er
-                break
+        ens_index: Dict[bytes, "RunResult"] = {}
+        for er in ens_runs:
+            key = np.ascontiguousarray(np.asarray(er.test_indices)).tobytes()
+            ens_index[key] = er  # last write wins (most recent run)
+
+        matched = ens_index.get(ood_key)
         if matched is None:
             logger.info("No matching ENS run for OOD eval on %s", fs_key)
             return

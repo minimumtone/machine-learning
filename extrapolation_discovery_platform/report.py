@@ -26,6 +26,7 @@ import numpy as np
 import pandas as pd
 
 from extrapolation_discovery_platform.evaluation import ValidityScore
+from extrapolation_discovery_platform.model_selection import ModelSelectionResult
 from extrapolation_discovery_platform.ood import OODResult
 from extrapolation_discovery_platform.workflows import RunResult
 
@@ -62,6 +63,7 @@ class ReportGenerator:
         extra_sections: Optional[Dict[str, str]] = None,
         literature_results: Optional[List[Any]] = None,
         feature_recommendation: Optional[Any] = None,
+        model_selection_result: Optional[ModelSelectionResult] = None,
     ) -> Path:
         """Write full Markdown report.
 
@@ -85,6 +87,8 @@ class ReportGenerator:
             Top literature WF matches for evidence section.
         feature_recommendation : FeatureRecommendation, optional
             Literature-derived feature set recommendation.
+        model_selection_result : ModelSelectionResult, optional
+            Nested CV model selection result.
 
         Returns
         -------
@@ -119,8 +123,8 @@ class ReportGenerator:
         # ---- 2. Feature Validity Ranking ----
         lines.append("## 2. Feature Set Validity Ranking")
         lines.append("")
-        lines.append("| Rank | Feature Set | Effect Size | Stability | Generalisation | Leak Penalty | Extrap. Safety | RMSE (95% CI) | **Total** |")
-        lines.append("|------|-------------|-------------|-----------|----------------|--------------|----------------|---------------|-----------|")
+        lines.append("| Rank | Feature Set | Effect Size | Stability | Generalisation | Leak Penalty | Extrap. Safety | MC Penalty | RMSE (95% CI) | **Total** |")
+        lines.append("|------|-------------|-------------|-----------|----------------|--------------|----------------|------------|---------------|-----------|")
         for i, s in enumerate(validity_scores):
             # Format Bootstrap CI if available (#9)
             if s.rmse_mean > 0 and s.rmse_ci_lower != s.rmse_ci_upper:
@@ -133,6 +137,7 @@ class ReportGenerator:
                 f"| {i+1} | {s.feature_set} | {s.effect_size:.4f} | "
                 f"{s.stability:.4f} | {s.generalisation:.4f} | "
                 f"{s.leak_penalty:.4f} | {s.extrapolation_safety:.4f} | "
+                f"{s.multicollinearity_penalty:.4f} | "
                 f"{ci_str} | "
                 f"**{s.total:.4f}** |"
             )
@@ -326,8 +331,61 @@ class ReportGenerator:
             lines.append("Literature-based feature recommendation was not performed.")
             lines.append("")
 
-        # ---- 9. Next Experiment Proposal ----
-        lines.append("## 9. Next Experiment Proposal")
+        # ---- 9. Model Selection (Nested CV) ----
+        lines.append("## 9. Model Selection (Nested CV)")
+        lines.append("")
+        if model_selection_result is not None:
+            ms = model_selection_result
+            lines.append(f"- **Best model**: `{ms.best_name}`")
+            lines.append(
+                f"- **Outer CV RMSE**: "
+                f"{ms.best_mean_rmse:.4f} \u00b1 {ms.best_std_rmse:.4f}"
+            )
+            if ms.n_features_selected is not None:
+                lines.append(
+                    f"- **Selected features**: {ms.n_features_selected}"
+                )
+            if ms.best_params:
+                lines.append(
+                    f"- **Hyperparameters**: `{ms.best_params}`"
+                )
+            lines.append(f"- **Elapsed**: {ms.elapsed_sec:.1f} sec")
+            lines.append("")
+            lines.append(
+                "| Model | Mean RMSE | Std RMSE | Features |"
+            )
+            lines.append(
+                "|-------|-----------|----------|----------|"
+            )
+            sorted_cands = sorted(
+                ms.all_candidates, key=lambda c: c.mean_rmse,
+            )
+            for c in sorted_cands:
+                n_feat = (
+                    str(c.median_n_features)
+                    if c.median_n_features is not None
+                    else "all"
+                )
+                marker = " **Best**" if c.name == ms.best_name else ""
+                lines.append(
+                    f"| {c.name}{marker} | {c.mean_rmse:.4f} "
+                    f"| {c.std_rmse:.4f} | {n_feat} |"
+                )
+            lines.append("")
+            if ms.selected_features:
+                lines.append("### Selected Features")
+                lines.append("")
+                for i, feat in enumerate(ms.selected_features, 1):
+                    lines.append(f"{i}. `{feat}`")
+                lines.append("")
+        else:
+            lines.append(
+                "Model selection was not performed."
+            )
+            lines.append("")
+
+        # ---- 10. Next Experiment Proposal ----
+        lines.append("## 10. Next Experiment Proposal")
         lines.append("")
         if validity_scores:
             best = validity_scores[0]
@@ -351,7 +409,7 @@ class ReportGenerator:
 
         # ---- Extra sections ----
         if extra_sections:
-            sec_num = 10
+            sec_num = 11
             for title, body in extra_sections.items():
                 lines.append(f"## {sec_num}. {title}")
                 lines.append("")

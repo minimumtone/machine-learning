@@ -75,6 +75,7 @@ class OODDetector:
         self._cov_inv: Optional[np.ndarray] = None
         self._mean: Optional[np.ndarray] = None
         self._nn: Optional[NearestNeighbors] = None
+        self._actual_k: Optional[int] = None  # set in fit(); guards score() before fit()
         self._fitted = False
         self._train_composite: Optional[np.ndarray] = None
         self._ood_threshold: float = 0.0

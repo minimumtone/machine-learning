@@ -43,6 +43,10 @@ logger = logging.getLogger(__name__)
 _POOL_FCC = ["Co", "Cr", "Fe", "Mn", "Ni", "Cu", "Al"]
 
 # BCC-type: refractory HEAs (VEC < ~6.87 when equimolar)
+# NOTE: Cr appears in both _POOL_FCC and _POOL_BCC intentionally.
+# Cr is a common constituent in both Cantor-type FCC alloys (e.g.
+# CoCrFeMnNi) and refractory BCC alloys (e.g. CrMoNbTaV).  The
+# duplication allows realistic sampling from both structural families.
 _POOL_BCC = ["Mo", "Nb", "Ta", "Ti", "V", "W", "Hf", "Zr", "Cr"]
 
 # Mixed-phase candidates: elements that appear in both families
