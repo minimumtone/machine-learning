@@ -41,6 +41,7 @@ import concurrent.futures
 import json
 import logging
 import os
+from collections import defaultdict
 try:
     import resource
     _HAS_RESOURCE = True
@@ -731,12 +732,11 @@ class ExperimentRunner:
         # Strategy (in priority order):
         #   1. Use the registry runs to find the feature set with the lowest
         #      mean test RMSE across all workflows and folds.
-        #   2. Fall back to the feature set with the most features (old
-        #      behaviour) if no runs are available.
+        #   2. Fall back by FS priority order (FS_BASE first) if no runs
+        #      are available.
         #   3. Fall back to all columns if effective_cols is empty.
         best_cols: Optional[List[str]] = None
         if self._registry.runs:
-            from collections import defaultdict
             rmse_sums: dict = defaultdict(float)
             rmse_counts: dict = defaultdict(int)
             for r in self._registry.runs:
@@ -756,11 +756,15 @@ class ExperimentRunner:
                     rmse_sums[best_fs] / max(rmse_counts[best_fs], 1),
                 )
 
-        # Fallback: most features (least aggressively filtered)
+        # Fallback: pick by FS priority order (base → domain → all → magpie)
+        # rather than largest feature count, which would always prefer the
+        # least-filtered set.
+        _FS_PRIORITY = ["FS_BASE", "FS_THERMO", "FS_SIZE", "FS_ELECTRON", "FS_ALL", "FS_MAGPIE"]
         if best_cols is None:
-            for fs_key, cols in self._effective_cols.items():
-                if best_cols is None or len(cols) > len(best_cols):
-                    best_cols = cols
+            for fs_key in _FS_PRIORITY:
+                if fs_key in self._effective_cols and self._effective_cols[fs_key]:
+                    best_cols = self._effective_cols[fs_key]
+                    break
 
         if best_cols is None:
             best_cols = list(features_all.columns)

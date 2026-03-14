@@ -58,6 +58,13 @@ def compute_vif(X: pd.DataFrame) -> pd.Series:
       - Near-singular design -> VIF = inf
 
     Returns pd.Series sorted descending by VIF.
+
+    .. note::
+       This implementation is O(p²) because it fits one LinearRegression per
+       feature.  For small feature sets (FS_BASE ~10 cols) this is negligible,
+       but for FS_MAGPIE (~132 cols) it means 132 regressions.  In practice
+       this is still fast (< 1 s for n ≤ 1000), but callers with very large
+       feature sets should be aware of the quadratic scaling.
     """
     from sklearn.linear_model import LinearRegression
 

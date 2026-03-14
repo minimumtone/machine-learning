@@ -24,7 +24,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import ARDRegression, LassoCV
+from sklearn.linear_model import ARDRegression, LassoCV, LinearRegression
+from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import StandardScaler
 
 logger = logging.getLogger(__name__)
@@ -222,8 +223,6 @@ def _forward_stepwise_ic(
         )
         return None
 
-    from sklearn.linear_model import LinearRegression
-    from sklearn.model_selection import cross_val_score
 
     n = len(y)
     remaining = list(X.columns)
