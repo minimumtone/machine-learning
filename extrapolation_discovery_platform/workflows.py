@@ -553,15 +553,25 @@ class WorkflowXGB(BaseWorkflow):
                 "model__max_depth": [4],
                 "model__learning_rate": [0.1],
             }
+        # XGBoost-specific params (colsample_bytree, min_child_weight,
+        # reg_alpha, reg_lambda) are invalid for the GradientBoostingRegressor
+        # fallback — only include them when XGBoost is available.
+        if _XGB_AVAILABLE:
+            return {
+                "model__n_estimators": [100, 300, 500],
+                "model__max_depth": [3, 5, 7],
+                "model__learning_rate": [0.01, 0.05, 0.1],
+                "model__subsample": [0.7, 1.0],
+                "model__colsample_bytree": [0.7, 1.0],
+                "model__min_child_weight": [1, 3, 5],
+                "model__reg_alpha": [0, 0.1, 1.0],
+                "model__reg_lambda": [1.0, 5.0],
+            }
         return {
             "model__n_estimators": [100, 300, 500],
             "model__max_depth": [3, 5, 7],
             "model__learning_rate": [0.01, 0.05, 0.1],
             "model__subsample": [0.7, 1.0],
-            "model__colsample_bytree": [0.7, 1.0],
-            "model__min_child_weight": [1, 3, 5],
-            "model__reg_alpha": [0, 0.1, 1.0],
-            "model__reg_lambda": [1.0, 5.0],
         }
 
     def run(
