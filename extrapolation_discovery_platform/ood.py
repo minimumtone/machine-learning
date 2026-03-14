@@ -158,11 +158,25 @@ class OODDetector:
             knn_min=self._knn_min, knn_max=self._knn_max,
         )
         self._train_composite = composite_train
-        self._ood_threshold = float(np.quantile(composite_train, self._threshold_q))
+
+        # Use mean + k*std for an absolute statistical threshold instead
+        # of a relative percentile.  The old approach (quantile-based)
+        # always flagged exactly (1-q)% of training data as OOD regardless
+        # of how tightly clustered the data was.  A statistical threshold
+        # only flags samples that are genuinely far from the mean.
+        #
+        # We map the quantile parameter to a z-multiplier so existing
+        # callers don't need to change their API:
+        #   q=0.95 → z≈1.645, q=0.99 → z≈2.326
+        from scipy.stats import norm as _norm_dist
+        z_mult = _norm_dist.ppf(self._threshold_q)
+        mean_c = float(composite_train.mean())
+        std_c = float(composite_train.std())
+        self._ood_threshold = mean_c + z_mult * std_c
 
         self._fitted = True
-        logger.info("OOD detector fitted. Threshold (q=%.2f) = %.4f",
-                     self._threshold_q, self._ood_threshold)
+        logger.info("OOD detector fitted. Threshold (z=%.2f, q=%.2f) = %.4f",
+                     z_mult, self._threshold_q, self._ood_threshold)
         return self
 
     # ------------------------------------------------------------------

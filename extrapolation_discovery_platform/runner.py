@@ -1147,14 +1147,12 @@ class ExperimentRunner:
         """Write a comprehensive experiment log (JSON) for debugging.
 
         The log includes:
-        - Experiment metadata (timestamp, seeds, n_samples, elapsed)
+        - Experiment metadata (timestamp, seeds, quick mode, leak settings)
         - Per-run metrics (workflow, feature_set, split, seed, fold,
           rmse_train/test, r2_train/test, mae_train/test, elapsed)
         - Phase 0 multicollinearity reports (per feature set)
         - Effective columns after Phase 0 drops
-        - Validity scores
-        - OOD summary
-        - Tracker summary (MLflow / in-memory)
+        - Tracker summary (MLflow / in-memory run list)
 
         Returns the path to the written log file.
         """

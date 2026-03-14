@@ -218,6 +218,7 @@ def _forward_stepwise_ic(
         return None
 
     from sklearn.linear_model import LinearRegression
+    from sklearn.model_selection import cross_val_score
 
     n = len(y)
     remaining = list(X.columns)
@@ -232,6 +233,12 @@ def _forward_stepwise_ic(
     )
     y_arr = np.ascontiguousarray(y.to_numpy(dtype="float64"))
 
+    # Use LOO-CV (or 5-fold for larger datasets) to compute RSS so that
+    # the information criterion is based on out-of-sample error, not
+    # training error.  Training RSS always decreases with more features,
+    # causing systematic over-selection.
+    cv_folds = min(n, 5)  # LOO when n <= 5, else 5-fold
+
     for step in range(min(max_features, len(remaining))):
         best_feat = None
         best_ic_step = np.inf
@@ -242,9 +249,12 @@ def _forward_stepwise_ic(
                 X_scaled[trial].to_numpy(dtype="float64", na_value=np.nan)
             )
             model = LinearRegression()
-            model.fit(X_trial, y_arr)
-            y_pred = model.predict(X_trial)
-            rss = float(np.sum((y_arr - y_pred) ** 2))
+            # CV-based MSE (negative by sklearn convention)
+            cv_mse = -cross_val_score(
+                model, X_trial, y_arr,
+                cv=cv_folds, scoring="neg_mean_squared_error",
+            ).mean()
+            rss = cv_mse * n  # scale back to RSS-equivalent
             k = len(trial) + 1  # +1 for intercept
 
             if rss <= 0:

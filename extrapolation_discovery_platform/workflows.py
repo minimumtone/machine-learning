@@ -594,9 +594,20 @@ class WorkflowXGB(BaseWorkflow):
         grid.fit(_safe_np(X_train), _safe_np(y_train))
 
         # ── Early stopping refinement (#3) ──
-        # After GridSearchCV finds the best hyperparameters, retrain the
-        # best model with early_stopping to find the optimal n_estimators.
-        # This reduces overfitting and training cost.
+        # After GridSearchCV finds the best hyperparameters, we probe for
+        # the optimal n_estimators via early stopping on a held-out
+        # validation split of the training data.
+        #
+        # NOTE on pipeline state consistency:
+        # The probe trains a standalone XGBRegressor on pre-transformed
+        # data to find best_iteration.  The final model is then re-fit
+        # from *raw* data through the full pipeline (clone → set_params
+        # → fit), so the StandardScaler/PCA are re-fit consistently and
+        # the pipeline state matches the final n_estimators.  The only
+        # approximation is that the optimal iteration count was determined
+        # under a slightly different scaler fit (80% of training data).
+        # This is acceptable because tree models are scale-invariant and
+        # our pipeline currently has no scaler/PCA for tree workflows.
         best_pipe = grid.best_estimator_
         best_model = best_pipe.named_steps["model"]
         used_early_stop = False
@@ -611,8 +622,10 @@ class WorkflowXGB(BaseWorkflow):
                 from sklearn.base import clone as _clone
                 from sklearn.model_selection import train_test_split as _tts
 
-                # Apply the scaler (and optionally PCA) from the best pipeline
-                # to transform training data for early stopping probe.
+                # For the early stopping probe, we work on raw data since
+                # tree-model pipelines have no preprocessor steps (scaler/
+                # PCA were removed for tree workflows).  If preprocessor
+                # steps exist (future change), transform consistently.
                 pre_steps = [
                     (name, step) for name, step in best_pipe.steps
                     if name != "model"
@@ -644,10 +657,9 @@ class WorkflowXGB(BaseWorkflow):
                 # Check if early stopping actually triggered (stopped before max budget)
                 if hasattr(es_model, "best_iteration") and es_model.best_iteration < es_params["n_estimators"] - 1:
                     # Clone the full pipeline and refit from raw data with
-                    # the optimal n_estimators.  This avoids the double-transform
-                    # bug that would occur if we inserted a model trained on
-                    # pre-transformed data back into the pipeline.
-                    # Use a temp variable so best_pipe stays fitted if fit() fails.
+                    # the optimal n_estimators.  This ensures the full
+                    # pipeline (including any preprocessor) is re-fit
+                    # consistently with the final iteration count.
                     optimal_n = es_model.best_iteration + 1
                     cloned_pipe = _clone(best_pipe)
                     cloned_pipe.set_params(model__n_estimators=optimal_n)

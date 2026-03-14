@@ -113,8 +113,15 @@ class CompositionBlockSplitter(BaseSplitter):
         """Return number of folds.
 
         Before ``split()`` has been fully consumed, returns the
-        *requested* number of folds.  After ``split()`` completes,
-        returns the *actual* number of non-empty clusters yielded.
+        *requested* number of folds (upper bound).  After ``split()``
+        completes, returns the *actual* number of non-empty clusters
+        yielded (may be fewer if some clusters were empty).
+
+        .. warning::
+            Callers that use ``n_splits()`` to pre-allocate job lists
+            should treat the pre-split value as an **upper bound** and
+            handle fewer actual folds gracefully.  Alternatively, call
+            ``list(splitter.split(...))`` first, then use ``len()``.
         """
         if self._actual_n_splits is not None:
             return self._actual_n_splits

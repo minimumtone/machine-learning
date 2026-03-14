@@ -207,7 +207,7 @@ def build_candidate_pipelines(
         ("scaler", StandardScaler()),
         ("est", LassoCV(
             alphas=np.logspace(-6, 2, 30 if quick else 50),
-            cv=3, max_iter=10000, n_jobs=-1,
+            cv=3, max_iter=10000, n_jobs=1,
         )),
     ])
     candidates.append(("Lasso", pipe_lasso, None))
@@ -233,7 +233,7 @@ def build_candidate_pipelines(
     if _XGB_AVAILABLE:
         lasso_for_sel = LassoCV(
             alphas=np.logspace(-6, 2, 30 if quick else 50),
-            cv=3, max_iter=10000, n_jobs=-1,
+            cv=3, max_iter=10000, n_jobs=1,
         )
         sel_lasso = SelectFromModel(lasso_for_sel, threshold="median")
         pipe_sel_lasso_xgb = Pipeline([
@@ -652,7 +652,23 @@ def refit_and_save(
     pipe = clone(pipeline_template)
 
     if best_params:
-        pipe.set_params(**best_params)
+        try:
+            pipe.set_params(**best_params)
+        except Exception:
+            logger.warning(
+                "Failed to set best_params for %s — using defaults",
+                best_candidate.name,
+            )
+    else:
+        # best_params is None (e.g. LassoCV selects alpha internally).
+        # This is expected for CV-based estimators.  For HPO-based
+        # candidates (XGB, RF) it means all folds failed — log a warning.
+        if param_dist is not None:
+            logger.warning(
+                "No best_params found for %s (all folds may have failed) "
+                "— refitting with default hyperparameters",
+                best_candidate.name,
+            )
 
     X_arr = safe_array(X)
     y_arr = safe_array(y).ravel()
