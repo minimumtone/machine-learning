@@ -703,6 +703,7 @@ def validity_scores_to_dataframe(scores: List[Any]) -> pd.DataFrame:
             "Generalisation": round(s.generalisation, 4),
             "Leak Penalty": round(s.leak_penalty, 4),
             "Extrap. Safety": round(s.extrapolation_safety, 4),
+            "MC Penalty": round(s.multicollinearity_penalty, 4),
             "Total": round(s.total, 4),
         }
         # Bootstrap CI (#9)

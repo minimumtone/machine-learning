@@ -29,6 +29,9 @@ from sklearn.preprocessing import StandardScaler
 logger = logging.getLogger(__name__)
 
 
+from extrapolation_discovery_platform._utils import safe_array as _safe_np  # noqa: E402
+
+
 def _get_inner_n_jobs() -> int:
     """Return the n_jobs for inner estimators (GridSearchCV, RandomForest, etc.).
 
@@ -44,26 +47,6 @@ def _get_inner_n_jobs() -> int:
         return max(1, int(raw))
     except ValueError:
         return 1
-
-
-def _safe_np(source: Any) -> np.ndarray:
-    """Return a C-contiguous float64 array from DataFrame / Series / ndarray.
-
-    pandas 3.0 may return F-contiguous (column-major) arrays from
-    ``.values`` / ``.to_numpy()`` when the BlockManager is fragmented.
-    BLAS/LAPACK routines inside StandardScaler, Ridge, XGBoost, and
-    NearestNeighbors assume C-contiguous (row-major) layout and can
-    SIGSEGV on F-contiguous input.  This helper guarantees C-contiguous.
-    """
-    if isinstance(source, pd.DataFrame):
-        arr = source.to_numpy(dtype="float64", na_value=np.nan)
-    elif isinstance(source, pd.Series):
-        arr = source.to_numpy(dtype="float64")
-    elif isinstance(source, np.ndarray):
-        arr = np.array(source, dtype="float64")
-    else:
-        arr = np.asarray(source, dtype="float64")
-    return np.ascontiguousarray(arr)
 
 try:
     from xgboost import XGBRegressor
@@ -553,26 +536,17 @@ class WorkflowXGB(BaseWorkflow):
                 "model__max_depth": [4],
                 "model__learning_rate": [0.1],
             }
-        # XGBoost-specific params (colsample_bytree, min_child_weight,
-        # reg_alpha, reg_lambda) are invalid for the GradientBoostingRegressor
-        # fallback — only include them when XGBoost is available.
-        if _XGB_AVAILABLE:
-            return {
-                "model__n_estimators": [100, 300, 500],
-                "model__max_depth": [3, 5, 7],
-                "model__learning_rate": [0.01, 0.05, 0.1],
-                "model__subsample": [0.7, 1.0],
-                "model__colsample_bytree": [0.7, 1.0],
-                "model__min_child_weight": [1, 3, 5],
-                "model__reg_alpha": [0, 0.1, 1.0],
-                "model__reg_lambda": [1.0, 5.0],
-            }
-        return {
-            "model__n_estimators": [100, 300, 500],
-            "model__max_depth": [3, 5, 7],
-            "model__learning_rate": [0.01, 0.05, 0.1],
-            "model__subsample": [0.7, 1.0],
+        grid: Dict[str, List[Any]] = {
+            "model__n_estimators": [100, 300],
+            "model__max_depth": [3, 6],
+            "model__learning_rate": [0.05, 0.1],
+            "model__subsample": [0.8, 1.0],
         }
+        if _XGB_AVAILABLE:
+            # XGBoost-specific params (not supported by GradientBoostingRegressor)
+            grid["model__colsample_bytree"] = [0.8, 1.0]
+            grid["model__min_child_weight"] = [1, 5]
+        return grid
 
     def run(
         self,
@@ -587,9 +561,9 @@ class WorkflowXGB(BaseWorkflow):
         logger.debug("WF-XGB: train=%d, test=%d, features=%d",
                       len(X_train), len(X_test), X_train.shape[1])
 
-        # Tree models are scale-invariant — skip StandardScaler and PCA.
-        # PCA destroys physically meaningful axes (element-derived features)
-        # and can hurt tree performance / interpretability.
+        # Tree models are scale-invariant and do not need StandardScaler.
+        # PCA destroys physically meaningful feature axes and hurts
+        # interpretability (feature importance becomes meaningless).
         steps: List[Tuple[str, Any]] = [
             ("model", self._get_estimator(seed)),
         ]
@@ -625,11 +599,22 @@ class WorkflowXGB(BaseWorkflow):
                 from sklearn.base import clone as _clone
                 from sklearn.model_selection import train_test_split as _tts
 
-                # No scaler/PCA for tree models — use raw data directly.
+                # Apply the scaler (and optionally PCA) from the best pipeline
+                # to transform training data for early stopping probe.
+                pre_steps = [
+                    (name, step) for name, step in best_pipe.steps
+                    if name != "model"
+                ]
+                if pre_steps:
+                    preprocessor = Pipeline(pre_steps)
+                    X_tr_transformed = preprocessor.transform(_safe_np(X_train))
+                else:
+                    X_tr_transformed = _safe_np(X_train)
+
                 # Split *training* data into train/validation for early stopping
                 # to avoid leaking the held-out test set into model selection.
                 X_tr_es, X_val_es, y_tr_es, y_val_es = _tts(
-                    _safe_np(X_train), _safe_np(y_train),
+                    X_tr_transformed, _safe_np(y_train),
                     test_size=0.2, random_state=seed,
                 )
 
@@ -738,7 +723,7 @@ class WorkflowENS(BaseWorkflow):
         self._quick = quick
         self._dim_reduction = dim_reduction
 
-    def _make_member(self, seed: int) -> Pipeline:
+    def _make_member(self, seed: int, n_features: int = 132) -> Pipeline:
         if self._base_workflow == "xgb" and _XGB_AVAILABLE:
             model = XGBRegressor(
                 n_estimators=100 if self._quick else 200,
@@ -748,6 +733,8 @@ class WorkflowENS(BaseWorkflow):
                 n_jobs=_get_inner_n_jobs(),
                 verbosity=0,
             )
+            # Tree: no scaler / PCA needed
+            return Pipeline([("model", model)])
         elif self._base_workflow == "xgb":
             from sklearn.ensemble import GradientBoostingRegressor
             model = GradientBoostingRegressor(
@@ -756,22 +743,17 @@ class WorkflowENS(BaseWorkflow):
                 learning_rate=0.1,
                 random_state=seed,
             )
+            # Tree: no scaler / PCA needed
+            return Pipeline([("model", model)])
         else:
-            # Ridge has no randomness; random_state is not a valid parameter.
+            # Linear model (Ridge): keep scaler + optional PCA
             model = Ridge(alpha=1.0)
-        # Skip scaler+PCA for tree-based models (scale-invariant);
-        # keep for linear models where scaling matters.
-        if self._base_workflow == "xgb":
             steps: List[Tuple[str, Any]] = [
-                ("model", model),
-            ]
-        else:
-            steps = [
                 ("scaler", StandardScaler()),
-                *_make_pca_step(132, self._dim_reduction),
+                *_make_pca_step(n_features, self._dim_reduction),
                 ("model", model),
             ]
-        return Pipeline(steps)
+            return Pipeline(steps)
 
     def run(
         self,
@@ -789,12 +771,13 @@ class WorkflowENS(BaseWorkflow):
         preds_list: List[np.ndarray] = []
         train_preds_list: List[np.ndarray] = []
 
+        n_features = X_train.shape[1]
         for m in range(self._n_members):
             # Use a large prime multiplier to avoid seed collisions.
             # The old formula (seed * 1000 + m) collides when
             # seed=1001,m=0 and seed=1,m=1000 (both → 1001000).
             member_seed = (seed + m * 10_000_007) % (2**31)
-            pipe = self._make_member(member_seed)
+            pipe = self._make_member(member_seed, n_features=n_features)
             pipe.fit(_safe_np(X_train), _safe_np(y_train))
             preds_list.append(pipe.predict(_safe_np(X_test)))
             train_preds_list.append(pipe.predict(_safe_np(X_train)))
@@ -866,11 +849,11 @@ class WorkflowRF(BaseWorkflow):
                 "model__min_samples_split": [2],
             }
         return {
-            "model__n_estimators": [100, 300, 500],
-            "model__max_depth": [None, 10, 20, 30],
-            "model__min_samples_split": [2, 5, 10],
-            "model__min_samples_leaf": [1, 2, 4],
-            "model__max_features": ["sqrt", "log2", 0.5, 1.0],
+            "model__n_estimators": [200, 500],
+            "model__max_depth": [None, 15],
+            "model__min_samples_split": [2, 5],
+            "model__min_samples_leaf": [1, 2],
+            "model__max_features": ["sqrt", 1.0],
         }
 
     def run(
@@ -886,8 +869,10 @@ class WorkflowRF(BaseWorkflow):
         logger.debug("WF-RF: train=%d, test=%d, features=%d",
                       len(X_train), len(X_test), X_train.shape[1])
 
+        # Tree models are scale-invariant and do not need StandardScaler.
+        # PCA destroys physically meaningful feature axes and hurts
+        # interpretability (feature importance becomes meaningless).
         _inner_jobs = _get_inner_n_jobs()
-        # Tree models are scale-invariant — skip StandardScaler and PCA.
         steps: List[Tuple[str, Any]] = [
             ("model", RandomForestRegressor(
                 random_state=seed, n_jobs=_inner_jobs,
