@@ -1198,19 +1198,30 @@ def _handle_csv_upload(
             )
 
         # --- Element consistency check ---
-        # Validate that detected element names are consistent with
-        # the periodic table database used by MAGPIE / matminer
-        # feature generation.  Warn if any detected element is NOT
-        # in _ElementDB (which backs both the periodic-table
-        # descriptors and the MAGPIE 132 features).
-        detected_elements = set(col_to_elem.values())
-        unsupported = detected_elements - available
+        # Detect column names that *look like* element symbols (1-2
+        # uppercase-initial letters) but were NOT matched by
+        # _detect_element_columns — these are silently skipped and
+        # may indicate misspelled or unsupported elements.
+        import re as _re
+        _ELEM_LIKE = _re.compile(r'^[A-Z][a-z]?$')
+        _SUFFIXES_RE = _re.compile(
+            r'[_\s]+(frac|at%|at|wt%|wt|fraction|pct|percent|ratio)$',
+            _re.IGNORECASE,
+        )
+        skipped_elem_like: List[str] = []
+        for col in raw.columns:
+            if col in elem_cols or col == target_col_clean:
+                continue
+            base = _SUFFIXES_RE.sub('', col).strip()
+            if _ELEM_LIKE.match(base) and base not in available:
+                skipped_elem_like.append(f"{col} (→{base})")
         element_warnings: List[str] = []
-        if unsupported:
+        if skipped_elem_like:
             element_warnings.append(
-                f"⚠ 以下の元素は周期律表データベースに未登録のため、"
-                f"MAGPIE / matminer 特徴量を計算できません: "
-                f"{', '.join(sorted(unsupported))}"
+                f"⚠ 以下の列名は元素記号に類似していますが、"
+                f"周期律表データベースに未登録のためスキップされました: "
+                f"{', '.join(skipped_elem_like[:10])}"
+                f"{' ...' if len(skipped_elem_like) > 10 else ''}"
             )
 
         # Check for string columns that might be used as
