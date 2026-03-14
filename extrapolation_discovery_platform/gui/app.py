@@ -1851,7 +1851,7 @@ def _run_feature_selection_for_fs(
 # ---------------------------------------------------------------------------
 
 # Current PR / build version tag shown in the GUI title bar.
-_GUI_VERSION_TAG = "PR#137"
+_GUI_VERSION_TAG = "PR#144"
 
 
 def create_app() -> gr.Blocks:
@@ -1864,977 +1864,1210 @@ def create_app() -> gr.Blocks:
             f"# Extrapolation Discovery Platform &ensp;"
             f"<small style='color:#888;'>({_GUI_VERSION_TAG})</small>\n"
             "Feature Validity Evaluation & OOD Detection Dashboard\n\n"
-            "**使い方**: **前処理** → **解析** → **後処理** の順にタブを進めてください。"
-            "まず Config & Run でCSVアップロード＆解析実行し、結果を各タブで確認します。"
+            "**使い方**: 左から順にタブを進めてください。"
+            "まず **Config & Run** でCSVアップロード＆解析実行し、"
+            "結果を **Dashboard** / **Results** / **OOD Map** 等のタブで確認します。"
         )
 
         # Fix #1: per-user session state via gr.State
         state = gr.State(_empty_session)
 
         with gr.Tabs():
-          # =============================================================
-          # Phase 1: 前処理 (Data Preparation)
-          # =============================================================
-          with gr.Tab("1. 前処理 (Data Preparation)"):
-            with gr.Tabs():
             # --- Tab 1: Config & Run ---
-              with gr.Tab("Config & Run"):
-                gr.Markdown(
-                    "## Analysis Configuration & Execution\n\n"
-                    "このプラットフォームは、複数のMLワークフロー×特徴量セット×"
-                    "分割ポリシーの組み合わせを網羅的に実行し、"
-                    "特徴量の妥当性を評価します。\n"
-                    "OOD検出で外挿危険領域を特定し、文献検索で最適記述子を探索します。"
+          with gr.Tab("Config & Run"):
+            gr.Markdown(
+                "## Analysis Configuration & Execution\n\n"
+                "このプラットフォームは、複数のMLワークフロー×特徴量セット×"
+                "分割ポリシーの組み合わせを網羅的に実行し、"
+                "特徴量の妥当性を評価します。\n"
+                "OOD検出で外挿危険領域を特定し、文献検索で最適記述子を探索します。"
+            )
+
+            # --- Data Source Selection ---
+            gr.Markdown(
+                "### データソース選択\n"
+                "**方法 A**: CSVファイルをアップロードして独自データで解析\n\n"
+                "**方法 B**: CSVを指定しなければ、組込みサンプルデータを自動生成"
+            )
+            with gr.Row():
+                run_csv_upload = gr.File(
+                    label="\U0001F4C2 CSV Upload (任意)",
+                    file_types=[".csv"],
+                )
+            csv_status_html = gr.HTML(
+                value=(
+                    '<div style="padding:8px 12px; background:#e8f4fd; '
+                    'border-left:4px solid #2196F3; border-radius:4px; '
+                    'margin:4px 0; font-size:14px;">'
+                    '\U0001F4CA <b>データソース</b>: '
+                    'サンプルデータ自動生成モード（CSVをアップロードすると切替）'
+                    '</div>'
+                ),
+            )
+
+            # --- CSV Format Analysis Panel ---
+            with gr.Accordion(
+                "CSV書式確認 (CSV Format Analysis)",
+                open=False,
+            ) as csv_format_accordion:
+                csv_format_html = gr.HTML(
+                    value=(
+                        '<div style="padding:12px; color:#888; '
+                        'font-size:14px;">'
+                        'CSVファイルをアップロードすると、'
+                        'ここに書式分析結果が表示されます。'
+                        '</div>'
+                    ),
                 )
 
-                # --- Data Source Selection ---
+            # --- Column Role Assignment ---
+            with gr.Accordion(
+                "説明因子・目的変数の選択 "
+                "(Feature / Target Column Selection)",
+                open=False,
+            ) as col_role_accordion:
                 gr.Markdown(
-                    "### データソース選択\n"
-                    "**方法 A**: CSVファイルをアップロードして独自データで解析\n\n"
-                    "**方法 B**: CSVを指定しなければ、組込みサンプルデータを自動生成"
+                    "CSVの列から **目的変数** (数値列1つ) と "
+                    "**説明因子** (複数列) を選択してください。\n\n"
+                    "- **数値列**: そのまま説明変数として使用\n"
+                    "- **文字列列** (元素名など): 自動で特徴量に"
+                    "変換 (One-Hot Encoding)\n"
+                    "- HEA組成データ (元素列あり) の場合は自動で "
+                    "HEA特徴量が計算されます。"
                 )
                 with gr.Row():
-                    run_csv_upload = gr.File(
-                        label="\U0001F4C2 CSV Upload (任意)",
-                        file_types=[".csv"],
+                    run_csv_target = gr.Dropdown(
+                        label="目的変数 (Target Variable)",
+                        choices=[],
+                        value=None,
+                        interactive=True,
+                        info="予測対象の数値列を1つ選択",
                     )
-                csv_status_html = gr.HTML(
-                    value=(
+                    csv_mode_radio = gr.Radio(
+                        label="CSV Mode",
+                        choices=["auto", "HEA (元素列)", "Generic (汎用)"],
+                        value="auto",
+                        info="auto: 元素列を自動検出",
+                    )
+                gr.Markdown(
+                    "### CSV Mode 選択ガイド\n\n"
+                    "| モード | 選択基準 | 説明 |\n"
+                    "|--------|----------|------|\n"
+                    "| **auto** | 迷ったらこれ | "
+                    "列名から元素列を自動検出し、HEA/Generic を自動判定します |\n"
+                    "| **HEA (元素列)** | CSV に元素名の列がある場合 | "
+                    "元素列（Fe, Co, Ni 等）から周期律表データ・"
+                    "熱力学特徴量・MAGPIE 特徴量を自動生成します |\n"
+                    "| **Generic (汎用)** | 元素データでない一般的なCSV | "
+                    "列をそのまま説明変数として使用。"
+                    "特徴量生成は行いません |\n\n"
+                    "> **ヒント**: HEA モードでは元素名（文字列列）を"
+                    "説明因子に含めると、周期律表データと "
+                    "MAGPIE/matminer 特徴量が自動計算されます。"
+                )
+                csv_feature_checks = gr.CheckboxGroup(
+                    label="説明因子 (Explanatory Variables)",
+                    choices=[],
+                    value=[],
+                    interactive=True,
+                    info="説明変数として使用する列を選択 "
+                    "(数値列・文字列列とも選択可、目的変数は自動除外)",
+                )
+
+            csv_read_btn = gr.Button(
+                "\U0001F4D6 CSV読み込み (Read CSV)",
+                variant="secondary",
+            )
+            # Hidden state to store all selectable column names
+            # from the initial full-file analysis so that
+            # _on_target_change does not need to re-read the CSV.
+            csv_all_cols_state = gr.State(value=[])
+
+            with gr.Row():
+                with gr.Column():
+                    seeds_input = gr.Textbox(
+                        label="Seeds (space-separated)",
+                        value="42 123 456",
+                        info="Random seeds for reproducibility",
+                    )
+                    n_samples = gr.Slider(
+                        minimum=50, maximum=1000, value=200, step=50,
+                        label="Number of Samples",
+                        info="CSVアップロード時は無視されます",
+                    )
+                    quick_mode = gr.Checkbox(
+                        label="Quick Mode (reduced HPO)",
+                        value=True,
+                        info="Use reduced hyperparameter grids",
+                    )
+                with gr.Column():
+                    exclude_elements = gr.Textbox(
+                        label="Exclude Elements (space-separated)",
+                        value="Co Ni Ti",
+                        info="Elements for ElementExclusion splits",
+                    )
+                    skip_literature = gr.Checkbox(
+                        label="Skip Literature Search",
+                        value=False,
+                    )
+                    skip_plots = gr.Checkbox(
+                        label="Skip Static Plots (matplotlib)",
+                        value=True,
+                        info="Skip PNG generation (Plotly always available)",
+                    )
+
+            # --- CSV upload handler: analyze format + populate dropdowns ---
+            def _on_csv_upload(file_obj: Any) -> Tuple:
+                """When CSV is uploaded, analyze format and populate column selectors."""
+                if file_obj is None:
+                    empty_format = (
+                        '<div style="padding:12px; color:#888; '
+                        'font-size:14px;">'
+                        'CSVファイルをアップロードすると、'
+                        'ここに書式分析結果が表示されます。'
+                        '</div>'
+                    )
+                    status = (
                         '<div style="padding:8px 12px; background:#e8f4fd; '
                         'border-left:4px solid #2196F3; border-radius:4px; '
                         'margin:4px 0; font-size:14px;">'
                         '\U0001F4CA <b>データソース</b>: '
-                        'サンプルデータ自動生成モード（CSVをアップロードすると切替）'
+                        'サンプルデータ自動生成モード'
+                        '（CSVをアップロードすると切替）'
                         '</div>'
-                    ),
-                )
+                    )
+                    return (
+                        status,
+                        empty_format,
+                        gr.update(choices=[], value=None),
+                        gr.update(choices=[], value=[]),
+                        gr.update(open=False),
+                        gr.update(open=False),
+                        [],                      # empty numeric cols
+                    )
 
-                # --- CSV Format Analysis Panel ---
-                with gr.Accordion(
-                    "CSV書式確認 (CSV Format Analysis)",
-                    open=False,
-                ) as csv_format_accordion:
-                    csv_format_html = gr.HTML(
-                        value=(
-                            '<div style="padding:12px; color:#888; '
-                            'font-size:14px;">'
-                            'CSVファイルをアップロードすると、'
-                            'ここに書式分析結果が表示されます。'
-                            '</div>'
+                try:
+                    file_path = (
+                        file_obj.name
+                        if hasattr(file_obj, "name")
+                        else str(file_obj)
+                    )
+                    raw, format_html, numeric_cols, string_cols, constant_cols = (
+                        _analyze_csv_format(file_path)
+                    )
+
+                    fname = (
+                        file_obj.name.split("/")[-1]
+                        if hasattr(file_obj, "name")
+                        else "uploaded.csv"
+                    )
+                    status = (
+                        '<div style="padding:8px 12px; background:#e8f5e9; '
+                        'border-left:4px solid #4CAF50; border-radius:4px; '
+                        'margin:4px 0; font-size:14px;">'
+                        f'\u2705 <b>データソース</b>: '
+                        f'<code>{html_mod.escape(fname)}</code> '
+                        f'({raw.shape[0]}行 &times; {raw.shape[1]}列) '
+                        '— 目的変数と説明因子を選択してください'
+                        '</div>'
+                    )
+
+                    # --- Element consistency check ---
+                    # When string columns are detected (likely element
+                    # names), warn about periodic table / MAGPIE feature
+                    # generation implications.
+                    if string_cols:
+                        elem_detected = _detect_element_columns(raw)
+                        if elem_detected:
+                            status += (
+                                '<div style="padding:8px 12px; '
+                                'background:#fff8e1; '
+                                'border-left:4px solid #FFC107; '
+                                'border-radius:4px; '
+                                'margin:4px 0; font-size:13px;">'
+                                '\u26a0\ufe0f <b>元素列検出</b>: '
+                                '文字列列に元素名が含まれています。'
+                                'HEA モードでは周期律表データと '
+                                'MAGPIE/matminer 特徴量が自動生成されます。'
+                                '<br>'
+                                '<b>注意</b>: '
+                                '\u2022 元素列を説明因子に含める場合 → '
+                                'HEA モードまたは auto を選択してください<br>'
+                                '\u2022 元素列を含めない場合 → '
+                                'Generic モードを選択すると'
+                                '特徴量生成の矛盾を回避できます<br>'
+                                '\u2022 周期律表データ (原子半径, '
+                                '電気陰性度等) と MAGPIE 統計特徴量は'
+                                '同時に計算されます。'
+                                '両者は相補的であり矛盾しません。'
+                                '</div>'
+                            )
+
+                    # Auto-select target: last numeric column as guess
+                    default_target = (
+                        numeric_cols[-1] if numeric_cols else None
+                    )
+
+                    # Build all selectable columns:
+                    # numeric + string (for feature generation)
+                    all_cols = numeric_cols + string_cols
+
+                    # Auto-select features: all numeric except target
+                    # and uninformative columns detected by heuristic.
+                    # String columns are NOT auto-selected but
+                    # available for manual selection.
+                    _const_set = set(constant_cols)
+                    _uninformative: set = set(_const_set)
+                    for _col in numeric_cols:
+                        if _col == default_target or _col in _const_set:
+                            continue
+                        _s = raw[_col].dropna()
+                        if len(_s) == 0:
+                            _uninformative.add(_col)
+                            continue
+                        # Detect ID-like: integer, all unique, monotonic
+                        _is_int = _s.dtype.kind in ("i", "u") or (
+                            _s.dtype.kind == "f"
+                            and (_s == _s.astype(int)).all()
+                        )
+                        _all_unique = _s.nunique() == len(_s)
+                        _monotonic = (
+                            _s.is_monotonic_increasing
+                            or _s.is_monotonic_decreasing
+                        )
+                        if _is_int and _all_unique and _monotonic:
+                            _uninformative.add(_col)
+                    default_features = [
+                        c for c in numeric_cols
+                        if c != default_target
+                        and c not in _uninformative
+                    ]
+                    # Feature checkbox choices: all columns except
+                    # target. Annotate string cols with [文字列] tag
+                    # so users can distinguish types.
+                    _str_set = set(string_cols)
+                    feature_choices = [
+                        (f"{c} [文字列]" if c in _str_set else c)
+                        for c in all_cols
+                        if c != default_target
+                    ]
+
+                    return (
+                        status,
+                        format_html,
+                        gr.update(
+                            choices=numeric_cols,
+                            value=default_target,
                         ),
-                    )
-
-                # --- Column Role Assignment ---
-                with gr.Accordion(
-                    "説明因子・目的変数の選択 "
-                    "(Feature / Target Column Selection)",
-                    open=False,
-                ) as col_role_accordion:
-                    gr.Markdown(
-                        "CSVの列から **目的変数** (数値列1つ) と "
-                        "**説明因子** (複数列) を選択してください。\n\n"
-                        "- **数値列**: そのまま説明変数として使用\n"
-                        "- **文字列列** (元素名など): 自動で特徴量に"
-                        "変換 (One-Hot Encoding)\n"
-                        "- HEA組成データ (元素列あり) の場合は自動で "
-                        "HEA特徴量が計算されます。"
-                    )
-                    with gr.Row():
-                        run_csv_target = gr.Dropdown(
-                            label="目的変数 (Target Variable)",
-                            choices=[],
-                            value=None,
-                            interactive=True,
-                            info="予測対象の数値列を1つ選択",
-                        )
-                        csv_mode_radio = gr.Radio(
-                            label="CSV Mode",
-                            choices=["auto", "HEA (元素列)", "Generic (汎用)"],
-                            value="auto",
-                            info="auto: 元素列を自動検出",
-                        )
-                    csv_feature_checks = gr.CheckboxGroup(
-                        label="説明因子 (Explanatory Variables)",
-                        choices=[],
-                        value=[],
-                        interactive=True,
-                        info="説明変数として使用する列を選択 "
-                        "(数値列・文字列列とも選択可、目的変数は自動除外)",
-                    )
-
-                csv_read_btn = gr.Button(
-                    "\U0001F4D6 CSV読み込み (Read CSV)",
-                    variant="secondary",
-                )
-                # Hidden state to store all selectable column names
-                # from the initial full-file analysis so that
-                # _on_target_change does not need to re-read the CSV.
-                csv_all_cols_state = gr.State(value=[])
-
-                with gr.Row():
-                    with gr.Column():
-                        seeds_input = gr.Textbox(
-                            label="Seeds (space-separated)",
-                            value="42 123 456",
-                            info="Random seeds for reproducibility",
-                        )
-                        n_samples = gr.Slider(
-                            minimum=50, maximum=1000, value=200, step=50,
-                            label="Number of Samples",
-                            info="CSVアップロード時は無視されます",
-                        )
-                        quick_mode = gr.Checkbox(
-                            label="Quick Mode (reduced HPO)",
-                            value=True,
-                            info="Use reduced hyperparameter grids",
-                        )
-                    with gr.Column():
-                        exclude_elements = gr.Textbox(
-                            label="Exclude Elements (space-separated)",
-                            value="Co Ni Ti",
-                            info="Elements for ElementExclusion splits",
-                        )
-                        skip_literature = gr.Checkbox(
-                            label="Skip Literature Search",
-                            value=False,
-                        )
-                        skip_plots = gr.Checkbox(
-                            label="Skip Static Plots (matplotlib)",
-                            value=True,
-                            info="Skip PNG generation (Plotly always available)",
-                        )
-
-                # --- CSV upload handler: analyze format + populate dropdowns ---
-                def _on_csv_upload(file_obj: Any) -> Tuple:
-                    """When CSV is uploaded, analyze format and populate column selectors."""
-                    if file_obj is None:
-                        empty_format = (
-                            '<div style="padding:12px; color:#888; '
-                            'font-size:14px;">'
-                            'CSVファイルをアップロードすると、'
-                            'ここに書式分析結果が表示されます。'
-                            '</div>'
-                        )
-                        status = (
-                            '<div style="padding:8px 12px; background:#e8f4fd; '
-                            'border-left:4px solid #2196F3; border-radius:4px; '
-                            'margin:4px 0; font-size:14px;">'
-                            '\U0001F4CA <b>データソース</b>: '
-                            'サンプルデータ自動生成モード'
-                            '（CSVをアップロードすると切替）'
-                            '</div>'
-                        )
-                        return (
-                            status,
-                            empty_format,
-                            gr.update(choices=[], value=None),
-                            gr.update(choices=[], value=[]),
-                            gr.update(open=False),
-                            gr.update(open=False),
-                            [],                      # empty numeric cols
-                        )
-
-                    try:
-                        file_path = (
-                            file_obj.name
-                            if hasattr(file_obj, "name")
-                            else str(file_obj)
-                        )
-                        raw, format_html, numeric_cols, string_cols, constant_cols = (
-                            _analyze_csv_format(file_path)
-                        )
-
-                        fname = (
-                            file_obj.name.split("/")[-1]
-                            if hasattr(file_obj, "name")
-                            else "uploaded.csv"
-                        )
-                        status = (
-                            '<div style="padding:8px 12px; background:#e8f5e9; '
-                            'border-left:4px solid #4CAF50; border-radius:4px; '
-                            'margin:4px 0; font-size:14px;">'
-                            f'\u2705 <b>データソース</b>: '
-                            f'<code>{html_mod.escape(fname)}</code> '
-                            f'({raw.shape[0]}行 &times; {raw.shape[1]}列) '
-                            '— 目的変数と説明因子を選択してください'
-                            '</div>'
-                        )
-
-                        # Auto-select target: last numeric column as guess
-                        default_target = (
-                            numeric_cols[-1] if numeric_cols else None
-                        )
-
-                        # Build all selectable columns:
-                        # numeric + string (for feature generation)
-                        all_cols = numeric_cols + string_cols
-
-                        # Auto-select features: all numeric except target
-                        # and uninformative columns detected by heuristic.
-                        # String columns are NOT auto-selected but
-                        # available for manual selection.
-                        _const_set = set(constant_cols)
-                        _uninformative: set = set(_const_set)
-                        for _col in numeric_cols:
-                            if _col == default_target or _col in _const_set:
-                                continue
-                            _s = raw[_col].dropna()
-                            if len(_s) == 0:
-                                _uninformative.add(_col)
-                                continue
-                            # Detect ID-like: integer, all unique, monotonic
-                            _is_int = _s.dtype.kind in ("i", "u") or (
-                                _s.dtype.kind == "f"
-                                and (_s == _s.astype(int)).all()
-                            )
-                            _all_unique = _s.nunique() == len(_s)
-                            _monotonic = (
-                                _s.is_monotonic_increasing
-                                or _s.is_monotonic_decreasing
-                            )
-                            if _is_int and _all_unique and _monotonic:
-                                _uninformative.add(_col)
-                        default_features = [
-                            c for c in numeric_cols
-                            if c != default_target
-                            and c not in _uninformative
-                        ]
-                        # Feature checkbox choices: all columns except
-                        # target. Annotate string cols with [文字列] tag
-                        # so users can distinguish types.
-                        _str_set = set(string_cols)
-                        feature_choices = [
+                        gr.update(
+                            choices=feature_choices,
+                            value=default_features,
+                        ),
+                        gr.update(open=True),   # open format accordion
+                        gr.update(open=True),   # open column role accordion
+                        # Store annotated choices (with [文字列] tags)
+                        # so _on_target_change can rebuild properly
+                        [
                             (f"{c} [文字列]" if c in _str_set else c)
                             for c in all_cols
-                            if c != default_target
-                        ]
-
-                        return (
-                            status,
-                            format_html,
-                            gr.update(
-                                choices=numeric_cols,
-                                value=default_target,
-                            ),
-                            gr.update(
-                                choices=feature_choices,
-                                value=default_features,
-                            ),
-                            gr.update(open=True),   # open format accordion
-                            gr.update(open=True),   # open column role accordion
-                            # Store annotated choices (with [文字列] tags)
-                            # so _on_target_change can rebuild properly
-                            [
-                                (f"{c} [文字列]" if c in _str_set else c)
-                                for c in all_cols
-                            ],
-                        )
-                    except Exception:
-                        err = traceback.format_exc()
-                        err_html = _make_error_banner(
-                            "CSV読み込みエラー",
-                            f"<pre style='background:#fff5f5; padding:8px; "
-                            f"overflow-x:auto;'>{html_mod.escape(err)}</pre>",
-                        )
-                        return (
-                            err_html, err_html,
-                            gr.update(choices=[], value=None),
-                            gr.update(choices=[], value=[]),
-                            gr.update(open=True),
-                            gr.update(open=False),
-                            [],                      # empty numeric cols
-                        )
-
-                run_csv_upload.change(
-                    fn=_on_csv_upload,
-                    inputs=[run_csv_upload],
-                    outputs=[
-                        csv_status_html,
-                        csv_format_html,
-                        run_csv_target,
-                        csv_feature_checks,
-                        csv_format_accordion,
-                        col_role_accordion,
-                        csv_all_cols_state,
-                    ],
-                )
-
-                # When target changes, update feature checkboxes
-                # to exclude the target from the feature list.
-                def _on_target_change(
-                    target_col: Optional[str],
-                    all_features: List[str],
-                    all_cols_cached: List[str],
-                ) -> Any:
-                    """Remove target from feature selection.
-
-                    Uses the cached all_cols list from the initial
-                    full-file analysis instead of re-reading the CSV.
-                    Preserves [文字列] annotations on string columns.
-                    """
-                    if not target_col or not all_cols_cached:
-                        return gr.update()
-                    choices = [
-                        c for c in all_cols_cached
-                        if c != target_col
-                    ]
-                    # Keep currently selected features minus target
-                    # (strip [文字列] tag for comparison)
-                    new_val = [
-                        f for f in all_features
-                        if f.replace(" [文字列]", "") != target_col
-                    ]
-                    return gr.update(
-                        choices=choices, value=new_val,
+                        ],
                     )
-
-                run_csv_target.change(
-                    fn=_on_target_change,
-                    inputs=[
-                        run_csv_target, csv_feature_checks,
-                        csv_all_cols_state,
-                    ],
-                    outputs=[csv_feature_checks],
-                )
-
-                # --- CSV Read button handler ---
-                # Reads the uploaded CSV and updates Data Summary
-                # tab without running the full analysis.
-                def _read_csv_preview(
-                    file_obj: Any,
-                    target_col: Optional[str],
-                    selected_features: List[str],
-                    csv_mode: str,
-                    session: Dict[str, Any],
-                ) -> Tuple:
-                    """Read CSV and preview in Data Summary tab."""
-                    if file_obj is None:
-                        no_file_html = (
-                            '<div style="padding:8px 12px; '
-                            'background:#fff3e0; '
-                            'border-left:4px solid #FF9800; '
-                            'border-radius:4px; '
-                            'margin:4px 0; font-size:14px;">'
-                            '\u26a0\ufe0f <b>CSVファイルが選択されて'
-                            'いません</b>: '
-                            'まずCSVファイルをアップロードしてください。'
-                            '</div>'
-                        )
-                        return (
-                            no_file_html,
-                            build_summary_stats_md(None, None, None),
-                            None, None, None, pd.DataFrame(),
-                            session,
-                        )
-                    force_generic = (csv_mode == "Generic (汎用)")
-                    force_hea = (csv_mode == "HEA (元素列)")
-                    target_str = target_col if target_col else ""
-                    result = _handle_csv_upload(
-                        file_obj, target_str, session,
-                        selected_features=selected_features,
-                        force_generic=force_generic,
-                        force_hea=force_hea,
+                except Exception:
+                    err = traceback.format_exc()
+                    err_html = _make_error_banner(
+                        "CSV読み込みエラー",
+                        f"<pre style='background:#fff5f5; padding:8px; "
+                        f"overflow-x:auto;'>{html_mod.escape(err)}</pre>",
                     )
-                    # result = (stats_md, fig, fig, fig, df, session)
-                    updated_session = result[-1]
-                    stats_md = result[0]
-                    # Build status HTML
-                    if updated_session.get("compositions_df") is not None:
-                        n_samp = len(
-                            updated_session["compositions_df"]
-                        )
-                        n_feat = (
-                            updated_session["features_df"].shape[1]
-                        )
-                        mode_label = updated_session.get(
-                            "csv_mode", "auto",
-                        )
-                        fname = (
-                            file_obj.name.split("/")[-1]
-                            if hasattr(file_obj, "name")
-                            else "uploaded.csv"
-                        )
-                        status_html = (
-                            '<div style="padding:8px 12px; '
-                            'background:#e8f5e9; '
-                            'border-left:4px solid #4CAF50; '
-                            'border-radius:4px; '
-                            'margin:4px 0; font-size:14px;">'
-                            f'\u2705 <b>CSV読み込み完了</b>: '
-                            f'<code>{html_mod.escape(fname)}</code>'
-                            f' — {n_samp}サンプル, '
-                            f'{n_feat}特徴量 '
-                            f'(mode: {mode_label}) '
-                            '（Data Summaryタブで確認できます）'
-                            '</div>'
-                        )
-                    else:
-                        # Error case — stats_md contains the error
-                        status_html = (
-                            '<div style="padding:8px 12px; '
-                            'background:#ffebee; '
-                            'border-left:4px solid #F44336; '
-                            'border-radius:4px; '
-                            'margin:4px 0; font-size:14px;">'
-                            '\u274c <b>CSV読み込みエラー</b>: '
-                            'Data Summaryタブでエラー詳細を確認して'
-                            'ください。'
-                            '</div>'
-                        )
                     return (
-                        status_html,
-                        *result[:-1],  # stats_md, figs, df
-                        updated_session,
+                        err_html, err_html,
+                        gr.update(choices=[], value=None),
+                        gr.update(choices=[], value=[]),
+                        gr.update(open=True),
+                        gr.update(open=False),
+                        [],                      # empty numeric cols
                     )
 
-                # --- ML Algorithm Selection ---
-                with gr.Accordion(
-                    "ML Algorithm Selection (ワークフロー選択)",
-                    open=True,
-                ):
-                    gr.Markdown(
-                        "実行するMLワークフローを選択してください。\n\n"
-                        "- **WF-LIN** (Ridge回帰): 特徴量の符号検証・リーク検出に有効\n"
-                        "- **WF-LASSO** (Lasso回帰): L1正則化によるスパース特徴量選択\n"
-                        "- **WF-ARD** (ARD回帰): ベイズ的自動関連度決定\n"
-                        "- **WF-RF** (Random Forest + GridSearchCV): アンサンブル決定木による非線形回帰\n"
-                        "- **WF-XGB** (XGBoost + GridSearchCV): 非線形交互作用を捕捉\n"
-                        "- **WF-ENS** (Seed-varied Ensemble): 予測不確実性の定量化"
-                    )
-                    with gr.Row():
-                        wf_lin_check = gr.Checkbox(
-                            label="WF-LIN (Ridge Regression)",
-                            value=True,
-                        )
-                        wf_lasso_check = gr.Checkbox(
-                            label="WF-LASSO (Lasso L1)",
-                            value=True,
-                        )
-                        wf_ard_check = gr.Checkbox(
-                            label="WF-ARD (Bayesian ARD)",
-                            value=True,
-                        )
-                        wf_rf_check = gr.Checkbox(
-                            label="WF-RF (Random Forest + HPO)",
-                            value=True,
-                        )
-                        wf_xgb_check = gr.Checkbox(
-                            label="WF-XGB (XGBoost + HPO)",
-                            value=True,
-                        )
-                        wf_ens_check = gr.Checkbox(
-                            label="WF-ENS (Ensemble UQ)",
-                            value=True,
-                        )
+            run_csv_upload.change(
+                fn=_on_csv_upload,
+                inputs=[run_csv_upload],
+                outputs=[
+                    csv_status_html,
+                    csv_format_html,
+                    run_csv_target,
+                    csv_feature_checks,
+                    csv_format_accordion,
+                    col_role_accordion,
+                    csv_all_cols_state,
+                ],
+            )
 
-                # --- Dimensionality Reduction ---
-                with gr.Accordion(
-                    "Dimensionality Reduction (次元削減)",
-                    open=True,
-                ):
-                    gr.Markdown(
-                        "PCA による次元削減を各ワークフローのパイプラインに組み込みます。\n\n"
-                        "- **ON (デフォルト)**: StandardScaler 後に PCA（分散95%保持）を適用。"
-                        "高次元特徴量の多重共線性を緩和し、学習を安定化します。\n"
-                        "- **OFF**: 次元削減なし。全特徴量をそのまま使用します。"
-                    )
-                    dim_reduction_check = gr.Checkbox(
-                        label="次元削減を行う (Apply PCA Dimensionality Reduction)",
-                        value=True,
-                    )
+            # When target changes, update feature checkboxes
+            # to exclude the target from the feature list.
+            def _on_target_change(
+                target_col: Optional[str],
+                all_features: List[str],
+                all_cols_cached: List[str],
+            ) -> Any:
+                """Remove target from feature selection.
 
-                # --- Feature Selection Method Selection ---
-                with gr.Accordion(
-                    "Feature Selection Methods (特徴量選択アルゴリズム)",
-                    open=False,
-                ):
-                    gr.Markdown(
-                        "解析完了後に FS Comparison タブで実行できる"
-                        "特徴量選択アルゴリズムを選択してください。\n\n"
-                        "- **Lasso** (L1正則化): 不要な特徴量の係数をゼロに押す\n"
-                        "- **AIC** (赤池情報量規準): 前進ステップワイズ選択。複雑さへのペナルティが小さい\n"
-                        "- **BIC** (ベイズ情報量規準): AICより強いペナルティで簡素なモデルを選好\n"
-                        "- **ARD** (自動関連度決定): ベイズ的スパース回帰で特徴量を自動剣定"
-                    )
-                    with gr.Row():
-                        fs_lasso_check = gr.Checkbox(
-                            label="Lasso (L1)", value=True,
-                        )
-                        fs_aic_check = gr.Checkbox(
-                            label="AIC (Forward)", value=True,
-                        )
-                        fs_bic_check = gr.Checkbox(
-                            label="BIC (Forward)", value=True,
-                        )
-                        fs_ard_check = gr.Checkbox(
-                            label="ARD (Bayesian)", value=True,
-                        )
-
-                # --- Model Selection (Nested CV) ---
-                with gr.Accordion(
-                    "Model Selection — Nested CV (モデル選択)",
-                    open=True,
-                ):
-                    gr.Markdown(
-                        "Nested CV（外側=評価、内側=HPO）で複数モデルを公正に比較し、"
-                        "最適モデルを自動選択します。\n\n"
-                        "- **外側CV**: StratifiedKFold（目的変数の分位ビニング）\n"
-                        "- **内側CV**: RandomizedSearchCV でハイパーパラメータ最適化\n"
-                        "- **候補**: Lasso, Ridge, ARD, SelLasso+XGB, SelARD+RF, RF, XGB\n"
-                        "- **選択基準**: 外側CVの平均RMSE最小。同等なら疎なモデルを優先"
-                    )
-                    model_sel_check = gr.Checkbox(
-                        label="モデル選択を行う (Run Model Selection)",
-                        value=True,
-                    )
-                    with gr.Row():
-                        ms_n_outer = gr.Slider(
-                            minimum=2, maximum=10, value=5, step=1,
-                            label="Outer CV Folds",
-                            info="外側CVの分割数（デフォルト5）",
-                        )
-                        ms_n_inner = gr.Slider(
-                            minimum=2, maximum=5, value=3, step=1,
-                            label="Inner CV Folds",
-                            info="内側CVの分割数（デフォルト3）",
-                        )
-                        ms_n_iter = gr.Slider(
-                            minimum=5, maximum=100, value=20, step=5,
-                            label="HPO Iterations",
-                            info="RandomizedSearchCV反復数",
-                        )
-
-                # Integrations are always enabled behind the scenes.
-                gr.Markdown(
-                    "All tracking (MLflow), feature management "
-                    "(Feast), and workflow execution (MInt) are "
-                    "**automatically enabled**.  "
-                    "Results are recorded and managed transparently."
+                Uses the cached all_cols list from the initial
+                full-file analysis instead of re-reading the CSV.
+                Preserves [文字列] annotations on string columns.
+                """
+                if not target_col or not all_cols_cached:
+                    return gr.update()
+                choices = [
+                    c for c in all_cols_cached
+                    if c != target_col
+                ]
+                # Keep currently selected features minus target
+                # (strip [文字列] tag for comparison)
+                new_val = [
+                    f for f in all_features
+                    if f.replace(" [文字列]", "") != target_col
+                ]
+                return gr.update(
+                    choices=choices, value=new_val,
                 )
 
-                run_btn = gr.Button(
-                    "▶ Run Analysis (解析実行)", variant="primary", size="lg",
-                )
+            run_csv_target.change(
+                fn=_on_target_change,
+                inputs=[
+                    run_csv_target, csv_feature_checks,
+                    csv_all_cols_state,
+                ],
+                outputs=[csv_feature_checks],
+            )
 
-                # --- Progress bar (HTML-based for real-time updates) ---
-                progress_bar_html = gr.HTML(
-                    value=(
-                        '<div style="margin: 10px 0;">'
-                        '<div style="background: #e0e0e0; border-radius: 8px; '
-                        'height: 28px; overflow: hidden;">'
-                        '<div id="exp-progress" style="background: #4C72B0; '
-                        'height: 100%; width: 0%; border-radius: 8px; '
-                        'transition: width 0.3s; display: flex; '
-                        'align-items: center; justify-content: center; '
-                        'color: white; font-size: 13px; font-weight: bold;">'
-                        '</div></div>'
-                        '<div style="text-align: center; margin-top: 4px; '
-                        'color: #666; font-size: 12px;">Waiting to start...</div>'
+            # --- CSV Read button handler ---
+            # Reads the uploaded CSV and updates Data Summary
+            # tab without running the full analysis.
+            def _read_csv_preview(
+                file_obj: Any,
+                target_col: Optional[str],
+                selected_features: List[str],
+                csv_mode: str,
+                session: Dict[str, Any],
+            ) -> Tuple:
+                """Read CSV and preview in Data Summary tab."""
+                if file_obj is None:
+                    no_file_html = (
+                        '<div style="padding:8px 12px; '
+                        'background:#fff3e0; '
+                        'border-left:4px solid #FF9800; '
+                        'border-radius:4px; '
+                        'margin:4px 0; font-size:14px;">'
+                        '\u26a0\ufe0f <b>CSVファイルが選択されて'
+                        'いません</b>: '
+                        'まずCSVファイルをアップロードしてください。'
                         '</div>'
-                    ),
-                    label="Progress",
+                    )
+                    return (
+                        no_file_html,
+                        build_summary_stats_md(None, None, None),
+                        None, None, None, pd.DataFrame(),
+                        session,
+                    )
+                force_generic = (csv_mode == "Generic (汎用)")
+                force_hea = (csv_mode == "HEA (元素列)")
+                target_str = target_col if target_col else ""
+                result = _handle_csv_upload(
+                    file_obj, target_str, session,
+                    selected_features=selected_features,
+                    force_generic=force_generic,
+                    force_hea=force_hea,
+                )
+                # result = (stats_md, fig, fig, fig, df, session)
+                updated_session = result[-1]
+                stats_md = result[0]
+                # Build status HTML
+                if updated_session.get("compositions_df") is not None:
+                    n_samp = len(
+                        updated_session["compositions_df"]
+                    )
+                    n_feat = (
+                        updated_session["features_df"].shape[1]
+                    )
+                    mode_label = updated_session.get(
+                        "csv_mode", "auto",
+                    )
+                    fname = (
+                        file_obj.name.split("/")[-1]
+                        if hasattr(file_obj, "name")
+                        else "uploaded.csv"
+                    )
+                    status_html = (
+                        '<div style="padding:8px 12px; '
+                        'background:#e8f5e9; '
+                        'border-left:4px solid #4CAF50; '
+                        'border-radius:4px; '
+                        'margin:4px 0; font-size:14px;">'
+                        f'\u2705 <b>CSV読み込み完了</b>: '
+                        f'<code>{html_mod.escape(fname)}</code>'
+                        f' — {n_samp}サンプル, '
+                        f'{n_feat}特徴量 '
+                        f'(mode: {mode_label}) '
+                        '（Data Summaryタブで確認できます）'
+                        '</div>'
+                    )
+                else:
+                    # Error case — stats_md contains the error
+                    status_html = (
+                        '<div style="padding:8px 12px; '
+                        'background:#ffebee; '
+                        'border-left:4px solid #F44336; '
+                        'border-radius:4px; '
+                        'margin:4px 0; font-size:14px;">'
+                        '\u274c <b>CSV読み込みエラー</b>: '
+                        'Data Summaryタブでエラー詳細を確認して'
+                        'ください。'
+                        '</div>'
+                    )
+                return (
+                    status_html,
+                    *result[:-1],  # stats_md, figs, df
+                    updated_session,
                 )
 
-                progress_log = gr.HTML(
-                    value=_build_log_html("Waiting to start..."),
-                    label="Progress Log",
-                )
-
-              # --- Tab 2: Data Summary (Statistics only) ---
-              with gr.Tab("Data Summary"):
+            # --- ML Algorithm Selection ---
+            with gr.Accordion(
+                "ML Algorithm Selection (ワークフロー選択)",
+                open=True,
+            ):
                 gr.Markdown(
-                    "## Data Summary\n"
-                    "データセットの概要統計を確認できます。"
-                    "CSVアップロードは **Config & Run** タブから行ってください。"
+                    "実行するMLワークフローを選択してください。\n\n"
+                    "- **WF-LIN** (Ridge回帰): 特徴量の符号検証・リーク検出に有効\n"
+                    "- **WF-LASSO** (Lasso回帰): L1正則化によるスパース特徴量選択\n"
+                    "- **WF-ARD** (ARD回帰): ベイズ的自動関連度決定\n"
+                    "- **WF-RF** (Random Forest + GridSearchCV): アンサンブル決定木による非線形回帰\n"
+                    "- **WF-XGB** (XGBoost + GridSearchCV): 非線形交互作用を捕捉\n"
+                    "- **WF-ENS** (Seed-varied Ensemble): 予測不確実性の定量化"
                 )
-
-                summary_stats_md = gr.Markdown(
-                    build_summary_stats_md(None, None, None),
-                )
-
                 with gr.Row():
-                    target_hist_plot = gr.Plot(
-                        label="Target Distribution",
+                    wf_lin_check = gr.Checkbox(
+                        label="WF-LIN (Ridge Regression)",
+                        value=True,
                     )
-                    comp_bar_plot = gr.Plot(
-                        label="Element Composition (Mean +/- Std)",
+                    wf_lasso_check = gr.Checkbox(
+                        label="WF-LASSO (Lasso L1)",
+                        value=True,
+                    )
+                    wf_ard_check = gr.Checkbox(
+                        label="WF-ARD (Bayesian ARD)",
+                        value=True,
+                    )
+                    wf_rf_check = gr.Checkbox(
+                        label="WF-RF (Random Forest + HPO)",
+                        value=True,
+                    )
+                    wf_xgb_check = gr.Checkbox(
+                        label="WF-XGB (XGBoost + HPO)",
+                        value=True,
+                    )
+                    wf_ens_check = gr.Checkbox(
+                        label="WF-ENS (Ensemble UQ)",
+                        value=True,
                     )
 
-                corr_heatmap_plot = gr.Plot(
-                    label="Feature Correlation Matrix",
+            # --- Feature Set Selection ---
+            with gr.Accordion(
+                "Feature Set Selection (特徴量セット選択)",
+                open=True,
+            ):
+                gr.Markdown(
+                    "解析に含める特徴量セットを選択してください。\n\n"
+                    "- **FS_BASE**: 基本特徴量 (平均原子半径, VEC, 混合エンタルピー等)\n"
+                    "- **FS_THERMO**: 熱力学特徴量 (Ω パラメータ, 固溶体形成指標等)\n"
+                    "- **FS_SIZE**: サイズ効果特徴量 (弾性ミスマッチ, 原子半径差等)\n"
+                    "- **FS_ELECTRON**: 電子構造特徴量 (電気陰性度差, d電子数等)\n"
+                    "- **FS_ALL**: 上記すべての統合セット\n"
+                    "- **FS_MAGPIE**: MAGPIE 統計特徴量 (22元素特性 × 6統計量 = 132特徴量)"
+                )
+                with gr.Row():
+                    fset_base_check = gr.Checkbox(
+                        label="FS_BASE (基本)", value=True,
+                    )
+                    fset_thermo_check = gr.Checkbox(
+                        label="FS_THERMO (熱力学)", value=True,
+                    )
+                    fset_size_check = gr.Checkbox(
+                        label="FS_SIZE (サイズ)", value=True,
+                    )
+                with gr.Row():
+                    fset_electron_check = gr.Checkbox(
+                        label="FS_ELECTRON (電子構造)", value=True,
+                    )
+                    fset_all_check = gr.Checkbox(
+                        label="FS_ALL (統合)", value=True,
+                    )
+                    fset_magpie_check = gr.Checkbox(
+                        label="FS_MAGPIE (MAGPIE 132特徴量)", value=True,
+                    )
+
+            # --- Dimensionality Reduction ---
+            with gr.Accordion(
+                "Dimensionality Reduction (次元削減)",
+                open=True,
+            ):
+                gr.Markdown(
+                    "PCA による次元削減を各ワークフローのパイプラインに組み込みます。\n\n"
+                    "- **ON (デフォルト)**: StandardScaler 後に PCA（分散95%保持）を適用。"
+                    "高次元特徴量の多重共線性を緩和し、学習を安定化します。\n"
+                    "- **OFF**: 次元削減なし。全特徴量をそのまま使用します。"
+                )
+                dim_reduction_check = gr.Checkbox(
+                    label="次元削減を行う (Apply PCA Dimensionality Reduction)",
+                    value=True,
                 )
 
-                with gr.Accordion(
-                    "Full Feature Statistics", open=False,
-                ):
-                    feature_stats_table = gr.Dataframe(
-                        label="Descriptive Statistics (all features)",
+            # --- Feature Selection Method Selection ---
+            with gr.Accordion(
+                "Feature Selection Methods (特徴量選択アルゴリズム)",
+                open=False,
+            ):
+                gr.Markdown(
+                    "解析完了後に FS Comparison タブで実行できる"
+                    "特徴量選択アルゴリズムを選択してください。\n\n"
+                    "- **Lasso** (L1正則化): 不要な特徴量の係数をゼロに押す\n"
+                    "- **AIC** (赤池情報量規準): 前進ステップワイズ選択。複雑さへのペナルティが小さい\n"
+                    "- **BIC** (ベイズ情報量規準): AICより強いペナルティで簡素なモデルを選好\n"
+                    "- **ARD** (自動関連度決定): ベイズ的スパース回帰で特徴量を自動剣定"
+                )
+                with gr.Row():
+                    fs_lasso_check = gr.Checkbox(
+                        label="Lasso (L1)", value=True,
+                    )
+                    fs_aic_check = gr.Checkbox(
+                        label="AIC (Forward)", value=True,
+                    )
+                    fs_bic_check = gr.Checkbox(
+                        label="BIC (Forward)", value=True,
+                    )
+                    fs_ard_check = gr.Checkbox(
+                        label="ARD (Bayesian)", value=True,
                     )
 
-                summary_refresh_btn = gr.Button(
-                    "Refresh Summary", variant="primary",
+            # --- Model Selection (Nested CV) ---
+            with gr.Accordion(
+                "Model Selection — Nested CV (モデル選択)",
+                open=True,
+            ):
+                gr.Markdown(
+                    "Nested CV（外側=評価、内側=HPO）で複数モデルを公正に比較し、"
+                    "最適モデルを自動選択します。\n\n"
+                    "- **外側CV**: StratifiedKFold（目的変数の分位ビニング）\n"
+                    "- **内側CV**: RandomizedSearchCV でハイパーパラメータ最適化\n"
+                    "- **候補**: Lasso, Ridge, ARD, SelLasso+XGB, SelARD+RF, RF, XGB\n"
+                    "- **選択基準**: 外側CVの平均RMSE最小。同等なら疎なモデルを優先"
+                )
+                model_sel_check = gr.Checkbox(
+                    label="モデル選択を行う (Run Model Selection)",
+                    value=True,
+                )
+                with gr.Row():
+                    ms_n_outer = gr.Slider(
+                        minimum=2, maximum=10, value=5, step=1,
+                        label="Outer CV Folds",
+                        info="外側CVの分割数（デフォルト5）",
+                    )
+                    ms_n_inner = gr.Slider(
+                        minimum=2, maximum=5, value=3, step=1,
+                        label="Inner CV Folds",
+                        info="内側CVの分割数（デフォルト3）",
+                    )
+                    ms_n_iter = gr.Slider(
+                        minimum=5, maximum=100, value=20, step=5,
+                        label="HPO Iterations",
+                        info="RandomizedSearchCV反復数",
+                    )
+
+            # Integrations are always enabled behind the scenes.
+            gr.Markdown(
+                "All tracking (MLflow), feature management "
+                "(Feast), and workflow execution (MInt) are "
+                "**automatically enabled**.  "
+                "Results are recorded and managed transparently."
+            )
+
+            run_btn = gr.Button(
+                "▶ Run Analysis (解析実行)", variant="primary", size="lg",
+            )
+
+            # --- Progress bar (HTML-based for real-time updates) ---
+            progress_bar_html = gr.HTML(
+                value=(
+                    '<div style="margin: 10px 0;">'
+                    '<div style="background: #e0e0e0; border-radius: 8px; '
+                    'height: 28px; overflow: hidden;">'
+                    '<div id="exp-progress" style="background: #4C72B0; '
+                    'height: 100%; width: 0%; border-radius: 8px; '
+                    'transition: width 0.3s; display: flex; '
+                    'align-items: center; justify-content: center; '
+                    'color: white; font-size: 13px; font-weight: bold;">'
+                    '</div></div>'
+                    '<div style="text-align: center; margin-top: 4px; '
+                    'color: #666; font-size: 12px;">Waiting to start...</div>'
+                    '</div>'
+                ),
+                label="Progress",
+            )
+
+            progress_log = gr.HTML(
+                value=_build_log_html("Waiting to start..."),
+                label="Progress Log",
+            )
+
+          # --- Tab 2: Data Summary (Statistics only) ---
+          with gr.Tab("Data Summary"):
+            gr.Markdown(
+                "## Data Summary\n"
+                "データセットの概要統計を確認できます。"
+                "CSVアップロードは **Config & Run** タブから行ってください。"
+            )
+
+            summary_stats_md = gr.Markdown(
+                build_summary_stats_md(None, None, None),
+            )
+
+            with gr.Row():
+                target_hist_plot = gr.Plot(
+                    label="Target Distribution",
+                )
+                comp_bar_plot = gr.Plot(
+                    label="Element Composition (Mean +/- Std)",
                 )
 
-                summary_outputs = [
+            corr_heatmap_plot = gr.Plot(
+                label="Feature Correlation Matrix",
+            )
+
+            with gr.Accordion(
+                "Full Feature Statistics", open=False,
+            ):
+                feature_stats_table = gr.Dataframe(
+                    label="Descriptive Statistics (all features)",
+                )
+
+            summary_refresh_btn = gr.Button(
+                "Refresh Summary", variant="primary",
+            )
+
+            summary_outputs = [
+                summary_stats_md, target_hist_plot,
+                comp_bar_plot, corr_heatmap_plot,
+                feature_stats_table,
+            ]
+            summary_refresh_btn.click(
+                fn=_refresh_data_summary,
+                inputs=[state],
+                outputs=summary_outputs,
+            )
+
+            # Wire CSV Read button (defined in Config & Run tab)
+            # to update Data Summary components cross-tab.
+            csv_read_btn.click(
+                fn=_read_csv_preview,
+                inputs=[
+                    run_csv_upload, run_csv_target,
+                    csv_feature_checks, csv_mode_radio,
+                    state,
+                ],
+                outputs=[
+                    csv_status_html,
                     summary_stats_md, target_hist_plot,
                     comp_bar_plot, corr_heatmap_plot,
                     feature_stats_table,
-                ]
-                summary_refresh_btn.click(
-                    fn=_refresh_data_summary,
-                    inputs=[state],
-                    outputs=summary_outputs,
+                    state,
+                ],
+            )
+
+
+          # --- Tab 3: Dashboard ---
+          with gr.Tab("Dashboard"):
+            gr.Markdown("## Dashboard -- KPIs & Feature Validity")
+            gr.Markdown(
+                "**Config & Run** タブで解析を実行すると、"
+                "このページに結果が表示されます。"
+            )
+
+            with gr.Row():
+                kpi_runs = gr.Textbox(
+                    label="Total Runs", value="0", interactive=False,
+                )
+                kpi_best_fs = gr.Textbox(
+                    label="Best Feature Set", value="--", interactive=False,
+                )
+                kpi_best_score = gr.Textbox(
+                    label="Best Total Score", value="--", interactive=False,
+                )
+                kpi_ood_count = gr.Textbox(
+                    label="OOD Samples", value="--", interactive=False,
                 )
 
-                # Wire CSV Read button (defined in Config & Run tab)
-                # to update Data Summary components cross-tab.
-                csv_read_btn.click(
-                    fn=_read_csv_preview,
-                    inputs=[
-                        run_csv_upload, run_csv_target,
-                        csv_feature_checks, csv_mode_radio,
-                        state,
-                    ],
-                    outputs=[
-                        csv_status_html,
-                        summary_stats_md, target_hist_plot,
-                        comp_bar_plot, corr_heatmap_plot,
-                        feature_stats_table,
-                        state,
-                    ],
+            # --- Integration Status (collapsible, hidden by default) ---
+            with gr.Accordion(
+                "System Details (MLflow / Feast / MInt)",
+                open=False,
+            ):
+                integration_status = gr.Markdown(
+                    _build_integration_status_md(None),
                 )
 
+            validity_plot = gr.Plot(label="Feature Validity Ranking")
+            heatmap_plot = gr.Plot(label="Performance Heatmap (RMSE Test)")
+            heatmap_metric = gr.Dropdown(
+                choices=[
+                    "rmse_test", "rmse_train", "mae_test",
+                    "mae_train", "r2_test", "r2_train",
+                ],
+                value="rmse_test",
+                label="Heatmap Metric",
+            )
 
-          # =============================================================
-          # Phase 2: 解析 (Analysis)
-          # =============================================================
-          with gr.Tab("2. 解析 (Analysis)"):
-            with gr.Tabs():
-              # --- Tab 3: Dashboard ---
-              with gr.Tab("Dashboard"):
-                gr.Markdown("## Dashboard -- KPIs & Feature Validity")
-                gr.Markdown(
-                    "**Config & Run** タブで解析を実行すると、"
-                    "このページに結果が表示されます。"
+            dash_refresh_btn = gr.Button(
+                "Refresh Dashboard", variant="primary",
+            )
+            dash_outputs = [
+                kpi_runs, kpi_best_fs, kpi_best_score,
+                kpi_ood_count, integration_status,
+                validity_plot, heatmap_plot,
+            ]
+            dash_refresh_btn.click(
+                fn=_refresh_dashboard_data,
+                inputs=[heatmap_metric, state],
+                outputs=dash_outputs,
+            )
+            heatmap_metric.change(
+                fn=_refresh_dashboard_data,
+                inputs=[heatmap_metric, state],
+                outputs=dash_outputs,
+            )
+
+          # --- Tab 4: Results & FS Comparison ---
+          with gr.Tab("Results"):
+            gr.Markdown(
+                "## Analysis Results & Physical Interpretation\n\n"
+                "解析結果の数値データ・パリティプロット・FS比較・"
+                "物理的考察を統合表示します。"
+            )
+
+            # --- Physical Interpretation + FS Comparison ---
+            with gr.Accordion(
+                "物理的考察 & FS 比較サマリー "
+                "(Physical Interpretation & FS Comparison)",
+                open=True,
+            ):
+                results_interp_md = gr.Markdown(
+                    "*解析を実行すると、ここに物理的考察と "
+                    "FS比較サマリーが表示されます。*"
+                )
+                results_fs_bar_plot = gr.Plot(
+                    label="Feature Set 性能比較 (Grouped Bar)",
                 )
 
-                with gr.Row():
-                    kpi_runs = gr.Textbox(
-                        label="Total Runs", value="0", interactive=False,
-                    )
-                    kpi_best_fs = gr.Textbox(
-                        label="Best Feature Set", value="--", interactive=False,
-                    )
-                    kpi_best_score = gr.Textbox(
-                        label="Best Total Score", value="--", interactive=False,
-                    )
-                    kpi_ood_count = gr.Textbox(
-                        label="OOD Samples", value="--", interactive=False,
-                    )
-
-                # --- Integration Status (collapsible, hidden by default) ---
-                with gr.Accordion(
-                    "System Details (MLflow / Feast / MInt)",
-                    open=False,
-                ):
-                    integration_status = gr.Markdown(
-                        _build_integration_status_md(None),
-                    )
-
-                validity_plot = gr.Plot(label="Feature Validity Ranking")
-                heatmap_plot = gr.Plot(label="Performance Heatmap (RMSE Test)")
-                heatmap_metric = gr.Dropdown(
-                    choices=[
-                        "rmse_test", "rmse_train", "mae_test",
-                        "mae_train", "r2_test", "r2_train",
-                    ],
-                    value="rmse_test",
-                    label="Heatmap Metric",
+            # --- Filters ---
+            with gr.Row():
+                filter_wf = gr.Dropdown(
+                    choices=["All"], value="All", label="Workflow Filter",
+                )
+                filter_fs = gr.Dropdown(
+                    choices=["All"], value="All", label="Feature Set Filter",
+                )
+                filter_sp = gr.Dropdown(
+                    choices=["All"], value="All", label="Split Policy Filter",
                 )
 
-                dash_refresh_btn = gr.Button(
-                    "Refresh Dashboard", variant="primary",
-                )
-                dash_outputs = [
-                    kpi_runs, kpi_best_fs, kpi_best_score,
-                    kpi_ood_count, integration_status,
-                    validity_plot, heatmap_plot,
-                ]
-                dash_refresh_btn.click(
-                    fn=_refresh_dashboard_data,
-                    inputs=[heatmap_metric, state],
-                    outputs=dash_outputs,
-                )
-                heatmap_metric.change(
-                    fn=_refresh_dashboard_data,
-                    inputs=[heatmap_metric, state],
-                    outputs=dash_outputs,
+            validity_table = gr.Dataframe(label="Feature Validity Ranking")
+            results_table = gr.Dataframe(label="Run Results")
+            parity_plot = gr.Plot(label="Parity Plot")
+
+            # --- Model Selection Results ---
+            with gr.Accordion(
+                "Model Selection Results — Nested CV "
+                "(モデル選択結果)",
+                open=True,
+            ):
+                model_sel_md = gr.Markdown(
+                    "*モデル選択を有効にして解析を実行すると、"
+                    "ここに Nested CV の結果が表示されます。*"
                 )
 
-              # --- Tab 4: Results & FS Comparison ---
-              with gr.Tab("Results"):
-                gr.Markdown(
-                    "## Analysis Results & Physical Interpretation\n\n"
-                    "解析結果の数値データ・パリティプロット・FS比較・"
-                    "物理的考察を統合表示します。"
-                )
-
-                # --- Physical Interpretation + FS Comparison ---
-                with gr.Accordion(
-                    "物理的考察 & FS 比較サマリー "
-                    "(Physical Interpretation & FS Comparison)",
-                    open=True,
-                ):
-                    results_interp_md = gr.Markdown(
-                        "*解析を実行すると、ここに物理的考察と "
-                        "FS比較サマリーが表示されます。*"
-                    )
-                    results_fs_bar_plot = gr.Plot(
-                        label="Feature Set 性能比較 (Grouped Bar)",
-                    )
-
-                # --- Filters ---
-                with gr.Row():
-                    filter_wf = gr.Dropdown(
-                        choices=["All"], value="All", label="Workflow Filter",
-                    )
-                    filter_fs = gr.Dropdown(
-                        choices=["All"], value="All", label="Feature Set Filter",
-                    )
-                    filter_sp = gr.Dropdown(
-                        choices=["All"], value="All", label="Split Policy Filter",
-                    )
-
-                validity_table = gr.Dataframe(label="Feature Validity Ranking")
-                results_table = gr.Dataframe(label="Run Results")
-                parity_plot = gr.Plot(label="Parity Plot")
-
-                # --- Model Selection Results ---
-                with gr.Accordion(
-                    "Model Selection Results — Nested CV "
-                    "(モデル選択結果)",
-                    open=True,
-                ):
-                    model_sel_md = gr.Markdown(
-                        "*モデル選択を有効にして解析を実行すると、"
-                        "ここに Nested CV の結果が表示されます。*"
-                    )
-
-                res_refresh_btn = gr.Button(
-                    "Refresh Results", variant="primary",
-                )
-                res_outputs = [
-                    filter_wf, filter_fs, filter_sp,
-                    validity_table, results_table, parity_plot,
-                    results_interp_md, results_fs_bar_plot,
-                ]
-                res_refresh_btn.click(
+            res_refresh_btn = gr.Button(
+                "Refresh Results", variant="primary",
+            )
+            res_outputs = [
+                filter_wf, filter_fs, filter_sp,
+                validity_table, results_table, parity_plot,
+                results_interp_md, results_fs_bar_plot,
+            ]
+            res_refresh_btn.click(
+                fn=_refresh_results_data,
+                inputs=[filter_wf, filter_fs, filter_sp, state],
+                outputs=res_outputs,
+            )
+            for dropdown in [filter_wf, filter_fs, filter_sp]:
+                dropdown.change(
                     fn=_refresh_results_data,
                     inputs=[filter_wf, filter_fs, filter_sp, state],
                     outputs=res_outputs,
                 )
-                for dropdown in [filter_wf, filter_fs, filter_sp]:
-                    dropdown.change(
-                        fn=_refresh_results_data,
-                        inputs=[filter_wf, filter_fs, filter_sp, state],
-                        outputs=res_outputs,
-                    )
 
-              # --- Tab 5: OOD Map (Out-of-Distribution) ---
-              with gr.Tab("OOD Map"):
-                gr.Markdown(
-                    "## OOD (Out-of-Distribution) Map & Candidates",
+          # --- Tab 5: OOD Map (Out-of-Distribution) ---
+          with gr.Tab("OOD Map"):
+            gr.Markdown(
+                "## OOD (Out-of-Distribution) Map & Candidates",
+            )
+
+            fs_selector = gr.Dropdown(
+                choices=[
+                    "FS_BASE", "FS_THERMO", "FS_SIZE",
+                    "FS_ELECTRON", "FS_ALL", "FS_MAGPIE",
+                ],
+                value="FS_ALL",
+                label="Feature Set for OOD Map",
+            )
+            ood_plot = gr.Plot(label="OOD Map (PCA)")
+            with gr.Row():
+                ood_summary = gr.Textbox(
+                    label="OOD Summary", interactive=False,
+                )
+            ood_candidates = gr.Dataframe(label="Top OOD Candidates")
+
+            with gr.Row():
+                ood_refresh_btn = gr.Button(
+                    "Refresh OOD Map", variant="primary",
+                )
+                ood_csv_btn = gr.Button(
+                    "\u2b07 Download OOD Candidates CSV",
+                    variant="secondary",
+                )
+            ood_csv_file = gr.File(
+                label="OOD CSV Download", visible=False,
+            )
+
+            ood_outputs = [ood_plot, ood_summary, ood_candidates]
+            ood_refresh_btn.click(
+                fn=_refresh_ood_data,
+                inputs=[fs_selector, state],
+                outputs=ood_outputs,
+            )
+            fs_selector.change(
+                fn=_refresh_ood_data,
+                inputs=[fs_selector, state],
+                outputs=ood_outputs,
+            )
+            ood_csv_btn.click(
+                fn=_export_ood_csv,
+                inputs=[fs_selector, state],
+                outputs=[ood_csv_file],
+            )
+
+          # --- Tab 6: FS Comparison (Feature Selection + Physical Origins) ---
+          with gr.Tab("FS Comparison"):
+            gr.Markdown(
+                "## Feature Set Comparison & Feature Selection\n\n"
+                "各特徴量セットの物理的起源と、特徴量選択アルゴリズムの結果を表示します。"
+            )
+
+            # --- Physical Origin Descriptions ---
+            with gr.Accordion(
+                "特徴量セットの物理的起源 (Physical Origins)",
+                open=True,
+            ):
+                fs_origin_md = gr.Markdown(
+                    _build_fs_physical_origins_md(),
                 )
 
-                fs_selector = gr.Dropdown(
+            # --- Feature Selection ---
+            with gr.Accordion(
+                "特徴量選択結果 (Feature Selection Results)",
+                open=True,
+            ):
+                fs_comparison_selector = gr.Dropdown(
                     choices=[
                         "FS_BASE", "FS_THERMO", "FS_SIZE",
                         "FS_ELECTRON", "FS_ALL", "FS_MAGPIE",
                     ],
                     value="FS_ALL",
-                    label="Feature Set for OOD Map",
+                    label="特徴量セット選択",
                 )
-                ood_plot = gr.Plot(label="OOD Map (PCA)")
-                with gr.Row():
-                    ood_summary = gr.Textbox(
-                        label="OOD Summary", interactive=False,
-                    )
-                ood_candidates = gr.Dataframe(label="Top OOD Candidates")
-
-                with gr.Row():
-                    ood_refresh_btn = gr.Button(
-                        "Refresh OOD Map", variant="primary",
-                    )
-                    ood_csv_btn = gr.Button(
-                        "\u2b07 Download OOD Candidates CSV",
-                        variant="secondary",
-                    )
-                ood_csv_file = gr.File(
-                    label="OOD CSV Download", visible=False,
+                run_fs_btn = gr.Button(
+                    "▶ Run Feature Selection (特徴量選択実行)",
+                    variant="primary",
+                )
+                fs_result_md = gr.Markdown(
+                    "*まだ特徴量選択を実行していません。"
+                    "先に Config & Run で解析を実行してください。*"
+                )
+                fs_importance_plot = gr.Plot(
+                    label="Feature Importance (selected methods)",
+                )
+                fs_consensus_md = gr.Markdown(
+                    "*Consensus features will appear here.*"
                 )
 
-                ood_outputs = [ood_plot, ood_summary, ood_candidates]
-                ood_refresh_btn.click(
-                    fn=_refresh_ood_data,
-                    inputs=[fs_selector, state],
-                    outputs=ood_outputs,
-                )
-                fs_selector.change(
-                    fn=_refresh_ood_data,
-                    inputs=[fs_selector, state],
-                    outputs=ood_outputs,
-                )
-                ood_csv_btn.click(
-                    fn=_export_ood_csv,
-                    inputs=[fs_selector, state],
-                    outputs=[ood_csv_file],
-                )
-
-              # --- Tab 6: FS Comparison (Feature Selection + Physical Origins) ---
-              with gr.Tab("FS Comparison"):
-                gr.Markdown(
-                    "## Feature Set Comparison & Feature Selection\n\n"
-                    "各特徴量セットの物理的起源と、特徴量選択アルゴリズムの結果を表示します。"
-                )
-
-                # --- Physical Origin Descriptions ---
-                with gr.Accordion(
-                    "特徴量セットの物理的起源 (Physical Origins)",
-                    open=True,
-                ):
-                    fs_origin_md = gr.Markdown(
-                        _build_fs_physical_origins_md(),
-                    )
-
-                # --- Feature Selection ---
-                with gr.Accordion(
-                    "特徴量選択結果 (Feature Selection Results)",
-                    open=True,
-                ):
-                    fs_comparison_selector = gr.Dropdown(
-                        choices=[
-                            "FS_BASE", "FS_THERMO", "FS_SIZE",
-                            "FS_ELECTRON", "FS_ALL", "FS_MAGPIE",
-                        ],
-                        value="FS_ALL",
-                        label="特徴量セット選択",
-                    )
-                    run_fs_btn = gr.Button(
-                        "▶ Run Feature Selection (特徴量選択実行)",
-                        variant="primary",
-                    )
-                    fs_result_md = gr.Markdown(
-                        "*まだ特徴量選択を実行していません。"
-                        "先に Config & Run で解析を実行してください。*"
-                    )
-                    fs_importance_plot = gr.Plot(
-                        label="Feature Importance (selected methods)",
-                    )
-                    fs_consensus_md = gr.Markdown(
-                        "*Consensus features will appear here.*"
-                    )
-
-                    run_fs_btn.click(
-                        fn=_run_feature_selection_for_fs,
-                        inputs=[
-                            fs_comparison_selector,
-                            fs_lasso_check, fs_aic_check,
-                            fs_bic_check, fs_ard_check,
-                            state,
-                        ],
-                        outputs=[
-                            fs_result_md, fs_importance_plot,
-                            fs_consensus_md, state,
-                        ],
-                    )
-
-          # =============================================================
-          # Phase 3: 後処理 (Post-processing)
-          # =============================================================
-          with gr.Tab("3. 後処理 (Post-processing)"):
-            with gr.Tabs():
-              # --- Tab 7: Literature Search ---
-              with gr.Tab("Literature Search"):
-                gr.Markdown(
-                    "## Literature Search -- Embedding + Structured Filters",
-                )
-
-                with gr.Row():
-                    with gr.Column(scale=2):
-                        query_input = gr.Textbox(
-                            label="Search Query",
-                            value="composition only yield strength HEA",
-                            lines=2,
-                            info="Natural language or workflow-text query",
-                        )
-                    with gr.Column(scale=1):
-                        domain_filter = gr.Textbox(
-                            label="Domain", value="HEA",
-                        )
-                        task_filter = gr.Textbox(
-                            label="Task", value="yield_strength",
-                        )
-
-                with gr.Row():
-                    # Fix #4: choices match InputScope enum values
-                    inputs_filter = gr.Dropdown(
-                        choices=[
-                            "",
-                            "composition_only",
-                            "composition+process",
-                            "composition+calphad",
-                            "composition+microstructure",
-                            "full",
-                        ],
-                        value="",
-                        label="Inputs Scope",
-                    )
-                    lit_top_n = gr.Slider(
-                        minimum=1, maximum=20, value=10, step=1,
-                        label="Top N",
-                    )
-
-                search_btn = gr.Button(
-                    "Search Literature", variant="primary",
-                )
-                lit_results_table = gr.Dataframe(label="Search Results")
-                freq_plot = gr.Plot(label="Feature Frequency")
-                lit_recommendation = gr.Markdown(
-                    value="*Search to see feature recommendations.*",
-                )
-
-                search_btn.click(
-                    fn=_do_literature_search,
+                run_fs_btn.click(
+                    fn=_run_feature_selection_for_fs,
                     inputs=[
-                        query_input, domain_filter, task_filter,
-                        inputs_filter, lit_top_n, state,
+                        fs_comparison_selector,
+                        fs_lasso_check, fs_aic_check,
+                        fs_bic_check, fs_ard_check,
+                        state,
                     ],
                     outputs=[
-                        lit_results_table, freq_plot,
-                        lit_recommendation, state,
+                        fs_result_md, fs_importance_plot,
+                        fs_consensus_md, state,
                     ],
                 )
 
-              # --- Tab 8: Report ---
-              with gr.Tab("Report"):
-                gr.Markdown(
-                    "## Analysis Report -- Markdown Preview & Download",
-                )
-                report_md = gr.Markdown(
-                    value="*まだレポートが生成されていません。"
-                    "Config & Run で解析を実行してください。*",
-                )
-                download_btn = gr.File(label="Download Report (.md)")
+          # --- Tab 7: Model Info (MLflow / Feast) ---
+          with gr.Tab("Model Info"):
+            gr.Markdown(
+                "## Model Information — MLflow & Feast\n\n"
+                "MLflow で記録された実験ランと、Feast で管理されている"
+                "特徴量ストアの情報を閲覧できます。"
+            )
 
-                rpt_refresh_btn = gr.Button(
-                    "Refresh Report", variant="primary",
+            with gr.Accordion("MLflow 実験ラン (Experiment Runs)", open=True):
+                gr.Markdown(
+                    "解析実行後、MLflow に記録されたラン情報を表示します。\n"
+                    "**Refresh** ボタンで最新情報を取得してください。"
                 )
-                rpt_outputs = [report_md, download_btn]
-                rpt_refresh_btn.click(
-                    fn=_refresh_report_data,
-                    inputs=[state],
-                    outputs=rpt_outputs,
+                mlflow_runs_table = gr.Dataframe(
+                    label="MLflow Runs",
+                    headers=[
+                        "run_id", "run_name", "status",
+                        "rmse_test", "r2_test", "workflow",
+                        "feature_set", "split_policy",
+                    ],
                 )
+
+            with gr.Accordion("Feast 特徴量ストア (Feature Store)", open=True):
+                gr.Markdown(
+                    "Feast で管理されている特徴量セットの一覧を表示します。\n"
+                    "各特徴量セットの列名と統計情報を確認できます。"
+                )
+                feast_info_md = gr.Markdown(
+                    "*まだ解析を実行していません。"
+                    "Config & Run で解析を実行すると、"
+                    "ここに Feast 特徴量ストアの情報が表示されます。*"
+                )
+
+            def _refresh_model_info(
+                session: Dict[str, Any],
+            ) -> Tuple:
+                """Refresh MLflow runs and Feast feature store info."""
+                import pandas as _pd
+
+                # --- MLflow runs ---
+                runs_data: List[Dict[str, Any]] = []
+                try:
+                    from extrapolation_discovery_platform.integrations.mlflow_tracker import (
+                        MLflowTracker,
+                    )
+                    tracker = MLflowTracker()
+                    if tracker.is_mlflow_active:
+                        for r in tracker.list_runs():
+                            runs_data.append({
+                                "run_id": r.get("run_id", "")[:8],
+                                "run_name": r.get("run_name", ""),
+                                "status": r.get("status", ""),
+                                "rmse_test": r.get("metrics", {}).get(
+                                    "rmse_test", "",
+                                ),
+                                "r2_test": r.get("metrics", {}).get(
+                                    "r2_test", "",
+                                ),
+                                "workflow": r.get("params", {}).get(
+                                    "workflow_name", "",
+                                ),
+                                "feature_set": r.get("params", {}).get(
+                                    "feature_set_name", "",
+                                ),
+                                "split_policy": r.get("params", {}).get(
+                                    "split_policy_name", "",
+                                ),
+                            })
+                except Exception:
+                    pass
+
+                # Fallback: use session runs if MLflow not available
+                if not runs_data:
+                    session_runs = session.get("runs", [])
+                    for r in session_runs:
+                        runs_data.append({
+                            "run_id": getattr(r, "seed", ""),
+                            "run_name": getattr(
+                                r, "workflow_name", "",
+                            ),
+                            "status": "FINISHED",
+                            "rmse_test": round(
+                                getattr(r, "rmse_test", 0), 4,
+                            ),
+                            "r2_test": round(
+                                getattr(r, "r2_test", 0), 4,
+                            ),
+                            "workflow": getattr(
+                                r, "workflow_name", "",
+                            ),
+                            "feature_set": getattr(
+                                r, "feature_set_name", "",
+                            ),
+                            "split_policy": getattr(
+                                r, "split_policy_name", "",
+                            ),
+                        })
+                runs_df = _pd.DataFrame(runs_data) if runs_data else _pd.DataFrame()
+
+                # --- Feast feature store ---
+                feast_lines: List[str] = []
+                try:
+                    from extrapolation_discovery_platform.integrations.feast_store import (
+                        FeastFeatureStore,
+                    )
+                    store = FeastFeatureStore()
+                    if store.is_feast_active:
+                        feast_lines.append("**Feast Feature Store**: Active")
+                        for fs_name in [
+                            "FS_BASE", "FS_THERMO", "FS_SIZE",
+                            "FS_ELECTRON", "FS_ALL", "FS_MAGPIE",
+                        ]:
+                            try:
+                                df = store.get_features(fs_name)
+                                feast_lines.append(
+                                    f"- **{fs_name}**: "
+                                    f"{df.shape[1]} columns, "
+                                    f"{df.shape[0]} rows"
+                                )
+                            except Exception:
+                                feast_lines.append(
+                                    f"- **{fs_name}**: N/A"
+                                )
+                    else:
+                        feast_lines.append(
+                            "**Feast Feature Store**: "
+                            "Inactive (built-in fallback mode)"
+                        )
+                except Exception:
+                    feast_lines.append(
+                        "**Feast Feature Store**: Not available"
+                    )
+
+                # Add session-level feature info
+                features_df = session.get("features_df")
+                if features_df is not None:
+                    feast_lines.append(
+                        f"\n**Current Session Features**: "
+                        f"{features_df.shape[1]} columns, "
+                        f"{features_df.shape[0]} rows"
+                    )
+                    feast_lines.append(
+                        f"- Columns: "
+                        f"`{'`, `'.join(features_df.columns[:10])}`"
+                        + (
+                            f" ... (+{features_df.shape[1]-10} more)"
+                            if features_df.shape[1] > 10 else ""
+                        )
+                    )
+
+                feast_md = "\n".join(feast_lines) if feast_lines else (
+                    "*まだ解析を実行していません。*"
+                )
+
+                return runs_df, feast_md
+
+            model_info_refresh_btn = gr.Button(
+                "Refresh Model Info", variant="primary",
+            )
+            model_info_refresh_btn.click(
+                fn=_refresh_model_info,
+                inputs=[state],
+                outputs=[mlflow_runs_table, feast_info_md],
+            )
+
+          # --- Tab 8: Literature Search ---
+          with gr.Tab("Literature Search"):
+            gr.Markdown(
+                "## Literature Search -- Embedding + Structured Filters",
+            )
+
+            with gr.Row():
+                with gr.Column(scale=2):
+                    query_input = gr.Textbox(
+                        label="Search Query",
+                        value="composition only yield strength HEA",
+                        lines=2,
+                        info="Natural language or workflow-text query",
+                    )
+                with gr.Column(scale=1):
+                    domain_filter = gr.Textbox(
+                        label="Domain", value="HEA",
+                    )
+                    task_filter = gr.Textbox(
+                        label="Task", value="yield_strength",
+                    )
+
+            with gr.Row():
+                # Fix #4: choices match InputScope enum values
+                inputs_filter = gr.Dropdown(
+                    choices=[
+                        "",
+                        "composition_only",
+                        "composition+process",
+                        "composition+calphad",
+                        "composition+microstructure",
+                        "full",
+                    ],
+                    value="",
+                    label="Inputs Scope",
+                )
+                lit_top_n = gr.Slider(
+                    minimum=1, maximum=20, value=10, step=1,
+                    label="Top N",
+                )
+
+            search_btn = gr.Button(
+                "Search Literature", variant="primary",
+            )
+            lit_results_table = gr.Dataframe(label="Search Results")
+            freq_plot = gr.Plot(label="Feature Frequency")
+            lit_recommendation = gr.Markdown(
+                value="*Search to see feature recommendations.*",
+            )
+
+            search_btn.click(
+                fn=_do_literature_search,
+                inputs=[
+                    query_input, domain_filter, task_filter,
+                    inputs_filter, lit_top_n, state,
+                ],
+                outputs=[
+                    lit_results_table, freq_plot,
+                    lit_recommendation, state,
+                ],
+            )
+
+          # --- Tab 8: Report ---
+          with gr.Tab("Report"):
+            gr.Markdown(
+                "## Analysis Report -- Markdown Preview & Download",
+            )
+            report_md = gr.Markdown(
+                value="*まだレポートが生成されていません。"
+                "Config & Run で解析を実行してください。*",
+            )
+            download_btn = gr.File(label="Download Report (.md)")
+
+            rpt_refresh_btn = gr.Button(
+                "Refresh Report", variant="primary",
+            )
+            rpt_outputs = [report_md, download_btn]
+            rpt_refresh_btn.click(
+                fn=_refresh_report_data,
+                inputs=[state],
+                outputs=rpt_outputs,
+            )
 
         # ---------------------------------------------------------------
         # Run experiment generator  -- Fix #7 (streaming progress)
@@ -2853,6 +3086,12 @@ def create_app() -> gr.Blocks:
             use_wf_rf: bool,
             use_wf_xgb: bool,
             use_wf_ens: bool,
+            use_fs_base: bool,
+            use_fs_thermo: bool,
+            use_fs_size: bool,
+            use_fs_electron: bool,
+            use_fs_all: bool,
+            use_fs_magpie: bool,
             use_dim_reduction: bool,
             use_model_sel: bool,
             ms_outer: float,
@@ -3070,9 +3309,31 @@ def create_app() -> gr.Blocks:
                     selected_wfs = ["WF-LIN", "WF-LASSO", "WF-ARD", "WF-RF", "WF-XGB", "WF-ENS"]
                     log("No workflows selected; using all.")
 
+                # Build selected feature set list
+                selected_fsets: List[str] = []
+                if use_fs_base:
+                    selected_fsets.append("FS_BASE")
+                if use_fs_thermo:
+                    selected_fsets.append("FS_THERMO")
+                if use_fs_size:
+                    selected_fsets.append("FS_SIZE")
+                if use_fs_electron:
+                    selected_fsets.append("FS_ELECTRON")
+                if use_fs_all:
+                    selected_fsets.append("FS_ALL")
+                if use_fs_magpie:
+                    selected_fsets.append("FS_MAGPIE")
+                if not selected_fsets:
+                    selected_fsets = [
+                        "FS_BASE", "FS_THERMO", "FS_SIZE",
+                        "FS_ELECTRON", "FS_ALL", "FS_MAGPIE",
+                    ]
+                    log("No feature sets selected; using all.")
+
                 log(
                     f"Running analysis: seeds={seeds}, quick={quick}, "
-                    f"workflows={selected_wfs}"
+                    f"workflows={selected_wfs}, "
+                    f"feature_sets={selected_fsets}"
                 )
                 yield _yield_progress(
                     "\n".join(log_lines), 20,
@@ -3166,6 +3427,7 @@ def create_app() -> gr.Blocks:
                                 comps_df, features_df, target,
                                 progress_callback=_progress_cb,
                                 selected_workflows=selected_wfs,
+                                selected_feature_sets=selected_fsets,
                             )
                         _result_holder["runs"] = r
                         _result_holder["scores"] = s
@@ -3586,6 +3848,8 @@ def create_app() -> gr.Blocks:
                 exclude_elements, skip_literature, skip_plots,
                 wf_lin_check, wf_lasso_check, wf_ard_check,
                 wf_rf_check, wf_xgb_check, wf_ens_check,
+                fset_base_check, fset_thermo_check, fset_size_check,
+                fset_electron_check, fset_all_check, fset_magpie_check,
                 dim_reduction_check,
                 model_sel_check, ms_n_outer, ms_n_inner, ms_n_iter,
                 run_csv_upload, run_csv_target,
