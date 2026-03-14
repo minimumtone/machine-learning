@@ -30,7 +30,7 @@ integrations       External tool adapters (MLflow, Feast, MInt)
 # Install pandas C-contiguous compatibility patches BEFORE any other
 # imports that might use pandas.  This is the global SIGSEGV fix for
 # pandas 3.0's F-contiguous array layout.
-from hea_extrapolation_platform._compat import install as _install_compat
+from extrapolation_discovery_platform._compat import install as _install_compat
 _install_compat()
 del _install_compat
 

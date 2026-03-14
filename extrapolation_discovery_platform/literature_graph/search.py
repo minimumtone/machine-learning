@@ -17,16 +17,16 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
-from hea_extrapolation_platform.literature_graph.schemas import (
+from extrapolation_discovery_platform.literature_graph.schemas import (
     Paper,
     Workflow,
     load_jsonl,
 )
-from hea_extrapolation_platform.literature_graph.vector_index import (
+from extrapolation_discovery_platform.literature_graph.vector_index import (
     VectorIndex,
     embed_workflow_texts,
 )
-from hea_extrapolation_platform.literature_graph.workflow_text import (
+from extrapolation_discovery_platform.literature_graph.workflow_text import (
     generate_workflow_text,
 )
 

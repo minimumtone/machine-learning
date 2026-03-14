@@ -15,7 +15,7 @@ import logging
 from pathlib import Path
 from typing import List, Tuple
 
-from hea_extrapolation_platform.literature_graph.schemas import (
+from extrapolation_discovery_platform.literature_graph.schemas import (
     Edge,
     Paper,
     Workflow,

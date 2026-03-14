@@ -20,12 +20,12 @@ from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
 import numpy as np
 import pandas as pd
 
-from hea_extrapolation_platform.features import FeatureSetName
-from hea_extrapolation_platform.workflows import RunResult
-from hea_extrapolation_platform._compat import as_serializable
+from extrapolation_discovery_platform.features import FeatureSetName
+from extrapolation_discovery_platform.workflows import RunResult
+from extrapolation_discovery_platform._compat import as_serializable
 
 if TYPE_CHECKING:
-    from hea_extrapolation_platform.multicollinearity import MulticollinearityReport
+    from extrapolation_discovery_platform.multicollinearity import MulticollinearityReport
 
 logger = logging.getLogger(__name__)
 

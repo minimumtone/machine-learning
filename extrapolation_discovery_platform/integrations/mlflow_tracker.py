@@ -8,7 +8,7 @@ MLflow is not installed.
 
 Usage::
 
-    from hea_extrapolation_platform.integrations.mlflow_tracker import (
+    from extrapolation_discovery_platform.integrations.mlflow_tracker import (
         MLflowTracker,
         is_mlflow_available,
     )

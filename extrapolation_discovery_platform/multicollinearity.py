@@ -22,7 +22,7 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
-from hea_extrapolation_platform.features import FeatureCatalog, FeatureSetName
+from extrapolation_discovery_platform.features import FeatureCatalog, FeatureSetName
 
 logger = logging.getLogger(__name__)
 

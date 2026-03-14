@@ -50,18 +50,18 @@ from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 import numpy as np
 import pandas as pd
 
-from hea_extrapolation_platform.features import (
+from extrapolation_discovery_platform.features import (
     FeatureCatalog,
     FeatureSetName,
     compute_features,
 )
-from hea_extrapolation_platform.splitters import (
+from extrapolation_discovery_platform.splitters import (
     BaseSplitter,
     CompositionBlockSplitter,
     ElementExclusionSplitter,
     RandomCVSplitter,
 )
-from hea_extrapolation_platform.workflows import (
+from extrapolation_discovery_platform.workflows import (
     BaseWorkflow,
     RunResult,
     WorkflowARD,
@@ -71,26 +71,26 @@ from hea_extrapolation_platform.workflows import (
     WorkflowRF,
     WorkflowXGB,
 )
-from hea_extrapolation_platform.ood import OODDetector, OODResult
-from hea_extrapolation_platform.evaluation import FeatureValidityEvaluator, ValidityScore
-from hea_extrapolation_platform.integrations.mlflow_tracker import (
+from extrapolation_discovery_platform.ood import OODDetector, OODResult
+from extrapolation_discovery_platform.evaluation import FeatureValidityEvaluator, ValidityScore
+from extrapolation_discovery_platform.integrations.mlflow_tracker import (
     MLflowTracker,
     is_mlflow_available,
 )
-from hea_extrapolation_platform.integrations.feast_store import (
+from extrapolation_discovery_platform.integrations.feast_store import (
     FeastFeatureStore,
     is_feast_available,
 )
-from hea_extrapolation_platform.integrations.mint_adapter import (
+from extrapolation_discovery_platform.integrations.mint_adapter import (
     MIntWorkflowAdapter,
     MIntWorkflowConfig,
     MIntWorkflowRegistry,
 )
-from hea_extrapolation_platform.multicollinearity import (
+from extrapolation_discovery_platform.multicollinearity import (
     MulticollinearityReport,
     run_phase0_multicollinearity,
 )
-from hea_extrapolation_platform._compat import as_serializable
+from extrapolation_discovery_platform._compat import as_serializable
 
 logger = logging.getLogger(__name__)
 
@@ -239,7 +239,7 @@ def _run_job(
     y_train = _pd.Series(y[job.train_idx])
     y_test  = _pd.Series(y[job.test_idx])
 
-    from hea_extrapolation_platform.workflows import (
+    from extrapolation_discovery_platform.workflows import (
         WorkflowARD, WorkflowENS, WorkflowLASSO, WorkflowLIN, WorkflowRF,
         WorkflowXGB,
     )
@@ -260,7 +260,7 @@ def _run_job(
     if job.wf_name in wf_map:
         wf = wf_map[job.wf_name]
     elif mint_configs is not None and job.wf_name in mint_configs:
-        from hea_extrapolation_platform.integrations.mint_adapter import (
+        from extrapolation_discovery_platform.integrations.mint_adapter import (
             MIntWorkflowAdapter,
         )
         wf = MIntWorkflowAdapter(config=mint_configs[job.wf_name])

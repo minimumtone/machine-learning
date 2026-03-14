@@ -25,9 +25,9 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import pandas as pd
 
-from hea_extrapolation_platform.evaluation import ValidityScore
-from hea_extrapolation_platform.ood import OODResult
-from hea_extrapolation_platform.workflows import RunResult
+from extrapolation_discovery_platform.evaluation import ValidityScore
+from extrapolation_discovery_platform.ood import OODResult
+from extrapolation_discovery_platform.workflows import RunResult
 
 logger = logging.getLogger(__name__)
 
