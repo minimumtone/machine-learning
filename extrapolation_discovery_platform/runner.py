@@ -232,7 +232,13 @@ def _run_job(
         ``wf_name`` is not a built-in workflow, the config is used to
         reconstruct a ``MIntWorkflowAdapter`` in the worker process.
     """
+    import os as _os
     import pandas as _pd
+
+    # Signal to inner estimators (GridSearchCV etc.) that we are inside
+    # a ProcessPoolExecutor worker — they must use n_jobs=1 to avoid
+    # double parallelization and thread contention.
+    _os.environ["_EDP_INSIDE_WORKER"] = "1"
 
     # Row slices of a C-contiguous 2-D array are themselves contiguous.
     # Wrap them in DataFrames only for the workflow API.
@@ -319,12 +325,30 @@ class ExperimentRunner:
         use_feast: bool = False,
         use_mint: bool = False,
         dim_reduction: bool = True,
+        leak_auto_exclude: bool = True,
+        leak_corr_threshold: float = 0.85,
     ) -> None:
         self._seeds = seeds or [42, 123, 456]
         self._quick = quick
         self._dim_reduction = dim_reduction
+        self._leak_auto_exclude = leak_auto_exclude
+        self._leak_corr_threshold = leak_corr_threshold
         self._exclude_elements = exclude_elements or ["Co", "Ni", "Ti"]
         self._n_workers = n_workers if n_workers is not None else os.cpu_count()
+
+        # Guard against n_jobs over-subscription (Bug #3):
+        # If ProcessPoolExecutor workers AND inner estimators both use
+        # parallelism, CPU contention prevents model convergence and
+        # produces unstable / suppressed R² values.
+        _inner = int(os.environ.get("HEA_INNER_N_JOBS", "1") or "1")
+        if self._n_workers > 1 and _inner > 1:
+            logger.warning(
+                "Over-subscription detected: n_workers=%d × HEA_INNER_N_JOBS=%d. "
+                "This causes CPU contention that can suppress R² scores. "
+                "Set HEA_INNER_N_JOBS=1 (default) when using parallel workers.",
+                self._n_workers, _inner,
+            )
+
         self._registry = RunRegistry()
         self._ood_split_indices: Dict[str, Tuple[np.ndarray, np.ndarray]] = {}
         self._mc_reports: Optional[Dict[str, MulticollinearityReport]] = None
@@ -474,6 +498,11 @@ class ExperimentRunner:
             # to drop.  Until now these drops were *not* reflected in
             # the actual training arrays — Phase 3 still used the
             # original FeatureCatalog columns.  Fix: subtract drops.
+            #
+            # Additionally, if leak_auto_exclude is enabled, features
+            # with |correlation(feature, target)| > leak_corr_threshold
+            # are excluded.  These "leak" features act as proxy variables
+            # for the target, inflating train R² but collapsing test R².
             self._effective_cols = {}
             for _fs in feature_sets:
                 _fs_key = _fs.value
@@ -483,24 +512,57 @@ class ExperimentRunner:
                     _rpt = mc_reports[_fs_key]
                     _dropped = set(_rpt.dropped_constant + _rpt.dropped_perfect)
                     _orig = [c for c in _orig if c not in _dropped]
+                    # Auto-exclude leaked features (high |r| with target)
+                    if self._leak_auto_exclude and _rpt.leaked_features:
+                        _leak_set = set(_rpt.leaked_features)
+                        _before = len(_orig)
+                        _orig = [c for c in _orig if c not in _leak_set]
+                        if _before != len(_orig):
+                            logger.info(
+                                "Leak auto-exclude [%s]: removed %d features "
+                                "(|r| > %.2f): %s",
+                                _fs_key, _before - len(_orig),
+                                self._leak_corr_threshold,
+                                ", ".join(sorted(_leak_set & set(
+                                    FeatureCatalog.columns(_fs)
+                                ))),
+                            )
                 self._effective_cols[_fs_key] = _orig
                 logger.info(
                     "Effective columns [%s]: %d features (after Phase 0 drops)",
                     _fs_key, len(_orig),
                 )
 
+            # ── Phase 1: Precompute folds (moved before Phase 0.5) ──
+            # Compute fold_plan early so Phase 0.5 can use
+            # training indices to avoid data leakage.
+            fold_plan = self._phase1_precompute_folds(
+                compositions_df, features_all, target
+            )
+
             # ── Phase 0.5: Feature selection on cleaned columns ──
             # Lasso-based feature selection removes uninformative
             # features before training.  This addresses the issue
             # where high-dimensional / collinear features were passed
             # straight to learning without any selection step.
+            #
+            # FIX (data leakage): feature selection MUST use only training
+            # indices from the primary split.  Running LassoCV on the full
+            # dataset (including the test fold) leaks target information
+            # through feature selection, causing inflated train R² and
+            # suppressed / unreliable test R².  Use CompositionBlock fold-0
+            # train indices as a representative training subset.
+            _primary_train_idx = fold_plan["CompositionBlock"][0][0]
+
             for _fs_key, _cols in list(self._effective_cols.items()):
                 if len(_cols) <= 3:
                     continue  # too few to select from
                 try:
-                    _X_fs = features_all[_cols]
+                    # Slice to train-only rows to prevent data leakage
+                    _X_fs_train = features_all.iloc[_primary_train_idx][_cols]
+                    _y_train = target.iloc[_primary_train_idx]
                     _fs_summary = run_feature_selection(
-                        _X_fs, target,
+                        _X_fs_train, _y_train,
                         methods=["Lasso"],
                         feature_set=_fs_key,
                     )
@@ -509,8 +571,10 @@ class ExperimentRunner:
                         _sel = _lasso.selected_features
                         if len(_sel) >= 2:
                             logger.info(
-                                "Feature selection [%s]: %d → %d features",
+                                "Feature selection [%s]: %d → %d features"
+                                " (train-only, n_train=%d)",
                                 _fs_key, len(_cols), len(_sel),
+                                len(_primary_train_idx),
                             )
                             self._effective_cols[_fs_key] = _sel
                 except Exception:
@@ -529,10 +593,6 @@ class ExperimentRunner:
                     )
                 except Exception:
                     pass
-
-            fold_plan = self._phase1_precompute_folds(
-                compositions_df, features_all, target
-            )
             jobs = self._phase2_build_jobs(
                 feature_sets, wf_names, fold_plan,
                 mc_reports=mc_reports,
@@ -703,7 +763,10 @@ class ExperimentRunner:
 
                 # ── Model selection filter from Phase 0 ──
                 if mc_reports and fs_key in mc_reports:
-                    allowed_wf = set(mc_reports[fs_key].recommended_workflows)
+                    recs = mc_reports[fs_key].recommended_workflows
+                    # If recommended_workflows is empty, allow all
+                    # workflows instead of silently blocking everything.
+                    allowed_wf = set(recs) if recs else set(wf_names)
                 else:
                     allowed_wf = set(wf_names)  # fallback: all allowed
 

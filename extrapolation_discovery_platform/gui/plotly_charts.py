@@ -332,6 +332,7 @@ def plotly_heatmap(
 def plotly_parity(
     runs: List[Any],
     title: str = "Parity Plot (Test Set)",
+    target_name: str = "",
 ) -> go.Figure:
     """Interactive parity plot of y_true vs y_pred for all runs.
 
@@ -400,10 +401,12 @@ def plotly_parity(
             showlegend=True,
         ))
 
+    _x_label = f"実測値 / True ({target_name})" if target_name else "実測値 (True Value)"
+    _y_label = f"予測値 / Predicted ({target_name})" if target_name else "予測値 (Predicted Value)"
     fig.update_layout(
         title=title,
-        xaxis_title="実測値 (True Value)",
-        yaxis_title="予測値 (Predicted Value)",
+        xaxis_title=_x_label,
+        yaxis_title=_y_label,
         height=600,
         width=600,
     )
@@ -428,6 +431,7 @@ _WF_COLORS: Dict[str, str] = {
 def plotly_parity_per_algorithm(
     runs: List[Any],
     title: str = "Per-Algorithm Parity Plot (Test Set) — アルゴリズム別パリティプロット",
+    target_name: str = "",
 ) -> go.Figure:
     """Interactive parity plot with one trace per ML algorithm.
 
@@ -534,10 +538,12 @@ def plotly_parity_per_algorithm(
         )
     perf_text = "<br>".join(perf_lines) if perf_lines else "No data"
 
+    _x_label = f"実測値 / True ({target_name})" if target_name else "実測値 (True Value)"
+    _y_label = f"予測値 / Predicted ({target_name})" if target_name else "予測値 (Predicted Value)"
     fig.update_layout(
         title=title,
-        xaxis_title="実測値 (True Value)",
-        yaxis_title="予測値 (Predicted Value)",
+        xaxis_title=_x_label,
+        yaxis_title=_y_label,
         height=700,
         width=800,
         legend=dict(

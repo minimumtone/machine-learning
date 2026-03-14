@@ -40,8 +40,20 @@ def _get_inner_n_jobs() -> int:
     parallelism should be limited to 1 per worker to avoid resource contention.
 
     Respects ``HEA_INNER_N_JOBS`` environment variable.  Defaults to 1.
+
+    WARNING: Setting HEA_INNER_N_JOBS > 1 while n_workers > 1 in
+    ExperimentRunner causes n_workers × HEA_INNER_N_JOBS-fold CPU
+    over-subscription, leading to thread contention that can prevent
+    model convergence and produce unstable / suppressed R² values.
+    Only set HEA_INNER_N_JOBS > 1 when n_workers == 1 (serial mode).
+
+    Safety: When ``_INSIDE_WORKER`` flag is set (by _run_job in runner.py),
+    we force n_jobs=1 regardless of the environment variable to prevent
+    double parallelization between ProcessPoolExecutor and GridSearchCV.
     """
     import os
+    if os.environ.get("_EDP_INSIDE_WORKER", ""):
+        return 1  # always serial inside a worker process
     raw = os.environ.get("HEA_INNER_N_JOBS", "1")
     try:
         return max(1, int(raw))

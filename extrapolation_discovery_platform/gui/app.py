@@ -628,7 +628,11 @@ def _refresh_results_data(
             filtered = [r for r in filtered if r.split_policy == sp_filter]
 
         r_df = runs_to_dataframe(filtered) if filtered else pd.DataFrame()
-        parity_fig = plotly_parity_per_algorithm(filtered) if filtered else None
+        _target_name = session.get("target_col", "")
+        parity_fig = (
+            plotly_parity_per_algorithm(filtered, target_name=_target_name)
+            if filtered else None
+        )
 
         # Physical interpretation + FS comparison
         interp_md = _build_physical_interpretation_md(runs, scores, ood_results)
@@ -1517,14 +1521,19 @@ def _handle_csv_upload(
         session["csv_mode"] = "hea"
 
         # Build compositions list using canonical element symbols.
+        # Guard against NaN / non-numeric values in element columns.
         valid_indices: List[int] = []
         compositions = []
         for idx, row in raw[elem_cols].iterrows():
-            comp = {
-                col_to_elem[c]: float(v)
-                for c, v in row.items()
-                if float(v) > 0
-            }
+            comp: Dict[str, float] = {}
+            for c, v in row.items():
+                try:
+                    fv = float(v)
+                except (ValueError, TypeError):
+                    continue
+                if np.isnan(fv) or fv <= 0:
+                    continue
+                comp[col_to_elem[c]] = fv
             if comp:
                 compositions.append(comp)
                 valid_indices.append(idx)
@@ -1856,15 +1865,142 @@ _GUI_VERSION_TAG = "PR#144"
 
 def create_app() -> gr.Blocks:
     """Build and return the Gradio Blocks app."""
+
+    # CSS for left sidebar navigation pane
+    _SIDEBAR_CSS = """
+    /* --- Left Sidebar Navigation --- */
+    #sidebar-nav {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 180px;
+        height: 100vh;
+        background: #1a1a2e;
+        color: #e0e0e0;
+        padding: 12px 0;
+        overflow-y: auto;
+        z-index: 1000;
+        box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+    }
+    #sidebar-nav .sidebar-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #8ab4f8;
+        padding: 8px 16px 12px;
+        border-bottom: 1px solid #2a2a4a;
+        margin-bottom: 4px;
+    }
+    #sidebar-nav button.sidebar-btn {
+        display: block;
+        width: 100%;
+        text-align: left;
+        background: transparent;
+        color: #c0c0c0;
+        border: none;
+        padding: 9px 16px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    #sidebar-nav button.sidebar-btn:hover {
+        background: #2a2a4a;
+        color: #fff;
+    }
+    #sidebar-nav button.sidebar-btn.active {
+        background: #3a3a6a;
+        color: #8ab4f8;
+        font-weight: 600;
+        border-left: 3px solid #8ab4f8;
+        padding-left: 13px;
+    }
+    /* Push main content right to make room for sidebar */
+    .gradio-container {
+        margin-left: 180px !important;
+    }
+    /* Hide the default Gradio tab bar (replaced by sidebar) */
+    #main-tabs > .tab-nav {
+        display: none !important;
+    }
+    @media (max-width: 768px) {
+        #sidebar-nav { display: none; }
+        .gradio-container { margin-left: 0 !important; }
+        #main-tabs > .tab-nav { display: flex !important; }
+    }
+    """
+
+    # JavaScript for sidebar tab switching
+    _SIDEBAR_JS = """
+    () => {
+        // Wait for Gradio to render, then inject sidebar
+        setTimeout(() => {
+            if (document.getElementById('sidebar-nav')) return;
+            const tabs = [
+                '⚙ Config & Run',
+                '📊 Data Summary',
+                '📈 Dashboard',
+                '🔬 Results',
+                '🗺 OOD Map',
+                '🔍 FS Comparison',
+                '🧠 Model Selection',
+                '📖 Model Info',
+                '📚 Literature',
+                '📝 Report'
+            ];
+            const nav = document.createElement('div');
+            nav.id = 'sidebar-nav';
+            nav.innerHTML = '<div class="sidebar-title">Navigation</div>';
+            tabs.forEach((label, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'sidebar-btn' + (idx === 0 ? ' active' : '');
+                btn.textContent = label;
+                btn.onclick = () => {
+                    // Click the corresponding Gradio tab button
+                    const tabNav = document.querySelector('#main-tabs > .tab-nav');
+                    if (tabNav) {
+                        const tabBtns = tabNav.querySelectorAll('button');
+                        if (tabBtns[idx]) tabBtns[idx].click();
+                    }
+                    // Update active state
+                    nav.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                };
+                nav.appendChild(btn);
+            });
+            document.body.appendChild(nav);
+
+            // Sync sidebar when user clicks Gradio tabs directly
+            const tabNav = document.querySelector('#main-tabs > .tab-nav');
+            if (tabNav) {
+                const observer = new MutationObserver(() => {
+                    const tabBtns = tabNav.querySelectorAll('button');
+                    const sidebarBtns = nav.querySelectorAll('.sidebar-btn');
+                    tabBtns.forEach((tb, idx) => {
+                        if (tb.classList.contains('selected') && sidebarBtns[idx]) {
+                            sidebarBtns.forEach(b => b.classList.remove('active'));
+                            sidebarBtns[idx].classList.add('active');
+                        }
+                    });
+                });
+                observer.observe(tabNav, { attributes: true, subtree: true });
+            }
+        }, 1000);
+    }
+    """
+
     # Gradio 6.0: theme moved from Blocks() to launch().
     with gr.Blocks(
         title=f"Extrapolation Discovery Platform ({_GUI_VERSION_TAG})",
+        css=_SIDEBAR_CSS,
+        js=_SIDEBAR_JS,
     ) as app:
         gr.Markdown(
             f"# Extrapolation Discovery Platform &ensp;"
             f"<small style='color:#888;'>({_GUI_VERSION_TAG})</small>\n"
             "Feature Validity Evaluation & OOD Detection Dashboard\n\n"
-            "**使い方**: 左から順にタブを進めてください。"
+            "**使い方**: 左のサイドバーからタブを選択してください。"
             "まず **Config & Run** でCSVアップロード＆解析実行し、"
             "結果を **Dashboard** / **Results** / **OOD Map** 等のタブで確認します。"
         )
@@ -1872,7 +2008,7 @@ def create_app() -> gr.Blocks:
         # Fix #1: per-user session state via gr.State
         state = gr.State(_empty_session)
 
-        with gr.Tabs():
+        with gr.Tabs(elem_id="main-tabs"):
             # --- Tab 1: Config & Run ---
           with gr.Tab("Config & Run"):
             gr.Markdown(
@@ -2077,8 +2213,14 @@ def create_app() -> gr.Blocks:
                     # names), warn about periodic table / MAGPIE feature
                     # generation implications.
                     if string_cols:
-                        elem_detected = _detect_element_columns(raw)
-                        if elem_detected:
+                        from extrapolation_discovery_platform.features import (
+                            _ElementDB as _EDB_check,
+                        )
+                        _avail_elems = set(_EDB_check.available_elements())
+                        _elem_cols, _ = _detect_element_columns(
+                            list(raw.columns), _avail_elems,
+                        )
+                        if _elem_cols:
                             status += (
                                 '<div style="padding:8px 12px; '
                                 'background:#fff8e1; '
@@ -2481,6 +2623,33 @@ def create_app() -> gr.Blocks:
                         label="HPO Iterations",
                         info="RandomizedSearchCV反復数",
                     )
+
+            # --- Leak Detection Auto-Exclude ---
+            with gr.Accordion(
+                "Leak Detection (リーク特徴量の自動除外)",
+                open=True,
+            ):
+                gr.Markdown(
+                    "Phase 0 のマルチコリニアリティ解析で検出された"
+                    "**高相関特徴量 (|r| > 閾値)** を自動的に除外します。\n\n"
+                    "- リーク特徴量はターゲット変数の代理変数として機能し、"
+                    "訓練時は高 R² を示しますがテスト時に性能が大幅に低下します\n"
+                    "- 自動除外を有効にすると、Phase 0 で検出された"
+                    "|r| > 閾値 の特徴量が学習データから除外されます\n"
+                    "- 閾値はデフォルト 0.85（推奨）ですが、"
+                    "ドメイン知識に基づいて調整可能です"
+                )
+                leak_auto_exclude = gr.Checkbox(
+                    label="リーク特徴量を自動除外する "
+                    "(Auto-exclude leaked features)",
+                    value=True,
+                    info="Phase 0 で |r| > 閾値 の特徴量を学習から除外",
+                )
+                leak_corr_threshold = gr.Slider(
+                    minimum=0.50, maximum=0.99, value=0.85, step=0.01,
+                    label="相関閾値 (Correlation Threshold)",
+                    info="|r| がこの値を超える特徴量をリークとみなす",
+                )
 
             # Integrations are always enabled behind the scenes.
             gr.Markdown(
@@ -3097,6 +3266,8 @@ def create_app() -> gr.Blocks:
             ms_outer: float,
             ms_inner: float,
             ms_iter: float,
+            use_leak_exclude: bool,
+            leak_threshold: float,
             csv_file: Any,
             csv_target: Optional[str],
             csv_features: List[str],
@@ -3341,12 +3512,17 @@ def create_app() -> gr.Blocks:
                     summary_tuple=data_summary,
                 )
 
+                # Store target column name for dynamic parity labels
+                session["target_col"] = csv_target or "target"
+
                 runner = ExperimentRunner(
                     seeds=seeds, quick=quick, exclude_elements=excl,
                     use_mlflow=True,
                     use_feast=True,
                     use_mint=True,
                     dim_reduction=use_dim_reduction,
+                    leak_auto_exclude=use_leak_exclude,
+                    leak_corr_threshold=leak_threshold,
                 )
 
                 # --- Real-time log capture via threading ---
@@ -3852,6 +4028,7 @@ def create_app() -> gr.Blocks:
                 fset_electron_check, fset_all_check, fset_magpie_check,
                 dim_reduction_check,
                 model_sel_check, ms_n_outer, ms_n_inner, ms_n_iter,
+                leak_auto_exclude, leak_corr_threshold,
                 run_csv_upload, run_csv_target,
                 csv_feature_checks, csv_mode_radio,
                 state,
