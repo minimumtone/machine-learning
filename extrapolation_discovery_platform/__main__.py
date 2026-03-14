@@ -100,14 +100,13 @@ def _run_plots(runs, out_dir, logger):
     figure_paths = {}
     try:
         from extrapolation_discovery_platform.gui.plotly_charts import (
-            build_parity_figure,
+            plotly_parity,
         )
         fig_dir = out_dir / "figures"
         fig_dir.mkdir(parents=True, exist_ok=True)
         best_runs = sorted(runs, key=lambda r: r.r2_test, reverse=True)
         if best_runs:
-            br = best_runs[0]
-            fig = build_parity_figure(br.y_test_true, br.y_test_pred)
+            fig = plotly_parity(best_runs[:1], title="Parity Plot (Best Model)")
             parity_path = fig_dir / "parity_best.html"
             fig.write_html(str(parity_path))
             figure_paths["Parity (best)"] = parity_path
