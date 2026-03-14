@@ -382,6 +382,7 @@ class ExperimentRunner:
         target: pd.Series,
         progress_callback: Optional[Any] = None,
         selected_workflows: Optional[List[str]] = None,
+        selected_feature_sets: Optional[List[str]] = None,
     ) -> Tuple[List[RunResult], List[ValidityScore], Dict[str, OODResult]]:
         """Execute the full experiment grid in 5 phases."""
         t_start = time.time()
@@ -419,7 +420,18 @@ class ExperimentRunner:
             [w for w in all_wf_names if w in (selected_workflows or all_wf_names)]
         )
 
-        feature_sets = FeatureCatalog.list_sets()
+        all_feature_sets = FeatureCatalog.list_sets()
+        if selected_feature_sets:
+            _sel = set(selected_feature_sets)
+            feature_sets = [fs for fs in all_feature_sets if fs.value in _sel]
+            if not feature_sets:
+                feature_sets = all_feature_sets
+                logger.warning(
+                    "No matching feature sets for %s; using all.",
+                    selected_feature_sets,
+                )
+        else:
+            feature_sets = all_feature_sets
         y_arr = np.asarray(target, dtype=float)
 
         self._tracker.start_run(
