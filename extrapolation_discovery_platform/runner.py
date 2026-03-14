@@ -1142,3 +1142,87 @@ class ExperimentRunner:
 
     def export(self, out_dir: Path) -> None:
         self._registry.export_json(out_dir / "run_registry.json")
+
+    def export_experiment_log(self, out_dir: Path) -> Path:
+        """Write a comprehensive experiment log (JSON) for debugging.
+
+        The log includes:
+        - Experiment metadata (timestamp, seeds, n_samples, elapsed)
+        - Per-run metrics (workflow, feature_set, split, seed, fold,
+          rmse_train/test, r2_train/test, mae_train/test, elapsed)
+        - Phase 0 multicollinearity reports (per feature set)
+        - Effective columns after Phase 0 drops
+        - Validity scores
+        - OOD summary
+        - Tracker summary (MLflow / in-memory)
+
+        Returns the path to the written log file.
+        """
+        import datetime as _dt
+
+        log_path = out_dir / "experiment_log.json"
+        out_dir.mkdir(parents=True, exist_ok=True)
+
+        # Per-run metrics
+        run_records = []
+        for r in self._registry.runs:
+            run_records.append({
+                "workflow": r.workflow,
+                "feature_set": r.feature_set,
+                "split_policy": r.split_policy,
+                "seed": int(r.seed),
+                "fold": int(r.fold),
+                "rmse_train": round(float(r.rmse_train), 6),
+                "rmse_test": round(float(r.rmse_test), 6),
+                "r2_train": round(float(r.r2_train), 6),
+                "r2_test": round(float(r.r2_test), 6),
+                "mae_train": round(float(r.mae_train), 6),
+                "mae_test": round(float(r.mae_test), 6),
+                "elapsed_sec": round(float(r.elapsed_sec), 3),
+                "params": {k: str(v) for k, v in (r.params or {}).items()},
+            })
+
+        # Phase 0 multicollinearity summary
+        mc_summary = {}
+        for fs_key, rpt in (self._mc_reports or {}).items():
+            mc_summary[fs_key] = {
+                "n_features_before": rpt.n_features_before,
+                "n_features_after": rpt.n_features_after,
+                "dropped_constant": rpt.dropped_constant,
+                "dropped_perfect": rpt.dropped_perfect,
+                "high_vif_count": rpt.high_vif_count,
+                "moderate_vif_count": rpt.moderate_vif_count,
+                "multicollinearity_level": rpt.multicollinearity_level,
+                "high_vif_ratio": round(rpt.high_vif_ratio, 4),
+                "recommended_workflows": rpt.recommended_workflows,
+                "blocked_workflows": rpt.blocked_workflows,
+                "leak_suspects": rpt.leak_suspects or {},
+            }
+
+        # Effective columns
+        eff_cols = {
+            k: {"n_features": len(v), "columns": v}
+            for k, v in self._effective_cols.items()
+        }
+
+        # Tracker summary
+        tracker_runs = self._tracker.list_runs()
+
+        log_data = {
+            "timestamp": _dt.datetime.now().isoformat(),
+            "seeds": self._seeds,
+            "quick": self._quick,
+            "n_runs": len(self._registry.runs),
+            "leak_auto_exclude": self._leak_auto_exclude,
+            "leak_corr_threshold": self._leak_corr_threshold,
+            "multicollinearity_reports": mc_summary,
+            "effective_columns": eff_cols,
+            "runs": run_records,
+            "tracker_runs": as_serializable(tracker_runs),
+        }
+
+        with open(log_path, "w", encoding="utf-8") as f:
+            json.dump(as_serializable(log_data), f, indent=2,
+                      ensure_ascii=False)
+        logger.info("Experiment log written to %s", log_path)
+        return log_path

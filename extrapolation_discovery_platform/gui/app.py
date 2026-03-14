@@ -2990,161 +2990,237 @@ def create_app() -> gr.Blocks:
                     ],
                 )
 
-          # --- Tab 7: Model Info (MLflow / Feast) ---
-          with gr.Tab("Model Info"):
+          # --- Tab 7: Model Info (MLflow / Feast / Experiment Log) ---
+          with gr.Tab("📖 Model Info"):
             gr.Markdown(
-                "## Model Information — MLflow & Feast\n\n"
-                "MLflow で記録された実験ランと、Feast で管理されている"
-                "特徴量ストアの情報を閲覧できます。"
+                "## 機械学習ログ — ML Training History\n\n"
+                "解析実行後、各ランのメトリクス・Phase 0 解析結果・"
+                "トラッカー情報を閲覧できます。\n"
+                "**Refresh** ボタンで最新情報を取得してください。"
             )
 
-            with gr.Accordion("MLflow 実験ラン (Experiment Runs)", open=True):
+            with gr.Accordion(
+                "実験ラン一覧 (Per-Run Metrics)", open=True,
+            ):
                 gr.Markdown(
-                    "解析実行後、MLflow に記録されたラン情報を表示します。\n"
-                    "**Refresh** ボタンで最新情報を取得してください。"
+                    "各ワークフロー × 特徴量セット × 分割ポリシー × seed × fold "
+                    "の全ラン結果を表示します。"
                 )
                 mlflow_runs_table = gr.Dataframe(
-                    label="MLflow Runs",
+                    label="All Runs",
                     headers=[
-                        "run_id", "run_name", "status",
-                        "rmse_test", "r2_test", "workflow",
-                        "feature_set", "split_policy",
+                        "workflow", "feature_set", "split_policy",
+                        "seed", "fold",
+                        "rmse_train", "rmse_test",
+                        "r2_train", "r2_test",
+                        "mae_test", "elapsed_sec",
                     ],
                 )
 
-            with gr.Accordion("Feast 特徴量ストア (Feature Store)", open=True):
-                gr.Markdown(
-                    "Feast で管理されている特徴量セットの一覧を表示します。\n"
-                    "各特徴量セットの列名と統計情報を確認できます。"
+            with gr.Accordion(
+                "Phase 0 マルチコリニアリティ & リーク検出", open=True,
+            ):
+                mc_report_md = gr.Markdown(
+                    "*まだ解析を実行していません。*"
                 )
+
+            with gr.Accordion(
+                "トラッカー情報 (MLflow / Feast)", open=False,
+            ):
                 feast_info_md = gr.Markdown(
                     "*まだ解析を実行していません。"
                     "Config & Run で解析を実行すると、"
-                    "ここに Feast 特徴量ストアの情報が表示されます。*"
+                    "ここにトラッカー情報が表示されます。*"
+                )
+
+            with gr.Accordion(
+                "実験ログファイル (Experiment Log JSON)", open=False,
+            ):
+                gr.Markdown(
+                    "解析完了後に `results/<timestamp>/experiment_log.json` "
+                    "が自動生成されます。\n"
+                    "全ラン・Phase 0 レポート・有効特徴量列・トラッカー情報を含む"
+                    "包括的なデバッグログです。"
+                )
+                experiment_log_download = gr.File(
+                    label="Download experiment_log.json",
                 )
 
             def _refresh_model_info(
                 session: Dict[str, Any],
             ) -> Tuple:
-                """Refresh MLflow runs and Feast feature store info."""
+                """Refresh run metrics, MC reports, tracker info, and log."""
                 import pandas as _pd
 
-                # --- MLflow runs ---
+                # --- Per-run metrics from session ---
                 runs_data: List[Dict[str, Any]] = []
-                try:
-                    from extrapolation_discovery_platform.integrations.mlflow_tracker import (
-                        MLflowTracker,
-                    )
-                    tracker = MLflowTracker()
-                    if tracker.is_mlflow_active:
-                        for r in tracker.list_runs():
+                runner_obj = session.get("runner")
+
+                # 1. Try runner's tracker (preserves MLflow / in-memory data)
+                if runner_obj is not None:
+                    try:
+                        for tr in runner_obj.tracker.list_runs():
                             runs_data.append({
-                                "run_id": r.get("run_id", "")[:8],
-                                "run_name": r.get("run_name", ""),
-                                "status": r.get("status", ""),
-                                "rmse_test": r.get("metrics", {}).get(
+                                "workflow": tr.get("params", {}).get(
+                                    "workflow", "",
+                                ),
+                                "feature_set": tr.get("params", {}).get(
+                                    "feature_set", "",
+                                ),
+                                "split_policy": tr.get("params", {}).get(
+                                    "split_policy", "",
+                                ),
+                                "seed": tr.get("params", {}).get(
+                                    "seed", "",
+                                ),
+                                "fold": tr.get("params", {}).get(
+                                    "fold", "",
+                                ),
+                                "rmse_train": tr.get("metrics", {}).get(
+                                    "rmse_train", "",
+                                ),
+                                "rmse_test": tr.get("metrics", {}).get(
                                     "rmse_test", "",
                                 ),
-                                "r2_test": r.get("metrics", {}).get(
+                                "r2_train": tr.get("metrics", {}).get(
+                                    "r2_train", "",
+                                ),
+                                "r2_test": tr.get("metrics", {}).get(
                                     "r2_test", "",
                                 ),
-                                "workflow": r.get("params", {}).get(
-                                    "workflow_name", "",
+                                "mae_test": tr.get("metrics", {}).get(
+                                    "mae_test", "",
                                 ),
-                                "feature_set": r.get("params", {}).get(
-                                    "feature_set_name", "",
-                                ),
-                                "split_policy": r.get("params", {}).get(
-                                    "split_policy_name", "",
+                                "elapsed_sec": tr.get("metrics", {}).get(
+                                    "elapsed_sec", "",
                                 ),
                             })
-                except Exception:
-                    pass
+                    except Exception:
+                        pass
 
-                # Fallback: use session runs if MLflow not available
+                # 2. Fallback: build from session RunResult objects
                 if not runs_data:
-                    session_runs = session.get("runs", [])
-                    for r in session_runs:
+                    for r in session.get("runs", []):
                         runs_data.append({
-                            "run_id": getattr(r, "seed", ""),
-                            "run_name": getattr(
-                                r, "workflow_name", "",
-                            ),
-                            "status": "FINISHED",
-                            "rmse_test": round(
-                                getattr(r, "rmse_test", 0), 4,
-                            ),
-                            "r2_test": round(
-                                getattr(r, "r2_test", 0), 4,
-                            ),
-                            "workflow": getattr(
-                                r, "workflow_name", "",
-                            ),
+                            "workflow": getattr(r, "workflow", ""),
                             "feature_set": getattr(
-                                r, "feature_set_name", "",
+                                r, "feature_set", "",
                             ),
                             "split_policy": getattr(
-                                r, "split_policy_name", "",
+                                r, "split_policy", "",
+                            ),
+                            "seed": getattr(r, "seed", ""),
+                            "fold": getattr(r, "fold", ""),
+                            "rmse_train": round(
+                                float(getattr(r, "rmse_train", 0)), 4,
+                            ),
+                            "rmse_test": round(
+                                float(getattr(r, "rmse_test", 0)), 4,
+                            ),
+                            "r2_train": round(
+                                float(getattr(r, "r2_train", 0)), 4,
+                            ),
+                            "r2_test": round(
+                                float(getattr(r, "r2_test", 0)), 4,
+                            ),
+                            "mae_test": round(
+                                float(getattr(r, "mae_test", 0)), 4,
+                            ),
+                            "elapsed_sec": round(
+                                float(getattr(r, "elapsed_sec", 0)), 3,
                             ),
                         })
-                runs_df = _pd.DataFrame(runs_data) if runs_data else _pd.DataFrame()
 
-                # --- Feast feature store ---
-                feast_lines: List[str] = []
-                try:
-                    from extrapolation_discovery_platform.integrations.feast_store import (
-                        FeastFeatureStore,
-                    )
-                    store = FeastFeatureStore()
-                    if store.is_feast_active:
-                        feast_lines.append("**Feast Feature Store**: Active")
-                        for fs_name in [
-                            "FS_BASE", "FS_THERMO", "FS_SIZE",
-                            "FS_ELECTRON", "FS_ALL", "FS_MAGPIE",
-                        ]:
-                            try:
-                                df = store.get_features(fs_name)
-                                feast_lines.append(
-                                    f"- **{fs_name}**: "
-                                    f"{df.shape[1]} columns, "
-                                    f"{df.shape[0]} rows"
-                                )
-                            except Exception:
-                                feast_lines.append(
-                                    f"- **{fs_name}**: N/A"
-                                )
-                    else:
-                        feast_lines.append(
-                            "**Feast Feature Store**: "
-                            "Inactive (built-in fallback mode)"
+                runs_df = (
+                    _pd.DataFrame(runs_data) if runs_data
+                    else _pd.DataFrame()
+                )
+
+                # --- Phase 0 Multicollinearity Reports ---
+                mc_lines: List[str] = []
+                mc_rpts = session.get("mc_reports", {})
+                if mc_rpts:
+                    for fs_key, rpt in mc_rpts.items():
+                        mc_lines.append(f"### {fs_key}")
+                        mc_lines.append(
+                            f"- 特徴量数: {rpt.n_features_before} → "
+                            f"{rpt.n_features_after} "
+                            f"(定数列除去: {len(rpt.dropped_constant)}, "
+                            f"完全共線除去: {len(rpt.dropped_perfect)})"
                         )
-                except Exception:
-                    feast_lines.append(
-                        "**Feast Feature Store**: Not available"
+                        mc_lines.append(
+                            f"- VIF: high={rpt.high_vif_count}, "
+                            f"moderate={rpt.moderate_vif_count}, "
+                            f"ratio={rpt.high_vif_ratio:.1%}"
+                        )
+                        mc_lines.append(
+                            f"- レベル: **{rpt.multicollinearity_level}**"
+                        )
+                        mc_lines.append(
+                            f"- 許可WF: {rpt.recommended_workflows}"
+                        )
+                        if rpt.blocked_workflows:
+                            mc_lines.append(
+                                f"- ブロックWF: {rpt.blocked_workflows}"
+                            )
+                        suspects = rpt.leak_suspects or {}
+                        if suspects:
+                            leak_strs = [
+                                f"`{k}` (|r|={v:.4f})"
+                                for k, v in suspects.items()
+                            ]
+                            mc_lines.append(
+                                f"- ⚠ リーク疑い: "
+                                + ", ".join(leak_strs)
+                            )
+                        mc_lines.append("")
+                else:
+                    mc_lines.append(
+                        "*Phase 0 レポートがありません。"
+                        "解析を実行してください。*"
+                    )
+                mc_md = "\n".join(mc_lines)
+
+                # --- Tracker / Feast info ---
+                tracker_lines: List[str] = []
+                if runner_obj is not None:
+                    tracker_lines.append(
+                        f"**MLflow**: "
+                        f"{'Active' if runner_obj.tracker.is_mlflow_active else 'In-memory fallback'} "
+                        f"({runner_obj.tracker.get_tracking_uri()})"
+                    )
+                    fs_store = runner_obj.feature_store
+                    tracker_lines.append(
+                        f"**Feast**: "
+                        f"{'Active' if fs_store.is_feast_active else 'Built-in fallback'}"
+                    )
+                    fs_sets = fs_store.list_feature_sets()
+                    for fs_name, fs_info in fs_sets.items():
+                        tracker_lines.append(
+                            f"- **{fs_name}**: "
+                            f"{fs_info.get('n_features', '?')} features "
+                            f"(source: {fs_info.get('source', '?')})"
+                        )
+                else:
+                    tracker_lines.append(
+                        "*Runner が未初期化です。解析を実行してください。*"
                     )
 
-                # Add session-level feature info
                 features_df = session.get("features_df")
                 if features_df is not None:
-                    feast_lines.append(
+                    tracker_lines.append(
                         f"\n**Current Session Features**: "
                         f"{features_df.shape[1]} columns, "
                         f"{features_df.shape[0]} rows"
                     )
-                    feast_lines.append(
-                        f"- Columns: "
-                        f"`{'`, `'.join(features_df.columns[:10])}`"
-                        + (
-                            f" ... (+{features_df.shape[1]-10} more)"
-                            if features_df.shape[1] > 10 else ""
-                        )
-                    )
 
-                feast_md = "\n".join(feast_lines) if feast_lines else (
-                    "*まだ解析を実行していません。*"
-                )
+                tracker_md = "\n".join(tracker_lines)
 
-                return runs_df, feast_md
+                # --- Experiment log file ---
+                log_path = session.get("experiment_log_path")
+                log_file = log_path if log_path else None
+
+                return runs_df, mc_md, tracker_md, log_file
 
             model_info_refresh_btn = gr.Button(
                 "Refresh Model Info", variant="primary",
@@ -3152,7 +3228,10 @@ def create_app() -> gr.Blocks:
             model_info_refresh_btn.click(
                 fn=_refresh_model_info,
                 inputs=[state],
-                outputs=[mlflow_runs_table, feast_info_md],
+                outputs=[
+                    mlflow_runs_table, mc_report_md,
+                    feast_info_md, experiment_log_download,
+                ],
             )
 
           # --- Tab 8: Literature Search ---
@@ -3736,6 +3815,14 @@ def create_app() -> gr.Blocks:
                     f"Run registry exported to "
                     f"{out_dir / 'run_registry.json'}"
                 )
+
+                # Write comprehensive experiment log for debugging
+                try:
+                    exp_log_path = runner.export_experiment_log(out_dir)
+                    session["experiment_log_path"] = str(exp_log_path)
+                    log(f"Experiment log written to {exp_log_path}")
+                except Exception as _log_err:
+                    log(f"Warning: experiment log export failed: {_log_err}")
                 yield _yield_progress(
                     "\n".join(log_lines), 70,
                     "Results exported",
