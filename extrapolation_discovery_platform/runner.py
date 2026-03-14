@@ -418,6 +418,16 @@ class ExperimentRunner:
         """Model selection result from Phase 6 (None if not run)."""
         return self._model_selection_result
 
+    @property
+    def fs_summaries(self) -> Dict[str, Any]:
+        """Feature selection summaries from Phase 0.5 (empty before run)."""
+        return getattr(self, "_fs_summaries", {})
+
+    @property
+    def effective_cols(self) -> Dict[str, List[str]]:
+        """Effective columns per feature set after Phase 0 + 0.5."""
+        return self._effective_cols
+
     def run(
         self,
         compositions_df: pd.DataFrame,
@@ -541,18 +551,20 @@ class ExperimentRunner:
             )
 
             # ── Phase 0.5: Feature selection on cleaned columns ──
-            # Lasso-based feature selection removes uninformative
-            # features before training.  This addresses the issue
-            # where high-dimensional / collinear features were passed
-            # straight to learning without any selection step.
+            # Run ALL available feature selection methods (Lasso, AIC,
+            # BIC, ARD) on each feature set, then use the consensus
+            # features (selected by >= 2 methods) as the effective
+            # columns for training.  This is far more robust than
+            # relying on Lasso alone.
             #
             # FIX (data leakage): feature selection MUST use only training
-            # indices from the primary split.  Running LassoCV on the full
+            # indices from the primary split.  Running on the full
             # dataset (including the test fold) leaks target information
             # through feature selection, causing inflated train R² and
             # suppressed / unreliable test R².  Use CompositionBlock fold-0
             # train indices as a representative training subset.
             _primary_train_idx = fold_plan["CompositionBlock"][0][0]
+            self._fs_summaries: Dict[str, Any] = {}  # store for GUI display
 
             for _fs_key, _cols in list(self._effective_cols.items()):
                 if len(_cols) <= 3:
@@ -563,20 +575,41 @@ class ExperimentRunner:
                     _y_train = target.iloc[_primary_train_idx]
                     _fs_summary = run_feature_selection(
                         _X_fs_train, _y_train,
-                        methods=["Lasso"],
+                        methods=None,  # ALL methods: Lasso, AIC, BIC, ARD
+                        consensus_threshold=2,
                         feature_set=_fs_key,
                     )
-                    _lasso = _fs_summary.results.get("Lasso")
-                    if _lasso and _lasso.selected_features:
-                        _sel = _lasso.selected_features
-                        if len(_sel) >= 2:
+                    self._fs_summaries[_fs_key] = _fs_summary
+
+                    # Prefer consensus features (selected by >= 2 methods)
+                    if _fs_summary.consensus_features and len(_fs_summary.consensus_features) >= 2:
+                        _sel = _fs_summary.consensus_features
+                        logger.info(
+                            "Feature selection [%s]: %d → %d consensus features"
+                            " (%d methods, train-only, n_train=%d)",
+                            _fs_key, len(_cols), len(_sel),
+                            len(_fs_summary.results),
+                            len(_primary_train_idx),
+                        )
+                        self._effective_cols[_fs_key] = _sel
+                    else:
+                        # Fall back to Lasso-only if consensus is too small
+                        _lasso = _fs_summary.results.get("Lasso")
+                        if _lasso and _lasso.selected_features and len(_lasso.selected_features) >= 2:
+                            _sel = _lasso.selected_features
                             logger.info(
                                 "Feature selection [%s]: %d → %d features"
-                                " (train-only, n_train=%d)",
+                                " (Lasso fallback, train-only, n_train=%d)",
                                 _fs_key, len(_cols), len(_sel),
                                 len(_primary_train_idx),
                             )
                             self._effective_cols[_fs_key] = _sel
+                    # Log per-method results
+                    for _m_name, _m_res in _fs_summary.results.items():
+                        logger.info(
+                            "  %s [%s]: %d features selected",
+                            _m_name, _fs_key, _m_res.n_selected,
+                        )
                 except Exception:
                     logger.warning(
                         "Feature selection failed for %s; using all cleaned features",
@@ -607,6 +640,49 @@ class ExperimentRunner:
                 progress_callback, mint_configs or None,
             )
             self._registry.add_many(all_results)
+
+            # Log every individual run as a SEPARATE child run in
+            # the MLflow / in-memory tracker.  Previously log_run_result
+            # was called inside the parent experiment run, so all metrics
+            # were overwritten into a single run — making list_runs()
+            # return only 1 entry.  Now each run gets its own tracked run.
+            self._tracker.end_run()  # end the parent experiment run first
+            for _rr in all_results:
+                try:
+                    _run_label = (
+                        f"{_rr.workflow}_{_rr.feature_set}"
+                        f"_{_rr.split_policy}_s{_rr.seed}_f{_rr.fold}"
+                    )
+                    self._tracker.start_run(run_name=_run_label)
+                    self._tracker.log_run_result(_rr)
+                    self._tracker.end_run()
+                except Exception:
+                    logger.debug(
+                        "Failed to log run result to tracker: %s %s",
+                        _rr.workflow, _rr.feature_set,
+                    )
+                    try:
+                        self._tracker.end_run(status="FAILED")
+                    except Exception:
+                        pass
+
+            # Register effective columns per feature set with Feast store
+            for _fs_key, _fs_cols in self._effective_cols.items():
+                try:
+                    self._feature_store.register_feature_set(
+                        _fs_key, _fs_cols,
+                    )
+                except Exception:
+                    logger.debug(
+                        "Failed to register feature set %s in Feast",
+                        _fs_key,
+                    )
+
+            # Re-open a summary run to log experiment summary
+            self._tracker.start_run(
+                run_name=f"experiment_summary_{int(t_start)}",
+                tags={"type": "experiment_summary"},
+            )
 
             self._ood_split_indices = {}
             ood_results, ood_errors_for_eval = self._phase4_ood(

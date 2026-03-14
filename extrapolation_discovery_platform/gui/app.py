@@ -228,7 +228,19 @@ def _refresh_dashboard_data(
 
         n_runs = str(len(runs))
         best_fs = scores[0].feature_set if scores else "--"
-        best_score = f"{scores[0].total:.4f}" if scores else "--"
+
+        # Show best model's R² (Test) as the primary KPI — much more
+        # informative than the abstract validity total score.
+        if runs:
+            best_run = max(runs, key=lambda r: r.r2_test)
+            best_score = (
+                f"R²={best_run.r2_test:.4f} "
+                f"({best_run.workflow}/{best_run.feature_set})"
+            )
+        elif scores:
+            best_score = f"{scores[0].total:.4f}"
+        else:
+            best_score = "--"
 
         total_ood = (
             sum(r.n_ood for r in ood_results.values()) if ood_results else 0
@@ -3053,14 +3065,15 @@ def create_app() -> gr.Blocks:
                 import pandas as _pd
 
                 # --- Per-run metrics from session RunResult objects ---
-                # Primary source: session["runs"] always contains accurate
-                # per-run metrics from the RunResult dataclass.
-                # The tracker only holds one experiment-summary run (not
-                # per-workflow data), so it is NOT used for the runs table.
+                # Sort by R² (Test) descending so best models appear first.
                 runs_data: List[Dict[str, Any]] = []
                 runner_obj = session.get("runner")
+                session_runs = list(session.get("runs", []))
+                session_runs.sort(
+                    key=lambda r: r.r2_test, reverse=True,
+                )
 
-                for r in session.get("runs", []):
+                for r in session_runs:
                     runs_data.append({
                         "workflow": r.workflow,
                         "feature_set": r.feature_set,
@@ -3123,16 +3136,84 @@ def create_app() -> gr.Blocks:
                         "*Phase 0 レポートがありません。"
                         "解析を実行してください。*"
                     )
+
+                # --- Phase 0.5 Feature Selection summaries ---
+                if runner_obj is not None:
+                    fs_sums = runner_obj.fs_summaries
+                    if fs_sums:
+                        mc_lines.append("---")
+                        mc_lines.append(
+                            "## Phase 0.5: 特徴量選択 "
+                            "(Feature Selection)"
+                        )
+                        for fs_key, fs_sum in fs_sums.items():
+                            mc_lines.append(f"### {fs_key}")
+                            for m_name, m_res in fs_sum.results.items():
+                                mc_lines.append(
+                                    f"- **{m_name}**: "
+                                    f"{m_res.n_selected} features selected"
+                                )
+                            consensus = fs_sum.consensus_features
+                            if consensus:
+                                mc_lines.append(
+                                    f"- **Consensus** "
+                                    f"(≥{fs_sum.consensus_threshold} methods): "
+                                    f"{len(consensus)} features"
+                                )
+                            eff_cols = runner_obj.effective_cols.get(
+                                fs_key, [],
+                            )
+                            mc_lines.append(
+                                f"- **Effective** (used in training): "
+                                f"{len(eff_cols)} features"
+                            )
+                            mc_lines.append("")
+
                 mc_md = "\n".join(mc_lines)
 
                 # --- Tracker / Feast info ---
                 tracker_lines: List[str] = []
                 if runner_obj is not None:
+                    tracker = runner_obj.tracker
                     tracker_lines.append(
                         f"**MLflow**: "
-                        f"{'Active' if runner_obj.tracker.is_mlflow_active else 'In-memory fallback'} "
-                        f"({runner_obj.tracker.get_tracking_uri()})"
+                        f"{'Active' if tracker.is_mlflow_active else 'In-memory fallback'} "
+                        f"({tracker.get_tracking_uri()})"
                     )
+
+                    # Show ALL tracked runs from MLflow / in-memory store
+                    tracked_runs = tracker.list_runs()
+                    n_tracked = len(tracked_runs)
+                    tracker_lines.append(
+                        f"**Tracked Runs**: {n_tracked} total"
+                    )
+                    if tracked_runs:
+                        tracker_lines.append("")
+                        tracker_lines.append(
+                            "| Run Name | Status | Key Metrics |"
+                        )
+                        tracker_lines.append(
+                            "|----------|--------|-------------|"
+                        )
+                        for tr in tracked_runs[:50]:
+                            m = tr.get("metrics", {})
+                            metrics_str = ", ".join(
+                                f"{k}={v:.4f}"
+                                for k, v in sorted(m.items())
+                                if isinstance(v, (int, float))
+                                and k in (
+                                    "rmse_test", "r2_test",
+                                    "rmse_train", "r2_train",
+                                )
+                            )
+                            tracker_lines.append(
+                                f"| {tr.get('run_name', '?')} "
+                                f"| {tr.get('status', '?')} "
+                                f"| {metrics_str} |"
+                            )
+                        tracker_lines.append("")
+
+                    # Feast info
                     fs_store = runner_obj.feature_store
                     tracker_lines.append(
                         f"**Feast**: "
@@ -3140,10 +3221,13 @@ def create_app() -> gr.Blocks:
                     )
                     fs_sets = fs_store.list_feature_sets()
                     for fs_name, fs_info in fs_sets.items():
+                        src = fs_info.get("source", "?")
+                        n_feat = fs_info.get("n_features", "?")
+                        ver = fs_info.get("version", 1)
                         tracker_lines.append(
                             f"- **{fs_name}**: "
-                            f"{fs_info.get('n_features', '?')} features "
-                            f"(source: {fs_info.get('source', '?')})"
+                            f"{n_feat} features "
+                            f"(source: {src}, v{ver})"
                         )
                 else:
                     tracker_lines.append(
@@ -3335,6 +3419,10 @@ def create_app() -> gr.Blocks:
             empty_ms = "*Running...*"
             empty_ood = (None, "", pd.DataFrame())
             empty_rpt = ("*Running...*", None)
+            empty_model_info = (
+                pd.DataFrame(), "*Running...*",
+                "*Running...*", None,
+            )
             empty_summary = (
                 build_summary_stats_md(None, None, None),
                 None, None, None, pd.DataFrame(),
@@ -3356,6 +3444,7 @@ def create_app() -> gr.Blocks:
                     *summ,
                     *empty_dash, *empty_res, empty_ms,
                     *empty_ood, *empty_rpt,
+                    *empty_model_info,
                 )
 
             succeeded = False
@@ -3988,6 +4077,18 @@ def create_app() -> gr.Blocks:
             final_ood = _refresh_ood_data(ood_fs, session)
             final_rpt = _refresh_report_data(session)
 
+            # Model Info tab auto-refresh
+            try:
+                final_model_info = _refresh_model_info(session)
+            except Exception:
+                import pandas as _pd_fallback
+                final_model_info = (
+                    _pd_fallback.DataFrame(),
+                    "*Error refreshing model info.*",
+                    "*Error refreshing tracker info.*",
+                    None,
+                )
+
             # Model selection markdown
             ms_result_obj = session.get("model_selection_result")
             if ms_result_obj is not None:
@@ -4045,6 +4146,7 @@ def create_app() -> gr.Blocks:
                 final_ms_md,
                 *final_ood,
                 *final_rpt,
+                *final_model_info,
             )
 
         # Wire up the run button to the generator
@@ -4084,6 +4186,9 @@ def create_app() -> gr.Blocks:
                 ood_plot, ood_summary, ood_candidates,
                 # Report tab (fix #8)
                 report_md, download_btn,
+                # Model Info tab — auto-refresh after experiment
+                mlflow_runs_table, mc_report_md,
+                feast_info_md, experiment_log_download,
             ],
         )
 

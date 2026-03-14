@@ -674,7 +674,11 @@ def plotly_feature_frequency(
 # ---------------------------------------------------------------------------
 
 def runs_to_dataframe(runs: List[Any]) -> pd.DataFrame:
-    """Convert list of RunResult to a summary DataFrame."""
+    """Convert list of RunResult to a summary DataFrame.
+
+    Results are sorted by R² (Test) descending so the best-performing
+    models appear at the top of the table.
+    """
     records = []
     for r in runs:
         records.append({
@@ -691,7 +695,10 @@ def runs_to_dataframe(runs: List[Any]) -> pd.DataFrame:
             "R² (Test)": round(r.r2_test, 4),
             "Time (s)": round(r.elapsed_sec, 2),
         })
-    return _records_to_df(records)
+    df = _records_to_df(records)
+    if not df.empty and "R² (Test)" in df.columns:
+        df = df.sort_values("R² (Test)", ascending=False).reset_index(drop=True)
+    return df
 
 
 def validity_scores_to_dataframe(scores: List[Any]) -> pd.DataFrame:
