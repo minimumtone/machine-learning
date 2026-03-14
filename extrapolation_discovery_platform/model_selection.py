@@ -665,7 +665,7 @@ def refit_and_save(
                 "Failed to set best_params for %s — using defaults",
                 best_candidate.name,
             )
-    else:
+    elif best_params is None:
         # best_params is None (e.g. LassoCV selects alpha internally).
         # This is expected for CV-based estimators.  For HPO-based
         # candidates (XGB, RF) it means all folds failed — log a warning.
