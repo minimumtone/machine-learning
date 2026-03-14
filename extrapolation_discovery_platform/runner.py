@@ -643,13 +643,13 @@ class ExperimentRunner:
 
         # Fallback: pick by FS priority
         _FS_PRIORITY = ["FS_BASE", "FS_THERMO", "FS_SIZE", "FS_ELECTRON", "FS_ALL", "FS_MAGPIE"]
-        if best_cols is None:
+        if not best_cols:
             for fs_key in _FS_PRIORITY:
                 if fs_key in self._effective_cols and self._effective_cols[fs_key]:
                     best_cols = self._effective_cols[fs_key]
                     break
 
-        if best_cols is None:
+        if not best_cols:
             best_cols = list(features_all.columns)
 
         X = features_all[best_cols]
