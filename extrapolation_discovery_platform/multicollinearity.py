@@ -232,10 +232,13 @@ class MulticollinearityReport:
     recommended_workflows: List[str]
     blocked_workflows: List[str]
     leak_suspects: Dict[str, float] = None  # type: ignore[assignment]  # {feat: |corr|}
+    cleaned_columns: List[str] = None  # type: ignore[assignment]  # columns after cleanup
 
     def __post_init__(self) -> None:
         if self.leak_suspects is None:
             self.leak_suspects = {}
+        if self.cleaned_columns is None:
+            self.cleaned_columns = []
 
     @property
     def high_vif_ratio(self) -> float:
@@ -256,6 +259,7 @@ class MulticollinearityReport:
             'recommended_workflows': self.recommended_workflows,
             'blocked_workflows': self.blocked_workflows,
             'leak_suspects': self.leak_suspects,
+            'cleaned_columns': self.cleaned_columns,
         }
 
 
@@ -394,6 +398,11 @@ def run_phase0_multicollinearity(
                 )
 
         # Step D: Model selection
+        # Cleaned columns = original columns minus dropped constant/perfect/leak
+        cleaned_cols = list(X_fs.columns)
+        if leak_suspects:
+            cleaned_cols = [c for c in cleaned_cols if c not in leak_suspects]
+
         report = MulticollinearityReport(
             feature_set=fs_key,
             n_features_before=n_before,
@@ -407,6 +416,7 @@ def run_phase0_multicollinearity(
             recommended_workflows=[],
             blocked_workflows=[],
             leak_suspects=leak_suspects,
+            cleaned_columns=cleaned_cols,
         )
         allowed, blocked, reason = select_workflows_for_feature_set(
             report, all_workflows, n_samples

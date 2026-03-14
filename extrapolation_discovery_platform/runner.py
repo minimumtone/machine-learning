@@ -90,6 +90,9 @@ from extrapolation_discovery_platform.multicollinearity import (
     MulticollinearityReport,
     run_phase0_multicollinearity,
 )
+from extrapolation_discovery_platform.feature_selection import (
+    run_feature_selection,
+)
 from extrapolation_discovery_platform._compat import as_serializable
 
 logger = logging.getLogger(__name__)
@@ -455,6 +458,42 @@ class ExperimentRunner:
                 target=target,
             )
             self._mc_reports = mc_reports
+
+            # ── Phase 0b: Feature selection on cleaned columns ──
+            # Run Lasso-based feature selection on the multicollinearity-
+            # cleaned columns to further reduce dimensionality.
+            # Only for feature sets with > 10 features (where selection
+            # matters). Updates mc_report.cleaned_columns in-place.
+            for fs in feature_sets:
+                fs_key = fs.value
+                mc_rpt = mc_reports.get(fs_key)
+                if mc_rpt is None or len(mc_rpt.cleaned_columns) <= 10:
+                    continue
+                try:
+                    avail = [c for c in mc_rpt.cleaned_columns
+                             if c in features_all.columns]
+                    if len(avail) <= 10:
+                        continue
+                    X_sel = features_all[avail]
+                    fs_summary = run_feature_selection(
+                        X_sel, target,
+                        methods=["Lasso"],
+                        consensus_threshold=1,
+                        feature_set=fs_key,
+                    )
+                    if fs_summary.consensus_features:
+                        mc_rpt.cleaned_columns = fs_summary.consensus_features
+                        logger.info(
+                            "Phase 0b [%s]: feature selection %d→%d columns",
+                            fs_key, len(avail),
+                            len(fs_summary.consensus_features),
+                        )
+                except Exception:
+                    logger.debug(
+                        "Phase 0b [%s]: feature selection skipped (error)",
+                        fs_key,
+                    )
+
             if progress_callback is not None:
                 try:
                     progress_callback(
@@ -645,11 +684,19 @@ class ExperimentRunner:
         Each worker receives a read-only view and slices its own train/test.
         """
         # Build one C-contiguous array per feature set (not per seed/job)
+        # Use cleaned columns from Phase 0 multicollinearity when available,
+        # falling back to the full FeatureCatalog columns otherwise.
         fs_arrays: Dict[str, Tuple[np.ndarray, List[str]]] = {}
         for fs_name in feature_sets:
-            cols = list(FeatureCatalog.columns(fs_name))
+            fs_key = fs_name.value
+            mc_report = (self._mc_reports or {}).get(fs_key)
+            if mc_report and mc_report.cleaned_columns:
+                cols = [c for c in mc_report.cleaned_columns
+                        if c in features_all.columns]
+            else:
+                cols = list(FeatureCatalog.columns(fs_name))
             arr = safe_array(features_all[cols])
-            fs_arrays[fs_name.value] = (arr, cols)
+            fs_arrays[fs_key] = (arr, cols)
             logger.debug(
                 "Phase 3 prep: %s → array shape=%s C-contiguous=%s",
                 fs_name.value, arr.shape, arr.flags["C_CONTIGUOUS"],
@@ -766,7 +813,13 @@ class ExperimentRunner:
 
         for fs_name in feature_sets:
             fs_key = fs_name.value
-            cols = list(FeatureCatalog.columns(fs_name))
+            # Use cleaned columns from Phase 0 (same as Phase 3)
+            mc_report = (self._mc_reports or {}).get(fs_key)
+            if mc_report and mc_report.cleaned_columns:
+                cols = [c for c in mc_report.cleaned_columns
+                        if c in features_all.columns]
+            else:
+                cols = list(FeatureCatalog.columns(fs_name))
 
             # C-contiguous slices — same pattern as Phase 3
             X_fs_arr = safe_array(features_all[cols])
