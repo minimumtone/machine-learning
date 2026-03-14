@@ -82,7 +82,10 @@ def make_stratify_labels(y: np.ndarray, n_bins: int = 5) -> np.ndarray:
     n_unique = len(np.unique(y_arr))
     bins = min(n_bins, max(2, n_unique))
 
-    kb = KBinsDiscretizer(n_bins=bins, encode="ordinal", strategy="quantile")
+    kb = KBinsDiscretizer(
+        n_bins=bins, encode="ordinal", strategy="quantile",
+        subsample=None,
+    )
     labels = kb.fit_transform(y_arr).astype(int).ravel()
     return labels
 
@@ -428,9 +431,12 @@ def nested_cv_evaluate(
         y_te = pd.Series(y_arr[outer_test_idx])
 
         inner_labels = make_stratify_labels(y_tr.values, n_bins=min(5, n_inner))
-        inner_cv = StratifiedKFold(
+        _skf = StratifiedKFold(
             n_splits=n_inner, shuffle=True, random_state=random_state,
         )
+        # Pre-compute splits using discretised labels so that
+        # RandomizedSearchCV never calls split(X, y_continuous).
+        inner_cv = list(_skf.split(safe_array(X_tr), inner_labels))
 
         for name, pipeline, param_dist in candidates:
             msg = f"Fold {fold_i + 1}/{n_outer}: {name}"
