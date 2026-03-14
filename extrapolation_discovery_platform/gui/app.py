@@ -3052,84 +3052,28 @@ def create_app() -> gr.Blocks:
                 """Refresh run metrics, MC reports, tracker info, and log."""
                 import pandas as _pd
 
-                # --- Per-run metrics from session ---
+                # --- Per-run metrics from session RunResult objects ---
+                # Primary source: session["runs"] always contains accurate
+                # per-run metrics from the RunResult dataclass.
+                # The tracker only holds one experiment-summary run (not
+                # per-workflow data), so it is NOT used for the runs table.
                 runs_data: List[Dict[str, Any]] = []
                 runner_obj = session.get("runner")
 
-                # 1. Try runner's tracker (preserves MLflow / in-memory data)
-                if runner_obj is not None:
-                    try:
-                        for tr in runner_obj.tracker.list_runs():
-                            runs_data.append({
-                                "workflow": tr.get("params", {}).get(
-                                    "workflow", "",
-                                ),
-                                "feature_set": tr.get("params", {}).get(
-                                    "feature_set", "",
-                                ),
-                                "split_policy": tr.get("params", {}).get(
-                                    "split_policy", "",
-                                ),
-                                "seed": tr.get("params", {}).get(
-                                    "seed", "",
-                                ),
-                                "fold": tr.get("params", {}).get(
-                                    "fold", "",
-                                ),
-                                "rmse_train": tr.get("metrics", {}).get(
-                                    "rmse_train", "",
-                                ),
-                                "rmse_test": tr.get("metrics", {}).get(
-                                    "rmse_test", "",
-                                ),
-                                "r2_train": tr.get("metrics", {}).get(
-                                    "r2_train", "",
-                                ),
-                                "r2_test": tr.get("metrics", {}).get(
-                                    "r2_test", "",
-                                ),
-                                "mae_test": tr.get("metrics", {}).get(
-                                    "mae_test", "",
-                                ),
-                                "elapsed_sec": tr.get("metrics", {}).get(
-                                    "elapsed_sec", "",
-                                ),
-                            })
-                    except Exception:
-                        pass
-
-                # 2. Fallback: build from session RunResult objects
-                if not runs_data:
-                    for r in session.get("runs", []):
-                        runs_data.append({
-                            "workflow": getattr(r, "workflow", ""),
-                            "feature_set": getattr(
-                                r, "feature_set", "",
-                            ),
-                            "split_policy": getattr(
-                                r, "split_policy", "",
-                            ),
-                            "seed": getattr(r, "seed", ""),
-                            "fold": getattr(r, "fold", ""),
-                            "rmse_train": round(
-                                float(getattr(r, "rmse_train", 0)), 4,
-                            ),
-                            "rmse_test": round(
-                                float(getattr(r, "rmse_test", 0)), 4,
-                            ),
-                            "r2_train": round(
-                                float(getattr(r, "r2_train", 0)), 4,
-                            ),
-                            "r2_test": round(
-                                float(getattr(r, "r2_test", 0)), 4,
-                            ),
-                            "mae_test": round(
-                                float(getattr(r, "mae_test", 0)), 4,
-                            ),
-                            "elapsed_sec": round(
-                                float(getattr(r, "elapsed_sec", 0)), 3,
-                            ),
-                        })
+                for r in session.get("runs", []):
+                    runs_data.append({
+                        "workflow": r.workflow,
+                        "feature_set": r.feature_set,
+                        "split_policy": r.split_policy,
+                        "seed": int(r.seed),
+                        "fold": int(r.fold),
+                        "rmse_train": round(float(r.rmse_train), 4),
+                        "rmse_test": round(float(r.rmse_test), 4),
+                        "r2_train": round(float(r.r2_train), 4),
+                        "r2_test": round(float(r.r2_test), 4),
+                        "mae_test": round(float(r.mae_test), 4),
+                        "elapsed_sec": round(float(r.elapsed_sec), 3),
+                    })
 
                 runs_df = (
                     _pd.DataFrame(runs_data) if runs_data
