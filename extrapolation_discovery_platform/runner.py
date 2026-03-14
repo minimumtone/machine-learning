@@ -1,6 +1,6 @@
 """Experiment Runner — orchestrates the 7-phase ML pipeline.
 
-Phases: 1 Multicollinearity  2 Feature-selection  3 Fold-precompute
+Phases: 1 Multicollinearity  2 Fold-precompute   3 Feature-selection
         4 Job-list build     5 Parallel training  6 OOD  7 Evaluate
 """
 
