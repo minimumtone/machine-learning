@@ -1436,6 +1436,155 @@ def _detect_element_columns(
     return elem_cols, col_to_elem
 
 
+def _detect_element_value_format(
+    raw: pd.DataFrame,
+    available: set,
+) -> Tuple[
+    List[Dict[str, float]],   # compositions
+    List[int],                 # valid_indices
+    Optional[pd.DataFrame],   # comps_df (element-fraction matrix)
+]:
+    """Detect CSV formats where element symbols appear as column **values**.
+
+    Supports two patterns:
+
+    **Pattern A — paired element/count columns**:
+      ``element_A``, ``element_B``, ... paired with ``count_A``, ``count_B``, ...
+      The ``element_*`` columns contain element symbols; the ``count_*``
+      columns contain the corresponding atomic fractions / counts.
+
+    **Pattern B — ``formula`` column**:
+      A single column named ``formula`` (case-insensitive) containing
+      chemical formulae like ``"PuBi"``, ``"Fe2O3"``, ``"NiAl"``.
+
+    Returns ``(compositions, valid_indices, comps_df)`` on success, or
+    ``([], [], None)`` if neither pattern matches.
+    """
+    import re as _re
+
+    compositions: List[Dict[str, float]] = []
+    valid_indices: List[int] = []
+
+    # --- Pattern A: element_X / count_X paired columns ---
+    # Find columns whose values are predominantly element symbols.
+    elem_val_cols: List[str] = []
+    count_val_cols: List[str] = []
+
+    # Heuristic: look for column pairs like (element_A, count_A),
+    # (element_B, count_B), etc.  Also accept (elem_1, count_1).
+    _pair_re = _re.compile(
+        r'^(element|elem|el|comp|component)[_\s]?(.+)$', _re.IGNORECASE,
+    )
+    _count_prefixes = ("count", "frac", "fraction", "amount", "x", "ratio")
+
+    paired: List[Tuple[str, str]] = []  # (elem_col, count_col)
+    for col in raw.columns:
+        m = _pair_re.match(col)
+        if m is None:
+            continue
+        suffix = m.group(2)
+        # Look for a matching count column with the same suffix
+        for prefix in _count_prefixes:
+            candidates = [
+                f"{prefix}_{suffix}", f"{prefix}{suffix}",
+                f"{prefix.capitalize()}_{suffix}",
+            ]
+            for cand in candidates:
+                # Case-insensitive column lookup
+                for real_col in raw.columns:
+                    if real_col.lower() == cand.lower() and real_col != col:
+                        paired.append((col, real_col))
+                        break
+                else:
+                    continue
+                break
+            else:
+                continue
+            break
+
+    if paired:
+        # Validate: check that element columns actually contain element symbols
+        available_lower = {e.lower(): e for e in available}
+        _valid_pairs: List[Tuple[str, str]] = []
+        for ecol, ccol in paired:
+            vals = raw[ecol].dropna().astype(str).str.strip()
+            matched = vals.apply(
+                lambda v: v in available or v.lower() in available_lower,
+            )
+            if matched.mean() >= 0.5:  # at least 50% are element symbols
+                _valid_pairs.append((ecol, ccol))
+
+        if _valid_pairs:
+            for idx, row in raw.iterrows():
+                comp: Dict[str, float] = {}
+                for ecol, ccol in _valid_pairs:
+                    elem_val = row[ecol]
+                    count_val = row[ccol]
+                    if pd.isna(elem_val) or pd.isna(count_val):
+                        continue
+                    elem_str = str(elem_val).strip()
+                    canon = (
+                        elem_str if elem_str in available
+                        else available_lower.get(elem_str.lower())
+                    )
+                    if canon is None:
+                        continue
+                    try:
+                        fv = float(count_val)
+                    except (ValueError, TypeError):
+                        continue
+                    if fv > 0:
+                        comp[canon] = comp.get(canon, 0.0) + fv
+                if comp:
+                    compositions.append(comp)
+                    valid_indices.append(idx)
+
+    # --- Pattern B: formula column ---
+    if not compositions:
+        formula_col = None
+        for col in raw.columns:
+            if col.lower() in ("formula", "composition", "comp", "alloy"):
+                formula_col = col
+                break
+
+        if formula_col is not None:
+            _FORMULA_RE = _re.compile(r'([A-Z][a-z]?)(\d*\.?\d*)')
+            available_lower = {e.lower(): e for e in available}
+            for idx, val in raw[formula_col].items():
+                if pd.isna(val):
+                    continue
+                formula_str = str(val).strip()
+                comp: Dict[str, float] = {}
+                for sym, num in _FORMULA_RE.findall(formula_str):
+                    if not sym:
+                        continue
+                    canon = (
+                        sym if sym in available
+                        else available_lower.get(sym.lower())
+                    )
+                    if canon is None:
+                        continue
+                    frac = float(num) if num else 1.0
+                    if frac > 0:
+                        comp[canon] = comp.get(canon, 0.0) + frac
+                if comp:
+                    compositions.append(comp)
+                    valid_indices.append(idx)
+
+    if not compositions:
+        return [], [], None
+
+    # Build a comps_df (element-fraction matrix) from compositions
+    all_elems = sorted(
+        {e for c in compositions for e in c},
+    )
+    comps_df = pd.DataFrame(
+        [{e: c.get(e, 0.0) for e in all_elems} for c in compositions],
+    ).reset_index(drop=True)
+
+    return compositions, valid_indices, comps_df
+
+
 def _handle_csv_upload(
     file_obj: Any,
     target_col: str,
@@ -1499,8 +1648,22 @@ def _handle_csv_upload(
             list(raw.columns), available,
         )
 
+        # --- Fallback: element-value format detection ---
+        # If no element-named columns found, try detecting element
+        # symbols as column VALUES (e.g. element_A/count_A pattern
+        # or a formula column).
+        ev_compositions: List[Dict[str, float]] = []
+        ev_indices: List[int] = []
+        ev_comps_df: Optional[pd.DataFrame] = None
+        if not elem_cols:
+            ev_compositions, ev_indices, ev_comps_df = (
+                _detect_element_value_format(raw, available)
+            )
+
+        has_element_info = bool(elem_cols) or bool(ev_compositions)
+
         # Decide mode: HEA vs Generic
-        if force_hea and not elem_cols:
+        if force_hea and not has_element_info:
             return (
                 _make_error_banner(
                     "HEAモード選択エラー",
@@ -1508,12 +1671,13 @@ def _handle_csv_upload(
                     "HEA (元素列) モードを使用するには、"
                     "元素名 (例: Fe, Ni, Co) または元素分率 "
                     "(例: Fe_frac, Ni_at%) の列が必要です。"
+                    "element_A/count_A 形式や formula 列も対応しています。"
                     "<br>自動検出 (auto) または汎用 (Generic) "
                     "モードをお試しください。",
                 ),
                 None, None, None, pd.DataFrame(), session,
             )
-        use_generic = force_generic or (not elem_cols)
+        use_generic = force_generic or (not has_element_info)
 
         if use_generic:
             # --- Generic CSV mode ---
@@ -1532,42 +1696,52 @@ def _handle_csv_upload(
         # --- HEA mode ---
         session["csv_mode"] = "hea"
 
-        # Build compositions list using canonical element symbols.
-        # Guard against NaN / non-numeric values in element columns.
-        valid_indices: List[int] = []
-        compositions = []
-        for idx, row in raw[elem_cols].iterrows():
-            comp: Dict[str, float] = {}
-            for c, v in row.items():
-                try:
-                    fv = float(v)
-                except (ValueError, TypeError):
-                    continue
-                if np.isnan(fv) or fv <= 0:
-                    continue
-                comp[col_to_elem[c]] = fv
-            if comp:
-                compositions.append(comp)
-                valid_indices.append(idx)
+        # Build compositions — either from element-named columns
+        # or from element-value format detection.
+        if elem_cols:
+            # Pattern: column names ARE element symbols (e.g. Fe, Ni)
+            valid_indices: List[int] = []
+            compositions: List[Dict[str, float]] = []
+            for idx, row in raw[elem_cols].iterrows():
+                comp: Dict[str, float] = {}
+                for c, v in row.items():
+                    try:
+                        fv = float(v)
+                    except (ValueError, TypeError):
+                        continue
+                    if np.isnan(fv) or fv <= 0:
+                        continue
+                    comp[col_to_elem[c]] = fv
+                if comp:
+                    compositions.append(comp)
+                    valid_indices.append(idx)
 
-        if not compositions:
-            return (
-                _make_error_banner(
-                    "有効な組成データなし",
-                    "検出された元素列の値がすべて 0 です。"
-                    "原子分率が正の値を持つ行が必要です。",
-                ),
-                None, None, None, pd.DataFrame(), session,
+            if not compositions:
+                return (
+                    _make_error_banner(
+                        "有効な組成データなし",
+                        "検出された元素列の値がすべて 0 です。"
+                        "原子分率が正の値を持つ行が必要です。",
+                    ),
+                    None, None, None, pd.DataFrame(), session,
+                )
+
+            # Composition DataFrame — rename to canonical element symbols
+            comps_df = raw.loc[valid_indices, elem_cols].copy().reset_index(
+                drop=True,
             )
-
-        # Composition DataFrame — rename to canonical element symbols
-        comps_df = raw.loc[valid_indices, elem_cols].copy().reset_index(
-            drop=True,
-        )
-        comps_df.columns = [col_to_elem[c] for c in comps_df.columns]
+            comps_df.columns = [col_to_elem[c] for c in comps_df.columns]
+        else:
+            # Pattern: element symbols as VALUES (element_A/count_A
+            # or formula column) — already detected above.
+            compositions = ev_compositions
+            valid_indices = ev_indices
+            comps_df = ev_comps_df
 
         # Compute features
         features_df = compute_features(compositions, feature_set=None)
+        # Consolidate to C-contiguous to avoid fragmented BlockManager
+        features_df = _consolidate_df(features_df)
 
         # Extract or synthesize target — aligned to valid rows
         if target_col_clean and target_col_clean in raw.columns:
@@ -1933,49 +2107,44 @@ def create_app() -> gr.Blocks:
         margin-left: 180px !important;
     }
     /* Hide the default Gradio tab bar (replaced by sidebar) */
-    #main-tabs > .tab-nav {
+    #main-tabs > .tab-nav,
+    #main-tabs > [role=tablist] {
         display: none !important;
     }
     @media (max-width: 768px) {
         #sidebar-nav { display: none; }
         .gradio-container { margin-left: 0 !important; }
-        #main-tabs > .tab-nav { display: flex !important; }
+        #main-tabs > .tab-nav,
+        #main-tabs > [role=tablist] { display: flex !important; }
     }
     """
 
     # JavaScript for sidebar tab switching
+    # Compatible with Gradio 6.x ([role=tablist]) and earlier (.tab-nav).
     _SIDEBAR_JS = """
     () => {
         // Wait for Gradio to render, then inject sidebar
         setTimeout(() => {
             if (document.getElementById('sidebar-nav')) return;
-            const tabs = [
-                '⚙ Config & Run',
-                '📊 Data Summary',
-                '📈 Dashboard',
-                '🔬 Results',
-                '🗺 OOD Map',
-                '🔍 FS Comparison',
-                '🧠 Model Selection',
-                '📖 Model Info',
-                '📚 Literature',
-                '📝 Report'
-            ];
+
+            // Find Gradio's tab bar — Gradio 6.x uses [role=tablist],
+            // earlier versions use .tab-nav inside #main-tabs.
+            const tabNav = document.querySelector('#main-tabs [role=tablist]')
+                        || document.querySelector('#main-tabs > .tab-nav');
+            if (!tabNav) return;  // tabs not rendered yet
+
+            const gradioTabBtns = tabNav.querySelectorAll('[role=tab], button');
+            const labels = Array.from(gradioTabBtns).map(b => b.textContent.trim());
+
             const nav = document.createElement('div');
             nav.id = 'sidebar-nav';
             nav.innerHTML = '<div class="sidebar-title">Navigation</div>';
-            tabs.forEach((label, idx) => {
+            labels.forEach((label, idx) => {
                 const btn = document.createElement('button');
                 btn.className = 'sidebar-btn' + (idx === 0 ? ' active' : '');
                 btn.textContent = label;
                 btn.onclick = () => {
-                    // Click the corresponding Gradio tab button
-                    const tabNav = document.querySelector('#main-tabs > .tab-nav');
-                    if (tabNav) {
-                        const tabBtns = tabNav.querySelectorAll('button');
-                        if (tabBtns[idx]) tabBtns[idx].click();
-                    }
-                    // Update active state
+                    if (gradioTabBtns[idx]) gradioTabBtns[idx].click();
                     nav.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                 };
@@ -1984,21 +2153,19 @@ def create_app() -> gr.Blocks:
             document.body.appendChild(nav);
 
             // Sync sidebar when user clicks Gradio tabs directly
-            const tabNav = document.querySelector('#main-tabs > .tab-nav');
-            if (tabNav) {
-                const observer = new MutationObserver(() => {
-                    const tabBtns = tabNav.querySelectorAll('button');
-                    const sidebarBtns = nav.querySelectorAll('.sidebar-btn');
-                    tabBtns.forEach((tb, idx) => {
-                        if (tb.classList.contains('selected') && sidebarBtns[idx]) {
-                            sidebarBtns.forEach(b => b.classList.remove('active'));
-                            sidebarBtns[idx].classList.add('active');
-                        }
-                    });
+            const observer = new MutationObserver(() => {
+                const sidebarBtns = nav.querySelectorAll('.sidebar-btn');
+                gradioTabBtns.forEach((tb, idx) => {
+                    const isActive = tb.getAttribute('aria-selected') === 'true'
+                                  || tb.classList.contains('selected');
+                    if (isActive && sidebarBtns[idx]) {
+                        sidebarBtns.forEach(b => b.classList.remove('active'));
+                        sidebarBtns[idx].classList.add('active');
+                    }
                 });
-                observer.observe(tabNav, { attributes: true, subtree: true });
-            }
-        }, 1000);
+            });
+            observer.observe(tabNav, { attributes: true, subtree: true });
+        }, 1500);
     }
     """
 
@@ -2102,16 +2269,21 @@ def create_app() -> gr.Blocks:
                     "| モード | 選択基準 | 説明 |\n"
                     "|--------|----------|------|\n"
                     "| **auto** | 迷ったらこれ | "
-                    "列名から元素列を自動検出し、HEA/Generic を自動判定します |\n"
-                    "| **HEA (元素列)** | CSV に元素名の列がある場合 | "
-                    "元素列（Fe, Co, Ni 等）から周期律表データ・"
+                    "列名・列値から元素情報を自動検出し、"
+                    "HEA/Generic を自動判定します |\n"
+                    "| **HEA (元素列)** | CSV に元素情報がある場合 | "
+                    "元素列（Fe, Co, Ni 等）や element_A/count_A 形式、"
+                    "formula 列から周期律表データ・"
                     "熱力学特徴量・MAGPIE 特徴量を自動生成します |\n"
                     "| **Generic (汎用)** | 元素データでない一般的なCSV | "
                     "列をそのまま説明変数として使用。"
                     "特徴量生成は行いません |\n\n"
-                    "> **ヒント**: HEA モードでは元素名（文字列列）を"
-                    "説明因子に含めると、周期律表データと "
-                    "MAGPIE/matminer 特徴量が自動計算されます。"
+                    "> **ヒント**: 以下の形式に対応しています:\n"
+                    "> - 列名が元素名 (Fe, Ni 等)\n"
+                    "> - element_A/count_A, element_B/count_B 形式\n"
+                    "> - formula 列 (化学式: Fe2O3 等)\n\n"
+                    "> いずれの形式でも周期律表データと "
+                    "MAGPIE 特徴量が自動計算されます。"
                 )
                 csv_feature_checks = gr.CheckboxGroup(
                     label="説明因子 (Explanatory Variables)",
