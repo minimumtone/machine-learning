@@ -521,6 +521,7 @@ def run_individual(
                 )
                 if splits:
                     # 分割ポリシー名を実際に使ったものに更新
+                    split_policy_name = "RandomCV"
                     result.split_policy = f"RandomCV (ElementExclusion fallback)"
             if not splits:
                 raise ValueError(
