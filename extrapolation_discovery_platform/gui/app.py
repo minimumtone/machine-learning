@@ -1570,7 +1570,10 @@ def _detect_element_value_format(
                     )
                     if canon is None:
                         continue
-                    frac = float(num) if num else 1.0
+                    try:
+                        frac = float(num) if num else 1.0
+                    except (ValueError, TypeError):
+                        continue
                     if frac > 0:
                         comp[canon] = comp.get(canon, 0.0) + frac
                 if comp:
@@ -2093,9 +2096,9 @@ def create_app() -> gr.Blocks:
         font-size: 13px;
         cursor: pointer;
         transition: background 0.15s, color 0.15s;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        white-space: normal;
+        word-break: break-word;
+        line-height: 1.3;
     }
     #sidebar-nav button.sidebar-btn:hover {
         background: #2a2a4a;
@@ -3905,19 +3908,15 @@ def create_app() -> gr.Blocks:
                                     k: csv_cols
                                     for k in _FC._SETS
                                 }
-                                # For Generic CSV, honour user's FS
-                                # selection if provided; fall back
-                                # to FS_ALL when nothing is selected.
-                                _generic_fsets = (
-                                    selected_fsets
-                                    if selected_fsets
-                                    else ["FS_ALL"]
-                                )
+                                # Generic CSV: all FS map to the
+                                # same columns, so running multiple
+                                # FS just duplicates work.  Always
+                                # use FS_ALL only.
                                 r, s, o = runner.run(
                                     features_df, features_df, target,
                                     progress_callback=_progress_cb,
                                     selected_workflows=selected_wfs,
-                                    selected_feature_sets=_generic_fsets,
+                                    selected_feature_sets=["FS_ALL"],
                                 )
                             finally:
                                 _FC._SETS = _orig_sets
