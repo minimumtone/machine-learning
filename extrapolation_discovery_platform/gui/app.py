@@ -2098,9 +2098,9 @@ def create_app() -> gr.Blocks:
         font-size: 13px;
         cursor: pointer;
         transition: background 0.15s, color 0.15s;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        white-space: normal;
+        word-break: break-word;
+        line-height: 1.3;
     }
     #sidebar-nav button.sidebar-btn:hover {
         background: #2a2a4a;
