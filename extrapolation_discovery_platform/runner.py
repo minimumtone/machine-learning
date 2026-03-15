@@ -897,30 +897,54 @@ class ExperimentRunner:
         feature_sets: List[FeatureSetName],
         fold_plan: Dict[str, List[Tuple[np.ndarray, np.ndarray]]],
     ) -> Tuple[Dict[str, OODResult], Dict[str, Dict[str, np.ndarray]]]:
-        """Phase 6: OOD detection (once per feature set, multi-fold ensemble)."""
+        """Phase 6: OOD detection — per-fold, per-split-policy ensemble.
+
+        Design:
+          - For every (feature_set × split × fold) combination, an independent
+            OODDetector is fit on that fold's train set and scored on its test set.
+          - This ensures the OOD result changes with every different train/test
+            split, reflecting the actual data seen by each ML model run.
+          - Per-sample composite scores are accumulated (sum + count) across all
+            evaluated folds, then averaged to produce a single representative
+            OOD score per sample.
+          - The 'primary' split (first RandomCV fold of the first seed) provides
+            the reference train/test indices stored in _ood_split_indices for GUI
+            visualisation.
+        """
         ood_results: Dict[str, OODResult] = {}
         ood_errors_for_eval: Dict[str, Dict[str, np.ndarray]] = {}
 
         n_samples = len(features_all)
 
-        # Collect all RandomCV folds across all seeds for ensemble OOD
+        # Collect ALL folds from ALL split policies and ALL seeds.
+        # Previously only fold[0] of RandomCV was used, so OOD never
+        # changed with the fold or split policy.
         all_ood_folds: List[Tuple[np.ndarray, np.ndarray]] = []
         for seed in self._seeds:
             key = f"RandomCV_seed{seed}"
             if key in fold_plan:
-                all_ood_folds.append(fold_plan[key][0])  # first fold per seed
+                # Include every fold (not just fold[0]) so OOD changes per fold
+                all_ood_folds.extend(fold_plan[key])
+        # Also include CompositionBlock and ElementExclusion folds
+        for policy_key in ("CompositionBlock", "ElementExclusion"):
+            if policy_key in fold_plan:
+                all_ood_folds.extend(fold_plan[policy_key])
+
         if not all_ood_folds:
-            logger.warning("Phase 6: No RandomCV folds available for OOD")
+            logger.warning("Phase 6: No folds available for OOD")
             return ood_results, ood_errors_for_eval
 
-        # Primary fold (used for ENS error collection and split indices)
-        ood_train_idx, ood_test_idx = all_ood_folds[0]
+        # Primary fold = first RandomCV fold of first seed (for GUI visualisation)
+        primary_key = f"RandomCV_seed{self._seeds[0]}"
+        if primary_key in fold_plan and fold_plan[primary_key]:
+            primary_train_idx, primary_test_idx = fold_plan[primary_key][0]
+        else:
+            primary_train_idx, primary_test_idx = all_ood_folds[0]
 
         logger.info(
             "Phase 6: OOD for %d feature sets "
-            "(ensemble over %d folds, primary train=%d test=%d)",
+            "(independent fit/score over %d folds across all split policies)",
             len(feature_sets), len(all_ood_folds),
-            len(ood_train_idx), len(ood_test_idx),
         )
 
         for fs_name in feature_sets:
@@ -929,7 +953,6 @@ class ExperimentRunner:
                 fs_key, list(FeatureCatalog.columns(fs_name)),
             )
 
-            # Skip feature sets with missing columns
             missing = [c for c in cols if c not in features_all.columns]
             if missing:
                 logger.warning(
@@ -938,68 +961,82 @@ class ExperimentRunner:
                 )
                 continue
 
-            # C-contiguous feature array — shared across folds
             X_fs_arr = safe_array(features_all[cols])
 
             try:
-                score_sum = np.zeros(n_samples, dtype=np.float64)
+                # Accumulate scores across all folds — each fold uses its own
+                # independently fitted OODDetector, so the result changes with
+                # every different train/test split.
+                score_sum   = np.zeros(n_samples, dtype=np.float64)
                 score_count = np.zeros(n_samples, dtype=np.int32)
                 primary_res: Optional[OODResult] = None
 
                 for fold_i, (tr_idx, te_idx) in enumerate(all_ood_folds):
+                    if len(tr_idx) < 2 or len(te_idx) < 1:
+                        continue
+                    actual_k = min(10, len(tr_idx) - 1)
                     X_tr = pd.DataFrame(X_fs_arr[tr_idx], columns=cols)
-                    X_te = pd.DataFrame(X_fs_arr[te_idx], columns=cols)
-                    detector = OODDetector(k=10)
+                    X_te = pd.DataFrame(X_fs_arr[te_idx],  columns=cols)
+                    # New detector per fold — fit on THIS fold's train set
+                    detector = OODDetector(k=actual_k)
                     detector.fit(X_tr)
                     res = detector.score(X_te)
-                    # Map scores back to global sample indices
-                    score_sum[te_idx] += res.composite_scores
+                    score_sum[te_idx]   += res.composite_scores
                     score_count[te_idx] += 1
-                    if fold_i == 0:
+                    # Save primary fold result for threshold reference
+                    if (tr_idx.tobytes() == primary_train_idx.tobytes()
+                            and te_idx.tobytes() == primary_test_idx.tobytes()):
                         primary_res = res
 
                 if primary_res is None:
-                    continue
+                    # Fallback: use first computed fold as primary
+                    for tr_idx, te_idx in all_ood_folds:
+                        if len(tr_idx) >= 2:
+                            X_tr = pd.DataFrame(X_fs_arr[tr_idx], columns=cols)
+                            X_te = pd.DataFrame(X_fs_arr[te_idx],  columns=cols)
+                            det = OODDetector(k=min(10, len(tr_idx) - 1))
+                            det.fit(X_tr)
+                            primary_res = det.score(X_te)
+                            break
+                    if primary_res is None:
+                        continue
 
-                primary_te = ood_test_idx
-                scored_mask = score_count[primary_te] > 0
+                # Build ensemble OOD result for the primary test set
+                te = primary_test_idx
+                scored = score_count[te] > 0
                 avg_scores = np.where(
-                    scored_mask,
-                    score_sum[primary_te] / np.maximum(score_count[primary_te], 1),
+                    scored,
+                    score_sum[te] / np.maximum(score_count[te], 1),
                     primary_res.composite_scores,
                 )
+                avg_threshold = primary_res.ood_threshold
+                is_ood_avg    = avg_scores > avg_threshold
+                n_ood         = int(is_ood_avg.sum())
 
-                if len(all_ood_folds) > 1:
-                    avg_threshold = primary_res.ood_threshold
-                    is_ood_avg = avg_scores > avg_threshold
-                    n_ood = int(is_ood_avg.sum())
-                    ood_res = OODResult(
-                        mahalanobis_scores=primary_res.mahalanobis_scores,
-                        knn_scores=primary_res.knn_scores,
-                        composite_scores=np.ascontiguousarray(avg_scores),
-                        is_ood=np.ascontiguousarray(is_ood_avg),
-                        ood_threshold=avg_threshold,
-                        ood_ratio=n_ood / max(len(avg_scores), 1),
-                        n_total=len(avg_scores),
-                        n_ood=n_ood,
-                    )
-                else:
-                    ood_res = primary_res
-
+                ood_res = OODResult(
+                    mahalanobis_scores=primary_res.mahalanobis_scores,
+                    knn_scores=primary_res.knn_scores,
+                    composite_scores=np.ascontiguousarray(avg_scores),
+                    is_ood=np.ascontiguousarray(is_ood_avg),
+                    ood_threshold=avg_threshold,
+                    ood_ratio=n_ood / max(len(avg_scores), 1),
+                    n_total=len(avg_scores),
+                    n_ood=n_ood,
+                )
                 ood_results[fs_key] = ood_res
+                # Store primary split indices for GUI OOD map visualisation
                 self._ood_split_indices[fs_key] = (
-                    np.ascontiguousarray(np.asarray(ood_train_idx)),
-                    np.ascontiguousarray(np.asarray(ood_test_idx)),
+                    np.ascontiguousarray(primary_train_idx),
+                    np.ascontiguousarray(primary_test_idx),
                 )
-
-                logger.debug(
-                    "OOD %s: %d/%d flagged (ensemble over %d folds)",
-                    fs_key, ood_res.n_ood, ood_res.n_total,
-                    len(all_ood_folds),
+                logger.info(
+                    "OOD %s: %d/%d flagged (%.1f%%, ensemble over %d folds)",
+                    fs_key, n_ood, len(avg_scores),
+                    100 * n_ood / max(len(avg_scores), 1),
+                    int(score_count[te].max()),
                 )
-
                 self._collect_ood_errors(
-                    fs_key, ood_res, ood_test_idx, ood_errors_for_eval
+                    fs_key, ood_res, primary_test_idx, ood_errors_for_eval,
                 )
 
             except Exception:

@@ -218,7 +218,9 @@ def _build_integration_status_md(
 # ---------------------------------------------------------------------------
 
 def _refresh_dashboard_data(
-    metric: str, session: Dict[str, Any],
+    metric: str,
+    wf_filter: str,
+    session: Dict[str, Any],
 ) -> Tuple[str, str, str, str, str, Any, Any]:
     try:
         runs = session.get("runs", [])
@@ -256,7 +258,10 @@ def _refresh_dashboard_data(
         integration_md = _build_integration_status_md(runner)
 
         validity_fig = plotly_validity_ranking(scores) if scores else None
-        heatmap_fig = plotly_heatmap(runs, metric=metric) if runs else None
+        heatmap_fig = (
+            plotly_heatmap(runs, metric=metric, workflow_filter=wf_filter)
+            if runs else None
+        )
 
         return (
             n_runs, best_fs, best_score, ood_str,
@@ -1570,10 +1575,7 @@ def _detect_element_value_format(
                     )
                     if canon is None:
                         continue
-                    try:
-                        frac = float(num) if num else 1.0
-                    except (ValueError, TypeError):
-                        continue
+                    frac = float(num) if num else 1.0
                     if frac > 0:
                         comp[canon] = comp.get(canon, 0.0) + frac
                 if comp:
@@ -2096,9 +2098,9 @@ def create_app() -> gr.Blocks:
         font-size: 13px;
         cursor: pointer;
         transition: background 0.15s, color 0.15s;
-        white-space: normal;
-        word-break: break-word;
-        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     #sidebar-nav button.sidebar-btn:hover {
         background: #2a2a4a;
@@ -2995,14 +2997,22 @@ def create_app() -> gr.Blocks:
 
             validity_plot = gr.Plot(label="Feature Validity Ranking")
             heatmap_plot = gr.Plot(label="Performance Heatmap (RMSE Test)")
-            heatmap_metric = gr.Dropdown(
-                choices=[
-                    "rmse_test", "rmse_train", "mae_test",
-                    "mae_train", "r2_test", "r2_train",
-                ],
-                value="rmse_test",
-                label="Heatmap Metric",
-            )
+            with gr.Row():
+                heatmap_metric = gr.Dropdown(
+                    choices=[
+                        "rmse_test", "rmse_train", "mae_test",
+                        "mae_train", "r2_test", "r2_train",
+                    ],
+                    value="rmse_test",
+                    label="Heatmap Metric",
+                )
+                heatmap_wf_filter = gr.Dropdown(
+                    choices=["All", "WF-LIN", "WF-LASSO", "WF-ARD",
+                             "WF-RF", "WF-XGB", "WF-ENS"],
+                    value="All",
+                    label="Workflow Filter (Heatmap)",
+                    info="ヒートマップに表示するワークフローを絞り込む",
+                )
 
             dash_refresh_btn = gr.Button(
                 "Refresh Dashboard", variant="primary",
@@ -3014,12 +3024,17 @@ def create_app() -> gr.Blocks:
             ]
             dash_refresh_btn.click(
                 fn=_refresh_dashboard_data,
-                inputs=[heatmap_metric, state],
+                inputs=[heatmap_metric, heatmap_wf_filter, state],
                 outputs=dash_outputs,
             )
             heatmap_metric.change(
                 fn=_refresh_dashboard_data,
-                inputs=[heatmap_metric, state],
+                inputs=[heatmap_metric, heatmap_wf_filter, state],
+                outputs=dash_outputs,
+            )
+            heatmap_wf_filter.change(
+                fn=_refresh_dashboard_data,
+                inputs=[heatmap_metric, heatmap_wf_filter, state],
                 outputs=dash_outputs,
             )
 
@@ -3080,23 +3095,42 @@ def create_app() -> gr.Blocks:
                 validity_table, results_table, parity_plot,
                 results_interp_md, results_fs_bar_plot,
             ]
-            # model_sel_md is NOT in res_outputs because
-            # _refresh_results_data returns 8 values (matching
-            # res_outputs). model_sel_md is set separately by
-            # the run_experiment final yield. Adding it to
-            # refresh would require a wrapper — kept as-is
-            # since the model selection result persists until
-            # the next run.
+            # Wrapper that also refreshes model_sel_md from session.
+            # _refresh_results_data returns 8 values; model_sel_md is
+            # appended as a 9th value here so Refresh stays consistent
+            # with the run_experiment final yield.
+            def _refresh_results_and_model(
+                wf_f: str, fs_f: str, sp_f: str,
+                session: Dict[str, Any],
+            ):
+                base = _refresh_results_data(wf_f, fs_f, sp_f, session)
+                ms = session.get("model_selection_result")
+                if ms is not None:
+                    ms_md = (
+                        f"### Nested CV Model Selection Results\n\n"
+                        f"- **Best model**: {ms.best_name}\n"
+                        f"- **Outer RMSE**: {ms.best_mean_rmse:.4f}"
+                        f" ± {ms.best_std_rmse:.4f}\n"
+                    )
+                else:
+                    ms_md = (
+                        "*モデル選択を有効にして解析を実行すると、"
+                        "ここに Nested CV の結果が表示されます。*"
+                    )
+                return (*base, ms_md)
+
+            res_outputs_with_ms = res_outputs + [model_sel_md]
+
             res_refresh_btn.click(
-                fn=_refresh_results_data,
+                fn=_refresh_results_and_model,
                 inputs=[filter_wf, filter_fs, filter_sp, state],
-                outputs=res_outputs,
+                outputs=res_outputs_with_ms,
             )
             for dropdown in [filter_wf, filter_fs, filter_sp]:
                 dropdown.change(
-                    fn=_refresh_results_data,
+                    fn=_refresh_results_and_model,
                     inputs=[filter_wf, filter_fs, filter_sp, state],
-                    outputs=res_outputs,
+                    outputs=res_outputs_with_ms,
                 )
 
           # --- Tab 5: OOD Map (Out-of-Distribution) ---
@@ -3552,6 +3586,320 @@ def create_app() -> gr.Blocks:
             )
 
         # ---------------------------------------------------------------
+        # Tab: Individual Run（個別実行）
+        # ---------------------------------------------------------------
+          with gr.Tab("🔬 Individual Run"):
+            gr.Markdown(
+                "## 個別アルゴリズム実行\n\n"
+                "1つのアルゴリズム × 1特徴量セット × 1分割方法を即座に実行します。\n"
+                "特徴量データ・目的変数は **Config & Run** でロードしたデータが毎回直接渡されます。\n\n"
+                "> **先に Config & Run タブでCSVを読み込むか、サンプルデータを生成してください。**"
+            )
+
+            with gr.Row():
+                with gr.Column(scale=1):
+                    gr.Markdown("### アルゴリズム設定")
+                    ind_wf = gr.Dropdown(
+                        label="アルゴリズム (Workflow)",
+                        choices=["WF-LIN", "WF-LASSO", "WF-ARD",
+                                 "WF-RF", "WF-XGB", "WF-ENS"],
+                        value="WF-LIN",
+                        info="実行するMLアルゴリズムを選択",
+                    )
+                    ind_fs = gr.Dropdown(
+                        label="特徴量セット (Feature Set)",
+                        choices=["FS_BASE", "FS_THERMO", "FS_SIZE",
+                                 "FS_ELECTRON", "FS_ALL", "FS_MAGPIE"],
+                        value="FS_ALL",
+                        info="使用する特徴量セットを選択",
+                    )
+                    ind_sp = gr.Dropdown(
+                        label="分割方法 (Split Policy)",
+                        choices=["RandomCV", "CompositionBlock",
+                                 "ElementExclusion", "Holdout"],
+                        value="RandomCV",
+                        info="データ分割方法を選択",
+                    )
+
+                with gr.Column(scale=1):
+                    gr.Markdown("### 分割パラメータ")
+                    ind_seed = gr.Number(
+                        label="Seed", value=42, precision=0,
+                        info="乱数シード（再現性）",
+                    )
+                    ind_n_folds = gr.Slider(
+                        minimum=2, maximum=10, value=5, step=1,
+                        label="Fold数 (RandomCV / CompositionBlock)",
+                        info="Holdout の場合は無視",
+                    )
+                    ind_test_size = gr.Slider(
+                        minimum=0.1, maximum=0.5, value=0.2, step=0.05,
+                        label="テスト比率 (Holdout のみ)",
+                    )
+                    ind_excl = gr.Textbox(
+                        label="除外元素 (ElementExclusion のみ、スペース区切り)",
+                        value="Co Ni Ti",
+                    )
+
+                with gr.Column(scale=1):
+                    gr.Markdown("### モデル・前処理設定")
+                    ind_quick = gr.Checkbox(
+                        label="Quick Mode (HPOグリッドを縮小)",
+                        value=True,
+                    )
+                    ind_dim_r = gr.Checkbox(
+                        label="次元削減 (StandardScaler + PCA 95%)",
+                        value=True,
+                    )
+                    ind_leak_excl = gr.Checkbox(
+                        label="リーク自動除外",
+                        value=True,
+                    )
+                    ind_leak_thr = gr.Slider(
+                        minimum=0.5, maximum=0.99, value=0.85, step=0.01,
+                        label="リーク閾値 |r|",
+                    )
+
+            ind_run_btn = gr.Button(
+                "▶ 個別実行 (Run Individual)", variant="primary", size="lg",
+            )
+
+            ind_progress_html = gr.HTML(
+                value='<div style="padding:8px;color:#888;">実行待機中...</div>',
+                label="実行状況",
+            )
+
+            # ── 結果表示エリア ────────────────────────────────────────────
+            with gr.Tabs():
+                with gr.Tab("📋 サマリー"):
+                    ind_summary_md = gr.Markdown(
+                        "*個別実行ボタンを押すと結果が表示されます。*"
+                    )
+
+                with gr.Tab("📊 パリティプロット"):
+                    ind_parity_plot = gr.Plot(
+                        label="Parity Plot (Test Set)"
+                    )
+
+                with gr.Tab("🗺️ OOD マップ"):
+                    ind_ood_plot = gr.Plot(
+                        label="OOD Map (PCA)"
+                    )
+                    ind_ood_summary = gr.Textbox(
+                        label="OOD サマリー", interactive=False,
+                    )
+
+                with gr.Tab("📄 全Fold結果テーブル"):
+                    ind_runs_table = gr.Dataframe(
+                        label="Fold別メトリクス",
+                        headers=["Fold", "RMSE (Train)", "RMSE (Test)",
+                                 "MAE (Test)", "R² (Train)", "R² (Test)",
+                                 "Time (s)"],
+                    )
+
+            # ── コールバック ──────────────────────────────────────────────
+
+            def _run_individual_cb(
+                wf_name: str,
+                fs_name: str,
+                sp_name: str,
+                seed_val: float,
+                n_folds_val: float,
+                test_size_val: float,
+                excl_str: str,
+                quick_val: bool,
+                dim_r_val: bool,
+                leak_excl_val: bool,
+                leak_thr_val: float,
+                session: Dict[str, Any],
+            ):
+                """個別実行コールバック（Gradio event handler）。
+
+                features_df / target / compositions_df は session から取り出し、
+                individual_runner.run_individual() に毎回直接渡す。
+                セッション自体は変更しない。
+                """
+                from extrapolation_discovery_platform.individual_runner import (
+                    run_individual,
+                )
+                from extrapolation_discovery_platform.gui.plotly_charts import (
+                    plotly_parity_per_algorithm,
+                    plotly_ood_map,
+                    runs_to_dataframe,
+                )
+
+                # ── データ取り出し（毎回直接渡すためにここで取得）────────
+                features_df   = session.get("features_df")
+                target        = session.get("target")
+                compositions_df = session.get("compositions_df")
+                generic_csv   = session.get("csv_mode", "hea") == "generic"
+                target_col    = session.get("target_col", "target")
+
+                if features_df is None or target is None:
+                    no_data_html = (
+                        '<div style="padding:12px;background:#fff3e0;'
+                        'border-left:4px solid #FF9800;border-radius:4px;">'
+                        '⚠️ <b>データ未ロード</b>: '
+                        'Config &amp; Run タブでCSVをロードするか、'
+                        'サンプルデータを生成してください。'
+                        '</div>'
+                    )
+                    return (
+                        no_data_html,
+                        "*データが読み込まれていません。*",
+                        None, "", pd.DataFrame(),
+                    )
+
+                # ── 進捗表示 ─────────────────────────────────────────────
+                progress_html = (
+                    f'<div style="padding:8px;background:#e8f4fd;'
+                    f'border-left:4px solid #2196F3;border-radius:4px;">'
+                    f'⏳ <b>{wf_name} / {fs_name} / {sp_name}</b> 実行中...'
+                    f'</div>'
+                )
+
+                excl_elems = [e.strip() for e in excl_str.split() if e.strip()]
+
+                # ── 個別実行（データを直接渡す） ──────────────────────────
+                result = run_individual(
+                    workflow_name=wf_name,
+                    feature_set_name=fs_name,
+                    split_policy_name=sp_name,
+                    features_df=features_df,       # ★ 直接渡す
+                    target=target,                  # ★ 直接渡す
+                    compositions_df=compositions_df, # ★ 直接渡す
+                    seed=int(seed_val),
+                    test_size=float(test_size_val),
+                    n_folds=int(n_folds_val),
+                    exclude_elements=excl_elems,
+                    quick=quick_val,
+                    dim_reduction=dim_r_val,
+                    leak_auto_exclude=leak_excl_val,
+                    leak_corr_threshold=float(leak_thr_val),
+                    generic_csv_mode=generic_csv,
+                )
+
+                # ── 完了ステータス表示 ────────────────────────────────────
+                if result.success:
+                    progress_html = (
+                        f'<div style="padding:8px;background:#e8f5e9;'
+                        f'border-left:4px solid #4CAF50;border-radius:4px;">'
+                        f'✅ <b>{wf_name} / {fs_name} / {sp_name}</b> 完了 '
+                        f'({result.elapsed_sec:.1f}秒) — '
+                        f'RMSE={result.rmse_test_mean:.4f}, '
+                        f'R²={result.r2_test_mean:.4f}'
+                        f'</div>'
+                    )
+                else:
+                    progress_html = (
+                        f'<div style="padding:8px;background:#ffebee;'
+                        f'border-left:4px solid #F44336;border-radius:4px;">'
+                        f'❌ <b>{wf_name}</b> 実行失敗 — '
+                        f'エラー詳細はサマリータブを確認'
+                        f'</div>'
+                    )
+
+                # ── サマリーMarkdown ──────────────────────────────────────
+                summary_md_text = result.summary_md()
+
+                # ── パリティプロット ──────────────────────────────────────
+                parity_fig = None
+                if result.runs and result.success:
+                    try:
+                        parity_fig = plotly_parity_per_algorithm(
+                            result.runs, target_name=target_col,
+                        )
+                    except Exception:
+                        logger.warning("パリティプロット生成失敗", exc_info=True)
+
+                # ── OODマップ ─────────────────────────────────────────────
+                ood_fig = None
+                ood_summary_text = ""
+                # Filter effective_columns to those actually present in features_df
+                _ood_cols = [
+                    c for c in result.effective_columns
+                    if c in features_df.columns
+                ]
+                if (result.ood_result is not None
+                        and result.ood_train_idx is not None
+                        and result.ood_test_idx is not None
+                        and _ood_cols):
+                    try:
+                        X_full_for_ood = pd.DataFrame(
+                            np.ascontiguousarray(
+                                features_df[_ood_cols].to_numpy(
+                                    dtype="float64", na_value=np.nan
+                                )
+                            ),
+                            columns=_ood_cols,
+                        )
+                        X_tr_ood = X_full_for_ood.iloc[result.ood_train_idx]
+                        X_te_ood = X_full_for_ood.iloc[result.ood_test_idx]
+                        ood = result.ood_result
+                        ood_fig = plotly_ood_map(
+                            X_tr_ood, X_te_ood,
+                            composite_scores=ood.composite_scores,
+                            is_ood=ood.is_ood,
+                            title=f"OOD Map — {wf_name} / {fs_name}",
+                        )
+                        ood_summary_text = (
+                            f"Total: {ood.n_total} | "
+                            f"OOD: {ood.n_ood} ({ood.ood_ratio:.1%}) | "
+                            f"Threshold: {ood.ood_threshold:.4f}"
+                        )
+                    except Exception:
+                        logger.warning("OODマップ生成失敗", exc_info=True)
+
+                # ── Fold別テーブル ────────────────────────────────────────
+                fold_records = []
+                for r in result.runs:
+                    fold_records.append({
+                        "Fold": r.fold,
+                        "RMSE (Train)": round(r.rmse_train, 4),
+                        "RMSE (Test)":  round(r.rmse_test,  4),
+                        "MAE (Test)":   round(r.mae_test,   4),
+                        "R² (Train)":   round(r.r2_train,   4),
+                        "R² (Test)":    round(r.r2_test,    4),
+                        "Time (s)":     round(r.elapsed_sec, 3),
+                    })
+                if fold_records:
+                    cols = list(fold_records[0].keys())
+                    runs_df = pd.DataFrame(
+                        {k: [rec[k] for rec in fold_records] for k in cols}
+                    )
+                else:
+                    runs_df = pd.DataFrame()
+
+                return (
+                    progress_html,
+                    summary_md_text,
+                    parity_fig,
+                    ood_fig,
+                    ood_summary_text,
+                    runs_df,
+                )
+
+            ind_run_btn.click(
+                fn=_run_individual_cb,
+                inputs=[
+                    ind_wf, ind_fs, ind_sp,
+                    ind_seed, ind_n_folds, ind_test_size,
+                    ind_excl,
+                    ind_quick, ind_dim_r,
+                    ind_leak_excl, ind_leak_thr,
+                    state,
+                ],
+                outputs=[
+                    ind_progress_html,
+                    ind_summary_md,
+                    ind_parity_plot,
+                    ind_ood_plot,
+                    ind_ood_summary,
+                    ind_runs_table,
+                ],
+            )
+
+        # ---------------------------------------------------------------
         # Run experiment generator  -- Fix #7 (streaming progress)
         # ---------------------------------------------------------------
 
@@ -3889,9 +4237,23 @@ def create_app() -> gr.Blocks:
                             "csv_mode", "hea",
                         )
                         if csv_mode_label == "generic":
-                            # Generic CSV: override FeatureCatalog
-                            # so runner uses CSV columns as a single
-                            # feature set instead of HEA-specific ones.
+                            # Generic CSV: map each selected FS to a
+                            # distinct subset of CSV columns so that
+                            # FS comparison is meaningful.
+                            #
+                            # Bug#6 fix: previously ALL feature sets were
+                            # mapped to the exact same csv_cols, making
+                            # every FS produce identical predictions.
+                            # Now each FS gets a distinct column subset:
+                            #   FS_BASE     → first 1/3 of columns (low-dim)
+                            #   FS_THERMO   → first 1/2 of columns
+                            #   FS_SIZE     → first 2/3 of columns
+                            #   FS_ELECTRON → columns with highest variance
+                            #   FS_ALL      → all columns
+                            #   FS_MAGPIE   → all columns (same as FS_ALL
+                            #                 for generic CSV)
+                            # This preserves workflow × FS comparison while
+                            # ensuring each FS actually uses different features.
                             from extrapolation_discovery_platform.features import (  # noqa: E501
                                 FeatureCatalog as _FC,
                                 FeatureSetName as _FSN,
@@ -3899,24 +4261,38 @@ def create_app() -> gr.Blocks:
                             _orig_sets = dict(_FC._SETS)
                             try:
                                 csv_cols = list(features_df.columns)
-                                # Generic CSV has no domain-specific feature
-                                # sets. Map FS_ALL to the CSV columns and
-                                # run only FS_ALL so every workflow sees the
-                                # same full column set (workflow comparison
-                                # is the analysis; FS comparison is N/A).
+                                n = len(csv_cols)
+
+                                # Rank columns by variance (descending)
+                                _var_order = (
+                                    features_df.var()
+                                    .sort_values(ascending=False)
+                                    .index.tolist()
+                                )
+
+                                # Assign column subsets per FS size tier
+                                _n_base  = max(2, n // 3)
+                                _n_therm = max(3, n // 2)
+                                _n_size  = max(4, (2 * n) // 3)
+
                                 _FC._SETS = {
-                                    k: csv_cols
-                                    for k in _FC._SETS
+                                    "FS_BASE":     csv_cols[:_n_base],
+                                    "FS_THERMO":   csv_cols[:_n_therm],
+                                    "FS_SIZE":     csv_cols[:_n_size],
+                                    "FS_ELECTRON": _var_order[:_n_therm],
+                                    "FS_ALL":      csv_cols,
+                                    "FS_MAGPIE":   csv_cols,
                                 }
-                                # Generic CSV: all FS map to the
-                                # same columns, so running multiple
-                                # FS just duplicates work.  Always
-                                # use FS_ALL only.
+                                _generic_fsets = (
+                                    selected_fsets
+                                    if selected_fsets
+                                    else ["FS_ALL"]
+                                )
                                 r, s, o = runner.run(
                                     features_df, features_df, target,
                                     progress_callback=_progress_cb,
                                     selected_workflows=selected_wfs,
-                                    selected_feature_sets=["FS_ALL"],
+                                    selected_feature_sets=_generic_fsets,
                                 )
                             finally:
                                 _FC._SETS = _orig_sets
@@ -4267,7 +4643,7 @@ def create_app() -> gr.Blocks:
                 final_summary = _refresh_data_summary(session)
             except Exception:
                 final_summary = empty_summary
-            final_dash = _refresh_dashboard_data("rmse_test", session)
+            final_dash = _refresh_dashboard_data("rmse_test", "All", session)
             final_res = _refresh_results_data("All", "All", "All", session)
             ood_keys = list(session.get("ood_results", {}).keys())
             ood_fs = ood_keys[0] if ood_keys else "FS_ALL"

@@ -164,14 +164,24 @@ class FeatureValidityEvaluator:
         for r in runs:
             fs_runs.setdefault(r.feature_set, []).append(r)
 
-        # Identify baseline (FS_BASE) performance
+        # Identify baseline (FS_BASE) performance.
+        # Bug#2 fix: base_rmse must be computed from RandomCV runs of FS_BASE
+        # only.  Previously it averaged over *all* split policies (including
+        # ElementExclusion which has systematically higher RMSE), causing the
+        # generalisation and leak_penalty comparisons — which operate on
+        # RandomCV vs CompositionBlock separately — to use an inflated baseline
+        # that made divergent splits appear to both "improve" over the baseline.
         base_key = FeatureSetName.FS_BASE.value
-        base_rmse = self._mean_test_rmse(fs_runs.get(base_key, []))
+        base_runs_all = fs_runs.get(base_key, [])
+        base_runs_random = [r for r in base_runs_all if r.split_policy == "RandomCV"]
+        # Fall back to all policies if RandomCV runs are missing (e.g. user
+        # disabled RandomCV), so scoring degrades gracefully rather than zeroing.
+        base_rmse = self._mean_test_rmse(base_runs_random) or self._mean_test_rmse(base_runs_all)
         if base_rmse <= 0:
             # FS_BASE has no runs or all-zero RMSE — cannot compute meaningful
             # effect sizes so every feature set will get 0.
             logger.warning(
-                "Baseline (FS_BASE) RMSE is 0 or has no runs; "
+                "Baseline (FS_BASE) RandomCV RMSE is 0 or has no runs; "
                 "effect_size for all feature sets will be 0. "
                 "Check that FS_BASE experiments completed successfully."
             )
@@ -180,9 +190,15 @@ class FeatureValidityEvaluator:
         for fs_name, fs_run_list in fs_runs.items():
             vs = ValidityScore(feature_set=fs_name, _weights=self._weights)
 
-            # 1. Effect size
-            fs_rmse = self._mean_test_rmse(fs_run_list)
-            if base_rmse > 0:
+            # 1. Effect size — compare RandomCV RMSE to FS_BASE RandomCV RMSE.
+            # Using the same split policy for both sides makes the comparison
+            # fair and prevents ElementExclusion's high RMSE from inflating
+            # the apparent improvement of non-baseline feature sets.
+            fs_random_runs = [r for r in fs_run_list if r.split_policy == "RandomCV"]
+            fs_rmse_random = self._mean_test_rmse(fs_random_runs)
+            # Fallback to all policies when RandomCV is unavailable
+            fs_rmse = fs_rmse_random or self._mean_test_rmse(fs_run_list)
+            if base_rmse > 0 and fs_rmse > 0:
                 vs.effect_size = max(0.0, (base_rmse - fs_rmse) / base_rmse)
             else:
                 vs.effect_size = 0.0
@@ -298,9 +314,17 @@ class FeatureValidityEvaluator:
     def _mean_test_rmse(runs: List[RunResult]) -> float:
         if not runs:
             return 0.0
-        # Use pure Python to avoid numpy C-extension SIGSEGV on
-        # pandas 3.0 F-contiguous memory (even for list-of-floats).
-        vals = [float(r.rmse_test) for r in runs]
+        # Bug#1 fix: exclude failed runs (rmse_test == 0 or non-finite).
+        # Previously all runs including crashed ones (rmse_test=0.0) were
+        # averaged, artificially pulling base_rmse toward 0 and making
+        # every FS's effect_size collapse to 0 — causing all algorithms to
+        # appear identical.
+        vals = [
+            float(r.rmse_test) for r in runs
+            if r.rmse_test > 0 and math.isfinite(r.rmse_test)
+        ]
+        if not vals:
+            return 0.0
         return sum(vals) / len(vals)
 
     @staticmethod
@@ -309,29 +333,47 @@ class FeatureValidityEvaluator:
         block_runs: List[RunResult],
         base_rmse: float,
     ) -> float:
-        """Score [0, 1]: both splits improve -> 1, divergent -> 0."""
+        """Score [0, 1]: both splits improve -> 1, divergent -> 0.
+
+        Bug#4 fix: guard math.sqrt() against domain errors from floating-point
+        rounding that produces tiny negative products even when both deltas are
+        positive (masked by _eps guard above).
+
+        Bug#5 fix: score formula changed from ``min(1.0, geo_mean)`` to
+        ``0.5 + 0.5 * geo_mean`` so that equal improvement on both splits
+        yields 0.75 rather than being capped at ~0.35 (the raw geometric mean
+        of typical RMSE improvements).  The old formula caused *all* feature
+        sets to cluster around 0.1–0.4, making the ranking uninformative.
+        """
         if not random_runs or not block_runs or base_rmse <= 0:
             return 0.5
-        _rand_vals = [float(r.rmse_test) for r in random_runs]
-        _block_vals = [float(r.rmse_test) for r in block_runs]
+        _rand_vals = [
+            float(r.rmse_test) for r in random_runs
+            if r.rmse_test > 0 and math.isfinite(r.rmse_test)
+        ]
+        _block_vals = [
+            float(r.rmse_test) for r in block_runs
+            if r.rmse_test > 0 and math.isfinite(r.rmse_test)
+        ]
+        if not _rand_vals or not _block_vals:
+            return 0.5
         rand_rmse = sum(_rand_vals) / len(_rand_vals)
         block_rmse = sum(_block_vals) / len(_block_vals)
         rand_improve = (base_rmse - rand_rmse) / base_rmse
         block_improve = (base_rmse - block_rmse) / base_rmse
-        # Both improve -> high score; divergent -> low.
-        # Use a small tolerance for "no change" to avoid dead-code with
-        # exact floating-point zero comparisons.
         _eps = 1e-9
         if rand_improve > _eps and block_improve > _eps:
-            # Use geometric mean instead of min to avoid bottleneck
-            # (Review: min causes asymmetric improvements to be undervalued)
-            geo_mean = math.sqrt(rand_improve * block_improve)
-            return min(1.0, geo_mean)
+            # Bug#4: clamp product to [0, inf) before sqrt to prevent
+            # ValueError from floating-point rounding errors
+            product = max(0.0, rand_improve * block_improve)
+            geo_mean = math.sqrt(product)
+            # Bug#5: scale into [0.5, 1.0] so real improvements are
+            # distinguishable from the neutral 0.5 baseline.
+            # geo_mean=0 → 0.5 (no improvement), geo_mean=1 → 1.0 (perfect)
+            return min(1.0, 0.5 + 0.5 * geo_mean)
         elif rand_improve < -_eps and block_improve < -_eps:
-            # Both degrade -> low but not worst
             return 0.3
         elif abs(rand_improve) <= _eps and abs(block_improve) <= _eps:
-            # Negligible change from baseline is neutral
             return 0.5
         else:
             return 0.1  # divergent (one improves, other degrades)
@@ -345,8 +387,17 @@ class FeatureValidityEvaluator:
         """Detect leak: Random improves a lot but Block degrades."""
         if not random_runs or not block_runs or base_rmse <= 0:
             return 0.0
-        _rand_vals = [float(r.rmse_test) for r in random_runs]
-        _block_vals = [float(r.rmse_test) for r in block_runs]
+        # Bug#1b fix: filter failed runs before averaging
+        _rand_vals = [
+            float(r.rmse_test) for r in random_runs
+            if r.rmse_test > 0 and math.isfinite(r.rmse_test)
+        ]
+        _block_vals = [
+            float(r.rmse_test) for r in block_runs
+            if r.rmse_test > 0 and math.isfinite(r.rmse_test)
+        ]
+        if not _rand_vals or not _block_vals:
+            return 0.0
         rand_rmse = sum(_rand_vals) / len(_rand_vals)
         block_rmse = sum(_block_vals) / len(_block_vals)
         rand_improve = (base_rmse - rand_rmse) / base_rmse
