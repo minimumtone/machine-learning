@@ -265,6 +265,7 @@ def plotly_validity_ranking(
 def plotly_heatmap(
     runs: List[Any],
     metric: str = "rmse_test",
+    workflow_filter: Optional[str] = None,
 ) -> go.Figure:
     """Interactive heatmap of metric (feature_set × split_policy).
 
@@ -273,13 +274,18 @@ def plotly_heatmap(
     runs : list of RunResult
     metric : str
         Metric attribute name (default 'rmse_test').
+    workflow_filter : str or None
+        If provided, only include runs matching this workflow.
 
     Returns
     -------
     go.Figure
     """
+    filtered = runs
+    if workflow_filter and workflow_filter != "All":
+        filtered = [r for r in runs if r.workflow == workflow_filter]
     records = []
-    for r in runs:
+    for r in filtered:
         records.append({
             "feature_set": r.feature_set,
             "split_policy": r.split_policy,
@@ -461,9 +467,9 @@ def plotly_parity_per_algorithm(
             wf_data[wf] = {"true": [], "pred": [], "rmse": [], "r2": []}
         for i in range(len(r.y_test_true)):
             if test_indices is not None:
-                key = (r.workflow, r.feature_set, int(test_indices[i]))
+                key = (r.workflow, r.feature_set, r.split_policy, int(test_indices[i]))
             else:
-                key = (r.workflow, r.feature_set, float(r.y_test_true[i]))
+                key = (r.workflow, r.feature_set, r.split_policy, float(r.y_test_true[i]))
             if key in seen_keys:
                 continue
             seen_keys.add(key)

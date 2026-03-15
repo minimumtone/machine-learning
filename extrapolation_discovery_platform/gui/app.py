@@ -232,7 +232,13 @@ def _refresh_dashboard_data(
         # Show best model's R² (Test) as the primary KPI — much more
         # informative than the abstract validity total score.
         if runs:
-            best_run = max(runs, key=lambda r: r.r2_test if not np.isnan(r.r2_test) else float('-inf'))
+            def _safe_r2(r):
+                v = r.r2_test
+                try:
+                    return float('-inf') if np.isnan(v) else float(v)
+                except (TypeError, ValueError):
+                    return float('-inf')
+            best_run = max(runs, key=_safe_r2)
             best_score = (
                 f"R²={best_run.r2_test:.4f} "
                 f"({best_run.workflow}/{best_run.feature_set})"
@@ -2046,7 +2052,7 @@ def _run_feature_selection_for_fs(
 # ---------------------------------------------------------------------------
 
 # Current PR / build version tag shown in the GUI title bar.
-_GUI_VERSION_TAG = "PR#144"
+_GUI_VERSION_TAG = "PR#147"
 
 
 def create_app() -> gr.Blocks:
@@ -2106,16 +2112,17 @@ def create_app() -> gr.Blocks:
     .gradio-container {
         margin-left: 180px !important;
     }
-    /* Hide the default Gradio tab bar (replaced by sidebar) */
-    #main-tabs > .tab-nav,
-    #main-tabs > [role=tablist] {
+    /* Hide the default Gradio tab bar (replaced by sidebar).
+       Use broad descendant selector to catch nested [role=tablist] in Gradio 6.x. */
+    #main-tabs .tab-nav,
+    #main-tabs [role=tablist] {
         display: none !important;
     }
     @media (max-width: 768px) {
         #sidebar-nav { display: none; }
         .gradio-container { margin-left: 0 !important; }
-        #main-tabs > .tab-nav,
-        #main-tabs > [role=tablist] { display: flex !important; }
+        #main-tabs .tab-nav,
+        #main-tabs [role=tablist] { display: flex !important; }
     }
     """
 
@@ -2123,17 +2130,22 @@ def create_app() -> gr.Blocks:
     # Compatible with Gradio 6.x ([role=tablist]) and earlier (.tab-nav).
     _SIDEBAR_JS = """
     () => {
-        // Wait for Gradio to render, then inject sidebar
-        setTimeout(() => {
+        // Inject sidebar once Gradio has rendered the tab bar.
+        // Uses polling instead of a fixed timeout so it works even
+        // on slow machines or with heavy CSV data.
+        function _injectSidebar() {
             if (document.getElementById('sidebar-nav')) return;
 
             // Find Gradio's tab bar — Gradio 6.x uses [role=tablist],
             // earlier versions use .tab-nav inside #main-tabs.
             const tabNav = document.querySelector('#main-tabs [role=tablist]')
-                        || document.querySelector('#main-tabs > .tab-nav');
-            if (!tabNav) return;  // tabs not rendered yet
+                        || document.querySelector('#main-tabs .tab-nav');
+            if (!tabNav) return false;  // not rendered yet
 
-            const gradioTabBtns = tabNav.querySelectorAll('[role=tab], button');
+            // Only select direct [role=tab] or direct button children
+            // to avoid picking up unrelated nested buttons.
+            const gradioTabBtns = tabNav.querySelectorAll(':scope > [role=tab], :scope > button');
+            if (gradioTabBtns.length === 0) return false;
             const labels = Array.from(gradioTabBtns).map(b => b.textContent.trim());
 
             const nav = document.createElement('div');
@@ -2165,7 +2177,18 @@ def create_app() -> gr.Blocks:
                 });
             });
             observer.observe(tabNav, { attributes: true, subtree: true });
-        }, 1500);
+            return true;  // success
+        }
+
+        // Poll every 300ms for up to 10s (handles slow renders).
+        let _attempts = 0;
+        const _maxAttempts = 33;
+        const _poll = setInterval(() => {
+            _attempts++;
+            if (_injectSidebar() || _attempts >= _maxAttempts) {
+                clearInterval(_poll);
+            }
+        }, 300);
     }
     """
 
@@ -3054,6 +3077,13 @@ def create_app() -> gr.Blocks:
                 validity_table, results_table, parity_plot,
                 results_interp_md, results_fs_bar_plot,
             ]
+            # model_sel_md is NOT in res_outputs because
+            # _refresh_results_data returns 8 values (matching
+            # res_outputs). model_sel_md is set separately by
+            # the run_experiment final yield. Adding it to
+            # refresh would require a wrapper — kept as-is
+            # since the model selection result persists until
+            # the next run.
             res_refresh_btn.click(
                 fn=_refresh_results_data,
                 inputs=[filter_wf, filter_fs, filter_sp, state],
@@ -3875,11 +3905,19 @@ def create_app() -> gr.Blocks:
                                     k: csv_cols
                                     for k in _FC._SETS
                                 }
+                                # For Generic CSV, honour user's FS
+                                # selection if provided; fall back
+                                # to FS_ALL when nothing is selected.
+                                _generic_fsets = (
+                                    selected_fsets
+                                    if selected_fsets
+                                    else ["FS_ALL"]
+                                )
                                 r, s, o = runner.run(
                                     features_df, features_df, target,
                                     progress_callback=_progress_cb,
                                     selected_workflows=selected_wfs,
-                                    selected_feature_sets=["FS_ALL"],
+                                    selected_feature_sets=_generic_fsets,
                                 )
                             finally:
                                 _FC._SETS = _orig_sets
