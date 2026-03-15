@@ -483,7 +483,14 @@ class WorkflowXGB(BaseWorkflow):
         logger.debug("WF-XGB: train=%d, test=%d, features=%d",
                       len(X_train), len(X_test), X_train.shape[1])
 
+        # Bug#3 fix: add StandardScaler before XGB.
+        # XGB is scale-invariant for tree splits, but MAGPIE features span
+        # many orders of magnitude.  Without scaling, features with large
+        # raw values dominate the gain calculation and suppress informative
+        # features — causing WF-XGB to produce the same predictions as
+        # simpler models that happened to be seeded with the same data.
         steps: List[Tuple[str, Any]] = [
+            ("scaler", StandardScaler()),
             ("model", self._get_estimator(seed)),
         ]
         pipe = Pipeline(steps)
@@ -714,7 +721,13 @@ class WorkflowRF(BaseWorkflow):
                       len(X_train), len(X_test), X_train.shape[1])
 
         _inner_jobs = get_safe_n_jobs()
+        # Bug#3 fix: add StandardScaler before RandomForest.
+        # RF is scale-invariant for Gini/variance splits but adding a scaler
+        # makes the pipeline consistent with WF-LIN/LASSO/ARD and prevents
+        # MAGPIE features with disparate magnitudes from skewing the
+        # max_features sampling step (which uses raw feature indices).
         steps: List[Tuple[str, Any]] = [
+            ("scaler", StandardScaler()),
             ("model", RandomForestRegressor(
                 random_state=seed, n_jobs=_inner_jobs,
             )),

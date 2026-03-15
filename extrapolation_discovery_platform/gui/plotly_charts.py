@@ -14,6 +14,7 @@ Provides interactive equivalents of the matplotlib-based visualization module:
 from __future__ import annotations
 
 import logging
+import math
 import warnings
 from typing import Any, Dict, List, Optional, Sequence, Tuple  # noqa: F401
 
@@ -265,6 +266,7 @@ def plotly_validity_ranking(
 def plotly_heatmap(
     runs: List[Any],
     metric: str = "rmse_test",
+    workflow_filter: Optional[str] = None,
 ) -> go.Figure:
     """Interactive heatmap of metric (feature_set × split_policy).
 
@@ -273,13 +275,18 @@ def plotly_heatmap(
     runs : list of RunResult
     metric : str
         Metric attribute name (default 'rmse_test').
+    workflow_filter : str or None
+        If provided, only include runs matching this workflow.
 
     Returns
     -------
     go.Figure
     """
+    filtered = runs
+    if workflow_filter and workflow_filter != "All":
+        filtered = [r for r in runs if r.workflow == workflow_filter]
     records = []
-    for r in runs:
+    for r in filtered:
         records.append({
             "feature_set": r.feature_set,
             "split_policy": r.split_policy,
@@ -316,8 +323,13 @@ def plotly_heatmap(
         "r2_train": "R\u00b2 (Train) — 1に近いほど良い",
     }
     metric_display = _metric_labels.get(metric, metric.upper())
+    wf_label = (
+        f" [{workflow_filter}]"
+        if workflow_filter and workflow_filter != "All"
+        else " [全ワークフロー平均]"
+    )
     fig.update_layout(
-        title=f"パフォーマンスヒートマップ: {metric_display}",
+        title=f"パフォーマンスヒートマップ: {metric_display}{wf_label}",
         xaxis_title="分割方法 (Split Policy)",
         yaxis_title="特徴量セット (Feature Set)",
         height=max(400, len(pivot) * 60 + 200),
@@ -360,10 +372,12 @@ def plotly_parity(
             test_indices = getattr(r, "test_indices", None)
             for i in range(len(r.y_test_true)):
                 if test_indices is not None:
-                    key = (r.workflow, r.feature_set, int(test_indices[i]))
+                    # Fix: include split_policy in key — same sample can appear
+                    # legitimately in both RandomCV and CompositionBlock folds
+                    # and must NOT be deduplicated across policies.
+                    key = (r.workflow, r.feature_set, r.split_policy, int(test_indices[i]))
                 else:
-                    # Fallback: use (wf, fs, true_value) as rough key
-                    key = (r.workflow, r.feature_set, float(r.y_test_true[i]))
+                    key = (r.workflow, r.feature_set, r.split_policy, float(r.y_test_true[i]))
                 if key in seen_keys:
                     continue
                 seen_keys.add(key)
@@ -461,9 +475,9 @@ def plotly_parity_per_algorithm(
             wf_data[wf] = {"true": [], "pred": [], "rmse": [], "r2": []}
         for i in range(len(r.y_test_true)):
             if test_indices is not None:
-                key = (r.workflow, r.feature_set, int(test_indices[i]))
+                key = (r.workflow, r.feature_set, r.split_policy, int(test_indices[i]))
             else:
-                key = (r.workflow, r.feature_set, float(r.y_test_true[i]))
+                key = (r.workflow, r.feature_set, r.split_policy, float(r.y_test_true[i]))
             if key in seen_keys:
                 continue
             seen_keys.add(key)
@@ -476,9 +490,10 @@ def plotly_parity_per_algorithm(
     for r in runs:
         wf_runs_grouped.setdefault(r.workflow, []).append(r)
     for wf, wf_run_list in wf_runs_grouped.items():
-        rmses = [float(r.rmse_test) for r in wf_run_list if r.rmse_test > 0]
+        rmses = [float(r.rmse_test) for r in wf_run_list
+                 if r.rmse_test > 0 and math.isfinite(r.rmse_test)]
         r2s = [float(r.r2_test) for r in wf_run_list
-               if not (r.r2_test != r.r2_test)]  # exclude NaN
+               if math.isfinite(r.r2_test)]
         wf_metrics[wf] = {
             "rmse_test": sum(rmses) / len(rmses) if rmses else 0.0,
             "r2_test": sum(r2s) / len(r2s) if r2s else 0.0,
@@ -697,7 +712,12 @@ def runs_to_dataframe(runs: List[Any]) -> pd.DataFrame:
         })
     df = _records_to_df(records)
     if not df.empty and "R² (Test)" in df.columns:
-        df = df.sort_values("R² (Test)", ascending=False).reset_index(drop=True)
+        # fillna(-inf) so failed runs (NaN R²) sort to the bottom
+        df = df.sort_values(
+            "R² (Test)",
+            ascending=False,
+            key=lambda s: s.fillna(float("-inf")),
+        ).reset_index(drop=True)
     return df
 
 

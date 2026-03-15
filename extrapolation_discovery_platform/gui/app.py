@@ -218,7 +218,9 @@ def _build_integration_status_md(
 # ---------------------------------------------------------------------------
 
 def _refresh_dashboard_data(
-    metric: str, session: Dict[str, Any],
+    metric: str,
+    wf_filter: str,
+    session: Dict[str, Any],
 ) -> Tuple[str, str, str, str, str, Any, Any]:
     try:
         runs = session.get("runs", [])
@@ -232,7 +234,13 @@ def _refresh_dashboard_data(
         # Show best model's R² (Test) as the primary KPI — much more
         # informative than the abstract validity total score.
         if runs:
-            best_run = max(runs, key=lambda r: r.r2_test if not np.isnan(r.r2_test) else float('-inf'))
+            def _safe_r2(r):
+                v = r.r2_test
+                try:
+                    return float('-inf') if np.isnan(v) else float(v)
+                except (TypeError, ValueError):
+                    return float('-inf')
+            best_run = max(runs, key=_safe_r2)
             best_score = (
                 f"R²={best_run.r2_test:.4f} "
                 f"({best_run.workflow}/{best_run.feature_set})"
@@ -250,7 +258,10 @@ def _refresh_dashboard_data(
         integration_md = _build_integration_status_md(runner)
 
         validity_fig = plotly_validity_ranking(scores) if scores else None
-        heatmap_fig = plotly_heatmap(runs, metric=metric) if runs else None
+        heatmap_fig = (
+            plotly_heatmap(runs, metric=metric, workflow_filter=wf_filter)
+            if runs else None
+        )
 
         return (
             n_runs, best_fs, best_score, ood_str,
@@ -1436,6 +1447,155 @@ def _detect_element_columns(
     return elem_cols, col_to_elem
 
 
+def _detect_element_value_format(
+    raw: pd.DataFrame,
+    available: set,
+) -> Tuple[
+    List[Dict[str, float]],   # compositions
+    List[int],                 # valid_indices
+    Optional[pd.DataFrame],   # comps_df (element-fraction matrix)
+]:
+    """Detect CSV formats where element symbols appear as column **values**.
+
+    Supports two patterns:
+
+    **Pattern A — paired element/count columns**:
+      ``element_A``, ``element_B``, ... paired with ``count_A``, ``count_B``, ...
+      The ``element_*`` columns contain element symbols; the ``count_*``
+      columns contain the corresponding atomic fractions / counts.
+
+    **Pattern B — ``formula`` column**:
+      A single column named ``formula`` (case-insensitive) containing
+      chemical formulae like ``"PuBi"``, ``"Fe2O3"``, ``"NiAl"``.
+
+    Returns ``(compositions, valid_indices, comps_df)`` on success, or
+    ``([], [], None)`` if neither pattern matches.
+    """
+    import re as _re
+
+    compositions: List[Dict[str, float]] = []
+    valid_indices: List[int] = []
+
+    # --- Pattern A: element_X / count_X paired columns ---
+    # Find columns whose values are predominantly element symbols.
+    elem_val_cols: List[str] = []
+    count_val_cols: List[str] = []
+
+    # Heuristic: look for column pairs like (element_A, count_A),
+    # (element_B, count_B), etc.  Also accept (elem_1, count_1).
+    _pair_re = _re.compile(
+        r'^(element|elem|el|comp|component)[_\s]?(.+)$', _re.IGNORECASE,
+    )
+    _count_prefixes = ("count", "frac", "fraction", "amount", "x", "ratio")
+
+    paired: List[Tuple[str, str]] = []  # (elem_col, count_col)
+    for col in raw.columns:
+        m = _pair_re.match(col)
+        if m is None:
+            continue
+        suffix = m.group(2)
+        # Look for a matching count column with the same suffix
+        for prefix in _count_prefixes:
+            candidates = [
+                f"{prefix}_{suffix}", f"{prefix}{suffix}",
+                f"{prefix.capitalize()}_{suffix}",
+            ]
+            for cand in candidates:
+                # Case-insensitive column lookup
+                for real_col in raw.columns:
+                    if real_col.lower() == cand.lower() and real_col != col:
+                        paired.append((col, real_col))
+                        break
+                else:
+                    continue
+                break
+            else:
+                continue
+            break
+
+    if paired:
+        # Validate: check that element columns actually contain element symbols
+        available_lower = {e.lower(): e for e in available}
+        _valid_pairs: List[Tuple[str, str]] = []
+        for ecol, ccol in paired:
+            vals = raw[ecol].dropna().astype(str).str.strip()
+            matched = vals.apply(
+                lambda v: v in available or v.lower() in available_lower,
+            )
+            if matched.mean() >= 0.5:  # at least 50% are element symbols
+                _valid_pairs.append((ecol, ccol))
+
+        if _valid_pairs:
+            for idx, row in raw.iterrows():
+                comp: Dict[str, float] = {}
+                for ecol, ccol in _valid_pairs:
+                    elem_val = row[ecol]
+                    count_val = row[ccol]
+                    if pd.isna(elem_val) or pd.isna(count_val):
+                        continue
+                    elem_str = str(elem_val).strip()
+                    canon = (
+                        elem_str if elem_str in available
+                        else available_lower.get(elem_str.lower())
+                    )
+                    if canon is None:
+                        continue
+                    try:
+                        fv = float(count_val)
+                    except (ValueError, TypeError):
+                        continue
+                    if fv > 0:
+                        comp[canon] = comp.get(canon, 0.0) + fv
+                if comp:
+                    compositions.append(comp)
+                    valid_indices.append(idx)
+
+    # --- Pattern B: formula column ---
+    if not compositions:
+        formula_col = None
+        for col in raw.columns:
+            if col.lower() in ("formula", "composition", "comp", "alloy"):
+                formula_col = col
+                break
+
+        if formula_col is not None:
+            _FORMULA_RE = _re.compile(r'([A-Z][a-z]?)(\d*\.?\d*)')
+            available_lower = {e.lower(): e for e in available}
+            for idx, val in raw[formula_col].items():
+                if pd.isna(val):
+                    continue
+                formula_str = str(val).strip()
+                comp: Dict[str, float] = {}
+                for sym, num in _FORMULA_RE.findall(formula_str):
+                    if not sym:
+                        continue
+                    canon = (
+                        sym if sym in available
+                        else available_lower.get(sym.lower())
+                    )
+                    if canon is None:
+                        continue
+                    frac = float(num) if num else 1.0
+                    if frac > 0:
+                        comp[canon] = comp.get(canon, 0.0) + frac
+                if comp:
+                    compositions.append(comp)
+                    valid_indices.append(idx)
+
+    if not compositions:
+        return [], [], None
+
+    # Build a comps_df (element-fraction matrix) from compositions
+    all_elems = sorted(
+        {e for c in compositions for e in c},
+    )
+    comps_df = pd.DataFrame(
+        [{e: c.get(e, 0.0) for e in all_elems} for c in compositions],
+    ).reset_index(drop=True)
+
+    return compositions, valid_indices, comps_df
+
+
 def _handle_csv_upload(
     file_obj: Any,
     target_col: str,
@@ -1499,8 +1659,22 @@ def _handle_csv_upload(
             list(raw.columns), available,
         )
 
+        # --- Fallback: element-value format detection ---
+        # If no element-named columns found, try detecting element
+        # symbols as column VALUES (e.g. element_A/count_A pattern
+        # or a formula column).
+        ev_compositions: List[Dict[str, float]] = []
+        ev_indices: List[int] = []
+        ev_comps_df: Optional[pd.DataFrame] = None
+        if not elem_cols:
+            ev_compositions, ev_indices, ev_comps_df = (
+                _detect_element_value_format(raw, available)
+            )
+
+        has_element_info = bool(elem_cols) or bool(ev_compositions)
+
         # Decide mode: HEA vs Generic
-        if force_hea and not elem_cols:
+        if force_hea and not has_element_info:
             return (
                 _make_error_banner(
                     "HEAモード選択エラー",
@@ -1508,12 +1682,13 @@ def _handle_csv_upload(
                     "HEA (元素列) モードを使用するには、"
                     "元素名 (例: Fe, Ni, Co) または元素分率 "
                     "(例: Fe_frac, Ni_at%) の列が必要です。"
+                    "element_A/count_A 形式や formula 列も対応しています。"
                     "<br>自動検出 (auto) または汎用 (Generic) "
                     "モードをお試しください。",
                 ),
                 None, None, None, pd.DataFrame(), session,
             )
-        use_generic = force_generic or (not elem_cols)
+        use_generic = force_generic or (not has_element_info)
 
         if use_generic:
             # --- Generic CSV mode ---
@@ -1532,42 +1707,52 @@ def _handle_csv_upload(
         # --- HEA mode ---
         session["csv_mode"] = "hea"
 
-        # Build compositions list using canonical element symbols.
-        # Guard against NaN / non-numeric values in element columns.
-        valid_indices: List[int] = []
-        compositions = []
-        for idx, row in raw[elem_cols].iterrows():
-            comp: Dict[str, float] = {}
-            for c, v in row.items():
-                try:
-                    fv = float(v)
-                except (ValueError, TypeError):
-                    continue
-                if np.isnan(fv) or fv <= 0:
-                    continue
-                comp[col_to_elem[c]] = fv
-            if comp:
-                compositions.append(comp)
-                valid_indices.append(idx)
+        # Build compositions — either from element-named columns
+        # or from element-value format detection.
+        if elem_cols:
+            # Pattern: column names ARE element symbols (e.g. Fe, Ni)
+            valid_indices: List[int] = []
+            compositions: List[Dict[str, float]] = []
+            for idx, row in raw[elem_cols].iterrows():
+                comp: Dict[str, float] = {}
+                for c, v in row.items():
+                    try:
+                        fv = float(v)
+                    except (ValueError, TypeError):
+                        continue
+                    if np.isnan(fv) or fv <= 0:
+                        continue
+                    comp[col_to_elem[c]] = fv
+                if comp:
+                    compositions.append(comp)
+                    valid_indices.append(idx)
 
-        if not compositions:
-            return (
-                _make_error_banner(
-                    "有効な組成データなし",
-                    "検出された元素列の値がすべて 0 です。"
-                    "原子分率が正の値を持つ行が必要です。",
-                ),
-                None, None, None, pd.DataFrame(), session,
+            if not compositions:
+                return (
+                    _make_error_banner(
+                        "有効な組成データなし",
+                        "検出された元素列の値がすべて 0 です。"
+                        "原子分率が正の値を持つ行が必要です。",
+                    ),
+                    None, None, None, pd.DataFrame(), session,
+                )
+
+            # Composition DataFrame — rename to canonical element symbols
+            comps_df = raw.loc[valid_indices, elem_cols].copy().reset_index(
+                drop=True,
             )
-
-        # Composition DataFrame — rename to canonical element symbols
-        comps_df = raw.loc[valid_indices, elem_cols].copy().reset_index(
-            drop=True,
-        )
-        comps_df.columns = [col_to_elem[c] for c in comps_df.columns]
+            comps_df.columns = [col_to_elem[c] for c in comps_df.columns]
+        else:
+            # Pattern: element symbols as VALUES (element_A/count_A
+            # or formula column) — already detected above.
+            compositions = ev_compositions
+            valid_indices = ev_indices
+            comps_df = ev_comps_df
 
         # Compute features
         features_df = compute_features(compositions, feature_set=None)
+        # Consolidate to C-contiguous to avoid fragmented BlockManager
+        features_df = _consolidate_df(features_df)
 
         # Extract or synthesize target — aligned to valid rows
         if target_col_clean and target_col_clean in raw.columns:
@@ -1872,7 +2057,7 @@ def _run_feature_selection_for_fs(
 # ---------------------------------------------------------------------------
 
 # Current PR / build version tag shown in the GUI title bar.
-_GUI_VERSION_TAG = "PR#144"
+_GUI_VERSION_TAG = "PR#147"
 
 
 def create_app() -> gr.Blocks:
@@ -1932,50 +2117,51 @@ def create_app() -> gr.Blocks:
     .gradio-container {
         margin-left: 180px !important;
     }
-    /* Hide the default Gradio tab bar (replaced by sidebar) */
-    #main-tabs > .tab-nav {
+    /* Hide the default Gradio tab bar (replaced by sidebar).
+       Use broad descendant selector to catch nested [role=tablist] in Gradio 6.x. */
+    #main-tabs .tab-nav,
+    #main-tabs [role=tablist] {
         display: none !important;
     }
     @media (max-width: 768px) {
         #sidebar-nav { display: none; }
         .gradio-container { margin-left: 0 !important; }
-        #main-tabs > .tab-nav { display: flex !important; }
+        #main-tabs .tab-nav,
+        #main-tabs [role=tablist] { display: flex !important; }
     }
     """
 
     # JavaScript for sidebar tab switching
+    # Compatible with Gradio 6.x ([role=tablist]) and earlier (.tab-nav).
     _SIDEBAR_JS = """
     () => {
-        // Wait for Gradio to render, then inject sidebar
-        setTimeout(() => {
+        // Inject sidebar once Gradio has rendered the tab bar.
+        // Uses polling instead of a fixed timeout so it works even
+        // on slow machines or with heavy CSV data.
+        function _injectSidebar() {
             if (document.getElementById('sidebar-nav')) return;
-            const tabs = [
-                '⚙ Config & Run',
-                '📊 Data Summary',
-                '📈 Dashboard',
-                '🔬 Results',
-                '🗺 OOD Map',
-                '🔍 FS Comparison',
-                '🧠 Model Selection',
-                '📖 Model Info',
-                '📚 Literature',
-                '📝 Report'
-            ];
+
+            // Find Gradio's tab bar — Gradio 6.x uses [role=tablist],
+            // earlier versions use .tab-nav inside #main-tabs.
+            const tabNav = document.querySelector('#main-tabs [role=tablist]')
+                        || document.querySelector('#main-tabs .tab-nav');
+            if (!tabNav) return false;  // not rendered yet
+
+            // Only select direct [role=tab] or direct button children
+            // to avoid picking up unrelated nested buttons.
+            const gradioTabBtns = tabNav.querySelectorAll(':scope > [role=tab], :scope > button');
+            if (gradioTabBtns.length === 0) return false;
+            const labels = Array.from(gradioTabBtns).map(b => b.textContent.trim());
+
             const nav = document.createElement('div');
             nav.id = 'sidebar-nav';
             nav.innerHTML = '<div class="sidebar-title">Navigation</div>';
-            tabs.forEach((label, idx) => {
+            labels.forEach((label, idx) => {
                 const btn = document.createElement('button');
                 btn.className = 'sidebar-btn' + (idx === 0 ? ' active' : '');
                 btn.textContent = label;
                 btn.onclick = () => {
-                    // Click the corresponding Gradio tab button
-                    const tabNav = document.querySelector('#main-tabs > .tab-nav');
-                    if (tabNav) {
-                        const tabBtns = tabNav.querySelectorAll('button');
-                        if (tabBtns[idx]) tabBtns[idx].click();
-                    }
-                    // Update active state
+                    if (gradioTabBtns[idx]) gradioTabBtns[idx].click();
                     nav.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                 };
@@ -1984,21 +2170,30 @@ def create_app() -> gr.Blocks:
             document.body.appendChild(nav);
 
             // Sync sidebar when user clicks Gradio tabs directly
-            const tabNav = document.querySelector('#main-tabs > .tab-nav');
-            if (tabNav) {
-                const observer = new MutationObserver(() => {
-                    const tabBtns = tabNav.querySelectorAll('button');
-                    const sidebarBtns = nav.querySelectorAll('.sidebar-btn');
-                    tabBtns.forEach((tb, idx) => {
-                        if (tb.classList.contains('selected') && sidebarBtns[idx]) {
-                            sidebarBtns.forEach(b => b.classList.remove('active'));
-                            sidebarBtns[idx].classList.add('active');
-                        }
-                    });
+            const observer = new MutationObserver(() => {
+                const sidebarBtns = nav.querySelectorAll('.sidebar-btn');
+                gradioTabBtns.forEach((tb, idx) => {
+                    const isActive = tb.getAttribute('aria-selected') === 'true'
+                                  || tb.classList.contains('selected');
+                    if (isActive && sidebarBtns[idx]) {
+                        sidebarBtns.forEach(b => b.classList.remove('active'));
+                        sidebarBtns[idx].classList.add('active');
+                    }
                 });
-                observer.observe(tabNav, { attributes: true, subtree: true });
+            });
+            observer.observe(tabNav, { attributes: true, subtree: true });
+            return true;  // success
+        }
+
+        // Poll every 300ms for up to 10s (handles slow renders).
+        let _attempts = 0;
+        const _maxAttempts = 33;
+        const _poll = setInterval(() => {
+            _attempts++;
+            if (_injectSidebar() || _attempts >= _maxAttempts) {
+                clearInterval(_poll);
             }
-        }, 1000);
+        }, 300);
     }
     """
 
@@ -2102,16 +2297,21 @@ def create_app() -> gr.Blocks:
                     "| モード | 選択基準 | 説明 |\n"
                     "|--------|----------|------|\n"
                     "| **auto** | 迷ったらこれ | "
-                    "列名から元素列を自動検出し、HEA/Generic を自動判定します |\n"
-                    "| **HEA (元素列)** | CSV に元素名の列がある場合 | "
-                    "元素列（Fe, Co, Ni 等）から周期律表データ・"
+                    "列名・列値から元素情報を自動検出し、"
+                    "HEA/Generic を自動判定します |\n"
+                    "| **HEA (元素列)** | CSV に元素情報がある場合 | "
+                    "元素列（Fe, Co, Ni 等）や element_A/count_A 形式、"
+                    "formula 列から周期律表データ・"
                     "熱力学特徴量・MAGPIE 特徴量を自動生成します |\n"
                     "| **Generic (汎用)** | 元素データでない一般的なCSV | "
                     "列をそのまま説明変数として使用。"
                     "特徴量生成は行いません |\n\n"
-                    "> **ヒント**: HEA モードでは元素名（文字列列）を"
-                    "説明因子に含めると、周期律表データと "
-                    "MAGPIE/matminer 特徴量が自動計算されます。"
+                    "> **ヒント**: 以下の形式に対応しています:\n"
+                    "> - 列名が元素名 (Fe, Ni 等)\n"
+                    "> - element_A/count_A, element_B/count_B 形式\n"
+                    "> - formula 列 (化学式: Fe2O3 等)\n\n"
+                    "> いずれの形式でも周期律表データと "
+                    "MAGPIE 特徴量が自動計算されます。"
                 )
                 csv_feature_checks = gr.CheckboxGroup(
                     label="説明因子 (Explanatory Variables)",
@@ -2797,14 +2997,22 @@ def create_app() -> gr.Blocks:
 
             validity_plot = gr.Plot(label="Feature Validity Ranking")
             heatmap_plot = gr.Plot(label="Performance Heatmap (RMSE Test)")
-            heatmap_metric = gr.Dropdown(
-                choices=[
-                    "rmse_test", "rmse_train", "mae_test",
-                    "mae_train", "r2_test", "r2_train",
-                ],
-                value="rmse_test",
-                label="Heatmap Metric",
-            )
+            with gr.Row():
+                heatmap_metric = gr.Dropdown(
+                    choices=[
+                        "rmse_test", "rmse_train", "mae_test",
+                        "mae_train", "r2_test", "r2_train",
+                    ],
+                    value="rmse_test",
+                    label="Heatmap Metric",
+                )
+                heatmap_wf_filter = gr.Dropdown(
+                    choices=["All", "WF-LIN", "WF-LASSO", "WF-ARD",
+                             "WF-RF", "WF-XGB", "WF-ENS"],
+                    value="All",
+                    label="Workflow Filter (Heatmap)",
+                    info="ヒートマップに表示するワークフローを絞り込む",
+                )
 
             dash_refresh_btn = gr.Button(
                 "Refresh Dashboard", variant="primary",
@@ -2816,12 +3024,17 @@ def create_app() -> gr.Blocks:
             ]
             dash_refresh_btn.click(
                 fn=_refresh_dashboard_data,
-                inputs=[heatmap_metric, state],
+                inputs=[heatmap_metric, heatmap_wf_filter, state],
                 outputs=dash_outputs,
             )
             heatmap_metric.change(
                 fn=_refresh_dashboard_data,
-                inputs=[heatmap_metric, state],
+                inputs=[heatmap_metric, heatmap_wf_filter, state],
+                outputs=dash_outputs,
+            )
+            heatmap_wf_filter.change(
+                fn=_refresh_dashboard_data,
+                inputs=[heatmap_metric, heatmap_wf_filter, state],
                 outputs=dash_outputs,
             )
 
@@ -2882,16 +3095,42 @@ def create_app() -> gr.Blocks:
                 validity_table, results_table, parity_plot,
                 results_interp_md, results_fs_bar_plot,
             ]
+            # Wrapper that also refreshes model_sel_md from session.
+            # _refresh_results_data returns 8 values; model_sel_md is
+            # appended as a 9th value here so Refresh stays consistent
+            # with the run_experiment final yield.
+            def _refresh_results_and_model(
+                wf_f: str, fs_f: str, sp_f: str,
+                session: Dict[str, Any],
+            ):
+                base = _refresh_results_data(wf_f, fs_f, sp_f, session)
+                ms = session.get("model_selection_result")
+                if ms is not None:
+                    ms_md = (
+                        f"### Nested CV Model Selection Results\n\n"
+                        f"- **Best model**: {ms.best_name}\n"
+                        f"- **Outer RMSE**: {ms.best_mean_rmse:.4f}"
+                        f" ± {ms.best_std_rmse:.4f}\n"
+                    )
+                else:
+                    ms_md = (
+                        "*モデル選択を有効にして解析を実行すると、"
+                        "ここに Nested CV の結果が表示されます。*"
+                    )
+                return (*base, ms_md)
+
+            res_outputs_with_ms = res_outputs + [model_sel_md]
+
             res_refresh_btn.click(
-                fn=_refresh_results_data,
+                fn=_refresh_results_and_model,
                 inputs=[filter_wf, filter_fs, filter_sp, state],
-                outputs=res_outputs,
+                outputs=res_outputs_with_ms,
             )
             for dropdown in [filter_wf, filter_fs, filter_sp]:
                 dropdown.change(
-                    fn=_refresh_results_data,
+                    fn=_refresh_results_and_model,
                     inputs=[filter_wf, filter_fs, filter_sp, state],
-                    outputs=res_outputs,
+                    outputs=res_outputs_with_ms,
                 )
 
           # --- Tab 5: OOD Map (Out-of-Distribution) ---
@@ -3347,6 +3586,320 @@ def create_app() -> gr.Blocks:
             )
 
         # ---------------------------------------------------------------
+        # Tab: Individual Run（個別実行）
+        # ---------------------------------------------------------------
+          with gr.Tab("🔬 Individual Run"):
+            gr.Markdown(
+                "## 個別アルゴリズム実行\n\n"
+                "1つのアルゴリズム × 1特徴量セット × 1分割方法を即座に実行します。\n"
+                "特徴量データ・目的変数は **Config & Run** でロードしたデータが毎回直接渡されます。\n\n"
+                "> **先に Config & Run タブでCSVを読み込むか、サンプルデータを生成してください。**"
+            )
+
+            with gr.Row():
+                with gr.Column(scale=1):
+                    gr.Markdown("### アルゴリズム設定")
+                    ind_wf = gr.Dropdown(
+                        label="アルゴリズム (Workflow)",
+                        choices=["WF-LIN", "WF-LASSO", "WF-ARD",
+                                 "WF-RF", "WF-XGB", "WF-ENS"],
+                        value="WF-LIN",
+                        info="実行するMLアルゴリズムを選択",
+                    )
+                    ind_fs = gr.Dropdown(
+                        label="特徴量セット (Feature Set)",
+                        choices=["FS_BASE", "FS_THERMO", "FS_SIZE",
+                                 "FS_ELECTRON", "FS_ALL", "FS_MAGPIE"],
+                        value="FS_ALL",
+                        info="使用する特徴量セットを選択",
+                    )
+                    ind_sp = gr.Dropdown(
+                        label="分割方法 (Split Policy)",
+                        choices=["RandomCV", "CompositionBlock",
+                                 "ElementExclusion", "Holdout"],
+                        value="RandomCV",
+                        info="データ分割方法を選択",
+                    )
+
+                with gr.Column(scale=1):
+                    gr.Markdown("### 分割パラメータ")
+                    ind_seed = gr.Number(
+                        label="Seed", value=42, precision=0,
+                        info="乱数シード（再現性）",
+                    )
+                    ind_n_folds = gr.Slider(
+                        minimum=2, maximum=10, value=5, step=1,
+                        label="Fold数 (RandomCV / CompositionBlock)",
+                        info="Holdout の場合は無視",
+                    )
+                    ind_test_size = gr.Slider(
+                        minimum=0.1, maximum=0.5, value=0.2, step=0.05,
+                        label="テスト比率 (Holdout のみ)",
+                    )
+                    ind_excl = gr.Textbox(
+                        label="除外元素 (ElementExclusion のみ、スペース区切り)",
+                        value="Co Ni Ti",
+                    )
+
+                with gr.Column(scale=1):
+                    gr.Markdown("### モデル・前処理設定")
+                    ind_quick = gr.Checkbox(
+                        label="Quick Mode (HPOグリッドを縮小)",
+                        value=True,
+                    )
+                    ind_dim_r = gr.Checkbox(
+                        label="次元削減 (StandardScaler + PCA 95%)",
+                        value=True,
+                    )
+                    ind_leak_excl = gr.Checkbox(
+                        label="リーク自動除外",
+                        value=True,
+                    )
+                    ind_leak_thr = gr.Slider(
+                        minimum=0.5, maximum=0.99, value=0.85, step=0.01,
+                        label="リーク閾値 |r|",
+                    )
+
+            ind_run_btn = gr.Button(
+                "▶ 個別実行 (Run Individual)", variant="primary", size="lg",
+            )
+
+            ind_progress_html = gr.HTML(
+                value='<div style="padding:8px;color:#888;">実行待機中...</div>',
+                label="実行状況",
+            )
+
+            # ── 結果表示エリア ────────────────────────────────────────────
+            with gr.Tabs():
+                with gr.Tab("📋 サマリー"):
+                    ind_summary_md = gr.Markdown(
+                        "*個別実行ボタンを押すと結果が表示されます。*"
+                    )
+
+                with gr.Tab("📊 パリティプロット"):
+                    ind_parity_plot = gr.Plot(
+                        label="Parity Plot (Test Set)"
+                    )
+
+                with gr.Tab("🗺️ OOD マップ"):
+                    ind_ood_plot = gr.Plot(
+                        label="OOD Map (PCA)"
+                    )
+                    ind_ood_summary = gr.Textbox(
+                        label="OOD サマリー", interactive=False,
+                    )
+
+                with gr.Tab("📄 全Fold結果テーブル"):
+                    ind_runs_table = gr.Dataframe(
+                        label="Fold別メトリクス",
+                        headers=["Fold", "RMSE (Train)", "RMSE (Test)",
+                                 "MAE (Test)", "R² (Train)", "R² (Test)",
+                                 "Time (s)"],
+                    )
+
+            # ── コールバック ──────────────────────────────────────────────
+
+            def _run_individual_cb(
+                wf_name: str,
+                fs_name: str,
+                sp_name: str,
+                seed_val: float,
+                n_folds_val: float,
+                test_size_val: float,
+                excl_str: str,
+                quick_val: bool,
+                dim_r_val: bool,
+                leak_excl_val: bool,
+                leak_thr_val: float,
+                session: Dict[str, Any],
+            ):
+                """個別実行コールバック（Gradio event handler）。
+
+                features_df / target / compositions_df は session から取り出し、
+                individual_runner.run_individual() に毎回直接渡す。
+                セッション自体は変更しない。
+                """
+                from extrapolation_discovery_platform.individual_runner import (
+                    run_individual,
+                )
+                from extrapolation_discovery_platform.gui.plotly_charts import (
+                    plotly_parity_per_algorithm,
+                    plotly_ood_map,
+                    runs_to_dataframe,
+                )
+
+                # ── データ取り出し（毎回直接渡すためにここで取得）────────
+                features_df   = session.get("features_df")
+                target        = session.get("target")
+                compositions_df = session.get("compositions_df")
+                generic_csv   = session.get("csv_mode", "hea") == "generic"
+                target_col    = session.get("target_col", "target")
+
+                if features_df is None or target is None:
+                    no_data_html = (
+                        '<div style="padding:12px;background:#fff3e0;'
+                        'border-left:4px solid #FF9800;border-radius:4px;">'
+                        '⚠️ <b>データ未ロード</b>: '
+                        'Config &amp; Run タブでCSVをロードするか、'
+                        'サンプルデータを生成してください。'
+                        '</div>'
+                    )
+                    return (
+                        no_data_html,
+                        "*データが読み込まれていません。*",
+                        None, "", pd.DataFrame(),
+                    )
+
+                # ── 進捗表示 ─────────────────────────────────────────────
+                progress_html = (
+                    f'<div style="padding:8px;background:#e8f4fd;'
+                    f'border-left:4px solid #2196F3;border-radius:4px;">'
+                    f'⏳ <b>{wf_name} / {fs_name} / {sp_name}</b> 実行中...'
+                    f'</div>'
+                )
+
+                excl_elems = [e.strip() for e in excl_str.split() if e.strip()]
+
+                # ── 個別実行（データを直接渡す） ──────────────────────────
+                result = run_individual(
+                    workflow_name=wf_name,
+                    feature_set_name=fs_name,
+                    split_policy_name=sp_name,
+                    features_df=features_df,       # ★ 直接渡す
+                    target=target,                  # ★ 直接渡す
+                    compositions_df=compositions_df, # ★ 直接渡す
+                    seed=int(seed_val),
+                    test_size=float(test_size_val),
+                    n_folds=int(n_folds_val),
+                    exclude_elements=excl_elems,
+                    quick=quick_val,
+                    dim_reduction=dim_r_val,
+                    leak_auto_exclude=leak_excl_val,
+                    leak_corr_threshold=float(leak_thr_val),
+                    generic_csv_mode=generic_csv,
+                )
+
+                # ── 完了ステータス表示 ────────────────────────────────────
+                if result.success:
+                    progress_html = (
+                        f'<div style="padding:8px;background:#e8f5e9;'
+                        f'border-left:4px solid #4CAF50;border-radius:4px;">'
+                        f'✅ <b>{wf_name} / {fs_name} / {sp_name}</b> 完了 '
+                        f'({result.elapsed_sec:.1f}秒) — '
+                        f'RMSE={result.rmse_test_mean:.4f}, '
+                        f'R²={result.r2_test_mean:.4f}'
+                        f'</div>'
+                    )
+                else:
+                    progress_html = (
+                        f'<div style="padding:8px;background:#ffebee;'
+                        f'border-left:4px solid #F44336;border-radius:4px;">'
+                        f'❌ <b>{wf_name}</b> 実行失敗 — '
+                        f'エラー詳細はサマリータブを確認'
+                        f'</div>'
+                    )
+
+                # ── サマリーMarkdown ──────────────────────────────────────
+                summary_md_text = result.summary_md()
+
+                # ── パリティプロット ──────────────────────────────────────
+                parity_fig = None
+                if result.runs and result.success:
+                    try:
+                        parity_fig = plotly_parity_per_algorithm(
+                            result.runs, target_name=target_col,
+                        )
+                    except Exception:
+                        logger.warning("パリティプロット生成失敗", exc_info=True)
+
+                # ── OODマップ ─────────────────────────────────────────────
+                ood_fig = None
+                ood_summary_text = ""
+                # Filter effective_columns to those actually present in features_df
+                _ood_cols = [
+                    c for c in result.effective_columns
+                    if c in features_df.columns
+                ]
+                if (result.ood_result is not None
+                        and result.ood_train_idx is not None
+                        and result.ood_test_idx is not None
+                        and _ood_cols):
+                    try:
+                        X_full_for_ood = pd.DataFrame(
+                            np.ascontiguousarray(
+                                features_df[_ood_cols].to_numpy(
+                                    dtype="float64", na_value=np.nan
+                                )
+                            ),
+                            columns=_ood_cols,
+                        )
+                        X_tr_ood = X_full_for_ood.iloc[result.ood_train_idx]
+                        X_te_ood = X_full_for_ood.iloc[result.ood_test_idx]
+                        ood = result.ood_result
+                        ood_fig = plotly_ood_map(
+                            X_tr_ood, X_te_ood,
+                            composite_scores=ood.composite_scores,
+                            is_ood=ood.is_ood,
+                            title=f"OOD Map — {wf_name} / {fs_name}",
+                        )
+                        ood_summary_text = (
+                            f"Total: {ood.n_total} | "
+                            f"OOD: {ood.n_ood} ({ood.ood_ratio:.1%}) | "
+                            f"Threshold: {ood.ood_threshold:.4f}"
+                        )
+                    except Exception:
+                        logger.warning("OODマップ生成失敗", exc_info=True)
+
+                # ── Fold別テーブル ────────────────────────────────────────
+                fold_records = []
+                for r in result.runs:
+                    fold_records.append({
+                        "Fold": r.fold,
+                        "RMSE (Train)": round(r.rmse_train, 4),
+                        "RMSE (Test)":  round(r.rmse_test,  4),
+                        "MAE (Test)":   round(r.mae_test,   4),
+                        "R² (Train)":   round(r.r2_train,   4),
+                        "R² (Test)":    round(r.r2_test,    4),
+                        "Time (s)":     round(r.elapsed_sec, 3),
+                    })
+                if fold_records:
+                    cols = list(fold_records[0].keys())
+                    runs_df = pd.DataFrame(
+                        {k: [rec[k] for rec in fold_records] for k in cols}
+                    )
+                else:
+                    runs_df = pd.DataFrame()
+
+                return (
+                    progress_html,
+                    summary_md_text,
+                    parity_fig,
+                    ood_fig,
+                    ood_summary_text,
+                    runs_df,
+                )
+
+            ind_run_btn.click(
+                fn=_run_individual_cb,
+                inputs=[
+                    ind_wf, ind_fs, ind_sp,
+                    ind_seed, ind_n_folds, ind_test_size,
+                    ind_excl,
+                    ind_quick, ind_dim_r,
+                    ind_leak_excl, ind_leak_thr,
+                    state,
+                ],
+                outputs=[
+                    ind_progress_html,
+                    ind_summary_md,
+                    ind_parity_plot,
+                    ind_ood_plot,
+                    ind_ood_summary,
+                    ind_runs_table,
+                ],
+            )
+
+        # ---------------------------------------------------------------
         # Run experiment generator  -- Fix #7 (streaming progress)
         # ---------------------------------------------------------------
 
@@ -3684,9 +4237,23 @@ def create_app() -> gr.Blocks:
                             "csv_mode", "hea",
                         )
                         if csv_mode_label == "generic":
-                            # Generic CSV: override FeatureCatalog
-                            # so runner uses CSV columns as a single
-                            # feature set instead of HEA-specific ones.
+                            # Generic CSV: map each selected FS to a
+                            # distinct subset of CSV columns so that
+                            # FS comparison is meaningful.
+                            #
+                            # Bug#6 fix: previously ALL feature sets were
+                            # mapped to the exact same csv_cols, making
+                            # every FS produce identical predictions.
+                            # Now each FS gets a distinct column subset:
+                            #   FS_BASE     → first 1/3 of columns (low-dim)
+                            #   FS_THERMO   → first 1/2 of columns
+                            #   FS_SIZE     → first 2/3 of columns
+                            #   FS_ELECTRON → columns with highest variance
+                            #   FS_ALL      → all columns
+                            #   FS_MAGPIE   → all columns (same as FS_ALL
+                            #                 for generic CSV)
+                            # This preserves workflow × FS comparison while
+                            # ensuring each FS actually uses different features.
                             from extrapolation_discovery_platform.features import (  # noqa: E501
                                 FeatureCatalog as _FC,
                                 FeatureSetName as _FSN,
@@ -3694,20 +4261,38 @@ def create_app() -> gr.Blocks:
                             _orig_sets = dict(_FC._SETS)
                             try:
                                 csv_cols = list(features_df.columns)
-                                # Generic CSV has no domain-specific feature
-                                # sets. Map FS_ALL to the CSV columns and
-                                # run only FS_ALL so every workflow sees the
-                                # same full column set (workflow comparison
-                                # is the analysis; FS comparison is N/A).
+                                n = len(csv_cols)
+
+                                # Rank columns by variance (descending)
+                                _var_order = (
+                                    features_df.var()
+                                    .sort_values(ascending=False)
+                                    .index.tolist()
+                                )
+
+                                # Assign column subsets per FS size tier
+                                _n_base  = max(2, n // 3)
+                                _n_therm = max(3, n // 2)
+                                _n_size  = max(4, (2 * n) // 3)
+
                                 _FC._SETS = {
-                                    k: csv_cols
-                                    for k in _FC._SETS
+                                    "FS_BASE":     csv_cols[:_n_base],
+                                    "FS_THERMO":   csv_cols[:_n_therm],
+                                    "FS_SIZE":     csv_cols[:_n_size],
+                                    "FS_ELECTRON": _var_order[:_n_therm],
+                                    "FS_ALL":      csv_cols,
+                                    "FS_MAGPIE":   csv_cols,
                                 }
+                                _generic_fsets = (
+                                    selected_fsets
+                                    if selected_fsets
+                                    else ["FS_ALL"]
+                                )
                                 r, s, o = runner.run(
                                     features_df, features_df, target,
                                     progress_callback=_progress_cb,
                                     selected_workflows=selected_wfs,
-                                    selected_feature_sets=["FS_ALL"],
+                                    selected_feature_sets=_generic_fsets,
                                 )
                             finally:
                                 _FC._SETS = _orig_sets
@@ -4058,7 +4643,7 @@ def create_app() -> gr.Blocks:
                 final_summary = _refresh_data_summary(session)
             except Exception:
                 final_summary = empty_summary
-            final_dash = _refresh_dashboard_data("rmse_test", session)
+            final_dash = _refresh_dashboard_data("rmse_test", "All", session)
             final_res = _refresh_results_data("All", "All", "All", session)
             ood_keys = list(session.get("ood_results", {}).keys())
             ood_fs = ood_keys[0] if ood_keys else "FS_ALL"
