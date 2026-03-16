@@ -280,6 +280,19 @@ def stage1_preprocess(
             else:
                 logger.warning("Stage1: ElementExclusion — compositions_df が None")
 
+        if "Holdout" in active_policies:
+            try:
+                n = len(features_df)
+                rng = np.random.default_rng(_seed0)
+                shuffled = rng.permutation(n)
+                n_test = max(1, int(n * 0.2))
+                test_idx = shuffled[:n_test]
+                train_idx = shuffled[n_test:]
+                fold_plan["Holdout"] = [(train_idx, test_idx)]
+                logger.info("Stage1: Holdout 1 fold (test=%d, train=%d)", n_test, n - n_test)
+            except Exception:
+                logger.warning("Stage1: Holdout 分割失敗:\n%s", traceback.format_exc())
+
         if "RandomCV" in active_policies:
             # RandomCV は seed ごとに別キーで保持（evaluation.py の base_rmse 計算で参照）
             for seed in seeds:

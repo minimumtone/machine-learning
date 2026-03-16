@@ -458,13 +458,15 @@ def run_individual(
         result.effective_columns = _eff_cols
         result.n_features_before = len(_eff_cols)
         result.n_features_after  = train_res.n_features_used
+        # RandomCV の fold_plan キーは "RandomCV_seed{seed}" 形式
+        _plan_lookup_key = f"RandomCV_seed{seed}" if _sp_clean == "RandomCV" else _sp_clean
         result.n_train_samples   = (
-            int(np.mean([len(s[0]) for s in prep.fold_plan.get(_sp_clean, [])]))
-            if prep.fold_plan.get(_sp_clean) else 0
+            int(np.mean([len(s[0]) for s in prep.fold_plan.get(_plan_lookup_key, [])]))
+            if prep.fold_plan.get(_plan_lookup_key) else 0
         )
         result.n_test_samples = (
-            int(np.mean([len(s[1]) for s in prep.fold_plan.get(_sp_clean, [])]))
-            if prep.fold_plan.get(_sp_clean) else 0
+            int(np.mean([len(s[1]) for s in prep.fold_plan.get(_plan_lookup_key, [])]))
+            if prep.fold_plan.get(_plan_lookup_key) else 0
         )
 
         # ── 集約メトリクス（Stage2 からコピー） ─────────────────────
