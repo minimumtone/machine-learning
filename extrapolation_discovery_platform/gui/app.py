@@ -3171,10 +3171,6 @@ def create_app() -> gr.Blocks:
                     choices=["All"], value="All", label="Split Policy Filter",
                 )
 
-            res_refresh_btn = gr.Button(
-                "🔄 Refresh Results", variant="primary",
-            )
-
             # ── 1. アルゴリズム別パリティグリッド（メイン） ──────────────
             gr.Markdown(
                 "### 📊 アルゴリズム別パリティプロット\n"
