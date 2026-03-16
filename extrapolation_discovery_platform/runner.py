@@ -29,12 +29,6 @@ from extrapolation_discovery_platform.features import (
     FeatureSetName,
     compute_features,
 )
-from extrapolation_discovery_platform.splitters import (
-    BaseSplitter,
-    CompositionBlockSplitter,
-    ElementExclusionSplitter,
-    RandomCVSplitter,
-)
 from extrapolation_discovery_platform.workflows import (
     BaseWorkflow,
     RunResult,
@@ -45,7 +39,6 @@ from extrapolation_discovery_platform.workflows import (
     WorkflowRF,
     WorkflowXGB,
 )
-from extrapolation_discovery_platform.ood import OODDetector, OODResult
 from extrapolation_discovery_platform.evaluation import FeatureValidityEvaluator, ValidityScore
 from extrapolation_discovery_platform.integrations.mlflow_tracker import (
     MLflowTracker,
@@ -62,9 +55,7 @@ from extrapolation_discovery_platform.integrations.mint_adapter import (
 )
 from extrapolation_discovery_platform.multicollinearity import (
     MulticollinearityReport,
-    run_phase0_multicollinearity,
 )
-from extrapolation_discovery_platform.feature_selection import run_feature_selection
 from extrapolation_discovery_platform.model_selection import (
     ModelSelectionResult,
     run_model_selection,
@@ -153,46 +144,36 @@ def _run_job(
     y: np.ndarray,
     mint_configs: Optional[Dict[str, "MIntWorkflowConfig"]] = None,
 ) -> RunResult:
-    """Execute one training run (pure, picklable)."""
+    """Execute one training run (pure, picklable).
+
+    Delegates workflow instantiation to individual_runner._WORKFLOW_FACTORIES
+    so that runner.py and individual_runner.py share a single source of truth
+    for how each workflow is constructed.  Previously both modules duplicated
+    the factory dict, so changes to one (e.g. adding StandardScaler to WF-XGB)
+    were not automatically reflected in the other.
+    """
     import os as _os
     import pandas as _pd
 
-    # Signal to inner estimators (GridSearchCV etc.) that we are inside
-    # a ProcessPoolExecutor worker — they must use n_jobs=1 to avoid
-    # double parallelization and thread contention.
     _os.environ["_EDP_INSIDE_WORKER"] = "1"
 
-    # Row slices of a C-contiguous 2-D array are themselves contiguous.
-    # Wrap them in DataFrames only for the workflow API.
     X_train = _pd.DataFrame(X_fs[job.train_idx], columns=feature_cols)
     X_test  = _pd.DataFrame(X_fs[job.test_idx],  columns=feature_cols)
     y_train = _pd.Series(y[job.train_idx])
     y_test  = _pd.Series(y[job.test_idx])
 
-    from extrapolation_discovery_platform.workflows import (
-        WorkflowARD, WorkflowENS, WorkflowLASSO, WorkflowLIN, WorkflowRF,
-        WorkflowXGB,
+    # --- single source of truth: delegate to individual_runner ---
+    from extrapolation_discovery_platform.individual_runner import (
+        _WORKFLOW_FACTORIES as _IR_FACTORIES,
     )
-    _dr = job.dim_reduction
-    _pca = _dr or job.force_pca  # force_pca=True → always PCA ON (WF-LIN only)
+    _dr  = job.dim_reduction
+    _pca = _dr or job.force_pca
 
-    # Lazy instantiation: create only the one workflow needed for this job.
-    # Previously all 6 workflows were instantiated per job, wasting resources
-    # when running hundreds of parallel jobs via ProcessPoolExecutor.
-    _BUILTIN_FACTORIES = {
-        "WF-LIN":   lambda: WorkflowLIN(dim_reduction=_pca),
-        "WF-LASSO": lambda: WorkflowLASSO(dim_reduction=_dr),
-        "WF-ARD":   lambda: WorkflowARD(dim_reduction=_dr),
-        "WF-RF":    lambda: WorkflowRF(quick=job.quick, dim_reduction=_dr),
-        "WF-XGB":   lambda: WorkflowXGB(quick=job.quick, dim_reduction=_dr),
-        "WF-ENS":   lambda: WorkflowENS(
-            n_members=3 if job.quick else 5, quick=job.quick,
-            dim_reduction=_dr,
-        ),
-    }
+    # WF-LIN gets force_pca treatment; all others use the standard _dr flag
+    _dim_r_for_wf = _pca if job.wf_name == "WF-LIN" else _dr
 
-    if job.wf_name in _BUILTIN_FACTORIES:
-        wf = _BUILTIN_FACTORIES[job.wf_name]()
+    if job.wf_name in _IR_FACTORIES:
+        wf = _IR_FACTORIES[job.wf_name](job.quick, _dim_r_for_wf)
     elif mint_configs is not None and job.wf_name in mint_configs:
         from extrapolation_discovery_platform.integrations.mint_adapter import (
             MIntWorkflowAdapter,
@@ -201,7 +182,7 @@ def _run_job(
     else:
         raise KeyError(
             f"Unknown workflow '{job.wf_name}'. "
-            f"Built-in: {list(_BUILTIN_FACTORIES)}, MInt: {list(mint_configs or {})}"
+            f"Built-in: {list(_IR_FACTORIES)}, MInt: {list(mint_configs or {})}"
         )
 
     return wf.run(
@@ -358,9 +339,55 @@ class ExperimentRunner:
         progress_callback: Optional[Any] = None,
         selected_workflows: Optional[List[str]] = None,
         selected_feature_sets: Optional[List[str]] = None,
+        selected_split_policies: Optional[List[str]] = None,
     ) -> Tuple[List[RunResult], List[ValidityScore], Dict[str, OODResult]]:
-        """Execute the full experiment grid in 7 phases."""
+        """Execute the full experiment grid in 7 phases.
+
+        Parameters
+        ----------
+        selected_split_policies : list of str, optional
+            Subset of ["CompositionBlock", "ElementExclusion", "RandomCV"].
+            Default (None) uses ["CompositionBlock", "ElementExclusion"] —
+            RandomCV is intentionally excluded by default because:
+
+            1. **Data leakage risk**: RandomCV randomly assigns near-duplicate
+               or related samples to both train and test sets.  For materials
+               datasets where alloys with similar compositions appear multiple
+               times, this inflates apparent test-set performance.
+            2. **Misleading generalisation score**: The validity evaluator
+               computes a "generalisation" score by comparing RandomCV vs
+               CompositionBlock performance.  If RandomCV is always included,
+               this score reflects random-split variance rather than true
+               compositional extrapolation ability.
+            3. **Redundancy**: CompositionBlock already provides rigorous
+               k-fold cross-validation; adding RandomCV doubles run count
+               without adding information about extrapolation safety.
+
+            Set ``selected_split_policies=["CompositionBlock",
+            "ElementExclusion", "RandomCV"]`` to include RandomCV when
+            needed (e.g. for baselines or debugging).
+        """
         t_start = time.time()
+
+        # ── Resolve split policies (default: exclude RandomCV) ──────────
+        _ALL_POLICIES = ["CompositionBlock", "ElementExclusion", "RandomCV"]
+        if selected_split_policies is None:
+            # Default: CompositionBlock + ElementExclusion only.
+            # RandomCV is excluded because it leaks compositionally similar
+            # samples between train/test and inflates test metrics.
+            # See run() docstring for full rationale.
+            active_policies = ["CompositionBlock", "ElementExclusion"]
+        else:
+            active_policies = [
+                p for p in _ALL_POLICIES if p in selected_split_policies
+            ]
+            if not active_policies:
+                logger.warning(
+                    "selected_split_policies contained no valid policies; "
+                    "falling back to ['CompositionBlock', 'ElementExclusion']"
+                )
+                active_policies = ["CompositionBlock", "ElementExclusion"]
+        logger.info("Active split policies: %s", active_policies)
 
         # ── Reset per-run state so repeated GUI calls don't accumulate ──
         self._registry.reset()
@@ -413,110 +440,45 @@ class ExperimentRunner:
         )
 
         try:
-            # ── Phase 1: Multicollinearity diagnostics & leak detection ──
-            mc_reports = run_phase0_multicollinearity(
-                features_all, feature_sets, wf_names, len(features_all),
+            # ── Stage 1: 前処理（Phase1 + Phase3 + Phase2 を一本化） ──────
+            # pipeline.stage1_preprocess が:
+            #   1. 多重共線性・リーク検出
+            #   2. 有効列決定（drop + leak 除外）
+            #   3. 分割計画計算（fold_plan）
+            #   4. 特徴量選択（訓練データのみ・リーク防止）
+            # を同じ順序で実行する。individual_runner も同じ関数を使うため
+            # 同一条件なら同一結果が保証される。
+            from extrapolation_discovery_platform.pipeline import stage1_preprocess
+
+            _fs_names = [fs.value for fs in feature_sets]
+            _generic = getattr(self, "_generic_csv_mode", False)
+            prep = stage1_preprocess(
+                features_df=features_all,
                 target=target,
+                compositions_df=compositions_df,
+                feature_set_names=_fs_names,
+                workflow_names=wf_names,
+                seeds=self._seeds,
+                active_policies=active_policies,
+                leak_auto_exclude=self._leak_auto_exclude,
                 leak_corr_threshold=self._leak_corr_threshold,
+                generic_csv_mode=_generic,
             )
+            if not prep.success:
+                raise RuntimeError(f"Stage1 前処理失敗:\n{prep.error_message}")
+
+            mc_reports = prep.mc_reports
             self._mc_reports = mc_reports
-
-            # ── Effective columns per feature set (subtract Phase 1 drops) ──
-            self._effective_cols = {}
-            for _fs in feature_sets:
-                _fs_key = _fs.value
-                _orig = [c for c in FeatureCatalog.columns(_fs)
-                         if c in features_all.columns]
-                if mc_reports and _fs_key in mc_reports:
-                    _rpt = mc_reports[_fs_key]
-                    _dropped = set(_rpt.dropped_constant + _rpt.dropped_perfect)
-                    _orig = [c for c in _orig if c not in _dropped]
-                    # Auto-exclude leaked features (high |r| with target)
-                    if self._leak_auto_exclude and _rpt.leak_suspects:
-                        _leak_set = set(_rpt.leak_suspects.keys())
-                        _before = len(_orig)
-                        _orig = [c for c in _orig if c not in _leak_set]
-                        if _before != len(_orig):
-                            logger.info(
-                                "Leak auto-exclude [%s]: removed %d features "
-                                "(|r| > %.2f): %s",
-                                _fs_key, _before - len(_orig),
-                                self._leak_corr_threshold,
-                                ", ".join(sorted(_leak_set & set(
-                                    FeatureCatalog.columns(_fs)
-                                ))),
-                            )
-                self._effective_cols[_fs_key] = _orig
-                logger.info(
-                    "Effective columns [%s]: %d features (after Phase 1 drops)",
-                    _fs_key, len(_orig),
-                )
-
-            # ── Phase 3: Precompute folds ──
-            fold_plan = self._phase3_precompute_folds(
-                compositions_df, features_all, target
-            )
-
-            # ── Phase 2: Feature selection (train-only to prevent leakage) ──
-            _primary_train_idx = fold_plan["CompositionBlock"][0][0]
-            self._fs_summaries: Dict[str, Any] = {}  # store for GUI display
-
-            for _fs_key, _cols in list(self._effective_cols.items()):
-                if len(_cols) <= 3:
-                    continue  # too few to select from
-                try:
-                    # Slice to train-only rows to prevent data leakage
-                    _X_fs_train = features_all.iloc[_primary_train_idx][_cols]
-                    _y_train = target.iloc[_primary_train_idx]
-                    _fs_summary = run_feature_selection(
-                        _X_fs_train, _y_train,
-                        methods=None,  # ALL methods: Lasso, AIC, BIC, ARD
-                        consensus_threshold=2,
-                        feature_set=_fs_key,
-                    )
-                    self._fs_summaries[_fs_key] = _fs_summary
-
-                    # Prefer consensus features (selected by >= 2 methods)
-                    if _fs_summary.consensus_features and len(_fs_summary.consensus_features) >= 2:
-                        _sel = _fs_summary.consensus_features
-                        logger.info(
-                            "Feature selection [%s]: %d → %d consensus features"
-                            " (%d methods, train-only, n_train=%d)",
-                            _fs_key, len(_cols), len(_sel),
-                            len(_fs_summary.results),
-                            len(_primary_train_idx),
-                        )
-                        self._effective_cols[_fs_key] = _sel
-                    else:
-                        # Fall back to Lasso-only if consensus is too small
-                        _lasso = _fs_summary.results.get("Lasso")
-                        if _lasso and _lasso.selected_features and len(_lasso.selected_features) >= 2:
-                            _sel = _lasso.selected_features
-                            logger.info(
-                                "Feature selection [%s]: %d → %d features"
-                                " (Lasso fallback, train-only, n_train=%d)",
-                                _fs_key, len(_cols), len(_sel),
-                                len(_primary_train_idx),
-                            )
-                            self._effective_cols[_fs_key] = _sel
-                    # Log per-method results
-                    for _m_name, _m_res in _fs_summary.results.items():
-                        logger.info(
-                            "  %s [%s]: %d features selected",
-                            _m_name, _fs_key, _m_res.n_selected,
-                        )
-                except Exception:
-                    logger.warning(
-                        "Feature selection failed for %s; using all cleaned features",
-                        _fs_key,
-                    )
+            self._effective_cols = prep.effective_cols
+            self._fs_summaries = prep.fs_summaries
+            fold_plan = prep.fold_plan
 
             if progress_callback is not None:
                 try:
                     progress_callback(
                         0, 0,
-                        f"Phases 1-2 complete: multicollinearity + feature "
-                        f"selection for {len(mc_reports)} feature sets",
+                        f"Stage1 完了: 前処理 + 特徴量選択 ({len(mc_reports)} FS, "
+                        f"{len(fold_plan)} split policies)",
                     )
                 except Exception:
                     pass
@@ -576,11 +538,44 @@ class ExperimentRunner:
                 tags={"type": "experiment_summary"},
             )
 
-            # ── Phase 6: OOD detection ──
+            # ── Stage 3: OOD 検出（学習とは完全独立） ───────────────────
+            # pipeline.stage3_detect_ood が各 FS の fold_plan を使って
+            # 全 fold × 全 split でアンサンブル OOD を計算する。
+            # OOD は RunResult に含まれず、ここで独立して計算される。
+            from extrapolation_discovery_platform.pipeline import stage3_detect_ood
+
             self._ood_split_indices = {}
-            ood_results, ood_errors_for_eval = self._phase6_ood(
-                features_all, feature_sets, fold_plan
-            )
+            ood_results: Dict[str, OODResult] = {}
+            ood_errors_for_eval: Dict[str, Dict[str, np.ndarray]] = {}
+
+            for _fs in feature_sets:
+                _fs_key = _fs.value
+                _ood_cols = self._effective_cols.get(
+                    _fs_key, list(FeatureCatalog.columns(_fs)),
+                )
+                _ood_cols = [c for c in _ood_cols if c in features_all.columns]
+                if not _ood_cols:
+                    logger.warning("Stage3: %s — OOD列なし、スキップ", _fs_key)
+                    continue
+                ood_stage = stage3_detect_ood(
+                    features_df=features_all,
+                    effective_columns=_ood_cols,
+                    fold_plan=fold_plan,
+                )
+                if ood_stage.success and ood_stage.ood_result is not None:
+                    ood_results[_fs_key] = ood_stage.ood_result
+                    if ood_stage.primary_train_idx is not None:
+                        self._ood_split_indices[_fs_key] = (
+                            ood_stage.primary_train_idx,
+                            ood_stage.primary_test_idx,
+                        )
+                    self._collect_ood_errors(
+                        _fs_key, ood_stage.ood_result,
+                        ood_stage.primary_test_idx, ood_errors_for_eval,
+                    )
+                else:
+                    logger.warning("Stage3 OOD失敗 [%s]: %s",
+                                   _fs_key, ood_stage.error_message[:200])
 
             # ── Phase 7: Evaluation ──
             validity_scores = self._phase7_evaluate(
@@ -675,44 +670,6 @@ class ExperimentRunner:
         self._model_selection_result = result
         return result
 
-    def _phase3_precompute_folds(
-        self,
-        compositions_df: pd.DataFrame,
-        features_all: pd.DataFrame,
-        target: pd.Series,
-    ) -> Dict[str, List[Tuple[np.ndarray, np.ndarray]]]:
-        """Phase 3: compute all splits exactly once."""
-        fold_plan: Dict[str, List[Tuple[np.ndarray, np.ndarray]]] = {}
-
-        logger.debug("Phase 3: CompositionBlock (once)")
-        cb = CompositionBlockSplitter(n_folds=5, seed=self._seeds[0])
-        fold_plan["CompositionBlock"] = list(
-            cb.split(features_all, target, compositions=compositions_df)
-        )
-
-        logger.debug("Phase 3: ElementExclusion (once)")
-        ee = ElementExclusionSplitter(target_elements=self._exclude_elements)
-        fold_plan["ElementExclusion"] = list(
-            ee.split(features_all, target, compositions=compositions_df)
-        )
-
-        for seed in self._seeds:
-            logger.debug("Phase 3: RandomCV seed=%d", seed)
-            rc = RandomCVSplitter(n_folds=5, seed=seed)
-            fold_plan[f"RandomCV_seed{seed}"] = list(
-                rc.split(features_all, target, compositions=compositions_df)
-            )
-
-        logger.info(
-            "Phase 3 complete: CompositionBlock=%d folds, "
-            "ElementExclusion=%d folds, RandomCV=%d folds/seed × %d seeds",
-            len(fold_plan["CompositionBlock"]),
-            len(fold_plan["ElementExclusion"]),
-            len(fold_plan[f"RandomCV_seed{self._seeds[0]}"]),
-            len(self._seeds),
-        )
-        return fold_plan
-
     def _phase4_build_jobs(
         self,
         feature_sets: List[FeatureSetName],
@@ -723,11 +680,16 @@ class ExperimentRunner:
         jobs: List[_Job] = []
         blocked_count = 0
         for seed in self._seeds:
-            splitter_folds = {
-                "CompositionBlock": fold_plan["CompositionBlock"],
-                "ElementExclusion": fold_plan["ElementExclusion"],
-                "RandomCV":         fold_plan[f"RandomCV_seed{seed}"],
-            }
+            # Build splitter_folds from fold_plan keys that were actually
+            # computed in Phase 3 (depends on active_policies).
+            splitter_folds: Dict[str, List[Tuple[np.ndarray, np.ndarray]]] = {}
+            if "CompositionBlock" in fold_plan:
+                splitter_folds["CompositionBlock"] = fold_plan["CompositionBlock"]
+            if "ElementExclusion" in fold_plan:
+                splitter_folds["ElementExclusion"] = fold_plan["ElementExclusion"]
+            rc_key = f"RandomCV_seed{seed}"
+            if rc_key in fold_plan:
+                splitter_folds["RandomCV"] = fold_plan[rc_key]
             for fs_name in feature_sets:
                 fs_key = fs_name.value
 
@@ -890,163 +852,6 @@ class ExperimentRunner:
             len(all_results), n_total, time.time() - _t0,
         )
         return all_results
-
-    def _phase6_ood(
-        self,
-        features_all: pd.DataFrame,
-        feature_sets: List[FeatureSetName],
-        fold_plan: Dict[str, List[Tuple[np.ndarray, np.ndarray]]],
-    ) -> Tuple[Dict[str, OODResult], Dict[str, Dict[str, np.ndarray]]]:
-        """Phase 6: OOD detection — per-fold, per-split-policy ensemble.
-
-        Design:
-          - For every (feature_set × split × fold) combination, an independent
-            OODDetector is fit on that fold's train set and scored on its test set.
-          - This ensures the OOD result changes with every different train/test
-            split, reflecting the actual data seen by each ML model run.
-          - Per-sample composite scores are accumulated (sum + count) across all
-            evaluated folds, then averaged to produce a single representative
-            OOD score per sample.
-          - The 'primary' split (first RandomCV fold of the first seed) provides
-            the reference train/test indices stored in _ood_split_indices for GUI
-            visualisation.
-        """
-        ood_results: Dict[str, OODResult] = {}
-        ood_errors_for_eval: Dict[str, Dict[str, np.ndarray]] = {}
-
-        n_samples = len(features_all)
-
-        # Collect ALL folds from ALL split policies and ALL seeds.
-        # Previously only fold[0] of RandomCV was used, so OOD never
-        # changed with the fold or split policy.
-        all_ood_folds: List[Tuple[np.ndarray, np.ndarray]] = []
-        for seed in self._seeds:
-            key = f"RandomCV_seed{seed}"
-            if key in fold_plan:
-                # Include every fold (not just fold[0]) so OOD changes per fold
-                all_ood_folds.extend(fold_plan[key])
-        # Also include CompositionBlock and ElementExclusion folds
-        for policy_key in ("CompositionBlock", "ElementExclusion"):
-            if policy_key in fold_plan:
-                all_ood_folds.extend(fold_plan[policy_key])
-
-        if not all_ood_folds:
-            logger.warning("Phase 6: No folds available for OOD")
-            return ood_results, ood_errors_for_eval
-
-        # Primary fold = first RandomCV fold of first seed (for GUI visualisation)
-        primary_key = f"RandomCV_seed{self._seeds[0]}"
-        if primary_key in fold_plan and fold_plan[primary_key]:
-            primary_train_idx, primary_test_idx = fold_plan[primary_key][0]
-        else:
-            primary_train_idx, primary_test_idx = all_ood_folds[0]
-
-        logger.info(
-            "Phase 6: OOD for %d feature sets "
-            "(independent fit/score over %d folds across all split policies)",
-            len(feature_sets), len(all_ood_folds),
-        )
-
-        for fs_name in feature_sets:
-            fs_key = fs_name.value
-            cols = self._effective_cols.get(
-                fs_key, list(FeatureCatalog.columns(fs_name)),
-            )
-
-            missing = [c for c in cols if c not in features_all.columns]
-            if missing:
-                logger.warning(
-                    "OOD: Feature set %s skipped: columns not in data: %s",
-                    fs_key, missing[:5],
-                )
-                continue
-
-            X_fs_arr = safe_array(features_all[cols])
-
-            try:
-                # Accumulate scores across all folds — each fold uses its own
-                # independently fitted OODDetector, so the result changes with
-                # every different train/test split.
-                score_sum   = np.zeros(n_samples, dtype=np.float64)
-                score_count = np.zeros(n_samples, dtype=np.int32)
-                primary_res: Optional[OODResult] = None
-
-                for fold_i, (tr_idx, te_idx) in enumerate(all_ood_folds):
-                    if len(tr_idx) < 2 or len(te_idx) < 1:
-                        continue
-                    actual_k = min(10, len(tr_idx) - 1)
-                    X_tr = pd.DataFrame(X_fs_arr[tr_idx], columns=cols)
-                    X_te = pd.DataFrame(X_fs_arr[te_idx],  columns=cols)
-                    # New detector per fold — fit on THIS fold's train set
-                    detector = OODDetector(k=actual_k)
-                    detector.fit(X_tr)
-                    res = detector.score(X_te)
-                    score_sum[te_idx]   += res.composite_scores
-                    score_count[te_idx] += 1
-                    # Save primary fold result for threshold reference
-                    if (tr_idx.tobytes() == primary_train_idx.tobytes()
-                            and te_idx.tobytes() == primary_test_idx.tobytes()):
-                        primary_res = res
-
-                if primary_res is None:
-                    # Fallback: use first computed fold as primary
-                    for tr_idx, te_idx in all_ood_folds:
-                        if len(tr_idx) >= 2:
-                            X_tr = pd.DataFrame(X_fs_arr[tr_idx], columns=cols)
-                            X_te = pd.DataFrame(X_fs_arr[te_idx],  columns=cols)
-                            det = OODDetector(k=min(10, len(tr_idx) - 1))
-                            det.fit(X_tr)
-                            primary_res = det.score(X_te)
-                            break
-                    if primary_res is None:
-                        continue
-
-                # Build ensemble OOD result for the primary test set
-                te = primary_test_idx
-                scored = score_count[te] > 0
-                avg_scores = np.where(
-                    scored,
-                    score_sum[te] / np.maximum(score_count[te], 1),
-                    primary_res.composite_scores,
-                )
-                avg_threshold = primary_res.ood_threshold
-                is_ood_avg    = avg_scores > avg_threshold
-                n_ood         = int(is_ood_avg.sum())
-
-                ood_res = OODResult(
-                    mahalanobis_scores=primary_res.mahalanobis_scores,
-                    knn_scores=primary_res.knn_scores,
-                    composite_scores=np.ascontiguousarray(avg_scores),
-                    is_ood=np.ascontiguousarray(is_ood_avg),
-                    ood_threshold=avg_threshold,
-                    ood_ratio=n_ood / max(len(avg_scores), 1),
-                    n_total=len(avg_scores),
-                    n_ood=n_ood,
-                )
-                ood_results[fs_key] = ood_res
-                # Store primary split indices for GUI OOD map visualisation
-                self._ood_split_indices[fs_key] = (
-                    np.ascontiguousarray(primary_train_idx),
-                    np.ascontiguousarray(primary_test_idx),
-                )
-                logger.info(
-                    "OOD %s: %d/%d flagged (%.1f%%, ensemble over %d folds)",
-                    fs_key, n_ood, len(avg_scores),
-                    100 * n_ood / max(len(avg_scores), 1),
-                    int(score_count[te].max()),
-                )
-                self._collect_ood_errors(
-                    fs_key, ood_res, primary_test_idx, ood_errors_for_eval,
-                )
-
-            except Exception:
-                logger.exception("OOD detection failed for %s", fs_key)
-
-        logger.info(
-            "Phase 6 complete: OOD done for %d / %d feature sets",
-            len(ood_results), len(feature_sets),
-        )
-        return ood_results, ood_errors_for_eval
 
     def _phase7_evaluate(
         self,

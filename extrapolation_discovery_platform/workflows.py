@@ -596,14 +596,24 @@ class WorkflowXGB(BaseWorkflow):
 
 
 class WorkflowENS(BaseWorkflow):
-    """Seed-varied ensemble workflow for uncertainty quantification."""
+    """Seed-varied ensemble workflow for uncertainty quantification.
+
+    Uses Ridge regression as the base model (not XGB) so that WF-ENS
+    produces predictions that are genuinely different from WF-XGB.
+    With quick=True, WF-XGB uses the same fixed parameters as the XGB
+    members would, making the two workflows produce identical results —
+    which defeats the purpose of having both.  Ridge-based ensemble:
+      - is fast (no HPO grid),
+      - gives distinct predictions from any tree-based workflow,
+      - still provides meaningful prediction uncertainty via seed variance.
+    """
 
     name = "WF-ENS"
 
     def __init__(
         self,
         n_members: int = 5,
-        base_workflow: Optional[str] = "xgb",
+        base_workflow: Optional[str] = "ridge",  # was "xgb" — changed to avoid duplicate results
         quick: bool = False,
         dim_reduction: bool = True,
     ) -> None:

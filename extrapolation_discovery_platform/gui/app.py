@@ -62,9 +62,12 @@ from extrapolation_discovery_platform.gui.plotly_charts import (
     plotly_feature_frequency,
     plotly_fs_grouped_bar,
     plotly_heatmap,
+    plotly_metrics_comparison,
     plotly_ood_map,
     plotly_parity,
+    plotly_parity_grid_by_algorithm,
     plotly_parity_per_algorithm,
+    plotly_parity_train_test,
     plotly_target_histogram,
     plotly_uncertainty_ood,
     plotly_validity_ranking,
@@ -652,8 +655,20 @@ def _refresh_results_data(
 
         r_df = runs_to_dataframe(filtered) if filtered else pd.DataFrame()
         _target_name = session.get("target_col", "")
-        parity_fig = (
-            plotly_parity_per_algorithm(filtered, target_name=_target_name)
+
+        # アルゴリズム別パリティグリッド（メイン表示）
+        parity_grid_fig = (
+            plotly_parity_grid_by_algorithm(filtered, target_name=_target_name)
+            if filtered else None
+        )
+        # アルゴリズム性能比較バーチャート
+        metrics_fig = (
+            plotly_metrics_comparison(filtered)
+            if filtered else None
+        )
+        # Train/Test split parity（過学習確認）
+        parity_train_test_fig = (
+            plotly_parity_train_test(filtered, target_name=_target_name)
             if filtered else None
         )
 
@@ -667,13 +682,16 @@ def _refresh_results_data(
             gr.update(choices=wf_choices, value=wf_filter if wf_filter in wf_choices else "All"),
             gr.update(choices=fs_choices, value=fs_filter if fs_filter in fs_choices else "All"),
             gr.update(choices=sp_choices, value=sp_filter if sp_filter in sp_choices else "All"),
-            v_df, r_df, parity_fig, interp_md, fs_bar_fig,
+            v_df, r_df,
+            parity_grid_fig, metrics_fig, parity_train_test_fig,
+            interp_md, fs_bar_fig,
         )
     except Exception:
         logger.exception("_refresh_results_data failed")
         return (
             gr.update(), gr.update(), gr.update(),
-            pd.DataFrame(), pd.DataFrame(), None,
+            pd.DataFrame(), pd.DataFrame(),
+            None, None, None,
             "*Error refreshing results — see server log.*", None,
         )
 
@@ -2057,7 +2075,7 @@ def _run_feature_selection_for_fs(
 # ---------------------------------------------------------------------------
 
 # Current PR / build version tag shown in the GUI title bar.
-_GUI_VERSION_TAG = "PR#147"
+_GUI_VERSION_TAG = "PR#148"
 
 
 def create_app() -> gr.Blocks:
@@ -2070,13 +2088,13 @@ def create_app() -> gr.Blocks:
         position: fixed;
         left: 0;
         top: 0;
-        width: 180px;
+        width: 200px;
         height: 100vh;
         background: #1a1a2e;
         color: #e0e0e0;
         padding: 12px 0;
         overflow-y: auto;
-        z-index: 1000;
+        z-index: 9999;
         box-shadow: 2px 0 8px rgba(0,0,0,0.15);
     }
     #sidebar-nav .sidebar-title {
@@ -2098,9 +2116,9 @@ def create_app() -> gr.Blocks:
         font-size: 13px;
         cursor: pointer;
         transition: background 0.15s, color 0.15s;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        white-space: normal;
+        word-break: break-word;
+        line-height: 1.3;
     }
     #sidebar-nav button.sidebar-btn:hover {
         background: #2a2a4a;
@@ -2115,18 +2133,22 @@ def create_app() -> gr.Blocks:
     }
     /* Push main content right to make room for sidebar */
     .gradio-container {
-        margin-left: 180px !important;
+        margin-left: 200px !important;
     }
     /* Hide the default Gradio tab bar (replaced by sidebar).
-       Use broad descendant selector to catch nested [role=tablist] in Gradio 6.x. */
+       Target every possible selector Gradio uses across versions. */
+    #main-tabs > .tab-nav,
+    #main-tabs > [role=tablist],
     #main-tabs .tab-nav,
-    #main-tabs [role=tablist] {
+    #main-tabs [role=tablist],
+    div#main-tabs > div > [role=tablist],
+    div#main-tabs > div.tabs > div[role=tablist] {
         display: none !important;
     }
     @media (max-width: 768px) {
         #sidebar-nav { display: none; }
         .gradio-container { margin-left: 0 !important; }
-        #main-tabs .tab-nav,
+        #main-tabs > .tab-nav,
         #main-tabs [role=tablist] { display: flex !important; }
     }
     """
@@ -2135,65 +2157,119 @@ def create_app() -> gr.Blocks:
     # Compatible with Gradio 6.x ([role=tablist]) and earlier (.tab-nav).
     _SIDEBAR_JS = """
     () => {
-        // Inject sidebar once Gradio has rendered the tab bar.
-        // Uses polling instead of a fixed timeout so it works even
-        // on slow machines or with heavy CSV data.
+        // ── Sidebar injection ──────────────────────────────────────────
+        // Gradio renders asynchronously; we poll until the tab bar is
+        // available, then inject the sidebar and hide the original bar.
+        // The sidebar delegates all tab-switching to Gradio's own buttons
+        // so routing, keyboard navigation, and state updates all work.
+
+        function _getTabNav() {
+            // Gradio 4.x / 5.x: .tab-nav  |  Gradio 6.x: [role=tablist]
+            return (
+                document.querySelector('#main-tabs > .tab-nav') ||
+                document.querySelector('#main-tabs [role=tablist]') ||
+                document.querySelector('#main-tabs .tabs [role=tablist]')
+            );
+        }
+
+        function _getTabBtns(tabNav) {
+            // Prefer [role=tab]; fall back to direct <button> children
+            let btns = Array.from(tabNav.querySelectorAll('[role=tab]'));
+            if (btns.length === 0) {
+                btns = Array.from(tabNav.querySelectorAll('button'));
+            }
+            return btns;
+        }
+
+        function _hideTabNav(tabNav) {
+            // Force hide with both attribute and inline style so CSS
+            // specificity battles don't make the bar reappear.
+            tabNav.setAttribute('data-edp-hidden', '1');
+            tabNav.style.setProperty('display', 'none', 'important');
+        }
+
         function _injectSidebar() {
-            if (document.getElementById('sidebar-nav')) return;
+            if (document.getElementById('sidebar-nav')) return true;
 
-            // Find Gradio's tab bar — Gradio 6.x uses [role=tablist],
-            // earlier versions use .tab-nav inside #main-tabs.
-            const tabNav = document.querySelector('#main-tabs [role=tablist]')
-                        || document.querySelector('#main-tabs .tab-nav');
-            if (!tabNav) return false;  // not rendered yet
+            const tabNav = _getTabNav();
+            if (!tabNav) return false;
 
-            // Only select direct [role=tab] or direct button children
-            // to avoid picking up unrelated nested buttons.
-            const gradioTabBtns = tabNav.querySelectorAll(':scope > [role=tab], :scope > button');
+            const gradioTabBtns = _getTabBtns(tabNav);
             if (gradioTabBtns.length === 0) return false;
-            const labels = Array.from(gradioTabBtns).map(b => b.textContent.trim());
+
+            _hideTabNav(tabNav);
+
+            const labels = gradioTabBtns.map(b => b.textContent.trim());
 
             const nav = document.createElement('div');
             nav.id = 'sidebar-nav';
             nav.innerHTML = '<div class="sidebar-title">Navigation</div>';
+
             labels.forEach((label, idx) => {
                 const btn = document.createElement('button');
-                btn.className = 'sidebar-btn' + (idx === 0 ? ' active' : '');
+                btn.className = 'sidebar-btn';
                 btn.textContent = label;
+                btn.dataset.tabIdx = idx;
                 btn.onclick = () => {
-                    if (gradioTabBtns[idx]) gradioTabBtns[idx].click();
-                    nav.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+                    // Re-query Gradio buttons each click — avoids stale refs
+                    const currentNav = _getTabNav();
+                    if (!currentNav) return;
+                    const currentBtns = _getTabBtns(currentNav);
+                    if (currentBtns[idx]) currentBtns[idx].click();
+                    nav.querySelectorAll('.sidebar-btn')
+                       .forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                 };
                 nav.appendChild(btn);
             });
+
+            // Set initial active state
+            const firstActive = gradioTabBtns.findIndex(
+                b => b.getAttribute('aria-selected') === 'true' ||
+                     b.classList.contains('selected')
+            );
+            const sidebarBtns = nav.querySelectorAll('.sidebar-btn');
+            sidebarBtns[Math.max(0, firstActive)]?.classList.add('active');
+
             document.body.appendChild(nav);
 
-            // Sync sidebar when user clicks Gradio tabs directly
-            const observer = new MutationObserver(() => {
-                const sidebarBtns = nav.querySelectorAll('.sidebar-btn');
-                gradioTabBtns.forEach((tb, idx) => {
-                    const isActive = tb.getAttribute('aria-selected') === 'true'
-                                  || tb.classList.contains('selected');
-                    if (isActive && sidebarBtns[idx]) {
-                        sidebarBtns.forEach(b => b.classList.remove('active'));
-                        sidebarBtns[idx].classList.add('active');
+            // Sync sidebar highlight when user clicks Gradio tabs
+            const obs = new MutationObserver(() => {
+                const freshNav = _getTabNav();
+                if (!freshNav) return;
+                _hideTabNav(freshNav);  // re-apply in case Gradio re-rendered
+                const freshBtns = _getTabBtns(freshNav);
+                const navBtns   = nav.querySelectorAll('.sidebar-btn');
+                freshBtns.forEach((tb, i) => {
+                    const active =
+                        tb.getAttribute('aria-selected') === 'true' ||
+                        tb.classList.contains('selected');
+                    if (active && navBtns[i]) {
+                        navBtns.forEach(b => b.classList.remove('active'));
+                        navBtns[i].classList.add('active');
                     }
                 });
             });
-            observer.observe(tabNav, { attributes: true, subtree: true });
-            return true;  // success
+            // Watch both attributes (aria-selected) and class changes
+            obs.observe(document.getElementById('main-tabs'), {
+                attributes: true, subtree: true, attributeFilter: ['aria-selected', 'class'],
+            });
+
+            return true;
         }
 
-        // Poll every 300ms for up to 10s (handles slow renders).
-        let _attempts = 0;
-        const _maxAttempts = 33;
+        // Poll every 250 ms for up to 15 s (generous for slow CSVs / cold starts)
+        let _tries = 0;
         const _poll = setInterval(() => {
-            _attempts++;
-            if (_injectSidebar() || _attempts >= _maxAttempts) {
-                clearInterval(_poll);
-            }
-        }, 300);
+            _tries++;
+            if (_injectSidebar() || _tries >= 60) clearInterval(_poll);
+        }, 250);
+
+        // Also attempt injection immediately on load events
+        ['DOMContentLoaded', 'load'].forEach(evt => {
+            if (document.readyState !== 'loading') _injectSidebar();
+            window.addEventListener(evt, _injectSidebar, { once: true });
+        });
     }
     """
 
@@ -2863,6 +2939,45 @@ def create_app() -> gr.Blocks:
                     info="|r| がこの値を超える特徴量をリークとみなす",
                 )
 
+            # ── 分割ポリシー選択 ────────────────────────────────────────
+            with gr.Accordion(
+                "分割ポリシー設定 (Split Policy — 上級者向け)",
+                open=False,
+            ):
+                gr.Markdown(
+                    "### 分割ポリシー\n\n"
+                    "**CompositionBlock**（推奨）: 組成空間でkMeansクラスタリングを行い、"
+                    "類似組成がtrain/testに混入しないように分割する。"
+                    "真の外挿性能を評価できる。\n\n"
+                    "**ElementExclusion**: 特定元素を含むサンプルをテストセットに割り当てる。"
+                    "特定元素系への外挿能力を評価する。\n\n"
+                    "**RandomCV** ⚠️ デフォルト無効: ランダムk-fold交差検証。"
+                    "以下の理由により通常は使用しない:\n"
+                    "1. **データリーク**: 組成が類似した合金がtrain/testに混在し、"
+                    "テスト性能が過大評価される\n"
+                    "2. **評価スコアの歪み**: 汎化スコアはRandomCV vs CompositionBlockの"
+                    "比較で算出されるが、RandomCVを含めると真の外挿能力でなく"
+                    "ランダム分割の分散を反映してしまう\n"
+                    "3. **冗長性**: CompositionBlockが既に厳密なk-fold CVを提供している\n\n"
+                    "ベースライン比較や診断目的のみ使用してください。"
+                )
+                with gr.Row():
+                    sp_cb_check = gr.Checkbox(
+                        label="✅ CompositionBlock（推奨）",
+                        value=True,
+                        info="組成空間kMeansクラスタによる厳密分割",
+                    )
+                    sp_ee_check = gr.Checkbox(
+                        label="✅ ElementExclusion",
+                        value=True,
+                        info="特定元素の完全除外による外挿テスト",
+                    )
+                    sp_rc_check = gr.Checkbox(
+                        label="⚠️ RandomCV（リーク懸念あり・デフォルト無効）",
+                        value=False,
+                        info="ランダムCV — ベースライン/診断用途のみ",
+                    )
+
             # Integrations are always enabled behind the scenes.
             gr.Markdown(
                 "All tracking (MLflow), feature management "
@@ -3038,27 +3153,11 @@ def create_app() -> gr.Blocks:
                 outputs=dash_outputs,
             )
 
-          # --- Tab 4: Results & FS Comparison ---
           with gr.Tab("Results"):
             gr.Markdown(
-                "## Analysis Results & Physical Interpretation\n\n"
-                "解析結果の数値データ・パリティプロット・FS比較・"
-                "物理的考察を統合表示します。"
+                "## Analysis Results\n\n"
+                "フィルタで絞り込み後、各チャートが自動更新されます。"
             )
-
-            # --- Physical Interpretation + FS Comparison ---
-            with gr.Accordion(
-                "物理的考察 & FS 比較サマリー "
-                "(Physical Interpretation & FS Comparison)",
-                open=True,
-            ):
-                results_interp_md = gr.Markdown(
-                    "*解析を実行すると、ここに物理的考察と "
-                    "FS比較サマリーが表示されます。*"
-                )
-                results_fs_bar_plot = gr.Plot(
-                    label="Feature Set 性能比較 (Grouped Bar)",
-                )
 
             # --- Filters ---
             with gr.Row():
@@ -3072,19 +3171,60 @@ def create_app() -> gr.Blocks:
                     choices=["All"], value="All", label="Split Policy Filter",
                 )
 
-            validity_table = gr.Dataframe(label="Feature Validity Ranking")
-            results_table = gr.Dataframe(label="Run Results")
-            parity_plot = gr.Plot(label="Parity Plot")
+            # ── 1. アルゴリズム別パリティグリッド（メイン） ──────────────
+            gr.Markdown(
+                "### 📊 アルゴリズム別パリティプロット\n"
+                "各サブプロットに1アルゴリズムの全FS×分割ポリシーの予測を表示。"
+                "対角線に近いほど精度が高い。"
+            )
+            parity_grid_plot = gr.Plot(
+                label="アルゴリズム別パリティグリッド",
+            )
 
-            # --- Model Selection Results ---
+            # ── 2. アルゴリズム性能比較バーチャート ──────────────────────
+            gr.Markdown(
+                "### 📈 アルゴリズム性能比較 (RMSE / R²)\n"
+                "mean ± std（特徴量セット×seed平均）。エラーバーで安定性を確認。"
+            )
+            metrics_compare_plot = gr.Plot(
+                label="性能比較 (RMSE / R²)",
+            )
+
+            # ── 3. Train vs Test パリティ（過学習確認） ───────────────────
+            gr.Markdown(
+                "### 🔍 Train vs Test パリティ（過学習確認）\n"
+                "左：訓練メトリクス / 右：検証予測。"
+                "右の散らばりが大きいほど過学習の可能性。"
+            )
+            parity_train_test_plot = gr.Plot(
+                label="Train vs Test Parity",
+            )
+
+            # ── 4. 妥当性ランキングテーブル ──────────────────────────────
+            gr.Markdown("### 🏆 特徴量セット妥当性ランキング")
+            validity_table = gr.Dataframe(label="Feature Validity Ranking")
+
+            # ── 5. 全Runテーブル ──────────────────────────────────────────
+            with gr.Accordion("全Runテーブル (All Runs)", open=False):
+                results_table = gr.Dataframe(label="Run Results")
+
+            # ── 6. FS比較・物理的考察 ─────────────────────────────────────
             with gr.Accordion(
-                "Model Selection Results — Nested CV "
-                "(モデル選択結果)",
-                open=True,
+                "物理的考察 & FS比較サマリー", open=False,
+            ):
+                results_interp_md = gr.Markdown(
+                    "*解析を実行すると表示されます。*"
+                )
+                results_fs_bar_plot = gr.Plot(
+                    label="Feature Set 性能比較 (Grouped Bar)",
+                )
+
+            # ── 7. モデル選択結果 ─────────────────────────────────────────
+            with gr.Accordion(
+                "Model Selection Results — Nested CV", open=False,
             ):
                 model_sel_md = gr.Markdown(
-                    "*モデル選択を有効にして解析を実行すると、"
-                    "ここに Nested CV の結果が表示されます。*"
+                    "*モデル選択を有効にして解析を実行すると表示されます。*"
                 )
 
             res_refresh_btn = gr.Button(
@@ -3092,13 +3232,11 @@ def create_app() -> gr.Blocks:
             )
             res_outputs = [
                 filter_wf, filter_fs, filter_sp,
-                validity_table, results_table, parity_plot,
+                validity_table, results_table,
+                parity_grid_plot, metrics_compare_plot, parity_train_test_plot,
                 results_interp_md, results_fs_bar_plot,
             ]
-            # Wrapper that also refreshes model_sel_md from session.
-            # _refresh_results_data returns 8 values; model_sel_md is
-            # appended as a 9th value here so Refresh stays consistent
-            # with the run_experiment final yield.
+
             def _refresh_results_and_model(
                 wf_f: str, fs_f: str, sp_f: str,
                 session: Dict[str, Any],
@@ -3615,10 +3753,10 @@ def create_app() -> gr.Blocks:
                     )
                     ind_sp = gr.Dropdown(
                         label="分割方法 (Split Policy)",
-                        choices=["RandomCV", "CompositionBlock",
-                                 "ElementExclusion", "Holdout"],
-                        value="RandomCV",
-                        info="データ分割方法を選択",
+                        choices=["CompositionBlock", "ElementExclusion",
+                                 "Holdout", "RandomCV ⚠️(リーク懸念)"],
+                        value="CompositionBlock",
+                        info="CompositionBlock推奨。RandomCVはリーク懸念があるため診断用途のみ使用。",
                     )
 
                 with gr.Column(scale=1):
@@ -3669,35 +3807,28 @@ def create_app() -> gr.Blocks:
                 label="実行状況",
             )
 
-            # ── 結果表示エリア ────────────────────────────────────────────
-            with gr.Tabs():
-                with gr.Tab("📋 サマリー"):
-                    ind_summary_md = gr.Markdown(
-                        "*個別実行ボタンを押すと結果が表示されます。*"
-                    )
+            # ── 結果表示エリア（タブなし・全て縦並び表示）────────────────
+            ind_summary_md = gr.Markdown(
+                "*個別実行ボタンを押すと結果が表示されます。*"
+            )
 
-                with gr.Tab("📊 パリティプロット"):
-                    ind_parity_plot = gr.Plot(
-                        label="Parity Plot (Test Set)"
-                    )
+            gr.Markdown("#### 📊 パリティプロット (Test Set)")
+            ind_parity_plot = gr.Plot(label="Parity Plot (Test Set)")
 
-                with gr.Tab("🗺️ OOD マップ"):
-                    ind_ood_plot = gr.Plot(
-                        label="OOD Map (PCA)"
-                    )
-                    ind_ood_summary = gr.Textbox(
-                        label="OOD サマリー", interactive=False,
-                    )
+            gr.Markdown("#### 🗺️ OOD マップ")
+            ind_ood_plot = gr.Plot(label="OOD Map (PCA)")
+            ind_ood_summary = gr.Textbox(
+                label="OOD サマリー", interactive=False,
+            )
 
-                with gr.Tab("📄 全Fold結果テーブル"):
-                    ind_runs_table = gr.Dataframe(
-                        label="Fold別メトリクス",
-                        headers=["Fold", "RMSE (Train)", "RMSE (Test)",
-                                 "MAE (Test)", "R² (Train)", "R² (Test)",
-                                 "Time (s)"],
-                    )
+            gr.Markdown("#### 📄 Fold別メトリクス")
+            ind_runs_table = gr.Dataframe(
+                label="Fold別メトリクス",
+                headers=["Fold", "RMSE (Train)", "RMSE (Test)",
+                         "MAE (Test)", "R² (Train)", "R² (Test)", "Time (s)"],
+            )
 
-            # ── コールバック ──────────────────────────────────────────────
+# ── コールバック ──────────────────────────────────────────────
 
             def _run_individual_cb(
                 wf_name: str,
@@ -3747,8 +3878,23 @@ def create_app() -> gr.Blocks:
                     return (
                         no_data_html,
                         "*データが読み込まれていません。*",
-                        None, "", pd.DataFrame(),
+                        None, None, "", pd.DataFrame(),
                     )
+
+                # ── runner実行後のeffective_cols・seedを引き継ぐ ──────────
+                # runner.run()はPhase1+Phase2で特徴量を絞り込んでいるため、
+                # individualもその結果を使うことで全体実行と計算内容が一致する。
+                runner_obj = session.get("runner")
+                precomputed_cols = None
+                composition_seed = int(seed_val)
+                runner_n_folds = int(n_folds_val)
+                if runner_obj is not None:
+                    # Phase2後の有効列を引き継ぐ
+                    ec = getattr(runner_obj, "_effective_cols", {})
+                    precomputed_cols = ec.get(fs_name) or None
+                    # CompositionBlock分割はrunnerと同じseedで行う（同一の分割）
+                    if sp_name == "CompositionBlock" and runner_obj._seeds:
+                        composition_seed = runner_obj._seeds[0]
 
                 # ── 進捗表示 ─────────────────────────────────────────────
                 progress_html = (
@@ -3765,18 +3911,19 @@ def create_app() -> gr.Blocks:
                     workflow_name=wf_name,
                     feature_set_name=fs_name,
                     split_policy_name=sp_name,
-                    features_df=features_df,       # ★ 直接渡す
-                    target=target,                  # ★ 直接渡す
-                    compositions_df=compositions_df, # ★ 直接渡す
-                    seed=int(seed_val),
+                    features_df=features_df,
+                    target=target,
+                    compositions_df=compositions_df,
+                    seed=composition_seed,
                     test_size=float(test_size_val),
-                    n_folds=int(n_folds_val),
+                    n_folds=runner_n_folds,
                     exclude_elements=excl_elems,
                     quick=quick_val,
                     dim_reduction=dim_r_val,
                     leak_auto_exclude=leak_excl_val,
                     leak_corr_threshold=float(leak_thr_val),
                     generic_csv_mode=generic_csv,
+                    precomputed_columns=precomputed_cols,
                 )
 
                 # ── 完了ステータス表示 ────────────────────────────────────
@@ -3933,6 +4080,9 @@ def create_app() -> gr.Blocks:
             csv_target: Optional[str],
             csv_features: List[str],
             csv_mode: str,
+            use_sp_cb: bool,
+            use_sp_ee: bool,
+            use_sp_rc: bool,
             session: Dict[str, Any],
         ) -> Generator:
             """Generator that yields incremental progress + state.
@@ -3967,7 +4117,8 @@ def create_app() -> gr.Blocks:
                           _build_integration_status_md(None), None, None)
             empty_res = (
                 gr.update(), gr.update(), gr.update(),
-                pd.DataFrame(), pd.DataFrame(), None,
+                pd.DataFrame(), pd.DataFrame(),
+                None, None, None,
                 "*Running...*", None,
             )
             empty_ms = "*Running...*"
@@ -4146,6 +4297,19 @@ def create_app() -> gr.Blocks:
                     selected_wfs = ["WF-LIN", "WF-LASSO", "WF-ARD", "WF-RF", "WF-XGB", "WF-ENS"]
                     log("No workflows selected; using all.")
 
+                # Build selected split policy list
+                # RandomCV はデフォルト無効（データリーク懸念 + 評価スコア歪み）
+                selected_sps: List[str] = []
+                if use_sp_cb:
+                    selected_sps.append("CompositionBlock")
+                if use_sp_ee:
+                    selected_sps.append("ElementExclusion")
+                if use_sp_rc:
+                    selected_sps.append("RandomCV")
+                if not selected_sps:
+                    selected_sps = ["CompositionBlock", "ElementExclusion"]
+                    log("No split policies selected; using CompositionBlock + ElementExclusion.")
+
                 # Build selected feature set list
                 selected_fsets: List[str] = []
                 if use_fs_base:
@@ -4293,6 +4457,7 @@ def create_app() -> gr.Blocks:
                                     progress_callback=_progress_cb,
                                     selected_workflows=selected_wfs,
                                     selected_feature_sets=_generic_fsets,
+                                    selected_split_policies=selected_sps,
                                 )
                             finally:
                                 _FC._SETS = _orig_sets
@@ -4302,6 +4467,7 @@ def create_app() -> gr.Blocks:
                                 progress_callback=_progress_cb,
                                 selected_workflows=selected_wfs,
                                 selected_feature_sets=selected_fsets,
+                                selected_split_policies=selected_sps,
                             )
                         _result_holder["runs"] = r
                         _result_holder["scores"] = s
@@ -4737,6 +4903,7 @@ def create_app() -> gr.Blocks:
                 leak_auto_exclude, leak_corr_threshold,
                 run_csv_upload, run_csv_target,
                 csv_feature_checks, csv_mode_radio,
+                sp_cb_check, sp_ee_check, sp_rc_check,
                 state,
             ],
             outputs=[
@@ -4749,9 +4916,10 @@ def create_app() -> gr.Blocks:
                 # Dashboard tab (fix #8)
                 kpi_runs, kpi_best_fs, kpi_best_score, kpi_ood_count,
                 integration_status, validity_plot, heatmap_plot,
-                # Results tab (fix #8) — now includes interpretation + FS bar
+                # Results tab (fix #8) — algorithm grid + metrics compare + train/test
                 filter_wf, filter_fs, filter_sp,
-                validity_table, results_table, parity_plot,
+                validity_table, results_table,
+                parity_grid_plot, metrics_compare_plot, parity_train_test_plot,
                 results_interp_md, results_fs_bar_plot,
                 # Model Selection results
                 model_sel_md,
