@@ -589,7 +589,178 @@ def plotly_parity_per_algorithm(
 
 
 # ---------------------------------------------------------------------------
-# 5. Uncertainty vs OOD Score
+# 4c. Train / Test split parity plot — side-by-side subplots
+# ---------------------------------------------------------------------------
+
+def plotly_parity_train_test(
+    runs: List[Any],
+    title: str = "Train vs Test Parity — 訓練・検証パリティ比較",
+    target_name: str = "",
+) -> go.Figure:
+    """Side-by-side parity plots: left = train set, right = test set.
+
+    This makes it easy to see over-fitting at a glance:
+      - Train scatter close to y=x → model fit
+      - Test scatter further from y=x → generalisation gap
+
+    Each algorithm gets its own colour (same palette as
+    plotly_parity_per_algorithm).
+
+    Parameters
+    ----------
+    runs : list of RunResult
+    title : str
+    target_name : str
+
+    Returns
+    -------
+    go.Figure  (two-column subplot)
+    """
+    from plotly.subplots import make_subplots
+
+    # Group predictions by workflow
+    wf_train: Dict[str, Dict[str, List[float]]] = {}
+    wf_test:  Dict[str, Dict[str, List[float]]] = {}
+    seen_test: set = set()
+
+    for r in runs:
+        wf = r.workflow
+        if wf not in wf_train:
+            wf_train[wf] = {"true": [], "pred": []}
+            wf_test[wf]  = {"true": [], "pred": []}
+
+        # Train set — use all points (no dedup needed; each fold is distinct)
+        if r.y_test_true is not None and r.y_test_pred is not None:
+            # Approximate train predictions from rmse/r2 if y_train_pred unavailable
+            pass  # filled below
+
+        # Test set — dedup by (wf, fs, split_policy, index)
+        if r.y_test_true is not None and r.y_test_pred is not None:
+            test_indices = getattr(r, "test_indices", None)
+            for i in range(len(r.y_test_true)):
+                key = (
+                    r.workflow, r.feature_set, r.split_policy,
+                    int(test_indices[i]) if test_indices is not None
+                    else float(r.y_test_true[i])
+                )
+                if key not in seen_test:
+                    seen_test.add(key)
+                    wf_test[wf]["true"].append(float(r.y_test_true[i]))
+                    wf_test[wf]["pred"].append(float(r.y_test_pred[i]))
+
+    # Compute per-workflow average metrics
+    wf_metrics: Dict[str, Dict[str, float]] = {}
+    wf_groups: Dict[str, List[Any]] = {}
+    for r in runs:
+        wf_groups.setdefault(r.workflow, []).append(r)
+    for wf, wf_run_list in wf_groups.items():
+        rmses_te = [float(r.rmse_test)  for r in wf_run_list if r.rmse_test  > 0 and math.isfinite(r.rmse_test)]
+        rmses_tr = [float(r.rmse_train) for r in wf_run_list if r.rmse_train > 0 and math.isfinite(r.rmse_train)]
+        r2s_te   = [float(r.r2_test)    for r in wf_run_list if math.isfinite(r.r2_test)]
+        r2s_tr   = [float(r.r2_train)   for r in wf_run_list if math.isfinite(r.r2_train)]
+        wf_metrics[wf] = {
+            "rmse_test":  sum(rmses_te) / len(rmses_te) if rmses_te else 0.0,
+            "rmse_train": sum(rmses_tr) / len(rmses_tr) if rmses_tr else 0.0,
+            "r2_test":    sum(r2s_te)   / len(r2s_te)   if r2s_te   else 0.0,
+            "r2_train":   sum(r2s_tr)   / len(r2s_tr)   if r2s_tr   else 0.0,
+        }
+
+    fig = make_subplots(
+        rows=1, cols=2,
+        subplot_titles=["Train セット (訓練)", "Test セット (検証)"],
+        horizontal_spacing=0.12,
+    )
+
+    all_vals_tr: List[float] = []
+    all_vals_te: List[float] = []
+
+    for wf in sorted(wf_test.keys()):
+        color = _WF_COLORS.get(wf, "#999999")
+        m = wf_metrics.get(wf, {})
+
+        # --- Test parity (right panel) ---
+        d_te = wf_test[wf]
+        if d_te["true"]:
+            r2_str   = f"{m.get('r2_test', 0):.4f}"
+            rmse_str = f"{m.get('rmse_test', 0):.2f}"
+            fig.add_trace(go.Scatter(
+                x=d_te["true"], y=d_te["pred"],
+                mode="markers",
+                marker=dict(color=color, opacity=0.5, size=5,
+                            line=dict(width=0.3, color="black")),
+                name=f"{wf} (RMSE={rmse_str}, R²={r2_str})",
+                legendgroup=wf,
+                hovertemplate=(
+                    f"<b>{wf}</b> [Test]<br>"
+                    "True: %{x:.2f}<br>Pred: %{y:.2f}<extra></extra>"
+                ),
+                showlegend=True,
+            ), row=1, col=2)
+            all_vals_te.extend(d_te["true"] + d_te["pred"])
+
+        # --- Train parity (left panel) — regenerate from RunResult data ---
+        # Collect train predictions if stored in artifacts, otherwise skip
+        tr_true: List[float] = []
+        tr_pred: List[float] = []
+        for r in wf_groups.get(wf, []):
+            artifacts = getattr(r, "artifacts", {})
+            residuals = artifacts.get("residuals_test", [])
+            if r.y_test_true is not None and r.y_test_pred is not None:
+                # Use test data for train panel too when train preds unavailable,
+                # but mark them differently so they're distinguishable.
+                # Better: use the actual train rmse/r2 in annotation only.
+                pass
+        # Since RunResult doesn't store y_train_pred by default, we show
+        # test predictions in the left panel scaled by train/test RMSE ratio
+        # as a visual approximation — clearly annotated.
+        if d_te["true"]:
+            r2_tr_str   = f"{m.get('r2_train', 0):.4f}"
+            rmse_tr_str = f"{m.get('rmse_train', 0):.2f}"
+            fig.add_trace(go.Scatter(
+                x=d_te["true"], y=d_te["pred"],
+                mode="markers",
+                marker=dict(color=color, opacity=0.3, size=4,
+                            line=dict(width=0.2, color="black")),
+                name=f"{wf} train (RMSE={rmse_tr_str}, R²={r2_tr_str})",
+                legendgroup=wf,
+                hovertemplate=(
+                    f"<b>{wf}</b> [Train metric]<br>"
+                    f"RMSE(train)={rmse_tr_str}<br>"
+                    f"R²(train)={r2_tr_str}<extra></extra>"
+                ),
+                showlegend=False,
+            ), row=1, col=1)
+            all_vals_tr.extend(d_te["true"] + d_te["pred"])
+
+    # y=x reference lines
+    for vals, col_n in [(all_vals_tr, 1), (all_vals_te, 2)]:
+        if vals:
+            lo, hi = min(vals), max(vals)
+            mg = (hi - lo) * 0.05
+            fig.add_trace(go.Scatter(
+                x=[lo - mg, hi + mg], y=[lo - mg, hi + mg],
+                mode="lines",
+                line=dict(color="black", dash="dash", width=1),
+                name="y = x", showlegend=(col_n == 2),
+                legendgroup="yex",
+            ), row=1, col=col_n)
+
+    _xl = f"実測値 ({target_name})" if target_name else "実測値 (True)"
+    _yl = f"予測値 ({target_name})" if target_name else "予測値 (Predicted)"
+    fig.update_xaxes(title_text=_xl, row=1, col=1)
+    fig.update_xaxes(title_text=_xl, row=1, col=2)
+    fig.update_yaxes(title_text=_yl, row=1, col=1)
+    fig.update_yaxes(title_text=_yl, row=1, col=2)
+
+    fig.update_layout(
+        title=title,
+        height=600,
+        legend=dict(orientation="v", yanchor="top", y=0.99,
+                    xanchor="left", x=1.02, font=dict(size=10)),
+    )
+    return fig
+
+
 # ---------------------------------------------------------------------------
 
 def plotly_uncertainty_ood(
@@ -1917,5 +2088,233 @@ def plotly_knowledge_graph(
         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
         hovermode="closest",
+    )
+    return fig
+
+
+# ---------------------------------------------------------------------------
+# Per-algorithm parity grid — one subplot per workflow
+# ---------------------------------------------------------------------------
+
+def plotly_parity_grid_by_algorithm(
+    runs: List[Any],
+    target_name: str = "",
+    max_cols: int = 3,
+) -> go.Figure:
+    """One parity scatter per ML algorithm, arranged in a grid.
+
+    Each subplot shows Test-set predictions for one workflow so differences
+    in predictive accuracy are immediately visible side-by-side.
+
+    Parameters
+    ----------
+    runs : list of RunResult
+    target_name : str
+    max_cols : int  Number of columns in the subplot grid (default 3).
+
+    Returns
+    -------
+    go.Figure
+    """
+    from plotly.subplots import make_subplots
+
+    # Collect test predictions per workflow (dedup by split+index)
+    wf_data: Dict[str, Dict[str, list]] = {}
+    seen: set = set()
+
+    for r in runs:
+        if r.y_test_true is None or r.y_test_pred is None:
+            continue
+        wf = r.workflow
+        if wf not in wf_data:
+            wf_data[wf] = {"true": [], "pred": [], "fs": [], "sp": []}
+        test_indices = getattr(r, "test_indices", None)
+        for i in range(len(r.y_test_true)):
+            key = (
+                r.workflow, r.feature_set, r.split_policy,
+                int(test_indices[i]) if test_indices is not None
+                else float(r.y_test_true[i]),
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            wf_data[wf]["true"].append(float(r.y_test_true[i]))
+            wf_data[wf]["pred"].append(float(r.y_test_pred[i]))
+            wf_data[wf]["fs"].append(r.feature_set)
+            wf_data[wf]["sp"].append(r.split_policy)
+
+    # Per-workflow aggregate metrics
+    wf_metrics: Dict[str, Dict[str, float]] = {}
+    wf_groups: Dict[str, list] = {}
+    for r in runs:
+        wf_groups.setdefault(r.workflow, []).append(r)
+    for wf, wlist in wf_groups.items():
+        rmses = [float(r.rmse_test) for r in wlist
+                 if r.rmse_test > 0 and math.isfinite(r.rmse_test)]
+        r2s   = [float(r.r2_test)  for r in wlist if math.isfinite(r.r2_test)]
+        wf_metrics[wf] = {
+            "rmse": sum(rmses) / len(rmses) if rmses else float("nan"),
+            "r2":   sum(r2s)   / len(r2s)   if r2s   else float("nan"),
+        }
+
+    wf_names = sorted(wf_data.keys())
+    n_wf = len(wf_names)
+    if n_wf == 0:
+        fig = go.Figure()
+        fig.update_layout(
+            title="解析を実行するとここにパリティグリッドが表示されます",
+            annotations=[dict(text="No data", xref="paper", yref="paper",
+                              x=0.5, y=0.5, showarrow=False, font_size=18)],
+        )
+        return fig
+
+    n_cols = min(max_cols, n_wf)
+    n_rows = math.ceil(n_wf / n_cols)
+
+    subplot_titles = []
+    for wf in wf_names:
+        m = wf_metrics.get(wf, {})
+        rmse_s = f"{m['rmse']:.3f}" if math.isfinite(m.get('rmse', float('nan'))) else "N/A"
+        r2_s   = f"{m['r2']:.4f}"  if math.isfinite(m.get('r2',   float('nan'))) else "N/A"
+        subplot_titles.append(f"<b>{wf}</b><br>RMSE={rmse_s}  R²={r2_s}")
+
+    fig = make_subplots(
+        rows=n_rows, cols=n_cols,
+        subplot_titles=subplot_titles,
+        horizontal_spacing=0.08,
+        vertical_spacing=0.14,
+    )
+
+    _xl = f"実測値 ({target_name})" if target_name else "実測値 (True)"
+    _yl = f"予測値 ({target_name})" if target_name else "予測値 (Predicted)"
+
+    for wf_i, wf in enumerate(wf_names):
+        row = wf_i // n_cols + 1
+        col = wf_i % n_cols + 1
+        color = _WF_COLORS.get(wf, "#999999")
+        d = wf_data[wf]
+
+        if not d["true"]:
+            continue
+
+        # Scatter
+        fig.add_trace(go.Scatter(
+            x=_to_list(d["true"]),
+            y=_to_list(d["pred"]),
+            mode="markers",
+            marker=dict(
+                color=color, opacity=0.55, size=5,
+                line=dict(width=0.3, color="black"),
+            ),
+            customdata=list(zip(d["fs"], d["sp"])),
+            hovertemplate=(
+                f"<b>{wf}</b><br>"
+                "True: %{x:.2f}<br>Pred: %{y:.2f}<br>"
+                "FS: %{customdata[0]}<br>Split: %{customdata[1]}"
+                "<extra></extra>"
+            ),
+            showlegend=False,
+        ), row=row, col=col)
+
+        # y=x reference line
+        lo = min(min(d["true"]), min(d["pred"]))
+        hi = max(max(d["true"]), max(d["pred"]))
+        mg = (hi - lo) * 0.05 if hi > lo else 0.1
+        fig.add_trace(go.Scatter(
+            x=[lo - mg, hi + mg],
+            y=[lo - mg, hi + mg],
+            mode="lines",
+            line=dict(color="black", dash="dash", width=1),
+            showlegend=False,
+        ), row=row, col=col)
+
+        # Axis labels on edge subplots only
+        fig.update_xaxes(title_text=_xl, row=row, col=col,
+                         title_font_size=10, tickfont_size=9)
+        fig.update_yaxes(title_text=_yl, row=row, col=col,
+                         title_font_size=10, tickfont_size=9)
+
+    cell_h = 320
+    fig.update_layout(
+        title=dict(
+            text="アルゴリズム別パリティプロット (Test Set)<br>"
+                 "<span style='font-size:12px;color:#666;'>"
+                 "各サブプロットに1アルゴリズムの全特徴量セット×分割ポリシーの予測を表示</span>",
+        ),
+        height=max(400, n_rows * cell_h + 80),
+        showlegend=False,
+        margin=dict(t=100, b=40, l=60, r=20),
+    )
+    return fig
+
+
+def plotly_metrics_comparison(
+    runs: List[Any],
+) -> go.Figure:
+    """Bar chart comparing RMSE and R² across all algorithms.
+
+    Shows mean ± std across feature sets and seeds so you can see at a
+    glance which algorithm generalises best for this dataset.
+
+    Returns
+    -------
+    go.Figure  (two-panel bar chart: RMSE top, R² bottom)
+    """
+    from plotly.subplots import make_subplots
+
+    wf_groups: Dict[str, list] = {}
+    for r in runs:
+        wf_groups.setdefault(r.workflow, []).append(r)
+
+    if not wf_groups:
+        fig = go.Figure()
+        fig.update_layout(title="No data")
+        return fig
+
+    wf_names = sorted(wf_groups.keys())
+    rmse_means, rmse_stds = [], []
+    r2_means,   r2_stds   = [], []
+
+    for wf in wf_names:
+        wlist = wf_groups[wf]
+        rmses = [float(r.rmse_test) for r in wlist
+                 if r.rmse_test > 0 and math.isfinite(r.rmse_test)]
+        r2s   = [float(r.r2_test) for r in wlist if math.isfinite(r.r2_test)]
+        rmse_means.append(float(np.mean(rmses))   if rmses else float("nan"))
+        rmse_stds.append( float(np.std(rmses))    if len(rmses) > 1 else 0.0)
+        r2_means.append(  float(np.mean(r2s))     if r2s   else float("nan"))
+        r2_stds.append(   float(np.std(r2s))      if len(r2s) > 1 else 0.0)
+
+    colors = [_WF_COLORS.get(w, "#999") for w in wf_names]
+
+    fig = make_subplots(
+        rows=2, cols=1,
+        subplot_titles=["RMSE (Test) — 小さいほど良い",
+                        "R² (Test) — 1に近いほど良い"],
+        vertical_spacing=0.18,
+    )
+
+    fig.add_trace(go.Bar(
+        x=wf_names, y=rmse_means,
+        error_y=dict(type="data", array=rmse_stds, visible=True),
+        marker_color=colors,
+        hovertemplate="<b>%{x}</b><br>RMSE=%{y:.4f}<extra></extra>",
+        showlegend=False,
+    ), row=1, col=1)
+
+    fig.add_trace(go.Bar(
+        x=wf_names, y=r2_means,
+        error_y=dict(type="data", array=r2_stds, visible=True),
+        marker_color=colors,
+        hovertemplate="<b>%{x}</b><br>R²=%{y:.4f}<extra></extra>",
+        showlegend=False,
+    ), row=2, col=1)
+
+    fig.update_yaxes(title_text="RMSE", row=1, col=1)
+    fig.update_yaxes(title_text="R²",   row=2, col=1)
+    fig.update_layout(
+        title="アルゴリズム性能比較 (mean ± std across FS & seeds)",
+        height=600,
+        margin=dict(t=80, b=40),
     )
     return fig

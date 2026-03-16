@@ -51,9 +51,8 @@ from extrapolation_discovery_platform.splitters import (
     ElementExclusionSplitter,
     RandomCVSplitter,
 )
-from extrapolation_discovery_platform.ood import OODDetector, OODResult
+from extrapolation_discovery_platform.ood import OODResult
 from extrapolation_discovery_platform.multicollinearity import (
-    run_phase0_multicollinearity,
     MulticollinearityReport,
 )
 
@@ -240,7 +239,7 @@ def _make_splits(
 ) -> List[Tuple[np.ndarray, np.ndarray]]:
     """指定された分割ポリシーに従い (train_idx, test_idx) のリストを返す。"""
 
-    if split_policy == "RandomCV":
+    if split_policy in ("RandomCV", "RandomCV ⚠️(リーク懸念)"):
         splitter = RandomCVSplitter(n_folds=n_folds, seed=seed)
         return list(splitter.split(features_df, target, compositions=compositions_df))
 
@@ -301,6 +300,8 @@ def run_individual(
     leak_corr_threshold: float = 0.85,
     # ── 汎用CSV モードフラグ ───────────────────────────────────────────────
     generic_csv_mode: bool = False,
+    # ── runner実行後の有効列を引き継ぐ（Phase2特徴量選択を反映） ────────────
+    precomputed_columns: Optional[List[str]] = None,
 ) -> IndividualRunResult:
     """1アルゴリズム × 1特徴量セット × 1分割ポリシーを即座に実行する。
 
@@ -340,6 +341,11 @@ def run_individual(
     generic_csv_mode : bool
         True のとき、features_df 全列を1つの特徴量セットとして使う
         （HEA固有のFS列選択をスキップ）
+    precomputed_columns : list of str, optional
+        runner.ExperimentRunner.run() 実行後に得られた effective_cols
+        (Phase1+Phase2で絞り込まれた列リスト) を渡すと、全実行と完全に
+        同じ列でindividual実行が行われる。
+        None のときは Phase1 のみで列を決定する（runner未実行時の単体使用）。
 
     Returns
     -------
@@ -354,317 +360,147 @@ def run_individual(
     )
 
     try:
-        # ── 1. 特徴量列の選択（毎回直接渡されたデータから行う） ──────────
-        if generic_csv_mode:
-            # Generic CSV: 全列を使う
-            fs_cols = list(features_df.columns)
-        else:
+        # ══════════════════════════════════════════════════════════════
+        # Stage 1 → Stage 2 → Stage 3 の 3 段階パイプラインに委譲
+        #
+        # 一括計算(runner.py) も個別計算(ここ) も同じ pipeline.py を呼ぶ。
+        # 同一の計算条件なら同一の結果が保証される。
+        #
+        # Stage 1: stage1_preprocess — 前処理
+        #   多重共線性検出 → 有効列決定 → 分割計算 → 特徴量選択
+        # Stage 2: stage2_train      — ML 学習（OOD なし）
+        #   各 fold × WF で学習・推論 → RunResult[]
+        # Stage 3: stage3_detect_ood — OOD 検出（学習と完全独立）
+        #   全 fold アンサンブル OOD → OODStageResult
+        # ══════════════════════════════════════════════════════════════
+        from extrapolation_discovery_platform.pipeline import (
+            stage1_preprocess,
+            stage2_train,
+            stage3_detect_ood,
+        )
+
+        # ── Stage 1: 前処理 ──────────────────────────────────────────
+        # precomputed_columns が渡されている場合（一括計算後の個別追加計算）は
+        # Stage1 をスキップして既存の有効列をそのまま使う。
+        if precomputed_columns is not None:
+            # 既に runner が Stage1 を実行済み → effective_cols だけ引き継ぐ
+            _valid_cols = [c for c in precomputed_columns if c in features_df.columns]
+            _fs_key = "generic" if generic_csv_mode else feature_set_name
+            _fold_plan_hint: dict = {}  # 分割は Stage1 相当を再実行
+            # 分割だけは再計算が必要（seed 統一のため）
+            from extrapolation_discovery_platform.splitters import (
+                CompositionBlockSplitter, RandomCVSplitter,
+            )
             try:
-                fs_enum = FeatureSetName(feature_set_name)
-                fs_cols = [c for c in FeatureCatalog.columns(fs_enum) if c in features_df.columns]
-            except (ValueError, KeyError):
-                # 未知のFS名 → 全列フォールバック
-                logger.warning(
-                    "未知の特徴量セット '%s'。全列を使用します。", feature_set_name
-                )
-                fs_cols = list(features_df.columns)
-
-        if not fs_cols:
-            raise ValueError(
-                f"特徴量セット '{feature_set_name}' に対応する列が "
-                f"features_df に見つかりません。"
-            )
-
-        result.n_features_before = len(fs_cols)
-
-        # ── 2. 特徴量行列を抽出（C-contiguous保証） ─────────────────────
-        X_full = pd.DataFrame(
-            safe_array(features_df[fs_cols]),
-            columns=fs_cols,
-            index=features_df.index,
-        )
-
-        # ── 3. Phase1: 多重共線性 + リーク検出（毎回直接渡す） ───────────
-        try:
-            if not generic_csv_mode and fs_cols:
-                # HEA mode: use FeatureSetName-based MC analysis
-                try:
-                    fs_enum_for_mc = FeatureSetName(feature_set_name)
-                    fs_enum_list = [fs_enum_for_mc]
-                except ValueError:
-                    fs_enum_list = []
-                mc_reports = run_phase0_multicollinearity(
-                    X_full,
-                    fs_enum_list,
-                    [workflow_name],
-                    len(X_full),
-                    target=target,
-                    leak_corr_threshold=leak_corr_threshold,
-                )
-                mc_rpt = mc_reports.get(feature_set_name) if mc_reports else None
-            else:
-                # Generic CSV mode: run MC analysis directly on X_full columns
-                # (run_phase0_multicollinearity needs FeatureSetName objects,
-                #  so we build a temporary FeatureSetName-free report instead)
-                from extrapolation_discovery_platform.multicollinearity import (
-                    remove_constant_columns,
-                    remove_perfect_collinear,
-                    compute_vif,
-                    detect_target_leakage,
-                )
-                _X_tmp, _dropped_c = remove_constant_columns(X_full.copy())
-                _X_tmp, _dropped_p = remove_perfect_collinear(_X_tmp)
-                _n_after = _X_tmp.shape[1]
-                _vif = compute_vif(_X_tmp) if _n_after <= 50 else None
-                _high_vif = (
-                    int((_vif > 10).sum()) if _vif is not None else 0
-                )
-                _high_ratio = _high_vif / max(_n_after, 1)
-                _mc_level = (
-                    "High" if _high_ratio > 0.5
-                    else "Moderate" if _high_ratio > 0.2
-                    else "Low"
-                )
-                _leak = {}
-                if target is not None:
-                    try:
-                        _leak = detect_target_leakage(
-                            _X_tmp, target, threshold=leak_corr_threshold,
-                        )
-                    except Exception:
-                        pass
-                from extrapolation_discovery_platform.multicollinearity import (
-                    MulticollinearityReport as _MCR,
-                )
-                mc_rpt = _MCR(
-                    feature_set=feature_set_name,
-                    n_features_before=len(fs_cols),
-                    n_features_after=_n_after,
-                    dropped_constant=list(_dropped_c),
-                    dropped_perfect=list(_dropped_p),
-                    vif_series=_vif if _vif is not None else pd.Series(dtype=float),
-                    high_vif_count=_high_vif,
-                    moderate_vif_count=0,
-                    multicollinearity_level=_mc_level.lower(),
-                    recommended_workflows=[workflow_name],
-                    blocked_workflows=[],
-                    leak_suspects=_leak,
-                )
-            result.mc_report = mc_rpt
-        except Exception:
-            logger.warning("Phase1 multicollinearity failed (non-fatal):\n%s", traceback.format_exc())
-            mc_rpt = None
-
-        # ── 4. 有効列を決定（drop + リーク除外）────────────────────────
-        effective_cols = list(fs_cols)
-        dropped: List[str] = []
-        leak_suspects: Dict[str, float] = {}
-
-        if mc_rpt is not None:
-            _drop_set = set(mc_rpt.dropped_constant + mc_rpt.dropped_perfect)
-            if _drop_set:
-                dropped = [c for c in effective_cols if c in _drop_set]
-                effective_cols = [c for c in effective_cols if c not in _drop_set]
-
-            if leak_auto_exclude and mc_rpt.leak_suspects:
-                leak_suspects = dict(mc_rpt.leak_suspects)
-                _leak_set = set(leak_suspects.keys())
-                _before = len(effective_cols)
-                effective_cols = [c for c in effective_cols if c not in _leak_set]
-                if _before != len(effective_cols):
-                    logger.info(
-                        "リーク自動除外: %d 特徴量除去 (|r|>%.2f)",
-                        _before - len(effective_cols), leak_corr_threshold,
+                _sp = split_policy_name.replace(" ⚠️(リーク懸念)", "")
+                if _sp == "CompositionBlock" and compositions_df is not None:
+                    _cb = CompositionBlockSplitter(n_folds=n_folds, seed=seed)
+                    _fold_plan_hint["CompositionBlock"] = list(
+                        _cb.split(features_df, target, compositions=compositions_df)
                     )
+                else:
+                    _rc = RandomCVSplitter(n_folds=n_folds, seed=seed)
+                    _fold_plan_hint[_sp] = list(
+                        _rc.split(features_df, target, compositions=compositions_df)
+                    )
+            except Exception:
+                logger.warning("個別実行: 分割再計算失敗:\n%s", traceback.format_exc())
 
-        if not effective_cols:
-            raise ValueError("有効な特徴量列がありません。前処理後にすべての列が除去されました。")
+            # PreprocessResult の簡易版を作る
+            from extrapolation_discovery_platform.pipeline import PreprocessResult
+            prep = PreprocessResult(
+                effective_cols={_fs_key: _valid_cols if _valid_cols else list(features_df.columns)},
+                fold_plan=_fold_plan_hint,
+                active_policies=[split_policy_name.replace(" ⚠️(リーク懸念)", "")],
+                success=True,
+            )
+        else:
+            # 新規実行 → Stage1 を完全実行
+            _sp_clean = split_policy_name.replace(" ⚠️(リーク懸念)", "")
+            prep = stage1_preprocess(
+                features_df=features_df,
+                target=target,
+                compositions_df=compositions_df,
+                feature_set_names=[feature_set_name],
+                workflow_names=[workflow_name],
+                seeds=[seed],
+                active_policies=[_sp_clean],
+                leak_auto_exclude=leak_auto_exclude,
+                leak_corr_threshold=leak_corr_threshold,
+                generic_csv_mode=generic_csv_mode,
+            )
+            if not prep.success:
+                raise RuntimeError(f"Stage1 前処理失敗:\n{prep.error_message}")
 
-        result.effective_columns = effective_cols
-        result.n_features_after  = len(effective_cols)
-        result.dropped_columns   = dropped
-        result.leak_suspects     = leak_suspects
+        result.mc_report = next(iter(prep.mc_reports.values()), None)
 
-        # ── 5. 有効特徴量行列を再構築（C-contiguous）─────────────────
-        X = pd.DataFrame(
-            safe_array(X_full[effective_cols]),
-            columns=effective_cols,
-            index=X_full.index,
-        )
-        y = target.reset_index(drop=True)
-
-        # ── 6. 分割を生成（毎回直接渡す）───────────────────────────────
-        splits = _make_splits(
-            split_policy=split_policy_name,
-            features_df=X,
-            target=y,
-            compositions_df=compositions_df,
+        # ── Stage 2: ML 学習 ─────────────────────────────────────────
+        _sp_clean = split_policy_name.replace(" ⚠️(リーク懸念)", "")
+        train_res = stage2_train(
+            preprocess_result=prep,
+            features_df=features_df,
+            target=target,
+            workflow_name=workflow_name,
+            split_policy_name=_sp_clean,
+            feature_set_name=feature_set_name,
+            quick=quick,
+            dim_reduction=dim_reduction,
             seed=seed,
-            n_folds=n_folds,
-            test_size=test_size,
-            exclude_elements=exclude_elements,
+            generic_csv_mode=generic_csv_mode,
+        )
+        if not train_res.success:
+            raise RuntimeError(f"Stage2 学習失敗:\n{train_res.error_message}")
+
+        runs = train_res.runs
+        result.runs              = runs
+        result.n_folds_executed  = train_res.n_folds_executed
+        result.n_features_before = len(prep.effective_cols.get(
+            "generic" if generic_csv_mode else feature_set_name,
+            []
+        ))
+        result.n_features_after  = train_res.n_features_used
+        result.n_train_samples   = (
+            int(np.mean([len(s[0]) for s in prep.fold_plan.get(_sp_clean, [])]))
+            if prep.fold_plan.get(_sp_clean) else 0
+        )
+        result.n_test_samples = (
+            int(np.mean([len(s[1]) for s in prep.fold_plan.get(_sp_clean, [])]))
+            if prep.fold_plan.get(_sp_clean) else 0
         )
 
-        if not splits:
-            if split_policy_name == "ElementExclusion":
-                logger.warning(
-                    "ElementExclusion で有効な分割が生成されませんでした。"
-                    "RandomCV (n_folds=%d) にフォールバックします。", n_folds,
-                )
-                splits = _make_splits(
-                    split_policy="RandomCV",
-                    features_df=X, target=y,
-                    compositions_df=compositions_df,
-                    seed=seed, n_folds=n_folds,
-                    test_size=test_size,
-                    exclude_elements=exclude_elements,
-                )
-                if splits:
-                    # 分割ポリシー名を実際に使ったものに更新
-                    split_policy_name = "RandomCV"
-                    result.split_policy = f"RandomCV (ElementExclusion fallback)"
-            if not splits:
-                raise ValueError(
-                    f"分割ポリシー '{split_policy_name}' で有効な分割が生成されませんでした。"
-                    "データ数が少すぎるか、指定した元素が存在しない可能性があります。"
-                )
+        # ── 集約メトリクス（Stage2 からコピー） ─────────────────────
+        result.rmse_test_mean  = train_res.rmse_test_mean
+        result.rmse_test_std   = train_res.rmse_test_std
+        result.rmse_train_mean = train_res.rmse_train_mean
+        result.mae_test_mean   = train_res.mae_test_mean
+        result.r2_test_mean    = train_res.r2_test_mean
+        result.r2_test_std     = train_res.r2_test_std
 
-        # ── 7. ワークフローを生成（毎回 new instance）──────────────────
-        factory = _WORKFLOW_FACTORIES.get(workflow_name)
-        if factory is None:
-            raise ValueError(
-                f"未知のワークフロー '{workflow_name}'. "
-                f"使用可能: {list(_WORKFLOW_FACTORIES.keys())}"
-            )
-
-        # ── 8. 各Foldで学習・推論（毎回データを直接渡す）──────────────
-        runs: List[RunResult] = []
-        n_train_list: List[int] = []
-        n_test_list:  List[int] = []
-
-        for fold_idx, (train_idx, test_idx) in enumerate(splits):
-            X_train = pd.DataFrame(
-                safe_array(X.iloc[train_idx]),
-                columns=effective_cols,
-            )
-            X_test = pd.DataFrame(
-                safe_array(X.iloc[test_idx]),
-                columns=effective_cols,
-            )
-            y_train = y.iloc[train_idx].reset_index(drop=True)
-            y_test  = y.iloc[test_idx].reset_index(drop=True)
-
-            n_train_list.append(len(X_train))
-            n_test_list.append(len(X_test))
-
-            # ワークフローインスタンスを毎回新規作成（冗長だが独立性を保証）
-            wf = factory(quick, dim_reduction)
-
-            run = wf.run(
-                X_train, y_train, X_test, y_test,
-                seed=seed,
-                feature_set=feature_set_name,
-                split_policy=split_policy_name,
-                fold=fold_idx,
-                test_indices=np.asarray(test_idx),
-            )
-            runs.append(run)
-            logger.info(
-                "[個別実行] %s / %s / %s / seed=%d / fold=%d  "
-                "RMSE=%.4f  R²=%.4f  (%.2f s)",
-                workflow_name, feature_set_name, split_policy_name,
-                seed, fold_idx,
-                run.rmse_test, run.r2_test, run.elapsed_sec,
-            )
-
-        result.runs = runs
-        result.n_folds_executed  = len(runs)
-        result.n_train_samples   = int(np.mean(n_train_list)) if n_train_list else 0
-        result.n_test_samples    = int(np.mean(n_test_list))  if n_test_list  else 0
-
-        # ── 9. メトリクス集計 ─────────────────────────────────────────
-        valid_rmse_te = [r.rmse_test  for r in runs if r.rmse_test  > 0 and math.isfinite(r.rmse_test)]
-        valid_rmse_tr = [r.rmse_train for r in runs if r.rmse_train > 0 and math.isfinite(r.rmse_train)]
-        valid_mae_te  = [r.mae_test   for r in runs if r.mae_test   > 0 and math.isfinite(r.mae_test)]
-        valid_r2_te   = [r.r2_test    for r in runs if math.isfinite(r.r2_test)]
-
-        def _mean(xs): return float(np.mean(xs)) if xs else float("nan")
-        def _std(xs):  return float(np.std(xs))  if len(xs) > 1 else 0.0
-
-        result.rmse_test_mean  = _mean(valid_rmse_te)
-        result.rmse_test_std   = _std(valid_rmse_te)
-        result.rmse_train_mean = _mean(valid_rmse_tr)
-        result.mae_test_mean   = _mean(valid_mae_te)
-        result.r2_test_mean    = _mean(valid_r2_te)
-        result.r2_test_std     = _std(valid_r2_te)
-
-        # ── 10. アーティファクト集約（最後のfoldのものを代表として保持）
+        # ── アーティファクト集約（最後の fold を代表に） ─────────────
         if runs and runs[-1].artifacts:
             result.artifacts = dict(runs[-1].artifacts)
 
-        # ── 11. OOD 検出（各foldで独立にfit/score、毎回直接データを渡す）────
-        # 学習のたびにOODが変わるべき：train_idxが変わればfit結果も変わる。
-        # 全foldのスコアを平均して代表値とし、GUIには最初のfoldのsplit indexを渡す。
-        if splits:
-            n_total_samples = len(X)
-            ood_score_sum   = np.zeros(n_total_samples, dtype=np.float64)
-            ood_score_count = np.zeros(n_total_samples, dtype=np.int32)
-            primary_ood_res  = None
-            primary_train_idx, primary_test_idx = splits[0]
+        # ── Stage 3: OOD 検出（学習と完全独立） ─────────────────────
+        _ood_cols_key = "generic" if generic_csv_mode else feature_set_name
+        _ood_cols = prep.effective_cols.get(_ood_cols_key, list(features_df.columns))
+        _ood_cols = [c for c in _ood_cols if c in features_df.columns]
 
-            for fold_idx_ood, (tr_idx_ood, te_idx_ood) in enumerate(splits):
-                if len(tr_idx_ood) < 2 or len(te_idx_ood) < 1:
-                    continue
-                try:
-                    actual_k = min(10, len(tr_idx_ood) - 1)
-                    X_ood_tr = pd.DataFrame(
-                        safe_array(X.iloc[tr_idx_ood]), columns=effective_cols,
-                    )
-                    X_ood_te = pd.DataFrame(
-                        safe_array(X.iloc[te_idx_ood]), columns=effective_cols,
-                    )
-                    # 各foldで独立にOODDetectorをfit → train setが変わればOODも変わる
-                    detector = OODDetector(k=actual_k)
-                    detector.fit(X_ood_tr)
-                    fold_ood = detector.score(X_ood_te)
-                    # グローバルインデックスにスコアを蓄積
-                    ood_score_sum[te_idx_ood]   += fold_ood.composite_scores
-                    ood_score_count[te_idx_ood] += 1
-                    if fold_idx_ood == 0:
-                        primary_ood_res = fold_ood
-                except Exception:
-                    logger.warning(
-                        "OOD fold=%d 失敗 (non-fatal)", fold_idx_ood, exc_info=True,
-                    )
+        if _ood_cols and prep.fold_plan:
+            ood_stage = stage3_detect_ood(
+                features_df=features_df,
+                effective_columns=_ood_cols,
+                fold_plan=prep.fold_plan,
+            )
+            if ood_stage.success and ood_stage.ood_result is not None:
+                result.ood_result    = ood_stage.ood_result
+                result.ood_train_idx = ood_stage.primary_train_idx
+                result.ood_test_idx  = ood_stage.primary_test_idx
+            else:
+                logger.warning("Stage3 OOD失敗 (non-fatal): %s",
+                               ood_stage.error_message[:200])
 
-            if primary_ood_res is not None:
-                # primary test setの平均スコアを計算
-                te = primary_test_idx
-                scored = ood_score_count[te] > 0
-                avg_composite = np.where(
-                    scored,
-                    ood_score_sum[te] / np.maximum(ood_score_count[te], 1),
-                    primary_ood_res.composite_scores,
-                )
-                is_ood_avg = avg_composite > primary_ood_res.ood_threshold
-                n_ood_avg  = int(is_ood_avg.sum())
-                # 全fold平均のOODResultを保存
-                result.ood_result = OODResult(
-                    mahalanobis_scores=primary_ood_res.mahalanobis_scores,
-                    knn_scores=primary_ood_res.knn_scores,
-                    composite_scores=np.ascontiguousarray(avg_composite),
-                    is_ood=np.ascontiguousarray(is_ood_avg),
-                    ood_threshold=primary_ood_res.ood_threshold,
-                    ood_ratio=n_ood_avg / max(len(avg_composite), 1),
-                    n_total=len(avg_composite),
-                    n_ood=n_ood_avg,
-                )
-                result.ood_train_idx = np.asarray(primary_train_idx)
-                result.ood_test_idx  = np.asarray(primary_test_idx)
-                logger.info(
-                    "OOD完了: %d/%d OOD (%d fold平均)",
-                    n_ood_avg, len(avg_composite), len(splits),
-                )
+        result.elapsed_sec = time.time() - t0
+
 
         result.elapsed_sec = time.time() - t0
         result.success = True
