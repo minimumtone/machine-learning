@@ -280,19 +280,6 @@ def stage1_preprocess(
             else:
                 logger.warning("Stage1: ElementExclusion — compositions_df が None")
 
-        if "Holdout" in active_policies:
-            try:
-                n = len(features_df)
-                rng = np.random.default_rng(_seed0)
-                shuffled = rng.permutation(n)
-                n_test = max(1, int(n * 0.2))
-                test_idx = shuffled[:n_test]
-                train_idx = shuffled[n_test:]
-                fold_plan["Holdout"] = [(train_idx, test_idx)]
-                logger.info("Stage1: Holdout 1 fold (test=%d, train=%d)", n_test, n - n_test)
-            except Exception:
-                logger.warning("Stage1: Holdout 分割失敗:\n%s", traceback.format_exc())
-
         if "RandomCV" in active_policies:
             # RandomCV は seed ごとに別キーで保持（evaluation.py の base_rmse 計算で参照）
             for seed in seeds:
@@ -347,18 +334,29 @@ def stage1_preprocess(
                     )
                     fs_summaries[fs_key] = summary
 
-                    if summary.consensus_features and len(summary.consensus_features) >= 2:
-                        # コンセンサス特徴量（2手法以上で選択）を優先採用
-                        effective_cols[fs_key] = summary.consensus_features
+                    # コンセンサス特徴量（2手法以上で選択）が十分あれば採用
+                    # ただし元の列数の 20% 未満になる場合はスキップ
+                    min_cols = max(3, len(cols) // 5)
+                    consensus = summary.consensus_features or []
+                    if len(consensus) >= min_cols:
+                        effective_cols[fs_key] = consensus
                         logger.info("Stage1 特徴量選択 [%s]: %d→%d (consensus)",
                                     fs_key, len(cols), len(effective_cols[fs_key]))
                     else:
-                        # コンセンサスが少ない場合は Lasso 単独にフォールバック
+                        # Lasso フォールバック：最低 min_cols 列を保証
                         lasso = summary.results.get("Lasso")
-                        if lasso and lasso.selected_features and len(lasso.selected_features) >= 2:
-                            effective_cols[fs_key] = lasso.selected_features
+                        lasso_feats = (lasso.selected_features if lasso else []) or []
+                        if len(lasso_feats) >= min_cols:
+                            effective_cols[fs_key] = lasso_feats
                             logger.info("Stage1 特徴量選択 [%s]: %d→%d (lasso fallback)",
                                         fs_key, len(cols), len(effective_cols[fs_key]))
+                        else:
+                            # 選択結果が不十分 → 全列を維持（特徴量選択をスキップ）
+                            logger.info(
+                                "Stage1 特徴量選択 [%s]: 選択結果が不十分 "
+                                "(consensus=%d, lasso=%d, min_required=%d) — 全 %d 列を維持",
+                                fs_key, len(consensus), len(lasso_feats), min_cols, len(cols),
+                            )
                 except Exception:
                     logger.warning("Stage1 特徴量選択失敗 [%s] — 全列を維持:\n%s",
                                    fs_key, traceback.format_exc())
