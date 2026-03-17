@@ -85,6 +85,8 @@ def make_stratify_labels(y: np.ndarray, n_bins: int = 5) -> np.ndarray:
     kb = KBinsDiscretizer(
         n_bins=bins, encode="ordinal", strategy="quantile",
         subsample=None,
+        # sklearn 1.9 互換: quantile_method のデフォルト変更に対応
+        quantile_method="averaged_inverted_cdf",
     )
     labels = kb.fit_transform(y_arr).astype(int).ravel()
     return labels

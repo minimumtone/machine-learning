@@ -52,6 +52,26 @@ Stage1→2→3 を呼ぶため、**同一条件なら同一結果が保証され
 RandomCV が必要な場合（ベースライン比較・診断目的）は GUI の「分割ポリシー設定」
 アコーディオンから明示的に有効化できます。
 
+### 1-3-2. 分割数 (n_folds) の設定
+
+一括計算の交差検証分割数を GUI から設定できるようになりました。
+
+- GUI: `Config & Run` → 「分割ポリシー設定」アコーディオン内の **分割数 (n_folds)** スライダー
+- 範囲: 2〜10、デフォルト: **5**
+- API: `ExperimentRunner(n_folds=3)` のように指定
+
+| n_folds | 速度 | 評価安定性 | 1 fold あたりの訓練データ |
+|---|---|---|---|
+| 2 | 最速 | 低 | 75% |
+| 5 | 標準 | 中 | 80% |
+| 10 | 遅い | 高 | 90% |
+
+```python
+# 例: 3-fold CV で高速実行
+runner = ExperimentRunner(seeds=[42], quick=True, n_folds=3)
+runs, validity, ood = runner.run(comp, features, target)
+```
+
 ### 1-4. WF-ENS の修正
 
 `WorkflowENS` の `base_workflow` を `"xgb"` → `"ridge"` に変更し、

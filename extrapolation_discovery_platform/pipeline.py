@@ -160,6 +160,7 @@ def stage1_preprocess(
     leak_auto_exclude: bool = True,
     leak_corr_threshold: float = 0.85,
     generic_csv_mode: bool = False,
+    n_folds: int = 5,
 ) -> PreprocessResult:
     """Stage 1: 前処理。
 
@@ -181,6 +182,9 @@ def stage1_preprocess(
     active_policies : list of str
         有効にする分割ポリシー。["CompositionBlock", "ElementExclusion"] が推奨。
         "RandomCV" を含めるとデータリーク懸念あり（デフォルト無効）。
+    n_folds : int
+        分割数（デフォルト 5）。2〜10 の範囲で指定する。
+        小さいほど1 fold あたりの訓練データが増え、大きいほど評価が安定する。
     """
     t0 = time.time()
     result = PreprocessResult(active_policies=list(active_policies))
@@ -251,7 +255,7 @@ def stage1_preprocess(
         if "CompositionBlock" in active_policies:
             if compositions_df is not None:
                 try:
-                    cb = CompositionBlockSplitter(n_folds=5, seed=_seed0)
+                    cb = CompositionBlockSplitter(n_folds=n_folds, seed=_seed0)
                     folds = list(cb.split(features_df, target, compositions=compositions_df))
                     if folds:
                         fold_plan["CompositionBlock"] = folds
@@ -284,7 +288,7 @@ def stage1_preprocess(
             # RandomCV は seed ごとに別キーで保持（evaluation.py の base_rmse 計算で参照）
             for seed in seeds:
                 try:
-                    rc = RandomCVSplitter(n_folds=5, seed=seed)
+                    rc = RandomCVSplitter(n_folds=n_folds, seed=seed)
                     folds = list(rc.split(features_df, target, compositions=compositions_df))
                     if folds:
                         fold_plan[f"RandomCV_seed{seed}"] = folds
@@ -299,7 +303,7 @@ def stage1_preprocess(
                 "Stage1: 全分割ポリシーで fold 0。"
                 "RandomCV seed=%d でフォールバック", _seed0
             )
-            rc_fb = RandomCVSplitter(n_folds=5, seed=_seed0)
+            rc_fb = RandomCVSplitter(n_folds=n_folds, seed=_seed0)
             folds = list(rc_fb.split(features_df, target, compositions=compositions_df))
             if folds:
                 fold_plan[f"RandomCV_seed{_seed0}"] = folds

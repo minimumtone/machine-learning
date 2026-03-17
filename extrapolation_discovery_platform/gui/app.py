@@ -2965,6 +2965,12 @@ def create_app() -> gr.Blocks:
                             value=False,
                             info="ランダムCV — ベースライン/診断用途のみ",
                         )
+                    with gr.Row():
+                        n_folds_slider = gr.Slider(
+                            minimum=2, maximum=10, value=5, step=1,
+                            label="分割数 (n_folds)",
+                            info="各ポリシーの交差検証分割数（デフォルト: 5）。小さいほど速く、大きいほど評価が安定する",
+                        )
 
                 # Integrations are always enabled behind the scenes.
                 gr.Markdown(
@@ -4028,6 +4034,7 @@ def create_app() -> gr.Blocks:
             use_sp_cb: bool,
             use_sp_ee: bool,
             use_sp_rc: bool,
+            n_folds_val: float,
             session: Dict[str, Any],
         ) -> Generator:
             """Generator that yields incremental progress + state.
@@ -4298,6 +4305,7 @@ def create_app() -> gr.Blocks:
                     dim_reduction=use_dim_reduction,
                     leak_auto_exclude=use_leak_exclude,
                     leak_corr_threshold=leak_threshold,
+                    n_folds=max(2, int(n_folds_val)),
                 )
 
                 # --- Real-time log capture via threading ---
@@ -4849,6 +4857,7 @@ def create_app() -> gr.Blocks:
                 run_csv_upload, run_csv_target,
                 csv_feature_checks, csv_mode_radio,
                 sp_cb_check, sp_ee_check, sp_rc_check,
+                n_folds_slider,
                 state,
             ],
             outputs=[

@@ -194,6 +194,35 @@ assert "RandomCV" in policies2
 
 ---
 
+## T7-2: n_folds の設定が正しく伝達される
+
+**確認コマンド:**
+```python
+from extrapolation_discovery_platform.pipeline import stage1_preprocess
+from extrapolation_discovery_platform.runner import ExperimentRunner
+
+# n_folds=3 で分割数が 3 になるか
+prep = stage1_preprocess(X, y, comp, ["FS_BASE"], ["WF-LIN"],
+                          seeds=[42], active_policies=["CompositionBlock"], n_folds=3)
+assert len(prep.fold_plan["CompositionBlock"]) == 3
+
+# ExperimentRunner に伝達されるか
+runner = ExperimentRunner(seeds=[42], quick=True, n_folds=3)
+assert runner._n_folds == 3
+runs, _, _ = runner.run(comp, X, y, selected_split_policies=["CompositionBlock"])
+folds = {r.fold for r in runs if r.split_policy == "CompositionBlock"}
+assert max(folds) == 2  # 0,1,2 の 3-fold
+```
+
+**確認すべき点:**
+- [ ] `stage1_preprocess(n_folds=3)` で `fold_plan["CompositionBlock"]` の長さが 3
+- [ ] `ExperimentRunner(n_folds=3)` で `_n_folds == 3` が保存される
+- [ ] 実行後の `RunResult.fold` の最大値が `n_folds - 1`
+- [ ] デフォルト (`n_folds` 未指定) で 5-fold になる
+- [ ] GUI の「分割数 (n_folds)」スライダーが **2〜10** の範囲でデフォルト **5**
+
+---
+
 ## T8: WF-ENS ≠ WF-XGB
 
 **確認コマンド:**
