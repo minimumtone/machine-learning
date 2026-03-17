@@ -72,6 +72,47 @@ runner = ExperimentRunner(seeds=[42], quick=True, n_folds=3)
 runs, validity, ood = runner.run(comp, features, target)
 ```
 
+### 1-3-3. サイドバー削除
+
+ブラウザのタブ横スクロールを廃止し、左サイドバーナビゲーションも削除しました。
+Gradio 標準のタブバーを使用します（6タブ、横スクロール不要）。
+
+### 1-3-4. 訓練/テスト比率の設定（test_size）
+
+Config & Run の「分割ポリシー設定」アコーディオンに **テスト比率 (test_size)** スライダーを追加しました。
+
+- 範囲: 0.1〜0.5、デフォルト: **0.2**（20%）
+- **Holdout** 分割チェックボックスも追加。一括計算で単純な train/test 分割が使えます
+- CompositionBlock / ElementExclusion / RandomCV では無視されます
+
+### 1-3-5. Nested-CV のデフォルト OFF
+
+実行時間短縮のため、モデル選択（Nested-CV）を **デフォルト OFF** に変更しました。
+有効にする場合は「Model Selection — Nested CV」アコーディオンのチェックボックスをONにしてください。
+
+### 1-3-6. 全WF比較機能（Individual Run）
+
+🔬 Individual Run タブに **⚡ 全WF比較** ボタンを追加しました。
+同一 FS・split・seed 条件で全アルゴリズムを一括実行し、RMSE バーチャートで比較できます。
+
+### 1-3-7. OOD Feature Discovery（新機能）
+
+OOD & Individual タブに **🔭 OOD Feature Discovery** サブタブを追加しました。
+
+**目的**: OOD 検出後に境界付近サンプルを訓練データに追加し、
+追加特徴量候補を組み込んで再学習することで外挿性能を向上させる特徴量を探索する。
+
+**使い方**:
+1. 一括計算（Config & Run）を実行して OOD 検出を完了させる
+2. OOD Feature Discovery タブを開く
+3. 探索する WF・FS・split を選択
+4. 追加特徴量候補の CSV をアップロード（文献由来記述子・細分化記述子など）
+5. 探索する列を選択して「🔭 特徴量探索を実行」をクリック
+6. ベースライン vs 各候補の OOD RMSE を比較し、最良特徴量を確認
+
+**バックエンド**: `ood_feature_discovery.py` を新設。
+`identify_boundary_samples()` / `augment_dataset()` / `run_feature_discovery()` の3段階で構成。
+
 ### 1-4. WF-ENS の修正
 
 `WorkflowENS` の `base_workflow` を `"xgb"` → `"ridge"` に変更し、
@@ -343,4 +384,4 @@ launch()
 | PR | #148 |
 | GUI バージョンタグ | PR#148（画面右上に表示） |
 | Python 要件 | 3.10 以上 |
-| 主要変更ファイル | pipeline.py（新設）, runner.py, individual_runner.py, gui/app.py |
+| 主要変更ファイル | pipeline.py, runner.py, individual_runner.py, ood_feature_discovery.py（新設）, gui/app.py |

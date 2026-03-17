@@ -5,6 +5,76 @@
 
 ---
 
+## T-A: サイドバー削除確認
+
+**確認コマンド:**
+```python
+with open("gui/app.py") as f:
+    app = f.read()
+assert "_SIDEBAR_CSS" not in app
+assert "_SIDEBAR_JS"  not in app
+assert "css=_SIDEBAR_CSS" not in app
+```
+
+**確認すべき点:**
+- [ ] `_SIDEBAR_CSS` の定義が app.py に存在しない
+- [ ] `_SIDEBAR_JS` の定義が app.py に存在しない
+- [ ] Gradio Blocks の `css=` / `js=` にサイドバー参照がない
+- [ ] GUI 起動時に左サイドバーが表示されない（標準タブバーのみ）
+
+---
+
+## T-B: test_size / Holdout 分割の確認
+
+**確認コマンド:**
+```python
+from extrapolation_discovery_platform.pipeline import stage1_preprocess
+prep = stage1_preprocess(X, y, comp, ["FS_BASE"], ["WF-LIN"],
+    seeds=[42], active_policies=["Holdout"], test_size=0.3)
+tr, te = prep.fold_plan["Holdout"][0]
+ratio = len(te) / (len(tr) + len(te))
+assert abs(ratio - 0.3) < 0.05
+```
+
+**確認すべき点:**
+- [ ] `active_policies=["Holdout"]` で fold_plan に "Holdout" キーが入る
+- [ ] `test_size=0.3` でテスト比率が約 30%
+- [ ] CompositionBlock / ElementExclusion では test_size が無視される
+- [ ] GUI の「テスト比率」スライダーが範囲 0.1〜0.5、デフォルト 0.2
+
+---
+
+## T-C: Nested-CV デフォルト OFF
+
+**確認すべき点:**
+- [ ] `model_sel_check` の `value=False`（デフォルト OFF）
+- [ ] チェックを ON にして実行すると Nested-CV が動作する
+- [ ] OFF のままでは通常の実験のみ実行（高速）
+
+---
+
+## T-D: 全WF比較 UI
+
+**確認すべき点:**
+- [ ] 🔬 Individual Run タブに「⚡ 全WF比較」ボタンがある
+- [ ] ボタンクリックで全 WF（LIN, LASSO, ARD, RF, XGB, ENS）が実行される
+- [ ] 比較サマリーに `最優秀WF` と RMSE が表示される
+- [ ] WF別 RMSE バーチャートが表示される
+
+---
+
+## T-E: OOD Feature Discovery
+
+**確認すべき点:**
+- [ ] OOD & Individual タブに「🔭 OOD Feature Discovery」サブタブがある
+- [ ] 「CSV 読み込み」ボタンで列名がチェックボックスに反映される
+- [ ] 追加特徴量なし（CSV未指定）でもベースライン評価が実行される
+- [ ] 探索結果テーブルに `candidate_feature`, `baseline_rmse`, `ood_rmse`, `improvement` が含まれる
+- [ ] `improvement > 0` の特徴量が存在する場合に「最良特徴量」が表示される
+- [ ] OOD 結果がない状態（未実行）で実行するとエラーメッセージが表示される
+
+---
+
 ## 自動テスト（pytest / スクリプト）
 
 ### 実行コマンド

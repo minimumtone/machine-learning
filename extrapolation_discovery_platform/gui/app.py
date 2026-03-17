@@ -2082,210 +2082,18 @@ def create_app() -> gr.Blocks:
     """Build and return the Gradio Blocks app."""
 
     # CSS for left sidebar navigation pane
-    _SIDEBAR_CSS = """
-    /* --- Left Sidebar Navigation --- */
-    #sidebar-nav {
-        position: fixed;
-        left: 0;
-        top: 0;
-        width: 200px;
-        height: 100vh;
-        background: #1a1a2e;
-        color: #e0e0e0;
-        padding: 12px 0;
-        overflow-y: auto;
-        z-index: 9999;
-        box-shadow: 2px 0 8px rgba(0,0,0,0.15);
-    }
-    #sidebar-nav .sidebar-title {
-        font-size: 13px;
-        font-weight: 700;
-        color: #8ab4f8;
-        padding: 8px 16px 12px;
-        border-bottom: 1px solid #2a2a4a;
-        margin-bottom: 4px;
-    }
-    #sidebar-nav button.sidebar-btn {
-        display: block;
-        width: 100%;
-        text-align: left;
-        background: transparent;
-        color: #c0c0c0;
-        border: none;
-        padding: 9px 16px;
-        font-size: 13px;
-        cursor: pointer;
-        transition: background 0.15s, color 0.15s;
-        white-space: normal;
-        word-break: break-word;
-        line-height: 1.3;
-    }
-    #sidebar-nav button.sidebar-btn:hover {
-        background: #2a2a4a;
-        color: #fff;
-    }
-    #sidebar-nav button.sidebar-btn.active {
-        background: #3a3a6a;
-        color: #8ab4f8;
-        font-weight: 600;
-        border-left: 3px solid #8ab4f8;
-        padding-left: 13px;
-    }
-    /* Push main content right to make room for sidebar */
-    .gradio-container {
-        margin-left: 200px !important;
-    }
-    /* Hide the default Gradio tab bar (replaced by sidebar).
-       Target every possible selector Gradio uses across versions. */
-    #main-tabs > .tab-nav,
-    #main-tabs > [role=tablist],
-    #main-tabs .tab-nav,
-    #main-tabs [role=tablist],
-    div#main-tabs > div > [role=tablist],
-    div#main-tabs > div.tabs > div[role=tablist] {
-        display: none !important;
-    }
-    @media (max-width: 768px) {
-        #sidebar-nav { display: none; }
-        .gradio-container { margin-left: 0 !important; }
-        #main-tabs > .tab-nav,
-        #main-tabs [role=tablist] { display: flex !important; }
-    }
-    """
-
-    # JavaScript for sidebar tab switching
-    # Compatible with Gradio 6.x ([role=tablist]) and earlier (.tab-nav).
-    _SIDEBAR_JS = """
-    () => {
-        // ── Sidebar injection ──────────────────────────────────────────
-        // Gradio renders asynchronously; we poll until the tab bar is
-        // available, then inject the sidebar and hide the original bar.
-        // The sidebar delegates all tab-switching to Gradio's own buttons
-        // so routing, keyboard navigation, and state updates all work.
-
-        function _getTabNav() {
-            // Gradio 4.x / 5.x: .tab-nav  |  Gradio 6.x: [role=tablist]
-            return (
-                document.querySelector('#main-tabs > .tab-nav') ||
-                document.querySelector('#main-tabs [role=tablist]') ||
-                document.querySelector('#main-tabs .tabs [role=tablist]')
-            );
-        }
-
-        function _getTabBtns(tabNav) {
-            // Prefer [role=tab]; fall back to direct <button> children
-            let btns = Array.from(tabNav.querySelectorAll('[role=tab]'));
-            if (btns.length === 0) {
-                btns = Array.from(tabNav.querySelectorAll('button'));
-            }
-            return btns;
-        }
-
-        function _hideTabNav(tabNav) {
-            // Force hide with both attribute and inline style so CSS
-            // specificity battles don't make the bar reappear.
-            tabNav.setAttribute('data-edp-hidden', '1');
-            tabNav.style.setProperty('display', 'none', 'important');
-        }
-
-        function _injectSidebar() {
-            if (document.getElementById('sidebar-nav')) return true;
-
-            const tabNav = _getTabNav();
-            if (!tabNav) return false;
-
-            const gradioTabBtns = _getTabBtns(tabNav);
-            if (gradioTabBtns.length === 0) return false;
-
-            _hideTabNav(tabNav);
-
-            const labels = gradioTabBtns.map(b => b.textContent.trim());
-
-            const nav = document.createElement('div');
-            nav.id = 'sidebar-nav';
-            nav.innerHTML = '<div class="sidebar-title">Navigation</div>';
-
-            labels.forEach((label, idx) => {
-                const btn = document.createElement('button');
-                btn.className = 'sidebar-btn';
-                btn.textContent = label;
-                btn.dataset.tabIdx = idx;
-                btn.onclick = () => {
-                    // Re-query Gradio buttons each click — avoids stale refs
-                    const currentNav = _getTabNav();
-                    if (!currentNav) return;
-                    const currentBtns = _getTabBtns(currentNav);
-                    if (currentBtns[idx]) currentBtns[idx].click();
-                    nav.querySelectorAll('.sidebar-btn')
-                       .forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                };
-                nav.appendChild(btn);
-            });
-
-            // Set initial active state
-            const firstActive = gradioTabBtns.findIndex(
-                b => b.getAttribute('aria-selected') === 'true' ||
-                     b.classList.contains('selected')
-            );
-            const sidebarBtns = nav.querySelectorAll('.sidebar-btn');
-            sidebarBtns[Math.max(0, firstActive)]?.classList.add('active');
-
-            document.body.appendChild(nav);
-
-            // Sync sidebar highlight when user clicks Gradio tabs
-            const obs = new MutationObserver(() => {
-                const freshNav = _getTabNav();
-                if (!freshNav) return;
-                _hideTabNav(freshNav);  // re-apply in case Gradio re-rendered
-                const freshBtns = _getTabBtns(freshNav);
-                const navBtns   = nav.querySelectorAll('.sidebar-btn');
-                freshBtns.forEach((tb, i) => {
-                    const active =
-                        tb.getAttribute('aria-selected') === 'true' ||
-                        tb.classList.contains('selected');
-                    if (active && navBtns[i]) {
-                        navBtns.forEach(b => b.classList.remove('active'));
-                        navBtns[i].classList.add('active');
-                    }
-                });
-            });
-            // Watch both attributes (aria-selected) and class changes
-            obs.observe(document.getElementById('main-tabs'), {
-                attributes: true, subtree: true, attributeFilter: ['aria-selected', 'class'],
-            });
-
-            return true;
-        }
-
-        // Poll every 250 ms for up to 15 s (generous for slow CSVs / cold starts)
-        let _tries = 0;
-        const _poll = setInterval(() => {
-            _tries++;
-            if (_injectSidebar() || _tries >= 60) clearInterval(_poll);
-        }, 250);
-
-        // Also attempt injection immediately on load events
-        ['DOMContentLoaded', 'load'].forEach(evt => {
-            if (document.readyState !== 'loading') _injectSidebar();
-            window.addEventListener(evt, _injectSidebar, { once: true });
-        });
-    }
-    """
 
     # Gradio 6.0: theme moved from Blocks() to launch().
     with gr.Blocks(
         title=f"Extrapolation Discovery Platform ({_GUI_VERSION_TAG})",
-        css=_SIDEBAR_CSS,
-        js=_SIDEBAR_JS,
     ) as app:
         gr.Markdown(
             f"# Extrapolation Discovery Platform &ensp;"
             f"<small style='color:#888;'>({_GUI_VERSION_TAG})</small>\n"
             "Feature Validity Evaluation & OOD Detection Dashboard\n\n"
-            "**使い方**: 左のサイドバーからタブを選択してください。"
-            "まず **Config & Run** でCSVアップロード＆解析実行し、"
-            "結果を **Dashboard** / **Results** / **OOD Map** 等のタブで確認します。"
+            "**使い方**: 上のタブから操作を選択してください。"
+            "まず **Config & Run** でデータをロード＆解析実行し、"
+            "結果を **Results** / **Dashboard** / **OOD & Individual** 等のタブで確認します。"
         )
 
         # Fix #1: per-user session state via gr.State
@@ -2881,8 +2689,9 @@ def create_app() -> gr.Blocks:
                         "- **選択基準**: 外側CVの平均RMSE最小。同等なら疎なモデルを優先"
                     )
                     model_sel_check = gr.Checkbox(
-                        label="モデル選択を行う (Run Model Selection)",
-                        value=True,
+                        label="Nested-CV モデル選択を行う",
+                        value=False,
+                        info="外側CV×内側HPOで最適モデル自動選択（実行時間が大幅増）",
                     )
                     with gr.Row():
                         ms_n_outer = gr.Slider(
@@ -2965,11 +2774,21 @@ def create_app() -> gr.Blocks:
                             value=False,
                             info="ランダムCV — ベースライン/診断用途のみ",
                         )
+                        sp_ho_check = gr.Checkbox(
+                            label="Holdout（単純 train/test 分割）",
+                            value=False,
+                            info="test_size スライダーで比率を制御。小データや高速確認に使用",
+                        )
                     with gr.Row():
                         n_folds_slider = gr.Slider(
                             minimum=2, maximum=10, value=5, step=1,
                             label="分割数 (n_folds)",
                             info="各ポリシーの交差検証分割数（デフォルト: 5）。小さいほど速く、大きいほど評価が安定する",
+                        )
+                        test_size_slider = gr.Slider(
+                            minimum=0.1, maximum=0.5, value=0.2, step=0.05,
+                            label="テスト比率 (test_size)",
+                            info="Holdout 分割のテストデータ比率（デフォルト: 0.2 = 20%）。CompositionBlock/ElementExclusion では k-fold 分割のため無視される",
                         )
 
                 # Integrations are always enabled behind the scenes.
@@ -3416,9 +3235,13 @@ def create_app() -> gr.Blocks:
                                     label="リーク閾値 |r|",
                                 )
 
-                        ind_run_btn = gr.Button(
-                            "▶ 個別実行 (Run Individual)", variant="primary", size="lg",
-                        )
+                        with gr.Row():
+                            ind_run_btn = gr.Button(
+                                "▶ 個別実行 (Run Individual)", variant="primary",
+                            )
+                            ind_compare_btn = gr.Button(
+                                "⚡ 全WF比較 (Compare All Workflows)", variant="secondary",
+                            )
 
                         ind_progress_html = gr.HTML(
                             value='<div style="padding:8px;color:#888;">実行待機中...</div>',
@@ -3445,6 +3268,16 @@ def create_app() -> gr.Blocks:
                             headers=["Fold", "RMSE (Train)", "RMSE (Test)",
                                      "MAE (Test)", "R² (Train)", "R² (Test)", "Time (s)"],
                         )
+                        gr.Markdown("### ⚡ 全ワークフロー比較結果")
+                        ind_compare_md = gr.Markdown(
+                            "*⚡ 全WF比較ボタンを押すと全アルゴリズムを同一条件で実行して比較します。*"
+                        )
+                        ind_compare_table = gr.Dataframe(
+                            label="WF比較サマリー（RMSE_test 昇順）",
+                            headers=["workflow","rmse_test_mean","rmse_test_std",
+                                      "r2_test_mean","mae_test_mean","n_folds"],
+                        )
+                        ind_compare_plot = gr.Plot(label="WF別 RMSE 比較バーチャート")
 
 
                         def _run_individual_cb(
@@ -3662,6 +3495,313 @@ def create_app() -> gr.Blocks:
                                 ind_runs_table,
                             ],
                         )
+                        # ── 全WF比較コールバック ──────────────────────────────
+                        def _run_compare_cb(
+                            fs_name, sp_name, seed_val, n_folds_val, test_size_val,
+                            excl_str, quick, dim_r, leak_excl, leak_thr, session,
+                        ):
+                            """全 WF を同一条件で実行して性能を比較する。"""
+                            import math
+                            import pandas as _pd
+                            from extrapolation_discovery_platform.individual_runner import (
+                                run_individual_compare, _WORKFLOW_FACTORIES,
+                            )
+                            from extrapolation_discovery_platform.gui.plotly_charts import (
+                                plotly_metrics_comparison,
+                            )
+                            features_df  = session.get("features_df")
+                            target       = session.get("target")
+                            compositions = session.get("compositions_df")
+                            generic_csv  = session.get("csv_mode", False)
+                            if features_df is None or target is None:
+                                return "*先に Config & Run でデータをロードしてください。*", None, None
+
+                            wf_names = list(_WORKFLOW_FACTORIES.keys())
+                            sp_clean = sp_name.replace(" \u26a0\ufe0f(\u30ea\u30fc\u30af\u61b6\u5ff5)", "")
+                            try:
+                                results = run_individual_compare(
+                                    workflow_names=wf_names,
+                                    feature_set_name=fs_name,
+                                    split_policy_name=sp_clean,
+                                    features_df=features_df,
+                                    target=target,
+                                    compositions_df=compositions,
+                                    seed=int(seed_val),
+                                    n_folds=max(2, int(n_folds_val)),
+                                    test_size=float(test_size_val),
+                                    quick=quick,
+                                    dim_reduction=dim_r,
+                                    leak_auto_exclude=leak_excl,
+                                    leak_corr_threshold=float(leak_thr),
+                                    generic_csv_mode=generic_csv,
+                                )
+                            except Exception as exc:
+                                return f"*比較実行エラー: {exc}*", None, None
+
+                            rows = []
+                            for r in results:
+                                if r.success:
+                                    rows.append({
+                                        "workflow":       r.workflow,
+                                        "rmse_test_mean": round(r.rmse_test_mean, 4) if math.isfinite(r.rmse_test_mean) else None,
+                                        "rmse_test_std":  round(r.rmse_test_std,  4) if math.isfinite(r.rmse_test_std)  else None,
+                                        "r2_test_mean":   round(r.r2_test_mean,   4) if math.isfinite(r.r2_test_mean)   else None,
+                                        "mae_test_mean":  round(r.mae_test_mean,  4) if math.isfinite(r.mae_test_mean)  else None,
+                                        "n_folds":        r.n_folds_executed,
+                                    })
+                            if not rows:
+                                return "*比較結果なし（全WF失敗）*", None, None
+
+                            df   = _pd.DataFrame(rows).sort_values("rmse_test_mean")
+                            best = df.iloc[0]
+                            cond = (
+                                f"**比較条件**: FS={fs_name}  Split={sp_clean}  "
+                                f"Folds={int(n_folds_val)}  Seed={int(seed_val)}"
+                            )
+                            summary_md = (
+                                cond + "\n\n"
+                                + f"**最優秀 WF**: {best['workflow']}  "
+                                + f"RMSE={best['rmse_test_mean']:.4f}  "
+                                + f"R\u00b2={best['r2_test_mean']:.4f}"
+                            )
+                            all_runs = [run for r in results if r.success for run in r.runs]
+                            try:
+                                fig = plotly_metrics_comparison(all_runs, title="WF\u5225 RMSE \u6bd4\u8f03")
+                            except Exception:
+                                fig = None
+                            return summary_md, df, fig
+
+                        ind_compare_btn.click(
+                            fn=_run_compare_cb,
+                            inputs=[
+                                ind_fs, ind_sp,
+                                ind_seed, ind_n_folds, ind_test_size,
+                                ind_excl,
+                                ind_quick, ind_dim_r,
+                                ind_leak_excl, ind_leak_thr,
+                                state,
+                            ],
+                            outputs=[
+                                ind_compare_md,
+                                ind_compare_table,
+                                ind_compare_plot,
+                            ],
+                        )
+
+                with gr.Tab("🔭 OOD Feature Discovery"):
+                    gr.Markdown(
+                        "## OOD 特徴量探索\n\n"
+                        "OOD 検出後に境界付近のサンプルを訓練データに追加し、"
+                        "**追加特徴量候補**を一つずつ組み込んで再学習することで"
+                        "OOD データへの予測性能を向上させる特徴量を探索します。\n\n"
+                        "**想定用途**: 文献から得た新記述子・細分化記述子の有効性検証"
+                    )
+                    with gr.Row():
+                        disc_wf = gr.Dropdown(
+                            choices=["WF-LIN","WF-LASSO","WF-ARD","WF-RF","WF-XGB","WF-ENS"],
+                            value="WF-LIN",
+                            label="ワークフロー",
+                        )
+                        disc_fs = gr.Dropdown(
+                            choices=["FS_BASE","FS_THERMO","FS_SIZE","FS_ELECTRON","FS_ALL"],
+                            value="FS_BASE",
+                            label="特徴量セット",
+                        )
+                        disc_sp = gr.Dropdown(
+                            choices=["CompositionBlock","ElementExclusion","RandomCV","Holdout"],
+                            value="CompositionBlock",
+                            label="分割ポリシー",
+                        )
+                    with gr.Row():
+                        disc_n_ood = gr.Slider(
+                            minimum=0, maximum=50, value=0, step=1,
+                            label="OOD 追加サンプル上限 (0=全件)",
+                            info="0 のとき全 OOD フラグサンプルを対象にする",
+                        )
+                        disc_margin = gr.Slider(
+                            minimum=0.1, maximum=2.0, value=0.5, step=0.1,
+                            label="境界マージン係数",
+                            info="threshold × (1 ± margin) の範囲を境界サンプルとして取り込む",
+                        )
+                    with gr.Accordion("📂 追加特徴量 CSV アップロード", open=True):
+                        gr.Markdown(
+                            "元データと同じ行数・順序の CSV をアップロードしてください。\n"
+                            "各カラムが 1 つの候補特徴量として探索されます。\n"
+                            "文献由来の記述子や細分化した特徴量を想定しています。"
+                        )
+                        disc_csv_upload = gr.File(
+                            label="追加特徴量 CSV（任意）",
+                            file_types=[".csv"],
+                        )
+                        disc_col_select = gr.CheckboxGroup(
+                            choices=[],
+                            label="探索する特徴量カラムを選択",
+                            info="CSV 読み込み後に列名が表示されます",
+                        )
+                        disc_load_btn = gr.Button("CSV 読み込み", variant="secondary")
+                    disc_run_btn = gr.Button(
+                        "🔭 特徴量探索を実行", variant="primary", size="lg",
+                    )
+                    disc_progress = gr.HTML(value="")
+                    disc_summary_md = gr.Markdown(
+                        "*探索を実行すると結果が表示されます。*"
+                    )
+                    disc_result_table = gr.Dataframe(
+                        label="候補特徴量 × WF の探索結果（improvement 降順）",
+                        headers=["candidate_feature","workflow",
+                                  "baseline_rmse","ood_rmse","improvement",
+                                  "augmented_rmse","ood_r2","success"],
+                    )
+                    disc_compare_plot = gr.Plot(label="ベースライン vs 各候補の OOD RMSE 比較")
+
+                    def _disc_load_csv(csv_file):
+                        if csv_file is None:
+                            return gr.CheckboxGroup(choices=[], value=[])
+                        try:
+                            import pandas as _pd
+                            df = _pd.read_csv(csv_file.name)
+                            cols = list(df.columns)
+                            return gr.CheckboxGroup(choices=cols, value=cols)
+                        except Exception:
+                            return gr.CheckboxGroup(choices=[], value=[])
+
+                    disc_load_btn.click(
+                        fn=_disc_load_csv,
+                        inputs=[disc_csv_upload],
+                        outputs=[disc_col_select],
+                    )
+
+                    def _disc_run_cb(
+                        wf_name, fs_name, sp_name,
+                        n_ood, margin,
+                        csv_file, selected_cols,
+                        session,
+                    ):
+                        import math
+                        import numpy as _np
+                        import pandas as _pd
+                        import plotly.graph_objects as _go
+                        from extrapolation_discovery_platform.ood_feature_discovery import (
+                            run_feature_discovery,
+                        )
+
+                        features_df      = session.get("features_df")
+                        target           = session.get("target")
+                        compositions     = session.get("compositions_df")
+                        ood_results_dict = session.get("ood_results", {})
+
+                        if features_df is None or target is None:
+                            return "<p>先に Config & Run で解析を実行してください。</p>", "*データなし*", None, None
+
+                        ood_result = (ood_results_dict.get(fs_name)
+                                      or next(iter(ood_results_dict.values()), None))
+                        if ood_result is None:
+                            return "<p>OOD 結果が見つかりません。</p>", "*OOD 結果なし*", None, None
+
+                        ood_split    = session.get("ood_split_indices", {})
+                        ood_test_idx = None
+                        if fs_name in ood_split:
+                            _, ood_test_idx = ood_split[fs_name]
+                        elif ood_split:
+                            _, ood_test_idx = next(iter(ood_split.values()))
+                        if ood_test_idx is None:
+                            ood_test_idx = _np.arange(len(features_df))
+
+                        extra_df   = None
+                        candidates = []
+                        if csv_file is not None and selected_cols:
+                            try:
+                                extra_df   = _pd.read_csv(csv_file.name)
+                                candidates = [c for c in selected_cols if c in extra_df.columns]
+                            except Exception:
+                                pass
+
+                        sp_clean = sp_name.replace(" \u26a0\ufe0f(\u30ea\u30fc\u30af\u61b6\u5ff5)", "")
+
+                        try:
+                            disc = run_feature_discovery(
+                                workflow_names=[wf_name],
+                                feature_set_name=fs_name,
+                                split_policy=sp_clean,
+                                features_df=features_df,
+                                target=target,
+                                compositions_df=compositions,
+                                ood_result=ood_result,
+                                ood_test_idx=ood_test_idx,
+                                candidate_features=candidates,
+                                extra_features_df=extra_df,
+                                seed=42, n_folds=5, quick=True,
+                                n_ood_samples=int(n_ood),
+                                boundary_margin=float(margin),
+                            )
+                        except Exception as exc:
+                            return f"<p>Error: {exc}</p>", f"*失敗: {exc}*", None, None
+
+                        if not disc.success:
+                            return "<p>探索失敗</p>", "*" + disc.error_message[:200] + "*", None, None
+
+                        rows = []
+                        for r in disc.rounds:
+                            rows.append({
+                                "candidate_feature": r.candidate_feature or "(baseline)",
+                                "workflow":          r.workflow,
+                                "baseline_rmse":     round(r.baseline_rmse, 4) if math.isfinite(r.baseline_rmse) else None,
+                                "ood_rmse":          round(r.ood_rmse,      4) if math.isfinite(r.ood_rmse)      else None,
+                                "improvement":       round(r.improvement,   4) if math.isfinite(r.improvement)   else None,
+                                "augmented_rmse":    round(r.augmented_rmse,4) if math.isfinite(r.augmented_rmse)else None,
+                                "ood_r2":            round(r.ood_r2,        4) if math.isfinite(r.ood_r2)        else None,
+                                "success":           r.success,
+                            })
+                        df_res = _pd.DataFrame(rows)
+                        if "improvement" in df_res.columns:
+                            df_res = df_res.sort_values("improvement", ascending=False)
+
+                        if disc.best_feature:
+                            summary = (
+                                "**探索完了** " + str(len(disc.rounds)) + " ラウンド"
+                                + "  境界サンプル=" + str(disc.n_boundary_samples) + "\n\n"
+                                + "**最良特徴量**: `" + disc.best_feature + "`"
+                                + "  OOD RMSE 改善率: " + f"{disc.best_improvement:.1%}"
+                            )
+                        else:
+                            summary = "**探索完了** (追加特徴量候補なし — ベースラインのみ評価)"
+
+                        try:
+                            baseline_row = df_res[df_res["candidate_feature"] == "(baseline)"]
+                            cand_rows    = df_res[df_res["candidate_feature"] != "(baseline)"]
+                            fig = _go.Figure()
+                            if not baseline_row.empty and baseline_row.iloc[0]["baseline_rmse"] is not None:
+                                b = float(baseline_row.iloc[0]["baseline_rmse"])
+                                fig.add_hline(y=b, line_dash="dash", line_color="gray",
+                                              annotation_text="Baseline RMSE=" + f"{b:.4f}")
+                            if not cand_rows.empty:
+                                fig.add_bar(x=cand_rows["candidate_feature"],
+                                            y=cand_rows["ood_rmse"], name="OOD RMSE",
+                                            marker_color="steelblue")
+                            fig.update_layout(title="候補特徴量別 OOD RMSE",
+                                              xaxis_title="追加特徴量", yaxis_title="OOD RMSE",
+                                              height=400)
+                        except Exception:
+                            fig = None
+
+                        done_html = "<p>\u2705 \u63a2\u7d22\u5b8c\u4e86 (" + str(len(disc.rounds)) + "\u30e9\u30a6\u30f3\u30c9)</p>"
+                        return done_html, summary, df_res, fig
+
+                    disc_run_btn.click(
+                        fn=_disc_run_cb,
+                        inputs=[
+                            disc_wf, disc_fs, disc_sp,
+                            disc_n_ood, disc_margin,
+                            disc_csv_upload, disc_col_select,
+                            state,
+                        ],
+                        outputs=[
+                            disc_progress,
+                            disc_summary_md,
+                            disc_result_table,
+                            disc_compare_plot,
+                        ],
+                    )
 
             with gr.Tab("Literature"):
                 gr.Markdown(
@@ -4034,7 +4174,9 @@ def create_app() -> gr.Blocks:
             use_sp_cb: bool,
             use_sp_ee: bool,
             use_sp_rc: bool,
+            use_sp_ho: bool,
             n_folds_val: float,
+            test_size_val: float,
             session: Dict[str, Any],
         ) -> Generator:
             """Generator that yields incremental progress + state.
@@ -4258,6 +4400,8 @@ def create_app() -> gr.Blocks:
                     selected_sps.append("ElementExclusion")
                 if use_sp_rc:
                     selected_sps.append("RandomCV")
+                if use_sp_ho:
+                    selected_sps.append("Holdout")
                 if not selected_sps:
                     selected_sps = ["CompositionBlock", "ElementExclusion"]
                     log("No split policies selected; using CompositionBlock + ElementExclusion.")
@@ -4306,6 +4450,7 @@ def create_app() -> gr.Blocks:
                     leak_auto_exclude=use_leak_exclude,
                     leak_corr_threshold=leak_threshold,
                     n_folds=max(2, int(n_folds_val)),
+                    test_size=float(test_size_val),
                 )
 
                 # --- Real-time log capture via threading ---
@@ -4856,8 +5001,9 @@ def create_app() -> gr.Blocks:
                 leak_auto_exclude, leak_corr_threshold,
                 run_csv_upload, run_csv_target,
                 csv_feature_checks, csv_mode_radio,
-                sp_cb_check, sp_ee_check, sp_rc_check,
+                sp_cb_check, sp_ee_check, sp_rc_check, sp_ho_check,
                 n_folds_slider,
+                test_size_slider,
                 state,
             ],
             outputs=[

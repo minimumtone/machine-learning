@@ -231,6 +231,7 @@ class ExperimentRunner:
         leak_auto_exclude: bool = True,
         leak_corr_threshold: float = 0.85,
         n_folds: int = 5,
+        test_size: float = 0.2,
     ) -> None:
         self._seeds = seeds or [42, 123, 456]
         self._quick = quick
@@ -238,6 +239,7 @@ class ExperimentRunner:
         self._leak_auto_exclude = leak_auto_exclude
         self._leak_corr_threshold = leak_corr_threshold
         self._n_folds = max(2, int(n_folds))
+        self._test_size = float(test_size)
         self._exclude_elements = exclude_elements or ["Co", "Ni", "Ti"]
         self._n_workers = n_workers if n_workers is not None else os.cpu_count()
 
@@ -466,6 +468,7 @@ class ExperimentRunner:
                 leak_corr_threshold=self._leak_corr_threshold,
                 generic_csv_mode=_generic,
                 n_folds=self._n_folds,
+                test_size=self._test_size,
             )
             if not prep.success:
                 raise RuntimeError(f"Stage1 前処理失敗:\n{prep.error_message}")
