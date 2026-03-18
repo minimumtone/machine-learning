@@ -65,6 +65,10 @@ from extrapolation_discovery_platform.gui.plotly_charts import (
     plotly_metrics_comparison,
     plotly_ood_map,
     plotly_parity,
+    plotly_combo_rmse_heatmap,
+    plotly_combo_parity_grid,
+    plotly_combo_rmse_boxplot,
+    plotly_combo_train_test_scatter,
     plotly_parity_grid_by_algorithm,
     plotly_parity_per_algorithm,
     plotly_parity_train_test,
@@ -632,50 +636,137 @@ def _build_physical_interpretation_md(
 def _refresh_results_data(
     wf_filter: str, fs_filter: str, sp_filter: str,
     session: Dict[str, Any],
+    parity_sp: str = "All",
 ) -> Tuple:
+    """Results タブの全プロット・テーブルを更新する。
+
+    R² / RMSE は全 fold 集積データ点から直接計算（fold 平均は使わない）。
+    """
     try:
-        runs = session.get("runs", [])
+        from extrapolation_discovery_platform.gui.plotly_charts import (
+            plotly_combo_parity_grid,
+        )
+        from plotly.subplots import make_subplots as _msub
+        from sklearn.metrics import r2_score as _r2, mean_squared_error as _mse
+        from collections import defaultdict
+        import plotly.graph_objects as _go
+
+        runs   = session.get("runs", [])
         scores = session.get("validity_scores", [])
         ood_results = session.get("ood_results", {})
 
-        # Fix #11: dynamic filter choices from actual run data
-        wf_choices = ["All"] + sorted({r.workflow for r in runs})
+        wf_choices = ["All"] + sorted({r.workflow    for r in runs})
         fs_choices = ["All"] + sorted({r.feature_set for r in runs})
         sp_choices = ["All"] + sorted({r.split_policy for r in runs})
-
         v_df = validity_scores_to_dataframe(scores) if scores else pd.DataFrame()
 
         filtered = runs
         if wf_filter != "All":
-            filtered = [r for r in filtered if r.workflow == wf_filter]
+            filtered = [r for r in filtered if r.workflow    == wf_filter]
         if fs_filter != "All":
             filtered = [r for r in filtered if r.feature_set == fs_filter]
         if sp_filter != "All":
             filtered = [r for r in filtered if r.split_policy == sp_filter]
-
         r_df = runs_to_dataframe(filtered) if filtered else pd.DataFrame()
-        _target_name = session.get("target_col", "")
 
-        # アルゴリズム別パリティグリッド（メイン表示）
+        parity_sp_val = parity_sp if parity_sp else "All"
+
+        # ── メイン1: FS × WF パリティグリッド ────────────────────────────
         parity_grid_fig = (
-            plotly_parity_grid_by_algorithm(filtered, target_name=_target_name)
-            if filtered else None
+            plotly_combo_parity_grid(
+                runs,
+                split_filter=parity_sp_val,
+                target_name=session.get("target_col", ""),
+            )
+            if runs else None
         )
-        # アルゴリズム性能比較バーチャート
-        metrics_fig = (
-            plotly_metrics_comparison(filtered)
-            if filtered else None
-        )
-        # Train/Test split parity（過学習確認）
+
+        # ── メイン2: WF × FS ヒートマップ (R² | RMSE 並列) ───────────────
+        def _cell_metrics(run_list, sp_f="All"):
+            fl = [r for r in run_list if sp_f == "All" or r.split_policy == sp_f]
+            wfs = sorted({r.workflow    for r in fl})
+            fss = sorted({r.feature_set for r in fl})
+            cell = defaultdict(lambda: {"true": [], "pred": []})
+            seen = set()
+            for r in fl:
+                if r.y_test_true is None or r.y_test_pred is None:
+                    continue
+                ti = getattr(r, "test_indices", None)
+                for i in range(len(r.y_test_true)):
+                    key = (r.workflow, r.feature_set,
+                           int(ti[i]) if ti is not None else float(r.y_test_true[i]))
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    cell[(r.workflow, r.feature_set)]["true"].append(float(r.y_test_true[i]))
+                    cell[(r.workflow, r.feature_set)]["pred"].append(float(r.y_test_pred[i]))
+            r2_z, rmse_z, txt_r2, txt_rmse = [], [], [], []
+            for fs in fss:
+                rr, rm, tr, tm = [], [], [], []
+                for wf in wfs:
+                    d = cell[(wf, fs)]
+                    if len(d["true"]) < 2:
+                        rr.append(None); rm.append(None)
+                        tr.append("N/A"); tm.append("N/A")
+                        continue
+                    try:
+                        r2_v   = float(_r2(d["true"], d["pred"]))
+                        rmse_v = float(math.sqrt(_mse(d["true"], d["pred"])))
+                    except Exception:
+                        r2_v = rmse_v = None
+                    rr.append(r2_v); rm.append(rmse_v)
+                    warn = "⚠" if r2_v is not None and r2_v < 0 else ""
+                    tr.append(f"{r2_v:.3f}{warn}" if r2_v is not None else "N/A")
+                    tm.append(f"{rmse_v:.3f}"      if rmse_v is not None else "N/A")
+                r2_z.append(rr); rmse_z.append(rm)
+                txt_r2.append(tr); txt_rmse.append(tm)
+            return wfs, fss, r2_z, rmse_z, txt_r2, txt_rmse
+
+        wfs, fss, r2_z, rmse_z, txt_r2, txt_rmse = _cell_metrics(runs, parity_sp_val)
+        fs_labels = [f.replace("FS_", "") for f in fss]
+
+        if wfs and fss:
+            heat_fig = _msub(rows=1, cols=2,
+                             subplot_titles=["R² (高いほど良)", "RMSE (低いほど良)"],
+                             horizontal_spacing=0.14)
+            heat_fig.add_trace(_go.Heatmap(
+                z=r2_z, x=wfs, y=fs_labels,
+                text=txt_r2, texttemplate="%{text}", textfont=dict(size=9),
+                colorscale="RdYlGn", zmin=-1, zmax=1,
+                colorbar=dict(title="R²", thickness=10, len=0.7, x=0.44),
+                hovertemplate="WF:%{x} FS:%{y}<br>R²=%{text}<extra></extra>",
+            ), row=1, col=1)
+            heat_fig.add_trace(_go.Heatmap(
+                z=rmse_z, x=wfs, y=fs_labels,
+                text=txt_rmse, texttemplate="%{text}", textfont=dict(size=9),
+                colorscale="RdYlGn_r",
+                colorbar=dict(title="RMSE", thickness=10, len=0.7, x=1.0),
+                hovertemplate="WF:%{x} FS:%{y}<br>RMSE=%{text}<extra></extra>",
+            ), row=1, col=2)
+            heat_fig.update_layout(
+                title=dict(
+                    text=("WF × FS メトリクスヒートマップ "
+                          f"(Split={parity_sp_val})<br>"
+                          "<span style='font-size:10px;color:#666;'>"
+                          "全fold集積データから直接計算 / ⚠ は R²<0</span>"),
+                    font=dict(size=12),
+                ),
+                height=max(280, len(fss)*50 + 120),
+                margin=dict(t=80, b=60, l=80, r=20),
+            )
+            heat_fig.update_xaxes(tickangle=-35, tickfont=dict(size=9))
+            heat_fig.update_yaxes(tickfont=dict(size=9))
+            metrics_fig = heat_fig
+        else:
+            metrics_fig = None
+
+        # ── メイン3: Train vs Test 過学習マップ ──────────────────────────
         parity_train_test_fig = (
-            plotly_parity_train_test(filtered, target_name=_target_name)
-            if filtered else None
+            plotly_parity_train_test(runs, target_name=session.get("target_col", ""))
+            if runs else None
         )
 
-        # Physical interpretation + FS comparison
-        interp_md = _build_physical_interpretation_md(runs, scores, ood_results)
-
-        # FS comparison grouped bar chart
+        interp_md  = _build_physical_interpretation_md(runs, scores, ood_results)
         fs_bar_fig = plotly_fs_grouped_bar(runs) if runs else None
 
         return (
@@ -694,7 +785,6 @@ def _refresh_results_data(
             None, None, None,
             "*Error refreshing results — see server log.*", None,
         )
-
 
 def _refresh_ood_data(
     fs_key: str, session: Dict[str, Any],
@@ -2899,37 +2989,62 @@ def create_app() -> gr.Blocks:
                     "🔄 Refresh Results", variant="primary",
                 )
 
-                # ── 1. アルゴリズム別パリティグリッド（メイン） ──────────────
+                # ── ① RMSE ヒートマップ（FS × WF, SP ごとパネル） ────────────
                 gr.Markdown(
-                    "### 📊 アルゴリズム別パリティプロット\n"
-                    "各サブプロットに1アルゴリズムの全FS×分割ポリシーの予測を表示。"
-                    "対角線に近いほど精度が高い。"
+                    "### ① RMSE ヒートマップ（FS × WF × SP）\n"
+                    "セル値 = fold 平均 RMSE（小さいほど緑）。"
+                    "全組み合わせの性能を一覧できます。"
                 )
-                parity_grid_plot = gr.Plot(
-                    label="アルゴリズム別パリティグリッド",
-                )
+                combo_heatmap_plot = gr.Plot(label="RMSE ヒートマップ")
 
-                # ── 2. アルゴリズム性能比較バーチャート ──────────────────────
+                # ── ② パリティグリッド（行=FS / 列=WF / 色=SP） ───────────────
                 gr.Markdown(
-                    "### 📈 アルゴリズム性能比較 (RMSE / R²)\n"
-                    "mean ± std（特徴量セット×seed平均）。エラーバーで安定性を確認。"
+                    "### ② パリティグリッド（行=特徴量セット / 列=アルゴリズム）\n"
+                    "各セルに全 SP の散布点を色分けで重ね描き。"
+                    "SP フィルタで特定の分割ポリシーのみ表示できます。\n"
+                    "★ = 全組み合わせ中 RMSE 最小。⚠️ = R² < 0（fold 内分散が小さい）。"
                 )
-                metrics_compare_plot = gr.Plot(
-                    label="性能比較 (RMSE / R²)",
-                )
+                with gr.Row():
+                    parity_sp_filter = gr.Dropdown(
+                        choices=["All"],
+                        value="All",
+                        label="分割ポリシーで絞込 (SP Filter)",
+                        info="特定の SP のみパリティグリッドを表示する",
+                        scale=2,
+                    )
+                    gr.Markdown(
+                        "> **見方**: 行=特徴量セット（縦）、列=アルゴリズム（横）。"
+                        "右上の凡例で SP を色分け。対角線に近い点ほど精度が高い。"
+                        "★マークの行・列が最良の特徴量セット・アルゴリズムの組み合わせ。",
+                        scale=3,
+                    )
+                combo_parity_plot = gr.Plot(label="パリティグリッド（行=FS/列=WF/色=SP）")
+                # ダミーウィジェット（旧 parity_train_test_plot と outputs 互換を保つ）
+                parity_train_test_plot = gr.Plot(visible=False)
 
-                # ── 3. Train vs Test パリティ（過学習確認） ───────────────────
+                # ── ③ RMSE 箱ひげ図（fold 間ばらつき） ────────────────────────
                 gr.Markdown(
-                    "### 🔍 Train vs Test パリティ（過学習確認）\n"
-                    "左：訓練メトリクス / 右：検証予測。"
-                    "右の散らばりが大きいほど過学習の可能性。"
+                    "### ③ RMSE 分布（fold 間ばらつき）\n"
+                    "各箱 = (WF, FS) の全 fold の RMSE 分布。"
+                    "箱の幅が大きいほど fold 間でばらつきがある（不安定）。"
+                    "色 = 特徴量セット、x 軸 = アルゴリズム。"
                 )
-                parity_train_test_plot = gr.Plot(
-                    label="Train vs Test Parity",
-                )
+                combo_boxplot = gr.Plot(label="RMSE 分布（WF × FS × SP）")
 
-                # ── 4. 妥当性ランキングテーブル ──────────────────────────────
-                gr.Markdown("### 🏆 特徴量セット妥当性ランキング")
+                # ── ④ Train vs Test 過学習マップ ─────────────────────────────
+                gr.Markdown(
+                    "### ④ Train vs Test 過学習マップ\n"
+                    "1点 = 1 (WF, FS, SP) の fold 平均。"
+                    "対角線より上 → Test RMSE > Train RMSE（過学習の疑い）。"
+                    "色 = 分割ポリシー、形状 = アルゴリズム。"
+                )
+                combo_train_test_plot = gr.Plot(label="Train vs Test 過学習マップ")
+
+                # ── ⑤ 妥当性ランキングテーブル ──────────────────────────────
+                gr.Markdown(
+                    "### ⑤ 特徴量セット妥当性ランキング\n"
+                    "総合スコア（効果量・安定性・汎化性・リーク懸念）で降順ソート。"
+                )
                 validity_table = gr.Dataframe(label="Feature Validity Ranking")
 
                 # ── 5. 全Runテーブル ──────────────────────────────────────────
@@ -2961,15 +3076,19 @@ def create_app() -> gr.Blocks:
                 res_outputs = [
                     filter_wf, filter_fs, filter_sp,
                     validity_table, results_table,
-                    parity_grid_plot, metrics_compare_plot, parity_train_test_plot,
-                    results_interp_md, results_fs_bar_plot,
+                    combo_parity_plot,      # ① FS×WF パリティグリッド (全fold集積R²)
+                    combo_heatmap_plot,     # ② WF×FS ヒートマップ (R²|RMSE)
+                    parity_train_test_plot, # ③ Train vs Test 過学習マップ
+                    results_interp_md,      # 物理的考察 MD
+                    results_fs_bar_plot,    # FS比較棒グラフ
                 ]
 
                 def _refresh_results_and_model(
                     wf_f: str, fs_f: str, sp_f: str,
                     session: Dict[str, Any],
+                    parity_sp_f: str = "All",
                 ):
-                    base = _refresh_results_data(wf_f, fs_f, sp_f, session)
+                    base = _refresh_results_data(wf_f, fs_f, sp_f, session, parity_sp_f)
                     ms = session.get("model_selection_result")
                     if ms is not None:
                         ms_md = (
@@ -2985,17 +3104,17 @@ def create_app() -> gr.Blocks:
                         )
                     return (*base, ms_md)
 
-                res_outputs_with_ms = res_outputs + [model_sel_md]
+                res_outputs_with_ms = res_outputs + [model_sel_md]  # 11要素
 
                 res_refresh_btn.click(
                     fn=_refresh_results_and_model,
-                    inputs=[filter_wf, filter_fs, filter_sp, state],
+                    inputs=[filter_wf, filter_fs, filter_sp, state, parity_sp_filter],
                     outputs=res_outputs_with_ms,
                 )
-                for dropdown in [filter_wf, filter_fs, filter_sp]:
+                for dropdown in [filter_wf, filter_fs, filter_sp, parity_sp_filter]:
                     dropdown.change(
                         fn=_refresh_results_and_model,
-                        inputs=[filter_wf, filter_fs, filter_sp, state],
+                        inputs=[filter_wf, filter_fs, filter_sp, state, parity_sp_filter],
                         outputs=res_outputs_with_ms,
                     )
                 with gr.Accordion("📐 特徴量セット比較 & 特徴量選択", open=False):
@@ -3378,13 +3497,29 @@ def create_app() -> gr.Blocks:
 
                             # ── 完了ステータス表示 ────────────────────────────────────
                             if result.success:
+                                # 全 fold の予測点を集積して正確な R² を計算
+                                # （fold 平均 R² は CompositionBlock 分割で負になるため）
+                                try:
+                                    from sklearn.metrics import r2_score as _r2s
+                                    import numpy as _np_r2
+                                    _y_true_all, _y_pred_all = [], []
+                                    for _r in result.runs:
+                                        if _r.y_test_true is not None and _r.y_test_pred is not None:
+                                            _y_true_all.extend(_r.y_test_true.ravel())
+                                            _y_pred_all.extend(_r.y_test_pred.ravel())
+                                    if len(_y_true_all) >= 2:
+                                        _r2_global = float(_r2s(_y_true_all, _y_pred_all))
+                                    else:
+                                        _r2_global = result.r2_test_mean
+                                except Exception:
+                                    _r2_global = result.r2_test_mean
                                 progress_html = (
                                     f'<div style="padding:8px;background:#e8f5e9;'
                                     f'border-left:4px solid #4CAF50;border-radius:4px;">'
                                     f'✅ <b>{wf_name} / {fs_name} / {sp_name}</b> 完了 '
                                     f'({result.elapsed_sec:.1f}秒) — '
                                     f'RMSE={result.rmse_test_mean:.4f}, '
-                                    f'R²={result.r2_test_mean:.4f}'
+                                    f'R²={_r2_global:.4f}'
                                     f'</div>'
                                 )
                             else:
@@ -5016,10 +5151,12 @@ def create_app() -> gr.Blocks:
                 # Dashboard tab (fix #8)
                 kpi_runs, kpi_best_fs, kpi_best_score, kpi_ood_count,
                 integration_status, validity_plot, heatmap_plot,
-                # Results tab (fix #8) — algorithm grid + metrics compare + train/test
+                # Results tab — FS×WF parity grid + heatmap + train/test (全fold集積R²)
                 filter_wf, filter_fs, filter_sp,
                 validity_table, results_table,
-                parity_grid_plot, metrics_compare_plot, parity_train_test_plot,
+                combo_parity_plot,
+                combo_heatmap_plot,
+                parity_train_test_plot,
                 results_interp_md, results_fs_bar_plot,
                 # Model Selection results
                 model_sel_md,

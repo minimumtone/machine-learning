@@ -86,6 +86,7 @@ class IndividualRunResult:
     mae_test_mean: float = float("nan")
     r2_test_mean: float = float("nan")
     r2_test_std: float = float("nan")
+    r2_global: float = float("nan")  # 全 fold 集積での全体 R²
 
     # ── 個別ランのアーティファクト（係数・特徴量重要度など） ──────────────
     artifacts: Dict[str, Any] = field(default_factory=dict)
@@ -143,7 +144,9 @@ class IndividualRunResult:
             f"| RMSE (Test) | **{self.rmse_test_mean:.4f}** ± {self.rmse_test_std:.4f} |",
             f"| RMSE (Train) | {self.rmse_train_mean:.4f} |",
             f"| MAE (Test) | {self.mae_test_mean:.4f} |",
-            f"| R² (Test) | **{self.r2_test_mean:.4f}** ± {self.r2_test_std:.4f} |",
+            f"| R² (Test, 全体) | **{self.r2_global:.4f}** |",
+            f"| R² (Test, fold平均) | {self.r2_test_mean:.4f} ± {self.r2_test_std:.4f} |",
+            f"| ※ CompositionBlock等ではfold平均R²<0になりますが全体R²が正しい指標です | |",
         ]
 
         if self.leak_suspects:
@@ -475,6 +478,19 @@ def run_individual(
         result.mae_test_mean   = train_res.mae_test_mean
         result.r2_test_mean    = train_res.r2_test_mean
         result.r2_test_std     = train_res.r2_test_std
+
+        # 全 fold を集積した全体 R² を計算（fold平均R²はCompositionBlockで負になるため）
+        try:
+            from sklearn.metrics import r2_score as _r2s
+            _yt, _yp = [], []
+            for _r in runs:
+                if _r.y_test_true is not None and _r.y_test_pred is not None:
+                    _yt.extend(_r.y_test_true.ravel())
+                    _yp.extend(_r.y_test_pred.ravel())
+            if len(_yt) >= 2:
+                result.r2_global = float(_r2s(_yt, _yp))
+        except Exception:
+            result.r2_global = result.r2_test_mean
 
         # ── アーティファクト集約（最後の fold を代表に） ─────────────
         if runs and runs[-1].artifacts:
