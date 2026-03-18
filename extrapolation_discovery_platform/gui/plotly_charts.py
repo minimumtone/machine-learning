@@ -2708,26 +2708,22 @@ def plotly_combo_parity_grid(
     runs: List[Any],
     split_filter: str = "All",
     target_name: str = "",
-    max_wf: int = 8,
-    max_fs: int = 8,
+    n_cols: int = 3,
+    max_fs: int = 12,
 ) -> go.Figure:
-    """FS × WF のパリティ散布図マトリクス。
+    """FS × WF のパリティ散布図グリッド（3列固定）。
 
-    - 行 = Feature Set、列 = Workflow
-    - 各セルに全 fold 集積の (y_true, y_pred) 散布図
-    - 色 = Split Policy（異なるマーカーで重ねて表示）
-    - R² / RMSE はセル内データ点から直接再計算（fold 平均ではない）
+    全 (FS, WF) の組み合わせを 1 次元に並べ、n_cols 列で折り返す。
+    縦長になっても各セルを大きく保ち、読みやすさを優先する。
 
-    Parameters
-    ----------
-    runs : list of RunResult
-    split_filter : str
-        "All" または特定の split policy 名でフィルタ
+    - 各セルの R² / RMSE は全 fold 集積データ点から直接計算
+    - 色 = Split Policy（重複サンプルは seen セットで除去）
+    - EE (ElementExclusion) は複数 fold で同一サンプルが重複するため
+      seen による dedup 後の点数 < CB の点数になることがある（仕様）
     """
     from plotly.subplots import make_subplots
     from sklearn.metrics import r2_score as _r2, mean_squared_error as _mse
 
-    # ── フィルタ ──────────────────────────────────────────────────────────
     filtered = runs
     if split_filter != "All":
         filtered = [r for r in runs if r.split_policy == split_filter]
@@ -2737,12 +2733,10 @@ def plotly_combo_parity_grid(
         fig.update_layout(title="データなし（フィルタ条件に合致する run がありません）")
         return fig
 
-    # ── 軸ラベル一覧（出現順でソート） ────────────────────────────────────
-    wf_order = sorted({r.workflow    for r in filtered})[:max_wf]
+    wf_order = sorted({r.workflow    for r in filtered})
     fs_order = sorted({r.feature_set for r in filtered})[:max_fs]
     sp_order = sorted({r.split_policy for r in filtered})
 
-    # split ごとの色・マーカー
     SP_STYLES = {
         "CompositionBlock":  {"color": "#2196F3", "symbol": "circle"},
         "ElementExclusion":  {"color": "#FF5722", "symbol": "diamond"},
@@ -2752,14 +2746,19 @@ def plotly_combo_parity_grid(
     def sp_style(sp):
         return SP_STYLES.get(sp, {"color": "#888888", "symbol": "circle"})
 
-    n_rows = len(fs_order)
-    n_cols = len(wf_order)
-    if n_rows == 0 or n_cols == 0:
+    # 全 (FS, WF) の組み合わせを順番に並べる
+    # 並び順: FS が外ループ、WF が内ループ → FS ごとに WF をまとめて表示
+    cells = [(fs, wf) for fs in fs_order for wf in wf_order]
+    n_cells = len(cells)
+    if n_cells == 0:
         fig = go.Figure()
         fig.update_layout(title="データなし")
         return fig
 
-    # ── データ収集: {(wf, fs, sp)} → {true, pred} ─────────────────────────
+    n_cols = min(n_cols, n_cells)
+    n_rows = math.ceil(n_cells / n_cols)
+
+    # データ収集: {(wf, fs, sp)} → {true, pred}
     from collections import defaultdict
     cell_data: dict = defaultdict(lambda: defaultdict(lambda: {"true": [], "pred": []}))
     seen: set = set()
@@ -2776,177 +2775,158 @@ def plotly_combo_parity_grid(
             if key in seen:
                 continue
             seen.add(key)
-            d = cell_data[(r.workflow, r.feature_set)][r.split_policy]
-            d["true"].append(float(r.y_test_true[i]))
-            d["pred"].append(float(r.y_test_pred[i]))
+            cell_data[(r.feature_set, r.workflow)][r.split_policy]["true"].append(float(r.y_test_true[i]))
+            cell_data[(r.feature_set, r.workflow)][r.split_policy]["pred"].append(float(r.y_test_pred[i]))
 
-    # ── サブプロットタイトル（WF 名のみ） ────────────────────────────────
-    subplot_titles = [wf for wf in wf_order]   # 1行目列ヘッダー相当
+    # サブプロットタイトル（FS + WF の組み合わせ）
+    subplot_titles = [
+        f"<b>{fs.replace('FS_','')}</b> / {wf}"
+        for fs, wf in cells
+    ]
+    # 空白パディング（最後の行が埋まらない場合）
+    n_pad = n_cols * n_rows - n_cells
+    subplot_titles += [""] * n_pad
 
     fig = make_subplots(
         rows=n_rows, cols=n_cols,
-        subplot_titles=None,
-        horizontal_spacing=max(0.03, 0.6 / n_cols),
-        vertical_spacing=max(0.06, 1.0 / n_rows),
+        subplot_titles=subplot_titles,
+        horizontal_spacing=max(0.04, 0.6 / n_cols),
+        vertical_spacing=max(0.08, 1.2 / n_rows),
         shared_xaxes=False, shared_yaxes=False,
     )
 
     shown_sp: set = set()
 
-    for fi, fs in enumerate(fs_order):
-        for wi, wf in enumerate(wf_order):
-            row = fi + 1
-            col = wi + 1
-            sp_dict = cell_data[(wf, fs)]
+    for ci, (fs, wf) in enumerate(cells):
+        row = ci // n_cols + 1
+        col = ci % n_cols + 1
 
-            # 全 split をまとめた点群で R² / RMSE を計算
-            all_true, all_pred = [], []
-            for sp_d in sp_dict.values():
-                all_true.extend(sp_d["true"])
-                all_pred.extend(sp_d["pred"])
+        sp_dict = cell_data[(fs, wf)]
 
-            if len(all_true) >= 2:
-                try:
-                    r2_val   = float(_r2(all_true, all_pred))
-                    rmse_val = float(math.sqrt(_mse(all_true, all_pred)))
-                except Exception:
-                    r2_val = rmse_val = float("nan")
-            else:
-                r2_val = rmse_val = float("nan")
+        # 全 split をまとめた R² / RMSE
+        all_true, all_pred = [], []
+        for sp_d in sp_dict.values():
+            all_true.extend(sp_d["true"])
+            all_pred.extend(sp_d["pred"])
 
-            r2_str   = f"{r2_val:.3f}"   if math.isfinite(r2_val)   else "N/A"
-            rmse_str = f"{rmse_val:.3f}" if math.isfinite(rmse_val) else "N/A"
-            r2_warn  = " ⚠" if math.isfinite(r2_val) and r2_val < 0 else ""
-
-            # y=x 参照線
-            if all_true:
-                lo = min(min(all_true), min(all_pred))
-                hi = max(max(all_true), max(all_pred))
-                mg = (hi - lo) * 0.05 if hi > lo else 0.1
-                fig.add_trace(go.Scatter(
-                    x=[lo - mg, hi + mg], y=[lo - mg, hi + mg],
-                    mode="lines",
-                    line=dict(color="black", dash="dash", width=0.8),
-                    showlegend=False,
-                ), row=row, col=col)
-
-            # split ごとに色分けして点を追加
-            for sp in sp_order:
-                if sp not in sp_dict or not sp_dict[sp]["true"]:
-                    continue
-                sty = sp_style(sp)
-                show_legend = sp not in shown_sp
-                shown_sp.add(sp)
-                d = sp_dict[sp]
-                fig.add_trace(go.Scatter(
-                    x=d["true"], y=d["pred"],
-                    mode="markers",
-                    marker=dict(
-                        color=sty["color"],
-                        symbol=sty["symbol"],
-                        size=6, opacity=0.6,
-                        line=dict(width=0.4, color="rgba(0,0,0,0.4)"),
-                    ),
-                    name=sp,
-                    legendgroup=sp,
-                    showlegend=show_legend,
-                    hovertemplate=(
-                        f"<b>{wf} / {fs}</b><br>"
-                        f"Split: {sp}<br>"
-                        "True: %{x:.3f}<br>Pred: %{y:.3f}"
-                        "<extra></extra>"
-                    ),
-                ), row=row, col=col)
-
-            # セル注釈（左上に FS 名、右下に R²/RMSE）
-            # FS ラベルは左端列のみ
-            ax_key = f"xaxis{(fi * n_cols + wi + 1) if (fi * n_cols + wi + 1) > 1 else ''}"
-            ay_key = f"yaxis{(fi * n_cols + wi + 1) if (fi * n_cols + wi + 1) > 1 else ''}"
-
-            # axis タイトル
-            if col == 1:
-                fig.update_yaxes(
-                    title_text=fs.replace("FS_", ""),
-                    title_font=dict(size=11), tickfont=dict(size=9),
-                    row=row, col=col,
-                )
-            else:
-                fig.update_yaxes(tickfont=dict(size=9), row=row, col=col)
-
-            if row == 1:
-                # 列ヘッダー相当は annotation で付ける
-                pass
-            fig.update_xaxes(tickfont=dict(size=9), row=row, col=col)
-
-    # ── WF 列ヘッダー annotation（最上段のサブプロット上に追加） ─────────
-    # subplots の paper 座標系に注釈を配置
-    col_width = 1.0 / n_cols
-    row_height = 1.0 / n_rows
-    for wi, wf in enumerate(wf_order):
-        x_center = (wi + 0.5) * col_width
-        fig.add_annotation(
-            text=f"<b>{wf}</b>",
-            xref="paper", yref="paper",
-            x=x_center, y=1.02,
-            showarrow=False,
-            font=dict(size=12, color="#333"),
-            xanchor="center", yanchor="bottom",
-        )
-
-    # ── 各セルの R²/RMSE 注釈 ───────────────────────────────────────────
-    for fi, fs in enumerate(fs_order):
-        for wi, wf in enumerate(wf_order):
-            sp_dict = cell_data[(wf, fs)]
-            all_true, all_pred = [], []
-            for sp_d in sp_dict.values():
-                all_true.extend(sp_d["true"])
-                all_pred.extend(sp_d["pred"])
-            if len(all_true) < 2:
-                continue
+        if len(all_true) >= 2:
             try:
                 r2_val   = float(_r2(all_true, all_pred))
                 rmse_val = float(math.sqrt(_mse(all_true, all_pred)))
             except Exception:
-                continue
-            r2_str   = f"{r2_val:.3f}"   if math.isfinite(r2_val)   else "N/A"
-            rmse_str = f"{rmse_val:.3f}" if math.isfinite(rmse_val) else "N/A"
-            r2_warn  = "⚠" if math.isfinite(r2_val) and r2_val < 0 else ""
+                r2_val = rmse_val = float("nan")
+        else:
+            r2_val = rmse_val = float("nan")
 
-            # paper 座標系でセルの右下
-            x_pos = (wi + 1) * col_width - 0.01
-            y_pos = (n_rows - fi - 1) * row_height + 0.01
-            fig.add_annotation(
-                text=f"R²={r2_str}{r2_warn}<br>RMSE={rmse_str}",
-                xref="paper", yref="paper",
-                x=x_pos, y=y_pos,
-                showarrow=False,
-                font=dict(size=9),
-                xanchor="right", yanchor="bottom",
-                bgcolor="rgba(255,255,255,0.82)",
-                bordercolor="rgba(0,0,0,0.15)",
-                borderwidth=0.5,
-                borderpad=2,
+        r2_str   = f"{r2_val:.3f}"   if math.isfinite(r2_val)   else "N/A"
+        rmse_str = f"{rmse_val:.3f}" if math.isfinite(rmse_val) else "N/A"
+        r2_warn  = "⚠" if math.isfinite(r2_val) and r2_val < 0 else ""
+
+        # y=x 参照線
+        if all_true:
+            lo = min(min(all_true), min(all_pred))
+            hi = max(max(all_true), max(all_pred))
+            mg = (hi - lo) * 0.05 if hi > lo else 0.1
+            fig.add_trace(go.Scatter(
+                x=[lo - mg, hi + mg], y=[lo - mg, hi + mg],
+                mode="lines",
+                line=dict(color="black", dash="dash", width=0.8),
+                showlegend=False,
+            ), row=row, col=col)
+
+        # split ごとに色分けして散布図を追加
+        for sp in sp_order:
+            if sp not in sp_dict or not sp_dict[sp]["true"]:
+                continue
+            sty = sp_style(sp)
+            show_legend = sp not in shown_sp
+            shown_sp.add(sp)
+            d = sp_dict[sp]
+            n_pts = len(d["true"])
+            fig.add_trace(go.Scatter(
+                x=d["true"], y=d["pred"],
+                mode="markers",
+                marker=dict(
+                    color=sty["color"],
+                    symbol=sty["symbol"],
+                    size=6, opacity=0.6,
+                    line=dict(width=0.4, color="rgba(0,0,0,0.4)"),
+                ),
+                name=sp,
+                legendgroup=sp,
+                showlegend=show_legend,
+                customdata=[[n_pts]] * n_pts,
+                hovertemplate=(
+                    f"<b>{fs.replace('FS_','')} / {wf}</b><br>"
+                    f"Split: {sp} (n=%{{customdata[0]}}<br>"
+                    "True: %{x:.3f}<br>Pred: %{y:.3f}"
+                    "<extra></extra>"
+                ),
+            ), row=row, col=col)
+
+        # 軸ラベル（左端列のみ y ラベル）
+        if col == 1:
+            fig.update_yaxes(
+                title_text="予測値",
+                title_font=dict(size=10), tickfont=dict(size=9),
+                row=row, col=col,
             )
+        else:
+            fig.update_yaxes(tickfont=dict(size=9), row=row, col=col)
+        fig.update_xaxes(
+            title_text="実測値" if row == n_rows else "",
+            title_font=dict(size=10), tickfont=dict(size=9),
+            row=row, col=col,
+        )
+
+    # 各セルの R²/RMSE を subplot タイトル注釈で補足
+    # make_subplots が生成したタイトル注釈を更新
+    annots = list(fig.layout.annotations)
+    for ci, (fs, wf) in enumerate(cells):
+        sp_dict = cell_data[(fs, wf)]
+        all_true, all_pred = [], []
+        for sp_d in sp_dict.values():
+            all_true.extend(sp_d["true"])
+            all_pred.extend(sp_d["pred"])
+        if len(all_true) < 2:
+            continue
+        try:
+            r2_val   = float(_r2(all_true, all_pred))
+            rmse_val = float(math.sqrt(_mse(all_true, all_pred)))
+        except Exception:
+            continue
+        r2_warn = "⚠" if math.isfinite(r2_val) and r2_val < 0 else ""
+        # subplot タイトルの index = ci（make_subplots が同順で生成）
+        if ci < len(annots):
+            existing = annots[ci].text or ""
+            annots[ci].update(
+                text=(existing + f"<br><span style='font-size:9px;color:#555;'>"
+                      f"R²={r2_val:.3f}{r2_warn}  RMSE={rmse_val:.3f}</span>"),
+                font=dict(size=11),
+            )
+    fig.update_layout(annotations=annots)
 
     cell_px = 280
     fig.update_layout(
         title=dict(
-            text="パリティグリッド: 行=FS / 列=WF / 色=Split<br>"
-                 "<span style='font-size:11px;color:#666;'>"
-                 "R² / RMSE は各セルの全fold集積データ点から直接計算</span>",
+            text=(
+                "パリティグリッド (3列)  FS / WF × Split Policy<br>"
+                "<span style='font-size:11px;color:#666;'>"
+                "R² / RMSE は各セルの全fold集積データから直接計算。"
+                "EE は複数fold重複サンプルを1点として表示</span>"
+            ),
             font=dict(size=14),
         ),
-        height=max(300, n_rows * cell_px + 80),
-        width=max(400, n_cols * cell_px + 100),
+        height=max(400, n_rows * cell_px + 100),
         showlegend=True,
         legend=dict(
             title="Split Policy",
             orientation="h",
-            yanchor="bottom", y=-0.08,
+            yanchor="bottom", y=-0.04,
             xanchor="center", x=0.5,
             font=dict(size=12),
         ),
-        margin=dict(t=90, b=80, l=80, r=20),
+        margin=dict(t=100, b=100, l=80, r=20),
     )
     return fig
 
