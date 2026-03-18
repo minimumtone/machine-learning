@@ -2786,8 +2786,8 @@ def plotly_combo_parity_grid(
     fig = make_subplots(
         rows=n_rows, cols=n_cols,
         subplot_titles=None,
-        horizontal_spacing=max(0.02, 0.5 / n_cols),
-        vertical_spacing=max(0.04, 0.8 / n_rows),
+        horizontal_spacing=max(0.03, 0.6 / n_cols),
+        vertical_spacing=max(0.06, 1.0 / n_rows),
         shared_xaxes=False, shared_yaxes=False,
     )
 
@@ -2844,8 +2844,8 @@ def plotly_combo_parity_grid(
                     marker=dict(
                         color=sty["color"],
                         symbol=sty["symbol"],
-                        size=4, opacity=0.55,
-                        line=dict(width=0.3, color="rgba(0,0,0,0.4)"),
+                        size=6, opacity=0.6,
+                        line=dict(width=0.4, color="rgba(0,0,0,0.4)"),
                     ),
                     name=sp,
                     legendgroup=sp,
@@ -2867,16 +2867,16 @@ def plotly_combo_parity_grid(
             if col == 1:
                 fig.update_yaxes(
                     title_text=fs.replace("FS_", ""),
-                    title_font=dict(size=9), tickfont=dict(size=7),
+                    title_font=dict(size=11), tickfont=dict(size=9),
                     row=row, col=col,
                 )
             else:
-                fig.update_yaxes(tickfont=dict(size=7), row=row, col=col)
+                fig.update_yaxes(tickfont=dict(size=9), row=row, col=col)
 
             if row == 1:
                 # 列ヘッダー相当は annotation で付ける
                 pass
-            fig.update_xaxes(tickfont=dict(size=7), row=row, col=col)
+            fig.update_xaxes(tickfont=dict(size=9), row=row, col=col)
 
     # ── WF 列ヘッダー annotation（最上段のサブプロット上に追加） ─────────
     # subplots の paper 座標系に注釈を配置
@@ -2889,7 +2889,7 @@ def plotly_combo_parity_grid(
             xref="paper", yref="paper",
             x=x_center, y=1.02,
             showarrow=False,
-            font=dict(size=10),
+            font=dict(size=12, color="#333"),
             xanchor="center", yanchor="bottom",
         )
 
@@ -2920,21 +2920,21 @@ def plotly_combo_parity_grid(
                 xref="paper", yref="paper",
                 x=x_pos, y=y_pos,
                 showarrow=False,
-                font=dict(size=7),
+                font=dict(size=9),
                 xanchor="right", yanchor="bottom",
-                bgcolor="rgba(255,255,255,0.75)",
+                bgcolor="rgba(255,255,255,0.82)",
                 bordercolor="rgba(0,0,0,0.15)",
                 borderwidth=0.5,
                 borderpad=2,
             )
 
-    cell_px = 180
+    cell_px = 280
     fig.update_layout(
         title=dict(
             text="パリティグリッド: 行=FS / 列=WF / 色=Split<br>"
                  "<span style='font-size:11px;color:#666;'>"
                  "R² / RMSE は各セルの全fold集積データ点から直接計算</span>",
-            font=dict(size=13),
+            font=dict(size=14),
         ),
         height=max(300, n_rows * cell_px + 80),
         width=max(400, n_cols * cell_px + 100),
@@ -2944,9 +2944,9 @@ def plotly_combo_parity_grid(
             orientation="h",
             yanchor="bottom", y=-0.08,
             xanchor="center", x=0.5,
-            font=dict(size=10),
+            font=dict(size=12),
         ),
-        margin=dict(t=80, b=60, l=60, r=20),
+        margin=dict(t=90, b=80, l=80, r=20),
     )
     return fig
 
