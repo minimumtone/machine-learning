@@ -3005,19 +3005,19 @@ def create_app() -> gr.Blocks:
                     "★ = 全組み合わせ中 RMSE 最小。⚠️ = R² < 0（fold 内分散が小さい）。"
                 )
                 with gr.Row():
-                    parity_sp_filter = gr.Dropdown(
-                        choices=["All"],
-                        value="All",
-                        label="分割ポリシーで絞込 (SP Filter)",
-                        info="特定の SP のみパリティグリッドを表示する",
-                        scale=2,
-                    )
-                    gr.Markdown(
-                        "> **見方**: 行=特徴量セット（縦）、列=アルゴリズム（横）。"
-                        "右上の凡例で SP を色分け。対角線に近い点ほど精度が高い。"
-                        "★マークの行・列が最良の特徴量セット・アルゴリズムの組み合わせ。",
-                        scale=3,
-                    )
+                    with gr.Column(scale=2):
+                        parity_sp_filter = gr.Dropdown(
+                            choices=["All"],
+                            value="All",
+                            label="分割ポリシーで絞込 (SP Filter)",
+                            info="特定の SP のみパリティグリッドを表示する",
+                        )
+                    with gr.Column(scale=3):
+                        gr.Markdown(
+                            "> **見方**: 行=特徴量セット（縦）、列=アルゴリズム（横）。"
+                            "右上の凡例で SP を色分け。対角線に近い点ほど精度が高い。"
+                            "★マークの行・列が最良の特徴量セット・アルゴリズムの組み合わせ。",
+                        )
                 combo_parity_plot = gr.Plot(label="パリティグリッド（行=FS/列=WF/色=SP）")
                 # ダミーウィジェット（旧 parity_train_test_plot と outputs 互換を保つ）
                 parity_train_test_plot = gr.Plot(visible=False)
