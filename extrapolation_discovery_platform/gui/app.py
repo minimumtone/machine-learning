@@ -650,6 +650,7 @@ def _refresh_results_data(
         from sklearn.metrics import r2_score as _r2, mean_squared_error as _mse
         from collections import defaultdict
         import plotly.graph_objects as _go
+        import math
 
         runs   = session.get("runs", [])
         scores = session.get("validity_scores", [])
@@ -1453,12 +1454,73 @@ def _handle_generic_csv(
         num_df = num_df.astype("float64")
         parts.append(num_df)
 
-    # One-hot encode string columns
+    # 文字列列 → 元素記号列と判定してMAGPIE/周期律表プロパティに変換
+    # ワンホットベクトルは元素間の化学的類似性を失うため使用しない。
+    # _ElementDB に登録されている元素なら周期律表ベース記述子を付与し、
+    # 未知の文字列列はスキップする（警告ログのみ）。
     if string_feat_cols:
+        from extrapolation_discovery_platform.features import _ElementDB
+
+        # MAGPIEスタイルで使う元素プロパティキーとその日本語説明
+        _ELEM_PROPS = [
+            ("Z",            "atomic_number"),
+            ("vec",          "valence_electron_count"),
+            ("en",           "electronegativity"),
+            ("r",            "atomic_radius_A"),
+            ("Tm",           "melting_point_K"),
+            ("mass",         "atomic_mass"),
+            ("d_elec",       "d_electrons"),
+            ("B",            "bulk_modulus_GPa"),
+            ("Vm",           "atomic_volume_A3"),
+            ("mendeleev_no", "mendeleev_number"),
+            ("column",       "periodic_group"),
+            ("row",          "periodic_period"),
+            ("cov_r",        "covalent_radius_pm"),
+            ("Ns_val",       "valence_s"),
+            ("Np_val",       "valence_p"),
+            ("Nd_val",       "valence_d"),
+            ("Nf_val",       "valence_f"),
+            ("magmom",       "magnetic_moment_muB"),
+        ]
+
         for col in string_feat_cols:
-            s = raw_valid[col].fillna("_NA_").astype(str)
-            dummies = pd.get_dummies(s, prefix=col, dtype="float64")
-            parts.append(dummies)
+            s = raw_valid[col].fillna("").astype(str)
+            # 列の値が元素記号かどうか確認（過半数が _ElementDB に存在）
+            unique_vals = [v for v in s.unique() if v and v != "nan"]
+            n_elem = sum(1 for v in unique_vals if _ElementDB.get(v) is not None)
+            if len(unique_vals) == 0 or n_elem / max(len(unique_vals), 1) < 0.5:
+                logger.warning(
+                    "列 '%s' は元素記号列として認識できませんでした（スキップ）。"
+                    "元素記号以外の文字列列はサポートしません。", col
+                )
+                continue
+
+            # 各行の元素記号を周期律表プロパティに変換
+            prop_records = []
+            for elem_sym in s:
+                elem_data = _ElementDB.get(elem_sym) if elem_sym else None
+                row_props: dict = {}
+                for key, colname in _ELEM_PROPS:
+                    if elem_data is not None and key in elem_data:
+                        val = elem_data[key]
+                        # space_group などの非数値は除外
+                        row_props[f"{col}__{colname}"] = float(val) if isinstance(val, (int, float)) else float("nan")
+                    else:
+                        row_props[f"{col}__{colname}"] = float("nan")
+                prop_records.append(row_props)
+
+            prop_df = pd.DataFrame(prop_records, dtype="float64")
+            # NaN を列中央値で埋める
+            for c in prop_df.columns:
+                if prop_df[c].isna().any():
+                    med = prop_df[c].median()
+                    prop_df[c] = prop_df[c].fillna(med if pd.notna(med) else 0.0)
+
+            parts.append(prop_df)
+            logger.info(
+                "列 '%s' を MAGPIE/周期律表プロパティ %d 列に変換しました。",
+                col, prop_df.shape[1],
+            )
 
     if not parts:
         return (
@@ -3016,42 +3078,24 @@ def create_app() -> gr.Blocks:
                         gr.Markdown(
                             "> **見方**: 行=特徴量セット（縦）、列=アルゴリズム（横）。"
                             "右上の凡例で SP を色分け。対角線に近い点ほど精度が高い。"
-                            "★マークの行・列が最良の特徴量セット・アルゴリズムの組み合わせ。",
+                            "★マークの行・列が最良の特徴量セット・アルゴリズムの組み合わせ。"
                         )
                 combo_parity_plot = gr.Plot(label="パリティグリッド（行=FS/列=WF/色=SP）")
                 # ダミーウィジェット（旧 parity_train_test_plot と outputs 互換を保つ）
                 parity_train_test_plot = gr.Plot(visible=False)
 
-                # ── ③ RMSE 箱ひげ図（fold 間ばらつき） ────────────────────────
-                gr.Markdown(
-                    "### ③ RMSE 分布（fold 間ばらつき）\n"
-                    "各箱 = (WF, FS) の全 fold の RMSE 分布。"
-                    "箱の幅が大きいほど fold 間でばらつきがある（不安定）。"
-                    "色 = 特徴量セット、x 軸 = アルゴリズム。"
-                )
-                combo_boxplot = gr.Plot(label="RMSE 分布（WF × FS × SP）")
-
-                # ── ④ Train vs Test 過学習マップ ─────────────────────────────
-                gr.Markdown(
-                    "### ④ Train vs Test 過学習マップ\n"
-                    "1点 = 1 (WF, FS, SP) の fold 平均。"
-                    "対角線より上 → Test RMSE > Train RMSE（過学習の疑い）。"
-                    "色 = 分割ポリシー、形状 = アルゴリズム。"
-                )
-                combo_train_test_plot = gr.Plot(label="Train vs Test 過学習マップ")
-
-                # ── ⑤ 妥当性ランキングテーブル ──────────────────────────────
+                # ── ③ 妥当性ランキングテーブル ──────────────────────────────
                 gr.Markdown(
                     "### ⑤ 特徴量セット妥当性ランキング\n"
                     "総合スコア（効果量・安定性・汎化性・リーク懸念）で降順ソート。"
                 )
                 validity_table = gr.Dataframe(label="Feature Validity Ranking")
 
-                # ── 5. 全Runテーブル ──────────────────────────────────────────
+                # ── ④ 全Runテーブル ──────────────────────────────────────────
                 with gr.Accordion("全Runテーブル (All Runs)", open=False):
                     results_table = gr.Dataframe(label="Run Results")
 
-                # ── 6. FS比較・物理的考察 ─────────────────────────────────────
+                # ── ⑤ FS比較・物理的考察 ─────────────────────────────────────
                 with gr.Accordion(
                     "物理的考察 & FS比較サマリー", open=False,
                 ):

@@ -726,7 +726,7 @@ def plotly_parity_train_test(
         # Collect train predictions if stored in artifacts, otherwise skip
         tr_true: List[float] = []
         tr_pred: List[float] = []
-        for r in wf_groups.get(wf, []):
+        for r in wf_groups_rmse.get(wf, []):
             artifacts = getattr(r, "artifacts", {})
             residuals = artifacts.get("residuals_test", [])
             if r.y_test_true is not None and r.y_test_pred is not None:
