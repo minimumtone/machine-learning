@@ -2790,8 +2790,11 @@ def plotly_combo_parity_grid(
     fig = make_subplots(
         rows=n_rows, cols=n_cols,
         subplot_titles=subplot_titles,
-        horizontal_spacing=max(0.04, 0.6 / n_cols),
-        vertical_spacing=max(0.08, 1.2 / n_rows),
+        horizontal_spacing=min(0.15, max(0.03, 0.4 / n_cols)),
+        vertical_spacing=min(
+            (0.95 / (n_rows - 1)) if n_rows > 1 else 0.1,  # plotly 上限
+            max(0.04, 0.8 / n_rows),
+        ),
         shared_xaxes=False, shared_yaxes=False,
     )
 
