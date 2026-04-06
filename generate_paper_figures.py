@@ -273,7 +273,7 @@ def fig_b2_vs_pauling():
     common = sorted(set(rd) & set(PAULING_RADII))
     opt = [rd[e] for e in common]
     paul = [PAULING_RADII[e] for e in common]
-    alkali_set = {"K", "Rb", "Cs"}
+    alkali_set = {"Li", "Rb", "Cs"}
     fig, ax = plt.subplots(figsize=(7, 7))
     ox_n, oy_n, ox_o, oy_o, labels_o = [], [], [], [], []
     for e, x, y in zip(common, paul, opt):
@@ -282,7 +282,7 @@ def fig_b2_vs_pauling():
         else:
             ox_n.append(x); oy_n.append(y)
     ax.scatter(ox_n, oy_n, s=50, c="steelblue", alpha=0.7, label="Other elements")
-    ax.scatter(ox_o, oy_o, s=80, c="red", marker="^", label="Alkali metals (K, Rb, Cs)", zorder=5)
+    ax.scatter(ox_o, oy_o, s=80, c="red", marker="^", label="Alkali metals (Li, Rb, Cs)", zorder=5)
     for e, x, y in zip(labels_o, ox_o, oy_o):
         ax.annotate(e, (x, y), textcoords="offset points", xytext=(5, -10), fontsize=11, color="red")
     mn, mx = 0.8, 2.8

@@ -12,7 +12,7 @@
 
 
 
-\graphicspath{{figures/}{figures2/}}
+\graphicspath{{figures2/}}
 
 \journal{Materials Science and Engineering: A}
 
@@ -31,7 +31,7 @@
 
 
 \affiliation[nims]{Materials Data Platform, National Institute for Materials Science (NIMS), Tsukuba, Japan}
-\affiliation[hokudai]{Faculty of Engineering, Hokkaido University, Sapporo, Japan}
+% \affiliation[hokudai]{Faculty of Engineering, Hokkaido University, Sapporo, Japan}
 
 \begin{abstract}
 
@@ -66,7 +66,7 @@ Goldschmidt半径は、純金属の最近接原子間距離を接触剛体球モ
     \label{fig:pauling_goldschmidt}
 \end{figure}
 
-Slater~\citep{slater1964atomic}は1200以上の結合距離データから半径を導き、平均誤差0.12~\AAを達成した。この半径は共有結合・金属結合・イオン結合のいずれにも適用可能である。
+Slater~\citep{slater1964atomic}は1200以上の結合距離データから半径を導き、平均誤差0.12~\AA を達成した。この半径は共有結合・金属結合・イオン結合のいずれにも適用可能である。
 
 近年、Materials Project (MP)~\citep{jain2013} や Open Quantum Materials Database (OQMD)~\citep{saal2013} などの第一原理データベースが整備され、大規模な格子定数データに基づいて古典的な原子半径尺度を再検討できるようになった。本研究では、B2およびL1$_2$二元金属間化合物の格子定数に対して幾何学モデルを当てはめ、誤差最小化により構造特異的な有効原子半径を決定する。
 
@@ -400,14 +400,14 @@ L1$_2$構造については、OQMD-L1$_2$がRMSE = 0.066~\AA、平均相対誤�
 \subsubsection{Comparison with Pauling Radii}
 
 
-B2半径とPauling半径の比較は、図~\ref{fig:B2_pauling}に示すように、良好な相関を示す(全66元素: $R^2 = 0.925$、アルカリ金属除外64元素: $R^2 = 0.904$)。全体的には正の相関関係が見られるが、いくつかの元素は傾向線から大きく外れている。特にB(ボロン)は最適化B2半径(1.10~\AA)がPauling値に対して著しく小さく、その強い共有結合性を反映している。
+B2半径とPauling半径の比較は、図~\ref{fig:B2_pauling}に示すように、良好な相関を示す(全66元素: $R^2 = 0.925$、アルカリ金属(Li, Rb, Cs)除外63元素: $R^2 = 0.913$)。全体的には正の相関関係が見られるが、いくつかの元素は傾向線から大きく外れている。特にB(ボロン)は最適化B2半径(1.10~\AA)がPauling値に対して著しく小さく、その強い共有結合性を反映している。
 
-% The comparison of B2 radii with Pauling radii shows good correlation (all 66 elements: $R^2 = 0.925$; excl.~alkali metals 64 elements: $R^2 = 0.904$), as shown in Fig.~\ref{fig:B2_pauling}.
+% The comparison of B2 radii with Pauling radii shows good correlation (all 66 elements: $R^2 = 0.925$; excl.~alkali metals (Li, Rb, Cs) 63 elements: $R^2 = 0.913$), as shown in Fig.~\ref{fig:B2_pauling}.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.4\textwidth]{05_B2_vs_pauling.png}
-    \caption{Comparison of optimized B2 radii (MP) with Pauling metallic radii (all 66 elements: $R^2 = 0.925$; excl.~alkali metals: $R^2 = 0.904$).}
+    \caption{Comparison of optimized B2 radii (MP) with Pauling metallic radii (all 66 elements: $R^2 = 0.925$; excl.~alkali metals (Li, Rb, Cs): $R^2 = 0.913$, 63 elements).}
     \label{fig:B2_pauling}
 \end{figure}
 
@@ -513,7 +513,7 @@ B2半径とPauling半径の比較は、図~\ref{fig:B2_pauling}に示すよう�
 \scalebox{0.9}{
     \begin{tabular}{lcccc}
         \toprule
-        Structure & Common compounds & Lattice $R^2$ & Common elements & Radius $R^2$ \\
+        Structure & \shortstack{Common\\compounds} & \shortstack{Lattice\\$R^2$} & \shortstack{Common\\elements} & \shortstack{Radius\\$R^2$} \\
         \midrule
         B2 & 357 & 0.986 & 68 & 0.971 \\
         L1$_2$ & 186 & 0.986 & 58 & 0.885 \\
