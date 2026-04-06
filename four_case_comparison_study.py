@@ -40,6 +40,17 @@ plt.rcParams.update({
 LATTICE_CONST_MIN = 2.0
 LATTICE_CONST_MAX = 8.0
 
+# Non-metal elements to exclude from the analysis.
+# Hard-sphere model is not suitable for compounds with strong covalent/ionic bonding.
+NON_METAL_ELEMENTS = frozenset({
+    "H", "He",
+    "C", "N", "O", "F", "Ne",
+    "P", "S", "Cl", "Ar",
+    "Se", "Br", "Kr",
+    "Te", "I", "Xe",
+    "At", "Rn",
+})
+
 PAULING_RADII = {
     "H": 0.53, "Li": 1.55, "Be": 1.12, "B": 0.98, "C": 0.77, "N": 0.75, "O": 0.73,
     "Na": 1.90, "Mg": 1.60, "Al": 1.43, "Si": 1.17, "P": 1.10, "S": 1.04, "Cl": 0.99,
@@ -106,6 +117,8 @@ def extract_mp_all(api_key: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
             element_A = str(elements[0])
             element_B = str(elements[1])
+            if element_A in NON_METAL_ELEMENTS or element_B in NON_METAL_ELEMENTS:
+                continue
             count_A = composition[elements[0]]
             count_B = composition[elements[1]]
             total = count_A + count_B
@@ -158,19 +171,26 @@ def _fetch_oqmd_paginated(prototype: str, page_size: int = 500,
     base = "http://oqmd.org/oqmdapi/formationenergy"
     all_entries: List[dict] = []
     offset = 0
+    max_retries = 5
     while True:
         url = (f"{base}?filter=prototype={prototype}"
                f"&limit={page_size}&offset={offset}&format=json")
-        for attempt in range(3):
+        success = False
+        for attempt in range(max_retries):
             try:
                 resp = requests.get(url, timeout=timeout)
                 resp.raise_for_status()
+                success = True
                 break
             except Exception as e:
-                if attempt == 2:
-                    print(f"    OQMD page offset={offset} failed after 3 attempts: {e}")
-                    return all_entries
-                time.sleep(5 * (attempt + 1))
+                wait_sec = 10 * (attempt + 1)
+                print(f"    OQMD page offset={offset} attempt {attempt+1}/{max_retries} "
+                      f"failed: {e}  (retry in {wait_sec}s)")
+                time.sleep(wait_sec)
+        if not success:
+            print(f"    OQMD page offset={offset} failed after {max_retries} attempts, "
+                  f"returning {len(all_entries)} entries so far")
+            return all_entries
         data = resp.json()
         entries = data.get("data", [])
         all_entries.extend(entries)
@@ -215,6 +235,8 @@ def extract_oqmd_compounds(structure_type: str) -> pd.DataFrame:
 
             elements = sorted(el_counts.keys())
             element_A, element_B = elements[0], elements[1]
+            if element_A in NON_METAL_ELEMENTS or element_B in NON_METAL_ELEMENTS:
+                continue
             count_A, count_B = el_counts[element_A], el_counts[element_B]
 
             stability = entry.get("stability")
@@ -366,10 +388,6 @@ def run_analysis(api_key: str, fig_dir: str):
     datasets["OQMD_L12"] = extract_oqmd_compounds("L1$_2$")
     print(f"    => {len(datasets['OQMD_L12'])} compounds")
 
-    # Save CSVs
-    for key, df in datasets.items():
-        df.to_csv(os.path.join(fig_dir, f"compounds_{key}.csv"), index=False)
-
     # ==================================================================
     # Step 2: Calculate radii for each case
     # ==================================================================
@@ -386,6 +404,24 @@ def run_analysis(api_key: str, fig_dir: str):
         mean_rel = comp["rel_error_pct"].mean() if len(comp) > 0 else float("nan")
         med_rel = comp["rel_error_pct"].median() if len(comp) > 0 else float("nan")
         max_rel = comp["rel_error_pct"].max() if len(comp) > 0 else float("nan")
+
+        # Add calculated lattice constant to the dataset DataFrame
+        stype = df["structure_type"].iloc[0] if len(df) > 0 else "B2"
+        a_calc_list = []
+        for _, row in df.iterrows():
+            eA, eB = row["element_A"], row["element_B"]
+            if eA in radii and eB in radii:
+                if stype == "B2":
+                    a_calc_list.append((2 / np.sqrt(3)) * (radii[eA] + radii[eB]))
+                else:  # L1_2
+                    if row["count_A"] > row["count_B"]:
+                        r_major, r_minor = radii[eA], radii[eB]
+                    else:
+                        r_major, r_minor = radii[eB], radii[eA]
+                    a_calc_list.append(np.sqrt(2) * (r_major + r_minor))
+            else:
+                a_calc_list.append(float("nan"))
+        df["lattice_constant_calc"] = a_calc_list
 
         results[key] = {
             "df": df,
@@ -407,6 +443,10 @@ def run_analysis(api_key: str, fig_dir: str):
         # Save radii
         r_df = pd.DataFrame([{"element": el, "radius": r} for el, r in sorted(radii.items())])
         r_df.to_csv(os.path.join(fig_dir, f"radii_{key}.csv"), index=False)
+
+    # Save CSVs (after radii calculation so lattice_constant_calc is included)
+    for key, df in datasets.items():
+        df.to_csv(os.path.join(fig_dir, f"compounds_{key}.csv"), index=False)
 
     # ==================================================================
     # Step 3: Figures
@@ -536,6 +576,9 @@ def run_analysis(api_key: str, fig_dir: str):
     fig, axes = plt.subplots(2, 2, figsize=(16, 12))
     for ax, key in zip(axes.flat, keys):
         df = datasets[key]
+        if len(df) == 0 or "energy_above_hull" not in df.columns:
+            ax.set_title(f"{CASE_LABELS[key]} (no data)")
+            continue
         ehull = df["energy_above_hull"].dropna().values
         if len(ehull) == 0:
             ax.set_title(f"{CASE_LABELS[key]} (no data)")
