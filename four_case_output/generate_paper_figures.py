@@ -22,8 +22,9 @@ plt.rcParams.update({
     "figure.titlesize": 22,
 })
 
-DATA_DIR = "/home/ubuntu/repos/machine-learning/four_case_output/figures"
-OUT_DIR = "/home/ubuntu/paper_figures"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(SCRIPT_DIR, "data")
+OUT_DIR = os.path.join(SCRIPT_DIR, "output")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 # ── Reference radii ──
