@@ -99,16 +99,24 @@ class MaterialsProjectDataExtractor:
 
     def extract_compounds(
         self,
-        energy_above_hull_max: float = 0.1
+        energy_above_hull_max: Optional[float] = None
     ) -> List[CompoundData]:
-        """Extract B2 and L12 compounds from Materials Project."""
-        print("Extracting compounds from Materials Project...")
+        """Extract B2 and L12 compounds from Materials Project.
 
-        docs = self.mpr.materials.summary.search(
-            spacegroup_number=221,
-            num_elements=2,
-            energy_above_hull=(0, energy_above_hull_max),
-            fields=[
+        Args:
+            energy_above_hull_max: Maximum energy above hull (eV/atom) for filtering.
+                If None, no filtering is applied (all compounds are included).
+        """
+        print("Extracting compounds from Materials Project...")
+        if energy_above_hull_max is not None:
+            print(f"  Filtering: energy_above_hull <= {energy_above_hull_max} eV/atom")
+        else:
+            print("  No energy_above_hull filter applied (including unstable compounds)")
+
+        search_kwargs = {
+            "spacegroup_number": 221,
+            "num_elements": 2,
+            "fields": [
                 "material_id",
                 "formula_pretty",
                 "structure",
@@ -116,7 +124,11 @@ class MaterialsProjectDataExtractor:
                 "energy_above_hull",
                 "composition"
             ]
-        )
+        }
+        if energy_above_hull_max is not None:
+            search_kwargs["energy_above_hull"] = (0, energy_above_hull_max)
+
+        docs = self.mpr.materials.summary.search(**search_kwargs)
 
         print(f"Found {len(docs)} binary cubic structures")
 
@@ -738,7 +750,7 @@ def main(api_key: str, output_dir: str = "hea_radius_output"):
 
     print("\n=== Step 1: Extracting compound data from Materials Project ===")
     extractor = MaterialsProjectDataExtractor(api_key)
-    compounds = extractor.extract_compounds(energy_above_hull_max=0.1)
+    compounds = extractor.extract_compounds(energy_above_hull_max=None)
 
     if len(compounds) == 0:
         print("No compounds extracted. Please check API key.")
