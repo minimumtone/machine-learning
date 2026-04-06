@@ -418,7 +418,9 @@ def run_analysis(api_key: str, fig_dir: str):
                         r_major, r_minor = radii[eA], radii[eB]
                     else:
                         r_major, r_minor = radii[eB], radii[eA]
-                    a_calc_list.append(np.sqrt(2) * (r_major + r_minor))
+                    a1 = 2 * r_major * np.sqrt(2)
+                    a2 = (r_major + r_minor) * np.sqrt(2)
+                    a_calc_list.append((a1 + a2) / 2)
             else:
                 a_calc_list.append(float("nan"))
         df["lattice_constant_calc"] = a_calc_list
