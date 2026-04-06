@@ -14,7 +14,7 @@ Materials Project (MP) および OQMD から B2 (CsCl型) と L1$_2$ (AuCu$_3$�
 ### 手法
 
 - **B2 (CsCl型)**: $a_{\mathrm{calc}} = \frac{2}{\sqrt{3}}(r_A + r_B)$, 化学量論比 1:1
-- **L1$_2$ (AuCu$_3$型)**: $a_{\mathrm{calc}} = \frac{2\sqrt{2}\,r_{\mathrm{major}} + \sqrt{2}(r_{\mathrm{major}} + r_{\mathrm{minor}})}{2} = \frac{\sqrt{2}(3r_{\mathrm{major}} + r_{\mathrm{minor}})}{2}$, 化学量論比 3:1
+- **L1$_2$ (AuCu$_3$型)**: $a_{\mathrm{calc}} = \max\bigl(2\sqrt{2}\,r_{\mathrm{major}},\; \sqrt{2}(r_{\mathrm{major}} + r_{\mathrm{minor}}),\; 2\,r_{\mathrm{minor}}\bigr)$, 化学量論比 3:1
 - **最適化**: scipy.optimize.least_squares (TRF法), Pauling半径を初期値として使用
 
 ---
