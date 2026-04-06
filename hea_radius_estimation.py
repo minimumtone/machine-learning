@@ -13,9 +13,11 @@ Key features:
 
 Geometric relationships:
 - B2 structure (AB): r_A + r_B = (sqrt(3)/2) * a
-- L12 structure (A3B): Two contact conditions
-  - A-A contact (major-major): 2*r_major = a/sqrt(2)
-  - A-B contact (major-minor): r_major + r_minor = a/sqrt(2)
+- L12 structure (A3B): Three contact conditions (use max)
+  - A-A contact: a = 2*sqrt(2)*r_major
+  - A-B contact: a = sqrt(2)*(r_major + r_minor)
+  - B-B contact: a = 2*r_minor
+  - a_calc = max(a_AA, a_AB, a_BB)
 """
 
 import itertools
@@ -292,8 +294,12 @@ class HEARadiusCalculator:
                     else:
                         r_major = r_B
                         r_minor = r_A
-                    res.append(2 * r_major - a / np.sqrt(2))
-                    res.append(r_major + r_minor - a / np.sqrt(2))
+                    # Three contact conditions — use max
+                    a_AA = 2 * np.sqrt(2) * r_major
+                    a_AB = np.sqrt(2) * (r_major + r_minor)
+                    a_BB = 2 * r_minor
+                    a_calc = max(a_AA, a_AB, a_BB)
+                    res.append(a_calc - a)
 
             return np.array(res)
 
@@ -382,8 +388,8 @@ class HEARadiusCalculator:
     ) -> pd.DataFrame:
         """Compare calculated lattice constants with DFT values.
         
-        For L12 structures, calculates three lattice constants based on
-        three contact conditions and reports the average.
+        For L12 structures, calculates lattice constant as max of three
+        contact conditions (A-A, A-B, B-B).
         """
         results = []
 
@@ -403,10 +409,10 @@ class HEARadiusCalculator:
                 else:
                     r_major = r_B
                     r_minor = r_A
-                a_AA = np.sqrt(2) * 2 * r_major
+                a_AA = 2 * np.sqrt(2) * r_major
                 a_AB = np.sqrt(2) * (r_major + r_minor)
                 a_BB = 2 * r_minor
-                a_calc = (a_AA + a_AB + a_BB) / 3
+                a_calc = max(a_AA, a_AB, a_BB)
 
             a_dft = c.lattice_constant
             error = a_calc - a_dft

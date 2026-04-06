@@ -14,7 +14,7 @@ Materials Project (MP) および OQMD から B2 (CsCl型) と L1$_2$ (AuCu$_3$�
 ### 手法
 
 - **B2 (CsCl型)**: $a_{\mathrm{calc}} = \frac{2}{\sqrt{3}}(r_A + r_B)$, 化学量論比 1:1
-- **L1$_2$ (AuCu$_3$型)**: $a_{\mathrm{calc}} = \sqrt{2}(r_{\mathrm{major}} + r_{\mathrm{minor}})$, 化学量論比 3:1
+- **L1$_2$ (AuCu$_3$型)**: $a_{\mathrm{calc}} = \frac{2\sqrt{2}\,r_{\mathrm{major}} + \sqrt{2}(r_{\mathrm{major}} + r_{\mathrm{minor}})}{2} = \frac{\sqrt{2}(3r_{\mathrm{major}} + r_{\mathrm{minor}})}{2}$, 化学量論比 3:1
 - **最適化**: scipy.optimize.least_squares (TRF法), Pauling半径を初期値として使用
 
 ---
@@ -30,7 +30,7 @@ Materials Project (MP) および OQMD から B2 (CsCl型) と L1$_2$ (AuCu$_3$�
 
 **総化合物数: 3,982** (MP: 1,205, OQMD: 2,777)
 
-![データセット概要](https://app.devin.ai/attachments/1d1a90f8-b9a0-4746-92aa-7f2c5327f7c9/fig1_dataset_summary.png)
+![データセット概要](https://app.devin.ai/attachments/22e76b1f-9438-4707-a307-8c914fa34d59/fig1_dataset_summary.png)
 
 **図1**: ケース別の化合物数。OQMD は B2 構造で MP の約7倍のデータを提供する一方、L1$_2$ は MP の方が約3.6倍豊富。
 
@@ -48,7 +48,7 @@ Materials Project (MP) および OQMD から B2 (CsCl型) と L1$_2$ (AuCu$_3$�
 
 ## 3. 安定性分布
 
-![安定性分布](https://app.devin.ai/attachments/8d4d8845-8440-4226-8fe9-bf23c4c10b6a/fig5_ehull_distributions.png)
+![安定性分布](https://app.devin.ai/attachments/0a7857cc-ac63-48d4-a35b-2a1eae39e29c/fig5_ehull_distributions.png)
 
 **図5**: 各ケースの $E_{\mathrm{hull}}$ / stability 分布。赤破線は従来のフィルタ閾値 0.1 eV/atom を示す。
 
@@ -73,7 +73,7 @@ Materials Project (MP) および OQMD から B2 (CsCl型) と L1$_2$ (AuCu$_3$�
 
 ### 4.2 パリティプロット (DFT格子定数 vs 計算格子定数)
 
-![パリティプロット](https://app.devin.ai/attachments/2cc11df8-83e8-4407-a4ae-23030a9757c8/fig2_parity_2x2.png)
+![パリティプロット](https://app.devin.ai/attachments/665bc25e-fd6b-470f-9469-928aa07dba03/fig2_parity_2x2.png)
 
 **図2**: 各ケースの格子定数パリティプロット。横軸が DFT/OQMD 参照値、縦軸が TRF 最適化半径からの計算値。カラーマップは $E_{\mathrm{hull}}$ / stability を表す。
 
@@ -85,7 +85,7 @@ Materials Project (MP) および OQMD から B2 (CsCl型) と L1$_2$ (AuCu$_3$�
 
 ### 4.3 誤差指標の棒グラフ比較
 
-![誤差指標](https://app.devin.ai/attachments/d8eb759b-3d4f-4e5e-b672-0d86aff18d3e/fig3_error_metrics.png)
+![誤差指標](https://app.devin.ai/attachments/2e5e473d-1b96-477f-888d-546fbbbd29c6/fig3_error_metrics.png)
 
 **図3**: (a) 格子定数 RMSE, (b) 格子定数 MAE, (c) 平均相対誤差 の4ケース比較。
 
@@ -140,7 +140,7 @@ B2 構造では MP と OQMD の有効原子半径は良好に一致 (RMSD = 0.04
 
 L1$_2$ 構造では MP と OQMD の半径差が B2 より大きい (RMSD = 0.108 A)。特に希土類元素 (Eu, Dy, Gd, Nd, Ho) や アルカリ土類金属 (Sr, Mg) で差が顕著。データソース間の DFT 計算条件の違い (擬ポテンシャル、カットオフエネルギー等) が影響している可能性がある。
 
-![半径比較](https://app.devin.ai/attachments/0d72020d-383c-435d-a4cf-626e71d539bf/fig4_radius_mp_vs_oqmd.png)
+![半径比較](https://app.devin.ai/attachments/749603a7-132a-46ef-82d6-5f7f748dca25/fig4_radius_mp_vs_oqmd.png)
 
 **図4**: MP vs OQMD の有効原子半径比較。左: B2 構造、右: L1$_2$ 構造。対角線からの乖離が大きい元素にラベルを付記。
 
@@ -148,7 +148,7 @@ L1$_2$ 構造では MP と OQMD の半径差が B2 より大きい (RMSD = 0.108
 
 ## 6. 予測誤差と安定性の関係
 
-![誤差 vs 安定性](https://app.devin.ai/attachments/a9ecb67b-23d9-4023-b497-52d923e607ea/fig6_error_vs_ehull.png)
+![誤差 vs 安定性](https://app.devin.ai/attachments/3f09e01f-1859-4a58-8c7a-bd23d3f47bdf/fig6_error_vs_ehull.png)
 
 **図6**: 各ケースの格子定数相対誤差 vs $E_{\mathrm{hull}}$ / stability。
 

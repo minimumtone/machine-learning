@@ -290,14 +290,21 @@ def calculate_radii_trf(df: pd.DataFrame) -> Tuple[Dict[str, float], Dict]:
             iA, iB = el2idx[row["element_A"]], el2idx[row["element_B"]]
             if stype == "B2":
                 res.append(radii[iA] + radii[iB] - (np.sqrt(3) / 2) * a)
-            else:  # L1_2
+            else:  # L1_2 — use max of 3 contact conditions
                 rA, rB = radii[iA], radii[iB]
                 if row["count_A"] > row["count_B"]:
                     r_major, r_minor = rA, rB
                 else:
                     r_major, r_minor = rB, rA
-                res.append(2 * r_major - a / np.sqrt(2))
-                res.append(r_major + r_minor - a / np.sqrt(2))
+                # Three contact conditions:
+                #   A-A: a = 2*sqrt(2)*r_major
+                #   A-B: a = sqrt(2)*(r_major + r_minor)
+                #   B-B: a = 2*r_minor
+                a_AA = 2 * np.sqrt(2) * r_major
+                a_AB = np.sqrt(2) * (r_major + r_minor)
+                a_BB = 2 * r_minor
+                a_calc = max(a_AA, a_AB, a_BB)
+                res.append(a_calc - a)
         return np.array(res)
 
     result = least_squares(residuals, x0, bounds=(0.5, 3.5), method="trf",
@@ -330,9 +337,10 @@ def compare_lattice_constants(df: pd.DataFrame,
                 r_major, r_minor = rA, rB
             else:
                 r_major, r_minor = rB, rA
-            a1 = 2 * r_major * np.sqrt(2)
-            a2 = (r_major + r_minor) * np.sqrt(2)
-            a_calc = (a1 + a2) / 2
+            a_AA = 2 * np.sqrt(2) * r_major
+            a_AB = np.sqrt(2) * (r_major + r_minor)
+            a_BB = 2 * r_minor
+            a_calc = max(a_AA, a_AB, a_BB)
         error = a_calc - a_ref
         rel_error = abs(error) / a_ref * 100
         rows.append({
@@ -413,14 +421,15 @@ def run_analysis(api_key: str, fig_dir: str):
             if eA in radii and eB in radii:
                 if stype == "B2":
                     a_calc_list.append((2 / np.sqrt(3)) * (radii[eA] + radii[eB]))
-                else:  # L1_2
+                else:  # L1_2 — max of 3 contact conditions
                     if row["count_A"] > row["count_B"]:
                         r_major, r_minor = radii[eA], radii[eB]
                     else:
                         r_major, r_minor = radii[eB], radii[eA]
-                    a1 = 2 * r_major * np.sqrt(2)
-                    a2 = (r_major + r_minor) * np.sqrt(2)
-                    a_calc_list.append((a1 + a2) / 2)
+                    a_AA = 2 * np.sqrt(2) * r_major
+                    a_AB = np.sqrt(2) * (r_major + r_minor)
+                    a_BB = 2 * r_minor
+                    a_calc_list.append(max(a_AA, a_AB, a_BB))
             else:
                 a_calc_list.append(float("nan"))
         df["lattice_constant_calc"] = a_calc_list
