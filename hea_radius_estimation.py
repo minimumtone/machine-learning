@@ -125,7 +125,10 @@ class MaterialsProjectDataExtractor:
                 "composition"
             ]
         }
-        )
+        if energy_above_hull_max is not None:
+            search_kwargs["energy_above_hull"] = (0, energy_above_hull_max)
+
+        docs = self.mpr.materials.summary.search(**search_kwargs)
 
         print(f"Found {len(docs)} binary cubic structures")
 
