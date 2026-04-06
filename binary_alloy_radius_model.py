@@ -272,7 +272,6 @@ class RadiusCalculator:
             res = []
             for _, row in l12_data.iterrows():
                 a = row["lattice_constant_a"]
-                d_obs = a / np.sqrt(2)
 
                 idx_A = element_to_idx[row["element_A"]]
                 idx_B = element_to_idx[row["element_B"]]
