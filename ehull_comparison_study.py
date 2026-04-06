@@ -65,7 +65,7 @@ def extract_compounds(api_key: str, energy_above_hull_max: Optional[float] = Non
     if energy_above_hull_max is not None:
         search_kwargs["energy_above_hull"] = (0, energy_above_hull_max)
 
-    label = f"E_hull <= {energy_above_hull_max}" if energy_above_hull_max else "No filter"
+    label = f"E_hull <= {energy_above_hull_max}" if energy_above_hull_max is not None else "No filter"
     print(f"  [{label}] Querying Materials Project...")
     docs = mpr.materials.summary.search(**search_kwargs)
     print(f"  [{label}] Found {len(docs)} raw documents")
@@ -532,7 +532,7 @@ def run_analysis(api_key: str, fig_dir: str):
         report_lines.append(f"| {cat_label} | {count} | {pct:.1f}% |")
     report_lines.append("")
 
-    report_lines.append(f"![E_hull分布](figures/fig1_ehull_distribution.png)\n")
+    report_lines.append(f"![E_hull分布](fig1_ehull_distribution.png)\n")
     report_lines.append("**図1**: 左: 全データの $E_{\\mathrm{hull}}$ 分布。右: $\\leq$ 1.0 eV/atom の拡大図。赤破線は 0.1 eV/atom 閾値。\n")
 
     # Radii optimization
@@ -556,11 +556,11 @@ def run_analysis(api_key: str, fig_dir: str):
             report_lines.append(f"| {metric} | {v_f:.4f} {unit} | {v_a:.4f} {unit} | {sign}{delta:.4f} {unit} |")
     report_lines.append("")
 
-    report_lines.append(f"![パリティプロット比較](figures/fig2_parity_comparison.png)\n")
+    report_lines.append(f"![パリティプロット比較](fig2_parity_comparison.png)\n")
     report_lines.append("**図2**: 格子定数のパリティプロット。左: フィルタあり、右: フィルタなし。色は $E_{\\mathrm{hull}}$ を示す。\n")
 
     if fig3_path:
-        report_lines.append(f"![半径比較](figures/fig3_radius_comparison.png)\n")
+        report_lines.append(f"![半径比較](fig3_radius_comparison.png)\n")
         report_lines.append("**図3**: (a) フィルタあり/なしでの有効原子半径の比較。(b) 半径変化量の上位元素。\n")
 
     # Radius changes
@@ -585,7 +585,7 @@ def run_analysis(api_key: str, fig_dir: str):
     # Error vs stability
     report_lines.append("## 4. 安定性と予測精度の関係\n")
     if fig4_path:
-        report_lines.append(f"![誤差 vs E_hull](figures/fig4_error_vs_ehull.png)\n")
+        report_lines.append(f"![誤差 vs E_hull](fig4_error_vs_ehull.png)\n")
         report_lines.append("**図4**: (a) 格子定数の相対誤差 vs $E_{\\mathrm{hull}}$。(b) 安定性カテゴリ別の誤差分布。\n")
 
     # Error by stability category
@@ -607,7 +607,7 @@ def run_analysis(api_key: str, fig_dir: str):
                 report_lines.append(f"| {cat_label} | {len(subset)} | {mean_err:.2f} | {rmse_lat:.4f} |")
         report_lines.append("")
 
-    report_lines.append(f"![構造タイプ](figures/fig5_structure_breakdown.png)\n")
+    report_lines.append(f"![構造タイプ](fig5_structure_breakdown.png)\n")
     report_lines.append("**図5**: 構造タイプ（B2 / L1$_2$）の分布比較。\n")
 
     # Conclusion
