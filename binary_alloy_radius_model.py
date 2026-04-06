@@ -50,24 +50,28 @@ class MaterialsProjectExtractor:
 
     def extract_binary_cubic_structures(
         self,
-        energy_above_hull_max: float = 0.1
+        energy_above_hull_max: Optional[float] = None
     ) -> pd.DataFrame:
         """
         Extract binary cubic structures (space group 221) from Materials Project.
 
         Args:
-            energy_above_hull_max: Maximum energy above hull (eV/atom) for filtering
+            energy_above_hull_max: Maximum energy above hull (eV/atom) for filtering.
+                If None, no filtering is applied (all compounds are included).
 
         Returns:
             DataFrame with extracted structure data
         """
         print("Extracting binary cubic structures from Materials Project...")
+        if energy_above_hull_max is not None:
+            print(f"  Filtering: energy_above_hull <= {energy_above_hull_max} eV/atom")
+        else:
+            print("  No energy_above_hull filter applied (including unstable compounds)")
 
-        docs = self.mpr.materials.summary.search(
-            spacegroup_number=221,
-            num_elements=2,
-            energy_above_hull=(0, energy_above_hull_max),
-            fields=[
+        search_kwargs = {
+            "spacegroup_number": 221,
+            "num_elements": 2,
+            "fields": [
                 "material_id",
                 "formula_pretty",
                 "structure",
@@ -76,7 +80,11 @@ class MaterialsProjectExtractor:
                 "composition",
                 "symmetry"
             ]
-        )
+        }
+        if energy_above_hull_max is not None:
+            search_kwargs["energy_above_hull"] = (0, energy_above_hull_max)
+
+        docs = self.mpr.materials.summary.search(**search_kwargs)
 
         print(f"Found {len(docs)} binary cubic structures")
 
@@ -734,7 +742,7 @@ def main(api_key: str, output_dir: str = "binary_alloy_output"):
     print("=" * 60)
 
     extractor = MaterialsProjectExtractor(api_key)
-    df = extractor.extract_binary_cubic_structures(energy_above_hull_max=0.1)
+    df = extractor.extract_binary_cubic_structures(energy_above_hull_max=None)
 
     if len(df) == 0:
         print("No data extracted. Please check API key and connection.")
