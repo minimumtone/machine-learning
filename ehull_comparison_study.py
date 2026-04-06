@@ -149,14 +149,17 @@ def calculate_radii_trf(df: pd.DataFrame, structure_type: Optional[str] = None) 
             iB = el2idx[row["element_B"]]
             if row["structure_type"] == "B2":
                 res.append(radii[iA] + radii[iB] - (np.sqrt(3) / 2) * a)
-            else:  # L1$_2$
+            else:  # L1$_2$ — max-based model
                 rA, rB = radii[iA], radii[iB]
                 if row["count_A"] > row["count_B"]:
                     r_major, r_minor = rA, rB
                 else:
                     r_major, r_minor = rB, rA
-                res.append(2 * r_major - a / np.sqrt(2))
-                res.append(r_major + r_minor - a / np.sqrt(2))
+                a_AA = 2 * np.sqrt(2) * r_major
+                a_AB = np.sqrt(2) * (r_major + r_minor)
+                a_BB = 2 * r_minor
+                a_calc = max(a_AA, a_AB, a_BB)
+                res.append(a_calc - a)
         return np.array(res)
 
     result = least_squares(residuals, x0, bounds=(0.5, 3.0), method="trf",
@@ -188,9 +191,10 @@ def compare_lattice_constants(df: pd.DataFrame, radii: Dict[str, float]) -> pd.D
                 r_major, r_minor = rA, rB
             else:
                 r_major, r_minor = rB, rA
-            a1 = 2 * r_major * np.sqrt(2)
-            a2 = (r_major + r_minor) * np.sqrt(2)
-            a_calc = (a1 + a2) / 2
+            a_AA = 2 * np.sqrt(2) * r_major
+            a_AB = np.sqrt(2) * (r_major + r_minor)
+            a_BB = 2 * r_minor
+            a_calc = max(a_AA, a_AB, a_BB)
         error = a_calc - a_dft
         rel_error = abs(error) / a_dft * 100
         rows.append({

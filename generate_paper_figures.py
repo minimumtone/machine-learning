@@ -428,7 +428,7 @@ def fig_common_compounds():
         ax.set_xlabel("MP lattice constant (\u00c5)")
         ax.set_ylabel("OQMD lattice constant (\u00c5)")
         ax.set_title(f"{struct_label}: MP vs OQMD Lattice Constants")
-        ax.text(0.05, 0.95, f"$R^2$ = {r**2:.4f}\nRMSE = {rmse:.4f} \u00c5\nN = {len(common_formulas)}",
+        ax.text(0.05, 0.95, f"$R^2$ = {r**2:.3f}\nRMSE = {rmse:.3f} \u00c5\nN = {len(common_formulas)}",
                 transform=ax.transAxes, ha="left", va="top",
                 bbox=dict(boxstyle="round", fc="wheat", alpha=0.8))
         ax.set_xlim(mn, mx); ax.set_ylim(mn, mx)

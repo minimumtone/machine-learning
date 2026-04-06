@@ -322,11 +322,11 @@ Model performance was evaluated using standard regression metrics:
 
 \subsection{Model Performance}
 
-最適化された有効半径を用いた格子定数予測の精度を表~\ref{tab:performance}にまとめた。B2構造では、MP-B2のRMSEが0.052~\AA と最も小さく、平均相対誤差は0.99\%であった。OQMD-B2はデータ量が7倍(2539対357)と大幅に多いにもかかわらず、RMSE = 0.090~\AA、平均相対誤差1.74\%と良好な精度を維持している。
+最適化された有効半径を用いた格子定数予測の精度を表~\ref{tab:performance}にまとめた。B2構造では、MP-B2のRMSEが0.052~\AA と最も小さく、平均相対誤差は0.99\%であった。OQMD-B2はデータ量が7倍(2539対357)と大幅に多いにもかかわらず、RMSE = 0.089~\AA、平均相対誤差1.74\%と良好な精度を維持している。
 
 L1$_2$構造については、OQMD-L1$_2$がRMSE = 0.066~\AA、平均相対誤差1.13\%と4ケース中最高の精度を示した。MP-L1$_2$はRMSE = 0.157~\AA とやや大きいが、データ量が848件と最大であり、化合物の多様性がより大きいことを反映している可能性がある。$R^2$値はMP-L1$_2$を除き0.96以上を維持しており、幾何学的モデルが格子定数の変動の大部分を捉えていることを示している。
 
-% The accuracy of lattice constant prediction using the optimized effective radii is summarized in Table~\ref{tab:performance}. For B2 structures, MP-B2 achieved the smallest RMSE of 0.052~\AA\ with a mean relative error of 0.99\%. OQMD-B2, despite having seven times more data (2539 vs. 357), maintained good accuracy with RMSE = 0.090~\AA\ and mean relative error of 1.74\%.
+% The accuracy of lattice constant prediction using the optimized effective radii is summarized in Table~\ref{tab:performance}. For B2 structures, MP-B2 achieved the smallest RMSE of 0.052~\AA\ with a mean relative error of 0.99\%. OQMD-B2, despite having seven times more data (2539 vs. 357), maintained good accuracy with RMSE = 0.089~\AA\ and mean relative error of 1.74\%.
 
 % For L1$_2$ structures, OQMD-L1$_2$ showed the highest accuracy among all four cases with RMSE = 0.066~\AA\ and mean relative error of 1.13\%. MP-L1$_2$ had a somewhat larger RMSE of 0.157~\AA, but its dataset of 848 compounds is the largest, and the greater diversity of compounds may contribute to the larger error. $R^2$ values remained above 0.94 in all cases, indicating that the geometric model captures the majority of variance in lattice constants.
 
@@ -342,7 +342,7 @@ L1$_2$構造については、OQMD-L1$_2$がRMSE = 0.066~\AA、平均相対誤�
         \midrule
         MP & B2 & 0.052 & 0.034 & 0.977 & 0.99 & 8.67 \\
         MP & L1$_2$ & 0.157 & 0.109 & 0.944 & 2.31 & 15.53 \\
-        OQMD & B2 & 0.090 & 0.063 & 0.959 & 1.74 & 16.15 \\
+        OQMD & B2 & 0.089 & 0.063 & 0.959 & 1.74 & 16.15 \\
         OQMD & L1$_2$ & 0.066 & 0.047 & 0.973 & 1.13 & 6.14 \\
         \bottomrule
     \end{tabular}
@@ -560,7 +560,7 @@ B2半径とPauling半径の比較は、図~\ref{fig:B2_pauling}に示すよう�
         \midrule
         MP --- B2 & 0.158 & 0.052 & 67\% \\
         MP --- L1$_2$ & 0.206 & 0.157 & 24\% \\
-        OQMD --- B2 & 0.102 & 0.090 & 12\% \\
+        OQMD --- B2 & 0.102 & 0.089 & 13\% \\
         OQMD --- L1$_2$ & 0.067 & 0.066 & 2\% \\
         \bottomrule
     \end{tabular}
@@ -632,7 +632,7 @@ The GGA-PBE functional used in both MP and OQMD calculations is known to systema
 \section{Conclusions}
 We determined effective atomic radii for B2 and L1$_2$ binary intermetallic compounds by optimizing against lattice constant data from the Materials Project and OQMD databases. Non-metallic elements were excluded and a lattice constant range filter (2.0--8.0~\AA) was applied to define the applicability domain of the hard-sphere model. A total of 3982 compounds (MP: 357 B2, 848 L1$_2$; OQMD: 2539 B2, 238 L1$_2$) were analyzed. The main conclusions are as follows.
 \begin{enumerate}
-    \item \textbf{Predictive accuracy}: the optimized radii reproduce lattice constants with RMSE = 0.052~\AA\ for MP B2, 0.090~\AA\ for OQMD B2, 0.157~\AA\ for MP L1$_2$, and 0.066~\AA\ for OQMD L1$_2$, corresponding to $R^2 = 0.944$--0.977.
+    \item \textbf{Predictive accuracy}: the optimized radii reproduce lattice constants with RMSE = 0.052~\AA\ for MP B2, 0.089~\AA\ for OQMD B2, 0.157~\AA\ for MP L1$_2$, and 0.066~\AA\ for OQMD L1$_2$, corresponding to $R^2 = 0.944$--0.977.
     \item \textbf{Effectiveness of non-metallic element exclusion}: removal of compounds containing N, O, S, Se, and other non-metallic elements dramatically improved prediction accuracy, particularly for MP B2 (RMSE reduced by 67\%), confirming that the hard-sphere model is appropriate for metallic intermetallic compounds but not for covalent/ionic systems.
     \item \textbf{Structure dependence of effective radii}: L1$_2$ radii show good agreement with Goldschmidt metallic radii ($R^2 = 0.946$), whereas B2 radii display element-specific deviations. With the max-based L1$_2$ model, the B2-L1$_2$ radius differences are distributed on both sides: elements such as B ($-8.7$\%) and Li ($-7.5$\%) show contraction, while Ni ($+9.3$\%) and U ($+8.9$\%) show expansion.
     \item \textbf{Database consistency}: MP and OQMD give highly consistent lattice constants for common compounds ($R^2 > 0.985$) and consistent B2 radii ($R^2 = 0.971$), indicating that the optimized radii are stable against reasonable differences in first-principles workflows. L1$_2$ radius consistency ($R^2 = 0.885$) is improved by adopting the max-based model.
