@@ -35,6 +35,11 @@ plt.rcParams.update({
     "figure.titlesize": 22,
 })
 
+# Lattice constant range for valid B2/L1_2 unit cells (Angstrom).
+# Values outside this range likely indicate superstructures (e.g. Rh17S15 ~10 A).
+LATTICE_CONST_MIN = 2.0
+LATTICE_CONST_MAX = 8.0
+
 PAULING_RADII = {
     "H": 0.53, "Li": 1.55, "Be": 1.12, "B": 0.98, "C": 0.77, "N": 0.75, "O": 0.73,
     "Na": 1.90, "Mg": 1.60, "Al": 1.43, "Si": 1.17, "P": 1.10, "S": 1.04, "Cl": 0.99,
@@ -120,6 +125,9 @@ def extract_mp_all(api_key: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
                 "source": "MP",
             }
 
+            if not (LATTICE_CONST_MIN <= lattice.a <= LATTICE_CONST_MAX):
+                continue
+
             if abs(ratio_A - 0.5) < tol and abs(ratio_B - 0.5) < tol:
                 row["structure_type"] = "B2"
                 b2_data.append(row)
@@ -195,6 +203,9 @@ def extract_oqmd_compounds(structure_type: str) -> pd.DataFrame:
             if not (abs(a - avg) / avg < 0.02
                     and abs(b - avg) / avg < 0.02
                     and abs(c - avg) / avg < 0.02):
+                continue
+
+            if not (LATTICE_CONST_MIN <= a <= LATTICE_CONST_MAX):
                 continue
 
             sites = entry.get("sites", [])
