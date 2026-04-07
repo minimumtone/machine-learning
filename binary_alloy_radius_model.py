@@ -7,7 +7,7 @@ and builds machine learning models to predict radii and total energy.
 
 Based on geometric relationships:
 - B2 structure (AB): r_A + r_B = (sqrt(3)/2) * a
-- L1_2 structure (A3B): 2*r_A = a/sqrt(2), r_A + r_B = a/sqrt(2)
+- L1_2 structure (A3B): a = max(2*sqrt(2)*r_major, sqrt(2)*(r_major+r_minor), 2*r_minor)
 """
 
 import os
@@ -245,10 +245,11 @@ class RadiusCalculator:
         """
         Calculate effective radii for L1_2 structures.
 
-        For L1_2 (A3B):
-        - A-A distance: d_AA = a / sqrt(2)
-        - A-B distance: d_AB = a / sqrt(2)
-        - Equations: 2*r_A = a/sqrt(2), r_A + r_B = a/sqrt(2)
+        For L1_2 (A3B), three contact conditions:
+        - A-A contact: a = 2*sqrt(2)*r_major
+        - A-B contact: a = sqrt(2)*(r_major + r_minor)
+        - B-B contact: a = 2*r_minor
+        Lattice constant is determined by max of the three.
         """
         l12_data = self.df[self.df["structure_type"] == "L1_2"].copy()
 
@@ -271,7 +272,6 @@ class RadiusCalculator:
             res = []
             for _, row in l12_data.iterrows():
                 a = row["lattice_constant_a"]
-                d_obs = a / np.sqrt(2)
 
                 idx_A = element_to_idx[row["element_A"]]
                 idx_B = element_to_idx[row["element_B"]]
@@ -286,11 +286,14 @@ class RadiusCalculator:
                     major_idx = idx_B
                     minor_idx = idx_A
 
-                d_calc_AA = 2 * radii[major_idx]
-                res.append(d_calc_AA - d_obs)
-
-                d_calc_AB = radii[major_idx] + radii[minor_idx]
-                res.append(d_calc_AB - d_obs)
+                r_major = radii[major_idx]
+                r_minor = radii[minor_idx]
+                # Three contact conditions — use max
+                a_AA = 2 * np.sqrt(2) * r_major
+                a_AB = np.sqrt(2) * (r_major + r_minor)
+                a_BB = 2 * r_minor
+                a_calc = max(a_AA, a_AB, a_BB)
+                res.append(a_calc - a)
 
             return np.array(res)
 
