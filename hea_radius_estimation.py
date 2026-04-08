@@ -12,12 +12,20 @@ Key features:
 5. Compare with Pauling and Goldschmidt radii
 
 Geometric relationships:
-- B2 structure (AB): r_A + r_B = (sqrt(3)/2) * a
+- B2 structure (AB): Two contact conditions (use max)
+  - A-A contact: a = 2*r_A
+  - A-B contact: a = 2*(r_A + r_B)/sqrt(3)
+  - a_calc = max(a_AA, a_AB)
 - L12 structure (A3B): Three contact conditions (use max)
   - A-A contact: a = 2*sqrt(2)*r_major
   - A-B contact: a = sqrt(2)*(r_major + r_minor)
   - B-B contact: a = 2*r_minor
   - a_calc = max(a_AA, a_AB, a_BB)
+
+Optimisation uses an iterative scheme: at each iteration the dominant
+contact condition is determined from the current radii, and a smooth
+least-squares sub-problem is solved.  The loop repeats until no
+compound switches its active contact (self-consistent solution).
 """
 
 import itertools
@@ -235,19 +243,62 @@ class HEARadiusCalculator:
         ]
         return filtered
 
+    @staticmethod
+    def _determine_active_contacts(
+        compounds: List[CompoundData],
+        radii_arr: np.ndarray,
+        element_to_idx: Dict[str, int]
+    ) -> List[str]:
+        """Determine the active (dominant) contact condition for each compound.
+
+        Returns a list of contact labels, one per compound:
+          B2:  'AA' or 'AB'
+          L12: 'AA', 'AB', or 'BB'
+        """
+        contacts = []
+        for c in compounds:
+            idx_A = element_to_idx[c.element_A]
+            idx_B = element_to_idx[c.element_B]
+            r_A = radii_arr[idx_A]
+            r_B = radii_arr[idx_B]
+
+            if c.structure_type == "B2":
+                a_AA = 2 * r_A
+                a_AB = (2 / np.sqrt(3)) * (r_A + r_B)
+                contacts.append("AA" if a_AA >= a_AB else "AB")
+            elif c.structure_type == "L12":
+                if c.count_A > c.count_B:
+                    r_major, r_minor = r_A, r_B
+                else:
+                    r_major, r_minor = r_B, r_A
+                a_AA = 2 * np.sqrt(2) * r_major
+                a_AB = np.sqrt(2) * (r_major + r_minor)
+                a_BB = 2 * r_minor
+                vals = {"AA": a_AA, "AB": a_AB, "BB": a_BB}
+                contacts.append(max(vals, key=vals.get))
+        return contacts
+
     def calculate_radii_trf(
         self,
         compounds: List[CompoundData],
         structure_type: Optional[str] = None,
-        initial_guess: Optional[Dict[str, float]] = None
+        initial_guess: Optional[Dict[str, float]] = None,
+        max_iter: int = 50
     ) -> Tuple[Dict[str, float], Dict]:
         """
-        Calculate effective atomic radii using TRF (Trust Region Reflective) method.
+        Calculate effective atomic radii using iterative TRF optimisation.
+
+        At each iteration the dominant contact condition (max) is determined
+        for every compound from the current radii.  A smooth least-squares
+        sub-problem is then solved using only that fixed contact condition.
+        The loop repeats until no compound switches its active contact,
+        guaranteeing self-consistent radii.
 
         Args:
             compounds: List of compound data
             structure_type: "B2", "L12", or None for combined
             initial_guess: Initial radius values for optimization
+            max_iter: Maximum number of contact-reassignment iterations
 
         Returns:
             Tuple of (radii dict, statistics dict)
@@ -274,50 +325,91 @@ class HEARadiusCalculator:
         else:
             x0 = np.array([PAULING_RADII.get(el, 1.4) for el in elements])
 
-        def residuals(radii):
-            res = []
-            for c in compounds:
-                a = c.lattice_constant
-                idx_A = element_to_idx[c.element_A]
-                idx_B = element_to_idx[c.element_B]
+        # --- iterative loop --------------------------------------------------
+        current_radii = x0.copy()
+        active_contacts: List[str] = []
+        n_iterations = 0
 
-                if c.structure_type == "B2":
-                    d_obs = (np.sqrt(3) / 2) * a
-                    d_calc = radii[idx_A] + radii[idx_B]
-                    res.append(d_calc - d_obs)
-                elif c.structure_type == "L12":
+        for iteration in range(max_iter):
+            # 1. Determine active contact for each compound
+            new_contacts = self._determine_active_contacts(
+                compounds, current_radii, element_to_idx
+            )
+
+            # 2. Check convergence (no contact switches)
+            if new_contacts == active_contacts:
+                break
+            active_contacts = new_contacts
+            n_iterations = iteration + 1
+
+            # 3. Build smooth residual using fixed active contacts
+            frozen_contacts = list(active_contacts)  # snapshot
+
+            def residuals(radii, _contacts=frozen_contacts):
+                res = []
+                for i, c in enumerate(compounds):
+                    a = c.lattice_constant
+                    idx_A = element_to_idx[c.element_A]
+                    idx_B = element_to_idx[c.element_B]
                     r_A = radii[idx_A]
                     r_B = radii[idx_B]
-                    if c.count_A > c.count_B:
-                        r_major = r_A
-                        r_minor = r_B
-                    else:
-                        r_major = r_B
-                        r_minor = r_A
-                    # Three contact conditions — use max
-                    a_AA = 2 * np.sqrt(2) * r_major
-                    a_AB = np.sqrt(2) * (r_major + r_minor)
-                    a_BB = 2 * r_minor
-                    a_calc = max(a_AA, a_AB, a_BB)
-                    res.append(a_calc - a)
+                    ct = _contacts[i]
 
-            return np.array(res)
+                    if c.structure_type == "B2":
+                        if ct == "AA":
+                            res.append(2 * r_A - a)
+                        else:  # AB
+                            res.append((2 / np.sqrt(3)) * (r_A + r_B) - a)
+                    elif c.structure_type == "L12":
+                        if c.count_A > c.count_B:
+                            r_major, r_minor = r_A, r_B
+                        else:
+                            r_major, r_minor = r_B, r_A
+                        if ct == "AA":
+                            res.append(2 * np.sqrt(2) * r_major - a)
+                        elif ct == "AB":
+                            res.append(np.sqrt(2) * (r_major + r_minor) - a)
+                        else:  # BB
+                            res.append(2 * r_minor - a)
+                return np.array(res)
 
-        result = least_squares(
-            residuals,
-            x0,
-            bounds=(0.5, 3.0),
-            method="trf",
-            ftol=1e-10,
-            xtol=1e-10,
-            gtol=1e-10
-        )
+            # 4. Optimise with TRF
+            result = least_squares(
+                residuals,
+                current_radii,
+                bounds=(0.5, 3.0),
+                method="trf",
+                ftol=1e-10,
+                xtol=1e-10,
+                gtol=1e-10
+            )
+            current_radii = result.x
 
-        radii = {el: result.x[element_to_idx[el]] for el in elements}
+        # --- final statistics using the max-based lattice constant ------------
+        radii = {el: current_radii[element_to_idx[el]] for el in elements}
 
-        residual_values = result.fun
-        rmse = np.sqrt(np.mean(residual_values ** 2))
-        mae = np.mean(np.abs(residual_values))
+        # Compute residuals with max (the true model) for final stats
+        final_res = []
+        for c in compounds:
+            r_A = radii[c.element_A]
+            r_B = radii[c.element_B]
+            if c.structure_type == "B2":
+                a_calc = max(2 * r_A, (2 / np.sqrt(3)) * (r_A + r_B))
+            else:
+                if c.count_A > c.count_B:
+                    r_major, r_minor = r_A, r_B
+                else:
+                    r_major, r_minor = r_B, r_A
+                a_calc = max(
+                    2 * np.sqrt(2) * r_major,
+                    np.sqrt(2) * (r_major + r_minor),
+                    2 * r_minor
+                )
+            final_res.append(a_calc - c.lattice_constant)
+        final_res = np.array(final_res)
+
+        rmse = np.sqrt(np.mean(final_res ** 2))
+        mae = np.mean(np.abs(final_res))
 
         stats = {
             "n_compounds": len(compounds),
@@ -326,7 +418,8 @@ class HEARadiusCalculator:
             "mae": mae,
             "success": result.success,
             "cost": result.cost,
-            "optimality": result.optimality
+            "optimality": result.optimality,
+            "contact_iterations": n_iterations,
         }
 
         return radii, stats
@@ -401,7 +494,10 @@ class HEARadiusCalculator:
             r_B = radii[c.element_B]
 
             if c.structure_type == "B2":
-                a_calc = (2 / np.sqrt(3)) * (r_A + r_B)
+                # Two contact conditions — use max
+                a_AA = 2 * r_A  # A-A contact along cube edge
+                a_AB = (2 / np.sqrt(3)) * (r_A + r_B)  # A-B contact along body diagonal
+                a_calc = max(a_AA, a_AB)
             else:
                 if c.count_A > c.count_B:
                     r_major = r_A

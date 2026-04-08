@@ -271,8 +271,42 @@ def extract_oqmd_compounds(structure_type: str) -> pd.DataFrame:
 # Radius calculation (same TRF approach as existing code)
 # ---------------------------------------------------------------------------
 
-def calculate_radii_trf(df: pd.DataFrame) -> Tuple[Dict[str, float], Dict]:
-    """Calculate effective atomic radii using TRF optimisation."""
+def _determine_active_contacts_df(df: pd.DataFrame,
+                                   radii_arr: np.ndarray,
+                                   el2idx: Dict[str, int],
+                                   stype: str) -> List[str]:
+    """Determine the active (dominant) contact condition for each compound."""
+    contacts = []
+    for _, row in df.iterrows():
+        iA, iB = el2idx[row["element_A"]], el2idx[row["element_B"]]
+        rA, rB = radii_arr[iA], radii_arr[iB]
+        if stype == "B2":
+            a_AA = 2 * rA
+            a_AB = (2 / np.sqrt(3)) * (rA + rB)
+            contacts.append("AA" if a_AA >= a_AB else "AB")
+        else:  # L1_2
+            if row["count_A"] > row["count_B"]:
+                r_major, r_minor = rA, rB
+            else:
+                r_major, r_minor = rB, rA
+            a_AA = 2 * np.sqrt(2) * r_major
+            a_AB = np.sqrt(2) * (r_major + r_minor)
+            a_BB = 2 * r_minor
+            vals = {"AA": a_AA, "AB": a_AB, "BB": a_BB}
+            contacts.append(max(vals, key=vals.get))
+    return contacts
+
+
+def calculate_radii_trf(df: pd.DataFrame,
+                        max_iter: int = 50) -> Tuple[Dict[str, float], Dict]:
+    """Calculate effective atomic radii using iterative TRF optimisation.
+
+    At each iteration the dominant contact condition (max) is determined
+    for every compound from the current radii.  A smooth least-squares
+    sub-problem is then solved using only that fixed contact condition.
+    The loop repeats until no compound switches its active contact,
+    guaranteeing self-consistent radii.
+    """
     if len(df) == 0:
         return {}, {"n_compounds": 0, "n_elements": 0,
                      "rmse": float("nan"), "mae": float("nan")}
@@ -283,40 +317,100 @@ def calculate_radii_trf(df: pd.DataFrame) -> Tuple[Dict[str, float], Dict]:
 
     stype = df["structure_type"].iloc[0]
 
-    def residuals(radii):
-        res = []
-        for _, row in df.iterrows():
-            a = row["lattice_constant"]
-            iA, iB = el2idx[row["element_A"]], el2idx[row["element_B"]]
-            if stype == "B2":
-                res.append(radii[iA] + radii[iB] - (np.sqrt(3) / 2) * a)
-            else:  # L1_2 — use max of 3 contact conditions
-                rA, rB = radii[iA], radii[iB]
-                if row["count_A"] > row["count_B"]:
-                    r_major, r_minor = rA, rB
-                else:
-                    r_major, r_minor = rB, rA
-                # Three contact conditions:
-                #   A-A: a = 2*sqrt(2)*r_major
-                #   A-B: a = sqrt(2)*(r_major + r_minor)
-                #   B-B: a = 2*r_minor
-                a_AA = 2 * np.sqrt(2) * r_major
-                a_AB = np.sqrt(2) * (r_major + r_minor)
-                a_BB = 2 * r_minor
-                a_calc = max(a_AA, a_AB, a_BB)
-                res.append(a_calc - a)
-        return np.array(res)
+    # Pre-extract row data for speed
+    row_data = []
+    for _, row in df.iterrows():
+        row_data.append((
+            row["lattice_constant"],
+            el2idx[row["element_A"]], el2idx[row["element_B"]],
+            row["count_A"], row["count_B"],
+        ))
 
-    result = least_squares(residuals, x0, bounds=(0.5, 3.5), method="trf",
-                           ftol=1e-10, xtol=1e-10, gtol=1e-10)
-    radii = {el: result.x[el2idx[el]] for el in elements}
-    rv = result.fun
+    # --- iterative loop ---
+    current_radii = x0.copy()
+    active_contacts: List[str] = []
+    n_iterations = 0
+
+    for iteration in range(max_iter):
+        new_contacts = _determine_active_contacts_df(df, current_radii,
+                                                     el2idx, stype)
+        if new_contacts == active_contacts:
+            break
+        active_contacts = new_contacts
+        n_iterations = iteration + 1
+
+        frozen_contacts = list(active_contacts)
+
+        def residuals(radii, _contacts=frozen_contacts):
+            res = []
+            for i, (a, iA, iB, cA, cB) in enumerate(row_data):
+                rA, rB = radii[iA], radii[iB]
+                ct = _contacts[i]
+                if stype == "B2":
+                    if ct == "AA":
+                        res.append(2 * rA - a)
+                    else:
+                        res.append((2 / np.sqrt(3)) * (rA + rB) - a)
+                else:  # L1_2
+                    if cA > cB:
+                        r_major, r_minor = rA, rB
+                    else:
+                        r_major, r_minor = rB, rA
+                    if ct == "AA":
+                        res.append(2 * np.sqrt(2) * r_major - a)
+                    elif ct == "AB":
+                        res.append(np.sqrt(2) * (r_major + r_minor) - a)
+                    else:
+                        res.append(2 * r_minor - a)
+            return np.array(res)
+
+        result = least_squares(residuals, current_radii,
+                               bounds=(0.5, 3.5), method="trf",
+                               ftol=1e-10, xtol=1e-10, gtol=1e-10)
+        current_radii = result.x
+
+    radii = {el: current_radii[el2idx[el]] for el in elements}
+
+    # Final stats using max (the true model)
+    final_res = []
+    for _, row in df.iterrows():
+        eA, eB = row["element_A"], row["element_B"]
+        rA, rB = radii[eA], radii[eB]
+        if stype == "B2":
+            a_calc = max(2 * rA, (2 / np.sqrt(3)) * (rA + rB))
+        else:
+            if row["count_A"] > row["count_B"]:
+                r_major, r_minor = rA, rB
+            else:
+                r_major, r_minor = rB, rA
+            a_calc = max(2 * np.sqrt(2) * r_major,
+                         np.sqrt(2) * (r_major + r_minor),
+                         2 * r_minor)
+        final_res.append(a_calc - row["lattice_constant"])
+    final_res = np.array(final_res)
+
     return radii, {
         "n_compounds": len(df),
         "n_elements": len(elements),
-        "rmse": np.sqrt(np.mean(rv ** 2)),
-        "mae": np.mean(np.abs(rv)),
+        "rmse": np.sqrt(np.mean(final_res ** 2)),
+        "mae": np.mean(np.abs(final_res)),
+        "contact_iterations": n_iterations,
     }
+
+
+def _calc_lattice_constant(stype: str, rA: float, rB: float,
+                           count_A: int, count_B: int) -> float:
+    """Compute lattice constant from radii using max contact model."""
+    if stype == "B2":
+        return max(2 * rA, (2 / np.sqrt(3)) * (rA + rB))
+    else:  # L1_2
+        if count_A > count_B:
+            r_major, r_minor = rA, rB
+        else:
+            r_major, r_minor = rB, rA
+        return max(2 * np.sqrt(2) * r_major,
+                   np.sqrt(2) * (r_major + r_minor),
+                   2 * r_minor)
 
 
 def compare_lattice_constants(df: pd.DataFrame,
@@ -330,17 +424,8 @@ def compare_lattice_constants(df: pd.DataFrame,
             continue
         rA, rB = radii[eA], radii[eB]
         a_ref = row["lattice_constant"]
-        if stype == "B2":
-            a_calc = (2 / np.sqrt(3)) * (rA + rB)
-        else:
-            if row["count_A"] > row["count_B"]:
-                r_major, r_minor = rA, rB
-            else:
-                r_major, r_minor = rB, rA
-            a_AA = 2 * np.sqrt(2) * r_major
-            a_AB = np.sqrt(2) * (r_major + r_minor)
-            a_BB = 2 * r_minor
-            a_calc = max(a_AA, a_AB, a_BB)
+        a_calc = _calc_lattice_constant(stype, rA, rB,
+                                        row["count_A"], row["count_B"])
         error = a_calc - a_ref
         rel_error = abs(error) / a_ref * 100
         rows.append({
@@ -419,17 +504,10 @@ def run_analysis(api_key: str, fig_dir: str):
         for _, row in df.iterrows():
             eA, eB = row["element_A"], row["element_B"]
             if eA in radii and eB in radii:
-                if stype == "B2":
-                    a_calc_list.append((2 / np.sqrt(3)) * (radii[eA] + radii[eB]))
-                else:  # L1_2 — max of 3 contact conditions
-                    if row["count_A"] > row["count_B"]:
-                        r_major, r_minor = radii[eA], radii[eB]
-                    else:
-                        r_major, r_minor = radii[eB], radii[eA]
-                    a_AA = 2 * np.sqrt(2) * r_major
-                    a_AB = np.sqrt(2) * (r_major + r_minor)
-                    a_BB = 2 * r_minor
-                    a_calc_list.append(max(a_AA, a_AB, a_BB))
+                a_calc_list.append(
+                    _calc_lattice_constant(stype, radii[eA], radii[eB],
+                                           row["count_A"], row["count_B"])
+                )
             else:
                 a_calc_list.append(float("nan"))
         df["lattice_constant_calc"] = a_calc_list
