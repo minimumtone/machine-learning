@@ -12,10 +12,11 @@ Key features:
 5. Compare with Pauling and Goldschmidt radii
 
 Geometric relationships:
-- B2 structure (AB): Two contact conditions (use max)
+- B2 structure (AB): Three contact conditions (use max)
   - A-A contact: a = 2*r_A
+  - B-B contact: a = 2*r_B
   - A-B contact: a = 2*(r_A + r_B)/sqrt(3)
-  - a_calc = max(a_AA, a_AB)
+  - a_calc = max(a_AA, a_BB, a_AB)
 - L12 structure (A3B): Three contact conditions (use max)
   - A-A contact: a = 2*sqrt(2)*r_major
   - A-B contact: a = sqrt(2)*(r_major + r_minor)
@@ -252,7 +253,7 @@ class HEARadiusCalculator:
         """Determine the active (dominant) contact condition for each compound.
 
         Returns a list of contact labels, one per compound:
-          B2:  'AA' or 'AB'
+          B2:  'AA', 'BB', or 'AB'
           L12: 'AA', 'AB', or 'BB'
         """
         contacts = []
@@ -264,8 +265,10 @@ class HEARadiusCalculator:
 
             if c.structure_type == "B2":
                 a_AA = 2 * r_A
+                a_BB = 2 * r_B
                 a_AB = (2 / np.sqrt(3)) * (r_A + r_B)
-                contacts.append("AA" if a_AA >= a_AB else "AB")
+                vals = {"AA": a_AA, "BB": a_BB, "AB": a_AB}
+                contacts.append(max(vals, key=vals.get))
             elif c.structure_type == "L12":
                 if c.count_A > c.count_B:
                     r_major, r_minor = r_A, r_B
@@ -358,6 +361,8 @@ class HEARadiusCalculator:
                     if c.structure_type == "B2":
                         if ct == "AA":
                             res.append(2 * r_A - a)
+                        elif ct == "BB":
+                            res.append(2 * r_B - a)
                         else:  # AB
                             res.append((2 / np.sqrt(3)) * (r_A + r_B) - a)
                     elif c.structure_type == "L12":
@@ -394,7 +399,7 @@ class HEARadiusCalculator:
             r_A = radii[c.element_A]
             r_B = radii[c.element_B]
             if c.structure_type == "B2":
-                a_calc = max(2 * r_A, (2 / np.sqrt(3)) * (r_A + r_B))
+                a_calc = max(2 * r_A, 2 * r_B, (2 / np.sqrt(3)) * (r_A + r_B))
             else:
                 if c.count_A > c.count_B:
                     r_major, r_minor = r_A, r_B
@@ -494,10 +499,11 @@ class HEARadiusCalculator:
             r_B = radii[c.element_B]
 
             if c.structure_type == "B2":
-                # Two contact conditions — use max
+                # Three contact conditions — use max
                 a_AA = 2 * r_A  # A-A contact along cube edge
+                a_BB = 2 * r_B  # B-B contact along cube edge
                 a_AB = (2 / np.sqrt(3)) * (r_A + r_B)  # A-B contact along body diagonal
-                a_calc = max(a_AA, a_AB)
+                a_calc = max(a_AA, a_BB, a_AB)
             else:
                 if c.count_A > c.count_B:
                     r_major = r_A

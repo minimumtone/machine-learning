@@ -282,8 +282,10 @@ def _determine_active_contacts_df(df: pd.DataFrame,
         rA, rB = radii_arr[iA], radii_arr[iB]
         if stype == "B2":
             a_AA = 2 * rA
+            a_BB = 2 * rB
             a_AB = (2 / np.sqrt(3)) * (rA + rB)
-            contacts.append("AA" if a_AA >= a_AB else "AB")
+            vals = {"AA": a_AA, "BB": a_BB, "AB": a_AB}
+            contacts.append(max(vals, key=vals.get))
         else:  # L1_2
             if row["count_A"] > row["count_B"]:
                 r_major, r_minor = rA, rB
@@ -349,7 +351,9 @@ def calculate_radii_trf(df: pd.DataFrame,
                 if stype == "B2":
                     if ct == "AA":
                         res.append(2 * rA - a)
-                    else:
+                    elif ct == "BB":
+                        res.append(2 * rB - a)
+                    else:  # AB
                         res.append((2 / np.sqrt(3)) * (rA + rB) - a)
                 else:  # L1_2
                     if cA > cB:
@@ -377,7 +381,7 @@ def calculate_radii_trf(df: pd.DataFrame,
         eA, eB = row["element_A"], row["element_B"]
         rA, rB = radii[eA], radii[eB]
         if stype == "B2":
-            a_calc = max(2 * rA, (2 / np.sqrt(3)) * (rA + rB))
+            a_calc = max(2 * rA, 2 * rB, (2 / np.sqrt(3)) * (rA + rB))
         else:
             if row["count_A"] > row["count_B"]:
                 r_major, r_minor = rA, rB
@@ -402,7 +406,7 @@ def _calc_lattice_constant(stype: str, rA: float, rB: float,
                            count_A: int, count_B: int) -> float:
     """Compute lattice constant from radii using max contact model."""
     if stype == "B2":
-        return max(2 * rA, (2 / np.sqrt(3)) * (rA + rB))
+        return max(2 * rA, 2 * rB, (2 / np.sqrt(3)) * (rA + rB))
     else:  # L1_2
         if count_A > count_B:
             r_major, r_minor = rA, rB
