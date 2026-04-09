@@ -7,6 +7,7 @@ classifies them as B2 or L1_2, calculates effective atomic radii via TRF
 optimisation, and generates a comprehensive comparison report with figures.
 """
 
+import multiprocessing
 import os
 import re
 import sys
@@ -21,6 +22,7 @@ import numpy as np
 import pandas as pd
 import requests
 from scipy.optimize import least_squares, minimize
+from threadpoolctl import threadpool_limits
 
 warnings.filterwarnings("ignore")
 
@@ -271,32 +273,35 @@ def extract_oqmd_compounds(structure_type: str) -> pd.DataFrame:
 # Radius calculation (same TRF approach as existing code)
 # ---------------------------------------------------------------------------
 
-def _determine_active_contacts_df(df: pd.DataFrame,
-                                   radii_arr: np.ndarray,
-                                   el2idx: Dict[str, int],
-                                   stype: str) -> List[str]:
-    """Determine the active (dominant) contact condition for each compound."""
-    contacts = []
-    for _, row in df.iterrows():
-        iA, iB = el2idx[row["element_A"]], el2idx[row["element_B"]]
-        rA, rB = radii_arr[iA], radii_arr[iB]
-        if stype == "B2":
-            a_AA = 2 * rA
-            a_BB = 2 * rB
-            a_AB = (2 / np.sqrt(3)) * (rA + rB)
-            vals = {"AA": a_AA, "BB": a_BB, "AB": a_AB}
-            contacts.append(max(vals, key=vals.get))
-        else:  # L1_2
-            if row["count_A"] > row["count_B"]:
-                r_major, r_minor = rA, rB
-            else:
-                r_major, r_minor = rB, rA
-            a_AA = 2 * np.sqrt(2) * r_major
-            a_AB = np.sqrt(2) * (r_major + r_minor)
-            a_BB = 2 * r_minor
-            vals = {"AA": a_AA, "AB": a_AB, "BB": a_BB}
-            contacts.append(max(vals, key=vals.get))
-    return contacts
+def _determine_active_contacts_vec(radii_arr: np.ndarray,
+                                    iA_arr: np.ndarray, iB_arr: np.ndarray,
+                                    im_arr: np.ndarray, in_arr: np.ndarray,
+                                    stype: str) -> np.ndarray:
+    """Vectorised active-contact determination.  Returns array of 0/1/2
+    encoding AA/BB/AB respectively."""
+    _sqrt2 = np.sqrt(2)
+    _2s3 = 2.0 / np.sqrt(3)
+    if stype == "B2":
+        a_AA = 2.0 * radii_arr[iA_arr]
+        a_BB = 2.0 * radii_arr[iB_arr]
+        a_AB = _2s3 * (radii_arr[iA_arr] + radii_arr[iB_arr])
+        stacked = np.column_stack([a_AA, a_BB, a_AB])
+    else:  # L1_2
+        rm = radii_arr[im_arr]
+        rn = radii_arr[in_arr]
+        a_AA = 2.0 * _sqrt2 * rm
+        a_AB = _sqrt2 * (rm + rn)
+        a_BB = 2.0 * rn
+        stacked = np.column_stack([a_AA, a_AB, a_BB])
+    return stacked.argmax(axis=1)
+
+
+# contact-type integer codes used throughout the vectorised path
+_CT_AA, _CT_BB, _CT_AB = 0, 1, 2
+# For L1_2 the column order is AA, AB, BB → codes 0, 1, 2 but
+# _CT_AB=2 would collide with BB.  Keep separate mappings:
+_B2_CODES  = np.array([0, 1, 2])   # AA, BB, AB columns
+_L12_CODES = np.array([0, 1, 2])   # AA, AB, BB columns
 
 
 def calculate_radii_trf(df: pd.DataFrame,
@@ -304,7 +309,7 @@ def calculate_radii_trf(df: pd.DataFrame,
                         initial_guess: Optional[Dict[str, float]] = None,
                         ) -> Tuple[Dict[str, float], Dict]:
     """Calculate effective atomic radii using iterative constrained
-    optimisation (SLSQP).
+    optimisation (SLSQP) with fully vectorised inner functions.
 
     At each iteration the dominant contact condition (max) is determined
     for every compound from the current radii.  A constrained optimisation
@@ -331,149 +336,167 @@ def calculate_radii_trf(df: pd.DataFrame,
     _sqrt2 = np.sqrt(2)
     _2s3 = 2.0 / np.sqrt(3)
 
-    # Pre-extract row data for speed
-    row_data = []
-    for _, row in df.iterrows():
-        row_data.append((
-            row["lattice_constant"],
-            el2idx[row["element_A"]], el2idx[row["element_B"]],
-            row["count_A"], row["count_B"],
-        ))
+    # Pre-extract numpy arrays (done once)
+    n_comp = len(df)
+    a_vals = df["lattice_constant"].values.astype(np.float64)
+    iA_arr = np.array([el2idx[e] for e in df["element_A"]], dtype=np.intp)
+    iB_arr = np.array([el2idx[e] for e in df["element_B"]], dtype=np.intp)
+    cA_arr = df["count_A"].values
+    cB_arr = df["count_B"].values
+
+    # For L1_2: pre-compute major / minor element indices
+    is_A_major = cA_arr > cB_arr
+    im_arr = np.where(is_A_major, iA_arr, iB_arr)  # major
+    in_arr = np.where(is_A_major, iB_arr, iA_arr)  # minor
 
     # --- iterative loop ---
     current_radii = x0.copy()
-    active_contacts: List[str] = []
+    prev_ct = np.full(n_comp, -1, dtype=np.intp)
     n_iterations = 0
     _bounds = [(0.5, 3.5)] * n_el
 
     for iteration in range(max_iter):
-        new_contacts = _determine_active_contacts_df(df, current_radii,
-                                                     el2idx, stype)
-        if new_contacts == active_contacts:
+        ct = _determine_active_contacts_vec(current_radii,
+                                            iA_arr, iB_arr,
+                                            im_arr, in_arr, stype)
+        if np.array_equal(ct, prev_ct):
             break
-        active_contacts = new_contacts
+        prev_ct = ct.copy()
         n_iterations = iteration + 1
 
-        frozen = list(active_contacts)
+        # --- build masks for current contact assignment ---
+        if stype == "B2":
+            mAA = ct == 0; mBB = ct == 1; mAB = ct == 2  # noqa: E702
+        else:
+            mAA = ct == 0; mAB = ct == 1; mBB = ct == 2  # noqa: E702
 
-        # Objective: 0.5 * sum of squared residuals (dominant contacts)
-        def _obj(radii, _ct=frozen):
-            ssr = 0.0
-            for i, (a, iA, iB, cA, cB) in enumerate(row_data):
-                rA, rB = radii[iA], radii[iB]
-                ct = _ct[i]
-                if stype == "B2":
-                    if ct == "AA":
-                        d = 2.0 * rA - a
-                    elif ct == "BB":
-                        d = 2.0 * rB - a
-                    else:
-                        d = _2s3 * (rA + rB) - a
-                else:
-                    rm = rA if cA > cB else rB
-                    rn = rB if cA > cB else rA
-                    if ct == "AA":
-                        d = 2.0 * _sqrt2 * rm - a
-                    elif ct == "AB":
-                        d = _sqrt2 * (rm + rn) - a
-                    else:
-                        d = 2.0 * rn - a
-                ssr += d * d
-            return 0.5 * ssr
+        # ---- vectorised objective (0.5 * SSR) ----
+        if stype == "B2":
+            def _obj(radii, _mAA=mAA, _mBB=mBB, _mAB=mAB):
+                rA = radii[iA_arr]; rB = radii[iB_arr]
+                d = np.empty(n_comp)
+                d[_mAA] = 2.0 * rA[_mAA] - a_vals[_mAA]
+                d[_mBB] = 2.0 * rB[_mBB] - a_vals[_mBB]
+                d[_mAB] = _2s3 * (rA[_mAB] + rB[_mAB]) - a_vals[_mAB]
+                return 0.5 * np.dot(d, d)
 
-        def _grad(radii, _ct=frozen):
-            g = np.zeros_like(radii)
-            for i, (a, iA, iB, cA, cB) in enumerate(row_data):
-                rA, rB = radii[iA], radii[iB]
-                ct = _ct[i]
-                if stype == "B2":
-                    if ct == "AA":
-                        d = 2.0 * rA - a
-                        g[iA] += 2.0 * d
-                    elif ct == "BB":
-                        d = 2.0 * rB - a
-                        g[iB] += 2.0 * d
-                    else:
-                        d = _2s3 * (rA + rB) - a
-                        g[iA] += _2s3 * d
-                        g[iB] += _2s3 * d
-                else:
-                    im = iA if cA > cB else iB
-                    imn = iB if cA > cB else iA
-                    rm, rn = radii[im], radii[imn]
-                    if ct == "AA":
-                        d = 2.0 * _sqrt2 * rm - a
-                        g[im] += 2.0 * _sqrt2 * d
-                    elif ct == "AB":
-                        d = _sqrt2 * (rm + rn) - a
-                        g[im] += _sqrt2 * d
-                        g[imn] += _sqrt2 * d
-                    else:
-                        d = 2.0 * rn - a
-                        g[imn] += 2.0 * d
-            return g
+            def _grad(radii, _mAA=mAA, _mBB=mBB, _mAB=mAB):
+                rA = radii[iA_arr]; rB = radii[iB_arr]
+                d = np.empty(n_comp)
+                d[_mAA] = 2.0 * rA[_mAA] - a_vals[_mAA]
+                d[_mBB] = 2.0 * rB[_mBB] - a_vals[_mBB]
+                d[_mAB] = _2s3 * (rA[_mAB] + rB[_mAB]) - a_vals[_mAB]
+                g = np.zeros(n_el)
+                np.add.at(g, iA_arr[_mAA], 2.0 * d[_mAA])
+                np.add.at(g, iB_arr[_mBB], 2.0 * d[_mBB])
+                np.add.at(g, iA_arr[_mAB], _2s3 * d[_mAB])
+                np.add.at(g, iB_arr[_mAB], _2s3 * d[_mAB])
+                return g
+        else:  # L1_2
+            def _obj(radii, _mAA=mAA, _mAB=mAB, _mBB=mBB):
+                rm = radii[im_arr]; rn = radii[in_arr]
+                d = np.empty(n_comp)
+                d[_mAA] = 2.0 * _sqrt2 * rm[_mAA] - a_vals[_mAA]
+                d[_mAB] = _sqrt2 * (rm[_mAB] + rn[_mAB]) - a_vals[_mAB]
+                d[_mBB] = 2.0 * rn[_mBB] - a_vals[_mBB]
+                return 0.5 * np.dot(d, d)
 
-        # Inequality constraints: a_DFT - a_non_dominant >= 0
-        def _ineq(radii, _ct=frozen):
-            vals = []
-            for i, (a, iA, iB, cA, cB) in enumerate(row_data):
-                rA, rB = radii[iA], radii[iB]
-                ct = _ct[i]
-                if stype == "B2":
-                    if ct != "AA":
-                        vals.append(a - 2.0 * rA)
-                    if ct != "BB":
-                        vals.append(a - 2.0 * rB)
-                    if ct != "AB":
-                        vals.append(a - _2s3 * (rA + rB))
-                else:
-                    rm = rA if cA > cB else rB
-                    rn = rB if cA > cB else rA
-                    if ct != "AA":
-                        vals.append(a - 2.0 * _sqrt2 * rm)
-                    if ct != "AB":
-                        vals.append(a - _sqrt2 * (rm + rn))
-                    if ct != "BB":
-                        vals.append(a - 2.0 * rn)
-            return np.array(vals)
+            def _grad(radii, _mAA=mAA, _mAB=mAB, _mBB=mBB):
+                rm = radii[im_arr]; rn = radii[in_arr]
+                d = np.empty(n_comp)
+                d[_mAA] = 2.0 * _sqrt2 * rm[_mAA] - a_vals[_mAA]
+                d[_mAB] = _sqrt2 * (rm[_mAB] + rn[_mAB]) - a_vals[_mAB]
+                d[_mBB] = 2.0 * rn[_mBB] - a_vals[_mBB]
+                g = np.zeros(n_el)
+                np.add.at(g, im_arr[_mAA], 2.0 * _sqrt2 * d[_mAA])
+                np.add.at(g, im_arr[_mAB], _sqrt2 * d[_mAB])
+                np.add.at(g, in_arr[_mAB], _sqrt2 * d[_mAB])
+                np.add.at(g, in_arr[_mBB], 2.0 * d[_mBB])
+                return g
 
-        def _ineq_jac(radii, _ct=frozen):
-            rows = []
-            for i, (a, iA, iB, cA, cB) in enumerate(row_data):
-                ct = _ct[i]
-                if stype == "B2":
-                    if ct != "AA":
-                        row = np.zeros(n_el)
-                        row[iA] = -2.0
-                        rows.append(row)
-                    if ct != "BB":
-                        row = np.zeros(n_el)
-                        row[iB] = -2.0
-                        rows.append(row)
-                    if ct != "AB":
-                        row = np.zeros(n_el)
-                        row[iA] = -_2s3
-                        row[iB] = -_2s3
-                        rows.append(row)
-                else:
-                    im = iA if cA > cB else iB
-                    imn = iB if cA > cB else iA
-                    if ct != "AA":
-                        row = np.zeros(n_el)
-                        row[im] = -2.0 * _sqrt2
-                        rows.append(row)
-                    if ct != "AB":
-                        row = np.zeros(n_el)
-                        row[im] = -_sqrt2
-                        row[imn] = -_sqrt2
-                        rows.append(row)
-                    if ct != "BB":
-                        row = np.zeros(n_el)
-                        row[imn] = -2.0
-                        rows.append(row)
-            if not rows:
+        # ---- vectorised inequality constraints ----
+        # Build constraint index arrays & pre-compute constant Jacobian
+        # (constraints are linear in radii → Jacobian is constant)
+        c_idx_list: List[int] = []      # compound index
+        c_type_list: List[int] = []     # 0=AA, 1=BB, 2=AB for B2 / 0=AA, 1=AB, 2=BB for L12
+        if stype == "B2":
+            for i in range(n_comp):
+                c = ct[i]
+                if c != 0:  # not AA
+                    c_idx_list.append(i); c_type_list.append(0)
+                if c != 1:  # not BB
+                    c_idx_list.append(i); c_type_list.append(1)
+                if c != 2:  # not AB
+                    c_idx_list.append(i); c_type_list.append(2)
+        else:
+            for i in range(n_comp):
+                c = ct[i]
+                if c != 0:  # not AA
+                    c_idx_list.append(i); c_type_list.append(0)
+                if c != 1:  # not AB
+                    c_idx_list.append(i); c_type_list.append(1)
+                if c != 2:  # not BB
+                    c_idx_list.append(i); c_type_list.append(2)
+
+        n_ineq = len(c_idx_list)
+        if n_ineq > 0:
+            ci = np.array(c_idx_list, dtype=np.intp)
+            ctp = np.array(c_type_list, dtype=np.intp)
+            c_a = a_vals[ci]
+            cmAA = ctp == 0; cmBB_or_AB1 = ctp == 1; cmAB_or_BB2 = ctp == 2
+
+            if stype == "B2":
+                c_iA = iA_arr[ci]; c_iB = iB_arr[ci]
+
+                def _ineq(radii, _cmAA=cmAA, _cmBB=cmBB_or_AB1,
+                          _cmAB=cmAB_or_BB2):
+                    rA = radii[c_iA]; rB = radii[c_iB]
+                    v = np.empty(n_ineq)
+                    v[_cmAA] = c_a[_cmAA] - 2.0 * rA[_cmAA]
+                    v[_cmBB] = c_a[_cmBB] - 2.0 * rB[_cmBB]
+                    v[_cmAB] = c_a[_cmAB] - _2s3 * (rA[_cmAB] + rB[_cmAB])
+                    return v
+
+                # constant Jacobian
+                jac = np.zeros((n_ineq, n_el))
+                aa_rows = np.where(cmAA)[0]
+                jac[aa_rows, c_iA[aa_rows]] += -2.0
+                bb_rows = np.where(cmBB_or_AB1)[0]
+                jac[bb_rows, c_iB[bb_rows]] += -2.0
+                ab_rows = np.where(cmAB_or_BB2)[0]
+                jac[ab_rows, c_iA[ab_rows]] += -_2s3
+                jac[ab_rows, c_iB[ab_rows]] += -_2s3
+            else:  # L1_2
+                c_im = im_arr[ci]; c_in = in_arr[ci]
+
+                def _ineq(radii, _cmAA=cmAA, _cmAB=cmBB_or_AB1,
+                          _cmBB=cmAB_or_BB2):
+                    rm = radii[c_im]; rn = radii[c_in]
+                    v = np.empty(n_ineq)
+                    v[_cmAA] = c_a[_cmAA] - 2.0 * _sqrt2 * rm[_cmAA]
+                    v[_cmAB] = c_a[_cmAB] - _sqrt2 * (rm[_cmAB] + rn[_cmAB])
+                    v[_cmBB] = c_a[_cmBB] - 2.0 * rn[_cmBB]
+                    return v
+
+                jac = np.zeros((n_ineq, n_el))
+                aa_rows = np.where(cmAA)[0]
+                jac[aa_rows, c_im[aa_rows]] += -2.0 * _sqrt2
+                ab_rows = np.where(cmBB_or_AB1)[0]
+                jac[ab_rows, c_im[ab_rows]] += -_sqrt2
+                jac[ab_rows, c_in[ab_rows]] += -_sqrt2
+                bb_rows = np.where(cmAB_or_BB2)[0]
+                jac[bb_rows, c_in[bb_rows]] += -2.0
+
+            _const_jac = jac
+
+            def _ineq_jac(radii):
+                return _const_jac
+        else:
+            def _ineq(radii):
+                return np.array([])
+
+            def _ineq_jac(radii):
                 return np.empty((0, n_el))
-            return np.array(rows)
 
         result = minimize(
             _obj, current_radii, jac=_grad,
@@ -485,62 +508,80 @@ def calculate_radii_trf(df: pd.DataFrame,
 
     radii = {el: current_radii[el2idx[el]] for el in elements}
 
-    # Final stats using max (the true model)
-    final_res = []
-    for _, row in df.iterrows():
-        eA, eB = row["element_A"], row["element_B"]
-        rA, rB = radii[eA], radii[eB]
-        if stype == "B2":
-            a_calc = max(2 * rA, 2 * rB, _2s3 * (rA + rB))
-        else:
-            if row["count_A"] > row["count_B"]:
-                r_major, r_minor = rA, rB
-            else:
-                r_major, r_minor = rB, rA
-            a_calc = max(2 * _sqrt2 * r_major,
-                         _sqrt2 * (r_major + r_minor),
-                         2 * r_minor)
-        final_res.append(a_calc - row["lattice_constant"])
-    final_res = np.array(final_res)
+    # Final stats using max (the true model) — vectorised
+    rA_f = np.array([radii[e] for e in df["element_A"]])
+    rB_f = np.array([radii[e] for e in df["element_B"]])
+    if stype == "B2":
+        a_calc = np.maximum(np.maximum(2 * rA_f, 2 * rB_f),
+                            _2s3 * (rA_f + rB_f))
+    else:
+        rm_f = np.where(is_A_major, rA_f, rB_f)
+        rn_f = np.where(is_A_major, rB_f, rA_f)
+        a_calc = np.maximum(np.maximum(2 * _sqrt2 * rm_f,
+                                       _sqrt2 * (rm_f + rn_f)),
+                            2 * rn_f)
+    final_res = a_calc - a_vals
 
-    # Count constraint violations
-    n_violated = 0
-    for _, row in df.iterrows():
-        eA, eB = row["element_A"], row["element_B"]
-        rA, rB = radii[eA], radii[eB]
-        a = row["lattice_constant"]
-        if stype == "B2":
-            for v in [2 * rA, 2 * rB, _2s3 * (rA + rB)]:
-                if v > a + 1e-6:
-                    n_violated += 1
-        else:
-            if row["count_A"] > row["count_B"]:
-                rm, rn = rA, rB
-            else:
-                rm, rn = rB, rA
-            for v in [2 * _sqrt2 * rm, _sqrt2 * (rm + rn), 2 * rn]:
-                if v > a + 1e-6:
-                    n_violated += 1
+    # Count constraint violations — vectorised
+    if stype == "B2":
+        all_contacts = np.column_stack([2 * rA_f, 2 * rB_f,
+                                        _2s3 * (rA_f + rB_f)])
+    else:
+        all_contacts = np.column_stack([2 * _sqrt2 * rm_f,
+                                        _sqrt2 * (rm_f + rn_f),
+                                        2 * rn_f])
+    n_violated = int(np.sum(all_contacts > a_vals[:, None] + 1e-6))
 
     return radii, {
         "n_compounds": len(df),
         "n_elements": len(elements),
-        "rmse": np.sqrt(np.mean(final_res ** 2)),
-        "mae": np.mean(np.abs(final_res)),
+        "rmse": float(np.sqrt(np.mean(final_res ** 2))),
+        "mae": float(np.mean(np.abs(final_res))),
         "contact_iterations": n_iterations,
         "n_constraint_violations": n_violated,
     }
+
+
+# ---------------------------------------------------------------------------
+# Module-level state for multiprocessing bootstrap workers
+# ---------------------------------------------------------------------------
+_BOOT_DF: Optional[pd.DataFrame] = None
+_BOOT_GUESS: Optional[Dict[str, float]] = None
+
+
+def _init_boot_pool(df: pd.DataFrame, guess: Dict[str, float]) -> None:
+    """Initialiser called once per worker process."""
+    global _BOOT_DF, _BOOT_GUESS
+    _BOOT_DF = df
+    _BOOT_GUESS = guess
+
+
+def _boot_worker(seed: int) -> Optional[Dict[str, float]]:
+    """Single bootstrap iteration (must be module-level for pickling)."""
+    with threadpool_limits(limits=1):
+        rng = np.random.RandomState(seed)
+        n = len(_BOOT_DF)
+        idx = rng.choice(n, size=n, replace=True)
+        sample = _BOOT_DF.iloc[idx].reset_index(drop=True)
+        try:
+            r, _ = calculate_radii_trf(sample, max_iter=10,
+                                       initial_guess=_BOOT_GUESS)
+            return r
+        except Exception:
+            return None
 
 
 def bootstrap_uncertainty(df: pd.DataFrame,
                           n_bootstrap: int = 1000,
                           random_state: int = 42,
                           initial_guess: Optional[Dict[str, float]] = None,
+                          n_jobs: Optional[int] = None,
                           ) -> Dict:
     """Estimate uncertainty in atomic radii via bootstrap resampling.
 
     Resamples compounds with replacement, re-optimises for each sample,
     and returns per-element mean, std, and 95 % confidence intervals.
+    Uses multiprocessing to parallelise across CPU cores.
     """
     if len(df) == 0:
         return {}
@@ -549,23 +590,28 @@ def bootstrap_uncertainty(df: pd.DataFrame,
         initial_guess, _ = calculate_radii_trf(df)
 
     elements = sorted(initial_guess.keys())
-    n = len(df)
+
+    if n_jobs is None:
+        n_jobs = min(os.cpu_count() or 1, 8)
+
     rng = np.random.RandomState(random_state)
+    seeds = rng.randint(0, 2**31, size=n_bootstrap).tolist()
 
     boot_radii: Dict[str, List[float]] = {el: [] for el in elements}
+    n_done = 0
 
-    for b in range(n_bootstrap):
-        if (b + 1) % 100 == 0:
-            print(f"  bootstrap {b + 1}/{n_bootstrap}")
-        idx = rng.choice(n, size=n, replace=True)
-        sample = df.iloc[idx].reset_index(drop=True)
-        try:
-            r, _ = calculate_radii_trf(sample, initial_guess=initial_guess)
-            for el in elements:
-                if el in r:
-                    boot_radii[el].append(r[el])
-        except Exception:
-            continue
+    with multiprocessing.Pool(
+        n_jobs, initializer=_init_boot_pool,
+        initargs=(df, initial_guess),
+    ) as pool:
+        for r in pool.imap_unordered(_boot_worker, seeds, chunksize=4):
+            n_done += 1
+            if n_done % 100 == 0:
+                print(f"  bootstrap {n_done}/{n_bootstrap}")
+            if r is not None:
+                for el in elements:
+                    if el in r:
+                        boot_radii[el].append(r[el])
 
     out: Dict = {"mean": {}, "std": {},
                  "ci_lower": {}, "ci_upper": {},
