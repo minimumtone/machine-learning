@@ -38,7 +38,7 @@ from typing import Dict, List, Optional, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.optimize import least_squares
+from scipy.optimize import least_squares, minimize
 
 warnings.filterwarnings("ignore")
 
@@ -328,10 +328,26 @@ class HEARadiusCalculator:
         else:
             x0 = np.array([PAULING_RADII.get(el, 1.4) for el in elements])
 
+        # Pre-computed constants
+        _sqrt2 = np.sqrt(2)
+        _2_over_sqrt3 = 2.0 / np.sqrt(3)
+
+        # Pre-extract compound data for vectorised access
+        _cdata = []
+        for c in compounds:
+            _cdata.append((
+                c.lattice_constant,
+                element_to_idx[c.element_A],
+                element_to_idx[c.element_B],
+                c.count_A, c.count_B,
+                c.structure_type,
+            ))
+
         # --- iterative loop --------------------------------------------------
         current_radii = x0.copy()
         active_contacts: List[str] = []
         n_iterations = 0
+        _bounds = [(0.5, 3.0)] * n_elements
 
         for iteration in range(max_iter):
             # 1. Determine active contact for each compound
@@ -345,48 +361,136 @@ class HEARadiusCalculator:
             active_contacts = new_contacts
             n_iterations = iteration + 1
 
-            # 3. Build smooth residual using fixed active contacts
-            frozen_contacts = list(active_contacts)  # snapshot
+            # 3. Objective: sum of squared residuals for dominant contacts
+            frozen = list(active_contacts)
 
-            def residuals(radii, _contacts=frozen_contacts):
-                res = []
-                for i, c in enumerate(compounds):
-                    a = c.lattice_constant
-                    idx_A = element_to_idx[c.element_A]
-                    idx_B = element_to_idx[c.element_B]
-                    r_A = radii[idx_A]
-                    r_B = radii[idx_B]
-                    ct = _contacts[i]
-
-                    if c.structure_type == "B2":
+            def _objective(radii, _ct=frozen):
+                ssr = 0.0
+                for i, (a, iA, iB, cA, cB, st) in enumerate(_cdata):
+                    rA, rB = radii[iA], radii[iB]
+                    ct = _ct[i]
+                    if st == "B2":
                         if ct == "AA":
-                            res.append(2 * r_A - a)
+                            d = 2.0 * rA - a
                         elif ct == "BB":
-                            res.append(2 * r_B - a)
-                        else:  # AB
-                            res.append((2 / np.sqrt(3)) * (r_A + r_B) - a)
-                    elif c.structure_type == "L12":
-                        if c.count_A > c.count_B:
-                            r_major, r_minor = r_A, r_B
+                            d = 2.0 * rB - a
                         else:
-                            r_major, r_minor = r_B, r_A
+                            d = _2_over_sqrt3 * (rA + rB) - a
+                    else:  # L12
+                        rm = rA if cA > cB else rB
+                        rn = rB if cA > cB else rA
                         if ct == "AA":
-                            res.append(2 * np.sqrt(2) * r_major - a)
+                            d = 2.0 * _sqrt2 * rm - a
                         elif ct == "AB":
-                            res.append(np.sqrt(2) * (r_major + r_minor) - a)
-                        else:  # BB
-                            res.append(2 * r_minor - a)
-                return np.array(res)
+                            d = _sqrt2 * (rm + rn) - a
+                        else:
+                            d = 2.0 * rn - a
+                    ssr += d * d
+                return 0.5 * ssr
 
-            # 4. Optimise with TRF
-            result = least_squares(
-                residuals,
-                current_radii,
-                bounds=(0.5, 3.0),
-                method="trf",
-                ftol=1e-10,
-                xtol=1e-10,
-                gtol=1e-10
+            def _gradient(radii, _ct=frozen):
+                g = np.zeros_like(radii)
+                for i, (a, iA, iB, cA, cB, st) in enumerate(_cdata):
+                    rA, rB = radii[iA], radii[iB]
+                    ct = _ct[i]
+                    if st == "B2":
+                        if ct == "AA":
+                            d = 2.0 * rA - a
+                            g[iA] += 2.0 * d
+                        elif ct == "BB":
+                            d = 2.0 * rB - a
+                            g[iB] += 2.0 * d
+                        else:
+                            d = _2_over_sqrt3 * (rA + rB) - a
+                            g[iA] += _2_over_sqrt3 * d
+                            g[iB] += _2_over_sqrt3 * d
+                    else:  # L12
+                        im = iA if cA > cB else iB
+                        imn = iB if cA > cB else iA
+                        rm, rn = radii[im], radii[imn]
+                        if ct == "AA":
+                            d = 2.0 * _sqrt2 * rm - a
+                            g[im] += 2.0 * _sqrt2 * d
+                        elif ct == "AB":
+                            d = _sqrt2 * (rm + rn) - a
+                            g[im] += _sqrt2 * d
+                            g[imn] += _sqrt2 * d
+                        else:
+                            d = 2.0 * rn - a
+                            g[imn] += 2.0 * d
+                return g
+
+            # 4. Inequality constraints: a_DFT - a_non_dominant >= 0
+            def _ineq_fun(radii, _ct=frozen):
+                vals = []
+                for i, (a, iA, iB, cA, cB, st) in enumerate(_cdata):
+                    rA, rB = radii[iA], radii[iB]
+                    ct = _ct[i]
+                    if st == "B2":
+                        if ct != "AA":
+                            vals.append(a - 2.0 * rA)
+                        if ct != "BB":
+                            vals.append(a - 2.0 * rB)
+                        if ct != "AB":
+                            vals.append(a - _2_over_sqrt3 * (rA + rB))
+                    else:  # L12
+                        rm = rA if cA > cB else rB
+                        rn = rB if cA > cB else rA
+                        if ct != "AA":
+                            vals.append(a - 2.0 * _sqrt2 * rm)
+                        if ct != "AB":
+                            vals.append(a - _sqrt2 * (rm + rn))
+                        if ct != "BB":
+                            vals.append(a - 2.0 * rn)
+                return np.array(vals)
+
+            def _ineq_jac(radii, _ct=frozen):
+                rows = []
+                for i, (a, iA, iB, cA, cB, st) in enumerate(_cdata):
+                    ct = _ct[i]
+                    if st == "B2":
+                        if ct != "AA":
+                            row = np.zeros(n_elements)
+                            row[iA] = -2.0
+                            rows.append(row)
+                        if ct != "BB":
+                            row = np.zeros(n_elements)
+                            row[iB] = -2.0
+                            rows.append(row)
+                        if ct != "AB":
+                            row = np.zeros(n_elements)
+                            row[iA] = -_2_over_sqrt3
+                            row[iB] = -_2_over_sqrt3
+                            rows.append(row)
+                    else:  # L12
+                        im = iA if cA > cB else iB
+                        imn = iB if cA > cB else iA
+                        if ct != "AA":
+                            row = np.zeros(n_elements)
+                            row[im] = -2.0 * _sqrt2
+                            rows.append(row)
+                        if ct != "AB":
+                            row = np.zeros(n_elements)
+                            row[im] = -_sqrt2
+                            row[imn] = -_sqrt2
+                            rows.append(row)
+                        if ct != "BB":
+                            row = np.zeros(n_elements)
+                            row[imn] = -2.0
+                            rows.append(row)
+                if not rows:
+                    return np.empty((0, n_elements))
+                return np.array(rows)
+
+            # 5. Optimise with SLSQP (supports inequality constraints)
+            result = minimize(
+                _objective, current_radii,
+                jac=_gradient,
+                method="SLSQP",
+                bounds=_bounds,
+                constraints={"type": "ineq",
+                             "fun": _ineq_fun, "jac": _ineq_jac},
+                options={"maxiter": 1000, "ftol": 1e-12},
             )
             current_radii = result.x
 
@@ -416,18 +520,98 @@ class HEARadiusCalculator:
         rmse = np.sqrt(np.mean(final_res ** 2))
         mae = np.mean(np.abs(final_res))
 
+        # Count constraint violations (any contact > a_DFT)
+        n_violated = 0
+        for c in compounds:
+            r_A = radii[c.element_A]
+            r_B = radii[c.element_B]
+            a = c.lattice_constant
+            if c.structure_type == "B2":
+                for v in [2 * r_A, 2 * r_B,
+                          _2_over_sqrt3 * (r_A + r_B)]:
+                    if v > a + 1e-6:
+                        n_violated += 1
+            else:
+                if c.count_A > c.count_B:
+                    r_maj, r_min = r_A, r_B
+                else:
+                    r_maj, r_min = r_B, r_A
+                for v in [2 * _sqrt2 * r_maj,
+                          _sqrt2 * (r_maj + r_min),
+                          2 * r_min]:
+                    if v > a + 1e-6:
+                        n_violated += 1
+
         stats = {
             "n_compounds": len(compounds),
             "n_elements": n_elements,
             "rmse": rmse,
             "mae": mae,
             "success": result.success,
-            "cost": result.cost,
-            "optimality": result.optimality,
+            "cost": float(result.fun),
+            "optimality": float(np.max(np.abs(result.jac)))
+                if hasattr(result, "jac") and result.jac is not None
+                else float("nan"),
             "contact_iterations": n_iterations,
+            "n_constraint_violations": n_violated,
         }
 
         return radii, stats
+
+    def bootstrap_uncertainty(
+        self,
+        compounds: List[CompoundData],
+        structure_type: Optional[str] = None,
+        n_bootstrap: int = 1000,
+        random_state: int = 42,
+        initial_guess: Optional[Dict[str, float]] = None,
+    ) -> Dict:
+        """Estimate uncertainty in atomic radii via bootstrap resampling.
+
+        Resamples compounds with replacement, re-optimises for each sample,
+        and returns per-element mean, std, and 95 % confidence intervals.
+        """
+        if structure_type:
+            compounds = [c for c in compounds
+                         if c.structure_type == structure_type]
+        if len(compounds) == 0:
+            return {}
+
+        if initial_guess is None:
+            initial_guess, _ = self.calculate_radii_trf(compounds)
+
+        elements = sorted(initial_guess.keys())
+        n = len(compounds)
+        rng = np.random.RandomState(random_state)
+
+        boot_radii: Dict[str, List[float]] = {el: [] for el in elements}
+
+        for b in range(n_bootstrap):
+            if (b + 1) % 100 == 0:
+                print(f"  bootstrap {b + 1}/{n_bootstrap}")
+            idx = rng.choice(n, size=n, replace=True)
+            sample = [compounds[i] for i in idx]
+            try:
+                r, _ = self.calculate_radii_trf(
+                    sample, initial_guess=initial_guess)
+                for el in elements:
+                    if el in r:
+                        boot_radii[el].append(r[el])
+            except Exception:
+                continue
+
+        out: Dict = {"mean": {}, "std": {},
+                     "ci_lower": {}, "ci_upper": {},
+                     "n_success": 0}
+        for el in elements:
+            vals = np.array(boot_radii[el])
+            if len(vals) > 0:
+                out["mean"][el] = float(np.mean(vals))
+                out["std"][el] = float(np.std(vals))
+                out["ci_lower"][el] = float(np.percentile(vals, 2.5))
+                out["ci_upper"][el] = float(np.percentile(vals, 97.5))
+                out["n_success"] = max(out["n_success"], len(vals))
+        return out
 
     def calculate_all_radii(self) -> None:
         """Calculate radii for B2, L12, and combined datasets."""

@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import requests
-from scipy.optimize import least_squares
+from scipy.optimize import least_squares, minimize
 
 warnings.filterwarnings("ignore")
 
@@ -300,14 +300,18 @@ def _determine_active_contacts_df(df: pd.DataFrame,
 
 
 def calculate_radii_trf(df: pd.DataFrame,
-                        max_iter: int = 50) -> Tuple[Dict[str, float], Dict]:
-    """Calculate effective atomic radii using iterative TRF optimisation.
+                        max_iter: int = 50,
+                        initial_guess: Optional[Dict[str, float]] = None,
+                        ) -> Tuple[Dict[str, float], Dict]:
+    """Calculate effective atomic radii using iterative constrained
+    optimisation (SLSQP).
 
     At each iteration the dominant contact condition (max) is determined
-    for every compound from the current radii.  A smooth least-squares
-    sub-problem is then solved using only that fixed contact condition.
-    The loop repeats until no compound switches its active contact,
-    guaranteeing self-consistent radii.
+    for every compound from the current radii.  A constrained optimisation
+    sub-problem is then solved: the objective minimises residuals for the
+    active contacts while inequality constraints enforce that every
+    non-dominant contact satisfies a_contact <= a_DFT.  The loop repeats
+    until no compound switches its active contact (self-consistent radii).
     """
     if len(df) == 0:
         return {}, {"n_compounds": 0, "n_elements": 0,
@@ -315,9 +319,17 @@ def calculate_radii_trf(df: pd.DataFrame,
 
     elements = sorted(set(df["element_A"]) | set(df["element_B"]))
     el2idx = {el: i for i, el in enumerate(elements)}
-    x0 = np.array([PAULING_RADII.get(el, 1.4) for el in elements])
+    n_el = len(elements)
+
+    if initial_guess:
+        x0 = np.array([initial_guess.get(el, 1.4) for el in elements])
+    else:
+        x0 = np.array([PAULING_RADII.get(el, 1.4) for el in elements])
 
     stype = df["structure_type"].iloc[0]
+
+    _sqrt2 = np.sqrt(2)
+    _2s3 = 2.0 / np.sqrt(3)
 
     # Pre-extract row data for speed
     row_data = []
@@ -332,6 +344,7 @@ def calculate_radii_trf(df: pd.DataFrame,
     current_radii = x0.copy()
     active_contacts: List[str] = []
     n_iterations = 0
+    _bounds = [(0.5, 3.5)] * n_el
 
     for iteration in range(max_iter):
         new_contacts = _determine_active_contacts_df(df, current_radii,
@@ -341,36 +354,133 @@ def calculate_radii_trf(df: pd.DataFrame,
         active_contacts = new_contacts
         n_iterations = iteration + 1
 
-        frozen_contacts = list(active_contacts)
+        frozen = list(active_contacts)
 
-        def residuals(radii, _contacts=frozen_contacts):
-            res = []
+        # Objective: 0.5 * sum of squared residuals (dominant contacts)
+        def _obj(radii, _ct=frozen):
+            ssr = 0.0
             for i, (a, iA, iB, cA, cB) in enumerate(row_data):
                 rA, rB = radii[iA], radii[iB]
-                ct = _contacts[i]
+                ct = _ct[i]
                 if stype == "B2":
                     if ct == "AA":
-                        res.append(2 * rA - a)
+                        d = 2.0 * rA - a
                     elif ct == "BB":
-                        res.append(2 * rB - a)
-                    else:  # AB
-                        res.append((2 / np.sqrt(3)) * (rA + rB) - a)
-                else:  # L1_2
-                    if cA > cB:
-                        r_major, r_minor = rA, rB
+                        d = 2.0 * rB - a
                     else:
-                        r_major, r_minor = rB, rA
+                        d = _2s3 * (rA + rB) - a
+                else:
+                    rm = rA if cA > cB else rB
+                    rn = rB if cA > cB else rA
                     if ct == "AA":
-                        res.append(2 * np.sqrt(2) * r_major - a)
+                        d = 2.0 * _sqrt2 * rm - a
                     elif ct == "AB":
-                        res.append(np.sqrt(2) * (r_major + r_minor) - a)
+                        d = _sqrt2 * (rm + rn) - a
                     else:
-                        res.append(2 * r_minor - a)
-            return np.array(res)
+                        d = 2.0 * rn - a
+                ssr += d * d
+            return 0.5 * ssr
 
-        result = least_squares(residuals, current_radii,
-                               bounds=(0.5, 3.5), method="trf",
-                               ftol=1e-10, xtol=1e-10, gtol=1e-10)
+        def _grad(radii, _ct=frozen):
+            g = np.zeros_like(radii)
+            for i, (a, iA, iB, cA, cB) in enumerate(row_data):
+                rA, rB = radii[iA], radii[iB]
+                ct = _ct[i]
+                if stype == "B2":
+                    if ct == "AA":
+                        d = 2.0 * rA - a
+                        g[iA] += 2.0 * d
+                    elif ct == "BB":
+                        d = 2.0 * rB - a
+                        g[iB] += 2.0 * d
+                    else:
+                        d = _2s3 * (rA + rB) - a
+                        g[iA] += _2s3 * d
+                        g[iB] += _2s3 * d
+                else:
+                    im = iA if cA > cB else iB
+                    imn = iB if cA > cB else iA
+                    rm, rn = radii[im], radii[imn]
+                    if ct == "AA":
+                        d = 2.0 * _sqrt2 * rm - a
+                        g[im] += 2.0 * _sqrt2 * d
+                    elif ct == "AB":
+                        d = _sqrt2 * (rm + rn) - a
+                        g[im] += _sqrt2 * d
+                        g[imn] += _sqrt2 * d
+                    else:
+                        d = 2.0 * rn - a
+                        g[imn] += 2.0 * d
+            return g
+
+        # Inequality constraints: a_DFT - a_non_dominant >= 0
+        def _ineq(radii, _ct=frozen):
+            vals = []
+            for i, (a, iA, iB, cA, cB) in enumerate(row_data):
+                rA, rB = radii[iA], radii[iB]
+                ct = _ct[i]
+                if stype == "B2":
+                    if ct != "AA":
+                        vals.append(a - 2.0 * rA)
+                    if ct != "BB":
+                        vals.append(a - 2.0 * rB)
+                    if ct != "AB":
+                        vals.append(a - _2s3 * (rA + rB))
+                else:
+                    rm = rA if cA > cB else rB
+                    rn = rB if cA > cB else rA
+                    if ct != "AA":
+                        vals.append(a - 2.0 * _sqrt2 * rm)
+                    if ct != "AB":
+                        vals.append(a - _sqrt2 * (rm + rn))
+                    if ct != "BB":
+                        vals.append(a - 2.0 * rn)
+            return np.array(vals)
+
+        def _ineq_jac(radii, _ct=frozen):
+            rows = []
+            for i, (a, iA, iB, cA, cB) in enumerate(row_data):
+                ct = _ct[i]
+                if stype == "B2":
+                    if ct != "AA":
+                        row = np.zeros(n_el)
+                        row[iA] = -2.0
+                        rows.append(row)
+                    if ct != "BB":
+                        row = np.zeros(n_el)
+                        row[iB] = -2.0
+                        rows.append(row)
+                    if ct != "AB":
+                        row = np.zeros(n_el)
+                        row[iA] = -_2s3
+                        row[iB] = -_2s3
+                        rows.append(row)
+                else:
+                    im = iA if cA > cB else iB
+                    imn = iB if cA > cB else iA
+                    if ct != "AA":
+                        row = np.zeros(n_el)
+                        row[im] = -2.0 * _sqrt2
+                        rows.append(row)
+                    if ct != "AB":
+                        row = np.zeros(n_el)
+                        row[im] = -_sqrt2
+                        row[imn] = -_sqrt2
+                        rows.append(row)
+                    if ct != "BB":
+                        row = np.zeros(n_el)
+                        row[imn] = -2.0
+                        rows.append(row)
+            if not rows:
+                return np.empty((0, n_el))
+            return np.array(rows)
+
+        result = minimize(
+            _obj, current_radii, jac=_grad,
+            method="SLSQP", bounds=_bounds,
+            constraints={"type": "ineq", "fun": _ineq, "jac": _ineq_jac},
+            options={"maxiter": 1000, "ftol": 1e-12},
+        )
         current_radii = result.x
 
     radii = {el: current_radii[el2idx[el]] for el in elements}
@@ -381,17 +491,36 @@ def calculate_radii_trf(df: pd.DataFrame,
         eA, eB = row["element_A"], row["element_B"]
         rA, rB = radii[eA], radii[eB]
         if stype == "B2":
-            a_calc = max(2 * rA, 2 * rB, (2 / np.sqrt(3)) * (rA + rB))
+            a_calc = max(2 * rA, 2 * rB, _2s3 * (rA + rB))
         else:
             if row["count_A"] > row["count_B"]:
                 r_major, r_minor = rA, rB
             else:
                 r_major, r_minor = rB, rA
-            a_calc = max(2 * np.sqrt(2) * r_major,
-                         np.sqrt(2) * (r_major + r_minor),
+            a_calc = max(2 * _sqrt2 * r_major,
+                         _sqrt2 * (r_major + r_minor),
                          2 * r_minor)
         final_res.append(a_calc - row["lattice_constant"])
     final_res = np.array(final_res)
+
+    # Count constraint violations
+    n_violated = 0
+    for _, row in df.iterrows():
+        eA, eB = row["element_A"], row["element_B"]
+        rA, rB = radii[eA], radii[eB]
+        a = row["lattice_constant"]
+        if stype == "B2":
+            for v in [2 * rA, 2 * rB, _2s3 * (rA + rB)]:
+                if v > a + 1e-6:
+                    n_violated += 1
+        else:
+            if row["count_A"] > row["count_B"]:
+                rm, rn = rA, rB
+            else:
+                rm, rn = rB, rA
+            for v in [2 * _sqrt2 * rm, _sqrt2 * (rm + rn), 2 * rn]:
+                if v > a + 1e-6:
+                    n_violated += 1
 
     return radii, {
         "n_compounds": len(df),
@@ -399,7 +528,57 @@ def calculate_radii_trf(df: pd.DataFrame,
         "rmse": np.sqrt(np.mean(final_res ** 2)),
         "mae": np.mean(np.abs(final_res)),
         "contact_iterations": n_iterations,
+        "n_constraint_violations": n_violated,
     }
+
+
+def bootstrap_uncertainty(df: pd.DataFrame,
+                          n_bootstrap: int = 1000,
+                          random_state: int = 42,
+                          initial_guess: Optional[Dict[str, float]] = None,
+                          ) -> Dict:
+    """Estimate uncertainty in atomic radii via bootstrap resampling.
+
+    Resamples compounds with replacement, re-optimises for each sample,
+    and returns per-element mean, std, and 95 % confidence intervals.
+    """
+    if len(df) == 0:
+        return {}
+
+    if initial_guess is None:
+        initial_guess, _ = calculate_radii_trf(df)
+
+    elements = sorted(initial_guess.keys())
+    n = len(df)
+    rng = np.random.RandomState(random_state)
+
+    boot_radii: Dict[str, List[float]] = {el: [] for el in elements}
+
+    for b in range(n_bootstrap):
+        if (b + 1) % 100 == 0:
+            print(f"  bootstrap {b + 1}/{n_bootstrap}")
+        idx = rng.choice(n, size=n, replace=True)
+        sample = df.iloc[idx].reset_index(drop=True)
+        try:
+            r, _ = calculate_radii_trf(sample, initial_guess=initial_guess)
+            for el in elements:
+                if el in r:
+                    boot_radii[el].append(r[el])
+        except Exception:
+            continue
+
+    out: Dict = {"mean": {}, "std": {},
+                 "ci_lower": {}, "ci_upper": {},
+                 "n_success": 0}
+    for el in elements:
+        vals = np.array(boot_radii[el])
+        if len(vals) > 0:
+            out["mean"][el] = float(np.mean(vals))
+            out["std"][el] = float(np.std(vals))
+            out["ci_lower"][el] = float(np.percentile(vals, 2.5))
+            out["ci_upper"][el] = float(np.percentile(vals, 97.5))
+            out["n_success"] = max(out["n_success"], len(vals))
+    return out
 
 
 def _calc_lattice_constant(stype: str, rA: float, rB: float,
@@ -529,13 +708,44 @@ def run_analysis(api_key: str, fig_dir: str):
         }
         print(f"\n  [{CASE_LABELS[key]}]")
         print(f"    Compounds: {stats['n_compounds']}, Elements: {stats['n_elements']}")
+        n_viol = stats.get("n_constraint_violations", 0)
         print(f"    Radii  RMSE={stats['rmse']:.4f} A, MAE={stats['mae']:.4f} A")
         print(f"    Lattice RMSE={lat_rmse:.4f} A, MAE={lat_mae:.4f} A")
         print(f"    Rel Error: mean={mean_rel:.2f}%, median={med_rel:.2f}%, max={max_rel:.2f}%")
+        print(f"    Constraint violations: {n_viol}")
 
         # Save radii
         r_df = pd.DataFrame([{"element": el, "radius": r} for el, r in sorted(radii.items())])
         r_df.to_csv(os.path.join(fig_dir, f"radii_{key}.csv"), index=False)
+
+    # ==================================================================
+    # Step 2b: Bootstrap uncertainty estimation
+    # ==================================================================
+    print("\n" + "=" * 70)
+    print("Step 2b: Bootstrap uncertainty estimation (1000 resamples)")
+    print("=" * 70)
+
+    boot_results: Dict[str, Dict] = {}
+    for key, df in datasets.items():
+        print(f"\n  [{CASE_LABELS[key]}]")
+        radii = results[key]["radii"]
+        boot = bootstrap_uncertainty(df, n_bootstrap=1000,
+                                     initial_guess=radii)
+        boot_results[key] = boot
+
+        # Save radii with uncertainty
+        rows_out = []
+        for el in sorted(radii.keys()):
+            rows_out.append({
+                "element": el,
+                "radius": radii[el],
+                "std": boot["std"].get(el, float("nan")),
+                "ci_lower": boot["ci_lower"].get(el, float("nan")),
+                "ci_upper": boot["ci_upper"].get(el, float("nan")),
+            })
+        pd.DataFrame(rows_out).to_csv(
+            os.path.join(fig_dir, f"radii_{key}_bootstrap.csv"), index=False)
+        print(f"    bootstrap success: {boot.get('n_success', 0)}/1000")
 
     # Save CSVs (after radii calculation so lattice_constant_calc is included)
     for key, df in datasets.items():
