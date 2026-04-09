@@ -38,7 +38,7 @@ from typing import Dict, List, Optional, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.optimize import least_squares
+from scipy.optimize import least_squares, minimize
 
 warnings.filterwarnings("ignore")
 
@@ -245,41 +245,42 @@ class HEARadiusCalculator:
         return filtered
 
     @staticmethod
-    def _determine_active_contacts(
-        compounds: List[CompoundData],
+    def _determine_active_contacts_vec(
         radii_arr: np.ndarray,
-        element_to_idx: Dict[str, int]
-    ) -> List[str]:
-        """Determine the active (dominant) contact condition for each compound.
+        iA_arr: np.ndarray, iB_arr: np.ndarray,
+        im_arr: np.ndarray, in_arr: np.ndarray,
+        is_b2: np.ndarray,
+    ) -> np.ndarray:
+        """Vectorised active-contact determination for mixed B2/L12.
 
-        Returns a list of contact labels, one per compound:
-          B2:  'AA', 'BB', or 'AB'
-          L12: 'AA', 'AB', or 'BB'
+        Returns integer codes per compound:
+          B2:  0=AA, 1=BB, 2=AB
+          L12: 0=AA, 1=AB, 2=BB
         """
-        contacts = []
-        for c in compounds:
-            idx_A = element_to_idx[c.element_A]
-            idx_B = element_to_idx[c.element_B]
-            r_A = radii_arr[idx_A]
-            r_B = radii_arr[idx_B]
+        _sqrt2 = np.sqrt(2)
+        _2s3 = 2.0 / np.sqrt(3)
+        n = len(iA_arr)
+        ct = np.zeros(n, dtype=np.intp)
 
-            if c.structure_type == "B2":
-                a_AA = 2 * r_A
-                a_BB = 2 * r_B
-                a_AB = (2 / np.sqrt(3)) * (r_A + r_B)
-                vals = {"AA": a_AA, "BB": a_BB, "AB": a_AB}
-                contacts.append(max(vals, key=vals.get))
-            elif c.structure_type == "L12":
-                if c.count_A > c.count_B:
-                    r_major, r_minor = r_A, r_B
-                else:
-                    r_major, r_minor = r_B, r_A
-                a_AA = 2 * np.sqrt(2) * r_major
-                a_AB = np.sqrt(2) * (r_major + r_minor)
-                a_BB = 2 * r_minor
-                vals = {"AA": a_AA, "AB": a_AB, "BB": a_BB}
-                contacts.append(max(vals, key=vals.get))
-        return contacts
+        # B2 compounds
+        bm = is_b2
+        if bm.any():
+            rA = radii_arr[iA_arr[bm]]
+            rB = radii_arr[iB_arr[bm]]
+            stk = np.column_stack([2.0 * rA, 2.0 * rB,
+                                   _2s3 * (rA + rB)])
+            ct[bm] = stk.argmax(axis=1)
+
+        # L12 compounds
+        lm = ~is_b2
+        if lm.any():
+            rm = radii_arr[im_arr[lm]]
+            rn = radii_arr[in_arr[lm]]
+            stk = np.column_stack([2.0 * _sqrt2 * rm,
+                                   _sqrt2 * (rm + rn),
+                                   2.0 * rn])
+            ct[lm] = stk.argmax(axis=1)
+        return ct
 
     def calculate_radii_trf(
         self,
@@ -288,23 +289,15 @@ class HEARadiusCalculator:
         initial_guess: Optional[Dict[str, float]] = None,
         max_iter: int = 50
     ) -> Tuple[Dict[str, float], Dict]:
-        """
-        Calculate effective atomic radii using iterative TRF optimisation.
+        """Calculate effective atomic radii using iterative constrained
+        optimisation (SLSQP) with fully vectorised inner functions.
 
         At each iteration the dominant contact condition (max) is determined
-        for every compound from the current radii.  A smooth least-squares
-        sub-problem is then solved using only that fixed contact condition.
-        The loop repeats until no compound switches its active contact,
-        guaranteeing self-consistent radii.
-
-        Args:
-            compounds: List of compound data
-            structure_type: "B2", "L12", or None for combined
-            initial_guess: Initial radius values for optimization
-            max_iter: Maximum number of contact-reassignment iterations
-
-        Returns:
-            Tuple of (radii dict, statistics dict)
+        for every compound from the current radii.  A constrained optimisation
+        sub-problem is then solved: the objective minimises residuals for the
+        active contacts while inequality constraints enforce that every
+        non-dominant contact satisfies a_contact <= a_DFT.  The loop repeats
+        until no compound switches its active contact (self-consistent radii).
         """
         if structure_type:
             compounds = [c for c in compounds if c.structure_type == structure_type]
@@ -328,106 +321,286 @@ class HEARadiusCalculator:
         else:
             x0 = np.array([PAULING_RADII.get(el, 1.4) for el in elements])
 
-        # --- iterative loop --------------------------------------------------
+        _sqrt2 = np.sqrt(2)
+        _2s3 = 2.0 / np.sqrt(3)
+
+        # Pre-extract numpy arrays (done once)
+        n_comp = len(compounds)
+        a_vals = np.array([c.lattice_constant for c in compounds])
+        iA_arr = np.array([element_to_idx[c.element_A] for c in compounds],
+                          dtype=np.intp)
+        iB_arr = np.array([element_to_idx[c.element_B] for c in compounds],
+                          dtype=np.intp)
+        cA_arr = np.array([c.count_A for c in compounds])
+        cB_arr = np.array([c.count_B for c in compounds])
+        is_b2 = np.array([c.structure_type == "B2" for c in compounds])
+        is_l12 = ~is_b2
+
+        # major/minor indices for L12
+        is_A_major = cA_arr > cB_arr
+        im_arr = np.where(is_A_major, iA_arr, iB_arr)
+        in_arr = np.where(is_A_major, iB_arr, iA_arr)
+
+        # --- iterative loop ---
         current_radii = x0.copy()
-        active_contacts: List[str] = []
+        prev_ct = np.full(n_comp, -1, dtype=np.intp)
         n_iterations = 0
+        _bounds = [(0.5, 3.0)] * n_elements
 
         for iteration in range(max_iter):
-            # 1. Determine active contact for each compound
-            new_contacts = self._determine_active_contacts(
-                compounds, current_radii, element_to_idx
-            )
+            ct = self._determine_active_contacts_vec(
+                current_radii, iA_arr, iB_arr, im_arr, in_arr, is_b2)
 
-            # 2. Check convergence (no contact switches)
-            if new_contacts == active_contacts:
+            if np.array_equal(ct, prev_ct):
                 break
-            active_contacts = new_contacts
+            prev_ct = ct.copy()
             n_iterations = iteration + 1
 
-            # 3. Build smooth residual using fixed active contacts
-            frozen_contacts = list(active_contacts)  # snapshot
+            # --- masks for B2 contacts ---
+            b2_AA = is_b2 & (ct == 0)
+            b2_BB = is_b2 & (ct == 1)
+            b2_AB = is_b2 & (ct == 2)
+            # --- masks for L12 contacts ---
+            l12_AA = is_l12 & (ct == 0)
+            l12_AB = is_l12 & (ct == 1)
+            l12_BB = is_l12 & (ct == 2)
 
-            def residuals(radii, _contacts=frozen_contacts):
-                res = []
-                for i, c in enumerate(compounds):
-                    a = c.lattice_constant
-                    idx_A = element_to_idx[c.element_A]
-                    idx_B = element_to_idx[c.element_B]
-                    r_A = radii[idx_A]
-                    r_B = radii[idx_B]
-                    ct = _contacts[i]
+            # ---- vectorised objective ----
+            def _objective(radii,
+                           _b2AA=b2_AA, _b2BB=b2_BB, _b2AB=b2_AB,
+                           _l12AA=l12_AA, _l12AB=l12_AB, _l12BB=l12_BB):
+                rA = radii[iA_arr]; rB = radii[iB_arr]
+                rm = radii[im_arr]; rn = radii[in_arr]
+                d = np.empty(n_comp)
+                d[_b2AA] = 2.0 * rA[_b2AA] - a_vals[_b2AA]
+                d[_b2BB] = 2.0 * rB[_b2BB] - a_vals[_b2BB]
+                d[_b2AB] = _2s3 * (rA[_b2AB] + rB[_b2AB]) - a_vals[_b2AB]
+                d[_l12AA] = 2.0 * _sqrt2 * rm[_l12AA] - a_vals[_l12AA]
+                d[_l12AB] = _sqrt2 * (rm[_l12AB] + rn[_l12AB]) - a_vals[_l12AB]
+                d[_l12BB] = 2.0 * rn[_l12BB] - a_vals[_l12BB]
+                return 0.5 * np.dot(d, d)
 
-                    if c.structure_type == "B2":
-                        if ct == "AA":
-                            res.append(2 * r_A - a)
-                        elif ct == "BB":
-                            res.append(2 * r_B - a)
-                        else:  # AB
-                            res.append((2 / np.sqrt(3)) * (r_A + r_B) - a)
-                    elif c.structure_type == "L12":
-                        if c.count_A > c.count_B:
-                            r_major, r_minor = r_A, r_B
-                        else:
-                            r_major, r_minor = r_B, r_A
-                        if ct == "AA":
-                            res.append(2 * np.sqrt(2) * r_major - a)
-                        elif ct == "AB":
-                            res.append(np.sqrt(2) * (r_major + r_minor) - a)
-                        else:  # BB
-                            res.append(2 * r_minor - a)
-                return np.array(res)
+            def _gradient(radii,
+                          _b2AA=b2_AA, _b2BB=b2_BB, _b2AB=b2_AB,
+                          _l12AA=l12_AA, _l12AB=l12_AB, _l12BB=l12_BB):
+                rA = radii[iA_arr]; rB = radii[iB_arr]
+                rm = radii[im_arr]; rn = radii[in_arr]
+                d = np.empty(n_comp)
+                d[_b2AA] = 2.0 * rA[_b2AA] - a_vals[_b2AA]
+                d[_b2BB] = 2.0 * rB[_b2BB] - a_vals[_b2BB]
+                d[_b2AB] = _2s3 * (rA[_b2AB] + rB[_b2AB]) - a_vals[_b2AB]
+                d[_l12AA] = 2.0 * _sqrt2 * rm[_l12AA] - a_vals[_l12AA]
+                d[_l12AB] = _sqrt2 * (rm[_l12AB] + rn[_l12AB]) - a_vals[_l12AB]
+                d[_l12BB] = 2.0 * rn[_l12BB] - a_vals[_l12BB]
+                g = np.zeros(n_elements)
+                # B2
+                np.add.at(g, iA_arr[_b2AA], 2.0 * d[_b2AA])
+                np.add.at(g, iB_arr[_b2BB], 2.0 * d[_b2BB])
+                np.add.at(g, iA_arr[_b2AB], _2s3 * d[_b2AB])
+                np.add.at(g, iB_arr[_b2AB], _2s3 * d[_b2AB])
+                # L12
+                np.add.at(g, im_arr[_l12AA], 2.0 * _sqrt2 * d[_l12AA])
+                np.add.at(g, im_arr[_l12AB], _sqrt2 * d[_l12AB])
+                np.add.at(g, in_arr[_l12AB], _sqrt2 * d[_l12AB])
+                np.add.at(g, in_arr[_l12BB], 2.0 * d[_l12BB])
+                return g
 
-            # 4. Optimise with TRF
-            result = least_squares(
-                residuals,
-                current_radii,
-                bounds=(0.5, 3.0),
-                method="trf",
-                ftol=1e-10,
-                xtol=1e-10,
-                gtol=1e-10
+            # ---- inequality constraints (constant Jacobian) ----
+            c_idx_list: List[int] = []
+            c_type_list: List[int] = []
+            c_is_b2_list: List[bool] = []
+            for i in range(n_comp):
+                c = ct[i]
+                if is_b2[i]:
+                    if c != 0: c_idx_list.append(i); c_type_list.append(0); c_is_b2_list.append(True)
+                    if c != 1: c_idx_list.append(i); c_type_list.append(1); c_is_b2_list.append(True)
+                    if c != 2: c_idx_list.append(i); c_type_list.append(2); c_is_b2_list.append(True)
+                else:
+                    if c != 0: c_idx_list.append(i); c_type_list.append(0); c_is_b2_list.append(False)
+                    if c != 1: c_idx_list.append(i); c_type_list.append(1); c_is_b2_list.append(False)
+                    if c != 2: c_idx_list.append(i); c_type_list.append(2); c_is_b2_list.append(False)
+
+            n_ineq = len(c_idx_list)
+            if n_ineq > 0:
+                ci = np.array(c_idx_list, dtype=np.intp)
+                ctp = np.array(c_type_list, dtype=np.intp)
+                c_b2 = np.array(c_is_b2_list)
+                c_a = a_vals[ci]
+
+                # B2 constraint masks
+                cb2_AA = c_b2 & (ctp == 0)
+                cb2_BB = c_b2 & (ctp == 1)
+                cb2_AB = c_b2 & (ctp == 2)
+                # L12 constraint masks
+                cl_AA = (~c_b2) & (ctp == 0)
+                cl_AB = (~c_b2) & (ctp == 1)
+                cl_BB = (~c_b2) & (ctp == 2)
+
+                c_iA = iA_arr[ci]; c_iB = iB_arr[ci]
+                c_im = im_arr[ci]; c_in = in_arr[ci]
+
+                def _ineq_fun(radii,
+                              _cb2AA=cb2_AA, _cb2BB=cb2_BB, _cb2AB=cb2_AB,
+                              _clAA=cl_AA, _clAB=cl_AB, _clBB=cl_BB):
+                    rA = radii[c_iA]; rB = radii[c_iB]
+                    rm = radii[c_im]; rn = radii[c_in]
+                    v = np.empty(n_ineq)
+                    v[_cb2AA] = c_a[_cb2AA] - 2.0 * rA[_cb2AA]
+                    v[_cb2BB] = c_a[_cb2BB] - 2.0 * rB[_cb2BB]
+                    v[_cb2AB] = c_a[_cb2AB] - _2s3 * (rA[_cb2AB] + rB[_cb2AB])
+                    v[_clAA] = c_a[_clAA] - 2.0 * _sqrt2 * rm[_clAA]
+                    v[_clAB] = c_a[_clAB] - _sqrt2 * (rm[_clAB] + rn[_clAB])
+                    v[_clBB] = c_a[_clBB] - 2.0 * rn[_clBB]
+                    return v
+
+                # Pre-compute constant Jacobian
+                jac = np.zeros((n_ineq, n_elements))
+                for mask, col_arr, coeff in [
+                    (cb2_AA, c_iA, -2.0),
+                    (cb2_BB, c_iB, -2.0),
+                ]:
+                    rows_idx = np.where(mask)[0]
+                    if len(rows_idx): jac[rows_idx, col_arr[rows_idx]] += coeff
+                # B2 AB
+                ab_rows = np.where(cb2_AB)[0]
+                if len(ab_rows):
+                    jac[ab_rows, c_iA[ab_rows]] += -_2s3
+                    jac[ab_rows, c_iB[ab_rows]] += -_2s3
+                # L12 AA
+                aa_rows = np.where(cl_AA)[0]
+                if len(aa_rows): jac[aa_rows, c_im[aa_rows]] += -2.0 * _sqrt2
+                # L12 AB
+                ab_rows = np.where(cl_AB)[0]
+                if len(ab_rows):
+                    jac[ab_rows, c_im[ab_rows]] += -_sqrt2
+                    jac[ab_rows, c_in[ab_rows]] += -_sqrt2
+                # L12 BB
+                bb_rows = np.where(cl_BB)[0]
+                if len(bb_rows): jac[bb_rows, c_in[bb_rows]] += -2.0
+
+                _const_jac = jac
+                def _ineq_jac(radii):
+                    return _const_jac
+            else:
+                def _ineq_fun(radii):
+                    return np.array([])
+                def _ineq_jac(radii):
+                    return np.empty((0, n_elements))
+
+            result = minimize(
+                _objective, current_radii,
+                jac=_gradient,
+                method="SLSQP",
+                bounds=_bounds,
+                constraints={"type": "ineq",
+                             "fun": _ineq_fun, "jac": _ineq_jac},
+                options={"maxiter": 1000, "ftol": 1e-12},
             )
             current_radii = result.x
 
-        # --- final statistics using the max-based lattice constant ------------
+        # --- final statistics (vectorised) ---
         radii = {el: current_radii[element_to_idx[el]] for el in elements}
 
-        # Compute residuals with max (the true model) for final stats
-        final_res = []
-        for c in compounds:
-            r_A = radii[c.element_A]
-            r_B = radii[c.element_B]
-            if c.structure_type == "B2":
-                a_calc = max(2 * r_A, 2 * r_B, (2 / np.sqrt(3)) * (r_A + r_B))
-            else:
-                if c.count_A > c.count_B:
-                    r_major, r_minor = r_A, r_B
-                else:
-                    r_major, r_minor = r_B, r_A
-                a_calc = max(
-                    2 * np.sqrt(2) * r_major,
-                    np.sqrt(2) * (r_major + r_minor),
-                    2 * r_minor
-                )
-            final_res.append(a_calc - c.lattice_constant)
-        final_res = np.array(final_res)
+        rA_f = np.array([radii[c.element_A] for c in compounds])
+        rB_f = np.array([radii[c.element_B] for c in compounds])
+        rm_f = np.where(is_A_major, rA_f, rB_f)
+        rn_f = np.where(is_A_major, rB_f, rA_f)
 
-        rmse = np.sqrt(np.mean(final_res ** 2))
-        mae = np.mean(np.abs(final_res))
+        a_calc = np.empty(n_comp)
+        if is_b2.any():
+            a_calc[is_b2] = np.maximum(
+                np.maximum(2 * rA_f[is_b2], 2 * rB_f[is_b2]),
+                _2s3 * (rA_f[is_b2] + rB_f[is_b2]))
+        if is_l12.any():
+            a_calc[is_l12] = np.maximum(
+                np.maximum(2 * _sqrt2 * rm_f[is_l12],
+                           _sqrt2 * (rm_f[is_l12] + rn_f[is_l12])),
+                2 * rn_f[is_l12])
+        final_res = a_calc - a_vals
+
+        # constraint violations (vectorised)
+        n_violated = 0
+        if is_b2.any():
+            b2c = np.column_stack([2 * rA_f[is_b2], 2 * rB_f[is_b2],
+                                   _2s3 * (rA_f[is_b2] + rB_f[is_b2])])
+            n_violated += int(np.sum(b2c > a_vals[is_b2, None] + 1e-6))
+        if is_l12.any():
+            l12c = np.column_stack([
+                2 * _sqrt2 * rm_f[is_l12],
+                _sqrt2 * (rm_f[is_l12] + rn_f[is_l12]),
+                2 * rn_f[is_l12]])
+            n_violated += int(np.sum(l12c > a_vals[is_l12, None] + 1e-6))
 
         stats = {
             "n_compounds": len(compounds),
             "n_elements": n_elements,
-            "rmse": rmse,
-            "mae": mae,
+            "rmse": float(np.sqrt(np.mean(final_res ** 2))),
+            "mae": float(np.mean(np.abs(final_res))),
             "success": result.success,
-            "cost": result.cost,
-            "optimality": result.optimality,
+            "cost": float(result.fun),
+            "optimality": float(np.max(np.abs(result.jac)))
+                if hasattr(result, "jac") and result.jac is not None
+                else float("nan"),
             "contact_iterations": n_iterations,
+            "n_constraint_violations": n_violated,
         }
 
         return radii, stats
+
+    def bootstrap_uncertainty(
+        self,
+        compounds: List[CompoundData],
+        structure_type: Optional[str] = None,
+        n_bootstrap: int = 1000,
+        random_state: int = 42,
+        initial_guess: Optional[Dict[str, float]] = None,
+    ) -> Dict:
+        """Estimate uncertainty in atomic radii via bootstrap resampling.
+
+        Resamples compounds with replacement, re-optimises for each sample,
+        and returns per-element mean, std, and 95 % confidence intervals.
+        """
+        if structure_type:
+            compounds = [c for c in compounds
+                         if c.structure_type == structure_type]
+        if len(compounds) == 0:
+            return {}
+
+        if initial_guess is None:
+            initial_guess, _ = self.calculate_radii_trf(compounds)
+
+        elements = sorted(initial_guess.keys())
+        n = len(compounds)
+        rng = np.random.RandomState(random_state)
+
+        boot_radii: Dict[str, List[float]] = {el: [] for el in elements}
+
+        for b in range(n_bootstrap):
+            if (b + 1) % 100 == 0:
+                print(f"  bootstrap {b + 1}/{n_bootstrap}")
+            idx = rng.choice(n, size=n, replace=True)
+            sample = [compounds[i] for i in idx]
+            try:
+                r, _ = self.calculate_radii_trf(
+                    sample, max_iter=10, initial_guess=initial_guess)
+                for el in elements:
+                    if el in r:
+                        boot_radii[el].append(r[el])
+            except Exception:
+                continue
+
+        out: Dict = {"mean": {}, "std": {},
+                     "ci_lower": {}, "ci_upper": {},
+                     "n_success": 0}
+        for el in elements:
+            vals = np.array(boot_radii[el])
+            if len(vals) > 0:
+                out["mean"][el] = float(np.mean(vals))
+                out["std"][el] = float(np.std(vals))
+                out["ci_lower"][el] = float(np.percentile(vals, 2.5))
+                out["ci_upper"][el] = float(np.percentile(vals, 97.5))
+                out["n_success"] = max(out["n_success"], len(vals))
+        return out
 
     def calculate_all_radii(self) -> None:
         """Calculate radii for B2, L12, and combined datasets."""
