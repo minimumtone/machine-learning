@@ -35,9 +35,9 @@
 
 \begin{abstract}
 
-B2型(CsCl型)およびL1$_2$型(Cu$_3$Au型)二元金属間化合物における有効原子半径を、Materials Project (MP)およびOpen Quantum Materials Database (OQMD)の格子定数データに対する最適化により決定した。非金属元素を含む化合物と格子定数範囲外(2.0--8.0~\AA)の超格子を除外し、MP-B2: 357件、MP-L1$_2$: 848件、OQMD-B2: 2539件、OQMD-L1$_2$: 238件、計3982件を解析した。B2構造にはA--A, B--B, A--B接触条件のmax基準モデル、L1$_2$構造にはA--A, A--B, B--B接触条件のmax基準モデルを適用し、接触条件の再評価を伴う反復最適化により全元素の有効半径を決定した。
+B2型(CsCl型)およびL1$_2$型(Cu$_3$Au型)二元金属間化合物における有効原子半径を、Materials Project (MP)およびOpen Quantum Materials Database (OQMD)の格子定数データに対する最適化により決定した。非金属元素およびアルカリ金属元素を含む化合物と格子定数範囲外(2.0--8.0~\AA)の超格子を除外し、MP-B2: 346件、MP-L1$_2$: 723件、OQMD-B2: 2207件、OQMD-L1$_2$: 235件、計3511件を解析した。B2構造にはA--A, B--B, A--B接触条件のmax基準モデル、L1$_2$構造にはA--A, A--B, B--B接触条件のmax基準モデルを適用し、不等式制約付きSLSQP最適化と接触条件の再評価を伴う反復最適化により全元素の有効半径を決定した。Bootstrap法(1000回リサンプリング)による不確定性評価も実施した。
 
-B2とL1$_2$の間で有効半径に系統的な差異が認められた。Li($-7.9$\%)やRb($-6.2$\%)はB2半径がL1$_2$半径より小さく、Ni($+9.3$\%)やU($+8.7$\%)は逆にB2半径が大きい。遷移金属群では3d: $+2.1$\%、4d: $+0.4$\%、5d: $-0.2$\%と群ごとに異なり、Goldschmidtの一律3\%収縮則とは合致しない。L1$_2$半径はGoldschmidt半径と$R^2=0.946$の相関を示した。非金属除外によりMP-B2のRMSEは大幅に改善し、硬球モデルの適用範囲が明確になった。
+B2とL1$_2$の間で有効半径に系統的な差異が認められた。Re($-5.9$\%)やCa($-5.6$\%)はB2半径がL1$_2$半径より小さく、Ni($+7.9$\%)やPu($+7.4$\%)は逆にB2半径が大きい。遷移金属群では3d: $+1.7$\%、4d: $+0.7$\%、5d: $-0.3$\%と群ごとに異なり、Goldschmidtの一律3\%収縮則とは合致しない。L1$_2$半径はGoldschmidt半径と$R^2=0.858$の相関を示した。非金属・アルカリ金属除外により硬球モデルの適用範囲が明確になった。
 
 得られた構造特異的有効半径は、格子定数予測やサイズミスマッチ評価の基準値として利用できる。
 \end{abstract}
@@ -268,9 +268,11 @@ B2構造とL1$_2$構造を示す模式図は
 
 B2のmax基準モデル（式~\ref{eq:B2}）およびL1$_2$のmax基準モデル（式~\ref{eq:L12}）では、$\max$関数の非微分点が最適化ソルバーに問題を生じさせる。これを回避するため、接触条件の再評価を伴う反復最適化スキームを採用した。
 
-各反復では、(1) 現在の半径から各化合物の支配的接触条件を決定し、(2) その接触条件を固定した滑らかな最小二乗部分問題をTRFで解き、(3) 新しい半径で接触条件を再評価する。接触条件の切り替わりがなくなった時点で収束とみなす。この反復スキームにより、各化合物の接触条件がその最適化された半径と自己無撞着になることが保証される。
+各反復では、(1) 現在の半径から各化合物の支配的接触条件を決定し、(2) その接触条件を固定した最適化部分問題を解き、(3) 新しい半径で接触条件を再評価する。接触条件の切り替わりがなくなった時点で収束とみなす。この反復スキームにより、各化合物の接触条件がその最適化された半径と自己無撞着になることが保証される。
 
-最適化にはSciPyライブラリのTrust Region Reflective (TRF)アルゴリズムを使用した。全ての半径に対して物理的制約($0.5 \leq r_i \leq 3.5$~\AA)を課し、初期値にはPaulingの金属半径を用いた。最適化はB2構造とL1$_2$構造で別々に実行され、各元素ごとに構造固有の有効半径が得られた。
+最適化にはSciPyライブラリのSequential Least Squares Programming (SLSQP)アルゴリズムを使用した。全ての半径に対して物理的制約($0.5 \leq r_i \leq 3.5$~\AA)を課し、さらに非支配的接触条件が観測格子定数以下となる不等式制約を導入した。これにより、硬球が重ならないという物理的条件が保証される。初期値にはPaulingの金属半径を用いた。最適化はB2構造とL1$_2$構造で別々に実行され、各元素ごとに構造固有の有効半径が得られた。
+
+半径の不確定性はBootstrap法により評価した。各ケースについて1000回のリサンプリングを行い、各リサンプルに対して同一の反復最適化を実行して半径分布を得た。各元素の半径の標準偏差および95\%信頼区間を算出した。
 
 
 % where $N$ is the number of compounds, $a_j^{obs}$ is the observed lattice constant for compound $j$, and $a_j^{pred}$ is the predicted lattice constant calculated from the geometric model using the current set of radii.
@@ -325,9 +327,9 @@ Model performance was evaluated using standard regression metrics:
 
 \subsection{Model Performance}
 
-最適化された有効半径を用いた格子定数予測の精度を表~\ref{tab:performance}にまとめた。B2構造では、MP-B2のRMSEが0.054~\AA と最も小さく、平均相対誤差は1.02\%であった。OQMD-B2はデータ量が7倍(2539対357)と大幅に多いにもかかわらず、RMSE = 0.108~\AA、平均相対誤差1.94\%と良好な精度を維持している。
+最適化された有効半径を用いた格子定数予測の精度を表~\ref{tab:performance}にまとめた。B2構造では、MP-B2のRMSEが0.054~\AA と最も小さく、平均相対誤差は1.03\%であった。OQMD-B2はデータ量が6倍(2207対346)と大幅に多いにもかかわらず、RMSE = 0.095~\AA、平均相対誤差1.90\%と良好な精度を維持している。
 
-L1$_2$構造については、OQMD-L1$_2$がRMSE = 0.065~\AA、平均相対誤差1.13\%と4ケース中最高の精度を示した。MP-L1$_2$はRMSE = 0.157~\AA とやや大きいが、データ量が848件と最大であり、化合物の多様性がより大きいことを反映している可能性がある。$R^2$値は0.940--0.976の範囲にあり、幾何学的モデルが格子定数の変動の大部分を捉えていることを示している。
+L1$_2$構造については、OQMD-L1$_2$がRMSE = 0.066~\AA、平均相対誤差1.13\%と4ケース中最高の精度を示した。MP-L1$_2$はRMSE = 0.116~\AA とやや大きいが、データ量が723件と最大であり、化合物の多様性がより大きいことを反映している可能性がある。$R^2$値は0.935--0.975の範囲にあり、幾何学的モデルが格子定数の変動の大部分を捉えていることを示している。
 
 % The accuracy of lattice constant prediction using the optimized effective radii is summarized in Table~\ref{tab:performance}. For B2 structures, MP-B2 achieved the smallest RMSE of 0.052~\AA\ with a mean relative error of 0.99\%. OQMD-B2, despite having seven times more data (2539 vs. 357), maintained good accuracy with RMSE = 0.089~\AA\ and mean relative error of 1.74\%.
 
@@ -343,25 +345,47 @@ L1$_2$構造については、OQMD-L1$_2$がRMSE = 0.065~\AA、平均相対誤�
         \toprule
         Database & Structure & RMSE (\AA) & MAE (\AA) & $R^2$ & Mean rel.\ err.\ (\%) & Max rel.\ err.\ (\%) \\
         \midrule
-        MP & B2 & 0.054 & 0.035 & 0.976 & 1.02 & 9.76 \\
-        MP & L1$_2$ & 0.157 & 0.110 & 0.944 & 2.32 & 15.54 \\
-        OQMD & B2 & 0.108 & 0.071 & 0.940 & 1.94 & 21.25 \\
-        OQMD & L1$_2$ & 0.065 & 0.047 & 0.973 & 1.13 & 6.89 \\
+        MP & B2 & 0.054 & 0.036 & 0.975 & 1.03 & 9.88 \\
+        MP & L1$_2$ & 0.116 & 0.093 & 0.950 & 2.08 & 9.52 \\
+        OQMD & B2 & 0.095 & 0.067 & 0.935 & 1.90 & 19.20 \\
+        OQMD & L1$_2$ & 0.066 & 0.047 & 0.973 & 1.13 & 6.88 \\
         \bottomrule
     \end{tabular}
     }
 \end{table*}
 
-図~\ref{fig:performance}は、データベースと構造タイプごとの予測精度をグラフで比較したものである。MP-B2が最小RMSE(0.054~\AA)を示す一方、OQMD-L1$_2$が最小の平均相対誤差(1.13\%)を示しており、データソースと構造タイプの組み合わせによって精度特性が異なることが分かる。B2構造のRMSEが従来のA--B接触のみモデルと比較してやや増加しているのは、max基準モデルの採用により、A--AまたはB--B接触が支配的な化合物において、非支配的な原子種の半径への制約が弱まるためである。
+図~\ref{fig:performance}は、データベースと構造タイプごとの予測精度をグラフで比較したものである。MP-B2が最小RMSE(0.054~\AA)を示す一方、OQMD-L1$_2$が最小の平均相対誤差(1.13\%)を示しており、データソースと構造タイプの組み合わせによって精度特性が異なることが分かる。
 
 % A graphical comparison of prediction accuracy across databases and structure types is shown in Fig.~\ref{fig:performance}. MP-B2 shows the smallest RMSE while OQMD-L1$_2$ shows the smallest mean relative error, indicating that accuracy characteristics differ depending on the combination of data source and structure type.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.45\textwidth]{12_model_performance.png}
-    \caption{Comparison of lattice constant prediction accuracy (RMSE) across databases and structure types. MP-B2 achieves the highest accuracy (RMSE = 0.054~\AA). OQMD-B2 RMSE = 0.108~\AA\ reflects the addition of B--B contact condition.}
+    \caption{Comparison of lattice constant prediction accuracy (RMSE) across databases and structure types. MP-B2 achieves the highest accuracy (RMSE = 0.054~\AA).}
     \label{fig:performance}
 \end{figure}
+
+\subsection{Bootstrap Uncertainty Estimation}
+Bootstrap法(1000回リサンプリング)により各元素の有効半径の不確定性を評価した結果を表~\ref{tab:bootstrap}にまとめた。全4ケースで1000回中1000回の最適化が成功した。半径の標準偏差の中央値はOQMD-B2で最小(0.007~\AA)、OQMD-L1$_2$で最大(0.021~\AA)であった。95\%信頼区間の平均幅はOQMD-B2: 0.036~\AA、MP-B2: 0.065~\AA、MP-L1$_2$: 0.070~\AA、OQMD-L1$_2$: 0.094~\AA であった。
+
+不確定性が大きい元素は、各ケースで異なる傾向を示した。MP-B2ではFe (std = 0.052~\AA)、MP-L1$_2$ではBa (0.040~\AA)、OQMD-B2ではB (0.039~\AA)、OQMD-L1$_2$ではFe (0.060~\AA)が最大の不確定性を示した。OQMD-B2のstdが最小なのはデータ量(2207件)が多いことを反映している。
+
+\begin{table}[htbp]
+\small
+    \centering
+    \caption{Summary of Bootstrap uncertainty estimation (1000 resamples per case). Median and maximum standard deviation of effective radii, and the average width of 95\% confidence intervals are shown.}
+    \label{tab:bootstrap}
+    \begin{tabular}{lcccc}
+        \toprule
+        Case & Med.\ std (\AA) & Max.\ std (\AA) & Avg.\ 95\% CI (\AA) & Max.\ std element \\
+        \midrule
+        MP-B2 & 0.014 & 0.052 & 0.065 & Fe \\
+        MP-L1$_2$ & 0.017 & 0.040 & 0.070 & Ba \\
+        OQMD-B2 & 0.007 & 0.039 & 0.036 & B \\
+        OQMD-L1$_2$ & 0.021 & 0.060 & 0.094 & Fe \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
 \subsection{Parity Plots}
 観測値と予測値のパリティプロットは、B2では対角線近傍に点が密集し、系統的偏差が小さいことを示している。一方、L1$_2$では全体として良好な一致を保つものの、B2よりも散らばりがやや大きい。これはL1$_2$で複数の接触条件が競合し得ること、および剛体球近似で捉えられない電子的寄与を反映している可能性がある。
@@ -371,14 +395,14 @@ L1$_2$構造については、OQMD-L1$_2$がRMSE = 0.065~\AA、平均相対誤�
   \begin{minipage}[t]{0.48\textwidth}
     \centering
     \includegraphics[width=0.9\linewidth]{03_B2_parity_lattice.png}
-    \caption{Parity plot for MP B2 structures showing observed vs. predicted lattice constants. The dashed line represents perfect agreement. The tight clustering of points around the diagonal demonstrates the high accuracy of the geometric model with optimized radii (RMSE = 0.054~\AA, $R^2 = 0.976$).}
+    \caption{Parity plot for MP B2 structures showing observed vs. predicted lattice constants. The dashed line represents perfect agreement. The tight clustering of points around the diagonal demonstrates the high accuracy of the geometric model with optimized radii (RMSE = 0.054~\AA, $R^2 = 0.975$).}
     \label{fig:parity_B2}
   \end{minipage}
   \hfill
   \begin{minipage}[t]{0.48\textwidth}
     \centering
     \includegraphics[width=0.9\linewidth]{04_L12_parity_lattice.png}
-    \caption{Parity plot for MP L1$_2$ structures showing observed vs. predicted lattice constants. The agreement is good overall (RMSE = 0.157~\AA, $R^2 = 0.944$), though with somewhat greater scatter than for B2 structures, particularly at larger lattice constants.}
+    \caption{Parity plot for MP L1$_2$ structures showing observed vs. predicted lattice constants. The agreement is good overall (RMSE = 0.116~\AA, $R^2 = 0.950$), though with somewhat greater scatter than for B2 structures.}
     \label{fig:parity_L12}
   \end{minipage}
 \end{figure*}
@@ -388,28 +412,28 @@ L1$_2$構造については、OQMD-L1$_2$がRMSE = 0.065~\AA、平均相対誤�
 
 \subsubsection{Comparison with Goldschmidt Radii}
 
-最適化されたL1$_2$半径は、図~\ref{fig:L12_goldschmidt}に示すように、Goldschmidt半径と良好な相関を示す($R^2 = 0.946$、RMSE = 0.111~\AA)。L1$_2$は最密充填誘導体構造であり主成分原子は12個の最近接原子を持つため、配位数12の純金属から導かれたGoldschmidtの経験値との対応は物理的に合理的である。RMSE = 0.111~\AA の偏差は、純金属と二元金属間化合物における結合環境の違いを反映している。
+最適化されたL1$_2$半径は、図~\ref{fig:L12_goldschmidt}に示すように、Goldschmidt半径と相関を示す($R^2 = 0.858$、RMSE = 0.083~\AA)。L1$_2$は最密充填誘導体構造であり主成分原子は12個の最近接原子を持つため、配位数12の純金属から導かれたGoldschmidtの経験値との対応は物理的に合理的である。RMSE = 0.083~\AA の偏差は、純金属と二元金属間化合物における結合環境の違いを反映している。
 
 % The optimized L1$_2$ radii show good correlation with Goldschmidt radii ($R^2 = 0.946$, RMSE = 0.111~\AA), as shown in Fig.~\ref{fig:L12_goldschmidt}.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.4\textwidth]{gs_02_L12_vs_goldschmidt.png}
-    \caption{Comparison of optimized L1$_2$ radii (MP) with Goldschmidt metallic radii ($R^2 = 0.946$, RMSE = 0.111~\AA, 65 common elements).}
+    \caption{Comparison of optimized L1$_2$ radii (MP) with Goldschmidt metallic radii ($R^2 = 0.858$, RMSE = 0.083~\AA, 60 common elements).}
     \label{fig:L12_goldschmidt}
 \end{figure}
 
 \subsubsection{Comparison with Pauling Radii}
 
 
-B2半径とPauling半径の比較は、図~\ref{fig:B2_pauling}に示すように、相関を示す(全66元素: $R^2 = 0.898$、アルカリ金属(Li, Rb, Cs)除外63元素: $R^2 = 0.909$)。従来のA--B接触のみモデルと比較して$R^2$がやや低下しているのは、max基準モデルにおいて同種原子間接触(A--AまたはB--B)が支配的な化合物では、非支配的な原子種の半径は格子定数に直接影響しないため、その最適化に対する制約が弱まることを反映している。
+B2半径とPauling半径の比較は、図~\ref{fig:B2_pauling}に示すように、相関を示す(全62元素: $R^2 = 0.835$)。max基準モデルにおいて同種原子間接触(A--AまたはB--B)が支配的な化合物では、非支配的な原子種の半径は格子定数に直接影響しないため、その最適化に対する制約が弱まることを反映している。
 
 % The comparison of B2 radii with Pauling radii shows good correlation (all 66 elements: $R^2 = 0.925$; excl.~alkali metals (Li, Rb, Cs) 63 elements: $R^2 = 0.913$), as shown in Fig.~\ref{fig:B2_pauling}.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.4\textwidth]{05_B2_vs_pauling.png}
-    \caption{Comparison of optimized B2 radii (MP) with Pauling metallic radii (all 66 elements: $R^2 = 0.898$; excl.~alkali metals (Li, Rb, Cs): $R^2 = 0.909$, 63 elements).}
+    \caption{Comparison of optimized B2 radii (MP) with Pauling metallic radii (62 common elements: $R^2 = 0.835$).}
     \label{fig:B2_pauling}
 \end{figure}
 
@@ -423,7 +447,7 @@ B2半径とPauling半径の比較は、図~\ref{fig:B2_pauling}に示すよう�
 
 本研究が扱う重要な問題は、B2(CN=8)構造とL1$_2$(CN=12)構造の間で原子半径がどれだけ変化するかである。Goldschmidtの経験則によれば、配位数が12から8に変化すると、半径は約3％縮小すると考えられる。この予測は、同一元素について測定されたB2とL1$_2$の半径を比較することで検証できる。
 
-表~\ref{tab:top_contraction}は、MPデータセットにおいてB2-L1$_2$半径差(収縮率)が最も大きい元素を列挙している。最大の収縮を示すのはLi($-7.9$\%)であり、次いでRb($-6.2$\%), Re($-6.0$\%)が続く。一方、Ni, U, Cuなどの元素はB2半径がL1$_2$半径より大きい逆の傾向を示している。
+表~\ref{tab:top_contraction}は、MPデータセットにおいてB2-L1$_2$半径差(収縮率)が最も大きい元素を列挙している。最大の収縮を示すのはRe($-5.9$\%)であり、次いでCa($-5.6$\%), Hg($-3.6$\%)が続く。一方、Ni, Pu, Uなどの元素はB2半径がL1$_2$半径より大きい逆の傾向を示している。
 
 % A key question addressed by this study is how effective atomic radii change between B2 (CN=8) and L1$_2$ (CN=12) structures. According to Goldschmidt's empirical rule, a coordination number change from 12 to 8 should result in approximately 3\% radius contraction.
 
@@ -439,16 +463,17 @@ B2半径とPauling半径の比較は、図~\ref{fig:B2_pauling}に示すよう�
         \toprule
         Element & B2 radius (\AA) & L1$_2$ radius (\AA) & Diff. (\AA) & Contraction (\%) & Group \\
         \midrule
-        Li & 1.32 & 1.43 & $-$0.11 & $-$7.9 & Alkali metal \\
-        Rb & 2.11 & 2.24 & $-$0.14 & $-$6.2 & Alkali metal \\
-        Re & 1.29 & 1.37 & $-$0.08 & $-$6.0 & 5d transition \\
-        Ca & 1.76 & 1.87 & $-$0.11 & $-$5.7 & Alkaline earth \\
-        Tc & 1.27 & 1.35 & $-$0.07 & $-$5.4 & 4d transition \\
+        Re & 1.29 & 1.37 & $-$0.08 & $-$5.9 & 5d transition \\
+        Ca & 1.75 & 1.86 & $-$0.10 & $-$5.6 & Alkaline earth \\
+        Hg & 1.52 & 1.57 & $-$0.06 & $-$3.6 & 5d transition \\
+        Ir & 1.27 & 1.31 & $-$0.04 & $-$3.4 & 5d transition \\
+        Ga & 1.35 & 1.40 & $-$0.05 & $-$3.4 & Post-transition \\
         \midrule
-        Np & 1.62 & 1.53 & $+$0.10 & $+$6.5 & Actinide \\
-        Cu & 1.26 & 1.18 & $+$0.08 & $+$6.9 & 3d transition \\
-        U & 1.62 & 1.49 & $+$0.13 & $+$8.7 & Actinide \\
-        Ni & 1.18 & 1.08 & $+$0.10 & $+$9.3 & 3d transition \\
+        Ce & 1.79 & 1.69 & $+$0.10 & $+$6.0 & Lanthanide \\
+        Mn & 1.31 & 1.23 & $+$0.08 & $+$6.4 & 3d transition \\
+        U & 1.62 & 1.52 & $+$0.10 & $+$6.5 & Actinide \\
+        Pu & 1.63 & 1.52 & $+$0.11 & $+$7.4 & Actinide \\
+        Ni & 1.18 & 1.09 & $+$0.09 & $+$7.9 & 3d transition \\
         \bottomrule
     \end{tabular}
     }
@@ -471,14 +496,12 @@ B2半径とPauling半径の比較は、図~\ref{fig:B2_pauling}に示すよう�
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.4\textwidth]{gs_04_B2_contraction.png}
-    \caption{Distribution of B2-L1$_2$ radius contraction rates for all elements (MP data). The red dashed line indicates Goldschmidt's predicted 3\% contraction for CN 12 $\rightarrow$ 8. Most transition metals fall near this value, while B (boron) and Li show anomalously large contractions.}
+    \caption{Distribution of B2-L1$_2$ radius contraction rates for all elements (MP data). The red dashed line indicates Goldschmidt's predicted 3\% contraction for CN 12 $\rightarrow$ 8. Most transition metals fall near this value, while some elements show anomalously large contractions.}
     \label{fig:B2_contraction}
 \end{figure}
 
 \subsection{Element Group Analysis}
-有効半径の体系的傾向をみるため、元素をアルカリ金属、アルカリ土類、3d/4d/5d遷移金属、ランタノイド、アクチノイド、遷移後金属に分類してB2--L1$_2$差を比較した。表~\ref{tab:element_groups}に示すように、3d遷移金属の平均変化率は$+2.1$\%、4d遷移金属は$+0.2$\%、5d遷移金属は$-0.4$\%であり、max基準モデルではB2半径がL1$_2$半径より大きくなる元素が多く見られる。ランタノイドは平均$+0.8$\%(13元素)、アクチノイドは$+4.6$\%とB2の方が大きい傾向が見られた。遷移後金属(Al, Ga, In等)は平均$-1.6$\%の収縮を示した。
-
-なお、アルカリ金属については、非金属元素除外の結果、MPデータセットにおいてB2とL1$_2$の両方にデータを持つ元素はLi, Rb, Csの3元素のみとなった。平均変化率は$-1.1$\%であるが、3元素のみでは統計的に十分な結論を導くことは困難である。
+有効半径の体系的傾向をみるため、元素をアルカリ土類、3d/4d/5d遷移金属、ランタノイド、アクチノイド、遷移後金属に分類してB2--L1$_2$差を比較した（アルカリ金属は本研究の解析対象から除外済み）。表~\ref{tab:element_groups}に示すように、3d遷移金属の平均変化率は$+1.7$\%、4d遷移金属は$+0.7$\%、5d遷移金属は$-0.3$\%であり、max基準モデルではB2半径がL1$_2$半径より大きくなる元素が多く見られる。ランタノイドは平均$+0.5$\%(14元素)、アクチノイドは$+4.1$\%とB2の方が大きい傾向が見られた。遷移後金属(Al, Ga, In等)は平均$-1.9$\%の収縮を示した。
 
 \begin{table*}[htbp]      \small
     \centering
@@ -489,14 +512,13 @@ B2半径とPauling半径の比較は、図~\ref{fig:B2_pauling}に示すよう�
         \toprule
         Element group & N & B2 avg. (\AA) & L1$_2$ avg. (\AA) & Avg. (\%) & Range (\%) & Characteristic \\
         \midrule
-        Alkali metals & 3 & 1.97 & 1.98 & $-$1.1 & $-$7.5 to $+$2.9 & Li contraction \\
-        Alkaline earth & 5 & 1.71 & 1.71 & $+$0.6 & $-$4.3 to $+$4.2 & Mixed \\
-        3d transition & 10 & 1.31 & 1.28 & $+$2.1 & $-$2.2 to $+$9.3 & Ni, Cu expand \\
-        4d transition & 10 & 1.42 & 1.42 & $+$0.2 & $-$5.8 to $+$4.6 & Mixed \\
-        5d transition & 10 & 1.44 & 1.44 & $-$0.4 & $-$6.2 to $+$5.9 & Mixed \\
-        Lanthanides & 13 & 1.74 & 1.73 & $+$0.8 & $-$2.3 to $+$6.5 & Slight expansion \\
-        Actinides & 4 & 1.65 & 1.58 & $+$4.6 & $-$1.3 to $+$8.9 & B2 expansion \\
-        Post-transition & 7 & 1.56 & 1.59 & $-$1.6 & $-$5.1 to $+$3.0 & Moderate contraction \\
+        Alkaline earth & 5 & 1.68 & 1.69 & $-$0.2 & $-$5.6 to $+$3.7 & Ca contraction \\
+        3d transition & 10 & 1.30 & 1.28 & $+$1.7 & $-$2.8 to $+$7.9 & Ni expand \\
+        4d transition & 10 & 1.43 & 1.42 & $+$0.7 & $-$2.0 to $+$4.0 & Mixed \\
+        5d transition & 10 & 1.44 & 1.44 & $-$0.3 & $-$5.9 to $+$5.3 & Re contraction \\
+        Lanthanides & 14 & 1.73 & 1.73 & $+$0.5 & $-$2.2 to $+$6.0 & Slight expansion \\
+        Actinides & 5 & 1.72 & 1.65 & $+$4.1 & $-$1.3 to $+$7.4 & B2 expansion \\
+        Post-transition & 6 & 1.54 & 1.57 & $-$1.9 & $-$3.4 to $-$0.5 & Moderate contraction \\
         \bottomrule
     \end{tabular}
     }
@@ -544,16 +566,16 @@ B2半径とPauling半径の比較は、図~\ref{fig:B2_pauling}に示すよう�
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Discussion}
 
-\subsection{Effect of Non-Metallic Element Exclusion}
+\subsection{Effect of Non-Metallic and Alkali Metal Exclusion}
 
-非金属元素を含む化合物の除外は硬球モデルの精度に影響する。表~\ref{tab:nonmetal_effect}に示すように、改善効果はケースによって異なる。なお、Before RMSEは従来のA--B接触のみモデルによる値であり、After RMSEは本研究のmax基準反復最適化モデルによる値であるため、改善率にはモデル変更の効果も含まれる。MP-B2では66\%の改善(0.158~\AA から0.054~\AA)であり、IrN, OsN, TiO, CuO等の共有結合性/イオン性化合物が硬球モデルから大きく逸脱していたことを示す。MP-L1$_2$でも24\%の改善(0.206~\AA から0.157~\AA)が見られた。OQMD-B2ではmax基準モデルの採用によりRMSEがやや増加したが、これは同種原子間接触(A--AまたはB--B)が支配的な化合物において、非支配的な原子種の半径への制約が弱まる物理的特性を反映している。
+非金属元素およびアルカリ金属元素(Li, Na, K, Rb, Cs)を含む化合物の除外は硬球モデルの精度に影響する。非金属元素はイオン性・共有結合性が強く、硬球近似が不適切である。アルカリ金属は大きなイオン半径と強いイオン性のため、B2構造において格子定数の系統的な過大評価を引き起こす。表~\ref{tab:nonmetal_effect}に示すように、改善効果はケースによって異なる。なお、Before RMSEは従来のA--B接触のみモデル（非金属・アルカリ金属を含む）による値であり、After RMSEは本研究のmax基準反復最適化モデル（非金属・アルカリ金属除外後）による値であるため、改善率にはモデル変更とデータフィルタリングの両方の効果が含まれる。
 
 % The most important methodological finding is the pronounced effect of excluding non-metallic elements on hard-sphere model accuracy. As shown in Table~\ref{tab:nonmetal_effect}, the RMSE improvement varies significantly across cases. MP-B2 shows a dramatic 67\% improvement (0.158~\AA\ to 0.052~\AA), demonstrating that strongly covalent/ionic compounds such as IrN, OsN, TiO, and CuO deviated substantially from the hard-sphere model.
 
 \begin{table}[htbp]
 \small
     \centering
-    \caption{Effect of non-metallic element exclusion on lattice constant prediction accuracy.}
+    \caption{Effect of non-metallic and alkali metal exclusion on lattice constant prediction accuracy.}
     \label{tab:nonmetal_effect}
 \scalebox{0.9}{
     \begin{tabular}{lccc}
@@ -561,30 +583,30 @@ B2半径とPauling半径の比較は、図~\ref{fig:B2_pauling}に示すよう�
         Case & Before RMSE (\AA) & After RMSE (\AA) & Improvement \\
         \midrule
         MP --- B2 & 0.158 & 0.054 & 66\% \\
-        MP --- L1$_2$ & 0.206 & 0.157 & 24\% \\
-        OQMD --- B2 & 0.102 & 0.108 & $-$6\% \\
-        OQMD --- L1$_2$ & 0.067 & 0.065 & 3\% \\
+        MP --- L1$_2$ & 0.206 & 0.116 & 44\% \\
+        OQMD --- B2 & 0.102 & 0.095 & 7\% \\
+        OQMD --- L1$_2$ & 0.067 & 0.066 & 1\% \\
         \bottomrule
     \end{tabular}
     }
 \end{table}
 
-この結果は、硬球幾何モデルの適用範囲を明確に示している。金属元素のみで構成される二元化合物に対しては良好な予測を提供するが、非金属元素を含む化合物では電荷移動や共有結合性により原子間距離が硬球モデルから大きく逸脱する。
+この結果は、硬球幾何モデルの適用範囲を明確に示している。非金属元素・アルカリ金属元素を除いた金属間化合物に対しては良好な予測を提供するが、これらの元素を含む化合物では電荷移動、共有結合性、強いイオン性により原子間距離が硬球モデルから逸脱する。
 
 \subsection{Structure Dependence of Effective Radii}
 
 B2--L1$_2$半径差の元素群分析(表~\ref{tab:element_groups})から、以下の系統的傾向が明らかになった。
 
-元素群別の平均B2--L1$_2$半径差は、3d遷移金属で$+2.1$\%(10元素)、4d遷移金属で$+0.4$\%(10元素)、5d遷移金属で$-0.2$\%(10元素)であった。これらのB2-L1$_2$差は正負両方に分布しており、Goldschmidtの一律3\%収縮則とは合致しない。個々の元素レベルでは、Li($-7.9$\%)やRb($-6.2$\%)のように大きな収縮を示す元素がある一方、Ni($+9.3$\%)やU($+8.7$\%)のようにB2半径がL1$_2$半径より大きい元素も存在する。これは配位数変化のみでは説明できない元素固有の効果を示している。
+元素群別の平均B2--L1$_2$半径差は、3d遷移金属で$+1.7$\%(10元素)、4d遷移金属で$+0.7$\%(10元素)、5d遷移金属で$-0.3$\%(10元素)であった。これらのB2-L1$_2$差は正負両方に分布しており、Goldschmidtの一律3\%収縮則とは合致しない。個々の元素レベルでは、Re($-5.9$\%)やCa($-5.6$\%)のように大きな収縮を示す元素がある一方、Ni($+7.9$\%)やPu($+7.4$\%)のようにB2半径がL1$_2$半径より大きい元素も存在する。これは配位数変化のみでは説明できない元素固有の効果を示している。
 
-ランタノイドの平均収縮率は$+0.5$\%(14元素)、アルカリ金属は$-6.4$\%(3元素)であった。4f電子の遮蔽効果によりランタノイドでは配位環境依存性が小さく、アルカリ金属では拡散的な外殻電子のためB2半径が小さくなる傾向が顕著であった。
+ランタノイドの平均収縮率は$+0.2$\%(13元素)であった。4f電子の遮蔽効果によりランタノイドでは配位環境依存性が小さい。なお、アルカリ金属元素(Li, Na, K, Rb, Cs)は強いイオン性のため硬球モデルへの適合が悪く、本研究では解析対象から除外した。
 
 % Element-group average B2--L1$_2$ radius differences: 3d: $+2.1$\% (10 elements), 4d: $+0.2$\% (10 elements), 5d: $-0.4$\% (10 elements). Lanthanides: $+0.8$\% (13 elements), alkali metals: $-1.1$\% (3 elements).
 
 \subsection{Implications for Hume-Rothery Rules}
-Hume--Rothery則のサイズ因子は、通常、元素ごとに単一の原子半径を仮定して適用される~\citep{humerothery1936, miracle2017}。しかし本研究の結果は、B2とL1$_2$のような秩序相では、有効半径が構造依存であることを示している。遷移金属の大半ではB2-L1$_2$差は数\%以内であり実用上の影響は限定的であるが、特定の元素(Ni: $+9.3$\%, U: $+8.7$\%, Li: $-7.9$\%等)では約9\%に達する差が生じるため、これらの元素を含む系では構造に応じた半径の使い分けが重要となる。
+Hume--Rothery則のサイズ因子は、通常、元素ごとに単一の原子半径を仮定して適用される~\citep{humerothery1936, miracle2017}。しかし本研究の結果は、B2とL1$_2$のような秩序相では、有効半径が構造依存であることを示している。遷移金属の大半ではB2-L1$_2$差は数\%以内であり実用上の影響は限定的であるが、特定の元素(Ni: $+7.9$\%, Pu: $+7.4$\%, Re: $-5.9$\%等)では約8\%に達する差が生じるため、これらの元素を含む系では構造に応じた半径の使い分けが重要となる。
 
-したがって、相安定性評価や合金設計では、想定する構造に応じた半径を使い分ける方が妥当である。L1$_2$についてはGoldschmidt半径が概ね有効である($R^2 = 0.946$)一方、B2については本研究で決定した構造特異的半径を用いる意義が大きい。
+したがって、相安定性評価や合金設計では、想定する構造に応じた半径を使い分ける方が妥当である。L1$_2$についてはGoldschmidt半径が参考になる($R^2 = 0.858$)一方、B2については本研究で決定した構造特異的半径を用いる意義が大きい。
 
 この知見は、Hume--Rothery型のサイズ因子による議論だけでなく、機械学習を用いた材料特性予測において原子半径を特徴量として利用する場合にも重要である。とくに、結晶構造や局所結合環境に応じて有効半径が大きく変化する元素では、単一の原子半径を記述子として用いると、環境依存的な効果を見落とす可能性がある。そのような系では、構造特異的、あるいは局所環境を反映した記述子を用いることが望ましい。
 
@@ -595,7 +617,7 @@ Hume--Rothery則のサイズ因子は、通常、元素ごとに単一の原子�
 
 King~~\citep{king1966} は、Laves相やその他の金属間構造の格子定数を分析し、有効半径を導出した。その結果、Goldschmidt則と同様の配位数依存性の証拠を見出した。しかし、彼のデータセットは実験的に特徴づけられた化合物に限定され、数千ではなく数百程度であった。Teatum et al.~~\citep{teatum1960} は、実験データと理論的考察を組み合わせて、金属間化合物の構造予測に用いる原子半径をまとめた。彼らの値は広く用いられてきたが、構造固有の効果を考慮していない。近年では機械学習手法が金属間化合物の格子定数やその他の特性の予測に応用されている ~\citep{ward2016}。しかしこれらは通常、原子半径を最適化可能なパラメータではなく固定入力特徴として扱う。
 
-本研究では、大規模な第一原理データ(総計3982件)を用いて構造特異的有効半径を決定し、配位数効果や元素群の傾向を分析した。
+本研究では、大規模な第一原理データ(総計3511件)を用いて構造特異的有効半径を決定し、配位数効果や元素群の傾向を分析した。
 
 % Several previous studies have attempted to determine effective atomic radii from intermetallic compound data, though none have used datasets as large as those available from modern first-principles databases.
 
@@ -613,11 +635,11 @@ The GGA-PBE functional used in both MP and OQMD calculations is known to systema
 
 \textbf{磁気効果}: 磁性元素(Fe、Co、Ni、Mn、Cr、希土類元素)では、磁気状態が原子体積に影響し、結果として有効半径を変える。MP法やOQMD法ではスピン分極を考慮するが、磁気秩序の扱いは必ずしも基底状態に対応しない。特に反強磁性や複雑な磁気構造の場合に顕著である。
 
-\textbf{モデルの限界}: 剛体球幾何モデルは電荷移動、混成軌道、dバンド充填などの電子効果を無視している。B2におけるBやLiの大きな収縮は、これらの効果が無視できない場合があることを示している。
+\textbf{モデルの限界}: 剛体球幾何モデルは電荷移動、混成軌道、dバンド充填などの電子効果を無視している。非金属元素やアルカリ金属を含む化合物での大きな予測誤差は、これらの電子効果が無視できないことを示しており、本研究ではこれらの元素を解析対象から除外した。
 
-\textbf{データの品質}: 非金属元素除外と格子定数範囲フィルタを適用したが、データベース内の一部のエントリには構造決定や計算パラメータの誤りが含まれる可能性がある。B2ではMPとOQMDの半径に高い一貫性($R^2 = 0.969$)があり、誤りは系統的ではないと考えられる。L1$_2$の半径整合性($R^2 = 0.885$)はB2より低く、OQMDのL1$_2$データ数(238件)がMP(848件)より少ないことが一因である。データポイントが少ない元素では半径の不確実性が大きくなる。
+\textbf{データの品質}: 非金属元素・アルカリ金属元素除外と格子定数範囲フィルタを適用したが、データベース内の一部のエントリには構造決定や計算パラメータの誤りが含まれる可能性がある。B2ではMPとOQMDの半径に高い一貫性($R^2 = 0.955$)があり、誤りは系統的ではないと考えられる。L1$_2$の半径整合性($R^2 = 0.854$)はB2より低く、OQMDのL1$_2$データ数(235件)がMP(723件)より少ないことが一因である。データポイントが少ない元素では半径の不確実性が大きくなる。
 
-\textbf{max基準モデルの近似}: 本研究ではB2(式~\ref{eq:B2})およびL1$_2$(式~\ref{eq:L12})の両方にmax基準モデルを採用した。これは剛体球が重ならない最小格子定数を与える物理的に明確なモデルである。しかし、実際の結晶では原子は完全な剛体球ではなく、電子的効果による緩和が存在する。B2のmax基準モデルでは、同種原子間接触(A--AまたはB--B)が支配的な化合物において、非支配的な原子種の半径への制約が弱まるため、従来のA--B接触のみモデルと比較してOQMD-B2のRMSEがやや増加した。これはモデルの物理的正当性と経験的精度のトレードオフを示している。
+\textbf{max基準モデルの近似}: 本研究ではB2(式~\ref{eq:B2})およびL1$_2$(式~\ref{eq:L12})の両方にmax基準モデルを採用した。これは剛体球が重ならない最小格子定数を与える物理的に明確なモデルである。しかし、実際の結晶では原子は完全な剛体球ではなく、電子的効果による緩和が存在する。B2のmax基準モデルでは、同種原子間接触(A--AまたはB--B)が支配的な化合物において、非支配的な原子種の半径への制約が弱まる。この問題は不等式制約付きSLSQP最適化により緩和され、非支配的接触条件が観測格子定数以下となることが保証される。
 
 % \textbf{Temperature effects}: DFT calculations correspond to 0~K (with zero-point motion neglected), while experimental measurements and classical radius tabulations typically refer to room temperature.
 
@@ -632,12 +654,12 @@ The GGA-PBE functional used in both MP and OQMD calculations is known to systema
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusions}
-We determined effective atomic radii for B2 and L1$_2$ binary intermetallic compounds by optimizing against lattice constant data from the Materials Project and OQMD databases. Non-metallic elements were excluded and a lattice constant range filter (2.0--8.0~\AA) was applied to define the applicability domain of the hard-sphere model. A total of 3982 compounds (MP: 357 B2, 848 L1$_2$; OQMD: 2539 B2, 238 L1$_2$) were analyzed. The main conclusions are as follows.
+We determined effective atomic radii for B2 and L1$_2$ binary intermetallic compounds by optimizing against lattice constant data from the Materials Project and OQMD databases. Non-metallic and alkali metal elements were excluded and a lattice constant range filter (2.0--8.0~\AA) was applied to define the applicability domain of the hard-sphere model. A total of 3511 compounds (MP: 346 B2, 723 L1$_2$; OQMD: 2207 B2, 235 L1$_2$) were analyzed using inequality-constrained SLSQP optimization with Bootstrap uncertainty estimation. The main conclusions are as follows.
 \begin{enumerate}
-    \item \textbf{Predictive accuracy}: the optimized radii reproduce lattice constants with RMSE = 0.054~\AA\ for MP B2, 0.108~\AA\ for OQMD B2, 0.157~\AA\ for MP L1$_2$, and 0.065~\AA\ for OQMD L1$_2$, corresponding to $R^2 = 0.940$--0.976.
-    \item \textbf{Effectiveness of non-metallic element exclusion}: removal of compounds containing N, O, S, Se, and other non-metallic elements improved prediction accuracy, particularly for MP B2 (RMSE reduced by 66\%), confirming that the hard-sphere model is appropriate for metallic intermetallic compounds but not for covalent/ionic systems.
-    \item \textbf{Structure dependence of effective radii}: L1$_2$ radii show good agreement with Goldschmidt metallic radii ($R^2 = 0.946$), whereas B2 radii display element-specific deviations. With the max-based models for both B2 and L1$_2$, the B2-L1$_2$ radius differences are distributed on both sides: elements such as Li ($-7.9$\%) and Rb ($-6.2$\%) show contraction, while Ni ($+9.3$\%) and U ($+8.7$\%) show expansion.
-    \item \textbf{Database consistency}: MP and OQMD give highly consistent lattice constants for common compounds ($R^2 > 0.985$) and consistent B2 radii ($R^2 = 0.969$), indicating that the optimized radii are stable against reasonable differences in first-principles workflows. L1$_2$ radius consistency ($R^2 = 0.885$) is improved by adopting the max-based model.
+    \item \textbf{Predictive accuracy}: the optimized radii reproduce lattice constants with RMSE = 0.054~\AA\ for MP B2, 0.095~\AA\ for OQMD B2, 0.116~\AA\ for MP L1$_2$, and 0.066~\AA\ for OQMD L1$_2$, corresponding to $R^2 = 0.935$--0.975.
+    \item \textbf{Effectiveness of element exclusion}: removal of compounds containing non-metallic elements and alkali metals improved prediction accuracy, particularly for MP B2 (RMSE reduced by 66\%) and MP L1$_2$ (44\%), confirming that the hard-sphere model is appropriate for metallic intermetallic compounds but not for covalent/ionic systems or compounds with strong ionic character.
+    \item \textbf{Structure dependence of effective radii}: L1$_2$ radii correlate with Goldschmidt metallic radii ($R^2 = 0.858$), whereas B2 radii display element-specific deviations. With the max-based models for both B2 and L1$_2$, the B2-L1$_2$ radius differences are distributed on both sides: elements such as Re ($-5.9$\%) and Ca ($-5.6$\%) show contraction, while Ni ($+7.9$\%) and Pu ($+7.4$\%) show expansion.
+    \item \textbf{Database consistency}: MP and OQMD give highly consistent lattice constants for common compounds ($R^2 > 0.985$) and consistent B2 radii ($R^2 = 0.955$), indicating that the optimized radii are stable against reasonable differences in first-principles workflows. L1$_2$ radius consistency ($R^2 = 0.854$) is lower, partly due to smaller OQMD L1$_2$ dataset size.
 \end{enumerate}
 
 The tabulated radii provide a practical reference for lattice-constant estimation, size-mismatch analysis, and phase-stability discussions in B2- and L1$_2$-containing alloy systems.

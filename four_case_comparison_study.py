@@ -53,6 +53,14 @@ NON_METAL_ELEMENTS = frozenset({
     "At", "Rn",
 })
 
+# Alkali metal elements to exclude from the analysis.
+# Large ionic radii and strong ionic character in B2 compounds lead to
+# systematic overestimation of lattice constants by the hard-sphere model.
+ALKALI_METAL_ELEMENTS = frozenset({"Li", "Na", "K", "Rb", "Cs", "Fr"})
+
+# Combined exclusion set for filtering.
+EXCLUDED_ELEMENTS = NON_METAL_ELEMENTS | ALKALI_METAL_ELEMENTS
+
 PAULING_RADII = {
     "H": 0.53, "Li": 1.55, "Be": 1.12, "B": 0.98, "C": 0.77, "N": 0.75, "O": 0.73,
     "Na": 1.90, "Mg": 1.60, "Al": 1.43, "Si": 1.17, "P": 1.10, "S": 1.04, "Cl": 0.99,
@@ -119,7 +127,7 @@ def extract_mp_all(api_key: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
             element_A = str(elements[0])
             element_B = str(elements[1])
-            if element_A in NON_METAL_ELEMENTS or element_B in NON_METAL_ELEMENTS:
+            if element_A in EXCLUDED_ELEMENTS or element_B in EXCLUDED_ELEMENTS:
                 continue
             count_A = composition[elements[0]]
             count_B = composition[elements[1]]
@@ -237,7 +245,7 @@ def extract_oqmd_compounds(structure_type: str) -> pd.DataFrame:
 
             elements = sorted(el_counts.keys())
             element_A, element_B = elements[0], elements[1]
-            if element_A in NON_METAL_ELEMENTS or element_B in NON_METAL_ELEMENTS:
+            if element_A in EXCLUDED_ELEMENTS or element_B in EXCLUDED_ELEMENTS:
                 continue
             count_A, count_B = el_counts[element_A], el_counts[element_B]
 
