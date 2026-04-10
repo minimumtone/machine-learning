@@ -365,6 +365,28 @@ L1$_2$構造については、OQMD-L1$_2$がRMSE = 0.066~\AA、平均相対誤�
     \label{fig:performance}
 \end{figure}
 
+\subsection{Bootstrap Uncertainty Estimation}
+Bootstrap法(1000回リサンプリング)により各元素の有効半径の不確定性を評価した結果を表~\ref{tab:bootstrap}にまとめた。全4ケースで1000回中1000回の最適化が成功した。半径の標準偏差の中央値はOQMD-B2で最小(0.007~\AA)、OQMD-L1$_2$で最大(0.021~\AA)であった。95\%信頼区間の平均幅はOQMD-B2: 0.036~\AA、MP-B2: 0.065~\AA、MP-L1$_2$: 0.070~\AA、OQMD-L1$_2$: 0.094~\AA であった。
+
+不確定性が大きい元素は、各ケースで異なる傾向を示した。MP-B2ではFe (std = 0.052~\AA)、MP-L1$_2$ではBa (0.040~\AA)、OQMD-B2ではB (0.039~\AA)、OQMD-L1$_2$ではFe (0.060~\AA)が最大の不確定性を示した。OQMD-B2のstdが最小なのはデータ量(2207件)が多いことを反映している。
+
+\begin{table}[htbp]
+\small
+    \centering
+    \caption{Summary of Bootstrap uncertainty estimation (1000 resamples per case). Median and maximum standard deviation of effective radii, and the average width of 95\% confidence intervals are shown.}
+    \label{tab:bootstrap}
+    \begin{tabular}{lcccc}
+        \toprule
+        Case & Med.\ std (\AA) & Max.\ std (\AA) & Avg.\ 95\% CI (\AA) & Max.\ std element \\
+        \midrule
+        MP-B2 & 0.014 & 0.052 & 0.065 & Fe \\
+        MP-L1$_2$ & 0.017 & 0.040 & 0.070 & Ba \\
+        OQMD-B2 & 0.007 & 0.039 & 0.036 & B \\
+        OQMD-L1$_2$ & 0.021 & 0.060 & 0.094 & Fe \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
 \subsection{Parity Plots}
 観測値と予測値のパリティプロットは、B2では対角線近傍に点が密集し、系統的偏差が小さいことを示している。一方、L1$_2$では全体として良好な一致を保つものの、B2よりも散らばりがやや大きい。これはL1$_2$で複数の接触条件が競合し得ること、および剛体球近似で捉えられない電子的寄与を反映している可能性がある。
 
