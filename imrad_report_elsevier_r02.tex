@@ -425,7 +425,7 @@ B2半径とPauling半径の比較は、図~\ref{fig:B2_pauling}に示すよう�
 
 本研究が扱う重要な問題は、B2(CN=8)構造とL1$_2$(CN=12)構造の間で原子半径がどれだけ変化するかである。Goldschmidtの経験則によれば、配位数が12から8に変化すると、半径は約3％縮小すると考えられる。この予測は、同一元素について測定されたB2とL1$_2$の半径を比較することで検証できる。
 
-表~\ref{tab:top_contraction}は、MPデータセットにおいてB2-L1$_2$半径差(収縮率)が最も大きい元素を列挙している。最大の収縮を示すのはLi($-7.9$\%)であり、次いでRb($-6.2$\%), Re($-6.0$\%)が続く。一方、Ni, U, Cuなどの元素はB2半径がL1$_2$半径より大きい逆の傾向を示している。
+表~\ref{tab:top_contraction}は、MPデータセットにおいてB2-L1$_2$半径差(収縮率)が最も大きい元素を列挙している。最大の収縮を示すのはRe($-5.9$\%)であり、次いでCa($-5.6$\%), Hg($-3.6$\%)が続く。一方、Ni, Pu, Uなどの元素はB2半径がL1$_2$半径より大きい逆の傾向を示している。
 
 % A key question addressed by this study is how effective atomic radii change between B2 (CN=8) and L1$_2$ (CN=12) structures. According to Goldschmidt's empirical rule, a coordination number change from 12 to 8 should result in approximately 3\% radius contraction.
 
@@ -441,16 +441,17 @@ B2半径とPauling半径の比較は、図~\ref{fig:B2_pauling}に示すよう�
         \toprule
         Element & B2 radius (\AA) & L1$_2$ radius (\AA) & Diff. (\AA) & Contraction (\%) & Group \\
         \midrule
-        Li & 1.32 & 1.43 & $-$0.11 & $-$7.9 & Alkali metal \\
-        Rb & 2.11 & 2.24 & $-$0.14 & $-$6.2 & Alkali metal \\
-        Re & 1.29 & 1.37 & $-$0.08 & $-$6.0 & 5d transition \\
-        Ca & 1.76 & 1.87 & $-$0.11 & $-$5.7 & Alkaline earth \\
-        Tc & 1.27 & 1.35 & $-$0.07 & $-$5.4 & 4d transition \\
+        Re & 1.29 & 1.37 & $-$0.08 & $-$5.9 & 5d transition \\
+        Ca & 1.75 & 1.86 & $-$0.10 & $-$5.6 & Alkaline earth \\
+        Hg & 1.52 & 1.57 & $-$0.06 & $-$3.6 & 5d transition \\
+        Ir & 1.27 & 1.31 & $-$0.04 & $-$3.4 & 5d transition \\
+        Ga & 1.35 & 1.40 & $-$0.05 & $-$3.4 & Post-transition \\
         \midrule
-        Np & 1.62 & 1.53 & $+$0.10 & $+$6.5 & Actinide \\
-        Cu & 1.26 & 1.18 & $+$0.08 & $+$6.9 & 3d transition \\
-        U & 1.62 & 1.49 & $+$0.13 & $+$8.7 & Actinide \\
-        Ni & 1.18 & 1.08 & $+$0.10 & $+$9.3 & 3d transition \\
+        Ce & 1.79 & 1.69 & $+$0.10 & $+$6.0 & Lanthanide \\
+        Mn & 1.31 & 1.23 & $+$0.08 & $+$6.4 & 3d transition \\
+        U & 1.62 & 1.52 & $+$0.10 & $+$6.5 & Actinide \\
+        Pu & 1.63 & 1.52 & $+$0.11 & $+$7.4 & Actinide \\
+        Ni & 1.18 & 1.09 & $+$0.09 & $+$7.9 & 3d transition \\
         \bottomrule
     \end{tabular}
     }
@@ -473,14 +474,12 @@ B2半径とPauling半径の比較は、図~\ref{fig:B2_pauling}に示すよう�
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.4\textwidth]{gs_04_B2_contraction.png}
-    \caption{Distribution of B2-L1$_2$ radius contraction rates for all elements (MP data). The red dashed line indicates Goldschmidt's predicted 3\% contraction for CN 12 $\rightarrow$ 8. Most transition metals fall near this value, while B (boron) and Li show anomalously large contractions.}
+    \caption{Distribution of B2-L1$_2$ radius contraction rates for all elements (MP data). The red dashed line indicates Goldschmidt's predicted 3\% contraction for CN 12 $\rightarrow$ 8. Most transition metals fall near this value, while some elements show anomalously large contractions.}
     \label{fig:B2_contraction}
 \end{figure}
 
 \subsection{Element Group Analysis}
-有効半径の体系的傾向をみるため、元素をアルカリ金属、アルカリ土類、3d/4d/5d遷移金属、ランタノイド、アクチノイド、遷移後金属に分類してB2--L1$_2$差を比較した。表~\ref{tab:element_groups}に示すように、3d遷移金属の平均変化率は$+2.1$\%、4d遷移金属は$+0.2$\%、5d遷移金属は$-0.4$\%であり、max基準モデルではB2半径がL1$_2$半径より大きくなる元素が多く見られる。ランタノイドは平均$+0.8$\%(13元素)、アクチノイドは$+4.6$\%とB2の方が大きい傾向が見られた。遷移後金属(Al, Ga, In等)は平均$-1.6$\%の収縮を示した。
-
-なお、アルカリ金属については、非金属元素除外の結果、MPデータセットにおいてB2とL1$_2$の両方にデータを持つ元素はLi, Rb, Csの3元素のみとなった。平均変化率は$-1.1$\%であるが、3元素のみでは統計的に十分な結論を導くことは困難である。
+有効半径の体系的傾向をみるため、元素をアルカリ土類、3d/4d/5d遷移金属、ランタノイド、アクチノイド、遷移後金属に分類してB2--L1$_2$差を比較した（アルカリ金属は本研究の解析対象から除外済み）。表~\ref{tab:element_groups}に示すように、3d遷移金属の平均変化率は$+1.7$\%、4d遷移金属は$+0.7$\%、5d遷移金属は$-0.3$\%であり、max基準モデルではB2半径がL1$_2$半径より大きくなる元素が多く見られる。ランタノイドは平均$+0.5$\%(14元素)、アクチノイドは$+4.1$\%とB2の方が大きい傾向が見られた。遷移後金属(Al, Ga, In等)は平均$-1.9$\%の収縮を示した。
 
 \begin{table*}[htbp]      \small
     \centering
@@ -491,14 +490,13 @@ B2半径とPauling半径の比較は、図~\ref{fig:B2_pauling}に示すよう�
         \toprule
         Element group & N & B2 avg. (\AA) & L1$_2$ avg. (\AA) & Avg. (\%) & Range (\%) & Characteristic \\
         \midrule
-        Alkali metals & 3 & 1.97 & 1.98 & $-$1.1 & $-$7.5 to $+$2.9 & Li contraction \\
-        Alkaline earth & 5 & 1.71 & 1.71 & $+$0.6 & $-$4.3 to $+$4.2 & Mixed \\
-        3d transition & 10 & 1.31 & 1.28 & $+$2.1 & $-$2.2 to $+$9.3 & Ni, Cu expand \\
-        4d transition & 10 & 1.42 & 1.42 & $+$0.2 & $-$5.8 to $+$4.6 & Mixed \\
-        5d transition & 10 & 1.44 & 1.44 & $-$0.4 & $-$6.2 to $+$5.9 & Mixed \\
-        Lanthanides & 13 & 1.74 & 1.73 & $+$0.8 & $-$2.3 to $+$6.5 & Slight expansion \\
-        Actinides & 4 & 1.65 & 1.58 & $+$4.6 & $-$1.3 to $+$8.9 & B2 expansion \\
-        Post-transition & 7 & 1.56 & 1.59 & $-$1.6 & $-$5.1 to $+$3.0 & Moderate contraction \\
+        Alkaline earth & 5 & 1.68 & 1.69 & $-$0.2 & $-$5.6 to $+$3.7 & Ca contraction \\
+        3d transition & 10 & 1.30 & 1.28 & $+$1.7 & $-$2.8 to $+$7.9 & Ni expand \\
+        4d transition & 10 & 1.43 & 1.42 & $+$0.7 & $-$2.0 to $+$4.0 & Mixed \\
+        5d transition & 10 & 1.44 & 1.44 & $-$0.3 & $-$5.9 to $+$5.3 & Re contraction \\
+        Lanthanides & 14 & 1.73 & 1.73 & $+$0.5 & $-$2.2 to $+$6.0 & Slight expansion \\
+        Actinides & 5 & 1.72 & 1.65 & $+$4.1 & $-$1.3 to $+$7.4 & B2 expansion \\
+        Post-transition & 6 & 1.54 & 1.57 & $-$1.9 & $-$3.4 to $-$0.5 & Moderate contraction \\
         \bottomrule
     \end{tabular}
     }

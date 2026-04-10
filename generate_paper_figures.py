@@ -273,29 +273,16 @@ def fig_b2_vs_pauling():
     common = sorted(set(rd) & set(PAULING_RADII))
     opt = [rd[e] for e in common]
     paul = [PAULING_RADII[e] for e in common]
-    alkali_set = {"Li", "Rb", "Cs"}
     fig, ax = plt.subplots(figsize=(7, 7))
-    ox_n, oy_n, ox_o, oy_o, labels_o = [], [], [], [], []
-    for e, x, y in zip(common, paul, opt):
-        if e in alkali_set:
-            ox_o.append(x); oy_o.append(y); labels_o.append(e)
-        else:
-            ox_n.append(x); oy_n.append(y)
-    ax.scatter(ox_n, oy_n, s=50, c="steelblue", alpha=0.7, label="Other elements")
-    ax.scatter(ox_o, oy_o, s=80, c="red", marker="^", label="Alkali metals (Li, Rb, Cs)", zorder=5)
-    for e, x, y in zip(labels_o, ox_o, oy_o):
-        ax.annotate(e, (x, y), textcoords="offset points", xytext=(5, -10), fontsize=11, color="red")
+    ax.scatter(paul, opt, s=50, c="steelblue", alpha=0.7, label="Elements")
     mn, mx = 0.8, 2.8
     ax.plot([mn, mx], [mn, mx], "k--", alpha=0.5, label="Perfect agreement")
-    slope, intercept, r_all, _, _ = stats.linregress(paul, opt)
-    paul_filt = [x for e, x in zip(common, paul) if e not in alkali_set]
-    opt_filt = [y for e, y in zip(common, opt) if e not in alkali_set]
-    _, _, r_filt, _, _ = stats.linregress(paul_filt, opt_filt)
+    _, _, r_val, _, _ = stats.linregress(paul, opt)
     ax.set_xlabel("Pauling radius (\u00c5)")
     ax.set_ylabel("Optimized B2 radius (\u00c5)")
     ax.set_title("B2 Radii vs Pauling Radii (MP)")
     ax.text(0.95, 0.05,
-            f"All: $R^2$ = {r_all**2:.3f}\nExcl. alkali: $R^2$ = {r_filt**2:.3f}\nN = {len(common)}",
+            f"$R^2$ = {r_val**2:.3f}\nN = {len(common)}",
             transform=ax.transAxes, ha="right", va="bottom",
             bbox=dict(boxstyle="round", fc="wheat", alpha=0.8))
     ax.set_xlim(mn, mx); ax.set_ylim(mn, mx)
@@ -314,18 +301,10 @@ def fig_b2_vs_l12_scatter():
     b2 = get_radii_dict("MP_B2")
     l12 = get_radii_dict("MP_L12")
     common = sorted(set(b2) & set(l12))
-    alkali = {"Li", "Na", "K", "Rb", "Cs"}
     fig, ax = plt.subplots(figsize=(7, 7))
-    xn, yn, xa, ya, la = [], [], [], [], []
-    for e in common:
-        if e in alkali:
-            xa.append(l12[e]); ya.append(b2[e]); la.append(e)
-        else:
-            xn.append(l12[e]); yn.append(b2[e])
-    ax.scatter(xn, yn, s=40, c="steelblue", alpha=0.6, label="Other elements")
-    ax.scatter(xa, ya, s=80, c="red", marker="^", label="Alkali metals", zorder=5)
-    for e, x, y in zip(la, xa, ya):
-        ax.annotate(e, (x, y), textcoords="offset points", xytext=(5, -10), fontsize=11, color="red")
+    x_vals = [l12[e] for e in common]
+    y_vals = [b2[e] for e in common]
+    ax.scatter(x_vals, y_vals, s=40, c="steelblue", alpha=0.6, label="Elements")
     mn, mx = 0.8, 2.8
     ax.plot([mn, mx], [mn, mx], "k--", alpha=0.5, label="Equal radii")
     ax.plot([mn, mx], [mn*0.97, mx*0.97], "r:", alpha=0.5, label="3% contraction (Goldschmidt)")
