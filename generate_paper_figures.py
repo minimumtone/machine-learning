@@ -23,8 +23,8 @@ plt.rcParams.update({
 })
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(SCRIPT_DIR, "data")
-OUT_DIR = os.path.join(SCRIPT_DIR, "output")
+DATA_DIR = os.path.join(SCRIPT_DIR, "four_case_output", "figures")
+OUT_DIR = os.path.join(SCRIPT_DIR, "four_case_output", "figures")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 # ── Reference radii ──
@@ -349,6 +349,9 @@ def fig_alkali_comparison():
     b2 = get_radii_dict("MP_B2")
     l12 = get_radii_dict("MP_L12")
     avail = [e for e in alkali if e in b2 and e in l12]
+    if len(avail) == 0:
+        print("  gs_05_alkali_comparison.png: No alkali metals in data, skipping")
+        return
     x = np.arange(len(avail))
     width = 0.2
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -390,7 +393,8 @@ def fig_b2_contraction():
     other_c = [c for e, c in zip(els, contractions) if e not in alkali]
     alkali_c = [c for e, c in zip(els, contractions) if e in alkali]
     ax.hist(other_c, bins=30, color="steelblue", alpha=0.7, label="Other elements", edgecolor="black", linewidth=0.5)
-    ax.hist(alkali_c, bins=10, color="red", alpha=0.7, label="Alkali metals", edgecolor="black", linewidth=0.5)
+    if alkali_c:
+        ax.hist(alkali_c, bins=10, color="red", alpha=0.7, label="Alkali metals", edgecolor="black", linewidth=0.5)
     ax.axvline(x=-3, color="red", linestyle=":", linewidth=2, label="Goldschmidt 3% rule")
     ax.set_xlabel("B2$-$L1$_2$ radius change (%)")
     ax.set_ylabel("Number of elements")
