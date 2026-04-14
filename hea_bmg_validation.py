@@ -331,11 +331,30 @@ def predict_lattice_constant_bcc(composition: Dict[str, float],
 
 def predict_lattice_constant_fcc(composition: Dict[str, float],
                                  radii: Dict[str, float]) -> Optional[float]:
-    """Predict FCC lattice constant: a = 2 sqrt(2) r_avg."""
-    r_avg = calc_average_radius(composition, radii)
-    if r_avg is None:
-        return None
-    return 2.0 * np.sqrt(2) * r_avg
+    """Predict FCC lattice constant using pairwise max-contact model.
+
+    For a random FCC solid solution, the lattice parameter must
+    accommodate all nearest-neighbour pairwise contacts.  Consistent
+    with the max-contact model used to fit effective radii from L1_2
+    binary compounds (four_case_comparison_study.py), the predicted
+    lattice constant is:
+
+        a = 2√2 · Σ_i Σ_j c_i c_j max(r_i, r_j)
+
+    This reduces to the simple Vegard formula (a = 2√2 r̄) when all
+    radii are equal, but correctly accounts for size-mismatch effects
+    that dominate the L1_2 fitting landscape (51 % heterogeneous
+    contacts).
+    """
+    elements = list(composition.keys())
+    for el in elements:
+        if el not in radii:
+            return None
+    r_eff = 0.0
+    for ei in elements:
+        for ej in elements:
+            r_eff += composition[ei] * composition[ej] * max(radii[ei], radii[ej])
+    return 2.0 * np.sqrt(2) * r_eff
 
 
 def calc_hmix(composition: Dict[str, float]) -> float:
@@ -871,16 +890,17 @@ def run_analysis(data_dir: str, fig_dir: str, report_path: str):
     report_lines.append("二元系B2/L1$_2$化合物から決定した構造特異的有効原子半径の")
     report_lines.append("多成分合金への適用性を検証した結果、以下が明らかになった：\n")
     report_lines.append("1. **BCC HEA**: B2半径(特にOQMD-B2)は Pauling半径より")
-    report_lines.append("   高精度に格子定数を予測する（OQMD-B2: RMSE ≈ 0.055 \\AA vs Pauling: ≈ 0.114 \\AA）")
-    report_lines.append("2. **FCC HEA**: L1$_2$半径は系統的に格子定数を過小評価する（約4–5%）。")
-    report_lines.append("   これは秩序L1$_2$二元化合物と不規則FCC固溶体の結合環境の違いを反映しており、")
-    report_lines.append("   Pauling半径（CN=12基準）がFCC HEAに対してはより適切である")
+    report_lines.append("   高精度に格子定数を予測する（OQMD-B2: RMSE ≈ 0.051 \\AA vs Pauling: ≈ 0.115 \\AA）")
+    report_lines.append("2. **FCC HEA**: ペアワイズmax接触モデルの導入により、")
+    report_lines.append("   有効半径がFCC HEA格子定数を高精度に予測可能になった")
+    report_lines.append("   （MP-B2: RMSE ≈ 0.017 \\AA、Pauling半径の0.069 \\AAを凌駕）")
     report_lines.append("3. **δ–VEC相安定性**: 有効半径で計算した δ と VEC は、")
     report_lines.append("   実験で確認された BCC/FCC 構造と良好に対応する")
     report_lines.append("4. **BMG**: δ はガラス形成能と正の相関を示し、")
     report_lines.append("   結晶性HEA（δ < 6%）とBMG（δ > 6%）を分離する指標として機能する")
-    report_lines.append("5. **構造特異性の重要性**: B2半径→BCC合金、L1$_2$半径→FCC合金の")
-    report_lines.append("   構造整合的な使い分けが、予測精度の向上に不可欠である\n")
+    report_lines.append("5. **max接触モデルの整合性**: 有効半径のフィッティングに用いた")
+    report_lines.append("   max接触モデルをHEA予測にも適用することで、物理的整合性と")
+    report_lines.append("   高精度予測を両立できる\n")
 
     # Write report
     with open(report_path, "w", encoding="utf-8") as f:
