@@ -75,9 +75,9 @@ BCC HEA には B2 半径、FCC HEA には L1$_2$ 半径を対応させて評価�
 | NbMoTaW | BCC | 2.35 | 5.5 | -6.5 | 11.5 |
 | VNbMoTaW | BCC | 4.85 | 5.4 | -4.6 | 13.4 |
 | CoCrFeNiCu | FCC | 5.24 | 8.8 | 3.2 | 13.4 |
-| TiZrNbMoTa | BCC | 3.77 | 4.8 | -0.2 | 13.4 |
+| TiZrNbMoTa | BCC | 3.77 | 4.8 | -1.8 | 13.4 |
 | HfNbTaTiZr | BCC | 3.51 | 4.4 | 2.7 | 13.4 |
-| Al$_{0.5}$NbTa$_{0.8}$Ti$_{1.5}$V$_{0.2}$Zr | BCC | 5.06 | 4.3 | -8.5 | 13.8 |
+| Al$_{0.5}$NbTa$_{0.8}$Ti$_{1.5}$V$_{0.2}$Zr | BCC | 5.06 | 4.3 | -8.6 | 13.8 |
 
 ![δ–VEC phase map](hea_delta_vec_map.png)
 
