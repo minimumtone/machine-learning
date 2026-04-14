@@ -244,6 +244,97 @@ def plot_individual_vegard(table: pd.DataFrame, metric: str,
     plt.close()
 
 
+def plot_triplet_summary_grid(table: pd.DataFrame, metric: str,
+                              ylabel: str, fig_path: str,
+                              n_cols: int = 6):
+    """Summary grid of complete triplet pairs (3 compositions) only.
+
+    Similar to plot_individual_vegard but with richer annotations:
+    colour-coded L1_2 / B2 markers, R^2-based subplot border colour,
+    and aggregate statistics in a super-title.
+    """
+    # Filter to rows with all 3 compositions
+    triplet = table[table["n_compositions"] == 3].copy()
+    if triplet.empty:
+        print("  No complete triplet pairs found – skipping summary grid.")
+        return
+
+    # Sort by R² descending so best-fit pairs appear first
+    x_pts = np.array([0.25, 0.50, 0.75])
+    r2_vals = []
+    for _, row in triplet.iterrows():
+        y = np.array([row[f"{metric}_25"], row[f"{metric}_50"],
+                      row[f"{metric}_75"]])
+        r2_vals.append(fit_linear(x_pts, y)["R2"])
+    triplet = triplet.assign(_r2=r2_vals).sort_values("_r2", ascending=False)
+
+    n = len(triplet)
+    n_rows = int(np.ceil(n / n_cols))
+    fig, axes = plt.subplots(n_rows, n_cols,
+                             figsize=(4.2 * n_cols, 3.8 * n_rows),
+                             squeeze=False)
+    x_fit = np.linspace(0.15, 0.85, 80)
+
+    for idx, (_, row) in enumerate(triplet.iterrows()):
+        ax = axes[idx // n_cols][idx % n_cols]
+        el1, el2 = row["el1"], row["el2"]
+        y = np.array([row[f"{metric}_25"], row[f"{metric}_50"],
+                      row[f"{metric}_75"]])
+        fit = fit_linear(x_pts, y)
+
+        # Data points: L1_2 (blue circles) and B2 (red diamond)
+        ax.scatter([0.25, 0.75], [y[0], y[2]], c="#1f77b4", s=70,
+                   zorder=5, marker="o", edgecolors="black",
+                   linewidths=0.6, label="L1$_2$")
+        ax.scatter([0.50], [y[1]], c="#d62728", s=70, zorder=5,
+                   marker="D", edgecolors="black",
+                   linewidths=0.6, label="B2")
+
+        # Linear fit
+        y_fit = fit["slope"] * x_fit + fit["intercept"]
+        ax.plot(x_fit, y_fit, "k--", alpha=0.5, linewidth=1)
+
+        # Colour border by R² quality
+        r2 = fit["R2"]
+        if r2 >= 0.99:
+            border_color = "#2ca02c"   # green
+        elif r2 >= 0.95:
+            border_color = "#1f77b4"   # blue
+        elif r2 >= 0.90:
+            border_color = "#ff7f0e"   # orange
+        else:
+            border_color = "#d62728"   # red
+        for spine in ax.spines.values():
+            spine.set_edgecolor(border_color)
+            spine.set_linewidth(2)
+
+        ax.set_title(f"{el1}–{el2}\n$R^2$={r2:.4f}",
+                     fontsize=11, color=border_color, fontweight="bold")
+        ax.set_xlabel(f"$x_{{{el1}}}$", fontsize=10)
+        ax.set_ylabel(ylabel, fontsize=10)
+        ax.set_xlim(0.15, 0.85)
+        ax.tick_params(labelsize=9)
+
+    # Hide empty axes
+    for idx in range(n, n_rows * n_cols):
+        axes[idx // n_cols][idx % n_cols].set_visible(False)
+
+    # Aggregate stats in suptitle
+    r2_arr = np.array(r2_vals)
+    n99 = (r2_arr > 0.99).sum()
+    n95 = (r2_arr > 0.95).sum()
+    fig.suptitle(
+        f"Pseudo-Vegard ($r_{{\\mathrm{{WS}}}}$): {n} complete triplet pairs\n"
+        f"Mean $R^2$ = {r2_arr.mean():.3f},  Median $R^2$ = {np.median(r2_arr):.3f}  "
+        f"($R^2$>0.99: {n99},  $R^2$>0.95: {n95})",
+        fontsize=16, y=1.02)
+
+    plt.tight_layout()
+    plt.savefig(fig_path, dpi=150, bbox_inches="tight")
+    plt.close()
+    print(f"  Triplet summary grid ({n} pairs) → {fig_path}")
+
+
 def plot_individual_vegard_separate(table: pd.DataFrame, metric: str,
                                     ylabel: str, out_dir: str):
     """Save one publication-quality figure per binary pair (2 or 3 points)."""
@@ -604,6 +695,13 @@ def run_analysis(data_dir: str, fig_dir: str, report_path: str):
         table_all, "r_ws",
         "$r_{\\mathrm{WS}}$ (\\AA)",
         os.path.join(fig_dir, "individual"))
+
+    # 7. Summary grid of complete triplet pairs only (r_ws)
+    print("\nGenerating triplet summary grid (complete 3-pt pairs only) …")
+    plot_triplet_summary_grid(
+        table_all, "r_ws",
+        "$r_{\\mathrm{WS}}$ (\\AA)",
+        os.path.join(fig_dir, "vegard_triplet_summary_r_ws.png"))
 
     # Report
     print("\nGenerating report …")
