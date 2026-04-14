@@ -19,9 +19,9 @@ BMG(ガラス形成能指標)の実験データと比較して検証する。
 |:---|:---:|:---:|:---|:---:|:---:|:---:|
 | CoCrFeMnNi | FCC | 3.592 | OQMD-L1$_2$ | 3.432 | -0.160 | 4.45 |
 | CoCrFeNi | FCC | 3.572 | OQMD-L1$_2$ | 3.395 | -0.177 | 4.95 |
-| CoCrFeNiMn$_{0.5}$ | FCC | 3.581 | OQMD-L1$_2$ | 3.412 | -0.169 | 4.71 |
-| Al$_{0.3}$CoCrFeNi | FCC | 3.588 | OQMD-L1$_2$ | 3.441 | -0.147 | 4.10 |
-| Al$_{0.5}$CoCrFeNi | FCC | 3.601 | OQMD-L1$_2$ | 3.454 | -0.147 | 4.09 |
+| CoCrFeNiMn$_{0.5}$ | FCC | 3.581 | OQMD-L1$_2$ | 3.416 | -0.165 | 4.61 |
+| Al$_{0.3}$CoCrFeNi | FCC | 3.588 | OQMD-L1$_2$ | 3.434 | -0.154 | 4.29 |
+| Al$_{0.5}$CoCrFeNi | FCC | 3.601 | OQMD-L1$_2$ | 3.457 | -0.144 | 3.99 |
 | AlCoCrFeNi | BCC | 2.871 | MP-B2 | 2.886 | +0.015 | 0.51 |
 | TiZrHfNbTa | BCC | 3.404 | MP-B2 | 3.471 | +0.067 | 1.98 |
 | NbMoTaW | BCC | 3.213 | OQMD-B2 | 3.158 | -0.055 | 1.70 |
@@ -43,19 +43,19 @@ BCC HEA には B2 半径、FCC HEA には L1$_2$ 半径を対応させて評価�
 | Goldschmidt | BCC | 7 | 0.0599 | 0.0525 | 1.64 |
 | MP-L1$_2$ | FCC | 6 | 0.2025 | 0.2016 | 5.62 |
 | OQMD-L1$_2$ | FCC | 6 | 0.1602 | 0.1599 | 4.46 |
-| Pauling | FCC | 6 | 0.0222 | 0.0187 | 0.52 |
-| Goldschmidt | FCC | 6 | 0.0730 | 0.0589 | 1.64 |
+| Pauling | FCC | 6 | 0.0223 | 0.0187 | 0.52 |
+| Goldschmidt | FCC | 6 | 0.0725 | 0.0589 | 1.64 |
 
 ### 1.3 全 HEA 統合 RMSE 比較
 
 | Radius set | RMSE (\AA) | MAE (\AA) | Mean rel. err. (%) |
 |:---|:---:|:---:|:---:|
 | MP-B2 | 0.1044 | 0.0976 | 2.86 |
-| MP-L1$_2$ | 0.1405 | 0.1102 | 3.13 |
+| MP-L1$_2$ | 0.1404 | 0.1102 | 3.13 |
 | OQMD-B2 | 0.0690 | 0.0663 | 1.93 |
 | OQMD-L1$_2$ | 0.1246 | 0.1006 | 2.82 |
 | Pauling | 0.0848 | 0.0695 | 2.13 |
-| Goldschmidt | 0.0663 | 0.0555 | 1.64 |
+| Goldschmidt | 0.0660 | 0.0555 | 1.64 |
 
 ![HEA lattice constant parity](hea_parity.png)
 
@@ -165,7 +165,7 @@ Inoueの経験則は必要条件ではなく、GFAの連続的な指標として
 - **BCC HEA** (MP-B2 半径): RMSE = 0.1055 \AA, MAE = 0.0934 \AA, 平均相対誤差 = 2.86%
 - **FCC HEA** (MP-L1$_2$ 半径): RMSE = 0.2025 \AA, MAE = 0.2016 \AA, 平均相対誤差 = 5.62%
 - **BCC HEA** (Pauling 半径): RMSE = 0.1137 \AA
-- **FCC HEA** (Pauling 半径): RMSE = 0.0222 \AA
+- **FCC HEA** (Pauling 半径): RMSE = 0.0223 \AA
 
 ### 3.2 BMG ガラス形成能
 
