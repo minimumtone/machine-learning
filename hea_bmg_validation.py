@@ -104,6 +104,9 @@ MIXING_ENTHALPY = {
     ("Be", "Cu"): -12, ("Be", "Ni"): -18,
     ("Al", "Hf"): -39, ("Al", "Nb"): -18, ("Al", "Ta"): -19,
     ("Al", "V"): -16, ("Al", "W"): -2, ("Al", "Mo"): -5,
+    # Additional pairs for BMG alloys (Takeuchi & Inoue 2005)
+    ("B", "Fe"): -26, ("Au", "Ge"): -23, ("Au", "Si"): -28,
+    ("Ge", "Si"): -8, ("Al", "La"): -38, ("La", "Ni"): -27,
 }
 
 
@@ -758,7 +761,7 @@ def run_bmg_validation(radii_all: Dict[str, Dict[str, float]],
         if pd.isna(row["R_c"]):
             continue
         c1 = row["n_elements"] >= 3
-        c2 = (row["delta_pct"] or 0) > 12.0
+        c2 = (row["delta_pct"] if pd.notna(row["delta_pct"]) else 0) > 12.0
         c3 = row["H_mix"] < 0
         n_met = sum([c1, c2, c3])
         gfa = "Excellent" if row["R_c"] <= 10 else (
