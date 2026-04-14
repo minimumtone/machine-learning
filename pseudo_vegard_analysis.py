@@ -458,11 +458,20 @@ def run_analysis(data_dir: str, fig_dir: str, report_path: str):
         "Pseudo-Vegard: Raw Lattice Constant",
         os.path.join(fig_dir, "vegard_grid_a_raw.png"))
 
-    # 3. R² histograms
+    # 3. Individual pseudo-Vegard diagrams (r_ws)
+    plot_individual_vegard(
+        table, "r_ws",
+        "$r_{\\mathrm{WS}}$ (\\AA)",
+        "Pseudo-Vegard: Wigner-Seitz Radius",
+        os.path.join(fig_dir, "vegard_grid_r_ws.png"))
+
+    # 4. R² histograms (d_nn and r_ws)
     plot_r2_histogram(results_dnn, "$d_{\\mathrm{nn}}$",
                       os.path.join(fig_dir, "vegard_r2_histogram.png"))
+    plot_r2_histogram(results_rws, "$r_{\\mathrm{WS}}$",
+                      os.path.join(fig_dir, "vegard_r2_histogram_rws.png"))
 
-    # 4. B2 deviation
+    # 5. B2 deviation
     results_dnn_sorted = results_dnn.sort_values("mid_residual")
     plot_mid_deviation(results_dnn_sorted, "d_nn", "\\AA",
                        os.path.join(fig_dir, "vegard_b2_deviation.png"))
