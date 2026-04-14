@@ -402,7 +402,7 @@ def run_hea_validation(radii_all: Dict[str, Dict[str, float]],
     lines.append("二元系B2/L1$_2$化合物から決定した有効原子半径を用いて、")
     lines.append("多成分HEAの格子定数をVegard則で予測し、実験値と比較する。\n")
     lines.append("- BCC: $a = 4\\bar{r} / \\sqrt{3}$")
-    lines.append("- FCC: $a = 2\\sqrt{2}\\,\\bar{r}$")
+    lines.append("- FCC: $a = 2\\sqrt{2}\\,\\sum_i \\sum_j c_i c_j \\max(r_i, r_j)$  (ペアワイズmax接触モデル)")
     lines.append("- $\\bar{r} = \\sum c_i r_i$ (組成加重平均半径)\n")
 
     rows = []

@@ -10,7 +10,7 @@ BMG(ガラス形成能指標)の実験データと比較して検証する。
 多成分HEAの格子定数をVegard則で予測し、実験値と比較する。
 
 - BCC: $a = 4\bar{r} / \sqrt{3}$
-- FCC: $a = 2\sqrt{2}\,\bar{r}$
+- FCC: $a = 2\sqrt{2}\,\sum_i \sum_j c_i c_j \max(r_i, r_j)$  (ペアワイズmax接触モデル)
 - $\bar{r} = \sum c_i r_i$ (組成加重平均半径)
 
 ### 1.1 格子定数予測結果
