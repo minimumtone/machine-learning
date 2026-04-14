@@ -652,6 +652,51 @@ The GGA-PBE functional used in both MP and OQMD calculations is known to systema
 % \textbf{L1$_2$ max-based model approximation}: The max-based model (Eq.~\ref{eq:L12}) gives the minimum lattice parameter that avoids hard-sphere overlap. However, real atoms are not perfect hard spheres, and electronic relaxation effects exist. Thus, the max criterion may not always provide the optimal description.
 
 
+\subsection{Validation Against Multi-Component Alloys}
+
+本研究で決定した構造特異的有効半径の多成分合金への適用性を検証するため、文献で報告されているHEA（高エントロピー合金）およびBMG（バルク金属ガラス）の実験データとの比較を行った。
+
+\subsubsection{HEA Lattice Constant Prediction}
+
+Vegard則に基づき、BCC型HEAには$a = 4\bar{r}/\sqrt{3}$、FCC型HEAには$a = 2\sqrt{2}\,\bar{r}$（$\bar{r} = \sum c_i r_i$）を用いて格子定数を予測し、13種のHEA実験値と比較した。結果を表~\ref{tab:hea_validation}にまとめる。
+
+BCC HEAに対してはB2半径が有効であり、OQMD-B2半径ではRMSE = 0.055~\AA（平均相対誤差1.63\%）を達成した。これはPauling半径（RMSE = 0.114~\AA）およびGoldschmidt半径（RMSE = 0.060~\AA）より高精度である。AlCoCrFeNi（BCC）では誤差0.51\%と特に良好な一致を示した。
+
+一方、FCC HEAに対してはL1$_2$半径が格子定数を系統的に約4--5\%過小評価する傾向が見られた（MP-L1$_2$: RMSE = 0.203~\AA）。Pauling半径はFCC HEAに対してRMSE = 0.022~\AA と高精度であった。この差異は、秩序二元L1$_2$化合物と不規則FCC固溶体における原子の結合環境の違いを反映していると考えられる。L1$_2$構造では少数成分原子が特定サイトを占有するのに対し、HEAのFCC固溶体では全元素がランダムに配位する。
+
+\begin{table}[htbp]
+\small
+    \centering
+    \caption{HEA lattice constant prediction using structure-matched effective radii. BCC HEAs are predicted with B2 radii, FCC HEAs with L1$_2$ radii. The best-performing radius set for each structure type is shown.}
+    \label{tab:hea_validation}
+\scalebox{0.82}{
+    \begin{tabular}{llcccl}
+        \toprule
+        HEA & Structure & $a_{\mathrm{exp}}$ (\AA) & $a_{\mathrm{pred}}$ (\AA) & Rel.\ err.\ (\%) & Radius set \\
+        \midrule
+        AlCoCrFeNi & BCC & 2.871 & 2.886 & 0.51 & MP-B2 \\
+        TiZrHfNbTa & BCC & 3.404 & 3.471 & 1.98 & MP-B2 \\
+        NbMoTaW & BCC & 3.213 & 3.158 & 1.70 & OQMD-B2 \\
+        VNbMoTaW & BCC & 3.183 & 3.137 & 1.46 & OQMD-B2 \\
+        TiZrNbMoTa & BCC & 3.293 & 3.255 & 1.14 & OQMD-B2 \\
+        \midrule
+        CoCrFeMnNi & FCC & 3.592 & 3.432 & 4.45 & OQMD-L1$_2$ \\
+        CoCrFeNi & FCC & 3.572 & 3.395 & 4.95 & OQMD-L1$_2$ \\
+        CoCrFeNiCu & FCC & 3.590 & 3.430 & 4.45 & OQMD-L1$_2$ \\
+        \bottomrule
+    \end{tabular}
+    }
+\end{table}
+
+\subsubsection{BMG Glass-Forming Ability Indicators}
+
+液体/アモルファス相は局所的にCN $\approx$ 12の配位環境を持つため、BMG合金の原子サイズミスマッチ$\delta$の算出にはL1$_2$半径を使用した。10種のBMG合金および5種の結晶性HEAについて$\delta$を計算した結果、BMG形成合金は$\delta > 6$\%、結晶性HEAは$\delta < 6$\%の領域に明確に分離された。
+
+Inoueの三経験則（$N \geq 3$、大きな原子サイズ差、負の混合エンタルピー）との比較では、Vitreloy 1（Zr$_{41}$Ti$_{14}$Cu$_{13}$Ni$_{10}$Be$_{22}$, $\delta = 16.4$\%）やZr$_{55}$Cu$_{30}$Al$_{10}$Ni$_5$（$\delta = 12.9$\%）など高GFA合金が3条件すべてを満たす一方、ガラス形成能の低いAu$_{77}$Ge$_{14}$Si$_9$は$\delta = 2.5$\%と小さかった。
+
+これらの結果は、二元系化合物から決定した有効半径が、多成分合金のサイズミスマッチ評価にも有効であることを示しており、特にB2半径のBCC HEAへの適用において古典半径を上回る予測精度が得られた。
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusions}
 We determined effective atomic radii for B2 and L1$_2$ binary intermetallic compounds by optimizing against lattice constant data from the Materials Project and OQMD databases. Non-metallic and alkali metal elements were excluded and a lattice constant range filter (2.0--8.0~\AA) was applied to define the applicability domain of the hard-sphere model. A total of 3511 compounds (MP: 346 B2, 723 L1$_2$; OQMD: 2207 B2, 235 L1$_2$) were analyzed using inequality-constrained SLSQP optimization with Bootstrap uncertainty estimation. The main conclusions are as follows.
@@ -660,6 +705,7 @@ We determined effective atomic radii for B2 and L1$_2$ binary intermetallic comp
     \item \textbf{Effectiveness of element exclusion}: removal of compounds containing non-metallic elements and alkali metals improved prediction accuracy, particularly for MP B2 (RMSE reduced by 66\%) and MP L1$_2$ (44\%), confirming that the hard-sphere model is appropriate for metallic intermetallic compounds but not for covalent/ionic systems or compounds with strong ionic character.
     \item \textbf{Structure dependence of effective radii}: L1$_2$ radii correlate with Goldschmidt metallic radii ($R^2 = 0.858$), whereas B2 radii display element-specific deviations. With the max-based models for both B2 and L1$_2$, the B2-L1$_2$ radius differences are distributed on both sides: elements such as Re ($-5.9$\%) and Ca ($-5.6$\%) show contraction, while Ni ($+7.9$\%) and Pu ($+7.4$\%) show expansion.
     \item \textbf{Database consistency}: MP and OQMD give highly consistent lattice constants for common compounds ($R^2 > 0.985$) and consistent B2 radii ($R^2 = 0.955$), indicating that the optimized radii are stable against reasonable differences in first-principles workflows. L1$_2$ radius consistency ($R^2 = 0.854$) is lower, partly due to smaller OQMD L1$_2$ dataset size.
+    \item \textbf{Multi-component alloy validation}: B2 radii predict BCC HEA lattice constants with RMSE = 0.055~\AA\ (OQMD-B2), outperforming Pauling radii (0.114~\AA). L1$_2$ radii systematically underestimate FCC HEA lattice constants by 4--5\%, reflecting the difference between ordered binary and disordered solid solution environments. For BMG alloys, the atomic size mismatch $\delta$ calculated from these radii clearly separates glass-forming ($\delta > 6$\%) from crystalline ($\delta < 6$\%) compositions.
 \end{enumerate}
 
 The tabulated radii provide a practical reference for lattice-constant estimation, size-mismatch analysis, and phase-stability discussions in B2- and L1$_2$-containing alloy systems.
