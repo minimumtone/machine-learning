@@ -115,6 +115,19 @@ def find_triplet_pairs(df: pd.DataFrame) -> List[Tuple[str, str]]:
     return sorted(pairs_25 & pairs_50 & pairs_75)
 
 
+def find_all_plottable_pairs(df: pd.DataFrame) -> List[Tuple[str, str]]:
+    """Find binary pairs that have data at >= 2 compositions."""
+    pairs_25 = set(df[df["frac_el1"] == 0.25][["el1", "el2"]].apply(tuple, axis=1))
+    pairs_50 = set(df[df["frac_el1"] == 0.50][["el1", "el2"]].apply(tuple, axis=1))
+    pairs_75 = set(df[df["frac_el1"] == 0.75][["el1", "el2"]].apply(tuple, axis=1))
+    at_least_two = set()
+    for p in pairs_25 | pairs_50 | pairs_75:
+        n = sum([p in pairs_25, p in pairs_50, p in pairs_75])
+        if n >= 2:
+            at_least_two.add(p)
+    return sorted(at_least_two)
+
+
 def build_triplet_table(df: pd.DataFrame,
                         pairs: List[Tuple[str, str]]) -> pd.DataFrame:
     """Build table with one row per pair, columns for 25/50/75% values."""
@@ -136,8 +149,10 @@ def build_triplet_table(df: pd.DataFrame,
             row[f"d_nn_{label}"] = d_nn(a_avg, src)
             row[f"r_ws_{label}"] = r_ws(a_avg, src)
 
-        # Skip if incomplete
-        if all(f"a_{x}" in row for x in ["25", "50", "75"]):
+        # Skip if incomplete (need at least 2 compositions)
+        n_comp = sum(1 for x in ["25", "50", "75"] if f"a_{x}" in row)
+        if n_comp >= 2:
+            row["n_compositions"] = n_comp
             rows.append(row)
 
     return pd.DataFrame(rows)
@@ -227,6 +242,104 @@ def plot_individual_vegard(table: pd.DataFrame, metric: str,
     plt.tight_layout()
     plt.savefig(fig_path, dpi=150, bbox_inches="tight")
     plt.close()
+
+
+def plot_individual_vegard_separate(table: pd.DataFrame, metric: str,
+                                    ylabel: str, out_dir: str):
+    """Save one publication-quality figure per binary pair (2 or 3 points)."""
+    os.makedirs(out_dir, exist_ok=True)
+    x_fit = np.linspace(0.15, 0.85, 80)
+    count = 0
+
+    for _, row in table.iterrows():
+        el1, el2 = row["el1"], row["el2"]
+
+        # Collect available data points
+        xs, ys, colors, markers, labels_ann = [], [], [], [], []
+        for frac, label, clr, mkr, ann in [
+            (0.25, "25", "#1f77b4", "o",
+             f"L1$_2$ AB$_3$\n(25% {el1})"),
+            (0.50, "50", "#d62728", "D",
+             f"B2 AB\n(50% {el1})"),
+            (0.75, "75", "#1f77b4", "o",
+             f"L1$_2$ A$_3$B\n(75% {el1})"),
+        ]:
+            col = f"{metric}_{label}"
+            if col in row and pd.notna(row[col]):
+                xs.append(frac)
+                ys.append(row[col])
+                colors.append(clr)
+                markers.append(mkr)
+                labels_ann.append(ann)
+
+        if len(xs) < 2:
+            continue
+
+        x_arr, y_arr = np.array(xs), np.array(ys)
+        fit = fit_linear(x_arr, y_arr)
+        n_pts = len(xs)
+
+        fig, ax = plt.subplots(figsize=(7, 5))
+
+        # Plot L1_2 and B2 points separately for legend
+        l12_plotted, b2_plotted = False, False
+        for xp, yp, clr, mkr in zip(xs, ys, colors, markers):
+            lbl = None
+            if mkr == "o" and not l12_plotted:
+                lbl = "L1$_2$"
+                l12_plotted = True
+            elif mkr == "D" and not b2_plotted:
+                lbl = "B2"
+                b2_plotted = True
+            ax.scatter([xp], [yp], c=clr, s=120, zorder=5, marker=mkr,
+                       edgecolors="black", linewidths=0.8, label=lbl)
+
+        # Linear fit line
+        y_fit = fit["slope"] * x_fit + fit["intercept"]
+        if n_pts == 3:
+            fit_label = f"Linear fit ($R^2$ = {fit['R2']:.4f})"
+        else:
+            fit_label = "Linear interpolation (2 pts)"
+        ax.plot(x_fit, y_fit, "k--", alpha=0.6, linewidth=1.5,
+                label=fit_label)
+
+        # Mark missing composition as open marker
+        all_fracs = {0.25, 0.50, 0.75}
+        missing = all_fracs - set(xs)
+        for mf in missing:
+            y_pred = fit["slope"] * mf + fit["intercept"]
+            mkr_m = "D" if mf == 0.50 else "o"
+            ax.scatter([mf], [y_pred], facecolors="none",
+                       edgecolors="gray", s=120, zorder=4,
+                       marker=mkr_m, linewidths=1.5)
+            struct_lbl = "B2" if mf == 0.50 else "L1$_2$"
+            ax.annotate(f"{struct_lbl}\n(no data)", (mf, y_pred),
+                        textcoords="offset points", xytext=(0, -20),
+                        ha="center", fontsize=9, color="gray",
+                        fontstyle="italic")
+
+        # Annotations for actual points
+        for xp, yp, txt in zip(xs, ys, labels_ann):
+            ax.annotate(txt, (xp, yp), textcoords="offset points",
+                        xytext=(0, 14), ha="center", fontsize=11,
+                        color="#333333")
+
+        ax.set_xlabel(f"$x_{{{el1}}}$ (fraction of {el1})", fontsize=16)
+        ax.set_ylabel(ylabel, fontsize=16)
+        r2_str = f"$R^2$ = {fit['R2']:.4f}" if n_pts == 3 else "(2 pts)"
+        ax.set_title(f"{el1}\u2013{el2}  Pseudo-Vegard ($r_{{\\mathrm{{WS}}}}$)\n"
+                     f"{r2_str}", fontsize=18)
+        ax.legend(fontsize=13, loc="best")
+        ax.set_xlim(0.15, 0.85)
+        ax.tick_params(labelsize=13)
+        plt.tight_layout()
+
+        fname = f"vegard_{el1}_{el2}_r_ws.png"
+        plt.savefig(os.path.join(out_dir, fname), dpi=150, bbox_inches="tight")
+        plt.close()
+        count += 1
+
+    print(f"  Saved {count} individual plots \u2192 {out_dir}/")
 
 
 def plot_r2_histogram(results: pd.DataFrame, metric_label: str,
@@ -416,13 +529,19 @@ def run_analysis(data_dir: str, fig_dir: str, report_path: str):
     all_data = load_all_compounds(data_dir)
     print(f"  Total compounds: {len(all_data)}")
 
-    # Find triplet pairs
+    # Find triplet pairs (3 compositions) for linearity analysis
     pairs = find_triplet_pairs(all_data)
     print(f"  Triplet pairs (25%/50%/75%): {len(pairs)}")
 
-    # Build analysis table
+    # Find all plottable pairs (>= 2 compositions)
+    all_pairs = find_all_plottable_pairs(all_data)
+    print(f"  Plottable pairs (>= 2 compositions): {len(all_pairs)}")
+
+    # Build analysis tables
     table = build_triplet_table(all_data, pairs)
-    print(f"  Valid triplets: {len(table)}")
+    table_all = build_triplet_table(all_data, all_pairs)
+    print(f"  Valid triplets (3 pts): {len(table)}")
+    print(f"  Valid plottable (>= 2 pts): {len(table_all)}")
 
     # Linearity analysis for each metric
     print("\nAnalysing linearity …")
@@ -478,6 +597,13 @@ def run_analysis(data_dir: str, fig_dir: str, report_path: str):
 
     # 5. Three-metric comparison
     plot_three_metrics(table, os.path.join(fig_dir, "vegard_three_metrics.png"))
+
+    # 6. Individual per-pair plots for ALL plottable pairs (r_ws)
+    print("\nGenerating individual per-pair plots (all plottable pairs) …")
+    plot_individual_vegard_separate(
+        table_all, "r_ws",
+        "$r_{\\mathrm{WS}}$ (\\AA)",
+        os.path.join(fig_dir, "individual"))
 
     # Report
     print("\nGenerating report …")
