@@ -28,7 +28,6 @@ BMG(ガラス形成能指標)の実験データと比較して検証する。
 | VNbMoTaW | BCC | 3.183 | OQMD-B2 | 3.137 | -0.046 | 1.46 |
 | CoCrFeNiCu | FCC | 3.590 | OQMD-L1$_2$ | 3.430 | -0.160 | 4.45 |
 | TiZrNbMoTa | BCC | 3.293 | OQMD-B2 | 3.255 | -0.038 | 1.14 |
-| HfNbTaTiZr | BCC | 3.404 | MP-B2 | 3.471 | +0.067 | 1.98 |
 | Al$_{0.5}$NbTa$_{0.8}$Ti$_{1.5}$V$_{0.2}$Zr | BCC | 3.310 | OQMD-B2 | 3.276 | -0.034 | 1.03 |
 
 ### 1.2 構造整合半径による RMSE 比較
@@ -37,10 +36,10 @@ BCC HEA には B2 半径、FCC HEA には L1$_2$ 半径を対応させて評価�
 
 | Radius set | Structure | $N$ | RMSE (\AA) | MAE (\AA) | Mean rel. err. (%) |
 |:---|:---:|:---:|:---:|:---:|:---:|
-| MP-B2 | BCC | 7 | 0.1055 | 0.0934 | 2.86 |
-| OQMD-B2 | BCC | 7 | 0.0548 | 0.0528 | 1.63 |
-| Pauling | BCC | 7 | 0.1137 | 0.1131 | 3.51 |
-| Goldschmidt | BCC | 7 | 0.0599 | 0.0525 | 1.64 |
+| MP-B2 | BCC | 6 | 0.1106 | 0.0977 | 3.01 |
+| OQMD-B2 | BCC | 6 | 0.0511 | 0.0494 | 1.54 |
+| Pauling | BCC | 6 | 0.1149 | 0.1142 | 3.57 |
+| Goldschmidt | BCC | 6 | 0.0606 | 0.0520 | 1.64 |
 | MP-L1$_2$ | FCC | 6 | 0.2025 | 0.2016 | 5.62 |
 | OQMD-L1$_2$ | FCC | 6 | 0.1602 | 0.1599 | 4.46 |
 | Pauling | FCC | 6 | 0.0223 | 0.0187 | 0.52 |
@@ -50,12 +49,12 @@ BCC HEA には B2 半径、FCC HEA には L1$_2$ 半径を対応させて評価�
 
 | Radius set | RMSE (\AA) | MAE (\AA) | Mean rel. err. (%) |
 |:---|:---:|:---:|:---:|
-| MP-B2 | 0.1044 | 0.0976 | 2.86 |
-| MP-L1$_2$ | 0.1404 | 0.1102 | 3.13 |
-| OQMD-B2 | 0.0690 | 0.0663 | 1.93 |
-| OQMD-L1$_2$ | 0.1246 | 0.1006 | 2.82 |
-| Pauling | 0.0848 | 0.0695 | 2.13 |
-| Goldschmidt | 0.0660 | 0.0555 | 1.64 |
+| MP-B2 | 0.1069 | 0.1001 | 2.93 |
+| MP-L1$_2$ | 0.1462 | 0.1194 | 3.39 |
+| OQMD-B2 | 0.0686 | 0.0657 | 1.91 |
+| OQMD-L1$_2$ | 0.1313 | 0.1115 | 3.12 |
+| Pauling | 0.0827 | 0.0665 | 2.05 |
+| Goldschmidt | 0.0668 | 0.0555 | 1.64 |
 
 ![HEA lattice constant parity](hea_parity.png)
 
@@ -76,7 +75,6 @@ BCC HEA には B2 半径、FCC HEA には L1$_2$ 半径を対応させて評価�
 | VNbMoTaW | BCC | 4.85 | 5.4 | -4.6 | 13.4 |
 | CoCrFeNiCu | FCC | 5.24 | 8.8 | 3.2 | 13.4 |
 | TiZrNbMoTa | BCC | 3.77 | 4.8 | -1.8 | 13.4 |
-| HfNbTaTiZr | BCC | 3.51 | 4.4 | 2.7 | 13.4 |
 | Al$_{0.5}$NbTa$_{0.8}$Ti$_{1.5}$V$_{0.2}$Zr | BCC | 5.06 | 4.3 | -8.6 | 13.8 |
 
 ![δ–VEC phase map](hea_delta_vec_map.png)
@@ -162,9 +160,9 @@ Inoueの経験則は必要条件ではなく、GFAの連続的な指標として
 
 ### 3.1 HEA 格子定数予測
 
-- **BCC HEA** (MP-B2 半径): RMSE = 0.1055 \AA, MAE = 0.0934 \AA, 平均相対誤差 = 2.86%
+- **BCC HEA** (MP-B2 半径): RMSE = 0.1106 \AA, MAE = 0.0977 \AA, 平均相対誤差 = 3.01%
 - **FCC HEA** (MP-L1$_2$ 半径): RMSE = 0.2025 \AA, MAE = 0.2016 \AA, 平均相対誤差 = 5.62%
-- **BCC HEA** (Pauling 半径): RMSE = 0.1137 \AA
+- **BCC HEA** (Pauling 半径): RMSE = 0.1149 \AA
 - **FCC HEA** (Pauling 半径): RMSE = 0.0223 \AA
 
 ### 3.2 BMG ガラス形成能

@@ -177,10 +177,8 @@ HEA_DATA = [
      {"Ti": 0.2, "Zr": 0.2, "Nb": 0.2, "Mo": 0.2, "Ta": 0.2},
      "BCC", 3.293,
      "Senkov et al. (2013) Intermetallics"),
-    ("HfNbTaTiZr",
-     {"Hf": 0.2, "Nb": 0.2, "Ta": 0.2, "Ti": 0.2, "Zr": 0.2},
-     "BCC", 3.404,
-     "Senkov et al. (2011) J. Alloys Compd."),
+    # Note: HfNbTaTiZr is the same alloy as TiZrHfNbTa above (same composition,
+    # structure, and reference) — removed to avoid duplicate data points.
     ("Al$_{0.5}$NbTa$_{0.8}$Ti$_{1.5}$V$_{0.2}$Zr",
      {"Al": 0.10, "Nb": 0.20, "Ta": 0.16, "Ti": 0.30, "V": 0.04, "Zr": 0.20},
      "BCC", 3.310,
