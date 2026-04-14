@@ -906,7 +906,7 @@ def run_analysis(data_dir: str, fig_dir: str, report_path: str):
     report_lines.append("   高精度に格子定数を予測する（OQMD-B2: RMSE ≈ 0.051 \\AA vs Pauling: ≈ 0.115 \\AA）")
     report_lines.append("2. **FCC HEA**: ペアワイズmax接触モデルの導入により、")
     report_lines.append("   有効半径がFCC HEA格子定数を高精度に予測可能になった")
-    report_lines.append("   （MP-B2: RMSE ≈ 0.017 \\AA、Pauling半径の0.069 \\AAを凌駕）")
+    report_lines.append("   （OQMD-B2: RMSE ≈ 0.023 \\AA、Pauling半径の0.073 \\AAを凌駕）")
     report_lines.append("3. **δ–VEC相安定性**: 有効半径で計算した δ と VEC は、")
     report_lines.append("   実験で確認された BCC/FCC 構造と良好に対応する")
     report_lines.append("4. **BMG**: δ はガラス形成能と正の相関を示し、")
