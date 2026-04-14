@@ -658,11 +658,11 @@ The GGA-PBE functional used in both MP and OQMD calculations is known to systema
 
 \subsubsection{HEA Lattice Constant Prediction}
 
-Vegard則に基づき、BCC型HEAには$a = 4\bar{r}/\sqrt{3}$（$\bar{r} = \sum c_i r_i$）を用いた。FCC型HEAには、有効半径の決定に用いたmax接触モデルとの整合性を保つため、ペアワイズmax接触モデル$a = 2\sqrt{2}\sum_i \sum_j c_i c_j \max(r_i, r_j)$を採用した。12種のHEA実験値と比較した結果を表~\ref{tab:hea_validation}にまとめる。
+Vegard則に基づき、BCC型HEAには$a = 4\bar{r}/\sqrt{3}$（$\bar{r} = \sum c_i r_i$）を用いた。FCC型HEAには、有効半径の決定に用いたmax接触モデルとの整合性を保つため、ペアワイズmax接触モデル$a = 2\sqrt{2}\sum_i \sum_j c_i c_j \max(r_i, r_j)$を採用した。14種のHEA実験値（FCC 8種、BCC 6種）と比較した結果を表~\ref{tab:hea_validation}にまとめる。FCC HEAにはCoCrFeNi系（3d遷移金属）に加え、AuCuNiPdPt（貴金属系）およびCoCrFeNiPd（Pd添加系）を含めることで、元素系・格子定数範囲（3.572--3.806~\AA）の多様性を確保した。
 
 BCC HEAに対してはB2半径が有効であり、OQMD-B2半径ではRMSE = 0.051~\AA（平均相対誤差1.54\%）を達成した。これはPauling半径（RMSE = 0.115~\AA）およびGoldschmidt半径（RMSE = 0.061~\AA）より高精度である。AlCoCrFeNi（BCC）では誤差0.51\%と特に良好な一致を示した。
 
-FCC HEAに対しては、単純Vegard式（$a = 2\sqrt{2}\bar{r}$）では有効半径が格子定数を系統的に過小評価するが、ペアワイズmax接触モデルの導入により大幅に改善された。MP-B2半径ではRMSE = 0.017~\AA（平均相対誤差0.36\%）を達成し、Pauling半径（RMSE = 0.069~\AA）を凌駕する。この改善は、有効半径フィッティングにおけるL1$_2$化合物の約51\%が異種原子接触（$a = \sqrt{2}(r_A + r_B)$）で格子定数が決定されることと整合的である。
+FCC HEAに対しては、単純Vegard式（$a = 2\sqrt{2}\bar{r}$）では有効半径が格子定数を系統的に過小評価するが、ペアワイズmax接触モデルの導入により大幅に改善された。OQMD-B2半径ではRMSE = 0.023~\AA（平均相対誤差0.53\%）、OQMD-L1$_2$半径ではRMSE = 0.025~\AA（0.54\%）を達成し、いずれもPauling半径（RMSE = 0.073~\AA）を凌駕する。特筆すべきは、貴金属系AuCuNiPdPt（$a_{\mathrm{exp}} = 3.806$~\AA）がOQMD-L1$_2$半径で誤差0.007\%と極めて高精度に予測される点であり、3d遷移金属系とは元素構成が全く異なるにもかかわらず有効半径の汎用性が確認された。この改善は、有効半径フィッティングにおけるL1$_2$化合物の約51\%が異種原子接触（$a = \sqrt{2}(r_A + r_B)$）で格子定数が決定されることと整合的である。
 
 \begin{table}[htbp]
 \small
@@ -683,6 +683,8 @@ FCC HEAに対しては、単純Vegard式（$a = 2\sqrt{2}\bar{r}$）では有効
         CoCrFeMnNi & FCC & 3.592 & 3.606 & 0.39 & OQMD-L1$_2$ \\
         CoCrFeNi & FCC & 3.572 & 3.568 & 0.10 & OQMD-L1$_2$ \\
         CoCrFeNiCu & FCC & 3.590 & 3.603 & 0.36 & OQMD-L1$_2$ \\
+        AuCuNiPdPt & FCC & 3.806 & 3.806 & 0.007 & OQMD-L1$_2$ \\
+        CoCrFeNiPd & FCC & 3.660 & 3.628 & 0.87 & OQMD-L1$_2$ \\
         \bottomrule
     \end{tabular}
     }
@@ -705,7 +707,7 @@ We determined effective atomic radii for B2 and L1$_2$ binary intermetallic comp
     \item \textbf{Effectiveness of element exclusion}: removal of compounds containing non-metallic elements and alkali metals improved prediction accuracy, particularly for MP B2 (RMSE reduced by 66\%) and MP L1$_2$ (44\%), confirming that the hard-sphere model is appropriate for metallic intermetallic compounds but not for covalent/ionic systems or compounds with strong ionic character.
     \item \textbf{Structure dependence of effective radii}: L1$_2$ radii correlate with Goldschmidt metallic radii ($R^2 = 0.858$), whereas B2 radii display element-specific deviations. With the max-based models for both B2 and L1$_2$, the B2-L1$_2$ radius differences are distributed on both sides: elements such as Re ($-5.9$\%) and Ca ($-5.6$\%) show contraction, while Ni ($+7.9$\%) and Pu ($+7.4$\%) show expansion.
     \item \textbf{Database consistency}: MP and OQMD give highly consistent lattice constants for common compounds ($R^2 > 0.985$) and consistent B2 radii ($R^2 = 0.955$), indicating that the optimized radii are stable against reasonable differences in first-principles workflows. L1$_2$ radius consistency ($R^2 = 0.854$) is lower, partly due to smaller OQMD L1$_2$ dataset size.
-    \item \textbf{Multi-component alloy validation}: B2 radii predict BCC HEA lattice constants with RMSE = 0.051~\AA\ (OQMD-B2), outperforming Pauling radii (0.115~\AA). With the pairwise max-contact model, FCC HEA lattice constants are predicted with RMSE = 0.017~\AA\ (MP-B2), surpassing even Pauling radii (0.069~\AA). For BMG alloys, the atomic size mismatch $\delta$ calculated from these radii clearly separates glass-forming ($\delta > 6$\%) from crystalline ($\delta < 6$\%) compositions.
+    \item \textbf{Multi-component alloy validation}: B2 radii predict BCC HEA lattice constants with RMSE = 0.051~\AA\ (OQMD-B2), outperforming Pauling radii (0.115~\AA). With the pairwise max-contact model, FCC HEA lattice constants are predicted with RMSE = 0.023~\AA\ (OQMD-B2), surpassing Pauling radii (0.073~\AA). The dataset includes diverse element systems from 3d transition metals (CoCrFeNi variants) to noble metals (AuCuNiPdPt), with lattice constants spanning 3.572--3.806~\AA. For BMG alloys, the atomic size mismatch $\delta$ calculated from these radii clearly separates glass-forming ($\delta > 6$\%) from crystalline ($\delta < 6$\%) compositions.
 \end{enumerate}
 
 The tabulated radii provide a practical reference for lattice-constant estimation, size-mismatch analysis, and phase-stability discussions in B2- and L1$_2$-containing alloy systems.

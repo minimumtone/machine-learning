@@ -108,6 +108,10 @@ MIXING_ENTHALPY = {
     # Additional pairs for BMG alloys (Takeuchi & Inoue 2005)
     ("B", "Fe"): -26, ("Au", "Ge"): -23, ("Au", "Si"): -28,
     ("Ge", "Si"): -8, ("Al", "La"): -38, ("La", "Ni"): -27,
+    # Noble metal & Pd pairs for diverse FCC HEAs (Takeuchi & Inoue 2005)
+    ("Au", "Cu"): -9, ("Au", "Ni"): -9, ("Au", "Pd"): 0, ("Au", "Pt"): -4,
+    ("Co", "Pd"): 0, ("Cr", "Pd"): -15, ("Cu", "Pd"): -14, ("Cu", "Pt"): -12,
+    ("Fe", "Pd"): -4, ("Ni", "Pt"): -5, ("Pd", "Pt"): 0,
 }
 
 
@@ -183,6 +187,15 @@ HEA_DATA = [
      {"Al": 0.10, "Nb": 0.20, "Ta": 0.16, "Ti": 0.30, "V": 0.04, "Zr": 0.20},
      "BCC", 3.310,
      "Senkov et al. (2014) Acta Mater."),
+    # --- Diverse FCC HEAs (non-CoCrFeNi backbone) ---
+    ("AuCuNiPdPt",
+     {"Au": 0.2, "Cu": 0.2, "Ni": 0.2, "Pd": 0.2, "Pt": 0.2},
+     "FCC", 3.806,
+     "Freudenberger et al. (2017) Metals 7, 135"),
+    ("CoCrFeNiPd",
+     {"Co": 0.2, "Cr": 0.2, "Fe": 0.2, "Ni": 0.2, "Pd": 0.2},
+     "FCC", 3.66,
+     "Niu et al. (2017) Sci. Rep. 7, 39803"),
 ]
 
 

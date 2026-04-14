@@ -29,6 +29,8 @@ BMG(ガラス形成能指標)の実験データと比較して検証する。
 | CoCrFeNiCu | FCC | 3.590 | OQMD-L1$_2$ | 3.603 | +0.013 | 0.36 |
 | TiZrNbMoTa | BCC | 3.293 | OQMD-B2 | 3.255 | -0.038 | 1.14 |
 | Al$_{0.5}$NbTa$_{0.8}$Ti$_{1.5}$V$_{0.2}$Zr | BCC | 3.310 | OQMD-B2 | 3.276 | -0.034 | 1.03 |
+| AuCuNiPdPt | FCC | 3.806 | OQMD-L1$_2$ | 3.806 | +0.000 | 0.01 |
+| CoCrFeNiPd | FCC | 3.660 | OQMD-L1$_2$ | 3.628 | -0.032 | 0.87 |
 
 ### 1.2 構造整合半径による RMSE 比較
 
@@ -40,21 +42,21 @@ BCC HEA には B2 半径、FCC HEA には L1$_2$ 半径を対応させて評価�
 | OQMD-B2 | BCC | 6 | 0.0511 | 0.0494 | 1.54 |
 | Pauling | BCC | 6 | 0.1149 | 0.1142 | 3.57 |
 | Goldschmidt | BCC | 6 | 0.0606 | 0.0520 | 1.64 |
-| MP-L1$_2$ | FCC | 6 | 0.0967 | 0.0905 | 2.52 |
-| OQMD-L1$_2$ | FCC | 6 | 0.0262 | 0.0208 | 0.58 |
-| Pauling | FCC | 6 | 0.0690 | 0.0611 | 1.70 |
-| Goldschmidt | FCC | 6 | 0.0452 | 0.0409 | 1.14 |
+| MP-L1$_2$ | FCC | 8 | 0.1003 | 0.0937 | 2.59 |
+| OQMD-L1$_2$ | FCC | 8 | 0.0254 | 0.0196 | 0.54 |
+| Pauling | FCC | 8 | 0.0728 | 0.0642 | 1.76 |
+| Goldschmidt | FCC | 8 | 0.0537 | 0.0441 | 1.21 |
 
 ### 1.3 全 HEA 統合 RMSE 比較
 
 | Radius set | RMSE (\AA) | MAE (\AA) | Mean rel. err. (%) |
 |:---|:---:|:---:|:---:|
-| MP-B2 | 0.0791 | 0.0553 | 1.68 |
-| MP-L1$_2$ | 0.0745 | 0.0638 | 1.84 |
-| OQMD-B2 | 0.0392 | 0.0329 | 1.00 |
-| OQMD-L1$_2$ | 0.0243 | 0.0187 | 0.54 |
-| Pauling | 0.0948 | 0.0877 | 2.64 |
-| Goldschmidt | 0.0534 | 0.0465 | 1.39 |
+| MP-B2 | 0.0750 | 0.0532 | 1.60 |
+| MP-L1$_2$ | 0.0805 | 0.0694 | 1.98 |
+| OQMD-B2 | 0.0378 | 0.0322 | 0.96 |
+| OQMD-L1$_2$ | 0.0240 | 0.0183 | 0.52 |
+| Pauling | 0.0932 | 0.0856 | 2.54 |
+| Goldschmidt | 0.0568 | 0.0475 | 1.39 |
 
 ![HEA lattice constant parity](hea_parity.png)
 
@@ -76,6 +78,8 @@ BCC HEA には B2 半径、FCC HEA には L1$_2$ 半径を対応させて評価�
 | CoCrFeNiCu | FCC | 5.24 | 8.8 | 3.2 | 13.4 |
 | TiZrNbMoTa | BCC | 3.77 | 4.8 | -1.8 | 13.4 |
 | Al$_{0.5}$NbTa$_{0.8}$Ti$_{1.5}$V$_{0.2}$Zr | BCC | 5.06 | 4.3 | -8.6 | 13.8 |
+| AuCuNiPdPt | FCC | 9.57 | 10.4 | -7.8 | 13.4 |
+| CoCrFeNiPd | FCC | 5.88 | 8.6 | -5.4 | 13.4 |
 
 ![δ–VEC phase map](hea_delta_vec_map.png)
 
@@ -161,9 +165,9 @@ Inoueの経験則は必要条件ではなく、GFAの連続的な指標として
 ### 3.1 HEA 格子定数予測
 
 - **BCC HEA** (MP-B2 半径): RMSE = 0.1106 \AA, MAE = 0.0977 \AA, 平均相対誤差 = 3.01%
-- **FCC HEA** (MP-L1$_2$ 半径): RMSE = 0.0967 \AA, MAE = 0.0905 \AA, 平均相対誤差 = 2.52%
+- **FCC HEA** (MP-L1$_2$ 半径): RMSE = 0.1003 \AA, MAE = 0.0937 \AA, 平均相対誤差 = 2.59%
 - **BCC HEA** (Pauling 半径): RMSE = 0.1149 \AA
-- **FCC HEA** (Pauling 半径): RMSE = 0.0690 \AA
+- **FCC HEA** (Pauling 半径): RMSE = 0.0728 \AA
 
 ### 3.2 BMG ガラス形成能
 
