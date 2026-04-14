@@ -581,8 +581,8 @@ def generate_report(table: pd.DataFrame,
         )
 
     # Figures
-    lines.append("\n![Pseudo-Vegard grid (d_nn)](vegard_grid_d_nn.png)\n")
-    lines.append("![R2 histogram](vegard_r2_histogram.png)\n")
+    lines.append("\n![Triplet summary grid (r_ws)](vegard_triplet_summary_r_ws.png)\n")
+    lines.append("![R2 histogram (r_ws)](vegard_r2_histogram_rws.png)\n")
     lines.append("![B2 deviation](vegard_b2_deviation.png)\n")
     lines.append("![Three metrics comparison](vegard_three_metrics.png)\n")
 
@@ -654,39 +654,16 @@ def run_analysis(data_dir: str, fig_dir: str, report_path: str):
     # Plots
     print("\nGenerating figures …")
 
-    # 1. Individual pseudo-Vegard diagrams (d_nn)
-    plot_individual_vegard(
-        table, "d_nn",
-        "$d_{\\mathrm{nn}}$ (\\AA)",
-        "Pseudo-Vegard: Nearest-Neighbour Distance",
-        os.path.join(fig_dir, "vegard_grid_d_nn.png"))
-
-    # 2. Individual pseudo-Vegard diagrams (raw a)
-    plot_individual_vegard(
-        table, "a",
-        "$a$ (\\AA)",
-        "Pseudo-Vegard: Raw Lattice Constant",
-        os.path.join(fig_dir, "vegard_grid_a_raw.png"))
-
-    # 3. Individual pseudo-Vegard diagrams (r_ws)
-    plot_individual_vegard(
-        table, "r_ws",
-        "$r_{\\mathrm{WS}}$ (\\AA)",
-        "Pseudo-Vegard: Wigner-Seitz Radius",
-        os.path.join(fig_dir, "vegard_grid_r_ws.png"))
-
-    # 4. R² histograms (d_nn and r_ws)
-    plot_r2_histogram(results_dnn, "$d_{\\mathrm{nn}}$",
-                      os.path.join(fig_dir, "vegard_r2_histogram.png"))
+    # 1. R² histogram (r_ws)
     plot_r2_histogram(results_rws, "$r_{\\mathrm{WS}}$",
                       os.path.join(fig_dir, "vegard_r2_histogram_rws.png"))
 
-    # 5. B2 deviation
+    # 2. B2 deviation
     results_dnn_sorted = results_dnn.sort_values("mid_residual")
     plot_mid_deviation(results_dnn_sorted, "d_nn", "\\AA",
                        os.path.join(fig_dir, "vegard_b2_deviation.png"))
 
-    # 5. Three-metric comparison
+    # 3. Three-metric comparison
     plot_three_metrics(table, os.path.join(fig_dir, "vegard_three_metrics.png"))
 
     # 6. Individual per-pair plots for ALL plottable pairs (r_ws)

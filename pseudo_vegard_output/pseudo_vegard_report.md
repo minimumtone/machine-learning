@@ -137,9 +137,9 @@ L1$_2$ AB$_3$ (25%A) の3つの秩序構造から得られる格子定数を用�
 | In-Np | 4.5811 | 3.7789 | 4.6064 | 0.0007 |
 | Ce-Pb | 4.9300 | 4.0033 | 4.9341 | 0.0000 |
 
-![Pseudo-Vegard grid (d_nn)](vegard_grid_d_nn.png)
+![Triplet summary grid (r_ws)](vegard_triplet_summary_r_ws.png)
 
-![R2 histogram](vegard_r2_histogram.png)
+![R2 histogram (r_ws)](vegard_r2_histogram_rws.png)
 
 ![B2 deviation](vegard_b2_deviation.png)
 
