@@ -20,7 +20,7 @@
 
 \begin{frontmatter}
 
-\title{Effective Atomic Radii in Binary Intermetallic Compounds Using First-Principles Databases}
+\title{Effective Atomic Radii in Binary Intermetallic Compounds and Their Applicability as Descriptors for High-Entropy Alloys and Bulk Metallic Glasses}
 
 \author[nims]{Satoshi Minamoto}
 \ead{minamoto.satoshi@nims.go.jp}
@@ -35,15 +35,15 @@
 
 \begin{abstract}
 
-B2型(CsCl型)およびL1$_2$型(Cu$_3$Au型)二元金属間化合物における有効原子半径を、Materials Project (MP)およびOpen Quantum Materials Database (OQMD)の格子定数データに対する最適化により決定した。非金属元素およびアルカリ金属元素を含む化合物と格子定数範囲外(2.0--8.0~\AA)の超格子を除外し、MP-B2: 346件、MP-L1$_2$: 723件、OQMD-B2: 2207件、OQMD-L1$_2$: 235件、計3511件を解析した。B2構造にはA--A, B--B, A--B接触条件のmax基準モデル、L1$_2$構造にはA--A, A--B, B--B接触条件のmax基準モデルを適用し、不等式制約付きSLSQP最適化と接触条件の再評価を伴う反復最適化により全元素の有効半径を決定した。Bootstrap法(1000回リサンプリング)による不確定性評価も実施した。
+B2型(CsCl型)およびL1$_2$型(Cu$_3$Au型)二元金属間化合物における有効原子半径を、Materials Project (MP)およびOpen Quantum Materials Database (OQMD)の格子定数データに対する最適化により決定した。非金属元素およびアルカリ金属元素を含む化合物と格子定数範囲外(2.0--8.0~\AA)の超格子を除外し、MP-B2: 346件、MP-L1$_2$: 723件、OQMD-B2: 2207件、OQMD-L1$_2$: 235件、計3511件を解析した。B2およびL1$_2$構造の両方にmax基準モデルを適用し、不等式制約付きSLSQP最適化により全元素の有効半径を決定した。
 
-B2とL1$_2$の間で有効半径に系統的な差異が認められた。Re($-5.9$\%)やCa($-5.6$\%)はB2半径がL1$_2$半径より小さく、Ni($+7.9$\%)やPu($+7.4$\%)は逆にB2半径が大きい。遷移金属群では3d: $+1.7$\%、4d: $+0.7$\%、5d: $-0.3$\%と群ごとに異なり、Goldschmidtの一律3\%収縮則とは合致しない。L1$_2$半径はGoldschmidt半径と$R^2=0.858$の相関を示した。非金属・アルカリ金属除外により硬球モデルの適用範囲が明確になった。
+得られた有効半径の構造非依存な検証として、有効等価半径$r_\mathrm{WS} = (V_\mathrm{atom})^{1/3}$（原子体積の立方根）を指標とした疑似Vegard則解析を行った。B2 AB (50\%A)とL1$_2$ A$_3$B (75\%A)、L1$_2$ AB$_3$ (25\%A)の3組成点を結ぶ線形性を52の二元系で検証した結果、$r_\mathrm{WS}$指標では中央値$R^2 = 0.974$（52ペア中32ペアで$R^2 > 0.95$）と高い線形性を示した。生の格子定数（中央値$R^2 = 0.036$）や最近接原子間距離（中央値$R^2 = 0.778$）と比較して、原子体積ベースの指標が構造変化に対して最もロバストであることが確認された。
 
-得られた構造特異的有効半径は、格子定数予測やサイズミスマッチ評価の基準値として利用できる。
+さらに、得られた有効半径の多成分合金への適用性を実証した。HEA格子定数予測では、ペアワイズmax接触モデルを用いてFCC HEA 8種でRMSE = 0.023~\AA（OQMD-B2半径）、BCC HEA 6種でRMSE = 0.051~\AA を達成し、Pauling半径を凌駕した。BMGガラス形成能評価では、有効半径から計算した原子サイズミスマッチ$\delta$がガラス形成合金（$\delta > 6$\%）と結晶性HEA（$\delta < 6$\%）を明確に分離した。これらの結果は、二元系化合物から決定した有効半径がHEAやBMGの記述子としても有用であることを示している。
 \end{abstract}
 
 \begin{keyword}
-atomic radius \sep intermetallic compounds \sep B2 structure \sep L1$_2$ structure \sep first-principles calculation \sep Materials Project \sep OQMD \sep Goldschmidt radius \sep Pauling radius
+atomic radius \sep intermetallic compounds \sep B2 structure \sep L1$_2$ structure \sep first-principles calculation \sep Materials Project \sep OQMD \sep high-entropy alloys \sep bulk metallic glasses \sep Vegard's law
 \end{keyword}
 
 \end{frontmatter}
@@ -73,14 +73,16 @@ Slater~\citep{slater1964atomic}は1200以上の結合距離データから半径
 
 \subsection{Research Objectives}
 B2型(CsCl型, CN=8)とL1$_2$型(Cu$_3$Au型, CN=12)は、NiAl、TiNi、FeAl、Ni$_3$Alなどに代表される重要な秩序相であり、耐熱材料、形状記憶合金、Ni基超合金、高エントロピー合金に広く現れる。両構造は配位数と近接原子配置が大きく異なるため、原子半径の構造依存性を検証するうえで格好の比較対象である。
-これを目的として、本研究の目的は以下の4点とする。
+本研究の目的は以下の6点とする。
 \begin{enumerate}
 \setlength{\parskip}{0cm}
 \setlength{\itemsep}{0cm}
     \item MPおよびOQMDからB2およびL1$_2$二元金属間化合物を収集し、非金属元素除外と格子定数範囲フィルタを適用した解析用データセットを構築する。
     \item B2およびL1$_2$構造に対し、格子定数予測誤差を最小化する構造特異的有効原子半径を最適化により決定する。
     \item 得られた半径をGoldschmidt半径およびPauling半径と比較し、構造依存性と元素群依存性を明らかにする。
-    \item MPとOQMDの結果を比較し、決定した半径の頑健性と材料設計への有用性を評価する。
+    \item MPとOQMDの結果を比較し、決定した半径の頑健性を評価する。
+    \item 有効等価半径$r_\mathrm{WS} = (V_\mathrm{atom})^{1/3}$を指標として、B2--L1$_2$間の疑似Vegard則の成立性を検証し、原子体積ベースの有効半径が構造変化に対してロバストであることを示す。
+    \item 得られた有効半径を高エントロピー合金(HEA)の格子定数予測およびバルク金属ガラス(BMG)のガラス形成能評価に適用し、多成分合金の記述子としての有用性を実証する。
 \end{enumerate}
 
 
@@ -321,6 +323,30 @@ Model performance was evaluated using standard regression metrics:
 % where $\bar{a}$ is the mean observed lattice constant. These metrics were calculated separately for each database (MP, OQMD) and structure type (B2, L1$_2$).
 
 % Element-group analysis was performed by classifying elements into categories (alkali metals, alkaline earth metals, 3d/4d/5d transition metals, lanthanides, actinides, and post-transition metals) and calculating group-averaged properties such as mean radius, mean B2-L1$_2$ difference, and standard deviation within each group.
+
+\subsection{Effective Equivalent Radii and Pseudo-Vegard's Law}
+
+得られた有効半径の構造非依存性を検証するため、有効等価半径（effective equivalent radius）$r_\mathrm{WS}$を導入する。原子体積$V_\mathrm{atom} = a^3 / Z$（$Z$は単位胞中の原子数）から
+\begin{equation}
+    r_\mathrm{WS} = (V_\mathrm{atom})^{1/3} = \left(\frac{a^3}{Z}\right)^{1/3}
+    \label{eq:r_ws}
+\end{equation}
+と定義される。B2構造では$Z = 2$、L1$_2$構造では$Z = 4$であるから、それぞれ$r_\mathrm{WS}^\mathrm{B2} = (a^3/2)^{1/3}$、$r_\mathrm{WS}^\mathrm{L1_2} = (a^3/4)^{1/3}$となる。$r_\mathrm{WS}$は原子1個が占める体積の等価球半径に対応し、結晶構造の違い（配位数、充填率）を吸収した構造非依存な原子サイズの指標である。
+
+二元系A--Bにおいて、L1$_2$ A$_3$B（75\%A）、B2 AB（50\%A）、L1$_2$ AB$_3$（25\%A）の3つの秩序構造は、A元素の組成分率$x_A = 0.75, 0.50, 0.25$に対応する。Vegard則が成立するならば、$r_\mathrm{WS}$はこの組成に対して線形に変化するはずである。MP + OQMDデータベースから3組成すべてのデータが利用可能な52の二元系について、3点の$r_\mathrm{WS}$値に対する線形フィットを行い、決定係数$R^2$で線形性を定量化した。比較のため、生の格子定数$a$および最近接原子間距離$d_\mathrm{nn}$（B2: $a\sqrt{3}/2$、L1$_2$: $a/\sqrt{2}$）についても同様の解析を行った。
+
+\subsection{Multi-Component Alloy Validation}
+
+\subsubsection{HEA Lattice Constant Prediction}
+決定した有効半径の多成分合金への適用性を評価するため、文献で報告された14種のHEA（FCC 8種、BCC 6種）の実験格子定数との比較を行った。BCC型HEAの格子定数予測にはVegard則$a = 4\bar{r}/\sqrt{3}$（$\bar{r} = \sum_i c_i r_i$）を用いた。FCC型HEAには、有効半径の決定に用いたmax接触モデルとの整合性を保つため、ペアワイズmax接触モデル
+\begin{equation}
+    a_\mathrm{FCC} = 2\sqrt{2}\sum_i \sum_j c_i c_j \max(r_i, r_j)
+    \label{eq:fcc_pairwise}
+\end{equation}
+を採用した。FCC HEAデータセットには、3d遷移金属系（CoCrFeNi変種）に加え、貴金属系（AuCuNiPdPt）およびPd添加系（CoCrFeNiPd）を含めることで、元素系・格子定数範囲（3.572--3.806~\AA）の多様性を確保した。
+
+\subsubsection{BMG Glass-Forming Ability Indicators}
+有効半径から算出される原子サイズミスマッチパラメータ$\delta = 100\sqrt{\sum_i c_i (1 - r_i/\bar{r})^2}$が、BMG合金のガラス形成能（GFA）と相関するかを検証した。10種のBMG合金と5種の結晶性HEAについて$\delta$を算出し、Inoueの三経験則（$N \geq 3$、大きな原子サイズ差、負の混合エンタルピー）との整合性を評価した。BMG合金はCN $\approx$ 12の液体/アモルファス局所環境を持つため、L1$_2$半径を用いた。
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results}
@@ -563,6 +589,147 @@ B2半径とPauling半径の比較は、図~\ref{fig:B2_pauling}に示すよう�
 \end{figure*}
 
 
+\subsection{Pseudo-Vegard's Law Analysis}
+
+有効等価半径$r_\mathrm{WS} = (V_\mathrm{atom})^{1/3}$を指標として、B2--L1$_2$間の疑似Vegard則の成立性を検証した。52の二元系ペア（L1$_2$ A$_3$B、B2 AB、L1$_2$ AB$_3$の3組成すべてのデータが利用可能）について、3つの指標での線形性を比較した結果を表~\ref{tab:vegard_linearity}にまとめる。
+
+\begin{table}[htbp]
+\small
+    \centering
+    \caption{Linearity statistics for pseudo-Vegard's law across 52 binary pairs. Three representations are compared: raw lattice constant $a$, nearest-neighbour distance $d_\mathrm{nn}$, and effective equivalent radius $r_\mathrm{WS} = (V_\mathrm{atom})^{1/3}$.}
+    \label{tab:vegard_linearity}
+\scalebox{0.9}{
+    \begin{tabular}{lccccc}
+        \toprule
+        Metric & Mean $R^2$ & Median $R^2$ & $R^2 > 0.99$ & $R^2 > 0.95$ & $R^2 < 0.90$ \\
+        \midrule
+        $a$ (raw) & 0.065 & 0.036 & 0 & 0 & 52 \\
+        $d_\mathrm{nn}$ & 0.666 & 0.778 & 1 & 5 & 39 \\
+        $r_\mathrm{WS}$ & \textbf{0.798} & \textbf{0.974} & \textbf{18} & \textbf{32} & 19 \\
+        \bottomrule
+    \end{tabular}
+    }
+\end{table}
+
+生の格子定数$a$ではB2とL1$_2$のスケール差（B2: $\sim$3~\AA, L1$_2$: $\sim$4~\AA）が大きく、線形性は全く成立しない（中央値$R^2 = 0.036$）。最近接原子間距離$d_\mathrm{nn}$への変換により改善が見られるが（中央値$R^2 = 0.778$）、配位数差（B2: CN=8、L1$_2$: CN=12）の影響が残る。一方、原子体積ベースの$r_\mathrm{WS}$では中央値$R^2 = 0.974$と顕著に高い線形性を示し、52ペア中32ペア（62\%）で$R^2 > 0.95$を達成した。
+
+図~\ref{fig:vegard_three}は12の代表的二元系について、3指標の比較を示す。左パネル（生の格子定数）でV字型を示していた組成依存性が、右パネル（$r_\mathrm{WS}$）ではほぼ直線に乗ることが確認できる。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.45\textwidth]{../pseudo_vegard_output/vegard_three_metrics.png}
+    \caption{Comparison of three metrics for pseudo-Vegard's law in 12 representative binary pairs. Left: raw lattice constant $a$; center: nearest-neighbour distance $d_\mathrm{nn}$; right: effective equivalent radius $r_\mathrm{WS}$. The three composition points (25\%, 50\%, 75\% of element 1) become progressively more linear from left to right.}
+    \label{fig:vegard_three}
+\end{figure}
+
+図~\ref{fig:vegard_triplet}は3組成すべてが揃った52ペアの$r_\mathrm{WS}$による疑似Vegard則プロットを$R^2$降順で示す。$R^2 > 0.99$のペア（18件、緑枠）ではAlーDy ($R^2 = 0.996$)、Alー Y ($R^2 = 0.999$)、DyーGa ($R^2 = 1.000$)など希土類-典型金属系が多く、$r_\mathrm{WS}$指標での線形性が極めて良好である。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.45\textwidth]{../pseudo_vegard_output/vegard_triplet_summary_r_ws.png}
+    \caption{Pseudo-Vegard's law for all 52 binary pairs with complete triplet data, plotted using $r_\mathrm{WS}$. Panels are sorted by $R^2$ (descending). Border colours indicate quality: green ($R^2 > 0.99$), blue ($R^2 > 0.95$), orange ($R^2 > 0.90$), red ($R^2 < 0.90$).}
+    \label{fig:vegard_triplet}
+\end{figure}
+
+図~\ref{fig:vegard_r2hist}に$r_\mathrm{WS}$での$R^2$分布を示す。大多数のペアが$R^2 > 0.95$の領域に集中しており、原子体積ベースの有効等価半径が、B2--L1$_2$の構造差を超えて組成に対する線形性（疑似Vegard則）を良好に満たすことを示している。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.40\textwidth]{../pseudo_vegard_output/vegard_r2_histogram_rws.png}
+    \caption{Distribution of $R^2$ values for pseudo-Vegard's law linearity using $r_\mathrm{WS}$ across 52 binary pairs. The majority of pairs cluster near $R^2 \approx 1$, confirming that atomic-volume-based radii satisfy pseudo-Vegard's law across B2 and L1$_2$ structures.}
+    \label{fig:vegard_r2hist}
+\end{figure}
+
+図~\ref{fig:vegard_r2_comparison}は$d_\mathrm{nn}$と$r_\mathrm{WS}$の$R^2$分布を並列で比較したものである。$d_\mathrm{nn}$（パネルa）では$R^2$が広範囲に分散しているのに対し、$r_\mathrm{WS}$（パネルb）では大多数が$R^2 > 0.95$に集中する明瞭な差が見られる。
+
+\begin{figure*}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{../pseudo_vegard_output/vegard_r2_comparison_histogram.png}
+    \caption{Comparison of $R^2$ distributions for pseudo-Vegard's law linearity. (a) Nearest-neighbour distance $d_\mathrm{nn}$: median $R^2 = 0.778$, broadly distributed. (b) Effective equivalent radius $r_\mathrm{WS}$: median $R^2 = 0.974$, concentrated near $R^2 \approx 1$. The dramatic improvement from (a) to (b) demonstrates that atomic-volume-based radii effectively cancel the structural scaling difference between B2 and L1$_2$.}
+    \label{fig:vegard_r2_comparison}
+\end{figure*}
+
+図~\ref{fig:vegard_r2_scatter}は各ペアの$R^2(r_\mathrm{WS})$と$R^2(d_\mathrm{nn})$を散布図で比較したものである。対角線（$R^2(r_\mathrm{WS}) = R^2(d_\mathrm{nn})$）の上側に位置するペアでは$r_\mathrm{WS}$の方が線形性が良好であり、大多数のペアがこの条件を満たしている。ただし、一部のアクチノイド含有系（Ce--Sn, In--Th等）では$d_\mathrm{nn}$の方が$R^2$が高い場合もあり、5f電子の関与する系では原子体積保存が成立しにくいことを反映している。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.45\textwidth]{../pseudo_vegard_output/vegard_r2_scatter_rws_vs_dnn.png}
+    \caption{Scatter plot comparing $R^2(r_\mathrm{WS})$ vs $R^2(d_\mathrm{nn})$ for each binary pair. Points above the diagonal indicate better linearity with $r_\mathrm{WS}$. Most pairs fall above the diagonal, with notable exceptions in actinide-containing systems where $d_\mathrm{nn}$ can outperform $r_\mathrm{WS}$.}
+    \label{fig:vegard_r2_scatter}
+\end{figure}
+
+この結果は、原子体積$V_\mathrm{atom}$（ひいては$r_\mathrm{WS}$）が結晶構造の変化に対してロバストな量であり、Vegard則の本質である体積加法性を反映していることを物理的に裏付けている。配位数がCN=12（L1$_2$）からCN=8（B2）に変化しても、1原子あたりの占有体積はほぼ保存されるという原子体積保存の描像と整合的である。
+
+表~\ref{tab:vegard_52pairs}に52ペアすべてについて、$r_\mathrm{WS}$による疑似Vegard則の詳細データを示す。各ペアのL1$_2$ AB$_3$（25\%A）、B2 AB（50\%A）、L1$_2$ A$_3$B（75\%A）における$r_\mathrm{WS}$値、$r_\mathrm{WS}$および$d_\mathrm{nn}$に対する$R^2$値、B2点のL1$_2$内挿からの偏差を示す。
+
+\begin{table*}[htbp]
+\small
+    \centering
+    \caption{Pseudo-Vegard's law analysis for all 52 binary pairs with complete triplet data. $r_\mathrm{WS}$ values at three compositions (25\%, 50\%, 75\% of element 1), $R^2$ for $r_\mathrm{WS}$ and $d_\mathrm{nn}$ linearity, and B2 deviation from L1$_2$ interpolation. Pairs are sorted by $R^2(r_\mathrm{WS})$ in descending order.}
+    \label{tab:vegard_52pairs}
+\scalebox{0.72}{
+    \begin{tabular}{lcccccccc}
+        \toprule
+        Pair & $r_\mathrm{WS}$(25\%) (\AA) & $r_\mathrm{WS}$(50\%) (\AA) & $r_\mathrm{WS}$(75\%) (\AA) & $R^2(r_\mathrm{WS})$ & $R^2(d_\mathrm{nn})$ & B2 dev.($r_\mathrm{WS}$) (\%) & B2 dev.($d_\mathrm{nn}$) (\%) \\
+        \midrule
+        Dy--Ga & 2.687 & 2.830 & 2.974 & 1.0000 & 0.9070 & $-0.02$ & $-2.81$ \\
+        Er--In & 2.892 & 2.950 & 3.011 & 0.9999 & 0.6021 & $-0.04$ & $-2.83$ \\
+        Dy--In & 2.902 & 2.973 & 3.041 & 0.9998 & 0.6841 & $+0.05$ & $-2.74$ \\
+        Er--Ga & 2.666 & 2.808 & 2.944 & 0.9998 & 0.9115 & $+0.12$ & $-2.67$ \\
+        Al--Y & 3.019 & 2.858 & 2.683 & 0.9994 & 0.9410 & $+0.24$ & $-2.56$ \\
+        Ni--Pt & 2.429 & 2.367 & 2.296 & 0.9983 & 0.7767 & $+0.20$ & $-2.60$ \\
+        In--Tm & 2.997 & 2.939 & 2.891 & 0.9973 & 0.5282 & $-0.16$ & $-2.95$ \\
+        Ho--In & 2.902 & 2.958 & 3.028 & 0.9961 & 0.5982 & $-0.23$ & $-3.01$ \\
+        Ga--Ho & 2.959 & 2.796 & 2.666 & 0.9960 & 0.8785 & $-0.57$ & $-3.35$ \\
+        Al--Dy & 2.984 & 2.850 & 2.680 & 0.9955 & 0.9479 & $+0.63$ & $-2.18$ \\
+        Al--Lu & 2.915 & 2.797 & 2.648 & 0.9953 & 0.9323 & $+0.57$ & $-2.24$ \\
+        Gd--In & 2.920 & 3.010 & 3.081 & 0.9952 & 0.7787 & $+0.32$ & $-2.48$ \\
+        Pd--Sm & 3.018 & 2.840 & 2.613 & 0.9952 & 0.9762 & $+0.87$ & $-1.95$ \\
+        Al--Sc & 2.793 & 2.676 & 2.585 & 0.9951 & 0.8097 & $-0.47$ & $-3.25$ \\
+        In--Sm & 3.104 & 3.032 & 2.939 & 0.9948 & 0.7867 & $+0.34$ & $-2.46$ \\
+        Fe--Pt & 2.464 & 2.422 & 2.363 & 0.9910 & 0.6858 & $+0.35$ & $-2.46$ \\
+        Ga--Nd & 3.051 & 2.930 & 2.762 & 0.9909 & 0.9496 & $+0.83$ & $-1.99$ \\
+        Nd--Tl & 3.012 & 3.088 & 3.143 & 0.9904 & 0.6954 & $+0.36$ & $-2.44$ \\
+        Pb--Tm & 3.021 & 3.031 & 3.046 & 0.9898 & 0.0597 & $-0.07$ & $-2.86$ \\
+        Al--Zr & 2.757 & 2.687 & 2.585 & 0.9888 & 0.8643 & $+0.60$ & $-2.21$ \\
+        Ge--Pu & 2.890 & 2.804 & 2.670 & 0.9844 & 0.9249 & $+0.86$ & $-1.95$ \\
+        Ge--Ni & 2.250 & 2.362 & 2.537 & 0.9841 & 0.8671 & $-1.32$ & $-4.08$ \\
+        Fe--Ni & 2.222 & 2.244 & 2.258 & 0.9833 & 0.2245 & $+0.18$ & $-2.61$ \\
+        In--Nd & 3.145 & 3.072 & 2.952 & 0.9812 & 0.8765 & $+0.76$ & $-2.06$ \\
+        In--Pr & 3.171 & 3.095 & 2.968 & 0.9804 & 0.8908 & $+0.81$ & $-2.01$ \\
+        Ag--Pt & 2.524 & 2.547 & 2.560 & 0.9764 & 0.1798 & $+0.19$ & $-2.61$ \\
+        Al--Pr & 3.104 & 2.983 & 2.763 & 0.9726 & 0.9872 & $+1.69$ & $-1.15$ \\
+        Ti--Zn & 2.462 & 2.483 & 2.522 & 0.9678 & 0.3031 & $-0.38$ & $-3.16$ \\
+        Hg--Tl & 3.055 & 3.034 & 2.992 & 0.9654 & 0.3512 & $+0.34$ & $-2.46$ \\
+        In--Ni & 2.351 & 2.497 & 2.786 & 0.9647 & 0.8760 & $-2.80$ & $-5.52$ \\
+        Fe--Pd & 2.447 & 2.415 & 2.350 & 0.9645 & 0.7280 & $+0.67$ & $-2.14$ \\
+        La--Tl & 3.049 & 3.155 & 3.207 & 0.9613 & 0.8346 & $+0.88$ & $-1.94$ \\
+        Pb--Th & 3.140 & 3.128 & 3.093 & 0.9246 & 0.2270 & $+0.38$ & $-2.43$ \\
+        Pr--Sn & 3.005 & 3.111 & 3.139 & 0.8992 & 0.8547 & $+1.27$ & $-1.56$ \\
+        La--Sn & 3.020 & 3.143 & 3.174 & 0.8918 & 0.9137 & $+1.51$ & $-1.33$ \\
+        Ca--Pb & 3.098 & 3.114 & 3.183 & 0.8879 & 0.2963 & $-0.83$ & $-3.60$ \\
+        Mn--Pt & 2.474 & 2.473 & 2.450 & 0.7968 & 0.1138 & $+0.43$ & $-2.37$ \\
+        La--Pb & 3.110 & 3.193 & 3.196 & 0.7725 & 0.6960 & $+1.27$ & $-1.55$ \\
+        Pu--Sn & 2.942 & 2.992 & 2.993 & 0.7688 & 0.3600 & $+0.82$ & $-1.99$ \\
+        Pt--V & 2.416 & 2.467 & 2.458 & 0.5956 & 0.4745 & $+1.24$ & $-1.59$ \\
+        In--Th & 3.121 & 3.165 & 2.986 & 0.5249 & 0.9625 & $+3.65$ & $+0.76$ \\
+        Ce--In & 2.994 & 3.120 & 3.087 & 0.5038 & 0.9915 & $+2.62$ & $-0.24$ \\
+        Si--U & 2.671 & 2.722 & 2.533 & 0.5002 & 0.8825 & $+4.60$ & $+1.68$ \\
+        In--U & 2.814 & 3.001 & 2.945 & 0.4624 & 0.8965 & $+4.25$ & $+1.34$ \\
+        Np--Sn & 2.933 & 2.959 & 2.893 & 0.3531 & 0.4700 & $+1.59$ & $-1.25$ \\
+        Pb--Pu & 3.020 & 2.973 & 3.078 & 0.3017 & 0.0898 & $-2.49$ & $-5.21$ \\
+        In--Pu & 2.738 & 3.026 & 2.889 & 0.2740 & 0.5096 & $+7.56$ & $+4.55$ \\
+        Ce--Sn & 3.016 & 3.135 & 3.068 & 0.1954 & 0.9886 & $+3.04$ & $+0.16$ \\
+        Ge--U & 2.701 & 2.785 & 2.643 & 0.1659 & 0.6740 & $+4.22$ & $+1.31$ \\
+        Al--Np & 2.713 & 2.801 & 2.679 & 0.0748 & 0.5558 & $+3.89$ & $+0.99$ \\
+        In--Np & 2.886 & 2.999 & 2.902 & 0.0168 & 0.2870 & $+3.65$ & $+0.75$ \\
+        Ce--Pb & 3.106 & 3.177 & 3.108 & 0.0010 & 0.0147 & $+2.27$ & $-0.59$ \\
+        \bottomrule
+    \end{tabular}
+    }
+\end{table*}
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Discussion}
 
@@ -652,22 +819,95 @@ The GGA-PBE functional used in both MP and OQMD calculations is known to systema
 % \textbf{L1$_2$ max-based model approximation}: The max-based model (Eq.~\ref{eq:L12}) gives the minimum lattice parameter that avoids hard-sphere overlap. However, real atoms are not perfect hard spheres, and electronic relaxation effects exist. Thus, the max criterion may not always provide the optimal description.
 
 
-\subsection{Validation Against Multi-Component Alloys}
+\subsection{Structure Dependence of Effective Equivalent Radii}
 
-本研究で決定した構造特異的有効半径の多成分合金への適用性を検証するため、文献で報告されているHEA（高エントロピー合金）およびBMG（バルク金属ガラス）の実験データとの比較を行った。
+疑似Vegard則解析において$r_\mathrm{WS}$が高い線形性（中央値$R^2 = 0.974$）を示すことは、原子体積が構造変化に対してロバストであることを意味する。しかし、$r_\mathrm{WS}$が完全に構造非依存ではないことも定量的に示す必要がある。ここでは、B2点（50\%）のL1$_2$内挿値（25\%と75\%の中点）からの偏差を系統的に分析する。
 
-\subsubsection{HEA Lattice Constant Prediction}
+\subsubsection{B2--L1$_2$ Atomic Volume Difference}
 
-Vegard則に基づき、BCC型HEAには$a = 4\bar{r}/\sqrt{3}$（$\bar{r} = \sum c_i r_i$）を用いた。FCC型HEAには、有効半径の決定に用いたmax接触モデルとの整合性を保つため、ペアワイズmax接触モデル$a = 2\sqrt{2}\sum_i \sum_j c_i c_j \max(r_i, r_j)$を採用した。14種のHEA実験値（FCC 8種、BCC 6種）と比較した結果を表~\ref{tab:hea_validation}にまとめる。FCC HEAにはCoCrFeNi系（3d遷移金属）に加え、AuCuNiPdPt（貴金属系）およびCoCrFeNiPd（Pd添加系）を含めることで、元素系・格子定数範囲（3.572--3.806~\AA）の多様性を確保した。
+52の二元系トリプレットについて、B2点の$r_\mathrm{WS}$がL1$_2$点の線形内挿からどの程度偏差するかを図~\ref{fig:b2_structure_dep}に示す。$r_\mathrm{WS}$偏差（パネルa）と$d_\mathrm{nn}$偏差（パネルb）を比較すると、構造依存性の大きさと方向が質的に異なることがわかる。
 
-BCC HEAに対してはB2半径が有効であり、OQMD-B2半径ではRMSE = 0.051~\AA（平均相対誤差1.54\%）を達成した。これはPauling半径（RMSE = 0.115~\AA）およびGoldschmidt半径（RMSE = 0.061~\AA）より高精度である。AlCoCrFeNi（BCC）では誤差0.51\%と特に良好な一致を示した。
+\begin{figure*}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth]{../pseudo_vegard_output/vegard_b2_structure_dependence.png}
+    \caption{B2 point deviation from L1$_2$ linear interpolation for 52 binary pairs. (a) Effective equivalent radius $r_\mathrm{WS} = (V_\mathrm{atom})^{1/3}$: mean deviation $+1.0$\%, with 40/52 pairs positive (B2 volume expansion). (b) Nearest-neighbour distance $d_\mathrm{nn}$: mean deviation $-1.8$\%, with 44/52 pairs negative (B2 bond contraction). The opposing signs indicate that B2 structures have shorter bond lengths but larger atomic volumes than L1$_2$ interpolation predicts.}
+    \label{fig:b2_structure_dep}
+\end{figure*}
 
-FCC HEAに対しては、単純Vegard式（$a = 2\sqrt{2}\bar{r}$）では有効半径が格子定数を系統的に過小評価するが、ペアワイズmax接触モデルの導入により大幅に改善された。OQMD-B2半径ではRMSE = 0.023~\AA（平均相対誤差0.53\%）、OQMD-L1$_2$半径ではRMSE = 0.025~\AA（0.54\%）を達成し、いずれもPauling半径（RMSE = 0.073~\AA）を凌駕する。特筆すべきは、貴金属系AuCuNiPdPt（$a_{\mathrm{exp}} = 3.806$~\AA）がOQMD-L1$_2$半径で誤差0.007\%と極めて高精度に予測される点であり、3d遷移金属系とは元素構成が全く異なるにもかかわらず有効半径の汎用性が確認された。この改善は、有効半径フィッティングにおけるL1$_2$化合物の約51\%が異種原子接触（$a = \sqrt{2}(r_A + r_B)$）で格子定数が決定されることと整合的である。
+$d_\mathrm{nn}$偏差は52ペア中44ペアで負（平均$-1.8$\%）であり、B2（CN=8）ではL1$_2$（CN=12）からの外挿値よりも最近接原子間距離が系統的に短い。これはCN=8の低配位環境では個々の結合が強化（短縮）されるという、よく知られた配位数効果~\citep{goldschmidt1927}と整合的である。
+
+一方、$r_\mathrm{WS}$偏差は52ペア中40ペアで正（平均$+1.0$\%）であり、B2の原子体積はL1$_2$内挿値よりもわずかに大きい。これは、B2のBCC基盤構造（充填率0.680）がL1$_2$のFCC基盤構造（充填率0.741）よりも低密度であることを反映している。理想的な剛体球充填では$V_\mathrm{atom}^\mathrm{B2}/V_\mathrm{atom}^\mathrm{L1_2} = 0.741/0.680 = 1.089$（8.9\%の体積膨張）が予想されるが、実際の偏差は平均わずか$+2.7$\%（$r_\mathrm{WS}$で$+1.0$\%）にとどまる。この差は、実際の結晶ではB2構造において電子的緩和により原子が「圧縮」され、理想充填率の差を大きく相殺することを示唆している。
+
+\subsubsection{Element-Group Dependence}
+
+$r_\mathrm{WS}$偏差には元素群依存性が見られる。表~\ref{tab:rws_deviation_groups}に二元系ペアの分類別の統計を示す。
 
 \begin{table}[htbp]
 \small
     \centering
-    \caption{HEA lattice constant prediction using structure-matched effective radii. BCC HEAs are predicted with $a = 4\bar{r}/\sqrt{3}$, FCC HEAs with the pairwise max-contact model $a = 2\sqrt{2}\sum_i \sum_j c_i c_j \max(r_i, r_j)$. Representative entries are shown.}
+    \caption{B2 $r_\mathrm{WS}$ deviation from L1$_2$ interpolation classified by element-pair type. Positive values indicate B2 volume expansion relative to L1$_2$ interpolation.}
+    \label{tab:rws_deviation_groups}
+\scalebox{0.9}{
+    \begin{tabular}{lccc}
+        \toprule
+        Pair type & $N$ & Mean dev.\ (\%) & Range (\%) \\
+        \midrule
+        Lanthanide--$p$-block & 24 & $+0.8$ & $-0.6$ to $+3.0$ \\
+        Actinide--$p$-block & 12 & $+2.8$ & $-2.5$ to $+7.6$ \\
+        3$d$--5$d$ & 4 & $+0.6$ & $+0.2$ to $+1.2$ \\
+        3$d$--$p$-block & 3 & $-1.5$ & $-2.8$ to $-0.5$ \\
+        3$d$--3$d$ & 2 & $-0.1$ & $-0.4$ to $+0.2$ \\
+        4$d$--$p$-block & 2 & $+0.4$ & $+0.2$ to $+0.6$ \\
+        \bottomrule
+    \end{tabular}
+    }
+\end{table}
+
+ランタノイド--$p$ブロック金属ペア（24件）は偏差が小さく（平均$+0.8$\%）、疑似Vegard則の線形性が最も良好である。これは、ランタノイドの4f電子が内殻的であるため、配位環境の変化に対して原子体積が安定していることを反映している。
+
+一方、アクチノイド--$p$ブロック金属ペア（12件）は偏差が大きく（平均$+2.8$\%）、特にIn--Pu（$+7.6$\%）、Si--U（$+4.6$\%）、In--U（$+4.3$\%）など5f電子が関与する系で顕著である。アクチノイドの5f電子は4f電子と異なり空間的に広がっており、配位環境の変化に対して価電子状態が大きく変化するため、B2構造でのボンド再配列に伴う体積変化が大きい。
+
+遷移金属ペアでは偏差は概ね1\%以内であり、$r_\mathrm{WS}$の構造非依存性が良好に成立する。ただし、3$d$--$p$ブロック金属ペアでは負の偏差（B2での体積収縮）が見られ、In--Ni（$-2.8$\%）やGe--Ni（$-1.3$\%）のようにNiを含む系で顕著である。
+
+\subsubsection{Physical Interpretation}
+
+$r_\mathrm{WS}$偏差と$d_\mathrm{nn}$偏差の対比（図~\ref{fig:rws_vs_dnn}）は、構造依存性の物理的起源を理解する上で重要な知見を与える。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.45\textwidth]{../pseudo_vegard_output/vegard_rws_vs_dnn_deviation.png}
+    \caption{Correlation between $r_\mathrm{WS}$ and $d_\mathrm{nn}$ B2 deviations from L1$_2$ interpolation. Most points fall in the upper-left quadrant (positive $r_\mathrm{WS}$ deviation, negative $d_\mathrm{nn}$ deviation), indicating that B2 structures have shorter bonds but larger atomic volumes than L1$_2$ interpolation predicts.}
+    \label{fig:rws_vs_dnn}
+\end{figure}
+
+大多数のペアは第2象限（$d_\mathrm{nn}$偏差 $< 0$、$r_\mathrm{WS}$偏差 $> 0$）に位置する。これは以下の物理的描像と整合的である：
+
+\begin{enumerate}
+\setlength{\parskip}{0cm}
+\setlength{\itemsep}{0cm}
+    \item \textbf{結合距離の短縮}：B2（CN=8）ではL1$_2$（CN=12）よりも配位数が少ないため、個々の結合が強化され、$d_\mathrm{nn}$が系統的に短くなる（平均$-1.8$\%）。
+    \item \textbf{原子体積の微増}：しかし、BCC基盤のB2構造はFCC基盤のL1$_2$構造よりも充填効率が低いため、結合短縮にもかかわらず原子体積はわずかに増加する（平均$+2.7$\%）。
+    \item \textbf{体積保存の近似的成立}：理想充填率の差（8.9\%）に比べて実際の偏差（2.7\%）は大幅に小さく、電子的緩和効果が充填率差の約70\%を相殺している。
+\end{enumerate}
+
+この「結合短縮と体積微増の共存」こそが、$r_\mathrm{WS}$が$d_\mathrm{nn}$よりも疑似Vegard則をよく満たす理由である。$d_\mathrm{nn}$は配位数効果を直接反映するため構造依存性が残るが、$r_\mathrm{WS}$では結合短縮と充填率低下が部分的に相殺し合い、構造変化に対するロバスト性が高まるのである。
+
+以上の分析から、$r_\mathrm{WS} = (V_\mathrm{atom})^{1/3}$は完全に構造非依存ではないものの（特にアクチノイド含有系で偏差が大きい）、ランタノイド系や遷移金属系では偏差が1\%以内にとどまり、疑似Vegard則の良好な成立（中央値$R^2 = 0.974$）を支えている。この知見は、原子体積の近似的保存則が広く成立することの定量的な証拠を提供するものである。
+
+前節までに、B2/L1$_2$二元系化合物から決定した有効半径が、原子体積ベースの有効等価半径$r_\mathrm{WS}$を介して構造変化に対してロバストであること（疑似Vegard則）を示した。ここでは、これらの有効半径が多成分合金の物性記述子としても有用であることを実証する。
+
+\subsubsection{HEA Lattice Constant Prediction}
+
+14種のHEA実験値（FCC 8種、BCC 6種）と比較した結果を表~\ref{tab:hea_validation}にまとめる。BCC型HEAにはVegard則$a = 4\bar{r}/\sqrt{3}$、FCC型HEAにはペアワイズmax接触モデル（式~\ref{eq:fcc_pairwise}）を用いた。FCC HEAにはCoCrFeNi系（3d遷移金属）に加え、AuCuNiPdPt（貴金属系）およびCoCrFeNiPd（Pd添加系）を含めることで、元素系・格子定数範囲（3.572--3.806~\AA）の多様性を確保した。
+
+BCC HEAに対してはB2半径が有効であり、OQMD-B2半径ではRMSE = 0.051~\AA（平均相対誤差1.54\%）を達成した。これはPauling半径（RMSE = 0.115~\AA）およびGoldschmidt半径（RMSE = 0.061~\AA）より高精度である。
+
+FCC HEAに対しては、ペアワイズmax接触モデルの導入によりOQMD-B2半径でRMSE = 0.023~\AA（平均相対誤差0.53\%）、OQMD-L1$_2$半径でRMSE = 0.025~\AA（0.54\%）を達成し、Pauling半径（RMSE = 0.073~\AA）を凌駕する。特筆すべきは、貴金属系AuCuNiPdPt（$a_{\mathrm{exp}} = 3.806$~\AA）がOQMD-L1$_2$半径で誤差0.007\%と極めて高精度に予測される点であり、3d遷移金属系とは元素構成が全く異なるにもかかわらず有効半径の汎用性が確認された。この改善は、有効半径フィッティングにおけるL1$_2$化合物の約51\%が異種原子接触（$a = \sqrt{2}(r_A + r_B)$）で格子定数が決定されることと整合的である。
+
+\begin{table}[htbp]
+\small
+    \centering
+    \caption{HEA lattice constant prediction using structure-specific effective radii as descriptors. BCC HEAs: $a = 4\bar{r}/\sqrt{3}$, FCC HEAs: pairwise max-contact model (Eq.~\ref{eq:fcc_pairwise}). Representative entries are shown.}
     \label{tab:hea_validation}
 \scalebox{0.82}{
     \begin{tabular}{llcccl}
@@ -696,21 +936,26 @@ FCC HEAに対しては、単純Vegard式（$a = 2\sqrt{2}\bar{r}$）では有効
 
 Inoueの三経験則（$N \geq 3$、大きな原子サイズ差、負の混合エンタルピー）との比較では、Vitreloy 1（Zr$_{41}$Ti$_{14}$Cu$_{13}$Ni$_{10}$Be$_{22}$, $\delta = 16.4$\%）やZr$_{55}$Cu$_{30}$Al$_{10}$Ni$_5$（$\delta = 12.9$\%）など高GFA合金が3条件すべてを満たす一方、ガラス形成能の低いAu$_{77}$Ge$_{14}$Si$_9$は$\delta = 2.5$\%と小さかった。
 
-これらの結果は、二元系化合物から決定した有効半径が、多成分合金のサイズミスマッチ評価にも有効であることを示しており、特にB2半径のBCC HEAへの適用において古典半径を上回る予測精度が得られた。
+\subsubsection{Descriptor Utility}
+
+以上の結果は、二元系化合物から決定した有効半径が多成分合金の記述子として以下の点で有用であることを示している：(1) HEA格子定数予測において古典的Pauling半径を凌駕する精度を達成（FCC: RMSE 0.023 vs 0.073~\AA）、(2) 原子サイズミスマッチ$\delta$がBMGのガラス形成能と正の相関を示し、結晶性HEA（$\delta < 6$\%）とBMG（$\delta > 6$\%）を分離する指標として機能、(3) δ--VEC相図においてBCC/FCC構造安定性を正しく予測。これは、疑似Vegard則解析で示された有効半径の構造非依存性（$r_\mathrm{WS}$の体積加法性）が、二元系から多成分系への転用可能性を物理的に支えているためと理解できる。
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusions}
-We determined effective atomic radii for B2 and L1$_2$ binary intermetallic compounds by optimizing against lattice constant data from the Materials Project and OQMD databases. Non-metallic and alkali metal elements were excluded and a lattice constant range filter (2.0--8.0~\AA) was applied to define the applicability domain of the hard-sphere model. A total of 3511 compounds (MP: 346 B2, 723 L1$_2$; OQMD: 2207 B2, 235 L1$_2$) were analyzed using inequality-constrained SLSQP optimization with Bootstrap uncertainty estimation. The main conclusions are as follows.
+B2型およびL1$_2$型二元金属間化合物の格子定数データ（MP + OQMD、計3511件）に対する最適化により有効原子半径を決定し、有効等価半径$r_\mathrm{WS} = (V_\mathrm{atom})^{1/3}$を指標とした疑似Vegard則検証、およびHEA/BMGへの記述子としての適用性を実証した。主要な結論を以下に示す。
 \begin{enumerate}
-    \item \textbf{Predictive accuracy}: the optimized radii reproduce lattice constants with RMSE = 0.054~\AA\ for MP B2, 0.095~\AA\ for OQMD B2, 0.116~\AA\ for MP L1$_2$, and 0.066~\AA\ for OQMD L1$_2$, corresponding to $R^2 = 0.935$--0.975.
-    \item \textbf{Effectiveness of element exclusion}: removal of compounds containing non-metallic elements and alkali metals improved prediction accuracy, particularly for MP B2 (RMSE reduced by 66\%) and MP L1$_2$ (44\%), confirming that the hard-sphere model is appropriate for metallic intermetallic compounds but not for covalent/ionic systems or compounds with strong ionic character.
-    \item \textbf{Structure dependence of effective radii}: L1$_2$ radii correlate with Goldschmidt metallic radii ($R^2 = 0.858$), whereas B2 radii display element-specific deviations. With the max-based models for both B2 and L1$_2$, the B2-L1$_2$ radius differences are distributed on both sides: elements such as Re ($-5.9$\%) and Ca ($-5.6$\%) show contraction, while Ni ($+7.9$\%) and Pu ($+7.4$\%) show expansion.
-    \item \textbf{Database consistency}: MP and OQMD give highly consistent lattice constants for common compounds ($R^2 > 0.985$) and consistent B2 radii ($R^2 = 0.955$), indicating that the optimized radii are stable against reasonable differences in first-principles workflows. L1$_2$ radius consistency ($R^2 = 0.854$) is lower, partly due to smaller OQMD L1$_2$ dataset size.
-    \item \textbf{Multi-component alloy validation}: B2 radii predict BCC HEA lattice constants with RMSE = 0.051~\AA\ (OQMD-B2), outperforming Pauling radii (0.115~\AA). With the pairwise max-contact model, FCC HEA lattice constants are predicted with RMSE = 0.023~\AA\ (OQMD-B2), surpassing Pauling radii (0.073~\AA). The dataset includes diverse element systems from 3d transition metals (CoCrFeNi variants) to noble metals (AuCuNiPdPt), with lattice constants spanning 3.572--3.806~\AA. For BMG alloys, the atomic size mismatch $\delta$ calculated from these radii clearly separates glass-forming ($\delta > 6$\%) from crystalline ($\delta < 6$\%) compositions.
+    \item \textbf{格子定数予測精度}: 最適化半径はRMSE = 0.054~\AA（MP-B2）、0.095~\AA（OQMD-B2）、0.116~\AA（MP-L1$_2$）、0.066~\AA（OQMD-L1$_2$）で格子定数を再現し、$R^2 = 0.935$--0.975を達成した。
+    \item \textbf{非金属元素除外の有効性}: 非金属元素・アルカリ金属の除外により予測精度が向上し（MP-B2: RMSE 66\%改善）、硬球モデルの適用範囲が金属間化合物に限定されることを確認した。
+    \item \textbf{構造依存性}: B2--L1$_2$間の有効半径差は元素固有であり、Goldschmidtの一律3\%収縮則とは合致しない。Re（$-5.9$\%）やNi（$+7.9$\%）など最大8\%の差が生じる元素が存在する。
+    \item \textbf{データベース間整合性}: MPとOQMDの半径は高い一貫性を示し（B2: $R^2 = 0.969$）、異なる計算プロトコル間での頑健性が確認された。
+    \item \textbf{疑似Vegard則の成立}: 有効等価半径$r_\mathrm{WS}$を指標とした疑似Vegard則解析により、52の二元系で中央値$R^2 = 0.974$（32ペアで$R^2 > 0.95$）と高い線形性を確認した。生の格子定数（中央値$R^2 = 0.036$）や最近接原子間距離（中央値$R^2 = 0.778$）に比べ、原子体積ベースの指標が構造変化に対して最もロバストであることを定量的に示した。
+    \item \textbf{構造依存性の定量的解析}: B2の$r_\mathrm{WS}$はL1$_2$内挿値から平均$+1.0$\%偏差するが、これは理想充填率差から予想される8.9\%の体積膨張に比べて大幅に小さい。$d_\mathrm{nn}$の系統的短縮（平均$-1.8$\%）と$r_\mathrm{WS}$の微増が共存する「結合短縮と体積微増の共存」パターンが、$r_\mathrm{WS}$の構造ロバスト性の物理的起源である。アクチノイド含有系では5f電子の寄与により偏差が大きい（平均$+2.8$\%）一方、ランタノイド系・遷移金属系では1\%以内にとどまる。
+    \item \textbf{HEA格子定数予測}: ペアワイズmax接触モデルを用いたFCC HEA予測でRMSE = 0.023~\AA（OQMD-B2）を達成し、Pauling半径（0.073~\AA）を凌駕した。BCC HEAでもOQMD-B2半径でRMSE = 0.051~\AA を達成した。3d遷移金属系から貴金属系（AuCuNiPdPt）まで、元素系の異なるHEAに対して汎用性を確認した。
+    \item \textbf{BMG記述子としての有用性}: 有効半径から計算した原子サイズミスマッチ$\delta$がBMG合金（$\delta > 6$\%）と結晶性HEA（$\delta < 6$\%）を明確に分離し、Inoueの三経験則とも整合的であった。
 \end{enumerate}
 
-The tabulated radii provide a practical reference for lattice-constant estimation, size-mismatch analysis, and phase-stability discussions in B2- and L1$_2$-containing alloy systems.
+以上の結果は、二元系金属間化合物から決定した有効原子半径が、疑似Vegard則を通じて構造変化に対するロバスト性を持ち、HEAの格子定数予測やBMGのガラス形成能評価といった多成分合金の記述子としても有用であることを実証している。決定した半径は、格子定数推算、サイズミスマッチ解析、相安定性議論の実用的な基準値として利用可能である。
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
