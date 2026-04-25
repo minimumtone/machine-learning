@@ -539,7 +539,7 @@ def generate_report(table: pd.DataFrame,
     lines.append("2. **最近接原子間距離 $d_{\\mathrm{nn}}$** — "
                  "B2: $a\\sqrt{3}/2$、L1$_2$: $a/\\sqrt{2}$")
     lines.append("3. **Wigner-Seitz半径 $r_{\\mathrm{WS}}$** — "
-                 "$(V_{\\mathrm{atom}})^{1/3}$\n")
+                 "$(3V_{\\mathrm{atom}}/4\\pi)^{1/3}$\n")
     lines.append(f"解析対象: **{len(table)} 二元系** "
                  f"(MP + OQMD から L1$_2$ A$_3$B, B2 AB, L1$_2$ AB$_3$ "
                  f"すべてが利用可能なペア)\n")
