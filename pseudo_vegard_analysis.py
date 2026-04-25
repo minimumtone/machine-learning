@@ -19,8 +19,8 @@ Three representations are compared:
   1. Raw lattice constant  $a$  (structures differ → different scale)
   2. Nearest-neighbour distance  $d_{\\mathrm{nn}}$
      B2:  $d = a\\sqrt{3}/2$,  L1$_2$: $d = a/\\sqrt{2}$
-  3. Wigner-Seitz radius  $r_{\\mathrm{WS}} = (V_{\\mathrm{atom}})^{1/3}$
-     B2:  $r = (a^3/2)^{1/3}$,  L1$_2$: $r = (a^3/4)^{1/3}$
+  3. Wigner-Seitz radius  $r_{\\mathrm{WS}} = (3 V_{\\mathrm{atom}} / 4\\pi)^{1/3}$
+     B2:  $r = (3 a^3 / 8\\pi)^{1/3}$,  L1$_2$: $r = (3 a^3 / 16\\pi)^{1/3}$
 
 All figures and report are generated in a single execution pass.
 """
@@ -96,11 +96,17 @@ def d_nn(a: float, struct: str) -> float:
 
 
 def r_ws(a: float, struct: str) -> float:
-    """Wigner-Seitz radius = (V_atom)^{1/3}."""
+    """Wigner-Seitz radius = (3 V_atom / 4 pi)^{1/3}.
+
+    The Wigner-Seitz radius is defined as the radius of a sphere whose
+    volume equals the atomic volume V_atom = a^3 / Z (Z = atoms per cell).
+    B2: Z = 2, L1_2: Z = 4.
+    """
     if "B2" in struct:
-        return (a ** 3 / 2) ** (1.0 / 3)
+        V_atom = a ** 3 / 2
     else:  # L12
-        return (a ** 3 / 4) ** (1.0 / 3)
+        V_atom = a ** 3 / 4
+    return (3 * V_atom / (4 * np.pi)) ** (1.0 / 3)
 
 
 # =====================================================================
