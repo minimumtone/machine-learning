@@ -332,11 +332,13 @@ def predict_vegard_king(comp, struct, king_vols=KING_ATOMIC_VOLUMES):
     V_avg = sum(c_i * V_i), then a = (n_auc * V_avg)^(1/3)
     n_auc = 4 for FCC, 2 for BCC.
     """
+    # Normalize compositions to sum to 1.0
+    total = sum(comp.values())
     v_avg = 0.0
     for el, c in comp.items():
         if el not in king_vols:
             return None
-        v_avg += c * king_vols[el]
+        v_avg += (c / total) * king_vols[el]
     n_auc = 4 if struct == "FCC" else 2
     return (n_auc * v_avg) ** (1/3)
 
@@ -349,10 +351,12 @@ def predict_pairwise_max(comp, struct, radii_dict):
     for el in elements:
         if el not in radii_dict:
             return None
+    # Normalize compositions to sum to 1.0 to avoid quadratic amplification
+    total = sum(comp.values())
     r_eff = 0.0
     for i, el_i in enumerate(elements):
         for j, el_j in enumerate(elements):
-            r_eff += comp[el_i] * comp[el_j] * max(radii_dict[el_i], radii_dict[el_j])
+            r_eff += (comp[el_i]/total) * (comp[el_j]/total) * max(radii_dict[el_i], radii_dict[el_j])
     if struct == "FCC":
         return 2 * np.sqrt(2) * r_eff
     else:  # BCC
@@ -363,11 +367,13 @@ def predict_simple_vegard(comp, struct, radii_dict):
     FCC: a = 2*sqrt(2) * r_avg
     BCC: a = (4/sqrt(3)) * r_avg
     """
+    # Normalize compositions to sum to 1.0
+    total = sum(comp.values())
     r_avg = 0.0
     for el, c in comp.items():
         if el not in radii_dict:
             return None
-        r_avg += c * radii_dict[el]
+        r_avg += (c / total) * radii_dict[el]
     if struct == "FCC":
         return 2 * np.sqrt(2) * r_avg
     else:
@@ -722,7 +728,7 @@ def main():
         ("Os","Ir"): 1.74, ("Os","Pd"): 4.77, ("Os","Pt"): 7.80,
         ("Os","Rh"): -1.63, ("Pt","Os"): -7.12,
         ("Re","Co"): -26.46, ("Re","Fe"): -23.94, ("Re","Ir"): -5.61,
-        ("Re","Rh"): -6.70, ("Re","Rh"): -6.70,
+        ("Re","Rh"): -6.70,
         ("Rh","Os"): 1.58, ("Rh","Re"): 4.17, ("Rh","Ru"): 0.23,
         ("Rh","Ti"): -21.24,
         ("Ru","Co"): -18.28, ("Ru","Fe"): -11.24,
