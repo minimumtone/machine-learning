@@ -332,6 +332,227 @@ def compute_structure_specific_omega_sf(compound_df):
     return omega_b2, omega_l12
 
 
+# Atomic number for periodic-table features
+ATOMIC_NUMBER = {
+    "H":1,"He":2,"Li":3,"Be":4,"B":5,"C":6,"N":7,"O":8,
+    "Na":11,"Mg":12,"Al":13,"Si":14,"P":15,"S":16,
+    "K":19,"Ca":20,"Sc":21,"Ti":22,"V":23,"Cr":24,
+    "Mn":25,"Fe":26,"Co":27,"Ni":28,"Cu":29,"Zn":30,
+    "Ga":31,"Ge":32,"As":33,"Se":34,"Br":35,
+    "Rb":37,"Sr":38,"Y":39,"Zr":40,"Nb":41,"Mo":42,
+    "Tc":43,"Ru":44,"Rh":45,"Pd":46,"Ag":47,"Cd":48,
+    "In":49,"Sn":50,"Sb":51,"Te":52,"I":53,
+    "Cs":55,"Ba":56,"La":57,"Ce":58,"Pr":59,"Nd":60,
+    "Sm":62,"Eu":63,"Gd":64,"Tb":65,"Dy":66,"Ho":67,
+    "Er":68,"Tm":69,"Yb":70,"Lu":71,
+    "Hf":72,"Ta":73,"W":74,"Re":75,"Os":76,"Ir":77,
+    "Pt":78,"Au":79,"Hg":80,"Tl":81,"Pb":82,"Bi":83,
+    "Th":90,"U":92,"Pu":94,"Np":93,
+}
+
+# Covalent radii (Å) — Cordero et al. (2008)
+COVALENT_RADIUS = {
+    "Li":1.28,"Be":0.96,"B":0.84,"C":0.76,"N":0.71,"O":0.66,
+    "Na":1.66,"Mg":1.41,"Al":1.21,"Si":1.11,"P":1.07,"S":1.05,
+    "K":2.03,"Ca":1.76,"Sc":1.70,"Ti":1.60,"V":1.53,"Cr":1.39,
+    "Mn":1.39,"Fe":1.32,"Co":1.26,"Ni":1.24,"Cu":1.32,"Zn":1.22,
+    "Ga":1.22,"Ge":1.20,"As":1.19,"Se":1.20,"Br":1.20,
+    "Rb":2.20,"Sr":1.95,"Y":1.90,"Zr":1.75,"Nb":1.64,"Mo":1.54,
+    "Tc":1.47,"Ru":1.46,"Rh":1.42,"Pd":1.39,"Ag":1.45,"Cd":1.44,
+    "In":1.42,"Sn":1.39,"Sb":1.39,"Te":1.38,"I":1.39,
+    "Cs":2.44,"Ba":2.15,"La":2.07,"Ce":2.04,"Pr":2.03,"Nd":2.01,
+    "Sm":1.98,"Eu":1.98,"Gd":1.96,"Tb":1.94,"Dy":1.92,"Ho":1.92,
+    "Er":1.89,"Tm":1.90,"Yb":1.87,"Lu":1.87,
+    "Hf":1.75,"Ta":1.70,"W":1.62,"Re":1.51,"Os":1.44,"Ir":1.41,
+    "Pt":1.36,"Au":1.36,"Hg":1.32,"Tl":1.45,"Pb":1.46,"Bi":1.48,
+    "Th":2.06,"U":1.96,"Pu":1.87,"Np":1.90,
+}
+
+# Periodic-table row
+PERIOD = {
+    "Li":2,"Be":2,"B":2,"C":2,"N":2,"O":2,
+    "Na":3,"Mg":3,"Al":3,"Si":3,"P":3,"S":3,
+    "K":4,"Ca":4,"Sc":4,"Ti":4,"V":4,"Cr":4,
+    "Mn":4,"Fe":4,"Co":4,"Ni":4,"Cu":4,"Zn":4,
+    "Ga":4,"Ge":4,"As":4,"Se":4,"Br":4,
+    "Rb":5,"Sr":5,"Y":5,"Zr":5,"Nb":5,"Mo":5,
+    "Tc":5,"Ru":5,"Rh":5,"Pd":5,"Ag":5,"Cd":5,
+    "In":5,"Sn":5,"Sb":5,"Te":5,"I":5,
+    "Cs":6,"Ba":6,"La":6,"Ce":6,"Pr":6,"Nd":6,
+    "Sm":6,"Eu":6,"Gd":6,"Tb":6,"Dy":6,"Ho":6,
+    "Er":6,"Tm":6,"Yb":6,"Lu":6,
+    "Hf":6,"Ta":6,"W":6,"Re":6,"Os":6,"Ir":6,
+    "Pt":6,"Au":6,"Hg":6,"Tl":6,"Pb":6,"Bi":6,
+    "Th":7,"U":7,"Pu":7,"Np":7,
+}
+
+
+def build_omega_sf_features(elA, elB):
+    """
+    Build pairwise feature vector for Ω_sf prediction.
+    Features capture atomic property differences/ratios that drive size factor.
+    Returns 14-dimensional feature vector.
+    """
+    # Ensure consistent ordering (smaller Z first)
+    if ATOMIC_NUMBER.get(elA, 0) > ATOMIC_NUMBER.get(elB, 0):
+        elA, elB = elB, elA
+
+    rA = COVALENT_RADIUS.get(elA, 1.3)
+    rB = COVALENT_RADIUS.get(elB, 1.3)
+    vA = KING_ATOMIC_VOLUMES.get(elA, 15.0)
+    vB = KING_ATOMIC_VOLUMES.get(elB, 15.0)
+    enA = PAULING_EN.get(elA, 1.5)
+    enB = PAULING_EN.get(elB, 1.5)
+    vecA = VEC.get(elA, 5)
+    vecB = VEC.get(elB, 5)
+    dA = D_ELECTRONS.get(elA, 0)
+    dB = D_ELECTRONS.get(elB, 0)
+    mA = ATOMIC_MASS.get(elA, 50.0)
+    mB = ATOMIC_MASS.get(elB, 50.0)
+    pA = PERIOD.get(elA, 4)
+    pB = PERIOD.get(elB, 4)
+
+    feats = np.array([
+        (rA - rB) / ((rA + rB) / 2),          # 0: radius ratio deviation
+        abs(rA - rB),                           # 1: absolute radius diff
+        (vA - vB) / ((vA + vB) / 2),          # 2: volume ratio deviation
+        abs(vA - vB),                           # 3: absolute volume diff
+        enA - enB,                              # 4: electronegativity diff (signed)
+        abs(enA - enB),                         # 5: |Δχ|
+        vecA - vecB,                            # 6: VEC diff (signed)
+        abs(vecA - vecB),                       # 7: |ΔVEC|
+        dA - dB,                                # 8: d-electron diff (signed)
+        abs(dA - dB),                           # 9: |Δd|
+        (vA + vB) / 2,                         # 10: mean volume
+        (enA + enB) / 2,                       # 11: mean electronegativity
+        abs(pA - pB),                           # 12: period diff
+        abs(mA - mB) / ((mA + mB) / 2),       # 13: mass ratio deviation
+    ])
+    return feats
+
+
+OMEGA_FEATURE_NAMES = [
+    "Δr/r_avg", "|Δr|", "ΔV/V_avg", "|ΔV|",
+    "Δχ", "|Δχ|", "ΔVEC", "|ΔVEC|",
+    "Δd", "|Δd|", "V_avg", "χ_avg",
+    "ΔPeriod", "Δm/m_avg",
+]
+
+
+def build_omega_sf_ml_model(omega_sf_dict, structure_label=""):
+    """
+    Train GPR + Ridge models to predict Ω_sf from elemental properties.
+    Uses LOO-CV to evaluate prediction accuracy.
+
+    Args:
+        omega_sf_dict: {(elA, elB): omega_value} from DFT data
+        structure_label: "B2" or "L12" for logging
+
+    Returns:
+        (gpr_model, scaler, cv_rmse, cv_r2, missing_predictions)
+        where missing_predictions = {pair: (omega_pred, sigma)} for all 666 pairs
+    """
+    pairs = list(omega_sf_dict.keys())
+    omegas = np.array([omega_sf_dict[p] for p in pairs])
+    X = np.array([build_omega_sf_features(*p) for p in pairs])
+    N = len(pairs)
+
+    print(f"      Ω_sf ML ({structure_label}): {N} known pairs, 14 features")
+
+    # LOO-CV for Ridge (baseline)
+    best_ridge_rmse = 999
+    best_alpha = 1.0
+    for alpha in [0.01, 0.1, 0.5, 1.0, 5.0, 10.0, 50.0]:
+        loo = LeaveOneOut()
+        y_pred = np.zeros(N)
+        for tr, te in loo.split(X):
+            sc = StandardScaler()
+            Xtr = sc.fit_transform(X[tr])
+            Xte = sc.transform(X[te])
+            m = Ridge(alpha=alpha)
+            m.fit(Xtr, omegas[tr])
+            y_pred[te] = m.predict(Xte)
+        rmse = np.sqrt(np.mean((omegas - y_pred)**2))
+        if rmse < best_ridge_rmse:
+            best_ridge_rmse = rmse
+            best_alpha = alpha
+
+    print(f"        Ridge LOO-CV RMSE: {best_ridge_rmse:.6f} (α={best_alpha})")
+
+    # LOO-CV for GPR (Matérn 5/2)
+    kernel = ConstantKernel(0.01) * Matern(length_scale=1.0, nu=2.5) + WhiteKernel(0.001)
+    y_pred_gpr = np.zeros(N)
+    y_std_gpr = np.zeros(N)
+    loo = LeaveOneOut()
+    for tr, te in loo.split(X):
+        sc = StandardScaler()
+        Xtr = sc.fit_transform(X[tr])
+        Xte = sc.transform(X[te])
+        gpr = GaussianProcessRegressor(
+            kernel=kernel, n_restarts_optimizer=3,
+            alpha=1e-6, normalize_y=True, random_state=42)
+        gpr.fit(Xtr, omegas[tr])
+        pred, std = gpr.predict(Xte, return_std=True)
+        y_pred_gpr[te] = pred
+        y_std_gpr[te] = std
+
+    rmse_gpr = np.sqrt(np.mean((omegas - y_pred_gpr)**2))
+    r2_gpr = 1 - np.sum((omegas - y_pred_gpr)**2) / np.sum((omegas - omegas.mean())**2)
+    print(f"        GPR LOO-CV RMSE: {rmse_gpr:.6f}, R$^2$={r2_gpr:.4f}")
+
+    # Train final GPR on all data
+    sc_final = StandardScaler()
+    X_scaled = sc_final.fit_transform(X)
+    gpr_final = GaussianProcessRegressor(
+        kernel=kernel, n_restarts_optimizer=5,
+        alpha=1e-6, normalize_y=True, random_state=42)
+    gpr_final.fit(X_scaled, omegas)
+
+    # Predict all possible pairs (including known ones, for consistency check)
+    all_elements = sorted(KING_ATOMIC_VOLUMES.keys())
+    all_predictions = {}
+    for i, elA in enumerate(all_elements):
+        for elB in all_elements[i+1:]:
+            pair = tuple(sorted([elA, elB]))
+            feat = build_omega_sf_features(elA, elB).reshape(1, -1)
+            feat_scaled = sc_final.transform(feat)
+            pred, std = gpr_final.predict(feat_scaled, return_std=True)
+            all_predictions[pair] = (pred[0], std[0])
+
+    return gpr_final, sc_final, rmse_gpr, r2_gpr, all_predictions
+
+
+def fill_missing_omega_sf(omega_dft, omega_ml_predictions):
+    """
+    Create a complete Ω_sf dictionary: DFT values where available,
+    ML-predicted values where missing.
+
+    Returns:
+        omega_filled: {pair: omega_value}
+        filled_pairs: list of pairs that were ML-filled
+        fill_stats: dict with summary statistics
+    """
+    omega_filled = {}
+    filled_pairs = []
+    dft_pairs = []
+
+    for pair, (pred, std) in omega_ml_predictions.items():
+        if pair in omega_dft:
+            omega_filled[pair] = omega_dft[pair]
+            dft_pairs.append(pair)
+        else:
+            omega_filled[pair] = pred
+            filled_pairs.append((pair, pred, std))
+
+    fill_stats = {
+        "n_dft": len(dft_pairs),
+        "n_ml_filled": len(filled_pairs),
+        "n_total": len(omega_filled),
+        "mean_uncertainty": np.mean([s for _, _, s in filled_pairs]) if filled_pairs else 0,
+    }
+    return omega_filled, filled_pairs, fill_stats
+
+
 def compute_eq10_scaled(comp, struct, omega_sf, gamma=1.0):
     """
     Alonso Eq.10 with scaled DFT Ω_sf correction.
@@ -675,6 +896,37 @@ def main():
     print(f"    B2-specific pairs:   {len(omega_b2)}")
     print(f"    L1₂-specific pairs:  {len(omega_l12)}")
 
+    # --- ML interpolation of missing Ω_sf ---
+    print("\n[2b] ML interpolation of missing Ω_sf pairs...")
+    print("    Training Ω_sf prediction models (GPR + Ridge)...")
+
+    _, _, rmse_b2, r2_b2, ml_pred_b2 = build_omega_sf_ml_model(omega_b2, "B2")
+    _, _, rmse_l12, r2_l12, ml_pred_l12 = build_omega_sf_ml_model(omega_l12, "L12")
+
+    # Fill missing pairs
+    omega_b2_filled, filled_b2, stats_b2 = fill_missing_omega_sf(omega_b2, ml_pred_b2)
+    omega_l12_filled, filled_l12, stats_l12 = fill_missing_omega_sf(omega_l12, ml_pred_l12)
+
+    print(f"    B2:  {stats_b2['n_dft']} DFT + {stats_b2['n_ml_filled']} ML-filled "
+          f"= {stats_b2['n_total']} total (mean σ={stats_b2['mean_uncertainty']:.5f})")
+    print(f"    L12: {stats_l12['n_dft']} DFT + {stats_l12['n_ml_filled']} ML-filled "
+          f"= {stats_l12['n_total']} total (mean σ={stats_l12['mean_uncertainty']:.5f})")
+
+    # Count how many HEA pairs were missing and got filled
+    missing_b2_in_hea = set()
+    missing_l12_in_hea = set()
+    for hea in ALONSO_TABLE2:
+        elems = list(hea["comp"].keys())
+        for i in range(len(elems)):
+            for j in range(i+1, len(elems)):
+                pair = tuple(sorted([elems[i], elems[j]]))
+                if hea["struct"] == "BCC" and pair not in omega_b2:
+                    missing_b2_in_hea.add(pair)
+                elif hea["struct"] == "FCC" and pair not in omega_l12:
+                    missing_l12_in_hea.add(pair)
+    print(f"    HEA pairs missing DFT data: {len(missing_b2_in_hea)} BCC, "
+          f"{len(missing_l12_in_hea)} FCC → now ML-filled")
+
     # --- Noise floor analysis ---
     print("\n[3] Noise floor analysis (duplicate HEA compositions)...")
     sigma_noise, dup_info = estimate_noise_floor(ALONSO_TABLE2)
@@ -768,6 +1020,51 @@ def main():
     results["DFT Eq.10 (this work)"] = print_metrics("DFT Eq.10 (this work)", a_eq10_dft)
     results["DFT Eq.10 SS (this work)"] = print_metrics(
         f"DFT Eq.10 SS (γB={best_gb:.2f},γF={best_gf:.2f})", a_eq10_ss)
+
+    # SS Eq.10 with ML-filled Ω_sf (no missing pairs)
+    print("    Computing SS Eq.10 with ML-filled Ω_sf...")
+    best_rmse_filled = 999
+    best_gb_f, best_gf_f = best_gb, best_gf
+    for gb in np.arange(best_gb - 0.3, best_gb + 0.31, 0.05):
+        for gf in np.arange(best_gf - 0.3, best_gf + 0.31, 0.05):
+            a_pred = np.zeros(N)
+            for i in bcc_idx:
+                a_pred[i] = compute_eq10_scaled(
+                    ALONSO_TABLE2[i]["comp"], "BCC", omega_b2_filled, gb)
+            for i in fcc_idx:
+                a_pred[i] = compute_eq10_scaled(
+                    ALONSO_TABLE2[i]["comp"], "FCC", omega_l12_filled, gf)
+            rmse = np.sqrt(np.mean((y_hea - a_pred)**2))
+            if rmse < best_rmse_filled:
+                best_rmse_filled = rmse
+                best_gb_f, best_gf_f = gb, gf
+
+    for gb in np.arange(best_gb_f - 0.05, best_gb_f + 0.06, 0.01):
+        for gf in np.arange(best_gf_f - 0.05, best_gf_f + 0.06, 0.01):
+            a_pred = np.zeros(N)
+            for i in bcc_idx:
+                a_pred[i] = compute_eq10_scaled(
+                    ALONSO_TABLE2[i]["comp"], "BCC", omega_b2_filled, gb)
+            for i in fcc_idx:
+                a_pred[i] = compute_eq10_scaled(
+                    ALONSO_TABLE2[i]["comp"], "FCC", omega_l12_filled, gf)
+            rmse = np.sqrt(np.mean((y_hea - a_pred)**2))
+            if rmse < best_rmse_filled:
+                best_rmse_filled = rmse
+                best_gb_f, best_gf_f = gb, gf
+
+    a_eq10_ss_filled = np.zeros(N)
+    for i in bcc_idx:
+        a_eq10_ss_filled[i] = compute_eq10_scaled(
+            ALONSO_TABLE2[i]["comp"], "BCC", omega_b2_filled, best_gb_f)
+    for i in fcc_idx:
+        a_eq10_ss_filled[i] = compute_eq10_scaled(
+            ALONSO_TABLE2[i]["comp"], "FCC", omega_l12_filled, best_gf_f)
+
+    print(f"    ML-filled γ_BCC = {best_gb_f:.2f}, γ_FCC = {best_gf_f:.2f}")
+    results["SS Eq.10 ML-filled"] = print_metrics(
+        f"SS Eq.10 ML-filled (γB={best_gb_f:.2f},γF={best_gf_f:.2f})",
+        a_eq10_ss_filled)
 
     # --- ML models ---
     print("\n[6] Training ML models...")
@@ -1001,7 +1298,9 @@ def main():
                 cub = Cubist(**cub_params)
                 cub.fit(Xtr, residual_ss[tr])
                 y_corr_cub[te] = cub.predict(Xte)
-            except Exception:
+            except Exception as e:
+                if te[0] == 0:
+                    print(f"        Warning: Cubist({cub_name}) failed: {e}")
                 y_corr_cub[te] = 0.0
         a_ss_cub = a_eq10_ss + y_corr_cub
         rmse = np.sqrt(np.mean((y_hea - a_ss_cub)**2))
@@ -1073,6 +1372,7 @@ def main():
         ("Alonso Eq.10", a_eq10_alonso),
         ("King Vegard", a_vegard_king),
         ("DFT Eq.10 SS", a_eq10_ss),
+        ("SS Eq.10 ML-filled", a_eq10_ss_filled),
         ("SS Eq.10 + Ridge", a_ss_ridge),
         ("SS Eq.10 + GPR", a_ss_gpr),
         ("SS Eq.10 + SVR", a_ss_svr),
@@ -1106,6 +1406,7 @@ def main():
         "Transfer (base)": y_pred_base,
         "DFT Eq.10 (this work)": a_eq10_dft,
         "DFT Eq.10 SS (this work)": a_eq10_ss,
+        "SS Eq.10 ML-filled": a_eq10_ss_filled,
         "SS Eq.10 + Ridge": a_ss_ridge,
         "SS Eq.10 + XGBoost": a_ss_xgb,
         "SS Eq.10 + GPR": a_ss_gpr,
@@ -1161,6 +1462,7 @@ def main():
             "a_vegard_king": a_vegard_king[i],
             "a_eq10_dft": a_eq10_dft[i],
             "a_eq10_ss": a_eq10_ss[i],
+            "a_eq10_ss_ml_filled": a_eq10_ss_filled[i],
             "a_ss_ridge": a_ss_ridge[i],
             "a_ss_gpr": a_ss_gpr[i],
             "a_ss_gpr_std": gpr_uncertainty[i],
@@ -1186,6 +1488,31 @@ def main():
             omega_data.append({"pair": f"{pair[0]}-{pair[1]}", "omega_b2": None,
                                "omega_l12": val})
     pd.DataFrame(omega_data).to_csv(OUTDIR / "omega_sf_data.csv", index=False)
+
+    # Save ML-filled Ω_sf with source labels
+    omega_ml_data = []
+    all_elements = sorted(KING_ATOMIC_VOLUMES.keys())
+    for i, elA in enumerate(all_elements):
+        for elB in all_elements[i+1:]:
+            pair = tuple(sorted([elA, elB]))
+            row_d = {"pair": f"{pair[0]}-{pair[1]}"}
+            if pair in omega_b2:
+                row_d["omega_b2"] = omega_b2[pair]
+                row_d["b2_source"] = "DFT"
+            elif pair in ml_pred_b2:
+                row_d["omega_b2"] = ml_pred_b2[pair][0]
+                row_d["b2_source"] = "ML"
+                row_d["b2_sigma"] = ml_pred_b2[pair][1]
+            if pair in omega_l12:
+                row_d["omega_l12"] = omega_l12[pair]
+                row_d["l12_source"] = "DFT"
+            elif pair in ml_pred_l12:
+                row_d["omega_l12"] = ml_pred_l12[pair][0]
+                row_d["l12_source"] = "ML"
+                row_d["l12_sigma"] = ml_pred_l12[pair][1]
+            omega_ml_data.append(row_d)
+    pd.DataFrame(omega_ml_data).to_csv(
+        OUTDIR / "omega_sf_ml_filled.csv", index=False)
 
     # =====================================================================
     # Figures
@@ -1229,6 +1556,7 @@ def main():
         ("King\nVegard", results["King Vegard (this work)"][0]),
         ("DFT\nEq.10", results["DFT Eq.10 (this work)"][0]),
         ("DFT Eq.10\nSS", results["DFT Eq.10 SS (this work)"][0]),
+        ("SS ML-\nfilled", results["SS Eq.10 ML-filled"][0]),
         ("SS+Ridge", results["SS Eq.10 + Ridge"][0]),
         ("SS+GPR", results["SS Eq.10 + GPR"][0]),
         ("SS+SVR", results["SS Eq.10 + SVR"][0]),
@@ -1239,8 +1567,8 @@ def main():
     ]
     names_bar, vals_bar = zip(*bar_methods)
     colors = ["#AAAAAA", "#888888", "#4477AA", "#44AA77", "#22AA22",
-              "#CC8800", "#FF6600", "#9933CC", "#228B22", "#8B4513",
-              "#EE3333", "#DD22DD"]
+              "#11BB55", "#CC8800", "#FF6600", "#9933CC", "#228B22",
+              "#8B4513", "#EE3333", "#DD22DD"]
     bars = ax.bar(range(len(names_bar)), vals_bar, color=colors, edgecolor="k")
     ax.set_xticks(range(len(names_bar)))
     ax.set_xticklabels(names_bar, fontsize=13)
@@ -1421,8 +1749,10 @@ def main():
         print(f"  → Surpassed Alonso Eq.10 ({alonso_rmse:.4f} Å)")
     print("=" * 70)
 
-    return results, y_best, y_ensemble_opt, a_eq10_ss, a_ss_gpr, gpr_uncertainty, a_ss_rf, a_ss_cub
+    return (results, y_best, y_ensemble_opt, a_eq10_ss, a_ss_gpr,
+            gpr_uncertainty, a_ss_rf, a_ss_cub, a_eq10_ss_filled)
 
 
 if __name__ == "__main__":
-    results, y_best, y_ensemble, a_eq10_ss, a_gpr, gpr_unc, a_rf, a_cub = main()
+    (results, y_best, y_ensemble, a_eq10_ss, a_gpr,
+     gpr_unc, a_rf, a_cub, a_filled) = main()
