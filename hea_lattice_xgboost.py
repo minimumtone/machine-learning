@@ -38,6 +38,9 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.linear_model import Ridge, Lasso, ElasticNet
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import Matern, WhiteKernel, RBF, ConstantKernel
+from sklearn.svm import SVR
 from scipy.optimize import minimize
 from xgboost import XGBRegressor
 
@@ -856,6 +859,85 @@ def main():
     results["SS Eq.10 + XGBoost"] = print_metrics(
         "SS Eq.10 + XGBoost residual", a_ss_xgb)
 
+    # Model F: SS Eq.10 + GPR residual correction (LOO-CV)
+    print("    Training Model F: SS Eq.10 + LOO-CV GPR correction...")
+    gpr_kernels = [
+        ("Matern32", ConstantKernel(0.001) * Matern(length_scale=1.0, nu=1.5) + WhiteKernel(0.0001)),
+        ("Matern52", ConstantKernel(0.001) * Matern(length_scale=1.0, nu=2.5) + WhiteKernel(0.0001)),
+        ("RBF", ConstantKernel(0.001) * RBF(length_scale=1.0) + WhiteKernel(0.0001)),
+    ]
+
+    best_gpr_rmse = 999
+    best_gpr_name = ""
+    best_gpr_preds = None
+    best_gpr_stds = None
+
+    for kern_name, kernel in gpr_kernels:
+        y_corr_gpr = np.zeros(N)
+        y_std_gpr = np.zeros(N)
+        loo = LeaveOneOut()
+        for tr, te in loo.split(feats_simple):
+            sc = StandardScaler()
+            Xtr = sc.fit_transform(feats_simple[tr])
+            Xte = sc.transform(feats_simple[te])
+            gpr = GaussianProcessRegressor(
+                kernel=kernel, n_restarts_optimizer=5,
+                alpha=1e-6, normalize_y=True, random_state=42)
+            gpr.fit(Xtr, residual_ss[tr])
+            pred, std = gpr.predict(Xte, return_std=True)
+            y_corr_gpr[te] = pred
+            y_std_gpr[te] = std
+        a_ss_gpr = a_eq10_ss + y_corr_gpr
+        rmse = np.sqrt(np.mean((y_hea - a_ss_gpr)**2))
+        mae = np.mean(np.abs(y_hea - a_ss_gpr))
+        print(f"      GPR({kern_name}): RMSE={rmse:.4f} Å, MAE={mae:.4f} Å")
+        if rmse < best_gpr_rmse:
+            best_gpr_rmse = rmse
+            best_gpr_name = kern_name
+            best_gpr_preds = a_ss_gpr.copy()
+            best_gpr_stds = y_std_gpr.copy()
+
+    results["SS Eq.10 + GPR"] = print_metrics(
+        f"SS Eq.10 + GPR({best_gpr_name})", best_gpr_preds)
+    a_ss_gpr = best_gpr_preds
+    gpr_uncertainty = best_gpr_stds
+
+    # Model G: SS Eq.10 + SVR residual correction (LOO-CV)
+    print("    Training Model G: SS Eq.10 + LOO-CV SVR correction...")
+    svr_configs = [
+        ("RBF_C1", SVR(kernel="rbf", C=1.0, epsilon=0.001)),
+        ("RBF_C10", SVR(kernel="rbf", C=10.0, epsilon=0.001)),
+        ("RBF_C01", SVR(kernel="rbf", C=0.1, epsilon=0.001)),
+    ]
+
+    best_svr_rmse = 999
+    best_svr_name = ""
+    best_svr_preds = None
+
+    for svr_name, svr_model in svr_configs:
+        y_corr_svr = np.zeros(N)
+        loo = LeaveOneOut()
+        for tr, te in loo.split(feats_simple):
+            sc = StandardScaler()
+            Xtr = sc.fit_transform(feats_simple[tr])
+            Xte = sc.transform(feats_simple[te])
+            svr_model_copy = SVR(kernel=svr_model.kernel, C=svr_model.C,
+                                 epsilon=svr_model.epsilon)
+            svr_model_copy.fit(Xtr, residual_ss[tr])
+            y_corr_svr[te] = svr_model_copy.predict(Xte)
+        a_ss_svr = a_eq10_ss + y_corr_svr
+        rmse = np.sqrt(np.mean((y_hea - a_ss_svr)**2))
+        mae = np.mean(np.abs(y_hea - a_ss_svr))
+        print(f"      SVR({svr_name}): RMSE={rmse:.4f} Å, MAE={mae:.4f} Å")
+        if rmse < best_svr_rmse:
+            best_svr_rmse = rmse
+            best_svr_name = svr_name
+            best_svr_preds = a_ss_svr.copy()
+
+    results["SS Eq.10 + SVR"] = print_metrics(
+        f"SS Eq.10 + SVR({best_svr_name})", best_svr_preds)
+    a_ss_svr = best_svr_preds
+
     # Ensemble optimisation
     print("\n[7] Ensemble optimisation...")
 
@@ -914,6 +996,8 @@ def main():
         ("King Vegard", a_vegard_king),
         ("DFT Eq.10 SS", a_eq10_ss),
         ("SS Eq.10 + Ridge", a_ss_ridge),
+        ("SS Eq.10 + GPR", a_ss_gpr),
+        ("SS Eq.10 + SVR", a_ss_svr),
         ("XGBoost LOO", y_pred_loo),
         ("Optimal Ensemble", y_ensemble_opt),
     ]
@@ -944,6 +1028,8 @@ def main():
         "DFT Eq.10 SS (this work)": a_eq10_ss,
         "SS Eq.10 + Ridge": a_ss_ridge,
         "SS Eq.10 + XGBoost": a_ss_xgb,
+        "SS Eq.10 + GPR": a_ss_gpr,
+        "SS Eq.10 + SVR": a_ss_svr,
         "King Vegard (this work)": a_vegard_king,
     }
     y_best = method_predictions.get(best_method[0], y_ensemble_opt)
@@ -994,6 +1080,9 @@ def main():
             "a_eq10_dft": a_eq10_dft[i],
             "a_eq10_ss": a_eq10_ss[i],
             "a_ss_ridge": a_ss_ridge[i],
+            "a_ss_gpr": a_ss_gpr[i],
+            "a_ss_gpr_std": gpr_uncertainty[i],
+            "a_ss_svr": a_ss_svr[i],
             "a_xgb_loo": y_pred_loo[i],
             "a_ensemble": y_ensemble_opt[i],
             "a_best": y_best[i],
@@ -1056,13 +1145,15 @@ def main():
         ("King\nVegard", results["King Vegard (this work)"][0]),
         ("DFT\nEq.10", results["DFT Eq.10 (this work)"][0]),
         ("DFT Eq.10\nSS", results["DFT Eq.10 SS (this work)"][0]),
-        ("SS Eq.10\n+Ridge", results["SS Eq.10 + Ridge"][0]),
-        ("XGBoost\nLOO-CV", results["XGBoost LOO-CV"][0]),
+        ("SS+Ridge", results["SS Eq.10 + Ridge"][0]),
+        ("SS+GPR", results["SS Eq.10 + GPR"][0]),
+        ("SS+SVR", results["SS Eq.10 + SVR"][0]),
+        ("SS+XGBoost", results["SS Eq.10 + XGBoost"][0]),
         ("Optimal\nEnsemble", results["Optimal Ensemble"][0]),
     ]
     names_bar, vals_bar = zip(*bar_methods)
     colors = ["#AAAAAA", "#888888", "#4477AA", "#44AA77", "#22AA22",
-              "#CC8800", "#EE3333", "#DD22DD"]
+              "#CC8800", "#FF6600", "#9933CC", "#EE3333", "#DD22DD"]
     bars = ax.bar(range(len(names_bar)), vals_bar, color=colors, edgecolor="k")
     ax.set_xticks(range(len(names_bar)))
     ax.set_xticklabels(names_bar, fontsize=13)
@@ -1154,6 +1245,47 @@ def main():
     plt.savefig(OUTDIR / "fig6_vegard_check.png", dpi=200, bbox_inches="tight")
     plt.close()
 
+    # --- Fig 8: GPR uncertainty plot ---
+    fig, axes = plt.subplots(1, 2, figsize=(16, 7))
+
+    # Left: parity with error bars
+    ax = axes[0]
+    ax.errorbar(y_hea[bcc], a_ss_gpr[bcc], yerr=2*gpr_uncertainty[bcc],
+                fmt="s", color="steelblue", ms=8, capsize=3, capthick=1,
+                elinewidth=1, alpha=0.8, label="BCC", markeredgecolor="k",
+                markeredgewidth=0.5)
+    ax.errorbar(y_hea[fcc], a_ss_gpr[fcc], yerr=2*gpr_uncertainty[fcc],
+                fmt="o", color="crimson", ms=8, capsize=3, capthick=1,
+                elinewidth=1, alpha=0.8, label="FCC", markeredgecolor="k",
+                markeredgewidth=0.5)
+    lims = [min(y_hea.min(), a_ss_gpr.min()) - 0.05,
+            max(y_hea.max(), a_ss_gpr.max()) + 0.05]
+    ax.plot(lims, lims, "k--", lw=1)
+    ax.set_xlim(lims); ax.set_ylim(lims)
+    rmse_gpr = np.sqrt(np.mean((y_hea - a_ss_gpr)**2))
+    ax.set_title(f"GPR Prediction with 95% CI\nRMSE = {rmse_gpr:.4f} Å", fontsize=14)
+    ax.set_xlabel("Experimental $a$ (Å)", fontsize=13)
+    ax.set_ylabel("GPR Predicted $a$ (Å)", fontsize=13)
+    ax.legend(fontsize=12)
+    ax.set_aspect("equal")
+
+    # Right: uncertainty vs error magnitude
+    ax = axes[1]
+    abs_errors = np.abs(y_hea - a_ss_gpr)
+    ax.scatter(gpr_uncertainty[bcc], abs_errors[bcc], c="steelblue", s=80,
+               marker="s", edgecolors="k", lw=0.5, label="BCC", alpha=0.8)
+    ax.scatter(gpr_uncertainty[fcc], abs_errors[fcc], c="crimson", s=80,
+               marker="o", edgecolors="k", lw=0.5, label="FCC", alpha=0.8)
+    max_val = max(gpr_uncertainty.max(), abs_errors.max()) * 1.1
+    ax.plot([0, max_val], [0, max_val], "k--", lw=1, alpha=0.5, label="y=x")
+    ax.set_xlabel("GPR Predicted Uncertainty $\\sigma$ (Å)", fontsize=13)
+    ax.set_ylabel("Actual |Error| (Å)", fontsize=13)
+    ax.set_title("Uncertainty Calibration", fontsize=14)
+    ax.legend(fontsize=12)
+    plt.tight_layout()
+    plt.savefig(OUTDIR / "fig8_gpr_uncertainty.png", dpi=200, bbox_inches="tight")
+    plt.close()
+
     # --- Fig 7: Model flowchart ---
     fig, ax = plt.subplots(figsize=(16, 10))
     ax.set_xlim(0, 16); ax.set_ylim(0, 10)
@@ -1202,8 +1334,8 @@ def main():
         print(f"  → Surpassed Alonso Eq.10 ({alonso_rmse:.4f} Å)")
     print("=" * 70)
 
-    return results, y_best, y_ensemble_opt, a_eq10_ss
+    return results, y_best, y_ensemble_opt, a_eq10_ss, a_ss_gpr, gpr_uncertainty
 
 
 if __name__ == "__main__":
-    results, y_best, y_ensemble, a_eq10_ss = main()
+    results, y_best, y_ensemble, a_eq10_ss, a_gpr, gpr_unc = main()
