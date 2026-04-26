@@ -990,15 +990,16 @@ Cordero~\cite{cordero2008}の共有結合半径やShannon~\cite{shannon1976}の�
 \subsection{Alonso2021およびKing1966との包括的比較}
 
 \subsubsection{比較の目的と方法}
-本研究で決定した有効半径の多成分合金への適用可能性を定量的に評価するため、Coreño Alonso and Coreño Alonso~\cite{Alonso2021}がTable 2で報告した68種の立方晶HEAの実験格子定数データを用いた包括的比較を行った。比較対象とした手法は以下の5種類である：
+本研究で決定した有効半径の多成分合金への適用可能性を定量的に評価するため、Coreño Alonso and Coreño Alonso~\cite{Alonso2021}がTable 2で報告した68種の立方晶HEAの実験格子定数データを用いた包括的比較を行った。比較対象とした手法は以下の6種類である：
 \begin{enumerate}
 \setlength{\parskip}{0cm}
 \setlength{\itemsep}{0cm}
     \item \textbf{Alonso Vegard則}: 純元素の原子体積の組成加重平均から格子定数を推算する手法（Coreño Alonso~\cite{Alonso2021}のTable 2に報告された値）。
     \item \textbf{Alonso Eq.10（体積サイズ因子法）}: 純元素の原子体積に加え、溶媒-溶質間の体積サイズ因子$\Omega_\mathrm{sf}$を用いて合金形成による体積変化を補正する手法。
     \item \textbf{King原子体積Vegard則}: King~\cite{king1966}が報告した結晶学的純元素原子体積$V_i$を用いたVegard則。$V_\mathrm{avg} = \sum_i c_i V_i$から$a = (n_\mathrm{auc} \cdot V_\mathrm{avg})^{1/3}$として格子定数を算出する（$n_\mathrm{auc}$はFCCで4、BCCで2）。
-    \item \textbf{本研究ペアワイズmax接触モデル}: 本研究で最適化した有効半径を用い、式~\ref{eq:fcc_pairwise}に基づいて格子定数を予測する。
-    \item \textbf{本研究単純Vegard}: 本研究の有効半径の組成加重平均から格子定数を予測する。
+    \item \textbf{本研究ペアワイズmax接触モデル}: 本研究で最適化した有効接触半径を用い、式~\ref{eq:fcc_pairwise}に基づいて格子定数を予測する。
+    \item \textbf{本研究単純Vegard（接触半径）}: 本研究の有効接触半径の組成加重平均から格子定数を予測する。
+    \item \textbf{本研究$r_\mathrm{WS}$ Vegard（原子体積ベース）}: DFT化合物データから算出した元素別平均Wigner--Seitz半径$r_\mathrm{WS}$を用い、原子体積のVegard則に基づいて格子定数を予測する。接触半径ではなく原子体積由来の半径を用いる点で手法4・5と本質的に異なる。
 \end{enumerate}
 
 \subsubsection{比較結果}
@@ -1006,7 +1007,7 @@ Cordero~\cite{cordero2008}の共有結合半径やShannon~\cite{shannon1976}の�
 
 \begin{table*}[htbp]
 \centering
-\caption{Alonso2021 Table 2の68種HEAに対する格子定数予測精度の比較。RMSE・MAEは同Table 2の実験値と各手法の予測値から本研究で算出した値である（原論文ではRMSEは報告されておらず、平均相対誤差のみが記載されている）。}
+\caption{Alonso2021 Table 2の68種HEAに対する格子定数予測精度の比較。RMSE・MAEは同Table 2の実験値と各手法の予測値から本研究で算出した値である（原論文ではRMSEは報告されておらず、平均相対誤差のみが記載されている）。下段の$r_\mathrm{WS}$ VegardはDFT化合物の原子体積から算出した元素別平均Wigner--Seitz半径を用いたVegard則予測。}
 \label{tab:alonso_comparison}
 \begin{tabular}{lcccccc}
 \hline
@@ -1029,6 +1030,14 @@ King原子体積Vegard   & 全体 & 64 & 0.023 & 0.014 & 0.43 & 2.95 \\
                        & FCC  & 35 & 0.100 & 0.091 & 2.50 & 5.80 \\
 \hline
 本研究Vegard (OQMD-L1$_2$) & BCC & 10 & 0.041 & 0.037 & 1.17 & 1.85 \\
+\hline
+本研究$r_\mathrm{WS}$ Vegard (MP-B2) & 全体 & 64 & 0.161 & 0.154 & 4.50 & 9.42 \\
+                                     & BCC  & 29 & 0.148 & 0.137 & 4.25 & 9.42 \\
+                                     & FCC  & 35 & 0.170 & 0.169 & 4.70 & 5.90 \\
+\hline
+本研究$r_\mathrm{WS}$ Vegard (OQMD-L1$_2$) & 全体 & 41 & 0.150 & 0.147 & 4.19 & 7.19 \\
+                                            & BCC  & 10 & 0.161 & 0.148 & 4.54 & 7.19 \\
+                                            & FCC  & 31 & 0.147 & 0.146 & 4.08 & 4.83 \\
 \hline
 \end{tabular}
 \end{table*}
@@ -1068,6 +1077,21 @@ Alonso2021の体積サイズ因子法およびKing原子体積Vegard則は、同
 \end{enumerate}
 
 ただし、注目すべきは本研究のOQMD-L1$_2$半径を単純Vegard式に適用した場合、BCC HEA 10種に対してRMSE = 0.041~\AA（平均誤差1.17\%）と比較的良好な精度を示す点である。これは、L1$_2$半径が最密充填環境に対応し、BCC HEAの配位環境とのサイズ互換性がある程度保たれていることを示唆する。
+
+\subsubsection{原子体積ベース$r_\mathrm{WS}$によるHEA格子定数予測}
+接触半径ではなく、DFT化合物データから算出した元素別平均Wigner--Seitz半径$r_\mathrm{WS}$を用いたVegard則ベースのHEA格子定数予測も検討した。各元素$i$について、その元素を含む全二元化合物の原子体積$V_\mathrm{atom} = a^3/Z$を平均し、$r_{\mathrm{WS},i} = (3\bar{V}_{\mathrm{atom},i}/4\pi)^{1/3}$を算出した。HEA格子定数は、組成加重平均原子体積$\bar{V} = \sum_i c_i V_{\mathrm{atom},i}$（$V_{\mathrm{atom},i} = (4\pi/3)r_{\mathrm{WS},i}^3$）を用いて$a = (Z\bar{V})^{1/3}$（$Z = 4$: FCC、$Z = 2$: BCC）により予測した。
+
+結果を表~\ref{tab:alonso_comparison}の下段に示す。$r_\mathrm{WS}$ Vegard予測の最良精度はOQMD-L1$_2$半径でRMSE = 0.150~\AA（$N = 41$、平均誤差4.19\%）、次いでMP-B2半径でRMSE = 0.161~\AA（$N = 64$、平均誤差4.50\%）であった。これは接触半径ベースのペアワイズmax接触モデル（RMSE = 0.090~\AA）よりもさらに精度が劣り、King/Alonso手法（RMSE = 0.023~\AA）との差はさらに大きい。
+
+$r_\mathrm{WS}$ Vegard予測が接触半径ベースの予測より劣る原因は、以下の2点に帰される：
+\begin{enumerate}
+\setlength{\parskip}{0cm}
+\setlength{\itemsep}{0cm}
+    \item \textbf{化合物中の原子体積 vs 純元素の原子体積}: 本研究の$r_\mathrm{WS}$はDFT二元系化合物中の原子体積の平均値から算出される。化合物中では原子間相互作用により原子体積が純元素から変化する。一方、Vegard則の前提は「純元素の原子体積の線形内挿」であるため、化合物中の原子体積を入力として用いること自体がVegard則の前提と不整合である。King1966の原子体積が高い予測精度（RMSE = 0.023~\AA）を示すのは、純元素の結晶学的原子体積を用いているためである。
+    \item \textbf{構造依存性の混入}: B2化合物とL1$_2$化合物では充填率が異なる（B2: 68\%、L1$_2$: 74\%）ため、同一元素でも化合物の構造に応じて見かけの原子体積が変化する。元素別平均$r_\mathrm{WS}$はこの構造依存性を平均化してしまうため、特定構造のHEAに対する予測が系統的にずれる。
+\end{enumerate}
+
+この結果は、$r_\mathrm{WS}$の主たる有用性がHEA格子定数の直接予測ではなく、疑似Vegard則における構造変化に対するロバスト性の検証指標（中央値$R^2 = 0.974$）や、接触半径との直接比較による物理的解釈（$r_\mathrm{contact}/r_\mathrm{WS} \approx 0.86$--$0.91$）にあることを明確にしている。HEA格子定数の予測には、対象系に応じた適切な手法の選択—不規則固溶体にはKing/Alonso型の純元素原子体積ベース手法、秩序金属間化合物のサイズミスマッチ解析には本研究の有効半径—が有効である。
 
 \subsubsection{King原子体積と本研究のWigner--Seitz半径の比較}
 King~\cite{king1966}の純元素原子体積$V_i^\mathrm{King}$から算出したWigner--Seitz半径$r_\mathrm{WS}^\mathrm{King} = (3V_i^\mathrm{King}/4\pi)^{1/3}$と、本研究の有効等価半径$r_\mathrm{WS}$を比較した（図~\ref{fig:king_vs_rws}）。
