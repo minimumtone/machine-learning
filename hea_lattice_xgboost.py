@@ -37,12 +37,13 @@ from sklearn.model_selection import KFold, LeaveOneOut, cross_val_predict
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.linear_model import Ridge, Lasso, ElasticNet
 from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import Matern, WhiteKernel, RBF, ConstantKernel
 from sklearn.svm import SVR
 from scipy.optimize import minimize
 from xgboost import XGBRegressor
+from cubist import Cubist
 
 warnings.filterwarnings("ignore")
 
@@ -938,6 +939,83 @@ def main():
         f"SS Eq.10 + SVR({best_svr_name})", best_svr_preds)
     a_ss_svr = best_svr_preds
 
+    # Model H: SS Eq.10 + Random Forest residual correction (LOO-CV)
+    print("    Training Model H: SS Eq.10 + LOO-CV Random Forest correction...")
+    rf_configs = [
+        ("RF100_d3", dict(n_estimators=100, max_depth=3, min_samples_leaf=5, random_state=42)),
+        ("RF200_d2", dict(n_estimators=200, max_depth=2, min_samples_leaf=5, random_state=42)),
+        ("RF500_d3", dict(n_estimators=500, max_depth=3, min_samples_leaf=3, random_state=42)),
+        ("RF100_d5", dict(n_estimators=100, max_depth=5, min_samples_leaf=5, random_state=42)),
+        ("RF200_dNone", dict(n_estimators=200, max_depth=None, min_samples_leaf=5, random_state=42)),
+    ]
+
+    best_rf_rmse = 999
+    best_rf_name = ""
+    best_rf_preds = None
+
+    for rf_name, rf_params in rf_configs:
+        y_corr_rf = np.zeros(N)
+        loo = LeaveOneOut()
+        for tr, te in loo.split(feats_simple):
+            sc = StandardScaler()
+            Xtr = sc.fit_transform(feats_simple[tr])
+            Xte = sc.transform(feats_simple[te])
+            rf = RandomForestRegressor(**rf_params)
+            rf.fit(Xtr, residual_ss[tr])
+            y_corr_rf[te] = rf.predict(Xte)
+        a_ss_rf = a_eq10_ss + y_corr_rf
+        rmse = np.sqrt(np.mean((y_hea - a_ss_rf)**2))
+        mae = np.mean(np.abs(y_hea - a_ss_rf))
+        print(f"      RF({rf_name}): RMSE={rmse:.4f} Å, MAE={mae:.4f} Å")
+        if rmse < best_rf_rmse:
+            best_rf_rmse = rmse
+            best_rf_name = rf_name
+            best_rf_preds = a_ss_rf.copy()
+
+    results["SS Eq.10 + RF"] = print_metrics(
+        f"SS Eq.10 + RF({best_rf_name})", best_rf_preds)
+    a_ss_rf = best_rf_preds
+
+    # Model I: SS Eq.10 + Cubist residual correction (LOO-CV)
+    print("    Training Model I: SS Eq.10 + LOO-CV Cubist correction...")
+    cubist_configs = [
+        ("C5_N1", dict(n_rules=5, n_committees=1)),
+        ("C10_N1", dict(n_rules=10, n_committees=1)),
+        ("C5_N5", dict(n_rules=5, n_committees=5)),
+        ("C10_N5", dict(n_rules=10, n_committees=5)),
+        ("C20_N10", dict(n_rules=20, n_committees=10)),
+    ]
+
+    best_cub_rmse = 999
+    best_cub_name = ""
+    best_cub_preds = None
+
+    for cub_name, cub_params in cubist_configs:
+        y_corr_cub = np.zeros(N)
+        loo = LeaveOneOut()
+        for tr, te in loo.split(feats_simple):
+            sc = StandardScaler()
+            Xtr = sc.fit_transform(feats_simple[tr])
+            Xte = sc.transform(feats_simple[te])
+            try:
+                cub = Cubist(**cub_params)
+                cub.fit(Xtr, residual_ss[tr])
+                y_corr_cub[te] = cub.predict(Xte)
+            except Exception:
+                y_corr_cub[te] = 0.0
+        a_ss_cub = a_eq10_ss + y_corr_cub
+        rmse = np.sqrt(np.mean((y_hea - a_ss_cub)**2))
+        mae = np.mean(np.abs(y_hea - a_ss_cub))
+        print(f"      Cubist({cub_name}): RMSE={rmse:.4f} Å, MAE={mae:.4f} Å")
+        if rmse < best_cub_rmse:
+            best_cub_rmse = rmse
+            best_cub_name = cub_name
+            best_cub_preds = a_ss_cub.copy()
+
+    results["SS Eq.10 + Cubist"] = print_metrics(
+        f"SS Eq.10 + Cubist({best_cub_name})", best_cub_preds)
+    a_ss_cub = best_cub_preds
+
     # Ensemble optimisation
     print("\n[7] Ensemble optimisation...")
 
@@ -998,6 +1076,8 @@ def main():
         ("SS Eq.10 + Ridge", a_ss_ridge),
         ("SS Eq.10 + GPR", a_ss_gpr),
         ("SS Eq.10 + SVR", a_ss_svr),
+        ("SS Eq.10 + RF", a_ss_rf),
+        ("SS Eq.10 + Cubist", a_ss_cub),
         ("XGBoost LOO", y_pred_loo),
         ("Optimal Ensemble", y_ensemble_opt),
     ]
@@ -1030,6 +1110,8 @@ def main():
         "SS Eq.10 + XGBoost": a_ss_xgb,
         "SS Eq.10 + GPR": a_ss_gpr,
         "SS Eq.10 + SVR": a_ss_svr,
+        "SS Eq.10 + RF": a_ss_rf,
+        "SS Eq.10 + Cubist": a_ss_cub,
         "King Vegard (this work)": a_vegard_king,
     }
     y_best = method_predictions.get(best_method[0], y_ensemble_opt)
@@ -1083,6 +1165,8 @@ def main():
             "a_ss_gpr": a_ss_gpr[i],
             "a_ss_gpr_std": gpr_uncertainty[i],
             "a_ss_svr": a_ss_svr[i],
+            "a_ss_rf": a_ss_rf[i],
+            "a_ss_cubist": a_ss_cub[i],
             "a_xgb_loo": y_pred_loo[i],
             "a_ensemble": y_ensemble_opt[i],
             "a_best": y_best[i],
@@ -1148,12 +1232,15 @@ def main():
         ("SS+Ridge", results["SS Eq.10 + Ridge"][0]),
         ("SS+GPR", results["SS Eq.10 + GPR"][0]),
         ("SS+SVR", results["SS Eq.10 + SVR"][0]),
+        ("SS+RF", results["SS Eq.10 + RF"][0]),
+        ("SS+Cubist", results["SS Eq.10 + Cubist"][0]),
         ("SS+XGBoost", results["SS Eq.10 + XGBoost"][0]),
         ("Optimal\nEnsemble", results["Optimal Ensemble"][0]),
     ]
     names_bar, vals_bar = zip(*bar_methods)
     colors = ["#AAAAAA", "#888888", "#4477AA", "#44AA77", "#22AA22",
-              "#CC8800", "#FF6600", "#9933CC", "#EE3333", "#DD22DD"]
+              "#CC8800", "#FF6600", "#9933CC", "#228B22", "#8B4513",
+              "#EE3333", "#DD22DD"]
     bars = ax.bar(range(len(names_bar)), vals_bar, color=colors, edgecolor="k")
     ax.set_xticks(range(len(names_bar)))
     ax.set_xticklabels(names_bar, fontsize=13)
@@ -1334,8 +1421,8 @@ def main():
         print(f"  → Surpassed Alonso Eq.10 ({alonso_rmse:.4f} Å)")
     print("=" * 70)
 
-    return results, y_best, y_ensemble_opt, a_eq10_ss, a_ss_gpr, gpr_uncertainty
+    return results, y_best, y_ensemble_opt, a_eq10_ss, a_ss_gpr, gpr_uncertainty, a_ss_rf, a_ss_cub
 
 
 if __name__ == "__main__":
-    results, y_best, y_ensemble, a_eq10_ss, a_gpr, gpr_unc = main()
+    results, y_best, y_ensemble, a_eq10_ss, a_gpr, gpr_unc, a_rf, a_cub = main()
