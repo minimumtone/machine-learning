@@ -5,6 +5,7 @@ streamlit-aggrid
 pandas
 numpy
 scikit-learn
+xgboost  # For HEA lattice constant prediction (XGBoost regression)
 matplotlib
 seaborn
 joblib
