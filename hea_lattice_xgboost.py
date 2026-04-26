@@ -553,6 +553,134 @@ def fill_missing_omega_sf(omega_dft, omega_ml_predictions):
     return omega_filled, filled_pairs, fill_stats
 
 
+def compute_delta_r(comp):
+    """
+    Traditional atomic size mismatch δr (%) using King atomic volumes.
+    δr = 100 × √[Σ c_i (1 - r_i/r̄)²]  where r_i = V_i^(1/3).
+    """
+    elements = list(comp.keys())
+    fracs = np.array([comp[e] for e in elements])
+    fracs = fracs / fracs.sum()
+    vols = np.array([KING_ATOMIC_VOLUMES.get(e, 15.0) for e in elements])
+    r_vals = vols ** (1/3)
+    r_avg = np.sum(fracs * r_vals)
+    return 100 * np.sqrt(np.sum(fracs * (1 - r_vals / r_avg)**2))
+
+
+def compute_delta_sf(comp, omega_sf):
+    """
+    Ω_sf-based size mismatch descriptor.
+    δ_sf = √[Σ_i Σ_{j>i} c_i c_j Ω_sf(i,j)²]
+    Captures actual pairwise volume deviations from DFT, not just pure-element radii.
+    """
+    elements = list(comp.keys())
+    fracs = np.array([comp[e] for e in elements])
+    fracs = fracs / fracs.sum()
+    n = len(elements)
+
+    val = 0.0
+    for i in range(n):
+        for j in range(i+1, n):
+            pair = tuple(sorted([elements[i], elements[j]]))
+            omega = omega_sf.get(pair, 0.0)
+            val += fracs[i] * fracs[j] * omega**2
+    return np.sqrt(val)
+
+
+def compute_delta_sf_signed(comp, omega_sf):
+    """
+    Signed Ω_sf correction magnitude (can be positive or negative).
+    Σ_i Σ_{j≠i} c_i c_j Ω_sf(i,j) — the correction term in Eq.10.
+    """
+    elements = list(comp.keys())
+    fracs = np.array([comp[e] for e in elements])
+    fracs = fracs / fracs.sum()
+    n = len(elements)
+
+    val = 0.0
+    for i in range(n):
+        for j in range(n):
+            if i != j:
+                pair = tuple(sorted([elements[i], elements[j]]))
+                omega = omega_sf.get(pair, 0.0)
+                val += fracs[i] * fracs[j] * omega
+    return val
+
+
+def compute_omega_yang(comp, struct):
+    """
+    Ω parameter (Yang & Zhang 2012): Ω = T_m × ΔS_mix / |ΔH_mix|.
+    Uses Miedema-approximated ΔH_mix and rule-of-mixtures T_m.
+    """
+    # Melting points (K) — common HEA elements
+    T_MELT = {
+        "Al":933,"Co":1768,"Cr":2180,"Cu":1358,"Fe":1811,"Mn":1519,
+        "Mo":2896,"Nb":2750,"Ni":1728,"Pd":1828,"Pt":2041,"Re":3459,
+        "Rh":2237,"Ru":2607,"Ta":3290,"Ti":1941,"V":2183,"W":3695,
+        "Zr":2128,"Hf":2506,"Os":3306,"Ir":2719,"Au":1337,"Ag":1235,
+        "Zn":693,"Si":1687,"Ge":1211,"Be":1560,"Mg":923,"Sc":1814,
+        "Y":1799,"La":1193,"Ce":1068,"B":2349,"Sn":505,"Pb":601,
+    }
+    # Simplified Miedema mixing enthalpy (kJ/mol) — selected pairs
+    # Using Takeuchi & Inoue (2005) tabulated values for common HEA pairs
+    DELTA_H_MIX = {
+        ("Al","Co"):-19,("Al","Cr"):-10,("Al","Cu"):-1,("Al","Fe"):-11,
+        ("Al","Mn"):-19,("Al","Mo"):-5,("Al","Nb"):-18,("Al","Ni"):-22,
+        ("Al","Pd"):-31,("Al","Pt"):-44,("Al","Ti"):-30,("Al","V"):-16,
+        ("Al","Zr"):-44,("Co","Cr"):-4,("Co","Cu"):6,("Co","Fe"):-1,
+        ("Co","Mn"):-5,("Co","Mo"):-5,("Co","Nb"):-25,("Co","Ni"):0,
+        ("Co","Pd"):0,("Co","Ti"):-28,("Co","V"):-14,("Co","Zr"):-41,
+        ("Cr","Cu"):12,("Cr","Fe"):-1,("Cr","Mn"):2,("Cr","Mo"):0,
+        ("Cr","Nb"):-7,("Cr","Ni"):-7,("Cr","Pd"):-15,("Cr","Ta"):-7,
+        ("Cr","Ti"):-7,("Cr","V"):-2,("Cr","W"):-1,("Cr","Zr"):-12,
+        ("Cu","Fe"):13,("Cu","Mn"):4,("Cu","Mo"):19,("Cu","Nb"):3,
+        ("Cu","Ni"):4,("Cu","Pd"):-14,("Cu","Ti"):-9,("Cu","V"):5,
+        ("Cu","Zn"):-1,("Cu","Zr"):-23,("Fe","Mn"):0,("Fe","Mo"):-2,
+        ("Fe","Nb"):-16,("Fe","Ni"):-2,("Fe","Pd"):-4,("Fe","Si"):-35,
+        ("Fe","Ti"):-17,("Fe","V"):-7,("Fe","W"):-1,("Fe","Zr"):-25,
+        ("Hf","Nb"):4,("Hf","Ta"):3,("Hf","Ti"):0,("Hf","V"):-2,
+        ("Hf","Zr"):0,("Mn","Mo"):-5,("Mn","Nb"):-4,("Mn","Ni"):-8,
+        ("Mo","Nb"):-6,("Mo","Ni"):-7,("Mo","Ta"):-5,("Mo","Ti"):-4,
+        ("Mo","V"):0,("Mo","W"):0,("Mo","Zr"):-6,("Nb","Ni"):-30,
+        ("Nb","Ta"):0,("Nb","Ti"):2,("Nb","V"):-1,("Nb","W"):-8,
+        ("Nb","Zr"):4,("Ni","Pd"):0,("Ni","Pt"):-5,("Ni","Si"):-40,
+        ("Ni","Ti"):-35,("Ni","V"):-18,("Ni","Zr"):-49,
+        ("Os","Ir"):0,("Os","Pt"):-2,("Os","Rh"):0,("Os","Ru"):0,
+        ("Pd","Pt"):0,("Rh","Pd"):0,("Rh","Ru"):0,
+        ("Ir","Pd"):0,("Ir","Pt"):0,("Ir","Rh"):0,("Ir","Ru"):0,
+        ("Ru","Pd"):0,
+        ("Ta","Ti"):1,("Ta","V"):-1,("Ta","W"):-7,("Ta","Zr"):3,
+        ("Ti","V"):-2,("Ti","Zr"):0,("V","W"):-1,("V","Zr"):-4,
+        ("W","Zr"):-9,
+    }
+
+    elements = list(comp.keys())
+    fracs = np.array([comp[e] for e in elements])
+    fracs = fracs / fracs.sum()
+    n = len(elements)
+
+    # T_m mix
+    tm_vals = np.array([T_MELT.get(e, 2000) for e in elements])
+    T_m = np.sum(fracs * tm_vals)
+
+    # ΔS_mix
+    S_mix = -8.314 * np.sum(fracs[fracs > 0] * np.log(fracs[fracs > 0]))
+
+    # ΔH_mix
+    H_mix = 0.0
+    for i in range(n):
+        for j in range(i+1, n):
+            pair = tuple(sorted([elements[i], elements[j]]))
+            dh = DELTA_H_MIX.get(pair, 0)
+            H_mix += 4 * fracs[i] * fracs[j] * dh
+
+    if abs(H_mix) < 0.01:
+        return 999.0  # effectively infinite Ω → very stable SS
+
+    omega = T_m * S_mix / (abs(H_mix) * 1000)
+    return omega
+
+
 def compute_eq10_scaled(comp, struct, omega_sf, gamma=1.0):
     """
     Alonso Eq.10 with scaled DFT Ω_sf correction.
@@ -1513,6 +1641,170 @@ def main():
             omega_ml_data.append(row_d)
     pd.DataFrame(omega_ml_data).to_csv(
         OUTDIR / "omega_sf_ml_filled.csv", index=False)
+
+    # =====================================================================
+    # Phase 9b: δ_sf descriptor analysis — single-phase stability
+    # =====================================================================
+    print("\n[9b] Computing δ_sf descriptors for single-phase analysis...")
+
+    descriptor_data = []
+    for i, hea in enumerate(ALONSO_TABLE2):
+        comp = hea["comp"]
+        struct = hea["struct"]
+        elements = sorted(comp.keys())
+        elems_str = "-".join(elements)
+
+        dr = compute_delta_r(comp)
+        omega_ss = omega_b2 if struct == "BCC" else omega_l12
+        d_sf_ss = compute_delta_sf(comp, omega_ss)
+
+        # Combined Ω_sf (fallback to all-structure data for better coverage)
+        d_sf_combined = compute_delta_sf(comp, omega_sf)
+        d_sf_signed = compute_delta_sf_signed(comp, omega_sf)
+        omega_yang = compute_omega_yang(comp, struct)
+
+        # Count missing Ω_sf pairs (structure-specific vs combined)
+        n_pairs = 0
+        n_missing_ss = 0
+        n_missing_combined = 0
+        for ii in range(len(elements)):
+            for jj in range(ii+1, len(elements)):
+                pair = tuple(sorted([elements[ii], elements[jj]]))
+                n_pairs += 1
+                if pair not in omega_ss:
+                    n_missing_ss += 1
+                if pair not in omega_sf:
+                    n_missing_combined += 1
+
+        descriptor_data.append({
+            "composition": elems_str,
+            "struct": struct,
+            "a_exp": hea["a_exp"],
+            "a_eq10_ss": a_eq10_ss[i],
+            "delta_r": dr,
+            "delta_sf_ss": d_sf_ss,
+            "delta_sf": d_sf_combined,
+            "delta_sf_signed": d_sf_signed,
+            "Omega_yang": omega_yang,
+            "n_elements": len(elements),
+            "error_abs": abs(y_hea[i] - a_eq10_ss[i]),
+            "n_pairs": n_pairs,
+            "n_missing_ss": n_missing_ss,
+            "n_missing_combined": n_missing_combined,
+        })
+
+    desc_df = pd.DataFrame(descriptor_data)
+    desc_df.to_csv(OUTDIR / "descriptor_analysis.csv", index=False)
+
+    # Summary statistics
+    bcc_desc = desc_df[desc_df["struct"] == "BCC"]
+    fcc_desc = desc_df[desc_df["struct"] == "FCC"]
+
+    print(f"    δr  range: BCC [{bcc_desc['delta_r'].min():.2f}, "
+          f"{bcc_desc['delta_r'].max():.2f}%], "
+          f"FCC [{fcc_desc['delta_r'].min():.2f}, {fcc_desc['delta_r'].max():.2f}%]")
+    print(f"    δ_sf (combined) range: BCC [{bcc_desc['delta_sf'].min():.4f}, "
+          f"{bcc_desc['delta_sf'].max():.4f}], "
+          f"FCC [{fcc_desc['delta_sf'].min():.4f}, {fcc_desc['delta_sf'].max():.4f}]")
+    print(f"    δ_sf (SS-only) range: BCC [{bcc_desc['delta_sf_ss'].min():.4f}, "
+          f"{bcc_desc['delta_sf_ss'].max():.4f}], "
+          f"FCC [{fcc_desc['delta_sf_ss'].min():.4f}, {fcc_desc['delta_sf_ss'].max():.4f}]")
+    print(f"    Missing pairs (SS): BCC {bcc_desc['n_missing_ss'].sum()}/{bcc_desc['n_pairs'].sum()}, "
+          f"FCC {fcc_desc['n_missing_ss'].sum()}/{fcc_desc['n_pairs'].sum()}")
+    print(f"    Missing pairs (combined): BCC {bcc_desc['n_missing_combined'].sum()}/{bcc_desc['n_pairs'].sum()}, "
+          f"FCC {fcc_desc['n_missing_combined'].sum()}/{fcc_desc['n_pairs'].sum()}")
+
+    # Correlation: δr vs δ_sf
+    from scipy.stats import pearsonr, spearmanr
+    r_pearson, p_pearson = pearsonr(desc_df["delta_r"], desc_df["delta_sf"])
+    r_spearman, p_spearman = spearmanr(desc_df["delta_r"], desc_df["delta_sf"])
+    print(f"    δr vs δ_sf: Pearson r={r_pearson:.3f} (p={p_pearson:.1e}), "
+          f"Spearman ρ={r_spearman:.3f} (p={p_spearman:.1e})")
+
+    # Correlation with prediction error
+    r_err_dr, _ = pearsonr(desc_df["delta_r"], desc_df["error_abs"])
+    r_err_dsf, _ = pearsonr(desc_df["delta_sf"], desc_df["error_abs"])
+    print(f"    Error correlation: δr→|ε| r={r_err_dr:.3f}, δ_sf→|ε| r={r_err_dsf:.3f}")
+
+    # =====================================================================
+    # Figure: δr vs δ_sf comparison (3-panel)
+    # =====================================================================
+    fig_desc, axes_desc = plt.subplots(1, 3, figsize=(24, 8))
+
+    # Panel 1: δr vs δ_sf scatter
+    ax = axes_desc[0]
+    for struct_lab, marker, color in [("BCC", "s", "#4477AA"), ("FCC", "o", "#CC6677")]:
+        mask = desc_df["struct"] == struct_lab
+        ax.scatter(desc_df.loc[mask, "delta_r"],
+                   desc_df.loc[mask, "delta_sf"],
+                   marker=marker, c=color, s=100, alpha=0.8,
+                   edgecolors="k", lw=0.5, label=struct_lab)
+    ax.set_xlabel(r"$\delta_r$ (%)")
+    ax.set_ylabel(r"$\delta_{sf}$")
+    ax.set_title(f"$\\delta_r$ vs $\\delta_{{sf}}$  (r={r_pearson:.2f})")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+
+    # Panel 2: δ_sf vs prediction error
+    ax = axes_desc[1]
+    for struct_lab, marker, color in [("BCC", "s", "#4477AA"), ("FCC", "o", "#CC6677")]:
+        mask = desc_df["struct"] == struct_lab
+        ax.scatter(desc_df.loc[mask, "delta_sf"],
+                   desc_df.loc[mask, "error_abs"],
+                   marker=marker, c=color, s=100, alpha=0.8,
+                   edgecolors="k", lw=0.5, label=struct_lab)
+    ax.set_xlabel(r"$\delta_{sf}$")
+    ax.set_ylabel("Prediction error |ε| (Å)")
+    ax.set_title(f"$\\delta_{{sf}}$ vs Error  (r={r_err_dsf:.2f})")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+
+    # Panel 3: δr vs prediction error
+    ax = axes_desc[2]
+    for struct_lab, marker, color in [("BCC", "s", "#4477AA"), ("FCC", "o", "#CC6677")]:
+        mask = desc_df["struct"] == struct_lab
+        ax.scatter(desc_df.loc[mask, "delta_r"],
+                   desc_df.loc[mask, "error_abs"],
+                   marker=marker, c=color, s=100, alpha=0.8,
+                   edgecolors="k", lw=0.5, label=struct_lab)
+    ax.set_xlabel(r"$\delta_r$ (%)")
+    ax.set_ylabel("Prediction error |ε| (Å)")
+    ax.set_title(f"$\\delta_r$ vs Error  (r={r_err_dr:.2f})")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+
+    fig_desc.tight_layout()
+    fig_desc.savefig(OUTDIR / "fig_delta_sf_analysis.png", dpi=150, bbox_inches="tight")
+    plt.close(fig_desc)
+    print(f"    Saved fig_delta_sf_analysis.png")
+
+    # =====================================================================
+    # Figure: Ω_Yang vs δ_sf (phase stability map)
+    # =====================================================================
+    fig_phase, ax_phase = plt.subplots(figsize=(10, 8))
+    for struct_lab, marker, color in [("BCC", "s", "#4477AA"), ("FCC", "o", "#CC6677")]:
+        mask = desc_df["struct"] == struct_lab
+        omega_vals_plot = desc_df.loc[mask, "Omega_yang"].clip(upper=50)
+        ax_phase.scatter(desc_df.loc[mask, "delta_r"],
+                         omega_vals_plot,
+                         marker=marker, c=color, s=120, alpha=0.8,
+                         edgecolors="k", lw=0.5, label=struct_lab)
+
+    # Zhang criteria lines
+    ax_phase.axvline(x=6.6, color="red", ls="--", lw=2, alpha=0.7, label=r"$\delta_r$ = 6.6%")
+    ax_phase.axhline(y=1.1, color="green", ls="--", lw=2, alpha=0.7, label=r"$\Omega$ = 1.1")
+    ax_phase.set_xlabel(r"$\delta_r$ (%)")
+    ax_phase.set_ylabel(r"$\Omega$ (Yang-Zhang)")
+    ax_phase.set_title("Phase Stability Map: Alonso Table 2 HEAs\n"
+                        r"Single-phase region: $\delta_r < 6.6\%$ and $\Omega > 1.1$")
+    ax_phase.legend(fontsize=13)
+    ax_phase.grid(True, alpha=0.3)
+    ax_phase.set_xlim(-0.5, max(desc_df["delta_r"].max() * 1.1, 7.5))
+    ax_phase.set_ylim(0, min(desc_df["Omega_yang"].clip(upper=50).max() * 1.2, 55))
+    fig_phase.tight_layout()
+    fig_phase.savefig(OUTDIR / "fig_phase_stability_map.png", dpi=150, bbox_inches="tight")
+    plt.close(fig_phase)
+    print(f"    Saved fig_phase_stability_map.png")
 
     # =====================================================================
     # Figures
