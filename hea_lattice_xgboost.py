@@ -360,8 +360,8 @@ MULTIPHASE_HEA_DB = [
      "ref":"Yeh2004"},
     {"comp":{"Cu":0.2,"Ni":0.2,"Al":0.2,"Co":0.2,"Fe":0.2},"phase":"SS","struct":"BCC+FCC",
      "ref":"Yeh2004"},
-    {"comp":{"Cu":1/6,"Ni":1/6,"Al":1/6,"Co":1/6,"Cr":1/6,"Fe":1/6},"phase":"SS","struct":"BCC+FCC",
-     "ref":"Yeh2004"},
+    # Note: equimolar AlCoCrCuFeNi (Yeh2004) reclassified as IM below
+    # (Tong2005 identified B2 ordering at x=1.0 in Al_x CoCrCuFeNi series)
     {"comp":{"Mo":0.25,"Nb":0.25,"Ta":0.25,"V":0.25},"phase":"SS","struct":"BCC",
      "ref":"Yao2016"},
     {"comp":{"Al":0.25,"Nb":0.25,"Ti":0.25,"V":0.25},"phase":"SS","struct":"BCC",
@@ -902,8 +902,10 @@ def compute_omega_yang(comp, struct):
         ("Ca","Cu"):-14,("Ca","Mg"):-6,("Ca","Ni"):-22,("Ca","Zn"):-22,
         ("Cu","Mg"):-3,("Mg","Ni"):-4,("Mg","Zn"):-4,("Ni","Zn"):-9,
         ("Cu","Sn"):-7,("Pd","Sn"):-47,("Pd","Ti"):-52,("Pd","Zr"):-91,
-        ("Sn","Ti"):-21,("Sn","Zr"):-44,("Cu","Pd"):-14,
-        ("Fe","Zr"):-25,("Be","Fe"):0,
+        ("Sn","Ti"):-21,("Sn","Zr"):-44,
+        ("Be","Fe"):0,
+        # Pairs identified as missing by review (Takeuchi & Inoue 2005)
+        ("Al","Zn"):1,("Co","Zn"):-4,("Mn","Ti"):-8,("Mn","V"):-2,("Ni","Tb"):-42,
     }
 
     elements = list(comp.keys())
