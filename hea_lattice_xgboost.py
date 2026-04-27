@@ -896,7 +896,7 @@ def compute_omega_yang(comp, struct):
         # Additional pairs for AM/IM alloys (Takeuchi & Inoue 2005)
         ("Be","Cu"):0,("Be","Ni"):-4,("Be","Ti"):-30,("Be","Zr"):-43,
         ("Be","Hf"):-37,("Cu","Ti"):-9,("Cu","Hf"):-17,
-        ("Ni","Hf"):-42,("Ni","Cu"):4,
+        ("Hf","Ni"):-42,
         ("Al","Er"):-33,("Dy","Ni"):-34,("Er","Ni"):-35,("Er","Tb"):0,
         ("Dy","Er"):0,("Al","Dy"):-38,("Al","Tb"):-39,("Dy","Tb"):0,
         ("Ca","Cu"):-14,("Ca","Mg"):-6,("Ca","Ni"):-22,("Ca","Zn"):-22,
