@@ -6,6 +6,7 @@ pandas
 numpy
 scikit-learn
 xgboost  # For HEA lattice constant prediction (XGBoost regression)
+cubist   # Cubist rule-based regression for HEA residual correction
 matplotlib
 seaborn
 joblib

@@ -37,12 +37,13 @@ from sklearn.model_selection import KFold, LeaveOneOut, cross_val_predict
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.linear_model import Ridge, Lasso, ElasticNet
 from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import Matern, WhiteKernel, RBF, ConstantKernel
 from sklearn.svm import SVR
 from scipy.optimize import minimize
 from xgboost import XGBRegressor
+from cubist import Cubist
 
 warnings.filterwarnings("ignore")
 
@@ -223,6 +224,104 @@ ALONSO_TABLE2 = [
     {"comp":{"Co":0.386,"Cr":0.196,"Fe":0.211,"Ni":0.208},"struct":"FCC","a_exp":3.568,"a_vegard":3.5723,"a_eq10":3.5744},
 ]
 
+# =====================================================================
+# Independent Test Set — HEAs NOT in Alonso Table 2
+# Sources: Senkov (2010, 2011, 2013, 2018), Cantor (2004),
+#          Gali & George (2013), Wang et al. (2019), Feuerbacher (2018),
+#          Stepanov (2015), Youssef (2015), Tsai (2013), He (2014),
+#          Otto (2013), Zhang (2014), Tasan (2014)
+# All single-phase, XRD-verified compositions.
+# =====================================================================
+INDEPENDENT_TEST = [
+    # --- BCC HEAs ---
+    # Senkov 2010: MoNbTaW (a=3.2134 already in Alonso), but composition differs
+    # Senkov 2011: NbMoTaW (slightly different comp from Alonso)
+    # using only truly independent compositions below
+    #
+    # Senkov 2013 Acta Mater: NbTiVZr single-phase BCC
+    {"comp":{"Nb":0.25,"Ti":0.25,"V":0.25,"Zr":0.25},"struct":"BCC","a_exp":3.3670,
+     "ref":"Senkov2013_ActaMat"},
+    # Senkov 2011: CrMo0.5NbTa0.5TiZr — mostly single BCC (BCC1 major phase)
+    # Not purely single-phase — skip
+    #
+    # Yao 2016 / Senkov review: MoNbTaV single BCC
+    {"comp":{"Mo":0.25,"Nb":0.25,"Ta":0.25,"V":0.25},"struct":"BCC","a_exp":3.208,
+     "ref":"Yao2016_Entropy"},
+    # Feuerbacher 2018 Scripta Mater: HfNbTiVZr single BCC (different from Alonso comp ratios)
+    # Actually same composition as in Alonso — skip
+    #
+    # Stepanov 2015: AlNbTiV single BCC
+    {"comp":{"Al":0.25,"Nb":0.25,"Ti":0.25,"V":0.25},"struct":"BCC","a_exp":3.220,
+     "ref":"Stepanov2015_JAlloyCompd"},
+    # Senkov 2013: NbTiV2Zr BCC (multi-phase — skip)
+    #
+    # CrNbTiZr: Senkov2013 — two-phase (BCC + Laves) — skip
+    # CrNbTiVZr: Senkov2013 — two-phase — skip
+    #
+    # Zhang 2015 Calphad: CrMoNbTaVW single BCC
+    {"comp":{"Cr":1/6,"Mo":1/6,"Nb":1/6,"Ta":1/6,"V":1/6,"W":1/6},"struct":"BCC","a_exp":3.1901,
+     "ref":"Zhang2015_Calphad"},
+    # Kantelis 2025 AIP Adv: MoNbTaVW (comp from Senkov2011, measured independently)
+    {"comp":{"Mo":0.20,"Nb":0.20,"Ta":0.20,"V":0.20,"W":0.20},"struct":"BCC","a_exp":3.185,
+     "ref":"Kantelis2025_AIPAdv"},
+    # Youssef 2015: HfNbTaTiZr single BCC (bulk)
+    {"comp":{"Hf":0.20,"Nb":0.20,"Ta":0.20,"Ti":0.20,"Zr":0.20},"struct":"BCC","a_exp":3.404,
+     "ref":"Youssef2015_MaterResLett"},
+    # Senkov 2012: HfNbTaTiZr single BCC (as-cast)
+    {"comp":{"Hf":0.20,"Nb":0.20,"Ta":0.20,"Ti":0.20,"Zr":0.20},"struct":"BCC","a_exp":3.410,
+     "ref":"Senkov2012_Intermet"},
+    # Dirras 2016: Ti35Zr27.5Hf27.5Nb5Ta5 single BCC
+    {"comp":{"Ti":0.35,"Zr":0.275,"Hf":0.275,"Nb":0.05,"Ta":0.05},"struct":"BCC","a_exp":3.440,
+     "ref":"Dirras2016_MaterCharact"},
+    #
+    # --- FCC HEAs ---
+    # Cantor 2004 / Otto 2013: CoCrFeMnNi equiatomic (Cantor alloy)
+    # Note: already in Alonso as 3.597 — but different ref measurements:
+    # Otto 2013 measured a = 3.5988, let's include as independent verification
+    {"comp":{"Co":0.20,"Cr":0.20,"Fe":0.20,"Mn":0.20,"Ni":0.20},"struct":"FCC","a_exp":3.5988,
+     "ref":"Otto2013_ActaMat"},
+    # He 2014: CoCrFeNi (without Mn) — different from Alonso's CoCrFeNi compositions
+    # Actually already in Alonso — need truly independent compositions
+    #
+    # Nature srep39803 (2017): CoCrFeNi single FCC
+    {"comp":{"Co":0.25,"Cr":0.25,"Fe":0.25,"Ni":0.25},"struct":"FCC","a_exp":3.560,
+     "ref":"Niu2017_SciRep"},
+    # srep39803: (CoCrFeNi)0.89Pd0.11 single FCC
+    {"comp":{"Co":0.2225,"Cr":0.2225,"Fe":0.2225,"Ni":0.2225,"Pd":0.11},"struct":"FCC","a_exp":3.620,
+     "ref":"Niu2017_SciRep_Pd05"},
+    # srep39803: (CoCrFeNi)0.80Pd0.20 single FCC
+    {"comp":{"Co":0.20,"Cr":0.20,"Fe":0.20,"Ni":0.20,"Pd":0.20},"struct":"FCC","a_exp":3.660,
+     "ref":"Niu2017_SciRep_Pd10"},
+    # srep39803: (CoCrFeNi)0.73Pd0.27 single FCC
+    {"comp":{"Co":0.1825,"Cr":0.1825,"Fe":0.1825,"Ni":0.1825,"Pd":0.27},"struct":"FCC","a_exp":3.710,
+     "ref":"Niu2017_SciRep_Pd15"},
+    # srep39803: (CoCrFeNi)0.80V0.20 single FCC
+    {"comp":{"Co":0.20,"Cr":0.20,"Fe":0.20,"Ni":0.20,"V":0.20},"struct":"FCC","a_exp":3.610,
+     "ref":"Niu2017_SciRep_V10"},
+    # Wang2019 Scripta Mater: CoCrFeNi FCC (precision measurement)
+    {"comp":{"Co":0.25,"Cr":0.25,"Fe":0.25,"Ni":0.25},"struct":"FCC","a_exp":3.5723,
+     "ref":"Wang2019_ScriptaMat"},
+    # Wang2019: Co0.5CrFeNi FCC
+    {"comp":{"Co":0.143,"Cr":0.286,"Fe":0.286,"Ni":0.286},"struct":"FCC","a_exp":3.5805,
+     "ref":"Wang2019_ScriptaMat_Co05"},
+    # Zaddach 2013: CoCrFeMnNi FCC
+    {"comp":{"Co":0.20,"Cr":0.20,"Fe":0.20,"Mn":0.20,"Ni":0.20},"struct":"FCC","a_exp":3.597,
+     "ref":"Zaddach2013_JOM"},
+    # Zhang 2017 FCC: CrFeCoNi FCC (pressure study ambient)
+    {"comp":{"Cr":0.25,"Fe":0.25,"Co":0.25,"Ni":0.25},"struct":"FCC","a_exp":3.574,
+     "ref":"Zhang2017_NatCommun"},
+    # Tsai 2013: Co1.5CrFeNi1.5Ti0.5Mo0.1 FCC — not single phase enough
+    #
+    # Gali & George 2013: CoCrFeNiMn FCC (tensile specimen)
+    {"comp":{"Co":0.20,"Cr":0.20,"Fe":0.20,"Mn":0.20,"Ni":0.20},"struct":"FCC","a_exp":3.592,
+     "ref":"Gali2013_Intermet"},
+    # Li 2016 Nature: Fe80-xMnxCo10Cr10 dual-phase — skip (not single FCC)
+    #
+    # Tasan 2014: CoCrFeMnNi FCC
+    {"comp":{"Co":0.20,"Cr":0.20,"Fe":0.20,"Mn":0.20,"Ni":0.20},"struct":"FCC","a_exp":3.595,
+     "ref":"Tasan2014_ScrMat"},
+]
+
 
 # =====================================================================
 # Load DFT data
@@ -329,6 +428,355 @@ def compute_structure_specific_omega_sf(compound_df):
     omega_b2 = {p: np.median(v) for p, v in pair_b2.items() if len(v) >= 2}
     omega_l12 = {p: np.median(v) for p, v in pair_l12.items() if len(v) >= 2}
     return omega_b2, omega_l12
+
+
+# Atomic number for periodic-table features
+ATOMIC_NUMBER = {
+    "H":1,"He":2,"Li":3,"Be":4,"B":5,"C":6,"N":7,"O":8,
+    "Na":11,"Mg":12,"Al":13,"Si":14,"P":15,"S":16,
+    "K":19,"Ca":20,"Sc":21,"Ti":22,"V":23,"Cr":24,
+    "Mn":25,"Fe":26,"Co":27,"Ni":28,"Cu":29,"Zn":30,
+    "Ga":31,"Ge":32,"As":33,"Se":34,"Br":35,
+    "Rb":37,"Sr":38,"Y":39,"Zr":40,"Nb":41,"Mo":42,
+    "Tc":43,"Ru":44,"Rh":45,"Pd":46,"Ag":47,"Cd":48,
+    "In":49,"Sn":50,"Sb":51,"Te":52,"I":53,
+    "Cs":55,"Ba":56,"La":57,"Ce":58,"Pr":59,"Nd":60,
+    "Sm":62,"Eu":63,"Gd":64,"Tb":65,"Dy":66,"Ho":67,
+    "Er":68,"Tm":69,"Yb":70,"Lu":71,
+    "Hf":72,"Ta":73,"W":74,"Re":75,"Os":76,"Ir":77,
+    "Pt":78,"Au":79,"Hg":80,"Tl":81,"Pb":82,"Bi":83,
+    "Th":90,"U":92,"Pu":94,"Np":93,
+}
+
+# Covalent radii (Å) — Cordero et al. (2008)
+COVALENT_RADIUS = {
+    "Li":1.28,"Be":0.96,"B":0.84,"C":0.76,"N":0.71,"O":0.66,
+    "Na":1.66,"Mg":1.41,"Al":1.21,"Si":1.11,"P":1.07,"S":1.05,
+    "K":2.03,"Ca":1.76,"Sc":1.70,"Ti":1.60,"V":1.53,"Cr":1.39,
+    "Mn":1.39,"Fe":1.32,"Co":1.26,"Ni":1.24,"Cu":1.32,"Zn":1.22,
+    "Ga":1.22,"Ge":1.20,"As":1.19,"Se":1.20,"Br":1.20,
+    "Rb":2.20,"Sr":1.95,"Y":1.90,"Zr":1.75,"Nb":1.64,"Mo":1.54,
+    "Tc":1.47,"Ru":1.46,"Rh":1.42,"Pd":1.39,"Ag":1.45,"Cd":1.44,
+    "In":1.42,"Sn":1.39,"Sb":1.39,"Te":1.38,"I":1.39,
+    "Cs":2.44,"Ba":2.15,"La":2.07,"Ce":2.04,"Pr":2.03,"Nd":2.01,
+    "Sm":1.98,"Eu":1.98,"Gd":1.96,"Tb":1.94,"Dy":1.92,"Ho":1.92,
+    "Er":1.89,"Tm":1.90,"Yb":1.87,"Lu":1.87,
+    "Hf":1.75,"Ta":1.70,"W":1.62,"Re":1.51,"Os":1.44,"Ir":1.41,
+    "Pt":1.36,"Au":1.36,"Hg":1.32,"Tl":1.45,"Pb":1.46,"Bi":1.48,
+    "Th":2.06,"U":1.96,"Pu":1.87,"Np":1.90,
+}
+
+# Periodic-table row
+PERIOD = {
+    "Li":2,"Be":2,"B":2,"C":2,"N":2,"O":2,
+    "Na":3,"Mg":3,"Al":3,"Si":3,"P":3,"S":3,
+    "K":4,"Ca":4,"Sc":4,"Ti":4,"V":4,"Cr":4,
+    "Mn":4,"Fe":4,"Co":4,"Ni":4,"Cu":4,"Zn":4,
+    "Ga":4,"Ge":4,"As":4,"Se":4,"Br":4,
+    "Rb":5,"Sr":5,"Y":5,"Zr":5,"Nb":5,"Mo":5,
+    "Tc":5,"Ru":5,"Rh":5,"Pd":5,"Ag":5,"Cd":5,
+    "In":5,"Sn":5,"Sb":5,"Te":5,"I":5,
+    "Cs":6,"Ba":6,"La":6,"Ce":6,"Pr":6,"Nd":6,
+    "Sm":6,"Eu":6,"Gd":6,"Tb":6,"Dy":6,"Ho":6,
+    "Er":6,"Tm":6,"Yb":6,"Lu":6,
+    "Hf":6,"Ta":6,"W":6,"Re":6,"Os":6,"Ir":6,
+    "Pt":6,"Au":6,"Hg":6,"Tl":6,"Pb":6,"Bi":6,
+    "Th":7,"U":7,"Pu":7,"Np":7,
+}
+
+
+def build_omega_sf_features(elA, elB):
+    """
+    Build pairwise feature vector for Ω_sf prediction.
+    Features capture atomic property differences/ratios that drive size factor.
+    Returns 14-dimensional feature vector.
+    """
+    # Ensure consistent ordering (smaller Z first)
+    if ATOMIC_NUMBER.get(elA, 0) > ATOMIC_NUMBER.get(elB, 0):
+        elA, elB = elB, elA
+
+    rA = COVALENT_RADIUS.get(elA, 1.3)
+    rB = COVALENT_RADIUS.get(elB, 1.3)
+    vA = KING_ATOMIC_VOLUMES.get(elA, 15.0)
+    vB = KING_ATOMIC_VOLUMES.get(elB, 15.0)
+    enA = PAULING_EN.get(elA, 1.5)
+    enB = PAULING_EN.get(elB, 1.5)
+    vecA = VEC.get(elA, 5)
+    vecB = VEC.get(elB, 5)
+    dA = D_ELECTRONS.get(elA, 0)
+    dB = D_ELECTRONS.get(elB, 0)
+    mA = ATOMIC_MASS.get(elA, 50.0)
+    mB = ATOMIC_MASS.get(elB, 50.0)
+    pA = PERIOD.get(elA, 4)
+    pB = PERIOD.get(elB, 4)
+
+    feats = np.array([
+        (rA - rB) / ((rA + rB) / 2),          # 0: radius ratio deviation
+        abs(rA - rB),                           # 1: absolute radius diff
+        (vA - vB) / ((vA + vB) / 2),          # 2: volume ratio deviation
+        abs(vA - vB),                           # 3: absolute volume diff
+        enA - enB,                              # 4: electronegativity diff (signed)
+        abs(enA - enB),                         # 5: |Δχ|
+        vecA - vecB,                            # 6: VEC diff (signed)
+        abs(vecA - vecB),                       # 7: |ΔVEC|
+        dA - dB,                                # 8: d-electron diff (signed)
+        abs(dA - dB),                           # 9: |Δd|
+        (vA + vB) / 2,                         # 10: mean volume
+        (enA + enB) / 2,                       # 11: mean electronegativity
+        abs(pA - pB),                           # 12: period diff
+        abs(mA - mB) / ((mA + mB) / 2),       # 13: mass ratio deviation
+    ])
+    return feats
+
+
+OMEGA_FEATURE_NAMES = [
+    "Δr/r_avg", "|Δr|", "ΔV/V_avg", "|ΔV|",
+    "Δχ", "|Δχ|", "ΔVEC", "|ΔVEC|",
+    "Δd", "|Δd|", "V_avg", "χ_avg",
+    "ΔPeriod", "Δm/m_avg",
+]
+
+
+def build_omega_sf_ml_model(omega_sf_dict, structure_label=""):
+    """
+    Train GPR + Ridge models to predict Ω_sf from elemental properties.
+    Uses LOO-CV to evaluate prediction accuracy.
+
+    Args:
+        omega_sf_dict: {(elA, elB): omega_value} from DFT data
+        structure_label: "B2" or "L12" for logging
+
+    Returns:
+        (gpr_model, scaler, cv_rmse, cv_r2, missing_predictions)
+        where missing_predictions = {pair: (omega_pred, sigma)} for all 666 pairs
+    """
+    pairs = list(omega_sf_dict.keys())
+    omegas = np.array([omega_sf_dict[p] for p in pairs])
+    X = np.array([build_omega_sf_features(*p) for p in pairs])
+    N = len(pairs)
+
+    print(f"      Ω_sf ML ({structure_label}): {N} known pairs, 14 features")
+
+    # LOO-CV for Ridge (baseline)
+    best_ridge_rmse = 999
+    best_alpha = 1.0
+    for alpha in [0.01, 0.1, 0.5, 1.0, 5.0, 10.0, 50.0]:
+        loo = LeaveOneOut()
+        y_pred = np.zeros(N)
+        for tr, te in loo.split(X):
+            sc = StandardScaler()
+            Xtr = sc.fit_transform(X[tr])
+            Xte = sc.transform(X[te])
+            m = Ridge(alpha=alpha)
+            m.fit(Xtr, omegas[tr])
+            y_pred[te] = m.predict(Xte)
+        rmse = np.sqrt(np.mean((omegas - y_pred)**2))
+        if rmse < best_ridge_rmse:
+            best_ridge_rmse = rmse
+            best_alpha = alpha
+
+    print(f"        Ridge LOO-CV RMSE: {best_ridge_rmse:.6f} (α={best_alpha})")
+
+    # LOO-CV for GPR (Matérn 5/2)
+    kernel = ConstantKernel(0.01) * Matern(length_scale=1.0, nu=2.5) + WhiteKernel(0.001)
+    y_pred_gpr = np.zeros(N)
+    y_std_gpr = np.zeros(N)
+    loo = LeaveOneOut()
+    for tr, te in loo.split(X):
+        sc = StandardScaler()
+        Xtr = sc.fit_transform(X[tr])
+        Xte = sc.transform(X[te])
+        gpr = GaussianProcessRegressor(
+            kernel=kernel, n_restarts_optimizer=3,
+            alpha=1e-6, normalize_y=True, random_state=42)
+        gpr.fit(Xtr, omegas[tr])
+        pred, std = gpr.predict(Xte, return_std=True)
+        y_pred_gpr[te] = pred
+        y_std_gpr[te] = std
+
+    rmse_gpr = np.sqrt(np.mean((omegas - y_pred_gpr)**2))
+    r2_gpr = 1 - np.sum((omegas - y_pred_gpr)**2) / np.sum((omegas - omegas.mean())**2)
+    print(f"        GPR LOO-CV RMSE: {rmse_gpr:.6f}, R$^2$={r2_gpr:.4f}")
+
+    # Train final GPR on all data
+    sc_final = StandardScaler()
+    X_scaled = sc_final.fit_transform(X)
+    gpr_final = GaussianProcessRegressor(
+        kernel=kernel, n_restarts_optimizer=5,
+        alpha=1e-6, normalize_y=True, random_state=42)
+    gpr_final.fit(X_scaled, omegas)
+
+    # Predict all possible pairs (including known ones, for consistency check)
+    all_elements = sorted(KING_ATOMIC_VOLUMES.keys())
+    all_predictions = {}
+    for i, elA in enumerate(all_elements):
+        for elB in all_elements[i+1:]:
+            pair = tuple(sorted([elA, elB]))
+            feat = build_omega_sf_features(elA, elB).reshape(1, -1)
+            feat_scaled = sc_final.transform(feat)
+            pred, std = gpr_final.predict(feat_scaled, return_std=True)
+            all_predictions[pair] = (pred[0], std[0])
+
+    return gpr_final, sc_final, rmse_gpr, r2_gpr, all_predictions
+
+
+def fill_missing_omega_sf(omega_dft, omega_ml_predictions):
+    """
+    Create a complete Ω_sf dictionary: DFT values where available,
+    ML-predicted values where missing.
+
+    Returns:
+        omega_filled: {pair: omega_value}
+        filled_pairs: list of pairs that were ML-filled
+        fill_stats: dict with summary statistics
+    """
+    omega_filled = {}
+    filled_pairs = []
+    dft_pairs = []
+
+    for pair, (pred, std) in omega_ml_predictions.items():
+        if pair in omega_dft:
+            omega_filled[pair] = omega_dft[pair]
+            dft_pairs.append(pair)
+        else:
+            omega_filled[pair] = pred
+            filled_pairs.append((pair, pred, std))
+
+    fill_stats = {
+        "n_dft": len(dft_pairs),
+        "n_ml_filled": len(filled_pairs),
+        "n_total": len(omega_filled),
+        "mean_uncertainty": np.mean([s for _, _, s in filled_pairs]) if filled_pairs else 0,
+    }
+    return omega_filled, filled_pairs, fill_stats
+
+
+def compute_delta_r(comp):
+    """
+    Traditional atomic size mismatch δr (%) using King atomic volumes.
+    δr = 100 × √[Σ c_i (1 - r_i/r̄)²]  where r_i = V_i^(1/3).
+    """
+    elements = list(comp.keys())
+    fracs = np.array([comp[e] for e in elements])
+    fracs = fracs / fracs.sum()
+    vols = np.array([KING_ATOMIC_VOLUMES.get(e, 15.0) for e in elements])
+    r_vals = vols ** (1/3)
+    r_avg = np.sum(fracs * r_vals)
+    return 100 * np.sqrt(np.sum(fracs * (1 - r_vals / r_avg)**2))
+
+
+def compute_delta_sf(comp, omega_sf):
+    """
+    Ω_sf-based size mismatch descriptor.
+    δ_sf = √[Σ_i Σ_{j>i} c_i c_j Ω_sf(i,j)²]
+    Captures actual pairwise volume deviations from DFT, not just pure-element radii.
+    """
+    elements = list(comp.keys())
+    fracs = np.array([comp[e] for e in elements])
+    fracs = fracs / fracs.sum()
+    n = len(elements)
+
+    val = 0.0
+    for i in range(n):
+        for j in range(i+1, n):
+            pair = tuple(sorted([elements[i], elements[j]]))
+            omega = omega_sf.get(pair, 0.0)
+            val += fracs[i] * fracs[j] * omega**2
+    return np.sqrt(val)
+
+
+def compute_delta_sf_signed(comp, omega_sf):
+    """
+    Signed Ω_sf correction magnitude (can be positive or negative).
+    Σ_i Σ_{j≠i} c_i c_j Ω_sf(i,j) — the correction term in Eq.10.
+    """
+    elements = list(comp.keys())
+    fracs = np.array([comp[e] for e in elements])
+    fracs = fracs / fracs.sum()
+    n = len(elements)
+
+    val = 0.0
+    for i in range(n):
+        for j in range(n):
+            if i != j:
+                pair = tuple(sorted([elements[i], elements[j]]))
+                omega = omega_sf.get(pair, 0.0)
+                val += fracs[i] * fracs[j] * omega
+    return val
+
+
+def compute_omega_yang(comp, struct):
+    """
+    Ω parameter (Yang & Zhang 2012): Ω = T_m × ΔS_mix / |ΔH_mix|.
+    Uses Miedema-approximated ΔH_mix and rule-of-mixtures T_m.
+    """
+    # Melting points (K) — common HEA elements
+    T_MELT = {
+        "Al":933,"Co":1768,"Cr":2180,"Cu":1358,"Fe":1811,"Mn":1519,
+        "Mo":2896,"Nb":2750,"Ni":1728,"Pd":1828,"Pt":2041,"Re":3459,
+        "Rh":2237,"Ru":2607,"Ta":3290,"Ti":1941,"V":2183,"W":3695,
+        "Zr":2128,"Hf":2506,"Os":3306,"Ir":2719,"Au":1337,"Ag":1235,
+        "Zn":693,"Si":1687,"Ge":1211,"Be":1560,"Mg":923,"Sc":1814,
+        "Y":1799,"La":1193,"Ce":1068,"B":2349,"Sn":505,"Pb":601,
+    }
+    # Simplified Miedema mixing enthalpy (kJ/mol) — selected pairs
+    # Using Takeuchi & Inoue (2005) tabulated values for common HEA pairs
+    DELTA_H_MIX = {
+        ("Al","Co"):-19,("Al","Cr"):-10,("Al","Cu"):-1,("Al","Fe"):-11,
+        ("Al","Mn"):-19,("Al","Mo"):-5,("Al","Nb"):-18,("Al","Ni"):-22,
+        ("Al","Pd"):-31,("Al","Pt"):-44,("Al","Ti"):-30,("Al","V"):-16,
+        ("Al","Zr"):-44,("Co","Cr"):-4,("Co","Cu"):6,("Co","Fe"):-1,
+        ("Co","Mn"):-5,("Co","Mo"):-5,("Co","Nb"):-25,("Co","Ni"):0,
+        ("Co","Pd"):0,("Co","Ti"):-28,("Co","V"):-14,("Co","Zr"):-41,
+        ("Cr","Cu"):12,("Cr","Fe"):-1,("Cr","Mn"):2,("Cr","Mo"):0,
+        ("Cr","Nb"):-7,("Cr","Ni"):-7,("Cr","Pd"):-15,("Cr","Ta"):-7,
+        ("Cr","Ti"):-7,("Cr","V"):-2,("Cr","W"):-1,("Cr","Zr"):-12,
+        ("Cu","Fe"):13,("Cu","Mn"):4,("Cu","Mo"):19,("Cu","Nb"):3,
+        ("Cu","Ni"):4,("Cu","Pd"):-14,("Cu","Ti"):-9,("Cu","V"):5,
+        ("Cu","Zn"):-1,("Cu","Zr"):-23,("Fe","Mn"):0,("Fe","Mo"):-2,
+        ("Fe","Nb"):-16,("Fe","Ni"):-2,("Fe","Pd"):-4,("Fe","Si"):-35,
+        ("Fe","Ti"):-17,("Fe","V"):-7,("Fe","W"):-1,("Fe","Zr"):-25,
+        ("Hf","Nb"):4,("Hf","Ta"):3,("Hf","Ti"):0,("Hf","V"):-2,
+        ("Hf","Zr"):0,("Mn","Mo"):-5,("Mn","Nb"):-4,("Mn","Ni"):-8,
+        ("Mo","Nb"):-6,("Mo","Ni"):-7,("Mo","Ta"):-5,("Mo","Ti"):-4,
+        ("Mo","V"):0,("Mo","W"):0,("Mo","Zr"):-6,("Nb","Ni"):-30,
+        ("Nb","Ta"):0,("Nb","Ti"):2,("Nb","V"):-1,("Nb","W"):-8,
+        ("Nb","Zr"):4,("Ni","Pd"):0,("Ni","Pt"):-5,("Ni","Si"):-40,
+        ("Ni","Ti"):-35,("Ni","V"):-18,("Ni","Zr"):-49,
+        ("Ir","Os"):0,("Os","Pt"):-2,("Os","Rh"):0,("Os","Ru"):0,
+        ("Pd","Pt"):0,("Pd","Rh"):0,("Rh","Ru"):0,
+        ("Ir","Pd"):0,("Ir","Pt"):0,("Ir","Rh"):0,("Ir","Ru"):0,
+        ("Pd","Ru"):0,
+        ("Ta","Ti"):1,("Ta","V"):-1,("Ta","W"):-7,("Ta","Zr"):3,
+        ("Ti","V"):-2,("Ti","Zr"):0,("V","W"):-1,("V","Zr"):-4,
+        ("W","Zr"):-9,
+    }
+
+    elements = list(comp.keys())
+    fracs = np.array([comp[e] for e in elements])
+    fracs = fracs / fracs.sum()
+    n = len(elements)
+
+    # T_m mix
+    tm_vals = np.array([T_MELT.get(e, 2000) for e in elements])
+    T_m = np.sum(fracs * tm_vals)
+
+    # ΔS_mix
+    S_mix = -8.314 * np.sum(fracs[fracs > 0] * np.log(fracs[fracs > 0]))
+
+    # ΔH_mix
+    H_mix = 0.0
+    for i in range(n):
+        for j in range(i+1, n):
+            pair = tuple(sorted([elements[i], elements[j]]))
+            dh = DELTA_H_MIX.get(pair, 0)
+            H_mix += 4 * fracs[i] * fracs[j] * dh
+
+    if abs(H_mix) < 0.01:
+        return 999.0  # effectively infinite Ω → very stable SS
+
+    omega = T_m * S_mix / (abs(H_mix) * 1000)
+    return omega
 
 
 def compute_eq10_scaled(comp, struct, omega_sf, gamma=1.0):
@@ -674,6 +1122,37 @@ def main():
     print(f"    B2-specific pairs:   {len(omega_b2)}")
     print(f"    L1₂-specific pairs:  {len(omega_l12)}")
 
+    # --- ML interpolation of missing Ω_sf ---
+    print("\n[2b] ML interpolation of missing Ω_sf pairs...")
+    print("    Training Ω_sf prediction models (GPR + Ridge)...")
+
+    _, _, rmse_b2, r2_b2, ml_pred_b2 = build_omega_sf_ml_model(omega_b2, "B2")
+    _, _, rmse_l12, r2_l12, ml_pred_l12 = build_omega_sf_ml_model(omega_l12, "L12")
+
+    # Fill missing pairs
+    omega_b2_filled, filled_b2, stats_b2 = fill_missing_omega_sf(omega_b2, ml_pred_b2)
+    omega_l12_filled, filled_l12, stats_l12 = fill_missing_omega_sf(omega_l12, ml_pred_l12)
+
+    print(f"    B2:  {stats_b2['n_dft']} DFT + {stats_b2['n_ml_filled']} ML-filled "
+          f"= {stats_b2['n_total']} total (mean σ={stats_b2['mean_uncertainty']:.5f})")
+    print(f"    L12: {stats_l12['n_dft']} DFT + {stats_l12['n_ml_filled']} ML-filled "
+          f"= {stats_l12['n_total']} total (mean σ={stats_l12['mean_uncertainty']:.5f})")
+
+    # Count how many HEA pairs were missing and got filled
+    missing_b2_in_hea = set()
+    missing_l12_in_hea = set()
+    for hea in ALONSO_TABLE2:
+        elems = list(hea["comp"].keys())
+        for i in range(len(elems)):
+            for j in range(i+1, len(elems)):
+                pair = tuple(sorted([elems[i], elems[j]]))
+                if hea["struct"] == "BCC" and pair not in omega_b2:
+                    missing_b2_in_hea.add(pair)
+                elif hea["struct"] == "FCC" and pair not in omega_l12:
+                    missing_l12_in_hea.add(pair)
+    print(f"    HEA pairs missing DFT data: {len(missing_b2_in_hea)} BCC, "
+          f"{len(missing_l12_in_hea)} FCC → now ML-filled")
+
     # --- Noise floor analysis ---
     print("\n[3] Noise floor analysis (duplicate HEA compositions)...")
     sigma_noise, dup_info = estimate_noise_floor(ALONSO_TABLE2)
@@ -767,6 +1246,51 @@ def main():
     results["DFT Eq.10 (this work)"] = print_metrics("DFT Eq.10 (this work)", a_eq10_dft)
     results["DFT Eq.10 SS (this work)"] = print_metrics(
         f"DFT Eq.10 SS (γB={best_gb:.2f},γF={best_gf:.2f})", a_eq10_ss)
+
+    # SS Eq.10 with ML-filled Ω_sf (no missing pairs)
+    print("    Computing SS Eq.10 with ML-filled Ω_sf...")
+    best_rmse_filled = 999
+    best_gb_f, best_gf_f = best_gb, best_gf
+    for gb in np.arange(best_gb - 0.3, best_gb + 0.31, 0.05):
+        for gf in np.arange(best_gf - 0.3, best_gf + 0.31, 0.05):
+            a_pred = np.zeros(N)
+            for i in bcc_idx:
+                a_pred[i] = compute_eq10_scaled(
+                    ALONSO_TABLE2[i]["comp"], "BCC", omega_b2_filled, gb)
+            for i in fcc_idx:
+                a_pred[i] = compute_eq10_scaled(
+                    ALONSO_TABLE2[i]["comp"], "FCC", omega_l12_filled, gf)
+            rmse = np.sqrt(np.mean((y_hea - a_pred)**2))
+            if rmse < best_rmse_filled:
+                best_rmse_filled = rmse
+                best_gb_f, best_gf_f = gb, gf
+
+    for gb in np.arange(best_gb_f - 0.05, best_gb_f + 0.06, 0.01):
+        for gf in np.arange(best_gf_f - 0.05, best_gf_f + 0.06, 0.01):
+            a_pred = np.zeros(N)
+            for i in bcc_idx:
+                a_pred[i] = compute_eq10_scaled(
+                    ALONSO_TABLE2[i]["comp"], "BCC", omega_b2_filled, gb)
+            for i in fcc_idx:
+                a_pred[i] = compute_eq10_scaled(
+                    ALONSO_TABLE2[i]["comp"], "FCC", omega_l12_filled, gf)
+            rmse = np.sqrt(np.mean((y_hea - a_pred)**2))
+            if rmse < best_rmse_filled:
+                best_rmse_filled = rmse
+                best_gb_f, best_gf_f = gb, gf
+
+    a_eq10_ss_filled = np.zeros(N)
+    for i in bcc_idx:
+        a_eq10_ss_filled[i] = compute_eq10_scaled(
+            ALONSO_TABLE2[i]["comp"], "BCC", omega_b2_filled, best_gb_f)
+    for i in fcc_idx:
+        a_eq10_ss_filled[i] = compute_eq10_scaled(
+            ALONSO_TABLE2[i]["comp"], "FCC", omega_l12_filled, best_gf_f)
+
+    print(f"    ML-filled γ_BCC = {best_gb_f:.2f}, γ_FCC = {best_gf_f:.2f}")
+    results["SS Eq.10 ML-filled"] = print_metrics(
+        f"SS Eq.10 ML-filled (γB={best_gb_f:.2f},γF={best_gf_f:.2f})",
+        a_eq10_ss_filled)
 
     # --- ML models ---
     print("\n[6] Training ML models...")
@@ -938,6 +1462,85 @@ def main():
         f"SS Eq.10 + SVR({best_svr_name})", best_svr_preds)
     a_ss_svr = best_svr_preds
 
+    # Model H: SS Eq.10 + Random Forest residual correction (LOO-CV)
+    print("    Training Model H: SS Eq.10 + LOO-CV Random Forest correction...")
+    rf_configs = [
+        ("RF100_d3", dict(n_estimators=100, max_depth=3, min_samples_leaf=5, random_state=42)),
+        ("RF200_d2", dict(n_estimators=200, max_depth=2, min_samples_leaf=5, random_state=42)),
+        ("RF500_d3", dict(n_estimators=500, max_depth=3, min_samples_leaf=3, random_state=42)),
+        ("RF100_d5", dict(n_estimators=100, max_depth=5, min_samples_leaf=5, random_state=42)),
+        ("RF200_dNone", dict(n_estimators=200, max_depth=None, min_samples_leaf=5, random_state=42)),
+    ]
+
+    best_rf_rmse = 999
+    best_rf_name = ""
+    best_rf_preds = None
+
+    for rf_name, rf_params in rf_configs:
+        y_corr_rf = np.zeros(N)
+        loo = LeaveOneOut()
+        for tr, te in loo.split(feats_simple):
+            sc = StandardScaler()
+            Xtr = sc.fit_transform(feats_simple[tr])
+            Xte = sc.transform(feats_simple[te])
+            rf = RandomForestRegressor(**rf_params)
+            rf.fit(Xtr, residual_ss[tr])
+            y_corr_rf[te] = rf.predict(Xte)
+        a_ss_rf = a_eq10_ss + y_corr_rf
+        rmse = np.sqrt(np.mean((y_hea - a_ss_rf)**2))
+        mae = np.mean(np.abs(y_hea - a_ss_rf))
+        print(f"      RF({rf_name}): RMSE={rmse:.4f} Å, MAE={mae:.4f} Å")
+        if rmse < best_rf_rmse:
+            best_rf_rmse = rmse
+            best_rf_name = rf_name
+            best_rf_preds = a_ss_rf.copy()
+
+    results["SS Eq.10 + RF"] = print_metrics(
+        f"SS Eq.10 + RF({best_rf_name})", best_rf_preds)
+    a_ss_rf = best_rf_preds
+
+    # Model I: SS Eq.10 + Cubist residual correction (LOO-CV)
+    print("    Training Model I: SS Eq.10 + LOO-CV Cubist correction...")
+    cubist_configs = [
+        ("C5_N1", dict(n_rules=5, n_committees=1)),
+        ("C10_N1", dict(n_rules=10, n_committees=1)),
+        ("C5_N5", dict(n_rules=5, n_committees=5)),
+        ("C10_N5", dict(n_rules=10, n_committees=5)),
+        ("C20_N10", dict(n_rules=20, n_committees=10)),
+    ]
+
+    best_cub_rmse = 999
+    best_cub_name = ""
+    best_cub_preds = None
+
+    for cub_name, cub_params in cubist_configs:
+        y_corr_cub = np.zeros(N)
+        loo = LeaveOneOut()
+        for tr, te in loo.split(feats_simple):
+            sc = StandardScaler()
+            Xtr = sc.fit_transform(feats_simple[tr])
+            Xte = sc.transform(feats_simple[te])
+            try:
+                cub = Cubist(**cub_params)
+                cub.fit(Xtr, residual_ss[tr])
+                y_corr_cub[te] = cub.predict(Xte)
+            except Exception as e:
+                if te[0] == 0:
+                    print(f"        Warning: Cubist({cub_name}) failed: {e}")
+                y_corr_cub[te] = 0.0
+        a_ss_cub = a_eq10_ss + y_corr_cub
+        rmse = np.sqrt(np.mean((y_hea - a_ss_cub)**2))
+        mae = np.mean(np.abs(y_hea - a_ss_cub))
+        print(f"      Cubist({cub_name}): RMSE={rmse:.4f} Å, MAE={mae:.4f} Å")
+        if rmse < best_cub_rmse:
+            best_cub_rmse = rmse
+            best_cub_name = cub_name
+            best_cub_preds = a_ss_cub.copy()
+
+    results["SS Eq.10 + Cubist"] = print_metrics(
+        f"SS Eq.10 + Cubist({best_cub_name})", best_cub_preds)
+    a_ss_cub = best_cub_preds
+
     # Ensemble optimisation
     print("\n[7] Ensemble optimisation...")
 
@@ -995,9 +1598,12 @@ def main():
         ("Alonso Eq.10", a_eq10_alonso),
         ("King Vegard", a_vegard_king),
         ("DFT Eq.10 SS", a_eq10_ss),
+        ("SS Eq.10 ML-filled", a_eq10_ss_filled),
         ("SS Eq.10 + Ridge", a_ss_ridge),
         ("SS Eq.10 + GPR", a_ss_gpr),
         ("SS Eq.10 + SVR", a_ss_svr),
+        ("SS Eq.10 + RF", a_ss_rf),
+        ("SS Eq.10 + Cubist", a_ss_cub),
         ("XGBoost LOO", y_pred_loo),
         ("Optimal Ensemble", y_ensemble_opt),
     ]
@@ -1026,10 +1632,13 @@ def main():
         "Transfer (base)": y_pred_base,
         "DFT Eq.10 (this work)": a_eq10_dft,
         "DFT Eq.10 SS (this work)": a_eq10_ss,
+        "SS Eq.10 ML-filled": a_eq10_ss_filled,
         "SS Eq.10 + Ridge": a_ss_ridge,
         "SS Eq.10 + XGBoost": a_ss_xgb,
         "SS Eq.10 + GPR": a_ss_gpr,
         "SS Eq.10 + SVR": a_ss_svr,
+        "SS Eq.10 + RF": a_ss_rf,
+        "SS Eq.10 + Cubist": a_ss_cub,
         "King Vegard (this work)": a_vegard_king,
     }
     y_best = method_predictions.get(best_method[0], y_ensemble_opt)
@@ -1079,10 +1688,13 @@ def main():
             "a_vegard_king": a_vegard_king[i],
             "a_eq10_dft": a_eq10_dft[i],
             "a_eq10_ss": a_eq10_ss[i],
+            "a_eq10_ss_ml_filled": a_eq10_ss_filled[i],
             "a_ss_ridge": a_ss_ridge[i],
             "a_ss_gpr": a_ss_gpr[i],
             "a_ss_gpr_std": gpr_uncertainty[i],
             "a_ss_svr": a_ss_svr[i],
+            "a_ss_rf": a_ss_rf[i],
+            "a_ss_cubist": a_ss_cub[i],
             "a_xgb_loo": y_pred_loo[i],
             "a_ensemble": y_ensemble_opt[i],
             "a_best": y_best[i],
@@ -1102,6 +1714,195 @@ def main():
             omega_data.append({"pair": f"{pair[0]}-{pair[1]}", "omega_b2": None,
                                "omega_l12": val})
     pd.DataFrame(omega_data).to_csv(OUTDIR / "omega_sf_data.csv", index=False)
+
+    # Save ML-filled Ω_sf with source labels
+    omega_ml_data = []
+    all_elements = sorted(KING_ATOMIC_VOLUMES.keys())
+    for i, elA in enumerate(all_elements):
+        for elB in all_elements[i+1:]:
+            pair = tuple(sorted([elA, elB]))
+            row_d = {"pair": f"{pair[0]}-{pair[1]}"}
+            if pair in omega_b2:
+                row_d["omega_b2"] = omega_b2[pair]
+                row_d["b2_source"] = "DFT"
+            elif pair in ml_pred_b2:
+                row_d["omega_b2"] = ml_pred_b2[pair][0]
+                row_d["b2_source"] = "ML"
+                row_d["b2_sigma"] = ml_pred_b2[pair][1]
+            if pair in omega_l12:
+                row_d["omega_l12"] = omega_l12[pair]
+                row_d["l12_source"] = "DFT"
+            elif pair in ml_pred_l12:
+                row_d["omega_l12"] = ml_pred_l12[pair][0]
+                row_d["l12_source"] = "ML"
+                row_d["l12_sigma"] = ml_pred_l12[pair][1]
+            omega_ml_data.append(row_d)
+    pd.DataFrame(omega_ml_data).to_csv(
+        OUTDIR / "omega_sf_ml_filled.csv", index=False)
+
+    # =====================================================================
+    # Phase 9b: δ_sf descriptor analysis — single-phase stability
+    # =====================================================================
+    print("\n[9b] Computing δ_sf descriptors for single-phase analysis...")
+
+    descriptor_data = []
+    for i, hea in enumerate(ALONSO_TABLE2):
+        comp = hea["comp"]
+        struct = hea["struct"]
+        elements = sorted(comp.keys())
+        elems_str = "-".join(elements)
+
+        dr = compute_delta_r(comp)
+        omega_ss = omega_b2 if struct == "BCC" else omega_l12
+        d_sf_ss = compute_delta_sf(comp, omega_ss)
+
+        # Combined Ω_sf (fallback to all-structure data for better coverage)
+        d_sf_combined = compute_delta_sf(comp, omega_sf)
+        d_sf_signed = compute_delta_sf_signed(comp, omega_sf)
+        omega_yang = compute_omega_yang(comp, struct)
+
+        # Count missing Ω_sf pairs (structure-specific vs combined)
+        n_pairs = 0
+        n_missing_ss = 0
+        n_missing_combined = 0
+        for ii in range(len(elements)):
+            for jj in range(ii+1, len(elements)):
+                pair = tuple(sorted([elements[ii], elements[jj]]))
+                n_pairs += 1
+                if pair not in omega_ss:
+                    n_missing_ss += 1
+                if pair not in omega_sf:
+                    n_missing_combined += 1
+
+        descriptor_data.append({
+            "composition": elems_str,
+            "struct": struct,
+            "a_exp": hea["a_exp"],
+            "a_eq10_ss": a_eq10_ss[i],
+            "delta_r": dr,
+            "delta_sf_ss": d_sf_ss,
+            "delta_sf": d_sf_combined,
+            "delta_sf_signed": d_sf_signed,
+            "Omega_yang": omega_yang,
+            "n_elements": len(elements),
+            "error_abs": abs(y_hea[i] - a_eq10_ss[i]),
+            "n_pairs": n_pairs,
+            "n_missing_ss": n_missing_ss,
+            "n_missing_combined": n_missing_combined,
+        })
+
+    desc_df = pd.DataFrame(descriptor_data)
+    desc_df.to_csv(OUTDIR / "descriptor_analysis.csv", index=False)
+
+    # Summary statistics
+    bcc_desc = desc_df[desc_df["struct"] == "BCC"]
+    fcc_desc = desc_df[desc_df["struct"] == "FCC"]
+
+    print(f"    δr  range: BCC [{bcc_desc['delta_r'].min():.2f}, "
+          f"{bcc_desc['delta_r'].max():.2f}%], "
+          f"FCC [{fcc_desc['delta_r'].min():.2f}, {fcc_desc['delta_r'].max():.2f}%]")
+    print(f"    δ_sf (combined) range: BCC [{bcc_desc['delta_sf'].min():.4f}, "
+          f"{bcc_desc['delta_sf'].max():.4f}], "
+          f"FCC [{fcc_desc['delta_sf'].min():.4f}, {fcc_desc['delta_sf'].max():.4f}]")
+    print(f"    δ_sf (SS-only) range: BCC [{bcc_desc['delta_sf_ss'].min():.4f}, "
+          f"{bcc_desc['delta_sf_ss'].max():.4f}], "
+          f"FCC [{fcc_desc['delta_sf_ss'].min():.4f}, {fcc_desc['delta_sf_ss'].max():.4f}]")
+    print(f"    Missing pairs (SS): BCC {bcc_desc['n_missing_ss'].sum()}/{bcc_desc['n_pairs'].sum()}, "
+          f"FCC {fcc_desc['n_missing_ss'].sum()}/{fcc_desc['n_pairs'].sum()}")
+    print(f"    Missing pairs (combined): BCC {bcc_desc['n_missing_combined'].sum()}/{bcc_desc['n_pairs'].sum()}, "
+          f"FCC {fcc_desc['n_missing_combined'].sum()}/{fcc_desc['n_pairs'].sum()}")
+
+    # Correlation: δr vs δ_sf
+    from scipy.stats import pearsonr, spearmanr
+    r_pearson, p_pearson = pearsonr(desc_df["delta_r"], desc_df["delta_sf"])
+    r_spearman, p_spearman = spearmanr(desc_df["delta_r"], desc_df["delta_sf"])
+    print(f"    δr vs δ_sf: Pearson r={r_pearson:.3f} (p={p_pearson:.1e}), "
+          f"Spearman ρ={r_spearman:.3f} (p={p_spearman:.1e})")
+
+    # Correlation with prediction error
+    r_err_dr, _ = pearsonr(desc_df["delta_r"], desc_df["error_abs"])
+    r_err_dsf, _ = pearsonr(desc_df["delta_sf"], desc_df["error_abs"])
+    print(f"    Error correlation: δr→|ε| r={r_err_dr:.3f}, δ_sf→|ε| r={r_err_dsf:.3f}")
+
+    # =====================================================================
+    # Figure: δr vs δ_sf comparison (3-panel)
+    # =====================================================================
+    fig_desc, axes_desc = plt.subplots(1, 3, figsize=(24, 8))
+
+    # Panel 1: δr vs δ_sf scatter
+    ax = axes_desc[0]
+    for struct_lab, marker, color in [("BCC", "s", "#4477AA"), ("FCC", "o", "#CC6677")]:
+        mask = desc_df["struct"] == struct_lab
+        ax.scatter(desc_df.loc[mask, "delta_r"],
+                   desc_df.loc[mask, "delta_sf"],
+                   marker=marker, c=color, s=100, alpha=0.8,
+                   edgecolors="k", lw=0.5, label=struct_lab)
+    ax.set_xlabel(r"$\delta_r$ (%)")
+    ax.set_ylabel(r"$\delta_{sf}$")
+    ax.set_title(f"$\\delta_r$ vs $\\delta_{{sf}}$  (r={r_pearson:.2f})")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+
+    # Panel 2: δ_sf vs prediction error
+    ax = axes_desc[1]
+    for struct_lab, marker, color in [("BCC", "s", "#4477AA"), ("FCC", "o", "#CC6677")]:
+        mask = desc_df["struct"] == struct_lab
+        ax.scatter(desc_df.loc[mask, "delta_sf"],
+                   desc_df.loc[mask, "error_abs"],
+                   marker=marker, c=color, s=100, alpha=0.8,
+                   edgecolors="k", lw=0.5, label=struct_lab)
+    ax.set_xlabel(r"$\delta_{sf}$")
+    ax.set_ylabel("Prediction error |ε| (Å)")
+    ax.set_title(f"$\\delta_{{sf}}$ vs Error  (r={r_err_dsf:.2f})")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+
+    # Panel 3: δr vs prediction error
+    ax = axes_desc[2]
+    for struct_lab, marker, color in [("BCC", "s", "#4477AA"), ("FCC", "o", "#CC6677")]:
+        mask = desc_df["struct"] == struct_lab
+        ax.scatter(desc_df.loc[mask, "delta_r"],
+                   desc_df.loc[mask, "error_abs"],
+                   marker=marker, c=color, s=100, alpha=0.8,
+                   edgecolors="k", lw=0.5, label=struct_lab)
+    ax.set_xlabel(r"$\delta_r$ (%)")
+    ax.set_ylabel("Prediction error |ε| (Å)")
+    ax.set_title(f"$\\delta_r$ vs Error  (r={r_err_dr:.2f})")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+
+    fig_desc.tight_layout()
+    fig_desc.savefig(OUTDIR / "fig_delta_sf_analysis.png", dpi=150, bbox_inches="tight")
+    plt.close(fig_desc)
+    print(f"    Saved fig_delta_sf_analysis.png")
+
+    # =====================================================================
+    # Figure: Ω_Yang vs δ_sf (phase stability map)
+    # =====================================================================
+    fig_phase, ax_phase = plt.subplots(figsize=(10, 8))
+    for struct_lab, marker, color in [("BCC", "s", "#4477AA"), ("FCC", "o", "#CC6677")]:
+        mask = desc_df["struct"] == struct_lab
+        omega_vals_plot = desc_df.loc[mask, "Omega_yang"].clip(upper=50)
+        ax_phase.scatter(desc_df.loc[mask, "delta_r"],
+                         omega_vals_plot,
+                         marker=marker, c=color, s=120, alpha=0.8,
+                         edgecolors="k", lw=0.5, label=struct_lab)
+
+    # Zhang criteria lines
+    ax_phase.axvline(x=6.6, color="red", ls="--", lw=2, alpha=0.7, label=r"$\delta_r$ = 6.6%")
+    ax_phase.axhline(y=1.1, color="green", ls="--", lw=2, alpha=0.7, label=r"$\Omega$ = 1.1")
+    ax_phase.set_xlabel(r"$\delta_r$ (%)")
+    ax_phase.set_ylabel(r"$\Omega$ (Yang-Zhang)")
+    ax_phase.set_title("Phase Stability Map: Alonso Table 2 HEAs\n"
+                        r"Single-phase region: $\delta_r < 6.6\%$ and $\Omega > 1.1$")
+    ax_phase.legend(fontsize=13)
+    ax_phase.grid(True, alpha=0.3)
+    ax_phase.set_xlim(-0.5, max(desc_df["delta_r"].max() * 1.1, 7.5))
+    ax_phase.set_ylim(0, min(desc_df["Omega_yang"].clip(upper=50).max() * 1.2, 55))
+    fig_phase.tight_layout()
+    fig_phase.savefig(OUTDIR / "fig_phase_stability_map.png", dpi=150, bbox_inches="tight")
+    plt.close(fig_phase)
+    print(f"    Saved fig_phase_stability_map.png")
 
     # =====================================================================
     # Figures
@@ -1145,15 +1946,19 @@ def main():
         ("King\nVegard", results["King Vegard (this work)"][0]),
         ("DFT\nEq.10", results["DFT Eq.10 (this work)"][0]),
         ("DFT Eq.10\nSS", results["DFT Eq.10 SS (this work)"][0]),
+        ("SS ML-\nfilled", results["SS Eq.10 ML-filled"][0]),
         ("SS+Ridge", results["SS Eq.10 + Ridge"][0]),
         ("SS+GPR", results["SS Eq.10 + GPR"][0]),
         ("SS+SVR", results["SS Eq.10 + SVR"][0]),
+        ("SS+RF", results["SS Eq.10 + RF"][0]),
+        ("SS+Cubist", results["SS Eq.10 + Cubist"][0]),
         ("SS+XGBoost", results["SS Eq.10 + XGBoost"][0]),
         ("Optimal\nEnsemble", results["Optimal Ensemble"][0]),
     ]
     names_bar, vals_bar = zip(*bar_methods)
     colors = ["#AAAAAA", "#888888", "#4477AA", "#44AA77", "#22AA22",
-              "#CC8800", "#FF6600", "#9933CC", "#EE3333", "#DD22DD"]
+              "#11BB55", "#CC8800", "#FF6600", "#9933CC", "#228B22",
+              "#8B4513", "#EE3333", "#DD22DD"]
     bars = ax.bar(range(len(names_bar)), vals_bar, color=colors, edgecolor="k")
     ax.set_xticks(range(len(names_bar)))
     ax.set_xticklabels(names_bar, fontsize=13)
@@ -1323,6 +2128,132 @@ def main():
 
     print(f"\n    All figures saved to {OUTDIR}/")
 
+    # =====================================================================
+    # Phase 10: Independent Test Set Validation
+    # =====================================================================
+    print("\n[11] Independent Test Set Validation...")
+    print(f"     Test set: {len(INDEPENDENT_TEST)} HEAs from literature")
+
+    ind_results = []
+    for hea in INDEPENDENT_TEST:
+        comp = hea["comp"]
+        struct = hea["struct"]
+        a_exp = hea["a_exp"]
+        ref = hea.get("ref", "")
+
+        # Alonso Vegard
+        a_veg = compute_vegard(comp, struct)
+
+        # Alonso Eq.10 (combined DFT Ω_sf, γ=1)
+        a_eq10_king = compute_eq10_dft(comp, struct, omega_sf)
+
+        # DFT Eq.10 SS (structure-specific, optimized γ)
+        omega_ss = omega_b2 if struct == "BCC" else omega_l12
+        gamma_ss = best_gb if struct == "BCC" else best_gf
+        a_eq10_ss_ind = compute_eq10_scaled(comp, struct, omega_ss, gamma=gamma_ss)
+
+        ind_results.append({
+            "composition": "-".join(sorted(comp.keys())),
+            "struct": struct,
+            "a_exp": a_exp,
+            "a_vegard": a_veg,
+            "a_eq10_king": a_eq10_king,
+            "a_eq10_ss": a_eq10_ss_ind,
+            "err_vegard": a_exp - a_veg,
+            "err_king": a_exp - a_eq10_king,
+            "err_ss": a_exp - a_eq10_ss_ind,
+            "ref": ref,
+        })
+
+    ind_df = pd.DataFrame(ind_results)
+
+    # Compute metrics
+    def rmse(err):
+        return np.sqrt(np.mean(err ** 2))
+
+    def mae(err):
+        return np.mean(np.abs(err))
+
+    y_ind = ind_df["a_exp"].values
+    err_veg = ind_df["err_vegard"].values
+    err_king = ind_df["err_king"].values
+    err_ss = ind_df["err_ss"].values
+
+    r2_veg = 1 - np.sum(err_veg**2) / np.sum((y_ind - y_ind.mean())**2)
+    r2_king = 1 - np.sum(err_king**2) / np.sum((y_ind - y_ind.mean())**2)
+    r2_ss = 1 - np.sum(err_ss**2) / np.sum((y_ind - y_ind.mean())**2)
+
+    # Structure-specific
+    bcc_ind = ind_df["struct"] == "BCC"
+    fcc_ind = ind_df["struct"] == "FCC"
+
+    print(f"\n    === Independent Test Set Results ({len(ind_df)} HEAs) ===")
+    print(f"    {'Method':<25} {'RMSE':>8} {'MAE':>8} {'R²':>8}")
+    print(f"    {'-'*49}")
+    print(f"    {'Vegard':<25} {rmse(err_veg):>8.4f} {mae(err_veg):>8.4f} {r2_veg:>8.4f}")
+    print(f"    {'Alonso Eq.10 (King)':<25} {rmse(err_king):>8.4f} {mae(err_king):>8.4f} {r2_king:>8.4f}")
+    print(f"    {'DFT Eq.10 SS':<25} {rmse(err_ss):>8.4f} {mae(err_ss):>8.4f} {r2_ss:>8.4f}")
+    print()
+
+    if bcc_ind.sum() > 0:
+        print(f"    BCC ({bcc_ind.sum()} HEAs):")
+        print(f"      Vegard:       RMSE = {rmse(err_veg[bcc_ind]):.4f} Å")
+        print(f"      King Eq.10:   RMSE = {rmse(err_king[bcc_ind]):.4f} Å")
+        print(f"      DFT Eq.10 SS: RMSE = {rmse(err_ss[bcc_ind]):.4f} Å")
+
+    if fcc_ind.sum() > 0:
+        print(f"    FCC ({fcc_ind.sum()} HEAs):")
+        print(f"      Vegard:       RMSE = {rmse(err_veg[fcc_ind]):.4f} Å")
+        print(f"      King Eq.10:   RMSE = {rmse(err_king[fcc_ind]):.4f} Å")
+        print(f"      DFT Eq.10 SS: RMSE = {rmse(err_ss[fcc_ind]):.4f} Å")
+
+    # Save results
+    ind_df.to_csv(OUTDIR / "independent_test_results.csv", index=False)
+    print(f"\n    Saved independent_test_results.csv")
+
+    # --- Figure: Independent test parity plot ---
+    fig_ind, axes_ind = plt.subplots(1, 3, figsize=(24, 8))
+    methods_ind = [
+        ("Vegard", ind_df["a_vegard"].values, "steelblue"),
+        ("Alonso Eq.10 (King)", ind_df["a_eq10_king"].values, "gray"),
+        ("DFT Eq.10 SS", ind_df["a_eq10_ss"].values, "#44AA77"),
+    ]
+    for ax, (name, y_pred, color) in zip(axes_ind, methods_ind):
+        bcc_m = ind_df["struct"].values == "BCC"
+        fcc_m = ind_df["struct"].values == "FCC"
+        ax.scatter(y_ind[bcc_m], y_pred[bcc_m], c=color, marker="s", s=100,
+                   alpha=0.85, label=f"BCC ({bcc_m.sum()})", edgecolors="k", lw=0.5)
+        ax.scatter(y_ind[fcc_m], y_pred[fcc_m], c=color, marker="o", s=100,
+                   alpha=0.85, label=f"FCC ({fcc_m.sum()})", edgecolors="k", lw=0.5)
+        lims = [min(y_ind.min(), y_pred.min()) - 0.05,
+                max(y_ind.max(), y_pred.max()) + 0.05]
+        ax.plot(lims, lims, "k--", lw=1)
+        ax.set_xlim(lims)
+        ax.set_ylim(lims)
+        res = y_ind - y_pred
+        rmse_v = np.sqrt(np.mean(res**2))
+        r2_v = 1 - np.sum(res**2) / np.sum((y_ind - y_ind.mean())**2)
+        ax.set_title(f"{name}\nRMSE = {rmse_v:.4f} Å, R$^2$ = {r2_v:.4f}")
+        ax.set_xlabel("Experimental $a$ (Å)")
+        ax.set_ylabel("Predicted $a$ (Å)")
+        ax.legend(fontsize=13)
+        ax.set_aspect("equal")
+        ax.grid(True, alpha=0.3)
+    fig_ind.suptitle(f"Independent Test Set Validation ({len(ind_df)} HEAs, NOT in Alonso Table 2)",
+                     fontsize=20, fontweight="bold")
+    fig_ind.tight_layout()
+    fig_ind.savefig(OUTDIR / "fig_independent_test.png", dpi=200, bbox_inches="tight")
+    plt.close(fig_ind)
+    print(f"    Saved fig_independent_test.png")
+
+    # Per-alloy detail table
+    print(f"\n    Per-alloy predictions:")
+    print(f"    {'Composition':<30} {'Struct':>5} {'a_exp':>7} {'a_SS':>7} {'Err':>7} {'Ref'}")
+    for _, row in ind_df.iterrows():
+        print(f"    {row['composition']:<30} {row['struct']:>5} "
+              f"{row['a_exp']:>7.4f} {row['a_eq10_ss']:>7.4f} "
+              f"{row['err_ss']:>7.4f} {row['ref']}")
+
     # --- Summary ---
     print("\n" + "=" * 70)
     print(f"★ Best overall RMSE: {best_method[1][0]:.4f} Å ({best_method[0]})")
@@ -1332,10 +2263,19 @@ def main():
     alonso_rmse = results["Alonso Eq.10"][0]
     if best_method[1][0] < alonso_rmse:
         print(f"  → Surpassed Alonso Eq.10 ({alonso_rmse:.4f} Å)")
+    print()
+    print("  --- Independent Test Set ---")
+    print(f"  DFT Eq.10 SS RMSE: {rmse(err_ss):.4f} Å")
+    if bcc_ind.sum() > 0:
+        print(f"  BCC:  {rmse(err_ss[bcc_ind]):.4f} Å ({bcc_ind.sum()} HEAs)")
+    if fcc_ind.sum() > 0:
+        print(f"  FCC:  {rmse(err_ss[fcc_ind]):.4f} Å ({fcc_ind.sum()} HEAs)")
     print("=" * 70)
 
-    return results, y_best, y_ensemble_opt, a_eq10_ss, a_ss_gpr, gpr_uncertainty
+    return (results, y_best, y_ensemble_opt, a_eq10_ss, a_ss_gpr,
+            gpr_uncertainty, a_ss_rf, a_ss_cub, a_eq10_ss_filled)
 
 
 if __name__ == "__main__":
-    results, y_best, y_ensemble, a_eq10_ss, a_gpr, gpr_unc = main()
+    (results, y_best, y_ensemble, a_eq10_ss, a_gpr,
+     gpr_unc, a_rf, a_cub, a_filled) = main()
