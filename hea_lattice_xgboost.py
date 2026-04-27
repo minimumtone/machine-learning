@@ -434,8 +434,7 @@ MULTIPHASE_HEA_DB = [
     # Additional IM alloys from Guo & Liu 2011 Table 2
     {"comp":{"Cu":0.2,"Ni":0.2,"Co":0.2,"Zn":0.2,"Al":0.2},"phase":"IM","struct":"BCC+FCC+IM",
      "ref":"Guo2011_CuNiCoZnAl"},
-    {"comp":{"Ti":0.2,"Zr":0.2,"Hf":0.2,"Cu":0.2,"Ni":0.2},"phase":"IM","struct":"BCC+Laves+IM",
-     "ref":"Guo2011_TiZrHfCuNi"},
+    # Note: TiZrHfCuNi listed as AM in Guo2011 Table 3 (see AM section below)
     {"comp":{"Ti":1/6,"Zr":1/6,"Hf":1/6,"Cu":1/6,"Ni":1/6,"Be":1/6},"phase":"IM","struct":"BCC+IM",
      "ref":"Guo2011_TiZrHfCuNiBe"},
     # CoCrFeNiMo_x (Mo drives sigma phase)
