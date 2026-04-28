@@ -152,6 +152,7 @@ KING_ATOMIC_VOLUMES = {
     "Ta":18.014,"W":15.850,"Si":20.024,"Ge":22.634,"Be":8.111,
     "Mg":23.240,"Y":33.018,"La":37.168,"Ce":34.367,"Sc":24.987,
     "B":7.241,"P":23.000,"Sn":27.053,"Pb":30.321,
+    "Er":30.66,"Tb":32.09,"Dy":31.54,"Ca":43.63,
 }
 
 # =====================================================================
@@ -320,6 +321,146 @@ INDEPENDENT_TEST = [
     # Tasan 2014: CoCrFeMnNi FCC
     {"comp":{"Co":0.20,"Cr":0.20,"Fe":0.20,"Mn":0.20,"Ni":0.20},"struct":"FCC","a_exp":3.595,
      "ref":"Tasan2014_ScrMat"},
+]
+
+
+# =====================================================================
+# Multi-phase HEA Classification Database
+# Sources: Zhang (2008), Guo & Liu (2011), Yang & Zhang (2012),
+#          Senkov (2013, 2018), Tsai & Yeh (2014 review)
+# phase: "SS" = single-phase solid solution (BCC/FCC/BCC+FCC)
+#        "IM" = contains intermetallic compounds (Laves, sigma, B2 ordered, etc.)
+#        "AM" = amorphous phase
+# struct: dominant crystal structure for SS alloys
+# =====================================================================
+MULTIPHASE_HEA_DB = [
+    # --- Single-phase solid solutions (SS) ---
+    # Zhang 2008, Table 1 + Guo 2011, Table 1: SS alloys
+    {"comp":{"Co":0.2,"Cr":0.2,"Fe":0.2,"Mn":0.2,"Ni":0.2},"phase":"SS","struct":"FCC",
+     "ref":"Cantor2004"},
+    {"comp":{"Co":0.25,"Cr":0.25,"Fe":0.25,"Ni":0.25},"phase":"SS","struct":"FCC",
+     "ref":"Zhang2008"},
+    {"comp":{"Nb":0.25,"Mo":0.25,"Ta":0.25,"W":0.25},"phase":"SS","struct":"BCC",
+     "ref":"Senkov2010"},
+    {"comp":{"Nb":0.2,"Mo":0.2,"Ta":0.2,"V":0.2,"W":0.2},"phase":"SS","struct":"BCC",
+     "ref":"Senkov2010"},
+    {"comp":{"Nb":0.2,"Mo":0.2,"Ta":0.2,"V":0.2,"Ti":0.2},"phase":"SS","struct":"BCC",
+     "ref":"Senkov2011"},
+    {"comp":{"Nb":0.25,"Ta":0.25,"Ti":0.25,"V":0.25},"phase":"SS","struct":"BCC",
+     "ref":"Senkov2013"},
+    {"comp":{"Nb":0.25,"Ti":0.25,"V":0.25,"Zr":0.25},"phase":"SS","struct":"BCC",
+     "ref":"Senkov2013"},
+    {"comp":{"Hf":0.2,"Nb":0.2,"Ta":0.2,"Ti":0.2,"Zr":0.2},"phase":"SS","struct":"BCC",
+     "ref":"Senkov2012"},
+    {"comp":{"Nb":0.2,"Hf":0.2,"Zr":0.2,"V":0.2,"Ti":0.2},"phase":"SS","struct":"BCC",
+     "ref":"Senkov2013"},
+    {"comp":{"Al":0.25,"Co":0.25,"Cr":0.25,"Fe":0.25},"phase":"SS","struct":"BCC",
+     "ref":"Zhang2008"},
+    {"comp":{"Cu":0.2,"Ni":0.2,"Al":0.2,"Co":0.2,"Cr":0.2},"phase":"SS","struct":"BCC+FCC",
+     "ref":"Yeh2004"},
+    {"comp":{"Cu":0.2,"Ni":0.2,"Al":0.2,"Co":0.2,"Fe":0.2},"phase":"SS","struct":"BCC+FCC",
+     "ref":"Yeh2004"},
+    # Note: equimolar AlCoCrCuFeNi (Yeh2004) reclassified as IM below
+    # (Tong2005 identified B2 ordering at x=1.0 in Al_x CoCrCuFeNi series)
+    {"comp":{"Mo":0.25,"Nb":0.25,"Ta":0.25,"V":0.25},"phase":"SS","struct":"BCC",
+     "ref":"Yao2016"},
+    {"comp":{"Al":0.25,"Nb":0.25,"Ti":0.25,"V":0.25},"phase":"SS","struct":"BCC",
+     "ref":"Stepanov2015"},
+    {"comp":{"Co":0.2,"Cr":0.2,"Cu":0.2,"Fe":0.2,"Ni":0.2},"phase":"SS","struct":"FCC",
+     "ref":"Hsu2004"},
+    # Guo2011 Table 1 - additional SS alloys
+    {"comp":{"Ti":0.2,"V":0.2,"Cr":0.2,"Mn":0.2,"Fe":0.2},"phase":"SS","struct":"BCC",
+     "ref":"Guo2011"},
+    {"comp":{"Co":0.25,"Fe":0.25,"Mn":0.25,"Ni":0.25},"phase":"SS","struct":"FCC",
+     "ref":"Guo2011"},
+    {"comp":{"Co":0.2,"Cr":0.2,"Fe":0.2,"Ni":0.2,"V":0.2},"phase":"SS","struct":"FCC",
+     "ref":"Guo2011"},
+    {"comp":{"Al":1/7,"Co":1/7,"Cr":1/7,"Cu":1/7,"Fe":1/7,"Ni":1/7,"V":1/7},"phase":"SS","struct":"BCC+FCC",
+     "ref":"Singh2011"},
+    # Zhang2012: SS alloys from Omega-delta diagram
+    {"comp":{"Cr":1/6,"Mo":1/6,"Nb":1/6,"Ta":1/6,"V":1/6,"W":1/6},"phase":"SS","struct":"BCC",
+     "ref":"Zhang2015"},
+    {"comp":{"Ti":0.35,"Zr":0.275,"Hf":0.275,"Nb":0.05,"Ta":0.05},"phase":"SS","struct":"BCC",
+     "ref":"Dirras2016"},
+    {"comp":{"Co":0.2,"Cr":0.2,"Fe":0.2,"Ni":0.2,"Pd":0.2},"phase":"SS","struct":"FCC",
+     "ref":"Alonso2021"},
+    #
+    # --- Multi-phase / Intermetallic-containing alloys (IM) ---
+    # Zhang 2008, Guo 2011: IM alloys
+    {"comp":{"Al":1/3,"Co":1/3,"Cr":1/3},"phase":"IM","struct":"BCC+B2",
+     "ref":"Zhang2008"},
+    {"comp":{"Al":0.5/4.5,"Co":1/4.5,"Cr":1/4.5,"Cu":1/4.5,"Fe":1/4.5},"phase":"IM","struct":"BCC+FCC+B2",
+     "ref":"Tong2005_Al05"},
+    {"comp":{"Al":1/5,"Co":1/5,"Cr":1/5,"Cu":1/5,"Fe":1/5},"phase":"IM","struct":"BCC+FCC+B2",
+     "ref":"Tong2005_Al10"},
+    {"comp":{"Al":2/6,"Co":1/6,"Cr":1/6,"Cu":1/6,"Fe":1/6},"phase":"IM","struct":"BCC+B2",
+     "ref":"Tong2005_Al20"},
+    {"comp":{"Al":3/7,"Co":1/7,"Cr":1/7,"Cu":1/7,"Fe":1/7},"phase":"IM","struct":"BCC+B2",
+     "ref":"Tong2005_Al30"},
+    {"comp":{"Al":0.5/5.5,"Co":1/5.5,"Cr":1/5.5,"Cu":1/5.5,"Fe":1/5.5,"Ni":1/5.5},"phase":"SS","struct":"FCC",
+     "ref":"Tong2005b_Al05"},
+    {"comp":{"Al":1/6,"Co":1/6,"Cr":1/6,"Cu":1/6,"Fe":1/6,"Ni":1/6},"phase":"IM","struct":"BCC+FCC+B2",
+     "ref":"Tong2005b_Al10"},
+    {"comp":{"Al":2/7,"Co":1/7,"Cr":1/7,"Cu":1/7,"Fe":1/7,"Ni":1/7},"phase":"IM","struct":"BCC+B2",
+     "ref":"Tong2005b_Al20"},
+    # CoCrFeNiAl_x series (Guo 2011): Al content drives BCC+B2 formation
+    {"comp":{"Al":0.3/4.3,"Co":1/4.3,"Cr":1/4.3,"Fe":1/4.3,"Ni":1/4.3},"phase":"SS","struct":"FCC",
+     "ref":"Wang2009_Al03"},
+    {"comp":{"Al":0.5/4.5,"Co":1/4.5,"Cr":1/4.5,"Fe":1/4.5,"Ni":1/4.5},"phase":"SS","struct":"FCC+BCC",
+     "ref":"Wang2009_Al05"},
+    {"comp":{"Al":0.7/4.7,"Co":1/4.7,"Cr":1/4.7,"Fe":1/4.7,"Ni":1/4.7},"phase":"IM","struct":"BCC+FCC+B2",
+     "ref":"Wang2009_Al07"},
+    {"comp":{"Al":0.9/4.9,"Co":1/4.9,"Cr":1/4.9,"Fe":1/4.9,"Ni":1/4.9},"phase":"IM","struct":"BCC+B2",
+     "ref":"Wang2009_Al09"},
+    {"comp":{"Al":1.0/5.0,"Co":1/5.0,"Cr":1/5.0,"Fe":1/5.0,"Ni":1/5.0},"phase":"IM","struct":"BCC+B2",
+     "ref":"Wang2009_Al10"},
+    {"comp":{"Al":1.5/5.5,"Co":1/5.5,"Cr":1/5.5,"Fe":1/5.5,"Ni":1/5.5},"phase":"IM","struct":"BCC+B2",
+     "ref":"Wang2009_Al15"},
+    {"comp":{"Al":2.0/6.0,"Co":1/6.0,"Cr":1/6.0,"Fe":1/6.0,"Ni":1/6.0},"phase":"IM","struct":"BCC+B2",
+     "ref":"Wang2009_Al20"},
+    # CoCrCuFeNiTi_x (Guo 2011): Ti drives Laves/sigma
+    {"comp":{"Co":1/5.5,"Cr":1/5.5,"Cu":1/5.5,"Fe":1/5.5,"Ni":1/5.5,"Ti":0.5/5.5},"phase":"IM","struct":"FCC+Laves",
+     "ref":"Zhou2007_Ti05"},
+    {"comp":{"Co":1/6,"Cr":1/6,"Cu":1/6,"Fe":1/6,"Ni":1/6,"Ti":1/6},"phase":"IM","struct":"FCC+Laves",
+     "ref":"Zhou2007_Ti10"},
+    # Refractory multi-phase HEAs (Senkov 2013)
+    {"comp":{"Cr":0.25,"Nb":0.25,"Ti":0.25,"Zr":0.25},"phase":"IM","struct":"BCC+Laves",
+     "ref":"Senkov2013_CrNbTiZr"},
+    {"comp":{"Cr":0.2,"Nb":0.2,"Ti":0.2,"V":0.2,"Zr":0.2},"phase":"IM","struct":"BCC+Laves",
+     "ref":"Senkov2013_CrNbTiVZr"},
+    # AlCoCrFeNi high-Al alloys (intermetallic B2 ordered)
+    {"comp":{"Al":0.25,"Co":0.25,"Cr":0.25,"Ni":0.25},"phase":"IM","struct":"BCC+B2+FCC",
+     "ref":"Zhang2008_AlCoCrNi"},
+    # Additional IM alloys from Guo & Liu 2011 Table 2
+    {"comp":{"Cu":0.2,"Ni":0.2,"Co":0.2,"Zn":0.2,"Al":0.2},"phase":"IM","struct":"BCC+FCC+IM",
+     "ref":"Guo2011_CuNiCoZnAl"},
+    # Note: TiZrHfCuNi listed as AM in Guo2011 Table 3 (see AM section below)
+    {"comp":{"Ti":1/6,"Zr":1/6,"Hf":1/6,"Cu":1/6,"Ni":1/6,"Be":1/6},"phase":"IM","struct":"BCC+IM",
+     "ref":"Guo2011_TiZrHfCuNiBe"},
+    # CoCrFeNiMo_x (Mo drives sigma phase)
+    {"comp":{"Co":1/5.5,"Cr":1/5.5,"Fe":1/5.5,"Ni":1/5.5,"Mo":0.5/5.5},"phase":"IM","struct":"FCC+sigma",
+     "ref":"Shun2012_Mo05"},
+    {"comp":{"Co":1/5.85,"Cr":1/5.85,"Fe":1/5.85,"Ni":1/5.85,"Mo":0.85/5.85},"phase":"IM","struct":"FCC+sigma+mu",
+     "ref":"Shun2012_Mo085"},
+    # CoCrFeNiNb_x (Nb drives Laves)
+    {"comp":{"Co":1/5.5,"Cr":1/5.5,"Fe":1/5.5,"Ni":1/5.5,"Nb":0.5/5.5},"phase":"IM","struct":"FCC+Laves",
+     "ref":"He2014_Nb05"},
+    {"comp":{"Co":1/6,"Cr":1/6,"Fe":1/6,"Ni":1/6,"Nb":1/6},"phase":"IM","struct":"FCC+Laves",
+     "ref":"He2014_Nb10"},
+    #
+    # --- Amorphous alloys (AM) from Guo 2011 Table 3 ---
+    {"comp":{"Cu":0.2,"Zr":0.2,"Ti":0.2,"Ni":0.2,"Be":0.2},"phase":"AM","struct":"AM",
+     "ref":"Guo2011_AM1"},
+    {"comp":{"Cu":0.2,"Zr":0.2,"Ti":0.2,"Ni":0.2,"Hf":0.2},"phase":"AM","struct":"AM",
+     "ref":"Guo2011_AM2"},
+    {"comp":{"Zr":1/6,"Ti":1/6,"Cu":1/6,"Ni":1/6,"Be":1/6,"Fe":1/6},"phase":"AM","struct":"AM",
+     "ref":"Guo2011_AM3"},
+    {"comp":{"Er":0.2,"Tb":0.2,"Dy":0.2,"Ni":0.2,"Al":0.2},"phase":"AM","struct":"AM",
+     "ref":"Guo2011_AM4"},
+    {"comp":{"Ca":0.2,"Mg":0.2,"Cu":0.2,"Ni":0.2,"Zn":0.2},"phase":"AM","struct":"AM",
+     "ref":"Guo2011_AM5"},
+    {"comp":{"Ti":0.2,"Zr":0.2,"Cu":0.2,"Pd":0.2,"Sn":0.2},"phase":"AM","struct":"AM",
+     "ref":"Takeuchi2013_AM6"},
 ]
 
 
@@ -718,6 +859,7 @@ def compute_omega_yang(comp, struct):
         "Zr":2128,"Hf":2506,"Os":3306,"Ir":2719,"Au":1337,"Ag":1235,
         "Zn":693,"Si":1687,"Ge":1211,"Be":1560,"Mg":923,"Sc":1814,
         "Y":1799,"La":1193,"Ce":1068,"B":2349,"Sn":505,"Pb":601,
+        "Er":1802,"Tb":1629,"Dy":1685,"Ca":1115,
     }
     # Simplified Miedema mixing enthalpy (kJ/mol) — selected pairs
     # Using Takeuchi & Inoue (2005) tabulated values for common HEA pairs
@@ -750,6 +892,19 @@ def compute_omega_yang(comp, struct):
         ("Ta","Ti"):1,("Ta","V"):-1,("Ta","W"):-7,("Ta","Zr"):3,
         ("Ti","V"):-2,("Ti","Zr"):0,("V","W"):-1,("V","Zr"):-4,
         ("W","Zr"):-9,
+        # Additional pairs for AM/IM alloys (Takeuchi & Inoue 2005)
+        ("Be","Cu"):0,("Be","Ni"):-4,("Be","Ti"):-30,("Be","Zr"):-43,
+        ("Be","Hf"):-37,("Cu","Hf"):-17,
+        ("Hf","Ni"):-42,
+        ("Al","Er"):-33,("Dy","Ni"):-34,("Er","Ni"):-35,("Er","Tb"):0,
+        ("Dy","Er"):0,("Al","Dy"):-38,("Al","Tb"):-39,("Dy","Tb"):0,
+        ("Ca","Cu"):-14,("Ca","Mg"):-6,("Ca","Ni"):-22,("Ca","Zn"):-22,
+        ("Cu","Mg"):-3,("Mg","Ni"):-4,("Mg","Zn"):-4,("Ni","Zn"):-9,
+        ("Cu","Sn"):-7,("Pd","Sn"):-47,("Pd","Ti"):-52,("Pd","Zr"):-91,
+        ("Sn","Ti"):-21,("Sn","Zr"):-44,
+        ("Be","Fe"):0,
+        # Pairs identified as missing by review (Takeuchi & Inoue 2005)
+        ("Al","Zn"):1,("Co","Zn"):-4,("Mn","Ti"):-8,("Mn","V"):-2,("Ni","Tb"):-42,
     }
 
     elements = list(comp.keys())
@@ -2271,6 +2426,406 @@ def main():
     if fcc_ind.sum() > 0:
         print(f"  FCC:  {rmse(err_ss[fcc_ind]):.4f} Å ({fcc_ind.sum()} HEAs)")
     print("=" * 70)
+
+    # =====================================================================
+    # Phase 12: Multi-phase HEA Discrimination Analysis
+    # Compare δr vs δ_sf for single-phase / multi-phase classification
+    # =====================================================================
+    print("\n[12] Multi-phase HEA Discrimination Analysis...")
+    print(f"     Database: {len(MULTIPHASE_HEA_DB)} HEAs")
+
+    from sklearn.metrics import (roc_curve, auc, precision_recall_curve,
+                                 average_precision_score, confusion_matrix,
+                                 f1_score, accuracy_score)
+
+    # Compute descriptors for all multi-phase DB entries
+    mp_results = []
+    for hea in MULTIPHASE_HEA_DB:
+        comp = hea["comp"]
+        phase = hea["phase"]  # SS, IM, or AM
+        struct = hea.get("struct", "")
+        ref = hea.get("ref", "")
+
+        # δr (traditional size mismatch)
+        dr = compute_delta_r(comp)
+
+        # δ_sf using combined Ω_sf (B2+L12 averaged)
+        dsf_combined = compute_delta_sf(comp, omega_sf)
+
+        # δ_sf using structure-specific Ω_sf
+        dsf_b2 = compute_delta_sf(comp, omega_b2)
+        dsf_l12 = compute_delta_sf(comp, omega_l12)
+
+        # Ω parameter (Yang & Zhang 2012)
+        omega_yz = compute_omega_yang(comp, struct)
+
+        # ΔH_mix and ΔS_mix for analysis
+        elements = list(comp.keys())
+        fracs = np.array([comp[e] for e in elements])
+        fracs = fracs / fracs.sum()
+        S_mix = -8.314 * np.sum(fracs[fracs > 0] * np.log(fracs[fracs > 0]))
+
+        # VEC
+        VEC_vals = {
+            "Al":3,"Co":9,"Cr":6,"Cu":11,"Fe":8,"Mn":7,"Mo":6,"Nb":5,
+            "Ni":10,"Pd":10,"Pt":10,"Ta":5,"Ti":4,"V":5,"W":6,"Zr":4,
+            "Hf":4,"Ru":8,"Rh":9,"Ir":9,"Os":8,"Re":7,"Au":11,"Ag":11,
+            "Zn":12,"Si":4,"Ge":4,"Be":2,"Mg":2,"Sc":3,"Y":3,"La":3,
+            "Ce":4,"B":3,"Sn":4,"Pb":4,"Er":3,"Tb":3,"Dy":3,"Ca":2,
+        }
+        vec = np.sum(fracs * np.array([VEC_vals.get(e, 5) for e in elements]))
+
+        mp_results.append({
+            "composition": "-".join(sorted(comp.keys())),
+            "phase": phase,
+            "struct": struct,
+            "is_ss": 1 if phase == "SS" else 0,
+            "delta_r": dr,
+            "delta_sf_combined": dsf_combined,
+            "delta_sf_b2": dsf_b2,
+            "delta_sf_l12": dsf_l12,
+            "omega_yz": omega_yz,
+            "S_mix": S_mix,
+            "VEC": vec,
+            "ref": ref,
+        })
+
+    mp_df = pd.DataFrame(mp_results)
+    mp_df.to_csv(OUTDIR / "multiphase_classification.csv", index=False)
+
+    n_ss = (mp_df["phase"] == "SS").sum()
+    n_im = (mp_df["phase"] == "IM").sum()
+    n_am = (mp_df["phase"] == "AM").sum()
+    print(f"     SS: {n_ss}, IM: {n_im}, AM: {n_am}")
+
+    # Binary classification: SS=1 (positive) vs non-SS=0 (negative)
+    y_true = mp_df["is_ss"].values
+
+    # --- ROC curves for δr and δ_sf ---
+    # For SS prediction: lower δr / δ_sf → more likely SS
+    # So we negate the scores for ROC (higher score = more positive)
+    dr_scores = -mp_df["delta_r"].values
+    dsf_scores = -mp_df["delta_sf_combined"].values
+
+    # Also test Ω parameter (higher Ω → more likely SS)
+    omega_scores = np.clip(mp_df["omega_yz"].values, 0, 100)
+
+    fpr_dr, tpr_dr, thresh_dr = roc_curve(y_true, dr_scores)
+    auc_dr = auc(fpr_dr, tpr_dr)
+
+    fpr_dsf, tpr_dsf, thresh_dsf = roc_curve(y_true, dsf_scores)
+    auc_dsf = auc(fpr_dsf, tpr_dsf)
+
+    fpr_om, tpr_om, thresh_om = roc_curve(y_true, omega_scores)
+    auc_om = auc(fpr_om, tpr_om)
+
+    print(f"\n    === ROC AUC ===")
+    print(f"    δr:          AUC = {auc_dr:.3f}")
+    print(f"    δ_sf (comb): AUC = {auc_dsf:.3f}")
+    print(f"    Ω (Yang):    AUC = {auc_om:.3f}")
+
+    # --- Precision-Recall curves ---
+    prec_dr, rec_dr, _ = precision_recall_curve(y_true, dr_scores)
+    ap_dr = average_precision_score(y_true, dr_scores)
+
+    prec_dsf, rec_dsf, _ = precision_recall_curve(y_true, dsf_scores)
+    ap_dsf = average_precision_score(y_true, dsf_scores)
+
+    prec_om, rec_om, _ = precision_recall_curve(y_true, omega_scores)
+    ap_om = average_precision_score(y_true, omega_scores)
+
+    print(f"\n    === Average Precision ===")
+    print(f"    δr:          AP = {ap_dr:.3f}")
+    print(f"    δ_sf (comb): AP = {ap_dsf:.3f}")
+    print(f"    Ω (Yang):    AP = {ap_om:.3f}")
+
+    # --- Yang-Zhang criterion: δr < 6.6% AND Ω > 1.1 ---
+    yz_pred = ((mp_df["delta_r"] < 6.6) & (mp_df["omega_yz"] > 1.1)).astype(int)
+    yz_acc = accuracy_score(y_true, yz_pred)
+    yz_f1 = f1_score(y_true, yz_pred, zero_division=0)
+    cm_yz = confusion_matrix(y_true, yz_pred, labels=[0, 1])
+
+    print(f"\n    === Yang-Zhang Criterion (δr<6.6%, Ω>1.1) ===")
+    print(f"    Accuracy: {yz_acc:.3f}, F1: {yz_f1:.3f}")
+    print(f"    Confusion matrix (rows=true, cols=pred):")
+    print(f"      [non-SS pred non-SS, non-SS pred SS] = [{cm_yz[0,0]:2d}, {cm_yz[0,1]:2d}]")
+    print(f"      [SS pred non-SS,     SS pred SS    ] = [{cm_yz[1,0]:2d}, {cm_yz[1,1]:2d}]")
+
+    # --- Optimal threshold for δ_sf ---
+    # Find threshold that maximizes Youden's J statistic on ROC
+    j_scores_dr = tpr_dr - fpr_dr
+    opt_idx_dr = np.argmax(j_scores_dr)
+    opt_thresh_dr = -thresh_dr[opt_idx_dr]  # negate back
+    j_scores_dsf = tpr_dsf - fpr_dsf
+    opt_idx_dsf = np.argmax(j_scores_dsf)
+    opt_thresh_dsf = -thresh_dsf[opt_idx_dsf]  # negate back
+
+    # Apply optimal thresholds
+    pred_dr_opt = (mp_df["delta_r"] < opt_thresh_dr).astype(int)
+    acc_dr_opt = accuracy_score(y_true, pred_dr_opt)
+    f1_dr_opt = f1_score(y_true, pred_dr_opt, zero_division=0)
+    cm_dr_opt = confusion_matrix(y_true, pred_dr_opt, labels=[0, 1])
+
+    pred_dsf_opt = (mp_df["delta_sf_combined"] < opt_thresh_dsf).astype(int)
+    acc_dsf_opt = accuracy_score(y_true, pred_dsf_opt)
+    f1_dsf_opt = f1_score(y_true, pred_dsf_opt, zero_division=0)
+    cm_dsf_opt = confusion_matrix(y_true, pred_dsf_opt, labels=[0, 1])
+
+    print(f"\n    === Optimal Thresholds (Youden's J) ===")
+    print(f"    δr:  threshold = {opt_thresh_dr:.2f}%, Acc = {acc_dr_opt:.3f}, F1 = {f1_dr_opt:.3f}")
+    print(f"    δ_sf: threshold = {opt_thresh_dsf:.4f}, Acc = {acc_dsf_opt:.3f}, F1 = {f1_dsf_opt:.3f}")
+
+    # --- Combined criterion: δ_sf + Ω ---
+    # Test: δ_sf < opt_thresh AND Ω > 1.1
+    pred_dsf_yz = ((mp_df["delta_sf_combined"] < opt_thresh_dsf) &
+                   (mp_df["omega_yz"] > 1.1)).astype(int)
+    acc_dsf_yz = accuracy_score(y_true, pred_dsf_yz)
+    f1_dsf_yz = f1_score(y_true, pred_dsf_yz, zero_division=0)
+    cm_dsf_yz = confusion_matrix(y_true, pred_dsf_yz, labels=[0, 1])
+
+    print(f"\n    === Combined δ_sf + Ω Criterion ===")
+    print(f"    δ_sf<{opt_thresh_dsf:.4f} AND Ω>1.1: Acc = {acc_dsf_yz:.3f}, F1 = {f1_dsf_yz:.3f}")
+
+    # ==================================================================
+    # Publication-quality figures
+    # ==================================================================
+    FONTSIZE = 18
+    TICK_SIZE = 14
+
+    # --- Figure 1: ROC comparison (3 panels) ---
+    fig_roc, axes_roc = plt.subplots(1, 3, figsize=(24, 8))
+    for ax in axes_roc:
+        ax.tick_params(labelsize=TICK_SIZE)
+
+    ax1, ax2, ax3 = axes_roc
+
+    # Panel 1: ROC curves overlay
+    ax1.plot(fpr_dr, tpr_dr, 'b-', lw=2.5,
+             label=f'$\\delta_r$ (AUC={auc_dr:.3f})')
+    ax1.plot(fpr_dsf, tpr_dsf, 'r-', lw=2.5,
+             label=f'$\\delta_{{sf}}$ (AUC={auc_dsf:.3f})')
+    ax1.plot(fpr_om, tpr_om, 'g--', lw=2.5,
+             label=f'$\\Omega$ (AUC={auc_om:.3f})')
+    ax1.plot([0, 1], [0, 1], 'k--', lw=1, alpha=0.5)
+    ax1.set_xlabel("False Positive Rate", fontsize=FONTSIZE)
+    ax1.set_ylabel("True Positive Rate", fontsize=FONTSIZE)
+    ax1.set_title("ROC Curves: SS vs non-SS", fontsize=FONTSIZE)
+    ax1.legend(fontsize=FONTSIZE - 2, loc='lower right')
+    ax1.set_xlim([-0.02, 1.02])
+    ax1.set_ylim([-0.02, 1.02])
+    ax1.grid(True, alpha=0.3)
+
+    # Panel 2: Precision-Recall curves
+    ax2.plot(rec_dr, prec_dr, 'b-', lw=2.5,
+             label=f'$\\delta_r$ (AP={ap_dr:.3f})')
+    ax2.plot(rec_dsf, prec_dsf, 'r-', lw=2.5,
+             label=f'$\\delta_{{sf}}$ (AP={ap_dsf:.3f})')
+    ax2.plot(rec_om, prec_om, 'g--', lw=2.5,
+             label=f'$\\Omega$ (AP={ap_om:.3f})')
+    baseline = y_true.sum() / len(y_true)
+    ax2.axhline(baseline, color='k', ls='--', lw=1, alpha=0.5,
+                label=f'Baseline ({baseline:.2f})')
+    ax2.set_xlabel("Recall", fontsize=FONTSIZE)
+    ax2.set_ylabel("Precision", fontsize=FONTSIZE)
+    ax2.set_title("Precision-Recall Curves", fontsize=FONTSIZE)
+    ax2.legend(fontsize=FONTSIZE - 2, loc='lower left')
+    ax2.set_xlim([-0.02, 1.02])
+    ax2.set_ylim([0, 1.05])
+    ax2.grid(True, alpha=0.3)
+
+    # Panel 3: Confusion matrices comparison
+    # Show Yang-Zhang and δ_sf+Ω side by side
+    labels_cm = ["non-SS", "SS"]
+    cms = [
+        (cm_yz, f"Yang-Zhang\n($\\delta_r$<6.6%, $\\Omega$>1.1)\nAcc={yz_acc:.2f}, F1={yz_f1:.2f}"),
+        (cm_dsf_yz, f"$\\delta_{{sf}}$+$\\Omega$\n($\\delta_{{sf}}$<{opt_thresh_dsf:.3f}, $\\Omega$>1.1)\nAcc={acc_dsf_yz:.2f}, F1={f1_dsf_yz:.2f}"),
+    ]
+    for idx, (cm, title) in enumerate(cms):
+        x_off = 0.05 + idx * 0.5
+        for i in range(2):
+            for j in range(2):
+                color = '#44AA77' if i == j else '#CC5555'
+                alpha = 0.3 + 0.4 * cm[i, j] / max(cm.max(), 1)
+                rect = plt.Rectangle((x_off + j * 0.18, 0.25 + (1 - i) * 0.22),
+                                     0.16, 0.18, fc=color, alpha=alpha,
+                                     transform=ax3.transAxes)
+                ax3.add_patch(rect)
+                ax3.text(x_off + j * 0.18 + 0.08, 0.25 + (1 - i) * 0.22 + 0.09,
+                         str(cm[i, j]), ha='center', va='center',
+                         fontsize=FONTSIZE + 2, fontweight='bold',
+                         transform=ax3.transAxes)
+        # Row/column labels
+        for i, lab in enumerate(labels_cm):
+            ax3.text(x_off - 0.03, 0.25 + (1 - i) * 0.22 + 0.09, lab,
+                     ha='right', va='center', fontsize=TICK_SIZE,
+                     transform=ax3.transAxes)
+            ax3.text(x_off + i * 0.18 + 0.08, 0.19, lab,
+                     ha='center', va='top', fontsize=TICK_SIZE,
+                     transform=ax3.transAxes)
+        ax3.text(x_off + 0.18, 0.78, title, ha='center', va='bottom',
+                 fontsize=TICK_SIZE, transform=ax3.transAxes)
+    ax3.set_xlim([0, 1])
+    ax3.set_ylim([0, 1])
+    ax3.axis('off')
+    ax3.set_title("Confusion Matrices", fontsize=FONTSIZE)
+
+    fig_roc.suptitle(f"Single-phase SS Classification ({len(mp_df)} HEAs: {n_ss} SS, {n_im} IM, {n_am} AM)",
+                     fontsize=FONTSIZE + 2, fontweight='bold')
+    fig_roc.tight_layout()
+    fig_roc.savefig(OUTDIR / "fig_multiphase_roc.png", dpi=200, bbox_inches="tight")
+    plt.close(fig_roc)
+    print(f"\n    Saved fig_multiphase_roc.png")
+
+    # --- Figure 2: δr vs δ_sf scatter colored by phase ---
+    fig_sc, axes_sc = plt.subplots(1, 3, figsize=(24, 8))
+    for ax in axes_sc:
+        ax.tick_params(labelsize=TICK_SIZE)
+
+    ax1, ax2, ax3 = axes_sc
+    phase_colors = {"SS": "#44AA77", "IM": "#CC5555", "AM": "#4477AA"}
+    phase_markers = {"SS": "o", "IM": "s", "AM": "D"}
+
+    # Panel 1: δr vs δ_sf
+    for ph in ["SS", "IM", "AM"]:
+        mask = mp_df["phase"] == ph
+        if mask.sum() == 0:
+            continue
+        ax1.scatter(mp_df.loc[mask, "delta_r"],
+                    mp_df.loc[mask, "delta_sf_combined"],
+                    c=phase_colors[ph], marker=phase_markers[ph],
+                    s=120, alpha=0.8, label=f"{ph} ({mask.sum()})",
+                    edgecolors='k', lw=0.5)
+    ax1.axvline(6.6, color='b', ls='--', lw=1.5, alpha=0.7, label='$\\delta_r$=6.6%')
+    ax1.axhline(opt_thresh_dsf, color='r', ls='--', lw=1.5, alpha=0.7,
+                label=f'$\\delta_{{sf}}$={opt_thresh_dsf:.3f}')
+    ax1.set_xlabel("$\\delta_r$ (%)", fontsize=FONTSIZE)
+    ax1.set_ylabel("$\\delta_{sf}$ (combined)", fontsize=FONTSIZE)
+    ax1.set_title("$\\delta_r$ vs $\\delta_{sf}$", fontsize=FONTSIZE)
+    ax1.legend(fontsize=FONTSIZE - 4)
+    ax1.grid(True, alpha=0.3)
+
+    # Panel 2: δr–Ω phase stability map
+    for ph in ["SS", "IM", "AM"]:
+        mask = mp_df["phase"] == ph
+        if mask.sum() == 0:
+            continue
+        ax2.scatter(mp_df.loc[mask, "delta_r"],
+                    np.clip(mp_df.loc[mask, "omega_yz"], 0, 50),
+                    c=phase_colors[ph], marker=phase_markers[ph],
+                    s=120, alpha=0.8, label=f"{ph} ({mask.sum()})",
+                    edgecolors='k', lw=0.5)
+    ax2.axvline(6.6, color='k', ls='--', lw=1.5, alpha=0.5)
+    ax2.axhline(1.1, color='k', ls='--', lw=1.5, alpha=0.5)
+    ax2.fill_between([0, 6.6], 1.1, 50, alpha=0.08, color='green',
+                     label='Yang-Zhang SS region')
+    ax2.set_xlabel("$\\delta_r$ (%)", fontsize=FONTSIZE)
+    ax2.set_ylabel("$\\Omega$ (Yang-Zhang)", fontsize=FONTSIZE)
+    ax2.set_title("$\\delta_r$–$\\Omega$ Phase Map", fontsize=FONTSIZE)
+    ax2.legend(fontsize=FONTSIZE - 4)
+    ax2.set_ylim([-0.5, min(50, mp_df["omega_yz"].clip(upper=50).max() + 5)])
+    ax2.grid(True, alpha=0.3)
+
+    # Panel 3: δ_sf–Ω phase map
+    for ph in ["SS", "IM", "AM"]:
+        mask = mp_df["phase"] == ph
+        if mask.sum() == 0:
+            continue
+        ax3.scatter(mp_df.loc[mask, "delta_sf_combined"],
+                    np.clip(mp_df.loc[mask, "omega_yz"], 0, 50),
+                    c=phase_colors[ph], marker=phase_markers[ph],
+                    s=120, alpha=0.8, label=f"{ph} ({mask.sum()})",
+                    edgecolors='k', lw=0.5)
+    ax3.axvline(opt_thresh_dsf, color='r', ls='--', lw=1.5, alpha=0.7)
+    ax3.axhline(1.1, color='k', ls='--', lw=1.5, alpha=0.5)
+    ax3.set_xlabel("$\\delta_{sf}$ (combined)", fontsize=FONTSIZE)
+    ax3.set_ylabel("$\\Omega$ (Yang-Zhang)", fontsize=FONTSIZE)
+    ax3.set_title("$\\delta_{sf}$–$\\Omega$ Phase Map", fontsize=FONTSIZE)
+    ax3.legend(fontsize=FONTSIZE - 4)
+    ax3.set_ylim([-0.5, min(50, mp_df["omega_yz"].clip(upper=50).max() + 5)])
+    ax3.grid(True, alpha=0.3)
+
+    fig_sc.suptitle(f"Phase Stability Maps ({len(mp_df)} HEAs)",
+                    fontsize=FONTSIZE + 2, fontweight='bold')
+    fig_sc.tight_layout()
+    fig_sc.savefig(OUTDIR / "fig_multiphase_scatter.png", dpi=200, bbox_inches="tight")
+    plt.close(fig_sc)
+    print(f"    Saved fig_multiphase_scatter.png")
+
+    # --- Figure 3: Threshold optimization ---
+    fig_thresh, axes_thresh = plt.subplots(1, 2, figsize=(16, 8))
+    for ax in axes_thresh:
+        ax.tick_params(labelsize=TICK_SIZE)
+
+    # Sweep δr thresholds
+    dr_range = np.linspace(0, mp_df["delta_r"].max() + 1, 200)
+    f1_dr_arr = []
+    acc_dr_arr = []
+    for t in dr_range:
+        pred = (mp_df["delta_r"] < t).astype(int).values
+        f1_dr_arr.append(f1_score(y_true, pred, zero_division=0))
+        acc_dr_arr.append(accuracy_score(y_true, pred))
+    f1_dr_arr = np.array(f1_dr_arr)
+    acc_dr_arr = np.array(acc_dr_arr)
+
+    axes_thresh[0].plot(dr_range, f1_dr_arr, 'b-', lw=2.5, label='F1 score')
+    axes_thresh[0].plot(dr_range, acc_dr_arr, 'b--', lw=2, label='Accuracy')
+    best_f1_dr_idx = np.argmax(f1_dr_arr)
+    axes_thresh[0].axvline(dr_range[best_f1_dr_idx], color='b', ls=':', lw=1.5,
+                           label=f'Best F1: {dr_range[best_f1_dr_idx]:.1f}%')
+    axes_thresh[0].axvline(6.6, color='k', ls='--', lw=1.5, alpha=0.5,
+                           label='Yang-Zhang 6.6%')
+    axes_thresh[0].set_xlabel("$\\delta_r$ threshold (%)", fontsize=FONTSIZE)
+    axes_thresh[0].set_ylabel("Score", fontsize=FONTSIZE)
+    axes_thresh[0].set_title("$\\delta_r$ Threshold Optimization", fontsize=FONTSIZE)
+    axes_thresh[0].legend(fontsize=FONTSIZE - 2)
+    axes_thresh[0].grid(True, alpha=0.3)
+    axes_thresh[0].set_ylim([0, 1.05])
+
+    # Sweep δ_sf thresholds
+    dsf_range = np.linspace(0, mp_df["delta_sf_combined"].max() + 0.01, 200)
+    f1_dsf_arr = []
+    acc_dsf_arr = []
+    for t in dsf_range:
+        pred = (mp_df["delta_sf_combined"] < t).astype(int).values
+        f1_dsf_arr.append(f1_score(y_true, pred, zero_division=0))
+        acc_dsf_arr.append(accuracy_score(y_true, pred))
+    f1_dsf_arr = np.array(f1_dsf_arr)
+    acc_dsf_arr = np.array(acc_dsf_arr)
+
+    axes_thresh[1].plot(dsf_range, f1_dsf_arr, 'r-', lw=2.5, label='F1 score')
+    axes_thresh[1].plot(dsf_range, acc_dsf_arr, 'r--', lw=2, label='Accuracy')
+    best_f1_dsf_idx = np.argmax(f1_dsf_arr)
+    axes_thresh[1].axvline(dsf_range[best_f1_dsf_idx], color='r', ls=':', lw=1.5,
+                           label=f'Best F1: {dsf_range[best_f1_dsf_idx]:.4f}')
+    axes_thresh[1].set_xlabel("$\\delta_{sf}$ threshold", fontsize=FONTSIZE)
+    axes_thresh[1].set_ylabel("Score", fontsize=FONTSIZE)
+    axes_thresh[1].set_title("$\\delta_{sf}$ Threshold Optimization", fontsize=FONTSIZE)
+    axes_thresh[1].legend(fontsize=FONTSIZE - 2)
+    axes_thresh[1].grid(True, alpha=0.3)
+    axes_thresh[1].set_ylim([0, 1.05])
+
+    fig_thresh.suptitle("Threshold Optimization for SS Classification",
+                        fontsize=FONTSIZE + 2, fontweight='bold')
+    fig_thresh.tight_layout()
+    fig_thresh.savefig(OUTDIR / "fig_multiphase_threshold.png", dpi=200,
+                       bbox_inches="tight")
+    plt.close(fig_thresh)
+    print(f"    Saved fig_multiphase_threshold.png")
+
+    # --- Summary table ---
+    print(f"\n    === Discrimination Summary ({len(mp_df)} HEAs) ===")
+    print(f"    {'Criterion':<35} {'AUC':>6} {'AP':>6} {'Acc':>6} {'F1':>6}")
+    print(f"    {'-'*59}")
+    print(f"    {'δr (optimal threshold)':<35} {auc_dr:>6.3f} {ap_dr:>6.3f} "
+          f"{acc_dr_opt:>6.3f} {f1_dr_opt:>6.3f}")
+    print(f"    {'δ_sf (optimal threshold)':<35} {auc_dsf:>6.3f} {ap_dsf:>6.3f} "
+          f"{acc_dsf_opt:>6.3f} {f1_dsf_opt:>6.3f}")
+    print(f"    {'Ω only':<35} {auc_om:>6.3f} {ap_om:>6.3f} {'—':>6} {'—':>6}")
+    print(f"    {'Yang-Zhang (δr<6.6%, Ω>1.1)':<35} {'—':>6} {'—':>6} "
+          f"{yz_acc:>6.3f} {yz_f1:>6.3f}")
+    print(f"    {'δ_sf + Ω combined':<35} {'—':>6} {'—':>6} "
+          f"{acc_dsf_yz:>6.3f} {f1_dsf_yz:>6.3f}")
+    print()
 
     return (results, y_best, y_ensemble_opt, a_eq10_ss, a_ss_gpr,
             gpr_uncertainty, a_ss_rf, a_ss_cub, a_eq10_ss_filled)
