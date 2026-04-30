@@ -100,7 +100,7 @@ def read_lattice_constant(calc_dir):
         except Exception:
             pass
 
-    src_name = 'CONTCAR' if 'CONTCAR' in source else 'POSCAR'
+    src_name = 'CONTCAR' if os.path.basename(source) == 'CONTCAR' else 'POSCAR'
     return lattice_const, converged, src_name
 
 
