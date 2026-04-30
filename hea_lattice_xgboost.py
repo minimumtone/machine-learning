@@ -478,6 +478,17 @@ def load_compound_data():
                 df["db"] = src
                 df["stype"] = struct
                 dfs.append(df)
+    # Also load VASP-calculated data if available
+    for struct in ["B2", "L12"]:
+        for search_dir in [Path("data"), base]:
+            f = search_dir / f"compounds_VASP_{struct}.csv"
+            if f.exists():
+                df = pd.read_csv(f)
+                df["db"] = "VASP"
+                df["stype"] = struct
+                dfs.append(df)
+                print(f"    Loaded VASP {struct}: {len(df)} compounds from {f}")
+                break
     return pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
 
 
