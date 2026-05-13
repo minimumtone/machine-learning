@@ -13,21 +13,283 @@ extract_bib_app.py — Streamlit UI for AI-powered PDF → BibTeX extraction (v2
   streamlit run extract_bib_app.py
 """
 
+import hashlib
+import json
+import logging
 import os
+import re
+import threading
 import time
+import unicodedata
 from pathlib import Path
-from typing import Dict, List
+from typing import Any, Dict, List, Optional
 
 import streamlit as st
 
-from extract_bib import (
-    Checkpoint,
-    _format_bib_entry,
-    _make_cite_key,
-    extract_text_from_pdf,
-    file_sha256,
-    get_metadata_via_ai,
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%H:%M:%S",
 )
+log = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# PDF → テキスト
+# ---------------------------------------------------------------------------
+
+
+def extract_text_from_pdf(pdf_path: str, max_chars: int = 80_000) -> str:
+    """PDF ファイルからテキストを抽出する。pymupdf4llm > PyMuPDF の順にフォールバック。"""
+    try:
+        import pymupdf4llm
+        text = pymupdf4llm.to_markdown(pdf_path)
+    except ImportError:
+        import fitz
+        doc = fitz.open(pdf_path)
+        text = "\n".join(page.get_text() for page in doc)
+        doc.close()
+
+    if len(text) > max_chars:
+        text = text[:max_chars] + "\n\n... (truncated)"
+    return text
+
+
+# ---------------------------------------------------------------------------
+# SHA-256 ハッシュ (パス非依存の識別子)
+# ---------------------------------------------------------------------------
+
+
+def file_sha256(path: str, chunk_size: int = 1 << 20) -> str:
+    """ファイルの SHA-256 ハッシュを返す。"""
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        while True:
+            chunk = f.read(chunk_size)
+            if not chunk:
+                break
+            h.update(chunk)
+    return h.hexdigest()
+
+
+# ---------------------------------------------------------------------------
+# チェックポイント管理
+# ---------------------------------------------------------------------------
+
+
+class Checkpoint:
+    """SHA-256 → メタデータ のマッピングを JSON で永続化。スレッドセーフ。"""
+
+    def __init__(self, path: str = ".extract_bib_checkpoint.json"):
+        self.path = Path(path)
+        self._data: Dict[str, Dict] = {}
+        self._lock = threading.Lock()
+        self._load()
+
+    def _load(self) -> None:
+        if self.path.exists():
+            try:
+                self._data = json.loads(self.path.read_text(encoding="utf-8"))
+                log.info("チェックポイント読み込み: %d 件", len(self._data))
+            except (json.JSONDecodeError, OSError) as e:
+                log.warning("チェックポイント読み込み失敗 (%s), 新規作成", e)
+                self._data = {}
+
+    def save(self) -> None:
+        with self._lock:
+            snapshot = dict(self._data)
+        tmp = self.path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(snapshot, ensure_ascii=False, indent=1), encoding="utf-8")
+        tmp.replace(self.path)
+
+    def is_done(self, sha: str) -> bool:
+        with self._lock:
+            return sha in self._data
+
+    def get(self, sha: str) -> Optional[Dict]:
+        with self._lock:
+            return self._data.get(sha)
+
+    def put(self, sha: str, meta: Dict) -> None:
+        with self._lock:
+            self._data[sha] = meta
+
+    def all_entries(self) -> List[Dict]:
+        with self._lock:
+            return list(self._data.values())
+
+    def __len__(self) -> int:
+        with self._lock:
+            return len(self._data)
+
+
+# ---------------------------------------------------------------------------
+# LLM クライアント (OpenAI / LM Studio 共通)
+# ---------------------------------------------------------------------------
+
+SYSTEM_MSG = (
+    "あなたは材料科学・工学の専門家です。論文テキストから以下の情報を抽出し"
+    "JSONで返してください:\n"
+    "- title: タイトル\n"
+    "- authors: 著者（カンマ区切りの文字列）\n"
+    "- year: 出版年（整数、不明なら null）\n"
+    "- doi: DOI（不明なら null）\n"
+    "- journal: ジャーナル名（不明なら null）\n"
+    "- materials: 対象物質（例: 'SrTiO3', 'High-entropy alloy'）\n"
+    "- theory: 理論・モデル（例: 'Density Functional Theory', 'Dislocation Dynamics'）\n"
+    "- methods: 実験・解析手法（例: 'TEM', 'Machine Learning regression'）\n"
+    "- summary_ja: 論文の要点を日本語で2〜3文にまとめたもの\n"
+    "\n"
+    "回答はJSONオブジェクトのみ（マークダウンのコードブロック不要）。"
+)
+
+DEFAULT_PROVIDERS: Dict[str, Dict[str, Any]] = {
+    "openai": {
+        "base_url": None,
+        "model": "gpt-4o-mini",
+        "api_key_env": "OPENAI_API_KEY",
+        "api_key_required": True,
+    },
+    "lmstudio": {
+        "base_url": "http://localhost:1234/v1",
+        "model": "local-model",
+        "api_key_env": None,
+        "api_key_required": False,
+    },
+}
+
+
+def _build_client(
+    provider: str = "openai",
+    base_url: Optional[str] = None,
+    model: Optional[str] = None,
+    api_key: Optional[str] = None,
+) -> tuple:
+    """OpenAI 互換クライアントと使用モデル名を返す。"""
+    from openai import OpenAI
+
+    cfg = DEFAULT_PROVIDERS.get(provider, DEFAULT_PROVIDERS["openai"])
+
+    resolved_url = base_url or cfg["base_url"]
+    resolved_model = model or cfg["model"]
+
+    if api_key:
+        resolved_key = api_key
+    elif cfg["api_key_env"]:
+        resolved_key = os.getenv(cfg["api_key_env"], "")
+    else:
+        resolved_key = "lm-studio"
+
+    if cfg["api_key_required"] and not resolved_key:
+        raise RuntimeError(
+            f"環境変数 {cfg['api_key_env']} が設定されていません。"
+        )
+
+    kwargs: Dict[str, Any] = {"api_key": resolved_key, "timeout": 180}
+    if resolved_url:
+        kwargs["base_url"] = resolved_url
+
+    return OpenAI(**kwargs), resolved_model
+
+
+def _parse_json(text: str) -> Dict:
+    """LLM 応答から JSON を取り出す。"""
+    text = text.strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
+        if match:
+            return json.loads(match.group(1))
+        raise ValueError(f"JSON の解析に失敗しました: {text[:300]}...")
+
+
+def get_metadata_via_ai(
+    text: str,
+    provider: str = "openai",
+    model: Optional[str] = None,
+    base_url: Optional[str] = None,
+    api_key: Optional[str] = None,
+    max_retries: int = 3,
+) -> Dict:
+    """LLM API でメタデータを抽出する。リトライ付き。"""
+    client, resolved_model = _build_client(provider, base_url, model, api_key)
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            response = client.chat.completions.create(
+                model=resolved_model,
+                messages=[
+                    {"role": "system", "content": SYSTEM_MSG},
+                    {"role": "user", "content": f"以下の論文テキストを解析してください:\n\n{text}"},
+                ],
+                temperature=0.0,
+                max_tokens=2048,
+            )
+            raw = response.choices[0].message.content or ""
+            return _parse_json(raw)
+        except Exception as e:
+            if attempt < max_retries:
+                wait = 2 ** attempt
+                log.warning("API エラー (attempt %d/%d): %s — %ds 後にリトライ", attempt, max_retries, e, wait)
+                time.sleep(wait)
+            else:
+                raise
+
+
+# ---------------------------------------------------------------------------
+# BibTeX 生成
+# ---------------------------------------------------------------------------
+
+
+def _make_cite_key(meta: Dict, pdf_path: str) -> str:
+    """著者姓 + 年 のキーを生成する。不明なら PDF ファイル名から生成。"""
+    authors = meta.get("authors", "")
+    year = meta.get("year")
+
+    first_author = ""
+    if authors:
+        first = authors.split(",")[0].strip()
+        parts = first.split()
+        if parts:
+            first_author = parts[-1].lower()
+            first_author = unicodedata.normalize("NFKD", first_author)
+            first_author = re.sub(r"[^a-z]", "", first_author)
+
+    if not first_author:
+        first_author = Path(pdf_path).stem.lower()
+        first_author = re.sub(r"[^a-z0-9]", "", first_author)[:20]
+
+    year_str = str(year) if year else "nd"
+    return f"{first_author}{year_str}"
+
+
+def _escape_bib(value: str) -> str:
+    """BibTeX 値のエスケープ。"""
+    return value.replace("{", "\\{").replace("}", "\\}")
+
+
+def _format_bib_entry(key: str, meta: Dict) -> str:
+    """1 エントリ分の BibTeX 文字列を組み立てる。"""
+    lines = [f"@article{{{key},"]
+
+    field_map = [
+        ("title", meta.get("title", "")),
+        ("author", meta.get("authors", "")),
+        ("year", str(meta.get("year", "")) if meta.get("year") else ""),
+        ("journal", meta.get("journal", "") or ""),
+        ("doi", meta.get("doi", "") or ""),
+        ("materials", meta.get("materials", "") or ""),
+        ("theory", meta.get("theory", "") or ""),
+        ("methods", meta.get("methods", "") or ""),
+        ("comment", meta.get("summary_ja", "") or ""),
+    ]
+
+    for fname, fval in field_map:
+        if fval:
+            lines.append(f"  {fname} = {{{_escape_bib(str(fval))}}},")
+
+    lines.append("}")
+    return "\n".join(lines)
 
 # ---------------------------------------------------------------------------
 # ページ設定
