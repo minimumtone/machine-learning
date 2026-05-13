@@ -63,7 +63,7 @@ with st.sidebar:
             value=os.getenv("OPENAI_API_KEY", ""),
             type="password",
         )
-        model = st.selectbox("モデル", ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo"])
+        model = st.selectbox("モデル", ["gpt-4o-mini", "gpt-4o", "gpt-4-turbo"])
         base_url = None
     else:
         provider_key = "lmstudio"
