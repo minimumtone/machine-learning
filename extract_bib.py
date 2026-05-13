@@ -25,6 +25,7 @@ import logging
 import os
 import re
 import sys
+import threading
 import time
 import unicodedata
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -79,11 +80,12 @@ def file_sha256(path: str, chunk_size: int = 1 << 20) -> str:
 # ---------------------------------------------------------------------------
 
 class Checkpoint:
-    """SHA-256 → メタデータ のマッピングを JSON で永続化。"""
+    """SHA-256 → メタデータ のマッピングを JSON で永続化。スレッドセーフ。"""
 
     def __init__(self, path: str = ".extract_bib_checkpoint.json"):
         self.path = Path(path)
         self._data: Dict[str, Dict] = {}
+        self._lock = threading.Lock()
         self._load()
 
     def _load(self) -> None:
@@ -96,24 +98,31 @@ class Checkpoint:
                 self._data = {}
 
     def save(self) -> None:
+        with self._lock:
+            snapshot = dict(self._data)
         tmp = self.path.with_suffix(".tmp")
-        tmp.write_text(json.dumps(self._data, ensure_ascii=False, indent=1), encoding="utf-8")
+        tmp.write_text(json.dumps(snapshot, ensure_ascii=False, indent=1), encoding="utf-8")
         tmp.replace(self.path)
 
     def is_done(self, sha: str) -> bool:
-        return sha in self._data
+        with self._lock:
+            return sha in self._data
 
     def get(self, sha: str) -> Optional[Dict]:
-        return self._data.get(sha)
+        with self._lock:
+            return self._data.get(sha)
 
     def put(self, sha: str, meta: Dict) -> None:
-        self._data[sha] = meta
+        with self._lock:
+            self._data[sha] = meta
 
     def all_entries(self) -> List[Dict]:
-        return list(self._data.values())
+        with self._lock:
+            return list(self._data.values())
 
     def __len__(self) -> int:
-        return len(self._data)
+        with self._lock:
+            return len(self._data)
 
 
 # ---------------------------------------------------------------------------
@@ -359,17 +368,20 @@ def _process_one(
     base_url: Optional[str],
     api_key: Optional[str],
 ) -> Optional[Dict]:
-    """PDF 1 ファイルを処理。チェックポイント済みならスキップ。"""
+    """PDF 1 ファイルを処理。チェックポイント済みならスキップ。
+
+    Returns (meta, is_new): is_new=False ならキャッシュからの取得。
+    """
     sha = file_sha256(pdf_path)
 
     if checkpoint.is_done(sha):
         log.info("  [skip/hash] %s (処理済み)", Path(pdf_path).name)
-        return checkpoint.get(sha)
+        return checkpoint.get(sha), False
 
     text = extract_text_from_pdf(pdf_path)
     if len(text.strip()) < 100:
         log.warning("  [skip/short] %s テキスト不足", Path(pdf_path).name)
-        return None
+        return None, False
 
     meta = get_metadata_via_ai(
         text, provider=provider, model=model, base_url=base_url, api_key=api_key,
@@ -378,7 +390,7 @@ def _process_one(
     meta["_sha256"] = sha
 
     checkpoint.put(sha, meta)
-    return meta
+    return meta, True
 
 
 # ---------------------------------------------------------------------------
@@ -410,21 +422,25 @@ def run_batch(
 
     def _worker(pdf_path: str) -> tuple:
         try:
-            meta = _process_one(pdf_path, checkpoint, provider, model, base_url, api_key)
-            return pdf_path, meta, None
+            meta, is_new = _process_one(pdf_path, checkpoint, provider, model, base_url, api_key)
+            return pdf_path, meta, is_new, None
         except Exception as e:
-            return pdf_path, None, str(e)
+            return pdf_path, None, False, str(e)
+
+    new_entries: List[Dict] = []
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = {pool.submit(_worker, p): p for p in pdfs}
         for future in as_completed(futures):
-            pdf_path, meta, error = future.result()
+            pdf_path, meta, is_new, error = future.result()
             done_count += 1
 
             if error:
                 log.error("  [error] %s: %s", Path(pdf_path).name, error)
             elif meta:
                 results.append(meta)
+                if is_new:
+                    new_entries.append(meta)
                 log.info(
                     "  [%d/%d] %s → %s",
                     done_count, total,
@@ -440,8 +456,9 @@ def run_batch(
 
     checkpoint.save()
 
-    write_bib(bib_path, results)
-    log.info("=== 完了: %d/%d 件を処理 ===", len(results), total)
+    if new_entries:
+        write_bib(bib_path, new_entries)
+    log.info("=== 完了: %d/%d 件を処理 (新規 %d 件) ===", len(results), total, len(new_entries))
     return results
 
 
