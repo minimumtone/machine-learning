@@ -1,28 +1,42 @@
 #!/usr/bin/env python3
 """
-extract_bib.py — PDFから論文メタデータをAIで抽出しBibTeXに保存するツール
+extract_bib.py — PDFから論文メタデータをAIで抽出しBibTeXに保存するツール (v2)
 
 機能:
-  - PDF からテキストを抽出 (pymupdf4llm)
-  - OpenAI API でタイトル・著者・DOI に加え、
-    materials / theory / methods / summary_ja を抽出
-  - JabRef 互換の .bib ファイルへ出力
-    (カスタムフィールド materials, theory, methods + comment に日本語要約)
+  - PDF からテキストを抽出 (pymupdf4llm / PyMuPDF)
+  - OpenAI API または LM Studio (ローカルLLM) でメタデータ抽出
+    (title, authors, doi, materials, theory, methods, summary_ja)
+  - SHA-256 ハッシュによるチェックポイント管理
+    → PDF の置き場所が変わっても処理済みファイルを再処理しない
+  - DOI ベース重複検出
+  - 並行処理 (ThreadPoolExecutor) で 1万ファイル規模に対応
+  - JabRef 互換 .bib ファイルへ出力
 
 使い方:
-  python extract_bib.py paper1.pdf paper2.pdf ...
-  python extract_bib.py --input-dir ./papers/
-  python extract_bib.py paper.pdf --output my_library.bib
+  python extract_bib.py -d ./papers/
+  python extract_bib.py -d ./papers/ --workers 8 --provider lmstudio
+  python extract_bib.py paper1.pdf paper2.pdf -o my_library.bib
 """
 
 import argparse
+import hashlib
 import json
+import logging
 import os
 import re
 import sys
+import time
 import unicodedata
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%H:%M:%S",
+)
+log = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # PDF → テキスト
@@ -45,7 +59,65 @@ def extract_text_from_pdf(pdf_path: str, max_chars: int = 80_000) -> str:
 
 
 # ---------------------------------------------------------------------------
-# OpenAI メタデータ抽出
+# SHA-256 ハッシュ (パス非依存の識別子)
+# ---------------------------------------------------------------------------
+
+def file_sha256(path: str, chunk_size: int = 1 << 20) -> str:
+    """ファイルの SHA-256 ハッシュを返す。"""
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        while True:
+            chunk = f.read(chunk_size)
+            if not chunk:
+                break
+            h.update(chunk)
+    return h.hexdigest()
+
+
+# ---------------------------------------------------------------------------
+# チェックポイント管理
+# ---------------------------------------------------------------------------
+
+class Checkpoint:
+    """SHA-256 → メタデータ のマッピングを JSON で永続化。"""
+
+    def __init__(self, path: str = ".extract_bib_checkpoint.json"):
+        self.path = Path(path)
+        self._data: Dict[str, Dict] = {}
+        self._load()
+
+    def _load(self) -> None:
+        if self.path.exists():
+            try:
+                self._data = json.loads(self.path.read_text(encoding="utf-8"))
+                log.info("チェックポイント読み込み: %d 件", len(self._data))
+            except (json.JSONDecodeError, OSError) as e:
+                log.warning("チェックポイント読み込み失敗 (%s), 新規作成", e)
+                self._data = {}
+
+    def save(self) -> None:
+        tmp = self.path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(self._data, ensure_ascii=False, indent=1), encoding="utf-8")
+        tmp.replace(self.path)
+
+    def is_done(self, sha: str) -> bool:
+        return sha in self._data
+
+    def get(self, sha: str) -> Optional[Dict]:
+        return self._data.get(sha)
+
+    def put(self, sha: str, meta: Dict) -> None:
+        self._data[sha] = meta
+
+    def all_entries(self) -> List[Dict]:
+        return list(self._data.values())
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+
+# ---------------------------------------------------------------------------
+# LLM クライアント (OpenAI / LM Studio 共通)
 # ---------------------------------------------------------------------------
 
 SYSTEM_MSG = (
@@ -64,30 +136,86 @@ SYSTEM_MSG = (
     "回答はJSONオブジェクトのみ（マークダウンのコードブロック不要）。"
 )
 
+DEFAULT_PROVIDERS: Dict[str, Dict[str, Any]] = {
+    "openai": {
+        "base_url": None,
+        "model": "gpt-4o",
+        "api_key_env": "OPENAI_API_KEY",
+        "api_key_required": True,
+    },
+    "lmstudio": {
+        "base_url": "http://localhost:1234/v1",
+        "model": "local-model",
+        "api_key_env": None,
+        "api_key_required": False,
+    },
+}
 
-def get_metadata_via_ai(text: str, model: str = "gpt-4o") -> Dict:
-    """OpenAI API を使って論文テキストからメタデータを抽出する。"""
+
+def _build_client(
+    provider: str = "openai",
+    base_url: Optional[str] = None,
+    model: Optional[str] = None,
+    api_key: Optional[str] = None,
+) -> tuple:
+    """OpenAI 互換クライアントと使用モデル名を返す。"""
     from openai import OpenAI
 
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
+    cfg = DEFAULT_PROVIDERS.get(provider, DEFAULT_PROVIDERS["openai"])
+
+    resolved_url = base_url or cfg["base_url"]
+    resolved_model = model or cfg["model"]
+
+    if api_key:
+        resolved_key = api_key
+    elif cfg["api_key_env"]:
+        resolved_key = os.getenv(cfg["api_key_env"], "")
+    else:
+        resolved_key = "lm-studio"
+
+    if cfg["api_key_required"] and not resolved_key:
         raise RuntimeError(
-            "環境変数 OPENAI_API_KEY が設定されていません。\n"
-            "  export OPENAI_API_KEY='sk-...'"
+            f"環境変数 {cfg['api_key_env']} が設定されていません。"
         )
 
-    client = OpenAI(api_key=api_key, timeout=120)
-    response = client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": SYSTEM_MSG},
-            {"role": "user", "content": f"以下の論文テキストを解析してください:\n\n{text}"},
-        ],
-        temperature=0.0,
-        max_tokens=2048,
-    )
-    raw = response.choices[0].message.content or ""
-    return _parse_json(raw)
+    kwargs: Dict[str, Any] = {"api_key": resolved_key, "timeout": 180}
+    if resolved_url:
+        kwargs["base_url"] = resolved_url
+
+    return OpenAI(**kwargs), resolved_model
+
+
+def get_metadata_via_ai(
+    text: str,
+    provider: str = "openai",
+    model: Optional[str] = None,
+    base_url: Optional[str] = None,
+    api_key: Optional[str] = None,
+    max_retries: int = 3,
+) -> Dict:
+    """LLM API でメタデータを抽出する。リトライ付き。"""
+    client, resolved_model = _build_client(provider, base_url, model, api_key)
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            response = client.chat.completions.create(
+                model=resolved_model,
+                messages=[
+                    {"role": "system", "content": SYSTEM_MSG},
+                    {"role": "user", "content": f"以下の論文テキストを解析してください:\n\n{text}"},
+                ],
+                temperature=0.0,
+                max_tokens=2048,
+            )
+            raw = response.choices[0].message.content or ""
+            return _parse_json(raw)
+        except Exception as e:
+            if attempt < max_retries:
+                wait = 2 ** attempt
+                log.warning("API エラー (attempt %d/%d): %s — %ds 後にリトライ", attempt, max_retries, e, wait)
+                time.sleep(wait)
+            else:
+                raise
 
 
 def _parse_json(text: str) -> Dict:
@@ -103,7 +231,7 @@ def _parse_json(text: str) -> Dict:
 
 
 # ---------------------------------------------------------------------------
-# BibTeX 生成キー
+# BibTeX 生成
 # ---------------------------------------------------------------------------
 
 def _make_cite_key(meta: Dict, pdf_path: str) -> str:
@@ -127,10 +255,6 @@ def _make_cite_key(meta: Dict, pdf_path: str) -> str:
     year_str = str(year) if year else "nd"
     return f"{first_author}{year_str}"
 
-
-# ---------------------------------------------------------------------------
-# BibTeX 書き出し
-# ---------------------------------------------------------------------------
 
 def _escape_bib(value: str) -> str:
     """BibTeX 値のエスケープ。"""
@@ -161,106 +285,196 @@ def _format_bib_entry(key: str, meta: Dict) -> str:
     return "\n".join(lines)
 
 
-def add_to_bib(bib_path: str, key: str, meta: Dict) -> None:
-    """既存の .bib ファイルにエントリを追記（重複キー時はスキップ）。"""
+def write_bib(bib_path: str, entries: List[Dict]) -> None:
+    """全エントリを .bib ファイルに書き出す（DOI ベース重複除去付き）。"""
     path = Path(bib_path)
-    existing = path.read_text(encoding="utf-8") if path.exists() else ""
 
-    if re.search(rf"@\w+\{{\s*{re.escape(key)}\s*,", existing):
-        print(f"  [skip] キー '{key}' は既に存在します。")
-        return
+    seen_keys: set = set()
+    seen_dois: set = set()
+    bib_blocks: List[str] = []
 
-    entry = _format_bib_entry(key, meta)
-    with open(path, "a", encoding="utf-8") as f:
-        if existing and not existing.endswith("\n"):
-            f.write("\n")
-        f.write("\n" + entry + "\n")
+    if path.exists():
+        existing = path.read_text(encoding="utf-8")
+        for m in re.finditer(r"@\w+\{\s*([^,]+)\s*,", existing):
+            seen_keys.add(m.group(1).strip())
+        for m in re.finditer(r"doi\s*=\s*\{([^}]+)\}", existing, re.IGNORECASE):
+            seen_dois.add(m.group(1).strip().lower())
 
-    print(f"  [add]  {key} → {bib_path}")
+    new_count = 0
+    for meta in entries:
+        doi = (meta.get("doi") or "").strip().lower()
+        if doi and doi in seen_dois:
+            log.info("  [skip/doi] DOI 重複: %s", doi)
+            continue
+
+        key = _make_cite_key(meta, meta.get("_source_file", "unknown"))
+        base_key = key
+        counter = 2
+        while key in seen_keys:
+            key = f"{base_key}_{counter}"
+            counter += 1
+
+        seen_keys.add(key)
+        if doi:
+            seen_dois.add(doi)
+        bib_blocks.append(_format_bib_entry(key, meta))
+        new_count += 1
+
+    if bib_blocks:
+        with open(path, "a", encoding="utf-8") as f:
+            existing_text = path.read_text(encoding="utf-8") if path.stat().st_size > 0 else ""
+            if existing_text and not existing_text.endswith("\n"):
+                f.write("\n")
+            f.write("\n" + "\n\n".join(bib_blocks) + "\n")
+
+    log.info("BibTeX 出力: %d 件追加 → %s", new_count, bib_path)
+
+
+# ---------------------------------------------------------------------------
+# PDF 収集
+# ---------------------------------------------------------------------------
+
+def collect_pdfs(paths: List[str], input_dir: Optional[str], recursive: bool = True) -> List[str]:
+    """CLI 引数とディレクトリ指定から PDF パスを収集する。"""
+    pdfs: List[str] = list(paths)
+    if input_dir:
+        dir_path = Path(input_dir)
+        if dir_path.is_dir():
+            glob_pattern = "**/*.pdf" if recursive else "*.pdf"
+            pdfs.extend(str(p) for p in sorted(dir_path.glob(glob_pattern)))
+        else:
+            log.warning("ディレクトリが見つかりません: %s", input_dir)
+    return pdfs
+
+
+# ---------------------------------------------------------------------------
+# 1ファイル処理 (ワーカー関数)
+# ---------------------------------------------------------------------------
+
+def _process_one(
+    pdf_path: str,
+    checkpoint: Checkpoint,
+    provider: str,
+    model: Optional[str],
+    base_url: Optional[str],
+    api_key: Optional[str],
+) -> Optional[Dict]:
+    """PDF 1 ファイルを処理。チェックポイント済みならスキップ。"""
+    sha = file_sha256(pdf_path)
+
+    if checkpoint.is_done(sha):
+        log.info("  [skip/hash] %s (処理済み)", Path(pdf_path).name)
+        return checkpoint.get(sha)
+
+    text = extract_text_from_pdf(pdf_path)
+    if len(text.strip()) < 100:
+        log.warning("  [skip/short] %s テキスト不足", Path(pdf_path).name)
+        return None
+
+    meta = get_metadata_via_ai(
+        text, provider=provider, model=model, base_url=base_url, api_key=api_key,
+    )
+    meta["_source_file"] = pdf_path
+    meta["_sha256"] = sha
+
+    checkpoint.put(sha, meta)
+    return meta
 
 
 # ---------------------------------------------------------------------------
 # メイン
 # ---------------------------------------------------------------------------
 
-def process_pdf(pdf_path: str, bib_path: str, model: str) -> Optional[Dict]:
-    """PDF 1 ファイルを処理して bib に追加。"""
-    print(f"\n--- {pdf_path} ---")
+def run_batch(
+    pdfs: List[str],
+    bib_path: str = "library.bib",
+    checkpoint_path: str = ".extract_bib_checkpoint.json",
+    provider: str = "openai",
+    model: Optional[str] = None,
+    base_url: Optional[str] = None,
+    api_key: Optional[str] = None,
+    workers: int = 4,
+    save_every: int = 20,
+    on_progress: Optional[Any] = None,
+) -> List[Dict]:
+    """PDF リストをバッチ処理してチェックポイントに保存し、BibTeX を出力。
 
-    if not Path(pdf_path).exists():
-        print(f"  [error] ファイルが見つかりません: {pdf_path}")
-        return None
+    on_progress: callable(done, total, pdf_path, meta_or_none) — UI 向けコールバック
+    """
+    checkpoint = Checkpoint(checkpoint_path)
+    results: List[Dict] = []
+    done_count = 0
+    total = len(pdfs)
 
-    print("  テキスト抽出中 ...")
-    text = extract_text_from_pdf(pdf_path)
-    if len(text.strip()) < 100:
-        print("  [warn] テキストが短すぎます。スキャン PDF の可能性があります。")
-        return None
+    log.info("対象 PDF: %d 件 (workers=%d, provider=%s)", total, workers, provider)
 
-    print(f"  AI 解析中 (model={model}) ...")
-    meta = get_metadata_via_ai(text, model=model)
+    def _worker(pdf_path: str) -> tuple:
+        try:
+            meta = _process_one(pdf_path, checkpoint, provider, model, base_url, api_key)
+            return pdf_path, meta, None
+        except Exception as e:
+            return pdf_path, None, str(e)
 
-    print(f"  title   : {meta.get('title', '???')}")
-    print(f"  authors : {meta.get('authors', '???')}")
-    print(f"  doi     : {meta.get('doi', '???')}")
-    print(f"  materials: {meta.get('materials', '???')}")
-    print(f"  theory  : {meta.get('theory', '???')}")
-    print(f"  methods : {meta.get('methods', '???')}")
-    print(f"  summary : {(meta.get('summary_ja', '') or '')[:80]}...")
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {pool.submit(_worker, p): p for p in pdfs}
+        for future in as_completed(futures):
+            pdf_path, meta, error = future.result()
+            done_count += 1
 
-    key = _make_cite_key(meta, pdf_path)
-    add_to_bib(bib_path, key, meta)
-    return meta
+            if error:
+                log.error("  [error] %s: %s", Path(pdf_path).name, error)
+            elif meta:
+                results.append(meta)
+                log.info(
+                    "  [%d/%d] %s → %s",
+                    done_count, total,
+                    Path(pdf_path).name,
+                    meta.get("title", "???")[:60],
+                )
 
+            if on_progress:
+                on_progress(done_count, total, pdf_path, meta)
 
-def collect_pdfs(paths: List[str], input_dir: Optional[str]) -> List[str]:
-    """CLI 引数とディレクトリ指定から PDF パスを収集する。"""
-    pdfs: List[str] = list(paths)
-    if input_dir:
-        dir_path = Path(input_dir)
-        if dir_path.is_dir():
-            pdfs.extend(str(p) for p in sorted(dir_path.glob("*.pdf")))
-        else:
-            print(f"[warn] ディレクトリが見つかりません: {input_dir}")
-    return pdfs
+            if done_count % save_every == 0:
+                checkpoint.save()
+
+    checkpoint.save()
+
+    write_bib(bib_path, results)
+    log.info("=== 完了: %d/%d 件を処理 ===", len(results), total)
+    return results
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="PDF 論文から AI でメタデータを抽出し BibTeX に保存",
+        description="PDF 論文から AI でメタデータを抽出し BibTeX に保存 (v2: 大規模対応)",
     )
     parser.add_argument("pdfs", nargs="*", help="処理する PDF ファイル")
-    parser.add_argument(
-        "--input-dir", "-d",
-        help="PDF ファイルを含むディレクトリ",
-    )
-    parser.add_argument(
-        "--output", "-o",
-        default="library.bib",
-        help="出力 .bib ファイル (default: library.bib)",
-    )
-    parser.add_argument(
-        "--model", "-m",
-        default="gpt-4o",
-        help="OpenAI モデル名 (default: gpt-4o)",
-    )
+    parser.add_argument("--input-dir", "-d", help="PDF ファイルを含むディレクトリ")
+    parser.add_argument("--output", "-o", default="library.bib", help="出力 .bib ファイル")
+    parser.add_argument("--checkpoint", default=".extract_bib_checkpoint.json", help="チェックポイントファイル")
+    parser.add_argument("--provider", "-p", choices=["openai", "lmstudio"], default="openai")
+    parser.add_argument("--model", "-m", default=None, help="モデル名 (省略時: プロバイダデフォルト)")
+    parser.add_argument("--base-url", default=None, help="API ベース URL (LM Studio 等)")
+    parser.add_argument("--workers", "-w", type=int, default=4, help="並行ワーカー数")
+    parser.add_argument("--no-recursive", action="store_true", help="サブディレクトリを再帰探索しない")
     args = parser.parse_args()
 
-    pdfs = collect_pdfs(args.pdfs, args.input_dir)
+    pdfs = collect_pdfs(args.pdfs, args.input_dir, recursive=not args.no_recursive)
     if not pdfs:
         parser.print_help()
         print("\n[error] PDF ファイルを指定してください。")
         sys.exit(1)
 
-    print(f"対象 PDF: {len(pdfs)} 件  →  出力: {args.output}")
-
-    results: List[Dict] = []
-    for pdf in pdfs:
-        meta = process_pdf(pdf, args.output, args.model)
-        if meta:
-            results.append(meta)
-
-    print(f"\n=== 完了: {len(results)}/{len(pdfs)} 件を処理しました ===")
+    run_batch(
+        pdfs=pdfs,
+        bib_path=args.output,
+        checkpoint_path=args.checkpoint,
+        provider=args.provider,
+        model=args.model,
+        base_url=args.base_url,
+        workers=args.workers,
+    )
 
 
 if __name__ == "__main__":
