@@ -14,6 +14,7 @@ extract_bib_app.py — Streamlit UI for AI-powered PDF → BibTeX extraction (v2
 """
 
 import os
+import time
 from pathlib import Path
 from typing import Dict, List
 
@@ -145,17 +146,35 @@ with tab_extract:
                 results: List[Dict] = []
                 errors: List[Dict] = []
                 skipped = 0
+                total = len(pdf_list)
 
-                progress = st.progress(0, text="準備中...")
+                progress_bar = st.progress(0)
+                progress_text = st.empty()
                 status_area = st.empty()
                 stats_area = st.empty()
+                time_area = st.empty()
+
+                t_start = time.time()
 
                 for idx, pdf_path in enumerate(pdf_list):
                     fname = Path(pdf_path).name
-                    progress.progress(
-                        idx / len(pdf_list),
-                        text=f"({idx + 1}/{len(pdf_list)}) {fname}",
+                    done = idx + 1
+                    pct = done / total
+                    progress_bar.progress(pct)
+                    progress_text.markdown(
+                        f"**進捗: {done} / {total} 件 ({pct:.0%})**"
                     )
+
+                    elapsed = time.time() - t_start
+                    if idx > 0:
+                        speed = idx / elapsed
+                        remaining = (total - done) / speed
+                        elapsed_str = time.strftime("%M:%S", time.gmtime(elapsed))
+                        remaining_str = time.strftime("%M:%S", time.gmtime(remaining))
+                        time_area.caption(
+                            f"経過: {elapsed_str}  |  残り推定: {remaining_str}  |  "
+                            f"速度: {speed:.1f} 件/秒"
+                        )
 
                     try:
                         sha = file_sha256(pdf_path)
@@ -165,12 +184,22 @@ with tab_extract:
                             if cached:
                                 results.append(cached)
                             skipped += 1
+                            stats_area.markdown(
+                                f"成功 **{len(results)}**  |  "
+                                f"スキップ **{skipped}**  |  "
+                                f"エラー **{len(errors)}**"
+                            )
                             continue
 
                         status_area.info(f"テキスト抽出中: {fname}")
                         text = extract_text_from_pdf(pdf_path)
                         if len(text.strip()) < 100:
                             errors.append({"_file": pdf_path, "_error": "テキスト不足"})
+                            stats_area.markdown(
+                                f"成功 **{len(results)}**  |  "
+                                f"スキップ **{skipped}**  |  "
+                                f"エラー **{len(errors)}**"
+                            )
                             continue
 
                         status_area.info(f"AI 解析中: {fname}")
@@ -188,18 +217,25 @@ with tab_extract:
                         ckpt.put(sha, meta)
                         results.append(meta)
 
-                        if (idx + 1) % 20 == 0:
+                        if done % 20 == 0:
                             ckpt.save()
 
                     except Exception as e:
                         errors.append({"_file": pdf_path, "_error": str(e)})
 
                     stats_area.markdown(
-                        f"✅ {len(results)} 件成功  |  ⏭️ {skipped} 件スキップ  |  ❌ {len(errors)} 件エラー"
+                        f"成功 **{len(results)}**  |  "
+                        f"スキップ **{skipped}**  |  "
+                        f"エラー **{len(errors)}**"
                     )
 
                 ckpt.save()
-                progress.progress(1.0, text="完了!")
+                progress_bar.progress(1.0)
+                progress_text.markdown("**完了!**")
+                elapsed_total = time.time() - t_start
+                time_area.caption(
+                    f"合計時間: {time.strftime('%M:%S', time.gmtime(elapsed_total))}"
+                )
                 status_area.empty()
 
                 # BibTeX 組み立て
