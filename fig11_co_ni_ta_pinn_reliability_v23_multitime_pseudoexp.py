@@ -1596,12 +1596,15 @@ def gaussian_nll_multitime_rs(
 
     C_fdm = _reorder_c_internal_to_display_np(C_fdm_int)
 
+    t_exp_1d = np.asarray(t_exp).ravel()
+    x_exp_1d = np.asarray(x_exp).ravel()
+
     sigma_eff = max(float(sigma), 1.0e-8)
     total_nll = 0.0
-    unique_times = np.unique(t_exp)
+    unique_times = np.unique(t_exp_1d)
     for t_val in unique_times:
-        mask = np.abs(t_exp - t_val) < 1.0e-10
-        x_pts = x_exp[mask]
+        mask = np.abs(t_exp_1d - t_val) < 1.0e-10
+        x_pts = x_exp_1d[mask]
         c_pts = c_exp[mask]
 
         ti_closest = int(np.argmin(np.abs(t_grid - t_val)))
@@ -1613,7 +1616,7 @@ def gaussian_nll_multitime_rs(
         residual = c_pts[:, :n_ind] - c_pred[:, :n_ind]
         total_nll += 0.5 * np.sum((residual / sigma_eff) ** 2)
 
-    n_total = int(np.sum(np.abs(t_exp) >= 0)) * n_ind
+    n_total = len(t_exp_1d) * n_ind
     total_nll += n_total * np.log(sigma_eff)
 
     if prior_mean is not None and prior_std is not None:
