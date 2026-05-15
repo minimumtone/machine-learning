@@ -5144,9 +5144,9 @@ if type(result).__name__ == "TrainResultRS":
         st.markdown(f"Pseudo-exp points: {len(rs_data.x_exp_all)}")
         st.markdown(f"Training obs: {len(rs_data.x_obs)}")
         st.dataframe(pd.DataFrame({
-            "x_exp": rs_data.x_exp_all[:50],
-            "t_exp": rs_data.t_exp_all[:50],
-            **{f"c_exp_{comp}": rs_data.c_exp_all[:50, j] for j, comp in enumerate(COMPONENTS)},
+            "x_exp": np.asarray(rs_data.x_exp_all[:50]).ravel(),
+            "t_exp": np.asarray(rs_data.t_exp_all[:50]).ravel(),
+            **{f"c_exp_{comp}": np.asarray(rs_data.c_exp_all[:50, j]).ravel() for j, comp in enumerate(COMPONENTS)},
         }), use_container_width=True)
 
     st.stop()
