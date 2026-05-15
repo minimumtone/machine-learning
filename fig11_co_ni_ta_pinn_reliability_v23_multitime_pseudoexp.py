@@ -417,6 +417,68 @@ def sanitize_independent(c_ind: np.ndarray, eps: float = 1.0e-12) -> np.ndarray:
     return c_ind
 
 
+# =============================================================================
+# Composition-dependent mobility (CALPHAD style)
+# =============================================================================
+
+def mobility_matrix_from_endmembers_np(
+    c_full: np.ndarray,
+    log_M_endmembers: np.ndarray,
+    eps: float = 1.0e-12,
+) -> np.ndarray:
+    """Composition-dependent mobility matrix M(c) using end-member mixing.
+
+    CALPHAD model (simplified, fixed T):
+        ln M_i(c) = Σ_j x_j * ln(M_i^j)
+
+    Parameters
+    ----------
+    c_full : (Nx, n_components) array of full compositions.
+    log_M_endmembers : (n_ind, n_components) array of ln(M_i^j) values.
+        Row i = independent component i, column j = end-member j.
+
+    Returns
+    -------
+    M : (Nx, n_ind, n_ind) diagonal mobility matrix at each grid point.
+    """
+    c = np.clip(c_full, eps, 1.0)
+    c = c / np.sum(c, axis=1, keepdims=True)
+    n_ind = log_M_endmembers.shape[0]
+    Nx = c.shape[0]
+    M = np.zeros((Nx, n_ind, n_ind), dtype=float)
+    for i in range(n_ind):
+        log_Mi = np.sum(c * log_M_endmembers[i:i + 1, :], axis=1)
+        M[:, i, i] = np.exp(log_Mi)
+    return M
+
+
+def mobility_matrix_from_endmembers_torch(
+    c_full: torch.Tensor,
+    log_M_endmembers: torch.Tensor,
+    eps: float = 1.0e-8,
+) -> torch.Tensor:
+    """Composition-dependent mobility M(c) for PyTorch (auto-diff compatible).
+
+    Parameters
+    ----------
+    c_full : (N, n_components) tensor.
+    log_M_endmembers : (n_ind, n_components) tensor of ln(M_i^j).
+
+    Returns
+    -------
+    M : (N, n_ind, n_ind) diagonal mobility tensor.
+    """
+    c = torch.clamp(c_full, eps, 1.0)
+    c = c / torch.sum(c, dim=1, keepdim=True)
+    n_ind = log_M_endmembers.shape[0]
+    N = c.shape[0]
+    M = torch.zeros((N, n_ind, n_ind), dtype=c.dtype, device=c.device)
+    for i in range(n_ind):
+        log_Mi = torch.sum(c * log_M_endmembers[i:i + 1, :], dim=1)
+        M[:, i, i] = torch.exp(log_Mi)
+    return M
+
+
 def make_initial_profile_ternary_rs(
     x: np.ndarray,
     c_left: np.ndarray,
@@ -449,11 +511,18 @@ def fdm_ternary_regular_solution(
     x_interface: float = 0.5,
     omega_width: float = 0.02,
     save_every: int = 100,
+    log_M_endmembers: Optional[np.ndarray] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """FDM solver for ternary regular-solution diffusion: c_t = div(M grad(mu)).
 
+    If ``log_M_endmembers`` is provided (shape ``(n_ind, n_components)``),
+    the mobility matrix is **composition-dependent** at each grid point:
+        ln M_i(c) = Σ_j x_j ln(M_i^j)
+    Otherwise ``mobility`` is used as a constant (n_ind, n_ind) matrix.
+
     Returns (t_grid, C_history) where C_history has shape (n_saved, Nx, n_components).
     """
+    use_comp_dep_M = log_M_endmembers is not None
     Nx = len(x)
     dx = float(x[1] - x[0])
     n_components = c0_full.shape[1]
@@ -476,6 +545,11 @@ def fdm_ternary_regular_solution(
             x_interface=x_interface, width=omega_width,
         )
 
+        if use_comp_dep_M:
+            M_local = mobility_matrix_from_endmembers_np(c_full_safe, log_M_endmembers)
+        else:
+            M_local = np.broadcast_to(mobility[np.newaxis, :, :], (Nx, n_ind, n_ind))
+
         flux = np.zeros((Nx, n_ind), dtype=float)
         for i_comp in range(n_ind):
             for j_comp in range(n_ind):
@@ -483,7 +557,7 @@ def fdm_ternary_regular_solution(
                 dmu_dx[1:-1] = (mu[2:, j_comp] - mu[:-2, j_comp]) / (2.0 * dx)
                 dmu_dx[0] = dmu_dx[1]
                 dmu_dx[-1] = dmu_dx[-2]
-                flux[:, i_comp] += mobility[i_comp, j_comp] * dmu_dx
+                flux[:, i_comp] += M_local[:, i_comp, j_comp] * dmu_dx
 
         div_flux = np.zeros((Nx, n_ind), dtype=float)
         for i_comp in range(n_ind):
@@ -1187,6 +1261,8 @@ class TernaryRegularSolutionPINN(nn.Module):
         omega_width: float = 0.02,
         RT: float = 1.0,
         train_omega: bool = True,
+        log_M_endmembers_init: Optional[np.ndarray] = None,
+        train_mobility: bool = False,
     ):
         super().__init__()
         self.n_components = 3
@@ -1196,6 +1272,7 @@ class TernaryRegularSolutionPINN(nn.Module):
         self.x_interface = x_interface
         self.omega_width = omega_width
         self.RT = RT
+        self.use_comp_dep_mobility = log_M_endmembers_init is not None
 
         self.net = MLP(width, depth, activation)
 
@@ -1220,6 +1297,14 @@ class TernaryRegularSolutionPINN(nn.Module):
                 "theta_right_raw",
                 torch.tensor(theta_left_int, dtype=torch.float32, device=DEVICE),
             )
+
+        if log_M_endmembers_init is not None:
+            self.log_M_endmembers = nn.Parameter(
+                torch.tensor(log_M_endmembers_init, dtype=torch.float32, device=DEVICE),
+                requires_grad=train_mobility,
+            )
+        else:
+            self.log_M_endmembers = None
 
     def theta_vectors(self) -> Tuple[torch.Tensor, torch.Tensor]:
         """Return (theta_left, theta_right) in internal [Ni,Ta,Co] pair order."""
@@ -1255,11 +1340,15 @@ class TernaryRegularSolutionPINN(nn.Module):
         second_derivative_graph: bool,
         output_graph: bool,
     ) -> torch.Tensor:
-        """PDE residual: c_t - div(M grad(mu)) for Ni and Ta (independent).
+        """PDE residual: c_t - div(M grad(mu)) for independent components.
 
         Forward output is [Co, Ni, Ta].  For chemical potential computation
         we reorder to [Ni, Ta, Co] so that Co (dependent) is the reference
         component (index 2) as expected by diffusion_potentials_regular_solution_torch.
+
+        If ``self.use_comp_dep_mobility`` is True, M(c) is computed from
+        end-member log-mobilities at each collocation point.  Otherwise the
+        constant ``mobility`` tensor is used.
         """
         x = x.clone().detach().requires_grad_(True)
         t = t.clone().detach().requires_grad_(True)
@@ -1273,25 +1362,30 @@ class TernaryRegularSolutionPINN(nn.Module):
             x_interface=self.x_interface, width=self.omega_width,
         )
 
-        ni = C[:, 1:2]
-        ta = C[:, 2:3]
+        ind0 = C[:, 1:2]  # first independent component
+        ind1 = C[:, 2:3]  # second independent component
 
-        ni_t = torch.autograd.grad(ni, t, torch.ones_like(ni), create_graph=output_graph, retain_graph=True)[0]
-        ta_t = torch.autograd.grad(ta, t, torch.ones_like(ta), create_graph=output_graph, retain_graph=True)[0]
+        ind0_t = torch.autograd.grad(ind0, t, torch.ones_like(ind0), create_graph=output_graph, retain_graph=True)[0]
+        ind1_t = torch.autograd.grad(ind1, t, torch.ones_like(ind1), create_graph=output_graph, retain_graph=True)[0]
 
-        mu_ni = mu[:, 0:1]
-        mu_ta = mu[:, 1:2]
+        mu0 = mu[:, 0:1]
+        mu1 = mu[:, 1:2]
 
-        mu_ni_x = torch.autograd.grad(mu_ni, x, torch.ones_like(mu_ni), create_graph=second_derivative_graph, retain_graph=True)[0]
-        mu_ta_x = torch.autograd.grad(mu_ta, x, torch.ones_like(mu_ta), create_graph=second_derivative_graph, retain_graph=True)[0]
+        mu0_x = torch.autograd.grad(mu0, x, torch.ones_like(mu0), create_graph=second_derivative_graph, retain_graph=True)[0]
+        mu1_x = torch.autograd.grad(mu1, x, torch.ones_like(mu1), create_graph=second_derivative_graph, retain_graph=True)[0]
 
-        q_ni = mobility[0, 0] * mu_ni_x + mobility[0, 1] * mu_ta_x
-        q_ta = mobility[1, 0] * mu_ni_x + mobility[1, 1] * mu_ta_x
+        if self.use_comp_dep_mobility and self.log_M_endmembers is not None:
+            M_local = mobility_matrix_from_endmembers_torch(C_int, self.log_M_endmembers)
+            q0 = M_local[:, 0, 0:1] * mu0_x + M_local[:, 0, 1:2] * mu1_x
+            q1 = M_local[:, 1, 0:1] * mu0_x + M_local[:, 1, 1:2] * mu1_x
+        else:
+            q0 = mobility[0, 0] * mu0_x + mobility[0, 1] * mu1_x
+            q1 = mobility[1, 0] * mu0_x + mobility[1, 1] * mu1_x
 
-        q_ni_x = torch.autograd.grad(q_ni, x, torch.ones_like(q_ni), create_graph=output_graph, retain_graph=True)[0]
-        q_ta_x = torch.autograd.grad(q_ta, x, torch.ones_like(q_ta), create_graph=output_graph, retain_graph=True)[0]
+        q0_x = torch.autograd.grad(q0, x, torch.ones_like(q0), create_graph=output_graph, retain_graph=True)[0]
+        q1_x = torch.autograd.grad(q1, x, torch.ones_like(q1), create_graph=output_graph, retain_graph=True)[0]
 
-        return torch.cat([ni_t - q_ni_x, ta_t - q_ta_x], dim=1)
+        return torch.cat([ind0_t - q0_x, ind1_t - q1_x], dim=1)
 
 
 @dataclass
@@ -1470,6 +1564,7 @@ def gaussian_nll_multitime_rs(
     omega_width: float,
     prior_mean: Optional[np.ndarray] = None,
     prior_std: Optional[float] = None,
+    log_M_endmembers: Optional[np.ndarray] = None,
 ) -> float:
     """Gaussian NLL for multi-time Omega estimation using FDM forward model.
 
@@ -1494,6 +1589,7 @@ def gaussian_nll_multitime_rs(
             c0_int, x_grid, dt, nsteps, mobility, theta_left_int, theta_right_int,
             RT=RT, x_interface=x_interface, omega_width=omega_width,
             save_every=save_every,
+            log_M_endmembers=log_M_endmembers,
         )
     except Exception:
         return 1.0e12
@@ -1672,6 +1768,7 @@ def posterior_band_from_samples_rs(
     target_time: float,
     max_samples: int = 50,
     progress_bar=None,
+    log_M_endmembers: Optional[np.ndarray] = None,
 ) -> Dict[str, np.ndarray]:
     """Compute posterior credible band from Omega samples via FDM forward solves.
 
@@ -1702,6 +1799,7 @@ def posterior_band_from_samples_rs(
                 c0_int, x_grid, dt, nsteps, mobility, theta_l_int, theta_r_int,
                 RT=RT, x_interface=x_interface, omega_width=omega_width,
                 save_every=save_every,
+                log_M_endmembers=log_M_endmembers,
             )
             C_fdm = _reorder_c_internal_to_display_np(C_fdm_int)
             ti_closest = int(np.argmin(np.abs(t_grid - target_time)))
@@ -4206,13 +4304,67 @@ D_norm = D_phys * t_scale / L_scale^2
     # --- Chemical potential (Omega) specific controls ---
     if use_chemical_potential:
         st.markdown("### Regular-solution Omega settings")
-        st.caption("Ωの順序: (Co,Ni), (Co,Ta), (Ni,Ta). FDM教師データはD行列ベース (fig11と共通)。")
-        omega_left_init_str = st.text_input("初期Ω left (init)", value="1.5,0.5,2.0")
+
+        rs_system_preset = st.selectbox(
+            "System preset",
+            ["Co-Ni-Ta (default)", "Fe-C-Si (Darken uphill diffusion)"],
+            index=0,
+            help=(
+                "Co-Ni-Ta: default ternary system from fig11. "
+                "Fe-C-Si: DICTRA Darken experiment (1050°C, 13 days). "
+                "Uphill diffusion of C due to Si activity gradient."
+            ),
+        )
+
+        if rs_system_preset == "Fe-C-Si (Darken uphill diffusion)":
+            st.info(
+                "Fe-C-Si Darken実験 (1050°C = 1323 K, 13 days)\n\n"
+                "左: 3.80 wt% Si, 0.49 wt% C (残 Fe)\n"
+                "右: 0.05 wt% Si, 0.45 wt% C (残 Fe)\n\n"
+                "Cがuphill拡散 (Si濃度勾配による熱力学的カップリング)"
+            )
+            _omega_default = "3.0,1.0,0.5"
+            _omega_right_default = "3.0,1.0,0.5"
+            _rt_default = 1.0
+            _mob_mode_default = 1
+            _logM_defaults = (-3.5, -5.0, -3.5, -6.0, -6.0, -6.0)
+        else:
+            _omega_default = "1.5,0.5,2.0"
+            _omega_right_default = "1.5,0.5,2.0"
+            _rt_default = 1.0
+            _mob_mode_default = 0
+            _logM_defaults = (-4.0, -4.0, -4.0, -6.0, -6.0, -6.0)
+
+        st.caption("Ωの順序: (comp1,comp2), (comp1,ref), (comp2,ref). FDM教師データはD行列ベース (fig11と共通)。")
+        omega_left_init_str = st.text_input("初期Ω left (init)", value=_omega_default)
         learn_lr_omega = st.checkbox("左右別々のΩを学習", value=True)
-        omega_right_init_str = st.text_input("初期Ω right (init)", value=omega_left_init_str, disabled=not learn_lr_omega)
+        omega_right_init_str = st.text_input("初期Ω right (init)", value=_omega_right_default, disabled=not learn_lr_omega)
         rs_RT = st.number_input("RT (regular-solution)", min_value=0.01, max_value=10.0, value=1.0, step=0.1)
-        rs_M_diag = st.number_input("mobility diagonal M", min_value=1.0e-5, max_value=1.0, value=2.0e-2, step=1.0e-3, format="%.5f")
-        rs_M_offdiag = st.number_input("mobility off-diagonal", min_value=-0.5, max_value=0.5, value=0.0, step=1.0e-3, format="%.5f")
+
+        rs_mobility_mode = st.selectbox(
+            "Mobility model",
+            ["constant (scalar matrix)", "composition-dependent (CALPHAD end-member)"],
+            index=_mob_mode_default,
+            help=(
+                "Constant: single diagonal M matrix. "
+                "Composition-dependent: ln M_i(c) = Σ_j x_j ln(M_i^j) (CALPHAD end-member mixing)."
+            ),
+        )
+        rs_use_comp_dep_mobility = (rs_mobility_mode == "composition-dependent (CALPHAD end-member)")
+
+        if not rs_use_comp_dep_mobility:
+            rs_M_diag = st.number_input("mobility diagonal M", min_value=1.0e-5, max_value=1.0, value=2.0e-2, step=1.0e-3, format="%.5f")
+            rs_M_offdiag = st.number_input("mobility off-diagonal", min_value=-0.5, max_value=0.5, value=0.0, step=1.0e-3, format="%.5f")
+        else:
+            st.caption("ln(M_i^j): log-mobility of independent component i in end-member j")
+            st.caption("行: 独立成分 (comp1, comp2), 列: end-member (comp1, comp2, ref)")
+            rs_logM_00 = st.number_input("ln M_comp1^comp1", value=_logM_defaults[0], step=0.5, format="%.2f")
+            rs_logM_01 = st.number_input("ln M_comp1^comp2", value=_logM_defaults[1], step=0.5, format="%.2f")
+            rs_logM_02 = st.number_input("ln M_comp1^ref", value=_logM_defaults[2], step=0.5, format="%.2f")
+            rs_logM_10 = st.number_input("ln M_comp2^comp1", value=_logM_defaults[3], step=0.5, format="%.2f")
+            rs_logM_11 = st.number_input("ln M_comp2^comp2", value=_logM_defaults[4], step=0.5, format="%.2f")
+            rs_logM_12 = st.number_input("ln M_comp2^ref", value=_logM_defaults[5], step=0.5, format="%.2f")
+            rs_train_mobility = st.checkbox("Train mobility end-members", value=False)
         rs_fdm_dt = st.number_input("FDM dt for Omega teacher", min_value=1.0e-7, max_value=1.0e-3, value=1.0e-5, step=1.0e-6, format="%.2e")
         rs_fdm_nsteps = st.number_input("FDM steps for Omega teacher", min_value=10, max_value=100000, value=4000, step=500)
         rs_fdm_save_every = st.number_input("FDM save_every", min_value=1, max_value=10000, value=100, step=10)
@@ -4430,7 +4582,17 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
         else:
             theta_right_init_vals = theta_left_init_vals.copy()
 
-        mobility_rs = np.eye(2) * float(rs_M_diag) + (np.ones((2, 2)) - np.eye(2)) * float(rs_M_offdiag)
+        log_M_endmembers_init = None
+        rs_train_mob = False
+        if rs_use_comp_dep_mobility:
+            log_M_endmembers_init = np.array([
+                [rs_logM_00, rs_logM_01, rs_logM_02],
+                [rs_logM_10, rs_logM_11, rs_logM_12],
+            ], dtype=float)
+            rs_train_mob = bool(rs_train_mobility)
+            mobility_rs = np.eye(2) * 1.0e-2
+        else:
+            mobility_rs = np.eye(2) * float(rs_M_diag) + (np.ones((2, 2)) - np.eye(2)) * float(rs_M_offdiag)
 
         rs_model = TernaryRegularSolutionPINN(
             width=width,
@@ -4443,6 +4605,8 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
             omega_width=float(phase_interface_width),
             RT=float(rs_RT),
             train_omega=True,
+            log_M_endmembers_init=log_M_endmembers_init,
+            train_mobility=rs_train_mob,
         )
 
         st.info("Step 2/2: PINNsでΩ相互作用項を推定しています (chemical potential mode)...")
@@ -4489,6 +4653,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
             mobility=mobility_rs, RT=float(rs_RT),
             x_interface=0.5, omega_width=float(phase_interface_width),
             prior_mean=prior_mean_rs, prior_std=5.0,
+            log_M_endmembers=log_M_endmembers_init,
         )
 
         refine_info_rs = None
@@ -4522,8 +4687,11 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
             "noise": noise,
             "seed": int(seed),
             "rs_RT": float(rs_RT),
-            "rs_M_diag": float(rs_M_diag),
-            "rs_M_offdiag": float(rs_M_offdiag),
+            "rs_M_diag": float(rs_M_diag) if not rs_use_comp_dep_mobility else 1.0e-2,
+            "rs_M_offdiag": float(rs_M_offdiag) if not rs_use_comp_dep_mobility else 0.0,
+            "log_M_endmembers": log_M_endmembers_init,
+            "rs_use_comp_dep_mobility": rs_use_comp_dep_mobility,
+            "rs_system_preset": rs_system_preset,
             "rs_fdm_dt": float(rs_fdm_dt),
             "rs_fdm_nsteps": int(rs_fdm_nsteps),
             "rs_fdm_save_every": int(rs_fdm_save_every),
@@ -4817,6 +4985,7 @@ if inputs.get("use_chemical_potential", False) and isinstance(result, TrainResul
                 omega_width=float(inputs["phase_interface_width"]),
                 prior_mean=theta_hat_rs,
                 prior_std=5.0,
+                log_M_endmembers=inputs.get("log_M_endmembers"),
             )
 
             with st.spinner("Computing Laplace reliability for Omega..."):
@@ -4877,6 +5046,7 @@ if inputs.get("use_chemical_potential", False) and isinstance(result, TrainResul
                     target_time=float(t[-1]),
                     max_samples=int(inputs["rs_band_samples"]),
                     progress_bar=band_progress,
+                    log_M_endmembers=inputs.get("log_M_endmembers"),
                 )
 
             fig_band = go.Figure()
