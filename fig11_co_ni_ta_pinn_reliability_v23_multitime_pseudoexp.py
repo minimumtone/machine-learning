@@ -501,124 +501,6 @@ def fdm_ternary_regular_solution(
     return np.array(t_saved, dtype=float), np.stack(snapshots, axis=0)
 
 
-def make_training_data_from_fdm_rs(
-    x: np.ndarray,
-    t_grid: np.ndarray,
-    C_fdm: np.ndarray,
-    n_obs_random: int,
-    n_ic: int,
-    n_bc_each: int,
-    n_f: int,
-    noise: float,
-    seed: int,
-    n_exp_points: int,
-    n_exp_time_slices: int,
-    append_pseudo_exp_to_training: bool = True,
-) -> "TrainingDataRS":
-    """Build training data dict from FDM teacher data for regular-solution mode."""
-    rng = np.random.default_rng(seed)
-    Nx = len(x)
-    n_t = len(t_grid)
-    n_components = C_fdm.shape[2]
-
-    x_obs_list = []
-    t_obs_list = []
-    c_obs_list = []
-    for _ in range(n_obs_random):
-        ti = rng.integers(0, n_t)
-        xi = rng.integers(0, Nx)
-        x_obs_list.append(x[xi])
-        t_obs_list.append(t_grid[ti])
-        c_obs_list.append(C_fdm[ti, xi, :] + rng.normal(0.0, noise, size=n_components))
-
-    x_ic = x[np.linspace(0, Nx - 1, n_ic).astype(int)]
-    t_ic = np.full(n_ic, t_grid[0])
-    c_ic = np.column_stack([np.interp(x_ic, x, C_fdm[0, :, j]) for j in range(n_components)])
-    c_ic += rng.normal(0.0, noise * 0.5, size=c_ic.shape)
-
-    x_bc_left = np.full(n_bc_each, x[0])
-    x_bc_right = np.full(n_bc_each, x[-1])
-    t_bc = rng.uniform(t_grid[0], t_grid[-1], size=n_bc_each)
-    c_bc_left = np.tile(C_fdm[0, 0, :], (n_bc_each, 1))
-    c_bc_right = np.tile(C_fdm[0, -1, :], (n_bc_each, 1))
-
-    x_f = rng.uniform(x[0], x[-1], size=n_f)
-    t_f = rng.uniform(t_grid[0], t_grid[-1], size=n_f)
-
-    exp_time_indices = np.unique(np.linspace(0, n_t - 1, min(n_exp_time_slices + 1, n_t)).astype(int))
-    if n_t - 1 not in exp_time_indices:
-        exp_time_indices = np.append(exp_time_indices, n_t - 1)
-    exp_time_indices = exp_time_indices[exp_time_indices > 0]
-
-    x_exp_list = []
-    t_exp_list = []
-    c_exp_list = []
-    for ti_idx in exp_time_indices:
-        x_sample = np.linspace(x[0], x[-1], n_exp_points)
-        c_sample = np.column_stack([np.interp(x_sample, x, C_fdm[ti_idx, :, j]) for j in range(n_components)])
-        c_sample += rng.normal(0.0, noise, size=c_sample.shape)
-        c_sample = np.clip(c_sample, 0.0, 1.0)
-        c_sample = c_sample / np.sum(c_sample, axis=1, keepdims=True)
-        x_exp_list.append(x_sample)
-        t_exp_list.append(np.full(n_exp_points, t_grid[ti_idx]))
-        c_exp_list.append(c_sample)
-
-    x_exp = np.concatenate(x_exp_list)
-    t_exp = np.concatenate(t_exp_list)
-    c_exp = np.concatenate(c_exp_list, axis=0)
-
-    if append_pseudo_exp_to_training:
-        x_obs_list.extend(x_exp.tolist())
-        t_obs_list.extend(t_exp.tolist())
-        c_obs_list.extend(c_exp.tolist())
-
-    x_obs = np.array(x_obs_list, dtype=float)
-    t_obs = np.array(t_obs_list, dtype=float)
-    c_obs = np.array(c_obs_list, dtype=float)
-    c_obs = np.clip(c_obs, 0.0, 1.0)
-    c_obs = c_obs / np.sum(c_obs, axis=1, keepdims=True)
-
-    return TrainingDataRS(
-        x_grid=x,
-        t_grid=t_grid,
-        C_fdm=C_fdm,
-        x_obs=x_obs,
-        t_obs=t_obs,
-        c_obs=c_obs,
-        x_ic=np.concatenate([x_ic, x_bc_left, x_bc_right]),
-        t_ic=np.concatenate([t_ic, t_bc, t_bc]),
-        c_ic=np.concatenate([c_ic, c_bc_left, c_bc_right], axis=0),
-        x_f=x_f,
-        t_f=t_f,
-        x_exp=x_exp,
-        t_exp=t_exp,
-        c_exp=c_exp,
-        exp_time_indices=exp_time_indices.tolist(),
-        n_components=n_components,
-    )
-
-
-@dataclass
-class TrainingDataRS:
-    """Training data container for regular-solution mode."""
-    x_grid: np.ndarray
-    t_grid: np.ndarray
-    C_fdm: np.ndarray
-    x_obs: np.ndarray
-    t_obs: np.ndarray
-    c_obs: np.ndarray
-    x_ic: np.ndarray
-    t_ic: np.ndarray
-    c_ic: np.ndarray
-    x_f: np.ndarray
-    t_f: np.ndarray
-    x_exp: np.ndarray
-    t_exp: np.ndarray
-    c_exp: np.ndarray
-    exp_time_indices: list
-    n_components: int = 3
-
-
 # =============================================================================
 # FDM teacher and uncached forward solver
 # =============================================================================
@@ -1255,22 +1137,51 @@ class TwoRegionTernaryDiffusionPINN(TernaryDiffusionPINN):
 # Regular-solution PINN model (chemical potential approach)
 # =============================================================================
 
+def _reorder_display_to_internal(c: torch.Tensor) -> torch.Tensor:
+    """Reorder composition from display [Co,Ni,Ta] to internal [Ni,Ta,Co].
+
+    The regular-solution chemical potential functions expect the dependent
+    (reference) component to be the last column.  In the fig11 convention
+    Co is dependent, so we move it to the end.
+    """
+    return torch.cat([c[:, 1:2], c[:, 2:3], c[:, 0:1]], dim=1)
+
+
+def _reorder_theta_display_to_internal(theta: np.ndarray) -> np.ndarray:
+    """Reorder Omega pair vector from display order to internal order.
+
+    Display [Co=0,Ni=1,Ta=2] pairs:  (0,1)=CoNi, (0,2)=CoTa, (1,2)=NiTa
+    Internal [Ni=0,Ta=1,Co=2] pairs: (0,1)=NiTa, (0,2)=NiCo, (1,2)=TaCo
+
+    Omega is symmetric, so NiCo=CoNi and TaCo=CoTa.
+    Mapping: internal[0]=NiTa=display[2], internal[1]=CoNi=display[0], internal[2]=CoTa=display[1]
+    """
+    return np.array([theta[2], theta[0], theta[1]], dtype=float)
+
+
+def _reorder_theta_internal_to_display(theta: np.ndarray) -> np.ndarray:
+    """Inverse of _reorder_theta_display_to_internal."""
+    return np.array([theta[1], theta[2], theta[0]], dtype=float)
+
+
 class TernaryRegularSolutionPINN(nn.Module):
     """Ternary PINN using regular-solution chemical potentials instead of direct D matrix.
 
-    Trainable parameters are Omega pair-interaction terms (3 pairs for ternary:
-    Omega_CoNi, Omega_CoTa, Omega_NiTa) and a diagonal mobility matrix M.
-    The PDE is: c_t = div(M grad(mu)), where mu = chemical potential from
-    the regular-solution model.
+    Uses the same MLP architecture as TernaryDiffusionPINN (fig11-equivalent).
+    Output order is [Co, Ni, Ta] matching fig11; internally reorders to
+    [Ni, Ta, Co] for chemical potential calculations (Co as reference).
+
+    Trainable parameters: Omega pair-interaction terms stored in internal
+    [Ni,Ta,Co] order.  The PDE is: c_t = div(M grad(mu)).
     """
 
     def __init__(
         self,
-        n_components: int = 3,
+        width: int,
+        depth: int,
+        activation: str,
         theta_left_init: Optional[np.ndarray] = None,
         theta_right_init: Optional[np.ndarray] = None,
-        hidden_layers: Tuple[int, ...] = (64, 64, 64, 64),
-        activation: str = "tanh",
         learn_left_right_omega: bool = True,
         x_interface: float = 0.5,
         omega_width: float = 0.02,
@@ -1278,62 +1189,55 @@ class TernaryRegularSolutionPINN(nn.Module):
         train_omega: bool = True,
     ):
         super().__init__()
-        self.n_components = n_components
-        self.n_ind = n_components - 1
-        n_pairs = len(pair_indices_rs(n_components))
-        self.n_pairs = n_pairs
+        self.n_components = 3
+        self.n_ind = 2
+        self.n_pairs = 3
         self.learn_left_right_omega = learn_left_right_omega
         self.x_interface = x_interface
         self.omega_width = omega_width
         self.RT = RT
 
+        self.net = MLP(width, depth, activation)
+
         if theta_left_init is None:
-            theta_left_init = np.ones(n_pairs, dtype=float) * 1.0
+            theta_left_init = np.ones(self.n_pairs, dtype=float)
         if theta_right_init is None:
             theta_right_init = theta_left_init.copy()
+        theta_left_int = _reorder_theta_display_to_internal(theta_left_init)
+        theta_right_int = _reorder_theta_display_to_internal(theta_right_init)
 
         self.theta_left_raw = nn.Parameter(
-            torch.tensor(theta_left_init, dtype=torch.float32),
+            torch.tensor(theta_left_int, dtype=torch.float32, device=DEVICE),
             requires_grad=train_omega,
         )
         if learn_left_right_omega:
             self.theta_right_raw = nn.Parameter(
-                torch.tensor(theta_right_init, dtype=torch.float32),
+                torch.tensor(theta_right_int, dtype=torch.float32, device=DEVICE),
                 requires_grad=train_omega,
             )
         else:
             self.register_buffer(
                 "theta_right_raw",
-                torch.tensor(theta_left_init, dtype=torch.float32),
+                torch.tensor(theta_left_int, dtype=torch.float32, device=DEVICE),
             )
 
-        act_map = {"tanh": nn.Tanh, "silu": nn.SiLU, "gelu": nn.GELU, "relu": nn.ReLU}
-        act_cls = act_map.get(activation, nn.Tanh)
-        layers: List[nn.Module] = []
-        in_dim = 2
-        for h in hidden_layers:
-            layers.append(nn.Linear(in_dim, h))
-            layers.append(act_cls())
-            in_dim = h
-        layers.append(nn.Linear(in_dim, self.n_ind))
-        layers.append(nn.Sigmoid())
-        self.net = nn.Sequential(*layers)
-
     def theta_vectors(self) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Return (theta_left, theta_right) tensors."""
+        """Return (theta_left, theta_right) in internal [Ni,Ta,Co] pair order."""
         if self.learn_left_right_omega:
             return self.theta_left_raw, self.theta_right_raw
         return self.theta_left_raw, self.theta_left_raw
 
+    def theta_display(self) -> Tuple[np.ndarray, np.ndarray]:
+        """Return (theta_left, theta_right) in display [Co,Ni,Ta] pair order."""
+        tl, tr = self.theta_vectors()
+        return (
+            _reorder_theta_internal_to_display(tl.detach().cpu().numpy()),
+            _reorder_theta_internal_to_display(tr.detach().cpu().numpy()),
+        )
+
     def forward(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
-        """Return full composition [Co, Ni, Ta] with shape (N, 3)."""
-        X = torch.cat([x, t], dim=1)
-        c_ind = self.net(X)
-        total = torch.sum(c_ind, dim=1, keepdim=True)
-        c_ind = c_ind * torch.clamp(1.0 / (total + 1.0e-8), max=1.0)
-        c_dep = 1.0 - torch.sum(c_ind, dim=1, keepdim=True)
-        c_dep = torch.clamp(c_dep, min=1.0e-8)
-        return torch.cat([c_dep, c_ind], dim=1)
+        """Return full composition [Co, Ni, Ta] (same as fig11 MLP)."""
+        return self.net(x, t)
 
     def residual_train(self, x: torch.Tensor, t: torch.Tensor,
                        mobility: torch.Tensor) -> torch.Tensor:
@@ -1341,7 +1245,7 @@ class TernaryRegularSolutionPINN(nn.Module):
 
     def residual_eval(self, x: torch.Tensor, t: torch.Tensor,
                       mobility: torch.Tensor) -> torch.Tensor:
-        return self._residual_impl(x, t, mobility, second_derivative_graph=False, output_graph=False)
+        return self._residual_impl(x, t, mobility, second_derivative_graph=True, output_graph=False)
 
     def _residual_impl(
         self,
@@ -1351,61 +1255,57 @@ class TernaryRegularSolutionPINN(nn.Module):
         second_derivative_graph: bool,
         output_graph: bool,
     ) -> torch.Tensor:
-        """PDE residual: c_t - div(M grad(mu)) for each independent component."""
+        """PDE residual: c_t - div(M grad(mu)) for Ni and Ta (independent).
+
+        Forward output is [Co, Ni, Ta].  For chemical potential computation
+        we reorder to [Ni, Ta, Co] so that Co (dependent) is the reference
+        component (index 2) as expected by diffusion_potentials_regular_solution_torch.
+        """
         x = x.clone().detach().requires_grad_(True)
         t = t.clone().detach().requires_grad_(True)
 
         C = self.forward(x, t)
-        theta_l, theta_r = self.theta_vectors()
+        C_int = _reorder_display_to_internal(C)
 
+        theta_l, theta_r = self.theta_vectors()
         mu = diffusion_potentials_regular_solution_torch(
-            C, x, theta_l, theta_r, RT=self.RT,
+            C_int, x, theta_l, theta_r, RT=self.RT,
             x_interface=self.x_interface, width=self.omega_width,
         )
 
-        res_cols = []
-        for i in range(self.n_ind):
-            c_i = C[:, i + 1:i + 2]
-            grad_c_i = torch.autograd.grad(
-                c_i, t, torch.ones_like(c_i),
-                create_graph=output_graph, retain_graph=True,
-            )[0]
-            c_t = grad_c_i
+        ni = C[:, 1:2]
+        ta = C[:, 2:3]
 
-            q_i = torch.zeros_like(c_t)
-            for j in range(self.n_ind):
-                mu_j = mu[:, j:j + 1]
-                grad_mu_j = torch.autograd.grad(
-                    mu_j, x, torch.ones_like(mu_j),
-                    create_graph=True, retain_graph=True,
-                )[0]
-                mu_x_j = grad_mu_j
-                q_i = q_i + mobility[i, j] * mu_x_j
+        ni_t = torch.autograd.grad(ni, t, torch.ones_like(ni), create_graph=output_graph, retain_graph=True)[0]
+        ta_t = torch.autograd.grad(ta, t, torch.ones_like(ta), create_graph=output_graph, retain_graph=True)[0]
 
-            grad_q_i = torch.autograd.grad(
-                q_i, x, torch.ones_like(q_i),
-                create_graph=output_graph, retain_graph=True,
-            )[0]
-            q_x = grad_q_i
-            res_cols.append(c_t - q_x)
+        mu_ni = mu[:, 0:1]
+        mu_ta = mu[:, 1:2]
 
-        return torch.cat(res_cols, dim=1)
+        mu_ni_x = torch.autograd.grad(mu_ni, x, torch.ones_like(mu_ni), create_graph=second_derivative_graph, retain_graph=True)[0]
+        mu_ta_x = torch.autograd.grad(mu_ta, x, torch.ones_like(mu_ta), create_graph=second_derivative_graph, retain_graph=True)[0]
+
+        q_ni = mobility[0, 0] * mu_ni_x + mobility[0, 1] * mu_ta_x
+        q_ta = mobility[1, 0] * mu_ni_x + mobility[1, 1] * mu_ta_x
+
+        q_ni_x = torch.autograd.grad(q_ni, x, torch.ones_like(q_ni), create_graph=output_graph, retain_graph=True)[0]
+        q_ta_x = torch.autograd.grad(q_ta, x, torch.ones_like(q_ta), create_graph=output_graph, retain_graph=True)[0]
+
+        return torch.cat([ni_t - q_ni_x, ta_t - q_ta_x], dim=1)
 
 
 @dataclass
 class TrainResultRS:
     """Training result for regular-solution mode."""
     model: TernaryRegularSolutionPINN
-    data: TrainingDataRS
+    data: TrainingData
     history: pd.DataFrame
     train_time: float
     mobility: np.ndarray
-    theta_left_true: np.ndarray
-    theta_right_true: np.ndarray
 
 
 def train_pinn_rs(
-    data: TrainingDataRS,
+    data: TrainingData,
     model: TernaryRegularSolutionPINN,
     mobility: np.ndarray,
     epochs: int,
@@ -1418,7 +1318,7 @@ def train_pinn_rs(
     omega_prior_left: Optional[np.ndarray] = None,
     omega_prior_right: Optional[np.ndarray] = None,
 ) -> Tuple[TernaryRegularSolutionPINN, pd.DataFrame]:
-    """Train a TernaryRegularSolutionPINN model."""
+    """Train a TernaryRegularSolutionPINN model using fig11-standard TrainingData."""
     device = DEVICE
     model = model.to(device)
     mobility_t = torch.tensor(mobility, dtype=torch.float32, device=device)
@@ -1434,6 +1334,9 @@ def train_pinn_rs(
     w_ic = float(weights.get("ic", 12.0))
     w_bc = float(weights.get("bc", 12.0))
     w_phys = float(weights.get("phys", 10.0))
+
+    omega_prior_left_int = _reorder_theta_display_to_internal(omega_prior_left) if omega_prior_left is not None else None
+    omega_prior_right_int = _reorder_theta_display_to_internal(omega_prior_right) if omega_prior_right is not None else None
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=max(epochs, 1), eta_min=lr * 0.03)
@@ -1465,12 +1368,12 @@ def train_pinn_rs(
 
         loss = w_data * loss_data + w_ic * loss_ic + w_phys * loss_phys
 
-        if w_omega_prior > 0.0 and omega_prior_left is not None:
+        if w_omega_prior > 0.0 and omega_prior_left_int is not None:
             theta_l, theta_r = model.theta_vectors()
-            prior_l = torch.tensor(omega_prior_left, dtype=torch.float32, device=device)
+            prior_l = torch.tensor(omega_prior_left_int, dtype=torch.float32, device=device)
             omega_reg = torch.mean((theta_l - prior_l) ** 2)
-            if omega_prior_right is not None and model.learn_left_right_omega:
-                prior_r = torch.tensor(omega_prior_right, dtype=torch.float32, device=device)
+            if omega_prior_right_int is not None and model.learn_left_right_omega:
+                prior_r = torch.tensor(omega_prior_right_int, dtype=torch.float32, device=device)
                 omega_reg = omega_reg + torch.mean((theta_r - prior_r) ** 2)
             loss = loss + w_omega_prior * omega_reg
 
@@ -1478,20 +1381,20 @@ def train_pinn_rs(
         optimizer.step()
         scheduler.step()
 
-        theta_l, theta_r = model.theta_vectors()
-        theta_l_np = theta_l.detach().cpu().numpy()
-        theta_r_np = theta_r.detach().cpu().numpy()
-        pairs = pair_indices_rs(model.n_components)
+        theta_l_disp, theta_r_disp = model.theta_display()
         row = {
             "epoch": epoch,
             "loss": float(loss.item()),
             "data": float(loss_data.item()),
             "ic": float(loss_ic.item()),
             "physics": float(loss_phys.item()),
+            "Omega_CoNi_left": float(theta_l_disp[0]),
+            "Omega_CoTa_left": float(theta_l_disp[1]),
+            "Omega_NiTa_left": float(theta_l_disp[2]),
+            "Omega_CoNi_right": float(theta_r_disp[0]),
+            "Omega_CoTa_right": float(theta_r_disp[1]),
+            "Omega_NiTa_right": float(theta_r_disp[2]),
         }
-        for k, (a, b) in enumerate(pairs):
-            row[f"Omega_{a}{b}_left"] = float(theta_l_np[k])
-            row[f"Omega_{a}{b}_right"] = float(theta_r_np[k])
         history_rows.append(row)
 
         if progress is not None and epoch % max(1, epochs // 100) == 0:
@@ -1538,6 +1441,16 @@ def evaluate_model_on_grid_rs(
 # Omega-based reliability (regular-solution mode)
 # =============================================================================
 
+def _reorder_c_display_to_internal_np(c: np.ndarray) -> np.ndarray:
+    """Reorder composition array [Co,Ni,Ta] → [Ni,Ta,Co] (numpy, last axis)."""
+    return c[..., [1, 2, 0]]
+
+
+def _reorder_c_internal_to_display_np(c: np.ndarray) -> np.ndarray:
+    """Reorder composition array [Ni,Ta,Co] → [Co,Ni,Ta] (numpy, last axis)."""
+    return c[..., [2, 0, 1]]
+
+
 def gaussian_nll_multitime_rs(
     theta: np.ndarray,
     n_components: int,
@@ -1558,24 +1471,34 @@ def gaussian_nll_multitime_rs(
     prior_mean: Optional[np.ndarray] = None,
     prior_std: Optional[float] = None,
 ) -> float:
-    """Gaussian NLL for multi-time Omega estimation using FDM forward model."""
+    """Gaussian NLL for multi-time Omega estimation using FDM forward model.
+
+    theta and c0_full are in display [Co,Ni,Ta] order.  Internally reorders
+    to [Ni,Ta,Co] for the regular-solution FDM solver, then converts back.
+    """
     n_pairs = len(pair_indices_rs(n_components))
     if left_right:
-        theta_left = theta[:n_pairs]
-        theta_right = theta[n_pairs:2 * n_pairs]
+        theta_left_disp = theta[:n_pairs]
+        theta_right_disp = theta[n_pairs:2 * n_pairs]
     else:
-        theta_left = theta[:n_pairs]
-        theta_right = theta_left
+        theta_left_disp = theta[:n_pairs]
+        theta_right_disp = theta_left_disp
+
+    theta_left_int = _reorder_theta_display_to_internal(theta_left_disp)
+    theta_right_int = _reorder_theta_display_to_internal(theta_right_disp)
+    c0_int = _reorder_c_display_to_internal_np(c0_full)
 
     n_ind = n_components - 1
     try:
-        t_grid, C_fdm = fdm_ternary_regular_solution(
-            c0_full, x_grid, dt, nsteps, mobility, theta_left, theta_right,
+        t_grid, C_fdm_int = fdm_ternary_regular_solution(
+            c0_int, x_grid, dt, nsteps, mobility, theta_left_int, theta_right_int,
             RT=RT, x_interface=x_interface, omega_width=omega_width,
             save_every=save_every,
         )
     except Exception:
         return 1.0e12
+
+    C_fdm = _reorder_c_internal_to_display_np(C_fdm_int)
 
     sigma_eff = max(float(sigma), 1.0e-8)
     total_nll = 0.0
@@ -1629,14 +1552,16 @@ def overwrite_model_omega_from_theta(
     theta: np.ndarray,
     left_right: bool,
 ) -> None:
-    """Overwrite model Omega parameters from a flat theta vector."""
+    """Overwrite model Omega parameters from a flat theta vector (display order)."""
     n_pairs = model.n_pairs
-    theta_left = theta[:n_pairs]
+    theta_left_disp = theta[:n_pairs]
+    theta_left_int = _reorder_theta_display_to_internal(theta_left_disp)
     with torch.no_grad():
-        model.theta_left_raw.copy_(torch.tensor(theta_left, dtype=torch.float32))
+        model.theta_left_raw.copy_(torch.tensor(theta_left_int, dtype=torch.float32))
         if left_right and hasattr(model, "theta_right_raw") and isinstance(model.theta_right_raw, nn.Parameter):
-            theta_right = theta[n_pairs:2 * n_pairs]
-            model.theta_right_raw.copy_(torch.tensor(theta_right, dtype=torch.float32))
+            theta_right_disp = theta[n_pairs:2 * n_pairs]
+            theta_right_int = _reorder_theta_display_to_internal(theta_right_disp)
+            model.theta_right_raw.copy_(torch.tensor(theta_right_int, dtype=torch.float32))
 
 
 def laplace_reliability_rs(
@@ -1748,29 +1673,37 @@ def posterior_band_from_samples_rs(
     max_samples: int = 50,
     progress_bar=None,
 ) -> Dict[str, np.ndarray]:
-    """Compute posterior credible band from Omega samples via FDM forward solves."""
+    """Compute posterior credible band from Omega samples via FDM forward solves.
+
+    theta_samples and c0_full are in display [Co,Ni,Ta] order.
+    Internally reorders to [Ni,Ta,Co] for the FDM solver, then converts back.
+    """
     if theta_samples is None or len(theta_samples) == 0:
         nan = np.full((len(x_grid), n_components), np.nan)
         return {"q025": nan, "q500": nan, "q975": nan}
 
     n_pairs = len(pair_indices_rs(n_components))
+    c0_int = _reorder_c_display_to_internal_np(c0_full)
     idx = np.linspace(0, len(theta_samples) - 1, min(max_samples, len(theta_samples))).astype(int)
 
     profiles = []
     for k_idx, i in enumerate(idx):
         th = theta_samples[i]
         if left_right:
-            theta_l = th[:n_pairs]
-            theta_r = th[n_pairs:2 * n_pairs]
+            theta_l_disp = th[:n_pairs]
+            theta_r_disp = th[n_pairs:2 * n_pairs]
         else:
-            theta_l = th[:n_pairs]
-            theta_r = theta_l
+            theta_l_disp = th[:n_pairs]
+            theta_r_disp = theta_l_disp
+        theta_l_int = _reorder_theta_display_to_internal(theta_l_disp)
+        theta_r_int = _reorder_theta_display_to_internal(theta_r_disp)
         try:
-            t_grid, C_fdm = fdm_ternary_regular_solution(
-                c0_full, x_grid, dt, nsteps, mobility, theta_l, theta_r,
+            t_grid, C_fdm_int = fdm_ternary_regular_solution(
+                c0_int, x_grid, dt, nsteps, mobility, theta_l_int, theta_r_int,
                 RT=RT, x_interface=x_interface, omega_width=omega_width,
                 save_every=save_every,
             )
+            C_fdm = _reorder_c_internal_to_display_np(C_fdm_int)
             ti_closest = int(np.argmin(np.abs(t_grid - target_time)))
             profiles.append(C_fdm[ti_closest])
         except Exception:
@@ -4273,11 +4206,9 @@ D_norm = D_phys * t_scale / L_scale^2
     # --- Chemical potential (Omega) specific controls ---
     if use_chemical_potential:
         st.markdown("### Regular-solution Omega settings")
-        st.caption("Ωの順序: (Co,Ni), (Co,Ta), (Ni,Ta)")
-        omega_left_true_str = st.text_input("教師Ω left (true)", value="2.5,1.0,3.5")
+        st.caption("Ωの順序: (Co,Ni), (Co,Ta), (Ni,Ta). FDM教師データはD行列ベース (fig11と共通)。")
         omega_left_init_str = st.text_input("初期Ω left (init)", value="1.5,0.5,2.0")
         learn_lr_omega = st.checkbox("左右別々のΩを学習", value=True)
-        omega_right_true_str = st.text_input("教師Ω right (true)", value=omega_left_true_str, disabled=not learn_lr_omega)
         omega_right_init_str = st.text_input("初期Ω right (init)", value=omega_left_init_str, disabled=not learn_lr_omega)
         rs_RT = st.number_input("RT (regular-solution)", min_value=0.01, max_value=10.0, value=1.0, step=0.1)
         rs_M_diag = st.number_input("mobility diagonal M", min_value=1.0e-5, max_value=1.0, value=2.0e-2, step=1.0e-3, format="%.5f")
@@ -4290,9 +4221,6 @@ D_norm = D_phys * t_scale / L_scale^2
         do_fdm_refine = st.checkbox("PINN後にFDM尤度でΩを再最適化", value=True,
                                      help="相互作用項の精度を上げるための重要ステップ。")
         fdm_refine_maxiter = st.number_input("FDM再最適化 maxiter", min_value=10, max_value=2000, value=180, step=10)
-        rs_n_obs_random = st.number_input("random observation points (RS)", min_value=0, max_value=50000, value=2500, step=500)
-        rs_n_exp_time_slices = st.number_input("pseudo-exp 時刻数 (RS)", min_value=1, max_value=20, value=4, step=1)
-        rs_n_exp_points = st.number_input("pseudo-exp 点数/時刻 (RS)", min_value=4, max_value=500, value=48, step=4)
         rs_like_sigma = st.slider("likelihood sigma (RS)", 0.001, 0.080, 0.008, 0.001)
         rs_hessian_step = st.slider("Laplace Hessian step (RS)", 0.005, 0.150, 0.030, 0.005)
         rs_laplace_samples = st.slider("Laplace posterior samples (RS)", 200, 5000, 800, 100)
@@ -4401,172 +4329,7 @@ if run:
         log_d22_right_train_init = float(self_log_diag[1])
 
     # =========================================================================
-    # Chemical potential mode: regular-solution approach
-    # =========================================================================
-    if use_chemical_potential:
-        def _parse_omega_str(s: str, n_pairs: int) -> np.ndarray:
-            vals = np.array([float(v.strip()) for v in s.split(",")], dtype=float)
-            if vals.size != n_pairs:
-                raise ValueError(f"Expected {n_pairs} Omega values, got {vals.size}")
-            return vals
-
-        n_components_rs = 3
-        n_pairs_rs = len(pair_indices_rs(n_components_rs))
-        n_ind_rs = n_components_rs - 1
-
-        theta_left_true = _parse_omega_str(omega_left_true_str, n_pairs_rs)
-        theta_left_init_vals = _parse_omega_str(omega_left_init_str, n_pairs_rs)
-        if learn_lr_omega:
-            theta_right_true = _parse_omega_str(omega_right_true_str, n_pairs_rs)
-            theta_right_init_vals = _parse_omega_str(omega_right_init_str, n_pairs_rs)
-        else:
-            theta_right_true = theta_left_true.copy()
-            theta_right_init_vals = theta_left_init_vals.copy()
-
-        c_left_rs = np.array([1.0, 0.0, 0.0], dtype=float)
-        c_right_rs = np.array([0.0, 0.90, 0.10], dtype=float)
-        c_left_rs = np.clip(c_left_rs, 1.0e-6, 1.0)
-        c_left_rs /= c_left_rs.sum()
-        c_right_rs = np.clip(c_right_rs, 1.0e-6, 1.0)
-        c_right_rs /= c_right_rs.sum()
-
-        x_grid_rs = np.linspace(0.0, 1.0, int(nx_fdm))
-        c0_full_rs = make_initial_profile_ternary_rs(
-            x_grid_rs, c_left_rs, c_right_rs,
-            x0=0.5, width=float(phase_interface_width),
-        )
-        mobility_rs = np.eye(n_ind_rs) * float(rs_M_diag) + (np.ones((n_ind_rs, n_ind_rs)) - np.eye(n_ind_rs)) * float(rs_M_offdiag)
-
-        st.info("Step 1/3: Regular-solution FDM教師データを計算しています (c_t = div(M grad(μ)))...")
-        t_grid_rs, C_fdm_rs = fdm_ternary_regular_solution(
-            c0_full_rs, x_grid_rs, float(rs_fdm_dt), int(rs_fdm_nsteps),
-            mobility_rs, theta_left_true, theta_right_true,
-            RT=float(rs_RT), x_interface=0.5, omega_width=float(phase_interface_width),
-            save_every=int(rs_fdm_save_every),
-        )
-        st.success(f"FDM regular-solution teacher finished: {len(t_grid_rs)} time frames.")
-
-        data_rs = make_training_data_from_fdm_rs(
-            x_grid_rs, t_grid_rs, C_fdm_rs,
-            n_obs_random=int(rs_n_obs_random),
-            n_ic=int(n_ic), n_bc_each=int(n_bc_each), n_f=int(n_f),
-            noise=float(noise), seed=int(seed),
-            n_exp_points=int(rs_n_exp_points),
-            n_exp_time_slices=int(rs_n_exp_time_slices),
-            append_pseudo_exp_to_training=True,
-        )
-
-        rs_model = TernaryRegularSolutionPINN(
-            n_components=n_components_rs,
-            theta_left_init=theta_left_init_vals,
-            theta_right_init=theta_right_init_vals,
-            hidden_layers=tuple([int(width)] * int(depth)),
-            activation=str(activation),
-            learn_left_right_omega=bool(learn_lr_omega),
-            x_interface=0.5,
-            omega_width=float(phase_interface_width),
-            RT=float(rs_RT),
-            train_omega=True,
-        )
-
-        st.info("Step 2/3: PINNsでΩ相互作用項を推定しています...")
-        progress = st.progress(0.0)
-        status = st.empty()
-        rs_model, rs_hist = train_pinn_rs(
-            data=data_rs,
-            model=rs_model,
-            mobility=mobility_rs,
-            epochs=int(epochs),
-            lr=float(lr),
-            weights={"data": w_data, "ic": w_ic, "bc": w_bc, "phys": w_phys},
-            progress=progress,
-            status=status,
-            n_collocation=int(rs_n_collocation),
-            w_omega_prior=float(rs_w_omega_prior),
-            omega_prior_left=theta_left_init_vals,
-            omega_prior_right=theta_right_init_vals if learn_lr_omega else None,
-        )
-
-        theta_l_est, theta_r_est = rs_model.theta_vectors()
-        theta_l_np = theta_l_est.detach().cpu().numpy()
-        theta_r_np = theta_r_est.detach().cpu().numpy()
-
-        if learn_lr_omega:
-            theta_hat_rs = np.concatenate([theta_l_np, theta_r_np])
-            prior_mean_rs = np.concatenate([theta_left_init_vals, theta_right_init_vals])
-        else:
-            theta_hat_rs = theta_l_np.copy()
-            prior_mean_rs = theta_left_init_vals.copy()
-
-        nll_fun_rs = lambda th: gaussian_nll_multitime_rs(
-            th, n_components_rs, learn_lr_omega, c0_full_rs, x_grid_rs,
-            data_rs.x_exp, data_rs.t_exp, data_rs.c_exp,
-            sigma=float(rs_like_sigma), dt=float(rs_fdm_dt),
-            nsteps=int(rs_fdm_nsteps), save_every=int(rs_fdm_save_every),
-            mobility=mobility_rs, RT=float(rs_RT),
-            x_interface=0.5, omega_width=float(phase_interface_width),
-            prior_mean=prior_mean_rs, prior_std=5.0,
-        )
-
-        refine_info_rs = None
-        if do_fdm_refine:
-            st.info("Step 3/3: FDM尤度でΩを再最適化しています...")
-            theta_refined, refine_info_rs = refine_omega_by_fdm_likelihood(
-                nll_fun_rs, theta_hat_rs, maxiter=int(fdm_refine_maxiter), verbose=False,
-            )
-            if np.all(np.isfinite(theta_refined)):
-                theta_hat_rs = theta_refined
-                overwrite_model_omega_from_theta(rs_model, theta_hat_rs, learn_lr_omega)
-            st.success(f"FDM refinement: NLL {refine_info_rs['nll_before']:.2f} → {refine_info_rs['nll_after']:.2f}")
-
-        rs_result = TrainResultRS(
-            model=rs_model,
-            data=data_rs,
-            history=rs_hist,
-            train_time=0.0,
-            mobility=mobility_rs,
-            theta_left_true=theta_left_true,
-            theta_right_true=theta_right_true,
-        )
-
-        st.session_state.fig11_result_v12 = rs_result
-        st.session_state.fig11_inputs_v12 = {
-            "t_max": float(t_grid_rs[-1]),
-            "use_chemical_potential": True,
-            "learn_lr_omega": bool(learn_lr_omega),
-            "theta_left_true": theta_left_true.tolist(),
-            "theta_right_true": theta_right_true.tolist(),
-            "theta_hat_rs": theta_hat_rs.tolist(),
-            "refine_info_rs": refine_info_rs,
-            "fdm_teacher_mode": "regular-solution",
-            "span_um": span_um,
-            "noise": noise,
-            "seed": int(seed),
-            "rs_RT": float(rs_RT),
-            "rs_M_diag": float(rs_M_diag),
-            "rs_M_offdiag": float(rs_M_offdiag),
-            "rs_fdm_dt": float(rs_fdm_dt),
-            "rs_fdm_nsteps": int(rs_fdm_nsteps),
-            "rs_fdm_save_every": int(rs_fdm_save_every),
-            "rs_like_sigma": float(rs_like_sigma),
-            "rs_hessian_step": float(rs_hessian_step),
-            "rs_laplace_samples": int(rs_laplace_samples),
-            "rs_band_samples": int(rs_band_samples),
-            "rs_run_mcmc": bool(rs_run_mcmc),
-            "rs_mcmc_steps": int(rs_mcmc_steps),
-            "rs_mcmc_burn": int(rs_mcmc_burn),
-            "rs_mcmc_proposal": float(rs_mcmc_proposal),
-            "rs_skip_reliability": bool(rs_skip_reliability),
-            "phase_interface_width": float(phase_interface_width),
-            "paper_time_h": float(paper_time_h),
-            "paper_length_um": float(paper_length_um),
-            "show_zero_interaction_reference": show_zero_interaction_reference,
-        }
-        status.success("Completed. Rendering result tabs...")
-        safe_streamlit_rerun()
-
-    # =========================================================================
-    # Fickian D matrix mode: original approach
+    # Common: FDM teacher data generation (shared between Fickian and RS modes)
     # =========================================================================
     st.info("Step 1/2: Co / Ni-0.10Ta sharp-interface diffusion coupleをFDMで計算しています。")
     data = make_training_data(
@@ -4650,6 +4413,140 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
                 "Check that the fast side broadens much more rapidly than the slow side."
             )
 
+    # =========================================================================
+    # Branch: Chemical potential (RS) or Fickian D matrix
+    # =========================================================================
+    if use_chemical_potential:
+        def _parse_omega_str(s: str, n_pairs: int) -> np.ndarray:
+            vals = np.array([float(v.strip()) for v in s.split(",")], dtype=float)
+            if vals.size != n_pairs:
+                raise ValueError(f"Expected {n_pairs} Omega values, got {vals.size}")
+            return vals
+
+        n_pairs_rs = 3
+        theta_left_init_vals = _parse_omega_str(omega_left_init_str, n_pairs_rs)
+        if learn_lr_omega:
+            theta_right_init_vals = _parse_omega_str(omega_right_init_str, n_pairs_rs)
+        else:
+            theta_right_init_vals = theta_left_init_vals.copy()
+
+        mobility_rs = np.eye(2) * float(rs_M_diag) + (np.ones((2, 2)) - np.eye(2)) * float(rs_M_offdiag)
+
+        rs_model = TernaryRegularSolutionPINN(
+            width=width,
+            depth=depth,
+            activation=str(activation),
+            theta_left_init=theta_left_init_vals,
+            theta_right_init=theta_right_init_vals,
+            learn_left_right_omega=bool(learn_lr_omega),
+            x_interface=0.5,
+            omega_width=float(phase_interface_width),
+            RT=float(rs_RT),
+            train_omega=True,
+        )
+
+        st.info("Step 2/2: PINNsでΩ相互作用項を推定しています (chemical potential mode)...")
+        progress = st.progress(0.0)
+        status = st.empty()
+        rs_model, rs_hist = train_pinn_rs(
+            data=data,
+            model=rs_model,
+            mobility=mobility_rs,
+            epochs=int(epochs),
+            lr=float(lr),
+            weights={"data": w_data, "ic": w_ic, "bc": w_bc, "phys": w_phys},
+            progress=progress,
+            status=status,
+            n_collocation=int(rs_n_collocation),
+            w_omega_prior=float(rs_w_omega_prior),
+            omega_prior_left=theta_left_init_vals,
+            omega_prior_right=theta_right_init_vals if learn_lr_omega else None,
+        )
+
+        theta_l_disp, theta_r_disp = rs_model.theta_display()
+
+        if learn_lr_omega:
+            theta_hat_rs = np.concatenate([theta_l_disp, theta_r_disp])
+            prior_mean_rs = np.concatenate([theta_left_init_vals, theta_right_init_vals])
+        else:
+            theta_hat_rs = theta_l_disp.copy()
+            prior_mean_rs = theta_left_init_vals.copy()
+
+        c_left_rs = np.array([1.0 - 1e-6, 5e-7, 5e-7], dtype=float)
+        c_left_rs /= c_left_rs.sum()
+        c_right_rs = np.array([5e-7, 0.9, 0.1], dtype=float)
+        c_right_rs /= c_right_rs.sum()
+        c0_full_rs = make_initial_profile_ternary_rs(
+            data.x_grid, c_left_rs, c_right_rs,
+            x0=0.5, width=float(phase_interface_width),
+        )
+
+        nll_fun_rs = lambda th: gaussian_nll_multitime_rs(
+            th, 3, learn_lr_omega, c0_full_rs, data.x_grid,
+            data.x_exp_all, data.t_exp_all, data.c_exp_all,
+            sigma=float(rs_like_sigma), dt=float(rs_fdm_dt),
+            nsteps=int(rs_fdm_nsteps), save_every=int(rs_fdm_save_every),
+            mobility=mobility_rs, RT=float(rs_RT),
+            x_interface=0.5, omega_width=float(phase_interface_width),
+            prior_mean=prior_mean_rs, prior_std=5.0,
+        )
+
+        refine_info_rs = None
+        if do_fdm_refine:
+            st.info("FDM尤度でΩを再最適化しています...")
+            theta_refined, refine_info_rs = refine_omega_by_fdm_likelihood(
+                nll_fun_rs, theta_hat_rs, maxiter=int(fdm_refine_maxiter), verbose=False,
+            )
+            if np.all(np.isfinite(theta_refined)):
+                theta_hat_rs = theta_refined
+                overwrite_model_omega_from_theta(rs_model, theta_hat_rs, learn_lr_omega)
+            st.success(f"FDM refinement: NLL {refine_info_rs['nll_before']:.2f} → {refine_info_rs['nll_after']:.2f}")
+
+        rs_result = TrainResultRS(
+            model=rs_model,
+            data=data,
+            history=rs_hist,
+            train_time=0.0,
+            mobility=mobility_rs,
+        )
+
+        st.session_state.fig11_result_v12 = rs_result
+        st.session_state.fig11_inputs_v12 = {
+            "t_max": t_max,
+            "use_chemical_potential": True,
+            "learn_lr_omega": bool(learn_lr_omega),
+            "theta_hat_rs": theta_hat_rs.tolist(),
+            "refine_info_rs": refine_info_rs,
+            "fdm_teacher_mode": str(fdm_teacher_mode),
+            "span_um": span_um,
+            "noise": noise,
+            "seed": int(seed),
+            "rs_RT": float(rs_RT),
+            "rs_M_diag": float(rs_M_diag),
+            "rs_M_offdiag": float(rs_M_offdiag),
+            "rs_fdm_dt": float(rs_fdm_dt),
+            "rs_fdm_nsteps": int(rs_fdm_nsteps),
+            "rs_fdm_save_every": int(rs_fdm_save_every),
+            "rs_like_sigma": float(rs_like_sigma),
+            "rs_hessian_step": float(rs_hessian_step),
+            "rs_laplace_samples": int(rs_laplace_samples),
+            "rs_band_samples": int(rs_band_samples),
+            "rs_run_mcmc": bool(rs_run_mcmc),
+            "rs_mcmc_steps": int(rs_mcmc_steps),
+            "rs_mcmc_burn": int(rs_mcmc_burn),
+            "rs_mcmc_proposal": float(rs_mcmc_proposal),
+            "rs_skip_reliability": bool(rs_skip_reliability),
+            "phase_interface_width": float(phase_interface_width),
+            "paper_time_h": float(paper_time_h),
+            "paper_length_um": float(paper_length_um),
+            "show_zero_interaction_reference": show_zero_interaction_reference,
+        }
+        status.success("Completed. Rendering result tabs...")
+        safe_streamlit_rerun()
+
+    # =========================================================================
+    # Fickian D matrix mode: original approach
+    # =========================================================================
     st.info("Step 2/2: PINNsでCo/Ni/TaプロファイルとNi-Ta相互拡散行列を推定しています。")
     progress = st.progress(0.0)
     status = st.empty()
@@ -4790,10 +4687,7 @@ if inputs.get("use_chemical_potential", False) and isinstance(result, TrainResul
     C_fdm_rs = rs_data.C_fdm
     C_diff_rs = C_pinn_rs - C_fdm_rs
 
-    theta_l_est, theta_r_est = rs_model.theta_vectors()
-    theta_l_np = theta_l_est.detach().cpu().numpy()
-    theta_r_np = theta_r_est.detach().cpu().numpy()
-    pairs = pair_indices_rs(3)
+    theta_l_disp, theta_r_disp = rs_model.theta_display()
     pair_names = ["Omega_CoNi", "Omega_CoTa", "Omega_NiTa"]
 
     all_rmse = float(np.sqrt(np.mean(C_diff_rs ** 2)))
@@ -4806,17 +4700,11 @@ if inputs.get("use_chemical_potential", False) and isinstance(result, TrainResul
 
     st.markdown("### Estimated Omega interaction terms")
     omega_rows = []
-    theta_left_true = np.array(inputs["theta_left_true"], dtype=float)
-    theta_right_true = np.array(inputs["theta_right_true"], dtype=float)
-    for k, (i, j) in enumerate(pairs):
+    for k, pname in enumerate(pair_names):
         omega_rows.append({
-            "pair": pair_names[k],
-            "true_left": float(theta_left_true[k]),
-            "estimated_left": float(theta_l_np[k]),
-            "abs_error_left": abs(float(theta_l_np[k] - theta_left_true[k])),
-            "true_right": float(theta_right_true[k]),
-            "estimated_right": float(theta_r_np[k]),
-            "abs_error_right": abs(float(theta_r_np[k] - theta_right_true[k])),
+            "pair": pname,
+            "estimated_left": float(theta_l_disp[k]),
+            "estimated_right": float(theta_r_disp[k]),
         })
     st.dataframe(pd.DataFrame(omega_rows), use_container_width=True)
 
@@ -4835,11 +4723,11 @@ if inputs.get("use_chemical_potential", False) and isinstance(result, TrainResul
     with tab_rs1:
         st.markdown("### Final diffusion-couple profile (regular-solution)")
         dist = distance_um_from_x(x, span_um)
-        dist_exp = distance_um_from_x(rs_data.x_exp, span_um)
+        dist_exp = distance_um_from_x(rs_data.x_exp_all, span_um)
         fig = go.Figure()
         for j_comp, comp in enumerate(COMPONENTS):
             fig.add_trace(go.Scatter(
-                x=dist_exp, y=rs_data.c_exp[:, j_comp], mode="markers",
+                x=dist_exp, y=rs_data.c_exp_all[:, j_comp], mode="markers",
                 name=f"Exp. {comp}",
                 marker=dict(symbol=SYMBOLS[comp], size=7, color=COLORS[comp], line=dict(width=1.4)),
             ))
@@ -4889,15 +4777,13 @@ if inputs.get("use_chemical_potential", False) and isinstance(result, TrainResul
 
         st.markdown("### Omega convergence")
         fig_omega = go.Figure()
+        omega_cols_l = ["Omega_CoNi_left", "Omega_CoTa_left", "Omega_NiTa_left"]
+        omega_cols_r = ["Omega_CoNi_right", "Omega_CoTa_right", "Omega_NiTa_right"]
         for k, pname in enumerate(pair_names):
-            col_l = f"Omega_{pairs[k][0]}{pairs[k][1]}_left"
-            col_r = f"Omega_{pairs[k][0]}{pairs[k][1]}_right"
-            if col_l in rs_hist.columns:
-                fig_omega.add_trace(go.Scatter(x=rs_hist["epoch"], y=rs_hist[col_l], mode="lines", name=f"{pname} left"))
-                fig_omega.add_hline(y=float(theta_left_true[k]), line_dash="dash", opacity=0.4)
-            if col_r in rs_hist.columns:
-                fig_omega.add_trace(go.Scatter(x=rs_hist["epoch"], y=rs_hist[col_r], mode="lines", name=f"{pname} right"))
-                fig_omega.add_hline(y=float(theta_right_true[k]), line_dash="dash", opacity=0.4)
+            if omega_cols_l[k] in rs_hist.columns:
+                fig_omega.add_trace(go.Scatter(x=rs_hist["epoch"], y=rs_hist[omega_cols_l[k]], mode="lines", name=f"{pname} left"))
+            if omega_cols_r[k] in rs_hist.columns:
+                fig_omega.add_trace(go.Scatter(x=rs_hist["epoch"], y=rs_hist[omega_cols_r[k]], mode="lines", name=f"{pname} right"))
         fig_omega.update_xaxes(title="epoch")
         fig_omega.update_yaxes(title="Omega value")
         st.plotly_chart(clean_layout(fig_omega, "Omega pair-interaction convergence", 450), use_container_width=True)
@@ -4912,15 +4798,15 @@ if inputs.get("use_chemical_potential", False) and isinstance(result, TrainResul
             theta_hat_rs = np.array(inputs["theta_hat_rs"], dtype=float)
             learn_lr_omega_val = bool(inputs["learn_lr_omega"])
 
+            c0_full_for_nll = make_initial_profile_ternary_rs(
+                x, np.array([1.0 - 1e-6, 5e-7, 5e-7]),
+                np.array([5e-7, 0.9, 0.1]),
+                x0=0.5, width=float(inputs["phase_interface_width"]),
+            )
             nll_fun_rs = lambda th: gaussian_nll_multitime_rs(
                 th, 3, learn_lr_omega_val,
-                make_initial_profile_ternary_rs(
-                    x, np.array([1.0 - 1e-6, 5e-7, 5e-7]) / 1.0,
-                    np.array([5e-7, 0.9, 0.1]) / 1.0,
-                    x0=0.5, width=float(inputs["phase_interface_width"]),
-                ),
-                x,
-                rs_data.x_exp, rs_data.t_exp, rs_data.c_exp,
+                c0_full_for_nll, x,
+                rs_data.x_exp_all, rs_data.t_exp_all, rs_data.c_exp_all,
                 sigma=float(inputs["rs_like_sigma"]),
                 dt=float(inputs["rs_fdm_dt"]),
                 nsteps=int(inputs["rs_fdm_nsteps"]),
@@ -4929,10 +4815,7 @@ if inputs.get("use_chemical_potential", False) and isinstance(result, TrainResul
                 RT=float(inputs["rs_RT"]),
                 x_interface=0.5,
                 omega_width=float(inputs["phase_interface_width"]),
-                prior_mean=np.concatenate([
-                    np.array(inputs["theta_left_true"]),
-                    np.array(inputs["theta_right_true"]),
-                ]) if learn_lr_omega_val else np.array(inputs["theta_left_true"]),
+                prior_mean=theta_hat_rs,
                 prior_std=5.0,
             )
 
@@ -5059,12 +4942,12 @@ if inputs.get("use_chemical_potential", False) and isinstance(result, TrainResul
     with tab_rs4:
         st.markdown("### Raw data")
         st.markdown(f"x grid: {len(x)} points, t grid: {len(t)} frames")
-        st.markdown(f"Pseudo-exp points: {len(rs_data.x_exp)}")
+        st.markdown(f"Pseudo-exp points: {len(rs_data.x_exp_all)}")
         st.markdown(f"Training obs: {len(rs_data.x_obs)}")
         st.dataframe(pd.DataFrame({
-            "x_exp": rs_data.x_exp[:50],
-            "t_exp": rs_data.t_exp[:50],
-            **{f"c_exp_{comp}": rs_data.c_exp[:50, j] for j, comp in enumerate(COMPONENTS)},
+            "x_exp": rs_data.x_exp_all[:50],
+            "t_exp": rs_data.t_exp_all[:50],
+            **{f"c_exp_{comp}": rs_data.c_exp_all[:50, j] for j, comp in enumerate(COMPONENTS)},
         }), use_container_width=True)
 
     st.stop()
