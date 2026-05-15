@@ -452,6 +452,18 @@ def mobility_matrix_from_endmembers_np(
     return M
 
 
+def _mobility_diag_from_endmembers_np(
+    c_full: np.ndarray,
+    log_M_endmembers: np.ndarray,
+    eps: float = 1.0e-12,
+) -> np.ndarray:
+    """Fast diagonal-only mobility computation: returns (Nx, n_ind) array."""
+    c = np.clip(c_full, eps, 1.0)
+    c = c / np.sum(c, axis=1, keepdims=True)
+    log_M = c @ log_M_endmembers.T
+    return np.exp(log_M)
+
+
 def mobility_matrix_from_endmembers_torch(
     c_full: torch.Tensor,
     log_M_endmembers: torch.Tensor,
@@ -545,23 +557,22 @@ def fdm_ternary_regular_solution(
             x_interface=x_interface, width=omega_width,
         )
 
-        if use_comp_dep_M:
-            M_local = mobility_matrix_from_endmembers_np(c_full_safe, log_M_endmembers)
-        else:
-            M_local = np.broadcast_to(mobility[np.newaxis, :, :], (Nx, n_ind, n_ind))
+        dmu_dx = np.zeros_like(mu)
+        dmu_dx[1:-1] = (mu[2:] - mu[:-2]) / (2.0 * dx)
+        dmu_dx[0] = dmu_dx[1]
+        dmu_dx[-1] = dmu_dx[-2]
 
-        flux = np.zeros((Nx, n_ind), dtype=float)
-        for i_comp in range(n_ind):
-            for j_comp in range(n_ind):
-                dmu_dx = np.zeros(Nx, dtype=float)
-                dmu_dx[1:-1] = (mu[2:, j_comp] - mu[:-2, j_comp]) / (2.0 * dx)
-                dmu_dx[0] = dmu_dx[1]
-                dmu_dx[-1] = dmu_dx[-2]
-                flux[:, i_comp] += M_local[:, i_comp, j_comp] * dmu_dx
+        if use_comp_dep_M:
+            M_diag = _mobility_diag_from_endmembers_np(c_full_safe, log_M_endmembers)
+            flux = M_diag * dmu_dx
+        else:
+            flux = np.zeros((Nx, n_ind), dtype=float)
+            for i_comp in range(n_ind):
+                for j_comp in range(n_ind):
+                    flux[:, i_comp] += mobility[i_comp, j_comp] * dmu_dx[:, j_comp]
 
         div_flux = np.zeros((Nx, n_ind), dtype=float)
-        for i_comp in range(n_ind):
-            div_flux[1:-1, i_comp] = (flux[2:, i_comp] - flux[:-2, i_comp]) / (2.0 * dx)
+        div_flux[1:-1] = (flux[2:] - flux[:-2]) / (2.0 * dx)
 
         c_full[:, :n_ind] += dt * div_flux
         c_full[:, :n_ind] = sanitize_independent(c_full[:, :n_ind])
@@ -1631,13 +1642,26 @@ def refine_omega_by_fdm_likelihood(
     theta_hat: np.ndarray,
     maxiter: int = 180,
     verbose: bool = False,
+    progress_status=None,
 ) -> Tuple[np.ndarray, Optional[Dict]]:
     """Refine Omega estimate by minimizing FDM-based NLL using Powell method."""
     from scipy.optimize import minimize
-    result = minimize(nll_fun, theta_hat, method="Powell",
+    nll_before = float(nll_fun(theta_hat))
+    _eval_count = [0]
+
+    def _nll_with_progress(th):
+        _eval_count[0] += 1
+        val = nll_fun(th)
+        if progress_status is not None and _eval_count[0] % 5 == 0:
+            progress_status.text(
+                f"FDM refinement: {_eval_count[0]} evals, current NLL={val:.2f}"
+            )
+        return val
+
+    result = minimize(_nll_with_progress, theta_hat, method="Powell",
                       options={"maxiter": maxiter, "disp": verbose})
     info = {
-        "nll_before": float(nll_fun(theta_hat)),
+        "nll_before": nll_before,
         "nll_after": float(result.fun),
         "success": bool(result.success),
         "nfev": int(result.nfev),
@@ -4662,8 +4686,10 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
         refine_info_rs = None
         if do_fdm_refine:
             st.info("FDM尤度でΩを再最適化しています...")
+            refine_status = st.empty()
             theta_refined, refine_info_rs = refine_omega_by_fdm_likelihood(
                 nll_fun_rs, theta_hat_rs, maxiter=int(fdm_refine_maxiter), verbose=False,
+                progress_status=refine_status,
             )
             if np.all(np.isfinite(theta_refined)):
                 theta_hat_rs = theta_refined
