@@ -4871,7 +4871,7 @@ st.success("Loaded completed calculation from session state. Rendering result ta
 # =========================================================================
 # Chemical potential result display
 # =========================================================================
-if inputs.get("use_chemical_potential", False) and isinstance(result, TrainResultRS):
+if isinstance(result, TrainResultRS):
     rs_result = result
     rs_model = rs_result.model
     rs_data = rs_result.data
@@ -5154,6 +5154,10 @@ if inputs.get("use_chemical_potential", False) and isinstance(result, TrainResul
 # =========================================================================
 # Fickian D matrix result display (original)
 # =========================================================================
+
+if isinstance(result, TrainResultRS):
+    st.error("Regular-solution result detected but display section was skipped. Please re-run.")
+    st.stop()
 
 model = result.model
 data = result.data
