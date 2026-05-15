@@ -1,0 +1,6166 @@
+
+"""
+Streamlit app: Fig.11-style Co / Ni-0.10Ta ternary diffusion-couple PINN
+with likelihood-based reliability visualization.
+
+Run:
+    pip install streamlit torch numpy pandas plotly
+    streamlit run fig11_co_ni_ta_pinn_reliability_v2.py
+
+Purpose:
+    - Reproduce a Fig.11-style Co / Ni-0.10Ta diffusion-couple profile.
+    - Infer effective Ni-Ta interdiffusion interaction coefficients from experimental-like points.
+    - Visualize reliability using:
+        1. Low-cost Laplace approximation.
+        2. Higher-cost FDM-based random-walk Metropolis MCMC.
+    - Show likelihood/posterior uncertainty as BANDS, not only lines.
+
+Important:
+    This is an educational prototype, not a full DICTRA/CALPHAD reproduction.
+    Co is dependent: x_Co = 1 - x_Ni - x_Ta.
+    Independent variables are x_Ni and x_Ta.
+"""
+
+from __future__ import annotations
+
+# ---------------------------------------------------------------------------
+# OpenMP runtime workaround for Windows/Anaconda environments
+# ---------------------------------------------------------------------------
+# Some Windows Python environments load multiple Intel OpenMP runtimes through
+# combinations of PyTorch, NumPy, MKL, SciPy, or scikit-learn.
+# Clean solution: use a fresh consistent environment.
+# Prototype workaround: set these before importing numpy/torch/scipy.
+import os
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("MKL_NUM_THREADS", "1")
+
+
+import time
+from dataclasses import dataclass
+from typing import Dict, List, Sequence, Tuple, Optional
+
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+import streamlit as st
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+
+# =============================================================================
+# UI style
+# =============================================================================
+
+st.set_page_config(
+    page_title="Fig.11 Co/Ni-Ta PINN Reliability",
+    page_icon="🧪",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+st.markdown(
+    """
+<style>
+.stApp {
+    background: linear-gradient(135deg, #f8fafc 0%, #eef4f8 52%, #f7f2f8 100%);
+    color: #243041;
+}
+section[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #ffffff 0%, #f3f7fb 100%);
+    border-right: 1px solid rgba(148, 163, 184, 0.28);
+}
+section[data-testid="stSidebar"] * { color: #334155; }
+.hero {
+    padding: 1.55rem 1.8rem;
+    border-radius: 24px;
+    background: linear-gradient(135deg, rgba(224,242,254,0.95), rgba(250,245,255,0.92));
+    border: 1px solid rgba(148, 163, 184, 0.26);
+    box-shadow: 0 14px 34px rgba(100,116,139,0.14);
+    margin-bottom: 1.0rem;
+}
+.hero-title {
+    font-size: 2.0rem;
+    font-weight: 850;
+    letter-spacing: -0.035em;
+    color: #1e293b;
+}
+.hero-sub {
+    color: #475569;
+    font-size: 1.0rem;
+    line-height: 1.7;
+    max-width: 1120px;
+}
+.note {
+    padding: 0.95rem 1.15rem;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    color: #334155;
+    line-height: 1.7;
+    box-shadow: 0 10px 22px rgba(100,116,139,0.10);
+}
+div[data-testid="stMetric"] {
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(148, 163, 184, 0.20);
+    border-radius: 16px;
+    padding: 0.75rem 0.9rem;
+    box-shadow: 0 8px 20px rgba(100,116,139,0.09);
+}
+div[data-testid="stMetricValue"] { color: #1e293b; }
+div[data-testid="stMetricLabel"] { color: #64748b; }
+.stTabs [data-baseweb="tab-list"] { gap: 8px; }
+.stTabs [data-baseweb="tab"] {
+    border-radius: 999px;
+    padding: 8px 16px;
+    background-color: rgba(255,255,255,0.72);
+    border: 1px solid rgba(148,163,184,0.22);
+    color: #475569;
+}
+.stTabs [aria-selected="true"] {
+    background: linear-gradient(135deg, #dbeafe, #f3e8ff);
+    color: #1e293b;
+    border: 1px solid rgba(129,140,248,0.32);
+}
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
+
+# =============================================================================
+# Constants and helpers
+# =============================================================================
+
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+DTYPE = torch.float32
+
+COMPONENTS = ["Co", "Ni", "Ta"]
+COLORS = {"Co": "black", "Ni": "#2b83ba", "Ta": "#4daf4a"}
+SYMBOLS = {"Co": "circle-open", "Ni": "square-open", "Ta": "triangle-up-open"}
+
+
+def set_seed(seed: int) -> None:
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+
+
+
+def safe_streamlit_rerun():
+    """Rerun Streamlit after storing results.
+
+    Newer Streamlit uses st.rerun(); older versions used st.experimental_rerun().
+    """
+    try:
+        st.rerun()
+    except AttributeError:
+        st.experimental_rerun()
+
+
+def to_tensor(a: np.ndarray) -> torch.Tensor:
+    return torch.tensor(a, dtype=DTYPE, device=DEVICE)
+
+
+def distance_um_from_x(x: np.ndarray, span_um: float = 800.0) -> np.ndarray:
+    return (x - 0.5) * span_um
+
+
+def real_time_hours_from_tau(tau: float, tau_max: float, annealing_time_h: float) -> float:
+    """Map normalized diffusion time tau to physical time in hours."""
+    tau_max = max(float(tau_max), 1.0e-14)
+    return float(tau) / tau_max * float(annealing_time_h)
+
+
+def format_time_label(tau: float, tau_max: float, annealing_time_h: float) -> str:
+    """Readable label for normalized and physical time."""
+    th = real_time_hours_from_tau(tau, tau_max, annealing_time_h)
+    if th < 1.0:
+        return f"τ={tau:.4g}, real t={th*60:.2f} min"
+    if th < 48.0:
+        return f"τ={tau:.4g}, real t={th:.2f} h"
+    return f"τ={tau:.4g}, real t={th/24:.2f} d"
+
+
+def make_spd_matrix_np(log_d11: float, log_d22: float, rho_raw: float) -> np.ndarray:
+    """Symmetric positive-definite 2x2 diffusion matrix.
+
+    D12 = rho * sqrt(D11*D22), |rho| < 0.95.
+    D12 can be negative. Do not plot these values on ordinary log axes.
+    """
+    d11 = float(np.exp(log_d11))
+    d22 = float(np.exp(log_d22))
+    rho = float(0.95 * np.tanh(rho_raw))
+    d12 = rho * np.sqrt(d11 * d22)
+    return np.array([[d11, d12], [d12, d22]], dtype=float)
+
+
+def theta_from_D_matrix(D: np.ndarray) -> np.ndarray:
+    d11 = max(float(D[0, 0]), 1.0e-14)
+    d22 = max(float(D[1, 1]), 1.0e-14)
+    rho = float(D[0, 1]) / max(np.sqrt(d11 * d22), 1.0e-14)
+    rho_scaled = np.clip(rho / 0.95, -0.999999, 0.999999)
+    return np.array([np.log(d11), np.log(d22), np.arctanh(rho_scaled)], dtype=float)
+
+
+def zero_interaction_theta_from_D(D: np.ndarray) -> np.ndarray:
+    """Return theta with off-diagonal interaction forced to zero."""
+    d11 = max(float(D[0, 0]), 1.0e-14)
+    d22 = max(float(D[1, 1]), 1.0e-14)
+    return np.array([np.log(d11), np.log(d22), 0.0], dtype=float)
+
+
+def compute_zero_interaction_reference(
+    x_query: np.ndarray,
+    t_query: np.ndarray,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+    D_source: np.ndarray,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Compute FDM reference with ideal zero cross interaction.
+
+    The zero-interaction FDM may save a different number of time frames because
+    its stable time step can differ from the original FDM. Therefore the result
+    is interpolated onto the caller's x_query and t_query grids. This prevents
+    C_zero[idx] from using indices from another time grid.
+    """
+    theta_zero = zero_interaction_theta_from_D(D_source)
+    xz, tz, Cz, Dz = run_fdm_teacher(
+        float(theta_zero[0]),
+        float(theta_zero[1]),
+        float(theta_zero[2]),
+        float(t_max),
+        int(nx),
+        int(nt_save),
+    )
+    Xq, Tq = np.meshgrid(x_query, t_query)
+    C_interp = bilinear_sample_xt(xz, tz, Cz, Xq.reshape(-1, 1), Tq.reshape(-1, 1))
+    C_interp = C_interp.reshape(len(t_query), len(x_query), 3)
+    return np.asarray(t_query), C_interp, Dz, theta_zero
+
+
+def initial_diffusion_couple(x: np.ndarray, interface: float = 0.5) -> np.ndarray:
+    """Sharp Co / Ni-0.10Ta diffusion couple."""
+    C = np.zeros((len(x), 3), dtype=float)
+    left = x < interface
+    right = ~left
+    C[left, 0] = 1.0
+    C[right, 1] = 0.90
+    C[right, 2] = 0.10
+    return C
+
+
+# =============================================================================
+# Regular-solution thermodynamics (chemical potential approach)
+# =============================================================================
+
+def pair_indices_rs(n_components: int) -> List[Tuple[int, int]]:
+    """Return ordered pair indices (i,j) with i<j for N components."""
+    return [(i, j) for i in range(n_components) for j in range(i + 1, n_components)]
+
+
+def omega_matrix_from_pairs_np(theta: Sequence[float], n_components: int) -> np.ndarray:
+    """Build symmetric Omega matrix with zero diagonal from pair parameters."""
+    theta = np.asarray(theta, dtype=float).reshape(-1)
+    pairs = pair_indices_rs(n_components)
+    if theta.size != len(pairs):
+        raise ValueError(f"Expected {len(pairs)} Omega pair values, got {theta.size}.")
+    Omega = np.zeros((n_components, n_components), dtype=float)
+    for val, (i, j) in zip(theta, pairs):
+        Omega[i, j] = Omega[j, i] = float(val)
+    return Omega
+
+
+def omega_matrix_from_pairs_torch(theta: torch.Tensor, n_components: int) -> torch.Tensor:
+    """Torch version of omega_matrix_from_pairs_np."""
+    theta = theta.reshape(-1)
+    pairs = pair_indices_rs(n_components)
+    if theta.numel() != len(pairs):
+        raise ValueError(f"Expected {len(pairs)} Omega pair values, got {theta.numel()}.")
+    Omega = torch.zeros((n_components, n_components), dtype=theta.dtype, device=theta.device)
+    for k, (i, j) in enumerate(pairs):
+        Omega[i, j] = theta[k]
+        Omega[j, i] = theta[k]
+    return Omega
+
+
+def blend_pairs_np(theta_left: np.ndarray, theta_right: np.ndarray, x: np.ndarray,
+                   x_interface: float = 0.5, width: float = 0.02) -> np.ndarray:
+    """Smoothly blend left/right pair-interaction vectors as a function of x."""
+    x = np.asarray(x, dtype=float).reshape(-1, 1)
+    w = max(float(width), 1.0e-12)
+    s = 0.5 * (1.0 + np.tanh((x - float(x_interface)) / w))
+    return ((1.0 - s) * np.asarray(theta_left, dtype=float).reshape(1, -1)
+            + s * np.asarray(theta_right, dtype=float).reshape(1, -1))
+
+
+def blend_pairs_torch(theta_left: torch.Tensor, theta_right: torch.Tensor,
+                      x: torch.Tensor, x_interface: float = 0.5,
+                      width: float = 0.02) -> torch.Tensor:
+    """Torch version of blend_pairs_np."""
+    x = x.reshape(-1, 1)
+    w = max(float(width), 1.0e-12)
+    s = 0.5 * (1.0 + torch.tanh((x - float(x_interface)) / w))
+    return (1.0 - s) * theta_left.reshape(1, -1) + s * theta_right.reshape(1, -1)
+
+
+def complete_composition_np(c_ind: np.ndarray) -> np.ndarray:
+    """Append dependent component c_ref = 1 - sum(c_ind) as the last column."""
+    c_dep = 1.0 - np.sum(c_ind, axis=1, keepdims=True)
+    return np.concatenate([c_ind, c_dep], axis=1)
+
+
+def diffusion_potentials_regular_solution_np(
+    c_full: np.ndarray,
+    x: np.ndarray,
+    theta_left: Sequence[float],
+    theta_right: Optional[Sequence[float]] = None,
+    RT: float = 1.0,
+    x_interface: float = 0.5,
+    width: float = 0.02,
+    eps: float = 1.0e-12,
+) -> np.ndarray:
+    """Return diffusion potentials mu_i - mu_ref for i=0..N-2 (NumPy).
+
+    Regular solution free-energy:
+        g = RT sum_a c_a ln c_a + 1/2 sum_ab Omega_ab c_a c_b
+
+    With the last component as dependent reference r:
+        mu_i - mu_r = RT ln(c_i/c_r) + sum_b (Omega_ib - Omega_rb) c_b
+    """
+    c = np.clip(c_full, eps, 1.0)
+    c = c / np.sum(c, axis=1, keepdims=True)
+    n_components = c.shape[1]
+    n_ind = n_components - 1
+    ref = n_components - 1
+
+    theta_left = np.asarray(theta_left, dtype=float)
+    if theta_right is None:
+        theta_right_arr = theta_left
+    else:
+        theta_right_arr = np.asarray(theta_right, dtype=float)
+    theta_x = blend_pairs_np(theta_left, theta_right_arr, x, x_interface, width)
+    pairs = pair_indices_rs(n_components)
+
+    ideal = float(RT) * np.log(c[:, :n_ind] / c[:, ref:ref + 1])
+    mu_cols = []
+    for i in range(n_ind):
+        excess = np.zeros((c.shape[0], 1), dtype=float)
+        for k, (a, b) in enumerate(pairs):
+            coeff_i = np.zeros((c.shape[0], 1), dtype=float)
+            coeff_r = np.zeros((c.shape[0], 1), dtype=float)
+            if a == i:
+                coeff_i += theta_x[:, k:k + 1] * c[:, b:b + 1]
+            if b == i:
+                coeff_i += theta_x[:, k:k + 1] * c[:, a:a + 1]
+            if a == ref:
+                coeff_r += theta_x[:, k:k + 1] * c[:, b:b + 1]
+            if b == ref:
+                coeff_r += theta_x[:, k:k + 1] * c[:, a:a + 1]
+            excess += coeff_i - coeff_r
+        mu_cols.append(ideal[:, i:i + 1] + excess)
+    return np.concatenate(mu_cols, axis=1)
+
+
+def diffusion_potentials_regular_solution_torch(
+    c_full: torch.Tensor,
+    x: torch.Tensor,
+    theta_left: torch.Tensor,
+    theta_right: Optional[torch.Tensor] = None,
+    RT: float = 1.0,
+    x_interface: float = 0.5,
+    width: float = 0.02,
+    eps: float = 1.0e-8,
+) -> torch.Tensor:
+    """Torch diffusion potentials mu_i - mu_ref for multicomponent regular solution."""
+    c = torch.clamp(c_full, eps, 1.0)
+    c = c / torch.sum(c, dim=1, keepdim=True)
+    n_components = c.shape[1]
+    n_ind = n_components - 1
+    ref = n_components - 1
+
+    if theta_right is None:
+        theta_right = theta_left
+    theta_x = blend_pairs_torch(theta_left, theta_right, x, x_interface, width)
+    pairs = pair_indices_rs(n_components)
+
+    ideal = float(RT) * torch.log(c[:, :n_ind] / c[:, ref:ref + 1])
+    mu_cols = []
+    for i in range(n_ind):
+        excess = torch.zeros((c.shape[0], 1), dtype=c.dtype, device=c.device)
+        for k, (a, b) in enumerate(pairs):
+            coeff_i = torch.zeros((c.shape[0], 1), dtype=c.dtype, device=c.device)
+            coeff_r = torch.zeros((c.shape[0], 1), dtype=c.dtype, device=c.device)
+            if a == i:
+                coeff_i = coeff_i + theta_x[:, k:k + 1] * c[:, b:b + 1]
+            if b == i:
+                coeff_i = coeff_i + theta_x[:, k:k + 1] * c[:, a:a + 1]
+            if a == ref:
+                coeff_r = coeff_r + theta_x[:, k:k + 1] * c[:, b:b + 1]
+            if b == ref:
+                coeff_r = coeff_r + theta_x[:, k:k + 1] * c[:, a:a + 1]
+            excess = excess + coeff_i - coeff_r
+        mu_cols.append(ideal[:, i:i + 1] + excess)
+    return torch.cat(mu_cols, dim=1)
+
+
+def sanitize_independent(c_ind: np.ndarray, eps: float = 1.0e-12) -> np.ndarray:
+    """Clip independent compositions and ensure the dependent component is non-negative."""
+    c_ind = np.clip(c_ind, eps, 1.0 - eps)
+    total = np.sum(c_ind, axis=1, keepdims=True)
+    over = total > (1.0 - eps)
+    if np.any(over):
+        c_ind = np.where(over, c_ind / (total + eps) * (1.0 - eps), c_ind)
+    return c_ind
+
+
+def make_initial_profile_ternary_rs(
+    x: np.ndarray,
+    c_left: np.ndarray,
+    c_right: np.ndarray,
+    x0: float = 0.5,
+    width: float = 0.02,
+) -> np.ndarray:
+    """Create smooth initial composition profile for all 3 components."""
+    x = np.asarray(x, dtype=float).reshape(-1)
+    c_left = np.asarray(c_left, dtype=float).reshape(-1)
+    c_right = np.asarray(c_right, dtype=float).reshape(-1)
+    w = max(float(width), 1.0e-12)
+    s = 0.5 * (1.0 + np.tanh((x - float(x0)) / w))
+    n_components = len(c_left)
+    c0 = np.zeros((len(x), n_components), dtype=float)
+    for a in range(n_components):
+        c0[:, a] = (1.0 - s) * float(c_left[a]) + s * float(c_right[a])
+    return c0
+
+
+def fdm_ternary_regular_solution(
+    c0_full: np.ndarray,
+    x: np.ndarray,
+    dt: float,
+    nsteps: int,
+    mobility: np.ndarray,
+    theta_left: np.ndarray,
+    theta_right: Optional[np.ndarray] = None,
+    RT: float = 1.0,
+    x_interface: float = 0.5,
+    omega_width: float = 0.02,
+    save_every: int = 100,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """FDM solver for ternary regular-solution diffusion: c_t = div(M grad(mu)).
+
+    Returns (t_grid, C_history) where C_history has shape (n_saved, Nx, n_components).
+    """
+    Nx = len(x)
+    dx = float(x[1] - x[0])
+    n_components = c0_full.shape[1]
+    n_ind = n_components - 1
+
+    c_full = c0_full.copy()
+    snapshots = [c_full.copy()]
+    t_saved = [0.0]
+    t = 0.0
+
+    if theta_right is None:
+        theta_right = theta_left.copy()
+
+    for step in range(1, nsteps + 1):
+        c_ind = sanitize_independent(c_full[:, :n_ind])
+        c_full_safe = complete_composition_np(c_ind)
+
+        mu = diffusion_potentials_regular_solution_np(
+            c_full_safe, x, theta_left, theta_right, RT=RT,
+            x_interface=x_interface, width=omega_width,
+        )
+
+        flux = np.zeros((Nx, n_ind), dtype=float)
+        for i_comp in range(n_ind):
+            for j_comp in range(n_ind):
+                dmu_dx = np.zeros(Nx, dtype=float)
+                dmu_dx[1:-1] = (mu[2:, j_comp] - mu[:-2, j_comp]) / (2.0 * dx)
+                dmu_dx[0] = dmu_dx[1]
+                dmu_dx[-1] = dmu_dx[-2]
+                flux[:, i_comp] += mobility[i_comp, j_comp] * dmu_dx
+
+        div_flux = np.zeros((Nx, n_ind), dtype=float)
+        for i_comp in range(n_ind):
+            div_flux[1:-1, i_comp] = (flux[2:, i_comp] - flux[:-2, i_comp]) / (2.0 * dx)
+
+        c_full[:, :n_ind] += dt * div_flux
+        c_full[:, :n_ind] = sanitize_independent(c_full[:, :n_ind])
+        c_full[:, -1] = 1.0 - np.sum(c_full[:, :n_ind], axis=1)
+
+        t += dt
+        if step % save_every == 0 or step == nsteps:
+            snapshots.append(c_full.copy())
+            t_saved.append(t)
+
+    return np.array(t_saved, dtype=float), np.stack(snapshots, axis=0)
+
+
+def make_training_data_from_fdm_rs(
+    x: np.ndarray,
+    t_grid: np.ndarray,
+    C_fdm: np.ndarray,
+    n_obs_random: int,
+    n_ic: int,
+    n_bc_each: int,
+    n_f: int,
+    noise: float,
+    seed: int,
+    n_exp_points: int,
+    n_exp_time_slices: int,
+    append_pseudo_exp_to_training: bool = True,
+) -> "TrainingDataRS":
+    """Build training data dict from FDM teacher data for regular-solution mode."""
+    rng = np.random.default_rng(seed)
+    Nx = len(x)
+    n_t = len(t_grid)
+    n_components = C_fdm.shape[2]
+
+    x_obs_list = []
+    t_obs_list = []
+    c_obs_list = []
+    for _ in range(n_obs_random):
+        ti = rng.integers(0, n_t)
+        xi = rng.integers(0, Nx)
+        x_obs_list.append(x[xi])
+        t_obs_list.append(t_grid[ti])
+        c_obs_list.append(C_fdm[ti, xi, :] + rng.normal(0.0, noise, size=n_components))
+
+    x_ic = x[np.linspace(0, Nx - 1, n_ic).astype(int)]
+    t_ic = np.full(n_ic, t_grid[0])
+    c_ic = np.column_stack([np.interp(x_ic, x, C_fdm[0, :, j]) for j in range(n_components)])
+    c_ic += rng.normal(0.0, noise * 0.5, size=c_ic.shape)
+
+    x_bc_left = np.full(n_bc_each, x[0])
+    x_bc_right = np.full(n_bc_each, x[-1])
+    t_bc = rng.uniform(t_grid[0], t_grid[-1], size=n_bc_each)
+    c_bc_left = np.tile(C_fdm[0, 0, :], (n_bc_each, 1))
+    c_bc_right = np.tile(C_fdm[0, -1, :], (n_bc_each, 1))
+
+    x_f = rng.uniform(x[0], x[-1], size=n_f)
+    t_f = rng.uniform(t_grid[0], t_grid[-1], size=n_f)
+
+    exp_time_indices = np.unique(np.linspace(0, n_t - 1, min(n_exp_time_slices + 1, n_t)).astype(int))
+    if n_t - 1 not in exp_time_indices:
+        exp_time_indices = np.append(exp_time_indices, n_t - 1)
+    exp_time_indices = exp_time_indices[exp_time_indices > 0]
+
+    x_exp_list = []
+    t_exp_list = []
+    c_exp_list = []
+    for ti_idx in exp_time_indices:
+        x_sample = np.linspace(x[0], x[-1], n_exp_points)
+        c_sample = np.column_stack([np.interp(x_sample, x, C_fdm[ti_idx, :, j]) for j in range(n_components)])
+        c_sample += rng.normal(0.0, noise, size=c_sample.shape)
+        c_sample = np.clip(c_sample, 0.0, 1.0)
+        c_sample = c_sample / np.sum(c_sample, axis=1, keepdims=True)
+        x_exp_list.append(x_sample)
+        t_exp_list.append(np.full(n_exp_points, t_grid[ti_idx]))
+        c_exp_list.append(c_sample)
+
+    x_exp = np.concatenate(x_exp_list)
+    t_exp = np.concatenate(t_exp_list)
+    c_exp = np.concatenate(c_exp_list, axis=0)
+
+    if append_pseudo_exp_to_training:
+        x_obs_list.extend(x_exp.tolist())
+        t_obs_list.extend(t_exp.tolist())
+        c_obs_list.extend(c_exp.tolist())
+
+    x_obs = np.array(x_obs_list, dtype=float)
+    t_obs = np.array(t_obs_list, dtype=float)
+    c_obs = np.array(c_obs_list, dtype=float)
+    c_obs = np.clip(c_obs, 0.0, 1.0)
+    c_obs = c_obs / np.sum(c_obs, axis=1, keepdims=True)
+
+    return TrainingDataRS(
+        x_grid=x,
+        t_grid=t_grid,
+        C_fdm=C_fdm,
+        x_obs=x_obs,
+        t_obs=t_obs,
+        c_obs=c_obs,
+        x_ic=np.concatenate([x_ic, x_bc_left, x_bc_right]),
+        t_ic=np.concatenate([t_ic, t_bc, t_bc]),
+        c_ic=np.concatenate([c_ic, c_bc_left, c_bc_right], axis=0),
+        x_f=x_f,
+        t_f=t_f,
+        x_exp=x_exp,
+        t_exp=t_exp,
+        c_exp=c_exp,
+        exp_time_indices=exp_time_indices.tolist(),
+        n_components=n_components,
+    )
+
+
+@dataclass
+class TrainingDataRS:
+    """Training data container for regular-solution mode."""
+    x_grid: np.ndarray
+    t_grid: np.ndarray
+    C_fdm: np.ndarray
+    x_obs: np.ndarray
+    t_obs: np.ndarray
+    c_obs: np.ndarray
+    x_ic: np.ndarray
+    t_ic: np.ndarray
+    c_ic: np.ndarray
+    x_f: np.ndarray
+    t_f: np.ndarray
+    x_exp: np.ndarray
+    t_exp: np.ndarray
+    c_exp: np.ndarray
+    exp_time_indices: list
+    n_components: int = 3
+
+
+# =============================================================================
+# FDM teacher and uncached forward solver
+# =============================================================================
+
+def _run_fdm_teacher_core(
+    log_d11: float,
+    log_d22: float,
+    rho_raw: float,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Uncached conservative FDM for coupled ternary interdiffusion.
+
+    This function is intentionally uncached and is used by likelihood/MCMC to
+    avoid polluting Streamlit cache with thousands of random theta values.
+    """
+    Dmat = make_spd_matrix_np(log_d11, log_d22, rho_raw)
+    assert np.allclose(Dmat, Dmat.T), "Dmat is expected to be symmetric positive definite."
+
+    eigmax = float(np.max(np.linalg.eigvalsh(Dmat)))
+    x = np.linspace(0.0, 1.0, nx)
+    dx = x[1] - x[0]
+
+    C0 = initial_diffusion_couple(x)
+    U = C0[:, 1:3].copy()
+    left_u = np.array([0.0, 0.0], dtype=float)
+    right_u = np.array([0.90, 0.10], dtype=float)
+    U[0] = left_u
+    U[-1] = right_u
+
+    dt_stable = 0.18 * dx * dx / max(eigmax, 1.0e-14)
+    n_steps = max(10, int(np.ceil(t_max / dt_stable)))
+    dt = t_max / n_steps
+
+    save_ids = set(np.unique(np.linspace(0, n_steps, nt_save).astype(int)).tolist())
+    t_save = []
+    C_save = []
+
+    for step in range(n_steps + 1):
+        if step in save_ids:
+            C = np.zeros((nx, 3), dtype=float)
+            C[:, 1:3] = U
+            C[:, 0] = 1.0 - C[:, 1] - C[:, 2]
+            C = np.clip(C, 0.0, 1.0)
+            C = C / np.maximum(C.sum(axis=1, keepdims=True), 1.0e-14)
+            t_save.append(step * dt)
+            C_save.append(C)
+
+        if step == n_steps:
+            break
+
+        grad_half = (U[1:] - U[:-1]) / dx
+        # Dmat is constructed symmetric in this prototype, so grad @ Dmat and
+        # Dmat @ grad are equivalent after transposition. If future work allows
+        # non-symmetric interdiffusion matrices, this flux convention must be
+        # revisited carefully.
+        flux_half = -grad_half @ Dmat
+        U_new = U.copy()
+        U_new[1:-1] = U[1:-1] - dt * (flux_half[1:] - flux_half[:-1]) / dx
+        U_new[0] = left_u
+        U_new[-1] = right_u
+        U_new = np.clip(U_new, 0.0, 1.0)
+
+        total_solute = np.sum(U_new, axis=1)
+        bad = total_solute > 0.999
+        if np.any(bad):
+            U_new[bad] = U_new[bad] / total_solute[bad, None] * 0.999
+
+        U = U_new
+
+    return x, np.asarray(t_save), np.stack(C_save, axis=0), Dmat
+
+
+def smooth_step_indicator_np(x: np.ndarray, interface: float = 0.5, width: float = 0.02) -> np.ndarray:
+    """Smooth left-to-right indicator used for left/right D blending."""
+    x = np.asarray(x, dtype=float)
+    w = max(float(width), 1.0e-8)
+    return 0.5 * (1.0 + np.tanh((x - float(interface)) / w))
+
+
+def _run_fdm_teacher_core_two_region(
+    log_d11_left: float,
+    log_d22_left: float,
+    rho_raw_left: float,
+    log_d11_right: float,
+    log_d22_right: float,
+    rho_raw_right: float,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+    phase_width: float = 0.02,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Uncached conservative FDM with smoothly blended left/right diffusion matrices."""
+    D_left = make_spd_matrix_np(log_d11_left, log_d22_left, rho_raw_left)
+    D_right = make_spd_matrix_np(log_d11_right, log_d22_right, rho_raw_right)
+    D_avg = 0.5 * (D_left + D_right)
+
+    eigmax = float(max(np.max(np.linalg.eigvalsh(D_left)), np.max(np.linalg.eigvalsh(D_right))))
+    x = np.linspace(0.0, 1.0, nx)
+    dx = x[1] - x[0]
+
+    C0 = initial_diffusion_couple(x)
+    U = C0[:, 1:3].copy()
+    left_u = np.array([0.0, 0.0], dtype=float)
+    right_u = np.array([0.90, 0.10], dtype=float)
+    U[0] = left_u
+    U[-1] = right_u
+
+    x_half = 0.5 * (x[1:] + x[:-1])
+    s_half = smooth_step_indicator_np(x_half, interface=0.5, width=float(phase_width))
+    D_half = np.empty((len(x_half), 2, 2), dtype=float)
+    for k, s in enumerate(s_half):
+        D_half[k] = (1.0 - s) * D_left + s * D_right
+
+    dt_stable = 0.18 * dx * dx / max(eigmax, 1.0e-14)
+    n_steps = max(10, int(np.ceil(t_max / dt_stable)))
+    dt = t_max / n_steps
+
+    save_ids = set(np.unique(np.linspace(0, n_steps, nt_save).astype(int)).tolist())
+    t_save = []
+    C_save = []
+
+    for step in range(n_steps + 1):
+        if step in save_ids:
+            C = np.zeros((nx, 3), dtype=float)
+            C[:, 1:3] = U
+            C[:, 0] = 1.0 - C[:, 1] - C[:, 2]
+            C = np.clip(C, 0.0, 1.0)
+            C = C / np.maximum(C.sum(axis=1, keepdims=True), 1.0e-14)
+            t_save.append(step * dt)
+            C_save.append(C)
+
+        if step == n_steps:
+            break
+
+        grad_half = (U[1:] - U[:-1]) / dx
+        flux_half = np.empty_like(grad_half)
+        for k in range(len(grad_half)):
+            # Symmetric-D convention. Revisit if non-symmetric D is allowed.
+            flux_half[k] = -grad_half[k] @ D_half[k]
+
+        U_new = U.copy()
+        U_new[1:-1] = U[1:-1] - dt * (flux_half[1:] - flux_half[:-1]) / dx
+        U_new[0] = left_u
+        U_new[-1] = right_u
+        U_new = np.clip(U_new, 0.0, 1.0)
+
+        total_solute = np.sum(U_new, axis=1)
+        bad = total_solute > 0.999
+        if np.any(bad):
+            U_new[bad] = U_new[bad] / total_solute[bad, None] * 0.999
+        U = U_new
+
+    return x, np.asarray(t_save), np.stack(C_save, axis=0), D_avg, D_left, D_right
+
+
+@st.cache_data(show_spinner=False, max_entries=64)
+def run_fdm_teacher_two_region(
+    log_d11_left: float,
+    log_d22_left: float,
+    rho_raw_left: float,
+    log_d11_right: float,
+    log_d22_right: float,
+    rho_raw_right: float,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+    phase_width: float,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Cached two-region FDM teacher/profile call."""
+    return _run_fdm_teacher_core_two_region(
+        log_d11_left,
+        log_d22_left,
+        rho_raw_left,
+        log_d11_right,
+        log_d22_right,
+        rho_raw_right,
+        t_max,
+        nx,
+        nt_save,
+        phase_width,
+    )
+
+
+@st.cache_data(show_spinner=False, max_entries=64)
+def run_fdm_teacher(
+    log_d11: float,
+    log_d22: float,
+    rho_raw: float,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Cached FDM only for deterministic teacher/profile calls."""
+    return _run_fdm_teacher_core(log_d11, log_d22, rho_raw, t_max, nx, nt_save)
+
+
+def bilinear_sample_xt(
+    x_grid: np.ndarray,
+    t_grid: np.ndarray,
+    C: np.ndarray,
+    xq: np.ndarray,
+    tq: np.ndarray,
+) -> np.ndarray:
+    """Bilinear interpolation in x,t for a 3-component composition array."""
+    xq = xq.ravel()
+    tq = tq.ravel()
+    out = np.empty((len(xq), 3), dtype=float)
+
+    for k, (xx, tt) in enumerate(zip(xq, tq)):
+        ix = int(np.clip(np.searchsorted(x_grid, xx) - 1, 0, len(x_grid) - 2))
+        it = int(np.clip(np.searchsorted(t_grid, tt) - 1, 0, len(t_grid) - 2))
+        x0, x1 = x_grid[ix], x_grid[ix + 1]
+        t0, t1 = t_grid[it], t_grid[it + 1]
+        wx = 0.0 if x1 == x0 else (xx - x0) / (x1 - x0)
+        wt = 0.0 if t1 == t0 else (tt - t0) / (t1 - t0)
+        out[k] = (
+            (1 - wx) * (1 - wt) * C[it, ix]
+            + wx * (1 - wt) * C[it, ix + 1]
+            + (1 - wx) * wt * C[it + 1, ix]
+            + wx * wt * C[it + 1, ix + 1]
+        )
+
+    return out
+
+
+def make_pseudo_experiment(
+    x: np.ndarray,
+    C_final: np.ndarray,
+    noise: float,
+    seed: int,
+    n_points: int = 64,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Generate pseudo experimental points from the final FDM profile.
+
+    If noise=0, the pseudo experimental data are exactly on the FDM final profile.
+    """
+    rng = np.random.default_rng(seed + 1120)
+    x_exp = np.linspace(float(x.min()), float(x.max()), n_points)
+    c_clean = np.column_stack([np.interp(x_exp, x, C_final[:, j]) for j in range(3)])
+    noisy = c_clean + rng.normal(0.0, float(noise), size=c_clean.shape)
+    noisy = np.clip(noisy, 0.0, 1.0)
+    noisy = noisy / np.maximum(noisy.sum(axis=1, keepdims=True), 1.0e-14)
+    return x_exp, noisy
+
+
+def make_pseudo_experiment_multitime(
+    x: np.ndarray,
+    t_grid: np.ndarray,
+    C_fdm: np.ndarray,
+    noise: float,
+    seed: int,
+    n_points_per_time: int = 64,
+    n_time_slices: int = 4,
+    t_start: float = 0.0,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Generate pseudo experimental points from multiple FDM time slices."""
+    rng = np.random.default_rng(seed + 2219)
+    valid = np.where(np.asarray(t_grid, dtype=float) >= float(t_start))[0]
+    if len(valid) == 0:
+        valid = np.arange(len(t_grid))
+    idxs = np.unique(np.linspace(valid[0], valid[-1], int(max(n_time_slices, 1))).astype(int))
+    if idxs[-1] != len(t_grid) - 1:
+        idxs = np.unique(np.append(idxs, len(t_grid) - 1)).astype(int)
+
+    x_base = np.linspace(float(x.min()), float(x.max()), int(n_points_per_time))
+    x_list, t_list, c_list = [], [], []
+    for idx in idxs:
+        c_clean = np.column_stack([np.interp(x_base, x, C_fdm[idx, :, j]) for j in range(3)])
+        noisy = c_clean + rng.normal(0.0, float(noise), size=c_clean.shape)
+        noisy = np.clip(noisy, 0.0, 1.0)
+        noisy = noisy / np.maximum(noisy.sum(axis=1, keepdims=True), 1.0e-14)
+        x_list.append(x_base.reshape(-1, 1))
+        t_list.append(np.full((len(x_base), 1), float(t_grid[idx])))
+        c_list.append(noisy)
+
+    return np.vstack(x_list), np.vstack(t_list), np.vstack(c_list), idxs
+
+
+@dataclass
+class TrainingData:
+    x_obs: np.ndarray
+    t_obs: np.ndarray
+    c_obs: np.ndarray
+    x_ic: np.ndarray
+    t_ic: np.ndarray
+    c_ic: np.ndarray
+    x_bc: np.ndarray
+    t_bc: np.ndarray
+    c_bc: np.ndarray
+    x_f: np.ndarray
+    t_f: np.ndarray
+    x_grid: np.ndarray
+    t_grid: np.ndarray
+    C_fdm: np.ndarray
+    D_true: np.ndarray
+    D_true_left: Optional[np.ndarray]
+    D_true_right: Optional[np.ndarray]
+    t_start: float
+    x_exp: np.ndarray
+    c_exp: np.ndarray
+    x_exp_all: np.ndarray
+    t_exp_all: np.ndarray
+    c_exp_all: np.ndarray
+    exp_time_indices: np.ndarray
+
+
+def make_training_data(
+    log_d11: float,
+    log_d22: float,
+    rho_raw: float,
+    t_max: float,
+    nx_fdm: int,
+    nt_fdm: int,
+    n_obs: int,
+    n_ic: int,
+    n_bc_each: int,
+    n_f: int,
+    noise: float,
+    seed: int,
+    t_start_fraction: float,
+    n_exp_points: int,
+    pseudo_exp_time_mode: str = "final only",
+    pseudo_exp_time_slices: int = 4,
+    append_pseudo_exp_to_training: bool = True,
+    fdm_teacher_mode: str = "single D",
+    log_d11_right: Optional[float] = None,
+    log_d22_right: Optional[float] = None,
+    rho_raw_right: Optional[float] = None,
+    phase_width: float = 0.02,
+) -> TrainingData:
+    rng = np.random.default_rng(seed)
+    D_true_left = None
+    D_true_right = None
+    if str(fdm_teacher_mode).lower().startswith("left/right"):
+        x_grid, t_grid, C_fdm, D_true, D_true_left, D_true_right = run_fdm_teacher_two_region(
+            log_d11,
+            log_d22,
+            rho_raw,
+            float(log_d11_right if log_d11_right is not None else log_d11),
+            float(log_d22_right if log_d22_right is not None else log_d22),
+            float(rho_raw_right if rho_raw_right is not None else rho_raw),
+            t_max,
+            nx_fdm,
+            nt_fdm,
+            float(phase_width),
+        )
+    else:
+        x_grid, t_grid, C_fdm, D_true = run_fdm_teacher(
+            log_d11, log_d22, rho_raw, t_max, nx_fdm, nt_fdm
+        )
+        D_true_left = D_true
+        D_true_right = D_true
+    t_start = max(float(t_start_fraction * t_max), float(t_grid[1]))
+
+    x_obs = rng.uniform(0.02, 0.98, size=(n_obs, 1))
+    t_obs = rng.uniform(t_start, t_max, size=(n_obs, 1))
+    c_clean = bilinear_sample_xt(x_grid, t_grid, C_fdm, x_obs, t_obs)
+    c_obs = np.clip(c_clean + rng.normal(0.0, noise, size=c_clean.shape), 0.0, 1.0)
+    c_obs = c_obs / np.maximum(c_obs.sum(axis=1, keepdims=True), 1.0e-14)
+
+    x_ic = rng.uniform(0.0, 1.0, size=(n_ic, 1))
+    t_ic = np.full_like(x_ic, t_start)
+    c_ic = bilinear_sample_xt(x_grid, t_grid, C_fdm, x_ic, t_ic)
+
+    t_left = rng.uniform(t_start, t_max, size=(n_bc_each, 1))
+    t_right = rng.uniform(t_start, t_max, size=(n_bc_each, 1))
+    x_bc = np.vstack([np.zeros_like(t_left), np.ones_like(t_right)])
+    t_bc = np.vstack([t_left, t_right])
+    c_bc = np.vstack(
+        [
+            np.tile(np.array([[1.0, 0.0, 0.0]]), (n_bc_each, 1)),
+            np.tile(np.array([[0.0, 0.90, 0.10]]), (n_bc_each, 1)),
+        ]
+    )
+
+    x_f = rng.uniform(0.0, 1.0, size=(n_f, 1))
+    t_f = rng.uniform(t_start, t_max, size=(n_f, 1))
+
+    x_exp, c_exp = make_pseudo_experiment(
+        x_grid, C_fdm[-1], noise=noise, seed=seed, n_points=n_exp_points
+    )
+
+    if str(pseudo_exp_time_mode).lower().startswith("multi"):
+        x_exp_all, t_exp_all, c_exp_all, exp_time_indices = make_pseudo_experiment_multitime(
+            x_grid,
+            t_grid,
+            C_fdm,
+            noise=noise,
+            seed=seed,
+            n_points_per_time=n_exp_points,
+            n_time_slices=int(pseudo_exp_time_slices),
+            t_start=t_start,
+        )
+    else:
+        x_exp_all = x_exp.reshape(-1, 1)
+        t_exp_all = np.full((len(x_exp), 1), float(t_grid[-1]))
+        c_exp_all = c_exp
+        exp_time_indices = np.array([len(t_grid) - 1], dtype=int)
+
+    if bool(append_pseudo_exp_to_training):
+        x_obs = np.vstack([x_obs, x_exp_all])
+        t_obs = np.vstack([t_obs, t_exp_all])
+        c_obs = np.vstack([c_obs, c_exp_all])
+
+    return TrainingData(
+        x_obs=x_obs,
+        t_obs=t_obs,
+        c_obs=c_obs,
+        x_ic=x_ic,
+        t_ic=t_ic,
+        c_ic=c_ic,
+        x_bc=x_bc,
+        t_bc=t_bc,
+        c_bc=c_bc,
+        x_f=x_f,
+        t_f=t_f,
+        x_grid=x_grid,
+        t_grid=t_grid,
+        C_fdm=C_fdm,
+        D_true=D_true,
+        D_true_left=D_true_left,
+        D_true_right=D_true_right,
+        t_start=t_start,
+        x_exp=x_exp,
+        c_exp=c_exp,
+        x_exp_all=x_exp_all,
+        t_exp_all=t_exp_all,
+        c_exp_all=c_exp_all,
+        exp_time_indices=exp_time_indices,
+    )
+
+
+# =============================================================================
+# PINN model
+# =============================================================================
+
+class MLP(nn.Module):
+    def __init__(self, width: int, depth: int, activation: str):
+        super().__init__()
+
+        def make_activation():
+            if activation == "silu":
+                return nn.SiLU()
+            if activation == "gelu":
+                return nn.GELU()
+            return nn.Tanh()
+
+        layers = []
+        for i in range(depth):
+            layers.append(nn.Linear(2 if i == 0 else width, width))
+            layers.append(make_activation())
+        layers.append(nn.Linear(width, 3))
+        self.net = nn.Sequential(*layers)
+
+        for m in self.net:
+            if isinstance(m, nn.Linear):
+                nn.init.xavier_normal_(m.weight)
+                nn.init.zeros_(m.bias)
+
+    def forward(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
+        logits = self.net(torch.cat([x, t], dim=1))
+        positive = F.softplus(logits) + 1.0e-8
+        return positive / torch.sum(positive, dim=1, keepdim=True)
+
+
+class TernaryDiffusionPINN(nn.Module):
+    def __init__(
+        self,
+        log_d11_init: float,
+        log_d22_init: float,
+        rho_raw_init: float,
+        width: int,
+        depth: int,
+        activation: str,
+    ):
+        super().__init__()
+        self.net = MLP(width, depth, activation)
+        self.log_d11 = nn.Parameter(torch.tensor([log_d11_init], dtype=DTYPE, device=DEVICE))
+        self.log_d22 = nn.Parameter(torch.tensor([log_d22_init], dtype=DTYPE, device=DEVICE))
+        self.rho_raw = nn.Parameter(torch.tensor([rho_raw_init], dtype=DTYPE, device=DEVICE))
+
+    def diffusion_matrix(self) -> torch.Tensor:
+        d11 = torch.exp(self.log_d11[0])
+        d22 = torch.exp(self.log_d22[0])
+        rho = 0.95 * torch.tanh(self.rho_raw[0])
+        d12 = rho * torch.sqrt(d11 * d22)
+        return torch.stack([torch.stack([d11, d12]), torch.stack([d12, d22])])
+
+    def forward(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
+        return self.net(x, t)
+
+    def residual_train(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
+        """Training residual with full graph for backpropagation."""
+        return self._residual_impl(x, t, second_derivative_graph=True, output_graph=True)
+
+    def residual_eval(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
+        """Evaluation residual.
+
+        Second derivatives still require the first x-derivative to carry a local
+        graph, but the final derivative and outputs do not retain a persistent
+        higher-order graph for parameter backpropagation.
+        """
+        return self._residual_impl(x, t, second_derivative_graph=True, output_graph=False)
+
+    def _residual_impl(
+        self,
+        x: torch.Tensor,
+        t: torch.Tensor,
+        second_derivative_graph: bool,
+        output_graph: bool,
+    ) -> torch.Tensor:
+        x = x.clone().detach().requires_grad_(True)
+        t = t.clone().detach().requires_grad_(True)
+
+        C = self.forward(x, t)
+        ni = C[:, 1:2]
+        ta = C[:, 2:3]
+
+        ni_t = torch.autograd.grad(
+            ni, t, torch.ones_like(ni), create_graph=output_graph, retain_graph=True
+        )[0]
+        ta_t = torch.autograd.grad(
+            ta, t, torch.ones_like(ta), create_graph=output_graph, retain_graph=True
+        )[0]
+
+        ni_x = torch.autograd.grad(
+            ni, x, torch.ones_like(ni), create_graph=second_derivative_graph, retain_graph=True
+        )[0]
+        ta_x = torch.autograd.grad(
+            ta, x, torch.ones_like(ta), create_graph=second_derivative_graph, retain_graph=True
+        )[0]
+
+        D = self.diffusion_matrix()
+        q_ni = D[0, 0] * ni_x + D[0, 1] * ta_x
+        q_ta = D[1, 0] * ni_x + D[1, 1] * ta_x
+
+        q_ni_x = torch.autograd.grad(
+            q_ni, x, torch.ones_like(q_ni), create_graph=output_graph, retain_graph=True
+        )[0]
+        q_ta_x = torch.autograd.grad(
+            q_ta, x, torch.ones_like(q_ta), create_graph=output_graph, retain_graph=True
+        )[0]
+
+        return torch.cat([ni_t - q_ni_x, ta_t - q_ta_x], dim=1)
+
+
+
+class TwoRegionTernaryDiffusionPINN(TernaryDiffusionPINN):
+    """PINNs model with left/right diffusion matrices smoothly blended at the interface.
+
+    This is a fixed-interface approximation for diffusion couples whose two
+    sides have different crystal structures or different diffusion kinetics:
+
+        D(x) = (1 - s(x)) D_left + s(x) D_right
+        s(x) = 0.5 * (1 + tanh((x - x_interface) / width))
+
+    It is not a full DICTRA moving-boundary/local-equilibrium model, but it is
+    useful as a practical two-region extension of the present PINNs prototype.
+    """
+
+    def __init__(
+        self,
+        log_d11_left_init: float,
+        log_d22_left_init: float,
+        rho_raw_left_init: float,
+        log_d11_right_init: float,
+        log_d22_right_init: float,
+        rho_raw_right_init: float,
+        width: int,
+        depth: int,
+        activation: str,
+        phase_interface: float = 0.5,
+        phase_width: float = 0.02,
+    ):
+        super().__init__(log_d11_left_init, log_d22_left_init, rho_raw_left_init, width, depth, activation)
+        self.log_d11_left = self.log_d11
+        self.log_d22_left = self.log_d22
+        self.rho_raw_left = self.rho_raw
+        self.log_d11_right = nn.Parameter(torch.tensor([float(log_d11_right_init)], dtype=DTYPE, device=DEVICE))
+        self.log_d22_right = nn.Parameter(torch.tensor([float(log_d22_right_init)], dtype=DTYPE, device=DEVICE))
+        self.rho_raw_right = nn.Parameter(torch.tensor([float(rho_raw_right_init)], dtype=DTYPE, device=DEVICE))
+        self.phase_interface = float(phase_interface)
+        self.phase_width = float(phase_width)
+
+    def _matrix_from_params(self, log_d11: torch.Tensor, log_d22: torch.Tensor, rho_raw: torch.Tensor) -> torch.Tensor:
+        d11 = torch.exp(log_d11[0])
+        d22 = torch.exp(log_d22[0])
+        rho = 0.95 * torch.tanh(rho_raw[0])
+        d12 = rho * torch.sqrt(d11 * d22)
+        return torch.stack([torch.stack([d11, d12]), torch.stack([d12, d22])])
+
+    def diffusion_matrix_left(self) -> torch.Tensor:
+        return self._matrix_from_params(self.log_d11_left, self.log_d22_left, self.rho_raw_left)
+
+    def diffusion_matrix_right(self) -> torch.Tensor:
+        return self._matrix_from_params(self.log_d11_right, self.log_d22_right, self.rho_raw_right)
+
+    def diffusion_matrix(self) -> torch.Tensor:
+        return 0.5 * (self.diffusion_matrix_left() + self.diffusion_matrix_right())
+
+    def _residual_impl(self, x: torch.Tensor, t: torch.Tensor, second_derivative_graph: bool, output_graph: bool) -> torch.Tensor:
+        x = x.clone().detach().requires_grad_(True)
+        t = t.clone().detach().requires_grad_(True)
+
+        C = self.forward(x, t)
+        ni = C[:, 1:2]
+        ta = C[:, 2:3]
+
+        ni_t = torch.autograd.grad(ni, t, torch.ones_like(ni), create_graph=output_graph, retain_graph=True)[0]
+        ta_t = torch.autograd.grad(ta, t, torch.ones_like(ta), create_graph=output_graph, retain_graph=True)[0]
+        ni_x = torch.autograd.grad(ni, x, torch.ones_like(ni), create_graph=second_derivative_graph, retain_graph=True)[0]
+        ta_x = torch.autograd.grad(ta, x, torch.ones_like(ta), create_graph=second_derivative_graph, retain_graph=True)[0]
+
+        Dl = self.diffusion_matrix_left()
+        Dr = self.diffusion_matrix_right()
+        w = max(float(self.phase_width), 1.0e-8)
+        s = 0.5 * (1.0 + torch.tanh((x - float(self.phase_interface)) / w))
+
+        d11 = (1.0 - s) * Dl[0, 0] + s * Dr[0, 0]
+        d12 = (1.0 - s) * Dl[0, 1] + s * Dr[0, 1]
+        d21 = (1.0 - s) * Dl[1, 0] + s * Dr[1, 0]
+        d22 = (1.0 - s) * Dl[1, 1] + s * Dr[1, 1]
+
+        q_ni = d11 * ni_x + d12 * ta_x
+        q_ta = d21 * ni_x + d22 * ta_x
+        q_ni_x = torch.autograd.grad(q_ni, x, torch.ones_like(q_ni), create_graph=output_graph, retain_graph=True)[0]
+        q_ta_x = torch.autograd.grad(q_ta, x, torch.ones_like(q_ta), create_graph=output_graph, retain_graph=True)[0]
+        return torch.cat([ni_t - q_ni_x, ta_t - q_ta_x], dim=1)
+
+
+# =============================================================================
+# Regular-solution PINN model (chemical potential approach)
+# =============================================================================
+
+class TernaryRegularSolutionPINN(nn.Module):
+    """Ternary PINN using regular-solution chemical potentials instead of direct D matrix.
+
+    Trainable parameters are Omega pair-interaction terms (3 pairs for ternary:
+    Omega_CoNi, Omega_CoTa, Omega_NiTa) and a diagonal mobility matrix M.
+    The PDE is: c_t = div(M grad(mu)), where mu = chemical potential from
+    the regular-solution model.
+    """
+
+    def __init__(
+        self,
+        n_components: int = 3,
+        theta_left_init: Optional[np.ndarray] = None,
+        theta_right_init: Optional[np.ndarray] = None,
+        hidden_layers: Tuple[int, ...] = (64, 64, 64, 64),
+        activation: str = "tanh",
+        learn_left_right_omega: bool = True,
+        x_interface: float = 0.5,
+        omega_width: float = 0.02,
+        RT: float = 1.0,
+        train_omega: bool = True,
+    ):
+        super().__init__()
+        self.n_components = n_components
+        self.n_ind = n_components - 1
+        n_pairs = len(pair_indices_rs(n_components))
+        self.n_pairs = n_pairs
+        self.learn_left_right_omega = learn_left_right_omega
+        self.x_interface = x_interface
+        self.omega_width = omega_width
+        self.RT = RT
+
+        if theta_left_init is None:
+            theta_left_init = np.ones(n_pairs, dtype=float) * 1.0
+        if theta_right_init is None:
+            theta_right_init = theta_left_init.copy()
+
+        self.theta_left_raw = nn.Parameter(
+            torch.tensor(theta_left_init, dtype=torch.float32),
+            requires_grad=train_omega,
+        )
+        if learn_left_right_omega:
+            self.theta_right_raw = nn.Parameter(
+                torch.tensor(theta_right_init, dtype=torch.float32),
+                requires_grad=train_omega,
+            )
+        else:
+            self.register_buffer(
+                "theta_right_raw",
+                torch.tensor(theta_left_init, dtype=torch.float32),
+            )
+
+        act_map = {"tanh": nn.Tanh, "silu": nn.SiLU, "gelu": nn.GELU, "relu": nn.ReLU}
+        act_cls = act_map.get(activation, nn.Tanh)
+        layers: List[nn.Module] = []
+        in_dim = 2
+        for h in hidden_layers:
+            layers.append(nn.Linear(in_dim, h))
+            layers.append(act_cls())
+            in_dim = h
+        layers.append(nn.Linear(in_dim, self.n_ind))
+        layers.append(nn.Sigmoid())
+        self.net = nn.Sequential(*layers)
+
+    def theta_vectors(self) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Return (theta_left, theta_right) tensors."""
+        if self.learn_left_right_omega:
+            return self.theta_left_raw, self.theta_right_raw
+        return self.theta_left_raw, self.theta_left_raw
+
+    def forward(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
+        """Return full composition [Co, Ni, Ta] with shape (N, 3)."""
+        X = torch.cat([x, t], dim=1)
+        c_ind = self.net(X)
+        total = torch.sum(c_ind, dim=1, keepdim=True)
+        c_ind = c_ind * torch.clamp(1.0 / (total + 1.0e-8), max=1.0)
+        c_dep = 1.0 - torch.sum(c_ind, dim=1, keepdim=True)
+        c_dep = torch.clamp(c_dep, min=1.0e-8)
+        return torch.cat([c_dep, c_ind], dim=1)
+
+    def residual_train(self, x: torch.Tensor, t: torch.Tensor,
+                       mobility: torch.Tensor) -> torch.Tensor:
+        return self._residual_impl(x, t, mobility, second_derivative_graph=True, output_graph=True)
+
+    def residual_eval(self, x: torch.Tensor, t: torch.Tensor,
+                      mobility: torch.Tensor) -> torch.Tensor:
+        return self._residual_impl(x, t, mobility, second_derivative_graph=False, output_graph=False)
+
+    def _residual_impl(
+        self,
+        x: torch.Tensor,
+        t: torch.Tensor,
+        mobility: torch.Tensor,
+        second_derivative_graph: bool,
+        output_graph: bool,
+    ) -> torch.Tensor:
+        """PDE residual: c_t - div(M grad(mu)) for each independent component."""
+        x = x.clone().detach().requires_grad_(True)
+        t = t.clone().detach().requires_grad_(True)
+
+        C = self.forward(x, t)
+        theta_l, theta_r = self.theta_vectors()
+
+        mu = diffusion_potentials_regular_solution_torch(
+            C, x, theta_l, theta_r, RT=self.RT,
+            x_interface=self.x_interface, width=self.omega_width,
+        )
+
+        res_cols = []
+        for i in range(self.n_ind):
+            c_i = C[:, i + 1:i + 2]
+            grad_c_i = torch.autograd.grad(
+                c_i, t, torch.ones_like(c_i),
+                create_graph=output_graph, retain_graph=True,
+            )[0]
+            c_t = grad_c_i
+
+            q_i = torch.zeros_like(c_t)
+            for j in range(self.n_ind):
+                mu_j = mu[:, j:j + 1]
+                grad_mu_j = torch.autograd.grad(
+                    mu_j, x, torch.ones_like(mu_j),
+                    create_graph=True, retain_graph=True,
+                )[0]
+                mu_x_j = grad_mu_j
+                q_i = q_i + mobility[i, j] * mu_x_j
+
+            grad_q_i = torch.autograd.grad(
+                q_i, x, torch.ones_like(q_i),
+                create_graph=output_graph, retain_graph=True,
+            )[0]
+            q_x = grad_q_i
+            res_cols.append(c_t - q_x)
+
+        return torch.cat(res_cols, dim=1)
+
+
+@dataclass
+class TrainResultRS:
+    """Training result for regular-solution mode."""
+    model: TernaryRegularSolutionPINN
+    data: TrainingDataRS
+    history: pd.DataFrame
+    train_time: float
+    mobility: np.ndarray
+    theta_left_true: np.ndarray
+    theta_right_true: np.ndarray
+
+
+def train_pinn_rs(
+    data: TrainingDataRS,
+    model: TernaryRegularSolutionPINN,
+    mobility: np.ndarray,
+    epochs: int,
+    lr: float,
+    weights: Dict[str, float],
+    progress=None,
+    status=None,
+    n_collocation: int = 2000,
+    w_omega_prior: float = 0.0,
+    omega_prior_left: Optional[np.ndarray] = None,
+    omega_prior_right: Optional[np.ndarray] = None,
+) -> Tuple[TernaryRegularSolutionPINN, pd.DataFrame]:
+    """Train a TernaryRegularSolutionPINN model."""
+    device = DEVICE
+    model = model.to(device)
+    mobility_t = torch.tensor(mobility, dtype=torch.float32, device=device)
+
+    x_obs = to_tensor(data.x_obs.reshape(-1, 1)).to(device)
+    t_obs = to_tensor(data.t_obs.reshape(-1, 1)).to(device)
+    c_obs = to_tensor(data.c_obs).to(device)
+    x_ic = to_tensor(data.x_ic.reshape(-1, 1)).to(device)
+    t_ic = to_tensor(data.t_ic.reshape(-1, 1)).to(device)
+    c_ic = to_tensor(data.c_ic).to(device)
+
+    w_data = float(weights.get("data", 25.0))
+    w_ic = float(weights.get("ic", 12.0))
+    w_bc = float(weights.get("bc", 12.0))
+    w_phys = float(weights.get("phys", 10.0))
+
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=max(epochs, 1), eta_min=lr * 0.03)
+
+    history_rows = []
+    rng = np.random.default_rng(42)
+    t0 = time.time()
+
+    for epoch in range(1, epochs + 1):
+        model.train()
+        optimizer.zero_grad()
+
+        pred_obs = model(x_obs, t_obs)
+        loss_data = F.mse_loss(pred_obs, c_obs)
+
+        pred_ic = model(x_ic, t_ic)
+        loss_ic = F.mse_loss(pred_ic, c_ic)
+
+        x_col = torch.tensor(
+            rng.uniform(float(data.x_grid[0]), float(data.x_grid[-1]), size=(n_collocation, 1)),
+            dtype=torch.float32, device=device,
+        )
+        t_col = torch.tensor(
+            rng.uniform(float(data.t_grid[0]), float(data.t_grid[-1]), size=(n_collocation, 1)),
+            dtype=torch.float32, device=device,
+        )
+        res = model.residual_train(x_col, t_col, mobility_t)
+        loss_phys = torch.mean(res ** 2)
+
+        loss = w_data * loss_data + w_ic * loss_ic + w_phys * loss_phys
+
+        if w_omega_prior > 0.0 and omega_prior_left is not None:
+            theta_l, theta_r = model.theta_vectors()
+            prior_l = torch.tensor(omega_prior_left, dtype=torch.float32, device=device)
+            omega_reg = torch.mean((theta_l - prior_l) ** 2)
+            if omega_prior_right is not None and model.learn_left_right_omega:
+                prior_r = torch.tensor(omega_prior_right, dtype=torch.float32, device=device)
+                omega_reg = omega_reg + torch.mean((theta_r - prior_r) ** 2)
+            loss = loss + w_omega_prior * omega_reg
+
+        loss.backward()
+        optimizer.step()
+        scheduler.step()
+
+        theta_l, theta_r = model.theta_vectors()
+        theta_l_np = theta_l.detach().cpu().numpy()
+        theta_r_np = theta_r.detach().cpu().numpy()
+        pairs = pair_indices_rs(model.n_components)
+        row = {
+            "epoch": epoch,
+            "loss": float(loss.item()),
+            "data": float(loss_data.item()),
+            "ic": float(loss_ic.item()),
+            "physics": float(loss_phys.item()),
+        }
+        for k, (a, b) in enumerate(pairs):
+            row[f"Omega_{a}{b}_left"] = float(theta_l_np[k])
+            row[f"Omega_{a}{b}_right"] = float(theta_r_np[k])
+        history_rows.append(row)
+
+        if progress is not None and epoch % max(1, epochs // 100) == 0:
+            progress.progress(epoch / epochs)
+        if status is not None and epoch % max(1, epochs // 20) == 0:
+            status.text(
+                f"Epoch {epoch}/{epochs}  loss={float(loss.item()):.4e}  "
+                f"data={float(loss_data.item()):.4e}  phys={float(loss_phys.item()):.4e}"
+            )
+
+    train_time = time.time() - t0
+    model.eval()
+    if progress is not None:
+        progress.progress(1.0)
+    return model, pd.DataFrame(history_rows)
+
+
+def predict_rs(model: TernaryRegularSolutionPINN, x: np.ndarray, t: np.ndarray) -> np.ndarray:
+    """Predict compositions using a regular-solution PINN."""
+    model.eval()
+    with torch.no_grad():
+        xt = to_tensor(x.reshape(-1, 1)).to(next(model.parameters()).device)
+        tt = to_tensor(t.reshape(-1, 1)).to(next(model.parameters()).device)
+        return model(xt, tt).cpu().numpy()
+
+
+def evaluate_model_on_grid_rs(
+    model: TernaryRegularSolutionPINN,
+    x: np.ndarray,
+    t_grid: np.ndarray,
+) -> np.ndarray:
+    """Evaluate model on full x-t grid, returning (n_t, Nx, 3) array."""
+    Nx = len(x)
+    n_t = len(t_grid)
+    C_pinn = np.zeros((n_t, Nx, 3), dtype=float)
+    for ti in range(n_t):
+        x_flat = x.reshape(-1)
+        t_flat = np.full_like(x_flat, t_grid[ti])
+        C_pinn[ti] = predict_rs(model, x_flat, t_flat)
+    return C_pinn
+
+
+# =============================================================================
+# Omega-based reliability (regular-solution mode)
+# =============================================================================
+
+def gaussian_nll_multitime_rs(
+    theta: np.ndarray,
+    n_components: int,
+    left_right: bool,
+    c0_full: np.ndarray,
+    x_grid: np.ndarray,
+    x_exp: np.ndarray,
+    t_exp: np.ndarray,
+    c_exp: np.ndarray,
+    sigma: float,
+    dt: float,
+    nsteps: int,
+    save_every: int,
+    mobility: np.ndarray,
+    RT: float,
+    x_interface: float,
+    omega_width: float,
+    prior_mean: Optional[np.ndarray] = None,
+    prior_std: Optional[float] = None,
+) -> float:
+    """Gaussian NLL for multi-time Omega estimation using FDM forward model."""
+    n_pairs = len(pair_indices_rs(n_components))
+    if left_right:
+        theta_left = theta[:n_pairs]
+        theta_right = theta[n_pairs:2 * n_pairs]
+    else:
+        theta_left = theta[:n_pairs]
+        theta_right = theta_left
+
+    n_ind = n_components - 1
+    try:
+        t_grid, C_fdm = fdm_ternary_regular_solution(
+            c0_full, x_grid, dt, nsteps, mobility, theta_left, theta_right,
+            RT=RT, x_interface=x_interface, omega_width=omega_width,
+            save_every=save_every,
+        )
+    except Exception:
+        return 1.0e12
+
+    sigma_eff = max(float(sigma), 1.0e-8)
+    total_nll = 0.0
+    unique_times = np.unique(t_exp)
+    for t_val in unique_times:
+        mask = np.abs(t_exp - t_val) < 1.0e-10
+        x_pts = x_exp[mask]
+        c_pts = c_exp[mask]
+
+        ti_closest = int(np.argmin(np.abs(t_grid - t_val)))
+        c_pred = np.column_stack([
+            np.interp(x_pts, x_grid, C_fdm[ti_closest, :, j])
+            for j in range(n_components)
+        ])
+
+        residual = c_pts[:, :n_ind] - c_pred[:, :n_ind]
+        total_nll += 0.5 * np.sum((residual / sigma_eff) ** 2)
+
+    n_total = int(np.sum(np.abs(t_exp) >= 0)) * n_ind
+    total_nll += n_total * np.log(sigma_eff)
+
+    if prior_mean is not None and prior_std is not None:
+        prior = 0.5 * np.sum(((theta - prior_mean) / float(prior_std)) ** 2)
+        total_nll += prior
+
+    return float(total_nll) if np.isfinite(total_nll) else 1.0e12
+
+
+def refine_omega_by_fdm_likelihood(
+    nll_fun,
+    theta_hat: np.ndarray,
+    maxiter: int = 180,
+    verbose: bool = False,
+) -> Tuple[np.ndarray, Optional[Dict]]:
+    """Refine Omega estimate by minimizing FDM-based NLL using Powell method."""
+    from scipy.optimize import minimize
+    result = minimize(nll_fun, theta_hat, method="Powell",
+                      options={"maxiter": maxiter, "disp": verbose})
+    info = {
+        "nll_before": float(nll_fun(theta_hat)),
+        "nll_after": float(result.fun),
+        "success": bool(result.success),
+        "nfev": int(result.nfev),
+        "message": str(result.message),
+    }
+    return np.asarray(result.x, dtype=float), info
+
+
+def overwrite_model_omega_from_theta(
+    model: TernaryRegularSolutionPINN,
+    theta: np.ndarray,
+    left_right: bool,
+) -> None:
+    """Overwrite model Omega parameters from a flat theta vector."""
+    n_pairs = model.n_pairs
+    theta_left = theta[:n_pairs]
+    with torch.no_grad():
+        model.theta_left_raw.copy_(torch.tensor(theta_left, dtype=torch.float32))
+        if left_right and hasattr(model, "theta_right_raw") and isinstance(model.theta_right_raw, nn.Parameter):
+            theta_right = theta[n_pairs:2 * n_pairs]
+            model.theta_right_raw.copy_(torch.tensor(theta_right, dtype=torch.float32))
+
+
+def laplace_reliability_rs(
+    nll_fun,
+    theta_hat: np.ndarray,
+    hessian_step: float,
+    n_samples: int,
+    seed: int,
+) -> Dict[str, np.ndarray]:
+    """Laplace approximation reliability for Omega parameters."""
+    dim = len(theta_hat)
+    step = np.ones(dim, dtype=float) * float(hessian_step)
+    H_raw = numerical_hessian(nll_fun, theta_hat, step)
+
+    H_sym = 0.5 * (H_raw + H_raw.T)
+    h_eigval_raw = np.linalg.eigvalsh(H_sym)
+    hessian_min_eig = float(np.nanmin(h_eigval_raw))
+    hessian_non_pd = bool(np.any(h_eigval_raw <= 0.0))
+
+    H = H_sym + 1.0e-8 * np.eye(dim)
+    h_eigval_regularized = np.linalg.eigvalsh(H)
+
+    try:
+        cov_unclipped = np.linalg.inv(H)
+        inv_method = "inverse"
+    except np.linalg.LinAlgError:
+        cov_unclipped = np.linalg.pinv(H)
+        inv_method = "pinv"
+
+    cov_eigval_raw, eigvec = np.linalg.eigh(0.5 * (cov_unclipped + cov_unclipped.T))
+    cov_eigval_clipped = np.clip(cov_eigval_raw, 1.0e-10, 10.0)
+    covariance_was_clipped = bool(np.any(np.abs(cov_eigval_raw - cov_eigval_clipped) > 1.0e-14))
+    cov = eigvec @ np.diag(cov_eigval_clipped) @ eigvec.T
+
+    rng = np.random.default_rng(seed)
+    samples = rng.multivariate_normal(theta_hat, cov, size=int(n_samples), method="svd")
+
+    nll_at_hat = float(nll_fun(theta_hat))
+    return {
+        "theta_hat": np.asarray(theta_hat, dtype=float),
+        "cov": cov,
+        "samples": samples,
+        "nll_at_hat": np.array([nll_at_hat]),
+        "hessian_eigval_raw": h_eigval_raw,
+        "hessian_eigval_regularized": h_eigval_regularized,
+        "hessian_min_eig": np.array([hessian_min_eig]),
+        "hessian_non_pd": np.array([hessian_non_pd], dtype=bool),
+        "cov_eigval_raw": cov_eigval_raw,
+        "cov_eigval_clipped": cov_eigval_clipped,
+        "covariance_was_clipped": np.array([covariance_was_clipped], dtype=bool),
+        "hessian_inverse_method": np.array([inv_method]),
+    }
+
+
+def mcmc_reliability_rs(
+    nll_fun,
+    theta_hat: np.ndarray,
+    n_steps: int,
+    burn_in: int,
+    proposal_std: float,
+    seed: int,
+    progress_bar=None,
+) -> Dict[str, np.ndarray]:
+    """Random-walk Metropolis MCMC for Omega parameters."""
+    rng = np.random.default_rng(seed + 909)
+    dim = len(theta_hat)
+
+    current = theta_hat.copy()
+    current_lp = -nll_fun(current)
+
+    samples = []
+    accepted = 0
+    proposal_scale = np.ones(dim, dtype=float) * float(proposal_std)
+
+    for i in range(n_steps):
+        proposal = current + rng.normal(0.0, proposal_scale, size=dim)
+        proposal_lp = -nll_fun(proposal)
+        if np.log(rng.uniform()) < proposal_lp - current_lp:
+            current = proposal
+            current_lp = proposal_lp
+            accepted += 1
+        if i >= burn_in:
+            samples.append(current.copy())
+        if progress_bar is not None and (i % max(1, n_steps // 100) == 0 or i == n_steps - 1):
+            progress_bar.progress((i + 1) / n_steps)
+
+    samples_arr = np.asarray(samples, dtype=float)
+    return {
+        "theta_hat": theta_hat.copy(),
+        "samples": samples_arr,
+        "acceptance_rate": np.array([accepted / max(n_steps, 1)]),
+    }
+
+
+def posterior_band_from_samples_rs(
+    theta_samples: np.ndarray,
+    n_components: int,
+    left_right: bool,
+    c0_full: np.ndarray,
+    x_grid: np.ndarray,
+    dt: float,
+    nsteps: int,
+    save_every: int,
+    mobility: np.ndarray,
+    RT: float,
+    x_interface: float,
+    omega_width: float,
+    target_time: float,
+    max_samples: int = 50,
+    progress_bar=None,
+) -> Dict[str, np.ndarray]:
+    """Compute posterior credible band from Omega samples via FDM forward solves."""
+    if theta_samples is None or len(theta_samples) == 0:
+        nan = np.full((len(x_grid), n_components), np.nan)
+        return {"q025": nan, "q500": nan, "q975": nan}
+
+    n_pairs = len(pair_indices_rs(n_components))
+    idx = np.linspace(0, len(theta_samples) - 1, min(max_samples, len(theta_samples))).astype(int)
+
+    profiles = []
+    for k_idx, i in enumerate(idx):
+        th = theta_samples[i]
+        if left_right:
+            theta_l = th[:n_pairs]
+            theta_r = th[n_pairs:2 * n_pairs]
+        else:
+            theta_l = th[:n_pairs]
+            theta_r = theta_l
+        try:
+            t_grid, C_fdm = fdm_ternary_regular_solution(
+                c0_full, x_grid, dt, nsteps, mobility, theta_l, theta_r,
+                RT=RT, x_interface=x_interface, omega_width=omega_width,
+                save_every=save_every,
+            )
+            ti_closest = int(np.argmin(np.abs(t_grid - target_time)))
+            profiles.append(C_fdm[ti_closest])
+        except Exception:
+            profiles.append(np.full((len(x_grid), n_components), np.nan))
+        if progress_bar is not None:
+            progress_bar.progress((k_idx + 1) / len(idx))
+
+    profiles_arr = np.stack(profiles, axis=0)
+    return {
+        "q025": np.nanquantile(profiles_arr, 0.025, axis=0),
+        "q500": np.nanquantile(profiles_arr, 0.500, axis=0),
+        "q975": np.nanquantile(profiles_arr, 0.975, axis=0),
+    }
+
+
+@dataclass
+class TrainResult:
+    model: TernaryDiffusionPINN
+    data: TrainingData
+    history: pd.DataFrame
+    train_time: float
+
+
+def train_pinn(
+    data: TrainingData,
+    log_d11_init: float,
+    log_d22_init: float,
+    rho_raw_init: float,
+    width: int,
+    depth: int,
+    activation: str,
+    epochs: int,
+    lr: float,
+    weights: Dict[str, float],
+    progress=None,
+    status=None,
+    diag_prior_log: Optional[np.ndarray] = None,
+    diag_prior_weight: float = 0.0,
+    fix_diagonal_from_prior: bool = False,
+    diffusion_model_mode: str = "single D",
+    log_d11_right_init: Optional[float] = None,
+    log_d22_right_init: Optional[float] = None,
+    rho_raw_right_init: Optional[float] = None,
+    phase_interface: float = 0.5,
+    phase_width: float = 0.02,
+) -> TrainResult:
+    two_region = str(diffusion_model_mode).lower().startswith("left/right")
+    if two_region:
+        model = TwoRegionTernaryDiffusionPINN(
+            log_d11_init,
+            log_d22_init,
+            rho_raw_init,
+            float(log_d11_right_init if log_d11_right_init is not None else log_d11_init),
+            float(log_d22_right_init if log_d22_right_init is not None else log_d22_init),
+            float(rho_raw_right_init if rho_raw_right_init is not None else rho_raw_init),
+            width,
+            depth,
+            activation,
+            phase_interface=phase_interface,
+            phase_width=phase_width,
+        ).to(DEVICE)
+    else:
+        model = TernaryDiffusionPINN(
+            log_d11_init, log_d22_init, rho_raw_init, width, depth, activation
+        ).to(DEVICE)
+
+    diag_prior_tensor = None
+    if diag_prior_log is not None:
+        diag_prior_arr = np.asarray(diag_prior_log, dtype=float).reshape(-1)
+        diag_prior_tensor = torch.tensor(diag_prior_arr, dtype=DTYPE, device=DEVICE)
+        if fix_diagonal_from_prior:
+            with torch.no_grad():
+                if two_region and diag_prior_tensor.numel() >= 4:
+                    model.log_d11_left.copy_(diag_prior_tensor[0:1])
+                    model.log_d22_left.copy_(diag_prior_tensor[1:2])
+                    model.log_d11_right.copy_(diag_prior_tensor[2:3])
+                    model.log_d22_right.copy_(diag_prior_tensor[3:4])
+                else:
+                    model.log_d11.copy_(diag_prior_tensor[0:1])
+                    model.log_d22.copy_(diag_prior_tensor[1:2])
+            if two_region and diag_prior_tensor.numel() >= 4:
+                model.log_d11_left.requires_grad_(False)
+                model.log_d22_left.requires_grad_(False)
+                model.log_d11_right.requires_grad_(False)
+                model.log_d22_right.requires_grad_(False)
+            else:
+                model.log_d11.requires_grad_(False)
+                model.log_d22.requires_grad_(False)
+
+    opt = torch.optim.Adam([p for p in model.parameters() if p.requires_grad], lr=lr)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+        opt, T_max=max(epochs, 1), eta_min=lr * 0.03
+    )
+    mse = nn.MSELoss()
+
+    x_obs, t_obs, c_obs = to_tensor(data.x_obs), to_tensor(data.t_obs), to_tensor(data.c_obs)
+    x_ic, t_ic, c_ic = to_tensor(data.x_ic), to_tensor(data.t_ic), to_tensor(data.c_ic)
+    x_bc, t_bc, c_bc = to_tensor(data.x_bc), to_tensor(data.t_bc), to_tensor(data.c_bc)
+    x_f, t_f = to_tensor(data.x_f), to_tensor(data.t_f)
+
+    hist = []
+    report_every = max(1, epochs // 160)
+    t0 = time.time()
+
+    for ep in range(1, epochs + 1):
+        opt.zero_grad(set_to_none=True)
+
+        loss_data = mse(model(x_obs, t_obs), c_obs)
+        loss_ic = mse(model(x_ic, t_ic), c_ic)
+        loss_bc = mse(model(x_bc, t_bc), c_bc)
+        res = model.residual_train(x_f, t_f)
+        loss_phys = torch.mean(res * res)
+
+        loss_diag_prior = torch.tensor(0.0, dtype=DTYPE, device=DEVICE)
+        if diag_prior_tensor is not None and float(diag_prior_weight) > 0.0:
+            if two_region and diag_prior_tensor.numel() >= 4:
+                loss_diag_prior = (
+                    (model.log_d11_left[0] - diag_prior_tensor[0]) ** 2
+                    + (model.log_d22_left[0] - diag_prior_tensor[1]) ** 2
+                    + (model.log_d11_right[0] - diag_prior_tensor[2]) ** 2
+                    + (model.log_d22_right[0] - diag_prior_tensor[3]) ** 2
+                )
+            else:
+                loss_diag_prior = (
+                    (model.log_d11[0] - diag_prior_tensor[0]) ** 2
+                    + (model.log_d22[0] - diag_prior_tensor[1]) ** 2
+                )
+
+        loss = (
+            weights["data"] * loss_data
+            + weights["ic"] * loss_ic
+            + weights["bc"] * loss_bc
+            + weights["phys"] * loss_phys
+            + float(diag_prior_weight) * loss_diag_prior
+        )
+        loss.backward()
+        opt.step()
+        scheduler.step()
+
+        if ep == 1 or ep % report_every == 0 or ep == epochs:
+            D = model.diffusion_matrix().detach().cpu().numpy()
+            D_left_hist = D
+            D_right_hist = D
+            if two_region and hasattr(model, "diffusion_matrix_left"):
+                D_left_hist = model.diffusion_matrix_left().detach().cpu().numpy()
+                D_right_hist = model.diffusion_matrix_right().detach().cpu().numpy()
+            rho = D[0, 1] / max(np.sqrt(D[0, 0] * D[1, 1]), 1.0e-14)
+            row = {
+                "epoch": ep,
+                "loss": float(loss.detach().cpu()),
+                "data": float(loss_data.detach().cpu()),
+                "ic": float(loss_ic.detach().cpu()),
+                "bc": float(loss_bc.detach().cpu()),
+                "physics": float(loss_phys.detach().cpu()),
+                "diag_prior": float(loss_diag_prior.detach().cpu()),
+                "D_NiNi": D[0, 0],
+                "D_NiTa": D[0, 1],
+                "D_TaNi": D[1, 0],
+                "D_TaTa": D[1, 1],
+                "D_NiNi_left": D_left_hist[0, 0],
+                "D_NiTa_left": D_left_hist[0, 1],
+                "D_TaTa_left": D_left_hist[1, 1],
+                "D_NiNi_right": D_right_hist[0, 0],
+                "D_NiTa_right": D_right_hist[0, 1],
+                "D_TaTa_right": D_right_hist[1, 1],
+                "rho": rho,
+                "lr": scheduler.get_last_lr()[0],
+            }
+            hist.append(row)
+            if progress is not None:
+                progress.progress(min(ep / epochs, 1.0))
+            if status is not None:
+                status.markdown(
+                    f"**Training on {DEVICE}** `{ep:,}/{epochs:,}` | "
+                    f"loss `{row['loss']:.3e}` | "
+                    f"D=[[{D[0,0]:.3e}, {D[0,1]:+.3e}], "
+                    f"[{D[1,0]:+.3e}, {D[1,1]:.3e}]]"
+                )
+
+    return TrainResult(model=model, data=data, history=pd.DataFrame(hist), train_time=time.time() - t0)
+
+
+@torch.no_grad()
+def predict(model: TernaryDiffusionPINN, x: np.ndarray, t: np.ndarray) -> np.ndarray:
+    return model(to_tensor(x), to_tensor(t)).detach().cpu().numpy()
+
+
+def residual_grid(
+    model: TernaryDiffusionPINN,
+    t_start: float,
+    t_max: float,
+    nx: int = 100,
+    nt: int = 70,
+    chunk_size: int = 1024,
+):
+    """Evaluate residual map in chunks.
+
+    The second derivative still requires a local autograd graph, but chunking
+    prevents one large graph from being built for the full residual grid.
+    """
+    x = np.linspace(0.0, 1.0, nx).reshape(-1, 1)
+    t = np.linspace(t_start, t_max, nt).reshape(-1, 1)
+    X, T = np.meshgrid(x.ravel(), t.ravel())
+    Xf = X.reshape(-1, 1)
+    Tf = T.reshape(-1, 1)
+
+    chunks = []
+    for start in range(0, len(Xf), int(chunk_size)):
+        end = min(start + int(chunk_size), len(Xf))
+        R_chunk = model.residual_eval(to_tensor(Xf[start:end]), to_tensor(Tf[start:end]))
+        chunks.append(R_chunk.detach().cpu().numpy())
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    R = np.vstack(chunks)
+    return x.ravel(), t.ravel(), R.reshape(nt, nx, 2)
+
+
+# =============================================================================
+# Likelihood and reliability
+# =============================================================================
+
+def predict_final_profile_from_theta(
+    theta: np.ndarray,
+    x_query: np.ndarray,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+    use_cache: bool = False,
+) -> np.ndarray:
+    solver = run_fdm_teacher if use_cache else _run_fdm_teacher_core
+    xg, _, Cg, _ = solver(
+        float(theta[0]), float(theta[1]), float(theta[2]), float(t_max), int(nx), int(nt_save)
+    )
+    return np.column_stack([np.interp(x_query, xg, Cg[-1, :, j]) for j in range(3)])
+
+
+def gaussian_nll_from_experiment(
+    theta: np.ndarray,
+    x_exp: np.ndarray,
+    c_exp: np.ndarray,
+    sigma: float,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+) -> float:
+    """Gaussian NLL using independent Ni and Ta components."""
+    sigma_eff = max(float(sigma), 1.0e-8)
+    pred = predict_final_profile_from_theta(theta, x_exp, t_max, nx, nt_save, use_cache=False)
+    residual = c_exp[:, 1:3] - pred[:, 1:3]
+    n = residual.size
+    return float(0.5 * np.sum((residual / sigma_eff) ** 2) + n * np.log(sigma_eff))
+
+
+def gaussian_chi2_from_experiment(
+    theta: np.ndarray,
+    x_exp: np.ndarray,
+    c_exp: np.ndarray,
+    sigma: float,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+) -> Tuple[float, float]:
+    sigma_eff = max(float(sigma), 1.0e-8)
+    pred = predict_final_profile_from_theta(theta, x_exp, t_max, nx, nt_save, use_cache=False)
+    residual = c_exp[:, 1:3] - pred[:, 1:3]
+    chi2 = float(np.sum((residual / sigma_eff) ** 2))
+    dof = max(int(residual.size - 3), 1)
+    return chi2, chi2 / dof
+
+
+def neg_log_posterior(
+    theta: np.ndarray,
+    x_exp: np.ndarray,
+    c_exp: np.ndarray,
+    sigma: float,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+    prior_mean: np.ndarray,
+    prior_std: np.ndarray,
+) -> float:
+    nll = gaussian_nll_from_experiment(theta, x_exp, c_exp, sigma, t_max, nx, nt_save)
+    prior = 0.5 * np.sum(((theta - prior_mean) / prior_std) ** 2)
+    return float(nll + prior)
+
+
+def numerical_hessian(fun, theta0: np.ndarray, step: np.ndarray) -> np.ndarray:
+    n = len(theta0)
+    H = np.zeros((n, n), dtype=float)
+    f0 = fun(theta0)
+    for i in range(n):
+        ei = np.zeros(n)
+        ei[i] = step[i]
+        H[i, i] = (fun(theta0 + ei) - 2.0 * f0 + fun(theta0 - ei)) / (step[i] ** 2)
+        for j in range(i + 1, n):
+            ej = np.zeros(n)
+            ej[j] = step[j]
+            H[i, j] = (
+                fun(theta0 + ei + ej)
+                - fun(theta0 + ei - ej)
+                - fun(theta0 - ei + ej)
+                + fun(theta0 - ei - ej)
+            ) / (4.0 * step[i] * step[j])
+            H[j, i] = H[i, j]
+    return H
+
+
+def laplace_reliability(
+    theta_hat: np.ndarray,
+    x_exp: np.ndarray,
+    c_exp: np.ndarray,
+    sigma: float,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+    prior_mean: np.ndarray,
+    prior_std_scalar: float,
+    hessian_step: float,
+    n_samples: int,
+    seed: int,
+) -> Dict[str, np.ndarray]:
+    """Low-cost local posterior approximation around the PINN estimate.
+
+    The prior mean is intentionally supplied by the user/config, not set to theta_hat.
+    This avoids circular confidence where the prior forces the posterior back to
+    the PINN estimate.
+    """
+    prior_std = np.ones(3, dtype=float) * float(prior_std_scalar)
+    fun = lambda th: neg_log_posterior(
+        th, x_exp, c_exp, sigma, t_max, nx, nt_save, prior_mean, prior_std
+    )
+
+    step = np.ones(3, dtype=float) * float(hessian_step)
+    H_raw = numerical_hessian(fun, theta_hat, step)
+    H_sym = 0.5 * (H_raw + H_raw.T)
+    h_eigval_raw = np.linalg.eigvalsh(H_sym)
+    hessian_min_eig = float(np.nanmin(h_eigval_raw))
+    hessian_non_pd = bool(np.any(h_eigval_raw <= 0.0))
+
+    H = H_sym + 1.0e-8 * np.eye(3)
+    h_eigval_regularized = np.linalg.eigvalsh(H)
+
+    try:
+        cov_unclipped = np.linalg.inv(H)
+        inv_method = "inverse"
+    except np.linalg.LinAlgError:
+        cov_unclipped = np.linalg.pinv(H)
+        inv_method = "pinv"
+
+    cov_eigval_raw, eigvec = np.linalg.eigh(0.5 * (cov_unclipped + cov_unclipped.T))
+    cov_eigval_clipped = np.clip(cov_eigval_raw, 1.0e-10, 10.0)
+    covariance_was_clipped = bool(np.any(np.abs(cov_eigval_raw - cov_eigval_clipped) > 1.0e-14))
+    cov = eigvec @ np.diag(cov_eigval_clipped) @ eigvec.T
+
+    rng = np.random.default_rng(seed)
+    samples = rng.multivariate_normal(theta_hat, cov, size=int(n_samples))
+
+    chi2, red_chi2 = gaussian_chi2_from_experiment(theta_hat, x_exp, c_exp, sigma, t_max, nx, nt_save)
+    return {
+        "theta_hat": theta_hat,
+        "cov": cov,
+        "samples": samples,
+        "chi2": np.array([chi2]),
+        "reduced_chi2": np.array([red_chi2]),
+        "hessian_eigval_raw": h_eigval_raw,
+        "hessian_eigval_regularized": h_eigval_regularized,
+        "hessian_min_eig": np.array([hessian_min_eig]),
+        "hessian_non_pd": np.array([hessian_non_pd], dtype=bool),
+        "cov_eigval_raw": cov_eigval_raw,
+        "cov_eigval_clipped": cov_eigval_clipped,
+        "covariance_was_clipped": np.array([covariance_was_clipped], dtype=bool),
+        "hessian_inverse_method": np.array([inv_method]),
+    }
+
+
+@st.cache_data(show_spinner=False, max_entries=24)
+def cached_laplace_reliability(
+    theta_hat: np.ndarray,
+    x_exp: np.ndarray,
+    c_exp: np.ndarray,
+    sigma: float,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+    prior_mean: np.ndarray,
+    prior_std_scalar: float,
+    hessian_step: float,
+    n_samples: int,
+    seed: int,
+) -> Dict[str, np.ndarray]:
+    """Cached low-cost reliability calculation.
+
+    prior_mean is supplied explicitly by the UI/config and is not forced to
+    theta_hat. This avoids circular confidence where the prior pulls the
+    posterior back to the PINN estimate.
+    """
+    return laplace_reliability(
+        theta_hat=theta_hat,
+        x_exp=x_exp,
+        c_exp=c_exp,
+        sigma=sigma,
+        t_max=t_max,
+        nx=nx,
+        nt_save=nt_save,
+        prior_mean=prior_mean,
+        prior_std_scalar=prior_std_scalar,
+        hessian_step=hessian_step,
+        n_samples=n_samples,
+        seed=seed,
+    )
+
+
+def mcmc_reliability(
+    theta_start: np.ndarray,
+    x_exp: np.ndarray,
+    c_exp: np.ndarray,
+    sigma: float,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+    prior_mean: np.ndarray,
+    prior_std_scalar: float,
+    n_steps: int,
+    burn_in: int,
+    proposal_std: float,
+    seed: int,
+    progress_bar=None,
+) -> Dict[str, np.ndarray]:
+    """Higher-cost random-walk Metropolis posterior sampling.
+
+    Uses the uncached FDM solver to avoid Streamlit cache pollution.
+    """
+    rng = np.random.default_rng(seed + 404)
+    prior_std = np.ones(3, dtype=float) * float(prior_std_scalar)
+
+    current = theta_start.copy()
+    current_lp = -neg_log_posterior(current, x_exp, c_exp, sigma, t_max, nx, nt_save, prior_mean, prior_std)
+
+    samples = []
+    accepted = 0
+    proposal_scale = np.ones(3, dtype=float) * float(proposal_std)
+    n_steps = int(n_steps)
+    burn_in = int(burn_in)
+
+    for i in range(n_steps):
+        proposal = current + rng.normal(0.0, proposal_scale, size=3)
+        proposal_lp = -neg_log_posterior(
+            proposal, x_exp, c_exp, sigma, t_max, nx, nt_save, prior_mean, prior_std
+        )
+
+        if np.log(rng.uniform()) < proposal_lp - current_lp:
+            current = proposal
+            current_lp = proposal_lp
+            accepted += 1
+
+        if i >= burn_in:
+            samples.append(current.copy())
+
+        if progress_bar is not None and (i % max(1, n_steps // 100) == 0 or i == n_steps - 1):
+            progress_bar.progress((i + 1) / n_steps)
+
+    samples = np.asarray(samples, dtype=float)
+    chi2, red_chi2 = gaussian_chi2_from_experiment(theta_start, x_exp, c_exp, sigma, t_max, nx, nt_save)
+    return {
+        "samples": samples,
+        "acceptance_rate": np.array([accepted / max(n_steps, 1)]),
+        "chi2": np.array([chi2]),
+        "reduced_chi2": np.array([red_chi2]),
+    }
+
+
+def D_metrics_from_theta_samples(samples: np.ndarray) -> pd.DataFrame:
+    if samples is None or len(samples) == 0:
+        return pd.DataFrame(columns=["parameter", "mean", "std", "2.5%", "50%", "97.5%"])
+
+    mats = np.asarray([make_spd_matrix_np(s[0], s[1], s[2]) for s in samples])
+    vals = {
+        "D_NiNi": mats[:, 0, 0],
+        "D_NiTa": mats[:, 0, 1],
+        "D_TaNi": mats[:, 1, 0],
+        "D_TaTa": mats[:, 1, 1],
+    }
+
+    rows = []
+    for name, arr in vals.items():
+        rows.append(
+            {
+                "parameter": name,
+                "mean": float(np.mean(arr)),
+                "std": float(np.std(arr, ddof=1)) if len(arr) > 1 else 0.0,
+                "2.5%": float(np.quantile(arr, 0.025)),
+                "50%": float(np.quantile(arr, 0.500)),
+                "97.5%": float(np.quantile(arr, 0.975)),
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def reliability_summary_table(name: str, result_dict: Dict[str, np.ndarray]) -> pd.DataFrame:
+    table = D_metrics_from_theta_samples(result_dict["samples"])
+    table.insert(0, "method", name)
+    return table
+
+
+def posterior_band_from_samples(
+    theta_samples: np.ndarray,
+    x: np.ndarray,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+    max_samples: int = 80,
+    progress_bar=None,
+) -> Dict[str, np.ndarray]:
+    if theta_samples is None or len(theta_samples) == 0:
+        nan = np.full((len(x), 3), np.nan)
+        return {"q025": nan, "q500": nan, "q975": nan}
+
+    idx = np.linspace(0, len(theta_samples) - 1, min(int(max_samples), len(theta_samples))).astype(int)
+    profiles = []
+    for k, i in enumerate(idx):
+        profiles.append(predict_final_profile_from_theta(theta_samples[i], x, t_max, nx, nt_save, use_cache=False))
+        if progress_bar is not None:
+            progress_bar.progress((k + 1) / len(idx))
+
+    profiles = np.stack(profiles, axis=0)
+    return {
+        "q025": np.quantile(profiles, 0.025, axis=0),
+        "q500": np.quantile(profiles, 0.500, axis=0),
+        "q975": np.quantile(profiles, 0.975, axis=0),
+    }
+
+
+
+# =============================================================================
+# Left/right 6-parameter reliability
+# =============================================================================
+
+def theta_lr_from_matrices(D_left: np.ndarray, D_right: np.ndarray) -> np.ndarray:
+    """6-parameter representation for two-region diffusion matrices."""
+    th_l = theta_from_D_matrix(D_left)
+    th_r = theta_from_D_matrix(D_right)
+    return np.concatenate([th_l, th_r]).astype(float)
+
+
+def matrices_from_theta_lr(theta_lr: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    """Return D_left, D_right from theta_lr = [l11_l,l22_l,rho_l,l11_r,l22_r,rho_r]."""
+    theta_lr = np.asarray(theta_lr, dtype=float).reshape(-1)
+    if theta_lr.size != 6:
+        raise ValueError("theta_lr must have 6 elements")
+    D_left = make_spd_matrix_np(theta_lr[0], theta_lr[1], theta_lr[2])
+    D_right = make_spd_matrix_np(theta_lr[3], theta_lr[4], theta_lr[5])
+    return D_left, D_right
+
+
+def predict_final_profile_from_theta_lr(
+    theta_lr: np.ndarray,
+    x_query: np.ndarray,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+    phase_width: float,
+    use_cache: bool = False,
+) -> np.ndarray:
+    """Final profile from left/right FDM with 6 parameters."""
+    solver = run_fdm_teacher_two_region if use_cache else _run_fdm_teacher_core_two_region
+    xg, _, Cg, _, _, _ = solver(
+        float(theta_lr[0]),
+        float(theta_lr[1]),
+        float(theta_lr[2]),
+        float(theta_lr[3]),
+        float(theta_lr[4]),
+        float(theta_lr[5]),
+        float(t_max),
+        int(nx),
+        int(nt_save),
+        float(phase_width),
+    )
+    return np.column_stack([np.interp(x_query, xg, Cg[-1, :, j]) for j in range(3)])
+
+
+def gaussian_nll_from_experiment_lr(
+    theta_lr: np.ndarray,
+    x_exp: np.ndarray,
+    c_exp: np.ndarray,
+    sigma: float,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+    phase_width: float,
+) -> float:
+    """Gaussian NLL for left/right two-region model using independent Ni and Ta components."""
+    sigma_eff = max(float(sigma), 1.0e-8)
+    pred = predict_final_profile_from_theta_lr(theta_lr, x_exp, t_max, nx, nt_save, phase_width, use_cache=False)
+    residual = c_exp[:, 1:3] - pred[:, 1:3]
+    n = residual.size
+    return float(0.5 * np.sum((residual / sigma_eff) ** 2) + n * np.log(sigma_eff))
+
+
+def gaussian_chi2_from_experiment_lr(
+    theta_lr: np.ndarray,
+    x_exp: np.ndarray,
+    c_exp: np.ndarray,
+    sigma: float,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+    phase_width: float,
+) -> Tuple[float, float]:
+    sigma_eff = max(float(sigma), 1.0e-8)
+    pred = predict_final_profile_from_theta_lr(theta_lr, x_exp, t_max, nx, nt_save, phase_width, use_cache=False)
+    residual = c_exp[:, 1:3] - pred[:, 1:3]
+    chi2 = float(np.sum((residual / sigma_eff) ** 2))
+    dof = max(int(residual.size - 6), 1)
+    return chi2, chi2 / dof
+
+
+def neg_log_posterior_lr(
+    theta_lr: np.ndarray,
+    x_exp: np.ndarray,
+    c_exp: np.ndarray,
+    sigma: float,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+    phase_width: float,
+    prior_mean_lr: np.ndarray,
+    prior_std_lr: np.ndarray,
+) -> float:
+    nll = gaussian_nll_from_experiment_lr(theta_lr, x_exp, c_exp, sigma, t_max, nx, nt_save, phase_width)
+    prior = 0.5 * np.sum(((theta_lr - prior_mean_lr) / prior_std_lr) ** 2)
+    return float(nll + prior)
+
+
+def _posterior_result_from_hessian(
+    theta_hat: np.ndarray,
+    H_raw: np.ndarray,
+    n_samples: int,
+    seed: int,
+    chi2: float,
+    red_chi2: float,
+) -> Dict[str, np.ndarray]:
+    """Common Hessian-to-samples conversion with diagnostics."""
+    H_sym = 0.5 * (H_raw + H_raw.T)
+    h_eigval_raw = np.linalg.eigvalsh(H_sym)
+    hessian_min_eig = float(np.nanmin(h_eigval_raw))
+    hessian_non_pd = bool(np.any(h_eigval_raw <= 0.0))
+
+    H = H_sym + 1.0e-8 * np.eye(len(theta_hat))
+    h_eigval_regularized = np.linalg.eigvalsh(H)
+
+    try:
+        cov_unclipped = np.linalg.inv(H)
+        inv_method = "inverse"
+    except np.linalg.LinAlgError:
+        cov_unclipped = np.linalg.pinv(H)
+        inv_method = "pinv"
+
+    cov_eigval_raw, eigvec = np.linalg.eigh(0.5 * (cov_unclipped + cov_unclipped.T))
+    cov_eigval_clipped = np.clip(cov_eigval_raw, 1.0e-10, 10.0)
+    covariance_was_clipped = bool(np.any(np.abs(cov_eigval_raw - cov_eigval_clipped) > 1.0e-14))
+    cov = eigvec @ np.diag(cov_eigval_clipped) @ eigvec.T
+
+    rng = np.random.default_rng(seed)
+    samples = rng.multivariate_normal(theta_hat, cov, size=int(n_samples), method="svd")
+
+    return {
+        "theta_hat": np.asarray(theta_hat, dtype=float),
+        "cov": cov,
+        "samples": samples,
+        "chi2": np.array([chi2]),
+        "reduced_chi2": np.array([red_chi2]),
+        "hessian_eigval_raw": h_eigval_raw,
+        "hessian_eigval_regularized": h_eigval_regularized,
+        "hessian_min_eig": np.array([hessian_min_eig]),
+        "hessian_non_pd": np.array([hessian_non_pd], dtype=bool),
+        "cov_eigval_raw": cov_eigval_raw,
+        "cov_eigval_clipped": cov_eigval_clipped,
+        "covariance_was_clipped": np.array([covariance_was_clipped], dtype=bool),
+        "hessian_inverse_method": np.array([inv_method]),
+    }
+
+
+def laplace_reliability_lr(
+    theta_hat_lr: np.ndarray,
+    x_exp: np.ndarray,
+    c_exp: np.ndarray,
+    sigma: float,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+    phase_width: float,
+    prior_mean_lr: np.ndarray,
+    prior_std_scalar: float,
+    hessian_step: float,
+    n_samples: int,
+    seed: int,
+) -> Dict[str, np.ndarray]:
+    """6D Laplace reliability for two-region left/right D."""
+    theta_hat_lr = np.asarray(theta_hat_lr, dtype=float)
+    prior_mean_lr = np.asarray(prior_mean_lr, dtype=float)
+    prior_std_lr = np.ones(6, dtype=float) * float(prior_std_scalar)
+
+    fun = lambda th: neg_log_posterior_lr(
+        th, x_exp, c_exp, sigma, t_max, nx, nt_save, phase_width, prior_mean_lr, prior_std_lr
+    )
+    step = np.ones(6, dtype=float) * float(hessian_step)
+    H_raw = numerical_hessian(fun, theta_hat_lr, step)
+    chi2, red_chi2 = gaussian_chi2_from_experiment_lr(
+        theta_hat_lr, x_exp, c_exp, sigma, t_max, nx, nt_save, phase_width
+    )
+    return _posterior_result_from_hessian(theta_hat_lr, H_raw, n_samples, seed, chi2, red_chi2)
+
+
+@st.cache_data(show_spinner=False, max_entries=16)
+def cached_laplace_reliability_lr(
+    theta_hat_lr: np.ndarray,
+    x_exp: np.ndarray,
+    c_exp: np.ndarray,
+    sigma: float,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+    phase_width: float,
+    prior_mean_lr: np.ndarray,
+    prior_std_scalar: float,
+    hessian_step: float,
+    n_samples: int,
+    seed: int,
+) -> Dict[str, np.ndarray]:
+    return laplace_reliability_lr(
+        theta_hat_lr=theta_hat_lr,
+        x_exp=x_exp,
+        c_exp=c_exp,
+        sigma=sigma,
+        t_max=t_max,
+        nx=nx,
+        nt_save=nt_save,
+        phase_width=phase_width,
+        prior_mean_lr=prior_mean_lr,
+        prior_std_scalar=prior_std_scalar,
+        hessian_step=hessian_step,
+        n_samples=n_samples,
+        seed=seed,
+    )
+
+
+def mcmc_reliability_lr(
+    theta_start_lr: np.ndarray,
+    x_exp: np.ndarray,
+    c_exp: np.ndarray,
+    sigma: float,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+    phase_width: float,
+    prior_mean_lr: np.ndarray,
+    prior_std_scalar: float,
+    n_steps: int,
+    burn_in: int,
+    proposal_std: float,
+    seed: int,
+    progress_bar=None,
+) -> Dict[str, np.ndarray]:
+    """6D random-walk Metropolis for two-region left/right D."""
+    rng = np.random.default_rng(seed + 909)
+    prior_mean_lr = np.asarray(prior_mean_lr, dtype=float)
+    prior_std_lr = np.ones(6, dtype=float) * float(prior_std_scalar)
+
+    current = np.asarray(theta_start_lr, dtype=float).copy()
+    current_lp = -neg_log_posterior_lr(
+        current, x_exp, c_exp, sigma, t_max, nx, nt_save, phase_width, prior_mean_lr, prior_std_lr
+    )
+
+    samples = []
+    accepted = 0
+    proposal_scale = np.ones(6, dtype=float) * float(proposal_std)
+    n_steps = int(n_steps)
+    burn_in = int(burn_in)
+
+    for i in range(n_steps):
+        proposal = current + rng.normal(0.0, proposal_scale, size=6)
+        proposal_lp = -neg_log_posterior_lr(
+            proposal, x_exp, c_exp, sigma, t_max, nx, nt_save, phase_width, prior_mean_lr, prior_std_lr
+        )
+        if np.log(rng.uniform()) < proposal_lp - current_lp:
+            current = proposal
+            current_lp = proposal_lp
+            accepted += 1
+
+        if i >= burn_in:
+            samples.append(current.copy())
+
+        if progress_bar is not None and (i % max(1, n_steps // 100) == 0 or i == n_steps - 1):
+            progress_bar.progress((i + 1) / n_steps)
+
+    samples = np.asarray(samples, dtype=float)
+    chi2, red_chi2 = gaussian_chi2_from_experiment_lr(
+        theta_start_lr, x_exp, c_exp, sigma, t_max, nx, nt_save, phase_width
+    )
+    return {
+        "theta_hat": np.asarray(theta_start_lr, dtype=float),
+        "samples": samples,
+        "acceptance_rate": np.array([accepted / max(n_steps, 1)]),
+        "chi2": np.array([chi2]),
+        "reduced_chi2": np.array([red_chi2]),
+    }
+
+
+def posterior_band_from_samples_lr(
+    theta_samples_lr: np.ndarray,
+    x: np.ndarray,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+    phase_width: float,
+    max_samples: int = 80,
+    progress_bar=None,
+) -> Dict[str, np.ndarray]:
+    if theta_samples_lr is None or len(theta_samples_lr) == 0:
+        nan = np.full((len(x), 3), np.nan)
+        return {"q025": nan, "q500": nan, "q975": nan}
+
+    idx = np.linspace(0, len(theta_samples_lr) - 1, min(int(max_samples), len(theta_samples_lr))).astype(int)
+    profiles = []
+    for k, i in enumerate(idx):
+        profiles.append(
+            predict_final_profile_from_theta_lr(
+                theta_samples_lr[i], x, t_max, nx, nt_save, phase_width, use_cache=False
+            )
+        )
+        if progress_bar is not None:
+            progress_bar.progress((k + 1) / len(idx))
+
+    profiles = np.stack(profiles, axis=0)
+    return {
+        "q025": np.quantile(profiles, 0.025, axis=0),
+        "q500": np.quantile(profiles, 0.500, axis=0),
+        "q975": np.quantile(profiles, 0.975, axis=0),
+    }
+
+
+def reliability_summary_table_lr(label: str, rel: Dict[str, np.ndarray]) -> pd.DataFrame:
+    samples = np.asarray(rel["samples"], dtype=float)
+    names = [
+        "logD_NiNi_left",
+        "logD_TaTa_left",
+        "rho_raw_left",
+        "logD_NiNi_right",
+        "logD_TaTa_right",
+        "rho_raw_right",
+    ]
+    rows = []
+    for j, name in enumerate(names):
+        vals = samples[:, j]
+        rows.append(
+            {
+                "method": label,
+                "parameter": name,
+                "q025": float(np.quantile(vals, 0.025)),
+                "median": float(np.quantile(vals, 0.5)),
+                "q975": float(np.quantile(vals, 0.975)),
+                "mean": float(np.mean(vals)),
+                "std": float(np.std(vals)),
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def mcmc_trace_plot_lr(theta_samples_lr: np.ndarray):
+    fig = go.Figure()
+    if theta_samples_lr is None or len(theta_samples_lr) == 0:
+        return clean_layout(fig, "Left/right MCMC trace plot", 430)
+    names = [
+        "logD_NiNi_L", "logD_TaTa_L", "rho_L",
+        "logD_NiNi_R", "logD_TaTa_R", "rho_R",
+    ]
+    steps = np.arange(len(theta_samples_lr))
+    for j, name in enumerate(names):
+        fig.add_trace(go.Scatter(x=steps, y=theta_samples_lr[:, j], mode="lines", name=name, line=dict(width=1.5)))
+    fig.update_xaxes(title="saved MCMC sample index")
+    fig.update_yaxes(title="theta value")
+    return clean_layout(fig, "Left/right 6-parameter MCMC trace", 450)
+
+
+def likelihood_contour_grid(
+    theta_center: np.ndarray,
+    x_exp: np.ndarray,
+    c_exp: np.ndarray,
+    sigma: float,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+    axis_i: int,
+    axis_j: int,
+    half_width: float,
+    n_grid: int,
+    prior_mean: Optional[np.ndarray] = None,
+    prior_std_scalar: Optional[float] = None,
+    progress_bar=None,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Compute a 2D NLL or negative log posterior contour grid.
+
+    The third parameter is fixed at theta_center. If prior_mean is supplied,
+    the grid shows negative log posterior; otherwise negative log likelihood.
+    """
+    a = np.linspace(theta_center[axis_i] - half_width, theta_center[axis_i] + half_width, n_grid)
+    b = np.linspace(theta_center[axis_j] - half_width, theta_center[axis_j] + half_width, n_grid)
+    Z = np.zeros((n_grid, n_grid), dtype=float)
+
+    total = int(n_grid * n_grid)
+    done = 0
+    for iy, bv in enumerate(b):
+        for ix, av in enumerate(a):
+            th = theta_center.copy()
+            th[axis_i] = av
+            th[axis_j] = bv
+            if prior_mean is None or prior_std_scalar is None:
+                Z[iy, ix] = gaussian_nll_from_experiment(th, x_exp, c_exp, sigma, t_max, nx, nt_save)
+            else:
+                Z[iy, ix] = neg_log_posterior(
+                    th, x_exp, c_exp, sigma, t_max, nx, nt_save,
+                    prior_mean, np.ones(3) * prior_std_scalar
+                )
+            done += 1
+            if progress_bar is not None:
+                progress_bar.progress(done / max(total, 1))
+
+    Z = Z - np.nanmin(Z)
+    return a, b, Z
+
+
+# =============================================================================
+# Plot helpers
+# =============================================================================
+
+def clean_layout(fig: go.Figure, title: str, height: int = 430, legend_y: float = -0.25) -> go.Figure:
+    fig.update_layout(
+        title=dict(text=title, x=0.01, xanchor="left", y=0.98, yanchor="top"),
+        height=height,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(255,255,255,0.68)",
+        font=dict(color="#334155"),
+        legend=dict(
+            orientation="h",
+            x=0.0,
+            y=legend_y,
+            xanchor="left",
+            yanchor="top",
+            bgcolor="rgba(255,255,255,0.60)",
+            bordercolor="rgba(148,163,184,0.25)",
+            borderwidth=1,
+        ),
+        margin=dict(l=12, r=12, t=75, b=130),
+    )
+    fig.update_xaxes(showgrid=True, gridcolor="rgba(148,163,184,0.25)", zeroline=False)
+    fig.update_yaxes(showgrid=True, gridcolor="rgba(148,163,184,0.25)", zeroline=False)
+    return fig
+
+
+
+def fdm_teacher_preview_plot(
+    x_grid: np.ndarray,
+    t_grid: np.ndarray,
+    C_fdm: np.ndarray,
+    x_exp: np.ndarray,
+    C_exp: np.ndarray,
+    span_um: float = 800.0,
+    n_time_lines: int = 4,
+    annealing_time_h: float = 160.0,
+):
+    """Preview FDM teacher profiles and pseudo experimental points before PINNs training."""
+    fig = go.Figure()
+    dist = distance_um_from_x(x_grid, span_um)
+    exp_dist = distance_um_from_x(x_exp, span_um)
+
+    if len(t_grid) <= 1:
+        idxs = [0]
+    else:
+        idxs = np.unique(np.linspace(0, len(t_grid) - 1, int(max(n_time_lines, 2))).astype(int)).tolist()
+
+    for idx in idxs:
+        line_width = 1.4 if idx != idxs[-1] else 3.0
+        dash = "dot" if idx != idxs[-1] else "solid"
+        label_time = format_time_label(float(t_grid[idx]), float(t_grid[-1]), float(annealing_time_h))
+        for j, comp in enumerate(COMPONENTS):
+            fig.add_trace(
+                go.Scatter(
+                    x=dist,
+                    y=C_fdm[idx, :, j],
+                    mode="lines",
+                    name=f"FDM {comp} {label_time}",
+                    line=dict(width=line_width, dash=dash, color=COLORS[comp]),
+                    opacity=0.45 if idx != idxs[-1] else 1.0,
+                    showlegend=(idx == idxs[-1]),
+                )
+            )
+
+    for j, comp in enumerate(COMPONENTS):
+        fig.add_trace(
+            go.Scatter(
+                x=exp_dist,
+                y=C_exp[:, j],
+                mode="markers",
+                name=f"pseudo-exp {comp}",
+                marker=dict(
+                    symbol=SYMBOLS[comp],
+                    size=7,
+                    color=COLORS[comp],
+                    line=dict(width=1.2),
+                ),
+            )
+        )
+
+    fig.update_xaxes(title="Distance from initial interface (µm)")
+    fig.update_yaxes(title="Mole fraction", range=[-0.04, 1.04])
+    return clean_layout(
+        fig,
+        f"Preview after FDM: teacher profiles and pseudo experimental points; final = {format_time_label(float(t_grid[-1]), float(t_grid[-1]), float(annealing_time_h))}",
+        520,
+    )
+
+
+def fdm_teacher_preview_difference_plot(
+    x_grid: np.ndarray,
+    C_fdm_final: np.ndarray,
+    x_exp: np.ndarray,
+    C_exp: np.ndarray,
+    span_um: float = 800.0,
+):
+    """Preview pseudo-experimental residual against FDM final profile."""
+    dist_exp = distance_um_from_x(x_exp, span_um)
+    fig = go.Figure()
+    for j, comp in enumerate(COMPONENTS):
+        interp_final = np.interp(x_exp.ravel(), x_grid.ravel(), C_fdm_final[:, j])
+        diff = C_exp[:, j] - interp_final
+        fig.add_trace(
+            go.Scatter(
+                x=dist_exp,
+                y=diff,
+                mode="markers",
+                name=f"{comp}: pseudo-exp - FDM",
+                marker=dict(symbol=SYMBOLS[comp], size=7, color=COLORS[comp]),
+            )
+        )
+    fig.add_hline(y=0.0, line_dash="dash", opacity=0.5)
+    fig.update_xaxes(title="Distance from initial interface (µm)")
+    fig.update_yaxes(title="Mole fraction residual")
+    return clean_layout(fig, "Preview residual: pseudo experimental points - FDM final profile", 360)
+
+
+
+def fig11_profile_plot(
+    x,
+    C_fdm_final,
+    C_pinn_final,
+    x_exp,
+    C_exp,
+    span_um: float = 800.0,
+    C_zero_final: Optional[np.ndarray] = None,
+):
+    dist = distance_um_from_x(x, span_um)
+    dist_exp = distance_um_from_x(x_exp, span_um)
+    fig = go.Figure()
+
+    for j, comp in enumerate(COMPONENTS):
+        fig.add_trace(
+            go.Scatter(
+                x=dist_exp,
+                y=C_exp[:, j],
+                mode="markers",
+                name=f"Exp. {comp}",
+                marker=dict(symbol=SYMBOLS[comp], size=7, color=COLORS[comp], line=dict(width=1.4)),
+            )
+        )
+
+    for j, comp in enumerate(COMPONENTS):
+        fig.add_trace(
+            go.Scatter(
+                x=dist,
+                y=C_fdm_final[:, j],
+                mode="lines",
+                name=f"FDM {comp}",
+                line=dict(width=3, color=COLORS[comp]),
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=dist,
+                y=C_pinn_final[:, j],
+                mode="lines",
+                name=f"PINNs {comp}",
+                line=dict(width=2.5, dash="dash", color=COLORS[comp]),
+            )
+        )
+        if C_zero_final is not None:
+            fig.add_trace(
+                go.Scatter(
+                    x=dist,
+                    y=C_zero_final[:, j],
+                    mode="lines",
+                    name=f"Zero-interaction {comp}",
+                    line=dict(width=2.2, dash="dot", color=COLORS[comp]),
+                )
+            )
+
+    fig.update_xaxes(title="Distance (µm)", range=[-0.52 * span_um, 0.52 * span_um])
+    fig.update_yaxes(title="Mole Fraction", range=[-0.04, 1.04])
+    fig.add_annotation(x=0, y=1.0, text="1200 °C for 160 h style", showarrow=False, xanchor="left")
+    return clean_layout(fig, "Fig.11-style Co / Ni-0.10Ta diffusion-couple profile", 560, legend_y=-0.24)
+
+
+def multi_time_profile_plot(x, t, C_fdm, C_pinn, indices, span_um: float = 800.0, annealing_time_h: float = 160.0):
+    dist = distance_um_from_x(x, span_um)
+    fig = go.Figure()
+
+    for j, comp in enumerate(COMPONENTS):
+        for idx in indices:
+            label = format_time_label(float(t[idx]), float(t[-1]), float(annealing_time_h))
+            fig.add_trace(
+                go.Scatter(
+                    x=dist,
+                    y=C_fdm[idx, :, j],
+                    mode="lines",
+                    name=f"FDM {comp} {label}",
+                    line=dict(width=2.2, color=COLORS[comp]),
+                )
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x=dist,
+                    y=C_pinn[idx, :, j],
+                    mode="lines",
+                    name=f"PINNs {comp} {label}",
+                    line=dict(width=2.0, dash="dash", color=COLORS[comp]),
+                )
+            )
+
+    fig.update_xaxes(title="Distance (µm)")
+    fig.update_yaxes(title="Mole fraction")
+    return clean_layout(fig, "Multi-time profile check: Co, Ni, and Ta", 540, legend_y=-0.42)
+
+
+def single_time_profile_plot(
+    x,
+    t,
+    C_fdm,
+    C_pinn,
+    idx: int,
+    span_um: float = 800.0,
+    x_exp: Optional[np.ndarray] = None,
+    C_exp: Optional[np.ndarray] = None,
+    C_zero_time: Optional[np.ndarray] = None,
+    annealing_time_h: float = 160.0,
+):
+    """One profile plot for one selected time.
+
+    This is useful for ternary diffusion-couple checks because a single combined
+    multi-time plot becomes visually crowded. Each figure shows Co, Ni, and Ta
+    for one time slice. Experimental-like markers are overlaid only for the
+    final-time plot because the pseudo experimental data are final profiles.
+    """
+    dist = distance_um_from_x(x, span_um)
+    fig = go.Figure()
+
+    for j, comp in enumerate(COMPONENTS):
+        fig.add_trace(
+            go.Scatter(
+                x=dist,
+                y=C_fdm[idx, :, j],
+                mode="lines",
+                name=f"FDM {comp}",
+                line=dict(width=3, color=COLORS[comp]),
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=dist,
+                y=C_pinn[idx, :, j],
+                mode="lines",
+                name=f"PINNs {comp}",
+                line=dict(width=2.5, dash="dash", color=COLORS[comp]),
+            )
+        )
+        if C_zero_time is not None:
+            fig.add_trace(
+                go.Scatter(
+                    x=dist,
+                    y=C_zero_time[:, j],
+                    mode="lines",
+                    name=f"Zero-interaction {comp}",
+                    line=dict(width=2.2, dash="dot", color=COLORS[comp]),
+                )
+            )
+
+    # Experimental-like points exist only for the final annealing profile.
+    if idx == len(t) - 1 and x_exp is not None and C_exp is not None:
+        dist_exp = distance_um_from_x(x_exp, span_um)
+        for j, comp in enumerate(COMPONENTS):
+            fig.add_trace(
+                go.Scatter(
+                    x=dist_exp,
+                    y=C_exp[:, j],
+                    mode="markers",
+                    name=f"Exp. {comp}",
+                    marker=dict(
+                        symbol=SYMBOLS[comp],
+                        size=6,
+                        color=COLORS[comp],
+                        line=dict(width=1.2),
+                    ),
+                )
+            )
+
+    fig.update_xaxes(title="Distance (µm)")
+    fig.update_yaxes(title="Mole fraction", range=[-0.04, 1.04])
+    return clean_layout(
+        fig,
+        f"Profiles at {format_time_label(float(t[idx]), float(t[-1]), float(annealing_time_h))}",
+        height=430,
+        legend_y=-0.32,
+    )
+
+
+
+def classify_region_from_x(x_vals: np.ndarray, interface: float = 0.5, width: float = 0.03) -> np.ndarray:
+    """Classify points into left/interface/right for two-region diagnostics."""
+    x_vals = np.asarray(x_vals, dtype=float).reshape(-1)
+    w = max(float(width), 0.0)
+    region = np.full(x_vals.shape, "interface", dtype=object)
+    region[x_vals < interface - w] = "left"
+    region[x_vals > interface + w] = "right"
+    return region
+
+
+def predicted_vs_experiment_by_component_plot(
+    C_pred_final: np.ndarray,
+    x_grid: np.ndarray,
+    x_exp: np.ndarray,
+    C_exp: np.ndarray,
+    component_index: int,
+    component_name: str,
+    region_width: float = 0.03,
+):
+    """Predicted-vs-experiment plot for one component with region labels."""
+    pred = np.interp(x_exp.ravel(), x_grid.ravel(), C_pred_final[:, component_index])
+    exp = C_exp[:, component_index]
+    regions = classify_region_from_x(x_exp.ravel(), width=region_width)
+
+    fig = go.Figure()
+    region_symbols = {"left": "circle", "interface": "diamond", "right": "square"}
+    for region_name in ["left", "interface", "right"]:
+        mask = regions == region_name
+        if np.any(mask):
+            fig.add_trace(
+                go.Scatter(
+                    x=pred[mask],
+                    y=exp[mask],
+                    mode="markers",
+                    name=f"{region_name}",
+                    marker=dict(
+                        symbol=region_symbols[region_name],
+                        size=8,
+                        color=COLORS[component_name],
+                        line=dict(width=1.1),
+                    ),
+                )
+            )
+
+    lim_max = max(float(np.nanmax(pred)), float(np.nanmax(exp)), 1.0e-6)
+    fig.add_trace(
+        go.Scatter(
+            x=[0.0, lim_max],
+            y=[0.0, lim_max],
+            mode="lines",
+            name="ideal y=x",
+            line=dict(dash="dash", color="gray"),
+        )
+    )
+    fig.update_xaxes(title=f"PINNs predicted {component_name} mole fraction")
+    fig.update_yaxes(title=f"Experiment-like {component_name} mole fraction")
+    return clean_layout(fig, f"Predicted vs experiment by region: {component_name}", 420)
+
+
+def residual_summary_by_component_region(
+    C_pred_final: np.ndarray,
+    x_grid: np.ndarray,
+    x_exp: np.ndarray,
+    C_exp: np.ndarray,
+    region_width: float = 0.03,
+) -> pd.DataFrame:
+    """Residual summary split by component and left/interface/right region."""
+    regions = classify_region_from_x(x_exp.ravel(), width=region_width)
+    rows = []
+    for j, comp in enumerate(COMPONENTS):
+        pred = np.interp(x_exp.ravel(), x_grid.ravel(), C_pred_final[:, j])
+        exp = C_exp[:, j]
+        res = pred - exp
+        for region_name in ["left", "interface", "right", "all"]:
+            if region_name == "all":
+                mask = np.ones_like(res, dtype=bool)
+            else:
+                mask = regions == region_name
+            if not np.any(mask):
+                continue
+            rr = res[mask]
+            rows.append(
+                {
+                    "component": comp,
+                    "region": region_name,
+                    "n": int(np.sum(mask)),
+                    "mean residual": float(np.mean(rr)),
+                    "MAE": float(np.mean(np.abs(rr))),
+                    "RMSE": float(np.sqrt(np.mean(rr**2))),
+                    "max abs residual": float(np.max(np.abs(rr))),
+                }
+            )
+    return pd.DataFrame(rows)
+
+
+
+def final_difference_plot(x, C_diff_final, span_um: float = 800.0):
+    dist = distance_um_from_x(x, span_um)
+    fig = go.Figure()
+    for j, comp in enumerate(COMPONENTS):
+        fig.add_trace(
+            go.Scatter(
+                x=dist,
+                y=C_diff_final[:, j],
+                mode="lines",
+                name=f"{comp}: PINN-FDM",
+                line=dict(width=2.5, color=COLORS[comp]),
+            )
+        )
+    fig.add_hline(y=0.0, line_dash="dash", opacity=0.6)
+    fig.update_xaxes(title="Distance (µm)")
+    fig.update_yaxes(title="Mole fraction difference")
+    return clean_layout(fig, "Final-profile difference: PINN - FDM", 430)
+
+
+def zero_interaction_difference_plot(x, C_pinn_final, C_zero_final, span_um: float = 800.0):
+    """Difference between optimized PINN profile and zero-interaction reference."""
+    dist = distance_um_from_x(x, span_um)
+    fig = go.Figure()
+    for j, comp in enumerate(COMPONENTS):
+        fig.add_trace(
+            go.Scatter(
+                x=dist,
+                y=C_pinn_final[:, j] - C_zero_final[:, j],
+                mode="lines",
+                name=f"{comp}: PINN - zero-interaction",
+                line=dict(width=2.5, color=COLORS[comp]),
+            )
+        )
+    fig.add_hline(y=0.0, line_dash="dash", opacity=0.6)
+    fig.update_xaxes(title="Distance (µm)")
+    fig.update_yaxes(title="Mole fraction difference")
+    return clean_layout(fig, "Effect of interaction term: optimized PINN - zero-interaction reference", 430)
+
+
+def heatmap_diff_plot(x, t, C_diff, comp_index: int, span_um: float = 800.0):
+    dist = distance_um_from_x(x, span_um)
+    comp = COMPONENTS[comp_index]
+    fig = go.Figure(
+        data=[
+            go.Heatmap(
+                x=dist,
+                y=t,
+                z=C_diff[:, :, comp_index],
+                colorscale="RdBu",
+                zmid=0,
+                colorbar=dict(title="diff"),
+            )
+        ]
+    )
+    fig.update_xaxes(title="Distance (µm)")
+    fig.update_yaxes(title="normalized time")
+    return clean_layout(fig, f"Difference map: {comp} PINN - FDM", 430)
+
+
+def loss_plot(hist: pd.DataFrame):
+    fig = go.Figure()
+    for col in ["loss", "data", "ic", "bc", "physics"]:
+        fig.add_trace(go.Scatter(x=hist["epoch"], y=hist[col], mode="lines", name=col))
+    fig.update_xaxes(title="epoch")
+    fig.update_yaxes(title="loss", type="log")
+    return clean_layout(fig, "Loss functions", 430)
+
+
+def D_history_plot(hist: pd.DataFrame, D_true: np.ndarray):
+    fig = go.Figure()
+    entries = [("D_NiNi", D_true[0, 0]), ("D_NiTa", D_true[0, 1]), ("D_TaTa", D_true[1, 1])]
+    y_values = []
+    for name, true_val in entries:
+        fig.add_trace(go.Scatter(x=hist["epoch"], y=hist[name], mode="lines", name=f"PINN {name}"))
+        fig.add_hline(y=float(true_val), line_dash="dash", opacity=0.45)
+        y_values.extend(np.asarray(hist[name], dtype=float).tolist())
+        y_values.append(float(true_val))
+
+    y_values = np.asarray([v for v in y_values if np.isfinite(v)], dtype=float)
+    if len(y_values) > 4:
+        lo, hi = np.quantile(y_values, [0.02, 0.98])
+        if np.isclose(lo, hi):
+            pad = max(abs(hi), 1.0) * 0.1
+            lo, hi = lo - pad, hi + pad
+        else:
+            pad = 0.12 * (hi - lo)
+            lo, hi = lo - pad, hi + pad
+        fig.update_yaxes(range=[lo, hi])
+    fig.add_annotation(
+        xref="paper", yref="paper", x=0.01, y=0.98,
+        text="robust y-range: 2–98% quantile",
+        showarrow=False,
+        font=dict(size=11, color="#64748b"),
+    )
+    fig.update_xaxes(title="epoch")
+    fig.update_yaxes(title="diffusion matrix value, linear scale")
+    return clean_layout(fig, "Estimated diffusion-matrix parameters", 430)
+
+
+def predicted_vs_experiment_plot(C_pinn_final: np.ndarray, x: np.ndarray, x_exp: np.ndarray, C_exp: np.ndarray):
+    C_pred_at_exp = np.column_stack([np.interp(x_exp, x, C_pinn_final[:, j]) for j in range(3)])
+    fig = go.Figure()
+    for j, comp in enumerate(COMPONENTS):
+        fig.add_trace(
+            go.Scatter(
+                x=C_pred_at_exp[:, j],
+                y=C_exp[:, j],
+                mode="markers",
+                name=comp,
+                marker=dict(symbol="circle-open", size=7, color=COLORS[comp], line=dict(width=1.4)),
+            )
+        )
+    fig.add_trace(go.Scatter(x=[0, 1], y=[0, 1], mode="lines", name="y=x", line=dict(dash="dash", color="gray")))
+    fig.update_xaxes(title="PINN predicted mole fraction", range=[-0.03, 1.03])
+    fig.update_yaxes(title="experiment-like mole fraction", range=[-0.03, 1.03])
+    return clean_layout(fig, "Experiment-like data vs PINN prediction", 460)
+
+
+def diffusion_matrix_table(D_true: np.ndarray, D_pinn: np.ndarray) -> pd.DataFrame:
+    rows = []
+    labels = [["D_NiNi", "D_NiTa"], ["D_TaNi", "D_TaTa"]]
+    for i in range(2):
+        for j in range(2):
+            rows.append(
+                {
+                    "parameter": labels[i][j],
+                    "FDM true": D_true[i, j],
+                    "PINN estimated": D_pinn[i, j],
+                    "absolute error": abs(D_pinn[i, j] - D_true[i, j]),
+                }
+            )
+    return pd.DataFrame(rows)
+
+
+
+
+# =============================================================================
+# CALPHAD / DICTRA comparison helpers
+# =============================================================================
+
+def physical_to_normalized_D(D_phys: np.ndarray, length_um: float, time_h: float) -> np.ndarray:
+    """Convert physical diffusivity [m^2/s] to normalized diffusivity.
+
+    x_norm = x / L, t_norm = t / t_scale:
+        D_norm = D_phys * t_scale / L^2
+    """
+    L = max(float(length_um), 1.0e-12) * 1.0e-6
+    ts = max(float(time_h), 1.0e-12) * 3600.0
+    return np.asarray(D_phys, dtype=float) * ts / (L * L)
+
+
+def normalized_to_physical_D(D_norm: np.ndarray, length_um: float, time_h: float) -> np.ndarray:
+    """Convert normalized diffusivity to physical diffusivity [m^2/s]."""
+    L = max(float(length_um), 1.0e-12) * 1.0e-6
+    ts = max(float(time_h), 1.0e-12) * 3600.0
+    return np.asarray(D_norm, dtype=float) * (L * L) / ts
+
+
+def normalized_scalar_to_physical_D(value_norm: float, length_um: float, time_h: float) -> float:
+    """Convert one normalized diffusivity scalar to physical [m^2/s]."""
+    L = max(float(length_um), 1.0e-12) * 1.0e-6
+    ts = max(float(time_h), 1.0e-12) * 3600.0
+    return float(value_norm) * (L * L) / ts
+
+
+def safe_log_from_positive(value: float, fallback: float) -> float:
+    value = float(value)
+    if np.isfinite(value) and value > 0:
+        return float(np.log(value))
+    return float(fallback)
+
+
+def calphad_required_columns(kind: str) -> list:
+    if kind == "matrix":
+        return ["D_NiNi", "D_NiTa", "D_TaNi", "D_TaTa"]
+    if kind == "profile":
+        return ["distance_um", "Co", "Ni", "Ta"]
+    return []
+
+
+def validate_columns(df: pd.DataFrame, required: list) -> Tuple[bool, str]:
+    missing = [c for c in required if c not in df.columns]
+    if missing:
+        return False, "Missing columns: " + ", ".join(missing)
+    return True, ""
+
+
+def representative_calphad_matrix(df: pd.DataFrame) -> np.ndarray:
+    """Use median values as representative CALPHAD/DICTRA D matrix."""
+    return np.array(
+        [
+            [float(np.nanmedian(df["D_NiNi"])), float(np.nanmedian(df["D_NiTa"]))],
+            [float(np.nanmedian(df["D_TaNi"])), float(np.nanmedian(df["D_TaTa"]))],
+        ],
+        dtype=float,
+    )
+
+
+def matrix_rows_for_comparison(
+    D_pinn_norm: np.ndarray,
+    D_true_norm: np.ndarray,
+    D_zero_norm: Optional[np.ndarray],
+    D_calphad_phys: Optional[np.ndarray],
+    length_um: float,
+    time_h: float,
+) -> pd.DataFrame:
+    labels = [["D_NiNi", "D_NiTa"], ["D_TaNi", "D_TaTa"]]
+    D_pinn_phys = normalized_to_physical_D(D_pinn_norm, length_um, time_h)
+    D_true_phys = normalized_to_physical_D(D_true_norm, length_um, time_h)
+    D_zero_phys = None if D_zero_norm is None else normalized_to_physical_D(D_zero_norm, length_um, time_h)
+
+    rows = []
+    for i in range(2):
+        for j in range(2):
+            row = {
+                "parameter": labels[i][j],
+                "PINNs normalized": D_pinn_norm[i, j],
+                "PINNs physical [m2/s]": D_pinn_phys[i, j],
+                "FDM true physical [m2/s]": D_true_phys[i, j],
+            }
+            if D_zero_phys is not None:
+                row["zero-interaction physical [m2/s]"] = D_zero_phys[i, j]
+            if D_calphad_phys is not None:
+                c = D_calphad_phys[i, j]
+                p = D_pinn_phys[i, j]
+                row["CALPHAD/DICTRA physical [m2/s]"] = c
+                row["PINNs - CALPHAD [m2/s]"] = p - c
+                row["relative error vs CALPHAD [%]"] = np.nan if abs(c) < 1.0e-300 else 100.0 * (p - c) / abs(c)
+                row["sign agreement"] = "yes" if np.sign(p) == np.sign(c) or abs(p) < 1.0e-300 or abs(c) < 1.0e-300 else "no"
+            rows.append(row)
+    return pd.DataFrame(rows)
+
+
+def D_matrix_bar_plot(compare_df: pd.DataFrame):
+    fig = go.Figure()
+    params = compare_df["parameter"].tolist()
+    if "PINNs physical [m2/s]" in compare_df:
+        fig.add_trace(go.Bar(x=params, y=compare_df["PINNs physical [m2/s]"], name="PINNs"))
+    if "CALPHAD/DICTRA physical [m2/s]" in compare_df:
+        fig.add_trace(go.Bar(x=params, y=compare_df["CALPHAD/DICTRA physical [m2/s]"], name="CALPHAD/DICTRA"))
+    if "zero-interaction physical [m2/s]" in compare_df:
+        fig.add_trace(go.Bar(x=params, y=compare_df["zero-interaction physical [m2/s]"], name="zero-interaction"))
+    fig.update_yaxes(title="D [m²/s]", type="linear")
+    return clean_layout(fig, "Physical diffusion matrix comparison", 450)
+
+
+def calphad_D_composition_plot(df: pd.DataFrame, D_pinn_phys: np.ndarray):
+    """Plot CALPHAD D values over composition/row index with PINNs constant D as lines."""
+    fig = go.Figure()
+    xcol = None
+    for cand in ["x_Ta", "x_Ni", "distance_um", "index"]:
+        if cand in df.columns:
+            xcol = cand
+            break
+    if xcol is None:
+        xvals = np.arange(len(df))
+        xtitle = "row index"
+    else:
+        xvals = df[xcol].to_numpy()
+        xtitle = xcol
+
+    mapping = {
+        "D_NiNi": (0, 0),
+        "D_NiTa": (0, 1),
+        "D_TaNi": (1, 0),
+        "D_TaTa": (1, 1),
+    }
+    for name, (i, j) in mapping.items():
+        if name in df.columns:
+            fig.add_trace(go.Scatter(x=xvals, y=df[name], mode="lines+markers", name=f"CALPHAD {name}"))
+            fig.add_trace(
+                go.Scatter(
+                    x=[np.nanmin(xvals), np.nanmax(xvals)],
+                    y=[D_pinn_phys[i, j], D_pinn_phys[i, j]],
+                    mode="lines",
+                    name=f"PINNs {name}",
+                    line=dict(dash="dash"),
+                )
+            )
+    fig.update_xaxes(title=xtitle)
+    fig.update_yaxes(title="D [m²/s]")
+    return clean_layout(fig, "CALPHAD/DICTRA D(x) with PINNs constant-D reference", 520)
+
+
+def dictra_profile_overlay_plot(
+    profile_df: pd.DataFrame,
+    x: np.ndarray,
+    C_pinn_final: np.ndarray,
+    x_exp: np.ndarray,
+    C_exp: np.ndarray,
+    C_zero_final: Optional[np.ndarray],
+    span_um: float,
+):
+    dist = distance_um_from_x(x, span_um)
+    fig = go.Figure()
+
+    for j, comp in enumerate(COMPONENTS):
+        fig.add_trace(
+            go.Scatter(
+                x=dist,
+                y=C_pinn_final[:, j],
+                mode="lines",
+                name=f"PINNs {comp}",
+                line=dict(width=2.8, dash="dash", color=COLORS[comp]),
+            )
+        )
+        if C_zero_final is not None:
+            fig.add_trace(
+                go.Scatter(
+                    x=dist,
+                    y=C_zero_final[:, j],
+                    mode="lines",
+                    name=f"Zero {comp}",
+                    line=dict(width=2.0, dash="dot", color=COLORS[comp]),
+                )
+            )
+        fig.add_trace(
+            go.Scatter(
+                x=profile_df["distance_um"],
+                y=profile_df[comp],
+                mode="lines",
+                name=f"DICTRA/CALPHAD {comp}",
+                line=dict(width=2.5, color=COLORS[comp]),
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=distance_um_from_x(x_exp, span_um),
+                y=C_exp[:, j],
+                mode="markers",
+                name=f"Exp-like {comp}",
+                marker=dict(symbol=SYMBOLS[comp], size=6, color=COLORS[comp], line=dict(width=1.1)),
+            )
+        )
+
+    fig.update_xaxes(title="Distance from interface / Matano plane (µm)")
+    fig.update_yaxes(title="Mole fraction", range=[-0.04, 1.04])
+    return clean_layout(fig, "Profile overlay: PINNs / zero-interaction / DICTRA-CALPHAD / experiment", 560)
+
+
+def mobility_from_D_and_phi(D_phys: np.ndarray, phi: np.ndarray) -> np.ndarray:
+    """Effective mobility-like matrix M_eff = D * inv(Phi).
+
+    This is a diagnostic, not a direct DICTRA mobility database parameter.
+    """
+    phi = np.asarray(phi, dtype=float)
+    return np.asarray(D_phys, dtype=float) @ np.linalg.pinv(phi)
+
+
+
+def mcmc_trace_plot(theta_samples: np.ndarray):
+    """Trace plot for MCMC theta samples."""
+    fig = go.Figure()
+    if theta_samples is None or len(theta_samples) == 0:
+        return clean_layout(fig, "MCMC trace plot", 430)
+
+    names = ["log_d11", "log_d22", "rho_raw"]
+    steps = np.arange(len(theta_samples))
+    for j, name in enumerate(names):
+        fig.add_trace(
+            go.Scatter(
+                x=steps,
+                y=theta_samples[:, j],
+                mode="lines",
+                name=name,
+                line=dict(width=1.8),
+            )
+        )
+    fig.update_xaxes(title="saved MCMC sample index")
+    fig.update_yaxes(title="theta value")
+    return clean_layout(fig, "MCMC trace plot: sampled internal parameters", 430)
+
+
+def posterior_parameter_plot(samples_low: np.ndarray, samples_high: Optional[np.ndarray] = None):
+    """Posterior intervals on a linear y-axis.
+
+    Off-diagonal diffusion terms can be negative. Therefore this plot must not
+    use an ordinary log scale.
+    """
+    fig = go.Figure()
+
+    low_df = D_metrics_from_theta_samples(samples_low)
+    for k, (_, row) in enumerate(low_df.iterrows()):
+        fig.add_trace(
+            go.Scatter(
+                x=[row["parameter"]],
+                y=[row["50%"]],
+                error_y=dict(
+                    type="data",
+                    symmetric=False,
+                    array=[row["97.5%"] - row["50%"]],
+                    arrayminus=[row["50%"] - row["2.5%"]],
+                ),
+                mode="markers",
+                name="Laplace low-cost",
+                showlegend=(k == 0),
+                marker=dict(size=10),
+            )
+        )
+
+    if samples_high is not None and len(samples_high) > 5:
+        high_df = D_metrics_from_theta_samples(samples_high)
+        for k, (_, row) in enumerate(high_df.iterrows()):
+            fig.add_trace(
+                go.Scatter(
+                    x=[row["parameter"]],
+                    y=[row["50%"]],
+                    error_y=dict(
+                        type="data",
+                        symmetric=False,
+                        array=[row["97.5%"] - row["50%"]],
+                        arrayminus=[row["50%"] - row["2.5%"]],
+                    ),
+                    mode="markers",
+                    name="MCMC high-cost",
+                    showlegend=(k == 0),
+                    marker=dict(size=10, symbol="diamond"),
+                )
+            )
+
+    fig.add_hline(y=0.0, line_dash="dash", opacity=0.45)
+    fig.update_yaxes(title="diffusion matrix parameter, linear scale")
+    fig.update_xaxes(title="parameter")
+    return clean_layout(fig, "Posterior intervals of inferred interaction coefficients", 470)
+
+
+
+# =============================================================================
+# Abstract / conference validation helpers
+# =============================================================================
+
+def flatten_D_region_rows(
+    D_left_true: np.ndarray,
+    D_right_true: np.ndarray,
+    D_left_pred: np.ndarray,
+    D_right_pred: np.ndarray,
+    D_avg_true: np.ndarray,
+    D_avg_pred: np.ndarray,
+) -> pd.DataFrame:
+    """Compare true and estimated left/right diffusion matrices."""
+    rows = []
+    labels = [["D_NiNi", "D_NiTa"], ["D_TaNi", "D_TaTa"]]
+    for region, Dt, Dp in [
+        ("left", D_left_true, D_left_pred),
+        ("right", D_right_true, D_right_pred),
+        ("average", D_avg_true, D_avg_pred),
+    ]:
+        for i in range(2):
+            for j in range(2):
+                true_val = float(Dt[i, j])
+                pred_val = float(Dp[i, j])
+                rows.append(
+                    {
+                        "region": region,
+                        "parameter": labels[i][j],
+                        "true": true_val,
+                        "PINNs_estimate": pred_val,
+                        "absolute_error": pred_val - true_val,
+                        "relative_error_percent": np.nan if abs(true_val) < 1.0e-300 else 100.0 * (pred_val - true_val) / abs(true_val),
+                        "sign_agreement": bool(np.sign(true_val) == np.sign(pred_val) or abs(true_val) < 1.0e-300 or abs(pred_val) < 1.0e-300),
+                    }
+                )
+    return pd.DataFrame(rows)
+
+
+def profile_rmse_against_exp(
+    C_pred_final: np.ndarray,
+    x_grid: np.ndarray,
+    x_exp: np.ndarray,
+    C_exp: np.ndarray,
+    label: str,
+    region_width: float = 0.03,
+) -> pd.DataFrame:
+    """RMSE/MAE summary for a final profile against experiment-like points."""
+    regions = classify_region_from_x(x_exp.ravel(), width=region_width)
+    rows = []
+    for j, comp in enumerate(COMPONENTS):
+        pred = np.interp(x_exp.ravel(), x_grid.ravel(), C_pred_final[:, j])
+        exp = C_exp[:, j]
+        res = pred - exp
+        for region_name in ["left", "interface", "right", "all"]:
+            mask = np.ones_like(res, dtype=bool) if region_name == "all" else (regions == region_name)
+            if not np.any(mask):
+                continue
+            rr = res[mask]
+            rows.append(
+                {
+                    "model": label,
+                    "component": comp,
+                    "region": region_name,
+                    "n": int(np.sum(mask)),
+                    "MAE": float(np.mean(np.abs(rr))),
+                    "RMSE": float(np.sqrt(np.mean(rr**2))),
+                    "bias": float(np.mean(rr)),
+                    "max_abs": float(np.max(np.abs(rr))),
+                }
+            )
+    return pd.DataFrame(rows)
+
+
+def abstract_validation_metrics(
+    x_grid: np.ndarray,
+    C_pinn_final: np.ndarray,
+    C_fdm_final: np.ndarray,
+    x_exp: np.ndarray,
+    C_exp: np.ndarray,
+    D_true: np.ndarray,
+    D_true_left: np.ndarray,
+    D_true_right: np.ndarray,
+    D_pinn: np.ndarray,
+    D_pinn_left: np.ndarray,
+    D_pinn_right: np.ndarray,
+    C_zero_final: Optional[np.ndarray],
+    region_width: float,
+) -> Dict[str, pd.DataFrame]:
+    """Build validation tables for abstract-level reporting."""
+    D_compare = flatten_D_region_rows(
+        D_true_left, D_true_right, D_pinn_left, D_pinn_right, D_true, D_pinn
+    )
+
+    rmse_tables = [
+        profile_rmse_against_exp(C_pinn_final, x_grid, x_exp, C_exp, "PINNs", region_width=region_width),
+        profile_rmse_against_exp(C_fdm_final, x_grid, x_exp, C_exp, "FDM_teacher", region_width=region_width),
+    ]
+    if C_zero_final is not None:
+        rmse_tables.append(profile_rmse_against_exp(C_zero_final, x_grid, x_exp, C_exp, "zero_interaction", region_width=region_width))
+    rmse_df = pd.concat(rmse_tables, ignore_index=True)
+
+    all_rows = rmse_df[rmse_df["region"] == "all"].copy()
+    pivot = all_rows.pivot_table(index="component", columns="model", values="RMSE", aggfunc="first").reset_index()
+    if "PINNs" in pivot.columns and "zero_interaction" in pivot.columns:
+        pivot["RMSE_improvement_vs_zero_percent"] = 100.0 * (pivot["zero_interaction"] - pivot["PINNs"]) / np.maximum(pivot["zero_interaction"], 1.0e-300)
+    if "PINNs" in pivot.columns and "FDM_teacher" in pivot.columns:
+        pivot["PINNs_over_FDM_teacher_RMSE_ratio"] = pivot["PINNs"] / np.maximum(pivot["FDM_teacher"], 1.0e-300)
+
+    return {
+        "D_compare": D_compare,
+        "profile_rmse": rmse_df,
+        "rmse_improvement": pivot,
+    }
+
+
+def abstract_validation_summary_text(metrics: Dict[str, pd.DataFrame]) -> str:
+    """Generate a compact conference-abstract style summary."""
+    ddf = metrics["D_compare"]
+    rdf = metrics["rmse_improvement"]
+
+    cross = ddf[ddf["parameter"].isin(["D_NiTa", "D_TaNi"]) & ddf["region"].isin(["left", "right"])]
+    sign_ok = int(cross["sign_agreement"].sum()) if len(cross) else 0
+    sign_total = int(len(cross))
+
+    msg = []
+    msg.append("Synthetic diffusion-couple validation was performed using known left/right interdiffusion matrices.")
+    if sign_total:
+        msg.append(f"The inferred cross terms recovered the correct sign in {sign_ok}/{sign_total} left/right cross-term entries.")
+    if "RMSE_improvement_vs_zero_percent" in rdf.columns:
+        vals = rdf["RMSE_improvement_vs_zero_percent"].replace([np.inf, -np.inf], np.nan).dropna()
+        if len(vals):
+            msg.append(f"Compared with the zero-interaction reference, the PINNs profile reduced the component-wise RMSE by a median of {float(np.nanmedian(vals)):.1f}%.")
+    msg.append("These results support the use of physics-informed inverse analysis as a screening tool for CALPHAD/DICTRA mobility-description validation.")
+    return " ".join(msg)
+
+
+def multi_time_pseudo_exp_rmse_table(
+    model,
+    x_exp_all: np.ndarray,
+    t_exp_all: np.ndarray,
+    c_exp_all: np.ndarray,
+) -> pd.DataFrame:
+    """RMSE of PINNs prediction against multi-time pseudo-exp points."""
+    pred = predict(model, x_exp_all.reshape(-1, 1), t_exp_all.reshape(-1, 1))
+    rows = []
+    unique_t = np.unique(t_exp_all.reshape(-1))
+    for tv in unique_t:
+        mask = np.isclose(t_exp_all.reshape(-1), tv)
+        for j, comp in enumerate(COMPONENTS):
+            res = pred[mask, j] - c_exp_all[mask, j]
+            rows.append(
+                {
+                    "tau": float(tv),
+                    "component": comp,
+                    "n": int(np.sum(mask)),
+                    "MAE": float(np.mean(np.abs(res))),
+                    "RMSE": float(np.sqrt(np.mean(res**2))),
+                    "bias": float(np.mean(res)),
+                }
+            )
+    all_res = pred - c_exp_all
+    for j, comp in enumerate(COMPONENTS):
+        res = all_res[:, j]
+        rows.append(
+            {
+                "tau": "all",
+                "component": comp,
+                "n": int(len(res)),
+                "MAE": float(np.mean(np.abs(res))),
+                "RMSE": float(np.sqrt(np.mean(res**2))),
+                "bias": float(np.mean(res)),
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def multi_time_pseudo_exp_rmse_plot(mt_df: pd.DataFrame, annealing_time_h: float, tau_max: float):
+    fig = go.Figure()
+    plot_df = mt_df[mt_df["tau"] != "all"].copy()
+    if len(plot_df) == 0:
+        return clean_layout(fig, "Multi-time pseudo-exp RMSE", 420)
+    plot_df["real_time_h"] = plot_df["tau"].astype(float) / max(float(tau_max), 1.0e-14) * float(annealing_time_h)
+    for comp in COMPONENTS:
+        sub = plot_df[plot_df["component"] == comp]
+        fig.add_trace(
+            go.Scatter(
+                x=sub["real_time_h"],
+                y=sub["RMSE"],
+                mode="lines+markers",
+                name=comp,
+                line=dict(width=2.4, color=COLORS[comp]),
+                marker=dict(symbol=SYMBOLS[comp], size=8),
+            )
+        )
+    fig.update_xaxes(title="Real time equivalent (h)")
+    fig.update_yaxes(title="RMSE vs multi-time pseudo-exp")
+    return clean_layout(fig, "Multi-time pseudo-exp validation", 420)
+
+
+
+def abstract_validation_plot(metrics: Dict[str, pd.DataFrame]):
+    """Compact plot of RMSE improvement over zero-interaction."""
+    fig = go.Figure()
+    df = metrics["rmse_improvement"]
+    if "RMSE_improvement_vs_zero_percent" in df.columns:
+        fig.add_trace(
+            go.Bar(
+                x=df["component"],
+                y=df["RMSE_improvement_vs_zero_percent"],
+                name="RMSE improvement vs zero-interaction",
+            )
+        )
+    fig.add_hline(y=0.0, line_dash="dash", opacity=0.5)
+    fig.update_xaxes(title="Component")
+    fig.update_yaxes(title="RMSE improvement [%]")
+    return clean_layout(fig, "Abstract validation: improvement over zero-interaction", 420)
+
+
+
+def posterior_band_fig11_plot(
+    x: np.ndarray,
+    x_exp: np.ndarray,
+    C_exp: np.ndarray,
+    C_pinn_final: np.ndarray,
+    band: Dict[str, np.ndarray],
+    span_um: float,
+    title: str,
+):
+    dist = distance_um_from_x(x, span_um)
+    dist_exp = distance_um_from_x(x_exp, span_um)
+
+    fig = go.Figure()
+    for j, comp in enumerate(COMPONENTS):
+        fig.add_trace(
+            go.Scatter(
+                x=dist,
+                y=band["q975"][:, j],
+                mode="lines",
+                line=dict(width=0, color=COLORS[comp]),
+                showlegend=False,
+                hoverinfo="skip",
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=dist,
+                y=band["q025"][:, j],
+                mode="lines",
+                line=dict(width=0, color=COLORS[comp]),
+                fill="tonexty",
+                name=f"95% band {comp}",
+                opacity=0.18,
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=dist,
+                y=C_pinn_final[:, j],
+                mode="lines",
+                name=f"PINN fit {comp}",
+                line=dict(width=2.5, dash="dash", color=COLORS[comp]),
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=dist_exp,
+                y=C_exp[:, j],
+                mode="markers",
+                name=f"Exp. {comp}",
+                marker=dict(symbol=SYMBOLS[comp], size=7, color=COLORS[comp], line=dict(width=1.2)),
+            )
+        )
+
+    fig.update_xaxes(title="Distance (µm)")
+    fig.update_yaxes(title="Mole Fraction", range=[-0.04, 1.04])
+    return clean_layout(fig, title, 560, legend_y=-0.30)
+
+
+def likelihood_contour_plot(
+    grid_x: np.ndarray,
+    grid_y: np.ndarray,
+    Z: np.ndarray,
+    x_label: str,
+    y_label: str,
+    theta_hat: np.ndarray,
+    axis_i: int,
+    axis_j: int,
+):
+    fig = go.Figure(
+        data=[
+            go.Contour(
+                x=grid_x,
+                y=grid_y,
+                z=Z,
+                contours=dict(showlabels=True),
+                colorbar=dict(title="ΔNLL"),
+                colorscale="Viridis",
+            )
+        ]
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=[theta_hat[axis_i]],
+            y=[theta_hat[axis_j]],
+            mode="markers",
+            name="PINN estimate",
+            marker=dict(size=11, symbol="x"),
+        )
+    )
+    fig.update_xaxes(title=x_label)
+    fig.update_yaxes(title=y_label)
+    return clean_layout(fig, "Likelihood / posterior contour around inferred parameters", 500)
+
+
+
+def render_mcmc_explanation_expander(location: str = "main"):
+    """Render an explanatory MCMC block in the Streamlit GUI."""
+    with st.expander("MCMC信頼度評価の計算内容を表示", expanded=False):
+        st.markdown(
+            """
+### MCMCで何をしているか
+
+このアプリのMCMCは、PINNsを毎回再学習する処理ではありません。  
+PINNsで得た推定値を出発点として、候補となる拡散パラメータを少しずつ動かし、そのたびにFDMを解いて実験点との尤度を評価します。
+
+| 項目 | 内容 |
+|---|---|
+| 出発点 | PINNs推定値 `theta_hat` |
+| サンプリング対象 | `theta = [log_d11, log_d22, rho_raw]` |
+| forward model | FDM、`_run_fdm_teacher_core()` |
+| 比較対象 | `x_exp`, `c_exp` |
+| 尤度 | Gaussian likelihood |
+| 事前分布 | `prior_mean`, `prior_std` |
+| サンプラー | Random-walk Metropolis |
+| 出力 | posterior samples, acceptance rate, credible band |
+
+#### 1ステップで行う計算
+
+| 順序 | 処理 |
+|---:|---|
+| 1 | 現在の `theta` から候補 `theta_proposal` を作る |
+| 2 | 候補 `theta_proposal` を拡散行列 `D` に変換する |
+| 3 | その `D` でFDMを解き、最終プロファイルを計算する |
+| 4 | 実験点位置に補間する |
+| 5 | Ni/Ta成分の残差からGaussian NLLを計算する |
+| 6 | 事前分布ペナルティを加えて負の対数事後分布を作る |
+| 7 | Metropolis基準で候補を採択または棄却する |
+| 8 | burn-in後のサンプルを保存する |
+
+#### 内部パラメータと拡散行列
+
+```text
+theta = [log_d11, log_d22, rho_raw]
+
+D_NiNi = exp(log_d11)
+D_TaTa = exp(log_d22)
+rho    = 0.95 tanh(rho_raw)
+D_NiTa = D_TaNi = rho sqrt(D_NiNi D_TaTa)
+```
+
+#### 採択率の見方
+
+| acceptance rate | 解釈 | 調整 |
+|---:|---|---|
+| `< 0.1` | 候補が遠すぎて棄却されやすい | `proposal std` を下げる |
+| `0.2〜0.5` | まずは妥当な範囲 | そのまま様子を見る |
+| `> 0.6` | 候補が近すぎて探索が遅い | `proposal std` を上げる |
+
+#### 計算コスト
+
+MCMCは各ステップでFDMを解くため、計算時間は概ね次のように増えます。
+
+```text
+計算時間 ≈ MCMC steps × FDM 1回分の計算時間
+```
+
+そのため、まずは `MCMC steps = 700〜1000` 程度で挙動を確認し、必要に応じて `2000〜3000` に増やすのが安全です。
+
+#### 注意点
+
+現在の実装は、3成分すべてに同じ `proposal_std` を使う等方的なrandom-walk Metropolisです。  
+研究用途では、パラメータごとに異なるproposal幅、複数チェーン、trace plot、自己相関、R-hatなどの収束診断を追加すると、より信頼性の高いMCMC解析になります。
+"""
+        )
+
+
+def render_mcmc_quick_hint(run_high_cost_mcmc: bool, mcmc_steps: int, mcmc_burn: int, mcmc_proposal: float):
+    """Small always-visible MCMC status hint."""
+    if run_high_cost_mcmc:
+        effective = max(int(mcmc_steps) - int(mcmc_burn), 0)
+        st.info(
+            f"MCMC is ON: {int(mcmc_steps):,} steps, burn-in {int(mcmc_burn):,}, "
+            f"saved samples {effective:,}, proposal std {float(mcmc_proposal):.3f}. "
+            "Each step solves an FDM forward problem."
+        )
+    else:
+        st.caption(
+            "High-cost MCMC is OFF. Turn it on only after the PINNs/Laplace result looks reasonable, "
+            "because MCMC repeatedly solves the FDM forward model."
+        )
+
+
+
+# =============================================================================
+# Main UI
+# =============================================================================
+
+st.markdown(
+    """
+<div class="hero">
+  <div class="hero-title">Fig.11-style Co / Ni-0.10Ta Diffusion Couple</div>
+  <div class="hero-sub">
+    Co / Ni-0.10Ta 三元拡散対の濃度プロファイルを FDM・PINN・実験点風データで比較します。
+    PINN は Ni/Ta の有効相互拡散行列を推定し、尤度に基づく信頼度をバンドとして可視化します。
+  </div>
+</div>
+""",
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    """
+<div class="note">
+<b>Initial diffusion couple</b>: left = pure Co, right = Ni-0.10Ta.<br>
+<b>Independent components</b>: Ni and Ta. Co is computed as 1 - Ni - Ta.<br>
+<b>Model</b>: u<sub>t</sub> = ∂<sub>x</sub>(D ∂<sub>x</sub>u), where u=[x<sub>Ni</sub>, x<sub>Ta</sub>].<br>
+<b>Reliability</b>: low-cost Laplace approximation and high-cost FDM-based MCMC.
+</div>
+""",
+    unsafe_allow_html=True,
+)
+
+with st.sidebar:
+    st.markdown("## Controls")
+    st.caption(f"PINN device: {DEVICE}")
+    st.caption("LR schedule: CosineAnnealingLR, eta_min = 0.03 × initial LR")
+    if torch.cuda.is_available():
+        st.success(f"CUDA: {torch.cuda.get_device_name(0)}")
+    else:
+        st.warning("CUDA is not available. Training runs on CPU.")
+
+    st.markdown("### Analysis mode")
+    pinn_analysis_mode = st.selectbox(
+        "PINN analysis mode",
+        ["Fickian D matrix", "Regular-solution chemical potential"],
+        index=0,
+        help=(
+            "Fickian D matrix: traditional approach, flux = -D grad(c). "
+            "Regular-solution chemical potential: flux = M grad(mu), where mu "
+            "is derived from a regular-solution free-energy model with trainable "
+            "Omega pair-interaction terms."
+        ),
+    )
+    use_chemical_potential = (pinn_analysis_mode == "Regular-solution chemical potential")
+    if use_chemical_potential:
+        st.info(
+            "化学ポテンシャルモード: Regular-solution モデルで Omega 相互作用項を推定します。\n\n"
+            "PDE: c_t = div(M grad(μ)),  μ_i - μ_ref = RT ln(c_i/c_ref) + Σ_b (Ω_ib - Ω_rb) c_b"
+        )
+
+    st.markdown("### True diffusion matrix for FDM")
+    st.caption("Values are normalized, not physical SI units.")
+    fdm_teacher_mode = st.selectbox(
+        "FDM teacher diffusion model",
+        ["single D", "left/right D"],
+        index=1,
+        help="Use left/right D for FCC/BCC-like examples with strongly different diffusivities.",
+    )
+    fcc_bcc_preset = st.selectbox(
+        "example true-D preset",
+        ["manual", "TOFA abstract validation", "FCC-left slow / BCC-right fast"],
+        index=1,
+        help="Preset normalized values. TOFA abstract validation is designed to be stable and visibly non-trivial.",
+    )
+    if fcc_bcc_preset == "TOFA abstract validation":
+        # Moderate left/right contrast: large enough to show asymmetric diffusion,
+        # but not so extreme that PINNs/MCMC becomes unstable for a quick abstract-level demo.
+        default_l11, default_l22, default_rho_l = -5.20, -7.00, -0.20
+        default_r11, default_r22, default_rho_r = -3.20, -5.00, -0.35
+        st.success(
+            "TOFA abstract validation preset: left/right D contrast is about 7–8×. "
+            "This is intended for reproducible synthetic validation and abstract figures."
+        )
+    elif fcc_bcc_preset == "FCC-left slow / BCC-right fast":
+        default_l11, default_l22, default_rho_l = -7.00, -10.00, -0.15
+        default_r11, default_r22, default_rho_r = -2.40, -5.40, -0.35
+        st.info(
+            "FCC/BCC contrast preset: left side is slow, right side is fast. "
+            "Approximate contrast: D_NiNi right/left ≈ 100 and D_TaTa right/left ≈ 100. "
+            "PINNs initial values are aligned with these defaults unless you change them."
+        )
+    else:
+        default_l11, default_l22, default_rho_l = -3.15, -4.00, -0.35
+        default_r11, default_r22, default_rho_r = -3.15, -4.00, -0.35
+
+    log_d11_true = st.slider("left/single log D_NiNi true", -12.0, -1.0, float(default_l11), 0.05)
+    log_d22_true = st.slider("left/single log D_TaTa true", -12.0, -1.0, float(default_l22), 0.05)
+    rho_raw_true = st.slider("left/single coupling raw rho true", -2.5, 2.5, float(default_rho_l), 0.05)
+
+    log_d11_true_right = float(log_d11_true)
+    log_d22_true_right = float(log_d22_true)
+    rho_raw_true_right = float(rho_raw_true)
+    if fdm_teacher_mode == "left/right D":
+        st.markdown("#### Right-side true D for FDM")
+        log_d11_true_right = st.slider("right log D_NiNi true", -12.0, -1.0, float(default_r11), 0.05)
+        log_d22_true_right = st.slider("right log D_TaTa true", -12.0, -1.0, float(default_r22), 0.05)
+        rho_raw_true_right = st.slider("right coupling raw rho true", -2.5, 2.5, float(default_rho_r), 0.05)
+
+    st.markdown("### FDM teacher / experiment-like points")
+    t_max = st.slider("annealing time, normalized", 0.02, 1.00, 0.22, 0.01)
+    nx_fdm = st.select_slider("FDM spatial grid", options=[121, 161, 201, 251, 301], value=201)
+    nt_fdm = st.select_slider("FDM saved frames", options=[40, 60, 80, 100, 140], value=80)
+    span_um = st.slider("plot distance span, µm", 400.0, 1200.0, 800.0, 50.0)
+    multi_time_count = st.slider("multi-time profile slices", 3, 9, 5, 1)
+    multi_time_columns = st.selectbox("multi-time plot columns", [1, 2, 3], index=1)
+    show_zero_interaction_reference = st.checkbox(
+        "show zero-interaction reference",
+        value=True,
+        help="Force D_NiTa = D_TaNi = 0 while keeping selected diagonal terms.",
+    )
+    zero_interaction_source = st.selectbox(
+        "zero-interaction diagonal source",
+        ["PINN estimated diagonals", "FDM true diagonals"],
+        index=0,
+        help="Choose the diagonal terms used for the zero-interaction reference.",
+    )
+    noise = st.slider("pseudo experimental noise", 0.000, 0.050, 0.008, 0.001)
+    n_exp_points = st.slider("experimental-like points per time", 30, 120, 64, 2)
+    pseudo_exp_time_mode = st.selectbox(
+        "pseudo-exp time mode",
+        ["final only", "multi-time"],
+        index=1 if str(fcc_bcc_preset) == "TOFA abstract validation" else 0,
+        help="Use multi-time pseudo experimental data to improve identifiability of cross-interdiffusion terms.",
+    )
+    pseudo_exp_time_slices = st.slider(
+        "pseudo-exp time slices",
+        1,
+        8,
+        4 if str(fcc_bcc_preset) == "TOFA abstract validation" else 1,
+        1,
+        help="Number of FDM time slices used to generate experiment-like data. Final time is always included.",
+    )
+    append_pseudo_exp_to_training = st.checkbox(
+        "append pseudo-exp points to PINNs observations",
+        value=True,
+        help="If ON, pseudo experimental points are also used as supervised observation points during PINNs training.",
+    )
+    t_start_fraction = st.slider("PINN start time / total time", 0.005, 0.150, 0.030, 0.005)
+    seed = st.number_input("random seed", min_value=1, max_value=999999, value=7, step=1)
+
+    st.markdown("### Training points")
+    n_obs = st.slider("sparse observations", 50, 2000, 500, 10)
+    n_ic = st.slider("initial profile points at t_start", 30, 800, 240, 10)
+    n_bc_each = st.slider("boundary points per side", 20, 500, 120, 10)
+    n_f = st.slider("collocation points", 300, 12000, 3600, 100)
+
+    st.markdown("### PINNs")
+    st.caption("By default, PINNs initial D values are aligned with the FDM teacher true-D preset.")
+    log_d11_init = st.slider("left/single initial log D_NiNi", -12.0, -1.0, float(default_l11), 0.05)
+    log_d22_init = st.slider("left/single initial log D_TaTa", -12.0, -1.0, float(default_l22), 0.05)
+    rho_raw_init = st.slider("left/single initial coupling raw rho", -2.5, 2.5, float(default_rho_l), 0.05)
+    width = st.select_slider("network width", options=[24, 32, 48, 64, 96, 128], value=64)
+    depth = st.select_slider("network depth", options=[2, 3, 4, 5, 6], value=4)
+    activation = st.selectbox("activation", ["tanh", "silu", "gelu"], index=0)
+    epochs = st.slider("epochs", 300, 15000, 6000, 100)
+    lr = st.select_slider(
+        "learning rate", options=[1e-4, 3e-4, 1e-3, 3e-3], value=3e-4,
+        format_func=lambda v: f"{v:.0e}"
+    )
+
+    st.markdown("### Diffusion-couple / PINNs stability")
+    diffusion_model_mode = st.selectbox(
+        "PINNs diffusion model",
+        ["single D", "left/right D"],
+        index=1,
+        help="Use one diffusion matrix over the domain, or separate left/right matrices smoothly blended near the interface.",
+    )
+    phase_interface_width = st.slider("phase interface width", 0.001, 0.080, 0.020, 0.001)
+
+    log_d11_right_init = float(log_d11_init)
+    log_d22_right_init = float(log_d22_init)
+    rho_raw_right_init = float(rho_raw_init)
+    if diffusion_model_mode == "left/right D":
+        st.markdown("#### Right-side PINNs initial D")
+        log_d11_right_init = st.slider("right initial log D_NiNi", -12.0, -1.0, float(default_r11), 0.05)
+        log_d22_right_init = st.slider("right initial log D_TaTa", -12.0, -1.0, float(default_r22), 0.05)
+        rho_raw_right_init = st.slider("right initial coupling raw rho", -2.5, 2.5, float(default_rho_r), 0.05)
+    with st.expander("拡散対PINNsの注意", expanded=False):
+        st.markdown(
+            """
+拡散対の初期条件は階段状で、数学的には不連続です。現在のデータ生成では `PINN start time / total time` で `t=0` を避け、FDMで少し拡散した後の滑らかなプロファイルを初期条件としてPINNsに与えています。
+
+| 設定 | 推奨 |
+|---|---|
+| `PINN start time / total time` | `0.01`〜`0.05` 程度 |
+| `w_ic` | 小さめ、例: `2`〜`5` |
+| `diffusion model` | 左右で結晶構造が異なるなら `left/right D` |
+| `phase interface width` | `0.01`〜`0.03` 程度 |
+
+`left/right D` では、固定界面近傍で以下のように拡散行列を滑らかに接続します。
+
+```text
+D(x) = (1 - s(x)) D_left + s(x) D_right
+s(x) = 0.5 * [1 + tanh((x - x_interface) / width)]
+```
+
+これは厳密なDICTRA型の移動境界・局所平衡モデルではありませんが、左右で結晶構造や拡散速度が異なる効果をPINNs/FDMの枠内で扱うための実用的な近似です。
+"""
+        )
+
+    st.markdown("### Paper / CALPHAD basis")
+    st.caption("論文・DICTRAと同じ基準で比較するための物理スケールと自己拡散係数です。")
+    paper_T_C = st.number_input("paper temperature, °C", value=1200.0, step=10.0)
+    paper_time_h = st.number_input("paper annealing time, h", value=160.0, step=10.0)
+    paper_length_um = st.number_input(
+        "physical length scale L, µm",
+        value=float(span_um),
+        min_value=1.0,
+        step=50.0,
+        help="Normalized x in [0,1] is mapped to a physical length scale L. D_phys = D_norm * L^2 / t.",
+    )
+
+    # TOFA abstract preset:
+    # Use known diagonal entries as fixed anchors so the inverse problem focuses on
+    # cross-interdiffusion terms relative to a Darken/zero-interaction reference.
+    is_tofa_abstract_preset = (str(fcc_bcc_preset) == "TOFA abstract validation")
+    if is_tofa_abstract_preset:
+        st.success(
+            "TOFA abstract validation default: diagonal terms are fixed from the FDM-teacher true diagonal values. "
+            "The main inferred quantities are the cross-interdiffusion terms."
+        )
+
+    use_self_diffusion = st.checkbox(
+        "use available self-diffusion coefficients in PINNs",
+        value=bool(is_tofa_abstract_preset),
+        help="Use literature/CALPHAD self or tracer diffusion values as diagonal anchors for D_NiNi and D_TaTa.",
+    )
+
+    # Default values. For TOFA abstract validation, use the FDM-teacher true
+    # diagonal values converted from normalized units to m^2/s.
+    self_D_Ni_phys = 0.0
+    self_D_Ta_phys = 0.0
+    self_D_Ni_left_phys = 0.0
+    self_D_Ta_left_phys = 0.0
+    self_D_Ni_right_phys = 0.0
+    self_D_Ta_right_phys = 0.0
+
+    if use_self_diffusion:
+        if diffusion_model_mode == "single D":
+            default_single_D_Ni_phys = normalized_scalar_to_physical_D(np.exp(float(log_d11_true)), paper_length_um, paper_time_h) if is_tofa_abstract_preset else 0.0
+            default_single_D_Ta_phys = normalized_scalar_to_physical_D(np.exp(float(log_d22_true)), paper_length_um, paper_time_h) if is_tofa_abstract_preset else 0.0
+
+            st.markdown("#### Single-region self-diffusion anchors")
+            st.caption("全領域を1つの有効拡散行列で近似する場合に使います。")
+            self_D_Ni_phys = st.number_input(
+                "single-region D_NiNi prior [m²/s]",
+                value=float(default_single_D_Ni_phys),
+                format="%.4e",
+                help="single Dモデル用のNi対角項アンカーです。",
+            )
+            self_D_Ta_phys = st.number_input(
+                "single-region D_TaTa prior [m²/s]",
+                value=float(default_single_D_Ta_phys),
+                format="%.4e",
+                help="single Dモデル用のTa対角項アンカーです。",
+            )
+        else:
+            default_left_D_Ni_phys = normalized_scalar_to_physical_D(np.exp(float(log_d11_true)), paper_length_um, paper_time_h) if is_tofa_abstract_preset else 0.0
+            default_left_D_Ta_phys = normalized_scalar_to_physical_D(np.exp(float(log_d22_true)), paper_length_um, paper_time_h) if is_tofa_abstract_preset else 0.0
+            default_right_D_Ni_phys = normalized_scalar_to_physical_D(np.exp(float(log_d11_true_right)), paper_length_um, paper_time_h) if is_tofa_abstract_preset else 0.0
+            default_right_D_Ta_phys = normalized_scalar_to_physical_D(np.exp(float(log_d22_true_right)), paper_length_um, paper_time_h) if is_tofa_abstract_preset else 0.0
+
+            st.markdown("#### Left/right self-diffusion anchors")
+            st.caption("左右で結晶構造・相・CALPHAD/DICTRAデータが異なる場合に使います。")
+            if is_tofa_abstract_preset:
+                st.caption("TOFA概要用プリセットでは、これら4つの対角項はFDM教師のtrue diagonalから自動設定されています。")
+            lr_col1, lr_col2 = st.columns(2)
+            with lr_col1:
+                st.markdown("**Left region**")
+                self_D_Ni_left_phys = st.number_input(
+                    "left-region D_NiNi prior [m²/s]",
+                    value=float(default_left_D_Ni_phys),
+                    format="%.4e",
+                    help="左側相/構造のNi対角拡散アンカーです。",
+                )
+                self_D_Ta_left_phys = st.number_input(
+                    "left-region D_TaTa prior [m²/s]",
+                    value=float(default_left_D_Ta_phys),
+                    format="%.4e",
+                    help="左側相/構造のTa対角拡散アンカーです。",
+                )
+            with lr_col2:
+                st.markdown("**Right region**")
+                self_D_Ni_right_phys = st.number_input(
+                    "right-region D_NiNi prior [m²/s]",
+                    value=float(default_right_D_Ni_phys),
+                    format="%.4e",
+                    help="右側相/構造のNi対角拡散アンカーです。",
+                )
+                self_D_Ta_right_phys = st.number_input(
+                    "right-region D_TaTa prior [m²/s]",
+                    value=float(default_right_D_Ta_phys),
+                    format="%.4e",
+                    help="右側相/構造のTa対角拡散アンカーです。",
+                )
+
+    diag_constraint_default_index = 3 if is_tofa_abstract_preset else 0
+    diag_constraint_mode = st.selectbox(
+        "self-diffusion use mode",
+        ["free", "initialize only", "weak diagonal prior", "fix diagonal terms"],
+        index=diag_constraint_default_index,
+        help="Use available self-diffusion values as initialization, weak prior, or fixed diagonal terms.",
+    )
+    diag_prior_weight = st.slider("self-diffusion prior weight", 0.0, 200.0, 10.0, 1.0)
+
+    if is_tofa_abstract_preset and diag_constraint_mode != "fix diagonal terms":
+        st.warning(
+            "TOFA abstract validation is designed around fixed diagonal terms. "
+            "Changing this mode is useful for sensitivity analysis, but the default abstract claim assumes fixed diagonals."
+        )
+
+    with st.expander("Paper basis note", expanded=False):
+        st.markdown(
+            """
+| 基準 | このアプリでの扱い |
+|---|---|
+| phase | FCC γ相を想定 |
+| temperature | 既定値 1200 °C |
+| annealing time | 既定値 160 h |
+| composition unit | mole fraction |
+| dependent component | Co |
+| independent components | Ni, Ta |
+| diffusion frame | CALPHAD/DICTRA比較では volume-fixed interdiffusion coefficient を推奨 |
+
+自己拡散係数を使う場合は、物理単位 `[m²/s]` から内部の無次元Dへ変換します。
+
+```text
+D_norm = D_phys * t_scale / L_scale^2
+```
+
+`diffusion model = single D` の場合は、全領域で共有する対角項 `D_NiNi`, `D_TaTa` のアンカーとして使います。  
+`diffusion model = left/right D` の場合は、左領域・右領域それぞれの対角項アンカーとして使います。  
+`TOFA abstract validation` プリセットでは、これらの対角項を固定し、主に交差項 `D_NiTa`, `D_TaNi` をPINNsで推定する設計です。
+"""
+        )
+
+    with st.expander("Loss weights", expanded=False):
+        w_data = st.slider("w_data", 0.1, 100.0, 25.0, 0.1)
+        w_ic = st.slider("w_ic", 0.1, 100.0, 12.0, 0.1)
+        w_bc = st.slider("w_bc", 0.1, 100.0, 12.0, 0.1)
+        w_phys = st.slider("w_physics", 0.1, 100.0, 10.0, 0.1)
+
+    # --- Chemical potential (Omega) specific controls ---
+    if use_chemical_potential:
+        st.markdown("### Regular-solution Omega settings")
+        st.caption("Ωの順序: (Co,Ni), (Co,Ta), (Ni,Ta)")
+        omega_left_true_str = st.text_input("教師Ω left (true)", value="2.5,1.0,3.5")
+        omega_left_init_str = st.text_input("初期Ω left (init)", value="1.5,0.5,2.0")
+        learn_lr_omega = st.checkbox("左右別々のΩを学習", value=True)
+        omega_right_true_str = st.text_input("教師Ω right (true)", value=omega_left_true_str, disabled=not learn_lr_omega)
+        omega_right_init_str = st.text_input("初期Ω right (init)", value=omega_left_init_str, disabled=not learn_lr_omega)
+        rs_RT = st.number_input("RT (regular-solution)", min_value=0.01, max_value=10.0, value=1.0, step=0.1)
+        rs_M_diag = st.number_input("mobility diagonal M", min_value=1.0e-5, max_value=1.0, value=2.0e-2, step=1.0e-3, format="%.5f")
+        rs_M_offdiag = st.number_input("mobility off-diagonal", min_value=-0.5, max_value=0.5, value=0.0, step=1.0e-3, format="%.5f")
+        rs_fdm_dt = st.number_input("FDM dt for Omega teacher", min_value=1.0e-7, max_value=1.0e-3, value=1.0e-5, step=1.0e-6, format="%.2e")
+        rs_fdm_nsteps = st.number_input("FDM steps for Omega teacher", min_value=10, max_value=100000, value=4000, step=500)
+        rs_fdm_save_every = st.number_input("FDM save_every", min_value=1, max_value=10000, value=100, step=10)
+        rs_n_collocation = st.number_input("collocation points/epoch", min_value=8, max_value=50000, value=2000, step=500)
+        rs_w_omega_prior = st.slider("Omega prior regularization weight", 0.0, 50.0, 0.0, 0.5)
+        do_fdm_refine = st.checkbox("PINN後にFDM尤度でΩを再最適化", value=True,
+                                     help="相互作用項の精度を上げるための重要ステップ。")
+        fdm_refine_maxiter = st.number_input("FDM再最適化 maxiter", min_value=10, max_value=2000, value=180, step=10)
+        rs_n_obs_random = st.number_input("random observation points (RS)", min_value=0, max_value=50000, value=2500, step=500)
+        rs_n_exp_time_slices = st.number_input("pseudo-exp 時刻数 (RS)", min_value=1, max_value=20, value=4, step=1)
+        rs_n_exp_points = st.number_input("pseudo-exp 点数/時刻 (RS)", min_value=4, max_value=500, value=48, step=4)
+        rs_like_sigma = st.slider("likelihood sigma (RS)", 0.001, 0.080, 0.008, 0.001)
+        rs_hessian_step = st.slider("Laplace Hessian step (RS)", 0.005, 0.150, 0.030, 0.005)
+        rs_laplace_samples = st.slider("Laplace posterior samples (RS)", 200, 5000, 800, 100)
+        rs_band_samples = st.slider("FDM samples for credible band (RS)", 10, 150, 50, 10)
+        rs_run_mcmc = st.checkbox("Run MCMC for Omega reliability", value=False)
+        rs_mcmc_steps = st.slider("MCMC steps (RS)", 100, 3000, 600, 100)
+        rs_mcmc_burn = st.slider("MCMC burn-in (RS)", 0, 1500, 150, 50)
+        rs_mcmc_proposal = st.slider("MCMC proposal std (RS)", 0.005, 0.300, 0.035, 0.005)
+        rs_skip_reliability = st.checkbox("Skip Omega reliability evaluation", value=False)
+
+    st.markdown("### Reliability")
+    st.caption("Low-cost = Laplace approximation. High-cost = FDM-based MCMC.")
+    like_sigma = st.slider("likelihood sigma", 0.001, 0.080, max(float(noise), 0.008), 0.001)
+    rel_nx = st.select_slider("reliability FDM grid", options=[61, 81, 101, 121, 151], value=81)
+    rel_nt = st.select_slider("reliability saved frames", options=[20, 25, 35, 45], value=25)
+
+    st.caption("Independent prior center, not automatically centered on PINN estimate.")
+    prior_log_d11 = st.slider("prior mean log D_NiNi", -7.0, -1.0, -3.3, 0.05)
+    prior_log_d22 = st.slider("prior mean log D_TaTa", -8.0, -1.0, -4.1, 0.05)
+    prior_rho_raw = st.slider("prior mean rho_raw", -2.5, 2.5, 0.0, 0.05)
+    prior_std = st.slider("theta prior std", 0.2, 8.0, 3.0, 0.1)
+    hessian_step = st.slider("Laplace Hessian step", 0.005, 0.150, 0.035, 0.005)
+    laplace_samples = st.slider("Laplace posterior samples", 200, 5000, 1200, 100)
+    band_samples = st.slider("FDM samples for credible band", 10, 150, 60, 10)
+
+    run_high_cost_mcmc = st.checkbox("Run high-cost MCMC reliability", value=False)
+    mcmc_steps = st.slider("MCMC steps", 100, 3000, 700, 100)
+    mcmc_burn = st.slider("MCMC burn-in", 0, 1500, 200, 50)
+    mcmc_proposal = st.slider("MCMC proposal std", 0.005, 0.300, 0.045, 0.005)
+
+    with st.expander("MCMC設定の読み方", expanded=False):
+        st.markdown(
+            """
+| 設定 | 意味 |
+|---|---|
+| `MCMC steps` | 提案・採択判定を行う総ステップ数 |
+| `MCMC burn-in` | 初期値の影響が強い前半サンプルを捨てる数 |
+| `MCMC proposal std` | 候補パラメータを動かす幅 |
+
+`proposal std` が大きすぎると採択率が下がり、小さすぎると探索が遅くなります。  
+まずは `0.03〜0.06` 程度から試すのが無難です。
+"""
+        )
+
+    with st.expander("Likelihood contour", expanded=False):
+        contour_n = st.slider("contour grid size", 7, 25, 11, 2)
+        contour_half_width = st.slider("contour half width in theta", 0.05, 1.0, 0.35, 0.05)
+        contour_axis_pair = st.selectbox(
+            "contour axes",
+            ["logD_NiNi vs logD_TaTa", "logD_NiNi vs rho_raw", "logD_TaTa vs rho_raw"],
+        )
+
+    run = st.button("Run Fig.11-style FDM → PINN", type="primary", use_container_width=True)
+
+
+if "fig11_result_v12" not in st.session_state:
+    st.session_state.fig11_result_v12 = None
+    st.session_state.fig11_inputs_v12 = None
+
+
+if run:
+    set_seed(int(seed))
+
+    self_D_norm = None
+    self_log_diag = None
+    self_D_norm_lr = None
+    self_log_diag_lr = None
+    if bool(use_self_diffusion) and float(self_D_Ni_phys) > 0.0 and float(self_D_Ta_phys) > 0.0:
+        self_D_phys_matrix = np.array([[float(self_D_Ni_phys), 0.0], [0.0, float(self_D_Ta_phys)]], dtype=float)
+        self_D_norm = physical_to_normalized_D(self_D_phys_matrix, float(paper_length_um), float(paper_time_h))
+        self_log_diag = np.array([
+            safe_log_from_positive(self_D_norm[0, 0], log_d11_init),
+            safe_log_from_positive(self_D_norm[1, 1], log_d22_init),
+        ], dtype=float)
+
+    lr_self_available = (
+        float(self_D_Ni_left_phys) > 0.0 and float(self_D_Ta_left_phys) > 0.0
+        and float(self_D_Ni_right_phys) > 0.0 and float(self_D_Ta_right_phys) > 0.0
+    )
+    if bool(use_self_diffusion) and lr_self_available:
+        D_left_phys = np.array([[float(self_D_Ni_left_phys), 0.0], [0.0, float(self_D_Ta_left_phys)]], dtype=float)
+        D_right_phys = np.array([[float(self_D_Ni_right_phys), 0.0], [0.0, float(self_D_Ta_right_phys)]], dtype=float)
+        D_left_norm = physical_to_normalized_D(D_left_phys, float(paper_length_um), float(paper_time_h))
+        D_right_norm = physical_to_normalized_D(D_right_phys, float(paper_length_um), float(paper_time_h))
+        self_D_norm_lr = {"left": D_left_norm, "right": D_right_norm}
+        self_log_diag_lr = np.array([
+            safe_log_from_positive(D_left_norm[0, 0], log_d11_init),
+            safe_log_from_positive(D_left_norm[1, 1], log_d22_init),
+            safe_log_from_positive(D_right_norm[0, 0], log_d11_init),
+            safe_log_from_positive(D_right_norm[1, 1], log_d22_init),
+        ], dtype=float)
+
+    log_d11_train_init = float(log_d11_init)
+    log_d22_train_init = float(log_d22_init)
+    log_d11_right_train_init = float(log_d11_right_init)
+    log_d22_right_train_init = float(log_d22_right_init)
+    if self_log_diag_lr is not None and diffusion_model_mode == "left/right D" and diag_constraint_mode in ["initialize only", "weak diagonal prior", "fix diagonal terms"]:
+        log_d11_train_init = float(self_log_diag_lr[0])
+        log_d22_train_init = float(self_log_diag_lr[1])
+        log_d11_right_train_init = float(self_log_diag_lr[2])
+        log_d22_right_train_init = float(self_log_diag_lr[3])
+    elif self_log_diag is not None and diag_constraint_mode in ["initialize only", "weak diagonal prior", "fix diagonal terms"]:
+        log_d11_train_init = float(self_log_diag[0])
+        log_d22_train_init = float(self_log_diag[1])
+        log_d11_right_train_init = float(self_log_diag[0])
+        log_d22_right_train_init = float(self_log_diag[1])
+
+    # =========================================================================
+    # Chemical potential mode: regular-solution approach
+    # =========================================================================
+    if use_chemical_potential:
+        def _parse_omega_str(s: str, n_pairs: int) -> np.ndarray:
+            vals = np.array([float(v.strip()) for v in s.split(",")], dtype=float)
+            if vals.size != n_pairs:
+                raise ValueError(f"Expected {n_pairs} Omega values, got {vals.size}")
+            return vals
+
+        n_components_rs = 3
+        n_pairs_rs = len(pair_indices_rs(n_components_rs))
+        n_ind_rs = n_components_rs - 1
+
+        theta_left_true = _parse_omega_str(omega_left_true_str, n_pairs_rs)
+        theta_left_init_vals = _parse_omega_str(omega_left_init_str, n_pairs_rs)
+        if learn_lr_omega:
+            theta_right_true = _parse_omega_str(omega_right_true_str, n_pairs_rs)
+            theta_right_init_vals = _parse_omega_str(omega_right_init_str, n_pairs_rs)
+        else:
+            theta_right_true = theta_left_true.copy()
+            theta_right_init_vals = theta_left_init_vals.copy()
+
+        c_left_rs = np.array([1.0, 0.0, 0.0], dtype=float)
+        c_right_rs = np.array([0.0, 0.90, 0.10], dtype=float)
+        c_left_rs = np.clip(c_left_rs, 1.0e-6, 1.0)
+        c_left_rs /= c_left_rs.sum()
+        c_right_rs = np.clip(c_right_rs, 1.0e-6, 1.0)
+        c_right_rs /= c_right_rs.sum()
+
+        x_grid_rs = np.linspace(0.0, 1.0, int(nx_fdm))
+        c0_full_rs = make_initial_profile_ternary_rs(
+            x_grid_rs, c_left_rs, c_right_rs,
+            x0=0.5, width=float(phase_interface_width),
+        )
+        mobility_rs = np.eye(n_ind_rs) * float(rs_M_diag) + (np.ones((n_ind_rs, n_ind_rs)) - np.eye(n_ind_rs)) * float(rs_M_offdiag)
+
+        st.info("Step 1/3: Regular-solution FDM教師データを計算しています (c_t = div(M grad(μ)))...")
+        t_grid_rs, C_fdm_rs = fdm_ternary_regular_solution(
+            c0_full_rs, x_grid_rs, float(rs_fdm_dt), int(rs_fdm_nsteps),
+            mobility_rs, theta_left_true, theta_right_true,
+            RT=float(rs_RT), x_interface=0.5, omega_width=float(phase_interface_width),
+            save_every=int(rs_fdm_save_every),
+        )
+        st.success(f"FDM regular-solution teacher finished: {len(t_grid_rs)} time frames.")
+
+        data_rs = make_training_data_from_fdm_rs(
+            x_grid_rs, t_grid_rs, C_fdm_rs,
+            n_obs_random=int(rs_n_obs_random),
+            n_ic=int(n_ic), n_bc_each=int(n_bc_each), n_f=int(n_f),
+            noise=float(noise), seed=int(seed),
+            n_exp_points=int(rs_n_exp_points),
+            n_exp_time_slices=int(rs_n_exp_time_slices),
+            append_pseudo_exp_to_training=True,
+        )
+
+        rs_model = TernaryRegularSolutionPINN(
+            n_components=n_components_rs,
+            theta_left_init=theta_left_init_vals,
+            theta_right_init=theta_right_init_vals,
+            hidden_layers=tuple([int(width)] * int(depth)),
+            activation=str(activation),
+            learn_left_right_omega=bool(learn_lr_omega),
+            x_interface=0.5,
+            omega_width=float(phase_interface_width),
+            RT=float(rs_RT),
+            train_omega=True,
+        )
+
+        st.info("Step 2/3: PINNsでΩ相互作用項を推定しています...")
+        progress = st.progress(0.0)
+        status = st.empty()
+        rs_model, rs_hist = train_pinn_rs(
+            data=data_rs,
+            model=rs_model,
+            mobility=mobility_rs,
+            epochs=int(epochs),
+            lr=float(lr),
+            weights={"data": w_data, "ic": w_ic, "bc": w_bc, "phys": w_phys},
+            progress=progress,
+            status=status,
+            n_collocation=int(rs_n_collocation),
+            w_omega_prior=float(rs_w_omega_prior),
+            omega_prior_left=theta_left_init_vals,
+            omega_prior_right=theta_right_init_vals if learn_lr_omega else None,
+        )
+
+        theta_l_est, theta_r_est = rs_model.theta_vectors()
+        theta_l_np = theta_l_est.detach().cpu().numpy()
+        theta_r_np = theta_r_est.detach().cpu().numpy()
+
+        if learn_lr_omega:
+            theta_hat_rs = np.concatenate([theta_l_np, theta_r_np])
+            prior_mean_rs = np.concatenate([theta_left_init_vals, theta_right_init_vals])
+        else:
+            theta_hat_rs = theta_l_np.copy()
+            prior_mean_rs = theta_left_init_vals.copy()
+
+        nll_fun_rs = lambda th: gaussian_nll_multitime_rs(
+            th, n_components_rs, learn_lr_omega, c0_full_rs, x_grid_rs,
+            data_rs.x_exp, data_rs.t_exp, data_rs.c_exp,
+            sigma=float(rs_like_sigma), dt=float(rs_fdm_dt),
+            nsteps=int(rs_fdm_nsteps), save_every=int(rs_fdm_save_every),
+            mobility=mobility_rs, RT=float(rs_RT),
+            x_interface=0.5, omega_width=float(phase_interface_width),
+            prior_mean=prior_mean_rs, prior_std=5.0,
+        )
+
+        refine_info_rs = None
+        if do_fdm_refine:
+            st.info("Step 3/3: FDM尤度でΩを再最適化しています...")
+            theta_refined, refine_info_rs = refine_omega_by_fdm_likelihood(
+                nll_fun_rs, theta_hat_rs, maxiter=int(fdm_refine_maxiter), verbose=False,
+            )
+            if np.all(np.isfinite(theta_refined)):
+                theta_hat_rs = theta_refined
+                overwrite_model_omega_from_theta(rs_model, theta_hat_rs, learn_lr_omega)
+            st.success(f"FDM refinement: NLL {refine_info_rs['nll_before']:.2f} → {refine_info_rs['nll_after']:.2f}")
+
+        rs_result = TrainResultRS(
+            model=rs_model,
+            data=data_rs,
+            history=rs_hist,
+            train_time=0.0,
+            mobility=mobility_rs,
+            theta_left_true=theta_left_true,
+            theta_right_true=theta_right_true,
+        )
+
+        st.session_state.fig11_result_v12 = rs_result
+        st.session_state.fig11_inputs_v12 = {
+            "t_max": float(t_grid_rs[-1]),
+            "use_chemical_potential": True,
+            "learn_lr_omega": bool(learn_lr_omega),
+            "theta_left_true": theta_left_true.tolist(),
+            "theta_right_true": theta_right_true.tolist(),
+            "theta_hat_rs": theta_hat_rs.tolist(),
+            "refine_info_rs": refine_info_rs,
+            "fdm_teacher_mode": "regular-solution",
+            "span_um": span_um,
+            "noise": noise,
+            "seed": int(seed),
+            "rs_RT": float(rs_RT),
+            "rs_M_diag": float(rs_M_diag),
+            "rs_M_offdiag": float(rs_M_offdiag),
+            "rs_fdm_dt": float(rs_fdm_dt),
+            "rs_fdm_nsteps": int(rs_fdm_nsteps),
+            "rs_fdm_save_every": int(rs_fdm_save_every),
+            "rs_like_sigma": float(rs_like_sigma),
+            "rs_hessian_step": float(rs_hessian_step),
+            "rs_laplace_samples": int(rs_laplace_samples),
+            "rs_band_samples": int(rs_band_samples),
+            "rs_run_mcmc": bool(rs_run_mcmc),
+            "rs_mcmc_steps": int(rs_mcmc_steps),
+            "rs_mcmc_burn": int(rs_mcmc_burn),
+            "rs_mcmc_proposal": float(rs_mcmc_proposal),
+            "rs_skip_reliability": bool(rs_skip_reliability),
+            "phase_interface_width": float(phase_interface_width),
+            "paper_time_h": float(paper_time_h),
+            "paper_length_um": float(paper_length_um),
+            "show_zero_interaction_reference": show_zero_interaction_reference,
+        }
+        status.success("Completed. Rendering result tabs...")
+        safe_streamlit_rerun()
+
+    # =========================================================================
+    # Fickian D matrix mode: original approach
+    # =========================================================================
+    st.info("Step 1/2: Co / Ni-0.10Ta sharp-interface diffusion coupleをFDMで計算しています。")
+    data = make_training_data(
+        log_d11=log_d11_true,
+        log_d22=log_d22_true,
+        rho_raw=rho_raw_true,
+        t_max=t_max,
+        nx_fdm=nx_fdm,
+        nt_fdm=nt_fdm,
+        n_obs=n_obs,
+        n_ic=n_ic,
+        n_bc_each=n_bc_each,
+        n_f=n_f,
+        noise=noise,
+        seed=int(seed),
+        t_start_fraction=t_start_fraction,
+        n_exp_points=n_exp_points,
+        pseudo_exp_time_mode=str(pseudo_exp_time_mode),
+        pseudo_exp_time_slices=int(pseudo_exp_time_slices),
+        append_pseudo_exp_to_training=bool(append_pseudo_exp_to_training),
+        fdm_teacher_mode=str(fdm_teacher_mode),
+        log_d11_right=float(log_d11_true_right),
+        log_d22_right=float(log_d22_true_right),
+        rho_raw_right=float(rho_raw_true_right),
+        phase_width=float(phase_interface_width),
+    )
+
+    st.success("FDM teacher calculation and pseudo experimental data generation finished.")
+
+    with st.expander("Preview FDM teacher data before PINNs training", expanded=True):
+        st.markdown(
+            """
+FDM教師データと疑似実験点が生成された直後の確認図です。  
+この時点ではPINNs学習はまだ始まっていません。ここで初期プロファイル、最終プロファイル、疑似実験点の位置・ノイズ量を確認します。
+
+注意：FDM教師データはsharp step初期条件から積分しているため、粗い格子や長時間設定では界面近傍に微小なkinkが残ることがあります。必要に応じて `FDM spatial grid` を増やしてください。
+"""
+        )
+        st.plotly_chart(
+            fdm_teacher_preview_plot(
+                data.x_grid,
+                data.t_grid,
+                data.C_fdm,
+                data.x_exp,
+                data.c_exp,
+                span_um=float(span_um),
+                n_time_lines=4,
+                annealing_time_h=float(paper_time_h),
+            ),
+            use_container_width=True,
+        )
+        st.plotly_chart(
+            fdm_teacher_preview_difference_plot(
+                data.x_grid,
+                data.C_fdm[-1],
+                data.x_exp,
+                data.c_exp,
+                span_um=float(span_um),
+            ),
+            use_container_width=True,
+        )
+
+        preview_cols = st.columns(4)
+        preview_cols[0].metric("FDM x grid", f"{len(data.x_grid):,}")
+        preview_cols[1].metric("FDM saved frames", f"{len(data.t_grid):,}")
+        preview_cols[2].metric("final pseudo-exp points", f"{len(data.x_exp):,}")
+        preview_cols[3].metric("noise setting", f"{float(noise):.3g}")
+
+        mt_preview_cols = st.columns(3)
+        mt_preview_cols[0].metric("pseudo-exp time mode", str(pseudo_exp_time_mode))
+        mt_preview_cols[1].metric("pseudo-exp total points", f"{len(data.x_exp_all):,}")
+        mt_preview_cols[2].metric("pseudo-exp time slices", f"{len(data.exp_time_indices):,}")
+        if str(pseudo_exp_time_mode) == "multi-time":
+            st.info(
+                "Multi-time pseudo-exp is active. These points are appended to PINNs observations, "
+                "so the inverse problem uses time-evolution information, not only the final profile."
+            )
+        if str(fdm_teacher_mode) == "left/right D":
+            st.warning(
+                "FDM teacher uses left/right D. This is the intended setting for FCC/BCC-like contrast examples. "
+                "Check that the fast side broadens much more rapidly than the slow side."
+            )
+
+    st.info("Step 2/2: PINNsでCo/Ni/TaプロファイルとNi-Ta相互拡散行列を推定しています。")
+    progress = st.progress(0.0)
+    status = st.empty()
+    result = train_pinn(
+        data=data,
+        log_d11_init=log_d11_train_init,
+        log_d22_init=log_d22_train_init,
+        rho_raw_init=rho_raw_init,
+        width=width,
+        depth=depth,
+        activation=activation,
+        epochs=epochs,
+        lr=lr,
+        weights={"data": w_data, "ic": w_ic, "bc": w_bc, "phys": w_phys},
+        progress=progress,
+        status=status,
+        diag_prior_log=(
+            self_log_diag_lr if (
+                diffusion_model_mode == "left/right D"
+                and self_log_diag_lr is not None
+                and diag_constraint_mode in ["weak diagonal prior", "fix diagonal terms"]
+            )
+            else self_log_diag if (
+                self_log_diag is not None
+                and diag_constraint_mode in ["weak diagonal prior", "fix diagonal terms"]
+            )
+            else None
+        ),
+        diag_prior_weight=float(diag_prior_weight) if diag_constraint_mode == "weak diagonal prior" else 0.0,
+        fix_diagonal_from_prior=bool(
+            (
+                diffusion_model_mode == "left/right D"
+                and self_log_diag_lr is not None
+                and diag_constraint_mode == "fix diagonal terms"
+            )
+            or (
+                self_log_diag is not None
+                and diag_constraint_mode == "fix diagonal terms"
+            )
+        ),
+        diffusion_model_mode=str(diffusion_model_mode),
+        log_d11_right_init=float(log_d11_right_train_init),
+        log_d22_right_init=float(log_d22_right_train_init),
+        rho_raw_right_init=float(rho_raw_right_init),
+        phase_interface=0.5,
+        phase_width=float(phase_interface_width),
+    )
+
+    st.session_state.fig11_result_v12 = result
+    st.session_state.fig11_inputs_v12 = {
+        "t_max": t_max,
+        "fdm_teacher_mode": str(fdm_teacher_mode),
+        "log_d11_true": float(log_d11_true),
+        "log_d22_true": float(log_d22_true),
+        "rho_raw_true": float(rho_raw_true),
+        "log_d11_true_right": float(log_d11_true_right),
+        "log_d22_true_right": float(log_d22_true_right),
+        "rho_raw_true_right": float(rho_raw_true_right),
+        "fcc_bcc_preset": str(fcc_bcc_preset),
+        "abstract_validation_preset": str(fcc_bcc_preset == "TOFA abstract validation"),
+        "fixed_diagonal_abstract_default": bool(is_tofa_abstract_preset and diag_constraint_mode == "fix diagonal terms"),
+        "span_um": span_um,
+        "show_zero_interaction_reference": show_zero_interaction_reference,
+        "zero_interaction_source": zero_interaction_source,
+        "noise": noise,
+        "n_exp_points": int(n_exp_points),
+        "pseudo_exp_time_mode": str(pseudo_exp_time_mode),
+        "pseudo_exp_time_slices": int(pseudo_exp_time_slices),
+        "append_pseudo_exp_to_training": bool(append_pseudo_exp_to_training),
+        "like_sigma": like_sigma,
+        "rel_nx": rel_nx,
+        "rel_nt": rel_nt,
+        "prior_mean": np.array([prior_log_d11, prior_log_d22, prior_rho_raw], dtype=float),
+        "prior_std": prior_std,
+        "hessian_step": hessian_step,
+        "laplace_samples": laplace_samples,
+        "band_samples": band_samples,
+        "run_high_cost_mcmc": run_high_cost_mcmc,
+        "mcmc_steps": mcmc_steps,
+        "mcmc_burn": mcmc_burn,
+        "mcmc_proposal": mcmc_proposal,
+        "seed": int(seed),
+        "contour_n": contour_n,
+        "contour_half_width": contour_half_width,
+        "contour_axis_pair": contour_axis_pair,
+        "paper_T_C": float(paper_T_C),
+        "paper_time_h": float(paper_time_h),
+        "paper_length_um": float(paper_length_um),
+        "use_self_diffusion": bool(use_self_diffusion),
+        "self_D_Ni_phys": float(self_D_Ni_phys),
+        "self_D_Ta_phys": float(self_D_Ta_phys),
+        "diag_constraint_mode": diag_constraint_mode,
+        "diag_prior_weight": float(diag_prior_weight),
+        "self_D_norm": None if self_D_norm is None else self_D_norm,
+        "self_log_diag": None if self_log_diag is None else self_log_diag,
+        "diffusion_model_mode": str(diffusion_model_mode),
+        "log_d11_right_init": float(log_d11_right_init),
+        "log_d22_right_init": float(log_d22_right_init),
+        "rho_raw_right_init": float(rho_raw_right_init),
+        "phase_interface_width": float(phase_interface_width),
+        "self_D_Ni_left_phys": float(self_D_Ni_left_phys),
+        "self_D_Ta_left_phys": float(self_D_Ta_left_phys),
+        "self_D_Ni_right_phys": float(self_D_Ni_right_phys),
+        "self_D_Ta_right_phys": float(self_D_Ta_right_phys),
+        "self_D_norm_lr": None if self_D_norm_lr is None else self_D_norm_lr,
+        "self_log_diag_lr": None if self_log_diag_lr is None else self_log_diag_lr,
+    }
+    status.success("Completed. Rendering result tabs...")
+    safe_streamlit_rerun()
+
+
+result = st.session_state.fig11_result_v12
+inputs = st.session_state.fig11_inputs_v12
+
+if result is None:
+    c1, c2, c3 = st.columns(3)
+    c1.markdown('<div class="note"><b>1. FDM</b><br>Co / Ni-0.10Ta のsharp interfaceから連成拡散を解きます。</div>', unsafe_allow_html=True)
+    c2.markdown('<div class="note"><b>2. PINNs</b><br>Co, Ni, Ta濃度場と2x2相互拡散行列を推定します。</div>', unsafe_allow_html=True)
+    c3.markdown('<div class="note"><b>3. Reliability bands</b><br>尤度からプロファイル信頼帯と係数区間を出します。</div>', unsafe_allow_html=True)
+    st.stop()
+
+
+st.success("Loaded completed calculation from session state. Rendering result tabs below.")
+
+# =========================================================================
+# Chemical potential result display
+# =========================================================================
+if inputs.get("use_chemical_potential", False) and isinstance(result, TrainResultRS):
+    rs_result = result
+    rs_model = rs_result.model
+    rs_data = rs_result.data
+    rs_hist = rs_result.history
+    span_um = float(inputs["span_um"])
+
+    x = rs_data.x_grid
+    t = rs_data.t_grid
+    C_pinn_rs = evaluate_model_on_grid_rs(rs_model, x, t)
+    C_fdm_rs = rs_data.C_fdm
+    C_diff_rs = C_pinn_rs - C_fdm_rs
+
+    theta_l_est, theta_r_est = rs_model.theta_vectors()
+    theta_l_np = theta_l_est.detach().cpu().numpy()
+    theta_r_np = theta_r_est.detach().cpu().numpy()
+    pairs = pair_indices_rs(3)
+    pair_names = ["Omega_CoNi", "Omega_CoTa", "Omega_NiTa"]
+
+    all_rmse = float(np.sqrt(np.mean(C_diff_rs ** 2)))
+    final_rmse_each = np.sqrt(np.mean((C_diff_rs[-1] ** 2), axis=0))
+
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Total profile RMSE", f"{all_rmse:.3e}")
+    m2.metric("Final RMSE Co/Ni/Ta", f"{final_rmse_each[0]:.2e}/{final_rmse_each[1]:.2e}/{final_rmse_each[2]:.2e}")
+    m3.metric("Analysis mode", "Regular-solution chemical potential")
+
+    st.markdown("### Estimated Omega interaction terms")
+    omega_rows = []
+    theta_left_true = np.array(inputs["theta_left_true"], dtype=float)
+    theta_right_true = np.array(inputs["theta_right_true"], dtype=float)
+    for k, (i, j) in enumerate(pairs):
+        omega_rows.append({
+            "pair": pair_names[k],
+            "true_left": float(theta_left_true[k]),
+            "estimated_left": float(theta_l_np[k]),
+            "abs_error_left": abs(float(theta_l_np[k] - theta_left_true[k])),
+            "true_right": float(theta_right_true[k]),
+            "estimated_right": float(theta_r_np[k]),
+            "abs_error_right": abs(float(theta_r_np[k] - theta_right_true[k])),
+        })
+    st.dataframe(pd.DataFrame(omega_rows), use_container_width=True)
+
+    if inputs.get("refine_info_rs") is not None:
+        ri = inputs["refine_info_rs"]
+        st.markdown("### FDM likelihood refinement")
+        rc1, rc2, rc3 = st.columns(3)
+        rc1.metric("NLL before", f"{ri['nll_before']:.2f}")
+        rc2.metric("NLL after", f"{ri['nll_after']:.2f}")
+        rc3.metric("Evaluations", f"{ri['nfev']}")
+
+    tab_rs1, tab_rs2, tab_rs3, tab_rs4 = st.tabs(
+        ["Profiles", "Training", "Omega reliability", "Data"]
+    )
+
+    with tab_rs1:
+        st.markdown("### Final diffusion-couple profile (regular-solution)")
+        dist = distance_um_from_x(x, span_um)
+        dist_exp = distance_um_from_x(rs_data.x_exp, span_um)
+        fig = go.Figure()
+        for j_comp, comp in enumerate(COMPONENTS):
+            fig.add_trace(go.Scatter(
+                x=dist_exp, y=rs_data.c_exp[:, j_comp], mode="markers",
+                name=f"Exp. {comp}",
+                marker=dict(symbol=SYMBOLS[comp], size=7, color=COLORS[comp], line=dict(width=1.4)),
+            ))
+        for j_comp, comp in enumerate(COMPONENTS):
+            fig.add_trace(go.Scatter(
+                x=dist, y=C_fdm_rs[-1, :, j_comp], mode="lines",
+                name=f"FDM {comp}", line=dict(width=3, color=COLORS[comp]),
+            ))
+            fig.add_trace(go.Scatter(
+                x=dist, y=C_pinn_rs[-1, :, j_comp], mode="lines",
+                name=f"PINNs {comp}", line=dict(width=2.5, dash="dash", color=COLORS[comp]),
+            ))
+        fig.update_xaxes(title="Distance (µm)")
+        fig.update_yaxes(title="Mole Fraction", range=[-0.04, 1.04])
+        st.plotly_chart(clean_layout(fig, "Regular-solution profile: Co / Ni-Ta", 560), use_container_width=True)
+
+        st.markdown("### Multi-time profiles")
+        indices_rs = sorted(set(np.linspace(0, len(t) - 1, 5).astype(int).tolist()))
+        for idx_time in indices_rs:
+            fig_t = go.Figure()
+            for j_comp, comp in enumerate(COMPONENTS):
+                fig_t.add_trace(go.Scatter(
+                    x=dist, y=C_fdm_rs[idx_time, :, j_comp], mode="lines",
+                    name=f"FDM {comp}", line=dict(width=2.5, color=COLORS[comp]),
+                ))
+                fig_t.add_trace(go.Scatter(
+                    x=dist, y=C_pinn_rs[idx_time, :, j_comp], mode="lines",
+                    name=f"PINNs {comp}", line=dict(width=2.0, dash="dash", color=COLORS[comp]),
+                ))
+            paper_time_h_disp = float(inputs.get("paper_time_h", 160.0))
+            fig_t.update_xaxes(title="Distance (µm)")
+            fig_t.update_yaxes(title="Mole fraction", range=[-0.04, 1.04])
+            st.plotly_chart(
+                clean_layout(fig_t, f"t = {format_time_label(float(t[idx_time]), float(t[-1]), paper_time_h_disp)}", 400),
+                use_container_width=True,
+            )
+
+    with tab_rs2:
+        st.markdown("### Loss history")
+        fig_loss = go.Figure()
+        for col in ["loss", "data", "ic", "physics"]:
+            if col in rs_hist.columns:
+                fig_loss.add_trace(go.Scatter(x=rs_hist["epoch"], y=rs_hist[col], mode="lines", name=col))
+        fig_loss.update_xaxes(title="epoch")
+        fig_loss.update_yaxes(title="loss", type="log")
+        st.plotly_chart(clean_layout(fig_loss, "Loss functions (regular-solution)", 430), use_container_width=True)
+
+        st.markdown("### Omega convergence")
+        fig_omega = go.Figure()
+        for k, pname in enumerate(pair_names):
+            col_l = f"Omega_{pairs[k][0]}{pairs[k][1]}_left"
+            col_r = f"Omega_{pairs[k][0]}{pairs[k][1]}_right"
+            if col_l in rs_hist.columns:
+                fig_omega.add_trace(go.Scatter(x=rs_hist["epoch"], y=rs_hist[col_l], mode="lines", name=f"{pname} left"))
+                fig_omega.add_hline(y=float(theta_left_true[k]), line_dash="dash", opacity=0.4)
+            if col_r in rs_hist.columns:
+                fig_omega.add_trace(go.Scatter(x=rs_hist["epoch"], y=rs_hist[col_r], mode="lines", name=f"{pname} right"))
+                fig_omega.add_hline(y=float(theta_right_true[k]), line_dash="dash", opacity=0.4)
+        fig_omega.update_xaxes(title="epoch")
+        fig_omega.update_yaxes(title="Omega value")
+        st.plotly_chart(clean_layout(fig_omega, "Omega pair-interaction convergence", 450), use_container_width=True)
+
+        st.dataframe(rs_hist, use_container_width=True)
+
+    with tab_rs3:
+        st.markdown("### Omega-based reliability (regular-solution)")
+        if inputs.get("rs_skip_reliability", False):
+            st.warning("Omega reliability evaluation was skipped.")
+        else:
+            theta_hat_rs = np.array(inputs["theta_hat_rs"], dtype=float)
+            learn_lr_omega_val = bool(inputs["learn_lr_omega"])
+
+            nll_fun_rs = lambda th: gaussian_nll_multitime_rs(
+                th, 3, learn_lr_omega_val,
+                make_initial_profile_ternary_rs(
+                    x, np.array([1.0 - 1e-6, 5e-7, 5e-7]) / 1.0,
+                    np.array([5e-7, 0.9, 0.1]) / 1.0,
+                    x0=0.5, width=float(inputs["phase_interface_width"]),
+                ),
+                x,
+                rs_data.x_exp, rs_data.t_exp, rs_data.c_exp,
+                sigma=float(inputs["rs_like_sigma"]),
+                dt=float(inputs["rs_fdm_dt"]),
+                nsteps=int(inputs["rs_fdm_nsteps"]),
+                save_every=int(inputs["rs_fdm_save_every"]),
+                mobility=rs_result.mobility,
+                RT=float(inputs["rs_RT"]),
+                x_interface=0.5,
+                omega_width=float(inputs["phase_interface_width"]),
+                prior_mean=np.concatenate([
+                    np.array(inputs["theta_left_true"]),
+                    np.array(inputs["theta_right_true"]),
+                ]) if learn_lr_omega_val else np.array(inputs["theta_left_true"]),
+                prior_std=5.0,
+            )
+
+            with st.spinner("Computing Laplace reliability for Omega..."):
+                low_rel_rs = laplace_reliability_rs(
+                    nll_fun_rs, theta_hat_rs,
+                    hessian_step=float(inputs["rs_hessian_step"]),
+                    n_samples=int(inputs["rs_laplace_samples"]),
+                    seed=int(inputs["seed"]),
+                )
+
+            st.markdown("#### Laplace Hessian diagnostics")
+            h_min_rs = float(low_rel_rs.get("hessian_min_eig", np.array([np.nan]))[0])
+            h_non_pd_rs = bool(low_rel_rs.get("hessian_non_pd", np.array([False]))[0])
+            cov_clipped_rs = bool(low_rel_rs.get("covariance_was_clipped", np.array([False]))[0])
+            lhd1, lhd2, lhd3 = st.columns(3)
+            lhd1.metric("min eig(H)", f"{h_min_rs:.3e}")
+            lhd2.metric("Hessian non-PD", "yes" if h_non_pd_rs else "no")
+            lhd3.metric("cov eig clipped", "yes" if cov_clipped_rs else "no")
+
+            st.markdown("#### Omega posterior summary")
+            samples_rs = low_rel_rs["samples"]
+            n_pairs_show = rs_model.n_pairs
+            summary_rows = []
+            for k in range(samples_rs.shape[1]):
+                vals = samples_rs[:, k]
+                if k < n_pairs_show:
+                    lbl = f"{pair_names[k]}_left"
+                else:
+                    lbl = f"{pair_names[k - n_pairs_show]}_right"
+                summary_rows.append({
+                    "parameter": lbl,
+                    "q025": float(np.quantile(vals, 0.025)),
+                    "median": float(np.quantile(vals, 0.5)),
+                    "q975": float(np.quantile(vals, 0.975)),
+                    "mean": float(np.mean(vals)),
+                    "std": float(np.std(vals)),
+                })
+            st.dataframe(pd.DataFrame(summary_rows), use_container_width=True)
+
+            st.markdown("#### Posterior credible band")
+            with st.spinner("Computing credible band from Omega samples..."):
+                c0_full_for_band = make_initial_profile_ternary_rs(
+                    x, np.array([1.0 - 1e-6, 5e-7, 5e-7]),
+                    np.array([5e-7, 0.9, 0.1]),
+                    x0=0.5, width=float(inputs["phase_interface_width"]),
+                )
+                band_progress = st.progress(0.0)
+                band_rs = posterior_band_from_samples_rs(
+                    samples_rs, 3, learn_lr_omega_val,
+                    c0_full_for_band, x,
+                    dt=float(inputs["rs_fdm_dt"]),
+                    nsteps=int(inputs["rs_fdm_nsteps"]),
+                    save_every=int(inputs["rs_fdm_save_every"]),
+                    mobility=rs_result.mobility,
+                    RT=float(inputs["rs_RT"]),
+                    x_interface=0.5,
+                    omega_width=float(inputs["phase_interface_width"]),
+                    target_time=float(t[-1]),
+                    max_samples=int(inputs["rs_band_samples"]),
+                    progress_bar=band_progress,
+                )
+
+            fig_band = go.Figure()
+            dist = distance_um_from_x(x, span_um)
+            for j_comp, comp in enumerate(COMPONENTS):
+                fig_band.add_trace(go.Scatter(
+                    x=np.concatenate([dist, dist[::-1]]),
+                    y=np.concatenate([band_rs["q025"][:, j_comp], band_rs["q975"][::-1, j_comp]]),
+                    fill="toself", fillcolor=f"rgba({','.join(str(int(c*255)) for c in [0.2, 0.5, 0.8][:j_comp+1] + [0.2]*(3-j_comp-1))},0.15)",
+                    line=dict(width=0), name=f"95% CI {comp}", showlegend=True,
+                ))
+                fig_band.add_trace(go.Scatter(
+                    x=dist, y=band_rs["q500"][:, j_comp], mode="lines",
+                    name=f"Median {comp}", line=dict(width=2, color=COLORS[comp]),
+                ))
+                fig_band.add_trace(go.Scatter(
+                    x=dist, y=C_pinn_rs[-1, :, j_comp], mode="lines",
+                    name=f"PINNs {comp}", line=dict(width=2, dash="dash", color=COLORS[comp]),
+                ))
+            fig_band.update_xaxes(title="Distance (µm)")
+            fig_band.update_yaxes(title="Mole Fraction", range=[-0.04, 1.04])
+            st.plotly_chart(
+                clean_layout(fig_band, "Posterior credible band (regular-solution Omega)", 560),
+                use_container_width=True,
+            )
+
+            if bool(inputs.get("rs_run_mcmc", False)):
+                st.markdown("#### MCMC for Omega")
+                mcmc_progress_rs = st.progress(0.0)
+                with st.spinner("Running MCMC for Omega parameters..."):
+                    high_rel_rs = mcmc_reliability_rs(
+                        nll_fun_rs, theta_hat_rs,
+                        n_steps=int(inputs["rs_mcmc_steps"]),
+                        burn_in=int(inputs["rs_mcmc_burn"]),
+                        proposal_std=float(inputs["rs_mcmc_proposal"]),
+                        seed=int(inputs["seed"]),
+                        progress_bar=mcmc_progress_rs,
+                    )
+                acc_rs = float(high_rel_rs["acceptance_rate"][0])
+                st.metric("MCMC acceptance", f"{100*acc_rs:.1f}%")
+                if acc_rs < 0.10:
+                    st.warning("MCMC acceptance is low. Try lowering proposal std.")
+
+                st.markdown("##### MCMC trace")
+                fig_trace = go.Figure()
+                mcmc_samples = high_rel_rs["samples"]
+                for k in range(mcmc_samples.shape[1]):
+                    if k < n_pairs_show:
+                        lbl = f"{pair_names[k]}_left"
+                    else:
+                        lbl = f"{pair_names[k - n_pairs_show]}_right"
+                    fig_trace.add_trace(go.Scatter(
+                        x=np.arange(len(mcmc_samples)), y=mcmc_samples[:, k],
+                        mode="lines", name=lbl, line=dict(width=1.5),
+                    ))
+                fig_trace.update_xaxes(title="MCMC sample index")
+                fig_trace.update_yaxes(title="Omega value")
+                st.plotly_chart(
+                    clean_layout(fig_trace, "MCMC trace for Omega parameters", 450),
+                    use_container_width=True,
+                )
+
+    with tab_rs4:
+        st.markdown("### Raw data")
+        st.markdown(f"x grid: {len(x)} points, t grid: {len(t)} frames")
+        st.markdown(f"Pseudo-exp points: {len(rs_data.x_exp)}")
+        st.markdown(f"Training obs: {len(rs_data.x_obs)}")
+        st.dataframe(pd.DataFrame({
+            "x_exp": rs_data.x_exp[:50],
+            "t_exp": rs_data.t_exp[:50],
+            **{f"c_exp_{comp}": rs_data.c_exp[:50, j] for j, comp in enumerate(COMPONENTS)},
+        }), use_container_width=True)
+
+    st.stop()
+
+# =========================================================================
+# Fickian D matrix result display (original)
+# =========================================================================
+
+model = result.model
+data = result.data
+hist = result.history
+span_um = float(inputs["span_um"])
+
+x = data.x_grid
+t = data.t_grid
+X, T = np.meshgrid(x, t)
+
+C_pinn = predict(model, X.reshape(-1, 1), T.reshape(-1, 1)).reshape(len(t), len(x), 3)
+C_fdm = data.C_fdm
+C_diff = C_pinn - C_fdm
+
+D_pinn = model.diffusion_matrix().detach().cpu().numpy()
+D_pinn_left = D_pinn
+D_pinn_right = D_pinn
+if hasattr(model, "diffusion_matrix_left"):
+    D_pinn_left = model.diffusion_matrix_left().detach().cpu().numpy()
+    D_pinn_right = model.diffusion_matrix_right().detach().cpu().numpy()
+D_true = data.D_true
+D_true_left = data.D_true_left if data.D_true_left is not None else D_true
+D_true_right = data.D_true_right if data.D_true_right is not None else D_true
+
+C_zero = None
+D_zero = None
+theta_zero = None
+if bool(inputs.get("show_zero_interaction_reference", True)):
+    D_source = D_pinn if inputs.get("zero_interaction_source", "PINN estimated diagonals") == "PINN estimated diagonals" else D_true
+    _, C_zero, D_zero, theta_zero = compute_zero_interaction_reference(
+        x_query=x,
+        t_query=t,
+        t_max=float(inputs["t_max"]),
+        nx=len(x),
+        nt_save=len(t),
+        D_source=D_source,
+    )
+
+final_rmse_each = np.sqrt(np.mean((C_diff[-1] ** 2), axis=0))
+all_rmse = float(np.sqrt(np.mean(C_diff ** 2)))
+D_rel_err = float(np.linalg.norm(D_pinn - D_true) / max(np.linalg.norm(D_true), 1.0e-14))
+
+m1, m2, m3, m4 = st.columns(4)
+m1.metric("Total profile RMSE", f"{all_rmse:.3e}")
+m2.metric("Final RMSE Co/Ni/Ta", f"{final_rmse_each[0]:.2e}/{final_rmse_each[1]:.2e}/{final_rmse_each[2]:.2e}")
+m3.metric("D matrix rel. error", f"{100 * D_rel_err:.2f}%")
+m4.metric("Train time", f"{result.train_time:.1f} s")
+st.caption(
+    f"PINNs start time fraction={data.t_start / max(float(inputs['t_max']), 1.0e-14):.3f}; "
+    f"diffusion model={inputs.get('diffusion_model_mode', 'single D')}; "
+    f"phase interface width={float(inputs.get('phase_interface_width', 0.0)):.3f}"
+)
+if inputs.get("diffusion_model_mode") == "left/right D":
+    st.markdown("#### Left/right diffusion matrices estimated by PINNs")
+    lr_rows = []
+    for label, Dtmp in [("left", D_pinn_left), ("right", D_pinn_right), ("average", D_pinn)]:
+        lr_rows.extend([
+            {"region": label, "parameter": "D_NiNi", "normalized value": Dtmp[0, 0]},
+            {"region": label, "parameter": "D_NiTa", "normalized value": Dtmp[0, 1]},
+            {"region": label, "parameter": "D_TaNi", "normalized value": Dtmp[1, 0]},
+            {"region": label, "parameter": "D_TaTa", "normalized value": Dtmp[1, 1]},
+        ])
+    st.dataframe(pd.DataFrame(lr_rows), use_container_width=True)
+
+if C_zero is not None:
+    z1, z2, z3 = st.columns(3)
+    zero_vs_pinn = float(np.sqrt(np.mean((C_pinn[-1] - C_zero[-1]) ** 2)))
+    zero_vs_fdm = float(np.sqrt(np.mean((C_fdm[-1] - C_zero[-1]) ** 2)))
+    z1.metric("Zero-interaction ref.", "enabled")
+    z2.metric("RMSE PINN vs zero", f"{zero_vs_pinn:.3e}")
+    z3.metric("RMSE FDM vs zero", f"{zero_vs_fdm:.3e}")
+
+paper_time_h_for_display = float(inputs.get("paper_time_h", 160.0))
+st.caption(
+    f"Time conversion: normalized final time τ_max = {float(t[-1]):.4g} "
+    f"corresponds to physical annealing time = {paper_time_h_for_display:.3g} h. "
+    f"Displayed physical times use real t = τ / τ_max × {paper_time_h_for_display:.3g} h."
+)
+
+indices = sorted(set(np.linspace(0, len(t) - 1, int(multi_time_count)).astype(int).tolist()))
+
+tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
+    ["Profiles", "Differences", "Training", "Likelihood & bands", "Abstract validation", "CALPHAD / DICTRA", "Data & export"]
+)
+
+with tab1:
+    st.markdown("### Final diffusion-couple profile")
+    st.caption(
+        f"最終時刻の FDM / PINNs / pseudo experimental data / zero-interaction を重ねたFig.11風プロットです。"
+        f" 最終時刻は {format_time_label(float(t[-1]), float(t[-1]), paper_time_h_for_display)} です。"
+    )
+    st.plotly_chart(
+        fig11_profile_plot(
+            x,
+            C_fdm[-1],
+            C_pinn[-1],
+            data.x_exp,
+            data.c_exp,
+            span_um=span_um,
+            C_zero_final=None if C_zero is None else C_zero[-1],
+        ),
+        use_container_width=True,
+    )
+    st.markdown("### Predicted vs experiment diagnostics")
+    if inputs.get("diffusion_model_mode") == "left/right D":
+        st.warning(
+            "This diffusion-couple setting uses left/right D. A single predicted-vs-experiment scatter can mix "
+            "left, interface, and right regions. Use the component/region-split plots below for diagnosis."
+        )
+
+    with st.expander("Show mixed predicted-vs-experiment plot", expanded=False):
+        st.plotly_chart(
+            predicted_vs_experiment_plot(C_pinn[-1], x, data.x_exp, data.c_exp),
+            use_container_width=True,
+        )
+
+    region_diag_width = float(inputs.get("phase_interface_width", 0.03))
+    st.caption(
+        f"Region split uses x < 0.5 - {region_diag_width:.3f} as left, "
+        f"x > 0.5 + {region_diag_width:.3f} as right, and the middle as interface."
+    )
+
+    pv_cols = st.columns(3)
+    for j, comp in enumerate(COMPONENTS):
+        with pv_cols[j]:
+            st.plotly_chart(
+                predicted_vs_experiment_by_component_plot(
+                    C_pinn[-1],
+                    x,
+                    data.x_exp,
+                    data.c_exp,
+                    component_index=j,
+                    component_name=comp,
+                    region_width=region_diag_width,
+                ),
+                use_container_width=True,
+            )
+
+    with st.expander("Residual summary by component and region", expanded=False):
+        st.dataframe(
+            residual_summary_by_component_region(
+                C_pinn[-1],
+                x,
+                data.x_exp,
+                data.c_exp,
+                region_width=region_diag_width,
+            ),
+            use_container_width=True,
+        )
+
+    st.markdown("### Multi-time profiles, separated by time")
+    st.caption(
+        "各時刻ごとに Co / Ni / Ta の FDM と PINNs を別々の図として表示します。"
+        "最終時刻の図だけ pseudo experimental data も重ねます。"
+    )
+
+    mt_cols = st.columns(int(multi_time_columns))
+    for k, idx_time in enumerate(indices):
+        with mt_cols[k % int(multi_time_columns)]:
+            st.plotly_chart(
+                single_time_profile_plot(
+                    x,
+                    t,
+                    C_fdm,
+                    C_pinn,
+                    idx_time,
+                    span_um=span_um,
+                    x_exp=data.x_exp,
+                    C_exp=data.c_exp,
+                    C_zero_time=None if C_zero is None else C_zero[idx_time],
+                    annealing_time_h=paper_time_h_for_display,
+                ),
+                use_container_width=True,
+            )
+
+    with st.expander("Show combined multi-time overview", expanded=False):
+        st.plotly_chart(
+            multi_time_profile_plot(x, t, C_fdm, C_pinn, indices, span_um=span_um, annealing_time_h=paper_time_h_for_display),
+            use_container_width=True,
+        )
+
+with tab2:
+    st.plotly_chart(final_difference_plot(x, C_diff[-1], span_um=span_um), use_container_width=True)
+    if C_zero is not None:
+        st.plotly_chart(
+            zero_interaction_difference_plot(x, C_pinn[-1], C_zero[-1], span_um=span_um),
+            use_container_width=True,
+        )
+    h1, h2, h3 = st.columns(3)
+    h1.plotly_chart(heatmap_diff_plot(x, t, C_diff, 0, span_um=span_um), use_container_width=True)
+    h2.plotly_chart(heatmap_diff_plot(x, t, C_diff, 1, span_um=span_um), use_container_width=True)
+    h3.plotly_chart(heatmap_diff_plot(x, t, C_diff, 2, span_um=span_um), use_container_width=True)
+with tab3:
+    c1, c2 = st.columns(2)
+    c1.plotly_chart(loss_plot(hist), use_container_width=True)
+    c2.plotly_chart(D_history_plot(hist, D_true), use_container_width=True)
+
+    st.markdown("### Diffusion matrix")
+    st.dataframe(diffusion_matrix_table(D_true, D_pinn), use_container_width=True)
+
+    xr, tr, R = residual_grid(model, data.t_start, float(inputs["t_max"]))
+    r_ni = float(np.sqrt(np.mean(R[:, :, 0] ** 2)))
+    r_ta = float(np.sqrt(np.mean(R[:, :, 1] ** 2)))
+    q1, q2 = st.columns(2)
+    q1.metric("PDE residual RMSE Ni", f"{r_ni:.3e}")
+    q2.metric("PDE residual RMSE Ta", f"{r_ta:.3e}")
+
+    st.markdown("### Training history")
+    st.dataframe(hist, use_container_width=True)
+
+with tab4:
+    st.markdown(
+        """
+<div class="note">
+このタブでは、実験点風データから逆推定したNi-Ta相互拡散行列の信頼度を評価します。<br>
+<b>低コスト法</b>: PINN推定値の近傍で尤度を二次近似するLaplace近似。<br>
+<b>高精度・高コスト法</b>: FDM forward modelを毎回解くMetropolis MCMC。<br>
+線だけでなく、尤度からサンプルした拡散係数に基づく <b>95% credible band</b> を表示します。
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+
+    with st.expander("Pseudo-experiment noise model note", expanded=False):
+        st.markdown(
+            """
+疑似実験点は、FDM最終プロファイルに独立Gaussianノイズを加えた後、濃度を `[0,1]` にclipし、さらに総和が1になるようrenormalizeしています。  
+一方、尤度評価ではNi/Taの2成分に独立Gaussian誤差を仮定しています。
+
+| noise | 影響 |
+|---:|---|
+| `≤ 0.01` | clip/renormalizeの影響は通常小さい |
+| `0.03〜0.05` | reduced chi-squareやposterior widthにバイアスが入り得る |
+
+厳密な統計モデルにする場合は、組成制約つきの尤度、例えばlog-ratio空間やDirichlet型ノイズモデルを使うのが望ましいです。
+"""
+        )
+
+    render_mcmc_quick_hint(
+        bool(inputs["run_high_cost_mcmc"]),
+        int(inputs["mcmc_steps"]),
+        int(inputs["mcmc_burn"]),
+        float(inputs["mcmc_proposal"]),
+    )
+    render_mcmc_explanation_expander()
+
+    if inputs.get("diffusion_model_mode") == "left/right D":
+        st.markdown("### Left/right D dedicated 6-parameter reliability")
+        st.success(
+            "Using theta_lr = [logD_NiNi_L, logD_TaTa_L, rho_L, logD_NiNi_R, logD_TaTa_R, rho_R] "
+            "and solving the two-region FDM for each posterior sample."
+        )
+
+        theta_hat_lr = theta_lr_from_matrices(D_pinn_left, D_pinn_right)
+        like_sigma_eff = float(inputs["like_sigma"])
+        rel_nx_eff = int(inputs["rel_nx"])
+        rel_nt_eff = int(inputs["rel_nt"])
+        phase_width_eff = float(inputs.get("phase_interface_width", 0.02))
+        prior_mean_base = np.asarray(inputs["prior_mean"], dtype=float)
+        prior_mean_lr = np.concatenate([prior_mean_base, prior_mean_base])
+        prior_std_eff = float(inputs["prior_std"])
+
+        theta_lr_df = pd.DataFrame(
+            {
+                "parameter": [
+                    "logD_NiNi_left", "logD_TaTa_left", "rho_raw_left",
+                    "logD_NiNi_right", "logD_TaTa_right", "rho_raw_right",
+                ],
+                "theta_hat_lr": theta_hat_lr,
+                "prior_mean_lr": prior_mean_lr,
+            }
+        )
+        st.dataframe(theta_lr_df, use_container_width=True)
+
+        with st.spinner("Low-cost left/right reliability: 6D Laplace approximation..."):
+            low_rel_lr = cached_laplace_reliability_lr(
+                theta_hat_lr=theta_hat_lr,
+                x_exp=data.x_exp,
+                c_exp=data.c_exp,
+                sigma=like_sigma_eff,
+                t_max=float(inputs["t_max"]),
+                nx=rel_nx_eff,
+                nt_save=rel_nt_eff,
+                phase_width=phase_width_eff,
+                prior_mean_lr=prior_mean_lr,
+                prior_std_scalar=prior_std_eff,
+                hessian_step=float(inputs["hessian_step"]),
+                n_samples=int(inputs["laplace_samples"]),
+                seed=int(inputs["seed"]),
+            )
+
+        st.markdown("#### Left/right Laplace Hessian diagnostics")
+        h_min_lr = float(low_rel_lr.get("hessian_min_eig", np.array([np.nan]))[0])
+        h_non_pd_lr = bool(low_rel_lr.get("hessian_non_pd", np.array([False]))[0])
+        cov_clipped_lr = bool(low_rel_lr.get("covariance_was_clipped", np.array([False]))[0])
+        inv_method_lr = str(low_rel_lr.get("hessian_inverse_method", np.array(["unknown"]))[0])
+        lhd1, lhd2, lhd3, lhd4 = st.columns(4)
+        lhd1.metric("min eig(H) 6D", f"{h_min_lr:.3e}")
+        lhd2.metric("Hessian non-PD", "yes" if h_non_pd_lr else "no")
+        lhd3.metric("cov eig clipped", "yes" if cov_clipped_lr else "no")
+        lhd4.metric("inverse method", inv_method_lr)
+
+        with st.expander("Left/right Hessian / covariance eigenvalues", expanded=False):
+            st.dataframe(
+                pd.DataFrame(
+                    {
+                        "index": np.arange(len(low_rel_lr.get("hessian_eigval_raw", []))),
+                        "eig(H raw)": low_rel_lr.get("hessian_eigval_raw", np.array([])),
+                        "eig(H regularized)": low_rel_lr.get("hessian_eigval_regularized", np.array([])),
+                        "eig(cov raw)": low_rel_lr.get("cov_eigval_raw", np.array([])),
+                        "eig(cov clipped)": low_rel_lr.get("cov_eigval_clipped", np.array([])),
+                    }
+                ),
+                use_container_width=True,
+            )
+
+        if h_non_pd_lr:
+            st.error(
+                "6D Laplace warning: the left/right Hessian has non-positive eigenvalue(s). "
+                "The 6D credible band is shown, but should be interpreted cautiously."
+            )
+        elif cov_clipped_lr:
+            st.warning(
+                "6D Laplace warning: covariance eigenvalues were clipped. "
+                "Intervals may be affected by regularization."
+            )
+
+        high_rel_lr = None
+        if bool(inputs["run_high_cost_mcmc"]):
+            st.markdown("#### Left/right 6D MCMC")
+            mcmc_lr_progress = st.progress(0.0)
+            with st.spinner("High-cost left/right MCMC: each proposal solves two-region FDM..."):
+                high_rel_lr = mcmc_reliability_lr(
+                    theta_start_lr=theta_hat_lr,
+                    x_exp=data.x_exp,
+                    c_exp=data.c_exp,
+                    sigma=like_sigma_eff,
+                    t_max=float(inputs["t_max"]),
+                    nx=rel_nx_eff,
+                    nt_save=rel_nt_eff,
+                    phase_width=phase_width_eff,
+                    prior_mean_lr=prior_mean_lr,
+                    prior_std_scalar=prior_std_eff,
+                    n_steps=int(inputs["mcmc_steps"]),
+                    burn_in=int(inputs["mcmc_burn"]),
+                    proposal_std=float(inputs["mcmc_proposal"]),
+                    seed=int(inputs["seed"]),
+                    progress_bar=mcmc_lr_progress,
+                )
+            acc_lr = float(high_rel_lr["acceptance_rate"][0])
+            st.metric("left/right MCMC acceptance", f"{100*acc_lr:.1f}%")
+            if acc_lr < 0.10:
+                st.warning("Left/right MCMC acceptance is low. Try lowering MCMC proposal std.")
+            elif acc_lr > 0.60:
+                st.info("Left/right MCMC acceptance is high. Try increasing MCMC proposal std.")
+
+        st.markdown("#### Left/right posterior parameter summary")
+        lr_tables = [reliability_summary_table_lr("Laplace left/right 6D", low_rel_lr)]
+        if high_rel_lr is not None and len(high_rel_lr["samples"]) > 5:
+            lr_tables.append(reliability_summary_table_lr("MCMC left/right 6D", high_rel_lr))
+        st.dataframe(pd.concat(lr_tables, ignore_index=True), use_container_width=True)
+
+        if high_rel_lr is not None and len(high_rel_lr["samples"]) > 5:
+            st.plotly_chart(mcmc_trace_plot_lr(high_rel_lr["samples"]), use_container_width=True)
+
+        st.markdown("#### Left/right credible bands on profile")
+        st.caption("Each posterior sample is evaluated by the two-region FDM, not by averaged single-D FDM.")
+        low_lr_band_progress = st.progress(0.0)
+        low_lr_band = posterior_band_from_samples_lr(
+            low_rel_lr["samples"],
+            x,
+            float(inputs["t_max"]),
+            rel_nx_eff,
+            rel_nt_eff,
+            phase_width_eff,
+            max_samples=int(inputs["band_samples"]),
+            progress_bar=low_lr_band_progress,
+        )
+        st.plotly_chart(
+            posterior_band_fig11_plot(
+                x=x,
+                x_exp=data.x_exp,
+                C_exp=data.c_exp,
+                C_pinn_final=C_pinn[-1],
+                band=low_lr_band,
+                span_um=span_um,
+                title="Left/right 6D Laplace credible band on Fig.11-style profile",
+            ),
+            use_container_width=True,
+        )
+
+        if high_rel_lr is not None and len(high_rel_lr["samples"]) > 5:
+            high_lr_band_progress = st.progress(0.0)
+            high_lr_band = posterior_band_from_samples_lr(
+                high_rel_lr["samples"],
+                x,
+                float(inputs["t_max"]),
+                rel_nx_eff,
+                rel_nt_eff,
+                phase_width_eff,
+                max_samples=int(inputs["band_samples"]),
+                progress_bar=high_lr_band_progress,
+            )
+            st.plotly_chart(
+                posterior_band_fig11_plot(
+                    x=x,
+                    x_exp=data.x_exp,
+                    C_exp=data.c_exp,
+                    C_pinn_final=C_pinn[-1],
+                    band=high_lr_band,
+                    span_um=span_um,
+                    title="Left/right 6D MCMC credible band on Fig.11-style profile",
+                ),
+                use_container_width=True,
+            )
+
+        st.info(
+            "For left/right D mode, the legacy averaged-D 3-parameter reliability, contour, and band are skipped "
+            "to avoid mixing physical models."
+        )
+
+    else:
+        theta_hat = theta_from_D_matrix(D_pinn)
+        like_sigma_eff = float(inputs["like_sigma"])
+        rel_nx_eff = int(inputs["rel_nx"])
+        rel_nt_eff = int(inputs["rel_nt"])
+        prior_mean = np.asarray(inputs["prior_mean"], dtype=float)
+        prior_std_eff = float(inputs["prior_std"])
+
+        with st.spinner("Low-cost reliability: Laplace approximation from likelihood curvature..."):
+            low_rel = cached_laplace_reliability(
+                theta_hat=theta_hat,
+                x_exp=data.x_exp,
+                c_exp=data.c_exp,
+                sigma=like_sigma_eff,
+                t_max=float(inputs["t_max"]),
+                nx=rel_nx_eff,
+                nt_save=rel_nt_eff,
+                prior_mean=prior_mean,
+                prior_std_scalar=prior_std_eff,
+                hessian_step=float(inputs["hessian_step"]),
+                n_samples=int(inputs["laplace_samples"]),
+                seed=int(inputs["seed"]),
+            )
+
+        st.markdown("### Laplace Hessian diagnostics")
+        h_min = float(low_rel.get("hessian_min_eig", np.array([np.nan]))[0])
+        h_non_pd = bool(low_rel.get("hessian_non_pd", np.array([False]))[0])
+        cov_clipped = bool(low_rel.get("covariance_was_clipped", np.array([False]))[0])
+        inv_method = str(low_rel.get("hessian_inverse_method", np.array(["unknown"]))[0])
+
+        hd1, hd2, hd3, hd4 = st.columns(4)
+        hd1.metric("min eig(H)", f"{h_min:.3e}")
+        hd2.metric("Hessian non-PD", "yes" if h_non_pd else "no")
+        hd3.metric("cov eig clipped", "yes" if cov_clipped else "no")
+        hd4.metric("inverse method", inv_method)
+
+        with st.expander("Hessian / covariance eigenvalues", expanded=False):
+            hdiag_df = pd.DataFrame(
+                {
+                    "index": np.arange(len(low_rel.get("hessian_eigval_raw", []))),
+                    "eig(H raw)": low_rel.get("hessian_eigval_raw", np.array([])),
+                    "eig(H regularized)": low_rel.get("hessian_eigval_regularized", np.array([])),
+                    "eig(cov raw)": low_rel.get("cov_eigval_raw", np.array([])),
+                    "eig(cov clipped)": low_rel.get("cov_eigval_clipped", np.array([])),
+                }
+            )
+            st.dataframe(hdiag_df, use_container_width=True)
+
+        if h_non_pd:
+            st.error(
+                "Laplace warning: the raw Hessian of the negative log posterior has non-positive eigenvalue(s). "
+                "The PINNs estimate may be near a saddle/flat direction rather than a strict local minimum. "
+                "The covariance shown below was numerically repaired and should be interpreted cautiously."
+            )
+        elif cov_clipped:
+            st.warning(
+                "Laplace warning: covariance eigenvalues were clipped for numerical stability. "
+                "Credible intervals may be dominated by regularization rather than likelihood curvature."
+            )
+
+        high_rel = None
+        if bool(inputs["run_high_cost_mcmc"]):
+            st.warning("High-cost MCMC repeatedly solves FDM and can take a while.")
+            mcmc_progress = st.progress(0.0)
+            with st.spinner("High-cost reliability: FDM-based MCMC posterior sampling..."):
+                high_rel = mcmc_reliability(
+                    theta_start=theta_hat,
+                    x_exp=data.x_exp,
+                    c_exp=data.c_exp,
+                    sigma=like_sigma_eff,
+                    t_max=float(inputs["t_max"]),
+                    nx=rel_nx_eff,
+                    nt_save=rel_nt_eff,
+                    prior_mean=prior_mean,
+                    prior_std_scalar=prior_std_eff,
+                    n_steps=int(inputs["mcmc_steps"]),
+                    burn_in=int(inputs["mcmc_burn"]),
+                    proposal_std=float(inputs["mcmc_proposal"]),
+                    seed=int(inputs["seed"]),
+                    progress_bar=mcmc_progress,
+                )
+
+        chi2_low = float(low_rel["chi2"][0])
+        red_low = float(low_rel["reduced_chi2"][0])
+
+        r1, r2, r3, r4 = st.columns(4)
+        r1.metric("Likelihood sigma", f"{like_sigma_eff:.3f}")
+        r2.metric("Chi-square", f"{chi2_low:.2f}")
+        r3.metric("Reduced chi-square", f"{red_low:.2f}")
+        if high_rel is not None:
+            acc_rate = float(high_rel["acceptance_rate"][0])
+            r4.metric("MCMC acceptance", f"{100 * acc_rate:.1f}%")
+            if acc_rate < 0.10:
+                st.warning("MCMC acceptance rate is low. The proposal step may be too large; try lowering `MCMC proposal std`.")
+            elif acc_rate > 0.60:
+                st.info("MCMC acceptance rate is high. The proposal step may be too small; samples may move slowly. Consider increasing `MCMC proposal std`.")
+            else:
+                st.success("MCMC acceptance rate is in a practical range for a first diagnostic.")
+        else:
+            r4.metric("MCMC", "not run")
+
+        low_table = reliability_summary_table("Laplace low-cost", low_rel)
+        if high_rel is not None:
+            high_table = reliability_summary_table("MCMC high-cost", high_rel)
+            rel_table = pd.concat([low_table, high_table], ignore_index=True)
+        else:
+            rel_table = low_table
+
+        st.markdown("### Posterior interval of inferred interaction coefficients")
+        st.dataframe(rel_table, use_container_width=True)
+
+        st.plotly_chart(
+            posterior_parameter_plot(low_rel["samples"], None if high_rel is None else high_rel["samples"]),
+            use_container_width=True,
+        )
+
+        if high_rel is not None and len(high_rel["samples"]) > 5:
+            st.markdown("### MCMC trace diagnostic")
+            st.caption("保存されたMCMCサンプル列です。大きなドリフトが残っている場合は、burn-in不足や混合不良の可能性があります。")
+            st.plotly_chart(mcmc_trace_plot(high_rel["samples"]), use_container_width=True)
+
+        st.markdown("### Likelihood/posterior credible bands on profile")
+        st.caption(
+            "各サンプルの拡散行列でFDMを解き、最終プロファイルの2.5%, 50%, 97.5%分位をバンドとして表示します。"
+        )
+
+        low_band_progress = st.progress(0.0)
+        low_band = posterior_band_from_samples(
+            low_rel["samples"],
+            x,
+            float(inputs["t_max"]),
+            rel_nx_eff,
+            rel_nt_eff,
+            max_samples=int(inputs["band_samples"]),
+            progress_bar=low_band_progress,
+        )
+        st.plotly_chart(
+            posterior_band_fig11_plot(
+                x=x,
+                x_exp=data.x_exp,
+                C_exp=data.c_exp,
+                C_pinn_final=C_pinn[-1],
+                band=low_band,
+                span_um=span_um,
+                title="Low-cost Laplace credible band on Fig.11-style profile",
+            ),
+            use_container_width=True,
+        )
+
+        if high_rel is not None and len(high_rel["samples"]) > 5:
+            high_band_progress = st.progress(0.0)
+            high_band = posterior_band_from_samples(
+                high_rel["samples"],
+                x,
+                float(inputs["t_max"]),
+                rel_nx_eff,
+                rel_nt_eff,
+                max_samples=int(inputs["band_samples"]),
+                progress_bar=high_band_progress,
+            )
+            st.plotly_chart(
+                posterior_band_fig11_plot(
+                    x=x,
+                    x_exp=data.x_exp,
+                    C_exp=data.c_exp,
+                    C_pinn_final=C_pinn[-1],
+                    band=high_band,
+                    span_um=span_um,
+                    title="High-cost MCMC credible band on Fig.11-style profile",
+                ),
+                use_container_width=True,
+            )
+
+        st.markdown("### Likelihood / posterior contour")
+        pair = inputs["contour_axis_pair"]
+        if pair == "logD_NiNi vs logD_TaTa":
+            axis_i, axis_j = 0, 1
+            xl, yl = "log D_NiNi", "log D_TaTa"
+        elif pair == "logD_NiNi vs rho_raw":
+            axis_i, axis_j = 0, 2
+            xl, yl = "log D_NiNi", "rho_raw"
+        else:
+            axis_i, axis_j = 1, 2
+            xl, yl = "log D_TaTa", "rho_raw"
+
+        contour_evals = int(inputs["contour_n"]) ** 2
+        st.caption(
+            f"Contour grid cost: {int(inputs['contour_n'])} × {int(inputs['contour_n'])} = "
+            f"{contour_evals:,} FDM evaluations."
+        )
+        if contour_evals >= 400:
+            st.warning("Large contour grid: this may take a long time because each grid point solves an FDM forward problem.")
+
+        contour_progress = st.progress(0.0)
+        with st.spinner("Computing likelihood/posterior contour grid..."):
+            gx, gy, gz = likelihood_contour_grid(
+                theta_center=theta_hat,
+                x_exp=data.x_exp,
+                c_exp=data.c_exp,
+                sigma=like_sigma_eff,
+                t_max=float(inputs["t_max"]),
+                nx=rel_nx_eff,
+                nt_save=rel_nt_eff,
+                axis_i=axis_i,
+                axis_j=axis_j,
+                half_width=float(inputs["contour_half_width"]),
+                n_grid=int(inputs["contour_n"]),
+                prior_mean=prior_mean,
+                prior_std_scalar=prior_std_eff,
+                progress_bar=contour_progress,
+            )
+        st.plotly_chart(
+            likelihood_contour_plot(gx, gy, gz, xl, yl, theta_hat, axis_i, axis_j),
+            use_container_width=True,
+        )
+
+        st.markdown(
+            """
+    <div class="note">
+    Reduced chi-square が 1 に近い場合、仮定した測定ノイズとモデルのズレが概ね整合的です。
+    かなり大きい場合は、ノイズを過小評価している、または定数拡散行列モデルが実験点を説明しきれていない可能性があります。
+    Laplace近似は高速ですが局所的・ガウス近似です。MCMCは高コストですが、非対称・非ガウスな事後分布をある程度表現できます。
+    </div>
+    """,
+            unsafe_allow_html=True,
+        )
+
+
+
+with tab5:
+    st.markdown("## Abstract validation dashboard")
+    st.markdown(
+        """
+<div class="note">
+This tab is designed for preparing the TOFA abstract. It summarizes whether the synthetic diffusion-couple inverse problem is behaving as expected: recovery of known left/right D, improvement over zero-interaction, and component/region residuals.
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+
+    region_width_abs = float(inputs.get("phase_interface_width", 0.03))
+    abstract_metrics = abstract_validation_metrics(
+        x_grid=x,
+        C_pinn_final=C_pinn[-1],
+        C_fdm_final=C_fdm[-1],
+        x_exp=data.x_exp,
+        C_exp=data.c_exp,
+        D_true=D_true,
+        D_true_left=D_true_left,
+        D_true_right=D_true_right,
+        D_pinn=D_pinn,
+        D_pinn_left=D_pinn_left,
+        D_pinn_right=D_pinn_right,
+        C_zero_final=None if C_zero is None else C_zero[-1],
+        region_width=region_width_abs,
+    )
+
+    st.markdown("### One-paragraph abstract-ready validation summary")
+    summary_text = abstract_validation_summary_text(abstract_metrics)
+    if bool(inputs.get("fixed_diagonal_abstract_default", False)):
+        summary_text = (
+            summary_text
+            + " In this validation setting, the diagonal terms were fixed using known main-diffusion information, "
+            + "so the inverse problem focuses on effective cross-interdiffusion terms."
+        )
+    st.info(summary_text)
+
+    st.markdown("### Known true D vs PINNs-estimated D")
+    st.caption("For synthetic validation, true D is known from the FDM teacher. This table is not used for real experimental data.")
+    st.dataframe(abstract_metrics["D_compare"], use_container_width=True)
+
+    st.markdown("### Profile error and improvement over zero-interaction")
+    st.plotly_chart(abstract_validation_plot(abstract_metrics), use_container_width=True)
+    st.dataframe(abstract_metrics["rmse_improvement"], use_container_width=True)
+
+    with st.expander("Component/region residual summary", expanded=False):
+        st.dataframe(abstract_metrics["profile_rmse"], use_container_width=True)
+
+    st.download_button(
+        "Download abstract D comparison CSV",
+        abstract_metrics["D_compare"].to_csv(index=False).encode("utf-8"),
+        "tofa_abstract_validation_D_compare.csv",
+        "text/csv",
+    )
+    st.download_button(
+        "Download abstract RMSE summary CSV",
+        abstract_metrics["profile_rmse"].to_csv(index=False).encode("utf-8"),
+        "tofa_abstract_validation_profile_rmse.csv",
+        "text/csv",
+    )
+
+    st.markdown("### Multi-time pseudo-exp validation")
+    if str(inputs.get("pseudo_exp_time_mode", "final only")) == "multi-time":
+        mt_rmse_df = multi_time_pseudo_exp_rmse_table(
+            model,
+            data.x_exp_all,
+            data.t_exp_all,
+            data.c_exp_all,
+        )
+        st.plotly_chart(
+            multi_time_pseudo_exp_rmse_plot(mt_rmse_df, paper_time_h_for_display, float(t[-1])),
+            use_container_width=True,
+        )
+        st.dataframe(mt_rmse_df, use_container_width=True)
+        st.info(
+            "Multi-time pseudo-exp is active. This gives the inverse problem time-evolution constraints, "
+            "which is usually more informative for cross-interdiffusion terms than a final-profile-only validation."
+        )
+        st.download_button(
+            "Download multi-time pseudo-exp RMSE CSV",
+            mt_rmse_df.to_csv(index=False).encode("utf-8"),
+            "tofa_multitime_pseudo_exp_rmse.csv",
+            "text/csv",
+        )
+    else:
+        st.warning(
+            "Pseudo-exp time mode is final only. For TOFA abstract validation, multi-time pseudo-exp is recommended "
+            "because it improves identifiability of cross-interdiffusion terms."
+        )
+
+    st.markdown("### Suggested TOFA abstract claim")
+    st.code(
+        summary_text
+        + " The present implementation treats Co as the dependent component and Ni/Ta as independent components, "
+        + "and the inferred quantities are effective interdiffusion coefficients rather than direct CALPHAD mobility parameters.",
+        language="text",
+    )
+
+
+with tab6:
+    st.markdown("## CALPHAD / DICTRA basis comparison")
+    st.markdown(
+        """
+<div class="note">
+PINNsで推定した相互作用項が妥当かどうかを、論文/CALPHAD/DICTRAと同じ基準で比較するためのタブです。<br>
+推奨基準は <b>FCC γ相, 1200 °C, 160 h, mole fraction, Co従属, Ni/Ta独立, volume-fixed interdiffusion coefficient</b> です。
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+
+    paper_T_C_eff = float(inputs.get("paper_T_C", 1200.0))
+    paper_time_h_eff = float(inputs.get("paper_time_h", 160.0))
+    paper_length_um_eff = float(inputs.get("paper_length_um", span_um))
+
+    b1, b2, b3, b4 = st.columns(4)
+    b1.metric("basis T", f"{paper_T_C_eff:.0f} °C")
+    b2.metric("basis time", f"{paper_time_h_eff:.1f} h")
+    b3.metric("length scale L", f"{paper_length_um_eff:.1f} µm")
+    b4.metric("dependent", "Co; independent Ni/Ta")
+
+    with st.expander("基準合わせの注意", expanded=True):
+        st.markdown(
+            """
+| 項目 | 合わせるべき基準 |
+|---|---|
+| dependent component | `Co` |
+| independent components | `Ni`, `Ta` |
+| frame | `volume-fixed interdiffusion coefficient` を推奨 |
+| unit | `m²/s` |
+| composition | mole fraction |
+| distance origin | 論文比較では Matano interface 基準が望ましい |
+| phase | FCC γ相 |
+
+現在のPINNs内部Dは無次元です。このタブでは次の変換で物理単位へ戻して比較します。
+
+```text
+D_physical = D_normalized * L_scale^2 / t_scale
+```
+"""
+        )
+
+    st.markdown("### Self-diffusion diagonal anchors used in PINNs")
+    self_info = {
+        "use_self_diffusion": inputs.get("use_self_diffusion", False),
+        "mode": inputs.get("diag_constraint_mode", "free"),
+        "D_NiNi_self [m2/s]": inputs.get("self_D_Ni_phys", 0.0),
+        "D_TaTa_self [m2/s]": inputs.get("self_D_Ta_phys", 0.0),
+        "prior weight": inputs.get("diag_prior_weight", 0.0),
+    }
+    st.dataframe(pd.DataFrame([self_info]), use_container_width=True)
+    if (
+        inputs.get("diffusion_model_mode") == "left/right D"
+        and inputs.get("diag_constraint_mode") == "fix diagonal terms"
+        and inputs.get("self_D_norm_lr") is None
+    ):
+        st.warning(
+            "Two-region + fix diagonal terms is active, but left/right self-diffusion anchors were not fully provided. "
+            "To fix both regions, enter all four left/right diagonal values."
+        )
+
+    if inputs.get("self_D_norm") is not None:
+        st.caption("Self-diffusion values converted to normalized units used by PINNs:")
+        st.dataframe(
+            pd.DataFrame(
+                {
+                    "parameter": ["D_NiNi", "D_TaTa"],
+                    "self normalized": [inputs["self_D_norm"][0, 0], inputs["self_D_norm"][1, 1]],
+                    "self log normalized": [inputs["self_log_diag"][0], inputs["self_log_diag"][1]],
+                }
+            ),
+            use_container_width=True,
+        )
+    else:
+        st.info("Self-diffusion anchors were not used in this run. Enable them in the sidebar before running if values are available.")
+
+    st.markdown("### PINNs diffusion matrix in physical units")
+    D_pinn_phys = normalized_to_physical_D(D_pinn, paper_length_um_eff, paper_time_h_eff)
+    D_true_phys = normalized_to_physical_D(D_true, paper_length_um_eff, paper_time_h_eff)
+    st.dataframe(
+        matrix_rows_for_comparison(
+            D_pinn_norm=D_pinn,
+            D_true_norm=D_true,
+            D_zero_norm=D_zero,
+            D_calphad_phys=None,
+            length_um=paper_length_um_eff,
+            time_h=paper_time_h_eff,
+        ),
+        use_container_width=True,
+    )
+    if inputs.get("diffusion_model_mode") == "left/right D":
+        st.caption("Left/right region matrices in physical units:")
+        lr_phys_rows = []
+        for label, Dtmp in [("left", D_pinn_left), ("right", D_pinn_right), ("average", D_pinn)]:
+            Dtmp_phys = normalized_to_physical_D(Dtmp, paper_length_um_eff, paper_time_h_eff)
+            lr_phys_rows.extend([
+                {"region": label, "parameter": "D_NiNi", "physical [m2/s]": Dtmp_phys[0, 0]},
+                {"region": label, "parameter": "D_NiTa", "physical [m2/s]": Dtmp_phys[0, 1]},
+                {"region": label, "parameter": "D_TaNi", "physical [m2/s]": Dtmp_phys[1, 0]},
+                {"region": label, "parameter": "D_TaTa", "physical [m2/s]": Dtmp_phys[1, 1]},
+            ])
+        st.dataframe(pd.DataFrame(lr_phys_rows), use_container_width=True)
+
+    st.markdown("### Upload CALPHAD / DICTRA interdiffusion matrix CSV")
+    st.caption("Required columns: D_NiNi, D_NiTa, D_TaNi, D_TaTa. Optional: T_C, x_Co, x_Ni, x_Ta, frame, dependent.")
+    calphad_matrix_file = st.file_uploader("CALPHAD/DICTRA D matrix CSV", type=["csv"], key="calphad_matrix_csv")
+
+    calphad_df = None
+    D_calphad_phys = None
+    if calphad_matrix_file is not None:
+        calphad_df = pd.read_csv(calphad_matrix_file)
+        ok, msg = validate_columns(calphad_df, calphad_required_columns("matrix"))
+        if not ok:
+            st.error(msg)
+        else:
+            if "dependent" in calphad_df.columns:
+                bad_dep = sorted(set(str(v) for v in calphad_df["dependent"].dropna().unique() if str(v).lower() != "co"))
+                if bad_dep:
+                    st.warning(f"dependent column contains values other than Co: {bad_dep}. Direct comparison may be invalid.")
+            if "frame" in calphad_df.columns:
+                frames = sorted(set(str(v) for v in calphad_df["frame"].dropna().unique()))
+                st.caption("frame values in CSV: " + ", ".join(frames))
+            D_calphad_phys = representative_calphad_matrix(calphad_df)
+            compare_df = matrix_rows_for_comparison(
+                D_pinn_norm=D_pinn,
+                D_true_norm=D_true,
+                D_zero_norm=D_zero,
+                D_calphad_phys=D_calphad_phys,
+                length_um=paper_length_um_eff,
+                time_h=paper_time_h_eff,
+            )
+            st.markdown("#### Representative comparison table")
+            st.dataframe(compare_df, use_container_width=True)
+            st.plotly_chart(D_matrix_bar_plot(compare_df), use_container_width=True)
+            if len(calphad_df) > 1:
+                st.plotly_chart(calphad_D_composition_plot(calphad_df, D_pinn_phys), use_container_width=True)
+
+            st.download_button(
+                "Download PINNs vs CALPHAD D comparison CSV",
+                compare_df.to_csv(index=False).encode("utf-8"),
+                "pinns_vs_calphad_D_matrix_comparison.csv",
+                "text/csv",
+            )
+
+            st.markdown("#### Interpretation")
+            for _, row in compare_df.iterrows():
+                if row["parameter"] in ["D_NiTa", "D_TaNi"] and "CALPHAD/DICTRA physical [m2/s]" in compare_df.columns:
+                    st.write(
+                        f"- **{row['parameter']}**: sign agreement = `{row.get('sign agreement', 'n/a')}`, "
+                        f"relative error = `{row.get('relative error vs CALPHAD [%]', np.nan):.2f}%`."
+                    )
+
+    st.markdown("### Optional thermodynamic factor CSV")
+    st.caption("If Phi is available, upload Phi_NiNi, Phi_NiTa, Phi_TaNi, Phi_TaTa to estimate M_eff = D_pinn Phi^-1.")
+    phi_file = st.file_uploader("Thermodynamic factor Phi CSV", type=["csv"], key="phi_csv")
+    if phi_file is not None:
+        phi_df = pd.read_csv(phi_file)
+        required_phi = ["Phi_NiNi", "Phi_NiTa", "Phi_TaNi", "Phi_TaTa"]
+        ok, msg = validate_columns(phi_df, required_phi)
+        if not ok:
+            st.error(msg)
+        else:
+            Phi = np.array(
+                [
+                    [float(np.nanmedian(phi_df["Phi_NiNi"])), float(np.nanmedian(phi_df["Phi_NiTa"]))],
+                    [float(np.nanmedian(phi_df["Phi_TaNi"])), float(np.nanmedian(phi_df["Phi_TaTa"]))],
+                ],
+                dtype=float,
+            )
+            M_eff = mobility_from_D_and_phi(D_pinn_phys, Phi)
+            st.warning("M_eff = D Phi^-1 is a diagnostic effective mobility-like matrix, not a direct DICTRA database parameter.")
+            st.dataframe(
+                pd.DataFrame(
+                    [
+                        {"parameter": "M_eff_NiNi", "value": M_eff[0, 0]},
+                        {"parameter": "M_eff_NiTa", "value": M_eff[0, 1]},
+                        {"parameter": "M_eff_TaNi", "value": M_eff[1, 0]},
+                        {"parameter": "M_eff_TaTa", "value": M_eff[1, 1]},
+                    ]
+                ),
+                use_container_width=True,
+            )
+
+    st.markdown("### Upload DICTRA / CALPHAD profile CSV")
+    st.caption("Required columns: distance_um, Co, Ni, Ta. This is used for profile-level validation.")
+    dictra_profile_file = st.file_uploader("DICTRA/CALPHAD profile CSV", type=["csv"], key="dictra_profile_csv")
+    if dictra_profile_file is not None:
+        prof_df = pd.read_csv(dictra_profile_file)
+        ok, msg = validate_columns(prof_df, calphad_required_columns("profile"))
+        if not ok:
+            st.error(msg)
+        else:
+            st.plotly_chart(
+                dictra_profile_overlay_plot(
+                    profile_df=prof_df,
+                    x=x,
+                    C_pinn_final=C_pinn[-1],
+                    x_exp=data.x_exp,
+                    C_exp=data.c_exp,
+                    C_zero_final=None if C_zero is None else C_zero[-1],
+                    span_um=span_um,
+                ),
+                use_container_width=True,
+            )
+
+
+with tab6:
+    st.markdown(
+        """
+<div class="note">
+このデモでは実際のFig.11のraw experimental dataは使っていません。
+FDM最終プロファイルにノイズを加えた pseudo experimental data を open symbols として表示しています。
+実論文の完全再現には、実測プロファイル、熱力学DB、mobility DB、DICTRA相当の計算が必要です。
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+
+    summary = pd.DataFrame(
+        {
+            "quantity": [
+                "D_NiNi_true",
+                "D_NiTa_true",
+                "D_TaNi_true",
+                "D_TaTa_true",
+                "D_NiNi_PINN",
+                "D_NiTa_PINN",
+                "D_TaNi_PINN",
+                "D_TaTa_PINN",
+                "total_profile_RMSE",
+                "D_matrix_relative_error",
+                "train_time_s",
+            ],
+            "value": [
+                D_true[0, 0],
+                D_true[0, 1],
+                D_true[1, 0],
+                D_true[1, 1],
+                D_pinn[0, 0],
+                D_pinn[0, 1],
+                D_pinn[1, 0],
+                D_pinn[1, 1],
+                all_rmse,
+                D_rel_err,
+                result.train_time,
+            ],
+        }
+    )
+    st.download_button(
+        "Download summary CSV",
+        summary.to_csv(index=False).encode("utf-8"),
+        "fig11_summary.csv",
+        "text/csv",
+    )
+
+    dist = distance_um_from_x(x, span_um)
+    profile_df = pd.DataFrame(
+        {
+            "distance_um": dist,
+            "FDM_Co": C_fdm[-1, :, 0],
+            "FDM_Ni": C_fdm[-1, :, 1],
+            "FDM_Ta": C_fdm[-1, :, 2],
+            "PINN_Co": C_pinn[-1, :, 0],
+            "PINN_Ni": C_pinn[-1, :, 1],
+            "PINN_Ta": C_pinn[-1, :, 2],
+            "DIFF_Co": C_diff[-1, :, 0],
+            "DIFF_Ni": C_diff[-1, :, 1],
+            "DIFF_Ta": C_diff[-1, :, 2],
+        }
+    )
+    st.download_button(
+        "Download final profiles CSV",
+        profile_df.to_csv(index=False).encode("utf-8"),
+        "fig11_profiles.csv",
+        "text/csv",
+    )
+
+    exp_df = pd.DataFrame(
+        {
+            "distance_um": distance_um_from_x(data.x_exp, span_um),
+            "Exp_Co": data.c_exp[:, 0],
+            "Exp_Ni": data.c_exp[:, 1],
+            "Exp_Ta": data.c_exp[:, 2],
+        }
+    )
+    st.download_button(
+        "Download pseudo experimental data CSV",
+        exp_df.to_csv(index=False).encode("utf-8"),
+        "fig11_pseudo_experimental.csv",
+        "text/csv",
+    )
+
+    D_table = diffusion_matrix_table(D_true, D_pinn)
+    physical_D_table = matrix_rows_for_comparison(
+        D_pinn_norm=D_pinn,
+        D_true_norm=D_true,
+        D_zero_norm=D_zero,
+        D_calphad_phys=None,
+        length_um=float(inputs.get("paper_length_um", span_um)),
+        time_h=float(inputs.get("paper_time_h", 160.0)),
+    )
+    if D_zero is not None:
+        zero_rows = pd.DataFrame(
+            {
+                "parameter": ["D_NiNi", "D_NiTa", "D_TaNi", "D_TaTa"],
+                "zero_interaction_reference": [D_zero[0, 0], D_zero[0, 1], D_zero[1, 0], D_zero[1, 1]],
+            }
+        )
+        D_table = D_table.merge(zero_rows, on="parameter", how="left")
+
+    st.download_button(
+        "Download diffusion matrix CSV",
+        D_table.to_csv(index=False).encode("utf-8"),
+        "fig11_diffusion_matrix.csv",
+        "text/csv",
+    )
+    st.download_button(
+        "Download physical diffusion matrix CSV",
+        physical_D_table.to_csv(index=False).encode("utf-8"),
+        "fig11_diffusion_matrix_physical_units.csv",
+        "text/csv",
+    )
+
+    if C_zero is not None:
+        zero_df = pd.DataFrame(
+            {
+                "distance_um": distance_um_from_x(x, span_um),
+                "ZeroInteraction_Co": C_zero[-1, :, 0],
+                "ZeroInteraction_Ni": C_zero[-1, :, 1],
+                "ZeroInteraction_Ta": C_zero[-1, :, 2],
+                "PINN_minus_Zero_Co": C_pinn[-1, :, 0] - C_zero[-1, :, 0],
+                "PINN_minus_Zero_Ni": C_pinn[-1, :, 1] - C_zero[-1, :, 1],
+                "PINN_minus_Zero_Ta": C_pinn[-1, :, 2] - C_zero[-1, :, 2],
+            }
+        )
+        st.download_button(
+            "Download zero-interaction reference CSV",
+            zero_df.to_csv(index=False).encode("utf-8"),
+            "fig11_zero_interaction_reference.csv",
+            "text/csv",
+        )
