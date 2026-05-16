@@ -425,12 +425,16 @@ def _format_bib_entry(key: str, meta: Dict) -> str:
     """1 エントリ分の BibTeX 文字列を組み立てる。"""
     lines = [f"@article{{{key},"]
 
+    source = meta.get("_source_file", "")
+    file_basename = os.path.basename(source) if source else ""
+
     field_map = [
         ("title", meta.get("title", "")),
         ("author", meta.get("authors", "")),
         ("year", str(meta.get("year", "")) if meta.get("year") else ""),
         ("journal", meta.get("journal", "") or ""),
         ("doi", meta.get("doi", "") or ""),
+        ("file", file_basename),
         ("materials", meta.get("materials", "") or ""),
         ("studytype", meta.get("study_type", "") or ""),
         ("theory", meta.get("theory", "") or ""),
