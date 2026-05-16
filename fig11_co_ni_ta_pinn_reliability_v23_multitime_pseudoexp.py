@@ -820,6 +820,9 @@ def _run_fdm_teacher_core(
 
         total_solute = np.sum(U_new, axis=1)
         bad = total_solute > 0.999
+        # Fix #2: exclude boundary nodes from clip — BC values are exact
+        bad[0] = False
+        bad[-1] = False
         if np.any(bad):
             U_new[bad] = U_new[bad] / total_solute[bad, None] * 0.999
             _DIAG_COUNTERS["fdm_clip_events"] += 1
@@ -924,6 +927,9 @@ def _run_fdm_teacher_core_two_region(
 
         total_solute = np.sum(U_new, axis=1)
         bad = total_solute > 0.999
+        # Fix #2: exclude boundary nodes from clip — BC values are exact
+        bad[0] = False
+        bad[-1] = False
         if np.any(bad):
             U_new[bad] = U_new[bad] / total_solute[bad, None] * 0.999
             _DIAG_COUNTERS["fdm_clip_events"] += 1
@@ -1047,30 +1053,51 @@ def bilinear_sample_xt(
     return out
 
 
+def _alr_forward(c: np.ndarray, ref: int = 0) -> np.ndarray:
+    """Additive log-ratio transform: c (N, K) → alr (N, K-1)."""
+    c_safe = np.maximum(c, 1.0e-14)
+    return np.log(np.delete(c_safe, ref, axis=1) / c_safe[:, ref:ref + 1])
+
+
+def _alr_inverse(alr: np.ndarray, ref: int = 0) -> np.ndarray:
+    """Inverse ALR: alr (N, K-1) → c (N, K) on simplex."""
+    exp_alr = np.exp(alr)
+    denom = 1.0 + exp_alr.sum(axis=1, keepdims=True)
+    c_non_ref = exp_alr / denom
+    c_ref = 1.0 / denom
+    return np.insert(c_non_ref, ref, c_ref.ravel(), axis=1)
+
+
 def make_pseudo_experiment(
     x: np.ndarray,
     C_final: np.ndarray,
     noise: float,
     seed: int,
     n_points: int = 64,
+    noise_model: str = "gaussian",
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Generate pseudo experimental points from the final FDM profile.
 
     If noise=0, the pseudo experimental data are exactly on the FDM final profile.
 
-    **P8 note**: Gaussian noise is added then simplex-projected (clip + normalize).
-    This introduces correlations between components, so the resulting noise is
-    no longer iid Gaussian.  The downstream ``gaussian_nll_from_experiment``
-    assumes independent Gaussian noise — the likelihood is therefore
-    misspecified for noisy pseudo-experiments.  For rigorous UQ, use a
-    Dirichlet noise model or log-ratio (ALR) space.
+    P8 fix: ``noise_model`` controls the noise generation:
+    - "gaussian" (default): add Gaussian noise in composition space, then
+      simplex-project.  Fast and backward-compatible but misspecified.
+    - "alr": add Gaussian noise in ALR (additive log-ratio) space, then
+      transform back.  Self-consistent with independent Gaussian assumption
+      in ALR-transformed residuals.
     """
     rng = np.random.default_rng(seed + 1120)
     x_exp = np.linspace(float(x.min()), float(x.max()), n_points)
     c_clean = np.column_stack([np.interp(x_exp, x, C_final[:, j]) for j in range(3)])
-    noisy = c_clean + rng.normal(0.0, float(noise), size=c_clean.shape)
-    noisy = np.clip(noisy, 0.0, 1.0)
-    noisy = noisy / np.maximum(noisy.sum(axis=1, keepdims=True), 1.0e-14)
+    if noise_model == "alr" and float(noise) > 0.0:
+        alr_clean = _alr_forward(c_clean, ref=0)
+        alr_noisy = alr_clean + rng.normal(0.0, float(noise), size=alr_clean.shape)
+        noisy = _alr_inverse(alr_noisy, ref=0)
+    else:
+        noisy = c_clean + rng.normal(0.0, float(noise), size=c_clean.shape)
+        noisy = np.clip(noisy, 0.0, 1.0)
+        noisy = noisy / np.maximum(noisy.sum(axis=1, keepdims=True), 1.0e-14)
     return x_exp, noisy
 
 
@@ -1083,8 +1110,13 @@ def make_pseudo_experiment_multitime(
     n_points_per_time: int = 64,
     n_time_slices: int = 4,
     t_start: float = 0.0,
+    noise_model: str = "gaussian",
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Generate pseudo experimental points from multiple FDM time slices."""
+    """Generate pseudo experimental points from multiple FDM time slices.
+
+    P8 fix: ``noise_model="alr"`` adds noise in ALR space for
+    self-consistent likelihood evaluation.
+    """
     rng = np.random.default_rng(seed + 2219)
     valid = np.where(np.asarray(t_grid, dtype=float) >= float(t_start))[0]
     if len(valid) == 0:
@@ -1097,9 +1129,14 @@ def make_pseudo_experiment_multitime(
     x_list, t_list, c_list = [], [], []
     for idx in idxs:
         c_clean = np.column_stack([np.interp(x_base, x, C_fdm[idx, :, j]) for j in range(3)])
-        noisy = c_clean + rng.normal(0.0, float(noise), size=c_clean.shape)
-        noisy = np.clip(noisy, 0.0, 1.0)
-        noisy = noisy / np.maximum(noisy.sum(axis=1, keepdims=True), 1.0e-14)
+        if noise_model == "alr" and float(noise) > 0.0:
+            alr_clean = _alr_forward(c_clean, ref=0)
+            alr_noisy = alr_clean + rng.normal(0.0, float(noise), size=alr_clean.shape)
+            noisy = _alr_inverse(alr_noisy, ref=0)
+        else:
+            noisy = c_clean + rng.normal(0.0, float(noise), size=c_clean.shape)
+            noisy = np.clip(noisy, 0.0, 1.0)
+            noisy = noisy / np.maximum(noisy.sum(axis=1, keepdims=True), 1.0e-14)
         x_list.append(x_base.reshape(-1, 1))
         t_list.append(np.full((len(x_base), 1), float(t_grid[idx])))
         c_list.append(noisy)
@@ -1160,6 +1197,7 @@ def make_training_data(
     phase_width: float = 0.02,
     rho21_raw: Optional[float] = None,
     rho21_raw_right: Optional[float] = None,
+    noise_model: str = "gaussian",
 ) -> TrainingData:
     rng = np.random.default_rng(seed)
     D_true_left = None
@@ -1214,7 +1252,8 @@ def make_training_data(
     t_f = rng.uniform(t_start, t_max, size=(n_f, 1))
 
     x_exp, c_exp = make_pseudo_experiment(
-        x_grid, C_fdm[-1], noise=noise, seed=seed, n_points=n_exp_points
+        x_grid, C_fdm[-1], noise=noise, seed=seed, n_points=n_exp_points,
+        noise_model=noise_model,
     )
 
     if str(pseudo_exp_time_mode).lower().startswith("multi"):
@@ -1227,6 +1266,7 @@ def make_training_data(
             n_points_per_time=n_exp_points,
             n_time_slices=int(pseudo_exp_time_slices),
             t_start=t_start,
+            noise_model=noise_model,
         )
     else:
         x_exp_all = x_exp.reshape(-1, 1)
@@ -1306,16 +1346,13 @@ class MLP(nn.Module):
     def forward(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
         raw = self.net(torch.cat([x, t], dim=1))
         if self.direct_output:
+            # Fix #1: simplex-safe projection via clamp-based rescale.
+            # sigmoid → [0,1] per component, then rescale if Ni+Ta > 1.
             ni_ta = torch.sigmoid(raw)
-            ni = ni_ta[:, 0:1]
-            ta = ni_ta[:, 1:2]
-            total = ni + ta
-            # C3 fix: when Ni+Ta > 1, rescale to preserve simplex constraint
-            scale = torch.where(total > 1.0, 1.0 / (total + 1e-8), torch.ones_like(total))
-            ni = ni * scale
-            ta = ta * scale
-            co = 1.0 - ni - ta
-            return torch.cat([co, ni, ta], dim=1)
+            total = ni_ta.sum(dim=1, keepdim=True)
+            ni_ta = ni_ta / torch.clamp(total, min=1.0)
+            co = torch.clamp(1.0 - ni_ta.sum(dim=1, keepdim=True), min=0.0)
+            return torch.cat([co, ni_ta], dim=1)
         else:
             positive = F.softplus(raw) + 1.0e-8
             return positive / torch.sum(positive, dim=1, keepdim=True)
@@ -1792,18 +1829,20 @@ def train_pinn_rs(
             loss_bc_val = F.mse_loss(pred_bc, c_bc)
 
         # RBA: rebalance weights for RS training
-        if adaptive_weights and epoch > 1 and epoch % rba_update_every == 0:
-            # C5 note: per-loss autograd.grad calls + final loss.backward() causes
-            # ~(N+1)x backward passes. This is inherent to RBA (need per-loss
-            # gradient norms AND total gradient). Acceptable cost for update_every>1.
+        # C5 fix: on RBA epochs, reuse per-loss gradients to accumulate the
+        # weighted total gradient directly, eliminating the (N+1)th backward pass.
+        _rba_epoch = adaptive_weights and epoch > 1 and epoch % rba_update_every == 0
+        if _rba_epoch:
             params = [p for p in model.parameters() if p.requires_grad]
             losses_rba = [loss_data, loss_ic, loss_phys]
             if has_bc:
                 losses_rba.insert(2, loss_bc_val)
+            all_grads = []
             gnorms = []
             for loss_i in losses_rba:
                 grads = torch.autograd.grad(loss_i, params, retain_graph=True, allow_unused=True)
-                gn = torch.sqrt(sum(g.norm() ** 2 for g in grads if g is not None))  # C4 fix: proper L2
+                all_grads.append(grads)
+                gn = torch.sqrt(sum(g.norm() ** 2 for g in grads if g is not None))
                 gnorms.append(max(float(gn), 1.0e-12))
             mean_gn = sum(gnorms) / len(gnorms)
             base_w_list = [weights.get("data", 25.0), weights.get("ic", 12.0)]
@@ -1838,7 +1877,25 @@ def train_pinn_rs(
                 )
             break
 
-        loss.backward()
+        if _rba_epoch:
+            # Accumulate weighted gradients from per-loss grads (no extra backward)
+            optimizer.zero_grad()
+            for p in params:
+                if p.grad is None:
+                    p.grad = torch.zeros_like(p.data)
+            for w_i, grads_i in zip(new_w, all_grads):
+                for p, g in zip(params, grads_i):
+                    if g is not None:
+                        p.grad.add_(w_i * g)
+            # Add omega prior gradient separately
+            if w_omega_prior > 0.0 and omega_prior_left_int is not None:
+                omega_loss = w_omega_prior * omega_reg
+                og = torch.autograd.grad(omega_loss, params, allow_unused=True)
+                for p, g in zip(params, og):
+                    if g is not None:
+                        p.grad.add_(g)
+        else:
+            loss.backward()
         torch.nn.utils.clip_grad_norm_(
             [p for p in model.parameters() if p.requires_grad],
             max_norm=10.0,
@@ -1974,18 +2031,18 @@ def gaussian_nll_multitime_rs(  # T4: (n/2)log(2π) omitted — see gaussian_nll
 
     sigma_eff = max(float(sigma), 1.0e-8)
     total_nll = 0.0
-    unique_times = np.unique(t_exp_1d)
-    # C18 note: floating-point time matching uses absolute tolerance.
-    # If data pipeline changes time precision, this threshold may need adjustment.
-    _TIME_TOL = 1.0e-10
-    for t_val in unique_times:
-        mask = np.abs(t_exp_1d - t_val) < _TIME_TOL
+    # C18 fix: map experimental time values to nearest FDM time indices,
+    # then group by integer index instead of floating-point comparison.
+    t_exp_indices = np.array(
+        [int(np.argmin(np.abs(t_grid - t))) for t in t_exp_1d], dtype=int
+    )
+    for ti in np.unique(t_exp_indices):
+        mask = t_exp_indices == ti
         x_pts = x_exp_1d[mask]
         c_pts = c_exp[mask]
 
-        ti_closest = int(np.argmin(np.abs(t_grid - t_val)))
         c_pred = np.column_stack([
-            np.interp(x_pts, x_grid, C_fdm[ti_closest, :, j])
+            np.interp(x_pts, x_grid, C_fdm[ti, :, j])
             for j in range(n_components)
         ])
 
@@ -2487,13 +2544,17 @@ def train_pinn(
                 )
 
         # RBA: rebalance weights every rba_update_every epochs
-        # C5 note: see RS-side comment — inherent N+1 backward passes for RBA
-        if adaptive_weights and ep > 1 and ep % rba_update_every == 0:
+        # C5 fix: reuse per-loss gradients to accumulate weighted total gradient
+        # directly, eliminating the (N+1)th backward pass.
+        _rba_epoch = adaptive_weights and ep > 1 and ep % rba_update_every == 0
+        if _rba_epoch:
             params = [p for p in model.parameters() if p.requires_grad]
+            all_grads = []
             gnorms = []
             for loss_i in [loss_data, loss_ic, loss_bc, loss_phys]:
                 grads = torch.autograd.grad(loss_i, params, retain_graph=True, allow_unused=True)
-                gn = torch.sqrt(sum(g.norm() ** 2 for g in grads if g is not None))  # C4 fix: proper L2
+                all_grads.append(grads)
+                gn = torch.sqrt(sum(g.norm() ** 2 for g in grads if g is not None))
                 gnorms.append(max(float(gn), 1.0e-12))
             mean_gn = sum(gnorms) / len(gnorms)
             base = [weights["data"], weights["ic"], weights["bc"], weights["phys"]]
@@ -2517,7 +2578,25 @@ def train_pinn(
                 )
             break
 
-        loss.backward()
+        if _rba_epoch:
+            # Accumulate weighted gradients from per-loss grads (no extra backward)
+            opt.zero_grad()
+            for p in params:
+                if p.grad is None:
+                    p.grad = torch.zeros_like(p.data)
+            for w_i, grads_i in zip(new_w, all_grads):
+                for p, g in zip(params, grads_i):
+                    if g is not None:
+                        p.grad.add_(w_i * g)
+            # Add diag prior gradient separately if non-zero
+            if diag_prior_tensor is not None and float(diag_prior_weight) > 0.0:
+                dp_loss = float(diag_prior_weight) * loss_diag_prior
+                dp_grads = torch.autograd.grad(dp_loss, params, allow_unused=True)
+                for p, g in zip(params, dp_grads):
+                    if g is not None:
+                        p.grad.add_(g)
+        else:
+            loss.backward()
         torch.nn.utils.clip_grad_norm_(
             [p for p in model.parameters() if p.requires_grad],
             max_norm=10.0,
@@ -2616,16 +2695,18 @@ def predict_final_profile_from_theta(
     nx: int,
     nt_save: int,
     use_cache: bool = False,
+    symmetric: Optional[bool] = None,
 ) -> np.ndarray:
     """Predict final FDM profile.
 
-    C10 note: symmetric vs non-symmetric D is inferred from ``len(theta)``:
-    3 params → symmetric (FORCE_SYMMETRIC_D=True), 4 → non-symmetric.
-    This is consistent with ``THETA_DIM_SINGLE`` at module level.
+    C10 fix: ``symmetric`` explicitly controls parameter interpretation.
+    If None, inferred from ``len(theta)`` (3→symmetric, 4→non-symmetric).
     """
     theta = np.asarray(theta, dtype=float).ravel()
+    if symmetric is None:
+        symmetric = (theta.size <= 3)
     solver = run_fdm_teacher if use_cache else _run_fdm_teacher_core
-    rho21 = float(theta[3]) if len(theta) > 3 else None
+    rho21 = None if symmetric else float(theta[3])
     xg, _, Cg, _ = solver(
         float(theta[0]), float(theta[1]), float(theta[2]),
         float(t_max), int(nx), int(nt_save), rho21_raw=rho21,
@@ -2664,6 +2745,7 @@ def gaussian_nll_multitime(
     t_max: float,
     nx: int,
     nt_save: int,
+    symmetric: Optional[bool] = None,
 ) -> float:
     """Gaussian NLL using multi-time experimental data for single D mode (P4 fix).
 
@@ -2671,11 +2753,14 @@ def gaussian_nll_multitime(
     slice, this function matches predictions at every observed time point,
     improving cross-interdiffusion term identifiability.
 
+    C10 fix: ``symmetric`` explicitly controls parameter interpretation.
     **T4 note**: The (n/2)log(2π) normalisation constant is omitted.
     """
     sigma_eff = max(float(sigma), 1.0e-8)
     theta = np.asarray(theta, dtype=float).ravel()
-    rho21 = float(theta[3]) if len(theta) > 3 else None
+    if symmetric is None:
+        symmetric = (theta.size <= 3)
+    rho21 = None if symmetric else float(theta[3])
     try:
         xg, t_grid_fdm, Cg, _ = _run_fdm_teacher_core(
             float(theta[0]), float(theta[1]), float(theta[2]),
@@ -2689,15 +2774,16 @@ def gaussian_nll_multitime(
     x_exp_1d = np.asarray(x_exp_all).ravel()
 
     total_nll = 0.0
-    unique_times = np.unique(t_exp_1d)
-    _TIME_TOL = 1.0e-10
-    for t_val in unique_times:
-        mask = np.abs(t_exp_1d - t_val) < _TIME_TOL
+    # C18 fix: integer index-based time matching (eliminates float tolerance)
+    t_exp_indices = np.array(
+        [min(int(np.argmin(np.abs(t_grid_fdm - t))), Cg.shape[0] - 1)
+         for t in t_exp_1d], dtype=int
+    )
+    for ti in np.unique(t_exp_indices):
+        mask = t_exp_indices == ti
         x_pts = x_exp_1d[mask]
         c_pts = c_exp_all[mask]
-        ti_closest = int(np.argmin(np.abs(t_grid_fdm - t_val)))
-        ti_closest = min(ti_closest, Cg.shape[0] - 1)
-        pred = np.column_stack([np.interp(x_pts, xg, Cg[ti_closest, :, j]) for j in range(3)])
+        pred = np.column_stack([np.interp(x_pts, xg, Cg[ti, :, j]) for j in range(3)])
         residual = c_pts[:, 1:3] - pred[:, 1:3]
         total_nll += 0.5 * np.sum((residual / sigma_eff) ** 2)
 
@@ -3071,8 +3157,15 @@ def mcmc_reliability(
         proposal_cov_scale = 2.38 ** 2 / max(dim, 1)
 
     if proposal_cov is not None:
+        _cov = np.asarray(proposal_cov, dtype=float)
+        # Fix #3: augment proposal_cov with sigma block when marginalize_sigma=True
+        if marginalize_sigma and _cov.shape == (dim_theta, dim_theta):
+            _cov_aug = np.zeros((dim, dim), dtype=float)
+            _cov_aug[:dim_theta, :dim_theta] = _cov
+            _cov_aug[dim_theta, dim_theta] = 0.01  # σ proposal variance
+            _cov = _cov_aug
         L, proposal_scale, mode = _mcmc_proposal_from_cov(
-            np.asarray(proposal_cov, dtype=float) * float(proposal_cov_scale),
+            _cov * float(proposal_cov_scale),
             proposal_std, dim=dim,
         )
     else:
@@ -3544,8 +3637,15 @@ def mcmc_reliability_lr(
         proposal_cov_scale = 2.38 ** 2 / max(dim, 1)
 
     if proposal_cov is not None:
+        _cov = np.asarray(proposal_cov, dtype=float)
+        # Fix #3: augment proposal_cov with sigma block when marginalize_sigma=True
+        if marginalize_sigma and _cov.shape == (dim_theta, dim_theta):
+            _cov_aug = np.zeros((dim, dim), dtype=float)
+            _cov_aug[:dim_theta, :dim_theta] = _cov
+            _cov_aug[dim_theta, dim_theta] = 0.01
+            _cov = _cov_aug
         L, proposal_scale, mode = _mcmc_proposal_from_cov(
-            np.asarray(proposal_cov, dtype=float) * float(proposal_cov_scale),
+            _cov * float(proposal_cov_scale),
             proposal_std, dim=dim,
         )
     else:
@@ -5342,6 +5442,18 @@ Powell 法で最適化し、Hessian から Laplace 近似の事後分布 $\mathc
         help="Choose the diagonal terms used for the zero-interaction reference.",
     )
     noise = st.slider("pseudo experimental noise", 0.000, 0.050, 0.008, 0.001)
+    # P8 fix: allow user to select noise model
+    noise_model = st.selectbox(
+        "noise model",
+        ["gaussian (simplex-projected)", "ALR (additive log-ratio)"],
+        index=0,
+        help=(
+            "Gaussian: adds iid noise then re-normalizes to simplex (fast, introduces "
+            "correlation). ALR: adds noise in log-ratio space (self-consistent with "
+            "Gaussian NLL assumption)."
+        ),
+    )
+    noise_model_key = "alr" if "ALR" in noise_model else "gaussian"
     n_exp_points = st.slider("experimental-like points per time", 30, 120, 64, 2)
     pseudo_exp_time_mode = st.selectbox(
         "pseudo-exp time mode",
@@ -5623,6 +5735,17 @@ D_norm = D_phys * t_scale / L_scale^2
         omega_left_init_str = st.text_input("初期Ω left (init)", value=_omega_default)
         learn_lr_omega = st.checkbox("左右別々のΩを学習", value=True)
         omega_right_init_str = st.text_input("初期Ω right (init)", value=_omega_right_default, disabled=not learn_lr_omega)
+        # C11 fix: separate omega spatial blend width from initial composition profile width.
+        # phase_interface_width controls the initial c(x) sigmoid; omega_blend_width controls
+        # the spatial blending of left/right Omega values in the PINN and FDM NLL.
+        rs_omega_blend_width = st.slider(
+            "Ω spatial blend width",
+            0.001, 0.150, 0.020, 0.001,
+            help=(
+                "Width of the tanh blending region for left/right Omega. "
+                "Distinct from 'phase interface width' which controls the initial composition profile."
+            ),
+        )
         rs_RT = st.number_input("RT (regular-solution)", min_value=0.01, max_value=10.0, value=1.0, step=0.1)
 
         rs_mobility_mode = st.selectbox(
@@ -5802,6 +5925,7 @@ if run:
         phase_width=float(phase_interface_width),
         rho21_raw=float(rho21_raw_true) if rho21_raw_true is not None else None,
         rho21_raw_right=float(rho21_raw_true_right) if rho21_raw_true_right is not None else None,
+        noise_model=noise_model_key,
     )
 
     st.success("FDM teacher calculation and pseudo experimental data generation finished.")
@@ -5897,7 +6021,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
             theta_right_init=theta_right_init_vals,
             learn_left_right_omega=bool(learn_lr_omega),
             x_interface=0.5,
-            omega_width=float(phase_interface_width),
+            omega_width=float(rs_omega_blend_width),
             RT=float(rs_RT),
             train_omega=True,
             log_M_endmembers_init=log_M_endmembers_init,
@@ -5931,10 +6055,9 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
             theta_hat_rs = theta_l_disp.copy()
             prior_mean_rs = theta_left_init_vals.copy()
 
-        # C11 note: c_left_rs guard values (1e-6, 5e-7) avoid log(0) in chemical
-        # potential; phase_interface_width is shared between initial composition
-        # profile width and Omega spatial blend width. These are conceptually
-        # distinct quantities — decouple in future if needed.
+        # C11 fix: phase_interface_width controls initial c(x) sigmoid width;
+        # rs_omega_blend_width (separate slider) controls Omega spatial blending.
+        # Guard values (1e-6, 5e-7) avoid log(0) in chemical potential.
         c_left_rs = np.array([1.0 - 1e-6, 5e-7, 5e-7], dtype=float)
         c_left_rs /= c_left_rs.sum()
         c_right_rs = np.array([5e-7, 0.9, 0.1], dtype=float)
@@ -5950,7 +6073,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
             sigma=float(rs_like_sigma), dt=float(rs_fdm_dt),
             nsteps=int(rs_fdm_nsteps), save_every=int(rs_fdm_save_every),
             mobility=mobility_rs, RT=float(rs_RT),
-            x_interface=0.5, omega_width=float(phase_interface_width),
+            x_interface=0.5, omega_width=float(rs_omega_blend_width),
             prior_mean=prior_mean_rs, prior_std=5.0,
             log_M_endmembers=log_M_endmembers_init,
         )
@@ -6014,6 +6137,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
             "rs_mcmc_proposal": float(rs_mcmc_proposal),
             "rs_skip_reliability": bool(rs_skip_reliability),
             "phase_interface_width": float(phase_interface_width),
+            "rs_omega_blend_width": float(rs_omega_blend_width),
             "paper_time_h": float(paper_time_h),
             "paper_length_um": float(paper_length_um),
             "show_zero_interaction_reference": show_zero_interaction_reference,
@@ -6304,7 +6428,7 @@ if type(result).__name__ == "TrainResultRS":
                 mobility=rs_result.mobility,
                 RT=float(inputs["rs_RT"]),
                 x_interface=0.5,
-                omega_width=float(inputs["phase_interface_width"]),
+                omega_width=float(inputs.get("rs_omega_blend_width", inputs["phase_interface_width"])),
                 prior_mean=theta_hat_rs,
                 prior_std=5.0,
                 log_M_endmembers=inputs.get("log_M_endmembers"),
@@ -6378,7 +6502,7 @@ if type(result).__name__ == "TrainResultRS":
                     mobility=rs_result.mobility,
                     RT=float(inputs["rs_RT"]),
                     x_interface=0.5,
-                    omega_width=float(inputs["phase_interface_width"]),
+                    omega_width=float(inputs.get("rs_omega_blend_width", inputs["phase_interface_width"])),
                     target_time=float(t[-1]),
                     max_samples=int(inputs["rs_band_samples"]),
                     progress_bar=band_progress,
@@ -6901,6 +7025,8 @@ with tab4:
                     proposal_std=float(inputs["mcmc_proposal"]),
                     seed=int(inputs["seed"]),
                     progress_bar=mcmc_lr_progress,
+                    # Fix #5: pass Laplace cov as informed proposal (LR)
+                    proposal_cov=low_rel_lr.get("cov"),
                     marginalize_sigma=bool(inputs.get("marginalize_sigma", False)),
                 )
             acc_lr = float(high_rel_lr["acceptance_rate"][0])
@@ -7107,6 +7233,8 @@ with tab4:
                     proposal_std=float(inputs["mcmc_proposal"]),
                     seed=int(inputs["seed"]),
                     progress_bar=mcmc_progress,
+                    # Fix #5: pass Laplace cov as informed proposal
+                    proposal_cov=low_rel.get("cov"),
                     marginalize_sigma=bool(inputs.get("marginalize_sigma", False)),
                     # P4 fix: pass multitime data for full-time NLL evaluation
                     x_exp_all=data.x_exp_all,
