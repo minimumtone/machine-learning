@@ -213,10 +213,15 @@ def _parse_json(text: str) -> Dict:
 
 
 def _estimate_tokens(text: str) -> int:
-    """テキストのトークン数を推定する（英語≈4文字/token、日本語≈1.5文字/token）。"""
+    """テキストのトークン数を推定する。
+
+    学術論文（化学式・数式・特殊記号多め）は BPE トークナイザーで
+    1文字=1トークンになるケースが多いため、保守的に推定する。
+    """
     ascii_chars = sum(1 for c in text if ord(c) < 128)
     non_ascii = len(text) - ascii_chars
-    return int(ascii_chars / 4 + non_ascii / 1.5)
+    # 学術テキスト: ASCII ≈ 1.5 文字/token, 非 ASCII ≈ 1 文字/token
+    return int(ascii_chars / 1.5 + non_ascii / 1.0)
 
 
 def _split_text_by_tokens(text: str, max_tokens: int = 5000) -> List[str]:
@@ -303,7 +308,7 @@ def _call_llm_single(
                     {"role": "user", "content": f"以下の論文テキストを解析してください:\n\n{text}"},
                 ],
                 temperature=0.0,
-                max_tokens=2048,
+                max_tokens=1024,
             )
             if not response or not response.choices:
                 raise ValueError("LLM から空のレスポンスが返されました（choices が空）")
