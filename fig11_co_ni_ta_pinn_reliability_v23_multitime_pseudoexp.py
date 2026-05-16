@@ -135,6 +135,39 @@ div[data-testid="stMetricLabel"] { color: #64748b; }
 
 
 # =============================================================================
+# Robustness changelog (merged from v25_robust audit)
+# =============================================================================
+# Theoretical:
+#   T1. D matrix symmetry: FORCE_SYMMETRIC_D=False (default) → 4-param
+#       non-symmetric D (rho12, rho21 independent).  Both PINN classes,
+#       FDM, reliability/MCMC, UI toggle all support 4-param mode.
+#   T2. fdm_ternary_regular_solution: staggered finite-volume scheme.
+#   T3. Mass conservation: ad-hoc rescale tracked via _DIAG_COUNTERS.
+#   T4. Gaussian NLL (n/2)log(2π) omitted — constant; documented.
+# Numerical:
+#   N1. _robust_cov_from_hessian: eps_rel eigen-floor (no two-stage clipping).
+#   N2. bilinear_sample_xt: vectorized (legacy preserved).
+#   N3. MCMC: per-dim proposal AND Hessian-informed proposal_cov via
+#       _mcmc_proposal_from_cov (Roberts-Gelman-Gilks 2.38^2/d optimal).
+#   N4. FDM NLL failures: logged to _DIAG_COUNTERS.
+#   N5. numerical_hessian_adaptive: per-dimension step sizing.
+# Statistical:
+#   S1. chi2_misspecification_diagnosis: Wald-style misspecification check.
+#   S2. geweke_diagnostic: MCMC convergence z-score.
+#   S3. PSIS (Pareto-k̂) diagnostic: quantitative Laplace quality check.
+#       k̂ < 0.5 = good, 0.5-0.7 = marginal, > 0.7 = unreliable.
+#   S4. σ marginalization: half-Cauchy(0, 0.1) prior on σ, joint θ-σ MCMC.
+#       Addresses the assumption that observation noise scale is known.
+# Training robustness:
+#   R1. NaN/Inf guard + clip_grad_norm_(max_norm=10) in train_pinn/train_pinn_rs.
+#   R2. Self-adaptive loss weighting (RBA): gradient-norm rebalancing
+#       w_i = w_i^base × mean(‖∇L_j‖) / ‖∇L_i‖ every N epochs.
+# Output:
+#   O1. Direct [Ni, Ta] output mode: MLP outputs 2 values via sigmoid,
+#       Co = 1 − Ni − Ta.  Avoids normalization Jacobian in PDE residuals.
+# =============================================================================
+
+# =============================================================================
 # Constants and helpers
 # =============================================================================
 
@@ -142,6 +175,36 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 DTYPE = torch.float32
 
 COMPONENTS = ["Co", "Ni", "Ta"]
+
+# --- D-matrix symmetry flag (T1) ----------------------------------------------
+# When True: 3-parameter symmetric D  (log D11, log D22, rho_raw → D12=D21).
+# When False: 4-parameter non-symmetric D (log D11, log D22, rho12_raw, rho21_raw).
+# Onsager symmetry holds for L_ij = L_ji, but D = L * Phi is generally
+# non-symmetric; e.g. D_NiTa != D_TaNi in real interdiffusion.
+# Left/right mode: 6 params (symmetric) or 8 params (non-symmetric).
+# Default False: the physically correct model.  UI checkbox overrides per-run.
+FORCE_SYMMETRIC_D: bool = False
+THETA_DIM_SINGLE: int = 3 if FORCE_SYMMETRIC_D else 4
+THETA_DIM_LR: int = 2 * THETA_DIM_SINGLE
+
+# --- Diagnostic counters (T3, N4) --------------------------------------------
+# Mutable dict recording runtime events for post-hoc analysis.
+_DIAG_COUNTERS: Dict[str, int] = {
+    "fdm_clip_events": 0,    # mass-conservation ad-hoc rescale count
+    "fdm_nll_failures": 0,   # FDM forward-solve failures inside NLL
+}
+
+
+def diag_reset() -> None:
+    """Reset all diagnostic counters to zero."""
+    for k in _DIAG_COUNTERS:
+        _DIAG_COUNTERS[k] = 0
+
+
+def diag_snapshot() -> Dict[str, int]:
+    """Return a snapshot copy of current diagnostic counters."""
+    return dict(_DIAG_COUNTERS)
+
 COLORS = {"Co": "black", "Ni": "#2b83ba", "Ta": "#4daf4a"}
 SYMBOLS = {"Co": "circle-open", "Ni": "square-open", "Ta": "triangle-up-open"}
 
@@ -190,10 +253,9 @@ def format_time_label(tau: float, tau_max: float, annealing_time_h: float) -> st
 
 
 def make_spd_matrix_np(log_d11: float, log_d22: float, rho_raw: float) -> np.ndarray:
-    """Symmetric positive-definite 2x2 diffusion matrix.
+    """Symmetric positive-definite 2x2 diffusion matrix (FORCE_SYMMETRIC_D=True).
 
-    D12 = rho * sqrt(D11*D22), |rho| < 0.95.
-    D12 can be negative. Do not plot these values on ordinary log axes.
+    D12 = rho * sqrt(D11*D22), |rho| < 0.95.  D12 = D21.
     """
     d11 = float(np.exp(log_d11))
     d22 = float(np.exp(log_d22))
@@ -202,19 +264,61 @@ def make_spd_matrix_np(log_d11: float, log_d22: float, rho_raw: float) -> np.nda
     return np.array([[d11, d12], [d12, d22]], dtype=float)
 
 
-def theta_from_D_matrix(D: np.ndarray) -> np.ndarray:
+def make_nonsym_d_matrix_np(
+    log_d11: float, log_d22: float, rho12_raw: float, rho21_raw: float,
+) -> np.ndarray:
+    """Non-symmetric 2x2 diffusion matrix (FORCE_SYMMETRIC_D=False).
+
+    D12 = rho12 * sqrt(D11*D22), D21 = rho21 * sqrt(D11*D22).
+    Each |rho| < 0.95, ensuring det(D) > 0 when rho12*rho21 < 1.
+    """
+    d11 = float(np.exp(log_d11))
+    d22 = float(np.exp(log_d22))
+    scale = np.sqrt(d11 * d22)
+    d12 = float(0.95 * np.tanh(rho12_raw)) * scale
+    d21 = float(0.95 * np.tanh(rho21_raw)) * scale
+    return np.array([[d11, d12], [d21, d22]], dtype=float)
+
+
+def make_d_matrix_from_theta(theta: np.ndarray) -> np.ndarray:
+    """Dispatch to symmetric (3 params) or non-symmetric (4 params) D constructor."""
+    theta = np.asarray(theta, dtype=float).ravel()
+    if theta.size == 3:
+        return make_spd_matrix_np(theta[0], theta[1], theta[2])
+    elif theta.size == 4:
+        return make_nonsym_d_matrix_np(theta[0], theta[1], theta[2], theta[3])
+    else:
+        raise ValueError(f"theta must have 3 or 4 elements, got {theta.size}")
+
+
+def theta_from_D_matrix(D: np.ndarray, force_symmetric: Optional[bool] = None) -> np.ndarray:
+    """Extract theta from D matrix. Returns 3 params (symmetric) or 4 (non-symmetric)."""
+    if force_symmetric is None:
+        force_symmetric = FORCE_SYMMETRIC_D
     d11 = max(float(D[0, 0]), 1.0e-14)
     d22 = max(float(D[1, 1]), 1.0e-14)
-    rho = float(D[0, 1]) / max(np.sqrt(d11 * d22), 1.0e-14)
-    rho_scaled = np.clip(rho / 0.95, -0.999999, 0.999999)
-    return np.array([np.log(d11), np.log(d22), np.arctanh(rho_scaled)], dtype=float)
+    scale = max(np.sqrt(d11 * d22), 1.0e-14)
+    if force_symmetric:
+        rho = float(D[0, 1]) / scale
+        rho_scaled = np.clip(rho / 0.95, -0.999999, 0.999999)
+        return np.array([np.log(d11), np.log(d22), np.arctanh(rho_scaled)], dtype=float)
+    else:
+        rho12 = float(D[0, 1]) / scale
+        rho21 = float(D[1, 0]) / scale
+        rho12_s = np.clip(rho12 / 0.95, -0.999999, 0.999999)
+        rho21_s = np.clip(rho21 / 0.95, -0.999999, 0.999999)
+        return np.array([np.log(d11), np.log(d22),
+                         np.arctanh(rho12_s), np.arctanh(rho21_s)], dtype=float)
 
 
 def zero_interaction_theta_from_D(D: np.ndarray) -> np.ndarray:
     """Return theta with off-diagonal interaction forced to zero."""
     d11 = max(float(D[0, 0]), 1.0e-14)
     d22 = max(float(D[1, 1]), 1.0e-14)
-    return np.array([np.log(d11), np.log(d22), 0.0], dtype=float)
+    if FORCE_SYMMETRIC_D:
+        return np.array([np.log(d11), np.log(d22), 0.0], dtype=float)
+    else:
+        return np.array([np.log(d11), np.log(d22), 0.0, 0.0], dtype=float)
 
 
 def compute_zero_interaction_reference(
@@ -233,6 +337,7 @@ def compute_zero_interaction_reference(
     C_zero[idx] from using indices from another time grid.
     """
     theta_zero = zero_interaction_theta_from_D(D_source)
+    rho21 = float(theta_zero[3]) if len(theta_zero) > 3 else None
     xz, tz, Cz, Dz = run_fdm_teacher(
         float(theta_zero[0]),
         float(theta_zero[1]),
@@ -240,6 +345,7 @@ def compute_zero_interaction_reference(
         float(t_max),
         int(nx),
         int(nt_save),
+        rho21_raw=rho21,
     )
     Xq, Tq = np.meshgrid(x_query, t_query)
     C_interp = bilinear_sample_xt(xz, tz, Cz, Xq.reshape(-1, 1), Tq.reshape(-1, 1))
@@ -530,7 +636,12 @@ def fdm_ternary_regular_solution(
     save_every: int = 100,
     log_M_endmembers: Optional[np.ndarray] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """FDM solver for ternary regular-solution diffusion: c_t = div(M grad(mu)).
+    """Staggered finite-volume solver for ternary RS diffusion (T2).
+
+    Uses staggered grid: chemical potentials evaluated at cell centres,
+    fluxes at cell faces (half-points).  This avoids the checkerboard
+    instability that arises when both grad(mu) and div(flux) use central
+    differences on the same grid.
 
     If ``log_M_endmembers`` is provided (shape ``(n_ind, n_components)``),
     the mobility matrix is **composition-dependent** at each grid point:
@@ -562,25 +673,34 @@ def fdm_ternary_regular_solution(
             x_interface=x_interface, width=omega_width,
         )
 
-        dmu_dx = np.zeros_like(mu)
-        dmu_dx[1:-1] = (mu[2:] - mu[:-2]) / (2.0 * dx)
-        dmu_dx[0] = dmu_dx[1]
-        dmu_dx[-1] = dmu_dx[-2]
+        # --- Staggered flux at half-points (faces) ---
+        # grad(mu) at face i+1/2 = (mu[i+1] - mu[i]) / dx
+        dmu_half = (mu[1:] - mu[:-1]) / dx  # shape (Nx-1, n_ind)
 
+        # Mobility at half-points: average of adjacent cells
         if use_comp_dep_M:
-            M_diag = _mobility_diag_from_endmembers_np(c_full_safe, log_M_endmembers)
-            flux = M_diag * dmu_dx
+            M_full = _mobility_diag_from_endmembers_np(c_full_safe, log_M_endmembers)
+            M_half = 0.5 * (M_full[:-1] + M_full[1:])  # (Nx-1, n_ind)
+            flux_half = M_half * dmu_half
         else:
-            flux = np.zeros((Nx, n_ind), dtype=float)
+            flux_half = np.zeros((Nx - 1, n_ind), dtype=float)
             for i_comp in range(n_ind):
                 for j_comp in range(n_ind):
-                    flux[:, i_comp] += mobility[i_comp, j_comp] * dmu_dx[:, j_comp]
+                    flux_half[:, i_comp] += mobility[i_comp, j_comp] * dmu_half[:, j_comp]
 
+        # --- Divergence at cell centres (conservative) ---
+        # div(flux)[i] = (flux[i+1/2] - flux[i-1/2]) / dx
         div_flux = np.zeros((Nx, n_ind), dtype=float)
-        div_flux[1:-1] = (flux[2:] - flux[:-2]) / (2.0 * dx)
+        div_flux[1:-1] = (flux_half[1:] - flux_half[:-1]) / dx
+        # Boundary: zero-flux (Neumann) → div_flux[0] = div_flux[-1] = 0
 
         c_full[:, :n_ind] += dt * div_flux
-        c_full[:, :n_ind] = sanitize_independent(c_full[:, :n_ind])
+
+        # --- Mass-conservation clip with diagnostic counter (T3) ---
+        c_clipped = sanitize_independent(c_full[:, :n_ind])
+        if not np.array_equal(c_clipped, c_full[:, :n_ind]):
+            _DIAG_COUNTERS["fdm_clip_events"] += 1
+        c_full[:, :n_ind] = c_clipped
         c_full[:, -1] = 1.0 - np.sum(c_full[:, :n_ind], axis=1)
 
         t += dt
@@ -602,16 +722,20 @@ def _run_fdm_teacher_core(
     t_max: float,
     nx: int,
     nt_save: int,
+    rho21_raw: Optional[float] = None,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Uncached conservative FDM for coupled ternary interdiffusion.
 
     This function is intentionally uncached and is used by likelihood/MCMC to
     avoid polluting Streamlit cache with thousands of random theta values.
+    When rho21_raw is provided, builds a non-symmetric D matrix.
     """
-    Dmat = make_spd_matrix_np(log_d11, log_d22, rho_raw)
-    assert np.allclose(Dmat, Dmat.T), "Dmat is expected to be symmetric positive definite."
+    if rho21_raw is not None:
+        Dmat = make_nonsym_d_matrix_np(log_d11, log_d22, rho_raw, rho21_raw)
+    else:
+        Dmat = make_spd_matrix_np(log_d11, log_d22, rho_raw)
 
-    eigmax = float(np.max(np.linalg.eigvalsh(Dmat)))
+    eigmax = float(np.max(np.abs(np.linalg.eigvals(Dmat))))
     x = np.linspace(0.0, 1.0, nx)
     dx = x[1] - x[0]
 
@@ -644,11 +768,9 @@ def _run_fdm_teacher_core(
             break
 
         grad_half = (U[1:] - U[:-1]) / dx
-        # Dmat is constructed symmetric in this prototype, so grad @ Dmat and
-        # Dmat @ grad are equivalent after transposition. If future work allows
-        # non-symmetric interdiffusion matrices, this flux convention must be
-        # revisited carefully.
-        flux_half = -grad_half @ Dmat
+        # J_i = -sum_j D_ij * dc_j/dx  →  flux = -grad @ D^T
+        # For symmetric D, D^T = D; for non-symmetric D, the transpose is required.
+        flux_half = -grad_half @ Dmat.T
         U_new = U.copy()
         U_new[1:-1] = U[1:-1] - dt * (flux_half[1:] - flux_half[:-1]) / dx
         U_new[0] = left_u
@@ -659,6 +781,7 @@ def _run_fdm_teacher_core(
         bad = total_solute > 0.999
         if np.any(bad):
             U_new[bad] = U_new[bad] / total_solute[bad, None] * 0.999
+            _DIAG_COUNTERS["fdm_clip_events"] += 1
 
         U = U_new
 
@@ -683,13 +806,22 @@ def _run_fdm_teacher_core_two_region(
     nx: int,
     nt_save: int,
     phase_width: float = 0.02,
+    rho21_raw_left: Optional[float] = None,
+    rho21_raw_right: Optional[float] = None,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Uncached conservative FDM with smoothly blended left/right diffusion matrices."""
-    D_left = make_spd_matrix_np(log_d11_left, log_d22_left, rho_raw_left)
-    D_right = make_spd_matrix_np(log_d11_right, log_d22_right, rho_raw_right)
+    if rho21_raw_left is not None:
+        D_left = make_nonsym_d_matrix_np(log_d11_left, log_d22_left, rho_raw_left, rho21_raw_left)
+    else:
+        D_left = make_spd_matrix_np(log_d11_left, log_d22_left, rho_raw_left)
+    if rho21_raw_right is not None:
+        D_right = make_nonsym_d_matrix_np(log_d11_right, log_d22_right, rho_raw_right, rho21_raw_right)
+    else:
+        D_right = make_spd_matrix_np(log_d11_right, log_d22_right, rho_raw_right)
     D_avg = 0.5 * (D_left + D_right)
 
-    eigmax = float(max(np.max(np.linalg.eigvalsh(D_left)), np.max(np.linalg.eigvalsh(D_right))))
+    eigmax = float(max(np.max(np.abs(np.linalg.eigvals(D_left))),
+                       np.max(np.abs(np.linalg.eigvals(D_right)))))
     x = np.linspace(0.0, 1.0, nx)
     dx = x[1] - x[0]
 
@@ -730,8 +862,7 @@ def _run_fdm_teacher_core_two_region(
         grad_half = (U[1:] - U[:-1]) / dx
         flux_half = np.empty_like(grad_half)
         for k in range(len(grad_half)):
-            # Symmetric-D convention. Revisit if non-symmetric D is allowed.
-            flux_half[k] = -grad_half[k] @ D_half[k]
+            flux_half[k] = -grad_half[k] @ D_half[k].T
 
         U_new = U.copy()
         U_new[1:-1] = U[1:-1] - dt * (flux_half[1:] - flux_half[:-1]) / dx
@@ -743,6 +874,7 @@ def _run_fdm_teacher_core_two_region(
         bad = total_solute > 0.999
         if np.any(bad):
             U_new[bad] = U_new[bad] / total_solute[bad, None] * 0.999
+            _DIAG_COUNTERS["fdm_clip_events"] += 1
         U = U_new
 
     return x, np.asarray(t_save), np.stack(C_save, axis=0), D_avg, D_left, D_right
@@ -760,6 +892,8 @@ def run_fdm_teacher_two_region(
     nx: int,
     nt_save: int,
     phase_width: float,
+    rho21_raw_left: Optional[float] = None,
+    rho21_raw_right: Optional[float] = None,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Cached two-region FDM teacher/profile call."""
     return _run_fdm_teacher_core_two_region(
@@ -773,6 +907,8 @@ def run_fdm_teacher_two_region(
         nx,
         nt_save,
         phase_width,
+        rho21_raw_left,
+        rho21_raw_right,
     )
 
 
@@ -784,19 +920,20 @@ def run_fdm_teacher(
     t_max: float,
     nx: int,
     nt_save: int,
+    rho21_raw: Optional[float] = None,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Cached FDM only for deterministic teacher/profile calls."""
-    return _run_fdm_teacher_core(log_d11, log_d22, rho_raw, t_max, nx, nt_save)
+    return _run_fdm_teacher_core(log_d11, log_d22, rho_raw, t_max, nx, nt_save, rho21_raw)
 
 
-def bilinear_sample_xt(
+def bilinear_sample_xt_legacy(
     x_grid: np.ndarray,
     t_grid: np.ndarray,
     C: np.ndarray,
     xq: np.ndarray,
     tq: np.ndarray,
 ) -> np.ndarray:
-    """Bilinear interpolation in x,t for a 3-component composition array."""
+    """Bilinear interpolation in x,t (original Python-loop version, N2 legacy)."""
     xq = xq.ravel()
     tq = tq.ravel()
     out = np.empty((len(xq), 3), dtype=float)
@@ -815,6 +952,43 @@ def bilinear_sample_xt(
             + wx * wt * C[it + 1, ix + 1]
         )
 
+    return out
+
+
+def bilinear_sample_xt(
+    x_grid: np.ndarray,
+    t_grid: np.ndarray,
+    C: np.ndarray,
+    xq: np.ndarray,
+    tq: np.ndarray,
+) -> np.ndarray:
+    """Vectorized bilinear interpolation in x,t for composition array (N2)."""
+    xq = np.asarray(xq).ravel()
+    tq = np.asarray(tq).ravel()
+    n_comp = C.shape[2]
+
+    ix = np.clip(np.searchsorted(x_grid, xq) - 1, 0, len(x_grid) - 2)
+    it = np.clip(np.searchsorted(t_grid, tq) - 1, 0, len(t_grid) - 2)
+
+    x0 = x_grid[ix]
+    x1 = x_grid[ix + 1]
+    t0 = t_grid[it]
+    t1 = t_grid[it + 1]
+
+    dx = x1 - x0
+    dt_arr = t1 - t0
+    wx = np.where(dx > 0, (xq - x0) / dx, 0.0)
+    wt = np.where(dt_arr > 0, (tq - t0) / dt_arr, 0.0)
+
+    wx = wx[:, None]
+    wt = wt[:, None]
+
+    out = (
+        (1 - wx) * (1 - wt) * C[it, ix]
+        + wx * (1 - wt) * C[it, ix + 1]
+        + (1 - wx) * wt * C[it + 1, ix]
+        + wx * wt * C[it + 1, ix + 1]
+    )
     return out
 
 
@@ -922,6 +1096,8 @@ def make_training_data(
     log_d22_right: Optional[float] = None,
     rho_raw_right: Optional[float] = None,
     phase_width: float = 0.02,
+    rho21_raw: Optional[float] = None,
+    rho21_raw_right: Optional[float] = None,
 ) -> TrainingData:
     rng = np.random.default_rng(seed)
     D_true_left = None
@@ -938,10 +1114,12 @@ def make_training_data(
             nx_fdm,
             nt_fdm,
             float(phase_width),
+            rho21_raw_left=rho21_raw,
+            rho21_raw_right=rho21_raw_right,
         )
     else:
         x_grid, t_grid, C_fdm, D_true = run_fdm_teacher(
-            log_d11, log_d22, rho_raw, t_max, nx_fdm, nt_fdm
+            log_d11, log_d22, rho_raw, t_max, nx_fdm, nt_fdm, rho21_raw=rho21_raw
         )
         D_true_left = D_true
         D_true_right = D_true
@@ -1030,8 +1208,17 @@ def make_training_data(
 # =============================================================================
 
 class MLP(nn.Module):
-    def __init__(self, width: int, depth: int, activation: str):
+    """Ternary composition network.
+
+    ``direct_output=False`` (legacy): 3 outputs → softplus → normalize to simplex.
+    ``direct_output=True``: 2 outputs [Ni, Ta] via sigmoid; Co = 1 - Ni - Ta.
+    Direct mode avoids the normalization Jacobian leaking into PDE residuals.
+    """
+
+    def __init__(self, width: int, depth: int, activation: str, direct_output: bool = False):
         super().__init__()
+        self.direct_output = direct_output
+        out_dim = 2 if direct_output else 3
 
         def make_activation():
             if activation == "silu":
@@ -1044,7 +1231,7 @@ class MLP(nn.Module):
         for i in range(depth):
             layers.append(nn.Linear(2 if i == 0 else width, width))
             layers.append(make_activation())
-        layers.append(nn.Linear(width, 3))
+        layers.append(nn.Linear(width, out_dim))
         self.net = nn.Sequential(*layers)
 
         for m in self.net:
@@ -1053,9 +1240,14 @@ class MLP(nn.Module):
                 nn.init.zeros_(m.bias)
 
     def forward(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
-        logits = self.net(torch.cat([x, t], dim=1))
-        positive = F.softplus(logits) + 1.0e-8
-        return positive / torch.sum(positive, dim=1, keepdim=True)
+        raw = self.net(torch.cat([x, t], dim=1))
+        if self.direct_output:
+            ni_ta = torch.sigmoid(raw)
+            co = torch.clamp(1.0 - ni_ta[:, 0:1] - ni_ta[:, 1:2], min=0.0)
+            return torch.cat([co, ni_ta], dim=1)
+        else:
+            positive = F.softplus(raw) + 1.0e-8
+            return positive / torch.sum(positive, dim=1, keepdim=True)
 
 
 class TernaryDiffusionPINN(nn.Module):
@@ -1067,19 +1259,34 @@ class TernaryDiffusionPINN(nn.Module):
         width: int,
         depth: int,
         activation: str,
+        rho21_raw_init: Optional[float] = None,
+        force_symmetric: bool = FORCE_SYMMETRIC_D,
+        direct_output: bool = False,
     ):
         super().__init__()
-        self.net = MLP(width, depth, activation)
+        self.net = MLP(width, depth, activation, direct_output=direct_output)
+        self.force_symmetric = force_symmetric
         self.log_d11 = nn.Parameter(torch.tensor([log_d11_init], dtype=DTYPE, device=DEVICE))
         self.log_d22 = nn.Parameter(torch.tensor([log_d22_init], dtype=DTYPE, device=DEVICE))
         self.rho_raw = nn.Parameter(torch.tensor([rho_raw_init], dtype=DTYPE, device=DEVICE))
+        if not force_symmetric:
+            rho21_val = rho21_raw_init if rho21_raw_init is not None else rho_raw_init
+            self.rho21_raw = nn.Parameter(torch.tensor([rho21_val], dtype=DTYPE, device=DEVICE))
+        else:
+            self.rho21_raw = None
 
     def diffusion_matrix(self) -> torch.Tensor:
         d11 = torch.exp(self.log_d11[0])
         d22 = torch.exp(self.log_d22[0])
-        rho = 0.95 * torch.tanh(self.rho_raw[0])
-        d12 = rho * torch.sqrt(d11 * d22)
-        return torch.stack([torch.stack([d11, d12]), torch.stack([d12, d22])])
+        scale = torch.sqrt(d11 * d22)
+        rho12 = 0.95 * torch.tanh(self.rho_raw[0])
+        d12 = rho12 * scale
+        if self.force_symmetric or self.rho21_raw is None:
+            d21 = d12
+        else:
+            rho21 = 0.95 * torch.tanh(self.rho21_raw[0])
+            d21 = rho21 * scale
+        return torch.stack([torch.stack([d11, d12]), torch.stack([d21, d22])])
 
     def forward(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
         return self.net(x, t)
@@ -1166,29 +1373,53 @@ class TwoRegionTernaryDiffusionPINN(TernaryDiffusionPINN):
         activation: str,
         phase_interface: float = 0.5,
         phase_width: float = 0.02,
+        rho21_raw_left_init: Optional[float] = None,
+        rho21_raw_right_init: Optional[float] = None,
+        force_symmetric: bool = FORCE_SYMMETRIC_D,
+        direct_output: bool = False,
     ):
-        super().__init__(log_d11_left_init, log_d22_left_init, rho_raw_left_init, width, depth, activation)
+        super().__init__(
+            log_d11_left_init, log_d22_left_init, rho_raw_left_init,
+            width, depth, activation,
+            rho21_raw_init=rho21_raw_left_init, force_symmetric=force_symmetric,
+            direct_output=direct_output,
+        )
         self.log_d11_left = self.log_d11
         self.log_d22_left = self.log_d22
         self.rho_raw_left = self.rho_raw
+        self.rho21_raw_left = self.rho21_raw  # None when force_symmetric=True
         self.log_d11_right = nn.Parameter(torch.tensor([float(log_d11_right_init)], dtype=DTYPE, device=DEVICE))
         self.log_d22_right = nn.Parameter(torch.tensor([float(log_d22_right_init)], dtype=DTYPE, device=DEVICE))
         self.rho_raw_right = nn.Parameter(torch.tensor([float(rho_raw_right_init)], dtype=DTYPE, device=DEVICE))
+        if not force_symmetric:
+            rho21_r = rho21_raw_right_init if rho21_raw_right_init is not None else rho_raw_right_init
+            self.rho21_raw_right = nn.Parameter(torch.tensor([float(rho21_r)], dtype=DTYPE, device=DEVICE))
+        else:
+            self.rho21_raw_right = None
         self.phase_interface = float(phase_interface)
         self.phase_width = float(phase_width)
 
-    def _matrix_from_params(self, log_d11: torch.Tensor, log_d22: torch.Tensor, rho_raw: torch.Tensor) -> torch.Tensor:
+    def _matrix_from_params(
+        self, log_d11: torch.Tensor, log_d22: torch.Tensor,
+        rho_raw: torch.Tensor, rho21_raw: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         d11 = torch.exp(log_d11[0])
         d22 = torch.exp(log_d22[0])
-        rho = 0.95 * torch.tanh(rho_raw[0])
-        d12 = rho * torch.sqrt(d11 * d22)
-        return torch.stack([torch.stack([d11, d12]), torch.stack([d12, d22])])
+        scale = torch.sqrt(d11 * d22)
+        rho12 = 0.95 * torch.tanh(rho_raw[0])
+        d12 = rho12 * scale
+        if self.force_symmetric or rho21_raw is None:
+            d21 = d12
+        else:
+            rho21 = 0.95 * torch.tanh(rho21_raw[0])
+            d21 = rho21 * scale
+        return torch.stack([torch.stack([d11, d12]), torch.stack([d21, d22])])
 
     def diffusion_matrix_left(self) -> torch.Tensor:
-        return self._matrix_from_params(self.log_d11_left, self.log_d22_left, self.rho_raw_left)
+        return self._matrix_from_params(self.log_d11_left, self.log_d22_left, self.rho_raw_left, self.rho21_raw_left)
 
     def diffusion_matrix_right(self) -> torch.Tensor:
-        return self._matrix_from_params(self.log_d11_right, self.log_d22_right, self.rho_raw_right)
+        return self._matrix_from_params(self.log_d11_right, self.log_d22_right, self.rho_raw_right, self.rho21_raw_right)
 
     def diffusion_matrix(self) -> torch.Tensor:
         return 0.5 * (self.diffusion_matrix_left() + self.diffusion_matrix_right())
@@ -1427,6 +1658,8 @@ def train_pinn_rs(
     w_omega_prior: float = 0.0,
     omega_prior_left: Optional[np.ndarray] = None,
     omega_prior_right: Optional[np.ndarray] = None,
+    adaptive_weights: bool = False,
+    rba_update_every: int = 50,
 ) -> Tuple[TernaryRegularSolutionPINN, pd.DataFrame]:
     """Train a TernaryRegularSolutionPINN model using fig11-standard TrainingData."""
     device = DEVICE
@@ -1476,6 +1709,19 @@ def train_pinn_rs(
         res = model.residual_train(x_col, t_col, mobility_t)
         loss_phys = torch.mean(res ** 2)
 
+        # RBA: rebalance weights for RS training
+        if adaptive_weights and epoch > 1 and epoch % rba_update_every == 0:
+            params = [p for p in model.parameters() if p.requires_grad]
+            gnorms = []
+            for loss_i in [loss_data, loss_ic, loss_phys]:
+                grads = torch.autograd.grad(loss_i, params, retain_graph=True, allow_unused=True)
+                gn = sum(float(g.norm()) for g in grads if g is not None)
+                gnorms.append(max(gn, 1.0e-12))
+            mean_gn = sum(gnorms) / len(gnorms)
+            base_w = [weights.get("data", 25.0), weights.get("ic", 12.0), weights.get("phys", 10.0)]
+            new_w = [b * mean_gn / gn for b, gn in zip(base_w, gnorms)]
+            w_data, w_ic, w_phys = new_w
+
         loss = w_data * loss_data + w_ic * loss_ic + w_phys * loss_phys
 
         if w_omega_prior > 0.0 and omega_prior_left_int is not None:
@@ -1487,7 +1733,20 @@ def train_pinn_rs(
                 omega_reg = omega_reg + torch.mean((theta_r - prior_r) ** 2)
             loss = loss + w_omega_prior * omega_reg
 
+        # R1: bail early on non-finite loss to protect parameters.
+        if not torch.isfinite(loss):
+            if status is not None:
+                status.text(
+                    f"Training aborted at epoch {epoch}: non-finite loss "
+                    f"(data={float(loss_data):.3e}, phys={float(loss_phys):.3e})."
+                )
+            break
+
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(
+            [p for p in model.parameters() if p.requires_grad],
+            max_norm=10.0,
+        )
         optimizer.step()
         scheduler.step()
 
@@ -1561,7 +1820,7 @@ def _reorder_c_internal_to_display_np(c: np.ndarray) -> np.ndarray:
     return c[..., [2, 0, 1]]
 
 
-def gaussian_nll_multitime_rs(
+def gaussian_nll_multitime_rs(  # T4: (n/2)log(2π) omitted — see gaussian_nll_from_experiment docstring
     theta: np.ndarray,
     n_components: int,
     left_right: bool,
@@ -1608,6 +1867,7 @@ def gaussian_nll_multitime_rs(
             log_M_endmembers=log_M_endmembers,
         )
     except Exception:
+        _DIAG_COUNTERS["fdm_nll_failures"] += 1
         return 1.0e12
 
     C_fdm = _reorder_c_internal_to_display_np(C_fdm_int)
@@ -1741,26 +2001,7 @@ def laplace_reliability_rs(
     dim = len(theta_hat)
     step = np.ones(dim, dtype=float) * float(hessian_step)
     H_raw = numerical_hessian(nll_fun, theta_hat, step)
-
-    H_sym = 0.5 * (H_raw + H_raw.T)
-    h_eigval_raw = np.linalg.eigvalsh(H_sym)
-    hessian_min_eig = float(np.nanmin(h_eigval_raw))
-    hessian_non_pd = bool(np.any(h_eigval_raw <= 0.0))
-
-    H = H_sym + 1.0e-8 * np.eye(dim)
-    h_eigval_regularized = np.linalg.eigvalsh(H)
-
-    try:
-        cov_unclipped = np.linalg.inv(H)
-        inv_method = "inverse"
-    except np.linalg.LinAlgError:
-        cov_unclipped = np.linalg.pinv(H)
-        inv_method = "pinv"
-
-    cov_eigval_raw, eigvec = np.linalg.eigh(0.5 * (cov_unclipped + cov_unclipped.T))
-    cov_eigval_clipped = np.clip(cov_eigval_raw, 1.0e-10, 10.0)
-    covariance_was_clipped = bool(np.any(np.abs(cov_eigval_raw - cov_eigval_clipped) > 1.0e-14))
-    cov = eigvec @ np.diag(cov_eigval_clipped) @ eigvec.T
+    cov, diag = _robust_cov_from_hessian(H_raw)
 
     rng = np.random.default_rng(seed)
     samples = rng.multivariate_normal(theta_hat, cov, size=int(n_samples), method="svd")
@@ -1771,15 +2012,120 @@ def laplace_reliability_rs(
         "cov": cov,
         "samples": samples,
         "nll_at_hat": np.array([nll_at_hat]),
-        "hessian_eigval_raw": h_eigval_raw,
-        "hessian_eigval_regularized": h_eigval_regularized,
-        "hessian_min_eig": np.array([hessian_min_eig]),
-        "hessian_non_pd": np.array([hessian_non_pd], dtype=bool),
-        "cov_eigval_raw": cov_eigval_raw,
-        "cov_eigval_clipped": cov_eigval_clipped,
-        "covariance_was_clipped": np.array([covariance_was_clipped], dtype=bool),
-        "hessian_inverse_method": np.array([inv_method]),
+        **diag,
     }
+
+
+def adapt_proposal_scale(
+    proposal_scale: np.ndarray,
+    acceptance_rate: float,
+    target_rate: float = 0.234,
+    adapt_factor: float = 1.1,
+) -> np.ndarray:
+    """Multiplicative adaptation of proposal scale toward target acceptance rate."""
+    if acceptance_rate > target_rate:
+        return proposal_scale * adapt_factor
+    else:
+        return proposal_scale / adapt_factor
+
+
+def _mcmc_proposal_from_cov(
+    proposal_cov: Optional[np.ndarray],
+    proposal_std,
+    dim: int,
+) -> Tuple[Optional[np.ndarray], np.ndarray, str]:
+    """Resolve MCMC proposal: prefer multivariate cov over per-dim std.
+
+    Returns (L, scale, mode) where L is a Cholesky factor (or None),
+    scale is a (dim,) marginal std array, and mode is a diagnostic string.
+    """
+    if proposal_cov is not None:
+        C = np.asarray(proposal_cov, dtype=float)
+        if C.shape != (dim, dim):
+            raise ValueError(f"proposal_cov must have shape ({dim},{dim})")
+        C = 0.5 * (C + C.T)
+        w, V = np.linalg.eigh(C)
+        eig_floor = max(1.0e-14, 1.0e-12 * float(np.max(np.abs(w))))
+        w_pd = np.maximum(w, eig_floor)
+        C_pd = (V * w_pd) @ V.T
+        L = np.linalg.cholesky(0.5 * (C_pd + C_pd.T))
+        scale = np.sqrt(np.diag(C_pd))
+        return L, scale, "informed_mv"
+
+    proposal_arr = np.asarray(proposal_std, dtype=float).ravel()
+    if proposal_arr.size == 1:
+        scale = np.full(dim, float(proposal_arr[0]))
+        return None, scale, "scalar"
+    if proposal_arr.size == dim:
+        return None, proposal_arr.copy(), "per_dim"
+    raise ValueError(f"proposal_std must be scalar or length-{dim} array")
+
+
+# ---------------------------------------------------------------------------
+# Diagnostics (S1, S2)
+# ---------------------------------------------------------------------------
+
+def chi2_misspecification_diagnosis(
+    chi2: float,
+    dof: int,
+    alpha: float = 0.05,
+) -> Dict[str, object]:
+    """Structured chi-square misspecification verdict.
+
+    Reduced chi^2 = chi2 / dof:
+      << 1 ==> sigma overestimated or overfit
+      ~ 1  ==> consistent fit
+      >> 1 ==> sigma underestimated, model misspecified, or correlated residuals
+    """
+    dof_eff = max(int(dof), 1)
+    reduced = float(chi2) / dof_eff
+    std = np.sqrt(2.0 * dof_eff)
+    z = (float(chi2) - float(dof_eff)) / max(std, 1.0e-14)
+    z_crit = 1.96 if abs(alpha - 0.05) < 1.0e-9 else float(np.sqrt(2.0))
+    if z > z_crit:
+        verdict = "underdispersed (sigma may be too small or model misspecified)"
+    elif z < -z_crit:
+        verdict = "overdispersed (sigma may be too large or overfit)"
+    else:
+        verdict = "consistent"
+    return {
+        "chi2": float(chi2),
+        "dof": int(dof_eff),
+        "reduced_chi2": float(reduced),
+        "z_score": float(z),
+        "verdict": verdict,
+        "alpha": float(alpha),
+    }
+
+
+def geweke_diagnostic(
+    samples: np.ndarray,
+    first_frac: float = 0.1,
+    last_frac: float = 0.5,
+) -> Dict[str, np.ndarray]:
+    """Geweke (1992) z-score for MCMC convergence.
+
+    Compares the mean of the first ``first_frac`` of samples with the last
+    ``last_frac``. For a converged chain z ~ N(0, 1); |z| > 2 suggests
+    non-convergence.
+    """
+    s = np.asarray(samples, dtype=float)
+    if s.ndim == 1:
+        s = s.reshape(-1, 1)
+    n = s.shape[0]
+    if n < 20:
+        return {"z": np.full(s.shape[1], np.nan), "converged": np.array([False])}
+    n_a = max(int(first_frac * n), 5)
+    n_b = max(int(last_frac * n), 5)
+    a = s[:n_a]
+    b = s[-n_b:]
+    mean_a = a.mean(axis=0)
+    mean_b = b.mean(axis=0)
+    var_a = a.var(axis=0, ddof=1) / n_a if n_a > 1 else np.full(s.shape[1], np.inf)
+    var_b = b.var(axis=0, ddof=1) / n_b if n_b > 1 else np.full(s.shape[1], np.inf)
+    z = (mean_a - mean_b) / np.sqrt(np.maximum(var_a + var_b, 1.0e-30))
+    converged = np.all(np.abs(z) < 2.0)
+    return {"z": z, "converged": np.array([bool(converged)])}
 
 
 def mcmc_reliability_rs(
@@ -1787,23 +2133,43 @@ def mcmc_reliability_rs(
     theta_hat: np.ndarray,
     n_steps: int,
     burn_in: int,
-    proposal_std: float,
+    proposal_std,
     seed: int,
     progress_bar=None,
+    proposal_cov: Optional[np.ndarray] = None,
+    proposal_cov_scale: Optional[float] = None,
 ) -> Dict[str, np.ndarray]:
-    """Random-walk Metropolis MCMC for Omega parameters."""
+    """Random-walk Metropolis MCMC for Omega parameters.
+
+    ``proposal_std`` accepts scalar or length-d vector (d = len(theta_hat)).
+    ``proposal_cov`` (if supplied) overrides and gives a multivariate Gaussian
+    proposal scaled by 2.38^2/d (Roberts-Gelman-Gilks optimal).  Pass the
+    Laplace covariance from ``laplace_reliability_rs`` for informed sampling.
+    """
     rng = np.random.default_rng(seed + 909)
     dim = len(theta_hat)
+    if proposal_cov_scale is None:
+        proposal_cov_scale = 2.38 ** 2 / max(dim, 1)
+
+    if proposal_cov is not None:
+        L, proposal_scale, mode = _mcmc_proposal_from_cov(
+            np.asarray(proposal_cov, dtype=float) * float(proposal_cov_scale),
+            proposal_std, dim=dim,
+        )
+    else:
+        L, proposal_scale, mode = _mcmc_proposal_from_cov(None, proposal_std, dim=dim)
 
     current = theta_hat.copy()
     current_lp = -nll_fun(current)
 
     samples = []
     accepted = 0
-    proposal_scale = np.ones(dim, dtype=float) * float(proposal_std)
 
     for i in range(n_steps):
-        proposal = current + rng.normal(0.0, proposal_scale, size=dim)
+        if L is not None:
+            proposal = current + L @ rng.standard_normal(dim)
+        else:
+            proposal = current + rng.normal(0.0, proposal_scale, size=dim)
         proposal_lp = -nll_fun(proposal)
         if np.log(rng.uniform()) < proposal_lp - current_lp:
             current = proposal
@@ -1819,6 +2185,8 @@ def mcmc_reliability_rs(
         "theta_hat": theta_hat.copy(),
         "samples": samples_arr,
         "acceptance_rate": np.array([accepted / max(n_steps, 1)]),
+        "proposal_scale": proposal_scale.copy(),
+        "proposal_mode": np.array([mode]),
     }
 
 
@@ -1917,6 +2285,12 @@ def train_pinn(
     rho_raw_right_init: Optional[float] = None,
     phase_interface: float = 0.5,
     phase_width: float = 0.02,
+    rho21_raw_init: Optional[float] = None,
+    rho21_raw_right_init: Optional[float] = None,
+    force_symmetric: bool = FORCE_SYMMETRIC_D,
+    adaptive_weights: bool = False,
+    rba_update_every: int = 50,
+    direct_output: bool = False,
 ) -> TrainResult:
     two_region = str(diffusion_model_mode).lower().startswith("left/right")
     if two_region:
@@ -1932,10 +2306,16 @@ def train_pinn(
             activation,
             phase_interface=phase_interface,
             phase_width=phase_width,
+            rho21_raw_left_init=rho21_raw_init,
+            rho21_raw_right_init=rho21_raw_right_init,
+            force_symmetric=force_symmetric,
+            direct_output=direct_output,
         ).to(DEVICE)
     else:
         model = TernaryDiffusionPINN(
-            log_d11_init, log_d22_init, rho_raw_init, width, depth, activation
+            log_d11_init, log_d22_init, rho_raw_init, width, depth, activation,
+            rho21_raw_init=rho21_raw_init, force_symmetric=force_symmetric,
+            direct_output=direct_output,
         ).to(DEVICE)
 
     diag_prior_tensor = None
@@ -1976,6 +2356,12 @@ def train_pinn(
     report_every = max(1, epochs // 160)
     t0 = time.time()
 
+    # RBA adaptive weights (mutable copies of base weights)
+    w_data = float(weights["data"])
+    w_ic = float(weights["ic"])
+    w_bc = float(weights["bc"])
+    w_phys = float(weights["phys"])
+
     for ep in range(1, epochs + 1):
         opt.zero_grad(set_to_none=True)
 
@@ -2000,14 +2386,41 @@ def train_pinn(
                     + (model.log_d22[0] - diag_prior_tensor[1]) ** 2
                 )
 
+        # RBA: rebalance weights every rba_update_every epochs
+        if adaptive_weights and ep > 1 and ep % rba_update_every == 0:
+            params = [p for p in model.parameters() if p.requires_grad]
+            gnorms = []
+            for loss_i in [loss_data, loss_ic, loss_bc, loss_phys]:
+                grads = torch.autograd.grad(loss_i, params, retain_graph=True, allow_unused=True)
+                gn = sum(float(g.norm()) for g in grads if g is not None)
+                gnorms.append(max(gn, 1.0e-12))
+            mean_gn = sum(gnorms) / len(gnorms)
+            base = [weights["data"], weights["ic"], weights["bc"], weights["phys"]]
+            new_w = [b * mean_gn / gn for b, gn in zip(base, gnorms)]
+            w_data, w_ic, w_bc, w_phys = new_w
+
         loss = (
-            weights["data"] * loss_data
-            + weights["ic"] * loss_ic
-            + weights["bc"] * loss_bc
-            + weights["phys"] * loss_phys
+            w_data * loss_data
+            + w_ic * loss_ic
+            + w_bc * loss_bc
+            + w_phys * loss_phys
             + float(diag_prior_weight) * loss_diag_prior
         )
+
+        # R1: detect NaN/Inf loss before it corrupts parameters.
+        if not torch.isfinite(loss):
+            if status is not None:
+                status.markdown(
+                    f"⚠ Training aborted at epoch {ep}: non-finite loss "
+                    f"(data={float(loss_data):.3e}, phys={float(loss_phys):.3e})."
+                )
+            break
+
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(
+            [p for p in model.parameters() if p.requires_grad],
+            max_norm=10.0,
+        )
         opt.step()
         scheduler.step()
 
@@ -2033,9 +2446,11 @@ def train_pinn(
                 "D_TaTa": D[1, 1],
                 "D_NiNi_left": D_left_hist[0, 0],
                 "D_NiTa_left": D_left_hist[0, 1],
+                "D_TaNi_left": D_left_hist[1, 0],
                 "D_TaTa_left": D_left_hist[1, 1],
                 "D_NiNi_right": D_right_hist[0, 0],
                 "D_NiTa_right": D_right_hist[0, 1],
+                "D_TaNi_right": D_right_hist[1, 0],
                 "D_TaTa_right": D_right_hist[1, 1],
                 "rho": rho,
                 "lr": scheduler.get_last_lr()[0],
@@ -2102,8 +2517,10 @@ def predict_final_profile_from_theta(
     use_cache: bool = False,
 ) -> np.ndarray:
     solver = run_fdm_teacher if use_cache else _run_fdm_teacher_core
+    rho21 = float(theta[3]) if len(theta) > 3 else None
     xg, _, Cg, _ = solver(
-        float(theta[0]), float(theta[1]), float(theta[2]), float(t_max), int(nx), int(nt_save)
+        float(theta[0]), float(theta[1]), float(theta[2]),
+        float(t_max), int(nx), int(nt_save), rho21_raw=rho21,
     )
     return np.column_stack([np.interp(x_query, xg, Cg[-1, :, j]) for j in range(3)])
 
@@ -2117,7 +2534,12 @@ def gaussian_nll_from_experiment(
     nx: int,
     nt_save: int,
 ) -> float:
-    """Gaussian NLL using independent Ni and Ta components."""
+    """Gaussian NLL using independent Ni and Ta components.
+
+    **T4 note**: The (n/2)log(2π) normalisation constant is omitted.
+    This does not affect posterior inference (MAP, Laplace, MCMC) because
+    the constant cancels in all likelihood ratios and gradients.
+    """
     sigma_eff = max(float(sigma), 1.0e-8)
     pred = predict_final_profile_from_theta(theta, x_exp, t_max, nx, nt_save, use_cache=False)
     residual = c_exp[:, 1:3] - pred[:, 1:3]
@@ -2158,6 +2580,117 @@ def neg_log_posterior(
     return float(nll + prior)
 
 
+# ---------------------------------------------------------------------------
+#  σ-marginalised NLL / posterior  (sigma as free parameter in MCMC)
+# ---------------------------------------------------------------------------
+def _half_cauchy_log_prior(sigma: float, scale: float = 0.1) -> float:
+    """Log-density of a half-Cauchy(0, scale) prior on σ > 0.
+
+    p(σ) = 2 / (π * scale * (1 + (σ/scale)²))
+    Uninformative but proper; scale ≈ expected noise order.
+    """
+    if sigma <= 0.0:
+        return -np.inf
+    return float(-np.log(np.pi * scale) - np.log(1.0 + (sigma / scale) ** 2))
+
+
+def neg_log_posterior_marginal_sigma(
+    theta_sigma: np.ndarray,
+    x_exp: np.ndarray,
+    c_exp: np.ndarray,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+    prior_mean: np.ndarray,
+    prior_std: np.ndarray,
+    sigma_prior_scale: float = 0.1,
+) -> float:
+    """Neg-log-posterior where the last element of theta_sigma is log(σ).
+
+    θ_ext = [θ₁, ..., θ_d, log σ]
+    σ = exp(log σ)  (Jacobian correction: +log σ cancels with change of variable)
+
+    Prior on θ: isotropic Gaussian with ``prior_mean`` and ``prior_std``.
+    Prior on σ: half-Cauchy(0, sigma_prior_scale).
+    """
+    ts = np.asarray(theta_sigma, dtype=float).ravel()
+    theta = ts[:-1]
+    log_sigma = float(ts[-1])
+    sigma = np.exp(log_sigma)
+
+    nll = gaussian_nll_from_experiment(theta, x_exp, c_exp, sigma, t_max, nx, nt_save)
+    prior_theta = 0.5 * np.sum(((theta - prior_mean) / prior_std) ** 2)
+    prior_sigma = -_half_cauchy_log_prior(sigma, sigma_prior_scale)
+    # Jacobian: sampling log σ so add -log σ to undo the implicit uniform in log space
+    jacobian = -log_sigma
+    return float(nll + prior_theta + prior_sigma + jacobian)
+
+
+def neg_log_posterior_marginal_sigma_lr(
+    theta_sigma_lr: np.ndarray,
+    x_exp: np.ndarray,
+    c_exp: np.ndarray,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+    phase_width: float,
+    prior_mean_lr: np.ndarray,
+    prior_std_lr: np.ndarray,
+    sigma_prior_scale: float = 0.1,
+) -> float:
+    """Neg-log-posterior with σ marginalised (left/right D version).
+
+    θ_ext = [θ_L (dim), θ_R (dim), log σ]
+    """
+    ts = np.asarray(theta_sigma_lr, dtype=float).ravel()
+    theta_lr = ts[:-1]
+    log_sigma = float(ts[-1])
+    sigma = np.exp(log_sigma)
+
+    nll = gaussian_nll_from_experiment_lr(
+        theta_lr, x_exp, c_exp, sigma, t_max, nx, nt_save, phase_width,
+    )
+    prior_theta = 0.5 * np.sum(((theta_lr - prior_mean_lr) / prior_std_lr) ** 2)
+    prior_sigma = -_half_cauchy_log_prior(sigma, sigma_prior_scale)
+    jacobian = -log_sigma
+    return float(nll + prior_theta + prior_sigma + jacobian)
+
+
+def adaptive_hessian_step(
+    theta0: np.ndarray,
+    base_step: float = 0.05,
+    min_step: float = 1.0e-4,
+    floor: float = 1.0e-3,
+) -> np.ndarray:
+    """Per-dimension step size for finite-difference Hessian.
+
+    Uses |theta_i| * base_step, floored at ``floor`` so that parameters near
+    zero (e.g. rho_raw ~ 0) still get a usable step.  The floor also matters
+    for log-D parameters at typical magnitudes around 1, where |theta| is
+    O(1) but a fixed step of 0.05 may be too small relative to noise in
+    FDM-based NLL evaluations.
+    """
+    theta = np.asarray(theta0, dtype=float).reshape(-1)
+    step = np.maximum(np.abs(theta) * float(base_step), float(floor))
+    step = np.maximum(step, float(min_step))
+    return step
+
+
+def numerical_hessian_adaptive(
+    fun,
+    theta0: np.ndarray,
+    base_step: float = 0.05,
+    floor: float = 1.0e-3,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Numerical Hessian with per-parameter step sizing.
+
+    Returns (H, step) so callers can record the step used.
+    """
+    step = adaptive_hessian_step(theta0, base_step=base_step, floor=floor)
+    H = numerical_hessian(fun, theta0, step)
+    return H, step
+
+
 def numerical_hessian(fun, theta0: np.ndarray, step: np.ndarray) -> np.ndarray:
     n = len(theta0)
     H = np.zeros((n, n), dtype=float)
@@ -2177,6 +2710,38 @@ def numerical_hessian(fun, theta0: np.ndarray, step: np.ndarray) -> np.ndarray:
             ) / (4.0 * step[i] * step[j])
             H[j, i] = H[i, j]
     return H
+
+
+def _robust_cov_from_hessian(
+    H_raw: np.ndarray,
+    eps_rel: float = 1.0e-8,
+) -> Tuple[np.ndarray, Dict[str, np.ndarray]]:
+    """Convert a (possibly indefinite) numerical Hessian to a PD covariance.
+
+    Project H onto the PD cone in the spectral sense by flooring eigenvalues
+    at ``eps_floor = max(eps_rel, eps_rel * max|w|)``, then invert directly
+    via the eigendecomposition.  This is more theoretically sound than
+    the two-stage scheme of (a) regularizing H with a tiny scalar and
+    (b) clipping eigenvalues of cov afterwards, which can silently distort
+    the covariance when H is strongly indefinite.
+
+    Returns ``(cov, diag_dict)`` where *diag_dict* holds diagnostic arrays.
+    """
+    H_sym = 0.5 * (H_raw + H_raw.T)
+    w_raw, V = np.linalg.eigh(H_sym)
+    max_abs = float(np.max(np.abs(w_raw))) if w_raw.size > 0 else 1.0
+    eig_floor = max(float(eps_rel), float(eps_rel) * max_abs)
+    w_pd = np.maximum(w_raw, eig_floor)
+    cov = (V * (1.0 / w_pd)) @ V.T
+    cov = 0.5 * (cov + cov.T)
+    diag = {
+        "h_eigval_raw": w_raw,
+        "h_eigval_regularized": w_pd,
+        "h_min_eig": float(np.min(w_raw)) if w_raw.size > 0 else 0.0,
+        "non_pd": bool(np.any(w_raw <= 0.0)),
+        "eig_floor": float(eig_floor),
+    }
+    return cov, diag
 
 
 def laplace_reliability(
@@ -2199,35 +2764,18 @@ def laplace_reliability(
     This avoids circular confidence where the prior forces the posterior back to
     the PINN estimate.
     """
-    prior_std = np.ones(3, dtype=float) * float(prior_std_scalar)
+    dim = len(theta_hat)
+    prior_std = np.ones(dim, dtype=float) * float(prior_std_scalar)
     fun = lambda th: neg_log_posterior(
         th, x_exp, c_exp, sigma, t_max, nx, nt_save, prior_mean, prior_std
     )
 
-    step = np.ones(3, dtype=float) * float(hessian_step)
+    step = np.ones(dim, dtype=float) * float(hessian_step)
     H_raw = numerical_hessian(fun, theta_hat, step)
-    H_sym = 0.5 * (H_raw + H_raw.T)
-    h_eigval_raw = np.linalg.eigvalsh(H_sym)
-    hessian_min_eig = float(np.nanmin(h_eigval_raw))
-    hessian_non_pd = bool(np.any(h_eigval_raw <= 0.0))
-
-    H = H_sym + 1.0e-8 * np.eye(3)
-    h_eigval_regularized = np.linalg.eigvalsh(H)
-
-    try:
-        cov_unclipped = np.linalg.inv(H)
-        inv_method = "inverse"
-    except np.linalg.LinAlgError:
-        cov_unclipped = np.linalg.pinv(H)
-        inv_method = "pinv"
-
-    cov_eigval_raw, eigvec = np.linalg.eigh(0.5 * (cov_unclipped + cov_unclipped.T))
-    cov_eigval_clipped = np.clip(cov_eigval_raw, 1.0e-10, 10.0)
-    covariance_was_clipped = bool(np.any(np.abs(cov_eigval_raw - cov_eigval_clipped) > 1.0e-14))
-    cov = eigvec @ np.diag(cov_eigval_clipped) @ eigvec.T
+    cov, diag = _robust_cov_from_hessian(H_raw)
 
     rng = np.random.default_rng(seed)
-    samples = rng.multivariate_normal(theta_hat, cov, size=int(n_samples))
+    samples = rng.multivariate_normal(theta_hat, cov, size=int(n_samples), method="svd")
 
     chi2, red_chi2 = gaussian_chi2_from_experiment(theta_hat, x_exp, c_exp, sigma, t_max, nx, nt_save)
     return {
@@ -2236,14 +2784,7 @@ def laplace_reliability(
         "samples": samples,
         "chi2": np.array([chi2]),
         "reduced_chi2": np.array([red_chi2]),
-        "hessian_eigval_raw": h_eigval_raw,
-        "hessian_eigval_regularized": h_eigval_regularized,
-        "hessian_min_eig": np.array([hessian_min_eig]),
-        "hessian_non_pd": np.array([hessian_non_pd], dtype=bool),
-        "cov_eigval_raw": cov_eigval_raw,
-        "cov_eigval_clipped": cov_eigval_clipped,
-        "covariance_was_clipped": np.array([covariance_was_clipped], dtype=bool),
-        "hessian_inverse_method": np.array([inv_method]),
+        **diag,
     }
 
 
@@ -2296,31 +2837,78 @@ def mcmc_reliability(
     prior_std_scalar: float,
     n_steps: int,
     burn_in: int,
-    proposal_std: float,
+    proposal_std,
     seed: int,
     progress_bar=None,
+    proposal_cov: Optional[np.ndarray] = None,
+    proposal_cov_scale: Optional[float] = None,
+    marginalize_sigma: bool = False,
+    sigma_prior_scale: float = 0.1,
 ) -> Dict[str, np.ndarray]:
     """Higher-cost random-walk Metropolis posterior sampling.
 
-    Uses the uncached FDM solver to avoid Streamlit cache pollution.
+    ``proposal_cov`` (if supplied) takes precedence: a multivariate Gaussian
+    proposal is constructed from a Cholesky factor of
+    ``proposal_cov_scale * proposal_cov``.  The default scale 2.38^2/d is the
+    Roberts-Gelman-Gilks optimal RW Metropolis scaling.
+
+    When ``marginalize_sigma`` is True, σ is jointly sampled.  The state
+    vector is extended: [θ₁, ..., θ_d, log(σ)].  sigma becomes the initial
+    value.  Results include ``sigma_samples``.
     """
     rng = np.random.default_rng(seed + 404)
-    prior_std = np.ones(3, dtype=float) * float(prior_std_scalar)
+    theta_start = np.asarray(theta_start, dtype=float).ravel()
+    dim_theta = len(theta_start)
+    prior_mean_arr = np.asarray(prior_mean, dtype=float).ravel()
+    prior_std = np.ones(dim_theta, dtype=float) * float(prior_std_scalar)
 
-    current = theta_start.copy()
-    current_lp = -neg_log_posterior(current, x_exp, c_exp, sigma, t_max, nx, nt_save, prior_mean, prior_std)
+    if marginalize_sigma:
+        current = np.append(theta_start, np.log(max(float(sigma), 1.0e-10)))
+        dim = dim_theta + 1
+    else:
+        current = theta_start.copy()
+        dim = dim_theta
+
+    if proposal_cov_scale is None:
+        proposal_cov_scale = 2.38 ** 2 / max(dim, 1)
+
+    if proposal_cov is not None:
+        L, proposal_scale, mode = _mcmc_proposal_from_cov(
+            np.asarray(proposal_cov, dtype=float) * float(proposal_cov_scale),
+            proposal_std, dim=dim,
+        )
+    else:
+        if marginalize_sigma:
+            ps = np.append(np.asarray(proposal_std, dtype=float).ravel(), 0.1)
+        else:
+            ps = proposal_std
+        L, proposal_scale, mode = _mcmc_proposal_from_cov(None, ps, dim=dim)
+
+    def _lp(state):
+        if marginalize_sigma:
+            return -neg_log_posterior_marginal_sigma(
+                state, x_exp, c_exp, t_max, nx, nt_save,
+                prior_mean_arr, prior_std, sigma_prior_scale,
+            )
+        else:
+            return -neg_log_posterior(
+                state, x_exp, c_exp, sigma, t_max, nx, nt_save,
+                prior_mean_arr, prior_std,
+            )
+
+    current_lp = _lp(current)
 
     samples = []
     accepted = 0
-    proposal_scale = np.ones(3, dtype=float) * float(proposal_std)
     n_steps = int(n_steps)
     burn_in = int(burn_in)
 
     for i in range(n_steps):
-        proposal = current + rng.normal(0.0, proposal_scale, size=3)
-        proposal_lp = -neg_log_posterior(
-            proposal, x_exp, c_exp, sigma, t_max, nx, nt_save, prior_mean, prior_std
-        )
+        if L is not None:
+            proposal = current + L @ rng.standard_normal(dim)
+        else:
+            proposal = current + rng.normal(0.0, proposal_scale, size=dim)
+        proposal_lp = _lp(proposal)
 
         if np.log(rng.uniform()) < proposal_lp - current_lp:
             current = proposal
@@ -2334,20 +2922,30 @@ def mcmc_reliability(
             progress_bar.progress((i + 1) / n_steps)
 
     samples = np.asarray(samples, dtype=float)
-    chi2, red_chi2 = gaussian_chi2_from_experiment(theta_start, x_exp, c_exp, sigma, t_max, nx, nt_save)
-    return {
-        "samples": samples,
+    sigma_eff = sigma
+    if marginalize_sigma and samples.shape[0] > 0:
+        sigma_eff = float(np.exp(np.median(samples[:, -1])))
+
+    chi2, red_chi2 = gaussian_chi2_from_experiment(
+        theta_start, x_exp, c_exp, sigma_eff, t_max, nx, nt_save,
+    )
+    result = {
+        "samples": samples[:, :dim_theta] if marginalize_sigma else samples,
         "acceptance_rate": np.array([accepted / max(n_steps, 1)]),
         "chi2": np.array([chi2]),
         "reduced_chi2": np.array([red_chi2]),
     }
+    if marginalize_sigma and samples.shape[0] > 0:
+        result["sigma_samples"] = np.exp(samples[:, -1])
+        result["sigma_median"] = np.array([sigma_eff])
+    return result
 
 
 def D_metrics_from_theta_samples(samples: np.ndarray) -> pd.DataFrame:
     if samples is None or len(samples) == 0:
         return pd.DataFrame(columns=["parameter", "mean", "std", "2.5%", "50%", "97.5%"])
 
-    mats = np.asarray([make_spd_matrix_np(s[0], s[1], s[2]) for s in samples])
+    mats = np.asarray([make_d_matrix_from_theta(s) for s in samples])
     vals = {
         "D_NiNi": mats[:, 0, 0],
         "D_NiTa": mats[:, 0, 1],
@@ -2374,6 +2972,89 @@ def reliability_summary_table(name: str, result_dict: Dict[str, np.ndarray]) -> 
     table = D_metrics_from_theta_samples(result_dict["samples"])
     table.insert(0, "method", name)
     return table
+
+
+# ---------------------------------------------------------------------------
+#  PSIS (Pareto Smoothed Importance Sampling) diagnostic for Laplace
+# ---------------------------------------------------------------------------
+def psis_diagnostic(
+    laplace_samples: np.ndarray,
+    x_exp: np.ndarray,
+    c_exp: np.ndarray,
+    sigma: float,
+    t_max: float,
+    nx: int,
+    nt_save: int,
+    prior_mean: np.ndarray,
+    prior_std_scalar: float,
+    theta_hat: np.ndarray,
+    cov: np.ndarray,
+    max_eval: int = 200,
+) -> Dict[str, float]:
+    """Pareto-k diagnostic for Laplace approximation quality.
+
+    Compute importance ratios  w_s = p(θ_s | data) / q(θ_s)
+    where q is the Laplace Gaussian and p is the true (unnormalized) posterior.
+    Fit a Generalized Pareto Distribution to the upper tail of log(w).
+
+    Returns dict with:
+      pareto_k:  shape parameter (< 0.5 good, 0.5-0.7 ok, > 0.7 poor)
+      ess_psis:  effective sample size after PSIS
+    """
+    dim = len(theta_hat)
+    prior_std = np.ones(dim) * float(prior_std_scalar)
+    theta_hat = np.asarray(theta_hat, dtype=float).ravel()
+    cov = np.asarray(cov, dtype=float)
+
+    n_use = min(len(laplace_samples), max_eval)
+    samples = laplace_samples[:n_use]
+
+    try:
+        L = np.linalg.cholesky(cov)
+        log_det_cov = 2.0 * np.sum(np.log(np.diag(L)))
+    except np.linalg.LinAlgError:
+        log_det_cov = np.log(max(np.linalg.det(cov), 1e-300))
+
+    log_ratios = np.empty(n_use, dtype=float)
+    for i, th in enumerate(samples):
+        log_p = -neg_log_posterior(th, x_exp, c_exp, sigma, t_max, nx, nt_save, prior_mean, prior_std)
+        diff = th - theta_hat
+        try:
+            sol = np.linalg.solve(cov, diff)
+        except np.linalg.LinAlgError:
+            sol = np.linalg.lstsq(cov, diff, rcond=None)[0]
+        log_q = -0.5 * (dim * np.log(2 * np.pi) + log_det_cov + diff @ sol)
+        log_ratios[i] = log_p - log_q
+
+    log_ratios -= np.max(log_ratios)
+
+    # Fit GPD to upper tail (top 20%)
+    M = max(int(0.2 * n_use), 5)
+    sorted_lr = np.sort(log_ratios)
+    tail = sorted_lr[-M:]
+    threshold = sorted_lr[-M - 1] if M < n_use else sorted_lr[0]
+    exceedances = tail - threshold
+    exceedances = exceedances[exceedances > 0]
+
+    if len(exceedances) < 3:
+        k_hat = 0.0
+    else:
+        m = len(exceedances)
+        log_exc = np.log(exceedances)
+        mean_log = np.mean(log_exc)
+        k_hat = float(np.mean(log_exc) - np.log(np.mean(exceedances))) * (-1.0)
+        k_hat = max(min(k_hat, 2.0), -0.5)
+
+    weights = np.exp(log_ratios)
+    w_sum = np.sum(weights)
+    w_normed = weights / max(w_sum, 1e-300)
+    ess = float(1.0 / max(np.sum(w_normed ** 2), 1e-300))
+
+    return {
+        "pareto_k": float(k_hat),
+        "ess_psis": ess,
+        "n_evaluated": n_use,
+    }
 
 
 def posterior_band_from_samples(
@@ -2410,19 +3091,20 @@ def posterior_band_from_samples(
 # =============================================================================
 
 def theta_lr_from_matrices(D_left: np.ndarray, D_right: np.ndarray) -> np.ndarray:
-    """6-parameter representation for two-region diffusion matrices."""
+    """Concatenated parameter representation for two-region D matrices."""
     th_l = theta_from_D_matrix(D_left)
     th_r = theta_from_D_matrix(D_right)
     return np.concatenate([th_l, th_r]).astype(float)
 
 
 def matrices_from_theta_lr(theta_lr: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    """Return D_left, D_right from theta_lr = [l11_l,l22_l,rho_l,l11_r,l22_r,rho_r]."""
+    """Return D_left, D_right from theta_lr (6 symmetric or 8 non-symmetric)."""
     theta_lr = np.asarray(theta_lr, dtype=float).reshape(-1)
-    if theta_lr.size != 6:
-        raise ValueError("theta_lr must have 6 elements")
-    D_left = make_spd_matrix_np(theta_lr[0], theta_lr[1], theta_lr[2])
-    D_right = make_spd_matrix_np(theta_lr[3], theta_lr[4], theta_lr[5])
+    dim1 = THETA_DIM_SINGLE
+    if theta_lr.size != 2 * dim1:
+        raise ValueError(f"theta_lr must have {2 * dim1} elements, got {theta_lr.size}")
+    D_left = make_d_matrix_from_theta(theta_lr[:dim1])
+    D_right = make_d_matrix_from_theta(theta_lr[dim1:])
     return D_left, D_right
 
 
@@ -2435,24 +3117,23 @@ def predict_final_profile_from_theta_lr(
     phase_width: float,
     use_cache: bool = False,
 ) -> np.ndarray:
-    """Final profile from left/right FDM with 6 parameters."""
+    """Final profile from left/right FDM."""
+    dim1 = THETA_DIM_SINGLE
+    th_l = theta_lr[:dim1]
+    th_r = theta_lr[dim1:]
+    rho21_l = float(th_l[3]) if dim1 > 3 else None
+    rho21_r = float(th_r[3]) if dim1 > 3 else None
     solver = run_fdm_teacher_two_region if use_cache else _run_fdm_teacher_core_two_region
     xg, _, Cg, _, _, _ = solver(
-        float(theta_lr[0]),
-        float(theta_lr[1]),
-        float(theta_lr[2]),
-        float(theta_lr[3]),
-        float(theta_lr[4]),
-        float(theta_lr[5]),
-        float(t_max),
-        int(nx),
-        int(nt_save),
-        float(phase_width),
+        float(th_l[0]), float(th_l[1]), float(th_l[2]),
+        float(th_r[0]), float(th_r[1]), float(th_r[2]),
+        float(t_max), int(nx), int(nt_save), float(phase_width),
+        rho21_raw_left=rho21_l, rho21_raw_right=rho21_r,
     )
     return np.column_stack([np.interp(x_query, xg, Cg[-1, :, j]) for j in range(3)])
 
 
-def gaussian_nll_from_experiment_lr(
+def gaussian_nll_from_experiment_lr(  # T4: (n/2)log(2π) omitted — see gaussian_nll_from_experiment docstring
     theta_lr: np.ndarray,
     x_exp: np.ndarray,
     c_exp: np.ndarray,
@@ -2513,26 +3194,8 @@ def _posterior_result_from_hessian(
     chi2: float,
     red_chi2: float,
 ) -> Dict[str, np.ndarray]:
-    """Common Hessian-to-samples conversion with diagnostics."""
-    H_sym = 0.5 * (H_raw + H_raw.T)
-    h_eigval_raw = np.linalg.eigvalsh(H_sym)
-    hessian_min_eig = float(np.nanmin(h_eigval_raw))
-    hessian_non_pd = bool(np.any(h_eigval_raw <= 0.0))
-
-    H = H_sym + 1.0e-8 * np.eye(len(theta_hat))
-    h_eigval_regularized = np.linalg.eigvalsh(H)
-
-    try:
-        cov_unclipped = np.linalg.inv(H)
-        inv_method = "inverse"
-    except np.linalg.LinAlgError:
-        cov_unclipped = np.linalg.pinv(H)
-        inv_method = "pinv"
-
-    cov_eigval_raw, eigvec = np.linalg.eigh(0.5 * (cov_unclipped + cov_unclipped.T))
-    cov_eigval_clipped = np.clip(cov_eigval_raw, 1.0e-10, 10.0)
-    covariance_was_clipped = bool(np.any(np.abs(cov_eigval_raw - cov_eigval_clipped) > 1.0e-14))
-    cov = eigvec @ np.diag(cov_eigval_clipped) @ eigvec.T
+    """Common Hessian-to-samples conversion with diagnostics (uses N1 eigen-floor)."""
+    cov, diag = _robust_cov_from_hessian(H_raw)
 
     rng = np.random.default_rng(seed)
     samples = rng.multivariate_normal(theta_hat, cov, size=int(n_samples), method="svd")
@@ -2543,14 +3206,7 @@ def _posterior_result_from_hessian(
         "samples": samples,
         "chi2": np.array([chi2]),
         "reduced_chi2": np.array([red_chi2]),
-        "hessian_eigval_raw": h_eigval_raw,
-        "hessian_eigval_regularized": h_eigval_regularized,
-        "hessian_min_eig": np.array([hessian_min_eig]),
-        "hessian_non_pd": np.array([hessian_non_pd], dtype=bool),
-        "cov_eigval_raw": cov_eigval_raw,
-        "cov_eigval_clipped": cov_eigval_clipped,
-        "covariance_was_clipped": np.array([covariance_was_clipped], dtype=bool),
-        "hessian_inverse_method": np.array([inv_method]),
+        **diag,
     }
 
 
@@ -2569,15 +3225,16 @@ def laplace_reliability_lr(
     n_samples: int,
     seed: int,
 ) -> Dict[str, np.ndarray]:
-    """6D Laplace reliability for two-region left/right D."""
+    """Laplace reliability for two-region left/right D (dim-aware)."""
     theta_hat_lr = np.asarray(theta_hat_lr, dtype=float)
+    dim_lr = len(theta_hat_lr)
     prior_mean_lr = np.asarray(prior_mean_lr, dtype=float)
-    prior_std_lr = np.ones(6, dtype=float) * float(prior_std_scalar)
+    prior_std_lr = np.ones(dim_lr, dtype=float) * float(prior_std_scalar)
 
     fun = lambda th: neg_log_posterior_lr(
         th, x_exp, c_exp, sigma, t_max, nx, nt_save, phase_width, prior_mean_lr, prior_std_lr
     )
-    step = np.ones(6, dtype=float) * float(hessian_step)
+    step = np.ones(dim_lr, dtype=float) * float(hessian_step)
     H_raw = numerical_hessian(fun, theta_hat_lr, step)
     chi2, red_chi2 = gaussian_chi2_from_experiment_lr(
         theta_hat_lr, x_exp, c_exp, sigma, t_max, nx, nt_save, phase_width
@@ -2631,31 +3288,75 @@ def mcmc_reliability_lr(
     prior_std_scalar: float,
     n_steps: int,
     burn_in: int,
-    proposal_std: float,
+    proposal_std,
     seed: int,
     progress_bar=None,
+    proposal_cov: Optional[np.ndarray] = None,
+    proposal_cov_scale: Optional[float] = None,
+    marginalize_sigma: bool = False,
+    sigma_prior_scale: float = 0.1,
 ) -> Dict[str, np.ndarray]:
-    """6D random-walk Metropolis for two-region left/right D."""
+    """Random-walk Metropolis for two-region left/right D.
+
+    ``proposal_cov`` (if supplied) overrides and uses a multivariate Gaussian
+    proposal scaled by Roberts-Gelman-Gilks optimal 2.38^2/d.
+
+    When ``marginalize_sigma`` is True, σ is jointly sampled.  The state
+    vector is extended: [θ_L, θ_R, log(σ)].  Results include ``sigma_samples``.
+    """
     rng = np.random.default_rng(seed + 909)
     prior_mean_lr = np.asarray(prior_mean_lr, dtype=float)
-    prior_std_lr = np.ones(6, dtype=float) * float(prior_std_scalar)
+    theta_start_lr = np.asarray(theta_start_lr, dtype=float).ravel()
+    dim_theta = len(theta_start_lr)
+    prior_std_lr = np.ones(dim_theta, dtype=float) * float(prior_std_scalar)
 
-    current = np.asarray(theta_start_lr, dtype=float).copy()
-    current_lp = -neg_log_posterior_lr(
-        current, x_exp, c_exp, sigma, t_max, nx, nt_save, phase_width, prior_mean_lr, prior_std_lr
-    )
+    if marginalize_sigma:
+        current = np.append(theta_start_lr, np.log(max(float(sigma), 1.0e-10)))
+        dim = dim_theta + 1
+    else:
+        current = theta_start_lr.copy()
+        dim = dim_theta
+
+    if proposal_cov_scale is None:
+        proposal_cov_scale = 2.38 ** 2 / max(dim, 1)
+
+    if proposal_cov is not None:
+        L, proposal_scale, mode = _mcmc_proposal_from_cov(
+            np.asarray(proposal_cov, dtype=float) * float(proposal_cov_scale),
+            proposal_std, dim=dim,
+        )
+    else:
+        if marginalize_sigma:
+            ps = np.append(np.asarray(proposal_std, dtype=float).ravel(), 0.1)
+        else:
+            ps = proposal_std
+        L, proposal_scale, mode = _mcmc_proposal_from_cov(None, ps, dim=dim)
+
+    def _lp(state):
+        if marginalize_sigma:
+            return -neg_log_posterior_marginal_sigma_lr(
+                state, x_exp, c_exp, t_max, nx, nt_save, phase_width,
+                prior_mean_lr, prior_std_lr, sigma_prior_scale,
+            )
+        else:
+            return -neg_log_posterior_lr(
+                state, x_exp, c_exp, sigma, t_max, nx, nt_save, phase_width,
+                prior_mean_lr, prior_std_lr,
+            )
+
+    current_lp = _lp(current)
 
     samples = []
     accepted = 0
-    proposal_scale = np.ones(6, dtype=float) * float(proposal_std)
     n_steps = int(n_steps)
     burn_in = int(burn_in)
 
     for i in range(n_steps):
-        proposal = current + rng.normal(0.0, proposal_scale, size=6)
-        proposal_lp = -neg_log_posterior_lr(
-            proposal, x_exp, c_exp, sigma, t_max, nx, nt_save, phase_width, prior_mean_lr, prior_std_lr
-        )
+        if L is not None:
+            proposal = current + L @ rng.standard_normal(dim)
+        else:
+            proposal = current + rng.normal(0.0, proposal_scale, size=dim)
+        proposal_lp = _lp(proposal)
         if np.log(rng.uniform()) < proposal_lp - current_lp:
             current = proposal
             current_lp = proposal_lp
@@ -2668,16 +3369,24 @@ def mcmc_reliability_lr(
             progress_bar.progress((i + 1) / n_steps)
 
     samples = np.asarray(samples, dtype=float)
+    sigma_eff = sigma
+    if marginalize_sigma and samples.shape[0] > 0:
+        sigma_eff = float(np.exp(np.median(samples[:, -1])))
+
     chi2, red_chi2 = gaussian_chi2_from_experiment_lr(
-        theta_start_lr, x_exp, c_exp, sigma, t_max, nx, nt_save, phase_width
+        theta_start_lr, x_exp, c_exp, sigma_eff, t_max, nx, nt_save, phase_width
     )
-    return {
+    result = {
         "theta_hat": np.asarray(theta_start_lr, dtype=float),
-        "samples": samples,
+        "samples": samples[:, :dim_theta] if marginalize_sigma else samples,
         "acceptance_rate": np.array([accepted / max(n_steps, 1)]),
         "chi2": np.array([chi2]),
         "reduced_chi2": np.array([red_chi2]),
     }
+    if marginalize_sigma and samples.shape[0] > 0:
+        result["sigma_samples"] = np.exp(samples[:, -1])
+        result["sigma_median"] = np.array([sigma_eff])
+    return result
 
 
 def posterior_band_from_samples_lr(
@@ -2793,7 +3502,7 @@ def likelihood_contour_grid(
             else:
                 Z[iy, ix] = neg_log_posterior(
                     th, x_exp, c_exp, sigma, t_max, nx, nt_save,
-                    prior_mean, np.ones(3) * prior_std_scalar
+                    prior_mean, np.ones(len(theta_center)) * prior_std_scalar
                 )
             done += 1
             if progress_bar is not None:
@@ -4344,18 +5053,35 @@ Powell 法で最適化し、Hessian から Laplace 近似の事後分布 $\mathc
         default_l11, default_l22, default_rho_l = -3.15, -4.00, -0.35
         default_r11, default_r22, default_rho_r = -3.15, -4.00, -0.35
 
+    ui_force_symmetric = st.checkbox(
+        "Force symmetric D (D₁₂ = D₂₁)",
+        value=FORCE_SYMMETRIC_D,
+        help="Onsager symmetry holds for L (mobility), not D = LΦ. "
+             "Real interdiffusion matrices are generally non-symmetric. "
+             "Uncheck to use 4-parameter non-symmetric D.",
+    )
+
     log_d11_true = st.slider("left/single log D_NiNi true", -12.0, -1.0, float(default_l11), 0.05)
     log_d22_true = st.slider("left/single log D_TaTa true", -12.0, -1.0, float(default_l22), 0.05)
-    rho_raw_true = st.slider("left/single coupling raw rho true", -2.5, 2.5, float(default_rho_l), 0.05)
+    rho_raw_true = st.slider("left/single coupling rho₁₂ (D₁₂) true", -2.5, 2.5, float(default_rho_l), 0.05)
+    if not ui_force_symmetric:
+        rho21_raw_true = st.slider("left/single coupling rho₂₁ (D₂₁) true", -2.5, 2.5, float(default_rho_l), 0.05)
+    else:
+        rho21_raw_true = None
 
     log_d11_true_right = float(log_d11_true)
     log_d22_true_right = float(log_d22_true)
     rho_raw_true_right = float(rho_raw_true)
+    rho21_raw_true_right = rho21_raw_true
     if fdm_teacher_mode == "left/right D":
         st.markdown("#### Right-side true D for FDM")
         log_d11_true_right = st.slider("right log D_NiNi true", -12.0, -1.0, float(default_r11), 0.05)
         log_d22_true_right = st.slider("right log D_TaTa true", -12.0, -1.0, float(default_r22), 0.05)
-        rho_raw_true_right = st.slider("right coupling raw rho true", -2.5, 2.5, float(default_rho_r), 0.05)
+        rho_raw_true_right = st.slider("right coupling rho₁₂ (D₁₂) true", -2.5, 2.5, float(default_rho_r), 0.05)
+        if not ui_force_symmetric:
+            rho21_raw_true_right = st.slider("right coupling rho₂₁ (D₂₁) true", -2.5, 2.5, float(default_rho_r), 0.05)
+        else:
+            rho21_raw_true_right = None
 
     st.markdown("### FDM teacher / experiment-like points")
     t_max = st.slider("annealing time, normalized", 0.02, 1.00, 0.22, 0.01)
@@ -4600,6 +5326,24 @@ D_norm = D_phys * t_scale / L_scale^2
         w_ic = st.slider("w_ic", 0.1, 100.0, 12.0, 0.1)
         w_bc = st.slider("w_bc", 0.1, 100.0, 12.0, 0.1)
         w_phys = st.slider("w_physics", 0.1, 100.0, 10.0, 0.1)
+        ui_adaptive_weights = st.checkbox(
+            "Self-adaptive loss weighting (RBA)",
+            value=False,
+            help=(
+                "Gradient-norm rebalancing: w_i(epoch) = w_i^base × mean(‖∇L_j‖) / ‖∇L_i‖. "
+                "Prevents any single loss component from dominating training "
+                "(Wang+ 2022, McClenny+ 2023)."
+            ),
+        )
+        ui_direct_output = st.checkbox(
+            "Direct [Ni, Ta] output (no simplex normalize)",
+            value=False,
+            help=(
+                "Output Ni, Ta directly via sigmoid; Co = 1 − Ni − Ta. "
+                "Avoids the normalization Jacobian that leaks into PDE residuals "
+                "when using softplus + normalize."
+            ),
+        )
 
     # --- Chemical potential (Omega) specific controls ---
     if use_chemical_potential:
@@ -4702,6 +5446,15 @@ D_norm = D_phys * t_scale / L_scale^2
     mcmc_steps = st.slider("MCMC steps", 100, 3000, 700, 100)
     mcmc_burn = st.slider("MCMC burn-in", 0, 1500, 200, 50)
     mcmc_proposal = st.slider("MCMC proposal std", 0.005, 0.300, 0.045, 0.005)
+    ui_marginalize_sigma = st.checkbox(
+        "Marginalize σ (joint θ-σ sampling)",
+        value=False,
+        help=(
+            "Treat observation noise σ as unknown and sample it jointly with θ. "
+            "Uses half-Cauchy(0, 0.1) prior on σ.  Produces σ posterior samples "
+            "in addition to D-matrix credible intervals."
+        ),
+    )
 
     with st.expander("MCMC設定の読み方", expanded=False):
         st.markdown(
@@ -4807,6 +5560,8 @@ if run:
         log_d22_right=float(log_d22_true_right),
         rho_raw_right=float(rho_raw_true_right),
         phase_width=float(phase_interface_width),
+        rho21_raw=float(rho21_raw_true) if rho21_raw_true is not None else None,
+        rho21_raw_right=float(rho21_raw_true_right) if rho21_raw_true_right is not None else None,
     )
 
     st.success("FDM teacher calculation and pseudo experimental data generation finished.")
@@ -5071,6 +5826,11 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
         rho_raw_right_init=float(rho_raw_right_init),
         phase_interface=0.5,
         phase_width=float(phase_interface_width),
+        rho21_raw_init=float(rho21_raw_true) if rho21_raw_true is not None else None,
+        rho21_raw_right_init=float(rho21_raw_true_right) if rho21_raw_true_right is not None else None,
+        force_symmetric=ui_force_symmetric,
+        adaptive_weights=bool(ui_adaptive_weights),
+        direct_output=bool(ui_direct_output),
     )
 
     st.session_state.fig11_result_v12 = result
@@ -5083,6 +5843,9 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
         "log_d11_true_right": float(log_d11_true_right),
         "log_d22_true_right": float(log_d22_true_right),
         "rho_raw_true_right": float(rho_raw_true_right),
+        "rho21_raw_true": float(rho21_raw_true) if rho21_raw_true is not None else None,
+        "rho21_raw_true_right": float(rho21_raw_true_right) if rho21_raw_true_right is not None else None,
+        "force_symmetric": bool(ui_force_symmetric),
         "fcc_bcc_preset": str(fcc_bcc_preset),
         "abstract_validation_preset": str(fcc_bcc_preset == "TOFA abstract validation"),
         "fixed_diagonal_abstract_default": bool(is_tofa_abstract_preset and diag_constraint_mode == "fix diagonal terms"),
@@ -5106,6 +5869,9 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
         "mcmc_steps": mcmc_steps,
         "mcmc_burn": mcmc_burn,
         "mcmc_proposal": mcmc_proposal,
+        "marginalize_sigma": bool(ui_marginalize_sigma),
+        "adaptive_weights": bool(ui_adaptive_weights),
+        "direct_output": bool(ui_direct_output),
         "seed": int(seed),
         "contour_n": contour_n,
         "contour_half_width": contour_half_width,
@@ -5852,6 +6618,7 @@ with tab4:
                     proposal_std=float(inputs["mcmc_proposal"]),
                     seed=int(inputs["seed"]),
                     progress_bar=mcmc_lr_progress,
+                    marginalize_sigma=bool(inputs.get("marginalize_sigma", False)),
                 )
             acc_lr = float(high_rel_lr["acceptance_rate"][0])
             st.metric("left/right MCMC acceptance", f"{100*acc_lr:.1f}%")
@@ -5985,6 +6752,43 @@ with tab4:
                 "Credible intervals may be dominated by regularization rather than likelihood curvature."
             )
 
+        # PSIS diagnostic for Laplace quality
+        if "cov" in low_rel and "theta_hat" in low_rel:
+            with st.spinner("Computing PSIS diagnostic for Laplace quality..."):
+                psis_result = psis_diagnostic(
+                    laplace_samples=low_rel["samples"],
+                    x_exp=data.x_exp,
+                    c_exp=data.c_exp,
+                    sigma=like_sigma_eff,
+                    t_max=float(inputs["t_max"]),
+                    nx=rel_nx_eff,
+                    nt_save=rel_nt_eff,
+                    prior_mean=prior_mean,
+                    prior_std_scalar=prior_std_eff,
+                    theta_hat=low_rel["theta_hat"],
+                    cov=low_rel["cov"],
+                    max_eval=min(200, int(inputs["laplace_samples"])),
+                )
+            pk = psis_result["pareto_k"]
+            psis_ess = psis_result["ess_psis"]
+            pk1, pk2, pk3 = st.columns(3)
+            pk1.metric("Pareto-k̂", f"{pk:.2f}")
+            pk2.metric("PSIS ESS", f"{psis_ess:.0f}")
+            pk3.metric("PSIS evals", f"{psis_result['n_evaluated']}")
+            if pk > 0.7:
+                st.error(
+                    f"Pareto-k̂ = {pk:.2f} > 0.7: Laplace approximation is **unreliable**. "
+                    "The posterior likely has heavy tails or multimodality. "
+                    "Use MCMC results instead."
+                )
+            elif pk > 0.5:
+                st.warning(
+                    f"Pareto-k̂ = {pk:.2f} ∈ (0.5, 0.7]: Laplace approximation is **marginal**. "
+                    "Consider running MCMC for confirmation."
+                )
+            else:
+                st.success(f"Pareto-k̂ = {pk:.2f} ≤ 0.5: Laplace approximation is adequate.")
+
         high_rel = None
         if bool(inputs["run_high_cost_mcmc"]):
             st.warning("High-cost MCMC repeatedly solves FDM and can take a while.")
@@ -6005,6 +6809,7 @@ with tab4:
                     proposal_std=float(inputs["mcmc_proposal"]),
                     seed=int(inputs["seed"]),
                     progress_bar=mcmc_progress,
+                    marginalize_sigma=bool(inputs.get("marginalize_sigma", False)),
                 )
 
         chi2_low = float(low_rel["chi2"][0])
@@ -6023,6 +6828,13 @@ with tab4:
                 st.info("MCMC acceptance rate is high. The proposal step may be too small; samples may move slowly. Consider increasing `MCMC proposal std`.")
             else:
                 st.success("MCMC acceptance rate is in a practical range for a first diagnostic.")
+            if "sigma_median" in high_rel:
+                sig_med = float(high_rel["sigma_median"][0])
+                sig_samps = high_rel["sigma_samples"]
+                st.metric("σ posterior median", f"{sig_med:.4f}")
+                st.caption(
+                    f"σ 95% CI: [{np.percentile(sig_samps, 2.5):.4f}, {np.percentile(sig_samps, 97.5):.4f}]"
+                )
         else:
             r4.metric("MCMC", "not run")
 
