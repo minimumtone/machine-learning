@@ -366,6 +366,11 @@ with tab_extract:
         key="extract_dir",
     )
     recursive = st.checkbox("サブディレクトリも探索", value=True)
+    force_reprocess = st.checkbox(
+        "チェックポイントを無視して再処理",
+        value=False,
+        help="以前の処理結果を無視して全件を再解析します（モデル切り替え時など）",
+    )
 
     col_scan, col_clear = st.columns(2)
     with col_scan:
@@ -450,7 +455,7 @@ with tab_extract:
                     try:
                         sha = file_sha256(pdf_path)
 
-                        if ckpt.is_done(sha):
+                        if not force_reprocess and ckpt.is_done(sha):
                             cached = ckpt.get(sha)
                             if cached:
                                 results.append(cached)
