@@ -4871,7 +4871,7 @@ st.success("Loaded completed calculation from session state. Rendering result ta
 # =========================================================================
 # Chemical potential result display
 # =========================================================================
-if inputs.get("use_chemical_potential", False) and isinstance(result, TrainResultRS):
+if type(result).__name__ == "TrainResultRS":
     rs_result = result
     rs_model = rs_result.model
     rs_data = rs_result.data
@@ -5144,9 +5144,9 @@ if inputs.get("use_chemical_potential", False) and isinstance(result, TrainResul
         st.markdown(f"Pseudo-exp points: {len(rs_data.x_exp_all)}")
         st.markdown(f"Training obs: {len(rs_data.x_obs)}")
         st.dataframe(pd.DataFrame({
-            "x_exp": rs_data.x_exp_all[:50],
-            "t_exp": rs_data.t_exp_all[:50],
-            **{f"c_exp_{comp}": rs_data.c_exp_all[:50, j] for j, comp in enumerate(COMPONENTS)},
+            "x_exp": np.asarray(rs_data.x_exp_all[:50]).ravel(),
+            "t_exp": np.asarray(rs_data.t_exp_all[:50]).ravel(),
+            **{f"c_exp_{comp}": np.asarray(rs_data.c_exp_all[:50, j]).ravel() for j, comp in enumerate(COMPONENTS)},
         }), use_container_width=True)
 
     st.stop()
@@ -5154,6 +5154,10 @@ if inputs.get("use_chemical_potential", False) and isinstance(result, TrainResul
 # =========================================================================
 # Fickian D matrix result display (original)
 # =========================================================================
+
+if type(result).__name__ == "TrainResultRS":
+    st.error("Regular-solution result detected but display section was skipped. Please re-run.")
+    st.stop()
 
 model = result.model
 data = result.data
