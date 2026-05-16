@@ -730,6 +730,11 @@ def _run_fdm_teacher_core(
     avoid polluting Streamlit cache with thousands of random theta values.
     When rho21_raw is provided, builds a non-symmetric D matrix.
     """
+    # Defensive: force all parameters to native Python types to prevent object dtype
+    log_d11 = float(log_d11); log_d22 = float(log_d22); rho_raw = float(rho_raw)
+    t_max = float(t_max); nx = int(nx); nt_save = int(nt_save)
+    if rho21_raw is not None:
+        rho21_raw = float(rho21_raw)
     if rho21_raw is not None:
         Dmat = make_nonsym_d_matrix_np(log_d11, log_d22, rho_raw, rho21_raw)
     else:
@@ -810,6 +815,14 @@ def _run_fdm_teacher_core_two_region(
     rho21_raw_right: Optional[float] = None,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Uncached conservative FDM with smoothly blended left/right diffusion matrices."""
+    # Defensive: force all parameters to native Python types to prevent object dtype
+    log_d11_left = float(log_d11_left); log_d22_left = float(log_d22_left); rho_raw_left = float(rho_raw_left)
+    log_d11_right = float(log_d11_right); log_d22_right = float(log_d22_right); rho_raw_right = float(rho_raw_right)
+    t_max = float(t_max); nx = int(nx); nt_save = int(nt_save); phase_width = float(phase_width)
+    if rho21_raw_left is not None:
+        rho21_raw_left = float(rho21_raw_left)
+    if rho21_raw_right is not None:
+        rho21_raw_right = float(rho21_raw_right)
     if rho21_raw_left is not None:
         D_left = make_nonsym_d_matrix_np(log_d11_left, log_d22_left, rho_raw_left, rho21_raw_left)
     else:
@@ -3072,6 +3085,8 @@ def posterior_band_from_samples(
     max_samples: int = 80,
     progress_bar=None,
 ) -> Dict[str, np.ndarray]:
+    # Defensive: force scalar args to native Python types
+    t_max = float(t_max); nx = int(nx); nt_save = int(nt_save)
     if theta_samples is None or len(theta_samples) == 0:
         nan = np.full((len(x), 3), np.nan)
         return {"q025": nan, "q500": nan, "q975": nan}
@@ -3411,6 +3426,8 @@ def posterior_band_from_samples_lr(
     max_samples: int = 80,
     progress_bar=None,
 ) -> Dict[str, np.ndarray]:
+    # Defensive: force scalar args to native Python types
+    t_max = float(t_max); nx = int(nx); nt_save = int(nt_save); phase_width = float(phase_width)
     if theta_samples_lr is None or len(theta_samples_lr) == 0:
         nan = np.full((len(x), 3), np.nan)
         return {"q025": nan, "q500": nan, "q975": nan}
