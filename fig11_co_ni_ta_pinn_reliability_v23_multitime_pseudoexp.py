@@ -820,6 +820,9 @@ def _run_fdm_teacher_core(
 
         total_solute = np.sum(U_new, axis=1)
         bad = total_solute > 0.999
+        # Fix #2: exclude boundary nodes from clip — BC values are exact
+        bad[0] = False
+        bad[-1] = False
         if np.any(bad):
             U_new[bad] = U_new[bad] / total_solute[bad, None] * 0.999
             _DIAG_COUNTERS["fdm_clip_events"] += 1
@@ -924,6 +927,9 @@ def _run_fdm_teacher_core_two_region(
 
         total_solute = np.sum(U_new, axis=1)
         bad = total_solute > 0.999
+        # Fix #2: exclude boundary nodes from clip — BC values are exact
+        bad[0] = False
+        bad[-1] = False
         if np.any(bad):
             U_new[bad] = U_new[bad] / total_solute[bad, None] * 0.999
             _DIAG_COUNTERS["fdm_clip_events"] += 1
@@ -1340,16 +1346,13 @@ class MLP(nn.Module):
     def forward(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
         raw = self.net(torch.cat([x, t], dim=1))
         if self.direct_output:
+            # Fix #1: simplex-safe projection via clamp-based rescale.
+            # sigmoid → [0,1] per component, then rescale if Ni+Ta > 1.
             ni_ta = torch.sigmoid(raw)
-            ni = ni_ta[:, 0:1]
-            ta = ni_ta[:, 1:2]
-            total = ni + ta
-            # C3 fix: when Ni+Ta > 1, rescale to preserve simplex constraint
-            scale = torch.where(total > 1.0, 1.0 / (total + 1e-8), torch.ones_like(total))
-            ni = ni * scale
-            ta = ta * scale
-            co = 1.0 - ni - ta
-            return torch.cat([co, ni, ta], dim=1)
+            total = ni_ta.sum(dim=1, keepdim=True)
+            ni_ta = ni_ta / torch.clamp(total, min=1.0)
+            co = torch.clamp(1.0 - ni_ta.sum(dim=1, keepdim=True), min=0.0)
+            return torch.cat([co, ni_ta], dim=1)
         else:
             positive = F.softplus(raw) + 1.0e-8
             return positive / torch.sum(positive, dim=1, keepdim=True)
@@ -3154,8 +3157,15 @@ def mcmc_reliability(
         proposal_cov_scale = 2.38 ** 2 / max(dim, 1)
 
     if proposal_cov is not None:
+        _cov = np.asarray(proposal_cov, dtype=float)
+        # Fix #3: augment proposal_cov with sigma block when marginalize_sigma=True
+        if marginalize_sigma and _cov.shape == (dim_theta, dim_theta):
+            _cov_aug = np.zeros((dim, dim), dtype=float)
+            _cov_aug[:dim_theta, :dim_theta] = _cov
+            _cov_aug[dim_theta, dim_theta] = 0.01  # σ proposal variance
+            _cov = _cov_aug
         L, proposal_scale, mode = _mcmc_proposal_from_cov(
-            np.asarray(proposal_cov, dtype=float) * float(proposal_cov_scale),
+            _cov * float(proposal_cov_scale),
             proposal_std, dim=dim,
         )
     else:
@@ -3627,8 +3637,15 @@ def mcmc_reliability_lr(
         proposal_cov_scale = 2.38 ** 2 / max(dim, 1)
 
     if proposal_cov is not None:
+        _cov = np.asarray(proposal_cov, dtype=float)
+        # Fix #3: augment proposal_cov with sigma block when marginalize_sigma=True
+        if marginalize_sigma and _cov.shape == (dim_theta, dim_theta):
+            _cov_aug = np.zeros((dim, dim), dtype=float)
+            _cov_aug[:dim_theta, :dim_theta] = _cov
+            _cov_aug[dim_theta, dim_theta] = 0.01
+            _cov = _cov_aug
         L, proposal_scale, mode = _mcmc_proposal_from_cov(
-            np.asarray(proposal_cov, dtype=float) * float(proposal_cov_scale),
+            _cov * float(proposal_cov_scale),
             proposal_std, dim=dim,
         )
     else:
@@ -7008,6 +7025,8 @@ with tab4:
                     proposal_std=float(inputs["mcmc_proposal"]),
                     seed=int(inputs["seed"]),
                     progress_bar=mcmc_lr_progress,
+                    # Fix #5: pass Laplace cov as informed proposal (LR)
+                    proposal_cov=low_rel_lr.get("cov"),
                     marginalize_sigma=bool(inputs.get("marginalize_sigma", False)),
                 )
             acc_lr = float(high_rel_lr["acceptance_rate"][0])
@@ -7214,6 +7233,8 @@ with tab4:
                     proposal_std=float(inputs["mcmc_proposal"]),
                     seed=int(inputs["seed"]),
                     progress_bar=mcmc_progress,
+                    # Fix #5: pass Laplace cov as informed proposal
+                    proposal_cov=low_rel.get("cov"),
                     marginalize_sigma=bool(inputs.get("marginalize_sigma", False)),
                     # P4 fix: pass multitime data for full-time NLL evaluation
                     x_exp_all=data.x_exp_all,
