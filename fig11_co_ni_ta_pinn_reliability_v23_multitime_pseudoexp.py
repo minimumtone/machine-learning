@@ -1661,6 +1661,8 @@ def refine_omega_by_fdm_likelihood(
     _nll_history: List[float] = [nll_before]
     _pair_names = pair_names or [f"p{k}" for k in range(len(theta_hat))]
     _n_dim = len(theta_hat)
+    _n_pairs = len(_pair_names)
+    _has_lr = _n_dim >= 2 * _n_pairs  # True when left/right Omega are separate
     _expected_evals = max(1, maxiter * (2 * _n_dim + 1))
 
     def _nll_with_progress(th):
@@ -1673,10 +1675,16 @@ def refine_omega_by_fdm_likelihood(
         if progress_status is not None and _eval_count[0] % 3 == 0:
             elapsed = time.time() - _t0
             delta_nll = nll_before - _best_nll[0]
-            param_str = "  ".join(
-                f"{_pair_names[k % len(_pair_names)]}={'L' if k < _n_dim // 2 else 'R'}:{th[k]:+.3f}"
-                for k in range(min(len(th), 6))
-            )
+            if _has_lr:
+                param_str = "  ".join(
+                    f"{_pair_names[k % _n_pairs]}={'L' if k < _n_pairs else 'R'}:{th[k]:+.3f}"
+                    for k in range(min(len(th), 2 * _n_pairs))
+                )
+            else:
+                param_str = "  ".join(
+                    f"{_pair_names[k]}:{th[k]:+.3f}"
+                    for k in range(min(len(th), _n_pairs))
+                )
             progress_status.markdown(
                 f"**FDM refinement**  eval {_eval_count[0]}  |  "
                 f"NLL: {nll_before:.2f} → **{_best_nll[0]:.2f}** (Δ={delta_nll:+.2f})  |  "
