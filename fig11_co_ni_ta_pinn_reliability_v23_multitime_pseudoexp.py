@@ -4021,7 +4021,7 @@ with st.sidebar:
     pinn_analysis_mode = st.selectbox(
         "PINN analysis mode",
         ["Fickian D matrix", "Regular-solution chemical potential"],
-        index=0,
+        index=1,
         help=(
             "Fickian D matrix: traditional approach, flux = -D grad(c). "
             "Regular-solution chemical potential: flux = M grad(mu), where mu "
