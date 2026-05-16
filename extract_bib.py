@@ -313,16 +313,46 @@ def get_metadata_via_ai(
     max_retries: int = 3,
     max_tokens_per_chunk: int = 2500,
 ) -> Dict:
-    """LLM API でメタデータを抽出する。5000トークン超のテキストは分割して処理。"""
+    """チャンク分割で LLM API にメタデータ抽出を依頼。ローカル LLM のコンテキスト長にも対応。"""
     client, resolved_model = _build_client(provider, base_url, model, api_key)
 
+    est = _estimate_tokens(text)
     chunks = _split_text_by_tokens(text, max_tokens=max_tokens_per_chunk)
-    log.info("テキスト分割: %d チャンク（推定 %d トークン）", len(chunks), _estimate_tokens(text))
+    log.info("テキスト分割: %d チャンク（推定 %d トークン）", len(chunks), est)
 
     chunk_results = []
-    for chunk in chunks:
-        result = _call_llm_single(client, resolved_model, chunk, max_retries)
-        chunk_results.append(result)
+    for i, chunk in enumerate(chunks):
+        try:
+            result = _call_llm_single(client, resolved_model, chunk, max_retries)
+            chunk_results.append(result)
+        except Exception as e:
+            err_str = str(e).lower()
+            is_context_err = "context length" in err_str or "n_ctx" in err_str or "choices が空" in str(e)
+            if is_context_err and _estimate_tokens(chunk) > 500:
+                half = len(chunk) // 2
+                log.warning("チャンク %d がコンテキスト超過、半分に縮小してリトライ", i + 1)
+                try:
+                    result = _call_llm_single(client, resolved_model, chunk[:half], max_retries)
+                    chunk_results.append(result)
+                    continue
+                except Exception:
+                    pass
+                quarter = len(chunk) // 4
+                log.warning("チャンク %d を 1/4 に縮小してリトライ", i + 1)
+                try:
+                    result = _call_llm_single(client, resolved_model, chunk[:quarter], max_retries)
+                    chunk_results.append(result)
+                    continue
+                except Exception:
+                    pass
+            if len(chunks) > 1:
+                log.warning("チャンク %d/%d をスキップ: %s", i + 1, len(chunks), e)
+                continue
+            else:
+                raise
+
+    if not chunk_results:
+        raise ValueError("すべてのチャンクで LLM の応答を取得できませんでした")
 
     return _merge_metadata(chunk_results)
 
