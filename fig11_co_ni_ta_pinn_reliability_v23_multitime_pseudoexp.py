@@ -40,9 +40,14 @@ import time
 from dataclasses import dataclass
 from typing import Dict, List, Sequence, Tuple, Optional
 
+import io
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
 import streamlit as st
 import torch
 import torch.nn as nn
@@ -1643,29 +1648,59 @@ def refine_omega_by_fdm_likelihood(
     maxiter: int = 180,
     verbose: bool = False,
     progress_status=None,
+    progress_bar=None,
+    pair_names: Optional[List[str]] = None,
 ) -> Tuple[np.ndarray, Optional[Dict]]:
     """Refine Omega estimate by minimizing FDM-based NLL using Powell method."""
     from scipy.optimize import minimize
     nll_before = float(nll_fun(theta_hat))
     _eval_count = [0]
+    _best_nll = [nll_before]
+    _best_theta = [theta_hat.copy()]
+    _t0 = time.time()
+    _nll_history: List[float] = [nll_before]
+    _pair_names = pair_names or [f"p{k}" for k in range(len(theta_hat))]
+    _n_dim = len(theta_hat)
+    _expected_evals = max(1, maxiter * (2 * _n_dim + 1))
 
     def _nll_with_progress(th):
         _eval_count[0] += 1
         val = nll_fun(th)
-        if progress_status is not None and _eval_count[0] % 5 == 0:
-            progress_status.text(
-                f"FDM refinement: {_eval_count[0]} evals, current NLL={val:.2f}"
+        _nll_history.append(float(val))
+        if val < _best_nll[0]:
+            _best_nll[0] = float(val)
+            _best_theta[0] = th.copy()
+        if progress_status is not None and _eval_count[0] % 3 == 0:
+            elapsed = time.time() - _t0
+            delta_nll = nll_before - _best_nll[0]
+            param_str = "  ".join(
+                f"{_pair_names[k % len(_pair_names)]}={'L' if k < _n_dim // 2 else 'R'}:{th[k]:+.3f}"
+                for k in range(min(len(th), 6))
             )
+            progress_status.markdown(
+                f"**FDM refinement**  eval {_eval_count[0]}  |  "
+                f"NLL: {nll_before:.2f} → **{_best_nll[0]:.2f}** (Δ={delta_nll:+.2f})  |  "
+                f"elapsed {elapsed:.0f}s\n\n"
+                f"`{param_str}`"
+            )
+        if progress_bar is not None and _eval_count[0] % 3 == 0:
+            frac = min(1.0, _eval_count[0] / _expected_evals)
+            progress_bar.progress(frac)
         return val
 
     result = minimize(_nll_with_progress, theta_hat, method="Powell",
                       options={"maxiter": maxiter, "disp": verbose})
+    elapsed_total = time.time() - _t0
+    if progress_bar is not None:
+        progress_bar.progress(1.0)
     info = {
         "nll_before": nll_before,
         "nll_after": float(result.fun),
         "success": bool(result.success),
         "nfev": int(result.nfev),
         "message": str(result.message),
+        "elapsed_s": elapsed_total,
+        "nll_history": _nll_history,
     }
     return np.asarray(result.x, dtype=float), info
 
@@ -2763,6 +2798,176 @@ def likelihood_contour_grid(
 # =============================================================================
 # Plot helpers
 # =============================================================================
+
+MPL_COLORS = {"Co": "black", "Ni": "#2b83ba", "Ta": "#4daf4a"}
+MPL_MARKERS = {"Co": "o", "Ni": "s", "Ta": "^"}
+_PUB_FONTSIZE = 18
+
+
+def _pub_fig_to_bytes(fig: plt.Figure, dpi: int = 200) -> bytes:
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", dpi=dpi, bbox_inches="tight", facecolor="white")
+    buf.seek(0)
+    return buf.read()
+
+
+def pub_profile_figure(
+    dist: np.ndarray,
+    C_fdm: np.ndarray,
+    C_pinn: np.ndarray,
+    dist_exp: np.ndarray,
+    c_exp: np.ndarray,
+    title: str = "",
+    figsize: Tuple[float, float] = (10, 6),
+) -> plt.Figure:
+    """Publication-quality single-time profile figure."""
+    fig, ax = plt.subplots(1, 1, figsize=figsize)
+    for j, comp in enumerate(COMPONENTS):
+        ax.plot(dist_exp, c_exp[:, j], MPL_MARKERS[comp],
+                color=MPL_COLORS[comp], markersize=6, markerfacecolor="none",
+                markeredgewidth=1.5, label=f"Exp. {comp}", zorder=3)
+    for j, comp in enumerate(COMPONENTS):
+        ax.plot(dist, C_fdm[:, j], "-", color=MPL_COLORS[comp], linewidth=2.5,
+                label=f"FDM {comp}")
+        ax.plot(dist, C_pinn[:, j], "--", color=MPL_COLORS[comp], linewidth=2.0,
+                label=f"PINNs {comp}")
+    ax.set_xlabel("Distance (µm)", fontsize=_PUB_FONTSIZE)
+    ax.set_ylabel("Mole fraction", fontsize=_PUB_FONTSIZE)
+    ax.set_ylim(-0.04, 1.04)
+    ax.tick_params(labelsize=_PUB_FONTSIZE - 2)
+    ax.legend(fontsize=_PUB_FONTSIZE - 4, ncol=3, loc="upper right", framealpha=0.8)
+    if title:
+        ax.set_title(title, fontsize=_PUB_FONTSIZE + 2)
+    ax.grid(True, alpha=0.3)
+    fig.tight_layout()
+    return fig
+
+
+def pub_multitime_figure(
+    dist: np.ndarray,
+    t_grid: np.ndarray,
+    C_fdm: np.ndarray,
+    C_pinn: np.ndarray,
+    n_slices: int = 5,
+    n_cols: int = 3,
+    tau_max: float = 1.0,
+    annealing_time_h: float = 160.0,
+    figsize_per_panel: Tuple[float, float] = (5.5, 4.0),
+) -> plt.Figure:
+    """Publication-quality multi-time panel figure."""
+    indices = sorted(set(np.linspace(0, len(t_grid) - 1, n_slices).astype(int).tolist()))
+    n_panels = len(indices)
+    n_rows = max(1, (n_panels + n_cols - 1) // n_cols)
+    fig, axes = plt.subplots(n_rows, n_cols,
+                             figsize=(figsize_per_panel[0] * n_cols, figsize_per_panel[1] * n_rows),
+                             squeeze=False)
+    for idx_panel, idx_time in enumerate(indices):
+        r, c = divmod(idx_panel, n_cols)
+        ax = axes[r][c]
+        for j, comp in enumerate(COMPONENTS):
+            ax.plot(dist, C_fdm[idx_time, :, j], "-", color=MPL_COLORS[comp],
+                    linewidth=2.0, label=f"FDM {comp}" if idx_panel == 0 else "")
+            ax.plot(dist, C_pinn[idx_time, :, j], "--", color=MPL_COLORS[comp],
+                    linewidth=1.8, label=f"PINNs {comp}" if idx_panel == 0 else "")
+        tlabel = format_time_label(float(t_grid[idx_time]), tau_max, annealing_time_h)
+        ax.set_title(tlabel, fontsize=_PUB_FONTSIZE - 2)
+        ax.set_ylim(-0.04, 1.04)
+        ax.set_xlabel("Distance (µm)", fontsize=_PUB_FONTSIZE - 4)
+        ax.set_ylabel("Mole fraction", fontsize=_PUB_FONTSIZE - 4)
+        ax.tick_params(labelsize=_PUB_FONTSIZE - 5)
+        ax.grid(True, alpha=0.3)
+    for idx_panel in range(n_panels, n_rows * n_cols):
+        r, c = divmod(idx_panel, n_cols)
+        axes[r][c].set_visible(False)
+    handles, labels = axes[0][0].get_legend_handles_labels()
+    if handles:
+        fig.legend(handles, labels, loc="lower center", fontsize=_PUB_FONTSIZE - 4,
+                   ncol=len(COMPONENTS) * 2, bbox_to_anchor=(0.5, -0.02))
+    fig.tight_layout(rect=[0, 0.04, 1, 1])
+    return fig
+
+
+def pub_omega_convergence_figure(
+    history: pd.DataFrame,
+    pair_names: List[str],
+    figsize: Tuple[float, float] = (10, 5),
+) -> plt.Figure:
+    """Publication-quality Omega convergence figure (loss + Omega)."""
+    fig, (ax_loss, ax_omega) = plt.subplots(1, 2, figsize=figsize)
+
+    for col in ["loss", "data", "ic", "physics"]:
+        if col in history.columns:
+            ax_loss.semilogy(history["epoch"], history[col], linewidth=1.8, label=col)
+    ax_loss.set_xlabel("Epoch", fontsize=_PUB_FONTSIZE - 2)
+    ax_loss.set_ylabel("Loss", fontsize=_PUB_FONTSIZE - 2)
+    ax_loss.set_title("Training loss", fontsize=_PUB_FONTSIZE)
+    ax_loss.legend(fontsize=_PUB_FONTSIZE - 5)
+    ax_loss.tick_params(labelsize=_PUB_FONTSIZE - 4)
+    ax_loss.grid(True, alpha=0.3)
+
+    omega_cols_l = [f"{pn}_left" for pn in ["Omega_CoNi", "Omega_CoTa", "Omega_NiTa"]]
+    omega_cols_r = [f"{pn}_right" for pn in ["Omega_CoNi", "Omega_CoTa", "Omega_NiTa"]]
+    for k, pname in enumerate(pair_names):
+        if omega_cols_l[k] in history.columns:
+            ax_omega.plot(history["epoch"], history[omega_cols_l[k]], linewidth=1.8,
+                          label=f"{pname} left")
+        if omega_cols_r[k] in history.columns:
+            ax_omega.plot(history["epoch"], history[omega_cols_r[k]], linewidth=1.8,
+                          linestyle="--", label=f"{pname} right")
+    ax_omega.set_xlabel("Epoch", fontsize=_PUB_FONTSIZE - 2)
+    ax_omega.set_ylabel("Ω value", fontsize=_PUB_FONTSIZE - 2)
+    ax_omega.set_title("Ω convergence", fontsize=_PUB_FONTSIZE)
+    ax_omega.legend(fontsize=_PUB_FONTSIZE - 5)
+    ax_omega.tick_params(labelsize=_PUB_FONTSIZE - 4)
+    ax_omega.grid(True, alpha=0.3)
+
+    fig.tight_layout()
+    return fig
+
+
+def pub_nll_convergence_figure(
+    nll_history: List[float],
+    figsize: Tuple[float, float] = (8, 4),
+) -> plt.Figure:
+    """Publication-quality NLL convergence during FDM refinement."""
+    fig, ax = plt.subplots(1, 1, figsize=figsize)
+    ax.plot(range(len(nll_history)), nll_history, "-", linewidth=1.5, color="#2b83ba")
+    ax.set_xlabel("Function evaluation", fontsize=_PUB_FONTSIZE - 2)
+    ax.set_ylabel("NLL", fontsize=_PUB_FONTSIZE - 2)
+    ax.set_title("FDM likelihood refinement convergence", fontsize=_PUB_FONTSIZE)
+    ax.tick_params(labelsize=_PUB_FONTSIZE - 4)
+    ax.grid(True, alpha=0.3)
+    fig.tight_layout()
+    return fig
+
+
+def pub_credible_band_figure(
+    dist: np.ndarray,
+    C_pinn_final: np.ndarray,
+    band: Dict[str, np.ndarray],
+    title: str = "",
+    figsize: Tuple[float, float] = (10, 6),
+) -> plt.Figure:
+    """Publication-quality credible band figure."""
+    fig, ax = plt.subplots(1, 1, figsize=figsize)
+    alpha_fill = [0.15, 0.20, 0.18]
+    for j, comp in enumerate(COMPONENTS):
+        ax.fill_between(dist, band["q025"][:, j], band["q975"][:, j],
+                        color=MPL_COLORS[comp], alpha=alpha_fill[j], label=f"95% CI {comp}")
+        ax.plot(dist, band["q500"][:, j], "-", color=MPL_COLORS[comp],
+                linewidth=2.0, label=f"Median {comp}")
+        ax.plot(dist, C_pinn_final[:, j], "--", color=MPL_COLORS[comp],
+                linewidth=1.8, label=f"PINNs {comp}")
+    ax.set_xlabel("Distance (µm)", fontsize=_PUB_FONTSIZE)
+    ax.set_ylabel("Mole fraction", fontsize=_PUB_FONTSIZE)
+    ax.set_ylim(-0.04, 1.04)
+    ax.tick_params(labelsize=_PUB_FONTSIZE - 2)
+    ax.legend(fontsize=_PUB_FONTSIZE - 5, ncol=3, loc="upper right", framealpha=0.8)
+    if title:
+        ax.set_title(title, fontsize=_PUB_FONTSIZE + 2)
+    ax.grid(True, alpha=0.3)
+    fig.tight_layout()
+    return fig
 
 def clean_layout(fig: go.Figure, title: str, height: int = 430, legend_y: float = -0.25) -> go.Figure:
     fig.update_layout(
@@ -4021,7 +4226,7 @@ with st.sidebar:
     pinn_analysis_mode = st.selectbox(
         "PINN analysis mode",
         ["Fickian D matrix", "Regular-solution chemical potential"],
-        index=0,
+        index=1,
         help=(
             "Fickian D matrix: traditional approach, flux = -D grad(c). "
             "Regular-solution chemical potential: flux = M grad(mu), where mu "
@@ -4035,6 +4240,66 @@ with st.sidebar:
             "化学ポテンシャルモード: Regular-solution モデルで Omega 相互作用項を推定します。\n\n"
             "PDE: c_t = div(M grad(μ)),  μ_i - μ_ref = RT ln(c_i/c_ref) + Σ_b (Ω_ib - Ω_rb) c_b"
         )
+        with st.expander("📖 理論説明 (Regular-solution chemical potential model)", expanded=False):
+            st.markdown(r"""
+#### 1. 化学ポテンシャルと拡散
+
+Fickian 表記 $\mathbf{J} = -D\,\nabla c$ の代わりに、化学ポテンシャル駆動の拡散方程式を使います:
+
+$$
+\frac{\partial c_i}{\partial t} = \nabla \cdot \left( M_{ij}\, \nabla \mu_j \right)
+$$
+
+ここで $M_{ij}$ は **mobility 行列** (Onsager 係数 $L_{ij}$ に比例) です。
+Fickian 拡散行列 $D$ は $D_{ij} = \sum_k M_{ik} \frac{\partial \mu_k}{\partial c_j}$ を通じて化学ポテンシャルから導出されます。
+
+#### 2. Regular-solution モデル
+
+三元系 $(i = 1, 2, 3)$ のモル Gibbs エネルギーを以下で近似します:
+
+$$
+G_\mathrm{mix} = RT \sum_i c_i \ln c_i + \sum_{i<j} \Omega_{ij}\, c_i\, c_j
+$$
+
+- 第1項: **ideal-solution** (理想混合エントロピー)
+- 第2項: **excess** (ペア相互作用 $\Omega_{ij}$ = Redlich–Kister $L^0_{ij}$)
+
+成分 $i$ の化学ポテンシャル (参照成分 $r$ からの差):
+
+$$
+\mu_i - \mu_r = RT \ln\frac{c_i}{c_r} + \sum_{b \neq i,r} (\Omega_{ib} - \Omega_{rb})\, c_b + (\Omega_{ir} - \Omega_{rr})(c_r - c_i)
+$$
+
+本実装では Co を参照成分 ($r$ = Co) としています。
+
+#### 3. PINN による Omega 推定
+
+PINNs は以下の損失関数を最小化し、$\Omega_{ij}$ を含むネットワークパラメータを同時推定します:
+
+$$
+\mathcal{L} = \underbrace{\lambda_d \sum \|c^\mathrm{pred} - c^\mathrm{obs}\|^2}_{\text{data}} + \underbrace{\lambda_p \sum \|c_t - \nabla\cdot(M\nabla\mu)\|^2}_{\text{physics (PDE)}} + \underbrace{\lambda_\mathrm{ic} \sum \|c(x,0) - c_0(x)\|^2}_{\text{initial condition}}
+$$
+
+#### 4. FDM 尤度再最適化
+
+PINN 推定値 $\hat{\Omega}$ を初期値として、FDM (有限差分法) シミュレータを用いた厳密な尤度最大化を行います:
+
+$$
+\hat{\Omega}^\mathrm{refined} = \arg\min_\Omega \sum_{t_k} \frac{1}{2\sigma^2}\|c^\mathrm{FDM}(\Omega, t_k) - c^\mathrm{exp}(t_k)\|^2
+$$
+
+Powell 法で最適化し、Hessian から Laplace 近似の事後分布 $\mathcal{N}(\hat{\Omega}, H^{-1})$ を得ます。
+
+#### 5. DICTRA との対応
+
+| 本実装 | DICTRA/Thermo-Calc |
+|---|---|
+| $\Omega_{ij}$ | $L^0_{ij}$ (Redlich–Kister 0次項) |
+| Mobility 行列 $M$ | Onsager 係数 $L_{ij}$ |
+| $RT$ | $RT$ (物理温度) |
+| FDM solver | DICTRA homogenization |
+""")
+
 
     st.markdown("### True diffusion matrix for FDM")
     st.caption("Values are normalized, not physical SI units.")
@@ -4687,14 +4952,22 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
         if do_fdm_refine:
             st.info("FDM尤度でΩを再最適化しています...")
             refine_status = st.empty()
+            refine_bar = st.progress(0.0)
+            _omega_pair_names = ["Ω_CoNi", "Ω_CoTa", "Ω_NiTa"]
             theta_refined, refine_info_rs = refine_omega_by_fdm_likelihood(
                 nll_fun_rs, theta_hat_rs, maxiter=int(fdm_refine_maxiter), verbose=False,
-                progress_status=refine_status,
+                progress_status=refine_status, progress_bar=refine_bar,
+                pair_names=_omega_pair_names,
             )
             if np.all(np.isfinite(theta_refined)):
                 theta_hat_rs = theta_refined
                 overwrite_model_omega_from_theta(rs_model, theta_hat_rs, learn_lr_omega)
-            st.success(f"FDM refinement: NLL {refine_info_rs['nll_before']:.2f} → {refine_info_rs['nll_after']:.2f}")
+            _ri = refine_info_rs
+            st.success(
+                f"FDM refinement 完了: NLL {_ri['nll_before']:.2f} → {_ri['nll_after']:.2f}  "
+                f"({_ri['nfev']} evals, {_ri.get('elapsed_s', 0):.1f}s, "
+                f"{'converged' if _ri['success'] else 'maxiter reached'})"
+            )
 
         rs_result = TrainResultRS(
             model=rs_model,
@@ -4913,8 +5186,8 @@ if type(result).__name__ == "TrainResultRS":
         rc2.metric("NLL after", f"{ri['nll_after']:.2f}")
         rc3.metric("Evaluations", f"{ri['nfev']}")
 
-    tab_rs1, tab_rs2, tab_rs3, tab_rs4 = st.tabs(
-        ["Profiles", "Training", "Omega reliability", "Data"]
+    tab_rs1, tab_rs2, tab_rs3, tab_rs4, tab_rs5 = st.tabs(
+        ["Profiles", "Training", "Omega reliability", "Data", "Publication figures"]
     )
 
     with tab_rs1:
@@ -5148,6 +5421,71 @@ if type(result).__name__ == "TrainResultRS":
             "t_exp": np.asarray(rs_data.t_exp_all[:50]).ravel(),
             **{f"c_exp_{comp}": np.asarray(rs_data.c_exp_all[:50, j]).ravel() for j, comp in enumerate(COMPONENTS)},
         }), use_container_width=True)
+
+    with tab_rs5:
+        st.markdown("### 論文用 matplotlib 図 (Publication-quality figures)")
+        st.caption("フォントサイズ大、高解像度 PNG で出力します。右クリックまたはダウンロードボタンで保存できます。")
+
+        st.markdown("#### 1. Final profile (regular-solution)")
+        fig_pub_profile = pub_profile_figure(
+            dist, C_fdm_rs[-1], C_pinn_rs[-1], dist_exp, rs_data.c_exp_all,
+            title="Regular-solution profile: Co / Ni-Ta",
+        )
+        st.image(_pub_fig_to_bytes(fig_pub_profile), use_container_width=True)
+        buf_profile = io.BytesIO()
+        fig_pub_profile.savefig(buf_profile, format="png", dpi=300, bbox_inches="tight", facecolor="white")
+        st.download_button("Download profile (PNG, 300 dpi)", buf_profile.getvalue(),
+                           file_name="rs_profile_final.png", mime="image/png")
+        plt.close(fig_pub_profile)
+
+        st.markdown("#### 2. Multi-time profiles")
+        paper_time_h_disp = float(inputs.get("paper_time_h", 160.0))
+        fig_pub_mt = pub_multitime_figure(
+            dist, t, C_fdm_rs, C_pinn_rs,
+            n_slices=5, n_cols=3,
+            tau_max=float(t[-1]), annealing_time_h=paper_time_h_disp,
+        )
+        st.image(_pub_fig_to_bytes(fig_pub_mt), use_container_width=True)
+        buf_mt = io.BytesIO()
+        fig_pub_mt.savefig(buf_mt, format="png", dpi=300, bbox_inches="tight", facecolor="white")
+        st.download_button("Download multi-time (PNG, 300 dpi)", buf_mt.getvalue(),
+                           file_name="rs_multitime_profiles.png", mime="image/png")
+        plt.close(fig_pub_mt)
+
+        st.markdown("#### 3. Training loss & Ω convergence")
+        fig_pub_conv = pub_omega_convergence_figure(rs_hist, pair_names)
+        st.image(_pub_fig_to_bytes(fig_pub_conv), use_container_width=True)
+        buf_conv = io.BytesIO()
+        fig_pub_conv.savefig(buf_conv, format="png", dpi=300, bbox_inches="tight", facecolor="white")
+        st.download_button("Download convergence (PNG, 300 dpi)", buf_conv.getvalue(),
+                           file_name="rs_training_convergence.png", mime="image/png")
+        plt.close(fig_pub_conv)
+
+        if inputs.get("refine_info_rs") is not None and inputs["refine_info_rs"].get("nll_history"):
+            st.markdown("#### 4. FDM refinement NLL convergence")
+            fig_pub_nll = pub_nll_convergence_figure(inputs["refine_info_rs"]["nll_history"])
+            st.image(_pub_fig_to_bytes(fig_pub_nll), use_container_width=True)
+            buf_nll = io.BytesIO()
+            fig_pub_nll.savefig(buf_nll, format="png", dpi=300, bbox_inches="tight", facecolor="white")
+            st.download_button("Download NLL convergence (PNG, 300 dpi)", buf_nll.getvalue(),
+                               file_name="rs_nll_convergence.png", mime="image/png")
+            plt.close(fig_pub_nll)
+
+        try:
+            _band_rs_pub = band_rs  # noqa: F841 – set inside tab_rs3 scope
+            st.markdown("#### 5. Posterior credible band")
+            fig_pub_band = pub_credible_band_figure(
+                dist, C_pinn_rs[-1], _band_rs_pub,
+                title="Posterior 95% credible band (Regular-solution Ω)",
+            )
+            st.image(_pub_fig_to_bytes(fig_pub_band), use_container_width=True)
+            buf_band = io.BytesIO()
+            fig_pub_band.savefig(buf_band, format="png", dpi=300, bbox_inches="tight", facecolor="white")
+            st.download_button("Download credible band (PNG, 300 dpi)", buf_band.getvalue(),
+                               file_name="rs_credible_band.png", mime="image/png")
+            plt.close(fig_pub_band)
+        except NameError:
+            pass
 
     st.stop()
 
