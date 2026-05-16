@@ -826,6 +826,11 @@ with tab_extract:
     st.header("PDF → BibTeX 一括抽出")
     st.markdown("ディレクトリを指定すると、配下の **全 PDF** を AI 解析し BibTeX を生成します。")
 
+    # リネームタブで入力済みのディレクトリを引き継ぐ
+    _default_dir = st.session_state.get("rename_dir", "") or ""
+    if _default_dir and "extract_dir" not in st.session_state:
+        st.session_state["extract_dir"] = _default_dir
+
     dir_path = st.text_input(
         "PDF ディレクトリのパス",
         placeholder="/home/user/papers",
