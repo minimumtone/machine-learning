@@ -194,17 +194,87 @@ def _build_client(
     return OpenAI(**kwargs), resolved_model
 
 
-def get_metadata_via_ai(
+def _estimate_tokens(text: str) -> int:
+    """テキストのトークン数を推定する（英語≈4文字/token、日本語≈1.5文字/token）。"""
+    ascii_chars = sum(1 for c in text if ord(c) < 128)
+    non_ascii = len(text) - ascii_chars
+    return int(ascii_chars / 4 + non_ascii / 1.5)
+
+
+def _split_text_by_tokens(text: str, max_tokens: int = 5000) -> List[str]:
+    """テキストを max_tokens 以下のチャンクに分割する。段落境界で分割を試みる。"""
+    if _estimate_tokens(text) <= max_tokens:
+        return [text]
+
+    paragraphs = re.split(r"\n\s*\n", text)
+    chunks: List[str] = []
+    current_chunk = ""
+
+    for para in paragraphs:
+        candidate = (current_chunk + "\n\n" + para).strip() if current_chunk else para
+        if _estimate_tokens(candidate) <= max_tokens:
+            current_chunk = candidate
+        else:
+            if current_chunk:
+                chunks.append(current_chunk)
+            if _estimate_tokens(para) > max_tokens:
+                sentences = re.split(r"(?<=[.。!?])\s+", para)
+                current_chunk = ""
+                for sent in sentences:
+                    candidate = (current_chunk + " " + sent).strip() if current_chunk else sent
+                    if _estimate_tokens(candidate) <= max_tokens:
+                        current_chunk = candidate
+                    else:
+                        if current_chunk:
+                            chunks.append(current_chunk)
+                        current_chunk = sent
+            else:
+                current_chunk = para
+
+    if current_chunk:
+        chunks.append(current_chunk)
+
+    return chunks if chunks else [text[:max_tokens * 4]]
+
+
+def _merge_metadata(results: List[Dict]) -> Dict:
+    """複数チャンクの解析結果をマージする。最初のチャンクを優先（title/authors等）。"""
+    if len(results) == 1:
+        return results[0]
+
+    merged: Dict[str, Any] = {}
+    list_fields = {"materials", "theory", "methods"}
+    first_priority = {"title", "authors", "year", "doi", "journal"}
+
+    for key in first_priority:
+        for r in results:
+            val = r.get(key)
+            if val:
+                merged[key] = val
+                break
+
+    for key in list_fields:
+        parts = []
+        for r in results:
+            val = r.get(key, "")
+            if val and val not in parts:
+                parts.append(val)
+        merged[key] = "; ".join(parts) if parts else ""
+
+    summaries = [r.get("summary_ja", "") for r in results if r.get("summary_ja")]
+    if summaries:
+        merged["summary_ja"] = " ".join(summaries)
+
+    return merged
+
+
+def _call_llm_single(
+    client: Any,
+    resolved_model: str,
     text: str,
-    provider: str = "openai",
-    model: Optional[str] = None,
-    base_url: Optional[str] = None,
-    api_key: Optional[str] = None,
     max_retries: int = 3,
 ) -> Dict:
-    """LLM API でメタデータを抽出する。リトライ付き。"""
-    client, resolved_model = _build_client(provider, base_url, model, api_key)
-
+    """単一チャンクをLLMに送信してメタデータを取得する。リトライ付き。"""
     for attempt in range(1, max_retries + 1):
         try:
             response = client.chat.completions.create(
@@ -225,6 +295,29 @@ def get_metadata_via_ai(
                 time.sleep(wait)
             else:
                 raise
+
+
+def get_metadata_via_ai(
+    text: str,
+    provider: str = "openai",
+    model: Optional[str] = None,
+    base_url: Optional[str] = None,
+    api_key: Optional[str] = None,
+    max_retries: int = 3,
+    max_tokens_per_chunk: int = 5000,
+) -> Dict:
+    """LLM API でメタデータを抽出する。5000トークン超のテキストは分割して処理。"""
+    client, resolved_model = _build_client(provider, base_url, model, api_key)
+
+    chunks = _split_text_by_tokens(text, max_tokens=max_tokens_per_chunk)
+    log.info("テキスト分割: %d チャンク（推定 %d トークン）", len(chunks), _estimate_tokens(text))
+
+    chunk_results = []
+    for chunk in chunks:
+        result = _call_llm_single(client, resolved_model, chunk, max_retries)
+        chunk_results.append(result)
+
+    return _merge_metadata(chunk_results)
 
 
 def _parse_json(text: str) -> Dict:
