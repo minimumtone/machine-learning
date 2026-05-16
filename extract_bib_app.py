@@ -514,6 +514,18 @@ with tab_extract:
                 )
                 status_area.empty()
 
+                if skipped > 0 and skipped == total:
+                    st.warning(
+                        f"⚠️ 全 {total} 件がチェックポイント済みのためスキップされました。\n\n"
+                        "別のモデル（LM Studio 等）で再解析したい場合は、"
+                        "「**チェックポイントを無視して再処理**」にチェックを入れて再実行してください。"
+                    )
+                elif skipped > 0:
+                    st.info(
+                        f"ℹ️ {skipped} 件はチェックポイント済み（前回の結果を使用）、"
+                        f"{total - skipped - len(errors)} 件を新規解析しました。"
+                    )
+
                 # BibTeX 組み立て
                 bib_entries: List[str] = []
                 used_keys: set = set()
