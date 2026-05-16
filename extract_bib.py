@@ -159,7 +159,7 @@ SYSTEM_MSG = (
 DEFAULT_PROVIDERS: Dict[str, Dict[str, Any]] = {
     "openai": {
         "base_url": None,
-        "model": "gpt-4o-mini",
+        "model": "gpt-5.4-nano",
         "api_key_env": "OPENAI_API_KEY",
         "api_key_required": True,
     },

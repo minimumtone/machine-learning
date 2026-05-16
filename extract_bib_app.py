@@ -165,7 +165,7 @@ SYSTEM_MSG = (
 DEFAULT_PROVIDERS: Dict[str, Dict[str, Any]] = {
     "openai": {
         "base_url": None,
-        "model": "gpt-4o-mini",
+        "model": "gpt-5.4-nano",
         "api_key_env": "OPENAI_API_KEY",
         "api_key_required": True,
     },
@@ -502,8 +502,8 @@ with st.sidebar:
             type="password",
         )
         model = st.selectbox("モデル", [
-            "gpt-4o-mini", "gpt-4o", "gpt-4-turbo",
-            "gpt-5", "gpt-5-mini",
+            "gpt-5.4-nano", "gpt-5.4-mini", "gpt-5.5",
+            "gpt-5.4-pro", "gpt-5.4-thinking", "gpt-5.3-instant",
         ])
         base_url = None
     else:
