@@ -436,8 +436,11 @@ with tab_extract:
                 progress_bar = st.progress(0)
                 progress_text = st.empty()
                 status_area = st.empty()
+                detail_area = st.empty()
                 stats_area = st.empty()
                 time_area = st.empty()
+                log_container = st.expander("処理ログ", expanded=True)
+                log_lines: List[str] = []
 
                 t_start = time.time()
 
@@ -469,6 +472,9 @@ with tab_extract:
                             if cached:
                                 results.append(cached)
                             skipped += 1
+                            log_lines.append(f"⏭️ `{fname}` — チェックポイント済み（スキップ）")
+                            with log_container:
+                                st.markdown("\n".join(log_lines[-20:]))
                             stats_area.markdown(
                                 f"成功 **{len(results)}**  |  "
                                 f"スキップ **{skipped}**  |  "
@@ -476,10 +482,21 @@ with tab_extract:
                             )
                             continue
 
-                        status_area.info(f"テキスト抽出中: {fname}")
+                        # ステップ 1: テキスト抽出
+                        status_area.info(f"📄 [{done}/{total}] テキスト抽出中: {fname}")
+                        detail_area.caption(f"ファイル: {pdf_path}")
+                        t_file = time.time()
                         text = extract_text_from_pdf(pdf_path)
-                        if len(text.strip()) < 100:
+                        text_len = len(text.strip())
+                        extract_sec = time.time() - t_file
+
+                        if text_len < 100:
                             errors.append({"_file": pdf_path, "_error": "テキスト不足"})
+                            log_lines.append(
+                                f"❌ `{fname}` — テキスト不足 ({text_len} 文字)"
+                            )
+                            with log_container:
+                                st.markdown("\n".join(log_lines[-20:]))
                             stats_area.markdown(
                                 f"成功 **{len(results)}**  |  "
                                 f"スキップ **{skipped}**  |  "
@@ -487,7 +504,19 @@ with tab_extract:
                             )
                             continue
 
-                        status_area.info(f"AI 解析中: {fname}")
+                        # ステップ 2: AI 解析
+                        provider_label = "OpenAI" if provider_key == "openai" else "LM Studio"
+                        status_area.info(
+                            f"🤖 [{done}/{total}] AI 解析中: {fname}\n\n"
+                            f"テキスト: {text_len:,} 文字  |  "
+                            f"モデル: {model}（{provider_label}）"
+                        )
+                        detail_area.caption(
+                            f"テキスト抽出: {extract_sec:.1f}秒  |  "
+                            f"LLM 応答待ち..."
+                        )
+
+                        t_ai = time.time()
                         meta = get_metadata_via_ai(
                             text,
                             provider=provider_key,
@@ -495,6 +524,8 @@ with tab_extract:
                             base_url=base_url,
                             api_key=api_key,
                         )
+                        ai_sec = time.time() - t_ai
+
                         meta["_source_file"] = pdf_path
                         meta["_sha256"] = sha
                         meta["_cite_key"] = _make_cite_key(meta, pdf_path)
@@ -502,11 +533,28 @@ with tab_extract:
                         ckpt.put(sha, meta)
                         results.append(meta)
 
+                        title_short = (meta.get("title") or "")[:50]
+                        detail_area.caption(
+                            f"テキスト抽出: {extract_sec:.1f}秒  |  "
+                            f"AI 解析: {ai_sec:.1f}秒  |  "
+                            f"合計: {extract_sec + ai_sec:.1f}秒"
+                        )
+                        log_lines.append(
+                            f"✅ `{fname}` — {title_short}… "
+                            f"({extract_sec:.1f}s + {ai_sec:.1f}s)"
+                        )
+                        with log_container:
+                            st.markdown("\n".join(log_lines[-20:]))
+
                         if done % 20 == 0:
                             ckpt.save()
 
                     except Exception as e:
                         errors.append({"_file": pdf_path, "_error": str(e)})
+                        err_msg = str(e)[:80]
+                        log_lines.append(f"❌ `{fname}` — エラー: {err_msg}")
+                        with log_container:
+                            st.markdown("\n".join(log_lines[-20:]))
 
                     stats_area.markdown(
                         f"成功 **{len(results)}**  |  "
