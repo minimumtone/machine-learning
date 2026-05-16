@@ -180,7 +180,7 @@ def _build_client(
     elif cfg["api_key_env"]:
         resolved_key = os.getenv(cfg["api_key_env"], "")
     else:
-        resolved_key = "lm-studio"
+        resolved_key = "not-needed"
 
     if cfg["api_key_required"] and not resolved_key:
         raise RuntimeError(

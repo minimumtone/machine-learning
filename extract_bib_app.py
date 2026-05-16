@@ -177,7 +177,7 @@ def _build_client(
     elif cfg["api_key_env"]:
         resolved_key = os.getenv(cfg["api_key_env"], "")
     else:
-        resolved_key = "lm-studio"
+        resolved_key = "not-needed"
 
     if cfg["api_key_required"] and not resolved_key:
         raise RuntimeError(
@@ -333,7 +333,12 @@ with st.sidebar:
         provider_key = "lmstudio"
         api_key = None
         base_url = st.text_input("LM Studio URL", value="http://localhost:1234/v1")
-        model = st.text_input("モデル名", value="local-model")
+        model = st.text_input(
+            "モデル名",
+            value="",
+            placeholder="例: bonsai-8b, gemma-3-4b など",
+            help="LM Studio で読み込んでいるモデル名を入力してください",
+        )
 
     st.divider()
     st.header("出力設定")
@@ -402,6 +407,8 @@ with tab_extract:
         ):
             if provider_key == "openai" and not api_key:
                 st.error("OpenAI API Key を入力してください。")
+            elif provider_key == "lmstudio" and not model:
+                st.error("LM Studio のモデル名を入力してください。（例: bonsai-8b）")
             else:
                 if api_key:
                     os.environ["OPENAI_API_KEY"] = api_key
