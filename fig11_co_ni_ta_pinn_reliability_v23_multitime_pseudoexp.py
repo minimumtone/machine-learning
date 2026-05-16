@@ -2677,7 +2677,7 @@ def gaussian_nll_multitime(
     theta = np.asarray(theta, dtype=float).ravel()
     rho21 = float(theta[3]) if len(theta) > 3 else None
     try:
-        xg, _, Cg, _ = _run_fdm_teacher_core(
+        xg, t_grid_fdm, Cg, _ = _run_fdm_teacher_core(
             float(theta[0]), float(theta[1]), float(theta[2]),
             float(t_max), int(nx), int(nt_save), rho21_raw=rho21,
         )
@@ -2687,12 +2687,12 @@ def gaussian_nll_multitime(
 
     t_exp_1d = np.asarray(t_exp_all).ravel()
     x_exp_1d = np.asarray(x_exp_all).ravel()
-    t_grid_fdm = np.linspace(0, float(t_max), int(nt_save) + 1)
 
     total_nll = 0.0
     unique_times = np.unique(t_exp_1d)
+    _TIME_TOL = 1.0e-10
     for t_val in unique_times:
-        mask = np.abs(t_exp_1d - t_val) < 1.0e-10
+        mask = np.abs(t_exp_1d - t_val) < _TIME_TOL
         x_pts = x_exp_1d[mask]
         c_pts = c_exp_all[mask]
         ti_closest = int(np.argmin(np.abs(t_grid_fdm - t_val)))
@@ -3261,7 +3261,8 @@ def psis_diagnostic(
         # probability-weighted moments: b0 = mean, b1 = Σ (j/(m-1)) * x_(j)
         b0 = np.mean(exc_sorted)
         b1 = np.sum(np.arange(m) / max(m - 1, 1) * exc_sorted) / m
-        k_hat = float(b0 / (2.0 * b1) - 1.0) if b1 > 1e-15 else 0.0
+        denom = b0 - 2.0 * b1
+        k_hat = float((3.0 * b0 - 4.0 * b1) / denom) if abs(denom) > 1e-15 else 0.0
         k_hat = max(min(k_hat, 2.0), -0.5)
 
     weights = np.exp(log_ratios)
