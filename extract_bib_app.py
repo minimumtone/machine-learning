@@ -314,6 +314,7 @@ def _call_llm_single(
     resolved_model: str,
     text: str,
     max_retries: int = 3,
+    provider: str = "openai",
 ) -> Dict:
     """単一チャンクをLLMに送信してメタデータを取得する。リトライ付き。"""
     for attempt in range(1, max_retries + 1):
@@ -325,7 +326,6 @@ def _call_llm_single(
                     {"role": "user", "content": f"以下の論文テキストを解析してください:\n\n{text}"},
                 ],
                 temperature=0.0,
-                max_tokens=1024,
             )
             if not response or not response.choices:
                 raise ValueError("LLM から空のレスポンスが返されました（choices が空）")
@@ -368,26 +368,24 @@ def get_metadata_via_ai(
     chunk_results = []
     for i, chunk in enumerate(chunks):
         try:
-            result = _call_llm_single(client, resolved_model, chunk, max_retries)
+            result = _call_llm_single(client, resolved_model, chunk, max_retries, provider)
             chunk_results.append(result)
         except Exception as e:
             err_str = str(e).lower()
             is_context_err = "context length" in err_str or "n_ctx" in err_str or "choices が空" in str(e)
             if is_context_err and _estimate_tokens(chunk) > 500:
-                # チャンクをさらに半分に縮小してリトライ
                 half = len(chunk) // 2
                 log.warning("チャンク %d がコンテキスト超過、半分に縮小してリトライ", i + 1)
                 try:
-                    result = _call_llm_single(client, resolved_model, chunk[:half], max_retries)
+                    result = _call_llm_single(client, resolved_model, chunk[:half], max_retries, provider)
                     chunk_results.append(result)
                     continue
                 except Exception:
                     pass
-                # さらに 1/4 に縮小
                 quarter = len(chunk) // 4
                 log.warning("チャンク %d を 1/4 に縮小してリトライ", i + 1)
                 try:
-                    result = _call_llm_single(client, resolved_model, chunk[:quarter], max_retries)
+                    result = _call_llm_single(client, resolved_model, chunk[:quarter], max_retries, provider)
                     chunk_results.append(result)
                     continue
                 except Exception:
