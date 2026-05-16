@@ -421,6 +421,53 @@ def _escape_bib(value: str) -> str:
     return value.replace("{", "\\{").replace("}", "\\}")
 
 
+def _sanitize_filename(name: str, max_len: int = 100) -> str:
+    """ファイル名に使えない文字を除去し、長さを制限する。"""
+    forbidden = r'[\\/:*?"<>|]'
+    name = re.sub(forbidden, "", name)
+    name = re.sub(r"\s+", " ", name).strip()
+    if len(name) > max_len:
+        name = name[:max_len].rstrip()
+    return name
+
+
+def _rename_pdf(pdf_path: str, meta: Dict) -> str:
+    """解析結果を元に PDF を 著者_タイトル.pdf にリネームする。新しいパスを返す。"""
+    authors = meta.get("authors", "") or ""
+    title = meta.get("title", "") or ""
+    if not authors and not title:
+        return pdf_path
+
+    first_author = authors.split(",")[0].strip()
+    if " " in first_author:
+        first_author = first_author.split()[-1]
+    first_author = _sanitize_filename(first_author, max_len=30)
+    title_clean = _sanitize_filename(title, max_len=80)
+
+    if first_author and title_clean:
+        new_name = f"{first_author}_{title_clean}.pdf"
+    elif title_clean:
+        new_name = f"{title_clean}.pdf"
+    else:
+        new_name = f"{first_author}.pdf"
+
+    parent = os.path.dirname(pdf_path)
+    new_path = os.path.join(parent, new_name)
+
+    if new_path != pdf_path and os.path.exists(new_path):
+        base, ext = os.path.splitext(new_name)
+        counter = 2
+        while os.path.exists(os.path.join(parent, f"{base}_{counter}{ext}")):
+            counter += 1
+        new_path = os.path.join(parent, f"{base}_{counter}{ext}")
+
+    if new_path != pdf_path:
+        os.rename(pdf_path, new_path)
+        log.info("PDF リネーム: %s → %s", os.path.basename(pdf_path), os.path.basename(new_path))
+
+    return new_path
+
+
 def _format_bib_entry(key: str, meta: Dict) -> str:
     """1 エントリ分の BibTeX 文字列を組み立てる。"""
     lines = [f"@article{{{key},"]
@@ -527,6 +574,7 @@ def _process_one(
     model: Optional[str],
     base_url: Optional[str],
     api_key: Optional[str],
+    rename: bool = False,
 ) -> Optional[Dict]:
     """PDF 1 ファイルを処理。チェックポイント済みならスキップ。
 
@@ -546,7 +594,11 @@ def _process_one(
     meta = get_metadata_via_ai(
         text, provider=provider, model=model, base_url=base_url, api_key=api_key,
     )
-    meta["_source_file"] = pdf_path
+    if rename:
+        new_path = _rename_pdf(pdf_path, meta)
+        meta["_source_file"] = new_path
+    else:
+        meta["_source_file"] = pdf_path
     meta["_sha256"] = sha
 
     checkpoint.put(sha, meta)
@@ -568,6 +620,7 @@ def run_batch(
     workers: int = 4,
     save_every: int = 20,
     on_progress: Optional[Any] = None,
+    rename: bool = False,
 ) -> List[Dict]:
     """PDF リストをバッチ処理してチェックポイントに保存し、BibTeX を出力。
 
@@ -582,7 +635,7 @@ def run_batch(
 
     def _worker(pdf_path: str) -> tuple:
         try:
-            meta, is_new = _process_one(pdf_path, checkpoint, provider, model, base_url, api_key)
+            meta, is_new = _process_one(pdf_path, checkpoint, provider, model, base_url, api_key, rename=rename)
             return pdf_path, meta, is_new, None
         except Exception as e:
             return pdf_path, None, False, str(e)
@@ -635,6 +688,7 @@ def main() -> None:
     parser.add_argument("--base-url", default=None, help="API ベース URL (LM Studio 等)")
     parser.add_argument("--workers", "-w", type=int, default=4, help="並行ワーカー数")
     parser.add_argument("--no-recursive", action="store_true", help="サブディレクトリを再帰探索しない")
+    parser.add_argument("--rename", action="store_true", help="PDF を 著者_タイトル.pdf にリネーム")
     args = parser.parse_args()
 
     pdfs = collect_pdfs(args.pdfs, args.input_dir, recursive=not args.no_recursive)
@@ -651,6 +705,7 @@ def main() -> None:
         model=args.model,
         base_url=args.base_url,
         workers=args.workers,
+        rename=args.rename,
     )
 
 

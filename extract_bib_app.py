@@ -435,6 +435,55 @@ def _escape_bib(value: str) -> str:
     return value.replace("{", "\\{").replace("}", "\\}")
 
 
+def _sanitize_filename(name: str, max_len: int = 100) -> str:
+    """ファイル名に使えない文字を除去し、長さを制限する。"""
+    forbidden = r'[\\/:*?"<>|]'
+    name = re.sub(forbidden, "", name)
+    name = re.sub(r"\s+", " ", name).strip()
+    if len(name) > max_len:
+        name = name[:max_len].rstrip()
+    return name
+
+
+def _rename_pdf(pdf_path: str, meta: Dict) -> str:
+    """解析結果を元に PDF を 著者_タイトル.pdf にリネームする。新しいパスを返す。"""
+    authors = meta.get("authors", "") or ""
+    title = meta.get("title", "") or ""
+    if not authors and not title:
+        return pdf_path
+
+    first_author = authors.split(",")[0].strip()
+    # 姓のみ取得（スペースがある場合は最後の単語）
+    if " " in first_author:
+        first_author = first_author.split()[-1]
+    first_author = _sanitize_filename(first_author, max_len=30)
+    title_clean = _sanitize_filename(title, max_len=80)
+
+    if first_author and title_clean:
+        new_name = f"{first_author}_{title_clean}.pdf"
+    elif title_clean:
+        new_name = f"{title_clean}.pdf"
+    else:
+        new_name = f"{first_author}.pdf"
+
+    parent = os.path.dirname(pdf_path)
+    new_path = os.path.join(parent, new_name)
+
+    # 同名ファイルが既に存在する場合はサフィックスを付与
+    if new_path != pdf_path and os.path.exists(new_path):
+        base, ext = os.path.splitext(new_name)
+        counter = 2
+        while os.path.exists(os.path.join(parent, f"{base}_{counter}{ext}")):
+            counter += 1
+        new_path = os.path.join(parent, f"{base}_{counter}{ext}")
+
+    if new_path != pdf_path:
+        os.rename(pdf_path, new_path)
+        log.info("PDF リネーム: %s → %s", os.path.basename(pdf_path), os.path.basename(new_path))
+
+    return new_path
+
+
 def _format_bib_entry(key: str, meta: Dict) -> str:
     """1 エントリ分の BibTeX 文字列を組み立てる。"""
     lines = [f"@article{{{key},"]
@@ -534,6 +583,11 @@ with st.sidebar:
     st.header("出力設定")
     output_name = st.text_input("BibTeX ファイル名", value="library.bib")
     checkpoint_path = st.text_input("チェックポイント", value=".extract_bib_checkpoint.json")
+    rename_pdf = st.checkbox(
+        "PDF を 著者_タイトル.pdf にリネーム",
+        value=False,
+        help="解析成功後、PDF ファイルを「第一著者の姓_タイトル.pdf」に自動リネームします。"
+    )
 
 # ---------------------------------------------------------------------------
 # タブ構成
@@ -710,22 +764,32 @@ with tab_extract:
                         )
                         ai_sec = time.time() - t_ai
 
-                        meta["_source_file"] = pdf_path
+                        # PDF リネーム（有効時）
+                        if rename_pdf:
+                            new_path = _rename_pdf(pdf_path, meta)
+                            meta["_source_file"] = new_path
+                        else:
+                            meta["_source_file"] = pdf_path
                         meta["_sha256"] = sha
-                        meta["_cite_key"] = _make_cite_key(meta, pdf_path)
+                        meta["_cite_key"] = _make_cite_key(meta, meta["_source_file"])
 
                         ckpt.put(sha, meta)
                         results.append(meta)
 
                         title_short = (meta.get("title") or "")[:50]
+                        renamed_note = ""
+                        if rename_pdf and meta["_source_file"] != pdf_path:
+                            renamed_note = f" → {os.path.basename(meta['_source_file'])}"
                         detail_area.caption(
                             f"テキスト抽出: {extract_sec:.1f}秒  |  "
                             f"AI 解析: {ai_sec:.1f}秒  |  "
                             f"合計: {extract_sec + ai_sec:.1f}秒"
+                            f"{renamed_note}"
                         )
                         log_lines.append(
                             f"✅ {fname} — {title_short}… "
                             f"({extract_sec:.1f}s + {ai_sec:.1f}s)"
+                            f"{renamed_note}"
                         )
                         log_text_area.code("\n".join(log_lines[-30:]), language=None)
 
