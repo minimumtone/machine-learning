@@ -117,6 +117,15 @@ class Checkpoint:
         with self._lock:
             return list(self._data.values())
 
+    def all_entries_with_sha(self) -> List[tuple]:
+        """(sha, meta) のリストを返す。"""
+        with self._lock:
+            return list(self._data.items())
+
+    def remove(self, sha: str) -> None:
+        with self._lock:
+            self._data.pop(sha, None)
+
     def __len__(self) -> int:
         with self._lock:
             return len(self._data)
@@ -349,7 +358,7 @@ with st.sidebar:
 # タブ構成
 # ---------------------------------------------------------------------------
 
-tab_extract, tab_search = st.tabs(["📥 PDF 一括抽出", "🔍 文献検索"])
+tab_extract, tab_search, tab_cleanup = st.tabs(["📥 PDF 一括抽出", "🔍 文献検索", "🧹 クリーンアップ"])
 
 # ===================================================================
 # タブ 1: PDF 一括抽出
@@ -793,3 +802,117 @@ with tab_search:
                 mime="text/plain",
                 use_container_width=True,
             )
+
+# ===================================================================
+# タブ 3: クリーンアップ
+# ===================================================================
+
+with tab_cleanup:
+    st.header("🧹 クリーンアップ — 不要エントリの検出・削除")
+    st.markdown(
+        "PDF ディレクトリをスキャンし、**ファイルが存在しなくなった論文**を"
+        "チェックポイント / BibTeX から個別に削除できます。"
+    )
+
+    cleanup_dir = st.text_input(
+        "PDF ディレクトリのパス",
+        placeholder="/home/user/papers",
+        help="現在の PDF 置き場を指定してください",
+        key="cleanup_dir",
+    )
+    cleanup_recursive = st.checkbox("サブディレクトリも探索", value=True, key="cleanup_recursive")
+
+    if st.button("孤立エントリを検出", type="primary", use_container_width=True):
+        if not cleanup_dir or not Path(cleanup_dir).is_dir():
+            st.error("有効なディレクトリを指定してください。")
+        else:
+            ckpt = Checkpoint(checkpoint_path)
+            if len(ckpt) == 0:
+                st.info("チェックポイントにエントリがありません。")
+            else:
+                # 現在のディレクトリ内の PDF の SHA-256 を計算
+                pattern = "**/*.pdf" if cleanup_recursive else "*.pdf"
+                current_pdfs = sorted(str(p) for p in Path(cleanup_dir).glob(pattern))
+                st.caption(f"ディレクトリ内の PDF: {len(current_pdfs)} 件")
+
+                with st.spinner("PDF のハッシュを計算中..."):
+                    current_shas = set()
+                    for p in current_pdfs:
+                        try:
+                            current_shas.add(file_sha256(p))
+                        except Exception:
+                            pass
+
+                # チェックポイントのエントリと照合
+                orphans = []
+                for sha, meta in ckpt.all_entries_with_sha():
+                    if sha not in current_shas:
+                        orphans.append((sha, meta))
+
+                if not orphans:
+                    st.success("✅ 孤立エントリはありません。すべてのエントリに対応する PDF が存在します。")
+                else:
+                    st.warning(
+                        f"⚠️ {len(orphans)} 件の孤立エントリを検出しました。"
+                        "対応する PDF がディレクトリに見つかりません。"
+                    )
+                    st.session_state["orphans"] = orphans
+                    st.session_state["cleanup_checkpoint_path"] = checkpoint_path
+
+    # --- 孤立エントリの個別確認 ---
+    if "orphans" in st.session_state and st.session_state["orphans"]:
+        orphans = st.session_state["orphans"]
+        ckpt_path = st.session_state.get("cleanup_checkpoint_path", checkpoint_path)
+
+        st.subheader(f"孤立エントリ一覧（{len(orphans)} 件）")
+
+        # 全選択/全解除
+        col_all, col_none = st.columns(2)
+        with col_all:
+            select_all = st.button("すべて選択", use_container_width=True)
+        with col_none:
+            deselect_all = st.button("すべて解除", use_container_width=True)
+
+        selections = {}
+        for i, (sha, meta) in enumerate(orphans):
+            title = (meta.get("title") or "(no title)")[:60]
+            authors = (meta.get("authors") or "")[:40]
+            source = meta.get("_source_file", "不明")
+            label = f"**{title}**  —  {authors}  (元ファイル: {Path(source).name if source else '不明'})"
+
+            default_checked = select_all if select_all else (not deselect_all)
+            selections[sha] = st.checkbox(
+                label,
+                value=default_checked,
+                key=f"orphan_{i}_{sha[:8]}",
+            )
+
+            with st.expander(f"詳細: {title}", expanded=False):
+                st.markdown(f"- **Materials:** {meta.get('materials', '')}")
+                st.markdown(f"- **Theory:** {meta.get('theory', '')}")
+                st.markdown(f"- **Methods:** {meta.get('methods', '')}")
+                st.markdown(f"- **日本語要約:** {meta.get('summary_ja', '')}")
+                st.caption(f"SHA-256: {sha}")
+
+        selected_shas = [sha for sha, checked in selections.items() if checked]
+        st.markdown(f"**{len(selected_shas)} / {len(orphans)} 件を削除対象として選択中**")
+
+        if st.button(
+            f"選択した {len(selected_shas)} 件をチェックポイントから削除",
+            type="primary",
+            use_container_width=True,
+            disabled=(len(selected_shas) == 0),
+        ):
+            ckpt = Checkpoint(ckpt_path)
+            for sha in selected_shas:
+                ckpt.remove(sha)
+            ckpt.save()
+
+            remaining = [(s, m) for s, m in orphans if s not in selected_shas]
+            if remaining:
+                st.session_state["orphans"] = remaining
+            else:
+                st.session_state.pop("orphans", None)
+
+            st.success(f"✅ {len(selected_shas)} 件をチェックポイントから削除しました。")
+            st.rerun()
