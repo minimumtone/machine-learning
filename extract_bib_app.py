@@ -143,9 +143,20 @@ SYSTEM_MSG = (
     "- year: 出版年（整数、不明なら null）\n"
     "- doi: DOI（不明なら null）\n"
     "- journal: ジャーナル名（不明なら null）\n"
-    "- materials: 対象物質（例: 'SrTiO3', 'High-entropy alloy'）\n"
-    "- theory: 理論・モデル（例: 'Density Functional Theory', 'Dislocation Dynamics'）\n"
-    "- methods: 実験・解析手法（例: 'TEM', 'Machine Learning regression'）\n"
+    "- materials: 対象物質のリスト（カンマ区切り。例: 'SrTiO3, BaTiO3, High-entropy alloy'）\n"
+    "- study_type: 研究種別（'experimental', 'theoretical', 'computational', 'review' のいずれか、"
+    "または 'experimental+computational' のように複合）\n"
+    "- theory: 物理理論・モデル（カンマ区切り。例: 'Density Functional Theory, "
+    "Thermodynamic CALPHAD, Phase field model'）\n"
+    "- exp_methods: 実験手法（カンマ区切り。例: 'TEM, XRD, dilatometry, nanoindentation'。"
+    "実験がなければ null）\n"
+    "- math_methods: 数理的手法（カンマ区切り。例: 'Bayesian inference, Monte Carlo simulation, "
+    "finite element method, genetic algorithm, regression analysis'。該当なければ null）\n"
+    "- ml_methods: 機械学習手法（カンマ区切り。例: 'Neural Network, Random Forest, "
+    "Gaussian Process, XGBoost, deep learning'。該当なければ null）\n"
+    "- properties: 対象物性・測定量（カンマ区切り。例: 'Ms temperature, lattice constant, "
+    "elastic modulus, phase diagram'）\n"
+    "- keywords: 検索用キーワード（カンマ区切り、5〜10個。材料名・手法・物性・分野を含む）\n"
     "- summary_ja: 論文の要点を日本語で2〜3文にまとめたもの\n"
     "\n"
     "回答はJSONオブジェクトのみ（マークダウンのコードブロック不要）。"
@@ -267,8 +278,8 @@ def _merge_metadata(results: List[Dict]) -> Dict:
         return results[0]
 
     merged: Dict[str, Any] = {}
-    list_fields = {"materials", "theory", "methods"}
-    first_priority = {"title", "authors", "year", "doi", "journal"}
+    list_fields = {"materials", "theory", "exp_methods", "math_methods", "ml_methods", "properties", "keywords"}
+    first_priority = {"title", "authors", "year", "doi", "journal", "study_type"}
 
     for key in first_priority:
         for r in results:
@@ -278,12 +289,18 @@ def _merge_metadata(results: List[Dict]) -> Dict:
                 break
 
     for key in list_fields:
-        parts = []
+        seen: set = set()
+        parts: List[str] = []
         for r in results:
             val = r.get(key, "")
-            if val and val not in parts:
-                parts.append(val)
-        merged[key] = "; ".join(parts) if parts else ""
+            if not val:
+                continue
+            for item in re.split(r"[;,]", val):
+                item = item.strip()
+                if item and item.lower() not in seen:
+                    seen.add(item.lower())
+                    parts.append(item)
+        merged[key] = ", ".join(parts) if parts else ""
 
     summaries = [r.get("summary_ja", "") for r in results if r.get("summary_ja")]
     if summaries:
@@ -431,8 +448,13 @@ def _format_bib_entry(key: str, meta: Dict) -> str:
         ("journal", meta.get("journal", "") or ""),
         ("doi", meta.get("doi", "") or ""),
         ("materials", meta.get("materials", "") or ""),
+        ("studytype", meta.get("study_type", "") or ""),
         ("theory", meta.get("theory", "") or ""),
-        ("methods", meta.get("methods", "") or ""),
+        ("expmethods", meta.get("exp_methods", "") or ""),
+        ("mathmethods", meta.get("math_methods", "") or ""),
+        ("mlmethods", meta.get("ml_methods", "") or ""),
+        ("properties", meta.get("properties", "") or ""),
+        ("keywords", meta.get("keywords", "") or ""),
         ("comment", meta.get("summary_ja", "") or ""),
     ]
 
@@ -812,11 +834,14 @@ with tab_extract:
             for r in results:
                 display_data.append({
                     "Key": r.get("_cite_key", ""),
-                    "Title": (r.get("title") or "")[:80],
+                    "Title": (r.get("title") or "")[:60],
                     "Year": r.get("year", ""),
-                    "Materials": r.get("materials", ""),
-                    "Theory": r.get("theory", ""),
-                    "Methods": r.get("methods", ""),
+                    "種別": r.get("study_type", ""),
+                    "Materials": (r.get("materials") or "")[:30],
+                    "Theory": (r.get("theory") or "")[:30],
+                    "実験": (r.get("exp_methods") or "")[:25],
+                    "数理": (r.get("math_methods") or "")[:25],
+                    "ML": (r.get("ml_methods") or "")[:25],
                 })
             st.dataframe(display_data, use_container_width=True, height=400)
 
@@ -825,56 +850,80 @@ with tab_extract:
 
             from collections import Counter
 
+            def _count_csv_field(field_name: str) -> Counter:
+                """カンマ区切りフィールドを個別アイテムに分解してカウント。"""
+                counter: Counter = Counter()
+                for r in results:
+                    val = r.get(field_name, "") or ""
+                    for item in re.split(r"[,;]", val):
+                        item = item.strip()
+                        if item:
+                            counter[item] += 1
+                return counter
+
+            # 研究種別の内訳
+            study_types = [r.get("study_type", "") for r in results if r.get("study_type")]
+            if study_types:
+                st.markdown("**研究種別の内訳**")
+                st_counts = Counter(study_types)
+                st.bar_chart({k: v for k, v in st_counts.most_common()})
+
             col_s1, col_s2 = st.columns(2)
 
             with col_s1:
-                # 年別論文数
                 years = [r.get("year") for r in results if r.get("year")]
                 if years:
                     year_counts = Counter(years)
                     year_sorted = sorted(year_counts.items())
                     st.markdown("**年別論文数**")
-                    st.bar_chart(
-                        {str(y): c for y, c in year_sorted},
-                    )
+                    st.bar_chart({str(y): c for y, c in year_sorted})
 
             with col_s2:
-                # Materials 頻度
-                mats = [r.get("materials", "") for r in results if r.get("materials")]
-                if mats:
-                    mat_counts = Counter(mats).most_common(10)
-                    st.markdown("**Materials（上位10件）**")
-                    st.bar_chart(
-                        {m[:30]: c for m, c in mat_counts},
-                    )
+                mat_counts = _count_csv_field("materials").most_common(10)
+                if mat_counts:
+                    st.markdown("**対象物質（上位10件）**")
+                    st.bar_chart({m[:30]: c for m, c in mat_counts})
 
             col_s3, col_s4 = st.columns(2)
 
             with col_s3:
-                # Theory 頻度
-                theories = [r.get("theory", "") for r in results if r.get("theory")]
-                if theories:
-                    theory_counts = Counter(theories).most_common(10)
-                    st.markdown("**Theory（上位10件）**")
-                    st.bar_chart(
-                        {t[:30]: c for t, c in theory_counts},
-                    )
+                theory_counts = _count_csv_field("theory").most_common(10)
+                if theory_counts:
+                    st.markdown("**物理理論（上位10件）**")
+                    st.bar_chart({t[:30]: c for t, c in theory_counts})
 
             with col_s4:
-                # Methods 頻度
-                methods = [r.get("methods", "") for r in results if r.get("methods")]
-                if methods:
-                    method_counts = Counter(methods).most_common(10)
-                    st.markdown("**Methods（上位10件）**")
-                    st.bar_chart(
-                        {m[:30]: c for m, c in method_counts},
-                    )
+                exp_counts = _count_csv_field("exp_methods").most_common(10)
+                if exp_counts:
+                    st.markdown("**実験手法（上位10件）**")
+                    st.bar_chart({m[:30]: c for m, c in exp_counts})
+
+            col_s5, col_s6 = st.columns(2)
+
+            with col_s5:
+                math_counts = _count_csv_field("math_methods").most_common(10)
+                if math_counts:
+                    st.markdown("**数理的手法（上位10件）**")
+                    st.bar_chart({m[:30]: c for m, c in math_counts})
+
+            with col_s6:
+                ml_counts = _count_csv_field("ml_methods").most_common(10)
+                if ml_counts:
+                    st.markdown("**機械学習手法（上位10件）**")
+                    st.bar_chart({m[:30]: c for m, c in ml_counts})
+
+            prop_counts = _count_csv_field("properties").most_common(10)
+            if prop_counts:
+                st.markdown("**対象物性（上位10件）**")
+                st.bar_chart({p[:40]: c for p, c in prop_counts})
 
             # --- エントリ詳細カード ---
             st.subheader("📄 エントリ詳細")
             for r in results:
                 title_short = (r.get("title") or "(no title)")[:80]
-                with st.expander(f"📄 {title_short}"):
+                study_badge = r.get("study_type", "")
+                badge_str = f" [{study_badge}]" if study_badge else ""
+                with st.expander(f"📄 {title_short}{badge_str}"):
                     c1, c2 = st.columns(2)
                     with c1:
                         st.markdown(f"**Title:** {r.get('title', '')}")
@@ -884,10 +933,21 @@ with tab_extract:
                         doi = r.get("doi", "")
                         if doi:
                             st.markdown(f"**DOI:** [{doi}](https://doi.org/{doi})")
+                        if r.get("study_type"):
+                            st.markdown(f"**研究種別:** {r['study_type']}")
                     with c2:
                         st.markdown(f"**Materials:** {r.get('materials', '')}")
                         st.markdown(f"**Theory:** {r.get('theory', '')}")
-                        st.markdown(f"**Methods:** {r.get('methods', '')}")
+                        if r.get("exp_methods"):
+                            st.markdown(f"**実験手法:** {r['exp_methods']}")
+                        if r.get("math_methods"):
+                            st.markdown(f"**数理的手法:** {r['math_methods']}")
+                        if r.get("ml_methods"):
+                            st.markdown(f"**機械学習:** {r['ml_methods']}")
+                        if r.get("properties"):
+                            st.markdown(f"**対象物性:** {r['properties']}")
+                    if r.get("keywords"):
+                        st.markdown(f"**Keywords:** {r['keywords']}")
                     summary = r.get("summary_ja", "")
                     if summary:
                         st.markdown(f"**日本語要約:** {summary}")
@@ -943,41 +1003,79 @@ with tab_search:
         st.caption(f"登録済み文献: {len(all_entries)} 件")
 
         # --- 検索入力 ---
-        query = st.text_input("キーワード検索", placeholder="例: SrTiO3, DFT, Machine Learning...")
+        query = st.text_input("キーワード検索", placeholder="例: SrTiO3, DFT, Neural Network, Ms temperature...")
         search_mode = st.radio("検索モード", ["OR (いずれか含む)", "AND (すべて含む)"], horizontal=True)
 
         # --- フィルタ ---
-        col_f1, col_f2, col_f3 = st.columns(3)
+        def _collect_items(field: str) -> List[str]:
+            """カンマ区切りフィールドからユニークなアイテムをソートして返す。"""
+            items: set = set()
+            for e in all_entries:
+                val = e.get(field, "") or ""
+                for item in re.split(r"[,;]", val):
+                    item = item.strip()
+                    if item:
+                        items.add(item)
+            return sorted(items)
 
-        all_materials = sorted({e.get("materials", "") for e in all_entries if e.get("materials")})
-        all_theories = sorted({e.get("theory", "") for e in all_entries if e.get("theory")})
-        all_methods = sorted({e.get("methods", "") for e in all_entries if e.get("methods")})
+        # 研究種別フィルタ
+        all_study_types = sorted({e.get("study_type", "") for e in all_entries if e.get("study_type")})
+        filter_study_type = st.multiselect("研究種別フィルタ", all_study_types)
 
+        col_f1, col_f2 = st.columns(2)
         with col_f1:
-            filter_materials = st.multiselect("Materials フィルタ", all_materials)
+            filter_materials = st.multiselect("対象物質フィルタ", _collect_items("materials"))
         with col_f2:
-            filter_theory = st.multiselect("Theory フィルタ", all_theories)
+            filter_theory = st.multiselect("物理理論フィルタ", _collect_items("theory"))
+
+        col_f3, col_f4 = st.columns(2)
         with col_f3:
-            filter_methods = st.multiselect("Methods フィルタ", all_methods)
+            filter_exp = st.multiselect("実験手法フィルタ", _collect_items("exp_methods"))
+        with col_f4:
+            filter_math = st.multiselect("数理的手法フィルタ", _collect_items("math_methods"))
+
+        col_f5, col_f6 = st.columns(2)
+        with col_f5:
+            filter_ml = st.multiselect("機械学習フィルタ", _collect_items("ml_methods"))
+        with col_f6:
+            filter_props = st.multiselect("対象物性フィルタ", _collect_items("properties"))
 
         # --- 検索実行 ---
+        _SEARCH_FIELDS = [
+            "title", "authors", "materials", "theory", "exp_methods",
+            "math_methods", "ml_methods", "properties", "keywords",
+            "summary_ja", "journal", "doi", "study_type",
+        ]
+
         def _matches_query(entry: Dict, keywords: List[str], mode: str) -> bool:
             if not keywords:
                 return True
-            searchable = " ".join(
-                str(entry.get(f, ""))
-                for f in ["title", "authors", "materials", "theory", "methods", "summary_ja", "journal", "doi"]
-            ).lower()
+            searchable = " ".join(str(entry.get(f, "")) for f in _SEARCH_FIELDS).lower()
             if mode.startswith("AND"):
                 return all(kw.lower() in searchable for kw in keywords)
             return any(kw.lower() in searchable for kw in keywords)
 
+        def _field_contains_any(entry: Dict, field: str, values: List[str]) -> bool:
+            """エントリのカンマ区切りフィールドが、指定値のいずれかを含むか。"""
+            if not values:
+                return True
+            entry_val = (entry.get(field, "") or "").lower()
+            return any(v.lower() in entry_val for v in values)
+
         def _matches_filters(entry: Dict) -> bool:
-            if filter_materials and entry.get("materials", "") not in filter_materials:
+            if filter_study_type and entry.get("study_type", "") not in filter_study_type:
                 return False
-            if filter_theory and entry.get("theory", "") not in filter_theory:
+            if not _field_contains_any(entry, "materials", filter_materials):
                 return False
-            if filter_methods and entry.get("methods", "") not in filter_methods:
+            if not _field_contains_any(entry, "theory", filter_theory):
+                return False
+            if not _field_contains_any(entry, "exp_methods", filter_exp):
+                return False
+            if not _field_contains_any(entry, "math_methods", filter_math):
+                return False
+            if not _field_contains_any(entry, "ml_methods", filter_ml):
+                return False
+            if not _field_contains_any(entry, "properties", filter_props):
                 return False
             return True
 
@@ -990,25 +1088,27 @@ with tab_search:
         st.subheader(f"検索結果: {len(filtered)} 件")
 
         if filtered:
-            # テーブル表示
             table_data = []
             for e in filtered:
                 table_data.append({
-                    "Title": (e.get("title") or "")[:80],
-                    "Authors": (e.get("authors") or "")[:40],
+                    "Title": (e.get("title") or "")[:60],
                     "Year": e.get("year", ""),
-                    "Materials": e.get("materials", ""),
-                    "Theory": e.get("theory", ""),
-                    "Methods": e.get("methods", ""),
-                    "DOI": e.get("doi", ""),
+                    "種別": e.get("study_type", ""),
+                    "Materials": (e.get("materials") or "")[:30],
+                    "Theory": (e.get("theory") or "")[:30],
+                    "実験": (e.get("exp_methods") or "")[:25],
+                    "数理": (e.get("math_methods") or "")[:25],
+                    "ML": (e.get("ml_methods") or "")[:25],
+                    "物性": (e.get("properties") or "")[:25],
                 })
             st.dataframe(table_data, use_container_width=True, height=400)
 
-            # 選択エントリの詳細
             st.subheader("エントリ詳細")
             for e in filtered:
                 title_short = (e.get("title") or "(no title)")[:80]
-                with st.expander(f"📄 {title_short}"):
+                study_badge = e.get("study_type", "")
+                badge_str = f" [{study_badge}]" if study_badge else ""
+                with st.expander(f"📄 {title_short}{badge_str}"):
                     c1, c2 = st.columns(2)
                     with c1:
                         st.markdown(f"**Title:** {e.get('title', '')}")
@@ -1018,11 +1118,24 @@ with tab_search:
                         doi = e.get("doi", "")
                         if doi:
                             st.markdown(f"**DOI:** [{doi}](https://doi.org/{doi})")
+                        if e.get("study_type"):
+                            st.markdown(f"**研究種別:** {e['study_type']}")
                     with c2:
                         st.markdown(f"**Materials:** {e.get('materials', '')}")
                         st.markdown(f"**Theory:** {e.get('theory', '')}")
-                        st.markdown(f"**Methods:** {e.get('methods', '')}")
-                    st.markdown(f"**日本語要約:** {e.get('summary_ja', '')}")
+                        if e.get("exp_methods"):
+                            st.markdown(f"**実験手法:** {e['exp_methods']}")
+                        if e.get("math_methods"):
+                            st.markdown(f"**数理的手法:** {e['math_methods']}")
+                        if e.get("ml_methods"):
+                            st.markdown(f"**機械学習:** {e['ml_methods']}")
+                        if e.get("properties"):
+                            st.markdown(f"**対象物性:** {e['properties']}")
+                    if e.get("keywords"):
+                        st.markdown(f"**Keywords:** {e['keywords']}")
+                    summary = e.get("summary_ja", "")
+                    if summary:
+                        st.markdown(f"**日本語要約:** {summary}")
 
             # 検索結果の BibTeX エクスポート
             st.subheader("検索結果のエクスポート")
@@ -1133,8 +1246,17 @@ with tab_cleanup:
 
             with st.expander(f"詳細: {title}", expanded=False):
                 st.markdown(f"- **Materials:** {meta.get('materials', '')}")
+                if meta.get("study_type"):
+                    st.markdown(f"- **研究種別:** {meta['study_type']}")
                 st.markdown(f"- **Theory:** {meta.get('theory', '')}")
-                st.markdown(f"- **Methods:** {meta.get('methods', '')}")
+                if meta.get("exp_methods"):
+                    st.markdown(f"- **実験手法:** {meta['exp_methods']}")
+                if meta.get("math_methods"):
+                    st.markdown(f"- **数理的手法:** {meta['math_methods']}")
+                if meta.get("ml_methods"):
+                    st.markdown(f"- **機械学習:** {meta['ml_methods']}")
+                if meta.get("properties"):
+                    st.markdown(f"- **対象物性:** {meta['properties']}")
                 st.markdown(f"- **日本語要約:** {meta.get('summary_ja', '')}")
                 st.caption(f"SHA-256: {sha}")
 

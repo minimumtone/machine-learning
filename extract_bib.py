@@ -137,9 +137,20 @@ SYSTEM_MSG = (
     "- year: 出版年（整数、不明なら null）\n"
     "- doi: DOI（不明なら null）\n"
     "- journal: ジャーナル名（不明なら null）\n"
-    "- materials: 対象物質（例: 'SrTiO3', 'High-entropy alloy'）\n"
-    "- theory: 理論・モデル（例: 'Density Functional Theory', 'Dislocation Dynamics'）\n"
-    "- methods: 実験・解析手法（例: 'TEM', 'Machine Learning regression'）\n"
+    "- materials: 対象物質のリスト（カンマ区切り。例: 'SrTiO3, BaTiO3, High-entropy alloy'）\n"
+    "- study_type: 研究種別（'experimental', 'theoretical', 'computational', 'review' のいずれか、"
+    "または 'experimental+computational' のように複合）\n"
+    "- theory: 物理理論・モデル（カンマ区切り。例: 'Density Functional Theory, "
+    "Thermodynamic CALPHAD, Phase field model'）\n"
+    "- exp_methods: 実験手法（カンマ区切り。例: 'TEM, XRD, dilatometry, nanoindentation'。"
+    "実験がなければ null）\n"
+    "- math_methods: 数理的手法（カンマ区切り。例: 'Bayesian inference, Monte Carlo simulation, "
+    "finite element method, genetic algorithm, regression analysis'。該当なければ null）\n"
+    "- ml_methods: 機械学習手法（カンマ区切り。例: 'Neural Network, Random Forest, "
+    "Gaussian Process, XGBoost, deep learning'。該当なければ null）\n"
+    "- properties: 対象物性・測定量（カンマ区切り。例: 'Ms temperature, lattice constant, "
+    "elastic modulus, phase diagram'）\n"
+    "- keywords: 検索用キーワード（カンマ区切り、5〜10個。材料名・手法・物性・分野を含む）\n"
     "- summary_ja: 論文の要点を日本語で2〜3文にまとめたもの\n"
     "\n"
     "回答はJSONオブジェクトのみ（マークダウンのコードブロック不要）。"
@@ -247,8 +258,8 @@ def _merge_metadata(results: List[Dict]) -> Dict:
         return results[0]
 
     merged: Dict[str, Any] = {}
-    list_fields = {"materials", "theory", "methods"}
-    first_priority = {"title", "authors", "year", "doi", "journal"}
+    list_fields = {"materials", "theory", "exp_methods", "math_methods", "ml_methods", "properties", "keywords"}
+    first_priority = {"title", "authors", "year", "doi", "journal", "study_type"}
 
     for key in first_priority:
         for r in results:
@@ -258,12 +269,18 @@ def _merge_metadata(results: List[Dict]) -> Dict:
                 break
 
     for key in list_fields:
-        parts = []
+        seen: set = set()
+        parts: List[str] = []
         for r in results:
             val = r.get(key, "")
-            if val and val not in parts:
-                parts.append(val)
-        merged[key] = "; ".join(parts) if parts else ""
+            if not val:
+                continue
+            for item in re.split(r"[;,]", val):
+                item = item.strip()
+                if item and item.lower() not in seen:
+                    seen.add(item.lower())
+                    parts.append(item)
+        merged[key] = ", ".join(parts) if parts else ""
 
     summaries = [r.get("summary_ja", "") for r in results if r.get("summary_ja")]
     if summaries:
@@ -415,8 +432,13 @@ def _format_bib_entry(key: str, meta: Dict) -> str:
         ("journal", meta.get("journal", "") or ""),
         ("doi", meta.get("doi", "") or ""),
         ("materials", meta.get("materials", "") or ""),
+        ("studytype", meta.get("study_type", "") or ""),
         ("theory", meta.get("theory", "") or ""),
-        ("methods", meta.get("methods", "") or ""),
+        ("expmethods", meta.get("exp_methods", "") or ""),
+        ("mathmethods", meta.get("math_methods", "") or ""),
+        ("mlmethods", meta.get("ml_methods", "") or ""),
+        ("properties", meta.get("properties", "") or ""),
+        ("keywords", meta.get("keywords", "") or ""),
         ("comment", meta.get("summary_ja", "") or ""),
     ]
 
