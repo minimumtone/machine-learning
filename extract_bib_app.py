@@ -301,8 +301,10 @@ st.markdown(
     """
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
-    html, body, [class*="st-"], .stMarkdown, .stText, .stDataFrame,
-    h1, h2, h3, h4, h5, h6, p, span, div, label, input, button, textarea, select {
+    html, body, .stMarkdown, .stText, .stDataFrame,
+    h1, h2, h3, h4, h5, h6, p, label, input, button, textarea, select,
+    .stRadio div, .stSelectbox div, .stMultiSelect div, .stTextInput div,
+    .stTabs div, .stExpander div, .stAlert div, .stCaption, .stSubheader {
         font-family: 'Noto Sans JP', sans-serif !important;
     }
     </style>
