@@ -2878,10 +2878,13 @@ def mcmc_reliability(
             proposal_std, dim=dim,
         )
     else:
+        ps_arr = np.asarray(proposal_std, dtype=float).ravel()
+        if ps_arr.size == 1:
+            ps_arr = np.full(dim_theta, float(ps_arr[0]))
         if marginalize_sigma:
-            ps = np.append(np.asarray(proposal_std, dtype=float).ravel(), 0.1)
+            ps = np.append(ps_arr, 0.1)
         else:
-            ps = proposal_std
+            ps = ps_arr
         L, proposal_scale, mode = _mcmc_proposal_from_cov(None, ps, dim=dim)
 
     def _lp(state):
@@ -3326,10 +3329,13 @@ def mcmc_reliability_lr(
             proposal_std, dim=dim,
         )
     else:
+        ps_arr = np.asarray(proposal_std, dtype=float).ravel()
+        if ps_arr.size == 1:
+            ps_arr = np.full(dim_theta, float(ps_arr[0]))
         if marginalize_sigma:
-            ps = np.append(np.asarray(proposal_std, dtype=float).ravel(), 0.1)
+            ps = np.append(ps_arr, 0.1)
         else:
-            ps = proposal_std
+            ps = ps_arr
         L, proposal_scale, mode = _mcmc_proposal_from_cov(None, ps, dim=dim)
 
     def _lp(state):
