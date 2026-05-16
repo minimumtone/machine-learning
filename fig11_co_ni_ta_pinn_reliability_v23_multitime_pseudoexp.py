@@ -2925,6 +2925,8 @@ def mcmc_reliability(
             progress_bar.progress((i + 1) / n_steps)
 
     samples = np.asarray(samples, dtype=float)
+    if samples.ndim == 1:
+        samples = samples.reshape(0, dim_theta + (1 if marginalize_sigma else 0))
     sigma_eff = sigma
     if marginalize_sigma and samples.shape[0] > 0:
         sigma_eff = float(np.exp(np.median(samples[:, -1])))
@@ -3375,6 +3377,8 @@ def mcmc_reliability_lr(
             progress_bar.progress((i + 1) / n_steps)
 
     samples = np.asarray(samples, dtype=float)
+    if samples.ndim == 1:
+        samples = samples.reshape(0, dim_theta + (1 if marginalize_sigma else 0))
     sigma_eff = sigma
     if marginalize_sigma and samples.shape[0] > 0:
         sigma_eff = float(np.exp(np.median(samples[:, -1])))
@@ -5151,7 +5155,7 @@ Powell 法で最適化し、Hessian から Laplace 近似の事後分布 $\mathc
     width = st.select_slider("network width", options=[24, 32, 48, 64, 96, 128], value=64)
     depth = st.select_slider("network depth", options=[2, 3, 4, 5, 6], value=4)
     activation = st.selectbox("activation", ["tanh", "silu", "gelu"], index=0)
-    epochs = st.slider("epochs", 300, 15000, 6000, 100)
+    epochs = st.slider("epochs", 300, 15000, 300, 100)  # TEMP: default 6000→300 for testing
     lr = st.select_slider(
         "learning rate", options=[1e-4, 3e-4, 1e-3, 3e-3], value=3e-4,
         format_func=lambda v: f"{v:.0e}"
@@ -5455,8 +5459,8 @@ D_norm = D_phys * t_scale / L_scale^2
     band_samples = st.slider("FDM samples for credible band", 10, 150, 60, 10)
 
     run_high_cost_mcmc = st.checkbox("Run high-cost MCMC reliability", value=False)
-    mcmc_steps = st.slider("MCMC steps", 100, 3000, 700, 100)
-    mcmc_burn = st.slider("MCMC burn-in", 0, 1500, 200, 50)
+    mcmc_steps = st.slider("MCMC steps", 100, 3000, 100, 100)  # TEMP: default 700→100 for testing
+    mcmc_burn = st.slider("MCMC burn-in", 0, 1500, 20, 50)  # TEMP: default 200→20 for testing
     mcmc_proposal = st.slider("MCMC proposal std", 0.005, 0.300, 0.045, 0.005)
     ui_marginalize_sigma = st.checkbox(
         "Marginalize σ (joint θ-σ sampling)",
