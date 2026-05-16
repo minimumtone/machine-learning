@@ -567,6 +567,78 @@ with tab_extract:
                 })
             st.dataframe(display_data, use_container_width=True, height=400)
 
+            # --- 統計ダッシュボード ---
+            st.subheader("📊 統計ダッシュボード")
+
+            from collections import Counter
+
+            col_s1, col_s2 = st.columns(2)
+
+            with col_s1:
+                # 年別論文数
+                years = [r.get("year") for r in results if r.get("year")]
+                if years:
+                    year_counts = Counter(years)
+                    year_sorted = sorted(year_counts.items())
+                    st.markdown("**年別論文数**")
+                    st.bar_chart(
+                        {str(y): c for y, c in year_sorted},
+                    )
+
+            with col_s2:
+                # Materials 頻度
+                mats = [r.get("materials", "") for r in results if r.get("materials")]
+                if mats:
+                    mat_counts = Counter(mats).most_common(10)
+                    st.markdown("**Materials（上位10件）**")
+                    st.bar_chart(
+                        {m[:30]: c for m, c in mat_counts},
+                    )
+
+            col_s3, col_s4 = st.columns(2)
+
+            with col_s3:
+                # Theory 頻度
+                theories = [r.get("theory", "") for r in results if r.get("theory")]
+                if theories:
+                    theory_counts = Counter(theories).most_common(10)
+                    st.markdown("**Theory（上位10件）**")
+                    st.bar_chart(
+                        {t[:30]: c for t, c in theory_counts},
+                    )
+
+            with col_s4:
+                # Methods 頻度
+                methods = [r.get("methods", "") for r in results if r.get("methods")]
+                if methods:
+                    method_counts = Counter(methods).most_common(10)
+                    st.markdown("**Methods（上位10件）**")
+                    st.bar_chart(
+                        {m[:30]: c for m, c in method_counts},
+                    )
+
+            # --- エントリ詳細カード ---
+            st.subheader("📄 エントリ詳細")
+            for r in results:
+                title_short = (r.get("title") or "(no title)")[:80]
+                with st.expander(f"📄 {title_short}"):
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        st.markdown(f"**Title:** {r.get('title', '')}")
+                        st.markdown(f"**Authors:** {r.get('authors', '')}")
+                        st.markdown(f"**Year:** {r.get('year', '')}")
+                        st.markdown(f"**Journal:** {r.get('journal', '')}")
+                        doi = r.get("doi", "")
+                        if doi:
+                            st.markdown(f"**DOI:** [{doi}](https://doi.org/{doi})")
+                    with c2:
+                        st.markdown(f"**Materials:** {r.get('materials', '')}")
+                        st.markdown(f"**Theory:** {r.get('theory', '')}")
+                        st.markdown(f"**Methods:** {r.get('methods', '')}")
+                    summary = r.get("summary_ja", "")
+                    if summary:
+                        st.markdown(f"**日本語要約:** {summary}")
+
         if errors:
             with st.expander(f"エラー ({len(errors)} 件)", expanded=False):
                 for r in errors:
