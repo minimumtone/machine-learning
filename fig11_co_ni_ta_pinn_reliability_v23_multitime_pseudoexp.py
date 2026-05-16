@@ -755,7 +755,7 @@ def _run_fdm_teacher_core(
     n_steps = int(max(10, int(np.ceil(float(t_max) / dt_stable))))
     dt = float(t_max) / n_steps
 
-    save_ids = set(np.unique(np.linspace(0, int(n_steps), int(nt_save)).astype(int)).tolist())
+    save_ids = set(np.unique(np.linspace(0.0, float(n_steps), max(2, int(nt_save))).astype(int)).tolist())
     t_save = []
     C_save = []
 
@@ -855,7 +855,7 @@ def _run_fdm_teacher_core_two_region(
     n_steps = int(max(10, int(np.ceil(float(t_max) / dt_stable))))
     dt = float(t_max) / n_steps
 
-    save_ids = set(np.unique(np.linspace(0, int(n_steps), int(nt_save)).astype(int)).tolist())
+    save_ids = set(np.unique(np.linspace(0.0, float(n_steps), max(2, int(nt_save))).astype(int)).tolist())
     t_save = []
     C_save = []
 
