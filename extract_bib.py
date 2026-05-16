@@ -286,7 +286,14 @@ def _call_llm_single(
                 temperature=0.0,
                 max_tokens=2048,
             )
-            raw = response.choices[0].message.content or ""
+            if not response or not response.choices:
+                raise ValueError("LLM から空のレスポンスが返されました（choices が空）")
+            msg = response.choices[0].message
+            if msg is None:
+                raise ValueError("LLM レスポンスの message が None です")
+            raw = msg.content
+            if not raw:
+                raise ValueError("LLM レスポンスの content が空です")
             return _parse_json(raw)
         except Exception as e:
             if attempt < max_retries:

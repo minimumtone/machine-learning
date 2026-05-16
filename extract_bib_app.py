@@ -305,7 +305,14 @@ def _call_llm_single(
                 temperature=0.0,
                 max_tokens=2048,
             )
-            raw = response.choices[0].message.content or ""
+            if not response or not response.choices:
+                raise ValueError("LLM から空のレスポンスが返されました（choices が空）")
+            msg = response.choices[0].message
+            if msg is None:
+                raise ValueError("LLM レスポンスの message が None です")
+            raw = msg.content
+            if not raw:
+                raise ValueError("LLM レスポンスの content が空です")
             return _parse_json(raw)
         except Exception as e:
             if attempt < max_retries:
@@ -647,9 +654,9 @@ with tab_extract:
                             ckpt.save()
 
                     except Exception as e:
-                        errors.append({"_file": pdf_path, "_error": str(e)})
-                        err_msg = str(e)[:80]
-                        log_lines.append(f"❌ `{fname}` — エラー: {err_msg}")
+                        err_str = str(e)
+                        errors.append({"_file": pdf_path, "_error": err_str})
+                        log_lines.append(f"❌ `{fname}` — {err_str[:80]}")
                         with log_container:
                             st.markdown("\n".join(log_lines[-20:]))
 
@@ -667,6 +674,38 @@ with tab_extract:
                     f"合計時間: {time.strftime('%M:%S', time.gmtime(elapsed_total))}"
                 )
                 status_area.empty()
+                detail_area.empty()
+
+                # --- エラー詳細を stats 直下に表示 ---
+                if errors:
+                    st.markdown("---")
+                    st.subheader(f"❌ エラー詳細（{len(errors)} 件）")
+                    for err in errors:
+                        err_file = Path(err['_file']).name
+                        err_msg = err['_error']
+                        # エラー種別を判定して分かりやすく表示
+                        if "空のレスポンス" in err_msg or "content が空" in err_msg:
+                            err_type = "LLM 応答が空"
+                            err_hint = "モデルがテキストを処理できなかった可能性があります。テキストが長すぎるか、モデルの対応言語外の可能性があります。"
+                        elif "JSON" in err_msg:
+                            err_type = "JSON パースエラー"
+                            err_hint = "LLM の応答が正しい JSON 形式ではありませんでした。モデルを変更するか再実行してください。"
+                        elif "テキスト不足" in err_msg:
+                            err_type = "テキスト抽出失敗"
+                            err_hint = "PDF からテキストを十分に抽出できませんでした。画像ベースの PDF（スキャン）の可能性があります。"
+                        elif "Connection" in err_msg or "connect" in err_msg.lower():
+                            err_type = "接続エラー"
+                            err_hint = "LLM サーバーに接続できませんでした。URL とサーバーの起動状態を確認してください。"
+                        elif "timeout" in err_msg.lower():
+                            err_type = "タイムアウト"
+                            err_hint = "LLM の応答が時間内に返ってきませんでした。テキストが長すぎる可能性があります。"
+                        else:
+                            err_type = "その他のエラー"
+                            err_hint = ""
+                        st.error(f"**{err_file}** — {err_type}")
+                        st.caption(f"詳細: {err_msg}")
+                        if err_hint:
+                            st.caption(f"💡 {err_hint}")
 
                 if skipped > 0 and skipped == total:
                     st.warning(
