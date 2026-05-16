@@ -746,11 +746,11 @@ def _run_fdm_teacher_core(
     U[0] = left_u
     U[-1] = right_u
 
-    dt_stable = 0.18 * dx * dx / max(eigmax, 1.0e-14)
-    n_steps = max(10, int(np.ceil(t_max / dt_stable)))
-    dt = t_max / n_steps
+    dt_stable = float(0.18 * dx * dx / max(eigmax, 1.0e-14))
+    n_steps = int(max(10, int(np.ceil(float(t_max) / dt_stable))))
+    dt = float(t_max) / n_steps
 
-    save_ids = set(np.unique(np.linspace(0, n_steps, nt_save).astype(int)).tolist())
+    save_ids = set(np.unique(np.linspace(0, int(n_steps), int(nt_save)).astype(int)).tolist())
     t_save = []
     C_save = []
 
@@ -838,11 +838,11 @@ def _run_fdm_teacher_core_two_region(
     for k, s in enumerate(s_half):
         D_half[k] = (1.0 - s) * D_left + s * D_right
 
-    dt_stable = 0.18 * dx * dx / max(eigmax, 1.0e-14)
-    n_steps = max(10, int(np.ceil(t_max / dt_stable)))
-    dt = t_max / n_steps
+    dt_stable = float(0.18 * dx * dx / max(eigmax, 1.0e-14))
+    n_steps = int(max(10, int(np.ceil(float(t_max) / dt_stable))))
+    dt = float(t_max) / n_steps
 
-    save_ids = set(np.unique(np.linspace(0, n_steps, nt_save).astype(int)).tolist())
+    save_ids = set(np.unique(np.linspace(0, int(n_steps), int(nt_save)).astype(int)).tolist())
     t_save = []
     C_save = []
 
@@ -2516,6 +2516,7 @@ def predict_final_profile_from_theta(
     nt_save: int,
     use_cache: bool = False,
 ) -> np.ndarray:
+    theta = np.asarray(theta, dtype=float).ravel()
     solver = run_fdm_teacher if use_cache else _run_fdm_teacher_core
     rho21 = float(theta[3]) if len(theta) > 3 else None
     xg, _, Cg, _ = solver(
@@ -3123,6 +3124,7 @@ def predict_final_profile_from_theta_lr(
     use_cache: bool = False,
 ) -> np.ndarray:
     """Final profile from left/right FDM."""
+    theta_lr = np.asarray(theta_lr, dtype=float).ravel()
     dim1 = THETA_DIM_SINGLE
     th_l = theta_lr[:dim1]
     th_r = theta_lr[dim1:]
