@@ -3422,16 +3422,22 @@ def posterior_band_from_samples_lr(
     }
 
 
+def _lr_param_names(dim: int) -> list:
+    if dim >= 8:
+        return [
+            "logD_NiNi_left", "logD_TaTa_left", "rho12_raw_left", "rho21_raw_left",
+            "logD_NiNi_right", "logD_TaTa_right", "rho12_raw_right", "rho21_raw_right",
+        ][:dim]
+    return [
+        "logD_NiNi_left", "logD_TaTa_left", "rho_raw_left",
+        "logD_NiNi_right", "logD_TaTa_right", "rho_raw_right",
+    ][:dim]
+
+
 def reliability_summary_table_lr(label: str, rel: Dict[str, np.ndarray]) -> pd.DataFrame:
     samples = np.asarray(rel["samples"], dtype=float)
-    names = [
-        "logD_NiNi_left",
-        "logD_TaTa_left",
-        "rho_raw_left",
-        "logD_NiNi_right",
-        "logD_TaTa_right",
-        "rho_raw_right",
-    ]
+    dim = samples.shape[1] if samples.ndim == 2 else 6
+    names = _lr_param_names(dim)
     rows = []
     for j, name in enumerate(names):
         vals = samples[:, j]
@@ -3453,16 +3459,16 @@ def mcmc_trace_plot_lr(theta_samples_lr: np.ndarray):
     fig = go.Figure()
     if theta_samples_lr is None or len(theta_samples_lr) == 0:
         return clean_layout(fig, "Left/right MCMC trace plot", 430)
-    names = [
-        "logD_NiNi_L", "logD_TaTa_L", "rho_L",
-        "logD_NiNi_R", "logD_TaTa_R", "rho_R",
-    ]
+    dim = theta_samples_lr.shape[1] if theta_samples_lr.ndim == 2 else 6
+    names = _lr_param_names(dim)
     steps = np.arange(len(theta_samples_lr))
     for j, name in enumerate(names):
+        if j >= theta_samples_lr.shape[1]:
+            break
         fig.add_trace(go.Scatter(x=steps, y=theta_samples_lr[:, j], mode="lines", name=name, line=dict(width=1.5)))
     fig.update_xaxes(title="saved MCMC sample index")
     fig.update_yaxes(title="theta value")
-    return clean_layout(fig, "Left/right 6-parameter MCMC trace", 450)
+    return clean_layout(fig, f"Left/right {dim}-parameter MCMC trace", 450)
 
 
 def likelihood_contour_grid(
@@ -6517,27 +6523,48 @@ with tab4:
     render_mcmc_explanation_expander()
 
     if inputs.get("diffusion_model_mode") == "left/right D":
-        st.markdown("### Left/right D dedicated 6-parameter reliability")
-        st.success(
-            "Using theta_lr = [logD_NiNi_L, logD_TaTa_L, rho_L, logD_NiNi_R, logD_TaTa_R, rho_R] "
-            "and solving the two-region FDM for each posterior sample."
-        )
-
         theta_hat_lr = theta_lr_from_matrices(D_pinn_left, D_pinn_right)
+        st.markdown(f"### Left/right D dedicated {len(theta_hat_lr)}-parameter reliability")
+        if len(theta_hat_lr) == 8:
+            st.success(
+                "Using theta_lr = [logD_NiNi_L, logD_TaTa_L, rho12_L, rho21_L, "
+                "logD_NiNi_R, logD_TaTa_R, rho12_R, rho21_R] (non-symmetric D) "
+                "and solving the two-region FDM for each posterior sample."
+            )
+        else:
+            st.success(
+                "Using theta_lr = [logD_NiNi_L, logD_TaTa_L, rho_L, logD_NiNi_R, logD_TaTa_R, rho_R] "
+                "and solving the two-region FDM for each posterior sample."
+            )
         like_sigma_eff = float(inputs["like_sigma"])
         rel_nx_eff = int(inputs["rel_nx"])
         rel_nt_eff = int(inputs["rel_nt"])
         phase_width_eff = float(inputs.get("phase_interface_width", 0.02))
-        prior_mean_base = np.asarray(inputs["prior_mean"], dtype=float)
+        prior_mean_3 = np.asarray(inputs["prior_mean"], dtype=float)
+        dim_per_region = len(theta_hat_lr) // 2
+        if dim_per_region == 4 and len(prior_mean_3) == 3:
+            prior_mean_base = np.array(
+                [prior_mean_3[0], prior_mean_3[1], prior_mean_3[2], prior_mean_3[2]],
+                dtype=float,
+            )
+        else:
+            prior_mean_base = prior_mean_3
         prior_mean_lr = np.concatenate([prior_mean_base, prior_mean_base])
         prior_std_eff = float(inputs["prior_std"])
 
+        if dim_per_region == 4:
+            param_names = [
+                "logD_NiNi_left", "logD_TaTa_left", "rho12_raw_left", "rho21_raw_left",
+                "logD_NiNi_right", "logD_TaTa_right", "rho12_raw_right", "rho21_raw_right",
+            ]
+        else:
+            param_names = [
+                "logD_NiNi_left", "logD_TaTa_left", "rho_raw_left",
+                "logD_NiNi_right", "logD_TaTa_right", "rho_raw_right",
+            ]
         theta_lr_df = pd.DataFrame(
             {
-                "parameter": [
-                    "logD_NiNi_left", "logD_TaTa_left", "rho_raw_left",
-                    "logD_NiNi_right", "logD_TaTa_right", "rho_raw_right",
-                ],
+                "parameter": param_names,
                 "theta_hat_lr": theta_hat_lr,
                 "prior_mean_lr": prior_mean_lr,
             }
@@ -6599,7 +6626,7 @@ with tab4:
 
         high_rel_lr = None
         if bool(inputs["run_high_cost_mcmc"]):
-            st.markdown("#### Left/right 6D MCMC")
+            st.markdown(f"#### Left/right {len(theta_hat_lr)}D MCMC")
             mcmc_lr_progress = st.progress(0.0)
             with st.spinner("High-cost left/right MCMC: each proposal solves two-region FDM..."):
                 high_rel_lr = mcmc_reliability_lr(
@@ -6628,9 +6655,9 @@ with tab4:
                 st.info("Left/right MCMC acceptance is high. Try increasing MCMC proposal std.")
 
         st.markdown("#### Left/right posterior parameter summary")
-        lr_tables = [reliability_summary_table_lr("Laplace left/right 6D", low_rel_lr)]
+        lr_tables = [reliability_summary_table_lr(f"Laplace left/right {len(theta_hat_lr)}D", low_rel_lr)]
         if high_rel_lr is not None and len(high_rel_lr["samples"]) > 5:
-            lr_tables.append(reliability_summary_table_lr("MCMC left/right 6D", high_rel_lr))
+            lr_tables.append(reliability_summary_table_lr(f"MCMC left/right {len(theta_hat_lr)}D", high_rel_lr))
         st.dataframe(pd.concat(lr_tables, ignore_index=True), use_container_width=True)
 
         if high_rel_lr is not None and len(high_rel_lr["samples"]) > 5:
@@ -6657,7 +6684,7 @@ with tab4:
                 C_pinn_final=C_pinn[-1],
                 band=low_lr_band,
                 span_um=span_um,
-                title="Left/right 6D Laplace credible band on Fig.11-style profile",
+                title=f"Left/right {len(theta_hat_lr)}D Laplace credible band on Fig.11-style profile",
             ),
             use_container_width=True,
         )
@@ -6682,7 +6709,7 @@ with tab4:
                     C_pinn_final=C_pinn[-1],
                     band=high_lr_band,
                     span_um=span_um,
-                    title="Left/right 6D MCMC credible band on Fig.11-style profile",
+                    title=f"Left/right {len(theta_hat_lr)}D MCMC credible band on Fig.11-style profile",
                 ),
                 use_container_width=True,
             )
@@ -6697,7 +6724,14 @@ with tab4:
         like_sigma_eff = float(inputs["like_sigma"])
         rel_nx_eff = int(inputs["rel_nx"])
         rel_nt_eff = int(inputs["rel_nt"])
-        prior_mean = np.asarray(inputs["prior_mean"], dtype=float)
+        prior_mean_3 = np.asarray(inputs["prior_mean"], dtype=float)
+        if len(theta_hat) == 4 and len(prior_mean_3) == 3:
+            prior_mean = np.array(
+                [prior_mean_3[0], prior_mean_3[1], prior_mean_3[2], prior_mean_3[2]],
+                dtype=float,
+            )
+        else:
+            prior_mean = prior_mean_3
         prior_std_eff = float(inputs["prior_std"])
 
         with st.spinner("Low-cost reliability: Laplace approximation from likelihood curvature..."):
