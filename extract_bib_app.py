@@ -323,6 +323,10 @@ def _call_llm_single(
                 raise
 
 
+# システムプロンプト + ユーザープロンプトラップ + 出力余裕分のトークン数
+_PROMPT_OVERHEAD_TOKENS = 500
+
+
 def get_metadata_via_ai(
     text: str,
     provider: str = "openai",
@@ -330,9 +334,9 @@ def get_metadata_via_ai(
     base_url: Optional[str] = None,
     api_key: Optional[str] = None,
     max_retries: int = 3,
-    max_tokens_per_chunk: int = 5000,
+    max_tokens_per_chunk: int = 2500,
 ) -> Dict:
-    """LLM API でメタデータを抽出する。5000トークン超のテキストは分割して処理。"""
+    """チャンク分割で LLM API にメタデータ抽出を依頼。ローカル LLM のコンテキスト長にも対応。"""
     client, resolved_model = _build_client(provider, base_url, model, api_key)
 
     chunks = _split_text_by_tokens(text, max_tokens=max_tokens_per_chunk)
@@ -451,6 +455,16 @@ with st.sidebar:
         )
 
     st.divider()
+    st.header("チャンク設定")
+    max_chunk_tokens = st.number_input(
+        "チャンクあたり最大トークン数",
+        min_value=500,
+        max_value=50000,
+        value=2500,
+        step=500,
+        help="ローカル LLM のコンテキスト長が小さい場合は値を下げてください。"
+             "OpenAI (128k) なら大きくしても OK です。",
+    )
     st.header("出力設定")
     output_name = st.text_input("BibTeX ファイル名", value="library.bib")
     checkpoint_path = st.text_input("チェックポイント", value=".extract_bib_checkpoint.json")
@@ -540,7 +554,8 @@ with tab_extract:
                 detail_area = st.empty()
                 stats_area = st.empty()
                 time_area = st.empty()
-                log_container = st.expander("処理ログ", expanded=True)
+                log_container = st.container()
+                log_text_area = log_container.empty()
                 log_lines: List[str] = []
 
                 t_start = time.time()
@@ -573,9 +588,8 @@ with tab_extract:
                             if cached:
                                 results.append(cached)
                             skipped += 1
-                            log_lines.append(f"⏭️ `{fname}` — チェックポイント済み（スキップ）")
-                            with log_container:
-                                st.markdown("\n".join(log_lines[-20:]))
+                            log_lines.append(f"⏭️ {fname} — チェックポイント済み（スキップ）")
+                            log_text_area.code("\n".join(log_lines[-30:]), language=None)
                             stats_area.markdown(
                                 f"成功 **{len(results)}**  |  "
                                 f"スキップ **{skipped}**  |  "
@@ -594,10 +608,9 @@ with tab_extract:
                         if text_len < 100:
                             errors.append({"_file": pdf_path, "_error": "テキスト不足"})
                             log_lines.append(
-                                f"❌ `{fname}` — テキスト不足 ({text_len} 文字)"
+                                f"❌ {fname} — テキスト不足 ({text_len} 文字)"
                             )
-                            with log_container:
-                                st.markdown("\n".join(log_lines[-20:]))
+                            log_text_area.code("\n".join(log_lines[-30:]), language=None)
                             stats_area.markdown(
                                 f"成功 **{len(results)}**  |  "
                                 f"スキップ **{skipped}**  |  "
@@ -608,7 +621,7 @@ with tab_extract:
                         # ステップ 2: AI 解析
                         provider_label = "OpenAI" if provider_key == "openai" else "LM Studio"
                         est_tokens = _estimate_tokens(text)
-                        n_chunks = len(_split_text_by_tokens(text, max_tokens=5000))
+                        n_chunks = len(_split_text_by_tokens(text, max_tokens=max_chunk_tokens))
                         chunk_info = f"  |  分割: {n_chunks} チャンク" if n_chunks > 1 else ""
                         status_area.info(
                             f"🤖 [{done}/{total}] AI 解析中: {fname}\n\n"
@@ -627,6 +640,7 @@ with tab_extract:
                             model=model,
                             base_url=base_url,
                             api_key=api_key,
+                            max_tokens_per_chunk=max_chunk_tokens,
                         )
                         ai_sec = time.time() - t_ai
 
@@ -644,11 +658,10 @@ with tab_extract:
                             f"合計: {extract_sec + ai_sec:.1f}秒"
                         )
                         log_lines.append(
-                            f"✅ `{fname}` — {title_short}… "
+                            f"✅ {fname} — {title_short}… "
                             f"({extract_sec:.1f}s + {ai_sec:.1f}s)"
                         )
-                        with log_container:
-                            st.markdown("\n".join(log_lines[-20:]))
+                        log_text_area.code("\n".join(log_lines[-30:]), language=None)
 
                         if done % 20 == 0:
                             ckpt.save()
@@ -656,9 +669,8 @@ with tab_extract:
                     except Exception as e:
                         err_str = str(e)
                         errors.append({"_file": pdf_path, "_error": err_str})
-                        log_lines.append(f"❌ `{fname}` — {err_str[:80]}")
-                        with log_container:
-                            st.markdown("\n".join(log_lines[-20:]))
+                        log_lines.append(f"❌ {fname} — {err_str[:80]}")
+                        log_text_area.code("\n".join(log_lines[-30:]), language=None)
 
                     stats_area.markdown(
                         f"成功 **{len(results)}**  |  "
@@ -693,12 +705,22 @@ with tab_extract:
                         elif "テキスト不足" in err_msg:
                             err_type = "テキスト抽出失敗"
                             err_hint = "PDF からテキストを十分に抽出できませんでした。画像ベースの PDF（スキャン）の可能性があります。"
+                        elif "context length" in err_msg.lower() or "n_ctx" in err_msg or "n_keep" in err_msg:
+                            err_type = "コンテキスト長超過"
+                            err_hint = (
+                                "入力がモデルのコンテキスト長を超えています。"
+                                "サイドバーの「チャンクあたり最大トークン数」を小さくしてください"
+                                "（例: 1500 や 1000）。"
+                            )
                         elif "Connection" in err_msg or "connect" in err_msg.lower():
                             err_type = "接続エラー"
                             err_hint = "LLM サーバーに接続できませんでした。URL とサーバーの起動状態を確認してください。"
                         elif "timeout" in err_msg.lower():
                             err_type = "タイムアウト"
                             err_hint = "LLM の応答が時間内に返ってきませんでした。テキストが長すぎる可能性があります。"
+                        elif "400" in err_msg:
+                            err_type = "リクエストエラー (400)"
+                            err_hint = "LLM サーバーがリクエストを拒否しました。チャンクサイズを小さくしてみてください。"
                         else:
                             err_type = "その他のエラー"
                             err_hint = ""

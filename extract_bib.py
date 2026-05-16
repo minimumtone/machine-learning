@@ -311,7 +311,7 @@ def get_metadata_via_ai(
     base_url: Optional[str] = None,
     api_key: Optional[str] = None,
     max_retries: int = 3,
-    max_tokens_per_chunk: int = 5000,
+    max_tokens_per_chunk: int = 2500,
 ) -> Dict:
     """LLM API でメタデータを抽出する。5000トークン超のテキストは分割して処理。"""
     client, resolved_model = _build_client(provider, base_url, model, api_key)
