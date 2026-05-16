@@ -162,6 +162,15 @@ SYSTEM_MSG = (
     "回答はJSONオブジェクトのみ（マークダウンのコードブロック不要）。"
 )
 
+SYSTEM_MSG_RENAME = (
+    "論文テキストの冒頭からタイトルと著者のみを抽出し、JSON で返してください:\n"
+    "- title: タイトル\n"
+    "- authors: 著者（カンマ区切りの文字列）\n"
+    "\n"
+    "回答はJSONオブジェクトのみ（マークダウンのコードブロック不要）。"
+)
+
+
 DEFAULT_PROVIDERS: Dict[str, Dict[str, Any]] = {
     "openai": {
         "base_url": None,
@@ -445,6 +454,37 @@ def _sanitize_filename(name: str, max_len: int = 100) -> str:
     return name
 
 
+def _get_title_author_via_ai(
+    text: str,
+    provider: str = "openai",
+    model: Optional[str] = None,
+    base_url: Optional[str] = None,
+    api_key: Optional[str] = None,
+) -> Dict:
+    """PDF テキスト冒頭から title と authors のみを軽量に抽出する。"""
+    client, resolved_model = _build_client(provider, base_url, model, api_key)
+    # 冒頭 3000 文字のみ使用（タイトル・著者は先頭にある）
+    header = text[:3000]
+    try:
+        response = client.chat.completions.create(
+            model=resolved_model,
+            messages=[
+                {"role": "system", "content": SYSTEM_MSG_RENAME},
+                {"role": "user", "content": f"以下の論文テキストを解析してください:\n\n{header}"},
+            ],
+            temperature=0.0,
+        )
+        if not response or not response.choices:
+            return {}
+        msg = response.choices[0].message
+        if msg is None or not msg.content:
+            return {}
+        return _parse_json(msg.content)
+    except Exception as e:
+        log.warning("タイトル/著者の取得に失敗: %s", e)
+        return {}
+
+
 def _rename_pdf(pdf_path: str, meta: Dict) -> str:
     """解析結果を元に PDF を 著者_タイトル.pdf にリネームする。新しいパスを返す。"""
     authors = meta.get("authors", "") or ""
@@ -593,7 +633,190 @@ with st.sidebar:
 # タブ構成
 # ---------------------------------------------------------------------------
 
-tab_extract, tab_search, tab_cleanup = st.tabs(["📥 PDF 一括抽出", "🔍 文献検索", "🧹 クリーンアップ"])
+tab_rename, tab_extract, tab_search, tab_cleanup = st.tabs(["📝 リネーム確認", "📥 PDF 一括抽出", "🔍 文献検索", "🧹 クリーンアップ"])
+
+# ===================================================================
+# タブ 0: リネーム確認
+# ===================================================================
+
+with tab_rename:
+    st.header("PDF リネーム（著者_タイトル.pdf）")
+    st.markdown(
+        "PDF の冒頭から著者名とタイトルのみを AI で取得し、リネーム候補を一覧表示します。\n"
+        "個別にチェックして確定してください。**内容の全解析は「PDF 一括抽出」タブで行います。**"
+    )
+
+    rename_dir = st.text_input(
+        "PDF ディレクトリのパス",
+        placeholder="/home/user/papers",
+        help="サブディレクトリ内も再帰的に探索します",
+        key="rename_dir",
+    )
+    rename_recursive = st.checkbox("サブディレクトリも探索", value=True, key="rename_recursive")
+
+    if st.button("PDF をスキャンして著者・タイトルを取得", type="primary", use_container_width=True):
+        if not rename_dir or not Path(rename_dir).is_dir():
+            st.error("有効なディレクトリを指定してください。")
+        elif provider_key == "openai" and not api_key:
+            st.error("OpenAI API Key を入力してください。")
+        elif provider_key == "lmstudio" and not model:
+            st.error("LM Studio のモデル名を入力してください。")
+        else:
+            if api_key:
+                os.environ["OPENAI_API_KEY"] = api_key
+            pattern = "**/*.pdf" if rename_recursive else "*.pdf"
+            pdfs = sorted(str(p) for p in Path(rename_dir).glob(pattern))
+            if not pdfs:
+                st.warning("PDF ファイルが見つかりませんでした。")
+            else:
+                proposals: List[Dict] = []
+                progress = st.progress(0)
+                status = st.empty()
+                total = len(pdfs)
+
+                for idx, pdf_path in enumerate(pdfs):
+                    fname = Path(pdf_path).name
+                    status.info(f"🔍 [{idx + 1}/{total}] {fname}")
+                    progress.progress((idx + 1) / total)
+
+                    try:
+                        text = extract_text_from_pdf(pdf_path, max_chars=5000)
+                        if len(text.strip()) < 50:
+                            proposals.append({
+                                "path": pdf_path,
+                                "original": fname,
+                                "title": "",
+                                "authors": "",
+                                "new_name": "",
+                                "error": "テキスト不足",
+                            })
+                            continue
+
+                        info = _get_title_author_via_ai(
+                            text,
+                            provider=provider_key,
+                            model=model,
+                            base_url=base_url,
+                            api_key=api_key,
+                        )
+                        title = info.get("title", "") or ""
+                        authors = info.get("authors", "") or ""
+
+                        # 新しいファイル名を生成
+                        first_author = authors.split(",")[0].strip() if authors else ""
+                        if " " in first_author:
+                            first_author = first_author.split()[-1]
+                        first_author = _sanitize_filename(first_author, max_len=30)
+                        title_clean = _sanitize_filename(title, max_len=80)
+
+                        if first_author and title_clean:
+                            new_name = f"{first_author}_{title_clean}.pdf"
+                        elif title_clean:
+                            new_name = f"{title_clean}.pdf"
+                        elif first_author:
+                            new_name = f"{first_author}.pdf"
+                        else:
+                            new_name = ""
+
+                        proposals.append({
+                            "path": pdf_path,
+                            "original": fname,
+                            "title": title,
+                            "authors": authors,
+                            "new_name": new_name,
+                            "error": "",
+                        })
+                    except Exception as e:
+                        proposals.append({
+                            "path": pdf_path,
+                            "original": fname,
+                            "title": "",
+                            "authors": "",
+                            "new_name": "",
+                            "error": str(e)[:100],
+                        })
+
+                progress.empty()
+                status.empty()
+                st.session_state["rename_proposals"] = proposals
+                st.success(f"{len(proposals)} 件のリネーム候補を取得しました。")
+
+    # --- リネーム候補一覧 ---
+    if "rename_proposals" in st.session_state:
+        proposals = st.session_state["rename_proposals"]
+        valid = [p for p in proposals if p["new_name"] and p["new_name"] != p["original"]]
+        errors = [p for p in proposals if p["error"]]
+        unchanged = [p for p in proposals if not p["error"] and (not p["new_name"] or p["new_name"] == p["original"])]
+
+        st.markdown(
+            f"リネーム候補 **{len(valid)}** 件  |  "
+            f"変更不要 **{len(unchanged)}** 件  |  "
+            f"エラー **{len(errors)}** 件"
+        )
+
+        if errors:
+            with st.expander(f"⚠️ エラー ({len(errors)} 件)", expanded=False):
+                for p in errors:
+                    st.text(f"❌ {p['original']} — {p['error']}")
+
+        if valid:
+            col_all, col_none = st.columns(2)
+            with col_all:
+                if st.button("全選択", key="rename_select_all", use_container_width=True):
+                    for i in range(len(valid)):
+                        st.session_state[f"rename_check_{i}"] = True
+                    st.rerun()
+            with col_none:
+                if st.button("全解除", key="rename_deselect_all", use_container_width=True):
+                    for i in range(len(valid)):
+                        st.session_state[f"rename_check_{i}"] = False
+                    st.rerun()
+
+            selected_indices: List[int] = []
+            for i, p in enumerate(valid):
+                default_checked = st.session_state.get(f"rename_check_{i}", True)
+                col_check, col_info = st.columns([0.05, 0.95])
+                with col_check:
+                    checked = st.checkbox("", value=default_checked, key=f"rename_check_{i}", label_visibility="collapsed")
+                with col_info:
+                    st.markdown(
+                        f"**{p['original']}**\n\n"
+                        f"→ `{p['new_name']}`\n\n"
+                        f"著者: {p['authors']}  |  タイトル: {p['title']}"
+                    )
+                if checked:
+                    selected_indices.append(i)
+
+            st.divider()
+            st.markdown(f"**{len(selected_indices)} / {len(valid)} 件を選択中**")
+
+            if st.button(
+                f"選択した {len(selected_indices)} 件をリネーム実行",
+                type="primary",
+                disabled=len(selected_indices) == 0,
+                use_container_width=True,
+            ):
+                renamed_count = 0
+                rename_errors = 0
+                for i in selected_indices:
+                    p = valid[i]
+                    try:
+                        meta = {"authors": p["authors"], "title": p["title"]}
+                        new_path = _rename_pdf(p["path"], meta)
+                        if new_path != p["path"]:
+                            renamed_count += 1
+                    except Exception as e:
+                        log.error("リネーム失敗: %s — %s", p["original"], e)
+                        rename_errors += 1
+
+                st.success(f"✅ {renamed_count} 件をリネームしました。")
+                if rename_errors:
+                    st.warning(f"⚠️ {rename_errors} 件でエラーが発生しました。")
+                # リネーム後はリストをクリア
+                st.session_state.pop("rename_proposals", None)
+                st.info("「PDF 一括抽出」タブに移動して、リネーム済み PDF の内容解析を実行してください。")
+        else:
+            st.info("リネームが必要な PDF はありません。")
 
 # ===================================================================
 # タブ 1: PDF 一括抽出
