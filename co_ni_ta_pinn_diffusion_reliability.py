@@ -176,6 +176,101 @@ DTYPE = torch.float32
 
 COMPONENTS = ["Co", "Ni", "Ta"]
 
+# ---------------------------------------------------------------------------
+# CPU / GPU benchmark and device selection
+# ---------------------------------------------------------------------------
+_CUDA_AVAILABLE = torch.cuda.is_available()
+_GPU_NAME = torch.cuda.get_device_name(0) if _CUDA_AVAILABLE else "N/A"
+
+
+def _set_device(dev_str: str) -> torch.device:
+    """Update the module-level DEVICE variable and return the new device."""
+    global DEVICE
+    DEVICE = torch.device(dev_str)
+    return DEVICE
+
+
+def run_device_benchmark(
+    epochs: int = 30,
+    width: int = 64,
+    depth: int = 4,
+    nx: int = 80,
+) -> dict:
+    """Run a short PINN-like forward+backward benchmark on CPU and (if available) GPU.
+
+    Returns dict with keys: cpu_ms, gpu_ms (None if no GPU), recommended, speedup.
+    The benchmark mimics actual PINN training: forward pass + PDE residual + backward.
+    Designed to complete within ~10-30 seconds total.
+    """
+    import torch.nn as nn
+
+    class _BenchNet(nn.Module):
+        """Minimal MLP matching the PINN architecture for benchmarking."""
+        def __init__(self, w, d, dev):
+            super().__init__()
+            layers = [nn.Linear(2, w), nn.Tanh()]
+            for _ in range(d - 1):
+                layers += [nn.Linear(w, w), nn.Tanh()]
+            layers.append(nn.Linear(w, 3))
+            self.net = nn.Sequential(*layers).to(dev)
+
+        def forward(self, x, t):
+            xt = torch.cat([x, t], dim=1)
+            return self.net(xt)
+
+    def _bench_device(dev, ep, w, d, n):
+        device = torch.device(dev)
+        model = _BenchNet(w, d, device)
+        opt = torch.optim.Adam(model.parameters(), lr=1e-3)
+        x = torch.randn(n, 1, device=device, requires_grad=True)
+        t = torch.randn(n, 1, device=device, requires_grad=True)
+        c_target = torch.rand(n, 3, device=device)
+
+        # Warmup (2 iters)
+        for _ in range(2):
+            opt.zero_grad()
+            c = model(x, t)
+            loss = ((c - c_target) ** 2).mean()
+            # Simulate PDE residual: compute grad
+            dc_dx = torch.autograd.grad(c.sum(), x, create_graph=True)[0]
+            loss = loss + (dc_dx ** 2).mean()
+            loss.backward()
+            opt.step()
+
+        if device.type == "cuda":
+            torch.cuda.synchronize()
+
+        t0 = time.perf_counter()
+        for _ in range(ep):
+            opt.zero_grad()
+            c = model(x, t)
+            loss = ((c - c_target) ** 2).mean()
+            dc_dx = torch.autograd.grad(c.sum(), x, create_graph=True)[0]
+            loss = loss + (dc_dx ** 2).mean()
+            loss.backward()
+            opt.step()
+        if device.type == "cuda":
+            torch.cuda.synchronize()
+        elapsed = (time.perf_counter() - t0) * 1000  # ms
+        return elapsed / ep  # ms per epoch
+
+    result = {}
+    # CPU benchmark
+    cpu_ms = _bench_device("cpu", epochs, width, depth, nx)
+    result["cpu_ms"] = round(cpu_ms, 2)
+    result["gpu_ms"] = None
+    result["gpu_name"] = _GPU_NAME
+    result["speedup"] = 1.0
+    result["recommended"] = "cpu"
+
+    if _CUDA_AVAILABLE:
+        gpu_ms = _bench_device("cuda", epochs, width, depth, nx)
+        result["gpu_ms"] = round(gpu_ms, 2)
+        result["speedup"] = round(cpu_ms / max(gpu_ms, 0.01), 2)
+        result["recommended"] = "cuda" if gpu_ms < cpu_ms else "cpu"
+
+    return result
+
 # --- D-matrix symmetry flag (T1) ----------------------------------------------
 # When True: 3-parameter symmetric D  (log D11, log D22, rho_raw → D12=D21).
 # When False: 4-parameter non-symmetric D (log D11, log D22, rho12_raw, rho21_raw).
@@ -1915,10 +2010,13 @@ def train_pinn_rs(
     omega_prior_right: Optional[np.ndarray] = None,
     adaptive_weights: bool = False,
     rba_update_every: int = 50,
+    compile_model: bool = False,
 ) -> Tuple[TernaryRegularSolutionPINN, pd.DataFrame]:
     """Train a TernaryRegularSolutionPINN model using fig11-standard TrainingData."""
     device = DEVICE
     model = model.to(device)
+    if compile_model and hasattr(torch, "compile"):
+        model = torch.compile(model)
     mobility_t = torch.tensor(mobility, dtype=torch.float32, device=device)
 
     x_obs = to_tensor(data.x_obs.reshape(-1, 1)).to(device)
@@ -2618,6 +2716,7 @@ def train_pinn(
     adaptive_weights: bool = False,
     rba_update_every: int = 50,
     direct_output: bool = False,
+    compile_model: bool = False,
 ) -> TrainResult:
     two_region = str(diffusion_model_mode).lower().startswith("left/right")
     if two_region:
@@ -2644,6 +2743,9 @@ def train_pinn(
             rho21_raw_init=rho21_raw_init, force_symmetric=force_symmetric,
             direct_output=direct_output,
         ).to(DEVICE)
+
+    if compile_model and hasattr(torch, "compile"):
+        model = torch.compile(model)
 
     diag_prior_tensor = None
     if diag_prior_log is not None:
@@ -5463,12 +5565,53 @@ st.markdown(
 
 with st.sidebar:
     st.markdown("## Controls")
-    st.caption(f"PINN device: {DEVICE}")
     st.caption("LR schedule: CosineAnnealingLR, eta_min = 0.03 × initial LR")
-    if torch.cuda.is_available():
-        st.success(f"CUDA: {torch.cuda.get_device_name(0)}")
+
+    # --- Device selection with benchmark ---
+    st.markdown("### Compute device")
+    _bench_key = "device_benchmark_result"
+    if _bench_key not in st.session_state:
+        st.session_state[_bench_key] = None
+
+    if _CUDA_AVAILABLE:
+        if st.button("Run CPU / GPU benchmark"):
+            with st.spinner("Benchmarking CPU vs GPU (30 epochs)…"):
+                st.session_state[_bench_key] = run_device_benchmark()
+
+        _bench = st.session_state[_bench_key]
+        if _bench is not None:
+            st.caption(
+                f"CPU: {_bench['cpu_ms']:.1f} ms/ep — "
+                f"GPU ({_bench['gpu_name']}): {_bench['gpu_ms']:.1f} ms/ep — "
+                f"Speedup: {_bench['speedup']:.1f}×"
+            )
+            _default_idx = 0 if _bench["recommended"] == "cpu" else 1
+        else:
+            _default_idx = 1  # default to GPU when available
+
+        _device_choice = st.radio(
+            "Training device",
+            ["cpu", f"cuda ({_GPU_NAME})"],
+            index=_default_idx,
+            help="ベンチマーク実行後は速い方が自動選択されます。手動で切り替え可能。",
+        )
+        _dev_str = "cuda" if "cuda" in _device_choice else "cpu"
+        _set_device(_dev_str)
+        if _bench is not None and _dev_str == _bench["recommended"]:
+            st.success(f"Device: **{DEVICE}** (benchmark推奨)")
+        else:
+            st.info(f"Device: **{DEVICE}**")
     else:
         st.warning("CUDA is not available. Training runs on CPU.")
+        st.caption(f"Device: {DEVICE}")
+        # Run CPU-only benchmark for reference
+        if st.button("Run CPU benchmark"):
+            with st.spinner("Benchmarking CPU (30 epochs)…"):
+                _bench_result = run_device_benchmark()
+                st.session_state[_bench_key] = _bench_result
+        _bench = st.session_state[_bench_key]
+        if _bench is not None:
+            st.caption(f"CPU: {_bench['cpu_ms']:.1f} ms/epoch")
 
     st.markdown("### Analysis mode")
     pinn_analysis_mode = st.selectbox(
@@ -5887,6 +6030,15 @@ D_norm = D_phys * t_scale / L_scale^2
                 "when using softplus + normalize."
             ),
         )
+        ui_torch_compile = st.checkbox(
+            "torch.compile (PyTorch 2 JIT)",
+            value=False,
+            help=(
+                "PyTorch 2 の torch.compile でモデルの forward/backward を "
+                "JIT コンパイルします。初回は数秒のコンパイル時間がかかりますが、"
+                "以降の epoch が高速化されます。epoch 数が多い場合に有効。"
+            ),
+        )
 
     # --- Chemical potential (Omega) specific controls ---
     if use_chemical_potential:
@@ -6294,6 +6446,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
             omega_prior_right=theta_right_init_vals if learn_lr_omega else None,
             adaptive_weights=bool(ui_adaptive_weights),
             rba_update_every=50,
+            compile_model=bool(ui_torch_compile),
         )
 
         theta_l_disp, theta_r_disp = rs_model.theta_display()
@@ -6451,6 +6604,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
         force_symmetric=ui_force_symmetric,
         adaptive_weights=bool(ui_adaptive_weights),
         direct_output=bool(ui_direct_output),
+        compile_model=bool(ui_torch_compile),
     )
 
     st.session_state.fig11_result_v12 = result
