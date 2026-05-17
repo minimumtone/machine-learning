@@ -1539,12 +1539,17 @@ def make_training_data_rs(
     t_right = rng.uniform(t_start, t_max, size=(n_bc_each, 1))
     x_bc = np.vstack([np.zeros_like(t_left), np.ones_like(t_right)])
     t_bc = np.vstack([t_left, t_right])
-    c_bc = np.vstack(
-        [
-            np.tile(c_left_disp.reshape(1, -1), (n_bc_each, 1)),
-            np.tile(c_right_disp.reshape(1, -1), (n_bc_each, 1)),
-        ]
+    # RS FDM uses Neumann (zero-flux) BC so boundary compositions evolve.
+    # Sample actual FDM boundary values instead of fixed initial compositions.
+    c_bc_left = bilinear_sample_xt(
+        x_grid, t_grid_rs, C_fdm,
+        np.zeros((n_bc_each, 1)), t_left,
     )
+    c_bc_right = bilinear_sample_xt(
+        x_grid, t_grid_rs, C_fdm,
+        np.ones((n_bc_each, 1)), t_right,
+    )
+    c_bc = np.vstack([c_bc_left, c_bc_right])
 
     x_f = rng.uniform(0.0, 1.0, size=(n_f, 1))
     t_f = rng.uniform(t_start, t_max, size=(n_f, 1))
