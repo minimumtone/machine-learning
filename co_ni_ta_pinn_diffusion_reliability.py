@@ -47,7 +47,6 @@ import plotly.graph_objects as go
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
 import streamlit as st
 import torch
 import torch.nn as nn
@@ -787,6 +786,10 @@ def _rs_compute_div_flux(
 
     div_flux = np.zeros((Nx, n_ind), dtype=float)
     div_flux[1:-1] = (flux_half[1:] - flux_half[:-1]) / dx
+    # Neumann (zero-flux) BC: no flux through domain walls.
+    # Prevents boundary spikes from extreme log(c) chemical potentials.
+    div_flux[0] = flux_half[0] / dx
+    div_flux[-1] = -flux_half[-1] / dx
     return div_flux
 
 
@@ -812,10 +815,14 @@ def fdm_ternary_regular_solution(
     instability that arises when both grad(mu) and div(flux) use central
     differences on the same grid.
 
+    Boundary conditions: Neumann (zero-flux) at both ends of the domain.
+    This prevents boundary spikes caused by extreme log(c) chemical
+    potentials when compositions are near 0 or 1.
+
     Adaptive sub-stepping: at every sub-step the divergence is computed,
     and the sub-step size is limited so that the maximum composition
-    change per step stays below ``cfl_safety`` (default 0.3).  This
-    guarantees stability even for large Ω or steep gradients.
+    change per step stays below ``cfl_safety``.  This guarantees
+    stability even for large Ω or steep gradients.
 
     If ``log_M_endmembers`` is provided (shape ``(n_ind, n_components)``),
     the mobility matrix is **composition-dependent** at each grid point:
@@ -1167,7 +1174,6 @@ def bilinear_sample_xt(
     """Vectorized bilinear interpolation in x,t for composition array (N2)."""
     xq = np.asarray(xq).ravel()
     tq = np.asarray(tq).ravel()
-    n_comp = C.shape[2]
 
     ix = np.clip(np.searchsorted(x_grid, xq) - 1, 0, len(x_grid) - 2)
     it = np.clip(np.searchsorted(t_grid, tq) - 1, 0, len(t_grid) - 2)
@@ -1492,7 +1498,9 @@ def make_training_data_rs(
     x_grid = np.linspace(0.0, 1.0, nx_fdm)
 
     # Initial profile in internal order [Ni, Ta, Co]
-    eps_guard = 1.0e-6
+    # eps_guard prevents log(0) in chemical potential; 5e-3 avoids
+    # extreme mu values at boundaries while keeping profiles sharp.
+    eps_guard = 5.0e-3
     c_left_disp = np.array([1.0 - eps_guard, eps_guard / 2, eps_guard / 2], dtype=float)
     c_left_disp /= c_left_disp.sum()
     c_right_disp = np.array([eps_guard / 2, 0.9, 0.1], dtype=float)
@@ -2246,7 +2254,7 @@ def train_pinn_rs(
     model.eval()
     if progress is not None:
         progress.progress(1.0)
-    return model, pd.DataFrame(history_rows)
+    return model, pd.DataFrame(history_rows), train_time
 
 
 def predict_rs(model: TernaryRegularSolutionPINN, x: np.ndarray, t: np.ndarray) -> np.ndarray:
@@ -3686,15 +3694,14 @@ def psis_diagnostic(
     if len(exceedances) < 3:
         k_hat = 0.0
     else:
-        # C2 fix: use PWM estimator (Hosking & Wallis, 1987) for GPD shape k̂
+        # PWM estimator (Hosking & Wallis, 1987) for GPD shape ξ:
+        #   β₀ = σ/(1+ξ),  β₁ = σ/((1+ξ)(2+ξ))  →  ξ = β₀/β₁ − 2
         # consistent with Vehtari et al. (2017) PSIS thresholds
         m = len(exceedances)
         exc_sorted = np.sort(exceedances)
-        # probability-weighted moments: b0 = mean, b1 = Σ (j/(m-1)) * x_(j)
         b0 = np.mean(exc_sorted)
         b1 = np.sum(np.arange(m) / max(m - 1, 1) * exc_sorted) / m
-        denom = b0 - 2.0 * b1
-        k_hat = float((3.0 * b0 - 4.0 * b1) / denom) if abs(denom) > 1e-15 else 0.0
+        k_hat = float(b0 / b1 - 2.0) if abs(b1) > 1e-15 else 0.0
         k_hat = max(min(k_hat, 2.0), -0.5)
 
     weights = np.exp(log_ratios)
@@ -6188,7 +6195,11 @@ D_norm = D_phys * t_scale / L_scale^2
     st.caption("Independent prior center, not automatically centered on PINN estimate.")
     prior_log_d11 = st.slider("prior mean log D_NiNi", -7.0, -1.0, -3.3, 0.05)
     prior_log_d22 = st.slider("prior mean log D_TaTa", -8.0, -1.0, -4.1, 0.05)
-    prior_rho_raw = st.slider("prior mean rho_raw", -2.5, 2.5, 0.0, 0.05)
+    prior_rho_raw = st.slider("prior mean rho₁₂_raw", -2.5, 2.5, 0.0, 0.05)
+    if not ui_force_symmetric:
+        prior_rho21_raw = st.slider("prior mean rho₂₁_raw", -2.5, 2.5, 0.0, 0.05)
+    else:
+        prior_rho21_raw = None
     prior_std = st.slider("theta prior std", 0.2, 8.0, 3.0, 0.1)
     hessian_step = st.slider("Laplace Hessian step", 0.005, 0.150, 0.035, 0.005)
     laplace_samples = st.slider("Laplace posterior samples", 200, 5000, 1200, 100)
@@ -6477,7 +6488,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
         st.info("Step 2/2: PINNsでΩ相互作用項を推定しています (chemical potential mode)...")
         progress = st.progress(0.0)
         status = st.empty()
-        rs_model, rs_hist = train_pinn_rs(
+        rs_model, rs_hist, rs_train_time = train_pinn_rs(
             data=data,
             model=rs_model,
             mobility=mobility_rs,
@@ -6506,10 +6517,11 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
 
         # C11 fix: phase_interface_width controls initial c(x) sigmoid width;
         # rs_omega_blend_width (separate slider) controls Omega spatial blending.
-        # Guard values (1e-6, 5e-7) avoid log(0) in chemical potential.
-        c_left_rs = np.array([1.0 - 1e-6, 5e-7, 5e-7], dtype=float)
+        # Guard values (5e-3) avoid log(0) in chemical potential.
+        _eg2 = 5.0e-3
+        c_left_rs = np.array([1.0 - _eg2, _eg2 / 2, _eg2 / 2], dtype=float)
         c_left_rs /= c_left_rs.sum()
-        c_right_rs = np.array([5e-7, 0.9, 0.1], dtype=float)
+        c_right_rs = np.array([_eg2 / 2, 0.9, 0.1], dtype=float)
         c_right_rs /= c_right_rs.sum()
         c0_full_rs = make_initial_profile_ternary_rs(
             data.x_grid, c_left_rs, c_right_rs,
@@ -6552,7 +6564,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
             model=rs_model,
             data=data,
             history=rs_hist,
-            train_time=0.0,
+            train_time=rs_train_time,
             mobility=mobility_rs,
         )
 
@@ -6680,7 +6692,11 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
         "like_sigma": like_sigma,
         "rel_nx": rel_nx,
         "rel_nt": rel_nt,
-        "prior_mean": np.array([prior_log_d11, prior_log_d22, prior_rho_raw], dtype=float),
+        "prior_mean": (
+            np.array([prior_log_d11, prior_log_d22, prior_rho_raw, prior_rho21_raw], dtype=float)
+            if prior_rho21_raw is not None
+            else np.array([prior_log_d11, prior_log_d22, prior_rho_raw], dtype=float)
+        ),
         "prior_std": prior_std,
         "hessian_step": hessian_step,
         "laplace_samples": laplace_samples,
@@ -6862,9 +6878,10 @@ if type(result).__name__ == "TrainResultRS":
             theta_hat_rs = np.array(inputs["theta_hat_rs"], dtype=float)
             learn_lr_omega_val = bool(inputs["learn_lr_omega"])
 
+            _eg = 5.0e-3
             c0_full_for_nll = make_initial_profile_ternary_rs(
-                x, np.array([1.0 - 1e-6, 5e-7, 5e-7]),
-                np.array([5e-7, 0.9, 0.1]),
+                x, np.array([1.0 - _eg, _eg / 2, _eg / 2]),
+                np.array([_eg / 2, 0.9, 0.1]),
                 x0=0.5, width=float(inputs["phase_interface_width"]),
             )
             nll_fun_rs = lambda th: gaussian_nll_multitime_rs(
@@ -6937,9 +6954,10 @@ if type(result).__name__ == "TrainResultRS":
 
             st.markdown("#### Posterior credible band")
             with st.spinner("Computing credible band from Omega samples..."):
+                _eg3 = 5.0e-3
                 c0_full_for_band = make_initial_profile_ternary_rs(
-                    x, np.array([1.0 - 1e-6, 5e-7, 5e-7]),
-                    np.array([5e-7, 0.9, 0.1]),
+                    x, np.array([1.0 - _eg3, _eg3 / 2, _eg3 / 2]),
+                    np.array([_eg3 / 2, 0.9, 0.1]),
                     x0=0.5, width=float(inputs["phase_interface_width"]),
                 )
                 band_progress = st.progress(0.0)
@@ -7370,15 +7388,17 @@ with tab4:
         rel_nx_eff = int(inputs["rel_nx"])
         rel_nt_eff = int(inputs["rel_nt"])
         phase_width_eff = float(inputs.get("phase_interface_width", 0.02))
-        prior_mean_3 = np.asarray(inputs["prior_mean"], dtype=float)
+        prior_mean_raw = np.asarray(inputs["prior_mean"], dtype=float)
         dim_per_region = len(theta_hat_lr) // 2
-        if dim_per_region == 4 and len(prior_mean_3) == 3:
+        if dim_per_region == 4 and len(prior_mean_raw) == 3:
             prior_mean_base = np.array(
-                [prior_mean_3[0], prior_mean_3[1], prior_mean_3[2], prior_mean_3[2]],
+                [prior_mean_raw[0], prior_mean_raw[1], prior_mean_raw[2], prior_mean_raw[2]],
                 dtype=float,
             )
+        elif len(prior_mean_raw) == dim_per_region:
+            prior_mean_base = prior_mean_raw
         else:
-            prior_mean_base = prior_mean_3
+            prior_mean_base = prior_mean_raw[:dim_per_region] if len(prior_mean_raw) >= dim_per_region else np.pad(prior_mean_raw, (0, dim_per_region - len(prior_mean_raw)))
         prior_mean_lr = np.concatenate([prior_mean_base, prior_mean_base])
         prior_std_eff = float(inputs["prior_std"])
 
@@ -7556,14 +7576,16 @@ with tab4:
         like_sigma_eff = float(inputs["like_sigma"])
         rel_nx_eff = int(inputs["rel_nx"])
         rel_nt_eff = int(inputs["rel_nt"])
-        prior_mean_3 = np.asarray(inputs["prior_mean"], dtype=float)
-        if len(theta_hat) == 4 and len(prior_mean_3) == 3:
+        prior_mean_raw = np.asarray(inputs["prior_mean"], dtype=float)
+        if len(theta_hat) == 4 and len(prior_mean_raw) == 3:
             prior_mean = np.array(
-                [prior_mean_3[0], prior_mean_3[1], prior_mean_3[2], prior_mean_3[2]],
+                [prior_mean_raw[0], prior_mean_raw[1], prior_mean_raw[2], prior_mean_raw[2]],
                 dtype=float,
             )
+        elif len(prior_mean_raw) == len(theta_hat):
+            prior_mean = prior_mean_raw
         else:
-            prior_mean = prior_mean_3
+            prior_mean = prior_mean_raw[:len(theta_hat)] if len(prior_mean_raw) >= len(theta_hat) else np.pad(prior_mean_raw, (0, len(theta_hat) - len(prior_mean_raw)))
         prior_std_eff = float(inputs["prior_std"])
 
         with st.spinner("Low-cost reliability: Laplace approximation from likelihood curvature..."):
