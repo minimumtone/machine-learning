@@ -1618,6 +1618,7 @@ class TernaryRegularSolutionPINN(nn.Module):
         train_omega: bool = True,
         log_M_endmembers_init: Optional[np.ndarray] = None,
         train_mobility: bool = False,
+        direct_output: bool = False,
     ):
         super().__init__()
         self.n_components = 3
@@ -1629,7 +1630,7 @@ class TernaryRegularSolutionPINN(nn.Module):
         self.RT = RT
         self.use_comp_dep_mobility = log_M_endmembers_init is not None
 
-        self.net = MLP(width, depth, activation)
+        self.net = MLP(width, depth, activation, direct_output=direct_output)
 
         if theta_left_init is None:
             theta_left_init = np.ones(self.n_pairs, dtype=float)
@@ -6026,6 +6027,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
             train_omega=True,
             log_M_endmembers_init=log_M_endmembers_init,
             train_mobility=rs_train_mob,
+            direct_output=bool(ui_direct_output),
         )
 
         st.info("Step 2/2: PINNsでΩ相互作用項を推定しています (chemical potential mode)...")
@@ -6044,6 +6046,8 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
             w_omega_prior=float(rs_w_omega_prior),
             omega_prior_left=theta_left_init_vals,
             omega_prior_right=theta_right_init_vals if learn_lr_omega else None,
+            adaptive_weights=bool(ui_adaptive_weights),
+            rba_update_every=50,
         )
 
         theta_l_disp, theta_r_disp = rs_model.theta_display()
