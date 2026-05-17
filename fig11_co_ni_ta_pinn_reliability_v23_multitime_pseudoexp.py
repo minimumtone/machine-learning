@@ -1904,6 +1904,33 @@ def train_pinn_rs(
         optimizer.step()
         scheduler.step()
 
+        # --- Diagnostic: print loss breakdown & gradient norms at early epochs ---
+        _diag_epochs_rs = {1, 2, 5, 20, 50, 100}
+        if epoch in _diag_epochs_rs:
+            _net_params_rs = [p for n, p in model.named_parameters()
+                             if p.requires_grad and 'net.' in n]
+            _omega_params_rs = [p for n, p in model.named_parameters()
+                               if p.requires_grad and 'net.' not in n]
+            _gnorm_net_rs = sum(
+                p.grad.norm().item() ** 2 for p in _net_params_rs
+                if p.grad is not None
+            ) ** 0.5
+            _gnorm_omega_rs = sum(
+                p.grad.norm().item() ** 2 for p in _omega_params_rs
+                if p.grad is not None
+            ) ** 0.5
+            print(
+                f"[PINN-RS-DIAG] ep={epoch:>4d} | "
+                f"loss={float(loss):.2e} "
+                f"d={float(loss_data):.2e} "
+                f"ic={float(loss_ic):.2e} "
+                f"bc={float(loss_bc_val):.2e} "
+                f"phys={float(loss_phys):.2e} | "
+                f"||g_net||={_gnorm_net_rs:.2e} "
+                f"||g_Ω||={_gnorm_omega_rs:.2e}",
+                flush=True,
+            )
+
         theta_l_disp, theta_r_disp = model.theta_display()
         row = {
             "epoch": epoch,
