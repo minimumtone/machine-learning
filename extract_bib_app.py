@@ -1301,7 +1301,11 @@ with tab_search:
         st.caption(f"登録済み文献: {len(all_entries)} 件")
 
         # --- 検索入力 ---
-        query = st.text_input("キーワード検索", placeholder="例: SrTiO3, DFT, Neural Network, Ms temperature...")
+        query = st.text_input(
+            "キーワード検索（日英対応）",
+            placeholder="例: マルテンサイト, DFT, 機械学習, SrTiO3, 格子定数...",
+            help="日本語で入力しても対応する英語用語で検索します（例: 「密度汎関数」→ DFT も検索）",
+        )
         search_mode = st.radio("検索モード", ["OR (いずれか含む)", "AND (すべて含む)"], horizontal=True)
 
         # --- フィルタ ---
@@ -1338,6 +1342,101 @@ with tab_search:
         with col_f6:
             filter_props = st.multiselect("対象物性フィルタ", _collect_items("properties"))
 
+        # --- 日英対訳辞書（材料科学用語） ---
+        _JA_EN_DICT: Dict[str, List[str]] = {
+            "密度汎関数": ["density functional", "DFT"],
+            "第一原理": ["first principles", "ab initio", "first-principles"],
+            "分子動力学": ["molecular dynamics", "MD"],
+            "モンテカルロ": ["Monte Carlo"],
+            "有限要素": ["finite element", "FEM"],
+            "フェーズフィールド": ["phase field"],
+            "相図": ["phase diagram"],
+            "格子定数": ["lattice constant", "lattice parameter"],
+            "弾性率": ["elastic modulus", "Young's modulus", "bulk modulus"],
+            "硬さ": ["hardness"],
+            "引張": ["tensile"],
+            "圧縮": ["compression", "compressive"],
+            "破壊": ["fracture"],
+            "疲労": ["fatigue"],
+            "クリープ": ["creep"],
+            "腐食": ["corrosion"],
+            "酸化": ["oxidation"],
+            "拡散": ["diffusion"],
+            "転位": ["dislocation"],
+            "結晶粒": ["grain"],
+            "マルテンサイト": ["martensite"],
+            "オーステナイト": ["austenite"],
+            "フェライト": ["ferrite"],
+            "パーライト": ["pearlite"],
+            "ベイナイト": ["bainite"],
+            "析出": ["precipitation"],
+            "固溶": ["solid solution"],
+            "焼入れ": ["quenching"],
+            "焼戻し": ["tempering"],
+            "焼鈍": ["annealing"],
+            "鋳造": ["casting"],
+            "鍛造": ["forging"],
+            "圧延": ["rolling"],
+            "溶接": ["welding"],
+            "粉末冶金": ["powder metallurgy"],
+            "高エントロピー合金": ["high-entropy alloy", "HEA"],
+            "超合金": ["superalloy"],
+            "ステンレス鋼": ["stainless steel"],
+            "ニューラルネットワーク": ["neural network"],
+            "機械学習": ["machine learning"],
+            "深層学習": ["deep learning"],
+            "ランダムフォレスト": ["random forest"],
+            "ガウス過程": ["Gaussian process"],
+            "ベイズ": ["Bayesian"],
+            "回帰": ["regression"],
+            "分類": ["classification"],
+            "最適化": ["optimization"],
+            "実験": ["experimental"],
+            "理論": ["theoretical"],
+            "計算": ["computational"],
+            "シミュレーション": ["simulation"],
+            "熱処理": ["heat treatment"],
+            "熱伝導": ["thermal conductivity", "heat conduction"],
+            "電気抵抗": ["electrical resistivity", "resistance"],
+            "磁性": ["magnetic"],
+            "超伝導": ["superconducti"],
+            "誘電": ["dielectric"],
+            "圧電": ["piezoelectric"],
+            "触媒": ["catalyst", "catalytic"],
+            "電池": ["battery"],
+            "燃料電池": ["fuel cell"],
+            "太陽電池": ["solar cell", "photovoltaic"],
+            "薄膜": ["thin film"],
+            "ナノ": ["nano"],
+            "粒界": ["grain boundary"],
+            "状態図": ["phase diagram"],
+            "相変態": ["phase transformation"],
+            "X線回折": ["XRD", "X-ray diffraction"],
+            "透過電子顕微鏡": ["TEM", "transmission electron microscop"],
+            "走査電子顕微鏡": ["SEM", "scanning electron microscop"],
+        }
+
+        # 逆引き辞書も構築（英→日）
+        _EN_JA_DICT: Dict[str, List[str]] = {}
+        for ja, en_list in _JA_EN_DICT.items():
+            for en in en_list:
+                _EN_JA_DICT.setdefault(en.lower(), []).append(ja)
+
+        def _expand_keywords(keywords: List[str]) -> List[str]:
+            """キーワードを日英対訳で拡張する。"""
+            expanded = list(keywords)
+            for kw in keywords:
+                kw_lower = kw.lower()
+                # 日→英
+                for ja, en_list in _JA_EN_DICT.items():
+                    if ja in kw_lower:
+                        expanded.extend(en_list)
+                # 英→日
+                for en, ja_list in _EN_JA_DICT.items():
+                    if en in kw_lower:
+                        expanded.extend(ja_list)
+            return list(set(expanded))
+
         # --- 検索実行 ---
         _SEARCH_FIELDS = [
             "title", "authors", "materials", "theory", "exp_methods",
@@ -1348,10 +1447,23 @@ with tab_search:
         def _matches_query(entry: Dict, keywords: List[str], mode: str) -> bool:
             if not keywords:
                 return True
+            expanded = _expand_keywords(keywords)
             searchable = " ".join(str(entry.get(f, "")) for f in _SEARCH_FIELDS).lower()
             if mode.startswith("AND"):
-                return all(kw.lower() in searchable for kw in keywords)
-            return any(kw.lower() in searchable for kw in keywords)
+                # AND: 各 *元の* キーワードについて、元 or 訳語のいずれかがヒットすれば OK
+                for kw in keywords:
+                    kw_lower = kw.lower()
+                    kw_variants = [kw_lower]
+                    for ja, en_list in _JA_EN_DICT.items():
+                        if ja in kw_lower:
+                            kw_variants.extend(e.lower() for e in en_list)
+                    for en, ja_list in _EN_JA_DICT.items():
+                        if en in kw_lower:
+                            kw_variants.extend(ja_list)
+                    if not any(v in searchable for v in kw_variants):
+                        return False
+                return True
+            return any(kw.lower() in searchable for kw in expanded)
 
         def _field_contains_any(entry: Dict, field: str, values: List[str]) -> bool:
             """エントリのカンマ区切りフィールドが、指定値のいずれかを含むか。"""
@@ -1378,6 +1490,15 @@ with tab_search:
             return True
 
         keywords = [k.strip() for k in query.split(",") if k.strip()] if query else []
+
+        # 日英拡張のプレビュー表示
+        if keywords:
+            expanded_all = _expand_keywords(keywords)
+            added = [w for w in expanded_all if w not in keywords]
+            if added:
+                st.caption(f"🌐 日英拡張: {', '.join(keywords)} → +{', '.join(added[:10])}"
+                           f"{'…' if len(added) > 10 else ''}")
+
         filtered = [
             e for e in all_entries
             if _matches_query(e, keywords, search_mode) and _matches_filters(e)
@@ -1434,6 +1555,21 @@ with tab_search:
                     summary = e.get("summary_ja", "")
                     if summary:
                         st.markdown(f"**日本語要約:** {summary}")
+
+                    # PDF ダウンロード/閲覧
+                    source_file = e.get("_source_file", "")
+                    if source_file and os.path.isfile(source_file):
+                        with open(source_file, "rb") as pdf_f:
+                            pdf_bytes = pdf_f.read()
+                        st.download_button(
+                            label=f"📎 PDF を開く: {os.path.basename(source_file)}",
+                            data=pdf_bytes,
+                            file_name=os.path.basename(source_file),
+                            mime="application/pdf",
+                            key=f"pdf_dl_{hash(source_file)}",
+                        )
+                    elif source_file:
+                        st.caption(f"📎 PDF: {os.path.basename(source_file)}（ファイルが見つかりません）")
 
             # 検索結果の BibTeX エクスポート
             st.subheader("検索結果のエクスポート")
