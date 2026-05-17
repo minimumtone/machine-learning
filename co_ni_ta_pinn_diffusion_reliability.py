@@ -1307,6 +1307,152 @@ def make_training_data(
     )
 
 
+def make_training_data_rs(
+    theta_left: np.ndarray,
+    theta_right: np.ndarray,
+    mobility: np.ndarray,
+    RT: float,
+    x_interface: float,
+    omega_width: float,
+    phase_width: float,
+    dt: float,
+    nsteps: int,
+    save_every: int,
+    nx_fdm: int,
+    n_obs: int,
+    n_ic: int,
+    n_bc_each: int,
+    n_f: int,
+    noise: float,
+    seed: int,
+    t_start_fraction: float,
+    n_exp_points: int,
+    pseudo_exp_time_mode: str = "final only",
+    pseudo_exp_time_slices: int = 4,
+    append_pseudo_exp_to_training: bool = True,
+    learn_lr_omega: bool = False,
+    noise_model: str = "gaussian",
+    log_M_endmembers: Optional[np.ndarray] = None,
+) -> TrainingData:
+    """Generate training data using the RS (chemical-potential) FDM solver.
+
+    This ensures model consistency: when the PINN uses the RS PDE
+    (c_t = div(M grad(mu))), the teacher data is also generated from
+    the same RS model — not from a Fickian D-matrix FDM.
+
+    theta_left / theta_right are in **display** order [CoNi, CoTa, NiTa].
+    Internally reordered to [NiTa, NiCo, TaCo] for fdm_ternary_regular_solution.
+    """
+    rng = np.random.default_rng(seed)
+
+    theta_left_int = _reorder_theta_display_to_internal(theta_left)
+    theta_right_int = _reorder_theta_display_to_internal(theta_right)
+
+    x_grid = np.linspace(0.0, 1.0, nx_fdm)
+
+    # Initial profile in internal order [Ni, Ta, Co]
+    eps_guard = 1.0e-6
+    c_left_disp = np.array([1.0 - eps_guard, eps_guard / 2, eps_guard / 2], dtype=float)
+    c_left_disp /= c_left_disp.sum()
+    c_right_disp = np.array([eps_guard / 2, 0.9, 0.1], dtype=float)
+    c_right_disp /= c_right_disp.sum()
+
+    c0_disp = make_initial_profile_ternary_rs(
+        x_grid, c_left_disp, c_right_disp,
+        x0=x_interface, width=float(phase_width),
+    )
+    c0_int = _reorder_c_display_to_internal_np(c0_disp)
+
+    t_grid_rs, C_fdm_int = fdm_ternary_regular_solution(
+        c0_int, x_grid, dt, nsteps, mobility,
+        theta_left_int, theta_right_int,
+        RT=RT, x_interface=x_interface, omega_width=omega_width,
+        save_every=save_every,
+        log_M_endmembers=log_M_endmembers,
+    )
+
+    C_fdm = _reorder_c_internal_to_display_np(C_fdm_int)
+
+    t_max = float(t_grid_rs[-1])
+    t_start = max(float(t_start_fraction * t_max), float(t_grid_rs[1]) if len(t_grid_rs) > 1 else 0.0)
+
+    x_obs = rng.uniform(0.02, 0.98, size=(n_obs, 1))
+    t_obs = rng.uniform(t_start, t_max, size=(n_obs, 1))
+    c_clean = bilinear_sample_xt(x_grid, t_grid_rs, C_fdm, x_obs, t_obs)
+    c_obs = np.clip(c_clean + rng.normal(0.0, noise, size=c_clean.shape), 0.0, 1.0)
+    c_obs = c_obs / np.maximum(c_obs.sum(axis=1, keepdims=True), 1.0e-14)
+
+    x_ic = rng.uniform(0.0, 1.0, size=(n_ic, 1))
+    t_ic = np.full_like(x_ic, t_start)
+    c_ic = bilinear_sample_xt(x_grid, t_grid_rs, C_fdm, x_ic, t_ic)
+
+    t_left = rng.uniform(t_start, t_max, size=(n_bc_each, 1))
+    t_right = rng.uniform(t_start, t_max, size=(n_bc_each, 1))
+    x_bc = np.vstack([np.zeros_like(t_left), np.ones_like(t_right)])
+    t_bc = np.vstack([t_left, t_right])
+    c_bc = np.vstack(
+        [
+            np.tile(c_left_disp.reshape(1, -1), (n_bc_each, 1)),
+            np.tile(c_right_disp.reshape(1, -1), (n_bc_each, 1)),
+        ]
+    )
+
+    x_f = rng.uniform(0.0, 1.0, size=(n_f, 1))
+    t_f = rng.uniform(t_start, t_max, size=(n_f, 1))
+
+    x_exp, c_exp = make_pseudo_experiment(
+        x_grid, C_fdm[-1], noise=noise, seed=seed, n_points=n_exp_points,
+        noise_model=noise_model,
+    )
+
+    if str(pseudo_exp_time_mode).lower().startswith("multi"):
+        x_exp_all, t_exp_all, c_exp_all, exp_time_indices = make_pseudo_experiment_multitime(
+            x_grid, t_grid_rs, C_fdm,
+            noise=noise, seed=seed,
+            n_points_per_time=n_exp_points,
+            n_time_slices=int(pseudo_exp_time_slices),
+            t_start=t_start,
+            noise_model=noise_model,
+        )
+    else:
+        x_exp_all = x_exp.reshape(-1, 1)
+        t_exp_all = np.full((len(x_exp), 1), float(t_grid_rs[-1]))
+        c_exp_all = c_exp
+        exp_time_indices = np.array([len(t_grid_rs) - 1], dtype=int)
+
+    if bool(append_pseudo_exp_to_training):
+        x_obs = np.vstack([x_obs, x_exp_all])
+        t_obs = np.vstack([t_obs, t_exp_all])
+        c_obs = np.vstack([c_obs, c_exp_all])
+
+    return TrainingData(
+        x_obs=x_obs,
+        t_obs=t_obs,
+        c_obs=c_obs,
+        x_ic=x_ic,
+        t_ic=t_ic,
+        c_ic=c_ic,
+        x_bc=x_bc,
+        t_bc=t_bc,
+        c_bc=c_bc,
+        x_f=x_f,
+        t_f=t_f,
+        x_grid=x_grid,
+        t_grid=t_grid_rs,
+        C_fdm=C_fdm,
+        D_true=np.zeros((2, 2)),
+        D_true_left=None,
+        D_true_right=None,
+        t_start=t_start,
+        x_exp=x_exp,
+        c_exp=c_exp,
+        x_exp_all=x_exp_all,
+        t_exp_all=t_exp_all,
+        c_exp_all=c_exp_all,
+        exp_time_indices=exp_time_indices,
+    )
+
+
 # =============================================================================
 # PINN model
 # =============================================================================
@@ -5776,7 +5922,7 @@ D_norm = D_phys * t_scale / L_scale^2
             _mob_mode_default = 0
             _logM_defaults = (-4.0, -4.0, -4.0, -6.0, -6.0, -6.0)
 
-        st.caption("Ωの順序: (comp1,comp2), (comp1,ref), (comp2,ref). FDM教師データはD行列ベース (fig11と共通)。")
+        st.caption("Ωの順序: (comp1,comp2), (comp1,ref), (comp2,ref). RS mode時のFDM教師データはμ-Mモデルで生成（モデル整合性を保証）。")
         omega_left_init_str = st.text_input("初期Ω left (init)", value=_omega_default)
         learn_lr_omega = st.checkbox("左右別々のΩを学習", value=True)
         omega_right_init_str = st.text_input("初期Ω right (init)", value=_omega_right_default, disabled=not learn_lr_omega)
@@ -5942,36 +6088,92 @@ if run:
         log_d22_right_train_init = float(self_log_diag[1])
 
     # =========================================================================
-    # Common: FDM teacher data generation (shared between Fickian and RS modes)
+    # FDM teacher data generation
     # =========================================================================
-    st.info("Step 1/2: Co / Ni-0.10Ta sharp-interface diffusion coupleをFDMで計算しています。")
-    data = make_training_data(
-        log_d11=log_d11_true,
-        log_d22=log_d22_true,
-        rho_raw=rho_raw_true,
-        t_max=t_max,
-        nx_fdm=nx_fdm,
-        nt_fdm=nt_fdm,
-        n_obs=n_obs,
-        n_ic=n_ic,
-        n_bc_each=n_bc_each,
-        n_f=n_f,
-        noise=noise,
-        seed=int(seed),
-        t_start_fraction=t_start_fraction,
-        n_exp_points=n_exp_points,
-        pseudo_exp_time_mode=str(pseudo_exp_time_mode),
-        pseudo_exp_time_slices=int(pseudo_exp_time_slices),
-        append_pseudo_exp_to_training=bool(append_pseudo_exp_to_training),
-        fdm_teacher_mode=str(fdm_teacher_mode),
-        log_d11_right=float(log_d11_true_right),
-        log_d22_right=float(log_d22_true_right),
-        rho_raw_right=float(rho_raw_true_right),
-        phase_width=float(phase_interface_width),
-        rho21_raw=float(rho21_raw_true) if rho21_raw_true is not None else None,
-        rho21_raw_right=float(rho21_raw_true_right) if rho21_raw_true_right is not None else None,
-        noise_model=noise_model_key,
-    )
+    if use_chemical_potential:
+        # --- RS mode: use μ-M driven FDM to ensure model consistency ---
+        st.info("Step 1/2: RS (μ-M) FDMでCo / Ni-0.10Ta diffusion coupleを計算しています。")
+
+        def _parse_omega_str_early(s: str, n_pairs: int) -> np.ndarray:
+            vals = np.array([float(v.strip()) for v in s.split(",")], dtype=float)
+            if vals.size != n_pairs:
+                raise ValueError(f"Expected {n_pairs} Omega values, got {vals.size}")
+            return vals
+
+        _n_pairs_teacher = 3
+        _theta_left_teacher = _parse_omega_str_early(omega_left_init_str, _n_pairs_teacher)
+        if learn_lr_omega:
+            _theta_right_teacher = _parse_omega_str_early(omega_right_init_str, _n_pairs_teacher)
+        else:
+            _theta_right_teacher = _theta_left_teacher.copy()
+
+        _log_M_endmembers_teacher = None
+        if rs_use_comp_dep_mobility:
+            _log_M_endmembers_teacher = np.array([
+                [rs_logM_00, rs_logM_01, rs_logM_02],
+                [rs_logM_10, rs_logM_11, rs_logM_12],
+            ], dtype=float)
+            _mobility_teacher = np.eye(2) * 1.0e-2
+        else:
+            _mobility_teacher = np.eye(2) * float(rs_M_diag) + (np.ones((2, 2)) - np.eye(2)) * float(rs_M_offdiag)
+
+        data = make_training_data_rs(
+            theta_left=_theta_left_teacher,
+            theta_right=_theta_right_teacher,
+            mobility=_mobility_teacher,
+            RT=float(rs_RT),
+            x_interface=0.5,
+            omega_width=float(rs_omega_blend_width),
+            phase_width=float(phase_interface_width),
+            dt=float(rs_fdm_dt),
+            nsteps=int(rs_fdm_nsteps),
+            save_every=int(rs_fdm_save_every),
+            nx_fdm=nx_fdm,
+            n_obs=n_obs,
+            n_ic=n_ic,
+            n_bc_each=n_bc_each,
+            n_f=n_f,
+            noise=noise,
+            seed=int(seed),
+            t_start_fraction=t_start_fraction,
+            n_exp_points=n_exp_points,
+            pseudo_exp_time_mode=str(pseudo_exp_time_mode),
+            pseudo_exp_time_slices=int(pseudo_exp_time_slices),
+            append_pseudo_exp_to_training=bool(append_pseudo_exp_to_training),
+            learn_lr_omega=bool(learn_lr_omega),
+            noise_model=noise_model_key,
+            log_M_endmembers=_log_M_endmembers_teacher,
+        )
+    else:
+        # --- Fickian mode: D-matrix FDM (original) ---
+        st.info("Step 1/2: Co / Ni-0.10Ta sharp-interface diffusion coupleをFDMで計算しています。")
+        data = make_training_data(
+            log_d11=log_d11_true,
+            log_d22=log_d22_true,
+            rho_raw=rho_raw_true,
+            t_max=t_max,
+            nx_fdm=nx_fdm,
+            nt_fdm=nt_fdm,
+            n_obs=n_obs,
+            n_ic=n_ic,
+            n_bc_each=n_bc_each,
+            n_f=n_f,
+            noise=noise,
+            seed=int(seed),
+            t_start_fraction=t_start_fraction,
+            n_exp_points=n_exp_points,
+            pseudo_exp_time_mode=str(pseudo_exp_time_mode),
+            pseudo_exp_time_slices=int(pseudo_exp_time_slices),
+            append_pseudo_exp_to_training=bool(append_pseudo_exp_to_training),
+            fdm_teacher_mode=str(fdm_teacher_mode),
+            log_d11_right=float(log_d11_true_right),
+            log_d22_right=float(log_d22_true_right),
+            rho_raw_right=float(rho_raw_true_right),
+            phase_width=float(phase_interface_width),
+            rho21_raw=float(rho21_raw_true) if rho21_raw_true is not None else None,
+            rho21_raw_right=float(rho21_raw_true_right) if rho21_raw_true_right is not None else None,
+            noise_model=noise_model_key,
+        )
 
     st.success("FDM teacher calculation and pseudo experimental data generation finished.")
 
@@ -6157,7 +6359,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
 
         st.session_state.fig11_result_v12 = rs_result
         st.session_state.fig11_inputs_v12 = {
-            "t_max": t_max,
+            "t_max": float(data.t_grid[-1]),
             "use_chemical_potential": True,
             "learn_lr_omega": bool(learn_lr_omega),
             "theta_hat_rs": theta_hat_rs.tolist(),
