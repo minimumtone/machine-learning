@@ -747,6 +747,49 @@ def make_initial_profile_ternary_rs(
     return c0
 
 
+def _rs_compute_div_flux(
+    c_full: np.ndarray,
+    x: np.ndarray,
+    dx: float,
+    mobility: np.ndarray,
+    theta_left: np.ndarray,
+    theta_right: np.ndarray,
+    RT: float,
+    x_interface: float,
+    omega_width: float,
+    use_comp_dep_M: bool,
+    log_M_endmembers: Optional[np.ndarray],
+) -> np.ndarray:
+    """Compute div(flux) for the RS FDM scheme. Returns (Nx, n_ind) array."""
+    n_components = c_full.shape[1]
+    n_ind = n_components - 1
+    Nx = len(x)
+
+    c_ind = sanitize_independent(c_full[:, :n_ind])
+    c_full_safe = complete_composition_np(c_ind)
+
+    mu = diffusion_potentials_regular_solution_np(
+        c_full_safe, x, theta_left, theta_right, RT=RT,
+        x_interface=x_interface, width=omega_width,
+    )
+
+    dmu_half = (mu[1:] - mu[:-1]) / dx
+
+    if use_comp_dep_M:
+        M_full = _mobility_diag_from_endmembers_np(c_full_safe, log_M_endmembers)
+        M_half = 0.5 * (M_full[:-1] + M_full[1:])
+        flux_half = M_half * dmu_half
+    else:
+        flux_half = np.zeros((Nx - 1, n_ind), dtype=float)
+        for i_comp in range(n_ind):
+            for j_comp in range(n_ind):
+                flux_half[:, i_comp] += mobility[i_comp, j_comp] * dmu_half[:, j_comp]
+
+    div_flux = np.zeros((Nx, n_ind), dtype=float)
+    div_flux[1:-1] = (flux_half[1:] - flux_half[:-1]) / dx
+    return div_flux
+
+
 def fdm_ternary_regular_solution(
     c0_full: np.ndarray,
     x: np.ndarray,
@@ -760,6 +803,7 @@ def fdm_ternary_regular_solution(
     omega_width: float = 0.02,
     save_every: int = 100,
     log_M_endmembers: Optional[np.ndarray] = None,
+    cfl_safety: float = 0.05,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Staggered finite-volume solver for ternary RS diffusion (T2).
 
@@ -767,6 +811,11 @@ def fdm_ternary_regular_solution(
     fluxes at cell faces (half-points).  This avoids the checkerboard
     instability that arises when both grad(mu) and div(flux) use central
     differences on the same grid.
+
+    Adaptive sub-stepping: at every sub-step the divergence is computed,
+    and the sub-step size is limited so that the maximum composition
+    change per step stays below ``cfl_safety`` (default 0.3).  This
+    guarantees stability even for large Ω or steep gradients.
 
     If ``log_M_endmembers`` is provided (shape ``(n_ind, n_components)``),
     the mobility matrix is **composition-dependent** at each grid point:
@@ -785,59 +834,56 @@ def fdm_ternary_regular_solution(
     snapshots = [c_full.copy()]
     t_saved = [0.0]
     t = 0.0
+    total_substeps = 0
 
     if theta_right is None:
         theta_right = theta_left.copy()
 
+    # Spinodal warning: if max(Ω)/RT > 2, system may be thermodynamically unstable
+    max_omega = float(np.max(np.abs(theta_left)))
+    if theta_right is not None:
+        max_omega = max(max_omega, float(np.max(np.abs(theta_right))))
+    if RT > 0 and max_omega / RT > 2.0:
+        print(f"[RS-FDM] Warning: max(Ω)/RT = {max_omega / RT:.1f} > 2 "
+              f"(spinodal region). Adaptive sub-stepping active.")
+
     for step in range(1, nsteps + 1):
-        c_ind = sanitize_independent(c_full[:, :n_ind])
-        c_full_safe = complete_composition_np(c_ind)
+        remaining = dt
+        while remaining > 1.0e-18:
+            div_flux = _rs_compute_div_flux(
+                c_full, x, dx, mobility, theta_left, theta_right,
+                RT, x_interface, omega_width, use_comp_dep_M, log_M_endmembers,
+            )
 
-        mu = diffusion_potentials_regular_solution_np(
-            c_full_safe, x, theta_left, theta_right, RT=RT,
-            x_interface=x_interface, width=omega_width,
-        )
+            max_div = float(np.max(np.abs(div_flux)))
+            if max_div > 1.0e-30:
+                dt_safe = cfl_safety / max_div
+            else:
+                dt_safe = remaining
 
-        # --- Staggered flux at half-points (faces) ---
-        # grad(mu) at face i+1/2 = (mu[i+1] - mu[i]) / dx
-        dmu_half = (mu[1:] - mu[:-1]) / dx  # shape (Nx-1, n_ind)
+            sub_dt = min(dt_safe, remaining)
+            c_full[:, :n_ind] += sub_dt * div_flux
 
-        # Mobility at half-points: average of adjacent cells
-        if use_comp_dep_M:
-            M_full = _mobility_diag_from_endmembers_np(c_full_safe, log_M_endmembers)
-            M_half = 0.5 * (M_full[:-1] + M_full[1:])  # (Nx-1, n_ind)
-            flux_half = M_half * dmu_half
-        else:
-            flux_half = np.zeros((Nx - 1, n_ind), dtype=float)
-            for i_comp in range(n_ind):
-                for j_comp in range(n_ind):
-                    flux_half[:, i_comp] += mobility[i_comp, j_comp] * dmu_half[:, j_comp]
+            c_clipped = sanitize_independent(c_full[:, :n_ind])
+            if not np.array_equal(c_clipped, c_full[:, :n_ind]):
+                _DIAG_COUNTERS["fdm_clip_events"] += 1
+                delta = float(np.max(np.abs(c_clipped - c_full[:, :n_ind])))
+                _DIAG_COUNTERS["fdm_clip_max_delta"] = max(
+                    _DIAG_COUNTERS["fdm_clip_max_delta"], delta)
+            c_full[:, :n_ind] = c_clipped
+            c_full[:, -1] = 1.0 - np.sum(c_full[:, :n_ind], axis=1)
 
-        # --- Divergence at cell centres (conservative) ---
-        # div(flux)[i] = (flux[i+1/2] - flux[i-1/2]) / dx
-        div_flux = np.zeros((Nx, n_ind), dtype=float)
-        div_flux[1:-1] = (flux_half[1:] - flux_half[:-1]) / dx
-        # Boundary: div_flux[0]=div_flux[-1]=0 → c[0],c[-1] unchanged (effectively
-        # Dirichlet at initial values). True zero-flux Neumann would require
-        # ghost-cell flux treatment. For diffusion-couple bulk this is acceptable
-        # provided the domain is long enough to avoid boundary reflection (P1/P2).
-
-        c_full[:, :n_ind] += dt * div_flux
-
-        # --- Mass-conservation clip with diagnostic counter (T3, P9) ---
-        c_clipped = sanitize_independent(c_full[:, :n_ind])
-        if not np.array_equal(c_clipped, c_full[:, :n_ind]):
-            _DIAG_COUNTERS["fdm_clip_events"] += 1
-            delta = float(np.max(np.abs(c_clipped - c_full[:, :n_ind])))
-            _DIAG_COUNTERS["fdm_clip_max_delta"] = max(
-                _DIAG_COUNTERS["fdm_clip_max_delta"], delta)
-        c_full[:, :n_ind] = c_clipped
-        c_full[:, -1] = 1.0 - np.sum(c_full[:, :n_ind], axis=1)
+            remaining -= sub_dt
+            total_substeps += 1
 
         t += dt
         if step % save_every == 0 or step == nsteps:
             snapshots.append(c_full.copy())
             t_saved.append(t)
+
+    if total_substeps > nsteps:
+        print(f"[RS-FDM] Adaptive sub-stepping: {total_substeps} sub-steps "
+              f"for {nsteps} macro-steps (avg {total_substeps / nsteps:.1f}x)")
 
     return np.array(t_saved, dtype=float), np.stack(snapshots, axis=0)
 
