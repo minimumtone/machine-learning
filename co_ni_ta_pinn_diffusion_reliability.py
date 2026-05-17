@@ -6120,8 +6120,8 @@ D_norm = D_phys * t_scale / L_scale^2
         rs_fdm_save_every = st.number_input("FDM save_every", min_value=1, max_value=10000, value=100, step=10)
         rs_n_collocation = st.number_input("collocation points/epoch", min_value=8, max_value=50000, value=2000, step=500)
         rs_w_omega_prior = st.slider("Omega prior regularization weight", 0.0, 50.0, 0.0, 0.5)
-        do_fdm_refine = st.checkbox("PINN後にFDM尤度でΩを再最適化", value=True,
-                                     help="相互作用項の精度を上げるための重要ステップ。")
+        do_fdm_refine = st.checkbox("PINN後にFDM順問題による尤度でΩを再最適化", value=True,
+                                     help="候補Ωで RS FDM を順計算し、疑似実験点との残差（負の対数尤度）を最小化してΩを精密化します。")
         fdm_refine_maxiter = st.number_input("FDM再最適化 maxiter", min_value=10, max_value=2000, value=180, step=10)
         rs_like_sigma = st.slider("likelihood sigma (RS)", 0.001, 0.080, 0.008, 0.001)
         rs_hessian_step = st.slider("Laplace Hessian step (RS)", 0.005, 0.150, 0.030, 0.005)
@@ -6483,7 +6483,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
 
         refine_info_rs = None
         if do_fdm_refine:
-            st.info("FDM尤度でΩを再最適化しています...")
+            st.info("FDM順問題による尤度でΩを再最適化しています...")
             refine_status = st.empty()
             refine_bar = st.progress(0.0)
             _omega_pair_names = ["Ω_CoNi", "Ω_CoTa", "Ω_NiTa"]
