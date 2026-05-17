@@ -2605,6 +2605,34 @@ def train_pinn(
         opt.step()
         scheduler.step()
 
+        # --- Diagnostic: print loss breakdown & gradient norms at early epochs ---
+        _diag_epochs = {1, 2, 5, 20, 50, 100}
+        if ep in _diag_epochs:
+            # Separate net params vs D params
+            _net_params = [p for n, p in model.named_parameters()
+                          if p.requires_grad and 'net.' in n]
+            _d_params = [p for n, p in model.named_parameters()
+                         if p.requires_grad and 'net.' not in n]
+            _gnorm_net = sum(
+                p.grad.norm().item() ** 2 for p in _net_params
+                if p.grad is not None
+            ) ** 0.5
+            _gnorm_d = sum(
+                p.grad.norm().item() ** 2 for p in _d_params
+                if p.grad is not None
+            ) ** 0.5
+            print(
+                f"[PINN-DIAG] ep={ep:>4d} | "
+                f"loss={float(loss):.2e} "
+                f"d={float(loss_data):.2e} "
+                f"ic={float(loss_ic):.2e} "
+                f"bc={float(loss_bc):.2e} "
+                f"phys={float(loss_phys):.2e} | "
+                f"||g_net||={_gnorm_net:.2e} "
+                f"||g_D||={_gnorm_d:.2e}",
+                flush=True,
+            )
+
         if ep == 1 or ep % report_every == 0 or ep == epochs:
             D = model.diffusion_matrix().detach().cpu().numpy()
             D_left_hist = D
