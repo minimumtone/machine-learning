@@ -176,6 +176,101 @@ DTYPE = torch.float32
 
 COMPONENTS = ["Co", "Ni", "Ta"]
 
+# ---------------------------------------------------------------------------
+# CPU / GPU benchmark and device selection
+# ---------------------------------------------------------------------------
+_CUDA_AVAILABLE = torch.cuda.is_available()
+_GPU_NAME = torch.cuda.get_device_name(0) if _CUDA_AVAILABLE else "N/A"
+
+
+def _set_device(dev_str: str) -> torch.device:
+    """Update the module-level DEVICE variable and return the new device."""
+    global DEVICE
+    DEVICE = torch.device(dev_str)
+    return DEVICE
+
+
+def run_device_benchmark(
+    epochs: int = 30,
+    width: int = 64,
+    depth: int = 4,
+    nx: int = 80,
+) -> dict:
+    """Run a short PINN-like forward+backward benchmark on CPU and (if available) GPU.
+
+    Returns dict with keys: cpu_ms, gpu_ms (None if no GPU), recommended, speedup.
+    The benchmark mimics actual PINN training: forward pass + PDE residual + backward.
+    Designed to complete within ~10-30 seconds total.
+    """
+    import torch.nn as nn
+
+    class _BenchNet(nn.Module):
+        """Minimal MLP matching the PINN architecture for benchmarking."""
+        def __init__(self, w, d, dev):
+            super().__init__()
+            layers = [nn.Linear(2, w), nn.Tanh()]
+            for _ in range(d - 1):
+                layers += [nn.Linear(w, w), nn.Tanh()]
+            layers.append(nn.Linear(w, 3))
+            self.net = nn.Sequential(*layers).to(dev)
+
+        def forward(self, x, t):
+            xt = torch.cat([x, t], dim=1)
+            return self.net(xt)
+
+    def _bench_device(dev, ep, w, d, n):
+        device = torch.device(dev)
+        model = _BenchNet(w, d, device)
+        opt = torch.optim.Adam(model.parameters(), lr=1e-3)
+        x = torch.randn(n, 1, device=device, requires_grad=True)
+        t = torch.randn(n, 1, device=device, requires_grad=True)
+        c_target = torch.rand(n, 3, device=device)
+
+        # Warmup (2 iters)
+        for _ in range(2):
+            opt.zero_grad()
+            c = model(x, t)
+            loss = ((c - c_target) ** 2).mean()
+            # Simulate PDE residual: compute grad
+            dc_dx = torch.autograd.grad(c.sum(), x, create_graph=True)[0]
+            loss = loss + (dc_dx ** 2).mean()
+            loss.backward()
+            opt.step()
+
+        if device.type == "cuda":
+            torch.cuda.synchronize()
+
+        t0 = time.perf_counter()
+        for _ in range(ep):
+            opt.zero_grad()
+            c = model(x, t)
+            loss = ((c - c_target) ** 2).mean()
+            dc_dx = torch.autograd.grad(c.sum(), x, create_graph=True)[0]
+            loss = loss + (dc_dx ** 2).mean()
+            loss.backward()
+            opt.step()
+        if device.type == "cuda":
+            torch.cuda.synchronize()
+        elapsed = (time.perf_counter() - t0) * 1000  # ms
+        return elapsed / ep  # ms per epoch
+
+    result = {}
+    # CPU benchmark
+    cpu_ms = _bench_device("cpu", epochs, width, depth, nx)
+    result["cpu_ms"] = round(cpu_ms, 2)
+    result["gpu_ms"] = None
+    result["gpu_name"] = _GPU_NAME
+    result["speedup"] = 1.0
+    result["recommended"] = "cpu"
+
+    if _CUDA_AVAILABLE:
+        gpu_ms = _bench_device("cuda", epochs, width, depth, nx)
+        result["gpu_ms"] = round(gpu_ms, 2)
+        result["speedup"] = round(cpu_ms / max(gpu_ms, 0.01), 2)
+        result["recommended"] = "cuda" if gpu_ms < cpu_ms else "cpu"
+
+    return result
+
 # --- D-matrix symmetry flag (T1) ----------------------------------------------
 # When True: 3-parameter symmetric D  (log D11, log D22, rho_raw → D12=D21).
 # When False: 4-parameter non-symmetric D (log D11, log D22, rho12_raw, rho21_raw).
@@ -1307,6 +1402,152 @@ def make_training_data(
     )
 
 
+def make_training_data_rs(
+    theta_left: np.ndarray,
+    theta_right: np.ndarray,
+    mobility: np.ndarray,
+    RT: float,
+    x_interface: float,
+    omega_width: float,
+    phase_width: float,
+    dt: float,
+    nsteps: int,
+    save_every: int,
+    nx_fdm: int,
+    n_obs: int,
+    n_ic: int,
+    n_bc_each: int,
+    n_f: int,
+    noise: float,
+    seed: int,
+    t_start_fraction: float,
+    n_exp_points: int,
+    pseudo_exp_time_mode: str = "final only",
+    pseudo_exp_time_slices: int = 4,
+    append_pseudo_exp_to_training: bool = True,
+    learn_lr_omega: bool = False,
+    noise_model: str = "gaussian",
+    log_M_endmembers: Optional[np.ndarray] = None,
+) -> TrainingData:
+    """Generate training data using the RS (chemical-potential) FDM solver.
+
+    This ensures model consistency: when the PINN uses the RS PDE
+    (c_t = div(M grad(mu))), the teacher data is also generated from
+    the same RS model — not from a Fickian D-matrix FDM.
+
+    theta_left / theta_right are in **display** order [CoNi, CoTa, NiTa].
+    Internally reordered to [NiTa, NiCo, TaCo] for fdm_ternary_regular_solution.
+    """
+    rng = np.random.default_rng(seed)
+
+    theta_left_int = _reorder_theta_display_to_internal(theta_left)
+    theta_right_int = _reorder_theta_display_to_internal(theta_right)
+
+    x_grid = np.linspace(0.0, 1.0, nx_fdm)
+
+    # Initial profile in internal order [Ni, Ta, Co]
+    eps_guard = 1.0e-6
+    c_left_disp = np.array([1.0 - eps_guard, eps_guard / 2, eps_guard / 2], dtype=float)
+    c_left_disp /= c_left_disp.sum()
+    c_right_disp = np.array([eps_guard / 2, 0.9, 0.1], dtype=float)
+    c_right_disp /= c_right_disp.sum()
+
+    c0_disp = make_initial_profile_ternary_rs(
+        x_grid, c_left_disp, c_right_disp,
+        x0=x_interface, width=float(phase_width),
+    )
+    c0_int = _reorder_c_display_to_internal_np(c0_disp)
+
+    t_grid_rs, C_fdm_int = fdm_ternary_regular_solution(
+        c0_int, x_grid, dt, nsteps, mobility,
+        theta_left_int, theta_right_int,
+        RT=RT, x_interface=x_interface, omega_width=omega_width,
+        save_every=save_every,
+        log_M_endmembers=log_M_endmembers,
+    )
+
+    C_fdm = _reorder_c_internal_to_display_np(C_fdm_int)
+
+    t_max = float(t_grid_rs[-1])
+    t_start = max(float(t_start_fraction * t_max), float(t_grid_rs[1]) if len(t_grid_rs) > 1 else 0.0)
+
+    x_obs = rng.uniform(0.02, 0.98, size=(n_obs, 1))
+    t_obs = rng.uniform(t_start, t_max, size=(n_obs, 1))
+    c_clean = bilinear_sample_xt(x_grid, t_grid_rs, C_fdm, x_obs, t_obs)
+    c_obs = np.clip(c_clean + rng.normal(0.0, noise, size=c_clean.shape), 0.0, 1.0)
+    c_obs = c_obs / np.maximum(c_obs.sum(axis=1, keepdims=True), 1.0e-14)
+
+    x_ic = rng.uniform(0.0, 1.0, size=(n_ic, 1))
+    t_ic = np.full_like(x_ic, t_start)
+    c_ic = bilinear_sample_xt(x_grid, t_grid_rs, C_fdm, x_ic, t_ic)
+
+    t_left = rng.uniform(t_start, t_max, size=(n_bc_each, 1))
+    t_right = rng.uniform(t_start, t_max, size=(n_bc_each, 1))
+    x_bc = np.vstack([np.zeros_like(t_left), np.ones_like(t_right)])
+    t_bc = np.vstack([t_left, t_right])
+    c_bc = np.vstack(
+        [
+            np.tile(c_left_disp.reshape(1, -1), (n_bc_each, 1)),
+            np.tile(c_right_disp.reshape(1, -1), (n_bc_each, 1)),
+        ]
+    )
+
+    x_f = rng.uniform(0.0, 1.0, size=(n_f, 1))
+    t_f = rng.uniform(t_start, t_max, size=(n_f, 1))
+
+    x_exp, c_exp = make_pseudo_experiment(
+        x_grid, C_fdm[-1], noise=noise, seed=seed, n_points=n_exp_points,
+        noise_model=noise_model,
+    )
+
+    if str(pseudo_exp_time_mode).lower().startswith("multi"):
+        x_exp_all, t_exp_all, c_exp_all, exp_time_indices = make_pseudo_experiment_multitime(
+            x_grid, t_grid_rs, C_fdm,
+            noise=noise, seed=seed,
+            n_points_per_time=n_exp_points,
+            n_time_slices=int(pseudo_exp_time_slices),
+            t_start=t_start,
+            noise_model=noise_model,
+        )
+    else:
+        x_exp_all = x_exp.reshape(-1, 1)
+        t_exp_all = np.full((len(x_exp), 1), float(t_grid_rs[-1]))
+        c_exp_all = c_exp
+        exp_time_indices = np.array([len(t_grid_rs) - 1], dtype=int)
+
+    if bool(append_pseudo_exp_to_training):
+        x_obs = np.vstack([x_obs, x_exp_all])
+        t_obs = np.vstack([t_obs, t_exp_all])
+        c_obs = np.vstack([c_obs, c_exp_all])
+
+    return TrainingData(
+        x_obs=x_obs,
+        t_obs=t_obs,
+        c_obs=c_obs,
+        x_ic=x_ic,
+        t_ic=t_ic,
+        c_ic=c_ic,
+        x_bc=x_bc,
+        t_bc=t_bc,
+        c_bc=c_bc,
+        x_f=x_f,
+        t_f=t_f,
+        x_grid=x_grid,
+        t_grid=t_grid_rs,
+        C_fdm=C_fdm,
+        D_true=np.zeros((2, 2)),
+        D_true_left=None,
+        D_true_right=None,
+        t_start=t_start,
+        x_exp=x_exp,
+        c_exp=c_exp,
+        x_exp_all=x_exp_all,
+        t_exp_all=t_exp_all,
+        c_exp_all=c_exp_all,
+        exp_time_indices=exp_time_indices,
+    )
+
+
 # =============================================================================
 # PINN model
 # =============================================================================
@@ -1769,10 +2010,13 @@ def train_pinn_rs(
     omega_prior_right: Optional[np.ndarray] = None,
     adaptive_weights: bool = False,
     rba_update_every: int = 50,
+    compile_model: bool = False,
 ) -> Tuple[TernaryRegularSolutionPINN, pd.DataFrame]:
     """Train a TernaryRegularSolutionPINN model using fig11-standard TrainingData."""
     device = DEVICE
     model = model.to(device)
+    if compile_model and hasattr(torch, "compile"):
+        model = torch.compile(model)
     mobility_t = torch.tensor(mobility, dtype=torch.float32, device=device)
 
     x_obs = to_tensor(data.x_obs.reshape(-1, 1)).to(device)
@@ -1874,7 +2118,7 @@ def train_pinn_rs(
             if status is not None:
                 status.text(
                     f"Training aborted at epoch {epoch}: non-finite loss "
-                    f"(data={float(loss_data):.3e}, phys={float(loss_phys):.3e})."
+                    f"(data={loss_data.item():.3e}, phys={loss_phys.item():.3e})."
                 )
             break
 
@@ -1901,6 +2145,29 @@ def train_pinn_rs(
             [p for p in model.parameters() if p.requires_grad],
             max_norm=10.0,
         )
+        # --- Diagnostic: print loss breakdown & gradient norms at early epochs ---
+        if epoch in (1, 2, 5, 20, 50, 100):
+            _gn_net_rs, _gn_omega = 0.0, 0.0
+            for _n, _p in model.named_parameters():
+                if _p.grad is None:
+                    continue
+                _gnorm = float(_p.grad.norm())
+                if "theta" in _n or "log_M" in _n:
+                    _gn_omega += _gnorm ** 2
+                elif "net." in _n:
+                    _gn_net_rs += _gnorm ** 2
+                else:
+                    _gn_omega += _gnorm ** 2
+            print(
+                f"[RS-DIAG ep={epoch:3d}] loss={loss.item():.3e} | "
+                f"d={loss_data.item():.3e} ic={loss_ic.item():.3e} "
+                f"bc={loss_bc_val.item():.3e} phys={loss_phys.item():.3e} | "
+                f"||g_net||={np.sqrt(_gn_net_rs):.3e} ||g_Ω||={np.sqrt(_gn_omega):.3e} | "
+                f"lr={scheduler.get_last_lr()[0]:.2e}",
+                flush=True,
+            )
+        # --- END DIAGNOSTIC ---
+
         optimizer.step()
         scheduler.step()
 
@@ -2449,6 +2716,7 @@ def train_pinn(
     adaptive_weights: bool = False,
     rba_update_every: int = 50,
     direct_output: bool = False,
+    compile_model: bool = False,
 ) -> TrainResult:
     two_region = str(diffusion_model_mode).lower().startswith("left/right")
     if two_region:
@@ -2475,6 +2743,9 @@ def train_pinn(
             rho21_raw_init=rho21_raw_init, force_symmetric=force_symmetric,
             direct_output=direct_output,
         ).to(DEVICE)
+
+    if compile_model and hasattr(torch, "compile"):
+        model = torch.compile(model)
 
     diag_prior_tensor = None
     if diag_prior_log is not None:
@@ -2575,7 +2846,7 @@ def train_pinn(
             if status is not None:
                 status.markdown(
                     f"⚠ Training aborted at epoch {ep}: non-finite loss "
-                    f"(data={float(loss_data):.3e}, phys={float(loss_phys):.3e})."
+                    f"(data={loss_data.item():.3e}, phys={loss_phys.item():.3e})."
                 )
             break
 
@@ -2602,6 +2873,27 @@ def train_pinn(
             [p for p in model.parameters() if p.requires_grad],
             max_norm=10.0,
         )
+        # --- Diagnostic: print loss breakdown & gradient norms at early epochs ---
+        if ep in (1, 2, 5, 20, 50, 100):
+            _gn_net, _gn_D = 0.0, 0.0
+            for _n, _p in model.named_parameters():
+                if _p.grad is None:
+                    continue
+                _gnorm = float(_p.grad.norm())
+                if "log_d" in _n or "rho_raw" in _n:
+                    _gn_D += _gnorm ** 2
+                else:
+                    _gn_net += _gnorm ** 2
+            print(
+                f"[DIAG ep={ep:3d}] loss={loss.item():.3e} | "
+                f"d={loss_data.item():.3e} ic={loss_ic.item():.3e} "
+                f"bc={loss_bc.item():.3e} phys={loss_phys.item():.3e} | "
+                f"||g_net||={np.sqrt(_gn_net):.3e} ||g_D||={np.sqrt(_gn_D):.3e} | "
+                f"lr={scheduler.get_last_lr()[0]:.2e}",
+                flush=True,
+            )
+        # --- END DIAGNOSTIC ---
+
         opt.step()
         scheduler.step()
 
@@ -5251,7 +5543,7 @@ st.markdown(
 <div class="hero">
   <div class="hero-title">Fig.11-style Co / Ni-0.10Ta Diffusion Couple</div>
   <div class="hero-sub">
-    Co / Ni-0.10Ta 三元拡散対の濃度プロファイルを FDM・PINN・実験点風データで比較します。
+    Co / Ni-0.10Ta 三元拡散対の濃度プロファイルを FDM・PINN・FDMによる疑似実験データで比較します。
     PINN は Ni/Ta の有効相互拡散行列を推定し、尤度に基づく信頼度をバンドとして可視化します。
   </div>
 </div>
@@ -5273,12 +5565,53 @@ st.markdown(
 
 with st.sidebar:
     st.markdown("## Controls")
-    st.caption(f"PINN device: {DEVICE}")
     st.caption("LR schedule: CosineAnnealingLR, eta_min = 0.03 × initial LR")
-    if torch.cuda.is_available():
-        st.success(f"CUDA: {torch.cuda.get_device_name(0)}")
+
+    # --- Device selection with benchmark ---
+    st.markdown("### Compute device")
+    _bench_key = "device_benchmark_result"
+    if _bench_key not in st.session_state:
+        st.session_state[_bench_key] = None
+
+    if _CUDA_AVAILABLE:
+        if st.button("Run CPU / GPU benchmark"):
+            with st.spinner("Benchmarking CPU vs GPU (30 epochs)…"):
+                st.session_state[_bench_key] = run_device_benchmark()
+
+        _bench = st.session_state[_bench_key]
+        if _bench is not None:
+            st.caption(
+                f"CPU: {_bench['cpu_ms']:.1f} ms/ep — "
+                f"GPU ({_bench['gpu_name']}): {_bench['gpu_ms']:.1f} ms/ep — "
+                f"Speedup: {_bench['speedup']:.1f}×"
+            )
+            _default_idx = 0 if _bench["recommended"] == "cpu" else 1
+        else:
+            _default_idx = 1  # default to GPU when available
+
+        _device_choice = st.radio(
+            "Training device",
+            ["cpu", f"cuda ({_GPU_NAME})"],
+            index=_default_idx,
+            help="ベンチマーク実行後は速い方が自動選択されます。手動で切り替え可能。",
+        )
+        _dev_str = "cuda" if "cuda" in _device_choice else "cpu"
+        _set_device(_dev_str)
+        if _bench is not None and _dev_str == _bench["recommended"]:
+            st.success(f"Device: **{DEVICE}** (benchmark推奨)")
+        else:
+            st.info(f"Device: **{DEVICE}**")
     else:
         st.warning("CUDA is not available. Training runs on CPU.")
+        st.caption(f"Device: {DEVICE}")
+        # Run CPU-only benchmark for reference
+        if st.button("Run CPU benchmark"):
+            with st.spinner("Benchmarking CPU (30 epochs)…"):
+                _bench_result = run_device_benchmark()
+                st.session_state[_bench_key] = _bench_result
+        _bench = st.session_state[_bench_key]
+        if _bench is not None:
+            st.caption(f"CPU: {_bench['cpu_ms']:.1f} ms/epoch")
 
     st.markdown("### Analysis mode")
     pinn_analysis_mode = st.selectbox(
@@ -5697,6 +6030,15 @@ D_norm = D_phys * t_scale / L_scale^2
                 "when using softplus + normalize."
             ),
         )
+        ui_torch_compile = st.checkbox(
+            "torch.compile (PyTorch 2 JIT)",
+            value=False,
+            help=(
+                "PyTorch 2 の torch.compile でモデルの forward/backward を "
+                "JIT コンパイルします。初回は数秒のコンパイル時間がかかりますが、"
+                "以降の epoch が高速化されます。epoch 数が多い場合に有効。"
+            ),
+        )
 
     # --- Chemical potential (Omega) specific controls ---
     if use_chemical_potential:
@@ -5732,7 +6074,7 @@ D_norm = D_phys * t_scale / L_scale^2
             _mob_mode_default = 0
             _logM_defaults = (-4.0, -4.0, -4.0, -6.0, -6.0, -6.0)
 
-        st.caption("Ωの順序: (comp1,comp2), (comp1,ref), (comp2,ref). FDM教師データはD行列ベース (fig11と共通)。")
+        st.caption("Ωの順序: (comp1,comp2), (comp1,ref), (comp2,ref). RS mode時のFDM教師データはμ-Mモデルで生成（モデル整合性を保証）。")
         omega_left_init_str = st.text_input("初期Ω left (init)", value=_omega_default)
         learn_lr_omega = st.checkbox("左右別々のΩを学習", value=True)
         omega_right_init_str = st.text_input("初期Ω right (init)", value=_omega_right_default, disabled=not learn_lr_omega)
@@ -5842,7 +6184,7 @@ D_norm = D_phys * t_scale / L_scale^2
             ["logD_NiNi vs logD_TaTa", "logD_NiNi vs rho_raw", "logD_TaTa vs rho_raw"],
         )
 
-    run = st.button("Run Fig.11-style FDM → PINN", type="primary", use_container_width=True)
+    run = st.button("Run Fig.11-style FDM → PINN", type="primary", width="stretch")
 
 
 if "fig11_result_v12" not in st.session_state:
@@ -5898,36 +6240,92 @@ if run:
         log_d22_right_train_init = float(self_log_diag[1])
 
     # =========================================================================
-    # Common: FDM teacher data generation (shared between Fickian and RS modes)
+    # FDM teacher data generation
     # =========================================================================
-    st.info("Step 1/2: Co / Ni-0.10Ta sharp-interface diffusion coupleをFDMで計算しています。")
-    data = make_training_data(
-        log_d11=log_d11_true,
-        log_d22=log_d22_true,
-        rho_raw=rho_raw_true,
-        t_max=t_max,
-        nx_fdm=nx_fdm,
-        nt_fdm=nt_fdm,
-        n_obs=n_obs,
-        n_ic=n_ic,
-        n_bc_each=n_bc_each,
-        n_f=n_f,
-        noise=noise,
-        seed=int(seed),
-        t_start_fraction=t_start_fraction,
-        n_exp_points=n_exp_points,
-        pseudo_exp_time_mode=str(pseudo_exp_time_mode),
-        pseudo_exp_time_slices=int(pseudo_exp_time_slices),
-        append_pseudo_exp_to_training=bool(append_pseudo_exp_to_training),
-        fdm_teacher_mode=str(fdm_teacher_mode),
-        log_d11_right=float(log_d11_true_right),
-        log_d22_right=float(log_d22_true_right),
-        rho_raw_right=float(rho_raw_true_right),
-        phase_width=float(phase_interface_width),
-        rho21_raw=float(rho21_raw_true) if rho21_raw_true is not None else None,
-        rho21_raw_right=float(rho21_raw_true_right) if rho21_raw_true_right is not None else None,
-        noise_model=noise_model_key,
-    )
+    if use_chemical_potential:
+        # --- RS mode: use μ-M driven FDM to ensure model consistency ---
+        st.info("Step 1/2: RS (μ-M) FDMでCo / Ni-0.10Ta diffusion coupleを計算しています。")
+
+        def _parse_omega_str_early(s: str, n_pairs: int) -> np.ndarray:
+            vals = np.array([float(v.strip()) for v in s.split(",")], dtype=float)
+            if vals.size != n_pairs:
+                raise ValueError(f"Expected {n_pairs} Omega values, got {vals.size}")
+            return vals
+
+        _n_pairs_teacher = 3
+        _theta_left_teacher = _parse_omega_str_early(omega_left_init_str, _n_pairs_teacher)
+        if learn_lr_omega:
+            _theta_right_teacher = _parse_omega_str_early(omega_right_init_str, _n_pairs_teacher)
+        else:
+            _theta_right_teacher = _theta_left_teacher.copy()
+
+        _log_M_endmembers_teacher = None
+        if rs_use_comp_dep_mobility:
+            _log_M_endmembers_teacher = np.array([
+                [rs_logM_00, rs_logM_01, rs_logM_02],
+                [rs_logM_10, rs_logM_11, rs_logM_12],
+            ], dtype=float)
+            _mobility_teacher = np.eye(2) * 1.0e-2
+        else:
+            _mobility_teacher = np.eye(2) * float(rs_M_diag) + (np.ones((2, 2)) - np.eye(2)) * float(rs_M_offdiag)
+
+        data = make_training_data_rs(
+            theta_left=_theta_left_teacher,
+            theta_right=_theta_right_teacher,
+            mobility=_mobility_teacher,
+            RT=float(rs_RT),
+            x_interface=0.5,
+            omega_width=float(rs_omega_blend_width),
+            phase_width=float(phase_interface_width),
+            dt=float(rs_fdm_dt),
+            nsteps=int(rs_fdm_nsteps),
+            save_every=int(rs_fdm_save_every),
+            nx_fdm=nx_fdm,
+            n_obs=n_obs,
+            n_ic=n_ic,
+            n_bc_each=n_bc_each,
+            n_f=n_f,
+            noise=noise,
+            seed=int(seed),
+            t_start_fraction=t_start_fraction,
+            n_exp_points=n_exp_points,
+            pseudo_exp_time_mode=str(pseudo_exp_time_mode),
+            pseudo_exp_time_slices=int(pseudo_exp_time_slices),
+            append_pseudo_exp_to_training=bool(append_pseudo_exp_to_training),
+            learn_lr_omega=bool(learn_lr_omega),
+            noise_model=noise_model_key,
+            log_M_endmembers=_log_M_endmembers_teacher,
+        )
+    else:
+        # --- Fickian mode: D-matrix FDM (original) ---
+        st.info("Step 1/2: Co / Ni-0.10Ta sharp-interface diffusion coupleをFDMで計算しています。")
+        data = make_training_data(
+            log_d11=log_d11_true,
+            log_d22=log_d22_true,
+            rho_raw=rho_raw_true,
+            t_max=t_max,
+            nx_fdm=nx_fdm,
+            nt_fdm=nt_fdm,
+            n_obs=n_obs,
+            n_ic=n_ic,
+            n_bc_each=n_bc_each,
+            n_f=n_f,
+            noise=noise,
+            seed=int(seed),
+            t_start_fraction=t_start_fraction,
+            n_exp_points=n_exp_points,
+            pseudo_exp_time_mode=str(pseudo_exp_time_mode),
+            pseudo_exp_time_slices=int(pseudo_exp_time_slices),
+            append_pseudo_exp_to_training=bool(append_pseudo_exp_to_training),
+            fdm_teacher_mode=str(fdm_teacher_mode),
+            log_d11_right=float(log_d11_true_right),
+            log_d22_right=float(log_d22_true_right),
+            rho_raw_right=float(rho_raw_true_right),
+            phase_width=float(phase_interface_width),
+            rho21_raw=float(rho21_raw_true) if rho21_raw_true is not None else None,
+            rho21_raw_right=float(rho21_raw_true_right) if rho21_raw_true_right is not None else None,
+            noise_model=noise_model_key,
+        )
 
     st.success("FDM teacher calculation and pseudo experimental data generation finished.")
 
@@ -5951,7 +6349,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
                 n_time_lines=4,
                 annealing_time_h=float(paper_time_h),
             ),
-            use_container_width=True,
+            width="stretch",
         )
         st.plotly_chart(
             fdm_teacher_preview_difference_plot(
@@ -5961,7 +6359,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
                 data.c_exp,
                 span_um=float(span_um),
             ),
-            use_container_width=True,
+            width="stretch",
         )
 
         preview_cols = st.columns(4)
@@ -6048,6 +6446,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
             omega_prior_right=theta_right_init_vals if learn_lr_omega else None,
             adaptive_weights=bool(ui_adaptive_weights),
             rba_update_every=50,
+            compile_model=bool(ui_torch_compile),
         )
 
         theta_l_disp, theta_r_disp = rs_model.theta_display()
@@ -6113,7 +6512,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
 
         st.session_state.fig11_result_v12 = rs_result
         st.session_state.fig11_inputs_v12 = {
-            "t_max": t_max,
+            "t_max": float(data.t_grid[-1]),
             "use_chemical_potential": True,
             "learn_lr_omega": bool(learn_lr_omega),
             "theta_hat_rs": theta_hat_rs.tolist(),
@@ -6205,6 +6604,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
         force_symmetric=ui_force_symmetric,
         adaptive_weights=bool(ui_adaptive_weights),
         direct_output=bool(ui_direct_output),
+        compile_model=bool(ui_torch_compile),
     )
 
     st.session_state.fig11_result_v12 = result
@@ -6324,7 +6724,7 @@ if type(result).__name__ == "TrainResultRS":
             "estimated_left": float(theta_l_disp[k]),
             "estimated_right": float(theta_r_disp[k]),
         })
-    st.dataframe(pd.DataFrame(omega_rows), use_container_width=True)
+    st.dataframe(pd.DataFrame(omega_rows), width="stretch")
 
     if inputs.get("refine_info_rs") is not None:
         ri = inputs["refine_info_rs"]
@@ -6360,7 +6760,7 @@ if type(result).__name__ == "TrainResultRS":
             ))
         fig.update_xaxes(title="Distance (µm)")
         fig.update_yaxes(title="Mole Fraction", range=[-0.04, 1.04])
-        st.plotly_chart(clean_layout(fig, "Regular-solution profile: Co / Ni-Ta", 560), use_container_width=True)
+        st.plotly_chart(clean_layout(fig, "Regular-solution profile: Co / Ni-Ta", 560), width="stretch")
 
         st.markdown("### Multi-time profiles")
         indices_rs = sorted(set(np.linspace(0, len(t) - 1, 5).astype(int).tolist()))
@@ -6380,7 +6780,7 @@ if type(result).__name__ == "TrainResultRS":
             fig_t.update_yaxes(title="Mole fraction", range=[-0.04, 1.04])
             st.plotly_chart(
                 clean_layout(fig_t, f"t = {format_time_label(float(t[idx_time]), float(t[-1]), paper_time_h_disp)}", 400),
-                use_container_width=True,
+                width="stretch",
             )
 
     with tab_rs2:
@@ -6391,7 +6791,7 @@ if type(result).__name__ == "TrainResultRS":
                 fig_loss.add_trace(go.Scatter(x=rs_hist["epoch"], y=rs_hist[col], mode="lines", name=col))
         fig_loss.update_xaxes(title="epoch")
         fig_loss.update_yaxes(title="loss", type="log")
-        st.plotly_chart(clean_layout(fig_loss, "Loss functions (regular-solution)", 430), use_container_width=True)
+        st.plotly_chart(clean_layout(fig_loss, "Loss functions (regular-solution)", 430), width="stretch")
 
         st.markdown("### Omega convergence")
         fig_omega = go.Figure()
@@ -6404,9 +6804,9 @@ if type(result).__name__ == "TrainResultRS":
                 fig_omega.add_trace(go.Scatter(x=rs_hist["epoch"], y=rs_hist[omega_cols_r[k]], mode="lines", name=f"{pname} right"))
         fig_omega.update_xaxes(title="epoch")
         fig_omega.update_yaxes(title="Omega value")
-        st.plotly_chart(clean_layout(fig_omega, "Omega pair-interaction convergence", 450), use_container_width=True)
+        st.plotly_chart(clean_layout(fig_omega, "Omega pair-interaction convergence", 450), width="stretch")
 
-        st.dataframe(rs_hist, use_container_width=True)
+        st.dataframe(rs_hist, width="stretch")
 
     with tab_rs3:
         st.markdown("### Omega-based reliability (regular-solution)")
@@ -6487,7 +6887,7 @@ if type(result).__name__ == "TrainResultRS":
                     "mean": float(np.mean(vals)),
                     "std": float(np.std(vals)),
                 })
-            st.dataframe(pd.DataFrame(summary_rows), use_container_width=True)
+            st.dataframe(pd.DataFrame(summary_rows), width="stretch")
 
             st.markdown("#### Posterior credible band")
             with st.spinner("Computing credible band from Omega samples..."):
@@ -6534,7 +6934,7 @@ if type(result).__name__ == "TrainResultRS":
             fig_band.update_yaxes(title="Mole Fraction", range=[-0.04, 1.04])
             st.plotly_chart(
                 clean_layout(fig_band, "Posterior credible band (regular-solution Omega)", 560),
-                use_container_width=True,
+                width="stretch",
             )
 
             if bool(inputs.get("rs_run_mcmc", False)):
@@ -6570,7 +6970,7 @@ if type(result).__name__ == "TrainResultRS":
                 fig_trace.update_yaxes(title="Omega value")
                 st.plotly_chart(
                     clean_layout(fig_trace, "MCMC trace for Omega parameters", 450),
-                    use_container_width=True,
+                    width="stretch",
                 )
 
     with tab_rs4:
@@ -6582,7 +6982,7 @@ if type(result).__name__ == "TrainResultRS":
             "x_exp": np.asarray(rs_data.x_exp_all[:50]).ravel(),
             "t_exp": np.asarray(rs_data.t_exp_all[:50]).ravel(),
             **{f"c_exp_{comp}": np.asarray(rs_data.c_exp_all[:50, j]).ravel() for j, comp in enumerate(COMPONENTS)},
-        }), use_container_width=True)
+        }), width="stretch")
 
     with tab_rs5:
         st.markdown("### 論文用 matplotlib 図 (Publication-quality figures)")
@@ -6593,7 +6993,7 @@ if type(result).__name__ == "TrainResultRS":
             dist, C_fdm_rs[-1], C_pinn_rs[-1], dist_exp, rs_data.c_exp_all,
             title="Regular-solution profile: Co / Ni-Ta",
         )
-        st.image(_pub_fig_to_bytes(fig_pub_profile), use_container_width=True)
+        st.image(_pub_fig_to_bytes(fig_pub_profile), width="stretch")
         buf_profile = io.BytesIO()
         fig_pub_profile.savefig(buf_profile, format="png", dpi=300, bbox_inches="tight", facecolor="white")
         st.download_button("Download profile (PNG, 300 dpi)", buf_profile.getvalue(),
@@ -6607,7 +7007,7 @@ if type(result).__name__ == "TrainResultRS":
             n_slices=5, n_cols=3,
             tau_max=float(t[-1]), annealing_time_h=paper_time_h_disp,
         )
-        st.image(_pub_fig_to_bytes(fig_pub_mt), use_container_width=True)
+        st.image(_pub_fig_to_bytes(fig_pub_mt), width="stretch")
         buf_mt = io.BytesIO()
         fig_pub_mt.savefig(buf_mt, format="png", dpi=300, bbox_inches="tight", facecolor="white")
         st.download_button("Download multi-time (PNG, 300 dpi)", buf_mt.getvalue(),
@@ -6616,7 +7016,7 @@ if type(result).__name__ == "TrainResultRS":
 
         st.markdown("#### 3. Training loss & Ω convergence")
         fig_pub_conv = pub_omega_convergence_figure(rs_hist, pair_names)
-        st.image(_pub_fig_to_bytes(fig_pub_conv), use_container_width=True)
+        st.image(_pub_fig_to_bytes(fig_pub_conv), width="stretch")
         buf_conv = io.BytesIO()
         fig_pub_conv.savefig(buf_conv, format="png", dpi=300, bbox_inches="tight", facecolor="white")
         st.download_button("Download convergence (PNG, 300 dpi)", buf_conv.getvalue(),
@@ -6626,7 +7026,7 @@ if type(result).__name__ == "TrainResultRS":
         if inputs.get("refine_info_rs") is not None and inputs["refine_info_rs"].get("nll_history"):
             st.markdown("#### 4. FDM refinement NLL convergence")
             fig_pub_nll = pub_nll_convergence_figure(inputs["refine_info_rs"]["nll_history"])
-            st.image(_pub_fig_to_bytes(fig_pub_nll), use_container_width=True)
+            st.image(_pub_fig_to_bytes(fig_pub_nll), width="stretch")
             buf_nll = io.BytesIO()
             fig_pub_nll.savefig(buf_nll, format="png", dpi=300, bbox_inches="tight", facecolor="white")
             st.download_button("Download NLL convergence (PNG, 300 dpi)", buf_nll.getvalue(),
@@ -6640,7 +7040,7 @@ if type(result).__name__ == "TrainResultRS":
                 dist, C_pinn_rs[-1], _band_rs_pub,
                 title="Posterior 95% credible band (Regular-solution Ω)",
             )
-            st.image(_pub_fig_to_bytes(fig_pub_band), use_container_width=True)
+            st.image(_pub_fig_to_bytes(fig_pub_band), width="stretch")
             buf_band = io.BytesIO()
             fig_pub_band.savefig(buf_band, format="png", dpi=300, bbox_inches="tight", facecolor="white")
             st.download_button("Download credible band (PNG, 300 dpi)", buf_band.getvalue(),
@@ -6722,7 +7122,7 @@ if inputs.get("diffusion_model_mode") == "left/right D":
             {"region": label, "parameter": "D_TaNi", "normalized value": Dtmp[1, 0]},
             {"region": label, "parameter": "D_TaTa", "normalized value": Dtmp[1, 1]},
         ])
-    st.dataframe(pd.DataFrame(lr_rows), use_container_width=True)
+    st.dataframe(pd.DataFrame(lr_rows), width="stretch")
 
 if C_zero is not None:
     z1, z2, z3 = st.columns(3)
@@ -6761,7 +7161,7 @@ with tab1:
             span_um=span_um,
             C_zero_final=None if C_zero is None else C_zero[-1],
         ),
-        use_container_width=True,
+        width="stretch",
     )
     st.markdown("### Predicted vs experiment diagnostics")
     if inputs.get("diffusion_model_mode") == "left/right D":
@@ -6773,7 +7173,7 @@ with tab1:
     with st.expander("Show mixed predicted-vs-experiment plot", expanded=False):
         st.plotly_chart(
             predicted_vs_experiment_plot(C_pinn[-1], x, data.x_exp, data.c_exp),
-            use_container_width=True,
+            width="stretch",
         )
 
     region_diag_width = float(inputs.get("phase_interface_width", 0.03))
@@ -6795,7 +7195,7 @@ with tab1:
                     component_name=comp,
                     region_width=region_diag_width,
                 ),
-                use_container_width=True,
+                width="stretch",
             )
 
     with st.expander("Residual summary by component and region", expanded=False):
@@ -6807,7 +7207,7 @@ with tab1:
                 data.c_exp,
                 region_width=region_diag_width,
             ),
-            use_container_width=True,
+            width="stretch",
         )
 
     st.markdown("### Multi-time profiles, separated by time")
@@ -6832,33 +7232,33 @@ with tab1:
                     C_zero_time=None if C_zero is None else C_zero[idx_time],
                     annealing_time_h=paper_time_h_for_display,
                 ),
-                use_container_width=True,
+                width="stretch",
             )
 
     with st.expander("Show combined multi-time overview", expanded=False):
         st.plotly_chart(
             multi_time_profile_plot(x, t, C_fdm, C_pinn, indices, span_um=span_um, annealing_time_h=paper_time_h_for_display),
-            use_container_width=True,
+            width="stretch",
         )
 
 with tab2:
-    st.plotly_chart(final_difference_plot(x, C_diff[-1], span_um=span_um), use_container_width=True)
+    st.plotly_chart(final_difference_plot(x, C_diff[-1], span_um=span_um), width="stretch")
     if C_zero is not None:
         st.plotly_chart(
             zero_interaction_difference_plot(x, C_pinn[-1], C_zero[-1], span_um=span_um),
-            use_container_width=True,
+            width="stretch",
         )
     h1, h2, h3 = st.columns(3)
-    h1.plotly_chart(heatmap_diff_plot(x, t, C_diff, 0, span_um=span_um), use_container_width=True)
-    h2.plotly_chart(heatmap_diff_plot(x, t, C_diff, 1, span_um=span_um), use_container_width=True)
-    h3.plotly_chart(heatmap_diff_plot(x, t, C_diff, 2, span_um=span_um), use_container_width=True)
+    h1.plotly_chart(heatmap_diff_plot(x, t, C_diff, 0, span_um=span_um), width="stretch")
+    h2.plotly_chart(heatmap_diff_plot(x, t, C_diff, 1, span_um=span_um), width="stretch")
+    h3.plotly_chart(heatmap_diff_plot(x, t, C_diff, 2, span_um=span_um), width="stretch")
 with tab3:
     c1, c2 = st.columns(2)
-    c1.plotly_chart(loss_plot(hist), use_container_width=True)
-    c2.plotly_chart(D_history_plot(hist, D_true), use_container_width=True)
+    c1.plotly_chart(loss_plot(hist), width="stretch")
+    c2.plotly_chart(D_history_plot(hist, D_true), width="stretch")
 
     st.markdown("### Diffusion matrix")
-    st.dataframe(diffusion_matrix_table(D_true, D_pinn), use_container_width=True)
+    st.dataframe(diffusion_matrix_table(D_true, D_pinn), width="stretch")
 
     xr, tr, R = residual_grid(model, data.t_start, float(inputs["t_max"]))
     r_ni = float(np.sqrt(np.mean(R[:, :, 0] ** 2)))
@@ -6868,13 +7268,13 @@ with tab3:
     q2.metric("PDE residual RMSE Ta", f"{r_ta:.3e}")
 
     st.markdown("### Training history")
-    st.dataframe(hist, use_container_width=True)
+    st.dataframe(hist, width="stretch")
 
 with tab4:
     st.markdown(
         """
 <div class="note">
-このタブでは、実験点風データから逆推定したNi-Ta相互拡散行列の信頼度を評価します。<br>
+このタブでは、FDMによる疑似実験データから逆推定したNi-Ta相互拡散行列の信頼度を評価します。<br>
 <b>低コスト法</b>: PINN推定値の近傍で尤度を二次近似するLaplace近似。<br>
 <b>高精度・高コスト法</b>: FDM forward modelを毎回解くMetropolis MCMC。<br>
 線だけでなく、尤度からサンプルした拡散係数に基づく <b>95% credible band</b> を表示します。
@@ -6953,7 +7353,7 @@ with tab4:
                 "prior_mean_lr": prior_mean_lr,
             }
         )
-        st.dataframe(theta_lr_df, use_container_width=True)
+        st.dataframe(theta_lr_df, width="stretch")
 
         with st.spinner("Low-cost left/right reliability: 6D Laplace approximation..."):
             low_rel_lr = cached_laplace_reliability_lr(
@@ -6994,7 +7394,7 @@ with tab4:
                         "eig(cov clipped)": low_rel_lr.get("cov_eigval_clipped", np.array([])),
                     }
                 ),
-                use_container_width=True,
+                width="stretch",
             )
 
         if h_non_pd_lr:
@@ -7044,10 +7444,10 @@ with tab4:
         lr_tables = [reliability_summary_table_lr(f"Laplace left/right {len(theta_hat_lr)}D", low_rel_lr)]
         if high_rel_lr is not None and len(high_rel_lr["samples"]) > 5:
             lr_tables.append(reliability_summary_table_lr(f"MCMC left/right {len(theta_hat_lr)}D", high_rel_lr))
-        st.dataframe(pd.concat(lr_tables, ignore_index=True), use_container_width=True)
+        st.dataframe(pd.concat(lr_tables, ignore_index=True), width="stretch")
 
         if high_rel_lr is not None and len(high_rel_lr["samples"]) > 5:
-            st.plotly_chart(mcmc_trace_plot_lr(high_rel_lr["samples"]), use_container_width=True)
+            st.plotly_chart(mcmc_trace_plot_lr(high_rel_lr["samples"]), width="stretch")
 
         st.markdown("#### Left/right credible bands on profile")
         st.caption("Each posterior sample is evaluated by the two-region FDM, not by averaged single-D FDM.")
@@ -7072,7 +7472,7 @@ with tab4:
                 span_um=span_um,
                 title=f"Left/right {len(theta_hat_lr)}D Laplace credible band on Fig.11-style profile",
             ),
-            use_container_width=True,
+            width="stretch",
         )
 
         if high_rel_lr is not None and len(high_rel_lr["samples"]) > 5:
@@ -7097,7 +7497,7 @@ with tab4:
                     span_um=span_um,
                     title=f"Left/right {len(theta_hat_lr)}D MCMC credible band on Fig.11-style profile",
                 ),
-                use_container_width=True,
+                width="stretch",
             )
 
         st.info(
@@ -7162,7 +7562,7 @@ with tab4:
                     "eig(cov clipped)": low_rel.get("cov_eigval_clipped", np.array([])),
                 }
             )
-            st.dataframe(hdiag_df, use_container_width=True)
+            st.dataframe(hdiag_df, width="stretch")
 
         if h_non_pd:
             st.error(
@@ -7280,17 +7680,17 @@ with tab4:
             rel_table = low_table
 
         st.markdown("### Posterior interval of inferred interaction coefficients")
-        st.dataframe(rel_table, use_container_width=True)
+        st.dataframe(rel_table, width="stretch")
 
         st.plotly_chart(
             posterior_parameter_plot(low_rel["samples"], None if high_rel is None else high_rel["samples"]),
-            use_container_width=True,
+            width="stretch",
         )
 
         if high_rel is not None and len(high_rel["samples"]) > 5:
             st.markdown("### MCMC trace diagnostic")
             st.caption("保存されたMCMCサンプル列です。大きなドリフトが残っている場合は、burn-in不足や混合不良の可能性があります。")
-            st.plotly_chart(mcmc_trace_plot(high_rel["samples"]), use_container_width=True)
+            st.plotly_chart(mcmc_trace_plot(high_rel["samples"]), width="stretch")
 
         st.markdown("### Likelihood/posterior credible bands on profile")
         st.caption(
@@ -7317,7 +7717,7 @@ with tab4:
                 span_um=span_um,
                 title="Low-cost Laplace credible band on Fig.11-style profile",
             ),
-            use_container_width=True,
+            width="stretch",
         )
 
         if high_rel is not None and len(high_rel["samples"]) > 5:
@@ -7341,7 +7741,7 @@ with tab4:
                     span_um=span_um,
                     title="High-cost MCMC credible band on Fig.11-style profile",
                 ),
-                use_container_width=True,
+                width="stretch",
             )
 
         st.markdown("### Likelihood / posterior contour")
@@ -7384,7 +7784,7 @@ with tab4:
             )
         st.plotly_chart(
             likelihood_contour_plot(gx, gy, gz, xl, yl, theta_hat, axis_i, axis_j),
-            use_container_width=True,
+            width="stretch",
         )
 
         st.markdown(
@@ -7440,14 +7840,14 @@ This tab is designed for preparing the TOFA abstract. It summarizes whether the 
 
     st.markdown("### Known true D vs PINNs-estimated D")
     st.caption("For synthetic validation, true D is known from the FDM teacher. This table is not used for real experimental data.")
-    st.dataframe(abstract_metrics["D_compare"], use_container_width=True)
+    st.dataframe(abstract_metrics["D_compare"], width="stretch")
 
     st.markdown("### Profile error and improvement over zero-interaction")
-    st.plotly_chart(abstract_validation_plot(abstract_metrics), use_container_width=True)
-    st.dataframe(abstract_metrics["rmse_improvement"], use_container_width=True)
+    st.plotly_chart(abstract_validation_plot(abstract_metrics), width="stretch")
+    st.dataframe(abstract_metrics["rmse_improvement"], width="stretch")
 
     with st.expander("Component/region residual summary", expanded=False):
-        st.dataframe(abstract_metrics["profile_rmse"], use_container_width=True)
+        st.dataframe(abstract_metrics["profile_rmse"], width="stretch")
 
     st.download_button(
         "Download abstract D comparison CSV",
@@ -7472,9 +7872,9 @@ This tab is designed for preparing the TOFA abstract. It summarizes whether the 
         )
         st.plotly_chart(
             multi_time_pseudo_exp_rmse_plot(mt_rmse_df, paper_time_h_for_display, float(t[-1])),
-            use_container_width=True,
+            width="stretch",
         )
-        st.dataframe(mt_rmse_df, use_container_width=True)
+        st.dataframe(mt_rmse_df, width="stretch")
         st.info(
             "Multi-time pseudo-exp is active. This gives the inverse problem time-evolution constraints, "
             "which is usually more informative for cross-interdiffusion terms than a final-profile-only validation."
@@ -7551,7 +7951,7 @@ D_physical = D_normalized * L_scale^2 / t_scale
         "D_TaTa_self [m2/s]": inputs.get("self_D_Ta_phys", 0.0),
         "prior weight": inputs.get("diag_prior_weight", 0.0),
     }
-    st.dataframe(pd.DataFrame([self_info]), use_container_width=True)
+    st.dataframe(pd.DataFrame([self_info]), width="stretch")
     if (
         inputs.get("diffusion_model_mode") == "left/right D"
         and inputs.get("diag_constraint_mode") == "fix diagonal terms"
@@ -7572,7 +7972,7 @@ D_physical = D_normalized * L_scale^2 / t_scale
                     "self log normalized": [inputs["self_log_diag"][0], inputs["self_log_diag"][1]],
                 }
             ),
-            use_container_width=True,
+            width="stretch",
         )
     else:
         st.info("Self-diffusion anchors were not used in this run. Enable them in the sidebar before running if values are available.")
@@ -7589,7 +7989,7 @@ D_physical = D_normalized * L_scale^2 / t_scale
             length_um=paper_length_um_eff,
             time_h=paper_time_h_eff,
         ),
-        use_container_width=True,
+        width="stretch",
     )
     if inputs.get("diffusion_model_mode") == "left/right D":
         st.caption("Left/right region matrices in physical units:")
@@ -7602,7 +8002,7 @@ D_physical = D_normalized * L_scale^2 / t_scale
                 {"region": label, "parameter": "D_TaNi", "physical [m2/s]": Dtmp_phys[1, 0]},
                 {"region": label, "parameter": "D_TaTa", "physical [m2/s]": Dtmp_phys[1, 1]},
             ])
-        st.dataframe(pd.DataFrame(lr_phys_rows), use_container_width=True)
+        st.dataframe(pd.DataFrame(lr_phys_rows), width="stretch")
 
     st.markdown("### Upload CALPHAD / DICTRA interdiffusion matrix CSV")
     st.caption("Required columns: D_NiNi, D_NiTa, D_TaNi, D_TaTa. Optional: T_C, x_Co, x_Ni, x_Ta, frame, dependent.")
@@ -7633,10 +8033,10 @@ D_physical = D_normalized * L_scale^2 / t_scale
                 time_h=paper_time_h_eff,
             )
             st.markdown("#### Representative comparison table")
-            st.dataframe(compare_df, use_container_width=True)
-            st.plotly_chart(D_matrix_bar_plot(compare_df), use_container_width=True)
+            st.dataframe(compare_df, width="stretch")
+            st.plotly_chart(D_matrix_bar_plot(compare_df), width="stretch")
             if len(calphad_df) > 1:
-                st.plotly_chart(calphad_D_composition_plot(calphad_df, D_pinn_phys), use_container_width=True)
+                st.plotly_chart(calphad_D_composition_plot(calphad_df, D_pinn_phys), width="stretch")
 
             st.download_button(
                 "Download PINNs vs CALPHAD D comparison CSV",
@@ -7681,7 +8081,7 @@ D_physical = D_normalized * L_scale^2 / t_scale
                         {"parameter": "M_eff_TaTa", "value": M_eff[1, 1]},
                     ]
                 ),
-                use_container_width=True,
+                width="stretch",
             )
 
     st.markdown("### Upload DICTRA / CALPHAD profile CSV")
@@ -7703,7 +8103,7 @@ D_physical = D_normalized * L_scale^2 / t_scale
                     C_zero_final=None if C_zero is None else C_zero[-1],
                     span_um=span_um,
                 ),
-                use_container_width=True,
+                width="stretch",
             )
 
 
