@@ -927,8 +927,10 @@ def fdm_ternary_regular_solution(
         print(f"[RS-FDM] Warning: max(Ω)/RT = {max_omega / RT:.1f} > 2 "
               f"(spinodal region). Adaptive sub-stepping active.")
 
+    max_substeps_per_step = 50000
     for step in range(1, nsteps + 1):
         remaining = dt
+        step_substeps = 0
         while remaining > 1.0e-18:
             div_flux = _rs_compute_div_flux(
                 c_full, x, dx, mobility, theta_left, theta_right,
@@ -962,11 +964,20 @@ def fdm_ternary_regular_solution(
 
             remaining -= sub_dt
             total_substeps += 1
+            step_substeps += 1
+            if step_substeps >= max_substeps_per_step:
+                print(f"[RS-FDM] Step {step}: sub-step limit ({max_substeps_per_step}) "
+                      f"reached, remaining dt={remaining:.2e}. "
+                      f"Consider reducing dt or increasing cfl_safety.")
+                break
 
-        t += dt
+        t += (dt - remaining)
         if step % save_every == 0 or step == nsteps:
             snapshots.append(c_full.copy())
             t_saved.append(t)
+        if step % max(1, nsteps // 10) == 0:
+            print(f"[RS-FDM] Step {step}/{nsteps} (t={t:.4e}, "
+                  f"sub-steps this step: {step_substeps})")
 
     if total_substeps > nsteps:
         print(f"[RS-FDM] Adaptive sub-stepping: {total_substeps} sub-steps "
@@ -1704,12 +1715,28 @@ class MLP(nn.Module):
     ``direct_output=False`` (legacy): 3 outputs → softplus → normalize to simplex.
     ``direct_output=True``: 2 outputs [Ni, Ta] via sigmoid; Co = 1 - Ni - Ta.
     Direct mode avoids the normalization Jacobian leaking into PDE residuals.
+
+    ``n_time_fourier``: number of Fourier feature frequencies for time input.
+    When > 0, time is encoded as [t, sin(2π·f₁·t), cos(2π·f₁·t), ...] with
+    frequencies f_k = 2^(k-1) for k=1..n_time_fourier.  This breaks the spectral
+    bias that causes PINNs to underfit temporal evolution.
     """
 
-    def __init__(self, width: int, depth: int, activation: str, direct_output: bool = False):
+    def __init__(self, width: int, depth: int, activation: str,
+                 direct_output: bool = False, n_time_fourier: int = 0):
         super().__init__()
         self.direct_output = direct_output
+        self.n_time_fourier = n_time_fourier
         out_dim = 2 if direct_output else 3
+
+        # Input dim: x(1) + t(1) + 2*n_time_fourier (sin+cos per frequency)
+        in_dim = 2 + 2 * n_time_fourier
+        if n_time_fourier > 0:
+            freqs = torch.tensor(
+                [2.0 ** k for k in range(n_time_fourier)],
+                dtype=torch.float32,
+            )
+            self.register_buffer("_time_freqs", freqs)
 
         def make_activation():
             if activation == "silu":
@@ -1720,7 +1747,7 @@ class MLP(nn.Module):
 
         layers = []
         for i in range(depth):
-            layers.append(nn.Linear(2 if i == 0 else width, width))
+            layers.append(nn.Linear(in_dim if i == 0 else width, width))
             layers.append(make_activation())
         layers.append(nn.Linear(width, out_dim))
         self.net = nn.Sequential(*layers)
@@ -1730,11 +1757,17 @@ class MLP(nn.Module):
                 nn.init.xavier_normal_(m.weight)
                 nn.init.zeros_(m.bias)
 
+    def _encode_time(self, t: torch.Tensor) -> torch.Tensor:
+        """Encode time with Fourier features: [t, sin(2π·f·t), cos(2π·f·t), ...]."""
+        if self.n_time_fourier == 0:
+            return t
+        angles = 2.0 * torch.pi * self._time_freqs * t  # (N, n_freq)
+        return torch.cat([t, torch.sin(angles), torch.cos(angles)], dim=1)
+
     def forward(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
-        raw = self.net(torch.cat([x, t], dim=1))
+        t_enc = self._encode_time(t)
+        raw = self.net(torch.cat([x, t_enc], dim=1))
         if self.direct_output:
-            # Fix #1: simplex-safe projection via clamp-based rescale.
-            # sigmoid → [0,1] per component, then rescale if Ni+Ta > 1.
             ni_ta = torch.sigmoid(raw)
             total = ni_ta.sum(dim=1, keepdim=True)
             ni_ta = ni_ta / torch.clamp(total, min=1.0)
@@ -1757,9 +1790,10 @@ class TernaryDiffusionPINN(nn.Module):
         rho21_raw_init: Optional[float] = None,
         force_symmetric: bool = FORCE_SYMMETRIC_D,
         direct_output: bool = False,
+        n_time_fourier: int = 0,
     ):
         super().__init__()
-        self.net = MLP(width, depth, activation, direct_output=direct_output)
+        self.net = MLP(width, depth, activation, direct_output=direct_output, n_time_fourier=n_time_fourier)
         self.force_symmetric = force_symmetric
         self.log_d11 = nn.Parameter(torch.tensor([log_d11_init], dtype=DTYPE, device=DEVICE))
         self.log_d22 = nn.Parameter(torch.tensor([log_d22_init], dtype=DTYPE, device=DEVICE))
@@ -1872,12 +1906,13 @@ class TwoRegionTernaryDiffusionPINN(TernaryDiffusionPINN):
         rho21_raw_right_init: Optional[float] = None,
         force_symmetric: bool = FORCE_SYMMETRIC_D,
         direct_output: bool = False,
+        n_time_fourier: int = 0,
     ):
         super().__init__(
             log_d11_left_init, log_d22_left_init, rho_raw_left_init,
             width, depth, activation,
             rho21_raw_init=rho21_raw_left_init, force_symmetric=force_symmetric,
-            direct_output=direct_output,
+            direct_output=direct_output, n_time_fourier=n_time_fourier,
         )
         self.log_d11_left = self.log_d11
         self.log_d22_left = self.log_d22
@@ -2006,6 +2041,7 @@ class TernaryRegularSolutionPINN(nn.Module):
         log_M_endmembers_init: Optional[np.ndarray] = None,
         train_mobility: bool = False,
         direct_output: bool = False,
+        n_time_fourier: int = 0,
     ):
         super().__init__()
         self.n_components = 3
@@ -2017,7 +2053,7 @@ class TernaryRegularSolutionPINN(nn.Module):
         self.RT = RT
         self.use_comp_dep_mobility = log_M_endmembers_init is not None
 
-        self.net = MLP(width, depth, activation, direct_output=direct_output)
+        self.net = MLP(width, depth, activation, direct_output=direct_output, n_time_fourier=n_time_fourier)
 
         if theta_left_init is None:
             theta_left_init = np.ones(self.n_pairs, dtype=float)
@@ -2158,6 +2194,7 @@ def train_pinn_rs(
     adaptive_weights: bool = False,
     rba_update_every: int = 50,
     compile_model: bool = False,
+    loss_chart=None,
 ) -> Tuple[TernaryRegularSolutionPINN, pd.DataFrame]:
     """Train a TernaryRegularSolutionPINN model using fig11-standard TrainingData."""
     device = DEVICE
@@ -2347,6 +2384,21 @@ def train_pinn_rs(
                 f"Epoch {epoch}/{epochs}  loss={float(loss.item()):.4e}  "
                 f"data={float(loss_data.item()):.4e}  phys={float(loss_phys.item()):.4e}"
             )
+        if loss_chart is not None and epoch % max(1, epochs // 50) == 0:
+            try:
+                _df_live = pd.DataFrame(history_rows)
+                for _col in ["loss", "data", "physics", "ic"]:
+                    _df_live[_col] = _df_live[_col].replace([np.inf, -np.inf], np.nan)
+                    _df_live.loc[_df_live[_col] <= 0, _col] = np.nan
+                _fig_live = go.Figure()
+                _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["loss"], name="total", line=dict(width=2)))
+                _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["data"], name="data", line=dict(dash="dot")))
+                _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["physics"], name="physics", line=dict(dash="dot")))
+                _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["ic"], name="IC", line=dict(dash="dot")))
+                _fig_live.update_layout(title="Loss (real-time)", xaxis_title="Epoch", yaxis_title="Loss", yaxis_type="log", height=300, margin=dict(t=30, b=30))
+                loss_chart.plotly_chart(_fig_live, use_container_width=True)
+            except Exception:
+                pass
 
     train_time = time.time() - t0
     model.eval()
@@ -2869,6 +2921,8 @@ def train_pinn(
     rba_update_every: int = 50,
     direct_output: bool = False,
     compile_model: bool = False,
+    loss_chart=None,
+    n_time_fourier: int = 0,
 ) -> TrainResult:
     two_region = str(diffusion_model_mode).lower().startswith("left/right")
     if two_region:
@@ -2888,12 +2942,13 @@ def train_pinn(
             rho21_raw_right_init=rho21_raw_right_init,
             force_symmetric=force_symmetric,
             direct_output=direct_output,
+            n_time_fourier=n_time_fourier,
         ).to(DEVICE)
     else:
         model = TernaryDiffusionPINN(
             log_d11_init, log_d22_init, rho_raw_init, width, depth, activation,
             rho21_raw_init=rho21_raw_init, force_symmetric=force_symmetric,
-            direct_output=direct_output,
+            direct_output=direct_output, n_time_fourier=n_time_fourier,
         ).to(DEVICE)
 
     if compile_model and hasattr(torch, "compile"):
@@ -3090,6 +3145,22 @@ def train_pinn(
                     f"D=[[{D[0,0]:.3e}, {D[0,1]:+.3e}], "
                     f"[{D[1,0]:+.3e}, {D[1,1]:.3e}]]"
                 )
+            if loss_chart is not None:
+                try:
+                    _df_live = pd.DataFrame(hist)
+                    for _col in ["loss", "data", "physics", "ic", "bc"]:
+                        _df_live[_col] = _df_live[_col].replace([np.inf, -np.inf], np.nan)
+                        _df_live.loc[_df_live[_col] <= 0, _col] = np.nan
+                    _fig_live = go.Figure()
+                    _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["loss"], name="total", line=dict(width=2)))
+                    _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["data"], name="data", line=dict(dash="dot")))
+                    _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["physics"], name="physics", line=dict(dash="dot")))
+                    _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["ic"], name="IC", line=dict(dash="dot")))
+                    _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["bc"], name="BC", line=dict(dash="dot")))
+                    _fig_live.update_layout(title="Loss (real-time)", xaxis_title="Epoch", yaxis_title="Loss", yaxis_type="log", height=300, margin=dict(t=30, b=30))
+                    loss_chart.plotly_chart(_fig_live, use_container_width=True)
+                except Exception:
+                    pass
 
     return TrainResult(model=model, data=data, history=pd.DataFrame(hist), train_time=time.time() - t0)
 
@@ -5971,7 +6042,7 @@ Powell 法で最適化し、Hessian から Laplace 近似の事後分布 $\mathc
     activation = st.selectbox("activation", ["tanh", "silu", "gelu"], index=0)
     epochs = st.slider("epochs", 300, 15000, 6000, 100)
     lr = st.select_slider(
-        "learning rate", options=[1e-4, 3e-4, 1e-3, 3e-3], value=3e-4,
+        "learning rate", options=[1e-4, 3e-4, 1e-3, 3e-3], value=1e-4,
         format_func=lambda v: f"{v:.0e}"
     )
 
@@ -6155,7 +6226,7 @@ D_norm = D_phys * t_scale / L_scale^2
         w_data = st.slider("w_data", 0.1, 100.0, 25.0, 0.1)
         w_ic = st.slider("w_ic", 0.1, 100.0, 12.0, 0.1)
         w_bc = st.slider("w_bc", 0.1, 100.0, 12.0, 0.1)
-        w_phys = st.slider("w_physics", 0.01, 100.0, 0.1, 0.01)
+        w_phys = st.slider("w_physics", 0.01, 100.0, 1.0, 0.01)
         ui_adaptive_weights = st.checkbox(
             "Self-adaptive loss weighting (RBA)",
             value=False,
@@ -6167,11 +6238,22 @@ D_norm = D_phys * t_scale / L_scale^2
         )
         ui_direct_output = st.checkbox(
             "Direct [Ni, Ta] output (no simplex normalize)",
-            value=False,
+            value=True,
             help=(
                 "Output Ni, Ta directly via sigmoid; Co = 1 − Ni − Ta. "
                 "Avoids the normalization Jacobian that leaks into PDE residuals "
                 "when using softplus + normalize."
+            ),
+        )
+        ui_n_time_fourier = st.select_slider(
+            "Time Fourier features",
+            options=[0, 2, 4, 6, 8],
+            value=4,
+            help=(
+                "Number of Fourier frequency levels for time input encoding. "
+                "Encodes t as [t, sin(2πf₁t), cos(2πf₁t), ...] with fₖ = 2^(k−1). "
+                "Breaks the spectral bias that causes PINNs to underfit "
+                "temporal evolution. 0 = disabled (legacy), 4 = recommended."
             ),
         )
         ui_torch_compile = st.checkbox(
@@ -6574,28 +6656,36 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
             log_M_endmembers_init=log_M_endmembers_init,
             train_mobility=rs_train_mob,
             direct_output=bool(ui_direct_output),
+            n_time_fourier=int(ui_n_time_fourier),
         )
 
         st.info("Step 2/2: PINNsでΩ相互作用項を推定しています (chemical potential mode)...")
         progress = st.progress(0.0)
         status = st.empty()
-        rs_model, rs_hist, rs_train_time = train_pinn_rs(
-            data=data,
-            model=rs_model,
-            mobility=mobility_rs,
-            epochs=int(epochs),
-            lr=float(lr),
-            weights={"data": w_data, "ic": w_ic, "bc": w_bc, "phys": w_phys},
-            progress=progress,
-            status=status,
-            n_collocation=int(rs_n_collocation),
-            w_omega_prior=float(rs_w_omega_prior),
-            omega_prior_left=theta_left_init_vals,
-            omega_prior_right=theta_right_init_vals if learn_lr_omega else None,
-            adaptive_weights=bool(ui_adaptive_weights),
-            rba_update_every=50,
-            compile_model=bool(ui_torch_compile),
-        )
+        loss_chart_placeholder = st.empty()
+        try:
+            rs_model, rs_hist, rs_train_time = train_pinn_rs(
+                data=data,
+                model=rs_model,
+                mobility=mobility_rs,
+                epochs=int(epochs),
+                lr=float(lr),
+                weights={"data": w_data, "ic": w_ic, "bc": w_bc, "phys": w_phys},
+                progress=progress,
+                status=status,
+                n_collocation=int(rs_n_collocation),
+                w_omega_prior=float(rs_w_omega_prior),
+                omega_prior_left=theta_left_init_vals,
+                omega_prior_right=theta_right_init_vals if learn_lr_omega else None,
+                adaptive_weights=bool(ui_adaptive_weights),
+                rba_update_every=50,
+                compile_model=bool(ui_torch_compile),
+                loss_chart=loss_chart_placeholder,
+            )
+        except Exception as _train_err:
+            st.error(f"PINN training error: {_train_err}")
+            rs_hist = pd.DataFrame()
+            rs_train_time = 0.0
 
         theta_l_disp, theta_r_disp = rs_model.theta_display()
 
@@ -6691,58 +6781,65 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
     st.info("Step 2/2: PINNsでCo/Ni/TaプロファイルとNi-Ta相互拡散行列を推定しています。")
     progress = st.progress(0.0)
     status = st.empty()
-    result = train_pinn(
-        data=data,
-        log_d11_init=log_d11_train_init,
-        log_d22_init=log_d22_train_init,
-        rho_raw_init=rho_raw_init,
-        width=width,
-        depth=depth,
-        activation=activation,
-        epochs=epochs,
-        lr=lr,
-        weights={"data": w_data, "ic": w_ic, "bc": w_bc, "phys": w_phys},
-        progress=progress,
-        status=status,
-        # C14 note: diag_prior_log / fix_diagonal_from_prior logic is complex
-        # because it handles single D vs left/right D vs None across 3 modes.
-        diag_prior_log=(
-            self_log_diag_lr if (
-                diffusion_model_mode == "left/right D"
-                and self_log_diag_lr is not None
-                and diag_constraint_mode in ["weak diagonal prior", "fix diagonal terms"]
-            )
-            else self_log_diag if (
-                self_log_diag is not None
-                and diag_constraint_mode in ["weak diagonal prior", "fix diagonal terms"]
-            )
-            else None
-        ),
-        diag_prior_weight=float(diag_prior_weight) if diag_constraint_mode == "weak diagonal prior" else 0.0,
-        fix_diagonal_from_prior=bool(
-            (
-                diffusion_model_mode == "left/right D"
-                and self_log_diag_lr is not None
-                and diag_constraint_mode == "fix diagonal terms"
-            )
-            or (
-                self_log_diag is not None
-                and diag_constraint_mode == "fix diagonal terms"
-            )
-        ),
-        diffusion_model_mode=str(diffusion_model_mode),
-        log_d11_right_init=float(log_d11_right_train_init),
-        log_d22_right_init=float(log_d22_right_train_init),
-        rho_raw_right_init=float(rho_raw_right_init),
-        phase_interface=0.5,
-        phase_width=float(phase_interface_width),
-        rho21_raw_init=float(rho21_raw_true) if rho21_raw_true is not None else None,
-        rho21_raw_right_init=float(rho21_raw_true_right) if rho21_raw_true_right is not None else None,
-        force_symmetric=ui_force_symmetric,
-        adaptive_weights=bool(ui_adaptive_weights),
-        direct_output=bool(ui_direct_output),
-        compile_model=bool(ui_torch_compile),
-    )
+    loss_chart_placeholder = st.empty()
+    try:
+        result = train_pinn(
+            data=data,
+            log_d11_init=log_d11_train_init,
+            log_d22_init=log_d22_train_init,
+            rho_raw_init=rho_raw_init,
+            width=width,
+            depth=depth,
+            activation=activation,
+            epochs=epochs,
+            lr=lr,
+            weights={"data": w_data, "ic": w_ic, "bc": w_bc, "phys": w_phys},
+            progress=progress,
+            status=status,
+            # C14 note: diag_prior_log / fix_diagonal_from_prior logic is complex
+            # because it handles single D vs left/right D vs None across 3 modes.
+            diag_prior_log=(
+                self_log_diag_lr if (
+                    diffusion_model_mode == "left/right D"
+                    and self_log_diag_lr is not None
+                    and diag_constraint_mode in ["weak diagonal prior", "fix diagonal terms"]
+                )
+                else self_log_diag if (
+                    self_log_diag is not None
+                    and diag_constraint_mode in ["weak diagonal prior", "fix diagonal terms"]
+                )
+                else None
+            ),
+            diag_prior_weight=float(diag_prior_weight) if diag_constraint_mode == "weak diagonal prior" else 0.0,
+            fix_diagonal_from_prior=bool(
+                (
+                    diffusion_model_mode == "left/right D"
+                    and self_log_diag_lr is not None
+                    and diag_constraint_mode == "fix diagonal terms"
+                )
+                or (
+                    self_log_diag is not None
+                    and diag_constraint_mode == "fix diagonal terms"
+                )
+            ),
+            diffusion_model_mode=str(diffusion_model_mode),
+            log_d11_right_init=float(log_d11_right_train_init),
+            log_d22_right_init=float(log_d22_right_train_init),
+            rho_raw_right_init=float(rho_raw_right_init),
+            phase_interface=0.5,
+            phase_width=float(phase_interface_width),
+            rho21_raw_init=float(rho21_raw_true) if rho21_raw_true is not None else None,
+            rho21_raw_right_init=float(rho21_raw_true_right) if rho21_raw_true_right is not None else None,
+            force_symmetric=ui_force_symmetric,
+            adaptive_weights=bool(ui_adaptive_weights),
+            direct_output=bool(ui_direct_output),
+            compile_model=bool(ui_torch_compile),
+            loss_chart=loss_chart_placeholder,
+            n_time_fourier=int(ui_n_time_fourier),
+        )
+    except Exception as _train_err:
+        st.error(f"PINN training error: {_train_err}")
+        st.stop()
 
     st.session_state.fig11_result_v12 = result
     st.session_state.fig11_inputs_v12 = {
