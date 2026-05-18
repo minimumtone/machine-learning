@@ -746,6 +746,70 @@ def make_initial_profile_ternary_rs(
     return c0
 
 
+def _rs_interdiffusion_matrix_np(
+    c_full: np.ndarray,
+    theta_pairs: np.ndarray,
+    RT: float,
+    mobility: np.ndarray,
+    use_comp_dep_M: bool = False,
+    log_M_endmembers: Optional[np.ndarray] = None,
+    eps: float = 1.0e-14,
+) -> np.ndarray:
+    """Compute interdiffusion coefficient matrix D̃(c) from Onsager coefficients.
+
+    For diagonal L_kj = M_kk δ_kj (independent-component mobility):
+        D̃_km = M_kk × ∂(μ_k - μ_ref)/∂c_m
+
+    The thermodynamic factor for regular solution:
+        k = m:  RT/c_k + RT/c_ref - 2Ω_{k,ref}
+        k ≠ m:  RT/c_ref + Ω_km - Ω_{k,ref} - Ω_{ref,m}
+
+    Unlike the Onsager form (J = M∂μ/∂z), the Fick form (J = -D̃∂c/∂z)
+    avoids artificial flux from eps-clipping of log(c).  When c_k → 0,
+    D̃_kk → ∞ but ∂c_k/∂z ∝ c_k, so the product stays bounded.
+
+    Parameters
+    ----------
+    c_full : (Nx, n_components) compositions at half-grid points.
+    theta_pairs : (Nx, n_pairs) spatially-varying Ω parameters.
+    RT : scalar.
+    mobility : (n_ind, n_ind) constant mobility matrix.
+    """
+    Nx, n_components = c_full.shape
+    n_ind = n_components - 1
+    ref = n_components - 1
+    c = np.clip(c_full, eps, 1.0)
+    c = c / np.sum(c, axis=1, keepdims=True)
+
+    Omega = np.zeros((Nx, n_components, n_components), dtype=float)
+    pairs = pair_indices_rs(n_components)
+    for p_idx, (a, b) in enumerate(pairs):
+        Omega[:, a, b] = theta_pairs[:, p_idx]
+        Omega[:, b, a] = theta_pairs[:, p_idx]
+
+    if use_comp_dep_M and log_M_endmembers is not None:
+        M_diag = _mobility_diag_from_endmembers_np(c, log_M_endmembers)
+    else:
+        M_diag = np.zeros((Nx, n_ind), dtype=float)
+        for i in range(n_ind):
+            M_diag[:, i] = mobility[i, i]
+
+    c_ref = c[:, ref]
+    D_tilde = np.zeros((Nx, n_ind, n_ind), dtype=float)
+    for k in range(n_ind):
+        for m in range(n_ind):
+            if k == m:
+                thermo_factor = RT / c[:, k] + RT / c_ref - 2.0 * Omega[:, k, ref]
+            else:
+                thermo_factor = (RT / c_ref
+                                 + Omega[:, k, m]
+                                 - Omega[:, k, ref]
+                                 - Omega[:, ref, m])
+            D_tilde[:, k, m] = M_diag[:, k] * thermo_factor
+
+    return D_tilde
+
+
 def _rs_compute_div_flux(
     c_full: np.ndarray,
     x: np.ndarray,
@@ -759,7 +823,15 @@ def _rs_compute_div_flux(
     use_comp_dep_M: bool,
     log_M_endmembers: Optional[np.ndarray],
 ) -> np.ndarray:
-    """Compute div(flux) for the RS FDM scheme. Returns (Nx, n_ind) array."""
+    """Compute div(flux) for the RS FDM scheme (Onsager form).
+
+    Uses J_k = Σ_j M_kj ∂(μ_j - μ_ref)/∂z with zero-flux Neumann BC
+    (DICTRA default for closed-system diffusion couples).
+
+    Boundary cells participate in the flux balance with one-sided
+    differences, ensuring exact discrete mass conservation:
+    Σ_j div_flux[j,k] = 0 for each component k.
+    """
     n_components = c_full.shape[1]
     n_ind = n_components - 1
     Nx = len(x)
@@ -786,12 +858,11 @@ def _rs_compute_div_flux(
 
     div_flux = np.zeros((Nx, n_ind), dtype=float)
     div_flux[1:-1] = (flux_half[1:] - flux_half[:-1]) / dx
-    # Dirichlet BC: boundary compositions are held fixed externally.
-    # div_flux at boundaries = 0 (compositions enforced after update step).
-    # Diffusion front does not reach boundaries (L_diff << L_domain/2),
-    # so Dirichlet BC is physically correct (equivalent to semi-infinite couple).
-    div_flux[0] = 0.0
-    div_flux[-1] = 0.0
+    # Closed system (zero-flux Neumann BC, DICTRA default):
+    # Boundary flux = 0, so boundary cells see one-sided flux balance.
+    # This ensures exact mass conservation: Σ div_flux × dx = 0.
+    div_flux[0] = flux_half[0] / dx          # left:  J_{1/2} - 0
+    div_flux[-1] = -flux_half[-1] / dx       # right: 0 - J_{N-3/2}
     return div_flux
 
 
@@ -810,23 +881,19 @@ def fdm_ternary_regular_solution(
     log_M_endmembers: Optional[np.ndarray] = None,
     cfl_safety: float = 0.05,
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """Staggered finite-volume solver for ternary RS diffusion (T2).
+    """DICTRA-style finite-volume solver for ternary RS diffusion.
 
-    Uses staggered grid: chemical potentials evaluated at cell centres,
-    fluxes at cell faces (half-points).  This avoids the checkerboard
-    instability that arises when both grad(mu) and div(flux) use central
-    differences on the same grid.
+    Onsager-form FDM solver: J_k = Σ_j M_kj ∂(μ_j - μ_ref)/∂z.
 
-    Boundary conditions: Dirichlet (fixed composition) at both ends.
-    The diffusion front does not reach the boundaries within the
-    simulation time (L_diff << L_domain/2), so fixed-composition BC
-    is physically equivalent to a semi-infinite diffusion couple.
-    eps_guard in the initial profile prevents log(0) singularities.
+    Boundary conditions: closed system (zero-flux Neumann BC), matching
+    DICTRA default for diffusion-couple simulations.  Boundary cells
+    participate in the flux balance via one-sided differences, ensuring
+    exact discrete mass conservation: Σ div_flux × dx = 0.
 
-    Adaptive sub-stepping: at every sub-step the divergence is computed,
-    and the sub-step size is limited so that the maximum composition
-    change per step stays below ``cfl_safety``.  This guarantees
-    stability even for large Ω or steep gradients.
+    Adaptive sub-stepping with composition-aware CFL: the sub-step size
+    is limited both by ``cfl_safety / max|div_flux|`` (standard CFL) and
+    by a positivity constraint that prevents any composition from going
+    below ``eps_floor``.
 
     If ``log_M_endmembers`` is provided (shape ``(n_ind, n_components)``),
     the mobility matrix is **composition-dependent** at each grid point:
@@ -842,9 +909,8 @@ def fdm_ternary_regular_solution(
     n_ind = n_components - 1
 
     c_full = c0_full.copy()
-    # Dirichlet BC: store initial boundary compositions for enforcement
-    c_left_fixed = c0_full[0].copy()
-    c_right_fixed = c0_full[-1].copy()
+    # Closed system (DICTRA default): no Dirichlet enforcement needed.
+    # Zero-flux Neumann BC is handled inside _rs_compute_div_flux.
     snapshots = [c_full.copy()]
     t_saved = [0.0]
     t = 0.0
@@ -875,21 +941,24 @@ def fdm_ternary_regular_solution(
             else:
                 dt_safe = remaining
 
+            # Composition-aware CFL: prevent any c_i from going negative.
+            # For each grid point where div_flux < 0 (composition decreasing),
+            # limit dt so that c_i + dt*div_flux_i >= eps_floor.
+            eps_floor = 1.0e-14
+            c_all = np.column_stack([c_full[:, :n_ind],
+                                     c_full[:, -1:]])
+            div_all = np.column_stack([div_flux,
+                                       -np.sum(div_flux, axis=1, keepdims=True)])
+            neg_mask = div_all < -1.0e-30
+            if np.any(neg_mask):
+                ratios = (c_all[neg_mask] - eps_floor) / (-div_all[neg_mask])
+                dt_comp = float(np.min(ratios))
+                if dt_comp > 0:
+                    dt_safe = min(dt_safe, dt_comp)
+
             sub_dt = min(dt_safe, remaining)
             c_full[:, :n_ind] += sub_dt * div_flux
-
-            c_clipped = sanitize_independent(c_full[:, :n_ind])
-            if not np.array_equal(c_clipped, c_full[:, :n_ind]):
-                _DIAG_COUNTERS["fdm_clip_events"] += 1
-                delta = float(np.max(np.abs(c_clipped - c_full[:, :n_ind])))
-                _DIAG_COUNTERS["fdm_clip_max_delta"] = max(
-                    _DIAG_COUNTERS["fdm_clip_max_delta"], delta)
-            c_full[:, :n_ind] = c_clipped
             c_full[:, -1] = 1.0 - np.sum(c_full[:, :n_ind], axis=1)
-
-            # Enforce Dirichlet BC: reset boundary compositions
-            c_full[0] = c_left_fixed
-            c_full[-1] = c_right_fixed
 
             remaining -= sub_dt
             total_substeps += 1
@@ -1546,18 +1615,14 @@ def make_training_data_rs(
     t_ic = np.full_like(x_ic, t_start)
     c_ic = bilinear_sample_xt(x_grid, t_grid_rs, C_fdm, x_ic, t_ic)
 
-    t_left = rng.uniform(t_start, t_max, size=(n_bc_each, 1))
-    t_right = rng.uniform(t_start, t_max, size=(n_bc_each, 1))
-    x_bc = np.vstack([np.zeros_like(t_left), np.ones_like(t_right)])
-    t_bc = np.vstack([t_left, t_right])
-    # Dirichlet BC: boundary compositions are fixed (same as FDM).
-    # Diffusion front does not reach boundaries, so fixed BC is correct.
-    c_bc = np.vstack(
-        [
-            np.tile(c_left_disp.reshape(1, -1), (n_bc_each, 1)),
-            np.tile(c_right_disp.reshape(1, -1), (n_bc_each, 1)),
-        ]
-    )
+    # RS FDM uses closed-system (zero-flux Neumann) BC, matching DICTRA.
+    # No Dirichlet BC loss for the PINN — the physics PDE residual and
+    # data/IC losses are sufficient to constrain the solution.
+    # Empty BC arrays → has_bc=False in train_pinn_rs → BC loss skipped.
+    n_ind_disp = c_left_disp.shape[0]
+    x_bc = np.zeros((0, 1), dtype=float)
+    t_bc = np.zeros((0, 1), dtype=float)
+    c_bc = np.zeros((0, n_ind_disp), dtype=float)
 
     x_f = rng.uniform(0.0, 1.0, size=(n_f, 1))
     t_f = rng.uniform(t_start, t_max, size=(n_f, 1))
