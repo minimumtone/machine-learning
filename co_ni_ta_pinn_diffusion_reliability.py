@@ -786,10 +786,12 @@ def _rs_compute_div_flux(
 
     div_flux = np.zeros((Nx, n_ind), dtype=float)
     div_flux[1:-1] = (flux_half[1:] - flux_half[:-1]) / dx
-    # Neumann (zero-flux) BC: no flux through domain walls.
-    # Prevents boundary spikes from extreme log(c) chemical potentials.
-    div_flux[0] = flux_half[0] / dx
-    div_flux[-1] = -flux_half[-1] / dx
+    # Dirichlet BC: boundary compositions are held fixed externally.
+    # div_flux at boundaries = 0 (compositions enforced after update step).
+    # Diffusion front does not reach boundaries (L_diff << L_domain/2),
+    # so Dirichlet BC is physically correct (equivalent to semi-infinite couple).
+    div_flux[0] = 0.0
+    div_flux[-1] = 0.0
     return div_flux
 
 
@@ -815,9 +817,11 @@ def fdm_ternary_regular_solution(
     instability that arises when both grad(mu) and div(flux) use central
     differences on the same grid.
 
-    Boundary conditions: Neumann (zero-flux) at both ends of the domain.
-    This prevents boundary spikes caused by extreme log(c) chemical
-    potentials when compositions are near 0 or 1.
+    Boundary conditions: Dirichlet (fixed composition) at both ends.
+    The diffusion front does not reach the boundaries within the
+    simulation time (L_diff << L_domain/2), so fixed-composition BC
+    is physically equivalent to a semi-infinite diffusion couple.
+    eps_guard in the initial profile prevents log(0) singularities.
 
     Adaptive sub-stepping: at every sub-step the divergence is computed,
     and the sub-step size is limited so that the maximum composition
@@ -838,6 +842,9 @@ def fdm_ternary_regular_solution(
     n_ind = n_components - 1
 
     c_full = c0_full.copy()
+    # Dirichlet BC: store initial boundary compositions for enforcement
+    c_left_fixed = c0_full[0].copy()
+    c_right_fixed = c0_full[-1].copy()
     snapshots = [c_full.copy()]
     t_saved = [0.0]
     t = 0.0
@@ -879,6 +886,10 @@ def fdm_ternary_regular_solution(
                     _DIAG_COUNTERS["fdm_clip_max_delta"], delta)
             c_full[:, :n_ind] = c_clipped
             c_full[:, -1] = 1.0 - np.sum(c_full[:, :n_ind], axis=1)
+
+            # Enforce Dirichlet BC: reset boundary compositions
+            c_full[0] = c_left_fixed
+            c_full[-1] = c_right_fixed
 
             remaining -= sub_dt
             total_substeps += 1
@@ -1539,17 +1550,14 @@ def make_training_data_rs(
     t_right = rng.uniform(t_start, t_max, size=(n_bc_each, 1))
     x_bc = np.vstack([np.zeros_like(t_left), np.ones_like(t_right)])
     t_bc = np.vstack([t_left, t_right])
-    # RS FDM uses Neumann (zero-flux) BC so boundary compositions evolve.
-    # Sample actual FDM boundary values instead of fixed initial compositions.
-    c_bc_left = bilinear_sample_xt(
-        x_grid, t_grid_rs, C_fdm,
-        np.zeros((n_bc_each, 1)), t_left,
+    # Dirichlet BC: boundary compositions are fixed (same as FDM).
+    # Diffusion front does not reach boundaries, so fixed BC is correct.
+    c_bc = np.vstack(
+        [
+            np.tile(c_left_disp.reshape(1, -1), (n_bc_each, 1)),
+            np.tile(c_right_disp.reshape(1, -1), (n_bc_each, 1)),
+        ]
     )
-    c_bc_right = bilinear_sample_xt(
-        x_grid, t_grid_rs, C_fdm,
-        np.ones((n_bc_each, 1)), t_right,
-    )
-    c_bc = np.vstack([c_bc_left, c_bc_right])
 
     x_f = rng.uniform(0.0, 1.0, size=(n_f, 1))
     t_f = rng.uniform(t_start, t_max, size=(n_f, 1))
