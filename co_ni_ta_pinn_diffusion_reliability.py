@@ -6618,25 +6618,8 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
         )
 
         refine_info_rs = None
-        if do_fdm_refine:
-            st.info("FDM順問題による尤度でΩを再最適化しています...")
-            refine_status = st.empty()
-            refine_bar = st.progress(0.0)
-            _omega_pair_names = ["Ω_CoNi", "Ω_CoTa", "Ω_NiTa"]
-            theta_refined, refine_info_rs = refine_omega_by_fdm_likelihood(
-                nll_fun_rs, theta_hat_rs, maxiter=int(fdm_refine_maxiter), verbose=False,
-                progress_status=refine_status, progress_bar=refine_bar,
-                pair_names=_omega_pair_names,
-            )
-            if np.all(np.isfinite(theta_refined)):
-                theta_hat_rs = theta_refined
-                overwrite_model_omega_from_theta(rs_model, theta_hat_rs, learn_lr_omega)
-            _ri = refine_info_rs
-            st.success(
-                f"FDM refinement 完了: NLL {_ri['nll_before']:.2f} → {_ri['nll_after']:.2f}  "
-                f"({_ri['nfev']} evals, {_ri.get('elapsed_s', 0):.1f}s, "
-                f"{'converged' if _ri['success'] else 'maxiter reached'})"
-            )
+        # FDM refinement is deferred to the result display section
+        # so the user can inspect profiles immediately after PINN training.
 
         rs_result = TrainResultRS(
             model=rs_model,
@@ -6652,7 +6635,10 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
             "use_chemical_potential": True,
             "learn_lr_omega": bool(learn_lr_omega),
             "theta_hat_rs": theta_hat_rs.tolist(),
-            "refine_info_rs": refine_info_rs,
+            "refine_info_rs": None,
+            "do_fdm_refine": bool(do_fdm_refine),
+            "fdm_refine_maxiter": int(fdm_refine_maxiter),
+            "prior_mean_rs": prior_mean_rs.tolist(),
             "fdm_teacher_mode": str(fdm_teacher_mode),
             "span_um": span_um,
             "noise": noise,
@@ -6873,6 +6859,59 @@ if type(result).__name__ == "TrainResultRS":
         rc1.metric("NLL before", f"{ri['nll_before']:.2f}")
         rc2.metric("NLL after", f"{ri['nll_after']:.2f}")
         rc3.metric("Evaluations", f"{ri['nfev']}")
+    elif inputs.get("do_fdm_refine", False):
+        st.markdown("### FDM順問題による尤度でΩを再最適化")
+        st.caption(
+            "PINN学習後のΩ推定値を出発点として、FDM順問題の尤度を最小化してΩを精密化します。"
+        )
+        if st.button("Ωを再最適化する", key="btn_fdm_refine_rs"):
+            _eg_ref = 5.0e-3
+            c0_full_ref = make_initial_profile_ternary_rs(
+                x,
+                np.array([1.0 - _eg_ref, _eg_ref / 2, _eg_ref / 2]),
+                np.array([_eg_ref / 2, 0.9, 0.1]),
+                x0=0.5, width=float(inputs["phase_interface_width"]),
+            )
+            _learn_lr = bool(inputs["learn_lr_omega"])
+            _prior_mean = np.array(inputs["prior_mean_rs"], dtype=float)
+            nll_fun_ref = lambda th: gaussian_nll_multitime_rs(
+                th, 3, _learn_lr, c0_full_ref, x,
+                rs_data.x_exp_all, rs_data.t_exp_all, rs_data.c_exp_all,
+                sigma=float(inputs["rs_like_sigma"]),
+                dt=float(inputs["rs_fdm_dt"]),
+                nsteps=int(inputs["rs_fdm_nsteps"]),
+                save_every=int(inputs["rs_fdm_save_every"]),
+                mobility=rs_result.mobility,
+                RT=float(inputs["rs_RT"]),
+                x_interface=0.5,
+                omega_width=float(inputs.get("rs_omega_blend_width", inputs["phase_interface_width"])),
+                prior_mean=_prior_mean, prior_std=5.0,
+                log_M_endmembers=inputs.get("log_M_endmembers"),
+            )
+            _theta_hat = np.array(inputs["theta_hat_rs"], dtype=float)
+            st.info("FDM順問題による尤度でΩを再最適化しています...")
+            refine_status = st.empty()
+            refine_bar = st.progress(0.0)
+            _omega_pair_names = ["Ω_CoNi", "Ω_CoTa", "Ω_NiTa"]
+            theta_refined, refine_info = refine_omega_by_fdm_likelihood(
+                nll_fun_ref, _theta_hat,
+                maxiter=int(inputs.get("fdm_refine_maxiter", 180)),
+                verbose=False,
+                progress_status=refine_status, progress_bar=refine_bar,
+                pair_names=_omega_pair_names,
+            )
+            if np.all(np.isfinite(theta_refined)):
+                overwrite_model_omega_from_theta(rs_model, theta_refined, _learn_lr)
+                inputs["theta_hat_rs"] = theta_refined.tolist()
+            inputs["refine_info_rs"] = refine_info
+            st.session_state.fig11_inputs_v12 = inputs
+            _ri = refine_info
+            st.success(
+                f"FDM refinement 完了: NLL {_ri['nll_before']:.2f} → {_ri['nll_after']:.2f}  "
+                f"({_ri['nfev']} evals, {_ri.get('elapsed_s', 0):.1f}s, "
+                f"{'converged' if _ri['success'] else 'maxiter reached'})"
+            )
+            safe_streamlit_rerun()
 
     tab_rs1, tab_rs2, tab_rs3, tab_rs4, tab_rs5 = st.tabs(
         ["Profiles", "Training", "Omega reliability", "Data", "Publication figures"]
