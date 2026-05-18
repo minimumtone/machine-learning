@@ -2063,18 +2063,19 @@ class TernaryRegularSolutionPINN(nn.Module):
         return self.net(x, t)
 
     def residual_train(self, x: torch.Tensor, t: torch.Tensor,
-                       mobility: torch.Tensor) -> torch.Tensor:
-        return self._residual_impl(x, t, mobility, second_derivative_graph=True, output_graph=True)
+                       mobility: torch.Tensor, t_scale: float = 1.0) -> torch.Tensor:
+        return self._residual_impl(x, t, mobility, t_scale=t_scale, second_derivative_graph=True, output_graph=True)
 
     def residual_eval(self, x: torch.Tensor, t: torch.Tensor,
-                      mobility: torch.Tensor) -> torch.Tensor:
-        return self._residual_impl(x, t, mobility, second_derivative_graph=True, output_graph=False)
+                      mobility: torch.Tensor, t_scale: float = 1.0) -> torch.Tensor:
+        return self._residual_impl(x, t, mobility, t_scale=t_scale, second_derivative_graph=True, output_graph=False)
 
     def _residual_impl(
         self,
         x: torch.Tensor,
         t: torch.Tensor,
         mobility: torch.Tensor,
+        t_scale: float,
         second_derivative_graph: bool,
         output_graph: bool,
     ) -> torch.Tensor:
@@ -2114,8 +2115,8 @@ class TernaryRegularSolutionPINN(nn.Module):
 
         if self.use_comp_dep_mobility and self.log_M_endmembers is not None:
             M_local = mobility_matrix_from_endmembers_torch(C_int, self.log_M_endmembers)
-            q0 = M_local[:, 0, 0:1] * mu0_x + M_local[:, 0, 1:2] * mu1_x
-            q1 = M_local[:, 1, 0:1] * mu0_x + M_local[:, 1, 1:2] * mu1_x
+            q0 = t_scale * (M_local[:, 0, 0:1] * mu0_x + M_local[:, 0, 1:2] * mu1_x)
+            q1 = t_scale * (M_local[:, 1, 0:1] * mu0_x + M_local[:, 1, 1:2] * mu1_x)
         else:
             q0 = mobility[0, 0] * mu0_x + mobility[0, 1] * mu1_x
             q1 = mobility[1, 0] * mu0_x + mobility[1, 1] * mu1_x
@@ -2161,7 +2162,7 @@ def train_pinn_rs(
     # Time normalization: training data uses τ = t/t_max ∈ [0,1].
     # PDE in normalized time: dc/dτ = t_max * div(M ∇μ).
     # Effective mobility for the PINN residual: M_eff = M * t_max_physical.
-    t_scale = max(float(data.rs_t_max_physical), 1.0) if data.rs_t_max_physical > 0 else 1.0
+    t_scale = float(data.rs_t_max_physical) if data.rs_t_max_physical > 0 else 1.0
     mobility_scaled = mobility * t_scale
     mobility_t = torch.tensor(mobility_scaled, dtype=torch.float32, device=device)
 
@@ -2210,7 +2211,7 @@ def train_pinn_rs(
             rng.uniform(float(data.t_grid[0]), float(data.t_grid[-1]), size=(n_collocation, 1)),
             dtype=torch.float32, device=device,
         )
-        res = model.residual_train(x_col, t_col, mobility_t)
+        res = model.residual_train(x_col, t_col, mobility_t, t_scale=t_scale)
         loss_phys = torch.mean(res ** 2)
 
         # P7 fix: explicit BC enforcement
