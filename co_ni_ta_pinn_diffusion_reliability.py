@@ -1458,8 +1458,13 @@ def make_training_data(
     x_obs = rng.uniform(0.02, 0.98, size=(n_obs, 1))
     t_obs = rng.uniform(t_start, t_max, size=(n_obs, 1))
     c_clean = bilinear_sample_xt(x_grid, t_grid, C_fdm, x_obs, t_obs)
-    c_obs = np.clip(c_clean + rng.normal(0.0, noise, size=c_clean.shape), 0.0, 1.0)
-    c_obs = c_obs / np.maximum(c_obs.sum(axis=1, keepdims=True), 1.0e-14)
+    if noise_model == "alr" and float(noise) > 0.0:
+        alr_clean = _alr_forward(c_clean, ref=0)
+        alr_noisy = alr_clean + rng.normal(0.0, float(noise), size=alr_clean.shape)
+        c_obs = _alr_inverse(alr_noisy, ref=0)
+    else:
+        c_obs = np.clip(c_clean + rng.normal(0.0, noise, size=c_clean.shape), 0.0, 1.0)
+        c_obs = c_obs / np.maximum(c_obs.sum(axis=1, keepdims=True), 1.0e-14)
 
     x_ic = rng.uniform(0.0, 1.0, size=(n_ic, 1))
     t_ic = np.full_like(x_ic, t_start)
@@ -2461,7 +2466,7 @@ def gaussian_nll_multitime_rs(  # T4: (n/2)log(2π) omitted — see gaussian_nll
             for j in range(n_components)
         ])
 
-        residual = c_pts[:, :n_ind] - c_pred[:, :n_ind]
+        residual = c_pts[:, 1:n_ind + 1] - c_pred[:, 1:n_ind + 1]
         total_nll += 0.5 * np.sum((residual / sigma_eff) ** 2)
 
     n_total = len(t_exp_1d) * n_ind
@@ -3213,19 +3218,11 @@ def gaussian_nll_multitime(
     t_exp_1d = np.asarray(t_exp_all).ravel()
     x_exp_1d = np.asarray(x_exp_all).ravel()
 
-    total_nll = 0.0
-    # C18 fix: integer index-based time matching (eliminates float tolerance)
-    t_exp_indices = np.array(
-        [min(int(np.argmin(np.abs(t_grid_fdm - t))), Cg.shape[0] - 1)
-         for t in t_exp_1d], dtype=int
-    )
-    for ti in np.unique(t_exp_indices):
-        mask = t_exp_indices == ti
-        x_pts = x_exp_1d[mask]
-        c_pts = c_exp_all[mask]
-        pred = np.column_stack([np.interp(x_pts, xg, Cg[ti, :, j]) for j in range(3)])
-        residual = c_pts[:, 1:3] - pred[:, 1:3]
-        total_nll += 0.5 * np.sum((residual / sigma_eff) ** 2)
+    # Use bilinear interpolation in both x and t to avoid
+    # nearest-neighbor time mismatch when FDM grid varies with θ.
+    pred = bilinear_sample_xt(xg, t_grid_fdm, Cg, x_exp_1d, t_exp_1d)
+    residual = c_exp_all[:, 1:3] - pred[:, 1:3]
+    total_nll = 0.5 * np.sum((residual / sigma_eff) ** 2)
 
     n_total = len(t_exp_1d) * 2
     total_nll += n_total * np.log(sigma_eff)
@@ -3787,14 +3784,14 @@ def psis_diagnostic(
     if len(exceedances) < 3:
         k_hat = 0.0
     else:
-        # PWM estimator (Hosking & Wallis, 1987) for GPD shape ξ:
-        #   β₀ = σ/(1+ξ),  β₁ = σ/((1+ξ)(2+ξ))  →  ξ = β₀/β₁ − 2
-        # consistent with Vehtari et al. (2017) PSIS thresholds
-        m = len(exceedances)
-        exc_sorted = np.sort(exceedances)
-        b0 = np.mean(exc_sorted)
-        b1 = np.sum(np.arange(m) / max(m - 1, 1) * exc_sorted) / m
-        k_hat = float(b0 / b1 - 2.0) if abs(b1) > 1e-15 else 0.0
+        # GPD shape ξ via scipy MLE (robust for all ξ).
+        # Vehtari et al. (2017) PSIS thresholds: 0.5 (marginal), 0.7 (poor).
+        from scipy.stats import genpareto
+        try:
+            xi_fit, _loc, _scale = genpareto.fit(exceedances, floc=0.0)
+            k_hat = float(xi_fit)
+        except Exception:
+            k_hat = 0.0
         k_hat = max(min(k_hat, 2.0), -0.5)
 
     weights = np.exp(log_ratios)
@@ -3844,19 +3841,20 @@ def posterior_band_from_samples(
 # Left/right 6-parameter reliability
 # =============================================================================
 
-def theta_lr_from_matrices(D_left: np.ndarray, D_right: np.ndarray) -> np.ndarray:
+def theta_lr_from_matrices(D_left: np.ndarray, D_right: np.ndarray,
+                           force_symmetric: Optional[bool] = None) -> np.ndarray:
     """Concatenated parameter representation for two-region D matrices."""
-    th_l = theta_from_D_matrix(D_left)
-    th_r = theta_from_D_matrix(D_right)
+    th_l = theta_from_D_matrix(D_left, force_symmetric=force_symmetric)
+    th_r = theta_from_D_matrix(D_right, force_symmetric=force_symmetric)
     return np.concatenate([th_l, th_r]).astype(float)
 
 
 def matrices_from_theta_lr(theta_lr: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """Return D_left, D_right from theta_lr (6 symmetric or 8 non-symmetric)."""
     theta_lr = np.asarray(theta_lr, dtype=float).reshape(-1)
-    dim1 = THETA_DIM_SINGLE
-    if theta_lr.size != 2 * dim1:
-        raise ValueError(f"theta_lr must have {2 * dim1} elements, got {theta_lr.size}")
+    dim1 = len(theta_lr) // 2
+    if dim1 not in (3, 4) or theta_lr.size != 2 * dim1:
+        raise ValueError(f"theta_lr must have 6 or 8 elements, got {theta_lr.size}")
     D_left = make_d_matrix_from_theta(theta_lr[:dim1])
     D_right = make_d_matrix_from_theta(theta_lr[dim1:])
     return D_left, D_right
@@ -3873,7 +3871,7 @@ def predict_final_profile_from_theta_lr(
 ) -> np.ndarray:
     """Final profile from left/right FDM."""
     theta_lr = np.asarray(theta_lr, dtype=float).ravel()
-    dim1 = THETA_DIM_SINGLE
+    dim1 = len(theta_lr) // 2
     th_l = theta_lr[:dim1]
     th_r = theta_lr[dim1:]
     rho21_l = float(th_l[3]) if dim1 > 3 else None
@@ -7509,7 +7507,8 @@ with tab4:
     render_mcmc_explanation_expander()
 
     if inputs.get("diffusion_model_mode") == "left/right D":
-        theta_hat_lr = theta_lr_from_matrices(D_pinn_left, D_pinn_right)
+        theta_hat_lr = theta_lr_from_matrices(D_pinn_left, D_pinn_right,
+                                                force_symmetric=inputs.get("force_symmetric"))
         st.markdown(f"### Left/right D dedicated {len(theta_hat_lr)}-parameter reliability")
         if len(theta_hat_lr) == 8:
             st.success(
@@ -7710,7 +7709,7 @@ with tab4:
         )
 
     else:
-        theta_hat = theta_from_D_matrix(D_pinn)
+        theta_hat = theta_from_D_matrix(D_pinn, force_symmetric=inputs.get("force_symmetric"))
         like_sigma_eff = float(inputs["like_sigma"])
         rel_nx_eff = int(inputs["rel_nx"])
         rel_nt_eff = int(inputs["rel_nt"])
