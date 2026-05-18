@@ -971,7 +971,7 @@ def fdm_ternary_regular_solution(
                       f"Consider reducing dt or increasing cfl_safety.")
                 break
 
-        t += dt
+        t += (dt - remaining)
         if step % save_every == 0 or step == nsteps:
             snapshots.append(c_full.copy())
             t_saved.append(t)
@@ -6042,7 +6042,7 @@ Powell 法で最適化し、Hessian から Laplace 近似の事後分布 $\mathc
     activation = st.selectbox("activation", ["tanh", "silu", "gelu"], index=0)
     epochs = st.slider("epochs", 300, 15000, 6000, 100)
     lr = st.select_slider(
-        "learning rate", options=[1e-4, 3e-4, 1e-3, 3e-3], value=3e-4,
+        "learning rate", options=[1e-4, 3e-4, 1e-3, 3e-3], value=1e-4,
         format_func=lambda v: f"{v:.0e}"
     )
 
@@ -6226,7 +6226,7 @@ D_norm = D_phys * t_scale / L_scale^2
         w_data = st.slider("w_data", 0.1, 100.0, 25.0, 0.1)
         w_ic = st.slider("w_ic", 0.1, 100.0, 12.0, 0.1)
         w_bc = st.slider("w_bc", 0.1, 100.0, 12.0, 0.1)
-        w_phys = st.slider("w_physics", 0.01, 100.0, 0.1, 0.01)
+        w_phys = st.slider("w_physics", 0.01, 100.0, 1.0, 0.01)
         ui_adaptive_weights = st.checkbox(
             "Self-adaptive loss weighting (RBA)",
             value=False,
@@ -6238,7 +6238,7 @@ D_norm = D_phys * t_scale / L_scale^2
         )
         ui_direct_output = st.checkbox(
             "Direct [Ni, Ta] output (no simplex normalize)",
-            value=False,
+            value=True,
             help=(
                 "Output Ni, Ta directly via sigmoid; Co = 1 − Ni − Ta. "
                 "Avoids the normalization Jacobian that leaks into PDE residuals "
