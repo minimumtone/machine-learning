@@ -1409,6 +1409,7 @@ class TrainingData:
     c_exp_all: np.ndarray
     exp_time_indices: np.ndarray
     rs_t_max_physical: float = 0.0
+    fickian_t_max_physical: float = 0.0
 
 
 def make_training_data(
@@ -1462,9 +1463,17 @@ def make_training_data(
         )
         D_true_left = D_true
         D_true_right = D_true
+    # Time normalization: map t to [0, 1] so that x and t have comparable scales.
+    # Without this, Xavier + tanh networks respond almost exclusively to x ∈ [0,1]
+    # while t ∈ [0, 0.22] is effectively ignored (spectral bias → c(x) not c(x,t)).
+    # Compensate in train_pinn by D_eff = D * t_max_physical.
+    fickian_t_max_physical = float(t_grid[-1])
+    if fickian_t_max_physical > 0:
+        t_grid = t_grid / fickian_t_max_physical
+    t_max = float(t_grid[-1])  # = 1.0 after normalization
     # C16 note: t_grid[1] depends on nt_fdm and can vary substantially.
     # Using it as a floor means t_start may be unexpectedly large for coarse grids.
-    t_start = max(float(t_start_fraction * t_max), float(t_grid[1]))
+    t_start = max(float(t_start_fraction * t_max), float(t_grid[1]) if len(t_grid) > 1 else 0.0)
 
     x_obs = rng.uniform(0.02, 0.98, size=(n_obs, 1))
     t_obs = rng.uniform(t_start, t_max, size=(n_obs, 1))
@@ -1548,6 +1557,7 @@ def make_training_data(
         t_exp_all=t_exp_all,
         c_exp_all=c_exp_all,
         exp_time_indices=exp_time_indices,
+        fickian_t_max_physical=fickian_t_max_physical,
     )
 
 
@@ -1820,23 +1830,26 @@ class TernaryDiffusionPINN(nn.Module):
     def forward(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
         return self.net(x, t)
 
-    def residual_train(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
+    def residual_train(self, x: torch.Tensor, t: torch.Tensor,
+                       t_scale: float = 1.0) -> torch.Tensor:
         """Training residual with full graph for backpropagation."""
-        return self._residual_impl(x, t, second_derivative_graph=True, output_graph=True)
+        return self._residual_impl(x, t, t_scale=t_scale, second_derivative_graph=True, output_graph=True)
 
-    def residual_eval(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
+    def residual_eval(self, x: torch.Tensor, t: torch.Tensor,
+                      t_scale: float = 1.0) -> torch.Tensor:
         """Evaluation residual.
 
         Second derivatives still require the first x-derivative to carry a local
         graph, but the final derivative and outputs do not retain a persistent
         higher-order graph for parameter backpropagation.
         """
-        return self._residual_impl(x, t, second_derivative_graph=True, output_graph=False)
+        return self._residual_impl(x, t, t_scale=t_scale, second_derivative_graph=True, output_graph=False)
 
     def _residual_impl(
         self,
         x: torch.Tensor,
         t: torch.Tensor,
+        t_scale: float,
         second_derivative_graph: bool,
         output_graph: bool,
     ) -> torch.Tensor:
@@ -1862,8 +1875,8 @@ class TernaryDiffusionPINN(nn.Module):
         )[0]
 
         D = self.diffusion_matrix()
-        q_ni = D[0, 0] * ni_x + D[0, 1] * ta_x
-        q_ta = D[1, 0] * ni_x + D[1, 1] * ta_x
+        q_ni = t_scale * (D[0, 0] * ni_x + D[0, 1] * ta_x)
+        q_ta = t_scale * (D[1, 0] * ni_x + D[1, 1] * ta_x)
 
         q_ni_x = torch.autograd.grad(
             q_ni, x, torch.ones_like(q_ni), create_graph=output_graph, retain_graph=True
@@ -1954,7 +1967,7 @@ class TwoRegionTernaryDiffusionPINN(TernaryDiffusionPINN):
     def diffusion_matrix(self) -> torch.Tensor:
         return 0.5 * (self.diffusion_matrix_left() + self.diffusion_matrix_right())
 
-    def _residual_impl(self, x: torch.Tensor, t: torch.Tensor, second_derivative_graph: bool, output_graph: bool) -> torch.Tensor:
+    def _residual_impl(self, x: torch.Tensor, t: torch.Tensor, t_scale: float, second_derivative_graph: bool, output_graph: bool) -> torch.Tensor:
         x = x.clone().detach().requires_grad_(True)
         t = t.clone().detach().requires_grad_(True)
 
@@ -1977,8 +1990,8 @@ class TwoRegionTernaryDiffusionPINN(TernaryDiffusionPINN):
         d21 = (1.0 - s) * Dl[1, 0] + s * Dr[1, 0]
         d22 = (1.0 - s) * Dl[1, 1] + s * Dr[1, 1]
 
-        q_ni = d11 * ni_x + d12 * ta_x
-        q_ta = d21 * ni_x + d22 * ta_x
+        q_ni = t_scale * (d11 * ni_x + d12 * ta_x)
+        q_ta = t_scale * (d21 * ni_x + d22 * ta_x)
         q_ni_x = torch.autograd.grad(q_ni, x, torch.ones_like(q_ni), create_graph=output_graph, retain_graph=True)[0]
         q_ta_x = torch.autograd.grad(q_ta, x, torch.ones_like(q_ta), create_graph=output_graph, retain_graph=True)[0]
         return torch.cat([ni_t - q_ni_x, ta_t - q_ta_x], dim=1)
@@ -2983,6 +2996,11 @@ def train_pinn(
     )
     mse = nn.MSELoss()
 
+    # Time normalization: training data uses τ = t/t_max ∈ [0,1].
+    # PDE in normalized time: dc/dτ = t_max * D ∇²c.
+    # Effective diffusivity for the PINN residual: D_eff = D * t_max_physical.
+    fickian_t_scale = float(data.fickian_t_max_physical) if data.fickian_t_max_physical > 0 else 1.0
+
     x_obs, t_obs, c_obs = to_tensor(data.x_obs), to_tensor(data.t_obs), to_tensor(data.c_obs)
     x_ic, t_ic, c_ic = to_tensor(data.x_ic), to_tensor(data.t_ic), to_tensor(data.c_ic)
     x_bc, t_bc, c_bc = to_tensor(data.x_bc), to_tensor(data.t_bc), to_tensor(data.c_bc)
@@ -3004,7 +3022,7 @@ def train_pinn(
         loss_data = mse(model(x_obs, t_obs), c_obs)
         loss_ic = mse(model(x_ic, t_ic), c_ic)
         loss_bc = mse(model(x_bc, t_bc), c_bc)
-        res = model.residual_train(x_f, t_f)
+        res = model.residual_train(x_f, t_f, t_scale=fickian_t_scale)
         loss_phys = torch.mean(res * res)
 
         loss_diag_prior = torch.tensor(0.0, dtype=DTYPE, device=DEVICE)
@@ -3177,6 +3195,7 @@ def residual_grid(
     nx: int = 100,
     nt: int = 70,
     chunk_size: int = 1024,
+    t_scale: float = 1.0,
 ):
     """Evaluate residual map in chunks.
 
@@ -3192,7 +3211,7 @@ def residual_grid(
     chunks = []
     for start in range(0, len(Xf), int(chunk_size)):
         end = min(start + int(chunk_size), len(Xf))
-        R_chunk = model.residual_eval(to_tensor(Xf[start:end]), to_tensor(Tf[start:end]))
+        R_chunk = model.residual_eval(to_tensor(Xf[start:end]), to_tensor(Tf[start:end]), t_scale=t_scale)
         chunks.append(R_chunk.detach().cpu().numpy())
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
@@ -7557,7 +7576,9 @@ with tab3:
     st.markdown("### Diffusion matrix")
     st.dataframe(diffusion_matrix_table(D_true, D_pinn), use_container_width=True)
 
-    xr, tr, R = residual_grid(model, data.t_start, float(inputs["t_max"]))
+    _fickian_t_scale = float(data.fickian_t_max_physical) if data.fickian_t_max_physical > 0 else 1.0
+    xr, tr, R = residual_grid(model, data.t_start, float(data.t_grid[-1]),
+                               t_scale=_fickian_t_scale)
     r_ni = float(np.sqrt(np.mean(R[:, :, 0] ** 2)))
     r_ta = float(np.sqrt(np.mean(R[:, :, 1] ** 2)))
     q1, q2 = st.columns(2)
@@ -7821,6 +7842,8 @@ with tab4:
         else:
             prior_mean = prior_mean_raw[:len(theta_hat)] if len(prior_mean_raw) >= len(theta_hat) else np.pad(prior_mean_raw, (0, len(theta_hat) - len(prior_mean_raw)))
         prior_std_eff = float(inputs["prior_std"])
+        # t_exp_all is in normalized time [0,1]; FDM NLL needs physical time.
+        _t_exp_physical_fick = data.t_exp_all * data.fickian_t_max_physical if data.fickian_t_max_physical > 0 else data.t_exp_all
 
         with st.spinner("Low-cost reliability: Laplace approximation from likelihood curvature..."):
             low_rel = cached_laplace_reliability(
@@ -7838,7 +7861,7 @@ with tab4:
                 seed=int(inputs["seed"]),
                 # P4 fix: pass multitime data for full-time NLL evaluation
                 x_exp_all=data.x_exp_all,
-                t_exp_all=data.t_exp_all,
+                t_exp_all=_t_exp_physical_fick,
                 c_exp_all=data.c_exp_all,
             )
 
@@ -7896,7 +7919,7 @@ with tab4:
                     max_eval=min(200, int(inputs["laplace_samples"])),
                     # P4 fix: pass multitime data
                     x_exp_all=data.x_exp_all,
-                    t_exp_all=data.t_exp_all,
+                    t_exp_all=_t_exp_physical_fick,
                     c_exp_all=data.c_exp_all,
                 )
             pk = psis_result["pareto_k"]
@@ -7944,7 +7967,7 @@ with tab4:
                     marginalize_sigma=bool(inputs.get("marginalize_sigma", False)),
                     # P4 fix: pass multitime data for full-time NLL evaluation
                     x_exp_all=data.x_exp_all,
-                    t_exp_all=data.t_exp_all,
+                    t_exp_all=_t_exp_physical_fick,
                     c_exp_all=data.c_exp_all,
                 )
 
