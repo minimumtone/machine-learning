@@ -2308,10 +2308,10 @@ def train_pinn_rs(
                 gn = torch.sqrt(sum(g.norm() ** 2 for g in grads if g is not None))
                 gnorms.append(max(float(gn), 1.0e-12))
             mean_gn = sum(gnorms) / len(gnorms)
-            base_w_list = [weights.get("data", 25.0), weights.get("ic", 12.0)]
+            base_w_list = [w_data, w_ic]
             if has_bc:
-                base_w_list.append(weights.get("bc", 12.0))
-            base_w_list.append(weights.get("phys", 10.0))
+                base_w_list.append(w_bc)
+            base_w_list.append(w_phys)
             new_w = [b * mean_gn / gn for b, gn in zip(base_w_list, gnorms)]
             if has_bc:
                 w_data, w_ic, w_bc, w_phys = new_w
