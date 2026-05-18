@@ -2158,6 +2158,7 @@ def train_pinn_rs(
     adaptive_weights: bool = False,
     rba_update_every: int = 50,
     compile_model: bool = False,
+    loss_chart=None,
 ) -> Tuple[TernaryRegularSolutionPINN, pd.DataFrame]:
     """Train a TernaryRegularSolutionPINN model using fig11-standard TrainingData."""
     device = DEVICE
@@ -2347,6 +2348,15 @@ def train_pinn_rs(
                 f"Epoch {epoch}/{epochs}  loss={float(loss.item()):.4e}  "
                 f"data={float(loss_data.item()):.4e}  phys={float(loss_phys.item()):.4e}"
             )
+        if loss_chart is not None and epoch % max(1, epochs // 50) == 0:
+            _df_live = pd.DataFrame(history_rows)
+            _fig_live = go.Figure()
+            _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["loss"], name="total", line=dict(width=2)))
+            _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["data"], name="data", line=dict(dash="dot")))
+            _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["physics"], name="physics", line=dict(dash="dot")))
+            _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["ic"], name="IC", line=dict(dash="dot")))
+            _fig_live.update_layout(title="Loss (real-time)", xaxis_title="Epoch", yaxis_title="Loss", yaxis_type="log", height=300, margin=dict(t=30, b=30))
+            loss_chart.plotly_chart(_fig_live, use_container_width=True)
 
     train_time = time.time() - t0
     model.eval()
@@ -2869,6 +2879,7 @@ def train_pinn(
     rba_update_every: int = 50,
     direct_output: bool = False,
     compile_model: bool = False,
+    loss_chart=None,
 ) -> TrainResult:
     two_region = str(diffusion_model_mode).lower().startswith("left/right")
     if two_region:
@@ -3090,6 +3101,16 @@ def train_pinn(
                     f"D=[[{D[0,0]:.3e}, {D[0,1]:+.3e}], "
                     f"[{D[1,0]:+.3e}, {D[1,1]:.3e}]]"
                 )
+            if loss_chart is not None:
+                _df_live = pd.DataFrame(hist)
+                _fig_live = go.Figure()
+                _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["loss"], name="total", line=dict(width=2)))
+                _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["data"], name="data", line=dict(dash="dot")))
+                _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["physics"], name="physics", line=dict(dash="dot")))
+                _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["ic"], name="IC", line=dict(dash="dot")))
+                _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["bc"], name="BC", line=dict(dash="dot")))
+                _fig_live.update_layout(title="Loss (real-time)", xaxis_title="Epoch", yaxis_title="Loss", yaxis_type="log", height=300, margin=dict(t=30, b=30))
+                loss_chart.plotly_chart(_fig_live, use_container_width=True)
 
     return TrainResult(model=model, data=data, history=pd.DataFrame(hist), train_time=time.time() - t0)
 
@@ -6579,6 +6600,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
         st.info("Step 2/2: PINNsでΩ相互作用項を推定しています (chemical potential mode)...")
         progress = st.progress(0.0)
         status = st.empty()
+        loss_chart_placeholder = st.empty()
         rs_model, rs_hist, rs_train_time = train_pinn_rs(
             data=data,
             model=rs_model,
@@ -6595,6 +6617,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
             adaptive_weights=bool(ui_adaptive_weights),
             rba_update_every=50,
             compile_model=bool(ui_torch_compile),
+            loss_chart=loss_chart_placeholder,
         )
 
         theta_l_disp, theta_r_disp = rs_model.theta_display()
@@ -6691,6 +6714,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
     st.info("Step 2/2: PINNsでCo/Ni/TaプロファイルとNi-Ta相互拡散行列を推定しています。")
     progress = st.progress(0.0)
     status = st.empty()
+    loss_chart_placeholder = st.empty()
     result = train_pinn(
         data=data,
         log_d11_init=log_d11_train_init,
@@ -6742,6 +6766,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
         adaptive_weights=bool(ui_adaptive_weights),
         direct_output=bool(ui_direct_output),
         compile_model=bool(ui_torch_compile),
+        loss_chart=loss_chart_placeholder,
     )
 
     st.session_state.fig11_result_v12 = result
