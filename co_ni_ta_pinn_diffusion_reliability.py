@@ -3852,9 +3852,9 @@ def theta_lr_from_matrices(D_left: np.ndarray, D_right: np.ndarray,
 def matrices_from_theta_lr(theta_lr: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """Return D_left, D_right from theta_lr (6 symmetric or 8 non-symmetric)."""
     theta_lr = np.asarray(theta_lr, dtype=float).reshape(-1)
-    dim1 = THETA_DIM_SINGLE
-    if theta_lr.size != 2 * dim1:
-        raise ValueError(f"theta_lr must have {2 * dim1} elements, got {theta_lr.size}")
+    dim1 = len(theta_lr) // 2
+    if dim1 not in (3, 4) or theta_lr.size != 2 * dim1:
+        raise ValueError(f"theta_lr must have 6 or 8 elements, got {theta_lr.size}")
     D_left = make_d_matrix_from_theta(theta_lr[:dim1])
     D_right = make_d_matrix_from_theta(theta_lr[dim1:])
     return D_left, D_right
@@ -3871,7 +3871,7 @@ def predict_final_profile_from_theta_lr(
 ) -> np.ndarray:
     """Final profile from left/right FDM."""
     theta_lr = np.asarray(theta_lr, dtype=float).ravel()
-    dim1 = THETA_DIM_SINGLE
+    dim1 = len(theta_lr) // 2
     th_l = theta_lr[:dim1]
     th_r = theta_lr[dim1:]
     rho21_l = float(th_l[3]) if dim1 > 3 else None
