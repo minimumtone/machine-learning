@@ -1715,12 +1715,28 @@ class MLP(nn.Module):
     ``direct_output=False`` (legacy): 3 outputs → softplus → normalize to simplex.
     ``direct_output=True``: 2 outputs [Ni, Ta] via sigmoid; Co = 1 - Ni - Ta.
     Direct mode avoids the normalization Jacobian leaking into PDE residuals.
+
+    ``n_time_fourier``: number of Fourier feature frequencies for time input.
+    When > 0, time is encoded as [t, sin(2π·f₁·t), cos(2π·f₁·t), ...] with
+    frequencies f_k = 2^(k-1) for k=1..n_time_fourier.  This breaks the spectral
+    bias that causes PINNs to underfit temporal evolution.
     """
 
-    def __init__(self, width: int, depth: int, activation: str, direct_output: bool = False):
+    def __init__(self, width: int, depth: int, activation: str,
+                 direct_output: bool = False, n_time_fourier: int = 0):
         super().__init__()
         self.direct_output = direct_output
+        self.n_time_fourier = n_time_fourier
         out_dim = 2 if direct_output else 3
+
+        # Input dim: x(1) + t(1) + 2*n_time_fourier (sin+cos per frequency)
+        in_dim = 2 + 2 * n_time_fourier
+        if n_time_fourier > 0:
+            freqs = torch.tensor(
+                [2.0 ** k for k in range(n_time_fourier)],
+                dtype=torch.float32,
+            )
+            self.register_buffer("_time_freqs", freqs)
 
         def make_activation():
             if activation == "silu":
@@ -1731,7 +1747,7 @@ class MLP(nn.Module):
 
         layers = []
         for i in range(depth):
-            layers.append(nn.Linear(2 if i == 0 else width, width))
+            layers.append(nn.Linear(in_dim if i == 0 else width, width))
             layers.append(make_activation())
         layers.append(nn.Linear(width, out_dim))
         self.net = nn.Sequential(*layers)
@@ -1741,11 +1757,17 @@ class MLP(nn.Module):
                 nn.init.xavier_normal_(m.weight)
                 nn.init.zeros_(m.bias)
 
+    def _encode_time(self, t: torch.Tensor) -> torch.Tensor:
+        """Encode time with Fourier features: [t, sin(2π·f·t), cos(2π·f·t), ...]."""
+        if self.n_time_fourier == 0:
+            return t
+        angles = 2.0 * torch.pi * self._time_freqs * t  # (N, n_freq)
+        return torch.cat([t, torch.sin(angles), torch.cos(angles)], dim=1)
+
     def forward(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
-        raw = self.net(torch.cat([x, t], dim=1))
+        t_enc = self._encode_time(t)
+        raw = self.net(torch.cat([x, t_enc], dim=1))
         if self.direct_output:
-            # Fix #1: simplex-safe projection via clamp-based rescale.
-            # sigmoid → [0,1] per component, then rescale if Ni+Ta > 1.
             ni_ta = torch.sigmoid(raw)
             total = ni_ta.sum(dim=1, keepdim=True)
             ni_ta = ni_ta / torch.clamp(total, min=1.0)
@@ -1768,9 +1790,10 @@ class TernaryDiffusionPINN(nn.Module):
         rho21_raw_init: Optional[float] = None,
         force_symmetric: bool = FORCE_SYMMETRIC_D,
         direct_output: bool = False,
+        n_time_fourier: int = 0,
     ):
         super().__init__()
-        self.net = MLP(width, depth, activation, direct_output=direct_output)
+        self.net = MLP(width, depth, activation, direct_output=direct_output, n_time_fourier=n_time_fourier)
         self.force_symmetric = force_symmetric
         self.log_d11 = nn.Parameter(torch.tensor([log_d11_init], dtype=DTYPE, device=DEVICE))
         self.log_d22 = nn.Parameter(torch.tensor([log_d22_init], dtype=DTYPE, device=DEVICE))
@@ -1883,12 +1906,13 @@ class TwoRegionTernaryDiffusionPINN(TernaryDiffusionPINN):
         rho21_raw_right_init: Optional[float] = None,
         force_symmetric: bool = FORCE_SYMMETRIC_D,
         direct_output: bool = False,
+        n_time_fourier: int = 0,
     ):
         super().__init__(
             log_d11_left_init, log_d22_left_init, rho_raw_left_init,
             width, depth, activation,
             rho21_raw_init=rho21_raw_left_init, force_symmetric=force_symmetric,
-            direct_output=direct_output,
+            direct_output=direct_output, n_time_fourier=n_time_fourier,
         )
         self.log_d11_left = self.log_d11
         self.log_d22_left = self.log_d22
@@ -2017,6 +2041,7 @@ class TernaryRegularSolutionPINN(nn.Module):
         log_M_endmembers_init: Optional[np.ndarray] = None,
         train_mobility: bool = False,
         direct_output: bool = False,
+        n_time_fourier: int = 0,
     ):
         super().__init__()
         self.n_components = 3
@@ -2028,7 +2053,7 @@ class TernaryRegularSolutionPINN(nn.Module):
         self.RT = RT
         self.use_comp_dep_mobility = log_M_endmembers_init is not None
 
-        self.net = MLP(width, depth, activation, direct_output=direct_output)
+        self.net = MLP(width, depth, activation, direct_output=direct_output, n_time_fourier=n_time_fourier)
 
         if theta_left_init is None:
             theta_left_init = np.ones(self.n_pairs, dtype=float)
@@ -2897,6 +2922,7 @@ def train_pinn(
     direct_output: bool = False,
     compile_model: bool = False,
     loss_chart=None,
+    n_time_fourier: int = 0,
 ) -> TrainResult:
     two_region = str(diffusion_model_mode).lower().startswith("left/right")
     if two_region:
@@ -2916,12 +2942,13 @@ def train_pinn(
             rho21_raw_right_init=rho21_raw_right_init,
             force_symmetric=force_symmetric,
             direct_output=direct_output,
+            n_time_fourier=n_time_fourier,
         ).to(DEVICE)
     else:
         model = TernaryDiffusionPINN(
             log_d11_init, log_d22_init, rho_raw_init, width, depth, activation,
             rho21_raw_init=rho21_raw_init, force_symmetric=force_symmetric,
-            direct_output=direct_output,
+            direct_output=direct_output, n_time_fourier=n_time_fourier,
         ).to(DEVICE)
 
     if compile_model and hasattr(torch, "compile"):
@@ -6218,6 +6245,17 @@ D_norm = D_phys * t_scale / L_scale^2
                 "when using softplus + normalize."
             ),
         )
+        ui_n_time_fourier = st.select_slider(
+            "Time Fourier features",
+            options=[0, 2, 4, 6, 8],
+            value=4,
+            help=(
+                "Number of Fourier frequency levels for time input encoding. "
+                "Encodes t as [t, sin(2πf₁t), cos(2πf₁t), ...] with fₖ = 2^(k−1). "
+                "Breaks the spectral bias that causes PINNs to underfit "
+                "temporal evolution. 0 = disabled (legacy), 4 = recommended."
+            ),
+        )
         ui_torch_compile = st.checkbox(
             "torch.compile (PyTorch 2 JIT)",
             value=False,
@@ -6618,6 +6656,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
             log_M_endmembers_init=log_M_endmembers_init,
             train_mobility=rs_train_mob,
             direct_output=bool(ui_direct_output),
+            n_time_fourier=int(ui_n_time_fourier),
         )
 
         st.info("Step 2/2: PINNsでΩ相互作用項を推定しています (chemical potential mode)...")
@@ -6796,6 +6835,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
             direct_output=bool(ui_direct_output),
             compile_model=bool(ui_torch_compile),
             loss_chart=loss_chart_placeholder,
+            n_time_fourier=int(ui_n_time_fourier),
         )
     except Exception as _train_err:
         st.error(f"PINN training error: {_train_err}")
