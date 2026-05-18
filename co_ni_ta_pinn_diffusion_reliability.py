@@ -6319,7 +6319,7 @@ D_norm = D_phys * t_scale / L_scale^2
             ["logD_NiNi vs logD_TaTa", "logD_NiNi vs rho_raw", "logD_TaTa vs rho_raw"],
         )
 
-    run = st.button("Run Fig.11-style FDM → PINN", type="primary", width="stretch")
+    run = st.button("Run Fig.11-style FDM → PINN", type="primary")
 
 
 if "fig11_result_v12" not in st.session_state:
