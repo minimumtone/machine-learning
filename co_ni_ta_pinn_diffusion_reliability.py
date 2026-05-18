@@ -47,7 +47,6 @@ import plotly.graph_objects as go
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
 import streamlit as st
 import torch
 import torch.nn as nn
@@ -747,6 +746,126 @@ def make_initial_profile_ternary_rs(
     return c0
 
 
+def _rs_interdiffusion_matrix_np(
+    c_full: np.ndarray,
+    theta_pairs: np.ndarray,
+    RT: float,
+    mobility: np.ndarray,
+    use_comp_dep_M: bool = False,
+    log_M_endmembers: Optional[np.ndarray] = None,
+    eps: float = 1.0e-14,
+) -> np.ndarray:
+    """Compute interdiffusion coefficient matrix D̃(c) from Onsager coefficients.
+
+    For diagonal L_kj = M_kk δ_kj (independent-component mobility):
+        D̃_km = M_kk × ∂(μ_k - μ_ref)/∂c_m
+
+    The thermodynamic factor for regular solution:
+        k = m:  RT/c_k + RT/c_ref - 2Ω_{k,ref}
+        k ≠ m:  RT/c_ref + Ω_km - Ω_{k,ref} - Ω_{ref,m}
+
+    Unlike the Onsager form (J = M∂μ/∂z), the Fick form (J = -D̃∂c/∂z)
+    avoids artificial flux from eps-clipping of log(c).  When c_k → 0,
+    D̃_kk → ∞ but ∂c_k/∂z ∝ c_k, so the product stays bounded.
+
+    Parameters
+    ----------
+    c_full : (Nx, n_components) compositions at half-grid points.
+    theta_pairs : (Nx, n_pairs) spatially-varying Ω parameters.
+    RT : scalar.
+    mobility : (n_ind, n_ind) constant mobility matrix.
+    """
+    Nx, n_components = c_full.shape
+    n_ind = n_components - 1
+    ref = n_components - 1
+    c = np.clip(c_full, eps, 1.0)
+    c = c / np.sum(c, axis=1, keepdims=True)
+
+    Omega = np.zeros((Nx, n_components, n_components), dtype=float)
+    pairs = pair_indices_rs(n_components)
+    for p_idx, (a, b) in enumerate(pairs):
+        Omega[:, a, b] = theta_pairs[:, p_idx]
+        Omega[:, b, a] = theta_pairs[:, p_idx]
+
+    if use_comp_dep_M and log_M_endmembers is not None:
+        M_diag = _mobility_diag_from_endmembers_np(c, log_M_endmembers)
+    else:
+        M_diag = np.zeros((Nx, n_ind), dtype=float)
+        for i in range(n_ind):
+            M_diag[:, i] = mobility[i, i]
+
+    c_ref = c[:, ref]
+    D_tilde = np.zeros((Nx, n_ind, n_ind), dtype=float)
+    for k in range(n_ind):
+        for m in range(n_ind):
+            if k == m:
+                thermo_factor = RT / c[:, k] + RT / c_ref - 2.0 * Omega[:, k, ref]
+            else:
+                thermo_factor = (RT / c_ref
+                                 + Omega[:, k, m]
+                                 - Omega[:, k, ref]
+                                 - Omega[:, ref, m])
+            D_tilde[:, k, m] = M_diag[:, k] * thermo_factor
+
+    return D_tilde
+
+
+def _rs_compute_div_flux(
+    c_full: np.ndarray,
+    x: np.ndarray,
+    dx: float,
+    mobility: np.ndarray,
+    theta_left: np.ndarray,
+    theta_right: np.ndarray,
+    RT: float,
+    x_interface: float,
+    omega_width: float,
+    use_comp_dep_M: bool,
+    log_M_endmembers: Optional[np.ndarray],
+) -> np.ndarray:
+    """Compute div(flux) for the RS FDM scheme (Onsager form).
+
+    Uses J_k = Σ_j M_kj ∂(μ_j - μ_ref)/∂z with zero-flux Neumann BC
+    (DICTRA default for closed-system diffusion couples).
+
+    Boundary cells participate in the flux balance with one-sided
+    differences, ensuring exact discrete mass conservation:
+    Σ_j div_flux[j,k] = 0 for each component k.
+    """
+    n_components = c_full.shape[1]
+    n_ind = n_components - 1
+    Nx = len(x)
+
+    c_ind = sanitize_independent(c_full[:, :n_ind])
+    c_full_safe = complete_composition_np(c_ind)
+
+    mu = diffusion_potentials_regular_solution_np(
+        c_full_safe, x, theta_left, theta_right, RT=RT,
+        x_interface=x_interface, width=omega_width,
+    )
+
+    dmu_half = (mu[1:] - mu[:-1]) / dx
+
+    if use_comp_dep_M:
+        M_full = _mobility_diag_from_endmembers_np(c_full_safe, log_M_endmembers)
+        M_half = 0.5 * (M_full[:-1] + M_full[1:])
+        flux_half = M_half * dmu_half
+    else:
+        flux_half = np.zeros((Nx - 1, n_ind), dtype=float)
+        for i_comp in range(n_ind):
+            for j_comp in range(n_ind):
+                flux_half[:, i_comp] += mobility[i_comp, j_comp] * dmu_half[:, j_comp]
+
+    div_flux = np.zeros((Nx, n_ind), dtype=float)
+    div_flux[1:-1] = (flux_half[1:] - flux_half[:-1]) / dx
+    # Closed system (zero-flux Neumann BC, DICTRA default):
+    # Boundary flux = 0, so boundary cells see one-sided flux balance.
+    # This ensures exact mass conservation: Σ div_flux × dx = 0.
+    div_flux[0] = flux_half[0] / dx          # left:  J_{1/2} - 0
+    div_flux[-1] = -flux_half[-1] / dx       # right: 0 - J_{N-3/2}
+    return div_flux
+
+
 def fdm_ternary_regular_solution(
     c0_full: np.ndarray,
     x: np.ndarray,
@@ -760,13 +879,21 @@ def fdm_ternary_regular_solution(
     omega_width: float = 0.02,
     save_every: int = 100,
     log_M_endmembers: Optional[np.ndarray] = None,
+    cfl_safety: float = 0.05,
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """Staggered finite-volume solver for ternary RS diffusion (T2).
+    """DICTRA-style finite-volume solver for ternary RS diffusion.
 
-    Uses staggered grid: chemical potentials evaluated at cell centres,
-    fluxes at cell faces (half-points).  This avoids the checkerboard
-    instability that arises when both grad(mu) and div(flux) use central
-    differences on the same grid.
+    Onsager-form FDM solver: J_k = Σ_j M_kj ∂(μ_j - μ_ref)/∂z.
+
+    Boundary conditions: closed system (zero-flux Neumann BC), matching
+    DICTRA default for diffusion-couple simulations.  Boundary cells
+    participate in the flux balance via one-sided differences, ensuring
+    exact discrete mass conservation: Σ div_flux × dx = 0.
+
+    Adaptive sub-stepping with composition-aware CFL: the sub-step size
+    is limited both by ``cfl_safety / max|div_flux|`` (standard CFL) and
+    by a positivity constraint that prevents any composition from going
+    below ``eps_floor``.
 
     If ``log_M_endmembers`` is provided (shape ``(n_ind, n_components)``),
     the mobility matrix is **composition-dependent** at each grid point:
@@ -782,62 +909,68 @@ def fdm_ternary_regular_solution(
     n_ind = n_components - 1
 
     c_full = c0_full.copy()
+    # Closed system (DICTRA default): no Dirichlet enforcement needed.
+    # Zero-flux Neumann BC is handled inside _rs_compute_div_flux.
     snapshots = [c_full.copy()]
     t_saved = [0.0]
     t = 0.0
+    total_substeps = 0
 
     if theta_right is None:
         theta_right = theta_left.copy()
 
+    # Spinodal warning: if max(Ω)/RT > 2, system may be thermodynamically unstable
+    max_omega = float(np.max(np.abs(theta_left)))
+    if theta_right is not None:
+        max_omega = max(max_omega, float(np.max(np.abs(theta_right))))
+    if RT > 0 and max_omega / RT > 2.0:
+        print(f"[RS-FDM] Warning: max(Ω)/RT = {max_omega / RT:.1f} > 2 "
+              f"(spinodal region). Adaptive sub-stepping active.")
+
     for step in range(1, nsteps + 1):
-        c_ind = sanitize_independent(c_full[:, :n_ind])
-        c_full_safe = complete_composition_np(c_ind)
+        remaining = dt
+        while remaining > 1.0e-18:
+            div_flux = _rs_compute_div_flux(
+                c_full, x, dx, mobility, theta_left, theta_right,
+                RT, x_interface, omega_width, use_comp_dep_M, log_M_endmembers,
+            )
 
-        mu = diffusion_potentials_regular_solution_np(
-            c_full_safe, x, theta_left, theta_right, RT=RT,
-            x_interface=x_interface, width=omega_width,
-        )
+            max_div = float(np.max(np.abs(div_flux)))
+            if max_div > 1.0e-30:
+                dt_safe = cfl_safety / max_div
+            else:
+                dt_safe = remaining
 
-        # --- Staggered flux at half-points (faces) ---
-        # grad(mu) at face i+1/2 = (mu[i+1] - mu[i]) / dx
-        dmu_half = (mu[1:] - mu[:-1]) / dx  # shape (Nx-1, n_ind)
+            # Composition-aware CFL: prevent any c_i from going negative.
+            # For each grid point where div_flux < 0 (composition decreasing),
+            # limit dt so that c_i + dt*div_flux_i >= eps_floor.
+            eps_floor = 1.0e-14
+            c_all = np.column_stack([c_full[:, :n_ind],
+                                     c_full[:, -1:]])
+            div_all = np.column_stack([div_flux,
+                                       -np.sum(div_flux, axis=1, keepdims=True)])
+            neg_mask = div_all < -1.0e-30
+            if np.any(neg_mask):
+                ratios = (c_all[neg_mask] - eps_floor) / (-div_all[neg_mask])
+                dt_comp = float(np.min(ratios))
+                if dt_comp > 0:
+                    dt_safe = min(dt_safe, dt_comp)
 
-        # Mobility at half-points: average of adjacent cells
-        if use_comp_dep_M:
-            M_full = _mobility_diag_from_endmembers_np(c_full_safe, log_M_endmembers)
-            M_half = 0.5 * (M_full[:-1] + M_full[1:])  # (Nx-1, n_ind)
-            flux_half = M_half * dmu_half
-        else:
-            flux_half = np.zeros((Nx - 1, n_ind), dtype=float)
-            for i_comp in range(n_ind):
-                for j_comp in range(n_ind):
-                    flux_half[:, i_comp] += mobility[i_comp, j_comp] * dmu_half[:, j_comp]
+            sub_dt = min(dt_safe, remaining)
+            c_full[:, :n_ind] += sub_dt * div_flux
+            c_full[:, -1] = 1.0 - np.sum(c_full[:, :n_ind], axis=1)
 
-        # --- Divergence at cell centres (conservative) ---
-        # div(flux)[i] = (flux[i+1/2] - flux[i-1/2]) / dx
-        div_flux = np.zeros((Nx, n_ind), dtype=float)
-        div_flux[1:-1] = (flux_half[1:] - flux_half[:-1]) / dx
-        # Boundary: div_flux[0]=div_flux[-1]=0 → c[0],c[-1] unchanged (effectively
-        # Dirichlet at initial values). True zero-flux Neumann would require
-        # ghost-cell flux treatment. For diffusion-couple bulk this is acceptable
-        # provided the domain is long enough to avoid boundary reflection (P1/P2).
-
-        c_full[:, :n_ind] += dt * div_flux
-
-        # --- Mass-conservation clip with diagnostic counter (T3, P9) ---
-        c_clipped = sanitize_independent(c_full[:, :n_ind])
-        if not np.array_equal(c_clipped, c_full[:, :n_ind]):
-            _DIAG_COUNTERS["fdm_clip_events"] += 1
-            delta = float(np.max(np.abs(c_clipped - c_full[:, :n_ind])))
-            _DIAG_COUNTERS["fdm_clip_max_delta"] = max(
-                _DIAG_COUNTERS["fdm_clip_max_delta"], delta)
-        c_full[:, :n_ind] = c_clipped
-        c_full[:, -1] = 1.0 - np.sum(c_full[:, :n_ind], axis=1)
+            remaining -= sub_dt
+            total_substeps += 1
 
         t += dt
         if step % save_every == 0 or step == nsteps:
             snapshots.append(c_full.copy())
             t_saved.append(t)
+
+    if total_substeps > nsteps:
+        print(f"[RS-FDM] Adaptive sub-stepping: {total_substeps} sub-steps "
+              f"for {nsteps} macro-steps (avg {total_substeps / nsteps:.1f}x)")
 
     return np.array(t_saved, dtype=float), np.stack(snapshots, axis=0)
 
@@ -1121,7 +1254,6 @@ def bilinear_sample_xt(
     """Vectorized bilinear interpolation in x,t for composition array (N2)."""
     xq = np.asarray(xq).ravel()
     tq = np.asarray(tq).ravel()
-    n_comp = C.shape[2]
 
     ix = np.clip(np.searchsorted(x_grid, xq) - 1, 0, len(x_grid) - 2)
     it = np.clip(np.searchsorted(t_grid, tq) - 1, 0, len(t_grid) - 2)
@@ -1446,7 +1578,9 @@ def make_training_data_rs(
     x_grid = np.linspace(0.0, 1.0, nx_fdm)
 
     # Initial profile in internal order [Ni, Ta, Co]
-    eps_guard = 1.0e-6
+    # eps_guard prevents log(0) in chemical potential; 5e-3 avoids
+    # extreme mu values at boundaries while keeping profiles sharp.
+    eps_guard = 5.0e-3
     c_left_disp = np.array([1.0 - eps_guard, eps_guard / 2, eps_guard / 2], dtype=float)
     c_left_disp /= c_left_disp.sum()
     c_right_disp = np.array([eps_guard / 2, 0.9, 0.1], dtype=float)
@@ -1481,16 +1615,14 @@ def make_training_data_rs(
     t_ic = np.full_like(x_ic, t_start)
     c_ic = bilinear_sample_xt(x_grid, t_grid_rs, C_fdm, x_ic, t_ic)
 
-    t_left = rng.uniform(t_start, t_max, size=(n_bc_each, 1))
-    t_right = rng.uniform(t_start, t_max, size=(n_bc_each, 1))
-    x_bc = np.vstack([np.zeros_like(t_left), np.ones_like(t_right)])
-    t_bc = np.vstack([t_left, t_right])
-    c_bc = np.vstack(
-        [
-            np.tile(c_left_disp.reshape(1, -1), (n_bc_each, 1)),
-            np.tile(c_right_disp.reshape(1, -1), (n_bc_each, 1)),
-        ]
-    )
+    # RS FDM uses closed-system (zero-flux Neumann) BC, matching DICTRA.
+    # No Dirichlet BC loss for the PINN — the physics PDE residual and
+    # data/IC losses are sufficient to constrain the solution.
+    # Empty BC arrays → has_bc=False in train_pinn_rs → BC loss skipped.
+    n_ind_disp = c_left_disp.shape[0]
+    x_bc = np.zeros((0, 1), dtype=float)
+    t_bc = np.zeros((0, 1), dtype=float)
+    c_bc = np.zeros((0, n_ind_disp), dtype=float)
 
     x_f = rng.uniform(0.0, 1.0, size=(n_f, 1))
     t_f = rng.uniform(t_start, t_max, size=(n_f, 1))
@@ -2200,7 +2332,7 @@ def train_pinn_rs(
     model.eval()
     if progress is not None:
         progress.progress(1.0)
-    return model, pd.DataFrame(history_rows)
+    return model, pd.DataFrame(history_rows), train_time
 
 
 def predict_rs(model: TernaryRegularSolutionPINN, x: np.ndarray, t: np.ndarray) -> np.ndarray:
@@ -3640,15 +3772,14 @@ def psis_diagnostic(
     if len(exceedances) < 3:
         k_hat = 0.0
     else:
-        # C2 fix: use PWM estimator (Hosking & Wallis, 1987) for GPD shape k̂
+        # PWM estimator (Hosking & Wallis, 1987) for GPD shape ξ:
+        #   β₀ = σ/(1+ξ),  β₁ = σ/((1+ξ)(2+ξ))  →  ξ = β₀/β₁ − 2
         # consistent with Vehtari et al. (2017) PSIS thresholds
         m = len(exceedances)
         exc_sorted = np.sort(exceedances)
-        # probability-weighted moments: b0 = mean, b1 = Σ (j/(m-1)) * x_(j)
         b0 = np.mean(exc_sorted)
         b1 = np.sum(np.arange(m) / max(m - 1, 1) * exc_sorted) / m
-        denom = b0 - 2.0 * b1
-        k_hat = float((3.0 * b0 - 4.0 * b1) / denom) if abs(denom) > 1e-15 else 0.0
+        k_hat = float(b0 / b1 - 2.0) if abs(b1) > 1e-15 else 0.0
         k_hat = max(min(k_hat, 2.0), -0.5)
 
     weights = np.exp(log_ratios)
@@ -6142,7 +6273,11 @@ D_norm = D_phys * t_scale / L_scale^2
     st.caption("Independent prior center, not automatically centered on PINN estimate.")
     prior_log_d11 = st.slider("prior mean log D_NiNi", -7.0, -1.0, -3.3, 0.05)
     prior_log_d22 = st.slider("prior mean log D_TaTa", -8.0, -1.0, -4.1, 0.05)
-    prior_rho_raw = st.slider("prior mean rho_raw", -2.5, 2.5, 0.0, 0.05)
+    prior_rho_raw = st.slider("prior mean rho₁₂_raw", -2.5, 2.5, 0.0, 0.05)
+    if not ui_force_symmetric:
+        prior_rho21_raw = st.slider("prior mean rho₂₁_raw", -2.5, 2.5, 0.0, 0.05)
+    else:
+        prior_rho21_raw = None
     prior_std = st.slider("theta prior std", 0.2, 8.0, 3.0, 0.1)
     hessian_step = st.slider("Laplace Hessian step", 0.005, 0.150, 0.035, 0.005)
     laplace_samples = st.slider("Laplace posterior samples", 200, 5000, 1200, 100)
@@ -6431,7 +6566,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
         st.info("Step 2/2: PINNsでΩ相互作用項を推定しています (chemical potential mode)...")
         progress = st.progress(0.0)
         status = st.empty()
-        rs_model, rs_hist = train_pinn_rs(
+        rs_model, rs_hist, rs_train_time = train_pinn_rs(
             data=data,
             model=rs_model,
             mobility=mobility_rs,
@@ -6460,10 +6595,11 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
 
         # C11 fix: phase_interface_width controls initial c(x) sigmoid width;
         # rs_omega_blend_width (separate slider) controls Omega spatial blending.
-        # Guard values (1e-6, 5e-7) avoid log(0) in chemical potential.
-        c_left_rs = np.array([1.0 - 1e-6, 5e-7, 5e-7], dtype=float)
+        # Guard values (5e-3) avoid log(0) in chemical potential.
+        _eg2 = 5.0e-3
+        c_left_rs = np.array([1.0 - _eg2, _eg2 / 2, _eg2 / 2], dtype=float)
         c_left_rs /= c_left_rs.sum()
-        c_right_rs = np.array([5e-7, 0.9, 0.1], dtype=float)
+        c_right_rs = np.array([_eg2 / 2, 0.9, 0.1], dtype=float)
         c_right_rs /= c_right_rs.sum()
         c0_full_rs = make_initial_profile_ternary_rs(
             data.x_grid, c_left_rs, c_right_rs,
@@ -6506,7 +6642,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
             model=rs_model,
             data=data,
             history=rs_hist,
-            train_time=0.0,
+            train_time=rs_train_time,
             mobility=mobility_rs,
         )
 
@@ -6634,7 +6770,11 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
         "like_sigma": like_sigma,
         "rel_nx": rel_nx,
         "rel_nt": rel_nt,
-        "prior_mean": np.array([prior_log_d11, prior_log_d22, prior_rho_raw], dtype=float),
+        "prior_mean": (
+            np.array([prior_log_d11, prior_log_d22, prior_rho_raw, prior_rho21_raw], dtype=float)
+            if prior_rho21_raw is not None
+            else np.array([prior_log_d11, prior_log_d22, prior_rho_raw], dtype=float)
+        ),
         "prior_std": prior_std,
         "hessian_step": hessian_step,
         "laplace_samples": laplace_samples,
@@ -6816,9 +6956,10 @@ if type(result).__name__ == "TrainResultRS":
             theta_hat_rs = np.array(inputs["theta_hat_rs"], dtype=float)
             learn_lr_omega_val = bool(inputs["learn_lr_omega"])
 
+            _eg = 5.0e-3
             c0_full_for_nll = make_initial_profile_ternary_rs(
-                x, np.array([1.0 - 1e-6, 5e-7, 5e-7]),
-                np.array([5e-7, 0.9, 0.1]),
+                x, np.array([1.0 - _eg, _eg / 2, _eg / 2]),
+                np.array([_eg / 2, 0.9, 0.1]),
                 x0=0.5, width=float(inputs["phase_interface_width"]),
             )
             nll_fun_rs = lambda th: gaussian_nll_multitime_rs(
@@ -6891,9 +7032,10 @@ if type(result).__name__ == "TrainResultRS":
 
             st.markdown("#### Posterior credible band")
             with st.spinner("Computing credible band from Omega samples..."):
+                _eg3 = 5.0e-3
                 c0_full_for_band = make_initial_profile_ternary_rs(
-                    x, np.array([1.0 - 1e-6, 5e-7, 5e-7]),
-                    np.array([5e-7, 0.9, 0.1]),
+                    x, np.array([1.0 - _eg3, _eg3 / 2, _eg3 / 2]),
+                    np.array([_eg3 / 2, 0.9, 0.1]),
                     x0=0.5, width=float(inputs["phase_interface_width"]),
                 )
                 band_progress = st.progress(0.0)
@@ -7324,15 +7466,17 @@ with tab4:
         rel_nx_eff = int(inputs["rel_nx"])
         rel_nt_eff = int(inputs["rel_nt"])
         phase_width_eff = float(inputs.get("phase_interface_width", 0.02))
-        prior_mean_3 = np.asarray(inputs["prior_mean"], dtype=float)
+        prior_mean_raw = np.asarray(inputs["prior_mean"], dtype=float)
         dim_per_region = len(theta_hat_lr) // 2
-        if dim_per_region == 4 and len(prior_mean_3) == 3:
+        if dim_per_region == 4 and len(prior_mean_raw) == 3:
             prior_mean_base = np.array(
-                [prior_mean_3[0], prior_mean_3[1], prior_mean_3[2], prior_mean_3[2]],
+                [prior_mean_raw[0], prior_mean_raw[1], prior_mean_raw[2], prior_mean_raw[2]],
                 dtype=float,
             )
+        elif len(prior_mean_raw) == dim_per_region:
+            prior_mean_base = prior_mean_raw
         else:
-            prior_mean_base = prior_mean_3
+            prior_mean_base = prior_mean_raw[:dim_per_region] if len(prior_mean_raw) >= dim_per_region else np.pad(prior_mean_raw, (0, dim_per_region - len(prior_mean_raw)))
         prior_mean_lr = np.concatenate([prior_mean_base, prior_mean_base])
         prior_std_eff = float(inputs["prior_std"])
 
@@ -7510,14 +7654,16 @@ with tab4:
         like_sigma_eff = float(inputs["like_sigma"])
         rel_nx_eff = int(inputs["rel_nx"])
         rel_nt_eff = int(inputs["rel_nt"])
-        prior_mean_3 = np.asarray(inputs["prior_mean"], dtype=float)
-        if len(theta_hat) == 4 and len(prior_mean_3) == 3:
+        prior_mean_raw = np.asarray(inputs["prior_mean"], dtype=float)
+        if len(theta_hat) == 4 and len(prior_mean_raw) == 3:
             prior_mean = np.array(
-                [prior_mean_3[0], prior_mean_3[1], prior_mean_3[2], prior_mean_3[2]],
+                [prior_mean_raw[0], prior_mean_raw[1], prior_mean_raw[2], prior_mean_raw[2]],
                 dtype=float,
             )
+        elif len(prior_mean_raw) == len(theta_hat):
+            prior_mean = prior_mean_raw
         else:
-            prior_mean = prior_mean_3
+            prior_mean = prior_mean_raw[:len(theta_hat)] if len(prior_mean_raw) >= len(theta_hat) else np.pad(prior_mean_raw, (0, len(theta_hat) - len(prior_mean_raw)))
         prior_std_eff = float(inputs["prior_std"])
 
         with st.spinner("Low-cost reliability: Laplace approximation from likelihood curvature..."):
