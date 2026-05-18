@@ -927,8 +927,10 @@ def fdm_ternary_regular_solution(
         print(f"[RS-FDM] Warning: max(Ω)/RT = {max_omega / RT:.1f} > 2 "
               f"(spinodal region). Adaptive sub-stepping active.")
 
+    max_substeps_per_step = 50000
     for step in range(1, nsteps + 1):
         remaining = dt
+        step_substeps = 0
         while remaining > 1.0e-18:
             div_flux = _rs_compute_div_flux(
                 c_full, x, dx, mobility, theta_left, theta_right,
@@ -962,11 +964,20 @@ def fdm_ternary_regular_solution(
 
             remaining -= sub_dt
             total_substeps += 1
+            step_substeps += 1
+            if step_substeps >= max_substeps_per_step:
+                print(f"[RS-FDM] Step {step}: sub-step limit ({max_substeps_per_step}) "
+                      f"reached, remaining dt={remaining:.2e}. "
+                      f"Consider reducing dt or increasing cfl_safety.")
+                break
 
         t += dt
         if step % save_every == 0 or step == nsteps:
             snapshots.append(c_full.copy())
             t_saved.append(t)
+        if step % max(1, nsteps // 10) == 0:
+            print(f"[RS-FDM] Step {step}/{nsteps} (t={t:.4e}, "
+                  f"sub-steps this step: {step_substeps})")
 
     if total_substeps > nsteps:
         print(f"[RS-FDM] Adaptive sub-stepping: {total_substeps} sub-steps "
@@ -2349,14 +2360,20 @@ def train_pinn_rs(
                 f"data={float(loss_data.item()):.4e}  phys={float(loss_phys.item()):.4e}"
             )
         if loss_chart is not None and epoch % max(1, epochs // 50) == 0:
-            _df_live = pd.DataFrame(history_rows)
-            _fig_live = go.Figure()
-            _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["loss"], name="total", line=dict(width=2)))
-            _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["data"], name="data", line=dict(dash="dot")))
-            _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["physics"], name="physics", line=dict(dash="dot")))
-            _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["ic"], name="IC", line=dict(dash="dot")))
-            _fig_live.update_layout(title="Loss (real-time)", xaxis_title="Epoch", yaxis_title="Loss", yaxis_type="log", height=300, margin=dict(t=30, b=30))
-            loss_chart.plotly_chart(_fig_live, use_container_width=True)
+            try:
+                _df_live = pd.DataFrame(history_rows)
+                for _col in ["loss", "data", "physics", "ic"]:
+                    _df_live[_col] = _df_live[_col].replace([np.inf, -np.inf], np.nan)
+                    _df_live.loc[_df_live[_col] <= 0, _col] = np.nan
+                _fig_live = go.Figure()
+                _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["loss"], name="total", line=dict(width=2)))
+                _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["data"], name="data", line=dict(dash="dot")))
+                _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["physics"], name="physics", line=dict(dash="dot")))
+                _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["ic"], name="IC", line=dict(dash="dot")))
+                _fig_live.update_layout(title="Loss (real-time)", xaxis_title="Epoch", yaxis_title="Loss", yaxis_type="log", height=300, margin=dict(t=30, b=30))
+                loss_chart.plotly_chart(_fig_live, use_container_width=True)
+            except Exception:
+                pass
 
     train_time = time.time() - t0
     model.eval()
@@ -3102,15 +3119,21 @@ def train_pinn(
                     f"[{D[1,0]:+.3e}, {D[1,1]:.3e}]]"
                 )
             if loss_chart is not None:
-                _df_live = pd.DataFrame(hist)
-                _fig_live = go.Figure()
-                _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["loss"], name="total", line=dict(width=2)))
-                _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["data"], name="data", line=dict(dash="dot")))
-                _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["physics"], name="physics", line=dict(dash="dot")))
-                _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["ic"], name="IC", line=dict(dash="dot")))
-                _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["bc"], name="BC", line=dict(dash="dot")))
-                _fig_live.update_layout(title="Loss (real-time)", xaxis_title="Epoch", yaxis_title="Loss", yaxis_type="log", height=300, margin=dict(t=30, b=30))
-                loss_chart.plotly_chart(_fig_live, use_container_width=True)
+                try:
+                    _df_live = pd.DataFrame(hist)
+                    for _col in ["loss", "data", "physics", "ic", "bc"]:
+                        _df_live[_col] = _df_live[_col].replace([np.inf, -np.inf], np.nan)
+                        _df_live.loc[_df_live[_col] <= 0, _col] = np.nan
+                    _fig_live = go.Figure()
+                    _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["loss"], name="total", line=dict(width=2)))
+                    _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["data"], name="data", line=dict(dash="dot")))
+                    _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["physics"], name="physics", line=dict(dash="dot")))
+                    _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["ic"], name="IC", line=dict(dash="dot")))
+                    _fig_live.add_trace(go.Scatter(x=_df_live["epoch"], y=_df_live["bc"], name="BC", line=dict(dash="dot")))
+                    _fig_live.update_layout(title="Loss (real-time)", xaxis_title="Epoch", yaxis_title="Loss", yaxis_type="log", height=300, margin=dict(t=30, b=30))
+                    loss_chart.plotly_chart(_fig_live, use_container_width=True)
+                except Exception:
+                    pass
 
     return TrainResult(model=model, data=data, history=pd.DataFrame(hist), train_time=time.time() - t0)
 
@@ -6601,24 +6624,29 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
         progress = st.progress(0.0)
         status = st.empty()
         loss_chart_placeholder = st.empty()
-        rs_model, rs_hist, rs_train_time = train_pinn_rs(
-            data=data,
-            model=rs_model,
-            mobility=mobility_rs,
-            epochs=int(epochs),
-            lr=float(lr),
-            weights={"data": w_data, "ic": w_ic, "bc": w_bc, "phys": w_phys},
-            progress=progress,
-            status=status,
-            n_collocation=int(rs_n_collocation),
-            w_omega_prior=float(rs_w_omega_prior),
-            omega_prior_left=theta_left_init_vals,
-            omega_prior_right=theta_right_init_vals if learn_lr_omega else None,
-            adaptive_weights=bool(ui_adaptive_weights),
-            rba_update_every=50,
-            compile_model=bool(ui_torch_compile),
-            loss_chart=loss_chart_placeholder,
-        )
+        try:
+            rs_model, rs_hist, rs_train_time = train_pinn_rs(
+                data=data,
+                model=rs_model,
+                mobility=mobility_rs,
+                epochs=int(epochs),
+                lr=float(lr),
+                weights={"data": w_data, "ic": w_ic, "bc": w_bc, "phys": w_phys},
+                progress=progress,
+                status=status,
+                n_collocation=int(rs_n_collocation),
+                w_omega_prior=float(rs_w_omega_prior),
+                omega_prior_left=theta_left_init_vals,
+                omega_prior_right=theta_right_init_vals if learn_lr_omega else None,
+                adaptive_weights=bool(ui_adaptive_weights),
+                rba_update_every=50,
+                compile_model=bool(ui_torch_compile),
+                loss_chart=loss_chart_placeholder,
+            )
+        except Exception as _train_err:
+            st.error(f"PINN training error: {_train_err}")
+            rs_hist = pd.DataFrame()
+            rs_train_time = 0.0
 
         theta_l_disp, theta_r_disp = rs_model.theta_display()
 
@@ -6715,59 +6743,63 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
     progress = st.progress(0.0)
     status = st.empty()
     loss_chart_placeholder = st.empty()
-    result = train_pinn(
-        data=data,
-        log_d11_init=log_d11_train_init,
-        log_d22_init=log_d22_train_init,
-        rho_raw_init=rho_raw_init,
-        width=width,
-        depth=depth,
-        activation=activation,
-        epochs=epochs,
-        lr=lr,
-        weights={"data": w_data, "ic": w_ic, "bc": w_bc, "phys": w_phys},
-        progress=progress,
-        status=status,
-        # C14 note: diag_prior_log / fix_diagonal_from_prior logic is complex
-        # because it handles single D vs left/right D vs None across 3 modes.
-        diag_prior_log=(
-            self_log_diag_lr if (
-                diffusion_model_mode == "left/right D"
-                and self_log_diag_lr is not None
-                and diag_constraint_mode in ["weak diagonal prior", "fix diagonal terms"]
-            )
-            else self_log_diag if (
-                self_log_diag is not None
-                and diag_constraint_mode in ["weak diagonal prior", "fix diagonal terms"]
-            )
-            else None
-        ),
-        diag_prior_weight=float(diag_prior_weight) if diag_constraint_mode == "weak diagonal prior" else 0.0,
-        fix_diagonal_from_prior=bool(
-            (
-                diffusion_model_mode == "left/right D"
-                and self_log_diag_lr is not None
-                and diag_constraint_mode == "fix diagonal terms"
-            )
-            or (
-                self_log_diag is not None
-                and diag_constraint_mode == "fix diagonal terms"
-            )
-        ),
-        diffusion_model_mode=str(diffusion_model_mode),
-        log_d11_right_init=float(log_d11_right_train_init),
-        log_d22_right_init=float(log_d22_right_train_init),
-        rho_raw_right_init=float(rho_raw_right_init),
-        phase_interface=0.5,
-        phase_width=float(phase_interface_width),
-        rho21_raw_init=float(rho21_raw_true) if rho21_raw_true is not None else None,
-        rho21_raw_right_init=float(rho21_raw_true_right) if rho21_raw_true_right is not None else None,
-        force_symmetric=ui_force_symmetric,
-        adaptive_weights=bool(ui_adaptive_weights),
-        direct_output=bool(ui_direct_output),
-        compile_model=bool(ui_torch_compile),
-        loss_chart=loss_chart_placeholder,
-    )
+    try:
+        result = train_pinn(
+            data=data,
+            log_d11_init=log_d11_train_init,
+            log_d22_init=log_d22_train_init,
+            rho_raw_init=rho_raw_init,
+            width=width,
+            depth=depth,
+            activation=activation,
+            epochs=epochs,
+            lr=lr,
+            weights={"data": w_data, "ic": w_ic, "bc": w_bc, "phys": w_phys},
+            progress=progress,
+            status=status,
+            # C14 note: diag_prior_log / fix_diagonal_from_prior logic is complex
+            # because it handles single D vs left/right D vs None across 3 modes.
+            diag_prior_log=(
+                self_log_diag_lr if (
+                    diffusion_model_mode == "left/right D"
+                    and self_log_diag_lr is not None
+                    and diag_constraint_mode in ["weak diagonal prior", "fix diagonal terms"]
+                )
+                else self_log_diag if (
+                    self_log_diag is not None
+                    and diag_constraint_mode in ["weak diagonal prior", "fix diagonal terms"]
+                )
+                else None
+            ),
+            diag_prior_weight=float(diag_prior_weight) if diag_constraint_mode == "weak diagonal prior" else 0.0,
+            fix_diagonal_from_prior=bool(
+                (
+                    diffusion_model_mode == "left/right D"
+                    and self_log_diag_lr is not None
+                    and diag_constraint_mode == "fix diagonal terms"
+                )
+                or (
+                    self_log_diag is not None
+                    and diag_constraint_mode == "fix diagonal terms"
+                )
+            ),
+            diffusion_model_mode=str(diffusion_model_mode),
+            log_d11_right_init=float(log_d11_right_train_init),
+            log_d22_right_init=float(log_d22_right_train_init),
+            rho_raw_right_init=float(rho_raw_right_init),
+            phase_interface=0.5,
+            phase_width=float(phase_interface_width),
+            rho21_raw_init=float(rho21_raw_true) if rho21_raw_true is not None else None,
+            rho21_raw_right_init=float(rho21_raw_true_right) if rho21_raw_true_right is not None else None,
+            force_symmetric=ui_force_symmetric,
+            adaptive_weights=bool(ui_adaptive_weights),
+            direct_output=bool(ui_direct_output),
+            compile_model=bool(ui_torch_compile),
+            loss_chart=loss_chart_placeholder,
+        )
+    except Exception as _train_err:
+        st.error(f"PINN training error: {_train_err}")
+        st.stop()
 
     st.session_state.fig11_result_v12 = result
     st.session_state.fig11_inputs_v12 = {
