@@ -1397,6 +1397,7 @@ class TrainingData:
     t_exp_all: np.ndarray
     c_exp_all: np.ndarray
     exp_time_indices: np.ndarray
+    rs_t_max_physical: float = 0.0
 
 
 def make_training_data(
@@ -1602,7 +1603,14 @@ def make_training_data_rs(
 
     C_fdm = _reorder_c_internal_to_display_np(C_fdm_int)
 
-    t_max = float(t_grid_rs[-1])
+    # --- Time normalization for PINN input ---
+    # RS FDM produces small t_max (e.g. 0.04) while x ∈ [0, 1].
+    # Without normalization the network cannot distinguish different times.
+    # Normalize t to [0, 1]; compensate in train_pinn_rs by M_eff = M * t_max_physical.
+    t_max_physical = float(t_grid_rs[-1])
+    if t_max_physical > 0:
+        t_grid_rs = t_grid_rs / t_max_physical
+    t_max = float(t_grid_rs[-1])  # = 1.0 after normalization
     t_start = max(float(t_start_fraction * t_max), float(t_grid_rs[1]) if len(t_grid_rs) > 1 else 0.0)
 
     x_obs = rng.uniform(0.02, 0.98, size=(n_obs, 1))
@@ -1677,6 +1685,7 @@ def make_training_data_rs(
         t_exp_all=t_exp_all,
         c_exp_all=c_exp_all,
         exp_time_indices=exp_time_indices,
+        rs_t_max_physical=t_max_physical,
     )
 
 
@@ -2149,7 +2158,12 @@ def train_pinn_rs(
     model = model.to(device)
     if compile_model and hasattr(torch, "compile"):
         model = torch.compile(model)
-    mobility_t = torch.tensor(mobility, dtype=torch.float32, device=device)
+    # Time normalization: training data uses τ = t/t_max ∈ [0,1].
+    # PDE in normalized time: dc/dτ = t_max * div(M ∇μ).
+    # Effective mobility for the PINN residual: M_eff = M * t_max_physical.
+    t_scale = max(float(data.rs_t_max_physical), 1.0) if data.rs_t_max_physical > 0 else 1.0
+    mobility_scaled = mobility * t_scale
+    mobility_t = torch.tensor(mobility_scaled, dtype=torch.float32, device=device)
 
     x_obs = to_tensor(data.x_obs.reshape(-1, 1)).to(device)
     t_obs = to_tensor(data.t_obs.reshape(-1, 1)).to(device)
@@ -6606,9 +6620,11 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
             x0=0.5, width=float(phase_interface_width),
         )
 
+        # t_exp_all is in normalized time [0,1]; FDM NLL needs physical time.
+        _t_exp_physical = data.t_exp_all * data.rs_t_max_physical if data.rs_t_max_physical > 0 else data.t_exp_all
         nll_fun_rs = lambda th: gaussian_nll_multitime_rs(
             th, 3, learn_lr_omega, c0_full_rs, data.x_grid,
-            data.x_exp_all, data.t_exp_all, data.c_exp_all,
+            data.x_exp_all, _t_exp_physical, data.c_exp_all,
             sigma=float(rs_like_sigma), dt=float(rs_fdm_dt),
             nsteps=int(rs_fdm_nsteps), save_every=int(rs_fdm_save_every),
             mobility=mobility_rs, RT=float(rs_RT),
@@ -6876,9 +6892,10 @@ if type(result).__name__ == "TrainResultRS":
             )
             _learn_lr = bool(inputs["learn_lr_omega"])
             _prior_mean = np.array(inputs["prior_mean_rs"], dtype=float)
+            _t_exp_phys_ref = rs_data.t_exp_all * rs_data.rs_t_max_physical if rs_data.rs_t_max_physical > 0 else rs_data.t_exp_all
             nll_fun_ref = lambda th: gaussian_nll_multitime_rs(
                 th, 3, _learn_lr, c0_full_ref, x,
-                rs_data.x_exp_all, rs_data.t_exp_all, rs_data.c_exp_all,
+                rs_data.x_exp_all, _t_exp_phys_ref, rs_data.c_exp_all,
                 sigma=float(inputs["rs_like_sigma"]),
                 dt=float(inputs["rs_fdm_dt"]),
                 nsteps=int(inputs["rs_fdm_nsteps"]),
@@ -7003,10 +7020,11 @@ if type(result).__name__ == "TrainResultRS":
                 np.array([_eg / 2, 0.9, 0.1]),
                 x0=0.5, width=float(inputs["phase_interface_width"]),
             )
+            _t_exp_phys_nll = rs_data.t_exp_all * rs_data.rs_t_max_physical if rs_data.rs_t_max_physical > 0 else rs_data.t_exp_all
             nll_fun_rs = lambda th: gaussian_nll_multitime_rs(
                 th, 3, learn_lr_omega_val,
                 c0_full_for_nll, x,
-                rs_data.x_exp_all, rs_data.t_exp_all, rs_data.c_exp_all,
+                rs_data.x_exp_all, _t_exp_phys_nll, rs_data.c_exp_all,
                 sigma=float(inputs["rs_like_sigma"]),
                 dt=float(inputs["rs_fdm_dt"]),
                 nsteps=int(inputs["rs_fdm_nsteps"]),
