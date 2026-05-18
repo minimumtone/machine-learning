@@ -2208,8 +2208,16 @@ def train_pinn_rs(
     rba_update_every: int = 50,
     compile_model: bool = False,
     loss_chart=None,
+    phys_warmup_fraction: float = 0.50,
 ) -> Tuple[TernaryRegularSolutionPINN, pd.DataFrame]:
-    """Train a TernaryRegularSolutionPINN model using fig11-standard TrainingData."""
+    """Train a TernaryRegularSolutionPINN model using fig11-standard TrainingData.
+
+    phys_warmup_fraction: fraction of total epochs for physics warmup.
+        During warmup (epochs 1..warmup_end), w_phys is linearly ramped
+        from 0 to its target value.  This prevents the physics loss from
+        suppressing temporal evolution before the network has learned the
+        correct spatial + temporal profiles from data.
+    """
     device = DEVICE
     model = model.to(device)
     if compile_model and hasattr(torch, "compile"):
@@ -2236,7 +2244,9 @@ def train_pinn_rs(
     w_data = float(weights.get("data", 25.0))
     w_ic = float(weights.get("ic", 12.0))
     w_bc = float(weights.get("bc", 12.0))
-    w_phys = float(weights.get("phys", 10.0))
+    w_phys_target = float(weights.get("phys", 0.01))
+    w_phys = 0.0  # will be ramped during warmup
+    warmup_end = max(1, int(epochs * phys_warmup_fraction))
 
     omega_prior_left_int = _reorder_theta_display_to_internal(omega_prior_left) if omega_prior_left is not None else None
     omega_prior_right_int = _reorder_theta_display_to_internal(omega_prior_right) if omega_prior_right is not None else None
@@ -2249,6 +2259,12 @@ def train_pinn_rs(
     t0 = time.time()
 
     for epoch in range(1, epochs + 1):
+        # Physics warmup: linearly ramp w_phys from 0 to target
+        if epoch <= warmup_end:
+            w_phys = w_phys_target * (epoch / warmup_end)
+        else:
+            w_phys = w_phys_target
+
         model.train()
         optimizer.zero_grad()
 
@@ -6046,7 +6062,7 @@ Powell 法で最適化し、Hessian から Laplace 近似の事後分布 $\mathc
     seed = st.number_input("random seed", min_value=1, max_value=999999, value=7, step=1)
 
     st.markdown("### Training points")
-    n_obs = st.slider("sparse observations", 50, 2000, 500, 10)
+    n_obs = st.slider("sparse observations", 50, 5000, 1500, 10)
     n_ic = st.slider("initial profile points at t_start", 30, 800, 240, 10)
     n_bc_each = st.slider("boundary points per side", 20, 500, 120, 10)
     n_f = st.slider("collocation points", 300, 12000, 3600, 100)
@@ -6245,7 +6261,16 @@ D_norm = D_phys * t_scale / L_scale^2
         w_data = st.slider("w_data", 0.1, 100.0, 25.0, 0.1)
         w_ic = st.slider("w_ic", 0.1, 100.0, 12.0, 0.1)
         w_bc = st.slider("w_bc", 0.1, 100.0, 12.0, 0.1)
-        w_phys = st.slider("w_physics", 0.01, 100.0, 1.0, 0.01)
+        w_phys = st.slider("w_physics", 0.001, 100.0, 0.01, 0.001)
+        ui_phys_warmup = st.slider(
+            "physics warmup fraction",
+            0.0, 0.50, 0.50, 0.01,
+            help=(
+                "Fraction of epochs during which w_physics is linearly ramped "
+                "from 0 to its target.  Prevents the physics loss from "
+                "suppressing temporal evolution before data fitting stabilizes."
+            ),
+        )
         ui_adaptive_weights = st.checkbox(
             "Self-adaptive loss weighting (RBA)",
             value=False,
@@ -6700,6 +6725,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
                 rba_update_every=50,
                 compile_model=bool(ui_torch_compile),
                 loss_chart=loss_chart_placeholder,
+                phys_warmup_fraction=float(ui_phys_warmup),
             )
         except Exception as _train_err:
             st.error(f"PINN training error: {_train_err}")
