@@ -6157,7 +6157,7 @@ D_norm = D_phys * t_scale / L_scale^2
         w_data = st.slider("w_data", 0.1, 100.0, 25.0, 0.1)
         w_ic = st.slider("w_ic", 0.1, 100.0, 12.0, 0.1)
         w_bc = st.slider("w_bc", 0.1, 100.0, 12.0, 0.1)
-        w_phys = st.slider("w_physics", 0.1, 100.0, 10.0, 0.1)
+        w_phys = st.slider("w_physics", 0.01, 100.0, 0.1, 0.01)
         ui_adaptive_weights = st.checkbox(
             "Self-adaptive loss weighting (RBA)",
             value=False,
