@@ -6866,10 +6866,12 @@ if type(result).__name__ == "TrainResultRS":
         )
         if st.button("Ωを再最適化する", key="btn_fdm_refine_rs"):
             _eg_ref = 5.0e-3
+            _c_left_ref = np.array([1.0 - _eg_ref, _eg_ref / 2, _eg_ref / 2])
+            _c_left_ref /= _c_left_ref.sum()
+            _c_right_ref = np.array([_eg_ref / 2, 0.9, 0.1])
+            _c_right_ref /= _c_right_ref.sum()
             c0_full_ref = make_initial_profile_ternary_rs(
-                x,
-                np.array([1.0 - _eg_ref, _eg_ref / 2, _eg_ref / 2]),
-                np.array([_eg_ref / 2, 0.9, 0.1]),
+                x, _c_left_ref, _c_right_ref,
                 x0=0.5, width=float(inputs["phase_interface_width"]),
             )
             _learn_lr = bool(inputs["learn_lr_omega"])
