@@ -548,6 +548,7 @@ def diffusion_potentials_regular_solution_np(
     x_interface: float = 0.5,
     width: float = 0.02,
     eps: float = 1.0e-12,
+    mu_floor: float = 5.0e-3,
 ) -> np.ndarray:
     """Return diffusion potentials mu_i - mu_ref for i=0..N-2 (NumPy).
 
@@ -555,7 +556,10 @@ def diffusion_potentials_regular_solution_np(
         g = RT sum_a c_a ln c_a + 1/2 sum_ab Omega_ab c_a c_b
 
     With the last component as dependent reference r:
-        mu_i - mu_r = RT ln(c_i/c_r) + sum_b (Omega_ib - Omega_rb) c_b
+        mu_i - mu_r = RT ln((c_i + mu_floor)/(c_r + mu_floor))
+                      + sum_b (Omega_ib - Omega_rb) c_b
+
+    ``mu_floor`` prevents log-divergence when c_r → 0 (same as torch version).
     """
     c = np.clip(c_full, eps, 1.0)
     c = c / np.sum(c, axis=1, keepdims=True)
@@ -571,7 +575,8 @@ def diffusion_potentials_regular_solution_np(
     theta_x = blend_pairs_np(theta_left, theta_right_arr, x, x_interface, width)
     pairs = pair_indices_rs(n_components)
 
-    ideal = float(RT) * np.log(c[:, :n_ind] / c[:, ref:ref + 1])
+    c_reg = c + mu_floor
+    ideal = float(RT) * np.log(c_reg[:, :n_ind] / c_reg[:, ref:ref + 1])
     mu_cols = []
     for i in range(n_ind):
         excess = np.zeros((c.shape[0], 1), dtype=float)
@@ -600,8 +605,24 @@ def diffusion_potentials_regular_solution_torch(
     x_interface: float = 0.5,
     width: float = 0.02,
     eps: float = 1.0e-8,
+    mu_floor: float = 5.0e-3,
 ) -> torch.Tensor:
-    """Torch diffusion potentials mu_i - mu_ref for multicomponent regular solution."""
+    """Torch diffusion potentials mu_i - mu_ref for multicomponent regular solution.
+
+    ``mu_floor`` regularizes the ideal-mixing log term::
+
+        log((c_i + mu_floor) / (c_ref + mu_floor))
+
+    This bounds the autograd derivative d(log)/dc to 1/(c + mu_floor),
+    preventing the 1/c singularity that causes physics-loss explosion
+    when a component approaches zero (e.g. c_Co = 0.0025 at the right
+    boundary of the Co-Ni-Ta diffusion couple).  Default 5e-3 matches
+    the guard value used in the initial-condition setup.
+
+    Without regularization the PINN residual uses autograd which
+    propagates the exact 1/c singularity into ∂μ/∂x, producing
+    residuals of O(10⁴) and physics loss of O(10⁶).
+    """
     c = torch.clamp(c_full, eps, 1.0)
     c = c / torch.sum(c, dim=1, keepdim=True)
     n_components = c.shape[1]
@@ -613,7 +634,8 @@ def diffusion_potentials_regular_solution_torch(
     theta_x = blend_pairs_torch(theta_left, theta_right, x, x_interface, width)
     pairs = pair_indices_rs(n_components)
 
-    ideal = float(RT) * torch.log(c[:, :n_ind] / c[:, ref:ref + 1])
+    c_reg = c + mu_floor
+    ideal = float(RT) * torch.log(c_reg[:, :n_ind] / c_reg[:, ref:ref + 1])
     mu_cols = []
     for i in range(n_ind):
         excess = torch.zeros((c.shape[0], 1), dtype=c.dtype, device=c.device)
@@ -754,6 +776,7 @@ def _rs_interdiffusion_matrix_np(
     use_comp_dep_M: bool = False,
     log_M_endmembers: Optional[np.ndarray] = None,
     eps: float = 1.0e-14,
+    mu_floor: float = 5.0e-3,
 ) -> np.ndarray:
     """Compute interdiffusion coefficient matrix D̃(c) from Onsager coefficients.
 
@@ -761,12 +784,11 @@ def _rs_interdiffusion_matrix_np(
         D̃_km = M_kk × ∂(μ_k - μ_ref)/∂c_m
 
     The thermodynamic factor for regular solution:
-        k = m:  RT/c_k + RT/c_ref - 2Ω_{k,ref}
-        k ≠ m:  RT/c_ref + Ω_km - Ω_{k,ref} - Ω_{ref,m}
+        k = m:  RT/(c_k + mu_floor) + RT/(c_ref + mu_floor) - 2Ω_{k,ref}
+        k ≠ m:  RT/(c_ref + mu_floor) + Ω_km - Ω_{k,ref} - Ω_{ref,m}
 
-    Unlike the Onsager form (J = M∂μ/∂z), the Fick form (J = -D̃∂c/∂z)
-    avoids artificial flux from eps-clipping of log(c).  When c_k → 0,
-    D̃_kk → ∞ but ∂c_k/∂z ∝ c_k, so the product stays bounded.
+    ``mu_floor`` prevents 1/c divergence when c → 0 (consistent with
+    the log-regularization in ``diffusion_potentials_*``).
 
     Parameters
     ----------
@@ -774,6 +796,7 @@ def _rs_interdiffusion_matrix_np(
     theta_pairs : (Nx, n_pairs) spatially-varying Ω parameters.
     RT : scalar.
     mobility : (n_ind, n_ind) constant mobility matrix.
+    mu_floor : additive floor for 1/c terms (default 5e-3).
     """
     Nx, n_components = c_full.shape
     n_ind = n_components - 1
@@ -794,12 +817,13 @@ def _rs_interdiffusion_matrix_np(
         for i in range(n_ind):
             M_diag[:, i] = mobility[i, i]
 
-    c_ref = c[:, ref]
+    c_ref = c[:, ref] + mu_floor
     D_tilde = np.zeros((Nx, n_ind, n_ind), dtype=float)
     for k in range(n_ind):
+        c_k_safe = c[:, k] + mu_floor
         for m in range(n_ind):
             if k == m:
-                thermo_factor = RT / c[:, k] + RT / c_ref - 2.0 * Omega[:, k, ref]
+                thermo_factor = RT / c_k_safe + RT / c_ref - 2.0 * Omega[:, k, ref]
             else:
                 thermo_factor = (RT / c_ref
                                  + Omega[:, k, m]
@@ -822,6 +846,7 @@ def _rs_compute_div_flux(
     omega_width: float,
     use_comp_dep_M: bool,
     log_M_endmembers: Optional[np.ndarray],
+    mu_floor: float = 5.0e-3,
 ) -> np.ndarray:
     """Compute div(flux) for the RS FDM scheme (Onsager form).
 
@@ -842,6 +867,7 @@ def _rs_compute_div_flux(
     mu = diffusion_potentials_regular_solution_np(
         c_full_safe, x, theta_left, theta_right, RT=RT,
         x_interface=x_interface, width=omega_width,
+        mu_floor=mu_floor,
     )
 
     dmu_half = (mu[1:] - mu[:-1]) / dx
@@ -880,6 +906,7 @@ def fdm_ternary_regular_solution(
     save_every: int = 100,
     log_M_endmembers: Optional[np.ndarray] = None,
     cfl_safety: float = 0.05,
+    mu_floor: float = 5.0e-3,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """DICTRA-style finite-volume solver for ternary RS diffusion.
 
@@ -935,6 +962,7 @@ def fdm_ternary_regular_solution(
             div_flux = _rs_compute_div_flux(
                 c_full, x, dx, mobility, theta_left, theta_right,
                 RT, x_interface, omega_width, use_comp_dep_M, log_M_endmembers,
+                mu_floor=mu_floor,
             )
 
             max_div = float(np.max(np.abs(div_flux)))
@@ -2055,6 +2083,7 @@ class TernaryRegularSolutionPINN(nn.Module):
         train_mobility: bool = False,
         direct_output: bool = False,
         n_time_fourier: int = 0,
+        mu_floor: float = 5.0e-3,
     ):
         super().__init__()
         self.n_components = 3
@@ -2064,6 +2093,7 @@ class TernaryRegularSolutionPINN(nn.Module):
         self.x_interface = x_interface
         self.omega_width = omega_width
         self.RT = RT
+        self.mu_floor = mu_floor
         self.use_comp_dep_mobility = log_M_endmembers_init is not None
 
         self.net = MLP(width, depth, activation, direct_output=direct_output, n_time_fourier=n_time_fourier)
@@ -2153,6 +2183,7 @@ class TernaryRegularSolutionPINN(nn.Module):
         mu = diffusion_potentials_regular_solution_torch(
             C_int, x, theta_l, theta_r, RT=self.RT,
             x_interface=self.x_interface, width=self.omega_width,
+            mu_floor=self.mu_floor,
         )
 
         ind0 = C[:, 1:2]  # first independent component
@@ -2208,8 +2239,16 @@ def train_pinn_rs(
     rba_update_every: int = 50,
     compile_model: bool = False,
     loss_chart=None,
+    phys_warmup_fraction: float = 0.50,
 ) -> Tuple[TernaryRegularSolutionPINN, pd.DataFrame]:
-    """Train a TernaryRegularSolutionPINN model using fig11-standard TrainingData."""
+    """Train a TernaryRegularSolutionPINN model using fig11-standard TrainingData.
+
+    phys_warmup_fraction: fraction of total epochs for physics warmup.
+        During warmup (epochs 1..warmup_end), w_phys is linearly ramped
+        from 0 to its target value.  This prevents the physics loss from
+        suppressing temporal evolution before the network has learned the
+        correct spatial + temporal profiles from data.
+    """
     device = DEVICE
     model = model.to(device)
     if compile_model and hasattr(torch, "compile"):
@@ -2236,7 +2275,9 @@ def train_pinn_rs(
     w_data = float(weights.get("data", 25.0))
     w_ic = float(weights.get("ic", 12.0))
     w_bc = float(weights.get("bc", 12.0))
-    w_phys = float(weights.get("phys", 10.0))
+    w_phys_target = float(weights.get("phys", 1.0))
+    w_phys = 0.0  # will be ramped during warmup
+    warmup_end = max(1, int(epochs * phys_warmup_fraction))
 
     omega_prior_left_int = _reorder_theta_display_to_internal(omega_prior_left) if omega_prior_left is not None else None
     omega_prior_right_int = _reorder_theta_display_to_internal(omega_prior_right) if omega_prior_right is not None else None
@@ -2249,6 +2290,12 @@ def train_pinn_rs(
     t0 = time.time()
 
     for epoch in range(1, epochs + 1):
+        # Physics warmup: linearly ramp w_phys from 0 to target
+        if epoch <= warmup_end:
+            w_phys = w_phys_target * (epoch / warmup_end)
+        else:
+            w_phys = w_phys_target
+
         model.train()
         optimizer.zero_grad()
 
@@ -2292,10 +2339,10 @@ def train_pinn_rs(
                 gn = torch.sqrt(sum(g.norm() ** 2 for g in grads if g is not None))
                 gnorms.append(max(float(gn), 1.0e-12))
             mean_gn = sum(gnorms) / len(gnorms)
-            base_w_list = [weights.get("data", 25.0), weights.get("ic", 12.0)]
+            base_w_list = [w_data, w_ic]
             if has_bc:
-                base_w_list.append(weights.get("bc", 12.0))
-            base_w_list.append(weights.get("phys", 10.0))
+                base_w_list.append(w_bc)
+            base_w_list.append(w_phys)
             new_w = [b * mean_gn / gn for b, gn in zip(base_w_list, gnorms)]
             if has_bc:
                 w_data, w_ic, w_bc, w_phys = new_w
@@ -2360,12 +2407,18 @@ def train_pinn_rs(
                     _gn_net_rs += _gnorm ** 2
                 else:
                     _gn_omega += _gnorm ** 2
+            # Composition & residual diagnostics at collocation points
+            with torch.no_grad():
+                _c_col = model(x_col, t_col)
+                _c_min = float(_c_col.min())
+                _res_max = float(res.abs().max())
             print(
                 f"[RS-DIAG ep={epoch:3d}] loss={loss.item():.3e} | "
                 f"d={loss_data.item():.3e} ic={loss_ic.item():.3e} "
                 f"bc={loss_bc_val.item():.3e} phys={loss_phys.item():.3e} | "
                 f"||g_net||={np.sqrt(_gn_net_rs):.3e} ||g_Ω||={np.sqrt(_gn_omega):.3e} | "
-                f"lr={scheduler.get_last_lr()[0]:.2e}",
+                f"lr={scheduler.get_last_lr()[0]:.2e} | "
+                f"c_min={_c_min:.4f} res_max={_res_max:.1f}",
                 flush=True,
             )
         # --- END DIAGNOSTIC ---
@@ -6046,7 +6099,7 @@ Powell 法で最適化し、Hessian から Laplace 近似の事後分布 $\mathc
     seed = st.number_input("random seed", min_value=1, max_value=999999, value=7, step=1)
 
     st.markdown("### Training points")
-    n_obs = st.slider("sparse observations", 50, 2000, 500, 10)
+    n_obs = st.slider("sparse observations", 50, 5000, 1500, 10)
     n_ic = st.slider("initial profile points at t_start", 30, 800, 240, 10)
     n_bc_each = st.slider("boundary points per side", 20, 500, 120, 10)
     n_f = st.slider("collocation points", 300, 12000, 3600, 100)
@@ -6246,6 +6299,15 @@ D_norm = D_phys * t_scale / L_scale^2
         w_ic = st.slider("w_ic", 0.1, 100.0, 12.0, 0.1)
         w_bc = st.slider("w_bc", 0.1, 100.0, 12.0, 0.1)
         w_phys = st.slider("w_physics", 0.01, 100.0, 1.0, 0.01)
+        ui_phys_warmup = st.slider(
+            "physics warmup fraction",
+            0.0, 0.50, 0.50, 0.01,
+            help=(
+                "Fraction of epochs during which w_physics is linearly ramped "
+                "from 0 to its target.  Prevents the physics loss from "
+                "suppressing temporal evolution before data fitting stabilizes."
+            ),
+        )
         ui_adaptive_weights = st.checkbox(
             "Self-adaptive loss weighting (RBA)",
             value=False,
@@ -6273,6 +6335,19 @@ D_norm = D_phys * t_scale / L_scale^2
                 "Encodes t as [t, sin(2πf₁t), cos(2πf₁t), ...] with fₖ = 2^(k−1). "
                 "Breaks the spectral bias that causes PINNs to underfit "
                 "temporal evolution. 0 = disabled (legacy), 4 = recommended."
+            ),
+        )
+        ui_mu_floor = st.slider(
+            "μ regularization floor (mu_floor)",
+            0.001, 0.10, 0.005, 0.001,
+            format="%.3f",
+            help=(
+                "Additive floor for the ideal-mixing log term: log((c+δ)/(c_ref+δ)). "
+                "Bounds d(log)/dc to 1/(c+δ), preventing the 1/c singularity when a "
+                "component approaches zero (e.g. c_Co=0.0025). "
+                "Without this, physics loss explodes to O(10⁶) and gradients "
+                "are permanently clipped, causing the PINN to flatten temporal evolution. "
+                "5e-3 = recommended (matches IC guard value)."
             ),
         )
         ui_torch_compile = st.checkbox(
@@ -6676,6 +6751,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
             train_mobility=rs_train_mob,
             direct_output=bool(ui_direct_output),
             n_time_fourier=int(ui_n_time_fourier),
+            mu_floor=float(ui_mu_floor),
         )
 
         st.info("Step 2/2: PINNsでΩ相互作用項を推定しています (chemical potential mode)...")
@@ -6700,6 +6776,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
                 rba_update_every=50,
                 compile_model=bool(ui_torch_compile),
                 loss_chart=loss_chart_placeholder,
+                phys_warmup_fraction=float(ui_phys_warmup),
             )
         except Exception as _train_err:
             st.error(f"PINN training error: {_train_err}")
