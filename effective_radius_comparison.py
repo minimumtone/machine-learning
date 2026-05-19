@@ -22,7 +22,6 @@ Baseline — Pairwise Ω_sf (existing method):
 Author: Satoshi Minamoto (NIMS) / Devin
 """
 
-import sys
 import warnings
 from pathlib import Path
 from collections import defaultdict
@@ -616,15 +615,6 @@ def main():
     # =====================================================================
     res = res_mpoqmd
     meta = res["_meta"]
-
-    # ── Figure 1: 6-panel parity (3 methods × 2 scenarios) ──
-    fig, axes = plt.subplots(2, 3, figsize=(24, 14))
-
-    for col, (label, r) in enumerate([
-        ("MP+OQMD", res_mpoqmd), ("All data", res_all)
-    ]):
-        # Skip — just use MP+OQMD for parity plots
-        pass
 
     # 4-panel parity for MP+OQMD
     fig, axes = plt.subplots(2, 2, figsize=(16, 14))
