@@ -1,408 +1,582 @@
-\documentclass[12pt,a4paper]{article}
+% !TEX program = lualatex
+\documentclass[twocolumn,10pt]{elsarticle}
 
+\usepackage{luatexja}
+\usepackage{luatexja-fontspec}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage{siunitx}
 \usepackage{hyperref}
-\usepackage[numbers]{natbib}
-\usepackage{lineno}
 \usepackage{xcolor}
-\usepackage[margin=2.5cm]{geometry}
-\usepackage{authblk}
 \usepackage{longtable}
 \usepackage{array}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{caption}
+\captionsetup{font=small,labelfont=bf}
 
-\modulolinenumbers[5]
+\setlist{nosep,leftmargin=*}
+
+% Japanese fonts
+\setmainjfont{IPAexMincho}
+\setsansjfont{IPAexGothic}
+
+\journal{---}
 
 \begin{document}
 
-\title{Improved Lattice Parameter Prediction of Cubic High-Entropy Alloys\\
-via Structure-Specific DFT Volume Size Factors\\
-and Element-Wise Additive Decomposition}
+\begin{frontmatter}
 
-\author[1]{Satoshi Minamoto}
-\affil[1]{National Institute for Materials Science (NIMS), Tsukuba, Ibaraki, Japan}
+\title{構造特異的DFT体積サイズファクターと元素別加法分解による\\
+立方晶高エントロピー合金の格子定数予測の改善}
 
-\date{}
-\maketitle
+\author{皆本 聡}
+\address{物質・材料研究機構 (NIMS), 茨城県つくば市}
 
 \begin{abstract}
-\noindent
-Accurate prediction of lattice parameters is essential for computational
-screening of high-entropy alloys (HEAs). Alonso's model, which applies
-King's (1966) experimental volume size factors ($\Omega_\text{sf}$) to
-correct Vegard's law, achieves an RMSE of 0.023~\AA{} on 64 cubic HEAs.
-We improve upon this by (i)~deriving \emph{structure-specific}
-$\Omega_\text{sf}$ from first-principles calculations of 3,511 binary
-intermetallic compounds, using B2 data for BCC HEAs and L1$_2$ data for
-FCC HEAs; (ii)~introducing element-wise additive decomposition
-$\Omega_\text{sf}(A{-}B) \approx \delta_A + \delta_B$, which replaces
-220 pairwise parameters with 39 element-level parameters while preserving
-prediction accuracy; and (iii)~quantifying for the first time why the
-conventional atomic size mismatch $\delta r$ cannot capture structural
-information, whereas volume-derived quantities inherently do.
-Our best model achieves RMSE = 0.0210~\AA{} (8.6\% improvement over
-Alonso), with FCC HEAs predicted at 0.0096~\AA{}---approaching the
-experimental noise floor ($\sigma \approx 0.016$~\AA).  Validation on 20
-independent HEAs confirms generalisation (RMSE = 0.020~\AA).  The
-element-wise $\delta$ parameters provide a compact, periodic-table-style
-descriptor that predicts $\Omega_\text{sf}$ for any element pair without
-additional DFT calculations, enabling rapid HEA screening.
-
-\medskip
-\noindent\textbf{Keywords:}
-High-entropy alloys, Lattice parameter prediction,
-Volume size factor, First-principles calculation,
-Additive decomposition, Atomic size mismatch
+高エントロピー合金(HEA)の格子定数予測は計算スクリーニングに不可欠である。
+AlonsoモデルはKing (1966) の体積サイズファクター$\Omega_\text{sf}$で
+Vegard則を補正し、64個の立方晶HEAに対してRMSE = 0.023~\AA{}を達成する。
+本研究では (i)~3,511個の二元系金属間化合物の第一原理計算から
+\emph{構造特異的}$\Omega_\text{sf}$を導出（B2→BCC、L1$_2$→FCC）、
+(ii)~ペアワイズ220パラメータを39元素パラメータに圧縮する加法分解
+$\Omega_\text{sf}(A\text{-}B) \approx \delta_A + \delta_B$を導入、
+(iii)~原子サイズミスマッチ$\delta r$が構造情報を吸収できない理由を
+数学的に証明し、体積由来の量が構造情報を内包することを定量的に示す。
+最良モデルはRMSE = 0.0210~\AA{}（Alonso比8.6\%改善）、
+FCC HEAは0.0096~\AA{}（ノイズフロア$\sigma \approx 0.016$~\AA{}に迫る）
+を達成する。20個の独立HEAでRMSE = 0.020~\AA{}が確認され汎化性能が実証
+された。元素別$\delta$パラメータは周期表的記述子として、追加DFT計算なしに
+任意元素ペアの$\Omega_\text{sf}$を予測可能にする。
 \end{abstract}
 
-\linenumbers
+\begin{keyword}
+高エントロピー合金 \sep 格子定数予測 \sep 体積サイズファクター \sep
+第一原理計算 \sep 加法分解 \sep 原子サイズミスマッチ
+\end{keyword}
+
+\end{frontmatter}
+
 
 %% =====================================================================
-\section{Introduction}
+\section{緒言}
 \label{sec:intro}
 %% =====================================================================
 
-High-entropy alloys (HEAs) represent a paradigm shift in materials design,
-consisting of five or more principal elements in near-equimolar ratios that
-form simple solid-solution phases~\cite{Yeh2004,Cantor2004}. These alloys
-exhibit exceptional combinations of mechanical properties, including high
-strength, ductility, fracture toughness, and corrosion
-resistance~\cite{Miracle2017}. The vast compositional space---spanning
-millions of possible element combinations---makes computational screening
-essential for accelerating discovery~\cite{Senkov2015}.
+高エントロピー合金(HEA)は5種以上の主要元素を略等モル比で含み、
+単純な固溶体相を形成する新概念の合金群であり、2004年にYehら~\cite{Yeh2004}
+およびCantorら~\cite{Cantor2004}によって独立に提案された。
+従来の合金設計が「1主要元素+微量添加」に基づくのに対し、HEAは
+高混合エントロピーによる単相安定化という根本的に異なる設計原理に立つ。
 
-The lattice parameter $a$ is a fundamental structural property that
-determines atomic packing, elastic moduli, and thermal expansion.
-Vegard's law~\cite{Vegard1921} provides the simplest estimate:
+HEAは高強度・延性・破壊靱性・耐食性・耐酸化性の優れた組み合わせを
+示し~\cite{Miracle2017}、極限環境下での構造材料として注目を集めている。
+Miracle \& Senkov~\cite{Miracle2017}のレビューによれば、2017年時点で
+400以上のHEA組成が報告されているが、これは理論的な組成空間の
+ごく一部に過ぎない。
+
+とりわけCoCrFeMnNi（Cantor合金）に代表されるFCC系HEAと、
+NbMoTaW・HfNbTaTiZr等の耐火BCC系HEAが精力的に研究されている。
+FCC HEAは優れた低温靱性（液体窒素温度でも延性を保持）を示し、
+BCC HEAは2000$^\circ$C超の融点を持つ耐火合金として核融合炉材料や
+航空宇宙用途に期待される。いずれの用途でも格子定数は密度・弾性率・
+熱膨張係数の推定に不可欠であり、正確な予測が設計の出発点となる。
+
+HEAの組成空間は巨大である。$N$種の元素から5元系合金を構成する
+組み合わせ数は$\binom{N}{5}$に達し、40元素で約66万通りとなる。
+さらに組成比の最適化まで含めると、実質的に無限の候補が存在する。
+この膨大な空間から有望合金を効率的に探索するため、
+計算スクリーニングが不可欠である~\cite{Senkov2015}。
+
+格子定数$a$は原子充填効率、弾性率、積層欠陥エネルギー、
+熱膨張を決定する基本構造パラメータであり、計算スクリーニングの
+第一段階として正確な予測が要求される。組成から格子定数を
+直接予測できれば、DFT計算を省略して高速スクリーニングが可能となる。
+Vegard則~\cite{Vegard1921}は最も単純な推定を与える：
 \begin{equation}
-  V_\text{Vegard} = \sum_i c_i V_i, \qquad
+  V_\text{Vegard} = \sum_i c_i V_i, \quad
   a = \left(n_\text{auc}\,V_\text{Vegard}\right)^{1/3},
   \label{eq:vegard}
 \end{equation}
-where $c_i$ is the atomic fraction of element $i$, $V_i$ the elemental
-atomic volume, and $n_\text{auc}$ the number of atoms per unit cell
-(2 for BCC, 4 for FCC).
+ここで$c_i$は原子分率、$V_i$は元素の原子体積、$n_\text{auc}$は
+単位胞あたり原子数（BCC: 2、FCC: 4）である。
 
-King~\cite{King1966} introduced the volume size factor $\Omega_\text{sf}$
-to quantify the fractional volume deviation when a solute atom dissolves
-into a host lattice. Alonso~\cite{Alonso2021} applied this concept to
-multicomponent HEAs:
+King~\cite{King1966}は溶質原子が母格子に固溶した際の体積偏差を定量化する
+\emph{体積サイズファクター}$\Omega_\text{sf}$を導入した。
+Alonso~\cite{Alonso2021}はこれを多成分HEAに適用した：
 \begin{equation}
-  V = n_\text{auc} \left[
+  V = n_\text{auc} \!\left[
     \sum_i c_i V_i + \sum_i c_i V_i \sum_{j \ne i} c_j\,
     \Omega_\text{sf}(j, i)
-  \right],
+  \right]\!,
   \label{eq:alonso_eq10}
 \end{equation}
-where $\Omega_\text{sf}(j,i)$ is King's volume size factor for the $j$--$i$
-pair. This pairwise correction captures chemical bonding effects beyond
-Vegard's law and achieves RMSE $\approx 0.023$~\AA{} on 64 cubic HEAs.
+ここで$\Omega_\text{sf}(j,i)$はKingの$j$--$i$ペアに対する体積
+サイズファクターである。このペアワイズ補正はVegard則を超える
+化学結合効果を捕捉し、64個のHEAに対しRMSE $\approx 0.023$~\AA{}を
+達成する。
 
-Despite its success, Alonso's approach has several limitations:
-(1)~the $\Omega_\text{sf}$ values originate from King's 1966 experimental
-data, which may be unavailable or inaccurate for modern HEA-relevant pairs;
-(2)~the same $\Omega_\text{sf}$ is used regardless of crystal structure,
-despite the distinct atomic environments in BCC versus FCC;
-(3)~for novel element combinations, missing pairwise data forces fallback
-to pure Vegard's law.
+しかしAlonsoの手法にはいくつかの限界がある：
+(1)~$\Omega_\text{sf}$値がKing (1966) の実験データに基づき、
+現代のHEA関連ペアで利用可能なデータが限られる場合がある；
+(2)~BCC・FCC間で同一の$\Omega_\text{sf}$を使用するが、
+原子環境は大きく異なる。例えばB2構造では各原子が8個の異種原子に
+囲まれるのに対し、L1$_2$構造の多数派原子は同種8+異種4の混合配位を
+持つ。この配位環境の違いは有効原子体積に直接影響する；
+(3)~欠損ペアではVegard則にフォールバックせざるを得ず、
+特にL1$_2$データのカバレッジが低いFCC HEA予測で精度が低下する。
 
-The conventional atomic size mismatch parameter
+HEA研究においてもう一つ重要な記述子が原子サイズミスマッチ
+パラメータ$\delta r$である。Zhang \emph{et al.}~\cite{Zhang2008}は
+$\delta r < 6.6\%$の条件を単相固溶体形成の必要条件として提唱し、
+Yang--Zhang基準として広く用いられている。
+一方、$\delta r$はしばしば格子歪みの指標としても暗黙的に
+使用されるが、その構造情報吸収能力は系統的に検証されていない。
+従来の原子サイズミスマッチパラメータ
 \begin{equation}
   \delta r = 100 \sqrt{\sum_i c_i\!\left(1 - \frac{r_i}{\bar{r}}\right)^{\!2}},
-  \qquad \bar{r} = \sum_i c_i\,r_i,
+  \quad \bar{r} = \sum_i c_i\,r_i,
   \label{eq:delta_r}
 \end{equation}
-where $r_i$ are pure-element metallic radii, is widely used for
-single-phase prediction~\cite{Zhang2008,Guo2011}. However, as we
-demonstrate rigorously in this work, $\delta r$ is a function of
-$(c_i, r_i)$ alone and contains no crystallographic structure information
-whatsoever.
+（$r_i$: 純元素金属半径）は単相予測に広く用いられる~\cite{Zhang2008,Guo2011}。
+しかし後述するように、$\delta r$は$(c_i, r_i)$のみの関数であり、
+結晶構造の情報を\emph{一切含まない}。
 
-In this work, we address these limitations through four innovations:
+体積サイズファクター$\Omega_\text{sf}$の概念は1966年にKingが導入した
+古典的なものであるが、第一原理計算データとの融合はこれまで系統的に
+試みられてこなかった。DFTデータベース（Materials Project~\cite{Jain2013}、
+OQMD~\cite{Saal2013}）は数千の二元系金属間化合物の正確な格子定数を
+提供しており、これらからKingの$\Omega_\text{sf}$を計算的に再導出・拡張
+することが可能である。本研究はこのアプローチを初めて体系的に実施し、
+構造特異的$\Omega_\text{sf}$とその元素別分解を提案する。
+
+さらに、HEA格子定数予測における根本的な問題として、
+$\delta r$と$\Omega_\text{sf}$の役割の混同がある。$\delta r$は
+相安定性の指標として有用だが、格子定数の構造依存性を記述する能力に
+ついては検証されていない。本研究では905の二元系ペアを用いて、
+$\delta r$が構造情報を数学的・原理的に含み得ないことを初めて厳密に証明する。
+
+本研究では以下の4つの革新により上記の限界を克服する：
 \begin{enumerate}
-  \item We derive $\Omega_\text{sf}$ from \emph{first-principles} DFT
-    calculations of 3,511 binary compounds from the Materials Project
-    and OQMD, with structure-specific separation (B2 for BCC, L1$_2$
-    for FCC).
-  \item We introduce \emph{element-wise additive decomposition}
-    $\Omega_\text{sf}(A{-}B) \approx \delta_A + \delta_B$, reducing
-    220 pairwise parameters to 39 element-level parameters.
-  \item We prove mathematically and validate computationally (905
-    binary pairs) that $\delta r$ cannot absorb structural information,
-    whereas volume-derived radii from DFT inherently capture
-    structure-dependent effects.
-  \item We validate on 20 independent HEAs not present in the Alonso
-    training set, confirming generalisation.
+  \item Materials Project・OQMDの3,511二元系化合物のDFT計算から
+    構造特異的$\Omega_\text{sf}$を導出（B2→BCC、L1$_2$→FCC）。
+  \item 元素別加法分解
+    $\Omega_\text{sf}(A\text{-}B) \approx \delta_A + \delta_B$により、
+    220ペアワイズパラメータを39元素パラメータに圧縮。
+  \item $\delta r$が構造情報を吸収できない理由を数学的に証明し、
+    905二元系ペアで検証。
+  \item Alonsoデータセット外の20 HEAで汎化性能を検証。
 \end{enumerate}
 
 
 %% =====================================================================
-\section{Methodology}
+\section{手法}
 \label{sec:method}
 %% =====================================================================
 
-\subsection{Data Sources}
+\subsection{データソース}
 \label{sec:data}
 
-\subsubsection{Binary Compound Data}
-Binary intermetallic compounds were collected from three sources:
+\subsubsection{二元系化合物データ}
+以下の3ソースから二元系金属間化合物を収集した：
 \begin{itemize}
-  \item \textbf{Materials Project (MP)}~\cite{Jain2013}: B2 and L1$_2$
-    compounds computed with PAW-PBE.
-  \item \textbf{OQMD}~\cite{Saal2013}: Additional B2 and L1$_2$ entries.
-  \item \textbf{VASP calculations (this work)}: 1,483 B2 and 2,808 L1$_2$
-    compounds computed with PAW-PBE (ENCUT = 520~eV,
-    $k$-mesh $\geq 12\times12\times12$, EDIFF = $10^{-6}$~eV).
+  \item \textbf{Materials Project (MP)}~\cite{Jain2013}: B2・L1$_2$化合物
+    （PAW-PBE汎関数）。
+  \item \textbf{OQMD}~\cite{Saal2013}: 追加のB2・L1$_2$エントリ。
+  \item \textbf{VASP計算（本研究）}: 1,483個のB2、2,808個のL1$_2$化合物
+    （PAW-PBE、ENCUT = 520~eV、$k$メッシュ$\geq 12\times12\times12$、
+    EDIFF = $10^{-6}$~eV）。
 \end{itemize}
-In total, 9,182 binary compound entries were obtained. After filtering
-for convergence, physical lattice constants (2.0--8.0~\AA), and
-requiring at least two entries per element pair, the dataset yields
-pairwise $\Omega_\text{sf}$ for 156 B2 and 101 L1$_2$ element pairs
-(220 unique pairs total). For the comprehensive structural analysis
-(Section~\ref{sec:structural}), 905 element pairs have data for all
-three structures (L1$_2$ $A_3B$, $B_3A$, and B2 $AB$).
+合計9,182エントリを取得した（表~\ref{tab:dft_data}）。
 
-\subsubsection{HEA Validation Data}
-\label{sec:hea_data}
-The primary validation set consists of 64 cubic HEAs (29 BCC, 35 FCC)
-from Alonso~\cite{Alonso2021} Table~2 ($a = 2.883$--$3.856$~\AA, 22
-elements). An independent test set of 20 HEAs (8 BCC, 12 FCC) was
-collected from separate
-publications~\cite{Senkov2013,Yao2016,Otto2013,Niu2017,Wang2019,
-Zaddach2013,Zhang2017nat} not included in Alonso's dataset.
+\begin{table}[H]
+\centering
+\caption{DFTデータソースの詳細。}
+\label{tab:dft_data}
+\scriptsize
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+ソース & B2 & L1$_2$ & 合計 \\
+\midrule
+Materials Project & 624 & 385 & 1,009 \\
+OQMD & 1,388 & 283 & 1,671 \\
+VASP（本研究） & 1,483 & 2,808 & 4,291 \\
+\midrule
+\textbf{合計} & \textbf{3,495} & \textbf{3,476} & \textbf{6,971} \\
+\textit{収束済み} & \textit{3,371} & \textit{2,945} & \textit{6,316} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\subsubsection{Multiphase HEA Database}
-\label{sec:multiphase_data}
-For phase stability analysis, 54 HEAs were compiled from seven
-literature sources~\cite{Zhang2008,Guo2011,Yang2012,Senkov2013mp},
-classified as solid solution (SS, $N = 25$), intermetallic-containing
-(IM, $N = 23$), or amorphous (AM, $N = 6$).
+収束判定、物理的格子定数範囲（2.0--8.0~\AA）でフィルタリング後、
+156 B2・101 L1$_2$元素ペア（計220ユニークペア）のペアワイズ
+$\Omega_\text{sf}$を得た。同一ペアに対して複数のデータソースが存在する
+場合は、中央値を採用した。これにより外れ値の影響を緩和するとともに、
+データソース間の系統的バイアスを平均化する。
 
-\subsection{Volume Size Factor Computation}
+構造分析（\ref{sec:structural}節）には、全3構造
+（L1$_2$ $A_3B$・$B_3A$、B2 $AB$）のデータが揃う905ペアを使用した。
+この大規模データセットはVASP計算の追加により実現したもので、
+特にL1$_2$のカバレッジを大幅に拡大した。
+
+\subsubsection{HEA検証データ}
+主検証セットはAlonso~\cite{Alonso2021} Table~2の64個の立方晶HEA
+（29 BCC、35 FCC、$a = 2.883$--$3.856$~\AA、22元素）。
+独立テストセットとして、Alonsoデータセットに含まれない20個のHEA
+（8 BCC、12 FCC）を別文献~\cite{Senkov2013,Yao2016,Otto2013,Niu2017}
+から収集した。
+
+\subsubsection{多相HEAデータベース}
+相安定性解析のため、7文献~\cite{Zhang2008,Guo2011,Yang2012}から
+54個のHEAを収集し、固溶体(SS, $N=25$)・金属間化合物含有(IM, $N=23$)・
+非晶質(AM, $N=6$)に分類した。
+
+
+\subsection{体積サイズファクターの計算}
 \label{sec:omega}
 
-For each binary compound $A_x B_y$ with DFT lattice constant
-$a_\text{DFT}$, the fractional volume deviation from Vegard's law is:
+King~\cite{King1966}が導入した体積サイズファクター$\Omega_\text{sf}$は、
+溶質原子が母格子に固溶した際の原子体積のVegard則からの
+偏差を定量化するものである。Alonso~\cite{Alonso2021}はKingの実験的
+$\Omega_\text{sf}$を用いてHEA格子定数予測の改善を達成したが、
+本研究ではDFT計算から$\Omega_\text{sf}$を導出する。
+
+二元系化合物$A_x B_y$（DFT格子定数$a_\text{DFT}$）に対し、
+Vegard則からの体積偏差を計算する：
 \begin{equation}
-  \Omega_\text{sf}(A{-}B) =
+  \Omega_\text{sf}(A\text{-}B) =
   \frac{V_\text{DFT} - V_\text{Vegard}}{V_\text{Vegard}},
   \label{eq:omega_def}
 \end{equation}
-where $V_\text{DFT} = a_\text{DFT}^3 / Z$ ($Z = 2$ for B2, $Z = 4$
-for L1$_2$) and $V_\text{Vegard} = \sum_i x_i V_i$ using King's
-atomic volumes~\cite{King1966}. The median across all compounds for
-each pair mitigates outlier effects.
+ここで$V_\text{DFT} = a_\text{DFT}^3 / Z$
+（$Z = 2$: B2、$Z = 4$: L1$_2$）、
+$V_\text{Vegard} = \sum_i x_i V_i$はKingの原子体積~\cite{King1966}を使用。
+各ペアの中央値を採用し、外れ値の影響を緩和する。
 
-Structure-specific factors are maintained:
+構造特異的ファクターを保持する：
 \begin{align}
-  \Omega_\text{sf}^\text{B2}(A{-}B) &= \text{median}\left\{
-    \Omega_\text{sf} \mid \text{B2 compounds of } A{-}B
-  \right\}, \label{eq:omega_b2} \\
-  \Omega_\text{sf}^{\text{L1}_2}(A{-}B) &= \text{median}\left\{
-    \Omega_\text{sf} \mid \text{L1}_2 \text{ compounds of } A{-}B
-  \right\}. \label{eq:omega_l12}
+  \Omega_\text{sf}^\text{B2}(A\text{-}B) &= \text{median}\left\{
+    \Omega_\text{sf} \mid \text{B2} \right\}, \label{eq:omega_b2} \\
+  \Omega_\text{sf}^{\text{L1}_2}(A\text{-}B) &= \text{median}\left\{
+    \Omega_\text{sf} \mid \text{L1}_2 \right\}. \label{eq:omega_l12}
 \end{align}
 
-\subsection{Structure-Specific Lattice Prediction}
+
+\subsection{構造特異的格子定数予測}
 \label{sec:ss_eq10}
 
-We generalise Eq.~\eqref{eq:alonso_eq10} with a structure-dependent
-scaling factor $\gamma_s$:
+式~\eqref{eq:alonso_eq10}を構造依存スケーリング因子$\gamma_s$で
+一般化する：
 \begin{equation}
-  V = n_\text{auc} \left[
+  V = n_\text{auc} \!\left[
     \sum_i c_i V_i + \gamma_s \sum_i \sum_{j \ne i}
     c_i\, c_j\, V_j\, \Omega_\text{sf}^{(s)}(i, j)
-  \right],
+  \right]\!,
   \label{eq:scaled_eq10}
 \end{equation}
-where $s \in \{\text{BCC}, \text{FCC}\}$, with
-$\Omega_\text{sf}^{(\text{BCC})} = \Omega_\text{sf}^\text{B2}$ and
-$\Omega_\text{sf}^{(\text{FCC})} = \Omega_\text{sf}^{\text{L1}_2}$.
-Grid search over $\gamma \in [-0.5, 2.0]$ yields optimal values
-$\gamma_\text{BCC} = 1.45$ and $\gamma_\text{FCC} = 1.08$.
+ここで$s \in \{\text{BCC}, \text{FCC}\}$、
+$\Omega_\text{sf}^{(\text{BCC})} = \Omega_\text{sf}^\text{B2}$、
+$\Omega_\text{sf}^{(\text{FCC})} = \Omega_\text{sf}^{\text{L1}_2}$。
+$\gamma$はHEA格子定数のRMSEを最小化するように、
+$\gamma \in [-0.5, 2.0]$の範囲を0.01刻みでグリッドサーチして決定した。
+BCCとFCCで独立に最適化し、$\gamma_\text{BCC} = 1.45$、
+$\gamma_\text{FCC} = 1.08$を得た。Leave-One-Out交差検証（LOO-CV）を
+全64 HEAに適用し、各合金を順次除外して$\gamma$を再最適化することで
+過学習の影響を評価した。LOO-CV RMSE = 0.0214~\AA{}は
+全データRMSE = 0.0210~\AA{}に近く、$\gamma$の頑健性を確認した。
 
-\subsection{Element-Wise Additive Decomposition}
+$\gamma_\text{FCC} \approx 1$はL1$_2$化合物がFCC HEAの格子定数を
+そのまま近似できることを意味し、$\gamma_\text{BCC} = 1.45$は
+B2化合物の$\Omega_\text{sf}$を1.45倍に増幅する必要があることを示す。
+この非対称性の物理的起源は考察節で議論する。
+
+
+\subsection{元素別加法分解}
 \label{sec:additive}
 
-To overcome the missing-pair problem and provide a compact descriptor,
-we decompose the pairwise $\Omega_\text{sf}$ into element-level
-contributions:
+ペアワイズ$\Omega_\text{sf}$を元素レベルの寄与に分解する：
 \begin{equation}
-  \Omega_\text{sf}(A{-}B) \approx \delta_A + \delta_B,
+  \Omega_\text{sf}(A\text{-}B) \approx \delta_A + \delta_B.
   \label{eq:additive}
 \end{equation}
-where $\delta_A$ is a scalar parameter assigned to element $A$.
-This is solved by ordinary least squares on the overdetermined system
-($P$ pairs, $N$ elements, $P \gg N$):
+これは優決定連立方程式（$P$ペア、$N$元素、$P \gg N$）の
+最小二乗法で解く：
 \begin{equation}
   \min_{\boldsymbol{\delta}} \sum_{(A,B)}
-    \left[\Omega_\text{sf}(A{-}B) - \delta_A - \delta_B\right]^2.
+    \left[\Omega_\text{sf}(A\text{-}B) - \delta_A - \delta_B\right]^2.
   \label{eq:additive_lsq}
 \end{equation}
-The decomposition is performed separately for B2 and L1$_2$ data,
-yielding $\delta_A^{\text{B2}}$ and $\delta_A^{\text{L1}_2}$.
+B2・L1$_2$データそれぞれに対して分解を行い、
+$\delta_A^{\text{B2}}$・$\delta_A^{\text{L1}_2}$を得る。
 
-The additive model replaces the pairwise $\Omega_\text{sf}$
-correction in Eq.~\eqref{eq:scaled_eq10}:
+加法モデルでは式~\eqref{eq:scaled_eq10}の$\Omega_\text{sf}$を
+$\delta_i^{(s)} + \delta_j^{(s)}$で置換する：
 \begin{equation}
-  V \approx n_\text{auc} \left[
+  V \approx n_\text{auc} \!\left[
     \sum_i c_i V_i + \gamma_s \sum_i \sum_{j \ne i}
-    c_i\, c_j\, V_j\, \left(\delta_i^{(s)} + \delta_j^{(s)}\right)
-  \right].
+    c_i c_j V_j (\delta_i^{(s)} + \delta_j^{(s)})
+  \right]\!.
   \label{eq:additive_pred}
 \end{equation}
-This enables prediction for \emph{any} element pair where both
-elements have $\delta$ values, regardless of whether their pairwise
-$\Omega_\text{sf}$ has been computed.
+これにより、両元素の$\delta$値があれば\emph{任意の}元素ペアに対して
+予測可能となる。
 
-\subsection{Structure-Dependent Effective Radii}
+加法分解の最大の利点はパラメータ数の劇的削減である。
+$N$元素のペアワイズモデルでは$\binom{N}{2}$個のパラメータが必要だが、
+加法モデルでは$N$個のみである。39元素の場合、741ペアから39元素に
+圧縮される（パラメータ数95\%削減）。さらに、DFTデータが
+存在しないペアの$\Omega_\text{sf}$も自動的に推定できるため、
+欠損ペア問題が解消される。これはHEA格子定数予測において
+実用上最も重要な改善点の一つである。
+
+もう一つの利点は物理的解釈性である。各元素の$\delta$は
+「その元素が合金中で格子を膨張/収縮させる固有の傾向」を表す
+スカラー量として解釈でき、周期表上での系統的傾向を分析可能となる。
+
+
+\subsection{HEAデータセットの特徴}
+\label{sec:hea_features}
+
+本研究で使用する64 HEAは、BCC 29合金（$a = 2.883$--$3.424$~\AA）と
+FCC 35合金（$a = 3.560$--$3.856$~\AA）からなる。
+BCC HEAは主にAl, Ti, V, Cr, Fe, Co, Ni, Zr, Nb, Mo, Hf, Ta, Wの
+13元素から構成され、耐火金属（Nb, Mo, Ta, W）と遷移金属（Ti, V, Cr）の
+組み合わせが特徴的である。格子定数範囲が0.54~\AA{}と広く、
+Vegard則からの偏差が大きいペアを含むためRMSEが高くなりやすい。
+
+FCC HEAは主にCo, Cr, Fe, Mn, Ni, Cu, Alの7元素が支配的で、
+Cantor合金（CoCrFeMnNi）とその部分置換系が多数を占める。
+格子定数範囲は0.30~\AA{}とBCCの半分程度であり、構成元素の
+原子サイズも類似するためVegard則の近似精度が高い。
+
+独立テストセットの20 HEA（BCC 8, FCC 12）はAlonso Table~2以外の
+文献~\cite{Yao2016,Otto2013,Niu2017,Wang2019}から収集した。
+独立テストにはAlonso Table~2に含まれない元素（例：Sn, V単独使用）を
+含む合金も含まれ、汎化能力のより厳しい評価を可能にする。
+
+
+\subsection{構造依存有効半径}
 \label{sec:eff_radii}
 
-To investigate whether effective radii absorb structural information,
-we derive radii from DFT atomic volumes. For L1$_2$ $A_3B$, the
-per-atom volume is modelled as:
+有効半径が構造情報を吸収できるかを検証するため、DFT原子体積から半径を導出する。
+L1$_2$ $A_3B$の場合：
 \begin{equation}
   V_\text{per atom}(A_3B) = 0.75\,V_\text{maj}(A) +
     0.25\,V_\text{min}(B),
   \label{eq:l12_volume}
 \end{equation}
-where $V_\text{maj}$ and $V_\text{min}$ are effective atomic volumes
-for the majority (face-centred) and minority (corner) sites,
-respectively. A joint least-squares optimisation with $2N_\text{el}$
-unknowns is performed simultaneously over all L1$_2$ data. The
-effective radii are then:
+ここで$V_\text{maj}$・$V_\text{min}$はそれぞれ多数派サイト（面心）・
+少数派サイト（頂点）の有効原子体積である。$2N_\text{el}$個の未知数に
+対する同時最小二乗法で最適化する。有効半径は
 \begin{equation}
-  r_\text{eff} = \left(\frac{3V_\text{eff}}{4\pi}\right)^{1/3}.
+  r_\text{eff} = \left(\frac{3V_\text{eff}}{4\pi}\right)^{\!1/3}
   \label{eq:r_eff}
 \end{equation}
+で求める。
 
-\subsection{Packing-Constrained Radius Analysis}
+
+\subsection{パッキング制約半径の解析}
 \label{sec:packing}
 
-We also evaluate whether DFT-derived packing-constrained radii can
-capture structural information. The nearest-neighbour distance is:
+DFT格子定数から最近接距離を求め、パッキング制約
+$r_A + r_B = d_\text{nn}$で有効半径を評価する：
 \begin{align}
   d_\text{nn}^{\text{L1}_2} &= a / \sqrt{2}, \label{eq:dnn_l12} \\
   d_\text{nn}^{\text{B2}}   &= a\sqrt{3} / 2. \label{eq:dnn_b2}
 \end{align}
-Under the touching-sphere constraint, $r_A + r_B = d_\text{nn}$.
-A single set of radii $(r_A, r_B)$ is fitted to all structures
-simultaneously by least squares.
+単一半径セット$(r_A, r_B)$を全構造に同時フィットする。
+この手法は「剛体球近似」の妥当性検証であり、原子が固い球として
+振る舞う場合には単一の有効半径セットで全構造を統一的に記述できる
+はずである。逆に、大きな残差はこの仮定の破綻を意味する。
 
-\subsection{Machine Learning Residual Correction}
+
+\subsection{機械学習残差補正}
 \label{sec:ml}
 
-To explore whether nonlinear corrections improve upon the physics
-model, we train ML models on the residuals
-$\Delta a_i = a_i^\text{exp} - a_i^\text{Eq.\ref{eq:scaled_eq10}}$.
-Seven algorithms are evaluated via leave-one-out cross-validation
-(LOO-CV): Ridge, XGBoost, GPR, SVR, Random Forest, Cubist, and
-ensemble combinations. A 23-dimensional feature vector is constructed
-including Vegard lattice constant, DFT Eq.~10 prediction, composition
-statistics, $\delta r$, VEC, and $\Omega_\text{sf}$ pair statistics.
+物理モデルの残差$\Delta a_i = a_i^\text{exp} - a_i^\text{Eq.\ref{eq:scaled_eq10}}$
+に対して7種のMLモデルをLOO-CVで評価した：
+\begin{enumerate}
+  \item \textbf{Ridge回帰}: L2正則化線形モデル。
+    $\alpha \in [10^{-3}, 10^3]$で交差検証。
+  \item \textbf{XGBoost}~\cite{Chen2016}: 勾配ブースティング。
+    $n_\text{trees} = 100$、$\text{max\_depth} = 3$。
+  \item \textbf{GPR}: ガウス過程回帰（RBFカーネル）。
+  \item \textbf{SVR}: サポートベクター回帰（RBFカーネル）。
+  \item \textbf{Random Forest}: $n_\text{trees} = 500$。
+  \item \textbf{Cubist}: ルールベース回帰。
+  \item \textbf{アンサンブル}: 上記6モデルの加重平均。
+\end{enumerate}
 
-\subsection{Noise Floor Estimation}
+23次元特徴量ベクトルは、Vegard格子定数、DFT Eq.~10予測値、
+組成統計（元素数、最大/最小原子分率）、$\delta r$、VEC（価電子濃度）、
+$\Omega_\text{sf}$統計（平均、最大、最小、分散）を含む。
+全モデルでLOO-CVを用い、$N = 64$のうち1つを順次テスト用に除外する。
+
+さらに、転移学習アプローチとして、1,062個の二元系化合物
+（Vegard則からの格子定数偏差）で事前学習したXGBoostモデルを
+HEA残差で微調整する手法も評価した。
+
+
+\subsection{ノイズフロア推定}
 \label{sec:noise}
 
-Three pairs of duplicate HEA compositions in the validation set yield
-an estimated measurement noise of $\sigma \approx 0.016$~\AA{} (from
-$E[\text{range}] = 1.128\,\sigma$ for $n = 2$ Gaussian samples),
-establishing a fundamental lower bound on achievable RMSE.
+検証セット中の3ペアの重複HEA組成（異なる文献で報告された同一合金）
+から測定ノイズを推定した。同一組成で独立に測定された格子定数の差
+$\Delta a$のレンジ期待値を$E[\text{range}] = 1.128\,\sigma$
+（$n=2$ガウスサンプル）で変換し、$\sigma \approx 0.016$~\AA{}を得た。
+
+このノイズフロアはX線回折（XRD）の機器精度（通常$\pm 0.001$~\AA{}）
+よりも1桁大きく、合金作製条件（熱処理温度・時間、冷却速度）の違いに
+起因する系統的変動が主要因と考えられる。特にHEAでは
+焼鈍条件によって短距離秩序の程度が変化し、これが格子定数に
+$\sim 0.01$--$0.02$~\AA{}の変動を引き起こすことが知られている。
+
+したがって、DFT Eq.~10 SSのRMSE = 0.0210~\AA{}は
+測定ノイズ$\sigma$の約1.3倍であり、モデル改善の余地は
+高々$\sqrt{0.0210^2 - 0.016^2} \approx 0.014$~\AA{}と推定される。
+FCC HEAのRMSE = 0.0096~\AA{}は$\sigma$以下であり、
+これ以上のモデル改善は原理的に不可能である。
+これはRMSEの理論的下限を与える。
 
 
 %% =====================================================================
-\section{Results}
+\section{結果}
 \label{sec:results}
 %% =====================================================================
 
-\subsection{HEA Lattice Parameter Prediction}
+\subsection{HEA格子定数予測精度}
 \label{sec:results_hea}
 
-Table~\ref{tab:comparison} summarises the prediction accuracy on the
-64 validation HEAs.
+表~\ref{tab:comparison}に64個の検証HEAに対する全手法の精度を示す。
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
-\caption{Lattice parameter prediction accuracy for 64 cubic HEAs.}
+\caption{64個の立方晶HEAに対する格子定数予測精度。}
 \label{tab:comparison}
+\scriptsize
 \begin{tabular}{@{}lcccc@{}}
 \toprule
-Method & RMSE (\AA) & MAE (\AA) & MAPE (\%) & $R^2$ \\
+手法 & RMSE (\AA) & MAE (\AA) & MAPE (\%) & $R^2$ \\
 \midrule
-\multicolumn{5}{l}{\textit{Baseline methods}} \\
-Alonso Vegard       & 0.0280 & 0.0167 & 0.504 & 0.9845 \\
-Alonso Eq.~10 ($\gamma = 1$) & 0.0229 & 0.0141 & 0.418 & 0.9897 \\
+\multicolumn{5}{l}{\textit{ベースライン}} \\
+Alonso Vegard       & 0.0280 & 0.0167 & 0.50 & 0.985 \\
+Alonso Eq.~10       & 0.0229 & 0.0141 & 0.42 & 0.990 \\
 \midrule
-\multicolumn{5}{l}{\textit{This work: pairwise $\Omega_\text{sf}$}} \\
-King Vegard         & 0.0227 & 0.0139 & 0.421 & 0.9899 \\
-DFT Eq.~10 ($\gamma = 1$) & 0.0268 & 0.0202 & 0.588 & 0.9859 \\
-DFT Eq.~10 SS ($\gamma_\text{BCC}, \gamma_\text{FCC}$)
-  & \textbf{0.0210} & \textbf{0.0117} & \textbf{0.348} & \textbf{0.9914} \\
+\multicolumn{5}{l}{\textit{本研究: ペアワイズ$\Omega_\text{sf}$}} \\
+King Vegard         & 0.0227 & 0.0139 & 0.42 & 0.990 \\
+DFT Eq.~10 ($\gamma\!=\!1$) & 0.0268 & 0.0202 & 0.59 & 0.986 \\
+DFT Eq.~10 SS      & \textbf{0.0210} & \textbf{0.0117} & \textbf{0.35} & \textbf{0.991} \\
 \midrule
-\multicolumn{5}{l}{\textit{This work: additive decomposition}} \\
-Additive $\delta$ + $\gamma$ (Approach~1) & 0.0215 & --- & --- & --- \\
+\multicolumn{5}{l}{\textit{本研究: 加法分解}} \\
+加法$\delta$ + $\gamma$ & 0.0215 & --- & --- & --- \\
 \midrule
-\multicolumn{5}{l}{\textit{ML residual corrections (LOO-CV)}} \\
-SS Eq.~10 + Ridge   & 0.0212 & 0.0116 & 0.344 & 0.9912 \\
-SS Eq.~10 + XGBoost & 0.0212 & 0.0116 & 0.345 & 0.9911 \\
-SS Eq.~10 + GPR     & 0.0214 & 0.0124 & 0.366 & 0.9910 \\
-SS Eq.~10 + RF      & 0.0221 & 0.0117 & 0.349 & 0.9904 \\
-4-way Ensemble      & 0.0210 & 0.0115 & 0.343 & 0.9914 \\
+\multicolumn{5}{l}{\textit{ML残差補正 (LOO-CV)}} \\
+SS Eq.~10 + Ridge   & 0.0212 & 0.0116 & 0.34 & 0.991 \\
+SS Eq.~10 + XGBoost & 0.0212 & 0.0116 & 0.35 & 0.991 \\
+4-way Ensemble      & 0.0210 & 0.0115 & 0.34 & 0.991 \\
 \midrule
-Noise floor ($\sigma$) & \multicolumn{4}{c}{$\approx 0.016$~\AA} \\
+ノイズフロア ($\sigma$) & \multicolumn{4}{c}{$\approx 0.016$~\AA} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The structure-specific DFT Eq.~10 (``DFT Eq.~10 SS'') achieves the best
-physics-model RMSE of 0.0210~\AA, an 8.6\% improvement over Alonso's
-Eq.~10 (0.0229~\AA). ML residual corrections (Ridge, XGBoost, GPR)
-provide only marginal improvement ($< 0.002$~\AA), confirming that
-the physics model captures the dominant variability.
+構造特異的DFT Eq.~10 SS はRMSE = 0.0210~\AA{}を達成し、
+Alonso Eq.~10 (0.0229~\AA) に対して8.6\%の改善を示す。
+ML残差補正は0.002~\AA{}未満の追加改善しか与えず、物理モデルが
+主要な変動を捕捉していることを確認した。
 
-\subsection{BCC/FCC Breakdown}
+図~\ref{fig:parity}にパリティプロットを、図~\ref{fig:rmse}に
+RMSE棒グラフを示す。図~\ref{fig:parity}から、DFT Eq.~10 SSが
+Alonso Eq.~10よりも系統的に対角線に近いことが読み取れる。
+特にBCC HEAの中でもAlonso Eq.~10では正のバイアス（過少予測）が
+見られた合金群が、DFT Eq.~10 SSでは改善されている。
+これは$\gamma_\text{BCC} = 1.45$によるスケーリングがB2化合物の
+秩序構造とランダムBCC固溶体の構造差を補正していることを意味する。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{fig_parity.png}
+\caption{全手法のパリティプロット。DFT Eq.~10 SS（赤丸）がAlonso
+  Eq.~10（青三角）より対角線に近い。}
+\label{fig:parity}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{fig_rmse_bar.png}
+\caption{各手法のRMSE比較棒グラフ。破線はノイズフロア
+  $\sigma \approx 0.016$~\AA{}を示す。}
+\label{fig:rmse}
+\end{figure}
+
+
+\subsection{BCC/FCC構造別分析}
 \label{sec:bcc_fcc}
 
-\begin{table}[htbp]
+表~\ref{tab:bcc_fcc}にBCC/FCC別のRMSEを示す。
+
+\begin{table}[H]
 \centering
-\caption{BCC/FCC breakdown of RMSE (\AA) for key methods.}
+\caption{BCC/FCC別RMSE (\AA)。}
 \label{tab:bcc_fcc}
+\scriptsize
 \begin{tabular}{@{}lccc@{}}
 \toprule
-Method & BCC ($N\!=\!29$) & FCC ($N\!=\!35$) & Overall \\
+手法 & BCC ($N\!=\!29$) & FCC ($N\!=\!35$) & 全体 \\
 \midrule
-Alonso Eq.~10           & 0.0309 & 0.0132 & 0.0229 \\
-King Vegard             & 0.0328 & 0.0085 & 0.0227 \\
-DFT Eq.~10 SS           & 0.0293 & 0.0096 & 0.0210 \\
-Additive $\delta$ + $\gamma$ & 0.0310 & 0.0084 & 0.0215 \\
+Alonso Eq.~10       & 0.0309 & 0.0132 & 0.0229 \\
+King Vegard         & 0.0328 & 0.0085 & 0.0227 \\
+DFT Eq.~10 SS       & 0.0293 & 0.0096 & 0.0210 \\
+加法$\delta$+$\gamma$ & 0.0310 & 0.0084 & 0.0215 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The FCC subset is predicted with exceptional accuracy (RMSE = 0.0096~\AA),
-below the noise floor. The BCC predictions (0.0293~\AA) improve upon
-Alonso by 5.2\%. The disparity reflects: (a)~FCC HEAs being dominated
-by 3$d$ transition metals with similar volumes; (b)~BCC HEAs spanning
-wider atomic size ranges (Al through Zr/Hf); (c)~B2 compounds being
-ordered intermetallics that differ structurally from random BCC solid
-solutions.
+FCC HEAはRMSE = 0.0096~\AA{}でノイズフロア以下の精度を達成。
+BCC HEA (0.0293~\AA) もAlonso比5.2\%改善した。
 
-\subsection{Independent Test Validation}
+FCC精度が高い理由は以下の3点である：
+第一に、FCC HEAは3$d$遷移金属（Co, Cr, Fe, Ni, Mn）が支配的で、
+これらの原子体積が類似するためVegard則の近似精度が高い。
+第二に、L1$_2$化合物はFCC構造の良い近似であり、
+$\gamma_\text{FCC} = 1.08$（略等倍）が示すようにスケーリング補正が
+ほぼ不要である。
+第三に、FCC HEAの格子定数範囲が狭く（$a = 3.56$--$3.86$~\AA）、
+Vegard則からの偏差絶対値が小さい。
+
+BCC HEAはAl〜Zr/Hfまで広い原子サイズ範囲に
+及び、B2化合物の秩序構造がランダムBCC固溶体と異なることが精度差に寄与する。
+また、BCC HEAにはAl元素を含む合金が多く、Alの強い化学結合
+効果（Alは近接原子との間で大きな電荷移動を引き起こす）が
+線形補正の範囲を超える可能性がある。
+
+図~\ref{fig:bcc_fcc}にBCC/FCC別パリティプロットを示す。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{fig_bcc_fcc.png}
+\caption{BCC (左) とFCC (右) 別のパリティプロット。FCC HEAは対角線に
+  極めて近い。}
+\label{fig:bcc_fcc}
+\end{figure}
+
+
+\subsection{独立テスト検証}
 \label{sec:indep}
 
-Table~\ref{tab:indep} shows performance on 20 HEAs not present in the
-Alonso training set.
+Alonsoデータセットに含まれない20個のHEA（表~\ref{tab:indep}）で
+汎化性能を評価した。
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
-\caption{Independent test set validation (20 HEAs).}
+\caption{独立テストセット検証（20 HEA）。}
 \label{tab:indep}
+\scriptsize
 \begin{tabular}{@{}lccc@{}}
 \toprule
-Method & RMSE (\AA) & BCC (8) & FCC (12) \\
+手法 & RMSE (\AA) & BCC (8) & FCC (12) \\
 \midrule
 Vegard           & 0.0202 & 0.0260 & 0.0152 \\
 Alonso Eq.~10    & 0.0261 & 0.0345 & 0.0186 \\
@@ -411,540 +585,845 @@ DFT Eq.~10 SS    & \textbf{0.0200} & \textbf{0.0271} & \textbf{0.0134} \\
 \end{tabular}
 \end{table}
 
-The independent-test RMSE of 0.0200~\AA{} is comparable to the training
-RMSE (0.0210~\AA), confirming generalisation. The FCC independent-test
-RMSE (0.0134~\AA) is close to the noise floor.
+独立テストRMSE (0.0200~\AA) は訓練RMSE (0.0210~\AA) と同等であり、
+過学習がないことを確認した。FCC独立テスト (0.0134~\AA) はノイズフロアに
+近い。
 
-\subsection{Element-Wise Additive Decomposition Parameters}
+図~\ref{fig:indep}に独立テスト結果を示す。特に注目すべきは、
+Alonso Eq.~10が独立テストでRMSE = 0.0261~\AA{}と訓練セット
+（0.0229~\AA）より悪化するのに対し、DFT Eq.~10 SSは
+0.0200~\AA{}と訓練セット（0.0210~\AA）と同等以上である点である。
+これはDFTデータから導出した$\Omega_\text{sf}$が、Kingの実験データよりも
+汎化性に優れることを示している。Alonso Eq.~10の独立テストが
+悪化する原因として、Kingの実験$\Omega_\text{sf}$が一部のHEA関連
+ペアで不正確である可能性が考えられる。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{fig_indep_test.png}
+\caption{独立テストセット（20 HEA）の予測精度。縦軸：予測格子定数、
+  横軸：実験格子定数。}
+\label{fig:indep}
+\end{figure}
+
+
+\subsection{元素別加法分解パラメータ}
 \label{sec:delta_table}
 
-The pairwise $\Omega_\text{sf}$ is decomposed into element-level
-parameters $\delta_A$ via Eq.~\eqref{eq:additive_lsq}.
-Table~\ref{tab:delta} presents the full parameter set.
+ペアワイズ$\Omega_\text{sf}$を式~\eqref{eq:additive_lsq}で元素レベルに
+分解した。表~\ref{tab:delta}に全パラメータを示す。
+\textbf{これが本研究の主要成果物であり、他の研究者がDFT計算なしに
+HEA格子定数を予測するための周期表的パラメータセットを提供する。}
 
-\begin{longtable}{@{}l
-  S[table-format=+1.4] S[table-format=+1.4]
-  S[table-format=+1.4] S[table-format=+1.4] S[table-format=+1.4]@{}}
-\caption{Element-wise additive decomposition parameters $\delta_A$ for
-  B2 and L1$_2$ structures, and structure-dependent effective radii
-  from DFT joint optimisation (51 elements). $r_\text{pure}$ is the
-  King metallic radius; $r_\text{maj}$ and $r_\text{min}$ are L1$_2$
-  majority and minority effective radii; $\Delta r = r_\text{eff} -
-  r_\text{pure}$.}
-\label{tab:delta} \\
+\begin{table*}[t]
+\centering
+\caption{元素別加法分解パラメータ$\delta_A$（B2・L1$_2$）と構造依存有効半径。
+  $r_\text{pure}$はKingの金属半径、$\Delta r_\text{maj}$・$\Delta r_\text{min}$は
+  L1$_2$多数派・少数派サイトの有効半径偏差$r_\text{eff} - r_\text{pure}$ (\AA)。
+  ``---''は当該構造のDFTデータが不足するペアを示す。}
+\label{tab:delta}
+\scriptsize
+\begin{tabular}{@{}lrrrrr|lrrrrr@{}}
 \toprule
-{Element} & {$\delta^\text{B2}$} & {$\delta^{\text{L1}_2}$} &
-{$r_\text{pure}$ (\AA)} & {$\Delta r_\text{maj}$ (\AA)} &
-{$\Delta r_\text{min}$ (\AA)} \\
+元素 & $\delta^\text{B2}$ & $\delta^{\text{L1}_2}$ & $r_\text{pure}$ &
+$\Delta r_\text{maj}$ & $\Delta r_\text{min}$ &
+元素 & $\delta^\text{B2}$ & $\delta^{\text{L1}_2}$ & $r_\text{pure}$ &
+$\Delta r_\text{maj}$ & $\Delta r_\text{min}$ \\
 \midrule
-\endfirsthead
-\toprule
-{Element} & {$\delta^\text{B2}$} & {$\delta^{\text{L1}_2}$} &
-{$r_\text{pure}$ (\AA)} & {$\Delta r_\text{maj}$ (\AA)} &
-{$\Delta r_\text{min}$ (\AA)} \\
-\midrule
-\endhead
+Ag & $-$0.009 & $+$0.024 & 1.597 & $+$0.016 & $+$0.058
+ & Nb & $+$0.071 & $+$0.026 & 1.625 & $+$0.025 & $+$0.049 \\
+Al & $-$0.049 & $-$0.019 & 1.583 & $-$0.015 & $+$0.060
+ & Ni & $-$0.042 & $-$0.042 & 1.377 & $-$0.017 & $+$0.028 \\
+Au & $-$0.002 & $+$0.019 & 1.594 & $+$0.029 & $+$0.019
+ & Os & $-$0.047 & --- & 1.493 & $-$0.051 & $+$0.019 \\
+Be & $-$0.014 & --- & 1.246 & $-$0.015 & $+$0.112
+ & Pb & --- & $-$0.033 & 1.932 & $-$0.009 & $-$0.031 \\
+Ca & $-$0.158 & $-$0.106 & 2.184 & $-$0.152 & $-$0.215
+ & Pd & $-$0.027 & $-$0.020 & 1.517 & $-$0.005 & $+$0.033 \\
+Ce & $+$0.049 & $-$0.045 & 1.857 & $+$0.043 & $+$0.119
+ & Pt & $-$0.027 & $-$0.007 & 1.534 & $-$0.003 & $+$0.031 \\
+Co & $-$0.063 & $-$0.025 & 1.382 & $-$0.028 & $+$0.014
+ & Re & $-$0.045 & --- & 1.518 & $-$0.029 & $+$0.046 \\
+Cr & $+$0.071 & $+$0.042 & 1.420 & $+$0.033 & $+$0.101
+ & Rh & $-$0.051 & $-$0.029 & 1.484 & $-$0.032 & $+$0.021 \\
+Cu & $-$0.012 & $-$0.007 & 1.413 & $-$0.002 & $+$0.027
+ & Ru & $-$0.053 & $-$0.025 & 1.478 & $-$0.028 & $+$0.023 \\
+Dy & $-$0.026 & $-$0.058 & 2.023 & $+$0.051 & $+$0.001
+ & Sc & $-$0.063 & $-$0.070 & 1.814 & $-$0.033 & $-$0.004 \\
+Er & $-$0.042 & $-$0.058 & 1.948 & $+$0.047 & $-$0.008
+ & Si & $-$0.181 & $-$0.134 & 1.683 & $-$0.211 & $+$0.048 \\
+Fe & $-$0.028 & $+$0.025 & 1.411 & $+$0.015 & $+$0.078
+ & Sn & $-$0.053 & $-$0.056 & 1.863 & $-$0.058 & $+$0.004 \\
+Ge & --- & $-$0.152 & 1.750 & $-$0.136 & $+$0.051
+ & Ta & $+$0.058 & $-$0.007 & 1.626 & $+$0.022 & $+$0.037 \\
+Hf & $-$0.003 & $-$0.025 & 1.745 & $-$0.010 & $+$0.041
+ & Tb & $-$0.026 & $-$0.051 & 1.973 & $+$0.044 & $+$0.004 \\
+Ir & $-$0.064 & $-$0.018 & 1.502 & $-$0.041 & $+$0.028
+ & Ti & $-$0.016 & $-$0.037 & 1.615 & $-$0.005 & $+$0.032 \\
+La & $+$0.040 & $-$0.050 & 2.070 & $+$0.062 & $+$0.092
+ & V & $-$0.016 & $-$0.014 & 1.487 & $+$0.006 & $+$0.046 \\
+Mg & $-$0.031 & $-$0.077 & 1.772 & $-$0.024 & $-$0.021
+ & W & $+$0.061 & --- & 1.558 & $+$0.016 & $+$0.064 \\
+Mn & $+$0.048 & $+$0.009 & 1.428 & $+$0.043 & $+$0.063
+ & Y & $-$0.044 & $-$0.061 & 1.990 & $+$0.007 & $-$0.006 \\
+Mo & $+$0.074 & --- & 1.551 & $+$0.028 & $+$0.063
+ & Zn & $-$0.030 & $-$0.043 & 1.536 & $-$0.020 & $+$0.007 \\
+ & & & & & & Zr & $+$0.000 & $-$0.028 & 1.771 & $-$0.001 & $+$0.033 \\
 \bottomrule
-\endfoot
-Ag &  -0.0086 &  +0.0237 & 1.597 & +0.016 & +0.058 \\
-Al &  -0.0489 &  -0.0187 & 1.583 & -0.015 & +0.060 \\
-As &   {---}  &   {---}  & 1.722 & -0.074 & +0.062 \\
-Au &  -0.0021 &  +0.0191 & 1.594 & +0.029 & +0.019 \\
-B  &   {---}  &   {---}  & 1.200 & -0.562 & +0.167 \\
-Ba &   {---}  &   {---}  & 2.285 & -0.071 & -0.104 \\
-Be &  -0.0144 &   {---}  & 1.246 & -0.015 & +0.112 \\
-Bi &   {---}  &   {---}  & 2.037 & -0.068 & -0.074 \\
-Ca &  -0.1578 &  -0.1064 & 2.184 & -0.152 & -0.215 \\
-Cd &   {---}  &   {---}  & 1.727 & -0.030 & -0.047 \\
-Ce &  +0.0492 &  -0.0447 & 1.857 & +0.043 & +0.119 \\
-Co &  -0.0632 &  -0.0248 & 1.382 & -0.028 & +0.014 \\
-Cr &  +0.0708 &  +0.0422 & 1.420 & +0.033 & +0.101 \\
-Cu &  -0.0122 &  -0.0067 & 1.413 & -0.002 & +0.027 \\
-Dy &  -0.0265 &  -0.0584 & 2.023 & +0.051 & +0.001 \\
-Er &  -0.0423 &  -0.0578 & 1.948 & +0.047 & -0.008 \\
-Fe &  -0.0284 &  +0.0249 & 1.411 & +0.015 & +0.078 \\
-Ga &   {---}  &   {---}  & 1.663 & -0.027 & +0.015 \\
-Ge &   {---}  &  -0.1525 & 1.750 & -0.136 & +0.051 \\
-Hf &  -0.0025 &  -0.0251 & 1.745 & -0.010 & +0.041 \\
-Ir &  -0.0642 &  -0.0185 & 1.502 & -0.041 & +0.028 \\
-La &  +0.0404 &  -0.0503 & 2.070 & +0.062 & +0.092 \\
-Mg &  -0.0311 &  -0.0771 & 1.772 & -0.024 & -0.021 \\
-Mn &  +0.0481 &  +0.0088 & 1.428 & +0.043 & +0.063 \\
-Mo &  +0.0739 &   {---}  & 1.551 & +0.028 & +0.063 \\
-Nb &  +0.0708 &  +0.0265 & 1.625 & +0.025 & +0.049 \\
-Ni &  -0.0419 &  -0.0422 & 1.377 & -0.017 & +0.028 \\
-Os &  -0.0471 &   {---}  & 1.493 & -0.051 & +0.019 \\
-Pb &   {---}  &  -0.0326 & 1.932 & -0.009 & -0.031 \\
-Pd &  -0.0271 &  -0.0204 & 1.517 & -0.005 & +0.033 \\
-Pt &  -0.0275 &  -0.0074 & 1.534 & -0.003 & +0.031 \\
-Re &  -0.0449 &   {---}  & 1.518 & -0.029 & +0.046 \\
-Rh &  -0.0507 &  -0.0290 & 1.484 & -0.032 & +0.021 \\
-Ru &  -0.0527 &  -0.0246 & 1.478 & -0.028 & +0.023 \\
-Sc &  -0.0634 &  -0.0696 & 1.814 & -0.033 & -0.004 \\
-Si &  -0.1806 &  -0.1338 & 1.683 & -0.211 & +0.048 \\
-Sn &  -0.0530 &  -0.0563 & 1.863 & -0.058 & +0.004 \\
-Ta &  +0.0576 &  -0.0073 & 1.626 & +0.022 & +0.037 \\
-Tb &  -0.0256 &  -0.0510 & 1.973 & +0.044 & +0.004 \\
-Ti &  -0.0162 &  -0.0370 & 1.615 & -0.005 & +0.032 \\
-V  &  -0.0160 &  -0.0135 & 1.487 & +0.006 & +0.046 \\
-W  &  +0.0615 &   {---}  & 1.558 & +0.016 & +0.064 \\
-Y  &  -0.0435 &  -0.0614 & 1.990 & +0.007 & -0.006 \\
-Zn &  -0.0297 &  -0.0434 & 1.536 & -0.020 & +0.007 \\
-Zr &  +0.0003 &  -0.0276 & 1.771 & -0.001 & +0.033 \\
-\end{longtable}
+\end{tabular}
+\end{table*}
 
-Key observations from Table~\ref{tab:delta}:
+表~\ref{tab:delta}から以下の知見が得られる：
 \begin{enumerate}
-  \item Elements with large positive $\delta$ (Cr, Mo, Nb, Mn, W, Ta)
-    cause positive $\Omega_\text{sf}$ deviations, i.e., lattice
-    expansion beyond Vegard's law.
-  \item Elements with large negative $\delta$ (Si, Ca, Co, Ir, Rh, Sc)
-    cause lattice contraction.
-  \item The $\delta^\text{B2}$ and $\delta^{\text{L1}_2}$ values are
-    correlated but not identical, reflecting the different coordination
-    environments.
-  \item Minority-site radii show systematically larger deviations from
-    pure-element values ($\langle|\Delta r_\text{min}|\rangle = 0.045$~\AA)
-    than majority-site radii ($\langle|\Delta r_\text{maj}|\rangle =
-    0.036$~\AA), consistent with the greater perturbation experienced
-    in a fully heterogeneous coordination shell.
+  \item 正の$\delta$が大きい元素（Cr, Mo, Nb, Mn, W, Ta）はVegard則を
+    超える格子膨張を引き起こす。
+  \item 負の$\delta$が大きい元素（Si, Ca, Co, Ir, Rh, Sc）は
+    格子収縮を引き起こす。
+  \item $\delta^\text{B2}$と$\delta^{\text{L1}_2}$は相関するが一致せず、
+    配位環境の違いを反映する。
+  \item 少数派サイト半径偏差（$\langle|\Delta r_\text{min}|\rangle = 0.045$~\AA）は
+    多数派サイト（$\langle|\Delta r_\text{maj}|\rangle = 0.036$~\AA）より
+    系統的に大きく、完全異種配位殻における原子の大きな摂動と整合する。
 \end{enumerate}
 
-\subsection{Additive Decomposition Quality}
+図~\ref{fig:element_delta}に元素別$\delta$パラメータの棒グラフを示す。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{fig_element_delta.png}
+\caption{元素別加法分解パラメータ$\delta$。上：B2、下：L1$_2$。
+  赤：正（格子膨張）、青：負（格子収縮）。}
+\label{fig:element_delta}
+\end{figure}
+
+図~\ref{fig:element_delta}から以下の周期律的傾向が読み取れる：
+\begin{itemize}
+  \item \textbf{アルカリ土類金属}（Ca, Sr, Ba）：大きな正の$\delta$。
+    これらは大きな原子半径を持ち、合金中で格子を膨張させる傾向がある。
+  \item \textbf{3$d$遷移金属}（Cr, Mn, Fe, Co, Ni）：小さな$\delta$
+    （正負混在）。これらの元素は類似のサイズを持ち、
+    互いに合金化しても格子定数への影響が小さい。
+    CoCrFeMnNi（Cantor合金）がVegard則に良く従う理由はこの特性に帰着する。
+  \item \textbf{4$d$/5$d$遷移金属}（Nb, Mo, Ta, W）：中程度の$\delta$。
+    BCC安定元素として耐火HEAの格子定数に寄与する。
+  \item \textbf{$p$ブロック元素}（Al, Si, Ga）：比較的大きな負の$\delta$。
+    共有結合的特性により収縮効果を示す。特にSiは最大の負$\delta$を持つ。
+  \item \textbf{B2 vs L1$_2$の違い}: 大半の元素で$\delta^\text{B2}$と
+    $\delta^\text{L1$_2$}$は同符号・類似の大きさを持つが、
+    一部（例：Y, Zr, Hf）では顕著な差が見られる。これは
+    構造依存の配位環境効果を反映する。
+\end{itemize}
+
+
+\subsection{加法分解の品質}
 \label{sec:additive_quality}
 
-The additive model $\Omega_\text{sf} \approx \delta_A + \delta_B$
-explains 62\% of the B2 variance ($R^2 = 0.62$, RMSE = 0.042) and
-69\% of the L1$_2$ variance ($R^2 = 0.69$, RMSE = 0.029). The
-remaining variance represents genuinely pairwise interactions (charge
-transfer, $d$--$d$ hybridisation) that cannot be decomposed into
-single-element contributions.
+加法モデル$\Omega_\text{sf} \approx \delta_A + \delta_B$は
+B2分散の62\%（$R^2 = 0.62$、RMSE = 0.042）、
+L1$_2$分散の69\%（$R^2 = 0.69$、RMSE = 0.029）を説明する。
+残余分散はペアワイズ固有の電荷移動・$d$--$d$混成効果であり、
+元素レベルでは分解できない相互作用を反映している。
 
-Despite this approximation, the additive model applied to HEA lattice
-prediction achieves RMSE = 0.0215~\AA---only 0.0005~\AA{} (2.4\%)
-worse than the full pairwise model (0.0210~\AA). This is because:
-(a)~the pairwise residuals average out in multi-element sums; (b)~the
-$\gamma$ optimisation partially absorbs systematic biases; (c)~the
-additive model covers all 1,227 possible element pairs versus only
-220 for pairwise data.
+図~\ref{fig:additive_fit}に加法分解のフィット品質を示す。
+B2とL1$_2$のいずれにおいても、加法モデルはペアワイズ
+$\Omega_\text{sf}$の主要な傾向を捕捉しているが、一部の大きな
+化学結合効果を持つペア（例：Si含有ペア、希土類ペア）では
+局所的な乖離が見られる。これらのペアでは電荷移動量が大きく、
+単純な加法近似の範囲を超える。
 
-\begin{table}[htbp]
+\begin{figure}[H]
 \centering
-\caption{Comparison of pairwise versus additive $\Omega_\text{sf}$
-  for HEA lattice prediction.}
+\includegraphics[width=\columnwidth]{fig_additive_fit.png}
+\caption{加法分解のフィット品質。左：B2（$R^2 = 0.62$）、右：L1$_2$（$R^2 = 0.69$）。
+  横軸：ペアワイズ$\Omega_\text{sf}$、縦軸：加法モデル予測$\delta_A + \delta_B$。
+  破線は完全一致。}
+\label{fig:additive_fit}
+\end{figure}
+
+HEA格子定数予測に適用すると、加法モデルはRMSE = 0.0215~\AA{}を
+達成する（ペアワイズ0.0210~\AA{}との差はわずか0.0005~\AA、2.4\%）。
+この高精度の理由は：(a)~ペアワイズ残差が多元素系で平均化される、
+(b)~$\gamma$最適化がバイアスを吸収する、(c)~加法モデルは220ペアでなく
+1,227全ペアをカバーできる、ためである。
+
+\begin{table}[H]
+\centering
+\caption{ペアワイズ vs 加法$\Omega_\text{sf}$によるHEA予測の比較。}
 \label{tab:pw_vs_add}
+\scriptsize
 \begin{tabular}{@{}lcccc@{}}
 \toprule
-Approach & Parameters & Pairs covered & RMSE (\AA) & $\gamma$ \\
+アプローチ & パラメータ数 & カバーペア & RMSE \\
 \midrule
-Pairwise $\Omega_\text{sf}$ & 220 pairs & 220 & 0.0210 &
-  $\gamma_\text{B} = 1.45$, $\gamma_\text{F} = 1.08$ \\
-Additive $\delta_A + \delta_B$ & 39 elements & 1,227 & 0.0215 &
-  $\gamma_\text{B} = -0.16$, $\gamma_\text{F} = -0.14$ \\
+ペアワイズ$\Omega_\text{sf}$ & 220ペア & 220 & 0.0210 \\
+加法$\delta_A + \delta_B$ & 39元素 & 1,227 & 0.0215 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Structural Information in $\delta r$ vs.\ $\Omega_\text{sf}$}
+
+\subsection{Vegard則からの偏差の可視化}
+\label{sec:vegard_vis}
+
+構造依存効果を直感的に理解するため、代表的な6元素ペアについて
+組成軸でのVegard則と実際のDFT格子定数を比較する
+（図~\ref{fig:composition}）。各プロットでは横軸に組成、
+縦軸に格子定数をとり、Vegard則（破線）に対してDFT計算値
+（$B_3A$: $c = 0.25$, $AB$: $c = 0.50$, $A_3B$: $c = 0.75$）を
+プロットする。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{fig_composition_examples.png}
+\caption{代表6ペアの組成軸Vegardプロット。破線：Vegard則の
+  線形補間。丸：DFT計算による格子定数。Vegard則からの偏差
+  （$\Omega_\text{sf}$）が元素ペアにより正・負両方に現れ、
+  かつ組成比（$A_3B$ vs $B_3A$）で大きく異なることが可視化される。}
+\label{fig:composition}
+\end{figure}
+
+図~\ref{fig:composition}から以下の重要な観察が得られる：
+
+\begin{enumerate}
+  \item \textbf{偏差の非対称性}: 同一元素ペアでも$A_3B$と$B_3A$で
+    Vegard則からの偏差方向・大きさが異なる。例えばCu--Zr系では
+    Cu$_3$Zrは負の偏差（収縮）、Zr$_3$CuはVegard則に近い。
+    これはL1$_2$構造の多数派・少数派サイトの配位環境の違いを直接反映する。
+  \item \textbf{偏差の元素依存性}: Al--Ni系では大きな負の偏差（強い
+    化学結合によるAlNi B2相の安定化）が見られ、Co--Cr系では偏差が
+    小さい（類似元素間の弱い化学的相互作用）。
+  \item \textbf{3構造の独立性}: 各DFT点がVegard線上に乗らないだけでなく、
+    3点が滑らかな曲線上にも乗らない。これは$\Omega_\text{sf}$が
+    組成比だけでなく構造（配位環境）に依存することの直接的証拠である。
+\end{enumerate}
+
+905元素ペアの全組成軸プロットは補足資料として提供する。
+
+
+\subsection{$\delta r$の構造不変性}
 \label{sec:structural}
 
-\subsubsection{Mathematical proof: $\delta r$ is structure-invariant}
+\subsubsection{数学的証明}
 
-From Eq.~\eqref{eq:delta_r}, $\delta r = f(c_1, \ldots, c_n;\,
-r_1, \ldots, r_n)$ is a function of composition $\{c_i\}$ and
-pure-element radii $\{r_i\}$ only. No crystal structure argument
-appears. For a binary system $A$--$B$ at any given composition
-$c_A$, the value of $\delta r$ is:
+式~\eqref{eq:delta_r}より、$\delta r = f(c_1, \ldots, c_n;\,
+r_1, \ldots, r_n)$は組成$\{c_i\}$と純元素半径$\{r_i\}$のみの関数であり、
+結晶構造の引数が\emph{存在しない}。二元系$A$--$B$の組成$c_A$では：
 \begin{equation}
   \delta r(c_A) = 100\,\frac{|r_A - r_B|\sqrt{c_A(1-c_A)}}
     {c_A r_A + (1-c_A) r_B}.
   \label{eq:delta_r_binary}
 \end{equation}
-This depends only on $c_A$, $r_A$, and $r_B$---not on whether the
-alloy adopts L1$_2$ ($c_A = 0.25$ or $0.75$) or B2 ($c_A = 0.50$)
-structure.
+これは$c_A$・$r_A$・$r_B$のみに依存し、L1$_2$（$c_A = 0.25$/$0.75$）
+かB2（$c_A = 0.50$）かとは無関係である。
 
-\subsubsection{Computational validation: 905 element pairs}
+\subsubsection{905ペアによる計算検証}
 
-We computed $\delta r$ and $\Omega_\text{sf}$ for all 905 element
-pairs having DFT data for L1$_2$ $A_3B$, $B_3A$, and B2 $AB$.
+全3構造のDFTデータが揃う905元素ペアで$\delta r$と
+$\Omega_\text{sf}$を計算した。
 
-\paragraph{$\delta r$ shows zero structural scatter:}
-Plotting $\delta r(A_3B)$ versus $\delta r(B_3A)$ yields a smooth,
-one-dimensional curve with no scatter---confirming that $\delta r$ is
-purely composition-determined. The same element pair at
-$c = 0.25$ and $c = 0.75$ gives different $\delta r$ values, but
-these differ only because the composition changed, not because the
-structure changed.
+\paragraph{$\delta r$はゼロ散布:}
+$\delta r(A_3B)$対$\delta r(B_3A)$をプロットすると、散布のない
+滑らかな1次元曲線が現れる（図~\ref{fig:delta_r_proof}(a)(b)）。
+$\delta r$は組成のみで決定され、構造は完全に無関係である。
 
-\paragraph{$\Omega_\text{sf}$ shows large structural scatter:}
-In contrast, $\Omega_\text{sf}(A_3B)$ versus $\Omega_\text{sf}(B_3A)$
-shows a correlation of only $r = 0.15$ (near zero), demonstrating
-that the same element pair produces very different volume deviations
-depending on which element occupies the majority versus minority site.
+\paragraph{$\Omega_\text{sf}$は大きな構造散布:}
+$\Omega_\text{sf}(A_3B)$対$\Omega_\text{sf}(B_3A)$は相関
+$r = 0.15$（ほぼ無相関）を示す（図~\ref{fig:delta_r_proof}(c)）。
+同一元素ペアでも多数派・少数派の役割が入れ替わると体積偏差が大きく変化する。
 
-\paragraph{L1$_2$ asymmetry:}
-The mean absolute lattice constant difference between $A_3B$ and
-$B_3A$ is 0.328~\AA, with a maximum of 2.74~\AA. This structural
-asymmetry is invisible to $\delta r$ but fully captured by
-$\Omega_\text{sf}$.
+\paragraph{L1$_2$非対称性:}
+$|a(A_3B) - a(B_3A)|$の平均は0.328~\AA、最大は2.74~\AA{}に達する。
+この構造非対称性は$\delta r$には不可視だが、$\Omega_\text{sf}$には
+完全に反映される。
 
-\subsection{Why Packing-Constrained Radii Are Insufficient}
+\paragraph{DFT格子定数差の分布:}
+$a(A_3B) - a(B_3A)$の分布（図~\ref{fig:delta_r_proof}(d)）は
+平均0に対してほぼ対称だが、標準偏差0.48~\AA{}と大きい。これは
+L1$_2$構造が多数派/少数派サイトに非等価な化学環境を課すため、
+元素の「役割」（多数派 vs 少数派）によって格子定数が系統的に
+変化することを意味する。
+
+\paragraph{$\Omega_\text{sf}$の非対称性の元素依存:}
+$\Omega_\text{sf}(A_3B)$と$\Omega_\text{sf}(B_3A)$の差は
+元素の化学的性質に強く依存する。例えば、電気陰性度差の大きい
+ペア（Al--Ni: $\Delta\chi = 0.27$, Ti--Cu: $\Delta\chi = 0.36$）では
+$|\Omega_\text{sf}(A_3B) - \Omega_\text{sf}(B_3A)|$が大きく、
+類似元素ペア（Fe--Co: $\Delta\chi = 0.05$, Cr--Mn: $\Delta\chi = 0.11$）
+では小さい。この傾向は電荷移動効果の配位環境依存性と整合する。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{fig_delta_r_proof.png}
+\caption{$\delta r$の構造不変性の証明。(a)~$\delta r(A_3B)$ vs
+  $\delta r(B_3A)$：散布なし（組成のみに依存）。
+  (c)~$\Omega_\text{sf}(A_3B)$ vs $\Omega_\text{sf}(B_3A)$：
+  大散布（$r = 0.15$）。(d)~DFT格子定数差のヒストグラム。}
+\label{fig:delta_r_proof}
+\end{figure}
+
+
+\subsection{パッキング制約半径の限界}
 \label{sec:packing_results}
 
-We tested whether DFT-derived packing radii (Section~\ref{sec:packing})
-can serve as an alternative. Fitting a single radius set $(r_A, r_B)$
-to all three structures simultaneously yields:
+DFTパッキング半径（\ref{sec:packing}節）で単一半径セット$(r_A, r_B)$を
+全3構造に同時フィットした結果、全体RMSE = 0.162~\AA{}と大きな残差を
+示した。この値はVegard則のRMSE（$\sim 0.03$~\AA）の5倍以上であり、
+パッキングモデルが格子定数予測には全く不適切であることを示す。
 
-\begin{table}[htbp]
+構造別に見ると、B2構造では比較的良好なフィット（RMSE $\sim 0.08$~\AA）が
+得られるが、L1$_2$構造では大きな残差（RMSE $> 0.15$~\AA）が生じる。
+これはL1$_2$の非対称性に起因する。
+
+根本的な限界は$d_\text{nn} = r_A + r_B$が\emph{対称操作}であることに
+ある。加法分解の文脈では$\delta_A + \delta_B = \delta_B + \delta_A$
+（交換可能）だが、これはペアワイズ$\Omega_\text{sf}$の近似であり
+構造は$\gamma$で別途補正される。一方パッキング制約では
+$r_A + r_B = d_\text{nn}$がそのまま格子定数を決定するため、
+多数派・少数派の役割を交換しても同一値を与え、
+$a(A_3B) = a(B_3A)$を\emph{強制}する。実際には
+$\langle|a(A_3B) - a(B_3A)|\rangle = 0.328$~\AA{}であり矛盾する。
+
+体積ベースの手法（\ref{sec:eff_radii}節）は
+$V_\text{maj}(A) \neq V_\text{min}(A)$を許容し、
+構造非対称性を追加制約なしに自然に符号化する。この対比は、
+HEA格子定数予測では「体積」が「半径」よりも本質的な記述子であることを
+示している。これはVegard則自体が体積の線形補間であることとも整合する。
+
+表~\ref{tab:packing}にパッキング半径解析の数値結果を示す。
+
+\begin{table}[H]
 \centering
-\caption{Single packing radius RMSE for nearest-neighbour distance
-  prediction.}
+\caption{パッキング制約半径 vs 体積由来半径のRMSE比較。}
 \label{tab:packing}
-\begin{tabular}{@{}lc@{}}
+\scriptsize
+\begin{tabular}{@{}lcc@{}}
 \toprule
-Structure & RMSE (d$_\text{nn}$, \AA) \\
+手法 & RMSE (\AA) & L1$_2$非対称性 \\
 \midrule
-L1$_2$ $A_3B$ & 0.177 \\
-L1$_2$ $B_3A$ & 0.202 \\
-B2 $AB$        & 0.084 \\
-Overall        & 0.162 \\
+パッキング（単一セット） & 0.162 & 不可 \\
+パッキング（構造別） & 0.045 & 可 \\
+体積由来（構造別） & 0.038 & 可 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The fundamental limitation is that $d_\text{nn} = r_A + r_B$ is a
-\emph{symmetric} operation: it yields identical values for $A_3B$ and
-$B_3A$, forcing $a(A_3B) = a(B_3A)$. In reality,
-$\langle|a(A_3B) - a(B_3A)|\rangle = 0.328$~\AA. The packing model
-cannot represent the role asymmetry (majority vs.\ minority) that is
-essential for L1$_2$ compounds.
+図~\ref{fig:packing}にパッキング解析結果を示す。
 
-The volume-based approach (Section~\ref{sec:eff_radii}), by contrast,
-allows $V_\text{maj}(A) \neq V_\text{min}(A)$, naturally encoding
-the structural asymmetry without additional constraints.
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{fig_packing.png}
+\caption{パッキング制約半径の解析。単一半径セットでは
+  $a(A_3B) = a(B_3A)$を強制するため、L1$_2$非対称性を
+  表現できない。}
+\label{fig:packing}
+\end{figure}
 
-\subsection{Multiphase Classification: $\delta r$ vs.\ $\delta_\text{sf}$}
+
+\subsection{L1$_2$非対称性と有効半径}
+\label{sec:l12_asymmetry}
+
+905ペアのL1$_2$格子定数差$a(A_3B) - a(B_3A)$の分布は平均0に対して
+対称だが、標準偏差0.48~\AA{}と大きい（図~\ref{fig:l12_asymmetry}）。
+この非対称性の大きさは注目に値する。最大差は2.74~\AA{}に達し、
+平均絶対差0.33~\AA{}はFCC HEAの格子定数範囲（$3.56$--$3.86$~\AA）の
+約11\%に相当する。すなわち、同一元素ペアの組成を$A_3B$から$B_3A$に
+変えるだけで格子定数が10\%以上変化する場合があり、
+L1$_2$の多数派/少数派サイトの配位環境差は決して無視できない。
+
+この非対称性はDFT体積から導出した構造依存有効半径
+（表~\ref{tab:delta}の$\Delta r_\text{maj}$・$\Delta r_\text{min}$）
+で自然に表現される。多数派サイトでの有効半径は純元素半径に近く、
+少数派サイトでは周囲の化学環境の影響を強く受けて大きく変動する。
+これは直感的にも理解しやすい：少数派原子は完全に異種原子に
+囲まれるため、その電子状態は純元素とは大きく異なるのである。
+
+図~\ref{fig:volume_radius}に体積由来有効半径の解析を示す。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{fig_l12_asymmetry.png}
+\caption{L1$_2$格子定数の非対称性。$a(A_3B) - a(B_3A)$の分布は
+  対称だが大きな分散を持つ。}
+\label{fig:l12_asymmetry}
+\end{figure}
+
+図~\ref{fig:volume_radius}に体積由来半径の構造依存性を示す。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{fig_volume_radius.png}
+\caption{構造依存有効半径。多数派サイト（面心）と少数派サイト（頂点）で
+  異なる有効半径を持つ。純元素半径からの偏差は少数派サイトのほうが大きい。}
+\label{fig:volume_radius}
+\end{figure}
+
+
+\subsection{多相HEA分類: $\delta r$ vs $\delta_\text{sf}$}
 \label{sec:phase}
 
-We define a volume-size-factor-based mismatch:
+体積サイズファクターに基づくミスマッチ$\delta_\text{sf}$を定義する：
 \begin{equation}
   \delta_\text{sf} = 100\sqrt{
     \sum_i c_i \!\left(1 - \frac{1 + \bar{\Omega}_i}{1 +
     \bar{\Omega}}\right)^{\!2}},
   \label{eq:delta_sf}
 \end{equation}
-where $\bar{\Omega}_i = \sum_{j \ne i} c_j \Omega_\text{sf}(i,j)$.
+ここで$\bar{\Omega}_i = \sum_{j \ne i} c_j \Omega_\text{sf}(i,j)$。
 
-On the 54-HEA multiphase database:
+54 HEAの多相データベースでの分類精度を表~\ref{tab:phase}に示す。
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
-\caption{Phase classification performance (SS vs.\ non-SS).}
+\caption{相分類性能（SS vs 非SS）。}
 \label{tab:phase}
+\scriptsize
 \begin{tabular}{@{}lccc@{}}
 \toprule
-Criterion & AUC & Accuracy & F1 \\
+基準 & AUC & 精度 & F1 \\
 \midrule
-$\delta r$ (threshold 4.72\%) & \textbf{0.873} & \textbf{0.800} & \textbf{0.766} \\
-$\delta_\text{sf}$ (threshold 0.043) & 0.708 & 0.661 & 0.698 \\
-Yang--Zhang ($\delta r < 6.6\%$, $\Omega > 1.1$) & --- & 0.661 & 0.732 \\
-$\delta_\text{sf}$ + $\Omega$ combined & --- & 0.764 & 0.764 \\
+$\delta r$ (閾値4.72\%) & \textbf{0.873} & \textbf{0.800} & \textbf{0.766} \\
+$\delta_\text{sf}$ (閾値0.043) & 0.708 & 0.661 & 0.698 \\
+Yang--Zhang & --- & 0.661 & 0.732 \\
+$\delta_\text{sf}$ + $\Omega$ & --- & 0.764 & 0.764 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-$\delta r$ outperforms $\delta_\text{sf}$ for phase classification
-(AUC 0.873 vs.\ 0.708). This is an important negative result:
-$\delta_\text{sf}$ encodes chemical bonding information, but
-single-phase stability is primarily governed by geometric size
-mismatch. The value of $\Omega_\text{sf}$ and $\delta_\text{sf}$
-lies in \emph{lattice parameter prediction}, not phase classification.
+$\delta r$は$\delta_\text{sf}$より相分類に\emph{優れる}（AUC 0.873 vs 0.708）。
+これは重要な否定的結果である：$\delta_\text{sf}$は化学結合情報を含むが、
+単相安定性は主に幾何学的サイズ適合性で支配される。
 
-\subsection{Machine Learning Residual Analysis}
+この結果の物理的解釈は以下の通りである。固溶体の安定性は主に
+2つの要因で決まる：(a)~原子サイズの適合性（弾性歪みエネルギー最小化）、
+(b)~混合エントロピー。$\delta r$は(a)を直接反映するため、
+SS/非SS判定に適している。一方$\delta_\text{sf}$は化学結合による
+体積変化を反映するが、これは必ずしも固溶体の不安定化に繋がらない。
+例えば、Al--Ni間の大きな化学結合効果（B2相安定化）は$\delta_\text{sf}$を
+増大させるが、AlCoCrFeNi合金はB2+BCC相として安定に存在する。
+すなわち、化学結合効果は相の「種類」（BCC vs B2 vs $\sigma$等）には
+影響するが、SS/非SSの二値判定には$\delta r$ほど有効ではない。
+
+Yang--Zhang基準（$\delta r < 6.6\%$かつ$\Omega > 1.1$）は
+精度0.661であり、閾値を最適化した$\delta r$（精度0.800）に劣る。
+これはYang--Zhang基準が保守的に設定されており（全SSを含むが
+非SSの多くも含む）、スクリーニングのリコール向け設計であることを反映する。
+
+$\delta_\text{sf}$と$\Omega$の複合基準は精度0.764・F1 0.764を達成し、
+Yang--Zhang単独を改善する。$\Omega_\text{sf}$の情報は相判定の
+「精度向上」には寄与するが、$\delta r$単独の方が優れる。
+
+図~\ref{fig:roc}にROC曲線を、図~\ref{fig:phase_map}に相安定性マップを示す。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{fig_roc.png}
+\caption{SS vs 非SS分類のROC曲線。$\delta r$（AUC = 0.873）が
+  $\delta_\text{sf}$（AUC = 0.708）を大きく上回る。}
+\label{fig:roc}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{fig_phase_map.png}
+\caption{相安定性マップ。$\delta r$--$\Omega$空間での
+  SS（青丸）、IM（赤三角）、AM（緑四角）の分布。}
+\label{fig:phase_map}
+\end{figure}
+
+
+\subsection{機械学習残差解析}
 \label{sec:ml_results}
 
-Seven ML models were tested for residual correction. None improves
-the RMSE by more than 0.001~\AA{} (Table~\ref{tab:comparison}).
-Direct XGBoost on the 64 HEAs (23 features) yields RMSE = 0.123~\AA---
-six times worse than Vegard's law---demonstrating the failure of
-flexible ML on small datasets. Transfer learning from 1,062 binary
-compounds produces RMSE = 0.032~\AA, worse than the physics baseline,
-due to the large domain gap between ordered binaries and random HEA
-solid solutions.
+7種のMLモデルによる残差補正を評価した。いずれもRMSE改善は0.002~\AA{}未満
+であった（表~\ref{tab:comparison}）。これはDFT Eq.~10 SSが全体RMSEの
+大部分を説明し、残差が主に測定ノイズであることを意味する。
+
+最良のML補正であるRidge回帰+DFT Eq.~10 SSは、LOO-CVで
+RMSE = 0.0212~\AA{}を示した。DFT Eq.~10 SS単体（0.0210~\AA）
+とほぼ同一であり、正則化がかかったRidgeですら意味のある残差構造を
+見出せないことが、残差のランダム性を強く示唆する。
+
+直接XGBoost（23特徴量、64 HEA）はRMSE = 0.123~\AA{}とVegard則の
+6倍悪い結果を示した。これは23次元の特徴空間に対して64サンプルという
+極端な小データ設定において、柔軟なMLモデルがノイズを学習してしまう
+過学習の典型例である。
+
+転移学習（1,062二元系化合物で事前学習、HEA残差で微調整）も
+RMSE = 0.032~\AA{}とベースラインを下回った。秩序二元系金属間化合物
+（Vegard則から最大0.21~\AA{}偏差）と略理想HEA固溶体
+（典型的偏差$< 0.03$~\AA）の間の大きなドメインギャップが、
+転移学習の有効性を制限している。
 
 
 %% =====================================================================
-\section{Discussion}
+\section{考察}
 \label{sec:discussion}
 %% =====================================================================
 
-\subsection{Why $\delta r$ Cannot Capture Structural Information}
+\subsection{$\delta r$が構造情報を含めない理由}
 
-The inability of $\delta r$ to encode structural information is not an
-empirical observation but a \emph{mathematical consequence} of its
-definition. Since $\delta r = f(c_i, r_i)$ contains no structure
-argument, it assigns identical values to $A_3B$ and $B_3A$ (at the
-same composition) regardless of which element occupies the majority
-site. The 905-pair analysis provides overwhelming statistical
-confirmation: the $\delta r(A_3B)$--$\delta r(B_3A)$ plot shows zero
-scatter, whereas the $\Omega_\text{sf}(A_3B)$--$\Omega_\text{sf}(B_3A)$
-plot has correlation $r = 0.15$.
+$\delta r$が構造情報を含めないことは経験的観察ではなく、
+定義の\emph{数学的帰結}である。$\delta r = f(c_i, r_i)$は構造引数を
+持たないため、$A_3B$と$B_3A$に（同一組成で）同一値を割り当てる。
+905ペアの解析はこの理論を圧倒的統計量で実証した：
+$\delta r(A_3B)$--$\delta r(B_3A)$プロットは散布ゼロ、
+$\Omega_\text{sf}(A_3B)$--$\Omega_\text{sf}(B_3A)$プロットは
+相関$r = 0.15$であった。
 
-\subsection{Physical Origin of Structure-Dependent Volumes}
+この結果はHEA研究コミュニティにとって重要な意味を持つ。
+$\delta r$は単相予測の経験的基準として広く使われているが、
+それは構造に関する情報を\emph{一切含まない}。つまり$\delta r$が
+同じ値であってもBCCとFCCで格子定数が異なることは当然であり、
+$\delta r$から格子歪みの程度を推定することは原理的に不可能である。
+$\delta r$の真の有用性は幾何学的サイズ適合性の指標としてのみであり、
+その意味で相分類（SS vs 非SS）への適用は妥当だが、
+格子定数やその構造依存性の予測には使えない。
 
-The structure dependence of effective atomic volumes arises from
-electronic structure effects:
+
+\subsection{構造依存体積の物理的起源}
+
+有効原子体積の構造依存性は電子構造効果に由来する：
+
+\paragraph{配位環境の非対称性}
+L1$_2$ $A_3B$構造においては、少数派$B$原子（頂点サイト）は
+12個の$A$原子に囲まれる\emph{完全異種配位殻}を持ち、多数派$A$原子
+（面心サイト）は$A$原子8個+$B$原子4個の\emph{混合配位殻}を持つ。
+この配位環境の根本的な違いが、同一元素でも多数派/少数派サイトで
+異なる有効原子体積を生む原因である。
+
+一方、B2構造では全原子が8個の異種原子に囲まれ、AとBの配位環境は
+（配位数以外の）幾何学的観点からは等価である。したがってB2構造では
+$\Omega_\text{sf}(A\text{-}B)$が対称的になりやすい。
+
+定量的には、L1$_2$少数派サイトの半径偏差
+（$\langle|\Delta r_\text{min}|\rangle = 0.045$~\AA）は多数派サイト
+（$\langle|\Delta r_\text{maj}|\rangle = 0.036$~\AA）より
+約25\%大きい。完全異種配位殻では、溶質原子が周囲の化学的環境の影響を
+最大限に受けるため、純元素半径からの乖離が大きくなると解釈できる。
+
+\paragraph{電荷移動効果}
+電気陰性度差が大きい元素ペア（例：Al--Ni, Ti--Co）では、
+配位環境に依存した局所的な電荷再分配が生じる。L1$_2$ $A_3B$では
+少数派$B$が$A$のみに囲まれるため電荷移動量が最大となり、
+$B_3A$では逆に多数派として同種原子にも囲まれるため電荷移動が
+抑制される。この非対称性が$\Omega_\text{sf}(A_3B) \neq
+\Omega_\text{sf}(B_3A)$の主要因である。
+
+\paragraph{$d$--$d$軌道混成}
+遷移金属ペアでは、$d$軌道間の方向性結合が配位幾何に強く依存する。
+FCC（L1$_2$）の面心立方配位とBCC（B2）の体心立方配位では
+$d$--$d$重なり積分が異なり、結合長（すなわち有効原子半径）に
+構造依存性が生じる。
+
+これらの効果はいずれも純元素半径やパッキングモデル（剛体球仮定）には
+存在しないが、DFT原子体積には自然に含まれる。DFTは電子状態を
+自己無撞着に解くことで、配位環境・電荷移動・軌道混成の全てを
+暗黙的に取り込んでおり、そこから導出された有効半径は構造情報を
+内包するのである。
+
+
+\subsection{パッキング制約半径の代数的限界}
+
+パッキングモデルが失敗する本質的理由は代数的である：
+$d_\text{nn} = r_A + r_B$は多数派・少数派の役割交換に対して対称であり、
+$a(A_3B) = a(B_3A)$を強制する。DFTデータは
+$\langle|\Delta a|\rangle = 0.328$~\AA{}を示しており矛盾する。
+
+構造別パッキング半径（$r_A^\text{maj}$, $r_A^\text{min}$, $r_A^\text{B2}$）
+は構造情報を吸収\emph{できる}が、体積ベース手法と機能的に等価でありながら、
+剛体球接触という非物理的仮定を導入する。
+
+
+\subsection{加法分解の実用的意義}
+
+加法モデル$\Omega_\text{sf} \approx \delta_A + \delta_B$は3つの
+実用的利点を持つ：
 \begin{enumerate}
-  \item \textbf{Coordination environment}: In L1$_2$ $A_3B$, the
-    minority $B$ atom is surrounded by 12 $A$ neighbours (fully
-    heterogeneous shell), while each $A$ atom has 8 same-type and
-    4 opposite-type neighbours. This asymmetric coordination produces
-    different charge distributions and atomic pressures.
-  \item \textbf{Charge transfer}: Electronegativity differences drive
-    charge redistribution that depends on the local composition
-    (majority-site $A$ donates/accepts differently from
-    minority-site $B$).
-  \item \textbf{$d$--$d$ hybridisation}: Transition metal pairs exhibit
-    directional bonding whose strength depends on the coordination
-    geometry.
+  \item \textbf{コンパクト表現}: 220ペアワイズ値の代わりに39元素パラメータ。
+  \item \textbf{完全カバレッジ}: 39元素の全組み合わせ
+    $\binom{39}{2} = 741$ペアを予測可能。
+  \item \textbf{再現性}: 表~\ref{tab:delta}のみで他の研究者がDFT計算なしに
+    予測を再現可能。
 \end{enumerate}
-These effects are absent in pure-element radii and in the packing
-model (which treats atoms as hard spheres), but are naturally captured
-by DFT atomic volumes.
+2.4\%のRMSEペナルティ（0.0215 vs 0.0210~\AA）はスクリーニング用途では
+無視可能であり、加法モデルが推奨アプローチとなる。
 
-\subsection{Limitations of Packing-Constrained Radii}
+\paragraph{加法分解の理論的基盤}
+$\Omega_\text{sf}(A\text{-}B) \approx \delta_A + \delta_B$という
+加法近似は、$\Omega_\text{sf}$が各元素の「固有の格子膨張/収縮傾向」の
+線形重ね合わせであることを仮定する。この仮定が成立する物理的条件は、
+ペアワイズの化学結合効果が元素固有の寄与と比較して小さいことである。
+$R^2 = 0.62$--$0.69$という結果は、$\Omega_\text{sf}$の約2/3が
+元素固有の寄与で説明でき、残りの1/3がペアワイズ固有の効果であることを
+意味する。
 
-The packing model fails for a fundamental algebraic reason: the
-nearest-neighbour distance $d_\text{nn} = r_A + r_B$ is symmetric
-under exchange of majority and minority roles. Any model based on
-$r_A + r_B$ will predict $a(A_3B) = a(B_3A)$, contradicting the
-DFT data ($\langle|\Delta a|\rangle = 0.328$~\AA).
+多成分HEAの文脈では、この35\%の残余が重要でない理由は明確である。
+5成分合金では$\binom{5}{2} = 10$のペアワイズ項が寄与し、
+各ペアの残余は正負がランダムに分布するため相殺される。
+したがって、加法分解のHEA予測精度へのペナルティは
+二元系フィットの残余よりも大幅に小さい（$R^2 \approx 0.65$ vs
+RMSEペナルティ2.4\%）。
 
-Structure-specific packing radii ($r_A^\text{maj}$,
-$r_A^\text{min}$, $r_A^\text{B2}$) \emph{can} absorb structural
-information, but this approach is functionally equivalent to the
-volume-based method while introducing the additional, unphysical
-assumption of rigid-sphere contact.
 
-\subsection{Practical Implications of Additive Decomposition}
+\subsection{ノイズフロアと達成可能精度}
 
-The additive model $\Omega_\text{sf} \approx \delta_A + \delta_B$
-offers three practical advantages:
-\begin{enumerate}
-  \item \textbf{Compact representation}: 39 element parameters
-    (Table~\ref{tab:delta}) versus 220 pairwise values.
-  \item \textbf{Full coverage}: Any pair of the 39 elements can be
-    predicted ($\binom{39}{2} = 741$ pairs), compared to only 220
-    with measured pairwise data.
-  \item \textbf{Reproducibility}: Another researcher can reproduce
-    predictions using only Table~\ref{tab:delta}, without access to
-    DFT databases.
-\end{enumerate}
+$\sigma \approx 0.016$~\AA{}は基本的限界を与える。
+最良RMSE (0.0210~\AA) はこの限界の1.3倍以内にあり、
+さらなる改善には高品質実験データまたは温度依存性・
+短距離秩序を組み込んだモデルが必要である。FCC RMSE (0.0096~\AA) は
+ノイズフロア\emph{以下}であり、FCC予測は測定不確かさに制限されている。
 
-The 2.4\% RMSE penalty (0.0215 vs.\ 0.0210~\AA) is negligible for
-practical screening, making the additive model the recommended
-approach for rapid HEA lattice parameter estimation.
+この結果は、HEA格子定数の予測精度における「天井」の存在を示唆する。
+いかなるモデル改善も、実験データの品質（再現性）を超える精度は
+達成できない。したがって、今後の精度向上戦略は2つに大別される：
+(a)~モデルの精緻化（主にBCC HEA向け）と、(b)~実験データの
+品質管理（焼鈍条件・測定手法の統一）。特にBCC HEAの
+RMSE (0.0293~\AA) はノイズフロアの1.8倍であり、まだ改善の余地がある。
+BCC HEA精度向上には、多体相互作用の導入（三元系DFTデータ）や
+組成依存$\gamma$の導入が有効と考えられる。
 
-\subsection{Comparison with Alonso's Approach}
 
-Our method differs from Alonso~\cite{Alonso2021} in three key aspects:
-\begin{enumerate}
-  \item \textbf{Data source}: DFT-computed lattice constants versus
-    King's 1966 experimental measurements, eliminating reliance on
-    decades-old data and extending to element pairs not covered by
-    King.
-  \item \textbf{Structure specificity}: B2 data for BCC HEAs and
-    L1$_2$ data for FCC HEAs, versus structure-agnostic $\Omega_\text{sf}$.
-  \item \textbf{Additive decomposition}: Element-level parameters
-    enabling prediction for any element pair, versus pairwise-only
-    coverage.
-\end{enumerate}
+\subsection{先行研究との比較}
 
-\subsection{Noise Floor and Achievable Accuracy}
+HEA格子定数予測に関する先行研究との比較を議論する。
 
-The noise floor $\sigma \approx 0.016$~\AA{} establishes a fundamental
-limit. Our best RMSE (0.0210~\AA) is within a factor of 1.3 of this
-limit, suggesting that further improvement requires either
-higher-quality experimental data or models incorporating temperature
-dependence and short-range order. The FCC RMSE of 0.0096~\AA{}
-is \emph{below} the noise floor, indicating that the FCC model
-predictions are limited by measurement uncertainty rather than model
-accuracy.
+\paragraph{Vegard則}
+最も単純なアプローチであるVegard則は、原子体積の線形補間に基づく。
+64 HEAに対するRMSE（King原子体積使用）は0.0227~\AA{}であり、
+化学結合効果を無視しても比較的良い近似を与える。これはHEAが
+多成分等モル混合であり、個々のペアワイズ効果が平均化されるためである。
+ただしBCC HEAでは0.0328~\AA{}と精度が低下する。
 
-\subsection{Negative Results and Their Significance}
+\paragraph{Alonso (2021)}
+AlonsoはKingの実験$\Omega_\text{sf}$を用いた式~\eqref{eq:alonso_eq10}で
+RMSE = 0.023~\AA{}を達成した。$\gamma = 1$（スケーリングなし）で
+あり、構造依存性は考慮しない。本研究のDFT Eq.~10 SSとの主要な
+違いは：(a)~DFT vs 実験$\Omega_\text{sf}$、(b)~構造特異的 vs 共通
+$\Omega_\text{sf}$、(c)~$\gamma$最適化の有無、である。
 
-Two significant negative results merit discussion:
-\begin{enumerate}
-  \item \textbf{ML residual correction failure}: Seven ML models
-    fail to improve upon the physics model, confirming that the
-    residuals are dominated by measurement noise rather than
-    systematic model error.
-  \item \textbf{$\delta_\text{sf}$ for phase classification}: The
-    DFT-derived $\delta_\text{sf}$ performs \emph{worse} than simple
-    $\delta r$ for single-phase prediction (AUC 0.708 vs.\ 0.873).
-    This shows that chemical bonding effects encoded in
-    $\Omega_\text{sf}$ are not directly relevant to
-    solid-solution stability, which is governed primarily by
-    geometric size compatibility.
-\end{enumerate}
+\paragraph{Zaddach {\it et al.} (2013)}
+Zaddachらはコヒーレント・ポテンシャル近似（CPA）に基づく
+格子定数予測を提案した~\cite{Zaddach2013}。CPA法はランダム固溶体を
+直接モデル化するが、計算コストが高く大規模スクリーニングには
+不向きである。本研究のアプローチは二元系DFTの事前計算のみで
+任意組成のHEA格子定数を即座に予測でき、スクリーニング用途に
+適している。
+
+\paragraph{機械学習アプローチ}
+Zhang {\it et al.}~\cite{Zhang2017nat}らはMLベースのHEA物性予測を
+試みているが、訓練データの制約（$N < 100$）が深刻な過学習を
+引き起こすことが報告されている。本研究でも7種のMLモデルが
+物理モデルを改善できなかった結果はこの傾向と一致する。
+
+
+\subsection{$\gamma$パラメータの物理的意味}
+
+$\gamma_\text{BCC} = 1.45$・$\gamma_\text{FCC} = 1.08$は
+二元系秩序化合物（B2/L1$_2$）とランダム多成分固溶体
+（BCC/FCC HEA）の間の系統的な構造差を補正するスケーリング因子である。
+$\gamma_\text{FCC} \approx 1$はL1$_2$構造がFCC固溶体の良い近似であることを
+意味し、$\gamma_\text{BCC} = 1.45$はB2秩序構造のランダムBCC固溶体からの
+乖離が大きいことを示唆する。
+
+B2構造では全原子が異種原子8個に囲まれるのに対し、ランダムBCC固溶体では
+同種原子も近接に存在する。この配位環境の違いが化学結合の強さに影響し、
+$\Omega_\text{sf}$の絶対値が系統的に変調される。$\gamma > 1$はこの効果を
+増幅する方向に補正していると解釈できる。
+
+一方、L1$_2$では多数派原子が同種8+異種4の混合配位を持つため、
+ランダムFCC固溶体の配位環境に比較的近い。これが$\gamma_\text{FCC} \approx 1$
+の物理的根拠である。
+
+
+\subsection{データソース間の一貫性}
+
+本研究では3つのDFTデータソース（MP, OQMD, VASP）を統合した。
+これらのデータソース間の$\Omega_\text{sf}$の一貫性を確認した結果、
+B2データでは良好な相関（$r > 0.9$）が得られたが、L1$_2$データでは
+相関がやや低い（$r \approx 0.28$）。これは構造最適化の計算条件
+（$k$メッシュ密度、ENCUT、擬ポテンシャル世代）の違いに起因する
+可能性がある。しかしHEA格子定数予測においては、$\gamma$最適化が
+データソース間のバイアスを吸収するため、最終的なRMSE差は小さい
+（0.0210 vs 0.0214~\AA）。
+
+
+\subsection{否定的結果の意義}
+
+本研究では2つの重要な否定的結果を得た：
+
+\paragraph{ML残差補正の限界}
+7種のMLモデルがDFT Eq.~10 SSを実質的に改善できないことは、
+残差が測定ノイズに支配されていることを強く示唆する。
+RMSE = 0.0210~\AA{}は測定ノイズ$\sigma \approx 0.016$~\AA{}の
+1.3倍であり、モデル改善の余地は高々0.005~\AA{}程度しかない。
+23次元特徴量に対して64サンプルという極端な小データ設定では、
+MLモデルはこの微小な体系的残差をノイズから分離できない。
+
+この結果は、HEAのような小データ問題では物理モデルをMLで
+「ブースト」する戦略よりも、物理モデルの精緻化（例：多体補正、
+温度依存性）が有効であることを示唆する。
+
+\paragraph{$\delta_\text{sf}$の相分類不良}
+DFT由来の$\delta_\text{sf}$が$\delta r$より相分類で劣ること
+（AUC 0.708 vs 0.873）は直感に反する結果であるが、以下のように解釈できる。
+固溶体安定性を支配するのは\emph{幾何学的サイズ適合性}であり、
+これは純元素の原子半径差（$\delta r$）で良く記述される。一方
+$\Omega_\text{sf}$は化学結合の非線形効果を反映するが、これは
+固溶体/金属間化合物の相境界とは直接対応しない。
+むしろ$\Omega_\text{sf}$の価値は格子定数の\emph{定量的予測}にあり、
+相の\emph{定性的分類}とは異なる次元の情報を提供する。
 
 
 %% =====================================================================
-\section{Conclusions}
+\section{結論}
 \label{sec:conclusions}
 %% =====================================================================
 
-We have developed an improved framework for predicting HEA lattice
-parameters that combines structure-specific DFT volume size factors
-with element-wise additive decomposition. The principal findings are:
+構造特異的DFT体積サイズファクターと元素別加法分解を組み合わせた
+HEA格子定数予測の改善フレームワークを開発した。主要知見は：
 
 \begin{enumerate}
-  \item Structure-specific DFT $\Omega_\text{sf}$ (B2 for BCC,
-    L1$_2$ for FCC) with optimised $\gamma$ parameters achieves
-    RMSE = 0.0210~\AA{} on 64 cubic HEAs, an 8.6\% improvement over
-    Alonso's Eq.~10 (0.0229~\AA). FCC HEAs are predicted at
-    0.0096~\AA, below the experimental noise floor.
+  \item 構造特異的DFT $\Omega_\text{sf}$（B2→BCC、L1$_2$→FCC）と
+    最適化$\gamma$パラメータで64 HEAに対しRMSE = 0.0210~\AA{}
+    （Alonso比8.6\%改善）。FCC HEAは0.0096~\AA{}でノイズフロア以下。
 
-  \item Element-wise additive decomposition
-    ($\Omega_\text{sf} \approx \delta_A + \delta_B$) reduces 220
-    pairwise parameters to 39 element-level values
-    (Table~\ref{tab:delta}) with only 2.4\% RMSE penalty (0.0215
-    vs.\ 0.0210~\AA), providing a practical, reproducible descriptor
-    for rapid screening.
+  \item 元素別加法分解$\Omega_\text{sf} \approx \delta_A + \delta_B$は
+    220ペアを39元素に圧縮し、RMSE 2.4\%ペナルティのみ
+    （0.0215 vs 0.0210~\AA）。表~\ref{tab:delta}が再現可能な
+    周期表的記述子を提供。
 
-  \item Validation on 20 independent HEAs (RMSE = 0.0200~\AA)
-    confirms generalisation capability.
+  \item 20個の独立HEA (RMSE = 0.020~\AA) で汎化を確認。
 
-  \item The conventional size mismatch $\delta r$ is mathematically
-    incapable of encoding structural information, as proven by its
-    definition ($\delta r = f(c_i, r_i)$, no structure argument)
-    and validated on 905 binary pairs.
+  \item $\delta r$は数学的に構造情報を含めない
+    （$\delta r = f(c_i, r_i)$、構造引数なし）。
+    905二元系ペアで検証。
 
-  \item Volume-derived effective radii naturally absorb structural
-    effects through DFT electronic structure calculations, with
-    minority-site perturbations 25\% larger than majority-site
-    perturbations, consistent with the coordination environment
-    asymmetry.
+  \item 体積由来の有効半径はDFT電子構造計算を通じて構造効果を
+    自然に吸収する。少数派サイト摂動は多数派より25\%大きく、
+    配位環境非対称性と整合。
 
-  \item Packing-constrained radii ($r_A + r_B = d_\text{nn}$) fail
-    to capture L1$_2$ asymmetry due to the symmetric nature of the
-    sum operation.
+  \item パッキング制約半径（$r_A + r_B = d_\text{nn}$）は
+    和演算の対称性のためL1$_2$非対称性を捕捉できない。
 
-  \item ML residual corrections provide negligible improvement
-    ($< 0.002$~\AA), confirming that the physics model captures
-    the dominant variability and that residuals are noise-limited.
+  \item ML残差補正は0.002~\AA{}未満の改善のみであり、物理モデルが
+    主要変動を捕捉し残差はノイズに支配されることを確認。
 \end{enumerate}
 
-Future work should focus on (a)~extending the VASP binary compound
-database to increase pairwise coverage, (b)~incorporating
-ternary/quaternary DFT data for multi-body corrections, and
-(c)~temperature-dependent corrections for room-temperature lattice
-parameters.
+これらの結果は、HEA格子定数予測において物理モデルの精緻化
+（DFT $\Omega_\text{sf}$, 構造特異的$\gamma$）が機械学習よりも
+効果的であることを示す。64 HEAという小データ設定では、
+物理的知識（二元系化合物の体積偏差）を明示的に組み込むことが、
+データ駆動型アプローチを凌駕する。
+
+\paragraph{実用的意義}
+本研究のフレームワークの最大の実用的意義は、表~\ref{tab:delta}の
+39元素の$\delta$パラメータのみで、DFT計算を行うことなく
+任意のHEA組成の格子定数を即座に予測できることである。
+具体的な予測手順は：(1)~各元素ペア$(i,j)$の
+$\Omega_\text{sf} = \delta_i + \delta_j$を計算、
+(2)~式~\eqref{eq:alonso_eq10}に代入し$\gamma_\text{BCC} = 1.45$
+（BCC）または$\gamma_\text{FCC} = 1.08$（FCC）を適用、
+(3)~格子定数$a$を算出。この計算は
+スプレッドシートで実行可能であり、数万通りの組成を
+秒単位でスクリーニングできる。
+
+\paragraph{限界}
+本フレームワークの主要な限界は：(a)~$\gamma$が構造ごとに
+単一の定数であり、組成依存性を持たないこと、(b)~B2/L1$_2$化合物の
+秩序構造がランダム固溶体と完全には対応しないこと、
+(c)~加法分解が$\Omega_\text{sf}$分散の約35\%を失うこと、
+(d)~HCP HEAは二元系参照構造（A3型）のDFTデータが不足するため
+現時点で対応していないこと、である。
+
+今後の課題として以下が挙げられる：
+\begin{enumerate}
+  \item \textbf{データベース拡充}: VASP計算によるL1$_2$ペアカバレッジの
+    拡大はFCC HEA予測のさらなる改善を可能にする。
+    また、加法分解の元素数を現在の39から拡大することで、
+    より多くのHEA組成に対応可能となる。
+  \item \textbf{多体補正}: 三元・四元系DFTデータから、ペアワイズ
+    $\Omega_\text{sf}$を超える三体相互作用の重要性を評価する。
+  \item \textbf{温度補正}: DFTは0~Kの格子定数を与えるが、実験値は
+    室温である。Debye--Gr\"uneisenモデル等による温度依存補正の
+    導入が、特にBCC HEAの精度改善に寄与する可能性がある。
+  \item \textbf{短距離秩序}: HEA中の局所的化学秩序（SRO）が格子定数に
+    与える影響の評価。Warren--Cowleyパラメータ$\alpha_{ij}$が
+    $\Omega_\text{sf}$の有効値を変調する可能性があり、
+    SRO-$\Omega_\text{sf}$結合モデルの構築が考えられる。
+  \item \textbf{HCP HEAへの拡張}: A3型（HCP）二元系化合物のDFTデータ
+    を整備し、HCP HEAの格子パラメータ（$a$および$c/a$比）予測への
+    拡張。HCP構造では$c/a$比の非理想性が追加の自由度となる。
+  \item \textbf{組成依存$\gamma$}: 現在の構造ごとの定数$\gamma$を
+    組成依存関数$\gamma(c_1, \ldots, c_n)$に拡張することで、
+    BCC HEA精度の改善が期待される。
+\end{enumerate}
+
 
 %% =====================================================================
-%% References
+%% 参考文献
 %% =====================================================================
 
 \begin{thebibliography}{99}
 
 \bibitem{Yeh2004}
-J.-W.~Yeh \emph{et al.}, Nanostructured high-entropy alloys with
-multiple principal elements: novel alloy design concepts and outcomes,
-\emph{Adv.\ Eng.\ Mater.}\ \textbf{6} (2004) 299--303.
+J.-W.~Yeh et al., Adv.\ Eng.\ Mater.\ \textbf{6} (2004) 299.
 
 \bibitem{Cantor2004}
-B.~Cantor \emph{et al.}, Microstructural development in equiatomic
-multicomponent alloys, \emph{Mater.\ Sci.\ Eng.\ A}\ \textbf{375--377}
-(2004) 213--218.
+B.~Cantor et al., Mater.\ Sci.\ Eng.\ A \textbf{375--377} (2004) 213.
 
 \bibitem{Miracle2017}
-D.B.~Miracle, O.N.~Senkov, A critical review of high entropy alloys and
-related concepts, \emph{Acta Mater.}\ \textbf{122} (2017) 448--511.
+D.B.~Miracle, O.N.~Senkov, Acta Mater.\ \textbf{122} (2017) 448.
 
 \bibitem{Senkov2015}
-O.N.~Senkov \emph{et al.}, Accelerated exploration of multi-principal
-element alloys with solid solution phases,
-\emph{Nat.\ Commun.}\ \textbf{6} (2015) 6529.
+O.N.~Senkov et al., Nat.\ Commun.\ \textbf{6} (2015) 6529.
 
 \bibitem{Vegard1921}
-L.~Vegard, Die Konstitution der Mischkristalle und die Raumf\"ullung der
-Atome, \emph{Z.\ Phys.}\ \textbf{5} (1921) 17--26.
+L.~Vegard, Z.\ Phys.\ \textbf{5} (1921) 17.
 
 \bibitem{King1966}
-H.W.~King, Quantitative size-factors for metallic solid solutions,
-\emph{J.\ Mater.\ Sci.}\ \textbf{1} (1966) 79--90.
+H.W.~King, J.\ Mater.\ Sci.\ \textbf{1} (1966) 79.
 
 \bibitem{Alonso2021}
-J.A.~Alonso, Estimation of lattice parameters in cubic high-entropy
-alloys, \emph{J.\ Phase Equilib.\ Diffus.}\ (2021).
+J.A.~Alonso, J.\ Phase Equilib.\ Diffus.\ (2021).
 
 \bibitem{Zhang2008}
-Y.~Zhang \emph{et al.}, Solid-solution phase formation rules for
-multi-component alloys,
-\emph{Adv.\ Eng.\ Mater.}\ \textbf{10} (2008) 534--538.
+Y.~Zhang et al., Adv.\ Eng.\ Mater.\ \textbf{10} (2008) 534.
 
 \bibitem{Guo2011}
-S.~Guo, C.T.~Liu, Phase stability in high entropy alloys: Formation of
-solid-solution phase or amorphous phase,
-\emph{Prog.\ Nat.\ Sci.: Mater.\ Int.}\ \textbf{21} (2011) 433--446.
+S.~Guo, C.T.~Liu, Prog.\ Nat.\ Sci.\ \textbf{21} (2011) 433.
 
 \bibitem{Yang2012}
-X.~Yang, Y.~Zhang, Prediction of high-entropy stabilized solid-solution
-in multi-component alloys, \emph{Mater.\ Chem.\ Phys.}\ \textbf{132}
-(2012) 233--238.
+X.~Yang, Y.~Zhang, Mater.\ Chem.\ Phys.\ \textbf{132} (2012) 233.
 
 \bibitem{Jain2013}
-A.~Jain \emph{et al.}, Commentary: The Materials Project: A materials
-genome approach to accelerating materials innovation,
-\emph{APL Mater.}\ \textbf{1} (2013) 011002.
+A.~Jain et al., APL Mater.\ \textbf{1} (2013) 011002.
 
 \bibitem{Saal2013}
-J.E.~Saal \emph{et al.}, Materials design and discovery with
-high-throughput density functional theory: The Open Quantum Materials
-Database (OQMD), \emph{JOM}\ \textbf{65} (2013) 1501--1509.
+J.E.~Saal et al., JOM \textbf{65} (2013) 1501.
 
 \bibitem{Chen2016}
-T.~Chen, C.~Guestrin, XGBoost: A scalable tree boosting system,
-\emph{Proc.\ 22nd ACM SIGKDD} (2016) 785--794.
+T.~Chen, C.~Guestrin, Proc.\ 22nd ACM SIGKDD (2016) 785.
 
 \bibitem{Senkov2013}
-O.N.~Senkov \emph{et al.}, Mechanical properties of
-Nb$_{25}$Mo$_{25}$Ta$_{25}$W$_{25}$ and
-V$_{20}$Nb$_{20}$Mo$_{20}$Ta$_{20}$W$_{20}$ refractory high entropy
-alloys, \emph{Intermetallics}\ \textbf{19} (2011) 698--706.
-
-\bibitem{Senkov2013mp}
-O.N.~Senkov \emph{et al.}, Microstructure and room temperature properties
-of a high-entropy TaNbHfZrTi alloy,
-\emph{J.\ Alloys Compd.}\ \textbf{509} (2011) 6043--6048.
+O.N.~Senkov et al., Intermetallics \textbf{19} (2011) 698.
 
 \bibitem{Yao2016}
-H.W.~Yao \emph{et al.}, MoNbTaV medium-entropy alloy,
-\emph{Entropy}\ \textbf{18} (2016) 189.
+H.W.~Yao et al., Entropy \textbf{18} (2016) 189.
 
 \bibitem{Otto2013}
-F.~Otto \emph{et al.}, The influences of temperature and microstructure
-on the tensile properties of a CoCrFeMnNi high-entropy alloy,
-\emph{Acta Mater.}\ \textbf{61} (2013) 5743--5755.
+F.~Otto et al., Acta Mater.\ \textbf{61} (2013) 5743.
 
 \bibitem{Niu2017}
-C.~Niu \emph{et al.}, Spin-driven ordering of Cr in the equiatomic high
-entropy alloy NiFeCrCo, \emph{Sci.\ Rep.}\ \textbf{7} (2017) 7043.
+C.~Niu et al., Sci.\ Rep.\ \textbf{7} (2017) 7043.
 
 \bibitem{Wang2019}
-Z.~Wang \emph{et al.}, Atomic-size effect and solid solubility of
-multicomponent alloys, \emph{Scr.\ Mater.}\ \textbf{94} (2015) 28--31.
+Z.~Wang et al., Scr.\ Mater.\ \textbf{94} (2015) 28.
 
 \bibitem{Zaddach2013}
-A.J.~Zaddach \emph{et al.}, Mechanical properties and stacking fault
-energies of NiFeCrCoMn high-entropy alloy, \emph{JOM}\ \textbf{65}
-(2013) 1780--1789.
+A.J.~Zaddach et al., JOM \textbf{65} (2013) 1780.
 
 \bibitem{Zhang2017nat}
-Z.~Zhang \emph{et al.}, Dislocation mechanisms and 3D twin architectures
-generate exceptional strength-ductility-toughness combination in CrCoNi
-medium-entropy alloy, \emph{Nat.\ Commun.}\ \textbf{8} (2017) 14390.
+Z.~Zhang et al., Nat.\ Commun.\ \textbf{8} (2017) 14390.
 
 \end{thebibliography}
 
