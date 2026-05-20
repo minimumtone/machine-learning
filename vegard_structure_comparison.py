@@ -390,7 +390,10 @@ def solve_effective_volumes(l12_majority, l12_minority, b2_dict):
     """
     各構造における元素の有効体積を最小二乗法で推定.
     
-    L1₂ equation: V_per_atom = 0.75·V_eff_maj(A) + 0.25·V_eff_min(B)
+    Joint optimization with 2*n_el unknowns for L1₂:
+      V_per_atom = 0.75·V_maj(A) + 0.25·V_min(B)
+    where V_maj and V_min are SEPARATE parameter vectors.
+    
     B2 equation:  V_per_atom = 0.50·V_eff_b2(A) + 0.50·V_eff_b2(B)
     """
     # Collect all elements
@@ -404,55 +407,41 @@ def solve_effective_volumes(l12_majority, l12_minority, b2_dict):
 
     results = {}
 
-    # ── L1₂ majority (A in A₃B) ──
-    equations_maj = []
-    targets_maj = []
+    # ── L1₂ joint optimization: V_maj[0..n_el-1], V_min[n_el..2*n_el-1] ──
+    # For each compound A₃B: V = 0.75·V_maj(A) + 0.25·V_min(B)
+    equations_l12 = []
+    targets_l12 = []
     for elA, partners in l12_majority.items():
         if elA not in el_to_idx:
             continue
         for elB, v_per_atom in partners:
             if elB not in el_to_idx:
                 continue
-            equations_maj.append((el_to_idx[elA], el_to_idx[elB], v_per_atom))
-            targets_maj.append(v_per_atom)
+            # A is majority, B is minority
+            equations_l12.append((el_to_idx[elA], el_to_idx[elB], v_per_atom))
+            targets_l12.append(v_per_atom)
 
-    if equations_maj:
-        A_mat = np.zeros((len(equations_maj), n_el))
-        b_vec = np.array(targets_maj)
-        for i, (iA, iB, _) in enumerate(equations_maj):
-            A_mat[i, iA] = 0.75
-            A_mat[i, iB] = 0.25
+    if equations_l12:
+        # 2*n_el columns: [V_maj(0)..V_maj(n-1), V_min(0)..V_min(n-1)]
+        A_mat = np.zeros((len(equations_l12), 2 * n_el))
+        b_vec = np.array(targets_l12)
+        for i, (iA, iB, _) in enumerate(equations_l12):
+            A_mat[i, iA] = 0.75            # V_maj(A)
+            A_mat[i, n_el + iB] = 0.25     # V_min(B)
 
-        x0 = np.array([KING_ATOMIC_VOLUMES.get(e, 15) for e in all_elements])
-        res = least_squares(lambda x: A_mat @ x - b_vec, x0, bounds=(1, 100))
+        x0_king = np.array([KING_ATOMIC_VOLUMES.get(e, 15) for e in all_elements])
+        x0 = np.concatenate([x0_king, x0_king])
+        lb = np.full(2 * n_el, 1.0)
+        ub = np.full(2 * n_el, 100.0)
+        res = least_squares(lambda x: A_mat @ x - b_vec, x0, bounds=(lb, ub))
+
         v_eff_l12_majority = {e: res.x[i] for i, e in enumerate(all_elements)}
+        v_eff_l12_minority = {e: res.x[n_el + i] for i, e in enumerate(all_elements)}
         results["L12_majority"] = v_eff_l12_majority
-        results["L12_majority_rmse"] = np.sqrt(np.mean(res.fun**2))
-
-    # ── L1₂ minority (B in A₃B) ──
-    equations_min = []
-    targets_min = []
-    for elB, partners in l12_minority.items():
-        if elB not in el_to_idx:
-            continue
-        for elA, v_per_atom in partners:
-            if elA not in el_to_idx:
-                continue
-            equations_min.append((el_to_idx[elA], el_to_idx[elB], v_per_atom))
-            targets_min.append(v_per_atom)
-
-    if equations_min:
-        A_mat = np.zeros((len(equations_min), n_el))
-        b_vec = np.array(targets_min)
-        for i, (iA, iB, _) in enumerate(equations_min):
-            A_mat[i, iA] = 0.75
-            A_mat[i, iB] = 0.25
-
-        x0 = np.array([KING_ATOMIC_VOLUMES.get(e, 15) for e in all_elements])
-        res = least_squares(lambda x: A_mat @ x - b_vec, x0, bounds=(1, 100))
-        v_eff_l12_minority = {e: res.x[i] for i, e in enumerate(all_elements)}
         results["L12_minority"] = v_eff_l12_minority
-        results["L12_minority_rmse"] = np.sqrt(np.mean(res.fun**2))
+        results["L12_joint_rmse"] = np.sqrt(np.mean(res.fun**2))
+        results["L12_majority_rmse"] = results["L12_joint_rmse"]
+        results["L12_minority_rmse"] = results["L12_joint_rmse"]
 
     # ── B2 ──
     equations_b2 = []
