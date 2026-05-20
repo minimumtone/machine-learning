@@ -539,7 +539,7 @@ $$r_{\rm eff}({\rm Element}, {\rm Role}) = \left(\frac{3 V_{\rm eff}({\rm Elemen
 $$a_{\rm HEA} = \left(n_{\rm auc} \cdot V_{\rm per\, atom}\right)^{1/3}$$
 </div>
 
-<p>ここで $V_{\rm per\, atom}$ は合金中での平均原子体積であり、Alonso Eq.10では:</p>
+<p>ここで $V_{\rm per\, atom}$ は合金中での平均原子体積であり、King (1966) の体積サイズファクター $\Omega_{\rm sf}$ を用いた補正式（Alonso (2021) がHEAに応用した Eq.10）では:</p>
 
 <div class="equation-box">
 $$V_{\rm per\, atom} = \sum_i c_i V_i + \gamma \sum_i \sum_{j \neq i} c_i c_j V_j \Omega_{\rm sf}(i,j)$$
@@ -562,7 +562,7 @@ $$V_{\rm per\, atom} = \sum_i c_i V_i + \gamma \sum_i \sum_{j \neq i} c_i c_j V_
 <table>
 <tr><th>手法</th><th>RMSE [Å]</th><th>構造情報の有無</th></tr>
 <tr><td>Vegard則 ($\delta r$ベース)</td><td>0.028</td><td>なし</td></tr>
-<tr><td>Alonso Eq.10 ($\Omega_{\rm sf}$ペアワイズ)</td><td>0.021</td><td>ペアワイズで含む</td></tr>
+<tr><td>King $\Omega_{\rm sf}$ + Eq.10 (ペアワイズ)</td><td>0.021</td><td>ペアワイズで含む</td></tr>
 <tr><td>加法分解 ($\delta_A + \delta_B$)</td><td>0.022</td><td>元素レベルで含む</td></tr>
 </table>
 
