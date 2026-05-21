@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>考察: 有効原子半径 vs 原子体積由来の半径 — 構造情報の吸収能力の本質的差異</title>
+<script>
+  MathJax = {
+    tex: { inlineMath: [['$','$'], ['\\(','\\)']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  body {
+    font-family: "Hiragino Kaku Gothic Pro", "Yu Gothic", "Meiryo", sans-serif;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 30px;
+    line-height: 1.9;
+    color: #222;
+    background: #fafaf8;
+  }
+  h1 { font-size: 28px; color: #1a3a5c; border-bottom: 3px solid #1a3a5c; padding-bottom: 12px; }
+  h2 { font-size: 22px; color: #2c5f8a; margin-top: 40px; border-left: 5px solid #2c5f8a; padding-left: 12px; }
+  h3 { font-size: 18px; color: #3a7ab5; margin-top: 30px; }
+  h4 { font-size: 16px; color: #555; margin-top: 20px; }
+  .equation-box {
+    background: #eef4fa;
+    border: 1px solid #b0ccdf;
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin: 15px 0;
+    text-align: center;
+    font-size: 18px;
+  }
+  .key-point {
+    background: #fff3cd;
+    border-left: 5px solid #ffc107;
+    padding: 12px 18px;
+    margin: 15px 0;
+    border-radius: 0 6px 6px 0;
+  }
+  .conclusion-box {
+    background: #d4edda;
+    border: 2px solid #28a745;
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin: 20px 0;
+  }
+  .negative-box {
+    background: #f8d7da;
+    border-left: 5px solid #dc3545;
+    padding: 12px 18px;
+    margin: 15px 0;
+    border-radius: 0 6px 6px 0;
+  }
+  table {
+    border-collapse: collapse;
+    margin: 15px 0;
+    font-size: 14px;
+    width: 100%;
+  }
+  th, td {
+    border: 1px solid #ccc;
+    padding: 8px 12px;
+    text-align: center;
+  }
+  th { background: #e8eef4; font-weight: bold; }
+  tr:nth-child(even) { background: #f5f7fa; }
+  .fig-caption {
+    text-align: center;
+    font-size: 13px;
+    color: #666;
+    margin-top: 5px;
+  }
+  .toc {
+    background: #f0f4f8;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 15px 25px;
+    margin: 20px 0;
+  }
+  .toc a { text-decoration: none; color: #2c5f8a; }
+  .toc a:hover { text-decoration: underline; }
+  code { background: #e8e8e8; padding: 2px 6px; border-radius: 3px; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<h1>考察: 有効原子半径 vs 原子体積由来の半径<br>— 構造情報の吸収能力の本質的差異 —</h1>
+
+<p style="text-align:right; color:#666;">DFT二元化合物 9,182件 / 946元素ペア / 905ペアで全3構造カバー</p>
+
+<div class="toc">
+<strong>目次</strong>
+<ol>
+  <li><a href="#sec1">問題の定式化: 何を「構造情報」と呼ぶか</a></li>
+  <li><a href="#sec2">有効原子半径（Vegard式δr）の数学的構造</a></li>
+  <li><a href="#sec3">原子体積由来の半径の数学的構造</a></li>
+  <li><a href="#sec4">数学的証明: δrが構造情報を吸収できない理由</a></li>
+  <li><a href="#sec5">物理的考察: なぜ原子体積は構造を反映するか</a></li>
+  <li><a href="#sec6">DFTデータによる実証</a></li>
+  <li><a href="#sec7">具体的元素ペアの詳細解析</a></li>
+  <li><a href="#sec8">元素別有効半径テーブルの意味</a></li>
+  <li><a href="#sec9">HEA格子定数予測への含意</a></li>
+  <li><a href="#sec10">結論と今後の展望</a></li>
+</ol>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="sec1">1. 問題の定式化: 何を「構造情報」と呼ぶか</h2>
+
+<h3>1.1 同一元素ペア・同一組成での構造依存性</h3>
+
+<p>二元系合金A-Bにおいて、以下の3つの化合物を考える:</p>
+
+<table>
+<tr><th>化合物</th><th>構造</th><th>組成</th><th>Aの役割</th><th>Bの役割</th><th>原子数/単位胞</th></tr>
+<tr><td>A$_3$B</td><td>L1$_2$ (Cu$_3$Au型)</td><td>$c_A=0.75, c_B=0.25$</td><td>面心 (majority)</td><td>角 (minority)</td><td>4</td></tr>
+<tr><td>B$_3$A</td><td>L1$_2$ (Cu$_3$Au型)</td><td>$c_A=0.25, c_B=0.75$</td><td>角 (minority)</td><td>面心 (majority)</td><td>4</td></tr>
+<tr><td>AB</td><td>B2 (CsCl型)</td><td>$c_A=0.50, c_B=0.50$</td><td>体心</td><td>角</td><td>2</td></tr>
+</table>
+
+<p><strong>「構造情報」とは</strong>: 同じ元素AとBであっても、結晶構造中での「役割」（多数派/少数派、面心/角/体心）が異なれば、実際の原子体積・格子定数が変化する——この変化のことを指す。</p>
+
+<div class="key-point">
+<strong>核心的な問い:</strong> 元素ペア(A,B)に対して、A$_3$B と B$_3$A と AB の3つの格子定数はすべて異なる。この差異を、原子半径の記述子で捕捉できるか？
+</div>
+
+<h3>1.2 DFTデータが示す事実</h3>
+
+<p>905元素ペアで全3構造のDFT格子定数を比較した結果:</p>
+
+<table>
+<tr><th>量</th><th>値</th><th>意味</th></tr>
+<tr><td>L1$_2$ 平均格子定数差 $|a(X_3Y) - a(Y_3X)|$</td><td><strong>0.328 Å</strong></td><td>A$_3$B と B$_3$A は大きく異なる</td></tr>
+<tr><td>L1$_2$ 最大格子定数差</td><td>2.74 Å</td><td>極端な場合は2倍以上違う</td></tr>
+<tr><td>$\Omega_{\rm sf}$ 非対称性 std</td><td>0.230</td><td>Vegardからの偏差が方向で大きく異なる</td></tr>
+<tr><td>$\Omega_{\rm sf}(X_3Y)$ vs $\Omega_{\rm sf}(Y_3X)$ 相関</td><td>r = 0.152</td><td>ほぼ無相関 → 独立な物理</td></tr>
+</table>
+
+<!-- ================================================================ -->
+<h2 id="sec2">2. 有効原子半径（Vegard式δr）の数学的構造</h2>
+
+<h3>2.1 δr の定義</h3>
+
+<p>HEA研究で広く用いられる原子サイズミスマッチパラメータ $\delta r$ は以下で定義される:</p>
+
+<div class="equation-box">
+$$\delta r = 100 \times \sqrt{\sum_{i=1}^{n} c_i \left(1 - \frac{r_i}{\bar{r}}\right)^2}$$
+</div>
+
+<p>ここで:</p>
+<ul>
+  <li>$c_i$: 元素$i$の組成分率（モル分率）</li>
+  <li>$r_i$: 元素$i$の<strong>純元素としての金属半径</strong>（Goldschmidt CN12値など）</li>
+  <li>$\bar{r} = \sum_i c_i r_i$: 組成加重平均半径</li>
+</ul>
+
+<h3>2.2 δr の入力変数の分析</h3>
+
+<p>$\delta r$ を完全に展開すると:</p>
+
+<div class="equation-box">
+$$\delta r = 100 \times \sqrt{\sum_{i} c_i \left(1 - \frac{r_i}{\sum_j c_j r_j}\right)^2}$$
+</div>
+
+<p>この式の<strong>全ての変数</strong>を列挙する:</p>
+
+<table>
+<tr><th>変数</th><th>依存するもの</th><th>依存しないもの</th></tr>
+<tr><td>$c_i$ （組成）</td><td>合金の組成</td><td>結晶構造、格子定数、DFT結果</td></tr>
+<tr><td>$r_i$ （純元素半径）</td><td>元素の種類のみ</td><td>組成、結晶構造、パートナー元素</td></tr>
+</table>
+
+<div class="negative-box">
+<strong>結論:</strong> $\delta r$ の計算に使われるのは「組成 $\{c_i\}$」と「純元素半径 $\{r_i\}$」のみ。結晶構造タイプ（L1$_2$, B2, FCC, BCC）に関する情報は一切入力されない。
+</div>
+
+<h3>2.3 二元系における具体的計算</h3>
+
+<p>元素XとYからなる二元系において、3つの化合物のδrを計算する:</p>
+
+<h4>(i) L1$_2$ X$_3$Y: $c_X=0.75, c_Y=0.25$</h4>
+
+<div class="equation-box">
+$$\bar{r} = 0.75 r_X + 0.25 r_Y$$
+$$\delta r(X_3Y) = 100\sqrt{0.75\left(1-\frac{r_X}{\bar{r}}\right)^2 + 0.25\left(1-\frac{r_Y}{\bar{r}}\right)^2}$$
+</div>
+
+<h4>(ii) L1$_2$ Y$_3$X: $c_Y=0.75, c_X=0.25$</h4>
+
+<div class="equation-box">
+$$\bar{r}' = 0.75 r_Y + 0.25 r_X$$
+$$\delta r(Y_3X) = 100\sqrt{0.75\left(1-\frac{r_Y}{\bar{r}'}\right)^2 + 0.25\left(1-\frac{r_X}{\bar{r}'}\right)^2}$$
+</div>
+
+<h4>(iii) B2 XY: $c_X=0.50, c_Y=0.50$</h4>
+
+<div class="equation-box">
+$$\bar{r}'' = 0.50 r_X + 0.50 r_Y$$
+$$\delta r(XY) = 100\sqrt{0.50\left(1-\frac{r_X}{\bar{r}''}\right)^2 + 0.50\left(1-\frac{r_Y}{\bar{r}''}\right)^2}$$
+</div>
+
+<p><strong>重要な観察:</strong> これら3つの$\delta r$値は<strong>全て同じ2つの定数 $(r_X, r_Y)$ のみ</strong>から計算される。違うのは組成 $(c_X, c_Y)$ だけであり、結晶構造（L1$_2$かB2か）の情報は一切含まれない。</p>
+
+<p>さらに注意すべき点: $\delta r(X_3Y) \neq \delta r(Y_3X)$ ではあるが、この差は<strong>組成の入れ替え（0.75:0.25 → 0.25:0.75）</strong>のみに起因し、構造の違い（L1$_2$でXが面心位置にいるのか角位置にいるのか）とは無関係である。</p>
+
+<!-- ================================================================ -->
+<h2 id="sec3">3. 原子体積由来の半径の数学的構造</h2>
+
+<h3>3.1 DFT体積からの有効半径</h3>
+
+<p>DFT計算により得られた格子定数 $a$ から、原子あたり体積を計算する:</p>
+
+<div class="equation-box">
+$$V_{\rm per\, atom} = \frac{a^3}{Z}$$
+</div>
+
+<p>ここで $Z$ は単位胞あたりの原子数（L1$_2$: $Z=4$, B2: $Z=2$）。これから等価球半径を定義する:</p>
+
+<div class="equation-box">
+$$r_{\rm eff} = \left(\frac{3V_{\rm per\, atom}}{4\pi}\right)^{1/3}$$
+</div>
+
+<h3>3.2 構造別有効体積の推定</h3>
+
+<p>L1$_2$ A$_3$B化合物の原子あたり体積を、元素の「役割」ごとの有効体積で分解する:</p>
+
+<div class="equation-box">
+$$V_{\rm per\, atom}(A_3B) = 0.75 \cdot V_{\rm maj}(A) + 0.25 \cdot V_{\rm min}(B)$$
+</div>
+
+<p>ここで:</p>
+<ul>
+  <li>$V_{\rm maj}(A)$: 元素Aが<strong>多数派（面心位置）</strong>にいるときの有効体積</li>
+  <li>$V_{\rm min}(B)$: 元素Bが<strong>少数派（角位置）</strong>にいるときの有効体積</li>
+</ul>
+
+<p>同様にB2化合物では:</p>
+
+<div class="equation-box">
+$$V_{\rm per\, atom}(AB) = 0.50 \cdot V_{\rm B2}(A) + 0.50 \cdot V_{\rm B2}(B)$$
+</div>
+
+<p>ここで $V_{\rm B2}(A)$ は元素AがB2構造中にいるときの有効体積。</p>
+
+<h3>3.3 入力変数の分析</h3>
+
+<table>
+<tr><th>変数</th><th>依存するもの</th><th>依存しないもの</th></tr>
+<tr><td>$V_{\rm maj}(A)$ </td><td>元素A、L1$_2$多数派役割、<strong>全パートナー元素Bの化学的効果</strong></td><td>—</td></tr>
+<tr><td>$V_{\rm min}(B)$ </td><td>元素B、L1$_2$少数派役割、<strong>全パートナー元素Aの化学的効果</strong></td><td>—</td></tr>
+<tr><td>$V_{\rm B2}(A)$</td><td>元素A、B2構造中の役割、<strong>全パートナー元素Bの化学的効果</strong></td><td>—</td></tr>
+</table>
+
+<div class="conclusion-box">
+<strong>核心的差異:</strong> 体積由来の有効半径は、DFT計算という「仮想実験」を通じて、元素が特定の結晶構造中で特定の役割を担ったときの体積を取り込んでいる。これは構造情報そのものである。
+</div>
+
+<!-- ================================================================ -->
+<h2 id="sec4">4. 数学的証明: δrが構造情報を吸収できない理由</h2>
+
+<h3>4.1 定理: δrの構造不変性</h3>
+
+<p><strong>命題:</strong> 同一元素ペア(X,Y)と同一組成 $(c_X, c_Y)$ に対して、$\delta r$ の値は結晶構造によらず一定である。</p>
+
+<p><strong>証明:</strong></p>
+
+<p>$\delta r$ の定義式において、入力は $\{c_i, r_i\}$ のみである。$r_i$ は純元素の金属半径であり、元素固有の定数である。$c_i$ は組成のみに依存する。したがって、$\delta r = f(c_X, c_Y, r_X, r_Y)$ は組成と純元素半径の関数であり、結晶構造の引数を持たない。</p>
+
+<p>具体的に、A$_3$B の L1$_2$ と、仮想的な A$_3$B の D0$_3$ 構造を考えても:</p>
+
+<div class="equation-box">
+$$\delta r(A_3B; {\rm L1_2}) = \delta r(A_3B; {\rm D0_3}) = f(0.75, 0.25, r_A, r_B)$$
+</div>
+
+<p>構造タイプが変わっても、$\delta r$ は不変。$\blacksquare$</p>
+
+<h3>4.2 なぜこれが問題か</h3>
+
+<p>DFTの事実として、<strong>同じ元素ペア・同じ組成でも構造が違えば格子定数は異なる</strong>:</p>
+
+<table>
+<tr><th>元素ペア</th><th>$a({\rm L1_2}\; X_3Y)$</th><th>$a({\rm L1_2}\; Y_3X)$</th><th>$|{\Delta a}|$</th></tr>
+<tr><td>Al–Ti</td><td>3.981 Å</td><td>4.028 Å</td><td>0.047 Å</td></tr>
+<tr><td>Cu–Zr</td><td>3.836 Å</td><td>4.351 Å</td><td>0.515 Å</td></tr>
+<tr><td>Ni–Ti</td><td>3.593 Å</td><td>3.969 Å</td><td>0.376 Å</td></tr>
+<tr><td>Fe–Al</td><td>3.665 Å</td><td>3.788 Å</td><td>0.123 Å</td></tr>
+</table>
+
+<p>$\delta r$ は A$_3$B と B$_3$A を区別する手段を持たない（組成が同じ 75:25 なら同じ値になる）。しかし実際の格子定数は0.05〜0.5 Åも異なる。この情報は完全に失われている。</p>
+
+<h3>4.3 δrが変化する唯一の要因: 組成</h3>
+
+<p>905元素ペアの解析から、$\delta r(X_3Y)$ vs $\delta r(Y_3X)$ をプロットすると（fig08参照）、全てのデータ点が<strong>滑らかな曲線上</strong>に乗る。これは：</p>
+
+<ul>
+  <li>$\delta r(X_3Y)$ と $\delta r(Y_3X)$ は同じ $(r_X, r_Y)$ から計算される</li>
+  <li>組成 (0.75, 0.25) と (0.25, 0.75) の違いが唯一の変動要因</li>
+  <li>結晶構造に起因するランダムな散布は<strong>一切存在しない</strong></li>
+</ul>
+
+<p>一方、$\delta r(X_3Y; {\rm L1_2})$ vs $\delta r(XY; {\rm B2})$ のプロットでも、データ点は別の滑らかな曲線上に乗る。これも組成 (0.75:0.25 → 0.50:0.50) の変化のみを反映しており、L1$_2$ と B2 の構造的差異は含まれない。</p>
+
+<!-- ================================================================ -->
+<h2 id="sec5">5. 物理的考察: なぜ原子体積は構造を反映するか</h2>
+
+<h3>5.1 結晶構造が原子体積に影響する物理的メカニズム</h3>
+
+<p>DFT計算では、電子の波動関数を自己無撞着に解いている。このとき、原子の配位環境が体積に影響する主なメカニズムは以下の通り:</p>
+
+<h4>(a) 近接原子の種類と数（化学結合効果）</h4>
+
+<p>L1$_2$ A$_3$B 構造において:</p>
+<ul>
+  <li><strong>A原子（面心位置）</strong>の最近接: 8A + 4B（12個中、8個が同種）</li>
+  <li><strong>B原子（角位置）</strong>の最近接: 12A（全て異種原子）</li>
+</ul>
+
+<p>L1$_2$ B$_3$A 構造では役割が逆転:</p>
+<ul>
+  <li><strong>B原子（面心位置）</strong>の最近接: 8B + 4A</li>
+  <li><strong>A原子（角位置）</strong>の最近接: 12B</li>
+</ul>
+
+<p>B2 AB 構造では:</p>
+<ul>
+  <li><strong>A原子（体心位置）</strong>の最近接: 8B</li>
+  <li><strong>B原子（角位置）</strong>の最近接: 8A</li>
+</ul>
+
+<div class="key-point">
+<strong>配位環境の非対称性:</strong> L1$_2$ X$_3$Yでは、X原子は「8X+4Y」に囲まれるが、Y原子は「12X」に囲まれる。この配位環境の違いが電子状態を変え、平衡格子定数を変える。X$_3$YとY$_3$Xでは多数派/少数派が入れ替わるため、全く異なる配位環境が実現し、異なる格子定数を与える。
+</div>
+
+<h4>(b) 電荷移動と結合次数</h4>
+
+<p>異種原子間の電気陰性度差による電荷移動:</p>
+<ul>
+  <li>電荷がAからBへ移動 → A原子が収縮、B原子が膨張</li>
+  <li>A$_3$B: Aは多数派なので全体としてA的性質が支配 → 格子はやや収縮</li>
+  <li>B$_3$A: Bが多数派 → 格子はBの性質が支配</li>
+</ul>
+
+<h4>(c) d-d軌道混成</h4>
+
+<p>遷移金属同士の合金では、d電子の混成が格子定数に大きく影響する:</p>
+<ul>
+  <li>d電子が多い元素が多数派 → d-d結合が強化 → 格子収縮</li>
+  <li>d電子が少ない元素が多数派 → 結合が弱い → 格子がVegard則より大きくなることも</li>
+</ul>
+
+<h3>5.2 Vegard則が失敗する本質的理由</h3>
+
+<p>Vegard則:</p>
+
+<div class="equation-box">
+$$V_{\rm Vegard}(A_xB_{1-x}) = x \cdot V_A^{\rm pure} + (1-x) \cdot V_B^{\rm pure}$$
+</div>
+
+<p>この式が仮定しているのは:</p>
+<ol>
+  <li><strong>加法性</strong>: 原子体積は線形に混合する</li>
+  <li><strong>純元素基準</strong>: 合金中でも原子の体積は純元素と同じ</li>
+  <li><strong>構造無依存</strong>: 体積は結晶構造によらない</li>
+</ol>
+
+<p>実際には上記3つ全てが破れている:</p>
+
+<ol>
+  <li><strong>非加法性</strong>: 異種原子間の相互作用（化学結合効果）により非線形</li>
+  <li><strong>環境依存性</strong>: 合金中の原子体積は配位環境に依存</li>
+  <li><strong>構造依存性</strong>: L1$_2$とB2で配位構造が異なる → 体積も異なる</li>
+</ol>
+
+<h3>5.3 具体例: Ni-Al系</h3>
+
+<table>
+<tr><th>化合物</th><th>組成</th><th>$V_{\rm DFT}$ [Å$^3$]</th><th>$V_{\rm Vegard}$ [Å$^3$]</th><th>$\Omega_{\rm sf}$</th></tr>
+<tr><td>Ni$_3$Al (L1$_2$)</td><td>$c_{\rm Ni}=0.75$</td><td>11.97</td><td>12.36</td><td>−0.031</td></tr>
+<tr><td>Al$_3$Ni (L1$_2$)</td><td>$c_{\rm Ni}=0.25$</td><td>16.05</td><td>15.19</td><td>+0.057</td></tr>
+<tr><td>NiAl (B2)</td><td>$c_{\rm Ni}=0.50$</td><td>12.73</td><td>13.77</td><td>−0.076</td></tr>
+</table>
+
+<p><strong>解釈:</strong></p>
+<ul>
+  <li><strong>Ni$_3$Al</strong>: Niが多数派 → 強いd-d結合 → Vegardより収縮 ($\Omega_{\rm sf} = -0.031$)</li>
+  <li><strong>Al$_3$Ni</strong>: Alが多数派 → sp-d混成 → Vegardより膨張 ($\Omega_{\rm sf} = +0.057$)</li>
+  <li><strong>NiAl</strong>: 50:50 → 強いNi-Al結合（B2構造で安定）→ 大きく収縮 ($\Omega_{\rm sf} = -0.076$)</li>
+</ul>
+
+<p>これら3つの$\Omega_{\rm sf}$は全て符号も大きさも異なり、<strong>構造と役割に強く依存している</strong>。しかし、$\delta r$ は $(r_{\rm Ni}, r_{\rm Al})$ のみから計算されるため、これらの差異を一切区別できない。</p>
+
+<!-- ================================================================ -->
+<h2 id="sec6">6. DFTデータによる実証</h2>
+
+<h3>6.1 905元素ペアの全3構造解析</h3>
+
+<p>全9,182件のDFT化合物データ（VASP: 4,291, MP: 1,205, OQMD: 3,686）から、905元素ペアで X$_3$Y, Y$_3$X, B2 XY の全3構造のデータが揃うペアを抽出し解析した。</p>
+
+<h4>6.1.1 L1$_2$ の非対称性: A$_3$B ≠ B$_3$A</h4>
+
+<p>L1$_2$構造において、X$_3$YとY$_3$Xの格子定数差の分布:</p>
+
+<table>
+<tr><th>統計量</th><th>$|a(X_3Y) - a(Y_3X)|$ [Å]</th><th>$|\Omega_{\rm sf}(X_3Y) - \Omega_{\rm sf}(Y_3X)|$</th></tr>
+<tr><td>平均</td><td>0.328</td><td>0.086</td></tr>
+<tr><td>中央値</td><td>0.250</td><td>0.051</td></tr>
+<tr><td>最大</td><td>2.74</td><td>3.71</td></tr>
+<tr><td>標準偏差</td><td>0.333</td><td>0.230</td></tr>
+</table>
+
+<p>平均0.33 Åの格子定数差は、HEA格子定数予測の目標精度（~0.02 Å）の<strong>16倍</strong>に相当する。これは「構造情報」が極めて大きな寄与を持つことを示している。</p>
+
+<h4>6.1.2 Vegard偏差の構造依存性</h4>
+
+<p>$\Omega_{\rm sf}(X_3Y)$ と $\Omega_{\rm sf}(Y_3X)$ の相関係数は $r = 0.152$ であり、ほぼ無相関である。これは、<strong>X$_3$YのVegard偏差を知ってもY$_3$Xの偏差は予測できない</strong>ことを意味する。Vegard則（≡ $\Omega_{\rm sf}=0$ の仮定）はこの非対称性を完全に無視している。</p>
+
+<h3>6.2 δr の構造不変性の実証（fig08）</h3>
+
+<p>fig08は3パネルからなる:</p>
+
+<table>
+<tr><th>パネル</th><th>横軸</th><th>縦軸</th><th>結果</th></tr>
+<tr><td>(a)</td><td>$\delta r(X_3Y)$</td><td>$\delta r(Y_3X)$</td><td>滑らかな曲線 → 組成のみ</td></tr>
+<tr><td>(b)</td><td>$\delta r(X_3Y)$</td><td>$\delta r(B2\; XY)$</td><td>別の滑らかな曲線 → 組成のみ</td></tr>
+<tr><td>(c)</td><td>$\Omega_{\rm sf}(X_3Y)$</td><td>$\Omega_{\rm sf}(Y_3X)$</td><td>大きな散布 $r = 0.152$ → 構造依存</td></tr>
+</table>
+
+<p>パネル(a)(b)で散布が見られないのに対し、パネル(c)では巨大な散布が存在する。この対比が、$\delta r$（構造情報なし）と$\Omega_{\rm sf}$（構造情報あり）の本質的差異を直接的に示している。</p>
+
+<h3>6.3 体積由来の有効半径の構造依存性の実証（fig09）</h3>
+
+<p>51元素について、3つの構造別有効半径を最小二乗法で推定した:</p>
+
+<table>
+<tr><th>有効半径の種類</th><th>意味</th><th>純元素半径からの平均偏差</th></tr>
+<tr><td>$r_{\rm maj}$</td><td>L1$_2$で多数派（面心）のときの半径</td><td>0.088 Å</td></tr>
+<tr><td>$r_{\rm min}$</td><td>L1$_2$で少数派（角）のときの半径</td><td>0.127 Å</td></tr>
+<tr><td>$r_{\rm B2}$</td><td>B2構造中での半径</td><td>0.062 Å</td></tr>
+</table>
+
+<div class="key-point">
+<strong>重要な発見:</strong> 少数派（minority）の偏差（0.127 Å）が多数派（majority, 0.088 Å）より43%大きい。これは物理的に理解できる: 少数派原子は異種原子12個に完全に囲まれるため、化学結合効果をより強く受ける。多数派原子は同種原子8個に囲まれるため、純元素に近い体積を保つ。
+</div>
+
+<!-- ================================================================ -->
+<h2 id="sec7">7. 具体的元素ペアの詳細解析</h2>
+
+<h3>7.1 HEA主要元素の構造別有効半径</h3>
+
+<table>
+<tr><th>元素</th><th>$r_{\rm pure}$ [Å]</th><th>$r_{\rm maj}$ [Å]</th><th>$r_{\rm min}$ [Å]</th><th>$r_{\rm B2}$ [Å]</th><th>$\Delta r_{\rm maj}$</th><th>$\Delta r_{\rm min}$</th><th>$\Delta r_{\rm B2}$</th></tr>
+<tr><td>Al</td><td>1.583</td><td>1.568</td><td>1.642</td><td>1.587</td><td>−0.015</td><td>+0.060</td><td>+0.004</td></tr>
+<tr><td>Cu</td><td>1.413</td><td>1.428</td><td>1.368</td><td>1.427</td><td>+0.015</td><td>−0.045</td><td>+0.014</td></tr>
+<tr><td>Ni</td><td>1.377</td><td>1.334</td><td>1.438</td><td>1.318</td><td>−0.043</td><td>+0.061</td><td>−0.059</td></tr>
+<tr><td>Fe</td><td>1.411</td><td>1.373</td><td>1.336</td><td>1.336</td><td>−0.038</td><td>−0.075</td><td>−0.075</td></tr>
+<tr><td>Ti</td><td>1.615</td><td>1.567</td><td>1.604</td><td>1.573</td><td>−0.048</td><td>−0.011</td><td>−0.042</td></tr>
+<tr><td>Cr</td><td>1.421</td><td>1.415</td><td>1.479</td><td>1.474</td><td>−0.005</td><td>+0.058</td><td>+0.053</td></tr>
+<tr><td>Co</td><td>1.383</td><td>1.333</td><td>1.325</td><td>1.302</td><td>−0.050</td><td>−0.058</td><td>−0.081</td></tr>
+<tr><td>Zr</td><td>1.771</td><td>1.747</td><td>1.750</td><td>1.739</td><td>−0.024</td><td>−0.021</td><td>−0.032</td></tr>
+</table>
+
+<h4>元素ごとの考察:</h4>
+
+<p><strong>Ni（顕著な非対称性）:</strong> 多数派で収縮 ($\Delta r_{\rm maj}=-0.043$)、少数派で膨張 ($\Delta r_{\rm min}=+0.061$)、B2で大きく収縮 ($\Delta r_{\rm B2}=-0.059$)。Niはd電子が8個と多く、d-d結合形成力が強い。多数派のとき同種Ni-Ni結合が多く収縮、少数派のとき異種原子に囲まれ膨張する。B2では8個の異種原子との結合で強く収縮。この非対称性は $\delta r$ では一切捕捉できない。</p>
+
+<p><strong>Al（逆方向の非対称性）:</strong> 多数派でやや収縮 ($-0.015$)、少数派で大きく膨張 ($+0.060$)、B2ではほぼ変化なし ($+0.004$)。Alはsp金属であり、少数派として遷移金属に囲まれるとsp-d混成により膨張する傾向がある。</p>
+
+<p><strong>Cu（多数派で膨張、少数派で収縮）:</strong> 多数派 ($+0.015$)、少数派 ($-0.045$)。Cuはd殻が完全に閉じた(3d$^{10}$)元素であり、他の遷移金属と異なる挙動を示す。少数派として強いd-d結合を持つ元素に囲まれると圧縮される。</p>
+
+<p><strong>Fe（全構造で収縮）:</strong> 全3構造で収縮 ($-0.038, -0.075, -0.075$)。Feはd電子が6個で磁気モーメントを持つ。合金中では磁気的遷移（スピン状態変化）により体積が収縮する傾向が強い。</p>
+
+<h3>7.2 組成軸プロットから読み取れること</h3>
+
+<p>fig10（全905ペアのPDF）の組成軸プロットから、以下のパターンが観察される:</p>
+
+<h4>パターン1: 正の偏差（Vegardより膨張）</h4>
+<p>DFT点がVegard直線の<strong>上</strong>にある場合。電気陰性度差が小さいペアで見られることが多い。例: 同族元素ペア。</p>
+
+<h4>パターン2: 負の偏差（Vegardより収縮）</h4>
+<p>DFT点がVegard直線の<strong>下</strong>にある場合。強い化学結合を形成するペアで典型的。例: Ni-Al（B2で大きく収縮）。</p>
+
+<h4>パターン3: 非対称偏差</h4>
+<p>c=0.25で正、c=0.75で負（またはその逆）。同一ペアでも組成によってVegardからの偏差の符号が変わる。これはVegard則の線形仮定の根本的破綻を示す。$\delta r$はこの非線形性を捕捉できない。</p>
+
+<h4>パターン4: B2の特異点</h4>
+<p>c=0.50のB2が、L1$_2$の c=0.25 と c=0.75 を結ぶ直線から大きく外れるケース。B2構造特有の結合（最近接が全て異種原子）による効果。</p>
+
+<!-- ================================================================ -->
+<h2 id="sec8">8. 元素別有効半径テーブルの意味</h2>
+
+<h3>8.1 3種類の有効半径の物理的意味</h3>
+
+<div class="equation-box">
+$$r_{\rm eff}({\rm Element}, {\rm Role}) = \left(\frac{3 V_{\rm eff}({\rm Element}, {\rm Role})}{4\pi}\right)^{1/3}$$
+</div>
+
+<p>各元素は3つの有効半径を持つ:</p>
+
+<table>
+<tr><th>半径</th><th>由来</th><th>物理的意味</th></tr>
+<tr><td>$r_{\rm maj}$</td><td>L1$_2$多数派フィットから</td><td>FCC固溶体中で多数元素として振る舞うときのサイズ</td></tr>
+<tr><td>$r_{\rm min}$</td><td>L1$_2$少数派フィットから</td><td>FCC固溶体中で少数添加元素として振る舞うときのサイズ</td></tr>
+<tr><td>$r_{\rm B2}$</td><td>B2フィットから</td><td>BCC秩序構造中での有効サイズ</td></tr>
+</table>
+
+<h3>8.2 HEAへの応用</h3>
+
+<p>多成分HEA中では、各元素は「多数派にも少数派にもなりうる」。例えば、CoCrFeNiMn（Cantor合金）では各元素が20%ずつなので、明確な多数派/少数派は存在しない。しかし:</p>
+
+<ul>
+  <li>$r_{\rm maj}$ と $r_{\rm min}$ の<strong>加重平均</strong>が、HEA中での実効的サイズを近似すると期待される</li>
+  <li>$r_{\rm maj} \approx r_{\rm min}$ の元素（例: Zr）は環境に鈍感（robust）</li>
+  <li>$r_{\rm maj} \neq r_{\rm min}$ の元素（例: Ni, Al）は環境に敏感 → HEA中で大きな非線形効果</li>
+</ul>
+
+<h3>8.3 Vegard式δrとの対比</h3>
+
+<table>
+<tr><th>性質</th><th>$\delta r$ (Vegard式)</th><th>$r_{\rm eff}$ (体積由来)</th></tr>
+<tr><td>入力データ</td><td>純元素半径のみ</td><td>DFT合金体積</td></tr>
+<tr><td>構造依存性</td><td><strong>なし</strong></td><td><strong>あり</strong>（3構造で異なる値）</td></tr>
+<tr><td>化学結合効果</td><td>含まない</td><td>DFTを通じて含む</td></tr>
+<tr><td>パラメータ数</td><td>元素数 $N$</td><td>元素数 $\times$ 構造数</td></tr>
+<tr><td>物理的根拠</td><td>幾何学的（球の充填）</td><td>電子構造（量子力学的）</td></tr>
+<tr><td>予測力</td><td>単相判定に有用 (AUC=0.87)</td><td>格子定数予測に有用</td></tr>
+</table>
+
+<!-- ================================================================ -->
+<h2 id="sec9">9. HEA格子定数予測への含意</h2>
+
+<h3>9.1 なぜ構造情報が格子定数予測に必要か</h3>
+
+<p>HEA格子定数予測では、以下の量を正確に見積もる必要がある:</p>
+
+<div class="equation-box">
+$$a_{\rm HEA} = \left(n_{\rm auc} \cdot V_{\rm per\, atom}\right)^{1/3}$$
+</div>
+
+<p>ここで $V_{\rm per\, atom}$ は合金中での平均原子体積であり、King (1966) の体積サイズファクター $\Omega_{\rm sf}$ を用いた補正式（Alonso (2021) がHEAに応用した Eq.10）では:</p>
+
+<div class="equation-box">
+$$V_{\rm per\, atom} = \sum_i c_i V_i + \gamma \sum_i \sum_{j \neq i} c_i c_j V_j \Omega_{\rm sf}(i,j)$$
+</div>
+
+<p>第2項の $\Omega_{\rm sf}(i,j)$ がペアワイズの体積偏差であり、これが構造情報を持っている。Vegard則（第1項のみ）では $V_{\rm per\, atom} = \sum c_i V_i$ となり、構造情報は一切入らない。</p>
+
+<h3>9.2 δr vs Ω_sfの相関</h3>
+
+<p>前セッションの結果から、$\delta r$ と $\delta_{\rm sf}$（Ω_sfから構成されるサイズミスマッチ記述子）の相関は $r = 0.17$ と極めて低い。これは:</p>
+
+<ul>
+  <li>$\delta r$: 純元素半径から計算 → 幾何学的サイズ情報のみ</li>
+  <li>$\delta_{\rm sf}$: DFT体積偏差から計算 → 化学結合効果を含む</li>
+  <li>両者はほぼ独立な情報を持つ → 相補的に利用可能</li>
+</ul>
+
+<h3>9.3 実際の予測精度への影響</h3>
+
+<table>
+<tr><th>手法</th><th>RMSE [Å]</th><th>構造情報の有無</th></tr>
+<tr><td>Vegard則 ($\delta r$ベース)</td><td>0.028</td><td>なし</td></tr>
+<tr><td>King $\Omega_{\rm sf}$ + Eq.10 (ペアワイズ)</td><td>0.021</td><td>ペアワイズで含む</td></tr>
+<tr><td>加法分解 ($\delta_A + \delta_B$)</td><td>0.022</td><td>元素レベルで含む</td></tr>
+</table>
+
+<p>Vegard則（0.028 Å）から Eq.10（0.021 Å）への改善の<strong>全て</strong>が $\Omega_{\rm sf}$ による構造情報の導入に起因する。</p>
+
+<!-- ================================================================ -->
+<h2 id="sec10">10. 結論と今後の展望</h2>
+
+<div class="conclusion-box">
+<h3>結論</h3>
+
+<p><strong>1. 有効原子半径（$\delta r$）は構造情報を吸収できない</strong></p>
+<ul>
+  <li>数学的に証明: $\delta r = f(c_i, r_i)$ であり、結晶構造の引数を持たない</li>
+  <li>905ペアで実証: $\delta r(X_3Y)$ vs $\delta r(Y_3X)$ に散布がない（組成依存のみ）</li>
+  <li>A$_3$BとB$_3$Aの格子定数差（平均0.33 Å）を区別する手段を持たない</li>
+</ul>
+
+<p><strong>2. 原子体積由来の半径は構造情報を吸収できる</strong></p>
+<ul>
+  <li>DFT体積を通じて、配位環境・化学結合効果・d-d混成を取り込む</li>
+  <li>51元素で3つの有効半径（majority, minority, B2）が定量的に異なることを実証</li>
+  <li>少数派半径の偏差（0.127 Å）が多数派（0.088 Å）より43%大きい: 配位環境効果と整合</li>
+</ul>
+
+<p><strong>3. 実用的含意</strong></p>
+<ul>
+  <li>HEA格子定数予測: Vegard則(0.028 Å) → Eq.10(0.021 Å) の改善は構造情報の導入に起因</li>
+  <li>$\delta r$ と $\delta_{\rm sf}$ は独立な情報($r=0.17$) → 相補的利用が可能</li>
+  <li>$\delta r$ は単相判定に有用(AUC=0.87)、$\Omega_{\rm sf}$は格子定数予測に有用 — 目的に応じた使い分けが重要</li>
+</ul>
+</div>
+
+<h3>今後の展望</h3>
+
+<ol>
+  <li><strong>HEA中での有効半径の組成依存性</strong>: 二元系から推定した $r_{\rm maj}$, $r_{\rm min}$ が多成分系でどの程度有効かの検証</li>
+  <li><strong>三元系以上への拡張</strong>: ペアワイズ $\Omega_{\rm sf}$ の加法分解 $\delta_A + \delta_B$ が三体効果をどの程度見落とすか</li>
+  <li><strong>温度効果</strong>: 0 K DFTから室温への外挿と熱膨張の構造依存性</li>
+  <li><strong>構造安定性との関連</strong>: $r_{\rm maj} \neq r_{\rm min}$ が大きい元素はHEA中で秩序化しやすいか？</li>
+</ol>
+
+</body>
+</html>
