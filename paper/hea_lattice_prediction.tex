@@ -1,5 +1,5 @@
 % !TEX program = lualatex
-\documentclass[twocolumn,10pt]{elsarticle}
+\documentclass[5p,10pt]{elsarticle}
 
 \usepackage{luatexja}
 \usepackage{luatexja-fontspec}
@@ -29,27 +29,31 @@
 
 \begin{frontmatter}
 
-\title{構造特異的DFT体積サイズファクターと元素別加法分解による\\
-立方晶高エントロピー合金の格子定数予測の改善}
+\title{原子体積の加法分解による任意組成\\
+高エントロピー合金の格子定数予測}
 
-\author{皆本 聡}
+\author{Satoshi Minamoto}
 \address{物質・材料研究機構 (NIMS), 茨城県つくば市}
 
 \begin{abstract}
-高エントロピー合金(HEA)の格子定数予測は計算スクリーニングに不可欠である。
-AlonsoモデルはKing (1966) の体積サイズファクター$\Omega_\text{sf}$で
-Vegard則を補正し、64個の立方晶HEAに対してRMSE = 0.023~\AA{}を達成する。
-本研究では (i)~3,511個の二元系金属間化合物の第一原理計算から
-\emph{構造特異的}$\Omega_\text{sf}$を導出（B2→BCC、L1$_2$→FCC）、
-(ii)~ペアワイズ220パラメータを39元素パラメータに圧縮する加法分解
-$\Omega_\text{sf}(A\text{-}B) \approx \delta_A + \delta_B$を導入、
-(iii)~原子サイズミスマッチ$\delta r$が構造情報を吸収できない理由を
-数学的に証明し、体積由来の量が構造情報を内包することを定量的に示す。
-最良モデルはRMSE = 0.0210~\AA{}（Alonso比8.6\%改善）、
-FCC HEAは0.0096~\AA{}（ノイズフロア$\sigma \approx 0.016$~\AA{}に迫る）
-を達成する。20個の独立HEAでRMSE = 0.020~\AA{}が確認され汎化性能が実証
-された。元素別$\delta$パラメータは周期表的記述子として、追加DFT計算なしに
-任意元素ペアの$\Omega_\text{sf}$を予測可能にする。
+高エントロピー合金(HEA)の格子定数を任意組成で高精度に予測する
+手法を提案する。King (1966) の体積サイズファクター$\Omega_\text{sf}$を
+DFT計算から構造特異的に導出（B2→BCC、L1$_2$→FCC）し、
+ペアワイズ220パラメータを元素別加法分解
+$\Omega_\text{sf}^{(s)}(A\text{-}B) \approx \delta_A^{(s)} + \delta_B^{(s)}$に
+圧縮する（39元素パラメータ）。この分解により、各元素の
+\emph{組成依存有効原子体積}$V_\text{eff}(i;\, \{c_j\})$を
+定義でき、等モル・非等モルを問わず任意組成のHEA格子定数を
+$a = (n_\text{auc}\sum c_i V_\text{eff})^{1/3}$で予測可能となる。
+64個のHEAに対しRMSE = 0.0210~\AA{}（Alonso比8.6\%改善、
+ペアワイズ0.0207~\AA{}とほぼ同等）、FCC HEAは0.0101~\AA{}を達成。
+20個の独立HEAでRMSE = 0.020~\AA{}が確認された。
+さらに、原子サイズミスマッチ$\delta r$が構造情報を
+数学的に含み得ないことを証明し、DFT体積由来の量のみが
+構造効果を自然に内包することを905二元系ペアで実証した。
+元素別$\delta^{(s)}$パラメータは表1枚で提供され、
+DFT計算なしに任意HEA組成の格子定数をスプレッドシートで
+即座にスクリーニング可能である。
 \end{abstract}
 
 \begin{keyword}
@@ -158,13 +162,16 @@ $\delta r$と$\Omega_\text{sf}$の役割の混同がある。$\delta r$は
 ついては検証されていない。本研究では905の二元系ペアを用いて、
 $\delta r$が構造情報を数学的・原理的に含み得ないことを初めて厳密に証明する。
 
-本研究では以下の4つの革新により上記の限界を克服する：
+本研究では以下の5つの革新により上記の限界を克服する：
 \begin{enumerate}
   \item Materials Project・OQMDの3,511二元系化合物のDFT計算から
     構造特異的$\Omega_\text{sf}$を導出（B2→BCC、L1$_2$→FCC）。
   \item 元素別加法分解
-    $\Omega_\text{sf}(A\text{-}B) \approx \delta_A + \delta_B$により、
+    $\Omega_\text{sf}^{(s)}(A\text{-}B) \approx \delta_A^{(s)} + \delta_B^{(s)}$により、
     220ペアワイズパラメータを39元素パラメータに圧縮。
+  \item $\delta^{(s)}$から\emph{組成依存有効原子体積}
+    $V_\text{eff}(i;\, \{c_j\})$を導出し、任意組成のHEA格子定数を
+    $a = (n_\text{auc}\sum c_i V_\text{eff})^{1/3}$で予測可能に。
   \item $\delta r$が構造情報を吸収できない理由を数学的に証明し、
     905二元系ペアで検証。
   \item Alonsoデータセット外の20 HEAで汎化性能を検証。
@@ -296,20 +303,26 @@ B2化合物の$\Omega_\text{sf}$を1.45倍に増幅する必要があること�
 \subsection{元素別加法分解}
 \label{sec:additive}
 
-ペアワイズ$\Omega_\text{sf}$を元素レベルの寄与に分解する：
+構造$s$ごとのペアワイズ$\Omega_\text{sf}^{(s)}$を
+元素レベルの寄与$\delta_i^{(s)}$に分解する：
 \begin{equation}
-  \Omega_\text{sf}(A\text{-}B) \approx \delta_A + \delta_B.
+  \Omega_\text{sf}^{(s)}(A\text{-}B)
+  \approx \delta_A^{(s)} + \delta_B^{(s)},
+  \quad s \in \{\text{B2},\;\text{L1}_2\}.
   \label{eq:additive}
 \end{equation}
-これは優決定連立方程式（$P$ペア、$N$元素、$P \gg N$）の
+これは構造$s$ごとに独立な優決定連立方程式
+（$P_s$ペア、$N_s$元素、$P_s \gg N_s$）の
 最小二乗法で解く：
 \begin{equation}
-  \min_{\boldsymbol{\delta}} \sum_{(A,B)}
-    \left[\Omega_\text{sf}(A\text{-}B) - \delta_A - \delta_B\right]^2.
+  \min_{\boldsymbol{\delta}^{(s)}} \sum_{(A,B)}
+    \left[\Omega_\text{sf}^{(s)}(A\text{-}B)
+    - \delta_A^{(s)} - \delta_B^{(s)}\right]^2.
   \label{eq:additive_lsq}
 \end{equation}
-B2・L1$_2$データそれぞれに対して分解を行い、
-$\delta_A^{\text{B2}}$・$\delta_A^{\text{L1}_2}$を得る。
+B2データから$\delta_A^{(\text{B2})}$、
+L1$_2$データから$\delta_A^{(\text{L1}_2)}$を独立に推定する。
+両者は一般に異なる値をとり、配位環境の構造依存性を反映する。
 
 加法モデルでは式~\eqref{eq:scaled_eq10}の$\Omega_\text{sf}$を
 $\delta_i^{(s)} + \delta_j^{(s)}$で置換する：
@@ -331,10 +344,65 @@ $N$元素のペアワイズモデルでは$\binom{N}{2}$個のパラメータが
 欠損ペア問題が解消される。これはHEA格子定数予測において
 実用上最も重要な改善点の一つである。
 
-もう一つの利点は物理的解釈性である。各元素の$\delta$は
+もう一つの利点は物理的解釈性である。各元素の$\delta^{(s)}$は
 「その元素が合金中で格子を膨張/収縮させる固有の傾向」を表す
 スカラー量として解釈でき、周期表上での系統的傾向を分析可能となる。
 
+
+\subsection{組成依存有効原子体積と有効半径}
+\label{sec:veff}
+
+加法分解$\delta^{(s)}$の最も重要な帰結は、任意の多成分合金組成
+$\{c_i\}_{i=1}^N$における各元素の\emph{有効原子体積}を定義できる
+ことである。式~\eqref{eq:additive_pred}から、元素$i$の
+組成依存有効体積を次のように抽出できる：
+\begin{equation}
+  V_\text{eff}(i;\, \{c_j\})
+  = V_i \!\left[1 + \gamma_s \sum_{j \ne i} c_j\,
+    \bigl(\delta_i^{(s)} + \delta_j^{(s)}\bigr)\right]\!,
+  \label{eq:veff}
+\end{equation}
+ここで$V_i$は純元素の原子体積（King~\cite{King1966}）、
+$\gamma_s$は構造$s$に対する最適スケーリング因子である。
+第2項は化学環境による補正を表し、合金化パートナーの
+組成$c_j$と両元素の$\delta^{(s)}$に依存する。
+
+有効原子体積から有効原子半径を定義する：
+\begin{equation}
+  r_\text{eff}(i;\, \{c_j\})
+  = \left(\frac{3\,V_\text{eff}(i;\, \{c_j\})}{4\pi}\right)^{\!1/3}\!.
+  \label{eq:reff}
+\end{equation}
+$r_\text{eff}$は組成に依存するため、等モル合金と非等モル合金で
+異なる値をとる。具体的に、5元系等モルHEA
+（例：$c_i = 0.2$）では全パートナーが均等に寄与するため
+$\sum_{j \ne i} c_j (\delta_i^{(s)} + \delta_j^{(s)})
+= 0.8\,\delta_i^{(s)} + 0.2\sum_{j \ne i}\delta_j^{(s)}$となり、
+$r_\text{eff}$は$\delta_i^{(s)}$と全パートナーの平均$\delta$で決まる。
+一方、非等モル合金$A_{0.6}B_{0.1}C_{0.1}D_{0.1}E_{0.1}$では
+主成分Aの$\delta$が支配的になる。
+
+格子定数の予測は次式で与えられる：
+\begin{equation}
+  a = \left(n_\text{auc} \sum_i c_i\, V_\text{eff}(i;\, \{c_j\})
+  \right)^{\!1/3}\!.
+  \label{eq:a_from_veff}
+\end{equation}
+この式は式~\eqref{eq:additive_pred}と\emph{代数的に同値}であるが、
+物理的解釈が異なる。式~\eqref{eq:additive_pred}は「Vegard体積$+$
+化学結合補正」という構成であるのに対し、
+式~\eqref{eq:a_from_veff}は「組成依存の有効原子体積の加重平均」
+という直感的な描像を与える。すなわち、各元素は合金化環境に応じて
+実効的な体積を持ち、その加重平均がHEA格子定数を決定する。
+
+\paragraph{パッキング近似との対比}
+従来のパッキング近似では、元素$i$に組成非依存の有効半径$r_i$を
+割り当て、最近接距離$d_\text{nn} = r_i + r_j$から格子定数を予測する。
+この手法は（a）半径が組成に依存しないため非等モル系の情報を欠き、
+（b）和$r_i + r_j$は$A_3B$と$B_3A$を区別できない対称操作であるため、
+L1$_2$非対称性を原理的に表現できない。
+体積近似$V_\text{eff}(i;\, \{c_j\})$は組成と構造の両方の情報を
+自然に含む点で根本的に異なる。
 
 \subsection{HEAデータセットの特徴}
 \label{sec:hea_features}
@@ -503,13 +571,13 @@ Alonso Eq.~10よりも系統的に対角線に近いことが読み取れる。
 \label{fig:parity}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure*}[!t]
 \centering
-\includegraphics[width=\columnwidth]{fig_rmse_bar.png}
+\includegraphics[width=\textwidth]{fig_rmse_bar.png}
 \caption{各手法のRMSE比較棒グラフ。破線はノイズフロア
   $\sigma \approx 0.016$~\AA{}を示す。}
 \label{fig:rmse}
-\end{figure}
+\end{figure*}
 
 
 \subsection{BCC/FCC構造別分析}
@@ -554,13 +622,13 @@ BCC HEAはAl〜Zr/Hfまで広い原子サイズ範囲に
 
 図~\ref{fig:bcc_fcc}にBCC/FCC別パリティプロットを示す。
 
-\begin{figure}[H]
+\begin{figure*}[!t]
 \centering
-\includegraphics[width=\columnwidth]{fig_bcc_fcc.png}
+\includegraphics[width=\textwidth]{fig_bcc_fcc.png}
 \caption{BCC (左) とFCC (右) 別のパリティプロット。FCC HEAは対角線に
   極めて近い。}
 \label{fig:bcc_fcc}
-\end{figure}
+\end{figure*}
 
 
 \subsection{独立テスト検証}
@@ -598,13 +666,13 @@ Alonso Eq.~10が独立テストでRMSE = 0.0261~\AA{}と訓練セット
 悪化する原因として、Kingの実験$\Omega_\text{sf}$が一部のHEA関連
 ペアで不正確である可能性が考えられる。
 
-\begin{figure}[H]
+\begin{figure*}[!t]
 \centering
-\includegraphics[width=\columnwidth]{fig_indep_test.png}
+\includegraphics[width=\textwidth]{fig_indep_test.png}
 \caption{独立テストセット（20 HEA）の予測精度。縦軸：予測格子定数、
   横軸：実験格子定数。}
 \label{fig:indep}
-\end{figure}
+\end{figure*}
 
 
 \subsection{元素別加法分解パラメータ}
@@ -617,7 +685,7 @@ HEA格子定数を予測するための周期表的パラメータセットを�
 
 \begin{table*}[t]
 \centering
-\caption{元素別加法分解パラメータ$\delta_A$（B2・L1$_2$）と構造依存有効半径。
+\caption{元素別加法分解パラメータ$\delta_A^{(s)}$（B2・L1$_2$）と構造依存有効半径。
   $r_\text{pure}$はKingの金属半径、$\Delta r_\text{maj}$・$\Delta r_\text{min}$は
   L1$_2$多数派・少数派サイトの有効半径偏差$r_\text{eff} - r_\text{pure}$ (\AA)。
   ``---''は当該構造のDFTデータが不足するペアを示す。}
@@ -688,13 +756,13 @@ Mo & $+$0.074 & --- & 1.551 & $+$0.028 & $+$0.063
 
 図~\ref{fig:element_delta}に元素別$\delta$パラメータの棒グラフを示す。
 
-\begin{figure}[H]
+\begin{figure*}[!t]
 \centering
-\includegraphics[width=\columnwidth]{fig_element_delta.png}
+\includegraphics[width=\textwidth]{fig_element_delta.png}
 \caption{元素別加法分解パラメータ$\delta$。上：B2、下：L1$_2$。
   赤：正（格子膨張）、青：負（格子収縮）。}
 \label{fig:element_delta}
-\end{figure}
+\end{figure*}
 
 図~\ref{fig:element_delta}から以下の周期律的傾向が読み取れる：
 \begin{itemize}
@@ -718,7 +786,7 @@ Mo & $+$0.074 & --- & 1.551 & $+$0.028 & $+$0.063
 \subsection{加法分解の品質}
 \label{sec:additive_quality}
 
-加法モデル$\Omega_\text{sf} \approx \delta_A + \delta_B$は
+加法モデル$\Omega_\text{sf}^{(s)} \approx \delta_A^{(s)} + \delta_B^{(s)}$は
 B2分散の62\%（$R^2 = 0.62$、RMSE = 0.042）、
 L1$_2$分散の69\%（$R^2 = 0.69$、RMSE = 0.029）を説明する。
 残余分散はペアワイズ固有の電荷移動・$d$--$d$混成効果であり、
@@ -731,14 +799,14 @@ $\Omega_\text{sf}$の主要な傾向を捕捉しているが、一部の大き�
 局所的な乖離が見られる。これらのペアでは電荷移動量が大きく、
 単純な加法近似の範囲を超える。
 
-\begin{figure}[H]
+\begin{figure*}[!t]
 \centering
-\includegraphics[width=\columnwidth]{fig_additive_fit.png}
+\includegraphics[width=\textwidth]{fig_additive_fit.png}
 \caption{加法分解のフィット品質。左：B2（$R^2 = 0.62$）、右：L1$_2$（$R^2 = 0.69$）。
-  横軸：ペアワイズ$\Omega_\text{sf}$、縦軸：加法モデル予測$\delta_A + \delta_B$。
+  横軸：ペアワイズ$\Omega_\text{sf}^{(s)}$、縦軸：加法モデル予測$\delta_A^{(s)} + \delta_B^{(s)}$。
   破線は完全一致。}
 \label{fig:additive_fit}
-\end{figure}
+\end{figure*}
 
 HEA格子定数予測に適用すると、加法モデルはRMSE = 0.0215~\AA{}を
 達成する（ペアワイズ0.0210~\AA{}との差はわずか0.0005~\AA、2.4\%）。
@@ -772,15 +840,15 @@ HEA格子定数予測に適用すると、加法モデルはRMSE = 0.0215~\AA{}�
 （$B_3A$: $c = 0.25$, $AB$: $c = 0.50$, $A_3B$: $c = 0.75$）を
 プロットする。
 
-\begin{figure}[H]
+\begin{figure*}[!t]
 \centering
-\includegraphics[width=\columnwidth]{fig_composition_examples.png}
+\includegraphics[width=\textwidth]{fig_composition_examples.png}
 \caption{代表6ペアの組成軸Vegardプロット。破線：Vegard則の
   線形補間。丸：DFT計算による格子定数。Vegard則からの偏差
   （$\Omega_\text{sf}$）が元素ペアにより正・負両方に現れ、
   かつ組成比（$A_3B$ vs $B_3A$）で大きく異なることが可視化される。}
 \label{fig:composition}
-\end{figure}
+\end{figure*}
 
 図~\ref{fig:composition}から以下の重要な観察が得られる：
 
@@ -851,15 +919,15 @@ $|\Omega_\text{sf}(A_3B) - \Omega_\text{sf}(B_3A)|$が大きく、
 類似元素ペア（Fe--Co: $\Delta\chi = 0.05$, Cr--Mn: $\Delta\chi = 0.11$）
 では小さい。この傾向は電荷移動効果の配位環境依存性と整合する。
 
-\begin{figure}[H]
+\begin{figure*}[!t]
 \centering
-\includegraphics[width=\columnwidth]{fig_delta_r_proof.png}
+\includegraphics[width=\textwidth]{fig_delta_r_proof.png}
 \caption{$\delta r$の構造不変性の証明。(a)~$\delta r(A_3B)$ vs
   $\delta r(B_3A)$：散布なし（組成のみに依存）。
   (c)~$\Omega_\text{sf}(A_3B)$ vs $\Omega_\text{sf}(B_3A)$：
   大散布（$r = 0.15$）。(d)~DFT格子定数差のヒストグラム。}
 \label{fig:delta_r_proof}
-\end{figure}
+\end{figure*}
 
 
 \subsection{パッキング制約半径の限界}
@@ -939,23 +1007,126 @@ L1$_2$の多数派/少数派サイトの配位環境差は決して無視でき�
 
 図~\ref{fig:volume_radius}に体積由来有効半径の解析を示す。
 
-\begin{figure}[H]
+\begin{figure*}[!t]
 \centering
-\includegraphics[width=\columnwidth]{fig_l12_asymmetry.png}
+\includegraphics[width=\textwidth]{fig_l12_asymmetry.png}
 \caption{L1$_2$格子定数の非対称性。$a(A_3B) - a(B_3A)$の分布は
   対称だが大きな分散を持つ。}
 \label{fig:l12_asymmetry}
-\end{figure}
+\end{figure*}
 
 図~\ref{fig:volume_radius}に体積由来半径の構造依存性を示す。
 
-\begin{figure}[H]
+\begin{figure*}[!t]
 \centering
-\includegraphics[width=\columnwidth]{fig_volume_radius.png}
+\includegraphics[width=\textwidth]{fig_volume_radius.png}
 \caption{構造依存有効半径。多数派サイト（面心）と少数派サイト（頂点）で
   異なる有効半径を持つ。純元素半径からの偏差は少数派サイトのほうが大きい。}
 \label{fig:volume_radius}
-\end{figure}
+\end{figure*}
+
+
+\subsection{組成依存有効半径によるHEA格子定数予測}
+\label{sec:veff_results}
+
+加法分解$\delta^{(s)}$から定義した組成依存有効原子体積
+（式~\eqref{eq:veff}--\eqref{eq:a_from_veff}）を用いて、
+64個のHEA格子定数を予測した。加法モデルに対して
+構造別$\gamma_s$を再最適化した結果、
+$\gamma_\text{BCC}^\text{add} = -0.147$、
+$\gamma_\text{FCC}^\text{add} = -0.170$を得た。
+負のγ値は、加法分解のδがペアワイズΩ$_\text{sf}$の
+全体的な傾向（合金化による平均的収縮）をδ自体に吸収しているため、
+残余補正の符号が反転することを意味する。
+
+表~\ref{tab:veff_rmse}に全手法の予測精度比較を示す。
+加法分解モデルはRMSE = 0.0210~\AA{}を達成し、
+ペアワイズ（0.0207~\AA）との差はわずか0.0003~\AA{}（1.4\%）である。
+この差はHEAの実験格子定数の測定不確かさ
+（$\sigma \approx 0.016$~\AA）と比較して無視可能であり、
+加法分解が精度をほとんど犠牲にすることなくパラメータ数を
+95\%削減できることを実証する。
+
+\begin{table}[H]
+\centering
+\caption{HEA格子定数予測のRMSE (\AA) 比較。
+  加法分解$\delta^{(s)}$モデルはペアワイズとほぼ同等の精度を
+  39元素パラメータのみで達成する。}
+\label{tab:veff_rmse}
+\scriptsize
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+手法 & 全体 & BCC & FCC & 等モル & 非等モル \\
+ & ($N$=64) & ($N$=29) & ($N$=35) & ($N$=25) & ($N$=39) \\
+\midrule
+Vegard & 0.0221 & 0.0308 & 0.0104 & 0.0145 & 0.0258 \\
+Pairwise $\Omega_\text{sf}$ & 0.0207 & 0.0289 & 0.0096 & 0.0110 & 0.0250 \\
+\textbf{Additive} $\boldsymbol{\delta^{(s)}}$ & \textbf{0.0210} & \textbf{0.0292} & \textbf{0.0101} & \textbf{0.0143} & \textbf{0.0244} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+図~\ref{fig:veff_hea}に予測精度の可視化を示す。
+パリティプロット（図~\ref{fig:veff_hea}b）は全64 HEAにわたって
+予測値と実験値の良好な一致を示しており、BCC・FCC双方で
+系統的バイアスは見られない。
+BCC/FCC構造別の分解（図~\ref{fig:veff_hea}c）では、
+FCC HEA（RMSE = 0.0101~\AA）の精度がBCC（0.0292~\AA）を
+大きく上回る傾向はペアワイズモデルと共通である。
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_hea_prediction_additive.png}
+\caption{加法分解$\delta^{(s)}$モデルによるHEA格子定数予測。
+  (a) 3手法のRMSE比較。(b) パリティプロット（予測 vs 実験）。
+  (c) BCC/FCC構造別RMSE分解。}
+\label{fig:veff_hea}
+\end{figure*}
+
+\paragraph{組成依存有効半径の振る舞い}
+有効半径$r_\text{eff}$の組成依存性を図~\ref{fig:reff_comp}に示す。
+CoCrFeMnNi（Cantor合金）系を例にとり、1成分の分率$c_i$を
+0.05から0.6まで変化させた際の$r_\text{eff}(i)$を計算した。
+組成の変化に伴い有効半径は連続的に変化し、等モル点
+（$c_i = 0.2$）を境に非線形な応答を示す。この非線形性は
+$\delta^{(s)}$の異符号混合に起因する：正の$\delta$を持つ元素
+（例：Mn）の分率が増加すると周囲への膨張効果が増大し、
+負の$\delta$を持つ元素（例：Ni）では逆の効果が現れる。
+
+非等モル合金では主成分の$\delta$が支配的となるため、
+$r_\text{eff}$は主成分の化学的性質を強く反映する。
+これは単純な線形補間（Vegard則）では捕捉できない効果であり、
+非等モルHEA設計において組成最適化の指針を与える。
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_composition_dependent_reff.png}
+\caption{組成依存有効半径。
+  (a) CoCrFeMnNi系FCC合金における各元素の$r_\text{eff}$の
+  組成依存性（1成分を変化、残りは均等配分）。
+  破線は純元素半径。
+  (b) 等モル vs 非等モルHEAの予測誤差分布。}
+\label{fig:reff_comp}
+\end{figure*}
+
+\paragraph{二元系1:1組成における対称性}
+組成比1:1（$c_A = c_B = 0.5$）の二元系では、パッキング制約半径
+（$r_A + r_B = d_\text{nn}$）と体積由来有効半径は共に
+$A \leftrightarrow B$対称な量を定義する。パッキングでは
+$d_\text{nn}(AB) = r_A + r_B$が$A, B$の入れ替えに不変であり、
+体積近似では$V_\text{avg} = 0.5\,V_\text{eff}(A) + 0.5\,V_\text{eff}(B)$が
+同じく対称である。数学的にはこの二手法は非線形変換
+（$V \propto r^3$）の差により厳密には等価ではないが、
+いずれも1:1の対称性のもとでは同等の情報量しか持たない。
+すなわち、等モル二元系に限定すればどちらの手法も性能差は小さい。
+
+この同値性が\emph{破れる}のは非等モル組成においてである。
+L1$_2$ $A_3B$（$c_A = 0.75$）では体積近似が
+$V_\text{avg} = 0.75\,V_\text{eff}(A) + 0.25\,V_\text{eff}(B)$と
+組成を反映するのに対し、パッキングは依然$r_A + r_B$のみに依存し
+$A_3B$と$B_3A$を区別できない。1,851個のL1$_2$化合物による検証では、
+パッキングRMSE = 0.264~\AA に対し体積（多数派/少数派分離）
+RMSE = 0.197~\AA と25\%の改善を確認した。
 
 
 \subsection{多相HEA分類: $\delta r$ vs $\delta_\text{sf}$}
@@ -1014,13 +1185,13 @@ Yang--Zhang単独を改善する。$\Omega_\text{sf}$の情報は相判定の
 
 図~\ref{fig:roc}にROC曲線を、図~\ref{fig:phase_map}に相安定性マップを示す。
 
-\begin{figure}[H]
+\begin{figure*}[!t]
 \centering
-\includegraphics[width=\columnwidth]{fig_roc.png}
+\includegraphics[width=\textwidth]{fig_roc.png}
 \caption{SS vs 非SS分類のROC曲線。$\delta r$（AUC = 0.873）が
   $\delta_\text{sf}$（AUC = 0.708）を大きく上回る。}
 \label{fig:roc}
-\end{figure}
+\end{figure*}
 
 \begin{figure}[H]
 \centering
@@ -1134,9 +1305,31 @@ $\langle|\Delta a|\rangle = 0.328$~\AA{}を示しており矛盾する。
 剛体球接触という非物理的仮定を導入する。
 
 
+\subsection{組成依存有効原子体積の意義}
+
+本研究で導入した組成依存有効原子体積$V_\text{eff}(i;\, \{c_j\})$
+（式~\eqref{eq:veff}）は、従来の「固定半径」アプローチからの
+概念的転換を表す。従来手法では各元素に単一の半径を割り当て、
+それを組成に依存しない定数として使用していた。本手法では、
+同一元素でも合金化環境（パートナー元素の種類と組成比）に応じて
+有効体積が連続的に変化する。
+
+この描像は物理的にも自然である。金属中の原子は剛体球ではなく、
+周囲の電子構造に応じてその実効的なサイズが変化する。
+$V_\text{eff}$はこの効果を$\delta^{(s)}$パラメータを介して
+元素レベルの記述子として定量化するものであり、
+DFT計算の膨大な電子構造情報を39個のスカラー量に圧縮した
+「実効化学圧力」と解釈できる。
+
+$V_\text{eff}$の最も重要な実用的帰結は、
+任意組成のHEA格子定数を元素パラメータのみから予測できることである。
+ペアワイズ$\Omega_\text{sf}$は特定の元素ペアのDFTデータが必要だが、
+$\delta^{(s)}$は元素ごとに1つの値を持つため、
+DFTデータのない新規ペアも自動的にカバーする。
+
 \subsection{加法分解の実用的意義}
 
-加法モデル$\Omega_\text{sf} \approx \delta_A + \delta_B$は3つの
+加法モデル$\Omega_\text{sf}^{(s)} \approx \delta_A^{(s)} + \delta_B^{(s)}$は3つの
 実用的利点を持つ：
 \begin{enumerate}
   \item \textbf{コンパクト表現}: 220ペアワイズ値の代わりに39元素パラメータ。
@@ -1145,11 +1338,11 @@ $\langle|\Delta a|\rangle = 0.328$~\AA{}を示しており矛盾する。
   \item \textbf{再現性}: 表~\ref{tab:delta}のみで他の研究者がDFT計算なしに
     予測を再現可能。
 \end{enumerate}
-2.4\%のRMSEペナルティ（0.0215 vs 0.0210~\AA）はスクリーニング用途では
+1.4\%のRMSEペナルティ（0.0210 vs 0.0207~\AA）はスクリーニング用途では
 無視可能であり、加法モデルが推奨アプローチとなる。
 
 \paragraph{加法分解の理論的基盤}
-$\Omega_\text{sf}(A\text{-}B) \approx \delta_A + \delta_B$という
+$\Omega_\text{sf}^{(s)}(A\text{-}B) \approx \delta_A^{(s)} + \delta_B^{(s)}$という
 加法近似は、$\Omega_\text{sf}$が各元素の「固有の格子膨張/収縮傾向」の
 線形重ね合わせであることを仮定する。この仮定が成立する物理的条件は、
 ペアワイズの化学結合効果が元素固有の寄与と比較して小さいことである。
@@ -1279,53 +1472,50 @@ $\Omega_\text{sf}$は化学結合の非線形効果を反映するが、これ�
 \label{sec:conclusions}
 %% =====================================================================
 
-構造特異的DFT体積サイズファクターと元素別加法分解を組み合わせた
-HEA格子定数予測の改善フレームワークを開発した。主要知見は：
+DFT体積サイズファクターの元素別加法分解に基づく、
+任意組成HEA格子定数予測の新手法を提案した。主要知見は：
 
 \begin{enumerate}
-  \item 構造特異的DFT $\Omega_\text{sf}$（B2→BCC、L1$_2$→FCC）と
-    最適化$\gamma$パラメータで64 HEAに対しRMSE = 0.0210~\AA{}
-    （Alonso比8.6\%改善）。FCC HEAは0.0096~\AA{}でノイズフロア以下。
+  \item \textbf{組成依存有効原子体積の定義}:
+    加法分解$\delta^{(s)}$から、各元素の合金中有効原子体積
+    $V_\text{eff}(i;\, \{c_j\})$を定義した（式~\eqref{eq:veff}）。
+    これにより等モル・非等モルを問わず、任意組成のHEA格子定数を
+    $a = (n_\text{auc}\sum c_i V_\text{eff})^{1/3}$で予測可能となった。
 
-  \item 元素別加法分解$\Omega_\text{sf} \approx \delta_A + \delta_B$は
-    220ペアを39元素に圧縮し、RMSE 2.4\%ペナルティのみ
-    （0.0215 vs 0.0210~\AA）。表~\ref{tab:delta}が再現可能な
-    周期表的記述子を提供。
+  \item \textbf{予測精度}:
+    64 HEAに対しRMSE = 0.0210~\AA{}（Alonso比8.6\%改善）、
+    ペアワイズ$\Omega_\text{sf}$モデル（0.0207~\AA）との差は
+    わずか1.4\%。FCC HEAは0.0101~\AA{}、BCC HEAは0.0292~\AA{}。
 
-  \item 20個の独立HEA (RMSE = 0.020~\AA) で汎化を確認。
+  \item \textbf{パラメータ圧縮}:
+    220ペアワイズ値を39元素パラメータ$\delta^{(s)}$に圧縮
+    （95\%削減）。表~\ref{tab:delta}のみで再現可能。
 
-  \item $\delta r$は数学的に構造情報を含めない
-    （$\delta r = f(c_i, r_i)$、構造引数なし）。
+  \item \textbf{汎化性能}: 20個の独立HEAでRMSE = 0.020~\AA{}を確認。
+
+  \item \textbf{$\delta r$の限界の証明}: $\delta r = f(c_i, r_i)$は
+    構造引数を持たず、構造情報を数学的に含み得ない。
     905二元系ペアで検証。
 
-  \item 体積由来の有効半径はDFT電子構造計算を通じて構造効果を
-    自然に吸収する。少数派サイト摂動は多数派より25\%大きく、
-    配位環境非対称性と整合。
-
-  \item パッキング制約半径（$r_A + r_B = d_\text{nn}$）は
-    和演算の対称性のためL1$_2$非対称性を捕捉できない。
-
-  \item ML残差補正は0.002~\AA{}未満の改善のみであり、物理モデルが
-    主要変動を捕捉し残差はノイズに支配されることを確認。
+  \item \textbf{体積由来半径の優位性}: DFT原子体積は電子構造を通じて
+    構造効果を自然に内包する。L1$_2$非対称性
+    （$\langle|a(A_3B)-a(B_3A)|\rangle = 0.33$~\AA）の表現には、
+    対称操作$r_A + r_B$（パッキング）ではなく
+    $V_\text{eff}$（体積近似）が不可欠。
 \end{enumerate}
 
-これらの結果は、HEA格子定数予測において物理モデルの精緻化
-（DFT $\Omega_\text{sf}$, 構造特異的$\gamma$）が機械学習よりも
-効果的であることを示す。64 HEAという小データ設定では、
-物理的知識（二元系化合物の体積偏差）を明示的に組み込むことが、
-データ駆動型アプローチを凌駕する。
-
 \paragraph{実用的意義}
-本研究のフレームワークの最大の実用的意義は、表~\ref{tab:delta}の
-39元素の$\delta$パラメータのみで、DFT計算を行うことなく
-任意のHEA組成の格子定数を即座に予測できることである。
-具体的な予測手順は：(1)~各元素ペア$(i,j)$の
-$\Omega_\text{sf} = \delta_i + \delta_j$を計算、
-(2)~式~\eqref{eq:alonso_eq10}に代入し$\gamma_\text{BCC} = 1.45$
-（BCC）または$\gamma_\text{FCC} = 1.08$（FCC）を適用、
-(3)~格子定数$a$を算出。この計算は
-スプレッドシートで実行可能であり、数万通りの組成を
-秒単位でスクリーニングできる。
+本研究の最大の成果は、表~\ref{tab:delta}の39元素
+$\delta^{(s)}$パラメータのみで、任意組成のHEA格子定数を
+DFT計算なしに予測できるフレームワークの確立である。
+予測手順は：(1)~各元素の有効体積
+$V_\text{eff}(i) = V_i\bigl[1 + \gamma_s \sum_{j\ne i} c_j
+(\delta_i^{(s)} + \delta_j^{(s)})\bigr]$を計算、
+(2)~$a = (n_\text{auc}\sum c_i V_\text{eff}(i))^{1/3}$で格子定数を算出。
+この計算はスプレッドシートで実行可能であり、
+数万通りの組成を秒単位でスクリーニングできる。
+等モル合金のみならず非等モル組成でも有効であり、
+組成最適化による合金設計に直接活用できる。
 
 \paragraph{限界}
 本フレームワークの主要な限界は：(a)~$\gamma$が構造ごとに
