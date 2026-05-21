@@ -126,7 +126,7 @@ Alonso~\cite{Alonso2021}はKingの$\Omega_\text{sf}$を多成分HEAに
   V = n_\text{auc} \!\left[
     \underbrace{\sum_i c_i V_i}_{\text{Vegard項}}
     + \underbrace{\sum_i c_i V_i \sum_{j \ne i} c_j\,
-    \Omega_\text{sf}(j, i)}_{\text{化学結合補正項}}
+    \Omega_\text{sf}(i, j)}_{\text{化学結合補正項}}
   \right]\!.
   \label{eq:alonso_eq10}
 \end{equation}
@@ -134,8 +134,8 @@ Alonso~\cite{Alonso2021}はKingの$\Omega_\text{sf}$を多成分HEAに
 線形補間（Vegard則）であり、理想固溶体を仮定する。
 第2項はKingの$\Omega_\text{sf}$による非線形補正であり、
 各元素$i$の体積$c_i V_i$に対して、全パートナー元素$j$との
-ペアワイズ化学結合効果$c_j\Omega_\text{sf}(j,i)$を加算する。
-$\Omega_\text{sf}(j,i)$は元素$j$が元素$i$のサイトに近接した際の
+ペアワイズ化学結合効果$c_j\Omega_\text{sf}(i,j)$を加算する。
+$\Omega_\text{sf}(i,j)$は元素$i$を溶媒、元素$j$を溶質とした際の
 体積変化率であり、二元系の実験データまたはDFT計算から得られる。
 
 AlonsoはKingの実験$\Omega_\text{sf}$を用い、$\gamma = 1$
