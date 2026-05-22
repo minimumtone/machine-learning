@@ -480,7 +480,7 @@ def fig07_composition_examples(all_df):
                 else:
                     c_B = cB / total
                 a_fcc = a / (2 ** (1/3))  # convert L12 to equivalent B2 scale
-                ax.scatter(c_B * 100, a, c="C3", s=80, zorder=5, marker="^")
+                ax.scatter(c_B * 100, a_fcc, c="C3", s=80, zorder=5, marker="^")
 
         ax.set_xlabel(f"% {elY}")
         ax.set_ylabel("$a$ (\u00c5)")
