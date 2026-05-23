@@ -612,7 +612,7 @@ Alonso Eq.~10よりも系統的に対角線に近いことが読み取れる。
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=\textwidth]{fig_rmse_bar.png}
+\includegraphics[width=0.5\textwidth]{fig_rmse_bar.png}
 \caption{各手法のRMSE比較棒グラフ（64 HEA）。
   左からAlonso Vegard（0.0280~\AA）、Alonso Eq.~10（0.0229~\AA）、
   King Vegard（0.0227~\AA）、DFT Eq.~10 SS（0.0210~\AA）、
@@ -744,6 +744,53 @@ Vegardと同等、データがあれば改善」という特性は、
 \label{fig:indep}
 \end{figure*}
 
+表~\ref{tab:indep_detail}に独立テスト20 HEAの個別予測結果を示す。
+BCC合金ではAlNbTiVを除く7合金でVegard値とDFT Eq.~10 SS値が一致しており、
+B2 DFTデータ欠損によるVegard則への縮退が確認できる。
+FCC合金ではDFT Eq.~10 SSの補正効果が顕著であり、
+CoCrFeNi系やCoCrFeMnNi系で誤差が数mÅに収まっている。
+(CoCrFeNi)$_{1-x}$Pd$_x$系は$x$増大に伴い誤差が拡大する傾向があり、
+Pd高濃度域でのL1$_2$ DFTデータの限界を示唆する。
+
+\begin{table*}[t]
+\centering
+\caption{独立テスト20 HEAの個別格子定数予測結果（\AA）。
+  $\Delta$はDFT Eq.~10 SSの予測誤差（$a_\text{exp} - a_\text{pred}$、mÅ単位）。
+  BCC合金のうち``$=$''印はVegard則と完全一致（$\Omega_\text{sf}$データ欠損による縮退）。}
+\label{tab:indep_detail}
+\footnotesize
+\begin{tabular}{@{}llrrrrrl@{}}
+\toprule
+合金組成 & 構造 & $a_\text{exp}$ & Vegard & DFT Eq.~10 SS & $\Delta$ (mÅ) & 文献 \\
+\midrule
+\multicolumn{7}{l}{\textit{BCC合金}} \\
+NbTiVZr        & BCC & 3.3670 & 3.3130 & 3.3130$^=$  & $+$54.0 & Senkov~\cite{Senkov2013} \\
+MoNbTaV        & BCC & 3.2080 & 3.1978 & 3.1978$^=$  & $+$10.2 & Yao~\cite{Yao2016} \\
+AlNbTiV        & BCC & 3.2200 & 3.2084 & 3.1961      & $+$23.9 & Stepanov \\
+CrMoNbTaVW     & BCC & 3.1901 & 3.1443 & 3.1443$^=$  & $+$45.8 & Zhang \\
+MoNbTaVW       & BCC & 3.1850 & 3.1912 & 3.1912$^=$  & $-$6.2  & Kantelis \\
+HfNbTaTiZr     & BCC & 3.4040 & 3.4112 & 3.4112$^=$  & $-$7.2  & Youssef \\
+HfNbTaTiZr     & BCC & 3.4100 & 3.4112 & 3.4112$^=$  & $-$1.2  & Senkov~\cite{Senkov2013} \\
+Ti$_{35}$Zr$_{27.5}$Hf$_{27.5}$Nb$_5$Ta$_5$ & BCC & 3.4400 & 3.4490 & 3.4490$^=$ & $-$9.0 & Dirras \\
+\midrule
+\multicolumn{7}{l}{\textit{FCC合金}} \\
+CoCrFeMnNi     & FCC & 3.5988 & 3.5936 & 3.5918      & $+$7.0  & Otto~\cite{Otto2013} \\
+CoCrFeNi       & FCC & 3.5600 & 3.5778 & 3.5761      & $-$16.1 & Leong~\cite{Leong2017} \\
+(CoCrFeNi)$_{0.89}$Pd$_{0.11}$ & FCC & 3.6200 & 3.6148 & 3.6166 & $+$3.4 & Leong~\cite{Leong2017} \\
+(CoCrFeNi)$_{0.80}$Pd$_{0.20}$ & FCC & 3.6600 & 3.6446 & 3.6485 & $+$11.5 & Leong~\cite{Leong2017} \\
+(CoCrFeNi)$_{0.73}$Pd$_{0.27}$ & FCC & 3.7100 & 3.6674 & 3.6726 & $+$37.4 & Leong~\cite{Leong2017} \\
+(CoCrFeNi)$_{0.80}$V$_{0.20}$  & FCC & 3.6100 & 3.6266 & 3.6256 & $-$15.6 & Leong~\cite{Leong2017} \\
+CoCrFeNi       & FCC & 3.5723 & 3.5778 & 3.5761      & $-$3.8  & Wang~\cite{Wang2019} \\
+Co$_{0.5}$CrFeNi & FCC & 3.5805 & 3.5834 & 3.5812    & $-$0.7  & Wang~\cite{Wang2019} \\
+CoCrFeMnNi     & FCC & 3.5970 & 3.5936 & 3.5918      & $+$5.2  & Zaddach~\cite{Zaddach2013} \\
+CoCrFeNi       & FCC & 3.5740 & 3.5778 & 3.5761      & $-$2.1  & Zhang~\cite{Zhang2017nat} \\
+CoCrFeMnNi     & FCC & 3.5920 & 3.5936 & 3.5918      & $+$0.2  & Gali \\
+CoCrFeMnNi     & FCC & 3.5950 & 3.5936 & 3.5918      & $+$3.2  & Tasan \\
+\midrule
+\multicolumn{5}{l}{RMSE (全体 / BCC / FCC)} & \multicolumn{2}{l}{20.0 / 27.1 / 13.4 mÅ} \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
 \subsection{元素別加法分解パラメータ}
 \label{sec:delta_table}
@@ -1353,7 +1400,7 @@ Yang--Zhang単独を改善する。$\Omega_\text{sf}$の情報は相判定の
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=0.75\textwidth]{fig_roc.png}
+\includegraphics[width=0.6\textwidth]{fig_roc.png}
 \caption{SS（固溶体）vs 非SS（金属間化合物/非晶質）分類のROC曲線
   （54 HEA）。$\delta r$（実線、AUC = 0.873）が
   $\delta_\text{sf}$（破線、AUC = 0.708）を大きく上回る。
@@ -1726,6 +1773,21 @@ $V_\text{eff}(i) = V_i\bigl[1 + q_s \sum_{j\ne i} c_j
 
 
 %% =====================================================================
+%% Data and Models Availability
+%% =====================================================================
+
+\section*{Data and Models Availability}
+
+本研究の任意組成HEA格子定数予測コードおよびサンプルデータは、
+GitHubリポジトリ
+\href{https://github.com/minimumtone/machine-learning}{https://github.com/minimumtone/machine-learning}
+にて利用可能である。
+任意のBCC/FCC HEA組成に対し、表~\ref{tab:delta}の
+$\delta^{(s)}$パラメータと最適化済み$q$値のみで
+格子定数を予測できる。追加のDFT計算は不要である。
+
+
+%% =====================================================================
 %% 付録
 %% =====================================================================
 
@@ -1907,51 +1969,67 @@ Vegard基準線は室温に整合している。
 
 \bibitem{Yeh2004}
 J.-W.~Yeh et al., Adv.\ Eng.\ Mater.\ \textbf{6} (2004) 299.
+\newblock \href{https://doi.org/10.1002/adem.200300567}{doi:10.1002/adem.200300567}.
 
 \bibitem{Cantor2004}
 B.~Cantor et al., Mater.\ Sci.\ Eng.\ A \textbf{375--377} (2004) 213.
+\newblock \href{https://doi.org/10.1016/j.msea.2003.10.257}{doi:10.1016/j.msea.2003.10.257}.
 
 \bibitem{Miracle2017}
 D.B.~Miracle, O.N.~Senkov, Acta Mater.\ \textbf{122} (2017) 448.
+\newblock \href{https://doi.org/10.1016/j.actamat.2016.08.081}{doi:10.1016/j.actamat.2016.08.081}.
 
 \bibitem{Senkov2015}
 O.N.~Senkov et al., Nat.\ Commun.\ \textbf{6} (2015) 6529.
+\newblock \href{https://doi.org/10.1038/ncomms7529}{doi:10.1038/ncomms7529}.
 
 \bibitem{Vegard1921}
 L.~Vegard, Z.\ Phys.\ \textbf{5} (1921) 17.
+\newblock \href{https://doi.org/10.1007/BF01349680}{doi:10.1007/BF01349680}.
 
 \bibitem{King1966}
 H.W.~King, J.\ Mater.\ Sci.\ \textbf{1} (1966) 79.
+\newblock \href{https://doi.org/10.1007/BF00549722}{doi:10.1007/BF00549722}.
 
 \bibitem{Alonso2021}
-J.A.~Alonso, J.\ Phase Equilib.\ Diffus.\ (2021).
+J.A.~Alonso, J.\ Phase Equilib.\ Diffus.\ \textbf{43} (2022) 555.
+\newblock \href{https://doi.org/10.1007/s11669-022-00988-z}{doi:10.1007/s11669-022-00988-z}.
 
 \bibitem{Zhang2008}
 Y.~Zhang et al., Adv.\ Eng.\ Mater.\ \textbf{10} (2008) 534.
+\newblock \href{https://doi.org/10.1002/adem.200700240}{doi:10.1002/adem.200700240}.
 
 \bibitem{Guo2011}
 S.~Guo, C.T.~Liu, Prog.\ Nat.\ Sci.\ \textbf{21} (2011) 433.
+\newblock \href{https://doi.org/10.1016/S1002-0071(12)60080-X}{doi:10.1016/S1002-0071(12)60080-X}.
 
 \bibitem{Yang2012}
 X.~Yang, Y.~Zhang, Mater.\ Chem.\ Phys.\ \textbf{132} (2012) 233.
+\newblock \href{https://doi.org/10.1016/j.matchemphys.2011.11.021}{doi:10.1016/j.matchemphys.2011.11.021}.
 
 \bibitem{Jain2013}
 A.~Jain et al., APL Mater.\ \textbf{1} (2013) 011002.
+\newblock \href{https://doi.org/10.1063/1.4812323}{doi:10.1063/1.4812323}.
 
 \bibitem{Saal2013}
 J.E.~Saal et al., JOM \textbf{65} (2013) 1501.
+\newblock \href{https://doi.org/10.1007/s11837-013-0755-4}{doi:10.1007/s11837-013-0755-4}.
 
 \bibitem{Chen2016}
 T.~Chen, C.~Guestrin, Proc.\ 22nd ACM SIGKDD (2016) 785.
+\newblock \href{https://doi.org/10.1145/2939672.2939785}{doi:10.1145/2939672.2939785}.
 
 \bibitem{Senkov2013}
 O.N.~Senkov et al., Intermetallics \textbf{19} (2011) 698.
+\newblock \href{https://doi.org/10.1016/j.intermet.2011.01.004}{doi:10.1016/j.intermet.2011.01.004}.
 
 \bibitem{Yao2016}
 H.W.~Yao et al., Entropy \textbf{18} (2016) 189.
+\newblock \href{https://doi.org/10.3390/e18050189}{doi:10.3390/e18050189}.
 
 \bibitem{Otto2013}
 F.~Otto et al., Acta Mater.\ \textbf{61} (2013) 5743.
+\newblock \href{https://doi.org/10.1016/j.actamat.2013.06.018}{doi:10.1016/j.actamat.2013.06.018}.
 
 \bibitem{Leong2017}
 Z.~Leong et al., Sci.\ Rep.\ \textbf{7} (2017) 39803.
@@ -1959,15 +2037,19 @@ Z.~Leong et al., Sci.\ Rep.\ \textbf{7} (2017) 39803.
 
 \bibitem{Wang2019}
 Z.~Wang et al., Scr.\ Mater.\ \textbf{94} (2015) 28.
+\newblock \href{https://doi.org/10.1016/j.scriptamat.2014.09.010}{doi:10.1016/j.scriptamat.2014.09.010}.
 
 \bibitem{Zaddach2013}
 A.J.~Zaddach et al., JOM \textbf{65} (2013) 1780.
+\newblock \href{https://doi.org/10.1007/s11837-013-0771-4}{doi:10.1007/s11837-013-0771-4}.
 
 \bibitem{Zhang2017nat}
 Z.~Zhang et al., Nat.\ Commun.\ \textbf{8} (2017) 14390.
+\newblock \href{https://doi.org/10.1038/ncomms14390}{doi:10.1038/ncomms14390}.
 
 \bibitem{Curtarolo2012}
 S.~Curtarolo et al., Comput.\ Mater.\ Sci.\ \textbf{58} (2012) 218.
+\newblock \href{https://doi.org/10.1016/j.commatsci.2012.02.005}{doi:10.1016/j.commatsci.2012.02.005}.
 
 \end{thebibliography}
 
