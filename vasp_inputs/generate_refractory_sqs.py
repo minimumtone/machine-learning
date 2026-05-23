@@ -21,10 +21,11 @@ Usage:
     python generate_refractory_sqs.py
 
 Output structure:
-    SQS_refractory/
-    ├── CrHf_sqs16/   (INCAR, POSCAR, KPOINTS)
-    ├── CrMo_sqs16/
+    BCC_SQS/
+    ├── Cr8Hf8/   (INCAR, POSCAR, KPOINTS)
+    ├── Cr8Mo8/
     ├── ...
+    ├── Cr8Cr8/   (same-element references)
     ├── make_potcar.sh
     └── run_all.sh
 """
@@ -100,39 +101,20 @@ def estimate_sqs_a0(el_a, el_b):
 
 
 def write_incar_sqs(dirpath):
-    """Write INCAR for SQS structure optimization (16 atoms)."""
-    content = """SYSTEM = BCC SQS-16 optimization (refractory)
-
-# Electronic relaxation
-ENCUT  = 520
-PREC   = Accurate
-EDIFF  = 1E-6
-NELM   = 200
-LREAL  = Auto
-
-# Ionic relaxation
-IBRION = 2
-ISIF   = 3
-NSW    = 200
-EDIFFG = -0.01
-
-# Smearing (metals)
-ISMEAR = 1
-SIGMA  = 0.2
-
-# Exchange-correlation
-GGA    = PE
-
-# Spin polarization (important for Cr)
-ISPIN  = 2
-
-# Output
-LORBIT = 11
-LWAVE  = .FALSE.
-LCHARG = .FALSE.
-
-# Performance (16 atoms → moderate parallelization)
-NCORE  = 4
+    """Write INCAR matching existing BCC_B2 settings (ASE-generated style)."""
+    content = """INCAR created by Atomic Simulation Environment
+ ENCUT = 320.000000
+ POTIM = 0.020000
+ EDIFF = 1.00e-06
+ EDIFFG = -1.00e-02
+ ALGO = Normal
+ GGA = PE
+ PREC = high
+ IBRION = 2
+ ISIF = 3
+ ISPIN = 2
+ NELM = 60
+ NSW = 120
 """
     with open(os.path.join(dirpath, "INCAR"), "w") as f:
         f.write(content)
@@ -144,35 +126,52 @@ def write_poscar_sqs(dirpath, el_a, el_b, a_super):
 
     el_a: element A (8 atoms)
     el_b: element B (8 atoms)
+    For same-element (el_a == el_b): pure BCC supercell (16 atoms of one element)
     """
-    # Sort atoms by element (VASP requires contiguous species blocks)
-    pos_a = []
-    pos_b = []
-    for i, occ in enumerate(SQS_OCCUPATION):
-        if occ == 0:
-            pos_a.append(BCC_2x2x2_POSITIONS[i])
-        else:
-            pos_b.append(BCC_2x2x2_POSITIONS[i])
+    if el_a == el_b:
+        # Same element: all 16 atoms are the same
+        lines = [
+            f"{el_a}16 BCC-SQS16 (2x2x2, pure reference)",
+            "1.0",
+            f"  {a_super:.6f}  0.000000  0.000000",
+            f"  0.000000  {a_super:.6f}  0.000000",
+            f"  0.000000  0.000000  {a_super:.6f}",
+            f"  {el_a}",
+            f"  16",
+            "Direct",
+        ]
+        for pos in BCC_2x2x2_POSITIONS:
+            lines.append(f"  {pos[0]:.6f}  {pos[1]:.6f}  {pos[2]:.6f}")
+        lines.append("")
+    else:
+        # Binary: SQS occupation
+        pos_a = []
+        pos_b = []
+        for i, occ in enumerate(SQS_OCCUPATION):
+            if occ == 0:
+                pos_a.append(BCC_2x2x2_POSITIONS[i])
+            else:
+                pos_b.append(BCC_2x2x2_POSITIONS[i])
 
-    n_a = len(pos_a)
-    n_b = len(pos_b)
+        n_a = len(pos_a)
+        n_b = len(pos_b)
 
-    lines = [
-        f"{el_a}{n_a}{el_b}{n_b} BCC-SQS16 (2x2x2, 50:50)",
-        "1.0",
-        f"  {a_super:.6f}  0.000000  0.000000",
-        f"  0.000000  {a_super:.6f}  0.000000",
-        f"  0.000000  0.000000  {a_super:.6f}",
-        f"  {el_a}  {el_b}",
-        f"  {n_a}  {n_b}",
-        "Direct",
-    ]
+        lines = [
+            f"{el_a}{n_a}{el_b}{n_b} BCC-SQS16 (2x2x2, 50:50)",
+            "1.0",
+            f"  {a_super:.6f}  0.000000  0.000000",
+            f"  0.000000  {a_super:.6f}  0.000000",
+            f"  0.000000  0.000000  {a_super:.6f}",
+            f"  {el_a}  {el_b}",
+            f"  {n_a}  {n_b}",
+            "Direct",
+        ]
 
-    for pos in pos_a:
-        lines.append(f"  {pos[0]:.6f}  {pos[1]:.6f}  {pos[2]:.6f}")
-    for pos in pos_b:
-        lines.append(f"  {pos[0]:.6f}  {pos[1]:.6f}  {pos[2]:.6f}")
-    lines.append("")
+        for pos in pos_a:
+            lines.append(f"  {pos[0]:.6f}  {pos[1]:.6f}  {pos[2]:.6f}")
+        for pos in pos_b:
+            lines.append(f"  {pos[0]:.6f}  {pos[1]:.6f}  {pos[2]:.6f}")
+        lines.append("")
 
     with open(os.path.join(dirpath, "POSCAR"), "w") as f:
         f.write("\n".join(lines))
@@ -194,7 +193,7 @@ def generate_potcar_script(base_dir, calculations):
     """Generate shell script to create POTCAR from $VASPPOT."""
     lines = [
         "#!/bin/bash",
-        "# POTCAR generation script for SQS refractory calculations",
+        "# POTCAR generation script for BCC_SQS refractory calculations",
         "# Usage: bash make_potcar.sh",
         "# Requires: $VASPPOT environment variable",
         "",
@@ -206,19 +205,28 @@ def generate_potcar_script(base_dir, calculations):
         'fi',
         "",
         'echo "Using VASPPOT=$VASPPOT"',
-        'echo "Generating POTCAR files for SQS refractory calculations..."',
+        'echo "Generating POTCAR files for BCC_SQS refractory calculations..."',
         "",
     ]
 
     for calc_name, el_a, el_b in calculations:
         pot_a = POTCAR_VARIANTS.get(el_a, el_a)
         pot_b = POTCAR_VARIANTS.get(el_b, el_b)
-        lines.append(f"# --- {calc_name} ---")
-        lines.append(f'echo "  {calc_name}: {pot_a} + {pot_b}"')
-        lines.append(
-            f'cat "$VASPPOT"/{pot_a}/POTCAR "$VASPPOT"/{pot_b}/POTCAR '
-            f'> {calc_name}/POTCAR'
-        )
+        if el_a == el_b:
+            # Same-element: single POTCAR
+            lines.append(f"# --- {calc_name} (pure reference) ---")
+            lines.append(f'echo "  {calc_name}: {pot_a}"')
+            lines.append(
+                f'cat "$VASPPOT"/{pot_a}/POTCAR '
+                f'> {calc_name}/POTCAR'
+            )
+        else:
+            lines.append(f"# --- {calc_name} ---")
+            lines.append(f'echo "  {calc_name}: {pot_a} + {pot_b}"')
+            lines.append(
+                f'cat "$VASPPOT"/{pot_a}/POTCAR "$VASPPOT"/{pot_b}/POTCAR '
+                f'> {calc_name}/POTCAR'
+            )
         lines.append(
             f'if [ $? -ne 0 ]; then echo "  WARNING: Failed for {calc_name}"; fi'
         )
@@ -236,7 +244,7 @@ def generate_run_script(base_dir, calculations):
     """Generate batch submission script for all calculations."""
     lines = [
         "#!/bin/bash",
-        "# Batch execution script for SQS refractory DFT calculations",
+        "# Batch execution script for BCC_SQS refractory DFT calculations",
         "# Usage: bash run_all.sh",
         "#",
         "# Each SQS-16 calc is 16 atoms → moderate cost (~30min-1h per job).",
@@ -245,7 +253,7 @@ def generate_run_script(base_dir, calculations):
         'VASP_CMD="mpirun -np ${NPROCS:-8} vasp_std"',
         'LOG="run_status.log"',
         "",
-        'echo "=== SQS Refractory Calculations ===" | tee $LOG',
+        'echo "=== BCC_SQS Refractory Calculations ===" | tee $LOG',
         f'echo "Total: {len(calculations)} calculations (16 atoms each)" | tee -a $LOG',
         'echo "Started: $(date)" | tee -a $LOG',
         'echo "" | tee -a $LOG',
@@ -321,7 +329,8 @@ def extract_lattice_from_contcar(contcar_path):
 
 results = []
 dirs = sorted([d for d in os.listdir(BASE_DIR)
-               if os.path.isdir(os.path.join(BASE_DIR, d)) and "_sqs16" in d])
+               if os.path.isdir(os.path.join(BASE_DIR, d))
+               and d[0].isupper() and '8' in d])
 
 print("SQS-16 Refractory Results:")
 print("=" * 70)
@@ -332,14 +341,15 @@ for d in dirs:
         print(f"  {d}: CONTCAR not found")
         continue
 
-    # Parse elements from directory name (e.g., "CrHf_sqs16")
-    pair_name = d.replace("_sqs16", "")
+    # Parse elements from directory name (e.g., "Cr8Hf8")
+    pair_name = d
     # Elements are in POSCAR header
     poscar = os.path.join(BASE_DIR, d, "POSCAR")
     with open(poscar, "r") as f:
         poscar_lines = f.readlines()
     elements = poscar_lines[5].split()
-    el_a, el_b = elements[0], elements[1]
+    el_a = elements[0]
+    el_b = elements[1] if len(elements) > 1 else elements[0]
 
     a_eff, vol_total = extract_lattice_from_contcar(contcar)
     vol_per_atom = vol_total / 16.0
@@ -383,13 +393,25 @@ print(f"  python compare_b2_sqs.py")
 
 
 def main():
-    base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "SQS_refractory")
+    base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "BCC_SQS")
     os.makedirs(base_dir, exist_ok=True)
 
-    # Generate all refractory pairs (symmetric: only one direction needed)
     calculations = []
+
+    # Generate same-element references (9 calculations)
+    for el in REFRACTORY_ELEMENTS:
+        calc_name = f"{el}8{el}8"
+        a_super = 2.0 * ELEMENT_A0_BCC[el]  # 2×2×2 supercell
+        dirpath = os.path.join(base_dir, calc_name)
+        os.makedirs(dirpath, exist_ok=True)
+        write_incar_sqs(dirpath)
+        write_poscar_sqs(dirpath, el, el, a_super)
+        write_kpoints_sqs(dirpath)
+        calculations.append((calc_name, el, el))
+
+    # Generate all refractory pairs (symmetric: only one direction needed)
     for el_a, el_b in itertools.combinations(REFRACTORY_ELEMENTS, 2):
-        calc_name = f"{el_a}{el_b}_sqs16"
+        calc_name = f"{el_a}8{el_b}8"
         a_super = estimate_sqs_a0(el_a, el_b)
         dirpath = os.path.join(base_dir, calc_name)
         os.makedirs(dirpath, exist_ok=True)
@@ -403,9 +425,16 @@ def main():
     generate_run_script(base_dir, calculations)
     generate_extract_script(base_dir)
 
+    n_homo = len(REFRACTORY_ELEMENTS)
+    n_hetero = len(calculations) - n_homo
     print(f"Generated {len(calculations)} SQS calculations in {base_dir}/")
-    print(f"  - 36 refractory pairs × 1 (symmetric SQS) = 36 calculations")
-    print(f"  - Each: 16 atoms (2×2×2 BCC supercell, A8B8)")
+    print(f"  - {n_hetero} refractory pairs (A8B8)")
+    print(f"  - {n_homo} same-element references (A8A8)")
+    print(f"  - Total: {len(calculations)} calculations")
+    print(f"  - Each: 16 atoms (2×2×2 BCC supercell)")
+    print()
+    print("Directory naming: A8B8 format (e.g., Cr8Hf8, Mo8Mo8)")
+    print("  Matches BCC_B2 convention (A1B1) with atom counts")
     print()
     print("SQS advantages over B2:")
     print("  - Random-like atom distribution (mimics BCC solid solution)")
@@ -413,7 +442,7 @@ def main():
     print("  - Ω_sf directly applicable to BCC HEA prediction")
     print()
     print("Next steps:")
-    print("  1. cd SQS_refractory")
+    print("  1. cd BCC_SQS")
     print("  2. bash make_potcar.sh")
     print("  3. bash run_all.sh")
     print("  4. python extract_results.py")
