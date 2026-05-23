@@ -158,7 +158,11 @@ AlonsoはKingの実験$\Omega_\text{sf}$を用い、$q = 1$
 HEA研究においてもう一つ重要な記述子が原子サイズミスマッチ
 パラメータ$\delta r$である。Zhang \emph{et al.}~\cite{Zhang2008}は
 $\delta r < 6.6\%$の条件を単相固溶体形成の必要条件として提唱し、
-Yang--Zhang基準として広く用いられている。
+Yang--Zhang基準として広く用いられている~\cite{Yang2012}。
+Toda-Caraballo \& Rivera-D\'{i}az-del-Castillo~\cite{TodaCaraballo2016}は
+格子歪みに基づくHEA形成基準を提案し、$\delta r$の限界を議論した。
+Ye \emph{et al.}~\cite{Ye2015}は幾何学モデルにより固有残留歪みと
+相安定性の関係を定式化した。
 一方、$\delta r$はしばしば格子歪みの指標としても暗黙的に
 使用されるが、その構造情報吸収能力は系統的に検証されていない。
 従来の原子サイズミスマッチパラメータ
@@ -173,7 +177,19 @@ Yang--Zhang基準として広く用いられている。
 
 体積サイズファクター$\Omega_\text{sf}$の概念は1966年にKingが導入した
 古典的なものであるが、第一原理計算データとの融合はこれまで系統的に
-試みられてこなかった。DFTデータベース（Materials Project~\cite{Jain2013}、
+試みられてこなかった。
+HEA格子定数の第一原理計算としては、Tian \emph{et al.}~\cite{Tian2013}が
+KKR-CPA法によりNiCoFeCrAl$_x$の構造安定性と格子定数を評価し、
+Troparevsky \emph{et al.}~\cite{Troparevsky2015}が単相形成基準を
+提案した。Tian \emph{et al.}~\cite{Tian2015}はEMTO-CPA法により
+耐火HEAの弾性特性を系統的に計算した。
+しかしこれらはいずれも特定組成のDFT直接計算であり、
+任意組成への外挿には新たなDFT計算が必要となる。
+近年ではWen \emph{et al.}~\cite{Wen2019}やTandoc \emph{et al.}~\cite{Tandoc2023}が
+機械学習によるHEA物性予測を提案しているが、
+格子定数に特化した物理ベースのモデルは未確立である。
+
+DFTデータベース（Materials Project~\cite{Jain2013}、
 OQMD~\cite{Saal2013}）は数千の二元系金属間化合物の正確な格子定数を
 提供しており、これらからKingの$\Omega_\text{sf}$を計算的に再導出・拡張
 することが可能である。本研究はこのアプローチを初めて体系的に実施し、
@@ -476,10 +492,10 @@ L1$_2$ $A_3B$の場合：
 で求める。
 
 
-\subsection{パッキング制約半径の解析}
+\subsection{剛体球接触モデル半径の解析}
 \label{sec:packing}
 
-DFT格子定数から最近接距離を求め、パッキング制約
+DFT格子定数から最近接距離を求め、剛体球接触モデル
 $r_A + r_B = d_\text{nn}$で有効半径を評価する：
 \begin{align}
   d_\text{nn}^{\text{L1}_2} &= a / \sqrt{2}, \label{eq:dnn_l12} \\
@@ -1074,7 +1090,7 @@ $|\Omega_\text{sf}(A_3B) - \Omega_\text{sf}(B_3A)|$が大きく、
 \end{figure*}
 
 
-\subsection{パッキング制約半径の限界}
+\subsection{剛体球接触モデル半径の限界}
 \label{sec:packing_results}
 
 DFTパッキング半径（\ref{sec:packing}節）で単一半径セット$(r_A, r_B)$を
@@ -1089,7 +1105,7 @@ DFTパッキング半径（\ref{sec:packing}節）で単一半径セット$(r_A,
 根本的な限界は$d_\text{nn} = r_A + r_B$が\emph{対称操作}であることに
 ある。加法分解の文脈では$\delta_A + \delta_B = \delta_B + \delta_A$
 （交換可能）だが、これは元素対$\Omega_\text{sf}$の近似であり
-構造は$q$で別途補正される。一方パッキング制約では
+構造は$q$で別途補正される。一方剛体球接触モデルでは
 $r_A + r_B = d_\text{nn}$がそのまま格子定数を決定するため、
 多数派・少数派の役割を交換しても同一値を与え、
 $a(A_3B) = a(B_3A)$を\emph{強制}する。実際には
@@ -1105,7 +1121,7 @@ HEA格子定数予測では「体積」が「半径」よりも本質的な記�
 
 \begin{table}[H]
 \centering
-\caption{パッキング制約半径 vs 体積由来半径のRMSE比較 (\AA)。
+\caption{剛体球接触モデル半径 vs 体積由来半径のRMSE比較 (\AA)。
   パッキング（単一半径セット）は$r_A + r_B = d_\text{nn}$が
   対称操作のため$a(A_3B) = a(B_3A)$を強制し、
   L1$_2$非対称性を原理的に表現不可。
@@ -1128,7 +1144,7 @@ HEA格子定数予測では「体積」が「半径」よりも本質的な記�
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=0.85\textwidth]{fig_packing.png}
-\caption{パッキング制約半径の解析。
+\caption{剛体球接触モデル半径の解析。
   パッキングモデル（$d_\text{nn} = r_A + r_B$）で推定した半径による
   格子定数予測と実際のDFT格子定数の比較。
   単一半径セットでは$r_A + r_B$が対称操作であるため
@@ -1161,7 +1177,7 @@ L1$_2$の多数派/少数派サイトの配位環境差は決して無視でき�
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=0.75\textwidth]{fig_l12_asymmetry.png}
+\includegraphics[width=0.4\textwidth]{fig_l12_asymmetry.png}
 \caption{L1$_2$格子定数の非対称性（905ペア）。
   $a(A_3B) - a(B_3A)$の分布は平均0付近で対称だが、
   標準偏差0.48~\AA{}と大きな分散を持つ。
@@ -1176,7 +1192,7 @@ L1$_2$の多数派/少数派サイトの配位環境差は決して無視でき�
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=0.75\textwidth]{fig_volume_radius.png}
+\includegraphics[width=0.4\textwidth]{fig_volume_radius.png}
 \caption{L1$_2$構造における構造依存有効半径。
   多数派サイト（面心、配位殻: 同種8＋異種4）の有効半径偏差
   $\langle|\Delta r_\text{maj}|\rangle = 0.036$~\AA{}に対し、
@@ -1319,7 +1335,7 @@ FCC曲線（青実線）はL1$_2$の$\delta^{\text{L1}_2}$を用いるため、
 \end{figure*}
 
 \paragraph{二元系1:1組成における対称性}
-組成比1:1（$c_A = c_B = 0.5$）の二元系では、パッキング制約半径
+組成比1:1（$c_A = c_B = 0.5$）の二元系では、剛体球接触モデル半径
 （$r_A + r_B = d_\text{nn}$）と体積由来有効半径は共に
 $A \leftrightarrow B$対称な量を定義する。パッキングでは
 $d_\text{nn}(AB) = r_A + r_B$が$A, B$の入れ替えに不変であり、
@@ -1400,7 +1416,7 @@ Yang--Zhang単独を改善する。$\Omega_\text{sf}$の情報は相判定の
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=0.6\textwidth]{fig_roc.png}
+\includegraphics[width=0.3\textwidth]{fig_roc.png}
 \caption{SS（固溶体）vs 非SS（金属間化合物/非晶質）分類のROC曲線
   （54 HEA）。$\delta r$（実線、AUC = 0.873）が
   $\delta_\text{sf}$（破線、AUC = 0.708）を大きく上回る。
@@ -1512,7 +1528,7 @@ $d$--$d$重なり積分が異なり、結合長（すなわち有効原子半径
 内包するのである。
 
 
-\subsection{パッキング制約半径の代数的限界}
+\subsection{剛体球接触モデル半径の代数的限界}
 
 パッキングモデルが失敗する本質的理由は代数的である：
 $d_\text{nn} = r_A + r_B$は多数派・少数派の役割交換に対して対称であり、
@@ -1726,6 +1742,33 @@ DFT体積サイズファクターの元素別加法分解に基づく、
     対称操作$r_A + r_B$（パッキング）ではなく
     $V_\text{eff}$（体積近似）が不可欠。
 \end{enumerate}
+
+\paragraph{既存手法に対する改善}
+表~\ref{tab:method_comparison}に本手法と既存手法の比較を示す。
+Vegard則は構造・化学結合効果を無視するためRMSE = 0.0221~\AA{}に留まる。
+Alonsoの手法はKingの実験$\Omega_\text{sf}$を使用し0.0229~\AA{}を達成したが、
+$\Omega_\text{sf}$データの不足するペアでは予測不能となる。
+本手法はDFTデータの網羅性（3,297化合物）と構造特異性（B2/L1$_2$分離）
+により、RMSE = 0.0210~\AA{}（Vegard比$-$5\%、Alonso比$-$8\%）を達成した。
+さらに加法分解により38パラメータのみで同等精度を維持し、
+独立テスト（20 HEA）でも0.020~\AA{}と訓練データに対する過学習がないことを確認した。
+
+\begin{table}[H]
+\centering
+\caption{HEA格子定数予測手法の比較。}
+\label{tab:method_comparison}
+\footnotesize
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+手法 & パラメータ数 & RMSE (\AA) & 構造区別 & 任意組成 \\
+\midrule
+Vegard則~\cite{Vegard1921}           & 38 ($V_i$) & 0.0221 & なし & 可 \\
+Alonso Eq.~10~\cite{Alonso2021}      & $\sim$200 ($\Omega_\text{sf}$) & 0.0229 & なし & 限定的 \\
+\textbf{本手法（元素対）}             & 247 & \textbf{0.0210} & \textbf{あり} & 可 \\
+\textbf{本手法（加法$\delta^{(s)}$）} & 38 & \textbf{0.0211} & \textbf{あり} & 可 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \paragraph{実用的意義}
 本研究の最大の成果は、表~\ref{tab:delta}の38元素
@@ -2050,6 +2093,34 @@ Z.~Zhang et al., Nat.\ Commun.\ \textbf{8} (2017) 14390.
 \bibitem{Curtarolo2012}
 S.~Curtarolo et al., Comput.\ Mater.\ Sci.\ \textbf{58} (2012) 218.
 \newblock \href{https://doi.org/10.1016/j.commatsci.2012.02.005}{doi:10.1016/j.commatsci.2012.02.005}.
+
+\bibitem{Tian2013}
+F.~Tian et al., Phys.\ Rev.\ B \textbf{88} (2013) 085128.
+\newblock \href{https://doi.org/10.1103/PhysRevB.88.085128}{doi:10.1103/PhysRevB.88.085128}.
+
+\bibitem{Troparevsky2015}
+M.C.~Troparevsky et al., Phys.\ Rev.\ X \textbf{5} (2015) 011041.
+\newblock \href{https://doi.org/10.1103/PhysRevX.5.011041}{doi:10.1103/PhysRevX.5.011041}.
+
+\bibitem{Ye2015}
+Y.F.~Ye, C.T.~Liu, Y.~Yang, Acta Mater.\ \textbf{94} (2015) 152.
+\newblock \href{https://doi.org/10.1016/j.actamat.2015.04.051}{doi:10.1016/j.actamat.2015.04.051}.
+
+\bibitem{TodaCaraballo2016}
+I.~Toda-Caraballo, P.E.J.~Rivera-D\'{i}az-del-Castillo, Intermetallics \textbf{71} (2016) 76.
+\newblock \href{https://doi.org/10.1016/j.intermet.2015.12.011}{doi:10.1016/j.intermet.2015.12.011}.
+
+\bibitem{Tandoc2023}
+C.~Tandoc et al., npj Comput.\ Mater.\ \textbf{9} (2023) 53.
+\newblock \href{https://doi.org/10.1038/s41524-023-00993-x}{doi:10.1038/s41524-023-00993-x}.
+
+\bibitem{Tian2015}
+F.~Tian et al., Sci.\ Rep.\ \textbf{5} (2015) 12334.
+\newblock \href{https://doi.org/10.1038/srep12334}{doi:10.1038/srep12334}.
+
+\bibitem{Wen2019}
+C.~Wen et al., Acta Mater.\ \textbf{170} (2019) 109.
+\newblock \href{https://doi.org/10.1016/j.actamat.2019.03.010}{doi:10.1016/j.actamat.2019.03.010}.
 
 \end{thebibliography}
 
