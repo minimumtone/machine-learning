@@ -190,21 +190,21 @@ Gamma
 
 
 def generate_potcar_script(base_dir, calculations):
-    """Generate shell script to create POTCAR from $VASPPOT."""
+    """Generate shell script to create POTCAR from $VASP_PP_PATH."""
     lines = [
         "#!/bin/bash",
         "# POTCAR generation script for BCC_SQS refractory calculations",
         "# Usage: bash make_potcar.sh",
-        "# Requires: $VASPPOT environment variable",
+        "# Requires: $VASP_PP_PATH environment variable",
         "",
-        'if [ -z "$VASPPOT" ]; then',
-        '    echo "Error: VASPPOT environment variable is not set."',
+        'if [ -z "$VASP_PP_PATH" ]; then',
+        '    echo "Error: VASP_PP_PATH environment variable is not set."',
         '    echo "Set it to the PAW-PBE pseudopotential directory, e.g.:"',
-        '    echo "  export VASPPOT=/path/to/potpaw_PBE.64"',
+        '    echo "  export VASP_PP_PATH=/path/to/potpaw_PBE.64"',
         '    exit 1',
         'fi',
         "",
-        'echo "Using VASPPOT=$VASPPOT"',
+        'echo "Using VASP_PP_PATH=$VASP_PP_PATH"',
         'echo "Generating POTCAR files for BCC_SQS refractory calculations..."',
         "",
     ]
@@ -217,14 +217,14 @@ def generate_potcar_script(base_dir, calculations):
             lines.append(f"# --- {calc_name} (pure reference) ---")
             lines.append(f'echo "  {calc_name}: {pot_a}"')
             lines.append(
-                f'cat "$VASPPOT"/{pot_a}/POTCAR '
+                f'cat "$VASP_PP_PATH"/{pot_a}/POTCAR '
                 f'> {calc_name}/POTCAR'
             )
         else:
             lines.append(f"# --- {calc_name} ---")
             lines.append(f'echo "  {calc_name}: {pot_a} + {pot_b}"')
             lines.append(
-                f'cat "$VASPPOT"/{pot_a}/POTCAR "$VASPPOT"/{pot_b}/POTCAR '
+                f'cat "$VASP_PP_PATH"/{pot_a}/POTCAR "$VASP_PP_PATH"/{pot_b}/POTCAR '
                 f'> {calc_name}/POTCAR'
             )
         lines.append(
