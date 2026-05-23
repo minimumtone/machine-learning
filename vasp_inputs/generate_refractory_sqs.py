@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """
-VASP input file generator for refractory BCC SQS (Special Quasi-random Structure)
-calculations.
+VASP input file generator for BCC SQS (Special Quasi-random Structure) calculations.
 
-Generates INCAR, POSCAR, KPOINTS for binary BCC solid solutions of refractory
-elements using SQS supercells. This provides a better proxy for BCC HEA behavior
-than ordered B2 structures.
+Generates INCAR, POSCAR, KPOINTS for binary BCC solid solutions using SQS
+supercells. This provides a better proxy for BCC HEA behavior than ordered
+B2 structures.
 
 SQS approach:
   - 16-atom BCC supercell (2×2×2 conventional BCC = 16 atoms)
@@ -18,7 +17,11 @@ Comparison with B2:
   - SQS is physically more relevant for BCC HEA applications
 
 Usage:
-    python generate_refractory_sqs.py
+    python generate_refractory_sqs.py [--group refractory|all|custom]
+
+    --group refractory : 9高融点元素のみ (default, 45計算)
+    --group all        : BCC_B2全39元素 (780計算)
+    --elements "Fe,Co,Ni,Cr,Mn"  : 任意元素指定
 
 Output structure:
     BCC_SQS/
@@ -31,38 +34,50 @@ Output structure:
 """
 
 import os
+import sys
+import argparse
 import itertools
 import numpy as np
 
 # =====================================================================
-# Refractory elements
+# Element groups
 # =====================================================================
 REFRACTORY_ELEMENTS = sorted(['Nb', 'Ti', 'V', 'Zr', 'Mo', 'Ta', 'W', 'Hf', 'Cr'])
 
-# BCC lattice constants (Å)
+# All elements with existing BCC_B2 data (from VASP same-element B2 calculations)
+ALL_B2_ELEMENTS = sorted([
+    'Ag', 'Al', 'As', 'B', 'Ca', 'Cd', 'Ce', 'Co', 'Cr', 'Cu',
+    'Fe', 'Ga', 'Gd', 'Ge', 'Hf', 'In', 'La', 'Mg', 'Mn', 'Mo',
+    'Na', 'Nb', 'Ni', 'Pd', 'Ru', 'Sb', 'Sc', 'Se', 'Si', 'Sn',
+    'Sr', 'Ta', 'Tc', 'Ti', 'V', 'W', 'Y', 'Zn', 'Zr',
+])
+
+# BCC lattice constants (Å) from VASP B2 same-element calculations
 ELEMENT_A0_BCC = {
-    "Cr": 2.880,
-    "Hf": 3.530,
-    "Mo": 3.147,
-    "Nb": 3.301,
-    "Ta": 3.303,
-    "Ti": 3.250,
-    "V":  3.024,
-    "W":  3.165,
-    "Zr": 3.570,
+    "Ag": 3.3009, "Al": 3.2254, "As": 3.3672, "B":  2.3110,
+    "Ca": 4.3838, "Cd": 3.5840, "Ce": 3.7670, "Co": 2.8010,
+    "Cr": 2.8363, "Cu": 2.8955, "Fe": 2.8266, "Ga": 3.3618,
+    "Gd": 4.1013, "Ge": 3.3764, "Hf": 3.5338, "In": 3.8099,
+    "La": 4.2224, "Mg": 3.5789, "Mn": 2.7883, "Mo": 3.1486,
+    "Na": 4.2002, "Nb": 3.3237, "Ni": 2.7938, "Pd": 3.1386,
+    "Ru": 3.0460, "Sb": 3.7828, "Sc": 3.6771, "Se": 3.4604,
+    "Si": 3.0942, "Sn": 3.8076, "Sr": 4.7133, "Ta": 3.3119,
+    "Tc": 3.0712, "Ti": 3.2396, "V":  2.9821, "W":  3.1724,
+    "Y":  4.0265, "Zn": 3.1572, "Zr": 3.5687,
 }
 
-# POTCAR variants
+# POTCAR variants (PAW-PBE recommended)
 POTCAR_VARIANTS = {
-    "Cr": "Cr_pv",
-    "Hf": "Hf_pv",
-    "Mo": "Mo_pv",
-    "Nb": "Nb_pv",
-    "Ta": "Ta_pv",
-    "Ti": "Ti_pv",
-    "V":  "V_sv",
-    "W":  "W_pv",
-    "Zr": "Zr_sv",
+    "Ag": "Ag",    "Al": "Al",    "As": "As",    "B":  "B",
+    "Ca": "Ca_sv", "Cd": "Cd",    "Ce": "Ce",    "Co": "Co",
+    "Cr": "Cr_pv", "Cu": "Cu",    "Fe": "Fe_pv", "Ga": "Ga_d",
+    "Gd": "Gd_3",  "Ge": "Ge_d",  "Hf": "Hf_pv", "In": "In_d",
+    "La": "La",    "Mg": "Mg_pv", "Mn": "Mn_pv", "Mo": "Mo_pv",
+    "Na": "Na_pv", "Nb": "Nb_pv", "Ni": "Ni_pv", "Pd": "Pd",
+    "Ru": "Ru_pv", "Sb": "Sb",    "Sc": "Sc_sv", "Se": "Se",
+    "Si": "Si",    "Sn": "Sn_d",  "Sr": "Sr_sv", "Ta": "Ta_pv",
+    "Tc": "Tc_pv", "Ti": "Ti_pv", "V":  "V_sv",  "W":  "W_pv",
+    "Y":  "Y_sv",  "Zn": "Zn",    "Zr": "Zr_sv",
 }
 
 # =====================================================================
@@ -393,15 +408,46 @@ print(f"  python compare_b2_sqs.py")
 
 
 def main():
-    base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "BCC_SQS")
+    parser = argparse.ArgumentParser(
+        description="BCC SQS VASP input generator")
+    parser.add_argument("--group", choices=["refractory", "all"],
+                        default="refractory",
+                        help="Element group: refractory (9元素,45計算) or all (39元素,780計算)")
+    parser.add_argument("--elements", type=str, default=None,
+                        help="Comma-separated element list (e.g., 'Fe,Co,Ni,Cr,Mn')")
+    parser.add_argument("--outdir", type=str, default=None,
+                        help="Output directory (default: BCC_SQS)")
+    args = parser.parse_args()
+
+    # Determine element list
+    if args.elements:
+        elements = sorted([e.strip() for e in args.elements.split(",")])
+        group_name = "custom"
+        # Validate
+        for el in elements:
+            if el not in ELEMENT_A0_BCC:
+                print(f"Error: Unknown element '{el}'. Available: {ALL_B2_ELEMENTS}")
+                sys.exit(1)
+    elif args.group == "all":
+        elements = ALL_B2_ELEMENTS
+        group_name = "all"
+    else:
+        elements = REFRACTORY_ELEMENTS
+        group_name = "refractory"
+
+    # Output directory
+    if args.outdir:
+        base_dir = args.outdir
+    else:
+        base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "BCC_SQS")
     os.makedirs(base_dir, exist_ok=True)
 
     calculations = []
 
-    # Generate same-element references (9 calculations)
-    for el in REFRACTORY_ELEMENTS:
+    # Generate same-element references
+    for el in elements:
         calc_name = f"{el}8{el}8"
-        a_super = 2.0 * ELEMENT_A0_BCC[el]  # 2×2×2 supercell
+        a_super = 2.0 * ELEMENT_A0_BCC[el]
         dirpath = os.path.join(base_dir, calc_name)
         os.makedirs(dirpath, exist_ok=True)
         write_incar_sqs(dirpath)
@@ -409,8 +455,8 @@ def main():
         write_kpoints_sqs(dirpath)
         calculations.append((calc_name, el, el))
 
-    # Generate all refractory pairs (symmetric: only one direction needed)
-    for el_a, el_b in itertools.combinations(REFRACTORY_ELEMENTS, 2):
+    # Generate all pairs (symmetric: only one direction needed)
+    for el_a, el_b in itertools.combinations(elements, 2):
         calc_name = f"{el_a}8{el_b}8"
         a_super = estimate_sqs_a0(el_a, el_b)
         dirpath = os.path.join(base_dir, calc_name)
@@ -425,30 +471,31 @@ def main():
     generate_run_script(base_dir, calculations)
     generate_extract_script(base_dir)
 
-    n_homo = len(REFRACTORY_ELEMENTS)
+    n_homo = len(elements)
     n_hetero = len(calculations) - n_homo
-    print(f"Generated {len(calculations)} SQS calculations in {base_dir}/")
-    print(f"  - {n_hetero} refractory pairs (A8B8)")
+    n_total = len(calculations)
+    print(f"Generated {n_total} SQS calculations in {base_dir}/")
+    print(f"  - Group: {group_name} ({len(elements)} elements)")
+    print(f"  - {n_hetero} binary pairs (A8B8)")
     print(f"  - {n_homo} same-element references (A8A8)")
-    print(f"  - Total: {len(calculations)} calculations")
+    print(f"  - Total: {n_total} calculations")
     print(f"  - Each: 16 atoms (2×2×2 BCC supercell)")
     print()
     print("Directory naming: A8B8 format (e.g., Cr8Hf8, Mo8Mo8)")
-    print("  Matches BCC_B2 convention (A1B1) with atom counts")
-    print()
-    print("SQS advantages over B2:")
-    print("  - Random-like atom distribution (mimics BCC solid solution)")
-    print("  - No artificial long-range order")
-    print("  - Ω_sf directly applicable to BCC HEA prediction")
+    print(f"  Elements: {', '.join(elements)}")
     print()
     print("Next steps:")
-    print("  1. cd BCC_SQS")
+    print(f"  1. cd {os.path.basename(base_dir)}")
     print("  2. bash make_potcar.sh")
     print("  3. bash run_all.sh")
     print("  4. python extract_results.py")
     print()
-    print("Note: SQS calculations are more expensive than B2 (~30min-1h each).")
-    print("      Consider submitting to a job queue system.")
+    if n_total > 100:
+        est_hours = n_total * 0.75  # ~45min avg
+        print(f"Estimated total time (serial): ~{est_hours:.0f} hours")
+        print("Strongly recommend parallel job submission.")
+    else:
+        print("Note: SQS calculations are more expensive than B2 (~30min-1h each).")
 
 
 if __name__ == "__main__":
