@@ -256,20 +256,38 @@ def generate_potcar_script(base_dir, calculations):
 
 
 def generate_run_script(base_dir, calculations):
-    """Generate parallel execution script (OpenMPI, 32 cores)."""
+    """Generate all-in-one execution script (POTCAR生成→並列計算→結果抽出)."""
     calc_names = [c[0] for c in calculations]
 
+    # Build POTCAR generation commands
+    potcar_lines = []
+    for calc_name, el_a, el_b in calculations:
+        pot_a = POTCAR_VARIANTS.get(el_a, el_a)
+        pot_b = POTCAR_VARIANTS.get(el_b, el_b)
+        if el_a == el_b:
+            potcar_lines.append(
+                f'cat "$VASP_PP_PATH"/{pot_a}/POTCAR > "$BASEDIR"/{calc_name}/POTCAR')
+        else:
+            potcar_lines.append(
+                f'cat "$VASP_PP_PATH"/{pot_a}/POTCAR "$VASP_PP_PATH"/{pot_b}/POTCAR > "$BASEDIR"/{calc_name}/POTCAR')
+
+    potcar_block = "\n".join(potcar_lines)
+
     content = f"""#!/bin/bash
-# Parallel execution script for BCC_SQS DFT calculations
-# Environment: OpenMPI, 32 cores available
+# All-in-one execution script for BCC_SQS DFT calculations
+# Handles: POTCAR generation → parallel VASP execution → result extraction
 #
+# Environment: OpenMPI, 32 cores
 # Default: 8 parallel jobs × 4 cores each = 32 cores
-# Adjust NPROCS_PER_JOB and NJOBS_PARALLEL as needed.
 #
 # Usage:
 #   bash run_all.sh              # 8並列×4コア (default)
 #   bash run_all.sh 4 8          # 4並列×8コア
 #   bash run_all.sh 16 2         # 16並列×2コア
+#
+# Requires: $VASP_PP_PATH environment variable
+
+set -e
 
 NJOBS_PARALLEL=${{1:-8}}
 NPROCS_PER_JOB=${{2:-4}}
@@ -277,7 +295,31 @@ VASP_CMD="mpirun -np $NPROCS_PER_JOB vasp_std"
 LOG="run_status.log"
 BASEDIR=$(cd "$(dirname "$0")" && pwd)
 
-echo "=== BCC_SQS Parallel Calculations ===" | tee $LOG
+# ============================================================
+# Step 1: POTCAR generation
+# ============================================================
+echo "=== Step 1: POTCAR Generation ===" | tee $LOG
+
+if [ -z "$VASP_PP_PATH" ]; then
+    echo "Error: VASP_PP_PATH environment variable is not set." | tee -a $LOG
+    echo "Set it to the PAW-PBE pseudopotential directory, e.g.:" | tee -a $LOG
+    echo "  export VASP_PP_PATH=/path/to/potpaw_PBE.64" | tee -a $LOG
+    exit 1
+fi
+
+echo "Using VASP_PP_PATH=$VASP_PP_PATH" | tee -a $LOG
+echo "Generating POTCAR for {len(calculations)} calculations..." | tee -a $LOG
+
+{potcar_block}
+
+echo "POTCAR generation complete." | tee -a $LOG
+echo "" | tee -a $LOG
+
+# ============================================================
+# Step 2: Parallel VASP execution
+# ============================================================
+set +e
+echo "=== Step 2: Parallel VASP Execution ===" | tee -a $LOG
 echo "Total: {len(calculations)} calculations (16 atoms each)" | tee -a $LOG
 echo "Parallel jobs: $NJOBS_PARALLEL × $NPROCS_PER_JOB cores = $(($NJOBS_PARALLEL * $NPROCS_PER_JOB)) cores" | tee -a $LOG
 echo "Started: $(date)" | tee -a $LOG
@@ -309,7 +351,17 @@ echo "{chr(10).join(calc_names)}" | \\
 echo "" | tee -a $LOG
 echo "Finished: $(date)" | tee -a $LOG
 
+# ============================================================
+# Step 3: Result extraction
+# ============================================================
+echo "" | tee -a $LOG
+echo "=== Step 3: Result Extraction ===" | tee -a $LOG
+cd "$BASEDIR"
+python extract_results.py 2>&1 | tee -a $LOG
+
+# ============================================================
 # Summary
+# ============================================================
 echo "" | tee -a $LOG
 echo "=== Summary ===" | tee -a $LOG
 TOTAL={len(calculations)}
@@ -319,6 +371,8 @@ FAILED=$(grep -c "WARNING" $LOG 2>/dev/null || echo 0)
 echo "  Converged: $CONVERGED / $TOTAL" | tee -a $LOG
 echo "  Skipped (already done): $SKIPPED" | tee -a $LOG
 echo "  Not converged: $FAILED" | tee -a $LOG
+echo "" | tee -a $LOG
+echo "Results saved to: sqs_refractory_results.csv" | tee -a $LOG
 """
 
     with open(os.path.join(base_dir, "run_all.sh"), "w") as f:
@@ -515,17 +569,16 @@ def main():
     print(f"  Elements: {', '.join(elements)}")
     print()
     print("Next steps:")
-    print(f"  1. cd {os.path.basename(base_dir)}")
-    print("  2. bash make_potcar.sh")
-    print("  3. bash run_all.sh")
-    print("  4. python extract_results.py")
+    print(f"  1. export VASP_PP_PATH=/path/to/potpaw_PBE.64")
+    print(f"  2. cd {os.path.basename(base_dir)}")
+    print(f"  3. bash run_all.sh   # POTCAR生成→並列計算→結果抽出 (all-in-one)")
     print()
     if n_total > 100:
-        est_hours = n_total * 0.75  # ~45min avg
-        print(f"Estimated total time (serial): ~{est_hours:.0f} hours")
-        print("Strongly recommend parallel job submission.")
+        est_hours = n_total * 0.75 / 8  # 8並列想定
+        print(f"Estimated time (8並列×4コア): ~{est_hours:.0f} hours")
     else:
-        print("Note: SQS calculations are more expensive than B2 (~30min-1h each).")
+        est_hours = n_total * 0.75 / 8
+        print(f"Estimated time (8並列×4コア): ~{est_hours:.1f} hours")
 
 
 if __name__ == "__main__":
