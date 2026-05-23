@@ -286,15 +286,23 @@ def generate_run_script(base_dir, calculations):
 #   bash run_all.sh 4 8          # 4並列×8コア
 #   bash run_all.sh 16 2         # 16並列×2コア
 #
-# Requires: $VASP_PP_PATH environment variable
+# Requires: $VASP_PP_PATH, $VASPBIN environment variables
 
 set -e
 
 NJOBS_PARALLEL=${{1:-8}}
 NPROCS_PER_JOB=${{2:-4}}
-VASP_CMD="mpirun -np $NPROCS_PER_JOB vasp_std"
 LOG="run_status.log"
 BASEDIR=$(cd "$(dirname "$0")" && pwd)
+
+if [ -z "$VASPBIN" ]; then
+    echo "Error: VASPBIN environment variable is not set." | tee $LOG
+    echo "Set it to the VASP executable path, e.g.:" | tee -a $LOG
+    echo "  export VASPBIN=/path/to/vasp_std" | tee -a $LOG
+    exit 1
+fi
+
+VASP_CMD="mpirun -np $NPROCS_PER_JOB $VASPBIN"
 
 # ============================================================
 # Step 1: POTCAR generation
@@ -572,6 +580,7 @@ def main():
     print()
     print("Next steps:")
     print(f"  1. export VASP_PP_PATH=/path/to/vasp_pp  # (potpaw_PBE/ が含まれるディレクトリ)")
+    print(f"     export VASPBIN=/path/to/vasp_std")
     print(f"  2. cd {os.path.basename(base_dir)}")
     print(f"  3. bash run_all.sh   # POTCAR生成→並列計算→結果抽出 (all-in-one)")
     print()
