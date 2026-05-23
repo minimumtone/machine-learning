@@ -256,43 +256,73 @@ def generate_potcar_script(base_dir, calculations):
 
 
 def generate_run_script(base_dir, calculations):
-    """Generate batch submission script for all calculations."""
-    lines = [
-        "#!/bin/bash",
-        "# Batch execution script for BCC_SQS refractory DFT calculations",
-        "# Usage: bash run_all.sh",
-        "#",
-        "# Each SQS-16 calc is 16 atoms → moderate cost (~30min-1h per job).",
-        "# Adjust VASP_CMD and NPROCS to your environment.",
-        "",
-        'VASP_CMD="mpirun -np ${NPROCS:-8} vasp_std"',
-        'LOG="run_status.log"',
-        "",
-        'echo "=== BCC_SQS Refractory Calculations ===" | tee $LOG',
-        f'echo "Total: {len(calculations)} calculations (16 atoms each)" | tee -a $LOG',
-        'echo "Started: $(date)" | tee -a $LOG',
-        'echo "" | tee -a $LOG',
-        "",
-    ]
+    """Generate parallel execution script (OpenMPI, 32 cores)."""
+    calc_names = [c[0] for c in calculations]
 
-    for i, (calc_name, _, _) in enumerate(calculations, 1):
-        lines.append(f'echo "[{i}/{len(calculations)}] {calc_name}..." | tee -a $LOG')
-        lines.append(f'cd {calc_name}')
-        lines.append(f'$VASP_CMD > vasp.out 2>&1')
-        lines.append(f'if grep -q "reached required accuracy" OUTCAR 2>/dev/null; then')
-        lines.append(f'    echo "  CONVERGED" | tee -a ../$LOG')
-        lines.append(f'else')
-        lines.append(f'    echo "  WARNING: not converged" | tee -a ../$LOG')
-        lines.append(f'fi')
-        lines.append(f'cd ..')
-        lines.append("")
+    content = f"""#!/bin/bash
+# Parallel execution script for BCC_SQS DFT calculations
+# Environment: OpenMPI, 32 cores available
+#
+# Default: 8 parallel jobs × 4 cores each = 32 cores
+# Adjust NPROCS_PER_JOB and NJOBS_PARALLEL as needed.
+#
+# Usage:
+#   bash run_all.sh              # 8並列×4コア (default)
+#   bash run_all.sh 4 8          # 4並列×8コア
+#   bash run_all.sh 16 2         # 16並列×2コア
 
-    lines.append('echo "" | tee -a $LOG')
-    lines.append('echo "Finished: $(date)" | tee -a $LOG')
-    lines.append("")
+NJOBS_PARALLEL=${{1:-8}}
+NPROCS_PER_JOB=${{2:-4}}
+VASP_CMD="mpirun -np $NPROCS_PER_JOB vasp_std"
+LOG="run_status.log"
+BASEDIR=$(cd "$(dirname "$0")" && pwd)
+
+echo "=== BCC_SQS Parallel Calculations ===" | tee $LOG
+echo "Total: {len(calculations)} calculations (16 atoms each)" | tee -a $LOG
+echo "Parallel jobs: $NJOBS_PARALLEL × $NPROCS_PER_JOB cores = $(($NJOBS_PARALLEL * $NPROCS_PER_JOB)) cores" | tee -a $LOG
+echo "Started: $(date)" | tee -a $LOG
+echo "" | tee -a $LOG
+
+# Function to run a single calculation
+run_one() {{
+    local dir=$1
+    local basedir=$2
+    local vasp_cmd=$3
+    cd "$basedir/$dir"
+    if [ -f OUTCAR ] && grep -q "reached required accuracy" OUTCAR 2>/dev/null; then
+        echo "  SKIP (already converged): $dir"
+        return 0
+    fi
+    $vasp_cmd > vasp.out 2>&1
+    if grep -q "reached required accuracy" OUTCAR 2>/dev/null; then
+        echo "  CONVERGED: $dir"
+    else
+        echo "  WARNING (not converged): $dir"
+    fi
+}}
+export -f run_one
+
+# Run all calculations in parallel
+echo "{chr(10).join(calc_names)}" | \\
+    xargs -I {{}} -P $NJOBS_PARALLEL bash -c "run_one '{{}}' '$BASEDIR' '$VASP_CMD'" 2>&1 | tee -a $LOG
+
+echo "" | tee -a $LOG
+echo "Finished: $(date)" | tee -a $LOG
+
+# Summary
+echo "" | tee -a $LOG
+echo "=== Summary ===" | tee -a $LOG
+TOTAL={len(calculations)}
+CONVERGED=$(grep -c "CONVERGED" $LOG 2>/dev/null || echo 0)
+SKIPPED=$(grep -c "SKIP" $LOG 2>/dev/null || echo 0)
+FAILED=$(grep -c "WARNING" $LOG 2>/dev/null || echo 0)
+echo "  Converged: $CONVERGED / $TOTAL" | tee -a $LOG
+echo "  Skipped (already done): $SKIPPED" | tee -a $LOG
+echo "  Not converged: $FAILED" | tee -a $LOG
+"""
 
     with open(os.path.join(base_dir, "run_all.sh"), "w") as f:
-        f.write("\n".join(lines))
+        f.write(content)
     os.chmod(os.path.join(base_dir, "run_all.sh"), 0o755)
 
 
