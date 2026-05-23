@@ -140,7 +140,7 @@ Alonso~\cite{Alonso2021}はKingの$\Omega_\text{sf}$を多成分HEAに
 $\Omega_\text{sf}(i,j)$は元素$i$を溶媒、元素$j$を溶質とした際の
 体積変化率であり、二元系の実験データまたはDFT計算から得られる。
 
-AlonsoはKingの実験$\Omega_\text{sf}$を用い、$\gamma = 1$
+AlonsoはKingの実験$\Omega_\text{sf}$を用い、$q = 1$
 （スケーリングなし）で64個のHEAに対しRMSE $\approx 0.023$~\AA{}を
 達成した。この精度はVegard則（RMSE $\approx 0.028$~\AA）から
 18\%の改善に相当する。
@@ -152,7 +152,7 @@ AlonsoはKingの実験$\Omega_\text{sf}$を用い、$\gamma = 1$
 原子環境は大きく異なる。例えばB2構造では各原子が8個の異種原子に
 囲まれるのに対し、L1$_2$構造の多数派原子は同種8+異種4の混合配位を
 持つ。この配位環境の違いは有効原子体積に直接影響する；
-(3)~欠損ペアではVegard則にフォールバックせざるを得ず、
+(3)~欠損ペアではVegard則に縮退せざるを得ず、
 特にL1$_2$データのカバレッジが低いFCC HEA予測で精度が低下する。
 
 HEA研究においてもう一つ重要な記述子が原子サイズミスマッチ
@@ -257,7 +257,7 @@ $\Omega_\text{sf}$を得た。同一ペアに対して複数のデータソー�
 主検証セットはAlonso~\cite{Alonso2021} Table~2の64個の立方晶HEA
 （29 BCC、35 FCC、$a = 2.883$--$3.856$~\AA、22元素）。
 独立テストセットとして、Alonsoデータセットに含まれない20個のHEA
-（8 BCC、12 FCC）を別文献~\cite{Senkov2013,Yao2016,Otto2013,Niu2017}
+（8 BCC、12 FCC）を別文献~\cite{Senkov2013,Yao2016,Otto2013,Leong2017}
 から収集した。
 
 \subsubsection{多相HEAデータベース}
@@ -285,9 +285,15 @@ Vegard則からの体積偏差を計算する：
 ここで$V_\text{DFT} = a_\text{DFT}^3 / Z$
 （$Z = 2$: B2、$Z = 4$: L1$_2$）、
 $V_\text{Vegard} = \sum_i x_i V_i$はKingの原子体積~\cite{King1966}を使用。
-各ペアの中央値を採用し、外れ値の影響を緩和する。
+同一元素ペアに対してMP・OQMDの両データベースから複数の
+$\Omega_\text{sf}$値が得られる場合がある。
+その際、平均値ではなく中央値（median）を採用した。
+これは、異なるデータベース間での計算条件の差異や
+準安定構造の混入による外れ値が平均値を歪めるリスクを
+回避するためであり、特にデータ点数が少ない（2--3点）
+ペアにおいてロバスト性を確保する効果がある。
 
-構造特異的ファクターを保持する：
+構造特異的ファクターを保持し、B2とL1$_2$を独立に扱う：
 \begin{align}
   \Omega_\text{sf}^\text{B2}(A\text{-}B) &= \text{median}\left\{
     \Omega_\text{sf} \mid \text{B2} \right\}, \label{eq:omega_b2} \\
@@ -299,11 +305,11 @@ $V_\text{Vegard} = \sum_i x_i V_i$はKingの原子体積~\cite{King1966}を使�
 \subsection{構造特異的格子定数予測}
 \label{sec:ss_eq10}
 
-式~\eqref{eq:alonso_eq10}を構造依存スケーリング因子$\gamma_s$で
+式~\eqref{eq:alonso_eq10}を構造依存スケーリング因子$q_s$で
 一般化する：
 \begin{equation}
   V = n_\text{auc} \!\left[
-    \sum_i c_i V_i + \gamma_s \sum_i \sum_{j \ne i}
+    \sum_i c_i V_i + q_s \sum_i \sum_{j \ne i}
     c_i\, c_j\, V_j\, \Omega_\text{sf}^{(s)}(i, j)
   \right]\!,
   \label{eq:scaled_eq10}
@@ -311,16 +317,16 @@ $V_\text{Vegard} = \sum_i x_i V_i$はKingの原子体積~\cite{King1966}を使�
 ここで$s \in \{\text{BCC}, \text{FCC}\}$、
 $\Omega_\text{sf}^{(\text{BCC})} = \Omega_\text{sf}^\text{B2}$、
 $\Omega_\text{sf}^{(\text{FCC})} = \Omega_\text{sf}^{\text{L1}_2}$。
-$\gamma$はHEA格子定数のRMSEを最小化するように、
-$\gamma \in [-0.5, 2.0]$の範囲を0.01刻みでグリッドサーチして決定した。
-BCCとFCCで独立に最適化し、$\gamma_\text{BCC} = 1.45$、
-$\gamma_\text{FCC} = 1.08$を得た。Leave-One-Out交差検証（LOO-CV）を
-全64 HEAに適用し、各合金を順次除外して$\gamma$を再最適化することで
+$q$はHEA格子定数のRMSEを最小化するように、
+$q \in [-0.5, 2.0]$の範囲を0.01刻みでグリッドサーチして決定した。
+BCCとFCCで独立に最適化し、$q_\text{BCC} = 1.45$、
+$q_\text{FCC} = 1.08$を得た。Leave-One-Out交差検証（LOO-CV）を
+全64 HEAに適用し、各合金を順次除外して$q$を再最適化することで
 過学習の影響を評価した。LOO-CV RMSE = 0.0214~\AA{}は
-全データRMSE = 0.0210~\AA{}に近く、$\gamma$の頑健性を確認した。
+全データRMSE = 0.0210~\AA{}に近く、$q$の頑健性を確認した。
 
-$\gamma_\text{FCC} \approx 1$はL1$_2$化合物がFCC HEAの格子定数を
-そのまま近似できることを意味し、$\gamma_\text{BCC} = 1.45$は
+$q_\text{FCC} \approx 1$はL1$_2$化合物がFCC HEAの格子定数を
+そのまま近似できることを意味し、$q_\text{BCC} = 1.45$は
 B2化合物の$\Omega_\text{sf}$を1.45倍に増幅する必要があることを示す。
 この非対称性の物理的起源は考察節で議論する。
 
@@ -353,7 +359,7 @@ L1$_2$データから$\delta_A^{(\text{L1}_2)}$を独立に推定する。
 $\delta_i^{(s)} + \delta_j^{(s)}$で置換する：
 \begin{equation}
   V \approx n_\text{auc} \!\left[
-    \sum_i c_i V_i + \gamma_s \sum_i \sum_{j \ne i}
+    \sum_i c_i V_i + q_s \sum_i \sum_{j \ne i}
     c_i c_j V_j (\delta_i^{(s)} + \delta_j^{(s)})
   \right]\!.
   \label{eq:additive_pred}
@@ -383,12 +389,12 @@ $\{c_i\}_{i=1}^N$における各元素の\emph{有効原子体積}を定義で�
 組成依存有効体積を次のように抽出できる：
 \begin{equation}
   V_\text{eff}(i;\, \{c_j\})
-  = V_i \!\left[1 + \gamma_s \sum_{j \ne i} c_j\,
+  = V_i \!\left[1 + q_s \sum_{j \ne i} c_j\,
     \bigl(\delta_i^{(s)} + \delta_j^{(s)}\bigr)\right]\!,
   \label{eq:veff}
 \end{equation}
 ここで$V_i$は純元素の原子体積（King~\cite{King1966}）、
-$\gamma_s$は構造$s$に対する最適スケーリング因子である。
+$q_s$は構造$s$に対する最適スケーリング因子である。
 第2項は化学環境による補正を表し、合金化パートナーの
 組成$c_j$と両元素の$\delta^{(s)}$に依存する。
 
@@ -445,7 +451,7 @@ Cantor合金（CoCrFeMnNi）とその部分置換系が多数を占める。
 原子サイズも類似するためVegard則の近似精度が高い。
 
 独立テストセットの20 HEA（BCC 8, FCC 12）はAlonso Table~2以外の
-文献~\cite{Yao2016,Otto2013,Niu2017,Wang2019}から収集した。
+文献~\cite{Yao2016,Otto2013,Leong2017,Wang2019}から収集した。
 独立テストにはAlonso Table~2に含まれない元素（例：Sn, V単独使用）を
 含む合金も含まれ、汎化能力のより厳しい評価を可能にする。
 
@@ -564,11 +570,11 @@ Alonso Eq.~10       & 0.0229 & 0.0141 & 0.42 & 0.990 \\
 \midrule
 \multicolumn{5}{l}{\textit{本研究: 元素対$\Omega_\text{sf}$}} \\
 King Vegard         & 0.0227 & 0.0139 & 0.42 & 0.990 \\
-DFT Eq.~10 ($\gamma\!=\!1$) & 0.0268 & 0.0202 & 0.59 & 0.986 \\
+DFT Eq.~10 ($q\!=\!1$) & 0.0268 & 0.0202 & 0.59 & 0.986 \\
 DFT Eq.~10 SS      & \textbf{0.0210} & \textbf{0.0117} & \textbf{0.35} & \textbf{0.991} \\
 \midrule
 \multicolumn{5}{l}{\textit{本研究: 加法分解}} \\
-加法$\delta$ + $\gamma$ & 0.0211 & --- & --- & --- \\
+加法$\delta$ + $q$ & 0.0211 & --- & --- & --- \\
 \midrule
 \multicolumn{5}{l}{\textit{ML残差補正 (LOO-CV)}} \\
 SS Eq.~10 + Ridge   & 0.0212 & 0.0116 & 0.34 & 0.991 \\
@@ -590,7 +596,7 @@ RMSE棒グラフを示す。図~\ref{fig:parity}から、DFT Eq.~10 SSが
 Alonso Eq.~10よりも系統的に対角線に近いことが読み取れる。
 特にBCC HEAの中でもAlonso Eq.~10では正のバイアス（過少予測）が
 見られた合金群が、DFT Eq.~10 SSでは改善されている。
-これは$\gamma_\text{BCC} = 1.45$によるスケーリングがB2化合物の
+これは$q_\text{BCC} = 1.45$によるスケーリングがB2化合物の
 秩序構造とランダムBCC固溶体の構造差を補正していることを意味する。
 
 \begin{figure}[H]
@@ -636,7 +642,7 @@ Alonso Eq.~10よりも系統的に対角線に近いことが読み取れる。
 Alonso Eq.~10       & 0.0309 & 0.0132 & 0.0229 \\
 King Vegard         & 0.0328 & 0.0085 & 0.0227 \\
 DFT Eq.~10 SS       & 0.0293 & 0.0096 & 0.0210 \\
-加法$\delta$+$\gamma$ & 0.0310 & 0.0084 & 0.0215 \\
+加法$\delta$+$q$ & 0.0310 & 0.0084 & 0.0215 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -648,7 +654,7 @@ FCC精度が高い理由は以下の3点である：
 第一に、FCC HEAは3$d$遷移金属（Co, Cr, Fe, Ni, Mn）が支配的で、
 これらの原子体積が類似するためVegard則の近似精度が高い。
 第二に、L1$_2$化合物はFCC構造の良い近似であり、
-$\gamma_\text{FCC} = 1.08$（略等倍）が示すようにスケーリング補正が
+$q_\text{FCC} = 1.08$（略等倍）が示すようにスケーリング補正が
 ほぼ不要である。
 第三に、FCC HEAの格子定数範囲が狭く（$a = 3.56$--$3.86$~\AA）、
 Vegard則からの偏差絶対値が小さい。
@@ -707,7 +713,7 @@ DFT Eq.~10 SSの予測が\textbf{完全に一致}していることが分かる�
 これは、独立テストのBCC HEAが高融点元素（Nb, Ti, V, Zr, Mo, Ta, W, 
 Hf, Cr）から構成されており、これらのペアに対するB2構造のDFTデータが
 MP/OQMDデータベースに存在しないためである。$\Omega_\text{sf}$データが
-欠損する場合、モデルは自動的にVegard則にフォールバックするため、
+欠損する場合、モデルは自動的にVegard則に縮退するため、
 予測が同一となる。
 
 一方、FCC 12合金ではL1$_2$構造のDFTデータカバレッジが十分であり、
@@ -730,7 +736,7 @@ Vegardと同等、データがあれば改善」という特性は、
 \caption{独立テストセット検証の詳細（20 HEA: BCC 8個＋FCC 12個）。
   (a)~各HEAの絶対誤差（mÅ単位）の手法別比較。BCC 8合金中7合金で
   VegardとDFT Eq.~10 SSが完全一致（``=''印）：B2 DFTデータ欠損に
-  よるVegardフォールバック。(b)~訓練・テスト間RMSE比較：
+  によるVegard則への縮退。(b)~訓練・テスト間RMSE比較：
   テストRMSE $\approx$ 訓練RMSE（過学習なし）。
   (c)~BCC/FCC別RMSE分解：改善はL1$_2$データカバレッジのある
   FCCに集中（12\%改善）。(d)~パリティプロット。
@@ -888,7 +894,7 @@ $\Omega_\text{sf}$の主要な傾向を捕捉しているが、一部の大き�
 HEA格子定数予測に適用すると、加法モデルはRMSE = 0.0215~\AA{}を
 達成する（元素対モデル0.0210~\AA{}との差はわずか0.0005~\AA、2.4\%）。
 この高精度の理由は：(a)~元素対残差が多元素系で平均化される、
-(b)~$\gamma$最適化がバイアスを吸収する、(c)~加法モデルは247ペアでなく
+(b)~$q$最適化がバイアスを吸収する、(c)~加法モデルは247ペアでなく
 1,227全ペアをカバーできる、ためである。
 
 \begin{table}[H]
@@ -1036,7 +1042,7 @@ DFTパッキング半径（\ref{sec:packing}節）で単一半径セット$(r_A,
 根本的な限界は$d_\text{nn} = r_A + r_B$が\emph{対称操作}であることに
 ある。加法分解の文脈では$\delta_A + \delta_B = \delta_B + \delta_A$
 （交換可能）だが、これは元素対$\Omega_\text{sf}$の近似であり
-構造は$\gamma$で別途補正される。一方パッキング制約では
+構造は$q$で別途補正される。一方パッキング制約では
 $r_A + r_B = d_\text{nn}$がそのまま格子定数を決定するため、
 多数派・少数派の役割を交換しても同一値を与え、
 $a(A_3B) = a(B_3A)$を\emph{強制}する。実際には
@@ -1108,7 +1114,7 @@ L1$_2$の多数派/少数派サイトの配位環境差は決して無視でき�
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=\textwidth]{fig_l12_asymmetry.png}
+\includegraphics[width=0.75\textwidth]{fig_l12_asymmetry.png}
 \caption{L1$_2$格子定数の非対称性（905ペア）。
   $a(A_3B) - a(B_3A)$の分布は平均0付近で対称だが、
   標準偏差0.48~\AA{}と大きな分散を持つ。
@@ -1123,7 +1129,7 @@ L1$_2$の多数派/少数派サイトの配位環境差は決して無視でき�
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=\textwidth]{fig_volume_radius.png}
+\includegraphics[width=0.75\textwidth]{fig_volume_radius.png}
 \caption{L1$_2$構造における構造依存有効半径。
   多数派サイト（面心、配位殻: 同種8＋異種4）の有効半径偏差
   $\langle|\Delta r_\text{maj}|\rangle = 0.036$~\AA{}に対し、
@@ -1141,10 +1147,10 @@ L1$_2$の多数派/少数派サイトの配位環境差は決して無視でき�
 加法分解$\delta^{(s)}$から定義した組成依存有効原子体積
 （式~\eqref{eq:veff}--\eqref{eq:a_from_veff}）を用いて、
 64個のHEA格子定数を予測した。加法モデルに対して
-構造別$\gamma_s$を再最適化した結果、
-$\gamma_\text{BCC}^\text{add} = -0.147$、
-$\gamma_\text{FCC}^\text{add} = -0.170$を得た。
-負のγ値は、加法分解のδが元素対Ω$_\text{sf}$の
+構造別$q_s$を再最適化した結果、
+$q_\text{BCC}^\text{add} = -0.147$、
+$q_\text{FCC}^\text{add} = -0.170$を得た。
+負の$q$値は、加法分解のδが元素対Ω$_\text{sf}$の
 全体的な傾向（合金化による平均的収縮）をδ自体に吸収しているため、
 残余補正の符号が反転することを意味する。
 
@@ -1347,7 +1353,7 @@ Yang--Zhang単独を改善する。$\Omega_\text{sf}$の情報は相判定の
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=\textwidth]{fig_roc.png}
+\includegraphics[width=0.75\textwidth]{fig_roc.png}
 \caption{SS（固溶体）vs 非SS（金属間化合物/非晶質）分類のROC曲線
   （54 HEA）。$\delta r$（実線、AUC = 0.873）が
   $\delta_\text{sf}$（破線、AUC = 0.708）を大きく上回る。
@@ -1358,7 +1364,7 @@ Yang--Zhang単独を改善する。$\Omega_\text{sf}$の情報は相判定の
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=0.7\textwidth]{fig_phase_map.png}
+\includegraphics[width=0.55\textwidth]{fig_phase_map.png}
 \caption{$\delta r$--$\Omega$空間における相安定性マップ（54 HEA）。
   SS: 固溶体（青丸）、IM: 金属間化合物（赤三角）、AM: 非晶質（緑四角）。
   Yang--Zhang基準（$\delta r < 6.6\%$かつ$\Omega > 1.1$、灰色領域）は
@@ -1542,7 +1548,7 @@ $\sigma \approx 0.016$~\AA{}は基本的限界を与える。
 品質管理（焼鈍条件・測定手法の統一）。特にBCC HEAの
 RMSE (0.0293~\AA) はノイズフロアの1.8倍であり、まだ改善の余地がある。
 BCC HEA精度向上には、多体相互作用の導入（三元系DFTデータ）や
-組成依存$\gamma$の導入が有効と考えられる。
+組成依存$q$の導入が有効と考えられる。
 
 
 \subsection{先行研究との比較}
@@ -1558,10 +1564,10 @@ HEA格子定数予測に関する先行研究との比較を議論する。
 
 \paragraph{Alonso (2021)}
 AlonsoはKingの実験$\Omega_\text{sf}$を用いた式~\eqref{eq:alonso_eq10}で
-RMSE = 0.023~\AA{}を達成した。$\gamma = 1$（スケーリングなし）で
+RMSE = 0.023~\AA{}を達成した。$q = 1$（スケーリングなし）で
 あり、構造依存性は考慮しない。本研究のDFT Eq.~10 SSとの主要な
 違いは：(a)~DFT vs 実験$\Omega_\text{sf}$、(b)~構造特異的 vs 共通
-$\Omega_\text{sf}$、(c)~$\gamma$最適化の有無、である。
+$\Omega_\text{sf}$、(c)~$q$最適化の有無、である。
 
 \paragraph{Zaddach {\it et al.} (2013)}
 Zaddachらはコヒーレント・ポテンシャル近似（CPA）に基づく
@@ -1578,22 +1584,22 @@ Zhang {\it et al.}~\cite{Zhang2017nat}らはMLベースのHEA物性予測を
 物理モデルを改善できなかった結果はこの傾向と一致する。
 
 
-\subsection{$\gamma$パラメータの物理的意味}
+\subsection{$q$パラメータの物理的意味}
 
-$\gamma_\text{BCC} = 1.45$・$\gamma_\text{FCC} = 1.08$は
+$q_\text{BCC} = 1.45$・$q_\text{FCC} = 1.08$は
 二元系秩序化合物（B2/L1$_2$）とランダム多成分固溶体
 （BCC/FCC HEA）の間の系統的な構造差を補正するスケーリング因子である。
-$\gamma_\text{FCC} \approx 1$はL1$_2$構造がFCC固溶体の良い近似であることを
-意味し、$\gamma_\text{BCC} = 1.45$はB2秩序構造のランダムBCC固溶体からの
+$q_\text{FCC} \approx 1$はL1$_2$構造がFCC固溶体の良い近似であることを
+意味し、$q_\text{BCC} = 1.45$はB2秩序構造のランダムBCC固溶体からの
 乖離が大きいことを示唆する。
 
 B2構造では全原子が異種原子8個に囲まれるのに対し、ランダムBCC固溶体では
 同種原子も近接に存在する。この配位環境の違いが化学結合の強さに影響し、
-$\Omega_\text{sf}$の絶対値が系統的に変調される。$\gamma > 1$はこの効果を
+$\Omega_\text{sf}$の絶対値が系統的に変調される。$q > 1$はこの効果を
 増幅する方向に補正していると解釈できる。
 
 一方、L1$_2$では多数派原子が同種8+異種4の混合配位を持つため、
-ランダムFCC固溶体の配位環境に比較的近い。これが$\gamma_\text{FCC} \approx 1$
+ランダムFCC固溶体の配位環境に比較的近い。これが$q_\text{FCC} \approx 1$
 の物理的根拠である。
 
 
@@ -1604,7 +1610,7 @@ $\Omega_\text{sf}$の絶対値が系統的に変調される。$\gamma > 1$は�
 B2データでは良好な相関（$r > 0.9$）が得られたが、L1$_2$データでは
 相関がやや低い（$r \approx 0.28$）。これは構造最適化の計算条件
 （$k$メッシュ密度、ENCUT、擬ポテンシャル世代）の違いに起因する
-可能性がある。しかしHEA格子定数予測においては、$\gamma$最適化が
+可能性がある。しかしHEA格子定数予測においては、$q$最適化が
 データソース間のバイアスを吸収するため、最終的なRMSE差は小さい
 （0.0210 vs 0.0214~\AA）。
 
@@ -1679,7 +1685,7 @@ DFT体積サイズファクターの元素別加法分解に基づく、
 $\delta^{(s)}$パラメータのみで、任意組成のHEA格子定数を
 DFT計算なしに予測できるフレームワークの確立である。
 予測手順は：(1)~各元素の有効体積
-$V_\text{eff}(i) = V_i\bigl[1 + \gamma_s \sum_{j\ne i} c_j
+$V_\text{eff}(i) = V_i\bigl[1 + q_s \sum_{j\ne i} c_j
 (\delta_i^{(s)} + \delta_j^{(s)})\bigr]$を計算、
 (2)~$a = (n_\text{auc}\sum c_i V_\text{eff}(i))^{1/3}$で格子定数を算出。
 この計算はスプレッドシートで実行可能であり、
@@ -1688,7 +1694,7 @@ $V_\text{eff}(i) = V_i\bigl[1 + \gamma_s \sum_{j\ne i} c_j
 組成最適化による合金設計に直接活用できる。
 
 \paragraph{限界}
-本フレームワークの主要な限界は：(a)~$\gamma$が構造ごとに
+本フレームワークの主要な限界は：(a)~$q$が構造ごとに
 単一の定数であり、組成依存性を持たないこと、(b)~B2/L1$_2$化合物の
 秩序構造がランダム固溶体と完全には対応しないこと、
 (c)~加法分解が$\Omega_\text{sf}$分散の約35\%を失うこと、
@@ -1713,10 +1719,184 @@ $V_\text{eff}(i) = V_i\bigl[1 + \gamma_s \sum_{j\ne i} c_j
   \item \textbf{HCP HEAへの拡張}: A3型（HCP）二元系化合物のDFTデータ
     を整備し、HCP HEAの格子パラメータ（$a$および$c/a$比）予測への
     拡張。HCP構造では$c/a$比の非理想性が追加の自由度となる。
-  \item \textbf{組成依存$\gamma$}: 現在の構造ごとの定数$\gamma$を
-    組成依存関数$\gamma(c_1, \ldots, c_n)$に拡張することで、
+  \item \textbf{組成依存$q$}: 現在の構造ごとの定数$q$を
+    組成依存関数$q(c_1, \ldots, c_n)$に拡張することで、
     BCC HEA精度の改善が期待される。
 \end{enumerate}
+
+
+%% =====================================================================
+%% 付録
+%% =====================================================================
+
+\appendix
+
+\section{純元素原子体積のデータソース選択}
+\label{sec:appendix_volumes}
+
+本研究では$\Omega_\text{sf}$の算出（式~\eqref{eq:omega_def}）
+およびVegard則の基準体積（式~\eqref{eq:vegard}）に、
+King~\cite{King1966}の室温実験原子体積を採用した。
+DFT計算による純元素体積への置き換えも検討したが、
+以下の理由からKing値を維持する判断に至った。
+
+\subsection{DFT安定構造体積の問題}
+
+Materials Project (MP)~\cite{Jain2013}およびAFLOW~\cite{Curtarolo2012}データベースから
+40元素のDFT安定構造原子体積を取得し、King実験値と比較した
+（表~\ref{tab:king_vs_dft}）。
+HEA関連22元素ではMPの平均$|\Delta|$は2.4\%であるが、
+以下の元素で大きな乖離が認められた：
+
+\begin{itemize}
+  \item \textbf{Cr}: MP $= 13.08$~\AA$^3$ vs King $= 12.01$~\AA$^3$
+    （$+9.0$\%）。MPデータベースのエネルギー補正（r$^2$SCANまたはGGA+$U$）
+    により格子定数が過大評価されている可能性がある。
+  \item \textbf{Mn}: MP $= 13.02$~\AA$^3$ vs King $= 12.21$~\AA$^3$
+    （$+6.7$\%）。$\alpha$-Mn（$I\bar{4}3m$, 58原子/セル）は
+    複雑な反強磁性秩序を持ち、DFT-PBEでの最適化が
+    実験値を十分に再現できない。
+  \item \textbf{Sn}: MP $= 35.4$~\AA$^3$ vs King $= 27.1$~\AA$^3$
+    （$+31$\%）。MPが$\alpha$-Sn（diamond, Fd$\bar{3}$m）を
+    基底状態と判定するが、室温安定相は$\beta$-Sn（I4$_1$/amd）である。
+\end{itemize}
+
+AFLOWデータベースでは系統的な過小評価バイアス
+（HEA関連22元素で平均$-4.2$\%）が認められ、
+特にMn（$-17$\%）で顕著であった。
+
+\subsection{構造不一致の問題}
+\label{sec:appendix_structure}
+
+Vegard則の本来の定義では、
+$a_\text{alloy} = \sum c_i a_i$の$a_i$は
+各元素が\emph{合金と同じ結晶構造}を取った場合の格子定数である。
+この観点からBCC HEAにはBCC体積、FCC HEAにはFCC体積を用いるべきとも
+考えられる。しかし本研究のVASP B2/L1$_2$同種エントリ
+（元素$A$のみで構成されたB2/L1$_2$構造）を用いた検証では、
+テストRMSEが0.020~\AA{}から0.030~\AA{}に悪化した。
+
+原因は、同種エントリの体積が「孤立元素の強制構造」体積であり、
+HEA固溶体中の実環境とは異なることにある。例えば
+Si: diamond 20.0~\AA$^3$ $\to$ L1$_2$強制14.2~\AA$^3$（$-29$\%）、
+Mn: $\alpha$-Mn 12.2~\AA$^3$ $\to$ B2強制10.8~\AA$^3$（$-11$\%）
+と非物理的な収縮が生じる。
+
+\subsection{King実験値の妥当性}
+
+King値とCRC Handbook最新版（pymatgen内蔵値）の比較では、
+36元素中34元素で差が0.1\%未満であり、
+純元素の室温格子定数が1966年以降本質的に変化していないことを
+確認した。Kingの原子体積は室温安定構造に基づくSeitz体積であり、
+以下の理由から本手法に最適である：
+\begin{enumerate}
+  \item HEA格子定数の実験値が室温測定であり、
+    基準体積も室温値とすることで整合性が確保される。
+  \item DFT化合物体積$V_\text{DFT}$との系統的差異は
+    $\Omega_\text{sf}$の分子・分母で部分的に相殺され、
+    さらにスケーリング因子$q_s$が残差を吸収する。
+  \item 40元素にわたる統一的な基準を提供し、
+    DFTデータベース間のバイアス（MP vs AFLOW: 平均4.8\%差）
+    に影響されない。
+\end{enumerate}
+
+
+\begin{table}[h]
+\centering
+\caption{HEA関連元素の原子体積比較（\AA$^3$）。
+$\Delta_\text{MP}$・$\Delta_\text{AF}$はKing値からの偏差（\%）。}
+\label{tab:king_vs_dft}
+\small
+\begin{tabular}{l@{\hskip 6pt}r@{\hskip 6pt}r@{\hskip 6pt}r@{\hskip 6pt}r@{\hskip 6pt}r}
+\toprule
+元素 & 構造 & King & MP & $\Delta_\text{MP}$ & $\Delta_\text{AF}$ \\
+\midrule
+Fe  & BCC    & 11.78 & 11.73 & $-0.4$\% & $-3.8$\% \\
+Cr  & BCC    & 12.01 & 13.08 & $+9.0$\% & $-8.2$\% \\
+Co  & HCP    & 11.07 & 10.84 & $-2.1$\% & $-7.1$\% \\
+Ni  & FCC    & 10.94 & 10.49 & $-4.1$\% & $-6.6$\% \\
+Mn  & $\alpha$-Mn & 12.21 & 13.02 & $+6.7$\% & $-17.0$\% \\
+Cu  & FCC    & 11.81 & 11.45 & $-3.1$\% & $-5.8$\% \\
+Al  & FCC    & 16.60 & 16.47 & $-0.8$\% & $-2.9$\% \\
+Ti  & HCP    & 17.65 & 17.02 & $-3.6$\% & $-2.4$\% \\
+V   & BCC    & 13.82 & 13.26 & $-4.1$\% & $-5.9$\% \\
+Nb  & BCC    & 17.98 & 18.26 & $+1.6$\% & $-0.9$\% \\
+Mo  & BCC    & 15.58 & 15.89 & $+2.0$\% & $-0.3$\% \\
+Ta  & BCC    & 18.01 & 18.48 & $+2.6$\% & $-2.8$\% \\
+W   & BCC    & 15.85 & 15.93 & $+0.5$\% & $-2.1$\% \\
+Zr  & HCP    & 23.28 & 23.50 & $+0.9$\% & $-0.4$\% \\
+Hf  & HCP    & 22.31 & 22.26 & $-0.2$\% & $-4.4$\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\section{VASP B2データの高融点BCC HEAへの適用限界}
+\label{sec:appendix_vasp}
+
+高融点元素（Nb, Ti, V, Zr, Mo, Ta, W, Hf, Cr）同士の
+B2 $\Omega_\text{sf}$は36ペアがMP・OQMDに存在せず、
+独立テストのBCC HEA 8合金中7合金がVegard則に縮退する。
+
+これらの欠損ペアをVASP計算で補完する試みでは、
+$q_\text{BCC}$が1.45から0.50に急落し、
+テストRMSEが0.020~\AA{}から0.022~\AA{}に悪化した。
+原因はB2秩序構造の$\Omega_\text{sf}$が
+高融点BCC固溶体の体積偏差を正しく反映しないことにある：
+追加36ペアの86\%が負の$\Omega_\text{sf}$（収縮方向）を示すが、
+実際のBCC HEAの約半数は膨張方向の補正を必要とする。
+B2構造における$d$--$d$軌道混成による収縮が支配的であるのに対し、
+不規則BCC固溶体では異なる電子構造のため膨張が生じうる。
+
+この結果は、B2 $\to$ BCC代理の適用限界を示しており、
+データが不足する場合のVegard則への縮退が
+合理的な安全策であることを裏付ける。
+
+
+\section{その他の留意事項}
+\label{sec:appendix_notes}
+
+\subsection{DFTデータソース間の不整合}
+
+MP・OQMD・VASPの3データソースは計算条件
+（交換相関汎関数、$k$メッシュ密度、擬ポテンシャル世代、
+エネルギーカットオフ）が異なる。
+特にL1$_2$データではデータソース間の$\Omega_\text{sf}$相関が
+$r \approx 0.28$と低く、B2の$r > 0.9$に比べて一貫性が劣る。
+本手法では中央値採用とスケーリング因子$q_s$の最適化により
+この不整合を吸収しているが、
+将来的には統一計算条件での再計算が望ましい。
+
+\subsection{Gd・Ce除外の理由}
+
+GdおよびCeは$4f$電子の強い局在性のため
+DFT-GGA計算での構造最適化が不安定であり、
+$\Omega_\text{sf}$に最大0.66~\AA{}の異常値が混入した。
+独立テストHEAにGd・Ceが含まれないため精度に影響しないが、
+これら$f$電子系元素の取り扱いにはDFT+$U$や
+ハイブリッド汎関数の適用が必要である。
+
+\subsection{温度効果}
+
+DFT計算は0~Kの格子定数を与えるが、
+実験値はおよそ室温（$\sim$300~K）での測定値である。
+Kingの原子体積は室温実測値であるため、
+Vegard基準線は室温に整合している。
+一方、$\Omega_\text{sf}$はDFTの0~K体積から算出されるが、
+偏差の比（$\Delta V / V_\text{Vegard}$）として定義されているため、
+温度に伴う格子膨張が分子・分母で部分的に相殺される。
+ただしBCC HEAでは線膨張係数の元素間差が大きく、
+温度補正がRMSE改善に寄与する可能性がある。
+
+\subsection{加法分解の精度上限}
+
+元素対$\Omega_\text{sf}$を加法$\delta_i + \delta_j$に分解する際、
+全分散の約35\%が失われる。
+これは$\Omega_\text{sf}$に含まれる非加法的な二体効果
+（例：電荷移動量の非対称性、磁気相互作用）に起因する。
+現状では加法モデルのRMSE（0.0211~\AA）が元素対モデル（0.0210~\AA）と
+ほぼ同等であるため実用上の問題はないが、
+より高精度が要求される場合には残差二体補正項の導入が考えられる。
 
 
 %% =====================================================================
@@ -1773,8 +1953,9 @@ H.W.~Yao et al., Entropy \textbf{18} (2016) 189.
 \bibitem{Otto2013}
 F.~Otto et al., Acta Mater.\ \textbf{61} (2013) 5743.
 
-\bibitem{Niu2017}
-C.~Niu et al., Sci.\ Rep.\ \textbf{7} (2017) 7043.
+\bibitem{Leong2017}
+Z.~Leong et al., Sci.\ Rep.\ \textbf{7} (2017) 39803.
+\newblock \href{https://doi.org/10.1038/srep39803}{doi:10.1038/srep39803}.
 
 \bibitem{Wang2019}
 Z.~Wang et al., Scr.\ Mater.\ \textbf{94} (2015) 28.
@@ -1784,6 +1965,9 @@ A.J.~Zaddach et al., JOM \textbf{65} (2013) 1780.
 
 \bibitem{Zhang2017nat}
 Z.~Zhang et al., Nat.\ Commun.\ \textbf{8} (2017) 14390.
+
+\bibitem{Curtarolo2012}
+S.~Curtarolo et al., Comput.\ Mater.\ Sci.\ \textbf{58} (2012) 218.
 
 \end{thebibliography}
 
