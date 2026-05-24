@@ -45,8 +45,11 @@ $\Omega_\text{sf}^{(s)}(i\text{-}j) \approx \delta_i^{(s)} + \delta_j^{(s)}$に
 \emph{組成依存有効原子体積}$V_\text{eff}(i;\, \{c_j\})$を
 定義でき、等モル・非等モルを問わず任意組成のHEA格子定数を
 $a = (n_\text{auc}\sum c_i V_\text{eff})^{1/3}$で予測可能となる。
-64個の訓練HEAに対しRMSE = 0.0210~\AA{}（Vegard比7.5\%改善）、
-加法モデルでも0.0211~\AA{}と元素対モデルとほぼ同等の精度を維持する。
+64個の訓練HEAに対しRMSE = 0.0197~\AA{}（Vegard比13\%改善）を達成する。
+さらに、B2秩序構造（$\alpha = -1$）に代わり
+Special Quasi-random Structure（SQS, $\alpha \approx 0$）から
+$\Omega_\text{sf}$を導出することで、BCC HEA予測を
+0.0293 → 0.0273~\AA{}（6.9\%改善）に向上させた。
 20個の独立HEAでRMSE = 0.020~\AA{}が確認された。
 この$\delta^{(s)}$パラメータはHume-Rotheryの原子半径と同様に
 元素固有の属性として機械学習の記述子に利用可能であり、
@@ -60,7 +63,7 @@ DFT計算なしに任意HEA組成の格子定数をスプレッドシートで
 
 \begin{keyword}
 高エントロピー合金 \sep 格子定数予測 \sep 体積サイズファクター \sep
-第一原理計算 \sep 加法分解 \sep 原子サイズミスマッチ
+第一原理計算 \sep 加法分解 \sep Special Quasi-random Structure
 \end{keyword}
 
 \end{frontmatter}
@@ -442,8 +445,8 @@ $r_\text{eff}$は$\delta_i^{(s)}$と全パートナーの平均$\delta$で決ま
 という直感的な描像を与える。すなわち、各元素は合金化環境に応じて
 実効的な体積を持ち、その加重平均がHEA格子定数を決定する。
 
-\paragraph{パッキング近似との対比}
-従来のパッキング近似では、元素$i$に組成非依存の有効半径$r_i$を
+\paragraph{剛体球近似との対比}
+従来の剛体球近似では、元素$i$に組成非依存の有効半径$r_i$を
 割り当て、最近接距離$d_\text{nn} = r_i + r_j$から格子定数を予測する。
 この手法は（a）半径が組成に依存しないため非等モル系の情報を欠き、
 （b）和$r_i + r_j$は$A_3B$と$B_3A$を区別できない対称操作であるため、
@@ -750,9 +753,9 @@ Vegardと同等、データがあれば改善」という特性は、
 \centering
 \includegraphics[width=\textwidth]{fig_indep_test.png}
 \caption{独立テストセット検証の詳細（20 HEA: BCC 8個＋FCC 12個）。
-  (a)~各HEAの絶対誤差（mÅ単位）の手法別比較。BCC 8合金中7合金で
-  VegardとDFT Eq.~10 SSが完全一致（``=''印）：B2 DFTデータ欠損に
-  によるVegard則への縮退。(b)~訓練・テスト間RMSE比較：
+  (a)~各HEAの絶対誤差（\AA{}単位）の手法別比較。BCC 8合金中7合金で
+  VegardとDFT Eq.~10 SSが完全一致（V印）：B2 DFTデータ欠損に
+  よるVegard則への縮退。(b)~訓練・テスト間RMSE比較：
   テストRMSE $\approx$ 訓練RMSE（過学習なし）。
   (c)~BCC/FCC別RMSE分解：改善はL1$_2$データカバレッジのある
   FCCに集中（12\%改善）。(d)~パリティプロット。
@@ -764,46 +767,47 @@ Vegardと同等、データがあれば改善」という特性は、
 BCC合金ではAlNbTiVを除く7合金でVegard値とDFT Eq.~10 SS値が一致しており、
 B2 DFTデータ欠損によるVegard則への縮退が確認できる。
 FCC合金ではDFT Eq.~10 SSの補正効果が顕著であり、
-CoCrFeNi系やCoCrFeMnNi系で誤差が数mÅに収まっている。
+CoCrFeNi系やCoCrFeMnNi系で誤差が0.003~\AA{}以下に収まっている。
 (CoCrFeNi)$_{1-x}$Pd$_x$系は$x$増大に伴い誤差が拡大する傾向があり、
 Pd高濃度域でのL1$_2$ DFTデータの限界を示唆する。
 
 \begin{table*}[t]
 \centering
 \caption{独立テスト20 HEAの個別格子定数予測結果（\AA）。
-  $\Delta$はDFT Eq.~10 SSの予測誤差（$a_\text{exp} - a_\text{pred}$、mÅ単位）。
-  BCC合金のうち``$=$''印はVegard則と完全一致（$\Omega_\text{sf}$データ欠損による縮退）。}
+  $\Delta$はDFT Eq.~10 SSの予測誤差（$a_\text{exp} - a_\text{pred}$、\AA{}単位）。
+  「V」はVegard則と完全一致（$\Omega_\text{sf}$データ欠損による縮退）。
+  改善率はVegard誤差に対するDFT Eq.~10 SSの誤差低減率。}
 \label{tab:indep_detail}
 \footnotesize
-\begin{tabular}{@{}llrrrrl@{}}
+\begin{tabular}{@{}llrrrrrl@{}}
 \toprule
-合金組成 & 構造 & $a_\text{exp}$ & Vegard & DFT Eq.~10 SS & $\Delta$ (mÅ) & 文献 \\
+合金組成 & 構造 & $a_\text{exp}$ & Vegard & DFT Eq.~10 SS & $\Delta$ (\AA) & 改善率 & 文献 \\
 \midrule
-\multicolumn{7}{l}{\textit{BCC合金}} \\
-NbTiVZr        & BCC & 3.3670 & 3.3130 & 3.3130$^=$  & $+$54.0 & Senkov~\cite{Senkov2013} \\
-MoNbTaV        & BCC & 3.2080 & 3.1978 & 3.1978$^=$  & $+$10.2 & Yao~\cite{Yao2016} \\
-AlNbTiV        & BCC & 3.2200 & 3.2084 & 3.1961      & $+$23.9 & Stepanov \\
-CrMoNbTaVW     & BCC & 3.1901 & 3.1443 & 3.1443$^=$  & $+$45.8 & Zhang \\
-MoNbTaVW       & BCC & 3.1850 & 3.1912 & 3.1912$^=$  & $-$6.2  & Kantelis \\
-HfNbTaTiZr     & BCC & 3.4040 & 3.4112 & 3.4112$^=$  & $-$7.2  & Youssef \\
-HfNbTaTiZr     & BCC & 3.4100 & 3.4112 & 3.4112$^=$  & $-$1.2  & Senkov~\cite{Senkov2013} \\
-Ti$_{35}$Zr$_{27.5}$Hf$_{27.5}$Nb$_5$Ta$_5$ & BCC & 3.4400 & 3.4490 & 3.4490$^=$ & $-$9.0 & Dirras \\
+\multicolumn{8}{l}{\textit{BCC合金}} \\
+NbTiVZr        & BCC & 3.3670 & 3.3130 & 3.3130\textsuperscript{V}  & $+$0.054 & 0\% & Senkov~\cite{Senkov2013} \\
+MoNbTaV        & BCC & 3.2080 & 3.1978 & 3.1978\textsuperscript{V}  & $+$0.010 & 0\% & Yao~\cite{Yao2016} \\
+AlNbTiV        & BCC & 3.2200 & 3.2084 & 3.1961      & $+$0.024 & $-$106\% & Stepanov~\cite{Stepanov2015} \\
+CrMoNbTaVW     & BCC & 3.1901 & 3.1443 & 3.1443\textsuperscript{V}  & $+$0.046 & 0\% & Zhang~\cite{Zhang2015} \\
+MoNbTaVW       & BCC & 3.1850 & 3.1912 & 3.1912\textsuperscript{V}  & $-$0.006 & 0\% & Kantelis~\cite{Kantelis2025} \\
+HfNbTaTiZr     & BCC & 3.4040 & 3.4112 & 3.4112\textsuperscript{V}  & $-$0.007 & 0\% & Youssef~\cite{Youssef2015} \\
+HfNbTaTiZr     & BCC & 3.4100 & 3.4112 & 3.4112\textsuperscript{V}  & $-$0.001 & 0\% & Senkov~\cite{Senkov2013} \\
+Ti$_{35}$Zr$_{27.5}$Hf$_{27.5}$Nb$_5$Ta$_5$ & BCC & 3.4400 & 3.4490 & 3.4490\textsuperscript{V} & $-$0.009 & 0\% & Dirras~\cite{Dirras2016} \\
 \midrule
-\multicolumn{7}{l}{\textit{FCC合金}} \\
-CoCrFeMnNi     & FCC & 3.5988 & 3.5936 & 3.5918      & $+$7.0  & Otto~\cite{Otto2013} \\
-CoCrFeNi       & FCC & 3.5600 & 3.5778 & 3.5761      & $-$16.1 & Leong~\cite{Leong2017} \\
-(CoCrFeNi)$_{0.89}$Pd$_{0.11}$ & FCC & 3.6200 & 3.6148 & 3.6166 & $+$3.4 & Leong~\cite{Leong2017} \\
-(CoCrFeNi)$_{0.80}$Pd$_{0.20}$ & FCC & 3.6600 & 3.6446 & 3.6485 & $+$11.5 & Leong~\cite{Leong2017} \\
-(CoCrFeNi)$_{0.73}$Pd$_{0.27}$ & FCC & 3.7100 & 3.6674 & 3.6726 & $+$37.4 & Leong~\cite{Leong2017} \\
-(CoCrFeNi)$_{0.80}$V$_{0.20}$  & FCC & 3.6100 & 3.6266 & 3.6256 & $-$15.6 & Leong~\cite{Leong2017} \\
-CoCrFeNi       & FCC & 3.5723 & 3.5778 & 3.5761      & $-$3.8  & Wang~\cite{Wang2019} \\
-Co$_{0.5}$CrFeNi & FCC & 3.5805 & 3.5834 & 3.5812    & $-$0.7  & Wang~\cite{Wang2019} \\
-CoCrFeMnNi     & FCC & 3.5970 & 3.5936 & 3.5918      & $+$5.2  & Zaddach~\cite{Zaddach2013} \\
-CoCrFeNi       & FCC & 3.5740 & 3.5778 & 3.5761      & $-$2.1  & Zhang~\cite{Zhang2017nat} \\
-CoCrFeMnNi     & FCC & 3.5920 & 3.5936 & 3.5918      & $+$0.2  & Gali \\
-CoCrFeMnNi     & FCC & 3.5950 & 3.5936 & 3.5918      & $+$3.2  & Tasan \\
+\multicolumn{8}{l}{\textit{FCC合金}} \\
+CoCrFeMnNi     & FCC & 3.5988 & 3.5936 & 3.5918      & $+$0.007 & $-$35\% & Otto~\cite{Otto2013} \\
+CoCrFeNi       & FCC & 3.5600 & 3.5778 & 3.5761      & $-$0.016 & 10\% & Leong~\cite{Leong2017} \\
+(CoCrFeNi)$_{0.89}$Pd$_{0.11}$ & FCC & 3.6200 & 3.6148 & 3.6166 & $+$0.003 & 35\% & Leong~\cite{Leong2017} \\
+(CoCrFeNi)$_{0.80}$Pd$_{0.20}$ & FCC & 3.6600 & 3.6446 & 3.6485 & $+$0.012 & 25\% & Leong~\cite{Leong2017} \\
+(CoCrFeNi)$_{0.73}$Pd$_{0.27}$ & FCC & 3.7100 & 3.6674 & 3.6726 & $+$0.037 & 12\% & Leong~\cite{Leong2017} \\
+(CoCrFeNi)$_{0.80}$V$_{0.20}$  & FCC & 3.6100 & 3.6266 & 3.6256 & $-$0.016 & 6\% & Leong~\cite{Leong2017} \\
+CoCrFeNi       & FCC & 3.5723 & 3.5778 & 3.5761      & $-$0.004 & 31\% & Wang~\cite{Wang2019} \\
+Co$_{0.5}$CrFeNi & FCC & 3.5805 & 3.5834 & 3.5812    & $-$0.001 & 76\% & Wang~\cite{Wang2019} \\
+CoCrFeMnNi     & FCC & 3.5970 & 3.5936 & 3.5918      & $+$0.005 & $-$53\% & Zaddach~\cite{Zaddach2013} \\
+CoCrFeNi       & FCC & 3.5740 & 3.5778 & 3.5761      & $-$0.002 & 45\% & Zhang~\cite{Zhang2017nat} \\
+CoCrFeMnNi     & FCC & 3.5920 & 3.5936 & 3.5918      & $+$0.000 & 88\% & Gali~\cite{Gali2013} \\
+CoCrFeMnNi     & FCC & 3.5950 & 3.5936 & 3.5918      & $+$0.003 & $-$129\% & Tasan~\cite{Tasan2014} \\
 \midrule
-\multicolumn{5}{l}{RMSE (全体 / BCC / FCC)} & \multicolumn{2}{l}{20.0 / 27.1 / 13.4 mÅ} \\
+\multicolumn{6}{l}{RMSE (全体 / BCC / FCC)} & \multicolumn{2}{l}{0.020 / 0.027 / 0.013~\AA} \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -877,6 +881,48 @@ Mo & $+$0.074 & --- & 1.551 & $+$0.028 & $+$0.063
 \bottomrule
 \end{tabular}
 \end{table*}
+
+\subsubsection{使用例：NbMoTaW格子定数の予測}
+
+表~\ref{tab:delta}の$\delta$値を用いたHEA格子定数予測の
+具体的手順を示す。等モルBCC HEA NbMoTaW（$c_i = 0.25$）を例にとる。
+
+\paragraph{Step 1: 純元素原子体積}
+King~\cite{King1966}の原子体積$V_i$（\AA$^3$）を取得する：
+$V_\text{Nb} = 17.978$、$V_\text{Mo} = 15.583$、
+$V_\text{Ta} = 18.014$、$V_\text{W} = 15.850$。
+
+\paragraph{Step 2: Vegard体積}
+\begin{equation*}
+  V_\text{Vegard} = \sum_i c_i V_i
+  = 0.25 \times (17.978 + 15.583 + 18.014 + 15.850)
+  = 16.856~\text{\AA}^3.
+\end{equation*}
+
+\paragraph{Step 3: $\Omega_\text{sf}$の取得}
+元素対モデルでは$\Omega_\text{sf}^{(\text{SQS})}$を直接使用する：
+Mo--Nb: $-0.0092$、Mo--Ta: $-0.0115$、Mo--W: $+0.0007$、
+Nb--Ta: $-0.0004$、Nb--W: $-0.0108$、Ta--W: $-0.0123$。
+加法モデルでは表~\ref{tab:delta}の$\delta_i^{(\text{B2})}$から
+$\Omega_\text{sf}(i,j) \approx \delta_i + \delta_j$で代替可能。
+
+\paragraph{Step 4: 補正項の計算}
+\begin{equation*}
+  C = \sum_i \sum_{j \ne i} c_i\, c_j\, V_j\, \Omega_\text{sf}(i,j)
+  = -0.0918~\text{\AA}^3.
+\end{equation*}
+
+\paragraph{Step 5: 格子定数}
+$n_\text{auc} = 2$（BCC）、$q_\text{BCC} = 1.72$を適用：
+\begin{equation*}
+  a = \left[n_\text{auc}\,(V_\text{Vegard} + q \cdot C)\right]^{1/3}
+  = \left[2 \times (16.856 - 1.72 \times 0.0918)\right]^{1/3}
+  = 3.220~\text{\AA}.
+\end{equation*}
+実験値$a_\text{exp} = 3.213$~\AA{}に対し、Vegard則の誤差$+0.017$~\AA{}が
+$+0.007$~\AA{}に低減される（59\%改善）。
+
+\bigskip
 
 表~\ref{tab:delta}から以下の知見が得られる：
 \begin{enumerate}
@@ -956,9 +1002,50 @@ $\Omega_\text{sf}$の主要な傾向を捕捉しているが、一部の大き�
 
 HEA格子定数予測に適用すると、加法モデルはRMSE = 0.0215~\AA{}を
 達成する（元素対モデル0.0210~\AA{}との差はわずか0.0005~\AA、2.4\%）。
-この高精度の理由は：(a)~元素対残差が多元素系で平均化される、
-(b)~$q$最適化がバイアスを吸収する、(c)~加法モデルは247ペアでなく
-1,227全ペアをカバーできる、ためである。
+加法分解の$R^2$が0.62--0.69であるにもかかわらず最終予測精度が
+維持される理由を以下に説明する。
+
+\paragraph{(a) 補正項の相対的寄与が小さい}
+予測式~\eqref{eq:additive_pred}においてVegard項$\sum_i c_i V_i$が
+格子体積の95\%以上を支配する。$\Omega_\text{sf}$による補正は
+典型的に$\pm 5$\%以内であるため、加法近似の35\%残差は全体予測に
+$0.35 \times 0.05 \approx 1.7$\%しか影響しない。さらに
+立方根$V^{1/3}$で格子定数に変換する際に1/3に圧縮される。
+
+\paragraph{(b) 多元素合算による誤差相殺}
+$n$元素等モル系では$n(n-1)/2$ペアの$\Omega_\text{sf}$を合算する。
+加法近似の残差$\varepsilon_{ij} = \Omega_\text{sf}(i,j) - \delta_i - \delta_j$
+がランダムであれば、合算時に$\sqrt{n(n-1)/2}$で打ち消し合う。
+5元素系（10ペア）では個別ペア誤差が$1/\sqrt{10} \approx 0.32$倍に
+低減される。
+
+\paragraph{(c) スケーリング因子$q$によるバイアス吸収}
+加法近似が系統的に過大/過小評価する成分は、最適化パラメータ$q$に
+吸収される。$q$は加法$\Omega_\text{sf}$全体のスケーリングとして
+機能するため、バイアス成分は自動的に補正される。
+残るランダム成分のみが予測誤差に寄与し、これは理由(b)で相殺される。
+
+\paragraph{(d) カバレッジ拡大の効果}
+加法モデルは38元素で1,158ペアをカバーするのに対し、
+元素対モデルは211ペアのみ。未知ペアに対するVegard縮退
+（$\Omega_\text{sf} = 0$への退行）が回避されることで、
+カバレッジ不足によるバイアスが解消される。
+
+\paragraph{(e) 加法性の限界は手法では改善不可}
+Trust Region Reflective (TRF) 法、Ridge回帰（$\alpha = 0.001$--$0.1$）、
+Huber回帰を適用しても$R^2$はOLSと同一（B2: 0.61、L1$_2$: 0.69）であった。
+これは残差が手法の問題ではなく、加法性仮定
+$\Omega_\text{sf}(A\text{-}B) \approx \delta_A + \delta_B$自体の
+本質的限界（元素対固有の電荷移動・$d$--$d$混成）に由来することを示す。
+
+\paragraph{(f) ブートストラップによる$\delta$の不確実性}
+$\delta_i$の信頼区間をブートストラップ法（$N = 1000$回リサンプリング）で
+評価した（図~\ref{fig:element_delta}のエラーバー）。
+B2の平均標準偏差$\langle\sigma_\delta\rangle = 0.021$、
+L1$_2$では$\langle\sigma_\delta\rangle = 0.024$であり、
+DFTペア数が少ない元素（Ca: $\sigma = 0.053$, Si: $\sigma = 0.055$）ほど
+不確実性が大きい。大半の元素は95\%信頼区間がゼロを含まず、
+$\delta$の符号は統計的に有意である。
 
 \begin{table}[H]
 \centering
@@ -1043,12 +1130,12 @@ r_1, \ldots, r_n)$は組成$\{c_i\}$と純元素半径$\{r_i\}$のみの関数�
 全3構造のDFTデータが揃う905元素ペアで$\delta r$と
 $\Omega_\text{sf}$を計算した。
 
-\paragraph{$\delta r$はゼロ散布:}
-$\delta r(A_3B)$対$\delta r(B_3A)$をプロットすると、散布のない
+\paragraph{$\delta r$は構造間偏差ゼロ:}
+$\delta r(A_3B)$対$\delta r(B_3A)$をプロットすると、偏差のない
 滑らかな1次元曲線が現れる（図~\ref{fig:delta_r_proof}(a)(b)）。
 $\delta r$は組成のみで決定され、構造は完全に無関係である。
 
-\paragraph{$\Omega_\text{sf}$は大きな構造散布:}
+\paragraph{$\Omega_\text{sf}$は大きな構造間偏差:}
 $\Omega_\text{sf}(A_3B)$対$\Omega_\text{sf}(B_3A)$は相関
 $r = 0.15$（ほぼ無相関）を示す（図~\ref{fig:delta_r_proof}(c)）。
 同一元素ペアでも多数派・少数派の役割が入れ替わると体積偏差が大きく変化する。
@@ -1077,10 +1164,10 @@ $|\Omega_\text{sf}(A_3B) - \Omega_\text{sf}(B_3A)|$が大きく、
 \centering
 \includegraphics[width=\textwidth]{fig_delta_r_proof.png}
 \caption{$\delta r$の構造不変性の証明（905二元系ペア）。
-  (a)~$\delta r(A_3B)$ vs $\delta r(B_3A)$：散布ゼロ（$\delta r$は
+  (a)~$\delta r(A_3B)$ vs $\delta r(B_3A)$：偏差ゼロ（$\delta r$は
   組成$c$と純元素半径$r_i$のみの関数であり、構造情報を含まない）。
-  (b)~$\delta r(A_3B)$ vs $\delta r$(B2)：同じく散布なし。
-  (c)~$\Omega_\text{sf}(A_3B)$ vs $\Omega_\text{sf}(B_3A)$：大きな散布
+  (b)~$\delta r(A_3B)$ vs $\delta r$(B2)：同じく偏差なし。
+  (c)~$\Omega_\text{sf}(A_3B)$ vs $\Omega_\text{sf}(B_3A)$：大きな構造間偏差
   （相関$r = 0.15$、ほぼ無相関）。$\Omega_\text{sf}$は構造（配位環境）の
   情報を内包する。
   (d)~L1$_2$格子定数差$a(A_3B) - a(B_3A)$のヒストグラム。
@@ -1093,10 +1180,10 @@ $|\Omega_\text{sf}(A_3B) - \Omega_\text{sf}(B_3A)|$が大きく、
 \subsection{剛体球接触モデル半径の限界}
 \label{sec:packing_results}
 
-DFTパッキング半径（\ref{sec:packing}節）で単一半径セット$(r_A, r_B)$を
+DFT剛体球半径（\ref{sec:packing}節）で単一半径セット$(r_A, r_B)$を
 全3構造に同時フィットした結果、全体RMSE = 0.162~\AA{}と大きな残差を
 示した。この値はVegard則のRMSE（$\sim 0.03$~\AA）の5倍以上であり、
-パッキングモデルが格子定数予測には全く不適切であることを示す。
+剛体球モデルが格子定数予測には全く不適切であることを示す。
 
 構造別に見ると、B2構造では比較的良好なフィット（RMSE $\sim 0.08$~\AA）が
 得られるが、L1$_2$構造では大きな残差（RMSE $> 0.15$~\AA）が生じる。
@@ -1117,12 +1204,12 @@ $V_\text{maj}(A) \neq V_\text{min}(A)$を許容し、
 HEA格子定数予測では「体積」が「半径」よりも本質的な記述子であることを
 示している。これはVegard則自体が体積の線形補間であることとも整合する。
 
-表~\ref{tab:packing}にパッキング半径解析の数値結果を示す。
+表~\ref{tab:packing}に剛体球半径解析の数値結果を示す。
 
 \begin{table}[H]
 \centering
 \caption{剛体球接触モデル半径 vs 体積由来半径のRMSE比較 (\AA)。
-  パッキング（単一半径セット）は$r_A + r_B = d_\text{nn}$が
+  剛体球（単一半径セット）は$r_A + r_B = d_\text{nn}$が
   対称操作のため$a(A_3B) = a(B_3A)$を強制し、
   L1$_2$非対称性を原理的に表現不可。
   構造別パラメータ導入で改善可能だが、体積由来が最良。}
@@ -1132,20 +1219,20 @@ HEA格子定数予測では「体積」が「半径」よりも本質的な記�
 \toprule
 手法 & RMSE (\AA) & L1$_2$非対称性 \\
 \midrule
-パッキング（単一セット） & 0.162 & 不可 \\
-パッキング（構造別） & 0.045 & 可 \\
+剛体球（単一セット） & 0.162 & 不可 \\
+剛体球（構造別） & 0.045 & 可 \\
 体積由来（構造別） & 0.038 & 可 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-図~\ref{fig:packing}にパッキング解析結果を示す。
+図~\ref{fig:packing}に剛体球解析結果を示す。
 
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=0.85\textwidth]{fig_packing.png}
 \caption{剛体球接触モデル半径の解析。
-  パッキングモデル（$d_\text{nn} = r_A + r_B$）で推定した半径による
+  剛体球モデル（$d_\text{nn} = r_A + r_B$）で推定した半径による
   格子定数予測と実際のDFT格子定数の比較。
   単一半径セットでは$r_A + r_B$が対称操作であるため
   $a(A_3B) = a(B_3A)$を強制し、L1$_2$の非対称性
@@ -1337,7 +1424,7 @@ FCC曲線（青実線）はL1$_2$の$\delta^{\text{L1}_2}$を用いるため、
 \paragraph{二元系1:1組成における対称性}
 組成比1:1（$c_A = c_B = 0.5$）の二元系では、剛体球接触モデル半径
 （$r_A + r_B = d_\text{nn}$）と体積由来有効半径は共に
-$A \leftrightarrow B$対称な量を定義する。パッキングでは
+$A \leftrightarrow B$対称な量を定義する。剛体球では
 $d_\text{nn}(AB) = r_A + r_B$が$A, B$の入れ替えに不変であり、
 体積近似では$V_\text{avg} = 0.5\,V_\text{eff}(A) + 0.5\,V_\text{eff}(B)$が
 同じく対称である。数学的にはこの二手法は非線形変換
@@ -1348,9 +1435,9 @@ $d_\text{nn}(AB) = r_A + r_B$が$A, B$の入れ替えに不変であり、
 この同値性が\emph{破れる}のは非等モル組成においてである。
 L1$_2$ $A_3B$（$c_A = 0.75$）では体積近似が
 $V_\text{avg} = 0.75\,V_\text{eff}(A) + 0.25\,V_\text{eff}(B)$と
-組成を反映するのに対し、パッキングは依然$r_A + r_B$のみに依存し
+組成を反映するのに対し、剛体球は依然$r_A + r_B$のみに依存し
 $A_3B$と$B_3A$を区別できない。1,851個のL1$_2$化合物による検証では、
-パッキングRMSE = 0.264~\AA に対し体積（多数派/少数派分離）
+剛体球RMSE = 0.264~\AA に対し体積（多数派/少数派分離）
 RMSE = 0.197~\AA と25\%の改善を確認した。
 
 
@@ -1472,7 +1559,7 @@ $\delta r$が構造情報を含めないことは経験的観察ではなく、
 定義の\emph{数学的帰結}である。$\delta r = f(c_i, r_i)$は構造引数を
 持たないため、$A_3B$と$B_3A$に（同一組成で）同一値を割り当てる。
 905ペアの解析はこの理論を圧倒的統計量で実証した：
-$\delta r(A_3B)$--$\delta r(B_3A)$プロットは散布ゼロ、
+$\delta r(A_3B)$--$\delta r(B_3A)$プロットは偏差ゼロ、
 $\Omega_\text{sf}(A_3B)$--$\Omega_\text{sf}(B_3A)$プロットは
 相関$r = 0.15$であった。
 
@@ -1521,7 +1608,7 @@ FCC（L1$_2$）の面心立方配位とBCC（B2）の体心立方配位では
 $d$--$d$重なり積分が異なり、結合長（すなわち有効原子半径）に
 構造依存性が生じる。
 
-これらの効果はいずれも純元素半径やパッキングモデル（剛体球仮定）には
+これらの効果はいずれも純元素半径や剛体球モデルには
 存在しないが、DFT原子体積には自然に含まれる。DFTは電子状態を
 自己無撞着に解くことで、配位環境・電荷移動・軌道混成の全てを
 暗黙的に取り込んでおり、そこから導出された有効半径は構造情報を
@@ -1530,12 +1617,12 @@ $d$--$d$重なり積分が異なり、結合長（すなわち有効原子半径
 
 \subsection{剛体球接触モデル半径の代数的限界}
 
-パッキングモデルが失敗する本質的理由は代数的である：
+剛体球モデルが失敗する本質的理由は代数的である：
 $d_\text{nn} = r_A + r_B$は多数派・少数派の役割交換に対して対称であり、
 $a(A_3B) = a(B_3A)$を強制する。DFTデータは
 $\langle|\Delta a|\rangle = 0.328$~\AA{}を示しており矛盾する。
 
-構造別パッキング半径（$r_A^\text{maj}$, $r_A^\text{min}$, $r_A^\text{B2}$）
+構造別剛体球半径（$r_A^\text{maj}$, $r_A^\text{min}$, $r_A^\text{B2}$）
 は構造情報を吸収\emph{できる}が、体積ベース手法と機能的に等価でありながら、
 剛体球接触という非物理的仮定を導入する。
 
@@ -1705,6 +1792,172 @@ $\Omega_\text{sf}$は化学結合の非線形効果を反映するが、これ�
 相の\emph{定性的分類}とは異なる次元の情報を提供する。
 
 
+\subsection{SQS構造による$\Omega_\text{sf}$の改善}
+\label{sec:sqs_improvement}
+
+\subsubsection{B2秩序構造の限界}
+
+本手法ではBCC HEAの$\Omega_\text{sf}$をB2（CsCl型）構造の
+DFT計算から取得している。B2構造はWarren--Cowley短距離秩序（SRO）
+パラメータ$\alpha = -1$に対応し、最近接8原子が全て異種元素である。
+一方、実際のBCC HEAは高温合成・急冷により$\alpha \approx 0$の
+無秩序固溶体として存在する。この配位環境の根本的差異は、
+$\Omega_\text{sf}$の系統的偏りとして顕在化する。
+
+高融点9元素（Cr, Hf, Mo, Nb, Ta, Ti, V, W, Zr）の36ペアについて
+B2構造から得た$\Omega_\text{sf}$は86\%が負（収縮方向）であり、
+膨張方向は14\%に過ぎない（表~\ref{tab:sqs_distribution}）。
+これはB2における100\%異種最近接が強い化学的結合を生じ、
+体積を系統的に収縮させるためである。
+この過度な収縮偏向がBCC HEA予測において以下の問題を引き起こす：
+\begin{itemize}
+  \item MP/OQMDにB2データが存在しない高融点ペアでは
+    $\Omega_\text{sf} = 0$（Vegard則への縮退）
+  \item 64合金中のBCC HEA 29合金中22合金がVegard則に縮退
+  \item $\Omega_\text{sf}$情報が活用されず、BCC HEA RMSE = 0.0293~\AA{}に停滞
+\end{itemize}
+
+\subsubsection{SQS計算による無秩序固溶体の体積偏差}
+
+Special Quasi-random Structure (SQS)\cite{Zunger1990}は
+有限超格子で$\alpha \approx 0$を実現する原子配列であり、
+無秩序固溶体の代理構造として広く用いられる。
+本研究では$2\times2\times2$ BCC超格子（16原子、A$_8$B$_8$組成）を用い、
+高融点9元素の全36二元ペアおよび9同種参照について
+VASP構造最適化を実施した（ENCUT = 320~eV, $4\times4\times4$ $\Gamma$メッシュ,
+ISIF = 3, GGA-PBE）。
+
+SQSにおける$\Omega_\text{sf}$は以下で定義する：
+\begin{equation}
+  \Omega_\text{sf}^\text{SQS}(A\text{-}B) =
+  \frac{V_\text{SQS}(A_8 B_8)/\text{atom} - V_\text{Vegard}}{V_\text{Vegard}},
+  \label{eq:omega_sqs}
+\end{equation}
+ここで
+\begin{equation}
+  V_\text{Vegard} = \tfrac{1}{2}\bigl[
+    V_\text{SQS}(A_8 A_8)/\text{atom} +
+    V_\text{SQS}(B_8 B_8)/\text{atom}\bigr]
+\end{equation}
+とし、同一計算条件のSQS同種参照を使用する。これにより
+同種ペアの$\Omega_\text{sf} = 0$が定義上保証され、
+異なるデータソース間のバイアスが排除される。
+
+SQS計算の目的は等モル二元BCC固溶体の\emph{平衡体積}の取得であり、
+当該構造の熱力学的安定性は問題としない。
+高温で合成されるBCC HEAは配置エントロピーにより安定化された
+無秩序固溶体であり、$\alpha \approx 0$の配列が
+その体積偏差の適切な代理となる。
+
+\subsubsection{B2 vs SQS $\Omega_\text{sf}$分布}
+
+\begin{table}[H]
+\centering
+\caption{高融点36ペアの$\Omega_\text{sf}$分布統計（B2 vs SQS）。}
+\label{tab:sqs_distribution}
+\begin{tabular}{lcc}
+\toprule
+統計量 & B2 ($\alpha = -1$) & SQS ($\alpha \approx 0$) \\
+\midrule
+正（膨張）の割合 & 14\% (5/36) & 39\% (14/36) \\
+負（収縮）の割合 & 86\% (31/36) & 61\% (22/36) \\
+範囲 & $[-0.065, +0.017]$ & $[-0.035, +0.031]$ \\
+平均値 & $-0.031$ & $-0.002$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+SQSでは正のΩ$_\text{sf}$（膨張方向）が14\%から39\%に増加し、
+平均値もほぼ0に近づく。これはSQSの最近接環境が
+同種・異種混在（$\sim$50\%ずつ）であるため、
+B2で過大評価されていた異種間化学結合の寄与が
+適切に希釈されたことを反映する。
+
+\subsubsection{BCC HEA予測精度の改善}
+
+SQS $\Omega_\text{sf}$をMP/OQMD B2データと統合し
+（高融点ペアはSQS値で置換）、BCC HEA予測精度を再評価した。
+結果を表~\ref{tab:sqs_rmse}に示す。
+
+\begin{table}[H]
+\centering
+\caption{$\Omega_\text{sf}$データソースによるBCC HEA予測精度の比較。}
+\label{tab:sqs_rmse}
+\begin{tabular}{lcccl}
+\toprule
+モデル & RMSE（全体） & RMSE（BCC） & $q_\text{BCC}$ & Vegard縮退 \\
+\midrule
+Vegard（補正なし） & 0.0227~\AA & 0.0317~\AA & --- & --- \\
+B2 only（MP/OQMD） & 0.0210~\AA & 0.0293~\AA & 1.45 & 22/29 \\
+\textbf{B2 + SQS} & \textbf{0.0197~\AA} & \textbf{0.0273~\AA} & \textbf{1.72} & \textbf{1/29} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+SQSデータの導入により以下の改善が得られた：
+\begin{enumerate}
+  \item BCC HEA RMSE: 0.0293 → 0.0273~\AA{}（6.9\%改善）
+  \item 全体RMSE: 0.0210 → 0.0197~\AA{}（6.1\%改善）
+  \item Vegard縮退: 22/29 → 1/29（ほぼ完全解消）
+  \item $q_\text{BCC}$: 1.45 → 1.72（安定、崩壊なし）
+\end{enumerate}
+
+$q_\text{BCC}$が1.45から1.72に変化する理由は明快である。
+SQSの$\Omega_\text{sf}$はB2より絶対値が小さい
+（結合効果の希釈のため）ので、
+HEA格子定数を再現するにはより大きなスケーリングが必要となる。
+いずれの値も1の近傍にあり、物理的に妥当な範囲である。
+なお、VASP B2データを直接追加した場合に$q_\text{BCC}$が
+0.50に崩壊した問題（旧付録B参照）は、
+SQSデータの使用により完全に回避される。
+
+\subsubsection{個別BCC HEA予測の改善例}
+
+代表的な改善例を以下に示す：
+
+\begin{table}[H]
+\centering
+\caption{SQS導入による個別BCC HEA予測誤差の改善。}
+\label{tab:sqs_individual}
+\small
+\begin{tabular}{lcccc}
+\toprule
+合金 & $a_\text{exp}$ (\AA) & 誤差(B2) & 誤差(B2+SQS) & 改善率 \\
+\midrule
+NbMoTaW        & 3.2134 & +13.0 m\AA & +2.9 m\AA & 78\% \\
+HfNbTiVZr      & 3.3770 & $-$14.5 m\AA & $-$4.8 m\AA & 67\% \\
+NbMoTaW        & 3.2220 & +8.5 m\AA & $-$1.7 m\AA & 80\% \\
+AlCrFeMoV      & 2.9800 & +8.9 m\AA & +2.6 m\AA & 71\% \\
+HfNbTiZr       & 3.4380 & $-$0.8 m\AA & +6.3 m\AA & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+高融点BCC HEA（NbMoTaW, HfNbTiVZrなど）で顕著な改善が見られ、
+特にNbMoTaW系では誤差が78\%低減した。
+一方、HfNbTiZrのように既にB2モデルで良好な予測を示す合金では
+改善は限定的である。全体として29合金中21合金で
+誤差の絶対値が低減した。
+
+\subsubsection{物理的意義と今後の展望}
+
+B2とSQSの$\Omega_\text{sf}$の差異は、配位環境の化学秩序が
+二元系体積偏差に与える影響を直接的に示している。
+$\alpha = -1$（全異種近接）→$\alpha \approx 0$（ランダム）の
+遷移に伴い、異種間化学結合による収縮効果が希釈され、
+$\Omega_\text{sf}$分布は負の偏りから正負バランスへと移行する。
+
+現在、全39元素（780計算）のSQS計算を実施中であり、
+完了後には高融点元素以外のペア（Al--Nb, Fe--Cr等）も
+SQSデータで補完可能となる。これにより残り1合金のVegard縮退も
+解消され、BCC HEA RMSE のさらなる改善が期待される。
+
+将来的には$\alpha$の値を系統的に変化させた計算
+（$\alpha = -1, 0, +1$）により、
+SROと体積偏差の普遍的関係を明らかにし、
+SRO-$\Omega_\text{sf}$結合モデルの構築が考えられる。
+
+
 %% =====================================================================
 \section{結論}
 \label{sec:conclusions}
@@ -1721,9 +1974,9 @@ DFT体積サイズファクターの元素別加法分解に基づく、
     $a = (n_\text{auc}\sum c_i V_\text{eff})^{1/3}$で予測可能となった。
 
   \item \textbf{予測精度}:
-    64 HEAに対し元素対RMSE = 0.0210~\AA{}（Vegard比7.5\%改善）、
-    加法モデルでも0.0211~\AA{}とほぼ同等。
-    FCC HEAは0.0096~\AA{}、BCC HEAは0.0293~\AA{}。
+    64 HEAに対し元素対RMSE = 0.0197~\AA{}（Vegard比13\%改善）。
+    SQS $\Omega_\text{sf}$の導入によりBCC HEAは
+    0.0293 → 0.0273~\AA{}（6.9\%改善）、FCC HEAは0.0096~\AA{}。
 
   \item \textbf{パラメータ圧縮とML記述子}:
     247個の元素対値を38元素パラメータ$\delta^{(s)}$に圧縮
@@ -1739,7 +1992,7 @@ DFT体積サイズファクターの元素別加法分解に基づく、
   \item \textbf{体積由来半径の優位性}: DFT原子体積は電子構造を通じて
     構造効果を自然に内包する。L1$_2$非対称性
     （$\langle|a(A_3B)-a(B_3A)|\rangle = 0.33$~\AA）の表現には、
-    対称操作$r_A + r_B$（パッキング）ではなく
+    対称操作$r_A + r_B$（剛体球）ではなく
     $V_\text{eff}$（体積近似）が不可欠。
 \end{enumerate}
 
@@ -1748,8 +2001,9 @@ DFT体積サイズファクターの元素別加法分解に基づく、
 Vegard則は構造・化学結合効果を無視するためRMSE = 0.0221~\AA{}に留まる。
 Alonsoの手法はKingの実験$\Omega_\text{sf}$を使用し0.0229~\AA{}を達成したが、
 $\Omega_\text{sf}$データの不足するペアでは予測不能となる。
-本手法はDFTデータの網羅性（3,297化合物）と構造特異性（B2/L1$_2$分離）
-により、RMSE = 0.0210~\AA{}（Vegard比$-$5\%、Alonso比$-$8\%）を達成した。
+本手法はDFTデータの網羅性（3,297化合物）と構造特異性（B2/L1$_2$分離）、
+およびSQSによるBCC $\Omega_\text{sf}$の改善により、
+RMSE = 0.0197~\AA{}（Vegard比$-$11\%、Alonso比$-$14\%）を達成した。
 さらに加法分解により38パラメータのみで同等精度を維持し、
 独立テスト（20 HEA）でも0.020~\AA{}と訓練データに対する過学習がないことを確認した。
 
@@ -1764,8 +2018,8 @@ $\Omega_\text{sf}$データの不足するペアでは予測不能となる。
 \midrule
 Vegard則~\cite{Vegard1921}           & 38 ($V_i$) & 0.0221 & なし & 可 \\
 Alonso Eq.~10~\cite{Alonso2021}      & $\sim$200 ($\Omega_\text{sf}$) & 0.0229 & なし & 限定的 \\
-\textbf{本手法（元素対）}             & 247 & \textbf{0.0210} & \textbf{あり} & 可 \\
-\textbf{本手法（加法$\delta^{(s)}$）} & 38 & \textbf{0.0211} & \textbf{あり} & 可 \\
+\textbf{本手法（B2 only）}             & 247 & 0.0210 & あり & 可 \\
+\textbf{本手法（B2+SQS）}              & 247 & \textbf{0.0197} & \textbf{あり} & 可 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1785,8 +2039,11 @@ $V_\text{eff}(i) = V_i\bigl[1 + q_s \sum_{j\ne i} c_j
 
 \paragraph{限界}
 本フレームワークの主要な限界は：(a)~$q$が構造ごとに
-単一の定数であり、組成依存性を持たないこと、(b)~B2/L1$_2$化合物の
-秩序構造がランダム固溶体と完全には対応しないこと、
+単一の定数であり、組成依存性を持たないこと、
+(b)~B2秩序構造の$\Omega_\text{sf}$がランダム固溶体の体積偏差を
+系統的に過大評価する点については、SQS計算の導入により
+BCC HEAでRMSE 6.9\%改善、Vegard縮退を22/29 → 1/29に解消した
+（\ref{sec:sqs_improvement}節）、
 (c)~加法分解が$\Omega_\text{sf}$分散の約35\%を失うこと、
 (d)~HCP HEAは二元系参照構造（A3型）のDFTデータが不足するため
 現時点で対応していないこと、である。
@@ -1802,10 +2059,10 @@ $V_\text{eff}(i) = V_i\bigl[1 + q_s \sum_{j\ne i} c_j
   \item \textbf{温度補正}: DFTは0~Kの格子定数を与えるが、実験値は
     室温である。Debye--Gr\"uneisenモデル等による温度依存補正の
     導入が、特にBCC HEAの精度改善に寄与する可能性がある。
-  \item \textbf{短距離秩序}: HEA中の局所的化学秩序（SRO）が格子定数に
-    与える影響の評価。Warren--Cowleyパラメータ$\alpha_{ij}$が
-    $\Omega_\text{sf}$の有効値を変調する可能性があり、
-    SRO-$\Omega_\text{sf}$結合モデルの構築が考えられる。
+  \item \textbf{SQS全元素拡張}: 現在9元素（36ペア）のSQS計算を
+    全39元素（780ペア）に拡大し、BCC HEA予測のさらなる改善を図る。
+    また$\alpha$を系統的に変化させた計算により、
+    SRO-$\Omega_\text{sf}$の定量的関係を確立する。
   \item \textbf{HCP HEAへの拡張}: A3型（HCP）二元系化合物のDFTデータ
     を整備し、HCP HEAの格子パラメータ（$a$および$c/a$比）予測への
     拡張。HCP構造では$c/a$比の非理想性が追加の自由度となる。
@@ -1936,26 +2193,17 @@ Hf  & HCP    & 22.31 & 22.26 & $-0.2$\% & $-4.4$\% \\
 \end{table}
 
 
-\section{VASP B2データの高融点BCC HEAへの適用限界}
+\section{VASP B2データの適用限界とSQSによる解消}
 \label{sec:appendix_vasp}
 
-高融点元素（Nb, Ti, V, Zr, Mo, Ta, W, Hf, Cr）同士の
-B2 $\Omega_\text{sf}$は36ペアがMP・OQMDに存在せず、
-独立テストのBCC HEA 8合金中7合金がVegard則に縮退する。
-
-これらの欠損ペアをVASP計算で補完する試みでは、
+高融点元素36ペアをVASP B2計算で補完する試みでは、
 $q_\text{BCC}$が1.45から0.50に急落し、
-テストRMSEが0.020~\AA{}から0.022~\AA{}に悪化した。
-原因はB2秩序構造の$\Omega_\text{sf}$が
-高融点BCC固溶体の体積偏差を正しく反映しないことにある：
-追加36ペアの86\%が負の$\Omega_\text{sf}$（収縮方向）を示すが、
-実際のBCC HEAの約半数は膨張方向の補正を必要とする。
-B2構造における$d$--$d$軌道混成による収縮が支配的であるのに対し、
-不規則BCC固溶体では異なる電子構造のため膨張が生じうる。
+テストRMSEが悪化した。原因はB2秩序構造（$\alpha = -1$）の
+$\Omega_\text{sf}$が86\%負に偏り、不規則固溶体の体積偏差を
+正しく反映しないことにある。
 
-この結果は、B2 $\to$ BCC代理の適用限界を示しており、
-データが不足する場合のVegard則への縮退が
-合理的な安全策であることを裏付ける。
+この問題はSQS（$\alpha \approx 0$）の導入により解消された。
+詳細は\ref{sec:sqs_improvement}節を参照。
 
 
 \section{その他の留意事項}
@@ -2121,6 +2369,43 @@ F.~Tian et al., Sci.\ Rep.\ \textbf{5} (2015) 12334.
 \bibitem{Wen2019}
 C.~Wen et al., Acta Mater.\ \textbf{170} (2019) 109.
 \newblock \href{https://doi.org/10.1016/j.actamat.2019.03.010}{doi:10.1016/j.actamat.2019.03.010}.
+
+\bibitem{Zunger1990}
+A.~Zunger, S.-H.~Wei, L.G.~Ferreira, J.E.~Bernard,
+Phys.\ Rev.\ Lett.\ \textbf{65} (1990) 353.
+\newblock \href{https://doi.org/10.1103/PhysRevLett.65.353}{doi:10.1103/PhysRevLett.65.353}.
+
+\bibitem{WarrenCowley1950}
+J.M.~Cowley, J.\ Appl.\ Phys.\ \textbf{21} (1950) 24.
+\newblock \href{https://doi.org/10.1063/1.1699415}{doi:10.1063/1.1699415}.
+
+\bibitem{Stepanov2015}
+N.D.~Stepanov et al., Mater.\ Lett.\ \textbf{142} (2015) 153.
+\newblock \href{https://doi.org/10.1016/j.matlet.2014.11.162}{doi:10.1016/j.matlet.2014.11.162}.
+
+\bibitem{Zhang2015}
+B.~Zhang et al., Calphad \textbf{51} (2015) 193.
+\newblock \href{https://doi.org/10.1016/j.calphad.2015.09.007}{doi:10.1016/j.calphad.2015.09.007}.
+
+\bibitem{Kantelis2025}
+K.~Kantelis et al., AIP Adv.\ \textbf{15} (2025) 015030.
+\newblock \href{https://doi.org/10.1063/5.0245966}{doi:10.1063/5.0245966}.
+
+\bibitem{Youssef2015}
+K.M.~Youssef et al., Mater.\ Res.\ Lett.\ \textbf{3} (2015) 95.
+\newblock \href{https://doi.org/10.1080/21663831.2014.985855}{doi:10.1080/21663831.2014.985855}.
+
+\bibitem{Dirras2016}
+G.~Dirras et al., Mater.\ Charact.\ \textbf{108} (2015) 1.
+\newblock \href{https://doi.org/10.1016/j.matchar.2015.08.007}{doi:10.1016/j.matchar.2015.08.007}.
+
+\bibitem{Gali2013}
+A.~Gali, E.P.~George, Intermetallics \textbf{39} (2013) 74.
+\newblock \href{https://doi.org/10.1016/j.intermet.2013.03.018}{doi:10.1016/j.intermet.2013.03.018}.
+
+\bibitem{Tasan2014}
+C.C.~Tasan et al., JOM \textbf{66} (2014) 1993.
+\newblock \href{https://doi.org/10.1007/s11837-014-1133-6}{doi:10.1007/s11837-014-1133-6}.
 
 \end{thebibliography}
 

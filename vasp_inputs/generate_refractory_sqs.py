@@ -449,13 +449,16 @@ for d in dirs:
     if len(parts) == 2 and parts[0] == parts[1]:
         el = parts[0]
         contcar = os.path.join(BASE_DIR, d, "CONTCAR")
-        if os.path.exists(contcar):
+        if not os.path.exists(contcar):
+            print(f"  {d:8s}: CONTCAR not found (not converged?)")
+            continue
+        try:
             a_eff, vol_total = extract_lattice_from_contcar(contcar)
             vol_per_atom = vol_total / 16.0
             pure_volumes[el] = vol_per_atom
             print(f"  {d:8s}: V/atom = {vol_per_atom:.4f} Å³")
-        else:
-            print(f"  {d:8s}: CONTCAR not found (not converged?)")
+        except (IndexError, ValueError) as e:
+            print(f"  {d:8s}: CONTCAR broken ({e})")
 
 print(f"\\n  Found {len(pure_volumes)} pure element references.")
 
@@ -486,7 +489,11 @@ for d in dirs:
     el_a = elements[0]
     el_b = elements[1] if len(elements) > 1 else elements[0]
 
-    a_eff, vol_total = extract_lattice_from_contcar(contcar)
+    try:
+        a_eff, vol_total = extract_lattice_from_contcar(contcar)
+    except (IndexError, ValueError) as e:
+        print(f"  {d}: CONTCAR broken ({e})")
+        continue
     vol_per_atom = vol_total / 16.0
 
     # Compute Omega_sf using SQS same-element references
