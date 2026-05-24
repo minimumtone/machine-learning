@@ -1068,6 +1068,17 @@ def main():
     print(f"    B2:  {len(decomp['B2']['elements'])} elements, R2 = {decomp['B2']['r2']:.4f}")
     print(f"    L12: {len(decomp['L12']['elements'])} elements, R2 = {decomp['L12']['r2']:.4f}")
 
+    # 6b. Extended decomposition for Table 6 (includes VASP, min_count=1)
+    #     This fills gaps (Ge, Pb for B2; Be, Mo, Os, Re, W for L12)
+    #     without affecting model predictions (which use ob2/ol12 from MP+OQMD).
+    print("\n[5b] Extended decomposition for Table 6 (MP+OQMD+VASP, min_count=1)...")
+    ob2_ext, ol12_ext = compute_omega_sf_pairwise(
+        all_df, sources=("MP", "OQMD", "VASP"), min_count=1
+    )
+    decomp_table = additive_decomposition(ob2_ext, ol12_ext)
+    print(f"    B2:  {len(decomp_table['B2']['elements'])} elements, R2 = {decomp_table['B2']['r2']:.4f}")
+    print(f"    L12: {len(decomp_table['L12']['elements'])} elements, R2 = {decomp_table['L12']['r2']:.4f}")
+
     # --- Additive prediction: TWO modes ---
     # Mode A: Replace existing pairwise pairs with additive approximation (same coverage)
     def build_additive_omega_existing(decomp, key, original_omega):
@@ -1138,7 +1149,7 @@ def main():
     })
     fig03_bcc_fcc(y_train, a_ss_tr, ALONSO_TABLE2)
     fig04_indep_test(y_test, a_veg_te, a_ss_te, INDEPENDENT_TEST, gb, gf)
-    fig05_element_delta(decomp)
+    fig05_element_delta(decomp_table)
     fig06_additive_fit(ob2, ol12, decomp)
     fig07_composition_examples(all_df)
     fig08_delta_r_proof(all_df)
@@ -1154,20 +1165,20 @@ def main():
     # 9. Save data
     print("\n[8] Saving data files...")
 
-    # Delta parameters table
+    # Delta parameters table (uses extended decomposition with VASP for full coverage)
     rows = []
-    for elem in sorted(set(decomp["B2"]["elements"] + decomp["L12"]["elements"])):
+    for elem in sorted(set(decomp_table["B2"]["elements"] + decomp_table["L12"]["elements"])):
         r_pure = (3 * KING_ATOMIC_VOLUMES.get(elem, 15) / (4 * np.pi)) ** (1/3)
         rows.append({
             "Element": elem,
             "V_pure": KING_ATOMIC_VOLUMES.get(elem, np.nan),
             "r_pure": r_pure,
-            "delta_B2": decomp["B2"]["delta"].get(elem, np.nan),
-            "delta_L12": decomp["L12"]["delta"].get(elem, np.nan),
+            "delta_B2": decomp_table["B2"]["delta"].get(elem, np.nan),
+            "delta_L12": decomp_table["L12"]["delta"].get(elem, np.nan),
         })
     df_delta = pd.DataFrame(rows).sort_values("Element")
     df_delta.to_csv(OUTDIR / "results_delta_parameters.csv", index=False)
-    print(f"    results_delta_parameters.csv ({len(df_delta)} elements)")
+    print(f"    results_delta_parameters.csv ({len(df_delta)} elements, extended with VASP)")
 
     # Omega_sf data
     rows_osf = []
