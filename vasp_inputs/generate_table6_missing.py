@@ -123,7 +123,7 @@ POTCAR_VARIANTS = {
 # =====================================================================
 INCAR_L12 = """SYSTEM = L12 structure optimization
 # Electronic relaxation
-ENCUT  = 520
+ENCUT  = 320
 PREC   = Accurate
 EDIFF  = 1E-6
 NELM   = 200
@@ -156,7 +156,7 @@ NCORE  = 4
 
 INCAR_B2 = """SYSTEM = B2 structure optimization
 # Electronic relaxation
-ENCUT  = 520
+ENCUT  = 320
 PREC   = Accurate
 EDIFF  = 1E-6
 NELM   = 200
@@ -234,7 +234,7 @@ Direct
         f.write(content)
 
 
-def write_kpoints(dirpath, kmesh=11):
+def write_kpoints(dirpath, kmesh=6):
     """Write KPOINTS file (Gamma-centered)."""
     content = f"""Automatic mesh
 0
