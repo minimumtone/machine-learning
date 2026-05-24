@@ -754,8 +754,8 @@ Vegardと同等、データがあれば改善」という特性は、
 \includegraphics[width=\textwidth]{fig_indep_test.png}
 \caption{独立テストセット検証の詳細（20 HEA: BCC 8個＋FCC 12個）。
   (a)~各HEAの絶対誤差（mÅ単位）の手法別比較。BCC 8合金中7合金で
-  VegardとDFT Eq.~10 SSが完全一致（``=''印）：B2 DFTデータ欠損に
-  によるVegard則への縮退。(b)~訓練・テスト間RMSE比較：
+  VegardとDFT Eq.~10 SSが完全一致（V印）：B2 DFTデータ欠損に
+  よるVegard則への縮退。(b)~訓練・テスト間RMSE比較：
   テストRMSE $\approx$ 訓練RMSE（過学習なし）。
   (c)~BCC/FCC別RMSE分解：改善はL1$_2$データカバレッジのある
   FCCに集中（12\%改善）。(d)~パリティプロット。
@@ -775,38 +775,39 @@ Pd高濃度域でのL1$_2$ DFTデータの限界を示唆する。
 \centering
 \caption{独立テスト20 HEAの個別格子定数予測結果（\AA）。
   $\Delta$はDFT Eq.~10 SSの予測誤差（$a_\text{exp} - a_\text{pred}$、mÅ単位）。
-  BCC合金のうち``$=$''印はVegard則と完全一致（$\Omega_\text{sf}$データ欠損による縮退）。}
+  「V」はVegard則と完全一致（$\Omega_\text{sf}$データ欠損による縮退）。
+  改善率はVegard誤差に対するDFT Eq.~10 SSの誤差低減率。}
 \label{tab:indep_detail}
 \footnotesize
-\begin{tabular}{@{}llrrrrl@{}}
+\begin{tabular}{@{}llrrrrrl@{}}
 \toprule
-合金組成 & 構造 & $a_\text{exp}$ & Vegard & DFT Eq.~10 SS & $\Delta$ (mÅ) & 文献 \\
+合金組成 & 構造 & $a_\text{exp}$ & Vegard & DFT Eq.~10 SS & $\Delta$ (mÅ) & 改善率 & 文献 \\
 \midrule
-\multicolumn{7}{l}{\textit{BCC合金}} \\
-NbTiVZr        & BCC & 3.3670 & 3.3130 & 3.3130$^=$  & $+$54.0 & Senkov~\cite{Senkov2013} \\
-MoNbTaV        & BCC & 3.2080 & 3.1978 & 3.1978$^=$  & $+$10.2 & Yao~\cite{Yao2016} \\
-AlNbTiV        & BCC & 3.2200 & 3.2084 & 3.1961      & $+$23.9 & Stepanov \\
-CrMoNbTaVW     & BCC & 3.1901 & 3.1443 & 3.1443$^=$  & $+$45.8 & Zhang \\
-MoNbTaVW       & BCC & 3.1850 & 3.1912 & 3.1912$^=$  & $-$6.2  & Kantelis \\
-HfNbTaTiZr     & BCC & 3.4040 & 3.4112 & 3.4112$^=$  & $-$7.2  & Youssef \\
-HfNbTaTiZr     & BCC & 3.4100 & 3.4112 & 3.4112$^=$  & $-$1.2  & Senkov~\cite{Senkov2013} \\
-Ti$_{35}$Zr$_{27.5}$Hf$_{27.5}$Nb$_5$Ta$_5$ & BCC & 3.4400 & 3.4490 & 3.4490$^=$ & $-$9.0 & Dirras \\
+\multicolumn{8}{l}{\textit{BCC合金}} \\
+NbTiVZr        & BCC & 3.3670 & 3.3130 & 3.3130\textsuperscript{V}  & $+$54.0 & 0\% & Senkov~\cite{Senkov2013} \\
+MoNbTaV        & BCC & 3.2080 & 3.1978 & 3.1978\textsuperscript{V}  & $+$10.2 & 0\% & Yao~\cite{Yao2016} \\
+AlNbTiV        & BCC & 3.2200 & 3.2084 & 3.1961      & $+$23.9 & $-$106\% & Stepanov~\cite{Stepanov2015} \\
+CrMoNbTaVW     & BCC & 3.1901 & 3.1443 & 3.1443\textsuperscript{V}  & $+$45.8 & 0\% & Zhang~\cite{Zhang2015} \\
+MoNbTaVW       & BCC & 3.1850 & 3.1912 & 3.1912\textsuperscript{V}  & $-$6.2  & 0\% & Kantelis~\cite{Kantelis2025} \\
+HfNbTaTiZr     & BCC & 3.4040 & 3.4112 & 3.4112\textsuperscript{V}  & $-$7.2  & 0\% & Youssef~\cite{Youssef2015} \\
+HfNbTaTiZr     & BCC & 3.4100 & 3.4112 & 3.4112\textsuperscript{V}  & $-$1.2  & 0\% & Senkov~\cite{Senkov2013} \\
+Ti$_{35}$Zr$_{27.5}$Hf$_{27.5}$Nb$_5$Ta$_5$ & BCC & 3.4400 & 3.4490 & 3.4490\textsuperscript{V} & $-$9.0 & 0\% & Dirras~\cite{Dirras2016} \\
 \midrule
-\multicolumn{7}{l}{\textit{FCC合金}} \\
-CoCrFeMnNi     & FCC & 3.5988 & 3.5936 & 3.5918      & $+$7.0  & Otto~\cite{Otto2013} \\
-CoCrFeNi       & FCC & 3.5600 & 3.5778 & 3.5761      & $-$16.1 & Leong~\cite{Leong2017} \\
-(CoCrFeNi)$_{0.89}$Pd$_{0.11}$ & FCC & 3.6200 & 3.6148 & 3.6166 & $+$3.4 & Leong~\cite{Leong2017} \\
-(CoCrFeNi)$_{0.80}$Pd$_{0.20}$ & FCC & 3.6600 & 3.6446 & 3.6485 & $+$11.5 & Leong~\cite{Leong2017} \\
-(CoCrFeNi)$_{0.73}$Pd$_{0.27}$ & FCC & 3.7100 & 3.6674 & 3.6726 & $+$37.4 & Leong~\cite{Leong2017} \\
-(CoCrFeNi)$_{0.80}$V$_{0.20}$  & FCC & 3.6100 & 3.6266 & 3.6256 & $-$15.6 & Leong~\cite{Leong2017} \\
-CoCrFeNi       & FCC & 3.5723 & 3.5778 & 3.5761      & $-$3.8  & Wang~\cite{Wang2019} \\
-Co$_{0.5}$CrFeNi & FCC & 3.5805 & 3.5834 & 3.5812    & $-$0.7  & Wang~\cite{Wang2019} \\
-CoCrFeMnNi     & FCC & 3.5970 & 3.5936 & 3.5918      & $+$5.2  & Zaddach~\cite{Zaddach2013} \\
-CoCrFeNi       & FCC & 3.5740 & 3.5778 & 3.5761      & $-$2.1  & Zhang~\cite{Zhang2017nat} \\
-CoCrFeMnNi     & FCC & 3.5920 & 3.5936 & 3.5918      & $+$0.2  & Gali \\
-CoCrFeMnNi     & FCC & 3.5950 & 3.5936 & 3.5918      & $+$3.2  & Tasan \\
+\multicolumn{8}{l}{\textit{FCC合金}} \\
+CoCrFeMnNi     & FCC & 3.5988 & 3.5936 & 3.5918      & $+$7.0  & $-$35\% & Otto~\cite{Otto2013} \\
+CoCrFeNi       & FCC & 3.5600 & 3.5778 & 3.5761      & $-$16.1 & 10\% & Leong~\cite{Leong2017} \\
+(CoCrFeNi)$_{0.89}$Pd$_{0.11}$ & FCC & 3.6200 & 3.6148 & 3.6166 & $+$3.4 & 35\% & Leong~\cite{Leong2017} \\
+(CoCrFeNi)$_{0.80}$Pd$_{0.20}$ & FCC & 3.6600 & 3.6446 & 3.6485 & $+$11.5 & 25\% & Leong~\cite{Leong2017} \\
+(CoCrFeNi)$_{0.73}$Pd$_{0.27}$ & FCC & 3.7100 & 3.6674 & 3.6726 & $+$37.4 & 12\% & Leong~\cite{Leong2017} \\
+(CoCrFeNi)$_{0.80}$V$_{0.20}$  & FCC & 3.6100 & 3.6266 & 3.6256 & $-$15.6 & 6\% & Leong~\cite{Leong2017} \\
+CoCrFeNi       & FCC & 3.5723 & 3.5778 & 3.5761      & $-$3.8  & 31\% & Wang~\cite{Wang2019} \\
+Co$_{0.5}$CrFeNi & FCC & 3.5805 & 3.5834 & 3.5812    & $-$0.7  & 76\% & Wang~\cite{Wang2019} \\
+CoCrFeMnNi     & FCC & 3.5970 & 3.5936 & 3.5918      & $+$5.2  & $-$53\% & Zaddach~\cite{Zaddach2013} \\
+CoCrFeNi       & FCC & 3.5740 & 3.5778 & 3.5761      & $-$2.1  & 45\% & Zhang~\cite{Zhang2017nat} \\
+CoCrFeMnNi     & FCC & 3.5920 & 3.5936 & 3.5918      & $+$0.2  & 88\% & Gali~\cite{Gali2013} \\
+CoCrFeMnNi     & FCC & 3.5950 & 3.5936 & 3.5918      & $+$3.2  & $-$129\% & Tasan~\cite{Tasan2014} \\
 \midrule
-\multicolumn{5}{l}{RMSE (全体 / BCC / FCC)} & \multicolumn{2}{l}{20.0 / 27.1 / 13.4 mÅ} \\
+\multicolumn{6}{l}{RMSE (全体 / BCC / FCC)} & \multicolumn{2}{l}{20.0 / 27.1 / 13.4 mÅ} \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -880,6 +881,48 @@ Mo & $+$0.074 & --- & 1.551 & $+$0.028 & $+$0.063
 \bottomrule
 \end{tabular}
 \end{table*}
+
+\subsubsection{使用例：NbMoTaW格子定数の予測}
+
+表~\ref{tab:delta}の$\delta$値を用いたHEA格子定数予測の
+具体的手順を示す。等モルBCC HEA NbMoTaW（$c_i = 0.25$）を例にとる。
+
+\paragraph{Step 1: 純元素原子体積}
+King~\cite{King1966}の原子体積$V_i$（\AA$^3$）を取得する：
+$V_\text{Nb} = 17.978$、$V_\text{Mo} = 15.583$、
+$V_\text{Ta} = 18.014$、$V_\text{W} = 15.850$。
+
+\paragraph{Step 2: Vegard体積}
+\begin{equation*}
+  V_\text{Vegard} = \sum_i c_i V_i
+  = 0.25 \times (17.978 + 15.583 + 18.014 + 15.850)
+  = 16.856~\text{\AA}^3.
+\end{equation*}
+
+\paragraph{Step 3: $\Omega_\text{sf}$の取得}
+元素対モデルでは$\Omega_\text{sf}^{(\text{SQS})}$を直接使用する：
+Mo--Nb: $-0.0092$、Mo--Ta: $-0.0115$、Mo--W: $+0.0007$、
+Nb--Ta: $-0.0004$、Nb--W: $-0.0108$、Ta--W: $-0.0123$。
+加法モデルでは表~\ref{tab:delta}の$\delta_i^{(\text{B2})}$から
+$\Omega_\text{sf}(i,j) \approx \delta_i + \delta_j$で代替可能。
+
+\paragraph{Step 4: 補正項の計算}
+\begin{equation*}
+  C = \sum_i \sum_{j \ne i} c_i\, c_j\, V_j\, \Omega_\text{sf}(i,j)
+  = -0.0918~\text{\AA}^3.
+\end{equation*}
+
+\paragraph{Step 5: 格子定数}
+$n_\text{auc} = 2$（BCC）、$q_\text{BCC} = 1.72$を適用：
+\begin{equation*}
+  a = \left[n_\text{auc}\,(V_\text{Vegard} + q \cdot C)\right]^{1/3}
+  = \left[2 \times (16.856 - 1.72 \times 0.0918)\right]^{1/3}
+  = 3.220~\text{\AA}.
+\end{equation*}
+実験値$a_\text{exp} = 3.213$~\AA に対し、Vegard則の誤差$+17$~mÅが
+$+7$~mÅに低減される（59\%改善）。
+
+\bigskip
 
 表~\ref{tab:delta}から以下の知見が得られる：
 \begin{enumerate}
@@ -2294,6 +2337,34 @@ Phys.\ Rev.\ Lett.\ \textbf{65} (1990) 353.
 \bibitem{WarrenCowley1950}
 J.M.~Cowley, J.\ Appl.\ Phys.\ \textbf{21} (1950) 24.
 \newblock \href{https://doi.org/10.1063/1.1699415}{doi:10.1063/1.1699415}.
+
+\bibitem{Stepanov2015}
+N.D.~Stepanov et al., Mater.\ Lett.\ \textbf{142} (2015) 153.
+\newblock \href{https://doi.org/10.1016/j.matlet.2014.11.162}{doi:10.1016/j.matlet.2014.11.162}.
+
+\bibitem{Zhang2015}
+B.~Zhang et al., Calphad \textbf{51} (2015) 193.
+\newblock \href{https://doi.org/10.1016/j.calphad.2015.09.007}{doi:10.1016/j.calphad.2015.09.007}.
+
+\bibitem{Kantelis2025}
+K.~Kantelis et al., AIP Adv.\ \textbf{15} (2025) 015030.
+\newblock \href{https://doi.org/10.1063/5.0245966}{doi:10.1063/5.0245966}.
+
+\bibitem{Youssef2015}
+K.M.~Youssef et al., Mater.\ Res.\ Lett.\ \textbf{3} (2015) 95.
+\newblock \href{https://doi.org/10.1080/21663831.2014.985855}{doi:10.1080/21663831.2014.985855}.
+
+\bibitem{Dirras2016}
+G.~Dirras et al., Mater.\ Charact.\ \textbf{108} (2015) 1.
+\newblock \href{https://doi.org/10.1016/j.matchar.2015.08.007}{doi:10.1016/j.matchar.2015.08.007}.
+
+\bibitem{Gali2013}
+A.~Gali, E.P.~George, Intermetallics \textbf{39} (2013) 74.
+\newblock \href{https://doi.org/10.1016/j.intermet.2013.03.018}{doi:10.1016/j.intermet.2013.03.018}.
+
+\bibitem{Tasan2014}
+C.C.~Tasan et al., JOM \textbf{66} (2014) 1993.
+\newblock \href{https://doi.org/10.1007/s11837-014-1133-6}{doi:10.1007/s11837-014-1133-6}.
 
 \end{thebibliography}
 
