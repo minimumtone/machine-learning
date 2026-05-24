@@ -14,24 +14,17 @@ Usage:
     python generate_table6_missing.py
 
 Output structure:
-    table6_missing/
-    ├── L12/
-    │   ├── Be3Ni/   (INCAR, POSCAR, KPOINTS)
-    │   ├── Ni3Be/
-    │   ├── Be3Cu/
-    │   ├── ...
-    │   ├── Mo3Ni/
-    │   ├── ...
-    │   ├── W3Ni/
-    │   └── ...
-    ├── B2/
-    │   ├── GeNi/
-    │   ├── GeCu/
-    │   ├── ...
-    │   ├── PbNi/
-    │   └── ...
-    ├── make_potcar.sh
-    └── run_all.sh
+    FCC_L12/
+    ├── Be3Ni/   (INCAR, POSCAR, KPOINTS)
+    ├── Ni3Be/
+    ├── Mo3Ni/
+    └── ...
+    BCC_B2/
+    ├── GeNi/
+    ├── PbNi/
+    └── ...
+    make_potcar.sh
+    run_all.sh
 """
 
 import os
@@ -123,7 +116,7 @@ POTCAR_VARIANTS = {
 # =====================================================================
 INCAR_L12 = """SYSTEM = L12 structure optimization
 # Electronic relaxation
-ENCUT  = 520
+ENCUT  = 320
 PREC   = Accurate
 EDIFF  = 1E-6
 NELM   = 200
@@ -156,7 +149,7 @@ NCORE  = 4
 
 INCAR_B2 = """SYSTEM = B2 structure optimization
 # Electronic relaxation
-ENCUT  = 520
+ENCUT  = 320
 PREC   = Accurate
 EDIFF  = 1E-6
 NELM   = 200
@@ -234,7 +227,7 @@ Direct
         f.write(content)
 
 
-def write_kpoints(dirpath, kmesh=11):
+def write_kpoints(dirpath, kmesh=6):
     """Write KPOINTS file (Gamma-centered)."""
     content = f"""Automatic mesh
 0
@@ -261,15 +254,12 @@ def estimate_b2_a0(el_a, el_b):
 
 
 def main():
-    base_dir = "table6_missing"
-    os.makedirs(base_dir, exist_ok=True)
-
     all_calcs = []  # (subdir, el1, el2) for POTCAR script
 
     # =================================================================
     # Part 1: L1₂ calculations for Be, Mo, Os, Re, W
     # =================================================================
-    l12_dir = os.path.join(base_dir, "L12")
+    l12_dir = "FCC_L12"
     os.makedirs(l12_dir, exist_ok=True)
 
     print("=" * 60)
@@ -291,7 +281,7 @@ def main():
                 f.write(INCAR_L12)
             write_poscar_l12(dirpath_a3b, missing_el, partner, a0_a3b)
             write_kpoints(dirpath_a3b)
-            all_calcs.append((f"L12/{dirname_a3b}", missing_el, partner))
+            all_calcs.append((f"FCC_L12/{dirname_a3b}", missing_el, partner))
             l12_count += 1
 
             # B₃A: missing element as minority (corner)
@@ -303,13 +293,13 @@ def main():
                 f.write(INCAR_L12)
             write_poscar_l12(dirpath_b3a, partner, missing_el, a0_b3a)
             write_kpoints(dirpath_b3a)
-            all_calcs.append((f"L12/{dirname_b3a}", partner, missing_el))
+            all_calcs.append((f"FCC_L12/{dirname_b3a}", partner, missing_el))
             l12_count += 1
 
     # =================================================================
     # Part 2: B2 calculations for Ge, Pb
     # =================================================================
-    b2_dir = os.path.join(base_dir, "B2")
+    b2_dir = "BCC_B2"
     os.makedirs(b2_dir, exist_ok=True)
 
     print("\n" + "=" * 60)
@@ -331,7 +321,7 @@ def main():
                 f.write(INCAR_B2)
             write_poscar_b2(dirpath_ab, missing_el, partner, a0_ab)
             write_kpoints(dirpath_ab)
-            all_calcs.append((f"B2/{dirname_ab}", missing_el, partner))
+            all_calcs.append((f"BCC_B2/{dirname_ab}", missing_el, partner))
             b2_count += 1
 
             # BA: partner at corner, missing element at body center
@@ -343,13 +333,13 @@ def main():
                 f.write(INCAR_B2)
             write_poscar_b2(dirpath_ba, partner, missing_el, a0_ba)
             write_kpoints(dirpath_ba)
-            all_calcs.append((f"B2/{dirname_ba}", partner, missing_el))
+            all_calcs.append((f"BCC_B2/{dirname_ba}", partner, missing_el))
             b2_count += 1
 
     # =================================================================
     # Generate POTCAR concatenation script
     # =================================================================
-    potcar_script = os.path.join(base_dir, "make_potcar.sh")
+    potcar_script = "make_potcar.sh"
     with open(potcar_script, "w") as f:
         f.write("#!/bin/bash\n")
         f.write("# Auto-generated POTCAR creation script\n")
@@ -373,13 +363,13 @@ def main():
     # =================================================================
     # Generate batch submission script
     # =================================================================
-    run_script = os.path.join(base_dir, "run_all.sh")
+    run_script = "run_all.sh"
     with open(run_script, "w") as f:
         f.write("#!/bin/bash\n")
         f.write("# Auto-generated batch submission script\n")
         f.write("# Modify the SBATCH/qsub commands for your cluster\n\n")
         f.write("# Option 1: Serial execution (testing)\n")
-        f.write("# for dir in L12/* B2/*; do\n")
+        f.write("# for dir in FCC_L12/* BCC_B2/*; do\n")
         f.write("#     cd $dir && mpirun -np 4 vasp_std > vasp.out 2>&1 && cd ../..\n")
         f.write("# done\n\n")
         f.write("# Option 2: SLURM array job\n")
@@ -395,7 +385,7 @@ def main():
         f.write("    # sbatch job.sh                    # SLURM\n")
         f.write("    # qsub job.sh                     # PBS/Torque\n")
         f.write("    # mpirun -np 4 vasp_std > vasp.out 2>&1 &  # Local\n")
-        f.write("    cd $(dirname $(dirname $(pwd)))/table6_missing\n")
+        f.write("    cd -\n")
         f.write("done\n\n")
         f.write(f"echo \"Submitted {len(all_calcs)} calculations.\"\n")
     os.chmod(run_script, 0o755)
@@ -403,7 +393,7 @@ def main():
     # =================================================================
     # Generate SLURM job template
     # =================================================================
-    job_template = os.path.join(base_dir, "job_template.sh")
+    job_template = "job_template.sh"
     with open(job_template, "w") as f:
         f.write("""#!/bin/bash
 #SBATCH --job-name=tab6_fill
@@ -431,7 +421,7 @@ fi
     # =================================================================
     # Generate extraction script (post-calculation)
     # =================================================================
-    extract_script = os.path.join(base_dir, "extract_results.py")
+    extract_script = "extract_results.py"
     with open(extract_script, "w") as f:
         f.write('''#!/usr/bin/env python3
 """
@@ -439,7 +429,6 @@ Extract lattice constants from completed VASP calculations.
 Run after all calculations have converged.
 
 Usage:
-    cd table6_missing
     python extract_results.py
 
 Output:
@@ -469,8 +458,7 @@ def read_contcar(filepath):
 def main():
     results = []
 
-    for struct_type in ["L12", "B2"]:
-        struct_dir = struct_type
+    for struct_type, struct_dir in [("L12", "FCC_L12"), ("B2", "BCC_B2")]:
         if not os.path.isdir(struct_dir):
             continue
         for dirname in sorted(os.listdir(struct_dir)):
@@ -557,17 +545,17 @@ if __name__ == "__main__":
     print(f"\n  L1₂ calculations: {l12_count} ({l12_count//2} pairs × 2 directions)")
     print(f"  B2  calculations: {b2_count} ({b2_count//2} pairs × 2 directions)")
     print(f"  Total:            {l12_count + b2_count} VASP jobs")
-    print(f"\n  Output directory: {base_dir}/")
+    print(f"\n  Output directories: FCC_L12/, BCC_B2/")
     print(f"\n  Elements to fill:")
     print(f"    L1₂ δ: {', '.join(L12_MISSING)}")
     print(f"    B2  δ: {', '.join(B2_MISSING)}")
     print(f"\n  Estimated compute time: ~1-2 hours per job")
     print(f"  Total wall time: ~2 hours (with 30+ parallel cores)")
     print(f"\n  Steps:")
-    print(f"    1. cd {base_dir}")
+    print(f"    1. (run from working directory)")
     print(f"    2. bash make_potcar.sh          # generate POTCARs")
-    print(f"    3. cp job_template.sh L12/*/     # copy job script")
-    print(f"       cp job_template.sh B2/*/")
+    print(f"    3. cp job_template.sh FCC_L12/*/  # copy job script")
+    print(f"       cp job_template.sh BCC_B2/*/")
     print(f"    4. bash run_all.sh              # submit all jobs")
     print(f"    5. python extract_results.py    # after convergence")
 

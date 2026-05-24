@@ -893,11 +893,11 @@ $V_\text{Nb} = 17.978$、$V_\text{Mo} = 15.583$、
 $V_\text{Ta} = 18.014$、$V_\text{W} = 15.850$。
 
 \paragraph{Step 2: Vegard体積}
-\begin{equation*}
-  V_\text{Vegard} = \sum_i c_i V_i
-  = 0.25 \times (17.978 + 15.583 + 18.014 + 15.850)
-  = 16.856~\text{\AA}^3.
-\end{equation*}
+\begin{align*}
+  V_\text{Vegard} &= \sum_i c_i V_i \\
+  &= 0.25 \times (17.978 + 15.583 + 18.014 + 15.850) \\
+  &= 16.856~\text{\AA}^3.
+\end{align*}
 
 \paragraph{Step 3: $\Omega_\text{sf}$の取得}
 元素対モデルでは$\Omega_\text{sf}^{(\text{SQS})}$を直接使用する：
@@ -914,11 +914,11 @@ $\Omega_\text{sf}(i,j) \approx \delta_i + \delta_j$で代替可能。
 
 \paragraph{Step 5: 格子定数}
 $n_\text{auc} = 2$（BCC）、$q_\text{BCC} = 1.72$を適用：
-\begin{equation*}
-  a = \left[n_\text{auc}\,(V_\text{Vegard} + q \cdot C)\right]^{1/3}
-  = \left[2 \times (16.856 - 1.72 \times 0.0918)\right]^{1/3}
-  = 3.220~\text{\AA}.
-\end{equation*}
+\begin{align*}
+  a &= \left[n_\text{auc}\,(V_\text{Vegard} + q \cdot C)\right]^{1/3} \\
+  &= \left[2 \times (16.856 - 1.72 \times 0.0918)\right]^{1/3} \\
+  &= 3.220~\text{\AA}.
+\end{align*}
 実験値$a_\text{exp} = 3.213$~\AA{}に対し、Vegard則の誤差$+0.017$~\AA{}が
 $+0.007$~\AA{}に低減される（59\%改善）。
 
@@ -1134,6 +1134,16 @@ $\Omega_\text{sf}$を計算した。
 $\delta r(A_3B)$対$\delta r(B_3A)$をプロットすると、偏差のない
 滑らかな1次元曲線が現れる（図~\ref{fig:delta_r_proof}(a)(b)）。
 $\delta r$は組成のみで決定され、構造は完全に無関係である。
+なお図~\ref{fig:delta_r_proof}(a)で曲線が二股に分岐する理由は、
+$\delta r$の定義式~\eqref{eq:delta_r_binary}における
+組成$c_A$の非対称性に起因する。$r_A > r_B$のペアでは
+多数派A（$c_A = 0.75$, A$_3$B）の方が$\delta r$が小さく、
+$r_A < r_B$のペアではその逆となる。すなわち上側分岐は
+$r_A < r_B$（$\delta r$(B$_3$A)~$> \delta r$(A$_3$B)）、
+下側分岐は$r_A > r_B$（$\delta r$(A$_3$B)~$> \delta r$(B$_3$A)）
+に対応する。両分岐とも対角線上には乗らないが、これは
+$\delta r$が構造ではなく組成のみに依存する関数であることの帰結であり、
+偏差は存在しない（各ペアの$\delta r$値は解析的に一意に決まる）。
 
 \paragraph{$\Omega_\text{sf}$は大きな構造間偏差:}
 $\Omega_\text{sf}(A_3B)$対$\Omega_\text{sf}(B_3A)$は相関
@@ -1260,33 +1270,28 @@ L1$_2$の多数派/少数派サイトの配位環境差は決して無視でき�
 これは直感的にも理解しやすい：少数派原子は完全に異種原子に
 囲まれるため、その電子状態は純元素とは大きく異なるのである。
 
-図~\ref{fig:volume_radius}に体積由来有効半径の解析を示す。
+図~\ref{fig:l12_asymmetry}にL1$_2$格子定数の非対称性と体積由来有効半径の解析を示す。
 
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=0.4\textwidth]{fig_l12_asymmetry.png}
-\caption{L1$_2$格子定数の非対称性（905ペア）。
+\hfill
+\includegraphics[width=0.4\textwidth]{fig_volume_radius.png}
+\caption{(左)~L1$_2$格子定数の非対称性（905ペア）。
   $a(A_3B) - a(B_3A)$の分布は平均0付近で対称だが、
   標準偏差0.48~\AA{}と大きな分散を持つ。
   平均絶対差0.33~\AA{}はFCC HEA格子定数範囲の約11\%に相当し、
   同一元素ペアで組成を反転するだけで格子定数が大きく変化することを
   示す。$\delta r$はこの非対称性を一切検出できないが、
-  $\Omega_\text{sf}$には完全に反映される。}
-\label{fig:l12_asymmetry}
-\end{figure*}
-
-図~\ref{fig:volume_radius}に体積由来半径の構造依存性を示す。
-
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=0.4\textwidth]{fig_volume_radius.png}
-\caption{L1$_2$構造における構造依存有効半径。
+  $\Omega_\text{sf}$には完全に反映される。
+  (右)~L1$_2$構造における構造依存有効半径。
   多数派サイト（面心、配位殻: 同種8＋異種4）の有効半径偏差
   $\langle|\Delta r_\text{maj}|\rangle = 0.036$~\AA{}に対し、
   少数派サイト（頂点、配位殻: 異種12）は
   $\langle|\Delta r_\text{min}|\rangle = 0.045$~\AA{}と
   約25\%大きい。完全異種配位殻をもつ少数派原子は周囲の化学環境の
   影響を最も強く受け、純元素半径からの乖離が大きい。}
+\label{fig:l12_asymmetry}
 \label{fig:volume_radius}
 \end{figure*}
 
@@ -1345,7 +1350,7 @@ FCC HEA（RMSE = 0.0101~\AA）の精度がBCC（0.0292~\AA）を
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=\textwidth]{fig_hea_prediction_additive.png}
+\includegraphics[width=0.5\textwidth]{fig_hea_prediction_additive.png}
 \caption{加法分解$\delta^{(s)}$モデルによるHEA格子定数予測の可視化（64 HEA）。
   (a)~Vegard則・元素対$\Omega_\text{sf}$・加法$\delta^{(s)}$の
   RMSE比較棒グラフ。加法モデル（RMSE = 0.0211~\AA）は
@@ -1374,7 +1379,7 @@ $r_\text{eff}$は主成分の化学的性質を強く反映する。
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=\textwidth]{fig_composition_dependent_reff.png}
+\includegraphics[width=0.5\textwidth]{fig_composition_dependent_reff.png}
 \caption{組成依存有効半径$r_\text{eff}$の振る舞い。
   (a)~CoCrFeMnNi（Cantor合金）系FCC合金における各元素の
   $r_\text{eff}$の組成依存性。1成分の分率$c_i$を0.05--0.60まで
@@ -1409,7 +1414,7 @@ FCC曲線（青実線）はL1$_2$の$\delta^{\text{L1}_2}$を用いるため、
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=\textwidth]{fig_vegard_structure_absorbed.png}
+\includegraphics[width=0.5\textwidth]{fig_vegard_structure_absorbed.png}
 \caption{構造情報吸収によるVegard則の改善（代表3ペア：Cu--Zr, Al--Ni, Fe--Ti）。
   上段：Vegard則（純元素体積の線形補間）。赤破線：BCC予測、青破線：FCC予測。
   DFT計算値（丸：$A_3B$ L1$_2$、四角：$B_3A$ L1$_2$、菱形：$AB$ B2）は
@@ -1501,16 +1506,16 @@ Yang--Zhang単独を改善する。$\Omega_\text{sf}$の情報は相判定の
 
 図~\ref{fig:roc}にROC曲線を、図~\ref{fig:phase_map}に相安定性マップを示す。
 
-\begin{figure*}[!t]
+\begin{figure}[H]
 \centering
-\includegraphics[width=0.3\textwidth]{fig_roc.png}
+\includegraphics[width=0.7\columnwidth]{fig_roc.png}
 \caption{SS（固溶体）vs 非SS（金属間化合物/非晶質）分類のROC曲線
   （54 HEA）。$\delta r$（実線、AUC = 0.873）が
   $\delta_\text{sf}$（破線、AUC = 0.708）を大きく上回る。
   $\delta r$は幾何学的サイズ適合性を直接反映するため相分類に適するが、
   $\delta_\text{sf}$の化学結合情報は格子定数の定量予測に価値を持つ。}
 \label{fig:roc}
-\end{figure*}
+\end{figure}
 
 \begin{figure*}[!t]
 \centering
@@ -1883,13 +1888,14 @@ SQS $\Omega_\text{sf}$をMP/OQMD B2データと統合し
 \centering
 \caption{$\Omega_\text{sf}$データソースによるBCC HEA予測精度の比較。}
 \label{tab:sqs_rmse}
-\begin{tabular}{lcccl}
+\footnotesize
+\begin{tabular}{@{}lcccc@{}}
 \toprule
-モデル & RMSE（全体） & RMSE（BCC） & $q_\text{BCC}$ & Vegard縮退 \\
+モデル & RMSE(全体) & RMSE(BCC) & $q_\text{BCC}$ & 縮退 \\
 \midrule
-Vegard（補正なし） & 0.0227~\AA & 0.0317~\AA & --- & --- \\
-B2 only（MP/OQMD） & 0.0210~\AA & 0.0293~\AA & 1.45 & 22/29 \\
-\textbf{B2 + SQS} & \textbf{0.0197~\AA} & \textbf{0.0273~\AA} & \textbf{1.72} & \textbf{1/29} \\
+Vegard & 0.0227~\AA & 0.0317~\AA & --- & --- \\
+B2 only & 0.0210~\AA & 0.0293~\AA & 1.45 & 22/29 \\
+\textbf{B2+SQS} & \textbf{0.0197~\AA} & \textbf{0.0273~\AA} & \textbf{1.72} & \textbf{1/29} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1919,16 +1925,17 @@ SQSデータの使用により完全に回避される。
 \centering
 \caption{SQS導入による個別BCC HEA予測誤差の改善。}
 \label{tab:sqs_individual}
-\small
-\begin{tabular}{lcccc}
+\footnotesize
+\begin{tabular}{@{}lcrrr@{}}
 \toprule
-合金 & $a_\text{exp}$ (\AA) & 誤差(B2) & 誤差(B2+SQS) & 改善率 \\
+合金 & $a_\text{exp}$ & $\Delta_\text{B2}$ & $\Delta_\text{SQS}$ & 改善 \\
+ & (\AA) & (\AA) & (\AA) & (\%) \\
 \midrule
-NbMoTaW        & 3.2134 & +13.0 m\AA & +2.9 m\AA & 78\% \\
-HfNbTiVZr      & 3.3770 & $-$14.5 m\AA & $-$4.8 m\AA & 67\% \\
-NbMoTaW        & 3.2220 & +8.5 m\AA & $-$1.7 m\AA & 80\% \\
-AlCrFeMoV      & 2.9800 & +8.9 m\AA & +2.6 m\AA & 71\% \\
-HfNbTiZr       & 3.4380 & $-$0.8 m\AA & +6.3 m\AA & --- \\
+NbMoTaW   & 3.2134 & $+$0.0130 & $+$0.0029 & 78 \\
+HfNbTiVZr & 3.3770 & $-$0.0145 & $-$0.0048 & 67 \\
+NbMoTaW   & 3.2220 & $+$0.0085 & $-$0.0017 & 80 \\
+AlCrFeMoV & 2.9800 & $+$0.0089 & $+$0.0026 & 71 \\
+HfNbTiZr  & 3.4380 & $-$0.0008 & $+$0.0063 & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -2012,14 +2019,14 @@ RMSE = 0.0197~\AA{}（Vegard比$-$11\%、Alonso比$-$14\%）を達成した。
 \caption{HEA格子定数予測手法の比較。}
 \label{tab:method_comparison}
 \footnotesize
-\begin{tabular}{@{}lcccc@{}}
+\begin{tabular}{@{}lrccl@{}}
 \toprule
-手法 & パラメータ数 & RMSE (\AA) & 構造区別 & 任意組成 \\
+手法 & $N_\text{param}$ & RMSE (\AA) & 構造 & 組成 \\
 \midrule
-Vegard則~\cite{Vegard1921}           & 38 ($V_i$) & 0.0221 & なし & 可 \\
-Alonso Eq.~10~\cite{Alonso2021}      & $\sim$200 ($\Omega_\text{sf}$) & 0.0229 & なし & 限定的 \\
-\textbf{本手法（B2 only）}             & 247 & 0.0210 & あり & 可 \\
-\textbf{本手法（B2+SQS）}              & 247 & \textbf{0.0197} & \textbf{あり} & 可 \\
+Vegard~\cite{Vegard1921}      & 38  & 0.0221 & --- & 任意 \\
+Alonso~\cite{Alonso2021}      & $\sim$200 & 0.0229 & --- & 限定 \\
+\textbf{本手法(B2)}            & 247 & 0.0210 & B2/L1$_2$ & 任意 \\
+\textbf{本手法(B2+SQS)}        & 247 & \textbf{0.0197} & \textbf{B2/L1$_2$} & 任意 \\
 \bottomrule
 \end{tabular}
 \end{table}
