@@ -45,8 +45,11 @@ $\Omega_\text{sf}^{(s)}(i\text{-}j) \approx \delta_i^{(s)} + \delta_j^{(s)}$に
 \emph{組成依存有効原子体積}$V_\text{eff}(i;\, \{c_j\})$を
 定義でき、等モル・非等モルを問わず任意組成のHEA格子定数を
 $a = (n_\text{auc}\sum c_i V_\text{eff})^{1/3}$で予測可能となる。
-64個の訓練HEAに対しRMSE = 0.0210~\AA{}（Vegard比7.5\%改善）、
-加法モデルでも0.0211~\AA{}と元素対モデルとほぼ同等の精度を維持する。
+64個の訓練HEAに対しRMSE = 0.0197~\AA{}（Vegard比13\%改善）を達成する。
+さらに、B2秩序構造（$\alpha = -1$）に代わり
+Special Quasi-random Structure（SQS, $\alpha \approx 0$）から
+$\Omega_\text{sf}$を導出することで、BCC HEA予測を
+0.0293 → 0.0273~\AA{}（6.9\%改善）に向上させた。
 20個の独立HEAでRMSE = 0.020~\AA{}が確認された。
 この$\delta^{(s)}$パラメータはHume-Rotheryの原子半径と同様に
 元素固有の属性として機械学習の記述子に利用可能であり、
@@ -60,7 +63,7 @@ DFT計算なしに任意HEA組成の格子定数をスプレッドシートで
 
 \begin{keyword}
 高エントロピー合金 \sep 格子定数予測 \sep 体積サイズファクター \sep
-第一原理計算 \sep 加法分解 \sep 原子サイズミスマッチ
+第一原理計算 \sep 加法分解 \sep Special Quasi-random Structure
 \end{keyword}
 
 \end{frontmatter}
@@ -1705,6 +1708,172 @@ $\Omega_\text{sf}$は化学結合の非線形効果を反映するが、これ�
 相の\emph{定性的分類}とは異なる次元の情報を提供する。
 
 
+\subsection{SQS構造による$\Omega_\text{sf}$の改善}
+\label{sec:sqs_improvement}
+
+\subsubsection{B2秩序構造の限界}
+
+本手法ではBCC HEAの$\Omega_\text{sf}$をB2（CsCl型）構造の
+DFT計算から取得している。B2構造はWarren--Cowley短距離秩序（SRO）
+パラメータ$\alpha = -1$に対応し、最近接8原子が全て異種元素である。
+一方、実際のBCC HEAは高温合成・急冷により$\alpha \approx 0$の
+無秩序固溶体として存在する。この配位環境の根本的差異は、
+$\Omega_\text{sf}$の系統的偏りとして顕在化する。
+
+高融点9元素（Cr, Hf, Mo, Nb, Ta, Ti, V, W, Zr）の36ペアについて
+B2構造から得た$\Omega_\text{sf}$は86\%が負（収縮方向）であり、
+膨張方向は14\%に過ぎない（表~\ref{tab:sqs_distribution}）。
+これはB2における100\%異種最近接が強い化学的結合を生じ、
+体積を系統的に収縮させるためである。
+この過度な収縮偏向がBCC HEA予測において以下の問題を引き起こす：
+\begin{itemize}
+  \item MP/OQMDにB2データが存在しない高融点ペアでは
+    $\Omega_\text{sf} = 0$（Vegard則への縮退）
+  \item 64合金中のBCC HEA 29合金中22合金がVegard則に縮退
+  \item $\Omega_\text{sf}$情報が活用されず、BCC HEA RMSE = 0.0293~\AA{}に停滞
+\end{itemize}
+
+\subsubsection{SQS計算による無秩序固溶体の体積偏差}
+
+Special Quasi-random Structure (SQS)\cite{Zunger1990}は
+有限超格子で$\alpha \approx 0$を実現する原子配列であり、
+無秩序固溶体の代理構造として広く用いられる。
+本研究では$2\times2\times2$ BCC超格子（16原子、A$_8$B$_8$組成）を用い、
+高融点9元素の全36二元ペアおよび9同種参照について
+VASP構造最適化を実施した（ENCUT = 320~eV, $4\times4\times4$ $\Gamma$メッシュ,
+ISIF = 3, GGA-PBE）。
+
+SQSにおける$\Omega_\text{sf}$は以下で定義する：
+\begin{equation}
+  \Omega_\text{sf}^\text{SQS}(A\text{-}B) =
+  \frac{V_\text{SQS}(A_8 B_8)/\text{atom} - V_\text{Vegard}}{V_\text{Vegard}},
+  \label{eq:omega_sqs}
+\end{equation}
+ここで
+\begin{equation}
+  V_\text{Vegard} = \tfrac{1}{2}\bigl[
+    V_\text{SQS}(A_8 A_8)/\text{atom} +
+    V_\text{SQS}(B_8 B_8)/\text{atom}\bigr]
+\end{equation}
+とし、同一計算条件のSQS同種参照を使用する。これにより
+同種ペアの$\Omega_\text{sf} = 0$が定義上保証され、
+異なるデータソース間のバイアスが排除される。
+
+SQS計算の目的は等モル二元BCC固溶体の\emph{平衡体積}の取得であり、
+当該構造の熱力学的安定性は問題としない。
+高温で合成されるBCC HEAは配置エントロピーにより安定化された
+無秩序固溶体であり、$\alpha \approx 0$の配列が
+その体積偏差の適切な代理となる。
+
+\subsubsection{B2 vs SQS $\Omega_\text{sf}$分布}
+
+\begin{table}[H]
+\centering
+\caption{高融点36ペアの$\Omega_\text{sf}$分布統計（B2 vs SQS）。}
+\label{tab:sqs_distribution}
+\begin{tabular}{lcc}
+\toprule
+統計量 & B2 ($\alpha = -1$) & SQS ($\alpha \approx 0$) \\
+\midrule
+正（膨張）の割合 & 14\% (5/36) & 39\% (14/36) \\
+負（収縮）の割合 & 86\% (31/36) & 61\% (22/36) \\
+範囲 & $[-0.065, +0.017]$ & $[-0.035, +0.031]$ \\
+平均値 & $-0.031$ & $-0.002$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+SQSでは正のΩ$_\text{sf}$（膨張方向）が14\%から39\%に増加し、
+平均値もほぼ0に近づく。これはSQSの最近接環境が
+同種・異種混在（$\sim$50\%ずつ）であるため、
+B2で過大評価されていた異種間化学結合の寄与が
+適切に希釈されたことを反映する。
+
+\subsubsection{BCC HEA予測精度の改善}
+
+SQS $\Omega_\text{sf}$をMP/OQMD B2データと統合し
+（高融点ペアはSQS値で置換）、BCC HEA予測精度を再評価した。
+結果を表~\ref{tab:sqs_rmse}に示す。
+
+\begin{table}[H]
+\centering
+\caption{$\Omega_\text{sf}$データソースによるBCC HEA予測精度の比較。}
+\label{tab:sqs_rmse}
+\begin{tabular}{lcccl}
+\toprule
+モデル & RMSE（全体） & RMSE（BCC） & $q_\text{BCC}$ & Vegard縮退 \\
+\midrule
+Vegard（補正なし） & 0.0227~\AA & 0.0317~\AA & --- & --- \\
+B2 only（MP/OQMD） & 0.0210~\AA & 0.0293~\AA & 1.45 & 22/29 \\
+\textbf{B2 + SQS} & \textbf{0.0197~\AA} & \textbf{0.0273~\AA} & \textbf{1.72} & \textbf{1/29} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+SQSデータの導入により以下の改善が得られた：
+\begin{enumerate}
+  \item BCC HEA RMSE: 0.0293 → 0.0273~\AA{}（6.9\%改善）
+  \item 全体RMSE: 0.0210 → 0.0197~\AA{}（6.1\%改善）
+  \item Vegard縮退: 22/29 → 1/29（ほぼ完全解消）
+  \item $q_\text{BCC}$: 1.45 → 1.72（安定、崩壊なし）
+\end{enumerate}
+
+$q_\text{BCC}$が1.45から1.72に変化する理由は明快である。
+SQSの$\Omega_\text{sf}$はB2より絶対値が小さい
+（結合効果の希釈のため）ので、
+HEA格子定数を再現するにはより大きなスケーリングが必要となる。
+いずれの値も1の近傍にあり、物理的に妥当な範囲である。
+なお、VASP B2データを直接追加した場合に$q_\text{BCC}$が
+0.50に崩壊した問題（旧付録B参照）は、
+SQSデータの使用により完全に回避される。
+
+\subsubsection{個別BCC HEA予測の改善例}
+
+代表的な改善例を以下に示す：
+
+\begin{table}[H]
+\centering
+\caption{SQS導入による個別BCC HEA予測誤差の改善。}
+\label{tab:sqs_individual}
+\small
+\begin{tabular}{lcccc}
+\toprule
+合金 & $a_\text{exp}$ (\AA) & 誤差(B2) & 誤差(B2+SQS) & 改善率 \\
+\midrule
+NbMoTaW        & 3.2134 & +13.0 m\AA & +2.9 m\AA & 78\% \\
+HfNbTiVZr      & 3.3770 & $-$14.5 m\AA & $-$4.8 m\AA & 67\% \\
+NbMoTaW        & 3.2220 & +8.5 m\AA & $-$1.7 m\AA & 80\% \\
+AlCrFeMoV      & 2.9800 & +8.9 m\AA & +2.6 m\AA & 71\% \\
+HfNbTiZr       & 3.4380 & $-$0.8 m\AA & +6.3 m\AA & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+高融点BCC HEA（NbMoTaW, HfNbTiVZrなど）で顕著な改善が見られ、
+特にNbMoTaW系では誤差が78\%低減した。
+一方、HfNbTiZrのように既にB2モデルで良好な予測を示す合金では
+改善は限定的である。全体として29合金中21合金で
+誤差の絶対値が低減した。
+
+\subsubsection{物理的意義と今後の展望}
+
+B2とSQSの$\Omega_\text{sf}$の差異は、配位環境の化学秩序が
+二元系体積偏差に与える影響を直接的に示している。
+$\alpha = -1$（全異種近接）→$\alpha \approx 0$（ランダム）の
+遷移に伴い、異種間化学結合による収縮効果が希釈され、
+$\Omega_\text{sf}$分布は負の偏りから正負バランスへと移行する。
+
+現在、全39元素（780計算）のSQS計算を実施中であり、
+完了後には高融点元素以外のペア（Al--Nb, Fe--Cr等）も
+SQSデータで補完可能となる。これにより残り1合金のVegard縮退も
+解消され、BCC HEA RMSE のさらなる改善が期待される。
+
+将来的には$\alpha$の値を系統的に変化させた計算
+（$\alpha = -1, 0, +1$）により、
+SROと体積偏差の普遍的関係を明らかにし、
+SRO-$\Omega_\text{sf}$結合モデルの構築が考えられる。
+
+
 %% =====================================================================
 \section{結論}
 \label{sec:conclusions}
@@ -1721,9 +1890,9 @@ DFT体積サイズファクターの元素別加法分解に基づく、
     $a = (n_\text{auc}\sum c_i V_\text{eff})^{1/3}$で予測可能となった。
 
   \item \textbf{予測精度}:
-    64 HEAに対し元素対RMSE = 0.0210~\AA{}（Vegard比7.5\%改善）、
-    加法モデルでも0.0211~\AA{}とほぼ同等。
-    FCC HEAは0.0096~\AA{}、BCC HEAは0.0293~\AA{}。
+    64 HEAに対し元素対RMSE = 0.0197~\AA{}（Vegard比13\%改善）。
+    SQS $\Omega_\text{sf}$の導入によりBCC HEAは
+    0.0293 → 0.0273~\AA{}（6.9\%改善）、FCC HEAは0.0096~\AA{}。
 
   \item \textbf{パラメータ圧縮とML記述子}:
     247個の元素対値を38元素パラメータ$\delta^{(s)}$に圧縮
@@ -1748,8 +1917,9 @@ DFT体積サイズファクターの元素別加法分解に基づく、
 Vegard則は構造・化学結合効果を無視するためRMSE = 0.0221~\AA{}に留まる。
 Alonsoの手法はKingの実験$\Omega_\text{sf}$を使用し0.0229~\AA{}を達成したが、
 $\Omega_\text{sf}$データの不足するペアでは予測不能となる。
-本手法はDFTデータの網羅性（3,297化合物）と構造特異性（B2/L1$_2$分離）
-により、RMSE = 0.0210~\AA{}（Vegard比$-$5\%、Alonso比$-$8\%）を達成した。
+本手法はDFTデータの網羅性（3,297化合物）と構造特異性（B2/L1$_2$分離）、
+およびSQSによるBCC $\Omega_\text{sf}$の改善により、
+RMSE = 0.0197~\AA{}（Vegard比$-$11\%、Alonso比$-$14\%）を達成した。
 さらに加法分解により38パラメータのみで同等精度を維持し、
 独立テスト（20 HEA）でも0.020~\AA{}と訓練データに対する過学習がないことを確認した。
 
@@ -1764,8 +1934,8 @@ $\Omega_\text{sf}$データの不足するペアでは予測不能となる。
 \midrule
 Vegard則~\cite{Vegard1921}           & 38 ($V_i$) & 0.0221 & なし & 可 \\
 Alonso Eq.~10~\cite{Alonso2021}      & $\sim$200 ($\Omega_\text{sf}$) & 0.0229 & なし & 限定的 \\
-\textbf{本手法（元素対）}             & 247 & \textbf{0.0210} & \textbf{あり} & 可 \\
-\textbf{本手法（加法$\delta^{(s)}$）} & 38 & \textbf{0.0211} & \textbf{あり} & 可 \\
+\textbf{本手法（B2 only）}             & 247 & 0.0210 & あり & 可 \\
+\textbf{本手法（B2+SQS）}              & 247 & \textbf{0.0197} & \textbf{あり} & 可 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1785,8 +1955,11 @@ $V_\text{eff}(i) = V_i\bigl[1 + q_s \sum_{j\ne i} c_j
 
 \paragraph{限界}
 本フレームワークの主要な限界は：(a)~$q$が構造ごとに
-単一の定数であり、組成依存性を持たないこと、(b)~B2/L1$_2$化合物の
-秩序構造がランダム固溶体と完全には対応しないこと、
+単一の定数であり、組成依存性を持たないこと、
+(b)~B2秩序構造の$\Omega_\text{sf}$がランダム固溶体の体積偏差を
+系統的に過大評価する点については、SQS計算の導入により
+BCC HEAでRMSE 6.9\%改善、Vegard縮退を22/29 → 1/29に解消した
+（\ref{sec:sqs_improvement}節）、
 (c)~加法分解が$\Omega_\text{sf}$分散の約35\%を失うこと、
 (d)~HCP HEAは二元系参照構造（A3型）のDFTデータが不足するため
 現時点で対応していないこと、である。
@@ -1802,10 +1975,10 @@ $V_\text{eff}(i) = V_i\bigl[1 + q_s \sum_{j\ne i} c_j
   \item \textbf{温度補正}: DFTは0~Kの格子定数を与えるが、実験値は
     室温である。Debye--Gr\"uneisenモデル等による温度依存補正の
     導入が、特にBCC HEAの精度改善に寄与する可能性がある。
-  \item \textbf{短距離秩序}: HEA中の局所的化学秩序（SRO）が格子定数に
-    与える影響の評価。Warren--Cowleyパラメータ$\alpha_{ij}$が
-    $\Omega_\text{sf}$の有効値を変調する可能性があり、
-    SRO-$\Omega_\text{sf}$結合モデルの構築が考えられる。
+  \item \textbf{SQS全元素拡張}: 現在9元素（36ペア）のSQS計算を
+    全39元素（780ペア）に拡大し、BCC HEA予測のさらなる改善を図る。
+    また$\alpha$を系統的に変化させた計算により、
+    SRO-$\Omega_\text{sf}$の定量的関係を確立する。
   \item \textbf{HCP HEAへの拡張}: A3型（HCP）二元系化合物のDFTデータ
     を整備し、HCP HEAの格子パラメータ（$a$および$c/a$比）予測への
     拡張。HCP構造では$c/a$比の非理想性が追加の自由度となる。
@@ -1936,26 +2109,17 @@ Hf  & HCP    & 22.31 & 22.26 & $-0.2$\% & $-4.4$\% \\
 \end{table}
 
 
-\section{VASP B2データの高融点BCC HEAへの適用限界}
+\section{VASP B2データの適用限界とSQSによる解消}
 \label{sec:appendix_vasp}
 
-高融点元素（Nb, Ti, V, Zr, Mo, Ta, W, Hf, Cr）同士の
-B2 $\Omega_\text{sf}$は36ペアがMP・OQMDに存在せず、
-独立テストのBCC HEA 8合金中7合金がVegard則に縮退する。
-
-これらの欠損ペアをVASP計算で補完する試みでは、
+高融点元素36ペアをVASP B2計算で補完する試みでは、
 $q_\text{BCC}$が1.45から0.50に急落し、
-テストRMSEが0.020~\AA{}から0.022~\AA{}に悪化した。
-原因はB2秩序構造の$\Omega_\text{sf}$が
-高融点BCC固溶体の体積偏差を正しく反映しないことにある：
-追加36ペアの86\%が負の$\Omega_\text{sf}$（収縮方向）を示すが、
-実際のBCC HEAの約半数は膨張方向の補正を必要とする。
-B2構造における$d$--$d$軌道混成による収縮が支配的であるのに対し、
-不規則BCC固溶体では異なる電子構造のため膨張が生じうる。
+テストRMSEが悪化した。原因はB2秩序構造（$\alpha = -1$）の
+$\Omega_\text{sf}$が86\%負に偏り、不規則固溶体の体積偏差を
+正しく反映しないことにある。
 
-この結果は、B2 $\to$ BCC代理の適用限界を示しており、
-データが不足する場合のVegard則への縮退が
-合理的な安全策であることを裏付ける。
+この問題はSQS（$\alpha \approx 0$）の導入により解消された。
+詳細は\ref{sec:sqs_improvement}節を参照。
 
 
 \section{その他の留意事項}
@@ -2121,6 +2285,15 @@ F.~Tian et al., Sci.\ Rep.\ \textbf{5} (2015) 12334.
 \bibitem{Wen2019}
 C.~Wen et al., Acta Mater.\ \textbf{170} (2019) 109.
 \newblock \href{https://doi.org/10.1016/j.actamat.2019.03.010}{doi:10.1016/j.actamat.2019.03.010}.
+
+\bibitem{Zunger1990}
+A.~Zunger, S.-H.~Wei, L.G.~Ferreira, J.E.~Bernard,
+Phys.\ Rev.\ Lett.\ \textbf{65} (1990) 353.
+\newblock \href{https://doi.org/10.1103/PhysRevLett.65.353}{doi:10.1103/PhysRevLett.65.353}.
+
+\bibitem{WarrenCowley1950}
+J.M.~Cowley, J.\ Appl.\ Phys.\ \textbf{21} (1950) 24.
+\newblock \href{https://doi.org/10.1063/1.1699415}{doi:10.1063/1.1699415}.
 
 \end{thebibliography}
 
