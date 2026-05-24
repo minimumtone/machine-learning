@@ -394,26 +394,23 @@ def generate_extract_script(base_dir):
     """Generate Python script to extract results and compute Omega_sf."""
     content = '''#!/usr/bin/env python3
 """
-Extract lattice constants from completed SQS refractory VASP calculations
+Extract lattice constants from completed SQS VASP calculations
 and compute Omega_sf values.
 
 Omega_sf = (V_sqs - V_vegard) / V_vegard
 
-where V_sqs = a_sqs^3 / 16 (volume per atom from 16-atom supercell)
+where V_sqs = volume per atom from SQS calculation
       V_vegard = 0.5 * V_A + 0.5 * V_B (Vegard average for 50:50)
-      V_A, V_B = pure element BCC atomic volumes (from same-element SQS or King)
+      V_A, V_B = pure element atomic volumes FROM SQS SAME-ELEMENT CALCULATIONS (A8A8)
+
+Important: Vegard reference uses SQS same-element results (not external data)
+to ensure consistent computational conditions (k-mesh, ENCUT, supercell size).
 """
 
 import os
 import csv
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# King experimental atomic volumes (Å³) for reference
-KING_VOLUMES = {
-    "Cr": 12.01, "Hf": 22.31, "Mo": 15.58, "Nb": 17.98,
-    "Ta": 18.01, "Ti": 17.65, "V": 13.82, "W": 15.86, "Zr": 23.28,
-}
 
 
 def extract_lattice_from_contcar(contcar_path):
@@ -436,13 +433,44 @@ def extract_lattice_from_contcar(contcar_path):
     return a_eff, vol
 
 
-results = []
+# Step 1: Extract same-element references (A8A8) for Vegard baseline
+print("SQS Results Extraction")
+print("=" * 70)
+print("\\nStep 1: Extracting same-element references (A8A8)...")
+
+pure_volumes = {}  # element -> vol_per_atom from SQS same-element calc
 dirs = sorted([d for d in os.listdir(BASE_DIR)
                if os.path.isdir(os.path.join(BASE_DIR, d))
                and d[0].isupper() and '8' in d])
 
-print("SQS-16 Refractory Results:")
-print("=" * 70)
+for d in dirs:
+    # Check if same-element (e.g., Cr8Cr8)
+    parts = d.replace('8', ' ').split()
+    if len(parts) == 2 and parts[0] == parts[1]:
+        el = parts[0]
+        contcar = os.path.join(BASE_DIR, d, "CONTCAR")
+        if os.path.exists(contcar):
+            a_eff, vol_total = extract_lattice_from_contcar(contcar)
+            vol_per_atom = vol_total / 16.0
+            pure_volumes[el] = vol_per_atom
+            print(f"  {d:8s}: V/atom = {vol_per_atom:.4f} Å³")
+        else:
+            print(f"  {d:8s}: CONTCAR not found (not converged?)")
+
+print(f"\\n  Found {len(pure_volumes)} pure element references.")
+
+if len(pure_volumes) == 0:
+    print("\\nError: No same-element references found. Cannot compute Omega_sf.")
+    print("Run same-element calculations first (A8A8 directories).")
+    import sys
+    sys.exit(1)
+
+# Step 2: Extract binary pairs and compute Omega_sf
+print("\\nStep 2: Extracting binary pairs and computing Omega_sf...")
+print("-" * 70)
+
+results = []
+missing_ref = []
 
 for d in dirs:
     contcar = os.path.join(BASE_DIR, d, "CONTCAR")
@@ -450,9 +478,7 @@ for d in dirs:
         print(f"  {d}: CONTCAR not found")
         continue
 
-    # Parse elements from directory name (e.g., "Cr8Hf8")
-    pair_name = d
-    # Elements are in POSCAR header
+    # Parse elements from POSCAR header
     poscar = os.path.join(BASE_DIR, d, "POSCAR")
     with open(poscar, "r") as f:
         poscar_lines = f.readlines()
@@ -463,14 +489,21 @@ for d in dirs:
     a_eff, vol_total = extract_lattice_from_contcar(contcar)
     vol_per_atom = vol_total / 16.0
 
-    # Compute Omega_sf
-    v_a = KING_VOLUMES[el_a]
-    v_b = KING_VOLUMES[el_b]
+    # Compute Omega_sf using SQS same-element references
+    if el_a not in pure_volumes:
+        missing_ref.append((d, el_a))
+        continue
+    if el_b not in pure_volumes:
+        missing_ref.append((d, el_b))
+        continue
+
+    v_a = pure_volumes[el_a]
+    v_b = pure_volumes[el_b]
     v_vegard = 0.5 * v_a + 0.5 * v_b
     omega_sf = (vol_per_atom - v_vegard) / v_vegard
 
     results.append({
-        "pair": pair_name,
+        "pair": d,
         "element_A": el_a,
         "element_B": el_b,
         "a_supercell": a_eff,
@@ -478,10 +511,31 @@ for d in dirs:
         "v_vegard": v_vegard,
         "omega_sf": omega_sf,
     })
-    print(f"  {pair_name:8s}: a_eff = {a_eff:.4f} Å, "
+    print(f"  {d:8s}: a_eff = {a_eff:.4f} Å, "
           f"V/atom = {vol_per_atom:.3f} Å³, "
           f"V_Vegard = {v_vegard:.3f} Å³, "
-          f"Ω_sf = {omega_sf:+.4f}")
+          f"Ω_sf = {omega_sf:+.5f}")
+
+if missing_ref:
+    print(f"\\n  WARNING: {len(missing_ref)} pairs skipped (missing pure reference):")
+    for d, el in missing_ref[:10]:
+        print(f"    {d} (needs {el}8{el}8)")
+    if len(missing_ref) > 10:
+        print(f"    ... and {len(missing_ref) - 10} more")
+
+# Step 3: Summary statistics
+print("\\n" + "=" * 70)
+print("Summary:")
+n_pos = sum(1 for r in results if r["omega_sf"] > 0)
+n_neg = sum(1 for r in results if r["omega_sf"] < 0)
+n_zero = sum(1 for r in results if r["omega_sf"] == 0)
+print(f"  Total pairs: {len(results)}")
+print(f"  Positive Ω_sf (expansion): {n_pos} ({100*n_pos/max(len(results),1):.0f}%)")
+print(f"  Negative Ω_sf (contraction): {n_neg} ({100*n_neg/max(len(results),1):.0f}%)")
+if results:
+    omegas = [r["omega_sf"] for r in results]
+    print(f"  Range: [{min(omegas):+.5f}, {max(omegas):+.5f}]")
+    print(f"  Mean: {sum(omegas)/len(omegas):+.5f}")
 
 # Save to CSV
 csv_path = os.path.join(BASE_DIR, "sqs_refractory_results.csv")
@@ -493,8 +547,6 @@ with open(csv_path, "w", newline="") as f:
     writer.writerows(results)
 
 print(f"\\nSaved {len(results)} results to {csv_path}")
-print(f"\\nComparison with B2 data can be done by running:")
-print(f"  python compare_b2_sqs.py")
 '''
     with open(os.path.join(base_dir, "extract_results.py"), "w") as f:
         f.write(content)
