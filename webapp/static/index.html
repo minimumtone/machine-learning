@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HEA格子定数予測 — DFT-SSモデル</title>
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --text-light: #64748b;
+    --success: #16a34a;
+    --warning: #d97706;
+    --error: #dc2626;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .container { max-width: 960px; margin: 0 auto; padding: 20px; }
+  header {
+    background: linear-gradient(135deg, var(--primary), #7c3aed);
+    color: white;
+    padding: 24px 0;
+    margin-bottom: 24px;
+  }
+  header h1 { font-size: 1.5rem; font-weight: 700; }
+  header p { opacity: 0.9; font-size: 0.9rem; margin-top: 4px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .card h2 {
+    font-size: 1.1rem;
+    margin-bottom: 16px;
+    color: var(--primary);
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 8px;
+  }
+  .form-row {
+    display: flex;
+    gap: 12px;
+    align-items: end;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .form-group { display: flex; flex-direction: column; }
+  .form-group label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-light);
+    margin-bottom: 4px;
+  }
+  select, input[type="number"], input[type="text"] {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  select:focus, input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+  }
+  select { min-width: 100px; }
+  input[type="number"] { width: 100px; }
+  button {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+  }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; }
+  .btn-secondary {
+    background: #f1f5f9;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: #e2e8f0; }
+  .btn-danger {
+    background: var(--error);
+    color: white;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+  }
+  .btn-danger:hover { background: #b91c1c; }
+  .btn-add {
+    background: var(--success);
+    color: white;
+    padding: 8px 16px;
+  }
+  .btn-add:hover { background: #15803d; }
+
+  #element-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .element-tag {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.9rem;
+  }
+  .element-tag .elem-symbol {
+    font-weight: 700;
+    color: var(--primary);
+    min-width: 28px;
+  }
+  .element-tag input {
+    width: 70px;
+    padding: 4px 8px;
+    font-size: 0.85rem;
+  }
+
+  .struct-radio {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .struct-radio label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  .struct-radio input[type="radio"] { display: none; }
+  .struct-radio input[type="radio"]:checked + label {
+    border-color: var(--primary);
+    background: #eff6ff;
+    color: var(--primary);
+  }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .result-item {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+  }
+  .result-item .label {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-bottom: 4px;
+  }
+  .result-item .value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+  .result-item .unit {
+    font-size: 0.9rem;
+    color: var(--text-light);
+  }
+  .result-item.highlight {
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    border: 2px solid var(--primary);
+  }
+
+  .detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin-top: 12px;
+  }
+  .detail-table th, .detail-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+  .detail-table th {
+    background: #f1f5f9;
+    font-weight: 600;
+    color: var(--text-light);
+  }
+  .detail-table tr:hover { background: #f8fafc; }
+
+  .warning-box {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 0.85rem;
+    color: var(--warning);
+    margin-top: 12px;
+  }
+
+  .preset-section {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .preset-btn {
+    padding: 4px 12px;
+    font-size: 0.8rem;
+    background: #f1f5f9;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .preset-btn:hover { background: #e2e8f0; border-color: var(--primary); }
+
+  .eq-box {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    font-size: 0.85rem;
+    line-height: 1.8;
+  }
+  .eq-box .eq { text-align: center; font-size: 1rem; margin: 8px 0; font-style: italic; }
+
+  #results { display: none; }
+  .spinner {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid #fff;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .composition-bar {
+    height: 24px;
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    margin-bottom: 12px;
+  }
+  .composition-bar div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: white;
+    min-width: 0;
+    transition: width 0.3s;
+  }
+
+  @media (max-width: 640px) {
+    .result-grid { grid-template-columns: 1fr; }
+    .form-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <h1>HEA格子定数予測ツール</h1>
+    <p>DFT構造特異的モデル（Alonsoモデル + DFT Ω<sub>sf</sub>）</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Model description -->
+  <div class="card">
+    <h2>モデル概要</h2>
+    <div class="eq-box">
+      <strong>Alonsoモデル（DFT-SS）:</strong>
+      <div class="eq">
+        V<sub>uc</sub> = Z [ Σ c<sub>i</sub>V<sub>i</sub> + γ<sub>s</sub> · Σ<sub>i</sub> Σ<sub>j≠i</sub> c<sub>i</sub> c<sub>j</sub> V<sub>j</sub> Ω<sub>sf</sub><sup>(s)</sup>(i,j) ]
+      </div>
+      <ul style="margin-left:20px; font-size:0.85rem;">
+        <li>第1項: Vegard則（線形混合）</li>
+        <li>第2項: DFT体積サイズ因子 Ω<sub>sf</sub> による化学結合補正</li>
+        <li>γ<sub>BCC</sub> = <span id="info-gamma-bcc">--</span>, γ<sub>FCC</sub> = <span id="info-gamma-fcc">--</span> (校正定数)</li>
+        <li>B2ペア: <span id="info-b2">--</span>対, L1<sub>2</sub>ペア: <span id="info-l12">--</span>対</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Input -->
+  <div class="card">
+    <h2>組成入力</h2>
+
+    <div class="preset-section">
+      <span style="font-size:0.8rem; color:var(--text-light); align-self:center;">プリセット:</span>
+      <button class="preset-btn" onclick="loadPreset('cantor')">CoCrFeNiMn (Cantor)</button>
+      <button class="preset-btn" onclick="loadPreset('refractory')">NbMoTaW</button>
+      <button class="preset-btn" onclick="loadPreset('cocrfeni')">CoCrFeNi</button>
+      <button class="preset-btn" onclick="loadPreset('senkov')">NbTiVZrHf</button>
+      <button class="preset-btn" onclick="loadPreset('alcrfev')">AlCrFeMoV</button>
+    </div>
+
+    <!-- Structure selection -->
+    <div style="margin-bottom:12px;">
+      <label style="font-size:0.8rem; font-weight:600; color:var(--text-light);">結晶構造:</label>
+      <div class="struct-radio">
+        <input type="radio" name="struct" id="struct-bcc" value="BCC" checked>
+        <label for="struct-bcc">BCC</label>
+        <input type="radio" name="struct" id="struct-fcc" value="FCC">
+        <label for="struct-fcc">FCC</label>
+      </div>
+    </div>
+
+    <!-- Element addition -->
+    <div class="form-row">
+      <div class="form-group">
+        <label>元素追加:</label>
+        <select id="elem-select"></select>
+      </div>
+      <div class="form-group">
+        <label>原子分率 (at%):</label>
+        <input type="number" id="frac-input" value="25" min="0" max="100" step="0.1">
+      </div>
+      <button class="btn-add" onclick="addElement()">追加</button>
+      <button class="btn-secondary" onclick="addEquimolar()">等モル追加</button>
+    </div>
+
+    <!-- Element list -->
+    <div id="element-list"></div>
+
+    <!-- Composition bar -->
+    <div id="comp-bar" class="composition-bar" style="display:none;"></div>
+
+    <!-- Total display -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <span style="font-size:0.85rem; color:var(--text-light);">
+        合計: <strong id="total-frac">0</strong> at% (元素数: <span id="n-elements">0</span>)
+      </span>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-secondary" onclick="normalizeAll()">正規化 (100%)</button>
+        <button class="btn-secondary" onclick="clearAll()">クリア</button>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="predict-btn" onclick="predict()" style="width:100%; padding:12px; font-size:1.05rem;">
+      格子定数を予測
+    </button>
+  </div>
+
+  <!-- Results -->
+  <div class="card" id="results">
+    <h2>予測結果</h2>
+
+    <div id="result-comp-bar" class="composition-bar" style="margin-bottom:16px;"></div>
+
+    <div class="result-grid">
+      <div class="result-item highlight">
+        <div class="label">DFT-SSモデル予測</div>
+        <div class="value" id="res-predicted">--</div>
+        <div class="unit">Å</div>
+      </div>
+      <div class="result-item">
+        <div class="label">Vegard則（線形混合）</div>
+        <div class="value" id="res-vegard">--</div>
+        <div class="unit">Å</div>
+      </div>
+    </div>
+
+    <div class="result-grid" style="grid-template-columns: repeat(3, 1fr);">
+      <div class="result-item">
+        <div class="label">構造</div>
+        <div class="value" id="res-struct" style="font-size:1.2rem;">--</div>
+      </div>
+      <div class="result-item">
+        <div class="label">γ<sub>s</sub></div>
+        <div class="value" id="res-gamma" style="font-size:1.2rem;">--</div>
+      </div>
+      <div class="result-item">
+        <div class="label">Vegardからの補正</div>
+        <div class="value" id="res-correction" style="font-size:1.2rem;">--</div>
+        <div class="unit">Å³/atom</div>
+      </div>
+    </div>
+
+    <div id="warning-area"></div>
+
+    <!-- Pair details -->
+    <details style="margin-top:16px;">
+      <summary style="cursor:pointer; font-weight:600; font-size:0.9rem; color:var(--primary);">
+        元素対 Ω<sub>sf</sub> の詳細
+      </summary>
+      <table class="detail-table" id="pair-table">
+        <thead>
+          <tr><th>元素対</th><th>Ω<sub>sf</sub></th><th>体積寄与 (Å³)</th></tr>
+        </thead>
+        <tbody id="pair-tbody"></tbody>
+      </table>
+      <div id="missing-pairs" style="margin-top:8px;"></div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+const ELEMENT_COLORS = {
+  'Al':'#ef4444','Co':'#3b82f6','Cr':'#10b981','Cu':'#f59e0b','Fe':'#6366f1',
+  'Mn':'#ec4899','Ni':'#14b8a6','Ti':'#8b5cf6','V':'#f97316','Nb':'#06b6d4',
+  'Mo':'#84cc16','Ta':'#e11d48','W':'#7c3aed','Zr':'#0ea5e9','Hf':'#d946ef',
+  'Pd':'#fbbf24','Pt':'#a3e635','Au':'#facc15','Ag':'#94a3b8','Ir':'#2dd4bf',
+  'Rh':'#fb923c','Ru':'#818cf8','Os':'#4ade80','Re':'#f472b6','Si':'#38bdf8',
+  'Ge':'#a78bfa','Mg':'#34d399','Sc':'#fda4af','Sn':'#c084fc','Zn':'#fcd34d',
+  'Be':'#67e8f9','B':'#86efac','P':'#d8b4fe','Pb':'#cbd5e1','Y':'#fca5a5',
+  'La':'#bef264','Ce':'#fdba74','Er':'#c4b5fd','Tb':'#a5b4fc','Dy':'#99f6e4','Ca':'#fde68a'
+};
+
+let composition = {}; // {element: fraction_in_percent}
+let availableElements = [];
+
+async function init() {
+  const res = await fetch('/api/elements');
+  const data = await res.json();
+  availableElements = data.elements;
+  document.getElementById('info-gamma-bcc').textContent = data.gamma_bcc.toFixed(4);
+  document.getElementById('info-gamma-fcc').textContent = data.gamma_fcc.toFixed(4);
+  document.getElementById('info-b2').textContent = data.n_b2_pairs;
+  document.getElementById('info-l12').textContent = data.n_l12_pairs;
+  populateSelect();
+}
+
+function populateSelect() {
+  const sel = document.getElementById('elem-select');
+  sel.innerHTML = '';
+  const used = Object.keys(composition);
+  availableElements.filter(e => !used.includes(e)).forEach(e => {
+    const opt = document.createElement('option');
+    opt.value = e; opt.textContent = e;
+    sel.appendChild(opt);
+  });
+}
+
+function addElement() {
+  const elem = document.getElementById('elem-select').value;
+  const frac = parseFloat(document.getElementById('frac-input').value);
+  if (!elem || isNaN(frac) || frac <= 0) return;
+  composition[elem] = frac;
+  renderElements();
+  populateSelect();
+}
+
+function addEquimolar() {
+  const elem = document.getElementById('elem-select').value;
+  if (!elem || elem in composition) return;
+  composition[elem] = 0; // placeholder
+  const n = Object.keys(composition).length;
+  const eq = parseFloat((100 / n).toFixed(2));
+  Object.keys(composition).forEach(e => composition[e] = eq);
+  renderElements();
+  populateSelect();
+}
+
+function removeElement(elem) {
+  delete composition[elem];
+  renderElements();
+  populateSelect();
+}
+
+function updateFrac(elem, val) {
+  composition[elem] = parseFloat(val) || 0;
+  updateTotal();
+  renderBar();
+}
+
+function normalizeAll() {
+  const total = Object.values(composition).reduce((s, v) => s + v, 0);
+  if (total <= 0) return;
+  Object.keys(composition).forEach(e => {
+    composition[e] = parseFloat((composition[e] / total * 100).toFixed(2));
+  });
+  renderElements();
+}
+
+function clearAll() {
+  composition = {};
+  renderElements();
+  populateSelect();
+  document.getElementById('results').style.display = 'none';
+}
+
+function renderElements() {
+  const list = document.getElementById('element-list');
+  list.innerHTML = '';
+  Object.entries(composition).forEach(([elem, frac]) => {
+    const tag = document.createElement('div');
+    tag.className = 'element-tag';
+    tag.innerHTML = `
+      <span class="elem-symbol">${elem}</span>
+      <input type="number" value="${frac}" min="0" max="100" step="0.1"
+             onchange="updateFrac('${elem}', this.value)">
+      <span style="font-size:0.8rem; color:var(--text-light);">at%</span>
+      <button class="btn-danger" onclick="removeElement('${elem}')">✕</button>
+    `;
+    list.appendChild(tag);
+  });
+  updateTotal();
+  renderBar();
+}
+
+function updateTotal() {
+  const total = Object.values(composition).reduce((s, v) => s + v, 0);
+  document.getElementById('total-frac').textContent = total.toFixed(1);
+  document.getElementById('n-elements').textContent = Object.keys(composition).length;
+}
+
+function renderBar() {
+  const bar = document.getElementById('comp-bar');
+  const total = Object.values(composition).reduce((s, v) => s + v, 0);
+  if (total <= 0 || Object.keys(composition).length === 0) {
+    bar.style.display = 'none';
+    return;
+  }
+  bar.style.display = 'flex';
+  bar.innerHTML = '';
+  Object.entries(composition).forEach(([elem, frac]) => {
+    const pct = (frac / total * 100);
+    if (pct <= 0) return;
+    const div = document.createElement('div');
+    div.style.width = pct + '%';
+    div.style.background = ELEMENT_COLORS[elem] || '#64748b';
+    div.textContent = pct > 8 ? elem : '';
+    bar.appendChild(div);
+  });
+}
+
+function renderResultBar(comp) {
+  const bar = document.getElementById('result-comp-bar');
+  bar.innerHTML = '';
+  const entries = Object.entries(comp).sort((a,b) => b[1]-a[1]);
+  entries.forEach(([elem, frac]) => {
+    const pct = frac * 100;
+    if (pct <= 0) return;
+    const div = document.createElement('div');
+    div.style.width = pct + '%';
+    div.style.background = ELEMENT_COLORS[elem] || '#64748b';
+    div.textContent = pct > 6 ? `${elem} ${pct.toFixed(1)}%` : (pct > 3 ? elem : '');
+    bar.appendChild(div);
+  });
+}
+
+async function predict() {
+  const elems = Object.keys(composition);
+  if (elems.length < 2) {
+    alert('少なくとも2元素を追加してください');
+    return;
+  }
+  const total = Object.values(composition).reduce((s, v) => s + v, 0);
+  if (total <= 0) {
+    alert('組成分率が正でなければなりません');
+    return;
+  }
+
+  const struct = document.querySelector('input[name="struct"]:checked').value;
+  const comp = {};
+  elems.forEach(e => comp[e] = composition[e] / total);
+
+  const btn = document.getElementById('predict-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>計算中...';
+
+  try {
+    const res = await fetch('/api/predict', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({composition: comp, structure: struct})
+    });
+    const data = await res.json();
+
+    if (data.error) {
+      alert('エラー: ' + data.error);
+      return;
+    }
+
+    // Show results
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('res-predicted').textContent = data.a_predicted.toFixed(4);
+    document.getElementById('res-vegard').textContent = data.a_vegard.toFixed(4);
+    document.getElementById('res-struct').textContent = data.structure;
+    document.getElementById('res-gamma').textContent = data.gamma.toFixed(4);
+    document.getElementById('res-correction').textContent = data.correction_term.toFixed(4);
+
+    renderResultBar(data.composition);
+
+    // Pair table
+    const tbody = document.getElementById('pair-tbody');
+    tbody.innerHTML = '';
+    (data.pair_contributions || []).forEach(p => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${p.pair}</td><td>${p.omega_sf.toFixed(4)}</td><td>${p.contribution.toFixed(6)}</td>`;
+      tbody.appendChild(tr);
+    });
+
+    // Missing pairs
+    const mp = document.getElementById('missing-pairs');
+    if (data.missing_pairs && data.missing_pairs.length > 0) {
+      mp.innerHTML = `<div class="warning-box">
+        Ω<sub>sf</sub>データ欠損ペア（Vegard縮退）: ${data.missing_pairs.join(', ')}
+      </div>`;
+    } else {
+      mp.innerHTML = '';
+    }
+
+    // Warning
+    const wa = document.getElementById('warning-area');
+    if (data.warning) {
+      wa.innerHTML = `<div class="warning-box">${data.warning}</div>`;
+    } else if (data.vegard_fallback) {
+      wa.innerHTML = `<div class="warning-box">
+        一部の元素対でΩ<sub>sf</sub>データが欠損しているため、
+        該当ペアはVegard則に縮退しています（補正なし）。
+      </div>`;
+    } else {
+      wa.innerHTML = '';
+    }
+
+    document.getElementById('results').scrollIntoView({behavior: 'smooth'});
+
+  } catch (e) {
+    alert('通信エラー: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '格子定数を予測';
+  }
+}
+
+// Presets
+const PRESETS = {
+  cantor:     {comp: {Co:20,Cr:20,Fe:20,Mn:20,Ni:20}, struct: 'FCC'},
+  refractory: {comp: {Nb:25,Mo:25,Ta:25,W:25}, struct: 'BCC'},
+  cocrfeni:   {comp: {Co:25,Cr:25,Fe:25,Ni:25}, struct: 'FCC'},
+  senkov:     {comp: {Nb:20,Ti:20,V:20,Zr:20,Hf:20}, struct: 'BCC'},
+  alcrfev:    {comp: {Al:20,Cr:20,Fe:20,Mo:20,V:20}, struct: 'BCC'},
+};
+
+function loadPreset(name) {
+  const p = PRESETS[name];
+  composition = {...p.comp};
+  document.getElementById('struct-' + p.struct.toLowerCase()).checked = true;
+  renderElements();
+  populateSelect();
+}
+
+// Init
+init();
+</script>
+
+</body>
+</html>
