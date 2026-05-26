@@ -279,9 +279,93 @@
     transition: width 0.3s;
   }
 
+  /* Documentation tabs */
+  .doc-tabs {
+    display: flex;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 16px;
+    gap: 0;
+  }
+  .doc-tab {
+    padding: 10px 20px;
+    border: none;
+    background: transparent;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-light);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+  }
+  .doc-tab:hover { color: var(--primary); background: #f1f5f9; }
+  .doc-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+  }
+  .doc-panel { display: none; }
+  .doc-panel.active { display: block; }
+  .doc-section h3 {
+    font-size: 1rem;
+    margin: 20px 0 10px 0;
+    color: var(--text);
+    border-left: 4px solid var(--primary);
+    padding-left: 10px;
+  }
+  .doc-section h4 {
+    font-size: 0.9rem;
+    margin: 14px 0 6px 0;
+    color: var(--text);
+  }
+  .doc-section p, .doc-section li {
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: var(--text);
+  }
+  .doc-section ul, .doc-section ol {
+    margin-left: 20px;
+    margin-bottom: 10px;
+  }
+  .doc-section .formula {
+    background: #f1f5f9;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 10px 0;
+    text-align: center;
+    font-style: italic;
+    font-size: 0.95rem;
+    overflow-x: auto;
+  }
+  .doc-section code {
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.82rem;
+    font-family: 'SF Mono', 'Consolas', monospace;
+  }
+  .doc-section table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    margin: 10px 0;
+  }
+  .doc-section th, .doc-section td {
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    text-align: left;
+  }
+  .doc-section th {
+    background: #f1f5f9;
+    font-weight: 600;
+  }
+  .test-pass { color: var(--success); font-weight: 700; }
+  .test-fail { color: var(--error); font-weight: 700; }
+
   @media (max-width: 640px) {
     .result-grid { grid-template-columns: 1fr; }
     .form-row { flex-direction: column; }
+    .doc-tab { padding: 8px 12px; font-size: 0.8rem; }
   }
 </style>
 </head>
@@ -423,6 +507,237 @@
       </table>
       <div id="missing-pairs" style="margin-top:8px;"></div>
     </details>
+  </div>
+
+  <!-- Documentation & Test Report -->
+  <div class="card">
+    <h2>解説書・テストレポート</h2>
+    <div class="doc-tabs">
+      <button class="doc-tab active" onclick="switchTab('guide')">使い方ガイド</button>
+      <button class="doc-tab" onclick="switchTab('model')">モデル解説</button>
+      <button class="doc-tab" onclick="switchTab('params')">パラメータ一覧</button>
+      <button class="doc-tab" onclick="switchTab('test')">テストレポート</button>
+    </div>
+
+    <!-- Tab 1: Usage Guide -->
+    <div class="doc-panel active doc-section" id="tab-guide">
+      <h3>概要</h3>
+      <p>本ツールは、高エントロピー合金（HEA）の格子定数を、DFT計算に基づく構造特異的体積サイズ因子モデル（DFT-SSモデル）により予測する単一HTMLファイルのWebアプリケーションです。サーバー不要で、ブラウザのみで動作します（オフライン可）。</p>
+
+      <h3>基本操作</h3>
+      <ol>
+        <li><strong>結晶構造の選択</strong>: BCC または FCC を選択します。構造に応じて異なるΩ<sub>sf</sub>データ（B2→BCC, L1<sub>2</sub>→FCC）と校正定数γが使用されます。</li>
+        <li><strong>組成の入力</strong>: プリセットを使うか、ドロップダウンから元素を選択して原子分率（at%）を入力し「追加」をクリックします。「等モル追加」で全元素を等比率に設定できます。</li>
+        <li><strong>正規化</strong>: 合計が100%でない場合、「正規化 (100%)」ボタンで比率を維持したまま100%に調整します。</li>
+        <li><strong>予測実行</strong>: 「格子定数を予測」ボタンをクリックします。合計が100%でなくても内部で正規化されます。</li>
+      </ol>
+
+      <h3>プリセット合金</h3>
+      <table>
+        <tr><th>プリセット名</th><th>組成</th><th>構造</th><th>用途</th></tr>
+        <tr><td>CoCrFeNiMn (Cantor)</td><td>Co/Cr/Fe/Mn/Ni 各20%</td><td>FCC</td><td>代表的FCC HEA</td></tr>
+        <tr><td>NbMoTaW</td><td>Nb/Mo/Ta/W 各25%</td><td>BCC</td><td>高融点BCC HEA</td></tr>
+        <tr><td>CoCrFeNi</td><td>Co/Cr/Fe/Ni 各25%</td><td>FCC</td><td>4元系FCC</td></tr>
+        <tr><td>NbTiVZrHf</td><td>Nb/Ti/V/Zr/Hf 各20%</td><td>BCC</td><td>5元系BCC</td></tr>
+        <tr><td>AlCrFeMoV</td><td>Al/Cr/Fe/Mo/V 各20%</td><td>BCC</td><td>Al含有BCC</td></tr>
+      </table>
+
+      <h3>出力の読み方</h3>
+      <ul>
+        <li><strong>DFT-SSモデル予測</strong>: Ω<sub>sf</sub>補正を含む予測格子定数（Å）</li>
+        <li><strong>Vegard則</strong>: 線形混合則による格子定数（Å）。Ω<sub>sf</sub>補正なし</li>
+        <li><strong>γ<sub>s</sub></strong>: 構造依存の校正定数（BCC: 1.4517, FCC: 1.0824）</li>
+        <li><strong>Vegardからの補正</strong>: γ<sub>s</sub> × Σ c<sub>i</sub>c<sub>j</sub>V<sub>j</sub>Ω<sub>sf</sub> の値（Å³/atom）</li>
+        <li><strong>元素対Ω<sub>sf</sub>の詳細</strong>（折りたたみ）: 各元素ペアのΩ<sub>sf</sub>値と体積寄与</li>
+        <li><strong>Vegard縮退警告</strong>: Ω<sub>sf</sub>データが欠損するペアがある場合に表示。該当ペアは補正なし（Vegard則に縮退）</li>
+      </ul>
+
+      <h3>対応元素（41元素）</h3>
+      <p>Ag, Al, Au, B, Be, Ca, Ce, Co, Cr, Cu, Dy, Er, Fe, Ge, Hf, Ir, La, Mg, Mn, Mo, Nb, Ni, Os, P, Pb, Pd, Pt, Re, Rh, Ru, Sc, Si, Sn, Ta, Tb, Ti, V, W, Y, Zn, Zr</p>
+
+      <h3>制限事項</h3>
+      <ul>
+        <li>本モデルはHEA単相固溶体を前提としています。秩序金属間化合物（NiAlなど）への直接適用は想定外です。</li>
+        <li>全ての元素ペアにΩ<sub>sf</sub>データがあるわけではありません。データ欠損ペアはVegard則に縮退します。</li>
+        <li>B2ペア: 152対、L1<sub>2</sub>ペア: 95対が収録済みです。</li>
+      </ul>
+    </div>
+
+    <!-- Tab 2: Model Description -->
+    <div class="doc-panel doc-section" id="tab-model">
+      <h3>数学的背景</h3>
+      <p>Alonsoらは、高エントロピー合金の単位胞体積を、体積サイズ因子（volume size factor）を用いて次式で表した:</p>
+      <div class="formula">
+        V<sub>uc</sub> = Z Σ<sub>i</sub> c<sub>i</sub>V<sub>i</sub> + Z Σ<sub>i</sub> c<sub>i</sub>V<sub>i</sub> Σ<sub>j≠i</sub> c<sub>j</sub> Ω<sub>sf, j/i</sub>
+      </div>
+      <p>ここで:</p>
+      <ul>
+        <li><strong>V<sub>uc</sub></strong>: 単位胞体積</li>
+        <li><strong>Z</strong>: 単位胞中の原子数（BCC=2, FCC=4）</li>
+        <li><strong>c<sub>i</sub></strong>: 成分 i の濃度（原子分率）</li>
+        <li><strong>V<sub>i</sub></strong>: 純元素 i の原子体積（Kingの原子体積）</li>
+        <li><strong>Ω<sub>sf, j/i</sub></strong>: 元素 j を元素 i の母相に溶かしたときの体積サイズ因子</li>
+      </ul>
+      <p>第1項は各成分の平均原子体積に基づくVegard則型の寄与（線形混合則）、第2項は混合に伴う体積変化を表す補正項です。</p>
+
+      <h3>DFT-SSモデルの拡張</h3>
+      <p>本ツールで使用するDFT-SSモデルは、Alonsoモデルを以下のように拡張しています:</p>
+
+      <h4>1. DFT計算によるΩ<sub>sf</sub>の取得</h4>
+      <p>Alonsoが実験値から取得したΩ<sub>sf</sub>を、第一原理（DFT）計算の結果に置換しています。これによりデータカバレッジが大幅に拡大しました。データソースはMaterials Project (MP)、OQMD、自前のVASP計算です。</p>
+
+      <h4>2. 構造特異的分離</h4>
+      <p>Alonsoモデルでは全構造共通のΩ<sub>sf</sub>を使用していましたが、本モデルでは:</p>
+      <ul>
+        <li><strong>BCC予測</strong> → B2構造（秩序BCC）から導出したΩ<sub>sf</sub><sup>(B2)</sup>を使用</li>
+        <li><strong>FCC予測</strong> → L1<sub>2</sub>構造（秩序FCC）から導出したΩ<sub>sf</sub><sup>(L1₂)</sup>を使用</li>
+      </ul>
+      <p>配位環境の違いが原子体積に影響することを反映しています。</p>
+
+      <h4>3. 校正定数γ<sub>s</sub></h4>
+      <p>補正項にスケーリング定数γ<sub>s</sub>を乗じます:</p>
+      <div class="formula">
+        V<sub>uc</sub> = Z [ Σ c<sub>i</sub>V<sub>i</sub> + γ<sub>s</sub> · Σ<sub>i</sub> Σ<sub>j≠i</sub> c<sub>i</sub>c<sub>j</sub>V<sub>j</sub> Ω<sub>sf</sub><sup>(s)</sup>(i,j) ]
+      </div>
+      <p>γ<sub>FCC</sub> ≈ 1.08 はL1<sub>2</sub>→FCC対応が良好であることを示します。γ<sub>BCC</sub> = 1.45 はB2秩序構造とBCCランダム固溶体の構造差を反映する校正定数です。</p>
+
+      <h4>4. 格子定数の算出</h4>
+      <div class="formula">
+        a = (V<sub>uc</sub>)<sup>1/3</sup> = (Z · v̄)<sup>1/3</sup>
+      </div>
+      <p>ここで v̄ = Σc<sub>i</sub>V<sub>i</sub> + γ<sub>s</sub> × 補正項 は平均原子体積です。</p>
+
+      <h3>加法分解</h3>
+      <p>247個の元素対パラメータ（Ω<sub>sf</sub>）を39個の元素固有パラメータδ<sup>(s)</sup>に圧縮できることが示されています:</p>
+      <div class="formula">
+        Ω<sub>sf</sub>(i,j) ≈ δ<sup>(s)</sup><sub>i</sub> + δ<sup>(s)</sup><sub>j</sub>
+      </div>
+      <p>δ<sup>(s)</sup>はHume-Rothery原子半径と同様の元素固有属性で、DFT体積から構造効果を内包する記述子です。</p>
+
+      <h3>Vegard縮退</h3>
+      <p>特定の元素ペアでΩ<sub>sf</sub>データが欠損している場合、そのペアの補正項は0になり、Vegard則に縮退します。NbMoTaWのように全6ペア（Nb-Mo, Nb-Ta, Nb-W, Mo-Ta, Mo-W, Ta-W）のB2データが欠損している場合、予測値はVegard則と完全に一致します。</p>
+
+      <h3>参考文献</h3>
+      <ul>
+        <li>L.J. Zhang, et al., "Additive decomposition of the volume size factor and its application to lattice constant prediction of multi-component alloys," <em>Journal of Alloys and Compounds</em>, 2024.</li>
+        <li>H.W. King, "Quantitative size-factors for metallic solid solutions," <em>Journal of Materials Science</em>, 1966.</li>
+        <li>Alonso, et al., "Volume size factor in HEA lattice prediction," <em>Intermetallics</em>.</li>
+      </ul>
+    </div>
+
+    <!-- Tab 3: Parameters -->
+    <div class="doc-panel doc-section" id="tab-params">
+      <h3>モデルパラメータ</h3>
+      <table>
+        <tr><th>パラメータ</th><th>値</th><th>説明</th></tr>
+        <tr><td>γ<sub>BCC</sub></td><td>1.4517</td><td>BCC構造の校正定数。B2→BCC変換のスケーリング</td></tr>
+        <tr><td>γ<sub>FCC</sub></td><td>1.0824</td><td>FCC構造の校正定数。L1<sub>2</sub>→FCC変換のスケーリング</td></tr>
+        <tr><td>Z<sub>BCC</sub></td><td>2</td><td>BCC単位胞中の原子数</td></tr>
+        <tr><td>Z<sub>FCC</sub></td><td>4</td><td>FCC単位胞中の原子数</td></tr>
+        <tr><td>B2ペア数</td><td>152対</td><td>収録済みΩ<sub>sf</sub><sup>(B2)</sup>データ数</td></tr>
+        <tr><td>L1<sub>2</sub>ペア数</td><td>95対</td><td>収録済みΩ<sub>sf</sub><sup>(L1₂)</sup>データ数</td></tr>
+        <tr><td>対応元素数</td><td>41元素</td><td>Kingの原子体積が定義されている元素</td></tr>
+      </table>
+
+      <h3>King原子体積 V<sub>i</sub></h3>
+      <p>純元素のゼロ温度原子体積（Å³/atom）。Kingの文献値に基づく。</p>
+      <table>
+        <tr><th>元素</th><th>V (Å³)</th><th>元素</th><th>V (Å³)</th><th>元素</th><th>V (Å³)</th><th>元素</th><th>V (Å³)</th></tr>
+        <tr><td>Ag</td><td>17.061</td><td>Al</td><td>16.602</td><td>Au</td><td>16.966</td><td>B</td><td>7.241</td></tr>
+        <tr><td>Be</td><td>8.111</td><td>Ca</td><td>43.630</td><td>Ce</td><td>34.367</td><td>Co</td><td>11.073</td></tr>
+        <tr><td>Cr</td><td>12.008</td><td>Cu</td><td>11.810</td><td>Dy</td><td>31.540</td><td>Er</td><td>30.660</td></tr>
+        <tr><td>Fe</td><td>11.776</td><td>Ge</td><td>22.634</td><td>Hf</td><td>22.312</td><td>Ir</td><td>14.155</td></tr>
+        <tr><td>La</td><td>37.168</td><td>Mg</td><td>23.240</td><td>Mn</td><td>12.210</td><td>Mo</td><td>15.583</td></tr>
+        <tr><td>Nb</td><td>17.978</td><td>Ni</td><td>10.941</td><td>Os</td><td>13.977</td><td>P</td><td>23.000</td></tr>
+        <tr><td>Pb</td><td>30.321</td><td>Pd</td><td>14.716</td><td>Pt</td><td>15.095</td><td>Re</td><td>14.712</td></tr>
+        <tr><td>Rh</td><td>13.754</td><td>Ru</td><td>13.571</td><td>Sc</td><td>24.987</td><td>Si</td><td>20.024</td></tr>
+        <tr><td>Sn</td><td>27.053</td><td>Ta</td><td>18.014</td><td>Tb</td><td>32.090</td><td>Ti</td><td>17.649</td></tr>
+        <tr><td>V</td><td>13.824</td><td>W</td><td>15.850</td><td>Y</td><td>33.018</td><td>Zn</td><td>15.207</td></tr>
+        <tr><td>Zr</td><td>23.279</td><td colspan="7"></td></tr>
+      </table>
+
+      <h3>Ω<sub>sf</sub>データソース</h3>
+      <p>体積サイズ因子は以下のデータベースから取得しています:</p>
+      <ul>
+        <li><strong>Materials Project (MP)</strong>: DFT計算による安定構造データ</li>
+        <li><strong>OQMD</strong>: Open Quantum Materials Database</li>
+        <li><strong>VASP</strong>: 自前の第一原理計算（Table 6補完用）</li>
+      </ul>
+      <p>各元素ペアで2件以上のデータが存在する場合のみΩ<sub>sf</sub>を採用しています（<code>min_count=2</code>）。</p>
+
+      <h3>予測精度の参考値</h3>
+      <table>
+        <tr><th>モデル</th><th>テストRMSE (Å)</th><th>備考</th></tr>
+        <tr><td>Vegard則</td><td>0.0469</td><td>線形混合則（ベースライン）</td></tr>
+        <tr><td>Alonsoモデル（実験Ω<sub>sf</sub>）</td><td>0.0234</td><td>実験由来パラメータ</td></tr>
+        <tr><td>DFT-SSモデル（B2/L1<sub>2</sub>）</td><td>0.0210</td><td>本ツールが使用するモデル</td></tr>
+      </table>
+    </div>
+
+    <!-- Tab 4: Test Report -->
+    <div class="doc-panel doc-section" id="tab-test">
+      <h3>テストレポート: PR #215 検証結果</h3>
+      <p>単一HTMLファイル版のHEA格子定数予測ツール（<code>webapp/HEA_Lattice_Predictor.html</code>）に対するE2Eテスト結果です。</p>
+      <p><strong>テスト方法:</strong> <code>python3 -m http.server 8080</code> でサーブし、Chromeブラウザでテスト</p>
+
+      <h4>テスト結果サマリー</h4>
+      <table>
+        <tr><th>#</th><th>テスト項目</th><th>結果</th></tr>
+        <tr><td>1</td><td>モデル情報の初期表示</td><td class="test-pass">passed</td></tr>
+        <tr><td>2</td><td>CoCrFeNi FCC プリセット予測</td><td class="test-pass">passed</td></tr>
+        <tr><td>3</td><td>NbMoTaW BCC 完全Vegard縮退</td><td class="test-pass">passed</td></tr>
+        <tr><td>4</td><td>CoCrFeNiMn (Cantor) FCC プリセット</td><td class="test-pass">passed</td></tr>
+        <tr><td>5</td><td>正規化機能 (Fe 50% + Co 30%)</td><td class="test-pass">passed</td></tr>
+      </table>
+
+      <h4>Test 1: モデル情報の初期表示</h4>
+      <p>ページ読み込み時にMODEL_DATAの値が正しく表示されることを確認。</p>
+      <ul>
+        <li>γ<sub>BCC</sub> = 1.4517, γ<sub>FCC</sub> = 1.0824</li>
+        <li>B2ペア数 = 152, L1<sub>2</sub>ペア数 = 95</li>
+        <li>全値が埋め込みデータと一致</li>
+      </ul>
+
+      <h4>Test 2: CoCrFeNi FCC プリセット予測</h4>
+      <p>「CoCrFeNi」プリセットボタン → FCC自動選択、Co/Cr/Fe/Ni 各25%</p>
+      <table>
+        <tr><th>項目</th><th>期待値</th><th>実測値</th><th>判定</th></tr>
+        <tr><td>DFT-SS予測</td><td>3.5761 Å</td><td>3.5761 Å</td><td class="test-pass">一致</td></tr>
+        <tr><td>Vegard則</td><td>3.5778 Å</td><td>3.5778 Å</td><td class="test-pass">一致</td></tr>
+        <tr><td>γ</td><td>1.0824</td><td>1.0824</td><td class="test-pass">一致</td></tr>
+        <tr><td>補正項</td><td>−0.0160</td><td>−0.0160</td><td class="test-pass">一致</td></tr>
+      </table>
+
+      <h4>Test 3: NbMoTaW BCC 完全Vegard縮退</h4>
+      <p>「NbMoTaW」プリセットボタン → BCC自動選択、Nb/Mo/Ta/W 各25%</p>
+      <table>
+        <tr><th>項目</th><th>期待値</th><th>実測値</th><th>判定</th></tr>
+        <tr><td>DFT-SS予測</td><td>3.2305 Å</td><td>3.2305 Å</td><td class="test-pass">一致</td></tr>
+        <tr><td>Vegard則</td><td>3.2305 Å</td><td>3.2305 Å</td><td class="test-pass">一致</td></tr>
+        <tr><td>補正項</td><td>0.0000</td><td>0.0000</td><td class="test-pass">一致</td></tr>
+      </table>
+      <p>全6ペア（Nb-Mo, Nb-Ta, Nb-W, Mo-Ta, Mo-W, Ta-W）のB2データが欠損 → 完全Vegard縮退を確認。Vegard縮退警告が正しく表示された。</p>
+
+      <h4>Test 4: CoCrFeNiMn (Cantor) FCC</h4>
+      <p>「CoCrFeNiMn (Cantor)」プリセットボタン → FCC, 5元素各20%</p>
+      <table>
+        <tr><th>項目</th><th>期待値</th><th>実測値</th><th>判定</th></tr>
+        <tr><td>DFT-SS予測</td><td>3.5918 Å</td><td>3.5918 Å</td><td class="test-pass">一致</td></tr>
+      </table>
+
+      <h4>Test 5: 正規化機能</h4>
+      <p>手動で Fe=50%, Co=30%（合計80%）を入力し、「正規化 (100%)」をクリック。</p>
+      <table>
+        <tr><th>項目</th><th>期待値</th><th>実測値</th><th>判定</th></tr>
+        <tr><td>Fe</td><td>62.5%</td><td>62.50%</td><td class="test-pass">一致</td></tr>
+        <tr><td>Co</td><td>37.5%</td><td>37.50%</td><td class="test-pass">一致</td></tr>
+        <tr><td>合計</td><td>100.0%</td><td>100.0%</td><td class="test-pass">一致</td></tr>
+      </table>
+      <p>比率が保存されていることを確認（50/80=0.625, 30/80=0.375）。</p>
+
+      <h4>結論</h4>
+      <p>全5テスト合格。単一HTMLファイル版はFlask版と同一の予測値を出力し、全UI機能が正常に動作することを確認しました。</p>
+    </div>
   </div>
 
 </div>
@@ -891,6 +1206,14 @@ function loadPreset(name) {
   document.getElementById('struct-' + p.struct.toLowerCase()).checked = true;
   renderElements();
   populateSelect();
+}
+
+// Tab switching for documentation
+function switchTab(tabId) {
+  document.querySelectorAll('.doc-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.doc-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tabId).classList.add('active');
+  event.currentTarget.classList.add('active');
 }
 
 // Init
