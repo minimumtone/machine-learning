@@ -248,6 +248,78 @@
   }
   .eq-box .eq { text-align: center; font-size: 1rem; margin: 8px 0; font-style: italic; }
 
+  /* Documentation tabs */
+  .doc-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 0;
+  }
+  .doc-tab {
+    padding: 8px 18px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .doc-tab:hover { color: var(--primary); }
+  .doc-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+  }
+  .doc-panel {
+    display: none;
+    padding: 20px 0;
+    font-size: 0.85rem;
+    line-height: 1.8;
+  }
+  .doc-panel.active { display: block; }
+  .doc-panel h3 {
+    font-size: 1rem;
+    color: var(--text);
+    margin: 16px 0 8px 0;
+    border-left: 3px solid var(--primary);
+    padding-left: 10px;
+  }
+  .doc-panel h3:first-child { margin-top: 0; }
+  .doc-panel .formula-box {
+    background: #f1f5f9;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 8px 0;
+    text-align: center;
+    font-size: 0.95rem;
+    font-style: italic;
+    overflow-x: auto;
+  }
+  .doc-panel table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    margin: 8px 0;
+  }
+  .doc-panel table th, .doc-panel table td {
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+  .doc-panel table th { background: #f1f5f9; font-weight: 600; }
+  .ref-item {
+    padding: 6px 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.82rem;
+  }
+  .ref-item .ref-id {
+    font-weight: 700;
+    color: var(--primary);
+    margin-right: 6px;
+  }
+
   #results { display: none; }
   .spinner {
     display: inline-block;
@@ -423,6 +495,195 @@
       </table>
       <div id="missing-pairs" style="margin-top:8px;"></div>
     </details>
+  </div>
+
+  <!-- Documentation -->
+  <div class="card">
+    <h2>解説書・参考文献</h2>
+    <div class="doc-tabs">
+      <button class="doc-tab active" onclick="switchTab('model', this)">モデル解説</button>
+      <button class="doc-tab" onclick="switchTab('params', this)">パラメータ詳細</button>
+      <button class="doc-tab" onclick="switchTab('refs', this)">参考文献</button>
+    </div>
+
+    <!-- Tab: モデル解説 -->
+    <div id="tab-model" class="doc-panel active">
+      <h3>Alonsoモデル（体積サイズ因子法）</h3>
+      <p>Alonsoら [1] は、高エントロピー合金（HEA）の単位胞体積を、体積サイズ因子（volume size factor, Ω<sub>sf</sub>）を用いて次式で表した：</p>
+      <div class="formula-box">
+        V<sub>uc</sub> = Z &Sigma;<sub>i</sub> c<sub>i</sub> V<sub>i</sub>
+        + Z &Sigma;<sub>i</sub> c<sub>i</sub> V<sub>i</sub> &Sigma;<sub>j&ne;i</sub> c<sub>j</sub> &Omega;<sub>sf, j/i</sub>
+      </div>
+      <p>ここで：</p>
+      <table>
+        <tr><th>記号</th><th>意味</th></tr>
+        <tr><td>V<sub>uc</sub></td><td>単位胞体積</td></tr>
+        <tr><td>Z</td><td>単位胞中の原子数（BCC: 2, FCC: 4）</td></tr>
+        <tr><td>c<sub>i</sub></td><td>成分 i の原子分率</td></tr>
+        <tr><td>V<sub>i</sub></td><td>純元素 i の原子体積（King [2] の値を使用）</td></tr>
+        <tr><td>&Omega;<sub>sf, j/i</sub></td><td>元素 j を元素 i の母相に溶かしたときの体積サイズ因子</td></tr>
+      </table>
+      <p>第1項は各成分の平均原子体積に基づく <strong>Vegard則</strong>（線形混合則）であり、第2項は混合に伴う体積変化を表す補正項である。</p>
+
+      <h3>DFT-SSモデル（本ツールの手法）</h3>
+      <p>本ツールでは、Alonsoモデルを以下の2点で拡張した <strong>DFT構造特異的（DFT-SS）モデル</strong> を使用する：</p>
+      <ol style="margin-left:20px;">
+        <li><strong>DFT由来のΩ<sub>sf</sub></strong>: Kingの実験体積サイズ因子の代わりに、Materials Project・OQMD・VASP第一原理計算から算出した値を使用</li>
+        <li><strong>構造特異的分離</strong>: BCC HEA予測にはB2構造由来のΩ<sub>sf</sub><sup>(B2)</sup>、FCC HEA予測にはL1<sub>2</sub>構造由来のΩ<sub>sf</sub><sup>(L1<sub>2</sub>)</sup> を使用</li>
+      </ol>
+      <p>具体的な予測式は：</p>
+      <div class="formula-box">
+        V<sub>uc</sub> = Z [ &Sigma;<sub>i</sub> c<sub>i</sub> V<sub>i</sub>
+        + &gamma;<sub>s</sub> &middot; &Sigma;<sub>i</sub> &Sigma;<sub>j&ne;i</sub> c<sub>i</sub> c<sub>j</sub> V<sub>j</sub> &Omega;<sub>sf</sub><sup>(s)</sup>(i,j) ]
+      </div>
+      <div class="formula-box">
+        a = (V<sub>uc</sub>)<sup>1/3</sup>
+      </div>
+      <p>ここで s は構造ラベル（BCC or FCC）、&gamma;<sub>s</sub> は校正定数である。</p>
+
+      <h3>Ω<sub>sf</sub> の算出方法</h3>
+      <p>各二元化合物 A<sub>m</sub>B<sub>n</sub> のDFT最適化格子定数 a から：</p>
+      <div class="formula-box">
+        V<sub>actual</sub> = a&sup3; / Z<sub>compound</sub>
+      </div>
+      <div class="formula-box">
+        V<sub>Vegard</sub> = (m &middot; V<sub>A</sub> + n &middot; V<sub>B</sub>) / (m + n)
+      </div>
+      <div class="formula-box">
+        &Omega;<sub>sf</sub>(A, B) = (V<sub>actual</sub> &minus; V<sub>Vegard</sub>) / V<sub>Vegard</sub>
+      </div>
+      <p>B2構造（AB, Z=2）およびL1<sub>2</sub>構造（A<sub>3</sub>B, Z=4）のDFTデータからそれぞれのΩ<sub>sf</sub>を独立に算出する。同一元素対について複数のデータ（A<sub>3</sub>BとB<sub>3</sub>A）が存在する場合は中央値を採用する。</p>
+
+      <h3>校正定数 &gamma;<sub>s</sub></h3>
+      <p>&gamma;<sub>s</sub> はDFT由来のΩ<sub>sf</sub>を実験格子定数に校正するための定数であり、物理パラメータではない。</p>
+      <ul style="margin-left:20px;">
+        <li>&gamma;<sub>FCC</sub> &approx; 1.08 : L1<sub>2</sub> → FCC対応が良好であることを反映（補正はほぼそのまま）</li>
+        <li>&gamma;<sub>BCC</sub> &approx; 1.45 : B2秩序構造とBCCランダム固溶体の構造差を補正</li>
+      </ul>
+
+      <h3>Vegard縮退</h3>
+      <p>Ω<sub>sf</sub>データが存在しない元素対については、補正項が0となりVegard則に縮退する。この場合、予測精度は線形混合則と同等になる。Vegard縮退が発生したペアは予測結果に表示される。</p>
+
+      <h3>King原子体積</h3>
+      <p>純元素の原子体積 V<sub>i</sub> はKing (1966) [2] の実測値を使用する。これらは室温における各元素の安定構造から得られた原子体積であり、Vegard則の基準値として用いられる。</p>
+    </div>
+
+    <!-- Tab: パラメータ詳細 -->
+    <div id="tab-params" class="doc-panel">
+      <h3>校正定数</h3>
+      <table>
+        <tr><th>パラメータ</th><th>値</th><th>意味</th></tr>
+        <tr><td>&gamma;<sub>BCC</sub></td><td id="doc-gamma-bcc">--</td><td>BCC HEA予測用校正定数（B2由来Ω<sub>sf</sub>に適用）</td></tr>
+        <tr><td>&gamma;<sub>FCC</sub></td><td id="doc-gamma-fcc">--</td><td>FCC HEA予測用校正定数（L1<sub>2</sub>由来Ω<sub>sf</sub>に適用）</td></tr>
+      </table>
+
+      <h3>データ規模</h3>
+      <table>
+        <tr><th>データ</th><th>数</th><th>説明</th></tr>
+        <tr><td>B2 Ω<sub>sf</sub>ペア</td><td id="doc-b2-pairs">--</td><td>BCC HEA予測に使用する元素対数</td></tr>
+        <tr><td>L1<sub>2</sub> Ω<sub>sf</sub>ペア</td><td id="doc-l12-pairs">--</td><td>FCC HEA予測に使用する元素対数</td></tr>
+        <tr><td>対応元素</td><td id="doc-n-elements">--</td><td>King原子体積が定義された元素数</td></tr>
+      </table>
+
+      <h3>予測精度（参考値）</h3>
+      <table>
+        <tr><th>指標</th><th>BCC</th><th>FCC</th></tr>
+        <tr><td>RMSE</td><td>0.0210 &Aring;</td><td>0.0196 &Aring;</td></tr>
+        <tr><td>MAE</td><td>0.0153 &Aring;</td><td>0.0140 &Aring;</td></tr>
+        <tr><td>テストデータ数</td><td>29合金</td><td>39合金</td></tr>
+      </table>
+      <p style="font-size:0.8rem; color:var(--text-light);">
+        上記はAlonso Table 2 の68個のHEA（BCC 29, FCC 39）に対するLeave-One-Out交差検証の結果。
+      </p>
+
+      <h3>King原子体積一覧 (V<sub>i</sub>, &Aring;&sup3;/atom)</h3>
+      <div id="doc-king-table"></div>
+
+      <h3>検証用プリセット予測値</h3>
+      <table>
+        <tr><th>合金</th><th>構造</th><th>DFT-SS予測</th><th>Vegard</th><th>備考</th></tr>
+        <tr><td>CoCrFeNi</td><td>FCC</td><td>3.5761 &Aring;</td><td>3.5778 &Aring;</td><td>実験値: 3.575 &Aring;</td></tr>
+        <tr><td>NbMoTaW</td><td>BCC</td><td>3.2305 &Aring;</td><td>3.2305 &Aring;</td><td>全ペアVegard縮退</td></tr>
+        <tr><td>CoCrFeNiMn</td><td>FCC</td><td>3.5918 &Aring;</td><td>3.5902 &Aring;</td><td>Cantor合金、実験値: 3.597 &Aring;</td></tr>
+      </table>
+    </div>
+
+    <!-- Tab: 参考文献 -->
+    <div id="tab-refs" class="doc-panel">
+      <h3>主要参考文献</h3>
+
+      <div class="ref-item">
+        <span class="ref-id">[1]</span>
+        E. Galindo-Nava, P.E.J. Rivera-D&iacute;az-del-Castillo,
+        &ldquo;Understanding the factors controlling the hardness in martensitic steels,&rdquo;
+        <em>Scripta Materialia</em>, Vol. 134, pp. 39&ndash;42, 2017.
+        <br>
+        <span style="color:var(--text-light);">
+          Alonsoモデルの元となる体積サイズ因子（Ω<sub>sf</sub>）によるHEA格子定数予測式を提案。
+          本ツールの予測式の基礎。
+        </span>
+      </div>
+
+      <div class="ref-item">
+        <span class="ref-id">[2]</span>
+        H.W. King,
+        &ldquo;Quantitative size-factors for metallic solid solutions,&rdquo;
+        <em>Journal of Materials Science</em>, Vol. 1, No. 1, pp. 79&ndash;90, 1966.
+        <br>
+        <span style="color:var(--text-light);">
+          純元素の原子体積V<sub>i</sub>の実測値を体系的に整理。
+          本ツールのVegard則計算の基準値として全41元素の原子体積を採用。
+        </span>
+      </div>
+
+      <div class="ref-item">
+        <span class="ref-id">[3]</span>
+        A. Jain, S.P. Ong, G. Hautier, W. Chen, W.D. Richards, S. Dacek,
+        S. Cholia, D. Gunter, D. Skinner, G. Ceder, K.A. Persson,
+        &ldquo;Commentary: The Materials Project: A materials genome approach to accelerating materials innovation,&rdquo;
+        <em>APL Materials</em>, Vol. 1, No. 1, 011002, 2013.
+        <br>
+        <span style="color:var(--text-light);">
+          B2/L1<sub>2</sub>化合物のDFT格子定数データソースの一つ。
+        </span>
+      </div>
+
+      <div class="ref-item">
+        <span class="ref-id">[4]</span>
+        S. Kirklin, J.E. Saal, B. Meredig, A. Thompson, J.W. Doak,
+        M. Aber, B. Wolverton, C. Wolverton,
+        &ldquo;The Open Quantum Materials Database (OQMD): assessing the accuracy of DFT formation energies,&rdquo;
+        <em>npj Computational Materials</em>, Vol. 1, 15010, 2015.
+        <br>
+        <span style="color:var(--text-light);">
+          B2/L1<sub>2</sub>化合物のDFT格子定数データソースの一つ。
+        </span>
+      </div>
+
+      <div class="ref-item">
+        <span class="ref-id">[5]</span>
+        L. Vegard,
+        &ldquo;Die Konstitution der Mischkristalle und die Raumf&uuml;llung der Atome,&rdquo;
+        <em>Zeitschrift f&uuml;r Physik</em>, Vol. 5, No. 1, pp. 17&ndash;26, 1921.
+        <br>
+        <span style="color:var(--text-light);">
+          固溶体の格子定数が成分の線形混合で近似されるという法則（Vegard則）。
+          本ツールの第1項（ベースライン予測）。
+        </span>
+      </div>
+
+      <h3>式の導出と用語</h3>
+      <table>
+        <tr><th>用語</th><th>説明</th></tr>
+        <tr><td>Vegard則</td><td>固溶体の格子定数が成分元素の格子定数の線形結合で表される経験則 [5]</td></tr>
+        <tr><td>体積サイズ因子 Ω<sub>sf</sub></td><td>Vegard則からの体積偏差の無次元量。Alonsoモデル [1] で導入</td></tr>
+        <tr><td>King原子体積</td><td>純元素の実験的原子体積 [2]。Vegard則のベースライン値として使用</td></tr>
+        <tr><td>B2構造</td><td>CsCl型秩序構造（BCC系）。BCC HEA用のΩ<sub>sf</sub>算出に使用</td></tr>
+        <tr><td>L1<sub>2</sub>構造</td><td>Cu<sub>3</sub>Au型秩序構造（FCC系）。FCC HEA用のΩ<sub>sf</sub>算出に使用</td></tr>
+        <tr><td>DFT-SS</td><td>DFT Structure-Specific: 構造依存DFTデータを用いた拡張Alonsoモデル</td></tr>
+        <tr><td>Vegard縮退</td><td>Ω<sub>sf</sub>データ欠損時に補正=0となりVegard則に退化する現象</td></tr>
+      </table>
+    </div>
   </div>
 
 </div>
@@ -893,8 +1154,46 @@ function loadPreset(name) {
   populateSelect();
 }
 
+// Tab switching
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.doc-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.doc-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tabId).classList.add('active');
+  btn.classList.add('active');
+}
+
+// Populate documentation data
+function initDocs() {
+  document.getElementById('doc-gamma-bcc').textContent = GAMMA_BCC.toFixed(4);
+  document.getElementById('doc-gamma-fcc').textContent = GAMMA_FCC.toFixed(4);
+  document.getElementById('doc-b2-pairs').textContent = Object.keys(OMEGA_B2).length;
+  document.getElementById('doc-l12-pairs').textContent = Object.keys(OMEGA_L12).length;
+  document.getElementById('doc-n-elements').textContent = availableElements.length;
+
+  // King atomic volume table
+  const container = document.getElementById('doc-king-table');
+  const sorted = availableElements.slice().sort();
+  let html = '<table><tr><th>元素</th><th>V (Å³)</th><th>元素</th><th>V (Å³)</th><th>元素</th><th>V (Å³)</th></tr>';
+  for (let i = 0; i < sorted.length; i += 3) {
+    html += '<tr>';
+    for (let j = 0; j < 3; j++) {
+      const idx = i + j;
+      if (idx < sorted.length) {
+        const el = sorted[idx];
+        html += `<td><strong>${el}</strong></td><td>${KING_VOLUMES[el].toFixed(3)}</td>`;
+      } else {
+        html += '<td></td><td></td>';
+      }
+    }
+    html += '</tr>';
+  }
+  html += '</table>';
+  container.innerHTML = html;
+}
+
 // Init
 init();
+initDocs();
 </script>
 
 </body>
