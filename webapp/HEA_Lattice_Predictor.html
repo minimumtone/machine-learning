@@ -513,10 +513,10 @@
   <div class="card">
     <h2>解説書・テストレポート</h2>
     <div class="doc-tabs">
-      <button class="doc-tab active" onclick="switchTab('guide')">使い方ガイド</button>
-      <button class="doc-tab" onclick="switchTab('model')">モデル解説</button>
-      <button class="doc-tab" onclick="switchTab('params')">パラメータ一覧</button>
-      <button class="doc-tab" onclick="switchTab('test')">テストレポート</button>
+      <button class="doc-tab active" onclick="switchTab('guide', this)">使い方ガイド</button>
+      <button class="doc-tab" onclick="switchTab('model', this)">モデル解説</button>
+      <button class="doc-tab" onclick="switchTab('params', this)">パラメータ一覧</button>
+      <button class="doc-tab" onclick="switchTab('test', this)">テストレポート</button>
     </div>
 
     <!-- Tab 1: Usage Guide -->
@@ -1209,11 +1209,11 @@ function loadPreset(name) {
 }
 
 // Tab switching for documentation
-function switchTab(tabId) {
+function switchTab(tabId, btn) {
   document.querySelectorAll('.doc-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.doc-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('tab-' + tabId).classList.add('active');
-  event.currentTarget.classList.add('active');
+  btn.classList.add('active');
 }
 
 // Init
