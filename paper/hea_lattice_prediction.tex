@@ -204,21 +204,34 @@ $\delta r$と$\Omega_\text{sf}$の役割の混同がある。$\delta r$は
 ついては検証されていない。本研究では905の二元系ペアを用いて、
 $\delta r$が構造情報を数学的・原理的に含み得ないことを初めて厳密に証明する。
 
-本研究では以下の5つの革新により上記の限界を克服する：
+本研究はKing/Alonsoの体積サイズファクターの枠組みを踏襲しつつ、
+以下の革新により上記の限界を克服する：
 \begin{enumerate}
-  \item Materials Project・OQMDの3,297二元系化合物のDFT計算から
-    構造特異的$\Omega_\text{sf}$を導出（B2→BCC、L1$_2$→FCC、Gd・Ce除外）。
-  \item 元素別加法分解
+  \item \textbf{DFTデータへの置換}:
+    Kingの実験$\Omega_\text{sf}$に替えて、Materials Project・OQMDの
+    3,297二元系化合物のDFT計算から構造特異的$\Omega_\text{sf}$を導出
+    （B2→BCC、L1$_2$→FCC、Gd・Ce除外）。
+  \item \textbf{元素別加法分解}:
     $\Omega_\text{sf}^{(s)}(i\text{-}j) \approx \delta_i^{(s)} + \delta_j^{(s)}$により、
     247個の元素対パラメータを39元素パラメータに圧縮。
     得られた$\delta^{(s)}$はHume-Rothery原子半径と同様に
-    元素固有の属性であり、機械学習の記述子として利用可能。
-  \item $\delta^{(s)}$から\emph{組成依存有効原子体積}
-    $V_\text{eff}(i;\, \{c_j\})$を導出し、任意組成のHEA格子定数を
+    元素固有の属性であり、39パラメータで741ペアの全組み合わせを
+    カバーできる。
+  \item \textbf{組成依存有効原子体積}:
+    $\delta^{(s)}$から$V_\text{eff}(i;\, \mathbf{c})$を導出し、
+    任意組成のHEA格子定数を
     $a = (n_\text{auc}\sum c_i V_\text{eff})^{1/3}$で予測可能に。
-  \item $\delta r$が構造情報を吸収できない理由を数学的に証明し、
+  \item \textbf{SQS構造による改善}:
+    B2（秩序構造、$\alpha = -1$）由来の$\Omega_\text{sf}$は
+    Ni-Zr等の二元系では再現性があるが、多成分ランダム固溶体である
+    HEAの体積偏差を系統的に過大評価する。
+    SQS（$\alpha \approx 0$）からの$\Omega_\text{sf}$導出により
+    BCC HEA予測を6.9\%改善。
+  \item \textbf{$\delta r$の限界の証明}:
+    $\delta r$が構造情報を吸収できない理由を数学的に証明し、
     905二元系ペアで検証。
-  \item Alonsoデータセット外の20 HEAで汎化性能を検証。
+  \item \textbf{独立テスト}:
+    Alonsoデータセット外の20 HEAで汎化性能を検証。
 \end{enumerate}
 
 
@@ -280,7 +293,7 @@ $\Omega_\text{sf}$を得た。同一ペアに対して複数のデータソー�
 から収集した。
 
 \subsubsection{多相HEAデータベース}
-相安定性解析のため、7文献~\cite{Zhang2008,Guo2011,Yang2012}から
+相安定性解析のため、5文献~\cite{Zhang2008,Guo2011,Yang2012,TodaCaraballo2016,Ye2015}から
 54個のHEAを収集し、固溶体(SS, $N=25$)・金属間化合物含有(IM, $N=23$)・
 非晶質(AM, $N=6$)に分類した。
 
@@ -384,15 +397,16 @@ $\delta_i^{(s)} + \delta_j^{(s)}$で置換する：
   \label{eq:additive_pred}
 \end{equation}
 これにより、両元素の$\delta$値があれば\emph{任意の}元素ペアに対して
-予測可能となる。
+予測可能となり、39元素の全$\binom{39}{2} = 741$ペアの
+$\Omega_\text{sf}$を推定でき、それらを含む任意組成HEAの格子定数を
+計算可能である。
 
 加法分解の最大の利点はパラメータ数の劇的削減である。
-$N$元素の元素対モデルでは$\binom{N}{2}$個のパラメータが必要だが、
+元素対モデルでは$\binom{N}{2}$個のパラメータが必要だが、
 加法モデルでは$N$個のみである。39元素の場合、741ペアから39元素に
 圧縮される（パラメータ数95\%削減）。さらに、DFTデータが
 存在しないペアの$\Omega_\text{sf}$も自動的に推定できるため、
-欠損ペア問題が解消される。これはHEA格子定数予測において
-実用上最も重要な改善点の一つである。
+欠損ペア問題が解消される。
 
 もう一つの利点は物理的解釈性である。各元素の$\delta^{(s)}$は
 「その元素が合金中で格子を膨張/収縮させる固有の傾向」を表す
@@ -407,12 +421,13 @@ $\{c_i\}_{i=1}^N$における各元素の\emph{有効原子体積}を定義で�
 ことである。式~\eqref{eq:additive_pred}から、元素$i$の
 組成依存有効体積を次のように抽出できる：
 \begin{equation}
-  V_\text{eff}(i;\, \{c_j\})
+  V_\text{eff}(i;\, \mathbf{c})
   = V_i \!\left[1 + q_s \sum_{j \ne i} c_j\,
     \bigl(\delta_i^{(s)} + \delta_j^{(s)}\bigr)\right]\!,
   \label{eq:veff}
 \end{equation}
-ここで$V_i$は純元素の原子体積（King~\cite{King1966}）、
+ここで$\mathbf{c} = \{c_1, c_2, \ldots, c_N\}$は組成ベクトル、
+$V_i$は純元素の原子体積（King~\cite{King1966}）、
 $q_s$は構造$s$に対する最適スケーリング因子である。
 第2項は化学環境による補正を表し、合金化パートナーの
 組成$c_j$と両元素の$\delta^{(s)}$に依存する。
@@ -495,21 +510,6 @@ L1$_2$ $A_3B$の場合：
 で求める。
 
 
-\subsection{剛体球接触モデル半径の解析}
-\label{sec:packing}
-
-DFT格子定数から最近接距離を求め、剛体球接触モデル
-$r_A + r_B = d_\text{nn}$で有効半径を評価する：
-\begin{align}
-  d_\text{nn}^{\text{L1}_2} &= a / \sqrt{2}, \label{eq:dnn_l12} \\
-  d_\text{nn}^{\text{B2}}   &= a\sqrt{3} / 2. \label{eq:dnn_b2}
-\end{align}
-単一半径セット$(r_A, r_B)$を全構造に同時フィットする。
-この手法は「剛体球近似」の妥当性検証であり、原子が固い球として
-振る舞う場合には単一の有効半径セットで全構造を統一的に記述できる
-はずである。逆に、大きな残差はこの仮定の破綻を意味する。
-
-
 \subsection{機械学習残差補正}
 \label{sec:ml}
 
@@ -535,6 +535,21 @@ $\Omega_\text{sf}$統計（平均、最大、最小、分散）を含む。
 さらに、転移学習アプローチとして、1,062個の二元系化合物
 （Vegard則からの格子定数偏差）で事前学習したXGBoostモデルを
 HEA残差で微調整する手法も評価した。
+
+\paragraph{残差補正以外のML方策}
+残差補正の代替として、以下のアプローチも原理的に考えられる：
+(a)~格子定数そのものをMLで直接予測する手法
+（$a = f_\text{ML}(\mathbf{c}, \text{features})$）、
+(b)~$\Omega_\text{sf}$自体をMLで予測し物理モデルに組み込む方法
+（$\Omega_\text{sf}(i,j) = g_\text{ML}(Z_i, Z_j, \ldots)$）、
+(c)~$q_s$を組成依存関数としてMLで学習する方法
+（$q = h_\text{ML}(\mathbf{c})$）。
+しかし、64サンプルという極端な小データ設定では
+いずれの手法もノイズの学習（過学習）リスクが高く、
+本研究ではVegard+$\Omega_\text{sf}$の物理的枠組みを維持しつつ
+残差のみをMLで補正する保守的アプローチを採用した。
+なお、HEA実験データの蓄積が進めば
+(c)の組成依存$q$が最も有望と考えられる。
 
 
 \subsection{ノイズフロア推定}
@@ -625,13 +640,16 @@ Alonso Eq.~10よりも系統的に対角線に近いことが読み取れる。
   DFT Eq.~10 SS（赤丸、RMSE = 0.0210~\AA）がAlonso Eq.~10
   （青三角、RMSE = 0.0229~\AA）より系統的に対角線に近い。
   破線は完全一致線（$a_\text{pred} = a_\text{exp}$）。
-  BCC HEA（高格子定数側、$a > 3.1$~\AA）において改善が顕著。}
+  本手法の主要な改善点は：(1)~Kingの実験$\Omega_\text{sf}$をDFT計算で
+  置き換えることにより系統的バイアスを低減、(2)~構造特異的$q_s$の導入
+  によりBCC/FCC別の最適補正を実現、(3)~DFTデータカバレッジの拡大により
+  Vegard縮退ペアを削減。特にBCC HEA（$a > 3.1$~\AA{}）で改善が顕著。}
 \label{fig:parity}
 \end{figure}
 
-\begin{figure*}[!t]
+\begin{figure}[H]
 \centering
-\includegraphics[width=0.5\textwidth]{fig_rmse_bar.png}
+\includegraphics[width=0.9\columnwidth]{fig_rmse_bar.png}
 \caption{各手法のRMSE比較棒グラフ（64 HEA）。
   左からAlonso Vegard（0.0280~\AA）、Alonso Eq.~10（0.0229~\AA）、
   King Vegard（0.0227~\AA）、DFT Eq.~10 SS（0.0210~\AA）、
@@ -639,7 +657,7 @@ Alonso Eq.~10よりも系統的に対角線に近いことが読み取れる。
   $\sigma \approx 0.016$~\AA{}を示し、FCC HEAのRMSE（0.0096~\AA）は
   この限界以下に達している。}
 \label{fig:rmse}
-\end{figure*}
+\end{figure}
 
 
 \subsection{BCC/FCC構造別分析}
@@ -651,7 +669,11 @@ Alonso Eq.~10よりも系統的に対角線に近いことが読み取れる。
 \centering
 \caption{BCC（$N = 29$）/ FCC（$N = 35$）別RMSE (\AA)。
   FCC HEAはDFT Eq.~10 SSで0.0096~\AA{}とノイズフロア以下の精度を達成。
-  BCC HEAは0.0293~\AA{}でAlonso比5.2\%改善。}
+  BCC HEA（0.0293~\AA）の改善率が限定的なのは、高融点元素ペアの
+  B2 DFTデータ欠損によるVegard縮退（29合金中22合金で
+  $\Omega_\text{sf} = 0$に退行）が主因である。
+  SQSデータの導入によりBCC HEA RMSEは0.0273~\AA{}に改善される
+  （\ref{sec:sqs_improvement}節）。}
 \label{tab:bcc_fcc}
 \footnotesize
 \begin{tabular}{@{}lccc@{}}
@@ -741,6 +763,13 @@ DFT Eq.~10 SSはVegardに対してRMSE 12\%の改善を達成する。
 (c)BCC/FCC別のRMSE分解は、改善がFCCに集中する構造的理由を
 可視化する。
 
+BCC独立テスト8合金中7合金でVegard則への縮退（改善率0\%）が
+観察される。これはMP/OQMDデータベースにこれらの高融点元素ペアの
+B2構造データが存在しないためであり、$\Omega_\text{sf} = 0$に退行する。
+この問題はSQS（$\alpha \approx 0$）構造を用いた
+$\Omega_\text{sf}$の補完により解消される
+（\ref{sec:sqs_improvement}節参照）。
+
 特に注目すべきは、Alonso Eq.~10が独立テストでRMSE = 0.0261~\AA{}と
 訓練セット（0.0229~\AA）より悪化するのに対し、DFT Eq.~10 SSは
 0.0200~\AA{}と訓練セット（0.0210~\AA）と同等以上である点である。
@@ -824,7 +853,7 @@ HEA格子定数を予測するための周期表的パラメータセットを�
 \centering
 \caption{元素別加法分解パラメータ$\delta_i^{(s)}$（B2・L1$_2$）と構造依存有効半径（39元素）。
   $\delta^\text{B2}$・$\delta^{\text{L1}_2}$はそれぞれB2・L1$_2$構造から
-  導出した加法分解パラメータ（無次元）。$r_\text{pure}$はKingの金属半径 (\AA)。
+  導出した加法分解パラメータ（無次元）。$r_\text{pure}^\text{King}$はKingの金属半径~\cite{King1966} (\AA)。
   $\Delta r_\text{maj}$・$\Delta r_\text{min}$はL1$_2$多数派（面心）・少数派
   （頂点）サイトの有効半径偏差$r_\text{eff} - r_\text{pure}$ (\AA)。
   正の$\delta$は合金化時の格子膨張傾向、負は収縮傾向を示す。
@@ -835,9 +864,9 @@ HEA格子定数を予測するための周期表的パラメータセットを�
 \footnotesize
 \begin{tabular}{@{}lrrrrr|lrrrrr@{}}
 \toprule
-元素 & $\delta^\text{B2}$ & $\delta^{\text{L1}_2}$ & $r_\text{pure}$ &
+元素 & $\delta^\text{B2}$ & $\delta^{\text{L1}_2}$ & $r_\text{pure}^\text{King}$ &
 $\Delta r_\text{maj}$ & $\Delta r_\text{min}$ &
-元素 & $\delta^\text{B2}$ & $\delta^{\text{L1}_2}$ & $r_\text{pure}$ &
+元素 & $\delta^\text{B2}$ & $\delta^{\text{L1}_2}$ & $r_\text{pure}^\text{King}$ &
 $\Delta r_\text{maj}$ & $\Delta r_\text{min}$ \\
 \midrule
 Ag & $-$0.009 & $+$0.024 & 1.597 & $+$0.016 & $+$0.058
@@ -1191,7 +1220,7 @@ $|\Omega_\text{sf}(A_3B) - \Omega_\text{sf}(B_3A)|$が大きく、
 \subsection{剛体球接触モデル半径の限界}
 \label{sec:packing_results}
 
-DFT剛体球半径（\ref{sec:packing}節）で単一半径セット$(r_A, r_B)$を
+DFT剛体球半径（付録~\ref{sec:appendix_packing}）で単一半径セット$(r_A, r_B)$を
 全3構造に同時フィットした結果、全体RMSE = 0.162~\AA{}と大きな残差を
 示した。この値はVegard則のRMSE（$\sim 0.03$~\AA）の5倍以上であり、
 剛体球モデルが格子定数予測には全く不適切であることを示す。
@@ -1427,24 +1456,26 @@ FCC曲線（青実線）はL1$_2$の$\delta^{\text{L1}_2}$を用いるため、
 \label{fig:vegard_absorbed}
 \end{figure*}
 
-\paragraph{二元系1:1組成における対称性}
-組成比1:1（$c_A = c_B = 0.5$）の二元系では、剛体球接触モデル半径
+\paragraph{B2（1:1組成）とL1$_2$（3:1組成）の対比}
+B2構造（$c_A = c_B = 0.5$）では、剛体球接触モデル
 （$r_A + r_B = d_\text{nn}$）と体積由来有効半径は共に
-$A \leftrightarrow B$対称な量を定義する。剛体球では
-$d_\text{nn}(AB) = r_A + r_B$が$A, B$の入れ替えに不変であり、
-体積近似では$V_\text{avg} = 0.5\,V_\text{eff}(A) + 0.5\,V_\text{eff}(B)$が
-同じく対称である。数学的にはこの二手法は非線形変換
-（$V \propto r^3$）の差により厳密には等価ではないが、
-いずれも1:1の対称性のもとでは同等の情報量しか持たない。
-すなわち、等モル二元系に限定すればどちらの手法も性能差は小さい。
+$A \leftrightarrow B$対称な量となる。
+B2では$\Omega_\text{sf}(A\text{-}B)$が元素ペアに対して一つの値をとり、
+A・B原子は配位環境的に等価であるため、
+体積モデルと剛体球モデルの性能差は小さい。
 
-この同値性が\emph{破れる}のは非等モル組成においてである。
-L1$_2$ $A_3B$（$c_A = 0.75$）では体積近似が
+この同値性が\emph{破れる}のがL1$_2$構造（$c_A = 0.75$）である。
+L1$_2$ $A_3B$では多数派A（面心、混合配位殻）と少数派B（頂点、
+完全異種配位殻）で化学環境が大きく異なる。体積近似が
 $V_\text{avg} = 0.75\,V_\text{eff}(A) + 0.25\,V_\text{eff}(B)$と
 組成を反映するのに対し、剛体球は依然$r_A + r_B$のみに依存し
 $A_3B$と$B_3A$を区別できない。1,851個のL1$_2$化合物による検証では、
 剛体球RMSE = 0.264~\AA に対し体積（多数派/少数派分離）
 RMSE = 0.197~\AA と25\%の改善を確認した。
+したがって、L1$_2$由来の$\Omega_\text{sf}$が有効なFCC HEA予測では
+体積モデルの優位性が明確であり、
+B2由来のBCC HEA予測では両者の差が小さいという結果は、
+この構造的対称性の違いから自然に理解される。
 
 
 \subsection{多相HEA分類: $\delta r$ vs $\delta_\text{sf}$}
@@ -2100,6 +2131,42 @@ $\delta^{(s)}$パラメータと最適化済み$q$値のみで
 %% =====================================================================
 
 \appendix
+
+\section{剛体球接触モデル半径の解析}
+\label{sec:appendix_packing}
+
+DFT格子定数から最近接距離を求め、剛体球接触モデルで
+有効半径を評価する。剛体球仮定のもとでは、格子定数は
+同種・異種原子間の接触条件のうち最も制限の厳しいものにより
+決定される。
+
+L1$_2$ $A_3B$構造では、異種A--B最近接距離と
+同種A--A最近接距離が共に$a/\sqrt{2}$であるため、
+格子定数は以下で与えられる：
+\begin{equation}
+  a^{\text{L1}_2} = \sqrt{2}\,\max(r_A + r_B,\; 2r_A),
+  \label{eq:dnn_l12}
+\end{equation}
+ここで第1項はA--B接触、第2項はA--A接触（面心同士）による制約である。
+$r_B > r_A$のとき常にA--B接触が支配し、$r_B < r_A$のとき
+A--A接触が格子を決定する場合がある。
+
+B2構造ではA--B最近接距離が$a\sqrt{3}/2$、
+同種A--A（またはB--B）次近接距離が$a$であるため：
+\begin{equation}
+  a^{\text{B2}} = \max\!\left(\frac{2(r_A + r_B)}{\sqrt{3}},\;
+    2r_A,\; 2r_B\right)\!.
+  \label{eq:dnn_b2}
+\end{equation}
+第1項はA--B接触（体対角線方向）、第2・3項は同種接触
+（辺方向）による制約である。
+
+単一半径セット$(r_A, r_B)$を全構造に同時フィットする。
+原子が固い球として振る舞う場合には単一の有効半径セットで
+全構造を統一的に記述できるはずであるが、
+実際には全体RMSE = 0.162~\AA{}と大きな残差を示し、
+剛体球仮定の破綻を意味する（\ref{sec:packing_results}節）。
+
 
 \section{純元素原子体積のデータソース選択}
 \label{sec:appendix_volumes}
