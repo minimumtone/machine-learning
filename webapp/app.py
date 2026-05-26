@@ -131,6 +131,8 @@ def api_predict():
     """
     try:
         data = request.get_json()
+        if data is None:
+            return jsonify({"error": "Request must be JSON with Content-Type: application/json"}), 400
         comp = data.get("composition", {})
         struct = data.get("structure", "BCC").upper()
 
