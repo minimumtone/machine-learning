@@ -300,8 +300,8 @@ def make_magmom_l12(el_face, el_corner, is_af=False):
         return None
 
     if is_af:
-        # AF: alternating spin on face atoms
-        return f"{m_face} {m_face} {-m_face} {-m_corner}"
+        # AF Type-I: face atoms up, corner atom down
+        return f"{m_face} {m_face} {m_face} {-m_corner}"
     else:
         return f"3*{m_face} {m_corner}"
 
