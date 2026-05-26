@@ -125,30 +125,30 @@ $\Omega_\text{sf} > 0$はVegard則より膨張、$\Omega_\text{sf} < 0$は
 収縮を意味し、単純な原子半径差では説明できない化学結合効果
 （電荷移動、$d$--$d$軌道混成など）を反映する。
 
-Alonso~\cite{Alonso2021}はKingの$\Omega_\text{sf}$を多成分HEAに
-拡張し、以下の格子定数予測式を提案した：
+Alonsoら~\cite{Alonso2021}は、Kingの体積サイズ因子を
+多成分HEAに拡張し、単位胞体積を次式で表した（以下、Alonsoモデル）：
 \begin{equation}
-  V = n_\text{auc} \!\left[
-    \underbrace{\sum_i c_i V_i}_{\text{Vegard項}}
-    + \underbrace{\sum_i c_i V_i \sum_{j \ne i} c_j\,
-    \Omega_\text{sf}(i, j)}_{\text{化学結合補正項}}
-  \right]\!.
-  \label{eq:alonso_eq10}
+  V_\text{uc}
+  = Z \sum_{i=1}^{n} c_i V_i
+  + Z \sum_{i=1}^{n} c_i V_i
+    \sum_{\substack{j=1 \\ j \ne i}}^{n} c_j\,
+    \Omega_{\text{sf},\, j/i},
+  \label{eq:alonso}
 \end{equation}
-この式の物理的意味は明快である。第1項は各元素の原子体積の
-線形補間（Vegard則）であり、理想固溶体を仮定する。
-第2項はKingの$\Omega_\text{sf}$による非線形補正であり、
-各元素$i$の体積$c_i V_i$に対して、全パートナー元素$j$との
-元素対ごとの化学結合効果$c_j\Omega_\text{sf}(i,j)$を加算する。
-$\Omega_\text{sf}(i,j)$は元素$i$を溶媒、元素$j$を溶質とした際の
-体積変化率であり、二元系の実験データまたはDFT計算から得られる。
+ここで$V_\text{uc}$は単位胞体積、$Z$は単位胞中の原子数
+（BCC: 2、FCC: 4）、$c_i$は成分$i$の濃度、
+$V_i$は純元素$i$の原子体積、
+$\Omega_{\text{sf},\, j/i}$は元素$j$を元素$i$の母相に
+溶かしたときの体積サイズ因子である。
+すなわち、第1項は各成分の平均原子体積に基づくVegard則型の寄与であり、
+第2項は混合に伴う体積変化を表す補正項である。
 
-AlonsoはKingの実験$\Omega_\text{sf}$を用い、$q = 1$
-（スケーリングなし）で64個のHEAに対しRMSE $\approx 0.023$~\AA{}を
+Alonsoモデルは$\Omega_{\text{sf},\, j/i}$にKingの実験値を用い、
+スケーリングなし（$q = 1$）で64個のHEAに対しRMSE $\approx 0.023$~\AA{}を
 達成した。この精度はVegard則（RMSE $\approx 0.028$~\AA）から
 18\%の改善に相当する。
 
-しかしAlonsoの手法にはいくつかの限界がある：
+しかしAlonsoモデルにはいくつかの限界がある：
 (1)~$\Omega_\text{sf}$値がKing (1966) の実験データに基づき、
 現代のHEA関連ペアで利用可能なデータが限られる場合がある；
 (2)~BCC・FCC間で同一の$\Omega_\text{sf}$を使用するが、
@@ -337,7 +337,7 @@ $\Omega_\text{sf}$値が得られる場合がある。
 \subsection{構造特異的格子定数予測}
 \label{sec:ss_eq10}
 
-式~\eqref{eq:alonso_eq10}を構造依存校正定数$q_s$で
+式~\eqref{eq:alonso}を構造依存校正定数$q_s$で
 一般化する：
 \begin{equation}
   V = n_\text{auc} \!\left[
@@ -533,7 +533,7 @@ L1$_2$ $A_3B$の場合：
   \item \textbf{アンサンブル}: 上記6モデルの加重平均。
 \end{enumerate}
 
-23次元特徴量ベクトルは、Vegard格子定数、DFT Eq.~10予測値、
+23次元特徴量ベクトルは、Vegard格子定数、DFTモデル予測値、
 組成統計（元素数、最大/最小原子分率）、$\delta r$、VEC（価電子濃度）、
 $\Omega_\text{sf}$統計（平均、最大、最小、分散）を含む。
 全モデルでLOO-CVを用い、$N = 64$のうち1つを順次テスト用に除外する。
@@ -572,7 +572,7 @@ $\Delta a$のレンジ期待値を$E[\text{range}] = 1.128\,\sigma$
 焼鈍条件によって短距離秩序の程度が変化し、これが格子定数に
 $\sim 0.01$--$0.02$~\AA{}の変動を引き起こすことが知られている。
 
-したがって、DFT Eq.~10 SSのRMSE = 0.0210~\AA{}は
+したがって、DFT-SSモデルのRMSE = 0.0210~\AA{}は
 測定ノイズ$\sigma$の約1.3倍であり、モデル改善の余地は
 高々$\sqrt{0.0210^2 - 0.016^2} \approx 0.014$~\AA{}と推定される。
 FCC HEAのRMSE = 0.0096~\AA{}は$\sigma$以下であり、
@@ -593,9 +593,9 @@ FCC HEAのRMSE = 0.0096~\AA{}は$\sigma$以下であり、
 \begin{table}[H]
 \centering
 \caption{64個の立方晶HEAに対する格子定数予測精度（RMSE, MAE, MAPE, $R^2$）。
-  ベースライン（Alonso Vegard / Eq.~10）、本研究の元素対$\Omega_\text{sf}$
-  （King Vegard / DFT Eq.~10）、加法分解$\delta$モデル、および
-  ML残差補正の全手法を比較する。最良のDFT Eq.~10 SSはRMSE = 0.0210~\AA{}で
+  ベースライン（Alonso Vegard / Alonsoモデル）、本研究の元素対$\Omega_\text{sf}$
+  （King Vegard / DFTモデル）、加法分解$\delta$モデル、および
+  ML残差補正の全手法を比較する。最良のDFT-SSモデルはRMSE = 0.0210~\AA{}で
   Vegard比7.5\%改善。ノイズフロア$\sigma \approx 0.016$~\AA{}が
   達成可能精度の下限を規定する。}
 \label{tab:comparison}
@@ -606,19 +606,19 @@ FCC HEAのRMSE = 0.0096~\AA{}は$\sigma$以下であり、
 \midrule
 \multicolumn{5}{l}{\textit{ベースライン}} \\
 Alonso Vegard       & 0.0280 & 0.0167 & 0.50 & 0.985 \\
-Alonso Eq.~10       & 0.0229 & 0.0141 & 0.42 & 0.990 \\
+Alonsoモデル       & 0.0229 & 0.0141 & 0.42 & 0.990 \\
 \midrule
 \multicolumn{5}{l}{\textit{本研究: 元素対$\Omega_\text{sf}$}} \\
 King Vegard         & 0.0227 & 0.0139 & 0.42 & 0.990 \\
-DFT Eq.~10 ($q\!=\!1$) & 0.0268 & 0.0202 & 0.59 & 0.986 \\
-DFT Eq.~10 SS      & \textbf{0.0210} & \textbf{0.0117} & \textbf{0.35} & \textbf{0.991} \\
+DFTモデル ($q\!=\!1$) & 0.0268 & 0.0202 & 0.59 & 0.986 \\
+DFT-SSモデル      & \textbf{0.0210} & \textbf{0.0117} & \textbf{0.35} & \textbf{0.991} \\
 \midrule
 \multicolumn{5}{l}{\textit{本研究: 加法分解}} \\
 加法$\delta$ + $q$ & 0.0211 & --- & --- & --- \\
 \midrule
 \multicolumn{5}{l}{\textit{ML残差補正 (LOO-CV)}} \\
-SS Eq.~10 + Ridge   & 0.0212 & 0.0116 & 0.34 & 0.991 \\
-SS Eq.~10 + XGBoost & 0.0212 & 0.0116 & 0.35 & 0.991 \\
+SSモデル + Ridge   & 0.0212 & 0.0116 & 0.34 & 0.991 \\
+SSモデル + XGBoost & 0.0212 & 0.0116 & 0.35 & 0.991 \\
 4-way Ensemble      & 0.0210 & 0.0115 & 0.34 & 0.991 \\
 \midrule
 ノイズフロア ($\sigma$) & \multicolumn{4}{c}{$\approx 0.016$~\AA} \\
@@ -626,16 +626,16 @@ SS Eq.~10 + XGBoost & 0.0212 & 0.0116 & 0.35 & 0.991 \\
 \end{tabular}
 \end{table}
 
-構造特異的DFT Eq.~10 SS はRMSE = 0.0210~\AA{}を達成し、
+構造特異的DFT-SSモデル はRMSE = 0.0210~\AA{}を達成し、
 Vegard (0.0227~\AA) に対して7.5\%の改善を示す。
 ML残差補正は0.002~\AA{}未満の追加改善しか与えず、物理モデルが
 主要な変動を捕捉していることを確認した。
 
 図~\ref{fig:parity}にパリティプロットを、図~\ref{fig:rmse}に
-RMSE棒グラフを示す。図~\ref{fig:parity}から、DFT Eq.~10 SSが
-Alonso Eq.~10よりも系統的に対角線に近いことが読み取れる。
-特にBCC HEAの中でもAlonso Eq.~10では正のバイアス（過少予測）が
-見られた合金群が、DFT Eq.~10 SSでは改善されている。
+RMSE棒グラフを示す。図~\ref{fig:parity}から、DFT-SSモデルが
+Alonsoモデルよりも系統的に対角線に近いことが読み取れる。
+特にBCC HEAの中でもAlonsoモデルでは正のバイアス（過少予測）が
+見られた合金群が、DFT-SSモデルでは改善されている。
 これは$q_\text{BCC} = 1.45$によるスケーリングがB2化合物の
 秩序構造とランダムBCC固溶体の構造差を補正していることを意味する。
 
@@ -643,7 +643,7 @@ Alonso Eq.~10よりも系統的に対角線に近いことが読み取れる。
 \centering
 \includegraphics[width=\columnwidth]{fig_parity.png}
 \caption{全手法のパリティプロット（予測格子定数 vs 実験格子定数）。
-  DFT Eq.~10 SS（赤丸、RMSE = 0.0210~\AA）がAlonso Eq.~10
+  DFT-SSモデル（赤丸、RMSE = 0.0210~\AA）がAlonsoモデル
   （青三角、RMSE = 0.0229~\AA）より系統的に対角線に近い。
   破線は完全一致線（$a_\text{pred} = a_\text{exp}$）。
   本手法の主要な改善点は：(1)~Kingの実験$\Omega_\text{sf}$をDFT計算で
@@ -657,8 +657,8 @@ Alonso Eq.~10よりも系統的に対角線に近いことが読み取れる。
 \centering
 \includegraphics[width=0.9\columnwidth]{fig_rmse_bar.png}
 \caption{各手法のRMSE比較棒グラフ（64 HEA）。
-  左からAlonso Vegard（0.0280~\AA）、Alonso Eq.~10（0.0229~\AA）、
-  King Vegard（0.0227~\AA）、DFT Eq.~10 SS（0.0210~\AA）、
+  左からAlonso Vegard（0.0280~\AA）、Alonsoモデル（0.0229~\AA）、
+  King Vegard（0.0227~\AA）、DFT-SSモデル（0.0210~\AA）、
   加法$\delta$（0.0215~\AA）の順。水平破線はノイズフロア
   $\sigma \approx 0.016$~\AA{}を示し、FCC HEAのRMSE（0.0096~\AA）は
   この限界以下に達している。}
@@ -674,7 +674,7 @@ Alonso Eq.~10よりも系統的に対角線に近いことが読み取れる。
 \begin{table}[H]
 \centering
 \caption{BCC（$N = 29$）/ FCC（$N = 35$）別RMSE (\AA)。
-  FCC HEAはDFT Eq.~10 SSで0.0096~\AA{}とノイズフロア以下の精度を達成。
+  FCC HEAはDFT-SSモデルで0.0096~\AA{}とノイズフロア以下の精度を達成。
   BCC HEA（0.0293~\AA）の改善率が限定的なのは、高融点元素ペアの
   B2 DFTデータ欠損によるVegard縮退（29合金中22合金で
   $\Omega_\text{sf} = 0$に退行）が主因である。
@@ -686,16 +686,16 @@ Alonso Eq.~10よりも系統的に対角線に近いことが読み取れる。
 \toprule
 手法 & BCC ($N\!=\!29$) & FCC ($N\!=\!35$) & 全体 \\
 \midrule
-Alonso Eq.~10       & 0.0309 & 0.0132 & 0.0229 \\
+Alonsoモデル       & 0.0309 & 0.0132 & 0.0229 \\
 King Vegard         & 0.0328 & 0.0085 & 0.0227 \\
-DFT Eq.~10 SS       & 0.0293 & 0.0096 & 0.0210 \\
+DFT-SSモデル       & 0.0293 & 0.0096 & 0.0210 \\
 加法$\delta$+$q$ & 0.0310 & 0.0084 & 0.0215 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 FCC HEAはRMSE = 0.0096~\AA{}でノイズフロア以下の精度を達成。
-BCC HEA (0.0293~\AA) もAlonso比5.2\%改善した。
+BCC HEA (0.0293~\AA) もAlonsoモデル比5.2\%改善した。
 
 FCC精度が高い理由は以下の3点である：
 第一に、FCC HEAは3$d$遷移金属（Co, Cr, Fe, Ni, Mn）が支配的で、
@@ -718,7 +718,7 @@ BCC HEAはAl〜Zr/Hfまで広い原子サイズ範囲に
 \centering
 \includegraphics[width=\textwidth]{fig_bcc_fcc.png}
 \caption{BCC（左、$N = 29$）とFCC（右、$N = 35$）別のパリティプロット。
-  FCC HEA（右）はDFT Eq.~10 SSで対角線にほぼ一致（RMSE = 0.0096~\AA）。
+  FCC HEA（右）はDFT-SSモデルで対角線にほぼ一致（RMSE = 0.0096~\AA）。
   BCC HEA（左）は格子定数範囲が広く（$a = 2.87$--$3.44$~\AA）、
   Al含有合金で偏差がやや大きい。破線は完全一致線。}
 \label{fig:bcc_fcc}
@@ -734,8 +734,8 @@ Alonsoデータセットに含まれない20個のHEA（表~\ref{tab:indep}）�
 \begin{table}[H]
 \centering
 \caption{独立テストセット検証（Alonsoデータセット外の20 HEA: BCC 8, FCC 12）。
-  DFT Eq.~10 SSのRMSE = 0.0200~\AA{}は訓練セット（0.0210~\AA）と
-  同等以上であり、過学習がないことを確認。Alonso Eq.~10は独立テストで
+  DFT-SSモデルのRMSE = 0.0200~\AA{}は訓練セット（0.0210~\AA）と
+  同等以上であり、過学習がないことを確認。Alonsoモデルは独立テストで
   悪化（0.0261~\AA{}→訓練0.0229~\AA）。}
 \label{tab:indep}
 \footnotesize
@@ -744,8 +744,8 @@ Alonsoデータセットに含まれない20個のHEA（表~\ref{tab:indep}）�
 手法 & RMSE (\AA) & BCC (8) & FCC (12) \\
 \midrule
 Vegard           & 0.0202 & 0.0260 & 0.0152 \\
-Alonso Eq.~10    & 0.0261 & 0.0345 & 0.0186 \\
-DFT Eq.~10 SS    & \textbf{0.0200} & \textbf{0.0271} & \textbf{0.0134} \\
+Alonsoモデル    & 0.0261 & 0.0345 & 0.0186 \\
+DFT-SSモデル    & \textbf{0.0200} & \textbf{0.0271} & \textbf{0.0134} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -756,7 +756,7 @@ DFT Eq.~10 SS    & \textbf{0.0200} & \textbf{0.0271} & \textbf{0.0134} \\
 
 図~\ref{fig:indep}に独立テストの詳細を5パネルで示す。
 (a)各HEAごとの絶対誤差を比較すると、BCC 8合金中7合金でVegard則と
-DFT Eq.~10 SSの予測が\textbf{完全に一致}していることが分かる。
+DFT-SSモデルの予測が\textbf{完全に一致}していることが分かる。
 これは、独立テストのBCC HEAが高融点元素（Nb, Ti, V, Zr, Mo, Ta, W, 
 Hf, Cr）から構成されており、これらのペアに対するB2構造のDFTデータが
 MP/OQMDデータベースに存在しないためである。$\Omega_\text{sf}$データが
@@ -764,7 +764,7 @@ MP/OQMDデータベースに存在しないためである。$\Omega_\text{sf}$�
 予測が同一となる。
 
 一方、FCC 12合金ではL1$_2$構造のDFTデータカバレッジが十分であり、
-DFT Eq.~10 SSはVegardに対してRMSE 12\%の改善を達成する。
+DFT-SSモデルはVegardに対してRMSE 12\%の改善を達成する。
 (b)訓練・テスト間のRMSE比較は過学習がないことを明確に示す。
 (c)BCC/FCC別のRMSE分解は、改善がFCCに集中する構造的理由を
 可視化する。
@@ -776,11 +776,11 @@ B2構造データが存在しないためであり、$\Omega_\text{sf} = 0$に�
 $\Omega_\text{sf}$の補完により解消される
 （\ref{sec:sqs_improvement}節参照）。
 
-特に注目すべきは、Alonso Eq.~10が独立テストでRMSE = 0.0261~\AA{}と
-訓練セット（0.0229~\AA）より悪化するのに対し、DFT Eq.~10 SSは
+特に注目すべきは、Alonsoモデルが独立テストでRMSE = 0.0261~\AA{}と
+訓練セット（0.0229~\AA）より悪化するのに対し、DFT-SSモデルは
 0.0200~\AA{}と訓練セット（0.0210~\AA）と同等以上である点である。
 これはDFTデータから導出した$\Omega_\text{sf}$が、Kingの実験データよりも
-汎化性に優れることを示している。DFT Eq.~10 SSの「データがなければ
+汎化性に優れることを示している。DFT-SSモデルの「データがなければ
 Vegardと同等、データがあれば改善」という特性は、
 \emph{graceful degradation}（穏やかな劣化）の好例である。
 
@@ -789,7 +789,7 @@ Vegardと同等、データがあれば改善」という特性は、
 \includegraphics[width=\textwidth]{fig_indep_test.png}
 \caption{独立テストセット検証の詳細（20 HEA: BCC 8個＋FCC 12個）。
   (a)~各HEAの絶対誤差（\AA{}単位）の手法別比較。BCC 8合金中7合金で
-  VegardとDFT Eq.~10 SSが完全一致（V印）：B2 DFTデータ欠損に
+  VegardとDFT-SSモデルが完全一致（V印）：B2 DFTデータ欠損に
   よるVegard則への縮退。(b)~訓練・テスト間RMSE比較：
   テストRMSE $\approx$ 訓練RMSE（過学習なし）。
   (c)~BCC/FCC別RMSE分解：改善はL1$_2$データカバレッジのある
@@ -799,9 +799,9 @@ Vegardと同等、データがあれば改善」という特性は、
 \end{figure*}
 
 表~\ref{tab:indep_detail}に独立テスト20 HEAの個別予測結果を示す。
-BCC合金ではAlNbTiVを除く7合金でVegard値とDFT Eq.~10 SS値が一致しており、
+BCC合金ではAlNbTiVを除く7合金でVegard値とDFT-SSモデル値が一致しており、
 B2 DFTデータ欠損によるVegard則への縮退が確認できる。
-FCC合金ではDFT Eq.~10 SSの補正効果が顕著であり、
+FCC合金ではDFT-SSモデルの補正効果が顕著であり、
 CoCrFeNi系やCoCrFeMnNi系で誤差が0.003~\AA{}以下に収まっている。
 (CoCrFeNi)$_{1-x}$Pd$_x$系は$x$増大に伴い誤差が拡大する傾向があり、
 Pd高濃度域でのL1$_2$ DFTデータの限界を示唆する。
@@ -809,14 +809,14 @@ Pd高濃度域でのL1$_2$ DFTデータの限界を示唆する。
 \begin{table*}[t]
 \centering
 \caption{独立テスト20 HEAの個別格子定数予測結果（\AA）。
-  $\Delta$はDFT Eq.~10 SSの予測誤差（$a_\text{exp} - a_\text{pred}$、\AA{}単位）。
+  $\Delta$はDFT-SSモデルの予測誤差（$a_\text{exp} - a_\text{pred}$、\AA{}単位）。
   「V」はVegard則と完全一致（$\Omega_\text{sf}$データ欠損による縮退）。
-  改善率はVegard誤差に対するDFT Eq.~10 SSの誤差低減率。}
+  改善率はVegard誤差に対するDFT-SSモデルの誤差低減率。}
 \label{tab:indep_detail}
 \footnotesize
 \begin{tabular}{@{}llrrrrrl@{}}
 \toprule
-合金組成 & 構造 & $a_\text{exp}$ & Vegard & DFT Eq.~10 SS & $\Delta$ (\AA) & 改善率 & 文献 \\
+合金組成 & 構造 & $a_\text{exp}$ & Vegard & DFT-SSモデル & $\Delta$ (\AA) & 改善率 & 文献 \\
 \midrule
 \multicolumn{8}{l}{\textit{BCC合金}} \\
 NbTiVZr        & BCC & 3.3670 & 3.3130 & 3.3130\textsuperscript{V}  & $+$0.054 & 0\% & Senkov~\cite{Senkov2013} \\
@@ -1571,11 +1571,11 @@ Yang--Zhang単独を改善する。$\Omega_\text{sf}$の情報は相判定の
 \label{sec:ml_results}
 
 7種のMLモデルによる残差補正を評価した。いずれもRMSE改善は0.002~\AA{}未満
-であった（表~\ref{tab:comparison}）。これはDFT Eq.~10 SSが全体RMSEの
+であった（表~\ref{tab:comparison}）。これはDFT-SSモデルが全体RMSEの
 大部分を説明し、残差が主に測定ノイズであることを意味する。
 
-最良のML補正であるRidge回帰+DFT Eq.~10 SSは、LOO-CVで
-RMSE = 0.0212~\AA{}を示した。DFT Eq.~10 SS単体（0.0210~\AA）
+最良のML補正であるRidge回帰+DFT-SSモデルは、LOO-CVで
+RMSE = 0.0212~\AA{}を示した。DFT-SSモデル単体（0.0210~\AA）
 とほぼ同一であり、正則化がかかったRidgeですら意味のある残差構造を
 見出せないことが、残差のランダム性を強く示唆する。
 
@@ -1755,10 +1755,10 @@ HEA格子定数予測に関する先行研究との比較を議論する。
 多成分等モル混合であり、個々の元素対効果が平均化されるためである。
 ただしBCC HEAでは0.0328~\AA{}と精度が低下する。
 
-\paragraph{Alonso (2021)}
-AlonsoはKingの実験$\Omega_\text{sf}$を用いた式~\eqref{eq:alonso_eq10}で
-RMSE = 0.023~\AA{}を達成した。$q = 1$（スケーリングなし）で
-あり、構造依存性は考慮しない。本研究のDFT Eq.~10 SSとの主要な
+\paragraph{Alonsoモデル (2021)}
+Alonsoモデルは式~\eqref{eq:alonso}でRMSE = 0.023~\AA{}を達成した。
+$q = 1$（スケーリングなし）であり、構造依存性は考慮しない。
+本研究のDFT-SSモデルとの主要な
 違いは：(a)~DFT vs 実験$\Omega_\text{sf}$、(b)~構造特異的 vs 共通
 $\Omega_\text{sf}$、(c)~$q$最適化の有無、である。
 
@@ -1814,7 +1814,7 @@ B2データでは良好な相関（$r > 0.9$）が得られたが、L1$_2$デー
 本研究では2つの重要な否定的結果を得た：
 
 \paragraph{ML残差補正の限界}
-7種のMLモデルがDFT Eq.~10 SSを実質的に改善できないことは、
+7種のMLモデルがDFT-SSモデルを実質的に改善できないことは、
 残差が測定ノイズに支配されていることを強く示唆する。
 RMSE = 0.0210~\AA{}は測定ノイズ$\sigma \approx 0.016$~\AA{}の
 1.3倍であり、モデル改善の余地は高々0.005~\AA{}程度しかない。
@@ -2045,11 +2045,11 @@ DFT体積サイズファクターの元素別加法分解に基づく、
 \paragraph{既存手法に対する改善}
 表~\ref{tab:method_comparison}に本手法と既存手法の比較を示す。
 Vegard則は構造・化学結合効果を無視するためRMSE = 0.0221~\AA{}に留まる。
-Alonsoの手法はKingの実験$\Omega_\text{sf}$を使用し0.0229~\AA{}を達成したが、
+Alonsoモデルは実験$\Omega_\text{sf}$を使用し0.0229~\AA{}を達成したが、
 $\Omega_\text{sf}$データの不足するペアでは予測不能となる。
 本手法はDFTデータの網羅性（3,297化合物）と構造特異性（B2/L1$_2$分離）、
 およびSQSによるBCC $\Omega_\text{sf}$の改善により、
-RMSE = 0.0197~\AA{}（Vegard比$-$11\%、Alonso比$-$14\%）を達成した。
+RMSE = 0.0197~\AA{}（Vegard比$-$11\%、Alonsoモデル比$-$14\%）を達成した。
 さらに加法分解により39パラメータのみで同等精度を維持し、
 独立テスト（20 HEA）でも0.020~\AA{}と訓練データに対する過学習がないことを確認した。
 
