@@ -181,6 +181,16 @@ Ye \emph{et al.}~\cite{Ye2015}は幾何学モデルにより固有残留歪み�
 体積サイズファクター$\Omega_\text{sf}$の概念は1966年にKingが導入した
 古典的なものであるが、第一原理計算データとの融合はこれまで系統的に
 試みられてこなかった。
+Core\~{n}o-Alonso \& Core\~{n}o-Alonso~\cite{CorenoAlonso2004}は
+Miedemaの「Macroscopic Atom」モデル~\cite{deBoer1988}から
+$\Omega_\text{sf}$を半経験的に導出し、17個のB2および22個のL1$_2$
+金属間化合物の格子定数を予測した。しかしMiedemaパラメータ
+（$\phi^*$, $n_{\text{ws}}$）から計算された$\Omega_\text{sf}$は
+Kingの実験値との相関が$r = 0.711$に留まり、格子定数の平均誤差は
+B2で1.73\%、L1$_2$で1.15\%であった。この精度限界は、Miedemaモデルが
+合金形成エンタルピーの符号再現に最適化されたパラメータを流用しており、
+体積偏差の定量的記述には不十分であることを示唆する。
+
 HEA格子定数の第一原理計算としては、Tian \emph{et al.}~\cite{Tian2013}が
 KKR-CPA法によりNiCoFeCrAl$_x$の構造安定性と格子定数を評価し、
 Troparevsky \emph{et al.}~\cite{Troparevsky2015}が単相形成基準を
@@ -1762,6 +1772,69 @@ $q = 1$（スケーリングなし）であり、構造依存性は考慮しな�
 違いは：(a)~DFT vs 実験$\Omega_\text{sf}$、(b)~構造特異的 vs 共通
 $\Omega_\text{sf}$、(c)~$q$最適化の有無、である。
 
+\paragraph{Core\~{n}o-Alonsoモデル (2004)}
+Core\~{n}o-Alonso \& Core\~{n}o-Alonso~\cite{CorenoAlonso2004}は
+Miedemaの「Macroscopic Atom」モデル~\cite{deBoer1988}を用いて
+$\Omega_\text{sf}$を半経験的に導出し、二元系金属間化合物
+（B2: 17種24予測、L1$_2$: 22種）の格子定数を予測した。
+なお、B2では同一化合物に対してABとBAの両方向から予測を行っており、
+17種のユニーク化合物に対して計24件の予測結果が報告されている。
+Miedemaモデルでは合金形成エンタルピーの最適化に用いた
+パラメータ（電子密度$n_{\text{ws}}$、化学ポテンシャル$\phi^*$）から
+体積変化$\Delta V^0_{A/B}$を導出し、Kingの定義に従って
+$\Omega_\text{sf}$を計算する。しかし150二元系について計算された
+$\Omega_\text{sf}$はKing実験値との相関が$r = 0.711$に留まり、
+12\%のペアで符号が反転する。
+格子定数の平均誤差はL1$_2$で1.15\%、B2で1.73\%であった
+（相関係数: L1$_2$ 0.929, B2 0.927）。
+
+この結果と本研究のDFT由来$\Omega_\text{sf}$を直接比較するため、
+Core\~{n}o-Alonso Table~2に報告された化合物のうち本研究の
+DFTデータでカバーされる39件の予測結果（B2 20件、L1$_2$ 19件；
+Cd・Hg元素の欠落および実測値なしにより7件は比較不可）について、
+同一の実験格子定数に対する予測精度を評価した
+（表~\ref{tab:coreno_comparison}）。
+
+\begin{table}[H]
+\centering
+\caption{Core\~{n}o-Alonso (2004) のMiedemaモデルと本研究のDFT-SSモデルの
+  格子定数予測精度比較。Core\~{n}o-Alonso Table~2の化合物のうち
+  本研究のDFTデータでカバーされる39件の予測結果について、
+  実験値に対する平均絶対誤差（\%）を比較する。}
+\label{tab:coreno_comparison}
+\footnotesize
+\begin{tabular}{@{}lccc@{}}
+\toprule
+手法 & B2 (20件) & L1$_2$ (19件) & 全体 (39件) \\
+\midrule
+Vegard則           & 1.82\% & 1.06\% & 1.45\% \\
+Miedemaモデル~\cite{CorenoAlonso2004} & 1.77\% & 1.08\% & 1.43\% \\
+\textbf{DFT-SSモデル（本研究）} & \textbf{0.59\%} & \textbf{0.94\%} & \textbf{0.76\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+B2化合物ではDFT-SSモデルの平均誤差0.59\%がMiedemaモデルの1.77\%を
+大幅に上回る（67\%改善）。特にTiFe（Miedema: $-4.14$\%, DFT-SS: $-0.18$\%）、
+FeTi（$-3.73$\% $\to$ $-0.18$\%）、TiRu（$-3.00$\% $\to$ $-0.72$\%）
+など原子サイズ差の大きいペアで顕著な改善が見られる。
+これはDFTが電荷移動・$d$軌道混成による体積変化を直接計算するのに対し、
+Miedemaパラメータはこれらの効果を間接的にしか反映できないためである。
+
+L1$_2$化合物ではDFT-SSモデル（0.94\%）とMiedemaモデル（1.08\%）の
+差がやや縮小する。これはL1$_2$構造が3:1の化学量論比を持ち、
+多数派元素の自己相互作用が支配的となるため、
+$\Omega_\text{sf}$補正の寄与が相対的に小さくなることによる。
+ただしMn$_3$Pt（Miedema: 3.26\%, DFT-SS: 2.01\%）、
+FePd$_3$（1.35\% $\to$ 0.19\%）など、$d$電子移動が顕著な系では
+DFT-SSモデルの優位性が明瞭である。
+
+なお、Ag$_3$Pt（Miedema: $-4.05$\%, DFT-SS: $-4.18$\%）および
+Au$_3$Pt（Miedema: $-3.02$\%, DFT-SS: $-3.10$\%）は両モデルとも
+大きな誤差を示す。これらの系では実験値自体が長距離秩序度の
+影響を受けている可能性があり、完全秩序L1$_2$を仮定した
+DFT計算との直接比較には注意が必要である。
+
 \paragraph{Zaddach {\it et al.} (2013)}
 Zaddachらはコヒーレント・ポテンシャル近似（CPA）に基づく
 格子定数予測を提案した~\cite{Zaddach2013}。CPA法はランダム固溶体を
@@ -2064,10 +2137,14 @@ RMSE = 0.0197~\AA{}（Vegard比$-$11\%、Alonsoモデル比$-$14\%）を達成�
 \midrule
 Vegard~\cite{Vegard1921}      & 39  & 0.0221 & --- & 任意 \\
 Alonso~\cite{Alonso2021}      & $\sim$200 & 0.0229 & --- & 限定 \\
+Core\~{n}o-Alonso~\cite{CorenoAlonso2004} & $\sim$150 & ---$^\dagger$ & B2/L1$_2$ & 限定 \\
 \textbf{本手法(B2)}            & 247 & 0.0210 & B2/L1$_2$ & 任意 \\
 \textbf{本手法(B2+SQS)}        & 247 & \textbf{0.0197} & \textbf{B2/L1$_2$} & 任意 \\
 \bottomrule
 \end{tabular}
+\par\smallskip
+{\scriptsize $^\dagger$Core\~{n}o-Alonso (2004) はHEAではなく二元系金属間化合物を対象と
+しており、HEA RMSEは算出不可。二元系での平均誤差はB2 1.73\%, L1$_2$ 1.15\%。}
 \end{table}
 
 \paragraph{実用的意義}
@@ -2367,6 +2444,14 @@ H.W.~King, J.\ Mater.\ Sci.\ \textbf{1} (1966) 79.
 \bibitem{Alonso2021}
 J.A.~Alonso, J.\ Phase Equilib.\ Diffus.\ \textbf{43} (2022) 555.
 \newblock \href{https://doi.org/10.1007/s11669-022-00988-z}{doi:10.1007/s11669-022-00988-z}.
+
+\bibitem{CorenoAlonso2004}
+O.~Core\~{n}o-Alonso, J.~Core\~{n}o-Alonso, Intermetallics \textbf{12} (2004) 117.
+\newblock \href{https://doi.org/10.1016/j.intermet.2003.09.001}{doi:10.1016/j.intermet.2003.09.001}.
+
+\bibitem{deBoer1988}
+F.R.~de~Boer, R.~Boom, W.C.M.~Mattens, A.R.~Miedema, A.K.~Niessen,
+Cohesion in Metals: Transition Metal Alloys, North-Holland, Amsterdam, 1988.
 
 \bibitem{Zhang2008}
 Y.~Zhang et al., Adv.\ Eng.\ Mater.\ \textbf{10} (2008) 534.
