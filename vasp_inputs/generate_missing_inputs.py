@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-VASP input file generator for MISSING B2, L1₂, and BCC-SQS calculations.
+VASP input file generator for MISSING B2, L1₂, BCC-SQS, and FCC-SQS calculations.
 
 Reads existing compounds_VASP_B2.csv and compounds_VASP_L12.csv to identify
 which target element pairs are already computed, then generates VASP inputs
@@ -13,6 +13,7 @@ Structure types:
   - B2 (CsCl-type, 2 atoms): AB and BA for each pair
   - L1₂ (Cu₃Au-type, 4 atoms): A3B and B3A for each pair
   - BCC-SQS (2×2×2 supercell, 16 atoms): A8B8 for each unordered pair
+  - FCC-SQS (2×2×2 supercell, 32 atoms): A16B16 for each unordered pair
 
 Output structure:
     VASP_missing/
@@ -27,6 +28,10 @@ Output structure:
     ├── BCC_SQS/
     │   ├── Ag8Al8/
     │   ├── Ag8Ag8/
+    │   └── ...
+    ├── FCC_SQS/
+    │   ├── Ag16Al16/
+    │   ├── Ag16Ag16/
     │   └── ...
     ├── make_potcar.sh
     ├── run_all.sh
@@ -118,6 +123,33 @@ for ix in range(2):
             BCC_2x2x2_POSITIONS.append(
                 ((ix + 0.5) / 2.0, (iy + 0.5) / 2.0, (iz + 0.5) / 2.0))
 
+# =====================================================================
+# SQS-32 FCC configuration (2×2×2 FCC supercell, 32 atoms)
+# Occupation optimized for α_1nn ≈ α_2nn ≈ 0
+# =====================================================================
+FCC_2x2x2_POSITIONS = []
+for ix in range(2):
+    for iy in range(2):
+        for iz in range(2):
+            # 4 FCC basis atoms per unit cell
+            FCC_2x2x2_POSITIONS.append((ix / 2.0, iy / 2.0, iz / 2.0))
+            FCC_2x2x2_POSITIONS.append((ix / 2.0, (iy + 0.5) / 2.0, (iz + 0.5) / 2.0))
+            FCC_2x2x2_POSITIONS.append(((ix + 0.5) / 2.0, iy / 2.0, (iz + 0.5) / 2.0))
+            FCC_2x2x2_POSITIONS.append(((ix + 0.5) / 2.0, (iy + 0.5) / 2.0, iz / 2.0))
+
+# SQS occupation for 32-atom FCC: optimized to minimize short-range order
+# 0=A, 1=B, 16 atoms each
+FCC_SQS_OCCUPATION = [
+    0, 1, 1, 0,  # cell (0,0,0)
+    1, 0, 0, 1,  # cell (0,0,1)
+    1, 0, 0, 1,  # cell (0,1,0)
+    0, 1, 1, 0,  # cell (0,1,1)
+    1, 0, 0, 1,  # cell (1,0,0)
+    0, 1, 1, 0,  # cell (1,0,1)
+    0, 1, 1, 0,  # cell (1,1,0)
+    1, 0, 0, 1,  # cell (1,1,1)
+]
+
 
 # =====================================================================
 # INCAR / POSCAR / KPOINTS writers
@@ -206,6 +238,37 @@ INCAR created by Atomic Simulation Environment
         f.write(content)
 
 
+def write_incar_fcc_sqs(dirpath):
+    """INCAR for FCC-SQS (32 atoms)."""
+    content = """\
+SYSTEM = FCC-SQS structure optimization
+
+ENCUT  = 520
+PREC   = Accurate
+EDIFF  = 1E-6
+NELM   = 200
+LREAL  = .FALSE.
+
+IBRION = 2
+ISIF   = 3
+NSW    = 100
+EDIFFG = -0.01
+
+ISMEAR = 1
+SIGMA  = 0.2
+
+GGA    = PE
+ISPIN  = 2
+
+LORBIT = 11
+LWAVE  = .FALSE.
+LCHARG = .FALSE.
+NCORE  = 4
+"""
+    with open(os.path.join(dirpath, "INCAR"), "w") as f:
+        f.write(content)
+
+
 def write_poscar_b2(dirpath, el_corner, el_body, a0):
     """POSCAR for B2 (CsCl-type, 2 atoms)."""
     content = f"""\
@@ -270,6 +333,43 @@ def write_poscar_sqs(dirpath, el_a, el_b, a_super):
             f"  0.000000  0.000000  {a_super:.6f}",
             f"  {el_a}  {el_b}",
             f"  8  8",
+            "Direct",
+        ]
+        for pos in pos_a:
+            lines.append(f"  {pos[0]:.6f}  {pos[1]:.6f}  {pos[2]:.6f}")
+        for pos in pos_b:
+            lines.append(f"  {pos[0]:.6f}  {pos[1]:.6f}  {pos[2]:.6f}")
+    lines.append("")
+    with open(os.path.join(dirpath, "POSCAR"), "w") as f:
+        f.write("\n".join(lines))
+
+
+def write_poscar_fcc_sqs(dirpath, el_a, el_b, a_super):
+    """POSCAR for FCC-SQS (2×2×2 supercell, 32 atoms)."""
+    if el_a == el_b:
+        lines = [
+            f"{el_a}32 FCC-SQS32 (2x2x2, pure reference)",
+            "1.0",
+            f"  {a_super:.6f}  0.000000  0.000000",
+            f"  0.000000  {a_super:.6f}  0.000000",
+            f"  0.000000  0.000000  {a_super:.6f}",
+            f"  {el_a}",
+            f"  32",
+            "Direct",
+        ]
+        for pos in FCC_2x2x2_POSITIONS:
+            lines.append(f"  {pos[0]:.6f}  {pos[1]:.6f}  {pos[2]:.6f}")
+    else:
+        pos_a = [FCC_2x2x2_POSITIONS[i] for i, o in enumerate(FCC_SQS_OCCUPATION) if o == 0]
+        pos_b = [FCC_2x2x2_POSITIONS[i] for i, o in enumerate(FCC_SQS_OCCUPATION) if o == 1]
+        lines = [
+            f"{el_a}16{el_b}16 FCC-SQS32 (2x2x2, 50:50)",
+            "1.0",
+            f"  {a_super:.6f}  0.000000  0.000000",
+            f"  0.000000  {a_super:.6f}  0.000000",
+            f"  0.000000  0.000000  {a_super:.6f}",
+            f"  {el_a}  {el_b}",
+            f"  16  16",
             "Direct",
         ]
         for pos in pos_a:
@@ -404,6 +504,8 @@ def main():
                         help='Path to existing compounds_VASP_B2.csv')
     parser.add_argument('--l12-csv', default=None,
                         help='Path to existing compounds_VASP_L12.csv')
+    parser.add_argument('--fcc-sqs-csv', default=None,
+                        help='Path to existing compounds_VASP_FCC_SQS.csv (if any)')
     parser.add_argument('--output', default=None,
                         help='Output base directory (default: VASP_missing/ in same dir)')
     args = parser.parse_args()
@@ -414,6 +516,7 @@ def main():
     b2_dir = os.path.join(base_dir, "BCC_B2")
     l12_dir = os.path.join(base_dir, "FCC_L12")
     sqs_dir = os.path.join(base_dir, "BCC_SQS")
+    fcc_sqs_dir = os.path.join(base_dir, "FCC_SQS")
 
     # Load existing data
     existing_b2 = load_existing_pairs(args.b2_csv)
@@ -480,7 +583,7 @@ def main():
         all_calcs.append((f"BCC_SQS/{dirname}", [el_a, el_b]))
         sqs_count += 1
 
-    # Same-element SQS references
+    # Same-element BCC-SQS references
     for el in ALL_ELEMENTS:
         dirname = f"{el}8{el}8"
         dirpath = os.path.join(sqs_dir, dirname)
@@ -492,12 +595,37 @@ def main():
         all_calcs.append((f"BCC_SQS/{dirname}", [el]))
         sqs_count += 1
 
+    # ----- FCC-SQS (all pairs, no existing data) -----
+    fcc_sqs_count = 0
+    for el_a, el_b in itertools.combinations(ALL_ELEMENTS, 2):
+        dirname = f"{el_a}16{el_b}16"
+        dirpath = os.path.join(fcc_sqs_dir, dirname)
+        os.makedirs(dirpath, exist_ok=True)
+        a_super = 2.0 * 0.5 * (ELEMENT_A0_FCC.get(el_a, 3.80) + ELEMENT_A0_FCC.get(el_b, 3.80))
+        write_incar_fcc_sqs(dirpath)
+        write_poscar_fcc_sqs(dirpath, el_a, el_b, a_super)
+        write_kpoints(dirpath, kmesh=4)
+        all_calcs.append((f"FCC_SQS/{dirname}", [el_a, el_b]))
+        fcc_sqs_count += 1
+
+    # Same-element FCC-SQS references
+    for el in ALL_ELEMENTS:
+        dirname = f"{el}16{el}16"
+        dirpath = os.path.join(fcc_sqs_dir, dirname)
+        os.makedirs(dirpath, exist_ok=True)
+        a_super = 2.0 * ELEMENT_A0_FCC.get(el, 3.80)
+        write_incar_fcc_sqs(dirpath)
+        write_poscar_fcc_sqs(dirpath, el, el, a_super)
+        write_kpoints(dirpath, kmesh=4)
+        all_calcs.append((f"FCC_SQS/{dirname}", [el]))
+        fcc_sqs_count += 1
+
     # Generate helper scripts
     generate_potcar_script(base_dir, all_calcs)
     generate_run_script(base_dir, all_calcs)
 
     # Summary
-    total = b2_count + l12_count + sqs_count
+    total = b2_count + l12_count + sqs_count + fcc_sqs_count
     summary = f"""\
 === VASP Missing Calculations Summary ===
 
@@ -506,10 +634,11 @@ Existing B2 pairs:  {len(existing_b2)}
 Existing L12 pairs: {len(existing_l12)}
 
 Generated:
-  B2 (CsCl, 2 atoms):       {b2_count:>5} calculations  [ENCUT=520, k=16×16×16]
-  L12 (Cu3Au, 4 atoms):     {l12_count:>5} calculations  [ENCUT=520, k=12×12×12]
+  B2 (CsCl, 2 atoms):        {b2_count:>5} calculations  [ENCUT=520, k=16×16×16]
+  L12 (Cu3Au, 4 atoms):      {l12_count:>5} calculations  [ENCUT=520, k=12×12×12]
   BCC-SQS (2×2×2, 16 atoms): {sqs_count:>5} calculations  [ENCUT=320, k=4×4×4]
-  Total:                     {total:>5} calculations
+  FCC-SQS (2×2×2, 32 atoms): {fcc_sqs_count:>5} calculations  [ENCUT=520, k=4×4×4]
+  Total:                      {total:>5} calculations
 
 Output: {base_dir}/
 
