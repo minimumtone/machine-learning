@@ -132,13 +132,13 @@ Alonsoら~\cite{Alonso2021}は、Kingの体積サイズ因子を
 多成分HEAに拡張し、単位胞体積を次式で表した（以下、Alonsoモデル）：
 \begin{equation}
   V_\text{uc}
-  = Z \sum_{i=1}^{n} c_i V_i
-  + Z \sum_{i=1}^{n} c_i V_i
+  = n_\text{auc} \sum_{i=1}^{n} c_i V_i
+  + n_\text{auc} \sum_{i=1}^{n} c_i V_i
     \sum_{\substack{j=1 \\ j \ne i}}^{n} c_j\,
     \Omega_{\text{sf},\, j/i},
   \label{eq:alonso}
 \end{equation}
-ここで$V_\text{uc}$は単位胞体積、$Z$（$= n_\text{auc}$）は単位胞中の原子数
+ここで$V_\text{uc}$は単位胞体積、$n_\text{auc}$は単位胞あたり原子数
 （BCC: 2、FCC: 4）、$c_i$は成分$i$の濃度、
 $V_i$は純元素$i$の原子体積、
 $\Omega_{\text{sf},\, j/i}$は元素$j$を元素$i$の母相に
@@ -330,8 +330,8 @@ Vegard則からの体積偏差を計算する：
   \frac{V_\text{DFT} - V_\text{Vegard}}{V_\text{Vegard}},
   \label{eq:omega_def}
 \end{equation}
-ここで$V_\text{DFT} = a_\text{DFT}^3 / Z$
-（$Z = 2$: B2、$Z = 4$: L1$_2$）、
+ここで$V_\text{DFT} = a_\text{DFT}^3 / n_\text{auc}$
+（$n_\text{auc} = 2$: B2、$n_\text{auc} = 4$: L1$_2$）、
 $V_\text{Vegard} = \sum_i x_i V_i$はKingの原子体積~\cite{King1966}を使用。
 同一元素ペアに対してMP・OQMDの両データベースから複数の
 $\Omega_\text{sf}$値が得られる場合がある。
@@ -798,14 +798,17 @@ DFT-SSモデルはVegardに対してRMSE 12\%の改善を達成する。
 可視化する。
 
 BCC独立テスト8合金中7合金でVegard則への縮退（改善率0\%）が
-観察される。これはMP/OQMDデータベースにこれらの高融点元素ペアの
+観察される。これはMP/OQMDデータベースに高融点元素ペア
+（Cr, Hf, Mo, Nb, Ta, Ti, V, W, Zrの9元素間の36ペア）の
 B2構造データが存在しないためであり、$\Omega_\text{sf} = 0$に退行する。
-なお、VASP B2計算による直接補完も試みたが、B2秩序構造（$\alpha = -1$）の
+なお、これらの欠損ペアに対しVASP B2計算（PAW-PBE, ENCUT = 520~eV）
+による直接補完も試みたが、B2秩序構造（$\alpha = -1$）の
 $\Omega_\text{sf}$がランダム固溶体の体積偏差を系統的に過大評価し、
 $q_\text{BCC}$が0.50に崩壊する問題が生じた
 （\ref{sec:appendix_vasp}節参照）。
-この問題はSQS（$\alpha \approx 0$）構造を用いた
-$\Omega_\text{sf}$の導出により解消される
+そこで、同じ高融点9元素の36ペアに対し
+SQS（$\alpha \approx 0$）構造のVASP計算を実施し、
+$\Omega_\text{sf}$を導出することでこの問題を解消した
 （\ref{sec:sqs_improvement}節参照）。
 
 特に注目すべきは、Alonsoモデルが独立テストでRMSE = 0.0261~\AA{}と
@@ -2095,10 +2098,13 @@ $\alpha = -1$（全異種近接）→$\alpha \approx 0$（ランダム）の
 遷移に伴い、異種間化学結合による収縮効果が希釈され、
 $\Omega_\text{sf}$分布は負の偏りから正負バランスへと移行する。
 
-現在、全39元素（780計算）のSQS計算を実施中であり、
-完了後には高融点元素以外のペア（Al--Nb, Fe--Cr等）も
-SQSデータで補完可能となる。これにより残り1合金のVegard縮退も
-解消され、BCC HEA RMSE のさらなる改善が期待される。
+現在、全38元素の全$\binom{38}{2} = 703$ペア（AB・BA両方向で1406計算
+＋38同種参照、計1444計算）について、B2構造のVASP計算
+（PAW-PBE, ENCUT = 520~eV, $16\times16\times16$ $\Gamma$メッシュ, ISIF = 3）
+を準備中である。
+これにより、MP/OQMDにデータが存在しない元素ペアの
+$\Omega_\text{sf}$を系統的に補完し、
+残るVegard縮退の解消とBCC HEA RMSEのさらなる改善が期待される。
 
 将来的には$\alpha$の値を系統的に変化させた計算
 （$\alpha = -1, 0, +1$）により、
