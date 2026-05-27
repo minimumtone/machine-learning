@@ -6,3 +6,4 @@ __pycache__/
 vasp_inputs/BCC_B2/
 vasp_inputs/B2_refractory/
 vasp_inputs/L12_calculations/
+vasp_inputs/VASP_missing/
