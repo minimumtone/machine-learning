@@ -1758,19 +1758,12 @@ BCC HEA精度向上には、多体相互作用の導入（三元系DFTデータ�
 
 HEA格子定数予測に関する先行研究との比較を議論する。
 
-\paragraph{Vegard則}
-最も単純なアプローチであるVegard則は、原子体積の線形補間に基づく。
+\paragraph{Vegard則 (1921)}
+最も単純なアプローチであるVegard則~\cite{Vegard1921}は、原子体積の線形補間に基づく。
 64 HEAに対するRMSE（King原子体積使用）は0.0227~\AA{}であり、
 化学結合効果を無視しても比較的良い近似を与える。これはHEAが
 多成分等モル混合であり、個々の元素対効果が平均化されるためである。
 ただしBCC HEAでは0.0328~\AA{}と精度が低下する。
-
-\paragraph{Alonsoモデル (2021)}
-Alonsoモデルは式~\eqref{eq:alonso}でRMSE = 0.023~\AA{}を達成した。
-$q = 1$（スケーリングなし）であり、構造依存性は考慮しない。
-本研究のDFT-SSモデルとの主要な
-違いは：(a)~DFT vs 実験$\Omega_\text{sf}$、(b)~構造特異的 vs 共通
-$\Omega_\text{sf}$、(c)~$q$最適化の有無、である。
 
 \paragraph{Core\~{n}o-Alonsoモデル (2004)}
 Core\~{n}o-Alonso \& Core\~{n}o-Alonso~\cite{CorenoAlonso2004}は
@@ -1843,12 +1836,18 @@ Zaddachらはコヒーレント・ポテンシャル近似（CPA）に基づく
 任意組成のHEA格子定数を即座に予測でき、スクリーニング用途に
 適している。
 
-\paragraph{機械学習アプローチ}
+\paragraph{機械学習アプローチ (Zhang {\it et al.} 2017)}
 Zhang {\it et al.}~\cite{Zhang2017nat}らはMLベースのHEA物性予測を
 試みているが、訓練データの制約（$N < 100$）が深刻な過学習を
 引き起こすことが報告されている。本研究でも7種のMLモデルが
 物理モデルを改善できなかった結果はこの傾向と一致する。
 
+\paragraph{Alonsoモデル (2022)}
+Alonsoモデル~\cite{Alonso2021}は式~\eqref{eq:alonso}でRMSE = 0.023~\AA{}を達成した。
+$q = 1$（スケーリングなし）であり、構造依存性は考慮しない。
+本研究のDFT-SSモデルとの主要な
+違いは：(a)~DFT vs 実験$\Omega_\text{sf}$、(b)~構造特異的 vs 共通
+$\Omega_\text{sf}$、(c)~$q$最適化の有無、である。
 
 \subsection{校正定数$q$の位置づけ}
 
@@ -2415,165 +2414,7 @@ Vegard基準線は室温に整合している。
 %% 参考文献
 %% =====================================================================
 
-\begin{thebibliography}{99}
-
-\bibitem{Yeh2004}
-J.-W.~Yeh et al., Adv.\ Eng.\ Mater.\ \textbf{6} (2004) 299.
-\newblock \href{https://doi.org/10.1002/adem.200300567}{doi:10.1002/adem.200300567}.
-
-\bibitem{Cantor2004}
-B.~Cantor et al., Mater.\ Sci.\ Eng.\ A \textbf{375--377} (2004) 213.
-\newblock \href{https://doi.org/10.1016/j.msea.2003.10.257}{doi:10.1016/j.msea.2003.10.257}.
-
-\bibitem{Miracle2017}
-D.B.~Miracle, O.N.~Senkov, Acta Mater.\ \textbf{122} (2017) 448.
-\newblock \href{https://doi.org/10.1016/j.actamat.2016.08.081}{doi:10.1016/j.actamat.2016.08.081}.
-
-\bibitem{Senkov2015}
-O.N.~Senkov et al., Nat.\ Commun.\ \textbf{6} (2015) 6529.
-\newblock \href{https://doi.org/10.1038/ncomms7529}{doi:10.1038/ncomms7529}.
-
-\bibitem{Vegard1921}
-L.~Vegard, Z.\ Phys.\ \textbf{5} (1921) 17.
-\newblock \href{https://doi.org/10.1007/BF01349680}{doi:10.1007/BF01349680}.
-
-\bibitem{King1966}
-H.W.~King, J.\ Mater.\ Sci.\ \textbf{1} (1966) 79.
-\newblock \href{https://doi.org/10.1007/BF00549722}{doi:10.1007/BF00549722}.
-
-\bibitem{Alonso2021}
-J.A.~Alonso, J.\ Phase Equilib.\ Diffus.\ \textbf{43} (2022) 555.
-\newblock \href{https://doi.org/10.1007/s11669-022-00988-z}{doi:10.1007/s11669-022-00988-z}.
-
-\bibitem{CorenoAlonso2004}
-O.~Core\~{n}o-Alonso, J.~Core\~{n}o-Alonso, Intermetallics \textbf{12} (2004) 117.
-\newblock \href{https://doi.org/10.1016/j.intermet.2003.09.001}{doi:10.1016/j.intermet.2003.09.001}.
-
-\bibitem{deBoer1988}
-F.R.~de~Boer, R.~Boom, W.C.M.~Mattens, A.R.~Miedema, A.K.~Niessen,
-Cohesion in Metals: Transition Metal Alloys, North-Holland, Amsterdam, 1988.
-
-\bibitem{Zhang2008}
-Y.~Zhang et al., Adv.\ Eng.\ Mater.\ \textbf{10} (2008) 534.
-\newblock \href{https://doi.org/10.1002/adem.200700240}{doi:10.1002/adem.200700240}.
-
-\bibitem{Guo2011}
-S.~Guo, C.T.~Liu, Prog.\ Nat.\ Sci.\ \textbf{21} (2011) 433.
-\newblock \href{https://doi.org/10.1016/S1002-0071(12)60080-X}{doi:10.1016/S1002-0071(12)60080-X}.
-
-\bibitem{Yang2012}
-X.~Yang, Y.~Zhang, Mater.\ Chem.\ Phys.\ \textbf{132} (2012) 233.
-\newblock \href{https://doi.org/10.1016/j.matchemphys.2011.11.021}{doi:10.1016/j.matchemphys.2011.11.021}.
-
-\bibitem{Jain2013}
-A.~Jain et al., APL Mater.\ \textbf{1} (2013) 011002.
-\newblock \href{https://doi.org/10.1063/1.4812323}{doi:10.1063/1.4812323}.
-
-\bibitem{Saal2013}
-J.E.~Saal et al., JOM \textbf{65} (2013) 1501.
-\newblock \href{https://doi.org/10.1007/s11837-013-0755-4}{doi:10.1007/s11837-013-0755-4}.
-
-\bibitem{Chen2016}
-T.~Chen, C.~Guestrin, Proc.\ 22nd ACM SIGKDD (2016) 785.
-\newblock \href{https://doi.org/10.1145/2939672.2939785}{doi:10.1145/2939672.2939785}.
-
-\bibitem{Senkov2013}
-O.N.~Senkov et al., Intermetallics \textbf{19} (2011) 698.
-\newblock \href{https://doi.org/10.1016/j.intermet.2011.01.004}{doi:10.1016/j.intermet.2011.01.004}.
-
-\bibitem{Yao2016}
-H.W.~Yao et al., Entropy \textbf{18} (2016) 189.
-\newblock \href{https://doi.org/10.3390/e18050189}{doi:10.3390/e18050189}.
-
-\bibitem{Otto2013}
-F.~Otto et al., Acta Mater.\ \textbf{61} (2013) 5743.
-\newblock \href{https://doi.org/10.1016/j.actamat.2013.06.018}{doi:10.1016/j.actamat.2013.06.018}.
-
-\bibitem{Leong2017}
-Z.~Leong et al., Sci.\ Rep.\ \textbf{7} (2017) 39803.
-\newblock \href{https://doi.org/10.1038/srep39803}{doi:10.1038/srep39803}.
-
-\bibitem{Wang2019}
-Z.~Wang et al., Scr.\ Mater.\ \textbf{94} (2015) 28.
-\newblock \href{https://doi.org/10.1016/j.scriptamat.2014.09.010}{doi:10.1016/j.scriptamat.2014.09.010}.
-
-\bibitem{Zaddach2013}
-A.J.~Zaddach et al., JOM \textbf{65} (2013) 1780.
-\newblock \href{https://doi.org/10.1007/s11837-013-0771-4}{doi:10.1007/s11837-013-0771-4}.
-
-\bibitem{Zhang2017nat}
-Z.~Zhang et al., Nat.\ Commun.\ \textbf{8} (2017) 14390.
-\newblock \href{https://doi.org/10.1038/ncomms14390}{doi:10.1038/ncomms14390}.
-
-\bibitem{Curtarolo2012}
-S.~Curtarolo et al., Comput.\ Mater.\ Sci.\ \textbf{58} (2012) 218.
-\newblock \href{https://doi.org/10.1016/j.commatsci.2012.02.005}{doi:10.1016/j.commatsci.2012.02.005}.
-
-\bibitem{Tian2013}
-F.~Tian et al., Phys.\ Rev.\ B \textbf{88} (2013) 085128.
-\newblock \href{https://doi.org/10.1103/PhysRevB.88.085128}{doi:10.1103/PhysRevB.88.085128}.
-
-\bibitem{Troparevsky2015}
-M.C.~Troparevsky et al., Phys.\ Rev.\ X \textbf{5} (2015) 011041.
-\newblock \href{https://doi.org/10.1103/PhysRevX.5.011041}{doi:10.1103/PhysRevX.5.011041}.
-
-\bibitem{Ye2015}
-Y.F.~Ye, C.T.~Liu, Y.~Yang, Acta Mater.\ \textbf{94} (2015) 152.
-\newblock \href{https://doi.org/10.1016/j.actamat.2015.04.051}{doi:10.1016/j.actamat.2015.04.051}.
-
-\bibitem{TodaCaraballo2016}
-I.~Toda-Caraballo, P.E.J.~Rivera-D\'{i}az-del-Castillo, Intermetallics \textbf{71} (2016) 76.
-\newblock \href{https://doi.org/10.1016/j.intermet.2015.12.011}{doi:10.1016/j.intermet.2015.12.011}.
-
-\bibitem{Tandoc2023}
-C.~Tandoc et al., npj Comput.\ Mater.\ \textbf{9} (2023) 53.
-\newblock \href{https://doi.org/10.1038/s41524-023-00993-x}{doi:10.1038/s41524-023-00993-x}.
-
-\bibitem{Tian2015}
-F.~Tian et al., Sci.\ Rep.\ \textbf{5} (2015) 12334.
-\newblock \href{https://doi.org/10.1038/srep12334}{doi:10.1038/srep12334}.
-
-\bibitem{Wen2019}
-C.~Wen et al., Acta Mater.\ \textbf{170} (2019) 109.
-\newblock \href{https://doi.org/10.1016/j.actamat.2019.03.010}{doi:10.1016/j.actamat.2019.03.010}.
-
-\bibitem{Zunger1990}
-A.~Zunger, S.-H.~Wei, L.G.~Ferreira, J.E.~Bernard,
-Phys.\ Rev.\ Lett.\ \textbf{65} (1990) 353.
-\newblock \href{https://doi.org/10.1103/PhysRevLett.65.353}{doi:10.1103/PhysRevLett.65.353}.
-
-\bibitem{WarrenCowley1950}
-J.M.~Cowley, J.\ Appl.\ Phys.\ \textbf{21} (1950) 24.
-\newblock \href{https://doi.org/10.1063/1.1699415}{doi:10.1063/1.1699415}.
-
-\bibitem{Stepanov2015}
-N.D.~Stepanov et al., Mater.\ Lett.\ \textbf{142} (2015) 153.
-\newblock \href{https://doi.org/10.1016/j.matlet.2014.11.162}{doi:10.1016/j.matlet.2014.11.162}.
-
-\bibitem{Zhang2015}
-B.~Zhang et al., Calphad \textbf{51} (2015) 193.
-\newblock \href{https://doi.org/10.1016/j.calphad.2015.09.007}{doi:10.1016/j.calphad.2015.09.007}.
-
-\bibitem{Kantelis2025}
-K.~Kantelis et al., AIP Adv.\ \textbf{15} (2025) 015030.
-\newblock \href{https://doi.org/10.1063/5.0245966}{doi:10.1063/5.0245966}.
-
-\bibitem{Youssef2015}
-K.M.~Youssef et al., Mater.\ Res.\ Lett.\ \textbf{3} (2015) 95.
-\newblock \href{https://doi.org/10.1080/21663831.2014.985855}{doi:10.1080/21663831.2014.985855}.
-
-\bibitem{Dirras2016}
-G.~Dirras et al., Mater.\ Charact.\ \textbf{108} (2015) 1.
-\newblock \href{https://doi.org/10.1016/j.matchar.2015.08.007}{doi:10.1016/j.matchar.2015.08.007}.
-
-\bibitem{Gali2013}
-A.~Gali, E.P.~George, Intermetallics \textbf{39} (2013) 74.
-\newblock \href{https://doi.org/10.1016/j.intermet.2013.03.018}{doi:10.1016/j.intermet.2013.03.018}.
-
-\bibitem{Tasan2014}
-C.C.~Tasan et al., JOM \textbf{66} (2014) 1993.
-\newblock \href{https://doi.org/10.1007/s11837-014-1133-6}{doi:10.1007/s11837-014-1133-6}.
-
-\end{thebibliography}
+\bibliographystyle{elsarticle-num}
+\bibliography{references}
 
 \end{document}
