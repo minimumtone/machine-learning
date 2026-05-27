@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-VASP input file generator for ALL 39-element B2 pair calculations.
+VASP input file generator for ALL 38-element B2 pair calculations.
 
-Generates INCAR, POSCAR, KPOINTS for all C(39,2)=741 element pairs
-plus 39 same-element references (total 741×2 + 39 = 1521 calculations).
+Generates INCAR, POSCAR, KPOINTS for all C(38,2)=703 element pairs
+plus 38 same-element references (total 703×2 + 38 = 1444 calculations).
 
 For each pair A-B, both AB and BA B2 structures are generated:
   - AB: A at corner (0,0,0), B at body-center (0.5,0.5,0.5)
@@ -30,7 +30,7 @@ import os
 import itertools
 
 # =====================================================================
-# All 39 elements (41 main metals minus 4f-electron Gd, Ce)
+# All 38 elements (from delta_parameters.csv; Gd, Ce excluded for 4f instability)
 # Sorted alphabetically
 # =====================================================================
 ALL_ELEMENTS = sorted([
@@ -39,18 +39,7 @@ ALL_ELEMENTS = sorted([
     'Os', 'Pb', 'Pd', 'Pt', 'Re', 'Rh', 'Ru', 'Sc', 'Si', 'Sn',
     'Ta', 'Tb', 'Ti', 'V',  'W',  'Y',  'Zn', 'Zr',
 ])
-# Note: 38 elements listed above. Check if we need one more.
-# From delta_parameters.csv: 39 rows including all above.
-# Let me count: Ag Al Au Be Ca Co Cr Cu Dy Er Fe Ge Hf Ir La Mg Mn Mo
-#               Nb Ni Os Pb Pd Pt Re Rh Ru Sc Si Sn Ta Tb Ti V W Y Zn Zr
-# That's 38. The CSV has 39 rows — checking...
-# Missing: none of the above if CSV truly has 39.
-# Actually let's just read from CSV at runtime if available.
-
 assert len(ALL_ELEMENTS) == 38, f"Expected 38 elements, got {len(ALL_ELEMENTS)}"
-# The paper says "39 elements" counting the number of δ parameters
-# (38 elements × {B2, L12} but some elements have only one structure).
-# The actual unique element count is 38.
 
 # =====================================================================
 # Approximate BCC lattice constants (Å) for initial B2 POSCAR
@@ -290,14 +279,13 @@ def generate_run_script(base_dir, calculations):
         lines.append(f'cd "$BASE/{calc_name}"')
         lines.append('if [ ! -f POTCAR ]; then')
         lines.append(f'    echo "  SKIP (no POTCAR)" | tee -a "$LOG"')
-        lines.append(f'    cd "$BASE"')
-        lines.append('    continue 2>/dev/null')
-        lines.append('fi')
+        lines.append('else')
         lines.append('$VASPBIN > vasp.out 2>&1')
         lines.append('if grep -q "reached required accuracy" OUTCAR 2>/dev/null; then')
         lines.append(f'    echo "  CONVERGED" | tee -a "$LOG"')
         lines.append('else')
         lines.append(f'    echo "  WARNING: not converged" | tee -a "$LOG"')
+        lines.append('fi')
         lines.append('fi')
         lines.append(f'cd "$BASE"')
         lines.append("")
