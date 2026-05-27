@@ -261,14 +261,14 @@ def compute_effective_radii(all_df, sources=("MP", "OQMD", "VASP")):
 # ===========================================================================
 
 def fig01_parity(y_train, a_veg_tr, a_ss_tr, y_test, a_veg_te, a_ss_te):
-    """Fig 1: Parity plot Vegard vs DFT Eq.10 SS."""
+    """Fig 1: Parity plot Vegard vs DFT-Omega_sf."""
     fig, ax = plt.subplots(1, 1, figsize=(7, 7))
     lims = [2.85, 3.65]
     ax.plot(lims, lims, "k-", lw=1)
     ax.scatter(y_train, a_veg_tr, c="gray", alpha=0.5, s=50, label="Vegard (train)")
-    ax.scatter(y_train, a_ss_tr, c="C0", alpha=0.7, s=50, label="DFT Eq.10 SS (train)")
+    ax.scatter(y_train, a_ss_tr, c="C0", alpha=0.7, s=50, label=r"DFT-$\Omega_{\mathrm{sf}}$ (train)")
     ax.scatter(y_test, a_veg_te, c="gray", alpha=0.5, s=50, marker="^")
-    ax.scatter(y_test, a_ss_te, c="C3", alpha=0.7, s=50, marker="^", label="DFT Eq.10 SS (test)")
+    ax.scatter(y_test, a_ss_te, c="C3", alpha=0.7, s=50, marker="^", label=r"DFT-$\Omega_{\mathrm{sf}}$ (test)")
     ax.set_xlabel("Experimental $a$ (\u00c5)")
     ax.set_ylabel("Predicted $a$ (\u00c5)")
     ax.set_xlim(lims)
@@ -343,7 +343,7 @@ def fig04_indep_test(y_test, a_veg_te, a_ss_te, heas_test, gb, gf):
     x = np.arange(len(alloy_names))
     w = 0.35
     ax.barh(x - w/2, err_veg, w, color="gray", alpha=0.7, label="Vegard")
-    ax.barh(x + w/2, err_ss, w, color="C0", alpha=0.7, label="DFT Eq.10 SS")
+    ax.barh(x + w/2, err_ss, w, color="C0", alpha=0.7, label=r"DFT-$\Omega_{\mathrm{sf}}$")
     ax.set_yticks(x)
     ax.set_yticklabels(alloy_names, fontsize=10)
     ax.set_xlabel("|Error| (m\u00c5)")
@@ -362,7 +362,7 @@ def fig04_indep_test(y_test, a_veg_te, a_ss_te, heas_test, gb, gf):
               np.sqrt(np.mean((a_ss_te[fcc_t] - y_test[fcc_t]) ** 2)) * 1000]
     x2 = np.arange(len(categories))
     ax.bar(x2 - 0.2, rmse_v, 0.35, color="gray", alpha=0.7, label="Vegard")
-    ax.bar(x2 + 0.2, rmse_s, 0.35, color="C0", alpha=0.7, label="DFT Eq.10 SS")
+    ax.bar(x2 + 0.2, rmse_s, 0.35, color="C0", alpha=0.7, label=r"DFT-$\Omega_{\mathrm{sf}}$")
     ax.set_xticks(x2)
     ax.set_xticklabels(categories)
     ax.set_ylabel("RMSE (m\u00c5)")
@@ -1040,7 +1040,7 @@ def main():
     rmse_ss_tr = np.sqrt(np.mean((a_ss_tr - y_train) ** 2))
     print(f"\n    Training RMSE:")
     print(f"      Vegard:       {rmse_veg_tr:.4f} A")
-    print(f"      DFT Eq.10 SS: {rmse_ss_tr:.4f} A")
+    print(f"      DFT-Omega_sf: {rmse_ss_tr:.4f} A")
     print(f"      BCC:          {np.sqrt(np.mean((a_ss_tr[bcc_i]-y_train[bcc_i])**2)):.4f}")
     print(f"      FCC:          {np.sqrt(np.mean((a_ss_tr[fcc_i]-y_train[fcc_i])**2)):.4f}")
 
@@ -1056,7 +1056,7 @@ def main():
     rmse_ss_te = np.sqrt(np.mean((a_ss_te - y_test) ** 2))
     print(f"    Test RMSE:")
     print(f"      Vegard:       {rmse_veg_te:.4f}")
-    print(f"      DFT Eq.10 SS: {rmse_ss_te:.4f}")
+    print(f"      DFT-Omega_sf: {rmse_ss_te:.4f}")
     print(f"      BCC:          {np.sqrt(np.mean((a_ss_te[bcc_t]-y_test[bcc_t])**2)):.4f}")
     print(f"      FCC:          {np.sqrt(np.mean((a_ss_te[fcc_t]-y_test[fcc_t])**2)):.4f}")
     id_v = sum(1 for i in bcc_t if abs(a_ss_te[i] - a_veg_te[i]) < 1e-6)
@@ -1144,8 +1144,8 @@ def main():
     fig01_parity(y_train, a_veg_tr, a_ss_tr, y_test, a_veg_te, a_ss_te)
     fig02_rmse_bar({
         "Vegard": rmse_veg_tr,
-        "DFT Eq.10 SS\n(pairwise)": rmse_ss_tr,
-        "DFT Eq.10 SS\n(additive δ)": rmse_add_tr,
+        r"DFT-$\Omega_{\mathrm{sf}}$" + "\n(pairwise)": rmse_ss_tr,
+        r"DFT-$\Omega_{\mathrm{sf}}$" + "\n(additive δ)": rmse_add_tr,
     })
     fig03_bcc_fcc(y_train, a_ss_tr, ALONSO_TABLE2)
     fig04_indep_test(y_test, a_veg_te, a_ss_te, INDEPENDENT_TEST, gb, gf)
