@@ -689,12 +689,15 @@ Alonsoモデルよりも系統的に対角線に近いことが読み取れる�
 \begin{figure}[H]
 \centering
 \includegraphics[width=\columnwidth]{fig_parity.png}
-\caption{全手法のパリティプロット（予測格子定数 vs 実験格子定数）。
-  DFT-SSモデル（DFT-derived Structure-Specific model、赤丸、
-  RMSE = 0.0214~\AA）がAlonsoモデル
-  （青三角、RMSE = 0.0229~\AA）より系統的に対角線に近い。
-  破線は完全一致線（$a_\text{pred} = a_\text{exp}$）。
-  特にBCC HEA（$a > 3.1$~\AA{}）で改善が顕著。}
+\caption{パリティプロット（予測格子定数 vs 実験格子定数）。
+  灰丸: Vegard則（訓練64 HEA）、
+  青丸: DFT-SSモデル（DFT-derived Structure-Specific model、訓練64 HEA、RMSE = 0.0214~\AA）、
+  赤三角: DFT-SSモデル（独立テスト20 HEA、RMSE = 0.0222~\AA）。
+  実線は完全一致線（$a_\text{pred} = a_\text{exp}$）。
+  DFT-SSモデルはVegard則に比べ系統的に対角線に近く、
+  特にBCC HEA（$a > 3.1$~\AA{}）で改善が顕著。
+  独立テスト（赤三角）もBCC領域でやや偏差が大きいが、
+  FCC領域では訓練セットと同等の精度を示す。}
 \label{fig:parity}
 \end{figure}
 
