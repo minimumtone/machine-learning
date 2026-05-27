@@ -666,7 +666,9 @@ SSモデル + XGBoost & 0.0212 & 0.0116 & 0.35 & 0.991 \\
 \end{tabular}
 \end{table}
 
-構造特異的DFT-SSモデルはRMSE = 0.0214~\AA{}を達成し、
+構造特異的DFT-SSモデル（DFT-derived Structure-Specific model：
+DFT由来の$\Omega_\text{sf}$を用い、BCC/FCC各構造に個別の校正定数$q_s$を
+最適化する式~(\ref{eq:scaled_eq10})のモデル）はRMSE = 0.0214~\AA{}を達成し、
 Vegard (0.0227~\AA) に対して5.7\%の改善を示す。
 ML残差補正は0.002~\AA{}未満の追加改善しか与えず、物理モデルが
 主要な変動を捕捉していることを確認した。
@@ -688,13 +690,11 @@ Alonsoモデルよりも系統的に対角線に近いことが読み取れる�
 \centering
 \includegraphics[width=\columnwidth]{fig_parity.png}
 \caption{全手法のパリティプロット（予測格子定数 vs 実験格子定数）。
-  DFT-SSモデル（赤丸、RMSE = 0.0214~\AA）がAlonsoモデル
+  DFT-SSモデル（DFT-derived Structure-Specific model、赤丸、
+  RMSE = 0.0214~\AA）がAlonsoモデル
   （青三角、RMSE = 0.0229~\AA）より系統的に対角線に近い。
   破線は完全一致線（$a_\text{pred} = a_\text{exp}$）。
-  本手法の主要な改善点は：(1)~Kingの実験$\Omega_\text{sf}$をDFT計算で
-  置き換えることにより系統的バイアスを低減、(2)~構造特異的$q_s$の導入
-  によりBCC/FCC別の最適補正を実現、(3)~DFTデータカバレッジの拡大により
-  Vegard縮退ペアを削減。特にBCC HEA（$a > 3.1$~\AA{}）で改善が顕著。}
+  特にBCC HEA（$a > 3.1$~\AA{}）で改善が顕著。}
 \label{fig:parity}
 \end{figure}
 
