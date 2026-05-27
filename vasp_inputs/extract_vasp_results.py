@@ -7,8 +7,9 @@ under FCC_L12/ and BCC_B2/ to extract optimized lattice constants.
 Outputs CSV files compatible with hea_lattice_xgboost.py's compound_df format.
 
 Directory naming convention:
-    FCC_L12/Ag3Al1/  → L1₂ Ag₃Al  (element_A=Ag, count_A=3, element_B=Al, count_B=1)
     BCC_B2/Ag1Al1/   → B2  AgAl   (element_A=Ag, count_A=1, element_B=Al, count_B=1)
+    FCC_L12/Al1Ag3/  → L1₂ Ag₃Al  (element_A=Al, count_A=1, element_B=Ag, count_B=3)
+    BCC_SQS/Ag8Al8/  → SQS Ag₈Al₈ (element_A=Ag, count_A=8, element_B=Al, count_B=8)
 
 Usage:
     python extract_vasp_results.py /path/to/DATA

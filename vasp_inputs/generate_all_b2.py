@@ -412,7 +412,7 @@ def main():
         a0 = estimate_b2_a0(el_a, el_b)
 
         # AB: el_a at corner, el_b at body-center
-        calc_ab = f"{el_a}{el_b}"
+        calc_ab = f"{el_a}1{el_b}1"
         dir_ab = os.path.join(base_dir, calc_ab)
         os.makedirs(dir_ab, exist_ok=True)
         write_incar(dir_ab)
@@ -421,7 +421,7 @@ def main():
         calculations.append((calc_ab, el_a, el_b))
 
         # BA: el_b at corner, el_a at body-center
-        calc_ba = f"{el_b}{el_a}"
+        calc_ba = f"{el_b}1{el_a}1"
         dir_ba = os.path.join(base_dir, calc_ba)
         os.makedirs(dir_ba, exist_ok=True)
         write_incar(dir_ba)
@@ -431,7 +431,7 @@ def main():
 
     # Same-element references (AA)
     for el in ALL_ELEMENTS:
-        calc_name = f"{el}{el}"
+        calc_name = f"{el}1{el}1"
         a0 = ELEMENT_A0_BCC.get(el, 3.20)
         dirpath = os.path.join(base_dir, calc_name)
         os.makedirs(dirpath, exist_ok=True)
