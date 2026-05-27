@@ -190,6 +190,7 @@ Kingの実験値との相関が$r = 0.711$に留まり、格子定数の平均�
 B2で1.73\%、L1$_2$で1.15\%であった。この精度限界は、Miedemaモデルが
 合金形成エンタルピーの符号再現に最適化されたパラメータを流用しており、
 体積偏差の定量的記述には不十分であることを示唆する。
+
 HEA格子定数の第一原理計算としては、Tian \emph{et al.}~\cite{Tian2013}が
 KKR-CPA法によりNiCoFeCrAl$_x$の構造安定性と格子定数を評価し、
 Troparevsky \emph{et al.}~\cite{Troparevsky2015}が単相形成基準を
@@ -1775,7 +1776,9 @@ $\Omega_\text{sf}$、(c)~$q$最適化の有無、である。
 Core\~{n}o-Alonso \& Core\~{n}o-Alonso~\cite{CorenoAlonso2004}は
 Miedemaの「Macroscopic Atom」モデル~\cite{deBoer1988}を用いて
 $\Omega_\text{sf}$を半経験的に導出し、二元系金属間化合物
-（B2: 17個、L1$_2$: 22個）の格子定数を予測した。
+（B2: 17種24予測、L1$_2$: 22種）の格子定数を予測した。
+なお、B2では同一化合物に対してABとBAの両方向から予測を行っており、
+17種のユニーク化合物に対して計24件の予測結果が報告されている。
 Miedemaモデルでは合金形成エンタルピーの最適化に用いた
 パラメータ（電子密度$n_{\text{ws}}$、化学ポテンシャル$\phi^*$）から
 体積変化$\Delta V^0_{A/B}$を導出し、Kingの定義に従って
@@ -1787,8 +1790,8 @@ $\Omega_\text{sf}$はKing実験値との相関が$r = 0.711$に留まり、
 
 この結果と本研究のDFT由来$\Omega_\text{sf}$を直接比較するため、
 Core\~{n}o-Alonso Table~2に報告された化合物のうち本研究の
-DFTデータでカバーされる39化合物（B2 20個、L1$_2$ 19個；
-Cd・Hg元素の欠落により5化合物は比較不可）について、
+DFTデータでカバーされる39件の予測結果（B2 20件、L1$_2$ 19件；
+Cd・Hg元素の欠落および実測値なしにより7件は比較不可）について、
 同一の実験格子定数に対する予測精度を評価した
 （表~\ref{tab:coreno_comparison}）。
 
@@ -1796,13 +1799,13 @@ Cd・Hg元素の欠落により5化合物は比較不可）について、
 \centering
 \caption{Core\~{n}o-Alonso (2004) のMiedemaモデルと本研究のDFT-SSモデルの
   格子定数予測精度比較。Core\~{n}o-Alonso Table~2の化合物のうち
-  本研究のDFTデータでカバーされる39化合物について、
+  本研究のDFTデータでカバーされる39件の予測結果について、
   実験値に対する平均絶対誤差（\%）を比較する。}
 \label{tab:coreno_comparison}
 \footnotesize
 \begin{tabular}{@{}lccc@{}}
 \toprule
-手法 & B2 (20個) & L1$_2$ (19個) & 全体 (39個) \\
+手法 & B2 (20件) & L1$_2$ (19件) & 全体 (39件) \\
 \midrule
 Vegard則           & 1.82\% & 1.06\% & 1.45\% \\
 Miedemaモデル~\cite{CorenoAlonso2004} & 1.77\% & 1.08\% & 1.43\% \\
