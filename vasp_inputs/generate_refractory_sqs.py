@@ -118,7 +118,7 @@ def estimate_sqs_a0(el_a, el_b):
 def write_incar_sqs(dirpath):
     """Write INCAR matching existing BCC_B2 settings (ASE-generated style)."""
     content = """INCAR created by Atomic Simulation Environment
- ENCUT = 320.000000
+ ENCUT = 520.000000
  POTIM = 0.020000
  EDIFF = 1.00e-06
  EDIFFG = -1.00e-02
@@ -192,7 +192,7 @@ def write_poscar_sqs(dirpath, el_a, el_b, a_super):
         f.write("\n".join(lines))
 
 
-def write_kpoints_sqs(dirpath, kmesh=4):
+def write_kpoints_sqs(dirpath, kmesh=12):
     """Write KPOINTS file (smaller k-mesh for 16-atom supercell)."""
     content = f"""Automatic mesh
 0

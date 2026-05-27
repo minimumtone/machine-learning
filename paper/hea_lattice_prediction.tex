@@ -246,7 +246,7 @@ $\delta r$が構造情報を数学的・原理的に含み得ないことを初�
   \item \textbf{SQS構造による改善}:
     B2（秩序構造、Warren--Cowley短距離秩序パラメータ$\alpha = -1$）由来の$\Omega_\text{sf}$は
     Ni-Zr等の二元系では再現性があるが、多成分ランダム固溶体である
-    HEAの体積偏差を系統的に過大評価する。
+    HEAの体積偏差を系統的に大きく評価してしまう。
     SQS（$\alpha \approx 0$）からの$\Omega_\text{sf}$導出により
     BCC HEA予測を6.9\%改善。
   \item \textbf{$\delta r$の限界の証明}:
@@ -387,7 +387,7 @@ Leave-One-Out交差検証でLOO-CV RMSE = 0.0214~\AA{}と
 安定性を確認した。$q_\text{FCC} \approx 0.13$はL1$_2$由来の
 $\Omega_\text{sf}$補正がFCC HEAではほぼ不要であることを示し、
 $q_\text{BCC} < 1$はB2秩序構造の$\Omega_\text{sf}$が
-BCC HEAの体積偏差を過大評価するため減衰が必要であることを反映する。
+BCC HEAの体積偏差を大きく評価してしまうため減衰が必要であることを反映する。
 SQS参照構造を用いると$q_\text{BCC} = 1.72$に変化し、
 BCC RMSE = 0.0197~\AA{}に改善する
 （\ref{sec:sqs_improvement}節）。
@@ -673,7 +673,7 @@ ML残差補正は0.002~\AA{}未満の追加改善しか与えず、物理モデ�
 
 BCC HEAの改善率がFCCに比べ限定的なのは、
 B2秩序構造（$\alpha = -1$）の$\Omega_\text{sf}$が
-ランダムBCC固溶体の体積偏差を系統的に過大評価するためである。
+ランダムBCC固溶体の体積偏差を系統的に大きく評価してしまうためである。
 BCC-SQS（$\alpha \approx 0$）をBCC参照構造とすることで
 この問題は解消され、RMSE = 0.0197~\AA{}に改善される
 （\ref{sec:sqs_improvement}節で詳述）。
@@ -724,7 +724,7 @@ Alonsoモデルよりも系統的に対角線に近いことが読み取れる�
   （ただし$\sigma$推定の不確かさに留意、\ref{sec:noise}節参照）。
   BCC HEA（0.0299~\AA）の改善率が限定的なのは、
   B2秩序構造（$\alpha = -1$）の$\Omega_\text{sf}$が
-  ランダム固溶体の体積偏差を過大評価するためである。
+  ランダム固溶体の体積偏差を大きく評価してしまうためである。
   SQSデータの導入によりBCC HEA RMSEは0.0273~\AA{}に改善される
   （\ref{sec:sqs_improvement}節）。}
 \label{tab:bcc_fcc}
@@ -787,7 +787,7 @@ Alonsoデータセットに含まれない20個のHEA（表~\ref{tab:indep}）�
 \caption{独立テストセット検証（Alonsoデータセット外の20 HEA: BCC 8, FCC 12）。
   B2参照DFT-SSモデルのBCC RMSE（0.0298~\AA）はVegard（0.0260~\AA）より
   悪化する。これはB2秩序構造（$\alpha = -1$）の$\Omega_\text{sf}$が
-  ランダム固溶体の体積偏差を系統的に過大評価するためであり、
+  ランダム固溶体の体積偏差を系統的に大きく評価してしまうためであり、
   SQS参照構造への移行を裏付ける（\ref{sec:sqs_improvement}節）。
   FCC HEAではDFT-SSモデルがVegardに対し2.6\%改善。}
 \label{tab:indep}
@@ -816,7 +816,7 @@ $\Omega_\text{sf}$が利用可能となり（BCC 29/29ペアカバー）、
 Vegardより\textbf{悪化}する点である（RMSE: 0.0298 vs 0.0260~\AA）。
 これは、B2秩序構造（$\alpha = -1$、最近接が全て異種原子）の
 $\Omega_\text{sf}$がランダム固溶体BCC HEAの体積偏差を
-系統的に過大評価するためである。
+系統的に大きく評価してしまうためである。
 特にNbTiVZrでは予測誤差が0.062~\AA{}に達し、
 B2構造の強い化学的秩序効果が裏目に出ている。
 
@@ -840,7 +840,7 @@ SQS参照構造（\ref{sec:sqs_improvement}節）で本質的に解消される�
 \includegraphics[width=\textwidth]{fig_indep_test.png}
 \caption{独立テストセット検証の詳細（20 HEA: BCC 8個＋FCC 12個）。
   VASP B2データ統合により全BCC合金の$\Omega_\text{sf}$が利用可能
-  となったが、B2秩序構造の過大評価によりBCC RMSEはVegardより悪化
+  となったが、B2秩序構造の$\Omega_\text{sf}$が大きく評価されるためBCC RMSEはVegardより悪化
   （0.0298 vs 0.0260~\AA）。FCC合金ではL1$_2$参照による2.6\%改善
   を達成。この結果はSQS参照構造への移行を強く裏付ける。}
 \label{fig:indep}
@@ -1911,7 +1911,7 @@ B2参照では$q_\text{BCC} = 0.49$であるが、
 BCC-SQS参照では$q_\text{BCC} = 1.72$に変化する
 （表~\ref{tab:q_shift}）。
 B2構造の$\Omega_\text{sf}$は86\%が負に偏り、
-ランダム固溶体の体積偏差を系統的に過大評価するため、
+ランダム固溶体の体積偏差を系統的に大きく評価してしまうため、
 $q \approx 0.5$で半分に減衰させる必要がある。
 一方SQS（$\alpha \approx 0$）は配位環境がHEAに近く、
 $\Omega_\text{sf}$の絶対値が小さいため
@@ -1920,7 +1920,7 @@ $q > 1$でやや増幅する必要がある。
 \begin{table}[H]
 \centering
 \caption{BCC参照構造別$q$最適値の変化。
-  B2秩序構造（$\alpha = -1$）はランダム固溶体の体積偏差を過大評価し
+  B2秩序構造（$\alpha = -1$）はランダム固溶体の体積偏差を大きく評価してしまい
   $q$を抑制するが、SQS（$\alpha \approx 0$）では$q \approx 1$の近傍に収まる。}
 \label{tab:q_shift}
 \footnotesize
@@ -2015,7 +2015,7 @@ Special Quasi-random Structure (SQS)\cite{Zunger1990}は
 無秩序固溶体の代理構造として広く用いられる。
 本研究では$2\times2\times2$ BCC超格子（16原子、A$_8$B$_8$組成）を用い、
 高融点9元素の全36二元ペアおよび9同種参照について
-VASP構造最適化を実施した（ENCUT = 320~eV, $4\times4\times4$ $\Gamma$メッシュ,
+VASP構造最適化を実施した（ENCUT = 520~eV, $12\times12\times12$ $\Gamma$メッシュ,
 ISIF = 3, GGA-PBE）。
 
 SQSにおける$\Omega_\text{sf}$は以下で定義する：
@@ -2061,7 +2061,7 @@ SQS計算の目的は等モル二元BCC固溶体の\emph{平衡体積}の取得�
 SQSでは正のΩ$_\text{sf}$（膨張方向）が14\%から39\%に増加し、
 平均値もほぼ0に近づく。これはSQSの最近接環境が
 同種・異種混在（$\sim$50\%ずつ）であるため、
-B2で過大評価されていた異種間化学結合の寄与が
+B2で大きく評価されてしまう異種間化学結合の寄与が
 適切に希釈されたことを反映する。
 
 \subsubsection{BCC HEA予測精度の改善}
@@ -2072,7 +2072,10 @@ SQS $\Omega_\text{sf}$をMP/OQMD B2データと統合し
 
 \begin{table}[H]
 \centering
-\caption{$\Omega_\text{sf}$データソースによるBCC HEA予測精度の比較。}
+\caption{$\Omega_\text{sf}$参照構造によるBCC HEA予測精度の比較（64 HEA）。
+  Vegard則をベースラインとし、B2参照（$\alpha = -1$）とSQS参照（$\alpha \approx 0$）の
+  予測精度・校正定数$q_\text{BCC}$・Vegard縮退合金数を比較する。
+  SQS参照はBCC RMSEを8.7\%改善し、$q_\text{BCC}$を$1$の近傍に安定化させる。}
 \label{tab:sqs_rmse}
 \footnotesize
 \begin{tabular}{@{}lcccc@{}}
@@ -2089,21 +2092,54 @@ B2参照 & 0.0214~\AA & 0.0299~\AA & 0.49 & 0/29 \\
 B2参照からSQS参照への変更により以下の改善が得られた：
 \begin{enumerate}
   \item BCC HEA RMSE: 0.0299 → 0.0273~\AA{}（8.7\%改善）
-  \item 全体RMSE: 0.0214 → 0.0197~\AA{}（7.9\%改善）
+  \item 全体RMSE: 0.0214 → 0.0197~\AA{}（7.9\%改善、Vegard比$-$13\%）
   \item $q_\text{BCC}$: 0.49 → 1.72（$q \approx 1$の近傍に安定化）
+  \item FCC RMSE: 0.0096~\AA{}で不変（SQS置換はBCCのみ）
 \end{enumerate}
 
+\paragraph{$q_\text{BCC}$の変化の物理的解釈}
 $q_\text{BCC}$が0.49から1.72に変化する理由は明快である。
-SQSの$\Omega_\text{sf}$はB2より絶対値が小さい
-（結合効果の希釈のため）ので、
-HEA格子定数を再現するにはより大きなスケーリングが必要となる。
-いずれの値も1の近傍にあり、物理的に妥当な範囲である。
+B2構造（$\alpha = -1$）では最近接8原子が全て異種元素であり、
+異種間化学結合の寄与が大きく評価されてしまう。
+その結果、$\Omega_\text{sf}$は系統的に負に偏り（86\%が負）、
+体積収縮が強調される。
+この過大な$|\Omega_\text{sf}|$を補償するため、
+最適化過程で$q_\text{BCC}$が0.49に抑制される
+（$\Omega_\text{sf}$の効果を約半分に減衰）。
+
+一方、SQS（$\alpha \approx 0$）では最近接に同種・異種原子が
+約50\%ずつ含まれ、異種間結合の寄与が実際のランダム固溶体に
+対応する割合まで希釈される。
+その結果、$\Omega_\text{sf}$の絶対値は小さくなり、
+HEA格子定数を再現するにはより大きなスケーリング
+（$q_\text{BCC} = 1.72$）が必要となる。
+$q$の理想値は1（DFT $\Omega_\text{sf}$がそのままHEAに適用可能）であるが、
+B2の$q = 0.49$は理想値から大きく乖離しているのに対し、
+SQSの$q = 1.72$は1のオーダーに留まり、物理的により妥当である。
+
+\paragraph{参照構造とHEA格子定数予測の本質的関係}
+本結果は、$\Omega_\text{sf}$の物理的意味と
+HEA格子定数予測精度の間に密接な関係があることを実証する。
+B2参照では秩序度$\alpha = -1$の体積偏差を$q = 0.49$で
+無理にスケールダウンして$\alpha \approx 0$の体積偏差に変換しており、
+この変換は元素ペアごとに異なる非線形性を持つため
+系統誤差が残る。
+SQS参照では$\alpha \approx 0$の体積偏差を直接取得するため、
+$q \approx 1$での線形スケーリングが十分な精度を持つ。
+すなわち、\textbf{参照構造の秩序度とターゲット（HEA）の秩序度の
+一致が予測精度を支配する}。
+
+この知見はBCC-SQSに限らず一般化可能であり、
+FCC HEAに対するFCC-SQS、あるいは
+短距離秩序を持つHEAに対する$\alpha \neq 0$のSQSなど、
+ターゲット合金の配位環境に応じた参照構造の選択が
+予測精度の体系的向上に繋がることを示唆する。
+
 なお、B2参照では$q_\text{BCC} = 0.49$でBCC RMSE = 0.0299~\AA{}に
 留まるのに対し（表~\ref{tab:q_shift}）、SQSでは$q_\text{BCC} = 1.72$で
 0.0273~\AA{}に改善される。
-これはB2構造の$\Omega_\text{sf}$が系統的に負に偏り（86\%が負）、
-ランダム固溶体の体積偏差を過大評価するためである。
-SQSデータ（$\alpha \approx 0$）の使用によりこの偏向は解消される。
+Vegard則単体（0.0317~\AA{}）と比較すると、B2参照は5.7\%の改善に
+留まるのに対し、SQS参照では13.9\%の改善を達成する。
 
 \subsubsection{個別BCC HEA予測の改善例}
 
@@ -2266,7 +2302,7 @@ $V_\text{eff}(i) = V_i\bigl[1 + q_s \sum_{j\ne i} c_j
 本フレームワークの主要な限界は：(a)~$q$が構造ごとに
 単一の定数であり、組成依存性を持たないこと、
 (b)~B2秩序構造の$\Omega_\text{sf}$がランダム固溶体の体積偏差を
-系統的に過大評価する点については、SQS計算の導入により
+系統的に大きく評価してしまう点については、SQS計算の導入により
 BCC HEAでRMSE 6.9\%改善、Vegard縮退を22/29 → 1/29に解消した
 （\ref{sec:sqs_improvement}節）、
 (c)~加法分解が$\Omega_\text{sf}$分散の約35\%を失うこと、
@@ -2486,7 +2522,7 @@ SQS参照での$q_\text{BCC} = 1.72$と大きく異なる
 （表~\ref{tab:q_shift}参照）。
 $q_\text{BCC}$の低値はB2秩序構造の$\Omega_\text{sf}$が
 86\%負に偏ることに起因し、ランダム固溶体の体積偏差を
-過大評価していることの定量的証拠である。
+大きく評価してしまうことの定量的証拠である。
 この問題はSQS（$\alpha \approx 0$）の導入により解消される
 （\ref{sec:sqs_improvement}節）。
 

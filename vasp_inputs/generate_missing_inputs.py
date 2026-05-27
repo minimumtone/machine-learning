@@ -222,7 +222,7 @@ def write_incar_sqs(dirpath):
     """INCAR for BCC-SQS (16 atoms, ASE-style settings)."""
     content = """\
 INCAR created by Atomic Simulation Environment
- ENCUT = 320.000000
+ ENCUT = 520.000000
  POTIM = 0.020000
  EDIFF = 1.00e-06
  EDIFFG = -1.00e-02
@@ -582,7 +582,7 @@ def main():
         a_super = 2.0 * 0.5 * (ELEMENT_A0_BCC.get(el_a, 3.20) + ELEMENT_A0_BCC.get(el_b, 3.20))
         write_incar_sqs(dirpath)
         write_poscar_sqs(dirpath, el_a, el_b, a_super)
-        write_kpoints(dirpath, kmesh=4)
+        write_kpoints(dirpath, kmesh=12)
         all_calcs.append((f"BCC_SQS/{dirname}", [el_a, el_b]))
         sqs_count += 1
 
@@ -594,7 +594,7 @@ def main():
         a_super = 2.0 * ELEMENT_A0_BCC.get(el, 3.20)
         write_incar_sqs(dirpath)
         write_poscar_sqs(dirpath, el, el, a_super)
-        write_kpoints(dirpath, kmesh=4)
+        write_kpoints(dirpath, kmesh=12)
         all_calcs.append((f"BCC_SQS/{dirname}", [el]))
         sqs_count += 1
 
@@ -643,7 +643,7 @@ Existing L12 pairs: {len(existing_l12)}
 Generated:
   B2 (CsCl, 2 atoms):        {b2_count:>5} calculations  [ENCUT=520, k=16×16×16]
   L12 (Cu3Au, 4 atoms):      {l12_count:>5} calculations  [ENCUT=520, k=12×12×12]
-  BCC-SQS (2×2×2, 16 atoms): {sqs_count:>5} calculations  [ENCUT=320, k=4×4×4]
+  BCC-SQS (2×2×2, 16 atoms): {sqs_count:>5} calculations  [ENCUT=520, k=12×12×12]
   FCC-SQS (2×2×2, 32 atoms): {fcc_sqs_count:>5} calculations  [ENCUT=520, k=4×4×4]
   Total:                      {total:>5} calculations
 
