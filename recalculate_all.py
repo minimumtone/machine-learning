@@ -323,14 +323,11 @@ for _, row in compound_df.iterrows():
 count_all3 = 0
 for pair in pair_b2_raw:
     a, b = pair
-    has_a3b = pair_l12_a3b.get((a, b), 0) > 0 or pair_l12_a3b.get((b, a), 0) > 0
-    has_b3a = pair_l12_b3a.get((a, b), 0) > 0 or pair_l12_b3a.get((b, a), 0) > 0
-    # Actually for L12 symmetry: need both orientations
-    has_l12_both = False
-    # Check if both (X,Y) as majority and (Y,X) as majority exist
-    has_xy_major = pair_l12_a3b.get((a, b), 0) > 0 or pair_l12_b3a.get((b, a), 0) > 0
-    has_yx_major = pair_l12_a3b.get((b, a), 0) > 0 or pair_l12_b3a.get((a, b), 0) > 0
-    if has_xy_major and has_yx_major:
+    # Check A-majority L12 exists for this pair (A3B or equivalently B in B3A)
+    has_a3b = pair_l12_a3b.get((a, b), 0) > 0 or pair_l12_b3a.get((a, b), 0) > 0
+    # Check B-majority L12 exists for this pair (B3A or equivalently A in A3B)
+    has_b3a = pair_l12_a3b.get((b, a), 0) > 0 or pair_l12_b3a.get((b, a), 0) > 0
+    if has_a3b and has_b3a:
         count_all3 += 1
 
 print(f"  Pairs with all 3 structures (A3B + B3A + B2): {count_all3}")
