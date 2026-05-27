@@ -137,17 +137,18 @@ for ix in range(2):
             FCC_2x2x2_POSITIONS.append(((ix + 0.5) / 2.0, iy / 2.0, (iz + 0.5) / 2.0))
             FCC_2x2x2_POSITIONS.append(((ix + 0.5) / 2.0, (iy + 0.5) / 2.0, iz / 2.0))
 
-# SQS occupation for 32-atom FCC: optimized to minimize short-range order
+# SQS occupation for 32-atom FCC: optimized for α₁ ≈ α₂ ≈ α₃ ≈ 0
 # 0=A, 1=B, 16 atoms each
+# Monte Carlo optimized: α₁=0.000, α₂=0.000, α₃=0.000
 FCC_SQS_OCCUPATION = [
-    0, 1, 1, 0,  # cell (0,0,0)
-    1, 0, 0, 1,  # cell (0,0,1)
-    1, 0, 0, 1,  # cell (0,1,0)
-    0, 1, 1, 0,  # cell (0,1,1)
-    1, 0, 0, 1,  # cell (1,0,0)
-    0, 1, 1, 0,  # cell (1,0,1)
-    0, 1, 1, 0,  # cell (1,1,0)
-    1, 0, 0, 1,  # cell (1,1,1)
+    1, 1, 1, 1,  # cell (0,0,0)
+    1, 0, 1, 1,  # cell (0,0,1)
+    0, 1, 1, 1,  # cell (0,1,0)
+    1, 1, 0, 0,  # cell (0,1,1)
+    0, 0, 0, 1,  # cell (1,0,0)
+    1, 0, 0, 0,  # cell (1,0,1)
+    0, 0, 1, 0,  # cell (1,1,0)
+    0, 1, 0, 0,  # cell (1,1,1)
 ]
 
 
@@ -521,9 +522,11 @@ def main():
     # Load existing data
     existing_b2 = load_existing_pairs(args.b2_csv)
     existing_l12 = load_existing_pairs(args.l12_csv)
+    existing_fcc_sqs = load_existing_pairs(args.fcc_sqs_csv)
 
-    print(f"Existing B2 pairs:  {len(existing_b2)}")
-    print(f"Existing L12 pairs: {len(existing_l12)}")
+    print(f"Existing B2 pairs:      {len(existing_b2)}")
+    print(f"Existing L12 pairs:     {len(existing_l12)}")
+    print(f"Existing FCC-SQS pairs: {len(existing_fcc_sqs)}")
     print()
 
     all_calcs = []  # list of (subdir_relative, [elements_for_potcar])
@@ -595,9 +598,11 @@ def main():
         all_calcs.append((f"BCC_SQS/{dirname}", [el]))
         sqs_count += 1
 
-    # ----- FCC-SQS (all pairs, no existing data) -----
+    # ----- FCC-SQS (skip existing) -----
     fcc_sqs_count = 0
     for el_a, el_b in itertools.combinations(ALL_ELEMENTS, 2):
+        if (el_a, el_b) in existing_fcc_sqs or (el_b, el_a) in existing_fcc_sqs:
+            continue
         dirname = f"{el_a}16{el_b}16"
         dirpath = os.path.join(fcc_sqs_dir, dirname)
         os.makedirs(dirpath, exist_ok=True)
@@ -610,6 +615,8 @@ def main():
 
     # Same-element FCC-SQS references
     for el in ALL_ELEMENTS:
+        if (el, el) in existing_fcc_sqs:
+            continue
         dirname = f"{el}16{el}16"
         dirpath = os.path.join(fcc_sqs_dir, dirname)
         os.makedirs(dirpath, exist_ok=True)
