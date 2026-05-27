@@ -431,7 +431,7 @@ def main():
         for el_b in ALL_ELEMENTS:
             if (el_a, el_b) in existing_b2:
                 continue
-            dirname = f"{el_a}{el_b}"
+            dirname = f"{el_a}1{el_b}1"
             dirpath = os.path.join(b2_dir, dirname)
             os.makedirs(dirpath, exist_ok=True)
             a0 = 0.5 * (ELEMENT_A0_BCC.get(el_a, 3.20) + ELEMENT_A0_BCC.get(el_b, 3.20))
@@ -450,8 +450,9 @@ def main():
         for el_b in ALL_ELEMENTS:
             if (el_a, el_b) in existing_l12:
                 continue
-            # L12: el_a = face (majority, 3 atoms), el_b = corner (minority, 1 atom)
-            dirname = f"{el_a}3{el_b}1"
+            # L12: el_b = corner (minority, 1 atom), el_a = face (majority, 3 atoms)
+            # Directory convention: corner1face3 (e.g., Al1Ag3)
+            dirname = f"{el_b}1{el_a}3"
             dirpath = os.path.join(l12_dir, dirname)
             os.makedirs(dirpath, exist_ok=True)
             a0_a = ELEMENT_A0_FCC.get(el_a, 3.80)
