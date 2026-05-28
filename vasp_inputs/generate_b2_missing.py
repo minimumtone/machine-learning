@@ -303,7 +303,7 @@ def main():
     print(f"""
 実行手順:
   1. POTCAR生成:
-       cd {args.output_dir} && VASP_PP_PATH=/path/to/potpaw_PBE bash make_potcar.sh
+       cd {args.output_dir} && bash make_potcar.sh  # requires $VASP_PP_PATH
 
   2. 全計算実行:
        cd {args.output_dir} && VASPBIN=/path/to/vasp bash run_all.sh
