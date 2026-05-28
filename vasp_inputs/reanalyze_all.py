@@ -3,7 +3,7 @@
 VASP計算結果の一括スキャン・抽出・再解析スクリプト。
 
 リモート環境のVASP計算ディレクトリをスキャンし、
-BCC_B2/A1B1、FCC_L12/A3B1、BCC_SQS/A8B8の全結果を抽出して
+BCC_B2/A1B1、FCC_L12/A3B1、BCC_SQS_ISIF7/A8B8の全結果を抽出して
 Ω_sf計算→HEA格子定数予測まで一気に実行する。
 
 ディレクトリ構造:
@@ -16,7 +16,7 @@ BCC_B2/A1B1、FCC_L12/A3B1、BCC_SQS/A8B8の全結果を抽出して
     │   ├── Ag3Al1/
     │   ├── Al3Ag1/
     │   └── ...
-    └── BCC_SQS/
+    └── BCC_SQS_ISIF7/
         ├── Ag8Al8/
         └── ...
 
@@ -485,15 +485,15 @@ def main():
         description='VASP計算結果の一括スキャン・抽出・Ω_sf再解析')
     parser.add_argument('data_dir',
                         help='VASP計算結果のルートディレクトリ '
-                             '(BCC_B2/, FCC_L12/, BCC_SQS/ を含む)')
+                             '(BCC_B2/, FCC_L12/, BCC_SQS_ISIF7/ を含む)')
     parser.add_argument('-o', '--output-dir', default='./reanalysis_output',
                         help='出力ディレクトリ (default: ./reanalysis_output)')
     parser.add_argument('--b2-dir', default='BCC_B2',
                         help='B2サブディレクトリ名 (default: BCC_B2)')
     parser.add_argument('--l12-dir', default='FCC_L12',
                         help='L12サブディレクトリ名 (default: FCC_L12)')
-    parser.add_argument('--sqs-dir', default='BCC_SQS',
-                        help='SQSサブディレクトリ名 (default: BCC_SQS)')
+    parser.add_argument('--sqs-dir', default='BCC_SQS_ISIF7',
+                        help='SQSサブディレクトリ名 (default: BCC_SQS_ISIF7)')
     args = parser.parse_args()
 
     data_dir = Path(args.data_dir)

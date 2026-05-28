@@ -25,11 +25,11 @@ Output structure:
     │   ├── Be3Ag/
     │   ├── Ag3Be/
     │   └── ...
-    ├── BCC_SQS/
+    ├── BCC_SQS_ISIF7/
     │   ├── Ag8Al8/
     │   ├── Ag8Ag8/
     │   └── ...
-    ├── FCC_SQS/
+    ├── FCC_SQS_ISIF7/
     │   ├── Ag16Al16/
     │   ├── Ag16Ag16/
     │   └── ...
@@ -526,8 +526,8 @@ def main():
 
     b2_dir = os.path.join(base_dir, "BCC_B2")
     l12_dir = os.path.join(base_dir, "FCC_L12")
-    sqs_dir = os.path.join(base_dir, "BCC_SQS")
-    fcc_sqs_dir = os.path.join(base_dir, "FCC_SQS")
+    sqs_dir = os.path.join(base_dir, "BCC_SQS_ISIF7")
+    fcc_sqs_dir = os.path.join(base_dir, "FCC_SQS_ISIF7")
 
     # Load existing data
     existing_b2 = load_existing_pairs(args.b2_csv)
@@ -593,7 +593,7 @@ def main():
         write_incar_sqs(dirpath)
         write_poscar_sqs(dirpath, el_a, el_b, a_super)
         write_kpoints(dirpath, kmesh=12)
-        all_calcs.append((f"BCC_SQS/{dirname}", [el_a, el_b]))
+        all_calcs.append((f"BCC_SQS_ISIF7/{dirname}", [el_a, el_b]))
         sqs_count += 1
 
     # Same-element BCC-SQS references
@@ -605,7 +605,7 @@ def main():
         write_incar_sqs(dirpath)
         write_poscar_sqs(dirpath, el, el, a_super)
         write_kpoints(dirpath, kmesh=12)
-        all_calcs.append((f"BCC_SQS/{dirname}", [el]))
+        all_calcs.append((f"BCC_SQS_ISIF7/{dirname}", [el]))
         sqs_count += 1
 
     # ----- FCC-SQS (skip existing) -----
@@ -620,7 +620,7 @@ def main():
         write_incar_fcc_sqs(dirpath)
         write_poscar_fcc_sqs(dirpath, el_a, el_b, a_super)
         write_kpoints(dirpath, kmesh=4)
-        all_calcs.append((f"FCC_SQS/{dirname}", [el_a, el_b]))
+        all_calcs.append((f"FCC_SQS_ISIF7/{dirname}", [el_a, el_b]))
         fcc_sqs_count += 1
 
     # Same-element FCC-SQS references
@@ -634,7 +634,7 @@ def main():
         write_incar_fcc_sqs(dirpath)
         write_poscar_fcc_sqs(dirpath, el, el, a_super)
         write_kpoints(dirpath, kmesh=4)
-        all_calcs.append((f"FCC_SQS/{dirname}", [el]))
+        all_calcs.append((f"FCC_SQS_ISIF7/{dirname}", [el]))
         fcc_sqs_count += 1
 
     # Generate helper scripts

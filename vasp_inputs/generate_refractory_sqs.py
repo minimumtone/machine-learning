@@ -24,7 +24,7 @@ Usage:
     --elements "Fe,Co,Ni,Cr,Mn"  : 任意元素指定
 
 Output structure:
-    BCC_SQS/
+    BCC_SQS_ISIF7/
     ├── Cr8Hf8/   (INCAR, POSCAR, KPOINTS)
     ├── Cr8Mo8/
     ├── ...
@@ -219,7 +219,7 @@ def generate_potcar_script(base_dir, calculations):
     """Generate shell script to create POTCAR from $VASP_PP_PATH/potpaw_PBE."""
     lines = [
         "#!/bin/bash",
-        "# POTCAR generation script for BCC_SQS refractory calculations",
+        "# POTCAR generation script for BCC_SQS_ISIF7 refractory calculations",
         "# Usage: bash make_potcar.sh",
         "# Requires: $VASP_PP_PATH environment variable",
         "",
@@ -232,7 +232,7 @@ def generate_potcar_script(base_dir, calculations):
         "",
         'PP_DIR="$VASP_PP_PATH/potpaw_PBE"',
         'echo "Using PP_DIR=$PP_DIR"',
-        'echo "Generating POTCAR files for BCC_SQS refractory calculations..."',
+        'echo "Generating POTCAR files for BCC_SQS_ISIF7 refractory calculations..."',
         "",
     ]
 
@@ -286,7 +286,7 @@ def generate_run_script(base_dir, calculations):
     potcar_block = "\n".join(potcar_lines)
 
     content = f"""#!/bin/bash
-# All-in-one execution script for BCC_SQS DFT calculations
+# All-in-one execution script for BCC_SQS_ISIF7 DFT calculations
 # Handles: POTCAR generation → parallel VASP execution → result extraction
 #
 # Environment: OpenMPI, 32 cores
@@ -580,7 +580,7 @@ def main():
     parser.add_argument("--elements", type=str, default=None,
                         help="Comma-separated element list (e.g., 'Fe,Co,Ni,Cr,Mn')")
     parser.add_argument("--outdir", type=str, default=None,
-                        help="Output directory (default: BCC_SQS)")
+                        help="Output directory (default: BCC_SQS_ISIF7)")
     args = parser.parse_args()
 
     # Determine element list
@@ -603,7 +603,7 @@ def main():
     if args.outdir:
         base_dir = args.outdir
     else:
-        base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "BCC_SQS")
+        base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "BCC_SQS_ISIF7")
     os.makedirs(base_dir, exist_ok=True)
 
     calculations = []
