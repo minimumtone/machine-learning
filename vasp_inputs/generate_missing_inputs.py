@@ -43,7 +43,7 @@ Usage:
         --l12-csv /path/to/compounds_VASP_L12.csv
 
 Environment variables:
-    VASP_PP_PATH : path to PAW-PBE pseudopotential directory
+    VASP_PP_PATH : path to VASP pseudopotential root (POTCAR at $VASP_PP_PATH/PBE/{element}/POTCAR)
     VASPBIN      : VASP executable command
 """
 
@@ -418,7 +418,7 @@ def generate_potcar_script(base_dir, all_calcs):
 
     for subdir, el_list in all_calcs:
         pots = [POTCAR_VARIANTS.get(el, el) for el in el_list]
-        cat_parts = " ".join(f'"$VASP_PP_PATH"/{p}/POTCAR' for p in pots)
+        cat_parts = " ".join(f'"$VASP_PP_PATH"/PBE/{p}/POTCAR' for p in pots)
         lines.append(f'cat {cat_parts} > {subdir}/POTCAR 2>/dev/null')
         pot_str = "+".join(pots)
         lines.append(
