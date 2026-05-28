@@ -1410,8 +1410,8 @@ def main():
     results["Alonso Eq.10"] = print_metrics("Alonso Eq.10", a_eq10_alonso)
     results["King Vegard (this work)"] = print_metrics("King Vegard (this work)", a_vegard_king)
     results["DFT Eq.10 (this work)"] = print_metrics("DFT Eq.10 (this work)", a_eq10_dft)
-    results["DFT Eq.10 SS (this work)"] = print_metrics(
-        f"DFT Eq.10 SS (γB={best_gb:.2f},γF={best_gf:.2f})", a_eq10_ss)
+    results["DFT-Ωsf (this work)"] = print_metrics(
+        f"DFT-Ωsf (γB={best_gb:.2f},γF={best_gf:.2f})", a_eq10_ss)
 
     # SS Eq.10 with ML-filled Ω_sf (no missing pairs)
     print("    Computing SS Eq.10 with ML-filled Ω_sf...")
@@ -1763,7 +1763,7 @@ def main():
     key_preds = [
         ("Alonso Eq.10", a_eq10_alonso),
         ("King Vegard", a_vegard_king),
-        ("DFT Eq.10 SS", a_eq10_ss),
+        ("DFT-Ωsf", a_eq10_ss),
         ("SS Eq.10 ML-filled", a_eq10_ss_filled),
         ("SS Eq.10 + Ridge", a_ss_ridge),
         ("SS Eq.10 + GPR", a_ss_gpr),
@@ -1797,7 +1797,7 @@ def main():
         "Transfer (corrected)": y_pred_transfer,
         "Transfer (base)": y_pred_base,
         "DFT Eq.10 (this work)": a_eq10_dft,
-        "DFT Eq.10 SS (this work)": a_eq10_ss,
+        "DFT-Ωsf (this work)": a_eq10_ss,
         "SS Eq.10 ML-filled": a_eq10_ss_filled,
         "SS Eq.10 + Ridge": a_ss_ridge,
         "SS Eq.10 + XGBoost": a_ss_xgb,
@@ -2080,7 +2080,7 @@ def main():
     plot_data = [
         ("Alonso Eq.10", a_eq10_alonso, "gray"),
         ("King Vegard (this work)", a_vegard_king, "steelblue"),
-        ("DFT Eq.10 SS (this work)", a_eq10_ss, "#44AA77"),
+        ("DFT-Ωsf (this work)", a_eq10_ss, "#44AA77"),
         ("Best Model (this work)", y_best, "crimson"),
     ]
     for ax, (name, y_p, color) in zip(axes.flat, plot_data):
@@ -2111,7 +2111,7 @@ def main():
         ("Alonso\nEq.10", results["Alonso Eq.10"][0]),
         ("King\nVegard", results["King Vegard (this work)"][0]),
         ("DFT\nEq.10", results["DFT Eq.10 (this work)"][0]),
-        ("DFT Eq.10\nSS", results["DFT Eq.10 SS (this work)"][0]),
+        ("DFT Eq.10\nSS", results["DFT-Ωsf (this work)"][0]),
         ("SS ML-\nfilled", results["SS Eq.10 ML-filled"][0]),
         ("SS+Ridge", results["SS Eq.10 + Ridge"][0]),
         ("SS+GPR", results["SS Eq.10 + GPR"][0]),
@@ -2144,7 +2144,7 @@ def main():
     fig, axes = plt.subplots(1, 3, figsize=(18, 6))
     for ax, (name, y_p, color) in zip(axes, [
         ("Alonso Eq.10", a_eq10_alonso, "gray"),
-        ("DFT Eq.10 SS", a_eq10_ss, "#22AA22"),
+        ("DFT-Ωsf", a_eq10_ss, "#22AA22"),
         ("Best Model", y_best, "crimson"),
     ]):
         errors = (y_hea - y_p) * 1000  # mÅ
@@ -2313,7 +2313,7 @@ def main():
         # Alonso Eq.10 (combined DFT Ω_sf, γ=1)
         a_eq10_king = compute_eq10_dft(comp, struct, omega_sf)
 
-        # DFT Eq.10 SS (structure-specific, optimized γ)
+        # DFT-Ωsf (structure-specific, optimized γ)
         omega_ss = omega_b2 if struct == "BCC" else omega_l12
         gamma_ss = best_gb if struct == "BCC" else best_gf
         a_eq10_ss_ind = compute_eq10_scaled(comp, struct, omega_ss, gamma=gamma_ss)
@@ -2358,20 +2358,20 @@ def main():
     print(f"    {'-'*49}")
     print(f"    {'Vegard':<25} {rmse(err_veg):>8.4f} {mae(err_veg):>8.4f} {r2_veg:>8.4f}")
     print(f"    {'Alonso Eq.10 (King)':<25} {rmse(err_king):>8.4f} {mae(err_king):>8.4f} {r2_king:>8.4f}")
-    print(f"    {'DFT Eq.10 SS':<25} {rmse(err_ss):>8.4f} {mae(err_ss):>8.4f} {r2_ss:>8.4f}")
+    print(f"    {'DFT-Ωsf':<25} {rmse(err_ss):>8.4f} {mae(err_ss):>8.4f} {r2_ss:>8.4f}")
     print()
 
     if bcc_ind.sum() > 0:
         print(f"    BCC ({bcc_ind.sum()} HEAs):")
         print(f"      Vegard:       RMSE = {rmse(err_veg[bcc_ind]):.4f} Å")
         print(f"      King Eq.10:   RMSE = {rmse(err_king[bcc_ind]):.4f} Å")
-        print(f"      DFT Eq.10 SS: RMSE = {rmse(err_ss[bcc_ind]):.4f} Å")
+        print(f"      DFT-Ωsf: RMSE = {rmse(err_ss[bcc_ind]):.4f} Å")
 
     if fcc_ind.sum() > 0:
         print(f"    FCC ({fcc_ind.sum()} HEAs):")
         print(f"      Vegard:       RMSE = {rmse(err_veg[fcc_ind]):.4f} Å")
         print(f"      King Eq.10:   RMSE = {rmse(err_king[fcc_ind]):.4f} Å")
-        print(f"      DFT Eq.10 SS: RMSE = {rmse(err_ss[fcc_ind]):.4f} Å")
+        print(f"      DFT-Ωsf: RMSE = {rmse(err_ss[fcc_ind]):.4f} Å")
 
     # Save results
     ind_df.to_csv(OUTDIR / "independent_test_results.csv", index=False)
@@ -2382,7 +2382,7 @@ def main():
     methods_ind = [
         ("Vegard", ind_df["a_vegard"].values, "steelblue"),
         ("Alonso Eq.10 (King)", ind_df["a_eq10_king"].values, "gray"),
-        ("DFT Eq.10 SS", ind_df["a_eq10_ss"].values, "#44AA77"),
+        ("DFT-Ωsf", ind_df["a_eq10_ss"].values, "#44AA77"),
     ]
     for ax, (name, y_pred, color) in zip(axes_ind, methods_ind):
         bcc_m = ind_df["struct"].values == "BCC"
@@ -2431,7 +2431,7 @@ def main():
         print(f"  → Surpassed Alonso Eq.10 ({alonso_rmse:.4f} Å)")
     print()
     print("  --- Independent Test Set ---")
-    print(f"  DFT Eq.10 SS RMSE: {rmse(err_ss):.4f} Å")
+    print(f"  DFT-Ωsf RMSE: {rmse(err_ss):.4f} Å")
     if bcc_ind.sum() > 0:
         print(f"  BCC:  {rmse(err_ss[bcc_ind]):.4f} Å ({bcc_ind.sum()} HEAs)")
     if fcc_ind.sum() > 0:

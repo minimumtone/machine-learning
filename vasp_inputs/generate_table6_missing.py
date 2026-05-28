@@ -116,7 +116,7 @@ POTCAR_VARIANTS = {
 # =====================================================================
 INCAR_L12 = """SYSTEM = L12 structure optimization
 # Electronic relaxation
-ENCUT  = 320
+ENCUT  = 520
 PREC   = Accurate
 EDIFF  = 1E-6
 NELM   = 200
@@ -149,7 +149,7 @@ NCORE  = 4
 
 INCAR_B2 = """SYSTEM = B2 structure optimization
 # Electronic relaxation
-ENCUT  = 320
+ENCUT  = 520
 PREC   = Accurate
 EDIFF  = 1E-6
 NELM   = 200
