@@ -89,16 +89,17 @@ def main():
         with open(incar_path) as f:
             content = f.read()
 
-        if "ISIF" in content and "ISIF   = 7" in content or "ISIF = 7" in content:
-            already_isif7 += 1
-            continue
+        is_already_isif7 = "ISIF   = 7" in content or "ISIF = 7" in content
 
-        if args.dry_run:
-            print(f"  [更新] {subdir}/INCAR")
+        if is_already_isif7:
+            already_isif7 += 1
         else:
-            with open(incar_path, "w") as f:
-                f.write(INCAR_CONTENT)
-            updated += 1
+            if args.dry_run:
+                print(f"  [更新] {subdir}/INCAR")
+            else:
+                with open(incar_path, "w") as f:
+                    f.write(INCAR_CONTENT)
+                updated += 1
 
         if args.clean:
             for fname in CLEAN_FILES:
