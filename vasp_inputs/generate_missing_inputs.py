@@ -418,7 +418,7 @@ def generate_potcar_script(base_dir, all_calcs):
 
     for subdir, el_list in all_calcs:
         pots = [POTCAR_VARIANTS.get(el, el) for el in el_list]
-        cat_parts = " ".join(f'"$VASP_PP_PATH"/PBE/{p}/POTCAR' for p in pots)
+        cat_parts = " ".join(f'"$VASP_PP_PATH"/potpaw_PBE/{p}/POTCAR' for p in pots)
         lines.append(f'cat {cat_parts} > {subdir}/POTCAR 2>/dev/null')
         pot_str = "+".join(pots)
         lines.append(

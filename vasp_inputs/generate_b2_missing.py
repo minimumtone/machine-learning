@@ -235,7 +235,7 @@ def main():
     with open(potcar_script, "w") as f:
         f.write("#!/bin/bash\n")
         f.write("# POTCAR生成スクリプト\n")
-        f.write("# Usage: VASP_PP_PATH=/path/to/vasp_pp bash make_potcar.sh\n# POTCARパス: $VASP_PP_PATH/PBE/{element}/POTCAR\n\n")
+        f.write("# Usage: bash make_potcar.sh  (requires $VASP_PP_PATH)\n# POTCARパス: $VASP_PP_PATH/potpaw_PBE/{element}/POTCAR\n\n")
         f.write('if [ -z "$VASP_PP_PATH" ]; then\n')
         f.write('    echo "ERROR: VASP_PP_PATH not set"\n')
         f.write('    exit 1\n')
@@ -247,11 +247,11 @@ def main():
             va = POTCAR_VARIANTS[a]
             vb = POTCAR_VARIANTS[b]
             if a == b:
-                f.write(f'cat "$VASP_PP_PATH/PBE/{va}/POTCAR" '
+                f.write(f'cat "$VASP_PP_PATH/potpaw_PBE/{va}/POTCAR" '
                         f'> "$SCRIPT_DIR/{dirname}/POTCAR"\n')
             else:
-                f.write(f'cat "$VASP_PP_PATH/PBE/{va}/POTCAR" '
-                        f'"$VASP_PP_PATH/PBE/{vb}/POTCAR" '
+                f.write(f'cat "$VASP_PP_PATH/potpaw_PBE/{va}/POTCAR" '
+                        f'"$VASP_PP_PATH/potpaw_PBE/{vb}/POTCAR" '
                         f'> "$SCRIPT_DIR/{dirname}/POTCAR"\n')
 
         f.write(f'\necho "POTCAR generated for {len(pairs)} directories"\n')
