@@ -217,15 +217,17 @@ def scan_structure_dir(base_dir, struct_type, expected_counts):
     Returns:
         results: list of dicts with extracted data
         errors: list of error strings
-        missing: set of (elA, elB) pairs not found
+        found_pairs: set of (elA, elB) pairs found
+        no_result_dirs: list of dirname strings where CONTCAR/POSCAR was absent or unreadable
     """
     results = []
     errors = []
     found_pairs = set()
+    no_result_dirs = []
 
     if not os.path.isdir(base_dir):
         errors.append(f"Directory not found: {base_dir}")
-        return results, errors, set()
+        return results, errors, set(), []
 
     subdirs = sorted(os.listdir(base_dir))
     for dirname in subdirs:
@@ -243,36 +245,35 @@ def scan_structure_dir(base_dir, struct_type, expected_counts):
         e_per_atom = read_energy_per_atom(calc_dir)
         vol = read_cell_volume(calc_dir)
 
-        status = "converged" if converged else "not_converged"
         if a is None:
-            status = "no_result"
+            no_result_dirs.append(dirname)
             errors.append(f"No lattice constant: {dirname}")
+            continue
 
         found_pairs.add((elA, elB))
         if elA != elB:
             found_pairs.add((elB, elA))
 
-        if a is not None:
-            results.append({
-                'material_id': f'vasp-{dirname}',
-                'formula': f"{elA}{cA}{elB}{cB}",
-                'element_A': elA,
-                'element_B': elB,
-                'count_A': float(cA),
-                'count_B': float(cB),
-                'lattice_constant': a,
-                'energy_per_atom': e_per_atom if e_per_atom else '',
-                'energy_above_hull': '',
-                'source': 'VASP',
-                'structure_type': struct_type,
-                'lattice_constant_calc': a,
-                'converged': converged,
-                'source_file': src,
-                'dirname': dirname,
-                'cell_volume': vol,
-            })
+        results.append({
+            'material_id': f'vasp-{dirname}',
+            'formula': f"{elA}{cA}{elB}{cB}",
+            'element_A': elA,
+            'element_B': elB,
+            'count_A': float(cA),
+            'count_B': float(cB),
+            'lattice_constant': a,
+            'energy_per_atom': e_per_atom if e_per_atom else '',
+            'energy_above_hull': '',
+            'source': 'VASP',
+            'structure_type': struct_type,
+            'lattice_constant_calc': a,
+            'converged': converged,
+            'source_file': src,
+            'dirname': dirname,
+            'cell_volume': vol,
+        })
 
-    return results, errors, found_pairs
+    return results, errors, found_pairs, no_result_dirs
 
 
 # =====================================================================
@@ -533,28 +534,41 @@ def main():
         struct_dir = data_dir / cfg['dir']
         print(f"\n[{label}] Scanning {struct_dir} ...")
 
-        results, errors, found_pairs = scan_structure_dir(
+        results, errors, found_pairs, no_result_dirs = scan_structure_dir(
             str(struct_dir), cfg['type'], cfg['counts'])
 
         all_results[label] = results
+        all_no_result = no_result_dirs
 
         n_conv = sum(1 for r in results if r.get('converged'))
         n_notconv = sum(1 for r in results if not r.get('converged'))
         n_total = len(results)
+        n_noresult = len(no_result_dirs)
 
-        # Count directories with no results
-        n_dirs = 0
+        # Count directories
+        n_dirs = n_total + n_noresult
         if os.path.isdir(struct_dir):
-            n_dirs = sum(1 for d in os.listdir(struct_dir)
-                         if os.path.isdir(struct_dir / d))
-        n_noresult = n_dirs - n_total
+            n_dirs_actual = sum(1 for d in os.listdir(struct_dir)
+                                if os.path.isdir(struct_dir / d))
+            n_dirs = max(n_dirs, n_dirs_actual)
 
         print(f"    ディレクトリ: {n_dirs}")
         print(f"    結果取得: {n_total} (収束: {n_conv}, 未収束: {n_notconv})")
-        print(f"    結果なし: {max(n_noresult, 0)}")
+        print(f"    結果なし: {n_noresult}")
+        if no_result_dirs:
+            print(f"    結果なしリスト:")
+            for d in no_result_dirs:
+                print(f"      - {d}")
 
         report.append(f"| {label} | {n_dirs} | {n_conv} | {n_notconv} | "
-                       f"{max(n_noresult, 0)} |")
+                       f"{n_noresult} |")
+
+        # List no-result directories in report
+        if no_result_dirs:
+            report.append(f"\n**{label} 結果なしディレクトリ ({n_noresult}件):**\n")
+            for d in no_result_dirs:
+                report.append(f"- `{d}`")
+            report.append("")
 
         # Coverage analysis
         coverage = analyze_coverage(found_pairs, ALL_ELEMENTS)
