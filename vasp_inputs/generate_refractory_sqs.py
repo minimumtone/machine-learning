@@ -116,20 +116,31 @@ def estimate_sqs_a0(el_a, el_b):
 
 
 def write_incar_sqs(dirpath):
-    """Write INCAR matching existing BCC_B2 settings (ASE-generated style)."""
-    content = """INCAR created by Atomic Simulation Environment
- ENCUT = 520.000000
- POTIM = 0.020000
- EDIFF = 1.00e-06
- EDIFFG = -1.00e-02
- ALGO = Normal
- GGA = PE
- PREC = high
- IBRION = 2
- ISIF = 3
- ISPIN = 2
- NELM = 60
- NSW = 120
+    """Write INCAR for BCC-SQS. ISIF=7: volume-only relaxation, cubic shape preserved."""
+    content = """\
+SYSTEM = BCC-SQS structure optimization (cubic constraint)
+
+ENCUT  = 520
+PREC   = Accurate
+EDIFF  = 1E-6
+NELM   = 200
+LREAL  = .FALSE.
+
+IBRION = 2
+ISIF   = 7
+NSW    = 100
+EDIFFG = -0.01
+
+ISMEAR = 1
+SIGMA  = 0.2
+
+GGA    = PE
+ISPIN  = 2
+
+LORBIT = 11
+LWAVE  = .FALSE.
+LCHARG = .FALSE.
+NCORE  = 4
 """
     with open(os.path.join(dirpath, "INCAR"), "w") as f:
         f.write(content)

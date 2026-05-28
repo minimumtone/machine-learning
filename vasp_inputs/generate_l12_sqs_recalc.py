@@ -229,7 +229,7 @@ def make_incar_l12(system_name, magmom_str=None, is_af=False):
 
 
 def make_incar_sqs(system_name, n_atoms, magmom_str=None, is_af=False):
-    """Generate high-accuracy INCAR for SQS supercell calculation."""
+    """Generate high-accuracy INCAR for SQS supercell calculation. ISIF=7: cubic constraint."""
     lines = [
         f"SYSTEM = {system_name}",
         "",
@@ -240,9 +240,9 @@ def make_incar_sqs(system_name, n_atoms, magmom_str=None, is_af=False):
         "NELM   = 300",
         "LREAL  = .FALSE." if n_atoms <= 32 else "LREAL  = Auto",
         "",
-        "# Ionic relaxation",
+        "# Ionic relaxation (ISIF=7: volume-only, cubic shape preserved)",
         "IBRION = 2",
-        "ISIF   = 3",
+        "ISIF   = 7",
         "NSW    = 200",
         "EDIFFG = -0.005",
         "POTIM  = 0.02",
