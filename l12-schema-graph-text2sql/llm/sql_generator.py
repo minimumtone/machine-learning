@@ -127,16 +127,34 @@ def _rule_based_fallback(
         "calculated_property": "cp",
     }
 
-    for t in sorted(tables_needed):
-        a = alias_map.get(t, t[:2])
-        joins.append(f"JOIN {t} {a} ON {a}.entry_id = m.entry_id")
+    indirect_join_map = {
+        "calculated_property": (
+            "JOIN calculation calc ON calc.entry_id = m.entry_id\n"
+            "    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id"
+        ),
+    }
 
+    for t in sorted(tables_needed):
+        if t in indirect_join_map:
+            joins.append(indirect_join_map[t])
+            tables_needed.discard("calculation")
+        else:
+            a = alias_map.get(t, t[:2])
+            joins.append(f"JOIN {t} {a} ON {a}.entry_id = m.entry_id")
+
+    has_exists_elements = False
     for frag in linked["sql_fragments"]:
         sql_f = frag["sql_fragment"]
         if frag["type"] == "sort":
             order_by = sql_f
+        elif frag["type"] == "element_exists":
+            has_exists_elements = True
+            where_clauses.append(sql_f)
         else:
             where_clauses.append(sql_f)
+
+    if has_exists_elements:
+        joins = [j for j in joins if not j.startswith("JOIN composition")]
 
     if "structure" in tables_needed:
         select_cols.append("s.prototype")

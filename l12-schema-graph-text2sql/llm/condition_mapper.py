@@ -27,13 +27,25 @@ def map_prototype_condition(prototype: str) -> dict[str, Any]:
 
 def map_element_condition(elements: list[str]) -> list[dict[str, Any]]:
     conditions: list[dict[str, Any]] = []
-    for elem in elements:
+    if len(elements) == 1:
         conditions.append({
             "type": "element",
-            "sql_fragment": f"c.element = '{elem}'",
+            "sql_fragment": f"c.element = '{elements[0]}'",
             "tables": ["composition"],
             "columns": ["composition.element"],
         })
+    elif len(elements) > 1:
+        for elem in elements:
+            conditions.append({
+                "type": "element_exists",
+                "sql_fragment": (
+                    f"EXISTS (SELECT 1 FROM composition c_{elem.lower()}"
+                    f" WHERE c_{elem.lower()}.entry_id = m.entry_id"
+                    f" AND c_{elem.lower()}.element = '{elem}')"
+                ),
+                "tables": ["composition"],
+                "columns": ["composition.element"],
+            })
     return conditions
 
 
