@@ -1,0 +1,19 @@
+Metadata-Version: 2.4
+Name: l12-schema-graph-text2sql
+Version: 0.1.0
+Summary: Schema-graph-assisted Text-to-SQL for L1_2 intermetallic compound exploration
+Requires-Python: >=3.11
+Requires-Dist: psycopg[binary]>=3.1
+Requires-Dist: networkx>=3.0
+Requires-Dist: pyyaml>=6.0
+Requires-Dist: fastapi>=0.100
+Requires-Dist: uvicorn>=0.20
+Requires-Dist: sqlglot>=20.0
+Requires-Dist: openai>=1.0
+Requires-Dist: pandas>=2.0
+Requires-Dist: matplotlib>=3.7
+Requires-Dist: plotly>=5.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0; extra == "dev"
+Requires-Dist: httpx>=0.24; extra == "dev"

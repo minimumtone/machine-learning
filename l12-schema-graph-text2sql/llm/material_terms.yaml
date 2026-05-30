@@ -1,0 +1,121 @@
+prototype_aliases:
+  L12:
+    - L12
+    - "L1\u2082"
+    - L1_2
+    - Cu3Au
+    - "Cu\u2083Au\u578B"
+    - ordered FCC
+    - "\u898F\u5247\u5316FCC"
+    - gamma prime
+    - "\u03B3'"
+    - "\u30AC\u30F3\u30DE\u30D7\u30E9\u30A4\u30E0"
+  B2:
+    - B2
+    - CsCl
+    - "CsCl\u578B"
+    - ordered BCC
+    - "\u898F\u5247\u5316BCC"
+
+stability_terms:
+  stable:
+    description: thermodynamically stable
+    condition:
+      column: phase_stability.energy_above_hull
+      operator: "<="
+      value: 0.001
+      unit: eV/atom
+
+  metastable:
+    description: metastable within 50 meV/atom
+    condition:
+      column: phase_stability.energy_above_hull
+      operator: "<="
+      value: 0.05
+      unit: eV/atom
+
+property_terms:
+  formation_energy:
+    aliases:
+      - formation energy
+      - "\u5F62\u6210\u30A8\u30CD\u30EB\u30AE\u30FC"
+      - "\u751F\u6210\u30A8\u30CD\u30EB\u30AE\u30FC"
+    column: phase_stability.formation_energy_per_atom
+
+  lattice_constant:
+    aliases:
+      - lattice constant
+      - "\u683C\u5B50\u5B9A\u6570"
+      - lattice_a
+    column: structure.lattice_a
+
+  bulk_modulus:
+    aliases:
+      - bulk modulus
+      - "\u4F53\u7A4D\u5F3E\u6027\u7387"
+      - "\u30D0\u30EB\u30AF\u30E2\u30B8\u30E5\u30E9\u30B9"
+    property_name: bulk_modulus
+
+  shear_modulus:
+    aliases:
+      - shear modulus
+      - "\u305B\u3093\u65AD\u5F3E\u6027\u7387"
+      - "\u30B7\u30A2\u30E2\u30B8\u30E5\u30E9\u30B9"
+    property_name: shear_modulus
+
+  energy_above_hull:
+    aliases:
+      - energy above hull
+      - "\u30CF\u30EB\u4E0A\u30A8\u30CD\u30EB\u30AE\u30FC"
+    column: phase_stability.energy_above_hull
+
+  band_gap:
+    aliases:
+      - band gap
+      - "\u30D0\u30F3\u30C9\u30AE\u30E3\u30C3\u30D7"
+      - bandgap
+    column: phase_stability.band_gap
+
+  volume_per_atom:
+    aliases:
+      - volume per atom
+      - "\u539F\u5B50\u3042\u305F\u308A\u4F53\u7A4D"
+      - volume
+    column: structure.volume_per_atom
+
+  space_group:
+    aliases:
+      - space group
+      - "\u7A7A\u9593\u7FA4"
+      - spacegroup
+    column: structure.space_group
+
+elements:
+  Ni:
+    aliases: [Ni, nickel, "\u30CB\u30C3\u30B1\u30EB"]
+  Al:
+    aliases: [Al, aluminum, aluminium, "\u30A2\u30EB\u30DF\u30CB\u30A6\u30E0"]
+  Co:
+    aliases: [Co, cobalt, "\u30B3\u30D0\u30EB\u30C8"]
+  Ti:
+    aliases: [Ti, titanium, "\u30C1\u30BF\u30F3"]
+  Ta:
+    aliases: [Ta, tantalum, "\u30BF\u30F3\u30BF\u30EB"]
+  Nb:
+    aliases: [Nb, niobium, "\u30CB\u30AA\u30D6"]
+  W:
+    aliases: [W, tungsten, "\u30BF\u30F3\u30B0\u30B9\u30C6\u30F3"]
+  Fe:
+    aliases: [Fe, iron, "\u9244"]
+  Cu:
+    aliases: [Cu, copper, "\u9285"]
+  Pt:
+    aliases: [Pt, platinum, "\u30D7\u30E9\u30C1\u30CA"]
+  Ir:
+    aliases: [Ir, iridium, "\u30A4\u30EA\u30B8\u30A6\u30E0"]
+  Sc:
+    aliases: [Sc, scandium, "\u30B9\u30AB\u30F3\u30B8\u30A6\u30E0"]
+  Ga:
+    aliases: [Ga, gallium, "\u30AC\u30EA\u30A6\u30E0"]
+  Ge:
+    aliases: [Ge, germanium, "\u30B2\u30EB\u30DE\u30CB\u30A6\u30E0"]

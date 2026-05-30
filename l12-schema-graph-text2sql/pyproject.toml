@@ -1,0 +1,35 @@
+[project]
+name = "l12-schema-graph-text2sql"
+version = "0.1.0"
+description = "Schema-graph-assisted Text-to-SQL for L1_2 intermetallic compound exploration"
+requires-python = ">=3.11"
+dependencies = [
+    "psycopg[binary]>=3.1",
+    "networkx>=3.0",
+    "pyyaml>=6.0",
+    "fastapi>=0.100",
+    "uvicorn>=0.20",
+    "sqlglot>=20.0",
+    "openai>=1.0",
+    "pandas>=2.0",
+    "matplotlib>=3.7",
+    "plotly>=5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "httpx>=0.24",
+]
+
+[tool.setuptools.packages.find]
+include = ["graph*", "llm*", "safety*", "evaluation*", "api*", "ingestion*"]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
