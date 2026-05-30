@@ -25,6 +25,10 @@ class QueryRequest(BaseModel):
     execute: bool = True
 
 
+class ValidateRequest(BaseModel):
+    sql: str
+
+
 class QueryResponse(BaseModel):
     query: str
     conditions: dict[str, Any]
@@ -76,6 +80,6 @@ def extract_endpoint(req: QueryRequest) -> dict[str, Any]:
 
 
 @app.post("/validate")
-def validate_endpoint(sql: str) -> dict[str, Any]:
+def validate_endpoint(req: ValidateRequest) -> dict[str, Any]:
     """Validate a SQL string."""
-    return validate_sql(sql)
+    return validate_sql(req.sql)
