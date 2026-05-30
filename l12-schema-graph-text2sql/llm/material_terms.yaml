@@ -69,6 +69,27 @@ property_terms:
       - "\u30CF\u30EB\u4E0A\u30A8\u30CD\u30EB\u30AE\u30FC"
     column: phase_stability.energy_above_hull
 
+  band_gap:
+    aliases:
+      - band gap
+      - "\u30D0\u30F3\u30C9\u30AE\u30E3\u30C3\u30D7"
+      - bandgap
+    column: phase_stability.band_gap
+
+  volume_per_atom:
+    aliases:
+      - volume per atom
+      - "\u539F\u5B50\u3042\u305F\u308A\u4F53\u7A4D"
+      - volume
+    column: structure.volume_per_atom
+
+  space_group:
+    aliases:
+      - space group
+      - "\u7A7A\u9593\u7FA4"
+      - spacegroup
+    column: structure.space_group
+
 elements:
   Ni:
     aliases: [Ni, nickel, "\u30CB\u30C3\u30B1\u30EB"]

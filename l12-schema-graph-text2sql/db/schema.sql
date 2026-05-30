@@ -27,7 +27,8 @@ CREATE TABLE structure (
     lattice_a DOUBLE PRECISION,
     lattice_b DOUBLE PRECISION,
     lattice_c DOUBLE PRECISION,
-    volume_per_atom DOUBLE PRECISION
+    volume_per_atom DOUBLE PRECISION,
+    space_group TEXT
 );
 
 CREATE TABLE calculation (
@@ -51,7 +52,8 @@ CREATE TABLE phase_stability (
     entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
     formation_energy_per_atom DOUBLE PRECISION,
     energy_above_hull DOUBLE PRECISION,
-    is_stable BOOLEAN
+    is_stable BOOLEAN,
+    band_gap DOUBLE PRECISION
 );
 
 CREATE TABLE prototype_definition (

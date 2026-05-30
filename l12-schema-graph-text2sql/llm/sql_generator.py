@@ -162,9 +162,11 @@ def _rule_based_fallback(
     if "structure" in tables_needed:
         select_cols.append("s.prototype")
         select_cols.append("s.lattice_a")
+        select_cols.append("s.space_group")
     if "phase_stability" in tables_needed:
         select_cols.append("ps.formation_energy_per_atom")
         select_cols.append("ps.energy_above_hull")
+        select_cols.append("ps.band_gap")
 
     sql_parts = [f"SELECT DISTINCT\n    {', '.join(select_cols)}"]
     sql_parts.append("FROM material_entry m")
@@ -200,8 +202,10 @@ def pipeline(user_query: str, join_list: list[str] | None = None) -> dict[str, A
         "structure.prototype", "structure.strukturbericht", "structure.lattice_a",
         "structure.lattice_b", "structure.lattice_c", "structure.volume_per_atom",
         "structure.formula_type", "structure.space_group_number",
+        "structure.space_group",
         "phase_stability.formation_energy_per_atom",
         "phase_stability.energy_above_hull", "phase_stability.is_stable",
+        "phase_stability.band_gap",
         "calculation.method", "calculation.functional",
         "calculated_property.property_name", "calculated_property.value",
         "calculated_property.unit",
