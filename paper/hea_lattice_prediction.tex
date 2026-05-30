@@ -40,7 +40,7 @@
 手法を提案する。King (1966) の体積サイズファクター$\Omega_\text{sf}$を
 DFT計算から構造特異的に導出（B2→BCC、L1$_2$→FCC）し、
 Materials Project・OQMD・VASP計算の3ソースから
-元素対1,084パラメータ（418 B2 + 666 L1$_2$、38ターゲット元素間）を取得し、
+元素対1,461パラメータ（758 B2 + 703 L1$_2$、38ターゲット元素間）を取得し、
 64個のHEA予測に必要な全元素ペアのDFT $\Omega_\text{sf}$を確保した
 （BCC 59/59、FCC 42/42）。
 これを元素別加法分解
@@ -237,7 +237,7 @@ $\delta r$が構造情報を数学的・原理的に含み得ないことを初�
     DFT-GGA計算が不安定なため除外、\ref{sec:appendix_gdce}節参照）。
   \item \textbf{元素別加法分解}:
     $\Omega_\text{sf}^{(s)}(i\text{-}j) \approx \delta_i^{(s)} + \delta_j^{(s)}$により、
-    1,084個の元素対パラメータを39元素パラメータに圧縮。
+    1,461個の元素対パラメータを39元素パラメータに圧縮。
     得られた$\delta^{(s)}$はHume-Rothery原子半径と同様に
     元素固有の属性であり、39パラメータで741ペアの全組み合わせを
     カバーできる。
@@ -273,11 +273,12 @@ $\delta r$が構造情報を数学的・原理的に含み得ないことを初�
   \item \textbf{Materials Project (MP)}~\cite{Jain2013}: B2・L1$_2$化合物
     （PAW-PBE汎関数）。
   \item \textbf{OQMD}~\cite{Saal2013}: 追加のB2・L1$_2$エントリ。
-  \item \textbf{VASP計算（本研究）}: 1,483個のB2、2,808個のL1$_2$化合物
+  \item \textbf{VASP計算（本研究）}: 2,200個のB2（2,136収束）、
+    2,810個のL1$_2$（2,169収束）化合物
     （PAW-PBE、ENCUT = 520~eV、$k$メッシュ$\geq 12\times12\times12$、
     EDIFF = $10^{-6}$~eV）。
 \end{itemize}
-合計7,802エントリを取得した（表~\ref{tab:dft_data}）。
+合計9,863エントリを取得した（表~\ref{tab:dft_data}）。
 
 \begin{table}[H]
 \centering
@@ -290,17 +291,19 @@ $\delta r$が構造情報を数学的・原理的に含み得ないことを初�
 \midrule
 Materials Project & 346 & 723 & 1,069 \\
 OQMD & 2,207 & 235 & 2,442 \\
-VASP（本研究） & 1,483 & 2,808 & 4,291 \\
+VASP（本研究） & 2,200 & 2,810 & 5,010 \\
 \midrule
-\textbf{合計} & \textbf{4,036} & \textbf{3,766} & \textbf{7,802} \\
+\textbf{合計} & \textbf{4,753} & \textbf{3,768} & \textbf{9,863$^*$} \\
 \bottomrule
 \end{tabular}
+\par\smallskip
+{\scriptsize $^*$収束後のユニークペア数: B2 758、L1$_2$ 703（38元素間で完全カバレッジ）。}
 \end{table}
 
 収束判定、物理的格子定数範囲（2.0--8.0~\AA）でフィルタリング後、
-473 B2・703 L1$_2$元素ペアの$\Omega_\text{sf}$を得た。
-38ターゲット元素間に限定すると418 B2・666 L1$_2$ペア
-（可能な$\binom{38}{2} = 703$ペアのそれぞれ59.5\%、94.7\%）となる。
+B2で758・L1$_2$で703元素ペアの$\Omega_\text{sf}$を得た。
+38ターゲット元素間ではB2 703/703ペア（100\%）、
+L1$_2$ 703/703ペア（100\%）の完全カバレッジを達成した。
 同一ペアに対して複数のデータソースが存在する
 場合は、中央値を採用した。これにより外れ値の影響を緩和するとともに、
 データソース間の系統的バイアスを平均化する。
@@ -1159,7 +1162,7 @@ $\delta$の符号は統計的に有意である。
 \begin{table}[H]
 \centering
 \caption{元素対$\Omega_\text{sf}$と加法分解$\delta_A + \delta_B$による
-  HEA格子定数予測の比較。加法分解はパラメータ数を1,084対→39元素に
+  HEA格子定数予測の比較。加法分解はパラメータ数を1,461対→39元素に
   96\%削減しつつ、カバー可能ペア数を703→741に拡大。
   RMSEペナルティはわずか0.0003~\AA{}。}
 \label{tab:pw_vs_add}
@@ -1168,7 +1171,7 @@ $\delta$の符号は統計的に有意である。
 \toprule
 アプローチ & パラメータ数 & カバーペア & RMSE \\
 \midrule
-元素対$\Omega_\text{sf}$ & 1,084対 & 703 & 0.0214 \\
+元素対$\Omega_\text{sf}$ & 1,461対 & 703 & 0.0214 \\
 加法$\delta_i + \delta_j$ & 39元素 & 741 & 0.0211 \\
 \bottomrule
 \end{tabular}
@@ -1430,7 +1433,7 @@ $q_\text{FCC}^\text{add} = -0.170$を得た。
 \centering
 \caption{加法分解$\delta^{(s)}$モデルによるHEA格子定数予測RMSE (\AA) の
   全体・BCC/FCC構造別・等モル/非等モル組成別比較（64 HEA）。
-  Vegard則（ベースライン）、元素対$\Omega_\text{sf}$（1,084パラメータ）、
+  Vegard則（ベースライン）、元素対$\Omega_\text{sf}$（1,461パラメータ）、
   加法$\delta^{(s)}$（39パラメータ）の3手法。
   加法モデルのRMSE = 0.0211~\AA{}は元素対モデル（0.0214~\AA）とほぼ同等であり、
   96\%のパラメータ削減にもかかわらず精度を維持。
@@ -1866,7 +1869,7 @@ DFTデータのない新規ペアも自動的にカバーする。
 加法モデル$\Omega_\text{sf}^{(s)} \approx \delta_A^{(s)} + \delta_B^{(s)}$は3つの
 実用的利点を持つ：
 \begin{enumerate}
-  \item \textbf{コンパクト表現}: 1,084個の元素対値の代わりに39元素パラメータ。
+  \item \textbf{コンパクト表現}: 1,461個の元素対値の代わりに39元素パラメータ。
   \item \textbf{完全カバレッジ}: 39元素の全組み合わせ
     $\binom{39}{2} = 741$ペアを予測可能。
   \item \textbf{再現性}: 表~\ref{tab:delta}のみで他の研究者がDFT計算なしに
@@ -1918,6 +1921,7 @@ BCC HEA精度向上には、多体相互作用の導入（三元系DFTデータ�
 
 
 \subsection{校正定数$q$の位置づけ}
+\label{sec:q_position}
 
 $q_s$は二元系秩序構造の$\Omega_\text{sf}$を
 HEAランダム固溶体に適用する際の校正定数であり、本手法の物理的本質ではない。
@@ -1982,7 +1986,7 @@ HEA格子定数予測においては、$q$最適化が残余バイアスを吸�
 
 \subsection{否定的結果の意義}
 
-本研究では2つの重要な否定的結果を得た：
+本研究では3つの重要な否定的結果を得た：
 
 \paragraph{ML残差補正の限界}
 7種のMLモデルがDFT-$\Omega_\text{sf}$モデルを実質的に改善できないことは、
@@ -2005,6 +2009,57 @@ $\Omega_\text{sf}$は化学結合の非線形効果を反映するが、これ�
 固溶体/金属間化合物の相境界とは直接対応しない。
 むしろ$\Omega_\text{sf}$の価値は格子定数の\emph{定量的予測}にあり、
 相の\emph{定性的分類}とは異なる次元の情報を提供する。
+
+\paragraph{DFT自己整合体積の限界}
+King実験値$V_i$をDFT計算値に統一すれば
+$\Omega_\text{sf}$との理論的自己整合性が確保されると期待されるが、
+VASP B2同種体積、Wang~\cite{Wang2004lattice}のab initio安定構造体積、
+741ペア直接予測モデルのいずれもKing実験値を下回った
+（表~\ref{tab:vi_comparison}、詳細は\ref{sec:appendix_volumes}節）。
+GGA-PBEの元素依存系統誤差（Au: $+7.1$\%, Fe: $-4.6$\%）が
+Vegardベースラインを直接劣化させるためであり、
+自己整合性の理論的利点よりも、
+King室温実験値の高いVegard精度が実用上優先される。
+
+
+\subsection{DFT自己整合性 vs King実験値の精度}
+\label{sec:self_consistency}
+
+本手法ではKing実験値~\cite{King1966}をVegard基準体積$V_i$に、
+DFT計算値を$\Omega_\text{sf}$に用いる「混合」アプローチを採用している。
+理論的にはVegard基準もDFT体積で統一すれば
+$\Omega_\text{sf}$との自己整合性が確保されるが、
+3つの代替案——(i)~VASP B2同種仮想BCC体積、
+(ii)~Wang~\cite{Wang2004lattice}のab initio安定構造体積、
+(iii)~741ペア直接予測モデル——のいずれもKing実験値に劣ることを
+定量的に確認した（表~\ref{tab:vi_comparison}、詳細は
+\ref{sec:appendix_volumes}節）。
+
+この結果は、$V_i$と$\Omega_\text{sf}$のDFT系統誤差に対する
+感度の非対称性で理解できる。
+$\Omega_\text{sf} = (V_\text{DFT} - V_\text{Vegard})/V_\text{Vegard}$は
+偏差の\emph{比}として定義されるため、
+GGA系統誤差が分子・分母で部分的に相殺され、
+残余は単一パラメータ$q_s$で吸収される。
+一方、Vegard基準の$V_i$はHEA体積を直接決定するため、
+元素ごとにばらつくGGA誤差（Au: $+7.1$\%, Fe: $-4.6$\%）が
+そのままVegardベースラインのRMSEに現れる。
+この誤差は多元素の線形補間で部分的に平均化されるものの、
+$q$という単一スカラーでは吸収できない。
+
+加えて、HEA格子定数の実験値は室温（$\sim$300~K）測定であるのに対し、
+DFT体積は0~Kの値である。King実験値は室温測定であるため、
+Vegard基準線との温度整合性がDFTより優れる。
+準調和近似（QHA）によるDFT有限温度体積の計算は原理的に可能であるが、
+38元素の個別フォノン計算を要し、GGA系統誤差自体は解消されない。
+
+以上より、King $V_i$ + DFT $\Omega_\text{sf}$ + $q$補正の
+混合アプローチは、理論的自己整合性を犠牲にしつつも
+実用的予測精度を最大化する合理的な選択である。
+$q$は$V_i$と$\Omega_\text{sf}$のデータソース差異を吸収する
+\emph{環境因子}として位置づけられ（\ref{sec:q_position}節参照）、
+SQS参照では$q \to 1$（無補正）が達成されることが
+この解釈の妥当性を支持する。
 
 
 \subsection{SQS構造による$\Omega_\text{sf}$の改善}
@@ -2278,14 +2333,10 @@ $\alpha = -1$（全異種近接）→$\alpha \approx 0$（ランダム）の
 遷移に伴い、異種間化学結合による収縮効果が希釈され、
 $\Omega_\text{sf}$分布は負の偏りから正負バランスへと移行する。
 
-VASP B2/L1$_2$データの統合により、B2は418/703ペア（59.5\%）、
-L1$_2$は666/703ペア（94.7\%）のカバレッジを達成した。
-残る不足分（B2: 285ペア、L1$_2$: 37ペア）について、
-VASP計算（PAW-PBE, ENCUT = 520~eV, $16\times16\times16$ $\Gamma$メッシュ, ISIF = 3）
-を準備中である。
-特にB2で不足する主要元素（Au, Be, Ir, Os, Pt, Re, Rh等の5$d$貴金属・希土類）の
-データ取得が優先課題である。
-完全カバレッジの達成により、$q$の物理的意味がより明確化し、
+VASP B2/L1$_2$データの統合により、B2・L1$_2$ともに
+703/703ペア（100\%）の完全カバレッジを達成した。
+38元素の全ヘテロペアについてDFT $\Omega_\text{sf}$が利用可能であり、
+機械学習による欠損値補完が不要となった。
 SQS全元素拡張と組み合わせた予測精度の向上が期待される。
 
 なお、FCC側では同様のSQS置換（L1$_2$ → FCC-SQS）の
@@ -2328,13 +2379,13 @@ DFT体積サイズファクターの元素別加法分解に基づく、
     校正定数$q$を排除し、$\Omega_\text{sf}$のみで予測可能となる。FCC HEAは0.0096~\AA{}。
 
   \item \textbf{DFTデータカバレッジの完全化}:
-    MP/OQMD/VASPの3ソース統合により1,084元素ペア（418 B2 + 666 L1$_2$）を取得し、
+    MP/OQMD/VASPの3ソース統合により1,461元素ペア（758 B2 + 703 L1$_2$）を取得し、
     HEA予測に必要な全ペアのDFT $\Omega_\text{sf}$を確保した
     （BCC 59/59、FCC 42/42）。
     データソース間の$\Omega_\text{sf}$相関は$r > 0.99$と高い整合性を示す。
 
   \item \textbf{パラメータ圧縮とML記述子}:
-    1,084個の元素対値を38元素パラメータ$\delta^{(s)}$に圧縮。
+    1,461個の元素対値を38元素パラメータ$\delta^{(s)}$に圧縮。
     表~\ref{tab:delta}のみで再現可能であり、
     Hume-Rothery原子半径と同様に元素固有のML記述子としても活用可能。
 
@@ -2356,7 +2407,7 @@ DFT体積サイズファクターの元素別加法分解に基づく、
 Vegard則は構造・化学結合効果を無視するためRMSE = 0.0221~\AA{}に留まる。
 Alonsoモデルは実験$\Omega_\text{sf}$を使用し0.0229~\AA{}を達成したが、
 $\Omega_\text{sf}$データの不足するペアでは予測不能となる。
-本手法はDFTデータの網羅性（7,802化合物、MP/OQMD/VASP統合）と
+本手法はDFTデータの網羅性（9,863化合物、MP/OQMD/VASP統合）と
 構造特異性（B2/L1$_2$分離）、
 およびSQSによるBCC $\Omega_\text{sf}$の改善により、
 RMSE = 0.0202~\AA{}（Vegard比$-$11\%）を達成した。
@@ -2379,8 +2430,8 @@ VASP統合による全HEAペアのDFTカバレッジ達成（BCC 59/59、FCC 42/
 Vegard~\cite{Vegard1921}      & 38  & 0.0221 & --- & 任意 \\
 Alonso~\cite{Alonso2021}      & $\sim$200 & 0.0229 & --- & 限定 \\
 Core\~{n}o-Alonso~\cite{CorenoAlonso2004} & $\sim$150 & ---$^\dagger$ & B2/L1$_2$ & 限定 \\
-本手法(B2参照)           & 1,084 & 0.0214 & B2/L1$_2$ & 任意 \\
-\textbf{本手法(SQS参照, $q=1$)}    & 1,084+36 & \textbf{0.0202} & \textbf{B2/L1$_2$/SQS} & 任意 \\
+本手法(B2参照)           & 1,461 & 0.0214 & B2/L1$_2$ & 任意 \\
+\textbf{本手法(SQS参照, $q=1$)}    & 1,461+36 & \textbf{0.0202} & \textbf{B2/L1$_2$/SQS} & 任意 \\
 \bottomrule
 \end{tabular}
 \par\smallskip
@@ -2414,10 +2465,6 @@ BCC HEAでRMSE 6.0\%改善、Vegard縮退を22/29 → 1/29に解消した
 
 今後の課題として以下が挙げられる：
 \begin{enumerate}
-  \item \textbf{データベース完全化}: VASP統合によりB2は418/703（59.5\%）、
-    L1$_2$は666/703（94.7\%）のカバレッジを達成した。
-    残る不足分（B2: 285ペア、L1$_2$: 37ペア、主にAu・Be・5$d$貴金属）の
-    VASP計算を実施し、$\delta$パラメータの全元素再最適化を行う。
   \item \textbf{多体補正}: 三元・四元系DFTデータから、元素対
     $\Omega_\text{sf}$を超える三体相互作用の重要性を評価する。
   \item \textbf{温度補正}: DFTは0~Kの格子定数を与えるが、実験値は
@@ -2506,76 +2553,33 @@ B2構造ではA--B最近接距離が$a\sqrt{3}/2$、
 本研究では$\Omega_\text{sf}$の算出（式~\eqref{eq:omega_def}）
 およびVegard則の基準体積（式~\eqref{eq:vegard}）に、
 King~\cite{King1966}の室温実験原子体積を採用した。
-DFT計算による純元素体積への置き換えも検討したが、
-以下の理由からKing値を維持する判断に至った。
+DFT計算値（データベース値、本研究のVASP計算値、
+ならびにWangら~\cite{Wang2004lattice}のab initio体積）への
+置き換えを3つの観点から検証したが、
+いずれの場合もKing値の方がHEA予測精度において優れることを確認した。
 
-\subsection{DFT安定構造体積の問題}
+\subsection{DFTデータベース安定構造体積の問題}
 
 Materials Project (MP)~\cite{Jain2013}およびAFLOW~\cite{Curtarolo2012}データベースから
 40元素のDFT安定構造原子体積を取得し、King実験値と比較した
 （表~\ref{tab:king_vs_dft}）。
 HEA関連22元素ではMPの平均$|\Delta|$は2.4\%であるが、
 以下の元素で大きな乖離が認められた：
-
-\begin{itemize}
-  \item \textbf{Cr}: MP $= 13.08$~\AA$^3$ vs King $= 12.01$~\AA$^3$
-    （$+9.0$\%）。MPデータベースのエネルギー補正（r$^2$SCANまたはGGA+$U$）
-    により格子定数が過大評価されている可能性がある。
-  \item \textbf{Mn}: MP $= 13.02$~\AA$^3$ vs King $= 12.21$~\AA$^3$
-    （$+6.7$\%）。$\alpha$-Mn（$I\bar{4}3m$, 58原子/セル）は
-    複雑な反強磁性秩序を持ち、DFT-PBEでの最適化が
-    実験値を十分に再現できない。
-  \item \textbf{Sn}: MP $= 35.4$~\AA$^3$ vs King $= 27.1$~\AA$^3$
-    （$+31$\%）。MPが$\alpha$-Sn（diamond, Fd$\bar{3}$m）を
-    基底状態と判定するが、室温安定相は$\beta$-Sn（I4$_1$/amd）である。
-\end{itemize}
-
+Cr: MP $= 13.08$~\AA$^3$ vs King $= 12.01$~\AA$^3$（$+9.0$\%、
+エネルギー補正による過大評価の可能性）、
+Mn: MP $= 13.02$~\AA$^3$ vs King $= 12.21$~\AA$^3$（$+6.7$\%、
+$\alpha$-Mnの複雑な反強磁性秩序に起因）、
+Sn: MP $= 35.4$~\AA$^3$ vs King $= 27.1$~\AA$^3$（$+31$\%、
+$\alpha$-Snと$\beta$-Snの相判定の差異）。
 AFLOWデータベースでは系統的な過小評価バイアス
-（HEA関連22元素で平均$-4.2$\%）が認められ、
-特にMn（$-17$\%）で顕著であった。
+（HEA関連22元素で平均$-4.2$\%）が認められた。
 
-\subsection{構造不一致の問題}
-\label{sec:appendix_structure}
-
-Vegard則の本来の定義では、
-$a_\text{alloy} = \sum c_i a_i$の$a_i$は
-各元素が\emph{合金と同じ結晶構造}を取った場合の格子定数である。
-この観点からBCC HEAにはBCC体積、FCC HEAにはFCC体積を用いるべきとも
-考えられる。しかし本研究のVASP B2/L1$_2$同種エントリ
-（元素$A$のみで構成されたB2/L1$_2$構造）を用いた検証では、
-テストRMSEが0.020~\AA{}から0.030~\AA{}に悪化した。
-
-原因は、同種エントリの体積が「孤立元素の強制構造」体積であり、
-HEA固溶体中の実環境とは異なることにある。例えば
-Si: diamond 20.0~\AA$^3$ $\to$ L1$_2$強制14.2~\AA$^3$（$-29$\%）、
-Mn: $\alpha$-Mn 12.2~\AA$^3$ $\to$ B2強制10.8~\AA$^3$（$-11$\%）
-と非物理的な収縮が生じる。
-
-\subsection{King実験値の妥当性}
-
-King値とCRC Handbook最新版（pymatgen内蔵値）の比較では、
-36元素中34元素で差が0.1\%未満であり、
-純元素の室温格子定数が1966年以降本質的に変化していないことを
-確認した。Kingの原子体積は室温安定構造に基づくSeitz体積であり、
-以下の理由から本手法に最適である：
-\begin{enumerate}
-  \item HEA格子定数の実験値が室温測定であり、
-    基準体積も室温値とすることで整合性が確保される。
-  \item DFT化合物体積$V_\text{DFT}$との系統的差異は
-    $\Omega_\text{sf}$の分子・分母で部分的に相殺され、
-    さらにスケーリング因子$q_s$が残差を吸収する。
-  \item 40元素にわたる統一的な基準を提供し、
-    DFTデータベース間のバイアス（MP vs AFLOW: 平均4.8\%差）
-    に影響されない。
-\end{enumerate}
-
-
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \caption{HEA関連元素の原子体積比較（\AA$^3$）。
 $\Delta_\text{MP}$・$\Delta_\text{AF}$はKing値からの偏差（\%）。}
 \label{tab:king_vs_dft}
-\small
+\footnotesize
 \begin{tabular}{l@{\hskip 6pt}r@{\hskip 6pt}r@{\hskip 6pt}r@{\hskip 6pt}r@{\hskip 6pt}r}
 \toprule
 元素 & 構造 & King & MP & $\Delta_\text{MP}$ & $\Delta_\text{AF}$ \\
@@ -2599,16 +2603,197 @@ Hf  & HCP    & 22.31 & 22.26 & $-0.2$\% & $-4.4$\% \\
 \end{tabular}
 \end{table}
 
+\subsection{VASP B2同種ペア体積による置換の検証}
+\label{sec:appendix_vasp_homo}
+
+本研究のVASP B2計算では、各元素$A$の同種ペア（$A_1A_1$）から
+仮想BCC体積$V_\text{BCC}^A = a_{\text{B2}}^3 / 2$が得られる。
+$\Omega_\text{sf}$のDFT自己整合性の観点から、
+King体積をこのVASP仮想BCC体積に置き換える検証を行った。
+
+表~\ref{tab:king_vs_vasp_bcc}に38元素のKing実験体積と
+VASP B2同種体積の比較を示す。
+$|\Delta| > 3$\%の元素は40元素中14元素に及び、
+そのうちHEA関連は8元素（Mn, Pd, Cr, Ru, Fe, V, Ti, Zn）である。
+差異の原因は2つに大別される：
+\begin{enumerate}
+  \item \textbf{構造不一致}:
+    King体積は各元素の室温安定構造（Au→FCC, Ti→HCP, Si→diamond等）
+    に基づくが、VASP B2同種体積はすべて仮想BCC構造である。
+    特にSi（diamond→BCC: $-26$\%）、Ge（$-15$\%）、
+    Mn（$\alpha$-Mn→BCC: $-11$\%）で顕著な乖離を示す。
+  \item \textbf{GGA系統誤差}:
+    BCC安定元素（Cr, Fe, V）でも$3$--$5$\%の差異が存在する。
+    これはGGA-PBEの交換相関近似に固有の元素依存誤差であり、
+    磁性元素で特に顕著である。
+\end{enumerate}
+
+VASP B2同種体積をKing体積に代えてVegard基準線に使用すると、
+HEA格子定数のVegard RMSE（ベースライン精度）は
+0.0231~\AA{}から0.0348~\AA{}へと51\%悪化する。
+さらに$q$を最適化してもRMSE = 0.0258~\AA{}にとどまり
+（$q_\text{BCC} = 0.56$, $q_\text{FCC} = -0.62$）、
+King基準のRMSE = 0.0214~\AA{}を超えることはできない。
+$q_\text{FCC}$が負の非物理的値をとることは、
+FCC HEA予測において仮想BCC体積のVegardベースラインが
+根本的に不適切であることを示す。
+
+\subsection{Ab initio安定構造体積（Wang 2004）による検証}
+\label{sec:appendix_wang}
+
+VASP B2同種体積の問題が「構造不一致」（全元素をBCCに強制）に
+起因するならば、各元素の安定構造のDFT体積を用いることで
+解決できるはずである。
+Wang~ら~\cite{Wang2004lattice}は78元素について
+VASP PAW-GGAでBCC・FCC・HCPの3構造の格子定数を系統的に
+計算している。各元素の室温安定構造に対応するWang体積を
+$V_i$として採用し、HEA予測精度を評価した
+（Si・Ge・Mn・Snは安定構造がBCC/FCC/HCPのいずれでもないため
+King値をフォールバックとして使用）。
+
+結果を表~\ref{tab:vi_comparison}に示す。
+Wang安定構造体積を用いたVegard RMSEは0.0338~\AA{}であり、
+King値の0.0227~\AA{}より49\%悪い。
+最適$q$でのRMSE = 0.0320~\AA{}もKing値の0.0214~\AA{}を大幅に下回る。
+さらに$q_\text{FCC} = -0.47$と非物理的値を示し、
+FCC HEA予測が破綻する。
+
+\begin{table}[H]
+\centering
+\caption{原子体積$V_i$ソース別のHEA格子定数予測精度（64 HEA）。
+  Vegard RMSEはベースライン（$\Omega_\text{sf}$補正なし）の精度、
+  最適$q$ RMSEはB2/L1$_2$ $\Omega_\text{sf}$を
+  用いた最適化後の精度を示す。
+  King実験値はすべてのDFT代替案を上回る。}
+\label{tab:vi_comparison}
+\footnotesize
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+$V_i$ソース & Vegard RMSE & 最適$q$ RMSE & $q_\text{BCC}$ & $q_\text{FCC}$ \\
+\midrule
+\textbf{King実験値（本研究）}  & \textbf{0.0227} & \textbf{0.0214} & 0.49 & 0.12 \\
+Wang安定構造~\cite{Wang2004lattice}   & 0.0338 & 0.0320 & 0.75 & $-0.47$ \\
+Wang BCC（全元素）   & 0.0359 & 0.0342 & 0.85 & 0.03 \\
+VASP B2同種（本研究） & 0.0348 & 0.0258 & 0.56 & $-0.62$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{741ペア直接予測モデルの検証}
+\label{sec:appendix_741pair}
+
+38元素パラメータを経由せず、741個の二元系DFT格子定数$a(i,j)$から
+直接HEA格子定数を予測するモデルも検討した：
+\begin{equation}
+  V_\text{HEA} = n_\text{auc}\sum_{i}\sum_{j} c_i c_j V(i,j),
+  \quad V(i,j) = a_\text{B2}(i,j)^3 / 2.
+\end{equation}
+このモデルはVegard基準体積$V_i$を暗黙的に
+VASP B2同種体積$V(i,i)$で定義する。
+数学的には38元素モデルと等価であり、
+差異はVegardベースラインに用いる$V_i$のソースのみである
+（VASP仮想BCC vs King実験値）。
+
+$q = 1$（パラメータフリー）でのRMSE = 0.0331~\AA{}は
+King Vegard（0.0231~\AA{}）より43\%悪い。
+$q$を最適化してもRMSE = 0.0258~\AA{}にとどまり、
+38元素モデルのRMSE = 0.0214~\AA{}を超えることはできない。
+741ペアの情報は既に703個の$\Omega_\text{sf}(i,j)$として
+全て使用されており、新たな情報は追加されない。
+
+\subsection{DFT体積が劣る根本原因}
+\label{sec:appendix_dft_limitation}
+
+DFT（GGA-PBE）体積がKing実験値を超えられない根本原因は、
+GGA交換相関近似の元素依存系統誤差にある。
+Wang~\cite{Wang2004lattice}の安定構造体積とKing値の比較
+（表~\ref{tab:king_vs_vasp_bcc}）では、
+Au: $+7.1$\%、Pd: $+6.5$\%（GGA過大評価）、
+Fe: $-4.6$\%、Cr: $-3.9$\%（磁性元素の過小評価）など、
+元素ごとにばらつく誤差が観察される。
+
+この元素依存誤差はVegard則の線形補間精度を直接劣化させる。
+一方、$\Omega_\text{sf}$は体積偏差の\emph{比}として定義される
+（式~\eqref{eq:omega_def}）ため、GGA誤差が分子・分母で
+部分的に相殺される。この非対称性が、King $V_i$ + DFT $\Omega_\text{sf}$
+という混合アプローチの優位性の物理的根拠である。
+
+加えて、HEA格子定数の実験値は室温（$\sim$300~K）測定であるのに対し、
+DFT体積は0~Kの値であり、熱膨張分の系統的差異が存在する。
+King体積は室温測定値であるため、Vegard基準線との温度整合性が
+DFTより優れている。
+
+\subsection{King実験値の妥当性}
+
+King値とCRC Handbook最新版（pymatgen内蔵値）の比較では、
+36元素中34元素で差が0.1\%未満であり、
+純元素の室温格子定数が1966年以降本質的に変化していないことを
+確認した。Kingの原子体積は室温安定構造に基づくSeitz体積であり、
+以下の理由から本手法に最適である：
+\begin{enumerate}
+  \item HEA格子定数の実験値が室温測定であり、
+    基準体積も室温値とすることで整合性が確保される。
+  \item DFT化合物体積$V_\text{DFT}$との系統的差異は
+    $\Omega_\text{sf}$の分子・分母で部分的に相殺され、
+    さらにスケーリング因子$q_s$が残差を吸収する。
+  \item 40元素にわたる統一的な基準を提供し、
+    DFTデータベース間のバイアス（MP vs AFLOW: 平均4.8\%差）
+    に影響されない。
+\end{enumerate}
+
+\begin{table}[H]
+\centering
+\caption{38ターゲット元素のKing実験体積とVASP B2同種体積の比較。
+$\Delta$はKing値からの偏差（\%）。$|\Delta| > 3$\%を太字で示す。
+$^\dagger$印はAlonso Table~2のHEA検証データに含まれる元素。}
+\label{tab:king_vs_vasp_bcc}
+\footnotesize
+\begin{tabular}{@{}lcrrr@{}}
+\toprule
+元素 & 安定構造 & King (\AA$^3$) & VASP BCC (\AA$^3$) & $\Delta$ (\%) \\
+\midrule
+Si      & diamond    & 20.02 & 14.81 & $\mathbf{-26.0}$ \\
+Ge      & diamond    & 22.63 & 19.25 & $\mathbf{-15.0}$ \\
+Mn$^\dagger$ & $\alpha$-Mn & 12.21 & 10.84 & $\mathbf{-11.2}$ \\
+Ag      & FCC        & 17.06 & 17.98 & $\mathbf{+5.4}$ \\
+Pd$^\dagger$ & FCC  & 14.72 & 15.46 & $\mathbf{+5.0}$ \\
+Cr$^\dagger$ & BCC  & 12.01 & 11.41 & $\mathbf{-5.0}$ \\
+Ru$^\dagger$ & HCP  & 13.57 & 14.13 & $\mathbf{+4.1}$ \\
+Fe$^\dagger$ & BCC  & 11.78 & 11.29 & $\mathbf{-4.1}$ \\
+V$^\dagger$  & BCC  & 13.82 & 13.26 & $\mathbf{-4.1}$ \\
+Ti$^\dagger$ & HCP  & 17.65 & 17.00 & $\mathbf{-3.7}$ \\
+Zn$^\dagger$ & HCP  & 15.21 & 15.74 & $\mathbf{+3.5}$ \\
+Ca      & FCC        & 43.63 & 42.12 & $\mathbf{-3.5}$ \\
+\midrule
+Cu$^\dagger$ & FCC  & 11.81 & 12.14 & $+2.8$ \\
+W$^\dagger$  & BCC  & 15.85 & 15.96 & $+0.7$ \\
+Nb$^\dagger$ & BCC  & 17.98 & 18.36 & $+2.1$ \\
+Mo$^\dagger$ & BCC  & 15.58 & 15.61 & $+0.2$ \\
+Ta$^\dagger$ & BCC  & 18.01 & 18.16 & $+0.8$ \\
+Ni$^\dagger$ & FCC  & 10.94 & 10.90 & $-0.3$ \\
+Al$^\dagger$ & FCC  & 16.60 & 16.78 & $+1.1$ \\
+Co$^\dagger$ & HCP  & 11.07 & 10.99 & $-0.8$ \\
+Hf$^\dagger$ & HCP  & 22.31 & 22.06 & $-1.1$ \\
+Zr$^\dagger$ & HCP  & 23.28 & 22.73 & $-2.4$ \\
+\bottomrule
+\end{tabular}
+\par\smallskip
+{\scriptsize 上段: $|\Delta| > 3$\%（降順）。下段: 代表的な$|\Delta| \leq 3$\%元素。
+全38元素中$|\Delta| > 3$\%は14元素、うちHEA関連8元素。}
+\end{table}
+
 
 \section{VASP B2/L1$_2$データ統合の定量的分析}
 \label{sec:appendix_vasp}
 
-VASP B2（1,483化合物、27/38元素）およびL1$_2$（2,808化合物、37/38元素）データを
+VASP B2（2,200計算、2,136収束、38/38元素）
+およびL1$_2$（2,810計算、2,169収束、38/38元素）データを
 MP/OQMDに統合した結果を定量的に分析した。
 
 \paragraph{カバレッジ改善}
 38ターゲット元素間の元素ペアカバレッジは
-B2で152→418ペア（+266）、L1$_2$で95→666ペア（+571）に拡大した。
+B2で152→758ペア（+606、703ヘテロペア完全カバレッジ）、
+L1$_2$で95→703ペア（+608）に拡大した。
 HEA予測に必要な全元素ペアのDFT $\Omega_\text{sf}$が利用可能となった
 （BCC 10/59→59/59、FCC 4/42→42/42）。
 
