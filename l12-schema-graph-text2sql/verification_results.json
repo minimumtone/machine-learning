@@ -39,8 +39,8 @@
     "few_shot_store": {
       "total_examples": 11,
       "sources": {
-        "paper:hea_lattice_prediction.tex": 4,
-        "seed:curated": 7
+        "seed:curated": 7,
+        "paper:hea_lattice_prediction.tex": 4
       }
     }
   },
@@ -99,7 +99,7 @@
           "space_group"
         ],
         "errors": [],
-        "latency_ms": 13,
+        "latency_ms": 14,
         "sample_rows": [
           [
             "oqmd_B2_10127",
@@ -156,7 +156,7 @@
       },
       "passed": true,
       "pass_reason": "rows=16, expected >0",
-      "elapsed_ms": 382
+      "elapsed_ms": 400
     },
     {
       "test_id": "A02",
@@ -296,7 +296,7 @@
       },
       "passed": true,
       "pass_reason": "rows=88, expected >0",
-      "elapsed_ms": 74
+      "elapsed_ms": 79
     },
     {
       "test_id": "A03",
@@ -350,7 +350,7 @@
           "formula"
         ],
         "errors": [],
-        "latency_ms": 8,
+        "latency_ms": 9,
         "sample_rows": [
           [
             "oqmd_B2_10516",
@@ -372,7 +372,7 @@
       },
       "passed": true,
       "pass_reason": "rows=4, expected >0",
-      "elapsed_ms": 43
+      "elapsed_ms": 46
     },
     {
       "test_id": "A04",
@@ -422,7 +422,7 @@
           "space_group"
         ],
         "errors": [],
-        "latency_ms": 8,
+        "latency_ms": 9,
         "sample_rows": [
           [
             "oqmd_B2_10879",
@@ -484,7 +484,7 @@
       },
       "passed": true,
       "pass_reason": "rows=100, expected >0",
-      "elapsed_ms": 42
+      "elapsed_ms": 45
     },
     {
       "test_id": "A05",
@@ -675,7 +675,7 @@
           "band_gap"
         ],
         "errors": [],
-        "latency_ms": 10,
+        "latency_ms": 11,
         "sample_rows": [
           [
             "oqmd_L12_17121",
@@ -701,7 +701,7 @@
       },
       "passed": true,
       "pass_reason": "rows=1, expected >0",
-      "elapsed_ms": 66
+      "elapsed_ms": 65
     },
     {
       "test_id": "A07",
@@ -800,7 +800,7 @@
       },
       "passed": true,
       "pass_reason": "rows=4, expected >0",
-      "elapsed_ms": 46
+      "elapsed_ms": 45
     },
     {
       "test_id": "A08",
@@ -891,7 +891,7 @@
       },
       "passed": true,
       "pass_reason": "rows=100, expected >0",
-      "elapsed_ms": 46
+      "elapsed_ms": 43
     },
     {
       "test_id": "A09",
@@ -988,7 +988,7 @@
       },
       "passed": true,
       "pass_reason": "rows=9, expected >0",
-      "elapsed_ms": 46
+      "elapsed_ms": 44
     },
     {
       "test_id": "A10",
@@ -1038,7 +1038,7 @@
           "space_group"
         ],
         "errors": [],
-        "latency_ms": 9,
+        "latency_ms": 10,
         "sample_rows": [
           [
             "oqmd_L12_11162",
@@ -1100,7 +1100,7 @@
       },
       "passed": true,
       "pass_reason": "rows=100, expected >0",
-      "elapsed_ms": 53
+      "elapsed_ms": 56
     },
     {
       "test_id": "A11",
@@ -1166,7 +1166,7 @@
           "space_group"
         ],
         "errors": [],
-        "latency_ms": 9,
+        "latency_ms": 10,
         "sample_rows": [
           [
             "oqmd_B2_100359",
@@ -1207,7 +1207,7 @@
       },
       "passed": true,
       "pass_reason": "rows=30, expected >0",
-      "elapsed_ms": 44
+      "elapsed_ms": 47
     },
     {
       "test_id": "A12",
@@ -1298,7 +1298,7 @@
       },
       "passed": true,
       "pass_reason": "rows=100, expected >0",
-      "elapsed_ms": 44
+      "elapsed_ms": 45
     },
     {
       "test_id": "A13",
@@ -1395,7 +1395,7 @@
       },
       "passed": true,
       "pass_reason": "rows=6, expected >0",
-      "elapsed_ms": 44
+      "elapsed_ms": 43
     },
     {
       "test_id": "A14",
@@ -1492,7 +1492,7 @@
       },
       "passed": true,
       "pass_reason": "rows=16, expected >0",
-      "elapsed_ms": 42
+      "elapsed_ms": 43
     },
     {
       "test_id": "A15",
@@ -1553,7 +1553,7 @@
           "band_gap"
         ],
         "errors": [],
-        "latency_ms": 10,
+        "latency_ms": 11,
         "sample_rows": [
           [
             "oqmd_L12_17672",
@@ -1674,7 +1674,7 @@
           "space_group"
         ],
         "errors": [],
-        "latency_ms": 8,
+        "latency_ms": 9,
         "sample_rows": [
           [
             "oqmd_B2_10879",
@@ -1765,7 +1765,7 @@
           "space_group"
         ],
         "errors": [],
-        "latency_ms": 8,
+        "latency_ms": 9,
         "sample_rows": [
           [
             "oqmd_L12_11162",
@@ -1806,7 +1806,7 @@
       },
       "passed": true,
       "pass_reason": "success=True, sql_generated=True",
-      "elapsed_ms": 42
+      "elapsed_ms": 43
     },
     {
       "test_id": "B03",
@@ -1856,7 +1856,7 @@
           "space_group"
         ],
         "errors": [],
-        "latency_ms": 8,
+        "latency_ms": 9,
         "sample_rows": [
           [
             "oqmd_B2_10879",
@@ -1961,7 +1961,7 @@
           "band_gap"
         ],
         "errors": [],
-        "latency_ms": 10,
+        "latency_ms": 11,
         "sample_rows": [
           [
             "oqmd_B2_17512",
@@ -1977,7 +1977,7 @@
       },
       "passed": true,
       "pass_reason": "rows=1, expected >0",
-      "elapsed_ms": 63
+      "elapsed_ms": 64
     },
     {
       "test_id": "B05",
@@ -2041,12 +2041,12 @@
           "band_gap"
         ],
         "errors": [],
-        "latency_ms": 11,
+        "latency_ms": 12,
         "sample_rows": []
       },
       "passed": true,
       "pass_reason": "rows=0, expected 0",
-      "elapsed_ms": 63
+      "elapsed_ms": 71
     },
     {
       "test_id": "C01",
@@ -2096,7 +2096,7 @@
           "band_gap"
         ],
         "errors": [],
-        "latency_ms": 8,
+        "latency_ms": 9,
         "sample_rows": [
           [
             "oqmd_L12_17704",
@@ -2137,7 +2137,7 @@
       },
       "passed": true,
       "pass_reason": "rows=100, expected >0",
-      "elapsed_ms": 60
+      "elapsed_ms": 65
     },
     {
       "test_id": "C02",
@@ -2187,7 +2187,7 @@
           "space_group"
         ],
         "errors": [],
-        "latency_ms": 8,
+        "latency_ms": 9,
         "sample_rows": [
           [
             "oqmd_B2_10879",
@@ -2228,7 +2228,7 @@
       },
       "passed": true,
       "pass_reason": "rows=100, expected >0",
-      "elapsed_ms": 42
+      "elapsed_ms": 44
     },
     {
       "test_id": "C03",
@@ -2278,7 +2278,7 @@
           "band_gap"
         ],
         "errors": [],
-        "latency_ms": 8,
+        "latency_ms": 9,
         "sample_rows": [
           [
             "oqmd_L12_17704",
@@ -2354,7 +2354,7 @@
           "formula"
         ],
         "errors": [],
-        "latency_ms": 7,
+        "latency_ms": 8,
         "sample_rows": [
           [
             "oqmd_B2_29029",
@@ -2423,7 +2423,7 @@
           "formula"
         ],
         "errors": [],
-        "latency_ms": 7,
+        "latency_ms": 8,
         "sample_rows": [
           [
             "oqmd_B2_29029",
@@ -2449,7 +2449,7 @@
       },
       "passed": true,
       "pass_reason": "success=True, sql_generated=True",
-      "elapsed_ms": 40
+      "elapsed_ms": 42
     },
     {
       "test_id": "C06",
@@ -2572,7 +2572,7 @@
           "space_group"
         ],
         "errors": [],
-        "latency_ms": 8,
+        "latency_ms": 9,
         "sample_rows": [
           [
             "oqmd_B2_30426",
@@ -2613,7 +2613,7 @@
       },
       "passed": true,
       "pass_reason": "success=True, sql_generated=True",
-      "elapsed_ms": 42
+      "elapsed_ms": 43
     },
     {
       "test_id": "C08",
@@ -2799,7 +2799,7 @@
           "space_group"
         ],
         "errors": [],
-        "latency_ms": 8,
+        "latency_ms": 9,
         "sample_rows": [
           [
             "oqmd_L12_11162",
@@ -2840,7 +2840,7 @@
       },
       "passed": true,
       "pass_reason": "rows=100, expected >0",
-      "elapsed_ms": 44
+      "elapsed_ms": 42
     },
     {
       "test_id": "C10",
@@ -2902,7 +2902,7 @@
           "space_group"
         ],
         "errors": [],
-        "latency_ms": 8,
+        "latency_ms": 9,
         "sample_rows": [
           [
             "oqmd_B2_10127",
@@ -2943,7 +2943,7 @@
       },
       "passed": true,
       "pass_reason": "rows=24, expected >0",
-      "elapsed_ms": 43
+      "elapsed_ms": 42
     },
     {
       "test_id": "D01",
@@ -2998,7 +2998,7 @@
           "band_gap"
         ],
         "errors": [],
-        "latency_ms": 9,
+        "latency_ms": 10,
         "sample_rows": [
           [
             "oqmd_B2_17443",
@@ -3054,7 +3054,7 @@
       },
       "passed": true,
       "pass_reason": "success=True, sql_generated=True",
-      "elapsed_ms": 65
+      "elapsed_ms": 63
     },
     {
       "test_id": "D02",
@@ -3110,7 +3110,7 @@
           "space_group"
         ],
         "errors": [],
-        "latency_ms": 8,
+        "latency_ms": 9,
         "sample_rows": [
           [
             "oqmd_B2_10127",
@@ -3196,7 +3196,7 @@
       },
       "passed": true,
       "pass_reason": "Correctly rejected",
-      "elapsed_ms": 34
+      "elapsed_ms": 33
     },
     {
       "test_id": "E02",
@@ -3292,7 +3292,7 @@
       },
       "passed": true,
       "pass_reason": "Correctly rejected",
-      "elapsed_ms": 33
+      "elapsed_ms": 32
     },
     {
       "test_id": "E04",
@@ -3331,7 +3331,7 @@
       },
       "passed": true,
       "pass_reason": "Correctly rejected",
-      "elapsed_ms": 33
+      "elapsed_ms": 32
     },
     {
       "test_id": "E05",
@@ -3368,7 +3368,7 @@
       },
       "passed": true,
       "pass_reason": "Correctly rejected",
-      "elapsed_ms": 33
+      "elapsed_ms": 32
     },
     {
       "test_id": "F01",
@@ -3410,7 +3410,7 @@
       },
       "passed": true,
       "pass_reason": "Validation correct",
-      "elapsed_ms": 42
+      "elapsed_ms": 43
     },
     {
       "test_id": "F02",
