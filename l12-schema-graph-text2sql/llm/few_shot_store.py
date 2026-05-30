@@ -343,7 +343,7 @@ def _build_seed_sql(
         where.append("ps.energy_above_hull <= 0.05")
         select.extend(["ps.formation_energy_per_atom", "ps.energy_above_hull"])
 
-    if sort_col and "phase_stability" in sort_col and stability is None:
+    if sort_col and ("phase_stability" in sort_col or sort_col.startswith("ps.")) and stability is None:
         joins.append("JOIN phase_stability ps ON ps.entry_id = m.entry_id")
         select.extend(["ps.formation_energy_per_atom", "ps.energy_above_hull"])
 
@@ -355,7 +355,7 @@ def _build_seed_sql(
     sql += "\nFROM material_entry m"
     for j in joins:
         sql += f"\n    {j}"
-    sql += f"\nWHERE\n    {chr(10).join('    AND '.join(where).split('AND '))}"
+    sql += "\nWHERE\n    " + "\n    AND ".join(where)
     if order:
         sql += order
     sql += "\nLIMIT 100;"

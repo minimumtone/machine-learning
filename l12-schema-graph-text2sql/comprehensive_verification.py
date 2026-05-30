@@ -916,8 +916,9 @@ if __name__ == "__main__":
         json.dump(data, f, ensure_ascii=False, indent=2, default=str)
     print(f"\nJSON results: {json_path}")
 
-    # Generate HTML
-    html = generate_html_report(data)
+    # Generate HTML (detailed version for junior engineers)
+    from report_generator import generate_html_report as gen_detailed_report
+    html = gen_detailed_report(data)
     html_path = Path(__file__).parent / "verification_report.html"
     html_path.write_text(html, encoding="utf-8")
     print(f"HTML report:  {html_path}")
