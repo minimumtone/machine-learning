@@ -1,0 +1,34 @@
+allowed_tables:
+  - material_entry
+  - composition
+  - structure
+  - calculation
+  - calculated_property
+  - phase_stability
+  - prototype_definition
+
+allowed_joins:
+  - source_table: composition
+    source_column: entry_id
+    target_table: material_entry
+    target_column: entry_id
+
+  - source_table: structure
+    source_column: entry_id
+    target_table: material_entry
+    target_column: entry_id
+
+  - source_table: calculation
+    source_column: entry_id
+    target_table: material_entry
+    target_column: entry_id
+
+  - source_table: calculated_property
+    source_column: calculation_id
+    target_table: calculation
+    target_column: calculation_id
+
+  - source_table: phase_stability
+    source_column: entry_id
+    target_table: material_entry
+    target_column: entry_id
