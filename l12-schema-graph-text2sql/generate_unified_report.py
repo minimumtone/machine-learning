@@ -413,7 +413,61 @@ Generated: {time.strftime('%Y-%m-%d %H:%M:%S UTC')}<br>
 <div class="card"><div class="big">{S_lr['llm']['total_tokens']:,}</div>LLM消費トークン<br><small>39件合計</small></div>
 </div>
 
-<h3>1.1 カテゴリ別結果</h3>
+<h3>1.1 3つの処理レベルの定義</h3>
+<p>本レポートでは、Text-to-SQL（T2SQL）の処理を3段階に分けて比較する。
+各レベルは前のレベルの機能を包含した上位互換の関係にある。</p>
+
+<div class="comparison-grid" style="grid-template-columns:1fr 1fr 1fr;">
+<div style="border-left:4px solid var(--fail); padding:14px;">
+<h4 style="color:var(--fail);">Level 0: Naive T2SQL</h4>
+<p><b>処理内容：</b>自然言語から条件（元素名、prototype名等）だけを抽出し、
+データベースの<b>全テーブルを無条件にJOIN</b>してWHERE句を付けるだけの最も単純な方式。</p>
+<p><b>特徴：</b></p>
+<ul>
+<li>Schema Graph（テーブル間関係の解析）を使わない</li>
+<li>DISTINCT（重複除去）を付けない → JOINの増殖で同じ行が何十回も出る</li>
+<li>LIMIT（件数制限）を付けない → 全件返却</li>
+<li>SQL Guard（安全検査）がない → SQL injectionに脆弱</li>
+<li>複数元素のAND検索（「NiとAlを両方含む」）が構造的に不可能</li>
+</ul>
+<p><b>結論：</b>実用には不適。「何もしなかったらどうなるか」のベースライン。</p>
+</div>
+
+<div style="border-left:4px solid var(--blue); padding:14px;">
+<h4 style="color:var(--blue);">Level 1: Schema Graph T2SQL（Rule-based）</h4>
+<p><b>処理内容：</b>Level 0の条件抽出に加え、<b>Schema Graph Traversal Engine</b>（NetworkXグラフ）で
+テーブル間のFK（外部キー）関係を解析し、<b>必要最小限のテーブルだけをJOIN</b>する。
+LLM（大規模言語モデル）は使わず、辞書＋正規表現のパターンマッチングで動作する。</p>
+<p><b>特徴：</b></p>
+<ul>
+<li>Schema Graphが最短JOIN経路を自動探索 → 不要テーブルを排除</li>
+<li>DISTINCT・LIMIT 100を自動付与</li>
+<li>SQL Guard（sqlglot構文検証 + 禁止キーワード検出）で安全性を担保</li>
+<li>APIキー不要 → 完全オフライン動作・コスト0・&lt;100ms</li>
+<li>決定的出力（同じ入力 → 常に同じSQL）</li>
+</ul>
+<p><b>制限：</b>辞書（material_terms.yaml）に未登録の用語は認識できない。
+数値条件（「band_gap &gt; 1.0 eV」）のWHERE句を自動生成できない。</p>
+</div>
+
+<div style="border-left:4px solid var(--pass); padding:14px;">
+<h4 style="color:var(--pass);">Level 2: Schema Graph + LLM（GPT-5）</h4>
+<p><b>処理内容：</b>Level 1の全機能に加え、<b>LLM（本検証ではOpenAI GPT-5）</b>がSQL生成を担当する。
+プロンプトにはXMLスキーマ情報・許可テーブル/カラム一覧・Few-Shot事例（過去の成功SQL）が注入される。</p>
+<p><b>特徴：</b></p>
+<ul>
+<li>辞書に未登録の元素（Xe, Rn等）や表現も認識可能</li>
+<li>「NiAlのL12」のような略記から意図を正確に推定</li>
+<li>数値条件（「band_gap &gt; 1.0 eV」）のWHERE句を生成可能</li>
+<li>Few-Shot事例（RAG）により、過去の成功パターンを参考にして精度向上</li>
+<li>Schema制約（許可テーブル/カラムのみをプロンプトで指定）でハルシネーションを抑制</li>
+</ul>
+<p><b>制限：</b>平均~7.3秒/件（Level 1の~70倍）。APIコスト発生。
+非決定的出力。クエリ内容が外部APIに送信される。</p>
+</div>
+</div>
+
+<h3>1.2 カテゴリ別結果</h3>
 <table>
 <tr><th>カテゴリ</th><th>件数</th><th>内容</th>
 <th>Naive<br>(Level 0)</th>
@@ -496,8 +550,161 @@ volume_per_atom フィールドから立方晶を仮定して a = (V × N_atoms)
 <h2 id="sec3">3. E-R図とXML/RAGによるスキーマ注入</h2>
 
 <h3>3.1 E-R図（7テーブル構成）</h3>
-<p>材料データベースは以下の7テーブルで構成される。各テーブル間はFK（外部キー）で関連付けられている。</p>
+<p>材料データベースは以下の7テーブルで構成される。各テーブル間はFK（外部キー）で関連付けられている。
+下図はテーブル間の関係を視覚化したE-R図である。</p>
 
+<!-- ── E-R Diagram (SVG) ── -->
+<div style="overflow-x:auto; margin:20px 0;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 620" style="max-width:1100px; width:100%; height:auto; font-family:'Segoe UI',Roboto,sans-serif;">
+  <!-- Background -->
+  <rect width="1100" height="620" fill="#fafafa" rx="12"/>
+
+  <!-- ═══ material_entry (center) ═══ -->
+  <g transform="translate(400,220)">
+    <rect width="300" height="160" rx="8" fill="#1a237e" stroke="#0d47a1" stroke-width="2"/>
+    <text x="150" y="28" text-anchor="middle" fill="#fff" font-size="16" font-weight="bold">material_entry</text>
+    <line x1="10" y1="38" x2="290" y2="38" stroke="#5c6bc0" stroke-width="1"/>
+    <text x="20" y="58" fill="#e8eaf6" font-size="13">&#x1f511; entry_id (TEXT) PK</text>
+    <text x="20" y="78" fill="#e8eaf6" font-size="13">formula (TEXT)</text>
+    <text x="20" y="98" fill="#e8eaf6" font-size="13">reduced_formula (TEXT)</text>
+    <text x="20" y="118" fill="#e8eaf6" font-size="13">chemical_system (TEXT)</text>
+    <text x="20" y="138" fill="#e8eaf6" font-size="13">source_id (INTEGER)</text>
+    <text x="20" y="155" fill="#9fa8da" font-size="11">Central hub - all tables reference this</text>
+  </g>
+
+  <!-- ═══ composition (top-left) ═══ -->
+  <g transform="translate(30,30)">
+    <rect width="250" height="130" rx="8" fill="#1565c0" stroke="#0d47a1" stroke-width="2"/>
+    <text x="125" y="26" text-anchor="middle" fill="#fff" font-size="15" font-weight="bold">composition</text>
+    <line x1="10" y1="36" x2="240" y2="36" stroke="#64b5f6" stroke-width="1"/>
+    <text x="16" y="56" fill="#e3f2fd" font-size="12">&#x1f517; entry_id (TEXT) FK</text>
+    <text x="16" y="74" fill="#e3f2fd" font-size="12">element (TEXT)</text>
+    <text x="16" y="92" fill="#e3f2fd" font-size="12">atomic_fraction (REAL)</text>
+    <text x="16" y="110" fill="#e3f2fd" font-size="12">site_label (TEXT)</text>
+    <text x="16" y="126" fill="#90caf9" font-size="10">1:N (1 entry has multiple elements)</text>
+  </g>
+
+  <!-- ═══ structure (top-right) ═══ -->
+  <g transform="translate(790,30)">
+    <rect width="280" height="160" rx="8" fill="#1565c0" stroke="#0d47a1" stroke-width="2"/>
+    <text x="140" y="26" text-anchor="middle" fill="#fff" font-size="15" font-weight="bold">structure</text>
+    <line x1="10" y1="36" x2="270" y2="36" stroke="#64b5f6" stroke-width="1"/>
+    <text x="16" y="56" fill="#e3f2fd" font-size="12">&#x1f517; entry_id (TEXT) FK</text>
+    <text x="16" y="74" fill="#e3f2fd" font-size="12">prototype (TEXT) e.g. &quot;CsCl&quot;</text>
+    <text x="16" y="92" fill="#e3f2fd" font-size="12">strukturbericht (TEXT) e.g. &quot;B2&quot;</text>
+    <text x="16" y="110" fill="#e3f2fd" font-size="12">lattice_a/b/c (REAL)</text>
+    <text x="16" y="128" fill="#e3f2fd" font-size="12">volume_per_atom (REAL)</text>
+    <text x="16" y="146" fill="#e3f2fd" font-size="12">space_group (TEXT)</text>
+  </g>
+
+  <!-- ═══ phase_stability (bottom-left) ═══ -->
+  <g transform="translate(30,400)">
+    <rect width="280" height="150" rx="8" fill="#1565c0" stroke="#0d47a1" stroke-width="2"/>
+    <text x="140" y="26" text-anchor="middle" fill="#fff" font-size="15" font-weight="bold">phase_stability</text>
+    <line x1="10" y1="36" x2="270" y2="36" stroke="#64b5f6" stroke-width="1"/>
+    <text x="16" y="56" fill="#e3f2fd" font-size="12">&#x1f517; entry_id (TEXT) FK</text>
+    <text x="16" y="74" fill="#e3f2fd" font-size="12">formation_energy_per_atom (REAL)</text>
+    <text x="16" y="92" fill="#e3f2fd" font-size="12">energy_above_hull (REAL)</text>
+    <text x="16" y="110" fill="#e3f2fd" font-size="12">is_stable (BOOLEAN)</text>
+    <text x="16" y="128" fill="#e3f2fd" font-size="12">band_gap (REAL)</text>
+    <text x="16" y="146" fill="#90caf9" font-size="10">E_hull=0 means thermodynamically stable</text>
+  </g>
+
+  <!-- ═══ calculation (bottom-center) ═══ -->
+  <g transform="translate(440,450)">
+    <rect width="220" height="110" rx="8" fill="#2e7d32" stroke="#1b5e20" stroke-width="2"/>
+    <text x="110" y="26" text-anchor="middle" fill="#fff" font-size="15" font-weight="bold">calculation</text>
+    <line x1="10" y1="36" x2="210" y2="36" stroke="#66bb6a" stroke-width="1"/>
+    <text x="16" y="56" fill="#e8f5e9" font-size="12">&#x1f511; calculation_id (INT) PK</text>
+    <text x="16" y="74" fill="#e8f5e9" font-size="12">&#x1f517; entry_id (TEXT) FK</text>
+    <text x="16" y="92" fill="#e8f5e9" font-size="12">method (TEXT) / functional (TEXT)</text>
+  </g>
+
+  <!-- ═══ calculated_property (bottom-right) ═══ -->
+  <g transform="translate(780,450)">
+    <rect width="270" height="130" rx="8" fill="#2e7d32" stroke="#1b5e20" stroke-width="2"/>
+    <text x="135" y="26" text-anchor="middle" fill="#fff" font-size="15" font-weight="bold">calculated_property</text>
+    <line x1="10" y1="36" x2="260" y2="36" stroke="#66bb6a" stroke-width="1"/>
+    <text x="16" y="56" fill="#e8f5e9" font-size="12">&#x1f517; calculation_id (INT) FK</text>
+    <text x="16" y="74" fill="#e8f5e9" font-size="12">property_name (TEXT)</text>
+    <text x="16" y="92" fill="#e8f5e9" font-size="12">value (REAL)</text>
+    <text x="16" y="110" fill="#e8f5e9" font-size="12">unit (TEXT)</text>
+  </g>
+
+  <!-- ═══ data_source (far right) ═══ -->
+  <g transform="translate(820,240)">
+    <rect width="220" height="110" rx="8" fill="#6a1b9a" stroke="#4a148c" stroke-width="2"/>
+    <text x="110" y="26" text-anchor="middle" fill="#fff" font-size="15" font-weight="bold">data_source</text>
+    <line x1="10" y1="36" x2="210" y2="36" stroke="#ab47bc" stroke-width="1"/>
+    <text x="16" y="56" fill="#f3e5f5" font-size="12">&#x1f511; source_id (INT) PK</text>
+    <text x="16" y="74" fill="#f3e5f5" font-size="12">source_name (TEXT)</text>
+    <text x="16" y="92" fill="#f3e5f5" font-size="12">version (TEXT) / url (TEXT)</text>
+  </g>
+
+  <!-- ═══ FK arrows ═══ -->
+  <!-- composition → material_entry -->
+  <line x1="280" y1="130" x2="400" y2="250" stroke="#ef6c00" stroke-width="2.5" marker-end="url(#arrowOrange)"/>
+  <text x="310" y="175" fill="#ef6c00" font-size="11" font-weight="bold">entry_id FK</text>
+
+  <!-- structure → material_entry -->
+  <line x1="790" y1="140" x2="700" y2="250" stroke="#ef6c00" stroke-width="2.5" marker-end="url(#arrowOrange)"/>
+  <text x="720" y="180" fill="#ef6c00" font-size="11" font-weight="bold">entry_id FK</text>
+
+  <!-- phase_stability → material_entry -->
+  <line x1="310" y1="450" x2="400" y2="360" stroke="#ef6c00" stroke-width="2.5" marker-end="url(#arrowOrange)"/>
+  <text x="325" y="395" fill="#ef6c00" font-size="11" font-weight="bold">entry_id FK</text>
+
+  <!-- calculation → material_entry -->
+  <line x1="500" y1="450" x2="500" y2="380" stroke="#ef6c00" stroke-width="2.5" marker-end="url(#arrowOrange)"/>
+  <text x="510" y="420" fill="#ef6c00" font-size="11" font-weight="bold">entry_id FK</text>
+
+  <!-- calculated_property → calculation -->
+  <line x1="780" y1="505" x2="660" y2="505" stroke="#ef6c00" stroke-width="2.5" marker-end="url(#arrowOrange)"/>
+  <text x="690" y="498" fill="#ef6c00" font-size="11" font-weight="bold">calc_id FK</text>
+
+  <!-- data_source ← material_entry (dashed - optional) -->
+  <line x1="700" y1="290" x2="820" y2="290" stroke="#ab47bc" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#arrowPurple)"/>
+  <text x="730" y="283" fill="#ab47bc" font-size="11">source_id</text>
+
+  <!-- Arrow markers -->
+  <defs>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#ef6c00"/>
+    </marker>
+    <marker id="arrowPurple" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#ab47bc"/>
+    </marker>
+  </defs>
+
+  <!-- Legend -->
+  <g transform="translate(30,570)">
+    <rect width="1040" height="40" rx="6" fill="#e8eaf6" stroke="#c5cae9"/>
+    <text x="20" y="26" fill="#333" font-size="13">
+      <tspan font-weight="bold" fill="#1a237e">&#9632;</tspan> Central Table &nbsp;&nbsp;
+      <tspan font-weight="bold" fill="#1565c0">&#9632;</tspan> Core Property Tables (directly FK to material_entry) &nbsp;&nbsp;
+      <tspan font-weight="bold" fill="#2e7d32">&#9632;</tspan> Calculation Chain (2-hop from material_entry) &nbsp;&nbsp;
+      <tspan font-weight="bold" fill="#6a1b9a">&#9632;</tspan> Reference Table &nbsp;&nbsp;
+      <tspan fill="#ef6c00">&#x2192;</tspan> FK Relationship
+    </text>
+  </g>
+</svg>
+</div>
+
+<p><b>図の読み方：</b></p>
+<ul>
+<li><b>矢印（→）</b>はFK（外部キー）関係を示す。矢印の元テーブルが参照元、先テーブルが参照先</li>
+<li><b>紺色</b>: material_entry（中心テーブル。全テーブルの基点）</li>
+<li><b>青色</b>: composition, structure, phase_stability（material_entryに直接FKで接続。1-hop JOIN）</li>
+<li><b>緑色</b>: calculation, calculated_property（2-hop JOIN。material_entry → calculation → calculated_property）</li>
+<li><b>紫色</b>: data_source（参照テーブル。破線は任意結合を示す）</li>
+</ul>
+
+<p><b>Schema Graph Traversalの観点：</b>「Feを含む安定なB2化合物」というクエリの場合、
+必要なのは composition（Fe）+ structure（B2）+ phase_stability（安定性）の3テーブルだけ。
+Schema Graphはこの3テーブルへの最短経路（全て material_entry 経由の1-hop）を自動的に発見し、
+不要な calculation / calculated_property / data_source のJOINを排除する。</p>
+
+<h3>3.1.1 テーブル定義一覧</h3>
 <table>
 <tr><th>テーブル名</th><th>役割</th><th>主要カラム</th><th>FK関係</th></tr>
 <tr><td><b>material_entry</b></td><td>中心テーブル（材料エントリ）</td>
