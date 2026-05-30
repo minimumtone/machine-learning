@@ -33,17 +33,31 @@ def extract_prototype(query: str, terms: dict[str, Any] | None = None) -> str | 
     return None
 
 
+def _is_ascii(s: str) -> bool:
+    return all(ord(c) < 128 for c in s)
+
+
+_NON_ALNUM = r'(?:(?<=\s)|(?<=[\u3000-\u9FFF\uFF00-\uFFEF])|(?<=^)|(?<=[^A-Za-z0-9]))'
+_NON_ALNUM_END = r'(?=\s|[\u3000-\u9FFF\uFF00-\uFFEF]|$|[^A-Za-z0-9])'
+
+
 def extract_elements(query: str, terms: dict[str, Any] | None = None) -> list[str]:
     if terms is None:
         terms = _load_terms()
-    q_lower = query.lower()
     found: list[str] = []
     for elem, info in terms.get("elements", {}).items():
         for alias in info.get("aliases", []):
-            if alias.lower() in q_lower:
-                if elem not in found:
-                    found.append(elem)
-                break
+            if _is_ascii(alias):
+                pattern = _NON_ALNUM + re.escape(alias) + _NON_ALNUM_END
+                if re.search(pattern, query, re.IGNORECASE):
+                    if elem not in found:
+                        found.append(elem)
+                    break
+            else:
+                if alias in query:
+                    if elem not in found:
+                        found.append(elem)
+                    break
     return found
 
 

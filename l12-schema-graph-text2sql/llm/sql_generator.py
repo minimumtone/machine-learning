@@ -134,7 +134,10 @@ def _rule_based_fallback(
         ),
     }
 
-    for t in sorted(tables_needed):
+    sorted_tables = sorted(tables_needed)
+    for t in sorted_tables:
+        if t not in tables_needed:
+            continue
         if t in indirect_join_map:
             joins.append(indirect_join_map[t])
             tables_needed.discard("calculation")
