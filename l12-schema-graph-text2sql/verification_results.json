@@ -99,7 +99,7 @@
           "space_group"
         ],
         "errors": [],
-        "latency_ms": 14,
+        "latency_ms": 12,
         "sample_rows": [
           [
             "oqmd_B2_10127",
@@ -139,24 +139,18 @@
         ]
       },
       "oqmd_comparison": {
-        "baseline_count": 0,
-        "db_count": 16,
-        "intersection": 0,
-        "match_rate": 0.0,
+        "oqmd_api_count": 7,
+        "t2sql_unique_count": 7,
+        "intersection": 7,
+        "precision": 1.0,
+        "recall": 1.0,
+        "limit_constrained": false,
         "baseline_only": [],
-        "db_only": [
-          "AlFe",
-          "FeCo",
-          "FeN",
-          "FeRh",
-          "FeSi",
-          "TiFe",
-          "VFe"
-        ]
+        "db_only": []
       },
       "passed": true,
       "pass_reason": "rows=16, expected >0",
-      "elapsed_ms": 389
+      "elapsed_ms": 866
     },
     {
       "test_id": "A02",
@@ -221,7 +215,7 @@
           "band_gap"
         ],
         "errors": [],
-        "latency_ms": 11,
+        "latency_ms": 9,
         "sample_rows": [
           [
             "oqmd_L12_18031",
@@ -276,27 +270,18 @@
         ]
       },
       "oqmd_comparison": {
-        "baseline_count": 0,
-        "db_count": 88,
-        "intersection": 0,
-        "match_rate": 0.0,
+        "oqmd_api_count": 88,
+        "t2sql_unique_count": 88,
+        "intersection": 88,
+        "precision": 1.0,
+        "recall": 1.0,
+        "limit_constrained": false,
         "baseline_only": [],
-        "db_only": [
-          "AlNi3",
-          "CaSn3",
-          "CaTl3",
-          "Ce3In",
-          "Ce3Tl",
-          "CeIn3",
-          "CePb3",
-          "CePd3",
-          "CeSn3",
-          "CrRh3"
-        ]
+        "db_only": []
       },
       "passed": true,
       "pass_reason": "rows=88, expected >0",
-      "elapsed_ms": 81
+      "elapsed_ms": 22012
     },
     {
       "test_id": "A03",
@@ -350,7 +335,7 @@
           "formula"
         ],
         "errors": [],
-        "latency_ms": 9,
+        "latency_ms": 10,
         "sample_rows": [
           [
             "oqmd_B2_10516",
@@ -372,7 +357,7 @@
       },
       "passed": true,
       "pass_reason": "rows=4, expected >0",
-      "elapsed_ms": 45
+      "elapsed_ms": 43
     },
     {
       "test_id": "A04",
@@ -422,7 +407,7 @@
           "space_group"
         ],
         "errors": [],
-        "latency_ms": 9,
+        "latency_ms": 8,
         "sample_rows": [
           [
             "oqmd_B2_10879",
@@ -462,29 +447,29 @@
         ]
       },
       "oqmd_comparison": {
-        "baseline_count": 636,
-        "db_count": 100,
-        "intersection": 0,
-        "match_rate": 0.0,
+        "oqmd_api_count": 483,
+        "t2sql_unique_count": 95,
+        "intersection": 95,
+        "precision": 1.0,
+        "recall": 0.197,
+        "limit_constrained": true,
         "baseline_only": [
-          ""
+          "AgBr",
+          "AgCl",
+          "AgI",
+          "AlCo",
+          "AlFe",
+          "AlIr",
+          "AlMo",
+          "AlNi",
+          "AlOs",
+          "AlPd"
         ],
-        "db_only": [
-          "AlAu",
-          "AlRu",
-          "ArMg",
-          "BaC",
-          "BaN",
-          "BeCu",
-          "CaAl",
-          "CaS",
-          "CaSe",
-          "CdAg"
-        ]
+        "db_only": []
       },
       "passed": true,
       "pass_reason": "rows=100, expected >0",
-      "elapsed_ms": 44
+      "elapsed_ms": 22932
     },
     {
       "test_id": "A05",
@@ -594,27 +579,29 @@
         ]
       },
       "oqmd_comparison": {
-        "baseline_count": 0,
-        "db_count": 100,
-        "intersection": 0,
-        "match_rate": 0.0,
-        "baseline_only": [],
-        "db_only": [
-          "AlFe",
-          "AlRh",
-          "BaCd",
-          "BeCo",
-          "BeNi",
-          "CaHg",
-          "CaMg",
-          "CeCd",
-          "CeHg",
-          "CsI"
-        ]
+        "oqmd_api_count": 260,
+        "t2sql_unique_count": 90,
+        "intersection": 90,
+        "precision": 1.0,
+        "recall": 0.346,
+        "limit_constrained": true,
+        "baseline_only": [
+          "AlCo",
+          "AlIr",
+          "AlNi",
+          "AlOs",
+          "AlPd",
+          "AlRu",
+          "BaHg",
+          "BaZn",
+          "BeCu",
+          "BePd"
+        ],
+        "db_only": []
       },
       "passed": true,
       "pass_reason": "rows=100, expected >0",
-      "elapsed_ms": 64
+      "elapsed_ms": 3953
     },
     {
       "test_id": "A06",
@@ -675,7 +662,7 @@
           "band_gap"
         ],
         "errors": [],
-        "latency_ms": 10,
+        "latency_ms": 11,
         "sample_rows": [
           [
             "oqmd_L12_17121",
@@ -690,18 +677,18 @@
         ]
       },
       "oqmd_comparison": {
-        "baseline_count": 0,
-        "db_count": 1,
-        "intersection": 0,
-        "match_rate": 0.0,
+        "oqmd_api_count": 1,
+        "t2sql_unique_count": 1,
+        "intersection": 1,
+        "precision": 1.0,
+        "recall": 1.0,
+        "limit_constrained": false,
         "baseline_only": [],
-        "db_only": [
-          "TaCo3"
-        ]
+        "db_only": []
       },
       "passed": true,
       "pass_reason": "rows=1, expected >0",
-      "elapsed_ms": 65
+      "elapsed_ms": 11118
     },
     {
       "test_id": "A07",
@@ -800,7 +787,7 @@
       },
       "passed": true,
       "pass_reason": "rows=4, expected >0",
-      "elapsed_ms": 46
+      "elapsed_ms": 44
     },
     {
       "test_id": "A08",
@@ -850,7 +837,7 @@
           "space_group"
         ],
         "errors": [],
-        "latency_ms": 9,
+        "latency_ms": 8,
         "sample_rows": [
           [
             "oqmd_L12_11162",
@@ -891,7 +878,7 @@
       },
       "passed": true,
       "pass_reason": "rows=100, expected >0",
-      "elapsed_ms": 45
+      "elapsed_ms": 41
     },
     {
       "test_id": "A09",
@@ -988,7 +975,7 @@
       },
       "passed": true,
       "pass_reason": "rows=9, expected >0",
-      "elapsed_ms": 45
+      "elapsed_ms": 42
     },
     {
       "test_id": "A10",
@@ -1038,7 +1025,7 @@
           "space_group"
         ],
         "errors": [],
-        "latency_ms": 9,
+        "latency_ms": 8,
         "sample_rows": [
           [
             "oqmd_L12_11162",
@@ -1078,29 +1065,29 @@
         ]
       },
       "oqmd_comparison": {
-        "baseline_count": 273,
-        "db_count": 100,
-        "intersection": 0,
-        "match_rate": 0.0,
+        "oqmd_api_count": 273,
+        "t2sql_unique_count": 100,
+        "intersection": 100,
+        "precision": 1.0,
+        "recall": 0.366,
+        "limit_constrained": true,
         "baseline_only": [
-          ""
+          "AgPt3",
+          "Al3V",
+          "AlCu3",
+          "AlNi3",
+          "Ca3Pb",
+          "CaPb3",
+          "CaSn3",
+          "CaTl3",
+          "Ce3Sn",
+          "Ce3Tl"
         ],
-        "db_only": [
-          "Ag3Pt",
-          "AlPt3",
-          "Cd3In",
-          "Ce3Al",
-          "Ce3Ga",
-          "Ce3In",
-          "Ce3Pb",
-          "CePb3",
-          "CrPt3",
-          "CrRh3"
-        ]
+        "db_only": []
       },
       "passed": true,
       "pass_reason": "rows=100, expected >0",
-      "elapsed_ms": 50
+      "elapsed_ms": 42893
     },
     {
       "test_id": "A11",
@@ -1166,7 +1153,7 @@
           "space_group"
         ],
         "errors": [],
-        "latency_ms": 9,
+        "latency_ms": 10,
         "sample_rows": [
           [
             "oqmd_B2_100359",
@@ -1207,7 +1194,7 @@
       },
       "passed": true,
       "pass_reason": "rows=30, expected >0",
-      "elapsed_ms": 44
+      "elapsed_ms": 45
     },
     {
       "test_id": "A12",
@@ -1298,7 +1285,7 @@
       },
       "passed": true,
       "pass_reason": "rows=100, expected >0",
-      "elapsed_ms": 43
+      "elapsed_ms": 45
     },
     {
       "test_id": "A13",
@@ -1492,7 +1479,7 @@
       },
       "passed": true,
       "pass_reason": "rows=16, expected >0",
-      "elapsed_ms": 44
+      "elapsed_ms": 45
     },
     {
       "test_id": "A15",
@@ -1553,7 +1540,7 @@
           "band_gap"
         ],
         "errors": [],
-        "latency_ms": 11,
+        "latency_ms": 10,
         "sample_rows": [
           [
             "oqmd_L12_17672",
@@ -1608,23 +1595,18 @@
         ]
       },
       "oqmd_comparison": {
-        "baseline_count": 0,
-        "db_count": 6,
-        "intersection": 0,
-        "match_rate": 0.0,
+        "oqmd_api_count": 6,
+        "t2sql_unique_count": 6,
+        "intersection": 6,
+        "precision": 1.0,
+        "recall": 1.0,
+        "limit_constrained": false,
         "baseline_only": [],
-        "db_only": [
-          "AlNi3",
-          "FeNi3",
-          "GaNi3",
-          "MnNi3",
-          "Ni3Sn",
-          "SiNi3"
-        ]
+        "db_only": []
       },
       "passed": true,
       "pass_reason": "rows=6, expected >0",
-      "elapsed_ms": 68
+      "elapsed_ms": 27079
     },
     {
       "test_id": "B01",
@@ -1674,7 +1656,7 @@
           "space_group"
         ],
         "errors": [],
-        "latency_ms": 9,
+        "latency_ms": 10,
         "sample_rows": [
           [
             "oqmd_B2_10879",
@@ -1806,7 +1788,7 @@
       },
       "passed": true,
       "pass_reason": "success=True, sql_generated=True",
-      "elapsed_ms": 45
+      "elapsed_ms": 44
     },
     {
       "test_id": "B03",
@@ -1961,7 +1943,7 @@
           "band_gap"
         ],
         "errors": [],
-        "latency_ms": 11,
+        "latency_ms": 12,
         "sample_rows": [
           [
             "oqmd_B2_17512",
@@ -1977,7 +1959,7 @@
       },
       "passed": true,
       "pass_reason": "rows=1, expected >0",
-      "elapsed_ms": 66
+      "elapsed_ms": 69
     },
     {
       "test_id": "B05",
@@ -2046,7 +2028,7 @@
       },
       "passed": true,
       "pass_reason": "rows=0, expected 0",
-      "elapsed_ms": 66
+      "elapsed_ms": 68
     },
     {
       "test_id": "C01",
@@ -2137,7 +2119,7 @@
       },
       "passed": true,
       "pass_reason": "rows=100, expected >0",
-      "elapsed_ms": 62
+      "elapsed_ms": 63
     },
     {
       "test_id": "C02",
@@ -2187,7 +2169,7 @@
           "space_group"
         ],
         "errors": [],
-        "latency_ms": 9,
+        "latency_ms": 8,
         "sample_rows": [
           [
             "oqmd_B2_10879",
@@ -2228,7 +2210,7 @@
       },
       "passed": true,
       "pass_reason": "rows=100, expected >0",
-      "elapsed_ms": 43
+      "elapsed_ms": 44
     },
     {
       "test_id": "C03",
@@ -2319,7 +2301,7 @@
       },
       "passed": true,
       "pass_reason": "rows=100, expected >0",
-      "elapsed_ms": 61
+      "elapsed_ms": 64
     },
     {
       "test_id": "C04",
@@ -2380,7 +2362,7 @@
       },
       "passed": true,
       "pass_reason": "success=True, sql_generated=True",
-      "elapsed_ms": 40
+      "elapsed_ms": 43
     },
     {
       "test_id": "C05",
@@ -2423,7 +2405,7 @@
           "formula"
         ],
         "errors": [],
-        "latency_ms": 7,
+        "latency_ms": 8,
         "sample_rows": [
           [
             "oqmd_B2_29029",
@@ -2449,7 +2431,7 @@
       },
       "passed": true,
       "pass_reason": "success=True, sql_generated=True",
-      "elapsed_ms": 40
+      "elapsed_ms": 41
     },
     {
       "test_id": "C06",
@@ -2522,7 +2504,7 @@
       },
       "passed": true,
       "pass_reason": "rows=24, expected >0",
-      "elapsed_ms": 41
+      "elapsed_ms": 43
     },
     {
       "test_id": "C07",
@@ -2572,7 +2554,7 @@
           "space_group"
         ],
         "errors": [],
-        "latency_ms": 8,
+        "latency_ms": 9,
         "sample_rows": [
           [
             "oqmd_B2_30426",
@@ -2613,7 +2595,7 @@
       },
       "passed": true,
       "pass_reason": "success=True, sql_generated=True",
-      "elapsed_ms": 42
+      "elapsed_ms": 43
     },
     {
       "test_id": "C08",
@@ -2674,7 +2656,7 @@
           "band_gap"
         ],
         "errors": [],
-        "latency_ms": 9,
+        "latency_ms": 10,
         "sample_rows": [
           [
             "oqmd_B2_17621",
@@ -2729,10 +2711,12 @@
         ]
       },
       "oqmd_comparison": {
-        "baseline_count": 0,
-        "db_count": 100,
+        "oqmd_api_count": 0,
+        "t2sql_unique_count": 78,
         "intersection": 0,
-        "match_rate": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "limit_constrained": false,
         "baseline_only": [],
         "db_only": [
           "AlFe",
@@ -2749,7 +2733,7 @@
       },
       "passed": true,
       "pass_reason": "rows=100, expected >0",
-      "elapsed_ms": 61
+      "elapsed_ms": 23829
     },
     {
       "test_id": "C09",
@@ -2799,7 +2783,7 @@
           "space_group"
         ],
         "errors": [],
-        "latency_ms": 8,
+        "latency_ms": 10,
         "sample_rows": [
           [
             "oqmd_L12_11162",
@@ -2840,7 +2824,7 @@
       },
       "passed": true,
       "pass_reason": "rows=100, expected >0",
-      "elapsed_ms": 41
+      "elapsed_ms": 44
     },
     {
       "test_id": "C10",
@@ -2902,7 +2886,7 @@
           "space_group"
         ],
         "errors": [],
-        "latency_ms": 9,
+        "latency_ms": 8,
         "sample_rows": [
           [
             "oqmd_B2_10127",
@@ -2943,7 +2927,7 @@
       },
       "passed": true,
       "pass_reason": "rows=24, expected >0",
-      "elapsed_ms": 43
+      "elapsed_ms": 42
     },
     {
       "test_id": "D01",
@@ -2998,7 +2982,7 @@
           "band_gap"
         ],
         "errors": [],
-        "latency_ms": 10,
+        "latency_ms": 9,
         "sample_rows": [
           [
             "oqmd_B2_17443",
@@ -3054,7 +3038,7 @@
       },
       "passed": true,
       "pass_reason": "success=True, sql_generated=True",
-      "elapsed_ms": 64
+      "elapsed_ms": 61
     },
     {
       "test_id": "D02",
@@ -3110,7 +3094,7 @@
           "space_group"
         ],
         "errors": [],
-        "latency_ms": 10,
+        "latency_ms": 8,
         "sample_rows": [
           [
             "oqmd_B2_10127",
@@ -3151,7 +3135,7 @@
       },
       "passed": true,
       "pass_reason": "success=True, sql_generated=True",
-      "elapsed_ms": 45
+      "elapsed_ms": 42
     },
     {
       "test_id": "E01",
@@ -3196,7 +3180,7 @@
       },
       "passed": true,
       "pass_reason": "Correctly rejected",
-      "elapsed_ms": 35
+      "elapsed_ms": 34
     },
     {
       "test_id": "E02",
@@ -3236,7 +3220,7 @@
       },
       "passed": true,
       "pass_reason": "Correctly rejected",
-      "elapsed_ms": 34
+      "elapsed_ms": 32
     },
     {
       "test_id": "E03",
@@ -3410,7 +3394,7 @@
       },
       "passed": true,
       "pass_reason": "Validation correct",
-      "elapsed_ms": 43
+      "elapsed_ms": 41
     },
     {
       "test_id": "F02",
@@ -3450,7 +3434,7 @@
       },
       "passed": true,
       "pass_reason": "Correctly rejected",
-      "elapsed_ms": 34
+      "elapsed_ms": 32
     }
   ]
 }

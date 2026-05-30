@@ -87,7 +87,7 @@ def make_figures(vr: dict, lr: dict) -> dict[str, str]:
     for tid in test_ids:
         v = vr_by_id.get(tid, {})
         naive_issues.append(len(v.get("naive", {}).get("issues", [])))
-        oqmd_matches.append(v.get("oqmd_comparison", {}).get("match_rate"))
+        oqmd_matches.append(v.get("oqmd_comparison", {}).get("precision"))
 
     categories = [r["category"] for r in lr_results]
 
@@ -212,9 +212,9 @@ def make_figures(vr: dict, lr: dict) -> dict[str, str]:
     fig.savefig(FIGURES_DIR / "fig5_3level_comparison.png", dpi=150, bbox_inches="tight")
     figs["fig5_3level"] = fig_to_base64(fig)
 
-    # ── Fig 6: OQMD match rates ──
-    oqmd_tests = [(r["test_id"], r.get("oqmd_comparison", {}).get("match_rate"))
-                  for r in vr["results"] if r.get("oqmd_comparison", {}).get("match_rate") is not None]
+    # ── Fig 6: OQMD API precision rates ──
+    oqmd_tests = [(r["test_id"], r.get("oqmd_comparison", {}).get("precision"))
+                  for r in vr["results"] if r.get("oqmd_comparison", {}).get("precision") is not None]
     if oqmd_tests:
         fig, ax = plt.subplots(figsize=(12, 7))
         o_ids = [t[0] for t in oqmd_tests]
@@ -223,8 +223,8 @@ def make_figures(vr: dict, lr: dict) -> dict[str, str]:
         ax.bar(o_ids, o_rates, color=colors_oqmd, alpha=0.85, edgecolor="white")
         ax.axhline(y=100, color="#2e7d32", linestyle="--", linewidth=2, alpha=0.5)
         ax.set_xlabel("Test ID")
-        ax.set_ylabel("Match Rate (%)")
-        ax.set_title("Fig.6: OQMD-API Ground Truth Match Rate (Schema Graph T2SQL)")
+        ax.set_ylabel("Precision (%)")
+        ax.set_title("Fig.6: OQMD-API照合 Precision（T2SQL結果がOQMDに含まれる割合）")
         ax.set_ylim(0, 110)
         for i, (tid, rate) in enumerate(zip(o_ids, o_rates)):
             ax.text(i, rate + 2, f"{rate:.0f}%", ha="center", fontsize=14, fontweight="bold")
@@ -937,7 +937,14 @@ GPT-5はo1/o3と同様に内部推論（reasoning）トークンを消費する�
     W(f"""
 <h2 id="sec7">7. OQMD-API正解データとの照合</h2>
 
-<p>OQMD-APIから直接取得した結果を正解データとして、T2SQL（Schema Graph, Rule-based）の結果と照合した。</p>
+<p>各テストケースに対応するクエリ条件で<b>OQMD API（https://oqmd.org/oqmdapi/formationenergy）に直接問い合わせ</b>、
+取得した化合物リストを正解データとして、T2SQL（Schema Graph, Rule-based）の結果と照合した。</p>
+
+<p><b>評価指標：</b></p>
+<ul>
+<li><b>Precision（適合率）</b>: T2SQLが返した化合物のうち、OQMD APIにも存在する割合。高いほど「正しい結果を返している」。</li>
+<li><b>Recall（再現率）</b>: OQMD APIの化合物のうち、T2SQLが返した割合。LIMIT 100制約により100%にならないケースがある。</li>
+</ul>
 """)
 
 
@@ -946,13 +953,18 @@ GPT-5はo1/o3と同様に内部推論（reasoning）トークンを消費する�
     oqmd_tests = [(r["test_id"], r["nl_query"], r.get("oqmd_comparison", {}))
                   for r in vr["results"] if r.get("oqmd_comparison")]
     if oqmd_tests:
-        W('<table><tr><th>Test ID</th><th>クエリ</th><th>OQMD件数</th><th>T2SQL件数</th><th>一致率</th></tr>')
+        W('<table><tr><th>Test ID</th><th>クエリ</th><th>OQMD APIユニーク化合物数</th><th>T2SQLユニーク化合物数</th><th>一致数</th><th>Precision</th><th>Recall</th><th>備考</th></tr>')
         for tid, query, oqmd in oqmd_tests:
-            rate = oqmd.get("match_rate", 0) * 100
+            prec = oqmd.get("precision", 0) * 100
+            rec = oqmd.get("recall", 0) * 100
+            limit_note = "LIMIT制約" if oqmd.get("limit_constrained") else ""
             W(f'<tr><td><b>{tid}</b></td><td>{h(query[:50])}</td>'
-              f'<td>{oqmd.get("baseline_count", "?")}</td>'
-              f'<td>{oqmd.get("db_count", "?")}</td>'
-              f'<td class="{"pass" if rate >= 100 else "warn"}">{rate:.0f}%</td></tr>')
+              f'<td>{oqmd.get("oqmd_api_count", "?")}</td>'
+              f'<td>{oqmd.get("t2sql_unique_count", "?")}</td>'
+              f'<td>{oqmd.get("intersection", "?")}</td>'
+              f'<td class="{"pass" if prec >= 95 else "warn"}">{prec:.0f}%</td>'
+              f'<td class="{"pass" if rec >= 95 else "warn" if rec >= 50 else "fail"}">{rec:.0f}%</td>'
+              f'<td>{limit_note}</td></tr>')
         W('</table>')
 
     W("""
@@ -1111,9 +1123,12 @@ Materials ProjectやAFLOWなど異なるスキーマを持つデータソース�
 
         # OQMD
         oqmd = r_vr.get("oqmd_comparison", {})
-        if oqmd.get("match_rate") is not None:
-            W(f'<p><b>OQMD一致率:</b> {oqmd["match_rate"]*100:.0f}% '
-              f'(OQMD: {oqmd.get("baseline_count",0)}件, T2SQL: {oqmd.get("db_count",0)}件)</p>')
+        if oqmd.get("precision") is not None:
+            limit_note = " ※LIMIT制約あり" if oqmd.get("limit_constrained") else ""
+            W(f'<p><b>OQMD API照合:</b> Precision={oqmd["precision"]*100:.0f}% '
+              f'Recall={oqmd.get("recall",0)*100:.0f}% '
+              f'(OQMD API: {oqmd.get("oqmd_api_count",0)}種, T2SQL: {oqmd.get("t2sql_unique_count",0)}種, '
+              f'一致: {oqmd.get("intersection",0)}種){limit_note}</p>')
 
         W('</details>')
 
@@ -1177,10 +1192,13 @@ validation/safetyテスト（E01-F02）はLLM実行をスキップしている�
 
     if "fig6_oqmd" in figs:
         W(f"""<img class="fig" src="data:image/png;base64,{figs['fig6_oqmd']}"
-     alt="Fig.6: OQMD Match Rate" />
-<p><b>Fig.6:</b> Schema Graph T2SQL（Level 1）の結果とOQMD-API直接取得結果の一致率。
-対応するテストでは全て100%一致。これはOQMD API→CSV→RDB正規化→NL→SQL変換→JOIN再結合の
-全パイプラインが正しく動作していることを示す（Section 7参照）。</p>""")
+     alt="Fig.6: OQMD API Precision" />
+<p><b>Fig.6:</b> T2SQLが返した化合物がOQMD APIの直接取得結果に含まれる割合（Precision）。
+Precisionが100%のテストは、T2SQLが返した全化合物がOQMD APIでも確認できることを意味する。
+Precisionが100%未満の場合、T2SQLが返した化合物の一部がOQMD APIでは異なる名称で登録されている
+可能性がある（Section 7参照）。
+なお、LIMIT 100制約によりOQMD APIの全件を返せないケースがあるが、
+これはRecall（網羅率）の低下であり、Precision（正確性）には影響しない。</p>""")
     else:
         W('<p><i>OQMD比較対象テストなし</i></p>')
 

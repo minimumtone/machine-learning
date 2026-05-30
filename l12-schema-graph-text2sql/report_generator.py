@@ -739,7 +739,7 @@ SQL は決定論的に条件辞書から生成されるため、Few-Shot 例の�
             oqmd = ""
             if "oqmd_comparison" in r and "error" not in r.get("oqmd_comparison", {}):
                 oc = r["oqmd_comparison"]
-                oqmd = f'{oc["match_rate"]*100:.0f}% ({oc["intersection"]}/{oc["baseline_count"]})'
+                oqmd = f'P={oc["precision"]*100:.0f}% R={oc["recall"]*100:.0f}% ({oc["intersection"]}/{oc["oqmd_api_count"]})'
             fs_c = r.get("few_shot", {}).get("retrieved_count", "—")
 
             W(f'<tr class="{cls}">')
@@ -763,8 +763,8 @@ SQL は決定論的に条件辞書から生成されるため、Few-Shot 例の�
                       f'{"; ".join(issues)}</p>')
             if "oqmd_comparison" in r and "error" not in r.get("oqmd_comparison", {}):
                 oc = r["oqmd_comparison"]
-                W(f'<p><b>OQMD 比較：</b> baseline={oc["baseline_count"]}, '
-                  f'T2SQL={oc["db_count"]}, 一致率={oc["match_rate"]*100:.1f}%</p>')
+                W(f'<p><b>OQMD API比較：</b> OQMD={oc["oqmd_api_count"]}種, '
+                  f'T2SQL={oc["t2sql_unique_count"]}種, Precision={oc["precision"]*100:.1f}%, Recall={oc["recall"]*100:.1f}%</p>')
                 if oc.get("baseline_only"):
                     W(f'<p>OQMD のみ: {", ".join(oc["baseline_only"][:5])}</p>')
             if "few_shot" in r and "retrieved_queries" in r.get("few_shot", {}):
@@ -797,11 +797,11 @@ SQL は決定論的に条件辞書から生成されるため、Few-Shot 例の�
         W('<tr><th>ID</th><th>クエリ</th><th>OQMD件数</th><th>T2SQL件数</th><th>一致率</th></tr>')
         for r in oqmd_tests:
             oc = r["oqmd_comparison"]
-            color = "pass" if oc["match_rate"] >= 0.95 else (
-                "warn" if oc["match_rate"] >= 0.8 else "fail")
+            p_color = "pass" if oc["precision"] >= 0.95 else (
+                "warn" if oc["precision"] >= 0.8 else "fail")
             W(f'<tr><td>{r["test_id"]}</td><td>{h(r["nl_query"][:50])}</td>')
-            W(f'<td>{oc["baseline_count"]}</td><td>{oc["db_count"]}</td>')
-            W(f'<td class="{color}">{oc["match_rate"]*100:.1f}%</td></tr>')
+            W(f'<td>{oc["oqmd_api_count"]}</td><td>{oc["t2sql_unique_count"]}</td>')
+            W(f'<td class="{p_color}">{oc["precision"]*100:.1f}%</td></tr>')
         W('</table>')
 
     # ================================================================

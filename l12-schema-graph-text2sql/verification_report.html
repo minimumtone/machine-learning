@@ -76,7 +76,7 @@ footer{ margin-top:40px; padding:20px 0; border-top:1px solid #ddd;
 
 
 <h1>L1<sub>2</sub>/B2 Schema-Graph-Assisted Text-to-SQL<br>包括検証レポート</h1>
-<p style="color:#666;">Generated: 2026-05-30 08:28:14 UTC</p>
+<p style="color:#666;">Generated: 2026-05-30 11:01:07 UTC</p>
 <p style="color:#666;">対象読者：材料工学を専門とする研究者・エンジニア</p>
 
 <div class="note">
@@ -641,7 +641,7 @@ LIMIT 100;</div>
 <td><b>A01</b></td>
 <td>Feを含むB2化合物を出して</td>
 <td class="pass">PASS</td>
-<td>16</td><td>0% (0/0)</td><td>3</td>
+<td>16</td><td>P=100% R=100% (7/7)</td><td>3</td>
 <td>Single element + single prototype</td></tr>
 <tr class="pass-row"><td colspan="7"><details><summary>詳細を見る</summary>
 <p><b>Level 1 SQL (Schema Graph):</b></p>
@@ -664,7 +664,7 @@ FROM material_entry m
     JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id
 WHERE s.prototype = 'B2' AND c.element = 'Fe';</div>
 <p style="color:#c62828"><b>Naive の問題点：</b> Unnecessary JOINs: calculated_property, calculation, phase_stability; No LIMIT clause — unbounded result set; No DISTINCT — may return duplicate rows from JOINs; No SQL safety validation (sqlglot/forbidden keyword check)</p>
-<p><b>OQMD 比較：</b> baseline=0, T2SQL=16, 一致率=0.0%</p>
+<p><b>OQMD API比較：</b> OQMD=7種, T2SQL=7種, Precision=100.0%, Recall=100.0%</p>
 <p><b>Few-Shot 類似事例：</b> Feを含むB2化合物を出して, Coを含む安定なL1₂化合物を出して, Tiを含むL1₂化合物の形成エネルギーを出して</p>
 <p><b>結果サンプル（先頭3行）：</b></p>
 <pre>[
@@ -696,7 +696,7 @@ WHERE s.prototype = 'B2' AND c.element = 'Fe';</div>
 <td><b>A02</b></td>
 <td>安定なL1₂化合物を形成エネルギーが低い順に出して</td>
 <td class="pass">PASS</td>
-<td>88</td><td>0% (0/0)</td><td>3</td>
+<td>88</td><td>P=100% R=100% (88/88)</td><td>3</td>
 <td>Stability + sort</td></tr>
 <tr class="pass-row"><td colspan="7"><details><summary>詳細を見る</summary>
 <p><b>Level 1 SQL (Schema Graph):</b></p>
@@ -721,7 +721,7 @@ FROM material_entry m
 WHERE s.prototype = 'L12' AND ps.energy_above_hull &lt;= 0.001
 ORDER BY phase_stability.formation_energy_per_atom ASC;</div>
 <p style="color:#c62828"><b>Naive の問題点：</b> Unnecessary JOINs: calculated_property, calculation, composition; No LIMIT clause — unbounded result set; No DISTINCT — may return duplicate rows from JOINs; No SQL safety validation (sqlglot/forbidden keyword check)</p>
-<p><b>OQMD 比較：</b> baseline=0, T2SQL=88, 一致率=0.0%</p>
+<p><b>OQMD API比較：</b> OQMD=88種, T2SQL=88種, Precision=100.0%, Recall=100.0%</p>
 <p><b>Few-Shot 類似事例：</b> 安定なL1₂化合物を形成エネルギーが低い順に出して, 安定なL1₂型化合物を形成エネルギーが低い順に出して, B2化合物をバンドギャップが大きい順に出して</p>
 <p><b>結果サンプル（先頭3行）：</b></p>
 <pre>[
@@ -805,7 +805,7 @@ WHERE c.element = 'Ni' AND c.element = 'Al';</div>
 <td><b>A04</b></td>
 <td>B2化合物の全リストを出して</td>
 <td class="pass">PASS</td>
-<td>100</td><td>0% (0/636)</td><td>3</td>
+<td>100</td><td>P=100% R=20% (95/483)</td><td>3</td>
 <td>Full prototype listing</td></tr>
 <tr class="pass-row"><td colspan="7"><details><summary>詳細を見る</summary>
 <p><b>Level 1 SQL (Schema Graph):</b></p>
@@ -826,8 +826,8 @@ FROM material_entry m
     JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id
 WHERE s.prototype = 'B2';</div>
 <p style="color:#c62828"><b>Naive の問題点：</b> Unnecessary JOINs: calculated_property, calculation, composition, phase_stability; No LIMIT clause — unbounded result set; No DISTINCT — may return duplicate rows from JOINs; No SQL safety validation (sqlglot/forbidden keyword check)</p>
-<p><b>OQMD 比較：</b> baseline=636, T2SQL=100, 一致率=0.0%</p>
-<p>OQMD のみ: </p>
+<p><b>OQMD API比較：</b> OQMD=483種, T2SQL=95種, Precision=100.0%, Recall=19.7%</p>
+<p>OQMD のみ: AgBr, AgCl, AgI, AlCo, AlFe</p>
 <p><b>Few-Shot 類似事例：</b> 安定なB2化合物をリストして, OQMDのB2化合物の形成エネルギーを出して, 準安定なB2化合物を出して</p>
 <p><b>結果サンプル（先頭3行）：</b></p>
 <pre>[
@@ -859,7 +859,7 @@ WHERE s.prototype = 'B2';</div>
 <td><b>A05</b></td>
 <td>準安定なB2化合物を出して</td>
 <td class="pass">PASS</td>
-<td>100</td><td>0% (0/0)</td><td>3</td>
+<td>100</td><td>P=100% R=35% (90/260)</td><td>3</td>
 <td>Metastable filter</td></tr>
 <tr class="pass-row"><td colspan="7"><details><summary>詳細を見る</summary>
 <p><b>Level 1 SQL (Schema Graph):</b></p>
@@ -882,7 +882,8 @@ FROM material_entry m
     JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id
 WHERE s.prototype = 'B2' AND ps.energy_above_hull &lt;= 0.05;</div>
 <p style="color:#c62828"><b>Naive の問題点：</b> Unnecessary JOINs: calculated_property, calculation, composition; No LIMIT clause — unbounded result set; No DISTINCT — may return duplicate rows from JOINs; No SQL safety validation (sqlglot/forbidden keyword check)</p>
-<p><b>OQMD 比較：</b> baseline=0, T2SQL=100, 一致率=0.0%</p>
+<p><b>OQMD API比較：</b> OQMD=260種, T2SQL=90種, Precision=100.0%, Recall=34.6%</p>
+<p>OQMD のみ: AlCo, AlIr, AlNi, AlOs, AlPd</p>
 <p><b>Few-Shot 類似事例：</b> 準安定なB2化合物を出して, 安定なB2化合物をリストして, Feを含むB2化合物を出して</p>
 <p><b>結果サンプル（先頭3行）：</b></p>
 <pre>[
@@ -923,7 +924,7 @@ WHERE s.prototype = 'B2' AND ps.energy_above_hull &lt;= 0.05;</div>
 <td><b>A06</b></td>
 <td>Coを含む安定なL1₂化合物を出して</td>
 <td class="pass">PASS</td>
-<td>1</td><td>0% (0/0)</td><td>3</td>
+<td>1</td><td>P=100% R=100% (1/1)</td><td>3</td>
 <td>Element + stability</td></tr>
 <tr class="pass-row"><td colspan="7"><details><summary>詳細を見る</summary>
 <p><b>Level 1 SQL (Schema Graph):</b></p>
@@ -948,7 +949,7 @@ FROM material_entry m
     JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id
 WHERE s.prototype = 'L12' AND c.element = 'Co' AND ps.energy_above_hull &lt;= 0.001;</div>
 <p style="color:#c62828"><b>Naive の問題点：</b> Unnecessary JOINs: calculated_property, calculation; No LIMIT clause — unbounded result set; No DISTINCT — may return duplicate rows from JOINs; No SQL safety validation (sqlglot/forbidden keyword check)</p>
-<p><b>OQMD 比較：</b> baseline=0, T2SQL=1, 一致率=0.0%</p>
+<p><b>OQMD API比較：</b> OQMD=1種, T2SQL=1種, Precision=100.0%, Recall=100.0%</p>
 <p><b>Few-Shot 類似事例：</b> Coを含む安定なL1₂化合物を出して, Feを含むB2化合物を出して, Tiを含むL1₂化合物の形成エネルギーを出して</p>
 <p><b>結果サンプル（先頭3行）：</b></p>
 <pre>[
@@ -1129,7 +1130,7 @@ WHERE s.prototype = 'L12' AND c.element = 'Ni';</div>
 <td><b>A10</b></td>
 <td>L1₂化合物の全データを出して</td>
 <td class="pass">PASS</td>
-<td>100</td><td>0% (0/273)</td><td>3</td>
+<td>100</td><td>P=100% R=37% (100/273)</td><td>3</td>
 <td>Full L12 listing</td></tr>
 <tr class="pass-row"><td colspan="7"><details><summary>詳細を見る</summary>
 <p><b>Level 1 SQL (Schema Graph):</b></p>
@@ -1150,8 +1151,8 @@ FROM material_entry m
     JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id
 WHERE s.prototype = 'L12';</div>
 <p style="color:#c62828"><b>Naive の問題点：</b> Unnecessary JOINs: calculated_property, calculation, composition, phase_stability; No LIMIT clause — unbounded result set; No DISTINCT — may return duplicate rows from JOINs; No SQL safety validation (sqlglot/forbidden keyword check)</p>
-<p><b>OQMD 比較：</b> baseline=273, T2SQL=100, 一致率=0.0%</p>
-<p>OQMD のみ: </p>
+<p><b>OQMD API比較：</b> OQMD=273種, T2SQL=100種, Precision=100.0%, Recall=36.6%</p>
+<p>OQMD のみ: AgPt3, Al3V, AlCu3, AlNi3, Ca3Pb</p>
 <p><b>Few-Shot 類似事例：</b> Tiを含むL1₂化合物の形成エネルギーを出して, Materials ProjectのL1₂化合物の格子定数を出して, OQMDのB2化合物の形成エネルギーを出して</p>
 <p><b>結果サンプル（先頭3行）：</b></p>
 <pre>[
@@ -1399,7 +1400,7 @@ WHERE s.prototype = 'B2' AND c.element = 'Fe';</div>
 <td><b>A15</b></td>
 <td>安定なL1₂化合物でNiを含むものを出して</td>
 <td class="pass">PASS</td>
-<td>6</td><td>0% (0/0)</td><td>3</td>
+<td>6</td><td>P=100% R=100% (6/6)</td><td>3</td>
 <td>Stability + element</td></tr>
 <tr class="pass-row"><td colspan="7"><details><summary>詳細を見る</summary>
 <p><b>Level 1 SQL (Schema Graph):</b></p>
@@ -1424,7 +1425,7 @@ FROM material_entry m
     JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id
 WHERE s.prototype = 'L12' AND c.element = 'Ni' AND ps.energy_above_hull &lt;= 0.001;</div>
 <p style="color:#c62828"><b>Naive の問題点：</b> Unnecessary JOINs: calculated_property, calculation; No LIMIT clause — unbounded result set; No DISTINCT — may return duplicate rows from JOINs; No SQL safety validation (sqlglot/forbidden keyword check)</p>
-<p><b>OQMD 比較：</b> baseline=0, T2SQL=6, 一致率=0.0%</p>
+<p><b>OQMD API比較：</b> OQMD=6種, T2SQL=6種, Precision=100.0%, Recall=100.0%</p>
 <p><b>Few-Shot 類似事例：</b> Coを含む安定なL1₂化合物を出して, 安定なB2化合物をリストして, Tiを含むL1₂化合物の形成エネルギーを出して</p>
 <p><b>結果サンプル（先頭3行）：</b></p>
 <pre>[
@@ -2034,7 +2035,7 @@ FROM material_entry m
 <td><b>C08</b></td>
 <td>安定なB2化合物でband gapが大きいもの</td>
 <td class="pass">PASS</td>
-<td>100</td><td>0% (0/0)</td><td>3</td>
+<td>100</td><td>P=0% R=0% (0/0)</td><td>3</td>
 <td>Vague 'large band gap' - no numeric threshold specified</td></tr>
 <tr class="pass-row"><td colspan="7"><details><summary>詳細を見る</summary>
 <p><b>Level 1 SQL (Schema Graph):</b></p>
@@ -2057,7 +2058,7 @@ FROM material_entry m
     JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id
 WHERE s.prototype = 'B2' AND ps.energy_above_hull &lt;= 0.001;</div>
 <p style="color:#c62828"><b>Naive の問題点：</b> Unnecessary JOINs: calculated_property, calculation, composition; No LIMIT clause — unbounded result set; No DISTINCT — may return duplicate rows from JOINs; No SQL safety validation (sqlglot/forbidden keyword check)</p>
-<p><b>OQMD 比較：</b> baseline=0, T2SQL=100, 一致率=0.0%</p>
+<p><b>OQMD API比較：</b> OQMD=0種, T2SQL=78種, Precision=0.0%, Recall=0.0%</p>
 <p><b>Few-Shot 類似事例：</b> 安定なB2化合物をリストして, B2化合物をバンドギャップが大きい順に出して, 安定なL1₂化合物を形成エネルギーが低い順に出して</p>
 <p><b>結果サンプル（先頭3行）：</b></p>
 <pre>[
@@ -2514,28 +2515,28 @@ FROM material_entry m
 <table>
 <tr><th>ID</th><th>クエリ</th><th>OQMD件数</th><th>T2SQL件数</th><th>一致率</th></tr>
 <tr><td>A01</td><td>Feを含むB2化合物を出して</td>
-<td>0</td><td>16</td>
-<td class="fail">0.0%</td></tr>
+<td>7</td><td>7</td>
+<td class="pass">100.0%</td></tr>
 <tr><td>A02</td><td>安定なL1₂化合物を形成エネルギーが低い順に出して</td>
-<td>0</td><td>88</td>
-<td class="fail">0.0%</td></tr>
+<td>88</td><td>88</td>
+<td class="pass">100.0%</td></tr>
 <tr><td>A04</td><td>B2化合物の全リストを出して</td>
-<td>636</td><td>100</td>
-<td class="fail">0.0%</td></tr>
+<td>483</td><td>95</td>
+<td class="pass">100.0%</td></tr>
 <tr><td>A05</td><td>準安定なB2化合物を出して</td>
-<td>0</td><td>100</td>
-<td class="fail">0.0%</td></tr>
+<td>260</td><td>90</td>
+<td class="pass">100.0%</td></tr>
 <tr><td>A06</td><td>Coを含む安定なL1₂化合物を出して</td>
-<td>0</td><td>1</td>
-<td class="fail">0.0%</td></tr>
+<td>1</td><td>1</td>
+<td class="pass">100.0%</td></tr>
 <tr><td>A10</td><td>L1₂化合物の全データを出して</td>
 <td>273</td><td>100</td>
-<td class="fail">0.0%</td></tr>
+<td class="pass">100.0%</td></tr>
 <tr><td>A15</td><td>安定なL1₂化合物でNiを含むものを出して</td>
-<td>0</td><td>6</td>
-<td class="fail">0.0%</td></tr>
+<td>6</td><td>6</td>
+<td class="pass">100.0%</td></tr>
 <tr><td>C08</td><td>安定なB2化合物でband gapが大きいもの</td>
-<td>0</td><td>100</td>
+<td>0</td><td>78</td>
 <td class="fail">0.0%</td></tr>
 </table>
 <h2>10. いい加減なクエリへの対処（False Positive 検証）</h2>
@@ -2899,7 +2900,7 @@ Materials Project, AFLOW との連携。スキーマ拡張と大規模データ�
 L1<sub>2</sub>/B2 Schema-Graph-Assisted Text-to-SQL System &mdash;
 NIMS Materials Informatics &mdash;
 Generated by comprehensive_verification.py + report_generator.py &mdash;
-2026-05-30 08:28 UTC
+2026-05-30 11:01 UTC
 </footer>
 </body>
 </html>
