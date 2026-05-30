@@ -47,15 +47,20 @@ def attempt_repair(
     from llm.sql_generator import extract_sql_from_response
 
     client = openai.OpenAI(api_key=api_key)
-    resp = client.chat.completions.create(
+    create_kwargs: dict[str, Any] = dict(
         model=model,
         messages=[
             {"role": "system", "content": "You are a PostgreSQL expert. Fix the SQL."},
             {"role": "user", "content": prompt},
         ],
-        temperature=0.0,
-        max_tokens=512,
     )
+    _is_new_model = model and any(t in model for t in ("gpt-5", "o1", "o3", "o4"))
+    if _is_new_model:
+        create_kwargs["max_completion_tokens"] = 4096
+    else:
+        create_kwargs["temperature"] = 0.0
+        create_kwargs["max_tokens"] = 512
+    resp = client.chat.completions.create(**create_kwargs)
     raw = resp.choices[0].message.content or ""
     sql = extract_sql_from_response(raw)
     return {

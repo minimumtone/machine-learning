@@ -95,15 +95,21 @@ def generate_sql_via_llm(
     import openai
     client = openai.OpenAI(api_key=api_key)
     t0 = time.time()
-    resp = client.chat.completions.create(
+    create_kwargs: dict[str, Any] = dict(
         model=model,
         messages=[
             {"role": "system", "content": "You are a PostgreSQL expert for materials databases."},
             {"role": "user", "content": prompt},
         ],
-        temperature=0.0,
-        max_tokens=512,
     )
+    # GPT-5 / o-series: no temperature, use max_completion_tokens
+    _is_new_model = model and any(t in model for t in ("gpt-5", "o1", "o3", "o4"))
+    if _is_new_model:
+        create_kwargs["max_completion_tokens"] = 4096
+    else:
+        create_kwargs["temperature"] = 0.0
+        create_kwargs["max_tokens"] = 512
+    resp = client.chat.completions.create(**create_kwargs)
     latency_ms = int((time.time() - t0) * 1000)
     raw = resp.choices[0].message.content or ""
     sql = extract_sql_from_response(raw)
