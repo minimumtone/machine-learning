@@ -22,15 +22,22 @@ def _normalize(text: str) -> str:
     return text.translate(_SUBSCRIPT_MAP)
 
 
-def extract_prototype(query: str, terms: dict[str, Any] | None = None) -> str | None:
+def extract_prototype(query: str, terms: dict[str, Any] | None = None) -> str | list[str] | None:
     if terms is None:
         terms = _load_terms()
     q = _normalize(query)
+    found: list[str] = []
     for proto, aliases in terms.get("prototype_aliases", {}).items():
         for alias in aliases:
             if _normalize(alias).lower() in q.lower():
-                return proto
-    return None
+                if proto not in found:
+                    found.append(proto)
+                break
+    if not found:
+        return None
+    if len(found) == 1:
+        return found[0]
+    return found
 
 
 def _is_ascii(s: str) -> bool:

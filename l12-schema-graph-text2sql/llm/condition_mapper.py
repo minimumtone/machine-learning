@@ -14,12 +14,17 @@ def _load_terms(path: Path | None = None) -> dict[str, Any]:
         return yaml.safe_load(f)
 
 
-def map_prototype_condition(prototype: str) -> dict[str, Any]:
+def map_prototype_condition(prototype: str | list[str]) -> dict[str, Any]:
+    if isinstance(prototype, list):
+        parts = " OR ".join(
+            f"s.prototype = '{p}' OR s.strukturbericht = '{p}'" for p in prototype
+        )
+        sql_fragment = f"({parts})"
+    else:
+        sql_fragment = f"(s.prototype = '{prototype}' OR s.strukturbericht = '{prototype}')"
     return {
         "type": "prototype",
-        "sql_fragment": (
-            f"(s.prototype = '{prototype}' OR s.strukturbericht = '{prototype}')"
-        ),
+        "sql_fragment": sql_fragment,
         "tables": ["structure"],
         "columns": ["structure.prototype", "structure.strukturbericht"],
     }

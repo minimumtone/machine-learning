@@ -10,6 +10,12 @@ prototype_aliases:
     - gamma prime
     - "\u03B3'"
     - "\u30AC\u30F3\u30DE\u30D7\u30E9\u30A4\u30E0"
+  B2:
+    - B2
+    - CsCl
+    - "CsCl\u578B"
+    - ordered BCC
+    - "\u898F\u5247\u5316BCC"
 
 stability_terms:
   stable:
