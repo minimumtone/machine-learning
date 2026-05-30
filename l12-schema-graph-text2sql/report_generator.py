@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Generate detailed HTML verification report for junior engineers.
+"""Generate detailed HTML verification report for materials engineers.
 
-Every technical concept is explained so a newcomer can understand
-*why* each component exists and *what problem it solves*.
-No hand-waving, no shortcuts, no "obvious" assumptions.
+Targeted at materials engineering professionals. Explains every
+technical decision with honest assessment of limitations.
+No hand-waving, no shortcuts — demerits stated explicitly.
 """
 from __future__ import annotations
 
@@ -66,6 +66,12 @@ tr.pass-row{{ background:#e8f5e9; }} tr.fail-row{{ background:#ffebee; }}
             margin:12px 0; border-radius:0 6px 6px 0; }}
 .bad{{ background:#ffebee; border-left:4px solid #c62828; padding:12px 16px;
        margin:12px 0; border-radius:0 6px 6px 0; }}
+.demerit{{ background:#fff8e1; border-left:4px solid #f57f17; padding:14px 18px;
+           margin:14px 0; border-radius:0 6px 6px 0; }}
+.demerit h4{{ color:#e65100; margin:0 0 8px 0; }}
+.severity-high{{ border-left-color:#c62828; background:#ffebee; }}
+.severity-mid{{ border-left-color:#ef6c00; background:#fff3e0; }}
+.severity-low{{ border-left-color:#fbc02d; background:#fffde7; }}
 .code{{ background:#eceff1; padding:2px 6px; border-radius:3px;
         font-family:monospace; font-size:0.92em; }}
 .er-xml{{ background:#f3e5f5; border:1px solid #ce93d8; border-radius:6px;
@@ -102,14 +108,15 @@ footer{{ margin-top:40px; padding:20px 0; border-top:1px solid #ddd;
     # 0. タイトル・サマリ
     # ================================================================
     W(f"""
-<h1>L1<sub>2</sub>/B2 Schema-Graph-Assisted Text-to-SQL<br>包括検証レポート（若手エンジニア向け詳細版）</h1>
+<h1>L1<sub>2</sub>/B2 Schema-Graph-Assisted Text-to-SQL<br>包括検証レポート</h1>
 <p style="color:#666;">Generated: {time.strftime('%Y-%m-%d %H:%M:%S UTC')}</p>
+<p style="color:#666;">対象読者：材料工学を専門とする研究者・エンジニア</p>
 
 <div class="note">
 <b>このレポートについて：</b>
-「自然言語で材料データベースを検索するシステム (Text-to-SQL)」を構築し、
+自然言語で材料データベースを検索する Text-to-SQL システムを構築し、
 39件のテストケースで検証した結果をまとめたものです。
-各セクションでは「なぜこの設計が必要なのか」を省略せず説明します。
+各セクションでは設計判断の根拠と、<b>デメリット・限界点を忖度なしに</b>記載します。
 </div>
 
 <h2>0. 全体サマリ</h2>
@@ -870,12 +877,221 @@ RAG Feedback Loop（成功SQL→蓄積→次回検索に活用）を含む。</l
 """)
 
     # ================================================================
-    # 12. まとめと今後
+    # 12. デメリットと限界（忖度なし）
     # ================================================================
     W("""
-<h2>12. まとめと今後の課題</h2>
+<h2>12. デメリットと限界 — なぜ100%を額面通りに受け取ってはいけないか</h2>
 
-<h3>12.1 達成したこと</h3>
+<div class="bad">
+<b>重要：</b>本セクションは、検証結果の「39/39 (100%)」という数字が
+<b>何を意味し、何を意味しないか</b>を正直に分析する。
+100% は「制御された条件下での動作確認」であり、
+「実運用可能」「任意のクエリに対応できる」という意味ではない。
+</div>
+
+<h3>12.1 テストケースの自己参照性（最大のデメリット）</h3>
+<div class="demerit severity-high">
+<h4>深刻度：高 — 検証の信頼性に直結</h4>
+<p>テストケース39件は、rule-based エンジンの抽出パターンを
+<b>知っている開発者が設計</b>している。
+「自分で作った試験を自分で受けている」状態であり、100%は当然の帰結である。</p>
+<p><b>材料研究者にとっての意味：</b>
+実際の研究現場では、研究者が自由な表現でクエリを入力する。
+例えば「γ'の析出強化に寄与する組成を探して」のような、
+本システムのパターンに合致しない表現が大半を占める。
+そのような入力でのテストは一切行われていない。</p>
+<p><b>改善策：</b>
+実際の材料研究者5〜10名に自由文でクエリを入力してもらい、
+成功率を計測する「ブラインドテスト」が必要。</p>
+</div>
+
+<h3>12.2 Rule-based fallback による検証の限界</h3>
+<div class="demerit severity-high">
+<h4>深刻度：高 — Few-Shot RAG の本来の効果が未検証</h4>
+<p>SQL-as-Few-Shot-Examples は <b>LLM の SQL 生成精度を向上させる仕組み</b>である。
+しかし、本検証は OpenAI API なしの rule-based モードで行われており、
+Few-Shot の本来の効果（LLM プロンプトへの事例注入→生成精度向上）は
+<b>一切検証できていない</b>。</p>
+<p>Rule-based モードでは条件辞書から決定論的に SQL を生成するため、
+Few-Shot 事例の有無で結果は変わらない。
+つまり、Few-Shot は「蓄積するだけ」で生成には影響を与えていない。</p>
+<p><b>材料研究者にとっての意味：</b>
+Few-Shot RAG の恩恵を受けるには、LLM（OpenAI GPT-4等）の API キーが必要。
+API 利用にはコスト（1クエリあたり数円〜数十円）と
+外部サービスへのデータ送信が発生する。
+オフライン環境（セキュリティ要件の厳しい研究機関等）では利用できない。</p>
+</div>
+
+<h3>12.3 OQMD 比較の循環論証</h3>
+<div class="demerit severity-mid">
+<h4>深刻度：中 — 検証の独立性に関わる</h4>
+<p>OQMD API → CSV → PostgreSQL に投入したデータに対して、
+同じ条件で SQL を発行して「一致した」と報告している。
+<b>同じデータソースの同じデータ</b>なので、不一致が起きる方がおかしい。</p>
+<p>真の検証とは、<b>独立したデータソース</b>（Materials Project, AFLOW, NOMAD）
+との交差検証、または論文の実験値との突き合わせである。</p>
+<p><b>例：</b>Ni<sub>3</sub>Al の格子定数 — OQMD (DFT) は 3.572 Å、
+実験値は 3.567 Å (Mishima et al., Acta Metall. 1985)。
+このような DFT vs 実験の乖離は本システムでは検出できない。</p>
+</div>
+
+<h3>12.4 語彙カバレッジの限界</h3>
+<div class="demerit severity-mid">
+<h4>深刻度：中 — Silent Failure（無言の失敗）を引き起こす</h4>
+<p><span class="code">material_terms.yaml</span> に登録された用語しか認識できない。
+未登録の材料用語は<b>警告なしに無視</b>される。</p>
+<table>
+<tr><th>入力</th><th>認識</th><th>結果</th></tr>
+<tr><td>「ヘスラー合金」(Heusler)</td><td class="fail">未登録</td><td>条件なし → 全データ返却</td></tr>
+<tr><td>「ペロブスカイト」(Perovskite)</td><td class="fail">未登録</td><td>条件なし → 全データ返却</td></tr>
+<tr><td>「マルテンサイト変態」</td><td class="fail">未登録</td><td>条件なし → 全データ返却</td></tr>
+<tr><td>「超格子」(superlattice)</td><td class="fail">未登録</td><td>条件なし → 全データ返却</td></tr>
+<tr><td>「Nickle」(スペルミス)</td><td class="fail">未対応</td><td>Ni として認識されない</td></tr>
+<tr><td>「にっける」(ひらがな)</td><td class="fail">未対応</td><td>Ni として認識されない</td></tr>
+</table>
+<p><b>材料研究者にとっての意味：</b>
+研究者は多様な表現を使う。「γ'相」「ガンマプライム」「gamma prime」は
+すべて同じ概念だが、辞書に登録されていなければ認識されない。
+さらに深刻なのは、<b>認識されなかったことがユーザーに通知されない</b>点である。
+ユーザーは「Xeを含むB2化合物」と入力して636件が返ってきたとき、
+Xeフィルタが無視されたことに気づかない可能性がある。</p>
+</div>
+
+<h3>12.5 数値比較クエリの不可能性</h3>
+<div class="demerit severity-mid">
+<h4>深刻度：中 — 材料スクリーニングの実用性に直結</h4>
+<p>Rule-based モードでは、数値の大小比較を含む WHERE 条件を生成できない。</p>
+<table>
+<tr><th>クエリ</th><th>期待される SQL</th><th>実際</th></tr>
+<tr><td>「band gap が 1.0 eV 以上のB2」</td>
+<td><span class="code">WHERE ps.band_gap &ge; 1.0</span></td>
+<td class="fail">生成不可（post-filteringで代替）</td></tr>
+<tr><td>「格子定数が 3.5 Å 以下のL1<sub>2</sub>」</td>
+<td><span class="code">WHERE s.lattice_a &le; 3.5</span></td>
+<td class="fail">生成不可</td></tr>
+<tr><td>「形成エネルギーが -0.5 eV/atom より低い」</td>
+<td><span class="code">WHERE ps.formation_energy &lt; -0.5</span></td>
+<td class="fail">生成不可</td></tr>
+</table>
+<p><b>材料研究者にとっての意味：</b>
+材料スクリーニングでは「E<sub>hull</sub> &lt; 50 meV の準安定相」
+「格子定数 3.5〜3.8 Å の範囲」のような数値条件が頻出する。
+現状ではこれらの条件を直接 SQL に変換できず、全件取得後に Python で
+フィルタリングするしかない（非効率、大規模データで破綻する）。</p>
+</div>
+
+<h3>12.6 スキーマの単純さ</h3>
+<div class="demerit severity-low">
+<h4>深刻度：低〜中 — スケーラビリティの懸念</h4>
+<p>本システムのスキーマは7テーブル・約30カラムの単純な構成である。
+実運用の材料データベースとの比較：</p>
+<table>
+<tr><th>データベース</th><th>テーブル数</th><th>エントリ数</th><th>特徴</th></tr>
+<tr><td><b>本システム</b></td><td>7</td><td>909</td><td>B2/L1<sub>2</sub>のみ</td></tr>
+<tr><td>OQMD</td><td>数十</td><td>1,000,000+</td><td>全結晶構造</td></tr>
+<tr><td>Materials Project</td><td>数十</td><td>150,000+</td><td>バンド構造・弾性定数含む</td></tr>
+<tr><td>AFLOW</td><td>数十</td><td>3,500,000+</td><td>自動フロー計算</td></tr>
+<tr><td>NOMAD</td><td>複雑な階層構造</td><td>12,000,000+</td><td>生データ含む</td></tr>
+</table>
+<p>Schema Graph の真価は複雑なスキーマ（テーブル間の JOIN 経路が非自明な場合）で
+発揮されるが、そのような条件での検証は行われていない。
+7テーブルでは、人間が手動で JOIN を書いても間違えにくい。</p>
+</div>
+
+<h3>12.7 データ規模の限界</h3>
+<div class="demerit severity-low">
+<h4>深刻度：低 — 将来の拡張時に顕在化</h4>
+<p>909件は実用規模の 0.1% 以下。大規模データでの以下の問題は未評価：</p>
+<ul>
+<li><b>クエリ性能：</b>100万件規模での JOIN + WHERE + ORDER BY のレスポンスタイム</li>
+<li><b>LIMIT 100 の妥当性：</b>候補が数千件あるとき、先頭100件で十分か？
+研究者はすべてのデータを見たい場合がある</li>
+<li><b>インデックス設計：</b>大規模データでは適切なインデックスなしに
+秒単位のレスポンスは不可能</li>
+<li><b>ページネーション：</b>100件以降のデータを取得する手段がない</li>
+</ul>
+</div>
+
+<h3>12.8 曖昧クエリへの「安全な失敗」は本当に安全か</h3>
+<div class="demerit severity-mid">
+<h4>深刻度：中 — ユーザー体験と信頼性</h4>
+<p>現在の設計では、曖昧な入力に対して「全データの先頭100件」を返す。
+テストではこれを「安全な動作」として PASS 判定しているが、
+材料研究者の視点では問題がある：</p>
+<ul>
+<li><b>「今日の天気を教えて」→ 材料データが返る：</b>
+入力が材料クエリかどうかの判定機構がない。
+ユーザーは返ってきたデータを「天気に関するデータ」と誤解する可能性は低いが、
+「このシステムは何でも答えてくれる」という誤った信頼を生む。</li>
+<li><b>「Xeを含むB2化合物」→ B2全件が返る：</b>
+Xe が辞書に未登録のため無視され、B2 化合物のフルリストが返る。
+ユーザーは「Xe 含有 B2 が636件もある」と誤解する可能性がある。
+<b>正しい動作は「Xe は認識できませんでした」という通知</b>。</li>
+</ul>
+<p><b>改善策：</b>
+入力テキストのうち、条件として抽出<b>されなかった</b>トークンを検出し、
+「以下の語句は認識されませんでした：Xe, ヘスラー」と
+ユーザーに明示的に通知する仕組みが必要。</p>
+</div>
+
+<h3>12.9 多言語・表記揺れの網羅性</h3>
+<div class="demerit severity-low">
+<h4>深刻度：低 — 主に日本語特有の問題</h4>
+<table>
+<tr><th>表記</th><th>対応状況</th><th>備考</th></tr>
+<tr><td>「ニッケル」</td><td class="pass">対応済み</td><td>カタカナ辞書に登録</td></tr>
+<tr><td>「にっける」</td><td class="fail">未対応</td><td>ひらがな辞書なし</td></tr>
+<tr><td>「Nickle」</td><td class="fail">未対応</td><td>スペルミス補正なし</td></tr>
+<tr><td>「Ni-based」</td><td class="pass">対応済み</td><td>正規表現でマッチ</td></tr>
+<tr><td>「ガンマプライム」</td><td class="pass">対応済み</td><td>γ' のカタカナ表記</td></tr>
+<tr><td>「gamma prime」</td><td class="pass">対応済み</td><td>英語表記</td></tr>
+<tr><td>「析出強化相」</td><td class="fail">未対応</td><td>概念レベルの表現</td></tr>
+</table>
+<p>スペルミス補正には Levenshtein 距離やファジーマッチングが有効だが、未実装。</p>
+</div>
+
+<h3>12.10 エラーリカバリの不在</h3>
+<div class="demerit severity-low">
+<h4>深刻度：低 — 現時点では問題は顕在化していない</h4>
+<p>SQL 実行エラー時に「別の SQL を試す」「ユーザーに確認する」等の
+リカバリ機構がない。1回失敗したらそのままエラーを返す。
+Rule-based モードではエラーが発生しにくいが、
+LLM モードでは生成 SQL の構文エラーが頻発する可能性がある。</p>
+</div>
+
+<h3>12.11 デメリット一覧（深刻度順）</h3>
+<table>
+<tr><th>#</th><th>デメリット</th><th>深刻度</th><th>影響範囲</th><th>改善コスト</th></tr>
+<tr class="fail-row">
+<td>1</td><td>テストケースの自己参照性</td><td>高</td><td>検証の信頼性</td><td>中（ブラインドテスト実施）</td></tr>
+<tr class="fail-row">
+<td>2</td><td>Rule-based での Few-Shot 未検証</td><td>高</td><td>Few-Shot の価値</td><td>低（API キー設定のみ）</td></tr>
+<tr>
+<td>3</td><td>OQMD 比較の循環論証</td><td>中</td><td>検証の独立性</td><td>中（別データソース連携）</td></tr>
+<tr>
+<td>4</td><td>語彙カバレッジ（Silent Failure）</td><td>中</td><td>ユーザー体験</td><td>低（通知機構追加）</td></tr>
+<tr>
+<td>5</td><td>数値比較クエリ不可</td><td>中</td><td>スクリーニング実用性</td><td>中（NLPパーサー追加）</td></tr>
+<tr>
+<td>6</td><td>曖昧クエリの安全性</td><td>中</td><td>ユーザーの誤解</td><td>低（未認識トークン通知）</td></tr>
+<tr>
+<td>7</td><td>スキーマの単純さ</td><td>低〜中</td><td>スケーラビリティ</td><td>高（スキーマ拡張+再検証）</td></tr>
+<tr>
+<td>8</td><td>データ規模の限界</td><td>低</td><td>性能</td><td>中（インデックス設計）</td></tr>
+<tr>
+<td>9</td><td>多言語・表記揺れ</td><td>低</td><td>日本語ユーザー</td><td>低（ファジーマッチ追加）</td></tr>
+<tr>
+<td>10</td><td>エラーリカバリ不在</td><td>低</td><td>LLMモード移行時</td><td>中（リトライ機構実装）</td></tr>
+</table>
+""")
+
+    # ================================================================
+    # 13. まとめと今後
+    # ================================================================
+    W("""
+<h2>13. まとめと今後の課題</h2>
+
+<h3>13.1 達成したこと</h3>
 <ul>
 <li>7テーブルの正規化スキーマに OQMD 909件のデータを投入</li>
 <li>NetworkX ベースの Schema Graph Traversal Engine で正確な JOIN 経路を自動探索</li>
@@ -885,19 +1101,41 @@ RAG Feedback Loop（成功SQL→蓄積→次回検索に活用）を含む。</l
 <li>OQMD 直接取得との比較で 100% 一致率</li>
 </ul>
 
-<h3>12.2 今後の課題（忖度なし）</h3>
-<ul>
-<li><b>LLM モードの実証：</b>Rule-based fallback では Few-Shot の効果が限定的。
-OpenAI API での実証が必要。</li>
-<li><b>数値条件の自動生成：</b>「band gap が大きい」→ 具体的な閾値
-（例: &gt; 1.0 eV）を自動推定する機構がない。現状は post-filtering 対応。</li>
-<li><b>未登録元素の通知：</b>辞書にない元素を入力された場合、
-ユーザーに「この元素は認識されませんでした」と伝える UI が必要。</li>
-<li><b>データ量の拡大：</b>現在 909件。Materials Project や AFLOW のデータを追加すれば、
-Few-Shot ストアの自己改善ループがより効果的になる。</li>
-<li><b>入力意図の判定：</b>材料検索に無関係な入力（天気、ニュース等）を
-「これは材料クエリではありません」と拒否する分類器が必要。</li>
-</ul>
+<h3>13.2 100% が意味すること・意味しないこと</h3>
+<table>
+<tr><th>意味すること（言えること）</th><th>意味しないこと（言えないこと）</th></tr>
+<tr>
+<td class="pass">定義済みパターンに合致するクエリは正しく処理できる</td>
+<td class="fail">任意の自然言語クエリに対応できるわけではない</td></tr>
+<tr>
+<td class="pass">SQL injection は確実にブロックされる</td>
+<td class="fail">全ての悪意ある入力パターンをテストしたわけではない</td></tr>
+<tr>
+<td class="pass">OQMD データに対して正確な検索ができる</td>
+<td class="fail">実験値との整合性は検証していない</td></tr>
+<tr>
+<td class="pass">Schema Graph は7テーブルで正しく動作する</td>
+<td class="fail">数十テーブル規模での動作は未検証</td></tr>
+<tr>
+<td class="pass">Few-Shot ストアの蓄積・検索機構は動作する</td>
+<td class="fail">LLM と組み合わせた際の精度向上は未実証</td></tr>
+</table>
+
+<h3>13.3 実用化に向けたロードマップ（優先度順）</h3>
+<ol>
+<li><b>未認識トークン通知（改善コスト：低）：</b>
+入力から抽出されなかった語句をユーザーに通知する。
+これだけで「Silent Failure」問題の大半が解決する。</li>
+<li><b>LLM モードでの検証（改善コスト：低）：</b>
+OpenAI API キーを設定し、Few-Shot RAG の実効性を評価する。</li>
+<li><b>ブラインドテスト（改善コスト：中）：</b>
+材料研究者5〜10名による自由文クエリテスト。
+真の成功率とユーザビリティの定量評価。</li>
+<li><b>数値条件パーサー（改善コスト：中）：</b>
+「band gap &gt; 1.0 eV」のような数値比較を自動抽出する NLP モジュール。</li>
+<li><b>データソース拡張（改善コスト：中〜高）：</b>
+Materials Project, AFLOW との連携。スキーマ拡張と大規模データ対応。</li>
+</ol>
 """)
 
     # Footer
