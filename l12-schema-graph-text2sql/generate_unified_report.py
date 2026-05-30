@@ -366,9 +366,10 @@ Generated: {time.strftime('%Y-%m-%d %H:%M:%S UTC')}<br>
 <li><a href="#sec8">いい加減なクエリへの対処検証</a></li>
 <li><a href="#sec9">SQL Injection・安全検査</a></li>
 <li><a href="#sec10">全39テスト 詳細結果</a></li>
-<li><a href="#sec11">Pros / Cons 総括</a></li>
-<li><a href="#sec12">デメリットと限界（忖度なし）</a></li>
-<li><a href="#sec13">まとめと今後</a></li>
+<li><a href="#sec11">比較グラフ分析</a></li>
+<li><a href="#sec12">Pros / Cons 総括</a></li>
+<li><a href="#sec13">デメリットと限界（忖度なし）</a></li>
+<li><a href="#sec14">まとめと今後</a></li>
 </ol>
 </div>
 """)
@@ -853,15 +854,7 @@ Schema Graphはこの3テーブルへの最短経路（全て material_entry 経
 <td class="warn">~7秒/件、APIコスト、ハルシネーション</td></tr>
 </table>
 
-<h3>5.2 カテゴリ別パス率比較</h3>
-<img class="fig" src="data:image/png;base64,{figs['fig5_3level']}"
-     alt="Fig.5: 3-Level Pass Rate Comparison by Category" />
-<p><b>Fig.5:</b> カテゴリ別パス率の3レベル比較。
-左（赤）: Naive T2SQL — 全カテゴリで不要JOINや安全検査欠如により問題あり。
-中央（青）: Schema Graph (Rule-based) — 全39件パス。
-右（緑）: LLM (GPT-5) — 全39件パス。</p>
-
-<h3>5.3 Naive T2SQLの具体的問題</h3>
+<h3>5.2 Naive T2SQLの具体的問題</h3>
 <p>Naive（Level 0）が生成するSQLの典型的な問題を示す。</p>
 """)
 
@@ -914,35 +907,7 @@ GPT-5はo1/o3と同様に内部推論（reasoning）トークンを消費する�
 このため <code>max_completion_tokens</code> を4096に設定する必要がある（512では出力が空になる）。
 </div>
 
-<h3>6.2 行数比較</h3>
-<img class="fig" src="data:image/png;base64,{figs['fig1_row_count']}"
-     alt="Fig.1: Row Count Comparison" />
-<p><b>Fig.1:</b> 各テストにおける返却行数の比較。
-青: Rule-based、橙: LLM (GPT-5)。
-多くのテストで同数の行を返却しているが、B01(Xe)やC09(NiAlのL12)で顕著な差がある。</p>
-
-<h3>6.3 結果一致率（Jaccard類似度）</h3>
-<img class="fig" src="data:image/png;base64,{figs['fig2_jaccard']}"
-     alt="Fig.2: Jaccard Similarity" />
-<p><b>Fig.2:</b> Rule-based と LLM の結果集合の一致度（Jaccard Index）。
-緑: ≥80%一致、橙: 50-80%、赤: &lt;50%。
-Jaccard &lt; 1.0 の原因は、(1) LIMIT 100のソート順差異、(2) LLMがより精密なWHERE条件を生成、
-(3) LLMが辞書未登録元素を認識できることによる。</p>
-
-<h3>6.4 LLMレイテンシ</h3>
-<img class="fig" src="data:image/png;base64,{figs['fig3_latency']}"
-     alt="Fig.3: LLM Latency" />
-<p><b>Fig.3:</b> GPT-5の1クエリあたりレイテンシ（秒）。
-青点線: Rule-basedの平均 (~0.1秒)。
-GPT-5は平均{S_lr['llm']['avg_latency_ms']/1000:.1f}秒で、Rule-basedの約70倍遅い。</p>
-
-<h3>6.5 トークン消費</h3>
-<img class="fig" src="data:image/png;base64,{figs['fig4_tokens']}"
-     alt="Fig.4: Token Consumption" />
-<p><b>Fig.4:</b> GPT-5の1クエリあたりトークン消費量。
-赤点線: 平均値。GPT-5は内部推論に大量のトークンを消費する。</p>
-
-<h3>6.6 注目すべき差異</h3>
+<h3>6.2 注目すべき差異</h3>
 <table>
 <tr><th>Test ID</th><th>クエリ</th><th>RB結果</th><th>LLM結果</th><th>分析</th></tr>
 """)
@@ -975,13 +940,7 @@ GPT-5は平均{S_lr['llm']['avg_latency_ms']/1000:.1f}秒で、Rule-basedの約7
 <p>OQMD-APIから直接取得した結果を正解データとして、T2SQL（Schema Graph, Rule-based）の結果と照合した。</p>
 """)
 
-    if "fig6_oqmd" in figs:
-        W(f"""
-<img class="fig" src="data:image/png;base64,{figs['fig6_oqmd']}"
-     alt="Fig.6: OQMD Match Rate" />
-<p><b>Fig.6:</b> Schema Graph T2SQL の結果とOQMD-API直接取得結果の一致率。
-対応するテストでは全て100%一致（同一データソースからの同一条件クエリのため）。</p>
-""")
+
 
     # Detail OQMD comparisons
     oqmd_tests = [(r["test_id"], r["nl_query"], r.get("oqmd_comparison", {}))
@@ -1151,17 +1110,88 @@ OQMD-APIから取得したデータをそのままPostgreSQLに投入し、同�
         W('</details>')
 
     # ══════════════════════════════════════════════════════════════════
-    # Section 11: Pros / Cons
+    # Section 11: Comparison Graphs
     # ══════════════════════════════════════════════════════════════════
     W(f"""
-<h2 id="sec11">11. Pros / Cons 総括</h2>
+<h2 id="sec11">11. 比較グラフ分析</h2>
 
-<h3>11.1 コスト・ベネフィット</h3>
+<p>Section 10 の個別テスト結果を踏まえ、全39テストを横断的に可視化したグラフを示す。
+各グラフの横軸はテストID（A01〜F02）であり、Section 10の詳細結果と対照して読むこと。</p>
+
+<h3>11.1 カテゴリ別パス率の3レベル比較（Fig.1）</h3>
+<img class="fig" src="data:image/png;base64,{figs['fig5_3level']}"
+     alt="Fig.1: 3-Level Pass Rate Comparison by Category" />
+<p><b>Fig.1:</b> 6カテゴリ（normal, no_results, sloppy, contradictory, rejection, safety）別に、
+3レベルのパス率を比較。
+左（赤）: Naive T2SQL（Level 0）— 全カテゴリで不要JOINや安全検査欠如により問題あり。
+中央（青）: Schema Graph (Level 1, Rule-based) — 全39件パス。
+右（緑）: LLM (Level 2, GPT-5) — 全39件パス。
+Naiveが0%のカテゴリは、SQL安全検査がないためSQL injectionテスト等で不合格になることを示す。</p>
+
+<h3>11.2 行数比較 — Rule-based vs LLM（Fig.2）</h3>
+<img class="fig" src="data:image/png;base64,{figs['fig1_row_count']}"
+     alt="Fig.2: Row Count Comparison" />
+<p><b>Fig.2:</b> 各テストにおける返却行数の比較。
+青: Rule-based（Level 1）、橙: LLM GPT-5（Level 2）。
+多くのテストで同数の行を返却しているが、B01(Xe)やC09(NiAlのL12)で顕著な差がある。
+B01ではRBがXeを無視して95件返却するのに対し、LLMは正確に2件のみ返却。
+C09ではRBが全L1₂100件を返却するのに対し、LLMはAlNi3の1件のみ返却。
+Section 10の各テスト詳細でSQL文を確認すると、この差異の原因がわかる。</p>
+
+<h3>11.3 結果一致率 — Jaccard類似度（Fig.3）</h3>
+<img class="fig" src="data:image/png;base64,{figs['fig2_jaccard']}"
+     alt="Fig.3: Jaccard Similarity" />
+<p><b>Fig.3:</b> Rule-based と LLM の結果集合の一致度（Jaccard Index）。
+緑: ≥80%一致、橙: 50-80%、赤: &lt;50%。
+Jaccard &lt; 1.0 の原因は、(1) LIMIT 100のソート順差異（A04, A08等）、
+(2) LLMがより精密なWHERE条件を生成（C09等）、
+(3) LLMが辞書未登録元素を認識できること（B01等）による。
+Jaccard=1.0のテスト（A01, A02等）では、両モードが完全に同一の結果集合を返却した。</p>
+
+<h3>11.4 LLMレイテンシ（Fig.4）</h3>
+<img class="fig" src="data:image/png;base64,{figs['fig3_latency']}"
+     alt="Fig.4: LLM Latency" />
+<p><b>Fig.4:</b> GPT-5の1クエリあたりレイテンシ（秒）。
+青点線: Rule-basedの平均 (~0.1秒)。
+GPT-5は平均{S_lr['llm']['avg_latency_ms']/1000:.1f}秒で、Rule-basedの約70倍遅い。
+緑: 5秒未満、橙: 5〜10秒、赤: 10秒以上。
+クエリの複雑さによりレイテンシが変動する。複合条件のクエリほど内部推論に時間がかかる傾向。</p>
+
+<h3>11.5 トークン消費量（Fig.5）</h3>
+<img class="fig" src="data:image/png;base64,{figs['fig4_tokens']}"
+     alt="Fig.5: Token Consumption" />
+<p><b>Fig.5:</b> GPT-5の1クエリあたりトークン消費量。
+赤点線: 平均値。GPT-5は内部推論（reasoning）に大量のトークンを消費する。
+1クエリあたり平均 ~1,600 推論トークン + ~70 出力トークン。
+validation/safetyテスト（E01-F02）はLLM実行をスキップしているため表示されない。</p>
+
+<h3>11.6 OQMD-API一致率（Fig.6）</h3>""")
+
+    if "fig6_oqmd" in figs:
+        W(f"""<img class="fig" src="data:image/png;base64,{figs['fig6_oqmd']}"
+     alt="Fig.6: OQMD Match Rate" />
+<p><b>Fig.6:</b> Schema Graph T2SQL（Level 1）の結果とOQMD-API直接取得結果の一致率。
+対応するテストでは全て100%一致。ただしSection 7で述べた通り、これは同一データソースからの
+同一条件クエリであるため循環論証であることに注意。</p>""")
+    else:
+        W('<p><i>OQMD比較対象テストなし</i></p>')
+
+    W(f"""
+<h3>11.7 コスト・ベネフィット分析（Fig.7）</h3>
 <img class="fig" src="data:image/png;base64,{figs['fig7_cost']}"
      alt="Fig.7: Cost-Benefit Analysis" />
-<p><b>Fig.7:</b> 左: 平均レイテンシ比較（対数スケール）。右: 1クエリあたりAPIコスト（円）。</p>
+<p><b>Fig.7:</b> 左: 平均レイテンシ比較（対数スケール）。Naive ~50ms、Schema Graph ~80ms、LLM ~7,300ms。
+右: 1クエリあたりAPIコスト（円）。Level 0/1はコスト0、Level 2は~¥9/件。
+1,000件バッチ処理の場合: Level 1 = ¥0・80秒、Level 2 = ~¥9,000・~2時間。</p>
+""")
 
-<h3>11.2 Level 0: Naive T2SQL</h3>
+    # ══════════════════════════════════════════════════════════════════
+    # Section 12: Pros / Cons
+    # ══════════════════════════════════════════════════════════════════
+    W(f"""
+<h2 id="sec12">12. Pros / Cons 総括</h2>
+
+<h3>12.1 Level 0: Naive T2SQL</h3>
 <div class="comparison-grid">
 <div class="pro-box">
 <h4>Pros</h4>
@@ -1183,7 +1213,7 @@ OQMD-APIから取得したデータをそのままPostgreSQLに投入し、同�
 </div>
 </div>
 
-<h3>11.3 Level 1: Schema Graph T2SQL (Rule-based)</h3>
+<h3>12.2 Level 1: Schema Graph T2SQL (Rule-based)</h3>
 <div class="comparison-grid">
 <div class="pro-box">
 <h4>Pros</h4>
@@ -1208,7 +1238,7 @@ OQMD-APIから取得したデータをそのままPostgreSQLに投入し、同�
 </div>
 </div>
 
-<h3>11.4 Level 2: Schema Graph + LLM (GPT-5)</h3>
+<h3>12.3 Level 2: Schema Graph + LLM (GPT-5)</h3>
 <div class="comparison-grid">
 <div class="pro-box">
 <h4>Pros</h4>
@@ -1240,7 +1270,7 @@ OQMD-APIから取得したデータをそのままPostgreSQLに投入し、同�
     # Section 12: Demerits (忖度なし)
     # ══════════════════════════════════════════════════════════════════
     W("""
-<h2 id="sec12">12. デメリットと限界（忖度なし）</h2>
+<h2 id="sec13">13. デメリットと限界（忖度なし）</h2>
 
 <p>本システムの100%パス率が持つ意味と持たない意味を、深刻度順に列挙する。</p>
 
@@ -1313,7 +1343,7 @@ LLMモードにはrepair_loop（再生成）があるが、Rule-basedモード�
 <td>Rule-basedモードではSQL構文エラーが起きたら即座に失敗。研究者は原因が分からない。</td></tr>
 </table>
 
-<h3>12.1 100%が意味すること / 意味しないこと</h3>
+<h3>13.1 100%が意味すること / 意味しないこと</h3>
 <table>
 <tr><th>100%が意味すること</th><th>100%が意味しないこと</th></tr>
 <tr><td>設計者が想定した39パターンでSQLが生成・実行できる</td>
@@ -1331,9 +1361,9 @@ LLMモードにはrepair_loop（再生成）があるが、Rule-basedモード�
     # Section 13: Summary / Future
     # ══════════════════════════════════════════════════════════════════
     W("""
-<h2 id="sec13">13. まとめと今後</h2>
+<h2 id="sec14">14. まとめと今後</h2>
 
-<h3>13.1 本検証で確認できたこと</h3>
+<h3>14.1 本検証で確認できたこと</h3>
 <ol>
 <li><b>Schema Graph Traversal Engine は有効：</b>Naive T2SQL（Level 0）の致命的な問題（不要JOIN、LIMIT欠如）を
 Schema Graph（Level 1）が完全に解消し、39/39テストでパスした。</li>
@@ -1344,7 +1374,7 @@ Rule-basedの弱点を補う場面がある。</li>
 TF-IDF類似度で適切な事例を検索できることを確認。</li>
 </ol>
 
-<h3>13.2 今後の課題（ロードマップ）</h3>
+<h3>14.2 今後の課題（ロードマップ）</h3>
 <table>
 <tr><th>優先度</th><th>課題</th><th>概要</th></tr>
 <tr><td><b>高</b></td><td>第三者評価</td><td>材料研究者5名以上に自由文でクエリを入力してもらい、パス率を測定</td></tr>
@@ -1357,7 +1387,7 @@ TF-IDF類似度で適切な事例を検索できることを確認。</li>
 <tr><td><b>低</b></td><td>表記揺れ対応</td><td>Levenshtein距離 / LLM fuzzy matchingで「Nickle」→「Ni」等を対応</td></tr>
 </table>
 
-<h3>13.3 推奨運用形態</h3>
+<h3>14.3 推奨運用形態</h3>
 <table>
 <tr><th>使用場面</th><th>推奨モード</th><th>理由</th></tr>
 <tr><td>日常的な材料データ検索</td><td>Rule-based (Level 1)</td>
