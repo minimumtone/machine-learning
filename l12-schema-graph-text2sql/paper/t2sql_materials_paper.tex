@@ -51,63 +51,60 @@
 \begin{document}
 
 \title{%
-  Schema-Graph-Assisted Text-to-SQL for Materials Databases:\\
-  A Method for Natural Language Querying of\\
-  Normalized Relational Materials Data\\[6pt]
-  \large --- Validated on OQMD Intermetallic Compound Data (B2 and L1$_2$) ---
+  材料データベースのためのSchema Graph支援Text-to-SQL手法：\\
+  正規化リレーショナル材料データへの自然言語クエリ手法\\[6pt]
+  \large --- OQMD金属間化合物データ（B2およびL1$_2$型）による検証 ---
 }
 \author{
-  Satoshi Minamoto\\
-  National Institute for Materials Science (NIMS)\\
-  1-2-1 Sengen, Tsukuba, Ibaraki 305-0047, Japan
+  皆本 悟\\
+  国立研究開発法人 物質・材料研究機構（NIMS）\\
+  〒305-0047 茨城県つくば市千現1-2-1
 }
 \date{}
 \maketitle
 
 % =====================================================================
 \begin{abstract}
-Materials databases such as the Open Quantum Materials Database (OQMD), Materials Project, and AFLOW
-have accumulated vast quantities of first-principles-calculated property data, yet accessing these data
-through normalized relational schemas requires SQL expertise that most materials scientists lack.
-We present a \textbf{Schema-Graph-Assisted Text-to-SQL (T2SQL) method} that automatically converts
-natural language queries into executable SQL statements for normalized materials databases.
+Open Quantum Materials Database（OQMD）、Materials Project、AFLOWなどの材料データベースには、
+第一原理計算による膨大な物性データが蓄積されているが、
+正規化されたリレーショナルスキーマを通じたデータアクセスには
+多くの材料研究者が持ち合わせていないSQL（Structured Query Language）の知識が必要である。
+本研究では、正規化された材料データベースに対し、
+自然言語クエリを実行可能なSQL文へ自動変換する
+\textbf{Schema Graph支援Text-to-SQL（T2SQL）手法}を提案する。
 
-The method comprises four key technical components:
-(1)~a \textbf{domain-specific entity extractor} with a bilingual (Japanese/English) materials terminology dictionary,
-(2)~a \textbf{Schema Graph Traversal Engine} that represents foreign key (FK) relationships as a NetworkX graph
-and computes minimal JOIN paths via Steiner tree approximation,
-(3)~a \textbf{Few-Shot Retrieval-Augmented Generation (RAG) store} (SQL-as-Few-Shot-Examples)
-that accumulates successful NL--SQL pairs and retrieves similar examples via TF-IDF cosine similarity
-for LLM prompt injection, including automatic seed example extraction from LaTeX manuscripts, and
-(4)~a \textbf{multi-layer SQL Guard} that enforces keyword blacklisting, single-statement restriction,
-table whitelisting, and automatic LIMIT injection.
+本手法は4つの技術要素から構成される：
+(1)~日英バイリンガル材料用語辞書を備えた\textbf{ドメイン特化型条件抽出器}、
+(2)~外部キー（FK）関係をNetworkXグラフとして表現し、
+Steiner木近似により最小JOIN経路を計算する\textbf{Schema Graph走査エンジン}、
+(3)~成功したNL--SQLペアを蓄積し、TF-IDFコサイン類似度で検索して
+LLMプロンプトに注入する\textbf{Few-Shot検索拡張生成（RAG）ストア}
+（SQL-as-Few-Shot-Examples。LaTeX原稿からの種事例自動抽出を含む）、および
+(4)~キーワードブラックリスト、単一文制約、テーブルホワイトリスト、
+自動LIMIT注入を行う\textbf{多層SQLガード}。
 
-Validation was performed on 909 OQMD intermetallic compounds
-(636 B2-type CsCl and 273 L1$_2$-type AuCu$_3$) across 39 test cases
-spanning normal queries, absent-data queries, ambiguous/malformed inputs, contradictory conditions,
-SQL injection attacks, and safety checks.
-A three-level comparison (Naive T2SQL without Schema Graph /
-Schema Graph + Rule-based / Schema Graph + GPT-5) demonstrated that
-Schema Graph traversal eliminates unnecessary JOINs, correctly handles multi-element AND queries
-(which yield zero results under the Naive approach), and achieves Precision = 1.0
-against direct OQMD API ground truth for all validated test cases.
-The Rule-based mode achieves $<$100~ms latency with zero external API dependency,
-while the GPT-5 mode provides superior vocabulary coverage and numeric filter generation
-at the cost of $\sim$7.3~s latency and token consumption.
+909件のOQMD金属間化合物（B2型CsCl 636件、L1$_2$型AuCu$_3$ 273件）に対し、
+正常クエリ、該当なしクエリ、曖昧・不正入力、矛盾条件、
+SQLインジェクション攻撃、安全性検査を含む39件のテストケースで検証を行った。
+3水準比較（Schema Graphなし Naive T2SQL / Schema Graph + Rule-based / Schema Graph + GPT-5）により、
+Schema Graph走査が不要なJOINを排除し、多元素AND検索
+（Naiveアプローチでは0件となる）を正しく処理し、
+OQMD API直接取得による正解データに対してPrecision = 1.0を達成することを示した。
+Rule-basedモードは外部API依存ゼロで100~ms未満のレイテンシを実現し、
+GPT-5モードは約7.3秒のレイテンシとトークン消費の代償で、
+辞書未登録語彙や数値フィルタ生成への対応力を提供する。
 
-This method lowers the barrier for materials researchers to query normalized relational databases
-using natural language.
-In the emerging paradigm of AI for Science (AI4S), where AI is expected to accelerate
-every stage of the scientific workflow---from hypothesis generation through data retrieval
-to experimental design---the ability to access structured materials data
-via natural language constitutes critical infrastructure.
-This work contributes to the democratization of data utilization in materials informatics
-and provides a foundational building block for AI4S-driven materials discovery.
+AI for Science（AI4S）のパラダイムにおいて、
+AIが仮説生成からデータ検索、実験設計に至る科学ワークフローの
+あらゆる段階を加速すると期待される中、
+構造化された材料データへの自然言語アクセスは重要な基盤技術である。
+本手法は材料インフォマティクスにおけるデータ活用の民主化に貢献し、
+AI4S駆動型材料探索の基礎的構成要素を提供する。
 
 \vspace{6pt}
-\noindent\textbf{Keywords:}
-Text-to-SQL, materials database, schema graph, Retrieval-Augmented Generation,
-OQMD, intermetallic compounds, natural language processing, materials informatics, AI for Science
+\noindent\textbf{キーワード：}
+Text-to-SQL、材料データベース、スキーマグラフ、検索拡張生成（RAG）、
+OQMD、金属間化合物、自然言語処理、マテリアルズ・インフォマティクス、AI for Science
 \end{abstract}
 
 % =====================================================================
@@ -115,149 +112,145 @@ OQMD, intermetallic compounds, natural language processing, materials informatic
 \newpage
 
 % =====================================================================
-\section{Introduction}
+\section{緒言}
 \label{sec:introduction}
 
-\subsection{AI for Science and the Data Access Barrier in Materials Informatics}
+\subsection{AI for Scienceと材料インフォマティクスにおけるデータアクセス障壁}
 
-The paradigm of \textbf{AI for Science (AI4S)}---the systematic application of
-artificial intelligence to accelerate scientific discovery---is transforming
-materials research~\citep{wang2023ai4s}.
-AI4S envisions an integrated workflow where AI agents autonomously
-generate hypotheses, retrieve relevant data from large-scale databases,
-design experiments or simulations, and interpret results.
-Within this vision, \textbf{natural language access to structured materials data}
-is not merely a convenience but a prerequisite:
-if AI agents (or the researchers directing them) cannot efficiently query
-normalized relational databases, the entire AI4S pipeline is bottlenecked
-at the data retrieval stage.
+\textbf{AI for Science（AI4S）}---科学的発見を加速するための人工知能の体系的応用---は、
+材料研究を変革しつつある~\citep{wang2023ai4s}。
+AI4Sは、AIエージェントが自律的に仮説を生成し、大規模データベースから関連データを検索し、
+実験やシミュレーションを設計し、結果を解釈する統合的ワークフローを構想している。
+このビジョンにおいて、\textbf{構造化された材料データへの自然言語アクセス}は
+単なる利便性ではなく前提条件である：
+AIエージェント（またはそれを指揮する研究者）が正規化リレーショナルデータベースを
+効率的にクエリできなければ、AI4Sパイプライン全体がデータ検索段階で
+ボトルネックとなる。
 
-The rapid growth of high-throughput first-principles calculations has produced
-several large-scale materials databases:
-the Open Quantum Materials Database (OQMD, $\sim$1M entries)~\citep{saal2013oqmd,kirklin2015oqmd},
-the Materials Project ($>$150K entries)~\citep{jain2013mp},
-AFLOW ($>$3.5M entries)~\citep{curtarolo2012aflow}, and
-NOMAD~\citep{draxl2019nomad}.
-These databases are indispensable for computational materials discovery,
-screening of candidate phases~\citep{senkov2018hea,george2019hea},
-and validation of experimental observations.
+ハイスループット第一原理計算の急速な発展により、
+複数の大規模材料データベースが構築されている：
+Open Quantum Materials Database（OQMD、約100万件）~\citep{saal2013oqmd,kirklin2015oqmd}、
+Materials Project（15万件超）~\citep{jain2013mp}、
+AFLOW（350万件超）~\citep{curtarolo2012aflow}、
+NOMAD~\citep{draxl2019nomad}。
+これらのデータベースは計算材料探索、候補相のスクリーニング~\citep{senkov2018hea,george2019hea}、
+実験観測の検証に不可欠である。
 
-However, accessing data stored in normalized relational schemas (multiple tables
-connected by foreign keys) requires SQL expertise.
-For example, querying ``stable B2 compounds containing Fe with their lattice constants''
-on a properly normalized schema demands a 4-table JOIN with WHERE conditions
-on element, prototype, and thermodynamic stability---a query that is straightforward for
-database engineers but non-trivial for materials scientists.
+しかし、正規化リレーショナルスキーマ（外部キーで接続された複数テーブル）に
+格納されたデータへのアクセスにはSQL知識が必要である。
+例えば、「Feを含む安定なB2化合物の格子定数」を適切に正規化されたスキーマで検索するには、
+元素・プロトタイプ・熱力学的安定性に対するWHERE条件を持つ
+4テーブルJOINが必要となる---データベース技術者にとっては容易だが、
+材料研究者にとっては非自明な操作である。
 
-While REST APIs (such as OQMD's \texttt{/oqmdapi/formationenergy}) partially address this barrier,
-they impose their own learning curve (filter syntax, pagination handling, response parsing)
-and lack the flexibility of arbitrary SQL queries over locally curated datasets.
+REST API（OQMDの\texttt{/oqmdapi/formationenergy}など）はこの障壁を部分的に緩和するが、
+独自の学習コスト（フィルタ構文、ページネーション処理、レスポンス解析）を課し、
+ローカルに構築したデータセットに対する柔軟なSQLクエリの能力を欠いている。
 
-In the AI4S context, this data access barrier is particularly critical:
-autonomous AI agents performing materials screening or property prediction
-must issue complex, multi-condition database queries programmatically.
-A natural language interface that reliably generates correct SQL
-enables both human researchers and AI agents to interact with materials databases
-without database engineering expertise,
-thereby removing a key bottleneck in the AI4S workflow.
+AI4Sの文脈において、このデータアクセス障壁は特に深刻である：
+材料スクリーニングや物性予測を行う自律AIエージェントは、
+複雑な複合条件データベースクエリをプログラム的に発行する必要がある。
+正しいSQLを確実に生成する自然言語インターフェースは、
+人間の研究者とAIエージェントの双方がデータベース工学の専門知識なしに
+材料データベースと対話することを可能にし、
+AI4Sワークフローの重要なボトルネックを除去する。
 
-\subsection{Text-to-SQL: State of the Art}
+\subsection{Text-to-SQLの技術動向}
 
-Text-to-SQL (T2SQL) research has advanced rapidly with large-scale benchmarks:
-Spider~\citep{yu2018spider} (10,181 questions, 200 databases, 138 domains) and
-BIRD~\citep{li2024bird} (12,751 questions, 95 databases, 33.4~GB).
-Recent LLM-based methods achieve high accuracy:
-DAIL-SQL~\citep{gao2023dail} reports 86.6\% execution accuracy on Spider using
-skeleton-based few-shot example selection,
-and DIN-SQL~\citep{pourreza2024dinsql} achieves 85.3\% using decomposed in-context learning.
-\citet{hong2024survey} provide a comprehensive survey noting the dominant role of schema linking.
-\citet{maamari2024schema} argue that advanced LLMs may render explicit schema linking unnecessary,
-though this remains debated.
+Text-to-SQL（T2SQL）研究は大規模ベンチマークにより急速に進展している：
+Spider~\citep{yu2018spider}（10,181問、200データベース、138ドメイン）、
+BIRD~\citep{li2024bird}（12,751問、95データベース、33.4~GB）。
+最近のLLMベース手法は高い精度を達成している：
+DAIL-SQL~\citep{gao2023dail}はスケルトンベースのfew-shot事例選択により
+Spider上で実行精度86.6\%を報告し、
+DIN-SQL~\citep{pourreza2024dinsql}は分解型文脈内学習により85.3\%を達成している。
+\citet{hong2024survey}はスキーマリンキングの支配的役割を指摘する包括的サーベイを提供し、
+\citet{maamari2024schema}は高度なLLMにより明示的スキーマリンキングが
+不要になる可能性を論じているが、これは議論が続いている。
 
-However, \textbf{all existing T2SQL benchmarks target general-purpose domains}
-(e-commerce, healthcare, education), and no prior work has addressed
-the specific challenges of materials science databases:
-domain-specific terminology (Strukturbericht designations, prototype names),
-bilingual queries (Japanese/English element names),
-composition table normalization (one row per element per compound), and
-thermodynamic stability filters ($E_\text{hull} \leq 0.001$~eV/atom).
+しかし、\textbf{既存のT2SQLベンチマークはすべて汎用ドメイン}
+（eコマース、医療、教育）を対象としており、
+材料科学データベース固有の課題に取り組んだ先行研究は存在しない：
+ドメイン固有の用語（Strukturbericht記号、プロトタイプ名）、
+バイリンガルクエリ（日英元素名）、
+組成テーブル正規化（化合物ごとに元素1行）、
+熱力学的安定性フィルタ（$E_\text{hull} \leq 0.001$~eV/atom）などの課題である。
 
-\subsection{NLP in Materials Informatics}
+\subsection{材料インフォマティクスにおけるNLP}
 
-NLP applications in materials science are expanding:
-MatSci-NLP~\citep{song2023matscnlp} benchmarks 7 NLP tasks on materials text,
-LLAMAT~\citep{mishra2024llamat} improves information extraction via continual pre-training of LLaMA,
-the Materials Knowledge Navigation Agent (MKNA)~\citep{zhuang2026mkna} translates
-natural language intent into database retrieval and structure generation actions,
-and OptiMat Alloys~\citep{hu2026optimat} provides an LLM-powered conversational alloy explorer.
-Materials Project has begun offering MCP-based LLM integration.
+材料科学におけるNLP応用は拡大している：
+MatSci-NLP~\citep{song2023matscnlp}は材料テキストの7つのNLPタスクをベンチマークし、
+LLAMAT~\citep{mishra2024llamat}はLLaMAの継続事前学習により情報抽出を改善し、
+Materials Knowledge Navigation Agent（MKNA）~\citep{zhuang2026mkna}は
+自然言語の意図をデータベース検索・構造生成アクションに変換し、
+OptiMat Alloys~\citep{hu2026optimat}はLLM駆動型対話式合金探索ツールを提供している。
+Materials ProjectはMCPベースのLLM統合の提供を開始している。
 
-These works address information extraction and agent-based database interaction,
-but \textbf{none target schema-aware SQL generation on normalized relational databases}---specifically,
-automatic JOIN path discovery through foreign key graph traversal.
-This gap is the focus of our method.
+これらの研究は情報抽出やエージェントベースのデータベース対話を扱っているが、
+\textbf{正規化リレーショナルデータベース上のスキーマ認識型SQL生成}---特に
+外部キーグラフ走査による自動JOIN経路探索---を対象としたものはない。
+このギャップが本手法の焦点である。
 
-\subsection{Objectives and Novelty}
+\subsection{目的と新規性}
 
-Our contributions are threefold:
+本研究の貢献は以下の3点である：
 
 \begin{enumerate}
-  \item \textbf{A materials-domain-specific Schema Graph T2SQL method}
-    combining a bilingual materials terminology dictionary with FK relationship graph traversal
-    for automatic JOIN path computation on normalized materials databases.
-  \item \textbf{SQL-as-Few-Shot-Examples with manuscript-based seed extraction}:
-    a RAG feedback loop that accumulates successful NL--SQL pairs
-    and retrieves them via TF-IDF similarity for LLM prompt injection,
-    with automatic seed example extraction from LaTeX research papers.
-  \item \textbf{Integration test methodology using OQMD API ground truth}:
-    quantitative validation of the entire data pipeline
-    (API $\to$ CSV $\to$ RDB normalization $\to$ NL $\to$ SQL $\to$ JOIN reconstruction)
-    using Precision/Recall against direct API queries.
+  \item \textbf{材料ドメイン特化型Schema Graph T2SQL手法}：
+    日英バイリンガル材料用語辞書とFK関係グラフ走査を組み合わせ、
+    正規化材料データベース上の自動JOIN経路計算を実現する。
+  \item \textbf{SQL-as-Few-Shot-Examplesと原稿ベース種事例抽出}：
+    成功したNL--SQLペアを蓄積しTF-IDF類似度でLLMプロンプトに注入するRAG
+    フィードバックループ。LaTeX研究論文からの自動種事例抽出を含む。
+  \item \textbf{OQMD API正解データを用いた結合テスト手法}：
+    データパイプライン全体（API $\to$ CSV $\to$ RDB正規化 $\to$ NL $\to$ SQL $\to$ JOIN再構成）の
+    正確性をPrecision/Recallで定量評価する。
 \end{enumerate}
 
 % =====================================================================
-\section{Methods}
+\section{手法}
 \label{sec:methods}
 
-This section describes each technical component in detail.
-The overall pipeline architecture is shown in Fig.~\ref{fig:architecture}.
+本節では各技術要素を詳述する。
+システム全体のパイプラインアーキテクチャを図~\ref{fig:architecture}に示す。
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=\linewidth]{figures/fig1_architecture.png}
-  \caption{System architecture of the Schema-Graph-Assisted Text-to-SQL pipeline.
-    Solid arrows indicate the primary data flow; dashed arrows indicate the
-    Few-Shot RAG feedback loop (successful query pairs are stored and retrieved for future queries).
-    The SQL Guard acts as a final safety layer before database execution.}
+  \caption{Schema Graph支援Text-to-SQLパイプラインのシステムアーキテクチャ。
+    実線矢印は主要データフロー、破線矢印はFew-Shot RAGフィードバックループ
+    （成功したクエリペアが蓄積・検索される）を示す。
+    SQLガードはデータベース実行前の最終安全層として機能する。}
   \label{fig:architecture}
 \end{figure}
 
-\subsection{Database Schema Design for Materials Data}
+\subsection{材料データのためのデータベーススキーマ設計}
 \label{sec:schema_design}
 
-\subsubsection{Normalization of OQMD Data into a 7-Table Schema}
+\subsubsection{OQMDデータの7テーブルスキーマへの正規化}
 
-OQMD's REST API returns flat JSON records (one entry = one JSON object),
-which we normalize into a 7-table relational schema (Fig.~\ref{fig:er_diagram}, Table~\ref{tab:schema}).
-The design follows Boyce-Codd Normal Form (BCNF) and is motivated by the following materials-domain considerations:
+OQMDのREST APIはフラットなJSONレコード（1エントリ = 1 JSONオブジェクト）を返す。
+これを7テーブルのリレーショナルスキーマに正規化する
+（図~\ref{fig:er_diagram}、表~\ref{tab:schema}）。
+設計はBoyce-Codd正規形（BCNF）に従い、以下の材料ドメイン固有の考慮に基づく。
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.9\linewidth]{figures/fig2_er_diagram.png}
-  \caption{Entity-Relationship diagram of the 7-table materials database schema.
-    All tables are connected to \texttt{material\_entry} via foreign keys (blue lines).
-    Red = primary key, Blue = foreign key.}
+  \caption{7テーブル材料データベーススキーマのEntity-Relationship図。
+    すべてのテーブルは外部キー（青線）により\texttt{material\_entry}に接続される。
+    赤=主キー、青=外部キー。}
   \label{fig:er_diagram}
 \end{figure}
 
 \begin{table}[htbp]
   \centering
-  \caption{Database schema overview (7 tables).}
+  \caption{データベーススキーマ概要（7テーブル）。}
   \label{tab:schema}
   \small
   \begin{tabularx}{\linewidth}{lllX}
     \toprule
-    Table & PK & FK & Key Columns \\
+    テーブル名 & 主キー & 外部キー & 主要カラム \\
     \midrule
     material\_entry & entry\_id & --- & formula, reduced\_formula, chemical\_system \\
     composition & composition\_id & entry\_id & element, atomic\_fraction \\
@@ -270,77 +263,77 @@ The design follows Boyce-Codd Normal Form (BCNF) and is motivated by the followi
   \end{tabularx}
 \end{table}
 
-\paragraph{Composition table separation.}
-A single compound may contain multiple elements (e.g., Fe$_3$Al $\to$ Fe and Al).
-By storing each element as a separate row in the \texttt{composition} table,
-we enable flexible element-based queries (AND, OR, NOT) without string parsing.
-This normalization, however, introduces a critical complexity:
-a query for ``compounds containing both Ni and Al'' cannot use a simple
-\texttt{WHERE element = 'Ni' AND element = 'Al'} (which would return zero rows,
-since no single row contains both elements simultaneously).
-Instead, \texttt{EXISTS} subqueries are required (see Section~\ref{sec:multi_element}).
+\paragraph{組成テーブルの分離。}
+単一の化合物が複数の元素を含む場合がある（例：Fe$_3$Al $\to$ FeとAl）。
+各元素を\texttt{composition}テーブルの個別行として格納することで、
+文字列解析なしに柔軟な元素ベースクエリ（AND, OR, NOT）を可能にする。
+ただし、この正規化は重要な複雑性を導入する：
+「NiとAlの両方を含む化合物」のクエリは単純な
+\texttt{WHERE element = 'Ni' AND element = 'Al'}では不可能である
+（単一行が両条件を同時に満たすことはないため0行が返る）。
+代わりに\texttt{EXISTS}副問い合わせが必要となる（\ref{sec:multi_element}節参照）。
 
-\paragraph{Structure/Phase stability/Calculation separation.}
-Crystal structure information (prototype, lattice constant), thermodynamic stability
-(energy above hull), and calculation metadata (DFT functional) are stored in separate tables
-to allow independent updates and extensions.
+\paragraph{構造/相安定性/計算の分離。}
+結晶構造情報（プロトタイプ、格子定数）、熱力学的安定性（hull上エネルギー）、
+計算メタデータ（DFT汎関数）を別テーブルに格納し、
+独立した更新・拡張を可能にする。
 
-\paragraph{Entity-Attribute-Value (EAV) for calculated properties.}
-The \texttt{calculated\_property} table uses an EAV pattern (\texttt{property\_name}, \texttt{value}, \texttt{unit})
-to accommodate arbitrary computed properties (bulk modulus, shear modulus, etc.)
-without schema modifications.
+\paragraph{計算物性のEntity-Attribute-Value（EAV）パターン。}
+\texttt{calculated\_property}テーブルはEAVパターン
+（\texttt{property\_name}, \texttt{value}, \texttt{unit}）を使用し、
+スキーマ変更なしに任意の計算物性（体積弾性率、せん断弾性率等）を収容する。
 
-\subsubsection{XML/YAML Representation for RAG Context Injection}
+\subsubsection{RAGコンテキスト注入のためのXML/YAML表現}
 
-The schema structure is serialized as YAML (\texttt{allowed\_schema.yaml}),
-which serves dual purposes:
-(a) the SQL Guard's table/column whitelist (Section~\ref{sec:sql_guard}), and
-(b) RAG context for LLM prompts---the schema YAML is injected into the system message
-so the LLM understands available tables, columns, and their types.
-This approach is analogous to schema serialization techniques used in
-general T2SQL~\citep{gao2023dail}, but here specialized for materials databases
-with domain-specific column semantics (e.g., \texttt{energy\_above\_hull} represents $E_\text{hull}$).
+スキーマ構造はYAML（\texttt{allowed\_schema.yaml}）としてシリアライズされ、
+二重の目的に供される：
+(a)~SQLガードのテーブル/カラムホワイトリスト（\ref{sec:sql_guard}節）、
+(b)~LLMプロンプトへのRAGコンテキスト---スキーマYAMLがシステムメッセージに注入され、
+LLMが利用可能なテーブル・カラム・型を理解する。
+このアプローチは汎用T2SQLのスキーマシリアライゼーション技法~\citep{gao2023dail}と
+類似するが、材料データベースのドメイン固有カラム意味論
+（例：\texttt{energy\_above\_hull}は$E_\text{hull}$を表す）に特化している。
 
-\subsection{Entity Extractor with Materials Terminology Dictionary}
+\subsection{材料用語辞書を備えた条件抽出器}
 \label{sec:entity_extractor}
 
-The entity extractor converts natural language queries into structured condition dictionaries
-using a YAML-based bilingual terminology dictionary (\texttt{material\_terms.yaml}).
+条件抽出器は、YAMLベースの日英バイリンガル用語辞書（\texttt{material\_terms.yaml}）を用いて、
+自然言語クエリを構造化された条件辞書に変換する。
 
-\subsubsection{Dictionary Structure}
+\subsubsection{辞書構造}
 
-The dictionary contains four categories:
+辞書は4つのカテゴリを含む：
 
 \begin{enumerate}
-  \item \textbf{Prototype aliases}: Mapping between prototype names and their variants.\\
-    Example: \texttt{B2} $\leftrightarrow$ [\texttt{B2}, \texttt{CsCl}, \texttt{CsCl型}, \texttt{B2型}]\\
+  \item \textbf{プロトタイプ別名}：プロトタイプ名とその変種の対応。\\
+    例：\texttt{B2} $\leftrightarrow$ [\texttt{B2}, \texttt{CsCl}, \texttt{CsCl型}, \texttt{B2型}]\\
     \texttt{L12} $\leftrightarrow$ [\texttt{L1$_2$}, \texttt{L12}, \texttt{AuCu3}, \texttt{Cu$_3$Au型}, \texttt{$\gamma'$}]
 
-  \item \textbf{Element mappings}: Symbol $\leftrightarrow$ Japanese/English name correspondence.\\
-    Example: \texttt{Fe} $\leftrightarrow$ [\texttt{Fe}, \texttt{鉄 (tetsu)}, \texttt{iron}]
+  \item \textbf{元素マッピング}：元素記号 $\leftrightarrow$ 日英名対応。\\
+    例：\texttt{Fe} $\leftrightarrow$ [\texttt{Fe}, \texttt{鉄}, \texttt{iron}]
 
-  \item \textbf{Stability terms}: Natural language $\to$ numerical threshold.\\
-    ``stable'' / ``安定'' $\to$ \texttt{energy\_above\_hull} $\leq 0.001$~eV/atom\\
-    ``metastable'' / ``準安定'' $\to$ \texttt{energy\_above\_hull} $\leq 0.05$~eV/atom
+  \item \textbf{安定性用語}：自然言語 $\to$ 数値閾値。\\
+    「安定」/ ``stable'' $\to$ \texttt{energy\_above\_hull} $\leq 0.001$~eV/atom\\
+    「準安定」/ ``metastable'' $\to$ \texttt{energy\_above\_hull} $\leq 0.05$~eV/atom
 
-  \item \textbf{Property terms}: Mapping property descriptions to table.column references.\\
-    ``lattice constant'' / ``格子定数'' $\to$ \texttt{structure.lattice\_a}\\
-    ``formation energy'' / ``形成エネルギー'' $\to$ \texttt{phase\_stability.formation\_energy\_per\_atom}
+  \item \textbf{物性用語}：物性記述からテーブル.カラム参照への対応。\\
+    「格子定数」/ ``lattice constant'' $\to$ \texttt{structure.lattice\_a}\\
+    「形成エネルギー」/ ``formation energy'' $\to$ \texttt{phase\_stability.formation\_energy\_per\_atom}
 \end{enumerate}
 
-\subsubsection{Unicode Normalization and Pattern Matching}
+\subsubsection{Unicode正規化とパターンマッチング}
 
-Unicode subscript characters (₀₁₂₃₄₅₆₇₈₉) are normalized to ASCII digits before matching.
-Element symbol recognition uses word-boundary regular expressions to correctly distinguish
-standalone ``Fe'' from ``FeCoNi'' substrings.
+Unicode下付き文字（₀₁₂₃₄₅₆₇₈₉）はマッチング前にASCII数字に正規化される。
+元素記号認識はワード境界正規表現を使用し、
+独立した「Fe」を「FeCoNi」部分文字列から正しく区別する。
 
-\subsubsection{Output Format}
+\subsubsection{出力形式}
 
-The extractor returns a structured dictionary:
+抽出器は構造化辞書を返す：
 
-\begin{lstlisting}[language=Python,caption={Entity extraction example.},label=lst:extract]
-# Input: "Show stable B2 compounds containing Fe"
-# Output:
+\begin{lstlisting}[language=Python,caption={条件抽出の例。},label=lst:extract]
+# 入力: "Feを含む安定なB2化合物を出して"
+# 出力:
 {
   "prototype": "B2",
   "contains_elements": ["Fe"],
@@ -350,17 +343,18 @@ The extractor returns a structured dictionary:
 }
 \end{lstlisting}
 
-\subsection{Schema Graph Traversal Engine}
+\subsection{Schema Graph走査エンジン}
 \label{sec:schema_graph}
 
-This is the core algorithmic contribution of the proposed method.
-The engine represents the database schema as a graph and computes optimal JOIN paths automatically.
+本手法の中核的アルゴリズム貢献である。
+このエンジンはデータベーススキーマをグラフとして表現し、
+最適なJOIN経路を自動計算する。
 
-\subsubsection{Graph Construction from PostgreSQL Metadata}
+\subsubsection{PostgreSQLメタデータからのグラフ構築}
 
-Foreign key relationships are extracted dynamically from PostgreSQL's \texttt{information\_schema}:
+外部キー関係はPostgreSQLの\texttt{information\_schema}から動的に抽出される：
 
-\begin{lstlisting}[language=SQL,caption={FK relationship extraction query.},label=lst:fk_query]
+\begin{lstlisting}[language=SQL,caption={FK関係抽出クエリ。},label=lst:fk_query]
 SELECT tc.table_name AS source_table,
        kcu.column_name AS source_column,
        ccu.table_name AS target_table,
@@ -374,82 +368,80 @@ SELECT tc.table_name AS source_table,
    AND tc.table_schema = 'public';
 \end{lstlisting}
 
-The result is stored as an undirected NetworkX~\citep{networkx2008} graph $G = (V, E)$
-where $V$ = \{table names\} and $E$ = \{FK relationships\}.
-Because FK metadata is read at runtime, the graph automatically adapts to schema changes
-without code modifications.
+結果はNetworkX~\citep{networkx2008}の無向グラフ$G = (V, E)$として格納される。
+ここで$V$ = \{テーブル名\}、$E$ = \{FK関係\}である。
+FKメタデータは実行時に読み取られるため、
+コード変更なしにスキーマ変更に自動適応する。
 
-\subsubsection{Minimal Covering JOIN Path: Steiner Tree Approximation}
+\subsubsection{最小被覆JOIN経路：Steiner木近似}
 \label{sec:steiner}
 
-Given a set of \textit{required tables} $R \subseteq V$ (determined by the entity extractor's output),
-we need the minimum subgraph of $G$ that connects all tables in $R$.
-This is the Steiner tree problem in graphs~\citep{hwang1992steiner}, which is NP-hard in general.
+条件抽出器の出力から決定された\textit{必要テーブル}集合$R \subseteq V$に対し、
+$R$のすべてのテーブルを接続する$G$の最小部分グラフが必要となる。
+これはグラフにおけるSteiner木問題~\citep{hwang1992steiner}であり、一般にNP困難である。
 
-For our 7-node, 6-edge schema graph, we employ a greedy heuristic
-(Algorithm~\ref{alg:steiner}) that is exact for tree-structured graphs
-(which our FK graph is):
+本スキーマの7ノード6辺グラフに対し、
+木構造グラフでは厳密解を与える貪欲ヒューリスティック
+（アルゴリズム~\ref{alg:steiner}）を採用する：
 
 \begin{algorithm}[htbp]
-  \caption{Minimal covering JOIN subgraph (Steiner tree approximation).}
+  \caption{最小被覆JOIN部分グラフ（Steiner木近似）。}
   \label{alg:steiner}
   \begin{algorithmic}[1]
-    \Require FK relationship graph $G = (V, E)$, required table set $R$
-    \Ensure List of JOIN paths $P$
+    \Require FK関係グラフ$G = (V, E)$、必要テーブル集合$R$
+    \Ensure JOIN経路リスト$P$
     \State $P \gets \emptyset$, $\text{covered} \gets \emptyset$
     \ForAll{$(s, t) \in \binom{R}{2}$}
       \If{$s \in \text{covered} \land t \in \text{covered}$}
-        \State \textbf{continue} \Comment{Both endpoints already connected}
+        \State \textbf{continue} \Comment{両端点は既に接続済み}
       \EndIf
-      \State $p \gets \text{ShortestPath}(G, s, t)$ \Comment{BFS on FK graph}
+      \State $p \gets \text{ShortestPath}(G, s, t)$ \Comment{FKグラフ上のBFS}
       \If{$p \neq \emptyset$}
         \State $P \gets P \cup \{p\}$
         \State $\text{covered} \gets \text{covered} \cup \text{nodes}(p)$
       \EndIf
     \EndFor
-    \ForAll{$r \in R \setminus \text{covered}$} \Comment{Handle isolated required tables}
-      \State $c \gets $ nearest node in covered
+    \ForAll{$r \in R \setminus \text{covered}$} \Comment{孤立必要テーブルの処理}
+      \State $c \gets $ coveredの最近傍ノード
       \State $P \gets P \cup \{\text{ShortestPath}(G, r, c)\}$
     \EndFor
     \State \Return $P$
   \end{algorithmic}
 \end{algorithm}
 
-\paragraph{Complexity.}
-For a graph with $|V| = n$ nodes and $|R| = k$ required tables,
-the algorithm performs $O(k^2)$ shortest-path computations, each $O(n + |E|)$ via BFS.
-For our schema ($n = 7$, $k \leq 5$), this completes in microseconds.
+\paragraph{計算量。}
+$|V| = n$ノード、$|R| = k$必要テーブルのグラフに対し、
+アルゴリズムは$O(k^2)$回の最短路計算を行い、各計算は$O(n + |E|)$（BFS）である。
+本スキーマ（$n = 7$、$k \leq 5$）ではマイクロ秒で完了する。
 
-\paragraph{Correctness for tree-structured FK graphs.}
-When $G$ is a tree (as in our schema, where \texttt{material\_entry} is the hub),
-the Steiner tree is unique and our greedy algorithm finds it exactly.
-For schemas with FK cycles (e.g., self-referencing tables), the approximation
-may include unnecessary edges, but this is acceptable for SQL generation
-(extra JOINs increase query cost but do not affect correctness if DISTINCT is applied).
+\paragraph{木構造FKグラフでの正確性。}
+$G$が木（本スキーマでは\texttt{material\_entry}がハブ）の場合、
+Steiner木は一意であり、貪欲アルゴリズムはこれを厳密に求める。
+FKサイクルを持つスキーマ（自己参照テーブル等）では近似が不要な辺を含む可能性があるが、
+SQL生成においてはDISTINCTを適用すれば正確性に影響しない。
 
-\subsubsection{JOIN Path $\to$ SQL FROM/JOIN Clause Generation}
+\subsubsection{JOIN経路 $\to$ SQL FROM/JOIN句生成}
 
-Each path in $P$ is converted to SQL JOIN clauses.
-The FK metadata provides the join column names:
+$P$の各経路はSQL JOIN句に変換される。
+FKメタデータが結合カラム名を提供する：
 
-\begin{lstlisting}[language=Python,caption={JOIN clause generation from path.},label=lst:join_gen,numbers=none]
-# Path: [material_entry, structure]
+\begin{lstlisting}[language=Python,caption={経路からのJOIN句生成。},label=lst:join_gen,numbers=none]
+# 経路: [material_entry, structure]
 # FK: structure.entry_id -> material_entry.entry_id
-# Generated:
+# 生成:
 #   FROM material_entry m
 #   JOIN structure s ON s.entry_id = m.entry_id
 \end{lstlisting}
 
-Table aliases are assigned automatically (first letter of table name,
-with conflict resolution for collisions).
+テーブル別名はテーブル名の先頭文字から自動割当される（衝突時は解決処理あり）。
 
-\subsubsection{Multi-Element AND Query: The EXISTS Subquery Pattern}
+\subsubsection{多元素ANDクエリ：EXISTS副問い合わせパターン}
 \label{sec:multi_element}
 
-A critical materials-specific challenge arises from the composition table normalization.
-Querying ``compounds containing both Ni and Al'' requires:
+組成テーブル正規化に起因する材料固有の重要課題が存在する。
+「NiとAlの両方を含む化合物」のクエリには以下が必要：
 
-\begin{lstlisting}[language=SQL,caption={Multi-element AND query using EXISTS subqueries.},label=lst:exists]
+\begin{lstlisting}[language=SQL,caption={EXISTS副問い合わせによる多元素ANDクエリ。},label=lst:exists]
 SELECT DISTINCT m.entry_id, m.formula
 FROM material_entry m
 WHERE EXISTS (
@@ -461,375 +453,367 @@ WHERE EXISTS (
 LIMIT 100;
 \end{lstlisting}
 
-The Schema Graph engine detects when multiple elements are specified
-and automatically generates EXISTS subqueries instead of direct JOINs.
-Without this pattern (Naive approach), the query
-\texttt{WHERE c.element = 'Ni' AND c.element = 'Al'}
-returns zero rows because no single composition row can satisfy both conditions simultaneously.
-This is the \textbf{most critical failure mode} prevented by the Schema Graph method.
+Schema Graphエンジンは複数元素が指定された場合を検出し、
+直接JOINの代わりにEXISTS副問い合わせを自動生成する。
+このパターンなし（Naiveアプローチ）では、
+\texttt{WHERE c.element = 'Ni' AND c.element = 'Al'}は
+単一組成行が両条件を同時に満たすことが不可能なため常に0行を返す。
+これがSchema Graph手法により防止される\textbf{最も重要な故障モード}である。
 
-\subsubsection{Comparison: Naive vs. Schema Graph (Worked Example)}
+\subsubsection{比較：Naive vs. Schema Graph（具体例）}
 
-Table~\ref{tab:naive_vs_sg} illustrates the difference for query
-``Show B2 compounds containing Fe'':
+表~\ref{tab:naive_vs_sg}に「Feを含むB2化合物を出して」に対する差異を示す：
 
 \begin{table}[htbp]
   \centering
-  \caption{SQL generation comparison: Naive vs. Schema Graph for ``B2 compounds containing Fe''.}
+  \caption{SQL生成比較：「Feを含むB2化合物」に対するNaive vs. Schema Graph。}
   \label{tab:naive_vs_sg}
   \small
   \begin{tabularx}{\linewidth}{lXX}
     \toprule
-    Aspect & Naive (Level 0) & Schema Graph (Level 1) \\
+    観点 & Naive（Level 0） & Schema Graph（Level 1） \\
     \midrule
-    JOIN tables & All 6 tables always & Only composition + structure (2 tables) \\
-    JOIN count & 5 JOINs & 2 JOINs \\
-    DISTINCT & No $\to$ duplicate rows & Yes \\
-    LIMIT & No $\to$ unbounded & Yes (100) \\
-    Safety validation & No & Full (keyword + table whitelist) \\
-    Multi-element AND & Incorrect (0 rows) & Correct (EXISTS) \\
+    JOINテーブル & 常に全6テーブル & composition + structureのみ（2テーブル） \\
+    JOIN数 & 5 JOIN & 2 JOIN \\
+    DISTINCT & なし $\to$ 重複行 & あり \\
+    LIMIT & なし $\to$ 無制限 & あり（100） \\
+    安全性検証 & なし & 完全（キーワード + テーブルWL） \\
+    多元素AND & 不正（0行） & 正確（EXISTS） \\
     \bottomrule
   \end{tabularx}
 \end{table}
 
-\subsection{SQL Generation: Rule-based and LLM Modes}
+\subsection{SQL生成：Rule-basedモードとLLMモード}
 \label{sec:sql_generation}
 
-The system supports two SQL generation modes, both operating within the
-Schema Graph constraints:
+システムは2つのSQL生成モードをサポートし、
+いずれもSchema Graph制約内で動作する。
 
-\subsubsection{Rule-based Mode (Level 1)}
+\subsubsection{Rule-basedモード（Level 1）}
 
-A deterministic template-based generator constructs SQL from the extracted conditions
-and Schema Graph JOIN paths.
-No external API is required; latency is $<$100~ms.
-Limitations: cannot generate numeric comparison WHERE clauses
-(e.g., \texttt{band\_gap > 1.0}), cannot handle negation
-(``compounds \textit{not} containing Fe''), and cannot understand
-terminology not in the dictionary.
+決定論的テンプレートベース生成器が、抽出された条件と
+Schema Graph JOIN経路からSQLを構築する。
+外部APIは不要で、レイテンシは100~ms未満。
+制限：数値比較WHERE句（例：\texttt{band\_gap > 1.0}）の生成不可、
+否定（「Feを含まない化合物」）の処理不可、
+辞書未登録用語の理解不可。
 
-\subsubsection{LLM Mode with Few-Shot RAG (Level 2)}
+\subsubsection{Few-Shot RAGを備えたLLMモード（Level 2）}
 \label{sec:llm_mode}
 
-When the Rule-based mode's dictionary coverage is insufficient
-(e.g., unregistered elements, numeric conditions, complex phrasing),
-the system falls back to LLM-based generation.
-The LLM (GPT-5 in our experiments) receives a structured prompt containing:
+Rule-basedモードの辞書カバレッジが不十分な場合
+（未登録元素、数値条件、複雑な表現など）、
+LLMベース生成にフォールバックする。
+LLM（本実験ではGPT-5）は以下の構造化プロンプトを受け取る：
 
 \begin{enumerate}
-  \item \textbf{System message}: Task description + Schema YAML (table names, column names, types, FK relationships)
-  \item \textbf{Few-Shot examples}: Top-$k$ similar NL--SQL pairs from the RAG store (Section~\ref{sec:few_shot})
-  \item \textbf{User message}: The natural language query
-  \item \textbf{Constraints}: ``Generate only SELECT statements'', ``Include LIMIT 100'',
-        ``Use only tables listed in the schema''
+  \item \textbf{システムメッセージ}：タスク説明 + スキーマYAML（テーブル名、カラム名、型、FK関係）
+  \item \textbf{Few-Shot事例}：RAGストアからのTop-$k$類似NL--SQLペア（\ref{sec:few_shot}節）
+  \item \textbf{ユーザーメッセージ}：自然言語クエリ
+  \item \textbf{制約}：「SELECT文のみ生成」「LIMIT 100を含める」
+        「スキーマに記載されたテーブルのみ使用」
 \end{enumerate}
 
-The generated SQL is then validated by the SQL Guard (Section~\ref{sec:sql_guard})
-before execution.
+生成されたSQLは実行前にSQLガード（\ref{sec:sql_guard}節）で検証される。
 
-\subsection{Few-Shot RAG Store (SQL-as-Few-Shot-Examples)}
+\subsection{Few-Shot RAGストア（SQL-as-Few-Shot-Examples）}
 \label{sec:few_shot}
 
-\subsubsection{Architecture}
+\subsubsection{アーキテクチャ}
 
-The Few-Shot store implements a RAG~\citep{lewis2020rag} pattern specialized for T2SQL:
+Few-ShotストアはT2SQLに特化したRAG~\citep{lewis2020rag}パターンを実装する：
 
 \begin{enumerate}
-  \item \textbf{Accumulation}: When a query successfully produces results,
-    the (NL query, SQL, conditions, row count, source) tuple is appended to a JSON store.
-  \item \textbf{Retrieval}: For a new query, TF-IDF~\citep{salton1988tfidf} cosine similarity
-    is computed against all stored NL queries, and the top-$k$ (default $k=3$) are returned.
-  \item \textbf{Injection}: Retrieved examples are formatted as
-    ``\texttt{Question: ... SQL: ...}'' blocks and prepended to the LLM prompt.
+  \item \textbf{蓄積}：クエリが正常に結果を返した場合、
+    （NLクエリ、SQL、条件、行数、ソース）タプルをJSONストアに追加する。
+  \item \textbf{検索}：新規クエリに対し、
+    全蓄積NLクエリとのTF-IDF~\citep{salton1988tfidf}コサイン類似度を計算し、
+    上位$k$件（デフォルト$k=3$）を返す。
+  \item \textbf{注入}：検索された事例を
+    「\texttt{Question: ... SQL: ...}」ブロックとしてフォーマットし、
+    LLMプロンプトの先頭に配置する。
 \end{enumerate}
 
-\subsubsection{TF-IDF Tokenization for Materials Queries}
+\subsubsection{材料クエリのためのTF-IDFトークナイゼーション}
 
-Standard NLP tokenizers are inadequate for materials queries because they split
-chemical formulas and element symbols incorrectly.
-Our tokenizer uses a combined regex pattern:
+標準NLPトークナイザは化学式や元素記号を不正確に分割するため、
+材料クエリには不適切である。
+本トークナイザは複合正規表現パターンを使用する：
 
-\begin{lstlisting}[language=Python,caption={TF-IDF tokenizer for materials queries.},label=lst:tokenizer,numbers=none]
-# Tokenization pattern:
-# 1. Chemical symbols: [A-Z][a-z]? (Fe, Ni, Al, ...)
-# 2. Japanese characters: [\u3040-\u9fff]+
-# 3. English words: [a-z]+
-# 4. Numbers: \d+
+\begin{lstlisting}[language=Python,caption={材料クエリ用TF-IDFトークナイザ。},label=lst:tokenizer,numbers=none]
+# トークナイゼーションパターン:
+# 1. 化学記号: [A-Z][a-z]? (Fe, Ni, Al, ...)
+# 2. 日本語文字: [\u3040-\u9fff]+
+# 3. 英単語: [a-z]+
+# 4. 数字: \d+
 tokens = re.findall(
   r'[A-Z][a-z]?|[\u3040-\u9fff]+|[a-z]+|\d+',
   query.lower()
 )
 \end{lstlisting}
 
-IDF is computed using $\text{IDF}(t) = \log(N / n_t)$ where $N$ is the total number of
-stored examples and $n_t$ is the number containing term $t$.
-Cosine similarity between query and stored example TF-IDF vectors determines ranking.
+IDFは$\text{IDF}(t) = \log(N / n_t)$で計算される。
+ここで$N$は蓄積事例総数、$n_t$は語$t$を含む事例数である。
+クエリと蓄積事例のTF-IDFベクトル間のコサイン類似度によりランキングされる。
 
-\subsubsection{Seed Example Extraction from Research Papers}
+\subsubsection{研究論文からの種事例抽出}
 
-To bootstrap the Few-Shot store without manual curation,
-we implemented automatic seed example extraction from LaTeX manuscripts.
-The extractor scans for patterns such as:
+手動キュレーションなしにFew-Shotストアをブートストラップするため、
+LaTeX原稿からの自動種事例抽出を実装した。
+抽出器は以下のパターンを走査する：
 
 \begin{itemize}
-  \item \texttt{B2[-\\s]type\\s*(formula)} $\to$ \{prototype: B2, elements: extracted\}
-  \item \texttt{L1[\$\_\{\}2]+[-\\s]*(formula)} $\to$ \{prototype: L12, elements: extracted\}
-  \item Context keywords within 100 characters: ``lattice'', ``stable'', ``formation energy''
+  \item \texttt{B2[-\textbackslash s]type\textbackslash s*(化学式)} $\to$ \{prototype: B2, elements: 抽出\}
+  \item \texttt{L1[\$\_\{\}2]+[-\textbackslash s]*(化学式)} $\to$ \{prototype: L12, elements: 抽出\}
+  \item 100文字以内のコンテキストキーワード：``lattice'', ``stable'', ``formation energy''
 \end{itemize}
 
-For each extracted compound mention, a canonical NL query and corresponding SQL are generated.
-In our experiments, 4 seed examples were automatically extracted from
-\texttt{hea\_lattice\_prediction.tex}, complementing 7 manually curated examples
-(11 total; Table~\ref{tab:few_shot_sources}).
+抽出された各化合物言及に対し、正規NLクエリと対応SQLが生成される。
+本実験では\texttt{hea\_lattice\_prediction.tex}から4件の種事例が自動抽出され、
+手動キュレーション7件と合わせて合計11件となった（表~\ref{tab:few_shot_sources}）。
 
 \begin{table}[htbp]
   \centering
-  \caption{Few-Shot store composition (11 examples).}
+  \caption{Few-Shotストア構成（11事例）。}
   \label{tab:few_shot_sources}
   \small
   \begin{tabular}{lccl}
     \toprule
-    Source & Count & \% & Example Query \\
+    ソース & 件数 & 比率 & クエリ例 \\
     \midrule
-    Manual curation & 7 & 64\% & ``Show B2 compounds containing Fe'' \\
-    Paper extraction & 4 & 36\% & ``Show properties of B2 FeAl'' \\
+    手動キュレーション & 7 & 64\% & 「Feを含むB2化合物を出して」 \\
+    論文抽出 & 4 & 36\% & 「B2 FeAlの物性を出して」 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\subsection{SQL Guard: Multi-layer Safety Validation}
+\subsection{SQLガード：多層安全性検証}
 \label{sec:sql_guard}
 
-All generated SQL---whether from Rule-based or LLM mode---passes through
-a 5-layer validation pipeline before database execution:
+Rule-basedモード・LLMモードを問わず、
+生成された全SQLはデータベース実行前に5層検証パイプラインを通過する：
 
 \begin{enumerate}
-  \item \textbf{Multiple statement detection}: Reject if semicolons appear within the SQL body
-    (prevents piggyback attacks such as \texttt{SELECT ...; DROP TABLE ...}).
-  \item \textbf{Forbidden keyword detection}: Scan for INSERT, UPDATE, DELETE, DROP, ALTER,
-    TRUNCATE, CREATE, GRANT, REVOKE, COPY using word-boundary regex matching.
-  \item \textbf{SELECT-only restriction}: Reject any statement not beginning with SELECT or WITH.
-  \item \textbf{Table whitelist verification}: Extract all table names referenced in FROM/JOIN clauses
-    and verify each appears in \texttt{allowed\_schema.yaml}.
-    Queries referencing undeclared tables (e.g., \texttt{secret\_passwords}) are rejected.
-  \item \textbf{Automatic LIMIT injection}: If no LIMIT clause is present, append \texttt{LIMIT 100}
-    to prevent unbounded result sets from consuming excessive memory or computation.
+  \item \textbf{複数文検出}：SQL本体内にセミコロンがあれば拒否
+    （\texttt{SELECT ...; DROP TABLE ...}等のピギーバック攻撃を防止）。
+  \item \textbf{禁止キーワード検出}：INSERT, UPDATE, DELETE, DROP, ALTER,
+    TRUNCATE, CREATE, GRANT, REVOKE, COPYをワード境界正規表現で走査。
+  \item \textbf{SELECT専用制約}：SELECTまたはWITHで始まらない文を拒否。
+  \item \textbf{テーブルホワイトリスト検証}：FROM/JOIN句の全テーブル名を抽出し、
+    \texttt{allowed\_schema.yaml}に存在するか検証。
+    未宣言テーブル（例：\texttt{secret\_passwords}）参照クエリは拒否。
+  \item \textbf{自動LIMIT注入}：LIMIT句がなければ\texttt{LIMIT 100}を付加し、
+    無制限結果セットによる過剰メモリ・計算消費を防止。
 \end{enumerate}
 
-Optionally, SQLGlot~\citep{sqlglot2023} performs AST-level syntax validation
-(detecting structurally malformed SQL that passes regex checks).
+オプションでSQLGlot~\citep{sqlglot2023}がAST（抽象構文木）レベルの構文検証を行う。
 
-\subsection{Recommended Operational Configuration: Cascading Mode}
+\subsection{推奨運用構成：カスケードモード}
 \label{sec:cascade}
 
-Based on the characteristics of each generation mode, we recommend a cascading strategy:
+各生成モードの特性に基づき、カスケード戦略を推奨する：
 
 \begin{enumerate}
-  \item \textbf{Stage 1}: Attempt Rule-based generation (Level 1, $<$100~ms).
-  \item \textbf{Decision}: If extracted conditions are empty or dictionary coverage
-    is below a threshold, escalate.
-  \item \textbf{Stage 2}: Fall back to LLM generation with Few-Shot RAG (Level 2, $\sim$7~s).
-  \item \textbf{Common}: SQL Guard validation is always applied regardless of generation mode.
+  \item \textbf{段階1}：Rule-based生成を試行（Level 1、100~ms未満）。
+  \item \textbf{判定}：抽出条件が空または辞書カバレッジが閾値以下の場合、エスカレーション。
+  \item \textbf{段階2}：Few-Shot RAG付きLLM生成にフォールバック（Level 2、約7秒）。
+  \item \textbf{共通}：生成モードによらずSQLガード検証を常に適用。
 \end{enumerate}
 
-This approach processes dictionary-covered queries (estimated 70--80\% of typical materials queries)
-without external API dependency, reserving LLM calls for complex or novel queries.
+このアプローチは、辞書がカバーするクエリ（典型的な材料クエリの推定70--80\%）を
+外部API依存なしに処理し、複雑または新規なクエリにのみLLM呼び出しを使用する。
 
 % =====================================================================
-\section{Data Preparation}
+\section{データ準備}
 \label{sec:data}
 
-\subsection{OQMD API Data Acquisition}
+\subsection{OQMD APIからのデータ取得}
 
-Data were retrieved from the OQMD RESTful API
-(\url{https://oqmd.org/oqmdapi/formationenergy})
-for two intermetallic prototype structures:
+データはOQMD RESTful API
+（\url{https://oqmd.org/oqmdapi/formationenergy}）から、
+2種類の金属間化合物プロトタイプ構造について取得した：
 
 \begin{itemize}
-  \item \textbf{B2 (CsCl-type)}: Filter \texttt{prototype=CsCl}.
-    636 unique compositions after deduplication.
-    Stable ($E_\text{hull} \leq 0.001$~eV/atom): 185.
-    Metastable ($E_\text{hull} \leq 0.05$~eV/atom): 198.
-  \item \textbf{L1$_2$ (AuCu$_3$-type)}: Filter \texttt{prototype=AuCu3}.
-    273 unique compositions.
-    Stable: 88. Metastable: 138.
+  \item \textbf{B2（CsCl型）}：フィルタ\texttt{prototype=CsCl}。
+    重複除去後636の固有組成。
+    安定（$E_\text{hull} \leq 0.001$~eV/atom）：185件。
+    準安定（$E_\text{hull} \leq 0.05$~eV/atom）：198件。
+  \item \textbf{L1$_2$（AuCu$_3$型）}：フィルタ\texttt{prototype=AuCu3}。
+    273の固有組成。安定：88件。準安定：138件。
 \end{itemize}
 
-Total: 909 unique compounds. For each entry, six fields were retrieved:
-name (chemical formula), entry\_id, prototype, delta\_e (formation energy per atom),
-stability (energy above hull), and band\_gap.
+合計：909の固有化合物。各エントリについて6フィールドを取得：
+name（化学式）、entry\_id、prototype、delta\_e（原子当たり形成エネルギー）、
+stability（hull上エネルギー）、band\_gap。
 
-The API returns paginated JSON responses (\texttt{limit=200, offset=0,200,...}).
-Duplicate entries (same chemical formula, different entry\_id from different DFT runs)
-were deduplicated by retaining the lowest-energy entry.
+APIはページネーションされたJSONレスポンス（\texttt{limit=200, offset=0,200,...}）を返す。
+重複エントリ（同一化学式、異なるentry\_id）は最低エネルギーのものを保持して重複除去した。
 
-\subsection{RDB Ingestion}
+\subsection{RDBへのデータ投入}
 
-Each OQMD entry is decomposed into the 7-table schema.
-For example, Fe$_3$Al (L1$_2$ prototype) generates:
-1 row in \texttt{material\_entry},
-2 rows in \texttt{composition} (Fe: 0.75, Al: 0.25),
-1 row in \texttt{structure} (prototype=L12, lattice\_a, space\_group),
-1 row in \texttt{phase\_stability} (formation\_energy, energy\_above\_hull, band\_gap), and
-1 row in \texttt{calculation} (method=GGA).
+各OQMDエントリを7テーブルスキーマに分解する。
+例えば、Fe$_3$Al（L1$_2$プロトタイプ）は以下を生成する：
+\texttt{material\_entry}に1行、
+\texttt{composition}に2行（Fe: 0.75、Al: 0.25）、
+\texttt{structure}に1行（prototype=L12、lattice\_a、space\_group）、
+\texttt{phase\_stability}に1行（formation\_energy、energy\_above\_hull、band\_gap）、
+\texttt{calculation}に1行（method=GGA）。
 
-\subsection{Schema Extension}
+\subsection{スキーマ拡張}
 
-The following columns were added to accommodate OQMD fields not in the original schema:
-\texttt{band\_gap} (REAL) in \texttt{phase\_stability} and
-\texttt{space\_group} (TEXT) in \texttt{structure}.
-The materials terminology dictionary was updated with corresponding terms
-(band\_gap, volume\_per\_atom, space\_group).
+元スキーマに含まれないOQMDフィールドを収容するため以下のカラムを追加した：
+\texttt{phase\_stability}に\texttt{band\_gap}（REAL）、
+\texttt{structure}に\texttt{space\_group}（TEXT）。
+材料用語辞書に対応用語（band\_gap、volume\_per\_atom、space\_group）を追加した。
 
 % =====================================================================
-\section{Results}
+\section{結果}
 \label{sec:results}
 
-\subsection{Test Case Design}
+\subsection{テストケース設計}
 
-39 test cases were designed across 6 categories (Table~\ref{tab:test_categories})
-to evaluate correctness, safety, and robustness.
+正確性、安全性、頑健性を評価するため、6カテゴリ39件のテストケースを設計した
+（表~\ref{tab:test_categories}）。
 
 \begin{table}[htbp]
   \centering
-  \caption{Test case categories (39 total).}
+  \caption{テストケースカテゴリ（全39件）。}
   \label{tab:test_categories}
   \small
   \begin{tabularx}{\linewidth}{llcX}
     \toprule
-    Category & IDs & $n$ & Validation Focus \\
+    カテゴリ & ID & $n$ & 検証焦点 \\
     \midrule
-    Normal & A01--A15 & 15 & Element, prototype, stability, sort, compound conditions \\
-    No results & B01--B05 & 5 & Rare/noble gas elements, non-existent combinations $\to$ expect 0 rows \\
-    Sloppy input & C01--C10 & 10 & Empty input, irrelevant text, single-word, numeric conditions \\
-    Contradictory & D01--D02 & 2 & ``stable AND metastable'', ``Fe-free Fe compound'' \\
-    SQL injection & E01--E05 & 5 & DROP, DELETE, INSERT, piggyback attacks \\
-    Safety check & F01--F02 & 2 & Direct SQL input (SELECT, UPDATE) \\
+    正常系 & A01--A15 & 15 & 元素、プロトタイプ、安定性、ソート、複合条件 \\
+    該当なし & B01--B05 & 5 & 希ガス/貴ガス元素、非存在組合せ $\to$ 0行期待 \\
+    いい加減な入力 & C01--C10 & 10 & 空入力、無関係テキスト、単語のみ、数値条件 \\
+    矛盾条件 & D01--D02 & 2 & 「安定かつ準安定」「Feなし Fe化合物」 \\
+    SQLインジェクション & E01--E05 & 5 & DROP, DELETE, INSERT、ピギーバック攻撃 \\
+    安全性検査 & F01--F02 & 2 & 直接SQL入力（SELECT, UPDATE） \\
     \bottomrule
   \end{tabularx}
 \end{table}
 
-\subsection{Three-Level Comparison}
+\subsection{3水準比較}
 \label{sec:3level}
 
-Fig.~\ref{fig:3level} and Table~\ref{tab:3level_results} show the comparison
-across three system levels.
+図~\ref{fig:3level}および表~\ref{tab:3level_results}に3水準の比較結果を示す。
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.9\linewidth]{figures/fig3_3level_passrate.png}
-  \caption{Test pass rate by category for three system levels.
-    Naive (Level 0) fails on SQL injection and safety categories (no SQL Guard).
-    Both Schema Graph levels (1 and 2) achieve 100\% across all categories.}
+  \caption{3水準のカテゴリ別テストパス率。
+    Naive（Level 0）はSQLインジェクションと安全性カテゴリで不合格（SQLガードなし）。
+    Schema Graph搭載の両水準（1, 2）は全カテゴリ100\%を達成。}
   \label{fig:3level}
 \end{figure}
 
 \begin{table}[htbp]
   \centering
-  \caption{Quantitative comparison of three system levels.}
+  \caption{3水準の定量比較。}
   \label{tab:3level_results}
   \small
   \begin{tabular}{lccc}
     \toprule
      & Naive (L0) & SG + RB (L1) & SG + GPT-5 (L2) \\
     \midrule
-    Pass rate & 32/39 (82\%) & 39/39 (100\%) & 39/39 (100\%) \\
-    Mean latency & $<$100~ms & $<$100~ms & $\sim$7,300~ms \\
-    Token consumption & 0 & 0 & 49,103 (39 queries) \\
-    Unnecessary JOIN removal & No & Yes & Yes \\
-    Multi-element AND & Incorrect & Correct & Correct \\
-    SQL injection blocking & No & Yes & Yes \\
-    Unregistered term handling & Ignored & Ignored & Understood \\
-    Numeric WHERE generation & No & No & Yes \\
-    External API dependency & None & None & OpenAI \\
+    パス率 & 32/39 (82\%) & 39/39 (100\%) & 39/39 (100\%) \\
+    平均レイテンシ & $<$100~ms & $<$100~ms & $\sim$7,300~ms \\
+    トークン消費 & 0 & 0 & 49,103（39クエリ） \\
+    不要JOIN除去 & 不可 & 可能 & 可能 \\
+    多元素AND & 不正確 & 正確 & 正確 \\
+    SQLインジェクション遮断 & 不可 & 可能 & 可能 \\
+    未登録語彙処理 & 無視 & 無視 & 理解可能 \\
+    数値WHERE生成 & 不可 & 不可 & 可能 \\
+    外部API依存 & なし & なし & OpenAI \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\subsection{Rule-based vs. GPT-5 Detailed Comparison}
+\subsection{Rule-based vs. GPT-5 詳細比較}
 
-\subsubsection{Result Set Agreement (Jaccard Index)}
+\subsubsection{結果セット一致度（Jaccard指数）}
 
-For 32 comparable tests (excluding injection/safety categories),
-Jaccard similarity between Rule-based and GPT-5 result sets was computed
-(Fig.~\ref{fig:jaccard}).
+比較可能な32件のテスト（インジェクション/安全性カテゴリ除く）について、
+Rule-basedとGPT-5の結果セット間のJaccard類似度を計算した
+（図~\ref{fig:jaccard}）。
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.9\linewidth]{figures/fig4_jaccard.png}
-  \caption{Jaccard index between Rule-based and GPT-5 result sets.
-    Green: $\geq 0.8$ (high agreement), Orange: 0.5--0.8 (moderate), Red: $<0.5$ (low).
-    Low-agreement cases primarily arise from GPT-5's superior semantic understanding
-    of compound-specific queries (e.g., B01: Xe compounds, C09: NiAl specification).}
+  \caption{Rule-basedとGPT-5結果セット間のJaccard指数。
+    緑：$\geq 0.8$（高一致）、橙：0.5--0.8（中程度）、赤：$<0.5$（低）。
+    低一致ケースは主にGPT-5の優れた意味理解に起因
+    （例：B01: Xe化合物、C09: NiAl特定）。}
   \label{fig:jaccard}
 \end{figure}
 
-\subsubsection{Notable Divergences}
+\subsubsection{注目すべき乖離}
 
-Three cases illustrate where GPT-5 outperforms Rule-based:
+GPT-5がRule-basedを上回る3ケースを示す：
 
 \begin{description}
-  \item[B01: ``Show B2 compounds containing Xe'']
-    Rule-based: Xe is not in the dictionary $\to$ condition ignored $\to$
-    returns all B2 compounds (100 rows, \textbf{false positives}).
-    GPT-5: correctly generates \texttt{WHERE element = 'Xe'} $\to$ 2 rows (CsXe, MgXe).
-  \item[C09: ``NiAl L12'']
-    Rule-based: extracts Ni, Al, L12 independently $\to$ returns all L1$_2$ with Ni or Al (100 rows).
-    GPT-5: understands ``NiAl'' as a specific compound $\to$ returns AlNi$_3$ only (1 row).
-  \item[D02: ``Fe-free Fe B2 compounds'']
-    Rule-based: cannot parse negation $\to$ returns Fe-containing B2 compounds.
-    GPT-5: recognizes contradiction $\to$ generates appropriate query.
+  \item[B01: 「Xeを含むB2化合物を出して」]
+    Rule-based：Xeは辞書未登録 $\to$ 条件無視 $\to$
+    全B2化合物を返却（100行、\textbf{偽陽性}）。
+    GPT-5：正しく\texttt{WHERE element = 'Xe'}を生成 $\to$ 2行（CsXe, MgXe）。
+  \item[C09: 「NiAl L12」]
+    Rule-based：Ni, Al, L12を独立に抽出 $\to$ NiまたはAlを含む全L1$_2$（100行）。
+    GPT-5：「NiAl」を特定化合物と理解 $\to$ AlNi$_3$のみ（1行）。
+  \item[D02: 「FeなしFe B2化合物」]
+    Rule-based：否定を解析不可 $\to$ Fe含有B2化合物を返却。
+    GPT-5：矛盾を認識 $\to$ 適切なクエリを生成。
 \end{description}
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.8\linewidth]{figures/fig7_notable_cases.png}
-  \caption{Row count comparison for notable divergence cases.
-    B01--B03: Rule-based returns excessive results due to unregistered elements;
-    GPT-5 returns correct (small) result sets.}
+  \caption{注目乖離ケースの行数比較。
+    B01--B03：Rule-basedは未登録元素により過剰結果を返却、
+    GPT-5は正確な（少ない）結果セットを返却。}
   \label{fig:notable}
 \end{figure}
 
-\subsubsection{Latency and Cost}
+\subsubsection{レイテンシとコスト}
 
-Fig.~\ref{fig:latency} shows per-query latency.
-Rule-based mode is consistently $<$100~ms.
-GPT-5 mode averages 7,305~ms (max 23,348~ms), a $\sim$70$\times$ increase.
-Total token consumption for 39 queries was 49,103 tokens ($\sim$1,259 tokens/query).
+図~\ref{fig:latency}にクエリごとのレイテンシを示す。
+Rule-basedモードは一貫して100~ms未満。
+GPT-5モードは平均7,305~ms（最大23,348~ms）、約70倍の増加。
+39クエリの総トークン消費は49,103トークン（約1,259トークン/クエリ）。
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.9\linewidth]{figures/fig5_latency.png}
-  \caption{Per-query latency comparison (log scale).
-    Rule-based: consistently $<$100~ms. GPT-5: $\sim$7.3~s average.}
+  \caption{クエリごとのレイテンシ比較（対数スケール）。
+    Rule-based：一貫して100~ms未満。GPT-5：平均約7.3秒。}
   \label{fig:latency}
 \end{figure}
 
-\subsection{OQMD API Ground Truth Validation (Integration Test)}
+\subsection{OQMD API正解データによる検証（結合テスト）}
 \label{sec:oqmd_validation}
 
-For 8 test cases, we queried the OQMD REST API with equivalent filter conditions
-and compared the results against T2SQL output (Table~\ref{tab:oqmd_results}, Fig.~\ref{fig:oqmd}).
-Precision = $|$T2SQL $\cap$ OQMD$|$ / $|$T2SQL$|$;
-Recall = $|$T2SQL $\cap$ OQMD$|$ / $|$OQMD$|$.
+8件のテストケースについて、同等のフィルタ条件でOQMD REST APIに直接問い合わせ、
+T2SQL出力と比較した（表~\ref{tab:oqmd_results}、図~\ref{fig:oqmd}）。
+Precision = $|$T2SQL $\cap$ OQMD$|$ / $|$T2SQL$|$、
+Recall = $|$T2SQL $\cap$ OQMD$|$ / $|$OQMD$|$。
 
 \begin{table}[htbp]
   \centering
-  \caption{OQMD API ground truth comparison (Precision / Recall).}
+  \caption{OQMD API正解データとの比較（Precision / Recall）。}
   \label{tab:oqmd_results}
   \small
   \begin{tabular}{llccccl}
     \toprule
-    ID & Query Condition & OQMD & T2SQL & Prec. & Rec. & Note \\
+    ID & クエリ条件 & OQMD & T2SQL & Prec. & Rec. & 備考 \\
     \midrule
-    A01 & Fe + B2 & 7 & 7 & 1.000 & 1.000 & Exact match \\
-    A02 & Stable L1$_2$ (sorted) & 88 & 88 & 1.000 & 1.000 & Exact match \\
-    A04 & All B2 & 483 & 95 & 1.000 & 0.197 & LIMIT 100 \\
-    A05 & Metastable B2 & 260 & 90 & 1.000 & 0.346 & LIMIT 100 \\
-    A06 & Co + stable L1$_2$ & 1 & 1 & 1.000 & 1.000 & Exact match \\
-    A10 & All L1$_2$ & 273 & 100 & 1.000 & 0.366 & LIMIT 100 \\
-    A15 & Ni + stable L1$_2$ & 6 & 6 & 1.000 & 1.000 & Exact match \\
-    C08 & Stable B2, band\_gap $>$ 0 & 0 & 78 & 0.000 & --- & API filter N/A \\
+    A01 & Fe + B2 & 7 & 7 & 1.000 & 1.000 & 完全一致 \\
+    A02 & 安定L1$_2$（ソート済） & 88 & 88 & 1.000 & 1.000 & 完全一致 \\
+    A04 & 全B2 & 483 & 95 & 1.000 & 0.197 & LIMIT制約 \\
+    A05 & 準安定B2 & 260 & 90 & 1.000 & 0.346 & LIMIT制約 \\
+    A06 & Co + 安定L1$_2$ & 1 & 1 & 1.000 & 1.000 & 完全一致 \\
+    A10 & 全L1$_2$ & 273 & 100 & 1.000 & 0.366 & LIMIT制約 \\
+    A15 & Ni + 安定L1$_2$ & 6 & 6 & 1.000 & 1.000 & 完全一致 \\
+    C08 & 安定B2、band\_gap $>$ 0 & 0 & 78 & 0.000 & --- & APIフィルタ非対応 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -837,287 +821,281 @@ Recall = $|$T2SQL $\cap$ OQMD$|$ / $|$OQMD$|$.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.8\linewidth]{figures/fig6_oqmd_precision_recall.png}
-  \caption{Precision (blue) and Recall (orange) against OQMD API ground truth.
-    All tests except C08 achieve Precision = 1.0.
-    Low Recall in A04/A05/A10 is due to LIMIT 100 constraint, not data inaccuracy.}
+  \caption{OQMD API正解データに対するPrecision（青）とRecall（橙）。
+    C08を除く全テストでPrecision = 1.0を達成。
+    A04/A05/A10の低Recallはデータ不正確性ではなくLIMIT 100制約による。}
   \label{fig:oqmd}
 \end{figure}
 
-\paragraph{Significance as an Integration Test.}
+\paragraph{結合テストとしての意義。}
 
-This comparison validates the \textbf{entire 5-stage data transformation pipeline}:
-(1)~API JSON $\to$ CSV conversion,
-(2)~CSV $\to$ 7-table normalization,
-(3)~NL $\to$ SQL conversion (entity extraction + Schema Graph),
-(4)~JOIN path correctness (FK graph traversal), and
-(5)~SQL execution with DISTINCT/LIMIT.
-Precision = 1.0 confirms that no data loss, corruption, or incorrect JOIN occurs
-across these five stages.
-If \textbf{any} stage contained a bug---e.g., incorrect element splitting in the composition table,
-FK integrity violations, or missing JOIN paths---Precision would fall below 1.0.
+この比較は\textbf{5段階のデータ変換パイプライン全体}を検証する：
+(1)~API JSON $\to$ CSV変換、
+(2)~CSV $\to$ 7テーブル正規化、
+(3)~NL $\to$ SQL変換（条件抽出 + Schema Graph）、
+(4)~JOIN経路の正確性（FKグラフ走査）、
+(5)~SQL実行（DISTINCT/LIMIT）。
+Precision = 1.0は、これら5段階にわたって
+データ損失・破損・不正JOINが発生していないことを確認する。
+いずれかの段階にバグがあれば---例えば、組成テーブルでの元素分割誤り、
+FK整合性違反、JOIN経路欠落---Precisionは1.0を下回る。
 
-Note: because the same data source (OQMD) is used for both the database content and
-the ground truth, this validation does not constitute an independent evaluation of
-the system's generalization to unseen databases.
-Cross-database validation (e.g., against Materials Project) remains future work.
+注意：同一データソース（OQMD）がデータベース内容と正解データの両方に使用されているため、
+この検証はシステムの未知データベースへの汎化能力の独立評価とはならない。
+異なるデータベース（Materials Project等）との交差検証は今後の課題である。
 
-\subsection{SQL Injection and Safety Results}
+\subsection{SQLインジェクションと安全性結果}
 
-All 7 adversarial inputs (E01--E05, F01--F02) were blocked by the SQL Guard
-(Table~\ref{tab:injection_results}).
+7件の敵対的入力（E01--E05、F01--F02）はすべてSQLガードにより遮断された
+（表~\ref{tab:injection_results}）。
 
 \begin{table}[htbp]
   \centering
-  \caption{SQL injection and safety test results (all blocked).}
+  \caption{SQLインジェクション・安全性テスト結果（全件遮断）。}
   \label{tab:injection_results}
   \small
   \begin{tabularx}{\linewidth}{lXl}
     \toprule
-    ID & Input & Blocking Reason \\
+    ID & 入力 & 遮断理由 \\
     \midrule
-    E01 & \texttt{DROP TABLE material\_entry;} & Forbidden keyword: DROP \\
-    E02 & \texttt{SELECT *; DELETE FROM composition;} & Multiple statements + DELETE \\
-    E03 & B2 compounds; \texttt{DROP TABLE structure;} & Multiple statements + DROP \\
-    E04 & \texttt{SELECT * FROM secret\_passwords} & Disallowed table \\
-    E05 & \texttt{INSERT INTO material\_entry ...} & Forbidden keyword: INSERT \\
-    F01 & \texttt{SELECT entry\_id FROM material\_entry} & No LIMIT $\to$ auto-added \\
-    F02 & \texttt{UPDATE material\_entry SET ...} & Forbidden keyword: UPDATE \\
+    E01 & \texttt{DROP TABLE material\_entry;} & 禁止キーワード：DROP \\
+    E02 & \texttt{SELECT *; DELETE FROM composition;} & 複数文 + DELETE \\
+    E03 & B2化合物; \texttt{DROP TABLE structure;} & 複数文 + DROP \\
+    E04 & \texttt{SELECT * FROM secret\_passwords} & 非許可テーブル \\
+    E05 & \texttt{INSERT INTO material\_entry ...} & 禁止キーワード：INSERT \\
+    F01 & \texttt{SELECT entry\_id FROM material\_entry} & LIMITなし $\to$ 自動付加 \\
+    F02 & \texttt{UPDATE material\_entry SET ...} & 禁止キーワード：UPDATE \\
     \bottomrule
   \end{tabularx}
 \end{table}
 
 % =====================================================================
-\section{Discussion}
+\section{考察}
 \label{sec:discussion}
 
-\subsection{Multi-dimensional Assessment}
+\subsection{多次元評価}
 
-Fig.~\ref{fig:radar} presents a radar chart comparing the three system levels
-across six dimensions: accuracy, latency (inverse), cost (inverse), safety,
-vocabulary coverage, and numeric filter capability.
+図~\ref{fig:radar}に3水準の6次元レーダーチャート比較を示す：
+精度、レイテンシ（逆数）、コスト（逆数）、安全性、
+語彙カバレッジ、数値フィルタ能力。
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.65\linewidth]{figures/fig8_radar.png}
-  \caption{Multi-dimensional comparison of three system levels (5-point scale per axis).
-    Schema Graph + LLM (Level 2) is most comprehensive but trades off latency and cost.}
+  \caption{3水準の多次元比較（各軸5点満点）。
+    Schema Graph + LLM（Level 2）は最も包括的だが、
+    レイテンシとコストを犠牲にする。}
   \label{fig:radar}
 \end{figure}
 
-\subsection{Pros and Cons of Each Level}
+\subsection{各水準の利点と欠点}
 
 \begin{table}[htbp]
   \centering
-  \caption{Advantages and disadvantages of each system level.}
+  \caption{各水準の利点と欠点。}
   \label{tab:pros_cons}
   \small
   \begin{tabularx}{\linewidth}{lXX}
     \toprule
-    Level & Advantages & Disadvantages \\
+    水準 & 利点 & 欠点 \\
     \midrule
     Naive (L0) &
-      Minimal implementation ($\sim$50 LOC). No dependencies. Fastest ($<$100~ms) &
-      Unnecessary JOINs. Multi-element AND fails. No safety. No LIMIT/DISTINCT \\
+      最小実装（約50行）。依存なし。最速（100~ms未満） &
+      不要JOIN。多元素AND失敗。安全性なし。LIMIT/DISTINCTなし \\
     \midrule
     SG + RB (L1) &
-      No external API. $<$100~ms. Full safety. 100\% deterministic. Reproducible &
-      Silent failure on unregistered terms. No numeric WHERE. Manual vocabulary expansion \\
+      外部API不要。100~ms未満。完全な安全性。100\%決定論的。再現可能 &
+      未登録語彙で無通知失敗。数値WHERE不可。手動語彙拡張が必要 \\
     \midrule
     SG + LLM (L2) &
-      Handles unregistered terms. Numeric/negation capable. Contextual understanding &
-      External API dependency (cost, latency, privacy). Non-deterministic. Hallucination risk \\
+      未登録語彙対応。数値/否定可能。文脈理解 &
+      外部API依存（コスト、レイテンシ、プライバシー）。非決定論的。幻覚リスク \\
     \bottomrule
   \end{tabularx}
 \end{table}
 
-\subsection{Limitations}
+\subsection{限界と制約}
 \label{sec:limitations}
 
-\subsubsection{Test Case Self-Referentiality (High Severity)}
+\subsubsection{テストケースの自己参照性（深刻度：高）}
 
-The 39 test cases were designed by the system developer who knows the extraction patterns.
-The 100\% pass rate is therefore expected under controlled conditions.
-Blind testing with free-form queries from materials researchers is required
-for genuine accuracy assessment.
+39件のテストケースは抽出パターンを知るシステム開発者が設計した。
+したがって、制御された条件下で100\%のパス率は予想される。
+真の精度評価には材料研究者による自由文クエリのブラインドテストが必要である。
 
-\subsubsection{Few-Shot RAG Effect Unvalidated (High Severity)}
+\subsubsection{Few-Shot RAG効果の未検証（深刻度：高）}
 
-The Few-Shot store's primary function---improving LLM SQL generation via
-similar example injection---was not isolated in an ablation study.
-Future work should compare LLM performance with and without Few-Shot examples
-on a held-out test set.
+Few-Shotストアの主要機能---類似事例注入によるLLM SQL生成精度向上---は
+アブレーション研究で分離されていない。
+今後の課題として、ホールドアウトテストセットにおける
+Few-Shot事例の有無によるLLM性能比較が必要である。
 
-\subsubsection{Silent Failure (Medium Severity)}
+\subsubsection{無通知失敗（深刻度：中）}
 
-When unregistered terms appear in Rule-based mode, conditions are silently dropped,
-producing overly broad results without user notification.
-Implementing a ``condition coverage score'' that warns users when
-their query terms were partially unrecognized would mitigate this risk.
+Rule-basedモードで未登録語彙が出現した場合、条件が無通知で破棄され、
+ユーザーへの通知なしに過度に広範な結果を生成する。
+クエリ語彙が部分的に未認識であることをユーザーに警告する
+「条件カバレッジスコア」の実装がこのリスクを軽減する。
 
-\subsubsection{Small-Scale Schema (Medium Severity)}
+\subsubsection{小規模スキーマ（深刻度：中）}
 
-Our 7-table, 909-record schema is far smaller than production databases
-(OQMD: $>$1M entries, potentially dozens of tables).
-Schema Graph traversal's Steiner tree approximation is exact for tree-structured graphs
-but may degrade for larger schemas with FK cycles.
-Scalability testing on 20+ table schemas with 100K+ records is needed.
+本研究の7テーブル・909レコードスキーマは本番データベース
+（OQMD：100万件超、テーブル数十の可能性）より遥かに小さい。
+Schema Graph走査のSteiner木近似は木構造グラフで厳密だが、
+FKサイクルを持つ大規模スキーマでは性能劣化の可能性がある。
+20テーブル以上・10万レコード以上のスケーラビリティテストが必要である。
 
-\subsubsection{Numeric Condition Limitation in Rule-based Mode (Medium Severity)}
+\subsubsection{Rule-basedモードの数値条件制限（深刻度：中）}
 
-Rule-based mode cannot generate numeric comparison clauses
-(e.g., \texttt{band\_gap > 1.0}), which are frequently needed in materials screening.
-A numeric condition parser (regex-based extraction of inequality operators and values)
-would address this without requiring LLM calls.
+Rule-basedモードは数値比較句（例：\texttt{band\_gap > 1.0}）を生成できない。
+これは材料スクリーニングで頻繁に必要とされる。
+不等式演算子と値の正規表現ベース抽出（数値条件パーサー）により、
+LLM呼び出しなしでこの問題を解決できる。
 
-\subsection{Comparison with Related Systems}
+\subsection{関連システムとの比較}
 
 \begin{table}[htbp]
   \centering
-  \caption{Comparison with related materials NLP / T2SQL systems.}
+  \caption{関連する材料NLP / T2SQLシステムとの比較。}
   \label{tab:related_comparison}
   \small
   \begin{tabularx}{\linewidth}{lccccX}
     \toprule
-    System & Schema-aware & Normalized RDB & Materials-specific & Few-Shot & Key Difference \\
+    システム & スキーマ認識 & 正規化RDB & 材料特化 & Few-Shot & 主な差異 \\
     \midrule
-    Spider~\citep{yu2018spider} & Yes & Yes & No & No & General-purpose benchmark \\
-    BIRD~\citep{li2024bird} & Yes & Yes & No & No & Large-scale, real-world data \\
-    DAIL-SQL~\citep{gao2023dail} & Yes & Yes & No & Yes & Skeleton-based selection \\
-    MKNA~\citep{zhuang2026mkna} & No & No (API) & Yes & No & Agent-based, no SQL \\
-    OptiMat~\citep{hu2026optimat} & No & No & Yes & No & On-demand DFT \\
-    MP MCP & Partial & No (API) & Yes & No & MCP protocol \\
-    \textbf{This work} & \textbf{Yes} & \textbf{Yes} & \textbf{Yes} & \textbf{Yes} & FK graph + materials dict \\
+    Spider~\citep{yu2018spider} & あり & あり & なし & なし & 汎用ベンチマーク \\
+    BIRD~\citep{li2024bird} & あり & あり & なし & なし & 大規模実データ \\
+    DAIL-SQL~\citep{gao2023dail} & あり & あり & なし & あり & スケルトン選択 \\
+    MKNA~\citep{zhuang2026mkna} & なし & なし（API） & あり & なし & エージェント、SQL生成なし \\
+    OptiMat~\citep{hu2026optimat} & なし & なし & あり & なし & オンデマンドDFT \\
+    MP MCP & 部分的 & なし（API） & あり & なし & MCPプロトコル \\
+    \textbf{本手法} & \textbf{あり} & \textbf{あり} & \textbf{あり} & \textbf{あり} & FKグラフ + 材料辞書 \\
     \bottomrule
   \end{tabularx}
 \end{table}
 
-\subsection{Significance for AI for Science (AI4S)}
+\subsection{AI for Science（AI4S）における意義}
 \label{sec:ai4s}
 
-The proposed method has direct implications for the AI4S paradigm
-in materials science.
-Table~\ref{tab:ai4s_workflow} maps each AI4S workflow stage
-to the role of the T2SQL method.
+本手法はAI4Sパラダイムに直接的な含意を持つ。
+表~\ref{tab:ai4s_workflow}にAI4Sワークフローの各段階とT2SQL手法の役割を示す。
 
 \begin{table}[htbp]
   \centering
-  \caption{Role of T2SQL in the AI4S materials discovery workflow.}
+  \caption{AI4S材料探索ワークフローにおけるT2SQLの役割。}
   \label{tab:ai4s_workflow}
   \small
   \begin{tabularx}{\linewidth}{lXX}
     \toprule
-    AI4S Stage & Conventional Approach & With T2SQL Method \\
+    AI4S段階 & 従来アプローチ & T2SQL手法適用時 \\
     \midrule
-    Hypothesis generation &
-      Researcher formulates query manually &
-      LLM agent generates NL query from hypothesis \\
-    Data retrieval &
-      Write SQL or API calls manually &
-      NL $\to$ SQL automatic conversion via Schema Graph \\
-    Screening / filtering &
-      Iterative SQL refinement &
-      Few-Shot RAG reuses successful query patterns \\
-    Result interpretation &
-      Manual inspection of query results &
-      Structured output with metadata (prototype, stability, properties) \\
-    Feedback / learning &
-      Knowledge stays with individual researcher &
-      Successful queries accumulate in Few-Shot store for reuse \\
+    仮説生成 &
+      研究者が手動でクエリを作成 &
+      LLMエージェントが仮説からNLクエリを生成 \\
+    データ検索 &
+      SQLまたはAPI呼び出しを手動記述 &
+      NL $\to$ SQL自動変換（Schema Graph経由） \\
+    スクリーニング &
+      反復的SQL修正 &
+      Few-Shot RAGが成功クエリパターンを再利用 \\
+    結果解釈 &
+      クエリ結果の手動検査 &
+      メタデータ付き構造化出力（プロトタイプ、安定性、物性） \\
+    フィードバック &
+      知識は個々の研究者に留まる &
+      成功クエリがFew-Shotストアに蓄積され再利用 \\
     \bottomrule
   \end{tabularx}
 \end{table}
 
-Critically, the Schema Graph architecture is \textbf{database-agnostic}:
-because FK relationships are introspected at runtime from PostgreSQL metadata
-(Section~\ref{sec:schema_graph}),
-the same engine can be deployed on any normalized materials database
-(Materials Project, AFLOW, NOMAD, or institutional databases)
-without code modifications---only the terminology dictionary needs domain adaptation.
-This portability is essential for AI4S,
-where heterogeneous data sources must be queried through a unified interface.
+重要な点として、Schema Graphアーキテクチャは\textbf{データベース非依存}である：
+FK関係は実行時にPostgreSQLメタデータからイントロスペクション（\ref{sec:schema_graph}節）
+されるため、同じエンジンを任意の正規化材料データベース
+（Materials Project、AFLOW、NOMAD、機関内データベース）に
+コード変更なしで展開できる---用語辞書のドメイン適応のみが必要である。
+このポータビリティはAI4Sにとって不可欠であり、
+異種データソースを統一インターフェースでクエリする必要がある。
 
-Furthermore, the cascading Rule-based $\to$ LLM architecture
-(Section~\ref{sec:cascade}) aligns with AI4S requirements for
-\textbf{reliability and cost efficiency}:
-routine queries are handled deterministically without external API calls,
-while complex queries leverage LLM capabilities.
-This hybrid approach ensures that AI4S pipelines can operate
-at scale without incurring prohibitive API costs or latency.
+さらに、カスケードRule-based $\to$ LLMアーキテクチャ（\ref{sec:cascade}節）は、
+AI4Sが要求する\textbf{信頼性とコスト効率}の要件に適合する：
+定型クエリは外部API呼び出しなしに決定論的に処理され、
+複雑なクエリのみがLLM能力を活用する。
+このハイブリッドアプローチにより、AI4Sパイプラインは
+禁止的なAPIコストやレイテンシなしに大規模運用が可能になる。
 
-\subsection{Future Directions}
+\subsection{今後の展望}
 
 \begin{enumerate}
-  \item \textbf{Multi-database extension}: Adapt Schema Graph to Materials Project, AFLOW schemas.
-    Dynamic FK introspection already supports this architecturally.
-  \item \textbf{AI4S agent integration}: Embed the T2SQL method as a tool
-    within autonomous materials discovery agents (e.g., via MCP protocol or function calling),
-    enabling end-to-end hypothesis $\to$ data retrieval $\to$ analysis pipelines.
-  \item \textbf{Blind user study}: Collect free-form queries from $\geq$10 materials researchers.
-  \item \textbf{Few-Shot ablation study}: Quantify Few-Shot RAG impact on LLM SQL quality.
-  \item \textbf{Interactive query refinement}: Return clarification questions for ambiguous queries
-    instead of silent fallback.
-  \item \textbf{Numeric condition parser}: Rule-based extraction of inequality conditions.
-  \item \textbf{Large-scale schema validation}: 20+ tables, 100K+ records.
-  \item \textbf{Cross-lingual embedding retrieval}: Replace TF-IDF with transformer embeddings
-    for Few-Shot similarity, improving cross-lingual matching---a prerequisite for
-    international AI4S collaboration where queries arrive in multiple languages.
+  \item \textbf{マルチデータベース拡張}：Schema GraphをMaterials Project、AFLOWスキーマに適応。
+    動的FKイントロスペクションはアーキテクチャ上これを既にサポートしている。
+  \item \textbf{AI4Sエージェント統合}：T2SQL手法を自律材料探索エージェントのツールとして
+    組み込み（MCPプロトコルやfunction calling経由）、
+    仮説 $\to$ データ検索 $\to$ 分析のエンドツーエンドパイプラインを実現。
+  \item \textbf{ブラインドユーザースタディ}：10名以上の材料研究者から自由文クエリを収集。
+  \item \textbf{Few-Shotアブレーション研究}：LLM SQL品質へのFew-Shot RAGの影響を定量化。
+  \item \textbf{対話的クエリ精緻化}：無通知フォールバックの代わりに
+    曖昧クエリに対する確認質問を返却。
+  \item \textbf{数値条件パーサー}：不等式条件のRule-based抽出。
+  \item \textbf{大規模スキーマ検証}：20テーブル以上、10万レコード以上。
+  \item \textbf{クロスリンガル埋め込み検索}：TF-IDFをtransformer埋め込みに置換し
+    Few-Shot類似度を改善---国際AI4S協力において
+    多言語クエリが到着する前提条件。
 \end{enumerate}
 
 % =====================================================================
-\section{Conclusion}
+\section{結論}
 \label{sec:conclusion}
 
-We presented a Schema-Graph-Assisted Text-to-SQL method for materials databases,
-validated on 909 OQMD intermetallic compounds (B2 and L1$_2$ types).
-The method addresses a specific gap in materials informatics:
-\textbf{schema-aware SQL generation on normalized relational databases} with
-materials-domain vocabulary.
+本研究では、909件のOQMD金属間化合物（B2およびL1$_2$型）で検証した、
+材料データベースのためのSchema Graph支援Text-to-SQL手法を提示した。
+本手法は材料インフォマティクスの特定のギャップ---
+材料ドメイン語彙を備えた\textbf{正規化リレーショナルデータベース上の
+スキーマ認識型SQL生成}---に取り組む。
 
-Key findings:
+主要な知見：
 
 \begin{enumerate}
-  \item \textbf{Schema Graph traversal} eliminates unnecessary JOINs
-    and correctly generates EXISTS subqueries for multi-element AND searches---the
-    most critical failure mode in normalized composition tables.
-  \item \textbf{Rule-based mode} achieves 39/39 test pass rate at $<$100~ms latency
-    with zero external API dependency, suitable for dictionary-covered queries.
-  \item \textbf{LLM mode (GPT-5)} extends coverage to unregistered terms,
-    numeric conditions, and negation, at $\sim$70$\times$ latency cost.
-  \item \textbf{OQMD API ground truth comparison} confirms Precision = 1.0
-    for the full data pipeline (API $\to$ RDB $\to$ NL $\to$ SQL $\to$ results),
-    validating integration correctness.
-  \item \textbf{SQL Guard} blocks all tested injection attacks and enforces
-    result set bounds.
+  \item \textbf{Schema Graph走査}は不要JOINを排除し、
+    多元素AND検索のためのEXISTS副問い合わせを正しく生成する---
+    正規化された組成テーブルにおける最も重要な故障モードの防止。
+  \item \textbf{Rule-basedモード}は外部API依存ゼロで100~ms未満のレイテンシにて
+    39/39テストパス率を達成し、辞書カバー対象クエリに適する。
+  \item \textbf{LLMモード（GPT-5）}は未登録語彙、数値条件、否定への対応を
+    約70倍のレイテンシコストで拡張する。
+  \item \textbf{OQMD API正解データ比較}はデータパイプライン全体
+    （API $\to$ RDB $\to$ NL $\to$ SQL $\to$ 結果）に対してPrecision = 1.0を確認し、
+    結合テストの正確性を検証する。
+  \item \textbf{SQLガード}はテスト対象の全インジェクション攻撃を遮断し、
+    結果セット上限を強制する。
 \end{enumerate}
 
-The cascading Rule-based $\to$ LLM architecture balances speed, cost, and coverage,
-enabling materials researchers to query normalized databases using natural language
-without SQL expertise.
+カスケードRule-based $\to$ LLMアーキテクチャは速度・コスト・カバレッジのバランスを取り、
+材料研究者がSQL専門知識なしに正規化データベースを
+自然言語でクエリすることを可能にする。
 
-In the broader context of \textbf{AI for Science (AI4S)},
-this work addresses a critical infrastructure gap:
-the ability to reliably convert natural language intent into executable database queries
-is a prerequisite for autonomous AI-driven materials discovery workflows.
-As AI agents increasingly mediate between researchers and data,
-the Schema Graph T2SQL method provides a \textbf{portable, database-agnostic foundation}
-that can be deployed across heterogeneous materials databases
-(OQMD, Materials Project, AFLOW, institutional databases)
-via runtime FK introspection.
-The Few-Shot RAG feedback loop further enables
-\textbf{continuous improvement without retraining},
-aligning with the self-improving nature of AI4S systems.
+\textbf{AI for Science（AI4S）}のより広い文脈において、
+本研究は重要なインフラストラクチャのギャップに取り組む：
+自然言語の意図を実行可能なデータベースクエリへ確実に変換する能力は、
+自律AI駆動型材料探索ワークフローの前提条件である。
+AIが研究者とデータの間を仲介する度合いが増す中、
+Schema Graph T2SQL手法は、実行時FKイントロスペクションにより
+異種材料データベース（OQMD、Materials Project、AFLOW、機関内DB）に
+展開可能な\textbf{ポータブルかつデータベース非依存の基盤}を提供する。
+Few-Shot RAGフィードバックループはさらに
+\textbf{再学習なしの継続的改善}を可能にし、
+AI4Sシステムの自己改善的性質に適合する。
 
-While the current validation is limited in scale and test case independence,
-the method establishes a reproducible framework for materials-database-specific T2SQL
-that can be extended to larger schemas, additional data sources,
-and integration into AI4S agent architectures.
+現在の検証は規模とテストケース独立性において限定的であるが、
+本手法は材料データベース特化型T2SQLの再現可能なフレームワークを確立し、
+より大規模なスキーマ、追加データソース、
+AI4Sエージェントアーキテクチャへの統合へと拡張可能である。
 
 % =====================================================================
-\section*{Acknowledgements}
+\section*{謝辞}
 
-DFT calculation data were obtained from the Open Quantum Materials Database (OQMD).
-We thank the Wolverton group at Northwestern University for developing and maintaining OQMD.
-This work was supported by NIMS.
+DFT計算データはOpen Quantum Materials Database（OQMD）から取得した。
+OQMDの開発・維持管理にあたるNorthwestern大学Wolvertonグループに感謝する。
+本研究はNIMSの支援を受けた。
 
 % =====================================================================
 \bibliographystyle{unsrtnat}
@@ -1127,67 +1105,67 @@ This work was supported by NIMS.
 \newpage
 \begin{appendices}
 
-\section{Full Test Case List}
+\section{全テストケース一覧}
 \label{app:all_tests}
 
 \begin{longtable}{llp{6cm}l}
   \toprule
-  ID & Category & Natural Language Query & Result \\
+  ID & カテゴリ & 自然言語クエリ & 結果 \\
   \midrule
   \endhead
-  A01 & normal & Show B2 compounds containing Fe & PASS \\
-  A02 & normal & Show stable L1$_2$ compounds sorted by formation energy & PASS \\
-  A03 & normal & Show compounds containing both Ni and Al & PASS \\
-  A04 & normal & Show all B2 compounds & PASS \\
-  A05 & normal & Show metastable B2 compounds & PASS \\
-  A06 & normal & Show stable L1$_2$ compounds containing Co & PASS \\
-  A07 & normal & Show B2 and L1$_2$ compounds containing Fe and Al & PASS \\
-  A08 & normal & Show $\gamma'$ compounds & PASS \\
-  A09 & normal & ニッケルを含むL1$_2$型化合物を出して & PASS \\
-  A10 & normal & Show all L1$_2$ compound data & PASS \\
-  A11 & normal & Show B2 compounds containing Ti sorted by lattice constant (desc) & PASS \\
-  A12 & normal & Show CsCl-type compounds & PASS \\
-  A13 & normal & Show Cu$_3$Au-type compounds & PASS \\
-  A14 & normal & 鉄を含むB2化合物を出して & PASS \\
-  A15 & normal & Show stable L1$_2$ compounds containing Ni & PASS \\
+  A01 & 正常系 & Feを含むB2化合物を出して & PASS \\
+  A02 & 正常系 & 安定なL1$_2$化合物を形成エネルギー順に出して & PASS \\
+  A03 & 正常系 & NiとAlの両方を含む化合物を出して & PASS \\
+  A04 & 正常系 & B2化合物の全リストを出して & PASS \\
+  A05 & 正常系 & 準安定なB2化合物を出して & PASS \\
+  A06 & 正常系 & Coを含む安定なL1$_2$化合物を出して & PASS \\
+  A07 & 正常系 & FeとAlを含むB2とL1$_2$化合物を出して & PASS \\
+  A08 & 正常系 & $\gamma'$化合物を出して & PASS \\
+  A09 & 正常系 & ニッケルを含むL1$_2$型化合物を出して & PASS \\
+  A10 & 正常系 & L1$_2$化合物の全データを出して & PASS \\
+  A11 & 正常系 & Tiを含むB2化合物を格子定数順（降順）に出して & PASS \\
+  A12 & 正常系 & CsCl型化合物を出して & PASS \\
+  A13 & 正常系 & Cu$_3$Au型化合物を出して & PASS \\
+  A14 & 正常系 & 鉄を含むB2化合物を出して & PASS \\
+  A15 & 正常系 & 安定なL1$_2$化合物でNiを含むものを出して & PASS \\
   \midrule
-  B01 & no\_results & Show B2 compounds containing Xe & PASS \\
-  B02 & no\_results & Show L1$_2$ compounds containing U and Pu & PASS \\
-  B03 & no\_results & Show B2 compounds containing Rn and Og & PASS \\
-  B04 & no\_results & Show stable B2 compounds containing Sc and Ir & PASS \\
-  B05 & no\_results & Show stable B2 compounds containing Pt and Ga & PASS \\
+  B01 & 該当なし & Xeを含むB2化合物を出して & PASS \\
+  B02 & 該当なし & UとPuを含むL1$_2$化合物を出して & PASS \\
+  B03 & 該当なし & RnとOgを含むB2化合物を出して & PASS \\
+  B04 & 該当なし & ScとIrを含む安定なB2化合物を出して & PASS \\
+  B05 & 該当なし & PtとGaを含む安定なB2化合物を出して & PASS \\
   \midrule
-  C01 & sloppy & Show stable compounds & PASS \\
-  C02 & sloppy & B2 & PASS \\
-  C03 & sloppy & Show something stable & PASS \\
-  C04 & sloppy & (empty input) & PASS \\
-  C05 & sloppy & What's the weather today? & PASS \\
-  C06 & sloppy & Fe & PASS \\
-  C07 & sloppy & lattice constant & PASS \\
-  C08 & sloppy & Stable B2 compounds with large band gap & PASS \\
-  C09 & sloppy & NiAl L12 & PASS \\
-  C10 & sloppy & B2 or L12 containing Fe & PASS \\
+  C01 & いい加減 & 安定な化合物を出して & PASS \\
+  C02 & いい加減 & B2 & PASS \\
+  C03 & いい加減 & 安定なものを出して & PASS \\
+  C04 & いい加減 & （空入力） & PASS \\
+  C05 & いい加減 & 今日の天気を教えて & PASS \\
+  C06 & いい加減 & Fe & PASS \\
+  C07 & いい加減 & 格子定数 & PASS \\
+  C08 & いい加減 & band gapが大きい安定なB2化合物 & PASS \\
+  C09 & いい加減 & NiAl L12 & PASS \\
+  C10 & いい加減 & FeのB2かL12 & PASS \\
   \midrule
-  D01 & contradictory & Stable AND metastable B2 compounds & PASS \\
-  D02 & contradictory & Fe-free Fe B2 compounds & PASS \\
+  D01 & 矛盾 & 安定かつ準安定なB2化合物 & PASS \\
+  D02 & 矛盾 & FeなしのFe B2化合物 & PASS \\
   \midrule
-  E01 & rejection & DROP TABLE material\_entry; & PASS \\
-  E02 & rejection & SELECT *; DELETE FROM composition; & PASS \\
-  E03 & rejection & B2 compounds; DROP TABLE structure; & PASS \\
-  E04 & rejection & SELECT * FROM secret\_passwords & PASS \\
-  E05 & rejection & INSERT INTO material\_entry VALUES (...) & PASS \\
+  E01 & 拒否 & DROP TABLE material\_entry; & PASS \\
+  E02 & 拒否 & SELECT *; DELETE FROM composition; & PASS \\
+  E03 & 拒否 & B2化合物; DROP TABLE structure; & PASS \\
+  E04 & 拒否 & SELECT * FROM secret\_passwords & PASS \\
+  E05 & 拒否 & INSERT INTO material\_entry VALUES (...) & PASS \\
   \midrule
-  F01 & safety & SELECT entry\_id FROM material\_entry & PASS \\
-  F02 & safety & UPDATE material\_entry SET formula='X' & PASS \\
+  F01 & 安全性 & SELECT entry\_id FROM material\_entry & PASS \\
+  F02 & 安全性 & UPDATE material\_entry SET formula='X' & PASS \\
   \bottomrule
 \end{longtable}
 
-\section{Generated SQL Examples}
+\section{生成SQL例}
 \label{app:sql_examples}
 
-\subsection{A01: ``Show B2 compounds containing Fe''}
+\subsection{A01: 「Feを含むB2化合物を出して」}
 
-\paragraph{Naive (Level 0):}
+\paragraph{Naive（Level 0）：}
 \begin{lstlisting}
 SELECT m.entry_id, m.formula, s.prototype
 FROM material_entry m
@@ -1198,10 +1176,10 @@ FROM material_entry m
     JOIN calculated_property cp
       ON cp.calculation_id = calc.calculation_id
 WHERE s.prototype = 'B2' AND c.element = 'Fe';
--- Issues: 3 unnecessary JOINs, no LIMIT, no DISTINCT
+-- 問題: 不要JOIN 3件、LIMIT/DISTINCTなし
 \end{lstlisting}
 
-\paragraph{Schema Graph + Rule-based (Level 1):}
+\paragraph{Schema Graph + Rule-based（Level 1）：}
 \begin{lstlisting}
 SELECT DISTINCT m.entry_id, m.formula,
     s.prototype, s.lattice_a, s.space_group
@@ -1211,10 +1189,10 @@ FROM material_entry m
 WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')
     AND c.element = 'Fe'
 LIMIT 100;
--- Optimal: 2 JOINs only, DISTINCT, LIMIT
+-- 最適: 必要な2 JOINのみ、DISTINCT、LIMIT付き
 \end{lstlisting}
 
-\paragraph{Schema Graph + GPT-5 (Level 2):}
+\paragraph{Schema Graph + GPT-5（Level 2）：}
 \begin{lstlisting}
 SELECT DISTINCT m.entry_id, m.formula,
     s.prototype, s.lattice_a, s.space_group
@@ -1224,23 +1202,23 @@ JOIN composition c ON c.entry_id = m.entry_id
 WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')
   AND c.element = 'Fe'
 LIMIT 100;
--- LLM generates equivalent SQL within Schema Graph constraints
+-- LLMがSchema Graph制約内で同等SQLを生成
 \end{lstlisting}
 
-\subsection{A03: ``Show compounds containing both Ni and Al''}
+\subsection{A03: 「NiとAlの両方を含む化合物を出して」}
 
-\paragraph{Naive (Level 0):}
+\paragraph{Naive（Level 0）：}
 \begin{lstlisting}
 SELECT m.entry_id, m.formula
 FROM material_entry m
     JOIN composition c ON c.entry_id = m.entry_id
-    ...(all table JOINs)...
+    ...(全テーブルJOIN)...
 WHERE c.element = 'Ni' AND c.element = 'Al';
--- FATAL: Single row cannot satisfy both conditions
--- -> Always returns 0 rows
+-- 致命的: 単一行が両条件を同時に満たすことは不可能
+-- -> 常に0行を返す
 \end{lstlisting}
 
-\paragraph{Schema Graph + Rule-based (Level 1):}
+\paragraph{Schema Graph + Rule-based（Level 1）：}
 \begin{lstlisting}
 SELECT DISTINCT m.entry_id, m.formula
 FROM material_entry m
@@ -1251,7 +1229,7 @@ WHERE EXISTS (
     SELECT 1 FROM composition
     WHERE entry_id = m.entry_id AND element = 'Al')
 LIMIT 100;
--- Correct multi-element AND via EXISTS subqueries
+-- EXISTS副問い合わせによる正確な多元素AND
 \end{lstlisting}
 
 \end{appendices}
