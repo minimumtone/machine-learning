@@ -1,0 +1,3456 @@
+{
+  "summary": {
+    "total": 39,
+    "passed": 39,
+    "failed": 0,
+    "pass_rate": 100.0,
+    "categories": {
+      "normal": {
+        "total": 15,
+        "passed": 15,
+        "pass_rate": 100.0
+      },
+      "no_results": {
+        "total": 5,
+        "passed": 5,
+        "pass_rate": 100.0
+      },
+      "sloppy": {
+        "total": 10,
+        "passed": 10,
+        "pass_rate": 100.0
+      },
+      "contradictory": {
+        "total": 2,
+        "passed": 2,
+        "pass_rate": 100.0
+      },
+      "rejection": {
+        "total": 5,
+        "passed": 5,
+        "pass_rate": 100.0
+      },
+      "safety": {
+        "total": 2,
+        "passed": 2,
+        "pass_rate": 100.0
+      }
+    },
+    "few_shot_store": {
+      "total_examples": 11,
+      "sources": {
+        "paper:hea_lattice_prediction.tex": 4,
+        "seed:curated": 7
+      }
+    }
+  },
+  "results": [
+    {
+      "test_id": "A01",
+      "category": "normal",
+      "nl_query": "Feを含むB2化合物を出して",
+      "notes": "Single element + single prototype",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE s.prototype = 'B2' AND c.element = 'Fe';",
+        "conditions": {
+          "prototype": "B2",
+          "contains_elements": [
+            "Fe"
+          ]
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, phase_stability",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND c.element = 'Fe'\nLIMIT 100;",
+        "conditions": {
+          "prototype": "B2",
+          "contains_elements": [
+            "Fe"
+          ]
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "Feを含むB2化合物を出して",
+          "Coを含む安定なL1₂化合物を出して",
+          "Tiを含むL1₂化合物の形成エネルギーを出して"
+        ],
+        "similarities": [
+          1.0,
+          0.531,
+          0.491
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 16,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group"
+        ],
+        "errors": [],
+        "latency_ms": 13,
+        "sample_rows": [
+          [
+            "oqmd_B2_10127",
+            "FeCo",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_110794",
+            "AlFe",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_110795",
+            "AlFe",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_18839",
+            "FeRh",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_19423",
+            "TiFe",
+            "B2",
+            null,
+            "Pm-3m"
+          ]
+        ]
+      },
+      "oqmd_comparison": {
+        "baseline_count": 0,
+        "db_count": 16,
+        "intersection": 0,
+        "match_rate": 0.0,
+        "baseline_only": [],
+        "db_only": [
+          "AlFe",
+          "FeCo",
+          "FeN",
+          "FeRh",
+          "FeSi",
+          "TiFe",
+          "VFe"
+        ]
+      },
+      "passed": true,
+      "pass_reason": "rows=16, expected >0",
+      "elapsed_ms": 382
+    },
+    {
+      "test_id": "A02",
+      "category": "normal",
+      "nl_query": "安定なL1₂化合物を形成エネルギーが低い順に出して",
+      "notes": "Stability + sort",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE s.prototype = 'L12' AND ps.energy_above_hull <= 0.001\nORDER BY phase_stability.formation_energy_per_atom ASC;",
+        "conditions": {
+          "prototype": "L12",
+          "stability": "stable",
+          "properties": [
+            "phase_stability.formation_energy_per_atom"
+          ],
+          "sort_by": "phase_stability.formation_energy_per_atom",
+          "sort_order": "asc"
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, composition",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+        "conditions": {
+          "prototype": "L12",
+          "stability": "stable",
+          "properties": [
+            "phase_stability.formation_energy_per_atom"
+          ],
+          "sort_by": "phase_stability.formation_energy_per_atom",
+          "sort_order": "asc"
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "安定なL1₂化合物を形成エネルギーが低い順に出して",
+          "安定なL1₂型化合物を形成エネルギーが低い順に出して",
+          "B2化合物をバンドギャップが大きい順に出して"
+        ],
+        "similarities": [
+          1.0,
+          0.894,
+          0.382
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 88,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group",
+          "formation_energy_per_atom",
+          "energy_above_hull",
+          "band_gap"
+        ],
+        "errors": [],
+        "latency_ms": 10,
+        "sample_rows": [
+          [
+            "oqmd_L12_18031",
+            "YPt3",
+            "L12",
+            null,
+            "Pm-3m",
+            -0.98113342625,
+            0.0,
+            0.0
+          ],
+          [
+            "oqmd_L12_18320",
+            "ErPd3",
+            "L12",
+            null,
+            "Pm-3m",
+            -0.914086197500001,
+            0.0,
+            0.0
+          ],
+          [
+            "oqmd_L12_17908",
+            "PaRh3",
+            "L12",
+            null,
+            "Pm-3m",
+            -0.899696755000001,
+            1.096999999972148e-05,
+            0.0
+          ],
+          [
+            "oqmd_L12_17945",
+            "ScPd3",
+            "L12",
+            null,
+            "Pm-3m",
+            -0.85439362875,
+            0.0,
+            0.0
+          ],
+          [
+            "oqmd_L12_17507",
+            "PaIr3",
+            "L12",
+            null,
+            "Pm-3m",
+            -0.85001516,
+            0.0,
+            0.0
+          ]
+        ]
+      },
+      "oqmd_comparison": {
+        "baseline_count": 0,
+        "db_count": 88,
+        "intersection": 0,
+        "match_rate": 0.0,
+        "baseline_only": [],
+        "db_only": [
+          "AlNi3",
+          "CaSn3",
+          "CaTl3",
+          "Ce3In",
+          "Ce3Tl",
+          "CeIn3",
+          "CePb3",
+          "CePd3",
+          "CeSn3",
+          "CrRh3"
+        ]
+      },
+      "passed": true,
+      "pass_reason": "rows=88, expected >0",
+      "elapsed_ms": 74
+    },
+    {
+      "test_id": "A03",
+      "category": "normal",
+      "nl_query": "NiとAlを両方含む化合物を出して",
+      "notes": "Multi-element AND with EXISTS",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE c.element = 'Ni' AND c.element = 'Al';",
+        "conditions": {
+          "contains_elements": [
+            "Ni",
+            "Al"
+          ]
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, phase_stability, structure",
+          "Multi-element AND on same composition row — will return 0 rows (should use EXISTS subqueries for ['Ni', 'Al'])",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\nWHERE\n    EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni')\n    AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al')\nLIMIT 100;",
+        "conditions": {
+          "contains_elements": [
+            "Ni",
+            "Al"
+          ]
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "NiとAlを両方含むB2とL1₂化合物を出して",
+          "Feを含むB2化合物を出して",
+          "Coを含む安定なL1₂化合物を出して"
+        ],
+        "similarities": [
+          0.908,
+          0.348,
+          0.309
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 4,
+        "columns": [
+          "entry_id",
+          "formula"
+        ],
+        "errors": [],
+        "latency_ms": 8,
+        "sample_rows": [
+          [
+            "oqmd_B2_10516",
+            "AlNi"
+          ],
+          [
+            "oqmd_B2_94913",
+            "AlNi"
+          ],
+          [
+            "oqmd_B2_94919",
+            "AlNi"
+          ],
+          [
+            "oqmd_L12_17890",
+            "AlNi3"
+          ]
+        ]
+      },
+      "passed": true,
+      "pass_reason": "rows=4, expected >0",
+      "elapsed_ms": 43
+    },
+    {
+      "test_id": "A04",
+      "category": "normal",
+      "nl_query": "B2化合物の全リストを出して",
+      "notes": "Full prototype listing",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE s.prototype = 'B2';",
+        "conditions": {
+          "prototype": "B2"
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, composition, phase_stability",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+        "conditions": {
+          "prototype": "B2"
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "安定なB2化合物をリストして",
+          "OQMDのB2化合物の形成エネルギーを出して",
+          "準安定なB2化合物を出して"
+        ],
+        "similarities": [
+          0.537,
+          0.361,
+          0.311
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 100,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group"
+        ],
+        "errors": [],
+        "latency_ms": 8,
+        "sample_rows": [
+          [
+            "oqmd_B2_10879",
+            "BeCu",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_89126",
+            "DyPd",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_11171",
+            "TmIn",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_89861",
+            "MnHg",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_10639",
+            "LaAg",
+            "B2",
+            null,
+            "Pm-3m"
+          ]
+        ]
+      },
+      "oqmd_comparison": {
+        "baseline_count": 636,
+        "db_count": 100,
+        "intersection": 0,
+        "match_rate": 0.0,
+        "baseline_only": [
+          ""
+        ],
+        "db_only": [
+          "AlAu",
+          "AlRu",
+          "ArMg",
+          "BaC",
+          "BaN",
+          "BeCu",
+          "CaAl",
+          "CaS",
+          "CaSe",
+          "CdAg"
+        ]
+      },
+      "passed": true,
+      "pass_reason": "rows=100, expected >0",
+      "elapsed_ms": 42
+    },
+    {
+      "test_id": "A05",
+      "category": "normal",
+      "nl_query": "準安定なB2化合物を出して",
+      "notes": "Metastable filter",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE s.prototype = 'B2' AND ps.energy_above_hull <= 0.05;",
+        "conditions": {
+          "prototype": "B2",
+          "stability": "metastable"
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, composition",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.05\nLIMIT 100;",
+        "conditions": {
+          "prototype": "B2",
+          "stability": "metastable"
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "準安定なB2化合物を出して",
+          "安定なB2化合物をリストして",
+          "Feを含むB2化合物を出して"
+        ],
+        "similarities": [
+          1.0,
+          0.457,
+          0.376
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 100,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group",
+          "formation_energy_per_atom",
+          "energy_above_hull",
+          "band_gap"
+        ],
+        "errors": [],
+        "latency_ms": 10,
+        "sample_rows": [
+          [
+            "oqmd_B2_17443",
+            "YHg",
+            "B2",
+            null,
+            "Pm-3m",
+            -0.480003724983134,
+            0.0018111350000000193,
+            0.0
+          ],
+          [
+            "oqmd_B2_18057",
+            "SmRh",
+            "B2",
+            null,
+            "Pm-3m",
+            -0.715152323750001,
+            0.0004242099999989257,
+            0.0
+          ],
+          [
+            "oqmd_B2_20721",
+            "YCu",
+            "B2",
+            null,
+            "Pm-3m",
+            -0.2439484175,
+            0.01608169875000029,
+            0.0
+          ],
+          [
+            "oqmd_B2_29537",
+            "ZrCo",
+            "B2",
+            null,
+            "Pm-3m",
+            -0.287899014999999,
+            0.04674955125000041,
+            0.0
+          ],
+          [
+            "oqmd_B2_18172",
+            "YTl",
+            "B2",
+            null,
+            "Pm-3m",
+            -0.37295919,
+            0.0021475850000000074,
+            0.0
+          ]
+        ]
+      },
+      "oqmd_comparison": {
+        "baseline_count": 0,
+        "db_count": 100,
+        "intersection": 0,
+        "match_rate": 0.0,
+        "baseline_only": [],
+        "db_only": [
+          "AlFe",
+          "AlRh",
+          "BaCd",
+          "BeCo",
+          "BeNi",
+          "CaHg",
+          "CaMg",
+          "CeCd",
+          "CeHg",
+          "CsI"
+        ]
+      },
+      "passed": true,
+      "pass_reason": "rows=100, expected >0",
+      "elapsed_ms": 65
+    },
+    {
+      "test_id": "A06",
+      "category": "normal",
+      "nl_query": "Coを含む安定なL1₂化合物を出して",
+      "notes": "Element + stability",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE s.prototype = 'L12' AND c.element = 'Co' AND ps.energy_above_hull <= 0.001;",
+        "conditions": {
+          "prototype": "L12",
+          "contains_elements": [
+            "Co"
+          ],
+          "stability": "stable"
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND c.element = 'Co'\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "conditions": {
+          "prototype": "L12",
+          "contains_elements": [
+            "Co"
+          ],
+          "stability": "stable"
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "Coを含む安定なL1₂化合物を出して",
+          "Feを含むB2化合物を出して",
+          "Tiを含むL1₂化合物の形成エネルギーを出して"
+        ],
+        "similarities": [
+          1.0,
+          0.535,
+          0.509
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 1,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group",
+          "formation_energy_per_atom",
+          "energy_above_hull",
+          "band_gap"
+        ],
+        "errors": [],
+        "latency_ms": 10,
+        "sample_rows": [
+          [
+            "oqmd_L12_17121",
+            "TaCo3",
+            "L12",
+            null,
+            "Pm-3m",
+            -0.243844279999999,
+            0.0009495091666670008,
+            0.0
+          ]
+        ]
+      },
+      "oqmd_comparison": {
+        "baseline_count": 0,
+        "db_count": 1,
+        "intersection": 0,
+        "match_rate": 0.0,
+        "baseline_only": [],
+        "db_only": [
+          "TaCo3"
+        ]
+      },
+      "passed": true,
+      "pass_reason": "rows=1, expected >0",
+      "elapsed_ms": 66
+    },
+    {
+      "test_id": "A07",
+      "category": "normal",
+      "nl_query": "FeとAlを含むB2とL1₂化合物を出して",
+      "notes": "Multi-element + multi-prototype",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.prototype = 'B2') AND c.element = 'Al' AND c.element = 'Fe';",
+        "conditions": {
+          "prototype": [
+            "L12",
+            "B2"
+          ],
+          "contains_elements": [
+            "Al",
+            "Fe"
+          ]
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, phase_stability",
+          "Multi-element AND on same composition row — will return 0 rows (should use EXISTS subqueries for ['Al', 'Fe'])",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12' OR s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al')\n    AND EXISTS (SELECT 1 FROM composition c_fe WHERE c_fe.entry_id = m.entry_id AND c_fe.element = 'Fe')\nLIMIT 100;",
+        "conditions": {
+          "prototype": [
+            "L12",
+            "B2"
+          ],
+          "contains_elements": [
+            "Al",
+            "Fe"
+          ]
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "NiとAlを両方含むB2とL1₂化合物を出して",
+          "Feを含むB2化合物を出して",
+          "Coを含む安定なL1₂化合物を出して"
+        ],
+        "similarities": [
+          0.776,
+          0.64,
+          0.394
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 4,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group"
+        ],
+        "errors": [],
+        "latency_ms": 10,
+        "sample_rows": [
+          [
+            "oqmd_B2_110794",
+            "AlFe",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_110795",
+            "AlFe",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_20929",
+            "AlFe",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_54708",
+            "AlFe",
+            "B2",
+            null,
+            "Pm-3m"
+          ]
+        ]
+      },
+      "passed": true,
+      "pass_reason": "rows=4, expected >0",
+      "elapsed_ms": 46
+    },
+    {
+      "test_id": "A08",
+      "category": "normal",
+      "nl_query": "γ'化合物のリストを出して",
+      "notes": "gamma prime notation → L12",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE s.prototype = 'L12';",
+        "conditions": {
+          "prototype": "L12"
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, composition, phase_stability",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLIMIT 100;",
+        "conditions": {
+          "prototype": "L12"
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "安定なB2化合物をリストして",
+          "OQMDのB2化合物の形成エネルギーを出して",
+          "Materials ProjectのL1₂化合物の格子定数を出して"
+        ],
+        "similarities": [
+          0.565,
+          0.4,
+          0.398
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 100,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group"
+        ],
+        "errors": [],
+        "latency_ms": 9,
+        "sample_rows": [
+          [
+            "oqmd_L12_11162",
+            "SmIn3",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_30346",
+            "ScGa3",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_18171",
+            "UTl3",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_18314",
+            "DyPd3",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_18135",
+            "YSn3",
+            "L12",
+            null,
+            "Pm-3m"
+          ]
+        ]
+      },
+      "passed": true,
+      "pass_reason": "rows=100, expected >0",
+      "elapsed_ms": 46
+    },
+    {
+      "test_id": "A09",
+      "category": "normal",
+      "nl_query": "ニッケルを含むL1₂型化合物を出して",
+      "notes": "Japanese element name",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE s.prototype = 'L12' AND c.element = 'Ni';",
+        "conditions": {
+          "prototype": "L12",
+          "contains_elements": [
+            "Ni"
+          ]
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, phase_stability",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND c.element = 'Ni'\nLIMIT 100;",
+        "conditions": {
+          "prototype": "L12",
+          "contains_elements": [
+            "Ni"
+          ]
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "Coを含む安定なL1₂化合物を出して",
+          "Feを含むB2化合物を出して",
+          "Tiを含むL1₂化合物の形成エネルギーを出して"
+        ],
+        "similarities": [
+          0.499,
+          0.479,
+          0.461
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 9,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group"
+        ],
+        "errors": [],
+        "latency_ms": 10,
+        "sample_rows": [
+          [
+            "oqmd_L12_11117",
+            "InNi3",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_17342",
+            "Ni3Ge",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_17672",
+            "MnNi3",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_17803",
+            "SiNi3",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_17808",
+            "Ni3Sn",
+            "L12",
+            null,
+            "Pm-3m"
+          ]
+        ]
+      },
+      "passed": true,
+      "pass_reason": "rows=9, expected >0",
+      "elapsed_ms": 46
+    },
+    {
+      "test_id": "A10",
+      "category": "normal",
+      "nl_query": "L1₂化合物の全データを出して",
+      "notes": "Full L12 listing",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE s.prototype = 'L12';",
+        "conditions": {
+          "prototype": "L12"
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, composition, phase_stability",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLIMIT 100;",
+        "conditions": {
+          "prototype": "L12"
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "Tiを含むL1₂化合物の形成エネルギーを出して",
+          "Materials ProjectのL1₂化合物の格子定数を出して",
+          "OQMDのB2化合物の形成エネルギーを出して"
+        ],
+        "similarities": [
+          0.357,
+          0.345,
+          0.292
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 100,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group"
+        ],
+        "errors": [],
+        "latency_ms": 9,
+        "sample_rows": [
+          [
+            "oqmd_L12_11162",
+            "SmIn3",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_30346",
+            "ScGa3",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_18171",
+            "UTl3",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_18314",
+            "DyPd3",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_18135",
+            "YSn3",
+            "L12",
+            null,
+            "Pm-3m"
+          ]
+        ]
+      },
+      "oqmd_comparison": {
+        "baseline_count": 273,
+        "db_count": 100,
+        "intersection": 0,
+        "match_rate": 0.0,
+        "baseline_only": [
+          ""
+        ],
+        "db_only": [
+          "Ag3Pt",
+          "AlPt3",
+          "Cd3In",
+          "Ce3Al",
+          "Ce3Ga",
+          "Ce3In",
+          "Ce3Pb",
+          "CePb3",
+          "CrPt3",
+          "CrRh3"
+        ]
+      },
+      "passed": true,
+      "pass_reason": "rows=100, expected >0",
+      "elapsed_ms": 53
+    },
+    {
+      "test_id": "A11",
+      "category": "normal",
+      "nl_query": "Tiを含むB2化合物を格子定数が大きい順に出して",
+      "notes": "Sort by lattice_a DESC",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE s.prototype = 'B2' AND c.element = 'Ti'\nORDER BY structure.lattice_a DESC;",
+        "conditions": {
+          "prototype": "B2",
+          "contains_elements": [
+            "Ti"
+          ],
+          "properties": [
+            "structure.lattice_a"
+          ],
+          "sort_by": "structure.lattice_a",
+          "sort_order": "desc"
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, phase_stability",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND c.element = 'Ti'\nORDER BY s.lattice_a DESC\nLIMIT 100;",
+        "conditions": {
+          "prototype": "B2",
+          "contains_elements": [
+            "Ti"
+          ],
+          "properties": [
+            "structure.lattice_a"
+          ],
+          "sort_by": "structure.lattice_a",
+          "sort_order": "desc"
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "B2化合物をバンドギャップが大きい順に出して",
+          "Tiを含むL1₂化合物の形成エネルギーを出して",
+          "Feを含むB2化合物を出して"
+        ],
+        "similarities": [
+          0.695,
+          0.474,
+          0.459
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 30,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group"
+        ],
+        "errors": [],
+        "latency_ms": 9,
+        "sample_rows": [
+          [
+            "oqmd_B2_100359",
+            "TiNi",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_107704",
+            "TiNi",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_10813",
+            "TiAu",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_10906",
+            "TiBe",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_109147",
+            "TiPd",
+            "B2",
+            null,
+            "Pm-3m"
+          ]
+        ]
+      },
+      "passed": true,
+      "pass_reason": "rows=30, expected >0",
+      "elapsed_ms": 44
+    },
+    {
+      "test_id": "A12",
+      "category": "normal",
+      "nl_query": "CsCl型化合物を出して",
+      "notes": "CsCl alias for B2",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE s.prototype = 'B2';",
+        "conditions": {
+          "prototype": "B2"
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, composition, phase_stability",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+        "conditions": {
+          "prototype": "B2"
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "安定なL1₂型化合物を形成エネルギーが低い順に出して",
+          "Feを含むB2化合物を出して",
+          "準安定なB2化合物を出して"
+        ],
+        "similarities": [
+          0.251,
+          0.158,
+          0.145
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 100,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group"
+        ],
+        "errors": [],
+        "latency_ms": 9,
+        "sample_rows": [
+          [
+            "oqmd_B2_10879",
+            "BeCu",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_89126",
+            "DyPd",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_11171",
+            "TmIn",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_89861",
+            "MnHg",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_10639",
+            "LaAg",
+            "B2",
+            null,
+            "Pm-3m"
+          ]
+        ]
+      },
+      "passed": true,
+      "pass_reason": "rows=100, expected >0",
+      "elapsed_ms": 44
+    },
+    {
+      "test_id": "A13",
+      "category": "normal",
+      "nl_query": "Cu₃Au型化合物を出して",
+      "notes": "Cu3Au alias for L12",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE s.prototype = 'L12' AND c.element = 'Cu';",
+        "conditions": {
+          "prototype": "L12",
+          "contains_elements": [
+            "Cu"
+          ]
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, phase_stability",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND c.element = 'Cu'\nLIMIT 100;",
+        "conditions": {
+          "prototype": "L12",
+          "contains_elements": [
+            "Cu"
+          ]
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "安定なL1₂型化合物を形成エネルギーが低い順に出して",
+          "Feを含むB2化合物を出して",
+          "準安定なB2化合物を出して"
+        ],
+        "similarities": [
+          0.251,
+          0.158,
+          0.145
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 6,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group"
+        ],
+        "errors": [],
+        "latency_ms": 9,
+        "sample_rows": [
+          [
+            "oqmd_L12_10123",
+            "CuAu3",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_17159",
+            "Cu3Pd",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_22409",
+            "AlCu3",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_29766",
+            "Cu3Pt",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_52896",
+            "Cu3N",
+            "L12",
+            null,
+            "Pm-3m"
+          ]
+        ]
+      },
+      "passed": true,
+      "pass_reason": "rows=6, expected >0",
+      "elapsed_ms": 44
+    },
+    {
+      "test_id": "A14",
+      "category": "normal",
+      "nl_query": "鉄を含むB2化合物を出して",
+      "notes": "Japanese element name (iron)",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE s.prototype = 'B2' AND c.element = 'Fe';",
+        "conditions": {
+          "prototype": "B2",
+          "contains_elements": [
+            "Fe"
+          ]
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, phase_stability",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND c.element = 'Fe'\nLIMIT 100;",
+        "conditions": {
+          "prototype": "B2",
+          "contains_elements": [
+            "Fe"
+          ]
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "Feを含むB2化合物を出して",
+          "Coを含む安定なL1₂化合物を出して",
+          "Tiを含むL1₂化合物の形成エネルギーを出して"
+        ],
+        "similarities": [
+          0.667,
+          0.507,
+          0.469
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 16,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group"
+        ],
+        "errors": [],
+        "latency_ms": 9,
+        "sample_rows": [
+          [
+            "oqmd_B2_10127",
+            "FeCo",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_110794",
+            "AlFe",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_110795",
+            "AlFe",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_18839",
+            "FeRh",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_19423",
+            "TiFe",
+            "B2",
+            null,
+            "Pm-3m"
+          ]
+        ]
+      },
+      "passed": true,
+      "pass_reason": "rows=16, expected >0",
+      "elapsed_ms": 42
+    },
+    {
+      "test_id": "A15",
+      "category": "normal",
+      "nl_query": "安定なL1₂化合物でNiを含むものを出して",
+      "notes": "Stability + element",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE s.prototype = 'L12' AND c.element = 'Ni' AND ps.energy_above_hull <= 0.001;",
+        "conditions": {
+          "prototype": "L12",
+          "contains_elements": [
+            "Ni"
+          ],
+          "stability": "stable"
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND c.element = 'Ni'\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "conditions": {
+          "prototype": "L12",
+          "contains_elements": [
+            "Ni"
+          ],
+          "stability": "stable"
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "Coを含む安定なL1₂化合物を出して",
+          "安定なB2化合物をリストして",
+          "Tiを含むL1₂化合物の形成エネルギーを出して"
+        ],
+        "similarities": [
+          0.493,
+          0.323,
+          0.297
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 6,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group",
+          "formation_energy_per_atom",
+          "energy_above_hull",
+          "band_gap"
+        ],
+        "errors": [],
+        "latency_ms": 10,
+        "sample_rows": [
+          [
+            "oqmd_L12_17672",
+            "MnNi3",
+            "L12",
+            null,
+            "Pm-3m",
+            -0.111224635948275,
+            0.0,
+            0.0
+          ],
+          [
+            "oqmd_L12_17803",
+            "SiNi3",
+            "L12",
+            null,
+            "Pm-3m",
+            -0.46466979375,
+            0.0,
+            0.0
+          ],
+          [
+            "oqmd_L12_17808",
+            "Ni3Sn",
+            "L12",
+            null,
+            "Pm-3m",
+            -0.224211121712801,
+            0.0,
+            0.0
+          ],
+          [
+            "oqmd_L12_17890",
+            "AlNi3",
+            "L12",
+            null,
+            "Pm-3m",
+            -0.438648115,
+            0.0,
+            0.0
+          ],
+          [
+            "oqmd_L12_30308",
+            "GaNi3",
+            "L12",
+            null,
+            "Pm-3m",
+            -0.29749693875,
+            5.1795000000243174e-05,
+            0.0
+          ]
+        ]
+      },
+      "oqmd_comparison": {
+        "baseline_count": 0,
+        "db_count": 6,
+        "intersection": 0,
+        "match_rate": 0.0,
+        "baseline_only": [],
+        "db_only": [
+          "AlNi3",
+          "FeNi3",
+          "GaNi3",
+          "MnNi3",
+          "Ni3Sn",
+          "SiNi3"
+        ]
+      },
+      "passed": true,
+      "pass_reason": "rows=6, expected >0",
+      "elapsed_ms": 66
+    },
+    {
+      "test_id": "B01",
+      "category": "no_results",
+      "nl_query": "Xeを含むB2化合物を出して",
+      "notes": "Xe not in dictionary → not extracted → returns all B2 (correct: no false filter)",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE s.prototype = 'B2';",
+        "conditions": {
+          "prototype": "B2"
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, composition, phase_stability",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+        "conditions": {
+          "prototype": "B2"
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "Feを含むB2化合物を出して",
+          "Coを含む安定なL1₂化合物を出して",
+          "Tiを含むL1₂化合物の形成エネルギーを出して"
+        ],
+        "similarities": [
+          0.667,
+          0.507,
+          0.469
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 100,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group"
+        ],
+        "errors": [],
+        "latency_ms": 8,
+        "sample_rows": [
+          [
+            "oqmd_B2_10879",
+            "BeCu",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_89126",
+            "DyPd",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_11171",
+            "TmIn",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_89861",
+            "MnHg",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_10639",
+            "LaAg",
+            "B2",
+            null,
+            "Pm-3m"
+          ]
+        ]
+      },
+      "passed": true,
+      "pass_reason": "success=True, sql_generated=True",
+      "elapsed_ms": 43
+    },
+    {
+      "test_id": "B02",
+      "category": "no_results",
+      "nl_query": "UとPuを含むL1₂化合物を出して",
+      "notes": "U/Pu not in dictionary → not extracted → returns all L12 (no false filter)",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE s.prototype = 'L12';",
+        "conditions": {
+          "prototype": "L12"
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, composition, phase_stability",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLIMIT 100;",
+        "conditions": {
+          "prototype": "L12"
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "NiとAlを両方含むB2とL1₂化合物を出して",
+          "Coを含む安定なL1₂化合物を出して",
+          "Feを含むB2化合物を出して"
+        ],
+        "similarities": [
+          0.495,
+          0.469,
+          0.456
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 100,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group"
+        ],
+        "errors": [],
+        "latency_ms": 8,
+        "sample_rows": [
+          [
+            "oqmd_L12_11162",
+            "SmIn3",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_30346",
+            "ScGa3",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_18171",
+            "UTl3",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_18314",
+            "DyPd3",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_18135",
+            "YSn3",
+            "L12",
+            null,
+            "Pm-3m"
+          ]
+        ]
+      },
+      "passed": true,
+      "pass_reason": "success=True, sql_generated=True",
+      "elapsed_ms": 42
+    },
+    {
+      "test_id": "B03",
+      "category": "no_results",
+      "nl_query": "RnとOgを含むB2化合物を出して",
+      "notes": "Rn/Og not in dictionary → not extracted → returns all B2 (no false filter)",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE s.prototype = 'B2';",
+        "conditions": {
+          "prototype": "B2"
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, composition, phase_stability",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+        "conditions": {
+          "prototype": "B2"
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "Feを含むB2化合物を出して",
+          "NiとAlを両方含むB2とL1₂化合物を出して",
+          "Coを含む安定なL1₂化合物を出して"
+        ],
+        "similarities": [
+          0.531,
+          0.495,
+          0.404
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 100,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group"
+        ],
+        "errors": [],
+        "latency_ms": 8,
+        "sample_rows": [
+          [
+            "oqmd_B2_10879",
+            "BeCu",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_89126",
+            "DyPd",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_11171",
+            "TmIn",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_89861",
+            "MnHg",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_10639",
+            "LaAg",
+            "B2",
+            null,
+            "Pm-3m"
+          ]
+        ]
+      },
+      "passed": true,
+      "pass_reason": "success=True, sql_generated=True",
+      "elapsed_ms": 43
+    },
+    {
+      "test_id": "B04",
+      "category": "no_results",
+      "nl_query": "ScとIrを含む安定なB2化合物を出して",
+      "notes": "ScIr B2 stable exists in OQMD (1 entry)",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE s.prototype = 'B2' AND c.element = 'Ir' AND c.element = 'Sc' AND ps.energy_above_hull <= 0.001;",
+        "conditions": {
+          "prototype": "B2",
+          "contains_elements": [
+            "Ir",
+            "Sc"
+          ],
+          "stability": "stable"
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation",
+          "Multi-element AND on same composition row — will return 0 rows (should use EXISTS subqueries for ['Ir', 'Sc'])",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND EXISTS (SELECT 1 FROM composition c_ir WHERE c_ir.entry_id = m.entry_id AND c_ir.element = 'Ir')\n    AND EXISTS (SELECT 1 FROM composition c_sc WHERE c_sc.entry_id = m.entry_id AND c_sc.element = 'Sc')\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "conditions": {
+          "prototype": "B2",
+          "contains_elements": [
+            "Ir",
+            "Sc"
+          ],
+          "stability": "stable"
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "Coを含む安定なL1₂化合物を出して",
+          "Feを含むB2化合物を出して",
+          "NiとAlを両方含むB2とL1₂化合物を出して"
+        ],
+        "similarities": [
+          0.539,
+          0.495,
+          0.462
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 1,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group",
+          "formation_energy_per_atom",
+          "energy_above_hull",
+          "band_gap"
+        ],
+        "errors": [],
+        "latency_ms": 10,
+        "sample_rows": [
+          [
+            "oqmd_B2_17512",
+            "ScIr",
+            "B2",
+            null,
+            "Pm-3m",
+            -1.0301461825,
+            0.0006342399999998971,
+            0.0
+          ]
+        ]
+      },
+      "passed": true,
+      "pass_reason": "rows=1, expected >0",
+      "elapsed_ms": 63
+    },
+    {
+      "test_id": "B05",
+      "category": "no_results",
+      "nl_query": "PtとGaを含む安定なB2化合物を出して",
+      "notes": "PtGa B2 stable: likely 0 in OQMD data",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE s.prototype = 'B2' AND c.element = 'Pt' AND c.element = 'Ga' AND ps.energy_above_hull <= 0.001;",
+        "conditions": {
+          "prototype": "B2",
+          "contains_elements": [
+            "Pt",
+            "Ga"
+          ],
+          "stability": "stable"
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation",
+          "Multi-element AND on same composition row — will return 0 rows (should use EXISTS subqueries for ['Pt', 'Ga'])",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND EXISTS (SELECT 1 FROM composition c_pt WHERE c_pt.entry_id = m.entry_id AND c_pt.element = 'Pt')\n    AND EXISTS (SELECT 1 FROM composition c_ga WHERE c_ga.entry_id = m.entry_id AND c_ga.element = 'Ga')\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "conditions": {
+          "prototype": "B2",
+          "contains_elements": [
+            "Pt",
+            "Ga"
+          ],
+          "stability": "stable"
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "Coを含む安定なL1₂化合物を出して",
+          "Feを含むB2化合物を出して",
+          "NiとAlを両方含むB2とL1₂化合物を出して"
+        ],
+        "similarities": [
+          0.539,
+          0.495,
+          0.462
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 0,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group",
+          "formation_energy_per_atom",
+          "energy_above_hull",
+          "band_gap"
+        ],
+        "errors": [],
+        "latency_ms": 11,
+        "sample_rows": []
+      },
+      "passed": true,
+      "pass_reason": "rows=0, expected 0",
+      "elapsed_ms": 63
+    },
+    {
+      "test_id": "C01",
+      "category": "sloppy",
+      "nl_query": "安定な化合物を出して",
+      "notes": "Missing prototype - should still work with stability filter only",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE ps.energy_above_hull <= 0.001;",
+        "conditions": {
+          "stability": "stable"
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, composition, structure",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "conditions": {
+          "stability": "stable"
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "安定なB2化合物をリストして",
+          "Coを含む安定なL1₂化合物を出して",
+          "準安定なB2化合物を出して"
+        ],
+        "similarities": [
+          0.632,
+          0.612,
+          0.518
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 100,
+        "columns": [
+          "entry_id",
+          "formula",
+          "formation_energy_per_atom",
+          "energy_above_hull",
+          "band_gap"
+        ],
+        "errors": [],
+        "latency_ms": 8,
+        "sample_rows": [
+          [
+            "oqmd_L12_17704",
+            "MnZn3",
+            -0.0240053184482751,
+            0.0,
+            0.0
+          ],
+          [
+            "oqmd_B2_104109",
+            "LuMg",
+            -0.0441481120833349,
+            0.0,
+            0.0
+          ],
+          [
+            "oqmd_B2_20464",
+            "PmMg",
+            -0.111143110833335,
+            0.00010101499999999597,
+            0.0
+          ],
+          [
+            "oqmd_L12_19193",
+            "TmGa3",
+            -0.50422251375,
+            0.0,
+            0.0
+          ],
+          [
+            "oqmd_B2_10896",
+            "BePd",
+            -0.586192649999999,
+            0.0006656600000003454,
+            0.0
+          ]
+        ]
+      },
+      "passed": true,
+      "pass_reason": "rows=100, expected >0",
+      "elapsed_ms": 60
+    },
+    {
+      "test_id": "C02",
+      "category": "sloppy",
+      "nl_query": "B2",
+      "notes": "Minimal input - just prototype name",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE s.prototype = 'B2';",
+        "conditions": {
+          "prototype": "B2"
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, composition, phase_stability",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+        "conditions": {
+          "prototype": "B2"
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "準安定なB2化合物を出して",
+          "安定なB2化合物をリストして",
+          "Feを含むB2化合物を出して"
+        ],
+        "similarities": [
+          0.344,
+          0.323,
+          0.283
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 100,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group"
+        ],
+        "errors": [],
+        "latency_ms": 8,
+        "sample_rows": [
+          [
+            "oqmd_B2_10879",
+            "BeCu",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_89126",
+            "DyPd",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_11171",
+            "TmIn",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_89861",
+            "MnHg",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_10639",
+            "LaAg",
+            "B2",
+            null,
+            "Pm-3m"
+          ]
+        ]
+      },
+      "passed": true,
+      "pass_reason": "rows=100, expected >0",
+      "elapsed_ms": 42
+    },
+    {
+      "test_id": "C03",
+      "category": "sloppy",
+      "nl_query": "なにか安定なものを出して",
+      "notes": "Vague 'something stable' - should extract stability",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE ps.energy_above_hull <= 0.001;",
+        "conditions": {
+          "stability": "stable"
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, composition, structure",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "conditions": {
+          "stability": "stable"
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "Coを含む安定なL1₂化合物を出して",
+          "安定なB2化合物をリストして",
+          "安定なL1₂化合物を形成エネルギーが低い順に出して"
+        ],
+        "similarities": [
+          0.195,
+          0.195,
+          0.165
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 100,
+        "columns": [
+          "entry_id",
+          "formula",
+          "formation_energy_per_atom",
+          "energy_above_hull",
+          "band_gap"
+        ],
+        "errors": [],
+        "latency_ms": 8,
+        "sample_rows": [
+          [
+            "oqmd_L12_17704",
+            "MnZn3",
+            -0.0240053184482751,
+            0.0,
+            0.0
+          ],
+          [
+            "oqmd_B2_104109",
+            "LuMg",
+            -0.0441481120833349,
+            0.0,
+            0.0
+          ],
+          [
+            "oqmd_B2_20464",
+            "PmMg",
+            -0.111143110833335,
+            0.00010101499999999597,
+            0.0
+          ],
+          [
+            "oqmd_L12_19193",
+            "TmGa3",
+            -0.50422251375,
+            0.0,
+            0.0
+          ],
+          [
+            "oqmd_B2_10896",
+            "BePd",
+            -0.586192649999999,
+            0.0006656600000003454,
+            0.0
+          ]
+        ]
+      },
+      "passed": true,
+      "pass_reason": "rows=100, expected >0",
+      "elapsed_ms": 62
+    },
+    {
+      "test_id": "C04",
+      "category": "sloppy",
+      "nl_query": "",
+      "notes": "Empty input - should return safe fallback or empty",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id;",
+        "conditions": {},
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, composition, phase_stability, structure",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\nLIMIT 100;",
+        "conditions": {},
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 0,
+        "retrieved_queries": [],
+        "similarities": []
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 100,
+        "columns": [
+          "entry_id",
+          "formula"
+        ],
+        "errors": [],
+        "latency_ms": 7,
+        "sample_rows": [
+          [
+            "oqmd_B2_29029",
+            "ScCd"
+          ],
+          [
+            "oqmd_B2_18106",
+            "ScZn"
+          ],
+          [
+            "oqmd_B2_19422",
+            "VOs"
+          ],
+          [
+            "oqmd_L12_30380",
+            "GdIr3"
+          ],
+          [
+            "oqmd_L12_17912",
+            "Pr3Pb"
+          ]
+        ]
+      },
+      "passed": true,
+      "pass_reason": "success=True, sql_generated=True",
+      "elapsed_ms": 41
+    },
+    {
+      "test_id": "C05",
+      "category": "sloppy",
+      "nl_query": "今日の天気を教えて",
+      "notes": "Irrelevant query - should not produce wrong material results",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id;",
+        "conditions": {},
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, composition, phase_stability, structure",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\nLIMIT 100;",
+        "conditions": {},
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "OQMDのB2化合物の形成エネルギーを出して",
+          "Materials ProjectのL1₂化合物の格子定数を出して",
+          "Tiを含むL1₂化合物の形成エネルギーを出して"
+        ],
+        "similarities": [
+          0.177,
+          0.176,
+          0.152
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 100,
+        "columns": [
+          "entry_id",
+          "formula"
+        ],
+        "errors": [],
+        "latency_ms": 7,
+        "sample_rows": [
+          [
+            "oqmd_B2_29029",
+            "ScCd"
+          ],
+          [
+            "oqmd_B2_18106",
+            "ScZn"
+          ],
+          [
+            "oqmd_B2_19422",
+            "VOs"
+          ],
+          [
+            "oqmd_L12_30380",
+            "GdIr3"
+          ],
+          [
+            "oqmd_L12_17912",
+            "Pr3Pb"
+          ]
+        ]
+      },
+      "passed": true,
+      "pass_reason": "success=True, sql_generated=True",
+      "elapsed_ms": 40
+    },
+    {
+      "test_id": "C06",
+      "category": "sloppy",
+      "nl_query": "Fe",
+      "notes": "Single element only, no prototype",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE c.element = 'Fe';",
+        "conditions": {
+          "contains_elements": [
+            "Fe"
+          ]
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, phase_stability, structure",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\nWHERE\n    c.element = 'Fe'\nLIMIT 100;",
+        "conditions": {
+          "contains_elements": [
+            "Fe"
+          ]
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 1,
+        "retrieved_queries": [
+          "Feを含むB2化合物を出して"
+        ],
+        "similarities": [
+          0.485
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 24,
+        "columns": [
+          "entry_id",
+          "formula"
+        ],
+        "errors": [],
+        "latency_ms": 8,
+        "sample_rows": [
+          [
+            "oqmd_B2_10127",
+            "FeCo"
+          ],
+          [
+            "oqmd_B2_110794",
+            "AlFe"
+          ],
+          [
+            "oqmd_B2_110795",
+            "AlFe"
+          ],
+          [
+            "oqmd_B2_18839",
+            "FeRh"
+          ],
+          [
+            "oqmd_B2_19423",
+            "TiFe"
+          ]
+        ]
+      },
+      "passed": true,
+      "pass_reason": "rows=24, expected >0",
+      "elapsed_ms": 42
+    },
+    {
+      "test_id": "C07",
+      "category": "sloppy",
+      "nl_query": "格子定数",
+      "notes": "Property name only, no element or prototype",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id;",
+        "conditions": {
+          "properties": [
+            "structure.lattice_a"
+          ]
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, composition, phase_stability, structure",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nLIMIT 100;",
+        "conditions": {
+          "properties": [
+            "structure.lattice_a"
+          ]
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 1,
+        "retrieved_queries": [
+          "Materials ProjectのL1₂化合物の格子定数を出して"
+        ],
+        "similarities": [
+          0.304
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 100,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group"
+        ],
+        "errors": [],
+        "latency_ms": 8,
+        "sample_rows": [
+          [
+            "oqmd_B2_30426",
+            "GdTl",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_11162",
+            "SmIn3",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_89126",
+            "DyPd",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_18171",
+            "UTl3",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_18314",
+            "DyPd3",
+            "L12",
+            null,
+            "Pm-3m"
+          ]
+        ]
+      },
+      "passed": true,
+      "pass_reason": "success=True, sql_generated=True",
+      "elapsed_ms": 42
+    },
+    {
+      "test_id": "C08",
+      "category": "sloppy",
+      "nl_query": "安定なB2化合物でband gapが大きいもの",
+      "notes": "Vague 'large band gap' - no numeric threshold specified",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE s.prototype = 'B2' AND ps.energy_above_hull <= 0.001;",
+        "conditions": {
+          "prototype": "B2",
+          "stability": "stable",
+          "properties": [
+            "phase_stability.band_gap"
+          ]
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, composition",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "conditions": {
+          "prototype": "B2",
+          "stability": "stable",
+          "properties": [
+            "phase_stability.band_gap"
+          ]
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "安定なB2化合物をリストして",
+          "B2化合物をバンドギャップが大きい順に出して",
+          "安定なL1₂化合物を形成エネルギーが低い順に出して"
+        ],
+        "similarities": [
+          0.285,
+          0.281,
+          0.219
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 100,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group",
+          "formation_energy_per_atom",
+          "energy_above_hull",
+          "band_gap"
+        ],
+        "errors": [],
+        "latency_ms": 9,
+        "sample_rows": [
+          [
+            "oqmd_B2_17621",
+            "LuPd",
+            "B2",
+            null,
+            "Pm-3m",
+            -0.9718324175,
+            0.0005692800000000053,
+            0.0
+          ],
+          [
+            "oqmd_B2_18057",
+            "SmRh",
+            "B2",
+            null,
+            "Pm-3m",
+            -0.715152323750001,
+            0.0004242099999989257,
+            0.0
+          ],
+          [
+            "oqmd_B2_17612",
+            "LuMg",
+            "B2",
+            null,
+            "Pm-3m",
+            -0.0441488020833347,
+            0.0,
+            0.0
+          ],
+          [
+            "oqmd_B2_104107",
+            "TmMg",
+            "B2",
+            null,
+            "Pm-3m",
+            -0.056790284583335,
+            9.736499999980774e-05,
+            0.0
+          ],
+          [
+            "oqmd_B2_17454",
+            "HoIn",
+            "B2",
+            null,
+            "Pm-3m",
+            -0.460542576666665,
+            0.00014886750000042692,
+            0.0
+          ]
+        ]
+      },
+      "oqmd_comparison": {
+        "baseline_count": 0,
+        "db_count": 100,
+        "intersection": 0,
+        "match_rate": 0.0,
+        "baseline_only": [],
+        "db_only": [
+          "AlFe",
+          "AlRh",
+          "BeNi",
+          "CaCd",
+          "CaHg",
+          "CeCd",
+          "CeMg",
+          "DyAg",
+          "DyCd",
+          "DyIn"
+        ]
+      },
+      "passed": true,
+      "pass_reason": "rows=100, expected >0",
+      "elapsed_ms": 64
+    },
+    {
+      "test_id": "C09",
+      "category": "sloppy",
+      "nl_query": "NiAlのL12",
+      "notes": "Compressed shorthand query",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE s.prototype = 'L12';",
+        "conditions": {
+          "prototype": "L12"
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, composition, phase_stability",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLIMIT 100;",
+        "conditions": {
+          "prototype": "L12"
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "NiとAlを両方含むB2とL1₂化合物を出して",
+          "Materials ProjectのL1₂化合物の格子定数を出して",
+          "Tiを含むL1₂化合物の形成エネルギーを出して"
+        ],
+        "similarities": [
+          0.401,
+          0.289,
+          0.226
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 100,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group"
+        ],
+        "errors": [],
+        "latency_ms": 8,
+        "sample_rows": [
+          [
+            "oqmd_L12_11162",
+            "SmIn3",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_30346",
+            "ScGa3",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_18171",
+            "UTl3",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_18314",
+            "DyPd3",
+            "L12",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_L12_18135",
+            "YSn3",
+            "L12",
+            null,
+            "Pm-3m"
+          ]
+        ]
+      },
+      "passed": true,
+      "pass_reason": "rows=100, expected >0",
+      "elapsed_ms": 44
+    },
+    {
+      "test_id": "C10",
+      "category": "sloppy",
+      "nl_query": "B2でもL12でもいいからFeを含むやつ",
+      "notes": "Casual Japanese multi-prototype query",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.prototype = 'B2') AND c.element = 'Fe';",
+        "conditions": {
+          "prototype": [
+            "L12",
+            "B2"
+          ],
+          "contains_elements": [
+            "Fe"
+          ]
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, phase_stability",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12' OR s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND c.element = 'Fe'\nLIMIT 100;",
+        "conditions": {
+          "prototype": [
+            "L12",
+            "B2"
+          ],
+          "contains_elements": [
+            "Fe"
+          ]
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "Feを含むB2化合物を出して",
+          "Coを含む安定なL1₂化合物を出して",
+          "Tiを含むL1₂化合物の形成エネルギーを出して"
+        ],
+        "similarities": [
+          0.457,
+          0.221,
+          0.205
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 24,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group"
+        ],
+        "errors": [],
+        "latency_ms": 8,
+        "sample_rows": [
+          [
+            "oqmd_B2_10127",
+            "FeCo",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_110794",
+            "AlFe",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_110795",
+            "AlFe",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_18839",
+            "FeRh",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_19423",
+            "TiFe",
+            "B2",
+            null,
+            "Pm-3m"
+          ]
+        ]
+      },
+      "passed": true,
+      "pass_reason": "rows=24, expected >0",
+      "elapsed_ms": 43
+    },
+    {
+      "test_id": "D01",
+      "category": "contradictory",
+      "nl_query": "安定かつ準安定なB2化合物",
+      "notes": "Contradictory stability - stable wins or returns stable subset",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE s.prototype = 'B2' AND ps.energy_above_hull <= 0.05;",
+        "conditions": {
+          "prototype": "B2",
+          "stability": "metastable"
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, composition",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.05\nLIMIT 100;",
+        "conditions": {
+          "prototype": "B2",
+          "stability": "metastable"
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "準安定なB2化合物を出して",
+          "安定なB2化合物をリストして",
+          "Coを含む安定なL1₂化合物を出して"
+        ],
+        "similarities": [
+          0.628,
+          0.425,
+          0.247
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 100,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group",
+          "formation_energy_per_atom",
+          "energy_above_hull",
+          "band_gap"
+        ],
+        "errors": [],
+        "latency_ms": 9,
+        "sample_rows": [
+          [
+            "oqmd_B2_17443",
+            "YHg",
+            "B2",
+            null,
+            "Pm-3m",
+            -0.480003724983134,
+            0.0018111350000000193,
+            0.0
+          ],
+          [
+            "oqmd_B2_18057",
+            "SmRh",
+            "B2",
+            null,
+            "Pm-3m",
+            -0.715152323750001,
+            0.0004242099999989257,
+            0.0
+          ],
+          [
+            "oqmd_B2_20721",
+            "YCu",
+            "B2",
+            null,
+            "Pm-3m",
+            -0.2439484175,
+            0.01608169875000029,
+            0.0
+          ],
+          [
+            "oqmd_B2_29537",
+            "ZrCo",
+            "B2",
+            null,
+            "Pm-3m",
+            -0.287899014999999,
+            0.04674955125000041,
+            0.0
+          ],
+          [
+            "oqmd_B2_18172",
+            "YTl",
+            "B2",
+            null,
+            "Pm-3m",
+            -0.37295919,
+            0.0021475850000000074,
+            0.0
+          ]
+        ]
+      },
+      "passed": true,
+      "pass_reason": "success=True, sql_generated=True",
+      "elapsed_ms": 65
+    },
+    {
+      "test_id": "D02",
+      "category": "contradictory",
+      "nl_query": "Feを含まないFeB2化合物を出して",
+      "notes": "Self-contradictory element request",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE s.prototype = 'B2' AND c.element = 'Fe';",
+        "conditions": {
+          "prototype": "B2",
+          "contains_elements": [
+            "Fe"
+          ]
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, phase_stability",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND c.element = 'Fe'\nLIMIT 100;",
+        "conditions": {
+          "prototype": "B2",
+          "contains_elements": [
+            "Fe"
+          ]
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "Feを含むB2化合物を出して",
+          "Coを含む安定なL1₂化合物を出して",
+          "Tiを含むL1₂化合物の形成エネルギーを出して"
+        ],
+        "similarities": [
+          0.781,
+          0.287,
+          0.266
+        ]
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 16,
+        "columns": [
+          "entry_id",
+          "formula",
+          "prototype",
+          "lattice_a",
+          "space_group"
+        ],
+        "errors": [],
+        "latency_ms": 8,
+        "sample_rows": [
+          [
+            "oqmd_B2_10127",
+            "FeCo",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_110794",
+            "AlFe",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_110795",
+            "AlFe",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_18839",
+            "FeRh",
+            "B2",
+            null,
+            "Pm-3m"
+          ],
+          [
+            "oqmd_B2_19423",
+            "TiFe",
+            "B2",
+            null,
+            "Pm-3m"
+          ]
+        ]
+      },
+      "passed": true,
+      "pass_reason": "success=True, sql_generated=True",
+      "elapsed_ms": 43
+    },
+    {
+      "test_id": "E01",
+      "category": "rejection",
+      "nl_query": "DROP TABLE material_entry;",
+      "notes": "SQL injection: DROP",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id;",
+        "conditions": {},
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, composition, phase_stability, structure",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\nLIMIT 100;",
+        "conditions": {},
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "OQMDのB2化合物の形成エネルギーを出して",
+          "NiとAlを両方含むB2とL1₂化合物を出して",
+          "準安定なB2化合物を出して"
+        ],
+        "similarities": [
+          0.211,
+          0.059,
+          0.059
+        ]
+      },
+      "validation": {
+        "valid": false,
+        "errors": [
+          "Forbidden keywords: DROP",
+          "Only SELECT statements are allowed",
+          "SQL parse error: Invalid expression / Unexpected token. Line 2, Col: 5.\n  DROP TABLE material_entry\n\u001b[4mLIMIT\u001b[0m 100;"
+        ]
+      },
+      "passed": true,
+      "pass_reason": "Correctly rejected",
+      "elapsed_ms": 34
+    },
+    {
+      "test_id": "E02",
+      "category": "rejection",
+      "nl_query": "SELECT * FROM material_entry; DELETE FROM composition;",
+      "notes": "SQL injection: multiple statements",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id;",
+        "conditions": {},
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, composition, phase_stability, structure",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\nLIMIT 100;",
+        "conditions": {},
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 1,
+        "retrieved_queries": [
+          "OQMDのB2化合物の形成エネルギーを出して"
+        ],
+        "similarities": [
+          0.193
+        ]
+      },
+      "validation": {
+        "valid": false,
+        "errors": [
+          "Multiple SQL statements detected",
+          "Forbidden keywords: DELETE"
+        ]
+      },
+      "passed": true,
+      "pass_reason": "Correctly rejected",
+      "elapsed_ms": 33
+    },
+    {
+      "test_id": "E03",
+      "category": "rejection",
+      "nl_query": "Feを含むB2; DROP TABLE structure;",
+      "notes": "Piggyback injection in NL",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE s.prototype = 'B2' AND c.element = 'Fe';",
+        "conditions": {
+          "prototype": "B2",
+          "contains_elements": [
+            "Fe"
+          ]
+        },
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, phase_stability",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND c.element = 'Fe'\nLIMIT 100;",
+        "conditions": {
+          "prototype": "B2",
+          "contains_elements": [
+            "Fe"
+          ]
+        },
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 3,
+        "retrieved_queries": [
+          "Feを含むB2化合物を出して",
+          "OQMDのB2化合物の形成エネルギーを出して",
+          "Coを含む安定なL1₂化合物を出して"
+        ],
+        "similarities": [
+          0.434,
+          0.239,
+          0.211
+        ]
+      },
+      "validation": {
+        "valid": false,
+        "errors": [
+          "Multiple SQL statements detected",
+          "Forbidden keywords: DROP",
+          "Only SELECT statements are allowed",
+          "SQL parse error: Invalid expression / Unexpected token. Line 2, Col: 5.\n  Feを含むB2; DROP TABLE structure\n\u001b[4mLIMIT\u001b[0m 100;"
+        ]
+      },
+      "passed": true,
+      "pass_reason": "Correctly rejected",
+      "elapsed_ms": 33
+    },
+    {
+      "test_id": "E04",
+      "category": "rejection",
+      "nl_query": "SELECT * FROM secret_passwords",
+      "notes": "Forbidden table access",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id;",
+        "conditions": {},
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, composition, phase_stability, structure",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\nLIMIT 100;",
+        "conditions": {},
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 1,
+        "retrieved_queries": [
+          "OQMDのB2化合物の形成エネルギーを出して"
+        ],
+        "similarities": [
+          0.15
+        ]
+      },
+      "validation": {
+        "valid": false,
+        "errors": [
+          "Disallowed tables: secret_passwords"
+        ]
+      },
+      "passed": true,
+      "pass_reason": "Correctly rejected",
+      "elapsed_ms": 33
+    },
+    {
+      "test_id": "E05",
+      "category": "rejection",
+      "nl_query": "INSERT INTO material_entry VALUES ('x','x','x','x',0)",
+      "notes": "INSERT injection",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id;",
+        "conditions": {},
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, composition, phase_stability, structure",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\nLIMIT 100;",
+        "conditions": {},
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 0,
+        "retrieved_queries": [],
+        "similarities": []
+      },
+      "validation": {
+        "valid": false,
+        "errors": [
+          "Forbidden keywords: INSERT",
+          "Only SELECT statements are allowed",
+          "SQL parse error: Invalid expression / Unexpected token. Line 2, Col: 5.\n  INSERT INTO material_entry VALUES ('x','x','x','x',0)\n\u001b[4mLIMIT\u001b[0m 100;"
+        ]
+      },
+      "passed": true,
+      "pass_reason": "Correctly rejected",
+      "elapsed_ms": 33
+    },
+    {
+      "test_id": "F01",
+      "category": "safety",
+      "nl_query": "SELECT entry_id FROM material_entry",
+      "notes": "Valid SELECT without LIMIT → auto-added",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id;",
+        "conditions": {},
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, composition, phase_stability, structure",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\nLIMIT 100;",
+        "conditions": {},
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 1,
+        "retrieved_queries": [
+          "OQMDのB2化合物の形成エネルギーを出して"
+        ],
+        "similarities": [
+          0.13
+        ]
+      },
+      "validation": {
+        "valid": true,
+        "errors": [],
+        "corrected_sql": "SELECT entry_id FROM material_entry\nLIMIT 100;"
+      },
+      "db_result": {
+        "success": true,
+        "row_count": 100
+      },
+      "passed": true,
+      "pass_reason": "Validation correct",
+      "elapsed_ms": 42
+    },
+    {
+      "test_id": "F02",
+      "category": "safety",
+      "nl_query": "UPDATE material_entry SET formula='X'",
+      "notes": "UPDATE rejected by SQL Guard",
+      "naive": {
+        "sql": "SELECT m.entry_id, m.formula\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id;",
+        "conditions": {},
+        "issues": [
+          "Unnecessary JOINs: calculated_property, calculation, composition, phase_stability, structure",
+          "No LIMIT clause — unbounded result set",
+          "No DISTINCT — may return duplicate rows from JOINs",
+          "No SQL safety validation (sqlglot/forbidden keyword check)"
+        ]
+      },
+      "schema_graph": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\nLIMIT 100;",
+        "conditions": {},
+        "model": "rule_based_fallback"
+      },
+      "few_shot": {
+        "retrieved_count": 1,
+        "retrieved_queries": [
+          "OQMDのB2化合物の形成エネルギーを出して"
+        ],
+        "similarities": [
+          0.064
+        ]
+      },
+      "validation": {
+        "valid": false,
+        "errors": [
+          "Forbidden keywords: UPDATE",
+          "Only SELECT statements are allowed"
+        ]
+      },
+      "passed": true,
+      "pass_reason": "Correctly rejected",
+      "elapsed_ms": 32
+    }
+  ]
+}
