@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from llm.entity_extractor import extract_conditions
+from llm.few_shot_store import add_example, format_few_shot_block, retrieve_similar
 from llm.schema_linker import link_schema
 
 
@@ -22,15 +23,20 @@ def build_constrained_prompt(
     allowed_tables: list[str],
     allowed_columns: list[str],
     allowed_joins: list[str],
+    few_shot_examples: list[dict[str, Any]] | None = None,
 ) -> str:
-    """Build the LLM prompt with schema constraints."""
+    """Build the LLM prompt with schema constraints and optional few-shot examples."""
     template = _load_prompt_template()
-    return template.format(
+    prompt = template.format(
         user_query=user_query,
         allowed_tables="\n".join(f"- {t}" for t in allowed_tables),
         allowed_columns="\n".join(f"- {c}" for c in allowed_columns),
         allowed_joins="\n".join(f"- {j}" for j in allowed_joins),
     )
+    if few_shot_examples:
+        few_shot_block = format_few_shot_block(few_shot_examples)
+        prompt = prompt.replace("\nUser query:", few_shot_block + "\nUser query:")
+    return prompt
 
 
 def extract_sql_from_response(response: str) -> str:
@@ -65,6 +71,9 @@ def generate_sql_via_llm(
         user_query, allowed_tables, allowed_columns, allowed_joins,
     )
 
+    # Retrieve similar few-shot examples
+    few_shot = retrieve_similar(user_query, top_k=3)
+
     if not api_key or api_key == "your_api_key_here":
         sql = _rule_based_fallback(user_query, allowed_tables, allowed_columns, allowed_joins)
         return {
@@ -73,7 +82,15 @@ def generate_sql_via_llm(
             "model": "rule_based_fallback",
             "tokens": 0,
             "latency_ms": 0,
+            "few_shot_count": len(few_shot),
+            "few_shot_queries": [e["nl_query"] for e in few_shot],
         }
+
+    # Rebuild prompt with few-shot examples for LLM mode
+    prompt = build_constrained_prompt(
+        user_query, allowed_tables, allowed_columns, allowed_joins,
+        few_shot_examples=few_shot,
+    )
 
     import openai
     client = openai.OpenAI(api_key=api_key)
@@ -98,6 +115,8 @@ def generate_sql_via_llm(
         "model": model,
         "tokens": tokens,
         "latency_ms": latency_ms,
+        "few_shot_count": len(few_shot),
+        "few_shot_queries": [e["nl_query"] for e in few_shot],
     }
 
 
@@ -181,8 +200,17 @@ def _rule_based_fallback(
     return "\n".join(sql_parts)
 
 
-def pipeline(user_query: str, join_list: list[str] | None = None) -> dict[str, Any]:
-    """Full pipeline: extract -> link -> generate SQL."""
+def pipeline(
+    user_query: str,
+    join_list: list[str] | None = None,
+    store_on_success: bool = False,
+) -> dict[str, Any]:
+    """Full pipeline: extract -> link -> generate SQL.
+
+    When *store_on_success* is True the result is persisted in the few-shot
+    store after successful DB execution so that future queries can benefit
+    from it as a few-shot example.
+    """
     conditions = extract_conditions(user_query)
     linked = link_schema(conditions)
 
@@ -224,4 +252,14 @@ def pipeline(user_query: str, join_list: list[str] | None = None) -> dict[str, A
     )
     result["conditions"] = conditions
     result["linked_schema"] = linked
+
+    if store_on_success:
+        add_example(
+            nl_query=user_query,
+            sql=result["sql"],
+            conditions=conditions,
+            row_count=-1,
+            source="pipeline",
+        )
+
     return result
