@@ -32,37 +32,69 @@ os.environ.setdefault("POSTGRES_DB", "l12_materials")
 os.environ.setdefault("POSTGRES_USER", "l12_user")
 os.environ.setdefault("POSTGRES_PASSWORD", "l12_password")
 
-# ── OQMD CSV baselines ──────────────────────────────────────────────
-import csv
+# ── OQMD API baselines ───────────────────────────────────────────────
+import requests as _requests
 
-def _load_oqmd_csv(path: str) -> list[dict]:
-    p = Path(__file__).parent / path
-    if not p.exists():
-        return []
-    with p.open(encoding="utf-8") as f:
-        return list(csv.DictReader(f))
+OQMD_API_URL = "https://oqmd.org/oqmdapi/formationenergy"
+_oqmd_cache: dict[str, list[dict]] = {}
 
-OQMD_B2 = _load_oqmd_csv("oqmd_b2_data.csv")
-OQMD_L12 = _load_oqmd_csv("oqmd_l12_data.csv")
-
-def oqmd_filter(rows, *, proto=None, elements=None, stable_only=False,
-                metastable_only=False, band_gap_gt=None):
-    out = list(rows)
-    if proto:
-        out = [r for r in out if r.get("prototype","") == proto or r.get("strukturbericht","") == proto]
+def oqmd_api_query(*, prototype: str | None = None,
+                   elements: list[str] | None = None,
+                   stable_only: bool = False,
+                   metastable_only: bool = False,
+                   band_gap_gt: float | None = None) -> list[dict]:
+    """Query OQMD API directly and return list of {formula, ...} dicts.
+    
+    Results are cached per filter string to avoid redundant HTTP calls.
+    """
+    parts = []
+    if prototype:
+        parts.append(f"prototype={prototype}")
     if elements:
-        for e in elements:
-            out = [r for r in out if e in r.get("formula","")]
+        parts.append(f"element_set={','.join(elements)}")
     if stable_only:
-        out = [r for r in out
-               if r.get("energy_above_hull") and float(r["energy_above_hull"]) <= 0.001]
-    if metastable_only:
-        out = [r for r in out
-               if r.get("energy_above_hull") and float(r["energy_above_hull"]) <= 0.05]
+        parts.append("stability<=0.001")
+    elif metastable_only:
+        parts.append("stability<=0.05")
     if band_gap_gt is not None:
-        out = [r for r in out
-               if r.get("band_gap") and r["band_gap"] != "" and float(r["band_gap"]) > band_gap_gt]
-    return out
+        parts.append(f"band_gap>{band_gap_gt}")
+    filter_str = " AND ".join(parts) if parts else ""
+
+    cache_key = filter_str
+    if cache_key in _oqmd_cache:
+        return _oqmd_cache[cache_key]
+
+    all_data: list[dict] = []
+    offset = 0
+    limit = 200
+    while True:
+        params = {"fields": "name,entry_id,prototype,delta_e,stability,band_gap",
+                  "limit": limit, "offset": offset}
+        if filter_str:
+            params["filter"] = filter_str
+        try:
+            resp = _requests.get(OQMD_API_URL, params=params, timeout=60)
+            resp.raise_for_status()
+            body = resp.json()
+            batch = body.get("data", [])
+            all_data.extend(batch)
+            if len(batch) < limit:
+                break
+            offset += limit
+        except Exception as e:
+            print(f"  [OQMD API warning] {e}")
+            break
+
+    # Deduplicate by formula (name), keep unique formulas
+    seen: set[str] = set()
+    unique: list[dict] = []
+    for d in all_data:
+        formula = d.get("name", "")
+        if formula and formula not in seen:
+            seen.add(formula)
+            unique.append({"formula": formula, **d})
+    _oqmd_cache[cache_key] = unique
+    return unique
 
 
 # =====================================================================
@@ -86,26 +118,26 @@ def T(test_id, category, nl_query, *,
 # ── A: 正常系 (Normal) ──────────────────────────────────────────────
 T("A01","normal","Feを含むB2化合物を出して",
   expect_rows_gt=0,
-  oqmd_baseline_fn=lambda: oqmd_filter(OQMD_B2, elements=["Fe"]),
+  oqmd_baseline_fn=lambda: oqmd_api_query(prototype="CsCl", elements=["Fe"]),
   notes="Single element + single prototype")
 T("A02","normal","安定なL1₂化合物を形成エネルギーが低い順に出して",
   expect_rows_gt=0,
-  oqmd_baseline_fn=lambda: oqmd_filter(OQMD_L12, stable_only=True),
+  oqmd_baseline_fn=lambda: oqmd_api_query(prototype="AuCu3", stable_only=True),
   notes="Stability + sort")
 T("A03","normal","NiとAlを両方含む化合物を出して",
   expect_rows_gt=0,
   notes="Multi-element AND with EXISTS")
 T("A04","normal","B2化合物の全リストを出して",
   expect_rows_gt=0,
-  oqmd_baseline_fn=lambda: list(OQMD_B2),
+  oqmd_baseline_fn=lambda: oqmd_api_query(prototype="CsCl"),
   notes="Full prototype listing")
 T("A05","normal","準安定なB2化合物を出して",
   expect_rows_gt=0,
-  oqmd_baseline_fn=lambda: oqmd_filter(OQMD_B2, metastable_only=True),
+  oqmd_baseline_fn=lambda: oqmd_api_query(prototype="CsCl", metastable_only=True),
   notes="Metastable filter")
 T("A06","normal","Coを含む安定なL1₂化合物を出して",
   expect_rows_gt=0,
-  oqmd_baseline_fn=lambda: oqmd_filter(OQMD_L12, elements=["Co"], stable_only=True),
+  oqmd_baseline_fn=lambda: oqmd_api_query(prototype="AuCu3", elements=["Co"], stable_only=True),
   notes="Element + stability")
 T("A07","normal","FeとAlを含むB2とL1₂化合物を出して",
   expect_rows_gt=0,
@@ -118,7 +150,7 @@ T("A09","normal","ニッケルを含むL1₂型化合物を出して",
   notes="Japanese element name")
 T("A10","normal","L1₂化合物の全データを出して",
   expect_rows_gt=0,
-  oqmd_baseline_fn=lambda: list(OQMD_L12),
+  oqmd_baseline_fn=lambda: oqmd_api_query(prototype="AuCu3"),
   notes="Full L12 listing")
 T("A11","normal","Tiを含むB2化合物を格子定数が大きい順に出して",
   expect_rows_gt=0,
@@ -134,7 +166,7 @@ T("A14","normal","鉄を含むB2化合物を出して",
   notes="Japanese element name (iron)")
 T("A15","normal","安定なL1₂化合物でNiを含むものを出して",
   expect_rows_gt=0,
-  oqmd_baseline_fn=lambda: oqmd_filter(OQMD_L12, elements=["Ni"], stable_only=True),
+  oqmd_baseline_fn=lambda: oqmd_api_query(prototype="AuCu3", elements=["Ni"], stable_only=True),
   notes="Stability + element")
 
 # ── B: 該当なし/0件系 (No results) ──────────────────────────────────
@@ -180,7 +212,7 @@ T("C07","sloppy","格子定数",
   notes="Property name only, no element or prototype")
 T("C08","sloppy","安定なB2化合物でband gapが大きいもの",
   expect_rows_gt=0,
-  oqmd_baseline_fn=lambda: oqmd_filter(OQMD_B2, stable_only=True, band_gap_gt=0),
+  oqmd_baseline_fn=lambda: oqmd_api_query(prototype="CsCl", stable_only=True, band_gap_gt=0),
   notes="Vague 'large band gap' - no numeric threshold specified")
 T("C09","sloppy","NiAlのL12",
   expect_rows_gt=0,
@@ -324,14 +356,12 @@ def run_single_test(test: dict) -> dict:
     else:
         result["db_result"] = {"success": False, "errors": ["No SQL generated"]}
 
-    # ── OQMD baseline comparison ──
+    # ── OQMD API baseline comparison ──
     if test.get("oqmd_baseline_fn"):
         try:
             baseline = test["oqmd_baseline_fn"]()
-            baseline_count = len(baseline)
-            db_count = result["db_result"].get("row_count", 0)
-            # Formula sets comparison
             baseline_formulas = {r.get("formula","") for r in baseline}
+            baseline_formulas.discard("")
             db_formulas = set()
             if result["db_result"].get("success") and result["db_result"].get("columns"):
                 cols = result["db_result"]["columns"]
@@ -339,13 +369,22 @@ def run_single_test(test: dict) -> dict:
                     fi = cols.index("formula")
                     for row in db_res.get("rows", []):
                         db_formulas.add(row[fi])
+            db_formulas.discard("")
             intersection = baseline_formulas & db_formulas
-            match_rate = len(intersection) / max(baseline_count, 1)
+            # Precision: what fraction of T2SQL results are correct (exist in OQMD)
+            precision = len(intersection) / max(len(db_formulas), 1)
+            # Recall: what fraction of OQMD results did T2SQL find
+            recall = len(intersection) / max(len(baseline_formulas), 1)
+            # Note if recall is limited by SQL LIMIT clause
+            limit_constrained = (len(db_formulas) < len(baseline_formulas)
+                                 and precision >= 0.95)
             result["oqmd_comparison"] = {
-                "baseline_count": baseline_count,
-                "db_count": db_count,
+                "oqmd_api_count": len(baseline_formulas),
+                "t2sql_unique_count": len(db_formulas),
                 "intersection": len(intersection),
-                "match_rate": round(match_rate, 3),
+                "precision": round(precision, 3),
+                "recall": round(recall, 3),
+                "limit_constrained": limit_constrained,
                 "baseline_only": sorted(baseline_formulas - db_formulas)[:10],
                 "db_only": sorted(db_formulas - baseline_formulas)[:10],
             }
@@ -775,7 +814,7 @@ material_entry (PK: entry_id)
             if "oqmd_comparison" in r:
                 oc = r["oqmd_comparison"]
                 if "error" not in oc:
-                    oqmd_info = f'{oc["match_rate"]*100:.0f}% ({oc["intersection"]}/{oc["baseline_count"]})'
+                    oqmd_info = f'P={oc["precision"]*100:.0f}% R={oc["recall"]*100:.0f}% ({oc["intersection"]}/{oc["oqmd_api_count"]})'
             fs_count = r.get("few_shot",{}).get("retrieved_count","—")
 
             html += f'<tr class="{status_class}">'
@@ -798,7 +837,7 @@ material_entry (PK: entry_id)
                     html += f'<p class="issue-list"><b>Naive Issues:</b> {"; ".join(r["naive"]["issues"])}</p>'
             if "oqmd_comparison" in r and "error" not in r.get("oqmd_comparison",{}):
                 oc = r["oqmd_comparison"]
-                html += f'<p><b>OQMD Comparison:</b> baseline={oc["baseline_count"]}, db={oc["db_count"]}, match={oc["match_rate"]*100:.1f}%</p>'
+                html += f'<p><b>OQMD API Comparison:</b> OQMD={oc["oqmd_api_count"]}種, T2SQL={oc["t2sql_unique_count"]}種, Precision={oc["precision"]*100:.1f}%, Recall={oc["recall"]*100:.1f}%</p>'
                 if oc.get("baseline_only"):
                     html += f'<p>Baseline-only: {", ".join(oc["baseline_only"][:5])}</p>'
                 if oc.get("db_only"):
@@ -819,15 +858,17 @@ material_entry (PK: entry_id)
     oqmd_tests = [r for r in results if "oqmd_comparison" in r and "error" not in r.get("oqmd_comparison",{})]
     if oqmd_tests:
         html += '<h2>8. OQMD Direct Comparison Summary</h2>\n'
-        html += '<table class="comparison-table">\n<tr><th>Test</th><th>Query</th><th>OQMD Baseline</th><th>T2SQL Result</th><th>Match Rate</th></tr>\n'
+        html += '<table class="comparison-table">\n<tr><th>Test</th><th>Query</th><th>OQMD API</th><th>T2SQL</th><th>Precision</th><th>Recall</th></tr>\n'
         for r in oqmd_tests:
             oc = r["oqmd_comparison"]
-            color = "pass" if oc["match_rate"] >= 0.95 else ("warn" if oc["match_rate"] >= 0.8 else "fail")
+            p_color = "pass" if oc["precision"] >= 0.95 else ("warn" if oc["precision"] >= 0.8 else "fail")
+            r_color = "pass" if oc["recall"] >= 0.95 else ("warn" if oc["recall"] >= 0.5 else "fail")
             html += f'<tr><td>{r["test_id"]}</td><td>{r["nl_query"][:50]}</td>'
-            html += f'<td>{oc["baseline_count"]}</td><td>{oc["db_count"]}</td>'
-            html += f'<td class="{color}">{oc["match_rate"]*100:.1f}%</td></tr>\n'
+            html += f'<td>{oc["oqmd_api_count"]}</td><td>{oc["t2sql_unique_count"]}</td>'
+            html += f'<td class="{p_color}">{oc["precision"]*100:.1f}%</td>'
+            html += f'<td class="{r_color}">{oc["recall"]*100:.1f}%</td></tr>\n'
         html += '</table>\n'
-        html += '<p><b>Note:</b> Match rate = |intersection| / |baseline|. T2SQL results may include additional entries due to LIMIT 100 truncation or slight filtering differences.</p>\n'
+        html += '<p><b>Note:</b> Precision = T2SQL結果がOQMD APIに含まれる割合。Recall = OQMD API結果のうちT2SQLが返した割合（LIMIT 100制約あり）。</p>\n'
 
     # ================================================================
     # Section 9: Sloppy Query Handling

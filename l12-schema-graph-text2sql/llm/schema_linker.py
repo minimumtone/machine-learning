@@ -43,6 +43,8 @@ def link_schema(conditions: dict[str, Any]) -> dict[str, Any]:
     required_columns: set[str] = set(BASE_COLUMNS)
 
     for key in conditions:
+        if key.startswith("_"):
+            continue
         if key in CONDITION_TABLE_MAP:
             required_tables.update(CONDITION_TABLE_MAP[key])
         if key in CONDITION_COLUMN_MAP:
@@ -61,6 +63,20 @@ def link_schema(conditions: dict[str, Any]) -> dict[str, Any]:
                 table = prop.split(".")[0]
                 required_tables.add(table)
                 required_columns.add(prop)
+
+    # Numeric conditions add their tables/columns
+    if "numeric_conditions" in conditions:
+        for nc in conditions["numeric_conditions"]:
+            col = nc["column"]
+            if "." in col:
+                table = col.split(".")[0]
+                required_tables.add(table)
+                required_columns.add(col)
+
+    # Formula conditions
+    if "formula" in conditions:
+        required_columns.add("material_entry.formula")
+        required_columns.add("material_entry.reduced_formula")
 
     mapped_fragments = map_conditions(conditions)
 

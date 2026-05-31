@@ -1,0 +1,813 @@
+[
+  {
+    "id": "A01",
+    "query": "Feを含むB2化合物を出して",
+    "coverage_score": 0.667,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "して"
+    ],
+    "rb_success": true,
+    "rb_row_count": 16,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Fe' LIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "A02",
+    "query": "安定なL1₂化合物を形成エネルギーが低い順に出して",
+    "coverage_score": 0.6,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "安定",
+      "して"
+    ],
+    "rb_success": true,
+    "rb_row_count": 88,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "A03",
+    "query": "NiとAlを両方含む化合物を出して",
+    "coverage_score": 0.5,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "両方含",
+      "して"
+    ],
+    "rb_success": true,
+    "rb_row_count": 4,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula FROM material_entry m JOIN composition c_ni ON c_ni.entry_id = m.entry_id JOIN composition c_al ON c_al.entry_id = m.entry_id WHERE c_ni.element = 'Ni' AND c_al.element = 'Al' LIMIT 100;",
+    "failure_mode": "partial_success"
+  },
+  {
+    "id": "A04",
+    "query": "B2化合物の全リストを出して",
+    "coverage_score": 0.5,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "して"
+    ],
+    "rb_success": true,
+    "rb_row_count": 100,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.lattice_b, s.lattice_c, s.volume_per_atom, s.formula_type, s.space_group_number, s.space_group\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "A05",
+    "query": "準安定なB2化合物を出して",
+    "coverage_score": 0.333,
+    "coverage_action": "clarification_required",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "準安定",
+      "して"
+    ],
+    "rb_success": true,
+    "rb_row_count": 100,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.energy_above_hull <= 0.05 LIMIT 100;",
+    "failure_mode": "unsafe_overbroad"
+  },
+  {
+    "id": "A06",
+    "query": "Coを含む安定なL1₂化合物を出して",
+    "coverage_score": 0.5,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "安定",
+      "して"
+    ],
+    "rb_success": true,
+    "rb_row_count": 1,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Co' AND ps.energy_above_hull <= 0.001 LIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "A07",
+    "query": "Ptを含む化合物の格子定数を出して",
+    "coverage_score": 0.667,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "して"
+    ],
+    "rb_success": true,
+    "rb_row_count": 42,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.lattice_a FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE c.element = 'Pt' LIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "A08",
+    "query": "B2とL1₂の両方を出して",
+    "coverage_score": 0.5,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "両方",
+      "して"
+    ],
+    "rb_success": true,
+    "rb_row_count": 100,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE s.prototype = 'L12' OR s.strukturbericht = 'L12' OR s.prototype = 'B2' OR s.strukturbericht = 'B2' LIMIT 100;",
+    "failure_mode": "partial_success"
+  },
+  {
+    "id": "A09",
+    "query": "NiとCoを含むL1₂化合物を出して",
+    "coverage_score": 0.75,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "して"
+    ],
+    "rb_success": true,
+    "rb_row_count": 0,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') AND EXISTS (SELECT 1 FROM composition c_co WHERE c_co.entry_id = m.entry_id AND c_co.element = 'Co') LIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "A10",
+    "query": "L1₂化合物の全データを出して",
+    "coverage_score": 0.5,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "して"
+    ],
+    "rb_success": true,
+    "rb_row_count": 100,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.lattice_b, s.lattice_c, s.volume_per_atom, s.formula_type, s.space_group_number, s.space_group\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "A11",
+    "query": "FeとAlを含むB2化合物を出して",
+    "coverage_score": 0.75,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "して"
+    ],
+    "rb_success": true,
+    "rb_row_count": 4,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND EXISTS (SELECT 1 FROM composition c_fe WHERE c_fe.entry_id = m.entry_id AND c_fe.element = 'Fe') AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al') LIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "A12",
+    "query": "安定なB2化合物を形成エネルギーが低い順に出して",
+    "coverage_score": 0.6,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "安定",
+      "して"
+    ],
+    "rb_success": true,
+    "rb_row_count": 100,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "A13",
+    "query": "Tiを含むL1₂化合物を出して",
+    "coverage_score": 0.667,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "して"
+    ],
+    "rb_success": true,
+    "rb_row_count": 10,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Ti' LIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "A14",
+    "query": "NiとTiを含む安定な化合物を出して",
+    "coverage_score": 0.5,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "安定",
+      "して"
+    ],
+    "rb_success": true,
+    "rb_row_count": 0,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id WHERE ps.energy_above_hull <= 0.001 AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti') LIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "A15",
+    "query": "安定なL1₂化合物でNiを含むものを出して",
+    "coverage_score": 0.4,
+    "coverage_action": "clarification_required",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "安定",
+      "むものを",
+      "して"
+    ],
+    "rb_success": true,
+    "rb_row_count": 6,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull \nFROM material_entry m \nJOIN composition c ON c.entry_id = m.entry_id \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nJOIN structure s ON s.entry_id = m.entry_id \nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') \nAND c.element = 'Ni' \nAND ps.energy_above_hull <= 0.001 \nLIMIT 100;",
+    "failure_mode": "unsafe_overbroad"
+  },
+  {
+    "id": "N01",
+    "query": "band gap > 1.0 eVのB2化合物を出して",
+    "coverage_score": 0.8,
+    "coverage_action": "execute_rule_based",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "して"
+    ],
+    "rb_success": true,
+    "rb_row_count": 43,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.band_gap > 1.0\nLIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "N02",
+    "query": "形成エネルギーが負のL1₂化合物を出して",
+    "coverage_score": 0.75,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "して"
+    ],
+    "rb_success": true,
+    "rb_row_count": 100,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.formation_energy_per_atom < 0\nLIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "N03",
+    "query": "Ehull < 0.05 eV/atomのB2化合物",
+    "coverage_score": 0.8,
+    "coverage_action": "execute_rule_based",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "Eh"
+    ],
+    "rb_success": true,
+    "rb_row_count": 100,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.energy_above_hull < 0.05\nLIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "N04",
+    "query": "格子定数が3.5 Å以上のB2化合物を出して",
+    "coverage_score": 0.6,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "以上",
+      "して"
+    ],
+    "rb_success": true,
+    "rb_row_count": 0,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND s.lattice_a >= 3.5\nLIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "N05",
+    "query": "band gapが0のL1₂化合物",
+    "coverage_score": 1.0,
+    "coverage_action": "execute_rule_based",
+    "unknown_elements": [],
+    "unrecognized_terms": [],
+    "rb_success": true,
+    "rb_row_count": 100,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.band_gap = 0\nLIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "B01",
+    "query": "Xeを含むB2化合物を出して",
+    "coverage_score": 0.333,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [
+      "Xe"
+    ],
+    "unrecognized_terms": [
+      "Xe",
+      "して"
+    ],
+    "rb_success": true,
+    "rb_row_count": 2,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Xe' LIMIT 100;",
+    "failure_mode": "unsafe_overbroad"
+  },
+  {
+    "id": "B02",
+    "query": "",
+    "coverage_score": 1.0,
+    "coverage_action": "execute_rule_based",
+    "unknown_elements": [],
+    "unrecognized_terms": [],
+    "rb_success": true,
+    "rb_row_count": 100,
+    "rb_sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') \nAND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "B03",
+    "query": "今日の天気を教えて",
+    "coverage_score": 0.0,
+    "coverage_action": "clarification_required",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "今日",
+      "天気",
+      "えて"
+    ],
+    "rb_success": true,
+    "rb_row_count": 100,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\nLIMIT 100;",
+    "failure_mode": "unsafe_overbroad"
+  },
+  {
+    "id": "B04",
+    "query": "NiAl L12",
+    "coverage_score": 1.0,
+    "coverage_action": "execute_rule_based",
+    "unknown_elements": [],
+    "unrecognized_terms": [],
+    "rb_success": true,
+    "rb_row_count": 1,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Ni' AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al') LIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "B05",
+    "query": "Ni3Al",
+    "coverage_score": 1.0,
+    "coverage_action": "execute_rule_based",
+    "unknown_elements": [],
+    "unrecognized_terms": [],
+    "rb_success": true,
+    "rb_row_count": 4,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id WHERE c.element = 'Ni' AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al') LIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "B06",
+    "query": "FeなしのB2化合物",
+    "coverage_score": 0.667,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "なしの"
+    ],
+    "rb_success": true,
+    "rb_row_count": 100,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element != 'Fe' LIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "B07",
+    "query": "ヘスラー合金を出して",
+    "coverage_score": 0.0,
+    "coverage_action": "clarification_required",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "ヘスラー",
+      "して"
+    ],
+    "rb_success": true,
+    "rb_row_count": 13,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id WHERE c.element = 'Hf' LIMIT 100;",
+    "failure_mode": "unsafe_overbroad"
+  },
+  {
+    "id": "B08",
+    "query": "band gapが大きい化合物",
+    "coverage_score": 0.667,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "きい"
+    ],
+    "rb_success": true,
+    "rb_row_count": 100,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, ps.band_gap \nFROM material_entry m \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nORDER BY ps.band_gap DESC \nLIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL01",
+    "query": "Which B2 compounds contain iron?",
+    "coverage_score": 0.8,
+    "coverage_action": "execute_rule_based",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "ich"
+    ],
+    "rb_success": true,
+    "rb_row_count": 16,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Fe' LIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL02",
+    "query": "NiAlの安定性を教えて",
+    "coverage_score": 0.5,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "安定性",
+      "えて"
+    ],
+    "rb_success": true,
+    "rb_row_count": 4,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, ps.is_stable, ps.energy_above_hull \nFROM material_entry m \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nWHERE EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = m.entry_id AND c.element = 'Ni') \nAND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = m.entry_id AND c.element = 'Al') \nLIMIT 100;",
+    "failure_mode": "partial_success"
+  },
+  {
+    "id": "BL03",
+    "query": "Show me all L12 alloys with Co and Ni",
+    "coverage_score": 1.0,
+    "coverage_action": "execute_rule_based",
+    "unknown_elements": [],
+    "unrecognized_terms": [],
+    "rb_success": true,
+    "rb_row_count": 0,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND EXISTS (SELECT 1 FROM composition c_co WHERE c_co.entry_id = m.entry_id AND c_co.element = 'Co') AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') LIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL04",
+    "query": "Feを含む安定なB2型合金の一覧",
+    "coverage_score": 0.5,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "安定",
+      "型合金"
+    ],
+    "rb_success": true,
+    "rb_row_count": 6,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Fe' AND ps.energy_above_hull <= 0.001 LIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL05",
+    "query": "lattice constant > 3.6のB2を出して",
+    "coverage_score": 0.8,
+    "coverage_action": "execute_rule_based",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "して"
+    ],
+    "rb_success": true,
+    "rb_row_count": 0,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND s.lattice_a > 3.6\nLIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL06",
+    "query": "energy above hullが最も低いL12化合物top10",
+    "coverage_score": 0.833,
+    "coverage_action": "execute_rule_based",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "top"
+    ],
+    "rb_success": true,
+    "rb_row_count": 10,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY ps.energy_above_hull ASC\nLIMIT 10;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL07",
+    "query": "CuAu型構造の化合物は？",
+    "coverage_score": 0.333,
+    "coverage_action": "clarification_required",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "Au",
+      "型構造"
+    ],
+    "rb_success": true,
+    "rb_row_count": 100,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLIMIT 100;",
+    "failure_mode": "unsafe_overbroad"
+  },
+  {
+    "id": "BL08",
+    "query": "Ti-Al系B2合金で安定なもの",
+    "coverage_score": 0.6,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "安定",
+      "なもの"
+    ],
+    "rb_success": true,
+    "rb_row_count": 0,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN composition c ON c.entry_id = m.entry_id\nWHERE \n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.001\n    AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti')\n    AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al')\nLIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL09",
+    "query": "band gapが正のB2化合物を大きい順に",
+    "coverage_score": 0.75,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "きい"
+    ],
+    "rb_success": true,
+    "rb_row_count": 53,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.band_gap \nFROM material_entry m \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nJOIN structure s ON s.entry_id = m.entry_id \nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') \nAND ps.band_gap > 0 \nORDER BY ps.band_gap DESC \nLIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL10",
+    "query": "Ni3Alの形成エネルギー",
+    "coverage_score": 1.0,
+    "coverage_action": "execute_rule_based",
+    "unknown_elements": [],
+    "unrecognized_terms": [],
+    "rb_success": true,
+    "rb_row_count": 0,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, ps.formation_energy_per_atom \nFROM material_entry m \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nWHERE m.formula = 'Ni3Al' \nLIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL11",
+    "query": "Pt containing stable compounds",
+    "coverage_score": 1.0,
+    "coverage_action": "execute_rule_based",
+    "unknown_elements": [],
+    "unrecognized_terms": [],
+    "rb_success": true,
+    "rb_row_count": 7,
+    "rb_sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE c.element = 'Pt' AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL12",
+    "query": "Scを含むL12化合物はありますか",
+    "coverage_score": 0.667,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "はありますか"
+    ],
+    "rb_success": true,
+    "rb_row_count": 8,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Sc' LIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL13",
+    "query": "形成エネルギーが-0.5 eV/atom以下の化合物",
+    "coverage_score": 0.8,
+    "coverage_action": "execute_rule_based",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "以下"
+    ],
+    "rb_success": true,
+    "rb_row_count": 100,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, ps.formation_energy_per_atom\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    ps.formation_energy_per_atom <= -0.5\nLIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL14",
+    "query": "B2とL12のbandgap比較",
+    "coverage_score": 0.75,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "比較"
+    ],
+    "rb_success": true,
+    "rb_row_count": 100,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.band_gap\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12' OR s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL15",
+    "query": "GaとGeを含む化合物",
+    "coverage_score": 1.0,
+    "coverage_action": "execute_rule_based",
+    "unknown_elements": [],
+    "unrecognized_terms": [],
+    "rb_success": true,
+    "rb_row_count": 0,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id WHERE c.element = 'Ga' AND EXISTS (SELECT 1 FROM composition c_ge WHERE c_ge.entry_id = m.entry_id AND c_ge.element = 'Ge') LIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL16",
+    "query": "ordered FCCの安定な化合物",
+    "coverage_score": 0.5,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "安定"
+    ],
+    "rb_success": true,
+    "rb_row_count": 0,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'FCC' OR s.strukturbericht = 'FCC')\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL17",
+    "query": "NbとTaを含むB2化合物のリスト",
+    "coverage_score": 1.0,
+    "coverage_action": "execute_rule_based",
+    "unknown_elements": [],
+    "unrecognized_terms": [],
+    "rb_success": true,
+    "rb_row_count": 1,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c_nb ON c_nb.entry_id = m.entry_id AND c_nb.element = 'Nb' JOIN composition c_ta ON c_ta.entry_id = m.entry_id AND c_ta.element = 'Ta' WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') LIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL18",
+    "query": "formation energy < -0.3のL12",
+    "coverage_score": 1.0,
+    "coverage_action": "execute_rule_based",
+    "unknown_elements": [],
+    "unrecognized_terms": [],
+    "rb_success": true,
+    "rb_row_count": 100,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.formation_energy_per_atom < -0.3\nLIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL19",
+    "query": "Irを含む全ての化合物の格子定数",
+    "coverage_score": 0.667,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "ての"
+    ],
+    "rb_success": true,
+    "rb_row_count": 30,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE c.element = 'Ir' LIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL20",
+    "query": "metastable B2 compounds with Fe",
+    "coverage_score": 1.0,
+    "coverage_action": "execute_rule_based",
+    "unknown_elements": [],
+    "unrecognized_terms": [],
+    "rb_success": true,
+    "rb_row_count": 15,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull \nFROM material_entry m \nJOIN structure s ON s.entry_id = m.entry_id \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nJOIN composition c ON c.entry_id = m.entry_id \nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') \nAND ps.energy_above_hull <= 0.05 \nAND c.element = 'Fe' \nLIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL21",
+    "query": "WとTiのB2化合物",
+    "coverage_score": 1.0,
+    "coverage_action": "execute_rule_based",
+    "unknown_elements": [],
+    "unrecognized_terms": [],
+    "rb_success": true,
+    "rb_row_count": 0,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND EXISTS (SELECT 1 FROM composition c_w WHERE c_w.entry_id = m.entry_id AND c_w.element = 'W') AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti') LIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL22",
+    "query": "L12 compounds sorted by band gap descending",
+    "coverage_score": 0.667,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "sorted",
+      "by"
+    ],
+    "rb_success": true,
+    "rb_row_count": 100,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, ps.band_gap FROM material_entry m JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE s.prototype = 'L12' OR s.strukturbericht = 'L12' ORDER BY ps.band_gap DESC LIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL23",
+    "query": "CuとNiを含むL12型化合物の安定性",
+    "coverage_score": 0.6,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "型化合物",
+      "安定性"
+    ],
+    "rb_success": true,
+    "rb_row_count": 0,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND EXISTS (SELECT 1 FROM composition c_cu WHERE c_cu.entry_id = m.entry_id AND c_cu.element = 'Cu') AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') LIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL24",
+    "query": "全ての化合物を格子定数の大きい順に",
+    "coverage_score": 0.333,
+    "coverage_action": "clarification_required",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "ての",
+      "きい"
+    ],
+    "rb_success": true,
+    "rb_row_count": 100,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nORDER BY s.lattice_a DESC\nLIMIT 100;",
+    "failure_mode": "unsafe_overbroad"
+  },
+  {
+    "id": "BL25",
+    "query": "energy above hullが0.1 eV/atom以下のB2化合物",
+    "coverage_score": 0.857,
+    "coverage_action": "execute_rule_based",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "以下"
+    ],
+    "rb_success": true,
+    "rb_row_count": 100,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.energy_above_hull <= 0.1\nLIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL26",
+    "query": "Alを含まないB2化合物",
+    "coverage_score": 0.667,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "まない"
+    ],
+    "rb_success": true,
+    "rb_row_count": 100,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element != 'Al' LIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL27",
+    "query": "bulk modulusが100 GPa以上の化合物",
+    "coverage_score": 0.6,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "Pa",
+      "以上"
+    ],
+    "rb_success": false,
+    "rb_row_count": 0,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.entry_id = m.entry_id\nWHERE\n    cp.property_name = 'bulk_modulus' AND cp.value >= 100\nLIMIT 100;",
+    "failure_mode": "sql_error"
+  },
+  {
+    "id": "BL28",
+    "query": "CoAlのB2型合金の物性",
+    "coverage_score": 0.6,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "型合金",
+      "物性"
+    ],
+    "rb_success": true,
+    "rb_row_count": 0,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.lattice_b, s.lattice_c, s.volume_per_atom\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND m.chemical_system = 'CoAl'\nLIMIT 100;",
+    "failure_mode": "partial_success"
+  },
+  {
+    "id": "BL29",
+    "query": "最も格子定数が小さいL12化合物",
+    "coverage_score": 0.667,
+    "coverage_action": "fallback_to_llm",
+    "unknown_elements": [],
+    "unrecognized_terms": [
+      "さい"
+    ],
+    "rb_success": true,
+    "rb_row_count": 100,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY s.lattice_a ASC\nLIMIT 100;",
+    "failure_mode": "exact_success"
+  },
+  {
+    "id": "BL30",
+    "query": "formation energyが正のB2化合物",
+    "coverage_score": 1.0,
+    "coverage_action": "execute_rule_based",
+    "unknown_elements": [],
+    "unrecognized_terms": [],
+    "rb_success": true,
+    "rb_row_count": 85,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND\n    ps.formation_energy_per_atom > 0\nLIMIT 100;",
+    "failure_mode": "exact_success"
+  }
+]

@@ -1,0 +1,3798 @@
+[
+  {
+    "id": "A01",
+    "query": "Feを含むB2化合物を出して",
+    "conditions": {
+      "prototype": "B2",
+      "contains_elements": [
+        "Fe"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.667,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "して"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE s.prototype = 'B2' AND c.element = 'Fe'\nLIMIT 100;",
+      "success": true,
+      "row_count": 16,
+      "latency_ms": 13
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Fe' LIMIT 100;",
+      "success": true,
+      "row_count": 16,
+      "latency_ms": 9
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds WHERE formula LIKE '%Fe%' AND formula LIKE 'B2%';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 79,
+      "latency_ms": 821
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.*\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE s.prototype = 'B2'\nAND EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = me.entry_id\n    AND c.element = 'Fe'\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 16,
+      "tokens": 345,
+      "latency_ms": 1572
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Fe' LIMIT 100;",
+      "success": true,
+      "row_count": 16,
+      "tokens": 790,
+      "latency_ms": 1222
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Fe' LIMIT 100;",
+      "success": true,
+      "row_count": 16,
+      "tokens": 967,
+      "latency_ms": 2024
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Fe' LIMIT 100;",
+      "success": true,
+      "row_count": 16,
+      "tokens": 967,
+      "latency_ms": 1578
+    }
+  },
+  {
+    "id": "A02",
+    "query": "安定なL1₂化合物を形成エネルギーが低い順に出して",
+    "conditions": {
+      "prototype": "L12",
+      "stability": "stable",
+      "properties": [
+        "phase_stability.formation_energy_per_atom"
+      ],
+      "sort_by": "phase_stability.formation_energy_per_atom",
+      "sort_order": "asc"
+    },
+    "coverage": {
+      "coverage_score": 0.6,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "安定",
+        "して"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN phase_stability ps ON ps.entry_id = material_entry.entry_id\nWHERE s.prototype = 'L12' AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 88,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 88,
+      "latency_ms": 9
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM materials WHERE compound_type = 'L1₂' ORDER BY formation_energy ASC;",
+      "success": false,
+      "row_count": 0,
+      "tokens": 90,
+      "latency_ms": 512
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system, ps.formation_energy_per_atom\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN structure st ON me.entry_id = st.entry_id\nWHERE ps.is_stable = TRUE \nAND ps.energy_above_hull <= 0.001 \nAND st.prototype = 'L12'\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 88,
+      "tokens": 391,
+      "latency_ms": 1772
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 88,
+      "tokens": 901,
+      "latency_ms": 2710
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 88,
+      "tokens": 1104,
+      "latency_ms": 2507
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 88,
+      "tokens": 1104,
+      "latency_ms": 2074
+    }
+  },
+  {
+    "id": "A03",
+    "query": "NiとAlを両方含む化合物を出して",
+    "conditions": {
+      "contains_elements": [
+        "Ni",
+        "Al"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.5,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "両方含",
+        "して"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE (c.element = 'Ni' OR c.element = 'Al')\nLIMIT 100;",
+      "success": true,
+      "row_count": 97,
+      "latency_ms": 7
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula FROM material_entry m JOIN composition c_ni ON c_ni.entry_id = m.entry_id JOIN composition c_al ON c_al.entry_id = m.entry_id WHERE c_ni.element = 'Ni' AND c_al.element = 'Al' LIMIT 100;",
+      "success": true,
+      "row_count": 4,
+      "latency_ms": 9
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds WHERE elements @> ARRAY['Ni', 'Al'];",
+      "success": false,
+      "row_count": 0,
+      "tokens": 79,
+      "latency_ms": 691
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nWHERE EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = me.entry_id AND c.element = 'Ni'\n) AND EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = me.entry_id AND c.element = 'Al'\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 4,
+      "tokens": 372,
+      "latency_ms": 1885
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula FROM material_entry m WHERE EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al') LIMIT 100;",
+      "success": true,
+      "row_count": 4,
+      "tokens": 829,
+      "latency_ms": 1534
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula FROM material_entry m JOIN composition c_ni ON c_ni.entry_id = m.entry_id JOIN composition c_al ON c_al.entry_id = m.entry_id WHERE c_ni.element = 'Ni' AND c_al.element = 'Al' LIMIT 100;",
+      "success": true,
+      "row_count": 4,
+      "tokens": 939,
+      "latency_ms": 1800
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula FROM material_entry m JOIN composition c_ni ON c_ni.entry_id = m.entry_id JOIN composition c_al ON c_al.entry_id = m.entry_id WHERE c_ni.element = 'Ni' AND c_al.element = 'Al' LIMIT 100;",
+      "success": true,
+      "row_count": 4,
+      "tokens": 939,
+      "latency_ms": 1495
+    }
+  },
+  {
+    "id": "A04",
+    "query": "B2化合物の全リストを出して",
+    "conditions": {
+      "prototype": "B2"
+    },
+    "coverage": {
+      "coverage_score": 0.5,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "して"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\nWHERE s.prototype = 'B2'\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.lattice_b, s.lattice_c, s.volume_per_atom, s.formula_type, s.space_group_number, s.space_group\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 9
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds WHERE chemical_formula LIKE 'B2%';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 74,
+      "latency_ms": 803
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE s.prototype = 'B2'\nAND EXISTS (\n    SELECT 1 FROM composition c WHERE c.entry_id = me.entry_id\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 349,
+      "latency_ms": 1123
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 822,
+      "latency_ms": 1791
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 956,
+      "latency_ms": 1584
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.lattice_b, s.lattice_c, s.volume_per_atom, s.formula_type, s.space_group_number, s.space_group\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 985,
+      "latency_ms": 1777
+    }
+  },
+  {
+    "id": "A05",
+    "query": "準安定なB2化合物を出して",
+    "conditions": {
+      "prototype": "B2",
+      "stability": "metastable"
+    },
+    "coverage": {
+      "coverage_score": 0.333,
+      "action": "clarification_required",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "準安定",
+        "して"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN phase_stability ps ON ps.entry_id = material_entry.entry_id\nWHERE s.prototype = 'B2' AND ps.energy_above_hull <= 0.05\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 10
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.energy_above_hull <= 0.05 LIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 10
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM materials WHERE stability = '準安定' AND compound_type = 'B2';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 83,
+      "latency_ms": 532
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE ps.energy_above_hull > 0.001 \nAND ps.energy_above_hull <= 0.01 \nAND EXISTS (\n    SELECT 1 FROM composition c WHERE c.entry_id = me.entry_id AND c.element = 'B'\n) \nAND EXISTS (\n    SELECT 1 FROM composition c WHERE c.entry_id = me.entry_id AND c.element = '2'\n)\nAND EXISTS (\n    SELECT 1 FROM structure s WHERE s.entry_id = me.entry_id AND s.prototype = 'B2'\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 431,
+      "latency_ms": 2393
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull \nFROM material_entry m \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nJOIN structure s ON s.entry_id = m.entry_id \nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.energy_above_hull <= 0.05 \nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 781,
+      "latency_ms": 1370
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.energy_above_hull <= 0.05 LIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 974,
+      "latency_ms": 1779
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.energy_above_hull <= 0.05 LIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 974,
+      "latency_ms": 2703
+    }
+  },
+  {
+    "id": "A06",
+    "query": "Coを含む安定なL1₂化合物を出して",
+    "conditions": {
+      "prototype": "L12",
+      "contains_elements": [
+        "Co"
+      ],
+      "stability": "stable"
+    },
+    "coverage": {
+      "coverage_score": 0.5,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "安定",
+        "して"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\n  JOIN phase_stability ps ON ps.entry_id = material_entry.entry_id\nWHERE s.prototype = 'L12' AND c.element = 'Co' AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "latency_ms": 9
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Co' AND ps.energy_above_hull <= 0.001 LIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "latency_ms": 11
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds WHERE stability = 'stable' AND formula LIKE '%Co%' AND formula LIKE 'L1₂%';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 90,
+      "latency_ms": 1153
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE ps.energy_above_hull <= 0.001\nAND s.prototype = 'L12'\nAND EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = me.entry_id AND c.element = 'Co'\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "tokens": 390,
+      "latency_ms": 1902
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Co' AND ps.energy_above_hull <= 0.001 LIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "tokens": 824,
+      "latency_ms": 1829
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Co' AND ps.energy_above_hull <= 0.001 LIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "tokens": 1045,
+      "latency_ms": 4082
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Co' AND ps.energy_above_hull <= 0.001 LIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "tokens": 1045,
+      "latency_ms": 2271
+    }
+  },
+  {
+    "id": "A07",
+    "query": "Ptを含む化合物の格子定数を出して",
+    "conditions": {
+      "contains_elements": [
+        "Pt"
+      ],
+      "properties": [
+        "structure.lattice_a"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.667,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "して"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE c.element = 'Pt'\nLIMIT 100;",
+      "success": true,
+      "row_count": 42,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.lattice_a FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE c.element = 'Pt' LIMIT 100;",
+      "success": true,
+      "row_count": 42,
+      "latency_ms": 10
+    },
+    "llm_only": {
+      "sql": "SELECT lattice_constant FROM compounds WHERE chemical_formula LIKE '%Pt%';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 77,
+      "latency_ms": 1237
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT s.lattice_a, s.lattice_b, s.lattice_c\nFROM structure s\nWHERE s.entry_id IN (\n    SELECT c.entry_id\n    FROM composition c\n    WHERE c.element = 'Pt'\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "tokens": 334,
+      "latency_ms": 895
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.lattice_a, s.lattice_b, s.lattice_c FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE c.element = 'Pt' LIMIT 100;",
+      "success": true,
+      "row_count": 42,
+      "tokens": 778,
+      "latency_ms": 1981
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.lattice_a FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE c.element = 'Pt' LIMIT 100;",
+      "success": true,
+      "row_count": 42,
+      "tokens": 944,
+      "latency_ms": 2237
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.lattice_a FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE c.element = 'Pt' LIMIT 100;",
+      "success": true,
+      "row_count": 42,
+      "tokens": 944,
+      "latency_ms": 2387
+    }
+  },
+  {
+    "id": "A08",
+    "query": "B2とL1₂の両方を出して",
+    "conditions": {
+      "prototype": [
+        "L12",
+        "B2"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.5,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "両方",
+        "して"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN structure s ON s.entry_id = material_entry.entry_id\nWHERE s.prototype = 'L12' AND s.prototype = 'B2'\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 0
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE s.prototype = 'L12' OR s.strukturbericht = 'L12' OR s.prototype = 'B2' OR s.strukturbericht = 'B2' LIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 9
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM materials WHERE material_code IN ('B2', 'L1₂');",
+      "success": false,
+      "row_count": 0,
+      "tokens": 79,
+      "latency_ms": 446
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.*\nFROM material_entry me\nWHERE EXISTS (\n    SELECT 1\n    FROM structure s\n    WHERE s.entry_id = me.entry_id AND s.prototype = 'B2'\n) AND EXISTS (\n    SELECT 1\n    FROM structure s\n    WHERE s.entry_id = me.entry_id AND s.prototype = 'L12'\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 356,
+      "latency_ms": 1074
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12' OR s.prototype = 'B2' OR s.strukturbericht = 'B2') LIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 856,
+      "latency_ms": 2041
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE s.prototype = 'L12' OR s.strukturbericht = 'L12' OR s.prototype = 'B2' OR s.strukturbericht = 'B2' LIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 1014,
+      "latency_ms": 1552
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE s.prototype = 'L12' OR s.strukturbericht = 'L12' OR s.prototype = 'B2' OR s.strukturbericht = 'B2' LIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 1014,
+      "latency_ms": 2157
+    }
+  },
+  {
+    "id": "A09",
+    "query": "NiとCoを含むL1₂化合物を出して",
+    "conditions": {
+      "prototype": "L12",
+      "contains_elements": [
+        "Ni",
+        "Co"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.75,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "して"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE s.prototype = 'L12' AND (c.element = 'Ni' OR c.element = 'Co')\nLIMIT 100;",
+      "success": true,
+      "row_count": 12,
+      "latency_ms": 9
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') AND EXISTS (SELECT 1 FROM composition c_co WHERE c_co.entry_id = m.entry_id AND c_co.element = 'Co') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 12
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM materials WHERE compound_type = 'L1₂' AND (elements @> ARRAY['Ni'] AND elements @> ARRAY['Co']);",
+      "success": false,
+      "row_count": 0,
+      "tokens": 94,
+      "latency_ms": 626
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.*\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE s.prototype = 'L12'\nAND EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = me.entry_id AND c.element = 'Ni'\n)\nAND EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = me.entry_id AND c.element = 'Co'\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 376,
+      "latency_ms": 1321
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') AND EXISTS (SELECT 1 FROM composition c_co WHERE c_co.entry_id = m.entry_id AND c_co.element = 'Co') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 866,
+      "latency_ms": 1887
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') AND EXISTS (SELECT 1 FROM composition c_co WHERE c_co.entry_id = m.entry_id AND c_co.element = 'Co') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 1049,
+      "latency_ms": 2669
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') AND EXISTS (SELECT 1 FROM composition c_co WHERE c_co.entry_id = m.entry_id AND c_co.element = 'Co') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 1049,
+      "latency_ms": 2282
+    }
+  },
+  {
+    "id": "A10",
+    "query": "L1₂化合物の全データを出して",
+    "conditions": {
+      "prototype": "L12"
+    },
+    "coverage": {
+      "coverage_score": 0.5,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "して"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\nWHERE s.prototype = 'L12'\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.lattice_b, s.lattice_c, s.volume_per_atom, s.formula_type, s.space_group_number, s.space_group\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 9
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM materials WHERE compound_name LIKE 'L1₂%';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 76,
+      "latency_ms": 524
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.*\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE s.prototype = 'L12'\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 314,
+      "latency_ms": 809
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 798,
+      "latency_ms": 1578
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.lattice_b, s.lattice_c, s.volume_per_atom, s.formula_type, s.space_group_number, s.space_group\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 967,
+      "latency_ms": 1891
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.lattice_b, s.lattice_c, s.volume_per_atom, s.formula_type, s.space_group_number, s.space_group\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 967,
+      "latency_ms": 2089
+    }
+  },
+  {
+    "id": "A11",
+    "query": "FeとAlを含むB2化合物を出して",
+    "conditions": {
+      "prototype": "B2",
+      "contains_elements": [
+        "Al",
+        "Fe"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.75,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "して"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE s.prototype = 'B2' AND (c.element = 'Al' OR c.element = 'Fe')\nLIMIT 100;",
+      "success": true,
+      "row_count": 55,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND EXISTS (SELECT 1 FROM composition c_fe WHERE c_fe.entry_id = m.entry_id AND c_fe.element = 'Fe') AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al') LIMIT 100;",
+      "success": true,
+      "row_count": 4,
+      "latency_ms": 11
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds WHERE formula LIKE '%B2%' AND formula LIKE '%Fe%' AND formula LIKE '%Al%';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 87,
+      "latency_ms": 1341
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.*\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE s.prototype = 'B2'\nAND EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = me.entry_id AND c.element = 'Fe'\n)\nAND EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = me.entry_id AND c.element = 'Al'\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 4,
+      "tokens": 375,
+      "latency_ms": 1530
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND EXISTS (SELECT 1 FROM composition c_fe WHERE c_fe.entry_id = m.entry_id AND c_fe.element = 'Fe') AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al') LIMIT 100;",
+      "success": true,
+      "row_count": 4,
+      "tokens": 863,
+      "latency_ms": 1259
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND EXISTS (SELECT 1 FROM composition c_fe WHERE c_fe.entry_id = m.entry_id AND c_fe.element = 'Fe') AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al') LIMIT 100;",
+      "success": true,
+      "row_count": 4,
+      "tokens": 1050,
+      "latency_ms": 4303
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND EXISTS (SELECT 1 FROM composition c_fe WHERE c_fe.entry_id = m.entry_id AND c_fe.element = 'Fe') AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al') LIMIT 100;",
+      "success": true,
+      "row_count": 4,
+      "tokens": 1050,
+      "latency_ms": 2072
+    }
+  },
+  {
+    "id": "A12",
+    "query": "安定なB2化合物を形成エネルギーが低い順に出して",
+    "conditions": {
+      "prototype": "B2",
+      "stability": "stable",
+      "properties": [
+        "phase_stability.formation_energy_per_atom"
+      ],
+      "sort_by": "phase_stability.formation_energy_per_atom",
+      "sort_order": "asc"
+    },
+    "coverage": {
+      "coverage_score": 0.6,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "安定",
+        "して"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN phase_stability ps ON ps.entry_id = material_entry.entry_id\nWHERE s.prototype = 'B2' AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 10
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds WHERE type = 'B2' AND stability = 'stable' ORDER BY formation_energy ASC;",
+      "success": false,
+      "row_count": 0,
+      "tokens": 93,
+      "latency_ms": 731
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, ps.formation_energy_per_atom\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE ps.is_stable = TRUE \nAND me.entry_id IN (\n    SELECT entry_id FROM structure WHERE prototype = 'B2'\n)\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 367,
+      "latency_ms": 1374
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull \nFROM material_entry m \nJOIN structure s ON s.entry_id = m.entry_id \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') \nAND ps.energy_above_hull <= 0.001 \nORDER BY ps.formation_energy_per_atom ASC \nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 889,
+      "latency_ms": 1881
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 1098,
+      "latency_ms": 2317
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 1098,
+      "latency_ms": 1990
+    }
+  },
+  {
+    "id": "A13",
+    "query": "Tiを含むL1₂化合物を出して",
+    "conditions": {
+      "prototype": "L12",
+      "contains_elements": [
+        "Ti"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.667,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "して"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE s.prototype = 'L12' AND c.element = 'Ti'\nLIMIT 100;",
+      "success": true,
+      "row_count": 10,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Ti' LIMIT 100;",
+      "success": true,
+      "row_count": 10,
+      "latency_ms": 9
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds WHERE formula LIKE '%Ti%' AND formula LIKE 'L1₂%';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 81,
+      "latency_ms": 605
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE s.prototype = 'L12'\nAND EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = me.entry_id\n    AND c.element = 'Ti'\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 10,
+      "tokens": 362,
+      "latency_ms": 1418
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Ti' LIMIT 100;",
+      "success": true,
+      "row_count": 10,
+      "tokens": 782,
+      "latency_ms": 1086
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Ti' LIMIT 100;",
+      "success": true,
+      "row_count": 10,
+      "tokens": 959,
+      "latency_ms": 1073
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Ti' LIMIT 100;",
+      "success": true,
+      "row_count": 10,
+      "tokens": 959,
+      "latency_ms": 1703
+    }
+  },
+  {
+    "id": "A14",
+    "query": "NiとTiを含む安定な化合物を出して",
+    "conditions": {
+      "contains_elements": [
+        "Ni",
+        "Ti"
+      ],
+      "stability": "stable"
+    },
+    "coverage": {
+      "coverage_score": 0.5,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "安定",
+        "して"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN composition c ON c.entry_id = material_entry.entry_id\n  JOIN phase_stability ps ON ps.entry_id = material_entry.entry_id\nWHERE (c.element = 'Ni' OR c.element = 'Ti') AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 20,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id WHERE ps.energy_above_hull <= 0.001 AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 12
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds WHERE (element1 = 'Ni' AND element2 = 'Ti' AND stability = 'stable') OR (element1 = 'Ti' AND element2 = 'Ni' AND stability = 'stable');",
+      "success": false,
+      "row_count": 0,
+      "tokens": 110,
+      "latency_ms": 884
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE ps.is_stable = TRUE AND ps.energy_above_hull <= 0.001\nAND EXISTS (SELECT 1 FROM composition c1 WHERE c1.entry_id = me.entry_id AND c1.element = 'Ni')\nAND EXISTS (SELECT 1 FROM composition c2 WHERE c2.entry_id = me.entry_id AND c2.element = 'Ti')\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 400,
+      "latency_ms": 1469
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.energy_above_hull FROM material_entry m JOIN composition c_ni ON c_ni.entry_id = m.entry_id JOIN composition c_ti ON c_ti.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id WHERE c_ni.element = 'Ni' AND c_ti.element = 'Ti' AND ps.energy_above_hull <= 0.001 LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 882,
+      "latency_ms": 1708
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN composition c1 ON c1.entry_id = m.entry_id JOIN composition c2 ON c2.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id WHERE c1.element = 'Ni' AND c2.element = 'Ti' AND ps.energy_above_hull <= 0.001 LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 1046,
+      "latency_ms": 1879
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id WHERE ps.energy_above_hull <= 0.001 AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 1075,
+      "latency_ms": 2416
+    }
+  },
+  {
+    "id": "A15",
+    "query": "安定なL1₂化合物でNiを含むものを出して",
+    "conditions": {
+      "prototype": "L12",
+      "contains_elements": [
+        "Ni"
+      ],
+      "stability": "stable"
+    },
+    "coverage": {
+      "coverage_score": 0.4,
+      "action": "clarification_required",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "安定",
+        "むものを",
+        "して"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\n  JOIN phase_stability ps ON ps.entry_id = material_entry.entry_id\nWHERE s.prototype = 'L12' AND c.element = 'Ni' AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 6,
+      "latency_ms": 10
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull \nFROM material_entry m \nJOIN composition c ON c.entry_id = m.entry_id \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nJOIN structure s ON s.entry_id = m.entry_id \nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') \nAND c.element = 'Ni' \nAND ps.energy_above_hull <= 0.001 \nLIMIT 100;",
+      "success": true,
+      "row_count": 6,
+      "latency_ms": 11
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM materials WHERE compound_type = 'L1₂' AND stability = 'stable' AND elements @> ARRAY['Ni'];",
+      "success": false,
+      "row_count": 0,
+      "tokens": 94,
+      "latency_ms": 663
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.*\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE s.prototype = 'L12'\nAND ps.energy_above_hull <= 0.001\nAND EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = me.entry_id\n    AND c.element = 'Ni'\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 6,
+      "tokens": 378,
+      "latency_ms": 1286
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull \nFROM material_entry m \nJOIN composition c ON c.entry_id = m.entry_id \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nJOIN structure s ON s.entry_id = m.entry_id \nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') \nAND c.element = 'Ni' \nAND ps.energy_above_hull <= 0.001 \nLIMIT 100;",
+      "success": true,
+      "row_count": 6,
+      "tokens": 862,
+      "latency_ms": 1730
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull \nFROM material_entry m \nJOIN composition c ON c.entry_id = m.entry_id \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nJOIN structure s ON s.entry_id = m.entry_id \nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') \nAND c.element = 'Ni' \nAND ps.energy_above_hull <= 0.001 \nLIMIT 100;",
+      "success": true,
+      "row_count": 6,
+      "tokens": 1079,
+      "latency_ms": 2186
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull \nFROM material_entry m \nJOIN composition c ON c.entry_id = m.entry_id \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nJOIN structure s ON s.entry_id = m.entry_id \nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') \nAND c.element = 'Ni' \nAND ps.energy_above_hull <= 0.001 \nLIMIT 100;",
+      "success": true,
+      "row_count": 6,
+      "tokens": 1079,
+      "latency_ms": 3127
+    }
+  },
+  {
+    "id": "N01",
+    "query": "band gap > 1.0 eVのB2化合物を出して",
+    "conditions": {
+      "prototype": "B2",
+      "properties": [
+        "phase_stability.band_gap"
+      ],
+      "numeric_conditions": [
+        {
+          "column": "phase_stability.band_gap",
+          "operator": ">",
+          "value": 1.0,
+          "raw_match": "band gap > 1.0 eV"
+        }
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.8,
+      "action": "execute_rule_based",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "して"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE s.prototype = 'B2' AND c.element = 'Ga'\nLIMIT 100;",
+      "success": true,
+      "row_count": 9,
+      "latency_ms": 9
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.band_gap > 1.0\nLIMIT 100;",
+      "success": true,
+      "row_count": 43,
+      "latency_ms": 10
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM materials WHERE band_gap > 1.0 AND compound_type = 'B2';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 87,
+      "latency_ms": 493
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE ps.band_gap > 1.0\nAND ps.energy_above_hull <= 0.001\nAND s.prototype = 'B2'\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 372,
+      "latency_ms": 1337
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.band_gap\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.band_gap > 1.0\nLIMIT 100;",
+      "success": true,
+      "row_count": 43,
+      "tokens": 783,
+      "latency_ms": 1867
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.band_gap > 1.0\nLIMIT 100;",
+      "success": true,
+      "row_count": 43,
+      "tokens": 991,
+      "latency_ms": 1974
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.band_gap > 1.0\nLIMIT 100;",
+      "success": true,
+      "row_count": 43,
+      "tokens": 991,
+      "latency_ms": 1673
+    }
+  },
+  {
+    "id": "N02",
+    "query": "形成エネルギーが負のL1₂化合物を出して",
+    "conditions": {
+      "prototype": "L12",
+      "properties": [
+        "phase_stability.formation_energy_per_atom"
+      ],
+      "numeric_conditions": [
+        {
+          "column": "phase_stability.formation_energy_per_atom",
+          "operator": "<",
+          "value": 0,
+          "raw_match": "形成エネルギーが負"
+        }
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.75,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "して"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\nWHERE s.prototype = 'L12'\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 7
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.formation_energy_per_atom < 0\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 10
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM materials WHERE formation_energy < 0 AND compound_type = 'L1₂';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 86,
+      "latency_ms": 722
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE ps.formation_energy_per_atom < 0 AND s.prototype = 'L12'\nAND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 88,
+      "tokens": 372,
+      "latency_ms": 1217
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom \nFROM material_entry m \nJOIN structure s ON s.entry_id = m.entry_id \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') \nAND ps.formation_energy_per_atom < 0 \nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 879,
+      "latency_ms": 1593
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.formation_energy_per_atom < 0\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 1083,
+      "latency_ms": 1780
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.formation_energy_per_atom < 0\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 1090,
+      "latency_ms": 1460
+    }
+  },
+  {
+    "id": "N03",
+    "query": "Ehull < 0.05 eV/atomのB2化合物",
+    "conditions": {
+      "prototype": "B2",
+      "numeric_conditions": [
+        {
+          "column": "phase_stability.energy_above_hull",
+          "operator": "<",
+          "value": 0.05,
+          "raw_match": "Ehull < 0.05 eV/atom"
+        }
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.8,
+      "action": "execute_rule_based",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "Eh"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\nWHERE s.prototype = 'B2'\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull < 0.05\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 11
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds WHERE structure = 'B2' AND Ehull < 0.05;",
+      "success": false,
+      "row_count": 0,
+      "tokens": 86,
+      "latency_ms": 829
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE ps.energy_above_hull < 0.05\nAND EXISTS (\n    SELECT 1 FROM structure s\n    WHERE s.entry_id = me.entry_id AND s.prototype = 'B2'\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 370,
+      "latency_ms": 1623
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull < 0.05\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 809,
+      "latency_ms": 1834
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.energy_above_hull < 0.05\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 1012,
+      "latency_ms": 1904
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull < 0.05\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 1013,
+      "latency_ms": 1919
+    }
+  },
+  {
+    "id": "N04",
+    "query": "格子定数が3.5 Å以上のB2化合物を出して",
+    "conditions": {
+      "prototype": "B2",
+      "properties": [
+        "structure.lattice_a"
+      ],
+      "numeric_conditions": [
+        {
+          "column": "structure.lattice_a",
+          "operator": ">=",
+          "value": 3.5,
+          "raw_match": "格子定数が3.5 Å以上"
+        }
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.6,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "以上",
+        "して"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\nWHERE s.prototype = 'B2'\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND s.lattice_a >= 3.5\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 10
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM materials WHERE lattice_constant >= 3.5 AND compound_type = 'B2';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 88,
+      "latency_ms": 1266
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE s.prototype = 'B2' \nAND s.lattice_a >= 3.5 \nAND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 375,
+      "latency_ms": 1518
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND\n    s.lattice_a >= 3.5\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 776,
+      "latency_ms": 1434
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND s.lattice_a >= 3.5\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 937,
+      "latency_ms": 1549
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND s.lattice_a >= 3.5\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 937,
+      "latency_ms": 1776
+    }
+  },
+  {
+    "id": "N05",
+    "query": "band gapが0のL1₂化合物",
+    "conditions": {
+      "prototype": "L12",
+      "properties": [
+        "phase_stability.band_gap"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 1.0,
+      "action": "execute_rule_based",
+      "unknown_elements": [],
+      "unrecognized_terms": []
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE s.prototype = 'L12' AND c.element = 'Ga'\nLIMIT 100;",
+      "success": true,
+      "row_count": 19,
+      "latency_ms": 9
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.band_gap = 0\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 9
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM materials WHERE structure = 'L1₂' AND band_gap = 0;",
+      "success": false,
+      "row_count": 0,
+      "tokens": 79,
+      "latency_ms": 609
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.*\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE ps.band_gap = 0\nAND s.prototype = 'L12'\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 334,
+      "latency_ms": 965
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.band_gap\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.band_gap = 0\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 795,
+      "latency_ms": 1310
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.band_gap = 0\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 998,
+      "latency_ms": 1593
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.band_gap = 0\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 998,
+      "latency_ms": 2073
+    }
+  },
+  {
+    "id": "B01",
+    "query": "Xeを含むB2化合物を出して",
+    "conditions": {
+      "prototype": "B2"
+    },
+    "coverage": {
+      "coverage_score": 0.333,
+      "action": "fallback_to_llm",
+      "unknown_elements": [
+        "Xe"
+      ],
+      "unrecognized_terms": [
+        "Xe",
+        "して"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\nWHERE s.prototype = 'B2'\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Xe' LIMIT 100;",
+      "success": true,
+      "row_count": 2,
+      "latency_ms": 9
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds WHERE formula LIKE '%Xe%' AND category = 'B2';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 78,
+      "latency_ms": 581
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.*\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE s.prototype = 'B2'\nAND EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = me.entry_id\n    AND c.element = 'Xe'\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 2,
+      "tokens": 345,
+      "latency_ms": 924
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Xe' LIMIT 100;",
+      "success": true,
+      "row_count": 2,
+      "tokens": 790,
+      "latency_ms": 1162
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Xe' LIMIT 100;",
+      "success": true,
+      "row_count": 2,
+      "tokens": 950,
+      "latency_ms": 1700
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Xe' LIMIT 100;",
+      "success": true,
+      "row_count": 2,
+      "tokens": 950,
+      "latency_ms": 2057
+    }
+  },
+  {
+    "id": "B03",
+    "query": "今日の天気を教えて",
+    "conditions": {},
+    "coverage": {
+      "coverage_score": 0.0,
+      "action": "clarification_required",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "今日",
+        "天気",
+        "えて"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 6
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 8
+    },
+    "llm_only": {
+      "sql": "SELECT weather FROM weather_forecast WHERE date = CURRENT_DATE;",
+      "success": false,
+      "row_count": 0,
+      "tokens": 68,
+      "latency_ms": 616
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 331,
+      "latency_ms": 859
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 779,
+      "latency_ms": 1639
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 836,
+      "latency_ms": 927
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 836,
+      "latency_ms": 911
+    }
+  },
+  {
+    "id": "B04",
+    "query": "NiAl L12",
+    "conditions": {
+      "prototype": "L12",
+      "formula": {
+        "formula_str": "NiAl",
+        "composition": {
+          "Ni": 1.0,
+          "Al": 1.0
+        },
+        "elements": [
+          "Al",
+          "Ni"
+        ],
+        "interpretation": "contains_elements"
+      },
+      "contains_elements": [
+        "Al",
+        "Ni"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 1.0,
+      "action": "execute_rule_based",
+      "unknown_elements": [],
+      "unrecognized_terms": []
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE s.prototype = 'L12' AND (c.element = 'Ni' OR c.element = 'Al')\nLIMIT 100;",
+      "success": true,
+      "row_count": 35,
+      "latency_ms": 9
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Ni' AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al') LIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "latency_ms": 10
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM materials WHERE name = 'NiAl L12';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 66,
+      "latency_ms": 798
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE s.prototype = 'L12'\nAND ps.energy_above_hull <= 0.001\nAND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = me.entry_id AND c.element = 'Ni')\nAND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = me.entry_id AND c.element = 'Al')\nLIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "tokens": 396,
+      "latency_ms": 1518
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al') LIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "tokens": 881,
+      "latency_ms": 3066
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Ni' AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al') LIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "tokens": 1046,
+      "latency_ms": 1886
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Ni' AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al') LIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "tokens": 1046,
+      "latency_ms": 1756
+    }
+  },
+  {
+    "id": "B05",
+    "query": "Ni3Al",
+    "conditions": {
+      "formula": {
+        "formula_str": "Ni3Al",
+        "composition": {
+          "Ni": 3.0,
+          "Al": 1.0
+        },
+        "elements": [
+          "Al",
+          "Ni"
+        ],
+        "interpretation": "exact_formula"
+      }
+    },
+    "coverage": {
+      "coverage_score": 1.0,
+      "action": "execute_rule_based",
+      "unknown_elements": [],
+      "unrecognized_terms": []
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE (c.element = 'Ni' OR c.element = 'Al')\nLIMIT 100;",
+      "success": true,
+      "row_count": 97,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, m.reduced_formula, m.chemical_system FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id WHERE c.element = 'Ni' AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al') LIMIT 100;",
+      "success": true,
+      "row_count": 4,
+      "latency_ms": 9
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM materials WHERE formula = 'Ni3Al';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 64,
+      "latency_ms": 435
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nWHERE EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = me.entry_id AND c.element = 'Ni' AND c.atomic_fraction = 0.75\n) AND EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = me.entry_id AND c.element = 'Al' AND c.atomic_fraction = 0.25\n) AND EXISTS (\n    SELECT 1\n    FROM phase_stability ps\n    WHERE ps.entry_id = me.entry_id AND ps.energy_above_hull <= 0.001\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "tokens": 418,
+      "latency_ms": 1856
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni' AND c_ni.atomic_fraction = 0.75) AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al' AND c_al.atomic_fraction = 0.25) LIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "tokens": 582,
+      "latency_ms": 2815
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, m.reduced_formula, m.chemical_system FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id WHERE c.element = 'Ni' AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al') LIMIT 100;",
+      "success": true,
+      "row_count": 4,
+      "tokens": 644,
+      "latency_ms": 1507
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, m.reduced_formula, m.chemical_system FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id WHERE c.element = 'Ni' AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al') LIMIT 100;",
+      "success": true,
+      "row_count": 4,
+      "tokens": 644,
+      "latency_ms": 1442
+    }
+  },
+  {
+    "id": "B06",
+    "query": "FeなしのB2化合物",
+    "conditions": {
+      "prototype": "B2",
+      "contains_elements": [
+        "Fe"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.667,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "なしの"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE s.prototype = 'B2' AND c.element = 'Fe'\nLIMIT 100;",
+      "success": true,
+      "row_count": 16,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element != 'Fe' LIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 10
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds WHERE element NOT LIKE '%Fe%' AND compound_type = 'B2';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 76,
+      "latency_ms": 960
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE s.prototype = 'B2' \nAND ps.energy_above_hull <= 0.001\nAND NOT EXISTS (\n    SELECT 1 \n    FROM composition c \n    WHERE c.entry_id = me.entry_id AND c.element = 'Fe'\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 384,
+      "latency_ms": 1259
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group \nFROM material_entry m \nJOIN structure s ON s.entry_id = m.entry_id \nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') \nAND NOT EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = m.entry_id AND c.element = 'Fe') \nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 771,
+      "latency_ms": 1027
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element != 'Fe' LIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 935,
+      "latency_ms": 1614
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element != 'Fe' LIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 935,
+      "latency_ms": 1461
+    }
+  },
+  {
+    "id": "B07",
+    "query": "ヘスラー合金を出して",
+    "conditions": {},
+    "coverage": {
+      "coverage_score": 0.0,
+      "action": "clarification_required",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "ヘスラー",
+        "して"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 7
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id WHERE c.element = 'Hf' LIMIT 100;",
+      "success": true,
+      "row_count": 13,
+      "latency_ms": 8
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM materials WHERE alloy_name = 'ヘスラー合金';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 73,
+      "latency_ms": 901
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nWHERE EXISTS (\n    SELECT 1 FROM composition c WHERE c.entry_id = me.entry_id AND c.element = 'H'\n) AND EXISTS (\n    SELECT 1 FROM composition c WHERE c.entry_id = me.entry_id AND c.element = 'Fe'\n) AND EXISTS (\n    SELECT 1 FROM composition c WHERE c.entry_id = me.entry_id AND c.element = 'Ni'\n) AND EXISTS (\n    SELECT 1 FROM composition c WHERE c.entry_id = me.entry_id AND c.element = 'Co'\n) AND EXISTS (\n    SELECT 1 FROM phase_stability ps WHERE ps.entry_id = me.entry_id AND ps.energy_above_hull <= 0.001\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 444,
+      "latency_ms": 2070
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE s.prototype = 'H' OR s.strukturbericht = 'H' LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 751,
+      "latency_ms": 836
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id WHERE c.element = 'Hf' LIMIT 100;",
+      "success": true,
+      "row_count": 13,
+      "tokens": 835,
+      "latency_ms": 1030
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id WHERE c.chemical_system = 'Hf' LIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "tokens": 837,
+      "latency_ms": 1162
+    }
+  },
+  {
+    "id": "B08",
+    "query": "band gapが大きい化合物",
+    "conditions": {
+      "properties": [
+        "phase_stability.band_gap"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.667,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "きい"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE c.element = 'Ga'\nLIMIT 100;",
+      "success": true,
+      "row_count": 28,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.band_gap \nFROM material_entry m \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nORDER BY ps.band_gap DESC \nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 11
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM materials WHERE band_gap IS NOT NULL ORDER BY band_gap DESC;",
+      "success": false,
+      "row_count": 0,
+      "tokens": 74,
+      "latency_ms": 703
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, ps.band_gap\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE ps.band_gap IS NOT NULL\nORDER BY ps.band_gap DESC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 329,
+      "latency_ms": 801
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.band_gap FROM material_entry m JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id ORDER BY ps.band_gap DESC LIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 826,
+      "latency_ms": 940
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.band_gap \nFROM material_entry m \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nORDER BY ps.band_gap DESC \nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 965,
+      "latency_ms": 1474
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.band_gap \nFROM material_entry m \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nORDER BY ps.band_gap DESC \nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 965,
+      "latency_ms": 1093
+    }
+  },
+  {
+    "id": "BL01",
+    "query": "Which B2 compounds contain iron?",
+    "conditions": {
+      "prototype": "B2",
+      "contains_elements": [
+        "Fe"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.8,
+      "action": "execute_rule_based",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "ich"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE s.prototype = 'B2' AND (c.element = 'Co' OR c.element = 'Ta' OR c.element = 'W' OR c.element = 'Fe' OR c.element = 'Ir')\nLIMIT 100;",
+      "success": true,
+      "row_count": 77,
+      "latency_ms": 9
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Fe' LIMIT 100;",
+      "success": true,
+      "row_count": 16,
+      "latency_ms": 9
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds WHERE type = 'B2' AND elements @> ARRAY['Fe'];",
+      "success": false,
+      "row_count": 0,
+      "tokens": 74,
+      "latency_ms": 663
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE s.prototype = 'B2'\nAND EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = me.entry_id\n    AND c.element = 'Fe'\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 16,
+      "tokens": 355,
+      "latency_ms": 1291
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group \nFROM material_entry m \nJOIN structure s ON s.entry_id = m.entry_id \nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') \nAND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = m.entry_id AND c.element = 'Fe') \nLIMIT 100;",
+      "success": true,
+      "row_count": 16,
+      "tokens": 767,
+      "latency_ms": 1325
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Fe' LIMIT 100;",
+      "success": true,
+      "row_count": 16,
+      "tokens": 933,
+      "latency_ms": 1500
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Fe' LIMIT 100;",
+      "success": true,
+      "row_count": 16,
+      "tokens": 933,
+      "latency_ms": 1448
+    }
+  },
+  {
+    "id": "BL02",
+    "query": "NiAlの安定性を教えて",
+    "conditions": {
+      "stability": "stable"
+    },
+    "coverage": {
+      "coverage_score": 0.5,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "安定性",
+        "えて"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN composition c ON c.entry_id = material_entry.entry_id\n  JOIN phase_stability ps ON ps.entry_id = material_entry.entry_id\nWHERE (c.element = 'Ni' OR c.element = 'Al') AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 28,
+      "latency_ms": 9
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.is_stable, ps.energy_above_hull \nFROM material_entry m \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nWHERE EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = m.entry_id AND c.element = 'Ni') \nAND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = m.entry_id AND c.element = 'Al') \nLIMIT 100;",
+      "success": true,
+      "row_count": 4,
+      "latency_ms": 9
+    },
+    "llm_only": {
+      "sql": "SELECT stability FROM materials WHERE material_name = 'NiAl';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 70,
+      "latency_ms": 732
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, ps.energy_above_hull, ps.is_stable\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE ps.energy_above_hull <= 0.001\nAND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = me.entry_id AND c.element = 'Ni')\nAND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = me.entry_id AND c.element = 'Al')\nLIMIT 100;",
+      "success": true,
+      "row_count": 4,
+      "tokens": 383,
+      "latency_ms": 1549
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    ps.energy_above_hull <= 0.001 AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al')\nLIMIT 100;",
+      "success": true,
+      "row_count": 4,
+      "tokens": 864,
+      "latency_ms": 2678
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.is_stable, ps.energy_above_hull \nFROM material_entry m \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nWHERE EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = m.entry_id AND c.element = 'Ni') \nAND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = m.entry_id AND c.element = 'Al') \nLIMIT 100;",
+      "success": true,
+      "row_count": 4,
+      "tokens": 986,
+      "latency_ms": 2137
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.is_stable, ps.energy_above_hull \nFROM material_entry m \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nWHERE EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = m.entry_id AND c.element = 'Ni') \nAND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = m.entry_id AND c.element = 'Al') \nLIMIT 100;",
+      "success": true,
+      "row_count": 4,
+      "tokens": 986,
+      "latency_ms": 1853
+    }
+  },
+  {
+    "id": "BL03",
+    "query": "Show me all L12 alloys with Co and Ni",
+    "conditions": {
+      "prototype": "L12",
+      "contains_elements": [
+        "Ni",
+        "Co"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 1.0,
+      "action": "execute_rule_based",
+      "unknown_elements": [],
+      "unrecognized_terms": []
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE s.prototype = 'L12' AND (c.element = 'Ni' OR c.element = 'Al' OR c.element = 'Co' OR c.element = 'W')\nLIMIT 100;",
+      "success": true,
+      "row_count": 38,
+      "latency_ms": 9
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND EXISTS (SELECT 1 FROM composition c_co WHERE c_co.entry_id = m.entry_id AND c_co.element = 'Co') AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 12
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM alloys WHERE type = 'L12' AND (elements @> ARRAY['Co'] AND elements @> ARRAY['Ni']);",
+      "success": false,
+      "row_count": 0,
+      "tokens": 87,
+      "latency_ms": 1105
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE s.prototype = 'L12'\nAND EXISTS (\n    SELECT 1 FROM composition c1 WHERE c1.entry_id = me.entry_id AND c1.element = 'Co'\n)\nAND EXISTS (\n    SELECT 1 FROM composition c2 WHERE c2.entry_id = me.entry_id AND c2.element = 'Ni'\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 385,
+      "latency_ms": 1502
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND EXISTS (SELECT 1 FROM composition c_co WHERE c_co.entry_id = m.entry_id AND c_co.element = 'Co') AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 738,
+      "latency_ms": 1217
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND EXISTS (SELECT 1 FROM composition c_co WHERE c_co.entry_id = m.entry_id AND c_co.element = 'Co') AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 926,
+      "latency_ms": 2326
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND EXISTS (SELECT 1 FROM composition c_co WHERE c_co.entry_id = m.entry_id AND c_co.element = 'Co') AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 926,
+      "latency_ms": 2106
+    }
+  },
+  {
+    "id": "BL04",
+    "query": "Feを含む安定なB2型合金の一覧",
+    "conditions": {
+      "prototype": "B2",
+      "contains_elements": [
+        "Fe"
+      ],
+      "stability": "stable"
+    },
+    "coverage": {
+      "coverage_score": 0.5,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "安定",
+        "型合金"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\n  JOIN phase_stability ps ON ps.entry_id = material_entry.entry_id\nWHERE s.prototype = 'B2' AND c.element = 'Fe' AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 6,
+      "latency_ms": 9
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Fe' AND ps.energy_above_hull <= 0.001 LIMIT 100;",
+      "success": true,
+      "row_count": 6,
+      "latency_ms": 10
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM alloys WHERE structure = 'B2' AND stable = true AND elements @> ARRAY['Fe'];",
+      "success": false,
+      "row_count": 0,
+      "tokens": 86,
+      "latency_ms": 713
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE ps.is_stable = TRUE \n  AND ps.energy_above_hull <= 0.001 \n  AND s.prototype = 'B2' \n  AND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = me.entry_id AND c.element = 'Fe')\nLIMIT 100;",
+      "success": true,
+      "row_count": 6,
+      "tokens": 394,
+      "latency_ms": 1436
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Fe' AND ps.energy_above_hull <= 0.001 LIMIT 100;",
+      "success": true,
+      "row_count": 6,
+      "tokens": 815,
+      "latency_ms": 1255
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Fe' AND ps.energy_above_hull <= 0.001 LIMIT 100;",
+      "success": true,
+      "row_count": 6,
+      "tokens": 1039,
+      "latency_ms": 1825
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Fe' AND ps.energy_above_hull <= 0.001 LIMIT 100;",
+      "success": true,
+      "row_count": 6,
+      "tokens": 1039,
+      "latency_ms": 1951
+    }
+  },
+  {
+    "id": "BL05",
+    "query": "lattice constant > 3.6のB2を出して",
+    "conditions": {
+      "prototype": "B2",
+      "properties": [
+        "structure.lattice_a"
+      ],
+      "numeric_conditions": [
+        {
+          "column": "structure.lattice_a",
+          "operator": ">",
+          "value": 3.6,
+          "raw_match": "lattice constant > 3.6"
+        }
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.8,
+      "action": "execute_rule_based",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "して"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE s.prototype = 'B2' AND (c.element = 'Co' OR c.element = 'Ti' OR c.element = 'Ta')\nLIMIT 100;",
+      "success": true,
+      "row_count": 66,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND s.lattice_a > 3.6\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 9
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM materials WHERE lattice_constant > 3.6 AND structure = 'B2';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 81,
+      "latency_ms": 638
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE s.lattice_a > 3.6 AND s.prototype = 'B2'\nAND EXISTS (\n    SELECT 1 FROM composition c WHERE c.entry_id = me.entry_id\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 360,
+      "latency_ms": 1276
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND s.lattice_a > 3.6\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 785,
+      "latency_ms": 1462
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND s.lattice_a > 3.6\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 965,
+      "latency_ms": 1525
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND s.lattice_a > 3.6\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 965,
+      "latency_ms": 1862
+    }
+  },
+  {
+    "id": "BL06",
+    "query": "energy above hullが最も低いL12化合物top10",
+    "conditions": {
+      "prototype": "L12",
+      "properties": [
+        "phase_stability.energy_above_hull"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.833,
+      "action": "execute_rule_based",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "top"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\nWHERE s.prototype = 'L12'\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 10
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY ps.energy_above_hull ASC\nLIMIT 10;",
+      "success": true,
+      "row_count": 10,
+      "latency_ms": 11
+    },
+    "llm_only": {
+      "sql": "SELECT *\nFROM materials\nWHERE compound_type = 'L12'\nORDER BY energy_above_hull ASC\nLIMIT 10;",
+      "success": false,
+      "row_count": 0,
+      "tokens": 90,
+      "latency_ms": 567
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, ps.energy_above_hull\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE s.prototype = 'L12' AND ps.energy_above_hull <= 0.001\nORDER BY ps.energy_above_hull ASC\nLIMIT 10;",
+      "success": true,
+      "row_count": 10,
+      "tokens": 366,
+      "latency_ms": 1287
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.energy_above_hull \nFROM material_entry m \nJOIN structure s ON s.entry_id = m.entry_id \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') \nORDER BY ps.energy_above_hull ASC \nLIMIT 10;",
+      "success": true,
+      "row_count": 10,
+      "tokens": 863,
+      "latency_ms": 1917
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY ps.energy_above_hull ASC\nLIMIT 10;",
+      "success": true,
+      "row_count": 10,
+      "tokens": 1071,
+      "latency_ms": 1792
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY ps.energy_above_hull ASC\nLIMIT 10;",
+      "success": true,
+      "row_count": 10,
+      "tokens": 1071,
+      "latency_ms": 2019
+    }
+  },
+  {
+    "id": "BL07",
+    "query": "CuAu型構造の化合物は？",
+    "conditions": {},
+    "coverage": {
+      "coverage_score": 0.333,
+      "action": "clarification_required",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "Au",
+        "型構造"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE c.element = 'Cu'\nLIMIT 100;",
+      "success": true,
+      "row_count": 34,
+      "latency_ms": 9
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 9
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds WHERE structure_type = 'CuAu';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 71,
+      "latency_ms": 603
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE s.prototype = 'L12' AND ps.energy_above_hull <= 0.001\nAND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = me.entry_id AND c.element = 'Cu')\nAND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = me.entry_id AND c.element = 'Au')\nLIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "tokens": 402,
+      "latency_ms": 1799
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 766,
+      "latency_ms": 1266
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 876,
+      "latency_ms": 1618
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 876,
+      "latency_ms": 1730
+    }
+  },
+  {
+    "id": "BL08",
+    "query": "Ti-Al系B2合金で安定なもの",
+    "conditions": {
+      "prototype": "B2",
+      "contains_elements": [
+        "Al",
+        "Ti"
+      ],
+      "stability": "stable"
+    },
+    "coverage": {
+      "coverage_score": 0.6,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "安定",
+        "なもの"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\n  JOIN phase_stability ps ON ps.entry_id = material_entry.entry_id\nWHERE s.prototype = 'B2' AND (c.element = 'Al' OR c.element = 'Ti') AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 20,
+      "latency_ms": 10
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN composition c ON c.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.001\n    AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti')\n    AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al')\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 18
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM alloys WHERE system = 'Ti-Al' AND type = 'B2' AND stability = 'stable';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 85,
+      "latency_ms": 618
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE ps.energy_above_hull <= 0.001\nAND EXISTS (\n    SELECT 1 FROM composition c1 WHERE c1.entry_id = me.entry_id AND c1.element = 'Ti'\n)\nAND EXISTS (\n    SELECT 1 FROM composition c2 WHERE c2.entry_id = me.entry_id AND c2.element = 'Al'\n)\nAND EXISTS (\n    SELECT 1 FROM structure s WHERE s.entry_id = me.entry_id AND s.prototype = 'B2'\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 421,
+      "latency_ms": 1505
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.001\n    AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti')\n    AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al')\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 923,
+      "latency_ms": 3940
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN composition c ON c.entry_id = m.entry_id\nWHERE \n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.001\n    AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti')\n    AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al')\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 1164,
+      "latency_ms": 2893
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN composition c ON c.entry_id = m.entry_id\nWHERE \n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.001\n    AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti')\n    AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al')\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 1164,
+      "latency_ms": 6544
+    }
+  },
+  {
+    "id": "BL09",
+    "query": "band gapが正のB2化合物を大きい順に",
+    "conditions": {
+      "prototype": "B2",
+      "properties": [
+        "phase_stability.band_gap"
+      ],
+      "sort_by": "phase_stability.band_gap",
+      "sort_order": "desc",
+      "numeric_conditions": [
+        {
+          "column": "phase_stability.band_gap",
+          "operator": ">",
+          "value": 0,
+          "raw_match": "band gapが正"
+        }
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.75,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "きい"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE s.prototype = 'B2' AND c.element = 'Ga'\nLIMIT 100;",
+      "success": true,
+      "row_count": 9,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.band_gap \nFROM material_entry m \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nJOIN structure s ON s.entry_id = m.entry_id \nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') \nAND ps.band_gap > 0 \nORDER BY ps.band_gap DESC \nLIMIT 100;",
+      "success": true,
+      "row_count": 53,
+      "latency_ms": 10
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM materials WHERE band_gap > 0 AND compound_type = 'B2' ORDER BY band_gap DESC;",
+      "success": false,
+      "row_count": 0,
+      "tokens": 89,
+      "latency_ms": 634
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, ps.band_gap\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE ps.band_gap > 0 AND s.prototype = 'B2' AND ps.energy_above_hull <= 0.001\nORDER BY ps.band_gap DESC\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 368,
+      "latency_ms": 1128
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.band_gap \nFROM material_entry m \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nJOIN structure s ON s.entry_id = m.entry_id \nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') \nAND ps.band_gap > 0 \nORDER BY ps.band_gap DESC \nLIMIT 100;",
+      "success": true,
+      "row_count": 53,
+      "tokens": 866,
+      "latency_ms": 1159
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.band_gap \nFROM material_entry m \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nJOIN structure s ON s.entry_id = m.entry_id \nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') \nAND ps.band_gap > 0 \nORDER BY ps.band_gap DESC \nLIMIT 100;",
+      "success": true,
+      "row_count": 53,
+      "tokens": 1069,
+      "latency_ms": 1956
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.band_gap \nFROM material_entry m \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nJOIN structure s ON s.entry_id = m.entry_id \nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') \nAND ps.band_gap > 0 \nORDER BY ps.band_gap DESC \nLIMIT 100;",
+      "success": true,
+      "row_count": 53,
+      "tokens": 1069,
+      "latency_ms": 1861
+    }
+  },
+  {
+    "id": "BL10",
+    "query": "Ni3Alの形成エネルギー",
+    "conditions": {
+      "properties": [
+        "phase_stability.formation_energy_per_atom"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 1.0,
+      "action": "execute_rule_based",
+      "unknown_elements": [],
+      "unrecognized_terms": []
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE (c.element = 'Ni' OR c.element = 'Al')\nLIMIT 100;",
+      "success": true,
+      "row_count": 97,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.formation_energy_per_atom \nFROM material_entry m \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nWHERE m.formula = 'Ni3Al' \nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 9
+    },
+    "llm_only": {
+      "sql": "SELECT formation_energy FROM materials WHERE material_name = 'Ni3Al';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 72,
+      "latency_ms": 434
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT pes.formation_energy_per_atom\nFROM phase_stability pes\nJOIN material_entry me ON pes.entry_id = me.entry_id\nWHERE me.formula = 'Ni3Al'\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 319,
+      "latency_ms": 809
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.formation_energy_per_atom \nFROM material_entry m \nJOIN composition c_ni ON c_ni.entry_id = m.entry_id \nJOIN composition c_al ON c_al.entry_id = m.entry_id \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nWHERE c_ni.element = 'Ni' AND c_ni.atomic_fraction = 0.75 \nAND c_al.element = 'Al' AND c_al.atomic_fraction = 0.25 \nLIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "tokens": 893,
+      "latency_ms": 3299
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.formation_energy_per_atom \nFROM material_entry m \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nWHERE m.reduced_formula = 'Ni3Al' \nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 985,
+      "latency_ms": 1267
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.formation_energy_per_atom \nFROM material_entry m \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nJOIN composition c ON c.entry_id = m.entry_id \nWHERE m.formula = 'Ni3Al' \nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 996,
+      "latency_ms": 1663
+    }
+  },
+  {
+    "id": "BL11",
+    "query": "Pt containing stable compounds",
+    "conditions": {
+      "contains_elements": [
+        "Pt"
+      ],
+      "stability": "stable"
+    },
+    "coverage": {
+      "coverage_score": 1.0,
+      "action": "execute_rule_based",
+      "unknown_elements": [],
+      "unrecognized_terms": []
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN composition c ON c.entry_id = material_entry.entry_id\n  JOIN phase_stability ps ON ps.entry_id = material_entry.entry_id\nWHERE (c.element = 'Ni' OR c.element = 'Co' OR c.element = 'Ta' OR c.element = 'Pt') AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 27,
+      "latency_ms": 10
+    },
+    "sg_rb": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE c.element = 'Pt' AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 7,
+      "latency_ms": 10
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds WHERE element = 'Pt' AND stability = 'stable';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 69,
+      "latency_ms": 690
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nWHERE EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = me.entry_id AND c.element = 'Pt'\n)\nAND EXISTS (\n    SELECT 1\n    FROM phase_stability ps\n    WHERE ps.entry_id = me.entry_id AND ps.energy_above_hull <= 0.001\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 7,
+      "tokens": 369,
+      "latency_ms": 1695
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE ps.energy_above_hull <= 0.001\nAND EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = me.entry_id AND c.element = 'Pt'\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 7,
+      "tokens": 358,
+      "latency_ms": 1181
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE c.element = 'Pt' AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 7,
+      "tokens": 513,
+      "latency_ms": 1606
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE c.element = 'Pt' AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 7,
+      "tokens": 513,
+      "latency_ms": 1633
+    }
+  },
+  {
+    "id": "BL12",
+    "query": "Scを含むL12化合物はありますか",
+    "conditions": {
+      "prototype": "L12",
+      "contains_elements": [
+        "Sc"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.667,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "はありますか"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE s.prototype = 'L12' AND c.element = 'Sc'\nLIMIT 100;",
+      "success": true,
+      "row_count": 8,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Sc' LIMIT 100;",
+      "success": true,
+      "row_count": 8,
+      "latency_ms": 10
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds WHERE name LIKE '%Sc%' AND type = 'L12';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 78,
+      "latency_ms": 796
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE s.prototype = 'L12'\nAND EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = me.entry_id\n    AND c.element = 'Sc'\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 8,
+      "tokens": 361,
+      "latency_ms": 1188
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = m.entry_id AND c.element = 'Sc') LIMIT 100;",
+      "success": true,
+      "row_count": 8,
+      "tokens": 787,
+      "latency_ms": 1504
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Sc' LIMIT 100;",
+      "success": true,
+      "row_count": 8,
+      "tokens": 958,
+      "latency_ms": 14423
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Sc' LIMIT 100;",
+      "success": true,
+      "row_count": 8,
+      "tokens": 958,
+      "latency_ms": 1696
+    }
+  },
+  {
+    "id": "BL13",
+    "query": "形成エネルギーが-0.5 eV/atom以下の化合物",
+    "conditions": {
+      "properties": [
+        "phase_stability.formation_energy_per_atom"
+      ],
+      "numeric_conditions": [
+        {
+          "column": "phase_stability.formation_energy_per_atom",
+          "operator": "<=",
+          "value": -0.5,
+          "raw_match": "形成エネルギーが-0.5 eV/atom以下"
+        }
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.8,
+      "action": "execute_rule_based",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "以下"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 6
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, ps.formation_energy_per_atom\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    ps.formation_energy_per_atom <= -0.5\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 9
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds WHERE formation_energy <= -0.5;",
+      "success": false,
+      "row_count": 0,
+      "tokens": 82,
+      "latency_ms": 651
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE ps.formation_energy_per_atom <= -0.5\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 344,
+      "latency_ms": 1086
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    ps.formation_energy_per_atom <= -0.5\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 869,
+      "latency_ms": 1889
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, ps.formation_energy_per_atom\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    ps.formation_energy_per_atom <= -0.5\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 1001,
+      "latency_ms": 2139
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, ps.formation_energy_per_atom\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    ps.formation_energy_per_atom <= -0.5\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 1001,
+      "latency_ms": 1634
+    }
+  },
+  {
+    "id": "BL14",
+    "query": "B2とL12のbandgap比較",
+    "conditions": {
+      "prototype": [
+        "L12",
+        "B2"
+      ],
+      "properties": [
+        "phase_stability.band_gap"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.75,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "比較"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE s.prototype = 'L12' AND s.prototype = 'B2' AND c.element = 'Ga'\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 0
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.band_gap\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12' OR s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 11
+    },
+    "llm_only": {
+      "sql": "SELECT material, bandgap FROM materials WHERE material IN ('B2', 'L12');",
+      "success": false,
+      "row_count": 0,
+      "tokens": 76,
+      "latency_ms": 496
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT s.prototype, p.band_gap\nFROM structure s\nJOIN phase_stability p ON s.entry_id = p.entry_id\nWHERE s.prototype IN ('B2', 'L12') AND p.is_stable = TRUE\nLIMIT 100;",
+      "success": true,
+      "row_count": 2,
+      "tokens": 328,
+      "latency_ms": 918
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.band_gap\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2' OR s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 840,
+      "latency_ms": 1699
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.band_gap\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12' OR s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 1044,
+      "latency_ms": 1958
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.band_gap\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2' OR s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 1044,
+      "latency_ms": 2456
+    }
+  },
+  {
+    "id": "BL15",
+    "query": "GaとGeを含む化合物",
+    "conditions": {
+      "contains_elements": [
+        "Ga",
+        "Ge"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 1.0,
+      "action": "execute_rule_based",
+      "unknown_elements": [],
+      "unrecognized_terms": []
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE (c.element = 'Ga' OR c.element = 'Ge')\nLIMIT 100;",
+      "success": true,
+      "row_count": 36,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id WHERE c.element = 'Ga' AND EXISTS (SELECT 1 FROM composition c_ge WHERE c_ge.entry_id = m.entry_id AND c_ge.element = 'Ge') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 9
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds WHERE name ILIKE '%Ga%' AND name ILIKE '%Ge%';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 77,
+      "latency_ms": 878
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nWHERE EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = me.entry_id AND c.element = 'Ga'\n) AND EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = me.entry_id AND c.element = 'Ge'\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 366,
+      "latency_ms": 1266
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula FROM material_entry m WHERE EXISTS (SELECT 1 FROM composition c_ga WHERE c_ga.entry_id = m.entry_id AND c_ga.element = 'Ga') AND EXISTS (SELECT 1 FROM composition c_ge WHERE c_ge.entry_id = m.entry_id AND c_ge.element = 'Ge') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 820,
+      "latency_ms": 1668
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id WHERE c.element = 'Ga' AND EXISTS (SELECT 1 FROM composition c_ge WHERE c_ge.entry_id = m.entry_id AND c_ge.element = 'Ge') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 933,
+      "latency_ms": 1283
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id WHERE c.element = 'Ga' AND EXISTS (SELECT 1 FROM composition c_ge WHERE c_ge.entry_id = m.entry_id AND c_ge.element = 'Ge') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 933,
+      "latency_ms": 1326
+    }
+  },
+  {
+    "id": "BL16",
+    "query": "ordered FCCの安定な化合物",
+    "conditions": {
+      "prototype": "L12",
+      "stability": "stable"
+    },
+    "coverage": {
+      "coverage_score": 0.5,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "安定"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN phase_stability ps ON ps.entry_id = material_entry.entry_id\nWHERE s.prototype = 'L12' AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 88,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'FCC' OR s.strukturbericht = 'FCC')\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 11
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM materials WHERE compound_name LIKE '%FCC%' AND stability = 'stable' ORDER BY compound_name;",
+      "success": false,
+      "row_count": 0,
+      "tokens": 80,
+      "latency_ms": 601
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE s.prototype = 'FCC' AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 352,
+      "latency_ms": 1165
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'FCC' OR s.strukturbericht = 'FCC')\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 856,
+      "latency_ms": 1883
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'FCC' OR s.strukturbericht = 'FCC')\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 1054,
+      "latency_ms": 2249
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'FCC' OR s.strukturbericht = 'FCC')\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 1054,
+      "latency_ms": 1961
+    }
+  },
+  {
+    "id": "BL17",
+    "query": "NbとTaを含むB2化合物のリスト",
+    "conditions": {
+      "prototype": "B2",
+      "contains_elements": [
+        "Ta",
+        "Nb"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 1.0,
+      "action": "execute_rule_based",
+      "unknown_elements": [],
+      "unrecognized_terms": []
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE s.prototype = 'B2' AND (c.element = 'Ta' OR c.element = 'Nb')\nLIMIT 100;",
+      "success": true,
+      "row_count": 24,
+      "latency_ms": 9
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c_nb ON c_nb.entry_id = m.entry_id JOIN composition c_ta ON c_ta.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c_nb.element = 'Nb' AND c_ta.element = 'Ta' LIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "latency_ms": 11
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds WHERE formula LIKE '%B2%' AND (formula LIKE '%Nb%' OR formula LIKE '%Ta%');",
+      "success": false,
+      "row_count": 0,
+      "tokens": 88,
+      "latency_ms": 784
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE s.prototype = 'B2'\nAND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = me.entry_id AND c.element = 'Nb')\nAND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = me.entry_id AND c.element = 'Ta')\nLIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "tokens": 379,
+      "latency_ms": 2201
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND EXISTS (SELECT 1 FROM composition c_nb WHERE c_nb.entry_id = m.entry_id AND c_nb.element = 'Nb') AND EXISTS (SELECT 1 FROM composition c_ta WHERE c_ta.entry_id = m.entry_id AND c_ta.element = 'Ta') LIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "tokens": 854,
+      "latency_ms": 2534
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c_nb ON c_nb.entry_id = m.entry_id JOIN composition c_ta ON c_ta.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c_nb.element = 'Nb' AND c_ta.element = 'Ta' LIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "tokens": 1018,
+      "latency_ms": 2048
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c_nb ON c_nb.entry_id = m.entry_id JOIN composition c_ta ON c_ta.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c_nb.element = 'Nb' AND c_ta.element = 'Ta' LIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "tokens": 1018,
+      "latency_ms": 9385
+    }
+  },
+  {
+    "id": "BL18",
+    "query": "formation energy < -0.3のL12",
+    "conditions": {
+      "prototype": "L12",
+      "properties": [
+        "phase_stability.formation_energy_per_atom"
+      ],
+      "numeric_conditions": [
+        {
+          "column": "phase_stability.formation_energy_per_atom",
+          "operator": "<",
+          "value": -0.3,
+          "raw_match": "formation energy < -0.3"
+        }
+      ]
+    },
+    "coverage": {
+      "coverage_score": 1.0,
+      "action": "execute_rule_based",
+      "unknown_elements": [],
+      "unrecognized_terms": []
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE s.prototype = 'L12' AND c.element = 'Ti'\nLIMIT 100;",
+      "success": true,
+      "row_count": 10,
+      "latency_ms": 9
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.formation_energy_per_atom < -0.3\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 11
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM materials WHERE formation_energy < -0.3 AND material_id = 'L12';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 79,
+      "latency_ms": 741
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE ps.formation_energy_per_atom < -0.3\nAND EXISTS (\n    SELECT 1\n    FROM structure s\n    WHERE s.entry_id = me.entry_id AND s.prototype = 'L12'\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 365,
+      "latency_ms": 1303
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.formation_energy_per_atom < -0.3\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 802,
+      "latency_ms": 1336
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.formation_energy_per_atom < -0.3\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 1005,
+      "latency_ms": 2342
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.formation_energy_per_atom < -0.3\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 1005,
+      "latency_ms": 2080
+    }
+  },
+  {
+    "id": "BL19",
+    "query": "Irを含む全ての化合物の格子定数",
+    "conditions": {
+      "contains_elements": [
+        "Ir"
+      ],
+      "properties": [
+        "structure.lattice_a"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.667,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "ての"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE c.element = 'Ir'\nLIMIT 100;",
+      "success": true,
+      "row_count": 30,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE c.element = 'Ir' LIMIT 100;",
+      "success": true,
+      "row_count": 30,
+      "latency_ms": 9
+    },
+    "llm_only": {
+      "sql": "SELECT lattice_constant FROM compounds WHERE chemical_formula LIKE '%Ir%';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 77,
+      "latency_ms": 679
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT s.lattice_a, s.lattice_b, s.lattice_c\nFROM structure s\nWHERE s.entry_id IN (\n    SELECT c.entry_id\n    FROM composition c\n    WHERE c.element = 'Ir'\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "tokens": 334,
+      "latency_ms": 854
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.lattice_a, s.lattice_b, s.lattice_c FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE c.element = 'Ir' LIMIT 100;",
+      "success": true,
+      "row_count": 30,
+      "tokens": 730,
+      "latency_ms": 1038
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE c.element = 'Ir' LIMIT 100;",
+      "success": true,
+      "row_count": 30,
+      "tokens": 897,
+      "latency_ms": 1248
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE c.element = 'Ir' LIMIT 100;",
+      "success": true,
+      "row_count": 30,
+      "tokens": 897,
+      "latency_ms": 1167
+    }
+  },
+  {
+    "id": "BL20",
+    "query": "metastable B2 compounds with Fe",
+    "conditions": {
+      "prototype": "B2",
+      "contains_elements": [
+        "Fe"
+      ],
+      "stability": "metastable"
+    },
+    "coverage": {
+      "coverage_score": 1.0,
+      "action": "execute_rule_based",
+      "unknown_elements": [],
+      "unrecognized_terms": []
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\n  JOIN phase_stability ps ON ps.entry_id = material_entry.entry_id\nWHERE s.prototype = 'B2' AND (c.element = 'Co' OR c.element = 'Ta' OR c.element = 'W' OR c.element = 'Fe') AND ps.energy_above_hull <= 0.05\nLIMIT 100;",
+      "success": true,
+      "row_count": 37,
+      "latency_ms": 10
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull \nFROM material_entry m \nJOIN structure s ON s.entry_id = m.entry_id \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nJOIN composition c ON c.entry_id = m.entry_id \nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') \nAND ps.energy_above_hull <= 0.05 \nAND c.element = 'Fe' \nLIMIT 100;",
+      "success": true,
+      "row_count": 15,
+      "latency_ms": 11
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds WHERE structure = 'B2' AND metastable = TRUE AND element = 'Fe';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 78,
+      "latency_ms": 682
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE ps.energy_above_hull > 0.001\nAND EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = me.entry_id AND c.element = 'Fe'\n)\nAND EXISTS (\n    SELECT 1\n    FROM structure s\n    WHERE s.entry_id = me.entry_id AND s.prototype = 'B2'\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 10,
+      "tokens": 392,
+      "latency_ms": 1616
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull \nFROM material_entry m \nJOIN structure s ON s.entry_id = m.entry_id \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') \nAND ps.energy_above_hull <= 0.05 \nAND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = m.entry_id AND c.element = 'Fe') \nLIMIT 100;",
+      "success": true,
+      "row_count": 15,
+      "tokens": 801,
+      "latency_ms": 1465
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull \nFROM material_entry m \nJOIN structure s ON s.entry_id = m.entry_id \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nJOIN composition c ON c.entry_id = m.entry_id \nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') \nAND ps.energy_above_hull <= 0.05 \nAND c.element = 'Fe' \nLIMIT 100;",
+      "success": true,
+      "row_count": 15,
+      "tokens": 1013,
+      "latency_ms": 2335
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull \nFROM material_entry m \nJOIN structure s ON s.entry_id = m.entry_id \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nJOIN composition c ON c.entry_id = m.entry_id \nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') \nAND ps.energy_above_hull <= 0.05 \nAND c.element = 'Fe' \nLIMIT 100;",
+      "success": true,
+      "row_count": 15,
+      "tokens": 1013,
+      "latency_ms": 2404
+    }
+  },
+  {
+    "id": "BL21",
+    "query": "WとTiのB2化合物",
+    "conditions": {
+      "prototype": "B2",
+      "contains_elements": [
+        "Ti",
+        "W"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 1.0,
+      "action": "execute_rule_based",
+      "unknown_elements": [],
+      "unrecognized_terms": []
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE s.prototype = 'B2' AND (c.element = 'Ti' OR c.element = 'W')\nLIMIT 100;",
+      "success": true,
+      "row_count": 39,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND EXISTS (SELECT 1 FROM composition c_w WHERE c_w.entry_id = m.entry_id AND c_w.element = 'W') AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 9
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM materials WHERE compound_name LIKE '%W%' AND compound_name LIKE '%Ti%' AND compound_name LIKE '%B2%';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 85,
+      "latency_ms": 797
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE s.prototype = 'B2'\nAND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = me.entry_id AND c.element = 'W')\nAND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = me.entry_id AND c.element = 'Ti')\nAND EXISTS (SELECT 1 FROM phase_stability ps WHERE ps.entry_id = me.entry_id AND ps.energy_above_hull <= 0.001)\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 406,
+      "latency_ms": 1825
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND EXISTS (SELECT 1 FROM composition c_w WHERE c_w.entry_id = m.entry_id AND c_w.element = 'W') AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 891,
+      "latency_ms": 6012
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND EXISTS (SELECT 1 FROM composition c_w WHERE c_w.entry_id = m.entry_id AND c_w.element = 'W') AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 1067,
+      "latency_ms": 2159
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND EXISTS (SELECT 1 FROM composition c_w WHERE c_w.entry_id = m.entry_id AND c_w.element = 'W') AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 1067,
+      "latency_ms": 2044
+    }
+  },
+  {
+    "id": "BL22",
+    "query": "L12 compounds sorted by band gap descending",
+    "conditions": {
+      "prototype": "L12",
+      "properties": [
+        "phase_stability.band_gap"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.667,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "sorted",
+        "by"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE s.prototype = 'L12' AND (c.element = 'Co' OR c.element = 'Sc' OR c.element = 'Ga')\nLIMIT 100;",
+      "success": true,
+      "row_count": 30,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.band_gap FROM material_entry m JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE s.prototype = 'L12' OR s.strukturbericht = 'L12' ORDER BY ps.band_gap DESC LIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 10
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds WHERE classification = 'L12' ORDER BY band_gap DESC;",
+      "success": false,
+      "row_count": 0,
+      "tokens": 74,
+      "latency_ms": 640
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, ps.band_gap\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE s.prototype = 'L12' AND ps.energy_above_hull <= 0.001\nORDER BY ps.band_gap DESC\nLIMIT 100;",
+      "success": true,
+      "row_count": 88,
+      "tokens": 353,
+      "latency_ms": 1008
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.band_gap FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.energy_above_hull <= 0.001 ORDER BY ps.band_gap DESC LIMIT 100;",
+      "success": true,
+      "row_count": 88,
+      "tokens": 539,
+      "latency_ms": 1462
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.band_gap FROM material_entry m JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE s.prototype = 'L12' OR s.strukturbericht = 'L12' ORDER BY ps.band_gap DESC LIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 711,
+      "latency_ms": 1783
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.band_gap FROM material_entry m JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE s.prototype = 'L12' OR s.strukturbericht = 'L12' ORDER BY ps.band_gap DESC LIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 711,
+      "latency_ms": 1541
+    }
+  },
+  {
+    "id": "BL23",
+    "query": "CuとNiを含むL12型化合物の安定性",
+    "conditions": {
+      "prototype": "L12",
+      "contains_elements": [
+        "Ni",
+        "Cu"
+      ],
+      "stability": "stable"
+    },
+    "coverage": {
+      "coverage_score": 0.6,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "型化合物",
+        "安定性"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\n  JOIN phase_stability ps ON ps.entry_id = material_entry.entry_id\nWHERE s.prototype = 'L12' AND (c.element = 'Ni' OR c.element = 'Cu') AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 8,
+      "latency_ms": 9
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND EXISTS (SELECT 1 FROM composition c_cu WHERE c_cu.entry_id = m.entry_id AND c_cu.element = 'Cu') AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 17
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds \nWHERE structure_type = 'L12' \nAND (element_1 = 'Cu' OR element_2 = 'Cu') \nAND (element_1 = 'Ni' OR element_2 = 'Ni') \nAND stability IS NOT NULL;",
+      "success": false,
+      "row_count": 0,
+      "tokens": 121,
+      "latency_ms": 1431
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE s.prototype = 'L12'\nAND ps.energy_above_hull <= 0.001\nAND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = me.entry_id AND c.element = 'Cu')\nAND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = me.entry_id AND c.element = 'Ni')\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 408,
+      "latency_ms": 1548
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.energy_above_hull FROM material_entry m JOIN composition c1 ON c1.entry_id = m.entry_id JOIN composition c2 ON c2.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND EXISTS (SELECT 1 FROM composition c_cu WHERE c_cu.entry_id = m.entry_id AND c_cu.element = 'Cu') AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') AND ps.energy_above_hull <= 0.001 LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 955,
+      "latency_ms": 3423
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND EXISTS (SELECT 1 FROM composition c_cu WHERE c_cu.entry_id = m.entry_id AND c_cu.element = 'Cu') AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') AND ps.energy_above_hull <= 0.001 LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 1156,
+      "latency_ms": 4259
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND EXISTS (SELECT 1 FROM composition c_cu WHERE c_cu.entry_id = m.entry_id AND c_cu.element = 'Cu') AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 1144,
+      "latency_ms": 3097
+    }
+  },
+  {
+    "id": "BL24",
+    "query": "全ての化合物を格子定数の大きい順に",
+    "conditions": {
+      "properties": [
+        "structure.lattice_a"
+      ],
+      "sort_by": "structure.lattice_a",
+      "sort_order": "desc"
+    },
+    "coverage": {
+      "coverage_score": 0.333,
+      "action": "clarification_required",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "ての",
+        "きい"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 7
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nORDER BY s.lattice_a DESC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 10
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds ORDER BY lattice_constant DESC;",
+      "success": false,
+      "row_count": 0,
+      "tokens": 76,
+      "latency_ms": 628
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, s.lattice_a, s.lattice_b, s.lattice_c\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nORDER BY (s.lattice_a + s.lattice_b + s.lattice_c) DESC\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "tokens": 351,
+      "latency_ms": 1240
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a \nFROM material_entry m \nJOIN structure s ON s.entry_id = m.entry_id \nORDER BY s.lattice_a DESC \nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 770,
+      "latency_ms": 1353
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nORDER BY s.lattice_a DESC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 931,
+      "latency_ms": 1151
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.lattice_a \nFROM material_entry m \nJOIN structure s ON s.entry_id = m.entry_id \nORDER BY s.lattice_a DESC \nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 930,
+      "latency_ms": 1386
+    }
+  },
+  {
+    "id": "BL25",
+    "query": "energy above hullが0.1 eV/atom以下のB2化合物",
+    "conditions": {
+      "prototype": "B2",
+      "properties": [
+        "phase_stability.energy_above_hull"
+      ],
+      "numeric_conditions": [
+        {
+          "column": "phase_stability.energy_above_hull",
+          "operator": "<=",
+          "value": 0.1,
+          "raw_match": "energy above hullが0.1 eV/atom以下"
+        }
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.857,
+      "action": "execute_rule_based",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "以下"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\nWHERE s.prototype = 'B2'\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.1\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 9
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds WHERE energy_above_hull <= 0.1 AND structure_type = 'B2';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 90,
+      "latency_ms": 1135
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE ps.energy_above_hull <= 0.1\nAND s.prototype = 'B2'\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 362,
+      "latency_ms": 1003
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.1\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 793,
+      "latency_ms": 1995
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.1\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 996,
+      "latency_ms": 1872
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.energy_above_hull <= 0.1\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 995,
+      "latency_ms": 1782
+    }
+  },
+  {
+    "id": "BL26",
+    "query": "Alを含まないB2化合物",
+    "conditions": {
+      "prototype": "B2",
+      "contains_elements": [
+        "Al"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.667,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "まない"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE s.prototype = 'B2' AND c.element = 'Al'\nLIMIT 100;",
+      "success": true,
+      "row_count": 39,
+      "latency_ms": 9
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element != 'Al' LIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 10
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds WHERE formula LIKE 'B2%' AND formula NOT LIKE '%Al%';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 78,
+      "latency_ms": 598
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE s.prototype = 'B2'\nAND NOT EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = me.entry_id AND c.element = 'Al'\n)\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 358,
+      "latency_ms": 1217
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND NOT EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = m.entry_id AND c.element = 'Al') LIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 834,
+      "latency_ms": 1125
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element != 'Al' LIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 999,
+      "latency_ms": 1727
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element != 'Al' LIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 999,
+      "latency_ms": 1812
+    }
+  },
+  {
+    "id": "BL27",
+    "query": "bulk modulusが100 GPa以上の化合物",
+    "conditions": {
+      "properties": [
+        "bulk_modulus"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.6,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "Pa",
+        "以上"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 7
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.entry_id = m.entry_id\nWHERE\n    cp.property_name = 'bulk_modulus' AND calc.value >= 100\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 0
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds WHERE bulk_modulus >= 100000;",
+      "success": false,
+      "row_count": 0,
+      "tokens": 74,
+      "latency_ms": 982
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN calculated_property cp ON me.entry_id = cp.calculation_id\nWHERE ps.energy_above_hull <= 0.001\nAND cp.property_name = 'bulk modulus'\nAND cp.value >= 100\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 365,
+      "latency_ms": 1162
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, ps.bulk_modulus\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    ps.bulk_modulus >= 100\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "tokens": 761,
+      "latency_ms": 1298
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.entry_id = m.entry_id\nWHERE\n    cp.property_name = 'bulk_modulus' AND calc.value >= 100\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "tokens": 886,
+      "latency_ms": 1375
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.entry_id = m.entry_id\nWHERE\n    cp.property_name = 'bulk_modulus' AND calc.value >= 100\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "tokens": 886,
+      "latency_ms": 1937
+    }
+  },
+  {
+    "id": "BL28",
+    "query": "CoAlのB2型合金の物性",
+    "conditions": {
+      "prototype": "B2"
+    },
+    "coverage": {
+      "coverage_score": 0.6,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "型合金",
+        "物性"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE s.prototype = 'B2' AND (c.element = 'Al' OR c.element = 'Co')\nLIMIT 100;",
+      "success": true,
+      "row_count": 62,
+      "latency_ms": 9
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, cp.property_name, cp.value\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND m.chemical_system = 'CoAl'\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 0
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM materials WHERE alloy_type = 'B2' AND material_name = 'CoAl';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 80,
+      "latency_ms": 753
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull, ps.is_stable, ps.band_gap\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE s.prototype = 'B2'\nAND ps.energy_above_hull <= 0.001\nAND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = me.entry_id AND c.element = 'Co')\nAND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = me.entry_id AND c.element = 'Al')\nLIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "tokens": 429,
+      "latency_ms": 1626
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = m.entry_id AND c.element = 'Co')\n    AND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = m.entry_id AND c.element = 'Al')\nLIMIT 100;",
+      "success": true,
+      "row_count": 2,
+      "tokens": 846,
+      "latency_ms": 2792
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.lattice_b, s.lattice_c, s.volume_per_atom\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND m.chemical_system = 'CoAl'\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 961,
+      "latency_ms": 1918
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND m.chemical_system = 'CoAl'\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "tokens": 946,
+      "latency_ms": 1589
+    }
+  },
+  {
+    "id": "BL29",
+    "query": "最も格子定数が小さいL12化合物",
+    "conditions": {
+      "prototype": "L12",
+      "properties": [
+        "structure.lattice_a"
+      ]
+    },
+    "coverage": {
+      "coverage_score": 0.667,
+      "action": "fallback_to_llm",
+      "unknown_elements": [],
+      "unrecognized_terms": [
+        "さい"
+      ]
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\nWHERE s.prototype = 'L12'\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 8
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY s.lattice_a ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 10
+    },
+    "llm_only": {
+      "sql": "SELECT compound_name, lattice_constant\nFROM compounds\nWHERE structure_type = 'L12'\nORDER BY lattice_constant ASC\nLIMIT 1;",
+      "success": false,
+      "row_count": 0,
+      "tokens": 91,
+      "latency_ms": 788
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, s.lattice_a, s.lattice_b, s.lattice_c\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE s.prototype = 'L12' AND ps.energy_above_hull <= 0.001\nORDER BY LEAST(s.lattice_a, s.lattice_b, s.lattice_c) ASC\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "tokens": 384,
+      "latency_ms": 1206
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY s.lattice_a ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 828,
+      "latency_ms": 1428
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY s.lattice_a ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 991,
+      "latency_ms": 1814
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY s.lattice_a ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "tokens": 991,
+      "latency_ms": 1472
+    }
+  },
+  {
+    "id": "BL30",
+    "query": "formation energyが正のB2化合物",
+    "conditions": {
+      "prototype": "B2",
+      "properties": [
+        "phase_stability.formation_energy_per_atom"
+      ],
+      "numeric_conditions": [
+        {
+          "column": "phase_stability.formation_energy_per_atom",
+          "operator": ">",
+          "value": 0,
+          "raw_match": "formation energyが正"
+        }
+      ]
+    },
+    "coverage": {
+      "coverage_score": 1.0,
+      "action": "execute_rule_based",
+      "unknown_elements": [],
+      "unrecognized_terms": []
+    },
+    "naive_rb": {
+      "sql": "SELECT material_entry.entry_id, material_entry.formula\nFROM material_entry\n  JOIN structure s ON s.entry_id = material_entry.entry_id\n  JOIN composition c ON c.entry_id = material_entry.entry_id\nWHERE s.prototype = 'B2' AND c.element = 'Ti'\nLIMIT 100;",
+      "success": true,
+      "row_count": 30,
+      "latency_ms": 9
+    },
+    "sg_rb": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND\n    ps.formation_energy_per_atom > 0\nLIMIT 100;",
+      "success": true,
+      "row_count": 85,
+      "latency_ms": 9
+    },
+    "llm_only": {
+      "sql": "SELECT * FROM compounds WHERE formation_energy > 0 AND compound_type = 'B2';",
+      "success": false,
+      "row_count": 0,
+      "tokens": 77,
+      "latency_ms": 686
+    },
+    "llm_schema_prompt": {
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, ps.formation_energy_per_atom\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE ps.formation_energy_per_atom > 0\nAND s.prototype = 'B2'\nLIMIT 100;",
+      "success": true,
+      "row_count": 85,
+      "tokens": 349,
+      "latency_ms": 1039
+    },
+    "llm_schema_fs": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.formation_energy_per_atom > 0\nLIMIT 100;",
+      "success": true,
+      "row_count": 85,
+      "tokens": 783,
+      "latency_ms": 2175
+    },
+    "sg_llm_no_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.formation_energy_per_atom > 0\nLIMIT 100;",
+      "success": true,
+      "row_count": 85,
+      "tokens": 992,
+      "latency_ms": 1742
+    },
+    "sg_llm_rag": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.formation_energy_per_atom > 0\nLIMIT 100;",
+      "success": true,
+      "row_count": 85,
+      "tokens": 985,
+      "latency_ms": 1675
+    }
+  }
+]

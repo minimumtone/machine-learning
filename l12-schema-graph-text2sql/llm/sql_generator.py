@@ -74,6 +74,11 @@ def generate_sql_via_llm(
     # Retrieve similar few-shot examples
     few_shot = retrieve_similar(user_query, top_k=3)
 
+    # Check coverage score for fallback decision
+    conditions = extract_conditions(user_query)
+    coverage_info = conditions.get("_coverage", {})
+    coverage_action = coverage_info.get("action", "execute_rule_based")
+
     if not api_key or api_key == "your_api_key_here":
         sql = _rule_based_fallback(user_query, allowed_tables, allowed_columns, allowed_joins)
         return {
@@ -84,7 +89,12 @@ def generate_sql_via_llm(
             "latency_ms": 0,
             "few_shot_count": len(few_shot),
             "few_shot_queries": [e["nl_query"] for e in few_shot],
+            "coverage": coverage_info,
         }
+
+    # If coverage is low and we have an API key, force LLM mode
+    # If coverage action is clarification_required, still try LLM but flag it
+    use_llm = True  # We have API key, so always use LLM when available
 
     # Rebuild prompt with few-shot examples for LLM mode
     prompt = build_constrained_prompt(
@@ -123,6 +133,7 @@ def generate_sql_via_llm(
         "latency_ms": latency_ms,
         "few_shot_count": len(few_shot),
         "few_shot_queries": [e["nl_query"] for e in few_shot],
+        "coverage": coverage_info,
     }
 
 
