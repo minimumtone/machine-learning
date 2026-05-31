@@ -109,6 +109,66 @@ def map_sort_condition(sort_by: str, sort_order: str) -> dict[str, Any]:
     }
 
 
+def map_numeric_condition(cond: dict[str, Any]) -> dict[str, Any]:
+    """Map a numeric comparison condition to a SQL fragment."""
+    column = cond["column"]
+    op = cond["operator"]
+    value = cond["value"]
+
+    col_parts = column.split(".")
+    alias_map = {
+        "phase_stability": "ps",
+        "structure": "s",
+        "material_entry": "m",
+        "composition": "c",
+        "calculation": "calc",
+        "calculated_property": "cp",
+    }
+    if len(col_parts) == 2:
+        table, col = col_parts
+        alias = alias_map.get(table, table[:2])
+        col_ref = f"{alias}.{col}"
+    else:
+        col_ref = column
+        table = ""
+
+    if op == "BETWEEN" and isinstance(value, list) and len(value) == 2:
+        sql_fragment = f"{col_ref} BETWEEN {value[0]} AND {value[1]}"
+    else:
+        sql_fragment = f"{col_ref} {op} {value}"
+
+    return {
+        "type": "numeric",
+        "sql_fragment": sql_fragment,
+        "tables": [table] if table else [],
+        "columns": [column],
+    }
+
+
+def map_formula_condition(formula_info: dict[str, Any]) -> list[dict[str, Any]]:
+    """Map a chemical formula condition to SQL fragments."""
+    interpretation = formula_info.get("interpretation", "contains_elements")
+    fragments: list[dict[str, Any]] = []
+
+    if interpretation == "exact_formula":
+        formula_str = formula_info["formula_str"]
+        fragments.append({
+            "type": "formula",
+            "sql_fragment": (
+                f"(m.formula = '{formula_str}'"
+                f" OR m.reduced_formula = '{formula_str}')"
+            ),
+            "tables": ["material_entry"],
+            "columns": ["material_entry.formula", "material_entry.reduced_formula"],
+        })
+    else:
+        elements = formula_info.get("elements", [])
+        if elements:
+            fragments.extend(map_element_condition(elements))
+
+    return fragments
+
+
 def map_conditions(conditions: dict[str, Any]) -> list[dict[str, Any]]:
     """Map a conditions dict (from entity_extractor) to SQL fragments."""
     mapped: list[dict[str, Any]] = []
@@ -128,6 +188,13 @@ def map_conditions(conditions: dict[str, Any]) -> list[dict[str, Any]]:
         mapped.append(
             map_lattice_reference_condition(conditions["lattice_reference"])
         )
+
+    if "numeric_conditions" in conditions:
+        for nc in conditions["numeric_conditions"]:
+            mapped.append(map_numeric_condition(nc))
+
+    if "formula" in conditions and "contains_elements" not in conditions:
+        mapped.extend(map_formula_condition(conditions["formula"]))
 
     if "sort_by" in conditions:
         mapped.append(
