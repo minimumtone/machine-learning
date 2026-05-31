@@ -1,0 +1,1752 @@
+[
+  {
+    "id": "A01",
+    "query": "Feを含むB2化合物を出して",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN composition c ON composition.entry_id = m.entry_id\nJOIN structure s ON structure.entry_id = m.entry_id\nWHERE m.formula LIKE '%B2%' AND c.element = 'Fe'\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 3300,
+      "tokens": 548
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN composition c ON composition.entry_id = m.entry_id\nJOIN structure s ON structure.entry_id = m.entry_id\nWHERE m.formula LIKE '%B2%' AND c.element = 'Fe'\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 2791,
+      "few_shot_count": 0,
+      "tokens": 548
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, s.prototype, s.strukturbericht, s.lattice_a, s.lattice_b, s.lattice_c, s.volume_per_atom, s.formula_type, s.space_group_number, s.space_group\nFROM material_entry m\nJOIN composition c ON composition.entry_id = m.entry_id\nJOIN structure s ON structure.entry_id = m.entry_id\nWHERE c.element = 'Fe' AND m.formula LIKE 'B2%'\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 2964,
+      "few_shot_count": 0,
+      "tokens": 582
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Fe' LIMIT 100;",
+      "success": true,
+      "row_count": 16,
+      "latency_ms": 2279,
+      "few_shot_count": 3,
+      "tokens": 967
+    }
+  },
+  {
+    "id": "A02",
+    "query": "安定なL1₂化合物を形成エネルギーが低い順に出して",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.lattice_a, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 88,
+      "latency_ms": 3520,
+      "tokens": 605
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.lattice_a, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 88,
+      "latency_ms": 3041,
+      "few_shot_count": 0,
+      "tokens": 605
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.lattice_a, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 88,
+      "latency_ms": 2955,
+      "few_shot_count": 0,
+      "tokens": 605
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 88,
+      "latency_ms": 2889,
+      "few_shot_count": 3,
+      "tokens": 1104
+    }
+  },
+  {
+    "id": "A03",
+    "query": "NiとAlを両方含む化合物を出して",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE c.element IN ('Ni', 'Al')\nGROUP BY m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nHAVING COUNT(DISTINCT c.element) = 2\nLIMIT 100;",
+      "success": true,
+      "row_count": 4,
+      "latency_ms": 2065,
+      "tokens": 493
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE c.element IN ('Ni', 'Al')\nGROUP BY m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nHAVING COUNT(DISTINCT c.element) = 2\nLIMIT 100;",
+      "success": true,
+      "row_count": 4,
+      "latency_ms": 2547,
+      "few_shot_count": 0,
+      "tokens": 493
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE c.element IN ('Ni', 'Al')\nGROUP BY m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nHAVING COUNT(DISTINCT c.element) = 2\nLIMIT 100;",
+      "success": true,
+      "row_count": 4,
+      "latency_ms": 2433,
+      "few_shot_count": 0,
+      "tokens": 493
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula FROM material_entry m JOIN composition c_ni ON c_ni.entry_id = m.entry_id JOIN composition c_al ON c_al.entry_id = m.entry_id WHERE c_ni.element = 'Ni' AND c_al.element = 'Al' LIMIT 100;",
+      "success": true,
+      "row_count": 4,
+      "latency_ms": 2034,
+      "few_shot_count": 3,
+      "tokens": 939
+    }
+  },
+  {
+    "id": "A04",
+    "query": "B2化合物の全リストを出して",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE m.formula LIKE '%B2%'\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 1584,
+      "tokens": 501
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE m.formula LIKE '%B2%'\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 2063,
+      "few_shot_count": 0,
+      "tokens": 501
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE m.formula LIKE '%B2%'\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 3136,
+      "few_shot_count": 0,
+      "tokens": 501
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.lattice_b, s.lattice_c, s.volume_per_atom, s.formula_type, s.space_group_number, s.space_group\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2212,
+      "few_shot_count": 3,
+      "tokens": 985
+    }
+  },
+  {
+    "id": "A05",
+    "query": "準安定なB2化合物を出して",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.energy_above_hull\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE ps.energy_above_hull <= 0.05 AND (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2507,
+      "tokens": 584
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.energy_above_hull\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE ps.energy_above_hull <= 0.05 AND (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 3044,
+      "few_shot_count": 0,
+      "tokens": 584
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.energy_above_hull\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE ps.energy_above_hull <= 0.05\nAND (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 3106,
+      "few_shot_count": 0,
+      "tokens": 585
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.energy_above_hull <= 0.05 LIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2527,
+      "few_shot_count": 3,
+      "tokens": 974
+    }
+  },
+  {
+    "id": "A06",
+    "query": "Coを含む安定なL1₂化合物を出して",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.lattice_a, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') \nAND ps.energy_above_hull <= 0.001 \nAND c.element = 'Co'\nLIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "latency_ms": 2738,
+      "tokens": 626
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') \nAND ps.energy_above_hull <= 0.001 \nAND c.element = 'Co'\nLIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "latency_ms": 2467,
+      "few_shot_count": 0,
+      "tokens": 621
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') \nAND ps.energy_above_hull <= 0.001 \nAND c.element = 'Co'\nLIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "latency_ms": 2353,
+      "few_shot_count": 0,
+      "tokens": 621
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Co' AND ps.energy_above_hull <= 0.001 LIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "latency_ms": 3232,
+      "few_shot_count": 3,
+      "tokens": 1045
+    }
+  },
+  {
+    "id": "A07",
+    "query": "Ptを含む化合物の格子定数を出して",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, s.lattice_a, s.lattice_b, s.lattice_c\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE c.element = 'Pt'\nLIMIT 100;",
+      "success": true,
+      "row_count": 52,
+      "latency_ms": 2872,
+      "tokens": 528
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, s.lattice_a, s.lattice_b, s.lattice_c\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE c.element = 'Pt'\nLIMIT 100;",
+      "success": true,
+      "row_count": 52,
+      "latency_ms": 1796,
+      "few_shot_count": 0,
+      "tokens": 528
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, s.lattice_a, s.lattice_b, s.lattice_c\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE c.element = 'Pt'\nLIMIT 100;",
+      "success": true,
+      "row_count": 52,
+      "latency_ms": 2422,
+      "few_shot_count": 0,
+      "tokens": 528
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.lattice_a FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE c.element = 'Pt' LIMIT 100;",
+      "success": true,
+      "row_count": 52,
+      "latency_ms": 1512,
+      "few_shot_count": 3,
+      "tokens": 944
+    }
+  },
+  {
+    "id": "A08",
+    "query": "B2とL1₂の両方を出して",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12' OR m.formula = 'B2'\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2085,
+      "tokens": 520
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12' OR m.formula = 'B2'\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2464,
+      "few_shot_count": 0,
+      "tokens": 520
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12' OR m.formula = 'B2'\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2061,
+      "few_shot_count": 0,
+      "tokens": 520
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE s.prototype = 'L12' OR s.strukturbericht = 'L12' OR s.prototype = 'B2' OR s.strukturbericht = 'B2' LIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2087,
+      "few_shot_count": 3,
+      "tokens": 1014
+    }
+  },
+  {
+    "id": "A09",
+    "query": "NiとCoを含むL1₂化合物を出して",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN composition c ON composition.entry_id = m.entry_id\nJOIN structure s ON structure.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND (c.element = 'Ni' OR c.element = 'Co')\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 3027,
+      "tokens": 569
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN composition c ON composition.entry_id = m.entry_id\nJOIN structure s ON structure.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND (c.element = 'Ni' OR c.element = 'Co')\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 2987,
+      "few_shot_count": 0,
+      "tokens": 569
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN composition c ON composition.entry_id = m.entry_id\nJOIN structure s ON structure.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND (c.element = 'Ni' OR c.element = 'Co')\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 3071,
+      "few_shot_count": 0,
+      "tokens": 569
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') AND EXISTS (SELECT 1 FROM composition c_co WHERE c_co.entry_id = m.entry_id AND c_co.element = 'Co') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 2614,
+      "few_shot_count": 3,
+      "tokens": 1049
+    }
+  },
+  {
+    "id": "A10",
+    "query": "L1₂化合物の全データを出して",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, s.lattice_a, s.lattice_b, s.lattice_c, s.volume_per_atom, s.formula_type, s.space_group_number, s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2914,
+      "tokens": 545
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, s.lattice_a, s.lattice_b, s.lattice_c, s.volume_per_atom, s.formula_type, s.space_group_number, s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 3423,
+      "few_shot_count": 0,
+      "tokens": 545
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, s.lattice_a, s.lattice_b, s.lattice_c, s.volume_per_atom, s.formula_type, s.space_group_number, s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2291,
+      "few_shot_count": 0,
+      "tokens": 545
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.lattice_b, s.lattice_c, s.volume_per_atom, s.formula_type, s.space_group_number, s.space_group\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2633,
+      "few_shot_count": 3,
+      "tokens": 967
+    }
+  },
+  {
+    "id": "A11",
+    "query": "FeとAlを含むB2化合物を出して",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN composition c ON composition.entry_id = m.entry_id\nJOIN structure s ON structure.entry_id = m.entry_id\nWHERE (c.element = 'Fe' OR c.element = 'Al') AND s.prototype = 'B2'\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 2325,
+      "tokens": 557
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN composition c ON composition.entry_id = m.entry_id\nJOIN structure s ON structure.entry_id = m.entry_id\nWHERE (c.element = 'Fe' OR c.element = 'Al') AND s.prototype = 'B2'\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 4733,
+      "few_shot_count": 0,
+      "tokens": 557
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN composition c ON composition.entry_id = m.entry_id\nJOIN structure s ON structure.entry_id = m.entry_id\nWHERE (c.element = 'Fe' OR c.element = 'Al') AND s.prototype = 'B2'\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 2970,
+      "few_shot_count": 0,
+      "tokens": 557
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND EXISTS (SELECT 1 FROM composition c_fe WHERE c_fe.entry_id = m.entry_id AND c_fe.element = 'Fe') AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al') LIMIT 100;",
+      "success": true,
+      "row_count": 4,
+      "latency_ms": 3658,
+      "few_shot_count": 3,
+      "tokens": 1050
+    }
+  },
+  {
+    "id": "A12",
+    "query": "安定なB2化合物を形成エネルギーが低い順に出して",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, \n       ps.formation_energy_per_atom, ps.energy_above_hull, ps.is_stable, \n       s.prototype, s.strukturbericht, s.lattice_a, s.lattice_b, s.lattice_c, \n       s.volume_per_atom, s.formula_type, s.space_group_number, s.space_group\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE ps.is_stable = TRUE\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 3554,
+      "tokens": 632
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE ps.is_stable = TRUE\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2201,
+      "few_shot_count": 0,
+      "tokens": 572
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE ps.is_stable = TRUE\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2665,
+      "few_shot_count": 0,
+      "tokens": 572
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 3093,
+      "few_shot_count": 3,
+      "tokens": 1098
+    }
+  },
+  {
+    "id": "A13",
+    "query": "Tiを含むL1₂化合物を出して",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN composition c ON composition.entry_id = m.entry_id\nJOIN structure s ON structure.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Ti'\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 2450,
+      "tokens": 559
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN composition c ON composition.entry_id = m.entry_id\nJOIN structure s ON structure.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Ti'\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 2871,
+      "few_shot_count": 0,
+      "tokens": 559
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN composition c ON composition.entry_id = m.entry_id\nJOIN structure s ON structure.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Ti'\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 2683,
+      "few_shot_count": 0,
+      "tokens": 559
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Ti' LIMIT 100;",
+      "success": true,
+      "row_count": 10,
+      "latency_ms": 2059,
+      "few_shot_count": 3,
+      "tokens": 959
+    }
+  },
+  {
+    "id": "A14",
+    "query": "NiとTiを含む安定な化合物を出して",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE c.element IN ('Ni', 'Ti')\nAND ps.energy_above_hull <= 0.001\nGROUP BY m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nLIMIT 100;",
+      "success": true,
+      "row_count": 24,
+      "latency_ms": 2059,
+      "tokens": 547
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, ps.formation_energy_per_atom, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE ps.is_stable = TRUE AND c.element IN ('Ni', 'Ti')\nLIMIT 100;",
+      "success": true,
+      "row_count": 24,
+      "latency_ms": 2499,
+      "few_shot_count": 0,
+      "tokens": 551
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, ps.formation_energy_per_atom, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE ps.is_stable = TRUE AND c.element IN ('Ni', 'Ti')\nLIMIT 100;",
+      "success": true,
+      "row_count": 24,
+      "latency_ms": 2383,
+      "few_shot_count": 0,
+      "tokens": 551
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id WHERE ps.energy_above_hull <= 0.001 AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 2912,
+      "few_shot_count": 3,
+      "tokens": 1075
+    }
+  },
+  {
+    "id": "A15",
+    "query": "安定なL1₂化合物でNiを含むものを出して",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nAND ps.energy_above_hull <= 0.001\nAND c.element = 'Ni'\nLIMIT 100;",
+      "success": true,
+      "row_count": 6,
+      "latency_ms": 3073,
+      "tokens": 612
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nAND ps.energy_above_hull <= 0.001\nAND c.element = 'Ni'\nLIMIT 100;",
+      "success": true,
+      "row_count": 6,
+      "latency_ms": 3024,
+      "few_shot_count": 0,
+      "tokens": 612
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, s.prototype, s.strukturbericht, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.energy_above_hull <= 0.001 AND c.element = 'Ni'\nLIMIT 100;",
+      "success": true,
+      "row_count": 6,
+      "latency_ms": 4127,
+      "few_shot_count": 0,
+      "tokens": 644
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull \nFROM material_entry m \nJOIN composition c ON c.entry_id = m.entry_id \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nJOIN structure s ON s.entry_id = m.entry_id \nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') \nAND c.element = 'Ni' \nAND ps.energy_above_hull <= 0.001 \nLIMIT 100;",
+      "success": true,
+      "row_count": 6,
+      "latency_ms": 3703,
+      "few_shot_count": 3,
+      "tokens": 1079
+    }
+  },
+  {
+    "id": "N01",
+    "query": "band gap > 1.0 eVのB2化合物を出して",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.band_gap\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE ps.band_gap > 1.0\nAND s.prototype = 'B2'\nLIMIT 100;",
+      "success": true,
+      "row_count": 43,
+      "latency_ms": 2614,
+      "tokens": 574
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.band_gap\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE ps.band_gap > 1.0\nAND s.prototype = 'B2'\nLIMIT 100;",
+      "success": true,
+      "row_count": 43,
+      "latency_ms": 2981,
+      "few_shot_count": 0,
+      "tokens": 574
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.band_gap\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE ps.band_gap > 1.0\nAND (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": true,
+      "row_count": 43,
+      "latency_ms": 2649,
+      "few_shot_count": 0,
+      "tokens": 585
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.band_gap > 1.0\nLIMIT 100;",
+      "success": true,
+      "row_count": 43,
+      "latency_ms": 2814,
+      "few_shot_count": 3,
+      "tokens": 991
+    }
+  },
+  {
+    "id": "N02",
+    "query": "形成エネルギーが負のL1₂化合物を出して",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.formation_energy_per_atom < 0\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2184,
+      "tokens": 588
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.formation_energy_per_atom < 0\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 1950,
+      "few_shot_count": 0,
+      "tokens": 588
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.formation_energy_per_atom < 0\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 1992,
+      "few_shot_count": 0,
+      "tokens": 588
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.formation_energy_per_atom < 0\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2545,
+      "few_shot_count": 3,
+      "tokens": 1090
+    }
+  },
+  {
+    "id": "N03",
+    "query": "Ehull < 0.05 eV/atomのB2化合物",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.energy_above_hull\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE ps.energy_above_hull < 0.05\nAND (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 4264,
+      "tokens": 590
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.energy_above_hull\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE ps.energy_above_hull < 0.05\nAND (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2914,
+      "few_shot_count": 0,
+      "tokens": 590
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.energy_above_hull\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE ps.energy_above_hull < 0.05\nAND (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 3190,
+      "few_shot_count": 0,
+      "tokens": 590
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.energy_above_hull < 0.05\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 3001,
+      "few_shot_count": 3,
+      "tokens": 1012
+    }
+  },
+  {
+    "id": "N04",
+    "query": "格子定数が3.5 Å以上のB2化合物を出して",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.lattice_a >= 3.5 AND s.prototype = 'B2'\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 1774,
+      "tokens": 514
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.lattice_a >= 3.5 AND s.prototype = 'B2'\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 1622,
+      "few_shot_count": 0,
+      "tokens": 514
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.lattice_a >= 3.5 AND (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 2955,
+      "few_shot_count": 0,
+      "tokens": 525
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND s.lattice_a >= 3.5\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 1716,
+      "few_shot_count": 3,
+      "tokens": 937
+    }
+  },
+  {
+    "id": "N05",
+    "query": "band gapが0のL1₂化合物",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.band_gap\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.band_gap = 0\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 3206,
+      "tokens": 576
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.band_gap\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.band_gap = 0\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2737,
+      "few_shot_count": 0,
+      "tokens": 576
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.band_gap\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.band_gap = 0\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2847,
+      "few_shot_count": 0,
+      "tokens": 576
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.band_gap = 0\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2325,
+      "few_shot_count": 3,
+      "tokens": 998
+    }
+  },
+  {
+    "id": "BL01",
+    "query": "Which B2 compounds contain iron?",
+    "no_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry AS m\nJOIN composition AS c ON c.entry_id = m.entry_id\nJOIN structure AS s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'B2' AND c.element = 'Fe'\nLIMIT 100;",
+      "success": true,
+      "row_count": 16,
+      "latency_ms": 2538,
+      "tokens": 526
+    },
+    "manual_only": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'B2' AND c.element = 'Fe'\nLIMIT 100;",
+      "success": true,
+      "row_count": 16,
+      "latency_ms": 2261,
+      "few_shot_count": 0,
+      "tokens": 523
+    },
+    "paper_only": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry AS m\nJOIN composition AS c ON c.entry_id = m.entry_id\nJOIN structure AS s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'B2' AND c.element = 'Fe'\nLIMIT 100;",
+      "success": true,
+      "row_count": 16,
+      "latency_ms": 2271,
+      "few_shot_count": 0,
+      "tokens": 526
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Fe' LIMIT 100;",
+      "success": true,
+      "row_count": 16,
+      "latency_ms": 2092,
+      "few_shot_count": 3,
+      "tokens": 933
+    }
+  },
+  {
+    "id": "BL02",
+    "query": "NiAlの安定性を教えて",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, ps.formation_energy_per_atom, ps.energy_above_hull, ps.is_stable, ps.band_gap\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE m.formula = 'NiAl' AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 2822,
+      "tokens": 514
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, ps.formation_energy_per_atom, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE m.formula = 'NiAl' AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 2296,
+      "few_shot_count": 0,
+      "tokens": 510
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, ps.formation_energy_per_atom, ps.energy_above_hull, ps.is_stable, ps.band_gap\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE m.formula = 'NiAl' AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 2270,
+      "few_shot_count": 0,
+      "tokens": 514
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.is_stable, ps.energy_above_hull \nFROM material_entry m \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nWHERE EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = m.entry_id AND c.element = 'Ni') \nAND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = m.entry_id AND c.element = 'Al') \nLIMIT 100;",
+      "success": true,
+      "row_count": 4,
+      "latency_ms": 2200,
+      "few_shot_count": 3,
+      "tokens": 986
+    }
+  },
+  {
+    "id": "BL03",
+    "query": "Show me all L12 alloys with Co and Ni",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN composition c ON composition.entry_id = m.entry_id\nJOIN structure s ON structure.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND (c.element = 'Co' OR c.element = 'Ni')\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 2819,
+      "tokens": 564
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN composition c ON composition.entry_id = m.entry_id\nJOIN structure s ON structure.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND (c.element = 'Co' OR c.element = 'Ni')\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 3087,
+      "few_shot_count": 0,
+      "tokens": 564
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN composition c ON composition.entry_id = m.entry_id\nJOIN structure s ON structure.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND (c.element = 'Co' OR c.element = 'Ni')\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 2823,
+      "few_shot_count": 0,
+      "tokens": 564
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND EXISTS (SELECT 1 FROM composition c_co WHERE c_co.entry_id = m.entry_id AND c_co.element = 'Co') AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 3434,
+      "few_shot_count": 2,
+      "tokens": 926
+    }
+  },
+  {
+    "id": "BL04",
+    "query": "Feを含む安定なB2型合金の一覧",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE c.element = 'Fe' \nAND ps.energy_above_hull <= 0.001 \nAND (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": true,
+      "row_count": 6,
+      "latency_ms": 2595,
+      "tokens": 617
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE c.element = 'Fe' AND ps.energy_above_hull <= 0.001 AND (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": true,
+      "row_count": 6,
+      "latency_ms": 3137,
+      "few_shot_count": 0,
+      "tokens": 615
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE c.element = 'Fe' \nAND ps.energy_above_hull <= 0.001 \nAND (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": true,
+      "row_count": 6,
+      "latency_ms": 2478,
+      "few_shot_count": 0,
+      "tokens": 617
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Fe' AND ps.energy_above_hull <= 0.001 LIMIT 100;",
+      "success": true,
+      "row_count": 6,
+      "latency_ms": 2979,
+      "few_shot_count": 3,
+      "tokens": 1039
+    }
+  },
+  {
+    "id": "BL05",
+    "query": "lattice constant > 3.6のB2を出して",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.lattice_a > 3.6 AND (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 2015,
+      "tokens": 520
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.lattice_a > 3.6 AND (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 2231,
+      "few_shot_count": 0,
+      "tokens": 520
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.lattice_a > 3.6 AND (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 2795,
+      "few_shot_count": 0,
+      "tokens": 520
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND s.lattice_a > 3.6\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 2617,
+      "few_shot_count": 3,
+      "tokens": 965
+    }
+  },
+  {
+    "id": "BL06",
+    "query": "energy above hullが最も低いL12化合物top10",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.energy_above_hull <= 0.001\nORDER BY ps.energy_above_hull ASC\nLIMIT 10;",
+      "success": true,
+      "row_count": 10,
+      "latency_ms": 2958,
+      "tokens": 598
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.energy_above_hull <= 0.001\nORDER BY ps.energy_above_hull ASC\nLIMIT 10;",
+      "success": true,
+      "row_count": 10,
+      "latency_ms": 2932,
+      "few_shot_count": 0,
+      "tokens": 598
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.energy_above_hull <= 0.001\nORDER BY ps.energy_above_hull ASC\nLIMIT 10;",
+      "success": true,
+      "row_count": 10,
+      "latency_ms": 2933,
+      "few_shot_count": 0,
+      "tokens": 598
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY ps.energy_above_hull ASC\nLIMIT 10;",
+      "success": true,
+      "row_count": 10,
+      "latency_ms": 2372,
+      "few_shot_count": 3,
+      "tokens": 1071
+    }
+  },
+  {
+    "id": "BL07",
+    "query": "CuAu型構造の化合物は？",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 1773,
+      "tokens": 446
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 1535,
+      "few_shot_count": 0,
+      "tokens": 446
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 1616,
+      "few_shot_count": 0,
+      "tokens": 446
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2202,
+      "few_shot_count": 3,
+      "tokens": 876
+    }
+  },
+  {
+    "id": "BL08",
+    "query": "Ti-Al系B2合金で安定なもの",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.lattice_a, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (c.element = 'Ti' OR c.element = 'Al') AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 28,
+      "latency_ms": 2795,
+      "tokens": 617
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (c.element = 'Ti' OR c.element = 'Al') AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 28,
+      "latency_ms": 2418,
+      "few_shot_count": 0,
+      "tokens": 605
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (c.element = 'Ti' OR c.element = 'Al') AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 28,
+      "latency_ms": 3122,
+      "few_shot_count": 0,
+      "tokens": 605
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN composition c_ti ON c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti'\n    JOIN composition c_al ON c_al.entry_id = m.entry_id AND c_al.element = 'Al'\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 3813,
+      "few_shot_count": 3,
+      "tokens": 1139
+    }
+  },
+  {
+    "id": "BL09",
+    "query": "band gapが正のB2化合物を大きい順に",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, ps.band_gap\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE ps.band_gap > 0\nAND m.reduced_formula LIKE 'B2%'\nORDER BY ps.band_gap DESC\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 1987,
+      "tokens": 559
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, ps.band_gap\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE ps.band_gap > 0\nORDER BY ps.band_gap DESC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 1951,
+      "few_shot_count": 0,
+      "tokens": 561
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, ps.band_gap\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE ps.band_gap > 0\nAND m.reduced_formula LIKE 'B2%'\nORDER BY ps.band_gap DESC\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 1990,
+      "few_shot_count": 0,
+      "tokens": 559
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.band_gap FROM material_entry m JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.band_gap > 0 ORDER BY ps.band_gap DESC LIMIT 100;",
+      "success": true,
+      "row_count": 53,
+      "latency_ms": 2164,
+      "few_shot_count": 3,
+      "tokens": 1058
+    }
+  },
+  {
+    "id": "BL10",
+    "query": "Ni3Alの形成エネルギー",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE m.formula = 'Ni3Al'\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 2182,
+      "tokens": 486
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE m.formula = 'Ni3Al'\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 2076,
+      "few_shot_count": 0,
+      "tokens": 486
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE m.formula = 'Ni3Al'\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 1839,
+      "few_shot_count": 0,
+      "tokens": 486
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.formation_energy_per_atom \nFROM material_entry m \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nJOIN composition c ON c.entry_id = m.entry_id \nWHERE m.formula = 'Ni3Al' \nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 2318,
+      "few_shot_count": 3,
+      "tokens": 996
+    }
+  },
+  {
+    "id": "BL11",
+    "query": "Pt containing stable compounds",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE c.element = 'Pt' AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 7,
+      "latency_ms": 2305,
+      "tokens": 527
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE c.element = 'Pt' AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 7,
+      "latency_ms": 2754,
+      "few_shot_count": 0,
+      "tokens": 527
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE c.element = 'Pt' AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 7,
+      "latency_ms": 2159,
+      "few_shot_count": 0,
+      "tokens": 527
+    },
+    "all_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE c.element = 'Pt' AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 7,
+      "latency_ms": 2944,
+      "few_shot_count": 0,
+      "tokens": 527
+    }
+  },
+  {
+    "id": "BL12",
+    "query": "Scを含むL12化合物はありますか",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN composition c ON composition.entry_id = m.entry_id\nJOIN structure s ON structure.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element LIKE '%Sc%'\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 2451,
+      "tokens": 558
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element LIKE '%Sc%'\nLIMIT 100;",
+      "success": true,
+      "row_count": 8,
+      "latency_ms": 2287,
+      "few_shot_count": 0,
+      "tokens": 539
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element LIKE '%Sc%'\nLIMIT 100;",
+      "success": true,
+      "row_count": 8,
+      "latency_ms": 3855,
+      "few_shot_count": 0,
+      "tokens": 547
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Sc' LIMIT 100;",
+      "success": true,
+      "row_count": 8,
+      "latency_ms": 1847,
+      "few_shot_count": 3,
+      "tokens": 958
+    }
+  },
+  {
+    "id": "BL13",
+    "query": "形成エネルギーが-0.5 eV/atom以下の化合物",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE ps.formation_energy_per_atom <= -0.5\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 1938,
+      "tokens": 499
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE ps.formation_energy_per_atom <= -0.5\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 1659,
+      "few_shot_count": 0,
+      "tokens": 499
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE ps.formation_energy_per_atom <= -0.5\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 1481,
+      "few_shot_count": 0,
+      "tokens": 499
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, ps.formation_energy_per_atom\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    ps.formation_energy_per_atom <= -0.5\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 1613,
+      "few_shot_count": 3,
+      "tokens": 1001
+    }
+  },
+  {
+    "id": "BL14",
+    "query": "B2とL12のbandgap比較",
+    "no_examples": {
+      "sql": "SELECT \n    m.entry_id, \n    m.formula, \n    m.reduced_formula, \n    ps.band_gap \nFROM \n    material_entry m \nJOIN \n    phase_stability ps ON ps.entry_id = m.entry_id \nJOIN \n    structure s ON s.entry_id = m.entry_id \nWHERE \n    (s.prototype = 'L12' OR s.strukturbericht = 'L12') \n    OR m.chemical_system = 'B2' \nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2307,
+      "tokens": 582
+    },
+    "manual_only": {
+      "sql": "SELECT \n    m.entry_id, \n    m.formula, \n    m.reduced_formula, \n    ps.band_gap \nFROM \n    material_entry m \nJOIN \n    phase_stability ps ON ps.entry_id = m.entry_id \nJOIN \n    structure s ON s.entry_id = m.entry_id \nWHERE \n    (s.prototype = 'L12' OR s.strukturbericht = 'L12') \n    OR m.chemical_system = 'B2' \nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2310,
+      "few_shot_count": 0,
+      "tokens": 582
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, ps.band_gap\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') \n   OR (m.formula LIKE '%B2%')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2273,
+      "few_shot_count": 0,
+      "tokens": 566
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.band_gap\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12' OR s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 3533,
+      "few_shot_count": 3,
+      "tokens": 1044
+    }
+  },
+  {
+    "id": "BL15",
+    "query": "GaとGeを含む化合物",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE c.element IN ('Ga', 'Ge')\nGROUP BY m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nHAVING COUNT(DISTINCT c.element) = 2\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 2481,
+      "tokens": 487
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE c.element IN ('Ga', 'Ge')\nGROUP BY m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nLIMIT 100;",
+      "success": true,
+      "row_count": 42,
+      "latency_ms": 2104,
+      "few_shot_count": 0,
+      "tokens": 474
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE c.element IN ('Ga', 'Ge')\nGROUP BY m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nLIMIT 100;",
+      "success": true,
+      "row_count": 42,
+      "latency_ms": 2659,
+      "few_shot_count": 0,
+      "tokens": 474
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id WHERE c.element = 'Ga' AND EXISTS (SELECT 1 FROM composition c_ge WHERE c_ge.entry_id = m.entry_id AND c_ge.element = 'Ge') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 1976,
+      "few_shot_count": 3,
+      "tokens": 933
+    }
+  },
+  {
+    "id": "BL16",
+    "query": "ordered FCCの安定な化合物",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'FCC' OR s.strukturbericht = 'FCC') AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 2946,
+      "tokens": 587
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'FCC' OR s.strukturbericht = 'FCC') AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 6409,
+      "few_shot_count": 0,
+      "tokens": 587
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'FCC' OR s.strukturbericht = 'FCC') AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 2440,
+      "few_shot_count": 0,
+      "tokens": 580
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'FCC' OR s.strukturbericht = 'FCC')\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 2302,
+      "few_shot_count": 3,
+      "tokens": 1054
+    }
+  },
+  {
+    "id": "BL17",
+    "query": "NbとTaを含むB2化合物のリスト",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE c.element IN ('Nb', 'Ta') AND s.prototype = 'B2'\nLIMIT 100;",
+      "success": true,
+      "row_count": 24,
+      "latency_ms": 2581,
+      "tokens": 533
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE c.element IN ('Nb', 'Ta') AND s.prototype = 'B2'\nLIMIT 100;",
+      "success": true,
+      "row_count": 24,
+      "latency_ms": 1677,
+      "few_shot_count": 0,
+      "tokens": 533
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE c.element IN ('Nb', 'Ta') AND s.prototype = 'B2'\nLIMIT 100;",
+      "success": true,
+      "row_count": 24,
+      "latency_ms": 1930,
+      "few_shot_count": 0,
+      "tokens": 533
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND EXISTS (SELECT 1 FROM composition c_nb WHERE c_nb.entry_id = m.entry_id AND c_nb.element = 'Nb') AND EXISTS (SELECT 1 FROM composition c_ta WHERE c_ta.entry_id = m.entry_id AND c_ta.element = 'Ta') LIMIT 100;",
+      "success": true,
+      "row_count": 1,
+      "latency_ms": 2877,
+      "few_shot_count": 3,
+      "tokens": 1041
+    }
+  },
+  {
+    "id": "BL18",
+    "query": "formation energy < -0.3のL12",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.formation_energy_per_atom < -0.3\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2089,
+      "tokens": 583
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.formation_energy_per_atom < -0.3\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 3717,
+      "few_shot_count": 0,
+      "tokens": 583
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.formation_energy_per_atom < -0.3\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2087,
+      "few_shot_count": 0,
+      "tokens": 583
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.formation_energy_per_atom < -0.3\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2281,
+      "few_shot_count": 3,
+      "tokens": 1005
+    }
+  },
+  {
+    "id": "BL19",
+    "query": "Irを含む全ての化合物の格子定数",
+    "no_examples": {
+      "sql": "SELECT s.lattice_a, s.lattice_b, s.lattice_c, m.formula\nFROM material_entry m\nJOIN composition c ON composition.entry_id = m.entry_id\nJOIN structure s ON structure.entry_id = m.entry_id\nWHERE c.element = 'Ir'\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 2096,
+      "tokens": 524
+    },
+    "manual_only": {
+      "sql": "SELECT s.lattice_a, s.lattice_b, s.lattice_c, m.formula\nFROM material_entry m\nJOIN composition c ON composition.entry_id = m.entry_id\nJOIN structure s ON structure.entry_id = m.entry_id\nWHERE c.element = 'Ir'\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 1837,
+      "few_shot_count": 0,
+      "tokens": 524
+    },
+    "paper_only": {
+      "sql": "SELECT s.lattice_a, s.lattice_b, s.lattice_c, m.formula\nFROM material_entry m\nJOIN composition c ON composition.entry_id = m.entry_id\nJOIN structure s ON structure.entry_id = m.entry_id\nWHERE c.element = 'Ir'\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 2219,
+      "few_shot_count": 0,
+      "tokens": 524
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE c.element = 'Ir' LIMIT 100;",
+      "success": true,
+      "row_count": 35,
+      "latency_ms": 1391,
+      "few_shot_count": 3,
+      "tokens": 900
+    }
+  },
+  {
+    "id": "BL20",
+    "query": "metastable B2 compounds with Fe",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, s.prototype, s.strukturbericht, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.energy_above_hull <= 0.05 AND c.element = 'Fe'\nLIMIT 100;",
+      "success": true,
+      "row_count": 15,
+      "latency_ms": 3074,
+      "tokens": 634
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, s.prototype, s.strukturbericht, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.energy_above_hull <= 0.05 AND c.element = 'Fe'\nLIMIT 100;",
+      "success": true,
+      "row_count": 15,
+      "latency_ms": 2846,
+      "few_shot_count": 0,
+      "tokens": 634
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, s.prototype, s.strukturbericht, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.energy_above_hull <= 0.05 AND c.element = 'Fe'\nLIMIT 100;",
+      "success": true,
+      "row_count": 15,
+      "latency_ms": 3491,
+      "few_shot_count": 0,
+      "tokens": 634
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull \nFROM material_entry m \nJOIN structure s ON s.entry_id = m.entry_id \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nJOIN composition c ON c.entry_id = m.entry_id \nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.energy_above_hull <= 0.05 AND c.element = 'Fe' \nLIMIT 100;",
+      "success": true,
+      "row_count": 15,
+      "latency_ms": 1538,
+      "few_shot_count": 3,
+      "tokens": 1011
+    }
+  },
+  {
+    "id": "BL21",
+    "query": "WとTiのB2化合物",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN composition c ON composition.entry_id = m.entry_id\nJOIN structure s ON structure.entry_id = m.entry_id\nWHERE (c.element = 'W' AND c.atomic_fraction = 0.5) OR (c.element = 'Ti' AND c.atomic_fraction = 0.5)\nAND (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 2915,
+      "tokens": 584
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN composition c ON composition.entry_id = m.entry_id\nJOIN structure s ON structure.entry_id = m.entry_id\nWHERE (c.element = 'W' AND c.atomic_fraction = 0.5) OR (c.element = 'Ti' AND c.atomic_fraction = 0.5)\nAND (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 3082,
+      "few_shot_count": 0,
+      "tokens": 584
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, c.element, c.atomic_fraction, c.site_label, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN composition c ON composition.entry_id = m.entry_id\nJOIN structure s ON structure.entry_id = m.entry_id\nWHERE (c.element = 'W' AND c.atomic_fraction = 0.5) OR (c.element = 'Ti' AND c.atomic_fraction = 0.5)\nAND (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 3048,
+      "few_shot_count": 0,
+      "tokens": 584
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND EXISTS (SELECT 1 FROM composition c_w WHERE c_w.entry_id = m.entry_id AND c_w.element = 'W') AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti') LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 2411,
+      "few_shot_count": 3,
+      "tokens": 1067
+    }
+  },
+  {
+    "id": "BL22",
+    "query": "L12 compounds sorted by band gap descending",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.band_gap\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'\nORDER BY ps.band_gap DESC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2348,
+      "tokens": 571
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.band_gap\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'\nORDER BY ps.band_gap DESC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2400,
+      "few_shot_count": 0,
+      "tokens": 571
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.band_gap\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'\nORDER BY ps.band_gap DESC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2046,
+      "few_shot_count": 0,
+      "tokens": 571
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.band_gap FROM material_entry m JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE s.prototype = 'L12' OR s.strukturbericht = 'L12' ORDER BY ps.band_gap DESC LIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 1599,
+      "few_shot_count": 1,
+      "tokens": 711
+    }
+  },
+  {
+    "id": "BL23",
+    "query": "CuとNiを含むL12型化合物の安定性",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, \n       s.prototype, s.strukturbericht, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.element IN ('Cu', 'Ni')\n  AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 8,
+      "latency_ms": 4759,
+      "tokens": 637
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, \n       s.prototype, s.lattice_a, s.lattice_b, s.lattice_c, \n       ps.formation_energy_per_atom, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND (c.element = 'Cu' OR c.element = 'Ni')\n  AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 8,
+      "latency_ms": 3741,
+      "few_shot_count": 0,
+      "tokens": 661
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, \n       s.prototype, s.strukturbericht, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.element IN ('Cu', 'Ni')\n  AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+      "success": true,
+      "row_count": 8,
+      "latency_ms": 3195,
+      "few_shot_count": 0,
+      "tokens": 637
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND EXISTS (SELECT 1 FROM composition c_cu WHERE c_cu.entry_id = m.entry_id AND c_cu.element = 'Cu') AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') AND ps.energy_above_hull <= 0.001 LIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 4029,
+      "few_shot_count": 3,
+      "tokens": 1156
+    }
+  },
+  {
+    "id": "BL24",
+    "query": "全ての化合物を格子定数の大きい順に",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.lattice_a, s.lattice_b, s.lattice_c, s.volume_per_atom, s.formula_type, s.space_group_number, s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nORDER BY s.lattice_a DESC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2328,
+      "tokens": 531
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.lattice_a, s.lattice_b, s.lattice_c\nFROM material_entry AS m\nJOIN structure AS s ON s.entry_id = m.entry_id\nORDER BY s.lattice_a DESC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2112,
+      "few_shot_count": 0,
+      "tokens": 514
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.lattice_a, s.lattice_b, s.lattice_c\nFROM material_entry AS m\nJOIN structure AS s ON s.entry_id = m.entry_id\nORDER BY s.lattice_a DESC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2264,
+      "few_shot_count": 0,
+      "tokens": 514
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nORDER BY s.lattice_a DESC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2590,
+      "few_shot_count": 3,
+      "tokens": 929
+    }
+  },
+  {
+    "id": "BL25",
+    "query": "energy above hullが0.1 eV/atom以下のB2化合物",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.energy_above_hull\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE ps.energy_above_hull <= 0.1 AND s.prototype = 'B2'\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2486,
+      "tokens": 579
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.energy_above_hull\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE ps.energy_above_hull <= 0.1 AND s.prototype = 'B2'\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2358,
+      "few_shot_count": 0,
+      "tokens": 579
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.strukturbericht, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE ps.energy_above_hull <= 0.1 AND s.prototype = 'B2'\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2419,
+      "few_shot_count": 0,
+      "tokens": 579
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.1\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 3041,
+      "few_shot_count": 3,
+      "tokens": 996
+    }
+  },
+  {
+    "id": "BL26",
+    "query": "Alを含まないB2化合物",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON composition.entry_id = m.entry_id\nJOIN structure s ON structure.entry_id = m.entry_id\nWHERE c.element != 'Al' AND m.formula LIKE 'B2%'\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 2380,
+      "tokens": 527
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON composition.entry_id = m.entry_id\nJOIN structure s ON structure.entry_id = m.entry_id\nWHERE c.element != 'Al' AND m.formula LIKE 'B2%'\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 2028,
+      "few_shot_count": 0,
+      "tokens": 527
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE c.element != 'Al' AND m.reduced_formula LIKE 'B2%'\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 2017,
+      "few_shot_count": 0,
+      "tokens": 528
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element != 'Al' LIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2385,
+      "few_shot_count": 3,
+      "tokens": 999
+    }
+  },
+  {
+    "id": "BL27",
+    "query": "bulk modulusが100 GPa以上の化合物",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.entry_id = calc.entry_id\nWHERE cp.property_name = 'bulk_modulus' AND cp.value >= 100\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 1919,
+      "tokens": 459
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.entry_id = calc.entry_id\nWHERE cp.property_name = 'bulk_modulus' AND cp.value >= 100\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 2094,
+      "few_shot_count": 0,
+      "tokens": 459
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.entry_id = calc.entry_id\nWHERE cp.property_name = 'bulk_modulus' AND cp.value >= 100\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 2286,
+      "few_shot_count": 0,
+      "tokens": 459
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.entry_id = m.entry_id\nWHERE\n    cp.property_name = 'bulk_modulus' AND calc.value >= 100\nLIMIT 100;",
+      "success": false,
+      "row_count": 0,
+      "latency_ms": 2373,
+      "few_shot_count": 3,
+      "tokens": 886
+    }
+  },
+  {
+    "id": "BL28",
+    "query": "CoAlのB2型合金の物性",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.lattice_a, s.lattice_b, s.lattice_c, s.volume_per_atom, s.formula_type, s.space_group_number, s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND m.chemical_system = 'CoAl'\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 3214,
+      "tokens": 549
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.lattice_a, s.lattice_b, s.lattice_c, s.volume_per_atom, s.formula_type, s.space_group_number, s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND m.chemical_system = 'CoAl'\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 2340,
+      "few_shot_count": 0,
+      "tokens": 549
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.prototype, s.lattice_a, s.lattice_b, s.lattice_c, s.volume_per_atom, s.formula_type, s.space_group_number, s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND m.chemical_system = 'CoAl'\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 2562,
+      "few_shot_count": 0,
+      "tokens": 549
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND m.chemical_system = 'CoAl'\nLIMIT 100;",
+      "success": true,
+      "row_count": 0,
+      "latency_ms": 2338,
+      "few_shot_count": 3,
+      "tokens": 946
+    }
+  },
+  {
+    "id": "BL29",
+    "query": "最も格子定数が小さいL12化合物",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'\nORDER BY s.lattice_a ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2107,
+      "tokens": 517
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'\nORDER BY s.lattice_a ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2260,
+      "few_shot_count": 0,
+      "tokens": 517
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'\nORDER BY s.lattice_a ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 2175,
+      "few_shot_count": 0,
+      "tokens": 517
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY s.lattice_a ASC\nLIMIT 100;",
+      "success": true,
+      "row_count": 100,
+      "latency_ms": 1789,
+      "few_shot_count": 3,
+      "tokens": 991
+    }
+  },
+  {
+    "id": "BL30",
+    "query": "formation energyが正のB2化合物",
+    "no_examples": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, \n       ps.formation_energy_per_atom \nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE ps.formation_energy_per_atom > 0 \nAND s.prototype = 'B2' \nLIMIT 100;",
+      "success": true,
+      "row_count": 85,
+      "latency_ms": 2233,
+      "tokens": 565
+    },
+    "manual_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, \n       ps.formation_energy_per_atom \nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE ps.formation_energy_per_atom > 0 \nAND s.prototype = 'B2' \nLIMIT 100;",
+      "success": true,
+      "row_count": 85,
+      "latency_ms": 2120,
+      "few_shot_count": 0,
+      "tokens": 565
+    },
+    "paper_only": {
+      "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, \n       ps.formation_energy_per_atom \nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE ps.formation_energy_per_atom > 0 \nAND s.prototype = 'B2' \nLIMIT 100;",
+      "success": true,
+      "row_count": 85,
+      "latency_ms": 1796,
+      "few_shot_count": 0,
+      "tokens": 565
+    },
+    "all_examples": {
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.formation_energy_per_atom > 0\nLIMIT 100;",
+      "success": true,
+      "row_count": 85,
+      "latency_ms": 2238,
+      "few_shot_count": 3,
+      "tokens": 992
+    }
+  }
+]
