@@ -1682,6 +1682,8 @@ GPT-4 zero-shot Text-to-SQLの正解率が16\%に留まり、
 したがって、制御された条件下で100\%のパス率は予想される。
 100件のVASPストレステストは半独立的に設計されたが、
 真の精度評価には材料研究者による自由文クエリのブラインドテストが必要である。
+今後の課題として、第三者の材料研究者複数名による
+ブラインドミニセット（例：5名×5クエリ）を用いた独立評価を計画している。
 
 \subsubsection{RAG天井効果（深刻度：中→解決済み）}
 
@@ -1897,12 +1899,20 @@ OQMDの開発・維持管理にあたるNorthwestern大学Wolvertonグループ�
 \newpage
 \begin{appendices}
 
-\section{全テストケース一覧}
+\section{回帰テストケース一覧}
 \label{app:all_tests}
+
+本付録には回帰テスト44件（表~\ref{tab:all_tests}）と
+代表的SQL生成例を掲載する。
+全評価クエリ（57件Baseline比較、50件RAGアブレーション、
+30件Graph Traversalアブレーション、100件VASPストレステスト、
+20件LLM再現性テスト）の完全リスト、プロンプトテンプレート、
+\texttt{allowed\_schema.yaml}、\texttt{material\_terms.yaml}は
+Supplementary Materialsに収録する。
 
 \begin{table*}[htbp]
 \centering
-\caption{全テストケース一覧（全44件、全PASS）。}
+\caption{回帰テストケース一覧（全44件、全PASS）。}
 \label{tab:all_tests}
 \footnotesize
 \begin{tabular}{llp{8cm}l}
