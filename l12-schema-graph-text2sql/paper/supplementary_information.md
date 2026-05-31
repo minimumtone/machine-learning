@@ -272,7 +272,7 @@ The schema prompt injected into the user message contains:
 | SQL exact-match rate | 30% (6/20 queries produced identical SQL across all 5 runs) |
 | Execution success rate | 100% (all 100 executions returned valid results) |
 | Result-set consistency | 95% (19/20 queries returned identical result sets across runs) |
-| Median latency | 2.8 s |
+| Median latency | 3.2 s |
 
 The low SQL exact-match rate reflects gpt-5.5's tendency to generate syntactically diverse but semantically equivalent SQL (e.g., different column ordering, alias choices, JOIN syntax). The high execution success and result-set consistency rates confirm that this diversity does not affect correctness.
 
@@ -411,7 +411,7 @@ Output: {recognized_constraints, unrecognized_terms, unknown_elements,
 
 | Condition | Exec Success | Result Correctness | Hallucinated Schema | Silent Drop | Unnecessary JOINs | Avg Rows |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1. Naive rule-based | 96.5% (55/57) | 79.3% (45/57) | 0 | 12.1% (7/57) | 3 | 54.4 |
+| 1. Naive rule-based | 96.5% (55/57) | 78.9% (45/57) | 0 | 12.3% (7/57) | 3 | 54.4 |
 | 2. LLM-only (no schema info) | 1.8% (1/57) | 1.8% (1/57) | 56 | 0% | N/A | N/A |
 | 3. LLM + schema prompt | 100.0% (57/57) | 100.0% (57/57) | 0 | 0% | 2 | 30.2 |
 | 4. LLM + schema + few-shot | 100.0% (57/57) | 100.0% (57/57) | 0 | 0% | 1 | 43.6 |

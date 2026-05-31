@@ -1007,7 +1007,7 @@ SQLが実行できても結果が正しくない場合（例：不適切なJOIN�
     \toprule
     条件 & 構成 & \shortstack{実行\\成功率} & \shortstack{結果\\正解率} & \shortstack{幻覚\\schema} & \shortstack{silent\\drop} & \shortstack{不要\\JOIN} \\
     \midrule
-    1 & Naive RB & 96.5\% & 79.3\% & 0 & 12.1\% & 3 \\
+    1 & Naive RB & 96.5\% & 78.9\% & 0 & 12.3\% & 3 \\
     2 & LLM-only & 1.8\% & 1.8\% & 56 & 0\% & --- \\
     3 & LLM+schema & 100\% & 100\% & 0 & 0\% & 2 \\
     4 & LLM+schema+FS & 100\% & 100\% & 0 & 0\% & 1 \\
@@ -1021,10 +1021,10 @@ SQLが実行できても結果が正しくない場合（例：不適切なJOIN�
 \paragraph{主要な発見。}
 
 \begin{enumerate}
-  \item \textbf{Naive RBの結果正解率は79.3\%}：実行成功率96.5\%との乖離は
+  \item \textbf{Naive RBの結果正解率は78.9\%}：実行成功率96.5\%との乖離は
     多元素AND検索の失敗に起因する。NaiveモードではJOINレベルANDとなり、
     「FeかつAl含有」クエリで97行（正解4行）を返す等の過剰結果が発生する。
-    また、辞書未登録語彙の無通知破棄（silent drop）が12.1\%発生し、
+    また、辞書未登録語彙の無通知破棄（silent drop）が12.3\%発生し、
     条件が無視されたSQLが実行成功してしまう。
   \item \textbf{SG制約 vs. schema prompt}：条件3--4（LLM+schema）と
     条件5--7（SG系）はいずれも結果正解率100\%だが、
