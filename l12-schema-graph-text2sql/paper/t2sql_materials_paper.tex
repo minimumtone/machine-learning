@@ -1406,6 +1406,59 @@ gpt-5.5は構造的に多様だが意味的に等価なSQL文を生成する傾�
   \end{tabularx}
 \end{table}
 
+\subsection{Graph Traversalアブレーション結果}
+\label{sec:traversal_ablation}
+
+Schema Graph FK走査の効果を定量的に評価するため、
+30クエリ×4条件のアブレーション実験を実施した（表~\ref{tab:traversal_ablation}）。
+クエリはJOIN複雑度により7カテゴリ（0-table、1-table、2-table、3-table、
+indirect、multi-element、numeric/sort）に分類した。
+
+\begin{table*}[htbp]
+  \centering
+  \caption{Graph Traversalアブレーション結果（30クエリ×4条件、gpt-5.5）。
+    不要JOIN数 = max(0, 実際JOIN数 $-$ 最小必要JOIN数)。}
+  \label{tab:traversal_ablation}
+  \small
+  \begin{tabular}{lrrrrrrrr}
+    \toprule
+    & \multicolumn{2}{c}{Naive (all JOINs)} & \multicolumn{2}{c}{SG + Rule-based} & \multicolumn{2}{c}{LLM (no traversal)} & \multicolumn{2}{c}{LLM + SG traversal} \\
+    \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9}
+    カテゴリ ($n$) & 平均JOIN & 不要JOIN & 平均JOIN & 不要JOIN & 平均JOIN & 不要JOIN & 平均JOIN & 不要JOIN \\
+    \midrule
+    0-table (2)       & 5.00 & 5.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\
+    1-table (4)       & 5.00 & 4.00 & 1.00 & 0.00 & 2.00 & 1.00 & 1.00 & 0.00 \\
+    2-table (5)       & 4.80 & 3.00 & 1.60 & 0.00 & 1.60 & 0.00 & 1.80 & 0.00 \\
+    3-table (8)       & 4.75 & 1.88 & 2.75 & 0.00 & 2.75 & 0.00 & 2.75 & 0.00 \\
+    indirect (2)      & 5.00 & 2.50 & 0.50 & 0.00 & 2.50 & 0.00 & 0.50 & 0.00 \\
+    multi-element (5) & 4.00 & 1.60 & 1.60 & 0.00 & 1.60 & 0.00 & 1.80 & 0.00 \\
+    numeric/sort (4)  & 5.00 & 3.25 & 1.75 & 0.00 & 1.75 & 0.00 & 1.75 & 0.00 \\
+    \midrule
+    \textbf{全体 (30)} & \textbf{4.73} & \textbf{2.73} & \textbf{1.67} & \textbf{0.00} & \textbf{1.93} & \textbf{0.13} & \textbf{1.73} & \textbf{0.00} \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+\paragraph{結果セット一致度（Jaccard類似度）。}
+条件間の結果セット一致度をJaccard類似度で評価した：
+\begin{itemize}
+  \item Naive vs SG+RB：$\bar{J} = 0.167$（完全一致 5/30）---Naiveの全テーブルJOINが
+    大量の不要行を返すため結果セットが大幅に乖離。
+  \item LLM（traversalなし） vs SG+RB：$\bar{J} = 0.818$（完全一致 24/30）---LLM単体でも
+    概ね正しいJOINを選択するが、1-tableカテゴリ等で冗長JOINが残る。
+  \item SG+RB vs LLM+SG traversal：$\bar{J} = 0.897$（完全一致 26/30）---
+    Schema Graph走査によりRule-basedとLLMが高い結果一致度を達成。
+\end{itemize}
+
+\paragraph{Graph Traversalの効果。}
+(1)~Naive条件は平均4.73 JOINを生成し、うち2.73（58\%）が不要である。
+すべてのカテゴリで不要JOINが発生し、0-tableクエリでも5 JOINを生成する。
+(2)~SG+RBおよびLLM+SG traversal条件は
+\textbf{不要JOIN数が厳密に0}であり、FK走査が最小JOINパスを正確に算出することを示す。
+(3)~LLM（traversalなし）はgpt-5.5の能力により概ね正しいJOINを選択するが、
+1-tableカテゴリで平均1.0の不要JOINが残り（T25: CsCl型で4不要JOIN）、
+\textbf{Schema Graph走査がLLMの冗長JOIN生成を完全に排除する}ことを確認した。
+
 % =====================================================================
 \section{考察}
 \label{sec:discussion}
