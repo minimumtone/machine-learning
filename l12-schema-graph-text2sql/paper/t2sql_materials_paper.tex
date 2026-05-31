@@ -1,6 +1,6 @@
 % !TEX program = lualatex
 %% Elsevier elsarticle + numbered references
-\documentclass[twocolumn,12pt]{elsarticle}
+\documentclass[5p,twocolumn]{elsarticle}
 
 \usepackage{luatexja}
 \usepackage{luatexja-fontspec}
@@ -53,9 +53,8 @@
 
 \begin{frontmatter}
 
-\title{Schema Graph制約型Text-to-SQLによる材料データベース自然言語インターフェース：
-  Rule-based・LLM生成のカスケードアーキテクチャ
-  --- OQMD金属間化合物1{,}351件（B2・L1$_2$・NaCl・NiAs・BiF$_3$型）での7条件比較検証 ---}
+\title{Schema Graph制約型Text-to-SQLによる材料データベース自然言語インターフェース：\\
+  Rule-based・LLMカスケードアーキテクチャのOQMD 1{,}351件検証}
 
 \author[nims]{Satoshi Minamoto\corref{cor1}}
 \cortext[cor1]{Corresponding author}
@@ -124,10 +123,6 @@ OQMD \sep 金属間化合物 \sep 自然言語処理 \sep マテリアルズ・�
 \end{keyword}
 
 \end{frontmatter}
-
-% =====================================================================
-\tableofcontents
-\newpage
 
 % =====================================================================
 \section{緒言}
@@ -226,6 +221,47 @@ Materials ProjectはMCPベースのLLM統合の提供を開始している。
 \textbf{正規化リレーショナルデータベース上のスキーマ認識型SQL生成}---特に
 外部キーグラフ走査による自動JOIN経路探索---を対象としたものはない。
 このギャップが本手法の焦点である。
+
+\subsection{オントロジー・知識グラフアプローチとの関連}
+\label{sec:ontology_comparison}
+
+材料データへの構造化アクセスには、
+オントロジー・知識グラフ（KG）に基づくアプローチも有力な系譜を形成している。
+Ishiiらは超伝導材料データベースSuperConをRDFオントロジーとして再構築し、
+SPARQLエンドポイントを通じた意味検索を実現した~\citep{ishii2023supercon}。
+同グループはPoLyInfoの高分子データについても同様の機械可読化を行い、
+BFO上位オントロジーとの整合により分野横断的なデータ連携を可能にしている~\citep{ishii2024polyinfo}。
+欧州ではElementary Multiperspective Material Ontology（EMMO）が
+材料モデリングの標準オントロジーとして整備され、
+OWL推論に基づく意味的一貫性の保証を提供している~\citep{emmo2020}。
+
+汎用ドメインでは、Sequeda \& Allemang~\citep{sequeda2024benchmark}が
+企業SQLデータベースを知識グラフに変換し、
+Text-to-SPARQLがText-to-SQLに比べ正解率を16\%から54\%に向上させることを示した。
+さらにオントロジーの意味制約を用いたクエリ検証（OBQC）により
+72\%まで改善している~\citep{allemang2024obqc}。
+
+本手法はこれらオントロジーアプローチと\textbf{構造制約によるクエリ品質保証}という
+目的を共有する。
+オントロジーのOWLプロパティにおけるdomain/range制約は、
+RDBにおけるFK関係のテーブル間制約と機能的に対応し、
+OBQCによるSPARQLクエリ検証は、
+本手法のSQLGuard（カラムホワイトリスト・FK整合JOIN検証）と同等の役割を果たす。
+ただし、両アプローチの適用文脈は異なる。
+オントロジーアプローチはRDFトリプルストアへのデータ変換を前提とし、
+OWL推論による意味的推移律（例：「NiAlはL1$_2$型」$\to$「NiAlは金属間化合物」）や
+異種データベース間の相互運用性において優れた表現力を持つ。
+一方、OQMD・Materials Project・AFLOW等の大規模材料データベースは
+既にリレーショナルスキーマで運用されており、
+本手法はこれらの\textbf{既存RDBインフラをそのまま活用}する設計を採用している。
+FK関係のグラフ走査（Steiner木近似）は、
+オントロジーの推論に依存せずにJOINパスの正確性を保証する
+軽量な代替手段を提供する。
+
+両アプローチは排他的ではなく相補的である。
+将来的には、オントロジーが定義する意味的制約を
+Schema Graphの走査ヒューリスティックに統合することで、
+FK関係だけでなくドメイン知識に基づくJOINパス選択が可能になると考えられる。
 
 \subsection{目的と新規性}
 
@@ -1076,7 +1112,7 @@ Intent Classifierテスト20件の計80件を構築した（表~\ref{tab:test_ca
     \midrule
     正常系 & A01--A15 & 15 & 元素、プロトタイプ、安定性、ソート、複合条件 \\
     該当なし & B01--B05 & 5 & 希ガス/貴ガス元素、非存在組合せ $\to$ 0行期待 \\
-    いい加減な入力 & C01--C10 & 10 & 空入力、無関係テキスト、単語のみ、数値条件 \\
+    曖昧な入力 & C01--C10 & 10 & 空入力、無関係テキスト、単語のみ、数値条件 \\
     矛盾条件 & D01--D02 & 2 & 「安定かつ準安定」「Feなし Fe化合物」 \\
     SQLインジェクション & E01--E05 & 5 & DROP, DELETE, INSERT、ピギーバック攻撃 \\
     安全性検査 & F01--F02 & 2 & 直接SQL入力（SELECT, UPDATE） \\
@@ -1090,7 +1126,7 @@ Intent Classifierテスト20件の計80件を構築した（表~\ref{tab:test_ca
 \subsubsection{Baseline比較実験（7条件×57クエリ）}
 
 システムの各構成要素の寄与を分離するため、7条件のBaseline比較を設計した。
-57件のクエリ（正常系15件 + 該当なし5件 + いい加減入力10件 + 矛盾2件 +
+57件のクエリ（正常系15件 + 該当なし5件 + 曖昧入力10件 + 矛盾2件 +
 インジェクション5件 + 安全性2件 + 数値条件20件 - 重複2件）を用いた。
 LLM条件にはgpt-5.5を使用した。
 
@@ -1645,20 +1681,25 @@ gpt-5.5のSQL一致率は30\%（20クエリ×5回）であり、
 
 \begin{table*}[htbp]
   \centering
-  \caption{関連する材料NLP / T2SQLシステムとの比較。}
+  \caption{関連する材料NLP / T2SQL / オントロジーシステムとの比較。}
   \label{tab:related_comparison}
   \small
   \begin{tabularx}{\textwidth}{lccccX}
     \toprule
-    システム & スキーマ認識 & 正規化RDB & 材料特化 & Few-Shot & 主な差異 \\
+    システム & スキーマ認識 & 正規化RDB & 材料特化 & NL$\to$クエリ & 主な差異 \\
     \midrule
-    Spider~\citep{yu2018spider} & あり & あり & なし & なし & 汎用ベンチマーク \\
-    BIRD~\citep{li2024bird} & あり & あり & なし & なし & 大規模実データ \\
-    DAIL-SQL~\citep{gao2023dail} & あり & あり & なし & あり & スケルトン選択 \\
-    MKNA~\citep{zhuang2026mkna} & なし & なし（API） & あり & なし & エージェント、SQL生成なし \\
-    OptiMat~\citep{hu2026optimat} & なし & なし & あり & なし & オンデマンドDFT \\
-    MP MCP & 部分的 & なし（API） & あり & なし & MCPプロトコル \\
-    \textbf{本手法} & \textbf{あり} & \textbf{あり} & \textbf{あり} & \textbf{あり} & FKグラフ + 材料辞書 \\
+    Spider~\citep{yu2018spider} & あり & あり & なし & SQL & 汎用ベンチマーク \\
+    BIRD~\citep{li2024bird} & あり & あり & なし & SQL & 大規模実データ \\
+    DAIL-SQL~\citep{gao2023dail} & あり & あり & なし & SQL & スケルトン選択 \\
+    MKNA~\citep{zhuang2026mkna} & なし & なし & あり & API & エージェント \\
+    OptiMat~\citep{hu2026optimat} & なし & なし & あり & API & オンデマンドDFT \\
+    \midrule
+    SuperCon~\citep{ishii2023supercon} & あり & なし & あり & SPARQL & RDFオントロジー \\
+    PoLyInfo~\citep{ishii2024polyinfo} & あり & なし & あり & SPARQL & BFO準拠 \\
+    EMMO~\citep{emmo2020} & あり & なし & あり & --- & 上位オントロジー \\
+    KG+OBQC~\citep{allemang2024obqc} & あり & なし & なし & SPARQL & 72\%精度 \\
+    \midrule
+    \textbf{本手法} & \textbf{あり} & \textbf{あり} & \textbf{あり} & \textbf{SQL} & FK走査 + 材料辞書 \\
     \bottomrule
   \end{tabularx}
 \end{table*}
@@ -1845,16 +1886,16 @@ OQMDの開発・維持管理にあたるNorthwestern大学Wolvertonグループ�
   B04 & 該当なし & ScとIrを含む安定なB2化合物を出して & PASS \\
   B05 & 該当なし & PtとGaを含む安定なB2化合物を出して & PASS \\
   \midrule
-  C01 & いい加減 & 安定な化合物を出して & PASS \\
-  C02 & いい加減 & B2 & PASS \\
-  C03 & いい加減 & 安定なものを出して & PASS \\
-  C04 & いい加減 & （空入力） & PASS \\
-  C05 & いい加減 & 今日の天気を教えて & PASS \\
-  C06 & いい加減 & Fe & PASS \\
-  C07 & いい加減 & 格子定数 & PASS \\
-  C08 & いい加減 & band gapが大きい安定なB2化合物 & PASS \\
-  C09 & いい加減 & NiAl L12 & PASS \\
-  C10 & いい加減 & FeのB2かL12 & PASS \\
+  C01 & 曖昧 & 安定な化合物を出して & PASS \\
+  C02 & 曖昧 & B2 & PASS \\
+  C03 & 曖昧 & 安定なものを出して & PASS \\
+  C04 & 曖昧 & （空入力） & PASS \\
+  C05 & 曖昧 & 今日の天気を教えて & PASS \\
+  C06 & 曖昧 & Fe & PASS \\
+  C07 & 曖昧 & 格子定数 & PASS \\
+  C08 & 曖昧 & band gapが大きい安定なB2化合物 & PASS \\
+  C09 & 曖昧 & NiAl L12 & PASS \\
+  C10 & 曖昧 & FeのB2かL12 & PASS \\
   \midrule
   D01 & 矛盾 & 安定かつ準安定なB2化合物 & PASS \\
   D02 & 矛盾 & FeなしのFe B2化合物 & PASS \\
@@ -1874,31 +1915,39 @@ OQMDの開発・維持管理にあたるNorthwestern大学Wolvertonグループ�
 \section{生成SQL例}
 \label{app:sql_examples}
 
+\lstset{basicstyle=\ttfamily\scriptsize,breaklines=true,columns=fullflexible}
+
 \subsection{A01: 「Feを含むB2化合物を出して」}
 
 \paragraph{Naive（Level 0）：}
 \begin{lstlisting}
 SELECT m.entry_id, m.formula, s.prototype
 FROM material_entry m
-    JOIN composition c ON c.entry_id = m.entry_id
-    JOIN structure s ON s.entry_id = m.entry_id
-    JOIN phase_stability ps ON ps.entry_id = m.entry_id
-    JOIN calculation calc ON calc.entry_id = m.entry_id
-    JOIN calculated_property cp
-      ON cp.calculation_id = calc.calculation_id
-WHERE s.prototype = 'B2' AND c.element = 'Fe';
+  JOIN composition c ON c.entry_id = m.entry_id
+  JOIN structure s ON s.entry_id = m.entry_id
+  JOIN phase_stability ps
+    ON ps.entry_id = m.entry_id
+  JOIN calculation calc
+    ON calc.entry_id = m.entry_id
+  JOIN calculated_property cp
+    ON cp.calculation_id = calc.calculation_id
+WHERE s.prototype = 'B2'
+  AND c.element = 'Fe';
 -- 問題: 不要JOIN 3件、LIMIT/DISTINCTなし
 \end{lstlisting}
 
 \paragraph{Schema Graph + Rule-based（Level 1）：}
 \begin{lstlisting}
 SELECT DISTINCT m.entry_id, m.formula,
-    s.prototype, s.lattice_a, s.space_group
+  s.prototype, s.lattice_a, s.space_group
 FROM material_entry m
-    JOIN composition c ON c.entry_id = m.entry_id
-    JOIN structure s ON s.entry_id = m.entry_id
-WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')
-    AND c.element = 'Fe'
+  JOIN composition c
+    ON c.entry_id = m.entry_id
+  JOIN structure s
+    ON s.entry_id = m.entry_id
+WHERE (s.prototype = 'B2'
+    OR s.strukturbericht = 'B2')
+  AND c.element = 'Fe'
 LIMIT 100;
 -- 最適: 必要な2 JOINのみ、DISTINCT、LIMIT付き
 \end{lstlisting}
@@ -1906,14 +1955,17 @@ LIMIT 100;
 \paragraph{Schema Graph + gpt-5.5（Level 2）：}
 \begin{lstlisting}
 SELECT DISTINCT m.entry_id, m.formula,
-    s.prototype, s.lattice_a, s.space_group
+  s.prototype, s.lattice_a, s.space_group
 FROM material_entry m
-JOIN structure s ON s.entry_id = m.entry_id
-JOIN composition c ON c.entry_id = m.entry_id
-WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')
+  JOIN structure s
+    ON s.entry_id = m.entry_id
+  JOIN composition c
+    ON c.entry_id = m.entry_id
+WHERE (s.prototype = 'B2'
+    OR s.strukturbericht = 'B2')
   AND c.element = 'Fe'
 LIMIT 100;
--- LLMがSchema Graph制約内で同等SQLを生成
+-- LLMがSG制約内で同等SQLを生成
 \end{lstlisting}
 
 \subsection{A03: 「NiとAlの両方を含む化合物を出して」}
@@ -1922,11 +1974,13 @@ LIMIT 100;
 \begin{lstlisting}
 SELECT m.entry_id, m.formula
 FROM material_entry m
-    JOIN composition c ON c.entry_id = m.entry_id
-    ...(全テーブルJOIN)...
-WHERE c.element = 'Ni' AND c.element = 'Al';
--- 致命的: 単一行が両条件を同時に満たすことは不可能
--- -> 常に0行を返す
+  JOIN composition c
+    ON c.entry_id = m.entry_id
+  ...(全テーブルJOIN)...
+WHERE c.element = 'Ni'
+  AND c.element = 'Al';
+-- 致命的: 単一行が両条件を同時に
+-- 満たすことは不可能 -> 常に0行
 \end{lstlisting}
 
 \paragraph{Schema Graph + Rule-based（Level 1）：}
@@ -1934,13 +1988,15 @@ WHERE c.element = 'Ni' AND c.element = 'Al';
 SELECT DISTINCT m.entry_id, m.formula
 FROM material_entry m
 WHERE EXISTS (
-    SELECT 1 FROM composition
-    WHERE entry_id = m.entry_id AND element = 'Ni')
-  AND EXISTS (
-    SELECT 1 FROM composition
-    WHERE entry_id = m.entry_id AND element = 'Al')
+  SELECT 1 FROM composition
+  WHERE entry_id = m.entry_id
+    AND element = 'Ni')
+AND EXISTS (
+  SELECT 1 FROM composition
+  WHERE entry_id = m.entry_id
+    AND element = 'Al')
 LIMIT 100;
--- EXISTS副問い合わせによる正確な多元素AND
+-- EXISTS副問い合わせで正確な多元素AND
 \end{lstlisting}
 
 \end{appendices}
