@@ -41,7 +41,7 @@ os.environ.setdefault("POSTGRES_DB", "l12_materials")
 os.environ.setdefault("POSTGRES_USER", "l12_user")
 os.environ.setdefault("POSTGRES_PASSWORD", "l12_password")
 
-LLM_MODEL = os.environ.get("LLM_MODEL", "gpt-5")
+LLM_MODEL = os.environ.get("LLM_MODEL", "gpt-5.5")
 API_KEY = os.environ.get("OPENAI_API_KEY", "")
 RESULTS_DIR = Path(__file__).parent / "results"
 RESULTS_DIR.mkdir(exist_ok=True)
@@ -417,6 +417,214 @@ def run_reproducibility_test(queries: list[dict[str, str]],
 
 
 # ====================================================================
+# Experiment 2b: RAG Ablation (4 conditions)
+# ====================================================================
+def run_rag_ablation(queries: list[dict[str, str]]) -> list[dict[str, Any]]:
+    """Compare 4 RAG conditions:
+    1. No examples (schema info only)
+    2. Manual examples only (source=manual/seed)
+    3. Paper-extracted examples only (source=paper)
+    4. All examples (manual + paper + runtime)
+    """
+    if not API_KEY or API_KEY == "your_api_key_here":
+        print("  [SKIP] No API key for RAG ablation")
+        return []
+
+    all_examples = load_store()
+    manual_examples = [e for e in all_examples if e.get("source") in ("manual", "seed", "pipeline")]
+    paper_examples = [e for e in all_examples if e.get("source") == "paper"]
+
+    print(f"  Store: {len(all_examples)} total, {len(manual_examples)} manual/seed, {len(paper_examples)} paper")
+
+    results = []
+    for test in queries:
+        qid = test["id"]
+        query = test["query"]
+        if not query:
+            continue
+        print(f"  [{qid}] {query[:40]}...", flush=True)
+        entry: dict[str, Any] = {"id": qid, "query": query}
+
+        conditions = extract_conditions(query)
+        linked = link_schema(conditions)
+        allowed_cols = [c for c in ALL_COLUMNS if c.split(".")[0] in linked["required_tables"]]
+        allowed_joins_filtered = [j for j in ALL_JOINS if any(t in j for t in linked["required_tables"])]
+
+        # Condition 1: No examples
+        try:
+            prompt_no_ex = build_constrained_prompt(
+                query, linked["required_tables"], allowed_cols, allowed_joins_filtered,
+                few_shot_examples=None,
+            )
+            import openai
+            client = openai.OpenAI(api_key=API_KEY)
+            t0 = time.time()
+            create_kwargs: dict[str, Any] = dict(
+                model=LLM_MODEL,
+                messages=[
+                    {"role": "system", "content": "You are a PostgreSQL expert for materials databases."},
+                    {"role": "user", "content": prompt_no_ex},
+                ],
+            )
+            _is_new = any(t in LLM_MODEL for t in ("gpt-5", "o1", "o3", "o4"))
+            if _is_new:
+                create_kwargs["max_completion_tokens"] = 4096
+            else:
+                create_kwargs["temperature"] = 0.0
+                create_kwargs["max_tokens"] = 512
+            resp = client.chat.completions.create(**create_kwargs)
+            latency = int((time.time() - t0) * 1000)
+            sql = extract_sql_from_response(resp.choices[0].message.content or "")
+            result = _execute_query(sql)
+            entry["no_examples"] = {
+                "sql": sql, "success": result.get("success", False),
+                "row_count": result.get("row_count", 0),
+                "latency_ms": latency,
+                "tokens": (resp.usage.prompt_tokens + resp.usage.completion_tokens) if resp.usage else 0,
+            }
+        except Exception as e:
+            entry["no_examples"] = {"sql": "", "success": False, "error": str(e)}
+
+        # Condition 2: Manual examples only
+        try:
+            from llm.few_shot_store import _tokenize, _tf, _idf, _cosine
+            query_tokens = _tokenize(query)
+            if manual_examples:
+                corpus_tokens = [_tokenize(e["nl_query"]) for e in manual_examples]
+                idf = _idf(corpus_tokens + [query_tokens])
+                def _tfidf(tokens):
+                    tf = _tf(tokens)
+                    return {t: tf[t] * idf.get(t, 1.0) for t in tf}
+                q_vec = _tfidf(query_tokens)
+                scored = []
+                for i, doc_tokens in enumerate(corpus_tokens):
+                    d_vec = _tfidf(doc_tokens)
+                    sim = _cosine(q_vec, d_vec)
+                    scored.append((sim, i))
+                scored.sort(reverse=True)
+                manual_fs = [{**manual_examples[idx], "similarity": sim}
+                             for sim, idx in scored[:3] if sim > 0.05]
+            else:
+                manual_fs = []
+
+            prompt_manual = build_constrained_prompt(
+                query, linked["required_tables"], allowed_cols, allowed_joins_filtered,
+                few_shot_examples=manual_fs,
+            )
+            t0 = time.time()
+            create_kwargs2: dict[str, Any] = dict(
+                model=LLM_MODEL,
+                messages=[
+                    {"role": "system", "content": "You are a PostgreSQL expert for materials databases."},
+                    {"role": "user", "content": prompt_manual},
+                ],
+            )
+            if _is_new:
+                create_kwargs2["max_completion_tokens"] = 4096
+            else:
+                create_kwargs2["temperature"] = 0.0
+                create_kwargs2["max_tokens"] = 512
+            resp2 = client.chat.completions.create(**create_kwargs2)
+            latency2 = int((time.time() - t0) * 1000)
+            sql2 = extract_sql_from_response(resp2.choices[0].message.content or "")
+            result2 = _execute_query(sql2)
+            entry["manual_only"] = {
+                "sql": sql2, "success": result2.get("success", False),
+                "row_count": result2.get("row_count", 0),
+                "latency_ms": latency2, "few_shot_count": len(manual_fs),
+                "tokens": (resp2.usage.prompt_tokens + resp2.usage.completion_tokens) if resp2.usage else 0,
+            }
+        except Exception as e:
+            entry["manual_only"] = {"sql": "", "success": False, "error": str(e)}
+
+        # Condition 3: Paper-extracted examples only
+        try:
+            if paper_examples:
+                corpus_tokens_p = [_tokenize(e["nl_query"]) for e in paper_examples]
+                idf_p = _idf(corpus_tokens_p + [query_tokens])
+                def _tfidf_p(tokens):
+                    tf = _tf(tokens)
+                    return {t: tf[t] * idf_p.get(t, 1.0) for t in tf}
+                q_vec_p = _tfidf_p(query_tokens)
+                scored_p = []
+                for i, doc_tokens in enumerate(corpus_tokens_p):
+                    d_vec = _tfidf_p(doc_tokens)
+                    sim = _cosine(q_vec_p, d_vec)
+                    scored_p.append((sim, i))
+                scored_p.sort(reverse=True)
+                paper_fs = [{**paper_examples[idx], "similarity": sim}
+                            for sim, idx in scored_p[:3] if sim > 0.05]
+            else:
+                paper_fs = []
+
+            prompt_paper = build_constrained_prompt(
+                query, linked["required_tables"], allowed_cols, allowed_joins_filtered,
+                few_shot_examples=paper_fs,
+            )
+            t0 = time.time()
+            create_kwargs3: dict[str, Any] = dict(
+                model=LLM_MODEL,
+                messages=[
+                    {"role": "system", "content": "You are a PostgreSQL expert for materials databases."},
+                    {"role": "user", "content": prompt_paper},
+                ],
+            )
+            if _is_new:
+                create_kwargs3["max_completion_tokens"] = 4096
+            else:
+                create_kwargs3["temperature"] = 0.0
+                create_kwargs3["max_tokens"] = 512
+            resp3 = client.chat.completions.create(**create_kwargs3)
+            latency3 = int((time.time() - t0) * 1000)
+            sql3 = extract_sql_from_response(resp3.choices[0].message.content or "")
+            result3 = _execute_query(sql3)
+            entry["paper_only"] = {
+                "sql": sql3, "success": result3.get("success", False),
+                "row_count": result3.get("row_count", 0),
+                "latency_ms": latency3, "few_shot_count": len(paper_fs),
+                "tokens": (resp3.usage.prompt_tokens + resp3.usage.completion_tokens) if resp3.usage else 0,
+            }
+        except Exception as e:
+            entry["paper_only"] = {"sql": "", "success": False, "error": str(e)}
+
+        # Condition 4: All examples (full RAG)
+        try:
+            all_fs = retrieve_similar(query, top_k=3)
+            prompt_all = build_constrained_prompt(
+                query, linked["required_tables"], allowed_cols, allowed_joins_filtered,
+                few_shot_examples=all_fs,
+            )
+            t0 = time.time()
+            create_kwargs4: dict[str, Any] = dict(
+                model=LLM_MODEL,
+                messages=[
+                    {"role": "system", "content": "You are a PostgreSQL expert for materials databases."},
+                    {"role": "user", "content": prompt_all},
+                ],
+            )
+            if _is_new:
+                create_kwargs4["max_completion_tokens"] = 4096
+            else:
+                create_kwargs4["temperature"] = 0.0
+                create_kwargs4["max_tokens"] = 512
+            resp4 = client.chat.completions.create(**create_kwargs4)
+            latency4 = int((time.time() - t0) * 1000)
+            sql4 = extract_sql_from_response(resp4.choices[0].message.content or "")
+            result4 = _execute_query(sql4)
+            entry["all_examples"] = {
+                "sql": sql4, "success": result4.get("success", False),
+                "row_count": result4.get("row_count", 0),
+                "latency_ms": latency4, "few_shot_count": len(all_fs),
+                "tokens": (resp4.usage.prompt_tokens + resp4.usage.completion_tokens) if resp4.usage else 0,
+            }
+        except Exception as e:
+            entry["all_examples"] = {"sql": "", "success": False, "error": str(e)}
+
+        results.append(entry)
+    return results
+
+
+# ====================================================================
 # Experiment 3: Failure mode analysis
 # ====================================================================
 def run_failure_analysis(queries: list[dict[str, str]]) -> list[dict[str, Any]]:
@@ -491,6 +699,16 @@ def main():
         (RESULTS_DIR / "reproducibility.json").write_text(
             json.dumps(repro_results, ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"  → {len(repro_results)} queries × 5 runs")
+
+    # Experiment 2b: RAG Ablation
+    print("\n=== Experiment 2b: RAG Ablation (4 conditions) ===")
+    rag_queries = CURATED_TESTS + NUMERIC_TESTS + BLIND_QUERIES  # skip adversarial for RAG
+    rag_results = run_rag_ablation(rag_queries)
+    all_results["rag_ablation"] = rag_results
+    if rag_results:
+        (RESULTS_DIR / "rag_ablation.json").write_text(
+            json.dumps(rag_results, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"  → {len(rag_results)} queries × 4 RAG conditions")
 
     # Experiment 3: Failure mode analysis
     print("\n=== Experiment 3: Failure Mode Analysis ===")

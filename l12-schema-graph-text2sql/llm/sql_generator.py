@@ -10,6 +10,7 @@ from typing import Any
 
 from llm.entity_extractor import extract_conditions
 from llm.few_shot_store import add_example, format_few_shot_block, retrieve_similar
+from llm.intent_classifier import classify_intent
 from llm.schema_linker import link_schema
 
 
@@ -65,7 +66,7 @@ def generate_sql_via_llm(
     if api_key is None:
         api_key = os.getenv("OPENAI_API_KEY", "")
     if model is None:
-        model = os.getenv("LLM_MODEL", "gpt-4.1-mini")
+        model = os.getenv("LLM_MODEL", "gpt-5.5")
 
     prompt = build_constrained_prompt(
         user_query, allowed_tables, allowed_columns, allowed_joins,
@@ -221,13 +222,35 @@ def pipeline(
     user_query: str,
     join_list: list[str] | None = None,
     store_on_success: bool = False,
+    skip_intent_check: bool = False,
 ) -> dict[str, Any]:
-    """Full pipeline: extract -> link -> generate SQL.
+    """Full pipeline: intent classify -> extract -> link -> generate SQL.
 
     When *store_on_success* is True the result is persisted in the few-shot
     store after successful DB execution so that future queries can benefit
     from it as a few-shot example.
+
+    When *skip_intent_check* is True, bypass intent classification
+    (useful for benchmarking or when intent is pre-verified).
     """
+    # Intent classification gate
+    if not skip_intent_check:
+        intent = classify_intent(user_query)
+        if intent["intent"] in ("out_of_scope", "greeting"):
+            return {
+                "sql": "",
+                "mode": "rejected",
+                "intent": intent,
+                "reason": intent["reason"],
+            }
+        if intent["intent"] == "unsafe":
+            return {
+                "sql": "",
+                "mode": "rejected",
+                "intent": intent,
+                "reason": f"Unsafe input detected: {intent['reason']}",
+            }
+
     conditions = extract_conditions(user_query)
     linked = link_schema(conditions)
 

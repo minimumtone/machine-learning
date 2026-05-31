@@ -10,7 +10,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 16,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Fe' LIMIT 100;",
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND c.element = 'Fe'\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -25,7 +25,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 88,
-    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    s.lattice_a,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -40,7 +40,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 4,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula FROM material_entry m JOIN composition c_ni ON c_ni.entry_id = m.entry_id JOIN composition c_al ON c_al.entry_id = m.entry_id WHERE c_ni.element = 'Ni' AND c_al.element = 'Al' LIMIT 100;",
+    "rb_sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE c.element IN ('Ni', 'Al')\nGROUP BY m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nHAVING COUNT(DISTINCT c.element) = 2\nLIMIT 100;",
     "failure_mode": "partial_success"
   },
   {
@@ -54,7 +54,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 100,
-    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.lattice_b, s.lattice_c, s.volume_per_atom, s.formula_type, s.space_group_number, s.space_group\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    m.reduced_formula,\n    m.chemical_system,\n    s.prototype,\n    s.strukturbericht,\n    s.lattice_a,\n    s.lattice_b,\n    s.lattice_c,\n    s.volume_per_atom,\n    s.formula_type,\n    s.space_group_number,\n    s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -69,7 +69,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 100,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.energy_above_hull <= 0.05 LIMIT 100;",
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND ps.energy_above_hull <= 0.05\nLIMIT 100;",
     "failure_mode": "unsafe_overbroad"
   },
   {
@@ -84,7 +84,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 1,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Co' AND ps.energy_above_hull <= 0.001 LIMIT 100;",
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.element = 'Co'\n  AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -98,7 +98,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 42,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.lattice_a FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE c.element = 'Pt' LIMIT 100;",
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.lattice_a, s.lattice_b, s.lattice_c FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE c.element = 'Pt' LIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -113,7 +113,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 100,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE s.prototype = 'L12' OR s.strukturbericht = 'L12' OR s.prototype = 'B2' OR s.strukturbericht = 'B2' LIMIT 100;",
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.strukturbericht, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2' OR s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLIMIT 100;",
     "failure_mode": "partial_success"
   },
   {
@@ -127,7 +127,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 0,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') AND EXISTS (SELECT 1 FROM composition c_co WHERE c_co.entry_id = m.entry_id AND c_co.element = 'Co') LIMIT 100;",
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND EXISTS (\n    SELECT 1\n    FROM composition c_ni\n    WHERE c_ni.entry_id = m.entry_id\n      AND c_ni.element = 'Ni'\n  )\n  AND EXISTS (\n    SELECT 1\n    FROM composition c_co\n    WHERE c_co.entry_id = m.entry_id\n      AND c_co.element = 'Co'\n  )\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -141,7 +141,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 100,
-    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.lattice_b, s.lattice_c, s.volume_per_atom, s.formula_type, s.space_group_number, s.space_group\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLIMIT 100;",
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    m.reduced_formula,\n    m.chemical_system,\n    s.prototype,\n    s.strukturbericht,\n    s.lattice_a,\n    s.lattice_b,\n    s.lattice_c,\n    s.volume_per_atom,\n    s.formula_type,\n    s.space_group_number,\n    s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -155,7 +155,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 4,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND EXISTS (SELECT 1 FROM composition c_fe WHERE c_fe.entry_id = m.entry_id AND c_fe.element = 'Fe') AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al') LIMIT 100;",
+    "rb_sql": "SELECT m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND c.element IN ('Fe', 'Al')\nGROUP BY m.entry_id, m.formula, s.prototype, s.lattice_a\nHAVING COUNT(DISTINCT c.element) = 2\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -170,7 +170,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 100,
-    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -184,7 +184,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 10,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Ti' LIMIT 100;",
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Ti' LIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -199,7 +199,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 0,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id WHERE ps.energy_above_hull <= 0.001 AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti') LIMIT 100;",
+    "rb_sql": "SELECT m.entry_id, m.formula, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE c.element IN ('Ni', 'Ti')\n  AND ps.energy_above_hull <= 0.001\nGROUP BY m.entry_id, m.formula, ps.formation_energy_per_atom, ps.energy_above_hull\nHAVING COUNT(DISTINCT c.element) = 2\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -215,7 +215,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 6,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull \nFROM material_entry m \nJOIN composition c ON c.entry_id = m.entry_id \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nJOIN structure s ON s.entry_id = m.entry_id \nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') \nAND c.element = 'Ni' \nAND ps.energy_above_hull <= 0.001 \nLIMIT 100;",
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.element = 'Ni'\n  AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
     "failure_mode": "unsafe_overbroad"
   },
   {
@@ -229,7 +229,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 43,
-    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.band_gap > 1.0\nLIMIT 100;",
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    ps.band_gap,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.band_gap > 1.0\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -243,7 +243,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 100,
-    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.formation_energy_per_atom < 0\nLIMIT 100;",
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    s.strukturbericht,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.formation_energy_per_atom < 0\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -257,7 +257,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 100,
-    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.energy_above_hull < 0.05\nLIMIT 100;",
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    s.strukturbericht,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull < 0.05\nORDER BY ps.energy_above_hull ASC\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -272,7 +272,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 0,
-    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND s.lattice_a >= 3.5\nLIMIT 100;",
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND s.lattice_a >= 3.5\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -284,7 +284,7 @@
     "unrecognized_terms": [],
     "rb_success": true,
     "rb_row_count": 100,
-    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.band_gap = 0\nLIMIT 100;",
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    ps.band_gap\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.band_gap = 0\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -301,7 +301,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 2,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Xe' LIMIT 100;",
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND m.chemical_system ~ '(^|-)Xe(-|$)'\nLIMIT 100;",
     "failure_mode": "unsafe_overbroad"
   },
   {
@@ -313,7 +313,7 @@
     "unrecognized_terms": [],
     "rb_success": true,
     "rb_row_count": 100,
-    "rb_sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') \nAND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+    "rb_sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry AS m\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -329,7 +329,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 100,
-    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\nLIMIT 100;",
+    "rb_sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nLIMIT 100;",
     "failure_mode": "unsafe_overbroad"
   },
   {
@@ -341,7 +341,7 @@
     "unrecognized_terms": [],
     "rb_success": true,
     "rb_row_count": 1,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Ni' AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al') LIMIT 100;",
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND EXISTS (\n    SELECT 1\n    FROM composition c_ni\n    WHERE c_ni.entry_id = m.entry_id\n      AND c_ni.element = 'Ni'\n  )\n  AND EXISTS (\n    SELECT 1\n    FROM composition c_al\n    WHERE c_al.entry_id = m.entry_id\n      AND c_al.element = 'Al'\n  )\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -352,8 +352,8 @@
     "unknown_elements": [],
     "unrecognized_terms": [],
     "rb_success": true,
-    "rb_row_count": 4,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id WHERE c.element = 'Ni' AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al') LIMIT 100;",
+    "rb_row_count": 0,
+    "rb_sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nWHERE m.formula = 'Ni3Al' OR m.reduced_formula = 'Ni3Al'\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -367,7 +367,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 100,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element != 'Fe' LIMIT 100;",
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nLEFT JOIN composition c ON c.entry_id = m.entry_id AND c.element = 'Fe'\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND c.element IS NULL\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -381,8 +381,8 @@
       "して"
     ],
     "rb_success": true,
-    "rb_row_count": 13,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id WHERE c.element = 'Hf' LIMIT 100;",
+    "rb_row_count": 0,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, m.reduced_formula, m.chemical_system FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype ILIKE '%Heusler%' OR s.strukturbericht IN ('L21', 'C1b')) LIMIT 100;",
     "failure_mode": "unsafe_overbroad"
   },
   {
@@ -396,7 +396,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 100,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, ps.band_gap \nFROM material_entry m \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nORDER BY ps.band_gap DESC \nLIMIT 100;",
+    "rb_sql": "SELECT m.entry_id, m.formula, ps.band_gap\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE ps.band_gap IS NOT NULL\nORDER BY ps.band_gap DESC\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -410,7 +410,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 16,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Fe' LIMIT 100;",
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.strukturbericht, s.lattice_a, s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND c.element = 'Fe'\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -424,8 +424,8 @@
       "えて"
     ],
     "rb_success": true,
-    "rb_row_count": 4,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, ps.is_stable, ps.energy_above_hull \nFROM material_entry m \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nWHERE EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = m.entry_id AND c.element = 'Ni') \nAND EXISTS (SELECT 1 FROM composition c WHERE c.entry_id = m.entry_id AND c.element = 'Al') \nLIMIT 100;",
+    "rb_row_count": 3,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, m.reduced_formula, ps.formation_energy_per_atom, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE m.formula IN ('NiAl', 'AlNi')\n   OR m.reduced_formula IN ('NiAl', 'AlNi')\nORDER BY ps.energy_above_hull ASC\nLIMIT 100;",
     "failure_mode": "partial_success"
   },
   {
@@ -437,7 +437,7 @@
     "unrecognized_terms": [],
     "rb_success": true,
     "rb_row_count": 0,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND EXISTS (SELECT 1 FROM composition c_co WHERE c_co.entry_id = m.entry_id AND c_co.element = 'Co') AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') LIMIT 100;",
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.strukturbericht, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND EXISTS (\n    SELECT 1\n    FROM composition c_co\n    WHERE c_co.entry_id = m.entry_id\n      AND c_co.element = 'Co'\n  )\n  AND EXISTS (\n    SELECT 1\n    FROM composition c_ni\n    WHERE c_ni.entry_id = m.entry_id\n      AND c_ni.element = 'Ni'\n  )\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -452,7 +452,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 6,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Fe' AND ps.energy_above_hull <= 0.001 LIMIT 100;",
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.strukturbericht, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND c.element = 'Fe'\n  AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -466,7 +466,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 0,
-    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND s.lattice_a > 3.6\nLIMIT 100;",
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    s.strukturbericht,\n    s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND s.lattice_a > 3.6\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -480,7 +480,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 10,
-    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY ps.energy_above_hull ASC\nLIMIT 10;",
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    s.strukturbericht,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY ps.energy_above_hull ASC\nLIMIT 10;",
     "failure_mode": "exact_success"
   },
   {
@@ -494,8 +494,8 @@
       "型構造"
     ],
     "rb_success": true,
-    "rb_row_count": 100,
-    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLIMIT 100;",
+    "rb_row_count": 0,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    m.reduced_formula,\n    s.prototype\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L10' OR s.strukturbericht = 'L10')\nLIMIT 100;",
     "failure_mode": "unsafe_overbroad"
   },
   {
@@ -510,7 +510,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 0,
-    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN composition c ON c.entry_id = m.entry_id\nWHERE \n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.001\n    AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti')\n    AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al')\nLIMIT 100;",
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    s.lattice_a,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    m.chemical_system = 'Al-Ti'\n    AND (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -524,7 +524,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 53,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.band_gap \nFROM material_entry m \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nJOIN structure s ON s.entry_id = m.entry_id \nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') \nAND ps.band_gap > 0 \nORDER BY ps.band_gap DESC \nLIMIT 100;",
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.band_gap\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND ps.band_gap > 0\nORDER BY ps.band_gap DESC\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -535,8 +535,8 @@
     "unknown_elements": [],
     "unrecognized_terms": [],
     "rb_success": true,
-    "rb_row_count": 0,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, ps.formation_energy_per_atom \nFROM material_entry m \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nWHERE m.formula = 'Ni3Al' \nLIMIT 100;",
+    "rb_row_count": 1,
+    "rb_sql": "SELECT\n    m.entry_id,\n    m.formula,\n    m.reduced_formula,\n    ps.formation_energy_per_atom\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    m.formula IN ('Ni3Al', 'AlNi3')\n    OR m.reduced_formula IN ('Ni3Al', 'AlNi3')\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -548,7 +548,7 @@
     "unrecognized_terms": [],
     "rb_success": true,
     "rb_row_count": 7,
-    "rb_sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE c.element = 'Pt' AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+    "rb_sql": "SELECT\n  m.entry_id,\n  m.formula,\n  m.reduced_formula,\n  m.chemical_system,\n  ps.formation_energy_per_atom,\n  ps.energy_above_hull,\n  ps.is_stable,\n  ps.band_gap\nFROM material_entry AS m\nJOIN composition AS c\n  ON c.entry_id = m.entry_id\nJOIN phase_stability AS ps\n  ON ps.entry_id = m.entry_id\nWHERE c.element = 'Pt'\n  AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -562,7 +562,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 8,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Sc' LIMIT 100;",
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.element = 'Sc'\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -576,7 +576,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 100,
-    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, ps.formation_energy_per_atom\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    ps.formation_energy_per_atom <= -0.5\nLIMIT 100;",
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    m.reduced_formula,\n    m.chemical_system,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE ps.formation_energy_per_atom <= -0.5\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -590,7 +590,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 100,
-    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.band_gap\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12' OR s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    s.strukturbericht,\n    ps.band_gap\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2'\n     OR s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY s.prototype, ps.band_gap\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -602,7 +602,7 @@
     "unrecognized_terms": [],
     "rb_success": true,
     "rb_row_count": 0,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id WHERE c.element = 'Ga' AND EXISTS (SELECT 1 FROM composition c_ge WHERE c_ge.entry_id = m.entry_id AND c_ge.element = 'Ge') LIMIT 100;",
+    "rb_sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE c.element IN ('Ga', 'Ge')\nGROUP BY m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nHAVING COUNT(DISTINCT c.element) = 2\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -615,8 +615,8 @@
       "安定"
     ],
     "rb_success": true,
-    "rb_row_count": 0,
-    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'FCC' OR s.strukturbericht = 'FCC')\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+    "rb_row_count": 88,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    s.strukturbericht,\n    s.lattice_a,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -628,7 +628,7 @@
     "unrecognized_terms": [],
     "rb_success": true,
     "rb_row_count": 1,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c_nb ON c_nb.entry_id = m.entry_id AND c_nb.element = 'Nb' JOIN composition c_ta ON c_ta.entry_id = m.entry_id AND c_ta.element = 'Ta' WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') LIMIT 100;",
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = m.entry_id\n      AND c.element = 'Nb'\n  )\n  AND EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = m.entry_id\n      AND c.element = 'Ta'\n  )\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -640,7 +640,7 @@
     "unrecognized_terms": [],
     "rb_success": true,
     "rb_row_count": 100,
-    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.formation_energy_per_atom < -0.3\nLIMIT 100;",
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    ps.formation_energy_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.formation_energy_per_atom < -0.3\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -654,7 +654,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 30,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE c.element = 'Ir' LIMIT 100;",
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.lattice_a\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE c.element = 'Ir'\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -666,7 +666,7 @@
     "unrecognized_terms": [],
     "rb_success": true,
     "rb_row_count": 15,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull \nFROM material_entry m \nJOIN structure s ON s.entry_id = m.entry_id \nJOIN phase_stability ps ON ps.entry_id = m.entry_id \nJOIN composition c ON c.entry_id = m.entry_id \nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') \nAND ps.energy_above_hull <= 0.05 \nAND c.element = 'Fe' \nLIMIT 100;",
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND ps.energy_above_hull <= 0.05\n  AND c.element = 'Fe'\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -678,7 +678,7 @@
     "unrecognized_terms": [],
     "rb_success": true,
     "rb_row_count": 0,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND EXISTS (SELECT 1 FROM composition c_w WHERE c_w.entry_id = m.entry_id AND c_w.element = 'W') AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti') LIMIT 100;",
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND EXISTS (\n    SELECT 1\n    FROM composition c_w\n    WHERE c_w.entry_id = m.entry_id\n      AND c_w.element = 'W'\n  )\n  AND EXISTS (\n    SELECT 1\n    FROM composition c_ti\n    WHERE c_ti.entry_id = m.entry_id\n      AND c_ti.element = 'Ti'\n  )\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -693,7 +693,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 100,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, ps.band_gap FROM material_entry m JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE s.prototype = 'L12' OR s.strukturbericht = 'L12' ORDER BY ps.band_gap DESC LIMIT 100;",
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.strukturbericht, ps.band_gap\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY ps.band_gap DESC NULLS LAST\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -708,7 +708,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 0,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND EXISTS (SELECT 1 FROM composition c_cu WHERE c_cu.entry_id = m.entry_id AND c_cu.element = 'Cu') AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') LIMIT 100;",
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND EXISTS (SELECT 1 FROM composition c_cu WHERE c_cu.entry_id = m.entry_id AND c_cu.element = 'Cu')\n  AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni')\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -722,8 +722,8 @@
       "きい"
     ],
     "rb_success": true,
-    "rb_row_count": 100,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nORDER BY s.lattice_a DESC\nLIMIT 100;",
+    "rb_row_count": 0,
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.lattice_a IS NOT NULL\nORDER BY s.lattice_a DESC\nLIMIT 100;",
     "failure_mode": "unsafe_overbroad"
   },
   {
@@ -737,7 +737,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 100,
-    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.energy_above_hull <= 0.1\nLIMIT 100;",
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    s.strukturbericht,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.1\nORDER BY ps.energy_above_hull ASC\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -751,7 +751,7 @@
     ],
     "rb_success": true,
     "rb_row_count": 100,
-    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element != 'Al' LIMIT 100;",
+    "rb_sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND NOT EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = m.entry_id\n      AND c.element = 'Al'\n  )\nLIMIT 100;",
     "failure_mode": "exact_success"
   },
   {
@@ -764,10 +764,10 @@
       "Pa",
       "以上"
     ],
-    "rb_success": false,
-    "rb_row_count": 0,
-    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.entry_id = m.entry_id\nWHERE\n    cp.property_name = 'bulk_modulus' AND cp.value >= 100\nLIMIT 100;",
-    "failure_mode": "sql_error"
+    "rb_success": true,
+    "rb_row_count": 100,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    m.reduced_formula,\n    m.chemical_system\nFROM material_entry m\nLIMIT 100;",
+    "failure_mode": "partial_success"
   },
   {
     "id": "BL28",
@@ -780,8 +780,8 @@
       "物性"
     ],
     "rb_success": true,
-    "rb_row_count": 0,
-    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.lattice_b, s.lattice_c, s.volume_per_atom\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND m.chemical_system = 'CoAl'\nLIMIT 100;",
+    "rb_row_count": 2,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    m.reduced_formula,\n    m.chemical_system,\n    s.prototype,\n    s.strukturbericht,\n    s.lattice_a,\n    s.lattice_b,\n    s.lattice_c,\n    s.volume_per_atom,\n    s.formula_type,\n    s.space_group_number,\n    s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND m.reduced_formula IN ('CoAl', 'AlCo')\nLIMIT 100;",
     "failure_mode": "partial_success"
   },
   {
@@ -794,8 +794,8 @@
       "さい"
     ],
     "rb_success": true,
-    "rb_row_count": 100,
-    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY s.lattice_a ASC\nLIMIT 100;",
+    "rb_row_count": 0,
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.strukturbericht, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND s.lattice_a IS NOT NULL\nORDER BY s.lattice_a ASC\nLIMIT 1;",
     "failure_mode": "exact_success"
   },
   {
@@ -807,7 +807,7 @@
     "unrecognized_terms": [],
     "rb_success": true,
     "rb_row_count": 85,
-    "rb_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND\n    ps.formation_energy_per_atom > 0\nLIMIT 100;",
+    "rb_sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.formation_energy_per_atom > 0\nLIMIT 100;",
     "failure_mode": "exact_success"
   }
 ]
