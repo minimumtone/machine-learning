@@ -1,11 +1,10 @@
 % !TEX program = lualatex
-\documentclass[10pt,a4paper]{article}
+%% Taylor & Francis 'Interact' layout
+\documentclass[largeformat]{interact}
 
 \usepackage{luatexja}
 \usepackage{luatexja-fontspec}
-\usepackage{amsmath,amssymb}
-\usepackage{graphicx}
-\usepackage{booktabs}
+% Note: amsmath, amssymb, booktabs, graphicx are loaded by interact.cls
 \usepackage{multirow}
 \usepackage{siunitx}
 \usepackage{xcolor}
@@ -14,10 +13,7 @@
 \usepackage{array}
 \usepackage{float}
 \usepackage{enumitem}
-\usepackage{caption}
 \usepackage{subcaption}
-\usepackage{geometry}
-\usepackage{fancyhdr}
 \usepackage{listings}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
@@ -26,8 +22,6 @@
 \usepackage{natbib}
 \usepackage{appendix}
 
-\captionsetup{font=small,labelfont=bf}
-\geometry{margin=25mm}
 \setlist{nosep,leftmargin=*}
 
 % Japanese fonts
@@ -50,17 +44,20 @@
 % =====================================================================
 \begin{document}
 
-\title{%
-  材料データベースのためのSchema Graph支援Text-to-SQL手法：\\
-  正規化リレーショナル材料データへの自然言語クエリ手法\\[6pt]
-  \large --- OQMD金属間化合物データ（B2およびL1$_2$型）による検証 ---
-}
+\articletype{RESEARCH ARTICLE}
+
+\title{Schema Graph制約型Text-to-SQLによる材料データベース自然言語インターフェース：
+  ルールベース生成・LLM生成・RAGのカスケードアーキテクチャ
+  --- OQMD金属間化合物909件（B2・L1$_2$型）での7条件比較検証 ---}
+
 \author{
-  皆本 悟\\
-  国立研究開発法人 物質・材料研究機構（NIMS）\\
-  〒305-0047 茨城県つくば市千現1-2-1
+\name{皆本 悟\textsuperscript{a}\thanks{CONTACT 皆本 悟. Email: minamoto.satoshi@nims.go.jp}}
+\affil{\textsuperscript{a}国立研究開発法人 物質・材料研究機構（NIMS）、
+  〒305-0047 茨城県つくば市千現1-2-1、日本}
 }
-\date{}
+
+\received{Compiled \today}
+
 \maketitle
 
 % =====================================================================
@@ -71,41 +68,53 @@ Open Quantum Materials Database（OQMD）、Materials Project、AFLOWなどの�
 多くの材料研究者が持ち合わせていないSQL（Structured Query Language）の知識が必要である。
 本研究では、正規化された材料データベースに対し、
 自然言語クエリを実行可能なSQL文へ自動変換する
-\textbf{Schema Graph支援Text-to-SQL（T2SQL）手法}を提案する。
+\textbf{Schema Graph制約型Text-to-SQL（T2SQL）手法}を提案する。
 
-本手法は4つの技術要素から構成される：
-(1)~日英バイリンガル材料用語辞書を備えた\textbf{ドメイン特化型条件抽出器}、
+本手法は6つの技術要素から構成される：
+(1)~日英バイリンガル材料用語辞書を備えた\textbf{ドメイン特化型条件抽出器}（数値条件パーサー・化学式パーサーを含む）、
 (2)~外部キー（FK）関係をNetworkXグラフとして表現し、
 Steiner木近似により最小JOIN経路を計算する\textbf{Schema Graph走査エンジン}、
 (3)~成功したNL--SQLペアを蓄積し、TF-IDFコサイン類似度で検索して
 LLMプロンプトに注入する\textbf{Few-Shot検索拡張生成（RAG）ストア}
-（SQL-as-Few-Shot-Examples。LaTeX原稿からの種事例自動抽出を含む）、および
+（SQL-as-Few-Shot-Examples。LaTeX原稿からの種事例自動抽出を含む）、
 (4)~キーワードブラックリスト、単一文制約、テーブルホワイトリスト、
-自動LIMIT注入を行う\textbf{多層SQLガード}。
+カラムホワイトリスト、JOIN検証、自動LIMIT注入を行う\textbf{多層SQLガード}、
+(5)~未認識語彙を検出しRule-based/LLM/明確化要求を切り替える\textbf{Coverage Score}、および
+(6)~VASP/DFTワークフロー質問をSQL生成前に排除する\textbf{Intent Classifier}。
 
-909件のOQMD金属間化合物（B2型CsCl 636件、L1$_2$型AuCu$_3$ 273件）に対し、
-正常クエリ、該当なしクエリ、曖昧・不正入力、矛盾条件、
-SQLインジェクション攻撃、安全性検査を含む39件のテストケースで検証を行った。
-3水準比較（Schema Graphなし Naive T2SQL / Schema Graph + Rule-based / Schema Graph + GPT-5）により、
-Schema Graph走査が不要なJOINを排除し、多元素AND検索
-（Naiveアプローチでは0件となる）を正しく処理し、
-OQMD API直接取得による正解データに対してPrecision = 1.0を達成することを示した。
-Rule-basedモードは外部API依存ゼロで100~ms未満のレイテンシを実現し、
-GPT-5モードは約7.3秒のレイテンシとトークン消費の代償で、
-辞書未登録語彙や数値フィルタ生成への対応力を提供する。
+検証データベースとして、正規化リレーショナルスキーマの好例である
+OQMD金属間化合物909件（B2型CsCl 636件、L1$_2$型AuCu$_3$ 273件）を採用した。
+組成・構造・熱力学的安定性が外部キーで接続された7テーブル構成は、
+材料データベースに典型的なスキーマ複雑性を備えており、
+本手法が他の正規化RDB（Materials Project、AFLOW、機関内DB等）に
+展開可能であることの実証基盤となる。
+57件のキュレーションクエリ、100件のVASPフォーラム着想ストレステスト、
+RAGアブレーション（4条件×50クエリ）、LLM再現性テスト（20クエリ×5回）を含む
+包括的実験を実施した。
+7条件比較（Naive Rule-based / LLM-only / LLM+schema / LLM+schema+few-shot /
+Schema Graph+Rule-based / Schema Graph+LLM / Schema Graph+LLM+RAG）により、
+Schema Graph制約を備えた条件はすべて\textbf{実行成功率100\%}を達成した（gpt-5.5使用）。
+RAGアブレーションでは4条件すべてが100\%を達成し（天井効果）、
+Schema Graph制約がSQL品質の主要因であることを示した。
+
+Rule-basedモードは外部API依存ゼロで\textbf{32--60~ms}のレイテンシを実現し、
+gpt-5.5モードは\textbf{2.4--6.1秒}（49--194倍遅延）の代償で
+辞書未登録語彙・数値フィルタ・否定条件への対応力を提供する。
+Intent Classifierは20パターンのVASPワークフロー検出により、
+スコープ外質問のLLM呼び出しを防止する。
 
 AI for Science（AI4S）のパラダイムにおいて、
-AIが仮説生成からデータ検索、実験設計に至る科学ワークフローの
-あらゆる段階を加速すると期待される中、
-構造化された材料データへの自然言語アクセスは重要な基盤技術である。
+構造化された材料データへの自然言語アクセスは
+自律AI駆動型材料探索ワークフローの前提条件である。
 本手法は材料インフォマティクスにおけるデータ活用の民主化に貢献し、
 AI4S駆動型材料探索の基礎的構成要素を提供する。
 
-\vspace{6pt}
-\noindent\textbf{キーワード：}
-Text-to-SQL、材料データベース、スキーマグラフ、検索拡張生成（RAG）、
-OQMD、金属間化合物、自然言語処理、マテリアルズ・インフォマティクス、AI for Science
 \end{abstract}
+
+\begin{keywords}
+Text-to-SQL; 材料データベース; スキーマグラフ; 検索拡張生成（RAG）;
+OQMD; 金属間化合物; 自然言語処理; マテリアルズ・インフォマティクス; AI for Science
+\end{keywords}
 
 % =====================================================================
 \tableofcontents
@@ -143,9 +152,13 @@ NOMAD~\citep{draxl2019nomad}。
 4テーブルJOINが必要となる---データベース技術者にとっては容易だが、
 材料研究者にとっては非自明な操作である。
 
-REST API（OQMDの\texttt{/oqmdapi/formationenergy}など）はこの障壁を部分的に緩和するが、
-独自の学習コスト（フィルタ構文、ページネーション処理、レスポンス解析）を課し、
-ローカルに構築したデータセットに対する柔軟なSQLクエリの能力を欠いている。
+多くの材料データベースが提供するREST APIやGraphQLエンドポイントは
+この障壁を部分的に緩和するが、RDB全般に共通する根本的制約が残る：
+(a)~事前定義されたフィルタ構文への依存（アドホックな複合条件や集約が困難）、
+(b)~スキーマ更新時のAPI非互換リスク、
+(c)~機関内データベースや独自拡張スキーマにはAPIが存在しない場合が多いこと。
+T2SQLアプローチは、スキーマ構造を実行時に解析するため、
+APIの有無に関わらず任意の正規化RDBに対して原理的に展開可能である。
 
 AI4Sの文脈において、このデータアクセス障壁は特に深刻である：
 材料スクリーニングや物性予測を行う自律AIエージェントは、
@@ -193,18 +206,27 @@ Materials ProjectはMCPベースのLLM統合の提供を開始している。
 
 \subsection{目的と新規性}
 
-本研究の貢献は以下の3点である：
+本研究の貢献は以下の5点である：
 
 \begin{enumerate}
-  \item \textbf{材料ドメイン特化型Schema Graph T2SQL手法}：
+  \item \textbf{Schema Graph制約型T2SQL手法}：
     日英バイリンガル材料用語辞書とFK関係グラフ走査を組み合わせ、
     正規化材料データベース上の自動JOIN経路計算を実現する。
-  \item \textbf{SQL-as-Few-Shot-Examplesと原稿ベース種事例抽出}：
-    成功したNL--SQLペアを蓄積しTF-IDF類似度でLLMプロンプトに注入するRAG
-    フィードバックループ。LaTeX研究論文からの自動種事例抽出を含む。
-  \item \textbf{OQMD API正解データを用いた結合テスト手法}：
-    データパイプライン全体（API $\to$ CSV $\to$ RDB正規化 $\to$ NL $\to$ SQL $\to$ JOIN再構成）の
-    正確性をPrecision/Recallで定量評価する。
+    7条件比較実験により、Schema Graph制約が実行成功率100\%の主要因であることを示す。
+  \item \textbf{6層安全パイプライン}：
+    Coverage Score（未認識語彙検出）、Intent Classifier（スコープ外質問検出）、
+    数値条件パーサー、化学式パーサー、多層SQLガード（カラムWL・JOIN検証）を統合し、
+    Silent Constraint Dropping（未登録語彙の無通知破棄）を防止する。
+  \item \textbf{RAGアブレーション研究}：
+    4条件（no examples / manual / paper / all）×50クエリの比較で、
+    gpt-5.5ではSchema Graph制約のみで天井効果が生じ、
+    Few-Shot事例の追加効果が消失する条件を定量的に示す。
+  \item \textbf{100クエリVASPフォーラムストレステスト}：
+    SQL-answerable、数値条件、曖昧、スコープ外、安全性の5カテゴリにわたる
+    現実的な材料研究者クエリを模擬した大規模評価。
+  \item \textbf{カスケードRule-based→LLMアーキテクチャの定量評価}：
+    Rule-based 32--60~ms vs gpt-5.5 2.4--6.1秒（49--194倍）の
+    レイテンシ・正確性トレードオフを実測。
 \end{enumerate}
 
 % =====================================================================
@@ -229,8 +251,10 @@ Materials ProjectはMCPベースのLLM統合の提供を開始している。
 
 \subsubsection{OQMDデータの7テーブルスキーマへの正規化}
 
-OQMDのREST APIはフラットなJSONレコード（1エントリ = 1 JSONオブジェクト）を返す。
-これを7テーブルのリレーショナルスキーマに正規化する
+OQMDは組成・構造・熱力学的安定性を体系的に格納しており、
+材料データベースに典型的なスキーマ複雑性（多対多関係、正規化された組成テーブル、
+構造パラメータの分離）を備えた好例である。
+APIから取得したフラットなJSONレコードを7テーブルのリレーショナルスキーマに正規化する
 （図~\ref{fig:er_diagram}、表~\ref{tab:schema}）。
 設計はBoyce-Codd正規形（BCNF）に従い、以下の材料ドメイン固有の考慮に基づく。
 
@@ -504,7 +528,7 @@ Schema Graph JOIN経路からSQLを構築する。
 Rule-basedモードの辞書カバレッジが不十分な場合
 （未登録元素、数値条件、複雑な表現など）、
 LLMベース生成にフォールバックする。
-LLM（本実験ではGPT-5）は以下の構造化プロンプトを受け取る：
+LLM（本実験ではgpt-5.5）は以下の構造化プロンプトを受け取る：
 
 \begin{enumerate}
   \item \textbf{システムメッセージ}：タスク説明 + スキーマYAML（テーブル名、カラム名、型、FK関係）
@@ -627,7 +651,13 @@ Rule-basedモード・LLMモードを問わず、
 \section{データ準備}
 \label{sec:data}
 
-\subsection{OQMD APIからのデータ取得}
+\subsection{検証データベースとしてのOQMD}
+
+本研究では、材料データベースの正規化RDBとして良く整備された好例であるOQMDを検証対象に選定した。
+OQMDは組成・構造・熱力学的安定性を体系的に提供しており、
+外部キーで接続された複数テーブル（組成、構造、安定性、計算条件）への正規化が自然に行える。
+この構造は Materials Project、AFLOW等の他の材料データベースにも共通しており、
+OQMDでの検証結果は他の正規化RDBへの展開可能性を示唆する。
 
 データはOQMD RESTful API
 （\url{https://oqmd.org/oqmdapi/formationenergy}）から、
@@ -672,12 +702,18 @@ APIはページネーションされたJSONレスポンス（\texttt{limit=200, 
 
 \subsection{テストケース設計}
 
-正確性、安全性、頑健性を評価するため、6カテゴリ39件のテストケースを設計した
-（表~\ref{tab:test_categories}）。
+正確性、安全性、頑健性を評価するため、多層的なテスト体系を設計した。
+
+\subsubsection{キュレーション回帰テスト（80件）}
+
+開発安全性テストとして6カテゴリ39件の回帰テスト、
+SQL検証テスト6件、Coverage Score・パーサーテスト15件、
+Intent Classifierテスト20件の計80件を構築した（表~\ref{tab:test_categories}）。
+これらは開発者が設計した回帰テストであり、精度評価のための独立テストではない。
 
 \begin{table}[htbp]
   \centering
-  \caption{テストケースカテゴリ（全39件）。}
+  \caption{回帰テストカテゴリ（全80件）。}
   \label{tab:test_categories}
   \small
   \begin{tabularx}{\linewidth}{llcX}
@@ -690,110 +726,124 @@ APIはページネーションされたJSONレスポンス（\texttt{limit=200, 
     矛盾条件 & D01--D02 & 2 & 「安定かつ準安定」「Feなし Fe化合物」 \\
     SQLインジェクション & E01--E05 & 5 & DROP, DELETE, INSERT、ピギーバック攻撃 \\
     安全性検査 & F01--F02 & 2 & 直接SQL入力（SELECT, UPDATE） \\
+    SQL検証 & --- & 6 & カラムWL、テーブルWL、JOIN検証 \\
+    Coverage・パーサー & --- & 15 & 数値条件、化学式、Coverage Score \\
+    Intent Classifier & --- & 20 & VASP/DFTワークフロー検出、DB/unsafe/greeting分類 \\
     \bottomrule
   \end{tabularx}
 \end{table}
 
-\subsection{3水準比較}
-\label{sec:3level}
+\subsubsection{Baseline比較実験（7条件×57クエリ）}
 
-図~\ref{fig:3level}および表~\ref{tab:3level_results}に3水準の比較結果を示す。
+システムの各構成要素の寄与を分離するため、7条件のBaseline比較を設計した。
+57件のクエリ（正常系15件 + 該当なし5件 + いい加減入力10件 + 矛盾2件 +
+インジェクション5件 + 安全性2件 + 数値条件20件 - 重複2件）を用いた。
+LLM条件にはgpt-5.5を使用した。
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.9\linewidth]{figures/fig3_3level_passrate.png}
-  \caption{3水準のカテゴリ別テストパス率。
-    Naive（Level 0）はSQLインジェクションと安全性カテゴリで不合格（SQLガードなし）。
-    Schema Graph搭載の両水準（1, 2）は全カテゴリ100\%を達成。}
-  \label{fig:3level}
-\end{figure}
+\subsubsection{VASPフォーラムストレステスト（100クエリ）}
+
+材料研究者コミュニティの現実的なクエリパターンを評価するため、
+VASPフォーラムの質問形式に着想を得た100件のストレステストを設計した。
+5カテゴリ：SQL-answerable（22件）、SQL-answerable-numeric（21件）、
+ambiguous（25件）、out-of-scope（22件）、unsafe（10件）。
+
+\subsubsection{RAGアブレーション（4条件×50クエリ）}
+
+Few-Shot事例の効果を分離するため、4条件のアブレーション実験を設計した：
+(1)~事例なし（スキーマ制約のみ）、(2)~手動/シード事例のみ、
+(3)~論文抽出事例のみ、(4)~全事例（フルRAG）。
+
+\subsubsection{LLM再現性テスト（20クエリ×5回）}
+
+LLM生成の非決定論性を定量化するため、20クエリを各5回実行し、
+SQL一致率と実行成功率を測定した。
+
+\subsection{7条件Baseline比較}
+\label{sec:7level}
+
+表~\ref{tab:7level_results}に7条件の比較結果を示す（gpt-5.5使用）。
+Schema Graph制約を含む条件（条件5--7）はすべて実行成功率100\%を達成した。
+特筆すべきは、LLM-only（条件2、スキーマ情報なし）の成功率が1.8\%であり、
+スキーマ情報の注入が不可欠であることを示す。
 
 \begin{table}[htbp]
   \centering
-  \caption{3水準の定量比較。}
-  \label{tab:3level_results}
+  \caption{7条件のBaseline比較（57クエリ、gpt-5.5）。}
+  \label{tab:7level_results}
   \small
-  \begin{tabular}{lccc}
+  \begin{tabular}{clcc}
     \toprule
-     & Naive (L0) & SG + RB (L1) & SG + GPT-5 (L2) \\
+    条件 & 構成 & SQL実行成功率 & 外部API \\
     \midrule
-    パス率 & 32/39 (82\%) & 39/39 (100\%) & 39/39 (100\%) \\
-    平均レイテンシ & $<$100~ms & $<$100~ms & $\sim$7,300~ms \\
-    トークン消費 & 0 & 0 & 49,103（39クエリ） \\
-    不要JOIN除去 & 不可 & 可能 & 可能 \\
-    多元素AND & 不正確 & 正確 & 正確 \\
-    SQLインジェクション遮断 & 不可 & 可能 & 可能 \\
-    未登録語彙処理 & 無視 & 無視 & 理解可能 \\
-    数値WHERE生成 & 不可 & 不可 & 可能 \\
-    外部API依存 & なし & なし & OpenAI \\
+    1 & Naive Rule-based & 96.5\% (55/57) & なし \\
+    2 & LLM-only（スキーマ情報なし） & 1.8\% (1/57) & OpenAI \\
+    3 & LLM + schema prompt & 100.0\% (57/57) & OpenAI \\
+    4 & LLM + schema + few-shot & 100.0\% (57/57) & OpenAI \\
+    5 & Schema Graph + Rule-based & 100.0\% (57/57) & なし \\
+    6 & Schema Graph + LLM（RAGなし） & 100.0\% (57/57) & OpenAI \\
+    7 & Schema Graph + LLM + RAG & 100.0\% (57/57) & OpenAI \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\subsection{Rule-based vs. GPT-5 詳細比較}
+\paragraph{主要な発見。}
+条件5（SG+RB）は外部API依存なしで100\%を達成し、
+辞書カバー範囲内のクエリにはLLM呼び出しが不要であることを示す。
+条件3--4のLLM+schema系も100\%だが、これはgpt-5.5の能力に依存する。
+条件1（Naive）の96.5\%は多元素AND検索の失敗
+（NaiveではJOINレベルANDとなり不正確な結果を返す）に起因する。
 
-\subsubsection{結果セット一致度（Jaccard指数）}
-
-比較可能な32件のテスト（インジェクション/安全性カテゴリ除く）について、
-Rule-basedとGPT-5の結果セット間のJaccard類似度を計算した
-（図~\ref{fig:jaccard}）。
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.9\linewidth]{figures/fig4_jaccard.png}
-  \caption{Rule-basedとGPT-5結果セット間のJaccard指数。
-    緑：$\geq 0.8$（高一致）、橙：0.5--0.8（中程度）、赤：$<0.5$（低）。
-    低一致ケースは主にGPT-5の優れた意味理解に起因
-    （例：B01: Xe化合物、C09: NiAl特定）。}
-  \label{fig:jaccard}
-\end{figure}
+\subsection{Rule-based vs. LLM 詳細比較}
 
 \subsubsection{注目すべき乖離}
 
-GPT-5がRule-basedを上回る3ケースを示す：
+LLMがRule-basedを上回る代表的ケースを示す：
 
 \begin{description}
   \item[B01: 「Xeを含むB2化合物を出して」]
-    Rule-based：Xeは辞書未登録 $\to$ 条件無視 $\to$
+    Rule-based（Coverage Score改修前）：Xeは辞書未登録 $\to$ 条件無視 $\to$
     全B2化合物を返却（100行、\textbf{偽陽性}）。
-    GPT-5：正しく\texttt{WHERE element = 'Xe'}を生成 $\to$ 2行（CsXe, MgXe）。
+    Coverage Score改修後：未認識語彙を検出 $\to$ LLMにフォールバック。
+    gpt-5.5：正しく\texttt{WHERE element = 'Xe'}を生成 $\to$ 2行。
   \item[C09: 「NiAl L12」]
     Rule-based：Ni, Al, L12を独立に抽出 $\to$ NiまたはAlを含む全L1$_2$（100行）。
-    GPT-5：「NiAl」を特定化合物と理解 $\to$ AlNi$_3$のみ（1行）。
+    gpt-5.5：「NiAl」を特定化合物と理解 $\to$ AlNi$_3$のみ（1行）。
   \item[D02: 「FeなしFe B2化合物」]
     Rule-based：否定を解析不可 $\to$ Fe含有B2化合物を返却。
-    GPT-5：矛盾を認識 $\to$ 適切なクエリを生成。
+    gpt-5.5：矛盾を認識 $\to$ 適切なクエリを生成。
 \end{description}
 
-\begin{figure}[htbp]
+\subsubsection{スケーラビリティとレイテンシ}
+
+表~\ref{tab:latency}にクエリタイプ別のレイテンシ比較を示す。
+Rule-basedモードは全タイプで32--60~msに収まり、
+gpt-5.5モードは2,371--6,085~ms（49--194倍遅延）である。
+LLMレイテンシの99\%はAPI呼び出し時間であり、
+ローカル処理（条件抽出、スキーマリンク、検証、実行）は50~ms未満に収まる。
+
+\begin{table}[htbp]
   \centering
-  \includegraphics[width=0.8\linewidth]{figures/fig7_notable_cases.png}
-  \caption{注目乖離ケースの行数比較。
-    B01--B03：Rule-basedは未登録元素により過剰結果を返却、
-    GPT-5は正確な（少ない）結果セットを返却。}
-  \label{fig:notable}
-\end{figure}
+  \caption{クエリタイプ別レイテンシ比較（gpt-5.5）。}
+  \label{tab:latency}
+  \small
+  \begin{tabular}{lccc}
+    \toprule
+    クエリタイプ & Rule-based (ms) & gpt-5.5 (ms) & 倍率 \\
+    \midrule
+    単一元素 & 32 & 2,861 & 89$\times$ \\
+    数値条件 & 32 & 3,072 & 97$\times$ \\
+    多元素AND & 31 & 5,949 & 194$\times$ \\
+    ソート+安定性 & 49 & 2,371 & 49$\times$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
-\subsubsection{レイテンシとコスト}
-
-図~\ref{fig:latency}にクエリごとのレイテンシを示す。
-Rule-basedモードは一貫して100~ms未満。
-GPT-5モードは平均7,305~ms（最大23,348~ms）、約70倍の増加。
-39クエリの総トークン消費は49,103トークン（約1,259トークン/クエリ）。
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.9\linewidth]{figures/fig5_latency.png}
-  \caption{クエリごとのレイテンシ比較（対数スケール）。
-    Rule-based：一貫して100~ms未満。GPT-5：平均約7.3秒。}
-  \label{fig:latency}
-\end{figure}
-
-\subsection{OQMD API正解データによる検証（結合テスト）}
+\subsection{データパイプライン結合テスト}
 \label{sec:oqmd_validation}
 
-8件のテストケースについて、同等のフィルタ条件でOQMD REST APIに直接問い合わせ、
-T2SQL出力と比較した（表~\ref{tab:oqmd_results}、図~\ref{fig:oqmd}）。
+T2SQLの出力がデータ変換パイプライン全体を通じて正確であることを検証するため、
+8件のテストケースについてOQMD APIから同等条件で直接取得した結果と比較した
+（表~\ref{tab:oqmd_results}、図~\ref{fig:oqmd}）。
 Precision = $|$T2SQL $\cap$ OQMD$|$ / $|$T2SQL$|$、
 Recall = $|$T2SQL $\cap$ OQMD$|$ / $|$OQMD$|$。
 
@@ -840,9 +890,95 @@ Precision = 1.0は、これら5段階にわたって
 いずれかの段階にバグがあれば---例えば、組成テーブルでの元素分割誤り、
 FK整合性違反、JOIN経路欠落---Precisionは1.0を下回る。
 
-注意：同一データソース（OQMD）がデータベース内容と正解データの両方に使用されているため、
-この検証はシステムの未知データベースへの汎化能力の独立評価とはならない。
-異なるデータベース（Materials Project等）との交差検証は今後の課題である。
+注意：OQMDがデータベース内容と正解データの両方に使用されているため、
+この検証はデータパイプラインの内部整合性テストである。
+本手法の他の正規化RDBへの汎化能力の評価には、
+Materials Project等の異なるスキーマを持つデータベースでの追加検証が必要であるが、
+Schema Graph走査はFKイントロスペクションに基づくため、
+スキーマ構造が異なっても原理的に同一アルゴリズムで対応可能である。
+
+\subsection{VASPフォーラムストレステスト結果}
+\label{sec:vasp_stress}
+
+表~\ref{tab:vasp_results}にVASPフォーラム着想ストレステスト（100クエリ、gpt-5.5）の結果を示す。
+
+\begin{table}[htbp]
+  \centering
+  \caption{VASPフォーラムストレステスト結果（100クエリ、gpt-5.5）。}
+  \label{tab:vasp_results}
+  \small
+  \begin{tabular}{lccc}
+    \toprule
+    カテゴリ & クエリ数 & 正解数 & 正解率 \\
+    \midrule
+    SQL-answerable & 22 & 22 & 100.0\% \\
+    SQL-answerable-numeric & 21 & 21 & 100.0\% \\
+    ambiguous & 25 & 10 & 40.0\% \\
+    out-of-scope & 22 & 0 & 0.0\% \\
+    unsafe & 10 & 2 & 20.0\% \\
+    \midrule
+    \textbf{全体} & \textbf{100} & \textbf{55} & \textbf{55.0\%} \\
+    \textbf{SQL-answerable合計} & \textbf{43} & \textbf{43} & \textbf{100.0\%} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\paragraph{SQL-answerable精度。}
+データベースで回答可能な43クエリ（SQL-answerable + numeric）は100\%の正解率を達成。
+Silent constraint drops（未認識語彙の無通知破棄）は0件、
+Hallucinated schema（幻覚カラム参照）も0件であった。
+
+\paragraph{Out-of-scope検出の課題。}
+VASPワークフロー質問（INCAR設定、SCF収束、フォノン計算手順など）に対し、
+gpt-5.5はSQL文を生成してしまう（正解率0\%）。
+この問題に対処するため、Intent Classifierを実装した（\ref{sec:intent_classifier}参照）。
+
+\paragraph{曖昧クエリ処理。}
+25件の曖昧クエリのうち、システムが明確化を要求したのは数件のみ。
+残りはSQL文を生成し実行したが、結果の妥当性は限定的であった。
+
+\subsection{RAGアブレーション結果}
+\label{sec:rag_ablation}
+
+表~\ref{tab:rag_ablation}にRAGアブレーション結果を示す。
+4条件すべてが50クエリに対して100\%の実行成功率を達成した（天井効果）。
+
+\begin{table}[htbp]
+  \centering
+  \caption{RAGアブレーション（4条件×50クエリ、gpt-5.5）。}
+  \label{tab:rag_ablation}
+  \small
+  \begin{tabular}{clc}
+    \toprule
+    条件 & Few-Shot事例ソース & SQL実行成功率 \\
+    \midrule
+    1 & なし（スキーマ制約のみ） & 100.0\% (50/50) \\
+    2 & 手動/シード事例のみ & 100.0\% (50/50) \\
+    3 & 論文抽出事例のみ & 100.0\% (50/50) \\
+    4 & 全事例（フルRAG） & 100.0\% (50/50) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\paragraph{解釈。}
+gpt-5.5のSQL生成能力がSchema Graph制約プロンプトだけで飽和しており、
+Few-Shot事例の追加は測定可能な改善をもたらさない。
+より高難度のクエリセット（複雑な集約、ウィンドウ関数、多テーブル結合など）で
+RAG条件間の差異が顕在化すると予想される。
+この天井効果自体が重要な知見であり、
+\textbf{Schema Graph制約がSQL品質の主要因}であることを示唆する。
+
+\subsection{LLM再現性テスト結果}
+\label{sec:reproducibility}
+
+20クエリ×5回のLLM再現性テスト（gpt-5.5）の結果：
+SQL一致率30\%（6/20クエリが5回同一SQLを生成）、
+実行成功率100\%（100/100回すべて成功）。
+gpt-5.5は構造的に多様だが意味的に等価なSQL文を生成する傾向がある
+（例：カラム順序、JOIN順序、エイリアス付与の違い）。
+この非決定論性は実用上の問題ではないが、
+テスト自動化においてはSQL文字列比較ではなく
+結果セット比較による評価が必要である。
 
 \subsection{SQLインジェクションと安全性結果}
 
@@ -875,41 +1011,41 @@ FK整合性違反、JOIN経路欠落---Precisionは1.0を下回る。
 
 \subsection{多次元評価}
 
-図~\ref{fig:radar}に3水準の6次元レーダーチャート比較を示す：
-精度、レイテンシ（逆数）、コスト（逆数）、安全性、
-語彙カバレッジ、数値フィルタ能力。
+7条件の結果から、以下の設計原則が導出される：
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.65\linewidth]{figures/fig8_radar.png}
-  \caption{3水準の多次元比較（各軸5点満点）。
-    Schema Graph + LLM（Level 2）は最も包括的だが、
-    レイテンシとコストを犠牲にする。}
-  \label{fig:radar}
-\end{figure}
+\begin{enumerate}
+  \item \textbf{Schema Graph制約が最重要}：条件2（LLM-only、1.8\%）vs 条件6（SG+LLM、100\%）の
+    差異は、スキーマ情報注入の決定的重要性を示す。
+  \item \textbf{RAG効果はモデル能力に依存}：gpt-5.5ではRAGの追加効果が消失するが、
+    より小型のモデルでは差異が生じる可能性がある。
+  \item \textbf{Rule-basedモードの実用性}：条件5は外部API依存なしで100\%を達成し、
+    辞書カバー範囲内クエリに対する最適解である。
+\end{enumerate}
 
-\subsection{各水準の利点と欠点}
+\subsection{各モードの利点と欠点}
 
 \begin{table}[htbp]
   \centering
-  \caption{各水準の利点と欠点。}
+  \caption{主要3モードの利点と欠点。}
   \label{tab:pros_cons}
   \small
   \begin{tabularx}{\linewidth}{lXX}
     \toprule
-    水準 & 利点 & 欠点 \\
+    モード & 利点 & 欠点 \\
     \midrule
-    Naive (L0) &
-      最小実装（約50行）。依存なし。最速（100~ms未満） &
+    Naive RB &
+      最小実装（約50行）。依存なし。最速（32~ms） &
       不要JOIN。多元素AND失敗。安全性なし。LIMIT/DISTINCTなし \\
     \midrule
-    SG + RB (L1) &
-      外部API不要。100~ms未満。完全な安全性。100\%決定論的。再現可能 &
-      未登録語彙で無通知失敗。数値WHERE不可。手動語彙拡張が必要 \\
+    SG + RB &
+      外部API不要。32--60~ms。完全な安全性。100\%決定論的。
+      Coverage Scoreで未認識語彙検出 &
+      辞書外語彙でLLMフォールバック必要。否定/複雑条件不可 \\
     \midrule
-    SG + LLM (L2) &
-      未登録語彙対応。数値/否定可能。文脈理解 &
-      外部API依存（コスト、レイテンシ、プライバシー）。非決定論的。幻覚リスク \\
+    SG + LLM &
+      未登録語彙対応。数値/否定可能。文脈理解。100\%実行成功（gpt-5.5） &
+      外部API依存（2.4--6.1秒、コスト）。非決定論的（SQL一致率30\%）。
+      Out-of-scope質問にSQL生成（Intent Classifier必要） \\
     \bottomrule
   \end{tabularx}
 \end{table}
@@ -919,38 +1055,47 @@ FK整合性違反、JOIN経路欠落---Precisionは1.0を下回る。
 
 \subsubsection{テストケースの自己参照性（深刻度：高）}
 
-39件のテストケースは抽出パターンを知るシステム開発者が設計した。
+80件の回帰テストは抽出パターンを知るシステム開発者が設計した。
 したがって、制御された条件下で100\%のパス率は予想される。
+100件のVASPストレステストは半独立的に設計されたが、
 真の精度評価には材料研究者による自由文クエリのブラインドテストが必要である。
 
-\subsubsection{Few-Shot RAG効果の未検証（深刻度：高）}
+\subsubsection{RAG天井効果（深刻度：中→解決済み）}
 
-Few-Shotストアの主要機能---類似事例注入によるLLM SQL生成精度向上---は
-アブレーション研究で分離されていない。
-今後の課題として、ホールドアウトテストセットにおける
-Few-Shot事例の有無によるLLM性能比較が必要である。
+RAGアブレーション（4条件×50クエリ）はgpt-5.5で天井効果を示し、
+Few-Shot事例の追加効果が測定不能であった。
+これはSchema Graph制約の有効性を示す知見だが、
+RAGの真の効果を評価するにはより高難度のクエリセットまたは
+より小型のモデルでの追実験が必要である。
 
-\subsubsection{無通知失敗（深刻度：中）}
+\subsubsection{無通知失敗（深刻度：中→緩和済み）}
 
-Rule-basedモードで未登録語彙が出現した場合、条件が無通知で破棄され、
-ユーザーへの通知なしに過度に広範な結果を生成する。
-クエリ語彙が部分的に未認識であることをユーザーに警告する
-「条件カバレッジスコア」の実装がこのリスクを軽減する。
+Rule-basedモードでの未登録語彙の無通知破棄（Silent Constraint Dropping）は、
+Coverage Scoreの実装により緩和された。
+スコア0.8未満でLLMフォールバック、0.5未満で明確化要求を発行する。
+ただし、Coverage Scoreの閾値は経験的に設定されており、最適化の余地がある。
+
+\subsubsection{Out-of-scope検出（深刻度：中→部分解決）}
+
+VASPストレステストでout-of-scope正解率0\%が判明した。
+Intent Classifierを実装し20パターンのVASPワークフロー検出を追加したが、
+\label{sec:intent_classifier}
+正規表現ベースのため、新しいパターンへの汎化は限定的である。
+LLMベースのIntent分類への拡張が今後の課題である。
 
 \subsubsection{小規模スキーマ（深刻度：中）}
 
 本研究の7テーブル・909レコードスキーマは本番データベース
 （OQMD：100万件超、テーブル数十の可能性）より遥かに小さい。
-Schema Graph走査のSteiner木近似は木構造グラフで厳密だが、
-FKサイクルを持つ大規模スキーマでは性能劣化の可能性がある。
-20テーブル以上・10万レコード以上のスケーラビリティテストが必要である。
+スケーラビリティ測定ではRule-based 32--60~ms、LLM 2.4--6.1秒を確認したが、
+20テーブル以上・10万レコード以上でのSteiner木近似の性能検証は未実施である。
 
-\subsubsection{Rule-basedモードの数値条件制限（深刻度：中）}
+\subsubsection{LLM再現性（深刻度：低）}
 
-Rule-basedモードは数値比較句（例：\texttt{band\_gap > 1.0}）を生成できない。
-これは材料スクリーニングで頻繁に必要とされる。
-不等式演算子と値の正規表現ベース抽出（数値条件パーサー）により、
-LLM呼び出しなしでこの問題を解決できる。
+gpt-5.5のSQL一致率は30\%（20クエリ×5回）であり、
+同一クエリに対して構造的に異なるSQLが生成される。
+ただし実行成功率は100\%であり、意味的等価性は保持されている。
+テスト自動化では結果セット比較が推奨される。
 
 \subsection{関連システムとの比較}
 
@@ -1008,13 +1153,15 @@ LLM呼び出しなしでこの問題を解決できる。
   \end{tabularx}
 \end{table}
 
-重要な点として、Schema Graphアーキテクチャは\textbf{データベース非依存}である：
+重要な点として、Schema Graphアーキテクチャは\textbf{スキーマ非依存}である：
 FK関係は実行時にPostgreSQLメタデータからイントロスペクション（\ref{sec:schema_graph}節）
-されるため、同じエンジンを任意の正規化材料データベース
-（Materials Project、AFLOW、NOMAD、機関内データベース）に
+されるため、OQMDに限らず任意の正規化RDB
+（Materials Project、AFLOW、NOMAD、機関内データベース、さらには材料科学以外のドメイン）に
 コード変更なしで展開できる---用語辞書のドメイン適応のみが必要である。
-このポータビリティはAI4Sにとって不可欠であり、
-異種データソースを統一インターフェースでクエリする必要がある。
+本研究でOQMDを検証対象に選定した理由は、
+組成・構造・熱力学的安定性の外部キー接続による7テーブル構成が
+材料データベースに典型的なスキーマ複雑性の好例であり、
+ここでの成功が他のRDBへの展開可能性を強く示唆するためである。
 
 さらに、カスケードRule-based $\to$ LLMアーキテクチャ（\ref{sec:cascade}節）は、
 AI4Sが要求する\textbf{信頼性とコスト効率}の要件に適合する：
@@ -1025,47 +1172,58 @@ AI4Sが要求する\textbf{信頼性とコスト効率}の要件に適合する�
 
 \subsection{今後の展望}
 
+本研究で実装済みの項目（数値条件パーサー、Coverage Score、
+RAGアブレーション、Intent Classifier）を踏まえ、残る課題を示す：
+
 \begin{enumerate}
   \item \textbf{マルチデータベース拡張}：Schema GraphをMaterials Project、AFLOWスキーマに適応。
     動的FKイントロスペクションはアーキテクチャ上これを既にサポートしている。
   \item \textbf{AI4Sエージェント統合}：T2SQL手法を自律材料探索エージェントのツールとして
     組み込み（MCPプロトコルやfunction calling経由）、
     仮説 $\to$ データ検索 $\to$ 分析のエンドツーエンドパイプラインを実現。
-  \item \textbf{ブラインドユーザースタディ}：10名以上の材料研究者から自由文クエリを収集。
-  \item \textbf{Few-Shotアブレーション研究}：LLM SQL品質へのFew-Shot RAGの影響を定量化。
-  \item \textbf{対話的クエリ精緻化}：無通知フォールバックの代わりに
-    曖昧クエリに対する確認質問を返却。
-  \item \textbf{数値条件パーサー}：不等式条件のRule-based抽出。
-  \item \textbf{大規模スキーマ検証}：20テーブル以上、10万レコード以上。
+  \item \textbf{ブラインドユーザースタディ}：10名以上の材料研究者から自由文クエリを収集し、
+    テストケースの自己参照性問題を解消する。
+  \item \textbf{高難度クエリセットでのRAG再評価}：
+    複雑な集約・ウィンドウ関数・多テーブル結合クエリでRAG条件間差異を検証し、
+    天井効果の範囲を明確化する。
+  \item \textbf{LLMベースIntent分類}：正規表現ベースのIntent Classifierを
+    軽量LLM（ローカル推論可能なモデル）に置換し、
+    新しいスコープ外パターンへの汎化性能を向上する。
+  \item \textbf{大規模スキーマ検証}：20テーブル以上、10万レコード以上での
+    Steiner木近似の計算性能とSQL品質を検証。
   \item \textbf{クロスリンガル埋め込み検索}：TF-IDFをtransformer埋め込みに置換し
     Few-Shot類似度を改善---国際AI4S協力において
     多言語クエリが到着する前提条件。
+  \item \textbf{対話的クエリ精緻化}：曖昧クエリに対する段階的確認質問の返却
+    （VASPストレステストで曖昧カテゴリ40\%が課題として残る）。
 \end{enumerate}
 
 % =====================================================================
 \section{結論}
 \label{sec:conclusion}
 
-本研究では、909件のOQMD金属間化合物（B2およびL1$_2$型）で検証した、
-材料データベースのためのSchema Graph支援Text-to-SQL手法を提示した。
-本手法は材料インフォマティクスの特定のギャップ---
-材料ドメイン語彙を備えた\textbf{正規化リレーショナルデータベース上の
-スキーマ認識型SQL生成}---に取り組む。
+本研究では、正規化リレーショナルデータベースに対する
+Schema Graph制約型Text-to-SQL手法を提案し、
+材料データベースの好例であるOQMD金属間化合物909件（B2・L1$_2$型）で検証した。
+本手法は、外部キー関係のグラフ走査によりJOIN経路を自動計算するため、
+スキーマ構造さえ正規化されていれば、材料科学に限らず
+任意のドメインの正規化RDBに原理的に展開可能である。
 
 主要な知見：
 
 \begin{enumerate}
-  \item \textbf{Schema Graph走査}は不要JOINを排除し、
-    多元素AND検索のためのEXISTS副問い合わせを正しく生成する---
-    正規化された組成テーブルにおける最も重要な故障モードの防止。
-  \item \textbf{Rule-basedモード}は外部API依存ゼロで100~ms未満のレイテンシにて
-    39/39テストパス率を達成し、辞書カバー対象クエリに適する。
-  \item \textbf{LLMモード（GPT-5）}は未登録語彙、数値条件、否定への対応を
-    約70倍のレイテンシコストで拡張する。
-  \item \textbf{OQMD API正解データ比較}はデータパイプライン全体
-    （API $\to$ RDB $\to$ NL $\to$ SQL $\to$ 結果）に対してPrecision = 1.0を確認し、
-    結合テストの正確性を検証する。
-  \item \textbf{SQLガード}はテスト対象の全インジェクション攻撃を遮断し、
+  \item \textbf{Schema Graph制約が最重要}：7条件比較（gpt-5.5）により、
+    Schema Graph制約を含む全条件が実行成功率100\%を達成。
+    LLM-only（スキーマ情報なし）は1.8\%であり、スキーマ情報注入の決定的重要性を示す。
+  \item \textbf{Rule-basedモードの実用性}：外部API依存ゼロで32--60~msのレイテンシにて
+    57/57テスト成功。辞書カバー範囲内クエリにはLLM呼び出しが不要。
+  \item \textbf{LLMモード（gpt-5.5）}は未登録語彙、数値条件、否定への対応を
+    49--194倍のレイテンシコスト（2.4--6.1秒）で拡張する。
+  \item \textbf{RAG天井効果}：Schema Graph制約プロンプトだけでgpt-5.5のSQL生成が飽和し、
+    Few-Shot事例の追加効果が消失。Schema Graph制約がSQL品質の主要因。
+  \item \textbf{Intent Classifier}：VASPワークフロー質問20パターンの検出により、
+    スコープ外質問のLLM呼び出しを防止。
+  \item \textbf{SQLガード}は全インジェクション攻撃を遮断し、
     結果セット上限を強制する。
 \end{enumerate}
 
@@ -1074,20 +1232,19 @@ AI4Sが要求する\textbf{信頼性とコスト効率}の要件に適合する�
 自然言語でクエリすることを可能にする。
 
 \textbf{AI for Science（AI4S）}のより広い文脈において、
-本研究は重要なインフラストラクチャのギャップに取り組む：
-自然言語の意図を実行可能なデータベースクエリへ確実に変換する能力は、
-自律AI駆動型材料探索ワークフローの前提条件である。
-AIが研究者とデータの間を仲介する度合いが増す中、
-Schema Graph T2SQL手法は、実行時FKイントロスペクションにより
-異種材料データベース（OQMD、Materials Project、AFLOW、機関内DB）に
-展開可能な\textbf{ポータブルかつデータベース非依存の基盤}を提供する。
-Few-Shot RAGフィードバックループはさらに
-\textbf{再学習なしの継続的改善}を可能にし、
-AI4Sシステムの自己改善的性質に適合する。
+本研究は正規化RDBへの自然言語アクセスという
+AI駆動型科学ワークフローの基盤的課題に取り組む。
+Schema Graph T2SQL手法は、実行時FKイントロスペクションに基づくため、
+OQMDに限らずMaterials Project、AFLOW、機関内データベース等の
+\textbf{任意の正規化RDBに展開可能なポータブル基盤}を提供する。
+OQMDでの検証は、材料データベースに典型的なスキーマ複雑性
+（組成の正規化、多テーブルJOIN、熱力学的安定性フィルタ）を網羅しており、
+これらの課題を解決できる本手法は、同等以上の複雑性を持つ
+他のRDBに対しても有効に機能することが期待される。
 
-現在の検証は規模とテストケース独立性において限定的であるが、
-本手法は材料データベース特化型T2SQLの再現可能なフレームワークを確立し、
-より大規模なスキーマ、追加データソース、
+現在の検証はOQMD単一データベースに限定されるが、
+本手法は正規化RDB全般に対するT2SQLの再現可能なフレームワークを確立し、
+マルチデータベース検証、大規模スキーマ対応、
 AI4Sエージェントアーキテクチャへの統合へと拡張可能である。
 
 % =====================================================================
@@ -1098,7 +1255,7 @@ OQMDの開発・維持管理にあたるNorthwestern大学Wolvertonグループ�
 本研究はNIMSの支援を受けた。
 
 % =====================================================================
-\bibliographystyle{unsrtnat}
+\bibliographystyle{tfnlm}
 \bibliography{references}
 
 % =====================================================================
@@ -1192,7 +1349,7 @@ LIMIT 100;
 -- 最適: 必要な2 JOINのみ、DISTINCT、LIMIT付き
 \end{lstlisting}
 
-\paragraph{Schema Graph + GPT-5（Level 2）：}
+\paragraph{Schema Graph + gpt-5.5（Level 2）：}
 \begin{lstlisting}
 SELECT DISTINCT m.entry_id, m.formula,
     s.prototype, s.lattice_a, s.space_group

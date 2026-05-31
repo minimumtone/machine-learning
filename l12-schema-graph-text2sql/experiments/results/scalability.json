@@ -1,0 +1,1828 @@
+{
+  "experiment_date": "2026-05-31 02:07:57 UTC",
+  "llm_model": "gpt-5.5",
+  "db_entries": 909,
+  "tables": 7,
+  "rule_based_by_type": {
+    "simple_element": [
+      {
+        "query": "Feを含むB2化合物を出して",
+        "mode": "rule_based",
+        "n_runs": 5,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 81.2,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 10.0,
+        "avg_validate_ms": 6.2,
+        "avg_execute_ms": 10.0,
+        "avg_total_ms": 109.2,
+        "row_count": 16,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 366,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 11,
+            "execute_ms": 14,
+            "total_ms": 402,
+            "row_count": 16
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 36,
+            "row_count": 16
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 36,
+            "row_count": 16
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 36,
+            "row_count": 16
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 36,
+            "row_count": 16
+          }
+        ]
+      },
+      {
+        "query": "Niを含むL12化合物を出して",
+        "mode": "rule_based",
+        "n_runs": 5,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 12.2,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 9.8,
+        "avg_validate_ms": 5.0,
+        "avg_execute_ms": 8.4,
+        "avg_total_ms": 37.2,
+        "row_count": 9,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 23,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 49,
+            "row_count": 9
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 8,
+            "total_ms": 35,
+            "row_count": 9
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 8,
+            "total_ms": 35,
+            "row_count": 9
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 34,
+            "row_count": 9
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 8,
+            "total_ms": 33,
+            "row_count": 9
+          }
+        ]
+      },
+      {
+        "query": "Coを含む化合物を出して",
+        "mode": "rule_based",
+        "n_runs": 5,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 10.0,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 9.8,
+        "avg_validate_ms": 4.8,
+        "avg_execute_ms": 8.0,
+        "avg_total_ms": 34.0,
+        "row_count": 26,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 8,
+            "total_ms": 34,
+            "row_count": 26
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 8,
+            "total_ms": 35,
+            "row_count": 26
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 8,
+            "total_ms": 34,
+            "row_count": 26
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 4,
+            "execute_ms": 8,
+            "total_ms": 33,
+            "row_count": 26
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 8,
+            "total_ms": 34,
+            "row_count": 26
+          }
+        ]
+      }
+    ],
+    "simple_prototype": [
+      {
+        "query": "B2化合物の全リストを出して",
+        "mode": "rule_based",
+        "n_runs": 5,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.8,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 11.2,
+        "avg_validate_ms": 5.0,
+        "avg_execute_ms": 8.6,
+        "avg_total_ms": 36.0,
+        "row_count": 100,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 11,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 35,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 8,
+            "total_ms": 33,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 8,
+            "total_ms": 34,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 17,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 43,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 35,
+            "row_count": 100
+          }
+        ]
+      },
+      {
+        "query": "L1₂化合物の全データを出して",
+        "mode": "rule_based",
+        "n_runs": 5,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.4,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 9.4,
+        "avg_validate_ms": 5.0,
+        "avg_execute_ms": 8.2,
+        "avg_total_ms": 33.8,
+        "row_count": 100,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 8,
+            "total_ms": 33,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 8,
+            "total_ms": 33,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 35,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 8,
+            "total_ms": 35,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 8,
+            "total_ms": 33,
+            "row_count": 100
+          }
+        ]
+      }
+    ],
+    "numeric_condition": [
+      {
+        "query": "band gap > 1.0 eVのB2化合物を出して",
+        "mode": "rule_based",
+        "n_runs": 5,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.2,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 9.2,
+        "avg_validate_ms": 5.0,
+        "avg_execute_ms": 8.6,
+        "avg_total_ms": 34.4,
+        "row_count": 43,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 35,
+            "row_count": 43
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 35,
+            "row_count": 43
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 34,
+            "row_count": 43
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 8,
+            "total_ms": 34,
+            "row_count": 43
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 8,
+            "total_ms": 34,
+            "row_count": 43
+          }
+        ]
+      },
+      {
+        "query": "形成エネルギーが負のL1₂化合物を出して",
+        "mode": "rule_based",
+        "n_runs": 5,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.6,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 9.8,
+        "avg_validate_ms": 5.6,
+        "avg_execute_ms": 8.8,
+        "avg_total_ms": 35.2,
+        "row_count": 100,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 35,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 6,
+            "execute_ms": 9,
+            "total_ms": 36,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 6,
+            "execute_ms": 8,
+            "total_ms": 35,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 34,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 6,
+            "execute_ms": 9,
+            "total_ms": 36,
+            "row_count": 100
+          }
+        ]
+      },
+      {
+        "query": "Ehull < 0.05 eV/atomのB2化合物",
+        "mode": "rule_based",
+        "n_runs": 5,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.6,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 9.6,
+        "avg_validate_ms": 5.2,
+        "avg_execute_ms": 9.0,
+        "avg_total_ms": 35.4,
+        "row_count": 100,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 6,
+            "execute_ms": 9,
+            "total_ms": 37,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 35,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 35,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 35,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 35,
+            "row_count": 100
+          }
+        ]
+      }
+    ],
+    "multi_element": [
+      {
+        "query": "NiとAlを両方含む化合物を出して",
+        "mode": "rule_based",
+        "n_runs": 5,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.4,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 9.2,
+        "avg_validate_ms": 5.0,
+        "avg_execute_ms": 8.0,
+        "avg_total_ms": 33.8,
+        "row_count": 4,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 8,
+            "total_ms": 35,
+            "row_count": 4
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 8,
+            "total_ms": 34,
+            "row_count": 4
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 8,
+            "total_ms": 33,
+            "row_count": 4
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 8,
+            "total_ms": 34,
+            "row_count": 4
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 8,
+            "total_ms": 33,
+            "row_count": 4
+          }
+        ]
+      },
+      {
+        "query": "FeとAlを含むB2化合物を出して",
+        "mode": "rule_based",
+        "n_runs": 5,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.4,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 9.2,
+        "avg_validate_ms": 5.4,
+        "avg_execute_ms": 8.8,
+        "avg_total_ms": 34.4,
+        "row_count": 4,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 34,
+            "row_count": 4
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 34,
+            "row_count": 4
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 6,
+            "execute_ms": 8,
+            "total_ms": 34,
+            "row_count": 4
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 6,
+            "execute_ms": 9,
+            "total_ms": 35,
+            "row_count": 4
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 35,
+            "row_count": 4
+          }
+        ]
+      },
+      {
+        "query": "NiとCoを含むL1₂化合物を出して",
+        "mode": "rule_based",
+        "n_runs": 5,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.2,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 9.2,
+        "avg_validate_ms": 5.2,
+        "avg_execute_ms": 8.8,
+        "avg_total_ms": 34.2,
+        "row_count": 0,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 35,
+            "row_count": 0
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 8,
+            "total_ms": 34,
+            "row_count": 0
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 6,
+            "execute_ms": 9,
+            "total_ms": 34,
+            "row_count": 0
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 34,
+            "row_count": 0
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 34,
+            "row_count": 0
+          }
+        ]
+      }
+    ],
+    "sorting_limit": [
+      {
+        "query": "安定なL1₂化合物を形成エネルギーが低い順に出して",
+        "mode": "rule_based",
+        "n_runs": 5,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.6,
+        "avg_link_ms": 9.0,
+        "avg_generate_ms": 19.4,
+        "avg_validate_ms": 5.2,
+        "avg_execute_ms": 9.0,
+        "avg_total_ms": 54.0,
+        "row_count": 88,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 9,
+            "generate_ms": 19,
+            "validate_ms": 5,
+            "execute_ms": 8,
+            "total_ms": 53,
+            "row_count": 88
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 9,
+            "generate_ms": 19,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 52,
+            "row_count": 88
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 9,
+            "generate_ms": 21,
+            "validate_ms": 6,
+            "execute_ms": 9,
+            "total_ms": 56,
+            "row_count": 88
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 9,
+            "generate_ms": 19,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 54,
+            "row_count": 88
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 9,
+            "generate_ms": 19,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 55,
+            "row_count": 88
+          }
+        ]
+      },
+      {
+        "query": "安定なB2化合物を形成エネルギーが低い順に出して",
+        "mode": "rule_based",
+        "n_runs": 5,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.8,
+        "avg_link_ms": 9.0,
+        "avg_generate_ms": 19.2,
+        "avg_validate_ms": 5.2,
+        "avg_execute_ms": 9.4,
+        "avg_total_ms": 54.6,
+        "row_count": 100,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 9,
+            "generate_ms": 20,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 56,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 9,
+            "generate_ms": 19,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 53,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 9,
+            "generate_ms": 19,
+            "validate_ms": 6,
+            "execute_ms": 10,
+            "total_ms": 55,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 9,
+            "generate_ms": 19,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 55,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 9,
+            "generate_ms": 19,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 54,
+            "row_count": 100
+          }
+        ]
+      }
+    ],
+    "compound_query": [
+      {
+        "query": "Feを含む安定なB2型合金の一覧",
+        "mode": "rule_based",
+        "n_runs": 5,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.6,
+        "avg_link_ms": 9.0,
+        "avg_generate_ms": 19.2,
+        "avg_validate_ms": 5.2,
+        "avg_execute_ms": 9.8,
+        "avg_total_ms": 55.0,
+        "row_count": 6,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 9,
+            "generate_ms": 19,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 54,
+            "row_count": 6
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 9,
+            "generate_ms": 20,
+            "validate_ms": 6,
+            "execute_ms": 10,
+            "total_ms": 57,
+            "row_count": 6
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 9,
+            "generate_ms": 19,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 55,
+            "row_count": 6
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 9,
+            "generate_ms": 19,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 54,
+            "row_count": 6
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 9,
+            "generate_ms": 19,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 55,
+            "row_count": 6
+          }
+        ]
+      },
+      {
+        "query": "band gapが正のB2化合物を大きい順に",
+        "mode": "rule_based",
+        "n_runs": 5,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.6,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 9.2,
+        "avg_validate_ms": 5.2,
+        "avg_execute_ms": 8.6,
+        "avg_total_ms": 34.8,
+        "row_count": 53,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 36,
+            "row_count": 53
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 6,
+            "execute_ms": 9,
+            "total_ms": 36,
+            "row_count": 53
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 8,
+            "total_ms": 34,
+            "row_count": 53
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 8,
+            "total_ms": 34,
+            "row_count": 53
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 34,
+            "row_count": 53
+          }
+        ]
+      },
+      {
+        "query": "energy above hullが0.1 eV/atom以下のB2化合物",
+        "mode": "rule_based",
+        "n_runs": 5,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 11.4,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 9.8,
+        "avg_validate_ms": 5.4,
+        "avg_execute_ms": 9.8,
+        "avg_total_ms": 37.8,
+        "row_count": 100,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 9,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 36,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 17,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 43,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 36,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 6,
+            "execute_ms": 10,
+            "total_ms": 37,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 10,
+            "validate_ms": 6,
+            "execute_ms": 10,
+            "total_ms": 37,
+            "row_count": 100
+          }
+        ]
+      }
+    ]
+  },
+  "llm_by_type": {
+    "simple_element": [
+      {
+        "query": "Feを含むB2化合物を出して",
+        "mode": "llm",
+        "n_runs": 3,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.0,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 2903.7,
+        "avg_validate_ms": 4.3,
+        "avg_execute_ms": 9.7,
+        "avg_total_ms": 2928.7,
+        "row_count": 16,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 3173,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 3200,
+            "row_count": 16
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 8,
+            "link_ms": 0,
+            "generate_ms": 2993,
+            "validate_ms": 4,
+            "execute_ms": 10,
+            "total_ms": 3017,
+            "row_count": 16
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 2545,
+            "validate_ms": 4,
+            "execute_ms": 9,
+            "total_ms": 2569,
+            "row_count": 16
+          }
+        ]
+      },
+      {
+        "query": "Niを含むL12化合物を出して",
+        "mode": "llm",
+        "n_runs": 3,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 8.3,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 3051.7,
+        "avg_validate_ms": 4.3,
+        "avg_execute_ms": 9.7,
+        "avg_total_ms": 3076.0,
+        "row_count": 9,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 8,
+            "link_ms": 0,
+            "generate_ms": 2726,
+            "validate_ms": 4,
+            "execute_ms": 9,
+            "total_ms": 2750,
+            "row_count": 9
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 8,
+            "link_ms": 0,
+            "generate_ms": 3076,
+            "validate_ms": 4,
+            "execute_ms": 10,
+            "total_ms": 3100,
+            "row_count": 9
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 3353,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 3378,
+            "row_count": 9
+          }
+        ]
+      },
+      {
+        "query": "Coを含む化合物を出して",
+        "mode": "llm",
+        "n_runs": 3,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.0,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 2399.3,
+        "avg_validate_ms": 4.0,
+        "avg_execute_ms": 9.3,
+        "avg_total_ms": 2423.0,
+        "row_count": 26,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 2275,
+            "validate_ms": 4,
+            "execute_ms": 9,
+            "total_ms": 2298,
+            "row_count": 26
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 2525,
+            "validate_ms": 4,
+            "execute_ms": 9,
+            "total_ms": 2549,
+            "row_count": 26
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 2398,
+            "validate_ms": 4,
+            "execute_ms": 10,
+            "total_ms": 2422,
+            "row_count": 26
+          }
+        ]
+      }
+    ],
+    "simple_prototype": [
+      {
+        "query": "B2化合物の全リストを出して",
+        "mode": "llm",
+        "n_runs": 3,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.0,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 3436.7,
+        "avg_validate_ms": 5.0,
+        "avg_execute_ms": 9.7,
+        "avg_total_ms": 3461.7,
+        "row_count": 100,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 3325,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 3351,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 3061,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 3086,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 3924,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 3948,
+            "row_count": 100
+          }
+        ]
+      },
+      {
+        "query": "L1₂化合物の全データを出して",
+        "mode": "llm",
+        "n_runs": 3,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 8.3,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 4197.3,
+        "avg_validate_ms": 4.3,
+        "avg_execute_ms": 9.7,
+        "avg_total_ms": 4221.3,
+        "row_count": 100,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 8,
+            "link_ms": 0,
+            "generate_ms": 4919,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 4943,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 3033,
+            "validate_ms": 4,
+            "execute_ms": 9,
+            "total_ms": 3057,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 8,
+            "link_ms": 0,
+            "generate_ms": 4640,
+            "validate_ms": 4,
+            "execute_ms": 10,
+            "total_ms": 4664,
+            "row_count": 100
+          }
+        ]
+      }
+    ],
+    "numeric_condition": [
+      {
+        "query": "band gap > 1.0 eVのB2化合物を出して",
+        "mode": "llm",
+        "n_runs": 3,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.3,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 2787.7,
+        "avg_validate_ms": 5.0,
+        "avg_execute_ms": 10.3,
+        "avg_total_ms": 2813.3,
+        "row_count": 43,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 3079,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 3105,
+            "row_count": 43
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 2765,
+            "validate_ms": 5,
+            "execute_ms": 11,
+            "total_ms": 2790,
+            "row_count": 43
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 2519,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 2545,
+            "row_count": 43
+          }
+        ]
+      },
+      {
+        "query": "形成エネルギーが負のL1₂化合物を出して",
+        "mode": "llm",
+        "n_runs": 3,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.0,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 10236.7,
+        "avg_validate_ms": 4.7,
+        "avg_execute_ms": 10.3,
+        "avg_total_ms": 10262.0,
+        "row_count": 100,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 3921,
+            "validate_ms": 4,
+            "execute_ms": 10,
+            "total_ms": 3946,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 23518,
+            "validate_ms": 5,
+            "execute_ms": 11,
+            "total_ms": 23543,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 3271,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 3297,
+            "row_count": 100
+          }
+        ]
+      },
+      {
+        "query": "Ehull < 0.05 eV/atomのB2化合物",
+        "mode": "llm",
+        "n_runs": 3,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.0,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 3958.7,
+        "avg_validate_ms": 4.7,
+        "avg_execute_ms": 10.3,
+        "avg_total_ms": 3984.7,
+        "row_count": 100,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 4308,
+            "validate_ms": 5,
+            "execute_ms": 11,
+            "total_ms": 4334,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 3989,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 4015,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 3579,
+            "validate_ms": 4,
+            "execute_ms": 10,
+            "total_ms": 3605,
+            "row_count": 100
+          }
+        ]
+      }
+    ],
+    "multi_element": [
+      {
+        "query": "NiとAlを両方含む化合物を出して",
+        "mode": "llm",
+        "n_runs": 3,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.0,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 5970.7,
+        "avg_validate_ms": 4.3,
+        "avg_execute_ms": 9.0,
+        "avg_total_ms": 5994.7,
+        "row_count": 4,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 5329,
+            "validate_ms": 5,
+            "execute_ms": 9,
+            "total_ms": 5353,
+            "row_count": 4
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 6391,
+            "validate_ms": 4,
+            "execute_ms": 9,
+            "total_ms": 6415,
+            "row_count": 4
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 6192,
+            "validate_ms": 4,
+            "execute_ms": 9,
+            "total_ms": 6216,
+            "row_count": 4
+          }
+        ]
+      },
+      {
+        "query": "FeとAlを含むB2化合物を出して",
+        "mode": "llm",
+        "n_runs": 3,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 19.7,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 6668.3,
+        "avg_validate_ms": 5.0,
+        "avg_execute_ms": 10.0,
+        "avg_total_ms": 6705.0,
+        "row_count": 4,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 9636,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 9662,
+            "row_count": 4
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 8,
+            "link_ms": 0,
+            "generate_ms": 4045,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 4070,
+            "row_count": 4
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 42,
+            "link_ms": 0,
+            "generate_ms": 6324,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 6383,
+            "row_count": 4
+          }
+        ]
+      },
+      {
+        "query": "NiとCoを含むL1₂化合物を出して",
+        "mode": "llm",
+        "n_runs": 3,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.0,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 5527.7,
+        "avg_validate_ms": 5.0,
+        "avg_execute_ms": 10.3,
+        "avg_total_ms": 5553.7,
+        "row_count": 0,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 4285,
+            "validate_ms": 5,
+            "execute_ms": 11,
+            "total_ms": 4311,
+            "row_count": 0
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 7148,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 7174,
+            "row_count": 0
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 5150,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 5176,
+            "row_count": 0
+          }
+        ]
+      }
+    ],
+    "sorting_limit": [
+      {
+        "query": "安定なL1₂化合物を形成エネルギーが低い順に出して",
+        "mode": "llm",
+        "n_runs": 3,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.0,
+        "avg_link_ms": 7.7,
+        "avg_generate_ms": 2281.3,
+        "avg_validate_ms": 4.7,
+        "avg_execute_ms": 9.7,
+        "avg_total_ms": 2314.7,
+        "row_count": 88,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 8,
+            "generate_ms": 2205,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 2239,
+            "row_count": 88
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 8,
+            "generate_ms": 2244,
+            "validate_ms": 4,
+            "execute_ms": 9,
+            "total_ms": 2277,
+            "row_count": 88
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 7,
+            "generate_ms": 2395,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 2428,
+            "row_count": 88
+          }
+        ]
+      },
+      {
+        "query": "安定なB2化合物を形成エネルギーが低い順に出して",
+        "mode": "llm",
+        "n_runs": 3,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.0,
+        "avg_link_ms": 7.3,
+        "avg_generate_ms": 2923.7,
+        "avg_validate_ms": 4.3,
+        "avg_execute_ms": 10.0,
+        "avg_total_ms": 2955.7,
+        "row_count": 100,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 7,
+            "generate_ms": 3423,
+            "validate_ms": 4,
+            "execute_ms": 10,
+            "total_ms": 3455,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 7,
+            "generate_ms": 2639,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 2671,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 8,
+            "generate_ms": 2709,
+            "validate_ms": 4,
+            "execute_ms": 10,
+            "total_ms": 2741,
+            "row_count": 100
+          }
+        ]
+      }
+    ],
+    "compound_query": [
+      {
+        "query": "Feを含む安定なB2型合金の一覧",
+        "mode": "llm",
+        "n_runs": 3,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.0,
+        "avg_link_ms": 7.7,
+        "avg_generate_ms": 3536.3,
+        "avg_validate_ms": 5.0,
+        "avg_execute_ms": 11.3,
+        "avg_total_ms": 3571.0,
+        "row_count": 6,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 7,
+            "generate_ms": 3578,
+            "validate_ms": 5,
+            "execute_ms": 11,
+            "total_ms": 3612,
+            "row_count": 6
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 8,
+            "generate_ms": 3426,
+            "validate_ms": 5,
+            "execute_ms": 12,
+            "total_ms": 3462,
+            "row_count": 6
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 8,
+            "generate_ms": 3605,
+            "validate_ms": 5,
+            "execute_ms": 11,
+            "total_ms": 3639,
+            "row_count": 6
+          }
+        ]
+      },
+      {
+        "query": "band gapが正のB2化合物を大きい順に",
+        "mode": "llm",
+        "n_runs": 3,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.3,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 3042.0,
+        "avg_validate_ms": 4.3,
+        "avg_execute_ms": 10.0,
+        "avg_total_ms": 3067.7,
+        "row_count": 53,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 10,
+            "link_ms": 0,
+            "generate_ms": 2950,
+            "validate_ms": 4,
+            "execute_ms": 10,
+            "total_ms": 2977,
+            "row_count": 53
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 3061,
+            "validate_ms": 4,
+            "execute_ms": 10,
+            "total_ms": 3086,
+            "row_count": 53
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 3115,
+            "validate_ms": 5,
+            "execute_ms": 10,
+            "total_ms": 3140,
+            "row_count": 53
+          }
+        ]
+      },
+      {
+        "query": "energy above hullが0.1 eV/atom以下のB2化合物",
+        "mode": "llm",
+        "n_runs": 3,
+        "avg_intent_ms": 0.0,
+        "avg_extract_ms": 9.0,
+        "avg_link_ms": 0.0,
+        "avg_generate_ms": 2871.3,
+        "avg_validate_ms": 4.3,
+        "avg_execute_ms": 10.0,
+        "avg_total_ms": 2897.0,
+        "row_count": 100,
+        "runs": [
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 2762,
+            "validate_ms": 4,
+            "execute_ms": 10,
+            "total_ms": 2788,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 2948,
+            "validate_ms": 4,
+            "execute_ms": 9,
+            "total_ms": 2973,
+            "row_count": 100
+          },
+          {
+            "intent_ms": 0,
+            "extract_ms": 9,
+            "link_ms": 0,
+            "generate_ms": 2904,
+            "validate_ms": 5,
+            "execute_ms": 11,
+            "total_ms": 2930,
+            "row_count": 100
+          }
+        ]
+      }
+    ]
+  },
+  "rb_vs_llm": [
+    {
+      "query": "Feを含むB2化合物を出して",
+      "rb_total_ms": 32.2,
+      "rb_generate_ms": 8.6,
+      "llm_total_ms": 2861.3,
+      "llm_generate_ms": 2837.3,
+      "speedup": 88.9
+    },
+    {
+      "query": "band gap > 1.0 eVのB2化合物を出して",
+      "rb_total_ms": 31.8,
+      "rb_generate_ms": 8.0,
+      "llm_total_ms": 3072.3,
+      "llm_generate_ms": 3047.7,
+      "speedup": 96.6
+    },
+    {
+      "query": "NiとAlを両方含む化合物を出して",
+      "rb_total_ms": 30.6,
+      "rb_generate_ms": 8.2,
+      "llm_total_ms": 5949.0,
+      "llm_generate_ms": 5925.7,
+      "speedup": 194.4
+    },
+    {
+      "query": "安定なL1₂化合物を形成エネルギーが低い順に出して",
+      "rb_total_ms": 48.8,
+      "rb_generate_ms": 16.4,
+      "llm_total_ms": 2371.0,
+      "llm_generate_ms": 2338.7,
+      "speedup": 48.6
+    }
+  ]
+}

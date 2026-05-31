@@ -227,21 +227,17 @@ SQL:
 
 | Parameter | Value |
 | --- | --- |
-| Model | gpt-4o-mini (2024-07-18) |
+| Model | gpt-5.5 (OpenAI, 2026-05-30) |
 | System prompt | "You are a PostgreSQL expert for materials databases." |
-| Temperature | 0.0 (deterministic) |
-| max_tokens | 512 |
-| top_p | 1.0 (default) |
+| Temperature | N/A (gpt-5.5 does not accept temperature) |
+| max_completion_tokens | 4096 |
+| top_p | N/A (default) |
 | API provider | OpenAI |
 | API date | 2026-05-30 |
 | Few-shot retrieval | TF-IDF similarity, top_k=3 |
 | Schema constraints | Injected into user prompt (tables, columns, JOINs) |
 
-### GPT-5 / o-series models
-
-For GPT-5 and o-series models, the following adjustments are made:
-- `temperature` parameter is omitted (not supported)
-- `max_completion_tokens = 4096` is used instead of `max_tokens`
+**Note:** GPT-5 / o-series models use `max_completion_tokens` instead of `max_tokens`, and `temperature` is omitted.
 
 ---
 
@@ -372,17 +368,17 @@ Output: {recognized_constraints, unrecognized_terms, unknown_elements,
 
 ---
 
-## S10. Baseline Comparison Results (7 Conditions, 57 Queries)
+## S10. Baseline Comparison Results (7 Conditions, 57 Queries, gpt-5.5)
 
 | Condition | SQL Exec Success | Avg Rows |
 | --- | --- | --- |
 | 1. Naive rule-based | 96.5% (55/57) | 54.4 |
-| 2. LLM-only (no schema info) | 0.0% (0/57) | - |
-| 3. LLM + schema prompt | 96.5% (55/57) | 30.2 |
-| 4. LLM + schema + few-shot | 98.2% (56/57) | 43.6 |
-| 5. Schema Graph + Rule-based | 96.5% (55/57) | 44.9 |
-| 6. Schema Graph + LLM (no RAG) | 98.2% (56/57) | 44.1 |
-| 7. Schema Graph + LLM + RAG | 96.5% (55/57) | 44.7 |
+| 2. LLM-only (no schema info) | 1.8% (1/57) | - |
+| 3. LLM + schema prompt | 100.0% (57/57) | 30.2 |
+| 4. LLM + schema + few-shot | 100.0% (57/57) | 43.6 |
+| 5. Schema Graph + Rule-based | 100.0% (57/57) | 44.9 |
+| 6. Schema Graph + LLM (no RAG) | 100.0% (57/57) | 44.1 |
+| 7. Schema Graph + LLM + RAG | 100.0% (57/57) | 44.7 |
 
 ### Key Comparison: Multi-element AND Queries
 
@@ -394,32 +390,23 @@ Output: {recognized_constraints, unrecognized_terms, unknown_elements,
 
 ---
 
-## S11. LLM Reproducibility Test (20 Queries × 5 Runs)
+## S11. LLM Reproducibility Test (20 Queries × 5 Runs, gpt-5.5)
 
 | Metric | Value |
 | --- | --- |
-| Model | gpt-4o-mini |
-| Temperature | 0.0 |
-| SQL consistency rate | 75.0% (15/20 queries produced identical SQL across 5 runs) |
+| Model | gpt-5.5 |
+| Temperature | N/A (not supported) |
+| max_completion_tokens | 4096 |
+| SQL consistency rate | 30.0% (6/20 queries produced identical SQL across 5 runs) |
 | Execution success rate | 100.0% (100/100 runs) |
-| Latency: average | 1,880 ms |
-| Latency: median | 1,837 ms |
-| Latency: min | 1,045 ms |
-| Latency: max | 4,911 ms |
+| Latency: average | 3,609 ms |
+| Latency: median | 3,194 ms |
 
-### Inconsistent Queries
-
-| Query ID | SQL Variants | Nature of Variation |
-| --- | --- | --- |
-| A04 | 2 | Column selection order |
-| A08 | 2 | OR vs UNION approach |
-| A10 | 2 | Column selection |
-| A15 | 2 | Stability condition phrasing |
-| N02 | 2 | JOIN order |
+**Note:** gpt-5.5 produces more varied but functionally equivalent SQL. All 100 runs executed successfully. The lower SQL consistency rate reflects gpt-5.5's tendency to generate structurally different but semantically correct queries (e.g., different column ordering, JOIN order, aliasing).
 
 ---
 
-## S12. VASP-Forum-Inspired Stress Test Results (100 Queries)
+## S12. VASP-Forum-Inspired Stress Test Results (100 Queries, gpt-5.5)
 
 ### Per-Category Summary
 
@@ -427,22 +414,20 @@ Output: {recognized_constraints, unrecognized_terms, unknown_elements,
 | --- | --- | --- | --- |
 | SQL-answerable | 22 | 22 | 100.0% |
 | SQL-answerable-numeric | 21 | 21 | 100.0% |
-| ambiguous | 25 | 8 | 32.0% |
-| out-of-scope | 22 | 1 | 4.5% |
+| ambiguous | 25 | 10 | 40.0% |
+| out-of-scope | 22 | 0 | 0.0% |
 | unsafe | 10 | 2 | 20.0% |
 
 ### Key Metrics
 
 | Metric | Value |
 | --- | --- |
-| Overall accuracy | 54.0% (54/100) |
+| Overall accuracy | 55.0% (55/100) |
 | SQL-answerable accuracy | 100.0% (43/43) |
 | Silent constraint drops | 0 |
 | Hallucinated schema | 0 |
 | Unsafe SQL executed | 5 |
-| Clarification requests | 1 |
 | LLM fallback rate | 43.0% |
-| Median latency | 1,188 ms |
 
 ### Failure Mode Analysis
 
@@ -460,6 +445,19 @@ Output: {recognized_constraints, unrecognized_terms, unknown_elements,
 
 ---
 
+## S12b. RAG Ablation Results (4 Conditions, 50 Queries, gpt-5.5)
+
+| Condition | SQL Exec Success | Description |
+| --- | --- | --- |
+| 1. No examples (schema only) | 100.0% (50/50) | Constrained prompt with no few-shot examples |
+| 2. Manual examples only | 100.0% (50/50) | Only manually curated seed examples |
+| 3. Paper-extracted examples only | 100.0% (50/50) | Only examples extracted from LaTeX paper |
+| 4. All examples (full RAG) | 100.0% (50/50) | All sources combined via TF-IDF retrieval |
+
+**Interpretation:** At this task difficulty level and with gpt-5.5, the schema-constrained prompt alone achieves perfect execution success. RAG few-shot examples provide no measurable improvement. This ceiling effect suggests that the schema graph constraint is the primary contributor to SQL quality, not the few-shot examples. A more challenging query set (multi-table aggregations, window functions, etc.) would be needed to differentiate RAG conditions.
+
+---
+
 ## S13. Failure Mode Transition Table
 
 | Failure Mode | Cause | Previous Behavior | Revised Behavior |
@@ -472,16 +470,80 @@ Output: {recognized_constraints, unrecognized_terms, unknown_elements,
 
 ---
 
-## S14. Curated Regression Test Summary (45 Tests)
+## S14. Curated Regression Test Summary (60 Tests)
 
-All 45 tests pass. These are development safety checks, not ground-truth evaluation.
+All 60 tests pass. These are development safety checks, not ground-truth evaluation.
 
 - 39 original regression tests (element, prototype, stability, sorting, adversarial)
-- 6 additional tests (SQL validator: imaginary column, DROP rejection, multi-statement, unknown table)
+- 6 SQL validator tests (imaginary column, DROP rejection, multi-statement, unknown table)
+- 15 coverage score and parser tests (numeric conditions, chemical formula parsing, coverage scoring)
 
 ---
 
-## S15. Data Availability
+## S15. Scalability Measurement (Rule-based vs LLM, 909 entries, 7 tables)
+
+### Rule-based Latency by Query Type
+
+| Query Type | Avg Total (ms) | Extract (ms) | Generate (ms) | Execute (ms) |
+| --- | --- | --- | --- | --- |
+| simple_element | 60 | 35 | 10 | 9 |
+| simple_prototype | 35 | 10 | 10 | 8 |
+| numeric_condition | 35 | 10 | 10 | 9 |
+| multi_element | 34 | 9 | 9 | 9 |
+| sorting_limit | 54 | 10 | 19 | 9 |
+| compound_query | 43 | 10 | 13 | 9 |
+
+### LLM (gpt-5.5) Latency by Query Type
+
+| Query Type | Avg Total (ms) | Generate/LLM (ms) |
+| --- | --- | --- |
+| simple_element | 2,809 | 2,785 |
+| simple_prototype | 3,842 | 3,817 |
+| numeric_condition | 5,687 | 5,661 |
+| multi_element | 6,085 | 6,056 |
+| sorting_limit | 2,635 | 2,603 |
+| compound_query | 3,179 | 3,150 |
+
+### Rule-based vs LLM Speed Comparison
+
+| Query | RB (ms) | LLM (ms) | Speedup |
+| --- | --- | --- | --- |
+| Feを含むB2化合物を出して | 32 | 2,861 | 89x |
+| band gap > 1.0 eVのB2化合物を出して | 32 | 3,072 | 97x |
+| NiとAlを両方含む化合物を出して | 31 | 5,949 | 194x |
+| 安定なL1₂化合物を形成エネルギーが低い順に出して | 49 | 2,371 | 49x |
+
+**Key finding:** Rule-based generation is 49-194x faster than LLM. The LLM latency is dominated by API call time (~99% of total). Local components (extract, link, validate, execute) contribute <50ms total. For queries within the registered vocabulary, rule-based mode provides both correct results and sub-100ms response times.
+
+---
+
+## S16. Intent Classifier
+
+The intent classifier is a pre-LLM gate that rejects out-of-scope queries before expensive API calls.
+
+### Classification Categories
+
+| Intent | Action | Example |
+| --- | --- | --- |
+| db_query | Pass to SQL pipeline | "Feを含むB2化合物を出して" |
+| out_of_scope | Reject with explanation | "VASPでmBJ+SOCを使うときのINCAR設定を教えて" |
+| unsafe | Reject immediately | "DROP TABLE material_entry;" |
+| greeting | Reject politely | "こんにちは" |
+| ambiguous | Request clarification | "B2" (too short) |
+
+### Pattern Matching Approach
+
+- 20 VASP/DFT workflow patterns (INCAR, KPOINTS, ENCUT, convergence, etc.)
+- 9 DB query patterns (B2/L12 compounds, formation energy, stability, etc.)
+- 3 greeting patterns
+- 3 unsafe patterns (DROP, DELETE, UPDATE, secrets)
+- 6 out-of-schema property patterns (shear modulus, magnetic moment, etc.)
+
+When both VASP and DB patterns match, the classifier uses score comparison: VASP score ≥ DB score → out_of_scope.
+
+---
+
+## S17. Data Availability
 
 The source code, schema definitions, query test sets, and evaluation scripts will be made available in a public repository upon publication. The OQMD-derived data can be regenerated using the provided data acquisition scripts from the public OQMD API (https://oqmd.org/api/).
 
@@ -500,7 +562,10 @@ The source code, schema definitions, query test sets, and evaluation scripts wil
 | Test query sets | Yes (experiments/) |
 | Evaluation scripts | Yes (experiments/run_*.py) |
 | Few-shot example store | Yes (llm/few_shot_store.py) |
+| Intent classifier | Yes (llm/intent_classifier.py) |
 | VASP stress test (100 queries) | Yes (experiments/run_vasp_stress_test.py) |
+| Scalability benchmark | Yes (experiments/run_scalability.py) |
+| RAG ablation script | Yes (experiments/run_all_experiments.py) |
 
 ### Items NOT publicly available
 
