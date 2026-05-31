@@ -1,0 +1,511 @@
+# Supplementary Information
+
+Schema-Graph-Constrained Text-to-SQL for Normalized Relational Materials Databases
+
+---
+
+## S1. Database Schema Definition
+
+```sql
+CREATE TABLE material_entry (
+    entry_id TEXT PRIMARY KEY,
+    source_db TEXT,
+    source_material_id TEXT,
+    formula TEXT NOT NULL,
+    reduced_formula TEXT,
+    chemical_system TEXT,
+    number_of_elements INTEGER
+);
+
+CREATE TABLE composition (
+    composition_id TEXT PRIMARY KEY,
+    entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
+    element TEXT NOT NULL,
+    atomic_fraction DOUBLE PRECISION NOT NULL,
+    site_label TEXT
+);
+
+CREATE TABLE structure (
+    structure_id TEXT PRIMARY KEY,
+    entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
+    prototype TEXT,
+    strukturbericht TEXT,
+    formula_type TEXT,
+    space_group_number INTEGER,
+    crystal_system TEXT,
+    lattice_a DOUBLE PRECISION,
+    lattice_b DOUBLE PRECISION,
+    lattice_c DOUBLE PRECISION,
+    volume_per_atom DOUBLE PRECISION,
+    space_group TEXT
+);
+
+CREATE TABLE calculation (
+    calculation_id TEXT PRIMARY KEY,
+    entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
+    method TEXT,
+    functional TEXT,
+    calculation_type TEXT
+);
+
+CREATE TABLE calculated_property (
+    property_id TEXT PRIMARY KEY,
+    calculation_id TEXT NOT NULL REFERENCES calculation(calculation_id),
+    property_name TEXT NOT NULL,
+    value DOUBLE PRECISION,
+    unit TEXT
+);
+
+CREATE TABLE phase_stability (
+    stability_id TEXT PRIMARY KEY,
+    entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
+    formation_energy_per_atom DOUBLE PRECISION,
+    energy_above_hull DOUBLE PRECISION,
+    is_stable BOOLEAN,
+    band_gap DOUBLE PRECISION
+);
+
+CREATE TABLE prototype_definition (
+    prototype_id TEXT PRIMARY KEY,
+    prototype_name TEXT,
+    strukturbericht TEXT,
+    formula_type TEXT,
+    description TEXT
+);
+```
+
+### Indexes
+
+```sql
+CREATE INDEX idx_composition_entry_id ON composition(entry_id);
+CREATE INDEX idx_composition_element ON composition(element);
+CREATE INDEX idx_structure_entry_id ON structure(entry_id);
+CREATE INDEX idx_structure_prototype ON structure(prototype);
+CREATE INDEX idx_structure_strukturbericht ON structure(strukturbericht);
+CREATE INDEX idx_phase_stability_entry_id ON phase_stability(entry_id);
+CREATE INDEX idx_phase_energy_above_hull ON phase_stability(energy_above_hull);
+CREATE INDEX idx_calculation_entry_id ON calculation(entry_id);
+CREATE INDEX idx_property_calculation_id ON calculated_property(calculation_id);
+CREATE INDEX idx_property_name ON calculated_property(property_name);
+```
+
+---
+
+## S2. Allowed Schema Configuration (allowed_schema.yaml)
+
+```yaml
+allowed_tables:
+  - material_entry
+  - composition
+  - structure
+  - calculation
+  - calculated_property
+  - phase_stability
+  - prototype_definition
+
+allowed_joins:
+  - source_table: composition
+    source_column: entry_id
+    target_table: material_entry
+    target_column: entry_id
+  - source_table: structure
+    source_column: entry_id
+    target_table: material_entry
+    target_column: entry_id
+  - source_table: calculation
+    source_column: entry_id
+    target_table: material_entry
+    target_column: entry_id
+  - source_table: calculated_property
+    source_column: calculation_id
+    target_table: calculation
+    target_column: calculation_id
+  - source_table: phase_stability
+    source_column: entry_id
+    target_table: material_entry
+    target_column: entry_id
+```
+
+---
+
+## S3. Material Domain Dictionary (material_terms.yaml)
+
+```yaml
+prototype_aliases:
+  L12:
+    - L12, L1₂, L1_2, Cu3Au, Cu₃Au型, ordered FCC, 規則化FCC, gamma prime, γ', ガンマプライム
+  B2:
+    - B2, CsCl, CsCl型, ordered BCC, 規則化BCC
+
+stability_terms:
+  stable:
+    condition: phase_stability.energy_above_hull <= 0.001 eV/atom
+  metastable:
+    condition: phase_stability.energy_above_hull <= 0.05 eV/atom
+
+property_terms:
+  formation_energy:
+    aliases: [formation energy, 形成エネルギー, 生成エネルギー]
+    column: phase_stability.formation_energy_per_atom
+  lattice_constant:
+    aliases: [lattice constant, 格子定数, lattice_a]
+    column: structure.lattice_a
+  bulk_modulus:
+    aliases: [bulk modulus, 体積弾性率, バルクモジュラス]
+    property_name: bulk_modulus (EAV in calculated_property)
+  shear_modulus:
+    aliases: [shear modulus, せん断弾性率, シアモジュラス]
+    property_name: shear_modulus
+  energy_above_hull:
+    aliases: [energy above hull, ハル上エネルギー, Ehull]
+    column: phase_stability.energy_above_hull
+  band_gap:
+    aliases: [band gap, バンドギャップ, bandgap]
+    column: phase_stability.band_gap
+
+elements:
+  14 elements registered with Japanese aliases:
+  Ni (ニッケル), Al (アルミニウム), Co (コバルト), Ti (チタン),
+  Ta (タンタル), Nb (ニオブ), W (タングステン), Fe (鉄),
+  Cu (銅), Pt (プラチナ), Ir (イリジウム), Sc (スカンジウム),
+  Ga (ガリウム), Ge (ゲルマニウム)
+```
+
+---
+
+## S4. LLM Prompt Template (sql_generation_prompt.md)
+
+```
+You are a Text-to-SQL generator for a materials database.
+Generate only one PostgreSQL SELECT query.
+
+Rules:
+- Use only the provided tables.
+- Use only the provided columns.
+- Use only the provided JOIN clauses.
+- Do not invent tables.
+- Do not invent columns.
+- Do not use INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE, CREATE.
+- Return SQL only.
+- Always include a LIMIT clause (default LIMIT 100).
+
+Table aliases:
+- material_entry -> m
+- composition -> c
+- structure -> s
+- calculation -> calc
+- calculated_property -> cp
+- phase_stability -> ps
+- prototype_definition -> pd
+
+Material term mappings:
+- L1₂, L12, Cu3Au-type, γ' -> structure.prototype = 'L12' OR structure.strukturbericht = 'L12'
+- stable -> phase_stability.energy_above_hull <= 0.001
+- metastable -> phase_stability.energy_above_hull <= 0.05
+- formation energy, 形成エネルギー -> phase_stability.formation_energy_per_atom
+- lattice constant, 格子定数 -> structure.lattice_a
+- bulk modulus, 体積弾性率 -> calculated_property.property_name = 'bulk_modulus'
+
+Allowed tables:
+{allowed_tables}
+
+Allowed columns:
+{allowed_columns}
+
+Allowed JOINs:
+{allowed_joins}
+
+User query:
+{user_query}
+
+SQL:
+```
+
+---
+
+## S5. LLM Experiment Conditions
+
+| Parameter | Value |
+| --- | --- |
+| Model | gpt-4o-mini (2024-07-18) |
+| System prompt | "You are a PostgreSQL expert for materials databases." |
+| Temperature | 0.0 (deterministic) |
+| max_tokens | 512 |
+| top_p | 1.0 (default) |
+| API provider | OpenAI |
+| API date | 2026-05-30 |
+| Few-shot retrieval | TF-IDF similarity, top_k=3 |
+| Schema constraints | Injected into user prompt (tables, columns, JOINs) |
+
+### GPT-5 / o-series models
+
+For GPT-5 and o-series models, the following adjustments are made:
+- `temperature` parameter is omitted (not supported)
+- `max_completion_tokens = 4096` is used instead of `max_tokens`
+
+---
+
+## S6. SQL Guard Configuration
+
+### Validation Pipeline
+
+| Check | Action on Failure |
+| --- | --- |
+| Multiple statement detection | Reject (rejected_security) |
+| Forbidden keyword detection (INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE, CREATE, GRANT, REVOKE, COPY) | Reject (rejected_security) |
+| SELECT-only constraint | Reject (rejected_syntax) |
+| Table whitelist (7 allowed tables) | Reject (rejected_schema) |
+| Column whitelist (alias.column pattern) | Reject (rejected_schema) |
+| JOIN FK validation (must match allowed_schema.yaml) | Warn (rejected_join) |
+| Disallowed function detection (pg_sleep, dblink, lo_import, lo_export, pg_read_file, pg_ls_dir, pg_stat_file) | Reject (rejected_security) |
+| Subquery depth limit (max 3) | Reject (rejected_complexity) |
+| LIMIT enforcement (default 100) | Auto-modify (modified) |
+
+### Classification Categories
+
+| Classification | Description |
+| --- | --- |
+| accepted | SQL passes all checks |
+| modified | LIMIT added automatically |
+| rejected_syntax | Not a SELECT statement |
+| rejected_security | Forbidden keyword or function |
+| rejected_schema | Disallowed table or column |
+| rejected_join | JOIN not matching FK relationship |
+| rejected_complexity | Subquery depth exceeds limit |
+| clarification_required | Intent unclear, user confirmation needed |
+
+---
+
+## S7. Coverage Score Algorithm
+
+### Purpose
+
+Prevents silent constraint dropping in rule-based mode by quantifying how well the system understands a user query.
+
+### Algorithm
+
+```
+Input: user_query (natural language string)
+Output: {recognized_constraints, unrecognized_terms, unknown_elements,
+         coverage_score, action}
+
+1. Tokenize query (split on whitespace and Japanese particles)
+2. For each token:
+   a. Check against prototype_aliases → recognized
+   b. Check against stability_terms → recognized
+   c. Check against property_terms → recognized
+   d. Check against elements dictionary → recognized
+   e. Check if element-like (regex: [A-Z][a-z]?) and in _ALL_ELEMENTS
+      but NOT in known_elements → mark as unknown_element
+   f. Otherwise → unrecognized
+3. coverage_score = recognized_count / (recognized_count + unrecognized_count)
+4. Fallback policy:
+   - score >= 0.8 → action = "execute_rule_based"
+   - 0.5 <= score < 0.8 → action = "fallback_to_llm"
+   - score < 0.5 → action = "clarification_required"
+   - If unknown_elements detected → action = "fallback_to_llm" (override)
+```
+
+### Example Outputs
+
+| Query | Coverage | Unknown Elements | Action |
+| --- | --- | --- | --- |
+| Feを含むB2化合物を出して | 0.85 | [] | execute_rule_based |
+| Xeを含むB2化合物を出して | 0.55 | [Xe] | fallback_to_llm |
+| 今日の天気を教えて | 0.0 | [] | clarification_required |
+| band gap > 1.0 eVのB2化合物 | 0.88 | [] | execute_rule_based |
+
+---
+
+## S8. Numeric Condition Parser
+
+### Supported Patterns
+
+| Natural Language Pattern | SQL Condition |
+| --- | --- |
+| `band gap > 1.0 eV` | `phase_stability.band_gap > 1.0` |
+| `band gapが1 eV以上` | `phase_stability.band_gap >= 1.0` |
+| `Ehull < 0.05 eV/atom` | `phase_stability.energy_above_hull < 0.05` |
+| `形成エネルギーが負` | `phase_stability.formation_energy_per_atom < 0` |
+| `格子定数が3.5 Å以上` | `structure.lattice_a >= 3.5` |
+| `格子定数が3から4` | `structure.lattice_a BETWEEN 3.0 AND 4.0` |
+
+### Unit Conversion
+
+| Input Unit | Canonical Unit | Conversion Factor |
+| --- | --- | --- |
+| eV | eV | 1.0 |
+| meV/atom | eV/atom | 0.001 |
+| Å | Å | 1.0 |
+| Angstrom | Å | 1.0 |
+| nm | Å | 10.0 |
+
+### Property Column Mapping
+
+| Alias | Column |
+| --- | --- |
+| band_gap, band gap, バンドギャップ, bandgap | phase_stability.band_gap |
+| formation_energy, formation energy, 形成エネルギー, 生成エネルギー | phase_stability.formation_energy_per_atom |
+| energy_above_hull, Ehull, ハル上エネルギー | phase_stability.energy_above_hull |
+| lattice_a, lattice constant, 格子定数 | structure.lattice_a |
+| volume_per_atom, 原子あたり体積, volume | structure.volume_per_atom |
+
+---
+
+## S9. Chemical Formula Parser
+
+### Interpretation Rules
+
+| Input | Interpretation | Query Mode |
+| --- | --- | --- |
+| NiAl | contains_elements [Ni, Al] | EXISTS subquery for each element |
+| Ni3Al | exact_formula (Ni:3, Al:1) | WHERE formula = 'Ni3Al' OR reduced_formula = 'Ni3Al' |
+| AlNi3 | exact_formula (Al:1, Ni:3) | WHERE formula = 'AlNi3' |
+| FeCoNi | contains_elements [Fe, Co, Ni] | EXISTS subquery ×3 |
+
+### Disambiguation Priority
+
+1. If token contains digits → exact_formula (e.g., Ni3Al)
+2. If token is 2 capital letters → contains_elements (e.g., NiAl)
+3. If token is 3+ elements → contains_elements (e.g., FeCoNi)
+4. If ambiguous → prefer contains_elements, flag for LLM clarification
+
+---
+
+## S10. Baseline Comparison Results (7 Conditions, 57 Queries)
+
+| Condition | SQL Exec Success | Avg Rows |
+| --- | --- | --- |
+| 1. Naive rule-based | 96.5% (55/57) | 54.4 |
+| 2. LLM-only (no schema info) | 0.0% (0/57) | - |
+| 3. LLM + schema prompt | 96.5% (55/57) | 30.2 |
+| 4. LLM + schema + few-shot | 98.2% (56/57) | 43.6 |
+| 5. Schema Graph + Rule-based | 96.5% (55/57) | 44.9 |
+| 6. Schema Graph + LLM (no RAG) | 98.2% (56/57) | 44.1 |
+| 7. Schema Graph + LLM + RAG | 96.5% (55/57) | 44.7 |
+
+### Key Comparison: Multi-element AND Queries
+
+| Query | Naive RB (rows) | Schema Graph RB (rows) | Note |
+| --- | --- | --- | --- |
+| NiとAlを両方含む化合物 | 97 (incorrect) | 4 (correct) | Naive uses row-level AND; SG uses EXISTS |
+| FeとAlを含むB2化合物 | 55 (incorrect) | 4 (correct) | Same pattern |
+| NiとCoを含むL12化合物 | 12 (incorrect) | 0 (correct) | No NiCo L12 in DB |
+
+---
+
+## S11. LLM Reproducibility Test (20 Queries × 5 Runs)
+
+| Metric | Value |
+| --- | --- |
+| Model | gpt-4o-mini |
+| Temperature | 0.0 |
+| SQL consistency rate | 75.0% (15/20 queries produced identical SQL across 5 runs) |
+| Execution success rate | 100.0% (100/100 runs) |
+| Latency: average | 1,880 ms |
+| Latency: median | 1,837 ms |
+| Latency: min | 1,045 ms |
+| Latency: max | 4,911 ms |
+
+### Inconsistent Queries
+
+| Query ID | SQL Variants | Nature of Variation |
+| --- | --- | --- |
+| A04 | 2 | Column selection order |
+| A08 | 2 | OR vs UNION approach |
+| A10 | 2 | Column selection |
+| A15 | 2 | Stability condition phrasing |
+| N02 | 2 | JOIN order |
+
+---
+
+## S12. VASP-Forum-Inspired Stress Test Results (100 Queries)
+
+### Per-Category Summary
+
+| Category | Count | Correct | Accuracy |
+| --- | --- | --- | --- |
+| SQL-answerable | 22 | 22 | 100.0% |
+| SQL-answerable-numeric | 21 | 21 | 100.0% |
+| ambiguous | 25 | 8 | 32.0% |
+| out-of-scope | 22 | 1 | 4.5% |
+| unsafe | 10 | 2 | 20.0% |
+
+### Key Metrics
+
+| Metric | Value |
+| --- | --- |
+| Overall accuracy | 54.0% (54/100) |
+| SQL-answerable accuracy | 100.0% (43/43) |
+| Silent constraint drops | 0 |
+| Hallucinated schema | 0 |
+| Unsafe SQL executed | 5 |
+| Clarification requests | 1 |
+| LLM fallback rate | 43.0% |
+| Median latency | 1,188 ms |
+
+### Failure Mode Analysis
+
+| Failure Mode | Count | Description |
+| --- | --- | --- |
+| should_have_clarified | 13 | System generated SQL for ambiguous queries instead of asking for clarification |
+| generated_sql_for_out_of_scope | 22 | System generated SQL for VASP workflow questions |
+| unsafe_sql_executed | 5 | Unsafe input produced executable SQL |
+
+### Known Limitations Revealed
+
+1. **Out-of-scope detection**: The LLM mode generates SQL for VASP workflow questions (Q071-Q090) because the LLM interprets any materials-related text as a potential database query. A query classifier or intent detector is needed.
+2. **Ambiguity handling**: The system rarely asks for clarification (1/25 ambiguous queries). Threshold-based heuristics or explicit ambiguity detection should be added.
+3. **Unsafe input filtering**: While SQL injection (DROP, UPDATE) is blocked by the SQL Guard, some adversarial inputs (contradictory conditions, extreme LIMIT requests) are not caught before LLM generation.
+
+---
+
+## S13. Failure Mode Transition Table
+
+| Failure Mode | Cause | Previous Behavior | Revised Behavior |
+| --- | --- | --- | --- |
+| Silent constraint dropping | Unknown element (e.g., Xe) | Over-broad result (all B2) | Fallback to LLM or clarification |
+| Formula ambiguity | NiAl vs Ni+Al | Inconsistent interpretation | Candidate interpretations + priority |
+| Numeric condition failure | No parser | Ignored or LLM-only | Regex numeric parser with unit conversion |
+| Invalid LLM SQL | Hallucinated column | Guard rejection | Column whitelist + alias resolution |
+| Multi-element AND error | Row-level conjunction | Empty or over-broad result | EXISTS subquery pattern |
+
+---
+
+## S14. Curated Regression Test Summary (45 Tests)
+
+All 45 tests pass. These are development safety checks, not ground-truth evaluation.
+
+- 39 original regression tests (element, prototype, stability, sorting, adversarial)
+- 6 additional tests (SQL validator: imaginary column, DROP rejection, multi-statement, unknown table)
+
+---
+
+## S15. Data Availability
+
+The source code, schema definitions, query test sets, and evaluation scripts will be made available in a public repository upon publication. The OQMD-derived data can be regenerated using the provided data acquisition scripts from the public OQMD API (https://oqmd.org/api/).
+
+### Reproducibility Checklist
+
+| Item | Available |
+| --- | --- |
+| Database schema SQL | Yes (db/schema.sql) |
+| Data acquisition script | Yes (db/oqmd_loader.py) |
+| Material terms dictionary | Yes (llm/material_terms.yaml) |
+| Allowed schema config | Yes (safety/allowed_schema.yaml) |
+| LLM prompt template | Yes (llm/prompt_templates/) |
+| SQL Guard implementation | Yes (safety/sql_validator.py) |
+| Entity extractor + parsers | Yes (llm/entity_extractor.py) |
+| Schema Graph builder | Yes (graph/graph_builder.py) |
+| Test query sets | Yes (experiments/) |
+| Evaluation scripts | Yes (experiments/run_*.py) |
+| Few-shot example store | Yes (llm/few_shot_store.py) |
+| VASP stress test (100 queries) | Yes (experiments/run_vasp_stress_test.py) |
+
+### Items NOT publicly available
+
+| Item | Reason |
+| --- | --- |
+| OpenAI API key | Credential |
+| Raw LLM API logs | Contains API metadata |
+| Internal database connection strings | Infrastructure credential |
