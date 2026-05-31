@@ -1352,7 +1352,7 @@ LLMレイテンシの99\%はAPI呼び出し時間であり、
 \label{sec:oqmd_validation}
 
 T2SQLの出力がデータ変換パイプライン全体を通じて正確であることを検証するため、
-8件のテストケースについてOQMD APIから同等条件で直接取得した結果と比較した
+11件のテストケースについてOQMD APIから同等条件で直接取得した結果と比較した
 （表~\ref{tab:oqmd_results}、図~\ref{fig:oqmd}）。
 Precision = $|$T2SQL $\cap$ OQMD$|$ / $|$T2SQL$|$、
 Recall = $|$T2SQL $\cap$ OQMD$|$ / $|$OQMD$|$。
@@ -1394,8 +1394,8 @@ T2SQLは78件を返すが、OQMD APIでは対応するフィルタが存在せ�
   \centering
   \includegraphics[width=0.9\linewidth]{figures/fig6_oqmd_precision_recall.png}
   \caption{OQMD API正解データに対するPrecision（青）とRecall（橙）。
-    全7テストでPrecision = 1.0を達成。
-    A04/A05/A10の低Recallはデータ不正確性ではなくLIMIT 100制約による。
+    全11テストでPrecision = 1.0を達成。
+    A04/A05/A10/N01の低Recallはデータ不正確性ではなくLIMIT 100制約による。
     C08（APIフィルタ非対応）は比較対象外として除外した。}
   \label{fig:oqmd}
 \end{figure}
@@ -1651,7 +1651,7 @@ GPT-4 zero-shot Text-to-SQLの正解率が16\%に留まり、
 知識グラフ変換後のText-to-SPARQLで54\%、
 さらにOBQC（オントロジーベースクエリ検証）＋LLM修復で72\%に改善することを報告している。
 本手法はSchema Graph制約＋ドメイン辞書により
-7テーブル構成で実行成功率100\%・結果正解率100\%を達成した（表~\ref{tab:results}）。
+7テーブル構成で実行成功率100\%・結果正解率100\%を達成した（表~\ref{tab:7level_results}）。
 ただし、スキーマ規模（7テーブル vs 数十テーブル）およびテストセット条件
 （ドメイン特化キュレーション vs 汎用ベンチマーク）が異なるため
 直接比較は困難である。
