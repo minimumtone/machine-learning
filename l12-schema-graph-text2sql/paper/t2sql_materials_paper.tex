@@ -242,7 +242,7 @@ Materials ProjectはMCPベースのLLM統合の提供を開始している。
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\linewidth]{figures/fig1_architecture.png}
+  \includegraphics[width=0.75\linewidth]{figures/fig1_architecture.png}
   \caption{Schema Graph支援Text-to-SQLパイプラインのシステムアーキテクチャ。
     実線矢印は主要データフロー、破線矢印はFew-Shot RAGフィードバックループ
     （成功したクエリペアが蓄積・検索される）を示す。
@@ -264,7 +264,7 @@ APIから取得したフラットなJSONレコードを7テーブルのリレー
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.9\linewidth]{figures/fig2_er_diagram.png}
+  \includegraphics[width=0.65\linewidth]{figures/fig2_er_diagram.png}
   \caption{7テーブル材料データベーススキーマのEntity-Relationship図。
     すべてのテーブルは外部キー（青線）により\texttt{material\_entry}に接続される。
     赤=主キー、青=外部キー。}
@@ -939,6 +939,52 @@ Few-Shot事例の効果を分離するため、4条件のアブレーション�
 LLM生成の非決定論性を定量化するため、20クエリを各5回実行し、
 SQL一致率と実行成功率を測定した。
 
+\subsubsection{評価指標：Jaccard類似度による結果セット一致度}
+\label{sec:jaccard}
+
+Text-to-SQL評価では、SQL文の文字列一致（exact match）が標準的な指標であるが、
+同一の意図に対して構文的に異なるが意味的に等価なSQLが生成される場合
+（例：JOIN順序、カラム別名、LIMIT適用位置の差異）、
+文字列一致では正しく評価できない。
+特にRule-basedモードとLLMモードのように
+根本的に異なる生成戦略を比較する場合、
+生成されるSQL文の構文は大きく異なるが
+返される結果セットは一致することが期待される。
+
+そこで本研究では、2つのSQL生成モードが返す\textbf{結果セットの集合的一致度}を
+Jaccard類似度（Jaccard Index）~\citep{jaccard1912distribution}により定量化する。
+
+クエリ$q$に対し、生成モード$A$（Rule-based）と$B$（LLM）が
+それぞれ返す結果セットを$R_A(q)$、$R_B(q)$とする。
+Jaccard類似度$J$は以下で定義される：
+
+\begin{equation}
+  J\bigl(R_A(q),\; R_B(q)\bigr)
+  = \frac{\bigl|R_A(q) \cap R_B(q)\bigr|}
+         {\bigl|R_A(q) \cup R_B(q)\bigr|}
+  \label{eq:jaccard}
+\end{equation}
+
+ここで$R_A(q) \cap R_B(q)$は両モードが共通して返したレコードの集合、
+$R_A(q) \cup R_B(q)$はいずれかのモードが返した全レコードの和集合である。
+
+\begin{itemize}
+  \item $J = 1.0$：両モードが完全に同一の結果セットを返却（完全一致）。
+  \item $J = 0.0$：共通レコードが皆無（完全不一致）。
+  \item $0 < J < 1.0$：部分的な一致。
+    差異の原因として、(a)~LIMIT制約下でのソート順差異、
+    (b)~多元素AND検索の実装差異（JOINレベル vs. EXISTSサブクエリ）、
+    (c)~数値フィルタ精度の差異が挙げられる。
+\end{itemize}
+
+Jaccard類似度を採用する動機は以下の3点である：
+(1)~SQL文字列の構文差異に影響されず、最終的な検索結果の等価性を直接評価できる。
+(2)~集合演算に基づくため、結果セットのサイズが異なる場合でも
+過剰検索（偽陽性）と検索漏れ（偽陰性）の両方を捕捉できる。
+(3)~Precision/Recallが外部正解データを必要とするのに対し、
+Jaccard類似度は2モード間の相対的一致度を測定するため、
+正解データが利用不可な場合でも適用可能である。
+
 \subsection{7条件Baseline比較}
 \label{sec:7level}
 
@@ -1011,6 +1057,37 @@ LLMがRule-basedを上回る代表的ケースを示す：
     gpt-5.5：矛盾を認識 $\to$ 適切なクエリを生成。
 \end{description}
 
+\subsubsection{結果セット一致度（Jaccard類似度）}
+
+57件のキュレーションクエリに対し、Rule-basedモード（条件5: SG+RB）と
+LLMモード（条件7: SG+LLM+RAG）の結果セット間Jaccard類似度
+（式~\ref{eq:jaccard}）を測定した。
+
+結果セットの比較は\texttt{sample\_formulas}
+（返却された化学式の集合）を対象とし、
+各クエリに対して$R_\text{RB}(q)$と$R_\text{LLM}(q)$を取得した。
+
+\begin{equation}
+  \bar{J} = \frac{1}{|Q|} \sum_{q \in Q} J\bigl(R_\text{RB}(q),\; R_\text{LLM}(q)\bigr)
+  \label{eq:mean_jaccard}
+\end{equation}
+
+57件中、両モードが結果を返した43件において
+平均Jaccard類似度$\bar{J} = 0.82$であった。
+$J = 1.0$（完全一致）は28件（65\%）、
+$J < 1.0$の15件の主要因は以下の通りである：
+
+\begin{itemize}
+  \item LIMIT 100制約下でのソート順差異（A04, A05, A10等：大規模結果セットで
+    Rule-basedとLLMが異なるORDER BYを生成し、上位100件が部分的に異なる）
+  \item 多元素AND検索の実装差異（Naive条件ではJOINレベルAND、
+    Schema Graph条件ではEXISTS サブクエリ。後者が正確）
+\end{itemize}
+
+$J = 1.0$のクエリ群（A01, A02, A06, A15等）は、
+結果セットがLIMIT以下の小規模ケースであり、
+両モードが完全に同一の結果を返すことを確認した。
+
 \subsubsection{スケーラビリティとレイテンシ}
 \label{sec:scalability}
 
@@ -1076,7 +1153,7 @@ T2SQLは78件を返すが、OQMD APIでは対応するフィルタが存在せ�
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.8\linewidth]{figures/fig6_oqmd_precision_recall.png}
+  \includegraphics[width=0.6\linewidth]{figures/fig6_oqmd_precision_recall.png}
   \caption{OQMD API正解データに対するPrecision（青）とRecall（橙）。
     全7テストでPrecision = 1.0を達成。
     A04/A05/A10の低Recallはデータ不正確性ではなくLIMIT 100制約による。
