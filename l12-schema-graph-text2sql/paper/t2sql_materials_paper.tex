@@ -111,8 +111,7 @@ AI for Science（AI4S）のパラダイムにおいて、
 構造化された材料データへの自然言語アクセスは
 自律AI駆動型材料探索ワークフローの前提条件である。
 本手法は材料インフォマティクスにおけるデータ活用の民主化に貢献し、
-Materials Integration（MInt）\cite{minamoto2020mint}や
-provenance管理システムpinax \cite{minamoto2026pinax}等の
+Materials IntegrationやProvenance管理システム等の
 データ基盤との連携により、AI4S駆動型材料探索の基礎的構成要素を提供する。
 
 \end{abstract}
@@ -536,16 +535,17 @@ Unicode下付き文字（₀₁₂₃₄₅₆₇₈₉）はマッチング前�
   \centering
   \caption{数値条件パーサーの対応パターン。}
   \label{tab:numeric_patterns}
-  \small
+  \scriptsize
   \begin{tabular}{lll}
     \toprule
     パターン種別 & 入力例 & 出力 \\
     \midrule
     記号比較 & \texttt{band\_gap > 1.0 eV} & \texttt{WHERE band\_gap > 1.0} \\
     日本語後置 & 形成エネルギーが0.5以上 & \texttt{WHERE ... >= 0.5} \\
-    日本語より構文 & 格子定数が3.0より大きい & \texttt{WHERE lattice\_a > 3.0} \\
+    日本語より & 格子定数が3.0より大きい & \texttt{WHERE lattice\_a > 3.0} \\
     符号判定 & 形成エネルギーが負 & \texttt{WHERE ... < 0} \\
-    範囲指定 & band gap 0.5--2.0 eV & \texttt{WHERE ... BETWEEN 0.5 AND 2.0} \\
+    範囲指定 & band gap 0.5--2.0 eV & \texttt{WHERE ... BETWEEN} \\
+             &                       & \texttt{0.5 AND 2.0} \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -887,13 +887,13 @@ LaTeX原稿からの自動種事例抽出を実装した。
   \centering
   \caption{Few-Shotストア構成（11事例）。}
   \label{tab:few_shot_sources}
-  \small
-  \begin{tabular}{lccl}
+  \scriptsize
+  \begin{tabular}{lccp{3.5cm}}
     \toprule
     ソース & 件数 & 比率 & クエリ例 \\
     \midrule
-    手動キュレーション & 7 & 64\% & 「Feを含むB2化合物を出して」 \\
-    論文抽出 & 4 & 36\% & 「B2 FeAlの物性を出して」 \\
+    手動キュレーション & 7 & 64\% & Feを含むB2化合物を出して \\
+    論文抽出 & 4 & 36\% & B2 FeAlの物性を出して \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1915,7 +1915,7 @@ OQMDの開発・維持管理にあたるNorthwestern大学Wolvertonグループ�
 \section{生成SQL例}
 \label{app:sql_examples}
 
-\lstset{basicstyle=\ttfamily\scriptsize,breaklines=true,columns=fixed,numbers=none,xleftmargin=1em}
+\lstset{basicstyle=\ttfamily\scriptsize,breaklines=true,columns=flexible,numbers=none,frame=single,xleftmargin=0pt,xrightmargin=0pt,linewidth=\columnwidth}
 
 \subsection{A01: 「Feを含むB2化合物を出して」}
 
