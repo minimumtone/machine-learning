@@ -395,7 +395,7 @@ FK関係だけでなくドメイン知識に基づくJOINパス選択が可能�
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.75\linewidth]{figures/fig1_architecture.png}
+  \includegraphics[width=\linewidth]{figures/fig1_architecture.png}
   \caption{Schema Graph支援Text-to-SQLパイプラインのシステムアーキテクチャ。
     実線矢印は主要データフロー、破線矢印はFew-Shot RAGフィードバックループ
     （成功したクエリペアが蓄積・検索される）を示す。
@@ -417,7 +417,7 @@ APIから取得したフラットなJSONレコードを7テーブルのリレー
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.65\linewidth]{figures/fig2_er_diagram.png}
+  \includegraphics[width=\linewidth]{figures/fig2_er_diagram.png}
   \caption{7テーブル材料データベーススキーマのEntity-Relationship図。
     すべてのテーブルは外部キー（青線）により\texttt{material\_entry}に接続される。
     赤=主キー、青=外部キー。}
@@ -1372,7 +1372,7 @@ T2SQLは78件を返すが、OQMD APIでは対応するフィルタが存在せ�
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.6\linewidth]{figures/fig6_oqmd_precision_recall.png}
+  \includegraphics[width=0.9\linewidth]{figures/fig6_oqmd_precision_recall.png}
   \caption{OQMD API正解データに対するPrecision（青）とRecall（橙）。
     全7テストでPrecision = 1.0を達成。
     A04/A05/A10の低Recallはデータ不正確性ではなくLIMIT 100制約による。
