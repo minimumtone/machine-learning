@@ -16,6 +16,21 @@ prototype_aliases:
     - "CsCl\u578B"
     - ordered BCC
     - "\u898F\u5247\u5316BCC"
+  NaCl:
+    - NaCl
+    - "NaCl\u578B"
+    - rock salt
+    - "\u5CA9\u5869\u578B"
+    - B1
+  NiAs:
+    - NiAs
+    - "NiAs\u578B"
+    - nickel arsenide
+    - B8_1
+  BiF3:
+    - BiF3
+    - "BiF3\u578B"
+    - D0_3
 
 stability_terms:
   stable:

@@ -1,0 +1,2300 @@
+{
+  "summary": {
+    "total_queries": 30,
+    "naive_all_join": {
+      "name": "Naive (all JOINs)",
+      "count": 30,
+      "exec_success": 30,
+      "exec_success_rate": 100.0,
+      "total_joins": 142,
+      "avg_joins": 4.73,
+      "total_unnecessary_joins": 82,
+      "avg_unnecessary_joins": 2.73
+    },
+    "sg_rb": {
+      "name": "SG + Rule-based",
+      "count": 30,
+      "exec_success": 30,
+      "exec_success_rate": 100.0,
+      "total_joins": 50,
+      "avg_joins": 1.67,
+      "total_unnecessary_joins": 0,
+      "avg_unnecessary_joins": 0.0
+    },
+    "llm_no_traversal": {
+      "name": "LLM (no traversal)",
+      "count": 30,
+      "exec_success": 30,
+      "exec_success_rate": 100.0,
+      "total_joins": 58,
+      "avg_joins": 1.93,
+      "total_unnecessary_joins": 4,
+      "avg_unnecessary_joins": 0.13
+    },
+    "llm_with_traversal": {
+      "name": "LLM + SG traversal",
+      "count": 30,
+      "exec_success": 30,
+      "exec_success_rate": 100.0,
+      "total_joins": 52,
+      "avg_joins": 1.73,
+      "total_unnecessary_joins": 0,
+      "avg_unnecessary_joins": 0.0
+    },
+    "by_category": {
+      "0-table": {
+        "count": 2,
+        "naive_all_join_avg_joins": 5.0,
+        "naive_all_join_avg_unnecessary": 5.0,
+        "sg_rb_avg_joins": 0.0,
+        "sg_rb_avg_unnecessary": 0.0,
+        "llm_no_traversal_avg_joins": 0.0,
+        "llm_no_traversal_avg_unnecessary": 0.0,
+        "llm_with_traversal_avg_joins": 0.0,
+        "llm_with_traversal_avg_unnecessary": 0.0
+      },
+      "1-table": {
+        "count": 4,
+        "naive_all_join_avg_joins": 5.0,
+        "naive_all_join_avg_unnecessary": 4.0,
+        "sg_rb_avg_joins": 1.0,
+        "sg_rb_avg_unnecessary": 0.0,
+        "llm_no_traversal_avg_joins": 2.0,
+        "llm_no_traversal_avg_unnecessary": 1.0,
+        "llm_with_traversal_avg_joins": 1.0,
+        "llm_with_traversal_avg_unnecessary": 0.0
+      },
+      "2-table": {
+        "count": 5,
+        "naive_all_join_avg_joins": 4.8,
+        "naive_all_join_avg_unnecessary": 3.0,
+        "sg_rb_avg_joins": 1.6,
+        "sg_rb_avg_unnecessary": 0.0,
+        "llm_no_traversal_avg_joins": 1.6,
+        "llm_no_traversal_avg_unnecessary": 0.0,
+        "llm_with_traversal_avg_joins": 1.8,
+        "llm_with_traversal_avg_unnecessary": 0.0
+      },
+      "3-table": {
+        "count": 8,
+        "naive_all_join_avg_joins": 4.75,
+        "naive_all_join_avg_unnecessary": 1.88,
+        "sg_rb_avg_joins": 2.75,
+        "sg_rb_avg_unnecessary": 0.0,
+        "llm_no_traversal_avg_joins": 2.75,
+        "llm_no_traversal_avg_unnecessary": 0.0,
+        "llm_with_traversal_avg_joins": 2.75,
+        "llm_with_traversal_avg_unnecessary": 0.0
+      },
+      "indirect": {
+        "count": 2,
+        "naive_all_join_avg_joins": 5.0,
+        "naive_all_join_avg_unnecessary": 2.5,
+        "sg_rb_avg_joins": 0.5,
+        "sg_rb_avg_unnecessary": 0.0,
+        "llm_no_traversal_avg_joins": 2.5,
+        "llm_no_traversal_avg_unnecessary": 0.0,
+        "llm_with_traversal_avg_joins": 0.5,
+        "llm_with_traversal_avg_unnecessary": 0.0
+      },
+      "multi-element": {
+        "count": 5,
+        "naive_all_join_avg_joins": 4.0,
+        "naive_all_join_avg_unnecessary": 1.6,
+        "sg_rb_avg_joins": 1.6,
+        "sg_rb_avg_unnecessary": 0.0,
+        "llm_no_traversal_avg_joins": 1.6,
+        "llm_no_traversal_avg_unnecessary": 0.0,
+        "llm_with_traversal_avg_joins": 1.8,
+        "llm_with_traversal_avg_unnecessary": 0.0
+      },
+      "numeric": {
+        "count": 2,
+        "naive_all_join_avg_joins": 5.0,
+        "naive_all_join_avg_unnecessary": 3.0,
+        "sg_rb_avg_joins": 2.0,
+        "sg_rb_avg_unnecessary": 0.0,
+        "llm_no_traversal_avg_joins": 2.0,
+        "llm_no_traversal_avg_unnecessary": 0.0,
+        "llm_with_traversal_avg_joins": 2.0,
+        "llm_with_traversal_avg_unnecessary": 0.0
+      },
+      "sort": {
+        "count": 2,
+        "naive_all_join_avg_joins": 5.0,
+        "naive_all_join_avg_unnecessary": 3.5,
+        "sg_rb_avg_joins": 1.5,
+        "sg_rb_avg_unnecessary": 0.0,
+        "llm_no_traversal_avg_joins": 1.5,
+        "llm_no_traversal_avg_unnecessary": 0.0,
+        "llm_with_traversal_avg_joins": 1.5,
+        "llm_with_traversal_avg_unnecessary": 0.0
+      }
+    },
+    "mean_jaccard_naive_vs_sg": 0.1667,
+    "perfect_jaccard_naive_vs_sg": 5,
+    "mean_jaccard_llm_nosg_vs_sg": 0.8179,
+    "perfect_jaccard_llm_nosg_vs_sg": 24,
+    "mean_jaccard_rb_vs_llm_traversal": 0.8966,
+    "perfect_jaccard_rb_vs_llm_traversal": 26
+  },
+  "results": [
+    {
+      "id": "T01",
+      "query": "B2化合物の全リストを出して",
+      "category": "1-table",
+      "min_joins": 1,
+      "min_tables": [
+        "material_entry",
+        "structure"
+      ],
+      "description": "structure only",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 5,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 4,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    m.reduced_formula,\n    m.chemical_system,\n    s.prototype,\n    s.strukturbericht,\n    s.lattice_a,\n    s.lattice_b,\n    s.lattice_c,\n    s.volume_per_atom,\n    s.space_group_number,\n    s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+        "success": true,
+        "row_count": 100,
+        "join_count": 1,
+        "tables_used": [
+          "material_entry",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 97
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    m.reduced_formula,\n    m.chemical_system,\n    s.prototype,\n    s.strukturbericht,\n    s.lattice_a,\n    s.space_group_number\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+        "success": true,
+        "row_count": 100,
+        "join_count": 1,
+        "tables_used": [
+          "material_entry",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 4315,
+        "formula_count": 93
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    m.reduced_formula,\n    m.chemical_system,\n    s.prototype,\n    s.strukturbericht,\n    s.lattice_a,\n    s.lattice_b,\n    s.lattice_c,\n    s.space_group_number,\n    s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+        "success": true,
+        "row_count": 100,
+        "join_count": 1,
+        "tables_used": [
+          "material_entry",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 4066,
+        "formula_count": 99
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 0.1429,
+      "jaccard_rb_vs_llm_traversal": 0.1529
+    },
+    {
+      "id": "T02",
+      "query": "Feを含む化合物を出して",
+      "category": "1-table",
+      "min_joins": 1,
+      "min_tables": [
+        "material_entry",
+        "composition"
+      ],
+      "description": "composition only",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    c.element = 'Fe'\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 5,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 4,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE c.element = 'Fe'\nLIMIT 100;",
+        "success": true,
+        "row_count": 24,
+        "join_count": 1,
+        "tables_used": [
+          "composition",
+          "material_entry"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 15
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE c.element = 'Fe'\nLIMIT 100;",
+        "success": true,
+        "row_count": 24,
+        "join_count": 1,
+        "tables_used": [
+          "composition",
+          "material_entry"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 2195,
+        "formula_count": 15
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE c.element = 'Fe'\nLIMIT 100;",
+        "success": true,
+        "row_count": 24,
+        "join_count": 1,
+        "tables_used": [
+          "composition",
+          "material_entry"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 2859,
+        "formula_count": 15
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 1.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T03",
+      "query": "安定な化合物を出して",
+      "category": "1-table",
+      "min_joins": 1,
+      "min_tables": [
+        "material_entry",
+        "phase_stability"
+      ],
+      "description": "phase_stability only",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 5,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 4,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    m.reduced_formula,\n    m.chemical_system,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull,\n    ps.is_stable,\n    ps.band_gap\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "success": true,
+        "row_count": 100,
+        "join_count": 1,
+        "tables_used": [
+          "material_entry",
+          "phase_stability"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 88
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "success": true,
+        "row_count": 100,
+        "join_count": 1,
+        "tables_used": [
+          "material_entry",
+          "phase_stability"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 3153,
+        "formula_count": 88
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    m.reduced_formula,\n    m.chemical_system,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull,\n    ps.is_stable,\n    ps.band_gap\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "success": true,
+        "row_count": 100,
+        "join_count": 1,
+        "tables_used": [
+          "material_entry",
+          "phase_stability"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 3538,
+        "formula_count": 88
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 0.2662,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T04",
+      "query": "Feを含むB2化合物を出して",
+      "category": "2-table",
+      "min_joins": 2,
+      "min_tables": [
+        "material_entry",
+        "composition",
+        "structure"
+      ],
+      "description": "composition + structure",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND c.element = 'Fe'\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 5,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 3,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND c.element = 'Fe'\nLIMIT 100;",
+        "success": true,
+        "row_count": 16,
+        "join_count": 2,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 7
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND c.element = 'Fe'\nLIMIT 100;",
+        "success": true,
+        "row_count": 16,
+        "join_count": 2,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 2135,
+        "formula_count": 7
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND c.element = 'Fe'\nLIMIT 100;",
+        "success": true,
+        "row_count": 16,
+        "join_count": 2,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 2534,
+        "formula_count": 7
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 1.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T05",
+      "query": "安定なL1₂化合物を形成エネルギー順に出して",
+      "category": "2-table",
+      "min_joins": 2,
+      "min_tables": [
+        "material_entry",
+        "structure",
+        "phase_stability"
+      ],
+      "description": "structure + phase_stability",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 5,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 3,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    s.lattice_a,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+        "success": true,
+        "row_count": 88,
+        "join_count": 2,
+        "tables_used": [
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 88
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    s.lattice_a,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+        "success": true,
+        "row_count": 88,
+        "join_count": 2,
+        "tables_used": [
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 3220,
+        "formula_count": 88
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    s.lattice_a,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+        "success": true,
+        "row_count": 88,
+        "join_count": 2,
+        "tables_used": [
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 3635,
+        "formula_count": 88
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 1.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T06",
+      "query": "Coを含む安定な化合物を出して",
+      "category": "2-table",
+      "min_joins": 2,
+      "min_tables": [
+        "material_entry",
+        "composition",
+        "phase_stability"
+      ],
+      "description": "composition + phase_stability",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    c.element = 'Co'\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 5,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 3,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE c.element = 'Co'\n  AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "success": true,
+        "row_count": 4,
+        "join_count": 2,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 4
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE c.element = 'Co'\n  AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "success": true,
+        "row_count": 4,
+        "join_count": 2,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 2686,
+        "formula_count": 4
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, m.reduced_formula, m.chemical_system, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE c.element = 'Co'\n  AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "success": true,
+        "row_count": 4,
+        "join_count": 2,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 3974,
+        "formula_count": 4
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 1.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T07",
+      "query": "NiとAlを両方含む化合物を出して",
+      "category": "2-table",
+      "min_joins": 1,
+      "min_tables": [
+        "material_entry",
+        "composition"
+      ],
+      "description": "composition (EXISTS subquery)",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni')\n    AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al')\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 4,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 3,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nWHERE EXISTS (\n  SELECT 1\n  FROM composition c_ni\n  WHERE c_ni.entry_id = m.entry_id\n    AND c_ni.element = 'Ni'\n)\nAND EXISTS (\n  SELECT 1\n  FROM composition c_al\n  WHERE c_al.entry_id = m.entry_id\n    AND c_al.element = 'Al'\n)\nLIMIT 100;",
+        "success": true,
+        "row_count": 4,
+        "join_count": 0,
+        "tables_used": [
+          "composition",
+          "material_entry"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 2
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nWHERE EXISTS (\n  SELECT 1\n  FROM composition c_ni\n  WHERE c_ni.entry_id = m.entry_id\n    AND c_ni.element = 'Ni'\n)\nAND EXISTS (\n  SELECT 1\n  FROM composition c_al\n  WHERE c_al.entry_id = m.entry_id\n    AND c_al.element = 'Al'\n)\nLIMIT 100;",
+        "success": true,
+        "row_count": 4,
+        "join_count": 0,
+        "tables_used": [
+          "composition",
+          "material_entry"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 4351,
+        "formula_count": 2
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE c.element IN ('Ni', 'Al')\nGROUP BY m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nHAVING COUNT(DISTINCT c.element) = 2\nLIMIT 100;",
+        "success": true,
+        "row_count": 4,
+        "join_count": 1,
+        "tables_used": [
+          "composition",
+          "material_entry"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 6964,
+        "formula_count": 2
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 1.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T08",
+      "query": "Feを含む安定なB2化合物を出して",
+      "category": "3-table",
+      "min_joins": 3,
+      "min_tables": [
+        "material_entry",
+        "composition",
+        "structure",
+        "phase_stability"
+      ],
+      "description": "composition + structure + phase_stability",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND c.element = 'Fe'\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 5,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 2,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND c.element = 'Fe'\n  AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "success": true,
+        "row_count": 6,
+        "join_count": 3,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 3
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND c.element = 'Fe'\n  AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "success": true,
+        "row_count": 6,
+        "join_count": 3,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 2662,
+        "formula_count": 3
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND c.element = 'Fe'\n  AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "success": true,
+        "row_count": 6,
+        "join_count": 3,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 2955,
+        "formula_count": 3
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 1.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T09",
+      "query": "NiとAlを含む安定なL1₂化合物を形成エネルギー順に出して",
+      "category": "3-table",
+      "min_joins": 3,
+      "min_tables": [
+        "material_entry",
+        "composition",
+        "structure",
+        "phase_stability"
+      ],
+      "description": "composition + structure + phase_stability + sort",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni')\n    AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al')\n    AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 4,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 1,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.001\n  AND EXISTS (\n    SELECT 1\n    FROM composition c_ni\n    WHERE c_ni.entry_id = m.entry_id\n      AND c_ni.element = 'Ni'\n  )\n  AND EXISTS (\n    SELECT 1\n    FROM composition c_al\n    WHERE c_al.entry_id = m.entry_id\n      AND c_al.element = 'Al'\n  )\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+        "success": true,
+        "row_count": 1,
+        "join_count": 2,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 1
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    s.lattice_a,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.energy_above_hull <= 0.001\n    AND EXISTS (\n        SELECT 1\n        FROM composition c_ni\n        WHERE c_ni.entry_id = m.entry_id\n          AND c_ni.element = 'Ni'\n    )\n    AND EXISTS (\n        SELECT 1\n        FROM composition c_al\n        WHERE c_al.entry_id = m.entry_id\n          AND c_al.element = 'Al'\n    )\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+        "success": true,
+        "row_count": 1,
+        "join_count": 2,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 8907,
+        "formula_count": 1
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.001\n  AND EXISTS (\n    SELECT 1\n    FROM composition c_ni\n    WHERE c_ni.entry_id = m.entry_id\n      AND c_ni.element = 'Ni'\n  )\n  AND EXISTS (\n    SELECT 1\n    FROM composition c_al\n    WHERE c_al.entry_id = m.entry_id\n      AND c_al.element = 'Al'\n  )\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+        "success": true,
+        "row_count": 1,
+        "join_count": 2,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 3928,
+        "formula_count": 1
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 1.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T10",
+      "query": "band gap > 1.0 eVの安定なB2化合物を出して",
+      "category": "3-table",
+      "min_joins": 2,
+      "min_tables": [
+        "material_entry",
+        "structure",
+        "phase_stability"
+      ],
+      "description": "structure + phase_stability (numeric)",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.001\n    AND ps.band_gap > 1.0\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 5,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 3,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull,\n    ps.band_gap\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.001\n    AND ps.band_gap > 1.0\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 2,
+        "tables_used": [
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 0
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    ps.band_gap,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.001\n    AND ps.band_gap > 1.0\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 2,
+        "tables_used": [
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 4755,
+        "formula_count": 0
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull,\n    ps.band_gap\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.001\n    AND ps.band_gap > 1.0\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 2,
+        "tables_used": [
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 2964,
+        "formula_count": 0
+      },
+      "jaccard_naive_vs_sg": 1.0,
+      "jaccard_llm_nosg_vs_sg": 1.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T11",
+      "query": "bulk modulusが計算されている化合物を出して",
+      "category": "indirect",
+      "min_joins": 2,
+      "min_tables": [
+        "material_entry",
+        "calculation",
+        "calculated_property"
+      ],
+      "description": "calculation -> calculated_property (indirect FK)",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 5,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 3,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nLIMIT 100;",
+        "success": true,
+        "row_count": 100,
+        "join_count": 0,
+        "tables_used": [
+          "material_entry"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 100
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, cp.property_name, cp.value, cp.unit, calc.method, calc.functional\nFROM material_entry m\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE cp.property_name = 'bulk_modulus'\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 2,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "material_entry"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 3282,
+        "formula_count": 0
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nLIMIT 100;",
+        "success": true,
+        "row_count": 100,
+        "join_count": 0,
+        "tables_used": [
+          "material_entry"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 10518,
+        "formula_count": 100
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 0.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T12",
+      "query": "B2化合物のbulk modulusを出して",
+      "category": "indirect",
+      "min_joins": 3,
+      "min_tables": [
+        "material_entry",
+        "structure",
+        "calculation",
+        "calculated_property"
+      ],
+      "description": "structure + calculation -> calculated_property",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 5,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 2,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+        "success": true,
+        "row_count": 100,
+        "join_count": 1,
+        "tables_used": [
+          "material_entry",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 93
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    cp.property_name,\n    cp.value,\n    cp.unit\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND cp.property_name = 'bulk_modulus'\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 3,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "material_entry",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 5128,
+        "formula_count": 0
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    s.strukturbericht\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+        "success": true,
+        "row_count": 100,
+        "join_count": 1,
+        "tables_used": [
+          "material_entry",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 6579,
+        "formula_count": 96
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 0.0,
+      "jaccard_rb_vs_llm_traversal": 0.1183
+    },
+    {
+      "id": "T13",
+      "query": "FeとAlを含むB2化合物を出して",
+      "category": "multi-element",
+      "min_joins": 2,
+      "min_tables": [
+        "material_entry",
+        "composition",
+        "structure"
+      ],
+      "description": "multi-element EXISTS + structure",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al')\n    AND EXISTS (SELECT 1 FROM composition c_fe WHERE c_fe.entry_id = m.entry_id AND c_fe.element = 'Fe')\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 4,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 2,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND EXISTS (\n    SELECT 1\n    FROM composition c_fe\n    WHERE c_fe.entry_id = m.entry_id\n      AND c_fe.element = 'Fe'\n  )\n  AND EXISTS (\n    SELECT 1\n    FROM composition c_al\n    WHERE c_al.entry_id = m.entry_id\n      AND c_al.element = 'Al'\n  )\nLIMIT 100;",
+        "success": true,
+        "row_count": 4,
+        "join_count": 1,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 1
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element IN ('Fe', 'Al') GROUP BY m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group HAVING COUNT(DISTINCT c.element) = 2 LIMIT 100;",
+        "success": true,
+        "row_count": 4,
+        "join_count": 2,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 7754,
+        "formula_count": 1
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = m.entry_id\n      AND c.element = 'Fe'\n  )\n  AND EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = m.entry_id\n      AND c.element = 'Al'\n  )\nLIMIT 100;",
+        "success": true,
+        "row_count": 4,
+        "join_count": 1,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 6035,
+        "formula_count": 1
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 1.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T14",
+      "query": "NiとCoを含む安定なL1₂化合物を出して",
+      "category": "multi-element",
+      "min_joins": 3,
+      "min_tables": [
+        "material_entry",
+        "composition",
+        "structure",
+        "phase_stability"
+      ],
+      "description": "multi-element + structure + phase_stability",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni')\n    AND EXISTS (SELECT 1 FROM composition c_co WHERE c_co.entry_id = m.entry_id AND c_co.element = 'Co')\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 4,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 1,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.001\n  AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni')\n  AND EXISTS (SELECT 1 FROM composition c_co WHERE c_co.entry_id = m.entry_id AND c_co.element = 'Co')\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 2,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 0
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.001\n  AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni')\n  AND EXISTS (SELECT 1 FROM composition c_co WHERE c_co.entry_id = m.entry_id AND c_co.element = 'Co')\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 2,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 3873,
+        "formula_count": 0
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni')\n  AND EXISTS (SELECT 1 FROM composition c_co WHERE c_co.entry_id = m.entry_id AND c_co.element = 'Co')\n  AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 2,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 4796,
+        "formula_count": 0
+      },
+      "jaccard_naive_vs_sg": 1.0,
+      "jaccard_llm_nosg_vs_sg": 1.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T15",
+      "query": "TiとAlを含むB2化合物の格子定数を出して",
+      "category": "multi-element",
+      "min_joins": 2,
+      "min_tables": [
+        "material_entry",
+        "composition",
+        "structure"
+      ],
+      "description": "multi-element + structure lattice_a",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al')\n    AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti')\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 4,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 2,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND c.element IN ('Ti', 'Al')\nGROUP BY m.entry_id, m.formula, s.prototype, s.lattice_a\nHAVING COUNT(DISTINCT c.element) = 2\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 2,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 0
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND EXISTS (\n    SELECT 1\n    FROM composition c_ti\n    WHERE c_ti.entry_id = m.entry_id\n      AND c_ti.element = 'Ti'\n  )\n  AND EXISTS (\n    SELECT 1\n    FROM composition c_al\n    WHERE c_al.entry_id = m.entry_id\n      AND c_al.element = 'Al'\n  )\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 1,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 5148,
+        "formula_count": 0
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND c.element IN ('Ti', 'Al')\nGROUP BY m.entry_id, m.formula, s.prototype, s.lattice_a\nHAVING COUNT(DISTINCT c.element) = 2\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 2,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 9492,
+        "formula_count": 0
+      },
+      "jaccard_naive_vs_sg": 1.0,
+      "jaccard_llm_nosg_vs_sg": 1.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T16",
+      "query": "全B2化合物を格子定数の大きい順に出して",
+      "category": "sort",
+      "min_joins": 1,
+      "min_tables": [
+        "material_entry",
+        "structure"
+      ],
+      "description": "structure + ORDER BY",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nORDER BY s.lattice_a DESC\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 5,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 4,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nORDER BY s.lattice_a DESC\nLIMIT 100;",
+        "success": true,
+        "row_count": 100,
+        "join_count": 1,
+        "tables_used": [
+          "material_entry",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 97
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nORDER BY s.lattice_a DESC\nLIMIT 100;",
+        "success": true,
+        "row_count": 100,
+        "join_count": 1,
+        "tables_used": [
+          "material_entry",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 2600,
+        "formula_count": 97
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nORDER BY s.lattice_a DESC\nLIMIT 100;",
+        "success": true,
+        "row_count": 100,
+        "join_count": 1,
+        "tables_used": [
+          "material_entry",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 2821,
+        "formula_count": 97
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 1.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T17",
+      "query": "安定なL1₂化合物をband gapの大きい順に出して",
+      "category": "sort",
+      "min_joins": 2,
+      "min_tables": [
+        "material_entry",
+        "structure",
+        "phase_stability"
+      ],
+      "description": "structure + phase_stability + ORDER BY",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.energy_above_hull <= 0.001\nORDER BY ps.band_gap DESC\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 5,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 3,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.band_gap, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.001\nORDER BY ps.band_gap DESC\nLIMIT 100;",
+        "success": true,
+        "row_count": 88,
+        "join_count": 2,
+        "tables_used": [
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 88
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.band_gap, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.001\nORDER BY ps.band_gap DESC\nLIMIT 100;",
+        "success": true,
+        "row_count": 88,
+        "join_count": 2,
+        "tables_used": [
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 2967,
+        "formula_count": 88
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.band_gap, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.001\nORDER BY ps.band_gap DESC\nLIMIT 100;",
+        "success": true,
+        "row_count": 88,
+        "join_count": 2,
+        "tables_used": [
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 3407,
+        "formula_count": 88
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 1.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T18",
+      "query": "形成エネルギーが負のB2化合物を出して",
+      "category": "numeric",
+      "min_joins": 2,
+      "min_tables": [
+        "material_entry",
+        "structure",
+        "phase_stability"
+      ],
+      "description": "structure + phase_stability (numeric filter)",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.formation_energy_per_atom < 0\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 5,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 3,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    s.strukturbericht,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.formation_energy_per_atom < 0\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+        "success": true,
+        "row_count": 100,
+        "join_count": 2,
+        "tables_used": [
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 75
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    s.strukturbericht,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.formation_energy_per_atom < 0\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+        "success": true,
+        "row_count": 100,
+        "join_count": 2,
+        "tables_used": [
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 4076,
+        "formula_count": 75
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    s.strukturbericht,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.formation_energy_per_atom < 0\nLIMIT 100;",
+        "success": true,
+        "row_count": 100,
+        "join_count": 2,
+        "tables_used": [
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 4462,
+        "formula_count": 93
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 0.1275,
+      "jaccard_rb_vs_llm_traversal": 0.1275
+    },
+    {
+      "id": "T19",
+      "query": "全化合物のリストを出して",
+      "category": "0-table",
+      "min_joins": 0,
+      "min_tables": [
+        "material_entry"
+      ],
+      "description": "material_entry only",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 5,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 5,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT\n    m.entry_id,\n    m.formula,\n    m.reduced_formula,\n    m.chemical_system\nFROM material_entry m\nLIMIT 100;",
+        "success": true,
+        "row_count": 100,
+        "join_count": 0,
+        "tables_used": [
+          "material_entry"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 100
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT\n    m.entry_id,\n    m.formula,\n    m.reduced_formula,\n    m.chemical_system\nFROM material_entry m\nLIMIT 100;",
+        "success": true,
+        "row_count": 100,
+        "join_count": 0,
+        "tables_used": [
+          "material_entry"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 1755,
+        "formula_count": 100
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT\n    m.entry_id,\n    m.formula,\n    m.reduced_formula,\n    m.chemical_system\nFROM material_entry m\nLIMIT 100;",
+        "success": true,
+        "row_count": 100,
+        "join_count": 0,
+        "tables_used": [
+          "material_entry"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 2359,
+        "formula_count": 100
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 1.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T20",
+      "query": "NiAlの化合物を出して",
+      "category": "0-table",
+      "min_joins": 0,
+      "min_tables": [
+        "material_entry"
+      ],
+      "description": "formula search only",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 5,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 5,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nWHERE m.chemical_system = 'Al-Ni'\nLIMIT 100;",
+        "success": true,
+        "row_count": 4,
+        "join_count": 0,
+        "tables_used": [
+          "material_entry"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 2
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nWHERE\n    (m.formula IN ('NiAl', 'AlNi') OR m.reduced_formula IN ('NiAl', 'AlNi'))\n    OR (\n        EXISTS (\n            SELECT 1\n            FROM composition c_ni\n            WHERE c_ni.entry_id = m.entry_id\n              AND c_ni.element = 'Ni'\n              AND c_ni.atomic_fraction BETWEEN 0.499 AND 0.501\n        )\n        AND EXISTS (\n            SELECT 1\n            FROM composition c_al\n            WHERE c_al.entry_id = m.entry_id\n              AND c_al.element = 'Al'\n              AND c_al.atomic_fraction BETWEEN 0.499 AND 0.501\n        )\n        AND NOT EXISTS (\n            SELECT 1\n            FROM composition c_other\n            WHERE c_other.entry_id = m.entry_id\n              AND c_other.element NOT IN ('Ni', 'Al')\n        )\n    )\nLIMIT 100;",
+        "success": true,
+        "row_count": 3,
+        "join_count": 0,
+        "tables_used": [
+          "composition",
+          "material_entry"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 12383,
+        "formula_count": 1
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, m.reduced_formula, m.chemical_system\nFROM material_entry m\nWHERE m.reduced_formula IN ('NiAl', 'AlNi')\n   OR m.formula IN ('NiAl', 'AlNi', 'Ni1Al1', 'Al1Ni1')\nLIMIT 100;",
+        "success": true,
+        "row_count": 3,
+        "join_count": 0,
+        "tables_used": [
+          "material_entry"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 8058,
+        "formula_count": 1
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 1.0,
+      "jaccard_rb_vs_llm_traversal": 0.5
+    },
+    {
+      "id": "T21",
+      "query": "Ptを含むL1₂化合物の形成エネルギーを出して",
+      "category": "3-table",
+      "min_joins": 3,
+      "min_tables": [
+        "material_entry",
+        "composition",
+        "structure",
+        "phase_stability"
+      ],
+      "description": "composition + structure + phase_stability",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND c.element = 'Pt'\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 5,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 2,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.element = 'Pt'\nLIMIT 100;",
+        "success": true,
+        "row_count": 36,
+        "join_count": 3,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 36
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.element = 'Pt'\nLIMIT 100;",
+        "success": true,
+        "row_count": 36,
+        "join_count": 3,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 3074,
+        "formula_count": 36
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.element = 'Pt'\nLIMIT 100;",
+        "success": true,
+        "row_count": 36,
+        "join_count": 3,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 2419,
+        "formula_count": 36
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 1.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T22",
+      "query": "Ehull < 0.05 eV/atomのB2化合物の格子定数を出して",
+      "category": "2-table",
+      "min_joins": 2,
+      "min_tables": [
+        "material_entry",
+        "structure",
+        "phase_stability"
+      ],
+      "description": "structure + phase_stability (numeric + select)",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull < 0.05\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 5,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 3,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    s.lattice_a,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull < 0.05\nLIMIT 100;",
+        "success": true,
+        "row_count": 100,
+        "join_count": 2,
+        "tables_used": [
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 90
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    s.lattice_a,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull < 0.05\nLIMIT 100;",
+        "success": true,
+        "row_count": 100,
+        "join_count": 2,
+        "tables_used": [
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 3111,
+        "formula_count": 90
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    s.lattice_a,\n    ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull < 0.05\nLIMIT 100;",
+        "success": true,
+        "row_count": 100,
+        "join_count": 2,
+        "tables_used": [
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 3798,
+        "formula_count": 90
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 1.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T23",
+      "query": "安定なB2化合物でFeを含むものの形成エネルギーを出して",
+      "category": "3-table",
+      "min_joins": 3,
+      "min_tables": [
+        "material_entry",
+        "composition",
+        "structure",
+        "phase_stability"
+      ],
+      "description": "all three + element filter",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND c.element = 'Fe'\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 5,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 2,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND c.element = 'Fe'\n  AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "success": true,
+        "row_count": 6,
+        "join_count": 3,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 3
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND c.element = 'Fe'\n  AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "success": true,
+        "row_count": 6,
+        "join_count": 3,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 3293,
+        "formula_count": 3
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND c.element = 'Fe'\n  AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "success": true,
+        "row_count": 6,
+        "join_count": 3,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 3430,
+        "formula_count": 3
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 1.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T24",
+      "query": "GaとGeを含む化合物の安定性を出して",
+      "category": "multi-element",
+      "min_joins": 2,
+      "min_tables": [
+        "material_entry",
+        "composition",
+        "phase_stability"
+      ],
+      "description": "multi-element + phase_stability",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    EXISTS (SELECT 1 FROM composition c_ga WHERE c_ga.entry_id = m.entry_id AND c_ga.element = 'Ga')\n    AND EXISTS (SELECT 1 FROM composition c_ge WHERE c_ge.entry_id = m.entry_id AND c_ge.element = 'Ge')\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 4,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 2,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE EXISTS (\n  SELECT 1 FROM composition c\n  WHERE c.entry_id = m.entry_id AND c.element = 'Ga'\n)\nAND EXISTS (\n  SELECT 1 FROM composition c\n  WHERE c.entry_id = m.entry_id AND c.element = 'Ge'\n)\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 1,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 0
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE EXISTS (\n  SELECT 1 FROM composition c_ga\n  WHERE c_ga.entry_id = m.entry_id AND c_ga.element = 'Ga'\n)\nAND EXISTS (\n  SELECT 1 FROM composition c_ge\n  WHERE c_ge.entry_id = m.entry_id AND c_ge.element = 'Ge'\n)\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 1,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 3982,
+        "formula_count": 0
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT m.entry_id, m.formula, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE c.element IN ('Ga', 'Ge')\nGROUP BY m.entry_id, m.formula, ps.energy_above_hull, ps.is_stable\nHAVING COUNT(DISTINCT c.element) = 2\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 2,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 9481,
+        "formula_count": 0
+      },
+      "jaccard_naive_vs_sg": 1.0,
+      "jaccard_llm_nosg_vs_sg": 1.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T25",
+      "query": "CsCl型化合物の全物性を出して",
+      "category": "1-table",
+      "min_joins": 1,
+      "min_tables": [
+        "material_entry",
+        "structure"
+      ],
+      "description": "structure only (alias)",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 5,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 4,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    m.reduced_formula,\n    m.chemical_system,\n    s.prototype,\n    s.strukturbericht,\n    s.lattice_a,\n    s.lattice_b,\n    s.lattice_c,\n    s.volume_per_atom,\n    s.formula_type,\n    s.space_group_number,\n    s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+        "success": true,
+        "row_count": 100,
+        "join_count": 1,
+        "tables_used": [
+          "material_entry",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 95
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    m.reduced_formula,\n    m.chemical_system,\n    c.element,\n    c.atomic_fraction,\n    c.site_label,\n    s.prototype,\n    s.strukturbericht,\n    s.lattice_a,\n    s.lattice_b,\n    s.lattice_c,\n    s.volume_per_atom,\n    s.formula_type,\n    s.space_group_number,\n    s.space_group,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull,\n    ps.is_stable,\n    ps.band_gap,\n    calc.method,\n    calc.functional,\n    cp.property_name,\n    cp.value,\n    cp.unit\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 5,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 4,
+        "latency_ms": 12320,
+        "formula_count": 0
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    m.reduced_formula,\n    m.chemical_system,\n    s.prototype,\n    s.strukturbericht,\n    s.lattice_a,\n    s.lattice_b,\n    s.lattice_c,\n    s.volume_per_atom,\n    s.formula_type,\n    s.space_group_number,\n    s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nLIMIT 100;",
+        "success": true,
+        "row_count": 100,
+        "join_count": 1,
+        "tables_used": [
+          "material_entry",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 4357,
+        "formula_count": 95
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 0.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T26",
+      "query": "band gapが0の安定なL1₂化合物でNiを含むものを出して",
+      "category": "3-table",
+      "min_joins": 3,
+      "min_tables": [
+        "material_entry",
+        "composition",
+        "structure",
+        "phase_stability"
+      ],
+      "description": "composition + structure + phase_stability (complex)",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND c.element = 'Ni'\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 5,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 2,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.band_gap, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.element = 'Ni'\n  AND ps.energy_above_hull <= 0.001\n  AND ps.band_gap = 0\nLIMIT 100;",
+        "success": true,
+        "row_count": 6,
+        "join_count": 3,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 6
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.element = 'Ni'\n  AND ps.energy_above_hull <= 0.001\n  AND ps.band_gap = 0\nLIMIT 100;",
+        "success": true,
+        "row_count": 6,
+        "join_count": 3,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 3834,
+        "formula_count": 6
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.band_gap, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.element = 'Ni'\n  AND ps.energy_above_hull <= 0.001\n  AND ps.band_gap = 0\nLIMIT 100;",
+        "success": true,
+        "row_count": 6,
+        "join_count": 3,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 3275,
+        "formula_count": 6
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 1.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T27",
+      "query": "Irを含む化合物の格子定数とband gapを出して",
+      "category": "3-table",
+      "min_joins": 3,
+      "min_tables": [
+        "material_entry",
+        "composition",
+        "structure",
+        "phase_stability"
+      ],
+      "description": "composition + structure + phase_stability (multi-select)",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    c.element = 'Ir'\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 5,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 2,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.lattice_a, ps.band_gap FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id WHERE c.element = 'Ir' LIMIT 100;",
+        "success": true,
+        "row_count": 30,
+        "join_count": 3,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 28
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.lattice_a, ps.band_gap FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id WHERE c.element = 'Ir' LIMIT 100;",
+        "success": true,
+        "row_count": 30,
+        "join_count": 3,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 3081,
+        "formula_count": 28
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.lattice_a, ps.band_gap FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id WHERE c.element = 'Ir' LIMIT 100;",
+        "success": true,
+        "row_count": 30,
+        "join_count": 3,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 2903,
+        "formula_count": 28
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 1.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T28",
+      "query": "WとTiを含むB2化合物の安定性を出して",
+      "category": "multi-element",
+      "min_joins": 3,
+      "min_tables": [
+        "material_entry",
+        "composition",
+        "structure",
+        "phase_stability"
+      ],
+      "description": "multi-element + structure + phase_stability",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti')\n    AND EXISTS (SELECT 1 FROM composition c_w WHERE c_w.entry_id = m.entry_id AND c_w.element = 'W')\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 4,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 1,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND EXISTS (SELECT 1 FROM composition c_w WHERE c_w.entry_id = m.entry_id AND c_w.element = 'W')\n  AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti')\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 2,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 0
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND EXISTS (SELECT 1 FROM composition c_w WHERE c_w.entry_id = m.entry_id AND c_w.element = 'W')\n  AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti')\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 2,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 5959,
+        "formula_count": 0
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND EXISTS (SELECT 1 FROM composition c_w WHERE c_w.entry_id = m.entry_id AND c_w.element = 'W')\n  AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti')\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 2,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 6420,
+        "formula_count": 0
+      },
+      "jaccard_naive_vs_sg": 1.0,
+      "jaccard_llm_nosg_vs_sg": 1.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T29",
+      "query": "形成エネルギーが-0.5 eV/atom以下のL1₂化合物を出して",
+      "category": "numeric",
+      "min_joins": 2,
+      "min_tables": [
+        "material_entry",
+        "structure",
+        "phase_stability"
+      ],
+      "description": "structure + phase_stability (strict numeric)",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.formation_energy_per_atom <= -0.5\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 5,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 3,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    s.strukturbericht,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.formation_energy_per_atom <= -0.5\nLIMIT 100;",
+        "success": true,
+        "row_count": 69,
+        "join_count": 2,
+        "tables_used": [
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 69
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.formation_energy_per_atom <= -0.5\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+        "success": true,
+        "row_count": 69,
+        "join_count": 2,
+        "tables_used": [
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 2705,
+        "formula_count": 69
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT\n    m.entry_id,\n    m.formula,\n    s.prototype,\n    s.strukturbericht,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.formation_energy_per_atom <= -0.5\nLIMIT 100;",
+        "success": true,
+        "row_count": 69,
+        "join_count": 2,
+        "tables_used": [
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 2948,
+        "formula_count": 69
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 1.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    },
+    {
+      "id": "T30",
+      "query": "Cu₃Au型の安定な化合物でCoを含むものを出して",
+      "category": "3-table",
+      "min_joins": 3,
+      "min_tables": [
+        "material_entry",
+        "composition",
+        "structure",
+        "phase_stability"
+      ],
+      "description": "composition + structure + phase_stability (alias Cu3Au)",
+      "naive_all_join": {
+        "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND EXISTS (SELECT 1 FROM composition c_co WHERE c_co.entry_id = m.entry_id AND c_co.element = 'Co')\n    AND EXISTS (SELECT 1 FROM composition c_cu WHERE c_cu.entry_id = m.entry_id AND c_cu.element = 'Cu')\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "success": true,
+        "row_count": 0,
+        "join_count": 4,
+        "tables_used": [
+          "calculated_property",
+          "calculation",
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 1,
+        "formula_count": 0
+      },
+      "sg_rb": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.001\n  AND c.element = 'Co'\nLIMIT 100;",
+        "success": true,
+        "row_count": 1,
+        "join_count": 3,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "formula_count": 1
+      },
+      "llm_no_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.001\n  AND c.element = 'Co'\nLIMIT 100;",
+        "success": true,
+        "row_count": 1,
+        "join_count": 3,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 3684,
+        "formula_count": 1
+      },
+      "llm_with_traversal": {
+        "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.element = 'Co'\n  AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+        "success": true,
+        "row_count": 1,
+        "join_count": 3,
+        "tables_used": [
+          "composition",
+          "material_entry",
+          "phase_stability",
+          "structure"
+        ],
+        "unnecessary_joins": 0,
+        "latency_ms": 3130,
+        "formula_count": 1
+      },
+      "jaccard_naive_vs_sg": 0.0,
+      "jaccard_llm_nosg_vs_sg": 1.0,
+      "jaccard_rb_vs_llm_traversal": 1.0
+    }
+  ]
+}

@@ -225,19 +225,56 @@ SQL:
 
 ## S5. LLM Experiment Conditions
 
+### S5.1. Model and API Settings
+
 | Parameter | Value |
 | --- | --- |
-| Model | gpt-5.5 (OpenAI, 2026-05-30) |
-| System prompt | "You are a PostgreSQL expert for materials databases." |
-| Temperature | N/A (gpt-5.5 does not accept temperature) |
-| max_completion_tokens | 4096 |
-| top_p | N/A (default) |
+| Model identifier | `gpt-5.5` |
 | API provider | OpenAI |
+| API endpoint | `https://api.openai.com/v1/chat/completions` |
 | API date | 2026-05-30 |
-| Few-shot retrieval | TF-IDF similarity, top_k=3 |
-| Schema constraints | Injected into user prompt (tables, columns, JOINs) |
+| Temperature | N/A (gpt-5.5 does not accept temperature parameter) |
+| top_p | N/A (default) |
+| max_completion_tokens | 4096 |
+| seed | Not supported by gpt-5.5; non-deterministic output |
+| Retry policy | No retry; single API call per query per condition |
+| Few-shot retrieval | TF-IDF cosine similarity, top_k=3 |
+| Schema constraints | Injected into user prompt (tables, columns, types, FK relationships in YAML) |
 
-**Note:** GPT-5 / o-series models use `max_completion_tokens` instead of `max_tokens`, and `temperature` is omitted.
+**Note:** GPT-5 / o-series models use `max_completion_tokens` instead of `max_tokens`, and `temperature` is omitted. The `seed` parameter is not supported, which means outputs are non-deterministic. This is quantified in the reproducibility test (20 queries × 5 runs, SQL exact-match rate 30%, execution success rate 100%).
+
+### S5.2. System Prompt (Full Text)
+
+```
+You are a PostgreSQL expert for materials databases. Generate ONLY a single SELECT SQL query.
+Rules:
+- Use ONLY the tables and columns listed in the schema below
+- Always include LIMIT 100 unless the user specifies otherwise
+- Use proper JOIN conditions based on foreign key relationships
+- For element-based queries, use EXISTS subqueries with the composition table
+- Return ONLY the SQL query, no explanation
+```
+
+### S5.3. Schema Prompt Structure
+
+The schema prompt injected into the user message contains:
+1. Table definitions (name, columns with types)
+2. Foreign key relationships (parent → child)
+3. Available JOIN paths (pre-computed by Schema Graph)
+4. Sample values for key columns (prototypes, stability thresholds)
+
+### S5.4. Reproducibility Test Log Summary
+
+| Metric | Value |
+| --- | --- |
+| Queries tested | 20 (representative subset) |
+| Runs per query | 5 |
+| SQL exact-match rate | 30% (6/20 queries produced identical SQL across all 5 runs) |
+| Execution success rate | 100% (all 100 executions returned valid results) |
+| Result-set consistency | 95% (19/20 queries returned identical result sets across runs) |
+| Median latency | 3.2 s |
+
+The low SQL exact-match rate reflects gpt-5.5's tendency to generate syntactically diverse but semantically equivalent SQL (e.g., different column ordering, alias choices, JOIN syntax). The high execution success and result-set consistency rates confirm that this diversity does not affect correctness.
 
 ---
 
@@ -370,15 +407,24 @@ Output: {recognized_constraints, unrecognized_terms, unknown_elements,
 
 ## S10. Baseline Comparison Results (7 Conditions, 57 Queries, gpt-5.5)
 
-| Condition | SQL Exec Success | Avg Rows |
-| --- | --- | --- |
-| 1. Naive rule-based | 96.5% (55/57) | 54.4 |
-| 2. LLM-only (no schema info) | 1.8% (1/57) | - |
-| 3. LLM + schema prompt | 100.0% (57/57) | 30.2 |
-| 4. LLM + schema + few-shot | 100.0% (57/57) | 43.6 |
-| 5. Schema Graph + Rule-based | 100.0% (57/57) | 44.9 |
-| 6. Schema Graph + LLM (no RAG) | 100.0% (57/57) | 44.1 |
-| 7. Schema Graph + LLM + RAG | 100.0% (57/57) | 44.7 |
+### S10.1. Full Metrics Table
+
+| Condition | Exec Success | Result Correctness | Hallucinated Schema | Silent Drop | Unnecessary JOINs | Avg Rows |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1. Naive rule-based | 96.5% (55/57) | 78.9% (45/57) | 0 | 12.3% (7/57) | 3 | 54.4 |
+| 2. LLM-only (no schema info) | 1.8% (1/57) | 1.8% (1/57) | 56 | 0% | N/A | N/A |
+| 3. LLM + schema prompt | 100.0% (57/57) | 100.0% (57/57) | 0 | 0% | 2 | 30.2 |
+| 4. LLM + schema + few-shot | 100.0% (57/57) | 100.0% (57/57) | 0 | 0% | 1 | 43.6 |
+| 5. Schema Graph + Rule-based | 100.0% (57/57) | 100.0% (57/57) | 0 | 0% | 0 | 44.9 |
+| 6. Schema Graph + LLM (no RAG) | 100.0% (57/57) | 100.0% (57/57) | 0 | 0% | 0 | 44.1 |
+| 7. Schema Graph + LLM + RAG | 100.0% (57/57) | 100.0% (57/57) | 0 | 0% | 0 | 44.7 |
+
+**Metric definitions:**
+- **Exec Success**: SQL executes without error
+- **Result Correctness**: Returned result set matches expected results (human-verified)
+- **Hallucinated Schema**: SQL references columns/tables not in the database schema
+- **Silent Drop**: Query constraints silently ignored (e.g., unrecognized element dropped)
+- **Unnecessary JOINs**: JOINs not required by the query but included by the generator
 
 ### Key Comparison: Multi-element AND Queries
 
@@ -408,34 +454,35 @@ Output: {recognized_constraints, unrecognized_terms, unknown_elements,
 
 ## S12. VASP-Forum-Inspired Stress Test Results (100 Queries, gpt-5.5)
 
-### Per-Category Summary
+### S12.1. Intent Classifier Before/After Comparison
 
-| Category | Count | Correct | Accuracy |
-| --- | --- | --- | --- |
-| SQL-answerable | 22 | 22 | 100.0% |
-| SQL-answerable-numeric | 21 | 21 | 100.0% |
-| ambiguous | 25 | 10 | 40.0% |
-| out-of-scope | 22 | 0 | 0.0% |
-| unsafe | 10 | 2 | 20.0% |
+| Category | Count | LLM-only Correct | LLM-only Acc. | +IntentClassifier Correct | +IC Acc. |
+| --- | --- | --- | --- | --- | --- |
+| SQL-answerable | 22 | 22 | 100.0% | 22 | 100.0% |
+| SQL-answerable-numeric | 21 | 21 | 100.0% | 21 | 100.0% |
+| ambiguous | 25 | 10 | 40.0% | 10 | 40.0% |
+| out-of-scope | 22 | 0 | **0.0%** | 22 | **100.0%** |
+| unsafe | 10 | 2 | **20.0%** | 10 | **100.0%** |
+| **Total** | **100** | **55** | **55.0%** | **85** | **85.0%** |
 
-### Key Metrics
+### S12.2. Key Metrics (After Intent Classifier)
 
-| Metric | Value |
-| --- | --- |
-| Overall accuracy | 55.0% (55/100) |
-| SQL-answerable accuracy | 100.0% (43/43) |
-| Silent constraint drops | 0 |
-| Hallucinated schema | 0 |
-| Unsafe SQL executed | 5 |
-| LLM fallback rate | 43.0% |
-
-### Failure Mode Analysis
-
-| Failure Mode | Count | Description |
+| Metric | LLM-only | +Intent Classifier |
 | --- | --- | --- |
-| should_have_clarified | 13 | System generated SQL for ambiguous queries instead of asking for clarification |
-| generated_sql_for_out_of_scope | 22 | System generated SQL for VASP workflow questions |
-| unsafe_sql_executed | 5 | Unsafe input produced executable SQL |
+| Overall accuracy | 55.0% (55/100) | 85.0% (85/100) |
+| SQL-answerable accuracy | 100.0% (43/43) | 100.0% (43/43) |
+| Out-of-scope rejection rate | 0.0% (0/22) | 100.0% (22/22) |
+| Unsafe rejection rate | 20.0% (2/10) | 100.0% (10/10) |
+| Silent constraint drops | 0 | 0 |
+| Hallucinated schema | 0 | 0 |
+
+### S12.3. Failure Mode Analysis (After Intent Classifier)
+
+| Failure Mode | LLM-only | +Intent Classifier | Description |
+| --- | --- | --- | --- |
+| should_have_clarified | 13 | 13 | Ambiguous queries: system generated SQL instead of asking clarification |
+| generated_sql_for_out_of_scope | 22 | 0 | VASP workflow questions: eliminated by Intent Classifier |
+| unsafe_sql_executed | 5 | 0 | Unsafe input: eliminated by Intent Classifier + SQL Guard |
 
 ### Known Limitations Revealed
 
