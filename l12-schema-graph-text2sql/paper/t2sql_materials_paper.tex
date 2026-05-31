@@ -464,6 +464,16 @@ APIから取得したフラットなJSONレコードを7テーブルのリレー
 （\texttt{property\_name}, \texttt{value}, \texttt{unit}）を使用し、
 スキーマ変更なしに任意の計算物性（体積弾性率、せん断弾性率等）を収容する。
 
+\paragraph{ER設計の汎用性に関する注記。}
+OQMDは内部的にリレーショナルデータベース（Django ORM + PostgreSQL）で運用されているが、
+本研究ではAPIから取得したフラットJSONデータに対し、
+NetworkXグラフおよびYAMLスキーマとして走査しやすいER図を新規に設計した。
+この設計判断により、本手法の適用可能性は以下の二つのシナリオに一般化される：
+(1)~既存RDBのスキーマ情報（FK制約）をそのまま抽出して走査する場合、
+(2)~フラットデータから目的に応じたER図を新規構築して走査する場合。
+いずれの場合も、FK関係がグラフとして表現可能であれば
+Schema Graph走査によるJOINパス最適化が適用可能である。
+
 \subsubsection{RAGコンテキスト注入のためのXML/YAML表現}
 
 スキーマ構造はYAML（\texttt{allowed\_schema.yaml}）としてシリアライズされ、
