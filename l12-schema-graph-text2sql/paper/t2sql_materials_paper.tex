@@ -70,7 +70,8 @@ Open Quantum Materials Database（OQMD）、Materials Project、AFLOWなどの�
 正規化されたリレーショナルスキーマを通じたデータアクセスには
 多くの材料研究者が持ち合わせていないSQL（Structured Query Language）の知識が必要である。
 本研究では、正規化された材料データベースに対し、
-自然言語クエリを実行可能なSQL文へ自動変換する
+自然言語による参照系クエリ（CRUD操作のうちRead、すなわちSELECT文のみ）を
+実行可能なSQL文へ自動変換する
 \textbf{Schema Graph制約型Text-to-SQL（T2SQL）手法}を提案する。
 
 本手法は6つの技術要素から構成される：
@@ -160,10 +161,19 @@ RDF化~\cite{ishii2023supercon}や、
 
 しかし、正規化リレーショナルスキーマ（外部キーで接続された複数テーブル）に
 格納されたデータへのアクセスにはSQL知識が必要である。
-例えば、「Feを含む安定なB2化合物の格子定数」を適切に正規化されたスキーマで検索するには、
+材料工学において本質的に重要なのは、大量データの収集よりも
+\textbf{少量の異種データを正確に組み合わせる}ことである：
+組成・結晶構造・熱力学的安定性・計算条件・物性値は
+それぞれ独立したテーブルに正規化されており、
+これらを外部キー（FK）に沿って正しくJOINすることで
+初めて意味のある材料情報が得られる。
+例えば、「Feを含む安定なB2化合物の格子定数」を検索するには、
 元素・プロトタイプ・熱力学的安定性に対するWHERE条件を持つ
 4テーブルJOINが必要となる---データベース技術者にとっては容易だが、
 材料研究者にとっては非自明な操作である。
+不正確なJOIN（不要なテーブル結合や結合条件の欠落）は
+誤ったデータの組み合わせを返し、
+材料探索やスクリーニングの判断を誤導する深刻なリスクとなる。
 
 多くの材料データベースが提供するREST APIやGraphQLエンドポイントは
 この障壁を部分的に緩和するが、RDB全般に共通する根本的制約が残る：
@@ -225,6 +235,8 @@ Materials ProjectはMCPベースのLLM統合の提供を開始している。
   \item \textbf{Schema Graph制約型T2SQL手法}：
     日英バイリンガル材料用語辞書とFK関係グラフ走査を組み合わせ、
     正規化材料データベース上の自動JOIN経路計算を実現する。
+    材料工学で本質的に重要な「少量の異種データの正確な組み合わせ」を、
+    Steiner木近似による最小JOINパス算出で保証する。
     7条件比較実験により、Schema Graph制約が実行成功率100\%の主要因であることを示す。
   \item \textbf{6層安全パイプライン}：
     Coverage Score（未認識語彙検出）、Intent Classifier（スコープ外質問検出）、
@@ -853,6 +865,8 @@ LaTeX原稿からの自動種事例抽出を実装した。
 \subsection{SQLガード：多層安全性検証}
 \label{sec:sql_guard}
 
+本手法はCRUD操作のうち参照系（Read）のみを対象とし、
+生成SQLはSELECT文に限定される。
 Rule-basedモード・LLMモードを問わず、
 生成された全SQLはデータベース実行前に8層検証パイプラインを通過する。
 前稿の5層構成に対し、カラムホワイトリスト検証（層6）、
@@ -966,21 +980,69 @@ stability（hull上エネルギー）、band\_gap。
 APIはページネーションされたJSONレスポンス（\texttt{limit=200, offset=0,200,...}）を返す。
 重複エントリ（同一化学式、異なるentry\_id）は最低エネルギーのものを保持して重複除去した。
 
-\subsection{RDBへのデータ投入}
+\subsection{ER設計の根拠：フラットAPIから正規化RDBへ}
+\label{sec:er_design}
 
-各OQMDエントリを7テーブルスキーマに分解する。
+OQMD APIは各化合物をフラットなJSONレコードとして返す：
+\texttt{name}（化学式）、\texttt{entry\_id}、\texttt{prototype}、
+\texttt{formationenergy}、\texttt{stability}（$E_\text{hull}$）、\texttt{band\_gap}等が
+1行に格納された非正規化形式である。
+このフラットデータをそのまま単一テーブルに格納することも可能だが、
+材料データの論理構造に基づき、以下の設計判断で7テーブルに正規化した。
+
+\paragraph{設計判断1：組成テーブルの分離（1:N正規化）。}
+最も重要な設計判断は、\texttt{composition}テーブルの分離である。
+化合物と構成元素の関係は1:N（例：Ni$_3$AlはNi行とAl行の2レコード）であり、
+これをフラットテーブルの1カラムに格納すると
+「NiとAlを\textbf{両方}含む化合物」のような多元素AND検索が不可能になる。
+正規化により、compositionテーブルの\textbf{自己結合}（SELF JOIN）で
+任意の元素組み合わせ検索が実現される。
+Graph Traversalアブレーション（\ref{sec:traversal_ablation}節）で示したとおり、
+この自己結合を含むJOINパスの正確な算出がSchema Graph走査の主要な貢献である。
+
+\paragraph{設計判断2：構造・安定性・計算条件の分離。}
+同一化合物に対して複数の結晶構造（多形）や異なる計算条件が存在しうるため、
+\texttt{structure}（プロトタイプ、空間群、格子定数）、
+\texttt{phase\_stability}（形成エネルギー、$E_\text{hull}$、バンドギャップ）、
+\texttt{calculation}（DFT計算条件）を独立テーブルとした。
+これにより「安定な（$E_\text{hull} \leq 0.001$）L1$_2$構造のうち
+格子定数が3.5~\AA{}以上」のような、構造と安定性を跨ぐ複合条件が
+FK整合JOINで正確に検索できる。
+
+\paragraph{設計判断3：計算と物性の親子関係。}
+1つのDFT計算から複数の物性値（体積弾性率、剪断弾性率等）が出力されるため、
+\texttt{calculation} $\to$ \texttt{properties}（1:N）の親子関係とした。
+物性名・値・単位を行として格納するEAV（Entity-Attribute-Value）パターンにより、
+新しい物性を追加する際にスキーマ変更が不要である。
+
+\paragraph{設計判断4：プロトタイプ定義のマスタ化。}
+\texttt{prototype\_definition}テーブルにB2、L1$_2$、A15等の
+プロトタイプ名・Strukturbericht記号・結晶型の対応を格納し、
+structureテーブルから参照する。
+これにより「L12」「Cu3Au型」「AuCu$_3$型」等の
+同義表現を一元的に管理できる。
+
+\paragraph{正規化がSchema Graph走査を必要にする。}
+上記の正規化設計により、
+単純な検索でも2--4テーブルのJOINが必要となる。
+この\textbf{正規化の代償としてのJOIN複雑性}こそが、
+FK関係をグラフとして表現し最短JOINパスを自動算出する
+Schema Graph走査エンジンの存在意義である。
+
+\subsection{データ投入と変換}
+
+各OQMDエントリのフラットJSONを7テーブルスキーマに分解して投入する。
 例えば、Fe$_3$Al（L1$_2$プロトタイプ）は以下を生成する：
 \texttt{material\_entry}に1行、
 \texttt{composition}に2行（Fe: 0.75、Al: 0.25）、
 \texttt{structure}に1行（prototype=L12、lattice\_a、space\_group）、
 \texttt{phase\_stability}に1行（formation\_energy、energy\_above\_hull、band\_gap）、
 \texttt{calculation}に1行（method=GGA）。
-
-\subsection{スキーマ拡張}
-
-元スキーマに含まれないOQMDフィールドを収容するため以下のカラムを追加した：
+APIの非正規化フィールド（例：\texttt{stability} $\to$ \texttt{energy\_above\_hull}）は
+カラム名を標準化して格納した。
+元スキーマに含まれないOQMDフィールドを収容するため、
 \texttt{phase\_stability}に\texttt{band\_gap}（REAL）、
-\texttt{structure}に\texttt{space\_group}（TEXT）。
+\texttt{structure}に\texttt{space\_group}（TEXT）を追加し、
 材料用語辞書に対応用語（band\_gap、volume\_per\_atom、space\_group）を追加した。
 
 % =====================================================================
@@ -1462,6 +1524,28 @@ indirect、multi-element、numeric/sort）に分類した。
 % =====================================================================
 \section{考察}
 \label{sec:discussion}
+
+\subsection{データ組み合わせ精度の重要性}
+
+材料工学において、データベース検索の価値は返却行数ではなく
+\textbf{異種テーブルの正確な組み合わせ}にある。
+組成・構造・安定性・物性が別テーブルに正規化されたRDBでは、
+JOINの正確性がデータ品質の生命線となる。
+
+Graph Traversalアブレーション（表~\ref{tab:traversal_ablation}）は
+この観点を定量的に裏付ける：
+Naive条件は平均4.73 JOINを生成し58\%が不要である。
+不要JOINはデータの誤った組み合わせ---たとえば
+無関係なテーブルの直積による行数膨張や、
+多元素AND条件での誤ったフィルタリング---を引き起こす。
+SG+RBおよびLLM+SG条件はFK走査により不要JOINを完全排除し、
+Jaccard類似度0.897で一致する結果セットを返す。
+
+\textbf{909件・7テーブルという規模は、
+材料データの組み合わせ精度を検証するには十分な複雑性を持つ。}
+重要なのはレコード数ではなく、
+FK関係で接続された複数テーブル間のJOINパス空間であり、
+7テーブルの正規化スキーマは材料データベースに典型的な構成である。
 
 \subsection{多次元評価}
 
