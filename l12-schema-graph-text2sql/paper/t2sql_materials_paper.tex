@@ -1,6 +1,6 @@
 % !TEX program = lualatex
 %% Elsevier elsarticle + numbered references
-\documentclass[preprint,12pt]{elsarticle}
+\documentclass[twocolumn,12pt]{elsarticle}
 
 \usepackage{luatexja}
 \usepackage{luatexja-fontspec}
@@ -22,6 +22,8 @@
 \usepackage{tabularx}
 \usepackage{url}
 \usepackage{appendix}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,calc,backgrounds}
 \usepackage{lineno}
 \biboptions{numbers}
 
@@ -55,11 +57,11 @@
   Rule-based・LLM生成のカスケードアーキテクチャ
   --- OQMD金属間化合物909件（B2・L1$_2$型）での7条件比較検証 ---}
 
-\author[nims]{皆本 悟\corref{cor1}}
+\author[nims]{Satoshi Minamoto\corref{cor1}}
 \cortext[cor1]{Corresponding author}
 \ead{minamoto.satoshi@nims.go.jp}
-\address[nims]{国立研究開発法人 物質・材料研究機構（NIMS）、
-  〒305-0047 茨城県つくば市千現1-2-1、日本}
+\address[nims]{National Institute for Materials Science (NIMS),
+  1-2-1 Sengen, Tsukuba, Ibaraki 305-0047, Japan}
 
 % =====================================================================
 \begin{abstract}
@@ -109,7 +111,9 @@ AI for Science（AI4S）のパラダイムにおいて、
 構造化された材料データへの自然言語アクセスは
 自律AI駆動型材料探索ワークフローの前提条件である。
 本手法は材料インフォマティクスにおけるデータ活用の民主化に貢献し、
-AI4S駆動型材料探索の基礎的構成要素を提供する。
+Materials Integration（MInt）\cite{minamoto2020mint}や
+provenance管理システムpinax \cite{minamoto2026pinax}等の
+データ基盤との連携により、AI4S駆動型材料探索の基礎的構成要素を提供する。
 
 \end{abstract}
 
@@ -148,6 +152,11 @@ AFLOW（350万件超）~\citep{curtarolo2012aflow}、
 NOMAD~\citep{draxl2019nomad}。
 これらのデータベースは計算材料探索、候補相のスクリーニング~\citep{senkov2018hea,george2019hea}、
 実験観測の検証に不可欠である。
+一方、材料データの構造化・知識化の取り組みとして、
+Ishiiらはレガシー超伝導データベースSuperConのオントロジー構築と
+RDF化~\cite{ishii2023supercon}や、
+高分子データベースPoLyInfoの機械可読化~\cite{ishii2024polyinfo}を実現しており、
+スキーマの意味的構造化が材料データ活用の前提条件であることを示している。
 
 しかし、正規化リレーショナルスキーマ（外部キーで接続された複数テーブル）に
 格納されたデータへのアクセスにはSQL知識が必要である。
@@ -233,6 +242,103 @@ Materials ProjectはMCPベースのLLM統合の提供を開始している。
     レイテンシ・正確性トレードオフを実測。
 \end{enumerate}
 
+図~\ref{fig:pipeline_schematic}に本手法の解析フロー全体を示す。
+
+\begin{figure*}[htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  node distance=0.5cm and 0.4cm,
+  >=Stealth,
+  every node/.style={font=\small},
+  process/.style={rectangle, draw, rounded corners=3pt,
+    minimum height=0.8cm, minimum width=1.8cm, align=center,
+    fill=blue!8, text width=2.0cm},
+  decision/.style={diamond, draw, aspect=2.2,
+    minimum height=0.7cm, align=center,
+    fill=orange!12, text width=1.6cm, inner sep=1pt},
+  io/.style={trapezium, draw, trapezium left angle=70, trapezium right angle=110,
+    minimum height=0.7cm, align=center, fill=green!10, text width=1.8cm},
+  guard/.style={rectangle, draw, rounded corners=3pt,
+    minimum height=0.8cm, minimum width=1.8cm, align=center,
+    fill=red!10, text width=2.0cm},
+  data/.style={rectangle, draw, dashed,
+    minimum height=0.7cm, align=center,
+    fill=gray!8, text width=1.8cm},
+  arr/.style={->, thick, >=Stealth},
+  darr/.style={->, thick, dashed, >=Stealth},
+]
+
+% Row 1: Input
+\node[io] (input) {自然言語\\クエリ};
+\node[process, right=of input] (intent) {Intent\\Classifier\\(\S\ref{sec:intent_classifier})};
+\node[process, right=of intent] (extract) {条件抽出\\用語辞書照合\\(\S\ref{sec:entity_extractor})};
+\node[decision, right=of extract] (coverage) {Coverage\\Score\\(\S\ref{sec:coverage_score})};
+
+% Branch labels
+\node[above right=0.1cm and 0.3cm of coverage, font=\scriptsize\itshape] (high) {高};
+\node[below right=0.1cm and 0.3cm of coverage, font=\scriptsize\itshape] (low) {低};
+
+% Row 2: Dual path
+\node[process, right=2.2cm of coverage, yshift=0.8cm] (rb) {Rule-based\\SQL生成\\(\S\ref{sec:sql_generation})};
+\node[process, right=2.2cm of coverage, yshift=-0.8cm] (llm) {LLM SQL生成\\gpt-5.5\\(\S\ref{sec:llm_mode})};
+
+% Schema Graph (center, feeds both)
+\node[process, below=1.2cm of coverage, fill=cyan!15] (sg) {Schema Graph\\FK走査\\(\S\ref{sec:schema_graph})};
+\node[data, below=0.4cm of sg] (yaml) {allowed\_schema\\.yaml};
+
+% Row 3: Convergence
+\node[guard, right=of rb, yshift=-0.8cm] (guard) {SQLGuard\\6層検証\\(\S\ref{sec:sql_guard})};
+
+% Row 4: Output
+\node[io, right=of guard] (exec) {SQL実行\\結果返却};
+
+% Data stores
+\node[data, above=0.6cm of llm] (rag) {Few-Shot\\RAGストア};
+
+% Arrows: main flow
+\draw[arr] (input) -- (intent);
+\draw[arr] (intent) -- node[above, font=\scriptsize] {db\_query} (extract);
+\draw[arr] (extract) -- (coverage);
+
+% Coverage branching
+\draw[arr] (coverage.east) ++(0.1,0) |- (rb.west);
+\draw[arr] (coverage.east) ++(0.1,0) |- (llm.west);
+
+% Schema Graph feeds both
+\draw[darr] (sg.north) ++(0,0.1) -| ([xshift=-0.3cm]rb.south);
+\draw[darr] (sg.north) ++(0,0.1) -| ([xshift=-0.3cm]llm.south);
+\draw[arr] (yaml) -- (sg);
+
+% Converge to guard
+\draw[arr] (rb.east) -| (guard.north);
+\draw[arr] (llm.east) -| (guard.south);
+
+% Guard to output
+\draw[arr] (guard) -- (exec);
+
+% RAG to LLM
+\draw[darr] (rag) -- (llm);
+
+% Intent reject
+\node[below left=0.4cm and 0.1cm of intent, font=\scriptsize\itshape, text=red!70!black, align=center] (reject) {\shortstack{スコープ外\\ 拒否}};
+\draw[arr, red!60!black] (intent.south) -- (reject);
+
+% Parsers annotation
+\node[process, below=0.5cm of extract, fill=yellow!10, text width=2.4cm] (parsers) {数値パーサー\\化学式パーサー\\(\S\ref{sec:numeric_parser},\S\ref{sec:formula_parser})};
+\draw[darr] (parsers.north) -- (extract.south);
+
+\end{tikzpicture}%
+}% end resizebox
+\caption{提案手法の解析フロー全体図。
+  自然言語クエリはIntent Classifierでスコープ判定後、
+  用語辞書・数値/化学式パーサーで条件抽出される。
+  Coverage Scoreに基づきRule-based（高認識率）またはLLM（低認識率）経路に分岐し、
+  いずれもSchema Graph（FK走査）によるJOINパス制約とSQLGuard 6層検証を経て
+  安全なSQLが生成・実行される。破線矢印はデータ参照を示す。}
+\label{fig:pipeline_schematic}
+\end{figure*}
+
 % =====================================================================
 \section{手法}
 \label{sec:methods}
@@ -271,12 +377,12 @@ APIから取得したフラットなJSONレコードを7テーブルのリレー
   \label{fig:er_diagram}
 \end{figure}
 
-\begin{table}[htbp]
+\begin{table*}[htbp]
   \centering
   \caption{データベーススキーマ概要（7テーブル）。}
   \label{tab:schema}
   \small
-  \begin{tabularx}{\linewidth}{lllX}
+  \begin{tabularx}{\textwidth}{lllX}
     \toprule
     テーブル名 & 主キー & 外部キー & 主要カラム \\
     \midrule
@@ -289,7 +395,7 @@ APIから取得したフラットなJSONレコードを7テーブルのリレー
     prototype\_definition & prototype\_id & --- & prototype\_name, strukturbericht, description \\
     \bottomrule
   \end{tabularx}
-\end{table}
+\end{table*}
 
 \paragraph{組成テーブルの分離。}
 単一の化合物が複数の元素を含む場合がある（例：Fe$_3$Al $\to$ FeとAl）。
@@ -892,12 +998,12 @@ SQL検証テスト6件、Coverage Score・パーサーテスト15件、
 Intent Classifierテスト20件の計80件を構築した（表~\ref{tab:test_categories}）。
 これらは開発者が設計した回帰テストであり、精度評価のための独立テストではない。
 
-\begin{table}[htbp]
+\begin{table*}[htbp]
   \centering
   \caption{回帰テストカテゴリ（全80件）。}
   \label{tab:test_categories}
   \small
-  \begin{tabularx}{\linewidth}{llcX}
+  \begin{tabularx}{\textwidth}{llcX}
     \toprule
     カテゴリ & ID & $n$ & 検証焦点 \\
     \midrule
@@ -912,7 +1018,7 @@ Intent Classifierテスト20件の計80件を構築した（表~\ref{tab:test_ca
     Intent Classifier & --- & 20 & VASP/DFTワークフロー検出、DB/unsafe/greeting分類 \\
     \bottomrule
   \end{tabularx}
-\end{table}
+\end{table*}
 
 \subsubsection{Baseline比較実験（7条件×57クエリ）}
 
@@ -998,7 +1104,7 @@ SQL実行成功率（execution success）に加え、
 SQLが実行できても結果が正しくない場合（例：不適切なJOINにより過剰行数を返す）は
 不正解とする。
 
-\begin{table}[htbp]
+\begin{table*}[htbp]
   \centering
   \caption{7条件のBaseline比較（57クエリ、gpt-5.5）。}
   \label{tab:7level_results}
@@ -1016,7 +1122,7 @@ SQLが実行できても結果が正しくない場合（例：不適切なJOIN�
     7 & SG+LLM+RAG & 100\% & 100\% & 0 & 0\% & 0 \\
     \bottomrule
   \end{tabular}
-\end{table}
+\end{table*}
 
 \paragraph{主要な発見。}
 
@@ -1123,7 +1229,7 @@ T2SQLの出力がデータ変換パイプライン全体を通じて正確であ
 Precision = $|$T2SQL $\cap$ OQMD$|$ / $|$T2SQL$|$、
 Recall = $|$T2SQL $\cap$ OQMD$|$ / $|$OQMD$|$。
 
-\begin{table}[htbp]
+\begin{table*}[htbp]
   \centering
   \caption{OQMD API正解データとの比較（Precision / Recall）。}
   \label{tab:oqmd_results}
@@ -1141,7 +1247,7 @@ Recall = $|$T2SQL $\cap$ OQMD$|$ / $|$OQMD$|$。
     A15 & Ni + 安定L1$_2$ & 6 & 6 & 1.000 & 1.000 & 完全一致 \\
     \bottomrule
   \end{tabular}
-\end{table}
+\end{table*}
 
 \textbf{API非対応ケース（C08）。}
 C08（安定B2かつband\_gap $>$ 0）はOQMD REST APIが同等のフィルタ条件を
@@ -1187,7 +1293,7 @@ Schema Graph走査はFKイントロスペクションに基づくため、
 表~\ref{tab:vasp_results}にVASPフォーラム着想ストレステスト（100クエリ、gpt-5.5）の結果を、
 Intent Classifier導入前後の比較として示す。
 
-\begin{table}[htbp]
+\begin{table*}[htbp]
   \centering
   \caption{VASPフォーラムストレステスト結果：Intent Classifier導入前後の比較
     （100クエリ、gpt-5.5）。}
@@ -1208,7 +1314,7 @@ Intent Classifier導入前後の比較として示す。
     \textbf{全体 (100)} & \textbf{55} & \textbf{55\%} & \textbf{85} & \textbf{85\%} \\
     \bottomrule
   \end{tabular}
-\end{table}
+\end{table*}
 
 \paragraph{SQL-answerable精度。}
 データベースで回答可能な43クエリ（SQL-answerable + numeric）は
@@ -1395,12 +1501,12 @@ gpt-5.5のSQL一致率は30\%（20クエリ×5回）であり、
 
 \subsection{関連システムとの比較}
 
-\begin{table}[htbp]
+\begin{table*}[htbp]
   \centering
   \caption{関連する材料NLP / T2SQLシステムとの比較。}
   \label{tab:related_comparison}
   \small
-  \begin{tabularx}{\linewidth}{lccccX}
+  \begin{tabularx}{\textwidth}{lccccX}
     \toprule
     システム & スキーマ認識 & 正規化RDB & 材料特化 & Few-Shot & 主な差異 \\
     \midrule
@@ -1413,7 +1519,7 @@ gpt-5.5のSQL一致率は30\%（20クエリ×5回）であり、
     \textbf{本手法} & \textbf{あり} & \textbf{あり} & \textbf{あり} & \textbf{あり} & FKグラフ + 材料辞書 \\
     \bottomrule
   \end{tabularx}
-\end{table}
+\end{table*}
 
 \subsection{AI for Science（AI4S）における意義}
 \label{sec:ai4s}
@@ -1421,12 +1527,12 @@ gpt-5.5のSQL一致率は30\%（20クエリ×5回）であり、
 本手法はAI4Sパラダイムに直接的な含意を持つ。
 表~\ref{tab:ai4s_workflow}にAI4Sワークフローの各段階とT2SQL手法の役割を示す。
 
-\begin{table}[htbp]
+\begin{table*}[htbp]
   \centering
   \caption{AI4S材料探索ワークフローにおけるT2SQLの役割。}
   \label{tab:ai4s_workflow}
   \small
-  \begin{tabularx}{\linewidth}{lXX}
+  \begin{tabularx}{\textwidth}{lXX}
     \toprule
     AI4S段階 & 従来アプローチ & T2SQL手法適用時 \\
     \midrule
@@ -1447,13 +1553,17 @@ gpt-5.5のSQL一致率は30\%（20クエリ×5回）であり、
       成功クエリがFew-Shotストアに蓄積され再利用 \\
     \bottomrule
   \end{tabularx}
-\end{table}
+\end{table*}
 
 重要な点として、Schema Graphアーキテクチャは\textbf{スキーマ非依存}である：
 FK関係は実行時にPostgreSQLメタデータからイントロスペクション（\ref{sec:schema_graph}節）
 されるため、OQMDに限らず任意の正規化RDB
 （Materials Project、AFLOW、NOMAD、機関内データベース、さらには材料科学以外のドメイン）に
 コード変更なしで展開できる---用語辞書のドメイン適応のみが必要である。
+とりわけ、Materials Integration（MInt）システム\cite{minamoto2020mint}における
+PSPP（プロセス・構造・物性・性能）連鎖の各モジュールが出力するRDBや、
+provenance管理システムpinax \cite{minamoto2026pinax}が蓄積する
+解析ワークフローデータベースは、本手法の自然な適用先として期待される。
 本研究でOQMDを検証対象に選定した理由は、
 組成・構造・熱力学的安定性の外部キー接続による7テーブル構成が
 材料データベースに典型的なスキーマ複雑性の好例であり、
@@ -1562,11 +1672,15 @@ OQMDの開発・維持管理にあたるNorthwestern大学Wolvertonグループ�
 \section{全テストケース一覧}
 \label{app:all_tests}
 
-\begin{longtable}{llp{6cm}l}
+\begin{table*}[htbp]
+\centering
+\caption{全テストケース一覧（全44件、全PASS）。}
+\label{tab:all_tests}
+\footnotesize
+\begin{tabular}{llp{8cm}l}
   \toprule
   ID & カテゴリ & 自然言語クエリ & 結果 \\
   \midrule
-  \endhead
   A01 & 正常系 & Feを含むB2化合物を出して & PASS \\
   A02 & 正常系 & 安定なL1$_2$化合物を形成エネルギー順に出して & PASS \\
   A03 & 正常系 & NiとAlの両方を含む化合物を出して & PASS \\
@@ -1612,7 +1726,8 @@ OQMDの開発・維持管理にあたるNorthwestern大学Wolvertonグループ�
   F01 & 安全性 & SELECT entry\_id FROM material\_entry & PASS \\
   F02 & 安全性 & UPDATE material\_entry SET formula='X' & PASS \\
   \bottomrule
-\end{longtable}
+\end{tabular}
+\end{table*}
 
 \section{生成SQL例}
 \label{app:sql_examples}
