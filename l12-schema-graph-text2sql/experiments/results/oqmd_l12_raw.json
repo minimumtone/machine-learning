@@ -1,0 +1,2459 @@
+[
+  {
+    "name": "U3Si",
+    "entry_id": 5216,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 76.7547,
+    "band_gap": 0.0,
+    "stability": 0.023807571249999993
+  },
+  {
+    "name": "FeNi3",
+    "entry_id": 7241,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 43.8705,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "Cu3Au",
+    "entry_id": 7246,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 53.4373,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "FePt3",
+    "entry_id": 7825,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 59.8402,
+    "band_gap": 0.0,
+    "stability": 0.0008124793750001191
+  },
+  {
+    "name": "Pd3Pb",
+    "entry_id": 7834,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 68.2197,
+    "band_gap": 0.0,
+    "stability": 0.0028342850000000475
+  },
+  {
+    "name": "UGe3",
+    "entry_id": 10071,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 73.8765,
+    "band_gap": 0.0,
+    "stability": 0.00032632249999992036
+  },
+  {
+    "name": "InPt3",
+    "entry_id": 10118,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 66.0117,
+    "band_gap": 0.0,
+    "stability": 0.0008256925000006965
+  },
+  {
+    "name": "FeIr3",
+    "entry_id": 10122,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 54.4246,
+    "band_gap": 0.0,
+    "stability": 0.0584880749999996
+  },
+  {
+    "name": "CuAu3",
+    "entry_id": 10123,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 66.684,
+    "band_gap": 0.0,
+    "stability": 0.009315249999999806
+  },
+  {
+    "name": "NpGe3",
+    "entry_id": 10307,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 75.4458,
+    "band_gap": 0.0,
+    "stability": 7.20825000000147e-05
+  },
+  {
+    "name": "DyAl3",
+    "entry_id": 10447,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 76.9933,
+    "band_gap": 0.0,
+    "stability": 0.010979616250000379
+  },
+  {
+    "name": "ErAl3",
+    "entry_id": 10454,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 75.7463,
+    "band_gap": 0.0,
+    "stability": 0.0032692955000009905
+  },
+  {
+    "name": "HoAl3",
+    "entry_id": 10477,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 76.3704,
+    "band_gap": 0.0,
+    "stability": 0.005378295500000019
+  },
+  {
+    "name": "LiAl3",
+    "entry_id": 10489,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 64.4812,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "LuAl3",
+    "entry_id": 10494,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 74.2539,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "NpAl3",
+    "entry_id": 10537,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 76.8838,
+    "band_gap": 0.0,
+    "stability": 0.021344041874999525
+  },
+  {
+    "name": "Sm3Al",
+    "entry_id": 10543,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 113.952,
+    "band_gap": 0.0,
+    "stability": 0.026554935000001223
+  },
+  {
+    "name": "Pr3Al",
+    "entry_id": 10559,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 120.028,
+    "band_gap": 0.0,
+    "stability": 0.028732548749999004
+  },
+  {
+    "name": "PrAl3",
+    "entry_id": 10560,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 84.353,
+    "band_gap": 0.0,
+    "stability": 0.097520785000001
+  },
+  {
+    "name": "PuAl3",
+    "entry_id": 10570,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 77.2874,
+    "band_gap": 0.0,
+    "stability": 0.02243226875000004
+  },
+  {
+    "name": "Tb3Al",
+    "entry_id": 10587,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 108.954,
+    "band_gap": 0.0,
+    "stability": 0.42026861270833116
+  },
+  {
+    "name": "TmAl3",
+    "entry_id": 10601,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 75.1554,
+    "band_gap": 0.0,
+    "stability": 0.0014805220000000952
+  },
+  {
+    "name": "UAl3",
+    "entry_id": 10602,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 77.8179,
+    "band_gap": 0.0,
+    "stability": 0.026805794374999498
+  },
+  {
+    "name": "Y3Al",
+    "entry_id": 10611,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 108.991,
+    "band_gap": 0.0,
+    "stability": 0.04984421687500026
+  },
+  {
+    "name": "YAl3",
+    "entry_id": 10614,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 77.2602,
+    "band_gap": 0.0,
+    "stability": 0.017147111250000013
+  },
+  {
+    "name": "YbAl3",
+    "entry_id": 10618,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 78.9594,
+    "band_gap": 0.0,
+    "stability": 0.09094823249999992
+  },
+  {
+    "name": "InAg3",
+    "entry_id": 10638,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 73.6288,
+    "band_gap": 0.0,
+    "stability": 0.017789788750000007
+  },
+  {
+    "name": "MgAg3",
+    "entry_id": 10655,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 70.1706,
+    "band_gap": 0.0,
+    "stability": 0.008916323749998983
+  },
+  {
+    "name": "AgPt3",
+    "entry_id": 10664,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 63.9892,
+    "band_gap": 0.0,
+    "stability": 0.05142231083333414
+  },
+  {
+    "name": "TmAg3",
+    "entry_id": 10680,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 80.8122,
+    "band_gap": 0.0,
+    "stability": 0.15238744
+  },
+  {
+    "name": "LiAu3",
+    "entry_id": 10769,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 67.269,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "Ti3Au",
+    "entry_id": 10814,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 66.6272,
+    "band_gap": 0.0,
+    "stability": 0.13281844249999997
+  },
+  {
+    "name": "V3Au",
+    "entry_id": 10819,
+    "prototype": "AuCu3",
+    "spacegroup": "P4/mmm",
+    "volume": 57.2438,
+    "band_gap": 0.0,
+    "stability": 0.13752365905222858
+  },
+  {
+    "name": "SrBi3",
+    "entry_id": 10964,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 128.85,
+    "band_gap": 0.0,
+    "stability": 0.0018897949999996944
+  },
+  {
+    "name": "Ca3Pb",
+    "entry_id": 10999,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 128.935,
+    "band_gap": 0.0,
+    "stability": 0.03392165562500049
+  },
+  {
+    "name": "CaSn3",
+    "entry_id": 11003,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 107.217,
+    "band_gap": 0.0,
+    "stability": 0.0005862650000008074
+  },
+  {
+    "name": "CaTl3",
+    "entry_id": 11006,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 112.384,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "Nd3In",
+    "entry_id": 11110,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 123.329,
+    "band_gap": 0.0,
+    "stability": 0.00024211499999976516
+  },
+  {
+    "name": "NdIn3",
+    "entry_id": 11111,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 102.951,
+    "band_gap": 0.0,
+    "stability": 0.0022322249999999766
+  },
+  {
+    "name": "InNi3",
+    "entry_id": 11117,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 52.0018,
+    "band_gap": 0.0,
+    "stability": 0.03791163000000024
+  },
+  {
+    "name": "Pr3In",
+    "entry_id": 11138,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 126.295,
+    "band_gap": 0.0,
+    "stability": 5.189999999999362e-05
+  },
+  {
+    "name": "PrIn3",
+    "entry_id": 11139,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 104.628,
+    "band_gap": 0.0,
+    "stability": 0.0009788025000004308
+  },
+  {
+    "name": "Pu3In",
+    "entry_id": 11150,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 105.665,
+    "band_gap": 0.0,
+    "stability": 0.0670849300000002
+  },
+  {
+    "name": "PuIn3",
+    "entry_id": 11151,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 96.443,
+    "band_gap": 0.0,
+    "stability": 0.015703907499999753
+  },
+  {
+    "name": "Sc3In",
+    "entry_id": 11157,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 91.2705,
+    "band_gap": 0.0,
+    "stability": 0.012164601249999019
+  },
+  {
+    "name": "ScIn3",
+    "entry_id": 11158,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 91.1762,
+    "band_gap": 0.0,
+    "stability": 0.001875067499999994
+  },
+  {
+    "name": "Sm3In",
+    "entry_id": 11161,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 119.255,
+    "band_gap": 0.0,
+    "stability": 0.00023038249999962623
+  },
+  {
+    "name": "SmIn3",
+    "entry_id": 11162,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 101.593,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "TbIn3",
+    "entry_id": 11165,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 98.7215,
+    "band_gap": 0.0,
+    "stability": 0.0011866774999997887
+  },
+  {
+    "name": "ThIn3",
+    "entry_id": 11168,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 106.498,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "TmIn3",
+    "entry_id": 11173,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 96.6711,
+    "band_gap": 0.0,
+    "stability": 0.0015616675000003077
+  },
+  {
+    "name": "UIn3",
+    "entry_id": 11174,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 102.124,
+    "band_gap": 0.0,
+    "stability": 5.3227499999589784e-05
+  },
+  {
+    "name": "YIn3",
+    "entry_id": 11176,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 98.3094,
+    "band_gap": 0.0,
+    "stability": 0.0017662399999989753
+  },
+  {
+    "name": "YbIn3",
+    "entry_id": 11180,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 100.406,
+    "band_gap": 0.0,
+    "stability": 0.0024164875000000086
+  },
+  {
+    "name": "Zr3In",
+    "entry_id": 11181,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 89.0611,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "Mn3Ge",
+    "entry_id": 16686,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 46.4365,
+    "band_gap": 0.0,
+    "stability": 0.09974285499999949
+  },
+  {
+    "name": "NbCd3",
+    "entry_id": 17062,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 77.8489,
+    "band_gap": 0.0,
+    "stability": 0.135690055
+  },
+  {
+    "name": "V3Cd",
+    "entry_id": 17075,
+    "prototype": "AuCu3",
+    "spacegroup": "P4/mmm",
+    "volume": 59.6795,
+    "band_gap": 0.0,
+    "stability": 0.3801708075
+  },
+  {
+    "name": "Ce3Ga",
+    "entry_id": 17084,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 121.463,
+    "band_gap": 0.0,
+    "stability": 0.0580148887499993
+  },
+  {
+    "name": "CePt3",
+    "entry_id": 17090,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 75.1359,
+    "band_gap": 0.0,
+    "stability": 0.10036981666666711
+  },
+  {
+    "name": "TaCo3",
+    "entry_id": 17121,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 47.7954,
+    "band_gap": 0.0,
+    "stability": 0.0009495091666670008
+  },
+  {
+    "name": "Cu3Pd",
+    "entry_id": 17159,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 50.9786,
+    "band_gap": 0.0,
+    "stability": 0.0028903739285720126
+  },
+  {
+    "name": "DyGa3",
+    "entry_id": 17179,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 77.5654,
+    "band_gap": 0.0,
+    "stability": 0.007079151249999249
+  },
+  {
+    "name": "DyIr3",
+    "entry_id": 17183,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 65.8985,
+    "band_gap": 0.0,
+    "stability": 0.19313910249999927
+  },
+  {
+    "name": "ErPb3",
+    "entry_id": 17190,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 113.392,
+    "band_gap": 0.0,
+    "stability": 0.01424802499999997
+  },
+  {
+    "name": "ErSn3",
+    "entry_id": 17196,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 102.669,
+    "band_gap": 0.0,
+    "stability": 0.02618280039360016
+  },
+  {
+    "name": "DySn3",
+    "entry_id": 17206,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 103.303,
+    "band_gap": 0.0,
+    "stability": 0.030662774999999975
+  },
+  {
+    "name": "EuTl3",
+    "entry_id": 17221,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 109.768,
+    "band_gap": 0.0,
+    "stability": 0.013728197500000316
+  },
+  {
+    "name": "Fe3Pd",
+    "entry_id": 17227,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 51.305,
+    "band_gap": 0.0,
+    "stability": 0.10245141749999978
+  },
+  {
+    "name": "Fe3Sn",
+    "entry_id": 17231,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 54.6927,
+    "band_gap": 0.0,
+    "stability": 0.0856499541666661
+  },
+  {
+    "name": "Nd3Ga",
+    "entry_id": 17263,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 114.854,
+    "band_gap": 0.0,
+    "stability": 0.06252947578125026
+  },
+  {
+    "name": "NdGa3",
+    "entry_id": 17264,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 84.2456,
+    "band_gap": 0.0,
+    "stability": 0.06909517250000019
+  },
+  {
+    "name": "Pr3Ga",
+    "entry_id": 17283,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 117.684,
+    "band_gap": 0.0,
+    "stability": 0.06266075441291791
+  },
+  {
+    "name": "GaPt3",
+    "entry_id": 17286,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 61.4037,
+    "band_gap": 0.0,
+    "stability": 0.014864910000000009
+  },
+  {
+    "name": "Sm3Ga",
+    "entry_id": 17300,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 110.822,
+    "band_gap": 0.0,
+    "stability": 0.07475917296874948
+  },
+  {
+    "name": "TbGa3",
+    "entry_id": 17303,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 78.3217,
+    "band_gap": 0.0,
+    "stability": 0.01465357249999949
+  },
+  {
+    "name": "GdPt3",
+    "entry_id": 17333,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 70.0442,
+    "band_gap": 0.0,
+    "stability": 0.0015210725000004421
+  },
+  {
+    "name": "Ni3Ge",
+    "entry_id": 17342,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 45.5375,
+    "band_gap": 0.0,
+    "stability": 0.001553598750000218
+  },
+  {
+    "name": "HfIr3",
+    "entry_id": 17363,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 62.1117,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "HfRh3",
+    "entry_id": 17387,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 60.7853,
+    "band_gap": 0.0,
+    "stability": 0.0009227850000002036
+  },
+  {
+    "name": "Ti3Hg",
+    "entry_id": 17437,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 70.0287,
+    "band_gap": 0.0,
+    "stability": 0.0745326725000002
+  },
+  {
+    "name": "TlHg3",
+    "entry_id": 17440,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 107.171,
+    "band_gap": 0.0,
+    "stability": 0.0264960425252985
+  },
+  {
+    "name": "ZrHg3",
+    "entry_id": 17450,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 86.0234,
+    "band_gap": 0.0,
+    "stability": 0.057874252516865635
+  },
+  {
+    "name": "HoIn3",
+    "entry_id": 17455,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 97.743,
+    "band_gap": 0.0,
+    "stability": 0.0013795024999999628
+  },
+  {
+    "name": "HoPb3",
+    "entry_id": 17465,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 113.789,
+    "band_gap": 0.0,
+    "stability": 0.00974281749999939
+  },
+  {
+    "name": "HoPd3",
+    "entry_id": 17468,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 68.4501,
+    "band_gap": 0.0,
+    "stability": 0.001724717500000028
+  },
+  {
+    "name": "HoPt3",
+    "entry_id": 17472,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 68.4877,
+    "band_gap": 0.0,
+    "stability": 0.001626950000000127
+  },
+  {
+    "name": "HoSn3",
+    "entry_id": 17477,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 102.938,
+    "band_gap": 0.0,
+    "stability": 0.03527483375000007
+  },
+  {
+    "name": "HoTl3",
+    "entry_id": 17480,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 104.413,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "NbIr3",
+    "entry_id": 17502,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 60.141,
+    "band_gap": 0.0,
+    "stability": 0.007446940000001456
+  },
+  {
+    "name": "NdIr3",
+    "entry_id": 17504,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 69.6454,
+    "band_gap": 0.0,
+    "stability": 0.3689769112500001
+  },
+  {
+    "name": "PaIr3",
+    "entry_id": 17507,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 68.3692,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "TaIr3",
+    "entry_id": 17518,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 60.4098,
+    "band_gap": 0.0,
+    "stability": 0.00012126250000099592
+  },
+  {
+    "name": "TiIr3",
+    "entry_id": 17524,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 57.6324,
+    "band_gap": 0.0,
+    "stability": 0.0012413524999990155
+  },
+  {
+    "name": "UIr3",
+    "entry_id": 17529,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 66.4378,
+    "band_gap": 0.0,
+    "stability": 7.830250000040451e-05
+  },
+  {
+    "name": "VIr3",
+    "entry_id": 17533,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 55.8125,
+    "band_gap": 0.0,
+    "stability": 0.022847493750000003
+  },
+  {
+    "name": "ZrIr3",
+    "entry_id": 17544,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 63.2677,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "LaPb3",
+    "entry_id": 17568,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 120.374,
+    "band_gap": 0.0,
+    "stability": 0.0020146974999999956
+  },
+  {
+    "name": "LaPd3",
+    "entry_id": 17569,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 74.9316,
+    "band_gap": 0.0,
+    "stability": 0.00021774500000071306
+  },
+  {
+    "name": "LaPt3",
+    "entry_id": 17573,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 74.9063,
+    "band_gap": 0.0,
+    "stability": 0.09790237583333206
+  },
+  {
+    "name": "LaSn3",
+    "entry_id": 17578,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 110.121,
+    "band_gap": 0.0,
+    "stability": 0.00014573249999894067
+  },
+  {
+    "name": "La3Sn",
+    "entry_id": 17579,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 127.341,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "LaTl3",
+    "entry_id": 17581,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 113.412,
+    "band_gap": 0.0,
+    "stability": 0.004492092499999989
+  },
+  {
+    "name": "La3Tl",
+    "entry_id": 17582,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 129.217,
+    "band_gap": 0.0,
+    "stability": 0.00016185249999953188
+  },
+  {
+    "name": "LuPb3",
+    "entry_id": 17620,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 112.693,
+    "band_gap": 0.0,
+    "stability": 0.024753781249999995
+  },
+  {
+    "name": "LuPd3",
+    "entry_id": 17622,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 66.7888,
+    "band_gap": 0.0,
+    "stability": 0.0014361375000000454
+  },
+  {
+    "name": "LuPt3",
+    "entry_id": 17624,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 66.7661,
+    "band_gap": 0.0,
+    "stability": 0.001670882500000026
+  },
+  {
+    "name": "LuTl3",
+    "entry_id": 17628,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 103.075,
+    "band_gap": 0.0,
+    "stability": 0.0031962524999999964
+  },
+  {
+    "name": "MnNi3",
+    "entry_id": 17672,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 44.9247,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "MnPt3",
+    "entry_id": 17681,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 60.5882,
+    "band_gap": 0.0,
+    "stability": 5.291000000001711e-05
+  },
+  {
+    "name": "Mn3Pt",
+    "entry_id": 17682,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 56.314,
+    "band_gap": 0.0,
+    "stability": 0.2426364281034498
+  },
+  {
+    "name": "Mn3Rh",
+    "entry_id": 17687,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 46.1392,
+    "band_gap": 0.0,
+    "stability": 0.1554134506034508
+  },
+  {
+    "name": "MnZn3",
+    "entry_id": 17704,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 55.2642,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "NaPb3",
+    "entry_id": 17728,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 119.61,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "NbRh3",
+    "entry_id": 17747,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 58.8199,
+    "band_gap": 0.0,
+    "stability": 0.0011510924999990069
+  },
+  {
+    "name": "NbRu3",
+    "entry_id": 17752,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 58.9549,
+    "band_gap": 0.0,
+    "stability": 0.025634948251130205
+  },
+  {
+    "name": "NbZn3",
+    "entry_id": 17759,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 60.6607,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "NdPb3",
+    "entry_id": 17764,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 117.078,
+    "band_gap": 0.0,
+    "stability": 0.004663747500000093
+  },
+  {
+    "name": "NdPd3",
+    "entry_id": 17765,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 72.6927,
+    "band_gap": 0.0,
+    "stability": 0.003020099999999637
+  },
+  {
+    "name": "NdPt3",
+    "entry_id": 17769,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 73.1952,
+    "band_gap": 0.0,
+    "stability": 0.05712784916666602
+  },
+  {
+    "name": "NdSn3",
+    "entry_id": 17775,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 107.461,
+    "band_gap": 0.0,
+    "stability": 0.00577059000000002
+  },
+  {
+    "name": "NdTl3",
+    "entry_id": 17777,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 109.282,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "Nd3Tl",
+    "entry_id": 17779,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 122.964,
+    "band_gap": 0.0,
+    "stability": 0.0021658273243019
+  },
+  {
+    "name": "SiNi3",
+    "entry_id": 17803,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 42.8747,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "Ni3Sn",
+    "entry_id": 17808,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 51.7537,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "NpPd3",
+    "entry_id": 17872,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 70.5083,
+    "band_gap": 0.0,
+    "stability": 0.031606778750000064
+  },
+  {
+    "name": "NpRh3",
+    "entry_id": 17873,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 64.0682,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "NpSn3",
+    "entry_id": 17875,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 100.893,
+    "band_gap": 0.0,
+    "stability": 6.759249999999106e-05
+  },
+  {
+    "name": "Np3Sn",
+    "entry_id": 17876,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 96.9406,
+    "band_gap": 0.0,
+    "stability": 0.2854028701424449
+  },
+  {
+    "name": "Np3Tl",
+    "entry_id": 17877,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 100.846,
+    "band_gap": 0.0,
+    "stability": 0.545530579687499
+  },
+  {
+    "name": "AlNi3",
+    "entry_id": 17890,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 44.9718,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "PaRh3",
+    "entry_id": 17908,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 66.8911,
+    "band_gap": 0.0,
+    "stability": 1.096999999972148e-05
+  },
+  {
+    "name": "Pr3Pb",
+    "entry_id": 17912,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 126.491,
+    "band_gap": 0.0,
+    "stability": 0.013027595129488312
+  },
+  {
+    "name": "PrPb3",
+    "entry_id": 17913,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 118.147,
+    "band_gap": 0.0,
+    "stability": 0.00583569500000003
+  },
+  {
+    "name": "Pt3Pb",
+    "entry_id": 17915,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 69.7651,
+    "band_gap": 0.0,
+    "stability": 0.046924961188772166
+  },
+  {
+    "name": "Pu3Pb",
+    "entry_id": 17917,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 108.539,
+    "band_gap": 0.0,
+    "stability": 0.020057960000000846
+  },
+  {
+    "name": "PuPb3",
+    "entry_id": 17918,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 116.615,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "TbPb3",
+    "entry_id": 17926,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 114.596,
+    "band_gap": 0.0,
+    "stability": 0.002615772499998975
+  },
+  {
+    "name": "ThPb3",
+    "entry_id": 17928,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 118.329,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "TmPb3",
+    "entry_id": 17929,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 113.052,
+    "band_gap": 0.0,
+    "stability": 0.018495053750000268
+  },
+  {
+    "name": "UPb3",
+    "entry_id": 17931,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 112.91,
+    "band_gap": 0.0,
+    "stability": 0.148792423750001
+  },
+  {
+    "name": "YPb3",
+    "entry_id": 17934,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 114.673,
+    "band_gap": 0.0,
+    "stability": 0.009914671310809031
+  },
+  {
+    "name": "YbPb3",
+    "entry_id": 17937,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 116.167,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "PrPd3",
+    "entry_id": 17940,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 73.6338,
+    "band_gap": 0.0,
+    "stability": 0.0031743899999998604
+  },
+  {
+    "name": "PuPd3",
+    "entry_id": 17943,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 70.3021,
+    "band_gap": 0.0,
+    "stability": 0.5189805174999993
+  },
+  {
+    "name": "ScPd3",
+    "entry_id": 17945,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 63.6865,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "SmPd3",
+    "entry_id": 17947,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 71.3635,
+    "band_gap": 0.0,
+    "stability": 0.0021758924999990548
+  },
+  {
+    "name": "SnPd3",
+    "entry_id": 17954,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 64.9636,
+    "band_gap": 0.0,
+    "stability": 0.0020998225000004034
+  },
+  {
+    "name": "TbPd3",
+    "entry_id": 17965,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 69.3965,
+    "band_gap": 0.0,
+    "stability": 0.0017938774999998186
+  },
+  {
+    "name": "TiPd3",
+    "entry_id": 17972,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 59.6405,
+    "band_gap": 0.0,
+    "stability": 0.007792608749999985
+  },
+  {
+    "name": "TmPd3",
+    "entry_id": 17981,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 67.6017,
+    "band_gap": 0.0,
+    "stability": 0.0014887550000000083
+  },
+  {
+    "name": "YPd3",
+    "entry_id": 17986,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 69.3457,
+    "band_gap": 0.0,
+    "stability": 0.0024302299999998667
+  },
+  {
+    "name": "YbPd3",
+    "entry_id": 17988,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 66.7012,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "PuPt3",
+    "entry_id": 17994,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 69.159,
+    "band_gap": 0.0,
+    "stability": 0.0025993908333330484
+  },
+  {
+    "name": "ScPt3",
+    "entry_id": 17997,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 63.3756,
+    "band_gap": 0.0,
+    "stability": 0.001092692499999659
+  },
+  {
+    "name": "SmPt3",
+    "entry_id": 18000,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 71.6713,
+    "band_gap": 0.0,
+    "stability": 0.0040556233333329805
+  },
+  {
+    "name": "SnPt3",
+    "entry_id": 18004,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 66.701,
+    "band_gap": 0.0,
+    "stability": 0.0007310625000001569
+  },
+  {
+    "name": "TbPt3",
+    "entry_id": 18012,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 69.4851,
+    "band_gap": 0.0,
+    "stability": 0.0014974850000000206
+  },
+  {
+    "name": "TmPt3",
+    "entry_id": 18021,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 67.5614,
+    "band_gap": 0.0,
+    "stability": 0.0016288999999998222
+  },
+  {
+    "name": "V3Pt",
+    "entry_id": 18026,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 55.3792,
+    "band_gap": 0.0,
+    "stability": 0.19797462499999802
+  },
+  {
+    "name": "VPt3",
+    "entry_id": 18029,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 59.4159,
+    "band_gap": 0.0,
+    "stability": 0.0130972562500003
+  },
+  {
+    "name": "YPt3",
+    "entry_id": 18031,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 69.3801,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "YbPt3",
+    "entry_id": 18034,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 66.6774,
+    "band_gap": 0.0,
+    "stability": 0.07539047499999807
+  },
+  {
+    "name": "ZnPt3",
+    "entry_id": 18037,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 60.7431,
+    "band_gap": 0.0,
+    "stability": 0.0007710562499994023
+  },
+  {
+    "name": "ZrPt3",
+    "entry_id": 18039,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 65.7063,
+    "band_gap": 0.0,
+    "stability": 0.011098583749999946
+  },
+  {
+    "name": "PuRh3",
+    "entry_id": 18042,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 64.2439,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "PuSn3",
+    "entry_id": 18046,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 101.861,
+    "band_gap": 0.0,
+    "stability": 0.0001831625000003334
+  },
+  {
+    "name": "ScRh3",
+    "entry_id": 18055,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 59.9871,
+    "band_gap": 0.0,
+    "stability": 0.0011009949999993829
+  },
+  {
+    "name": "TaRh3",
+    "entry_id": 18066,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 58.6356,
+    "band_gap": 0.0,
+    "stability": 0.0008480499999998781
+  },
+  {
+    "name": "ThRh3",
+    "entry_id": 18071,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 70.6962,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "TiRh3",
+    "entry_id": 18074,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 56.4978,
+    "band_gap": 0.0,
+    "stability": 0.0011723049999989854
+  },
+  {
+    "name": "URh3",
+    "entry_id": 18078,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 65.0777,
+    "band_gap": 0.0,
+    "stability": 0.0014078799999980296
+  },
+  {
+    "name": "VRh3",
+    "entry_id": 18081,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 54.4912,
+    "band_gap": 0.0,
+    "stability": 0.014075297499999306
+  },
+  {
+    "name": "ZrRh3",
+    "entry_id": 18089,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 61.7999,
+    "band_gap": 0.0,
+    "stability": 0.001363719999998958
+  },
+  {
+    "name": "URu3",
+    "entry_id": 18098,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 63.8153,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "USi3",
+    "entry_id": 18109,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 65.0124,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "SmTl3",
+    "entry_id": 18112,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 107.473,
+    "band_gap": 0.0,
+    "stability": 0.00270406750000024
+  },
+  {
+    "name": "TbSn3",
+    "entry_id": 18123,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 103.698,
+    "band_gap": 0.0,
+    "stability": 0.014555896018598524
+  },
+  {
+    "name": "ThSn3",
+    "entry_id": 18125,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 107.415,
+    "band_gap": 0.0,
+    "stability": 0.00013970250000006068
+  },
+  {
+    "name": "Ti3Sn",
+    "entry_id": 18128,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 71.5112,
+    "band_gap": 0.0,
+    "stability": 0.03704907875000002
+  },
+  {
+    "name": "USn3",
+    "entry_id": 18132,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 99.1364,
+    "band_gap": 0.0,
+    "stability": 0.00044904750000035465
+  },
+  {
+    "name": "YSn3",
+    "entry_id": 18135,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 103.915,
+    "band_gap": 0.0,
+    "stability": 0.023511687268598425
+  },
+  {
+    "name": "YbSn3",
+    "entry_id": 18138,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 104.164,
+    "band_gap": 0.0,
+    "stability": 0.00011728750000006283
+  },
+  {
+    "name": "TbTl3",
+    "entry_id": 18149,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 105.262,
+    "band_gap": 0.0,
+    "stability": 0.005174874999999801
+  },
+  {
+    "name": "ThTl3",
+    "entry_id": 18162,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 111.705,
+    "band_gap": 0.0,
+    "stability": 0.0012070574999999972
+  },
+  {
+    "name": "TiZn3",
+    "entry_id": 18167,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 59.7082,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "TmTl3",
+    "entry_id": 18170,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 103.713,
+    "band_gap": 0.0,
+    "stability": 0.004358943750000233
+  },
+  {
+    "name": "UTl3",
+    "entry_id": 18171,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 107.056,
+    "band_gap": 0.0,
+    "stability": 0.23442209
+  },
+  {
+    "name": "YTl3",
+    "entry_id": 18173,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 105.188,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "YbTl3",
+    "entry_id": 18175,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 108.229,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "VZn3",
+    "entry_id": 18189,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 55.5175,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "Zr3Al",
+    "entry_id": 18197,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 84.212,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "DyPd3",
+    "entry_id": 18314,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 68.8491,
+    "band_gap": 0.0,
+    "stability": 0.001993465000000305
+  },
+  {
+    "name": "ErPd3",
+    "entry_id": 18320,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 67.9106,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "LuGa3",
+    "entry_id": 18364,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 74.1578,
+    "band_gap": 0.0,
+    "stability": 0.0004051549999999904
+  },
+  {
+    "name": "NpGa3",
+    "entry_id": 18367,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 77.064,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "Np3Al",
+    "entry_id": 18451,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 78.5803,
+    "band_gap": 0.0,
+    "stability": 0.39503112890625
+  },
+  {
+    "name": "Np3In",
+    "entry_id": 18452,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 102.466,
+    "band_gap": 0.0,
+    "stability": 0.4438738808032265
+  },
+  {
+    "name": "NpIn3",
+    "entry_id": 18460,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 97.7402,
+    "band_gap": 0.0,
+    "stability": 0.004624919999999479
+  },
+  {
+    "name": "La3In",
+    "entry_id": 18489,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 129.527,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "CoPt3",
+    "entry_id": 18499,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 58.6653,
+    "band_gap": 0.0,
+    "stability": 0.020880746666666034
+  },
+  {
+    "name": "CePd3",
+    "entry_id": 18665,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 75.4494,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "GdPd3",
+    "entry_id": 18693,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 69.9681,
+    "band_gap": 0.0,
+    "stability": 0.001931357500000619
+  },
+  {
+    "name": "AlPt3",
+    "entry_id": 18714,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 60.129,
+    "band_gap": 0.0,
+    "stability": 0.01557226749999896
+  },
+  {
+    "name": "ScAl3",
+    "entry_id": 18716,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 69.0724,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "CaPb3",
+    "entry_id": 18782,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 119.09,
+    "band_gap": 0.0,
+    "stability": 0.002452539999999892
+  },
+  {
+    "name": "Ce3In",
+    "entry_id": 18793,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 130.452,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "Ce3Pb",
+    "entry_id": 18794,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 131.038,
+    "band_gap": 0.0,
+    "stability": 0.006112555940035291
+  },
+  {
+    "name": "CrRh3",
+    "entry_id": 18815,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 54.0903,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "EuSn3",
+    "entry_id": 18834,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 106.8,
+    "band_gap": 0.0,
+    "stability": 0.0005198599999997056
+  },
+  {
+    "name": "Nb3Ge",
+    "entry_id": 18852,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 69.369,
+    "band_gap": 0.0,
+    "stability": 0.13927770370217624
+  },
+  {
+    "name": "ScIr3",
+    "entry_id": 18866,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 61.0503,
+    "band_gap": 0.0,
+    "stability": 0.005006264499999968
+  },
+  {
+    "name": "Nb3Si",
+    "entry_id": 18875,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 67.6481,
+    "band_gap": 0.0,
+    "stability": 0.222510941432764
+  },
+  {
+    "name": "PrPt3",
+    "entry_id": 18884,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 74.1575,
+    "band_gap": 0.0,
+    "stability": 0.08803257750000004
+  },
+  {
+    "name": "PrSn3",
+    "entry_id": 18890,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 108.515,
+    "band_gap": 0.0,
+    "stability": 0.00029298375000086363
+  },
+  {
+    "name": "PrTl3",
+    "entry_id": 18892,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 110.537,
+    "band_gap": 0.0,
+    "stability": 0.005527719999999958
+  },
+  {
+    "name": "Pr3Tl",
+    "entry_id": 18894,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 125.468,
+    "band_gap": 0.0,
+    "stability": 0.0009822525000010018
+  },
+  {
+    "name": "SmSn3",
+    "entry_id": 18908,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 105.913,
+    "band_gap": 0.0,
+    "stability": 0.015036402499999046
+  },
+  {
+    "name": "Ce3Al",
+    "entry_id": 18920,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 124.142,
+    "band_gap": 0.0,
+    "stability": 0.032616688749998984
+  },
+  {
+    "name": "Cd3In",
+    "entry_id": 19112,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 92.5393,
+    "band_gap": 0.0,
+    "stability": 0.0158212225000001
+  },
+  {
+    "name": "PuGe3",
+    "entry_id": 19154,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 76.1477,
+    "band_gap": 0.0,
+    "stability": 0.001877512500000289
+  },
+  {
+    "name": "HoGa3",
+    "entry_id": 19192,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 75.821,
+    "band_gap": 0.0,
+    "stability": 0.00324338562499904
+  },
+  {
+    "name": "TmGa3",
+    "entry_id": 19193,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 75.3396,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "Ni3Pt",
+    "entry_id": 19455,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 48.4321,
+    "band_gap": 0.0,
+    "stability": 0.0018394300000003777
+  },
+  {
+    "name": "MgPd3",
+    "entry_id": 19681,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 61.4522,
+    "band_gap": 0.0,
+    "stability": 0.009009687500001029
+  },
+  {
+    "name": "Pu3Ge",
+    "entry_id": 20082,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 94.6431,
+    "band_gap": 0.0,
+    "stability": 0.009097694547317209
+  },
+  {
+    "name": "Pu3Sn",
+    "entry_id": 20083,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 105.581,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "Mn3Sb",
+    "entry_id": 20674,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 54.8361,
+    "band_gap": 0.0,
+    "stability": 0.10332608685344931
+  },
+  {
+    "name": "Al3V",
+    "entry_id": 21315,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 59.2197,
+    "band_gap": 0.0,
+    "stability": 0.1389778425
+  },
+  {
+    "name": "TiAl3",
+    "entry_id": 21316,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 62.9908,
+    "band_gap": 0.0,
+    "stability": 0.03258294250000032
+  },
+  {
+    "name": "PdAu3",
+    "entry_id": 22245,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 69.2517,
+    "band_gap": 0.0,
+    "stability": 0.00927139374999976
+  },
+  {
+    "name": "Pd3Au",
+    "entry_id": 22246,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 63.402,
+    "band_gap": 0.0,
+    "stability": 0.002142258750000174
+  },
+  {
+    "name": "AlCu3",
+    "entry_id": 22409,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 49.5094,
+    "band_gap": 0.0,
+    "stability": 0.011023996250000001
+  },
+  {
+    "name": "InPd3",
+    "entry_id": 23395,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 65.2897,
+    "band_gap": 0.0,
+    "stability": 0.023573395000000996
+  },
+  {
+    "name": "La3Ga",
+    "entry_id": 27476,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 119.679,
+    "band_gap": 0.0,
+    "stability": 0.053167855937193864
+  },
+  {
+    "name": "Ag3Pt",
+    "entry_id": 27631,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 67.1075,
+    "band_gap": 0.0,
+    "stability": 0.03703386710547107
+  },
+  {
+    "name": "ZrAl3",
+    "entry_id": 27979,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 69.0874,
+    "band_gap": 0.0,
+    "stability": 0.027378616249999987
+  },
+  {
+    "name": "CeIn3",
+    "entry_id": 29103,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 107.388,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "CePb3",
+    "entry_id": 29152,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 119.826,
+    "band_gap": 0.0,
+    "stability": 0.0007644149999994632
+  },
+  {
+    "name": "CeRh3",
+    "entry_id": 29167,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 71.331,
+    "band_gap": 0.0,
+    "stability": 0.22921011333333352
+  },
+  {
+    "name": "Ce3Sn",
+    "entry_id": 29193,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 127.959,
+    "band_gap": 0.0,
+    "stability": 0.002933826111728599
+  },
+  {
+    "name": "CeSn3",
+    "entry_id": 29195,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 109.724,
+    "band_gap": 0.0,
+    "stability": 0.0005257099999999015
+  },
+  {
+    "name": "CeTl3",
+    "entry_id": 29199,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 112.011,
+    "band_gap": 0.0,
+    "stability": 0.003810147500000083
+  },
+  {
+    "name": "Ce3Tl",
+    "entry_id": 29201,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 129.801,
+    "band_gap": 0.0,
+    "stability": 0.00026507249999999094
+  },
+  {
+    "name": "TiCo3",
+    "entry_id": 29521,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 46.1451,
+    "band_gap": 0.0,
+    "stability": 0.014039837500000651
+  },
+  {
+    "name": "CrIr3",
+    "entry_id": 29555,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 55.6254,
+    "band_gap": 0.0,
+    "stability": 0.0011297812500004611
+  },
+  {
+    "name": "CrPt3",
+    "entry_id": 29575,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 59.2377,
+    "band_gap": 0.0,
+    "stability": 0.0015777425000008116
+  },
+  {
+    "name": "Cu3Pt",
+    "entry_id": 29766,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 51.1448,
+    "band_gap": 0.0,
+    "stability": 9.532500000100641e-05
+  },
+  {
+    "name": "DyPb3",
+    "entry_id": 29905,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 113.873,
+    "band_gap": 0.0,
+    "stability": 0.00577817249999929
+  },
+  {
+    "name": "DyPt3",
+    "entry_id": 29914,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 68.9765,
+    "band_gap": 0.0,
+    "stability": 0.0014078949999980495
+  },
+  {
+    "name": "DyTl3",
+    "entry_id": 29948,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 104.771,
+    "band_gap": 0.0,
+    "stability": 0.004814477499999775
+  },
+  {
+    "name": "ErGa3",
+    "entry_id": 29969,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 75.7754,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "ErPt3",
+    "entry_id": 30031,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 68.028,
+    "band_gap": 0.0,
+    "stability": 0.0013947950000006148
+  },
+  {
+    "name": "ErTl3",
+    "entry_id": 30065,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 104.133,
+    "band_gap": 0.0,
+    "stability": 0.004830775000000009
+  },
+  {
+    "name": "EuPb3",
+    "entry_id": 30123,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 118.733,
+    "band_gap": 0.0,
+    "stability": 0.00153450250000009
+  },
+  {
+    "name": "EuPd3",
+    "entry_id": 30129,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 69.5553,
+    "band_gap": 0.0,
+    "stability": 0.01183876166666653
+  },
+  {
+    "name": "GaFe3",
+    "entry_id": 30161,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 48.8492,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "FePd3",
+    "entry_id": 30235,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 58.6357,
+    "band_gap": 0.0,
+    "stability": 0.0029802225000002264
+  },
+  {
+    "name": "Fe3Pt",
+    "entry_id": 30238,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 51.6428,
+    "band_gap": 0.0,
+    "stability": 0.039906302499999505
+  },
+  {
+    "name": "GaNi3",
+    "entry_id": 30308,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 45.9187,
+    "band_gap": 0.0,
+    "stability": 5.1795000000243174e-05
+  },
+  {
+    "name": "Pu3Ga",
+    "entry_id": 30332,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 94.4688,
+    "band_gap": 0.0,
+    "stability": 0.06654659312499898
+  },
+  {
+    "name": "ScGa3",
+    "entry_id": 30346,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 69.1199,
+    "band_gap": 0.0,
+    "stability": 0.0003829950000009963
+  },
+  {
+    "name": "UGa3",
+    "entry_id": 30363,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 76.9623,
+    "band_gap": 0.0,
+    "stability": 0.00032668499999999323
+  },
+  {
+    "name": "GdIn3",
+    "entry_id": 30377,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 99.543,
+    "band_gap": 0.0,
+    "stability": 0.0012664275000004999
+  },
+  {
+    "name": "GdIr3",
+    "entry_id": 30380,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 66.8953,
+    "band_gap": 0.0,
+    "stability": 0.24085806875000076
+  },
+  {
+    "name": "GdPb3",
+    "entry_id": 30398,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 115.311,
+    "band_gap": 0.0,
+    "stability": 0.0027614662542755353
+  },
+  {
+    "name": "GdSn3",
+    "entry_id": 30421,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 104.402,
+    "band_gap": 0.0,
+    "stability": 0.008815954143600147
+  },
+  {
+    "name": "GdTl3",
+    "entry_id": 30424,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 105.914,
+    "band_gap": 0.0,
+    "stability": 0.004446737500000075
+  },
+  {
+    "name": "Pr3Sn",
+    "entry_id": 30964,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 124.251,
+    "band_gap": 0.0,
+    "stability": 0.0042748615577622995
+  },
+  {
+    "name": "TiPt3",
+    "entry_id": 30987,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 60.6946,
+    "band_gap": 0.0,
+    "stability": 0.0046398378571419485
+  },
+  {
+    "name": "ErIn3",
+    "entry_id": 31226,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 96.7839,
+    "band_gap": 0.0,
+    "stability": 0.0021173749999996994
+  },
+  {
+    "name": "DyIn3",
+    "entry_id": 31227,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 97.7839,
+    "band_gap": 0.0,
+    "stability": 0.0020873150000003116
+  },
+  {
+    "name": "Cu3N",
+    "entry_id": 52896,
+    "prototype": "AuCu3",
+    "spacegroup": "Pm-3m",
+    "volume": 42.3342,
+    "band_gap": 0.0,
+    "stability": 0.832809196164123
+  }
+]

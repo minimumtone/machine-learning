@@ -1,0 +1,5726 @@
+[
+  {
+    "name": "CsCl",
+    "entry_id": 4110,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 71.862,
+    "band_gap": 5.181,
+    "stability": 0.048765620000000176
+  },
+  {
+    "name": "CsBr",
+    "entry_id": 4111,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 81.4882,
+    "band_gap": 4.487,
+    "stability": 0.04143123500000012
+  },
+  {
+    "name": "RbCl",
+    "entry_id": 5151,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 62.0219,
+    "band_gap": 5.126,
+    "stability": 0.06233479499999994
+  },
+  {
+    "name": "TlCl",
+    "entry_id": 5677,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 57.9995,
+    "band_gap": 2.323,
+    "stability": 0.04738283500000007
+  },
+  {
+    "name": "KCl",
+    "entry_id": 5995,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.6889,
+    "band_gap": 5.123,
+    "stability": 0.07819627750000135
+  },
+  {
+    "name": "ThTe",
+    "entry_id": 6293,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 57.1791,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "SiOs",
+    "entry_id": 8080,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 25.8658,
+    "band_gap": 0.0,
+    "stability": 0.033006704535841536
+  },
+  {
+    "name": "NaCl",
+    "entry_id": 8090,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 41.5233,
+    "band_gap": 4.237,
+    "stability": 0.15699969249999546
+  },
+  {
+    "name": "RbF",
+    "entry_id": 8091,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 35.8071,
+    "band_gap": 7.051,
+    "stability": 0.12287070999999994
+  },
+  {
+    "name": "PuAs",
+    "entry_id": 8269,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 43.8492,
+    "band_gap": 0.0,
+    "stability": 0.19295059000000003
+  },
+  {
+    "name": "UAs",
+    "entry_id": 8281,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 43.1953,
+    "band_gap": 0.0,
+    "stability": 0.13297251
+  },
+  {
+    "name": "CsI",
+    "entry_id": 8355,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 101.476,
+    "band_gap": 3.857,
+    "stability": 0.03186423666666527
+  },
+  {
+    "name": "SiRh",
+    "entry_id": 8386,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 26.4874,
+    "band_gap": 0.0,
+    "stability": 0.28431601124999994
+  },
+  {
+    "name": "SiRu",
+    "entry_id": 8480,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 25.4444,
+    "band_gap": 0.0,
+    "stability": 0.002273607500000052
+  },
+  {
+    "name": "InSb",
+    "entry_id": 8484,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.1569,
+    "band_gap": 0.0,
+    "stability": 0.23518437
+  },
+  {
+    "name": "InTe",
+    "entry_id": 8487,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 57.0812,
+    "band_gap": 0.0,
+    "stability": 0.2629089699999998
+  },
+  {
+    "name": "ZrPd",
+    "entry_id": 9972,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 37.665,
+    "band_gap": 0.0,
+    "stability": 0.06512298125000004
+  },
+  {
+    "name": "FeCo",
+    "entry_id": 10127,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 21.5335,
+    "band_gap": 0.0,
+    "stability": 0.031640219999999906
+  },
+  {
+    "name": "ZnCu",
+    "entry_id": 10128,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 25.6346,
+    "band_gap": 0.0,
+    "stability": 0.003848952233779762
+  },
+  {
+    "name": "USb",
+    "entry_id": 10323,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 51.6971,
+    "band_gap": 0.0,
+    "stability": 0.02789458062500136
+  },
+  {
+    "name": "CdAg",
+    "entry_id": 10359,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 38.1634,
+    "band_gap": 0.0,
+    "stability": 0.0038324438888891615
+  },
+  {
+    "name": "CeAg",
+    "entry_id": 10361,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.6783,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "DyAg",
+    "entry_id": 10365,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 47.4344,
+    "band_gap": 0.0,
+    "stability": 0.0006244250000000395
+  },
+  {
+    "name": "NpTe",
+    "entry_id": 10375,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 53.3428,
+    "band_gap": 0.0,
+    "stability": 0.06194636515624885
+  },
+  {
+    "name": "AlAu",
+    "entry_id": 10381,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 33.4611,
+    "band_gap": 0.0,
+    "stability": 0.14938112625
+  },
+  {
+    "name": "CeAl",
+    "entry_id": 10401,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.5495,
+    "band_gap": 0.0,
+    "stability": 0.06004809499999997
+  },
+  {
+    "name": "AlCo",
+    "entry_id": 10411,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 22.6547,
+    "band_gap": 0.0,
+    "stability": 0.003813699999999809
+  },
+  {
+    "name": "DyAl",
+    "entry_id": 10445,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 46.5798,
+    "band_gap": 0.0,
+    "stability": 0.02122244624999997
+  },
+  {
+    "name": "AlIr",
+    "entry_id": 10480,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 27.5314,
+    "band_gap": 0.0,
+    "stability": 4.67000000003992e-06
+  },
+  {
+    "name": "AlNi",
+    "entry_id": 10516,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 24.0552,
+    "band_gap": 0.0,
+    "stability": 6.6560000001048e-05
+  },
+  {
+    "name": "ScAl",
+    "entry_id": 10539,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 38.3758,
+    "band_gap": 0.0,
+    "stability": 0.005456309999999631
+  },
+  {
+    "name": "SmAl",
+    "entry_id": 10542,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 49.8314,
+    "band_gap": 0.0,
+    "stability": 0.03149970750000042
+  },
+  {
+    "name": "AlOs",
+    "entry_id": 10544,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 27.4909,
+    "band_gap": 0.0,
+    "stability": 0.02626261000000013
+  },
+  {
+    "name": "AlPd",
+    "entry_id": 10550,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 28.8846,
+    "band_gap": 0.0,
+    "stability": 0.03641273999999928
+  },
+  {
+    "name": "PrAl",
+    "entry_id": 10558,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 53.0524,
+    "band_gap": 0.0,
+    "stability": 0.05212252500000003
+  },
+  {
+    "name": "AlPt",
+    "entry_id": 10561,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 29.5392,
+    "band_gap": 0.0,
+    "stability": 0.11153046249999987
+  },
+  {
+    "name": "AlRe",
+    "entry_id": 10573,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 28.6592,
+    "band_gap": 0.0,
+    "stability": 0.3160960449999997
+  },
+  {
+    "name": "AlRh",
+    "entry_id": 10576,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 27.0552,
+    "band_gap": 0.0,
+    "stability": 8.740499999992934e-05
+  },
+  {
+    "name": "YAl",
+    "entry_id": 10609,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 46.714,
+    "band_gap": 0.0,
+    "stability": 0.021175009374999998
+  },
+  {
+    "name": "ErAg",
+    "entry_id": 10623,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 46.2187,
+    "band_gap": 0.0,
+    "stability": 0.0008020950000000027
+  },
+  {
+    "name": "GdAg",
+    "entry_id": 10632,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 48.8377,
+    "band_gap": 0.0,
+    "stability": 0.0007009849999999873
+  },
+  {
+    "name": "LaAg",
+    "entry_id": 10639,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 55.4807,
+    "band_gap": 0.0,
+    "stability": 0.006768492500000001
+  },
+  {
+    "name": "LiAg",
+    "entry_id": 10649,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 31.4875,
+    "band_gap": 0.0,
+    "stability": 0.00033476999999998425
+  },
+  {
+    "name": "NdAg",
+    "entry_id": 10660,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 52.0373,
+    "band_gap": 0.0,
+    "stability": 0.0014401800000004017
+  },
+  {
+    "name": "PrAg",
+    "entry_id": 10662,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 53.1526,
+    "band_gap": 0.0,
+    "stability": 0.0069572949999999745
+  },
+  {
+    "name": "ScAg",
+    "entry_id": 10665,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 40.0296,
+    "band_gap": 0.0,
+    "stability": 0.001398430000000006
+  },
+  {
+    "name": "SmAg",
+    "entry_id": 10667,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 50.3379,
+    "band_gap": 0.0,
+    "stability": 0.00102392499999987
+  },
+  {
+    "name": "TbAg",
+    "entry_id": 10672,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 48.0842,
+    "band_gap": 0.0,
+    "stability": 0.07965846633333307
+  },
+  {
+    "name": "TmAg",
+    "entry_id": 10678,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 45.4458,
+    "band_gap": 0.0,
+    "stability": 0.0016281999999999686
+  },
+  {
+    "name": "YAg",
+    "entry_id": 10681,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 47.7059,
+    "band_gap": 0.0,
+    "stability": 0.0015580449999999524
+  },
+  {
+    "name": "YbAg",
+    "entry_id": 10683,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 48.1894,
+    "band_gap": 0.0,
+    "stability": 0.006614506250000041
+  },
+  {
+    "name": "CdAu",
+    "entry_id": 10705,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 38.3287,
+    "band_gap": 0.0,
+    "stability": 0.00543921
+  },
+  {
+    "name": "CsAu",
+    "entry_id": 10711,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 77.4177,
+    "band_gap": 1.04,
+    "stability": 0.007440914999999992
+  },
+  {
+    "name": "RbAu",
+    "entry_id": 10712,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 69.1706,
+    "band_gap": 0.392,
+    "stability": 0.01320482406250012
+  },
+  {
+    "name": "DyAu",
+    "entry_id": 10715,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 45.9144,
+    "band_gap": 0.0,
+    "stability": 0.022499612499999988
+  },
+  {
+    "name": "ErAu",
+    "entry_id": 10720,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 44.8124,
+    "band_gap": 0.0,
+    "stability": 0.01344919500000008
+  },
+  {
+    "name": "GdAu",
+    "entry_id": 10729,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 47.3209,
+    "band_gap": 0.0,
+    "stability": 0.02527999000000003
+  },
+  {
+    "name": "HoAu",
+    "entry_id": 10736,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 45.3111,
+    "band_gap": 0.0,
+    "stability": 0.01823717250000001
+  },
+  {
+    "name": "LuAu",
+    "entry_id": 10775,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 43.2785,
+    "band_gap": 0.0,
+    "stability": 0.0004420149999999623
+  },
+  {
+    "name": "MgAu",
+    "entry_id": 10777,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 35.3707,
+    "band_gap": 0.0,
+    "stability": 0.0012252074999997697
+  },
+  {
+    "name": "NdAu",
+    "entry_id": 10789,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 50.4363,
+    "band_gap": 0.0,
+    "stability": 0.04563163499999978
+  },
+  {
+    "name": "PrAu",
+    "entry_id": 10793,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 51.4661,
+    "band_gap": 0.0,
+    "stability": 0.047170337500000326
+  },
+  {
+    "name": "ScAu",
+    "entry_id": 10797,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 38.5218,
+    "band_gap": 0.0,
+    "stability": 0.0037229399999999524
+  },
+  {
+    "name": "SmAu",
+    "entry_id": 10799,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 48.7189,
+    "band_gap": 0.0,
+    "stability": 0.038721950000000005
+  },
+  {
+    "name": "TbAu",
+    "entry_id": 10810,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 46.5681,
+    "band_gap": 0.0,
+    "stability": 0.02572280250000003
+  },
+  {
+    "name": "TiAu",
+    "entry_id": 10813,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 34.551,
+    "band_gap": 0.0,
+    "stability": 0.11352196749999904
+  },
+  {
+    "name": "TmAu",
+    "entry_id": 10817,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 44.2043,
+    "band_gap": 0.0,
+    "stability": 0.0090111100000001
+  },
+  {
+    "name": "YAu",
+    "entry_id": 10822,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 46.2091,
+    "band_gap": 0.0,
+    "stability": 0.024117667500000994
+  },
+  {
+    "name": "YbAu",
+    "entry_id": 10823,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 44.7991,
+    "band_gap": 0.0,
+    "stability": 0.011590693749999992
+  },
+  {
+    "name": "BaCd",
+    "entry_id": 10840,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 75.3588,
+    "band_gap": 0.0,
+    "stability": 0.0022185200000000016
+  },
+  {
+    "name": "BaHg",
+    "entry_id": 10846,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 72.0075,
+    "band_gap": 0.0,
+    "stability": 0.003990455000000004
+  },
+  {
+    "name": "BaZn",
+    "entry_id": 10867,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 68.4179,
+    "band_gap": 0.0,
+    "stability": 0.019330972499999988
+  },
+  {
+    "name": "BeCo",
+    "entry_id": 10876,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 17.332,
+    "band_gap": 0.0,
+    "stability": 0.00426963249999901
+  },
+  {
+    "name": "BeCu",
+    "entry_id": 10879,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 19.3093,
+    "band_gap": 0.0,
+    "stability": 0.005333575000000326
+  },
+  {
+    "name": "BeNi",
+    "entry_id": 10894,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 17.6252,
+    "band_gap": 0.0,
+    "stability": 0.0006242399999999981
+  },
+  {
+    "name": "BePd",
+    "entry_id": 10896,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 22.4019,
+    "band_gap": 0.0,
+    "stability": 0.0006656600000003454
+  },
+  {
+    "name": "BeRh",
+    "entry_id": 10900,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 21.5768,
+    "band_gap": 0.0,
+    "stability": 5.579500000096882e-05
+  },
+  {
+    "name": "TiBe",
+    "entry_id": 10906,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 25.0432,
+    "band_gap": 0.0,
+    "stability": 1.8099999999909855e-06
+  },
+  {
+    "name": "ThBi",
+    "entry_id": 10965,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 61.1738,
+    "band_gap": 0.0,
+    "stability": 0.02528971000000002
+  },
+  {
+    "name": "CaCd",
+    "entry_id": 10972,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 55.8254,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "CaHg",
+    "entry_id": 10986,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.0636,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "CaIn",
+    "entry_id": 10991,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 56.4312,
+    "band_gap": 0.0,
+    "stability": 0.0016267600000002824
+  },
+  {
+    "name": "CaPd",
+    "entry_id": 11000,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 43.4657,
+    "band_gap": 0.0,
+    "stability": 0.0003523999999995864
+  },
+  {
+    "name": "CaTl",
+    "entry_id": 11005,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 57.8056,
+    "band_gap": 0.0,
+    "stability": 0.0014997037499996368
+  },
+  {
+    "name": "CeCd",
+    "entry_id": 11012,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 58.704,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "DyCd",
+    "entry_id": 11019,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 51.7349,
+    "band_gap": 0.0,
+    "stability": 0.000974805000000023
+  },
+  {
+    "name": "ErCd",
+    "entry_id": 11022,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 50.452,
+    "band_gap": 0.0,
+    "stability": 0.001125144999999994
+  },
+  {
+    "name": "EuCd",
+    "entry_id": 11024,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 57.9663,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "HoCd",
+    "entry_id": 11031,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 51.07,
+    "band_gap": 0.0,
+    "stability": 0.001183370000000017
+  },
+  {
+    "name": "InNi",
+    "entry_id": 11114,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 31.153,
+    "band_gap": 0.0,
+    "stability": 0.09062725999999999
+  },
+  {
+    "name": "InPd",
+    "entry_id": 11128,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 35.5285,
+    "band_gap": 0.0,
+    "stability": 0.013687436249999907
+  },
+  {
+    "name": "PrIn",
+    "entry_id": 11137,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 59.4209,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "InRh",
+    "entry_id": 11153,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 33.6793,
+    "band_gap": 0.0,
+    "stability": 0.004973660000000213
+  },
+  {
+    "name": "SmIn",
+    "entry_id": 11159,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 55.8307,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "TmIn",
+    "entry_id": 11171,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 51.2563,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "YIn",
+    "entry_id": 11175,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 55.1438,
+    "band_gap": 0.0,
+    "stability": 0.0037210875000002197
+  },
+  {
+    "name": "YbIn",
+    "entry_id": 11177,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 55.261,
+    "band_gap": 0.0,
+    "stability": 0.00033538500000007687
+  },
+  {
+    "name": "TlSb",
+    "entry_id": 11312,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 57.7442,
+    "band_gap": 0.0,
+    "stability": 0.18179992479166684
+  },
+  {
+    "name": "RbBr",
+    "entry_id": 11509,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 71.771,
+    "band_gap": 4.153,
+    "stability": 0.05527828499999998
+  },
+  {
+    "name": "RbI",
+    "entry_id": 11510,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 89.1966,
+    "band_gap": 3.455,
+    "stability": 0.04972857500000005
+  },
+  {
+    "name": "KI",
+    "entry_id": 11511,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 81.6171,
+    "band_gap": 3.367,
+    "stability": 0.06963003999999984
+  },
+  {
+    "name": "KBr",
+    "entry_id": 11512,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 65.7632,
+    "band_gap": 3.948,
+    "stability": 0.07251042499999993
+  },
+  {
+    "name": "CsF",
+    "entry_id": 11514,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 43.9486,
+    "band_gap": 6.315,
+    "stability": 0.13207015499999963
+  },
+  {
+    "name": "NpAs",
+    "entry_id": 11602,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 42.6387,
+    "band_gap": 0.0,
+    "stability": 0.13741595499999903
+  },
+  {
+    "name": "PbS",
+    "entry_id": 14034,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 48.5773,
+    "band_gap": 0.0,
+    "stability": 0.25504796000000096
+  },
+  {
+    "name": "PbSe",
+    "entry_id": 14035,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 53.0103,
+    "band_gap": 0.0,
+    "stability": 0.23983249265624995
+  },
+  {
+    "name": "TePb",
+    "entry_id": 14036,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 62.5983,
+    "band_gap": 0.0,
+    "stability": 0.22865984999999922
+  },
+  {
+    "name": "PrTe",
+    "entry_id": 14052,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 59.239,
+    "band_gap": 0.0,
+    "stability": 0.09434697499999989
+  },
+  {
+    "name": "SrCd",
+    "entry_id": 17067,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 64.9075,
+    "band_gap": 0.0,
+    "stability": 0.003059450000000019
+  },
+  {
+    "name": "ErIn",
+    "entry_id": 17187,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 51.6971,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "DyTl",
+    "entry_id": 17207,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 53.5368,
+    "band_gap": 0.0,
+    "stability": 0.0019816950000000055
+  },
+  {
+    "name": "EuHg",
+    "entry_id": 17212,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 56.3456,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "GaIr",
+    "entry_id": 17248,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 28.3412,
+    "band_gap": 0.0,
+    "stability": 0.0012283499999999892
+  },
+  {
+    "name": "GaRu",
+    "entry_id": 17297,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 27.6982,
+    "band_gap": 0.0,
+    "stability": 0.007680352500000209
+  },
+  {
+    "name": "GdHg",
+    "entry_id": 17320,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 52.1439,
+    "band_gap": 0.0,
+    "stability": 0.0009818050000000023
+  },
+  {
+    "name": "UTe",
+    "entry_id": 17352,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 52.5098,
+    "band_gap": 0.0,
+    "stability": 0.1379879816666661
+  },
+  {
+    "name": "YbZn",
+    "entry_id": 17360,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 46.1369,
+    "band_gap": 0.0,
+    "stability": 0.0006964549999999847
+  },
+  {
+    "name": "HfOs",
+    "entry_id": 17380,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 34.3291,
+    "band_gap": 0.0,
+    "stability": 0.0006704699999990904
+  },
+  {
+    "name": "HfPt",
+    "entry_id": 17383,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 36.5553,
+    "band_gap": 0.0,
+    "stability": 0.16891751250000053
+  },
+  {
+    "name": "HfRh",
+    "entry_id": 17386,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 34.6104,
+    "band_gap": 0.0,
+    "stability": 0.05157265499999997
+  },
+  {
+    "name": "HfRu",
+    "entry_id": 17389,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 33.9267,
+    "band_gap": 0.0,
+    "stability": 0.000525254999999003
+  },
+  {
+    "name": "HfTc",
+    "entry_id": 17392,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 34.6008,
+    "band_gap": 0.0,
+    "stability": 0.0004249700000009682
+  },
+  {
+    "name": "HoHg",
+    "entry_id": 17397,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 50.0377,
+    "band_gap": 0.0,
+    "stability": 0.0018053199999999991
+  },
+  {
+    "name": "LaHg",
+    "entry_id": 17402,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 58.4591,
+    "band_gap": 0.0,
+    "stability": 0.0036502749999999806
+  },
+  {
+    "name": "LiHg",
+    "entry_id": 17404,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 36.1708,
+    "band_gap": 0.0,
+    "stability": 0.0009405949999993779
+  },
+  {
+    "name": "LuHg",
+    "entry_id": 17406,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 47.5396,
+    "band_gap": 0.0,
+    "stability": 0.002723030000000015
+  },
+  {
+    "name": "MgHg",
+    "entry_id": 17407,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 41.6159,
+    "band_gap": 0.0,
+    "stability": 0.0021959099999999954
+  },
+  {
+    "name": "MnHg",
+    "entry_id": 17413,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 36.3926,
+    "band_gap": 0.0,
+    "stability": 0.364270040620315
+  },
+  {
+    "name": "NdHg",
+    "entry_id": 17419,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 55.4162,
+    "band_gap": 0.0,
+    "stability": 0.0027753699999999992
+  },
+  {
+    "name": "PrHg",
+    "entry_id": 17424,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 56.5451,
+    "band_gap": 0.0,
+    "stability": 0.002776569999998979
+  },
+  {
+    "name": "ScHg",
+    "entry_id": 17427,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 42.8675,
+    "band_gap": 0.0,
+    "stability": 0.002017939999999996
+  },
+  {
+    "name": "SrHg",
+    "entry_id": 17429,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 62.5029,
+    "band_gap": 0.0,
+    "stability": 0.002584590000000997
+  },
+  {
+    "name": "TbHg",
+    "entry_id": 17432,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 51.3457,
+    "band_gap": 0.0,
+    "stability": 0.0014035849999999989
+  },
+  {
+    "name": "TlHg",
+    "entry_id": 17439,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 55.2426,
+    "band_gap": 0.0,
+    "stability": 0.0247376300168656
+  },
+  {
+    "name": "TmHg",
+    "entry_id": 17441,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 48.7611,
+    "band_gap": 0.0,
+    "stability": 0.001648005000000008
+  },
+  {
+    "name": "YHg",
+    "entry_id": 17443,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 50.8958,
+    "band_gap": 0.0,
+    "stability": 0.0018111350000000193
+  },
+  {
+    "name": "YbHg",
+    "entry_id": 17446,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 51.578,
+    "band_gap": 0.0,
+    "stability": 0.00030410499999999896
+  },
+  {
+    "name": "HoIn",
+    "entry_id": 17454,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 52.8929,
+    "band_gap": 0.0,
+    "stability": 0.00014886750000042692
+  },
+  {
+    "name": "HoIr",
+    "entry_id": 17457,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 39.3126,
+    "band_gap": 0.0,
+    "stability": 0.0005675599999990233
+  },
+  {
+    "name": "HoMg",
+    "entry_id": 17459,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 53.5826,
+    "band_gap": 0.0,
+    "stability": 0.00012906000000040274
+  },
+  {
+    "name": "HoMg",
+    "entry_id": 17460,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 53.6142,
+    "band_gap": 0.0,
+    "stability": 0.00011308000000020968
+  },
+  {
+    "name": "HoPd",
+    "entry_id": 17467,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 42.0607,
+    "band_gap": 0.0,
+    "stability": 0.024966596249999973
+  },
+  {
+    "name": "HoRh",
+    "entry_id": 17474,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 39.2174,
+    "band_gap": 0.0,
+    "stability": 0.0010027750000000113
+  },
+  {
+    "name": "HoTl",
+    "entry_id": 17479,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 53.0826,
+    "band_gap": 0.0,
+    "stability": 0.0016683150000010305
+  },
+  {
+    "name": "HoZn",
+    "entry_id": 17481,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 44.537,
+    "band_gap": 0.0,
+    "stability": 6.602500000002509e-05
+  },
+  {
+    "name": "GaAg",
+    "entry_id": 17484,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 36.2175,
+    "band_gap": 0.0,
+    "stability": 0.08476408541666691
+  },
+  {
+    "name": "HoAg",
+    "entry_id": 17486,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 46.8144,
+    "band_gap": 0.0,
+    "stability": 0.000860279999999991
+  },
+  {
+    "name": "LuIr",
+    "entry_id": 17492,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 37.4179,
+    "band_gap": 0.0,
+    "stability": 0.0014050300000000293
+  },
+  {
+    "name": "ScIr",
+    "entry_id": 17512,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 33.3386,
+    "band_gap": 0.0,
+    "stability": 0.0006342399999998971
+  },
+  {
+    "name": "TmIr",
+    "entry_id": 17525,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 38.326,
+    "band_gap": 0.0,
+    "stability": 0.0002493949999999856
+  },
+  {
+    "name": "YIr",
+    "entry_id": 17536,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 40.2459,
+    "band_gap": 0.0,
+    "stability": 0.0003444032549571041
+  },
+  {
+    "name": "YbIr",
+    "entry_id": 17538,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 37.3437,
+    "band_gap": 0.0,
+    "stability": 0.2640702321875002
+  },
+  {
+    "name": "ZrIr",
+    "entry_id": 17541,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 36.3203,
+    "band_gap": 0.0,
+    "stability": 0.09050918625000104
+  },
+  {
+    "name": "LaMg",
+    "entry_id": 17558,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 61.9075,
+    "band_gap": 0.0,
+    "stability": 0.0002726312499998912
+  },
+  {
+    "name": "LaTl",
+    "entry_id": 17580,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 62.1634,
+    "band_gap": 0.0,
+    "stability": 0.0023039250000009837
+  },
+  {
+    "name": "LaZn",
+    "entry_id": 17583,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 52.8188,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "LiPb",
+    "entry_id": 17590,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 44.4011,
+    "band_gap": 0.0,
+    "stability": 0.0006408400000002534
+  },
+  {
+    "name": "LiPd",
+    "entry_id": 17596,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 26.4626,
+    "band_gap": 0.0,
+    "stability": 0.019124745000000998
+  },
+  {
+    "name": "LiTl",
+    "entry_id": 17610,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 41.1753,
+    "band_gap": 0.0,
+    "stability": 8.75099999999851e-05
+  },
+  {
+    "name": "LuMg",
+    "entry_id": 17612,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 51.9379,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "LuPd",
+    "entry_id": 17621,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 40.1355,
+    "band_gap": 0.0,
+    "stability": 0.0005692800000000053
+  },
+  {
+    "name": "LuRh",
+    "entry_id": 17625,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 37.3813,
+    "band_gap": 0.0,
+    "stability": 0.00045345999999968356
+  },
+  {
+    "name": "LuRu",
+    "entry_id": 17627,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 36.7729,
+    "band_gap": 0.0,
+    "stability": 0.00013830999999997484
+  },
+  {
+    "name": "LuZn",
+    "entry_id": 17629,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 42.2691,
+    "band_gap": 0.0,
+    "stability": 0.00051768499999999
+  },
+  {
+    "name": "NdMg",
+    "entry_id": 17630,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 58.4562,
+    "band_gap": 0.0,
+    "stability": 8.959999999999524e-05
+  },
+  {
+    "name": "MgPd",
+    "entry_id": 17638,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 31.5558,
+    "band_gap": 0.0,
+    "stability": 0.002445649999999966
+  },
+  {
+    "name": "PrMg",
+    "entry_id": 17640,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 60.037,
+    "band_gap": 0.0,
+    "stability": 9.375000000005906e-06
+  },
+  {
+    "name": "MgRh",
+    "entry_id": 17646,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 30.1179,
+    "band_gap": 0.0,
+    "stability": 0.0004300850000006906
+  },
+  {
+    "name": "SmMg",
+    "entry_id": 17650,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 56.7043,
+    "band_gap": 0.0,
+    "stability": 4.425499999999305e-05
+  },
+  {
+    "name": "SrMg",
+    "entry_id": 17655,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 72.8647,
+    "band_gap": 0.0,
+    "stability": 0.022970129374999995
+  },
+  {
+    "name": "TbMg",
+    "entry_id": 17657,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.6392,
+    "band_gap": 0.0,
+    "stability": 0.24304753308333
+  },
+  {
+    "name": "MgTl",
+    "entry_id": 17660,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 48.4111,
+    "band_gap": 0.0,
+    "stability": 0.0029861399999999982
+  },
+  {
+    "name": "TmMg",
+    "entry_id": 17661,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 52.669,
+    "band_gap": 0.0,
+    "stability": 0.00012495999999991014
+  },
+  {
+    "name": "YMg",
+    "entry_id": 17663,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.4935,
+    "band_gap": 0.0,
+    "stability": 0.0003304375000000026
+  },
+  {
+    "name": "MnNi",
+    "entry_id": 17671,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 23.9343,
+    "band_gap": 0.0,
+    "stability": 0.047690290877789546
+  },
+  {
+    "name": "MnPd",
+    "entry_id": 17677,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 30.0889,
+    "band_gap": 0.0,
+    "stability": 0.008446446241379607
+  },
+  {
+    "name": "MnRh",
+    "entry_id": 17686,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 27.8137,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "MnV",
+    "entry_id": 17700,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 23.3217,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "MnZn",
+    "entry_id": 17703,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 26.5512,
+    "band_gap": 0.0,
+    "stability": 0.08233642381565072
+  },
+  {
+    "name": "NbRu",
+    "entry_id": 17750,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 32.0688,
+    "band_gap": 0.0,
+    "stability": 0.07116064
+  },
+  {
+    "name": "NdTl",
+    "entry_id": 17776,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 58.5111,
+    "band_gap": 0.0,
+    "stability": 0.001860805000000021
+  },
+  {
+    "name": "NdZn",
+    "entry_id": 17780,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 49.6409,
+    "band_gap": 0.0,
+    "stability": 0.00016701000000002297
+  },
+  {
+    "name": "ScNi",
+    "entry_id": 17795,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 31.382,
+    "band_gap": 0.0,
+    "stability": 0.0002819250000010154
+  },
+  {
+    "name": "TiNi",
+    "entry_id": 17838,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 26.9429,
+    "band_gap": 0.0,
+    "stability": 0.04573141500000022
+  },
+  {
+    "name": "ZnNi",
+    "entry_id": 17860,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 24.0255,
+    "band_gap": 0.0,
+    "stability": 0.013030894999999515
+  },
+  {
+    "name": "TiOs",
+    "entry_id": 17904,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 29.3648,
+    "band_gap": 0.0,
+    "stability": 0.0002991049999999662
+  },
+  {
+    "name": "ZrOs",
+    "entry_id": 17906,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 35.3748,
+    "band_gap": 0.0,
+    "stability": 0.0007385349999999846
+  },
+  {
+    "name": "ScPd",
+    "entry_id": 17944,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 35.9492,
+    "band_gap": 0.0,
+    "stability": 0.0007531750000000503
+  },
+  {
+    "name": "TiPd",
+    "entry_id": 17970,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 31.6067,
+    "band_gap": 0.0,
+    "stability": 0.08312948337160764
+  },
+  {
+    "name": "TmPd",
+    "entry_id": 17980,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 40.9643,
+    "band_gap": 0.0,
+    "stability": 0.018461866250000014
+  },
+  {
+    "name": "YbPd",
+    "entry_id": 17987,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 40.9566,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "ScPt",
+    "entry_id": 17995,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 35.4484,
+    "band_gap": 0.0,
+    "stability": 0.007501645000000057
+  },
+  {
+    "name": "TiPt",
+    "entry_id": 18015,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 31.7572,
+    "band_gap": 0.0,
+    "stability": 0.15005851499999923
+  },
+  {
+    "name": "ZrPt",
+    "entry_id": 18038,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 37.5312,
+    "band_gap": 0.0,
+    "stability": 0.17458105999999962
+  },
+  {
+    "name": "PuRu",
+    "entry_id": 18044,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 38.5288,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "TiRe",
+    "entry_id": 18050,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 30.0296,
+    "band_gap": 0.0,
+    "stability": 2.5645000000906748e-05
+  },
+  {
+    "name": "ScRh",
+    "entry_id": 18054,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 33.2516,
+    "band_gap": 0.0,
+    "stability": 0.000966360000000055
+  },
+  {
+    "name": "SmRh",
+    "entry_id": 18057,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 42.6215,
+    "band_gap": 0.0,
+    "stability": 0.0004242099999989257
+  },
+  {
+    "name": "TbRh",
+    "entry_id": 18067,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 40.4518,
+    "band_gap": 0.0,
+    "stability": 0.00040818999999991945
+  },
+  {
+    "name": "TiRh",
+    "entry_id": 18073,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 29.7905,
+    "band_gap": 0.0,
+    "stability": 0.03270506249999994
+  },
+  {
+    "name": "TmRh",
+    "entry_id": 18076,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 38.2936,
+    "band_gap": 0.0,
+    "stability": 0.0003815299999999633
+  },
+  {
+    "name": "YRh",
+    "entry_id": 18083,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 40.3441,
+    "band_gap": 0.0,
+    "stability": 0.0003459550000000089
+  },
+  {
+    "name": "ZrRh",
+    "entry_id": 18088,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 35.6686,
+    "band_gap": 0.0,
+    "stability": 0.05368201625000102
+  },
+  {
+    "name": "ScRu",
+    "entry_id": 18090,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 32.7596,
+    "band_gap": 0.0,
+    "stability": 0.0007116800000002144
+  },
+  {
+    "name": "TiRu",
+    "entry_id": 18097,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 28.9236,
+    "band_gap": 0.0,
+    "stability": 0.00013640000000014751
+  },
+  {
+    "name": "VRu",
+    "entry_id": 18099,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 26.911,
+    "band_gap": 0.0,
+    "stability": 0.04910503800000063
+  },
+  {
+    "name": "ZrRu",
+    "entry_id": 18101,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 35.1104,
+    "band_gap": 0.0,
+    "stability": 0.0001991000000010068
+  },
+  {
+    "name": "ScZn",
+    "entry_id": 18106,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 37.2934,
+    "band_gap": 0.0,
+    "stability": 0.0001364199999997484
+  },
+  {
+    "name": "SmTl",
+    "entry_id": 18111,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 56.564,
+    "band_gap": 0.0,
+    "stability": 0.0008613100000010032
+  },
+  {
+    "name": "SmZn",
+    "entry_id": 18114,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 47.8713,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "SrTl",
+    "entry_id": 18140,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 66.9283,
+    "band_gap": 0.0,
+    "stability": 0.003409326249999789
+  },
+  {
+    "name": "TaTc",
+    "entry_id": 18145,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 32.2914,
+    "band_gap": 0.0,
+    "stability": 2.9919999999794555e-05
+  },
+  {
+    "name": "TbTl",
+    "entry_id": 18148,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.1523,
+    "band_gap": 0.0,
+    "stability": 0.026587412583332522
+  },
+  {
+    "name": "TbZn",
+    "entry_id": 18152,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 45.8562,
+    "band_gap": 0.0,
+    "stability": 0.11828321743114713
+  },
+  {
+    "name": "TiTc",
+    "entry_id": 18156,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 29.7336,
+    "band_gap": 0.0,
+    "stability": 0.00012348500000103346
+  },
+  {
+    "name": "VTc",
+    "entry_id": 18157,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 27.3964,
+    "band_gap": 0.0,
+    "stability": 5.125500000102701e-05
+  },
+  {
+    "name": "TmTl",
+    "entry_id": 18169,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 52.1369,
+    "band_gap": 0.0,
+    "stability": 0.0017900499999999875
+  },
+  {
+    "name": "YTl",
+    "entry_id": 18172,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 53.7307,
+    "band_gap": 0.0,
+    "stability": 0.0021475850000000074
+  },
+  {
+    "name": "YbTl",
+    "entry_id": 18174,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 56.006,
+    "band_gap": 0.0,
+    "stability": 0.0010990700000000353
+  },
+  {
+    "name": "TmZn",
+    "entry_id": 18176,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 43.366,
+    "band_gap": 0.0,
+    "stability": 5.772000000003885e-05
+  },
+  {
+    "name": "AlRu",
+    "entry_id": 18193,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 27.2415,
+    "band_gap": 0.0,
+    "stability": 4.539999999941813e-06
+  },
+  {
+    "name": "DyPd",
+    "entry_id": 18313,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 42.6502,
+    "band_gap": 0.0,
+    "stability": 0.035160694999999964
+  },
+  {
+    "name": "ZnRh",
+    "entry_id": 18674,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 27.5069,
+    "band_gap": 0.0,
+    "stability": 0.0006179550000010026
+  },
+  {
+    "name": "ZnAu",
+    "entry_id": 18741,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 32.2995,
+    "band_gap": 0.0,
+    "stability": 0.00046951444444440216
+  },
+  {
+    "name": "CeBi",
+    "entry_id": 18755,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 65.2146,
+    "band_gap": 0.0,
+    "stability": 0.24681538999999997
+  },
+  {
+    "name": "GdCd",
+    "entry_id": 18785,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 53.0781,
+    "band_gap": 0.0,
+    "stability": 0.0008191799999999749
+  },
+  {
+    "name": "TbCd",
+    "entry_id": 18788,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 52.2552,
+    "band_gap": 0.0,
+    "stability": 0.09089323721226947
+  },
+  {
+    "name": "CeZn",
+    "entry_id": 18797,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 51.9905,
+    "band_gap": 0.0,
+    "stability": 0.0009205400000005803
+  },
+  {
+    "name": "TiCo",
+    "entry_id": 18811,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 25.5441,
+    "band_gap": 0.0,
+    "stability": 0.02021524625000054
+  },
+  {
+    "name": "ErCu",
+    "entry_id": 18818,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 40.1498,
+    "band_gap": 0.0,
+    "stability": 0.001121178750000007
+  },
+  {
+    "name": "EuCu",
+    "entry_id": 18819,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 45.8154,
+    "band_gap": 0.0,
+    "stability": 0.051264071250000015
+  },
+  {
+    "name": "DyMg",
+    "entry_id": 18829,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.1196,
+    "band_gap": 0.0,
+    "stability": 1.730999999999261e-05
+  },
+  {
+    "name": "FeRh",
+    "entry_id": 18839,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 27.0507,
+    "band_gap": 0.0,
+    "stability": 0.003396992000000522
+  },
+  {
+    "name": "TiIr",
+    "entry_id": 18867,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 30.0557,
+    "band_gap": 0.0,
+    "stability": 0.09991856249999942
+  },
+  {
+    "name": "MgSc",
+    "entry_id": 18869,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 45.6664,
+    "band_gap": 0.0,
+    "stability": 0.0006542200000003995
+  },
+  {
+    "name": "PrTl",
+    "entry_id": 18891,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 59.9503,
+    "band_gap": 0.0,
+    "stability": 0.0016434100000000118
+  },
+  {
+    "name": "PrZn",
+    "entry_id": 18895,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 50.629,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "YbRh",
+    "entry_id": 18903,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 37.1874,
+    "band_gap": 0.0,
+    "stability": 0.005161432500000007
+  },
+  {
+    "name": "YbRu",
+    "entry_id": 18904,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 37.0972,
+    "band_gap": 0.0,
+    "stability": 0.3646894524999996
+  },
+  {
+    "name": "GdTh",
+    "entry_id": 19092,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 64.5859,
+    "band_gap": 0.0,
+    "stability": 0.166068341249999
+  },
+  {
+    "name": "DyTh",
+    "entry_id": 19093,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 63.687,
+    "band_gap": 0.0,
+    "stability": 0.145762746666666
+  },
+  {
+    "name": "MnAu",
+    "entry_id": 19149,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 33.1696,
+    "band_gap": 0.0,
+    "stability": 0.07027844155172491
+  },
+  {
+    "name": "GdAl",
+    "entry_id": 19332,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 47.9717,
+    "band_gap": 0.0,
+    "stability": 0.023106375000000012
+  },
+  {
+    "name": "DyCu",
+    "entry_id": 19333,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 40.9305,
+    "band_gap": 0.0,
+    "stability": 0.011944967499999959
+  },
+  {
+    "name": "ZnAg",
+    "entry_id": 19341,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 32.1263,
+    "band_gap": 0.0,
+    "stability": 0.00019932000000009997
+  },
+  {
+    "name": "VOs",
+    "entry_id": 19422,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 27.2522,
+    "band_gap": 0.0,
+    "stability": 0.040700208749999495
+  },
+  {
+    "name": "TiFe",
+    "entry_id": 19423,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 25.5024,
+    "band_gap": 0.0,
+    "stability": 0.0013548600000006794
+  },
+  {
+    "name": "NdAl",
+    "entry_id": 19476,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 51.7355,
+    "band_gap": 0.0,
+    "stability": 0.044305275000000144
+  },
+  {
+    "name": "CoSi",
+    "entry_id": 19979,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 21.5128,
+    "band_gap": 0.0,
+    "stability": 0.20990106874999997
+  },
+  {
+    "name": "MoN",
+    "entry_id": 20242,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 19.601,
+    "band_gap": 0.0,
+    "stability": 0.7492780762820738
+  },
+  {
+    "name": "YP",
+    "entry_id": 20281,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 41.9136,
+    "band_gap": 0.0,
+    "stability": 0.5594864049999981
+  },
+  {
+    "name": "YAs",
+    "entry_id": 20282,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 45.7675,
+    "band_gap": 0.0,
+    "stability": 0.49484068000000114
+  },
+  {
+    "name": "YN",
+    "entry_id": 20394,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 26.7191,
+    "band_gap": 0.0,
+    "stability": 0.937328234999997
+  },
+  {
+    "name": "AgI",
+    "entry_id": 20443,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 56.3668,
+    "band_gap": 0.182,
+    "stability": 0.38847064666666664
+  },
+  {
+    "name": "CeMg",
+    "entry_id": 20463,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 61.163,
+    "band_gap": 0.0,
+    "stability": 6.427500000022457e-05
+  },
+  {
+    "name": "PmMg",
+    "entry_id": 20464,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 57.4008,
+    "band_gap": 0.0,
+    "stability": 0.00010101499999999597
+  },
+  {
+    "name": "EuMg",
+    "entry_id": 20465,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 66.8207,
+    "band_gap": 0.0,
+    "stability": 0.000153864999999892
+  },
+  {
+    "name": "GdMg",
+    "entry_id": 20466,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 55.2294,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "ErMg",
+    "entry_id": 20467,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 53.2843,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "LaN",
+    "entry_id": 20522,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 31.3045,
+    "band_gap": 0.0,
+    "stability": 0.5942343149999969
+  },
+  {
+    "name": "HgTe",
+    "entry_id": 20574,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 53.5146,
+    "band_gap": 0.0,
+    "stability": 0.4179959966666662
+  },
+  {
+    "name": "ZnO",
+    "entry_id": 20684,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 18.8294,
+    "band_gap": 0.0,
+    "stability": 0.717588334999999
+  },
+  {
+    "name": "YCu",
+    "entry_id": 20721,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 41.5965,
+    "band_gap": 0.0,
+    "stability": 0.01608169875000029
+  },
+  {
+    "name": "SrS",
+    "entry_id": 20780,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 49.0091,
+    "band_gap": 1.874,
+    "stability": 0.29928412000000004
+  },
+  {
+    "name": "ScAs",
+    "entry_id": 20836,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 38.5052,
+    "band_gap": 0.0,
+    "stability": 0.486505195
+  },
+  {
+    "name": "ScSb",
+    "entry_id": 20837,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 46.9459,
+    "band_gap": 0.0,
+    "stability": 0.3302488499999999
+  },
+  {
+    "name": "UBi",
+    "entry_id": 20918,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 55.6392,
+    "band_gap": 0.0,
+    "stability": 0.10952802
+  },
+  {
+    "name": "AlFe",
+    "entry_id": 20929,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 23.5842,
+    "band_gap": 0.0,
+    "stability": 0.00011611999999960876
+  },
+  {
+    "name": "ErN",
+    "entry_id": 21306,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 25.5957,
+    "band_gap": 0.0,
+    "stability": 0.957537214999998
+  },
+  {
+    "name": "ErP",
+    "entry_id": 21307,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 40.6372,
+    "band_gap": 0.0,
+    "stability": 0.5628835399999998
+  },
+  {
+    "name": "ErAs",
+    "entry_id": 21308,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 44.4631,
+    "band_gap": 0.0,
+    "stability": 0.49802127500000015
+  },
+  {
+    "name": "PrN",
+    "entry_id": 21407,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 31.1065,
+    "band_gap": 0.0,
+    "stability": 0.7611675049999971
+  },
+  {
+    "name": "TcB",
+    "entry_id": 21452,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 20.3153,
+    "band_gap": 0.0,
+    "stability": 0.5295237167003392
+  },
+  {
+    "name": "PdN",
+    "entry_id": 21510,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 21.1154,
+    "band_gap": 0.0,
+    "stability": 1.41149625232825
+  },
+  {
+    "name": "ScN",
+    "entry_id": 22242,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 21.3903,
+    "band_gap": 0.0,
+    "stability": 1.032536239999998
+  },
+  {
+    "name": "ScP",
+    "entry_id": 22243,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 35.1253,
+    "band_gap": 0.0,
+    "stability": 0.562526055
+  },
+  {
+    "name": "ScC",
+    "entry_id": 22262,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 23.7885,
+    "band_gap": 0.0,
+    "stability": 0.8410965344476705
+  },
+  {
+    "name": "YC",
+    "entry_id": 22264,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 29.8509,
+    "band_gap": 0.0,
+    "stability": 0.8894485483333343
+  },
+  {
+    "name": "ZrC",
+    "entry_id": 22284,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 25.2157,
+    "band_gap": 0.0,
+    "stability": 1.228850269999999
+  },
+  {
+    "name": "ZrN",
+    "entry_id": 22285,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 22.9956,
+    "band_gap": 0.0,
+    "stability": 0.8865630099999997
+  },
+  {
+    "name": "TbAl",
+    "entry_id": 22287,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 47.2024,
+    "band_gap": 0.0,
+    "stability": 0.1616636450833332
+  },
+  {
+    "name": "SrO",
+    "entry_id": 22298,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 29.8115,
+    "band_gap": 2.792,
+    "stability": 0.4194085300000001
+  },
+  {
+    "name": "ReN",
+    "entry_id": 22305,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 19.6803,
+    "band_gap": 0.0,
+    "stability": 1.1288141901760607
+  },
+  {
+    "name": "CuPd",
+    "entry_id": 22410,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 27.217,
+    "band_gap": 0.0,
+    "stability": 0.0003496100000009994
+  },
+  {
+    "name": "MgAg",
+    "entry_id": 22530,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 35.7837,
+    "band_gap": 0.0,
+    "stability": 0.004450280000000195
+  },
+  {
+    "name": "NaH",
+    "entry_id": 23862,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 23.848,
+    "band_gap": 1.313,
+    "stability": 0.1606720450000003
+  },
+  {
+    "name": "ThAs",
+    "entry_id": 28120,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 48.6998,
+    "band_gap": 0.0,
+    "stability": 0.2857034300000001
+  },
+  {
+    "name": "BaTe",
+    "entry_id": 28662,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 77.0546,
+    "band_gap": 0.894,
+    "stability": 0.167741442499995
+  },
+  {
+    "name": "LaCd",
+    "entry_id": 29003,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 59.9057,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "LuCd",
+    "entry_id": 29007,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 48.7368,
+    "band_gap": 0.0,
+    "stability": 0.0012793550000000375
+  },
+  {
+    "name": "NdCd",
+    "entry_id": 29013,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 56.4301,
+    "band_gap": 0.0,
+    "stability": 0.0009254925000002356
+  },
+  {
+    "name": "PrCd",
+    "entry_id": 29020,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 57.3409,
+    "band_gap": 0.0,
+    "stability": 9.601500000000485e-05
+  },
+  {
+    "name": "ScCd",
+    "entry_id": 29029,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 43.4055,
+    "band_gap": 0.0,
+    "stability": 0.003328724999999977
+  },
+  {
+    "name": "SmCd",
+    "entry_id": 29034,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.5879,
+    "band_gap": 0.0,
+    "stability": 0.0002657499999999535
+  },
+  {
+    "name": "TmCd",
+    "entry_id": 29039,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 49.7135,
+    "band_gap": 0.0,
+    "stability": 0.0013965649999999608
+  },
+  {
+    "name": "YCd",
+    "entry_id": 29043,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 52.0001,
+    "band_gap": 0.0,
+    "stability": 0.0013753100000000185
+  },
+  {
+    "name": "YbCd",
+    "entry_id": 29044,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.0275,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "CeHg",
+    "entry_id": 29100,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 57.792,
+    "band_gap": 0.0,
+    "stability": 0.003015010000000984
+  },
+  {
+    "name": "HfCo",
+    "entry_id": 29359,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 30.5066,
+    "band_gap": 0.0,
+    "stability": 0.042122101250001986
+  },
+  {
+    "name": "ScCo",
+    "entry_id": 29468,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 29.3045,
+    "band_gap": 0.0,
+    "stability": 0.007414385000000023
+  },
+  {
+    "name": "ZrCo",
+    "entry_id": 29537,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 32.7219,
+    "band_gap": 0.0,
+    "stability": 0.04674955125000041
+  },
+  {
+    "name": "GdCu",
+    "entry_id": 29642,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 42.4293,
+    "band_gap": 0.0,
+    "stability": 0.010912899999999698
+  },
+  {
+    "name": "HoCu",
+    "entry_id": 29686,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 40.945,
+    "band_gap": 0.0,
+    "stability": 0.0038858737499999907
+  },
+  {
+    "name": "ScCu",
+    "entry_id": 29784,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 33.8475,
+    "band_gap": 0.0,
+    "stability": 0.0023663099999999826
+  },
+  {
+    "name": "TbCu",
+    "entry_id": 29816,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 41.7658,
+    "band_gap": 0.0,
+    "stability": 0.13925559913333213
+  },
+  {
+    "name": "TmCu",
+    "entry_id": 29826,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 39.867,
+    "band_gap": 0.0,
+    "stability": 5.794500000000369e-05
+  },
+  {
+    "name": "ZrCu",
+    "entry_id": 29834,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 34.8362,
+    "band_gap": 0.0,
+    "stability": 0.045593592991564236
+  },
+  {
+    "name": "DyHg",
+    "entry_id": 29867,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 50.6467,
+    "band_gap": 0.0,
+    "stability": 0.001914960000000021
+  },
+  {
+    "name": "DyIn",
+    "entry_id": 29868,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 52.88,
+    "band_gap": 0.0,
+    "stability": 0.00048164500000025257
+  },
+  {
+    "name": "DyRh",
+    "entry_id": 29922,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 39.891,
+    "band_gap": 0.0,
+    "stability": 0.0003208699999999176
+  },
+  {
+    "name": "DyZn",
+    "entry_id": 29957,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 45.156,
+    "band_gap": 0.0,
+    "stability": 0.00014190999999996734
+  },
+  {
+    "name": "ErHg",
+    "entry_id": 29989,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 49.316,
+    "band_gap": 0.0,
+    "stability": 0.002353296666666782
+  },
+  {
+    "name": "ErIr",
+    "entry_id": 30000,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 38.8199,
+    "band_gap": 0.0,
+    "stability": 0.00022188000000100683
+  },
+  {
+    "name": "ErMg",
+    "entry_id": 30004,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 53.2562,
+    "band_gap": 0.0,
+    "stability": 6.875000000003406e-06
+  },
+  {
+    "name": "ErPd",
+    "entry_id": 30025,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 41.5607,
+    "band_gap": 0.0,
+    "stability": 0.024414628750001
+  },
+  {
+    "name": "ErRh",
+    "entry_id": 30040,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 38.833,
+    "band_gap": 0.0,
+    "stability": 0.0002876350000000638
+  },
+  {
+    "name": "ErTl",
+    "entry_id": 30061,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 52.4548,
+    "band_gap": 0.0,
+    "stability": 0.00247103999999998
+  },
+  {
+    "name": "ErZn",
+    "entry_id": 30067,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 44.0671,
+    "band_gap": 0.0,
+    "stability": 5.7254999999978295e-05
+  },
+  {
+    "name": "EuTe",
+    "entry_id": 30151,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 62.541,
+    "band_gap": 0.217,
+    "stability": 0.2281154349999901
+  },
+  {
+    "name": "EuTl",
+    "entry_id": 30152,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 60.9984,
+    "band_gap": 0.0,
+    "stability": 0.0005359025000000184
+  },
+  {
+    "name": "EuZn",
+    "entry_id": 30156,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 51.518,
+    "band_gap": 0.0,
+    "stability": 0.0018331199999999659
+  },
+  {
+    "name": "VFe",
+    "entry_id": 30264,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 23.5689,
+    "band_gap": 0.0,
+    "stability": 0.032777015625000405
+  },
+  {
+    "name": "GaNi",
+    "entry_id": 30309,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 24.617,
+    "band_gap": 0.0,
+    "stability": 0.036580511250001
+  },
+  {
+    "name": "GdIn",
+    "entry_id": 30376,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.1608,
+    "band_gap": 0.0,
+    "stability": 0.0001170950000000115
+  },
+  {
+    "name": "GdRh",
+    "entry_id": 30405,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 41.1156,
+    "band_gap": 0.0,
+    "stability": 0.0003261199999999853
+  },
+  {
+    "name": "GdTl",
+    "entry_id": 30426,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.8536,
+    "band_gap": 0.0,
+    "stability": 0.0013151149999999778
+  },
+  {
+    "name": "GdZn",
+    "entry_id": 30434,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 46.0102,
+    "band_gap": 0.0,
+    "stability": 0.0010148899999999905
+  },
+  {
+    "name": "PuTe",
+    "entry_id": 31001,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.7437,
+    "band_gap": 0.0,
+    "stability": 0.08825740999999998
+  },
+  {
+    "name": "TaRu",
+    "entry_id": 31032,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 31.9855,
+    "band_gap": 0.0,
+    "stability": 0.07279751166666798
+  },
+  {
+    "name": "YZn",
+    "entry_id": 31121,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 45.4349,
+    "band_gap": 0.0,
+    "stability": 0.0002570450000000113
+  },
+  {
+    "name": "ZrZn",
+    "entry_id": 31126,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 37.126,
+    "band_gap": 0.0,
+    "stability": 0.0001056299999999677
+  },
+  {
+    "name": "GaRh",
+    "entry_id": 31231,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 27.8819,
+    "band_gap": 0.0,
+    "stability": 0.00047871000000010433
+  },
+  {
+    "name": "GaCo",
+    "entry_id": 31240,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 23.3769,
+    "band_gap": 0.0,
+    "stability": 0.004309375000000004
+  },
+  {
+    "name": "SrS",
+    "entry_id": 50960,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 48.9859,
+    "band_gap": 2.032,
+    "stability": 0.29931544
+  },
+  {
+    "name": "USb",
+    "entry_id": 51072,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 51.6168,
+    "band_gap": 0.0,
+    "stability": 0.027988815625000357
+  },
+  {
+    "name": "EuTe",
+    "entry_id": 51779,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 62.5282,
+    "band_gap": 0.217,
+    "stability": 0.2281216099999901
+  },
+  {
+    "name": "CsBr",
+    "entry_id": 52046,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 81.6963,
+    "band_gap": 4.506,
+    "stability": 0.04108556500000016
+  },
+  {
+    "name": "CsCl",
+    "entry_id": 52059,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 71.9131,
+    "band_gap": 5.181,
+    "stability": 0.048669395000000115
+  },
+  {
+    "name": "CsI",
+    "entry_id": 52061,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 101.194,
+    "band_gap": 3.859,
+    "stability": 0.0319222466666651
+  },
+  {
+    "name": "PuTe",
+    "entry_id": 52394,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.8889,
+    "band_gap": 0.0,
+    "stability": 0.08809411000000011
+  },
+  {
+    "name": "CsI",
+    "entry_id": 53881,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 101.207,
+    "band_gap": 3.859,
+    "stability": 0.03191907666666527
+  },
+  {
+    "name": "AlFe",
+    "entry_id": 54708,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 23.605,
+    "band_gap": 0.0,
+    "stability": 3.185499999958097e-05
+  },
+  {
+    "name": "AlRu",
+    "entry_id": 54942,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 27.2457,
+    "band_gap": 0.0,
+    "stability": 7.004999999948858e-06
+  },
+  {
+    "name": "ErAg",
+    "entry_id": 54987,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 46.1037,
+    "band_gap": 0.0,
+    "stability": 0.0013021400000000072
+  },
+  {
+    "name": "HoAg",
+    "entry_id": 55003,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 46.7567,
+    "band_gap": 0.0,
+    "stability": 0.001100829999999997
+  },
+  {
+    "name": "MgAg",
+    "entry_id": 55028,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 36.1903,
+    "band_gap": 0.0,
+    "stability": 0.0017437900000001894
+  },
+  {
+    "name": "ZnAg",
+    "entry_id": 55055,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 32.1878,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "ZnAu",
+    "entry_id": 55142,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 32.2847,
+    "band_gap": 0.0,
+    "stability": 0.0005194894444444098
+  },
+  {
+    "name": "GdCd",
+    "entry_id": 55278,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 53.1369,
+    "band_gap": 0.0,
+    "stability": 0.0006406749999999795
+  },
+  {
+    "name": "InNi",
+    "entry_id": 55518,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 31.3714,
+    "band_gap": 0.0,
+    "stability": 0.09003998499999999
+  },
+  {
+    "name": "InPd",
+    "entry_id": 55542,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 35.5587,
+    "band_gap": 0.0,
+    "stability": 0.013486751249999984
+  },
+  {
+    "name": "InRh",
+    "entry_id": 55558,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 33.6414,
+    "band_gap": 0.0,
+    "stability": 0.005189610000000178
+  },
+  {
+    "name": "KCl",
+    "entry_id": 56154,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.6862,
+    "band_gap": 5.123,
+    "stability": 0.07820177250000127
+  },
+  {
+    "name": "RbCl",
+    "entry_id": 56986,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 62.5708,
+    "band_gap": 4.997,
+    "stability": 0.06140289500000007
+  },
+  {
+    "name": "TlCl",
+    "entry_id": 56987,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 58.0212,
+    "band_gap": 2.323,
+    "stability": 0.04734396500000004
+  },
+  {
+    "name": "RbI",
+    "entry_id": 57018,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 90.1579,
+    "band_gap": 3.452,
+    "stability": 0.04938244000000003
+  },
+  {
+    "name": "RbBr",
+    "entry_id": 57019,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 71.4267,
+    "band_gap": 4.153,
+    "stability": 0.05583680000000002
+  },
+  {
+    "name": "RbCl",
+    "entry_id": 57020,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 61.8255,
+    "band_gap": 5.13,
+    "stability": 0.06274191500000015
+  },
+  {
+    "name": "RbF",
+    "entry_id": 57021,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 36.0304,
+    "band_gap": 7.037,
+    "stability": 0.11880458499999991
+  },
+  {
+    "name": "KI",
+    "entry_id": 57108,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 81.6332,
+    "band_gap": 3.367,
+    "stability": 0.06962631499999983
+  },
+  {
+    "name": "SiRu",
+    "entry_id": 69843,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 25.4404,
+    "band_gap": 0.0,
+    "stability": 0.0022767274999999643
+  },
+  {
+    "name": "SiRu",
+    "entry_id": 74704,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 25.4466,
+    "band_gap": 0.0,
+    "stability": 0.0022724874999999756
+  },
+  {
+    "name": "LaCd",
+    "entry_id": 87980,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 59.8905,
+    "band_gap": 0.0,
+    "stability": 4.9100000000024124e-05
+  },
+  {
+    "name": "LuCd",
+    "entry_id": 87994,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 48.738,
+    "band_gap": 0.0,
+    "stability": 0.0012748550000000192
+  },
+  {
+    "name": "NdCd",
+    "entry_id": 88003,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 56.4301,
+    "band_gap": 0.0,
+    "stability": 0.0009254925000002356
+  },
+  {
+    "name": "PrCd",
+    "entry_id": 88014,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 57.3642,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "ScCd",
+    "entry_id": 88025,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 43.4745,
+    "band_gap": 0.0,
+    "stability": 0.0028930699999999976
+  },
+  {
+    "name": "SmCd",
+    "entry_id": 88027,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.5303,
+    "band_gap": 0.0,
+    "stability": 0.0004780099999999732
+  },
+  {
+    "name": "TbCd",
+    "entry_id": 88030,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 52.3954,
+    "band_gap": 0.0,
+    "stability": 0.09039543721226924
+  },
+  {
+    "name": "TmCd",
+    "entry_id": 88033,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 49.5533,
+    "band_gap": 0.0,
+    "stability": 0.0020868199999999892
+  },
+  {
+    "name": "YCd",
+    "entry_id": 88036,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 51.9651,
+    "band_gap": 0.0,
+    "stability": 0.001509000000000038
+  },
+  {
+    "name": "YbCd",
+    "entry_id": 88040,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.0144,
+    "band_gap": 0.0,
+    "stability": 2.116000000002005e-05
+  },
+  {
+    "name": "CeHg",
+    "entry_id": 88122,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 57.7049,
+    "band_gap": 0.0,
+    "stability": 0.003492414999999971
+  },
+  {
+    "name": "CeMg",
+    "entry_id": 88154,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 61.3935,
+    "band_gap": 0.0,
+    "stability": 1.420000000022792e-05
+  },
+  {
+    "name": "CeZn",
+    "entry_id": 88239,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 52.0438,
+    "band_gap": 0.0,
+    "stability": 0.0007880550000005648
+  },
+  {
+    "name": "GaCo",
+    "entry_id": 88346,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 23.9651,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "HfCo",
+    "entry_id": 88389,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 31.6756,
+    "band_gap": 0.0,
+    "stability": 0.03959520625000096
+  },
+  {
+    "name": "DyCu",
+    "entry_id": 88739,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 41.4217,
+    "band_gap": 0.0,
+    "stability": 0.009897137499999986
+  },
+  {
+    "name": "ErCu",
+    "entry_id": 88747,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 40.3183,
+    "band_gap": 0.0,
+    "stability": 0.0006034837500000223
+  },
+  {
+    "name": "GdCu",
+    "entry_id": 88809,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 42.5054,
+    "band_gap": 0.0,
+    "stability": 0.0106175449999997
+  },
+  {
+    "name": "HoCu",
+    "entry_id": 88828,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 40.9387,
+    "band_gap": 0.0,
+    "stability": 0.0038978237499999735
+  },
+  {
+    "name": "ScCu",
+    "entry_id": 88926,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 34.1243,
+    "band_gap": 0.0,
+    "stability": 0.0004813149999999822
+  },
+  {
+    "name": "TbCu",
+    "entry_id": 88940,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 41.7407,
+    "band_gap": 0.0,
+    "stability": 0.13936247413333142
+  },
+  {
+    "name": "TmCu",
+    "entry_id": 88955,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 39.7915,
+    "band_gap": 0.0,
+    "stability": 0.00019894999999997554
+  },
+  {
+    "name": "YCu",
+    "entry_id": 88957,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 41.5976,
+    "band_gap": 0.0,
+    "stability": 0.016076018749999282
+  },
+  {
+    "name": "DyMg",
+    "entry_id": 88965,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.1171,
+    "band_gap": 0.0,
+    "stability": 1.7845000000293876e-05
+  },
+  {
+    "name": "ZnCu",
+    "entry_id": 88966,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 25.5567,
+    "band_gap": 0.0,
+    "stability": 0.004533612233779863
+  },
+  {
+    "name": "DyHg",
+    "entry_id": 89004,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 50.6841,
+    "band_gap": 0.0,
+    "stability": 0.00173207000000003
+  },
+  {
+    "name": "DyIn",
+    "entry_id": 89009,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 52.8908,
+    "band_gap": 0.0,
+    "stability": 0.00046665000000023493
+  },
+  {
+    "name": "ErHg",
+    "entry_id": 89046,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 49.4538,
+    "band_gap": 0.0,
+    "stability": 0.0016431716666667762
+  },
+  {
+    "name": "ErIr",
+    "entry_id": 89055,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 38.8199,
+    "band_gap": 0.0,
+    "stability": 0.00022188000000100683
+  },
+  {
+    "name": "ErMg",
+    "entry_id": 89059,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 53.0726,
+    "band_gap": 0.0,
+    "stability": 0.00010207000000009292
+  },
+  {
+    "name": "ErPd",
+    "entry_id": 89074,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 41.5981,
+    "band_gap": 0.0,
+    "stability": 0.02424439875000095
+  },
+  {
+    "name": "ErRh",
+    "entry_id": 89086,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 38.7612,
+    "band_gap": 0.0,
+    "stability": 0.0006122550000000615
+  },
+  {
+    "name": "ErTl",
+    "entry_id": 89098,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 52.5154,
+    "band_gap": 0.0,
+    "stability": 0.0021694749999999763
+  },
+  {
+    "name": "ErZn",
+    "entry_id": 89104,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 44.0992,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "DyPd",
+    "entry_id": 89126,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 42.6502,
+    "band_gap": 0.0,
+    "stability": 0.035160694999999964
+  },
+  {
+    "name": "DyRh",
+    "entry_id": 89140,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 39.8961,
+    "band_gap": 0.0,
+    "stability": 0.0002997750000000021
+  },
+  {
+    "name": "DyZn",
+    "entry_id": 89155,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 45.1941,
+    "band_gap": 0.0,
+    "stability": 7.144500000000331e-05
+  },
+  {
+    "name": "EuTl",
+    "entry_id": 89198,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 60.8802,
+    "band_gap": 0.0,
+    "stability": 0.0007584524999999509
+  },
+  {
+    "name": "TiFe",
+    "entry_id": 89397,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 25.5019,
+    "band_gap": 0.0,
+    "stability": 0.0013555900000006282
+  },
+  {
+    "name": "TiFe",
+    "entry_id": 89398,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 25.5019,
+    "band_gap": 0.0,
+    "stability": 0.0013555900000006282
+  },
+  {
+    "name": "VFe",
+    "entry_id": 89417,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 23.5689,
+    "band_gap": 0.0,
+    "stability": 0.032777015625000405
+  },
+  {
+    "name": "GaNi",
+    "entry_id": 89558,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 24.7261,
+    "band_gap": 0.0,
+    "stability": 0.036039856250001
+  },
+  {
+    "name": "GaRh",
+    "entry_id": 89616,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 27.8943,
+    "band_gap": 0.0,
+    "stability": 0.00041401500000015634
+  },
+  {
+    "name": "GdIn",
+    "entry_id": 89687,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.263,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "GdMg",
+    "entry_id": 89700,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 55.2133,
+    "band_gap": 0.0,
+    "stability": 4.940000000203115e-06
+  },
+  {
+    "name": "GdRh",
+    "entry_id": 89749,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 41.1182,
+    "band_gap": 0.0,
+    "stability": 0.00031685499999900557
+  },
+  {
+    "name": "GdTl",
+    "entry_id": 89759,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.85,
+    "band_gap": 0.0,
+    "stability": 0.0013289400000000007
+  },
+  {
+    "name": "GdZn",
+    "entry_id": 89768,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 46.0112,
+    "band_gap": 0.0,
+    "stability": 0.0010118650000009999
+  },
+  {
+    "name": "MgHg",
+    "entry_id": 89859,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 41.6296,
+    "band_gap": 0.0,
+    "stability": 0.0021269499999999886
+  },
+  {
+    "name": "MnHg",
+    "entry_id": 89861,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 36.3821,
+    "band_gap": 0.0,
+    "stability": 0.364317145620316
+  },
+  {
+    "name": "HoRh",
+    "entry_id": 89924,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 39.3204,
+    "band_gap": 0.0,
+    "stability": 0.0004828150000010245
+  },
+  {
+    "name": "HoZn",
+    "entry_id": 89929,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 44.567,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "LiTl",
+    "entry_id": 90117,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 40.9938,
+    "band_gap": 0.0,
+    "stability": 0.0007740950000000024
+  },
+  {
+    "name": "LuPd",
+    "entry_id": 90130,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 40.122,
+    "band_gap": 0.0,
+    "stability": 0.0005878200000000167
+  },
+  {
+    "name": "NdMg",
+    "entry_id": 90141,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 58.7957,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "MgPd",
+    "entry_id": 90147,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 31.855,
+    "band_gap": 0.0,
+    "stability": 0.0006746400000009478
+  },
+  {
+    "name": "SmMg",
+    "entry_id": 90153,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 57.073,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "TbMg",
+    "entry_id": 90160,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.6399,
+    "band_gap": 0.0,
+    "stability": 0.24304733808333
+  },
+  {
+    "name": "MnPd",
+    "entry_id": 90200,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 30.3794,
+    "band_gap": 0.0,
+    "stability": 0.007252801241380613
+  },
+  {
+    "name": "NdZn",
+    "entry_id": 90445,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 49.4919,
+    "band_gap": 0.0,
+    "stability": 0.00047074499999999464
+  },
+  {
+    "name": "TiOs",
+    "entry_id": 90586,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 29.3997,
+    "band_gap": 0.0,
+    "stability": 0.0001393600000000328
+  },
+  {
+    "name": "YbPd",
+    "entry_id": 90674,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 40.8571,
+    "band_gap": 0.0,
+    "stability": 0.00028980999999994594
+  },
+  {
+    "name": "SmRh",
+    "entry_id": 90771,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 42.6133,
+    "band_gap": 0.0,
+    "stability": 0.00045266499999996324
+  },
+  {
+    "name": "YRh",
+    "entry_id": 90791,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 40.3438,
+    "band_gap": 0.0,
+    "stability": 0.0003468550000000903
+  },
+  {
+    "name": "ZrRh",
+    "entry_id": 90794,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 35.7739,
+    "band_gap": 0.0,
+    "stability": 0.05309798124999998
+  },
+  {
+    "name": "VRu",
+    "entry_id": 90810,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 26.8938,
+    "band_gap": 0.0,
+    "stability": 0.04917968799999961
+  },
+  {
+    "name": "TbZn",
+    "entry_id": 90870,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 45.5555,
+    "band_gap": 0.0,
+    "stability": 0.11885404743114662
+  },
+  {
+    "name": "ThTe",
+    "entry_id": 90872,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 57.1764,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "TmTl",
+    "entry_id": 90905,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 51.7143,
+    "band_gap": 0.0,
+    "stability": 0.0039934100000000305
+  },
+  {
+    "name": "BaTe",
+    "entry_id": 91935,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 77.6044,
+    "band_gap": 0.893,
+    "stability": 0.1675810674999949
+  },
+  {
+    "name": "DyAg",
+    "entry_id": 94296,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 47.353,
+    "band_gap": 0.0,
+    "stability": 0.0009594950000000324
+  },
+  {
+    "name": "FeRh",
+    "entry_id": 94348,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 27.0292,
+    "band_gap": 0.0,
+    "stability": 0.0035370820000000178
+  },
+  {
+    "name": "MgAg",
+    "entry_id": 94482,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 36.3436,
+    "band_gap": 0.0,
+    "stability": 0.000991055000000185
+  },
+  {
+    "name": "GdAg",
+    "entry_id": 94573,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 48.824,
+    "band_gap": 0.0,
+    "stability": 0.0007495200000000035
+  },
+  {
+    "name": "TiRu",
+    "entry_id": 94574,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 28.9344,
+    "band_gap": 0.0,
+    "stability": 9.644500000016709e-05
+  },
+  {
+    "name": "CeAg",
+    "entry_id": 94593,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.074,
+    "band_gap": 0.0,
+    "stability": 0.002896175000000001
+  },
+  {
+    "name": "LaAg",
+    "entry_id": 94594,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.6491,
+    "band_gap": 0.0,
+    "stability": 0.01005623750000001
+  },
+  {
+    "name": "CsAu",
+    "entry_id": 94600,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 77.7527,
+    "band_gap": 1.155,
+    "stability": 0.006369490000000033
+  },
+  {
+    "name": "AlNi",
+    "entry_id": 94913,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 24.0723,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "AlNi",
+    "entry_id": 94919,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 24.0144,
+    "band_gap": 0.0,
+    "stability": 0.0002513600000000338
+  },
+  {
+    "name": "CdAu",
+    "entry_id": 94922,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 38.459,
+    "band_gap": 0.0,
+    "stability": 0.004524649999999991
+  },
+  {
+    "name": "FeCo",
+    "entry_id": 98735,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 22.7543,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "ScN",
+    "entry_id": 100270,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 21.3903,
+    "band_gap": 0.0,
+    "stability": 1.032536239999998
+  },
+  {
+    "name": "ScP",
+    "entry_id": 100272,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 35.1441,
+    "band_gap": 0.0,
+    "stability": 0.5624979400000001
+  },
+  {
+    "name": "ScAs",
+    "entry_id": 100274,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 38.5052,
+    "band_gap": 0.0,
+    "stability": 0.486505195
+  },
+  {
+    "name": "ScSb",
+    "entry_id": 100276,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 46.9817,
+    "band_gap": 0.0,
+    "stability": 0.33011415
+  },
+  {
+    "name": "TiNi",
+    "entry_id": 100359,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 26.9329,
+    "band_gap": 0.0,
+    "stability": 0.04577332500000025
+  },
+  {
+    "name": "MgSc",
+    "entry_id": 104098,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 45.5105,
+    "band_gap": 0.0,
+    "stability": 0.0011870800000003054
+  },
+  {
+    "name": "YMg",
+    "entry_id": 104099,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.7342,
+    "band_gap": 0.0,
+    "stability": 0.00010383249999999788
+  },
+  {
+    "name": "LaMg",
+    "entry_id": 104100,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 62.1462,
+    "band_gap": 0.0,
+    "stability": 0.00016523624999989495
+  },
+  {
+    "name": "PrMg",
+    "entry_id": 104101,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 59.7306,
+    "band_gap": 0.0,
+    "stability": 4.302500000000209e-05
+  },
+  {
+    "name": "DyMg",
+    "entry_id": 104105,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.1197,
+    "band_gap": 0.0,
+    "stability": 1.722500000009286e-05
+  },
+  {
+    "name": "HoMg",
+    "entry_id": 104106,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 53.6632,
+    "band_gap": 0.0,
+    "stability": 9.343500000021099e-05
+  },
+  {
+    "name": "TmMg",
+    "entry_id": 104107,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 52.7528,
+    "band_gap": 0.0,
+    "stability": 9.736499999980774e-05
+  },
+  {
+    "name": "LuMg",
+    "entry_id": 104109,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 51.9456,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "YMg",
+    "entry_id": 105788,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.7174,
+    "band_gap": 0.0,
+    "stability": 0.00011480249999999692
+  },
+  {
+    "name": "TiNi",
+    "entry_id": 107704,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 26.8564,
+    "band_gap": 0.0,
+    "stability": 0.04615711500000025
+  },
+  {
+    "name": "ZrCu",
+    "entry_id": 109112,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 34.8347,
+    "band_gap": 0.0,
+    "stability": 0.045600682991565236
+  },
+  {
+    "name": "TiPd",
+    "entry_id": 109147,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 31.5262,
+    "band_gap": 0.0,
+    "stability": 0.0834973133716076
+  },
+  {
+    "name": "MoN",
+    "entry_id": 109771,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 19.6098,
+    "band_gap": 0.0,
+    "stability": 0.7491665612820728
+  },
+  {
+    "name": "AlFe",
+    "entry_id": 110794,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 23.575,
+    "band_gap": 0.0,
+    "stability": 0.00015675499999961984
+  },
+  {
+    "name": "AlFe",
+    "entry_id": 110795,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 23.5741,
+    "band_gap": 0.0,
+    "stability": 0.0001606399999996011
+  },
+  {
+    "name": "ZrC",
+    "entry_id": 116062,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 25.127,
+    "band_gap": 0.0,
+    "stability": 1.229072239999999
+  },
+  {
+    "name": "YAl",
+    "entry_id": 116118,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 46.8897,
+    "band_gap": 0.0,
+    "stability": 0.021084679375000026
+  },
+  {
+    "name": "PrAl",
+    "entry_id": 116119,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 52.9713,
+    "band_gap": 0.0,
+    "stability": 0.05214890999999999
+  },
+  {
+    "name": "NdAl",
+    "entry_id": 116120,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 51.8534,
+    "band_gap": 0.0,
+    "stability": 0.044283300000000136
+  },
+  {
+    "name": "DyAl",
+    "entry_id": 116121,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 46.5395,
+    "band_gap": 0.0,
+    "stability": 0.021228541250000954
+  },
+  {
+    "name": "CeAl",
+    "entry_id": 116122,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.5296,
+    "band_gap": 0.0,
+    "stability": 0.06005463499999997
+  },
+  {
+    "name": "ZrCu",
+    "entry_id": 116222,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 34.8824,
+    "band_gap": 0.0,
+    "stability": 0.045360887991564236
+  },
+  {
+    "name": "ZrRu",
+    "entry_id": 116234,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 35.1272,
+    "band_gap": 0.0,
+    "stability": 0.00015226499999998477
+  },
+  {
+    "name": "ZrZn",
+    "entry_id": 116235,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 37.126,
+    "band_gap": 0.0,
+    "stability": 0.00010556499999997415
+  },
+  {
+    "name": "TiNi",
+    "entry_id": 116608,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 26.953,
+    "band_gap": 0.0,
+    "stability": 0.04569087500000024
+  },
+  {
+    "name": "TlCl",
+    "entry_id": 116636,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 57.9397,
+    "band_gap": 2.324,
+    "stability": 0.04749209000000021
+  },
+  {
+    "name": "TiIr",
+    "entry_id": 116945,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 30.0872,
+    "band_gap": 0.0,
+    "stability": 0.09978450749999934
+  },
+  {
+    "name": "ZnO",
+    "entry_id": 117131,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 18.9308,
+    "band_gap": 0.0,
+    "stability": 0.715681565
+  },
+  {
+    "name": "SiRh",
+    "entry_id": 117262,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 26.4711,
+    "band_gap": 0.0,
+    "stability": 0.28434405625000003
+  },
+  {
+    "name": "TiNi",
+    "entry_id": 121204,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 26.8987,
+    "band_gap": 0.0,
+    "stability": 0.045931275000000216
+  },
+  {
+    "name": "LaS",
+    "entry_id": 2012590,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 45.4569,
+    "band_gap": 0.0,
+    "stability": 0.31834067249999976
+  },
+  {
+    "name": "LaSe",
+    "entry_id": 2012591,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 50.9087,
+    "band_gap": 0.0,
+    "stability": 0.23881182166666637
+  },
+  {
+    "name": "NpN",
+    "entry_id": 2013938,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 26.4156,
+    "band_gap": 0.0,
+    "stability": 0.6257518299999965
+  },
+  {
+    "name": "IrN",
+    "entry_id": 2013956,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 20.7545,
+    "band_gap": 0.0,
+    "stability": 1.5842438523282478
+  },
+  {
+    "name": "TiN",
+    "entry_id": 2014098,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 18.087,
+    "band_gap": 0.0,
+    "stability": 0.8549716150000002
+  },
+  {
+    "name": "HfN",
+    "entry_id": 2014102,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 22.0656,
+    "band_gap": 0.0,
+    "stability": 1.0099267699999999
+  },
+  {
+    "name": "VN",
+    "entry_id": 2014104,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 16.1735,
+    "band_gap": 0.0,
+    "stability": 0.6634067849999974
+  },
+  {
+    "name": "NbN",
+    "entry_id": 2014106,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 20.8457,
+    "band_gap": 0.0,
+    "stability": 0.6472560499999962
+  },
+  {
+    "name": "TaN",
+    "entry_id": 2014108,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 20.7499,
+    "band_gap": 0.0,
+    "stability": 0.8228918999999955
+  },
+  {
+    "name": "LaTe",
+    "entry_id": 2014220,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 60.9389,
+    "band_gap": 0.0,
+    "stability": 0.127585148333333
+  },
+  {
+    "name": "CeS",
+    "entry_id": 2014221,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 45.768,
+    "band_gap": 0.0,
+    "stability": 0.27718168
+  },
+  {
+    "name": "CeSe",
+    "entry_id": 2014222,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 51.031,
+    "band_gap": 0.0,
+    "stability": 0.19308520333333412
+  },
+  {
+    "name": "CeTe",
+    "entry_id": 2014223,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 60.8014,
+    "band_gap": 0.0,
+    "stability": 0.08889036500000014
+  },
+  {
+    "name": "EuS",
+    "entry_id": 2014224,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 44.031,
+    "band_gap": 1.2719999999999998,
+    "stability": 0.2529802050000023
+  },
+  {
+    "name": "EuSe",
+    "entry_id": 2014225,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 50.3058,
+    "band_gap": 0.9779999999999998,
+    "stability": 0.24650016999999957
+  },
+  {
+    "name": "YP",
+    "entry_id": 2014542,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 41.9283,
+    "band_gap": 0.0,
+    "stability": 0.5594653699999999
+  },
+  {
+    "name": "YSb",
+    "entry_id": 2014546,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.9584,
+    "band_gap": 0.0,
+    "stability": 0.3467249599999995
+  },
+  {
+    "name": "HfPd",
+    "entry_id": 2014611,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 36.452,
+    "band_gap": 0.0,
+    "stability": 0.059797632500000475
+  },
+  {
+    "name": "HfIr",
+    "entry_id": 2014613,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 35.1911,
+    "band_gap": 0.0,
+    "stability": 0.09558810499999915
+  },
+  {
+    "name": "HfC",
+    "entry_id": 2014753,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 24.1776,
+    "band_gap": 0.0,
+    "stability": 1.347978431666665
+  },
+  {
+    "name": "TaC",
+    "entry_id": 2014754,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 21.8344,
+    "band_gap": 0.0,
+    "stability": 1.0352635900000013
+  },
+  {
+    "name": "WC",
+    "entry_id": 2014755,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 20.3782,
+    "band_gap": 0.0,
+    "stability": 0.9061576150000016
+  },
+  {
+    "name": "ReC",
+    "entry_id": 2014756,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 19.5478,
+    "band_gap": 0.0,
+    "stability": 1.1136342018749996
+  },
+  {
+    "name": "OsC",
+    "entry_id": 2014757,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 19.5648,
+    "band_gap": 0.0,
+    "stability": 1.4814929512500008
+  },
+  {
+    "name": "IrC",
+    "entry_id": 2014758,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 20.297,
+    "band_gap": 0.0,
+    "stability": 1.6715560912500003
+  },
+  {
+    "name": "PtC",
+    "entry_id": 2014759,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 22.2297,
+    "band_gap": 0.0,
+    "stability": 1.99271267625
+  },
+  {
+    "name": "CdN",
+    "entry_id": 2015003,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 25.571,
+    "band_gap": 0.0,
+    "stability": 1.2769219773282474
+  },
+  {
+    "name": "HoN",
+    "entry_id": 2015164,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 26.1492,
+    "band_gap": 0.0,
+    "stability": 0.9383307500000029
+  },
+  {
+    "name": "HoP",
+    "entry_id": 2015166,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 41.0848,
+    "band_gap": 0.0,
+    "stability": 0.5567194899999965
+  },
+  {
+    "name": "HoAs",
+    "entry_id": 2015168,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 44.9436,
+    "band_gap": 0.0,
+    "stability": 0.49328390499999464
+  },
+  {
+    "name": "HoBi",
+    "entry_id": 2015170,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 57.1745,
+    "band_gap": 0.0,
+    "stability": 0.2771218466666667
+  },
+  {
+    "name": "PrBi",
+    "entry_id": 2015237,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 63.6859,
+    "band_gap": 0.0,
+    "stability": 0.2520237449999999
+  },
+  {
+    "name": "DyP",
+    "entry_id": 2015244,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 41.6074,
+    "band_gap": 0.0,
+    "stability": 0.5494728549999968
+  },
+  {
+    "name": "DyAs",
+    "entry_id": 2015246,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 45.519,
+    "band_gap": 0.0,
+    "stability": 0.4878598750000054
+  },
+  {
+    "name": "TcN",
+    "entry_id": 2015302,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 19.1164,
+    "band_gap": 0.0,
+    "stability": 0.7969484511641223
+  },
+  {
+    "name": "AlCo",
+    "entry_id": 2015345,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 23.0493,
+    "band_gap": 0.0,
+    "stability": 3.923500000002633e-05
+  },
+  {
+    "name": "CoW",
+    "entry_id": 2015346,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 26.7814,
+    "band_gap": 0.0,
+    "stability": 0.3768510103106711
+  },
+  {
+    "name": "TiCo",
+    "entry_id": 2015347,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 25.7134,
+    "band_gap": 0.0,
+    "stability": 0.013185931249999783
+  },
+  {
+    "name": "VCo",
+    "entry_id": 2015348,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 23.9035,
+    "band_gap": 0.0,
+    "stability": 0.13028558250000088
+  },
+  {
+    "name": "NbCo",
+    "entry_id": 2015349,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 29.3837,
+    "band_gap": 0.0,
+    "stability": 0.15267904537778823
+  },
+  {
+    "name": "TaCo",
+    "entry_id": 2015350,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 28.4448,
+    "band_gap": 0.0,
+    "stability": 0.16478630494853758
+  },
+  {
+    "name": "CrCo",
+    "entry_id": 2015351,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 22.8286,
+    "band_gap": 0.0,
+    "stability": 0.17347610504689612
+  },
+  {
+    "name": "CoMo",
+    "entry_id": 2015352,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 26.8686,
+    "band_gap": 0.0,
+    "stability": 0.3175006252074525
+  },
+  {
+    "name": "MnCo",
+    "entry_id": 2015353,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 22.8746,
+    "band_gap": 0.0,
+    "stability": 0.006371868336738015
+  },
+  {
+    "name": "CoNi",
+    "entry_id": 2015355,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 21.7778,
+    "band_gap": 0.0,
+    "stability": 0.17534088850000024
+  },
+  {
+    "name": "YTi",
+    "entry_id": 2015402,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 48.883,
+    "band_gap": 0.0,
+    "stability": 0.3284297806068679
+  },
+  {
+    "name": "NbC",
+    "entry_id": 2015634,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 22.0214,
+    "band_gap": 0.0,
+    "stability": 0.9613348378898452
+  },
+  {
+    "name": "TiFe",
+    "entry_id": 2015642,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 25.5036,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "PuBi",
+    "entry_id": 2016180,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 58.024,
+    "band_gap": 0.0,
+    "stability": 0.08276408000000046
+  },
+  {
+    "name": "MnSn",
+    "entry_id": 2016196,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 35.648,
+    "band_gap": 0.0,
+    "stability": 0.3290443533333332
+  },
+  {
+    "name": "MnSb",
+    "entry_id": 2016200,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 37.7326,
+    "band_gap": 0.0,
+    "stability": 0.32799807750000015
+  },
+  {
+    "name": "VRu",
+    "entry_id": 2018051,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 26.8242,
+    "band_gap": 0.0,
+    "stability": 0.04925713300000001
+  },
+  {
+    "name": "NdN",
+    "entry_id": 2019709,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 30.1492,
+    "band_gap": 0.0,
+    "stability": 0.7828973949999973
+  },
+  {
+    "name": "CrN",
+    "entry_id": 2019865,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 15.6037,
+    "band_gap": 0.0,
+    "stability": 0.6708373300000012
+  },
+  {
+    "name": "MnN",
+    "entry_id": 2019867,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 15.7378,
+    "band_gap": 0.0,
+    "stability": 0.703167070000001
+  },
+  {
+    "name": "FeN",
+    "entry_id": 2019869,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 16.3795,
+    "band_gap": 0.0,
+    "stability": 0.8510887550000004
+  },
+  {
+    "name": "CoN",
+    "entry_id": 2019871,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 15.6763,
+    "band_gap": 0.0,
+    "stability": 0.8766571249141242
+  },
+  {
+    "name": "NiN",
+    "entry_id": 2019873,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 16.3229,
+    "band_gap": 0.0,
+    "stability": 1.0183431791210937
+  },
+  {
+    "name": "CuN",
+    "entry_id": 2019875,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 17.4129,
+    "band_gap": 0.0,
+    "stability": 1.3009338723282475
+  },
+  {
+    "name": "ZnN",
+    "entry_id": 2019877,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 19.2348,
+    "band_gap": 0.0,
+    "stability": 1.0701487123282472
+  },
+  {
+    "name": "DySb",
+    "entry_id": 2019925,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.5623,
+    "band_gap": 0.0,
+    "stability": 0.33766886499999926
+  },
+  {
+    "name": "HoSb",
+    "entry_id": 2019926,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 54.0288,
+    "band_gap": 0.0,
+    "stability": 0.3392793049999998
+  },
+  {
+    "name": "ErSb",
+    "entry_id": 2019927,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 53.5269,
+    "band_gap": 0.0,
+    "stability": 0.34029533999999995
+  },
+  {
+    "name": "TmSb",
+    "entry_id": 2019928,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 53.0194,
+    "band_gap": 0.0,
+    "stability": 0.33942995499999995
+  },
+  {
+    "name": "MgO",
+    "entry_id": 2020985,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 18.1342,
+    "band_gap": 2.7060000000000004,
+    "stability": 0.7602776850000001
+  },
+  {
+    "name": "ThC",
+    "entry_id": 2023377,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 32.3883,
+    "band_gap": 0.0,
+    "stability": 0.6503280746874996
+  },
+  {
+    "name": "BiS",
+    "entry_id": 2023869,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 45.7768,
+    "band_gap": 0.0,
+    "stability": 0.31938299700199324
+  },
+  {
+    "name": "InAg",
+    "entry_id": 2025608,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 41.834,
+    "band_gap": 0.0,
+    "stability": 0.08032434950000011
+  },
+  {
+    "name": "WN",
+    "entry_id": 2029479,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 20.0797,
+    "band_gap": 0.0,
+    "stability": 1.0834091366666663
+  },
+  {
+    "name": "CaO",
+    "entry_id": 2029493,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 24.5682,
+    "band_gap": 2.931,
+    "stability": 0.491055115
+  },
+  {
+    "name": "CsXe",
+    "entry_id": 2029525,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 224.996,
+    "band_gap": 0.0,
+    "stability": 0.13707989500000006
+  },
+  {
+    "name": "ArMg",
+    "entry_id": 2029544,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 77.6828,
+    "band_gap": 0.0,
+    "stability": 0.738092670416665
+  },
+  {
+    "name": "MgXe",
+    "entry_id": 2029546,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 141.86,
+    "band_gap": 1.5330000000000001,
+    "stability": 0.698515995416665
+  },
+  {
+    "name": "CsSe",
+    "entry_id": 2029755,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 81.0966,
+    "band_gap": 0.0,
+    "stability": 0.4536751441666671
+  },
+  {
+    "name": "CaAl",
+    "entry_id": 2030303,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 51.0769,
+    "band_gap": 0.0,
+    "stability": 0.06565201897892703
+  },
+  {
+    "name": "MgAl",
+    "entry_id": 2030304,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 38.9011,
+    "band_gap": 0.0,
+    "stability": 0.08293803006416957
+  },
+  {
+    "name": "CaMg",
+    "entry_id": 2030306,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 62.1479,
+    "band_gap": 0.0,
+    "stability": 0.006083871250000261
+  },
+  {
+    "name": "NaBi",
+    "entry_id": 2030339,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 55.117,
+    "band_gap": 0.0,
+    "stability": 0.07012170000000006
+  },
+  {
+    "name": "NiMo",
+    "entry_id": 2030393,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 26.7318,
+    "band_gap": 0.0,
+    "stability": 0.348076432500001
+  },
+  {
+    "name": "ZrNi",
+    "entry_id": 2030395,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 32.8273,
+    "band_gap": 0.0,
+    "stability": 0.10205164874999983
+  },
+  {
+    "name": "ZrMo",
+    "entry_id": 2030400,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 37.3566,
+    "band_gap": 0.0,
+    "stability": 0.17774414375000136
+  },
+  {
+    "name": "TiNb",
+    "entry_id": 2030450,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 34.7417,
+    "band_gap": 0.0,
+    "stability": 0.04006504083333281
+  },
+  {
+    "name": "PmN",
+    "entry_id": 2030475,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 29.2908,
+    "band_gap": 0.0,
+    "stability": 0.8072496749999973
+  },
+  {
+    "name": "EuN",
+    "entry_id": 2030478,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 28.2821,
+    "band_gap": 0.0,
+    "stability": 0.48540399390625066
+  },
+  {
+    "name": "YbN",
+    "entry_id": 2030481,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 24.7905,
+    "band_gap": 0.0,
+    "stability": 0.49466916812499817
+  },
+  {
+    "name": "NiW",
+    "entry_id": 2030502,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 26.6881,
+    "band_gap": 0.0,
+    "stability": 0.4016566187042444
+  },
+  {
+    "name": "AlW",
+    "entry_id": 2030504,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 30.6662,
+    "band_gap": 0.0,
+    "stability": 0.4418255119967729
+  },
+  {
+    "name": "AgBr",
+    "entry_id": 2030839,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 44.6014,
+    "band_gap": 0.36099999999999977,
+    "stability": 0.22970617375000035
+  },
+  {
+    "name": "AgCl",
+    "entry_id": 2030842,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 40.1294,
+    "band_gap": 0.8560000000000001,
+    "stability": 0.16176356624999988
+  },
+  {
+    "name": "MgCu",
+    "entry_id": 2030890,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 30.7244,
+    "band_gap": 0.0,
+    "stability": 0.029940348333333366
+  },
+  {
+    "name": "YOs",
+    "entry_id": 2030938,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 39.7955,
+    "band_gap": 0.0,
+    "stability": 0.2996594057812512
+  },
+  {
+    "name": "NbTc",
+    "entry_id": 2030940,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 32.448,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "LiZn",
+    "entry_id": 2031148,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 27.2636,
+    "band_gap": 0.0,
+    "stability": 0.07282204500000006
+  },
+  {
+    "name": "TaNi",
+    "entry_id": 2031349,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 28.8538,
+    "band_gap": 0.0,
+    "stability": 0.20358425583333367
+  },
+  {
+    "name": "TaAl",
+    "entry_id": 2031351,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 33.4836,
+    "band_gap": 0.0,
+    "stability": 0.3610776956751582
+  },
+  {
+    "name": "BaCl",
+    "entry_id": 2031522,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 58.8639,
+    "band_gap": 0.0,
+    "stability": 0.39473609187500003
+  },
+  {
+    "name": "TaAs",
+    "entry_id": 2031531,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 33.1903,
+    "band_gap": 0.0,
+    "stability": 0.2764435249999996
+  },
+  {
+    "name": "CrC",
+    "entry_id": 2031815,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 15.9228,
+    "band_gap": 0.0,
+    "stability": 0.7639336271528463
+  },
+  {
+    "name": "MoC",
+    "entry_id": 2031821,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 20.0676,
+    "band_gap": 0.0,
+    "stability": 0.7660777700000008
+  },
+  {
+    "name": "TiZn",
+    "entry_id": 2032446,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 30.7163,
+    "band_gap": 0.0,
+    "stability": 0.006787270000000234
+  },
+  {
+    "name": "SnAs",
+    "entry_id": 2032671,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 46.2217,
+    "band_gap": 0.0,
+    "stability": 0.25221972486379896
+  },
+  {
+    "name": "KF",
+    "entry_id": 2032721,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 31.0888,
+    "band_gap": 7.292,
+    "stability": 0.10271843499999722
+  },
+  {
+    "name": "NaBr",
+    "entry_id": 2032723,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 50.1708,
+    "band_gap": 3.257,
+    "stability": 0.15185422499999812
+  },
+  {
+    "name": "NaF",
+    "entry_id": 2032725,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 21.2065,
+    "band_gap": 6.48,
+    "stability": 0.1574203350000034
+  },
+  {
+    "name": "NaI",
+    "entry_id": 2032726,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 64.504,
+    "band_gap": 2.473,
+    "stability": 0.15715173999999732
+  },
+  {
+    "name": "KSe",
+    "entry_id": 2032781,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 60.8339,
+    "band_gap": 0.0,
+    "stability": 0.353651070833334
+  },
+  {
+    "name": "KTe",
+    "entry_id": 2032785,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 72.9991,
+    "band_gap": 0.0,
+    "stability": 0.24992384083333297
+  },
+  {
+    "name": "CeN",
+    "entry_id": 2032907,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 32.1301,
+    "band_gap": 0.0,
+    "stability": 0.7431513749999967
+  },
+  {
+    "name": "BaS",
+    "entry_id": 2033256,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 57.5243,
+    "band_gap": 1.5500000000000003,
+    "stability": 0.2194936037500015
+  },
+  {
+    "name": "SnRu",
+    "entry_id": 2033514,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 33.9575,
+    "band_gap": 0.0,
+    "stability": 0.06055564991194218
+  },
+  {
+    "name": "CaCu",
+    "entry_id": 2033964,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 44.9282,
+    "band_gap": 0.0,
+    "stability": 0.09321424999999994
+  },
+  {
+    "name": "LiH",
+    "entry_id": 2033997,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 14.2541,
+    "band_gap": 1.0979999999999999,
+    "stability": 0.23338459999999944
+  },
+  {
+    "name": "GeRu",
+    "entry_id": 2034071,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 28.0126,
+    "band_gap": 0.0,
+    "stability": 0.03825636592131876
+  },
+  {
+    "name": "TbN",
+    "entry_id": 2034282,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 26.9772,
+    "band_gap": 0.0,
+    "stability": 0.8959899950000023
+  },
+  {
+    "name": "TbO",
+    "entry_id": 2034286,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 25.8931,
+    "band_gap": 0.0,
+    "stability": 0.8964440608963287
+  },
+  {
+    "name": "TbS",
+    "entry_id": 2034290,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 39.7182,
+    "band_gap": 0.0,
+    "stability": 0.3511838099999973
+  },
+  {
+    "name": "TbSe",
+    "entry_id": 2034294,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 44.8716,
+    "band_gap": 0.0,
+    "stability": 0.2465412662500004
+  },
+  {
+    "name": "ScBi",
+    "entry_id": 2034914,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 51.2429,
+    "band_gap": 0.0,
+    "stability": 0.2549252749999994
+  },
+  {
+    "name": "YBi",
+    "entry_id": 2034916,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 58.513,
+    "band_gap": 0.0,
+    "stability": 0.2786020533333339
+  },
+  {
+    "name": "TbAs",
+    "entry_id": 2034939,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 46.0223,
+    "band_gap": 0.0,
+    "stability": 0.4817985900000046
+  },
+  {
+    "name": "TiO",
+    "entry_id": 2034995,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 17.8911,
+    "band_gap": 0.0,
+    "stability": 0.5453821450000014
+  },
+  {
+    "name": "LiS",
+    "entry_id": 2035434,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 29.2678,
+    "band_gap": 0.0,
+    "stability": 0.3918571997997047
+  },
+  {
+    "name": "LiSe",
+    "entry_id": 2035439,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 34.7183,
+    "band_gap": 0.0,
+    "stability": 0.2686529549999974
+  },
+  {
+    "name": "LiTe",
+    "entry_id": 2035444,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 45.5308,
+    "band_gap": 0.0,
+    "stability": 0.2304695566666698
+  },
+  {
+    "name": "InP",
+    "entry_id": 2035476,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 40.8306,
+    "band_gap": 0.0,
+    "stability": 0.6052594949999994
+  },
+  {
+    "name": "CaN",
+    "entry_id": 2035481,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 26.794,
+    "band_gap": 0.0,
+    "stability": 0.6356886749813171
+  },
+  {
+    "name": "CaC",
+    "entry_id": 2035485,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 30.0555,
+    "band_gap": 0.0,
+    "stability": 1.1031459549999998
+  },
+  {
+    "name": "BaBi",
+    "entry_id": 2035553,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 80.6216,
+    "band_gap": 0.0,
+    "stability": 0.13275564916104177
+  },
+  {
+    "name": "CaBi",
+    "entry_id": 2035558,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 62.4546,
+    "band_gap": 0.0,
+    "stability": 0.09469173666666664
+  },
+  {
+    "name": "SrBi",
+    "entry_id": 2035567,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 71.0578,
+    "band_gap": 0.0,
+    "stability": 0.1059926174985909
+  },
+  {
+    "name": "CaS",
+    "entry_id": 2035871,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 42.1986,
+    "band_gap": 1.5089999999999995,
+    "stability": 0.3732473700000014
+  },
+  {
+    "name": "CaSe",
+    "entry_id": 2035873,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 48.2425,
+    "band_gap": 0.8570000000000002,
+    "stability": 0.34286039999999973
+  },
+  {
+    "name": "NiAg",
+    "entry_id": 2036146,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 28.4825,
+    "band_gap": 0.0,
+    "stability": 0.3021944262499998
+  },
+  {
+    "name": "NbV",
+    "entry_id": 2036459,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 31.593,
+    "band_gap": 0.0,
+    "stability": 0.10676385562500103
+  },
+  {
+    "name": "TaV",
+    "entry_id": 2036463,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 31.5565,
+    "band_gap": 0.0,
+    "stability": 0.12428582625000129
+  },
+  {
+    "name": "VMo",
+    "entry_id": 2036467,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 28.7329,
+    "band_gap": 0.0,
+    "stability": 0.0001688499999996651
+  },
+  {
+    "name": "VW",
+    "entry_id": 2036471,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 29.0569,
+    "band_gap": 0.0,
+    "stability": 0.0025291695833346423
+  },
+  {
+    "name": "TaNb",
+    "entry_id": 2036475,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 36.4341,
+    "band_gap": 0.0,
+    "stability": 0.0063121150000000625
+  },
+  {
+    "name": "NbMo",
+    "entry_id": 2036479,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 33.7406,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "NbW",
+    "entry_id": 2036483,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 34.0559,
+    "band_gap": 0.0,
+    "stability": 0.022581399999999974
+  },
+  {
+    "name": "TaMo",
+    "entry_id": 2036487,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 33.6355,
+    "band_gap": 0.0,
+    "stability": 0.0
+  },
+  {
+    "name": "TaW",
+    "entry_id": 2036491,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 33.9946,
+    "band_gap": 0.0,
+    "stability": 0.004061325000000338
+  },
+  {
+    "name": "MoW",
+    "entry_id": 2036495,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 31.9158,
+    "band_gap": 0.0,
+    "stability": 0.0001650599999987179
+  },
+  {
+    "name": "MnSi",
+    "entry_id": 2036678,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 21.6902,
+    "band_gap": 0.0,
+    "stability": 0.12805764875000053
+  },
+  {
+    "name": "TaP",
+    "entry_id": 2036682,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 29.9651,
+    "band_gap": 0.0,
+    "stability": 0.39780593000000053
+  },
+  {
+    "name": "CuH",
+    "entry_id": 2036722,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 15.2877,
+    "band_gap": 0.0,
+    "stability": 0.5739777939079125
+  },
+  {
+    "name": "MgN",
+    "entry_id": 2036781,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 19.3721,
+    "band_gap": 0.0,
+    "stability": 0.8153932056103563
+  },
+  {
+    "name": "FeSi",
+    "entry_id": 2036894,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 20.8519,
+    "band_gap": 0.0,
+    "stability": 0.022384549999999726
+  },
+  {
+    "name": "CrAs",
+    "entry_id": 2036995,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 27.1639,
+    "band_gap": 0.0,
+    "stability": 0.29377326749999977
+  },
+  {
+    "name": "MoP",
+    "entry_id": 2037259,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 27.1296,
+    "band_gap": 0.0,
+    "stability": 0.3169685750000011
+  },
+  {
+    "name": "BaC",
+    "entry_id": 2037380,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 45.1791,
+    "band_gap": 0.0,
+    "stability": 1.5756418805335288
+  },
+  {
+    "name": "BaN",
+    "entry_id": 2037392,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 40.343,
+    "band_gap": 0.0,
+    "stability": 0.8121567308333328
+  },
+  {
+    "name": "ScS",
+    "entry_id": 2037503,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 33.7419,
+    "band_gap": 0.0,
+    "stability": 0.40117933375000003
+  },
+  {
+    "name": "ScSe",
+    "entry_id": 2037505,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 38.19,
+    "band_gap": 0.0,
+    "stability": 0.3147141062500003
+  },
+  {
+    "name": "AlMo",
+    "entry_id": 2037610,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 30.5299,
+    "band_gap": 0.0,
+    "stability": 0.3686424848585548
+  },
+  {
+    "name": "NbAl",
+    "entry_id": 2037614,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 33.7252,
+    "band_gap": 0.0,
+    "stability": 0.31424083459999985
+  },
+  {
+    "name": "AlV",
+    "entry_id": 2037618,
+    "prototype": "CsCl",
+    "spacegroup": "Pm-3m",
+    "volume": 29.3458,
+    "band_gap": 0.0,
+    "stability": 0.23969115597576174
+  }
+]
