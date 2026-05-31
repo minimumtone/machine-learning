@@ -444,7 +444,7 @@ APIから取得したフラットなJSONレコードを7テーブルのリレー
   \end{tabularx}
 \end{table*}
 
-\paragraph{組成テーブルの分離。}
+\paragraph{組成テーブルの分離}
 単一の化合物が複数の元素を含む場合がある（例：Fe$_3$Al $\to$ FeとAl）。
 各元素を\texttt{composition}テーブルの個別行として格納することで、
 文字列解析なしに柔軟な元素ベースクエリ（AND, OR, NOT）を可能にする。
@@ -454,17 +454,17 @@ APIから取得したフラットなJSONレコードを7テーブルのリレー
 （単一行が両条件を同時に満たすことはないため0行が返る）。
 代わりに\texttt{EXISTS}副問い合わせが必要となる（\ref{sec:multi_element}節参照）。
 
-\paragraph{構造/相安定性/計算の分離。}
+\paragraph{構造/相安定性/計算の分離}
 結晶構造情報（プロトタイプ、格子定数）、熱力学的安定性（hull上エネルギー）、
 計算メタデータ（DFT汎関数）を別テーブルに格納し、
 独立した更新・拡張を可能にする。
 
-\paragraph{計算物性のEntity-Attribute-Value（EAV）パターン。}
+\paragraph{計算物性のEntity-Attribute-Value（EAV）パターン}
 \texttt{calculated\_property}テーブルはEAVパターン
 （\texttt{property\_name}, \texttt{value}, \texttt{unit}）を使用し、
 スキーマ変更なしに任意の計算物性（体積弾性率、せん断弾性率等）を収容する。
 
-\paragraph{ER設計の汎用性に関する注記。}
+\paragraph{ER設計の汎用性に関する注記}
 OQMDは内部的にリレーショナルデータベース（Django ORM + PostgreSQL）で運用されているが、
 本研究ではAPIから取得したフラットJSONデータに対し、
 NetworkXグラフおよびYAMLスキーマとして走査しやすいER図を新規に設計した。
@@ -712,12 +712,12 @@ $R$のすべてのテーブルを接続する$G$の最小部分グラフが必�
   \end{algorithmic}
 \end{algorithm}
 
-\paragraph{計算量。}
+\paragraph{計算量}
 $|V| = n$ノード、$|R| = k$必要テーブルのグラフに対し、
 アルゴリズムは$O(k^2)$回の最短路計算を行い、各計算は$O(n + |E|)$（BFS）である。
 本スキーマ（$n = 7$、$k \leq 5$）ではマイクロ秒で完了する。
 
-\paragraph{木構造FKグラフでの正確性。}
+\paragraph{木構造FKグラフでの正確性}
 $G$が木（本スキーマでは\texttt{material\_entry}がハブ）の場合、
 Steiner木は一意であり、貪欲アルゴリズムはこれを厳密に求める。
 FKサイクルを持つスキーマ（自己参照テーブル等）では近似が不要な辺を含む可能性があるが、
@@ -798,14 +798,14 @@ Schema Graphエンジンは複数元素が指定された場合を検出し、
 Schema Graph JOIN経路からSQLを構築する。
 外部APIは不要で、レイテンシは32--60~ms（\ref{sec:scalability}節）。
 
-\paragraph{改訂版での拡張。}
+\paragraph{改訂版での拡張}
 前稿のRule-basedモードでは数値比較WHERE句の生成が不可であったが、
 改訂版では数値条件パーサー（\ref{sec:numeric_parser}節）および
 化学式パーサー（\ref{sec:formula_parser}節）を統合し、
 \texttt{band\_gap > 1.0}、\texttt{formation\_energy < 0}、
 \texttt{Ni3Al}（完全一致）等の条件をRule-basedモード内で処理可能とした。
 
-\paragraph{残存する制限。}
+\paragraph{残存する制限}
 以下のクエリ種別はRule-basedモードでは処理できず、
 Coverage Score（\ref{sec:coverage_score}節）またはIntent Classifier
 （\ref{sec:intent_classifier}節）により自動的に
@@ -1041,7 +1041,7 @@ OQMD APIは各化合物をフラットなJSONレコードとして返す：
 このフラットデータをそのまま単一テーブルに格納することも可能だが、
 材料データの論理構造に基づき、以下の設計判断で7テーブルに正規化した。
 
-\paragraph{設計判断1：組成テーブルの分離（1:N正規化）。}
+\paragraph{設計判断1：組成テーブルの分離（1:N正規化）}
 最も重要な設計判断は、\texttt{composition}テーブルの分離である。
 化合物と構成元素の関係は1:N（例：Ni$_3$AlはNi行とAl行の2レコード）であり、
 これをフラットテーブルの1カラムに格納すると
@@ -1051,7 +1051,7 @@ OQMD APIは各化合物をフラットなJSONレコードとして返す：
 Graph Traversalアブレーション（\ref{sec:traversal_ablation}節）で示したとおり、
 この自己結合を含むJOINパスの正確な算出がSchema Graph走査の主要な貢献である。
 
-\paragraph{設計判断2：構造・安定性・計算条件の分離。}
+\paragraph{設計判断2：構造・安定性・計算条件の分離}
 同一化合物に対して複数の結晶構造（多形）や異なる計算条件が存在しうるため、
 \texttt{structure}（プロトタイプ、空間群、格子定数）、
 \texttt{phase\_stability}（形成エネルギー、$E_\text{hull}$、バンドギャップ）、
@@ -1060,20 +1060,20 @@ Graph Traversalアブレーション（\ref{sec:traversal_ablation}節）で示�
 格子定数が3.5~\AA{}以上」のような、構造と安定性を跨ぐ複合条件が
 FK整合JOINで正確に検索できる。
 
-\paragraph{設計判断3：計算と物性の親子関係。}
+\paragraph{設計判断3：計算と物性の親子関係}
 1つのDFT計算から複数の物性値（体積弾性率、剪断弾性率等）が出力されるため、
 \texttt{calculation} $\to$ \texttt{properties}（1:N）の親子関係とした。
 物性名・値・単位を行として格納するEAV（Entity-Attribute-Value）パターンにより、
 新しい物性を追加する際にスキーマ変更が不要である。
 
-\paragraph{設計判断4：プロトタイプ定義のマスタ化。}
+\paragraph{設計判断4：プロトタイプ定義のマスタ化}
 \texttt{prototype\_definition}テーブルにB2、L1$_2$、A15等の
 プロトタイプ名・Strukturbericht記号・結晶型の対応を格納し、
 structureテーブルから参照する。
 これにより「L12」「Cu3Au型」「AuCu$_3$型」等の
 同義表現を一元的に管理できる。
 
-\paragraph{正規化がSchema Graph走査を必要にする。}
+\paragraph{正規化がSchema Graph走査を必要にする}
 上記の正規化設計により、
 単純な検索でも2--4テーブルのJOINが必要となる。
 この\textbf{正規化の代償としてのJOIN複雑性}こそが、
@@ -1237,7 +1237,7 @@ SQLが実行できても結果が正しくない場合（例：不適切なJOIN�
   \end{tabular}
 \end{table*}
 
-\paragraph{主要な発見。}
+\paragraph{主要な発見}
 
 \begin{enumerate}
   \item \textbf{Naive RBの結果正解率は78.9\%}：実行成功率96.5\%との乖離は
@@ -1380,7 +1380,7 @@ T2SQLは78件を返すが、OQMD APIでは対応するフィルタが存在せ�
   \label{fig:oqmd}
 \end{figure}
 
-\paragraph{結合テストとしての意義。}
+\paragraph{結合テストとしての意義}
 
 この比較は\textbf{5段階のデータ変換パイプライン全体}を検証する：
 (1)~API JSON $\to$ CSV変換、
@@ -1429,25 +1429,25 @@ Intent Classifier導入前後の比較として示す。
   \end{tabular}
 \end{table*}
 
-\paragraph{SQL-answerable精度。}
+\paragraph{SQL-answerable精度}
 データベースで回答可能な43クエリ（SQL-answerable + numeric）は
 Intent Classifier導入前後とも100\%の正解率を維持。
 Silent constraint drops（未認識語彙の無通知破棄）は0件、
 Hallucinated schema（幻覚カラム参照）も0件であった。
 
-\paragraph{Out-of-scope検出の改善。}
+\paragraph{Out-of-scope検出の改善}
 LLMのみの条件ではVASPワークフロー質問（INCAR設定、SCF収束、フォノン計算手順など）に対し
 gpt-5.5がSQL文を生成してしまい正解率0\%であった。
 Intent Classifier（\ref{sec:intent_classifier}節）の導入により、
 20パターンのVASP/DFTワークフロー検出ルールで22件全件を
 正しくout\_of\_scopeとして拒否し、正解率が0\% $\to$ 100\%に改善した。
 
-\paragraph{Unsafe検出の改善。}
+\paragraph{Unsafe検出の改善}
 SQLインジェクション試行10件に対し、LLMのみでは2件の正解（20\%）であったが、
 Intent Classifier + SQLガード（\ref{sec:sql_guard}節）の組合せにより
 全10件を正しく拒否し100\%に改善した。
 
-\paragraph{曖昧クエリ処理。}
+\paragraph{曖昧クエリ処理}
 25件の曖昧クエリのうち、Coverage Scoreによる明確化要求は限定的であった（40\%）。
 曖昧クエリの処理改善は今後の課題である（\ref{sec:limitations}節）。
 
@@ -1474,7 +1474,7 @@ Intent Classifier + SQLガード（\ref{sec:sql_guard}節）の組合せによ�
   \end{tabular}
 \end{table}
 
-\paragraph{解釈。}
+\paragraph{解釈}
 gpt-5.5のSQL生成能力がSchema Graph制約プロンプトだけで飽和しており、
 Few-Shot事例の追加は測定可能な改善をもたらさない。
 より高難度のクエリセット（複雑な集約、ウィンドウ関数、多テーブル結合など）で
@@ -1552,7 +1552,7 @@ indirect、multi-element、numeric/sort）に分類した。
   \end{tabular}
 \end{table*}
 
-\paragraph{結果セット一致度（Jaccard類似度）。}
+\paragraph{結果セット一致度（Jaccard類似度）}
 条件間の結果セット一致度をJaccard類似度で評価した：
 \begin{itemize}
   \item Naive vs SG+RB：$\bar{J} = 0.167$（完全一致 5/30）---Naiveの全テーブルJOINが
@@ -1563,7 +1563,7 @@ indirect、multi-element、numeric/sort）に分類した。
     Schema Graph走査によりRule-basedとLLMが高い結果一致度を達成。
 \end{itemize}
 
-\paragraph{Graph Traversalの効果。}
+\paragraph{Graph Traversalの効果}
 (1)~Naive条件は平均4.73 JOINを生成し、うち2.73（58\%）が不要である。
 すべてのカテゴリで不要JOINが発生し、0-tableクエリでも5 JOINを生成する。
 (2)~SG+RBおよびLLM+SG traversal条件は
