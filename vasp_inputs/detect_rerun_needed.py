@@ -297,9 +297,10 @@ def scan_directory(sqs_dir, omega_threshold=0.5):
                     if omega_sf is not None and abs(omega_sf) > omega_threshold:
                         all_issues.append(f"OMEGA_OUTLIER({omega_sf:+.3f})")
 
-        # Read current POTIM and IBRION for diagnostics
+        # Read current POTIM, IBRION, ENCUT for diagnostics
         cur_potim = read_incar_param(calc_dir, 'POTIM')
         cur_ibrion = read_incar_param(calc_dir, 'IBRION')
+        cur_encut = read_incar_param(calc_dir, 'ENCUT')
 
         needs_rerun = len(all_issues) > 0
         if needs_rerun:
@@ -316,6 +317,7 @@ def scan_directory(sqs_dir, omega_threshold=0.5):
             'needs_rerun': needs_rerun,
             'potim': cur_potim,
             'ibrion': cur_ibrion,
+            'encut': cur_encut,
         })
 
     return results, total, converged, rerun_needed
@@ -723,11 +725,14 @@ Examples:
         else:
             ibrion = None  # keep original
 
-        # ENCUT: user-specified > auto (unconverged→600) > keep original
+        # ENCUT: user-specified > auto (increase to 600 if below) > keep original
+        cur_encut = r.get('encut')
         if args.encut is not None:
             encut = args.encut
+        elif cur_encut is None or cur_encut < 600:
+            encut = 600  # increase for unconverged cases
         else:
-            encut = 600  # increase for all unconverged cases
+            encut = None  # keep original (already >= 600)
 
         # ADDGRID: from CLI flag
         addgrid = args.addgrid
