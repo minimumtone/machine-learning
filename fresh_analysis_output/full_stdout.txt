@@ -1,0 +1,244 @@
+======================================================================
+HEA Lattice Constant Prediction: Dynamic Volume Size Factor
+======================================================================
+
+[1] Loading DFT compound data...
+    Loaded VASP B2: 1483 compounds from data/compounds_VASP_B2.csv
+    Loaded VASP L12: 2808 compounds from data/compounds_VASP_L12.csv
+    Total compounds: 7802
+
+[2] Computing DFT-derived volume size factors...
+    Combined Ω_sf pairs: 819
+    B2-specific pairs:   473
+    L1₂-specific pairs:  703
+
+[2b] ML interpolation of missing Ω_sf pairs...
+    Training Ω_sf prediction models (GPR + Ridge)...
+      Ω_sf ML (B2): 473 known pairs, 14 features
+        Ridge LOO-CV RMSE: 0.064368 (α=1.0)
+        GPR LOO-CV RMSE: 0.080610, R$^2$=-0.0042
+      Ω_sf ML (L12): 703 known pairs, 14 features
+        Ridge LOO-CV RMSE: 0.119292 (α=10.0)
+        GPR LOO-CV RMSE: 0.131003, R$^2$=-0.0029
+    B2:  473 DFT + 347 ML-filled = 820 total (mean σ=0.08044)
+    L12: 703 DFT + 117 ML-filled = 820 total (mean σ=0.13082)
+    HEA pairs missing DFT data: 0 BCC, 0 FCC → now ML-filled
+
+[3] Noise floor analysis (duplicate HEA compositions)...
+    Hf-Nb-Ti-V-Zr: a = 3.3770, 3.3663, spread = 0.0107 Å
+    Nb-Ta-Ti-V: a = 3.2300, 3.2206, spread = 0.0094 Å
+    Co-Cr-Fe-Ni-Pd: a = 3.6473, 3.6803, spread = 0.0330 Å
+    Estimated σ_noise = 0.0157 Å
+    Theoretical minimum RMSE ≈ 0.0157 Å
+
+[4] Building feature matrices...
+    Binary training samples: 3580
+    HEA test samples: 64
+
+[5] Computing baselines...
+    Optimising structure-specific γ parameters...
+    Optimal γ_BCC = 0.49, γ_FCC = 0.13
+
+    === All 64 HEAs ===
+    Alonso Vegard                           : RMSE=0.0280 Å, MAE=0.0167 Å, MAPE=0.504%, R$^2$=0.9845
+    Alonso Eq.10                            : RMSE=0.0229 Å, MAE=0.0141 Å, MAPE=0.418%, R$^2$=0.9897
+    King Vegard (this work)                 : RMSE=0.0227 Å, MAE=0.0139 Å, MAPE=0.421%, R$^2$=0.9899
+    DFT Eq.10 (this work)                   : RMSE=0.0284 Å, MAE=0.0225 Å, MAPE=0.655%, R$^2$=0.9841
+    DFT-Ωsf (γB=0.49,γF=0.13)               : RMSE=0.0214 Å, MAE=0.0126 Å, MAPE=0.377%, R$^2$=0.9910
+    Computing SS Eq.10 with ML-filled Ω_sf...
+    ML-filled γ_BCC = 0.49, γ_FCC = 0.13
+    SS Eq.10 ML-filled (γB=0.49,γF=0.13)    : RMSE=0.0214 Å, MAE=0.0126 Å, MAPE=0.377%, R$^2$=0.9910
+
+[6] Training ML models...
+    Training Model A: Direct XGBoost on HEA (LOO-CV)...
+    XGBoost LOO-CV (direct)                 : RMSE=0.1225 Å, MAE=0.0795 Å, MAPE=2.402%, R$^2$=0.7049
+    Training Model B: XGBoost 5-fold CV on HEA...
+    XGBoost 5-fold CV                       : RMSE=0.1319 Å, MAE=0.0896 Å, MAPE=2.701%, R$^2$=0.6580
+    Training Model C: Two-stage transfer...
+    Transfer base (binary)                  : RMSE=0.0774 Å, MAE=0.0661 Å, MAPE=1.880%, R$^2$=0.8821
+    Transfer + Ridge correction             : RMSE=0.0289 Å, MAE=0.0188 Å, MAPE=0.567%, R$^2$=0.9836
+    Training Model D: SS Eq.10 + LOO-CV Ridge correction...
+    SS Eq.10 + Ridge(α=100.0)               : RMSE=0.0218 Å, MAE=0.0128 Å, MAPE=0.381%, R$^2$=0.9907
+    Training Model E: SS Eq.10 + LOO-CV XGBoost correction...
+    SS Eq.10 + XGBoost residual             : RMSE=0.0221 Å, MAE=0.0129 Å, MAPE=0.385%, R$^2$=0.9904
+    Training Model F: SS Eq.10 + LOO-CV GPR correction...
+      GPR(Matern32): RMSE=0.0218 Å, MAE=0.0132 Å
+      GPR(Matern52): RMSE=0.0218 Å, MAE=0.0132 Å
+      GPR(RBF): RMSE=0.0218 Å, MAE=0.0132 Å
+    SS Eq.10 + GPR(Matern32)                : RMSE=0.0218 Å, MAE=0.0132 Å, MAPE=0.393%, R$^2$=0.9907
+    Training Model G: SS Eq.10 + LOO-CV SVR correction...
+      SVR(RBF_C1): RMSE=0.0356 Å, MAE=0.0191 Å
+      SVR(RBF_C10): RMSE=0.0494 Å, MAE=0.0266 Å
+      SVR(RBF_C01): RMSE=0.0258 Å, MAE=0.0140 Å
+    SS Eq.10 + SVR(RBF_C01)                 : RMSE=0.0258 Å, MAE=0.0140 Å, MAPE=0.417%, R$^2$=0.9869
+    Training Model H: SS Eq.10 + LOO-CV Random Forest correction...
+      RF(RF100_d3): RMSE=0.0231 Å, MAE=0.0128 Å
+      RF(RF200_d2): RMSE=0.0232 Å, MAE=0.0130 Å
+      RF(RF500_d3): RMSE=0.0237 Å, MAE=0.0132 Å
+      RF(RF100_d5): RMSE=0.0231 Å, MAE=0.0128 Å
+      RF(RF200_dNone): RMSE=0.0232 Å, MAE=0.0129 Å
+    SS Eq.10 + RF(RF100_d5)                 : RMSE=0.0231 Å, MAE=0.0128 Å, MAPE=0.384%, R$^2$=0.9895
+    Training Model I: SS Eq.10 + LOO-CV Cubist correction...
+        Warning: Cubist(C5_N1) failed: 'float' object has no attribute 'replace'
+      Cubist(C5_N1): RMSE=0.0214 Å, MAE=0.0126 Å
+        Warning: Cubist(C10_N1) failed: 'float' object has no attribute 'replace'
+      Cubist(C10_N1): RMSE=0.0214 Å, MAE=0.0126 Å
+        Warning: Cubist(C5_N5) failed: 'float' object has no attribute 'replace'
+      Cubist(C5_N5): RMSE=0.0214 Å, MAE=0.0126 Å
+        Warning: Cubist(C10_N5) failed: 'float' object has no attribute 'replace'
+      Cubist(C10_N5): RMSE=0.0214 Å, MAE=0.0126 Å
+        Warning: Cubist(C20_N10) failed: 'float' object has no attribute 'replace'
+      Cubist(C20_N10): RMSE=0.0214 Å, MAE=0.0126 Å
+    SS Eq.10 + Cubist(C5_N1)                : RMSE=0.0214 Å, MAE=0.0126 Å, MAPE=0.377%, R$^2$=0.9910
+
+[7] Ensemble optimisation...
+    Optimal Ensemble (w=1.00)               : RMSE=0.0214 Å, MAE=0.0126 Å, MAPE=0.377%, R$^2$=0.9910
+    3-way (0.00V+1.00E+0.00X)               : RMSE=0.0214 Å, MAE=0.0126 Å, MAPE=0.377%, R$^2$=0.9910
+    4-way (0.00V+1.00E+0.00R+0.00X)         : RMSE=0.0214 Å, MAE=0.0126 Å, MAPE=0.377%, R$^2$=0.9910
+
+    === BCC HEAs ===
+    Alonso Eq.10             : RMSE=0.0309 Å (N=29)
+    King Vegard              : RMSE=0.0317 Å (N=29)
+    DFT-Ωsf                  : RMSE=0.0299 Å (N=29)
+    SS Eq.10 ML-filled       : RMSE=0.0299 Å (N=29)
+    SS Eq.10 + Ridge         : RMSE=0.0305 Å (N=29)
+    SS Eq.10 + GPR           : RMSE=0.0301 Å (N=29)
+    SS Eq.10 + SVR           : RMSE=0.0359 Å (N=29)
+    SS Eq.10 + RF            : RMSE=0.0326 Å (N=29)
+    SS Eq.10 + Cubist        : RMSE=0.0299 Å (N=29)
+    XGBoost LOO              : RMSE=0.1472 Å (N=29)
+    Optimal Ensemble         : RMSE=0.0299 Å (N=29)
+
+    === FCC HEAs ===
+    Alonso Eq.10             : RMSE=0.0132 Å (N=35)
+    King Vegard              : RMSE=0.0104 Å (N=35)
+    DFT-Ωsf                  : RMSE=0.0096 Å (N=35)
+    SS Eq.10 ML-filled       : RMSE=0.0096 Å (N=35)
+    SS Eq.10 + Ridge         : RMSE=0.0099 Å (N=35)
+    SS Eq.10 + GPR           : RMSE=0.0107 Å (N=35)
+    SS Eq.10 + SVR           : RMSE=0.0123 Å (N=35)
+    SS Eq.10 + RF            : RMSE=0.0096 Å (N=35)
+    SS Eq.10 + Cubist        : RMSE=0.0096 Å (N=35)
+    XGBoost LOO              : RMSE=0.0974 Å (N=35)
+    Optimal Ensemble         : RMSE=0.0096 Å (N=35)
+
+    ★ Best method: DFT-Ωsf (this work) (RMSE=0.0214 Å)
+
+[8] Training final XGBoost model on all HEA data...
+    Model bundle saved to hea_xgboost_output/xgboost_model.pkl
+
+[9] Saving results...
+
+[9b] Computing δ_sf descriptors for single-phase analysis...
+    δr  range: BCC [2.20, 6.17%], FCC [1.04, 4.23%]
+    δ_sf (combined) range: BCC [0.0091, 0.0423], FCC [0.0155, 0.0432]
+    δ_sf (SS-only) range: BCC [0.0055, 0.0508], FCC [0.0132, 0.0408]
+    Missing pairs (SS): BCC 0/247, FCC 0/287
+    Missing pairs (combined): BCC 0/247, FCC 0/287
+    δr vs δ_sf: Pearson r=-0.019 (p=8.8e-01), Spearman ρ=-0.136 (p=2.8e-01)
+    Error correlation: δr→|ε| r=0.465, δ_sf→|ε| r=-0.220
+    Saved fig_delta_sf_analysis.png
+    Saved fig_phase_stability_map.png
+
+[10] Generating publication figures...
+
+    All figures saved to hea_xgboost_output/
+
+[11] Independent Test Set Validation...
+     Test set: 20 HEAs from literature
+
+    === Independent Test Set Results (20 HEAs) ===
+    Method                        RMSE      MAE       R²
+    -------------------------------------------------
+    Vegard                      0.0202   0.0133   0.9850
+    Alonso Eq.10 (King)         0.0275   0.0213   0.9722
+    DFT-Ωsf                     0.0221   0.0142   0.9821
+
+    BCC (8 HEAs):
+      Vegard:       RMSE = 0.0260 Å
+      King Eq.10:   RMSE = 0.0306 Å
+      DFT-Ωsf: RMSE = 0.0298 Å
+    FCC (12 HEAs):
+      Vegard:       RMSE = 0.0152 Å
+      King Eq.10:   RMSE = 0.0253 Å
+      DFT-Ωsf: RMSE = 0.0148 Å
+
+    Saved independent_test_results.csv
+    Saved fig_independent_test.png
+
+    Per-alloy predictions:
+    Composition                    Struct   a_exp    a_SS     Err Ref
+    Nb-Ti-V-Zr                       BCC  3.3670  3.3048  0.0622 Senkov2013_ActaMat
+    Mo-Nb-Ta-V                       BCC  3.2080  3.1967  0.0113 Yao2016_Entropy
+    Al-Nb-Ti-V                       BCC  3.2200  3.1963  0.0237 Stepanov2015_JAlloyCompd
+    Cr-Mo-Nb-Ta-V-W                  BCC  3.1901  3.1400  0.0501 Zhang2015_Calphad
+    Mo-Nb-Ta-V-W                     BCC  3.1850  3.1895 -0.0045 Kantelis2025_AIPAdv
+    Hf-Nb-Ta-Ti-Zr                   BCC  3.4040  3.4033  0.0007 Youssef2015_MaterResLett
+    Hf-Nb-Ta-Ti-Zr                   BCC  3.4100  3.4033  0.0067 Senkov2012_Intermet
+    Hf-Nb-Ta-Ti-Zr                   BCC  3.4400  3.4398  0.0002 Dirras2016_MaterCharact
+    Co-Cr-Fe-Mn-Ni                   FCC  3.5988  3.5880  0.0108 Otto2013_ActaMat
+    Co-Cr-Fe-Ni                      FCC  3.5600  3.5744 -0.0144 Niu2017_SciRep
+    Co-Cr-Fe-Ni-Pd                   FCC  3.6200  3.6135  0.0065 Niu2017_SciRep_Pd05
+    Co-Cr-Fe-Ni-Pd                   FCC  3.6600  3.6446  0.0154 Niu2017_SciRep_Pd10
+    Co-Cr-Fe-Ni-Pd                   FCC  3.7100  3.6682  0.0418 Niu2017_SciRep_Pd15
+    Co-Cr-Fe-Ni-V                    FCC  3.6100  3.6217 -0.0117 Niu2017_SciRep_V10
+    Co-Cr-Fe-Ni                      FCC  3.5723  3.5744 -0.0021 Wang2019_ScriptaMat
+    Co-Cr-Fe-Ni                      FCC  3.5805  3.5800  0.0005 Wang2019_ScriptaMat_Co05
+    Co-Cr-Fe-Mn-Ni                   FCC  3.5970  3.5880  0.0090 Zaddach2013_JOM
+    Co-Cr-Fe-Ni                      FCC  3.5740  3.5744 -0.0004 Zhang2017_NatCommun
+    Co-Cr-Fe-Mn-Ni                   FCC  3.5920  3.5880  0.0040 Gali2013_Intermet
+    Co-Cr-Fe-Mn-Ni                   FCC  3.5950  3.5880  0.0070 Tasan2014_ScrMat
+
+======================================================================
+★ Best overall RMSE: 0.0214 Å (DFT-Ωsf (this work))
+  Alonso Eq.10 RMSE:    0.0229 Å
+  Improvement:          6.9%
+  Noise floor:          0.0157 Å
+  → Surpassed Alonso Eq.10 (0.0229 Å)
+
+  --- Independent Test Set ---
+  DFT-Ωsf RMSE: 0.0221 Å
+  BCC:  0.0298 Å (8 HEAs)
+  FCC:  0.0148 Å (12 HEAs)
+======================================================================
+
+[12] Multi-phase HEA Discrimination Analysis...
+     Database: 54 HEAs
+     SS: 25, IM: 23, AM: 6
+
+    === ROC AUC ===
+    δr:          AUC = 0.869
+    δ_sf (comb): AUC = 0.734
+    Ω (Yang):    AUC = 0.806
+
+    === Average Precision ===
+    δr:          AP = 0.875
+    δ_sf (comb): AP = 0.767
+    Ω (Yang):    AP = 0.777
+
+    === Yang-Zhang Criterion (δr<6.6%, Ω>1.1) ===
+    Accuracy: 0.648, F1: 0.725
+    Confusion matrix (rows=true, cols=pred):
+      [non-SS pred non-SS, non-SS pred SS] = [10, 19]
+      [SS pred non-SS,     SS pred SS    ] = [ 0, 25]
+
+    === Optimal Thresholds (Youden's J) ===
+    δr:  threshold = 4.72%, Acc = 0.796, F1 = 0.766
+    δ_sf: threshold = 0.0163, Acc = 0.722, F1 = 0.571
+
+    === Combined δ_sf + Ω Criterion ===
+    δ_sf<0.0163 AND Ω>1.1: Acc = 0.722, F1 = 0.571
+
+    Saved fig_multiphase_roc.png
+    Saved fig_multiphase_scatter.png
+    Saved fig_multiphase_threshold.png
+
+    === Discrimination Summary (54 HEAs) ===
+    Criterion                              AUC     AP    Acc     F1
+    -----------------------------------------------------------
+    δr (optimal threshold)               0.869  0.875  0.796  0.766
+    δ_sf (optimal threshold)             0.734  0.767  0.722  0.571
+    Ω only                               0.806  0.777      —      —
+    Yang-Zhang (δr<6.6%, Ω>1.1)              —      —  0.648  0.725
+    δ_sf + Ω combined                        —      —  0.722  0.571
+

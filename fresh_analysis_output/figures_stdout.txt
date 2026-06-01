@@ -1,0 +1,93 @@
+============================================================
+HEA Lattice Constant — Clean Re-analysis
+Excluded elements: {'Gd', 'Ce'}
+============================================================
+
+[1] Loading compound data...
+    MP: 1002, OQMD: 2295, VASP: 3969
+    Total: 7266 compounds (Gd/Ce excluded)
+
+[2] Computing pairwise Omega_sf (MP+OQMD, len>=2)...
+    B2 pairs: 152, L1_2 pairs: 95
+
+[3] Optimizing gamma on training set (64 HEAs)...
+    gamma_BCC = 1.4517, gamma_FCC = 1.0824
+
+    Training RMSE:
+      Vegard:       0.0227 A
+      DFT-Omega_sf: 0.0210 A
+      BCC:          0.0293
+      FCC:          0.0096
+
+[4] Independent test (20 HEAs)...
+    Test RMSE:
+      Vegard:       0.0202
+      DFT-Omega_sf: 0.0200
+      BCC:          0.0271
+      FCC:          0.0134
+      BCC identical to Vegard: 7/8
+
+[5] Additive delta decomposition...
+    B2:  36 elements, R2 = 0.6105
+    L12: 33 elements, R2 = 0.6919
+
+[5b] Extended decomposition for Table 6 (MP+OQMD+VASP, min_count=1)...
+    B2:  39 elements, R2 = 0.5393
+    L12: 39 elements, R2 = 0.2625
+    Mode A (same coverage 152/95 pairs):
+      gamma_BCC=2.1468, gamma_FCC=0.6024
+      Train RMSE: 0.0211, Test RMSE: 0.0213
+    Mode B (full gap-fill 630/528 pairs):
+      gamma_BCC=-0.1589, gamma_FCC=-0.1740
+      Train RMSE: 0.0215, Test RMSE: 0.0227
+
+[6] Computing structure-dependent effective radii...
+    Elements with radii: 39
+
+[7] Generating figures...
+  fig_parity.png
+  fig_rmse_bar.png
+  fig_bcc_fcc.png
+  fig_indep_test.png
+  fig_element_delta.png
+  fig_additive_fit.png
+  fig_composition_examples.png
+  fig_delta_r_proof.png
+  fig_packing.png
+  fig_l12_asymmetry.png
+  fig_volume_radius.png
+  fig_hea_prediction_additive.png
+  fig_composition_dependent_reff.png
+  fig_vegard_structure_absorbed.png
+  fig_roc.png
+  fig_phase_map.png
+
+[8] Saving data files...
+    results_delta_parameters.csv (39 elements, extended with VASP)
+    results_omega_sf.csv (247 pairs)
+    results_independent_test.csv (20 HEAs)
+
+============================================================
+SUMMARY
+============================================================
+Data: 1002 MP + 2295 OQMD + 3969 VASP (Gd/Ce excluded)
+B2 pairs: 152, L12 pairs: 95
+gamma_BCC = 1.4517, gamma_FCC = 1.0824
+
+Training (64 HEA):
+  Vegard RMSE:       0.0227 A
+  Pairwise RMSE:     0.0210 A  (improvement: 7.5%)
+  Additive RMSE:     0.0211 A
+
+Independent test (20 HEA):
+  Vegard RMSE:       0.0202 A
+  Pairwise RMSE:     0.0200 A
+  Additive RMSE:     0.0213 A
+  BCC=Vegard:        7/8
+
+Additive decomposition:
+  B2  R2: 0.6105 (36 elements)
+  L12 R2: 0.6919 (33 elements)
+
+Figures: 16 PNGs saved to /home/ubuntu/repos/machine-learning/paper
+Data:    3 CSVs saved to /home/ubuntu/repos/machine-learning/paper
