@@ -617,7 +617,7 @@ def main():
         trav_avg = statistics.mean(trav_lats)
         full_sd = statistics.stdev(full_lats) if len(full_lats) > 1 else 0
         trav_sd = statistics.stdev(trav_lats) if len(trav_lats) > 1 else 0
-        savings = (1 - trav_avg / full_avg) * 100
+        savings = (1 - trav_avg / full_avg) * 100 if full_avg > 0 else 0
         stdev_ratio = trav_sd / full_sd if full_sd > 0 else 0
         print(f"    Traversalによる平均レイテンシ削減: {savings:.1f}%")
         print(f"    stdev比: {stdev_ratio:.2f} (Full={full_sd:.0f}ms → Trav={trav_sd:.0f}ms)")
