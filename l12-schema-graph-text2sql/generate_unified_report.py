@@ -346,7 +346,7 @@ img.fig{{ max-width:100%; height:auto; margin:16px 0; border:1px solid #ddd;
 <p style="color:#666; font-size:0.95em;">
 Generated: {time.strftime('%Y-%m-%d %H:%M:%S UTC')}<br>
 対象読者：材料工学を専門とする研究者・エンジニア<br>
-検証対象：OQMD B2 (636件) + L1<sub>2</sub> (273件) = 909件
+検証対象：OQMD 5プロトタイプ（B2 636件、L1<sub>2</sub> 273件、NaCl 355件、NiAs 74件、BiF<sub>3</sub> 13件）= 1,351件
 </p>
 """)
 
@@ -363,7 +363,7 @@ Generated: {time.strftime('%Y-%m-%d %H:%M:%S UTC')}<br>
 <li><a href="#sec5">3レベル比較（Naive / Schema Graph / LLM）</a></li>
 <li><a href="#sec6">LLM (GPT-5) vs Rule-based 比較検証</a></li>
 <li><a href="#sec7">OQMD-API正解データとの照合</a></li>
-<li><a href="#sec8">いい加減なクエリへの対処検証</a></li>
+<li><a href="#sec8">曖昧なクエリへの対処検証</a></li>
 <li><a href="#sec9">SQL Injection・安全検査</a></li>
 <li><a href="#sec10">全39テスト 詳細結果</a></li>
 <li><a href="#sec11">比較グラフ分析</a></li>
@@ -382,7 +382,7 @@ Generated: {time.strftime('%Y-%m-%d %H:%M:%S UTC')}<br>
 <table class="abbrev-table">
 <tr><th>略語</th><th>正式名称</th><th>説明</th></tr>
 <tr><td><b>T2SQL</b></td><td>Text-to-SQL</td><td>自然言語のクエリを構造化問い合わせ言語（SQL）に自動変換する技術</td></tr>
-<tr><td><b>OQMD</b></td><td>Open Quantum Materials Database</td><td>第一原理計算に基づく材料物性データベース（100万件超）。本検証ではB2型636件・L1<sub>2</sub>型273件を使用</td></tr>
+<tr><td><b>OQMD</b></td><td>Open Quantum Materials Database</td><td>第一原理計算に基づく材料物性データベース（100万件超）。本検証ではB2型636件・L1<sub>2</sub>型273件・NaCl型355件・NiAs型74件・BiF<sub>3</sub>型13件（計1,351件）を使用</td></tr>
 <tr><td><b>RB</b></td><td>Rule-based</td><td>LLMを使わず、辞書と正規表現のパターンマッチングで条件を抽出しSQLを生成する方式</td></tr>
 <tr><td><b>LLM</b></td><td>Large Language Model</td><td>大規模言語モデル。本検証ではOpenAI GPT-5を使用</td></tr>
 <tr><td><b>RAG</b></td><td>Retrieval-Augmented Generation</td><td>外部知識を検索してLLMプロンプトに注入し、回答精度を向上させる手法</td></tr>
@@ -410,7 +410,7 @@ Generated: {time.strftime('%Y-%m-%d %H:%M:%S UTC')}<br>
 <div class="card"><div class="big">39</div>テスト総数<br><small>6カテゴリ</small></div>
 <div class="card"><div class="big pass">{S_vr['passed']}/39</div>Schema Graph<br>(Rule-based)</div>
 <div class="card"><div class="big pass">{S_lr['llm']['passed']}/39</div>LLM (GPT-5)</div>
-<div class="card"><div class="big">909</div>DBレコード数<br><small>B2:636 + L1<sub>2</sub>:273</small></div>
+<div class="card"><div class="big">1,351</div>DBレコード数<br><small>B2:636 + L1<sub>2</sub>:273 + NaCl:355 + NiAs:74 + BiF<sub>3</sub>:13</small></div>
 <div class="card"><div class="big">{S_lr['llm']['total_tokens']:,}</div>LLM消費トークン<br><small>39件合計</small></div>
 </div>
 
@@ -479,7 +479,7 @@ LLM（大規模言語モデル）は使わず、辞書＋正規表現のパタ�
     cat_info = {
         "normal": ("正常系", "元素指定、prototype指定、安定性フィルタ、ソート等の標準クエリ"),
         "no_results": ("該当なし/0件系", "辞書未登録元素(Xe,Rn等)、データに存在しない組み合わせ"),
-        "sloppy": ("いい加減なクエリ", "空入力、無関係テキスト、曖昧条件、略記表現"),
+        "sloppy": ("曖昧なクエリ", "空入力、無関係テキスト、曖昧条件、略記表現"),
         "contradictory": ("矛盾条件", "「安定かつ準安定」「Feを含まないFe化合物」等の矛盾"),
         "rejection": ("SQL injection/拒否", "DROP TABLE, DELETE, INSERT等の破壊的SQL"),
         "safety": ("SQL Guard検証", "SELECT/UPDATEの安全性バリデーション"),
@@ -507,13 +507,16 @@ LLM（大規模言語モデル）は使わず、辞書＋正規表現のパタ�
 <h2 id="sec2">2. データ準備（OQMD-API）</h2>
 
 <h3>2.1 データ収集</h3>
-<p>OQMD (Open Quantum Materials Database) の REST API から、以下の2つのプロトタイプのデータを取得した。</p>
+<p>OQMD (Open Quantum Materials Database) の REST API から、以下の5つのプロトタイプのデータを取得した。</p>
 
 <table>
-<tr><th>プロトタイプ</th><th>Strukturbericht</th><th>取得件数</th><th>安定 (E<sub>hull</sub>=0)</th><th>準安定 (E<sub>hull</sub>≤0.05)</th></tr>
-<tr><td>CsCl</td><td>B2</td><td>636</td><td>185</td><td>198</td></tr>
-<tr><td>AuCu<sub>3</sub></td><td>L1<sub>2</sub></td><td>273</td><td>88</td><td>138</td></tr>
-<tr><td colspan="2"><b>合計</b></td><td><b>909</b></td><td><b>273</b></td><td><b>336</b></td></tr>
+<tr><th>プロトタイプ</th><th>Strukturbericht</th><th>取得件数</th><th>安定 (is_stable)</th><th>準安定 (E<sub>hull</sub>≤0.05)</th></tr>
+<tr><td>CsCl</td><td>B2</td><td>636</td><td>185</td><td>383</td></tr>
+<tr><td>NaCl</td><td>B1</td><td>355</td><td>139</td><td>203</td></tr>
+<tr><td>AuCu<sub>3</sub></td><td>L1<sub>2</sub></td><td>273</td><td>88</td><td>226</td></tr>
+<tr><td>NiAs</td><td>B8<sub>1</sub></td><td>74</td><td>6</td><td>24</td></tr>
+<tr><td>BiF<sub>3</sub></td><td>D0<sub>3</sub></td><td>13</td><td>0</td><td>0</td></tr>
+<tr><td colspan="2"><b>合計</b></td><td><b>1,351</b></td><td><b>418</b></td><td><b>836</b></td></tr>
 </table>
 
 <h3>2.2 取得フィールド</h3>
@@ -989,7 +992,7 @@ Materials ProjectやAFLOWなど異なるスキーマを持つデータソース�
     # Section 8: Sloppy queries
     # ══════════════════════════════════════════════════════════════════
     W("""
-<h2 id="sec8">8. いい加減なクエリへの対処検証</h2>
+<h2 id="sec8">8. 曖昧なクエリへの対処検証</h2>
 
 <p>実際の研究者は必ずしも正確な用語でクエリを入力しない。
 曖昧・不完全・無関係なクエリに対してシステムが「間違った検索結果を返さないか」を検証した。</p>
@@ -1353,9 +1356,9 @@ LLMモードでは対応可能だが、APIコストとレイテンシが発生�
 
 <tr><td><b>低</b></td><td>8</td>
 <td>データ規模が小さい</td>
-<td>909件 ≈ OQMD全体(100万件超)の0.1%未満。
+<td>1,351件 ≈ OQMD全体(100万件超)の0.1%未満。
 大規模データでのインデックス設計、クエリ性能、LIMIT 100の妥当性は未評価。</td>
-<td>900件なら全件スキャンでも瞬時だが、100万件では適切なインデックスなしでは秒単位のレイテンシ。</td></tr>
+<td>1,351件なら全件スキャンでも瞬時だが、100万件では適切なインデックスなしでは秒単位のレイテンシ。</td></tr>
 
 <tr><td><b>低</b></td><td>9</td>
 <td>表記揺れ非対応</td>
@@ -1435,7 +1438,7 @@ TF-IDF類似度で適切な事例を検索できることを確認。</li>
 <p>L1<sub>2</sub>/B2 Schema-Graph-Assisted Text-to-SQL System &mdash;
 包括的検証レポート (Unified Comprehensive Report) &mdash;
 Generated: {time.strftime('%Y-%m-%d %H:%M UTC')}</p>
-<p>データソース: OQMD (Open Quantum Materials Database) — B2: 636件, L1<sub>2</sub>: 273件, 計909件</p>
+<p>データソース: OQMD (Open Quantum Materials Database) — B2: 636件, L1<sub>2</sub>: 273件, NaCl: 355件, NiAs: 74件, BiF<sub>3</sub>: 13件, 計1,351件</p>
 <p>テスト環境: PostgreSQL 16 / Python 3.12 / OpenAI GPT-5 API</p>
 </footer>
 </body>
