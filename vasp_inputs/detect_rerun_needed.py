@@ -25,6 +25,8 @@ Phase 2 (--rerun):  CONTCAR→POSCAR、INCAR修正、mpirun で再計算実行
     --nsw 300           再計算のNSW (default: 300)
     --potim VALUE       再計算のPOTIM (default: auto — ZBRENTエラー時に調整)
     --ibrion {1,2}      再計算のIBRION (default: auto — ZBRENT時に1へ切替)
+    --encut VALUE        再計算のENCUT [eV] (default: auto — 未収束時に600へ増加)
+    --addgrid            ADDGRID=.TRUE.を追加（FFTグリッド補間精度向上）
     --omega-threshold 0.5  |Ω_sf|アウトライア閾値 (default: 0.5)
 
 環境変数:
@@ -322,12 +324,13 @@ def scan_directory(sqs_dir, omega_threshold=0.5):
 # =====================================================================
 # Phase 2: Prepare & run
 # =====================================================================
-def backup_and_prepare(calc_dir, new_nsw=300, new_potim=None, new_ibrion=None):
+def backup_and_prepare(calc_dir, new_nsw=300, new_potim=None, new_ibrion=None,
+                       new_encut=None, addgrid=False):
     """
     Prepare directory for rerun:
     1. Backup old outputs to .bak/
     2. Copy CONTCAR → POSCAR (restart from last geometry)
-    3. Update INCAR: NSW, ISIF=7, POTIM, IBRION
+    3. Update INCAR: NSW, ISIF=7, POTIM, IBRION, ENCUT, ADDGRID
     Returns True if preparation succeeded.
     """
     # Create backup
@@ -363,6 +366,8 @@ def backup_and_prepare(calc_dir, new_nsw=300, new_potim=None, new_ibrion=None):
     isif_set = False
     ibrion_set = False
     potim_set = False
+    encut_set = False
+    addgrid_set = False
     for line in lines:
         # Update NSW
         if re.match(r'\s*NSW\s*=', line):
@@ -386,6 +391,20 @@ def backup_and_prepare(calc_dir, new_nsw=300, new_potim=None, new_ibrion=None):
             else:
                 new_lines.append(line)
             potim_set = True
+        # ENCUT
+        elif re.match(r'\s*ENCUT\s*=', line):
+            if new_encut is not None:
+                new_lines.append(f' ENCUT = {new_encut}\n')
+            else:
+                new_lines.append(line)
+            encut_set = True
+        # ADDGRID
+        elif re.match(r'\s*ADDGRID\s*=', line):
+            if addgrid:
+                new_lines.append(' ADDGRID = .TRUE.\n')
+            else:
+                new_lines.append(line)
+            addgrid_set = True
         else:
             new_lines.append(line)
 
@@ -397,6 +416,10 @@ def backup_and_prepare(calc_dir, new_nsw=300, new_potim=None, new_ibrion=None):
         new_lines.append(f' POTIM = {new_potim:.6f}\n')
     if new_ibrion is not None and not ibrion_set:
         new_lines.append(f' IBRION = {new_ibrion}\n')
+    if new_encut is not None and not encut_set:
+        new_lines.append(f' ENCUT = {new_encut}\n')
+    if addgrid and not addgrid_set:
+        new_lines.append(' ADDGRID = .TRUE.\n')
 
     with open(incar_path, 'w') as f:
         f.writelines(new_lines)
@@ -530,6 +553,10 @@ Examples:
   # ZBRENT対策: POTIM調整 + IBRION=1 (quasi-Newton)
   python detect_rerun_needed.py /path/to/BCC_SQS_ISIF7 --rerun \\
       --potim 0.2 --ibrion 1
+
+  # VASP mailing list推奨: IBRION=1 + ADDGRID + ENCUT増加
+  python detect_rerun_needed.py /path/to/BCC_SQS_ISIF7 --rerun \\
+      --ibrion 1 --addgrid --encut 600
 """)
     parser.add_argument('sqs_dir',
                         help='Path to BCC_SQS_ISIF7 directory')
@@ -548,6 +575,15 @@ Examples:
     parser.add_argument('--ibrion', type=int, default=None, choices=[1, 2],
                         help='IBRION for rerun (1=RMM-DIIS quasi-Newton, '
                              '2=CG). Default: auto (ZBRENT→1, others→keep)')
+    parser.add_argument('--encut', type=int, default=None,
+                        help='ENCUT for rerun [eV] (default: auto — '
+                             'increase to 600 for unconverged cases). '
+                             'Higher ENCUT improves stress tensor accuracy '
+                             'for ISIF=7 volume relaxation.')
+    parser.add_argument('--addgrid', action='store_true',
+                        help='Add ADDGRID=.TRUE. to INCAR '
+                             '(improves FFT grid interpolation accuracy, '
+                             'recommended for ISIF>0 stress calculations)')
     parser.add_argument('--omega-threshold', type=float, default=0.5,
                         help='|Ω_sf| outlier threshold (default: 0.5)')
     parser.add_argument('-o', '--output', default='rerun_list.txt',
@@ -649,12 +685,17 @@ Examples:
                   else "POTIM → auto (ZBRENT: 0.2, others: keep)")
     ibrion_desc = (f"IBRION → {args.ibrion}" if args.ibrion
                    else "IBRION → auto (ZBRENT: 1, others: keep)")
+    encut_desc = (f"ENCUT → {args.encut} eV" if args.encut
+                  else "ENCUT → auto (unconverged: 600, others: keep)")
+    addgrid_desc = "ADDGRID = .TRUE." if args.addgrid else "ADDGRID: keep"
     print(f"  CONTCAR → POSCAR, NSW → {args.nsw}, ISIF = 7")
     print(f"  {potim_desc}")
     print(f"  {ibrion_desc}")
+    print(f"  {encut_desc}")
+    print(f"  {addgrid_desc}")
     print(f"{'='*70}")
 
-    # Determine POTIM/IBRION strategy per directory
+    # Determine POTIM/IBRION/ENCUT/ADDGRID strategy per directory
     prepared_dirs = []
     for r in rerun_entries:
         calc_dir = r['calc_dir']
@@ -682,13 +723,26 @@ Examples:
         else:
             ibrion = None  # keep original
 
+        # ENCUT: user-specified > auto (unconverged→600) > keep original
+        if args.encut is not None:
+            encut = args.encut
+        else:
+            encut = 600  # increase for all unconverged cases
+
+        # ADDGRID: from CLI flag
+        addgrid = args.addgrid
+
         ok = backup_and_prepare(calc_dir, new_nsw=args.nsw,
-                                new_potim=potim, new_ibrion=ibrion)
+                                new_potim=potim, new_ibrion=ibrion,
+                                new_encut=encut, addgrid=addgrid)
         if ok:
             prepared_dirs.append(calc_dir)
             potim_msg = f"POTIM={potim}" if potim else "POTIM=keep"
             ibrion_msg = f"IBRION={ibrion}" if ibrion else "IBRION=keep"
-            print(f"  OK  {r['dirname']:20s}  {potim_msg}  {ibrion_msg}")
+            encut_msg = f"ENCUT={encut}"
+            addgrid_msg = "ADDGRID=T" if addgrid else ""
+            extras = f"  {encut_msg}" + (f"  {addgrid_msg}" if addgrid_msg else "")
+            print(f"  OK  {r['dirname']:20s}  {potim_msg}  {ibrion_msg}{extras}")
         else:
             print(f"  NG  {r['dirname']}  (preparation failed, skipping)")
 
