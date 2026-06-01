@@ -25,8 +25,9 @@ BCC_B2/A1B1、FCC_L12/A3B1、BCC_SQS/A8B8の全結果を抽出して
 
     オプション:
       -o, --output-dir   出力ディレクトリ (default: ./reanalysis_output)
-      --hea-csv          HEAデータCSV (default: data/hea_dataset.csv)
-      --skip-hea         HEA予測を省略
+      --b2-dir           B2サブディレクトリ名 (default: BCC_B2)
+      --l12-dir          L12サブディレクトリ名 (default: FCC_L12)
+      --sqs-dir          SQSサブディレクトリ名 (default: BCC_SQS)
 
 出力:
     reanalysis_output/
@@ -61,8 +62,9 @@ ALL_ELEMENTS = sorted([
     'Ta', 'Tb', 'Ti', 'V',  'W',  'Y',  'Zn', 'Zr',
 ])
 
-# King atomic volumes (Å³) — pure-element BCC/FCC DFT volumes
-KING_ATOMIC_VOLUMES = {
+# VASP DFT atomic volumes (Å³) — pure-element BCC/FCC volumes from VASP GGA-PBE
+# (historically named KING_ATOMIC_VOLUMES; kept as alias for backward compatibility)
+VASP_ATOMIC_VOLUMES = {
     "Ag": 17.840, "Al": 16.602, "Au": 17.798, "Be": 8.105,
     "Ca": 42.025, "Co": 10.994, "Cr": 11.415, "Cu": 12.024,
     "Dy": 31.744, "Er": 31.063, "Fe": 11.312, "Ge": 19.243,
@@ -74,6 +76,7 @@ KING_ATOMIC_VOLUMES = {
     "Ti": 17.022, "V":  13.275, "W":  15.960, "Y":  33.017,
     "Zn": 15.741, "Zr": 22.721,
 }
+KING_ATOMIC_VOLUMES = VASP_ATOMIC_VOLUMES  # backward compatibility alias
 
 
 # =====================================================================
@@ -124,9 +127,11 @@ def read_lattice_constant(calc_dir):
             a_vec[2] * (b_vec[0]*c_vec[1] - b_vec[1]*c_vec[0])
         ) * abs(scale)**3
 
-        # For cubic: a = scale * |a_vec|
-        a_mag = (a_vec[0]**2 + a_vec[1]**2 + a_vec[2]**2)**0.5
-        lattice_const = abs(scale) * a_mag
+        # Equivalent cubic lattice constant from cell volume.
+        # Works for any cell shape (conventional, primitive, rotated).
+        # Downstream code uses a**3/Z to get per-atom volume, so
+        # a = vol**(1/3) ensures a**3/Z = vol/Z regardless of cell type.
+        lattice_const = vol ** (1.0 / 3.0)
 
         if lattice_const < 1.5 or lattice_const > 15.0:
             return None, False, source
@@ -283,6 +288,8 @@ def compute_omega_sf_b2(results):
     """Compute Ω_sf from B2 data (A1B1 pairs, Z=2)."""
     pair_data = defaultdict(list)
     for r in results:
+        if not r.get('converged', False):
+            continue
         elA, elB = r['element_A'], r['element_B']
         a = r['lattice_constant']
         if elA not in KING_ATOMIC_VOLUMES or elB not in KING_ATOMIC_VOLUMES:
@@ -307,6 +314,8 @@ def compute_omega_sf_l12(results):
     """Compute Ω_sf from L12 data (A3B1 pairs, Z=4)."""
     pair_data = defaultdict(list)
     for r in results:
+        if not r.get('converged', False):
+            continue
         elA, elB = r['element_A'], r['element_B']
         cA, cB = int(r['count_A']), int(r['count_B'])
         a = r['lattice_constant']
@@ -333,6 +342,8 @@ def compute_omega_sf_sqs(results):
     """Compute Ω_sf from SQS data (A8B8 pairs, Z=16)."""
     pair_data = defaultdict(list)
     for r in results:
+        if not r.get('converged', False):
+            continue
         elA, elB = r['element_A'], r['element_B']
         a = r['lattice_constant']
         if elA not in KING_ATOMIC_VOLUMES or elB not in KING_ATOMIC_VOLUMES:
@@ -390,6 +401,8 @@ def predict_hea_lattice(comp, struct, omega_sf, q=1.0):
         v_eff_i = vi * (1.0 + q * correction)
         v_eff_total += ci * v_eff_i
 
+    if v_eff_total <= 0:
+        return None
     a_pred = (n_auc * v_eff_total) ** (1.0 / 3.0)
     return a_pred
 

@@ -45,7 +45,9 @@ from scipy.optimize import minimize
 from xgboost import XGBRegressor
 from cubist import Cubist
 
-warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", category=UserWarning, module="xgboost")
+_WARNED_UNKNOWN_ELEMENTS = set()
 
 # Japanese font setup
 for fp in fm.findSystemFonts():
@@ -709,6 +711,10 @@ def build_omega_sf_ml_model(omega_sf_dict, structure_label=""):
 
     print(f"      Ω_sf ML ({structure_label}): {N} known pairs, 14 features")
 
+    if N < 2:
+        print(f"        Skipping ML model: insufficient data (N={N}, need ≥2 for LOO-CV)")
+        return None, None, float('inf'), 0.0, {}
+
     # LOO-CV for Ridge (baseline)
     best_ridge_rmse = 999
     best_alpha = 1.0
@@ -803,6 +809,17 @@ def fill_missing_omega_sf(omega_dft, omega_ml_predictions):
     return omega_filled, filled_pairs, fill_stats
 
 
+def _warn_unknown_element(elem, context=""):
+    """Emit a one-time warning for elements not in KING_ATOMIC_VOLUMES."""
+    key = (elem, context)
+    if key not in _WARNED_UNKNOWN_ELEMENTS:
+        _WARNED_UNKNOWN_ELEMENTS.add(key)
+        warnings.warn(
+            f"Unknown element '{elem}' not in KING_ATOMIC_VOLUMES"
+            f"{' (' + context + ')' if context else ''}, using default value",
+            stacklevel=3)
+
+
 def compute_delta_r(comp):
     """
     Traditional atomic size mismatch δr (%) using King atomic volumes.
@@ -811,6 +828,9 @@ def compute_delta_r(comp):
     elements = list(comp.keys())
     fracs = np.array([comp[e] for e in elements])
     fracs = fracs / fracs.sum()
+    for e in elements:
+        if e not in KING_ATOMIC_VOLUMES:
+            _warn_unknown_element(e, "compute_delta_r")
     vols = np.array([KING_ATOMIC_VOLUMES.get(e, 15.0) for e in elements])
     r_vals = vols ** (1/3)
     r_avg = np.sum(fracs * r_vals)
@@ -1195,6 +1215,10 @@ def build_hea_features(omega_sf):
 
 def loo_cv_xgboost(X, y, **xgb_params):
     """Leave-One-Out cross-validation for XGBoost."""
+    if len(y) < 2:
+        print(f"    loo_cv_xgboost: insufficient data (N={len(y)}), skipping")
+        return np.full(len(y), np.nan)
+
     loo = LeaveOneOut()
     y_pred = np.zeros(len(y))
 
@@ -1233,6 +1257,11 @@ def two_stage_model(X_binary, y_binary, X_hea, y_hea, omega_sf, xgb_params):
     Stage 1: Pre-train on DFT binary data
     Stage 2: Fine-tune residual on HEA data with LOO-CV
     """
+    if len(y_binary) == 0 or len(y_hea) < 2:
+        print("    two_stage_model: insufficient data "
+              f"(binary={len(y_binary)}, HEA={len(y_hea)}), skipping")
+        return np.full(len(y_hea), np.nan), np.full(len(y_hea), np.nan)
+
     # Stage 1: Train base model on binary data
     base_model = XGBRegressor(**xgb_params)
     base_model.fit(X_binary, y_binary, verbose=False)
