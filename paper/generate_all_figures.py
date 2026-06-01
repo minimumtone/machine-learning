@@ -92,6 +92,9 @@ def load_compounds():
                 df["stype"] = struct
                 dfs.append(df)
                 break
+    if not dfs:
+        raise FileNotFoundError(
+            "No compound CSV files found. Check four_case_output/figures/ and data/ directories.")
     all_df = pd.concat(dfs, ignore_index=True)
     # Exclude Gd/Ce
     mask = ~(all_df["element_A"].isin(EXCLUDE_ELEMENTS) |
@@ -148,15 +151,19 @@ def optimize_gamma(heas, ob2, ol12):
         ])
 
     def rmse_bcc(gb):
+        if not bcc_i:
+            return 0.0
         p = pred_all(gb, 1.0)
         return np.sqrt(np.mean((p[bcc_i] - y[bcc_i]) ** 2))
 
     def rmse_fcc(gf):
+        if not fcc_i:
+            return 0.0
         p = pred_all(1.0, gf)
         return np.sqrt(np.mean((p[fcc_i] - y[fcc_i]) ** 2))
 
-    gb = minimize_scalar(rmse_bcc, bounds=(-5, 5), method="bounded").x
-    gf = minimize_scalar(rmse_fcc, bounds=(-5, 5), method="bounded").x
+    gb = minimize_scalar(rmse_bcc, bounds=(-5, 5), method="bounded").x if bcc_i else 1.0
+    gf = minimize_scalar(rmse_fcc, bounds=(-5, 5), method="bounded").x if fcc_i else 1.0
     return gb, gf
 
 
@@ -491,6 +498,15 @@ def fig07_composition_examples(all_df):
     print("  fig_composition_examples.png")
 
 
+def _l12_bucket(elA, elB, cA, cB):
+    """Determine L1₂ bucket for sorted pair key.
+    'A3B' = sorted_pair[0] is majority; 'AB3' = sorted_pair[1] is majority.
+    """
+    pair = tuple(sorted([elA, elB]))
+    maj_elem = elA if cA >= cB else elB
+    return "A3B" if maj_elem == pair[0] else "AB3"
+
+
 def fig08_delta_r_proof(all_df):
     """Fig 8: 6-panel proof that delta_r cannot absorb structure info."""
     # Compute delta_r and Omega_sf for each pair×structure
@@ -514,10 +530,8 @@ def fig08_delta_r_proof(all_df):
             total = cA + cB
             v_veg = (cA * vA + cB * vB) / total
             osf = (a**3 / 4 - v_veg) / v_veg
-            if cA == 3:
-                pair_data[pair]["L12_A3B"].append(osf)
-            else:
-                pair_data[pair]["L12_AB3"].append(osf)
+            bucket = "L12_" + _l12_bucket(elA, elB, cA, cB)
+            pair_data[pair][bucket].append(osf)
 
     # Pairs with all 3 structures
     complete = {}
@@ -528,6 +542,10 @@ def fig08_delta_r_proof(all_df):
                 "L12_A3B": np.median(data["L12_A3B"]),
                 "L12_AB3": np.median(data["L12_AB3"]),
             }
+
+    if not complete:
+        print("  fig_delta_r_proof.png — skipped (no pairs with all 3 structures)")
+        return
 
     fig, axes = plt.subplots(2, 3, figsize=(18, 11))
 
@@ -598,15 +616,16 @@ def fig08_delta_r_proof(all_df):
             continue
         pair = tuple(sorted([elA, elB]))
         cA = row.get("count_A", 3)
-        if cA == 3:
-            pair_a[pair]["A3B"].append(a)
-        else:
-            pair_a[pair]["AB3"].append(a)
+        cB = row.get("count_B", 1)
+        bucket = _l12_bucket(elA, elB, cA, cB)
+        pair_a[pair][bucket].append(a)
     diffs = []
     for pair in pair_a:
         if pair_a[pair]["A3B"] and pair_a[pair]["AB3"]:
             diffs.append(abs(np.median(pair_a[pair]["A3B"]) -
                             np.median(pair_a[pair]["AB3"])))
+    if not diffs:
+        diffs = [0.0]
     ax.hist(diffs, bins=40, color="C0", edgecolor="black", linewidth=0.3)
     ax.axvline(np.mean(diffs), color="C3", linestyle="--", lw=2,
                label=f"mean = {np.mean(diffs):.3f} \u00c5")
@@ -662,10 +681,9 @@ def fig09_packing(all_df):
             pair_a[pair]["B2"].append(a)
         elif stype == "L12":
             cA = row.get("count_A", 3)
-            if cA == 3:
-                pair_a[pair]["A3B"].append(a)
-            else:
-                pair_a[pair]["AB3"].append(a)
+            cB = row.get("count_B", 1)
+            bucket = _l12_bucket(elA, elB, cA, cB)
+            pair_a[pair][bucket].append(a)
 
     # For pairs with both A3B and AB3, compute packing nearest-neighbor distance
     dnn_a3b, dnn_ab3 = [], []
@@ -675,6 +693,10 @@ def fig09_packing(all_df):
             a2 = np.median(pair_a[pair]["AB3"])
             dnn_a3b.append(a1 / np.sqrt(2))  # FCC nearest neighbor
             dnn_ab3.append(a2 / np.sqrt(2))
+
+    if not dnn_a3b:
+        print("  fig_packing.png — skipped (no pairs with both A3B and AB3)")
+        return
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
 
@@ -713,16 +735,19 @@ def fig10_l12_asymmetry(all_df):
             continue
         pair = tuple(sorted([elA, elB]))
         cA = row.get("count_A", 3)
-        if cA == 3:
-            pair_a[pair]["A3B"].append(a)
-        else:
-            pair_a[pair]["AB3"].append(a)
+        cB = row.get("count_B", 1)
+        bucket = _l12_bucket(elA, elB, cA, cB)
+        pair_a[pair][bucket].append(a)
 
     a3b_vals, ab3_vals = [], []
     for pair in pair_a:
         if pair_a[pair]["A3B"] and pair_a[pair]["AB3"]:
             a3b_vals.append(np.median(pair_a[pair]["A3B"]))
             ab3_vals.append(np.median(pair_a[pair]["AB3"]))
+
+    if not a3b_vals:
+        print("  fig_l12_asymmetry.png — skipped (no pairs with both A3B and AB3)")
+        return
 
     fig, ax = plt.subplots(figsize=(7, 7))
     ax.scatter(a3b_vals, ab3_vals, c="C3", alpha=0.4, s=20)
@@ -745,6 +770,9 @@ def fig10_l12_asymmetry(all_df):
 def fig11_volume_radius(radii):
     """Fig 11: Structure-dependent effective radii from volume."""
     elements = sorted([e for e in radii if "r_b2" in radii[e] and "r_l12_maj" in radii[e]])
+    if not elements:
+        print("  fig_volume_radius.png — skipped (no elements with both B2 and L12 radii)")
+        return
     r_pure = [radii[e]["r_pure"] for e in elements]
     r_b2 = [radii[e]["r_b2"] for e in elements]
     r_l12 = [radii[e]["r_l12_maj"] for e in elements]
@@ -860,10 +888,9 @@ def fig14_vegard_absorbed(all_df, radii):
             pair_a[pair]["B2"].append(a)
         elif stype == "L12":
             cA = row.get("count_A", 3)
-            if cA == 3:
-                pair_a[pair]["A3B"].append(a)
-            else:
-                pair_a[pair]["AB3"].append(a)
+            cB = row.get("count_B", 1)
+            bucket = _l12_bucket(elA, elB, cA, cB)
+            pair_a[pair][bucket].append(a)
 
     a_dft = []
     a_veg_pure = []
@@ -942,6 +969,8 @@ def fig15_roc(heas_mp, ob2, ol12):
         phase = h.get("phase", "SS")
         dr = compute_delta_r(comp)
         dsf = compute_delta_sf(comp, ob2)
+        if np.isnan(dr) or np.isnan(dsf):
+            continue
         dr_vals.append(dr)
         dsf_vals.append(dsf)
         labels.append(1 if phase == "IM" else 0)  # IM=1, SS=0
@@ -950,8 +979,8 @@ def fig15_roc(heas_mp, ob2, ol12):
     dsf_vals = np.array(dsf_vals)
     labels = np.array(labels)
 
-    if len(np.unique(labels)) < 2:
-        print("  fig_roc.png — skipped (single class)")
+    if len(labels) == 0 or len(np.unique(labels)) < 2:
+        print("  fig_roc.png — skipped (insufficient data or single class)")
         return
 
     fig, ax = plt.subplots(figsize=(7, 7))
