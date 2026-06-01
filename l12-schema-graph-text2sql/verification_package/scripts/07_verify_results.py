@@ -65,6 +65,17 @@ def skip(name: str, reason: str):
     skipped += 1
 
 
+def safe_rows(result_dict, default=0):
+    """rows値を安全に取得（None/欠落 → default）"""
+    v = result_dict.get("rows")
+    return v if v is not None else default
+
+
+def safe_latency(result_dict):
+    """latency_ms値を安全に取得（None → None, 0 → 0）"""
+    return result_dict.get("latency_ms")
+
+
 def pN(vals, n):
     """percentile (0-100)"""
     s = sorted(vals)
@@ -114,6 +125,10 @@ def main():
 
     N = len(detail)
     print(f"\n  データソース: {source_name}  ({N}件)")
+
+    if N == 0:
+        print("\n  エラー: 実験結果が0件です。データファイルが空の可能性があります。")
+        return 1
 
     # ------------------------------------------------------------------
     # ■ 1. 基本成功率（生データから再計算）
@@ -480,7 +495,7 @@ def main():
             if not r.get("success"):
                 continue
             total_success_cond += 1
-            if r.get("rows", -1) == 0:
+            if safe_rows(r, -1) == 0:
                 zero_rows.append(d.get("query", {}).get("id", "?"))
             else:
                 positive_rows += 1
@@ -497,10 +512,10 @@ def main():
     print("\n    === 実効成功率サマリ ===")
     full_def = sum(1 for d in detail
                    if d.get("llm_full_schema", {}).get("success")
-                   and d.get("llm_full_schema", {}).get("rows", 0) > 0) / N * 100
+                   and safe_rows(d.get("llm_full_schema", {})) > 0) / N * 100
     trav_def = sum(1 for d in detail
                    if d.get("llm_traversed", {}).get("success")
-                   and d.get("llm_traversed", {}).get("rows", 0) > 0) / N * 100
+                   and safe_rows(d.get("llm_traversed", {})) > 0) / N * 100
     full_nom = sum(1 for d in detail
                    if d.get("llm_full_schema", {}).get("success")) / N * 100
     trav_nom = sum(1 for d in detail
@@ -533,8 +548,8 @@ def main():
         qid = d.get("query", {}).get("id", "")
         f = d.get("llm_full_schema", {})
         t = d.get("llm_traversed", {})
-        f_limit = f.get("rows", 0) == 100
-        t_limit = t.get("rows", 0) == 100
+        f_limit = safe_rows(f) == 100
+        t_limit = safe_rows(t) == 100
         if f_limit or t_limit:
             limit_total += 1
             if f.get("success") != t.get("success"):
@@ -561,7 +576,7 @@ def main():
         qid = d.get("query", {}).get("id", "?")
         for key in ["llm_full_schema", "llm_traversed"]:
             r = d.get(key, {})
-            if r.get("success") and r.get("rows", 0) == 100:
+            if r.get("success") and safe_rows(r) == 100:
                 sql = r.get("sql", "")
                 if "GROUP BY" in sql.upper():
                     agg_limit_hit.append({"id": qid, "cond": key})
@@ -578,8 +593,8 @@ def main():
     print("\n■ 9. Latency分布【提案7】")
 
     for label, key in [("Full Schema", "llm_full_schema"), ("Traversed", "llm_traversed")]:
-        lats = [d.get(key, {}).get("latency_ms", 0) for d in detail
-                if d.get(key, {}).get("latency_ms")]
+        lats = [safe_latency(d.get(key, {})) for d in detail
+                if safe_latency(d.get(key, {})) is not None]
         if lats:
             p50 = pN(lats, 50)
             p95 = pN(lats, 95)
@@ -593,10 +608,10 @@ def main():
         else:
             print(f"    {label}: latencyデータなし")
 
-    full_lats = [d.get("llm_full_schema", {}).get("latency_ms", 0) for d in detail
-                 if d.get("llm_full_schema", {}).get("latency_ms")]
-    trav_lats = [d.get("llm_traversed", {}).get("latency_ms", 0) for d in detail
-                 if d.get("llm_traversed", {}).get("latency_ms")]
+    full_lats = [safe_latency(d.get("llm_full_schema", {})) for d in detail
+                 if safe_latency(d.get("llm_full_schema", {})) is not None]
+    trav_lats = [safe_latency(d.get("llm_traversed", {})) for d in detail
+                 if safe_latency(d.get("llm_traversed", {})) is not None]
     if full_lats and trav_lats:
         full_avg = statistics.mean(full_lats)
         trav_avg = statistics.mean(trav_lats)
@@ -698,7 +713,7 @@ def main():
                 sg_no_where = sum(1 for d in sg_success
                                   if "WHERE" not in d.get("sql", "").upper())
                 sg_limit_hit = sum(1 for d in sg_success
-                                   if d.get("rows", 0) == 100)
+                                   if safe_rows(d) == 100)
                 n_sg = len(sg_success)
                 if n_sg > 0:
                     print(f"\n    SG+RB品質分析 (成功{n_sg}件):")
@@ -811,8 +826,8 @@ def main():
         qid = d.get("query", {}).get("id", "?")
         f = d.get("llm_full_schema", {})
         t = d.get("llm_traversed", {})
-        f_rows = f.get("rows", -1)
-        t_rows = t.get("rows", -1)
+        f_rows = safe_rows(f, -1)
+        t_rows = safe_rows(t, -1)
 
         # 条件: 両方success、かつ Trav rows が Full rows より大幅に多い
         if f.get("success") and t.get("success"):
@@ -997,8 +1012,8 @@ def main():
         t = d.get("llm_traversed", {})
         if not (f.get("success") and t.get("success")):
             continue
-        f_rows = f.get("rows", -1)
-        t_rows = t.get("rows", -1)
+        f_rows = safe_rows(f, -1)
+        t_rows = safe_rows(t, -1)
         qid = d.get("query", {}).get("id", "?")
 
         # パターン: 片方rows>10, 他方rows=0
