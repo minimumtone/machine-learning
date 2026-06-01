@@ -78,6 +78,21 @@ VASP_ATOMIC_VOLUMES = {
     "Zn": 15.741, "Zr": 22.721,
 }
 
+# King (1966) experimental atomic volumes (Å³) — room-temperature stable structures.
+# Used for Vegard baseline V_i in HEA lattice prediction (NOT for Ω_sf reference).
+KING_ATOMIC_VOLUMES = {
+    "Ag": 17.061, "Al": 16.602, "Au": 16.966, "Be": 8.111,
+    "Ca": 43.630, "Co": 11.073, "Cr": 12.008, "Cu": 11.810,
+    "Dy": 31.540, "Er": 30.660, "Fe": 11.776, "Ge": 22.634,
+    "Hf": 22.312, "Ir": 14.155, "La": 37.168, "Mg": 23.240,
+    "Mn": 12.210, "Mo": 15.583, "Nb": 17.978, "Ni": 10.941,
+    "Os": 13.977, "Pb": 30.321, "Pd": 14.716, "Pt": 15.095,
+    "Re": 14.712, "Rh": 13.754, "Ru": 13.571, "Sc": 24.987,
+    "Si": 20.024, "Sn": 27.053, "Ta": 18.014, "Tb": 32.090,
+    "Ti": 17.649, "V":  13.824, "W":  15.850, "Y":  33.018,
+    "Zn": 15.207, "Zr": 23.279,
+}
+
 
 # =====================================================================
 # VASP output parsing
@@ -377,9 +392,9 @@ def predict_hea_lattice(comp, struct, omega_sf, q=1.0):
     v_eff_total = 0.0
     for i, eli in enumerate(elements):
         ci = comp[eli]
-        if eli not in VASP_ATOMIC_VOLUMES:
+        if eli not in KING_ATOMIC_VOLUMES:
             return None
-        vi = VASP_ATOMIC_VOLUMES[eli]
+        vi = KING_ATOMIC_VOLUMES[eli]  # King experimental V_i for Vegard baseline
 
         correction = 0.0
         for j, elj in enumerate(elements):
