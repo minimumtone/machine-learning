@@ -180,6 +180,7 @@ Generated: {time.strftime('%Y-%m-%d %H:%M:%S UTC')}<br>
 <div class="toc">
 <h3>目次</h3>
 <ol>
+<li><a href="#sec0">用語と手法の概要</a></li>
 <li><a href="#sec1">全体サマリ</a></li>
 <li><a href="#sec2">データベース構成</a></li>
 <li><a href="#sec3">実験1: Baseline比較（57クエリ・7手法）</a></li>
@@ -192,6 +193,51 @@ Generated: {time.strftime('%Y-%m-%d %H:%M:%S UTC')}<br>
 <li><a href="#sec10">全クエリ詳細一覧</a></li>
 <li><a href="#sec11">結論と知見</a></li>
 </ol>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="sec0">0. 用語と手法の概要</h2>
+
+<h3>0.1 Rule-basedとは何か</h3>
+<p>本研究における<b>Rule-based（ルールベース）</b>とは、LLM（大規模言語モデル）を一切使用せず、
+事前定義された辞書とテンプレートのみでSQLを生成する手法である。具体的には以下の3段構成で動作する：</p>
+
+<table>
+<tr><th>段階</th><th>処理内容</th><th>使用リソース</th></tr>
+<tr><td>1. 意図解析</td><td>入力テキストから材料用語・元素名・数値条件を抽出</td><td><code>material_terms.yaml</code>（材料ドメイン辞書）</td></tr>
+<tr><td>2. JOINパス決定</td><td>必要なテーブルだけを特定し、FK関係に沿ったJOINパスを生成</td><td><code>allowed_schema.yaml</code> + NetworkXグラフ走査</td></tr>
+<tr><td>3. SQL組立</td><td>WHERE句・SELECT句・ORDER BYをテンプレートで組み立て</td><td>SQLテンプレート（手動定義）</td></tr>
+</table>
+
+<div class="insight">
+<b>Rule-basedの利点:</b><br>
+• <b>LLM API不要</b> — インターネット接続・APIキー・コストが不要。完全オフラインで動作可能<br>
+• <b>超低レイテンシ</b> — 平均18ms（LLMの4,600msに対し250倍高速）<br>
+• <b>決定論的</b> — 同一入力に対し常に同一SQLを返す（LLMの非決定性なし）<br>
+• <b>監査可能</b> — なぜそのSQLが生成されたか、辞書マッチングの過程が完全に追跡可能
+</div>
+
+<h3>0.2 Naive Rule-based vs SG + Rule-based</h3>
+<table>
+<tr><th>手法</th><th>JOINパス決定方法</th><th>結果</th></tr>
+<tr><td><b>Naive Rule-based</b></td><td>全7テーブルを無条件にフルJOIN → WHEREで絞り込み</td><td>SQLは動作するが不要JOINが大量に残る</td></tr>
+<tr><td><b>SG + Rule-based</b></td><td>Schema Graph（FK関係のNetworkXグラフ）を走査し、<br>必要最小限のテーブルだけをSteiner木で接続</td><td>不要JOIN = 0。最適なJOINパスのみ生成</td></tr>
+</table>
+
+<h3>0.3 LLMモードとの関係</h3>
+<table>
+<tr><th>手法</th><th>SQL生成エンジン</th><th>Schema Graph</th><th>レイテンシ</th><th>用途</th></tr>
+<tr><td>Naive Rule-based</td><td>辞書+テンプレート</td><td>不使用</td><td>~9ms</td><td>（比較対象のみ）</td></tr>
+<tr><td><b>SG + Rule-based</b></td><td>辞書+テンプレート</td><td><b>使用</b></td><td>~18ms</td><td>本番推奨（速度重視）</td></tr>
+<tr><td>LLM + Schema</td><td>LLM (gpt-5.5等)</td><td>プロンプト注入</td><td>~4,600ms</td><td>複雑クエリ対応</td></tr>
+<tr><td><b>SG + LLM + RAG</b></td><td>LLM + Few-Shot</td><td><b>使用</b></td><td>~5,000ms</td><td>本番推奨（精度重視）</td></tr>
+</table>
+
+<div class="note">
+<b>設計思想:</b> Rule-basedとLLMは排他的ではなく<b>階層的フォールバック</b>として機能する。
+辞書カバレッジが高い定型クエリ（元素検索、プロトタイプ絞り込み等）はRule-basedで18msで処理し、
+辞書でカバーできない自由文（「安定で面白い化合物」等）のみLLMにフォールバックする。
+いずれの場合もSchema Graph制約が不要JOINを排除する品質保証層として機能する。
 </div>
 
 <!-- ═══════════════════════════════════════════════════════ -->
@@ -270,6 +316,23 @@ RAGの効果はモデル能力に依存し、gpt-5.5では天井効果（全条�
 <b>知見:</b> LLM Only（スキーマ情報なし）はわずか1/57 (1.8%)しか成功しない。
 スキーマ情報（許可テーブル/カラム/FK制約）をプロンプトに注入するだけで100%に回復する。
 これはLLMの自然言語理解能力の問題ではなく、<b>スキーマ知識の欠如</b>が失敗の根本原因であることを示す。
+</div>
+
+<div class="warning">
+<b>Naive Rule-based 96.5%の落とし穴:</b><br>
+Naive Rule-basedは実行成功率96.5%と一見高性能に見えるが、以下の重大な問題を抱える：<br><br>
+<b>1. 不要JOINによるSQL品質劣化:</b><br>
+全7テーブルを無条件にJOINするため、本来1〜2テーブルで済むクエリにも5つの不要JOINが含まれる。
+Graph Traversalアブレーション（セクション6）では<b>平均4.73 JOINのうち2.73が不要</b>（不要率58%）と実測された。<br><br>
+<b>2. スケーラビリティの欠如:</b><br>
+1,351件の小規模DBなら全件スキャンでも瞬時（9ms）だが、本番規模（OQMD 100万件超、Materials Project 15万件超）では
+不要JOINが指数的にコスト増大する。適切なインデックスなしでは秒〜分単位のレイテンシになりうる。<br><br>
+<b>3. 失敗する2件の本質:</b><br>
+失敗した2/57件は、compositionテーブルの自己結合が必要なケース（「NiとAlを<b>両方</b>含む化合物」）。
+Naive方式では多元素AND条件に対応する自己結合パターンを生成できない。
+Schema Graph走査はこれを自動検出し、必要な自己結合を生成する。<br><br>
+<b>結論:</b> 「実行が通る」ことと「本番品質のSQL」は異なる。
+Naive 96.5%はSchema Graph不要の根拠にはならず、むしろ不要JOIN問題を隠蔽する危険な数値である。
 </div>
 
 <h3>3.2 57クエリ全件一覧</h3>
