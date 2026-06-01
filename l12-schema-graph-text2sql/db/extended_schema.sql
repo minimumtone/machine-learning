@@ -7,81 +7,73 @@
 -- === Core Entity Tables ===
 
 CREATE TABLE material_entry (
-    entry_id SERIAL PRIMARY KEY,
-    formula VARCHAR(200) NOT NULL,
-    reduced_formula VARCHAR(200),
-    chemical_system VARCHAR(100),
-    num_elements INTEGER,
-    source_database VARCHAR(50) DEFAULT 'OQMD',
-    created_at TIMESTAMP DEFAULT NOW()
+    entry_id TEXT PRIMARY KEY,
+    source_db TEXT,
+    source_material_id TEXT,
+    formula TEXT NOT NULL,
+    reduced_formula TEXT,
+    chemical_system TEXT,
+    number_of_elements INTEGER
 );
 
 CREATE TABLE composition (
-    composition_id SERIAL PRIMARY KEY,
-    entry_id INTEGER NOT NULL REFERENCES material_entry(entry_id),
-    element VARCHAR(10) NOT NULL,
-    atomic_fraction NUMERIC(8,6),
-    site_label VARCHAR(50)
+    composition_id TEXT PRIMARY KEY,
+    entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
+    element TEXT NOT NULL,
+    atomic_fraction DOUBLE PRECISION,
+    site_label TEXT
 );
 
 CREATE TABLE structure (
-    structure_id SERIAL PRIMARY KEY,
-    entry_id INTEGER NOT NULL REFERENCES material_entry(entry_id),
-    prototype VARCHAR(100),
-    strukturbericht VARCHAR(20),
-    space_group VARCHAR(20),
+    structure_id TEXT PRIMARY KEY,
+    entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
+    prototype TEXT,
+    strukturbericht TEXT,
+    formula_type TEXT,
     space_group_number INTEGER,
-    lattice_a NUMERIC(10,6),
-    lattice_b NUMERIC(10,6),
-    lattice_c NUMERIC(10,6),
-    alpha NUMERIC(8,4) DEFAULT 90.0,
-    beta NUMERIC(8,4) DEFAULT 90.0,
-    gamma NUMERIC(8,4) DEFAULT 90.0,
-    volume NUMERIC(12,4),
-    crystal_system VARCHAR(30)
+    crystal_system TEXT,
+    lattice_a DOUBLE PRECISION,
+    lattice_b DOUBLE PRECISION,
+    lattice_c DOUBLE PRECISION,
+    volume_per_atom DOUBLE PRECISION,
+    space_group TEXT
 );
 
 CREATE TABLE phase_stability (
-    stability_id SERIAL PRIMARY KEY,
-    entry_id INTEGER NOT NULL REFERENCES material_entry(entry_id),
-    formation_energy_per_atom NUMERIC(10,6),
-    energy_above_hull NUMERIC(10,6),
+    stability_id TEXT PRIMARY KEY,
+    entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
+    formation_energy_per_atom DOUBLE PRECISION,
+    energy_above_hull DOUBLE PRECISION,
     is_stable BOOLEAN,
-    band_gap NUMERIC(8,4),
-    is_metal BOOLEAN
+    band_gap DOUBLE PRECISION
 );
 
 -- === Calculation & Properties (parent-child) ===
 
 CREATE TABLE calculation (
-    calculation_id SERIAL PRIMARY KEY,
-    entry_id INTEGER NOT NULL REFERENCES material_entry(entry_id),
-    method VARCHAR(50) DEFAULT 'GGA+PBE',
-    pseudopotential VARCHAR(50),
-    energy_cutoff NUMERIC(10,2),
-    k_points VARCHAR(30),
-    convergence_threshold NUMERIC(12,8),
-    software VARCHAR(30) DEFAULT 'VASP'
+    calculation_id TEXT PRIMARY KEY,
+    entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
+    method TEXT,
+    functional TEXT,
+    calculation_type TEXT
 );
 
 CREATE TABLE calculated_property (
-    property_id SERIAL PRIMARY KEY,
-    calculation_id INTEGER NOT NULL REFERENCES calculation(calculation_id),
-    property_name VARCHAR(100) NOT NULL,
-    value NUMERIC(15,6),
-    unit VARCHAR(30),
-    tensor_component VARCHAR(20)
+    property_id TEXT PRIMARY KEY,
+    calculation_id TEXT NOT NULL REFERENCES calculation(calculation_id),
+    property_name TEXT NOT NULL,
+    value DOUBLE PRECISION,
+    unit TEXT,
+    tensor_component TEXT
 );
 
 -- === Prototype & Space Group Master Tables ===
 
 CREATE TABLE prototype_definition (
-    prototype_id SERIAL PRIMARY KEY,
-    prototype_name VARCHAR(100) NOT NULL UNIQUE,
-    strukturbericht VARCHAR(20),
-    space_group_number INTEGER,
-    pearson_symbol VARCHAR(20),
-    num_atoms_per_cell INTEGER,
+    prototype_id TEXT PRIMARY KEY,
+    prototype_name TEXT,
+    strukturbericht TEXT,
+    formula_type TEXT,
     description TEXT
 );
 

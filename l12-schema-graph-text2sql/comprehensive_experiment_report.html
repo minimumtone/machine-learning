@@ -83,7 +83,7 @@ footer { margin-top: 60px; padding-top: 20px; border-top: 2px solid var(--border
 
 <h1>Schema-Graph Text-to-SQL<br>包括的実験レポート</h1>
 <p style="color: var(--text-secondary);">
-Generated: 2026-06-01 04:09:01 UTC<br>
+Generated: 2026-06-01 04:16:56 UTC<br>
 対象データベース: OQMD 5プロトタイプ — B2 (636件), L1<sub>2</sub> (273件), NaCl (355件), NiAs (74件), BiF<sub>3</sub> (13件) = <b>1,351件</b><br>
 7テーブル正規化RDB (PostgreSQL) / Schema Graph FK走査 (NetworkX)
 </p>
@@ -1536,22 +1536,22 @@ material_synthesis, defect_type, material_defect<br>
 <h3>7.1 カテゴリ別成功率</h3>
 <table>
 <tr><th>カテゴリ</th><th>クエリ数</th><th>LLM+Schema</th><th>LLM-only (no schema)</th><th>差分</th></tr>
-<tr class=""><td>Simple (1-2テーブル)</td><td>5</td>
-<td><b>4/5 (80%)</b></td>
+<tr class="highlight"><td>Simple (1-2テーブル)</td><td>5</td>
+<td><b>5/5 (100%)</b></td>
 <td>0/5 (0%)</td>
-<td>+80pp</td></tr>
+<td>+100pp</td></tr>
 <tr class=""><td>Medium (3-4テーブル)</td><td>5</td>
 <td><b>4/5 (80%)</b></td>
 <td>0/5 (0%)</td>
 <td>+80pp</td></tr>
-<tr class="highlight"><td>Complex (5+テーブル)</td><td>5</td>
-<td><b>5/5 (100%)</b></td>
+<tr class=""><td>Complex (5+テーブル)</td><td>5</td>
+<td><b>4/5 (80%)</b></td>
 <td>0/5 (0%)</td>
-<td>+100pp</td></tr>
-<tr class="highlight"><td>Very Complex (自己参照・集約)</td><td>5</td>
-<td><b>5/5 (100%)</b></td>
+<td>+80pp</td></tr>
+<tr class=""><td>Very Complex (自己参照・集約)</td><td>5</td>
+<td><b>4/5 (80%)</b></td>
 <td>0/5 (0%)</td>
-<td>+100pp</td></tr>
+<td>+80pp</td></tr>
 <tr class="highlight"><td>Cross-Domain (元素属性×材料)</td><td>5</td>
 <td><b>5/5 (100%)</b></td>
 <td>0/5 (0%)</td>
@@ -1561,22 +1561,22 @@ material_synthesis, defect_type, material_defect<br>
 <td>0/5 (0%)</td>
 <td>+80pp</td></tr>
 <tr style="font-weight:bold; background:#e3f2fd;"><td>TOTAL</td><td>30</td>
-<td>27/30 (90%)</td>
+<td>26/30 (87%)</td>
 <td>0/30 (0%)</td>
-<td>+90pp</td></tr>
+<td>+87pp</td></tr>
 </table>
 
 <h3>7.2 7テーブル vs 20テーブルの比較</h3>
 <table>
 <tr><th>条件</th><th>7テーブル (Baseline実験)</th><th>20テーブル (本実験)</th><th>低下幅</th></tr>
-<tr><td>LLM + Schema (gpt-4o-mini)</td><td>100% (57/57相当)</td><td><b>90%</b> (27/30)</td><td><span style="color:red;">-10pp</span></td></tr>
+<tr><td>LLM + Schema (gpt-4o-mini)</td><td>100% (57/57相当)</td><td><b>87%</b> (26/30)</td><td><span style="color:red;">-13pp</span></td></tr>
 <tr><td>LLM without Schema</td><td>1.8% (1/57)</td><td>0% (0/30)</td><td>—</td></tr>
 </table>
 
 <div class="warning">
 <b>核心的知見: スキーマ複雑性と成功率の関係</b><br><br>
-&bull; 7テーブル（星型FK）では gpt-4o-mini + Schema で100%達成していたが、<b>20テーブルに拡張すると90%に低下</b>（-10pp）<br>
-&bull; 失敗3件はいずれも<b>カラム名の誤参照</b>または<b>テーブルエイリアスの不整合</b>が原因<br>
+&bull; 7テーブル（星型FK）では gpt-4o-mini + Schema で100%達成していたが、<b>20テーブルに拡張すると87%に低下</b>（-13pp）<br>
+&bull; 失敗4件はいずれも<b>カラム名の誤参照</b>または<b>テーブルエイリアスの不整合</b>が原因<br>
 &bull; スキーマなしでは20テーブル環境で<b>全クエリ失敗</b>（0%）&rarr; スキーマ情報の必要性がさらに明確<br>
 &bull; この結果は「7テーブルでの100%は天井効果であり、実運用スキーマではSchema Graph走査＋SQLGuardが不可欠」を実証する<br><br>
 <b>&rarr; Schema Graph FK走査の必要性は、テーブル数が増えるほど高まる</b>
@@ -1585,12 +1585,15 @@ material_synthesis, defect_type, material_defect<br>
 <h3>7.3 失敗クエリの分析</h3>
 <table>
 <tr><th>ID</th><th>クエリ</th><th>カテゴリ</th><th>エラー原因</th></tr>
-<tr class="fail-row"><td>E04</td><td>NaCl型でis_metalがtrueのものは？...</td>
-<td>simple</td><td><code>column ps.is_metal does not exist
-LINE 1: SELECT me.entry_id</code></td></tr>
 <tr class="fail-row"><td>E07</td><td>Arc Meltingで合成されたNiを含む化合物の安定性は？...</td>
 <td>medium</td><td><code>column ms.method_name does not exist
-LINE 14:     ms.method_</code></td></tr>
+LINE 16:     ms.method_</code></td></tr>
+<tr class="fail-row"><td>E14</td><td>Nature Materialsに掲載された化合物のうち、Vacancy形成エネ...</td>
+<td>complex</td><td><code>operator does not exist: text = integer
+LINE 5: JOIN literat</code></td></tr>
+<tr class="fail-row"><td>E19</td><td>同一化合物に対して実験値と計算値の両方が存在するものを出して...</td>
+<td>very_complex</td><td><code>column em.property_name does not exist
+LINE 1: SELECT DISTIN</code></td></tr>
 <tr class="fail-row"><td>E28</td><td>アプリケーションドメインごとの安定化合物数を多い順に並べて...</td>
 <td>aggregation</td><td><code>missing FROM-clause entry for table "ms"
 LINE 1: SELECT ad.d</code></td></tr>
@@ -1602,123 +1605,123 @@ LINE 1: SELECT ad.d</code></td></tr>
 <tr><td>E01</td><td>B2プロトタイプの化合物を全て出して</td><td>simple</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>2039ms</td></tr>
+<td>1362ms</td></tr>
 <tr><td>E02</td><td>Feを含む安定な化合物は？</td><td>simple</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>1552ms</td></tr>
+<td>1105ms</td></tr>
 <tr><td>E03</td><td>band_gapが2以上の化合物を出して</td><td>simple</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>1119ms</td></tr>
-<tr><td>E04</td><td>NaCl型でis_metalがtrueのものは？</td><td>simple</td>
+<td>2228ms</td></tr>
+<tr><td>E04</td><td>NaCl型でband_gapが0の金属的な化合物は？</td><td>simple</td>
+<td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td style="color:red">&#10007;</td>
-<td>2034ms</td></tr>
+<td>1072ms</td></tr>
 <tr><td>E05</td><td>L12型でenergy_above_hullが0.01未満のものを出し...</td><td>simple</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>1280ms</td></tr>
+<td>985ms</td></tr>
 <tr><td>E06</td><td>Aerospace Alloys用途に適した安定なB2化合物を探して</td><td>medium</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>1863ms</td></tr>
+<td>1608ms</td></tr>
 <tr><td>E07</td><td>Arc Meltingで合成されたNiを含む化合物の安定性は？</td><td>medium</td>
 <td style="color:red">&#10007;</td>
 <td style="color:red">&#10007;</td>
-<td>2062ms</td></tr>
+<td>1634ms</td></tr>
 <tr><td>E08</td><td>XRDで測定された安定なL12化合物のlattice_paramete...</td><td>medium</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>1384ms</td></tr>
+<td>968ms</td></tr>
 <tr><td>E09</td><td>遷移金属(dブロック)を含む化合物で電池用途のものは？</td><td>medium</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>2130ms</td></tr>
+<td>22447ms</td></tr>
 <tr><td>E10</td><td>2020年以降に出版された論文で報告されたB2化合物は？</td><td>medium</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>1689ms</td></tr>
+<td>1230ms</td></tr>
 <tr><td>E11</td><td>Vacancy欠陥を持つ安定なNaCl型化合物で、その構成元素の電気陰...</td><td>complex</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>2055ms</td></tr>
+<td>1529ms</td></tr>
 <tr><td>E12</td><td>XRDで測定されたhardnessが10GPa以上の化合物のうち、Ar...</td><td>complex</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>1931ms</td></tr>
+<td>1706ms</td></tr>
 <tr><td>E13</td><td>Structural MaterialsのサブカテゴリであるAeros...</td><td>complex</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>1719ms</td></tr>
+<td>1704ms</td></tr>
 <tr><td>E14</td><td>Nature Materialsに掲載された化合物のうち、Vacanc...</td><td>complex</td>
-<td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>1920ms</td></tr>
+<td style="color:red">&#10007;</td>
+<td>1676ms</td></tr>
 <tr><td>E15</td><td>4族元素(Ti,Zr,Hf)を含むB2化合物で、触媒用途があり、かつ安...</td><td>complex</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>2015ms</td></tr>
+<td>1568ms</td></tr>
 <tr><td>E16</td><td>親カテゴリがEnergy Materialsであるすべてのサブカテゴリ...</td><td>very_complex</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>1096ms</td></tr>
+<td>1572ms</td></tr>
 <tr><td>E17</td><td>ドーパント元素として使われている元素で、その元素自体の電気陰性度が1....</td><td>very_complex</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>1389ms</td></tr>
+<td>1068ms</td></tr>
 <tr><td>E18</td><td>3つ以上の異なるアプリケーションドメインに紐付けられた化合物のうち、安...</td><td>very_complex</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>2144ms</td></tr>
+<td>1034ms</td></tr>
 <tr><td>E19</td><td>同一化合物に対して実験値と計算値の両方が存在するものを出して</td><td>very_complex</td>
-<td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>4382ms</td></tr>
+<td style="color:red">&#10007;</td>
+<td>1265ms</td></tr>
 <tr><td>E20</td><td>vacuum雰囲気で1500K以上で合成された化合物のうち、band_...</td><td>very_complex</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>2069ms</td></tr>
+<td>1538ms</td></tr>
 <tr><td>E21</td><td>原子番号が26以上30以下の元素を含む化合物で、formation_e...</td><td>cross_domain</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>1696ms</td></tr>
+<td>1303ms</td></tr>
 <tr><td>E22</td><td>alkali_metalカテゴリの元素を含む化合物で、Thermoel...</td><td>cross_domain</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>2359ms</td></tr>
+<td>1469ms</td></tr>
 <tr><td>E23</td><td>cubic結晶系の空間群に属する化合物のうち、DSCで測定されたものを...</td><td>cross_domain</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>1320ms</td></tr>
+<td>1127ms</td></tr>
 <tr><td>E24</td><td>Substitutional欠陥のドーパント元素がpブロックの化合物で...</td><td>cross_domain</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>2037ms</td></tr>
+<td>4555ms</td></tr>
 <tr><td>E25</td><td>Ball Millingで合成され、かつnanoindentation...</td><td>cross_domain</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>3395ms</td></tr>
+<td>1494ms</td></tr>
 <tr><td>E26</td><td>プロトタイプ別の平均formation_energyを出して</td><td>aggregation</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>1853ms</td></tr>
+<td>5994ms</td></tr>
 <tr><td>E27</td><td>合成方法ごとの成功率を計算して</td><td>aggregation</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>1355ms</td></tr>
+<td>1044ms</td></tr>
 <tr><td>E28</td><td>アプリケーションドメインごとの安定化合物数を多い順に並べて</td><td>aggregation</td>
 <td style="color:red">&#10007;</td>
 <td style="color:red">&#10007;</td>
-<td>1352ms</td></tr>
+<td>4849ms</td></tr>
 <tr><td>E29</td><td>各元素が含まれる化合物数のランキングTop10を出して</td><td>aggregation</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>965ms</td></tr>
+<td>1379ms</td></tr>
 <tr><td>E30</td><td>出版年ごとの論文数と、それらに紐付く化合物数を出して</td><td>aggregation</td>
 <td style="color:green">&#10003;</td>
 <td style="color:red">&#10007;</td>
-<td>1286ms</td></tr>
+<td>1323ms</td></tr>
 </table>
 
 <h3>7.5 拡張スキーマ構成</h3>

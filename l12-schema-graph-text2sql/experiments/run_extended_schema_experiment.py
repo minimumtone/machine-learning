@@ -33,19 +33,19 @@ tables:
     columns: [composition_id (PK), entry_id (FK→material_entry), element, atomic_fraction, site_label]
     
   structure:
-    columns: [structure_id (PK), entry_id (FK→material_entry), prototype, strukturbericht, space_group, space_group_number, lattice_a, lattice_b, lattice_c, alpha, beta, gamma, volume, crystal_system]
+    columns: [structure_id (PK), entry_id (FK→material_entry), prototype, strukturbericht, formula_type, space_group_number, crystal_system, lattice_a, lattice_b, lattice_c, volume_per_atom, space_group]
     
   phase_stability:
-    columns: [stability_id (PK), entry_id (FK→material_entry), formation_energy_per_atom, energy_above_hull, is_stable, band_gap, is_metal]
+    columns: [stability_id (PK), entry_id (FK→material_entry), formation_energy_per_atom, energy_above_hull, is_stable, band_gap]
     
   calculation:
-    columns: [calculation_id (PK), entry_id (FK→material_entry), method, pseudopotential, energy_cutoff, k_points, convergence_threshold, software]
+    columns: [calculation_id (PK), entry_id (FK→material_entry), method, functional, calculation_type]
     
   calculated_property:
     columns: [property_id (PK), calculation_id (FK→calculation), property_name, value, unit, tensor_component]
     
   prototype_definition:
-    columns: [prototype_id (PK), prototype_name (UNIQUE), strukturbericht, space_group_number, pearson_symbol, num_atoms_per_cell, description]
+    columns: [prototype_id (PK), prototype_name, strukturbericht, formula_type, description]
     
   element:
     columns: [element_id (PK), symbol (UNIQUE), name, atomic_number, atomic_mass, electronegativity, atomic_radius, group_number, period_number, block, category]
@@ -116,7 +116,7 @@ EXTENDED_QUERIES = [
     {"id": "E01", "query": "B2プロトタイプの化合物を全て出して", "category": "simple", "min_tables": 1, "expected_tables": ["structure"]},
     {"id": "E02", "query": "Feを含む安定な化合物は？", "category": "simple", "min_tables": 3, "expected_tables": ["material_entry", "composition", "phase_stability"]},
     {"id": "E03", "query": "band_gapが2以上の化合物を出して", "category": "simple", "min_tables": 2, "expected_tables": ["material_entry", "phase_stability"]},
-    {"id": "E04", "query": "NaCl型でis_metalがtrueのものは？", "category": "simple", "min_tables": 3, "expected_tables": ["material_entry", "structure", "phase_stability"]},
+    {"id": "E04", "query": "NaCl型でband_gapが0の金属的な化合物は？", "category": "simple", "min_tables": 3, "expected_tables": ["material_entry", "structure", "phase_stability"]},
     {"id": "E05", "query": "L12型でenergy_above_hullが0.01未満のものを出して", "category": "simple", "min_tables": 3, "expected_tables": ["material_entry", "structure", "phase_stability"]},
     
     # === Category 2: Medium (3-4 tables, multi-hop) ===
@@ -176,6 +176,7 @@ def build_prompt(query: str, with_schema: bool = True) -> str:
 
 def execute_sql(sql: str) -> dict:
     """Execute SQL and return results or error."""
+    conn = None
     try:
         conn = psycopg2.connect(**DB_CONFIG)
         cur = conn.cursor()
@@ -183,10 +184,12 @@ def execute_sql(sql: str) -> dict:
         rows = cur.fetchall()
         cols = [desc[0] for desc in cur.description] if cur.description else []
         cur.close()
-        conn.close()
         return {"success": True, "rows": len(rows), "columns": cols}
     except Exception as e:
         return {"success": False, "error": str(e)}
+    finally:
+        if conn is not None:
+            conn.close()
 
 
 def run_llm_query(query: str, model: str = "gpt-4o-mini", with_schema: bool = True) -> dict:
