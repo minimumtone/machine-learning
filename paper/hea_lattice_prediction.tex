@@ -349,7 +349,11 @@ Vegard則からの体積偏差を計算する：
 \end{equation}
 ここで$V_\text{DFT} = a_\text{DFT}^3 / n_\text{auc}$
 （$n_\text{auc} = 2$: B2、$n_\text{auc} = 4$: L1$_2$）、
-$V_\text{Vegard} = \sum_i x_i V_i$はKingの原子体積~\cite{King1966}を使用。
+$V_\text{Vegard} = \sum_i x_i V_i$は純元素参照体積である。
+$V_i$にはKing実験値~\cite{King1966}またはVASP DFT同種ペア体積を
+使用できるが、後者（DFT自己整合参照）では$V_\text{DFT}$と
+$V_\text{Vegard}$のGGA系統誤差が相殺され$q \approx 1$を達成する
+（\ref{sec:self_consistency}節）。
 同一元素ペアに対してMP・OQMDの両データベースから複数の
 $\Omega_\text{sf}$値が得られる場合がある。
 その際、平均値ではなく中央値（median）を採用した。
@@ -382,26 +386,23 @@ $\Omega_\text{sf}$値が得られる場合がある。
 ここで$s \in \{\text{BCC}, \text{FCC}\}$、
 $\Omega_\text{sf}^{(\text{BCC})} = \Omega_\text{sf}^\text{B2}$、
 $\Omega_\text{sf}^{(\text{FCC})} = \Omega_\text{sf}^{\text{L1}_2}$。
-$q_s$は二元系秩序構造（B2/L1$_2$）の$\Omega_\text{sf}$を
-多成分ランダム固溶体の体積偏差に対応付ける校正定数である。
-理想的には$q = 1$（秩序構造の$\Omega_\text{sf}$が
-そのままHEAに適用可能）だが、
-秩序構造と乱雑固溶体の配位環境の差により補正が必要となる。
-B2参照モデルでは$q_\text{BCC} = 0.49$、$q_\text{FCC} = 0.13$を用い、
-Leave-One-Out交差検証でLOO-CV RMSE = 0.0214~\AA{}と
-安定性を確認した。$q_\text{FCC} \approx 0.13$はL1$_2$由来の
-$\Omega_\text{sf}$補正がFCC HEAではほぼ不要であることを示し、
-$q_\text{BCC} < 1$はB2秩序構造の$\Omega_\text{sf}$が
-BCC HEAの体積偏差を大きく評価してしまうため減衰が必要であることを反映する。
-SQS参照構造を用いると$q_\text{BCC} = 1$を採用でき、
-校正定数なしで$\Omega_\text{sf}$のみによる予測が可能となる
-（全体RMSE = 0.0202~\AA{}、\ref{sec:sqs_improvement}節）。
+$q_s$は二元系構造の$\Omega_\text{sf}$を
+多成分ランダム固溶体の体積偏差に対応付けるスケーリング定数である。
+$q$の値は$\Omega_\text{sf}$の参照体積の選択に強く依存する。
+King実験値を参照体積に用いた場合は$q_\text{BCC} = 0.49$、
+$q_\text{FCC} = 0.17$が最適値となるが、
+$\Omega_\text{sf}$の参照体積をDFT自己整合（VASP B2同種体積）
+とすると$q_\text{BCC} \approx 1.17$、$q_\text{FCC} \approx 0.94$となり、
+$q = 1$（パラメータフリー）で全体RMSE = 0.0203~\AA{}
+（Vegard比12.2\%改善）を達成する
+（\ref{sec:self_consistency}節）。
 
-なお、$q$の値自体は物理モデルの本質ではなく、
-$\Omega_\text{sf}$と加法分解$\delta^{(s)}$が提供する
-構造・化学結合情報を実データに校正する役割を担う。
+$q$の値自体は物理モデルの本質ではなく、
+$\Omega_\text{sf}$の参照体積とVegard基準$V_i$の
+データソース差異を吸収する役割を担う。
 本手法の主要な貢献は$q$の最適化ではなく、
 $\Omega_\text{sf}$のDFT導出、構造特異的分離、
+DFT自己整合参照体積の導入、
 および元素別加法分解にある。
 
 
@@ -1925,49 +1926,53 @@ BCC HEA精度向上には、多体相互作用の導入（三元系DFTデータ�
 
 $q_s$は二元系秩序構造の$\Omega_\text{sf}$を
 HEAランダム固溶体に適用する際の校正定数であり、本手法の物理的本質ではない。
-$q$の値は参照構造（B2/L1$_2$）とHEA（BCC/FCC固溶体）の
-配位環境の差を反映する：B2では全近接が異種原子（$\alpha = -1$）、
-L1$_2$多数派原子は同種8+異種4の混合配位であるのに対し、
-ランダム固溶体は$\alpha \approx 0$である。
-
-$q$の値は参照構造の選択に強く依存する。
-B2参照では$q_\text{BCC} = 0.49$であるが、
-BCC-SQS参照では$q_\text{BCC} = 1$を採用できる
-（表~\ref{tab:q_shift}）。
-B2構造の$\Omega_\text{sf}$は86\%が負に偏り、
-ランダム固溶体の体積偏差を系統的に大きく評価してしまうため、
-$q \approx 0.5$で半分に減衰させる必要がある。
-一方SQS（$\alpha \approx 0$）は配位環境がHEAに近く、
-$\Omega_\text{sf}$がそのままHEAの体積偏差に対応するため
-$q = 1$（無補正）で十分な精度が得られる。
+$q$の値は2つの要因に依存する：
+\begin{enumerate}
+  \item \textbf{$\Omega_\text{sf}$の参照体積}:
+    $\Omega_\text{sf}$の分母$V_\text{Vegard}$にKing実験値を用いると
+    DFT計算値との不整合が$q$に影響する。
+    VASP DFT体積を用いればGGA系統誤差が相殺され、
+    B2参照でも$q \approx 1$となる
+    （表~\ref{tab:omega_ref_comparison}）。
+  \item \textbf{参照構造の秩序度$\alpha$}:
+    B2（$\alpha = -1$、全近接が異種原子）とHEA（$\alpha \approx 0$）の
+    配位環境の差。ただし$\Omega_\text{sf}$参照体積がDFT自己整合であれば、
+    この効果は比較的小さい（B2: $q = 1.17$, SQS: $q = 0.36$）。
+\end{enumerate}
 
 \begin{table}[H]
 \centering
-\caption{BCC参照構造別$q$最適値の変化。
-  B2秩序構造（$\alpha = -1$）はランダム固溶体の体積偏差を大きく評価してしまい
-  $q$を抑制するが、SQS（$\alpha \approx 0$）では$q \approx 1$の近傍に収まる。}
+\caption{$q_\text{BCC}$の決定因子：$\Omega_\text{sf}$参照体積と参照構造の寄与。
+  $\Omega_\text{sf}$参照体積の効果が支配的であり、
+  DFT自己整合参照を用いればB2構造でも$q \approx 1$が達成される。}
 \label{tab:q_shift}
 \footnotesize
-\begin{tabular}{@{}lcc@{}}
+\begin{tabular}{@{}llcc@{}}
 \toprule
-BCC参照構造 & $q_\text{BCC}$ & BCC RMSE (\AA) \\
+BCC参照構造 & $\Omega_\text{sf}$参照体積 & $q_\text{BCC}$ & BCC RMSE (\AA) \\
 \midrule
-B2（$\alpha = -1$）  & 0.49 & 0.0299 \\
-SQS（$\alpha \approx 0$、9元素、$q = 1$） & 1.00 & 0.0281 \\
+B2（$\alpha = -1$）   & King実験値 & 0.49 & 0.0299 \\
+SQS（$\alpha \approx 0$）& King実験値 & 0.26 & 0.0302 \\
+\textbf{B2（$\alpha = -1$）}   & \textbf{VASP DFT} & \textbf{1.17} & \textbf{0.0273} \\
+B2（$\alpha = -1$）   & VASP DFT ($q=1$) & 1.00 & 0.0274 \\
+SQS（$\alpha \approx 0$）& VASP DFT & 0.36 & 0.0299 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-$q_\text{FCC} \approx 0.13$はL1$_2$の配位がFCC固溶体に
-比較的近いことを反映する。FCC HEAではVegard則自体の精度が高く、
-$\Omega_\text{sf}$補正の寄与が小さいため$q$への感度は低い。
-実際にSQS参照で$q_\text{BCC} = 1$を採用しても
-全体RMSEは0.0202~\AA{}と、最適$q = 1.72$の0.0197~\AA{}から
-わずか0.5~m\AA{}の劣化にとどまる。
-この差は実験ノイズフロア$\sigma \approx 0.016$~\AA{}に比べて十分小さく、
-$q$を排除してモデルを簡素化する方が実用上望ましい。
-これにより、SQS参照の$\Omega_\text{sf}$のみで
-校正定数なしにHEA格子定数を予測できる。
+表~\ref{tab:q_shift}から明らかなように、$q$に対する支配的要因は
+参照構造の秩序度ではなく$\Omega_\text{sf}$の参照体積である。
+King参照ではB2もSQSも$q < 0.5$（$\Omega_\text{sf}$のスケールが不適切）だが、
+VASP DFT参照ではB2で$q = 1.17$（ほぼ無補正）となる。
+$q = 1$としてもBCC RMSE = 0.0274~\AA{}であり、
+King参照B2の最適$q$（0.0299~\AA{}）を上回る。
+
+$q_\text{FCC}$についても同様の傾向が認められる。
+King参照では$q_\text{FCC} \approx 0.17$であるが、
+VASP DFT参照では$q_\text{FCC} \approx 0.94$となる。
+FCC HEAではVegard則自体の精度が高く
+$\Omega_\text{sf}$補正の寄与が小さいため$q$への感度は低いが、
+DFT自己整合参照による$q \approx 1$は物理的に自然な結果である。
 
 
 \subsection{データソース間の一貫性}
@@ -2010,16 +2015,17 @@ $\Omega_\text{sf}$は化学結合の非線形効果を反映するが、これ�
 むしろ$\Omega_\text{sf}$の価値は格子定数の\emph{定量的予測}にあり、
 相の\emph{定性的分類}とは異なる次元の情報を提供する。
 
-\paragraph{DFT自己整合体積の限界}
-King実験値$V_i$をDFT計算値に統一すれば
-$\Omega_\text{sf}$との理論的自己整合性が確保されると期待されるが、
-VASP B2同種体積、Wang~\cite{Wang2004lattice}のab initio安定構造体積、
-741ペア直接予測モデルのいずれもKing実験値を下回った
-（表~\ref{tab:vi_comparison}、詳細は\ref{sec:appendix_volumes}節）。
-GGA-PBEの元素依存系統誤差（Au: $+7.1$\%, Fe: $-4.6$\%）が
-Vegardベースラインを直接劣化させるためであり、
-自己整合性の理論的利点よりも、
-King室温実験値の高いVegard精度が実用上優先される。
+\paragraph{DFT自己整合性の二面性}
+Vegard基準$V_i$をDFT体積に置き換えると
+GGA元素依存誤差でベースラインが劣化する
+（表~\ref{tab:vi_comparison}、\ref{sec:appendix_volumes}節）。
+しかし$\Omega_\text{sf}$の参照体積にDFT値を用いると、
+分子・分母のGGA誤差が相殺され$q \approx 1$を達成する
+（表~\ref{tab:omega_ref_comparison}、\ref{sec:self_consistency}節）。
+すなわちDFT自己整合性は$V_i$には有害だが
+$\Omega_\text{sf}$には有益であり、
+King $V_i$ + DFT自己整合$\Omega_\text{sf}$の
+ハイブリッドが最適解となる。
 
 
 \subsection{DFT自己整合性 vs King実験値の精度}
@@ -2027,6 +2033,10 @@ King室温実験値の高いVegard精度が実用上優先される。
 
 本手法ではKing実験値~\cite{King1966}をVegard基準体積$V_i$に、
 DFT計算値を$\Omega_\text{sf}$に用いる「混合」アプローチを採用している。
+ここで、$V_i$と$\Omega_\text{sf}$の
+DFT系統誤差に対する役割は本質的に異なる。
+
+\paragraph{Vegard基準$V_i$: King実験値が最適}
 理論的にはVegard基準もDFT体積で統一すれば
 $\Omega_\text{sf}$との自己整合性が確保されるが、
 3つの代替案——(i)~VASP B2同種仮想BCC体積、
@@ -2034,32 +2044,69 @@ $\Omega_\text{sf}$との自己整合性が確保されるが、
 (iii)~741ペア直接予測モデル——のいずれもKing実験値に劣ることを
 定量的に確認した（表~\ref{tab:vi_comparison}、詳細は
 \ref{sec:appendix_volumes}節）。
-
-この結果は、$V_i$と$\Omega_\text{sf}$のDFT系統誤差に対する
-感度の非対称性で理解できる。
-$\Omega_\text{sf} = (V_\text{DFT} - V_\text{Vegard})/V_\text{Vegard}$は
-偏差の\emph{比}として定義されるため、
-GGA系統誤差が分子・分母で部分的に相殺され、
-残余は単一パラメータ$q_s$で吸収される。
-一方、Vegard基準の$V_i$はHEA体積を直接決定するため、
+Vegard基準の$V_i$はHEA体積を直接決定するため、
 元素ごとにばらつくGGA誤差（Au: $+7.1$\%, Fe: $-4.6$\%）が
-そのままVegardベースラインのRMSEに現れる。
-この誤差は多元素の線形補間で部分的に平均化されるものの、
+そのままVegardベースラインのRMSEに現れ、
 $q$という単一スカラーでは吸収できない。
-
 加えて、HEA格子定数の実験値は室温（$\sim$300~K）測定であるのに対し、
 DFT体積は0~Kの値である。King実験値は室温測定であるため、
 Vegard基準線との温度整合性がDFTより優れる。
-準調和近似（QHA）によるDFT有限温度体積の計算は原理的に可能であるが、
-38元素の個別フォノン計算を要し、GGA系統誤差自体は解消されない。
 
-以上より、King $V_i$ + DFT $\Omega_\text{sf}$ + $q$補正の
-混合アプローチは、理論的自己整合性を犠牲にしつつも
-実用的予測精度を最大化する合理的な選択である。
-$q$は$V_i$と$\Omega_\text{sf}$のデータソース差異を吸収する
-\emph{環境因子}として位置づけられ（\ref{sec:q_position}節参照）、
-SQS参照では$q \to 1$（無補正）が達成されることが
-この解釈の妥当性を支持する。
+\paragraph{$\Omega_\text{sf}$参照体積: DFT自己整合が有効}
+一方、$\Omega_\text{sf}$の計算に用いる参照体積（式~\eqref{eq:omega_def}の
+$V_\text{Vegard}$）については、DFT体積の自己整合性が予測精度を
+大幅に向上させることを発見した。
+$\Omega_\text{sf} = (V_\text{DFT} - V_\text{Vegard})/V_\text{Vegard}$
+において$V_\text{Vegard}$にもDFT体積（VASP B2同種体積）を使用すると、
+分子$V_\text{DFT}(A,B)$と分母$V_\text{Vegard}$が同一のGGA-PBE計算に
+基づくため、系統誤差が比の中で相殺される。
+その結果、$\Omega_\text{sf}$が正しいスケールとなり、
+\textbf{B2参照（$\alpha = -1$）でも$q_\text{BCC} \approx 1.17$、
+$q_\text{FCC} \approx 0.94$が得られる}（表~\ref{tab:omega_ref_comparison}）。
+$q = 1$とした場合でもRMSE = 0.0203~\AA{}であり、
+Vegard則の0.0231~\AA{}に対し12.2\%の改善を校正定数なしで達成する。
+
+これに対し、$\Omega_\text{sf}$の$V_\text{Vegard}$にKing実験値を使用すると、
+DFT計算値$V_\text{DFT}$との間にGGA系統誤差分の不整合が生じ、
+$q_\text{BCC} = 0.49$となる。すなわち、
+\textbf{$q \neq 1$の主要因は参照構造の秩序度（$\alpha$依存）ではなく、
+$\Omega_\text{sf}$参照体積の不整合であった}。
+
+\begin{table}[H]
+\centering
+\caption{$\Omega_\text{sf}$参照体積が$q$値とHEA予測精度に与える影響（64 HEA）。
+  Vegard基準$V_i$はすべてKing実験値を使用。
+  $\Omega_\text{sf}$の参照体積のみを変更した比較。}
+\label{tab:omega_ref_comparison}
+\footnotesize
+\begin{tabular}{@{}llcccc@{}}
+\toprule
+BCC参照 & $\Omega_\text{sf}$参照$V_i$ & $q_\text{BCC}$ & $q_\text{FCC}$ & RMSE & vs Vegard \\
+\midrule
+B2 & King実験値     & 0.49  & 0.17  & 0.0217 & $+$6.2\% \\
+B2 & King ($q=1$)   & 1.00  & 1.00  & 0.0297 & $-$28.4\% \\
+\textbf{B2} & \textbf{VASP DFT} & \textbf{1.17} & \textbf{0.94} & \textbf{0.0202} & \textbf{$+$12.5\%} \\
+\textbf{B2} & \textbf{VASP DFT ($q=1$)} & \textbf{1.00} & \textbf{1.00} & \textbf{0.0203} & \textbf{$+$12.2\%} \\
+SQS & VASP DFT       & 0.36  & 0.94  & 0.0218 & $+$5.7\% \\
+SQS & VASP DFT ($q=1$) & 1.00 & 1.00 & 0.0249 & $-$7.5\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{最適なハイブリッドアプローチ}
+以上の分析から、本手法の最適構成は以下のように整理される：
+\begin{itemize}
+  \item \textbf{Vegard基準$V_i$}: King実験値（室温、安定構造）
+  \item \textbf{$\Omega_\text{sf}$参照体積}: VASP DFT体積（GGA-PBE、B2/L1$_2$同種ペア）
+  \item \textbf{$\Omega_\text{sf}$計算}: DFT二元系体積と上記DFT参照体積の比（自己整合）
+\end{itemize}
+この構成により$q \approx 1$（パラメータフリー）で
+RMSE = 0.0203~\AA{}（Vegard比12.2\%改善）を達成する。
+King $V_i$は正確なVegardベースラインを提供し、
+DFT自己整合$\Omega_\text{sf}$はGGA系統誤差が相殺された
+正しいスケールの体積偏差補正を提供する。
+両者の組み合わせにより、理論的自己整合性と実用的精度を
+両立するフレームワークが完成する。
 
 
 \subsection{SQS構造による$\Omega_\text{sf}$の改善}
@@ -2094,9 +2141,12 @@ Special Quasi-random Structure (SQS)\cite{Zunger1990}は
 有限超格子で$\alpha \approx 0$を実現する原子配列であり、
 無秩序固溶体の代理構造として広く用いられる。
 本研究では$2\times2\times2$ BCC超格子（16原子、A$_8$B$_8$組成）を用い、
-高融点9元素の全36二元ペアおよび9同種参照について
+全38元素の703ヘテロペアおよび38同種参照について
 VASP構造最適化を実施した（ENCUT = 520~eV, $12\times12\times12$ $\Gamma$メッシュ,
-ISIF = 3, GGA-PBE）。
+ISIF = 7（体積のみ緩和、立方晶制約）, GGA-PBE）。
+ISIF = 7は立方晶構造を維持するため、BCC HEAの体積抽出に適している。
+741計算中254が収束し（収束率32.6\%）、
+351ヘテロペアの$\Omega_\text{sf}$を取得した（703ペア中50.1\%）。
 
 SQSにおける$\Omega_\text{sf}$は以下で定義する：
 \begin{equation}
@@ -2112,7 +2162,7 @@ SQSにおける$\Omega_\text{sf}$は以下で定義する：
 \end{equation}
 とし、同一計算条件のSQS同種参照を使用する。これにより
 同種ペアの$\Omega_\text{sf} = 0$が定義上保証され、
-異なるデータソース間のバイアスが排除される。
+$\Omega_\text{sf}$の参照体積がDFT自己整合となる。
 
 SQS計算の目的は等モル二元BCC固溶体の\emph{平衡体積}の取得であり、
 当該構造の熱力学的安定性は問題としない。
@@ -2124,236 +2174,174 @@ SQS計算の目的は等モル二元BCC固溶体の\emph{平衡体積}の取得�
 
 \begin{table}[H]
 \centering
-\caption{高融点36ペアの$\Omega_\text{sf}$分布統計（B2 vs SQS）。}
+\caption{$\Omega_\text{sf}$分布統計（B2 vs SQS、VASP DFT参照体積）。
+  B2は703ペア全数、SQSは収束した351ペア。}
 \label{tab:sqs_distribution}
 \begin{tabular}{lcc}
 \toprule
-統計量 & B2 ($\alpha = -1$) & SQS ($\alpha \approx 0$) \\
+統計量 & B2 ($\alpha = -1$, 703ペア) & SQS ($\alpha \approx 0$, 351ペア) \\
 \midrule
-正（膨張）の割合 & 14\% (5/36) & 39\% (14/36) \\
-負（収縮）の割合 & 86\% (31/36) & 61\% (22/36) \\
-範囲 & $[-0.065, +0.017]$ & $[-0.035, +0.031]$ \\
-平均値 & $-0.031$ & $-0.002$ \\
+平均値 & $-0.045$ & $-0.001$ \\
+標準偏差 & $0.070$ & $0.172$ \\
+範囲 & $[-0.293, +0.201]$ & $[-0.559, +0.880]$ \\
+$|\Omega_\text{sf}| > 0.5$ & 0ペア & 12ペア \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-SQSでは正のΩ$_\text{sf}$（膨張方向）が14\%から39\%に増加し、
-平均値もほぼ0に近づく。これはSQSの最近接環境が
-同種・異種混在（$\sim$50\%ずつ）であるため、
-B2で大きく評価されてしまう異種間化学結合の寄与が
-適切に希釈されたことを反映する。
+SQSのΩ$_\text{sf}$分布はB2と質的に異なる特徴を示す。
+平均値はほぼ0（B2: $-0.045$ → SQS: $-0.001$）だが、
+標準偏差がB2の2.5倍（0.070 → 0.172）に増大し、
+$|\Omega_\text{sf}| > 0.5$の外れ値が12ペア存在する
+（Ca-Hf: 0.88, Ag-Si: 0.84等）。
+B2-SQS間のPearson相関は$r = 0.16$と低く、
+符号一致率も72.6\%にとどまる。
+これらはSQS計算の低い収束率（32.6\%）と
+16原子セルの有限サイズ効果に起因する
+ノイズの大きさを反映している。
 
-\subsubsection{BCC HEA予測精度の改善}
+\subsubsection{BCC HEA予測精度の比較}
 
-SQS $\Omega_\text{sf}$をMP/OQMD B2データと統合し
-（高融点ペアはSQS値で置換）、BCC HEA予測精度を再評価した。
-結果を表~\ref{tab:sqs_rmse}に示す。
+B2参照とSQS参照の$\Omega_\text{sf}$によるBCC HEA予測精度を
+表~\ref{tab:sqs_rmse}に示す。
+$\Omega_\text{sf}$参照体積はすべてVASP DFT（自己整合）、
+Vegard基準$V_i$はKing実験値を使用する。
 
 \begin{table}[H]
 \centering
 \caption{$\Omega_\text{sf}$参照構造によるBCC HEA予測精度の比較（64 HEA）。
-  Vegard則をベースラインとし、B2参照（$\alpha = -1$）とSQS参照（$\alpha \approx 0$）の
-  予測精度・校正定数$q_\text{BCC}$・Vegard縮退合金数を比較する。
-  SQS参照（$q = 1$）はBCC RMSEを6.0\%改善し、校正定数を排除する。}
+  $\Omega_\text{sf}$参照体積はVASP DFT、Vegard基準はKing実験値。
+  B2参照がDFT自己整合$\Omega_\text{sf}$により最高精度を達成する。}
 \label{tab:sqs_rmse}
 \footnotesize
-\begin{tabular}{@{}lcccc@{}}
+\begin{tabular}{@{}lccccc@{}}
 \toprule
-モデル & RMSE(全体) & RMSE(BCC) & $q_\text{BCC}$ & 縮退 \\
+モデル & RMSE(全体) & RMSE(BCC) & $q_\text{BCC}$ & $q_\text{FCC}$ & vs Vegard \\
 \midrule
-Vegard & 0.0227~\AA & 0.0317~\AA & --- & --- \\
-B2参照 & 0.0214~\AA & 0.0299~\AA & 0.49 & 0/29 \\
-\textbf{SQS参照 ($q = 1$)} & \textbf{0.0202~\AA} & \textbf{0.0281~\AA} & \textbf{1.00} & \textbf{1/29} \\
+Vegard & 0.0231~\AA & 0.0314~\AA & --- & --- & base \\
+\textbf{B2 (opt $q$)} & \textbf{0.0202~\AA} & \textbf{0.0273~\AA} & \textbf{1.17} & \textbf{0.94} & \textbf{$+$12.5\%} \\
+\textbf{B2 ($q = 1$)} & \textbf{0.0203~\AA} & \textbf{0.0274~\AA} & \textbf{1.00} & \textbf{1.00} & \textbf{$+$12.2\%} \\
+SQS (opt $q$) & 0.0218~\AA & 0.0299~\AA & 0.36 & 0.94 & $+$5.7\% \\
+SQS ($q = 1$)  & 0.0249~\AA & 0.0347~\AA & 1.00 & 1.00 & $-$7.5\% \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-B2参照からSQS参照への変更により以下の改善が得られた：
+DFT自己整合$\Omega_\text{sf}$を用いた場合、B2参照が最高精度を示す：
 \begin{enumerate}
-  \item BCC HEA RMSE: 0.0299 → 0.0281~\AA{}（6.0\%改善）
-  \item 全体RMSE: 0.0214 → 0.0202~\AA{}（5.6\%改善、Vegard比$-$11\%）
-  \item $q_\text{BCC} = 1$を採用：校正定数の排除によりモデルが簡素化
-  \item FCC RMSE: 0.0096~\AA{}で不変（SQS置換はBCCのみ）
+  \item B2 ($q = 1$): RMSE = 0.0203~\AA{}（Vegard比12.2\%改善）、
+    校正定数なしで最高精度を達成
+  \item SQS (opt $q$): RMSE = 0.0218~\AA{}（Vegard比5.7\%改善）、
+    B2より劣る
+  \item SQS ($q = 1$): RMSE = 0.0249~\AA{}（Vegardより悪化）
 \end{enumerate}
 
-\paragraph{$q_\text{BCC}$の変化の物理的解釈と$q = 1$の採用}
-B2参照で$q_\text{BCC} = 0.49$となる理由は明快である。
-B2構造（$\alpha = -1$）では最近接8原子が全て異種元素であり、
-異種間化学結合の寄与が大きく評価されてしまう。
-その結果、$\Omega_\text{sf}$は系統的に負に偏り（86\%が負）、
-体積収縮が強調される。
-この過大な$|\Omega_\text{sf}|$を補償するため、
-最適化過程で$q_\text{BCC}$が0.49に抑制される
-（$\Omega_\text{sf}$の効果を約半分に減衰）。
-
-一方、SQS（$\alpha \approx 0$）では最近接に同種・異種原子が
-約50\%ずつ含まれ、異種間結合の寄与が実際のランダム固溶体に
-対応する割合まで希釈される。
-その結果、$\Omega_\text{sf}$の絶対値は小さくなり、
-DFT $\Omega_\text{sf}$がそのままHEAに適用可能な状態に近づく。
-実際、$q$を最適化すると$q_\text{BCC} = 1.72$が得られるが、
-$q = 1$（無補正）としても全体RMSEは0.0202~\AA{}と、
-最適$q$の0.0197~\AA{}からわずか0.5~m\AA{}の劣化にとどまる。
-$q_\text{BCC}$の感度解析を表~\ref{tab:q_sensitivity}に示す。
+\paragraph{$q \approx 1$達成の主要因}
+従来、B2参照で$q_\text{BCC} = 0.49$（King参照$\Omega_\text{sf}$）と
+なる原因を、B2の秩序度（$\alpha = -1$）に帰属していた。
+しかし$\Omega_\text{sf}$の参照体積をVASP DFTに変更すると
+$q_\text{BCC} = 1.17$となり（表~\ref{tab:omega_ref_comparison}）、
+$q = 1$でもRMSE = 0.0203~\AA{}（Vegard比12.2\%改善）を達成する。
 
 \begin{table}[H]
 \centering
-\caption{SQS参照における$q_\text{BCC}$の感度解析。
-  $q = 1.0$から2.0の広い範囲でRMSEはほぼフラットであり、
-  校正定数$q$を排除して$q = 1$を採用することが正当化される。}
+\caption{B2参照・DFT自己整合$\Omega_\text{sf}$における$q_\text{BCC}$感度解析。
+  $q = 0.5$--$2.0$の広い範囲でRMSEはほぼフラットであり、
+  $q = 1$（パラメータフリー）の採用が正当化される。}
 \label{tab:q_sensitivity}
 \footnotesize
 \begin{tabular}{@{}ccc@{}}
 \toprule
 $q_\text{BCC}$ & BCC RMSE (\AA) & 全体 RMSE (\AA) \\
 \midrule
-0 (Vegard) & 0.0317 & 0.0227 \\
-0.49 (B2最適) & 0.0299$^*$ & 0.0214$^*$ \\
-\textbf{1.00 (採用)} & \textbf{0.0281} & \textbf{0.0202} \\
-1.50 & 0.0274 & 0.0197 \\
-1.72 (SQS最適) & 0.0273 & 0.0197 \\
-2.00 & 0.0274 & 0.0198 \\
+0 (Vegard) & 0.0314 & 0.0231 \\
+0.50 & 0.0287 & 0.0215 \\
+\textbf{1.00 (採用)} & \textbf{0.0274} & \textbf{0.0203} \\
+1.17 (最適) & 0.0273 & 0.0202 \\
+1.50 & 0.0274 & 0.0202 \\
+2.00 & 0.0281 & 0.0205 \\
 \bottomrule
 \end{tabular}
-\par\smallskip
-{\scriptsize $^*$B2参照の$\Omega_\text{sf}$を使用。他の行はSQS参照。}
 \end{table}
 
-$q = 1$を採用することで、モデル式から$q$を排除でき、
-$\Omega_\text{sf}$のみでHEA格子定数を予測可能となる。
-これはモデルの簡素性・透明性を大幅に向上させ、
-「SQS参照のDFT体積から算出した$\Omega_\text{sf}$を
-そのまま適用すればよい」という
-明快な予測プロトコルを提供する。
+この結果は$q \neq 1$の主要因に関する解釈を根本的に変更する：
+\begin{itemize}
+  \item 従来の解釈: $q = 0.49$は参照構造の秩序度（B2: $\alpha = -1$）と
+    HEA（$\alpha \approx 0$）の配位環境差を反映する「環境因子」
+  \item 新しい知見: $q \neq 1$は主に$\Omega_\text{sf}$参照体積の不整合
+    （King実験値 vs DFT計算値）に起因するアーティファクト。
+    DFT自己整合参照を用いればB2（$\alpha = -1$）でも$q \approx 1$
+\end{itemize}
 
-\paragraph{参照構造とHEA格子定数予測の本質的関係}
-本結果は、$\Omega_\text{sf}$の物理的意味と
-HEA格子定数予測精度の間に密接な関係があることを実証する。
-B2参照では秩序度$\alpha = -1$の体積偏差を$q = 0.49$で
-無理にスケールダウンして$\alpha \approx 0$の体積偏差に変換しており、
-この変換は元素ペアごとに異なる非線形性を持つため
-系統誤差が残る。
-SQS参照では$\alpha \approx 0$の体積偏差を直接取得するため、
-$q = 1$（無補正）で十分な精度が得られる。
-すなわち、\textbf{参照構造の秩序度とターゲット（HEA）の秩序度の
-一致が予測精度を支配する}。
+\paragraph{SQSが精度で劣る原因}
+SQS参照はDFT自己整合$\Omega_\text{sf}$を用いても
+B2参照を下回る（RMSE: 0.0218 vs 0.0202~\AA{}）。
+これは16原子SQSセルに固有のデータ品質の問題に起因する：
+(a)~低い収束率（741計算中254のみ収束: 32.6\%）、
+(b)~$\Omega_\text{sf}$の標準偏差がB2の2.5倍、
+(c)~$|\Omega_\text{sf}| > 0.5$の外れ値12ペア、
+(d)~B2-SQS相関が$r = 0.16$と極めて低い。
+B2は2原子/セルで構造が完全に定義されるため計算精度が高く、
+DFT自己整合$\Omega_\text{sf}$と組み合わせることで最高精度を達成する。
 
-この知見はBCC-SQSに限らず一般化可能であり、
-FCC HEAに対するFCC-SQS、あるいは
-短距離秩序を持つHEAに対する$\alpha \neq 0$のSQSなど、
-ターゲット合金の配位環境に応じた参照構造の選択が
-予測精度の体系的向上に繋がることを示唆する。
-
-なお、B2参照では$q_\text{BCC} = 0.49$でBCC RMSE = 0.0299~\AA{}に
-留まるのに対し（表~\ref{tab:q_shift}）、SQS参照で$q = 1$を採用しても
-0.0281~\AA{}に改善される（表~\ref{tab:q_sensitivity}）。
-Vegard則単体（0.0317~\AA{}）と比較すると、B2参照は5.7\%の改善に
-留まるのに対し、SQS参照（$q = 1$）では11.4\%の改善を達成する。
-
-\paragraph{$q$の環境因子としての解釈と$\alpha$依存性}
-以上の議論から、構造特異的パラメータとしてモデル中に
-$\Omega_\text{sf}$と$q_s$の2つが存在するが、
-これらの役割は本質的に異なる。
+\paragraph{$q$の役割の再定義}
+以上の分析から、$\Omega_\text{sf}$と$q_s$の
+役割は以下のように再定義される。
 $\Omega_\text{sf}(A\text{-}B)$は元素ペア$(A, B)$に固有の化学的寄与
 （サイズ差・化学的親和性に起因する体積偏差）を表す
 \textbf{化学因子}である。
-一方$q_s$は、参照構造の局所配位環境（$\alpha$で特徴づけられる）と
-ターゲットHEAの配位環境（$\alpha \approx 0$）との
-系統的ミスマッチを補正する\textbf{環境因子}である。
+一方$q_s$は、$\Omega_\text{sf}$の参照体積と
+Vegard基準$V_i$のデータソース差異を吸収する
+\textbf{スケーリング因子}である。
+DFT自己整合$\Omega_\text{sf}$を用いれば$q \approx 1$となり、
+$\Omega_\text{sf}$のみでHEA格子定数を予測可能となる。
+「King $V_i$ + DFT自己整合$\Omega_\text{sf}$ + $q = 1$」は
+パラメータフリーの最適予測プロトコルを提供する。
 
-現在得られている2点の$(\alpha, q_\text{opt})$データ——B2（$\alpha = -1, q = 0.49$）と
-SQS（$\alpha \approx 0, q_\text{opt} = 1.72$）——から、
-最も単純な近似として線形関係
-\begin{equation}
-  q_\text{BCC}(\alpha) \approx 1.72 + 1.23\,\alpha
-  \label{eq:q_alpha}
-\end{equation}
-が得られる。ただし前節で示したように、SQS参照では
-$q = 1$としても精度劣化は0.5~m\AA{}にとどまる
-（表~\ref{tab:q_sensitivity}）。
-すなわちSQS（$\alpha \approx 0$）では$q \approx 1$が実質的に成立しており、
-$\Omega_\text{sf}$がそのままHEAに適用可能である。
+\subsubsection{$\Omega_\text{sf}$参照体積変更の物理的意義}
 
-物理的な境界条件を考慮すると
-$q(\alpha)$はシグモイド型の関数形が予想される。
-$\alpha \to -1$（完全秩序）では$\Omega_\text{sf}$が
-極端に大きく評価されるため$q \to 0$に漸近し、
-$\alpha \to 0$（完全ランダム）では$q \to 1$に飽和する：
-\begin{equation}
-  q(\alpha) = \frac{q_\text{max}}{1 + \exp\!\bigl[-k(\alpha - \alpha_0)\bigr]}
-  \label{eq:q_sigmoid}
-\end{equation}
-ここで$q_\text{max}$は飽和値（SQSの結果から$q_\text{max} \approx 1$と推定）、
-$k$は遷移の急峻さ、$\alpha_0$は変曲点を表す。
-$\alpha \approx -0.5$付近の中間的な秩序度を持つSQS構造での
-DFT計算を実施すれば、シグモイド型の検証と
-パラメータ決定が可能となる。
-
-FCC側では現在L1$_2$参照（$\alpha = -1$）の
-$q_\text{FCC} = 0.13$のみがデータ点であり、
-FCC-SQS計算により第2のデータ点が得られれば
-同様の$q_\text{FCC}(\alpha)$関係を定量化できる。
-これは今後の計算課題である。
-
-\subsubsection{個別BCC HEA予測の改善例}
-
-代表的な改善例を以下に示す：
-
-\begin{table}[H]
-\centering
-\caption{SQS導入による個別BCC HEA予測誤差の改善。}
-\label{tab:sqs_individual}
-\footnotesize
-\begin{tabular}{@{}lcrrr@{}}
-\toprule
-合金 & $a_\text{exp}$ & $\Delta_\text{B2}$ & $\Delta_\text{SQS}$ & 改善 \\
- & (\AA) & (\AA) & (\AA) & (\%) \\
-\midrule
-NbMoTaW   & 3.2134 & $+$0.0130 & $+$0.0029 & 78 \\
-HfNbTiVZr & 3.3770 & $-$0.0145 & $-$0.0048 & 67 \\
-NbMoTaW   & 3.2220 & $+$0.0085 & $-$0.0017 & 80 \\
-AlCrFeMoV & 2.9800 & $+$0.0089 & $+$0.0026 & 71 \\
-HfNbTiZr  & 3.4380 & $-$0.0008 & $+$0.0063 & --- \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-高融点BCC HEA（NbMoTaW, HfNbTiVZrなど）で顕著な改善が見られ、
-特にNbMoTaW系では誤差が78\%低減した。
-一方、HfNbTiZrのように既にB2モデルで良好な予測を示す合金では
-改善は限定的である。全体として29合金中21合金で
-誤差の絶対値が低減した。
+DFT自己整合$\Omega_\text{sf}$で$q \approx 1$が達成される
+メカニズムを具体例で示す。Fe-Crペアの場合：
+\begin{itemize}
+  \item King参照:
+    $V_\text{Vegard} = (11.776 + 12.008)/2 = 11.892$~\AA$^3$、
+    $\Omega_\text{sf} = (11.21 - 11.892)/11.892 = -0.057$
+  \item VASP DFT参照:
+    $V_\text{Vegard} = (11.312 + 11.415)/2 = 11.364$~\AA$^3$、
+    $\Omega_\text{sf} = (11.21 - 11.364)/11.364 = -0.014$
+\end{itemize}
+VASP参照では$\Omega_\text{sf}$の絶対値が約1/4に縮小する。
+これはDFT計算値間でGGA系統誤差（Fe: $-4.1$\%, Cr: $-5.0$\%）が
+相殺されるためであり、結果として$q = 1$で
+適切なスケールの体積偏差補正が得られる。
 
 \subsubsection{物理的意義と今後の展望}
 
-B2とSQSの$\Omega_\text{sf}$の差異は、配位環境の化学秩序が
-二元系体積偏差に与える影響を直接的に示している。
-$\alpha = -1$（全異種近接）→$\alpha \approx 0$（ランダム）の
-遷移に伴い、異種間化学結合による収縮効果が希釈され、
-$\Omega_\text{sf}$分布は負の偏りから正負バランスへと移行する。
+本研究の中心的知見は、$\Omega_\text{sf}$の参照体積を
+DFT自己整合とすることで$q \approx 1$（パラメータフリー）を
+達成した点にある。これにより、
+「King $V_i$で正確なVegardベースラインを確保し、
+DFT自己整合$\Omega_\text{sf}$で体積偏差補正を行う」
+というシンプルかつ物理的に透明な予測フレームワークが完成した。
+
+B2参照（$\alpha = -1$）でも$q \approx 1$が達成されるという事実は、
+$q$の物理的意味に関する従来の解釈——秩序度$\alpha$と
+HEA配位環境の差——が主要因ではないことを示す。
+$q \neq 1$の根本原因は$\Omega_\text{sf}$参照体積の
+データソース不整合であり、B2構造の秩序度は二次的効果にとどまる。
+
+SQS計算は当初の仮説（$\alpha \approx 0$でq→1）を
+直接的には支持しなかった。16原子セルの有限サイズ効果と
+低い収束率（32.6\%）が$\Omega_\text{sf}$のノイズを増大させ、
+B2参照を上回る精度は得られていない。
+ただし、SQSの収束率改善（NSW増加）や
+より大きなセルサイズでの計算が実現すれば、
+参照構造の秩序度効果を分離して評価できる可能性がある。
 
 VASP B2/L1$_2$データの統合により、B2・L1$_2$ともに
 703/703ペア（100\%）の完全カバレッジを達成した。
 38元素の全ヘテロペアについてDFT $\Omega_\text{sf}$が利用可能であり、
 機械学習による欠損値補完が不要となった。
-SQS全元素拡張と組み合わせた予測精度の向上が期待される。
-
-なお、FCC側では同様のSQS置換（L1$_2$ → FCC-SQS）の
-必要性は現時点では低い。$q_\text{FCC} \approx 0.13$は
-L1$_2$の$\Omega_\text{sf}$がほぼ使われていないことを意味し、
-FCC HEA RMSE = 0.0096~\AA{}は推定ノイズフロア以下にある。
-これはFCC HEAの構成元素（3$d$遷移金属が支配的）の
-原子サイズ差が小さく、Vegard則自体の近似精度が高いためである。
-ただし、L1$_2$の化学量論（3:1）とFCC固溶体（ランダム）の
-配位環境の差がFCC-SQS計算により定量化できれば、
-BCC-SQSの成功と合わせて参照構造と秩序度の関係を
-体系的に理解する基盤となる。
-
-将来的には$\alpha$の値を系統的に変化させた計算
-（$\alpha = -1, 0, +1$）により、
-SROと体積偏差の普遍的関係を明らかにし、
-SRO-$\Omega_\text{sf}$結合モデルの構築が考えられる。
 
 
 %% =====================================================================
@@ -2371,12 +2359,12 @@ DFT体積サイズファクターの元素別加法分解に基づく、
     これにより等モル・非等モルを問わず、任意組成のHEA格子定数を
     $a = (n_\text{auc}\sum c_i V_\text{eff})^{1/3}$で予測可能となった。
 
-  \item \textbf{予測精度}:
-    B2参照での64 HEA全体RMSE = 0.0214~\AA{}（Vegard比5.7\%改善）。
-    BCC参照構造をSQSに変更し$q_\text{BCC} = 1$を採用することで、
-    BCC HEAは0.0299 → 0.0281~\AA{}（6.0\%改善）、
-    全体RMSE = 0.0202~\AA{}（Vegard比11\%改善）。
-    校正定数$q$を排除し、$\Omega_\text{sf}$のみで予測可能となる。FCC HEAは0.0096~\AA{}。
+  \item \textbf{予測精度とパラメータフリー予測}:
+    $\Omega_\text{sf}$の参照体積をDFT自己整合（VASP B2同種体積）とすることで、
+    B2参照（$\alpha = -1$）でも$q_\text{BCC} \approx 1.17$、$q_\text{FCC} \approx 0.94$を達成。
+    $q = 1$（パラメータフリー）で全体RMSE = 0.0203~\AA{}（Vegard比12.2\%改善）。
+    King実験値$V_i$で正確なVegardベースラインを確保しつつ、
+    DFT自己整合$\Omega_\text{sf}$で校正定数なしの体積偏差補正を実現した。
 
   \item \textbf{DFTデータカバレッジの完全化}:
     MP/OQMD/VASPの3ソース統合により1,461元素ペア（758 B2 + 703 L1$_2$）を取得し、
@@ -2404,15 +2392,13 @@ DFT体積サイズファクターの元素別加法分解に基づく、
 
 \paragraph{既存手法に対する改善}
 表~\ref{tab:method_comparison}に本手法と既存手法の比較を示す。
-Vegard則は構造・化学結合効果を無視するためRMSE = 0.0221~\AA{}に留まる。
+Vegard則は構造・化学結合効果を無視するためRMSE = 0.0231~\AA{}に留まる。
 Alonsoモデルは実験$\Omega_\text{sf}$を使用し0.0229~\AA{}を達成したが、
 $\Omega_\text{sf}$データの不足するペアでは予測不能となる。
 本手法はDFTデータの網羅性（8,521化合物、MP/OQMD/VASP統合）と
 構造特異性（B2/L1$_2$分離）、
-およびSQSによるBCC $\Omega_\text{sf}$の改善により、
-RMSE = 0.0202~\AA{}（Vegard比$-$11\%）を達成した。
-さらにSQS参照では$q_\text{BCC} = 1$を採用でき、
-校正定数なしで$\Omega_\text{sf}$のみによる予測が可能となった。
+およびDFT自己整合$\Omega_\text{sf}$参照体積の導入により、
+$q = 1$（パラメータフリー）でRMSE = 0.0203~\AA{}（Vegard比12.2\%改善）を達成した。
 VASP統合による全HEAペアのDFTカバレッジ達成（BCC 59/59、FCC 42/42）は、
 機械学習による補間を不要とし、モデルの頑健性を大幅に向上させた。
 さらに加法分解により38パラメータのみで同等精度を維持し、
@@ -2425,13 +2411,13 @@ VASP統合による全HEAペアのDFTカバレッジ達成（BCC 59/59、FCC 42/
 \footnotesize
 \begin{tabular}{@{}lrccl@{}}
 \toprule
-手法 & $N_\text{pair}$ & RMSE (\AA) & 構造 & 組成 \\
+手法 & $N_\text{pair}$ & RMSE (\AA) & $q$ & 組成 \\
 \midrule
-Vegard~\cite{Vegard1921}      & 38  & 0.0221 & --- & 任意 \\
+Vegard~\cite{Vegard1921}      & 38  & 0.0231 & --- & 任意 \\
 Alonso~\cite{Alonso2021}      & $\sim$200 & 0.0229 & --- & 限定 \\
-Core\~{n}o-Alonso~\cite{CorenoAlonso2004} & $\sim$150 & ---$^\dagger$ & B2/L1$_2$ & 限定 \\
-本手法(B2参照)           & 1,461 & 0.0214 & B2/L1$_2$ & 任意 \\
-\textbf{本手法(SQS参照, $q=1$)}    & 1,461+36 & \textbf{0.0202} & \textbf{B2/L1$_2$/SQS} & 任意 \\
+Core\~{n}o-Alonso~\cite{CorenoAlonso2004} & $\sim$150 & ---$^\dagger$ & --- & 限定 \\
+本手法(King参照$\Omega_\text{sf}$) & 1,461 & 0.0217 & 0.49/0.17 & 任意 \\
+\textbf{本手法(DFT自己整合$\Omega_\text{sf}$, $q=1$)} & 1,461 & \textbf{0.0203} & \textbf{1.00} & 任意 \\
 \bottomrule
 \end{tabular}
 \par\smallskip
@@ -2453,14 +2439,12 @@ $V_\text{eff}(i) = V_i\bigl[1 + q_s \sum_{j\ne i} c_j
 組成最適化による合金設計に直接活用できる。
 
 \paragraph{限界}
-本フレームワークの主要な限界は：(a)~$q$が構造ごとに
-単一の定数であり、組成依存性を持たないこと、
-(b)~B2秩序構造の$\Omega_\text{sf}$がランダム固溶体の体積偏差を
-系統的に大きく評価してしまう点については、SQS計算の導入により
-BCC HEAでRMSE 6.0\%改善、Vegard縮退を22/29 → 1/29に解消した
-（\ref{sec:sqs_improvement}節）、
-(c)~加法分解が$\Omega_\text{sf}$分散の約35\%を失うこと、
-(d)~HCP HEAは二元系参照構造（A3型）のDFTデータが不足するため
+本フレームワークの主要な限界は：
+(a)~加法分解が$\Omega_\text{sf}$分散の約35\%を失うこと、
+(b)~SQS 16原子セルでは収束率が低く（32.6\%）、
+$\Omega_\text{sf}$のノイズが大きいため、
+参照構造の秩序度効果の正確な評価が困難であること、
+(c)~HCP HEAは二元系参照構造（A3型）のDFTデータが不足するため
 現時点で対応していないこと、である。
 
 今後の課題として以下が挙げられる：
@@ -2470,23 +2454,13 @@ BCC HEAでRMSE 6.0\%改善、Vegard縮退を22/29 → 1/29に解消した
   \item \textbf{温度補正}: DFTは0~Kの格子定数を与えるが、実験値は
     室温である。Debye--Gr\"uneisenモデル等による温度依存補正の
     導入が、特にBCC HEAの精度改善に寄与する可能性がある。
-  \item \textbf{BCC-SQS全元素拡張}: 現在9元素（36ペア）のBCC-SQS計算を
-    全38元素（703ペア）に拡大し、BCC HEA予測のさらなる改善を図る。
-    B2参照での$q_\text{BCC} = 0.49$（表~\ref{tab:q_shift}）は、
-    SQS全元素拡張の必要性を定量的に裏付ける。
-  \item \textbf{FCC-SQS計算の検討}: FCC HEAでは$q_\text{FCC} \approx 0.13$と
-    L1$_2$の$\Omega_\text{sf}$がほぼ使われておらず、
-    FCC-SQSの優先度はBCC-SQSより低い。ただし、L1$_2$（3:1化学量論）と
-    FCC固溶体（ランダム）の配位環境の差を定量化し、
-    BCC-SQSの成功と合わせて参照構造と秩序度の体系的理解を目指す。
-    また$\alpha$を系統的に変化させた計算により、
-    SRO-$\Omega_\text{sf}$の定量的関係を確立する。
+  \item \textbf{SQS計算の改善}: 現在のISIF=7（NSW=100）では
+    741計算中254のみ収束（32.6\%）。NSW増加（200--300）と
+    より大きなセルサイズ（32--64原子）でSQSデータ品質を改善し、
+    参照構造秩序度の二次的効果を定量化する。
   \item \textbf{HCP HEAへの拡張}: A3型（HCP）二元系化合物のDFTデータ
     を整備し、HCP HEAの格子パラメータ（$a$および$c/a$比）予測への
     拡張。HCP構造では$c/a$比の非理想性が追加の自由度となる。
-  \item \textbf{組成依存$q$}: 現在の構造ごとの定数$q$を
-    組成依存関数$q(c_1, \ldots, c_n)$に拡張することで、
-    BCC HEA精度の改善が期待される。
 \end{enumerate}
 
 
@@ -2701,27 +2675,26 @@ $q$を最適化してもRMSE = 0.0258~\AA{}にとどまり、
 741ペアの情報は既に703個の$\Omega_\text{sf}(i,j)$として
 全て使用されており、新たな情報は追加されない。
 
-\subsection{DFT体積が劣る根本原因}
+\subsection{DFT体積の役割分離: $V_i$には有害、$\Omega_\text{sf}$には有益}
 \label{sec:appendix_dft_limitation}
 
-DFT（GGA-PBE）体積がKing実験値を超えられない根本原因は、
-GGA交換相関近似の元素依存系統誤差にある。
-Wang~\cite{Wang2004lattice}の安定構造体積とKing値の比較
-（表~\ref{tab:king_vs_vasp_bcc}）では、
-Au: $+7.1$\%、Pd: $+6.5$\%（GGA過大評価）、
-Fe: $-4.6$\%、Cr: $-3.9$\%（磁性元素の過小評価）など、
-元素ごとにばらつく誤差が観察される。
+DFT（GGA-PBE）体積のVegard基準$V_i$への影響と
+$\Omega_\text{sf}$参照体積への影響は本質的に異なる。
 
-この元素依存誤差はVegard則の線形補間精度を直接劣化させる。
-一方、$\Omega_\text{sf}$は体積偏差の\emph{比}として定義される
-（式~\eqref{eq:omega_def}）ため、GGA誤差が分子・分母で
-部分的に相殺される。この非対称性が、King $V_i$ + DFT $\Omega_\text{sf}$
-という混合アプローチの優位性の物理的根拠である。
+\paragraph{$V_i$へのDFT体積適用（有害）}
+GGA交換相関近似の元素依存系統誤差（Au: $+7.1$\%, Fe: $-4.6$\%）が
+Vegard則の線形補間精度を直接劣化させる。
+加えて、HEA格子定数の実験値は室温測定であるのに対しDFT体積は0~K値であり、
+温度整合性もKing実験値が優れる。
 
-加えて、HEA格子定数の実験値は室温（$\sim$300~K）測定であるのに対し、
-DFT体積は0~Kの値であり、熱膨張分の系統的差異が存在する。
-King体積は室温測定値であるため、Vegard基準線との温度整合性が
-DFTより優れている。
+\paragraph{$\Omega_\text{sf}$参照体積へのDFT体積適用（有益）}
+$\Omega_\text{sf} = (V_\text{DFT} - V_\text{Vegard})/V_\text{Vegard}$
+の$V_\text{Vegard}$にDFT体積を使用すると、
+分子・分母が同一のGGA計算に基づくため系統誤差が相殺される。
+その結果、$\Omega_\text{sf}$のスケールが正しくなり
+$q \approx 1$を達成する（表~\ref{tab:omega_ref_comparison}）。
+この非対称性が、King $V_i$ + DFT自己整合$\Omega_\text{sf}$ + $q = 1$
+というパラメータフリー予測フレームワークの物理的根拠である。
 
 \subsection{King実験値の妥当性}
 

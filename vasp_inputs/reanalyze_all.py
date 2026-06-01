@@ -61,8 +61,11 @@ ALL_ELEMENTS = sorted([
     'Ta', 'Tb', 'Ti', 'V',  'W',  'Y',  'Zn', 'Zr',
 ])
 
-# King atomic volumes (Å³) — pure-element BCC/FCC DFT volumes
-KING_ATOMIC_VOLUMES = {
+# VASP GGA-PBE DFT atomic volumes (Å³) from B2 homo-pair structures.
+# These are NOT King (1966) experimental values — they are DFT-computed
+# volumes from the same VASP B2 calculations used for Ω_sf, providing
+# DFT self-consistent reference for the Ω_sf ratio (GGA errors cancel).
+VASP_ATOMIC_VOLUMES = {
     "Ag": 17.840, "Al": 16.602, "Au": 17.798, "Be": 8.105,
     "Ca": 42.025, "Co": 10.994, "Cr": 11.415, "Cu": 12.024,
     "Dy": 31.744, "Er": 31.063, "Fe": 11.312, "Ge": 19.243,
@@ -285,12 +288,12 @@ def compute_omega_sf_b2(results):
     for r in results:
         elA, elB = r['element_A'], r['element_B']
         a = r['lattice_constant']
-        if elA not in KING_ATOMIC_VOLUMES or elB not in KING_ATOMIC_VOLUMES:
+        if elA not in VASP_ATOMIC_VOLUMES or elB not in VASP_ATOMIC_VOLUMES:
             continue
         if elA == elB:
             continue
-        vA = KING_ATOMIC_VOLUMES[elA]
-        vB = KING_ATOMIC_VOLUMES[elB]
+        vA = VASP_ATOMIC_VOLUMES[elA]
+        vB = VASP_ATOMIC_VOLUMES[elB]
         v_actual = a**3 / 2  # Z=2 for B2
         v_vegard = (vA + vB) / 2
         omega = (v_actual - v_vegard) / v_vegard
@@ -310,12 +313,12 @@ def compute_omega_sf_l12(results):
         elA, elB = r['element_A'], r['element_B']
         cA, cB = int(r['count_A']), int(r['count_B'])
         a = r['lattice_constant']
-        if elA not in KING_ATOMIC_VOLUMES or elB not in KING_ATOMIC_VOLUMES:
+        if elA not in VASP_ATOMIC_VOLUMES or elB not in VASP_ATOMIC_VOLUMES:
             continue
         if elA == elB:
             continue
-        vA = KING_ATOMIC_VOLUMES[elA]
-        vB = KING_ATOMIC_VOLUMES[elB]
+        vA = VASP_ATOMIC_VOLUMES[elA]
+        vB = VASP_ATOMIC_VOLUMES[elB]
         total = cA + cB
         v_actual = a**3 / 4  # Z=4 for L12
         v_vegard = (cA * vA + cB * vB) / total
@@ -335,12 +338,12 @@ def compute_omega_sf_sqs(results):
     for r in results:
         elA, elB = r['element_A'], r['element_B']
         a = r['lattice_constant']
-        if elA not in KING_ATOMIC_VOLUMES or elB not in KING_ATOMIC_VOLUMES:
+        if elA not in VASP_ATOMIC_VOLUMES or elB not in VASP_ATOMIC_VOLUMES:
             continue
         if elA == elB:
             continue
-        vA = KING_ATOMIC_VOLUMES[elA]
-        vB = KING_ATOMIC_VOLUMES[elB]
+        vA = VASP_ATOMIC_VOLUMES[elA]
+        vB = VASP_ATOMIC_VOLUMES[elB]
         # SQS 2x2x2 BCC supercell: 16 atoms, a_supercell = 2 * a_bcc
         # V_supercell = a_sup^3; V_per_atom = a_sup^3 / 16
         # Alternatively: a_bcc = a_sup / 2, V_per_atom = a_bcc^3 / 2
@@ -374,9 +377,9 @@ def predict_hea_lattice(comp, struct, omega_sf, q=1.0):
     v_eff_total = 0.0
     for i, eli in enumerate(elements):
         ci = comp[eli]
-        if eli not in KING_ATOMIC_VOLUMES:
+        if eli not in VASP_ATOMIC_VOLUMES:
             return None
-        vi = KING_ATOMIC_VOLUMES[eli]
+        vi = VASP_ATOMIC_VOLUMES[eli]
 
         correction = 0.0
         for j, elj in enumerate(elements):
