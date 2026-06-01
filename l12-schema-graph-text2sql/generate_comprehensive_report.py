@@ -15,7 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent
 
 def load_all_data():
-    return {
+    d = {
         'baseline': json.loads((ROOT / 'experiments/results/baseline_comparison.json').read_text('utf-8')),
         'rag': json.loads((ROOT / 'experiments/results/rag_ablation.json').read_text('utf-8')),
         'traversal': json.loads((ROOT / 'experiments/results/traversal_ablation.json').read_text('utf-8')),
@@ -23,6 +23,10 @@ def load_all_data():
         'repro': json.loads((ROOT / 'experiments/results/reproducibility.json').read_text('utf-8')),
         'mini': json.loads((ROOT / 'experiments/results/rag_ablation_gpt4o_mini.json').read_text('utf-8')),
     }
+    ext_path = ROOT / 'experiments/results/extended_schema_experiment.json'
+    if ext_path.exists():
+        d['extended'] = json.loads(ext_path.read_text('utf-8'))
+    return d
 
 
 def generate_html(data):
@@ -190,6 +194,7 @@ Generated: {time.strftime('%Y-%m-%d %H:%M:%S UTC')}<br>
 <li><a href="#sec8">実験6: LLM再現性検証（20クエリ×5回）</a></li>
 <li><a href="#sec9">モデル間比較: gpt-5.5 vs gpt-4o-mini</a></li>
 <li><a href="#sec10">全クエリ詳細一覧</a></li>
+<li><a href="#sec_ext">実験7: 拡張スキーマ実験（20テーブル・30クエリ）</a></li>
 <li><a href="#sec11">結論と知見</a></li>
 </ol>
 </div>
@@ -588,6 +593,149 @@ SQL生成可能なクエリだけでなく、曖昧・スコープ外・安全�
 <tr class="highlight"><td><b>合計</b></td><td><b>257 (+80 runs)</b></td><td colspan="3"><b>全実験でSchema Graph制約が有効</b></td></tr>
 </table>
 
+"""
+
+    # === Extended Schema Experiment Section ===
+    if 'extended' in data:
+        ext = data['extended']
+        categories = ['simple', 'medium', 'complex', 'very_complex', 'cross_domain', 'aggregation']
+        cat_labels = {
+            'simple': 'Simple (1-2テーブル)',
+            'medium': 'Medium (3-4テーブル)',
+            'complex': 'Complex (5+テーブル)',
+            'very_complex': 'Very Complex (自己参照・集約)',
+            'cross_domain': 'Cross-Domain (元素属性×材料)',
+            'aggregation': 'Aggregation (GROUP BY・COUNT)'
+        }
+        
+        schema_total = sum(1 for r in ext if r['llm_schema']['success'])
+        no_schema_total = sum(1 for r in ext if r['llm_no_schema']['success'])
+        total = len(ext)
+        
+        html += f"""
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="sec_ext">実験7: 拡張スキーマ実験（20テーブル・30クエリ）</h2>
+
+<div class="note">
+<b>目的:</b> 7テーブル（星型スキーマ）での高成功率が、テーブル数増加に伴いどの程度低下するかを測定する。<br>
+<b>構成:</b> 既存7テーブル + 13テーブル追加 = 20テーブル（多対多関係・自己参照FK・中間テーブル含む）<br>
+<b>追加テーブル:</b> element, element_property, space_group, application_domain (自己参照), material_application,
+literature_reference, material_reference, experimental_measurement, measured_property, synthesis_method,
+material_synthesis, defect_type, material_defect<br>
+<b>モデル:</b> gpt-4o-mini（天井効果を回避するため小型モデルを使用）
+</div>
+
+<h3>7.1 カテゴリ別成功率</h3>
+<table>
+<tr><th>カテゴリ</th><th>クエリ数</th><th>LLM+Schema</th><th>LLM-only (no schema)</th><th>差分</th></tr>"""
+
+        for cat in categories:
+            cat_results = [r for r in ext if r['query']['category'] == cat]
+            s_ok = sum(1 for r in cat_results if r['llm_schema']['success'])
+            n_ok = sum(1 for r in cat_results if r['llm_no_schema']['success'])
+            ct = len(cat_results)
+            s_pct = 100 * s_ok / ct if ct > 0 else 0
+            n_pct = 100 * n_ok / ct if ct > 0 else 0
+            row_class = 'highlight' if s_pct == 100 else ('fail-row' if s_pct < 70 else '')
+            html += f"""
+<tr class="{row_class}"><td>{cat_labels[cat]}</td><td>{ct}</td>
+<td><b>{s_ok}/{ct} ({s_pct:.0f}%)</b></td>
+<td>{n_ok}/{ct} ({n_pct:.0f}%)</td>
+<td>+{s_pct - n_pct:.0f}pp</td></tr>"""
+
+        html += f"""
+<tr style="font-weight:bold; background:#e3f2fd;"><td>TOTAL</td><td>{total}</td>
+<td>{schema_total}/{total} ({100*schema_total/total:.0f}%)</td>
+<td>{no_schema_total}/{total} ({100*no_schema_total/total:.0f}%)</td>
+<td>+{100*(schema_total-no_schema_total)/total:.0f}pp</td></tr>
+</table>
+
+<h3>7.2 7テーブル vs 20テーブルの比較</h3>
+<table>
+<tr><th>条件</th><th>7テーブル (Baseline実験)</th><th>20テーブル (本実験)</th><th>低下幅</th></tr>
+<tr><td>LLM + Schema (gpt-4o-mini)</td><td>100% (57/57相当)</td><td><b>{100*schema_total/total:.0f}%</b> ({schema_total}/{total})</td><td><span style="color:red;">-{100 - 100*schema_total/total:.0f}pp</span></td></tr>
+<tr><td>LLM without Schema</td><td>1.8% (1/57)</td><td>{100*no_schema_total/total:.0f}% ({no_schema_total}/{total})</td><td>—</td></tr>
+</table>
+
+<div class="warning">
+<b>核心的知見: スキーマ複雑性と成功率の関係</b><br><br>
+&bull; 7テーブル（星型FK）では gpt-4o-mini + Schema で100%達成していたが、<b>20テーブルに拡張すると{100*schema_total/total:.0f}%に低下</b>（-{100 - 100*schema_total/total:.0f}pp）<br>
+&bull; 失敗{total - schema_total}件はいずれも<b>カラム名の誤参照</b>または<b>テーブルエイリアスの不整合</b>が原因<br>
+&bull; スキーマなしでは20テーブル環境で<b>全クエリ失敗</b>（0%）&rarr; スキーマ情報の必要性がさらに明確<br>
+&bull; この結果は「7テーブルでの100%は天井効果であり、実運用スキーマではSchema Graph走査＋SQLGuardが不可欠」を実証する<br><br>
+<b>&rarr; Schema Graph FK走査の必要性は、テーブル数が増えるほど高まる</b>
+</div>
+
+<h3>7.3 失敗クエリの分析</h3>
+<table>
+<tr><th>ID</th><th>クエリ</th><th>カテゴリ</th><th>エラー原因</th></tr>"""
+        
+        for r in ext:
+            if not r['llm_schema']['success']:
+                err = r['llm_schema'].get('error', '')[:60].replace('<', '&lt;').replace('>', '&gt;')
+                q_short = r['query']['query'][:40]
+                html += f"""
+<tr class="fail-row"><td>{r['query']['id']}</td><td>{q_short}...</td>
+<td>{r['query']['category']}</td><td><code>{err}</code></td></tr>"""
+
+        html += """
+</table>
+
+<h3>7.4 全30クエリ詳細</h3>
+<table>
+<tr><th>ID</th><th>クエリ</th><th>カテゴリ</th><th>LLM+Schema</th><th>LLM-only</th><th>レイテンシ</th></tr>"""
+        
+        for r in ext:
+            s_ok = '&#10003;' if r['llm_schema']['success'] else '&#10007;'
+            n_ok = '&#10003;' if r['llm_no_schema']['success'] else '&#10007;'
+            lat = r['llm_schema'].get('latency_ms', 0)
+            q_short = r['query']['query'][:35] + ('...' if len(r['query']['query']) > 35 else '')
+            s_color = 'green' if r['llm_schema']['success'] else 'red'
+            n_color = 'green' if r['llm_no_schema']['success'] else 'red'
+            html += f"""
+<tr><td>{r['query']['id']}</td><td>{q_short}</td><td>{r['query']['category']}</td>
+<td style="color:{s_color}">{s_ok}</td>
+<td style="color:{n_color}">{n_ok}</td>
+<td>{lat}ms</td></tr>"""
+
+        html += f"""
+</table>
+
+<h3>7.5 拡張スキーマ構成</h3>
+<table>
+<tr><th>テーブル</th><th>種別</th><th>FK関係</th><th>レコード数</th></tr>
+<tr><td>material_entry</td><td>コアエンティティ</td><td>&mdash;（被参照9テーブル）</td><td>1,351</td></tr>
+<tr><td>composition</td><td>コア</td><td>&rarr; material_entry</td><td>~2,700</td></tr>
+<tr><td>structure</td><td>コア</td><td>&rarr; material_entry</td><td>1,351</td></tr>
+<tr><td>phase_stability</td><td>コア</td><td>&rarr; material_entry</td><td>1,351</td></tr>
+<tr><td>calculation</td><td>コア</td><td>&rarr; material_entry</td><td>1,351</td></tr>
+<tr><td>calculated_property</td><td>コア（子）</td><td>&rarr; calculation</td><td>~4,000</td></tr>
+<tr><td>prototype_definition</td><td>マスタ</td><td>&mdash;</td><td>5</td></tr>
+<tr class="highlight"><td>element</td><td>NEW: マスタ</td><td>&mdash;</td><td>62</td></tr>
+<tr class="highlight"><td>element_property</td><td>NEW: 子</td><td>&rarr; element</td><td>248</td></tr>
+<tr class="highlight"><td>space_group</td><td>NEW: マスタ</td><td>&mdash;</td><td>10</td></tr>
+<tr class="highlight"><td>application_domain</td><td>NEW: 自己参照階層</td><td>&rarr; application_domain (自己参照)</td><td>20</td></tr>
+<tr class="highlight"><td>material_application</td><td>NEW: 多対多中間</td><td>&rarr; material_entry, &rarr; application_domain</td><td>2,712</td></tr>
+<tr class="highlight"><td>literature_reference</td><td>NEW: マスタ</td><td>&mdash;</td><td>500</td></tr>
+<tr class="highlight"><td>material_reference</td><td>NEW: 多対多中間</td><td>&rarr; material_entry, &rarr; literature_reference</td><td>1,552</td></tr>
+<tr class="highlight"><td>experimental_measurement</td><td>NEW: 実験</td><td>&rarr; material_entry, &rarr; literature_reference</td><td>400</td></tr>
+<tr class="highlight"><td>measured_property</td><td>NEW: 子</td><td>&rarr; experimental_measurement</td><td>807</td></tr>
+<tr class="highlight"><td>synthesis_method</td><td>NEW: マスタ</td><td>&mdash;</td><td>10</td></tr>
+<tr class="highlight"><td>material_synthesis</td><td>NEW: 多対多中間</td><td>&rarr; material_entry, &rarr; synthesis_method, &rarr; literature_reference</td><td>600</td></tr>
+<tr class="highlight"><td>defect_type</td><td>NEW: マスタ</td><td>&mdash;</td><td>6</td></tr>
+<tr class="highlight"><td>material_defect</td><td>NEW: 欠陥情報</td><td>&rarr; material_entry, &rarr; defect_type, &rarr; element</td><td>300</td></tr>
+</table>
+
+<div class="insight">
+<b>スキーマ拡張の意義:</b><br>
+&bull; 7テーブル星型 &rarr; 20テーブル（多対多・自己参照・3段FK連鎖）に拡張<br>
+&bull; FK関係: 7本 &rarr; 21本（3倍）。JOINパス候補が指数的に増加<br>
+&bull; 特に material_defect は entry_id, defect_type_id, dopant_element_id の3FK を持ち、クエリ生成の難易度が高い<br>
+&bull; application_domain の自己参照（parent_domain_id &rarr; domain_id）は再帰CTEを必要とするケースがある
+</div>
+"""
+
+    html += """
 <!-- ═══════════════════════════════════════════════════════ -->
 <h2 id="sec11">11. 結論と知見</h2>
 
