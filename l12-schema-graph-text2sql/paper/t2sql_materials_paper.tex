@@ -97,8 +97,9 @@ RAGアブレーション（4条件×50クエリ）、LLM再現性テスト（20�
 包括的実験を実施した。
 Graph Traversalアブレーションでは、
 7テーブルでNaive条件の不要JOIN率58\%に対しSchema Graph走査条件は不要JOIN 0\%を達成した。
-さらに30テーブル・150クエリの拡張検証では、走査なし成功率86.7\%に対し
-走査あり\textbf{94.7\%}（+8.0pp）に向上し、
+さらに30テーブル・150クエリの拡張検証（gpt-4o-mini使用）では、走査なし成功率86.7\%に対し
+走査あり\textbf{94.7\%}（+8.0pp）に向上し（McNemar検定 $p < 0.05$）、
+テーブル選択F1は90.9\%→96.7\%に改善、
 FK走査によるJOINパス最適化がスキーマ規模増大に伴い不可欠となることを実証した。
 7条件比較（gpt-5.5使用）ではSchema Graph制約を備えた条件はすべて
 \textbf{実行成功率100\%}を達成し、
@@ -1673,6 +1674,156 @@ indirect、multi-element、numeric/sort）に分類した。
 1-tableカテゴリで平均1.0の不要JOINが残り（T25: CsCl型で4不要JOIN）、
 \textbf{Schema Graph走査がLLMの冗長JOIN生成を完全に排除する}ことを確認した。
 
+\subsection{30テーブル拡張検証の詳細分析}
+\label{sec:30table_detail}
+
+30テーブル・150クエリの拡張検証について、
+独自再計算による多面的評価指標を報告する。
+本実験にはgpt-4o-miniを使用した。
+
+\subsubsection{テーブル選択精度（F1スコア）}
+
+テーブル選択をPrecision/Recall/F1で評価した（表~\ref{tab:table_selection_f1}）。
+
+\begin{table}[htbp]
+  \centering
+  \caption{テーブル選択精度（30テーブル・150クエリ、gpt-4o-mini）。}
+  \label{tab:table_selection_f1}
+  \small
+  \begin{tabular}{lccc}
+    \toprule
+    条件 & Recall & Precision & F1 \\
+    \midrule
+    Full Schema & 87.4\% & 94.7\% & 90.9\% \\
+    Traversed & 93.7\% & 100.0\% & 96.7\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Traversed条件のPrecision=100.0\%は、
+Schema Graph走査が余分なテーブルを一切含まないことを示す。
+F1スコアの差（90.9\%→96.7\%）は成功率の差（86.7\%→94.7\%）より
+テーブル選択の改善を直接的に反映している。
+テーブル全選択時のSQL成功率はFull 97.8\%、Traversed 98.2\%であり、
+テーブル選択が正しければSQL生成はほぼ確実に成功する。
+
+\subsubsection{実効成功率（rows $>$ 0）}
+
+SQL実行成功（公称成功率）と実際にデータを返した割合（実効成功率）を
+区別して報告する（表~\ref{tab:effective_success}）。
+
+\begin{table}[htbp]
+  \centering
+  \caption{公称成功率と実効成功率の比較。}
+  \label{tab:effective_success}
+  \small
+  \begin{tabular}{lccc}
+    \toprule
+    条件 & 公称 & 実効（rows$>$0） & rows$=$0 \\
+    \midrule
+    Full Schema & 86.7\% & 67.3\% (101/150) & 19.3\% \\
+    Traversed & 94.7\% & 76.7\% (115/150) & 18.0\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+rows=0の27--29件は、seedデータの構造的偏り
+（L1$_2$中心の120件、論文DBの1{,}351件の約1/11）
+により正しいSQLでも空結果となるケースが大半である。
+実効成功率での改善幅は+9.3pp（公称+8.0pp）であり、
+Traversalの改善効果は実効ベースではやや拡大する。
+
+\subsubsection{意味的正確性と解釈乖離}
+
+テーブル選択の正確性を考慮した意味的補正成功率を算出した。
+expected\_tablesに含まれるべきテーブルが欠落しているにも関わらず
+SQLが実行成功する「偽陽性」は、
+Full Schema 36/130件（27.7\%）、Traversed 19/142件（13.4\%）である。
+偽陽性を除外した\textbf{意味的補正成功率}は
+Full 62.7\%（94/150）、Traversed 82.0\%（123/150）であり、
+差は+19.3ppに拡大する。
+
+さらに、両条件ともSQLエラーなしだが
+一方がrows$>$10・他方がrows=0となる
+「解釈乖離ペア」が10件（6.7\%）存在する。
+例：E087「band\_gapが0でthermal\_conductivityが低い化合物」に対し、
+Full条件は\texttt{phase\_stability.band\_gap = 0}（100件）、
+Traversed条件は\texttt{band\_structure.band\_gap\_type}（0件）を参照し、
+同じクエリに根本的に異なる解釈で「成功」と判定される。
+これはbinary成否評価の限界を示す。
+
+\subsubsection{テーブル選択Jaccard類似度}
+
+30テーブル環境でのexpected\_tablesとtables\_usedの
+Jaccard類似度を計算した：
+Full Schema $\bar{J} = 0.746$、Traversed $\bar{J} = 0.894$。
+Traversedは7テーブル環境でのSG+RB vs LLM+SG比較
+（$\bar{J} = 0.897$、表~\ref{tab:traversal_ablation}）と
+同等の精度を30テーブル環境でも維持している。
+
+\subsubsection{カテゴリ別分析とテーブル選択難易度}
+
+表~\ref{tab:category_results}にカテゴリ別成功率を示す。
+
+\begin{table}[htbp]
+  \centering
+  \caption{カテゴリ別成功率（30テーブル・150クエリ、gpt-4o-mini）。}
+  \label{tab:category_results}
+  \small
+  \begin{tabular}{lrrrr}
+    \toprule
+    カテゴリ & Full & Trav & diff & $\overline{t}_\mathrm{min}$ \\
+    \midrule
+    simple & 92\% & 100\% & +8pp & 2.2 \\
+    medium & 76\% & 92\% & +16pp & 3.6 \\
+    complex & 84\% & 96\% & +12pp & 5.0 \\
+    very\_complex & 96\% & 96\% & +0pp & 3.4 \\
+    cross\_domain & 88\% & 96\% & +8pp & 4.5 \\
+    aggregation & 84\% & 88\% & +4pp & 2.1 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+very\_complexカテゴリ（改善+0pp、$\overline{t}_\mathrm{min}$=3.4）は
+complexカテゴリ（改善+12pp、$\overline{t}_\mathrm{min}$=5.0）よりmin\_tablesが低い。
+これは既存の6カテゴリがSQL表現の複雑さで定義されており、
+テーブル選択難易度とは直交していることを示す。
+テーブル選択難易度（min\_tables基準）での再分類では、
+1--2テーブル（37件）+3pp、3--4テーブル（79件）+9pp、5+テーブル（34件）+12pp
+と、テーブル数が増加するほどTraversalの改善幅が単調増加する。
+
+\subsubsection{レイテンシ分析}
+
+\begin{table}[htbp]
+  \centering
+  \caption{30テーブル環境でのレイテンシ分布（gpt-4o-mini）。}
+  \label{tab:latency_30table}
+  \small
+  \begin{tabular}{lrrrr}
+    \toprule
+    条件 & avg (ms) & stdev (ms) & CV & p99 (ms) \\
+    \midrule
+    Full Schema & 2{,}238 & 2{,}148 & 96.0\% & 7{,}590 \\
+    Traversed & 1{,}986 & 867 & 43.7\% & 5{,}060 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Traversalによる平均レイテンシ削減は11.3\%と限定的だが、
+stdev比は0.40（Full=2{,}148ms→Trav=867ms）であり、
+レイテンシの予測可能性が大幅に改善される。
+p99テールも7{,}590ms→5{,}060msに抑制される。
+
+\subsubsection{McNemar検定}
+
+Full Schema条件とTraversed条件の成否変化について
+McNemar検定を実施した。
+$b=19$件（Full失敗→Trav成功）、$c=7$件（Full成功→Trav失敗）、
+$\chi^2 = 4.65$、$p < 0.05$で有意であり、
+Traversalによる成功率改善は統計的に裏付けられる。
+Traversed条件の逆効果7件の内訳は、
+必要テーブル削除4件、型不一致2件、SQL生成エラー1件である。
+
 % =====================================================================
 \section{考察}
 \label{sec:discussion}
@@ -1928,6 +2079,64 @@ gpt-5.5のSQL一致率は30\%（20クエリ×5回）であり、
 ただし実行成功率は100\%であり、意味的等価性は保持されている。
 テスト自動化では結果セット比較が推奨される。
 
+\subsubsection{実効成功率とseedデータバイアス（深刻度：高）}
+\label{sec:effective_rate_limit}
+
+30テーブル実験のTraversed成功率94.7\%のうち、
+実際にデータを返した（rows $>$ 0）のは76.7\%（115/150）である
+（表~\ref{tab:effective_success}）。
+残り18.0\%（27件）は正しいSQLだが空結果であり、
+検証パッケージのseedデータ（L1$_2$中心の120件）が
+論文のDB（1{,}351件・5プロトタイプ）の約1/11規模であることが主因である。
+30テーブル中23テーブルにseedデータが存在せず、
+非L1$_2$構造を要求するクエリで系統的にrows=0となる。
+seedデータの拡充により解消可能な問題であるが、
+公称成功率と実効成功率の乖離（18--19pp）には注意が必要である。
+
+\subsubsection{実験設計の制約（深刻度：高）}
+\label{sec:exp_design_limits}
+
+以下の実験設計上の制約を記す：
+
+\begin{enumerate}
+  \item \textbf{Full-Oracle/Full-Random条件の欠如}：
+    正解テーブルをそのまま渡す条件（Full-Oracle）および
+    同数のテーブルをランダムに選ぶ条件（Full-Random）が未実装のため、
+    Traversalエンジン固有の貢献とプロンプト短縮効果が分離できない。
+    テーブル全選択時のSQL成功率が97.8--98.2\%であることから、
+    プロンプト短縮だけで改善が説明される可能性を完全には排除できない。
+  \item \textbf{パイプライン複合評価}：
+    記録フィールドにentities\_extracted / tables\_candidates /
+    traversal\_subgraphが含まれず、
+    失敗がエンティティ抽出段階かグラフ走査段階か事後判定できない。
+  \item \textbf{交絡変数の未記録}：
+    temperatureパラメータ、システムプロンプト内容、クエリ実行順序、
+    DB状態（seedデータ件数）、プロンプト全文が記録されておらず、
+    再実験時の変動原因の特定が困難である。
+  \item \textbf{クエリ構文カバレッジ}：
+    150クエリ中、CTE（共通テーブル式）・窓関数・UNIONが各0件、
+    否定条件（NOT IN/NOT EXISTS）も4件にとどまる。
+    実運用で必要なSQL構文パターンのカバレッジが不十分である。
+\end{enumerate}
+
+\subsubsection{30テーブルRule-based比較の制約（深刻度：中）}
+
+30テーブル環境のNaive RB成功率0\%は、
+全150件が単一のエイリアス重複バグ
+（\texttt{table name "calc" specified more than once}）で失敗したことによる。
+30テーブルJOIN過多による破綻とは異なる故障モードである。
+SG+RB成功率54\%についても、成功81件は全件WHERE条件ゼロ
+（\texttt{LIMIT 100}のみ）、失敗68件はエイリアス重複バグによる。
+Rule-based比較結果の解釈には上記の制約を考慮すべきである。
+
+\subsubsection{30テーブル実験のモデル名（深刻度：中）}
+
+30テーブル・150クエリ実験にはgpt-4o-miniを使用したが、
+論文本文中に使用モデル名が明記されていなかった。
+\ref{sec:30table_detail}節にて明記した。
+主実験（7テーブル・57クエリ）はgpt-5.5で実施されており、
+モデル能力の差異が結果に影響する可能性がある。
+
 \subsection{関連システムとの比較}
 
 \begin{table*}[htbp]
@@ -2105,8 +2314,23 @@ OQMD実規模を想定した\textbf{30テーブル・150クエリ}の拡張検�
     結果セット上限を強制する。
 \end{enumerate}
 
+\textbf{30テーブル詳細分析}
+（\ref{sec:30table_detail}節）では、
+テーブル選択F1スコア（Full 90.9\% → Traversed 96.7\%）、
+実効成功率（rows$>$0: 67.3\% → 76.7\%）、
+意味的補正成功率（62.7\% → 82.0\%）、
+テーブル選択Jaccard類似度（0.746 → 0.894）、
+McNemar検定（$\chi^2=4.65$、$p<0.05$）を報告した。
+テーブル選択難易度軸では5+テーブルクエリで+12ppの改善が確認された。
+
 \textbf{実証の限界}：主検証はOQMDサブセット（1{,}351件・7テーブル）および
-拡張スキーマ（30テーブル・シミュレーションデータ）に限定される。
+拡張スキーマ（30テーブル・シミュレーションデータ120件）に限定される。
+30テーブル実験の公称成功率94.7\%に対し実効成功率（rows$>$0）は76.7\%であり、
+seedデータの規模乖離（120件 vs 論文DB 1{,}351件）が主因である
+（\ref{sec:effective_rate_limit}節）。
+実験設計上、Full-Oracle/Full-Random条件の欠如により
+Traversal固有の貢献とプロンプト短縮効果は分離されていない
+（\ref{sec:exp_design_limits}節）。
 クエリセットは著者設計であり、独立したユーザー評価は今後の課題である。
 
 カスケードRule-based $\to$ LLMアーキテクチャは速度・コスト・カバレッジのバランスを取り、

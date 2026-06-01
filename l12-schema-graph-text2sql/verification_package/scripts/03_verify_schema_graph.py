@@ -111,8 +111,11 @@ def main():
     if isolated:
         print(f"    → FK接続なしテーブル（グラフ外）: {isolated}")
 
-    check("テーブルグラフは連結", nx.is_connected(table_graph),
-          "非連結 — FK関係が不足している可能性")
+    if n_nodes == 0:
+        check("テーブルグラフは連結", False, "グラフが空です")
+    else:
+        check("テーブルグラフは連結", nx.is_connected(table_graph),
+              "非連結 — FK関係が不足している可能性")
 
     # --- 3. 最短経路探索 ---
     print("\n■ 3. 最短JOINパス探索")
@@ -333,10 +336,11 @@ def main():
                     "",
                 )
             else:
+                # 非連結テーブルにパスが見つかった場合は警告（FK接続ありの可能性）
                 check(
-                    f"非連結テーブル{iso_tbl}への走査 → パスが見つかる（FK接続あり）",
-                    True,
-                    f"パス: {path}",
+                    f"非連結テーブル{iso_tbl}への走査 → 空パスを期待",
+                    False,
+                    f"パスが見つかりました: {path}（FK接続がある可能性）",
                 )
         except Exception as e:
             # エラーが発生する場合、例外型を記録
