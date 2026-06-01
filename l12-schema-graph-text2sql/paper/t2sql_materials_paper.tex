@@ -1677,7 +1677,7 @@ indirect、multi-element、numeric/sort）に分類した。
 \section{考察}
 \label{sec:discussion}
 
-\subsection{データ組み合わせ精度の重要性}
+\subsection{データ組み合わせ精度の重要性：不要JOINの多層的リスク}
 
 材料工学において、データベース検索の価値は返却行数ではなく
 \textbf{異種テーブルの正確な組み合わせ}にある。
@@ -1687,11 +1687,66 @@ JOINの正確性がデータ品質の生命線となる。
 Graph Traversalアブレーション（表~\ref{tab:traversal_ablation}）は
 この観点を定量的に裏付ける：
 Naive条件は平均4.73 JOINを生成し58\%が不要である。
-不要JOINはデータの誤った組み合わせ---たとえば
-無関係なテーブルの直積による行数膨張や、
-多元素AND条件での誤ったフィルタリング---を引き起こす。
 SG+RBおよびLLM+SG条件はFK走査により不要JOINを完全排除し、
 Jaccard類似度0.897で一致する結果セットを返す。
+
+\paragraph{不要JOINがもたらす4層のリスク}
+
+不要JOINは単なる冗長性ではなく、材料データベースにおいて
+以下の4層で実害をもたらす（表~\ref{tab:unnecessary_join_risks}）。
+
+\begin{table}[htbp]
+  \centering
+  \caption{不要JOINの多層的リスク。}
+  \label{tab:unnecessary_join_risks}
+  \small
+  \begin{tabular}{p{1.8cm}p{4.2cm}p{3.5cm}}
+    \toprule
+    リスク層 & メカニズム & 材料DBでの帰結 \\
+    \midrule
+    正確性 &
+      1対多テーブルの不要結合により行が膨張し、
+      COUNT/AVG等の集計が水増しされる &
+      格子定数平均値の歪み、候補化合物数の過大計上 \\
+    \addlinespace
+    性能 &
+      読み取り行数・メモリ使用量・実行時間が
+      不要テーブルの行数に比例して増大 &
+      大規模DB（100万件超）での応答遅延 \\
+    \addlinespace
+    安全性 &
+      不要テーブル参照によりアクセス制御外の
+      カラム・データが結果に混入する可能性 &
+      未公開計算結果の意図しない露出 \\
+    \addlinespace
+    保守性 &
+      SQLが長大化し、意図の把握・レビュー・
+      修正が困難になる &
+      実運用での品質管理コスト増大 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\paragraph{具体例：行膨張による集計誤差}
+
+「Feを含む安定なB2化合物の平均格子定数」を検索する場合を考える。
+正しいJOINパスは
+\texttt{material\_entry}$\to$\texttt{composition}$\to$\texttt{crystal\_structure}$\to$\texttt{thermodynamic\_stability}
+の4テーブルである。
+ここで不要な\texttt{band\_structure}テーブルを追加JOINすると、
+各化合物に対してバンド構造レコード数（$k$点メッシュごとに1行、典型的に3--5行）分の重複行が発生する。
+結果として\texttt{AVG(lattice\_parameter)}の計算母数が3--5倍に膨張し、
+個々の値は変わらないが\texttt{COUNT(*)}が過大計上される。
+さらに深刻なケースとして、\texttt{composition}テーブル（多元素化合物では元素数分の行を持つ）と
+\texttt{band\_structure}の両方を不要JOINした場合、
+行数は「元素数$\times$バンド構造数」の直積で膨張し、
+\texttt{AVG}が意味を持たない値に変質する。
+
+Schema Graph走査はSteiner木近似により\textbf{必要最小限のテーブルのみ}を
+JOINパスとして算出するため、
+上記4層のリスクを原理的に排除する。
+本実験では走査あり条件で不要JOIN率を2.8\%まで削減し（走査なし9.2\%）、
+7テーブル環境では完全排除（58\%$\to$0\%）を達成した。
 
 \textbf{1{,}351件・7テーブル・5プロトタイプは本番規模の材料DBを代表するものではないが、
 組成・構造・安定性・計算条件を分離した正規化スキーマにおける
