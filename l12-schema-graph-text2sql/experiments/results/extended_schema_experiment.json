@@ -9,7 +9,7 @@
         "structure"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
       "success": true,
       "rows": 100,
       "columns": [
@@ -19,27 +19,78 @@
         "chemical_system"
       ],
       "sql": "SELECT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE s.prototype = 'B2'\nLIMIT 100;",
-      "latency_ms": 1362,
+      "latency_ms": 2588,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "full",
+      "join_count": 1,
+      "tables_used": [
+        "material_entry",
+        "structure"
+      ],
+      "condition": "llm_full_schema",
       "query_id": "E01",
       "query_text": "B2プロトタイプの化合物を全て出して",
       "category": "simple",
-      "min_tables": 1
+      "min_tables": 1,
+      "expected_tables": [
+        "structure"
+      ],
+      "unnecessary_joins": 1
+    },
+    "llm_traversed": {
+      "success": true,
+      "rows": 100,
+      "columns": [
+        "structure_id",
+        "entry_id",
+        "prototype",
+        "strukturbericht",
+        "formula_type",
+        "space_group_number",
+        "crystal_system",
+        "lattice_a",
+        "lattice_b",
+        "lattice_c",
+        "volume_per_atom",
+        "space_group"
+      ],
+      "sql": "SELECT * FROM structure WHERE prototype = 'B2' LIMIT 100;",
+      "latency_ms": 856,
+      "model": "gpt-4o-mini",
+      "schema_mode": "traversed",
+      "join_count": 0,
+      "tables_used": [
+        "structure"
+      ],
+      "condition": "llm_traversed",
+      "query_id": "E01",
+      "query_text": "B2プロトタイプの化合物を全て出して",
+      "category": "simple",
+      "min_tables": 1,
+      "expected_tables": [
+        "structure"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"compounds\" does not exist\nLINE 1: SELECT * FROM compounds WHERE prototype = 'B2' LIMIT 100;\n                      ^\n",
       "sql": "SELECT * FROM compounds WHERE prototype = 'B2' LIMIT 100;",
-      "latency_ms": 683,
+      "latency_ms": 630,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 0,
+      "tables_used": [
+        "compounds"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E01",
       "query_text": "B2プロトタイプの化合物を全て出して",
       "category": "simple",
       "min_tables": 1,
+      "expected_tables": [
+        "structure"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -56,7 +107,7 @@
         "phase_stability"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
       "success": true,
       "rows": 9,
       "columns": [
@@ -64,28 +115,83 @@
         "formula",
         "is_stable"
       ],
-      "sql": "SELECT DISTINCT me.entry_id, me.formula, ps.is_stable\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN composition c ON me.entry_id = c.entry_id\nWHERE c.element = 'Fe' AND ps.is_stable = true\nLIMIT 100;",
-      "latency_ms": 1105,
+      "sql": "SELECT me.entry_id, me.formula, ps.is_stable\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN composition c ON me.entry_id = c.entry_id\nWHERE c.element = 'Fe' AND ps.is_stable = true\nLIMIT 100;",
+      "latency_ms": 1815,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "full",
+      "join_count": 2,
+      "tables_used": [
+        "composition",
+        "material_entry",
+        "phase_stability"
+      ],
+      "condition": "llm_full_schema",
       "query_id": "E02",
       "query_text": "Feを含む安定な化合物は？",
       "category": "simple",
-      "min_tables": 3
+      "min_tables": 3,
+      "expected_tables": [
+        "material_entry",
+        "composition",
+        "phase_stability"
+      ],
+      "unnecessary_joins": 0
+    },
+    "llm_traversed": {
+      "success": true,
+      "rows": 9,
+      "columns": [
+        "entry_id",
+        "source_db",
+        "source_material_id",
+        "formula",
+        "reduced_formula",
+        "chemical_system",
+        "number_of_elements"
+      ],
+      "sql": "SELECT me.entry_id, me.source_db, me.source_material_id, me.formula, me.reduced_formula, me.chemical_system, me.number_of_elements\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN composition c ON me.entry_id = c.entry_id\nWHERE c.element = 'Fe' AND ps.is_stable = true\nLIMIT 100;",
+      "latency_ms": 1515,
+      "model": "gpt-4o-mini",
+      "schema_mode": "traversed",
+      "join_count": 2,
+      "tables_used": [
+        "composition",
+        "material_entry",
+        "phase_stability"
+      ],
+      "condition": "llm_traversed",
+      "query_id": "E02",
+      "query_text": "Feを含む安定な化合物は？",
+      "category": "simple",
+      "min_tables": 3,
+      "expected_tables": [
+        "material_entry",
+        "composition",
+        "phase_stability"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"compounds\" does not exist\nLINE 1: SELECT * FROM compounds WHERE stability = 'stable' AND eleme...\n                      ^\n",
       "sql": "SELECT * FROM compounds WHERE stability = 'stable' AND element = 'Fe' LIMIT 100;",
-      "latency_ms": 745,
+      "latency_ms": 786,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 0,
+      "tables_used": [
+        "compounds"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E02",
       "query_text": "Feを含む安定な化合物は？",
       "category": "simple",
       "min_tables": 3,
+      "expected_tables": [
+        "material_entry",
+        "composition",
+        "phase_stability"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -101,7 +207,7 @@
         "phase_stability"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
       "success": true,
       "rows": 77,
       "columns": [
@@ -110,27 +216,78 @@
         "band_gap"
       ],
       "sql": "SELECT me.entry_id, me.formula, ps.band_gap\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE ps.band_gap >= 2\nLIMIT 100;",
-      "latency_ms": 2228,
+      "latency_ms": 1040,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "full",
+      "join_count": 1,
+      "tables_used": [
+        "material_entry",
+        "phase_stability"
+      ],
+      "condition": "llm_full_schema",
       "query_id": "E03",
       "query_text": "band_gapが2以上の化合物を出して",
       "category": "simple",
-      "min_tables": 2
+      "min_tables": 2,
+      "expected_tables": [
+        "material_entry",
+        "phase_stability"
+      ],
+      "unnecessary_joins": 0
+    },
+    "llm_traversed": {
+      "success": true,
+      "rows": 77,
+      "columns": [
+        "entry_id",
+        "source_db",
+        "source_material_id",
+        "formula",
+        "reduced_formula",
+        "chemical_system",
+        "number_of_elements",
+        "band_gap"
+      ],
+      "sql": "SELECT me.entry_id, me.source_db, me.source_material_id, me.formula, me.reduced_formula, me.chemical_system, me.number_of_elements, ps.band_gap\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE ps.band_gap >= 2\nLIMIT 100;",
+      "latency_ms": 1345,
+      "model": "gpt-4o-mini",
+      "schema_mode": "traversed",
+      "join_count": 1,
+      "tables_used": [
+        "material_entry",
+        "phase_stability"
+      ],
+      "condition": "llm_traversed",
+      "query_id": "E03",
+      "query_text": "band_gapが2以上の化合物を出して",
+      "category": "simple",
+      "min_tables": 2,
+      "expected_tables": [
+        "material_entry",
+        "phase_stability"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"compounds\" does not exist\nLINE 1: SELECT * FROM compounds WHERE band_gap >= 2 LIMIT 100;\n                      ^\n",
       "sql": "SELECT * FROM compounds WHERE band_gap >= 2 LIMIT 100;",
-      "latency_ms": 561,
+      "latency_ms": 704,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 0,
+      "tables_used": [
+        "compounds"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E03",
       "query_text": "band_gapが2以上の化合物を出して",
       "category": "simple",
       "min_tables": 2,
+      "expected_tables": [
+        "material_entry",
+        "phase_stability"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -147,36 +304,94 @@
         "phase_stability"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
+      "success": true,
+      "rows": 68,
+      "columns": [
+        "entry_id",
+        "formula",
+        "band_gap",
+        "is_metallic"
+      ],
+      "sql": "SELECT me.entry_id, me.formula, ps.band_gap, ds.is_metallic\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN structure s ON me.entry_id = s.entry_id\nJOIN density_of_states ds ON me.entry_id = ds.entry_id\nWHERE s.prototype = 'NaCl' AND ps.band_gap = 0 AND ds.is_metallic = true\nLIMIT 100;",
+      "latency_ms": 1666,
+      "model": "gpt-4o-mini",
+      "schema_mode": "full",
+      "join_count": 3,
+      "tables_used": [
+        "density_of_states",
+        "material_entry",
+        "phase_stability",
+        "structure"
+      ],
+      "condition": "llm_full_schema",
+      "query_id": "E04",
+      "query_text": "NaCl型でband_gapが0の金属的な化合物は？",
+      "category": "simple",
+      "min_tables": 3,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "phase_stability"
+      ],
+      "unnecessary_joins": 1
+    },
+    "llm_traversed": {
       "success": true,
       "rows": 100,
       "columns": [
         "entry_id",
+        "source_db",
+        "source_material_id",
         "formula",
+        "reduced_formula",
+        "chemical_system",
+        "number_of_elements",
         "band_gap"
       ],
-      "sql": "SELECT me.entry_id, me.formula, ps.band_gap\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE s.prototype = 'NaCl' AND ps.band_gap = 0\nLIMIT 100;",
-      "latency_ms": 1072,
+      "sql": "SELECT me.entry_id, me.source_db, me.source_material_id, me.formula, me.reduced_formula, me.chemical_system, me.number_of_elements, ps.band_gap\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE s.prototype = 'NaCl' AND ps.band_gap = 0\nLIMIT 100;",
+      "latency_ms": 1472,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "traversed",
+      "join_count": 2,
+      "tables_used": [
+        "material_entry",
+        "phase_stability",
+        "structure"
+      ],
+      "condition": "llm_traversed",
       "query_id": "E04",
       "query_text": "NaCl型でband_gapが0の金属的な化合物は？",
       "category": "simple",
-      "min_tables": 3
+      "min_tables": 3,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "phase_stability"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"compounds\" does not exist\nLINE 2: FROM compounds\n             ^\n",
       "sql": "SELECT *\nFROM compounds\nWHERE structure_type = 'NaCl' AND band_gap = 0 AND is_metallic = true\nLIMIT 100;",
-      "latency_ms": 1076,
+      "latency_ms": 944,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 0,
+      "tables_used": [
+        "compounds"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E04",
       "query_text": "NaCl型でband_gapが0の金属的な化合物は？",
       "category": "simple",
       "min_tables": 3,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "phase_stability"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -193,7 +408,7 @@
         "phase_stability"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
       "success": true,
       "rows": 0,
       "columns": [
@@ -202,27 +417,82 @@
         "energy_above_hull"
       ],
       "sql": "SELECT me.entry_id, me.formula, ps.energy_above_hull\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE me.formula LIKE 'L12%' AND ps.energy_above_hull < 0.01\nLIMIT 100;",
-      "latency_ms": 985,
+      "latency_ms": 1236,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "full",
+      "join_count": 1,
+      "tables_used": [
+        "material_entry",
+        "phase_stability"
+      ],
+      "condition": "llm_full_schema",
       "query_id": "E05",
       "query_text": "L12型でenergy_above_hullが0.01未満のものを出して",
       "category": "simple",
-      "min_tables": 3
+      "min_tables": 3,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "phase_stability"
+      ],
+      "unnecessary_joins": 0
+    },
+    "llm_traversed": {
+      "success": true,
+      "rows": 100,
+      "columns": [
+        "entry_id",
+        "source_db",
+        "source_material_id",
+        "formula",
+        "reduced_formula",
+        "chemical_system",
+        "number_of_elements",
+        "energy_above_hull"
+      ],
+      "sql": "SELECT me.entry_id, me.source_db, me.source_material_id, me.formula, me.reduced_formula, me.chemical_system, me.number_of_elements, ps.energy_above_hull\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN structure s ON me.entry_id = s.entry_id\nWHERE s.prototype = 'L12' AND ps.energy_above_hull < 0.01\nLIMIT 100;",
+      "latency_ms": 1561,
+      "model": "gpt-4o-mini",
+      "schema_mode": "traversed",
+      "join_count": 2,
+      "tables_used": [
+        "material_entry",
+        "phase_stability",
+        "structure"
+      ],
+      "condition": "llm_traversed",
+      "query_id": "E05",
+      "query_text": "L12型でenergy_above_hullが0.01未満のものを出して",
+      "category": "simple",
+      "min_tables": 3,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "phase_stability"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"materials\" does not exist\nLINE 2: FROM materials \n             ^\n",
       "sql": "SELECT * \nFROM materials \nWHERE type = 'L12' AND energy_above_hull < 0.01 \nLIMIT 100;",
-      "latency_ms": 811,
+      "latency_ms": 919,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 0,
+      "tables_used": [
+        "materials"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E05",
       "query_text": "L12型でenergy_above_hullが0.01未満のものを出して",
       "category": "simple",
       "min_tables": 3,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "phase_stability"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -241,7 +511,7 @@
         "application_domain"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
       "success": true,
       "rows": 0,
       "columns": [
@@ -251,27 +521,90 @@
         "is_stable"
       ],
       "sql": "SELECT me.entry_id, me.formula, me.chemical_system, ps.is_stable\nFROM material_entry me\nJOIN material_application ma ON me.entry_id = ma.entry_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE ma.domain_id IN (SELECT domain_id FROM application_domain WHERE domain_name = 'Aerospace Alloys')\nAND ps.is_stable = true\nAND me.formula LIKE '%B2%'\nLIMIT 100;",
-      "latency_ms": 1608,
+      "latency_ms": 7407,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "full",
+      "join_count": 2,
+      "tables_used": [
+        "application_domain",
+        "material_application",
+        "material_entry",
+        "phase_stability"
+      ],
+      "condition": "llm_full_schema",
       "query_id": "E06",
       "query_text": "Aerospace Alloys用途に適した安定なB2化合物を探して",
       "category": "medium",
-      "min_tables": 4
+      "min_tables": 4,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "phase_stability",
+        "material_application",
+        "application_domain"
+      ],
+      "unnecessary_joins": 0
+    },
+    "llm_traversed": {
+      "success": true,
+      "rows": 0,
+      "columns": [
+        "entry_id",
+        "source_db",
+        "source_material_id",
+        "formula",
+        "reduced_formula",
+        "chemical_system",
+        "number_of_elements"
+      ],
+      "sql": "SELECT me.entry_id, me.source_db, me.source_material_id, me.formula, me.reduced_formula, me.chemical_system, me.number_of_elements\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN material_application ma ON me.entry_id = ma.entry_id\nJOIN application_domain ad ON ma.domain_id = ad.domain_id\nWHERE ps.is_stable = true AND ad.domain_name = 'Aerospace Alloys'\nAND me.formula LIKE '%B2%'\nLIMIT 100;",
+      "latency_ms": 1768,
+      "model": "gpt-4o-mini",
+      "schema_mode": "traversed",
+      "join_count": 3,
+      "tables_used": [
+        "application_domain",
+        "material_application",
+        "material_entry",
+        "phase_stability"
+      ],
+      "condition": "llm_traversed",
+      "query_id": "E06",
+      "query_text": "Aerospace Alloys用途に適した安定なB2化合物を探して",
+      "category": "medium",
+      "min_tables": 4,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "phase_stability",
+        "material_application",
+        "application_domain"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"compounds\" does not exist\nLINE 2: FROM compounds\n             ^\n",
       "sql": "SELECT *\nFROM compounds\nWHERE application = 'Aerospace Alloys' AND stability = 'stable' AND chemical_formula LIKE '%B2%'\nLIMIT 100;",
-      "latency_ms": 847,
+      "latency_ms": 950,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 0,
+      "tables_used": [
+        "compounds"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E06",
       "query_text": "Aerospace Alloys用途に適した安定なB2化合物を探して",
       "category": "medium",
       "min_tables": 4,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "phase_stability",
+        "material_application",
+        "application_domain"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -290,33 +623,94 @@
         "synthesis_method"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
       "success": false,
-      "error": "column ms.method_name does not exist\nLINE 16:     ms.method_name = 'Arc Melting' \n             ^\n",
-      "sql": "SELECT \n    me.entry_id, \n    me.formula, \n    ps.is_stable, \n    ps.formation_energy_per_atom, \n    ps.energy_above_hull \nFROM \n    material_entry me \nJOIN \n    material_synthesis ms ON me.entry_id = ms.entry_id \nJOIN \n    phase_stability ps ON me.entry_id = ps.entry_id \nJOIN \n    composition c ON me.entry_id = c.entry_id \nWHERE \n    ms.method_name = 'Arc Melting' \n    AND c.element = 'Ni' \nLIMIT 100;",
-      "latency_ms": 1634,
+      "error": "column ms.method_name does not exist\nLINE 14:     ms.method_name = 'Arc Melting' \n             ^\n",
+      "sql": "SELECT \n    me.entry_id, \n    me.formula, \n    ps.is_stable, \n    ps.formation_energy_per_atom, \n    ps.energy_above_hull \nFROM \n    material_entry me \nJOIN \n    material_synthesis ms ON me.entry_id = ms.entry_id \nJOIN \n    phase_stability ps ON me.entry_id = ps.entry_id \nWHERE \n    ms.method_name = 'Arc Melting' \n    AND me.formula LIKE '%Ni%' \nLIMIT 100;",
+      "latency_ms": 1547,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "full",
+      "join_count": 2,
+      "tables_used": [
+        "material_entry",
+        "material_synthesis",
+        "phase_stability"
+      ],
+      "condition": "llm_full_schema",
       "query_id": "E07",
       "query_text": "Arc Meltingで合成されたNiを含む化合物の安定性は？",
       "category": "medium",
       "min_tables": 4,
+      "expected_tables": [
+        "material_entry",
+        "composition",
+        "phase_stability",
+        "material_synthesis",
+        "synthesis_method"
+      ],
+      "unnecessary_joins": 0,
       "rows": 0,
       "columns": []
+    },
+    "llm_traversed": {
+      "success": true,
+      "rows": 0,
+      "columns": [
+        "entry_id",
+        "formula",
+        "is_stable",
+        "energy_above_hull",
+        "band_gap"
+      ],
+      "sql": "SELECT \n    me.entry_id, \n    me.formula, \n    ps.is_stable, \n    ps.energy_above_hull, \n    ps.band_gap \nFROM \n    material_entry me \nJOIN \n    material_synthesis ms ON me.entry_id = ms.entry_id \nJOIN \n    phase_stability ps ON me.entry_id = ps.entry_id \nJOIN \n    composition c ON me.entry_id = c.entry_id \nJOIN \n    synthesis_method sm ON ms.synthesis_id = sm.synthesis_id \nWHERE \n    c.element = 'Ni' \n    AND sm.method_name = 'Arc Melting' \nLIMIT 100;",
+      "latency_ms": 1999,
+      "model": "gpt-4o-mini",
+      "schema_mode": "traversed",
+      "join_count": 4,
+      "tables_used": [
+        "composition",
+        "material_entry",
+        "material_synthesis",
+        "phase_stability",
+        "synthesis_method"
+      ],
+      "condition": "llm_traversed",
+      "query_id": "E07",
+      "query_text": "Arc Meltingで合成されたNiを含む化合物の安定性は？",
+      "category": "medium",
+      "min_tables": 4,
+      "expected_tables": [
+        "material_entry",
+        "composition",
+        "phase_stability",
+        "material_synthesis",
+        "synthesis_method"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"compounds\" does not exist\nLINE 2: FROM compounds\n             ^\n",
       "sql": "SELECT *\nFROM compounds\nWHERE synthesis_method = 'Arc Melting' AND element = 'Ni'\nLIMIT 100;",
-      "latency_ms": 871,
+      "latency_ms": 813,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 0,
+      "tables_used": [
+        "compounds"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E07",
       "query_text": "Arc Meltingで合成されたNiを含む化合物の安定性は？",
       "category": "medium",
       "min_tables": 4,
+      "expected_tables": [
+        "material_entry",
+        "composition",
+        "phase_stability",
+        "material_synthesis",
+        "synthesis_method"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -335,7 +729,7 @@
         "measured_property"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
       "success": true,
       "rows": 88,
       "columns": [
@@ -343,28 +737,85 @@
         "lattice_b",
         "lattice_c"
       ],
-      "sql": "SELECT s.lattice_a, s.lattice_b, s.lattice_c\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE ps.is_stable = TRUE AND s.prototype = 'L12'\nLIMIT 100;",
-      "latency_ms": 968,
+      "sql": "SELECT structure.lattice_a, structure.lattice_b, structure.lattice_c\nFROM material_entry\nJOIN phase_stability ON material_entry.entry_id = phase_stability.entry_id\nJOIN structure ON material_entry.entry_id = structure.entry_id\nWHERE phase_stability.is_stable = TRUE\nAND structure.prototype = 'L12'\nLIMIT 100;",
+      "latency_ms": 1316,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "full",
+      "join_count": 2,
+      "tables_used": [
+        "material_entry",
+        "phase_stability",
+        "structure"
+      ],
+      "condition": "llm_full_schema",
       "query_id": "E08",
       "query_text": "XRDで測定された安定なL12化合物のlattice_parameterを出して",
       "category": "medium",
-      "min_tables": 5
+      "min_tables": 5,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "phase_stability",
+        "experimental_measurement",
+        "measured_property"
+      ],
+      "unnecessary_joins": 0
+    },
+    "llm_traversed": {
+      "success": true,
+      "rows": 0,
+      "columns": [
+        "lattice_a",
+        "lattice_b",
+        "lattice_c"
+      ],
+      "sql": "SELECT s.lattice_a, s.lattice_b, s.lattice_c\nFROM structure s\nJOIN phase_stability ps ON s.entry_id = ps.entry_id\nJOIN material_entry me ON s.entry_id = me.entry_id\nWHERE ps.is_stable = true AND me.formula LIKE '%L12%'\nLIMIT 100;",
+      "latency_ms": 1033,
+      "model": "gpt-4o-mini",
+      "schema_mode": "traversed",
+      "join_count": 2,
+      "tables_used": [
+        "material_entry",
+        "phase_stability",
+        "structure"
+      ],
+      "condition": "llm_traversed",
+      "query_id": "E08",
+      "query_text": "XRDで測定された安定なL12化合物のlattice_parameterを出して",
+      "category": "medium",
+      "min_tables": 5,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "phase_stability",
+        "experimental_measurement",
+        "measured_property"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"compounds\" does not exist\nLINE 2: FROM compounds \n             ^\n",
       "sql": "SELECT lattice_parameter \nFROM compounds \nWHERE structure_type = 'L12' AND stability = 'stable' AND measurement_technique = 'XRD' \nLIMIT 100;",
-      "latency_ms": 1000,
+      "latency_ms": 955,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 0,
+      "tables_used": [
+        "compounds"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E08",
       "query_text": "XRDで測定された安定なL12化合物のlattice_parameterを出して",
       "category": "medium",
       "min_tables": 5,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "phase_stability",
+        "experimental_measurement",
+        "measured_property"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -383,7 +834,7 @@
         "application_domain"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
       "success": true,
       "rows": 0,
       "columns": [
@@ -391,28 +842,93 @@
         "formula",
         "chemical_system"
       ],
-      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.chemical_system\nFROM material_entry me\nJOIN composition c ON me.entry_id = c.entry_id\nJOIN material_application ma ON me.entry_id = ma.entry_id\nJOIN application_domain ad ON ma.domain_id = ad.domain_id\nWHERE c.element IN (\n    SELECT symbol FROM element WHERE block = 'd'\n) AND ad.domain_name = '電池'\nLIMIT 100;",
-      "latency_ms": 22447,
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.chemical_system\nFROM material_entry me\nJOIN material_application ma ON me.entry_id = ma.entry_id\nJOIN composition c ON me.entry_id = c.entry_id\nJOIN element e ON c.element = e.symbol\nWHERE e.block = 'd' AND ma.domain_id IN (\n    SELECT domain_id FROM application_domain WHERE domain_name = 'battery'\n)\nLIMIT 100;",
+      "latency_ms": 1342,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "full",
+      "join_count": 3,
+      "tables_used": [
+        "application_domain",
+        "composition",
+        "element",
+        "material_application",
+        "material_entry"
+      ],
+      "condition": "llm_full_schema",
       "query_id": "E09",
       "query_text": "遷移金属(dブロック)を含む化合物で電池用途のものは？",
       "category": "medium",
-      "min_tables": 4
+      "min_tables": 4,
+      "expected_tables": [
+        "material_entry",
+        "composition",
+        "element",
+        "material_application",
+        "application_domain"
+      ],
+      "unnecessary_joins": 0
+    },
+    "llm_traversed": {
+      "success": true,
+      "rows": 0,
+      "columns": [
+        "entry_id",
+        "source_db",
+        "source_material_id",
+        "formula",
+        "reduced_formula",
+        "chemical_system",
+        "number_of_elements"
+      ],
+      "sql": "SELECT DISTINCT me.entry_id, me.source_db, me.source_material_id, me.formula, me.reduced_formula, me.chemical_system, me.number_of_elements\nFROM material_entry me\nJOIN composition c ON me.entry_id = c.entry_id\nJOIN element e ON c.element = e.symbol\nJOIN material_application ma ON me.entry_id = ma.entry_id\nJOIN application_domain ad ON ma.domain_id = ad.domain_id\nWHERE e.block = 'd' AND ad.domain_name LIKE '%電池%'\nLIMIT 100;",
+      "latency_ms": 1890,
+      "model": "gpt-4o-mini",
+      "schema_mode": "traversed",
+      "join_count": 4,
+      "tables_used": [
+        "application_domain",
+        "composition",
+        "element",
+        "material_application",
+        "material_entry"
+      ],
+      "condition": "llm_traversed",
+      "query_id": "E09",
+      "query_text": "遷移金属(dブロック)を含む化合物で電池用途のものは？",
+      "category": "medium",
+      "min_tables": 4,
+      "expected_tables": [
+        "material_entry",
+        "composition",
+        "element",
+        "material_application",
+        "application_domain"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"compounds\" does not exist\nLINE 2: FROM compounds\n             ^\n",
       "sql": "SELECT *\nFROM compounds\nWHERE transition_metal = TRUE AND application = 'battery'\nLIMIT 100;",
-      "latency_ms": 765,
+      "latency_ms": 689,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 0,
+      "tables_used": [
+        "compounds"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E09",
       "query_text": "遷移金属(dブロック)を含む化合物で電池用途のものは？",
       "category": "medium",
       "min_tables": 4,
+      "expected_tables": [
+        "material_entry",
+        "composition",
+        "element",
+        "material_application",
+        "application_domain"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -430,7 +946,38 @@
         "literature_reference"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
+      "success": true,
+      "rows": 0,
+      "columns": [
+        "entry_id",
+        "formula",
+        "chemical_system"
+      ],
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.chemical_system\nFROM material_entry me\nJOIN material_reference mr ON me.entry_id = mr.entry_id\nJOIN literature_reference lr ON mr.reference_id = lr.reference_id\nWHERE lr.year >= 2020 AND me.reduced_formula LIKE '%B2%'\nLIMIT 100;",
+      "latency_ms": 2103,
+      "model": "gpt-4o-mini",
+      "schema_mode": "full",
+      "join_count": 2,
+      "tables_used": [
+        "literature_reference",
+        "material_entry",
+        "material_reference"
+      ],
+      "condition": "llm_full_schema",
+      "query_id": "E10",
+      "query_text": "2020年以降に出版された論文で報告されたB2化合物は？",
+      "category": "medium",
+      "min_tables": 4,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "material_reference",
+        "literature_reference"
+      ],
+      "unnecessary_joins": 0
+    },
+    "llm_traversed": {
       "success": true,
       "rows": 0,
       "columns": [
@@ -439,28 +986,52 @@
         "reduced_formula",
         "chemical_system"
       ],
-      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN material_reference mr ON me.entry_id = mr.entry_id\nJOIN literature_reference lr ON mr.reference_id = lr.reference_id\nWHERE lr.year >= 2020 AND me.formula LIKE '%B2%'\nLIMIT 100;",
-      "latency_ms": 1230,
+      "sql": "SELECT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN material_reference mr ON me.entry_id = mr.entry_id\nJOIN literature_reference lr ON mr.reference_id = lr.reference_id\nWHERE lr.year >= 2020 AND me.formula LIKE '%B2%'\nLIMIT 100;",
+      "latency_ms": 1538,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "traversed",
+      "join_count": 2,
+      "tables_used": [
+        "literature_reference",
+        "material_entry",
+        "material_reference"
+      ],
+      "condition": "llm_traversed",
       "query_id": "E10",
       "query_text": "2020年以降に出版された論文で報告されたB2化合物は？",
       "category": "medium",
-      "min_tables": 4
+      "min_tables": 4,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "material_reference",
+        "literature_reference"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"papers\" does not exist\nLINE 2: FROM papers\n             ^\n",
       "sql": "SELECT *\nFROM papers\nJOIN compounds ON papers.id = compounds.paper_id\nWHERE compounds.type = 'B2' AND papers.publication_year >= 2020\nLIMIT 100;",
-      "latency_ms": 1051,
+      "latency_ms": 1116,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 1,
+      "tables_used": [
+        "compounds",
+        "papers"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E10",
       "query_text": "2020年以降に出版された論文で報告されたB2化合物は？",
       "category": "medium",
       "min_tables": 4,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "material_reference",
+        "literature_reference"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -481,7 +1052,44 @@
         "element"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
+      "success": true,
+      "rows": 8,
+      "columns": [
+        "entry_id",
+        "formula",
+        "chemical_system"
+      ],
+      "sql": "SELECT me.entry_id, me.formula, me.chemical_system\nFROM material_entry me\nJOIN material_defect md ON me.entry_id = md.entry_id\nJOIN composition c ON me.entry_id = c.entry_id\nJOIN element e ON c.element = e.symbol\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE md.defect_type_id = (SELECT defect_type_id FROM defect_type WHERE defect_name = 'Vacancy')\n  AND ps.is_stable = true\n  AND e.electronegativity >= 2.0\nLIMIT 100;",
+      "latency_ms": 1744,
+      "model": "gpt-4o-mini",
+      "schema_mode": "full",
+      "join_count": 4,
+      "tables_used": [
+        "composition",
+        "defect_type",
+        "element",
+        "material_defect",
+        "material_entry",
+        "phase_stability"
+      ],
+      "condition": "llm_full_schema",
+      "query_id": "E11",
+      "query_text": "Vacancy欠陥を持つ安定なNaCl型化合物で、その構成元素の電気陰性度が2.0以上のものは？",
+      "category": "complex",
+      "min_tables": 6,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "phase_stability",
+        "material_defect",
+        "defect_type",
+        "composition",
+        "element"
+      ],
+      "unnecessary_joins": 0
+    },
+    "llm_traversed": {
       "success": true,
       "rows": 8,
       "columns": [
@@ -490,28 +1098,60 @@
         "reduced_formula",
         "chemical_system"
       ],
-      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN material_defect md ON me.entry_id = md.entry_id\nJOIN composition c ON me.entry_id = c.entry_id\nJOIN element e ON c.element = e.symbol\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE md.defect_type_id = (SELECT defect_type_id FROM defect_type WHERE defect_name = 'Vacancy')\n  AND ps.is_stable = true\n  AND e.electronegativity >= 2.0\nLIMIT 100;",
-      "latency_ms": 1529,
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN material_defect md ON me.entry_id = md.entry_id\nJOIN defect_type dt ON md.defect_type_id = dt.defect_type_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN composition c ON me.entry_id = c.entry_id\nJOIN element e ON c.element = e.symbol\nWHERE dt.defect_name = 'Vacancy'\n  AND ps.is_stable = TRUE\n  AND e.electronegativity >= 2.0\nLIMIT 100;",
+      "latency_ms": 1621,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "traversed",
+      "join_count": 5,
+      "tables_used": [
+        "composition",
+        "defect_type",
+        "element",
+        "material_defect",
+        "material_entry",
+        "phase_stability"
+      ],
+      "condition": "llm_traversed",
       "query_id": "E11",
       "query_text": "Vacancy欠陥を持つ安定なNaCl型化合物で、その構成元素の電気陰性度が2.0以上のものは？",
       "category": "complex",
-      "min_tables": 6
+      "min_tables": 6,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "phase_stability",
+        "material_defect",
+        "defect_type",
+        "composition",
+        "element"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"compounds\" does not exist\nLINE 2: FROM compounds\n             ^\n",
       "sql": "SELECT *\nFROM compounds\nWHERE defect_type = 'Vacancy'\n  AND structure_type = 'NaCl'\n  AND electronegativity >= 2.0\nLIMIT 100;",
-      "latency_ms": 983,
+      "latency_ms": 980,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 0,
+      "tables_used": [
+        "compounds"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E11",
       "query_text": "Vacancy欠陥を持つ安定なNaCl型化合物で、その構成元素の電気陰性度が2.0以上のものは？",
       "category": "complex",
       "min_tables": 6,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "phase_stability",
+        "material_defect",
+        "defect_type",
+        "composition",
+        "element"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -530,7 +1170,41 @@
         "synthesis_method"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
+      "success": true,
+      "rows": 6,
+      "columns": [
+        "entry_id",
+        "formula",
+        "reduced_formula"
+      ],
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula\nFROM material_entry me\nJOIN experimental_measurement em ON me.entry_id = em.entry_id\nJOIN measured_property mp ON em.measurement_id = mp.measurement_id\nJOIN material_synthesis ms ON me.entry_id = ms.entry_id\nJOIN synthesis_method sm ON ms.synthesis_id = sm.synthesis_id\nWHERE mp.property_name = 'hardness' \n  AND mp.value >= 10 \n  AND sm.method_name = 'Arc Melting'\nLIMIT 100;",
+      "latency_ms": 1487,
+      "model": "gpt-4o-mini",
+      "schema_mode": "full",
+      "join_count": 4,
+      "tables_used": [
+        "experimental_measurement",
+        "material_entry",
+        "material_synthesis",
+        "measured_property",
+        "synthesis_method"
+      ],
+      "condition": "llm_full_schema",
+      "query_id": "E12",
+      "query_text": "XRDで測定されたhardnessが10GPa以上の化合物のうち、Arc Meltingで合成されたものは？",
+      "category": "complex",
+      "min_tables": 6,
+      "expected_tables": [
+        "material_entry",
+        "experimental_measurement",
+        "measured_property",
+        "material_synthesis",
+        "synthesis_method"
+      ],
+      "unnecessary_joins": 0
+    },
+    "llm_traversed": {
       "success": true,
       "rows": 6,
       "columns": [
@@ -539,28 +1213,55 @@
         "reduced_formula",
         "chemical_system"
       ],
-      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN experimental_measurement em ON me.entry_id = em.entry_id\nJOIN measured_property mp ON em.measurement_id = mp.measurement_id\nJOIN material_synthesis ms ON me.entry_id = ms.entry_id\nJOIN synthesis_method sm ON ms.synthesis_id = sm.synthesis_id\nWHERE mp.property_name = 'hardness' \n  AND mp.value >= 10 \n  AND mp.unit = 'GPa' \n  AND sm.method_name = 'Arc Melting'\nLIMIT 100;",
-      "latency_ms": 1706,
+      "sql": "SELECT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN material_synthesis ms ON me.entry_id = ms.entry_id\nJOIN experimental_measurement em ON me.entry_id = em.entry_id\nJOIN measured_property mp ON em.measurement_id = mp.measurement_id\nJOIN synthesis_method sm ON ms.synthesis_id = sm.synthesis_id\nWHERE mp.property_name = 'hardness'\n  AND mp.value >= 10\n  AND sm.method_name = 'Arc Melting'\nLIMIT 100;",
+      "latency_ms": 1555,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "traversed",
+      "join_count": 4,
+      "tables_used": [
+        "experimental_measurement",
+        "material_entry",
+        "material_synthesis",
+        "measured_property",
+        "synthesis_method"
+      ],
+      "condition": "llm_traversed",
       "query_id": "E12",
       "query_text": "XRDで測定されたhardnessが10GPa以上の化合物のうち、Arc Meltingで合成されたものは？",
       "category": "complex",
-      "min_tables": 6
+      "min_tables": 6,
+      "expected_tables": [
+        "material_entry",
+        "experimental_measurement",
+        "measured_property",
+        "material_synthesis",
+        "synthesis_method"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"compounds\" does not exist\nLINE 2: FROM compounds\n             ^\n",
       "sql": "SELECT *\nFROM compounds\nWHERE hardness >= 10\nAND synthesis_method = 'Arc Melting'\nAND measurement_technique = 'XRD'\nLIMIT 100;",
-      "latency_ms": 984,
+      "latency_ms": 955,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 0,
+      "tables_used": [
+        "compounds"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E12",
       "query_text": "XRDで測定されたhardnessが10GPa以上の化合物のうち、Arc Meltingで合成されたものは？",
       "category": "complex",
       "min_tables": 6,
+      "expected_tables": [
+        "material_entry",
+        "experimental_measurement",
+        "measured_property",
+        "material_synthesis",
+        "synthesis_method"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -580,7 +1281,43 @@
         "measured_property"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
+      "success": true,
+      "rows": 5,
+      "columns": [
+        "lattice_a",
+        "lattice_b",
+        "lattice_c"
+      ],
+      "sql": "SELECT structure.lattice_a, structure.lattice_b, structure.lattice_c\nFROM material_entry\nJOIN material_application ON material_entry.entry_id = material_application.entry_id\nJOIN application_domain ON material_application.domain_id = application_domain.domain_id\nJOIN structure ON material_entry.entry_id = structure.entry_id\nJOIN phase_diagram_entry ON material_entry.entry_id = phase_diagram_entry.entry_id\nWHERE application_domain.domain_name = 'Aerospace Alloys'\nAND phase_diagram_entry.is_on_hull = true\nAND structure.prototype = 'B2'\nAND EXISTS (\n    SELECT 1\n    FROM experimental_measurement\n    WHERE experimental_measurement.entry_id = material_entry.entry_id\n)\nLIMIT 100;",
+      "latency_ms": 2033,
+      "model": "gpt-4o-mini",
+      "schema_mode": "full",
+      "join_count": 4,
+      "tables_used": [
+        "application_domain",
+        "experimental_measurement",
+        "material_application",
+        "material_entry",
+        "phase_diagram_entry",
+        "structure"
+      ],
+      "condition": "llm_full_schema",
+      "query_id": "E13",
+      "query_text": "Structural MaterialsのサブカテゴリであるAerospace Alloysに適したB2化合物で、実験データがあるものの格子定数は？",
+      "category": "complex",
+      "min_tables": 6,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "material_application",
+        "application_domain",
+        "experimental_measurement",
+        "measured_property"
+      ],
+      "unnecessary_joins": 0
+    },
+    "llm_traversed": {
       "success": true,
       "rows": 0,
       "columns": [
@@ -588,28 +1325,58 @@
         "lattice_b",
         "lattice_c"
       ],
-      "sql": "SELECT s.lattice_a, s.lattice_b, s.lattice_c\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nJOIN material_application ma ON me.entry_id = ma.entry_id\nJOIN application_domain ad ON ma.domain_id = ad.domain_id\nWHERE ad.domain_name = 'Aerospace Alloys' \nAND me.formula LIKE '%B2%'\nAND EXISTS (\n    SELECT 1\n    FROM experimental_measurement em\n    WHERE em.entry_id = me.entry_id\n)\nLIMIT 100;",
-      "latency_ms": 1704,
+      "sql": "SELECT s.lattice_a, s.lattice_b, s.lattice_c\nFROM material_entry me\nJOIN material_application ma ON me.entry_id = ma.entry_id\nJOIN application_domain ad ON ma.domain_id = ad.domain_id\nJOIN structure s ON me.entry_id = s.entry_id\nJOIN experimental_measurement em ON me.entry_id = em.entry_id\nWHERE ad.domain_name = 'Aerospace Alloys' AND me.formula LIKE 'B2%'\nLIMIT 100;",
+      "latency_ms": 1312,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "traversed",
+      "join_count": 4,
+      "tables_used": [
+        "application_domain",
+        "experimental_measurement",
+        "material_application",
+        "material_entry",
+        "structure"
+      ],
+      "condition": "llm_traversed",
       "query_id": "E13",
       "query_text": "Structural MaterialsのサブカテゴリであるAerospace Alloysに適したB2化合物で、実験データがあるものの格子定数は？",
       "category": "complex",
-      "min_tables": 6
+      "min_tables": 6,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "material_application",
+        "application_domain",
+        "experimental_measurement",
+        "measured_property"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"materials\" does not exist\nLINE 2: FROM materials \n             ^\n",
       "sql": "SELECT lattice_constant \nFROM materials \nJOIN categories ON materials.category_id = categories.id \nWHERE categories.name = 'Aerospace Alloys' \nAND materials.compound_type = 'B2' \nAND materials.experiment_data IS NOT NULL \nLIMIT 100;",
-      "latency_ms": 1333,
+      "latency_ms": 1594,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 1,
+      "tables_used": [
+        "categories",
+        "materials"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E13",
       "query_text": "Structural MaterialsのサブカテゴリであるAerospace Alloysに適したB2化合物で、実験データがあるものの格子定数は？",
       "category": "complex",
       "min_tables": 6,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "material_application",
+        "application_domain",
+        "experimental_measurement",
+        "measured_property"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -628,33 +1395,97 @@
         "defect_type"
       ]
     },
-    "llm_schema": {
-      "success": false,
-      "error": "operator does not exist: text = integer\nLINE 5: JOIN literature_reference lr ON md.entry_id = lr.reference_i...\n                                                    ^\nHINT:  No operator matches the given name and argument types. You might need to add explicit type casts.\n",
-      "sql": "SELECT me.entry_id, me.source_db, me.source_material_id, me.formula, me.reduced_formula, me.chemical_system, me.number_of_elements\nFROM material_entry me\nJOIN material_defect md ON me.entry_id = md.entry_id\nJOIN defect_type dt ON md.defect_type_id = dt.defect_type_id\nJOIN literature_reference lr ON md.entry_id = lr.reference_id\nWHERE lr.journal = 'Nature Materials' AND md.formation_energy < 1\nLIMIT 100;",
-      "latency_ms": 1676,
+    "llm_full_schema": {
+      "success": true,
+      "rows": 2,
+      "columns": [
+        "entry_id",
+        "source_db",
+        "formula",
+        "formation_energy"
+      ],
+      "sql": "SELECT me.entry_id, me.source_db, me.formula, md.formation_energy\nFROM material_entry me\nJOIN material_defect md ON me.entry_id = md.entry_id\nJOIN literature_reference lr ON lr.reference_id = (SELECT mr.reference_id FROM material_reference mr WHERE mr.entry_id = me.entry_id LIMIT 1)\nWHERE lr.journal = 'Nature Materials' AND md.formation_energy < 1\nLIMIT 100;",
+      "latency_ms": 2583,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "full",
+      "join_count": 2,
+      "tables_used": [
+        "literature_reference",
+        "material_defect",
+        "material_entry",
+        "material_reference"
+      ],
+      "condition": "llm_full_schema",
       "query_id": "E14",
       "query_text": "Nature Materialsに掲載された化合物のうち、Vacancy形成エネルギーが1eV未満のものは？",
       "category": "complex",
       "min_tables": 5,
+      "expected_tables": [
+        "material_entry",
+        "material_reference",
+        "literature_reference",
+        "material_defect",
+        "defect_type"
+      ],
+      "unnecessary_joins": 0
+    },
+    "llm_traversed": {
+      "success": true,
       "rows": 0,
-      "columns": []
+      "columns": [
+        "entry_id",
+        "formula",
+        "formation_energy"
+      ],
+      "sql": "SELECT me.entry_id, me.formula, md.formation_energy\nFROM material_entry me\nJOIN material_defect md ON me.entry_id = md.entry_id\nJOIN material_reference mr ON me.entry_id = mr.entry_id\nJOIN literature_reference lr ON mr.reference_id = lr.reference_id\nWHERE lr.journal = 'Nature Materials' AND md.defect_type_id = (SELECT defect_type_id FROM defect_type WHERE defect_name = 'Vacancy')\nAND md.formation_energy < 1\nLIMIT 100;",
+      "latency_ms": 1555,
+      "model": "gpt-4o-mini",
+      "schema_mode": "traversed",
+      "join_count": 3,
+      "tables_used": [
+        "defect_type",
+        "literature_reference",
+        "material_defect",
+        "material_entry",
+        "material_reference"
+      ],
+      "condition": "llm_traversed",
+      "query_id": "E14",
+      "query_text": "Nature Materialsに掲載された化合物のうち、Vacancy形成エネルギーが1eV未満のものは？",
+      "category": "complex",
+      "min_tables": 5,
+      "expected_tables": [
+        "material_entry",
+        "material_reference",
+        "literature_reference",
+        "material_defect",
+        "defect_type"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"compounds\" does not exist\nLINE 2: FROM compounds\n             ^\n",
       "sql": "SELECT *\nFROM compounds\nWHERE vacancy_formation_energy < 1\nAND publication_source = 'Nature Materials'\nLIMIT 100;",
-      "latency_ms": 770,
+      "latency_ms": 991,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 0,
+      "tables_used": [
+        "compounds"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E14",
       "query_text": "Nature Materialsに掲載された化合物のうち、Vacancy形成エネルギーが1eV未満のものは？",
       "category": "complex",
       "min_tables": 5,
+      "expected_tables": [
+        "material_entry",
+        "material_reference",
+        "literature_reference",
+        "material_defect",
+        "defect_type"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -675,37 +1506,105 @@
         "application_domain"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
+      "success": true,
+      "rows": 0,
+      "columns": [
+        "entry_id",
+        "formula",
+        "chemical_system"
+      ],
+      "sql": "SELECT me.entry_id, me.formula, me.chemical_system\nFROM material_entry me\nJOIN composition c ON me.entry_id = c.entry_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN material_application ma ON me.entry_id = ma.entry_id\nWHERE c.element IN ('Ti', 'Zr', 'Hf')\n  AND me.reduced_formula LIKE '%B2%'\n  AND ma.domain_id IN (SELECT domain_id FROM application_domain WHERE domain_name = 'Catalysis')\n  AND ps.is_stable = true\nLIMIT 100;",
+      "latency_ms": 1704,
+      "model": "gpt-4o-mini",
+      "schema_mode": "full",
+      "join_count": 3,
+      "tables_used": [
+        "application_domain",
+        "composition",
+        "material_application",
+        "material_entry",
+        "phase_stability"
+      ],
+      "condition": "llm_full_schema",
+      "query_id": "E15",
+      "query_text": "4族元素(Ti,Zr,Hf)を含むB2化合物で、触媒用途があり、かつ安定なものを出して",
+      "category": "complex",
+      "min_tables": 5,
+      "expected_tables": [
+        "material_entry",
+        "composition",
+        "element",
+        "structure",
+        "phase_stability",
+        "material_application",
+        "application_domain"
+      ],
+      "unnecessary_joins": 0
+    },
+    "llm_traversed": {
       "success": true,
       "rows": 0,
       "columns": [
         "entry_id",
         "formula",
         "reduced_formula",
-        "chemical_system"
+        "chemical_system",
+        "number_of_elements"
       ],
-      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN composition c ON me.entry_id = c.entry_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN material_application ma ON me.entry_id = ma.entry_id\nJOIN application_domain ad ON ma.domain_id = ad.domain_id\nWHERE c.element IN ('Ti', 'Zr', 'Hf')\n  AND me.formula LIKE '%B2%'\n  AND ps.is_stable = TRUE\n  AND ad.domain_name LIKE '%触媒%'\nLIMIT 100;",
-      "latency_ms": 1568,
+      "sql": "SELECT me.entry_id, me.formula, me.reduced_formula, me.chemical_system, me.number_of_elements\nFROM material_entry me\nJOIN composition c ON me.entry_id = c.entry_id\nJOIN material_application ma ON me.entry_id = ma.entry_id\nJOIN application_domain ad ON ma.domain_id = ad.domain_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE c.element IN ('Ti', 'Zr', 'Hf')\n  AND me.formula LIKE '%B2%'\n  AND ad.domain_name LIKE '%触媒%'\n  AND ps.is_stable = true\nLIMIT 100;",
+      "latency_ms": 2336,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "traversed",
+      "join_count": 4,
+      "tables_used": [
+        "application_domain",
+        "composition",
+        "material_application",
+        "material_entry",
+        "phase_stability"
+      ],
+      "condition": "llm_traversed",
       "query_id": "E15",
       "query_text": "4族元素(Ti,Zr,Hf)を含むB2化合物で、触媒用途があり、かつ安定なものを出して",
       "category": "complex",
-      "min_tables": 5
+      "min_tables": 5,
+      "expected_tables": [
+        "material_entry",
+        "composition",
+        "element",
+        "structure",
+        "phase_stability",
+        "material_application",
+        "application_domain"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"compounds\" does not exist\nLINE 2: FROM compounds\n             ^\n",
       "sql": "SELECT *\nFROM compounds\nWHERE element IN ('Ti', 'Zr', 'Hf')\n  AND compound_type = 'B2'\n  AND application = 'catalyst'\n  AND stability = 'stable'\nLIMIT 100;",
-      "latency_ms": 1210,
+      "latency_ms": 975,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 0,
+      "tables_used": [
+        "compounds"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E15",
       "query_text": "4族元素(Ti,Zr,Hf)を含むB2化合物で、触媒用途があり、かつ安定なものを出して",
       "category": "complex",
       "min_tables": 5,
+      "expected_tables": [
+        "material_entry",
+        "composition",
+        "element",
+        "structure",
+        "phase_stability",
+        "material_application",
+        "application_domain"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -721,34 +1620,80 @@
         "material_application"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
       "success": true,
       "rows": 1,
       "columns": [
         "compound_count"
       ],
       "sql": "SELECT COUNT(DISTINCT ma.entry_id) AS compound_count\nFROM material_application ma\nJOIN application_domain ad ON ma.domain_id = ad.domain_id\nWHERE ad.parent_domain_id = (SELECT domain_id FROM application_domain WHERE domain_name = 'Energy Materials')\nLIMIT 100;",
-      "latency_ms": 1572,
+      "latency_ms": 987,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "full",
+      "join_count": 1,
+      "tables_used": [
+        "application_domain",
+        "material_application"
+      ],
+      "condition": "llm_full_schema",
       "query_id": "E16",
       "query_text": "親カテゴリがEnergy Materialsであるすべてのサブカテゴリに属する化合物数を数えて",
       "category": "very_complex",
-      "min_tables": 3
+      "min_tables": 3,
+      "expected_tables": [
+        "application_domain",
+        "material_application"
+      ],
+      "unnecessary_joins": 0
+    },
+    "llm_traversed": {
+      "success": true,
+      "rows": 1,
+      "columns": [
+        "compound_count"
+      ],
+      "sql": "SELECT COUNT(DISTINCT ma.entry_id) AS compound_count\nFROM material_application ma\nJOIN application_domain ad ON ma.domain_id = ad.domain_id\nWHERE ad.parent_domain_id = (SELECT domain_id FROM application_domain WHERE domain_name = 'Energy Materials')\nLIMIT 100;",
+      "latency_ms": 1244,
+      "model": "gpt-4o-mini",
+      "schema_mode": "traversed",
+      "join_count": 1,
+      "tables_used": [
+        "application_domain",
+        "material_application"
+      ],
+      "condition": "llm_traversed",
+      "query_id": "E16",
+      "query_text": "親カテゴリがEnergy Materialsであるすべてのサブカテゴリに属する化合物数を数えて",
+      "category": "very_complex",
+      "min_tables": 3,
+      "expected_tables": [
+        "application_domain",
+        "material_application"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"compounds\" does not exist\nLINE 2: FROM compounds\n             ^\n",
       "sql": "SELECT COUNT(*) AS compound_count\nFROM compounds\nJOIN subcategories ON compounds.subcategory_id = subcategories.id\nJOIN categories ON subcategories.category_id = categories.id\nWHERE categories.name = 'Energy Materials'\nLIMIT 100;",
-      "latency_ms": 1108,
+      "latency_ms": 1101,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 2,
+      "tables_used": [
+        "categories",
+        "compounds",
+        "subcategories"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E16",
       "query_text": "親カテゴリがEnergy Materialsであるすべてのサブカテゴリに属する化合物数を数えて",
       "category": "very_complex",
       "min_tables": 3,
+      "expected_tables": [
+        "application_domain",
+        "material_application"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -764,7 +1709,7 @@
         "element"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
       "success": true,
       "rows": 100,
       "columns": [
@@ -773,27 +1718,74 @@
         "electronegativity"
       ],
       "sql": "SELECT e.symbol, e.name, e.electronegativity\nFROM element e\nJOIN material_defect md ON e.element_id = md.dopant_element_id\nWHERE e.electronegativity >= 1.5\nLIMIT 100;",
-      "latency_ms": 1068,
+      "latency_ms": 2237,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "full",
+      "join_count": 1,
+      "tables_used": [
+        "element",
+        "material_defect"
+      ],
+      "condition": "llm_full_schema",
       "query_id": "E17",
       "query_text": "ドーパント元素として使われている元素で、その元素自体の電気陰性度が1.5以上のものを列挙して",
       "category": "very_complex",
-      "min_tables": 3
+      "min_tables": 3,
+      "expected_tables": [
+        "material_defect",
+        "element"
+      ],
+      "unnecessary_joins": 0
+    },
+    "llm_traversed": {
+      "success": true,
+      "rows": 100,
+      "columns": [
+        "element_id",
+        "symbol",
+        "name",
+        "electronegativity"
+      ],
+      "sql": "SELECT e.element_id, e.symbol, e.name, e.electronegativity\nFROM element e\nJOIN material_defect md ON e.element_id = md.dopant_element_id\nWHERE e.electronegativity >= 1.5\nLIMIT 100;",
+      "latency_ms": 2220,
+      "model": "gpt-4o-mini",
+      "schema_mode": "traversed",
+      "join_count": 1,
+      "tables_used": [
+        "element",
+        "material_defect"
+      ],
+      "condition": "llm_traversed",
+      "query_id": "E17",
+      "query_text": "ドーパント元素として使われている元素で、その元素自体の電気陰性度が1.5以上のものを列挙して",
+      "category": "very_complex",
+      "min_tables": 3,
+      "expected_tables": [
+        "material_defect",
+        "element"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"dopant_elements\" does not exist\nLINE 2: FROM dopant_elements\n             ^\n",
       "sql": "SELECT element_name\nFROM dopant_elements\nWHERE electronegativity >= 1.5\nLIMIT 100;",
-      "latency_ms": 820,
+      "latency_ms": 823,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 0,
+      "tables_used": [
+        "dopant_elements"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E17",
       "query_text": "ドーパント元素として使われている元素で、その元素自体の電気陰性度が1.5以上のものを列挙して",
       "category": "very_complex",
       "min_tables": 3,
+      "expected_tables": [
+        "material_defect",
+        "element"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -810,40 +1802,90 @@
         "phase_stability"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
       "success": true,
       "rows": 100,
       "columns": [
         "entry_id",
-        "source_db",
-        "source_material_id",
         "formula",
-        "reduced_formula",
-        "chemical_system",
-        "number_of_elements"
+        "chemical_system"
       ],
-      "sql": "SELECT DISTINCT me.*\nFROM material_entry me\nJOIN material_application ma ON me.entry_id = ma.entry_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE ps.is_stable = TRUE\nGROUP BY me.entry_id\nHAVING COUNT(DISTINCT ma.domain_id) >= 3\nLIMIT 100;",
-      "latency_ms": 1034,
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.chemical_system\nFROM material_entry me\nJOIN material_application ma ON me.entry_id = ma.entry_id\nJOIN application_domain ad ON ma.domain_id = ad.domain_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE ps.is_stable = TRUE\nGROUP BY me.entry_id, me.formula, me.chemical_system\nHAVING COUNT(DISTINCT ad.domain_id) >= 3\nLIMIT 100;",
+      "latency_ms": 1656,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "full",
+      "join_count": 3,
+      "tables_used": [
+        "application_domain",
+        "material_application",
+        "material_entry",
+        "phase_stability"
+      ],
+      "condition": "llm_full_schema",
       "query_id": "E18",
       "query_text": "3つ以上の異なるアプリケーションドメインに紐付けられた化合物のうち、安定なものだけ出して",
       "category": "very_complex",
-      "min_tables": 3
+      "min_tables": 3,
+      "expected_tables": [
+        "material_entry",
+        "material_application",
+        "phase_stability"
+      ],
+      "unnecessary_joins": 1
+    },
+    "llm_traversed": {
+      "success": true,
+      "rows": 100,
+      "columns": [
+        "entry_id",
+        "formula",
+        "reduced_formula",
+        "chemical_system"
+      ],
+      "sql": "SELECT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN material_application ma ON me.entry_id = ma.entry_id\nWHERE ps.is_stable = true\nGROUP BY me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nHAVING COUNT(DISTINCT ma.domain_id) >= 3\nLIMIT 100;",
+      "latency_ms": 3369,
+      "model": "gpt-4o-mini",
+      "schema_mode": "traversed",
+      "join_count": 2,
+      "tables_used": [
+        "material_application",
+        "material_entry",
+        "phase_stability"
+      ],
+      "condition": "llm_traversed",
+      "query_id": "E18",
+      "query_text": "3つ以上の異なるアプリケーションドメインに紐付けられた化合物のうち、安定なものだけ出して",
+      "category": "very_complex",
+      "min_tables": 3,
+      "expected_tables": [
+        "material_entry",
+        "material_application",
+        "phase_stability"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
-      "error": "relation \"compounds\" does not exist\nLINE 2: FROM compounds c\n             ^\n",
-      "sql": "SELECT c.*\nFROM compounds c\nJOIN applications a ON c.id = a.compound_id\nWHERE c.stability = 'stable'\nGROUP BY c.id\nHAVING COUNT(DISTINCT a.domain) >= 3\nLIMIT 100;",
-      "latency_ms": 1236,
+      "error": "relation \"compounds\" does not exist\nLINE 2: FROM compounds\n             ^\n",
+      "sql": "SELECT *\nFROM compounds\nWHERE stability = 'stable'\nAND id IN (\n    SELECT compound_id\n    FROM application_domains\n    GROUP BY compound_id\n    HAVING COUNT(DISTINCT domain_id) >= 3\n)\nLIMIT 100;",
+      "latency_ms": 1317,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 0,
+      "tables_used": [
+        "application_domains",
+        "compounds"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E18",
       "query_text": "3つ以上の異なるアプリケーションドメインに紐付けられた化合物のうち、安定なものだけ出して",
       "category": "very_complex",
       "min_tables": 3,
+      "expected_tables": [
+        "material_entry",
+        "material_application",
+        "phase_stability"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -862,33 +1904,96 @@
         "measured_property"
       ]
     },
-    "llm_schema": {
-      "success": false,
-      "error": "column em.property_name does not exist\nLINE 1: SELECT DISTINCT me.entry_id, me.formula, em.property_name AS...\n                                                 ^\nHINT:  Perhaps you meant to reference the column \"mp.property_name\" or the column \"cp.property_name\".\n",
-      "sql": "SELECT DISTINCT me.entry_id, me.formula, em.property_name AS experimental_property, mp.property_name AS calculated_property\nFROM material_entry me\nJOIN experimental_measurement em ON me.entry_id = em.entry_id\nJOIN measured_property mp ON em.measurement_id = mp.measurement_id\nJOIN calculation c ON me.entry_id = c.entry_id\nJOIN calculated_property cp ON c.calculation_id = cp.calculation_id\nWHERE em.property_name = cp.property_name\nLIMIT 100;",
-      "latency_ms": 1265,
+    "llm_full_schema": {
+      "success": true,
+      "rows": 100,
+      "columns": [
+        "entry_id",
+        "formula"
+      ],
+      "sql": "SELECT DISTINCT me.entry_id, me.formula\nFROM material_entry me\nJOIN experimental_measurement em ON me.entry_id = em.entry_id\nJOIN calculation c ON me.entry_id = c.entry_id\nLIMIT 100;",
+      "latency_ms": 943,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "full",
+      "join_count": 2,
+      "tables_used": [
+        "calculation",
+        "experimental_measurement",
+        "material_entry"
+      ],
+      "condition": "llm_full_schema",
       "query_id": "E19",
       "query_text": "同一化合物に対して実験値と計算値の両方が存在するものを出して",
       "category": "very_complex",
       "min_tables": 4,
+      "expected_tables": [
+        "material_entry",
+        "calculated_property",
+        "calculation",
+        "experimental_measurement",
+        "measured_property"
+      ],
+      "unnecessary_joins": 0
+    },
+    "llm_traversed": {
+      "success": true,
       "rows": 0,
-      "columns": []
+      "columns": [
+        "entry_id",
+        "formula",
+        "reduced_formula",
+        "chemical_system"
+      ],
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN experimental_measurement em ON me.entry_id = em.entry_id\nJOIN calculation c ON me.entry_id = c.entry_id\nJOIN calculated_property cp ON c.calculation_id = cp.calculation_id\nLIMIT 100;",
+      "latency_ms": 1330,
+      "model": "gpt-4o-mini",
+      "schema_mode": "traversed",
+      "join_count": 3,
+      "tables_used": [
+        "calculated_property",
+        "calculation",
+        "experimental_measurement",
+        "material_entry"
+      ],
+      "condition": "llm_traversed",
+      "query_id": "E19",
+      "query_text": "同一化合物に対して実験値と計算値の両方が存在するものを出して",
+      "category": "very_complex",
+      "min_tables": 4,
+      "expected_tables": [
+        "material_entry",
+        "calculated_property",
+        "calculation",
+        "experimental_measurement",
+        "measured_property"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"compounds\" does not exist\nLINE 2: FROM compounds c\n             ^\n",
       "sql": "SELECT *\nFROM compounds c\nJOIN experimental_values e ON c.id = e.compound_id\nJOIN calculated_values ca ON c.id = ca.compound_id\nLIMIT 100;",
-      "latency_ms": 1022,
+      "latency_ms": 1078,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 2,
+      "tables_used": [
+        "calculated_values",
+        "compounds",
+        "experimental_values"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E19",
       "query_text": "同一化合物に対して実験値と計算値の両方が存在するものを出して",
       "category": "very_complex",
       "min_tables": 4,
+      "expected_tables": [
+        "material_entry",
+        "calculated_property",
+        "calculation",
+        "experimental_measurement",
+        "measured_property"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -907,38 +2012,103 @@
         "literature_reference"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
       "success": true,
-      "rows": 2,
+      "rows": 4,
       "columns": [
         "entry_id",
         "formula",
         "reduced_formula",
         "chemical_system",
-        "band_gap"
+        "band_gap",
+        "title"
       ],
-      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system, ps.band_gap\nFROM material_entry me\nJOIN material_synthesis ms ON me.entry_id = ms.entry_id\nJOIN experimental_measurement em ON me.entry_id = em.entry_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN material_reference mr ON me.entry_id = mr.entry_id\nWHERE ms.atmosphere = 'vacuum' \n  AND ms.temperature_k >= 1500 \n  AND ps.band_gap > 0\nLIMIT 100;",
-      "latency_ms": 1538,
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system, ps.band_gap, lr.title\nFROM material_entry me\nJOIN material_synthesis ms ON me.entry_id = ms.entry_id\nJOIN experimental_measurement em ON me.entry_id = em.entry_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN material_reference mr ON me.entry_id = mr.entry_id\nJOIN literature_reference lr ON mr.reference_id = lr.reference_id\nWHERE ms.atmosphere = 'vacuum' \n  AND ms.temperature_k >= 1500 \n  AND ps.band_gap > 0\nLIMIT 100;",
+      "latency_ms": 2365,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "full",
+      "join_count": 5,
+      "tables_used": [
+        "experimental_measurement",
+        "literature_reference",
+        "material_entry",
+        "material_reference",
+        "material_synthesis",
+        "phase_stability"
+      ],
+      "condition": "llm_full_schema",
       "query_id": "E20",
       "query_text": "vacuum雰囲気で1500K以上で合成された化合物のうち、band_gapが正で、かつ論文引用があるものは？",
       "category": "very_complex",
-      "min_tables": 6
+      "min_tables": 6,
+      "expected_tables": [
+        "material_entry",
+        "material_synthesis",
+        "phase_stability",
+        "material_reference",
+        "literature_reference"
+      ],
+      "unnecessary_joins": 1
+    },
+    "llm_traversed": {
+      "success": true,
+      "rows": 6,
+      "columns": [
+        "entry_id",
+        "formula",
+        "reduced_formula",
+        "band_gap",
+        "title"
+      ],
+      "sql": "SELECT me.entry_id, me.formula, me.reduced_formula, ps.band_gap, lr.title\nFROM material_entry me\nJOIN material_synthesis ms ON me.entry_id = ms.entry_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN material_reference mr ON me.entry_id = mr.entry_id\nJOIN literature_reference lr ON mr.reference_id = lr.reference_id\nWHERE ms.atmosphere = 'vacuum'\n  AND ms.temperature_k >= 1500\n  AND ps.band_gap > 0\nLIMIT 100;",
+      "latency_ms": 1834,
+      "model": "gpt-4o-mini",
+      "schema_mode": "traversed",
+      "join_count": 4,
+      "tables_used": [
+        "literature_reference",
+        "material_entry",
+        "material_reference",
+        "material_synthesis",
+        "phase_stability"
+      ],
+      "condition": "llm_traversed",
+      "query_id": "E20",
+      "query_text": "vacuum雰囲気で1500K以上で合成された化合物のうち、band_gapが正で、かつ論文引用があるものは？",
+      "category": "very_complex",
+      "min_tables": 6,
+      "expected_tables": [
+        "material_entry",
+        "material_synthesis",
+        "phase_stability",
+        "material_reference",
+        "literature_reference"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"compounds\" does not exist\nLINE 2: FROM compounds\n             ^\n",
-      "sql": "SELECT *\nFROM compounds\nWHERE atmosphere = 'vacuum'\n  AND synthesis_temperature >= 1500\n  AND band_gap > 0\n  AND citation IS NOT NULL\nLIMIT 100;",
-      "latency_ms": 1016,
+      "sql": "SELECT *\nFROM compounds\nWHERE synthesis_atmosphere = 'vacuum'\n  AND synthesis_temperature >= 1500\n  AND band_gap > 0\n  AND citation_count > 0\nLIMIT 100;",
+      "latency_ms": 1111,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 0,
+      "tables_used": [
+        "compounds"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E20",
       "query_text": "vacuum雰囲気で1500K以上で合成された化合物のうち、band_gapが正で、かつ論文引用があるものは？",
       "category": "very_complex",
       "min_tables": 6,
+      "expected_tables": [
+        "material_entry",
+        "material_synthesis",
+        "phase_stability",
+        "material_reference",
+        "literature_reference"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -956,37 +2126,93 @@
         "phase_stability"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
+      "success": true,
+      "rows": 100,
+      "columns": [
+        "entry_id",
+        "formula",
+        "formation_energy_per_atom"
+      ],
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, ps.formation_energy_per_atom\nFROM material_entry me\nJOIN composition c ON me.entry_id = c.entry_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE c.element IN (\n    SELECT symbol FROM element WHERE atomic_number BETWEEN 26 AND 30\n) AND ps.formation_energy_per_atom < 0\nLIMIT 100;",
+      "latency_ms": 1359,
+      "model": "gpt-4o-mini",
+      "schema_mode": "full",
+      "join_count": 2,
+      "tables_used": [
+        "composition",
+        "element",
+        "material_entry",
+        "phase_stability"
+      ],
+      "condition": "llm_full_schema",
+      "query_id": "E21",
+      "query_text": "原子番号が26以上30以下の元素を含む化合物で、formation_energyが負のものは？",
+      "category": "cross_domain",
+      "min_tables": 4,
+      "expected_tables": [
+        "material_entry",
+        "composition",
+        "element",
+        "phase_stability"
+      ],
+      "unnecessary_joins": 0
+    },
+    "llm_traversed": {
       "success": true,
       "rows": 100,
       "columns": [
         "entry_id",
         "formula",
         "reduced_formula",
-        "chemical_system"
+        "formation_energy_per_atom"
       ],
-      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN composition c ON me.entry_id = c.entry_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN element e ON c.element = e.symbol\nWHERE e.atomic_number BETWEEN 26 AND 30\nAND ps.formation_energy_per_atom < 0\nLIMIT 100;",
-      "latency_ms": 1303,
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, ps.formation_energy_per_atom\nFROM material_entry me\nJOIN composition c ON me.entry_id = c.entry_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN element e ON c.element = e.symbol\nWHERE e.atomic_number BETWEEN 26 AND 30\nAND ps.formation_energy_per_atom < 0\nLIMIT 100;",
+      "latency_ms": 1518,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "traversed",
+      "join_count": 3,
+      "tables_used": [
+        "composition",
+        "element",
+        "material_entry",
+        "phase_stability"
+      ],
+      "condition": "llm_traversed",
       "query_id": "E21",
       "query_text": "原子番号が26以上30以下の元素を含む化合物で、formation_energyが負のものは？",
       "category": "cross_domain",
-      "min_tables": 4
+      "min_tables": 4,
+      "expected_tables": [
+        "material_entry",
+        "composition",
+        "element",
+        "phase_stability"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"compounds\" does not exist\nLINE 2: FROM compounds\n             ^\n",
       "sql": "SELECT *\nFROM compounds\nWHERE element_atomic_number BETWEEN 26 AND 30\n  AND formation_energy < 0\nLIMIT 100;",
-      "latency_ms": 1058,
+      "latency_ms": 848,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 0,
+      "tables_used": [
+        "compounds"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E21",
       "query_text": "原子番号が26以上30以下の元素を含む化合物で、formation_energyが負のものは？",
       "category": "cross_domain",
       "min_tables": 4,
+      "expected_tables": [
+        "material_entry",
+        "composition",
+        "element",
+        "phase_stability"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -1005,7 +2231,7 @@
         "application_domain"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
       "success": true,
       "rows": 8,
       "columns": [
@@ -1014,27 +2240,92 @@
         "chemical_system"
       ],
       "sql": "SELECT DISTINCT me.entry_id, me.formula, me.chemical_system\nFROM material_entry me\nJOIN composition c ON me.entry_id = c.entry_id\nJOIN material_application ma ON me.entry_id = ma.entry_id\nJOIN application_domain ad ON ma.domain_id = ad.domain_id\nJOIN element e ON c.element = e.symbol\nWHERE e.category = 'alkali_metal' AND ad.domain_name = 'Thermoelectrics'\nLIMIT 100;",
-      "latency_ms": 1469,
+      "latency_ms": 1660,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "full",
+      "join_count": 4,
+      "tables_used": [
+        "application_domain",
+        "composition",
+        "element",
+        "material_application",
+        "material_entry"
+      ],
+      "condition": "llm_full_schema",
       "query_id": "E22",
       "query_text": "alkali_metalカテゴリの元素を含む化合物で、Thermoelectrics用途に適したものは？",
       "category": "cross_domain",
-      "min_tables": 5
+      "min_tables": 5,
+      "expected_tables": [
+        "material_entry",
+        "composition",
+        "element",
+        "material_application",
+        "application_domain"
+      ],
+      "unnecessary_joins": 0
+    },
+    "llm_traversed": {
+      "success": true,
+      "rows": 8,
+      "columns": [
+        "entry_id",
+        "source_db",
+        "source_material_id",
+        "formula",
+        "reduced_formula",
+        "chemical_system",
+        "number_of_elements"
+      ],
+      "sql": "SELECT DISTINCT me.entry_id, me.source_db, me.source_material_id, me.formula, me.reduced_formula, me.chemical_system, me.number_of_elements\nFROM material_entry me\nJOIN composition c ON me.entry_id = c.entry_id\nJOIN element e ON c.element = e.symbol\nJOIN material_application ma ON me.entry_id = ma.entry_id\nJOIN application_domain ad ON ma.domain_id = ad.domain_id\nWHERE e.category = 'alkali_metal' AND ad.domain_name = 'Thermoelectrics'\nLIMIT 100;",
+      "latency_ms": 1730,
+      "model": "gpt-4o-mini",
+      "schema_mode": "traversed",
+      "join_count": 4,
+      "tables_used": [
+        "application_domain",
+        "composition",
+        "element",
+        "material_application",
+        "material_entry"
+      ],
+      "condition": "llm_traversed",
+      "query_id": "E22",
+      "query_text": "alkali_metalカテゴリの元素を含む化合物で、Thermoelectrics用途に適したものは？",
+      "category": "cross_domain",
+      "min_tables": 5,
+      "expected_tables": [
+        "material_entry",
+        "composition",
+        "element",
+        "material_application",
+        "application_domain"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"compounds\" does not exist\nLINE 2: FROM compounds\n             ^\n",
-      "sql": "SELECT *\nFROM compounds\nJOIN elements ON compounds.element_id = elements.id\nWHERE elements.category = 'alkali_metal' AND compounds.application = 'Thermoelectrics'\nLIMIT 100;",
-      "latency_ms": 2358,
+      "sql": "SELECT *\nFROM compounds\nWHERE category = 'alkali_metal' AND application = 'Thermoelectrics'\nLIMIT 100;",
+      "latency_ms": 811,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 0,
+      "tables_used": [
+        "compounds"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E22",
       "query_text": "alkali_metalカテゴリの元素を含む化合物で、Thermoelectrics用途に適したものは？",
       "category": "cross_domain",
       "min_tables": 5,
+      "expected_tables": [
+        "material_entry",
+        "composition",
+        "element",
+        "material_application",
+        "application_domain"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -1052,37 +2343,97 @@
         "experimental_measurement"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
       "success": true,
       "rows": 68,
       "columns": [
         "entry_id",
         "formula",
-        "reduced_formula",
         "chemical_system"
       ],
-      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nJOIN experimental_measurement em ON me.entry_id = em.entry_id\nWHERE s.crystal_system = 'cubic'\nAND em.method = 'DSC'\nLIMIT 100;",
-      "latency_ms": 1127,
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.chemical_system\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nJOIN experimental_measurement em ON me.entry_id = em.entry_id\nWHERE s.crystal_system = 'cubic'\nAND em.method = 'DSC'\nLIMIT 100;",
+      "latency_ms": 1228,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "full",
+      "join_count": 2,
+      "tables_used": [
+        "experimental_measurement",
+        "material_entry",
+        "structure"
+      ],
+      "condition": "llm_full_schema",
       "query_id": "E23",
       "query_text": "cubic結晶系の空間群に属する化合物のうち、DSCで測定されたものを出して",
       "category": "cross_domain",
-      "min_tables": 5
+      "min_tables": 5,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "space_group",
+        "experimental_measurement"
+      ],
+      "unnecessary_joins": 0
+    },
+    "llm_traversed": {
+      "success": true,
+      "rows": 0,
+      "columns": [
+        "entry_id",
+        "source_db",
+        "source_material_id",
+        "formula",
+        "reduced_formula",
+        "chemical_system",
+        "number_of_elements"
+      ],
+      "sql": "SELECT DISTINCT me.entry_id, me.source_db, me.source_material_id, me.formula, me.reduced_formula, me.chemical_system, me.number_of_elements\nFROM material_entry me\nJOIN structure s ON me.entry_id = s.entry_id\nJOIN space_group sg ON s.space_group_number = sg.space_group_number\nJOIN experimental_measurement em ON me.entry_id = em.entry_id\nWHERE sg.crystal_system = 'cubic' AND em.method = 'DSC'\nLIMIT 100;",
+      "latency_ms": 1710,
+      "model": "gpt-4o-mini",
+      "schema_mode": "traversed",
+      "join_count": 3,
+      "tables_used": [
+        "experimental_measurement",
+        "material_entry",
+        "space_group",
+        "structure"
+      ],
+      "condition": "llm_traversed",
+      "query_id": "E23",
+      "query_text": "cubic結晶系の空間群に属する化合物のうち、DSCで測定されたものを出して",
+      "category": "cross_domain",
+      "min_tables": 5,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "space_group",
+        "experimental_measurement"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"compounds\" does not exist\nLINE 2: FROM compounds\n             ^\n",
       "sql": "SELECT *\nFROM compounds\nJOIN crystal_systems ON compounds.crystal_system_id = crystal_systems.id\nJOIN measurements ON compounds.id = measurements.compound_id\nWHERE crystal_systems.name = 'cubic' AND measurements.type = 'DSC'\nLIMIT 100;",
-      "latency_ms": 1287,
+      "latency_ms": 1309,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 2,
+      "tables_used": [
+        "compounds",
+        "crystal_systems",
+        "measurements"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E23",
       "query_text": "cubic結晶系の空間群に属する化合物のうち、DSCで測定されたものを出して",
       "category": "cross_domain",
       "min_tables": 5,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "space_group",
+        "experimental_measurement"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -1101,37 +2452,102 @@
         "phase_stability"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
       "success": true,
       "rows": 2,
       "columns": [
         "entry_id",
         "formula",
-        "reduced_formula",
         "chemical_system"
       ],
-      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula, me.chemical_system\nFROM material_entry me\nJOIN material_defect md ON me.entry_id = md.entry_id\nJOIN element e ON md.dopant_element_id = e.element_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE md.defect_type_id = (SELECT defect_type_id FROM defect_type WHERE defect_name = 'Substitutional')\nAND e.block = 'p'\nAND ps.is_stable = true\nLIMIT 100;",
-      "latency_ms": 4555,
+      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.chemical_system\nFROM material_entry me\nJOIN material_defect md ON me.entry_id = md.entry_id\nJOIN element e ON md.dopant_element_id = e.element_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nWHERE md.defect_type_id = (SELECT defect_type_id FROM defect_type WHERE defect_name = 'Substitutional')\nAND e.block = 'p'\nAND ps.is_stable = true\nLIMIT 100;",
+      "latency_ms": 1822,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "full",
+      "join_count": 3,
+      "tables_used": [
+        "defect_type",
+        "element",
+        "material_defect",
+        "material_entry",
+        "phase_stability"
+      ],
+      "condition": "llm_full_schema",
       "query_id": "E24",
       "query_text": "Substitutional欠陥のドーパント元素がpブロックの化合物で、安定なものは？",
       "category": "cross_domain",
-      "min_tables": 5
+      "min_tables": 5,
+      "expected_tables": [
+        "material_entry",
+        "material_defect",
+        "defect_type",
+        "element",
+        "phase_stability"
+      ],
+      "unnecessary_joins": 0
+    },
+    "llm_traversed": {
+      "success": true,
+      "rows": 2,
+      "columns": [
+        "entry_id",
+        "source_db",
+        "source_material_id",
+        "formula",
+        "reduced_formula",
+        "chemical_system",
+        "number_of_elements"
+      ],
+      "sql": "SELECT me.entry_id, me.source_db, me.source_material_id, me.formula, me.reduced_formula, me.chemical_system, me.number_of_elements\nFROM material_entry me\nJOIN material_defect md ON me.entry_id = md.entry_id\nJOIN defect_type dt ON md.defect_type_id = dt.defect_type_id\nJOIN phase_stability ps ON me.entry_id = ps.entry_id\nJOIN element e ON md.dopant_element_id = e.element_id\nWHERE dt.defect_name = 'Substitutional' \n  AND e.block = 'p' \n  AND ps.is_stable = true\nLIMIT 100;",
+      "latency_ms": 2022,
+      "model": "gpt-4o-mini",
+      "schema_mode": "traversed",
+      "join_count": 4,
+      "tables_used": [
+        "defect_type",
+        "element",
+        "material_defect",
+        "material_entry",
+        "phase_stability"
+      ],
+      "condition": "llm_traversed",
+      "query_id": "E24",
+      "query_text": "Substitutional欠陥のドーパント元素がpブロックの化合物で、安定なものは？",
+      "category": "cross_domain",
+      "min_tables": 5,
+      "expected_tables": [
+        "material_entry",
+        "material_defect",
+        "defect_type",
+        "element",
+        "phase_stability"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"compounds\" does not exist\nLINE 2: FROM compounds\n             ^\n",
       "sql": "SELECT *\nFROM compounds\nWHERE defect_type = 'Substitutional'\n  AND dopant_element IN (SELECT element FROM elements WHERE block = 'p')\n  AND stability = 'stable'\nLIMIT 100;",
-      "latency_ms": 1026,
+      "latency_ms": 1002,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 0,
+      "tables_used": [
+        "compounds",
+        "elements"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E24",
       "query_text": "Substitutional欠陥のドーパント元素がpブロックの化合物で、安定なものは？",
       "category": "cross_domain",
       "min_tables": 5,
+      "expected_tables": [
+        "material_entry",
+        "material_defect",
+        "defect_type",
+        "element",
+        "phase_stability"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -1150,36 +2566,100 @@
         "measured_property"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
+      "success": true,
+      "rows": 0,
+      "columns": [
+        "entry_id",
+        "formula"
+      ],
+      "sql": "SELECT DISTINCT me.entry_id, me.formula\nFROM material_entry me\nJOIN material_synthesis ms ON me.entry_id = ms.entry_id\nJOIN synthesis_method sm ON ms.synthesis_id = sm.synthesis_id\nJOIN experimental_measurement em ON me.entry_id = em.entry_id\nJOIN measured_property mp ON em.measurement_id = mp.measurement_id\nWHERE sm.method_name = 'Ball Milling' \nAND em.method = 'nanoindentation' \nAND mp.property_name = 'hardness'\nLIMIT 100;",
+      "latency_ms": 2547,
+      "model": "gpt-4o-mini",
+      "schema_mode": "full",
+      "join_count": 4,
+      "tables_used": [
+        "experimental_measurement",
+        "material_entry",
+        "material_synthesis",
+        "measured_property",
+        "synthesis_method"
+      ],
+      "condition": "llm_full_schema",
+      "query_id": "E25",
+      "query_text": "Ball Millingで合成され、かつnanoindentationで測定されたhardnessデータがある化合物は？",
+      "category": "cross_domain",
+      "min_tables": 6,
+      "expected_tables": [
+        "material_entry",
+        "material_synthesis",
+        "synthesis_method",
+        "experimental_measurement",
+        "measured_property"
+      ],
+      "unnecessary_joins": 0
+    },
+    "llm_traversed": {
       "success": true,
       "rows": 0,
       "columns": [
         "entry_id",
         "formula",
-        "reduced_formula"
+        "reduced_formula",
+        "chemical_system",
+        "number_of_elements"
       ],
-      "sql": "SELECT DISTINCT me.entry_id, me.formula, me.reduced_formula\nFROM material_entry me\nJOIN material_synthesis ms ON me.entry_id = ms.entry_id\nJOIN synthesis_method sm ON ms.synthesis_id = sm.synthesis_id\nJOIN experimental_measurement em ON me.entry_id = em.entry_id\nJOIN measured_property mp ON em.measurement_id = mp.measurement_id\nWHERE sm.method_name = 'Ball Milling' \n  AND em.method = 'nanoindentation' \n  AND mp.property_name = 'hardness'\nLIMIT 100;",
-      "latency_ms": 1494,
+      "sql": "SELECT me.entry_id, me.formula, me.reduced_formula, me.chemical_system, me.number_of_elements\nFROM material_entry me\nJOIN material_synthesis ms ON me.entry_id = ms.entry_id\nJOIN synthesis_method sm ON ms.synthesis_id = sm.synthesis_id\nJOIN experimental_measurement em ON me.entry_id = em.entry_id\nWHERE sm.method_name = 'Ball Milling'\nAND em.method = 'nanoindentation'\nAND EXISTS (\n    SELECT 1\n    FROM measured_property mp\n    WHERE mp.measurement_id = em.measurement_id\n    AND mp.property_name = 'hardness'\n)\nLIMIT 100;",
+      "latency_ms": 1846,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "traversed",
+      "join_count": 3,
+      "tables_used": [
+        "experimental_measurement",
+        "material_entry",
+        "material_synthesis",
+        "measured_property",
+        "synthesis_method"
+      ],
+      "condition": "llm_traversed",
       "query_id": "E25",
       "query_text": "Ball Millingで合成され、かつnanoindentationで測定されたhardnessデータがある化合物は？",
       "category": "cross_domain",
-      "min_tables": 6
+      "min_tables": 6,
+      "expected_tables": [
+        "material_entry",
+        "material_synthesis",
+        "synthesis_method",
+        "experimental_measurement",
+        "measured_property"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"compounds\" does not exist\nLINE 2: FROM compounds\n             ^\n",
-      "sql": "SELECT *\nFROM compounds\nJOIN synthesis_methods ON compounds.id = synthesis_methods.compound_id\nJOIN measurement_techniques ON compounds.id = measurement_techniques.compound_id\nJOIN hardness_data ON compounds.id = hardness_data.compound_id\nWHERE synthesis_methods.method = 'Ball Milling'\n  AND measurement_techniques.technique = 'nanoindentation'\nLIMIT 100;",
-      "latency_ms": 1916,
+      "sql": "SELECT *\nFROM compounds\nJOIN synthesis_methods ON compounds.id = synthesis_methods.compound_id\nJOIN hardness_data ON compounds.id = hardness_data.compound_id\nWHERE synthesis_methods.method = 'Ball Milling'\n  AND hardness_data.method = 'nanoindentation'\nLIMIT 100;",
+      "latency_ms": 1211,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 2,
+      "tables_used": [
+        "compounds",
+        "hardness_data",
+        "synthesis_methods"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E25",
       "query_text": "Ball Millingで合成され、かつnanoindentationで測定されたhardnessデータがある化合物は？",
       "category": "cross_domain",
       "min_tables": 6,
+      "expected_tables": [
+        "material_entry",
+        "material_synthesis",
+        "synthesis_method",
+        "experimental_measurement",
+        "measured_property"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -1196,35 +2676,83 @@
         "phase_stability"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
       "success": true,
       "rows": 5,
       "columns": [
         "prototype",
         "average_formation_energy"
       ],
-      "sql": "SELECT \n    s.prototype, \n    AVG(ps.formation_energy_per_atom) AS average_formation_energy\nFROM \n    phase_stability ps\nJOIN \n    structure s ON ps.entry_id = s.entry_id\nGROUP BY \n    s.prototype\nLIMIT 100;",
-      "latency_ms": 5994,
+      "sql": "SELECT s.prototype, AVG(ps.formation_energy_per_atom) AS average_formation_energy\nFROM phase_stability ps\nJOIN structure s ON ps.entry_id = s.entry_id\nGROUP BY s.prototype\nLIMIT 100;",
+      "latency_ms": 944,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "full",
+      "join_count": 1,
+      "tables_used": [
+        "phase_stability",
+        "structure"
+      ],
+      "condition": "llm_full_schema",
       "query_id": "E26",
       "query_text": "プロトタイプ別の平均formation_energyを出して",
       "category": "aggregation",
-      "min_tables": 3
+      "min_tables": 3,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "phase_stability"
+      ],
+      "unnecessary_joins": 0
+    },
+    "llm_traversed": {
+      "success": true,
+      "rows": 5,
+      "columns": [
+        "prototype",
+        "average_formation_energy"
+      ],
+      "sql": "SELECT s.prototype, AVG(ps.formation_energy_per_atom) AS average_formation_energy\nFROM structure s\nJOIN phase_stability ps ON s.entry_id = ps.entry_id\nGROUP BY s.prototype\nLIMIT 100;",
+      "latency_ms": 753,
+      "model": "gpt-4o-mini",
+      "schema_mode": "traversed",
+      "join_count": 1,
+      "tables_used": [
+        "phase_stability",
+        "structure"
+      ],
+      "condition": "llm_traversed",
+      "query_id": "E26",
+      "query_text": "プロトタイプ別の平均formation_energyを出して",
+      "category": "aggregation",
+      "min_tables": 3,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "phase_stability"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"materials\" does not exist\nLINE 2: FROM materials\n             ^\n",
       "sql": "SELECT prototype, AVG(formation_energy) AS average_formation_energy\nFROM materials\nGROUP BY prototype\nLIMIT 100;",
-      "latency_ms": 742,
+      "latency_ms": 961,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 0,
+      "tables_used": [
+        "materials"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E26",
       "query_text": "プロトタイプ別の平均formation_energyを出して",
       "category": "aggregation",
       "min_tables": 3,
+      "expected_tables": [
+        "material_entry",
+        "structure",
+        "phase_stability"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -1240,35 +2768,82 @@
         "synthesis_method"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
       "success": true,
       "rows": 10,
       "columns": [
         "method_name",
         "success_rate"
       ],
-      "sql": "SELECT \n    sm.method_name, \n    AVG(CASE WHEN ms.success THEN 1 ELSE 0 END) AS success_rate\nFROM \n    material_synthesis ms\nJOIN \n    synthesis_method sm ON ms.synthesis_id = sm.synthesis_id\nGROUP BY \n    sm.method_name\nLIMIT 100;",
-      "latency_ms": 1044,
+      "sql": "SELECT \n    sm.method_name, \n    AVG(CASE WHEN ms.success THEN 1 ELSE 0 END) AS success_rate\nFROM \n    synthesis_method sm\nJOIN \n    material_synthesis ms ON sm.synthesis_id = ms.synthesis_id\nGROUP BY \n    sm.method_name\nLIMIT 100;",
+      "latency_ms": 1116,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "full",
+      "join_count": 1,
+      "tables_used": [
+        "material_synthesis",
+        "synthesis_method"
+      ],
+      "condition": "llm_full_schema",
       "query_id": "E27",
       "query_text": "合成方法ごとの成功率を計算して",
       "category": "aggregation",
-      "min_tables": 2
+      "min_tables": 2,
+      "expected_tables": [
+        "material_synthesis",
+        "synthesis_method"
+      ],
+      "unnecessary_joins": 0
+    },
+    "llm_traversed": {
+      "success": true,
+      "rows": 10,
+      "columns": [
+        "method_name",
+        "total_syntheses",
+        "successful_syntheses",
+        "success_rate"
+      ],
+      "sql": "SELECT \n    sm.method_name,\n    COUNT(ms.success) AS total_syntheses,\n    SUM(CASE WHEN ms.success THEN 1 ELSE 0 END) AS successful_syntheses,\n    (SUM(CASE WHEN ms.success THEN 1 ELSE 0 END) * 100.0 / COUNT(ms.success)) AS success_rate\nFROM \n    material_synthesis ms\nJOIN \n    synthesis_method sm ON ms.synthesis_id = sm.synthesis_id\nGROUP BY \n    sm.method_name\nLIMIT 100;",
+      "latency_ms": 1663,
+      "model": "gpt-4o-mini",
+      "schema_mode": "traversed",
+      "join_count": 1,
+      "tables_used": [
+        "material_synthesis",
+        "synthesis_method"
+      ],
+      "condition": "llm_traversed",
+      "query_id": "E27",
+      "query_text": "合成方法ごとの成功率を計算して",
+      "category": "aggregation",
+      "min_tables": 2,
+      "expected_tables": [
+        "material_synthesis",
+        "synthesis_method"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
-      "error": "relation \"synthesis_results\" does not exist\nLINE 3: FROM synthesis_results\n             ^\n",
-      "sql": "SELECT synthesis_method, COUNT(*) AS success_count, \n       (COUNT(*) * 100.0 / SUM(COUNT(*)) OVER ()) AS success_rate\nFROM synthesis_results\nWHERE result = 'success'\nGROUP BY synthesis_method\nLIMIT 100;",
-      "latency_ms": 1374,
+      "error": "relation \"experiments\" does not exist\nLINE 3: FROM experiments\n             ^\n",
+      "sql": "SELECT synthesis_method, \n       COUNT(*) FILTER (WHERE success = true) * 100.0 / COUNT(*) AS success_rate\nFROM experiments\nGROUP BY synthesis_method\nLIMIT 100;",
+      "latency_ms": 1767,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 0,
+      "tables_used": [
+        "experiments"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E27",
       "query_text": "合成方法ごとの成功率を計算して",
       "category": "aggregation",
       "min_tables": 2,
+      "expected_tables": [
+        "material_synthesis",
+        "synthesis_method"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -1285,18 +2860,58 @@
         "phase_stability"
       ]
     },
-    "llm_schema": {
-      "success": false,
-      "error": "missing FROM-clause entry for table \"ms\"\nLINE 1: SELECT ad.domain_name, COUNT(DISTINCT ms.entry_id) AS stable...\n                                              ^\n",
-      "sql": "SELECT ad.domain_name, COUNT(DISTINCT ms.entry_id) AS stable_compound_count\nFROM application_domain ad\nJOIN material_application ma ON ad.domain_id = ma.domain_id\nJOIN phase_stability ps ON ma.entry_id = ps.entry_id\nWHERE ps.is_stable = TRUE\nGROUP BY ad.domain_name\nORDER BY stable_compound_count DESC\nLIMIT 100;",
-      "latency_ms": 4849,
+    "llm_full_schema": {
+      "success": true,
+      "rows": 20,
+      "columns": [
+        "domain_name",
+        "stable_compound_count"
+      ],
+      "sql": "SELECT \n    application_domain.domain_name, \n    COUNT(phase_stability.entry_id) AS stable_compound_count\nFROM \n    application_domain\nJOIN \n    material_application ON application_domain.domain_id = material_application.domain_id\nJOIN \n    phase_stability ON material_application.entry_id = phase_stability.entry_id\nWHERE \n    phase_stability.is_stable = TRUE\nGROUP BY \n    application_domain.domain_name\nORDER BY \n    stable_compound_count DESC\nLIMIT 100;",
+      "latency_ms": 8065,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "full",
+      "join_count": 2,
+      "tables_used": [
+        "application_domain",
+        "material_application",
+        "phase_stability"
+      ],
+      "condition": "llm_full_schema",
       "query_id": "E28",
       "query_text": "アプリケーションドメインごとの安定化合物数を多い順に並べて",
       "category": "aggregation",
       "min_tables": 3,
+      "expected_tables": [
+        "material_application",
+        "application_domain",
+        "phase_stability"
+      ],
+      "unnecessary_joins": 0
+    },
+    "llm_traversed": {
+      "success": false,
+      "error": "operator does not exist: integer = text\nLINE 3: JOIN phase_stability ps ON ad.domain_id = ps.entry_id\n                                                ^\nHINT:  No operator matches the given name and argument types. You might need to add explicit type casts.\n",
+      "sql": "SELECT ad.domain_name, COUNT(ps.stability_id) AS stable_compound_count\nFROM application_domain ad\nJOIN phase_stability ps ON ad.domain_id = ps.entry_id\nWHERE ps.is_stable = TRUE\nGROUP BY ad.domain_name\nORDER BY stable_compound_count DESC\nLIMIT 100;",
+      "latency_ms": 1300,
+      "model": "gpt-4o-mini",
+      "schema_mode": "traversed",
+      "join_count": 1,
+      "tables_used": [
+        "application_domain",
+        "phase_stability"
+      ],
+      "condition": "llm_traversed",
+      "query_id": "E28",
+      "query_text": "アプリケーションドメインごとの安定化合物数を多い順に並べて",
+      "category": "aggregation",
+      "min_tables": 3,
+      "expected_tables": [
+        "material_application",
+        "application_domain",
+        "phase_stability"
+      ],
+      "unnecessary_joins": 0,
       "rows": 0,
       "columns": []
     },
@@ -1304,14 +2919,23 @@
       "success": false,
       "error": "relation \"compounds\" does not exist\nLINE 2: FROM compounds\n             ^\n",
       "sql": "SELECT application_domain, COUNT(*) AS stable_compound_count\nFROM compounds\nWHERE stability = 'stable'\nGROUP BY application_domain\nORDER BY stable_compound_count DESC\nLIMIT 100;",
-      "latency_ms": 819,
+      "latency_ms": 817,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 0,
+      "tables_used": [
+        "compounds"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E28",
       "query_text": "アプリケーションドメインごとの安定化合物数を多い順に並べて",
       "category": "aggregation",
       "min_tables": 3,
+      "expected_tables": [
+        "material_application",
+        "application_domain",
+        "phase_stability"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -1326,35 +2950,77 @@
         "composition"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
       "success": true,
       "rows": 10,
       "columns": [
         "element",
         "compound_count"
       ],
-      "sql": "SELECT c.element, COUNT(DISTINCT c.entry_id) AS compound_count\nFROM composition c\nGROUP BY c.element\nORDER BY compound_count DESC\nLIMIT 10;",
-      "latency_ms": 1379,
+      "sql": "SELECT element, COUNT(composition.entry_id) AS compound_count\nFROM composition\nJOIN element ON composition.element = element.symbol\nGROUP BY element\nORDER BY compound_count DESC\nLIMIT 10;",
+      "latency_ms": 802,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "full",
+      "join_count": 1,
+      "tables_used": [
+        "composition",
+        "element"
+      ],
+      "condition": "llm_full_schema",
       "query_id": "E29",
       "query_text": "各元素が含まれる化合物数のランキングTop10を出して",
       "category": "aggregation",
-      "min_tables": 1
+      "min_tables": 1,
+      "expected_tables": [
+        "composition"
+      ],
+      "unnecessary_joins": 1
+    },
+    "llm_traversed": {
+      "success": true,
+      "rows": 10,
+      "columns": [
+        "element",
+        "compound_count"
+      ],
+      "sql": "SELECT element, COUNT(DISTINCT entry_id) AS compound_count\nFROM composition\nGROUP BY element\nORDER BY compound_count DESC\nLIMIT 10;",
+      "latency_ms": 734,
+      "model": "gpt-4o-mini",
+      "schema_mode": "traversed",
+      "join_count": 0,
+      "tables_used": [
+        "composition"
+      ],
+      "condition": "llm_traversed",
+      "query_id": "E29",
+      "query_text": "各元素が含まれる化合物数のランキングTop10を出して",
+      "category": "aggregation",
+      "min_tables": 1,
+      "expected_tables": [
+        "composition"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"compounds\" does not exist\nLINE 2: FROM compounds\n             ^\n",
-      "sql": "SELECT element, COUNT(compound_id) AS compound_count\nFROM compounds\nJOIN elements ON compounds.element_id = elements.id\nGROUP BY element\nORDER BY compound_count DESC\nLIMIT 100;",
-      "latency_ms": 1170,
+      "sql": "SELECT element, COUNT(compound_id) AS compound_count\nFROM compounds\nJOIN elements ON compounds.element_id = elements.id\nGROUP BY element\nORDER BY compound_count DESC\nLIMIT 10;",
+      "latency_ms": 988,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 1,
+      "tables_used": [
+        "compounds",
+        "elements"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E29",
       "query_text": "各元素が含まれる化合物数のランキングTop10を出して",
       "category": "aggregation",
       "min_tables": 1,
+      "expected_tables": [
+        "composition"
+      ],
       "rows": 0,
       "columns": []
     }
@@ -1370,7 +3036,7 @@
         "material_reference"
       ]
     },
-    "llm_schema": {
+    "llm_full_schema": {
       "success": true,
       "rows": 26,
       "columns": [
@@ -1379,27 +3045,75 @@
         "compound_count"
       ],
       "sql": "SELECT \n    lr.year, \n    COUNT(lr.reference_id) AS paper_count, \n    COUNT(DISTINCT me.entry_id) AS compound_count\nFROM \n    literature_reference lr\nJOIN \n    material_reference mr ON lr.reference_id = mr.reference_id\nJOIN \n    material_entry me ON mr.entry_id = me.entry_id\nGROUP BY \n    lr.year\nORDER BY \n    lr.year\nLIMIT 100;",
-      "latency_ms": 1323,
+      "latency_ms": 1690,
       "model": "gpt-4o-mini",
-      "with_schema": true,
-      "condition": "llm_schema",
+      "schema_mode": "full",
+      "join_count": 2,
+      "tables_used": [
+        "literature_reference",
+        "material_entry",
+        "material_reference"
+      ],
+      "condition": "llm_full_schema",
       "query_id": "E30",
       "query_text": "出版年ごとの論文数と、それらに紐付く化合物数を出して",
       "category": "aggregation",
-      "min_tables": 3
+      "min_tables": 3,
+      "expected_tables": [
+        "literature_reference",
+        "material_reference"
+      ],
+      "unnecessary_joins": 1
+    },
+    "llm_traversed": {
+      "success": true,
+      "rows": 26,
+      "columns": [
+        "year",
+        "paper_count",
+        "compound_count"
+      ],
+      "sql": "SELECT \n    lr.year, \n    COUNT(lr.reference_id) AS paper_count, \n    COUNT(DISTINCT mr.material_reference_id) AS compound_count\nFROM \n    literature_reference lr\nLEFT JOIN \n    material_reference mr ON lr.reference_id = mr.reference_id\nGROUP BY \n    lr.year\nORDER BY \n    lr.year\nLIMIT 100;",
+      "latency_ms": 1219,
+      "model": "gpt-4o-mini",
+      "schema_mode": "traversed",
+      "join_count": 1,
+      "tables_used": [
+        "literature_reference",
+        "material_reference"
+      ],
+      "condition": "llm_traversed",
+      "query_id": "E30",
+      "query_text": "出版年ごとの論文数と、それらに紐付く化合物数を出して",
+      "category": "aggregation",
+      "min_tables": 3,
+      "expected_tables": [
+        "literature_reference",
+        "material_reference"
+      ],
+      "unnecessary_joins": 0
     },
     "llm_no_schema": {
       "success": false,
       "error": "relation \"papers\" does not exist\nLINE 6:     papers p\n            ^\n",
       "sql": "SELECT \n    p.publication_year, \n    COUNT(p.id) AS paper_count, \n    COUNT(DISTINCT c.id) AS compound_count\nFROM \n    papers p\nLEFT JOIN \n    compounds c ON p.id = c.paper_id\nGROUP BY \n    p.publication_year\nORDER BY \n    p.publication_year\nLIMIT 100;",
-      "latency_ms": 1772,
+      "latency_ms": 1438,
       "model": "gpt-4o-mini",
-      "with_schema": false,
+      "schema_mode": "none",
+      "join_count": 1,
+      "tables_used": [
+        "compounds",
+        "papers"
+      ],
       "condition": "llm_no_schema",
       "query_id": "E30",
       "query_text": "出版年ごとの論文数と、それらに紐付く化合物数を出して",
       "category": "aggregation",
       "min_tables": 3,
+      "expected_tables": [
+        "literature_reference",
+        "material_reference"
+      ],
       "rows": 0,
       "columns": []
     }

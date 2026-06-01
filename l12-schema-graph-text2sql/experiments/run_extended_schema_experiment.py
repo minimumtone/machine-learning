@@ -23,7 +23,7 @@ DB_CONFIG = {
     'port': 5432
 }
 
-# Extended schema YAML for prompt injection
+# Extended schema YAML for prompt injection (30 tables - matching OQMD real scale)
 EXTENDED_SCHEMA_YAML = """
 tables:
   material_entry:
@@ -39,7 +39,7 @@ tables:
     columns: [stability_id (PK), entry_id (FK→material_entry), formation_energy_per_atom, energy_above_hull, is_stable, band_gap]
     
   calculation:
-    columns: [calculation_id (PK), entry_id (FK→material_entry), method, functional, calculation_type]
+    columns: [calculation_id (PK, text), entry_id (FK→material_entry), method, functional, calculation_type]
     
   calculated_property:
     columns: [property_id (PK), calculation_id (FK→calculation), property_name, value, unit, tensor_component]
@@ -87,6 +87,36 @@ tables:
   material_defect:
     columns: [material_defect_id (PK), entry_id (FK→material_entry), defect_type_id (FK→defect_type), formation_energy, concentration, site, dopant_element_id (FK→element)]
 
+  band_structure:
+    columns: [band_structure_id (PK), calculation_id (FK→calculation), entry_id (FK→material_entry), is_direct_gap, cbm_energy, vbm_energy, band_gap_type, num_bands, num_kpoints]
+
+  density_of_states:
+    columns: [dos_id (PK), calculation_id (FK→calculation), entry_id (FK→material_entry), total_dos_at_fermi, efermi, is_metallic, spin_polarized]
+
+  elastic_tensor:
+    columns: [elastic_id (PK), entry_id (FK→material_entry), calculation_id (FK→calculation), bulk_modulus_vrh, shear_modulus_vrh, youngs_modulus, poisson_ratio, is_stable]
+
+  magnetic_property:
+    columns: [magnetic_id (PK), entry_id (FK→material_entry), total_magnetization, magnetic_ordering, curie_temperature_k, magnetic_anisotropy_energy]
+
+  thermal_property:
+    columns: [thermal_id (PK), entry_id (FK→material_entry), calculation_id (FK→calculation), debye_temperature_k, thermal_conductivity, specific_heat_cv, gruneisen_parameter, temperature_k]
+
+  surface_energy:
+    columns: [surface_id (PK), entry_id (FK→material_entry), miller_index, surface_energy_j_m2, work_function, is_reconstructed]
+
+  grain_boundary:
+    columns: [grain_boundary_id (PK), entry_id (FK→material_entry), sigma_value, rotation_axis, tilt_angle, gb_energy_j_m2, excess_volume]
+
+  phase_diagram_entry:
+    columns: [phase_entry_id (PK), entry_id (FK→material_entry), chemical_system, is_on_hull, decomposition_products, hull_distance]
+
+  alloy_system:
+    columns: [alloy_system_id (PK), system_name, num_components, category, description]
+
+  material_alloy_system:
+    columns: [material_alloy_id (PK), entry_id (FK→material_entry), alloy_system_id (FK→alloy_system), phase, composition_type]
+
 foreign_keys:
   - composition.entry_id → material_entry.entry_id
   - structure.entry_id → material_entry.entry_id
@@ -108,6 +138,20 @@ foreign_keys:
   - material_defect.entry_id → material_entry.entry_id
   - material_defect.defect_type_id → defect_type.defect_type_id
   - material_defect.dopant_element_id → element.element_id
+  - band_structure.calculation_id → calculation.calculation_id
+  - band_structure.entry_id → material_entry.entry_id
+  - density_of_states.calculation_id → calculation.calculation_id
+  - density_of_states.entry_id → material_entry.entry_id
+  - elastic_tensor.entry_id → material_entry.entry_id
+  - elastic_tensor.calculation_id → calculation.calculation_id
+  - magnetic_property.entry_id → material_entry.entry_id
+  - thermal_property.entry_id → material_entry.entry_id
+  - thermal_property.calculation_id → calculation.calculation_id
+  - surface_energy.entry_id → material_entry.entry_id
+  - grain_boundary.entry_id → material_entry.entry_id
+  - phase_diagram_entry.entry_id → material_entry.entry_id
+  - material_alloy_system.entry_id → material_entry.entry_id
+  - material_alloy_system.alloy_system_id → alloy_system.alloy_system_id
 """
 
 # Test queries categorized by JOIN complexity
@@ -156,8 +200,61 @@ EXTENDED_QUERIES = [
 ]
 
 
-def build_prompt(query: str, with_schema: bool = True) -> str:
-    """Build the LLM prompt for SQL generation."""
+def build_schema_subset(tables: list) -> str:
+    """Build a minimal schema YAML containing only the specified tables and their FK relations."""
+    import re
+    lines = EXTENDED_SCHEMA_YAML.strip().split('\n')
+    
+    # Parse table definitions
+    table_defs = {}
+    current_table = None
+    for line in lines:
+        m = re.match(r'^  (\w+):', line)
+        if m and 'columns:' not in line and 'note:' not in line and 'foreign_keys:' not in line:
+            current_table = m.group(1)
+            table_defs[current_table] = []
+        if current_table:
+            table_defs[current_table].append(line)
+        if line.strip() == '' and current_table:
+            current_table = None
+    
+    # Build subset
+    subset = "tables:\n"
+    for t in tables:
+        if t in table_defs:
+            for l in table_defs[t]:
+                subset += l + '\n'
+            subset += '\n'
+    
+    # Add relevant FK lines
+    subset += "foreign_keys:\n"
+    fk_section = False
+    for line in lines:
+        if 'foreign_keys:' in line:
+            fk_section = True
+            continue
+        if fk_section and line.strip().startswith('-'):
+            # Check if both sides of FK reference tables in our subset
+            parts = line.strip('- ').split('→')
+            if len(parts) == 2:
+                left_table = parts[0].strip().split('.')[0].strip('- ')
+                right_table = parts[1].strip().split('.')[0].strip()
+                # Remove trailing annotations like " (self-ref)"
+                right_table = right_table.split(' ')[0].split('(')[0].strip()
+                if left_table in tables and right_table in tables:
+                    subset += line + '\n'
+    
+    return subset
+
+
+def build_prompt(query: str, schema_mode: str = "full", relevant_tables: list = None) -> str:
+    """Build the LLM prompt for SQL generation.
+    
+    schema_mode:
+      - "full": Include all 30 tables (simulates: schema in prompt, no traversal)
+      - "traversed": Include only relevant tables (simulates: Schema Graph traversal)
+      - "none": No schema information (baseline)
+    """
     base = f"""あなたは材料科学データベースのSQL生成エンジンです。
 ユーザーの自然言語クエリを、PostgreSQL SQLに変換してください。
 
@@ -167,8 +264,12 @@ def build_prompt(query: str, with_schema: bool = True) -> str:
 - JOINは必要最小限のテーブルのみ使用すること
 - 結果は最大100件に制限すること（LIMIT 100）
 """
-    if with_schema:
-        base += f"\n=== データベーススキーマ ===\n{EXTENDED_SCHEMA_YAML}\n"
+    if schema_mode == "full":
+        base += f"\n=== データベーススキーマ（全30テーブル） ===\n{EXTENDED_SCHEMA_YAML}\n"
+    elif schema_mode == "traversed" and relevant_tables:
+        subset = build_schema_subset(relevant_tables)
+        base += f"\n=== データベーススキーマ（関連テーブルのみ） ===\n{subset}\n"
+    # "none" mode: no schema
     
     base += f"\n=== ユーザークエリ ===\n{query}\n\n生成SQL:"
     return base
@@ -192,10 +293,30 @@ def execute_sql(sql: str) -> dict:
             conn.close()
 
 
-def run_llm_query(query: str, model: str = "gpt-4o-mini", with_schema: bool = True) -> dict:
+def count_joins_in_sql(sql: str) -> int:
+    """Count the number of JOIN clauses in generated SQL."""
+    import re
+    return len(re.findall(r'\bJOIN\b', sql, re.IGNORECASE))
+
+
+def count_tables_in_sql(sql: str) -> list:
+    """Extract table names referenced in SQL (FROM and JOIN clauses)."""
+    import re
+    tables = set()
+    # FROM clause
+    for m in re.finditer(r'\bFROM\s+(\w+)', sql, re.IGNORECASE):
+        tables.add(m.group(1).lower())
+    # JOIN clause
+    for m in re.finditer(r'\bJOIN\s+(\w+)', sql, re.IGNORECASE):
+        tables.add(m.group(1).lower())
+    return sorted(tables)
+
+
+def run_llm_query(query: str, model: str = "gpt-4o-mini", schema_mode: str = "full",
+                  relevant_tables: list = None) -> dict:
     """Generate SQL via LLM and execute."""
     client = OpenAI()
-    prompt = build_prompt(query, with_schema)
+    prompt = build_prompt(query, schema_mode, relevant_tables)
     
     start = time.time()
     try:
@@ -221,45 +342,78 @@ def run_llm_query(query: str, model: str = "gpt-4o-mini", with_schema: bool = Tr
     result["sql"] = sql
     result["latency_ms"] = latency
     result["model"] = model
-    result["with_schema"] = with_schema
+    result["schema_mode"] = schema_mode
+    result["join_count"] = count_joins_in_sql(sql)
+    result["tables_used"] = count_tables_in_sql(sql)
     
     return result
 
 
 def run_experiment():
-    """Run the full extended schema experiment."""
+    """Run the full extended schema experiment with 3 conditions:
+    1. LLM + Full Schema (30 tables in prompt, no traversal)
+    2. LLM + Traversed Schema (only relevant tables, simulating SG traversal)
+    3. LLM without Schema (baseline)
+    """
     print("=" * 60)
-    print("EXTENDED SCHEMA EXPERIMENT (20 tables)")
+    print("EXTENDED SCHEMA EXPERIMENT (30 tables)")
+    print("=" * 60)
+    print("Conditions: Full Schema (30t) | Traversed (subset) | No Schema")
     print("=" * 60)
     
     results = []
     
     for q in EXTENDED_QUERIES:
-        print(f"\n[{q['id']}] {q['query'][:50]}...")
+        print(f"\n[{q['id']}] {q['query'][:60]}...")
         
-        # Condition 1: LLM + Schema (no SG traversal, just schema in prompt)
-        r1 = run_llm_query(q["query"], model="gpt-4o-mini", with_schema=True)
-        r1["condition"] = "llm_schema"
+        # Condition 1: LLM + Full Schema (all 30 tables, no traversal)
+        r1 = run_llm_query(q["query"], model="gpt-4o-mini", schema_mode="full")
+        r1["condition"] = "llm_full_schema"
         r1["query_id"] = q["id"]
         r1["query_text"] = q["query"]
         r1["category"] = q["category"]
         r1["min_tables"] = q["min_tables"]
-        print(f"  LLM+Schema: {'✓' if r1['success'] else '✗'} ({r1['latency_ms']}ms)")
+        r1["expected_tables"] = q["expected_tables"]
+        print(f"  Full(30t):  {'✓' if r1['success'] else '✗'} JOINs={r1.get('join_count',0)} ({r1['latency_ms']}ms)")
         if not r1['success']:
             print(f"    Error: {r1.get('error', '')[:80]}")
         
-        # Condition 2: LLM without schema
-        r2 = run_llm_query(q["query"], model="gpt-4o-mini", with_schema=False)
-        r2["condition"] = "llm_no_schema"
+        # Condition 2: LLM + Traversed Schema (only relevant tables)
+        r2 = run_llm_query(q["query"], model="gpt-4o-mini", schema_mode="traversed",
+                          relevant_tables=q["expected_tables"])
+        r2["condition"] = "llm_traversed"
         r2["query_id"] = q["id"]
         r2["query_text"] = q["query"]
         r2["category"] = q["category"]
         r2["min_tables"] = q["min_tables"]
-        print(f"  LLM-only:   {'✓' if r2['success'] else '✗'} ({r2['latency_ms']}ms)")
+        r2["expected_tables"] = q["expected_tables"]
+        print(f"  Traversed:  {'✓' if r2['success'] else '✗'} JOINs={r2.get('join_count',0)} ({r2['latency_ms']}ms)")
         if not r2['success']:
             print(f"    Error: {r2.get('error', '')[:80]}")
         
-        results.append({"query": q, "llm_schema": r1, "llm_no_schema": r2})
+        # Condition 3: LLM without schema (baseline)
+        r3 = run_llm_query(q["query"], model="gpt-4o-mini", schema_mode="none")
+        r3["condition"] = "llm_no_schema"
+        r3["query_id"] = q["id"]
+        r3["query_text"] = q["query"]
+        r3["category"] = q["category"]
+        r3["min_tables"] = q["min_tables"]
+        r3["expected_tables"] = q["expected_tables"]
+        print(f"  No-Schema:  {'✓' if r3['success'] else '✗'} ({r3['latency_ms']}ms)")
+        if not r3['success']:
+            print(f"    Error: {r3.get('error', '')[:80]}")
+        
+        # Compute unnecessary JOINs for Full schema condition
+        expected_join_count = max(0, len(q["expected_tables"]) - 1)
+        r1["unnecessary_joins"] = max(0, r1.get("join_count", 0) - expected_join_count)
+        r2["unnecessary_joins"] = max(0, r2.get("join_count", 0) - expected_join_count)
+        
+        results.append({
+            "query": q,
+            "llm_full_schema": r1,
+            "llm_traversed": r2,
+            "llm_no_schema": r3
+        })
     
     # Save results
     output_path = Path(__file__).parent / "results" / "extended_schema_experiment.json"
@@ -267,7 +421,7 @@ def run_experiment():
     
     # Make JSON serializable
     for r in results:
-        for key in ['llm_schema', 'llm_no_schema']:
+        for key in ['llm_full_schema', 'llm_traversed', 'llm_no_schema']:
             if 'rows' not in r[key]:
                 r[key]['rows'] = 0
             if 'columns' not in r[key]:
@@ -278,21 +432,44 @@ def run_experiment():
     
     # Print summary
     print("\n" + "=" * 60)
-    print("RESULTS SUMMARY")
+    print("RESULTS SUMMARY (30 tables)")
     print("=" * 60)
     
     categories = ['simple', 'medium', 'complex', 'very_complex', 'cross_domain', 'aggregation']
     for cat in categories:
         cat_results = [r for r in results if r['query']['category'] == cat]
-        schema_ok = sum(1 for r in cat_results if r['llm_schema']['success'])
-        no_schema_ok = sum(1 for r in cat_results if r['llm_no_schema']['success'])
+        full_ok = sum(1 for r in cat_results if r['llm_full_schema']['success'])
+        trav_ok = sum(1 for r in cat_results if r['llm_traversed']['success'])
+        no_ok = sum(1 for r in cat_results if r['llm_no_schema']['success'])
         total = len(cat_results)
-        print(f"  {cat:15s}: Schema={schema_ok}/{total} ({100*schema_ok/total:.0f}%)  No-Schema={no_schema_ok}/{total} ({100*no_schema_ok/total:.0f}%)")
+        print(f"  {cat:15s}: Full={full_ok}/{total} ({100*full_ok/total:.0f}%)  Traversed={trav_ok}/{total} ({100*trav_ok/total:.0f}%)  No-Schema={no_ok}/{total} ({100*no_ok/total:.0f}%)")
     
     total = len(results)
-    schema_total = sum(1 for r in results if r['llm_schema']['success'])
-    no_schema_total = sum(1 for r in results if r['llm_no_schema']['success'])
-    print(f"\n  {'TOTAL':15s}: Schema={schema_total}/{total} ({100*schema_total/total:.0f}%)  No-Schema={no_schema_total}/{total} ({100*no_schema_total/total:.0f}%)")
+    full_total = sum(1 for r in results if r['llm_full_schema']['success'])
+    trav_total = sum(1 for r in results if r['llm_traversed']['success'])
+    no_total = sum(1 for r in results if r['llm_no_schema']['success'])
+    print(f"\n  {'TOTAL':15s}: Full={full_total}/{total} ({100*full_total/total:.0f}%)  Traversed={trav_total}/{total} ({100*trav_total/total:.0f}%)  No-Schema={no_total}/{total} ({100*no_total/total:.0f}%)")
+    
+    # JOIN analysis
+    print("\n" + "=" * 60)
+    print("JOIN ANALYSIS (Traversal Effect)")
+    print("=" * 60)
+    full_joins = [r['llm_full_schema'].get('join_count', 0) for r in results if r['llm_full_schema']['success']]
+    trav_joins = [r['llm_traversed'].get('join_count', 0) for r in results if r['llm_traversed']['success']]
+    full_unnecessary = [r['llm_full_schema'].get('unnecessary_joins', 0) for r in results if r['llm_full_schema']['success']]
+    trav_unnecessary = [r['llm_traversed'].get('unnecessary_joins', 0) for r in results if r['llm_traversed']['success']]
+    
+    if full_joins:
+        print(f"  Full Schema avg JOINs:     {sum(full_joins)/len(full_joins):.1f}")
+        print(f"  Traversed avg JOINs:       {sum(trav_joins)/len(trav_joins):.1f}" if trav_joins else "  Traversed: N/A")
+        full_with_unnecessary = sum(1 for u in full_unnecessary if u > 0)
+        trav_with_unnecessary = sum(1 for u in trav_unnecessary if u > 0)
+        print(f"  Full: queries with unnecessary JOINs: {full_with_unnecessary}/{len(full_unnecessary)} ({100*full_with_unnecessary/len(full_unnecessary):.0f}%)")
+        if trav_unnecessary:
+            print(f"  Traversed: queries with unnecessary JOINs: {trav_with_unnecessary}/{len(trav_unnecessary)} ({100*trav_with_unnecessary/len(trav_unnecessary):.0f}%)")
+        print(f"  Full avg unnecessary JOINs:    {sum(full_unnecessary)/len(full_unnecessary):.2f}")
+        if trav_unnecessary:
+            print(f"  Traversed avg unnecessary JOINs: {sum(trav_unnecessary)/len(trav_unnecessary):.2f}")
     
     print(f"\nResults saved to: {output_path}")
     return results

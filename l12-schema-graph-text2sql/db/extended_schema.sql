@@ -1,7 +1,8 @@
 -- ============================================================
 -- Extended Schema for Schema-Graph Scalability Experiment
--- 20 tables + many-to-many + hierarchical + self-referencing FK
--- Based on Materials Project / AFLOW / NOMAD patterns
+-- 30 tables + many-to-many + hierarchical + self-referencing FK
+-- Based on OQMD (~30 tables) / Materials Project (~20 collections) patterns
+-- ER図設計において実際のRDB構造に近い規模を想定
 -- ============================================================
 
 -- === Core Entity Tables ===
@@ -209,6 +210,111 @@ CREATE TABLE material_defect (
     dopant_element_id INTEGER REFERENCES element(element_id)
 );
 
+-- === Electronic Structure Tables (Tables 21-22) ===
+
+CREATE TABLE band_structure (
+    band_structure_id SERIAL PRIMARY KEY,
+    calculation_id TEXT NOT NULL REFERENCES calculation(calculation_id),
+    entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
+    is_direct_gap BOOLEAN,
+    cbm_energy DOUBLE PRECISION,
+    vbm_energy DOUBLE PRECISION,
+    band_gap_type VARCHAR(20),
+    num_bands INTEGER,
+    num_kpoints INTEGER
+);
+
+CREATE TABLE density_of_states (
+    dos_id SERIAL PRIMARY KEY,
+    calculation_id TEXT NOT NULL REFERENCES calculation(calculation_id),
+    entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
+    total_dos_at_fermi DOUBLE PRECISION,
+    efermi DOUBLE PRECISION,
+    is_metallic BOOLEAN,
+    spin_polarized BOOLEAN
+);
+
+-- === Mechanical/Physical Property Tables (Tables 23-25) ===
+
+CREATE TABLE elastic_tensor (
+    elastic_id SERIAL PRIMARY KEY,
+    entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
+    calculation_id TEXT NOT NULL REFERENCES calculation(calculation_id),
+    bulk_modulus_vrh DOUBLE PRECISION,
+    shear_modulus_vrh DOUBLE PRECISION,
+    youngs_modulus DOUBLE PRECISION,
+    poisson_ratio DOUBLE PRECISION,
+    is_stable BOOLEAN
+);
+
+CREATE TABLE magnetic_property (
+    magnetic_id SERIAL PRIMARY KEY,
+    entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
+    total_magnetization DOUBLE PRECISION,
+    magnetic_ordering VARCHAR(30),
+    curie_temperature_k DOUBLE PRECISION,
+    magnetic_anisotropy_energy DOUBLE PRECISION
+);
+
+CREATE TABLE thermal_property (
+    thermal_id SERIAL PRIMARY KEY,
+    entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
+    calculation_id TEXT NOT NULL REFERENCES calculation(calculation_id),
+    debye_temperature_k DOUBLE PRECISION,
+    thermal_conductivity DOUBLE PRECISION,
+    specific_heat_cv DOUBLE PRECISION,
+    gruneisen_parameter DOUBLE PRECISION,
+    temperature_k DOUBLE PRECISION DEFAULT 300.0
+);
+
+-- === Surface/Interface Tables (Tables 26-27) ===
+
+CREATE TABLE surface_energy (
+    surface_id SERIAL PRIMARY KEY,
+    entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
+    miller_index VARCHAR(10) NOT NULL,
+    surface_energy_j_m2 DOUBLE PRECISION,
+    work_function DOUBLE PRECISION,
+    is_reconstructed BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE grain_boundary (
+    grain_boundary_id SERIAL PRIMARY KEY,
+    entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
+    sigma_value INTEGER,
+    rotation_axis VARCHAR(10),
+    tilt_angle DOUBLE PRECISION,
+    gb_energy_j_m2 DOUBLE PRECISION,
+    excess_volume DOUBLE PRECISION
+);
+
+-- === Phase Diagram & Alloy Tables (Tables 28-30) ===
+
+CREATE TABLE phase_diagram_entry (
+    phase_entry_id SERIAL PRIMARY KEY,
+    entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
+    chemical_system TEXT NOT NULL,
+    is_on_hull BOOLEAN,
+    decomposition_products TEXT,
+    hull_distance DOUBLE PRECISION
+);
+
+CREATE TABLE alloy_system (
+    alloy_system_id SERIAL PRIMARY KEY,
+    system_name VARCHAR(100) NOT NULL,
+    num_components INTEGER,
+    category VARCHAR(30),
+    description TEXT
+);
+
+CREATE TABLE material_alloy_system (
+    material_alloy_id SERIAL PRIMARY KEY,
+    entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
+    alloy_system_id INTEGER NOT NULL REFERENCES alloy_system(alloy_system_id),
+    phase VARCHAR(30),
+    composition_type VARCHAR(30)
+);
+
 -- === Indexes for performance ===
 CREATE INDEX idx_composition_entry ON composition(entry_id);
 CREATE INDEX idx_composition_element ON composition(element);
@@ -227,3 +333,15 @@ CREATE INDEX idx_exp_measurement_entry ON experimental_measurement(entry_id);
 CREATE INDEX idx_measured_prop_meas ON measured_property(measurement_id);
 CREATE INDEX idx_material_synthesis_entry ON material_synthesis(entry_id);
 CREATE INDEX idx_material_defect_entry ON material_defect(entry_id);
+CREATE INDEX idx_bs_entry ON band_structure(entry_id);
+CREATE INDEX idx_bs_calc ON band_structure(calculation_id);
+CREATE INDEX idx_dos_entry ON density_of_states(entry_id);
+CREATE INDEX idx_dos_calc ON density_of_states(calculation_id);
+CREATE INDEX idx_elastic_entry ON elastic_tensor(entry_id);
+CREATE INDEX idx_magnetic_entry ON magnetic_property(entry_id);
+CREATE INDEX idx_thermal_entry ON thermal_property(entry_id);
+CREATE INDEX idx_surface_entry ON surface_energy(entry_id);
+CREATE INDEX idx_gb_entry ON grain_boundary(entry_id);
+CREATE INDEX idx_phase_entry ON phase_diagram_entry(entry_id);
+CREATE INDEX idx_mat_alloy_entry ON material_alloy_system(entry_id);
+CREATE INDEX idx_mat_alloy_system ON material_alloy_system(alloy_system_id);
