@@ -286,6 +286,7 @@ def scan_directory(sqs_dir, omega_threshold=0.5):
         all_issues.extend(contcar_issues)
 
         omega_sf = None
+        elA, countA, elB, countB = None, None, None, None
         # Ω_sf check only for binary compounds
         if len(elements) == 2:
             elA, countA = elements[0]
@@ -744,7 +745,7 @@ Examples:
             prepared_dirs.append(calc_dir)
             potim_msg = f"POTIM={potim}" if potim else "POTIM=keep"
             ibrion_msg = f"IBRION={ibrion}" if ibrion else "IBRION=keep"
-            encut_msg = f"ENCUT={encut}"
+            encut_msg = f"ENCUT={encut}" if encut else "ENCUT=keep"
             addgrid_msg = "ADDGRID=T" if addgrid else ""
             extras = f"  {encut_msg}" + (f"  {addgrid_msg}" if addgrid_msg else "")
             print(f"  OK  {r['dirname']:20s}  {potim_msg}  {ibrion_msg}{extras}")
