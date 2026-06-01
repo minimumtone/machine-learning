@@ -1,3 +1,11 @@
+-- ============================================================
+-- 7テーブル初期スキーマ（論文の7テーブル主実験用）
+-- ※ 30テーブル実験にはextended_schema.sqlを使用してください
+-- ※ docker-compose.ymlはextended_schema.sqlのみをマウントしており
+--   このファイルは直接使用されません
+-- ※ extended_schema.sqlの30テーブルはこの7テーブルを完全に包含しています
+-- ============================================================
+
 CREATE TABLE material_entry (
     entry_id TEXT PRIMARY KEY,
     source_db TEXT,

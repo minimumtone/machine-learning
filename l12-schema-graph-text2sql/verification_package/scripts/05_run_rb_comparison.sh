@@ -7,7 +7,16 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PKG_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# verification_packageがリポジトリ内にあるか判定
+if [ -d "$PKG_ROOT/../experiments" ]; then
+    REPO_ROOT="$(cd "$PKG_ROOT/.." && pwd)"
+else
+    echo "エラー: verification_packageをリポジトリ内に配置してください。"
+    exit 1
+fi
+PROJECT_ROOT="$REPO_ROOT"
 
 echo "============================================================"
 echo "  Rule-based比較実験（30テーブル・150クエリ）"
@@ -17,7 +26,7 @@ echo "  Naive RB: 全テーブルJOIN → 30テーブル環境では破綻"
 echo "  SG+RB:    走査後の辞書ベース → 限定的に機能"
 echo ""
 
-cd "$PROJECT_ROOT"
+cd "$REPO_ROOT"
 
 python3 -c "
 import sys, json, time

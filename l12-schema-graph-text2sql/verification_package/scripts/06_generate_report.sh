@@ -6,13 +6,27 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PKG_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# verification_packageがリポジトリ内にあるか判定
+if [ -f "$PKG_ROOT/../generate_comprehensive_report.py" ]; then
+    REPO_ROOT="$(cd "$PKG_ROOT/.." && pwd)"
+else
+    echo "エラー: verification_packageをリポジトリ内に配置してください。"
+    exit 1
+fi
+PROJECT_ROOT="$REPO_ROOT"
 
 echo "============================================================"
 echo "  HTMLレポート生成"
 echo "============================================================"
 
-cd "$PROJECT_ROOT"
+cd "$REPO_ROOT"
+echo ""
+echo "  ⚠ 注意: このHTMLレポートは論文の主実験（30テーブル・150クエリ）"
+echo "  の結果を含みません。別実験（7テーブル・57クエリ等）のレポートです。"
+echo "  論文の150クエリ実験検証には Step 7 (07_verify_results.py) を使用してください。"
+echo ""
 
 echo ""
 echo "  [1/2] 包括的実験レポート生成中..."

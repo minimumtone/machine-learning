@@ -6,14 +6,26 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PKG_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# verification_packageがリポジトリ内にあるか判定
+if [ -d "$PKG_ROOT/../tests" ]; then
+    REPO_ROOT="$(cd "$PKG_ROOT/.." && pwd)"
+else
+    echo "エラー: verification_packageをリポジトリ内に配置してください。"
+    echo "  例: cd machine-learning/l12-schema-graph-text2sql"
+    echo "      cp -r /path/to/verification_package ."
+    exit 1
+fi
 
 echo "============================================================"
 echo "  単体テスト実行（80テスト）"
 echo "============================================================"
+echo "  パッケージ: $PKG_ROOT"
+echo "  リポジトリ: $REPO_ROOT"
 echo ""
 
-cd "$PROJECT_ROOT"
+cd "$REPO_ROOT"
 python3 -m pytest tests/ -v --tb=short 2>&1 | tee /tmp/test_results.txt
 
 echo ""
