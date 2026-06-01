@@ -73,8 +73,8 @@ SQL知識が必要であり、材料研究者にとって大きな障壁とな�
 日英バイリンガル材料用語辞書、Few-Shot RAG、8層SQLガード、
 Coverage Score、Intent Classifierの6要素を統合する。
 
-\textbf{30テーブル・31FK関係・150クエリ}の実運用規模検証を主実験として実施した。
-OQMD実スキーマ構造（${\sim}30$テーブル）を参考に拡張スキーマを構築し、
+OQMD（${\sim}30$テーブル）の実スキーマ規模を想定した
+\textbf{30テーブル・31FK関係・150クエリ}の検証を実施した。
 6カテゴリ（Simple/Medium/Complex/Very Complex/Cross-domain/Aggregation）各25件の
 150クエリで評価した結果：
 走査なし（Full Schema 30テーブル全量注入）成功率\textbf{86.7\%}に対し、
@@ -85,8 +85,7 @@ Naive Rule-based（全テーブルJOIN）は30テーブルで\textbf{実行成�
 Schema Graph走査＋Rule-basedは54\%、LLM＋走査が最良であった。
 McNemar検定により走査効果の統計的有意性を確認した（$p = 0.031$）。
 
-基盤開発として7テーブル・OQMD 1{,}351件（B2・L1$_2$・NaCl・NiAs・BiF$_3$型）での
-Baselineおよびアブレーション実験も実施した。
+Coreサブセット（7テーブル・OQMD 1{,}351件）でのアブレーション実験も実施した。
 gpt-5.5は7テーブルで天井効果（全条件100\%）を示し、
 Schema Graph制約のみでFew-Shot RAGの追加効果が消失する。
 一方gpt-4o-miniではRAGにより80\%$\to$98\%（+18pp）と顕著な改善が確認され、
@@ -447,27 +446,19 @@ SQL文の構文生成そのものではなく、
 \subsection{材料データのためのデータベーススキーマ設計}
 \label{sec:schema_design}
 
-\subsubsection{OQMDデータの7テーブルスキーマへの正規化}
+\subsubsection{OQMD実規模スキーマの設計（30テーブル・31FK関係）}
 
-OQMDは組成・構造・熱力学的安定性を体系的に格納しており、
+OQMDは内部的にDjango ORM + PostgreSQLで$\sim$30テーブルの正規化RDBとして運用されており、
 材料データベースに典型的なスキーマ複雑性（多対多関係、正規化された組成テーブル、
 構造パラメータの分離）を備えた好例である。
-APIから取得したフラットなJSONレコードを7テーブルのリレーショナルスキーマに正規化する
-（図~\ref{fig:er_diagram}、表~\ref{tab:schema}）。
+本研究では、このOQMD実規模を想定した30テーブル・31FK関係の
+リレーショナルスキーマを設計した（図~\ref{fig:er_30tables}）。
 設計はBoyce-Codd正規形（BCNF）に従い、以下の材料ドメイン固有の考慮に基づく。
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=\linewidth]{figures/fig2_er_diagram.png}
-  \caption{7テーブル材料データベーススキーマのEntity-Relationship図。
-    すべてのテーブルは外部キー（青線）により\texttt{material\_entry}に接続される。
-    赤=主キー、青=外部キー。}
-  \label{fig:er_diagram}
-\end{figure}
 
 \begin{table*}[htbp]
   \centering
-  \caption{データベーススキーマ概要（7テーブル）。}
+  \caption{Coreサブセットスキーマ概要（7テーブル）。
+    30テーブルスキーマの中核部分として機能する。}
   \label{tab:schema}
   \small
   \begin{tabularx}{\textwidth}{lllX}
@@ -519,17 +510,11 @@ NetworkXグラフおよびYAMLスキーマとして走査しやすいER図を新
 いずれの場合も、FK関係がグラフとして表現可能であれば
 Schema Graph走査によるJOINパス最適化が適用可能である。
 
-\subsubsection{30テーブル拡張スキーマへの拡張}
+\subsubsection{30テーブルスキーマのグループ構成}
 \label{sec:extended_schema}
 
-7テーブルの基本スキーマはSchema Graph走査の原理検証に適するが、
-実運用規模の材料データベースは通常20--50テーブルを持つ
-（OQMD${\sim}30$テーブル、Materials Project${\sim}20$コレクション）。
-スキーマ規模増大に伴うSchema Graph走査の有効性を検証するため、
-OQMDのDjangoモデル構造およびMaterials Projectのコレクション構成を参考に、
-30テーブル・31FK関係の拡張スキーマを構築した（図~\ref{fig:er_30tables}）。
-
-拡張スキーマは7テーブルのCore構造を保持しつつ、以下の6グループ23テーブルを追加する：
+30テーブルスキーマは6グループから構成される。
+Core（7テーブル、表~\ref{tab:schema}）を中核に、以下の5グループ23テーブルを配置する：
 (1)~\textbf{Application}（application\_domain, use\_case, alloy\_system等）：
   材料の応用先とユースケースを管理、
 (2)~\textbf{Experiment}（experiment, measurement, sample等）：
@@ -548,10 +533,10 @@ application\_domainは親子関係の自己参照FKを含む。
 \begin{figure*}[htbp]
   \centering
   \includegraphics[width=\textwidth]{figures/fig_er_30tables.png}
-  \caption{30テーブル拡張スキーマのEntity-Relationship図。
+  \caption{30テーブルスキーマのEntity-Relationship図。
     material\_entry（中央ハブ、21本のFK受入）を中心に放射状配置。
     6グループ（Core/Application/Experiment/Electronic/Thermo/Alloy）を色分け表示。
-    30テーブル・31FK関係、最大深度3。}
+    31FK関係、最大深度3。}
   \label{fig:er_30tables}
 \end{figure*}
 
@@ -1692,13 +1677,11 @@ indirect、multi-element、numeric/sort）に分類した。
 1-tableカテゴリで平均1.0の不要JOINが残り（T25: CsCl型で4不要JOIN）、
 \textbf{Schema Graph走査がLLMの冗長JOIN生成を完全に排除する}ことを確認した。
 
-\subsection{30テーブル・150クエリ拡張検証}
+\subsection{30テーブル・150クエリ検証}
 \label{sec:30table_results}
 
-7テーブルでgpt-5.5が天井効果（全条件100\%）を示したことから、
-Schema Graph走査の実運用規模での有効性を検証するため、
-30テーブル・31FK関係の拡張スキーマ（\ref{sec:extended_schema}節）で
-150クエリ・6カテゴリの大規模検証を実施した。
+30テーブル・31FK関係スキーマ（\ref{sec:extended_schema}節）での
+150クエリ・6カテゴリの検証結果を示す。
 
 \subsubsection{実験設計}
 
@@ -1885,29 +1868,29 @@ GPT-4 zero-shot Text-to-SQLの正解率が16\%に留まり、
 本手法の高精度は、(1)~FK走査による最小JOINパス保証、
 (2)~材料用語辞書によるドメイン適応、
 (3)~SQLGuardによる事後検証の三重制約に起因する。
-30テーブル規模の追加検証（150クエリ・6カテゴリ）では、
+30テーブル・150クエリ検証（\ref{sec:30table_results}節）では、
 走査なし条件（Full Schema）の成功率86.7\%に対し、
 走査あり条件（Traversed）は94.7\%（+8.0pp）に向上し、
 不要JOIN率も9.2\%$\to$2.8\%に削減された。
 特にMediumカテゴリ（3--4テーブル結合）では走査により+16ppの改善（76\%$\to$92\%）が確認され、
 走査なしでは19件が失敗するクエリを走査ありで正答に転換できた。
 
-\subsection{多次元評価：7テーブルと30テーブルの統合的考察}
+\subsection{多次元評価の統合的考察}
 
 30テーブル・150クエリ検証（表~\ref{tab:30table_results}）と
-7テーブル・7条件比較（表~\ref{tab:7level_results}）の結果を統合すると、
+Coreサブセットアブレーション（表~\ref{tab:7level_results}）の結果を統合すると、
 以下の設計原則が導出される：
 
 \begin{enumerate}
   \item \textbf{スキーマ情報注入が決定的}：7テーブルで条件2（LLM-only、1.8\%）vs 条件6（SG+LLM、100\%）、
     30テーブルでNo Schema（0.7\%）vs Traversed（94.7\%）の差異が示す。
   \item \textbf{Schema Graph走査はスキーマ規模に比例して重要性が増大}：
-    7テーブル（星型構造）ではLLMがJOINパスを「記憶」可能で天井効果が生じるが、
+    Coreサブセット（7テーブル、星型構造）ではLLMがJOINパスを「記憶」可能で天井効果が生じるが、
     30テーブルでは走査なし86.7\% $\to$ 走査あり94.7\%（+8.0pp）と明確な差異が出現。
     Naive RBは30テーブルで0\%に破綻。
   \item \textbf{RAG効果はモデル能力に依存}：gpt-5.5ではRAGの追加効果が消失するが、
     gpt-4o-miniでは80\%$\to$98\%（+18pp）の顕著な改善が確認された。
-  \item \textbf{Rule-basedモードの実用性}：7テーブルでは外部API依存なしで100\%を達成し、
+  \item \textbf{Rule-basedモードの実用性}：Coreサブセットでは外部API依存なしで100\%を達成し、
     30テーブルでもSG+RBで54\%（辞書カバー範囲内）を達成。
 \end{enumerate}
 
@@ -2046,11 +2029,9 @@ LLMベースのIntent分類への拡張が今後の課題である。
 
 \subsubsection{スキーマ規模の妥当性（深刻度：中$\to$低）}
 
-本研究の基盤実験は7テーブル・1{,}351レコードで実施し、
-30テーブル・31FK関係の拡張スキーマで実運用規模検証を追加した
-（\ref{sec:30table_results}節）。
-30テーブル検証により走査なし86.7\%$\to$走査あり94.7\%（+8.0pp）の改善を実証し、
-スキーマ規模の妥当性に関する懸念を緩和した。
+本研究はOQMD実規模を想定した30テーブル・31FK関係スキーマで主検証を実施し
+（\ref{sec:30table_results}節）、走査なし86.7\%$\to$走査あり94.7\%（+8.0pp）の改善を実証した。
+Coreサブセット（7テーブル・1{,}351レコード）でのアブレーション実験も実施している。
 
 表~\ref{tab:failure_modes}に30テーブル検証で観察された失敗パターンと
 Schema Graph走査による解決機序を示す。
@@ -2216,7 +2197,7 @@ RAGアブレーション、Intent Classifier）を踏まえ、残る課題を示
   \item \textbf{LLMベースIntent分類}：正規表現ベースのIntent Classifierを
     軽量LLM（ローカル推論可能なモデル）に置換し、
     新しいスコープ外パターンへの汎化性能を向上する。
-  \item \textbf{大規模レコード検証}：30テーブル・150クエリの拡張検証は実施済みだが、
+  \item \textbf{大規模レコード検証}：30テーブル・150クエリの検証は実施済みだが、
     10万レコード以上でのSteiner木近似の計算性能およびクエリ実行性能の検証が残る。
   \item \textbf{CALPHAD連携による熱力学的精度向上}：Text-to-SQLで取得した候補化合物のうち、
     熱力学的に特定が困難なもの（準安定相、固溶体の安定性判定等）については、
@@ -2244,8 +2225,8 @@ SQL構文の生成ではなく、正規化された異種材料データを外�
 材料ドメイン意味論に従って正しく結合することである}---
 本手法はこの課題にSchema Graph走査（Steiner木近似）で対応する。
 
-7テーブル・OQMD 1{,}351件の基盤実験と、
-\textbf{30テーブル・31FK関係・150クエリ}の実運用規模検証で本手法を評価した。
+OQMD実規模を想定した\textbf{30テーブル・31FK関係・150クエリ}の検証を主軸に、
+Coreサブセット（7テーブル・1{,}351件）でのアブレーション実験を含め本手法を評価した。
 主要な知見：
 
 \begin{enumerate}
@@ -2266,8 +2247,8 @@ SQL構文の生成ではなく、正規化された異種材料データを外�
     結果セット上限を強制する。
 \end{enumerate}
 
-\textbf{実証の限界}：主検証はOQMDサブセット（1{,}351件・7テーブル）および
-拡張スキーマ（30テーブル・シミュレーションデータ）に限定される。
+\textbf{実証の限界}：30テーブルスキーマはOQMD実規模を想定した設計だが
+シミュレーションデータでの検証に限定される。
 クエリセットは著者設計であり、独立したユーザー評価は今後の課題である。
 
 カスケードRule-based $\to$ LLMアーキテクチャは速度・コスト・カバレッジのバランスを取り、
