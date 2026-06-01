@@ -317,6 +317,65 @@ EXTENDED_QUERIES = [
     {"id": "E148", "query": "安定/不安定化合物別の平均band_gap比較", "category": "aggregation", "min_tables": 3, "expected_tables": ["material_entry", "phase_stability", "band_structure"]},
     {"id": "E149", "query": "各プロトタイプのyoungs_modulus平均値をランキングで出して", "category": "aggregation", "min_tables": 3, "expected_tables": ["material_entry", "structure", "elastic_tensor"]},
     {"id": "E150", "query": "thermal_propertyのtemperature_k別のデータ件数の分布を出して", "category": "aggregation", "min_tables": 1, "expected_tables": ["thermal_property"]},
+
+    # === Verification Gap Queries (①〜⑤: 検証不足パターンの補完) ===
+
+    # --- ① 同名カラム多義性 (band_gap: phase_stability vs band_structure) ---
+    {"id": "V001", "query": "band_gapが小さい化合物のバンド構造データを出して", "category": "ambiguity", "min_tables": 3, "expected_tables": ["material_entry", "band_structure", "phase_stability"]},
+    {"id": "V002", "query": "band_gapが1eV以上の安定な化合物を出して", "category": "ambiguity", "min_tables": 2, "expected_tables": ["material_entry", "phase_stability"]},
+    {"id": "V003", "query": "band_gapのDFT計算値と実験値を比較して", "category": "ambiguity", "min_tables": 4, "expected_tables": ["material_entry", "band_structure", "experimental_measurement", "measured_property"]},
+    {"id": "V004", "query": "direct band gapを持つ化合物のphase_stabilityでのband_gapは？", "category": "ambiguity", "min_tables": 3, "expected_tables": ["material_entry", "band_structure", "phase_stability"]},
+    {"id": "V005", "query": "band_gapが0の化合物のDOS（density_of_states）を出して", "category": "ambiguity", "min_tables": 3, "expected_tables": ["material_entry", "phase_stability", "density_of_states"]},
+    {"id": "V006", "query": "band_structureのband_gap_typeがindirectで、phase_stabilityのband_gapが2以上の化合物", "category": "ambiguity", "min_tables": 3, "expected_tables": ["material_entry", "band_structure", "phase_stability"]},
+    {"id": "V007", "query": "formation_energy_per_atomが低い化合物の弾性テンソルデータを出して", "category": "ambiguity", "min_tables": 3, "expected_tables": ["material_entry", "phase_stability", "elastic_tensor"]},
+    {"id": "V008", "query": "space_group_numberが225の化合物のstructureとspace_group情報を両方出して", "category": "ambiguity", "min_tables": 3, "expected_tables": ["material_entry", "structure", "space_group"]},
+    {"id": "V009", "query": "is_stableがtrueの化合物のバンド構造でdirect gapのものだけ出して", "category": "ambiguity", "min_tables": 3, "expected_tables": ["material_entry", "phase_stability", "band_structure"]},
+    {"id": "V010", "query": "thermal_conductivityが高い化合物のband_gapをband_structureから出して", "category": "ambiguity", "min_tables": 3, "expected_tables": ["material_entry", "thermal_property", "band_structure"]},
+    {"id": "V011", "query": "磁気秩序がferromagneticな化合物のband_gap（phase_stability）は？", "category": "ambiguity", "min_tables": 3, "expected_tables": ["material_entry", "magnetic_property", "phase_stability"]},
+    {"id": "V012", "query": "band_structureとphase_stabilityの両方にデータがある化合物は何件？", "category": "ambiguity", "min_tables": 3, "expected_tables": ["material_entry", "band_structure", "phase_stability"]},
+    {"id": "V013", "query": "元素のelectronegativityが高い化合物のband_gap分布を出して", "category": "ambiguity", "min_tables": 4, "expected_tables": ["material_entry", "composition", "element", "phase_stability"]},
+    {"id": "V014", "query": "surface_energyが低い化合物のband構造でdirect gapのものは？", "category": "ambiguity", "min_tables": 3, "expected_tables": ["material_entry", "surface_energy", "band_structure"]},
+    {"id": "V015", "query": "bulk_modulusが高くband_gapが大きい化合物（両方のテーブルから）", "category": "ambiguity", "min_tables": 3, "expected_tables": ["material_entry", "elastic_tensor", "phase_stability"]},
+
+    # --- ② 自己参照FK (application_domain.parent_domain_id → domain_id) ---
+    {"id": "V016", "query": "Energy Materialsとそのサブカテゴリに属する化合物を全て出して", "category": "self_ref", "min_tables": 3, "expected_tables": ["material_entry", "material_application", "application_domain"]},
+    {"id": "V017", "query": "親カテゴリがNullの最上位ドメイン一覧を出して", "category": "self_ref", "min_tables": 1, "expected_tables": ["application_domain"]},
+    {"id": "V018", "query": "サブカテゴリを持つドメインとその子カテゴリ数を出して", "category": "self_ref", "min_tables": 1, "expected_tables": ["application_domain"]},
+    {"id": "V019", "query": "Aerospace Alloysの親ドメインに属する化合物も含めて全て出して", "category": "self_ref", "min_tables": 3, "expected_tables": ["material_entry", "material_application", "application_domain"]},
+    {"id": "V020", "query": "ドメイン階層の深さ（親→子→孫）を持つカテゴリを出して", "category": "self_ref", "min_tables": 1, "expected_tables": ["application_domain"]},
+
+    # --- ③ isolated table（FK未接続: prototype_definition, space_group） ---
+    {"id": "V021", "query": "strukturberichtがB2の原型定義の詳細を出して", "category": "isolated", "min_tables": 1, "expected_tables": ["prototype_definition"]},
+    {"id": "V022", "query": "空間群221の詳細情報を出して", "category": "isolated", "min_tables": 1, "expected_tables": ["space_group"]},
+    {"id": "V023", "query": "prototype_definitionに登録されているプロトタイプ名の一覧を出して", "category": "isolated", "min_tables": 1, "expected_tables": ["prototype_definition"]},
+    {"id": "V024", "query": "空間群番号が200以上の空間群名を全て出して", "category": "isolated", "min_tables": 1, "expected_tables": ["space_group"]},
+    {"id": "V025", "query": "cubic結晶系に属する空間群の一覧を出して", "category": "isolated", "min_tables": 1, "expected_tables": ["space_group"]},
+
+    # --- ④ Traversal追加すぎ（余分なテーブル追加で型不一致等を誘発） ---
+    {"id": "V026", "query": "structureテーブルのspace_group_number別に化合物数を集計して", "category": "over_traversal", "min_tables": 1, "expected_tables": ["structure"]},
+    {"id": "V027", "query": "structureのcrystal_system別のlattice_a平均値を出して", "category": "over_traversal", "min_tables": 1, "expected_tables": ["structure"]},
+    {"id": "V028", "query": "composition.elementのみでFeを含む化合物数を数えて", "category": "over_traversal", "min_tables": 1, "expected_tables": ["composition"]},
+    {"id": "V029", "query": "phase_stabilityテーブルのis_stableがtrueの件数を出して", "category": "over_traversal", "min_tables": 1, "expected_tables": ["phase_stability"]},
+    {"id": "V030", "query": "calculationテーブルのsoftware_name別のデータ件数を出して", "category": "over_traversal", "min_tables": 1, "expected_tables": ["calculation"]},
+
+    # --- ⑤ aggregation + Traversal効果の検証 ---
+    {"id": "V031", "query": "全テーブルのデータ件数をテーブル別に出して", "category": "agg_traversal", "min_tables": 1, "expected_tables": ["material_entry"]},
+    {"id": "V032", "query": "合金系ごとに、その系に属する化合物のformation_energy平均と弾性定数平均を出して", "category": "agg_traversal", "min_tables": 5, "expected_tables": ["material_entry", "material_alloy_system", "alloy_system", "phase_stability", "elastic_tensor"]},
+    {"id": "V033", "query": "各合成手法ごとの安定化合物の平均band_gapと化合物数を出して", "category": "agg_traversal", "min_tables": 4, "expected_tables": ["material_entry", "material_synthesis", "synthesis_method", "phase_stability"]},
+    {"id": "V034", "query": "元素カテゴリ別に、含有化合物のbulk_modulus平均とformation_energy平均を出して", "category": "agg_traversal", "min_tables": 5, "expected_tables": ["material_entry", "composition", "element", "elastic_tensor", "phase_stability"]},
+    {"id": "V035", "query": "用途ドメイン別の化合物数と平均thermal_conductivityを集計して", "category": "agg_traversal", "min_tables": 4, "expected_tables": ["material_entry", "material_application", "application_domain", "thermal_property"]},
+
+    # --- ⑥ 意味的誤り耐性クエリ（テーブル削除で条件消失→rows爆増を検出） ---
+    {"id": "V036", "query": "磁気的に秩序化した三元系合金を出して", "category": "semantic_trap", "min_tables": 3, "expected_tables": ["material_entry", "composition", "magnetic_property"]},
+    {"id": "V037", "query": "band_gapが2eV以上でかつ弾性的に安定な化合物を出して", "category": "semantic_trap", "min_tables": 3, "expected_tables": ["material_entry", "phase_stability", "elastic_tensor"]},
+    {"id": "V038", "query": "表面エネルギーが低くかつ熱伝導率が高い化合物を出して", "category": "semantic_trap", "min_tables": 3, "expected_tables": ["material_entry", "surface_energy", "thermal_property"]},
+    {"id": "V039", "query": "粒界エネルギーが高いfcc結晶系の化合物を出して", "category": "semantic_trap", "min_tables": 3, "expected_tables": ["material_entry", "grain_boundary", "structure"]},
+    {"id": "V040", "query": "DOSデータがあり、かつis_stableがtrueの化合物を出して", "category": "semantic_trap", "min_tables": 3, "expected_tables": ["material_entry", "density_of_states", "phase_stability"]},
+    {"id": "V041", "query": "欠陥タイプがvacancyでかつbulk_modulusが高い化合物を出して", "category": "semantic_trap", "min_tables": 4, "expected_tables": ["material_entry", "material_defect", "defect_type", "elastic_tensor"]},
+    {"id": "V042", "query": "文献引用のあるエネルギー材料（Energy Materials）を出して", "category": "semantic_trap", "min_tables": 5, "expected_tables": ["material_entry", "material_reference", "literature_reference", "material_application", "application_domain"]},
+    {"id": "V043", "query": "実験的に測定されたband_gapとDFT計算のband_gapを持つ化合物を出して", "category": "semantic_trap", "min_tables": 4, "expected_tables": ["material_entry", "experimental_measurement", "measured_property", "phase_stability"]},
+    {"id": "V044", "query": "Aerospace Alloys用途かつ高温でthermal_conductivityデータのある化合物を出して", "category": "semantic_trap", "min_tables": 4, "expected_tables": ["material_entry", "material_application", "application_domain", "thermal_property"]},
+    {"id": "V045", "query": "相図データのある合金系でformation_energyが最も低い化合物を出して", "category": "semantic_trap", "min_tables": 5, "expected_tables": ["material_entry", "material_alloy_system", "alloy_system", "phase_diagram_entry", "phase_stability"]},
 ]
 
 
@@ -469,21 +528,31 @@ def run_llm_query(query: str, model: str = "gpt-4o-mini", schema_mode: str = "fu
     return result
 
 
-def run_experiment():
+def run_experiment(quick=False):
     """Run the full extended schema experiment with 3 conditions:
     1. LLM + Full Schema (30 tables in prompt, no traversal)
     2. LLM + Traversed Schema (only relevant tables, simulating SG traversal)
     3. LLM without Schema (baseline)
+
+    Args:
+        quick: If True, run only medium+complex (50 queries) for fast validation.
     """
-    print("=" * 60)
-    print("EXTENDED SCHEMA EXPERIMENT (30 tables)")
-    print("=" * 60)
+    queries = EXTENDED_QUERIES
+    if quick:
+        queries = [q for q in EXTENDED_QUERIES if q["category"] in ("medium", "complex")]
+        print("=" * 60)
+        print(f"QUICK MODE: medium+complex only ({len(queries)} queries)")
+        print("=" * 60)
+    else:
+        print("=" * 60)
+        print("EXTENDED SCHEMA EXPERIMENT (30 tables)")
+        print("=" * 60)
     print("Conditions: Full Schema (30t) | Traversed (subset) | No Schema")
     print("=" * 60)
     
     results = []
     
-    for q in EXTENDED_QUERIES:
+    for q in queries:
         print(f"\n[{q['id']}] {q['query'][:60]}...")
         
         # Condition 1: LLM + Full Schema (all 30 tables, no traversal)
@@ -596,4 +665,5 @@ def run_experiment():
 
 
 if __name__ == '__main__':
-    run_experiment()
+    quick_mode = '--quick' in sys.argv
+    run_experiment(quick=quick_mode)
