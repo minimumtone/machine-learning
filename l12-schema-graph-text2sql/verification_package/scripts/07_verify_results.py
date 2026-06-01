@@ -155,6 +155,11 @@ def main():
         print("    No Schema失敗理由内訳:")
         for reason, cnt in sorted(nosc_fail_reasons.items(), key=lambda x: -x[1]):
             print(f"      {reason}: {cnt}件")
+    # No Schemaの成功例について暗黙知汚染の可能性を注記
+    nosc_success = [d for d in detail if d.get("llm_no_schema", {}).get("success")]
+    if nosc_success:
+        print(f"    ⚠ No Schema成功{len(nosc_success)}件のテーブル名がLLM学習データに含まれる可能性")
+        print(f"      → スキーマ未提供条件の純粋性について論文で注記が必要")
 
     # ------------------------------------------------------------------
     # ■ 2. 成功率の分解報告【提案1】
@@ -207,10 +212,21 @@ def main():
 
     for label, key in [("Full Schema", "llm_full_schema"), ("Traversed", "llm_traversed")]:
         rec, prec, n_perf, n_sql, sql_rate = table_selection_metrics(detail, key)
+        f1 = 2 * rec * prec / (rec + prec) if (rec + prec) > 0 else 0
         print(f"    {label}:")
         print(f"      テーブル選択Recall:    {rec:.1f}%")
         print(f"      テーブル選択Precision: {prec:.1f}%")
+        print(f"      テーブル選択F1:        {f1:.1f}%")
         print(f"      テーブル全選択時SQL成功率: {n_sql}/{n_perf} ({sql_rate:.1f}%)")
+
+    # Full-Oracle上限推定（テーブル選択が完全な場合のSQL成功率）
+    for label, key in [("Full Schema", "llm_full_schema"), ("Traversed", "llm_traversed")]:
+        _, _, n_perf, n_sql, sql_rate = table_selection_metrics(detail, key)
+        if n_perf > 0:
+            oracle_upper = sql_rate  # テーブル完全選択時の成功率 = Full-Oracle上限
+            print(f"    {label} Full-Oracle上限推定: {oracle_upper:.1f}%")
+    print("    ※ Full-Oracle/Full-Random条件が未実装のため、")
+    print("      Traversalエンジン固有の貢献とプロンプト短縮効果は分離不能")
 
     check("Traversedのテーブル選択Recall > Fullのテーブル選択Recall",
           table_selection_metrics(detail, "llm_traversed")[0] >
@@ -294,6 +310,12 @@ def main():
                 print(f"    {label}: {len(ids)}件 {ids}")
     else:
         print("    Traversal逆効果クエリなし")
+
+    print("\n    ⚠ パイプライン複合評価の限界:")
+    print("      detailed_resultsにentities_extracted / tables_candidates /")
+    print("      traversal_subgraphが記録されていないため、失敗原因が")
+    print("      エンティティ抽出段階かグラフ走査段階か事後判定不能")
+    print("      → 論文でTraversal単体評価ではなく複合評価であることを明記すべき")
 
     # ------------------------------------------------------------------
     # ■ 5. unnecessary_join_rate 再計算【提案2】
@@ -770,6 +792,59 @@ def main():
 
     check("条件緩和疑いクエリ ≤ 15件", len(inflation_suspects) <= 15,
           f"{len(inflation_suspects)}件")
+
+    # ------------------------------------------------------------------
+    # ■ 15. 返却カラム数分析（出力品質）
+    # ------------------------------------------------------------------
+    print("\n■ 15. 返却カラム数分析（出力品質）")
+
+    for label, key in [("Full Schema", "llm_full_schema"), ("Traversed", "llm_traversed")]:
+        col_counts = []
+        for d in detail:
+            r = d.get(key, {})
+            if not r.get("success"):
+                continue
+            n_cols = r.get("columns_returned", r.get("num_columns", 0))
+            if n_cols > 0:
+                col_counts.append(n_cols)
+        if col_counts:
+            avg_cols = statistics.mean(col_counts)
+            print(f"    {label}: 平均返却カラム数={avg_cols:.1f}")
+        else:
+            print(f"    {label}: カラム数データなし")
+
+    # Full vs Traversedのカラム数比較
+    trav_more = 0
+    total_paired = 0
+    for d in detail:
+        f = d.get("llm_full_schema", {})
+        t = d.get("llm_traversed", {})
+        if f.get("success") and t.get("success"):
+            f_cols = f.get("columns_returned", f.get("num_columns", 0))
+            t_cols = t.get("columns_returned", t.get("num_columns", 0))
+            if f_cols > 0 and t_cols > 0:
+                total_paired += 1
+                if t_cols > f_cols + 2:
+                    trav_more += 1
+    if total_paired > 0:
+        print(f"    Traversedが3カラム以上多い: {trav_more}/{total_paired} ({trav_more/total_paired*100:.0f}%)")
+        if trav_more / total_paired > 0.2:
+            print(f"    ⚠ Traversalはテーブル削減と引き換えに返却カラムが冗長化する傾向")
+
+    # ------------------------------------------------------------------
+    # ■ 16. 実験設計の限界と注記
+    # ------------------------------------------------------------------
+    print("\n■ 16. 実験設計の限界と注記")
+
+    limitations = [
+        "1. Full-Oracle/Full-Random条件が未実装 → Traversalエンジン固有貢献とプロンプト短縮効果が分離不能",
+        "2. No Schema条件はストローマン（149/150がrelation does not exist）→ 部分スキーマ条件を推奨",
+        "3. パイプライン中間データ（entities_extracted等）が未記録 → 失敗段階の特定不能",
+        "4. expected_150q.jsonは論文出力そのもの → 固定値一致は循環参照（許容範囲チェックに変更済み）",
+        f"5. ユニーク経路数が総クエリ数より少ない → 重複テーブル組み合わせは相関試行",
+    ]
+    for lim in limitations:
+        print(f"    {lim}")
 
     # ------------------------------------------------------------------
     # 総合判定
