@@ -53,8 +53,8 @@
 
 \begin{frontmatter}
 
-\title{Schema Graph制約型Text-to-SQLによる材料データベース自然言語インターフェース：\\
-  Rule-based・LLMカスケードアーキテクチャのOQMD 1{,}351件検証}
+\title{Schema-Graph-Constrained Natural Language Interface for Relational Materials Databases:\\
+  Schema Graph制約型自然言語インターフェースによる正規化材料データベースへのアクセス方法論}
 
 \author[nims]{Satoshi Minamoto\corref{cor1}}
 \cortext[cor1]{Corresponding author}
@@ -132,6 +132,15 @@ OQMD \sep 金属間化合物 \sep 自然言語処理 \sep マテリアルズ・�
 \label{sec:introduction}
 
 \subsection{AI for Scienceと材料インフォマティクスにおけるデータアクセス障壁}
+
+材料データベースにおける自然言語インターフェースの本質的課題は、
+SQL文の構文生成そのものではなく、
+正規化された異種材料データを、外部キー関係と材料ドメイン意味論に従って
+正しく結合することである。
+本論文では、この課題に対しSchema Graph走査（FK関係のグラフ表現とSteiner木近似）に基づく
+制約型手法を提案し、30テーブル・150クエリの実運用規模で
+走査なし成功率86.7\%に対し走査あり94.7\%（+8.0pp）、
+不要JOIN率9.2\%→2.8\%の改善を実証する。
 
 \textbf{AI for Science（AI4S）}---科学的発見を加速するための人工知能の体系的応用---は、
 材料研究を変革しつつある~\citep{wang2023ai4s}。
@@ -276,8 +285,9 @@ FK関係だけでなくドメイン知識に基づくJOINパス選択が可能�
     正規化材料データベース上の自動JOIN経路計算を実現する。
     材料工学で本質的に重要な「少量の異種データの正確な組み合わせ」を、
     Steiner木近似による最小JOINパス算出で保証する。
-    7条件比較実験により、Schema Graph制約が実行成功率100\%の主要因であることを示す。
-  \item \textbf{6層安全パイプライン}：
+    Schema Graph制約は、結果正解率を維持しつつ不要JOINを排除し、
+    Rule-basedでもLLMなしに高精度を達成する主要因である。
+  \item \textbf{8層安全パイプライン}：
     Coverage Score（未認識語彙検出）、Intent Classifier（スコープ外質問検出）、
     数値条件パーサー、化学式パーサー、多層SQLガード（カラムWL・JOIN検証）を統合し、
     Silent Constraint Dropping（未登録語彙の無通知破棄）を防止する。
@@ -339,7 +349,7 @@ FK関係だけでなくドメイン知識に基づくJOINパス選択が可能�
 \node[data, below=0.4cm of sg] (yaml) {allowed\_schema\\.yaml};
 
 % Row 3: Convergence
-\node[guard, right=of rb, yshift=-0.8cm] (guard) {SQLGuard\\6層検証\\(\S\ref{sec:sql_guard})};
+\node[guard, right=of rb, yshift=-0.8cm] (guard) {SQLGuard\\8層検証\\(\S\ref{sec:sql_guard})};
 
 % Row 4: Output
 \node[io, right=of guard] (exec) {SQL実行\\結果返却};
@@ -385,10 +395,54 @@ FK関係だけでなくドメイン知識に基づくJOINパス選択が可能�
   自然言語クエリはIntent Classifierでスコープ判定後、
   用語辞書・数値/化学式パーサーで条件抽出される。
   Coverage Scoreに基づきRule-based（高認識率）またはLLM（低認識率）経路に分岐し、
-  いずれもSchema Graph（FK走査）によるJOINパス制約とSQLGuard 6層検証を経て
+  いずれもSchema Graph（FK走査）によるJOINパス制約とSQLGuard 8層検証を経て
   安全なSQLが生成・実行される。破線矢印はデータ参照を示す。}
 \label{fig:pipeline_schematic}
 \end{figure*}
+
+% =====================================================================
+\section{材料Text-to-SQLの設計要件}
+\label{sec:design_requirements}
+
+材料データベースに対する自然言語インターフェースの本質的課題は、
+SQL文の構文生成そのものではなく、
+\textbf{正規化された異種材料データを、外部キー関係と材料ドメイン意味論に従って正しく結合すること}である。
+汎用Text-to-SQLシステムを材料データベースに直接適用した場合、
+以下の材料固有の要件が満たされず、重大な精度低下を招く。
+
+\begin{enumerate}
+  \item \textbf{正規化組成テーブルの正確なJOIN}：
+    多元素化合物の各元素が独立行として格納されるため、
+    「NiとAlを\emph{両方}含む」検索にはSELF-JOINまたはINTERSECTが必要となる。
+    汎用LLMはこのパターンを頻繁に誤る。
+  \item \textbf{材料用語の曖昧性解消}：
+    「NiAl」が特定化合物（B2-NiAl）か含有元素条件かは文脈依存であり、
+    「安定」が$E_\mathrm{hull} \leq 0.001$~eV/atomか
+    $\Delta G_f < 0$かはスキーマ依存である。
+    ドメイン辞書なしではカラムマッピングが不定となる。
+  \item \textbf{プロトタイプ・空間群の語彙正規化}：
+    L1$_2$、AuCu$_3$型、Cu$_3$Au型は同一プロトタイプを指すが、
+    表記が多様であり、日英バイリンガルでの同義語展開が必要。
+  \item \textbf{FKに沿った最小JOINパスの計算}：
+    30テーブル規模のスキーマでは候補JOINパスが爆発し、
+    不要テーブルの結合がLLM精度を低下させる。
+    Steiner木近似による最小サブグラフ抽出が不可欠。
+  \item \textbf{数値条件の単位・閾値解釈}：
+    「バンドギャップが大きい」→ $> 1.0$~eVか$> 2.0$~eVか、
+    「安定な」→ $E_\mathrm{hull} \leq 0.001$か$\leq 0.1$かは
+    材料ドメイン知識に基づく判断が必要。
+  \item \textbf{スコープ外質問の拒否}：
+    VASP計算パラメータの最適化やDFTワークフローに関する質問は
+    SQL-answerableではなく、無理にSQLを生成すると無意味な結果を返す。
+  \item \textbf{安全実行の保証}：
+    SELECT以外のSQL（INSERT/UPDATE/DELETE）の排除、
+    無制限結果セットの防止（自動LIMIT注入）、
+    テーブル・カラムホワイトリストによるインジェクション防止。
+\end{enumerate}
+
+これらの要件は、汎用Text-to-SQLベンチマーク（Spider、WikiSQL等）では
+評価対象に含まれない材料データベース固有の課題である。
+本手法は上記7要件すべてに対応する統合フレームワークとして設計された。
 
 % =====================================================================
 \section{手法}
@@ -1669,6 +1723,14 @@ GPT-4 zero-shot Text-to-SQLの正解率が16\%に留まり、
 
 \subsection{多次元評価}
 
+7テーブル・7条件比較ではgpt-5.5使用時に天井効果（全条件100\%実行成功）が生じ、
+Schema Graph走査の必要性が見えにくい。
+これはスキーマが単純（7テーブル・星型構造）であり、
+LLMがJOINパス全体を「記憶」可能であることに起因する。
+そこで30テーブル・150クエリの実運用規模検証を追加した結果、
+走査なし86.7\% $\to$ 走査あり94.7\%（+8.0pp）の明確な差異が確認され、
+テーブル数増加に伴いSchema Graph走査が不可欠となることを実証した。
+
 7条件の結果から、以下の設計原則が導出される：
 
 \begin{enumerate}
@@ -1677,9 +1739,12 @@ GPT-4 zero-shot Text-to-SQLの正解率が16\%に留まり、
     維持しつつ不要JOINを完全排除し（表~\ref{tab:traversal_ablation}）、
     Rule-basedモードでもLLM非依存で高精度を実現する。
   \item \textbf{RAG効果はモデル能力に依存}：gpt-5.5ではRAGの追加効果が消失するが、
-    より小型のモデルでは差異が生じる可能性がある。
+    gpt-4o-miniでは80\%$\to$98\%（+18pp）の顕著な改善が確認された。
   \item \textbf{Rule-basedモードの実用性}：条件5は外部API依存なしで100\%を達成し、
     辞書カバー範囲内クエリに対する最適解である。
+  \item \textbf{30テーブルでNaive RBは破綻}：テーブル数増加でNaive RB（全テーブルJOIN）の
+    実行成功率は0\%に低下し（7テーブルでは96.5\%）、
+    Schema Graph走査なしのRule-basedアプローチは実運用規模で機能しない。
 \end{enumerate}
 
 \subsection{各モードの利点と欠点}
@@ -1770,6 +1835,37 @@ Schema情報なし0.7\%（1/150）。
 走査なしで失敗する19件のクエリ（カラム名曖昧化・FK経路誤選択）を走査あり条件で正答に転換でき、
 テーブル数増加に伴いSchema Graph走査の必要性が顕著に高まることを実証した。
 
+表~\ref{tab:failure_modes}に30テーブル検証で観察された失敗パターンと
+Schema Graph走査による解決機序を示す。
+
+\begin{table}[htbp]
+  \centering
+  \caption{30テーブル検証における失敗パターンとSchema Graph走査による緩和。}
+  \label{tab:failure_modes}
+  \small
+  \begin{tabular}{p{2.5cm}p{3.5cm}p{3.5cm}}
+    \toprule
+    失敗パターン & Full Schema注入時の原因 & Traversalによる緩和 \\
+    \midrule
+    カラム名曖昧参照 &
+      複数テーブルに同名カラム（entry\_id等）が存在し、LLMが誤ったテーブルから参照 &
+      関連テーブルのみ提示することで候補を限定 \\
+    \addlinespace
+    存在しないカラム参照 &
+      類似テーブル・類似カラム名からLLMが幻覚的に生成 &
+      スキーマコンテキスト縮小により幻覚を抑制 \\
+    \addlinespace
+    FK経路の誤選択 &
+      直接JOINを試行するが中間テーブルが必要 &
+      FK走査がSteiner木で正しい経路を明示 \\
+    \addlinespace
+    不要JOIN &
+      提示された30テーブルから不要なテーブルまでJOIN &
+      最小サブグラフのみ提示し不要JOINを原理的に排除 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
 \subsubsection{LLM再現性（深刻度：低）}
 
 gpt-5.5のSQL一致率は30\%（20クエリ×5回）であり、
@@ -1802,6 +1898,31 @@ gpt-5.5のSQL一致率は30\%（20クエリ×5回）であり、
     \textbf{本手法} & \textbf{あり} & \textbf{あり} & \textbf{あり} & \textbf{SQL} & FK走査 + 材料辞書 \\
     \bottomrule
   \end{tabularx}
+\end{table*}
+
+\subsection{手法能力比較}
+
+表~\ref{tab:method_capability}に、本手法と既存アプローチの
+材料データベース向け主要能力を比較する。
+
+\begin{table*}[htbp]
+  \centering
+  \caption{材料Text-to-SQLにおける手法能力比較。}
+  \label{tab:method_capability}
+  \small
+  \begin{tabular}{lccccc}
+    \toprule
+    手法 & ドメイン辞書 & FK走査 & SQLガード & 材料パーサー & 正規化組成対応 \\
+    \midrule
+    汎用LLM T2SQL (zero-shot) & --- & --- & 部分的 & --- & --- \\
+    Few-shot T2SQL & --- & --- & 部分的 & --- & --- \\
+    KG / Text-to-SPARQL & オントロジー & グラフ走査 & あり & ドメイン依存 & RDF経由 \\
+    DAIL-SQL~\citep{gao2023dail} & --- & --- & --- & --- & --- \\
+    OBQC+LLM~\citep{allemang2024obqc} & オントロジー & グラフ走査 & あり & --- & --- \\
+    \midrule
+    \textbf{本手法} & \textbf{あり} & \textbf{あり} & \textbf{8層} & \textbf{あり} & \textbf{あり} \\
+    \bottomrule
+  \end{tabular}
 \end{table*}
 
 \subsection{AI for Science（AI4S）における意義}
@@ -1899,31 +2020,39 @@ RAGアブレーション、Intent Classifier）を踏まえ、残る課題を示
 \section{結論}
 \label{sec:conclusion}
 
-本研究では、正規化リレーショナルデータベースに対する
-Schema Graph制約型Text-to-SQL手法を提案し、
-材料データベースの好例であるOQMD金属間化合物1{,}351件（B2・L1$_2$・NaCl・NiAs・BiF$_3$型）で検証した。
-本手法は、外部キー関係のグラフ走査によりJOIN経路を自動計算するため、
-実装上はFKイントロスペクションにより他のスキーマへの移植が可能な設計であるが、
-\textbf{実証はOQMDサブセット（1{,}351件・7テーブル・5プロトタイプ）に限定される}。
+本研究では、正規化された材料リレーショナルデータベースに対する
+Schema Graph制約型自然言語インターフェースを提案した。
+\textbf{材料データベースにおける自然言語アクセスの本質的課題は
+SQL構文の生成ではなく、正規化された異種材料データを外部キー関係と
+材料ドメイン意味論に従って正しく結合することである}---
+本手法はこの課題にSchema Graph走査（Steiner木近似）で対応する。
+
+OQMD金属間化合物1{,}351件（B2・L1$_2$・NaCl・NiAs・BiF$_3$型、7テーブル）での検証に加え、
+OQMD実規模を想定した\textbf{30テーブル・150クエリ}の拡張検証を実施した。
 
 主要な知見：
 
 \begin{enumerate}
+  \item \textbf{Schema Graph走査は実運用規模で不可欠}：
+    30テーブル環境で走査なし86.7\% $\to$ 走査あり94.7\%（+8.0pp）。
+    不要JOIN率9.2\% $\to$ 2.8\%。Mediumカテゴリでは+16pp改善。
+    Naive RB（全テーブルJOIN）は30テーブルで実行成功率0\%に破綻。
   \item \textbf{スキーマ情報注入が決定的}：7条件比較（gpt-5.5）により、
     Schema Graph制約を含む全条件が実行成功率100\%を達成。
-    LLM-only（スキーマ情報なし）は1.8\%。さらにSchema Graph走査は
-    不要JOINを完全排除し（Naive 58\% $\to$ SG 0\%）、Rule-basedでもLLM非依存で高精度を実現する。
+    LLM-only（スキーマ情報なし）は1.8\%。
   \item \textbf{Rule-basedモードの実用性}：外部API依存ゼロで32--60~msのレイテンシにて
     57/57テスト成功。辞書カバー範囲内クエリにはLLM呼び出しが不要。
-  \item \textbf{LLMモード（gpt-5.5）}は未登録語彙、数値条件、否定への対応を
-    49--194倍のレイテンシコスト（2.4--6.1秒）で拡張する。
-  \item \textbf{RAG天井効果}：Schema Graph制約プロンプトだけでgpt-5.5のSQL生成が飽和し、
-    Few-Shot事例の追加効果が消失。Schema Graph制約が不要JOIN排除の主要因。
-  \item \textbf{Intent Classifier}：VASPワークフロー質問20パターンの検出により、
-    out-of-scope正解率を0\%から100\%に改善（表~\ref{tab:vasp_results}）。
-  \item \textbf{SQLガード}は全インジェクション攻撃を遮断し、
+  \item \textbf{RAG効果はモデル能力に依存}：gpt-5.5では天井効果（全条件100\%）だが、
+    gpt-4o-miniでは80\% $\to$ 98\%（+18pp）。
+  \item \textbf{Intent Classifier}：VASPワークフロー質問の検出により、
+    out-of-scope正解率を0\%から100\%に改善。
+  \item \textbf{8層SQLガード}は全インジェクション攻撃を遮断し、
     結果セット上限を強制する。
 \end{enumerate}
+
+\textbf{実証の限界}：主検証はOQMDサブセット（1{,}351件・7テーブル）および
+拡張スキーマ（30テーブル・シミュレーションデータ）に限定される。
+クエリセットは著者設計であり、独立したユーザー評価は今後の課題である。
 
 カスケードRule-based $\to$ LLMアーキテクチャは速度・コスト・カバレッジのバランスを取り、
 材料研究者がSQL専門知識なしに正規化データベースを
