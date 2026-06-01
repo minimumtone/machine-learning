@@ -14,6 +14,10 @@ Step 7: 結果の自動検証（v2 — 全ロジック再構築）
   提案7: Latency p50/p95/p99
   ■13: 意味的正確性チェック（偽陽性＝テーブル欠落+成功の検出・補正成功率）
   ■14: rows膨張の自動検出（条件緩和疑いフラグ）
+  ■15: 返却カラム数分析（出力品質）
+  ■16: 実験設計の限界と注記
+  ■17: 解釈乖離ペア検出（両方成功だが回答内容が根本的に異なる）
+  ■18（統合）: RB比較の無効性警告 + HTMLレポート不整合 + 交絡変数6項目
 
 Circular Reference対策:
   成功率チェックを固定値一致→許容範囲（Trav≥90%, Full≥80%）に変更
@@ -368,6 +372,8 @@ def main():
 
     # tables_usedベースの実効結合数（サブクエリ含む）
     print("\n    ※ join_countはJOIN句のみでサブクエリを含まない。tables_usedベースの実効値:")
+    print("    ※ 論文の不要JOIN率2.8%も同じ定義（JOIN句のみ）で算出されており、")
+    print("      サブクエリ経由テーブルが除外されている定義の不完全性が論文にも引き継がれている")
     for label, key in [("Full Schema", "llm_full_schema"), ("Traversed", "llm_traversed")]:
         join_counts = []
         tables_counts = []
@@ -463,7 +469,7 @@ def main():
     # ------------------------------------------------------------------
     # ■ 7. rows=0 → definitive_success_rate【提案6】
     # ------------------------------------------------------------------
-    print("\n■ 7. rows=0 分析 + definitive_success_rate【提案6】")
+    print("\n■ 7. rows=0 分析 + 実効成功率【提案6】")
 
     for label, key in [("Full Schema", "llm_full_schema"), ("Traversed", "llm_traversed")]:
         zero_rows = []
@@ -480,19 +486,39 @@ def main():
                 positive_rows += 1
 
         definitive_rate = positive_rows / N * 100
+        nominal_rate = total_success_cond / N * 100
         print(f"    {label}:")
-        print(f"      success & rows>0: {positive_rows}/{N} ({definitive_rate:.1f}%) ← definitive_success_rate")
-        print(f"      success & rows=0: {len(zero_rows)}/{N} ({len(zero_rows)/N*100:.1f}%) ← 不確定")
+        print(f"      公称成功率 (SQLエラーなし): {total_success_cond}/{N} ({nominal_rate:.1f}%)")
+        print(f"      実効成功率 (rows>0):       {positive_rows}/{N} ({definitive_rate:.1f}%) ← 主要指標")
+        print(f"      rows=0 (不確定):              {len(zero_rows)}/{N} ({len(zero_rows)/N*100:.1f}%)")
         if zero_rows:
             print(f"      不確定クエリ例: {zero_rows[:5]}")
 
+    print("\n    === 実効成功率サマリ ===")
     full_def = sum(1 for d in detail
                    if d.get("llm_full_schema", {}).get("success")
                    and d.get("llm_full_schema", {}).get("rows", 0) > 0) / N * 100
     trav_def = sum(1 for d in detail
                    if d.get("llm_traversed", {}).get("success")
                    and d.get("llm_traversed", {}).get("rows", 0) > 0) / N * 100
-    check("definitive_success_rate: Traversed > Full",
+    full_nom = sum(1 for d in detail
+                   if d.get("llm_full_schema", {}).get("success")) / N * 100
+    trav_nom = sum(1 for d in detail
+                   if d.get("llm_traversed", {}).get("success")) / N * 100
+    print(f"    Full:      公称={full_nom:.1f}%  実効={full_def:.1f}%  差={full_nom-full_def:.1f}pp")
+    print(f"    Traversed: 公称={trav_nom:.1f}%  実効={trav_def:.1f}%  差={trav_nom-trav_def:.1f}pp")
+    print(f"    実効成功率差: +{trav_def - full_def:.1f}pp（公称: +{trav_nom - full_nom:.1f}pp）")
+
+    # seedデータL12バイアスの注記
+    print("\n    ⚠ seedデータL12バイアス + 規模乖離:")
+    print("      論文のDB: OQMD金属間化合物1,351件（B2型636, L12型273, NaCl型355, NiAs型74, BiF3型13）")
+    print("      検証パッケージ: seed_l12_entries.csv = 120件（論文の1/11規模）")
+    print("      → 非L12構造を要求するクエリで正しいSQLでもrows=0")
+    print("        （fcc結晶系、BiF3型、youngs_modulus≥300GPa等）")
+    print("      → rows=0の多くはTraversalの性能ではなくseedデータの規模・構造的偏りが原因")
+    print("      → 論文結果の再現としては、seedデータの規模乖離が根本的障壁")
+
+    check("実効成功率(rows>0): Traversed > Full",
           trav_def > full_def,
           f"Trav={trav_def:.1f}%, Full={full_def:.1f}%")
 
@@ -525,6 +551,26 @@ def main():
 
     check("LIMIT到達時の成否不一致 ≤ 10件",
           len(limit_mismatch) <= 10, f"{len(limit_mismatch)}件")
+
+    # LIMIT=100のaggregation影響分析
+    agg_limit_hit = []
+    for d in detail:
+        cat = d.get("query", {}).get("category", "")
+        if cat != "aggregation":
+            continue
+        qid = d.get("query", {}).get("id", "?")
+        for key in ["llm_full_schema", "llm_traversed"]:
+            r = d.get(key, {})
+            if r.get("success") and r.get("rows", 0) == 100:
+                sql = r.get("sql", "")
+                if "GROUP BY" in sql.upper():
+                    agg_limit_hit.append({"id": qid, "cond": key})
+    if agg_limit_hit:
+        print(f"\n    ⚠ aggregationクエリでGROUP BY結果がLIMIT=100で切り捨て: {len(agg_limit_hit)}件")
+        for a in agg_limit_hit[:5]:
+            print(f"      {a['id']} ({a['cond']})")
+        print(f"      → aggregationカテゴリの評価精度が体系的に低下する可能性")
+        print(f"      → SQL_ROW_LIMITのaggregationクエリ除外を推奨")
 
     # ------------------------------------------------------------------
     # ■ 9. Latency分布【提案7】
@@ -660,6 +706,16 @@ def main():
                     print(f"      rows=100到達: {sg_limit_hit}/{n_sg} ({sg_limit_hit/n_sg*100:.0f}%)")
                     if sg_no_where / n_sg > 0.8:
                         print(f"      ⚠ SG+RB成功の大部分がWHERE条件なし — 成功率はJOIN構文成功率に近い")
+
+            # RB比較の無効性についての明示的警告
+            print(f"\n    === RB比較の有効性に関する警告 ===")
+            print(f"    Naive RB 0%: 全件がエイリアス重複バグで失敗")
+            print(f"      → 'table name calc specified more than once' が原因")
+            print(f"      → 30テーブルJOIN過多による破綻という論文の主張とは無関係")
+            print(f"    SG+RB 54%: 成功件は全件WHERE条件ゼロ")
+            print(f"      → バグ修正後の理論的SG+RB成功率は約99%（WHEREなしで全件返すだけ）")
+            print(f"      → 54%はアルゴリズム性能ではなくバグ発生率を測定")
+            print(f"    → RB比較は3者が異なる基準で「成功」を計上しており比較として成立していない")
             break
     else:
         skip("RB比較", "結果ファイルが存在しません")
@@ -843,8 +899,167 @@ def main():
         "4. expected_150q.jsonは論文出力そのもの → 固定値一致は循環参照（許容範囲チェックに変更済み）",
         f"5. ユニーク経路数が総クエリ数より少ない → 重複テーブル組み合わせは相関試行",
     ]
+    # 論文との照合から発見された限界
+    paper_limitations = [
+        "6. 30テーブル・150クエリ実験の使用モデル名が論文に未記載",
+        "   → expected_150q.jsonはgpt-4o-miniだが、論文本文からは読み取れない",
+        "7. 論文の主実験（7テーブル・57クエリ）はgpt-5.5で実施 → 未公開モデルのため再現不可能",
+        "   → .env.exampleのLLM_MODEL=gpt-5も存在しないモデル名",
+        "8. Table 13（Graph Traversalアブレーション）は7テーブル・gpt-5.5の結果",
+        "   → 検証パッケージ（30テーブル）ではTable 13の再現が不可能",
+        "9. seedデータ120件 vs 論文DB 1,351件（1/11規模）",
+        "   → rows=0問題の直接原因、「論文結果の再現」に対する根本的障壁",
+        "10. 論文のJaccard類似度評価（5.1.6節）が検証パッケージに未実装",
+    ]
     for lim in limitations:
         print(f"    {lim}")
+    print("\n    === 論文との照合から発見された限界 ===")
+    for pl in paper_limitations:
+        print(f"    {pl}")
+
+    # 交絡変数の未記録項目
+    print("\n    === 未記録の交絡変数（6項目）===")
+    confounds = [
+        "6. temperatureパラメータが未記録 → 決定論性の根拠が不明、再現性の保証不可",
+        "7. システムプロンプトの内容と3条件間の一致が未確認",
+        "8. クエリ実行順序が未記録 → APIキャッシュ/レートリミット影響の確認不能",
+        "9. 3条件の実行順序（Full→Trav→NoSchemaか否か）が未記録",
+        "10. DB状態（実験時のseedデータ件数）が未記録",
+        "11. プロンプト全文（スキーマ情報の整形方法）が未記録",
+    ]
+    for c in confounds:
+        print(f"    {c}")
+    print("\n    推奨: 次回実験時に以下をdetailed_resultsに記録")
+    print("      {\"temperature\": 0, \"system_prompt_hash\": \"sha256:...\",")
+    print("       \"execution_order\": [\"full\", \"traversed\", \"no_schema\"],")
+    print("       \"seed_row_count\": {\"material_entry\": 120, ...},")
+    print("       \"prompt_full_text\": \"...\"}")
+
+    # HTMLレポートの不整合警告
+    print("\n    === HTMLレポートの不整合警告 ===")
+    print("    comprehensive_experiment_report.htmlは論文の主実験（30テーブル・150クエリ）")
+    print("    の結果を含まない別実験のレポートです:")
+    print("      - 実験1: 57クエリ・7手法（7テーブル環境）")
+    print("      - 実験2-3: RAGアブレーション（gpt-5.5という存在しないモデル名が混入）")
+    print("      - 実験4: 30クエリのみ")
+    print("    Step 6でこのHTMLを「実験結果」として提示すると検証者に誤解を与える")
+    print("    → 論文の150クエリ実験専用のHTMLを別途生成すべき")
+
+    # seedデータの不完全性
+    print("\n    === seedデータの不完全性 ===")
+    print("    参照結果(expected_150q.json)は30テーブル全てにデータがある環境で生成")
+    print("    検証パッケージのseedデータは7テーブル分（120件）のみ:")
+    print("      seedあり: material_entry, composition, structure, phase_stability,")
+    print("                calculation, calculated_property, prototype_definition")
+    print("      seedなし: elastic_tensor, band_structure, magnetic_property,")
+    print("                thermal_property, surface_energy, grain_boundary 他23テーブル")
+    print("    → 参照結果で101件がrows>0だが、検証環境では再現不能")
+    print("    → 検証者が手順通りに環境構築しても参照結果と根本的に異なるDB")
+
+    # extended_schema.sqlの問題
+    print("\n    === extended_schema.sqlの構造的問題 ===")
+    print("    - IF NOT EXISTS句なし → 既存DBに適用するとエラー")
+    print("    - ON DELETE CASCADEなし → material_entry削除時に孤立レコード")
+    print("    - schema.sqlのNOT NULL制約がextended_schema.sqlで欠落")
+
+    # クエリパターンカバレッジ
+    print("\n    === クエリ構文カバレッジの欠落 ===")
+    # 実際にデータから検出
+    cte_count = 0
+    window_count = 0
+    union_count = 0
+    negation_count = 0
+    for d in detail:
+        for key in ["llm_full_schema", "llm_traversed"]:
+            sql = d.get(key, {}).get("sql", "").upper()
+            if "WITH " in sql and " AS " in sql:
+                cte_count += 1
+            if "OVER(" in sql or "OVER (" in sql:
+                window_count += 1
+            if " UNION " in sql:
+                union_count += 1
+            if "NOT IN" in sql or "NOT EXISTS" in sql or "!=" in sql or "<>" in sql:
+                negation_count += 1
+    print(f"    CTEクエリ: {cte_count}件")
+    print(f"    窓関数: {window_count}件")
+    print(f"    UNION: {union_count}件")
+    print(f"    否定条件(NOT IN/NOT EXISTS/!=/<>): {negation_count}件")
+    print("    → 材料DBで実用的なCTE（階層再帰）・窓関数（ランキング）が未テスト")
+
+    # ------------------------------------------------------------------
+    # ■ 17. 解釈乖離ペア検出（両方成功・回答内容乖離）
+    # ------------------------------------------------------------------
+    print("\n■ 17. 解釈乖離ペア検出（両方成功・回答内容乖離）")
+
+    divergent_pairs = []
+    for d in detail:
+        f = d.get("llm_full_schema", {})
+        t = d.get("llm_traversed", {})
+        if not (f.get("success") and t.get("success")):
+            continue
+        f_rows = f.get("rows", -1)
+        t_rows = t.get("rows", -1)
+        qid = d.get("query", {}).get("id", "?")
+
+        # パターン: 片方rows>10, 他方rows=0
+        if (f_rows > 10 and t_rows == 0) or (t_rows > 10 and f_rows == 0):
+            f_tables = sorted(f.get("tables_used", []))
+            t_tables = sorted(t.get("tables_used", []))
+            divergent_pairs.append({
+                "id": qid,
+                "full_rows": f_rows,
+                "trav_rows": t_rows,
+                "full_tables": f_tables,
+                "trav_tables": t_tables,
+            })
+
+    print(f"    解釈乖離ペア: {len(divergent_pairs)}/{N} ({len(divergent_pairs)/N*100:.1f}%)")
+    print("    ※ 両方成功判定だが一方rows>10・他方rows=0のペア")
+    print("    ※ binary成否評価の最大の限界: 解釈の一貫性が担保されていない")
+    for dp in divergent_pairs:
+        print(f"      {dp['id']}: Full={dp['full_rows']}rows({dp['full_tables']}) "
+              f"vs Trav={dp['trav_rows']}rows({dp['trav_tables']})")
+
+    check("解釈乖離ペア ≤ 15件", len(divergent_pairs) <= 15,
+          f"{len(divergent_pairs)}件")
+
+    # ------------------------------------------------------------------
+    # ■ 18. テーブル選択Jaccard類似度（論文5.1.6節の指標）
+    # ------------------------------------------------------------------
+    print("\n■ 18. テーブル選択Jaccard類似度（論文5.1.6節の指標）")
+
+    jaccard_full = []
+    jaccard_trav = []
+    for d in detail:
+        q = d.get("query", {})
+        expected = set(q.get("expected_tables", []))
+        if not expected:
+            continue
+        for key, jlist in [("llm_full_schema", jaccard_full),
+                           ("llm_traversed", jaccard_trav)]:
+            r = d.get(key, {})
+            if not r.get("success"):
+                jlist.append(0.0)
+                continue
+            used = set(r.get("tables_used", []))
+            intersection = expected & used
+            union = expected | used
+            jac = len(intersection) / len(union) if union else 0.0
+            jlist.append(jac)
+
+    if jaccard_full:
+        avg_jf = statistics.mean(jaccard_full)
+        avg_jt = statistics.mean(jaccard_trav)
+        print(f"    Full Schema:  Jaccard平均 = {avg_jf:.3f}")
+        print(f"    Traversed:    Jaccard平均 = {avg_jt:.3f}")
+        print(f"    差: +{avg_jt - avg_jf:.3f}")
+        print("    ※ 論文5.1.6節のJaccard=0.897は7テーブル環境のSG+RB vs LLM+SG比較")
+        print("    ※ 上記は30テーブル環境のexpected_tables vs tables_usedのJaccard")
+        check("Jaccard類似度: Traversed ≥ Full",
+              avg_jt >= avg_jf,
+              f"Trav={avg_jt:.3f}, Full={avg_jf:.3f}")
+    else:
+        skip("Jaccard類似度", "expected_tablesデータなし")
 
     # ------------------------------------------------------------------
     # 総合判定

@@ -10,7 +10,16 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PKG_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# verification_packageがリポジトリ内にあるか判定
+if [ -d "$PKG_ROOT/../experiments" ]; then
+    REPO_ROOT="$(cd "$PKG_ROOT/.." && pwd)"
+else
+    echo "エラー: verification_packageをリポジトリ内に配置してください。"
+    exit 1
+fi
+PROJECT_ROOT="$REPO_ROOT"
 
 QUICK=""
 if [ "$1" = "--quick" ]; then
@@ -28,7 +37,7 @@ else
 fi
 
 # APIキー確認
-cd "$PROJECT_ROOT"
+cd "$REPO_ROOT"
 if [ -f .env ]; then
     source .env 2>/dev/null || true
     export $(grep -v '^#' .env | xargs) 2>/dev/null || true
@@ -73,7 +82,7 @@ fi
 
 echo ""
 echo "  実験開始..."
-cd "$PROJECT_ROOT"
+cd "$REPO_ROOT"
 python3 experiments/run_extended_schema_experiment.py $QUICK 2>&1 | tee /tmp/experiment_log.txt
 
 echo ""
