@@ -14,6 +14,11 @@ Step 7: 結果の自動検証（v2 — 全ロジック再構築）
   提案7: Latency p50/p95/p99
   ■13: 意味的正確性チェック（偽陽性＝テーブル欠落+成功の検出・補正成功率）
   ■14: rows膨張の自動検出（条件緩和疑いフラグ）
+
+Circular Reference対策:
+  成功率チェックを固定値一致→許容範囲（Trav≥90%, Full≥80%）に変更
+  ユニーク経路数・テーブルカバレッジ率を報告
+  join_countのサブクエリ未計上をtables_usedベースで補正表示
 """
 import json
 import sys
@@ -125,9 +130,11 @@ def main():
     print(f"    No Schema:    {nosc_ok}/{N} ({nosc_rate:.1f}%)")
     print(f"    Traversal効果: +{diff:.1f}pp")
 
-    check("Traversed成功率 > Full Schema成功率",
-          trav_rate > full_rate,
-          f"Trav={trav_rate:.1f}%, Full={full_rate:.1f}%")
+    # ※ 許容範囲チェック（Circular Reference回避: 固定値一致ではなく範囲で検証）
+    check("Traversed成功率 ≥ 90%", trav_rate >= 90.0,
+          f"Trav={trav_rate:.1f}%")
+    check("Full Schema成功率 ≥ 80%", full_rate >= 80.0,
+          f"Full={full_rate:.1f}%")
     check("Traversal改善幅 ≥ +3pp", diff >= 3.0, f"+{diff:.1f}pp")
     check("No Schema成功率 < 5%", nosc_rate < 5.0, f"{nosc_rate:.1f}%")
 
@@ -337,6 +344,27 @@ def main():
           trav_cor < full_cor,
           f"Trav={trav_cor:.1f}%, Full={full_cor:.1f}%")
 
+    # tables_usedベースの実効結合数（サブクエリ含む）
+    print("\n    ※ join_countはJOIN句のみでサブクエリを含まない。tables_usedベースの実効値:")
+    for label, key in [("Full Schema", "llm_full_schema"), ("Traversed", "llm_traversed")]:
+        join_counts = []
+        tables_counts = []
+        for d in detail:
+            r = d.get(key, {})
+            if not r.get("success"):
+                continue
+            jc = r.get("join_count", 0)
+            tc = len(r.get("tables_used", []))
+            join_counts.append(jc)
+            tables_counts.append(tc)
+        if join_counts:
+            avg_jc = statistics.mean(join_counts)
+            avg_tc = statistics.mean(tables_counts)
+            gap = avg_tc - avg_jc
+            print(f"    {label}: avg_join_count={avg_jc:.2f}  avg_tables_used={avg_tc:.2f}  差={gap:.2f}")
+            if gap > 0.5:
+                print(f"      ⚠ サブクエリ経由テーブルが平均{gap:.1f}件未計上")
+
     # ------------------------------------------------------------------
     # ■ 6. expected_tables 矛盾検出【提案3】
     # ------------------------------------------------------------------
@@ -372,6 +400,43 @@ def main():
 
     check("矛盾クエリ ≤ 30件", len(inconsistent) <= 30,
           f"{len(inconsistent)}件")
+
+    # ユニーク経路数（有効サンプル数）
+    table_combos = set()
+    for d in detail:
+        et = tuple(sorted(d.get("query", {}).get("expected_tables", [])))
+        table_combos.add(et)
+    n_unique = len(table_combos)
+    print(f"\n    ユニークテーブル経路数: {n_unique}/{N}")
+    if n_unique < N:
+        dup = N - n_unique
+        print(f"    ※ {dup}件が同一テーブル組み合わせの重複クエリ（相関試行）")
+        print(f"    ※ 信頼区間計算時はN={n_unique}が実効サンプル数")
+
+    # テーブルカバレッジ率
+    ALL_30_TABLES = {
+        "material_entry", "composition", "element", "element_property",
+        "structure", "phase_stability", "calculation", "calculated_property",
+        "band_structure", "density_of_states", "elastic_tensor",
+        "magnetic_property", "thermal_property", "surface_energy",
+        "grain_boundary", "experimental_measurement", "measured_property",
+        "synthesis_method", "material_synthesis", "application_domain",
+        "material_application", "literature_reference", "material_reference",
+        "defect_type", "material_defect", "alloy_system",
+        "material_alloy_system", "phase_diagram_entry",
+        "prototype_definition", "space_group",
+    }
+    covered_tables = set()
+    for d in detail:
+        for t in d.get("query", {}).get("expected_tables", []):
+            covered_tables.add(t)
+    uncovered = ALL_30_TABLES - covered_tables
+    cov_rate = len(covered_tables) / len(ALL_30_TABLES) * 100
+    print(f"\n    テーブルカバレッジ: {len(covered_tables)}/{len(ALL_30_TABLES)} ({cov_rate:.0f}%)")
+    if uncovered:
+        print(f"    ⚠ 未カバー: {sorted(uncovered)}")
+    check("テーブルカバレッジ ≥ 90%", cov_rate >= 90,
+          f"{cov_rate:.0f}% — 未カバー: {sorted(uncovered)}")
 
     # ------------------------------------------------------------------
     # ■ 7. rows=0 → definitive_success_rate【提案6】
