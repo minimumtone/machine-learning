@@ -138,7 +138,7 @@ Schema Graph走査（FK関係のグラフ表現とSteiner木近似）に基づ�
 Proposed手法がテーブル幻覚率0\%、実行精度76.3\%を達成したことを報告する。
 
 \textbf{AI for Science（AI4S）}---科学的発見を加速するための人工知能の体系的応用---は、
-材料研究を変革しつつある~\citep{wang2023ai4s}。
+材料研究を変革しつつある~\citep{wang2023ai4s,himanen2019dscribe}。
 AI4Sは、AIエージェントが自律的に仮説を生成し、大規模データベースから関連データを検索し、
 実験やシミュレーションを設計し、結果を解釈する統合的ワークフローを構想している。
 このビジョンにおいて、\textbf{構造化された材料データへの自然言語アクセス}は
@@ -201,10 +201,26 @@ BIRD~\citep{li2024bird}（12,751問、95データベース、33.4~GB）。
 最近のLLMベース手法は高い精度を達成している：
 DAIL-SQL~\citep{gao2023dail}はスケルトンベースのfew-shot事例選択により
 Spider上で実行精度86.6\%を報告し、
-DIN-SQL~\citep{pourreza2024dinsql}は分解型文脈内学習により85.3\%を達成している。
+DIN-SQL~\citep{pourreza2024dinsql}は分解型文脈内学習により85.3\%を達成し、
+XiYan-SQL~\citep{gao2024xiyan}はマルチジェネレータアンサンブルにより
+さらなる精度向上を報告している。
 Hong et al.~\citep{hong2024survey}はスキーマリンキングの支配的役割を指摘する包括的サーベイを提供し、
 Maamari et al.~\citep{maamari2024schema}は高度なLLMにより明示的スキーマリンキングが
 不要になる可能性を論じているが、これは議論が続いている。
+
+スキーマ構造をグラフとして明示的に利用する手法も発展している。
+RAT-SQL~\citep{wang2020ratsql}はRelation-Aware Schema Encodingにより
+テーブル間関係を事前学習し、
+ShadowGNN~\citep{chen2021shadowgnn}はグラフ射影ニューラルネットワークで
+スキーマグラフを符号化する。
+RESDSQL~\citep{li2023resdsql}はスキーマリンキングとスケルトン解析を分離し、
+Bridge~\citep{lin2020bridge}はテキストと表形式データの橋渡しを行う。
+最近では、SchemaGraphSQL~\citep{safdarian2026schemagraphsql}が
+パスファインディングアルゴリズムによる大規模DBスキーマリンキングを提案し、
+GraST-SQL~\citep{hoang2025grastsql}は機能依存グラフによる
+スキーマフィルタリングのスケーリングに取り組んでいる。
+McMillan~\citep{mcmillan2026context}は構造化コンテキストエンジニアリングが
+マルチファイルエージェントシステムにおけるスキーマ精度に与える影響を評価している。
 
 しかし、\textbf{既存のT2SQLベンチマークはすべて汎用ドメイン}
 （eコマース、医療、教育）を対象としており、
@@ -568,7 +584,7 @@ APIから取得したフラットなJSONレコードを7テーブルのリレー
 \paragraph{組成テーブルの分離}
 単一の化合物が複数の元素を含む場合がある（例：Fe$_3$Al $\to$ FeとAl）。
 各元素を\texttt{composition}テーブルの個別行として格納することで、
-文字列解析なしに柔軟な元素ベースクエリ（AND, OR, NOT）を可能にする。
+文字列解析なしに柔軟な元素ベースクエリ（AND, OR, NOT）を可能にする~\citep{villars2004pauling}。
 ただし、この正規化は重要な複雑性を導入する：
 「NiとAlの両方を含む化合物」のクエリは単純な
 \texttt{WHERE element = 'Ni' AND element = 'Al'}では不可能である
@@ -958,7 +974,7 @@ LLMフォールバック、明確化要求、またはスコープ外拒否に�
 Rule-basedモードの辞書カバレッジが不十分な場合
 （未登録元素、数値条件、複雑な表現など）、
 LLMベース生成にフォールバックする。
-LLM（本実験ではgpt-4.1-mini、API設定の詳細はSupplementary S5節を参照）は
+LLM（本実験ではgpt-5.5、API設定の詳細はSupplementary S5節を参照）は
 以下の構造化プロンプトを受け取る：
 
 \begin{enumerate}
@@ -976,7 +992,10 @@ LLM（本実験ではgpt-4.1-mini、API設定の詳細はSupplementary S5節を�
 
 \subsubsection{アーキテクチャ}
 
-Few-ShotストアはT2SQLに特化したRAG~\citep{lewis2020rag}パターンを実装する：
+Few-ShotストアはT2SQLに特化したRAG~\citep{lewis2020rag}パターンを実装する。
+GPT-3~\citep{brown2020fewshot}以降、少数事例の文脈内提示による
+task-agnosticな精度向上が広く知られており、
+本システムではドメイン特化事例の動的検索によりこれを材料T2SQLに適用する：
 
 \begin{enumerate}
   \item \textbf{蓄積}：クエリが正常に結果を返した場合、
@@ -1327,6 +1346,8 @@ SQL生成において、LLMはgold SQLと異なるSELECT列を出力すること
 
 ここで$C = \text{cols}(R_\text{gen}) \cap \text{cols}(R_\text{gold})$は
 共通カラム集合、$R^C$は列集合$C$への射影である。
+この集合照合はJaccard係数~\citep{jaccard1912distribution}に類似するが、
+分母をgold側に限定した再現率ベースの指標である。
 
 \paragraph{改善C：LIMIT 10{,}000正規化}
 SQLGuardが自動付加するLIMITの値がgold SQLと生成SQLで異なる場合、
@@ -1764,9 +1785,9 @@ Schema Graph走査とLLMの役割分担が機能している。
 
 $\gamma'$相候補ランキング（表~\ref{tab:gamma_prime}）でCu$_3$Nbが
 Ni$_3$Alと同等の最高スコア（0.878）を得た。
-Cu$_3$Nbは格子整合性（$\Delta a = 0.01$~\AA）、
+Cu$_3$Nbは格子整合性~\citep{vegard1921constitution}（$\Delta a = 0.01$~\AA）、
 準安定性（$E_\text{hull} = 0.004$~eV/atom）、
-高バルクモジュラス（218~GPa）を兼ね備える。
+高バルクモジュラス~\citep{king1966volume}（218~GPa）を兼ね備える。
 既知のNi$_3$Al（$B = 180$~GPa）を上回るバルクモジュラスは、
 機械的性質の観点で注目に値する。
 
@@ -1823,6 +1844,9 @@ Few-shot例の拡充、Self-correction、プロンプト改善が今後の方向
     Spider~\citep{yu2018spider} & あり & あり & なし & SQL & 汎用ベンチマーク \\
     BIRD~\citep{li2024bird} & あり & あり & なし & SQL & 大規模実データ \\
     DAIL-SQL~\citep{gao2023dail} & あり & あり & なし & SQL & スケルトン選択 \\
+    RAT-SQL~\citep{wang2020ratsql} & あり & あり & なし & SQL & 関係認識符号化 \\
+    RESDSQL~\citep{li2023resdsql} & あり & あり & なし & SQL & リンク分離 \\
+    SchemaGraphSQL~\citep{safdarian2026schemagraphsql} & あり & あり & なし & SQL & パスファインディング \\
     MKNA~\citep{zhuang2026mkna} & なし & なし & あり & API & エージェント \\
     OptiMat~\citep{hu2026optimat} & なし & なし & あり & API & オンデマンドDFT \\
     \midrule
