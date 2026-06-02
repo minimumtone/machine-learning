@@ -655,6 +655,85 @@ def diffusion_potentials_regular_solution_torch(
     return torch.cat(mu_cols, dim=1)
 
 
+def interdiffusion_matrix_rs_torch(
+    c_full: torch.Tensor,
+    theta_left: torch.Tensor,
+    theta_right: Optional[torch.Tensor] = None,
+    x: Optional[torch.Tensor] = None,
+    x_interface: float = 0.5,
+    width: float = 0.02,
+    RT: float = 1.0,
+    mobility: Optional[torch.Tensor] = None,
+    mu_floor: float = 5.0e-3,
+    eps: float = 1.0e-8,
+) -> torch.Tensor:
+    """Compute interdiffusion matrix D̃(c) for regular-solution model (PyTorch).
+
+    D̃_km = M_kk × ∂(μ_k − μ_ref)/∂c_m  (thermodynamic factor form).
+
+    For k = m:
+        ∂(μ_k − μ_ref)/∂c_k = RT/(c_k + δ) + RT/(c_ref + δ) − 2 Ω_{k,ref}
+    For k ≠ m:
+        ∂(μ_k − μ_ref)/∂c_m = RT/(c_ref + δ) + Ω_{km} − Ω_{k,ref} − Ω_{ref,m}
+
+    ``mu_floor`` (δ) prevents the 1/c divergence, consistent with the
+    log-regularization in ``diffusion_potentials_regular_solution_torch``.
+
+    Parameters
+    ----------
+    c_full : (N, n_components) compositions in internal order [Ni, Ta, Co].
+    theta_left, theta_right : (n_pairs,) Omega pair parameters (internal order).
+    x : (N, 1) spatial positions for blending theta.  If None, theta_left is
+        used everywhere.
+    mobility : (n_ind, n_ind) constant mobility matrix.  If None, identity is
+        used (returns the pure thermodynamic factor matrix).
+    mu_floor : additive floor for 1/c terms (default 5e-3).
+
+    Returns
+    -------
+    D_tilde : (N, n_ind, n_ind) interdiffusion matrix.
+    """
+    c = torch.clamp(c_full, eps, 1.0)
+    c = c / torch.sum(c, dim=1, keepdim=True)
+    N = c.shape[0]
+    n_components = c.shape[1]
+    n_ind = n_components - 1
+    ref = n_components - 1
+
+    if theta_right is None:
+        theta_right = theta_left
+    if x is not None:
+        theta_x = blend_pairs_torch(theta_left, theta_right, x, x_interface, width)
+    else:
+        theta_x = theta_left.unsqueeze(0).expand(N, -1)
+
+    pairs = pair_indices_rs(n_components)
+    Omega = torch.zeros(N, n_components, n_components, dtype=c.dtype, device=c.device)
+    for p_idx, (a, b) in enumerate(pairs):
+        Omega[:, a, b] = theta_x[:, p_idx]
+        Omega[:, b, a] = theta_x[:, p_idx]
+
+    c_ref = c[:, ref] + mu_floor  # (N,)
+
+    D_tilde = torch.zeros(N, n_ind, n_ind, dtype=c.dtype, device=c.device)
+    for k in range(n_ind):
+        c_k_safe = c[:, k] + mu_floor  # (N,)
+        for m in range(n_ind):
+            if k == m:
+                thermo = RT / c_k_safe + RT / c_ref - 2.0 * Omega[:, k, ref]
+            else:
+                thermo = (RT / c_ref
+                          + Omega[:, k, m]
+                          - Omega[:, k, ref]
+                          - Omega[:, ref, m])
+            if mobility is not None:
+                D_tilde[:, k, m] = mobility[k, k] * thermo
+            else:
+                D_tilde[:, k, m] = thermo
+
+    return D_tilde
+
+
 def sanitize_independent(c_ind: np.ndarray, eps: float = 1.0e-12) -> np.ndarray:
     """Clip independent compositions and ensure the dependent component is non-negative."""
     c_ind = np.clip(c_ind, eps, 1.0 - eps)
@@ -2084,6 +2163,7 @@ class TernaryRegularSolutionPINN(nn.Module):
         direct_output: bool = False,
         n_time_fourier: int = 0,
         mu_floor: float = 5.0e-3,
+        use_fick_form: bool = False,
     ):
         super().__init__()
         self.n_components = 3
@@ -2094,6 +2174,7 @@ class TernaryRegularSolutionPINN(nn.Module):
         self.omega_width = omega_width
         self.RT = RT
         self.mu_floor = mu_floor
+        self.use_fick_form = use_fick_form
         self.use_comp_dep_mobility = log_M_endmembers_init is not None
 
         self.net = MLP(width, depth, activation, direct_output=direct_output, n_time_fourier=n_time_fourier)
@@ -2163,16 +2244,41 @@ class TernaryRegularSolutionPINN(nn.Module):
         second_derivative_graph: bool,
         output_graph: bool,
     ) -> torch.Tensor:
-        """PDE residual: c_t - div(M grad(mu)) for independent components.
+        """PDE residual for independent components.
 
-        Forward output is [Co, Ni, Ta].  For chemical potential computation
-        we reorder to [Ni, Ta, Co] so that Co (dependent) is the reference
-        component (index 2) as expected by diffusion_potentials_regular_solution_torch.
+        Two modes (selected by ``self.use_fick_form``):
 
-        If ``self.use_comp_dep_mobility`` is True, M(c) is computed from
-        end-member log-mobilities at each collocation point.  Otherwise the
-        constant ``mobility`` tensor is used.
+        **Onsager form** (default, ``use_fick_form=False``):
+            residual = ∂c/∂t − ∂/∂x[M · ∂μ/∂x]
+            Autograd propagates through log(c+δ) in μ, creating 1/(c+δ)
+            gradient sensitivity.
+
+        **Fick form** (``use_fick_form=True``):
+            residual = ∂c/∂t − ∂/∂x[D̃(c) · ∂c/∂x]
+            D̃ is computed explicitly from the thermodynamic factor
+            (contains 1/c terms as values, not in the autograd path for
+            the second spatial derivative).  The flux D̃·∂c/∂x stays
+            bounded near c→0 because ∂c/∂x ∝ c for smooth profiles.
+
+        Forward output is [Co, Ni, Ta].  Internally reordered to
+        [Ni, Ta, Co] so that Co (dependent) is the reference component.
         """
+        if self.use_fick_form:
+            return self._residual_fick(x, t, mobility, t_scale,
+                                       second_derivative_graph, output_graph)
+        return self._residual_onsager(x, t, mobility, t_scale,
+                                      second_derivative_graph, output_graph)
+
+    def _residual_onsager(
+        self,
+        x: torch.Tensor,
+        t: torch.Tensor,
+        mobility: torch.Tensor,
+        t_scale: float,
+        second_derivative_graph: bool,
+        output_graph: bool,
+    ) -> torch.Tensor:
+        """Onsager form: ∂c/∂t − ∂/∂x[M · ∂μ/∂x]."""
         x = x.clone().detach().requires_grad_(True)
         t = t.clone().detach().requires_grad_(True)
 
@@ -2186,8 +2292,8 @@ class TernaryRegularSolutionPINN(nn.Module):
             mu_floor=self.mu_floor,
         )
 
-        ind0 = C[:, 1:2]  # first independent component
-        ind1 = C[:, 2:3]  # second independent component
+        ind0 = C[:, 1:2]
+        ind1 = C[:, 2:3]
 
         ind0_t = torch.autograd.grad(ind0, t, torch.ones_like(ind0), create_graph=output_graph, retain_graph=True)[0]
         ind1_t = torch.autograd.grad(ind1, t, torch.ones_like(ind1), create_graph=output_graph, retain_graph=True)[0]
@@ -2206,6 +2312,66 @@ class TernaryRegularSolutionPINN(nn.Module):
             q0 = mobility[0, 0] * mu0_x + mobility[0, 1] * mu1_x
             q1 = mobility[1, 0] * mu0_x + mobility[1, 1] * mu1_x
 
+        q0_x = torch.autograd.grad(q0, x, torch.ones_like(q0), create_graph=output_graph, retain_graph=True)[0]
+        q1_x = torch.autograd.grad(q1, x, torch.ones_like(q1), create_graph=output_graph, retain_graph=True)[0]
+
+        return torch.cat([ind0_t - q0_x, ind1_t - q1_x], dim=1)
+
+    def _residual_fick(
+        self,
+        x: torch.Tensor,
+        t: torch.Tensor,
+        mobility: torch.Tensor,
+        t_scale: float,
+        second_derivative_graph: bool,
+        output_graph: bool,
+    ) -> torch.Tensor:
+        """Fick form: ∂c/∂t − ∂/∂x[D̃(c) · ∂c/∂x].
+
+        D̃(c) is computed via ``interdiffusion_matrix_rs_torch`` using the
+        thermodynamic factor.  The autograd path for the flux divergence
+        goes through D̃·c_x (no log), avoiding the 1/c gradient explosion
+        that plagues the Onsager (μ-based) form when c_ref → 0.
+
+        D̃ depends on the network output c and on trainable Ω, so the
+        computational graph correctly flows gradients to both network
+        weights and Omega parameters.
+        """
+        x = x.clone().detach().requires_grad_(True)
+        t = t.clone().detach().requires_grad_(True)
+
+        C = self.forward(x, t)
+        C_int = _reorder_display_to_internal(C)
+
+        # Independent components (display order: Ni=col1, Ta=col2)
+        ind0 = C[:, 1:2]
+        ind1 = C[:, 2:3]
+
+        # ∂c/∂t
+        ind0_t = torch.autograd.grad(ind0, t, torch.ones_like(ind0), create_graph=output_graph, retain_graph=True)[0]
+        ind1_t = torch.autograd.grad(ind1, t, torch.ones_like(ind1), create_graph=output_graph, retain_graph=True)[0]
+
+        # ∂c/∂x for independent components (internal order: Ni=0, Ta=1)
+        c0_int = C_int[:, 0:1]  # Ni (internal)
+        c1_int = C_int[:, 1:2]  # Ta (internal)
+
+        c0_x = torch.autograd.grad(c0_int, x, torch.ones_like(c0_int), create_graph=second_derivative_graph, retain_graph=True)[0]
+        c1_x = torch.autograd.grad(c1_int, x, torch.ones_like(c1_int), create_graph=second_derivative_graph, retain_graph=True)[0]
+
+        # D̃(c) — interdiffusion matrix (N, 2, 2)
+        theta_l, theta_r = self.theta_vectors()
+        D_tilde = interdiffusion_matrix_rs_torch(
+            C_int, theta_l, theta_r,
+            x=x, x_interface=self.x_interface, width=self.omega_width,
+            RT=self.RT, mobility=mobility, mu_floor=self.mu_floor,
+        )
+
+        # flux q = D̃(c) · ∂c/∂x  (Fick's law: J = -D̃ ∇c, but FDM uses
+        # div(D̃ ∇c) = ∂c/∂t convention with sign absorbed into D̃)
+        q0 = t_scale * (D_tilde[:, 0, 0:1] * c0_x + D_tilde[:, 0, 1:2] * c1_x)
+        q1 = t_scale * (D_tilde[:, 1, 0:1] * c0_x + D_tilde[:, 1, 1:2] * c1_x)
+
+        # ∂q/∂x
         q0_x = torch.autograd.grad(q0, x, torch.ones_like(q0), create_graph=output_graph, retain_graph=True)[0]
         q1_x = torch.autograd.grad(q1, x, torch.ones_like(q1), create_graph=output_graph, retain_graph=True)[0]
 
@@ -6350,6 +6516,19 @@ D_norm = D_phys * t_scale / L_scale^2
                 "5e-3 = recommended (matches IC guard value)."
             ),
         )
+        ui_use_fick_form = st.checkbox(
+            "Fick form residual (D̃·∂c/∂x instead of M·∂μ/∂x)",
+            value=True,
+            help=(
+                "Compute PDE residual using the interdiffusion matrix "
+                "D̃(c) = M × ∂μ/∂c multiplied by ∂c/∂x, instead of "
+                "the Onsager form M × ∂μ/∂x.  "
+                "Avoids autograd through log(c) which creates 1/c "
+                "gradient sensitivity near c→0.  "
+                "The product D̃·∂c/∂x stays bounded because ∂c/∂x ∝ c "
+                "for smooth profiles (same principle as FDM)."
+            ),
+        )
         ui_torch_compile = st.checkbox(
             "torch.compile (PyTorch 2 JIT)",
             value=False,
@@ -6752,6 +6931,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
             direct_output=bool(ui_direct_output),
             n_time_fourier=int(ui_n_time_fourier),
             mu_floor=float(ui_mu_floor),
+            use_fick_form=bool(ui_use_fick_form),
         )
 
         st.info("Step 2/2: PINNsでΩ相互作用項を推定しています (chemical potential mode)...")
