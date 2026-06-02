@@ -30,10 +30,31 @@ def execution_validity(result: dict[str, Any]) -> bool:
 def execution_accuracy(
     result_rows: list[list[Any]],
     expected_rows: list[list[Any]],
+    result_columns: list[str] | None = None,
+    expected_columns: list[str] | None = None,
 ) -> float:
-    """Compute row-set overlap between result and expected."""
+    """Compute row-set overlap between result and expected.
+
+    When column metadata is provided, matching is done on the
+    intersection of column names so that extra SELECT columns in the
+    generated SQL do not penalise accuracy.
+    """
     if not expected_rows:
         return 1.0 if not result_rows else 0.0
+
+    if result_columns and expected_columns:
+        rc = [c.lower() for c in result_columns]
+        ec = [c.lower() for c in expected_columns]
+        common = [c for c in ec if c in rc]
+        if common:
+            ri = [rc.index(c) for c in common]
+            ei = [ec.index(c) for c in common]
+            result_set = {tuple(r[i] for i in ri) for r in result_rows}
+            expected_set = {tuple(r[i] for i in ei) for r in expected_rows}
+            if not expected_set:
+                return 0.0
+            return len(result_set & expected_set) / len(expected_set)
+
     result_set = {tuple(r) for r in result_rows}
     expected_set = {tuple(r) for r in expected_rows}
     if not expected_set:

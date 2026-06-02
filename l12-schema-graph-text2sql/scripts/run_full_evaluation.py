@@ -74,13 +74,14 @@ def load_evaluation_dataset() -> list[dict]:
     return queries
 
 
-def load_expected_results(qid: str) -> list[list]:
+def load_expected_results(qid: str) -> tuple[list[list], list[str]]:
+    """Return (rows, columns) for expected results."""
     path = RESULTS_DIR / f"{qid}.json"
     if path.exists():
         with open(path) as f:
             data = json.load(f)
-        return data.get("rows", [])
-    return []
+        return data.get("rows", []), data.get("columns", [])
+    return [], []
 
 
 def load_gold_sql(qid: str) -> str:
@@ -314,7 +315,8 @@ def _extract_sql(response: str) -> str:
 
 def compute_single_metrics(sql: str, exec_result: dict, expected_rows: list,
                            allowed_joins: list[str], hop_count: int,
-                           tokens: int, latency_ms: int) -> dict:
+                           tokens: int, latency_ms: int,
+                           expected_columns: list[str] | None = None) -> dict:
     """Compute metrics for a single query."""
     gen_tables = extract_tables_from_sql(sql)
     gen_columns = extract_columns_from_sql(sql)
@@ -327,7 +329,12 @@ def compute_single_metrics(sql: str, exec_result: dict, expected_rows: list,
 
     is_syntax_valid = syntax_validity(sql)
     is_exec_valid = exec_result.get("success", False)
-    exec_acc = execution_accuracy(exec_result.get("rows", []), expected_rows)
+    result_columns = exec_result.get("columns", None)
+    exec_acc = execution_accuracy(
+        exec_result.get("rows", []), expected_rows,
+        result_columns=result_columns,
+        expected_columns=expected_columns,
+    )
     h_table = hallucinated_table_rate(gen_tables, ALLOWED_TABLES)
     h_column = hallucinated_column_rate(gen_columns, [])  # skip column check for brevity
     h_join = hallucinated_join_rate(gen_joins, allowed_joins)
@@ -379,7 +386,7 @@ def run_evaluation():
         question = q["question"]
         difficulty = q["difficulty"]
         hop_count = q.get("hop_count", 1)
-        expected_rows = load_expected_results(qid)
+        expected_rows, expected_columns = load_expected_results(qid)
 
         print(f"\r  [{i+1}/{len(queries)}] {qid} ({difficulty})...", end="", flush=True)
 
@@ -413,6 +420,7 @@ def run_evaluation():
                 metrics = compute_single_metrics(
                     sql, exec_result, expected_rows, allowed_joins,
                     hop_count, tokens, latency_ms,
+                    expected_columns=expected_columns,
                 )
 
                 all_results[method].append({
