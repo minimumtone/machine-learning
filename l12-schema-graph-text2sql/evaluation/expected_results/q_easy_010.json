@@ -5,7 +5,7 @@
     "formula",
     "prototype"
   ],
-  "row_count": 9,
+  "row_count": 19,
   "rows": [
     [
       "entry_Al3Ti_006",
@@ -50,6 +50,56 @@
     [
       "entry_Rh3Ti_112",
       "Rh3Ti",
+      "L12"
+    ],
+    [
+      "oqmd_10814",
+      "Ti3Au",
+      "L12"
+    ],
+    [
+      "oqmd_17437",
+      "Ti3Hg",
+      "L12"
+    ],
+    [
+      "oqmd_18128",
+      "Ti3Sn",
+      "L12"
+    ],
+    [
+      "oqmd_21316",
+      "TiAl3",
+      "L12"
+    ],
+    [
+      "oqmd_29521",
+      "TiCo3",
+      "L12"
+    ],
+    [
+      "oqmd_17524",
+      "TiIr3",
+      "L12"
+    ],
+    [
+      "oqmd_17972",
+      "TiPd3",
+      "L12"
+    ],
+    [
+      "oqmd_30987",
+      "TiPt3",
+      "L12"
+    ],
+    [
+      "oqmd_18074",
+      "TiRh3",
+      "L12"
+    ],
+    [
+      "oqmd_18167",
+      "TiZn3",
       "L12"
     ]
   ]

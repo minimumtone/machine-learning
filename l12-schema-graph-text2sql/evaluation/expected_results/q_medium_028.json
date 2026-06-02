@@ -5,8 +5,33 @@
     "formula",
     "lattice_a"
   ],
-  "row_count": 15,
+  "row_count": 29,
   "rows": [
+    [
+      "oqmd_29555",
+      "CrIr3",
+      null
+    ],
+    [
+      "oqmd_17183",
+      "DyIr3",
+      null
+    ],
+    [
+      "oqmd_10122",
+      "FeIr3",
+      null
+    ],
+    [
+      "oqmd_30380",
+      "GdIr3",
+      null
+    ],
+    [
+      "oqmd_17363",
+      "HfIr3",
+      null
+    ],
     [
       "entry_Ir3Al_095",
       "Ir3Al",
@@ -81,6 +106,51 @@
       "entry_Ir3Zr_107",
       "Ir3Zr",
       3.9
+    ],
+    [
+      "oqmd_17502",
+      "NbIr3",
+      null
+    ],
+    [
+      "oqmd_17504",
+      "NdIr3",
+      null
+    ],
+    [
+      "oqmd_17507",
+      "PaIr3",
+      null
+    ],
+    [
+      "oqmd_18866",
+      "ScIr3",
+      null
+    ],
+    [
+      "oqmd_17518",
+      "TaIr3",
+      null
+    ],
+    [
+      "oqmd_17524",
+      "TiIr3",
+      null
+    ],
+    [
+      "oqmd_17529",
+      "UIr3",
+      null
+    ],
+    [
+      "oqmd_17533",
+      "VIr3",
+      null
+    ],
+    [
+      "oqmd_17544",
+      "ZrIr3",
+      null
     ]
   ]
 }

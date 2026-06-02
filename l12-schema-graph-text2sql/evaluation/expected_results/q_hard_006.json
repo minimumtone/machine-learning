@@ -4,7 +4,7 @@
     "a_site_element",
     "avg_lattice_a"
   ],
-  "row_count": 9,
+  "row_count": 40,
   "rows": [
     [
       "Ni",
@@ -41,6 +41,130 @@
     [
       "Al",
       4.035
+    ],
+    [
+      "Tb",
+      null
+    ],
+    [
+      "Ge",
+      null
+    ],
+    [
+      "Zn",
+      null
+    ],
+    [
+      "Cd",
+      null
+    ],
+    [
+      "Nd",
+      null
+    ],
+    [
+      "In",
+      null
+    ],
+    [
+      "Ti",
+      null
+    ],
+    [
+      "Hg",
+      null
+    ],
+    [
+      "Ga",
+      null
+    ],
+    [
+      "U",
+      null
+    ],
+    [
+      "Tl",
+      null
+    ],
+    [
+      "Ru",
+      null
+    ],
+    [
+      "Pu",
+      null
+    ],
+    [
+      "Zr",
+      null
+    ],
+    [
+      "Pr",
+      null
+    ],
+    [
+      "Au",
+      null
+    ],
+    [
+      "Ag",
+      null
+    ],
+    [
+      "Nb",
+      null
+    ],
+    [
+      "Ce",
+      null
+    ],
+    [
+      "Sc",
+      null
+    ],
+    [
+      "Bi",
+      null
+    ],
+    [
+      "Ca",
+      null
+    ],
+    [
+      "Si",
+      null
+    ],
+    [
+      "Y",
+      null
+    ],
+    [
+      "Sn",
+      null
+    ],
+    [
+      "Sm",
+      null
+    ],
+    [
+      "La",
+      null
+    ],
+    [
+      "Pb",
+      null
+    ],
+    [
+      "V",
+      null
+    ],
+    [
+      "Mn",
+      null
+    ],
+    [
+      "Np",
+      null
     ]
   ]
 }

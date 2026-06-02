@@ -5,8 +5,13 @@
     "chemical_system",
     "lattice_a"
   ],
-  "row_count": 1,
+  "row_count": 2,
   "rows": [
+    [
+      "AlNi3",
+      "Al-Ni",
+      null
+    ],
     [
       "Ni3Al",
       "Al-Ni",

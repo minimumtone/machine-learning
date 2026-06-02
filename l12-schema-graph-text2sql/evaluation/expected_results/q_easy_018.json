@@ -6,304 +6,304 @@
   "row_count": 100,
   "rows": [
     [
+      "Ag-Br"
+    ],
+    [
+      "Ag-C"
+    ],
+    [
+      "Ag-Cd"
+    ],
+    [
+      "Ag-Ce"
+    ],
+    [
+      "Ag-Cl"
+    ],
+    [
+      "Ag-Dy"
+    ],
+    [
+      "Ag-Er"
+    ],
+    [
+      "Ag-F"
+    ],
+    [
+      "Ag-Ga"
+    ],
+    [
+      "Ag-Gd"
+    ],
+    [
+      "Ag-Ho"
+    ],
+    [
+      "Ag-I"
+    ],
+    [
+      "Ag-In"
+    ],
+    [
+      "Ag-La"
+    ],
+    [
+      "Ag-Li"
+    ],
+    [
+      "Ag-Mg"
+    ],
+    [
+      "Ag-N"
+    ],
+    [
+      "Ag-Nd"
+    ],
+    [
+      "Ag-Ni"
+    ],
+    [
+      "Ag-Pr"
+    ],
+    [
+      "Ag-Pt"
+    ],
+    [
+      "Ag-Sc"
+    ],
+    [
+      "Ag-Sm"
+    ],
+    [
+      "Ag-Tb"
+    ],
+    [
+      "Ag-Tm"
+    ],
+    [
+      "Ag-Y"
+    ],
+    [
+      "Ag-Yb"
+    ],
+    [
+      "Ag-Zn"
+    ],
+    [
+      "Al-As"
+    ],
+    [
+      "Al-Au"
+    ],
+    [
+      "Al-Ca"
+    ],
+    [
+      "Al-Ce"
+    ],
+    [
       "Al-Co"
     ],
     [
       "Al-Cu"
     ],
     [
+      "Al-Dy"
+    ],
+    [
+      "Al-Er"
+    ],
+    [
       "Al-Fe"
+    ],
+    [
+      "Al-Gd"
+    ],
+    [
+      "Al-Ho"
     ],
     [
       "Al-Ir"
     ],
     [
+      "Al-Li"
+    ],
+    [
+      "Al-Lu"
+    ],
+    [
+      "Al-Mg"
+    ],
+    [
+      "Al-Mo"
+    ],
+    [
+      "Al-N"
+    ],
+    [
+      "Al-Nb"
+    ],
+    [
+      "Al-Nd"
+    ],
+    [
       "Al-Ni"
+    ],
+    [
+      "Al-Np"
+    ],
+    [
+      "Al-O"
+    ],
+    [
+      "Al-Os"
     ],
     [
       "Al-Pd"
     ],
     [
+      "Al-Pr"
+    ],
+    [
       "Al-Pt"
+    ],
+    [
+      "Al-Pu"
+    ],
+    [
+      "Al-Re"
     ],
     [
       "Al-Rh"
     ],
     [
+      "Al-Ru"
+    ],
+    [
       "Al-Sc"
+    ],
+    [
+      "Al-Sm"
+    ],
+    [
+      "Al-Ta"
+    ],
+    [
+      "Al-Tb"
     ],
     [
       "Al-Ti"
     ],
     [
-      "Co-Ga"
+      "Al-Tm"
     ],
     [
-      "Co-Ge"
+      "Al-U"
     ],
     [
-      "Co-Hf"
+      "Al-V"
     ],
     [
-      "Co-Mn"
+      "Al-W"
     ],
     [
-      "Co-Nb"
+      "Al-Y"
     ],
     [
-      "Co-Sc"
+      "Al-Yb"
     ],
     [
-      "Co-Si"
+      "Al-Zr"
     ],
     [
-      "Co-Sn"
+      "Ar-Mg"
     ],
     [
-      "Co-Ta"
+      "As-Ca"
     ],
     [
-      "Co-Ti"
+      "As-Ce"
     ],
     [
-      "Co-V"
+      "As-Co"
     ],
     [
-      "Co-W"
+      "As-Cr"
     ],
     [
-      "Co-Y"
+      "As-Cu"
     ],
     [
-      "Co-Zn"
+      "As-Dy"
     ],
     [
-      "Co-Zr"
+      "As-Er"
     ],
     [
-      "Cu-Ga"
+      "As-Ga"
     ],
     [
-      "Cu-Ge"
+      "As-Gd"
     ],
     [
-      "Cu-Hf"
+      "As-Ho"
     ],
     [
-      "Cu-Mn"
+      "As-In"
     ],
     [
-      "Cu-Nb"
+      "As-La"
     ],
     [
-      "Cu-Sc"
+      "As-Lu"
     ],
     [
-      "Cu-Si"
+      "As-Mn"
     ],
     [
-      "Cu-Sn"
+      "As-Nd"
     ],
     [
-      "Cu-Ta"
+      "As-Ni"
     ],
     [
-      "Cu-Ti"
+      "As-Np"
     ],
     [
-      "Cu-V"
+      "As-Pa"
     ],
     [
-      "Cu-Y"
+      "As-Pu"
     ],
     [
-      "Cu-Zn"
+      "As-Sc"
     ],
     [
-      "Cu-Zr"
+      "As-Sm"
     ],
     [
-      "Fe-Ga"
+      "As-Sn"
     ],
     [
-      "Fe-Ge"
+      "As-Ta"
     ],
     [
-      "Fe-Hf"
+      "As-Tb"
     ],
     [
-      "Fe-Mn"
+      "As-Te"
     ],
     [
-      "Fe-Nb"
+      "As-Th"
     ],
     [
-      "Fe-Sc"
+      "As-Ti"
     ],
     [
-      "Fe-Si"
+      "As-Tm"
     ],
     [
-      "Fe-Sn"
-    ],
-    [
-      "Fe-Ta"
-    ],
-    [
-      "Fe-Ti"
-    ],
-    [
-      "Fe-V"
-    ],
-    [
-      "Fe-Y"
-    ],
-    [
-      "Fe-Zn"
-    ],
-    [
-      "Fe-Zr"
-    ],
-    [
-      "Ga-Ir"
-    ],
-    [
-      "Ga-Ni"
-    ],
-    [
-      "Ga-Pd"
-    ],
-    [
-      "Ga-Pt"
-    ],
-    [
-      "Ga-Rh"
-    ],
-    [
-      "Ge-Ir"
-    ],
-    [
-      "Ge-Ni"
-    ],
-    [
-      "Ge-Pd"
-    ],
-    [
-      "Ge-Pt"
-    ],
-    [
-      "Ge-Rh"
-    ],
-    [
-      "Hf-Ir"
-    ],
-    [
-      "Hf-Ni"
-    ],
-    [
-      "Hf-Pd"
-    ],
-    [
-      "Hf-Pt"
-    ],
-    [
-      "Hf-Rh"
-    ],
-    [
-      "Ir-Mn"
-    ],
-    [
-      "Ir-Nb"
-    ],
-    [
-      "Ir-Sc"
-    ],
-    [
-      "Ir-Si"
-    ],
-    [
-      "Ir-Sn"
-    ],
-    [
-      "Ir-Ta"
-    ],
-    [
-      "Ir-Ti"
-    ],
-    [
-      "Ir-V"
-    ],
-    [
-      "Ir-Y"
-    ],
-    [
-      "Ir-Zn"
-    ],
-    [
-      "Ir-Zr"
-    ],
-    [
-      "Mn-Ni"
-    ],
-    [
-      "Mn-Pd"
-    ],
-    [
-      "Mn-Pt"
-    ],
-    [
-      "Nb-Ni"
-    ],
-    [
-      "Nb-Pd"
-    ],
-    [
-      "Nb-Pt"
-    ],
-    [
-      "Nb-Rh"
-    ],
-    [
-      "Ni-Sc"
-    ],
-    [
-      "Ni-Si"
-    ],
-    [
-      "Ni-Sn"
-    ],
-    [
-      "Ni-Ta"
-    ],
-    [
-      "Ni-Ti"
-    ],
-    [
-      "Ni-V"
-    ],
-    [
-      "Ni-Y"
-    ],
-    [
-      "Ni-Zn"
-    ],
-    [
-      "Ni-Zr"
-    ],
-    [
-      "Pd-Sc"
-    ],
-    [
-      "Pd-Si"
-    ],
-    [
-      "Pd-Sn"
-    ],
-    [
-      "Pd-Ta"
-    ],
-    [
-      "Pd-Ti"
+      "As-U"
     ]
   ]
 }

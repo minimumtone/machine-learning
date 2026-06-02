@@ -4,7 +4,7 @@
     "entry_id",
     "formula"
   ],
-  "row_count": 10,
+  "row_count": 78,
   "rows": [
     [
       "entry_Al3Sc_005",
@@ -15,6 +15,134 @@
       "Al3Ti"
     ],
     [
+      "oqmd_21315",
+      "Al3V"
+    ],
+    [
+      "oqmd_10263",
+      "AlAs"
+    ],
+    [
+      "oqmd_10381",
+      "AlAu"
+    ],
+    [
+      "oqmd_10411",
+      "AlCo"
+    ],
+    [
+      "oqmd_2015345",
+      "AlCo"
+    ],
+    [
+      "oqmd_22409",
+      "AlCu3"
+    ],
+    [
+      "oqmd_110794",
+      "AlFe"
+    ],
+    [
+      "oqmd_110795",
+      "AlFe"
+    ],
+    [
+      "oqmd_20929",
+      "AlFe"
+    ],
+    [
+      "oqmd_54708",
+      "AlFe"
+    ],
+    [
+      "oqmd_10480",
+      "AlIr"
+    ],
+    [
+      "oqmd_2037610",
+      "AlMo"
+    ],
+    [
+      "oqmd_2014843",
+      "AlN"
+    ],
+    [
+      "oqmd_10516",
+      "AlNi"
+    ],
+    [
+      "oqmd_94913",
+      "AlNi"
+    ],
+    [
+      "oqmd_94919",
+      "AlNi"
+    ],
+    [
+      "oqmd_17890",
+      "AlNi3"
+    ],
+    [
+      "oqmd_5632",
+      "AlO"
+    ],
+    [
+      "oqmd_10544",
+      "AlOs"
+    ],
+    [
+      "oqmd_10550",
+      "AlPd"
+    ],
+    [
+      "oqmd_10561",
+      "AlPt"
+    ],
+    [
+      "oqmd_18714",
+      "AlPt3"
+    ],
+    [
+      "oqmd_10573",
+      "AlRe"
+    ],
+    [
+      "oqmd_10576",
+      "AlRh"
+    ],
+    [
+      "oqmd_18193",
+      "AlRu"
+    ],
+    [
+      "oqmd_54942",
+      "AlRu"
+    ],
+    [
+      "oqmd_2037618",
+      "AlV"
+    ],
+    [
+      "oqmd_2030504",
+      "AlW"
+    ],
+    [
+      "oqmd_2030303",
+      "CaAl"
+    ],
+    [
+      "oqmd_18920",
+      "Ce3Al"
+    ],
+    [
+      "oqmd_10401",
+      "CeAl"
+    ],
+    [
+      "oqmd_116122",
+      "CeAl"
+    ],
+    [
       "entry_Co3Al_009",
       "Co3Al"
     ],
@@ -23,28 +151,172 @@
       "Cu3Al"
     ],
     [
+      "oqmd_10445",
+      "DyAl"
+    ],
+    [
+      "oqmd_116121",
+      "DyAl"
+    ],
+    [
+      "oqmd_10447",
+      "DyAl3"
+    ],
+    [
+      "oqmd_10454",
+      "ErAl3"
+    ],
+    [
       "entry_Fe3Al_036",
       "Fe3Al"
+    ],
+    [
+      "oqmd_19332",
+      "GdAl"
+    ],
+    [
+      "oqmd_10477",
+      "HoAl3"
     ],
     [
       "entry_Ir3Al_095",
       "Ir3Al"
     ],
     [
+      "oqmd_10489",
+      "LiAl3"
+    ],
+    [
+      "oqmd_10494",
+      "LuAl3"
+    ],
+    [
+      "oqmd_2030304",
+      "MgAl"
+    ],
+    [
+      "oqmd_2037614",
+      "NbAl"
+    ],
+    [
+      "oqmd_116120",
+      "NdAl"
+    ],
+    [
+      "oqmd_19476",
+      "NdAl"
+    ],
+    [
       "entry_Ni3Al_001",
       "Ni3Al"
+    ],
+    [
+      "oqmd_18451",
+      "Np3Al"
+    ],
+    [
+      "oqmd_10537",
+      "NpAl3"
     ],
     [
       "entry_Pd3Al_066",
       "Pd3Al"
     ],
     [
+      "oqmd_10559",
+      "Pr3Al"
+    ],
+    [
+      "oqmd_10558",
+      "PrAl"
+    ],
+    [
+      "oqmd_116119",
+      "PrAl"
+    ],
+    [
+      "oqmd_10560",
+      "PrAl3"
+    ],
+    [
       "entry_Pt3Al_007",
       "Pt3Al"
     ],
     [
+      "oqmd_10570",
+      "PuAl3"
+    ],
+    [
       "entry_Rh3Al_109",
       "Rh3Al"
+    ],
+    [
+      "oqmd_10539",
+      "ScAl"
+    ],
+    [
+      "oqmd_18716",
+      "ScAl3"
+    ],
+    [
+      "oqmd_10543",
+      "Sm3Al"
+    ],
+    [
+      "oqmd_10542",
+      "SmAl"
+    ],
+    [
+      "oqmd_2031351",
+      "TaAl"
+    ],
+    [
+      "oqmd_10587",
+      "Tb3Al"
+    ],
+    [
+      "oqmd_22287",
+      "TbAl"
+    ],
+    [
+      "oqmd_21316",
+      "TiAl3"
+    ],
+    [
+      "oqmd_10601",
+      "TmAl3"
+    ],
+    [
+      "oqmd_10602",
+      "UAl3"
+    ],
+    [
+      "oqmd_10611",
+      "Y3Al"
+    ],
+    [
+      "oqmd_10609",
+      "YAl"
+    ],
+    [
+      "oqmd_116118",
+      "YAl"
+    ],
+    [
+      "oqmd_10614",
+      "YAl3"
+    ],
+    [
+      "oqmd_10618",
+      "YbAl3"
+    ],
+    [
+      "oqmd_18197",
+      "Zr3Al"
+    ],
+    [
+      "oqmd_27979",
+      "ZrAl3"
     ]
   ]
 }

@@ -4,7 +4,7 @@
     "formula",
     "lattice_a"
   ],
-  "row_count": 9,
+  "row_count": 17,
   "rows": [
     [
       "Al3Sc",
@@ -41,6 +41,38 @@
     [
       "Rh3Sc",
       4.06
+    ],
+    [
+      "Sc3In",
+      null
+    ],
+    [
+      "ScAl3",
+      null
+    ],
+    [
+      "ScGa3",
+      null
+    ],
+    [
+      "ScIn3",
+      null
+    ],
+    [
+      "ScIr3",
+      null
+    ],
+    [
+      "ScPd3",
+      null
+    ],
+    [
+      "ScPt3",
+      null
+    ],
+    [
+      "ScRh3",
+      null
     ]
   ]
 }
