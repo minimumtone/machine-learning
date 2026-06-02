@@ -77,7 +77,8 @@ def load_evaluation_dataset() -> list[dict]:
 def load_expected_results(qid: str) -> list[list]:
     path = RESULTS_DIR / f"{qid}.json"
     if path.exists():
-        data = json.load(open(path))
+        with open(path) as f:
+            data = json.load(f)
         return data.get("rows", [])
     return []
 
