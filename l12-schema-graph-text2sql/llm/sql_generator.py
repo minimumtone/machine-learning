@@ -68,23 +68,16 @@ def generate_sql_via_llm(
     if model is None:
         model = os.getenv("LLM_MODEL", "gpt-5.5")
 
-    prompt = build_constrained_prompt(
-        user_query, allowed_tables, allowed_columns, allowed_joins,
-    )
-
-    # Retrieve similar few-shot examples
-    few_shot = retrieve_similar(user_query, top_k=3)
-
-    # Check coverage score for fallback decision
+    # Check API key early so fallback doesn't need the prompt template
     conditions = extract_conditions(user_query)
     coverage_info = conditions.get("_coverage", {})
-    coverage_action = coverage_info.get("action", "execute_rule_based")
+    few_shot = retrieve_similar(user_query, top_k=3)
 
     if not api_key or api_key == "your_api_key_here":
         sql = _rule_based_fallback(user_query, allowed_tables, allowed_columns, allowed_joins)
         return {
             "sql": sql,
-            "prompt": prompt,
+            "prompt": "",
             "model": "rule_based_fallback",
             "tokens": 0,
             "latency_ms": 0,
@@ -93,11 +86,6 @@ def generate_sql_via_llm(
             "coverage": coverage_info,
         }
 
-    # If coverage is low and we have an API key, force LLM mode
-    # If coverage action is clarification_required, still try LLM but flag it
-    use_llm = True  # We have API key, so always use LLM when available
-
-    # Rebuild prompt with few-shot examples for LLM mode
     prompt = build_constrained_prompt(
         user_query, allowed_tables, allowed_columns, allowed_joins,
         few_shot_examples=few_shot,

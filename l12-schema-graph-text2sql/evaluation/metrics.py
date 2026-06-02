@@ -54,6 +54,9 @@ def execution_accuracy(
             if not expected_set:
                 return 0.0
             return len(result_set & expected_set) / len(expected_set)
+        # common is empty: columns have no overlap, fall through to
+        # full-tuple comparison below (this is intentional — when column
+        # names share nothing, comparing full rows is the only option).
 
     result_set = {tuple(r) for r in result_rows}
     expected_set = {tuple(r) for r in expected_rows}

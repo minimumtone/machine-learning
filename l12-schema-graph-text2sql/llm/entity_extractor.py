@@ -90,16 +90,24 @@ def extract_elements(query: str, terms: dict[str, Any] | None = None) -> list[st
     return found
 
 
-def extract_stability(query: str, terms: dict[str, Any] | None = None) -> str | None:
+def extract_stability(query: str, terms: dict[str, Any] | None = None) -> str | list[str] | None:
     if terms is None:
         terms = _load_terms()
     q = _normalize(query).lower()
-    stab_terms = terms.get("stability_terms", {})
+    found: list[str] = []
     if "準安定" in query or "metastable" in q:
-        return "metastable"
+        found.append("metastable")
     if "安定" in query or "stable" in q:
-        return "stable"
-    return None
+        # Only add "stable" if we didn't just match it as part of "metastable"
+        if "metastable" not in found:
+            found.append("stable")
+        elif re.search(r"(?<!meta)(?<!準)安定|(?<!meta)stable\b", q):
+            found.append("stable")
+    if not found:
+        return None
+    if len(found) == 1:
+        return found[0]
+    return found
 
 
 def extract_properties(

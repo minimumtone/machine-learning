@@ -330,10 +330,15 @@ def compute_single_metrics(sql: str, exec_result: dict, expected_rows: list,
     is_syntax_valid = syntax_validity(sql)
     is_exec_valid = exec_result.get("success", False)
     result_columns = exec_result.get("columns", None)
+    # Column-aware accuracy (Improvement A)
     exec_acc = execution_accuracy(
         exec_result.get("rows", []), expected_rows,
         result_columns=result_columns,
         expected_columns=expected_columns,
+    )
+    # Raw accuracy without column-aware matching (baseline for Improvement A)
+    raw_exec_acc = execution_accuracy(
+        exec_result.get("rows", []), expected_rows,
     )
     h_table = hallucinated_table_rate(gen_tables, ALLOWED_TABLES)
     h_column = hallucinated_column_rate(gen_columns, [])  # skip column check for brevity
@@ -344,6 +349,7 @@ def compute_single_metrics(sql: str, exec_result: dict, expected_rows: list,
         "syntax_valid": is_syntax_valid,
         "execution_valid": is_exec_valid,
         "execution_accuracy": exec_acc,
+        "raw_execution_accuracy": raw_exec_acc,
         "hallucinated_table_rate": h_table,
         "hallucinated_column_rate": h_column,
         "hallucinated_join_rate": h_join,
@@ -448,6 +454,7 @@ def run_evaluation():
                     "syntax_valid": False,
                     "execution_valid": False,
                     "execution_accuracy": 0.0,
+                    "raw_execution_accuracy": 0.0,
                     "hallucinated_table_rate": 0.0,
                     "hallucinated_column_rate": 0.0,
                     "hallucinated_join_rate": 0.0,
@@ -468,6 +475,7 @@ def write_result_csv(results: list[dict], path: Path) -> None:
     fieldnames = [
         "query_id", "question", "difficulty", "hop_count", "method",
         "syntax_valid", "execution_valid", "execution_accuracy",
+        "raw_execution_accuracy",
         "hallucinated_table_rate", "hallucinated_join_rate",
         "token_usage", "latency_ms",
     ]
@@ -491,6 +499,7 @@ def write_metrics_summary(all_results: dict[str, list[dict]], path: Path) -> Non
             "syntax_validity": sum(r.get("syntax_valid", False) for r in results) / n,
             "execution_validity": sum(r.get("execution_valid", False) for r in results) / n,
             "avg_execution_accuracy": sum(r.get("execution_accuracy", 0) for r in results) / n,
+            "avg_raw_execution_accuracy": sum(r.get("raw_execution_accuracy", 0) for r in results) / n,
             "avg_hallucinated_table_rate": sum(r.get("hallucinated_table_rate", 0) for r in results) / n,
             "avg_hallucinated_join_rate": sum(r.get("hallucinated_join_rate", 0) for r in results) / n,
             "avg_token_usage": sum(r.get("token_usage", 0) for r in results) / n,

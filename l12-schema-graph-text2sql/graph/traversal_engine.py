@@ -24,29 +24,52 @@ def find_join_subgraph(
     graph: nx.Graph,
     required_tables: list[str],
 ) -> dict[str, list[str]]:
-    """Return join paths connecting all required tables via a Steiner-tree approximation."""
+    """Return join paths connecting all required tables via a Steiner-tree approximation.
+
+    Uses a union-find to track connected components so that pairs already
+    connected by prior paths are correctly skipped while pairs in separate
+    components are still joined.
+    """
     if len(required_tables) <= 1:
         return {"paths": [required_tables]}
 
+    # Simple union-find for connectivity tracking
+    parent: dict[str, str] = {}
+
+    def _find(x: str) -> str:
+        while parent.get(x, x) != x:
+            parent[x] = parent.get(parent[x], parent[x])
+            x = parent[x]
+        return x
+
+    def _union(a: str, b: str) -> None:
+        ra, rb = _find(a), _find(b)
+        if ra != rb:
+            parent[ra] = rb
+
     paths: list[list[str]] = []
-    covered: set[str] = set()
 
     for src, tgt in combinations(required_tables, 2):
-        if src in covered and tgt in covered:
+        if _find(src) == _find(tgt):
             continue
         path = find_shortest_table_path(graph, src, tgt)
         if path:
             paths.append(path)
-            covered.update(path)
+            for i in range(len(path) - 1):
+                _union(path[i], path[i + 1])
 
+    # Ensure all required tables are connected
     for t in required_tables:
-        if t not in covered:
-            for c in covered:
-                p = find_shortest_table_path(graph, t, c)
-                if p:
-                    paths.append(p)
-                    covered.update(p)
-                    break
+        root = _find(required_tables[0])
+        if _find(t) != root:
+            for other in required_tables:
+                if _find(other) == root:
+                    p = find_shortest_table_path(graph, t, other)
+                    if p:
+                        paths.append(p)
+                        for i in range(len(p) - 1):
+                            _union(p[i], p[i + 1])
+                        break
 
     return {"paths": paths}
 
