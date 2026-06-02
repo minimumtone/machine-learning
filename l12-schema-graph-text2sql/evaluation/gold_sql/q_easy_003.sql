@@ -1,4 +1,4 @@
-SELECT m.formula, s.formula_type
+SELECT m.entry_id, m.formula, s.formula_type
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 WHERE s.formula_type = 'A3B'

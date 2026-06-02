@@ -1,4 +1,4 @@
-SELECT DISTINCT m.formula, s.prototype
+SELECT DISTINCT m.entry_id, m.formula, s.prototype
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id

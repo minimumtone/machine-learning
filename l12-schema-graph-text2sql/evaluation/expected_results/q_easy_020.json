@@ -1,0 +1,16 @@
+{
+  "query_id": "q_easy_020",
+  "columns": [
+    "entry_id",
+    "formula",
+    "prototype"
+  ],
+  "row_count": 1,
+  "rows": [
+    [
+      "entry_Co3W_010",
+      "Co3W",
+      "L12"
+    ]
+  ]
+}

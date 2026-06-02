@@ -1,0 +1,14 @@
+{
+  "query_id": "q_easy_014",
+  "columns": [
+    "entry_id",
+    "formula"
+  ],
+  "row_count": 1,
+  "rows": [
+    [
+      "entry_Ni3Al_001",
+      "Ni3Al"
+    ]
+  ]
+}

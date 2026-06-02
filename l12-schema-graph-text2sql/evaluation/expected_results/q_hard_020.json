@@ -1,0 +1,34 @@
+{
+  "query_id": "q_hard_020",
+  "columns": [
+    "b_site_element",
+    "stable_count"
+  ],
+  "row_count": 6,
+  "rows": [
+    [
+      "Ti",
+      3.0
+    ],
+    [
+      "Al",
+      2.0
+    ],
+    [
+      "Ga",
+      2.0
+    ],
+    [
+      "Ge",
+      2.0
+    ],
+    [
+      "Nb",
+      2.0
+    ],
+    [
+      "Sc",
+      1.0
+    ]
+  ]
+}

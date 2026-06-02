@@ -1,0 +1,51 @@
+{
+  "query_id": "q_easy_015",
+  "columns": [
+    "entry_id",
+    "formula",
+    "prototype"
+  ],
+  "row_count": 8,
+  "rows": [
+    [
+      "entry_Co3Ga_024",
+      "Co3Ga",
+      "L12"
+    ],
+    [
+      "entry_Cu3Ga_052",
+      "Cu3Ga",
+      "L12"
+    ],
+    [
+      "entry_Fe3Ga_037",
+      "Fe3Ga",
+      "L12"
+    ],
+    [
+      "entry_Ir3Ga_096",
+      "Ir3Ga",
+      "L12"
+    ],
+    [
+      "entry_Ni3Ga_002",
+      "Ni3Ga",
+      "L12"
+    ],
+    [
+      "entry_Pd3Ga_067",
+      "Pd3Ga",
+      "L12"
+    ],
+    [
+      "entry_Pt3Ga_081",
+      "Pt3Ga",
+      "L12"
+    ],
+    [
+      "entry_Rh3Ga_110",
+      "Rh3Ga",
+      "L12"
+    ]
+  ]
+}

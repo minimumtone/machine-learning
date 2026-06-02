@@ -1,0 +1,18 @@
+{
+  "query_id": "q_hard_017",
+  "columns": [
+    "formula",
+    "lattice_a"
+  ],
+  "row_count": 2,
+  "rows": [
+    [
+      "Co3Ti",
+      3.55
+    ],
+    [
+      "Ni3Al",
+      3.572
+    ]
+  ]
+}

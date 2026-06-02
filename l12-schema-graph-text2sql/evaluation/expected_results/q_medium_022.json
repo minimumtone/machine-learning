@@ -1,0 +1,30 @@
+{
+  "query_id": "q_medium_022",
+  "columns": [
+    "formula",
+    "formation_energy_per_atom"
+  ],
+  "row_count": 5,
+  "rows": [
+    [
+      "Pt3Al",
+      -0.55
+    ],
+    [
+      "Al3Sc",
+      -0.5
+    ],
+    [
+      "Cu3Al",
+      -0.495
+    ],
+    [
+      "Pt3Zn",
+      -0.495
+    ],
+    [
+      "Fe3Mn",
+      -0.49
+    ]
+  ]
+}

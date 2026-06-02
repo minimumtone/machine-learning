@@ -1,4 +1,24 @@
 {
   "query_id": "q_medium_001",
-  "note": "Execute gold SQL against seeded DB to populate"
+  "columns": [
+    "entry_id",
+    "formula",
+    "formation_energy_per_atom",
+    "energy_above_hull"
+  ],
+  "row_count": 2,
+  "rows": [
+    [
+      "entry_Ni3Al_001",
+      "Ni3Al",
+      -0.42,
+      0.0
+    ],
+    [
+      "entry_Ni3Ti_012",
+      "Ni3Ti",
+      -0.3,
+      0.0
+    ]
+  ]
 }

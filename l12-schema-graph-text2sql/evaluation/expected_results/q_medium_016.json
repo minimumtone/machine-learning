@@ -1,0 +1,36 @@
+{
+  "query_id": "q_medium_016",
+  "columns": [
+    "formula",
+    "lattice_a",
+    "energy_above_hull"
+  ],
+  "row_count": 5,
+  "rows": [
+    [
+      "Ni3Ti",
+      3.4,
+      0.0
+    ],
+    [
+      "Pt3Ge",
+      3.4,
+      0.0
+    ],
+    [
+      "Cu3Ti",
+      3.54,
+      0.0
+    ],
+    [
+      "Co3Ti",
+      3.55,
+      0.0
+    ],
+    [
+      "Ni3Al",
+      3.572,
+      0.0
+    ]
+  ]
+}
