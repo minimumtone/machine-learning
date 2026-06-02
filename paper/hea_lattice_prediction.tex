@@ -64,8 +64,8 @@ Vegard則（0.0227~\AA）比5.7\%の改善に相当する。
 校正定数$q_\text{BCC} = 1$を採用でき、
 全体RMSE = 0.0202~\AA{}（Vegard比11\%改善）を達成した。
 Alonsoデータセット外の23個のHEA（BCC 10、FCC 13、10文献18元素）で
-汎化性能を検証し、全体RMSE = 0.0149~\AA{}（Vegard比14.4\%改善）、
-BCC RMSE = 0.0147~\AA{}（Vegard比21.4\%改善）を確認した。
+汎化性能を検証し、全体RMSE = 0.0150~\AA{}（Vegard比13.4\%改善）、
+BCC RMSE = 0.0149~\AA{}（Vegard比19.7\%改善）を確認した。
 DFT自己整合的に$\Omega_\text{sf}$を定義
 （参照体積にもVASP計算値を使用）すると
 B2参照でもq$\approx$1が達成されるという新知見も得られた。
@@ -195,7 +195,7 @@ Tian~\emph{et al.}~\cite{Tian2015}のEMTO-CPA法があるが、
   \item \textbf{$\delta r$の限界の証明}:
     703二元系ペアで$\delta r$が構造情報を含み得ないことを厳密に検証。
   \item \textbf{独立テスト}:
-    23 HEA（BCC 10、FCC 13）で検証。全体 RMSE = 0.0149~\AA{}（Vegard比14.4\%改善）、BCC RMSE = 0.0147~\AA{}（Vegard比21.4\%改善）。
+    23 HEA（BCC 10、FCC 13）で検証。全体 RMSE = 0.0150~\AA{}（Vegard比13.4\%改善）、BCC RMSE = 0.0149~\AA{}（Vegard比19.7\%改善）。
 \end{enumerate}
 
 
@@ -475,7 +475,7 @@ RMSE棒グラフを示す。
   灰丸: Vegard則（64 HEA）、
   青丸: DFT-$\Omega_\text{sf}$（64 HEA、RMSE = 0.0214~\AA）、
   赤三角: 独立テスト（23 HEA）。
-  独立テスト全体 RMSE = 0.0149~\AA（Vegard比14.4\%改善）。
+  独立テスト全体 RMSE = 0.0150~\AA（Vegard比13.4\%改善）。
   実線は完全一致線。}
 \label{fig:parity}
 \end{figure}
@@ -546,17 +546,17 @@ BCC HEA（0.0299~\AA）はSQS参照で0.0281~\AA{}に
 \toprule
 手法 & 全体 (23) & BCC (10) & FCC (13) \\
 \midrule
-Vegard（単純平均）          & 0.0174 & 0.0187 & 0.0164 \\
+Vegard（単純平均）          & 0.0173 & 0.0185 & 0.0164 \\
 Alonso体積ズレ補正（King実験値）    & 0.0185 & 0.0178 & 0.0190 \\
-DFT-$\Omega_\text{sf}$（構造別, 最適$\gamma$） & \textbf{0.0149} & \textbf{0.0147} & \textbf{0.0151} \\
+DFT-$\Omega_\text{sf}$（構造別, 最適$\gamma$） & \textbf{0.0150} & \textbf{0.0149} & \textbf{0.0151} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 DFT-$\Omega_\text{sf}$モデルが全カテゴリで最良である。
-全体RMSE = 0.0149~\AA{}でVegard（0.0174~\AA）から\textbf{14.4\%改善}した。
-BCC 10合金ではRMSE = 0.0147~\AA（Vegard比\textbf{21.4\%改善}）、
-FCC 13合金ではRMSE = 0.0151~\AA（Vegard比\textbf{7.9\%改善}）。
+全体RMSE = 0.0150~\AA{}でVegard（0.0173~\AA）から\textbf{13.4\%改善}した。
+BCC 10合金ではRMSE = 0.0149~\AA（Vegard比\textbf{19.7\%改善}）、
+FCC 13合金ではRMSE = 0.0151~\AA（Vegard比\textbf{7.6\%改善}）。
 B2参照構造の$\Omega_\text{sf}$データを473ペアに拡充し、
 耐火金属28ペアを全カバーしたことで、
 BCC予測精度が大幅に改善された。
@@ -1125,8 +1125,8 @@ DFT体積サイズファクターの元素別加法分解に基づく、
 
   \item \textbf{汎化性能}:
     23 HEA（BCC 10、FCC 13、10文献18元素）の多様な独立テストで検証。
-    全体 RMSE = 0.0149~\AA{}（Vegard比14.4\%改善）、
-    BCC RMSE = 0.0147~\AA{}（Vegard比21.4\%改善）を確認。
+    全体 RMSE = 0.0150~\AA{}（Vegard比13.4\%改善）、
+    BCC RMSE = 0.0149~\AA{}（Vegard比19.7\%改善）を確認。
     B2 $\Omega_\text{sf}$を473ペアに拡充した効果が顕著。
 
   \item \textbf{$\delta r$の限界}:

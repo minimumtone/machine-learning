@@ -247,7 +247,7 @@ INDEPENDENT_TEST = [
     {"comp":{"Mo":0.20,"Nb":0.20,"Ta":0.20,"V":0.20,"W":0.20},"struct":"BCC","a_exp":3.185,
      "ref":"Kantelis2025_AIPAdv","note":"equiatomic 5-element refractory"},
     # Senkov 2012: HfNbTaTiZr single BCC (as-cast)
-    {"comp":{"Hf":0.20,"Nb":0.20,"Ta":0.20,"Ti":0.20,"Zr":0.20},"struct":"BCC","a_exp":3.404,
+    {"comp":{"Hf":0.20,"Nb":0.20,"Ta":0.20,"Ti":0.20,"Zr":0.20},"struct":"BCC","a_exp":3.410,
      "ref":"Senkov2012_Intermet","note":"equiatomic 5-element Senkov standard"},
     # Dirras 2016: Ti35Zr27.5Hf27.5Nb5Ta5 single BCC
     {"comp":{"Ti":0.35,"Zr":0.275,"Hf":0.275,"Nb":0.05,"Ta":0.05},"struct":"BCC","a_exp":3.440,
