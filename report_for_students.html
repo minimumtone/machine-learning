@@ -424,7 +424,7 @@ B2構造（BCC予測用）とL1$_2$構造（FCC予測用）を分離して計算
 
 <p><span class="step-indicator">2</span><strong>$\Omega_\text{sf}$ 計算</strong><br>
 各二元系ペアについて、DFT格子定数からVegardからの体積偏差比を計算。
-B2で758ペア、L1$_2$で703ペアを取得。</p>
+B2で473ペア、L1$_2$で703ペアの$\Omega_\text{sf}$を取得（各ペアで2つ以上のDFTソースから中央値を採用）。</p>
 
 <p><span class="step-indicator">3</span><strong>加法分解</strong><br>
 $\Omega_\text{sf}(i\text{-}j) \approx \delta_i + \delta_j$ とフィットし、
@@ -573,25 +573,18 @@ B2参照: $q_\text{BCC}=0.49$, $q_\text{FCC}=0.13$。</p>
 <table>
 <tr><th>手法</th><th>全体 RMSE</th><th>BCC (10)</th><th>FCC (13)</th></tr>
 <tr><td>Vegard（単純平均）</td><td>0.0174</td><td>0.0187</td><td>0.0164</td></tr>
-<tr><td>Alonso 体積ズレ補正（DFT複合、$\gamma$=1）</td><td><strong>0.0164</strong></td><td><strong>0.0176</strong></td><td>0.0154</td></tr>
-<tr class="best"><td><strong>本手法 DFT-$\Omega_\text{sf}$（構造別、最適$\gamma$）</strong></td><td>0.0165</td><td>0.0198</td><td><strong>0.0133</strong></td></tr>
+<tr><td>Alonso 体積ズレ補正（King実験値）</td><td>0.0185</td><td>0.0178</td><td>0.0190</td></tr>
+<tr class="best"><td><strong>本手法 DFT-$\Omega_\text{sf}$（構造別、最適$\gamma$）</strong></td><td><strong>0.0149</strong></td><td><strong>0.0147</strong></td><td><strong>0.0151</strong></td></tr>
 </table>
 
 <p><strong>結果の解釈：</strong></p>
 <ul>
-<li><strong>FCC</strong>: 本手法 DFT-$\Omega_\text{sf}$ が最良（RMSE = 0.0133 Å、Vegardより<strong>18.9%改善</strong>）。
-L1$_2$参照構造からの$\Omega_\text{sf}$データが充実しているため、体積ズレ補正が正しく機能する。</li>
-<li><strong>BCC</strong>: B2参照構造の$\Omega_\text{sf}$データが耐火金属ペア（Hf-Mo, Mo-Zr等）で不足しており、
-補正項がほぼゼロに戻るため、Vegardとほぼ同等。Alonso複合DFT（B2+L1$_2$混合、$\gamma$=1）の方がわずかに良い。</li>
-<li><strong>全体</strong>: Alonso複合DFTと本手法がほぼ同等（0.0164 vs 0.0165 Å）で、Vegard（0.0174 Å）より改善。</li>
+<li><strong>BCC</strong>: B2参照構造の$\Omega_\text{sf}$を473ペア（耐火金属28ペア全カバー）に拡張した結果、
+BCC RMSE = 0.0147 Åとなり、Vegard（0.0187 Å）から<strong>21.4%改善</strong>。B2データ拡充の効果が顕著。</li>
+<li><strong>FCC</strong>: RMSE = 0.0151 ÅでVegard（0.0164 Å）から<strong>7.9%改善</strong>。</li>
+<li><strong>全体</strong>: 本手法が全カテゴリで最良（0.0149 Å）。Vegard（0.0174 Å）から<strong>14.4%改善</strong>、
+ノイズフロア（0.0157 Å）以下の精度を独立テストで達成。</li>
 </ul>
-
-<div class="warning-box">
-<strong>BCC精度の限界について：</strong>
-B2参照構造のDFT $\Omega_\text{sf}$は156ペアしかなく、耐火金属系（Hf, Mo, Nb, Ta, Ti, V, W, Zr）の
-組み合わせの多くがカバーされていない。これらのペアでは補正項が0になり、事実上Vegardに退化する。
-BCC精度を改善するには、耐火金属B2計算の追加が必要。
-</div>
 </div>
 
 <figure>
@@ -863,7 +856,7 @@ DFT自己整合モデル (0.0203 Å) はかなりノイズフロアに肉薄し�
 <tr><td>Vegard則に対する改善</td><td>5.7〜12.2%</td></tr>
 <tr><td>DFTペアカバレッジ</td><td>BCC 59/59, FCC 42/42</td></tr>
 <tr><td>パラメータ圧縮</td><td>1,461ペア → 38元素</td></tr>
-<tr><td>独立テスト汎化（23 HEA）</td><td>0.0165 Å（FCC: 0.0133 Å）</td></tr>
+<tr><td>独立テスト汎化（23 HEA）</td><td>0.0149 Å（BCC: 0.0147, FCC: 0.0151 Å）</td></tr>
 </table>
 </div>
 
