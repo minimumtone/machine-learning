@@ -7,4 +7,4 @@ WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND (ca.element = 'Ni' OR ca.element = 'Co')
   AND (cb.element = 'Al' OR cb.element = 'Ti')
 ORDER BY m.formula
-LIMIT 100;
+LIMIT 10000;

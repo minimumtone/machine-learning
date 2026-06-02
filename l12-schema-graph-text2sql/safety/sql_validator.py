@@ -19,7 +19,7 @@ FORBIDDEN_KEYWORDS = [
     "CREATE", "GRANT", "REVOKE", "COPY",
 ]
 
-DEFAULT_LIMIT = 100
+DEFAULT_LIMIT = 10000
 MAX_SUBQUERY_DEPTH = 3
 DISALLOWED_FUNCTIONS = [
     "pg_sleep", "dblink", "lo_import", "lo_export",

@@ -11,4 +11,4 @@ WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND cp_bm.property_name = 'bulk_modulus'
   AND cp_bm.value >= 150
 ORDER BY ps.formation_energy_per_atom ASC
-LIMIT 100;
+LIMIT 10000;

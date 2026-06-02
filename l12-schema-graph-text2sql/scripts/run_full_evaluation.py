@@ -409,9 +409,11 @@ def run_evaluation():
                 tokens = gen.get("tokens", 0)
                 latency_ms = gen.get("latency_ms", 0)
 
-                # Ensure LIMIT
-                if sql and not re.search(r"\bLIMIT\b", sql, re.IGNORECASE):
-                    sql = sql.rstrip().rstrip(";") + "\nLIMIT 100;"
+                # Normalize LIMIT to 10000
+                if sql:
+                    sql = re.sub(r"\bLIMIT\s+\d+", "LIMIT 10000", sql, flags=re.IGNORECASE)
+                    if not re.search(r"\bLIMIT\b", sql, re.IGNORECASE):
+                        sql = sql.rstrip().rstrip(";") + "\nLIMIT 10000;"
 
                 # Execute
                 exec_result = execute_sql(conn, sql) if sql else {"success": False, "rows": [], "row_count": 0}

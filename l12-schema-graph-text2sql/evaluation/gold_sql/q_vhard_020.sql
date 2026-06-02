@@ -18,4 +18,4 @@ JOIN calculated_property cp_sm ON cp_sm.calculation_id = calc.calculation_id
   AND cp_sm.property_name = 'shear_modulus'
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
 ORDER BY total_score DESC
-LIMIT 100;
+LIMIT 10000;

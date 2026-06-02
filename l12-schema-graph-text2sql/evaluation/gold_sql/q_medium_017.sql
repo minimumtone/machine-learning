@@ -6,4 +6,4 @@ JOIN phase_stability ps ON ps.entry_id = m.entry_id
 WHERE c.element = 'Nb'
   AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
 ORDER BY ps.energy_above_hull ASC
-LIMIT 100;
+LIMIT 10000;

@@ -7,7 +7,7 @@
     "bulk_modulus",
     "stability_class"
   ],
-  "row_count": 100,
+  "row_count": 120,
   "rows": [
     [
       "Fe3Nb",
@@ -708,6 +708,146 @@
       0.044,
       188.0,
       "metastable"
+    ],
+    [
+      "Cu3Al",
+      3.48,
+      0.044,
+      194.0,
+      "metastable"
+    ],
+    [
+      "Pd3Zr",
+      4.04,
+      0.044,
+      182.0,
+      "metastable"
+    ],
+    [
+      "Fe3Ga",
+      3.9,
+      0.044,
+      200.0,
+      "metastable"
+    ],
+    [
+      "Pt3Zr",
+      3.62,
+      0.044,
+      176.0,
+      "metastable"
+    ],
+    [
+      "Ni3Mn",
+      3.62,
+      0.044,
+      206.0,
+      "metastable"
+    ],
+    [
+      "Ir3Mn",
+      3.92,
+      0.048,
+      176.0,
+      "metastable"
+    ],
+    [
+      "Cu3Ga",
+      3.5,
+      0.048,
+      200.0,
+      "metastable"
+    ],
+    [
+      "Fe3Ge",
+      3.92,
+      0.048,
+      206.0,
+      "metastable"
+    ],
+    [
+      "Pd3Mn",
+      4.06,
+      0.048,
+      188.0,
+      "metastable"
+    ],
+    [
+      "Pd3Al",
+      3.78,
+      0.048,
+      194.0,
+      "metastable"
+    ],
+    [
+      "Co3Ga",
+      3.64,
+      0.048,
+      212.0,
+      "metastable"
+    ],
+    [
+      "Pt3Mn",
+      3.64,
+      0.048,
+      182.0,
+      "metastable"
+    ],
+    [
+      "Co3W",
+      3.74,
+      0.05,
+      200.0,
+      "metastable"
+    ],
+    [
+      "Pd3Ga",
+      3.8,
+      0.052,
+      200.0,
+      "unstable"
+    ],
+    [
+      "Ir3Al",
+      3.66,
+      0.052,
+      188.0,
+      "unstable"
+    ],
+    [
+      "Fe3Ti",
+      3.94,
+      0.052,
+      212.0,
+      "unstable"
+    ],
+    [
+      "Pt3Ga",
+      4.08,
+      0.052,
+      194.0,
+      "unstable"
+    ],
+    [
+      "Rh3Al",
+      3.94,
+      0.052,
+      182.0,
+      "unstable"
+    ],
+    [
+      "Co3Ge",
+      3.66,
+      0.052,
+      218.0,
+      "unstable"
+    ],
+    [
+      "Cu3Ge",
+      3.52,
+      0.052,
+      206.0,
+      "unstable"
     ]
   ]
 }

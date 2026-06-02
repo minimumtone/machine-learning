@@ -4,7 +4,7 @@
     "formula",
     "lattice_a"
   ],
-  "row_count": 100,
+  "row_count": 101,
   "rows": [
     [
       "Pt3Y",
@@ -405,6 +405,10 @@
     [
       "Rh3Y",
       4.08
+    ],
+    [
+      "Al3Sc",
+      4.09
     ]
   ]
 }

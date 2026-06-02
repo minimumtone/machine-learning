@@ -6,4 +6,4 @@ WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND c.site_label = 'A'
 GROUP BY c.element
 ORDER BY avg_lattice_a ASC
-LIMIT 100;
+LIMIT 10000;

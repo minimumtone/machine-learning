@@ -6,4 +6,4 @@ WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND ps.energy_above_hull = 0
   AND ps.formation_energy_per_atom <= -0.4
 ORDER BY ps.formation_energy_per_atom ASC
-LIMIT 100;
+LIMIT 10000;

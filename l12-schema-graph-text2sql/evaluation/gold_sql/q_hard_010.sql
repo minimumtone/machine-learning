@@ -7,4 +7,4 @@ WHERE c.site_label = 'B'
   AND (c.element = 'Al' OR c.element = 'Ti')
   AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
 ORDER BY ps.formation_energy_per_atom ASC
-LIMIT 100;
+LIMIT 10000;

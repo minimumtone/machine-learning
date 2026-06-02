@@ -6,4 +6,4 @@ WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND ps.formation_energy_per_atom <= -0.3
   AND s.lattice_a BETWEEN 3.5 AND 3.7
 ORDER BY ps.formation_energy_per_atom ASC
-LIMIT 100;
+LIMIT 10000;

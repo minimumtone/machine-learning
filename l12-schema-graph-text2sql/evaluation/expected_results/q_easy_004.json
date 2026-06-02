@@ -6,16 +6,10 @@
     "lattice_b",
     "lattice_c"
   ],
-  "row_count": 100,
+  "row_count": 393,
   "rows": [
     [
       "Ni3Ti",
-      3.4,
-      3.4,
-      3.4
-    ],
-    [
-      "Fe3Zn",
       3.4,
       3.4,
       3.4
@@ -33,6 +27,12 @@
       3.4
     ],
     [
+      "Fe3Zn",
+      3.4,
+      3.4,
+      3.4
+    ],
+    [
       "Fe3V",
       3.42,
       3.42,
@@ -45,16 +45,22 @@
       3.42
     ],
     [
+      "Pt3Ti",
+      3.42,
+      3.42,
+      3.42
+    ],
+    [
       "Ni3Nb",
       3.42,
       3.42,
       3.42
     ],
     [
-      "Pt3Ti",
-      3.42,
-      3.42,
-      3.42
+      "Rh3Sn",
+      3.44,
+      3.44,
+      3.44
     ],
     [
       "Ni3Ta",
@@ -64,12 +70,6 @@
     ],
     [
       "Pt3Nb",
-      3.44,
-      3.44,
-      3.44
-    ],
-    [
-      "Rh3Sn",
       3.44,
       3.44,
       3.44
@@ -87,7 +87,7 @@
       3.46
     ],
     [
-      "Fe3Mn",
+      "Rh3Zn",
       3.46,
       3.46,
       3.46
@@ -99,7 +99,7 @@
       3.46
     ],
     [
-      "Rh3Zn",
+      "Fe3Mn",
       3.46,
       3.46,
       3.46
@@ -141,13 +141,13 @@
       3.5
     ],
     [
-      "Cu3Ge",
+      "Ni3Si",
       3.52,
       3.52,
       3.52
     ],
     [
-      "Ni3Si",
+      "Cu3Ge",
       3.52,
       3.52,
       3.52
@@ -165,13 +165,13 @@
       3.54
     ],
     [
-      "Ni3Sn",
+      "Pt3Si",
       3.54,
       3.54,
       3.54
     ],
     [
-      "Pt3Si",
+      "Ni3Sn",
       3.54,
       3.54,
       3.54
@@ -181,12 +181,6 @@
       3.55,
       3.55,
       3.55
-    ],
-    [
-      "Cu3Nb",
-      3.56,
-      3.56,
-      3.56
     ],
     [
       "Pt3Sn",
@@ -201,16 +195,16 @@
       3.56
     ],
     [
+      "Cu3Nb",
+      3.56,
+      3.56,
+      3.56
+    ],
+    [
       "Ni3Al",
       3.572,
       3.572,
       3.572
-    ],
-    [
-      "Cu3Ta",
-      3.58,
-      3.58,
-      3.58
     ],
     [
       "Pt3Zn",
@@ -225,19 +219,25 @@
       3.58
     ],
     [
+      "Cu3Ta",
+      3.58,
+      3.58,
+      3.58
+    ],
+    [
       "Cu3Sc",
       3.6,
       3.6,
       3.6
     ],
     [
-      "Ni3Zr",
+      "Pt3V",
       3.6,
       3.6,
       3.6
     ],
     [
-      "Pt3V",
+      "Ni3Zr",
       3.6,
       3.6,
       3.6
@@ -267,12 +267,6 @@
       3.62
     ],
     [
-      "Cu3Hf",
-      3.64,
-      3.64,
-      3.64
-    ],
-    [
       "Co3Ga",
       3.64,
       3.64,
@@ -285,13 +279,13 @@
       3.64
     ],
     [
-      "Cu3Si",
-      3.66,
-      3.66,
-      3.66
+      "Cu3Hf",
+      3.64,
+      3.64,
+      3.64
     ],
     [
-      "Co3Ge",
+      "Ni3Ga",
       3.66,
       3.66,
       3.66
@@ -303,7 +297,13 @@
       3.66
     ],
     [
-      "Ni3Ga",
+      "Co3Ge",
+      3.66,
+      3.66,
+      3.66
+    ],
+    [
+      "Cu3Si",
       3.66,
       3.66,
       3.66
@@ -333,13 +333,13 @@
       3.68
     ],
     [
-      "Cu3Zn",
+      "Ir3Ge",
       3.7,
       3.7,
       3.7
     ],
     [
-      "Ir3Ge",
+      "Cu3Zn",
       3.7,
       3.7,
       3.7
@@ -357,6 +357,12 @@
       3.72
     ],
     [
+      "Co3Ta",
+      3.72,
+      3.72,
+      3.72
+    ],
+    [
       "Co3Y",
       3.72,
       3.72,
@@ -369,19 +375,13 @@
       3.72
     ],
     [
-      "Co3Ta",
-      3.72,
-      3.72,
-      3.72
-    ],
-    [
-      "Co3Hf",
+      "Ir3Ta",
       3.74,
       3.74,
       3.74
     ],
     [
-      "Ir3Ta",
+      "Co3Hf",
       3.74,
       3.74,
       3.74
@@ -399,13 +399,13 @@
       3.74
     ],
     [
-      "Co3Si",
+      "Ir3Sc",
       3.76,
       3.76,
       3.76
     ],
     [
-      "Ir3Sc",
+      "Co3Si",
       3.76,
       3.76,
       3.76
@@ -417,7 +417,7 @@
       3.76
     ],
     [
-      "Co3Sn",
+      "Pd3Al",
       3.78,
       3.78,
       3.78
@@ -429,19 +429,19 @@
       3.78
     ],
     [
-      "Pd3Al",
+      "Co3Sn",
       3.78,
       3.78,
       3.78
     ],
     [
-      "Ir3Hf",
+      "Co3Zn",
       3.8,
       3.8,
       3.8
     ],
     [
-      "Co3Zn",
+      "Ir3Hf",
       3.8,
       3.8,
       3.8
@@ -459,13 +459,13 @@
       3.82
     ],
     [
-      "Pd3Ge",
+      "Co3V",
       3.82,
       3.82,
       3.82
     ],
     [
-      "Co3V",
+      "Pd3Ge",
       3.82,
       3.82,
       3.82
@@ -489,12 +489,6 @@
       3.84
     ],
     [
-      "Ir3Zn",
-      3.86,
-      3.86,
-      3.86
-    ],
-    [
       "Co3Mn",
       3.86,
       3.86,
@@ -502,6 +496,12 @@
     ],
     [
       "Pd3Nb",
+      3.86,
+      3.86,
+      3.86
+    ],
+    [
+      "Ir3Zn",
       3.86,
       3.86,
       3.86
@@ -537,6 +537,12 @@
       3.9
     ],
     [
+      "Pd3Sc",
+      3.9,
+      3.9,
+      3.9
+    ],
+    [
       "Ir3Zr",
       3.9,
       3.9,
@@ -549,10 +555,10 @@
       3.9
     ],
     [
-      "Pd3Sc",
-      3.9,
-      3.9,
-      3.9
+      "Fe3Ge",
+      3.92,
+      3.92,
+      3.92
     ],
     [
       "Ir3Mn",
@@ -567,19 +573,13 @@
       3.92
     ],
     [
-      "Fe3Ge",
-      3.92,
-      3.92,
-      3.92
-    ],
-    [
-      "Fe3Ti",
+      "Rh3Al",
       3.94,
       3.94,
       3.94
     ],
     [
-      "Rh3Al",
+      "Fe3Ti",
       3.94,
       3.94,
       3.94
@@ -589,6 +589,12 @@
       3.94,
       3.94,
       3.94
+    ],
+    [
+      "Rh3Ga",
+      3.96,
+      3.96,
+      3.96
     ],
     [
       "Fe3Nb",
@@ -603,10 +609,1762 @@
       3.96
     ],
     [
-      "Rh3Ga",
-      3.96,
-      3.96,
-      3.96
+      "Al3Ti",
+      3.98,
+      3.98,
+      3.98
+    ],
+    [
+      "Pd3Sn",
+      3.98,
+      3.98,
+      3.98
+    ],
+    [
+      "Fe3Ta",
+      3.98,
+      3.98,
+      3.98
+    ],
+    [
+      "Rh3Ge",
+      3.98,
+      3.98,
+      3.98
+    ],
+    [
+      "Pd3Zn",
+      4.0,
+      4.0,
+      4.0
+    ],
+    [
+      "Fe3Sc",
+      4.0,
+      4.0,
+      4.0
+    ],
+    [
+      "Rh3Ti",
+      4.0,
+      4.0,
+      4.0
+    ],
+    [
+      "Rh3Nb",
+      4.02,
+      4.02,
+      4.02
+    ],
+    [
+      "Pd3V",
+      4.02,
+      4.02,
+      4.02
+    ],
+    [
+      "Fe3Y",
+      4.02,
+      4.02,
+      4.02
+    ],
+    [
+      "Fe3Hf",
+      4.04,
+      4.04,
+      4.04
+    ],
+    [
+      "Rh3Ta",
+      4.04,
+      4.04,
+      4.04
+    ],
+    [
+      "Pd3Zr",
+      4.04,
+      4.04,
+      4.04
+    ],
+    [
+      "Fe3Si",
+      4.06,
+      4.06,
+      4.06
+    ],
+    [
+      "Pd3Mn",
+      4.06,
+      4.06,
+      4.06
+    ],
+    [
+      "Rh3Sc",
+      4.06,
+      4.06,
+      4.06
+    ],
+    [
+      "Pt3Ga",
+      4.08,
+      4.08,
+      4.08
+    ],
+    [
+      "Rh3Y",
+      4.08,
+      4.08,
+      4.08
+    ],
+    [
+      "Fe3Sn",
+      4.08,
+      4.08,
+      4.08
+    ],
+    [
+      "Al3Sc",
+      4.09,
+      4.09,
+      4.09
+    ],
+    [
+      "NdPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "NdSn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "NdTl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Nd3Tl",
+      null,
+      null,
+      null
+    ],
+    [
+      "SiNi3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Ni3Sn",
+      null,
+      null,
+      null
+    ],
+    [
+      "NpPd3",
+      null,
+      null,
+      null
+    ],
+    [
+      "NpRh3",
+      null,
+      null,
+      null
+    ],
+    [
+      "NpSn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Np3Sn",
+      null,
+      null,
+      null
+    ],
+    [
+      "Np3Tl",
+      null,
+      null,
+      null
+    ],
+    [
+      "AlNi3",
+      null,
+      null,
+      null
+    ],
+    [
+      "PaRh3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Pr3Pb",
+      null,
+      null,
+      null
+    ],
+    [
+      "PrPb3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Pt3Pb",
+      null,
+      null,
+      null
+    ],
+    [
+      "Pu3Pb",
+      null,
+      null,
+      null
+    ],
+    [
+      "PuPb3",
+      null,
+      null,
+      null
+    ],
+    [
+      "TbPb3",
+      null,
+      null,
+      null
+    ],
+    [
+      "ThPb3",
+      null,
+      null,
+      null
+    ],
+    [
+      "TmPb3",
+      null,
+      null,
+      null
+    ],
+    [
+      "UPb3",
+      null,
+      null,
+      null
+    ],
+    [
+      "YPb3",
+      null,
+      null,
+      null
+    ],
+    [
+      "YbPb3",
+      null,
+      null,
+      null
+    ],
+    [
+      "PrPd3",
+      null,
+      null,
+      null
+    ],
+    [
+      "PuPd3",
+      null,
+      null,
+      null
+    ],
+    [
+      "ScPd3",
+      null,
+      null,
+      null
+    ],
+    [
+      "SmPd3",
+      null,
+      null,
+      null
+    ],
+    [
+      "SnPd3",
+      null,
+      null,
+      null
+    ],
+    [
+      "TbPd3",
+      null,
+      null,
+      null
+    ],
+    [
+      "TiPd3",
+      null,
+      null,
+      null
+    ],
+    [
+      "TmPd3",
+      null,
+      null,
+      null
+    ],
+    [
+      "YPd3",
+      null,
+      null,
+      null
+    ],
+    [
+      "YbPd3",
+      null,
+      null,
+      null
+    ],
+    [
+      "PuPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "ScPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "SmPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "SnPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "TbPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "TmPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "V3Pt",
+      null,
+      null,
+      null
+    ],
+    [
+      "VPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "YPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "YbPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "ZnPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "ZrPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "PuRh3",
+      null,
+      null,
+      null
+    ],
+    [
+      "PuSn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "ScRh3",
+      null,
+      null,
+      null
+    ],
+    [
+      "TaRh3",
+      null,
+      null,
+      null
+    ],
+    [
+      "ThRh3",
+      null,
+      null,
+      null
+    ],
+    [
+      "TiRh3",
+      null,
+      null,
+      null
+    ],
+    [
+      "URh3",
+      null,
+      null,
+      null
+    ],
+    [
+      "VRh3",
+      null,
+      null,
+      null
+    ],
+    [
+      "ZrRh3",
+      null,
+      null,
+      null
+    ],
+    [
+      "URu3",
+      null,
+      null,
+      null
+    ],
+    [
+      "USi3",
+      null,
+      null,
+      null
+    ],
+    [
+      "SmTl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "TbSn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "ThSn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Ti3Sn",
+      null,
+      null,
+      null
+    ],
+    [
+      "USn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "YSn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "YbSn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "TbTl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "ThTl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "TiZn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "TmTl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "UTl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "YTl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "YbTl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "VZn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Zr3Al",
+      null,
+      null,
+      null
+    ],
+    [
+      "DyPd3",
+      null,
+      null,
+      null
+    ],
+    [
+      "ErPd3",
+      null,
+      null,
+      null
+    ],
+    [
+      "LuGa3",
+      null,
+      null,
+      null
+    ],
+    [
+      "NpGa3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Np3Al",
+      null,
+      null,
+      null
+    ],
+    [
+      "Np3In",
+      null,
+      null,
+      null
+    ],
+    [
+      "NpIn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "La3In",
+      null,
+      null,
+      null
+    ],
+    [
+      "CoPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "CePd3",
+      null,
+      null,
+      null
+    ],
+    [
+      "GdPd3",
+      null,
+      null,
+      null
+    ],
+    [
+      "AlPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "ScAl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "CaPb3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Ce3In",
+      null,
+      null,
+      null
+    ],
+    [
+      "Ce3Pb",
+      null,
+      null,
+      null
+    ],
+    [
+      "CrRh3",
+      null,
+      null,
+      null
+    ],
+    [
+      "EuSn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Nb3Ge",
+      null,
+      null,
+      null
+    ],
+    [
+      "ScIr3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Nb3Si",
+      null,
+      null,
+      null
+    ],
+    [
+      "PrPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "PrSn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "PrTl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Pr3Tl",
+      null,
+      null,
+      null
+    ],
+    [
+      "SmSn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Ce3Al",
+      null,
+      null,
+      null
+    ],
+    [
+      "Cd3In",
+      null,
+      null,
+      null
+    ],
+    [
+      "PuGe3",
+      null,
+      null,
+      null
+    ],
+    [
+      "HoGa3",
+      null,
+      null,
+      null
+    ],
+    [
+      "TmGa3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Ni3Pt",
+      null,
+      null,
+      null
+    ],
+    [
+      "MgPd3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Pu3Ge",
+      null,
+      null,
+      null
+    ],
+    [
+      "Pu3Sn",
+      null,
+      null,
+      null
+    ],
+    [
+      "Mn3Sb",
+      null,
+      null,
+      null
+    ],
+    [
+      "Al3V",
+      null,
+      null,
+      null
+    ],
+    [
+      "TiAl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "PdAu3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Pd3Au",
+      null,
+      null,
+      null
+    ],
+    [
+      "AlCu3",
+      null,
+      null,
+      null
+    ],
+    [
+      "InPd3",
+      null,
+      null,
+      null
+    ],
+    [
+      "La3Ga",
+      null,
+      null,
+      null
+    ],
+    [
+      "Ag3Pt",
+      null,
+      null,
+      null
+    ],
+    [
+      "ZrAl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "CeIn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "CePb3",
+      null,
+      null,
+      null
+    ],
+    [
+      "CeRh3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Ce3Sn",
+      null,
+      null,
+      null
+    ],
+    [
+      "CeSn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "CeTl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Ce3Tl",
+      null,
+      null,
+      null
+    ],
+    [
+      "TiCo3",
+      null,
+      null,
+      null
+    ],
+    [
+      "CrIr3",
+      null,
+      null,
+      null
+    ],
+    [
+      "CrPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Cu3Pt",
+      null,
+      null,
+      null
+    ],
+    [
+      "DyPb3",
+      null,
+      null,
+      null
+    ],
+    [
+      "DyPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "DyTl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "ErGa3",
+      null,
+      null,
+      null
+    ],
+    [
+      "ErPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "ErTl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "EuPb3",
+      null,
+      null,
+      null
+    ],
+    [
+      "EuPd3",
+      null,
+      null,
+      null
+    ],
+    [
+      "GaFe3",
+      null,
+      null,
+      null
+    ],
+    [
+      "FePd3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Fe3Pt",
+      null,
+      null,
+      null
+    ],
+    [
+      "GaNi3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Pu3Ga",
+      null,
+      null,
+      null
+    ],
+    [
+      "ScGa3",
+      null,
+      null,
+      null
+    ],
+    [
+      "UGa3",
+      null,
+      null,
+      null
+    ],
+    [
+      "GdIn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "GdIr3",
+      null,
+      null,
+      null
+    ],
+    [
+      "GdPb3",
+      null,
+      null,
+      null
+    ],
+    [
+      "GdSn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "GdTl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Pr3Sn",
+      null,
+      null,
+      null
+    ],
+    [
+      "TiPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "ErIn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "DyIn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Cu3N",
+      null,
+      null,
+      null
+    ],
+    [
+      "U3Si",
+      null,
+      null,
+      null
+    ],
+    [
+      "FeNi3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Cu3Au",
+      null,
+      null,
+      null
+    ],
+    [
+      "FePt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Pd3Pb",
+      null,
+      null,
+      null
+    ],
+    [
+      "UGe3",
+      null,
+      null,
+      null
+    ],
+    [
+      "InPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "FeIr3",
+      null,
+      null,
+      null
+    ],
+    [
+      "CuAu3",
+      null,
+      null,
+      null
+    ],
+    [
+      "NpGe3",
+      null,
+      null,
+      null
+    ],
+    [
+      "DyAl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "ErAl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "HoAl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "LiAl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "LuAl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "NpAl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Sm3Al",
+      null,
+      null,
+      null
+    ],
+    [
+      "Pr3Al",
+      null,
+      null,
+      null
+    ],
+    [
+      "PrAl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "PuAl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Tb3Al",
+      null,
+      null,
+      null
+    ],
+    [
+      "TmAl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "UAl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Y3Al",
+      null,
+      null,
+      null
+    ],
+    [
+      "YAl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "YbAl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "InAg3",
+      null,
+      null,
+      null
+    ],
+    [
+      "MgAg3",
+      null,
+      null,
+      null
+    ],
+    [
+      "AgPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "TmAg3",
+      null,
+      null,
+      null
+    ],
+    [
+      "LiAu3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Ti3Au",
+      null,
+      null,
+      null
+    ],
+    [
+      "V3Au",
+      null,
+      null,
+      null
+    ],
+    [
+      "SrBi3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Ca3Pb",
+      null,
+      null,
+      null
+    ],
+    [
+      "CaSn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "CaTl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Nd3In",
+      null,
+      null,
+      null
+    ],
+    [
+      "NdIn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "InNi3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Pr3In",
+      null,
+      null,
+      null
+    ],
+    [
+      "PrIn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Pu3In",
+      null,
+      null,
+      null
+    ],
+    [
+      "PuIn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Sc3In",
+      null,
+      null,
+      null
+    ],
+    [
+      "ScIn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Sm3In",
+      null,
+      null,
+      null
+    ],
+    [
+      "SmIn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "TbIn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "ThIn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "TmIn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "UIn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "YIn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "YbIn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Zr3In",
+      null,
+      null,
+      null
+    ],
+    [
+      "Mn3Ge",
+      null,
+      null,
+      null
+    ],
+    [
+      "NbCd3",
+      null,
+      null,
+      null
+    ],
+    [
+      "V3Cd",
+      null,
+      null,
+      null
+    ],
+    [
+      "Ce3Ga",
+      null,
+      null,
+      null
+    ],
+    [
+      "CePt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "TaCo3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Cu3Pd",
+      null,
+      null,
+      null
+    ],
+    [
+      "DyGa3",
+      null,
+      null,
+      null
+    ],
+    [
+      "DyIr3",
+      null,
+      null,
+      null
+    ],
+    [
+      "ErPb3",
+      null,
+      null,
+      null
+    ],
+    [
+      "ErSn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "DySn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "EuTl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Fe3Pd",
+      null,
+      null,
+      null
+    ],
+    [
+      "Fe3Sn",
+      null,
+      null,
+      null
+    ],
+    [
+      "Nd3Ga",
+      null,
+      null,
+      null
+    ],
+    [
+      "NdGa3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Pr3Ga",
+      null,
+      null,
+      null
+    ],
+    [
+      "GaPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Sm3Ga",
+      null,
+      null,
+      null
+    ],
+    [
+      "TbGa3",
+      null,
+      null,
+      null
+    ],
+    [
+      "GdPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Ni3Ge",
+      null,
+      null,
+      null
+    ],
+    [
+      "HfIr3",
+      null,
+      null,
+      null
+    ],
+    [
+      "HfRh3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Ti3Hg",
+      null,
+      null,
+      null
+    ],
+    [
+      "TlHg3",
+      null,
+      null,
+      null
+    ],
+    [
+      "ZrHg3",
+      null,
+      null,
+      null
+    ],
+    [
+      "HoIn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "HoPb3",
+      null,
+      null,
+      null
+    ],
+    [
+      "HoPd3",
+      null,
+      null,
+      null
+    ],
+    [
+      "HoPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "HoSn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "HoTl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "NbIr3",
+      null,
+      null,
+      null
+    ],
+    [
+      "NdIr3",
+      null,
+      null,
+      null
+    ],
+    [
+      "PaIr3",
+      null,
+      null,
+      null
+    ],
+    [
+      "TaIr3",
+      null,
+      null,
+      null
+    ],
+    [
+      "TiIr3",
+      null,
+      null,
+      null
+    ],
+    [
+      "UIr3",
+      null,
+      null,
+      null
+    ],
+    [
+      "VIr3",
+      null,
+      null,
+      null
+    ],
+    [
+      "ZrIr3",
+      null,
+      null,
+      null
+    ],
+    [
+      "LaPb3",
+      null,
+      null,
+      null
+    ],
+    [
+      "LaPd3",
+      null,
+      null,
+      null
+    ],
+    [
+      "LaPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "LaSn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "La3Sn",
+      null,
+      null,
+      null
+    ],
+    [
+      "LaTl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "La3Tl",
+      null,
+      null,
+      null
+    ],
+    [
+      "LuPb3",
+      null,
+      null,
+      null
+    ],
+    [
+      "LuPd3",
+      null,
+      null,
+      null
+    ],
+    [
+      "LuPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "LuTl3",
+      null,
+      null,
+      null
+    ],
+    [
+      "MnNi3",
+      null,
+      null,
+      null
+    ],
+    [
+      "MnPt3",
+      null,
+      null,
+      null
+    ],
+    [
+      "Mn3Pt",
+      null,
+      null,
+      null
+    ],
+    [
+      "Mn3Rh",
+      null,
+      null,
+      null
+    ],
+    [
+      "MnZn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "NaPb3",
+      null,
+      null,
+      null
+    ],
+    [
+      "NbRh3",
+      null,
+      null,
+      null
+    ],
+    [
+      "NbRu3",
+      null,
+      null,
+      null
+    ],
+    [
+      "NbZn3",
+      null,
+      null,
+      null
+    ],
+    [
+      "NdPb3",
+      null,
+      null,
+      null
+    ],
+    [
+      "NdPd3",
+      null,
+      null,
+      null
     ]
   ]
 }

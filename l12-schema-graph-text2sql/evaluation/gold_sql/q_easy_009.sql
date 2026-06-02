@@ -3,4 +3,4 @@ FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 WHERE s.space_group_number = 221
 ORDER BY m.formula
-LIMIT 100;
+LIMIT 10000;
