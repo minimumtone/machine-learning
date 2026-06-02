@@ -279,9 +279,9 @@ def main():
         else:
             a_dft = compute_eq10_scaled(comp, struct, omega_l12, gamma_fcc)
         
-        err_vegard = a_vegard - a_exp
-        err_king = a_king - a_exp
-        err_dft = a_dft - a_exp
+        err_vegard = a_exp - a_vegard
+        err_king = a_exp - a_king
+        err_dft = a_exp - a_dft
         
         label = composition_label(comp)
         
