@@ -328,12 +328,12 @@ def scan_directory(sqs_dir, omega_threshold=0.5):
 # Phase 2: Prepare & run
 # =====================================================================
 def backup_and_prepare(calc_dir, new_nsw=300, new_potim=None, new_ibrion=None,
-                       new_encut=None, addgrid=False):
+                       new_encut=None, addgrid=False, new_ediffg=None):
     """
     Prepare directory for rerun:
     1. Backup old outputs to .bak/
     2. Copy CONTCAR → POSCAR (restart from last geometry)
-    3. Update INCAR: NSW, ISIF=7, POTIM, IBRION, ENCUT, ADDGRID
+    3. Update INCAR: NSW, ISIF=7, POTIM, IBRION, ENCUT, ADDGRID, EDIFFG
     Returns True if preparation succeeded.
     """
     # Create backup
@@ -371,6 +371,7 @@ def backup_and_prepare(calc_dir, new_nsw=300, new_potim=None, new_ibrion=None,
     potim_set = False
     encut_set = False
     addgrid_set = False
+    ediffg_set = False
     for line in lines:
         # Update NSW
         if re.match(r'\s*NSW\s*=', line):
@@ -401,6 +402,13 @@ def backup_and_prepare(calc_dir, new_nsw=300, new_potim=None, new_ibrion=None,
             else:
                 new_lines.append(line)
             encut_set = True
+        # EDIFFG
+        elif re.match(r'\s*EDIFFG\s*=', line):
+            if new_ediffg is not None:
+                new_lines.append(f' EDIFFG = {new_ediffg}\n')
+            else:
+                new_lines.append(line)
+            ediffg_set = True
         # ADDGRID
         elif re.match(r'\s*ADDGRID\s*=', line):
             if addgrid:
@@ -421,6 +429,8 @@ def backup_and_prepare(calc_dir, new_nsw=300, new_potim=None, new_ibrion=None,
         new_lines.append(f' IBRION = {new_ibrion}\n')
     if new_encut is not None and not encut_set:
         new_lines.append(f' ENCUT = {new_encut}\n')
+    if new_ediffg is not None and not ediffg_set:
+        new_lines.append(f' EDIFFG = {new_ediffg}\n')
     if addgrid and not addgrid_set:
         new_lines.append(' ADDGRID = .TRUE.\n')
 
@@ -436,7 +446,7 @@ def backup_and_prepare(calc_dir, new_nsw=300, new_potim=None, new_ibrion=None,
     return True
 
 
-def run_vasp_job(calc_dir, vaspbin, ncore):
+def run_vasp_job(calc_dir, vaspbin, ncore, job_timeout=7200):
     """
     Run a single VASP job. Returns (dirname, success, elapsed_sec, message).
 
@@ -445,6 +455,7 @@ def run_vasp_job(calc_dir, vaspbin, ncore):
     """
     dirname = os.path.basename(calc_dir)
     log_path = os.path.join(calc_dir, 'vasp.log')
+    self_timeout = job_timeout
 
     cmd = f"mpirun -np {ncore} {vaspbin}"
 
@@ -457,7 +468,7 @@ def run_vasp_job(calc_dir, vaspbin, ncore):
             stdout=log_f, stderr=subprocess.STDOUT,
             preexec_fn=os.setsid,  # new process group for clean kill
         )
-        proc.wait(timeout=7200)  # 2 hour timeout per job
+        proc.wait(timeout=self_timeout)  # timeout per job
         log_f.close()
 
         elapsed = time.time() - t0
@@ -492,12 +503,13 @@ def run_vasp_job(calc_dir, vaspbin, ncore):
         return dirname, False, elapsed, f"ERROR: {e}"
 
 
-def run_all_jobs(rerun_dirs, vaspbin, ncore, max_jobs):
+def run_all_jobs(rerun_dirs, vaspbin, ncore, max_jobs, job_timeout=7200):
     """Run all rerun jobs with max_jobs parallel workers."""
     total = len(rerun_dirs)
     print(f"\n{'='*70}")
     print(f"RUNNING {total} VASP JOBS  ({max_jobs} parallel × {ncore} cores each)")
     print(f"VASPBIN: {vaspbin}")
+    print(f"Timeout: {job_timeout}s per job")
     print(f"{'='*70}\n")
 
     completed = 0
@@ -507,7 +519,8 @@ def run_all_jobs(rerun_dirs, vaspbin, ncore, max_jobs):
     with ProcessPoolExecutor(max_workers=max_jobs) as executor:
         futures = {}
         for calc_dir in rerun_dirs:
-            future = executor.submit(run_vasp_job, calc_dir, vaspbin, ncore)
+            future = executor.submit(run_vasp_job, calc_dir, vaspbin, ncore,
+                                     job_timeout)
             futures[future] = calc_dir
 
         for future in as_completed(futures):
@@ -587,6 +600,14 @@ Examples:
                         help='Add ADDGRID=.TRUE. to INCAR '
                              '(improves FFT grid interpolation accuracy, '
                              'recommended for ISIF>0 stress calculations)')
+    parser.add_argument('--ediffg', type=float, default=None,
+                        help='EDIFFG for ionic convergence criterion '
+                             '(negative = force-based, e.g. -0.002 eV/Å). '
+                             'Recommended for ISIF=7 to prevent '
+                             'infinite oscillation near convergence')
+    parser.add_argument('--timeout', type=int, default=7200,
+                        help='Timeout per VASP job in seconds '
+                             '(default: 7200 = 2 hours)')
     parser.add_argument('--omega-threshold', type=float, default=0.5,
                         help='|Ω_sf| outlier threshold (default: 0.5)')
     parser.add_argument('-o', '--output', default='rerun_list.txt',
@@ -738,16 +759,21 @@ Examples:
         # ADDGRID: from CLI flag
         addgrid = args.addgrid
 
+        # EDIFFG: from CLI
+        ediffg = args.ediffg
+
         ok = backup_and_prepare(calc_dir, new_nsw=args.nsw,
                                 new_potim=potim, new_ibrion=ibrion,
-                                new_encut=encut, addgrid=addgrid)
+                                new_encut=encut, addgrid=addgrid,
+                                new_ediffg=ediffg)
         if ok:
             prepared_dirs.append(calc_dir)
             potim_msg = f"POTIM={potim}" if potim else "POTIM=keep"
             ibrion_msg = f"IBRION={ibrion}" if ibrion else "IBRION=keep"
             encut_msg = f"ENCUT={encut}" if encut else "ENCUT=keep"
             addgrid_msg = "ADDGRID=T" if addgrid else ""
-            extras = f"  {encut_msg}" + (f"  {addgrid_msg}" if addgrid_msg else "")
+            ediffg_msg = f"EDIFFG={ediffg}" if ediffg else ""
+            extras = f"  {encut_msg}" + (f"  {addgrid_msg}" if addgrid_msg else "") + (f"  {ediffg_msg}" if ediffg_msg else "")
             print(f"  OK  {r['dirname']:20s}  {potim_msg}  {ibrion_msg}{extras}")
         else:
             print(f"  NG  {r['dirname']}  (preparation failed, skipping)")
@@ -768,7 +794,8 @@ Examples:
 
     # Run
     succeeded, failed = run_all_jobs(
-        prepared_dirs, vaspbin, args.ncore, args.max_jobs)
+        prepared_dirs, vaspbin, args.ncore, args.max_jobs,
+        args.timeout)
 
     # Write remaining failures
     if failed:
