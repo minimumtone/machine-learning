@@ -236,93 +236,78 @@ ALONSO_TABLE2 = [
 # All single-phase, XRD-verified compositions.
 # =====================================================================
 INDEPENDENT_TEST = [
-    # --- BCC HEAs ---
-    # Senkov 2010: MoNbTaW (a=3.2134 already in Alonso), but composition differs
-    # Senkov 2011: NbMoTaW (slightly different comp from Alonso)
-    # using only truly independent compositions below
-    #
-    # Senkov 2013 Acta Mater: NbTiVZr single-phase BCC
-    {"comp":{"Nb":0.25,"Ti":0.25,"V":0.25,"Zr":0.25},"struct":"BCC","a_exp":3.3670,
-     "ref":"Senkov2013_ActaMat"},
-    # Senkov 2011: CrMo0.5NbTa0.5TiZr — mostly single BCC (BCC1 major phase)
-    # Not purely single-phase — skip
-    #
+    # --- BCC HEAs (10) ---
     # Yao 2016 / Senkov review: MoNbTaV single BCC
     {"comp":{"Mo":0.25,"Nb":0.25,"Ta":0.25,"V":0.25},"struct":"BCC","a_exp":3.208,
-     "ref":"Yao2016_Entropy"},
-    # Feuerbacher 2018 Scripta Mater: HfNbTiVZr single BCC (different from Alonso comp ratios)
-    # Actually same composition as in Alonso — skip
-    #
+     "ref":"Yao2016_Entropy","note":"equiatomic 4-element refractory"},
     # Stepanov 2015: AlNbTiV single BCC
     {"comp":{"Al":0.25,"Nb":0.25,"Ti":0.25,"V":0.25},"struct":"BCC","a_exp":3.220,
-     "ref":"Stepanov2015_JAlloyCompd"},
-    # Senkov 2013: NbTiV2Zr BCC (multi-phase — skip)
-    #
-    # CrNbTiZr: Senkov2013 — two-phase (BCC + Laves) — skip
-    # CrNbTiVZr: Senkov2013 — two-phase — skip
-    #
-    # Zhang 2015 Calphad: CrMoNbTaVW single BCC
-    {"comp":{"Cr":1/6,"Mo":1/6,"Nb":1/6,"Ta":1/6,"V":1/6,"W":1/6},"struct":"BCC","a_exp":3.1901,
-     "ref":"Zhang2015_Calphad"},
-    # Kantelis 2025 AIP Adv: MoNbTaVW (comp from Senkov2011, measured independently)
+     "ref":"Stepanov2015_JAlloyCompd","note":"equiatomic 4-element with Al"},
+    # Kantelis 2025 AIP Adv: MoNbTaVW
     {"comp":{"Mo":0.20,"Nb":0.20,"Ta":0.20,"V":0.20,"W":0.20},"struct":"BCC","a_exp":3.185,
-     "ref":"Kantelis2025_AIPAdv"},
-    # Youssef 2015: HfNbTaTiZr single BCC (bulk)
-    {"comp":{"Hf":0.20,"Nb":0.20,"Ta":0.20,"Ti":0.20,"Zr":0.20},"struct":"BCC","a_exp":3.404,
-     "ref":"Youssef2015_MaterResLett"},
+     "ref":"Kantelis2025_AIPAdv","note":"equiatomic 5-element refractory"},
     # Senkov 2012: HfNbTaTiZr single BCC (as-cast)
-    {"comp":{"Hf":0.20,"Nb":0.20,"Ta":0.20,"Ti":0.20,"Zr":0.20},"struct":"BCC","a_exp":3.410,
-     "ref":"Senkov2012_Intermet"},
+    {"comp":{"Hf":0.20,"Nb":0.20,"Ta":0.20,"Ti":0.20,"Zr":0.20},"struct":"BCC","a_exp":3.404,
+     "ref":"Senkov2012_Intermet","note":"equiatomic 5-element Senkov standard"},
     # Dirras 2016: Ti35Zr27.5Hf27.5Nb5Ta5 single BCC
     {"comp":{"Ti":0.35,"Zr":0.275,"Hf":0.275,"Nb":0.05,"Ta":0.05},"struct":"BCC","a_exp":3.440,
-     "ref":"Dirras2016_MaterCharact"},
+     "ref":"Dirras2016_MaterCharact","note":"Ti-rich non-equiatomic 5-element"},
+    # Tseng 2019 Entropy: HfMoNbTaTiZr equiatomic 6-element (Yeh group)
+    {"comp":{"Hf":1/6,"Mo":1/6,"Nb":1/6,"Ta":1/6,"Ti":1/6,"Zr":1/6},"struct":"BCC","a_exp":3.345,
+     "ref":"Tseng2019_Entropy","note":"equiatomic 6-element Yeh group"},
+    # Tseng 2019: HfMoTaTiZr (no Nb)
+    {"comp":{"Hf":0.20,"Mo":0.20,"Ta":0.20,"Ti":0.20,"Zr":0.20},"struct":"BCC","a_exp":3.364,
+     "ref":"Tseng2019_Entropy","note":"equiatomic 5-element (no Nb)"},
+    # Tseng 2019: HfMoNbTiZr (no Ta)
+    {"comp":{"Hf":0.20,"Mo":0.20,"Nb":0.20,"Ti":0.20,"Zr":0.20},"struct":"BCC","a_exp":3.369,
+     "ref":"Tseng2019_Entropy","note":"equiatomic 5-element (no Ta)"},
+    # Tseng 2019: HfMoNbTaZr (no Ti)
+    {"comp":{"Hf":0.20,"Mo":0.20,"Nb":0.20,"Ta":0.20,"Zr":0.20},"struct":"BCC","a_exp":3.347,
+     "ref":"Tseng2019_Entropy","note":"equiatomic 5-element (no Ti)"},
+    # Tseng 2019: HfMoNbTaTi (no Zr)
+    {"comp":{"Hf":0.20,"Mo":0.20,"Nb":0.20,"Ta":0.20,"Ti":0.20},"struct":"BCC","a_exp":3.305,
+     "ref":"Tseng2019_Entropy","note":"equiatomic 5-element (no Zr)"},
     #
-    # --- FCC HEAs ---
-    # Cantor 2004 / Otto 2013: CoCrFeMnNi equiatomic (Cantor alloy)
-    # Note: already in Alonso as 3.597 — but different ref measurements:
-    # Otto 2013 measured a = 3.5988, let's include as independent verification
+    # --- FCC HEAs (13) ---
+    # Otto 2013: CoCrFeMnNi (Cantor alloy)
     {"comp":{"Co":0.20,"Cr":0.20,"Fe":0.20,"Mn":0.20,"Ni":0.20},"struct":"FCC","a_exp":3.5988,
-     "ref":"Otto2013_ActaMat"},
-    # He 2014: CoCrFeNi (without Mn) — different from Alonso's CoCrFeNi compositions
-    # Actually already in Alonso — need truly independent compositions
-    #
-    # Nature srep39803 (2017): CoCrFeNi single FCC
-    {"comp":{"Co":0.25,"Cr":0.25,"Fe":0.25,"Ni":0.25},"struct":"FCC","a_exp":3.560,
-     "ref":"Niu2017_SciRep"},
-    # srep39803: (CoCrFeNi)0.89Pd0.11 single FCC
-    {"comp":{"Co":0.2225,"Cr":0.2225,"Fe":0.2225,"Ni":0.2225,"Pd":0.11},"struct":"FCC","a_exp":3.620,
-     "ref":"Niu2017_SciRep_Pd05"},
-    # srep39803: (CoCrFeNi)0.80Pd0.20 single FCC
-    {"comp":{"Co":0.20,"Cr":0.20,"Fe":0.20,"Ni":0.20,"Pd":0.20},"struct":"FCC","a_exp":3.660,
-     "ref":"Niu2017_SciRep_Pd10"},
-    # srep39803: (CoCrFeNi)0.73Pd0.27 single FCC
-    {"comp":{"Co":0.1825,"Cr":0.1825,"Fe":0.1825,"Ni":0.1825,"Pd":0.27},"struct":"FCC","a_exp":3.710,
-     "ref":"Niu2017_SciRep_Pd15"},
-    # srep39803: (CoCrFeNi)0.80V0.20 single FCC
-    {"comp":{"Co":0.20,"Cr":0.20,"Fe":0.20,"Ni":0.20,"V":0.20},"struct":"FCC","a_exp":3.610,
-     "ref":"Niu2017_SciRep_V10"},
+     "ref":"Otto2013_ActaMat","note":"Cantor alloy standard"},
     # Wang2019 Scripta Mater: CoCrFeNi FCC (precision measurement)
     {"comp":{"Co":0.25,"Cr":0.25,"Fe":0.25,"Ni":0.25},"struct":"FCC","a_exp":3.5723,
-     "ref":"Wang2019_ScriptaMat"},
+     "ref":"Wang2019_ScriptaMat","note":"equiatomic 4-element precision XRD"},
     # Wang2019: Co0.5CrFeNi FCC
     {"comp":{"Co":0.143,"Cr":0.286,"Fe":0.286,"Ni":0.286},"struct":"FCC","a_exp":3.5805,
-     "ref":"Wang2019_ScriptaMat_Co05"},
-    # Zaddach 2013: CoCrFeMnNi FCC
-    {"comp":{"Co":0.20,"Cr":0.20,"Fe":0.20,"Mn":0.20,"Ni":0.20},"struct":"FCC","a_exp":3.597,
-     "ref":"Zaddach2013_JOM"},
-    # Zhang 2017 FCC: CrFeCoNi FCC (pressure study ambient)
-    {"comp":{"Cr":0.25,"Fe":0.25,"Co":0.25,"Ni":0.25},"struct":"FCC","a_exp":3.574,
-     "ref":"Zhang2017_NatCommun"},
-    # Tsai 2013: Co1.5CrFeNi1.5Ti0.5Mo0.1 FCC — not single phase enough
-    #
-    # Gali & George 2013: CoCrFeNiMn FCC (tensile specimen)
-    {"comp":{"Co":0.20,"Cr":0.20,"Fe":0.20,"Mn":0.20,"Ni":0.20},"struct":"FCC","a_exp":3.592,
-     "ref":"Gali2013_Intermet"},
-    # Li 2016 Nature: Fe80-xMnxCo10Cr10 dual-phase — skip (not single FCC)
-    #
-    # Tasan 2014: CoCrFeMnNi FCC
-    {"comp":{"Co":0.20,"Cr":0.20,"Fe":0.20,"Mn":0.20,"Ni":0.20},"struct":"FCC","a_exp":3.595,
-     "ref":"Tasan2014_ScrMat"},
+     "ref":"Wang2019_ScriptaMat","note":"Co-lean non-equiatomic"},
+    # Niu 2017 Sci Rep: (CoCrFeNi)0.89Pd0.11 single FCC
+    {"comp":{"Co":0.2225,"Cr":0.2225,"Fe":0.2225,"Ni":0.2225,"Pd":0.11},"struct":"FCC","a_exp":3.620,
+     "ref":"Niu2017_SciRep","note":"11% Pd addition to CoCrFeNi"},
+    # Niu 2017: (CoCrFeNi)0.80Pd0.20 single FCC
+    {"comp":{"Co":0.20,"Cr":0.20,"Fe":0.20,"Ni":0.20,"Pd":0.20},"struct":"FCC","a_exp":3.660,
+     "ref":"Niu2017_SciRep","note":"equiatomic 5-element with Pd"},
+    # Niu 2017: (CoCrFeNi)0.73Pd0.27 single FCC
+    {"comp":{"Co":0.1825,"Cr":0.1825,"Fe":0.1825,"Ni":0.1825,"Pd":0.27},"struct":"FCC","a_exp":3.710,
+     "ref":"Niu2017_SciRep","note":"Pd-rich 27% addition"},
+    # Niu 2017: (CoCrFeNi)0.80V0.20 single FCC
+    {"comp":{"Co":0.20,"Cr":0.20,"Fe":0.20,"Ni":0.20,"V":0.20},"struct":"FCC","a_exp":3.610,
+     "ref":"Niu2017_SciRep","note":"equiatomic 5-element with V"},
+    # Freudenberger 2017 Metals: AuCuNiPd noble metal 4-element
+    {"comp":{"Au":0.25,"Cu":0.25,"Ni":0.25,"Pd":0.25},"struct":"FCC","a_exp":3.8093,
+     "ref":"Freudenberger2017_Metals","note":"noble metal 4-element"},
+    # Freudenberger 2017: AuCuNiPt
+    {"comp":{"Au":0.25,"Cu":0.25,"Ni":0.25,"Pt":0.25},"struct":"FCC","a_exp":3.8107,
+     "ref":"Freudenberger2017_Metals","note":"noble metal 4-element with Pt"},
+    # Freudenberger 2017: AuCuPdPt (no Ni)
+    {"comp":{"Au":0.25,"Cu":0.25,"Pd":0.25,"Pt":0.25},"struct":"FCC","a_exp":3.8847,
+     "ref":"Freudenberger2017_Metals","note":"noble metal 4-element (no Ni)"},
+    # Freudenberger 2017: AuNiPdPt (no Cu)
+    {"comp":{"Au":0.25,"Ni":0.25,"Pd":0.25,"Pt":0.25},"struct":"FCC","a_exp":3.8738,
+     "ref":"Freudenberger2017_Metals","note":"noble metal 4-element (no Cu)"},
+    # Freudenberger 2017: CuNiPdPt (no Au)
+    {"comp":{"Cu":0.25,"Ni":0.25,"Pd":0.25,"Pt":0.25},"struct":"FCC","a_exp":3.7622,
+     "ref":"Freudenberger2017_Metals","note":"noble metal 4-element (no Au)"},
+    # Freudenberger 2017: AuCuNiPdPt quinary
+    {"comp":{"Au":0.20,"Cu":0.20,"Ni":0.20,"Pd":0.20,"Pt":0.20},"struct":"FCC","a_exp":3.8307,
+     "ref":"Freudenberger2017_Metals","note":"noble metal 5-element quinary"},
 ]
 
 
@@ -2335,6 +2320,7 @@ def main():
         struct = hea["struct"]
         a_exp = hea["a_exp"]
         ref = hea.get("ref", "")
+        note = hea.get("note", "")
 
         # Alonso Vegard
         a_veg = compute_vegard(comp, struct)
@@ -2347,8 +2333,18 @@ def main():
         gamma_ss = best_gb if struct == "BCC" else best_gf
         a_eq10_ss_ind = compute_eq10_scaled(comp, struct, omega_ss, gamma=gamma_ss)
 
+        # Format composition name with molar fractions for non-equiatomic
+        n_elem = len(comp)
+        equi_frac = 1.0 / n_elem
+        is_equi = all(abs(v - equi_frac) < 0.001 for v in comp.values())
+        if is_equi:
+            comp_name = "-".join(sorted(comp.keys()))
+        else:
+            comp_name = "-".join(
+                f"{el}{v:.3f}" for el, v in sorted(comp.items()))
+
         ind_results.append({
-            "composition": "-".join(sorted(comp.keys())),
+            "composition": comp_name,
             "struct": struct,
             "a_exp": a_exp,
             "a_vegard": a_veg,
@@ -2358,6 +2354,7 @@ def main():
             "err_king": a_exp - a_eq10_king,
             "err_ss": a_exp - a_eq10_ss_ind,
             "ref": ref,
+            "note": note,
         })
 
     ind_df = pd.DataFrame(ind_results)
