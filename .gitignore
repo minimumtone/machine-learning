@@ -2,6 +2,15 @@ __pycache__/
 *.pyc
 *.pyo
 
+# LaTeX auxiliary files
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.spl
+*.synctex.gz
+
 # VASP generated input/output directories (regenerate with scripts)
 vasp_inputs/BCC_B2/
 vasp_inputs/B2_refractory/
