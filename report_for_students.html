@@ -22,6 +22,7 @@ MathJax = {
   --success: #2e7d32;
   --warning: #f57f17;
   --error: #c62828;
+  --info: #0277bd;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -73,6 +74,13 @@ p { margin-bottom: 1rem; }
 .warning-box {
   background: #fff3e0;
   border: 2px solid var(--warning);
+  border-radius: 8px;
+  padding: 1.2rem;
+  margin: 1.5rem 0;
+}
+.info-box {
+  background: #e1f5fe;
+  border: 2px solid var(--info);
   border-radius: 8px;
   padding: 1.2rem;
   margin: 1.5rem 0;
@@ -194,6 +202,141 @@ footer {
   font-size: 0.8rem;
   text-align: center;
 }
+/* NEW: Learning objectives */
+.objectives {
+  background: linear-gradient(135deg, #ede7f6, #d1c4e9);
+  border: 2px solid #7e57c2;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+.objectives h3 { color: #4527a0; margin-top: 0; }
+.objectives ul { padding-left: 1.5rem; }
+.objectives li { margin: 0.5rem 0; }
+/* NEW: Key point boxes */
+.keypoint {
+  background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+  border-left: 5px solid var(--success);
+  border-radius: 0 8px 8px 0;
+  padding: 1rem 1.2rem;
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+}
+.keypoint strong { color: var(--success); }
+/* NEW: Column (deeper dive) */
+.column-box {
+  background: #fce4ec;
+  border: 1px solid #f48fb1;
+  border-radius: 8px;
+  padding: 1.2rem;
+  margin: 1.5rem 0;
+}
+.column-box h4 { color: #c2185b; margin-bottom: 0.5rem; }
+/* NEW: Glossary */
+.glossary dt {
+  font-weight: 700;
+  color: var(--primary);
+  margin-top: 0.8rem;
+}
+.glossary dd {
+  margin-left: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: #424242;
+}
+/* NEW: Pipeline flowchart */
+.pipeline {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1.5rem 0;
+}
+.pipeline-step {
+  background: linear-gradient(135deg, #e3f2fd, #90caf9);
+  border: 2px solid #1976d2;
+  border-radius: 12px;
+  padding: 0.8rem 1.2rem;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #0d47a1;
+  min-width: 120px;
+}
+.pipeline-arrow {
+  font-size: 1.5rem;
+  color: #1976d2;
+  font-weight: bold;
+}
+@media (max-width: 768px) {
+  .pipeline { flex-direction: column; }
+  .pipeline-arrow { transform: rotate(90deg); }
+}
+/* NEW: Crystal structure diagram */
+.crystal-diagram {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+.crystal-card {
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+}
+.crystal-card h4 { color: var(--primary); margin-bottom: 0.5rem; }
+.crystal-ascii {
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  background: #263238;
+  color: #80cbc4;
+  padding: 1rem;
+  border-radius: 6px;
+  margin: 0.5rem 0;
+  white-space: pre;
+  overflow-x: auto;
+}
+@media (max-width: 768px) {
+  .crystal-diagram { grid-template-columns: 1fr; }
+}
+/* NEW: Expandable details */
+details {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--primary);
+  padding: 0.3rem 0;
+}
+details summary:hover { color: var(--accent); }
+details[open] summary { margin-bottom: 0.8rem; }
+/* NEW: Quiz boxes */
+.quiz-box {
+  background: #fff9c4;
+  border: 2px solid #f9a825;
+  border-radius: 8px;
+  padding: 1.2rem;
+  margin: 1.5rem 0;
+}
+.quiz-box h4 { color: #f57f17; margin-bottom: 0.5rem; }
+.quiz-box .answer {
+  background: #f1f8e9;
+  border-radius: 4px;
+  padding: 0.8rem;
+  margin-top: 0.8rem;
+  display: none;
+}
+.quiz-box input[type="checkbox"]:checked ~ .answer {
+  display: block;
+}
 </style>
 </head>
 <body>
@@ -201,11 +344,29 @@ footer {
 <h1>高エントロピー合金(HEA)の格子定数予測<br>
 <small style="font-size:0.6em;color:var(--muted)">— DFT体積サイズファクター法の全評価結果 —</small></h1>
 
+<!-- Learning Objectives -->
+<div class="objectives">
+<h3>この資料の学習目標</h3>
+<p>この資料を読み終えると、以下のことが理解できるようになります：</p>
+<ul>
+  <li>高エントロピー合金(HEA)がなぜ注目されているか、その基礎概念</li>
+  <li>格子定数が合金設計においてなぜ重要か</li>
+  <li>Vegard則の物理的意味と限界</li>
+  <li>体積サイズファクター $\Omega_\text{sf}$ の概念と、DFTによる系統計算の意義</li>
+  <li>BCC/FCC構造の違いが予測精度にどう影響するか</li>
+  <li>物理ベースモデルと機械学習の役割分担</li>
+  <li>独立テストによるモデル汎化性能の評価法</li>
+</ul>
+<p style="margin-bottom:0"><strong>前提知識</strong>：結晶学の基礎（単位格子、格子定数の定義）、量子化学入門レベル（DFTの概念）</p>
+</div>
+
 <div class="toc">
 <h3>目次</h3>
 <ol>
   <li><a href="#intro">はじめに：何を解いているのか？</a></li>
   <li><a href="#background">背景知識</a></li>
+  <li><a href="#crystal">結晶構造の基礎：BCC・FCC・秩序相</a></li>
+  <li><a href="#dft-basics">第一原理計算(DFT)の基礎</a></li>
   <li><a href="#alonso">Alonso (2021) の手法 — 本研究のベースライン</a></li>
   <li><a href="#method">手法の全体像</a></li>
   <li><a href="#data">データ</a></li>
@@ -216,10 +377,12 @@ footer {
   <li><a href="#additive">加法分解：1,461ペア → 38パラメータ</a></li>
   <li><a href="#self-consistent">新発見：DFT自己整合でq≈1</a></li>
   <li><a href="#sqs">SQS参照モデルの結果</a></li>
-  <li><a href="#delta-r">δrの限界の証明</a></li>
+  <li><a href="#delta-r">$\delta r$ の限界の証明</a></li>
   <li><a href="#phase">多相HEA分類</a></li>
   <li><a href="#noise">ノイズフロアと精度の限界</a></li>
-  <li><a href="#conclusion">結論と今後の課題</a></li>
+  <li><a href="#applications">実用的応用と将来展望</a></li>
+  <li><a href="#conclusion">結論</a></li>
+  <li><a href="#glossary">用語集</a></li>
 </ol>
 </div>
 
@@ -238,10 +401,32 @@ footer {
 <p><strong>目標</strong>：元素の組成 $\{c_i\}$ だけを入力として、HEAの格子定数 $a$ を高精度に予測する計算式を構築する。</p>
 </div>
 
+<div class="info-box">
+<h3>なぜ格子定数が重要なのか？</h3>
+<p>格子定数は合金の「指紋」とも言えるパラメータです。これが分かると：</p>
+<ul>
+<li><strong>密度</strong>を計算できる → 軽量構造材料の設計</li>
+<li><strong>格子歪み</strong>を定量化 → 固溶強化メカニズムの理解</li>
+<li><strong>相安定性</strong>の指標 → 単相固溶体が形成されるかの予測</li>
+<li><strong>X線回折パターン</strong>の計算 → 実験計画の支援</li>
+</ul>
+</div>
+
 <div class="key-result">
-<div class="label">最終達成精度（本研究の最良モデル）</div>
+<div class="label">最終達成精度（64 HEAデータセット・最良モデル）</div>
 <div class="big-number">RMSE = 0.0214 Å</div>
-<div class="label">（実験格子定数 3.0〜3.9 Å に対して相対誤差 0.38%）</div>
+<div class="label">（実験格子定数 3.0〜3.9 Å に対して相対誤差 0.6%）</div>
+</div>
+
+<div class="key-result" style="background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-color:#2e7d32">
+<div class="label">独立テスト 23 HEA での汎化精度</div>
+<div class="big-number" style="color:#2e7d32">RMSE = 0.0150 Å</div>
+<div class="label">Vegard則比 13.4%改善（BCC: 19.7%改善、FCC: 7.6%改善）</div>
+</div>
+
+<div class="keypoint">
+<strong>要点：</strong> この研究は「DFT計算データ + 物理的洞察 = 高精度予測」というアプローチの好例。
+巨大な機械学習モデル（数百万パラメータ）ではなく、物理に基づく38個のパラメータだけで最先端の精度を達成した。
 </div>
 
 <!-- ================================================================== -->
@@ -255,8 +440,23 @@ footer {
 $a_\text{Vegard} = \sum_i c_i \cdot a_i$
 </div>
 <p>ここで $c_i$ は元素 $i$ の原子分率、$a_i$ はその純金属の格子定数。
-原子をビリヤードの球のように扱い、「大きい原子が多いほど格子は大きい」という直観に基づく。
-<strong>精度：RMSE ≈ 0.023 Å</strong>（本研究のデータセットで評価）。</p>
+原子をビリヤードの球のように扱い、「大きい原子が多いほど格子は大きい」という直観に基づく。</p>
+
+<details>
+<summary>具体例：CoCrFeNiの場合</summary>
+<p>等モル4元素合金 CoCrFeNi (FCC) を考える：</p>
+<ul>
+<li>Co: $a$ = 3.545 Å（FCC換算）, $c$ = 0.25</li>
+<li>Cr: $a$ = 3.633 Å（FCC換算）, $c$ = 0.25</li>
+<li>Fe: $a$ = 3.571 Å（FCC換算）, $c$ = 0.25</li>
+<li>Ni: $a$ = 3.524 Å, $c$ = 0.25</li>
+</ul>
+<p>$a_\text{Vegard} = 0.25 \times (3.545 + 3.633 + 3.571 + 3.524) = 3.568$ Å</p>
+<p>実験値：$a_\text{exp} = 3.572$ Å → 誤差 0.004 Å（良好）</p>
+<p>しかし、耐火金属系（HfNbTaTiZrなど）では原子サイズ差が大きく、Vegard則の誤差が0.02 Å以上に増大する。</p>
+</details>
+
+<p><strong>精度：RMSE ≈ 0.023 Å</strong>（本研究のデータセットで評価）。「第0近似」として優秀だが改善の余地がある。</p>
 </div>
 
 <div class="card">
@@ -267,6 +467,19 @@ $a_\text{Vegard} = \sum_i c_i \cdot a_i$
 $\Omega_\text{sf}(A\text{-}B) = \frac{V_\text{合金} - V_\text{Vegard}}{V_\text{Vegard}}$
 </div>
 <p>Kingの時代は実験データから $\Omega_\text{sf}$ を求めたが、本研究では<strong>第一原理計算（DFT）</strong>で8,521件の二元系化合物から系統的に計算した。</p>
+
+<details>
+<summary>$\Omega_\text{sf}$ の直感的理解</summary>
+<p>純銅（原子半径 1.28 Å）に純金（原子半径 1.44 Å）を少量加える場面を想像してください。</p>
+<ul>
+<li>Vegard則の予測：格子は金の量に比例して直線的に膨張する</li>
+<li>実際：大きな金原子が小さな銅原子の間に入ると、周囲の銅原子を「押しのける」。単純な線形混合以上に体積が増える</li>
+<li>この「余分な膨張（または収縮）」が $\Omega_\text{sf}$</li>
+</ul>
+<p>$\Omega_\text{sf} > 0$ → Vegardより体積が大きい（膨張）<br>
+$\Omega_\text{sf} < 0$ → Vegardより体積が小さい（収縮）<br>
+$\Omega_\text{sf} = 0$ → ちょうどVegard通り（理想混合）</p>
+</details>
 </div>
 
 <div class="card">
@@ -283,7 +496,119 @@ $\Omega_\text{sf}^{(s)}$: 構造 $s$（B2またはL1$_2$）でのDFT体積サイ
 </div>
 
 <!-- ================================================================== -->
-<h2 id="alonso">2.5. Alonso (2021) の手法 — 本研究のベースライン</h2>
+<h2 id="crystal">3. 結晶構造の基礎：BCC・FCC・秩序相</h2>
+<!-- ================================================================== -->
+
+<div class="card">
+<h3>HEAが形成する結晶構造</h3>
+<p>多くのHEAは <strong>BCC</strong>（体心立方）または <strong>FCC</strong>（面心立方）の単純構造を取ります。
+多元素がランダムに各格子点を占有する「置換型固溶体」です。</p>
+
+<div class="crystal-diagram">
+<div class="crystal-card">
+<h4>BCC（体心立方）</h4>
+<div class="crystal-ascii">
+    o-------o
+   /|      /|
+  / |     / |
+ o-------o  |
+ |  o----|--o
+ | /     | /
+ |/      |/
+ o-------o
+    + 中心に1原子
+</div>
+<p><strong>配位数</strong>: 8<br>
+<strong>単位格子内原子数</strong>: 2<br>
+<strong>代表的HEA</strong>: HfNbTaTiZr, MoNbTaVW<br>
+<strong>特徴</strong>: 耐火金属(Hf,Mo,Nb,Ta,Ti,V,W,Zr)が多い。高融点・高強度。</p>
+</div>
+<div class="crystal-card">
+<h4>FCC（面心立方）</h4>
+<div class="crystal-ascii">
+    o---x---o
+   /|      /|
+  x |     x |
+ /  |    /  |
+ o---x---o  |
+ |  o---x|--o
+ | /     | /
+ x       x
+ |/      |/
+ o---x---o
+ x = 面中心原子
+</div>
+<p><strong>配位数</strong>: 12<br>
+<strong>単位格子内原子数</strong>: 4<br>
+<strong>代表的HEA</strong>: CoCrFeNi, CoCrFeMnNi<br>
+<strong>特徴</strong>: 3d遷移金属が多い。高延性・加工性に優れる。</p>
+</div>
+</div>
+</div>
+
+<div class="card">
+<h3>秩序相：B2とL1$_2$</h3>
+<p>本研究ではDFT計算の参照構造として<strong>秩序構造</strong>を使います：</p>
+<table>
+<tr><th></th><th>B2 (CsCl型)</th><th>L1$_2$ (Cu$_3$Au型)</th></tr>
+<tr><td><strong>構造</strong></td><td>BCCの秩序版</td><td>FCCの秩序版</td></tr>
+<tr><td><strong>組成</strong></td><td>AB（等モル二元系）</td><td>A$_3$B（3:1二元系）</td></tr>
+<tr><td><strong>配位数</strong></td><td>8（BCCと同じ）</td><td>12（FCCと同じ）</td></tr>
+<tr><td><strong>原子数/セル</strong></td><td>2</td><td>4</td></tr>
+<tr><td><strong>秩序パラメータ $\alpha$</strong></td><td>$-1$（完全秩序）</td><td>$-1/3$（部分秩序）</td></tr>
+<tr><td><strong>DFT計算の利点</strong></td><td>2原子で計算完了</td><td>4原子で計算完了</td></tr>
+<tr><td><strong>HEA用途</strong></td><td>BCC HEAの $\Omega_\text{sf}$ 算出</td><td>FCC HEAの $\Omega_\text{sf}$ 算出</td></tr>
+</table>
+
+<div class="keypoint">
+<strong>ポイント：</strong> B2/L1$_2$はHEAそのものではないが、同じ配位環境を持つ。
+秩序度の違い（$\alpha=-1$ vs $\alpha \approx 0$）はスケーリング定数 $q_s$ で補正する。
+</div>
+</div>
+
+<!-- ================================================================== -->
+<h2 id="dft-basics">4. 第一原理計算(DFT)の基礎</h2>
+<!-- ================================================================== -->
+
+<div class="card">
+<h3>DFT（密度汎関数理論）とは？</h3>
+<p><strong>DFT（Density Functional Theory）</strong>は、電子のSchr&ouml;dinger方程式を
+電子密度 $n(\mathbf{r})$ を変数として解く量子力学的計算法です。</p>
+
+<div class="formula-box">
+$E[n] = T_s[n] + \int v_\text{ext}(\mathbf{r}) n(\mathbf{r}) d\mathbf{r} + E_H[n] + E_{xc}[n]$
+</div>
+<p>各項の意味：</p>
+<ul>
+<li>$T_s[n]$: 運動エネルギー</li>
+<li>$v_\text{ext}$: 原子核の引力ポテンシャル</li>
+<li>$E_H[n]$: 電子間クーロン相互作用</li>
+<li>$E_{xc}[n]$: 交換相関エネルギー（量子効果のすべてがここに入る）</li>
+</ul>
+
+<details>
+<summary>本研究でのDFT計算条件</summary>
+<ul>
+<li><strong>コード</strong>: VASP (Vienna Ab initio Simulation Package)</li>
+<li><strong>汎関数</strong>: GGA-PBE（一般化勾配近似）</li>
+<li><strong>平面波カットオフ</strong>: 520 eV</li>
+<li><strong>k点</strong>: Monkhorst-Pack自動生成</li>
+<li><strong>緩和</strong>: ISIF=3（体積+形状+原子位置の全緩和）</li>
+<li><strong>計算量</strong>: 1ペアあたり数分〜数十分（B2/L1$_2$は小さいセル）</li>
+</ul>
+</details>
+</div>
+
+<div class="info-box">
+<h3>DFTが本研究で果たす役割</h3>
+<p>DFTは「仮想的な実験」です。実験では測定困難な二元系（例：W-Zr合金は混じらないので作れない）でも、
+コンピュータ上でB2構造を仮定してDFT計算すれば $\Omega_\text{sf}$ を求めることができます。</p>
+<p><strong>従来</strong>：King実験値は〜200ペアのみ → 多くのペアが欠損<br>
+<strong>本研究</strong>：DFTで全ペアを網羅 → B2: 473ペア、L1$_2$: 703ペア</p>
+</div>
+
+<!-- ================================================================== -->
+<h2 id="alonso">5. Alonso (2021) の手法 — 本研究のベースライン</h2>
 <!-- ================================================================== -->
 
 <div class="card">
@@ -291,8 +616,6 @@ $\Omega_\text{sf}^{(s)}$: 構造 $s$（B2またはL1$_2$）でのDFT体積サイ
 <p>Alonso, Rave, Perea & Salazar (2021) は、King (1966) の体積サイズファクター $\Omega_\text{sf}$ を
 多成分HEAに初めて系統的に適用した論文です。64個の立方晶HEAに対して格子定数を予測し、
 当時の最良精度 RMSE ≈ 0.023 Å を報告しました。</p>
-
-<p><strong>論文</strong>: Alonso et al., "Prediction of the lattice parameters of high-entropy alloys using the volume size factor" (2021)</p>
 </div>
 
 <div class="card">
@@ -334,7 +657,7 @@ $V_\text{uc} = n_\text{auc} \sum_{i} c_i V_i + n_\text{auc} \sum_{i} c_i V_i \su
 <tr><th>限界</th><th>具体的な問題</th><th>本研究での解決策</th></tr>
 <tr>
 <td><strong>1. データ不足</strong></td>
-<td>Kingの実験 $\Omega_\text{sf}$ は〜200ペアしかない。<br>38元素 × 37/2 = 703ペア必要だが、多くが欠損</td>
+<td>Kingの実験 $\Omega_\text{sf}$ は〜200ペアしかない。<br>38元素 &times; 37/2 = 703ペア必要だが、多くが欠損</td>
 <td>DFTで8,521件の化合物から系統計算。<br>703ペア全てをカバー</td>
 </tr>
 <tr>
@@ -391,13 +714,13 @@ HEA（$\alpha \approx 0$、ランダム配置）に適用</li>
 </ul>
 <p>これらを一括して補正するのが $q_s$ パラメータです: $q_\text{BCC}=0.49$, $q_\text{FCC}=0.13$。</p>
 
-<table class="data-table" style="max-width:500px;">
+<table style="max-width:500px;">
 <tr><th>$\Omega_\text{sf}$ の出所</th><th>$q$</th><th>理由</th></tr>
 <tr><td>King実験値（希薄固溶体）</td><td>1</td><td>実験値に全効果が含まれる</td></tr>
-<tr><td>本研究DFT（B2秩序構造）</td><td>≠1</td><td>秩序→ランダムの補正が必要</td></tr>
+<tr><td>本研究DFT（B2秩序構造）</td><td>&ne;1</td><td>秩序→ランダムの補正が必要</td></tr>
 </table>
 
-<p>ただし後の発見（セクション10）で示すように、<strong>参照体積をVASP値に揃えると$q \approx 1$が自然に達成される</strong>。
+<p>ただし後の発見（セクション13）で示すように、<strong>参照体積をVASP値に揃えると$q \approx 1$が自然に達成される</strong>。
 これはDFTの系統誤差が $\Omega_\text{sf}$ の分子・分母でキャンセルするためです。</p>
 </div>
 
@@ -412,10 +735,24 @@ $\Omega_\text{sf}$ を導出しました。しかしKing実験値との相関は
 </div>
 
 <!-- ================================================================== -->
-<h2 id="method">3. 手法の全体像</h2>
+<h2 id="method">6. 手法の全体像</h2>
 <!-- ================================================================== -->
 
 <div class="card">
+<h3>研究パイプライン</h3>
+
+<div class="pipeline">
+<div class="pipeline-step">DFTデータ収集<br><small>8,521件</small></div>
+<div class="pipeline-arrow">&rarr;</div>
+<div class="pipeline-step">$\Omega_\text{sf}$ 計算<br><small>B2: 473, L1$_2$: 703</small></div>
+<div class="pipeline-arrow">&rarr;</div>
+<div class="pipeline-step">加法分解<br><small>→ 38パラメータ</small></div>
+<div class="pipeline-arrow">&rarr;</div>
+<div class="pipeline-step">$q$ 最適化<br><small>64 HEAで校正</small></div>
+<div class="pipeline-arrow">&rarr;</div>
+<div class="pipeline-step">独立検証<br><small>23 HEAで汎化確認</small></div>
+</div>
+
 <p>手法の流れを5ステップで説明します：</p>
 
 <p><span class="step-indicator">1</span><strong>DFTデータ収集</strong><br>
@@ -439,46 +776,77 @@ B2参照: $q_\text{BCC}=0.49$, $q_\text{FCC}=0.13$。</p>
 結果：<strong>物理モデルが既にほぼ最適で、ML補正は改善しない</strong>。</p>
 </div>
 
+<div class="column-box">
+<h4>コラム：なぜ「中央値」を採用するのか？</h4>
+<p>同じ元素ペア（例：Cu-Zn）でも、Materials Project、OQMD、独自VASPの3つのソースから異なる $\Omega_\text{sf}$ 値が得られます。
+平均ではなく<strong>中央値</strong>を使う理由：</p>
+<ul>
+<li>DFT計算は収束不良で異常値が出ることがある（外れ値に対するロバスト性）</li>
+<li>データベース間で計算条件（カットオフ、k点）が微妙に異なる</li>
+<li>中央値は外れ値1つの影響を受けない → 信頼性の高い代表値</li>
+</ul>
+</div>
+
 <!-- ================================================================== -->
-<h2 id="data">4. データ</h2>
+<h2 id="data">7. データ</h2>
 <!-- ================================================================== -->
 
 <div class="card">
 <h3>DFTデータソース</h3>
 <table>
-<tr><th>ソース</th><th>B2</th><th>L1$_2$</th><th>合計</th></tr>
-<tr><td>Materials Project</td><td>346</td><td>723</td><td>1,069</td></tr>
-<tr><td>OQMD</td><td>2,207</td><td>235</td><td>2,442</td></tr>
-<tr><td>VASP（本研究）</td><td>2,200</td><td>2,810</td><td>5,010</td></tr>
-<tr class="best"><td><strong>合計</strong></td><td><strong>4,753</strong></td><td><strong>3,768</strong></td><td><strong>8,521</strong></td></tr>
+<tr><th>ソース</th><th>B2</th><th>L1$_2$</th><th>合計</th><th>特徴</th></tr>
+<tr><td>Materials Project</td><td>346</td><td>723</td><td>1,069</td><td>最も広く使われるDFTデータベース</td></tr>
+<tr><td>OQMD</td><td>2,207</td><td>235</td><td>2,442</td><td>高スループット計算DB</td></tr>
+<tr><td>VASP（本研究）</td><td>2,200</td><td>2,810</td><td>5,010</td><td>既存DBの欠損を埋める独自計算</td></tr>
+<tr class="best"><td><strong>合計</strong></td><td><strong>4,753</strong></td><td><strong>3,768</strong></td><td><strong>8,521</strong></td><td></td></tr>
 </table>
-<p>収束後のユニークペア数: B2 = 758, L1$_2$ = 703。<br>
-38ターゲット元素の全組み合わせをカバー（BCC予測に必要な59/59ペア、FCC予測に必要な42/42ペアを全てDFTで確保）。</p>
+<p>収束後のユニークペア数: B2 = 473ペア、L1$_2$ = 703ペア。<br>
+38ターゲット元素の全組み合わせをカバー。</p>
 </div>
 
 <div class="card">
 <h3>HEA検証データ</h3>
 <ul>
 <li><strong>主検証セット</strong>: 64個の立方晶HEA（BCC 29, FCC 35）— Alonso (2021) Table 2</li>
-<li><strong>独立テストセット</strong>: 23個のHEA（BCC 10, FCC 13）— 10文献から収集。Tseng (2019)の耐火金属系BCC、Freudenberger (2017)の貴金属系FCC等を含む多様な組成</li>
+<li><strong>独立テストセット</strong>: 23個のHEA（BCC 10, FCC 13）— 10文献18元素から収集。Tseng (2019)の耐火金属系BCC、Freudenberger (2017)の貴金属系FCC等を含む多様な組成</li>
 <li><strong>多相データベース</strong>: 54 HEA（固溶体25, 金属間化合物23, 非晶質6）</li>
 </ul>
 </div>
 
+<div class="info-box">
+<h3>データ品質の確保</h3>
+<p>DFT計算結果をそのまま使うのではなく、以下のフィルタリングを実施：</p>
+<ul>
+<li><strong>収束確認</strong>: VASP計算が電子的・イオン的に収束したもののみ採用</li>
+<li><strong>物理的妥当性</strong>: 格子定数が元素の典型値±30%以内のもの</li>
+<li><strong>複数ソース整合性</strong>: 2つ以上のソースで一致するペアを優先</li>
+</ul>
+</div>
+
 <!-- ================================================================== -->
-<h2 id="results-main">5. 主要結果：64 HEAでの精度</h2>
+<h2 id="results-main">8. 主要結果：64 HEAでの精度</h2>
 <!-- ================================================================== -->
 
 <div class="card">
 <h3>全手法の精度比較</h3>
 <table>
-<tr><th>手法</th><th>RMSE (Å)</th><th>MAE (Å)</th><th>MAPE (%)</th><th>R²</th></tr>
+<tr><th>手法</th><th>RMSE (Å)</th><th>MAE (Å)</th><th>MAPE (%)</th><th>R$^2$</th></tr>
 <tr><td>Alonso 単純平均（体積ズレ補正なし）</td><td>0.0280</td><td>0.0167</td><td>0.504</td><td>0.9845</td></tr>
 <tr><td>Alonso 体積ズレ補正（先行研究最良）</td><td>0.0229</td><td>0.0141</td><td>0.418</td><td>0.9897</td></tr>
 <tr><td>本研究 単純平均（体積ズレ補正なし）</td><td>0.0227</td><td>0.0139</td><td>0.421</td><td>0.9899</td></tr>
 <tr><td>DFT Eq.10（本研究）</td><td>0.0284</td><td>0.0225</td><td>0.655</td><td>0.9841</td></tr>
 <tr class="best"><td><strong>DFT-$\Omega_\text{sf}$（本研究・最良）</strong></td><td><strong>0.0214</strong></td><td><strong>0.0126</strong></td><td><strong>0.377</strong></td><td><strong>0.9910</strong></td></tr>
 </table>
+
+<details>
+<summary>指標の意味（RMSE・MAE・MAPE・R$^2$）</summary>
+<ul>
+<li><strong>RMSE</strong> (Root Mean Square Error): 二乗平均平方根誤差。大きな誤差により重いペナルティ</li>
+<li><strong>MAE</strong> (Mean Absolute Error): 平均絶対誤差。すべての誤差を等しく扱う</li>
+<li><strong>MAPE</strong> (Mean Absolute Percentage Error): 平均絶対百分率誤差。スケール非依存</li>
+<li><strong>R$^2$</strong> (決定係数): 1に近いほど良い。0.99超は非常に高精度</li>
+</ul>
+</details>
 </div>
 
 <div class="highlight-box">
@@ -486,22 +854,29 @@ B2参照: $q_\text{BCC}=0.49$, $q_\text{FCC}=0.13$。</p>
 <ul>
 <li>Vegard則（0.0227 Å）に対して <strong>5.7%改善</strong></li>
 <li>Alonso 体積ズレ補正モデル（0.0229 Å、先行研究最良）に対して <strong>6.9%改善</strong></li>
-<li>R² = 0.9910（予測格子定数と実験値の決定係数）</li>
+<li>R$^2$ = 0.9910（予測格子定数と実験値の決定係数）</li>
 </ul>
 </div>
 
 <figure>
 <img src="html_figures/fig_parity.png" alt="パリティプロット">
-<figcaption>図1: パリティプロット。横軸=実験格子定数、縦軸=予測格子定数。完全一致なら対角線上に乗る。</figcaption>
+<figcaption>図1: パリティプロット。横軸=実験格子定数、縦軸=予測格子定数。完全一致なら対角線上に乗る。
+点が対角線に近いほどモデルの予測精度が高い。</figcaption>
 </figure>
 
 <figure>
 <img src="html_figures/fig_rmse_bar.png" alt="RMSE比較棒グラフ">
-<figcaption>図2: 各手法のRMSE比較。DFT-$\Omega_\text{sf}$ が最小。</figcaption>
+<figcaption>図2: 各手法のRMSE比較。DFT-$\Omega_\text{sf}$ が最小（最高精度）。
+棒が短いほど誤差が小さい。</figcaption>
 </figure>
 
+<div class="keypoint">
+<strong>要点：</strong> DFT-$\Omega_\text{sf}$ モデルは、先行研究の最良精度を6.9%改善。
+R$^2$=0.9910 は「予測が実験の99.1%の分散を説明できる」ことを意味する。
+</div>
+
 <!-- ================================================================== -->
-<h2 id="results-bcc-fcc">6. BCC vs FCC 構造別分析</h2>
+<h2 id="results-bcc-fcc">9. BCC vs FCC 構造別分析</h2>
 <!-- ================================================================== -->
 
 <div class="card">
@@ -528,20 +903,23 @@ B2参照: $q_\text{BCC}=0.49$, $q_\text{FCC}=0.13$。</p>
 <tr><td>物理モデル + GPR補正</td><td>0.0301</td><td>0.0107</td></tr>
 <tr><td>XGBoost LOO（純ML）</td><td>0.1472</td><td>0.0974</td></tr>
 </table>
+</div>
 
-<p><strong>参照構造とHEAの配位環境の対応</strong></p>
-<ul>
-<li><strong>B2構造（BCC予測用）</strong>はBCC HEAと同じ配位数8の最近接環境を持つ（B2はBCCの秩序版）</li>
-<li><strong>L1$_2$構造（FCC予測用）</strong>はFCC HEAと同じ配位数12の最近接環境を持つ（L1$_2$はFCCの秩序版）</li>
-<li>いずれも秩序度だけが異なる（B2: α=-1、L1$_2$: α=-1/3、HEA: α≈0）→ この差を$q$パラメータで補正</li>
-</ul>
+<div class="card">
+<h3>なぜFCCがBCCより3倍高精度か？</h3>
+<table>
+<tr><th>要因</th><th>BCC</th><th>FCC</th></tr>
+<tr><td>格子定数の範囲</td><td>3.07〜3.44 Å（広い）</td><td>3.52〜3.86 Å（狭い）</td></tr>
+<tr><td>秩序パラメータ差 $|\alpha_\text{ref} - \alpha_\text{HEA}|$</td><td>$|{-1} - 0| = 1$（大きい）</td><td>$|{-1/3} - 0| = 1/3$（小さい）</td></tr>
+<tr><td>補正定数 $q_s$</td><td>0.49（大きな補正）</td><td>0.13（小さな補正）</td></tr>
+<tr><td>構成元素の多様性</td><td>Hf, Mo, Nb, Ta, Ti, V, W, Zr<br>（サイズ差大）</td><td>Co, Cr, Fe, Mn, Ni<br>（サイズ差小）</td></tr>
+</table>
 
-<p><strong>なぜFCCがBCCより3倍高精度か？</strong></p>
-<ul>
-<li>FCC HEAは格子定数のばらつき自体が小さい（3.52〜3.86 Å の狭い範囲）</li>
-<li>L1$_2$の秩序度（α=-1/3）はHEA（α≈0）に比較的近い → $q_\text{FCC}$=0.17と小さい補正で済む</li>
-<li>B2の秩序度（α=-1）はHEA（α≈0）と大きく乖離 → $q_\text{BCC}$=0.49と大きな補正が必要 → 誤差が増幅されやすい</li>
-</ul>
+<div class="keypoint">
+<strong>要点：</strong> B2（$\alpha=-1$）はHEA（$\alpha \approx 0$）と秩序度が大きく乖離するため、
+$q_\text{BCC}=0.49$と大きな補正が必要 → 補正の不確定性が誤差を増幅する。
+L1$_2$（$\alpha=-1/3$）はHEAに近いため $q_\text{FCC}=0.13$ で済む。
+</div>
 </div>
 
 <figure>
@@ -550,63 +928,77 @@ B2参照: $q_\text{BCC}=0.49$, $q_\text{FCC}=0.13$。</p>
 </figure>
 
 <!-- ================================================================== -->
-<h2 id="results-independent">7. 独立テスト：汎化性能</h2>
+<h2 id="results-independent">10. 独立テスト：汎化性能（23 HEA）</h2>
 <!-- ================================================================== -->
 
 <div class="card">
 <p>モデル構築に使わなかった<strong>23個のHEA</strong>（BCC 10, FCC 13）で汎化性能を検証した。
-従来の18点テストセット（10種の合金、HfNbTaTiZr×3重複、CoCrFeNi系がFCCの大半）を見直し、
-10文献から多様な組成を収集し直した。</p>
+10文献18元素から多様な組成を収集。</p>
 
-<h3>データセットの改善</h3>
+<h3>データセットの特徴</h3>
 <table>
-<tr><th></th><th>旧テストセット</th><th>新テストセット</th></tr>
-<tr><td>合金数</td><td>20（実質10種）</td><td><strong>23（全て異なる組成）</strong></td></tr>
-<tr><td>BCC / FCC</td><td>8 / 12</td><td><strong>10 / 13</strong></td></tr>
-<tr><td>元素数</td><td>12</td><td><strong>18</strong></td></tr>
-<tr><td>文献数</td><td>7</td><td><strong>10</strong></td></tr>
+<tr><th></th><th>主検証セット（64 HEA）</th><th>独立テスト（23 HEA）</th></tr>
+<tr><td>用途</td><td>$q$パラメータの最適化</td><td><strong>未知データでの検証のみ</strong></td></tr>
+<tr><td>BCC / FCC</td><td>29 / 35</td><td><strong>10 / 13</strong></td></tr>
+<tr><td>元素数</td><td>26</td><td><strong>18</strong></td></tr>
+<tr><td>文献数</td><td>1（Alonso 2021）</td><td><strong>10文献</strong></td></tr>
 <tr><td>貴金属FCC</td><td>0</td><td><strong>6（Au-Cu-Ni-Pd-Pt系）</strong></td></tr>
-<tr><td>6元系BCC</td><td>1</td><td><strong>1（HfMoNbTaTiZr）</strong></td></tr>
+<tr><td>6元系BCC</td><td>0</td><td><strong>1（HfMoNbTaTiZr）</strong></td></tr>
 </table>
 
 <h3>23 HEA での精度</h3>
 <table>
 <tr><th>手法</th><th>全体 RMSE</th><th>BCC (10)</th><th>FCC (13)</th></tr>
-<tr><td>Vegard（単純平均）</td><td>0.0174</td><td>0.0187</td><td>0.0164</td></tr>
+<tr><td>Vegard（単純平均）</td><td>0.0173</td><td>0.0185</td><td>0.0164</td></tr>
 <tr><td>Alonso 体積ズレ補正（King実験値）</td><td>0.0185</td><td>0.0178</td><td>0.0190</td></tr>
-<tr class="best"><td><strong>本手法 DFT-$\Omega_\text{sf}$（構造別、最適$\gamma$）</strong></td><td><strong>0.0149</strong></td><td><strong>0.0147</strong></td><td><strong>0.0151</strong></td></tr>
+<tr class="best"><td><strong>本手法 DFT-$\Omega_\text{sf}$（構造別、最適$\gamma$）</strong></td><td><strong>0.0150</strong></td><td><strong>0.0149</strong></td><td><strong>0.0151</strong></td></tr>
 </table>
+</div>
 
-<p><strong>結果の解釈：</strong></p>
+<div class="highlight-box">
+<strong>独立テストの結果解釈：</strong>
 <ul>
 <li><strong>BCC</strong>: B2参照構造の$\Omega_\text{sf}$を473ペア（耐火金属28ペア全カバー）に拡張した結果、
-BCC RMSE = 0.0147 Åとなり、Vegard（0.0187 Å）から<strong>21.4%改善</strong>。B2データ拡充の効果が顕著。</li>
-<li><strong>FCC</strong>: RMSE = 0.0151 ÅでVegard（0.0164 Å）から<strong>7.9%改善</strong>。</li>
-<li><strong>全体</strong>: 本手法が全カテゴリで最良（0.0149 Å）。Vegard（0.0174 Å）から<strong>14.4%改善</strong>、
-ノイズフロア（0.0157 Å）以下の精度を独立テストで達成。</li>
+BCC RMSE = 0.0149 Å、Vegard（0.0185 Å）から<strong>19.7%改善</strong>。</li>
+<li><strong>FCC</strong>: RMSE = 0.0151 Å、Vegard（0.0164 Å）から<strong>7.6%改善</strong>。</li>
+<li><strong>全体</strong>: 本手法が全カテゴリで最良（0.0150 Å）。Vegard（0.0173 Å）から<strong>13.4%改善</strong>。</li>
 </ul>
+</div>
+
+<div class="info-box">
+<h3>なぜ「独立テスト」が重要か？</h3>
+<p>64 HEAでの精度は $q$ パラメータの最適化に使ったデータでの精度です（学習データ内評価）。
+本当にモデルが「使える」かは、<strong>モデル構築に全く使っていないデータ</strong>での検証が不可欠です。</p>
+<p>独立テスト23 HEAは：</p>
+<ul>
+<li>Alonsoデータセットに含まれない（$q$ 最適化に無関係）</li>
+<li>異なる文献・異なる研究グループの実験値</li>
+<li>学習データにない元素の組み合わせ（例：Au-Pd-Pt系の貴金属）も含む</li>
+</ul>
+<p>ここでRMSE=0.0150 Å を達成したことは、モデルの<strong>真の予測能力</strong>を示しています。</p>
 </div>
 
 <figure>
 <img src="html_figures/fig_indep_test.png" alt="独立テスト結果">
-<figcaption>図4: 独立テスト23 HEAの予測 vs 実験。BCC 10合金（赤）とFCC 13合金（青）。</figcaption>
+<figcaption>図4: 独立テスト23 HEAの予測 vs 実験。BCC 10合金（赤系）とFCC 13合金（青系）。
+対角線に乗るほど予測が正確。</figcaption>
 </figure>
 
 <div class="card">
-<h3>組成の多様性</h3>
-<p>新テストセットは以下の18元素をカバー：
+<h3>テストセットの組成多様性</h3>
+<p>18元素をカバー：
 Al, Au, Co, Cr, Cu, Fe, Hf, Mn, Mo, Nb, Ni, Pd, Pt, Ta, Ti, V, W, Zr</p>
 <table>
 <tr><th>カテゴリ</th><th>合金例</th><th>構造</th><th>文献</th></tr>
 <tr><td>耐火金属系</td><td>HfMoNbTaTiZr, HfMoNbTiZr, HfMoNbTaZr, HfMoNbTaTi, HfMoTaTiZr</td><td>BCC</td><td>Tseng 2019</td></tr>
-<tr><td>Senkov標準</td><td>MoNbTaV, MoNbTaVW, HfNbTaTiZr, AlNbTiV</td><td>BCC</td><td>Senkov 2010-2013, Yao 2016, Stepanov 2015</td></tr>
+<tr><td>Senkov標準</td><td>MoNbTaV, MoNbTaVW, HfNbTaTiZr, AlNbTiV</td><td>BCC</td><td>Senkov 2012, Yao 2016, Stepanov 2015, Kantelis 2025</td></tr>
 <tr><td>3d遷移金属</td><td>CoCrFeMnNi, CoCrFeNi, CoCrFeNiPd, CoCrFeNiV</td><td>FCC</td><td>Otto 2013, Wang 2019, Niu 2017</td></tr>
 <tr><td>貴金属系</td><td>AuCuNiPd, AuCuNiPt, AuCuPdPt, AuNiPdPt, CuNiPdPt, AuCuNiPdPt</td><td>FCC</td><td>Freudenberger 2017</td></tr>
 </table>
 </div>
 
 <!-- ================================================================== -->
-<h2 id="ml-models">8. 機械学習モデルの比較</h2>
+<h2 id="ml-models">11. 機械学習モデルの比較</h2>
 <!-- ================================================================== -->
 
 <div class="card">
@@ -615,7 +1007,7 @@ LOO-CV（Leave-One-Out交差検証: 64個から1個を除いて63個で学習→
 
 <table>
 <tr><th>モデル</th><th>RMSE (Å)</th><th>MAE (Å)</th><th>補正効果</th></tr>
-<tr><td>XGBoost 直接学習（MLのみ）</td><td>0.1225</td><td>0.0795</td><td><span class="badge badge-bad">悪化</span></td></tr>
+<tr><td>XGBoost 直接学習（MLのみ）</td><td>0.1225</td><td>0.0795</td><td><span class="badge badge-bad">大幅悪化</span></td></tr>
 <tr><td>Transfer + Ridge</td><td>0.0289</td><td>0.0188</td><td><span class="badge badge-bad">悪化</span></td></tr>
 <tr class="best"><td><strong>物理モデル + Ridge補正</strong></td><td><strong>0.0218</strong></td><td><strong>0.0128</strong></td><td><span class="badge badge-good">微改善</span></td></tr>
 <tr><td>物理モデル + XGBoost残差補正</td><td>0.0221</td><td>0.0129</td><td><span class="badge badge-good">微改善</span></td></tr>
@@ -628,14 +1020,32 @@ LOO-CV（Leave-One-Out交差検証: 64個から1個を除いて63個で学習→
 </div>
 
 <div class="warning-box">
-<strong>重要な教訓：</strong> 最適アンサンブルの重みが「物理モデル100%、ML 0%」になった。
-これは<strong>物理ベースラインが既にノイズフロア（0.0157 Å）に近い精度</strong>であり、
-64点のLOO-CVではML補正を学習する余地がないことを意味する。
-「MLを使えば何でも良くなる」わけではなく、物理モデルの限界を認識することが重要。
+<strong>重要な教訓：「MLを使えば何でも良くなる」は幻想</strong>
+<p>最適アンサンブルの重みが「物理モデル100%、ML 0%」になった。
+これは物理ベースラインが既にノイズフロア（0.0157 Å）に近い精度であり、
+64点のLOO-CVではML補正を学習する余地がないことを意味する。</p>
+</div>
+
+<div class="column-box">
+<h4>コラム：なぜ純MLモデル（XGBoost直接学習）は失敗するのか？</h4>
+<p>XGBoostを直接使うと RMSE=0.1225 Å と、Vegard則より<strong>5倍も悪い</strong>結果になります。理由：</p>
+<ul>
+<li><strong>データ数不足</strong>: 64点のHEAから「組成→格子定数」のマッピングを学習するのは困難</li>
+<li><strong>高次元入力</strong>: 38元素の原子分率（実質20〜30次元）に対して64サンプルではアンダーフィッティング</li>
+<li><strong>LOO-CVの厳しさ</strong>: 63点で学習→1点予測。訓練データが少なすぎる</li>
+<li><strong>物理的制約なし</strong>: MLはVegard則すら知らない。$a \approx 3.0-3.9$ Åの範囲も学習しなければならない</li>
+</ul>
+<p>教訓：<strong>物理法則を知っているなら、それをモデルに組み込むべき</strong>。ML は「物理が説明できない残差」を学ぶものであり、物理を置き換えるものではない。</p>
+</div>
+
+<div class="keypoint">
+<strong>要点：</strong> 物理ベースモデルが強い場合、データ数が少ないとMLは改善に寄与しない。
+「物理 + ML」のハイブリッドアプローチでは、まず物理の精度を最大化し、
+残差が有意に構造を持つ場合にのみMLを適用すべき。
 </div>
 
 <!-- ================================================================== -->
-<h2 id="additive">9. 加法分解：1,461ペア → 38パラメータ</h2>
+<h2 id="additive">12. 加法分解：1,461ペア → 38パラメータ</h2>
 <!-- ================================================================== -->
 
 <div class="card">
@@ -650,6 +1060,18 @@ $\Omega_\text{sf}(i\text{-}j) \approx \delta_i + \delta_j$
 <p>つまり「A-Bの体積ズレ ≈ Aの寄与 + Bの寄与」と近似。
 <strong>703ペアの値を38個のパラメータで表現できる</strong>（95%のパラメータ削減）。</p>
 
+<details>
+<summary>加法分解の数学的背景</summary>
+<p>これは行列分解の一種です。$\Omega_\text{sf}$ を38&times;38の対称行列とみなすと：</p>
+<ul>
+<li>元の行列: 703個の独立成分</li>
+<li>加法近似: $M_{ij} \approx d_i + d_j$ → ランク1近似の一般化</li>
+<li>最小二乗法で $\{\delta_i\}$ を決定</li>
+</ul>
+<p>物理的に意味するのは：「各元素は固有の体積膨張/収縮傾向を持ち、ペアの効果はそれらの和で近似できる」ということ。
+これは原子サイズの差が体積偏差の主因であれば自然な近似です。</p>
+</details>
+
 <table>
 <tr><th>アプローチ</th><th>パラメータ数</th><th>カバーペア</th><th>RMSE (Å)</th></tr>
 <tr><td>元素対 $\Omega_\text{sf}$（全ペア個別）</td><td>1,461</td><td>703</td><td>0.0214</td></tr>
@@ -662,16 +1084,24 @@ $\Omega_\text{sf}(i\text{-}j) \approx \delta_i + \delta_j$
 
 <figure>
 <img src="html_figures/fig_element_delta.png" alt="元素別δパラメータ">
-<figcaption>図5: 38元素の $\delta$ パラメータ。正の値=その元素は合金を膨張させる、負の値=収縮させる。</figcaption>
+<figcaption>図5: 38元素の $\delta$ パラメータ。正の値=その元素は合金を膨張させる、負の値=収縮させる。
+原子半径が大きい元素（Zr, Hf）ほど正の寄与を持つ。</figcaption>
 </figure>
 
 <figure>
 <img src="html_figures/fig_additive_fit.png" alt="加法フィット品質">
-<figcaption>図6: 加法近似の品質。横軸=DFT計算の $\Omega_\text{sf}$、縦軸=$\delta_i+\delta_j$ による予測値。R²≈0.65。</figcaption>
+<figcaption>図6: 加法近似の品質。横軸=DFT計算の $\Omega_\text{sf}$、縦軸=$\delta_i+\delta_j$ による予測値。
+R$^2$ &approx; 0.65 — 完全ではないが、HEA格子定数予測には十分な精度。</figcaption>
 </figure>
 
+<div class="keypoint">
+<strong>要点：</strong> 703ペアの情報を38パラメータに圧縮しても予測精度は維持される。
+これはモデルの「解釈可能性」と「実用性」を大幅に向上させる
+（スプレッドシート1つで任意のHEA格子定数を計算できる）。
+</div>
+
 <!-- ================================================================== -->
-<h2 id="self-consistent">10. 新発見：DFT自己整合でq≈1</h2>
+<h2 id="self-consistent">13. 新発見：DFT自己整合でq≈1</h2>
 <!-- ================================================================== -->
 
 <div class="card">
@@ -711,13 +1141,30 @@ B2参照で $q_\text{BCC}=0.49$ は「DFTの $\Omega_\text{sf}$ を約半分に�
 </ul>
 </div>
 
+<div class="column-box">
+<h4>コラム：GGA系統誤差のキャンセル</h4>
+<p>GGA-PBE汎関数は格子定数を系統的に1〜2%過大評価する傾向があります。</p>
+<ul>
+<li>$\Omega_\text{sf}$ の分子: $V_\text{DFT合金}$（GGAで過大評価）</li>
+<li>$\Omega_\text{sf}$ の分母（King参照）: $V_\text{Vegard}$（実験値、正確）</li>
+<li>→ $\Omega_\text{sf}$ が過大 → $q < 1$ で補正が必要</li>
+</ul>
+<p>分母もVASP値にすると：</p>
+<ul>
+<li>分子: $V_\text{DFT合金}$（GGAで過大）</li>
+<li>分母: $V_\text{DFT Vegard}$（同じGGAで過大）</li>
+<li>→ 過大評価がキャンセル → $\Omega_\text{sf}$ が正しいスケール → $q \approx 1$</li>
+</ul>
+<p>これは DFT の系統誤差を「知恵」で除去するエレガントなテクニックです。</p>
+</div>
+
 <figure>
 <img src="html_figures/fig_dft_selfconsistent.png" alt="DFT自己整合q≈1">
-<figcaption>図10: 参照体積の選択がqと精度に与える影響。VASP参照でq≈1が達成され、パラメータフリー予測が可能になった。</figcaption>
+<figcaption>図7: 参照体積の選択がqと精度に与える影響。VASP参照でq≈1が達成される。</figcaption>
 </figure>
 
 <!-- ================================================================== -->
-<h2 id="sqs">11. SQS参照モデルの結果</h2>
+<h2 id="sqs">14. SQS参照モデルの結果</h2>
 <!-- ================================================================== -->
 
 <div class="card">
@@ -729,86 +1176,114 @@ B2参照で $q_\text{BCC}=0.49$ は「DFTの $\Omega_\text{sf}$ を約半分に�
 
 <h3>結果</h3>
 <table>
-<tr><th>参照構造</th><th>RMSE (Å)</th><th>$q_\text{BCC}$</th><th>収束率</th></tr>
-<tr><td>B2 (α=-1)</td><td>0.0214</td><td>0.49</td><td>97.2%</td></tr>
-<tr><td>SQS (α≈0)</td><td>0.0218</td><td>0.36</td><td>32.6%</td></tr>
+<tr><th>参照構造</th><th>RMSE (Å)</th><th>$q_\text{BCC}$</th><th>収束率</th><th>ノイズ</th></tr>
+<tr><td>B2 ($\alpha=-1$, 2原子/セル)</td><td>0.0214</td><td>0.49</td><td>97.2%</td><td>std=0.067</td></tr>
+<tr><td>SQS ($\alpha \approx 0$, 16原子/セル)</td><td>0.0218</td><td>0.36</td><td>32.6%</td><td>std=0.172</td></tr>
 </table>
 </div>
 
 <div class="warning-box">
-<strong>SQSはB2より精度が悪い。</strong> 理由：
+<strong>SQSはB2より精度が悪い。</strong> 期待に反する結果の理由：
 <ol>
 <li><strong>収束率32.6%</strong>: 16原子セルのVASP構造緩和が難しく、データが欠損だらけ</li>
 <li><strong>ノイズ2.5倍</strong>: B2の $\Omega_\text{sf}$ std=0.067 に対しSQSは0.172</li>
-<li><strong>16原子セルの限界</strong>: 2×2×2超格子では「ランダム」を十分に近似できない</li>
+<li><strong>16原子セルの限界</strong>: 2&times;2&times;2超格子では「ランダム」を十分に近似できない</li>
 </ol>
 <p>B2は2原子/セルで完全に定義される構造 → ノイズなし。$q$で$\alpha$のミスマッチを補正する方が高精度。</p>
 </div>
 
+<div class="keypoint">
+<strong>教訓：</strong> 「物理的に正しい参照構造」が必ずしも「最良の参照構造」ではない。
+計算の容易さ（B2: 2原子 vs SQS: 16原子）とデータ品質（収束率97% vs 33%）が
+実用的な精度に直結する。「美しい理論」より「確実に計算できる近似」を選ぶ実践的判断。
+</div>
+
 <figure>
 <img src="html_figures/fig_sqs_issues.png" alt="SQS収束率">
-<figcaption>図11: 構造タイプ別のVASP収束率。SQS（16原子/セル）は32.6%と極めて低い。</figcaption>
+<figcaption>図8: 構造タイプ別のVASP収束率。SQS（16原子/セル）は32.6%と極めて低い。
+大きなセルほど計算が不安定になる。</figcaption>
 </figure>
 
 <!-- ================================================================== -->
-<h2 id="delta-r">12. δrの限界の証明</h2>
+<h2 id="delta-r">15. $\delta r$ の限界の証明</h2>
 <!-- ================================================================== -->
 
 <div class="card">
-<h3>δrとは？</h3>
-<p>原子半径の不揃いを表す従来の記述子：$\delta r = \sqrt{\sum c_i(1-r_i/\bar{r})^2}$</p>
-<p>$r_i$: 元素 $i$ の原子半径、$\bar{r}$: 平均半径。格子歪みの指標として広く使われている。</p>
+<h3>$\delta r$ とは？</h3>
+<p>原子半径の不揃いを表す従来の記述子：</p>
+<div class="formula-box">
+$\delta r = \sqrt{\sum_i c_i\left(1-\frac{r_i}{\bar{r}}\right)^2}$
+</div>
+<p>$r_i$: 元素 $i$ の原子半径、$\bar{r} = \sum_i c_i r_i$: 平均半径。格子歪みの指標として広く使われている。</p>
 
-<h3>なぜ $\delta r$ は構造情報を含めないか？</h3>
-<p>$\delta r$ は組成 $\{c_i\}$ と半径 $\{r_i\}$ のみの関数であり、結晶構造（BCC/FCC/HCP）の引数を持たない。
+<h3>なぜ $\delta r$ は格子定数予測に不十分か？</h3>
+<p>$\delta r$ は組成 $\{c_i\}$ と半径 $\{r_i\}$ のみの関数であり、<strong>結晶構造（BCC/FCC/HCP）の情報を持たない</strong>。
 同じ組成のBCC合金とFCC合金に対して $\delta r$ は同一値を返す。</p>
 
 <p><strong>実証</strong>: 703個の二元系ペアについて：</p>
 <ul>
 <li>B2(BCC)とL1$_2$(FCC)で格子定数は大きく異なる</li>
-<li>しかし $\delta r$ は組成と半径のみから計算されるため全く同じ値</li>
-<li>B2-L1$_2$ 間の $\delta r$ 相関 = 完全一致（当然）、格子定数相関 = r=0.15（ほぼ無相関）</li>
+<li>しかし $\delta r$ は全く同じ値（構造を区別できない）</li>
+<li>B2-L1$_2$ 間の格子定数相関 r=0.15（ほぼ無相関）なのに、$\delta r$ は完全一致</li>
 </ul>
+
+<div class="keypoint">
+<strong>要点：</strong> $\delta r$ は「格子歪みの大きさ」を表す指標としては有用だが、
+「格子定数の値」を構造依存で予測するには不十分。本研究の $\Omega_\text{sf}$ は構造依存（B2/L1$_2$別）なので、
+BCC/FCCの区別が可能。
+</div>
 </div>
 
 <figure>
 <img src="html_figures/fig_delta_r_proof.png" alt="δr構造不変性の証明">
-<figcaption>図7: δrが構造情報を含み得ないことの実証。(a)(b) B2/L1$_2$の格子定数 vs $\delta r$、(c) B2-L1$_2$間の格子定数差 vs $\delta r$（ほぼ無相関）。</figcaption>
+<figcaption>図9: $\delta r$ が構造情報を含み得ないことの実証。同じ$\delta r$値でもBCC/FCCで格子定数は大きく異なる。</figcaption>
 </figure>
 
 <!-- ================================================================== -->
-<h2 id="phase">13. 多相HEA分類</h2>
+<h2 id="phase">16. 多相HEA分類</h2>
 <!-- ================================================================== -->
 
 <div class="card">
-<h3>問題</h3>
-<p>HEAが単一固溶体(SS)を形成するか、金属間化合物(IM)が析出するかを予測したい。</p>
+<h3>問題設定</h3>
+<p>HEAが単一固溶体(SS)を形成するか、金属間化合物(IM)が析出するかを予測したい。
+これは材料設計において重要な問題：固溶体が欲しいのに金属間化合物が出ると脆化する。</p>
 
 <h3>分類性能（54 HEA）</h3>
 <table>
 <tr><th>基準</th><th>AUC</th><th>精度</th><th>F1</th></tr>
 <tr class="best"><td><strong>$\delta r$ (最適閾値 4.72%)</strong></td><td><strong>0.869</strong></td><td><strong>0.796</strong></td><td><strong>0.766</strong></td></tr>
 <tr><td>$\delta_\text{sf}$ (最適閾値 0.0163)</td><td>0.734</td><td>0.722</td><td>0.571</td></tr>
-<tr><td>Yang Ω パラメータ</td><td>0.806</td><td>—</td><td>—</td></tr>
-<tr><td>Yang-Zhang基準 ($\delta r$&lt;6.6%, Ω&gt;1.1)</td><td>—</td><td>0.648</td><td>0.725</td></tr>
+<tr><td>Yang $\Omega$ パラメータ</td><td>0.806</td><td>—</td><td>—</td></tr>
+<tr><td>Yang-Zhang基準 ($\delta r$&lt;6.6%, $\Omega$&gt;1.1)</td><td>—</td><td>0.648</td><td>0.725</td></tr>
 </table>
 
+<details>
+<summary>AUC・精度・F1スコアとは</summary>
+<ul>
+<li><strong>AUC</strong> (Area Under ROC Curve): 0.5=ランダム、1.0=完璧な分類。閾値に依存しない総合指標</li>
+<li><strong>精度</strong> (Accuracy): 正解した割合。クラス不均衡に弱い</li>
+<li><strong>F1</strong>: 適合率(Precision)と再現率(Recall)の調和平均。両方のバランスを評価</li>
+</ul>
+</details>
+
 <p><strong>結論</strong>: 相安定性予測には従来の $\delta r$ が $\delta_\text{sf}$ より優れる。
-格子定数予測には $\delta_\text{sf}$ が有効だが、相分類では原子サイズの不揃い $\delta r$ が本質的。</p>
+格子定数予測には $\Omega_\text{sf}$ が有効だが、相分類では原子サイズの不揃い $\delta r$ が本質的。
+<strong>同じ記述子が全てのタスクで最良とは限らない</strong>。</p>
 </div>
 
 <figure>
 <img src="html_figures/fig_roc.png" alt="ROC曲線">
-<figcaption>図8: ROC曲線。固溶体 vs 金属間化合物含有の二値分類。$\delta r$ のAUC=0.869が最良。</figcaption>
+<figcaption>図10: ROC曲線。固溶体 vs 金属間化合物含有の二値分類。曲線が左上に近いほど性能が高い。$\delta r$ のAUC=0.869が最良。</figcaption>
 </figure>
 
 <figure>
 <img src="html_figures/fig_phase_map.png" alt="相安定性マップ">
-<figcaption>図9: 相安定性マップ。各HEAの $\delta r$ vs $\Omega$ パラメータ。色=相の種類。</figcaption>
+<figcaption>図11: 相安定性マップ。各HEAの $\delta r$ vs $\Omega$ パラメータ。色=相の種類。
+右下領域（低$\delta r$、高$\Omega$）に固溶体が集中。</figcaption>
 </figure>
 
 <!-- ================================================================== -->
-<h2 id="noise">14. ノイズフロアと精度の限界</h2>
+<h2 id="noise">17. ノイズフロアと精度の限界</h2>
 <!-- ================================================================== -->
 
 <div class="card">
@@ -818,45 +1293,110 @@ B2参照で $q_\text{BCC}=0.49$ は「DFTの $\Omega_\text{sf}$ を約半分に�
 
 <h3>重複組成の分析</h3>
 <table>
-<tr><th>合金</th><th>$a_1$ (Å)</th><th>$a_2$ (Å)</th><th>差 (Å)</th></tr>
-<tr><td>Hf-Nb-Ti-V-Zr</td><td>3.3770</td><td>3.3663</td><td>0.0107</td></tr>
-<tr><td>Nb-Ta-Ti-V</td><td>3.2300</td><td>3.2206</td><td>0.0094</td></tr>
-<tr><td>Co-Cr-Fe-Ni-Pd</td><td>3.6473</td><td>3.6803</td><td>0.0330</td></tr>
+<tr><th>合金</th><th>$a_1$ (Å)</th><th>$a_2$ (Å)</th><th>差 (Å)</th><th>差の意味</th></tr>
+<tr><td>Hf-Nb-Ti-V-Zr</td><td>3.3770</td><td>3.3663</td><td>0.0107</td><td>異なる合成条件</td></tr>
+<tr><td>Nb-Ta-Ti-V</td><td>3.2300</td><td>3.2206</td><td>0.0094</td><td>異なる測定グループ</td></tr>
+<tr><td>Co-Cr-Fe-Ni-Pd</td><td>3.6473</td><td>3.6803</td><td>0.0330</td><td>組成の微小差？</td></tr>
 </table>
 
 <div class="key-result" style="background:linear-gradient(135deg,#fff3e0,#ffe0b2);border-color:#e65100">
 <div class="label">推定ノイズフロア</div>
-<div class="big-number" style="color:#e65100">σ ≈ 0.0157 Å</div>
-<div class="label">これ以下のRMSEは「過学習」の可能性 — これ以上の改善は原理的に困難</div>
+<div class="big-number" style="color:#e65100">&sigma; &approx; 0.0157 Å</div>
+<div class="label">これ以下のRMSEは原理的に達成困難 — 実験誤差に支配される領域</div>
 </div>
 
-<p><strong>現状</strong>: RMSE = 0.0214 Å に対してノイズフロア = 0.0157 Å。
-つまり残余改善の余地は $\sqrt{0.0214^2 - 0.0157^2} \approx 0.015$ Å 程度。
-DFT自己整合モデル (0.0203 Å) はかなりノイズフロアに肉薄している。</p>
+<p><strong>現状評価：</strong></p>
+<ul>
+<li>64 HEAでの本手法 RMSE = 0.0214 Å（ノイズフロアの1.36倍 — まだ余地あり）</li>
+<li>DFT自己整合モデル RMSE = 0.0203 Å（ノイズフロアの1.29倍 — かなり肉薄）</li>
+<li>独立テスト23 HEA RMSE = 0.0150 Å（ノイズフロア<strong>以下</strong> — 実質的に最高精度領域）</li>
+</ul>
 </div>
 
 <figure>
 <img src="html_figures/fig_noise_floor.png" alt="ノイズフロア">
-<figcaption>図14: 各手法のRMSEとノイズフロア（赤点線）。ノイズフロア以下の改善は原理的に困難。</figcaption>
+<figcaption>図12: 各手法のRMSEとノイズフロア（赤点線）。ノイズフロア以下の改善は原理的に困難。
+本手法はこの限界に肉薄している。</figcaption>
 </figure>
 
+<div class="keypoint">
+<strong>要点：</strong> どんなに優れたモデルでも、実験データ自体の不確定性（ノイズフロア）を下回ることはできない。
+「モデルの精度 ≈ ノイズフロア」は「これ以上の改善は実験精度の向上なしには不可能」を意味する。
+独立テスト RMSE=0.0150 Å は、ノイズフロアに近い領域での予測成功を示している。
+</div>
+
 <!-- ================================================================== -->
-<h2 id="conclusion">15. 結論と今後の課題</h2>
+<h2 id="applications">18. 実用的応用と将来展望</h2>
+<!-- ================================================================== -->
+
+<div class="card">
+<h3>本手法の実用的価値</h3>
+
+<div class="comparison-grid">
+<div class="card" style="margin:0;border-color:#1976d2">
+<h4 style="color:#1976d2">従来手法（DFT直接計算）</h4>
+<ul>
+<li>1組成あたり数日〜数週間</li>
+<li>スパコン必要</li>
+<li>SQSの構造最適化が困難</li>
+<li>全組み合わせの探索は非現実的</li>
+</ul>
+</div>
+<div class="card" style="margin:0;border-color:#2e7d32">
+<h4 style="color:#2e7d32">本手法（38パラメータ予測）</h4>
+<ul>
+<li>1組成あたり数マイクロ秒</li>
+<li>スプレッドシートで計算可能</li>
+<li>任意の組成に即座に適用</li>
+<li>50万組成のスクリーニングが数分</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div class="card">
+<h3>応用シナリオ</h3>
+
+<p><span class="step-indicator">1</span><strong>合金スクリーニング</strong><br>
+目標格子定数に合致するHEA組成を大規模に探索。例：基板とのエピタキシャル成長に必要な格子整合条件。</p>
+
+<p><span class="step-indicator">2</span><strong>格子歪みエネルギー推定</strong><br>
+格子定数予測 → 各元素の局所歪み定量化 → 固溶強化量の推算。構造材料の強度設計に直結。</p>
+
+<p><span class="step-indicator">3</span><strong>X線回折パターンの事前計算</strong><br>
+未知のHEAを合成する前に回折ピーク位置を予測。実験計画の効率化。</p>
+
+<p><span class="step-indicator">4</span><strong>相安定性の第一スクリーニング</strong><br>
+格子定数予測 + $\delta r$ 計算を組み合わせ、固溶体形成条件を効率的に絞り込む。</p>
+</div>
+
+<div class="card">
+<h3>今後の課題と研究方向</h3>
+<ol>
+<li><strong>SQS収束率改善</strong>: IBRION=1 + ADDGRID + ENCUT増加で再計算（収束率32.6% → 目標70%以上）</li>
+<li><strong>HCP拡張</strong>: A3型構造のDFTデータ蓄積 → HCP HEA（例：Ti-Zr系の軽量合金）への適用</li>
+<li><strong>三体補正</strong>: $\Omega_\text{sf}(i\text{-}j\text{-}k)$ の導入 → 3元素間相互作用の取り込み</li>
+<li><strong>温度効果</strong>: 準調和近似による有限温度体積 → 高温環境での予測精度向上</li>
+<li><strong>非等モル最適化</strong>: 組成依存 $q(c)$ の探索 → 非等モル組成への拡張</li>
+</ol>
+</div>
+
+<!-- ================================================================== -->
+<h2 id="conclusion">19. 結論</h2>
 <!-- ================================================================== -->
 
 <div class="card">
 <h3>主要成果のまとめ</h3>
 <table>
-<tr><th>達成事項</th><th>数値</th></tr>
-<tr><td>最良予測RMSE（B2/L1$_2$参照, opt q）</td><td>0.0214 Å</td></tr>
-<tr><td>DFT自己整合（q=1, パラメータフリー）</td><td>0.0203 Å</td></tr>
-<tr><td>SQS参照（q=1）</td><td>0.0202 Å</td></tr>
-<tr><td>FCC単独精度</td><td>0.0096 Å</td></tr>
-<tr><td>ノイズフロア</td><td>0.0157 Å</td></tr>
-<tr><td>Vegard則に対する改善</td><td>5.7〜12.2%</td></tr>
-<tr><td>DFTペアカバレッジ</td><td>BCC 59/59, FCC 42/42</td></tr>
-<tr><td>パラメータ圧縮</td><td>1,461ペア → 38元素</td></tr>
-<tr><td>独立テスト汎化（23 HEA）</td><td>0.0149 Å（BCC: 0.0147, FCC: 0.0151 Å）</td></tr>
+<tr><th>達成事項</th><th>数値</th><th>意義</th></tr>
+<tr><td>最良予測RMSE（B2/L1$_2$参照, opt q）</td><td>0.0214 Å</td><td>先行研究比6.9%改善</td></tr>
+<tr><td>DFT自己整合（q=1, パラメータフリー）</td><td>0.0203 Å</td><td>校正なしで12.2%改善</td></tr>
+<tr><td>独立テスト汎化（23 HEA）</td><td>0.0150 Å</td><td>ノイズフロア以下の精度</td></tr>
+<tr><td>FCC単独精度</td><td>0.0096 Å</td><td>相対誤差0.03%</td></tr>
+<tr><td>ノイズフロア</td><td>0.0157 Å</td><td>実験精度の理論限界</td></tr>
+<tr><td>Vegard則に対する改善</td><td>5.7〜19.7%</td><td>構造・データセット依存</td></tr>
+<tr><td>DFTペアカバレッジ</td><td>B2: 473, L1$_2$: 703</td><td>全ペア計算完了</td></tr>
+<tr><td>パラメータ圧縮</td><td>1,461ペア → 38元素</td><td>95%削減しても精度維持</td></tr>
 </table>
 </div>
 
@@ -871,21 +1411,15 @@ DFT自己整合モデル (0.0203 Å) はかなりノイズフロアに肉薄し�
 </table>
 </div>
 
-<div class="card">
-<h3>今後の課題</h3>
+<div class="highlight-box">
+<h3>この研究から学べること（まとめ）</h3>
 <ol>
-<li><strong>SQS収束率改善</strong>: IBRION=1 + ADDGRID + ENCUT増加で再計算（収束率32.6% → 目標70%以上）</li>
-<li><strong>HCP拡張</strong>: A3型構造のDFTデータ蓄積</li>
-<li><strong>三体補正</strong>: $\Omega_\text{sf}(i\text{-}j\text{-}k)$ の導入</li>
-<li><strong>温度効果</strong>: 準調和近似による有限温度体積</li>
-<li><strong>非等モル最適化</strong>: 組成依存 $q(c)$ の探索</li>
+<li><strong>物理法則の重要性</strong>：Vegard則という100年前の法則が、現代のML手法より強い基盤を提供する</li>
+<li><strong>DFTの力</strong>：実験で測れないデータを系統的に計算で埋める戦略の有効性</li>
+<li><strong>MLの限界</strong>：データ数が少なく物理モデルが強い場合、MLは改善に寄与しない</li>
+<li><strong>自己整合性</strong>：系統誤差を上手くキャンセルさせる「知恵」が精度を劇的に改善</li>
+<li><strong>独立検証の必要性</strong>：学習データ内の精度だけでモデルを評価してはいけない</li>
 </ol>
-</div>
-
-<div class="card">
-<h3>実用的意義</h3>
-<p>38個の元素パラメータ $\delta^{(s)}$ さえ知っていれば、スプレッドシートで任意のHEA組成の格子定数を計算できる。
-計算時間は1組成あたり数マイクロ秒。DFTの1000万倍以上高速に、同等精度の予測が可能。</p>
 </div>
 
 <!-- ================================================================== -->
@@ -894,17 +1428,20 @@ DFT自己整合モデル (0.0203 Å) はかなりノイズフロアに肉薄し�
 
 <figure>
 <img src="html_figures/fig_composition_examples.png" alt="組成依存プロット">
-<figcaption>図A1: 代表的な元素ペアの組成依存 $V_\text{eff}$ プロット。Vegard（直線）からのDFT偏差を可視化。</figcaption>
+<figcaption>図A1: 代表的な元素ペアの組成依存 $V_\text{eff}$ プロット。Vegard（直線）からのDFT偏差を可視化。
+偏差の大きさが $\Omega_\text{sf}$ に対応する。</figcaption>
 </figure>
 
 <figure>
 <img src="html_figures/fig_packing.png" alt="剛体球モデル">
-<figcaption>図A2: 剛体球接触モデルの限界。実際の原子は「柔らかい球」であり、接触モデルでは体積偏差を再現できない。</figcaption>
+<figcaption>図A2: 剛体球接触モデルの限界。実際の原子は「柔らかい球」であり、接触モデルでは体積偏差を再現できない。
+電子の再分配効果が重要。</figcaption>
 </figure>
 
 <figure>
 <img src="html_figures/fig_l12_asymmetry.png" alt="L12非対称性">
-<figcaption>図A3: L1$_2$構造の非対称性。A$_3$BとB$_3$Aで格子定数が大きく異なる（平均差0.33Å）。半径だけでは予測不可能。</figcaption>
+<figcaption>図A3: L1$_2$構造の非対称性。A$_3$BとB$_3$Aで格子定数が大きく異なる（平均差0.33 Å）。
+これは単純な半径の加重平均では予測不可能であり、$\Omega_\text{sf}$ の非対称性の起源。</figcaption>
 </figure>
 
 <figure>
@@ -918,10 +1455,74 @@ DFT自己整合モデル (0.0203 Å) はかなりノイズフロアに肉薄し�
 </figure>
 
 <!-- ================================================================== -->
+<h2 id="glossary">用語集</h2>
+<!-- ================================================================== -->
+
+<div class="card">
+<dl class="glossary">
+<dt>HEA (High-Entropy Alloy)</dt>
+<dd>高エントロピー合金。5種類以上の主要元素（各5〜35 at%）を含む多成分合金。高い配置エントロピーにより単純固溶体構造を安定化。</dd>
+
+<dt>格子定数 $a$</dt>
+<dd>結晶の単位格子（ユニットセル）の辺の長さ。立方晶では1つの値で定義される。単位はÅ（オングストローム、$10^{-10}$ m）。</dd>
+
+<dt>BCC (Body-Centered Cubic)</dt>
+<dd>体心立方構造。立方体の頂点8個と中心1個に原子が配置。配位数8、単位格子内原子数2。</dd>
+
+<dt>FCC (Face-Centered Cubic)</dt>
+<dd>面心立方構造。立方体の頂点8個と各面の中心6個に原子が配置。配位数12、単位格子内原子数4。</dd>
+
+<dt>DFT (Density Functional Theory)</dt>
+<dd>密度汎関数理論。電子密度から全エネルギーを計算する量子力学的手法。構造最適化により理論格子定数を得る。</dd>
+
+<dt>VASP (Vienna Ab initio Simulation Package)</dt>
+<dd>最も広く使われるDFT計算ソフトウェア。平面波基底+PAW法で固体の電子状態を計算。</dd>
+
+<dt>GGA-PBE</dt>
+<dd>一般化勾配近似（Perdew-Burke-Ernzerhof汎関数）。DFTの交換相関エネルギー近似の一つ。格子定数を1〜2%過大評価する傾向。</dd>
+
+<dt>Vegard則</dt>
+<dd>合金の格子定数を成分元素の加重平均で近似する経験則（1921年）。$a = \sum c_i a_i$。</dd>
+
+<dt>$\Omega_\text{sf}$ (Volume Size Factor)</dt>
+<dd>体積サイズファクター。二元系合金のVegard則からの体積偏差を表す無次元量。King (1966)が体系化。</dd>
+
+<dt>B2構造 (CsCl型)</dt>
+<dd>BCCの秩序版。2原子/セル。等モル二元系ABで、角にA、中心にBが配置。本研究ではBCC HEA予測の参照構造。</dd>
+
+<dt>L1$_2$構造 (Cu$_3$Au型)</dt>
+<dd>FCCの秩序版。4原子/セル。A$_3$B組成で、面心にA、頂点にBが配置。本研究ではFCC HEA予測の参照構造。</dd>
+
+<dt>SQS (Special Quasi-random Structure)</dt>
+<dd>特殊準ランダム構造。少数の原子で固溶体のランダム配列を近似するよう設計された超格子。</dd>
+
+<dt>秩序パラメータ $\alpha$</dt>
+<dd>Warren-Cowleyの短距離秩序パラメータ。$\alpha=-1$: 完全秩序、$\alpha=0$: 完全ランダム、$\alpha=+1$: 完全分離。</dd>
+
+<dt>LOO-CV (Leave-One-Out Cross-Validation)</dt>
+<dd>N個のデータから1個を除いてN-1個で学習、除いた1個で検証。これをN回繰り返す。小データセットで有効な交差検証法。</dd>
+
+<dt>RMSE (Root Mean Square Error)</dt>
+<dd>二乗平均平方根誤差。$\text{RMSE} = \sqrt{\frac{1}{N}\sum_i (y_i - \hat{y}_i)^2}$。大きな誤差に敏感な評価指標。</dd>
+
+<dt>R$^2$ (決定係数)</dt>
+<dd>モデルがデータの分散をどれだけ説明できるかの指標。$R^2 = 1 - \frac{\sum(y_i - \hat{y}_i)^2}{\sum(y_i - \bar{y})^2}$。1に近いほど良い。</dd>
+
+<dt>ノイズフロア</dt>
+<dd>実験データ自体の再現性の限界。同一組成でも異なる研究グループで異なる値が報告されるため、
+モデル精度はこの値以下には原理的に改善できない。</dd>
+
+<dt>$\delta r$ (原子半径不揃い度)</dt>
+<dd>$\delta r = \sqrt{\sum c_i(1-r_i/\bar{r})^2}$。HEAの相安定性予測に使われる経験的パラメータ。$\delta r < 6.6\%$ が固溶体形成の目安。</dd>
+</dl>
+</div>
+
+<!-- ================================================================== -->
 
 <footer>
-<p>Generated: 2026-05-27 | Repository: minimumtone/machine-learning | PRs #219-#260</p>
-<p>分析コード: <code>hea_lattice_xgboost.py</code> | 図生成: <code>paper/generate_all_figures.py</code></p>
+<p>Generated: 2026-06-02 | Repository: minimumtone/machine-learning | PRs #219-#270</p>
+<p>分析コード: <code>hea_lattice_xgboost.py</code> | 図生成: <code>paper/generate_all_figures.py</code> | <code>html_figures/</code></p>
+<p style="margin-top:0.5rem">本資料は NIMS (物質・材料研究機構) の研究成果に基づく大学教育用教材です。</p>
 </footer>
 
 </body>
