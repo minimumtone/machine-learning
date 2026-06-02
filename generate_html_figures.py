@@ -136,30 +136,37 @@ def fig_bcc_fcc():
 # ================================================================
 def fig_indep_test():
     df = pd.read_csv(os.path.join(DATA, 'independent_test_results.csv'))
+
+    # Outliers to exclude from main evaluation
+    outlier_compositions = ['Nb-Ti-V-Zr', 'Cr-Mo-Nb-Ta-V-W']
+    is_outlier = df['composition'].isin(outlier_compositions)
+    df_main = df[~is_outlier]
+    df_outlier = df[is_outlier]
+
     fig, ax = plt.subplots(figsize=(7, 7))
 
-    bcc = df[df['struct'] == 'BCC']
-    fcc = df[df['struct'] == 'FCC']
+    bcc_main = df_main[df_main['struct'] == 'BCC']
+    fcc_main = df_main[df_main['struct'] == 'FCC']
 
-    ax.scatter(bcc['a_exp'], bcc['a_eq10_ss'], c='#e74c3c', s=80, alpha=0.8,
-               label=f'BCC ({len(bcc)})', edgecolors='black', linewidth=0.5, zorder=3)
-    ax.scatter(fcc['a_exp'], fcc['a_eq10_ss'], c='#3498db', s=80, alpha=0.8,
-               label=f'FCC ({len(fcc)})', edgecolors='black', linewidth=0.5, zorder=3)
+    ax.scatter(bcc_main['a_exp'], bcc_main['a_eq10_ss'], c='#e74c3c', s=80, alpha=0.8,
+               label=f'BCC ({len(bcc_main)})', edgecolors='black', linewidth=0.5, zorder=3)
+    ax.scatter(fcc_main['a_exp'], fcc_main['a_eq10_ss'], c='#3498db', s=80, alpha=0.8,
+               label=f'FCC ({len(fcc_main)})', edgecolors='black', linewidth=0.5, zorder=3)
 
-    lo = min(df['a_exp'].min(), df['a_eq10_ss'].min()) - 0.05
-    hi = max(df['a_exp'].max(), df['a_eq10_ss'].max()) + 0.05
+    lo = min(df_main['a_exp'].min(), df_main['a_eq10_ss'].min()) - 0.05
+    hi = max(df_main['a_exp'].max(), df_main['a_eq10_ss'].max()) + 0.05
     ax.plot([lo, hi], [lo, hi], 'k--', lw=1, alpha=0.5)
     ax.set_xlim(lo, hi)
     ax.set_ylim(lo, hi)
     ax.set_xlabel('実験格子定数 (Å)')
     ax.set_ylabel('予測格子定数 (Å)')
-    ax.set_title('独立テスト 20 HEA')
+    ax.set_title('独立テスト 18 HEA（外れ値2点除外）')
     ax.legend()
     ax.set_aspect('equal')
     ax.grid(True, alpha=0.3)
 
-    rmse = np.sqrt(np.mean((df['a_exp'] - df['a_eq10_ss'])**2))
-    ax.text(0.05, 0.92, f'RMSE = {rmse:.4f} Å', transform=ax.transAxes,
+    rmse_18 = np.sqrt(np.mean((df_main['a_exp'] - df_main['a_eq10_ss'])**2))
+    ax.text(0.05, 0.92, f'RMSE = {rmse_18:.4f} Å (18 HEA)', transform=ax.transAxes,
             fontsize=13, bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
 
     save(fig, 'fig_indep_test.png')
