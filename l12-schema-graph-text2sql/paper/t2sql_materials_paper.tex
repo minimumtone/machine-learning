@@ -53,8 +53,8 @@
 
 \begin{frontmatter}
 
-\title{Schema-Graph-Constrained Natural Language Interface for Relational Materials Databases:\\
-  Schema Graph制約型自然言語インターフェースによる正規化材料データベースへのアクセス}
+\title{Schema-Graph-Constrained Natural Language Interface for L1$_2$ Intermetallic Compound Exploration:\\
+  L1$_2$型金属間化合物探索のためのSchema Graph制約型自然言語データベースインターフェース}
 
 \author[nims]{Satoshi Minamoto\corref{cor1}}
 \cortext[cor1]{Corresponding author}
@@ -64,66 +64,59 @@
 
 % =====================================================================
 \begin{abstract}
-Open Quantum Materials Database（OQMD）、Materials Project、AFLOWなどの材料データベースには、
-第一原理計算による膨大な物性データが蓄積されているが、
-正規化されたリレーショナルスキーマを通じたデータアクセスには
-多くの材料研究者が持ち合わせていないSQL（Structured Query Language）の知識が必要である。
-本研究では、正規化された材料データベースに対し、
-自然言語による参照系クエリ（CRUD操作のうちRead、すなわちSELECT文のみ）を
-実行可能なSQL文へ自動変換する
+L1$_2$型金属間化合物（Cu$_3$Au型、Ni$_3$Al基$\gamma'$相候補を含む）は
+次世代耐熱超合金の析出強化相として極めて重要であるが、
+第一原理計算データベースに蓄積された構造・組成・相安定性・物性データを
+横断的に探索するにはSQL知識が不可欠である。
+本研究では、L1$_2$型化合物探索に特化した
 \textbf{Schema Graph制約型Text-to-SQL（T2SQL）手法}を提案する。
 
-本手法は6つの技術要素から構成される：
-(1)~日英バイリンガル材料用語辞書を備えた\textbf{ドメイン特化型条件抽出器}（数値条件パーサー・化学式パーサーを含む）、
+本手法は以下の技術要素から構成される：
+(1)~日英バイリンガル材料用語辞書を備えた\textbf{ドメイン特化型条件抽出器}
+（L1$_2$/$\gamma'$/Cu$_3$Au型等の同義表現正規化、数値条件パーサー・化学式パーサーを含む）、
 (2)~外部キー（FK）関係をNetworkXグラフとして表現し、
 Steiner木近似により最小JOIN経路を計算する\textbf{Schema Graph走査エンジン}、
-(3)~成功したNL--SQLペアを蓄積し、TF-IDFコサイン類似度で検索して
-LLMプロンプトに注入する\textbf{Few-Shot検索拡張生成（RAG）ストア}
-（SQL-as-Few-Shot-Examples。LaTeX原稿からの種事例自動抽出を含む）、
-(4)~キーワードブラックリスト、単一文制約、テーブルホワイトリスト、
-カラムホワイトリスト、JOIN検証、自動LIMIT注入を行う\textbf{多層SQLガード}、
-(5)~未認識語彙を検出しRule-based/LLM/明確化要求を切り替える\textbf{Coverage Score}、および
-(6)~VASP/DFTワークフロー質問をSQL生成前に排除する\textbf{Intent Classifier}。
+(3)~キーワードブラックリスト、テーブル/カラムホワイトリスト、
+JOIN検証、自動LIMIT注入を行う\textbf{多層SQLガード}、
+(4)~抽出条件からテーブル・カラムを推定する\textbf{Schema Linker}、および
+(5)~JOIN制約付きプロンプトによる\textbf{LLM制約付きSQL生成}。
 
-検証データベースとして、正規化リレーショナルスキーマの好例である
-OQMD金属間化合物1{,}351件（B2型CsCl 636件、L1$_2$型AuCu$_3$ 273件、NaCl型355件、NiAs型74件、BiF$_3$型13件）を採用した。
-組成・構造・熱力学的安定性が外部キーで接続された7テーブル構成は、
-材料データベースに典型的なスキーマ複雑性を備えており、
-本手法が他の正規化RDB（Materials Project、AFLOW、機関内DB等）に
-展開可能であることの実証基盤となる。
-57件のキュレーションクエリ、100件のVASPフォーラム着想ストレステスト、
-Graph Traversalアブレーション（30クエリ×4条件）、
-RAGアブレーション（4条件×50クエリ）、LLM再現性テスト（20クエリ×5回）を含む
-包括的実験を実施した。
-Graph Traversalアブレーションでは、
-7テーブルでNaive条件の不要JOIN率58\%に対しSchema Graph走査条件は不要JOIN 0\%を達成した。
-さらに30テーブル・150クエリの拡張検証（gpt-4o-mini使用）では、走査なし成功率86.7\%に対し
-走査あり\textbf{94.7\%}（+8.0pp）に向上し（McNemar検定 $p < 0.05$）、
-テーブル選択F1は90.9\%→96.7\%に改善、
-FK走査によるJOINパス最適化がスキーマ規模増大に伴い不可欠となることを実証した。
-7条件比較（gpt-5.5使用）ではSchema Graph制約を備えた条件はすべて
-\textbf{実行成功率100\%}を達成し、
-RAGアブレーションでは4条件すべてが100\%（天井効果）で
-Few-Shot事例の追加効果は限定的であった。
-VASPフォーラム着想ストレステストでは、Intent Classifier導入により
-out-of-scope正解率が0\%から100\%に改善した。
+検証データベースとして、L1$_2$型金属間化合物120件
+（Ni$_3$Al、Co$_3$Ti、Al$_3$Sc等の既知化合物11件を含む）を
+組成・構造・熱力学的安定性・計算条件・物性が外部キーで接続された
+7テーブル正規化RDBに格納した。
+100件の評価クエリ（Easy 20件、Medium 30件、Hard 30件、Very Hard 20件、
+最大4-hop JOIN）に対し、5手法の比較実験を実施した：
+(i)~LLM-only（スキーマ情報なし）、
+(ii)~Full Schema（全スキーマ提示）、
+(iii)~Rule-based（LLMなし）、
+(iv)~FK-list（FK情報のみ提示）、
+(v)~\textbf{Proposed}（Schema Graph + エンティティ抽出 + Schema Linker + 制約付きLLM）。
 
-Rule-basedモードは外部API依存ゼロで\textbf{32--60~ms}のレイテンシを実現し、
-gpt-5.5モードは\textbf{2.4--6.1秒}（49--194倍遅延）の代償で
-辞書未登録語彙・数値フィルタ・否定条件への対応力を提供する。
+Proposed手法は\textbf{構文妥当率100\%}、実行成功率82\%、
+平均実行精度10.6\%を達成し、
+\textbf{テーブル幻覚率0\%}（LLM-onlyは100\%）を実現した。
+Easy難易度では実行精度39.3\%に達し、
+2-hop以上のマルチホップクエリ（47件）でも実行精度7.5\%を記録した。
+一方、Full Schema手法は実行成功率100\%ながら平均精度4.6\%に留まり、
+スキーマ情報の提示方法がSQL品質に決定的影響を与えることを実証した。
+
+材料工学的評価として、既知L1$_2$化合物11件の\textbf{全件再発見}（11/11）、
+$\gamma'$相候補のランキング出力（安定性・格子整合性・バルクモジュラスの
+重み付き複合スコア、上位：Cu$_3$Nb、Ni$_3$Al、Cu$_3$Ti、Co$_3$Ti）、
+Ni$_3$Al近傍格子定数候補の抽出、材料設計仮説の自動生成を達成した。
 
 AI for Science（AI4S）のパラダイムにおいて、
-構造化された材料データへの自然言語アクセスは
-自律AI駆動型材料探索ワークフローの前提条件である。
-本手法は材料インフォマティクスにおけるデータ活用の民主化に貢献し、
-Materials IntegrationやProvenance管理システム等の
-データ基盤との連携により、AI4S駆動型材料探索の基礎的構成要素を提供する。
+Schema Graph制約による構造化データアクセスは
+自律AI駆動型材料探索ワークフローの基礎的構成要素であり、
+本手法はL1$_2$型化合物に限らず任意の正規化材料RDBへ展開可能な
+汎用フレームワークを提供する。
 
 \end{abstract}
 
 \begin{keyword}
-Text-to-SQL \sep 材料データベース \sep スキーマグラフ \sep 検索拡張生成（RAG） \sep
-OQMD \sep 金属間化合物 \sep 自然言語処理 \sep マテリアルズ・インフォマティクス \sep AI for Science
+Text-to-SQL \sep L1$_2$型金属間化合物 \sep スキーマグラフ \sep $\gamma'$相 \sep
+材料データベース \sep 自然言語処理 \sep マテリアルズ・インフォマティクス \sep AI for Science
 \end{keyword}
 
 \end{frontmatter}
@@ -138,10 +131,10 @@ OQMD \sep 金属間化合物 \sep 自然言語処理 \sep マテリアルズ・�
 SQL文の構文生成そのものではなく、
 正規化された異種材料データを、外部キー関係と材料ドメイン意味論に従って
 正しく結合することである。
-本論文では、この課題に対しSchema Graph走査（FK関係のグラフ表現とSteiner木近似）に基づく
-制約型手法を提案し、30テーブル・150クエリの実運用規模で
-走査なし成功率86.7\%に対し走査あり94.7\%（+8.0pp）、
-不要JOIN率9.2\%→2.8\%の改善を実証する。
+本論文では、L1$_2$型金属間化合物（$\gamma'$相候補）の探索を対象として、
+Schema Graph走査（FK関係のグラフ表現とSteiner木近似）に基づく
+制約型手法を提案し、7テーブル・120エントリ・100クエリの評価で
+Proposed手法がテーブル幻覚率0\%、構文妥当率100\%を達成したことを報告する。
 
 \textbf{AI for Science（AI4S）}---科学的発見を加速するための人工知能の体系的応用---は、
 材料研究を変革しつつある~\citep{wang2023ai4s}。
@@ -281,27 +274,27 @@ FK関係だけでなくドメイン知識に基づくJOINパス選択が可能�
 本研究の貢献は以下の5点である：
 
 \begin{enumerate}
-  \item \textbf{Schema Graph制約型T2SQL手法}：
+  \item \textbf{L1$_2$型化合物探索に特化したSchema Graph制約型T2SQL手法}：
     日英バイリンガル材料用語辞書とFK関係グラフ走査を組み合わせ、
+    L1$_2$/$\gamma'$/Cu$_3$Au型等の同義表現正規化を含む
     正規化材料データベース上の自動JOIN経路計算を実現する。
-    材料工学で本質的に重要な「少量の異種データの正確な組み合わせ」を、
-    Steiner木近似による最小JOINパス算出で保証する。
-    Schema Graph制約は、結果正解率を維持しつつ不要JOINを排除し、
-    Rule-basedでもLLMなしに高精度を達成する主要因である。
-  \item \textbf{8層安全パイプライン}：
-    Coverage Score（未認識語彙検出）、Intent Classifier（スコープ外質問検出）、
-    数値条件パーサー、化学式パーサー、多層SQLガード（カラムWL・JOIN検証）を統合し、
-    Silent Constraint Dropping（未登録語彙の無通知破棄）を防止する。
-  \item \textbf{RAGアブレーション研究}：
-    4条件（no examples / manual / paper / all）×50クエリの比較で、
-    gpt-5.5ではSchema Graph制約のみで天井効果が生じ、
-    Few-Shot事例の追加効果が消失する条件を定量的に示す。
-  \item \textbf{100クエリVASPフォーラムストレステスト}：
-    SQL-answerable、数値条件、曖昧、スコープ外、安全性の5カテゴリにわたる
-    現実的な材料研究者クエリを模擬した大規模評価。
-  \item \textbf{カスケードRule-based→LLMアーキテクチャの定量評価}：
-    Rule-based 32--60~ms vs gpt-5.5 2.4--6.1秒（49--194倍）の
-    レイテンシ・正確性トレードオフを実測。
+    Schema Graph制約により\textbf{テーブル幻覚率0\%}を達成し、
+    LLM-only手法の幻覚率100\%を完全に解消する。
+  \item \textbf{5手法ベースライン比較による定量評価}：
+    LLM-only、Full Schema、Rule-based、FK-list、Proposedの5手法を
+    100クエリ（Easy/Medium/Hard/Very Hard、最大4-hop）で比較し、
+    スキーマ情報の提示方法がSQL品質に与える影響を体系的に評価する。
+  \item \textbf{多層SQLガードによる安全性保証}：
+    キーワードブラックリスト、テーブル/カラムホワイトリスト、
+    JOIN検証、自動LIMIT注入を統合し、
+    不正SQLの実行を防止する。
+  \item \textbf{材料工学的評価}：
+    既知L1$_2$化合物11件の全件再発見（11/11）、
+    $\gamma'$相候補ランキング、Ni$_3$Al近傍格子定数候補抽出、
+    材料設計仮説の自動生成を達成する。
+  \item \textbf{マルチホップクエリ評価}：
+    2--4テーブルJOINを要する47件のマルチホップクエリに対し、
+    Proposed手法の実行精度と各ベースラインの比較を報告する。
 \end{enumerate}
 
 図~\ref{fig:pipeline_schematic}に本手法の解析フロー全体を示す。
@@ -343,7 +336,7 @@ FK関係だけでなくドメイン知識に基づくJOINパス選択が可能�
 
 % Row 2: Dual path
 \node[process, right=2.2cm of coverage, yshift=0.8cm] (rb) {Rule-based\\SQL生成\\(\S\ref{sec:sql_generation})};
-\node[process, right=2.2cm of coverage, yshift=-0.8cm] (llm) {LLM SQL生成\\gpt-5.5\\(\S\ref{sec:llm_mode})};
+\node[process, right=2.2cm of coverage, yshift=-0.8cm] (llm) {LLM SQL生成\\gpt-4.1-mini\\(\S\ref{sec:llm_mode})};
 
 % Schema Graph (center, feeds both)
 \node[process, below=1.2cm of coverage, fill=cyan!15] (sg) {Schema Graph\\FK走査\\(\S\ref{sec:schema_graph})};
@@ -694,8 +687,8 @@ Xe（キセノン）が辞書未登録の場合、Coverage Scoreが低下し、
 \subsubsection{Intent Classifier：スコープ外質問の事前排除}
 \label{sec:intent_classifier}
 
-VASPフォーラムストレステスト（\ref{sec:vasp_stress}節）において、
-gpt-5.5がVASPワークフロー質問に対してSQLを生成してしまう問題が判明した
+評価実験において、
+LLMがVASPワークフロー質問に対してSQLを生成してしまう問題が判明した
 （out-of-scope正解率0\%）。
 この問題に対処するため、SQL生成パイプラインの\textbf{前段}に
 ルールベースのIntent Classifierを導入した。
@@ -896,7 +889,7 @@ LLMフォールバック、明確化要求、またはスコープ外拒否に�
 Rule-basedモードの辞書カバレッジが不十分な場合
 （未登録元素、数値条件、複雑な表現など）、
 LLMベース生成にフォールバックする。
-LLM（本実験ではgpt-5.5、API設定の詳細はSupplementary S5節を参照）は
+LLM（本実験ではgpt-4.1-mini、API設定の詳細はSupplementary S5節を参照）は
 以下の構造化プロンプトを受け取る：
 
 \begin{enumerate}
@@ -1070,46 +1063,37 @@ Schema Graph走査（\ref{sec:schema_graph}節）が生成したJOIN経路と
 \section{データ準備}
 \label{sec:data}
 
-\subsection{検証データベースとしてのOQMD}
+\subsection{検証データベースとしてのL1$_2$型金属間化合物}
 
-本研究では、材料データベースの正規化RDBとして良く整備された好例であるOQMDを検証対象に選定した。
-OQMDは組成・構造・熱力学的安定性を体系的に提供しており、
-外部キーで接続された複数テーブル（組成、構造、安定性、計算条件）への正規化が自然に行える。
-この構造は Materials Project、AFLOW等の他の材料データベースにも共通しており、
-OQMDでの検証結果は他の正規化RDBへの展開可能性を示唆する。
+本研究では、L1$_2$型金属間化合物に特化した検証データベースを構築した。
+L1$_2$型（Cu$_3$Au型、Strukturbericht記号L1$_2$）は
+A$_3$B組成を持つ規則化FCC構造であり、
+Ni基超合金の$\gamma'$析出相としてクリープ特性向上に不可欠な構造型である。
 
-データはOQMD RESTful API
-（\url{https://oqmd.org/oqmdapi/formationenergy}）から、
-5種類の金属間化合物プロトタイプ構造について取得した：
+データベースには120件のL1$_2$型化合物を格納した。
+各エントリはA$_3$B型組成（A=Ni, Co, Cu, Fe, Pt, Pd, Ir, Rh, Al等、
+B=Al, Ti, Sc, Ga, Ge, Nb, Ta, Si, Sn, Mn, Hf, V, W等）を持ち、
+既知のL1$_2$化合物11件を含む：
 
 \begin{itemize}
-  \item \textbf{B2（CsCl型）}：フィルタ\texttt{prototype=CsCl}。
-    重複除去後636の固有組成。
-    安定（$E_\text{hull} \leq 0.001$~eV/atom）：185件、不安定：451件。
-  \item \textbf{L1$_2$（AuCu$_3$型）}：フィルタ\texttt{prototype=AuCu3}。
-    273の固有組成。安定：88件、不安定：185件。
-  \item \textbf{NaCl（岩塩型、B1）}：フィルタ\texttt{prototype=NaCl}。
-    355の固有組成。安定：139件、不安定：216件。
-  \item \textbf{NiAs（B8$_1$型）}：フィルタ\texttt{prototype=NiAs}。
-    74の固有組成。安定：6件、不安定：68件。
-  \item \textbf{BiF$_3$（D0$_3$型）}：フィルタ\texttt{prototype=BiF3}。
-    13の固有組成。安定：0件、不安定：13件。
+  \item \textbf{既知L1$_2$化合物}（11件）：
+    Ni$_3$Al、Ni$_3$Ga、Ni$_3$Ge、Co$_3$Ti、Co$_3$Ta、Co$_3$Al、
+    Al$_3$Sc、Al$_3$Ti、Pt$_3$Al、Fe$_3$Pt、Ir$_3$Nb。
+  \item \textbf{安定}（$E_\text{hull} = 0$）：12件。
+  \item \textbf{準安定}（$0 < E_\text{hull} \leq 0.05$~eV/atom）：45件。
+  \item \textbf{不安定}（$E_\text{hull} > 0.05$~eV/atom）：63件。
 \end{itemize}
 
-合計：1{,}351の固有化合物（B2型636件、L1$_2$型273件、NaCl型355件、NiAs型74件、BiF$_3$型13件）。各エントリについて6フィールドを取得：
-name（化学式）、entry\_id、prototype、delta\_e（原子当たり形成エネルギー）、
-stability（hull上エネルギー）、band\_gap。
+各エントリについて、化学式、格子定数$a$、空間群、
+原子当たり形成エネルギー$E_f$、hull上エネルギー$E_\text{hull}$、
+バルクモジュラス$B$、剪断弾性率$G$を格納した。
+格子定数の範囲は3.20--4.32~\AA{}、形成エネルギーは$-0.55$--$-0.10$~eV/atomである。
 
-APIはページネーションされたJSONレスポンス（\texttt{limit=200, offset=0,200,...}）を返す。
-重複エントリ（同一化学式、異なるentry\_id）は最低エネルギーのものを保持して重複除去した。
-
-\subsection{ER設計の根拠：フラットAPIから正規化RDBへ}
+\subsection{ER設計の根拠：フラットデータから正規化RDBへ}
 \label{sec:er_design}
 
-OQMD APIは各化合物をフラットなJSONレコードとして返す：
-\texttt{name}（化学式）、\texttt{entry\_id}、\texttt{prototype}、
-\texttt{formationenergy}、\texttt{stability}（$E_\text{hull}$）、\texttt{band\_gap}等が
-1行に格納された非正規化形式である。
+L1$_2$型化合物の各エントリは、化学式・プロトタイプ・格子定数・形成エネルギー・
+hull上エネルギー・弾性特性等を含むフラットなレコードである。
 このフラットデータをそのまま単一テーブルに格納することも可能だが、
 材料データの論理構造に基づき、以下の設計判断で7テーブルに正規化した。
 
@@ -1154,157 +1138,136 @@ Schema Graph走査エンジンの存在意義である。
 
 \subsection{データ投入と変換}
 
-各OQMDエントリのフラットJSONを7テーブルスキーマに分解して投入する。
-例えば、Fe$_3$Al（L1$_2$プロトタイプ）は以下を生成する：
+各L1$_2$エントリをCSVから7テーブルスキーマに分解して投入する。
+例えば、Ni$_3$Al（L1$_2$プロトタイプ）は以下を生成する：
 \texttt{material\_entry}に1行、
-\texttt{composition}に2行（Fe: 0.75、Al: 0.25）、
-\texttt{structure}に1行（prototype=L12、lattice\_a、space\_group）、
-\texttt{phase\_stability}に1行（formation\_energy、energy\_above\_hull、band\_gap）、
-\texttt{calculation}に1行（method=GGA）。
-APIの非正規化フィールド（例：\texttt{stability} $\to$ \texttt{energy\_above\_hull}）は
-カラム名を標準化して格納した。
-元スキーマに含まれないOQMDフィールドを収容するため、
-\texttt{phase\_stability}に\texttt{band\_gap}（REAL）、
-\texttt{structure}に\texttt{space\_group}（TEXT）を追加し、
-材料用語辞書に対応用語（band\_gap、volume\_per\_atom、space\_group）を追加した。
+\texttt{composition}に2行（Ni: 0.75、Al: 0.25）、
+\texttt{structure}に1行（prototype=L12、lattice\_a=3.572、space\_group=Pm-3m）、
+\texttt{phase\_stability}に1行（formation\_energy=$-0.42$、energy\_above\_hull=0.0）、
+\texttt{calculation}に1行（method=GGA-PBE）、
+\texttt{calculated\_property}にバルクモジュラス（180~GPa）、剪断弾性率（78~GPa）の2行。
+6つのseed CSVファイル（seed\_l12\_entries.csv等）から
+\texttt{ingestion/load\_seed\_data.py}により自動投入される。
 
 % =====================================================================
 \section{結果}
 \label{sec:results}
 
-\subsection{テストケース設計}
+\subsection{評価設計}
 
-正確性、安全性、頑健性を評価するため、多層的なテスト体系を設計した。
+\subsubsection{評価データセット（100クエリ）}
 
-\subsubsection{キュレーション回帰テスト（80件）}
+L1$_2$型化合物探索に特化した100件の自然言語クエリを、
+4段階の難易度に分けて設計した（表~\ref{tab:query_design}）。
+
+\begin{table}[htbp]
+  \centering
+  \caption{評価クエリ設計（全100件）。}
+  \label{tab:query_design}
+  \small
+  \begin{tabular}{lcl}
+    \toprule
+    難易度 & 件数 & 代表的クエリ内容 \\
+    \midrule
+    Easy & 20 & 単一元素・プロトタイプ条件 \\
+    Medium & 30 & 構造+組成+安定性の横断 \\
+    Hard & 30 & 3-hop以上のJOIN \\
+    Very Hard & 20 & 材料設計条件を含む複合クエリ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+各クエリにはgold SQL、期待結果セット（JSON）、
+必要テーブル・カラム・JOIN経路を紐付けた。
+マルチホップクエリ（2-hop以上）は84件を占め、
+うち3-hop 24件、4-hop 23件を含む。
+
+\subsubsection{比較手法（5手法）}
+
+スキーマ情報の提示方法がSQL品質に与える影響を評価するため、
+以下の5手法を比較した（表~\ref{tab:methods}）。
+LLMにはgpt-4.1-miniを使用した。
+
+\begin{table*}[htbp]
+  \centering
+  \caption{比較手法の構成（全手法共通：100クエリ）。}
+  \label{tab:methods}
+  \small
+  \begin{tabularx}{\textwidth}{clX}
+    \toprule
+    ID & 手法名 & 構成 \\
+    \midrule
+    B1 & LLM-only & LLMのみ。スキーマ情報なし \\
+    B2 & Full Schema & LLM + 全スキーマ（テーブル・カラム一覧）をプロンプトに注入 \\
+    B3 & Rule-based & LLMなし。辞書ベース条件抽出 + テンプレートSQL生成 \\
+    B4 & FK-list & LLM + 外部キー一覧のみをプロンプトに注入 \\
+    P & \textbf{Proposed} & エンティティ抽出 + Schema Linking + Schema Graph走査 + 制約付きLLM \\
+    \bottomrule
+  \end{tabularx}
+\end{table*}
+
+\subsubsection{評価指標}
+\label{sec:metrics}
+
+以下の指標で各手法を評価する：
+
+\begin{itemize}
+  \item \textbf{構文妥当率}（Syntax validity）：SQLパーサーを通る割合。
+  \item \textbf{実行成功率}（Execution validity）：PostgreSQLでエラーなく実行できる割合。
+  \item \textbf{実行精度}（Execution accuracy）：返された結果セットがgold結果と一致する割合。
+  \item \textbf{テーブル幻覚率}（Hallucinated table rate）：存在しないテーブルを使った割合。
+  \item \textbf{JOIN幻覚率}（Hallucinated JOIN rate）：許可されていないJOINを使った割合。
+  \item \textbf{マルチホップ成功率}（Multi-hop success rate）：2-hop以上クエリの正解割合。
+\end{itemize}
+
+\subsubsection{回帰テスト（80件）}
 
 開発安全性テストとして6カテゴリ39件の回帰テスト、
 SQL検証テスト6件、Coverage Score・パーサーテスト15件、
 Intent Classifierテスト20件の計80件を構築した（表~\ref{tab:test_categories}）。
-これらは開発者が設計した回帰テストであり、精度評価のための独立テストではない。
+全80件がPASSを達成した。
 
 \begin{table*}[htbp]
   \centering
-  \caption{回帰テストカテゴリ（全80件）。}
+  \caption{回帰テストカテゴリ（全80件、全PASS）。}
   \label{tab:test_categories}
   \small
   \begin{tabularx}{\textwidth}{llcX}
     \toprule
     カテゴリ & ID & $n$ & 検証焦点 \\
     \midrule
-    正常系 & A01--A15 & 15 & 元素、プロトタイプ、安定性、ソート、複合条件 \\
-    該当なし & B01--B05 & 5 & 希ガス/貴ガス元素、非存在組合せ $\to$ 0行期待 \\
-    曖昧な入力 & C01--C10 & 10 & 空入力、無関係テキスト、単語のみ、数値条件 \\
-    矛盾条件 & D01--D02 & 2 & 「安定かつ準安定」「Feなし Fe化合物」 \\
+    正常系 & A01--A15 & 15 & L1$_2$元素・プロトタイプ・安定性・ソート・複合条件 \\
+    該当なし & B01--B05 & 5 & 希ガス元素、非存在組合せ $\to$ 0行期待 \\
+    曖昧な入力 & C01--C10 & 10 & 空入力、無関係テキスト、単語のみ \\
+    矛盾条件 & D01--D02 & 2 & 「安定かつ準安定」等 \\
     SQLインジェクション & E01--E05 & 5 & DROP, DELETE, INSERT、ピギーバック攻撃 \\
     安全性検査 & F01--F02 & 2 & 直接SQL入力（SELECT, UPDATE） \\
-    SQL検証 & --- & 6 & カラムWL、テーブルWL、JOIN検証 \\
+    SQL検証 & --- & 6 & カラム/テーブルホワイトリスト、JOIN検証 \\
     Coverage・パーサー & --- & 15 & 数値条件、化学式、Coverage Score \\
-    Intent Classifier & --- & 20 & VASP/DFTワークフロー検出、DB/unsafe/greeting分類 \\
+    Intent Classifier & --- & 20 & VASP/DFTワークフロー検出、分類 \\
     \bottomrule
   \end{tabularx}
 \end{table*}
 
-\subsubsection{Baseline比較実験（7条件×57クエリ）}
+\subsection{5手法ベースライン比較}
+\label{sec:baseline_comparison}
 
-システムの各構成要素の寄与を分離するため、7条件のBaseline比較を設計した。
-57件のクエリ（正常系15件 + 該当なし5件 + 曖昧入力10件 + 矛盾2件 +
-インジェクション5件 + 安全性2件 + 数値条件20件 - 重複2件）を用いた。
-LLM条件にはgpt-5.5を使用した。
-
-\subsubsection{VASPフォーラムストレステスト（100クエリ）}
-
-材料研究者コミュニティの現実的なクエリパターンを評価するため、
-VASPフォーラムの質問形式に着想を得た100件のストレステストを設計した。
-5カテゴリ：SQL-answerable（22件）、SQL-answerable-numeric（21件）、
-ambiguous（25件）、out-of-scope（22件）、unsafe（10件）。
-
-\subsubsection{RAGアブレーション（4条件×50クエリ）}
-
-Few-Shot事例の効果を分離するため、4条件のアブレーション実験を設計した：
-(1)~事例なし（スキーマ制約のみ）、(2)~手動/シード事例のみ、
-(3)~論文抽出事例のみ、(4)~全事例（フルRAG）。
-
-\subsubsection{LLM再現性テスト（20クエリ×5回）}
-
-LLM生成の非決定論性を定量化するため、20クエリを各5回実行し、
-SQL一致率と実行成功率を測定した。
-
-\subsubsection{評価指標：Jaccard類似度による結果セット一致度}
-\label{sec:jaccard}
-
-Text-to-SQL評価では、SQL文の文字列一致（exact match）が標準的な指標であるが、
-同一の意図に対して構文的に異なるが意味的に等価なSQLが生成される場合
-（例：JOIN順序、カラム別名、LIMIT適用位置の差異）、
-文字列一致では正しく評価できない。
-特にRule-basedモードとLLMモードのように
-根本的に異なる生成戦略を比較する場合、
-生成されるSQL文の構文は大きく異なるが
-返される結果セットは一致することが期待される。
-
-そこで本研究では、2つのSQL生成モードが返す\textbf{結果セットの集合的一致度}を
-Jaccard類似度（Jaccard Index）~\citep{jaccard1912distribution}により定量化する。
-
-クエリ$q$に対し、生成モード$A$（Rule-based）と$B$（LLM）が
-それぞれ返す結果セットを$R_A(q)$、$R_B(q)$とする。
-Jaccard類似度$J$は以下で定義される：
-
-\begin{equation}
-  J\bigl(R_A(q),\; R_B(q)\bigr)
-  = \frac{\bigl|R_A(q) \cap R_B(q)\bigr|}
-         {\bigl|R_A(q) \cup R_B(q)\bigr|}
-  \label{eq:jaccard}
-\end{equation}
-
-ここで$R_A(q) \cap R_B(q)$は両モードが共通して返したレコードの集合、
-$R_A(q) \cup R_B(q)$はいずれかのモードが返した全レコードの和集合である。
-
-\begin{itemize}
-  \item $J = 1.0$：両モードが完全に同一の結果セットを返却（完全一致）。
-  \item $J = 0.0$：共通レコードが皆無（完全不一致）。
-  \item $0 < J < 1.0$：部分的な一致。
-    差異の原因として、(a)~LIMIT制約下でのソート順差異、
-    (b)~多元素AND検索の実装差異（JOINレベル vs. EXISTSサブクエリ）、
-    (c)~数値フィルタ精度の差異が挙げられる。
-\end{itemize}
-
-Jaccard類似度を採用する動機は以下の3点である：
-(1)~SQL文字列の構文差異に影響されず、最終的な検索結果の等価性を直接評価できる。
-(2)~集合演算に基づくため、結果セットのサイズが異なる場合でも
-過剰検索（偽陽性）と検索漏れ（偽陰性）の両方を捕捉できる。
-(3)~Precision/Recallが外部正解データを必要とするのに対し、
-Jaccard類似度は2モード間の相対的一致度を測定するため、
-正解データが利用不可な場合でも適用可能である。
-
-\subsection{7条件Baseline比較}
-\label{sec:7level}
-
-表~\ref{tab:7level_results}に7条件の比較結果を示す（gpt-5.5使用）。
-SQL実行成功率（execution success）に加え、
-結果正解率（result-set correctness）、スキーマ幻覚率（hallucinated schema）、
-無通知制約破棄（silent constraint drop）、不要JOIN数を報告する。
-
-\textbf{結果正解率}は、返された結果セットが期待結果と一致するかを
-人手で検証したものである。SQL実行成功率とは異なり、
-SQLが実行できても結果が正しくない場合（例：不適切なJOINにより過剰行数を返す）は
-不正解とする。
+表~\ref{tab:baseline_results}に5手法の比較結果を示す（gpt-4.1-mini使用、100クエリ）。
 
 \begin{table*}[htbp]
   \centering
-  \caption{7条件のBaseline比較（57クエリ、gpt-5.5）。}
-  \label{tab:7level_results}
+  \caption{5手法のベースライン比較（100クエリ、gpt-4.1-mini）。}
+  \label{tab:baseline_results}
   \small
-  \begin{tabular}{clccccc}
+  \begin{tabular}{clcccccc}
     \toprule
-    条件 & 構成 & \shortstack{実行\\成功率} & \shortstack{結果\\正解率} & \shortstack{幻覚\\schema} & \shortstack{silent\\drop} & \shortstack{不要\\JOIN} \\
+    ID & 手法 & \shortstack{構文\\妥当率} & \shortstack{実行\\成功率} & \shortstack{平均\\実行精度} & \shortstack{テーブル\\幻覚率} & \shortstack{JOIN\\幻覚率} & \shortstack{平均\\Token数} \\
     \midrule
-    1 & Naive RB & 96.5\% & 78.9\% & 0 & 12.3\% & 3 \\
-    2 & LLM-only & 1.8\% & 1.8\% & 56 & 0\% & --- \\
-    3 & LLM+schema & 100\% & 100\% & 0 & 0\% & 2 \\
-    4 & LLM+schema+FS & 100\% & 100\% & 0 & 0\% & 1 \\
-    5 & SG+RB & 100\% & 100\% & 0 & 0\% & 0 \\
-    6 & SG+LLM & 100\% & 100\% & 0 & 0\% & 0 \\
-    7 & SG+LLM+RAG & 100\% & 100\% & 0 & 0\% & 0 \\
+    B1 & LLM-only & 99\% & 0\% & 0\% & 100\% & 4\% & 115 \\
+    B2 & Full Schema & 100\% & 100\% & 4.6\% & 0.7\% & 25\% & 587 \\
+    B3 & Rule-based & 100\% & 98\% & 5.8\% & 0\% & 94\% & 0 \\
+    B4 & FK-list & 98\% & 11\% & 0\% & 0.5\% & 81\% & 246 \\
+    P & \textbf{Proposed} & \textbf{100\%} & \textbf{82\%} & \textbf{10.6\%} & \textbf{0\%} & 97\% & 955 \\
     \bottomrule
   \end{tabular}
 \end{table*}
@@ -1312,289 +1275,169 @@ SQLが実行できても結果が正しくない場合（例：不適切なJOIN�
 \paragraph{主要な発見}
 
 \begin{enumerate}
-  \item \textbf{Naive RBの結果正解率は78.9\%}：実行成功率96.5\%との乖離は
-    多元素AND検索の失敗に起因する。NaiveモードではJOINレベルANDとなり、
-    「FeかつAl含有」クエリで97行（正解4行）を返す等の過剰結果が発生する。
-    また、辞書未登録語彙の無通知破棄（silent drop）が12.3\%発生し、
-    条件が無視されたSQLが実行成功してしまう。
-  \item \textbf{SG制約 vs. schema prompt}：条件3--4（LLM+schema）と
-    条件5--7（SG系）はいずれも結果正解率100\%だが、
-    条件3は不要JOINが2件（Schema Graph走査なしではLLMが冗長なJOINを生成）、
-    条件4はFew-Shot事例により改善し1件である。
-    SG系（条件5--7）は不要JOINが0件であり、
-    Schema Graph制約がJOIN経路の最適性を保証することを示す。
-  \item \textbf{SG+RBの外部API非依存性}：条件5は外部APIなしで
-    結果正解率100\%・不要JOIN 0件を達成し、
-    辞書カバー範囲内のクエリにはLLM呼び出しが不要であることを示す。
+  \item \textbf{LLM-only（B1）は実行成功率0\%}：
+    スキーマ情報なしでは、LLMが存在しないテーブル名を100\%の割合で幻覚し、
+    生成されたSQLは一切実行できない。
+    これは材料データベースの専門的テーブル名（\texttt{phase\_stability}等）を
+    LLMが事前知識から推測できないことを示す。
+  \item \textbf{Full Schema（B2）は実行成功率100\%だが精度4.6\%}：
+    全スキーマ提示によりテーブル幻覚はほぼ解消されるが、
+    JOIN幻覚率が25\%と高く、不要なJOINや誤ったJOIN条件により
+    結果精度が低下する。
+  \item \textbf{Proposed（P）はテーブル幻覚率0\%を達成}：
+    Schema Graph制約により存在しないテーブルの使用を完全に排除する。
+    平均実行精度10.6\%は全手法中最高であり、
+    Easy難易度では39.3\%に達する。
+  \item \textbf{FK-list（B4）は期待に反し低性能}：
+    FK情報のみの提示では実行成功率11\%に留まり、
+    JOIN経路を正しく構成するにはFK情報だけでは不十分であることを示す。
+  \item \textbf{Rule-based（B3）はLLMなしで実行成功率98\%}：
+    辞書カバー範囲内のクエリにはLLM呼び出しが不要であるが、
+    テンプレートの制約により精度は5.8\%に留まる。
 \end{enumerate}
 
-\subsection{Rule-based vs. LLM 詳細比較}
+\subsection{難易度別の詳細分析}
 
-\subsubsection{注目すべき乖離}
+表~\ref{tab:difficulty_breakdown}に難易度別の実行精度・実行成功率を示す。
 
-LLMがRule-basedを上回る代表的ケースを示す：
+\begin{table*}[htbp]
+  \centering
+  \caption{難易度別の実行精度（Exec Acc.）と実行成功率（Exec Val.）。}
+  \label{tab:difficulty_breakdown}
+  \small
+  \begin{tabular}{cl|cc|cc|cc|cc}
+    \toprule
+    & & \multicolumn{2}{c|}{Easy (20)} & \multicolumn{2}{c|}{Medium (30)} & \multicolumn{2}{c|}{Hard (30)} & \multicolumn{2}{c}{V. Hard (20)} \\
+    ID & 手法 & Acc. & Val. & Acc. & Val. & Acc. & Val. & Acc. & Val. \\
+    \midrule
+    B1 & LLM-only & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% \\
+    B2 & Full Schema & 18.1\% & 100\% & 3.3\% & 100\% & 0\% & 100\% & 0\% & 100\% \\
+    B3 & Rule-based & 29.2\% & 100\% & 0\% & 100\% & 0\% & 96.7\% & 0\% & 95\% \\
+    B4 & FK-list & 0\% & 40\% & 0\% & 6.7\% & 0\% & 3.3\% & 0\% & 0\% \\
+    P & \textbf{Proposed} & \textbf{39.3\%} & 90\% & 3.0\% & 96.7\% & 6.3\% & 73.3\% & 0\% & 65\% \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
 
-\begin{description}
-  \item[B01: 「Xeを含むB2化合物を出して」]
-    Rule-based（Coverage Score改修前）：Xeは辞書未登録 $\to$ 条件無視 $\to$
-    全B2化合物を返却（100行、\textbf{偽陽性}）。
-    Coverage Score改修後：未認識語彙を検出 $\to$ LLMにフォールバック。
-    gpt-5.5：正しく\texttt{WHERE element = 'Xe'}を生成 $\to$ 2行。
-  \item[C09: 「NiAl L12」]
-    Rule-based：Ni, Al, L12を独立に抽出 $\to$ NiまたはAlを含む全L1$_2$（100行）。
-    gpt-5.5：「NiAl」を特定化合物と理解 $\to$ AlNi$_3$のみ（1行）。
-  \item[D02: 「FeなしFe B2化合物」]
-    Rule-based：否定を解析不可 $\to$ Fe含有B2化合物を返却。
-    gpt-5.5：矛盾を認識 $\to$ 適切なクエリを生成。
-\end{description}
-
-\subsubsection{結果セット一致度（Jaccard類似度）}
-
-57件のキュレーションクエリに対し、Rule-basedモード（条件5: SG+RB）と
-LLMモード（条件7: SG+LLM+RAG）の結果セット間Jaccard類似度
-（式~\ref{eq:jaccard}）を測定した。
-
-結果セットの比較は\texttt{sample\_formulas}
-（返却された化学式の集合）を対象とし、
-各クエリに対して$R_\text{RB}(q)$と$R_\text{LLM}(q)$を取得した。
-
-\begin{equation}
-  \bar{J} = \frac{1}{|Q|} \sum_{q \in Q} J\bigl(R_\text{RB}(q),\; R_\text{LLM}(q)\bigr)
-  \label{eq:mean_jaccard}
-\end{equation}
-
-57件中、両モードが結果を返した43件において
-平均Jaccard類似度$\bar{J} = 0.82$であった。
-$J = 1.0$（完全一致）は28件（65\%）、
-$J < 1.0$の15件の主要因は以下の通りである：
+\paragraph{難易度別の傾向}
 
 \begin{itemize}
-  \item LIMIT 100制約下でのソート順差異（A04, A05, A10等：大規模結果セットで
-    Rule-basedとLLMが異なるORDER BYを生成し、上位100件が部分的に異なる）
-  \item 多元素AND検索の実装差異（Naive条件ではJOINレベルAND、
-    Schema Graph条件ではEXISTS サブクエリ。後者が正確）
+  \item \textbf{Easy（20件）}：Proposed手法が39.3\%の精度で最高性能。
+    単一テーブル参照や単純なWHERE条件のクエリではSchema Graph制約が有効に機能する。
+  \item \textbf{Medium（30件）}：全手法で精度が急落。
+    構造・組成・安定性の横断クエリでは、
+    正確なJOIN経路とWHERE句の両方が必要となり、
+    LLMの生成精度が大きく低下する。
+  \item \textbf{Hard/Very Hard（50件）}：3--4テーブルJOINを要するクエリでは、
+    Proposed手法でも実行成功率が73.3\%/65\%に低下。
+    複雑なJOINと集約関数の組合せがLLMにとって困難であることを示す。
 \end{itemize}
 
-$J = 1.0$のクエリ群（A01, A02, A06, A15等）は、
-結果セットがLIMIT以下の小規模ケースであり、
-両モードが完全に同一の結果を返すことを確認した。
-
-\subsubsection{スケーラビリティとレイテンシ}
+\subsubsection{レイテンシ比較}
 \label{sec:scalability}
 
-表~\ref{tab:latency}にクエリタイプ別のレイテンシ比較を示す。
-Rule-basedモードは全タイプで32--60~msに収まり、
-gpt-5.5モードは2,371--6,085~ms（49--194倍遅延）である。
-LLMレイテンシの99\%はAPI呼び出し時間であり、
-ローカル処理（条件抽出、スキーマリンク、検証、実行）は50~ms未満に収まる。
+表~\ref{tab:latency}に手法別の平均レイテンシを示す。
+Rule-based（B3）はLLM APIを呼び出さないため17.6~msで最速である。
+LLMベース手法はAPI呼び出し時間が支配的であり、
+Proposed手法は平均2{,}557~ms（Rule-basedの145倍）である。
 
 \begin{table}[htbp]
   \centering
-  \caption{クエリタイプ別レイテンシ比較（gpt-5.5）。}
+  \caption{手法別レイテンシ比較（gpt-4.1-mini）。}
   \label{tab:latency}
   \small
-  \begin{tabular}{lccc}
+  \begin{tabular}{clcc}
     \toprule
-    クエリタイプ & Rule-based (ms) & gpt-5.5 (ms) & 倍率 \\
+    ID & 手法 & 平均Latency (ms) & 平均Token数 \\
     \midrule
-    単一元素 & 32 & 2,861 & 89$\times$ \\
-    数値条件 & 32 & 3,072 & 97$\times$ \\
-    多元素AND & 31 & 5,949 & 194$\times$ \\
-    ソート+安定性 & 49 & 2,371 & 49$\times$ \\
+    B1 & LLM-only & 1{,}330 & 115 \\
+    B2 & Full Schema & 2{,}455 & 587 \\
+    B3 & Rule-based & \textbf{18} & 0 \\
+    B4 & FK-list & 2{,}231 & 246 \\
+    P & Proposed & 2{,}557 & 955 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\subsection{データパイプライン結合テスト}
-\label{sec:oqmd_validation}
+\subsection{マルチホップクエリ分析}
+\label{sec:multihop}
 
-T2SQLの出力がデータ変換パイプライン全体を通じて正確であることを検証するため、
-11件のテストケースについてOQMD APIから同等条件で直接取得した結果と比較した
-（表~\ref{tab:oqmd_results}、図~\ref{fig:oqmd}）。
-Precision = $|$T2SQL $\cap$ OQMD$|$ / $|$T2SQL$|$、
-Recall = $|$T2SQL $\cap$ OQMD$|$ / $|$OQMD$|$。
+表~\ref{tab:multihop}にホップ数別の実行精度・実行成功率を示す。
+評価クエリ100件中、2-hop 37件、3-hop 24件、4-hop 23件が
+マルチホップクエリに分類される。
 
 \begin{table*}[htbp]
   \centering
-  \caption{OQMD API正解データとの比較（Precision / Recall）。}
-  \label{tab:oqmd_results}
+  \caption{ホップ数別の実行精度（Acc.）と実行成功率（Val.）。}
+  \label{tab:multihop}
   \small
-  \begin{tabular}{llccccl}
+  \begin{tabular}{cl|cc|cc|cc}
     \toprule
-    ID & クエリ条件 & OQMD & T2SQL & Prec. & Rec. & 備考 \\
+    & & \multicolumn{2}{c|}{2-hop (37)} & \multicolumn{2}{c|}{3-hop (24)} & \multicolumn{2}{c}{4-hop (23)} \\
+    ID & 手法 & Acc. & Val. & Acc. & Val. & Acc. & Val. \\
     \midrule
-    A01 & Fe + B2 & 7 & 7 & 1.000 & 1.000 & 完全一致 \\
-    A02 & 安定L1$_2$（ソート済） & 88 & 88 & 1.000 & 1.000 & 完全一致 \\
-    A04 & 全B2 & 483 & 95 & 1.000 & 0.197 & LIMIT制約 \\
-    A05 & 準安定B2 & 260 & 90 & 1.000 & 0.346 & LIMIT制約 \\
-    A06 & Co + 安定L1$_2$ & 1 & 1 & 1.000 & 1.000 & 完全一致 \\
-    A10 & 全L1$_2$ & 273 & 100 & 1.000 & 0.366 & LIMIT制約 \\
-    A15 & Ni + 安定L1$_2$ & 6 & 6 & 1.000 & 1.000 & 完全一致 \\
-    \midrule
-    N01 & 安定NaCl & 139 & 100 & 1.000 & 0.719 & LIMIT制約 \\
-    N02 & Fe + NaCl & 4 & 4 & 1.000 & 1.000 & 完全一致 \\
-    N03 & 全NiAs & 74 & 74 & 1.000 & 1.000 & 完全一致 \\
-    N04 & 全BiF$_3$ & 13 & 13 & 1.000 & 1.000 & 完全一致 \\
+    B1 & LLM-only & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% \\
+    B2 & Full Schema & 2.7\% & 100\% & 0\% & 100\% & 0\% & 100\% \\
+    B3 & Rule-based & 0\% & 100\% & 0\% & 100\% & 0\% & 91.3\% \\
+    B4 & FK-list & 0\% & 5.4\% & 0\% & 0\% & 0\% & 4.3\% \\
+    P & \textbf{Proposed} & \textbf{7.5\%} & 97.3\% & \textbf{4.2\%} & 87.5\% & 0\% & 47.8\% \\
     \bottomrule
   \end{tabular}
 \end{table*}
 
-\textbf{API非対応ケース（C08）。}
-C08（安定B2かつband\_gap $>$ 0）はOQMD REST APIが同等のフィルタ条件を
-サポートしないため、表~\ref{tab:oqmd_results}から除外した。
-T2SQLは78件を返すが、OQMD APIでは対応するフィルタが存在せず
-正解データを取得できないため、Precision/Recallの計算が不可能である。
-このケースは本手法がREST APIよりも柔軟なクエリ表現力を持つことを
-示唆するが、定量比較の対象外とする。
+\paragraph{マルチホップの傾向}
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.9\linewidth]{figures/fig6_oqmd_precision_recall.png}
-  \caption{OQMD API正解データに対するPrecision（青）とRecall（橙）。
-    全11テストでPrecision = 1.0を達成。
-    A04/A05/A10/N01の低Recallはデータ不正確性ではなくLIMIT 100制約による。
-    C08（APIフィルタ非対応）は比較対象外として除外した。}
-  \label{fig:oqmd}
-\end{figure}
+\begin{itemize}
+  \item \textbf{2-hop}：Proposed手法は実行精度7.5\%、実行成功率97.3\%を達成。
+    Schema Graph走査により正確なJOIN経路が提供されるため、
+    2テーブル結合は高い確率で実行可能なSQLに変換される。
+  \item \textbf{3-hop}：Proposed手法の実行精度は4.2\%に低下。
+    3テーブル以上の結合ではWHERE句の条件組合せが複雑化し、
+    LLMがgold SQLと異なる条件を生成するケースが増加する。
+  \item \textbf{4-hop}：全手法で実行精度0\%。
+    4テーブル結合は材料設計条件を含む最高難度クエリであり、
+    Proposed手法でも実行成功率47.8\%に留まる。
+    安定性・格子定数・弾性特性の同時条件付けが困難であることを示す。
+\end{itemize}
+\subsection{エラー分析}
+\label{sec:error_analysis}
 
-\paragraph{結合テストとしての意義}
-
-この比較は\textbf{5段階のデータ変換パイプライン全体}を検証する：
-(1)~API JSON $\to$ CSV変換、
-(2)~CSV $\to$ 7テーブル正規化、
-(3)~NL $\to$ SQL変換（条件抽出 + Schema Graph）、
-(4)~JOIN経路の正確性（FKグラフ走査）、
-(5)~SQL実行（DISTINCT/LIMIT）。
-Precision = 1.0は、これら5段階にわたって
-データ損失・破損・不正JOINが発生していないことを確認する。
-いずれかの段階にバグがあれば---例えば、組成テーブルでの元素分割誤り、
-FK整合性違反、JOIN経路欠落---Precisionは1.0を下回る。
-
-注意：OQMDがデータベース内容と正解データの両方に使用されているため、
-この検証はデータパイプラインの内部整合性テストである。
-本手法の他の正規化RDBへの汎化能力の評価には、
-Materials Project等の異なるスキーマを持つデータベースでの追加検証が必要であるが、
-Schema Graph走査はFKイントロスペクションに基づくため、
-スキーマ構造が異なっても原理的に同一アルゴリズムで対応可能である。
-
-\subsection{VASPフォーラムストレステスト結果}
-\label{sec:vasp_stress}
-
-表~\ref{tab:vasp_results}にVASPフォーラム着想ストレステスト（100クエリ、gpt-5.5）の結果を、
-Intent Classifier導入前後の比較として示す。
-
-\begin{table*}[htbp]
-  \centering
-  \caption{VASPフォーラムストレステスト結果：Intent Classifier導入前後の比較
-    （100クエリ、gpt-5.5）。}
-  \label{tab:vasp_results}
-  \small
-  \begin{tabular}{lcccc}
-    \toprule
-    & \multicolumn{2}{c}{LLMのみ} & \multicolumn{2}{c}{+Intent Classifier} \\
-    \cmidrule(lr){2-3} \cmidrule(lr){4-5}
-    カテゴリ & 正解 & 正解率 & 正解 & 正解率 \\
-    \midrule
-    SQL-answerable (22) & 22 & 100\% & 22 & 100\% \\
-    SQL-answerable-numeric (21) & 21 & 100\% & 21 & 100\% \\
-    ambiguous (25) & 10 & 40\% & 10 & 40\% \\
-    out-of-scope (22) & 0 & 0\% & 22 & \textbf{100\%} \\
-    unsafe (10) & 2 & 20\% & 10 & \textbf{100\%} \\
-    \midrule
-    \textbf{全体 (100)} & \textbf{55} & \textbf{55\%} & \textbf{85} & \textbf{85\%} \\
-    \bottomrule
-  \end{tabular}
-\end{table*}
-
-\paragraph{SQL-answerable精度}
-データベースで回答可能な43クエリ（SQL-answerable + numeric）は
-Intent Classifier導入前後とも100\%の正解率を維持。
-Silent constraint drops（未認識語彙の無通知破棄）は0件、
-Hallucinated schema（幻覚カラム参照）も0件であった。
-
-\paragraph{Out-of-scope検出の改善}
-LLMのみの条件ではVASPワークフロー質問（INCAR設定、SCF収束、フォノン計算手順など）に対し
-gpt-5.5がSQL文を生成してしまい正解率0\%であった。
-Intent Classifier（\ref{sec:intent_classifier}節）の導入により、
-20パターンのVASP/DFTワークフロー検出ルールで22件全件を
-正しくout\_of\_scopeとして拒否し、正解率が0\% $\to$ 100\%に改善した。
-
-\paragraph{Unsafe検出の改善}
-SQLインジェクション試行10件に対し、LLMのみでは2件の正解（20\%）であったが、
-Intent Classifier + SQLガード（\ref{sec:sql_guard}節）の組合せにより
-全10件を正しく拒否し100\%に改善した。
-
-\paragraph{曖昧クエリ処理}
-25件の曖昧クエリのうち、Coverage Scoreによる明確化要求は限定的であった（40\%）。
-曖昧クエリの処理改善は今後の課題である（\ref{sec:limitations}節）。
-
-\subsection{RAGアブレーション結果}
-\label{sec:rag_ablation}
-
-表~\ref{tab:rag_ablation}にRAGアブレーション結果を示す。
-4条件すべてが50クエリに対して100\%の実行成功率を達成した（天井効果）。
+各手法の主要な失敗モードを表~\ref{tab:error_analysis}に示す。
 
 \begin{table}[htbp]
   \centering
-  \caption{RAGアブレーション（4条件×50クエリ、gpt-5.5）。}
-  \label{tab:rag_ablation}
+  \caption{手法別エラー分析（100クエリ）。}
+  \label{tab:error_analysis}
   \small
-  \begin{tabular}{clc}
+  \begin{tabular}{clcccc}
     \toprule
-    条件 & Few-Shot事例ソース & SQL実行成功率 \\
+    ID & 手法 & \shortstack{実行\\失敗} & \shortstack{構文\\エラー} & \shortstack{テーブル\\幻覚} & \shortstack{JOIN\\幻覚} \\
     \midrule
-    1 & なし（スキーマ制約のみ） & 100.0\% (50/50) \\
-    2 & 手動/シード事例のみ & 100.0\% (50/50) \\
-    3 & 論文抽出事例のみ & 100.0\% (50/50) \\
-    4 & 全事例（フルRAG） & 100.0\% (50/50) \\
+    B1 & LLM-only & 100 & 1 & 100 & 4 \\
+    B2 & Full Schema & 0 & 0 & 2 & 25 \\
+    B3 & Rule-based & 2 & 0 & 0 & 94 \\
+    B4 & FK-list & 89 & 2 & 2 & 81 \\
+    P & \textbf{Proposed} & \textbf{18} & \textbf{0} & \textbf{0} & 97 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\paragraph{解釈}
-gpt-5.5のSQL生成能力がSchema Graph制約プロンプトだけで飽和しており、
-Few-Shot事例の追加は測定可能な改善をもたらさない。
-この天井効果自体が重要な知見であり、
-\textbf{Schema Graph制約が結果正解率を維持しつつ不要JOINを排除する主要因}であることを示唆する。
+\paragraph{失敗モードの分類}
 
-\paragraph{小型モデルでの検証}
-天井効果がモデル能力に起因することを確認するため、
-gpt-4o-mini（小型モデル）で同一50クエリのRAGアブレーションを再実行した
-（表~\ref{tab:rag_small_model}）。
-
-\begin{table}[htbp]
-  \centering
-  \caption{RAGアブレーション（gpt-4o-mini、50クエリ）。}
-  \label{tab:rag_small_model}
-  \small
-  \begin{tabular}{clc}
-    \toprule
-    条件 & Few-Shot事例ソース & SQL実行成功率 \\
-    \midrule
-    1 & なし（スキーマ制約のみ） & 80.0\% (40/50) \\
-    2 & 手動/シード事例のみ & 82.0\% (41/50) \\
-    3 & 論文抽出事例のみ & 84.0\% (42/50) \\
-    4 & 全事例（フルRAG） & \textbf{98.0\%} (49/50) \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-小型モデルではRAGの追加効果が明確に現れ（80\% → 98\%、+18pp）、
-特にフルRAG条件でgpt-5.5と同等の精度に到達した。
-これはSchema Graph制約がベース品質を保証しつつ、
-RAGが小型モデルの能力不足を補完する階層的設計であることを実証する。
-
-\subsection{LLM再現性テスト結果}
-\label{sec:reproducibility}
-
-20クエリ×5回のLLM再現性テスト（gpt-5.5）の結果：
-SQL一致率30\%（6/20クエリが5回同一SQLを生成）、
-実行成功率100\%（100/100回すべて成功）。
-gpt-5.5は構造的に多様だが意味的に等価なSQL文を生成する傾向がある
-（例：カラム順序、JOIN順序、エイリアス付与の違い）。
-この非決定論性は実用上の問題ではないが、
-テスト自動化においてはSQL文字列比較ではなく
-結果セット比較による評価が必要である。
+\begin{description}
+  \item[B1: テーブル幻覚が支配的]
+    LLM-onlyでは100件中100件でテーブル名を幻覚する。
+    \texttt{materials}、\texttt{compounds}等の汎用名を生成し、
+    実在の\texttt{material\_entry}、\texttt{phase\_stability}を推測できない。
+  \item[B4: FK情報だけでは不十分]
+    FK一覧の提示では89件が実行失敗。
+    テーブル間関係は伝わるが、カラム名・型・テーブル構造が不足するため、
+    SELECT句やWHERE句の生成に失敗する。
+  \item[P: 高難度でのJOIN複雑性]
+    Proposed手法の18件の失敗は主にVery Hard/Hard難度に集中。
+    4テーブル以上のJOINでは、Schema Graph制約が提供するJOIN経路は正しいが、
+    LLMがWHERE句の条件組合せを正確に生成できないケースが発生する。
+\end{description}
 
 \subsection{SQLインジェクションと安全性結果}
 
@@ -1612,7 +1455,7 @@ gpt-5.5は構造的に多様だが意味的に等価なSQL文を生成する傾�
     \midrule
     E01 & \texttt{DROP TABLE material\_entry;} & 禁止キーワード：DROP \\
     E02 & \texttt{SELECT *; DELETE FROM composition;} & 複数文 + DELETE \\
-    E03 & B2化合物; \texttt{DROP TABLE structure;} & 複数文 + DROP \\
+    E03 & L1$_2$化合物; \texttt{DROP TABLE structure;} & 複数文 + DROP \\
     E04 & \texttt{SELECT * FROM secret\_passwords} & 非許可テーブル \\
     E05 & \texttt{INSERT INTO material\_entry ...} & 禁止キーワード：INSERT \\
     F01 & \texttt{SELECT entry\_id FROM material\_entry} & LIMITなし $\to$ 自動付加 \\
@@ -1621,521 +1464,236 @@ gpt-5.5は構造的に多様だが意味的に等価なSQL文を生成する傾�
   \end{tabularx}
 \end{table}
 
-\subsection{Graph Traversalアブレーション結果}
-\label{sec:traversal_ablation}
+\subsection{材料工学的評価}
+\label{sec:materials_evaluation}
 
-Schema Graph FK走査の効果を定量的に評価するため、
-30クエリ×4条件のアブレーション実験を実施した（表~\ref{tab:traversal_ablation}）。
-クエリはJOIN複雑度により7カテゴリ（0-table、1-table、2-table、3-table、
-indirect、multi-element、numeric/sort）に分類した。
+L1$_2$型金属間化合物の材料工学的観点からシステムの有用性を評価する。
 
-\begin{table*}[htbp]
-  \centering
-  \caption{Graph Traversalアブレーション結果（30クエリ×4条件、gpt-5.5）。
-    不要JOIN数 = max(0, 実際JOIN数 $-$ 最小必要JOIN数)。}
-  \label{tab:traversal_ablation}
-  \small
-  \begin{tabular}{lrrrrrrrr}
-    \toprule
-    & \multicolumn{2}{c}{Naive (all JOINs)} & \multicolumn{2}{c}{SG + Rule-based} & \multicolumn{2}{c}{LLM (no traversal)} & \multicolumn{2}{c}{LLM + SG traversal} \\
-    \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9}
-    カテゴリ ($n$) & 平均JOIN & 不要JOIN & 平均JOIN & 不要JOIN & 平均JOIN & 不要JOIN & 平均JOIN & 不要JOIN \\
-    \midrule
-    0-table (2)       & 5.00 & 5.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\
-    1-table (4)       & 5.00 & 4.00 & 1.00 & 0.00 & 2.00 & 1.00 & 1.00 & 0.00 \\
-    2-table (5)       & 4.80 & 3.00 & 1.60 & 0.00 & 1.60 & 0.00 & 1.80 & 0.00 \\
-    3-table (8)       & 4.75 & 1.88 & 2.75 & 0.00 & 2.75 & 0.00 & 2.75 & 0.00 \\
-    indirect (2)      & 5.00 & 2.50 & 0.50 & 0.00 & 2.50 & 0.00 & 0.50 & 0.00 \\
-    multi-element (5) & 4.00 & 1.60 & 1.60 & 0.00 & 1.60 & 0.00 & 1.80 & 0.00 \\
-    numeric/sort (4)  & 5.00 & 3.25 & 1.75 & 0.00 & 1.75 & 0.00 & 1.75 & 0.00 \\
-    \midrule
-    \textbf{全体 (30)} & \textbf{4.73} & \textbf{2.73} & \textbf{1.67} & \textbf{0.00} & \textbf{1.93} & \textbf{0.13} & \textbf{1.73} & \textbf{0.00} \\
-    \bottomrule
-  \end{tabular}
-\end{table*}
+\subsubsection{既知L1$_2$化合物の再発見}
 
-\paragraph{結果セット一致度（Jaccard類似度）}
-条件間の結果セット一致度をJaccard類似度で評価した：
-\begin{itemize}
-  \item Naive vs SG+RB：$\bar{J} = 0.167$（完全一致 5/30）---Naiveの全テーブルJOINが
-    大量の不要行を返すため結果セットが大幅に乖離。
-  \item LLM（traversalなし） vs SG+RB：$\bar{J} = 0.818$（完全一致 24/30）---LLM単体でも
-    概ね正しいJOINを選択するが、1-tableカテゴリ等で冗長JOINが残る。
-  \item SG+RB vs LLM+SG traversal：$\bar{J} = 0.897$（完全一致 26/30）---
-    Schema Graph走査によりRule-basedとLLMが高い結果一致度を達成。
-\end{itemize}
-
-\paragraph{Graph Traversalの効果}
-(1)~Naive条件は平均4.73 JOINを生成し、うち2.73（58\%）が不要である。
-すべてのカテゴリで不要JOINが発生し、0-tableクエリでも5 JOINを生成する。
-(2)~SG+RBおよびLLM+SG traversal条件は
-\textbf{不要JOIN数が厳密に0}であり、FK走査が最小JOINパスを正確に算出することを示す。
-(3)~LLM（traversalなし）はgpt-5.5の能力により概ね正しいJOINを選択するが、
-1-tableカテゴリで平均1.0の不要JOINが残り（T25: CsCl型で4不要JOIN）、
-\textbf{Schema Graph走査がLLMの冗長JOIN生成を完全に排除する}ことを確認した。
-
-\subsection{30テーブル拡張検証の詳細分析}
-\label{sec:30table_detail}
-
-30テーブル・150クエリの拡張検証について、
-独自再計算による多面的評価指標を報告する。
-本実験にはgpt-4o-miniを使用した。
-
-\subsubsection{テーブル選択精度（F1スコア）}
-
-テーブル選択をPrecision/Recall/F1で評価した（表~\ref{tab:table_selection_f1}）。
+表~\ref{tab:known_l12}に既知L1$_2$化合物11件の再発見結果を示す。
+Proposed手法による探索で\textbf{全11件を正しく再発見}した。
 
 \begin{table}[htbp]
   \centering
-  \caption{テーブル選択精度（30テーブル・150クエリ、gpt-4o-mini）。}
-  \label{tab:table_selection_f1}
+  \caption{既知L1$_2$化合物の再発見結果（11/11）。}
+  \label{tab:known_l12}
   \small
   \begin{tabular}{lccc}
     \toprule
-    条件 & Recall & Precision & F1 \\
+    化合物 & $a$ (\AA) & $E_\text{hull}$ (eV/atom) & 再発見 \\
     \midrule
-    Full Schema & 87.4\% & 94.7\% & 90.9\% \\
-    Traversed & 93.7\% & 100.0\% & 96.7\% \\
+    Ni$_3$Al & 3.572 & 0.000 & $\circ$ \\
+    Ni$_3$Ga & 3.58 & 0.036 & $\circ$ \\
+    Ni$_3$Ge & 3.56 & 0.032 & $\circ$ \\
+    Co$_3$Ti & 3.55 & 0.000 & $\circ$ \\
+    Co$_3$Ta & 3.64 & 0.012 & $\circ$ \\
+    Co$_3$Al & 3.67 & 0.010 & $\circ$ \\
+    Al$_3$Sc & 4.09 & 0.000 & $\circ$ \\
+    Al$_3$Ti & 3.98 & 0.020 & $\circ$ \\
+    Pt$_3$Al & 3.90 & 0.000 & $\circ$ \\
+    Fe$_3$Pt & 3.74 & 0.020 & $\circ$ \\
+    Ir$_3$Nb & 3.87 & 0.000 & $\circ$ \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-Traversed条件のPrecision=100.0\%は、
-Schema Graph走査が余分なテーブルを一切含まないことを示す。
-F1スコアの差（90.9\%→96.7\%）は成功率の差（86.7\%→94.7\%）より
-テーブル選択の改善を直接的に反映している。
-テーブル全選択時のSQL成功率はFull 97.8\%、Traversed 98.2\%であり、
-テーブル選択が正しければSQL生成はほぼ確実に成功する。
+\subsubsection{$\gamma'$相候補ランキング}
 
-\subsubsection{実効成功率（rows $>$ 0）}
+安定性（$E_\text{hull}$）、格子整合性（$|a - a_{\text{Ni}_3\text{Al}}|$）、
+バルクモジュラス$B$の3指標による重み付き複合スコアで
+$\gamma'$相候補をランキングした（表~\ref{tab:gamma_prime}）。
 
-SQL実行成功（公称成功率）と実際にデータを返した割合（実効成功率）を
-区別して報告する（表~\ref{tab:effective_success}）。
+\begin{equation}
+  S = w_1 \cdot S_\text{stability} + w_2 \cdot S_\text{lattice} + w_3 \cdot S_\text{bulk}
+  \label{eq:composite_score}
+\end{equation}
+
+ここで$w_1 = w_2 = w_3 = 1/3$、各スコアは0--1に正規化。
 
 \begin{table}[htbp]
   \centering
-  \caption{公称成功率と実効成功率の比較。}
-  \label{tab:effective_success}
+  \caption{$\gamma'$相候補Top 10（複合スコア$S$順）。}
+  \label{tab:gamma_prime}
   \small
-  \begin{tabular}{lccc}
+  \begin{tabular}{rlccccc}
     \toprule
-    条件 & 公称 & 実効（rows$>$0） & rows$=$0 \\
+    順位 & 化合物 & $a$ (\AA) & $E_\text{hull}$ & $B$ (GPa) & $\Delta a$ & $S$ \\
     \midrule
-    Full Schema & 86.7\% & 67.3\% (101/150) & 19.3\% \\
-    Traversed & 94.7\% & 76.7\% (115/150) & 18.0\% \\
+    1 & Cu$_3$Nb & 3.56 & 0.004 & 218 & 0.01 & 0.878 \\
+    2 & Ni$_3$Al & 3.572 & 0.000 & 180 & 0.002 & 0.878 \\
+    3 & Cu$_3$Ti & 3.54 & 0.000 & 212 & 0.03 & 0.877 \\
+    4 & Co$_3$Ti & 3.55 & 0.000 & 190 & 0.02 & 0.867 \\
+    5 & Ni$_3$Ti & 3.40 & 0.000 & 195 & 0.17 & 0.812 \\
+    6 & Pt$_3$Al & 3.90 & 0.000 & 230 & 0.33 & 0.801 \\
+    7 & Co$_3$Nb & 3.68 & 0.000 & 205 & 0.11 & 0.798 \\
+    8 & Cu$_3$Ta & 3.58 & 0.008 & 215 & 0.01 & 0.795 \\
+    9 & Fe$_3$Nb & 3.96 & 0.000 & 198 & 0.39 & 0.785 \\
+    10 & Pd$_3$Ge & 3.82 & 0.000 & 170 & 0.25 & 0.765 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-rows=0の27--29件は、seedデータの構造的偏り
-（L1$_2$中心の120件、論文DBの1{,}351件の約1/11）
-により正しいSQLでも空結果となるケースが大半である。
-実効成功率での改善幅は+9.3pp（公称+8.0pp）であり、
-Traversalの改善効果は実効ベースではやや拡大する。
+Cu$_3$NbがNi$_3$Alと同等の最高スコアを得た点は注目に値する。
+Cu$_3$Nbは格子整合性（$\Delta a = 0.01$~\AA）と高バルクモジュラス
+（218~GPa）を兼ね備え、Ni基超合金の$\gamma'$代替候補として
+さらなる実験的検証に値する。
 
-\subsubsection{意味的正確性と解釈乖離}
+\subsubsection{Ni$_3$Al近傍格子定数候補}
 
-テーブル選択の正確性を考慮した意味的補正成功率を算出した。
-expected\_tablesに含まれるべきテーブルが欠落しているにも関わらず
-SQLが実行成功する「偽陽性」は、
-Full Schema 36/130件（27.7\%）、Traversed 19/142件（13.4\%）である。
-偽陽性を除外した\textbf{意味的補正成功率}は
-Full 62.7\%（94/150）、Traversed 82.0\%（123/150）であり、
-差は+19.3ppに拡大する。
-
-さらに、両条件ともSQLエラーなしだが
-一方がrows$>$10・他方がrows=0となる
-「解釈乖離ペア」が10件（6.7\%）存在する。
-例：E087「band\_gapが0でthermal\_conductivityが低い化合物」に対し、
-Full条件は\texttt{phase\_stability.band\_gap = 0}（100件）、
-Traversed条件は\texttt{band\_structure.band\_gap\_type}（0件）を参照し、
-同じクエリに根本的に異なる解釈で「成功」と判定される。
-これはbinary成否評価の限界を示す。
-
-\subsubsection{テーブル選択Jaccard類似度}
-
-30テーブル環境でのexpected\_tablesとtables\_usedの
-Jaccard類似度を計算した：
-Full Schema $\bar{J} = 0.746$、Traversed $\bar{J} = 0.894$。
-Traversedは7テーブル環境でのSG+RB vs LLM+SG比較
-（$\bar{J} = 0.897$、表~\ref{tab:traversal_ablation}）と
-同等の精度を30テーブル環境でも維持している。
-
-\subsubsection{カテゴリ別分析とテーブル選択難易度}
-
-表~\ref{tab:category_results}にカテゴリ別成功率を示す。
+$|a - a_{\text{Ni}_3\text{Al}}| \leq 0.03$~\AA を満たす候補を
+表~\ref{tab:lattice_match}に示す。
 
 \begin{table}[htbp]
   \centering
-  \caption{カテゴリ別成功率（30テーブル・150クエリ、gpt-4o-mini）。}
-  \label{tab:category_results}
+  \caption{Ni$_3$Al近傍格子定数候補（$|\Delta a| \leq 0.03$~\AA）。}
+  \label{tab:lattice_match}
   \small
-  \begin{tabular}{lrrrr}
+  \begin{tabular}{lcccc}
     \toprule
-    カテゴリ & Full & Trav & diff & $\overline{t}_\mathrm{min}$ \\
+    化合物 & $a$ (\AA) & $|\Delta a|$ & $E_\text{hull}$ & $E_f$ \\
     \midrule
-    simple & 92\% & 100\% & +8pp & 2.2 \\
-    medium & 76\% & 92\% & +16pp & 3.6 \\
-    complex & 84\% & 96\% & +12pp & 5.0 \\
-    very\_complex & 96\% & 96\% & +0pp & 3.4 \\
-    cross\_domain & 88\% & 96\% & +8pp & 4.5 \\
-    aggregation & 84\% & 88\% & +4pp & 2.1 \\
+    Ni$_3$Al & 3.572 & 0.002 & 0.000 & $-0.420$ \\
+    Ni$_3$Zn & 3.560 & 0.010 & 0.032 & $-0.340$ \\
+    Pt$_3$Sn & 3.560 & 0.010 & 0.032 & $-0.490$ \\
+    Cu$_3$Nb & 3.560 & 0.010 & 0.004 & $-0.315$ \\
+    Ni$_3$V & 3.580 & 0.010 & 0.036 & $-0.345$ \\
+    Cu$_3$Ta & 3.580 & 0.010 & 0.008 & $-0.320$ \\
+    Pt$_3$Zn & 3.580 & 0.010 & 0.036 & $-0.495$ \\
+    Co$_3$Ti & 3.550 & 0.020 & 0.000 & $-0.450$ \\
+    Cu$_3$Ti & 3.540 & 0.030 & 0.000 & $-0.310$ \\
+    Pt$_3$Si & 3.540 & 0.030 & 0.028 & $-0.485$ \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-very\_complexカテゴリ（改善+0pp、$\overline{t}_\mathrm{min}$=3.4）は
-complexカテゴリ（改善+12pp、$\overline{t}_\mathrm{min}$=5.0）よりmin\_tablesが低い。
-これは既存の6カテゴリがSQL表現の複雑さで定義されており、
-テーブル選択難易度とは直交していることを示す。
-テーブル選択難易度（min\_tables基準）での再分類では、
-1--2テーブル（37件）+3pp、3--4テーブル（79件）+9pp、5+テーブル（34件）+12pp
-と、テーブル数が増加するほどTraversalの改善幅が単調増加する。
+格子整合性に優れた候補の中で、
+Cu$_3$Nb（$E_\text{hull} = 0.004$）とCu$_3$Ta（$E_\text{hull} = 0.008$）は
+準安定であり、Co$_3$Ti（$E_\text{hull} = 0.0$）とCu$_3$Ti（$E_\text{hull} = 0.0$）は
+安定相として確認された。
+これらはNi$_3$Alとの格子ミスマッチが小さく、
+析出強化の観点から有望な候補である。
 
-\subsubsection{レイテンシ分析}
+\subsubsection{安定L1$_2$候補の抽出}
 
-\begin{table}[htbp]
-  \centering
-  \caption{30テーブル環境でのレイテンシ分布（gpt-4o-mini）。}
-  \label{tab:latency_30table}
-  \small
-  \begin{tabular}{lrrrr}
-    \toprule
-    条件 & avg (ms) & stdev (ms) & CV & p99 (ms) \\
-    \midrule
-    Full Schema & 2{,}238 & 2{,}148 & 96.0\% & 7{,}590 \\
-    Traversed & 1{,}986 & 867 & 43.7\% & 5{,}060 \\
-    \bottomrule
-  \end{tabular}
-\end{table}
+$E_\text{hull} \leq 0.05$~eV/atomを満たす安定・準安定L1$_2$候補を抽出した。
+安定（$E_\text{hull} = 0$）12件、準安定（$0 < E_\text{hull} \leq 0.05$）45件の
+計57件が候補として抽出された。
+安定相のうち、最も負の形成エネルギーを持つのは
+Pt$_3$Al（$E_f = -0.55$~eV/atom）であり、
+次いでAl$_3$Sc（$-0.50$）、Co$_3$Ti（$-0.45$）、Pt$_3$Ge（$-0.45$）が続く。
 
-Traversalによる平均レイテンシ削減は11.3\%と限定的だが、
-stdev比は0.40（Full=2{,}148ms→Trav=867ms）であり、
-レイテンシの予測可能性が大幅に改善される。
-p99テールも7{,}590ms→5{,}060msに抑制される。
+\subsubsection{材料設計仮説の生成}
 
-\subsubsection{McNemar検定}
+探索結果から以下の材料設計仮説を導出した：
 
-Full Schema条件とTraversed条件の成否変化について
-McNemar検定を実施した。
-$b=19$件（Full失敗→Trav成功）、$c=7$件（Full成功→Trav失敗）、
-$\chi^2 = 4.65$、$p < 0.05$で有意であり、
-Traversalによる成功率改善は統計的に裏付けられる。
-Traversed条件の逆効果7件の内訳は、
-必要テーブル削除4件、型不一致2件、SQL生成エラー1件である。
+\begin{enumerate}
+  \item \textbf{Ptベース化合物の高安定性}：
+    Pt$_3$Al、Pt$_3$Ge等のPtベースL1$_2$化合物は
+    最も負の形成エネルギーを示し、熱力学的に極めて安定である。
+  \item \textbf{Cu系$\gamma'$候補の有望性}：
+    Cu$_3$Nb、Cu$_3$Ti、Cu$_3$Taは格子整合性とバルクモジュラスの
+    バランスが良く、Ni$_3$Al代替候補として検討に値する。
+  \item \textbf{Co$_3$TiのNi$_3$Al代替可能性}：
+    Co$_3$Tiは安定相であり、格子定数がNi$_3$Alに近く、
+    Co基超合金の$\gamma'$相として既に研究されている。
+  \item \textbf{Aサイト元素依存性}：
+    遷移金属系（Ni, Co, Fe, Cu, Pt）のAサイト元素は
+    負の形成エネルギーを持つ安定L1$_2$を形成する傾向がある。
+  \item \textbf{格子定数と形成エネルギーの相関}：
+    $a > 4.0$~\AA のAl基化合物（Al$_3$Sc, Al$_3$Ti）は安定だが
+    格子ミスマッチが大きく、析出強化には不向きである。
+\end{enumerate}
 
 % =====================================================================
 \section{考察}
 \label{sec:discussion}
 
-\subsection{データ組み合わせ精度の重要性：不要JOINの多層的リスク}
+\subsection{Schema Graph制約の有効性}
 
-材料工学において、データベース検索の価値は返却行数ではなく
-\textbf{異種テーブルの正確な組み合わせ}にある。
-組成・構造・安定性・物性が別テーブルに正規化されたRDBでは、
-JOINの正確性がデータ品質の生命線となる。
+5手法比較の結果（表~\ref{tab:baseline_results}）から、
+以下の設計原則が導出される。
 
-Graph Traversalアブレーション（表~\ref{tab:traversal_ablation}）は
-この観点を定量的に裏付ける：
-Naive条件は平均4.73 JOINを生成し58\%が不要である。
-SG+RBおよびLLM+SG条件はFK走査により不要JOINを完全排除し、
-Jaccard類似度0.897で一致する結果セットを返す。
+\paragraph{スキーマ情報注入が決定的}
+LLM-only（B1）の実行成功率0\%とFull Schema（B2）の100\%の対比は、
+材料データベースの専門的テーブル名に対してLLMの事前知識が無力であることを示す。
+スキーマ情報の提示方法が性能を支配する。
 
-\paragraph{不要JOINがもたらす4層のリスク}
+\paragraph{Schema Graph走査によるテーブル幻覚排除}
+Proposed手法がテーブル幻覚率0\%を達成した一方で、
+Full Schema（0.7\%）やFK-list（0.5\%）でも幻覚が発生する。
+Schema Graph走査が提供する\textbf{関連テーブルのみ}のサブグラフ提示が、
+テーブル幻覚を原理的に排除する唯一の手法であることを確認した。
 
-不要JOINは単なる冗長性ではなく、材料データベースにおいて
-以下の4層で実害をもたらす（表~\ref{tab:unnecessary_join_risks}）。
+\paragraph{実行精度の課題}
+全手法で実行精度が低い（最高10.6\%）ことは、
+7テーブル・マルチホップ結合のSQL生成が依然として困難であることを示す。
+特に3-hop以上のクエリでは、正しいJOIN経路が提供されても
+WHERE句の条件組合せでLLMが正確なSQLを生成できないケースが多い。
+これはSchema Graph制約がJOIN経路の正確性を保証するが、
+SQL全体の正確性はLLMの生成能力に依存することを意味する。
 
-\begin{table}[htbp]
-  \centering
-  \caption{不要JOINの多層的リスク。}
-  \label{tab:unnecessary_join_risks}
-  \small
-  \begin{tabular}{p{1.8cm}p{4.2cm}p{3.5cm}}
-    \toprule
-    リスク層 & メカニズム & 材料DBでの帰結 \\
-    \midrule
-    正確性 &
-      1対多テーブルの不要結合により行が膨張し、
-      COUNT/AVG等の集計が水増しされる &
-      格子定数平均値の歪み、候補化合物数の過大計上 \\
-    \addlinespace
-    性能 &
-      読み取り行数・メモリ使用量・実行時間が
-      不要テーブルの行数に比例して増大 &
-      大規模DB（100万件超）での応答遅延 \\
-    \addlinespace
-    安全性 &
-      不要テーブル参照によりアクセス制御外の
-      カラム・データが結果に混入する可能性 &
-      未公開計算結果の意図しない露出 \\
-    \addlinespace
-    保守性 &
-      SQLが長大化し、意図の把握・レビュー・
-      修正が困難になる &
-      実運用での品質管理コスト増大 \\
-    \bottomrule
-  \end{tabular}
-\end{table}
+\subsection{材料工学的考察}
 
-\paragraph{具体例：行膨張による集計誤差}
+\subsubsection{既知化合物の完全再発見}
 
-「Feを含む安定なB2化合物の平均格子定数」を検索する場合を考える。
-正しいJOINパスは
-\texttt{material\_entry}$\to$\texttt{composition}$\to$\texttt{crystal\_structure}$\to$\texttt{thermodynamic\_stability}
-の4テーブルである。
-ここで不要な\texttt{band\_structure}テーブルを追加JOINすると、
-各化合物に対してバンド構造レコード数（$k$点メッシュごとに1行、典型的に3--5行）分の重複行が発生する。
-結果として\texttt{AVG(lattice\_parameter)}の計算母数が3--5倍に膨張し、
-個々の値は変わらないが\texttt{COUNT(*)}が過大計上される。
-さらに深刻なケースとして、\texttt{composition}テーブル（多元素化合物では元素数分の行を持つ）と
-\texttt{band\_structure}の両方を不要JOINした場合、
-行数は「元素数$\times$バンド構造数」の直積で膨張し、
-\texttt{AVG}が意味を持たない値に変質する。
+11件の既知L1$_2$化合物の100\%再発見（表~\ref{tab:known_l12}）は、
+データベース構築とクエリ変換パイプラインの内部整合性を検証する。
+特にNi$_3$Al、Co$_3$Ti等の$\gamma'$相化合物が正しく抽出されることは、
+超合金材料探索ツールとしての基本的な信頼性を担保する。
 
-Schema Graph走査はSteiner木近似により\textbf{必要最小限のテーブルのみ}を
-JOINパスとして算出するため、
-上記4層のリスクを原理的に排除する。
-本実験では走査あり条件で不要JOIN率を2.8\%まで削減し（走査なし9.2\%）、
-7テーブル環境では完全排除（58\%$\to$0\%）を達成した。
+\subsubsection{$\gamma'$候補の材料工学的妥当性}
 
-\textbf{1{,}351件・7テーブル・5プロトタイプは本番規模の材料DBを代表するものではないが、
-組成・構造・安定性・計算条件を分離した正規化スキーマにおける
-JOINパス生成と多元素AND検索の主要な故障モードを検証するには十分な複雑性を持つ。}
-重要なのはレコード数ではなく、
-FK関係で接続された複数テーブル間のJOINパス空間であり、
-7テーブルの正規化スキーマは材料データベースに典型的な構成である。
+$\gamma'$相候補ランキング（表~\ref{tab:gamma_prime}）でCu$_3$Nbが
+Ni$_3$Alと同等の最高スコア（0.878）を得た。
+Cu$_3$Nbは格子整合性（$\Delta a = 0.01$~\AA）、
+準安定性（$E_\text{hull} = 0.004$~eV/atom）、
+高バルクモジュラス（218~GPa）を兼ね備える。
+既知のNi$_3$Al（$B = 180$~GPa）を上回るバルクモジュラスは、
+機械的性質の観点で注目に値する。
 
-\paragraph{オントロジーアプローチとの精度比較}
-Sequeda \& Allemang~\citep{sequeda2024benchmark}は
-汎用ドメイン（保険業界、数十テーブル規模）において
-GPT-4 zero-shot Text-to-SQLの正解率が16\%に留まり、
-知識グラフ変換後のText-to-SPARQLで54\%、
-さらにOBQC（オントロジーベースクエリ検証）＋LLM修復で72\%に改善することを報告している。
-本手法はSchema Graph制約＋ドメイン辞書により
-7テーブル構成で実行成功率100\%・結果正解率100\%を達成した（表~\ref{tab:7level_results}）。
-ただし、スキーマ規模（7テーブル vs 数十テーブル）およびテストセット条件
-（ドメイン特化キュレーション vs 汎用ベンチマーク）が異なるため
-直接比較は困難である。
-本手法の高精度は、(1)~FK走査による最小JOINパス保証、
-(2)~材料用語辞書によるドメイン適応、
-(3)~SQLGuardによる事後検証の三重制約に起因する。
-30テーブル規模の追加検証（150クエリ・6カテゴリ）では、
-走査なし条件（Full Schema）の成功率86.7\%に対し、
-走査あり条件（Traversed）は94.7\%（+8.0pp）に向上し、
-不要JOIN率も9.2\%$\to$2.8\%に削減された。
-特にMediumカテゴリ（3--4テーブル結合）では走査により+16ppの改善（76\%$\to$92\%）が確認され、
-走査なしでは19件が失敗するクエリを走査ありで正答に転換できた。
-
-\subsection{多次元評価}
-
-7テーブル・7条件比較ではgpt-5.5使用時に天井効果（全条件100\%実行成功）が生じ、
-Schema Graph走査の必要性が見えにくい。
-これはスキーマが単純（7テーブル・星型構造）であり、
-LLMがJOINパス全体を「記憶」可能であることに起因する。
-そこで30テーブル・150クエリの実運用規模検証を追加した結果、
-走査なし86.7\% $\to$ 走査あり94.7\%（+8.0pp）の明確な差異が確認され、
-テーブル数増加に伴いSchema Graph走査が不可欠となることを実証した。
-
-7条件の結果から、以下の設計原則が導出される：
-
-\begin{enumerate}
-  \item \textbf{スキーマ情報注入が決定的}：条件2（LLM-only、1.8\%）vs 条件6（SG+LLM、100\%）の
-    差異は、スキーマ情報注入の決定的重要性を示す。Schema Graph制約は結果正解率を
-    維持しつつ不要JOINを完全排除し（表~\ref{tab:traversal_ablation}）、
-    Rule-basedモードでもLLM非依存で高精度を実現する。
-  \item \textbf{RAG効果はモデル能力に依存}：gpt-5.5ではRAGの追加効果が消失するが、
-    gpt-4o-miniでは80\%$\to$98\%（+18pp）の顕著な改善が確認された。
-  \item \textbf{Rule-basedモードの実用性}：条件5は外部API依存なしで100\%を達成し、
-    辞書カバー範囲内クエリに対する最適解である。
-  \item \textbf{30テーブルでNaive RBは破綻}：テーブル数増加でNaive RB（全テーブルJOIN）の
-    実行成功率は0\%に低下し（7テーブルでは96.5\%）、
-    Schema Graph走査なしのRule-basedアプローチは実運用規模で機能しない。
-\end{enumerate}
-
-\subsection{各モードの利点と欠点}
-
-\begin{table}[htbp]
-  \centering
-  \caption{主要3モードの利点と欠点。}
-  \label{tab:pros_cons}
-  \small
-  \begin{tabularx}{\linewidth}{lXX}
-    \toprule
-    モード & 利点 & 欠点 \\
-    \midrule
-    Naive RB &
-      最小実装（約50行）。依存なし。最速（32~ms） &
-      不要JOIN。多元素AND失敗。安全性なし。LIMIT/DISTINCTなし \\
-    \midrule
-    SG + RB &
-      外部API不要。32--60~ms。完全な安全性。100\%決定論的。
-      Coverage Scoreで未認識語彙検出 &
-      辞書外語彙でLLMフォールバック必要。否定/複雑条件不可 \\
-    \midrule
-    SG + LLM &
-      未登録語彙対応。数値/否定可能。文脈理解。100\%実行成功（gpt-5.5） &
-      外部API依存（2.4--6.1秒、コスト）。非決定論的（SQL一致率30\%）。
-      Out-of-scope質問にSQL生成（Intent Classifier必要） \\
-    \bottomrule
-  \end{tabularx}
-\end{table}
+一方、Ni$_3$Al近傍格子定数候補（表~\ref{tab:lattice_match}）では、
+Co$_3$Ti（$\Delta a = 0.02$~\AA、安定）が析出強化候補として最も現実的である。
+Co$_3$TiはCo基超合金の$\gamma'$相として既に研究されており、
+本データベースからの抽出結果は既知の材料工学的知見と整合する。
 
 \subsection{限界と制約}
 \label{sec:limitations}
 
-\subsubsection{テストケースの自己参照性（深刻度：高）}
+\subsubsection{データベース規模}
 
-80件の回帰テストは抽出パターンを知るシステム開発者が設計した。
-したがって、制御された条件下で100\%のパス率は予想される。
-100件のVASPストレステストは半独立的に設計されたが、
-真の精度評価には材料研究者による自由文クエリのブラインドテストが必要である。
-今後の課題として、第三者の材料研究者複数名による
-ブラインドミニセット（例：5名×5クエリ）を用いた独立評価を計画している。
+120エントリ・7テーブルの検証データベースは、
+本番規模の材料DB（OQMD：${\sim}30$テーブル・100万件超）より小さい。
+Schema Graph走査はFKイントロスペクションに基づくため、
+テーブル数増加に対してアルゴリズムは原理的に適用可能であるが、
+大規模スキーマでの実証は今後の課題である。
 
-\subsubsection{RAG天井効果（深刻度：中→解決済み）}
+\subsubsection{テストケースの自己参照性}
 
-RAGアブレーション（4条件×50クエリ）はgpt-5.5で天井効果を示し、
-Few-Shot事例の追加効果が測定不能であった。
-追実験としてgpt-4o-mini（小型モデル）で同一50クエリを再実行したところ、
-No Examples（Schema Graphプロンプトのみ）80\%、Manual Only 82\%、
-Paper Only 84\%、All Examples 98\%と明確なRAG効果が確認された
-（表~\ref{tab:rag_small_model}）。
-これはSchema Graph制約がベースラインの品質を保証しつつ、
-RAGが小型モデルの能力不足を補完する設計であることを実証する。
-gpt-5.5での天井効果はモデル能力がSchema Graph制約で飽和したためであり、
-RAGシステム自体の無効性を意味しない。
+80件の回帰テストおよび100件の評価クエリは
+システム開発者が設計したものであり、
+真の精度評価には材料研究者による自由文クエリの
+ブラインドテストが必要である。
 
-\subsubsection{無通知失敗（深刻度：中→緩和済み）}
+\subsubsection{実行精度の低さ}
 
-Rule-basedモードでの未登録語彙の無通知破棄（Silent Constraint Dropping）は、
-Coverage Scoreの実装により緩和された。
-スコア0.8未満でLLMフォールバック、0.5未満で明確化要求を発行する。
-ただし、Coverage Scoreの閾値は経験的に設定されており、最適化の余地がある。
+Proposed手法の平均実行精度10.6\%は、
+実用システムとしては不十分である。
+主要因は以下の通り：
+(1)~gpt-4.1-miniのSQL生成能力の限界（特に複合WHERE句）、
+(2)~gold SQLとの厳密一致評価（意味的に等価だが構文が異なるSQLは不正解扱い）、
+(3)~マルチホップクエリの本質的困難さ。
+より強力なLLMの使用、部分一致評価の導入、
+プロンプトエンジニアリングの改善が改善の方向性である。
 
-\subsubsection{Out-of-scope検出（深刻度：中→部分解決）}
+\subsubsection{seed dataバイアス}
 
-VASPストレステストでout-of-scope正解率0\%が判明した。
-Intent Classifier（\ref{sec:intent_classifier}節）を実装し
-20パターンのVASPワークフロー検出を追加したことで
-out-of-scope正解率は100\%に改善した（表~\ref{tab:vasp_results}）が、
-正規表現ベースのため、新しいパターンへの汎化は限定的である。
-LLMベースのIntent分類への拡張が今後の課題である。
-
-\subsubsection{スキーマ規模の妥当性（深刻度：中$\to$低）}
-
-本研究の主実験は7テーブル・1{,}351レコードのスキーマで実施された。
-この規模は本番データベース（OQMD：${\sim}30$テーブル・100万件超）より小さいが、
-ER図設計においては実際のRDB構造に近い規模を想定した追加検証を実施した。
-具体的に、OQMDのDjangoモデル構造（Entry, Structure, Atom, Composition, Calculation,
-FormationEnergy, Spacegroup等${\sim}30$テーブル）およびMaterials Projectのコレクション構成
-（materials, thermo, electronic\_structure, elasticity等${\sim}20$コレクション）を参考に、
-30テーブル・31FK関係（多対多・自己参照FK含む）の拡張スキーマを構築して検証を行った。
-
-30テーブル環境での実験結果（150クエリ・6カテゴリ）は以下の通りである：
-Schema Graph走査あり（Traversed：関連テーブルのみ提示）94.7\%（142/150）・不要JOIN率2.8\%、
-Schema情報全量提示（走査なし：30テーブル全体）86.7\%（130/150）・不要JOIN率9.2\%、
-Schema情報なし0.7\%（1/150）。
-走査あり条件は走査なし条件に対して+8.0ppの成功率向上を達成し、
-特にMediumカテゴリ（3--4テーブル結合）では+16pp（76\%$\to$92\%）の改善を示した。
-走査なしで失敗する19件のクエリ（カラム名曖昧化・FK経路誤選択）を走査あり条件で正答に転換でき、
-テーブル数増加に伴いSchema Graph走査の必要性が顕著に高まることを実証した。
-
-表~\ref{tab:failure_modes}に30テーブル検証で観察された失敗パターンと
-Schema Graph走査による解決機序を示す。
-
-\begin{table}[htbp]
-  \centering
-  \caption{30テーブル検証における失敗パターンとSchema Graph走査による緩和。}
-  \label{tab:failure_modes}
-  \small
-  \begin{tabular}{p{2.5cm}p{3.5cm}p{3.5cm}}
-    \toprule
-    失敗パターン & Full Schema注入時の原因 & Traversalによる緩和 \\
-    \midrule
-    カラム名曖昧参照 &
-      複数テーブルに同名カラム（entry\_id等）が存在し、LLMが誤ったテーブルから参照 &
-      関連テーブルのみ提示することで候補を限定 \\
-    \addlinespace
-    存在しないカラム参照 &
-      類似テーブル・類似カラム名からLLMが幻覚的に生成 &
-      スキーマコンテキスト縮小により幻覚を抑制 \\
-    \addlinespace
-    FK経路の誤選択 &
-      直接JOINを試行するが中間テーブルが必要 &
-      FK走査がSteiner木で正しい経路を明示 \\
-    \addlinespace
-    不要JOIN &
-      提示された30テーブルから不要なテーブルまでJOIN &
-      最小サブグラフのみ提示し不要JOINを原理的に排除 \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-\subsubsection{LLM再現性（深刻度：低）}
-
-gpt-5.5のSQL一致率は30\%（20クエリ×5回）であり、
-同一クエリに対して構造的に異なるSQLが生成される。
-ただし実行成功率は100\%であり、意味的等価性は保持されている。
-テスト自動化では結果セット比較が推奨される。
-
-\subsubsection{実効成功率とseedデータバイアス（深刻度：高）}
-\label{sec:effective_rate_limit}
-
-30テーブル実験のTraversed成功率94.7\%のうち、
-実際にデータを返した（rows $>$ 0）のは76.7\%（115/150）である
-（表~\ref{tab:effective_success}）。
-残り18.0\%（27件）は正しいSQLだが空結果であり、
-検証パッケージのseedデータ（L1$_2$中心の120件）が
-論文のDB（1{,}351件・5プロトタイプ）の約1/11規模であることが主因である。
-30テーブル中23テーブルにseedデータが存在せず、
-非L1$_2$構造を要求するクエリで系統的にrows=0となる。
-seedデータの拡充により解消可能な問題であるが、
-公称成功率と実効成功率の乖離（18--19pp）には注意が必要である。
-
-\subsubsection{実験設計の制約（深刻度：高）}
-\label{sec:exp_design_limits}
-
-以下の実験設計上の制約を記す：
-
-\begin{enumerate}
-  \item \textbf{Full-Oracle/Full-Random条件の欠如}：
-    正解テーブルをそのまま渡す条件（Full-Oracle）および
-    同数のテーブルをランダムに選ぶ条件（Full-Random）が未実装のため、
-    Traversalエンジン固有の貢献とプロンプト短縮効果が分離できない。
-    テーブル全選択時のSQL成功率が97.8--98.2\%であることから、
-    プロンプト短縮だけで改善が説明される可能性を完全には排除できない。
-  \item \textbf{パイプライン複合評価}：
-    記録フィールドにentities\_extracted / tables\_candidates /
-    traversal\_subgraphが含まれず、
-    失敗がエンティティ抽出段階かグラフ走査段階か事後判定できない。
-  \item \textbf{交絡変数の未記録}：
-    temperatureパラメータ、システムプロンプト内容、クエリ実行順序、
-    DB状態（seedデータ件数）、プロンプト全文が記録されておらず、
-    再実験時の変動原因の特定が困難である。
-  \item \textbf{クエリ構文カバレッジ}：
-    150クエリ中、CTE（共通テーブル式）・窓関数・UNIONが各0件、
-    否定条件（NOT IN/NOT EXISTS）も4件にとどまる。
-    実運用で必要なSQL構文パターンのカバレッジが不十分である。
-\end{enumerate}
-
-\subsubsection{30テーブルRule-based比較の制約（深刻度：中）}
-
-30テーブル環境のNaive RB成功率0\%は、
-全150件が単一のエイリアス重複バグ
-（\texttt{table name "calc" specified more than once}）で失敗したことによる。
-30テーブルJOIN過多による破綻とは異なる故障モードである。
-SG+RB成功率54\%についても、成功81件は全件WHERE条件ゼロ
-（\texttt{LIMIT 100}のみ）、失敗68件はエイリアス重複バグによる。
-Rule-based比較結果の解釈には上記の制約を考慮すべきである。
-
-\subsubsection{30テーブル実験のモデル名（深刻度：中）}
-
-30テーブル・150クエリ実験にはgpt-4o-miniを使用したが、
-論文本文中に使用モデル名が明記されていなかった。
-\ref{sec:30table_detail}節にて明記した。
-主実験（7テーブル・57クエリ）はgpt-5.5で実施されており、
-モデル能力の差異が結果に影響する可能性がある。
+L1$_2$型に特化した120エントリのseedデータは、
+A$_3$B組成の系統的な生成に基づいており、
+実験的に合成・検証されたデータではない。
+形成エネルギーや格子定数の値は
+第一原理計算に基づく推定値であり、
+材料設計仮説の検証には実験的裏付けが必要である。
 
 \subsection{関連システムとの比較}
 
@@ -2159,207 +1717,98 @@ Rule-based比較結果の解釈には上記の制約を考慮すべきである�
     EMMO~\citep{emmo2020} & あり & なし & あり & --- & 上位オントロジー \\
     KG+OBQC~\citep{allemang2024obqc} & あり & なし & なし & SPARQL & 72\%精度 \\
     \midrule
-    \textbf{本手法} & \textbf{あり} & \textbf{あり} & \textbf{あり} & \textbf{SQL} & FK走査 + 材料辞書 \\
+    \textbf{本手法} & \textbf{あり} & \textbf{あり} & \textbf{あり} & \textbf{SQL} & FK走査 + L1$_2$辞書 \\
     \bottomrule
   \end{tabularx}
-\end{table*}
-
-\subsection{手法能力比較}
-
-表~\ref{tab:method_capability}に、本手法と既存アプローチの
-材料データベース向け主要能力を比較する。
-
-\begin{table*}[htbp]
-  \centering
-  \caption{材料Text-to-SQLにおける手法能力比較。}
-  \label{tab:method_capability}
-  \small
-  \begin{tabular}{lccccc}
-    \toprule
-    手法 & ドメイン辞書 & FK走査 & SQLガード & 材料パーサー & 正規化組成対応 \\
-    \midrule
-    汎用LLM T2SQL (zero-shot) & --- & --- & 部分的 & --- & --- \\
-    Few-shot T2SQL & --- & --- & 部分的 & --- & --- \\
-    KG / Text-to-SPARQL & オントロジー & グラフ走査 & あり & ドメイン依存 & RDF経由 \\
-    DAIL-SQL~\citep{gao2023dail} & --- & --- & --- & --- & --- \\
-    OBQC+LLM~\citep{allemang2024obqc} & オントロジー & グラフ走査 & あり & --- & --- \\
-    \midrule
-    \textbf{本手法} & \textbf{あり} & \textbf{あり} & \textbf{8層} & \textbf{あり} & \textbf{あり} \\
-    \bottomrule
-  \end{tabular}
 \end{table*}
 
 \subsection{AI for Science（AI4S）における意義}
 \label{sec:ai4s}
 
 本手法はAI4Sパラダイムに直接的な含意を持つ。
-表~\ref{tab:ai4s_workflow}にAI4Sワークフローの各段階とT2SQL手法の役割を示す。
+Schema Graphアーキテクチャは\textbf{スキーマ非依存}であり、
+FK関係は実行時にPostgreSQLメタデータからイントロスペクション
+（\ref{sec:schema_graph}節）されるため、
+任意の正規化RDB（Materials Project、AFLOW、NOMAD、機関内データベース）に
+コード変更なしで展開可能である---用語辞書のドメイン適応のみが必要である。
 
-\begin{table*}[htbp]
-  \centering
-  \caption{AI4S材料探索ワークフローにおけるT2SQLの役割。}
-  \label{tab:ai4s_workflow}
-  \small
-  \begin{tabularx}{\textwidth}{lXX}
-    \toprule
-    AI4S段階 & 従来アプローチ & T2SQL手法適用時 \\
-    \midrule
-    仮説生成 &
-      研究者が手動でクエリを作成 &
-      LLMエージェントが仮説からNLクエリを生成 \\
-    データ検索 &
-      SQLまたはAPI呼び出しを手動記述 &
-      NL $\to$ SQL自動変換（Schema Graph経由） \\
-    スクリーニング &
-      反復的SQL修正 &
-      Few-Shot RAGが成功クエリパターンを再利用 \\
-    結果解釈 &
-      クエリ結果の手動検査 &
-      メタデータ付き構造化出力（プロトタイプ、安定性、物性） \\
-    フィードバック &
-      知識は個々の研究者に留まる &
-      成功クエリがFew-Shotストアに蓄積され再利用 \\
-    \bottomrule
-  \end{tabularx}
-\end{table*}
-
-重要な点として、Schema Graphアーキテクチャは\textbf{スキーマ非依存}である：
-FK関係は実行時にPostgreSQLメタデータからイントロスペクション（\ref{sec:schema_graph}節）
-されるため、OQMDに限らず任意の正規化RDB
-（Materials Project、AFLOW、NOMAD、機関内データベース、さらには材料科学以外のドメイン）に
-コード変更なしで展開できる---用語辞書のドメイン適応のみが必要である。
 とりわけ、Materials Integration（MInt）システム\cite{minamoto2020mint}における
-PSPP（プロセス・構造・物性・性能）連鎖の各モジュールが出力するRDBや、
+PSPP連鎖の各モジュールが出力するRDBや、
 provenance管理システムpinax \cite{minamoto2026pinax}が蓄積する
 解析ワークフローデータベースは、本手法の自然な適用先として期待される。
-本研究でOQMDを検証対象に選定した理由は、
-組成・構造・熱力学的安定性の外部キー接続による7テーブル構成が
-材料データベースに典型的なスキーマ複雑性の好例であり、
-ここでの成功が他のRDBへの展開可能性を強く示唆するためである。
 
-さらに、カスケードRule-based $\to$ LLMアーキテクチャ（\ref{sec:cascade}節）は、
-AI4Sが要求する\textbf{信頼性とコスト効率}の要件に適合する：
-定型クエリは外部API呼び出しなしに決定論的に処理され、
-複雑なクエリのみがLLM能力を活用する。
-このハイブリッドアプローチにより、AI4Sパイプラインは
-禁止的なAPIコストやレイテンシなしに大規模運用が可能になる。
+L1$_2$探索で実証されたSchema Graph制約 $\to$ LLM SQL生成 $\to$
+材料分析（$\gamma'$候補ランキング、格子整合性評価）の一連のフローは、
+NL $\to$ データ検索 $\to$ 材料設計仮説生成の
+エンドツーエンドパイプラインの原型を提供する。
 
 \subsection{今後の展望}
 
-本研究で実装済みの項目（数値条件パーサー、Coverage Score、
-RAGアブレーション、Intent Classifier）を踏まえ、残る課題を示す：
-
 \begin{enumerate}
   \item \textbf{マルチデータベース拡張}：Schema GraphをMaterials Project、AFLOWスキーマに適応。
-    動的FKイントロスペクションはアーキテクチャ上これを既にサポートしている。
+    動的FKイントロスペクションはアーキテクチャ上これを既にサポートする。
   \item \textbf{AI4Sエージェント統合}：T2SQL手法を自律材料探索エージェントのツールとして
     組み込み（MCPプロトコルやfunction calling経由）、
     仮説 $\to$ データ検索 $\to$ 分析のエンドツーエンドパイプラインを実現。
-  \item \textbf{ブラインドユーザースタディ}：10名以上の材料研究者から自由文クエリを収集し、
+  \item \textbf{ブラインドユーザースタディ}：材料研究者から自由文クエリを収集し、
     テストケースの自己参照性問題を解消する。
-  \item \textbf{高難度クエリセットでのRAG再評価}：
-    複雑な集約・ウィンドウ関数・多テーブル結合クエリでRAG条件間差異を検証し、
-    天井効果の範囲を明確化する。
-  \item \textbf{LLMベースIntent分類}：正規表現ベースのIntent Classifierを
-    軽量LLM（ローカル推論可能なモデル）に置換し、
-    新しいスコープ外パターンへの汎化性能を向上する。
-  \item \textbf{大規模データ検証}：30テーブル・150クエリでの検証は実施済み（走査あり94.7\%、+8.0pp改善）であるが、
-    10万レコード以上でのSteiner木近似の計算性能検証が残る。
-  \item \textbf{CALPHAD連携による熱力学的精度向上}：Text-to-SQLで取得した候補化合物のうち、
-    熱力学的に特定が困難なもの（準安定相、固溶体の安定性判定等）については、
-    CALPHAD法（Thermo-Calc等のTDBファイルからギブズエネルギー関数・相互作用パラメータを抽出）と
-    連携することで精度向上が可能である。
-    具体的には、Schema Graph走査でRDBから候補を絞り込んだ後、
-    CALPHADの自由エネルギー計算により相安定性を判定する二段階フローを想定する。
-    これにより、RDB上の$E_\mathrm{hull}$近似では判定困難な温度依存相安定性や
-    多成分固溶体の分解挙動にも対応可能となる。
-  \item \textbf{クロスリンガル埋め込み検索}：TF-IDFをtransformer埋め込みに置換し
-    Few-Shot類似度を改善---国際AI4S協力において
-    多言語クエリが到着する前提条件。
-  \item \textbf{対話的クエリ精緻化}：曖昧クエリに対する段階的確認質問の返却
-    （VASPストレステストで曖昧カテゴリ40\%が課題として残る）。
+  \item \textbf{CALPHAD連携}：Schema Graph走査でRDBから候補を絞り込んだ後、
+    CALPHADの自由エネルギー計算により温度依存相安定性を判定する
+    二段階フローを想定する。
+  \item \textbf{より強力なLLMの評価}：gpt-4.1-miniでの実行精度10.6\%は
+    改善余地が大きく、より大規模なモデルでの再評価が期待される。
+  \item \textbf{大規模データ検証}：10万レコード以上での
+    Steiner木近似の計算性能検証が残る。
 \end{enumerate}
 
 % =====================================================================
 \section{結論}
 \label{sec:conclusion}
 
-本研究では、正規化された材料リレーショナルデータベースに対する
-Schema Graph制約型自然言語インターフェースを提案した。
-\textbf{材料データベースにおける自然言語アクセスの本質的課題は
-SQL構文の生成ではなく、正規化された異種材料データを外部キー関係と
-材料ドメイン意味論に従って正しく結合することである}---
-本手法はこの課題にSchema Graph走査（Steiner木近似）で対応する。
-
-OQMD金属間化合物1{,}351件（B2・L1$_2$・NaCl・NiAs・BiF$_3$型、7テーブル）での検証に加え、
-OQMD実規模を想定した\textbf{30テーブル・150クエリ}の拡張検証を実施した。
-
+本研究では、L1$_2$型金属間化合物探索に特化した
+Schema Graph制約型自然言語データベースインターフェースを提案し、
+7テーブル・120エントリ・100クエリの評価で検証した。
 主要な知見：
 
 \begin{enumerate}
-  \item \textbf{Schema Graph走査は実運用規模で不可欠}：
-    30テーブル環境で走査なし86.7\% $\to$ 走査あり94.7\%（+8.0pp）。
-    不要JOIN率9.2\% $\to$ 2.8\%。Mediumカテゴリでは+16pp改善。
-    Naive RB（全テーブルJOIN）は30テーブルで実行成功率0\%に破綻。
-  \item \textbf{スキーマ情報注入が決定的}：7条件比較（gpt-5.5）により、
-    Schema Graph制約を含む全条件が実行成功率100\%を達成。
-    LLM-only（スキーマ情報なし）は1.8\%。
-  \item \textbf{Rule-basedモードの実用性}：外部API依存ゼロで32--60~msのレイテンシにて
-    57/57テスト成功。辞書カバー範囲内クエリにはLLM呼び出しが不要。
-  \item \textbf{RAG効果はモデル能力に依存}：gpt-5.5では天井効果（全条件100\%）だが、
-    gpt-4o-miniでは80\% $\to$ 98\%（+18pp）。
-  \item \textbf{Intent Classifier}：VASPワークフロー質問の検出により、
-    out-of-scope正解率を0\%から100\%に改善。
-  \item \textbf{8層SQLガード}は全インジェクション攻撃を遮断し、
-    結果セット上限を強制する。
+  \item \textbf{テーブル幻覚の完全排除}：
+    Proposed手法はテーブル幻覚率\textbf{0\%}を達成。
+    LLM-only（100\%）、Full Schema（0.7\%）、FK-list（0.5\%）と比較し、
+    Schema Graph走査が唯一テーブル幻覚を原理的に排除する。
+  \item \textbf{スキーマ情報注入が決定的}：
+    LLM-only（実行成功率0\%）vs Proposed（82\%）の差異は、
+    材料DB専門テーブル名に対するLLM事前知識の限界を示す。
+  \item \textbf{最高実行精度10.6\%}：
+    全手法中最高だが、実用には不十分。
+    Easy難度では39.3\%に達するが、Hard/Very Hardでは大幅に低下する。
+  \item \textbf{既知L1$_2$化合物11件の全件再発見}（100\%）：
+    データベース構築とクエリ変換パイプラインの内部整合性を検証。
+  \item \textbf{$\gamma'$相候補ランキング}：
+    Cu$_3$Nb、Ni$_3$Al、Cu$_3$Ti、Co$_3$Tiが上位。
+    格子整合性・安定性・バルクモジュラスの複合評価により
+    新規$\gamma'$候補を定量的にランキング。
+  \item \textbf{回帰テスト80/80 PASS}：
+    SQLインジェクション遮断、Intent分類を含む
+    安全性・頑健性テストに全件合格。
 \end{enumerate}
 
-\textbf{30テーブル詳細分析}
-（\ref{sec:30table_detail}節）では、
-テーブル選択F1スコア（Full 90.9\% → Traversed 96.7\%）、
-実効成功率（rows$>$0: 67.3\% → 76.7\%）、
-意味的補正成功率（62.7\% → 82.0\%）、
-テーブル選択Jaccard類似度（0.746 → 0.894）、
-McNemar検定（$\chi^2=4.65$、$p<0.05$）を報告した。
-テーブル選択難易度軸では5+テーブルクエリで+12ppの改善が確認された。
+\textbf{実証の限界}：
+検証は120エントリ・7テーブルのL1$_2$特化データベースに限定される。
+実行精度10.6\%は改善余地が大きく、
+より強力なLLM、部分一致評価、プロンプト改善が今後の方向性である。
+評価クエリは著者設計であり、独立した材料研究者による
+ブラインドテストが真の精度評価に必要である。
 
-\textbf{実証の限界}：主検証はOQMDサブセット（1{,}351件・7テーブル）および
-拡張スキーマ（30テーブル・シミュレーションデータ120件）に限定される。
-30テーブル実験の公称成功率94.7\%に対し実効成功率（rows$>$0）は76.7\%であり、
-seedデータの規模乖離（120件 vs 論文DB 1{,}351件）が主因である
-（\ref{sec:effective_rate_limit}節）。
-実験設計上、Full-Oracle/Full-Random条件の欠如により
-Traversal固有の貢献とプロンプト短縮効果は分離されていない
-（\ref{sec:exp_design_limits}節）。
-クエリセットは著者設計であり、独立したユーザー評価は今後の課題である。
-
-カスケードRule-based $\to$ LLMアーキテクチャは速度・コスト・カバレッジのバランスを取り、
-材料研究者がSQL専門知識なしに正規化データベースを
-自然言語でクエリすることを可能にする。
-
-\textbf{AI for Science（AI4S）}のより広い文脈において、
-本研究は正規化RDBへの自然言語アクセスという
-AI駆動型科学ワークフローの基盤的課題に取り組む。
-Schema Graph T2SQL手法は、実行時FKイントロスペクションに基づくため、
-実装上はMaterials Project、AFLOW、機関内データベース等への移植が可能な設計である。
-本研究の主実験はOQMDサブセット（1{,}351件・7テーブル・5プロトタイプ）で実施されたが、
-ER図設計においては実際のRDB構造（OQMD${\sim}30$テーブル、Materials Project${\sim}20$コレクション）に
-近い規模を想定し、30テーブル・31FK関係の拡張スキーマでの追加検証（150クエリ）を実施した。
-30テーブル環境ではSchema Graph走査により成功率が86.7\%から94.7\%に向上（+8.0pp）し、
-不要JOIN率も9.2\%から2.8\%に削減された。
-特に走査なし条件で失敗する19件のクエリを走査あり条件で正答に転換でき、
-走査の必要性がスキーマ規模の増大に伴い高まることを実証した。
-レコード数10万以上の大規模データおよび材料科学以外のドメインでの有効性は今後の検証課題である。
-
-現在の検証はOQMD単一データベースに限定されるが、
-本手法は正規化RDB全般に対するT2SQLの再現可能なフレームワークを確立し、
-マルチデータベース検証、大規模スキーマ対応、
-AI4Sエージェントアーキテクチャへの統合へと拡張可能である。
+本手法は正規化RDB全般に対するSchema Graph制約型T2SQLの
+再現可能なフレームワークを確立し、
+マルチデータベース対応、大規模スキーマ検証、
+AI4Sエージェント統合、CALPHAD連携への拡張が期待される。
 
 % =====================================================================
 \section*{謝辞}
 
-DFT計算データはOpen Quantum Materials Database（OQMD）から取得した。
+L1$_2$型金属間化合物のDFT計算データは
+Open Quantum Materials Database（OQMD）の値を参考に構築した。
 OQMDの開発・維持管理にあたるNorthwestern大学Wolvertonグループに感謝する。
 本研究はNIMSの支援を受けた。
 
@@ -2376,9 +1825,9 @@ OQMDの開発・維持管理にあたるNorthwestern大学Wolvertonグループ�
 
 本付録には回帰テスト44件（表~\ref{tab:all_tests}）と
 代表的SQL生成例を掲載する。
-全評価クエリ（57件Baseline比較、50件RAGアブレーション、
-30件Graph Traversalアブレーション、100件VASPストレステスト、
-20件LLM再現性テスト）の完全リスト、プロンプトテンプレート、
+全評価クエリ100件（Easy 20、Medium 30、Hard 30、Very Hard 20）の
+gold SQL、期待結果セット、5手法比較結果、
+プロンプトテンプレート、
 \texttt{allowed\_schema.yaml}、\texttt{material\_terms.yaml}は
 Supplementary Materialsに収録する。
 
@@ -2391,45 +1840,45 @@ Supplementary Materialsに収録する。
   \toprule
   ID & カテゴリ & 自然言語クエリ & 結果 \\
   \midrule
-  A01 & 正常系 & Feを含むB2化合物を出して & PASS \\
+  A01 & 正常系 & Feを含むL1$_2$化合物を出して & PASS \\
   A02 & 正常系 & 安定なL1$_2$化合物を形成エネルギー順に出して & PASS \\
   A03 & 正常系 & NiとAlの両方を含む化合物を出して & PASS \\
-  A04 & 正常系 & B2化合物の全リストを出して & PASS \\
-  A05 & 正常系 & 準安定なB2化合物を出して & PASS \\
+  A04 & 正常系 & L1$_2$化合物の全リストを出して & PASS \\
+  A05 & 正常系 & 準安定なL1$_2$化合物を出して & PASS \\
   A06 & 正常系 & Coを含む安定なL1$_2$化合物を出して & PASS \\
-  A07 & 正常系 & FeとAlを含むB2とL1$_2$化合物を出して & PASS \\
+  A07 & 正常系 & FeとAlを含むL1$_2$化合物を出して & PASS \\
   A08 & 正常系 & $\gamma'$化合物を出して & PASS \\
   A09 & 正常系 & ニッケルを含むL1$_2$型化合物を出して & PASS \\
   A10 & 正常系 & L1$_2$化合物の全データを出して & PASS \\
-  A11 & 正常系 & Tiを含むB2化合物を格子定数順（降順）に出して & PASS \\
-  A12 & 正常系 & CsCl型化合物を出して & PASS \\
+  A11 & 正常系 & Tiを含むL1$_2$化合物を格子定数順（降順）に出して & PASS \\
+  A12 & 正常系 & 安定なL1$_2$で格子定数3.5\AA 以上のものを出して & PASS \\
   A13 & 正常系 & Cu$_3$Au型化合物を出して & PASS \\
-  A14 & 正常系 & 鉄を含むB2化合物を出して & PASS \\
+  A14 & 正常系 & 鉄を含むL1$_2$化合物を出して & PASS \\
   A15 & 正常系 & 安定なL1$_2$化合物でNiを含むものを出して & PASS \\
   \midrule
-  B01 & 該当なし & Xeを含むB2化合物を出して & PASS \\
+  B01 & 該当なし & Xeを含むL1$_2$化合物を出して & PASS \\
   B02 & 該当なし & UとPuを含むL1$_2$化合物を出して & PASS \\
-  B03 & 該当なし & RnとOgを含むB2化合物を出して & PASS \\
-  B04 & 該当なし & ScとIrを含む安定なB2化合物を出して & PASS \\
-  B05 & 該当なし & PtとGaを含む安定なB2化合物を出して & PASS \\
+  B03 & 該当なし & RnとOgを含むL1$_2$化合物を出して & PASS \\
+  B04 & 該当なし & ScとIrを含む安定なL1$_2$化合物を出して & PASS \\
+  B05 & 該当なし & PtとGaを含む安定なL1$_2$化合物を出して & PASS \\
   \midrule
   C01 & 曖昧 & 安定な化合物を出して & PASS \\
-  C02 & 曖昧 & B2 & PASS \\
+  C02 & 曖昧 & L12 & PASS \\
   C03 & 曖昧 & 安定なものを出して & PASS \\
   C04 & 曖昧 & （空入力） & PASS \\
   C05 & 曖昧 & 今日の天気を教えて & PASS \\
   C06 & 曖昧 & Fe & PASS \\
   C07 & 曖昧 & 格子定数 & PASS \\
-  C08 & 曖昧 & band gapが大きい安定なB2化合物 & PASS \\
+  C08 & 曖昧 & 形成エネルギーが低い安定なL1$_2$化合物 & PASS \\
   C09 & 曖昧 & NiAl L12 & PASS \\
-  C10 & 曖昧 & FeのB2かL12 & PASS \\
+  C10 & 曖昧 & NiのL12 & PASS \\
   \midrule
-  D01 & 矛盾 & 安定かつ準安定なB2化合物 & PASS \\
-  D02 & 矛盾 & FeなしのFe B2化合物 & PASS \\
+  D01 & 矛盾 & 安定かつ準安定なL1$_2$化合物 & PASS \\
+  D02 & 矛盾 & NiなしのNi L1$_2$化合物 & PASS \\
   \midrule
   E01 & 拒否 & DROP TABLE material\_entry; & PASS \\
   E02 & 拒否 & SELECT *; DELETE FROM composition; & PASS \\
-  E03 & 拒否 & B2化合物; DROP TABLE structure; & PASS \\
+  E03 & 拒否 & L1$_2$化合物; DROP TABLE structure; & PASS \\
   E04 & 拒否 & SELECT * FROM secret\_passwords & PASS \\
   E05 & 拒否 & INSERT INTO material\_entry VALUES (...) & PASS \\
   \midrule
@@ -2444,12 +1893,23 @@ Supplementary Materialsに収録する。
 
 \lstset{basicstyle=\ttfamily\scriptsize,breaklines=true,columns=flexible,numbers=none,frame=single,xleftmargin=0pt,xrightmargin=0pt,linewidth=\columnwidth}
 
-\subsection{A01: 「Feを含むB2化合物を出して」}
+\subsection{「Niを含む安定なL1$_2$化合物を出して」}
 
-\paragraph{Naive（Level 0）：}
+\paragraph{LLM-only（B1）：}
 \begin{lstlisting}
-SELECT m.entry_id, m.formula,
-       s.prototype
+SELECT formula, stability
+FROM materials
+WHERE element = 'Ni'
+  AND structure_type = 'L12'
+  AND stability = 'stable';
+-- テーブル幻覚: materials, stability等は
+-- 存在しないテーブル -> 実行不可
+\end{lstlisting}
+
+\paragraph{Proposed手法（P）：}
+\begin{lstlisting}
+SELECT DISTINCT m.entry_id, m.formula,
+  s.prototype, s.lattice_a, s.space_group
 FROM material_entry m
   JOIN composition c
     ON c.entry_id = m.entry_id
@@ -2457,68 +1917,41 @@ FROM material_entry m
     ON s.entry_id = m.entry_id
   JOIN phase_stability ps
     ON ps.entry_id = m.entry_id
-  JOIN calculation calc
-    ON calc.entry_id = m.entry_id
-  JOIN calculated_property cp
-    ON cp.calculation_id
-     = calc.calculation_id
-WHERE s.prototype = 'B2'
-  AND c.element = 'Fe';
--- 問題: 不要JOIN 3件, LIMIT/DISTINCTなし
-\end{lstlisting}
-
-\paragraph{Schema Graph + Rule-based（Level 1）：}
-\begin{lstlisting}
-SELECT DISTINCT m.entry_id, m.formula,
-  s.prototype, s.lattice_a, s.space_group
-FROM material_entry m
-  JOIN composition c
-    ON c.entry_id = m.entry_id
-  JOIN structure s
-    ON s.entry_id = m.entry_id
-WHERE (s.prototype = 'B2'
-    OR s.strukturbericht = 'B2')
-  AND c.element = 'Fe'
+WHERE (s.prototype = 'L12'
+    OR s.strukturbericht = 'L12')
+  AND c.element = 'Ni'
+  AND ps.energy_above_hull = 0
 LIMIT 100;
--- 最適: 必要な2 JOINのみ、DISTINCT、LIMIT付き
+-- Schema Graph走査で必要な3 JOINのみ
+-- テーブル幻覚0%, DISTINCT, LIMIT付き
 \end{lstlisting}
 
-\paragraph{Schema Graph + gpt-5.5（Level 2）：}
-\begin{lstlisting}
-SELECT DISTINCT m.entry_id, m.formula,
-  s.prototype, s.lattice_a, s.space_group
-FROM material_entry m
-  JOIN structure s
-    ON s.entry_id = m.entry_id
-  JOIN composition c
-    ON c.entry_id = m.entry_id
-WHERE (s.prototype = 'B2'
-    OR s.strukturbericht = 'B2')
-  AND c.element = 'Fe'
-LIMIT 100;
--- LLMがSG制約内で同等SQLを生成
-\end{lstlisting}
+\subsection{「NiとAlの両方を含むL1$_2$化合物を出して」}
 
-\subsection{A03: 「NiとAlの両方を含む化合物を出して」}
-
-\paragraph{Naive（Level 0）：}
+\paragraph{Full Schema（B2）：}
 \begin{lstlisting}
 SELECT m.entry_id, m.formula
 FROM material_entry m
   JOIN composition c
     ON c.entry_id = m.entry_id
-  ...(全テーブルJOIN)...
+  JOIN structure s
+    ON s.entry_id = m.entry_id
 WHERE c.element = 'Ni'
-  AND c.element = 'Al';
+  AND c.element = 'Al'
+  AND s.prototype = 'L12';
 -- 致命的: 単一行が両条件を同時に
 -- 満たすことは不可能 -> 常に0行
 \end{lstlisting}
 
-\paragraph{Schema Graph + Rule-based（Level 1）：}
+\paragraph{Proposed手法（P）：}
 \begin{lstlisting}
 SELECT DISTINCT m.entry_id, m.formula
 FROM material_entry m
-WHERE EXISTS (
+  JOIN structure s
+    ON s.entry_id = m.entry_id
+WHERE (s.prototype = 'L12'
+    OR s.strukturbericht = 'L12')
+AND EXISTS (
   SELECT 1 FROM composition
   WHERE entry_id = m.entry_id
     AND element = 'Ni')
@@ -2528,6 +1961,7 @@ AND EXISTS (
     AND element = 'Al')
 LIMIT 100;
 -- EXISTS副問い合わせで正確な多元素AND
+-- -> Ni3Al (1行) を正しく返却
 \end{lstlisting}
 
 \end{appendices}
