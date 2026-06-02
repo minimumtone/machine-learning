@@ -373,17 +373,32 @@ $V_\text{uc} = n_\text{auc} \sum_{i} c_i V_i + n_\text{auc} \sum_{i} c_i V_i \su
 
 <div class="card">
 <h3>Alonsoの $q=1$ と本研究の $q \ne 1$</h3>
-<p>Alonsoの原論文では $q=1$（スケーリング補正なし）で式を使用しています。
-これはKingの実験 $\Omega_\text{sf}$ がHEAと同じ実験条件で測定されたものだからです。</p>
 
-<p>一方、本研究では $\Omega_\text{sf}$ をDFTから計算するため、以下のミスマッチが生じます：</p>
+<p><strong>Alonsoの原論文で $q=1$（補正なし）が成立する理由：</strong></p>
+<p>Alonsoが使った $\Omega_\text{sf}$ は、Kingが<strong>希薄固溶体の実験</strong>から求めた値です。
+実際に合金を作り、格子定数をX線回折で測定し、その実測値から $\Omega_\text{sf}$ を逆算しています。
+この実験値には<strong>電子相互作用・電荷移動・$d$-$d$混成</strong>など全ての物理効果が既に含まれているため、
+追加の補正（$q$パラメータ）は不要です。</p>
+
+<p><strong>本研究で $q \ne 1$ が必要な理由：</strong></p>
+<p>本研究では $\Omega_\text{sf}$ を実験ではなくDFT計算（B2やL1$_2$の秩序構造）から求めています。
+秩序構造とHEA（ランダム構造）では原子の並び方が異なるため、以下のミスマッチが生じます：</p>
 <ul>
-<li>DFTは0 K（基底状態）の結果 → HEAは室温</li>
-<li>B2構造（$\alpha=-1$）からの $\Omega_\text{sf}$ → HEAは $\alpha \approx 0$（ランダム）</li>
-<li>GGA-PBE汎関数の系統的な体積過大/過小評価</li>
+<li><strong>秩序度のミスマッチ</strong>：B2構造（$\alpha=-1$、完全秩序）から求めた $\Omega_\text{sf}$ を、
+HEA（$\alpha \approx 0$、ランダム配置）に適用</li>
+<li><strong>温度の違い</strong>：DFTは0 K（基底状態）、HEAは室温で測定</li>
+<li><strong>DFT汎関数の系統誤差</strong>：GGA-PBEによる体積の系統的な過大/過小評価</li>
 </ul>
-<p>これらを補正するために $q_s$ を導入: $q_\text{BCC}=0.49$, $q_\text{FCC}=0.13$。</p>
-<p>ただし後の発見（セクション10）で示すように、<strong>参照体積をVASP値に揃えると$q \approx 1$が自然に達成される</strong>。</p>
+<p>これらを一括して補正するのが $q_s$ パラメータです: $q_\text{BCC}=0.49$, $q_\text{FCC}=0.13$。</p>
+
+<table class="data-table" style="max-width:500px;">
+<tr><th>$\Omega_\text{sf}$ の出所</th><th>$q$</th><th>理由</th></tr>
+<tr><td>King実験値（希薄固溶体）</td><td>1</td><td>実験値に全効果が含まれる</td></tr>
+<tr><td>本研究DFT（B2秩序構造）</td><td>≠1</td><td>秩序→ランダムの補正が必要</td></tr>
+</table>
+
+<p>ただし後の発見（セクション10）で示すように、<strong>参照体積をVASP値に揃えると$q \approx 1$が自然に達成される</strong>。
+これはDFTの系統誤差が $\Omega_\text{sf}$ の分子・分母でキャンセルするためです。</p>
 </div>
 
 <div class="card">
