@@ -669,7 +669,7 @@ def interdiffusion_matrix_rs_torch(
 ) -> torch.Tensor:
     """Compute interdiffusion matrix D̃(c) for regular-solution model (PyTorch).
 
-    D̃_km = M_kk × ∂(μ_k − μ_ref)/∂c_m  (thermodynamic factor form).
+    D̃_km = Σ_j M_kj × ∂(μ_j − μ_ref)/∂c_m  (thermodynamic factor form).
 
     For k = m:
         ∂(μ_k − μ_ref)/∂c_k = RT/(c_k + δ) + RT/(c_ref + δ) − 2 Ω_{k,ref}
@@ -715,21 +715,25 @@ def interdiffusion_matrix_rs_torch(
 
     c_ref = c[:, ref] + mu_floor  # (N,)
 
-    D_tilde = torch.zeros(N, n_ind, n_ind, dtype=c.dtype, device=c.device)
-    for k in range(n_ind):
-        c_k_safe = c[:, k] + mu_floor  # (N,)
+    # Thermodynamic factor: thermo_factor[j, m] = ∂(μ_j − μ_ref)/∂c_m
+    thermo_factor = torch.zeros(N, n_ind, n_ind, dtype=c.dtype, device=c.device)
+    for j in range(n_ind):
+        c_j_safe = c[:, j] + mu_floor  # (N,)
         for m in range(n_ind):
-            if k == m:
-                thermo = RT / c_k_safe + RT / c_ref - 2.0 * Omega[:, k, ref]
+            if j == m:
+                thermo_factor[:, j, m] = RT / c_j_safe + RT / c_ref - 2.0 * Omega[:, j, ref]
             else:
-                thermo = (RT / c_ref
-                          + Omega[:, k, m]
-                          - Omega[:, k, ref]
-                          - Omega[:, ref, m])
-            if mobility is not None:
-                D_tilde[:, k, m] = mobility[k, k] * thermo
-            else:
-                D_tilde[:, k, m] = thermo
+                thermo_factor[:, j, m] = (RT / c_ref
+                                          + Omega[:, j, m]
+                                          - Omega[:, j, ref]
+                                          - Omega[:, ref, m])
+
+    # D̃_km = Σ_j M_kj × ∂(μ_j − μ_ref)/∂c_m
+    # Uses full mobility matrix (including off-diagonal terms).
+    if mobility is not None:
+        D_tilde = torch.einsum('kj,njm->nkm', mobility, thermo_factor)
+    else:
+        D_tilde = thermo_factor
 
     return D_tilde
 
