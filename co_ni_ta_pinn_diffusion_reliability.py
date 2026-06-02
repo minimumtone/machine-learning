@@ -768,72 +768,6 @@ def make_initial_profile_ternary_rs(
     return c0
 
 
-def _rs_interdiffusion_matrix_np(
-    c_full: np.ndarray,
-    theta_pairs: np.ndarray,
-    RT: float,
-    mobility: np.ndarray,
-    use_comp_dep_M: bool = False,
-    log_M_endmembers: Optional[np.ndarray] = None,
-    eps: float = 1.0e-14,
-    mu_floor: float = 5.0e-3,
-) -> np.ndarray:
-    """Compute interdiffusion coefficient matrix D̃(c) from Onsager coefficients.
-
-    For diagonal L_kj = M_kk δ_kj (independent-component mobility):
-        D̃_km = M_kk × ∂(μ_k - μ_ref)/∂c_m
-
-    The thermodynamic factor for regular solution:
-        k = m:  RT/(c_k + mu_floor) + RT/(c_ref + mu_floor) - 2Ω_{k,ref}
-        k ≠ m:  RT/(c_ref + mu_floor) + Ω_km - Ω_{k,ref} - Ω_{ref,m}
-
-    ``mu_floor`` prevents 1/c divergence when c → 0 (consistent with
-    the log-regularization in ``diffusion_potentials_*``).
-
-    Parameters
-    ----------
-    c_full : (Nx, n_components) compositions at half-grid points.
-    theta_pairs : (Nx, n_pairs) spatially-varying Ω parameters.
-    RT : scalar.
-    mobility : (n_ind, n_ind) constant mobility matrix.
-    mu_floor : additive floor for 1/c terms (default 5e-3).
-    """
-    Nx, n_components = c_full.shape
-    n_ind = n_components - 1
-    ref = n_components - 1
-    c = np.clip(c_full, eps, 1.0)
-    c = c / np.sum(c, axis=1, keepdims=True)
-
-    Omega = np.zeros((Nx, n_components, n_components), dtype=float)
-    pairs = pair_indices_rs(n_components)
-    for p_idx, (a, b) in enumerate(pairs):
-        Omega[:, a, b] = theta_pairs[:, p_idx]
-        Omega[:, b, a] = theta_pairs[:, p_idx]
-
-    if use_comp_dep_M and log_M_endmembers is not None:
-        M_diag = _mobility_diag_from_endmembers_np(c, log_M_endmembers)
-    else:
-        M_diag = np.zeros((Nx, n_ind), dtype=float)
-        for i in range(n_ind):
-            M_diag[:, i] = mobility[i, i]
-
-    c_ref = c[:, ref] + mu_floor
-    D_tilde = np.zeros((Nx, n_ind, n_ind), dtype=float)
-    for k in range(n_ind):
-        c_k_safe = c[:, k] + mu_floor
-        for m in range(n_ind):
-            if k == m:
-                thermo_factor = RT / c_k_safe + RT / c_ref - 2.0 * Omega[:, k, ref]
-            else:
-                thermo_factor = (RT / c_ref
-                                 + Omega[:, k, m]
-                                 - Omega[:, k, ref]
-                                 - Omega[:, ref, m])
-            D_tilde[:, k, m] = M_diag[:, k] * thermo_factor
-
-    return D_tilde
-
-
 def _rs_compute_div_flux(
     c_full: np.ndarray,
     x: np.ndarray,
@@ -1615,6 +1549,7 @@ def make_training_data_rs(
     learn_lr_omega: bool = False,
     noise_model: str = "gaussian",
     log_M_endmembers: Optional[np.ndarray] = None,
+    mu_floor: float = 5.0e-3,
 ) -> TrainingData:
     """Generate training data using the RS (chemical-potential) FDM solver.
 
@@ -1624,6 +1559,9 @@ def make_training_data_rs(
 
     theta_left / theta_right are in **display** order [CoNi, CoTa, NiTa].
     Internally reordered to [NiTa, NiCo, TaCo] for fdm_ternary_regular_solution.
+
+    ``mu_floor`` is forwarded to the FDM solver so that FDM teacher data
+    and the PINN use the same chemical-potential regularization.
     """
     rng = np.random.default_rng(seed)
 
@@ -1653,6 +1591,7 @@ def make_training_data_rs(
         RT=RT, x_interface=x_interface, omega_width=omega_width,
         save_every=save_every,
         log_M_endmembers=log_M_endmembers,
+        mu_floor=mu_floor,
     )
 
     C_fdm = _reorder_c_internal_to_display_np(C_fdm_int)
@@ -1670,8 +1609,13 @@ def make_training_data_rs(
     x_obs = rng.uniform(0.02, 0.98, size=(n_obs, 1))
     t_obs = rng.uniform(t_start, t_max, size=(n_obs, 1))
     c_clean = bilinear_sample_xt(x_grid, t_grid_rs, C_fdm, x_obs, t_obs)
-    c_obs = np.clip(c_clean + rng.normal(0.0, noise, size=c_clean.shape), 0.0, 1.0)
-    c_obs = c_obs / np.maximum(c_obs.sum(axis=1, keepdims=True), 1.0e-14)
+    if noise_model == "alr" and float(noise) > 0.0:
+        alr_clean = _alr_forward(c_clean, ref=0)
+        alr_noisy = alr_clean + rng.normal(0.0, float(noise), size=alr_clean.shape)
+        c_obs = _alr_inverse(alr_noisy, ref=0)
+    else:
+        c_obs = np.clip(c_clean + rng.normal(0.0, noise, size=c_clean.shape), 0.0, 1.0)
+        c_obs = c_obs / np.maximum(c_obs.sum(axis=1, keepdims=True), 1.0e-14)
 
     x_ic = rng.uniform(0.0, 1.0, size=(n_ic, 1))
     t_ic = np.full_like(x_ic, t_start)
@@ -2532,11 +2476,15 @@ def gaussian_nll_multitime_rs(  # T4: (n/2)log(2π) omitted — see gaussian_nll
     prior_mean: Optional[np.ndarray] = None,
     prior_std: Optional[float] = None,
     log_M_endmembers: Optional[np.ndarray] = None,
+    mu_floor: float = 5.0e-3,
 ) -> float:
     """Gaussian NLL for multi-time Omega estimation using FDM forward model.
 
     theta and c0_full are in display [Co,Ni,Ta] order.  Internally reorders
     to [Ni,Ta,Co] for the regular-solution FDM solver, then converts back.
+
+    ``mu_floor`` is forwarded to the FDM solver for consistent
+    chemical-potential regularization.
     """
     n_pairs = len(pair_indices_rs(n_components))
     if left_right:
@@ -2557,6 +2505,7 @@ def gaussian_nll_multitime_rs(  # T4: (n/2)log(2π) omitted — see gaussian_nll
             RT=RT, x_interface=x_interface, omega_width=omega_width,
             save_every=save_every,
             log_M_endmembers=log_M_endmembers,
+            mu_floor=mu_floor,
         )
     except Exception:
         _DIAG_COUNTERS["fdm_nll_failures"] += 1
@@ -2902,11 +2851,15 @@ def posterior_band_from_samples_rs(
     max_samples: int = 50,
     progress_bar=None,
     log_M_endmembers: Optional[np.ndarray] = None,
+    mu_floor: float = 5.0e-3,
 ) -> Dict[str, np.ndarray]:
     """Compute posterior credible band from Omega samples via FDM forward solves.
 
     theta_samples and c0_full are in display [Co,Ni,Ta] order.
     Internally reorders to [Ni,Ta,Co] for the FDM solver, then converts back.
+
+    ``mu_floor`` is forwarded to the FDM solver for consistent
+    chemical-potential regularization.
     """
     if theta_samples is None or len(theta_samples) == 0:
         nan = np.full((len(x_grid), n_components), np.nan)
@@ -2933,6 +2886,7 @@ def posterior_band_from_samples_rs(
                 RT=RT, x_interface=x_interface, omega_width=omega_width,
                 save_every=save_every,
                 log_M_endmembers=log_M_endmembers,
+                mu_floor=mu_floor,
             )
             C_fdm = _reorder_c_internal_to_display_np(C_fdm_int)
             ti_closest = int(np.argmin(np.abs(t_grid - target_time)))
@@ -6619,6 +6573,7 @@ if run:
             learn_lr_omega=bool(learn_lr_omega),
             noise_model=noise_model_key,
             log_M_endmembers=_log_M_endmembers_teacher,
+            mu_floor=float(ui_mu_floor),
         )
     else:
         # --- Fickian mode: D-matrix FDM (original) ---
@@ -6816,6 +6771,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
             x_interface=0.5, omega_width=float(rs_omega_blend_width),
             prior_mean=prior_mean_rs, prior_std=5.0,
             log_M_endmembers=log_M_endmembers_init,
+            mu_floor=float(ui_mu_floor),
         )
 
         refine_info_rs = None
@@ -6850,6 +6806,7 @@ FDM教師データと疑似実験点が生成された直後の確認図です�
             "log_M_endmembers": log_M_endmembers_init,
             "rs_use_comp_dep_mobility": rs_use_comp_dep_mobility,
             "rs_system_preset": rs_system_preset,
+            "mu_floor": float(ui_mu_floor),
             "rs_fdm_dt": float(rs_fdm_dt),
             "rs_fdm_nsteps": int(rs_fdm_nsteps),
             "rs_fdm_save_every": int(rs_fdm_save_every),
@@ -7098,6 +7055,7 @@ if type(result).__name__ == "TrainResultRS":
                 omega_width=float(inputs.get("rs_omega_blend_width", inputs["phase_interface_width"])),
                 prior_mean=_prior_mean, prior_std=5.0,
                 log_M_endmembers=inputs.get("log_M_endmembers"),
+                mu_floor=float(inputs.get("mu_floor", 5.0e-3)),
             )
             _theta_hat = np.array(inputs["theta_hat_rs"], dtype=float)
             st.info("FDM順問題による尤度でΩを再最適化しています...")
@@ -7228,6 +7186,7 @@ if type(result).__name__ == "TrainResultRS":
                 prior_mean=theta_hat_rs,
                 prior_std=5.0,
                 log_M_endmembers=inputs.get("log_M_endmembers"),
+                mu_floor=float(inputs.get("mu_floor", 5.0e-3)),
             )
 
             with st.spinner("Computing Laplace reliability for Omega..."):
@@ -7304,6 +7263,7 @@ if type(result).__name__ == "TrainResultRS":
                     max_samples=int(inputs["rs_band_samples"]),
                     progress_bar=band_progress,
                     log_M_endmembers=inputs.get("log_M_endmembers"),
+                    mu_floor=float(inputs.get("mu_floor", 5.0e-3)),
                 )
 
             fig_band = go.Figure()
