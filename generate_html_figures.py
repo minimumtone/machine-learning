@@ -152,18 +152,9 @@ def fig_indep_test():
                label=f'BCC ({len(bcc_main)})', edgecolors='black', linewidth=0.5, zorder=3)
     ax.scatter(fcc_main['a_exp'], fcc_main['a_eq10_ss'], c='#3498db', s=80, alpha=0.8,
                label=f'FCC ({len(fcc_main)})', edgecolors='black', linewidth=0.5, zorder=3)
-    # Plot outliers with distinct marker
-    if len(df_outlier) > 0:
-        ax.scatter(df_outlier['a_exp'], df_outlier['a_eq10_ss'], c='#e74c3c', s=100,
-                   alpha=0.4, marker='x', linewidth=2.5,
-                   label=f'除外 ({len(df_outlier)})', zorder=4)
-        for _, row in df_outlier.iterrows():
-            ax.annotate(row['composition'], (row['a_exp'], row['a_eq10_ss']),
-                        fontsize=8, ha='left', va='bottom', alpha=0.6,
-                        xytext=(5, 5), textcoords='offset points')
 
-    lo = min(df['a_exp'].min(), df['a_eq10_ss'].min()) - 0.05
-    hi = max(df['a_exp'].max(), df['a_eq10_ss'].max()) + 0.05
+    lo = min(df_main['a_exp'].min(), df_main['a_eq10_ss'].min()) - 0.05
+    hi = max(df_main['a_exp'].max(), df_main['a_eq10_ss'].max()) + 0.05
     ax.plot([lo, hi], [lo, hi], 'k--', lw=1, alpha=0.5)
     ax.set_xlim(lo, hi)
     ax.set_ylim(lo, hi)
