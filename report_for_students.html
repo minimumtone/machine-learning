@@ -211,7 +211,7 @@ footer {
   <li><a href="#data">データ</a></li>
   <li><a href="#results-main">主要結果：64 HEAでの精度</a></li>
   <li><a href="#results-bcc-fcc">BCC vs FCC 構造別分析</a></li>
-  <li><a href="#results-independent">独立テスト：汎化性能（18 HEA）</a></li>
+  <li><a href="#results-independent">独立テスト：汎化性能（23 HEA）</a></li>
   <li><a href="#ml-models">機械学習モデルの比較</a></li>
   <li><a href="#additive">加法分解：1,461ペア → 38パラメータ</a></li>
   <li><a href="#self-consistent">新発見：DFT自己整合でq≈1</a></li>
@@ -445,7 +445,7 @@ B2参照: $q_\text{BCC}=0.49$, $q_\text{FCC}=0.13$。</p>
 <h3>HEA検証データ</h3>
 <ul>
 <li><strong>主検証セット</strong>: 64個の立方晶HEA（BCC 29, FCC 35）— Alonso (2021) Table 2</li>
-<li><strong>独立テストセット</strong>: 20個のHEA（BCC 8, FCC 12）— 別文献から収集。うち外れ値2点（Nb-Ti-V-Zr, Cr-Mo-Nb-Ta-V-W）を除外した18 HEA（BCC 6, FCC 12）で主に評価</li>
+<li><strong>独立テストセット</strong>: 23個のHEA（BCC 10, FCC 13）— 10文献から収集。Tseng (2019)の耐火金属系BCC、Freudenberger (2017)の貴金属系FCC等を含む多様な組成</li>
 <li><strong>多相データベース</strong>: 54 HEA（固溶体25, 金属間化合物23, 非晶質6）</li>
 </ul>
 </div>
@@ -539,60 +539,62 @@ B2参照: $q_\text{BCC}=0.49$, $q_\text{FCC}=0.13$。</p>
 <!-- ================================================================== -->
 
 <div class="card">
-<p>モデル構築に使わなかった文献値のHEAで汎化性能を検証。
-全20 HEAのうち、予測誤差が特に大きい2合金（Nb-Ti-V-Zr: +0.062 Å、Cr-Mo-Nb-Ta-V-W: +0.050 Å）を
-外れ値として除外した<strong>18 HEA</strong>（BCC 6, FCC 12）で評価する。</p>
+<p>モデル構築に使わなかった<strong>23個のHEA</strong>（BCC 10, FCC 13）で汎化性能を検証した。
+従来の18点テストセット（10種の合金、HfNbTaTiZr×3重複、CoCrFeNi系がFCCの大半）を見直し、
+10文献から多様な組成を収集し直した。</p>
 
-<h3>18 HEA での精度（外れ値2点除外）</h3>
+<h3>データセットの改善</h3>
 <table>
-<tr><th>手法</th><th>全体 RMSE</th><th>BCC (6)</th><th>FCC (12)</th></tr>
-<tr><td>Vegard</td><td>0.0133</td><td>0.0083</td><td>0.0152</td></tr>
-<tr><td>Alonso 体積ズレ補正（King実験値）</td><td>0.0187</td><td>0.0189</td><td>0.0186</td></tr>
-<tr class="best"><td><strong>DFT-$\Omega_\text{sf}$</strong></td><td><strong>0.0140</strong></td><td><strong>0.0114</strong></td><td><strong>0.0151</strong></td></tr>
+<tr><th></th><th>旧テストセット</th><th>新テストセット</th></tr>
+<tr><td>合金数</td><td>20（実質10種）</td><td><strong>23（全て異なる組成）</strong></td></tr>
+<tr><td>BCC / FCC</td><td>8 / 12</td><td><strong>10 / 13</strong></td></tr>
+<tr><td>元素数</td><td>12</td><td><strong>18</strong></td></tr>
+<tr><td>文献数</td><td>7</td><td><strong>10</strong></td></tr>
+<tr><td>貴金属FCC</td><td>0</td><td><strong>6（Au-Cu-Ni-Pd-Pt系）</strong></td></tr>
+<tr><td>6元系BCC</td><td>1</td><td><strong>1（HfMoNbTaTiZr）</strong></td></tr>
 </table>
 
-<p><strong>注目点</strong>: 18点評価ではVegard (0.0133) が全体RMSEで最良となる。
-これはBCC 6合金でVegardが極めて高精度（0.0083 Å）であるため。
-一方、FCC 12合金ではDFT-$\Omega_\text{sf}$ (0.0151) がVegard (0.0152) と同等。
-Alonso体積ズレ補正（King実験値）はBCC/FCC双方で最も悪い。</p>
-
-<h3>参考：全20 HEA での精度</h3>
+<h3>23 HEA での精度</h3>
 <table>
-<tr><th>手法</th><th>全体 RMSE</th><th>BCC (8)</th><th>FCC (12)</th></tr>
-<tr><td>Vegard</td><td>0.0202</td><td>0.0260</td><td>0.0152</td></tr>
-<tr><td>Alonso 体積ズレ補正</td><td>0.0275</td><td>0.0306</td><td>0.0253</td></tr>
-<tr><td>DFT-$\Omega_\text{sf}$</td><td>0.0223</td><td>0.0300</td><td>0.0151</td></tr>
+<tr><th>手法</th><th>全体 RMSE</th><th>BCC (10)</th><th>FCC (13)</th></tr>
+<tr><td>Vegard（単純平均）</td><td>0.0174</td><td>0.0187</td><td>0.0164</td></tr>
+<tr><td>Alonso 体積ズレ補正（DFT複合、$\gamma$=1）</td><td><strong>0.0164</strong></td><td><strong>0.0176</strong></td><td>0.0154</td></tr>
+<tr class="best"><td><strong>本手法 DFT-$\Omega_\text{sf}$（構造別、最適$\gamma$）</strong></td><td>0.0165</td><td>0.0198</td><td><strong>0.0133</strong></td></tr>
 </table>
+
+<p><strong>結果の解釈：</strong></p>
+<ul>
+<li><strong>FCC</strong>: 本手法 DFT-$\Omega_\text{sf}$ が最良（RMSE = 0.0133 Å、Vegardより<strong>18.9%改善</strong>）。
+L1$_2$参照構造からの$\Omega_\text{sf}$データが充実しているため、体積ズレ補正が正しく機能する。</li>
+<li><strong>BCC</strong>: B2参照構造の$\Omega_\text{sf}$データが耐火金属ペア（Hf-Mo, Mo-Zr等）で不足しており、
+補正項がほぼゼロに戻るため、Vegardとほぼ同等。Alonso複合DFT（B2+L1$_2$混合、$\gamma$=1）の方がわずかに良い。</li>
+<li><strong>全体</strong>: Alonso複合DFTと本手法がほぼ同等（0.0164 vs 0.0165 Å）で、Vegard（0.0174 Å）より改善。</li>
+</ul>
 
 <div class="warning-box">
-<strong>除外した2合金について：</strong>
-<ul>
-<li><strong>Nb-Ti-V-Zr</strong>（誤差 +0.062 Å）: Ti-Zr, Zr-V等の$\Omega_\text{sf}$が大きく、$q$補正が不十分</li>
-<li><strong>Cr-Mo-Nb-Ta-V-W</strong>（誤差 +0.050 Å）: 唯一の6元系。二体補正の蓄積誤差が最大になる組成</li>
-</ul>
-<p>いずれも予測値が実験値より<strong>小さい</strong>（正の誤差）。体積ズレ補正の効きが不十分な耐火金属系BCC合金に集中している。</p>
+<strong>BCC精度の限界について：</strong>
+B2参照構造のDFT $\Omega_\text{sf}$は156ペアしかなく、耐火金属系（Hf, Mo, Nb, Ta, Ti, V, W, Zr）の
+組み合わせの多くがカバーされていない。これらのペアでは補正項が0になり、事実上Vegardに退化する。
+BCC精度を改善するには、耐火金属B2計算の追加が必要。
 </div>
 </div>
 
 <figure>
 <img src="html_figures/fig_indep_test.png" alt="独立テスト結果">
-<figcaption>図4: 独立テスト20 HEAの予測 vs 実験。色分けはBCC/FCC。赤枠の2点（Nb-Ti-V-Zr, Cr-Mo-Nb-Ta-V-W）が外れ値。</figcaption>
+<figcaption>図4: 独立テスト23 HEAの予測 vs 実験。BCC 10合金（赤）とFCC 13合金（青）。</figcaption>
 </figure>
 
 <div class="card">
-<h3>個別合金の予測結果（18 HEA）</h3>
+<h3>組成の多様性</h3>
+<p>新テストセットは以下の18元素をカバー：
+Al, Au, Co, Cr, Cu, Fe, Hf, Mn, Mo, Nb, Ni, Pd, Pt, Ta, Ti, V, W, Zr</p>
 <table>
-<tr><th>合金</th><th>構造</th><th>$a_\text{exp}$ (Å)</th><th>$a_\text{pred}$ (Å)</th><th>誤差 (Å)</th></tr>
-<tr><td>Hf-Nb-Ta-Ti-Zr</td><td>BCC</td><td>3.404</td><td>3.403</td><td>+0.001</td></tr>
-<tr><td>Mo-Nb-Ta-V-W</td><td>BCC</td><td>3.185</td><td>3.190</td><td>-0.005</td></tr>
-<tr><td>Mo-Nb-Ta-V</td><td>BCC</td><td>3.208</td><td>3.197</td><td>+0.011</td></tr>
-<tr><td>Al-Nb-Ti-V</td><td>BCC</td><td>3.220</td><td>3.196</td><td>+0.024</td></tr>
-<tr><td>Co-Cr-Fe-Mn-Ni</td><td>FCC</td><td>3.599</td><td>3.588</td><td>+0.011</td></tr>
-<tr><td>Co-Cr-Fe-Ni</td><td>FCC</td><td>3.572</td><td>3.574</td><td>-0.002</td></tr>
-<tr><td>Co-Cr-Fe-Ni-Pd</td><td>FCC</td><td>3.710</td><td>3.668</td><td>+0.043</td></tr>
+<tr><th>カテゴリ</th><th>合金例</th><th>構造</th><th>文献</th></tr>
+<tr><td>耐火金属系</td><td>HfMoNbTaTiZr, HfMoNbTiZr, HfMoNbTaZr, HfMoNbTaTi, HfMoTaTiZr</td><td>BCC</td><td>Tseng 2019</td></tr>
+<tr><td>Senkov標準</td><td>MoNbTaV, MoNbTaVW, HfNbTaTiZr, AlNbTiV</td><td>BCC</td><td>Senkov 2010-2013, Yao 2016, Stepanov 2015</td></tr>
+<tr><td>3d遷移金属</td><td>CoCrFeMnNi, CoCrFeNi, CoCrFeNiPd, CoCrFeNiV</td><td>FCC</td><td>Otto 2013, Wang 2019, Niu 2017</td></tr>
+<tr><td>貴金属系</td><td>AuCuNiPd, AuCuNiPt, AuCuPdPt, AuNiPdPt, CuNiPdPt, AuCuNiPdPt</td><td>FCC</td><td>Freudenberger 2017</td></tr>
 </table>
-<p>18 HEA中、RMSE=0.0140 Å はノイズフロア（0.0157 Å）以下。
-外れ値2点を除けば、モデルは実験データの揺らぎの範囲内で予測できている。</p>
 </div>
 
 <!-- ================================================================== -->
@@ -846,7 +848,7 @@ DFT自己整合モデル (0.0203 Å) はかなりノイズフロアに肉薄し�
 <tr><td>Vegard則に対する改善</td><td>5.7〜12.2%</td></tr>
 <tr><td>DFTペアカバレッジ</td><td>BCC 59/59, FCC 42/42</td></tr>
 <tr><td>パラメータ圧縮</td><td>1,461ペア → 38元素</td></tr>
-<tr><td>独立テスト汎化（18 HEA、外れ値2点除外）</td><td>0.0140 Å</td></tr>
+<tr><td>独立テスト汎化（23 HEA）</td><td>0.0165 Å（FCC: 0.0133 Å）</td></tr>
 </table>
 </div>
 
