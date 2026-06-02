@@ -2272,14 +2272,22 @@ class TernaryRegularSolutionPINN(nn.Module):
     ) -> torch.Tensor:
         """Fick form: ∂c/∂t − ∂/∂x[D̃(c) · ∂c/∂x].
 
-        D̃(c) is computed via ``interdiffusion_matrix_rs_torch`` using the
-        thermodynamic factor.  The autograd path for the flux divergence
-        goes through D̃·c_x (no log), avoiding the 1/c gradient explosion
-        that plagues the Onsager (μ-based) form when c_ref → 0.
+        D̃(c) = M × (thermodynamic factor) is computed via
+        ``interdiffusion_matrix_rs_torch``.  The 1/c terms live inside D̃
+        as *values* (not as autograd nodes for the spatial derivative)
+        because D̃ is **detached** from the graph before computing the
+        flux divergence ∂q/∂x.  This is the "frozen coefficient"
+        approach: D̃ is treated as a locally-constant matrix when taking
+        the second spatial derivative, analogous to how FDM evaluates
+        D̃ at grid points and then applies finite-difference stencils.
 
-        D̃ depends on the network output c and on trainable Ω, so the
-        computational graph correctly flows gradients to both network
-        weights and Omega parameters.
+        Gradient flow to network weights and Ω still works: the data
+        loss (which compares c to observations) provides the primary
+        gradient, and D̃ is recomputed at each forward pass.
+
+        Note: ``mobility`` coming from ``train_pinn_rs`` is already
+        pre-scaled by ``t_scale`` (M_eff = M × t_max_physical), so
+        we do NOT multiply by ``t_scale`` again here.
         """
         x = x.clone().detach().requires_grad_(True)
         t = t.clone().detach().requires_grad_(True)
@@ -2303,6 +2311,7 @@ class TernaryRegularSolutionPINN(nn.Module):
         c1_x = torch.autograd.grad(c1_int, x, torch.ones_like(c1_int), create_graph=second_derivative_graph, retain_graph=True)[0]
 
         # D̃(c) — interdiffusion matrix (N, 2, 2)
+        # mobility is already scaled by t_scale (M_eff = M * t_max_physical)
         theta_l, theta_r = self.theta_vectors()
         D_tilde = interdiffusion_matrix_rs_torch(
             C_int, theta_l, theta_r,
@@ -2310,12 +2319,16 @@ class TernaryRegularSolutionPINN(nn.Module):
             RT=self.RT, mobility=mobility, mu_floor=self.mu_floor,
         )
 
-        # flux q = D̃(c) · ∂c/∂x  (Fick's law: J = -D̃ ∇c, but FDM uses
-        # div(D̃ ∇c) = ∂c/∂t convention with sign absorbed into D̃)
-        q0 = t_scale * (D_tilde[:, 0, 0:1] * c0_x + D_tilde[:, 0, 1:2] * c1_x)
-        q1 = t_scale * (D_tilde[:, 1, 0:1] * c0_x + D_tilde[:, 1, 1:2] * c1_x)
+        # Detach D̃ from the computational graph ("frozen coefficient").
+        # This prevents autograd from differentiating through 1/c terms
+        # in D̃ when computing ∂q/∂x, avoiding 1/c² gradient explosion.
+        D_tilde = D_tilde.detach()
 
-        # ∂q/∂x
+        # flux q = D̃(c) · ∂c/∂x
+        q0 = D_tilde[:, 0, 0:1] * c0_x + D_tilde[:, 0, 1:2] * c1_x
+        q1 = D_tilde[:, 1, 0:1] * c0_x + D_tilde[:, 1, 1:2] * c1_x
+
+        # ∂q/∂x — only differentiates through c_x (not D̃)
         q0_x = torch.autograd.grad(q0, x, torch.ones_like(q0), create_graph=output_graph, retain_graph=True)[0]
         q1_x = torch.autograd.grad(q1, x, torch.ones_like(q1), create_graph=output_graph, retain_graph=True)[0]
 
