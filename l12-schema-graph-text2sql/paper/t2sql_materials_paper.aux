@@ -18,7 +18,7 @@
 \providecommand\HyField@AuxAddToCoFields[2]{}
 \emailauthor{minamoto.satoshi@nims.go.jp}{Satoshi Minamoto\corref {cor1}}
 \Newlabel{cor1}{1}
-\citation{wang2023ai4s}
+\citation{wang2023ai4s,himanen2019dscribe}
 \Newlabel{nims}{a}
 \@LN@col{1}
 \@writefile{toc}{\contentsline {section}{\numberline {1}緒言}{1}{section.1}\protected@file@percent }
@@ -36,8 +36,16 @@
 \citation{li2024bird}
 \citation{gao2023dail}
 \citation{pourreza2024dinsql}
+\citation{gao2024xiyan}
 \citation{hong2024survey}
 \citation{maamari2024schema}
+\citation{wang2020ratsql}
+\citation{chen2021shadowgnn}
+\citation{li2023resdsql}
+\citation{lin2020bridge}
+\citation{safdarian2026schemagraphsql}
+\citation{hoang2025grastsql}
+\citation{mcmillan2026context}
 \citation{song2023matscnlp}
 \citation{mishra2024llamat}
 \citation{zhuang2026mkna}
@@ -54,33 +62,34 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {1.3}材料インフォマティクスにおけるNLP}{2}{subsection.1.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {1.4}オントロジー・知識グラフアプローチとの関連}{2}{subsection.1.4}\protected@file@percent }
 \newlabel{sec:ontology_comparison}{{1.4}{2}{オントロジー・知識グラフアプローチとの関連}{subsection.1.4}{}}
+\citation{villars2004pauling}
 \@LN@col{1}
 \@writefile{toc}{\contentsline {subsection}{\numberline {1.5}目的と新規性}{3}{subsection.1.5}\protected@file@percent }
+\@LN@col{2}
 \@writefile{toc}{\contentsline {section}{\numberline {2}材料Text-to-SQLの設計要件}{3}{section.2}\protected@file@percent }
 \newlabel{sec:design_requirements}{{2}{3}{材料Text-to-SQLの設計要件}{section.2}{}}
-\@LN@col{2}
 \@writefile{toc}{\contentsline {section}{\numberline {3}手法}{3}{section.3}\protected@file@percent }
 \newlabel{sec:methods}{{3}{3}{手法}{section.3}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1}材料データのためのデータベーススキーマ設計}{3}{subsection.3.1}\protected@file@percent }
 \newlabel{sec:schema_design}{{3.1}{3}{材料データのためのデータベーススキーマ設計}{subsection.3.1}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.1}OQMDデータの7テーブルスキーマへの正規化}{3}{subsubsection.3.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.1}OQMDデータの正規化スキーマ設計}{3}{subsubsection.3.1.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{組成テーブルの分離}{3}{section*.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{構造/相安定性/計算の分離}{3}{section*.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{計算物性のEntity-Attribute-Value（EAV）パターン}{3}{section*.7}\protected@file@percent }
-\citation{gao2023dail}
 \@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces 提案手法の解析フロー全体図。自然言語クエリはIntent Classifierでスコープ判定後、用語辞書・数値/化学式パーサーで条件抽出される。Coverage Scoreに基づきRule-based（高認識率）またはLLM（低認識率）経路に分岐し、いずれもSchema Graph（FK走査）によるJOINパス制約とSQLGuard 8層検証を経て安全なSQLが生成・実行される。破線矢印はデータ参照を示す。\relax }}{4}{figure.caption.1}\protected@file@percent }
 \providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
 \newlabel{fig:pipeline_schematic}{{1}{4}{提案手法の解析フロー全体図。自然言語クエリはIntent Classifierでスコープ判定後、用語辞書・数値/化学式パーサーで条件抽出される。Coverage Scoreに基づきRule-based（高認識率）またはLLM（低認識率）経路に分岐し、いずれもSchema Graph（FK走査）によるJOINパス制約とSQLGuard 8層検証を経て安全なSQLが生成・実行される。破線矢印はデータ参照を示す。\relax }{figure.caption.1}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces データベーススキーマ概要（7テーブル）。\relax }}{4}{table.caption.4}\protected@file@percent }
-\newlabel{tab:schema}{{1}{4}{データベーススキーマ概要（7テーブル）。\relax }{table.caption.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Step 3パイプラインの概要。自然言語クエリから条件抽出（Step 2）を経て、Steiner木近似（Step 3）が30テーブルから必要最小限のサブグラフを抽出する。抽出されたテーブル・カラム・JOIN条件をYAMLでLLMに注入し（Step 4）、8層SQLGuard（Step 5）を経て安全なSQLFNを実行する。LLMの視界が必要テーブルに限定されるため、不要JOINとテーブル幻覚が原理的に排除される。\relax }}{4}{figure.caption.2}\protected@file@percent }
+\newlabel{fig:step3_pipeline}{{2}{4}{Step 3パイプラインの概要。自然言語クエリから条件抽出（Step 2）を経て、Steiner木近似（Step 3）が30テーブルから必要最小限のサブグラフを抽出する。抽出されたテーブル・カラム・JOIN条件をYAMLでLLMに注入し（Step 4）、8層SQLGuard（Step 5）を経て安全なSQLFNを実行する。LLMの視界が必要テーブルに限定されるため、不要JOINとテーブル幻覚が原理的に排除される。\relax }{figure.caption.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces データベーススキーマ概要。\relax }}{4}{table.caption.4}\protected@file@percent }
+\newlabel{tab:schema}{{1}{4}{データベーススキーマ概要。\relax }{table.caption.4}{}}
+\citation{gao2023dail}
 \@LN@col{1}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Schema Graph支援Text-to-SQLパイプラインのシステムアーキテクチャ。実線矢印は主要データフロー、破線矢印はFew-Shot RAGフィードバックループ（成功したクエリペアが蓄積・検索される）を示す。SQLガードはデータベース実行前の最終安全層として機能する。\relax }}{4}{figure.caption.2}\protected@file@percent }
-\newlabel{fig:architecture}{{2}{4}{Schema Graph支援Text-to-SQLパイプラインのシステムアーキテクチャ。実線矢印は主要データフロー、破線矢印はFew-Shot RAGフィードバックループ（成功したクエリペアが蓄積・検索される）を示す。SQLガードはデータベース実行前の最終安全層として機能する。\relax }{figure.caption.2}{}}
-\@writefile{toc}{\contentsline {paragraph}{ER設計の汎用性に関する注記}{4}{section*.8}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces 7テーブル材料データベーススキーマのEntity-Relationship図。すべてのテーブルは外部キー（青線）により\texttt  {material\_entry}に接続される。赤=主キー、青=外部キー。\relax }}{4}{figure.caption.3}\protected@file@percent }
-\newlabel{fig:er_diagram}{{3}{4}{7テーブル材料データベーススキーマのEntity-Relationship図。すべてのテーブルは外部キー（青線）により\texttt {material\_entry}に接続される。赤=主キー、青=外部キー。\relax }{figure.caption.3}{}}
-\@LN@col{1}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Schema Graph支援Text-to-SQLパイプラインのシステムアーキテクチャ。実線矢印は主要データフロー、破線矢印はFew-Shot RAGフィードバックループ（成功したクエリペアが蓄積・検索される）を示す。SQLガードはデータベース実行前の最終安全層として機能する。\relax }}{5}{figure.caption.3}\protected@file@percent }
+\newlabel{fig:architecture}{{3}{5}{Schema Graph支援Text-to-SQLパイプラインのシステムアーキテクチャ。実線矢印は主要データフロー、破線矢印はFew-Shot RAGフィードバックループ（成功したクエリペアが蓄積・検索される）を示す。SQLガードはデータベース実行前の最終安全層として機能する。\relax }{figure.caption.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{構造/相安定性/計算の分離}{5}{section*.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{計算物性のEntity-Attribute-Value（EAV）パターン}{5}{section*.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{ER設計の汎用性に関する注記}{5}{section*.8}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.2}RAGコンテキスト注入のためのXML/YAML表現}{5}{subsubsection.3.1.2}\protected@file@percent }
+\@LN@col{2}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.2}材料用語辞書を備えた条件抽出器}{5}{subsection.3.2}\protected@file@percent }
 \newlabel{sec:entity_extractor}{{3.2}{5}{材料用語辞書を備えた条件抽出器}{subsection.3.2}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.1}辞書構造}{5}{subsubsection.3.2.1}\protected@file@percent }
@@ -88,18 +97,18 @@
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.3}出力形式}{5}{subsubsection.3.2.3}\protected@file@percent }
 \newlabel{lst:extract}{{1}{5}{条件抽出の例。}{lstlisting.1}{}}
 \@writefile{lol}{\contentsline {lstlisting}{\numberline {1}条件抽出の例。}{5}{lstlisting.1}\protected@file@percent }
-\@LN@col{2}
-\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces 数値条件パーサーの対応パターン。\relax }}{5}{table.caption.9}\protected@file@percent }
-\newlabel{tab:numeric_patterns}{{2}{5}{数値条件パーサーの対応パターン。\relax }{table.caption.9}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.4}数値条件パーサー}{5}{subsubsection.3.2.4}\protected@file@percent }
 \newlabel{sec:numeric_parser}{{3.2.4}{5}{数値条件パーサー}{subsubsection.3.2.4}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.5}化学式パーサーと曖昧性処理}{5}{subsubsection.3.2.5}\protected@file@percent }
-\newlabel{sec:formula_parser}{{3.2.5}{5}{化学式パーサーと曖昧性処理}{subsubsection.3.2.5}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.6}Coverage Score：未認識語彙検出}{5}{subsubsection.3.2.6}\protected@file@percent }
-\newlabel{sec:coverage_score}{{3.2.6}{5}{Coverage Score：未認識語彙検出}{subsubsection.3.2.6}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces 数値条件パーサーの対応パターン。\relax }}{5}{table.caption.9}\protected@file@percent }
+\newlabel{tab:numeric_patterns}{{2}{5}{数値条件パーサーの対応パターン。\relax }{table.caption.9}{}}
 \citation{networkx2008}
 \citation{hwang1992steiner}
 \@LN@col{1}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.5}化学式パーサーと曖昧性処理}{6}{subsubsection.3.2.5}\protected@file@percent }
+\newlabel{sec:formula_parser}{{3.2.5}{6}{化学式パーサーと曖昧性処理}{subsubsection.3.2.5}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.6}Coverage Score：未認識語彙検出}{6}{subsubsection.3.2.6}\protected@file@percent }
+\newlabel{sec:coverage_score}{{3.2.6}{6}{Coverage Score：未認識語彙検出}{subsubsection.3.2.6}{}}
+\@LN@col{2}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.7}Intent Classifier：スコープ外質問の事前排除}{6}{subsubsection.3.2.7}\protected@file@percent }
 \newlabel{sec:intent_classifier}{{3.2.7}{6}{Intent Classifier：スコープ外質問の事前排除}{subsubsection.3.2.7}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Schema Graph走査エンジン}{6}{subsection.3.3}\protected@file@percent }
@@ -107,23 +116,21 @@
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.1}PostgreSQLメタデータからのグラフ構築}{6}{subsubsection.3.3.1}\protected@file@percent }
 \newlabel{lst:fk_query}{{2}{6}{FK関係抽出クエリ。}{lstlisting.2}{}}
 \@writefile{lol}{\contentsline {lstlisting}{\numberline {2}FK関係抽出クエリ。}{6}{lstlisting.2}\protected@file@percent }
-\@LN@col{2}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.2}最小被覆JOIN経路：Steiner木近似}{6}{subsubsection.3.3.2}\protected@file@percent }
 \newlabel{sec:steiner}{{3.3.2}{6}{最小被覆JOIN経路：Steiner木近似}{subsubsection.3.3.2}{}}
-\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces 最小被覆JOIN部分グラフ（Steiner木近似）。\relax }}{6}{algorithm.1}\protected@file@percent }
-\newlabel{alg:steiner}{{1}{6}{最小被覆JOIN部分グラフ（Steiner木近似）。\relax }{algorithm.1}{}}
-\@writefile{toc}{\contentsline {paragraph}{計算量}{6}{section*.10}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{木構造FKグラフでの正確性}{6}{section*.11}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.3}JOIN経路 $\to $ SQL FROM/JOIN句生成}{6}{subsubsection.3.3.3}\protected@file@percent }
-\newlabel{lst:join_gen}{{3}{6}{経路からのJOIN句生成。}{lstlisting.3}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {3}経路からのJOIN句生成。}{6}{lstlisting.3}\protected@file@percent }
-\citation{lewis2020rag}
-\citation{salton1988tfidf}
 \@LN@col{1}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces 最小被覆JOIN部分グラフ（Steiner木近似）。\relax }}{7}{algorithm.1}\protected@file@percent }
+\newlabel{alg:steiner}{{1}{7}{最小被覆JOIN部分グラフ（Steiner木近似）。\relax }{algorithm.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{計算量}{7}{section*.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{木構造FKグラフでの正確性}{7}{section*.11}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.3}JOIN経路 $\to $ SQL FROM/JOIN句生成}{7}{subsubsection.3.3.3}\protected@file@percent }
+\newlabel{lst:join_gen}{{3}{7}{経路からのJOIN句生成。}{lstlisting.3}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {3}経路からのJOIN句生成。}{7}{lstlisting.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.4}多元素ANDクエリ：EXISTS副問い合わせパターン}{7}{subsubsection.3.3.4}\protected@file@percent }
 \newlabel{sec:multi_element}{{3.3.4}{7}{多元素ANDクエリ：EXISTS副問い合わせパターン}{subsubsection.3.3.4}{}}
 \newlabel{lst:exists}{{4}{7}{EXISTS副問い合わせによる多元素ANDクエリ。}{lstlisting.4}{}}
 \@writefile{lol}{\contentsline {lstlisting}{\numberline {4}EXISTS副問い合わせによる多元素ANDクエリ。}{7}{lstlisting.4}\protected@file@percent }
+\@LN@col{2}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.5}比較：Naive vs. Schema Graph（具体例）}{7}{subsubsection.3.3.5}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces SQL生成比較：「Feを含むB2化合物」に対するNaive vs. Schema Graph。\relax }}{7}{table.caption.12}\protected@file@percent }
 \newlabel{tab:naive_vs_sg}{{3}{7}{SQL生成比較：「Feを含むB2化合物」に対するNaive vs. Schema Graph。\relax }{table.caption.12}{}}
@@ -131,19 +138,21 @@
 \newlabel{sec:sql_generation}{{3.4}{7}{SQL生成：Rule-basedモードとLLMモード}{subsection.3.4}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.4.1}Rule-basedモード（Level 1）}{7}{subsubsection.3.4.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{改訂版での拡張}{7}{section*.13}\protected@file@percent }
-\@LN@col{2}
 \@writefile{toc}{\contentsline {paragraph}{残存する制限}{7}{section*.14}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.4.2}Few-Shot RAGを備えたLLMモード（Level 2）}{7}{subsubsection.3.4.2}\protected@file@percent }
-\newlabel{sec:llm_mode}{{3.4.2}{7}{Few-Shot RAGを備えたLLMモード（Level 2）}{subsubsection.3.4.2}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Few-Shot RAGストア（SQL-as-Few-Shot-Examples）}{7}{subsection.3.5}\protected@file@percent }
-\newlabel{sec:few_shot}{{3.5}{7}{Few-Shot RAGストア（SQL-as-Few-Shot-Examples）}{subsection.3.5}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.5.1}アーキテクチャ}{7}{subsubsection.3.5.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.5.2}材料クエリのためのTF-IDFトークナイゼーション}{7}{subsubsection.3.5.2}\protected@file@percent }
-\newlabel{lst:tokenizer}{{5}{7}{材料クエリ用TF-IDFトークナイザ。}{lstlisting.5}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {5}材料クエリ用TF-IDFトークナイザ。}{7}{lstlisting.5}\protected@file@percent }
-\citation{sqlglot2023}
+\citation{lewis2020rag}
+\citation{brown2020fewshot}
+\citation{salton1988tfidf}
 \@LN@col{1}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.4.2}Few-Shot RAGを備えたLLMモード（Level 2）}{8}{subsubsection.3.4.2}\protected@file@percent }
+\newlabel{sec:llm_mode}{{3.4.2}{8}{Few-Shot RAGを備えたLLMモード（Level 2）}{subsubsection.3.4.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Few-Shot RAGストア（SQL-as-Few-Shot-Examples）}{8}{subsection.3.5}\protected@file@percent }
+\newlabel{sec:few_shot}{{3.5}{8}{Few-Shot RAGストア（SQL-as-Few-Shot-Examples）}{subsection.3.5}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.5.1}アーキテクチャ}{8}{subsubsection.3.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.5.2}材料クエリのためのTF-IDFトークナイゼーション}{8}{subsubsection.3.5.2}\protected@file@percent }
+\newlabel{lst:tokenizer}{{5}{8}{材料クエリ用TF-IDFトークナイザ。}{lstlisting.5}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {5}材料クエリ用TF-IDFトークナイザ。}{8}{lstlisting.5}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.5.3}研究論文からの種事例抽出}{8}{subsubsection.3.5.3}\protected@file@percent }
+\@LN@col{2}
 \@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Few-Shotストア構成（11事例）。\relax }}{8}{table.caption.15}\protected@file@percent }
 \newlabel{tab:few_shot_sources}{{4}{8}{Few-Shotストア構成（11事例）。\relax }{table.caption.15}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.6}SQLガード：多層安全性検証}{8}{subsection.3.6}\protected@file@percent }
@@ -151,96 +160,118 @@
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.6.1}基本安全性検証（層1--5）}{8}{subsubsection.3.6.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.6.2}カラムホワイトリスト検証（層6）}{8}{subsubsection.3.6.2}\protected@file@percent }
 \newlabel{sec:column_wl}{{3.6.2}{8}{カラムホワイトリスト検証（層6）}{subsubsection.3.6.2}{}}
-\@LN@col{2}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.6.3}FK整合JOIN検証（層7）}{8}{subsubsection.3.6.3}\protected@file@percent }
 \newlabel{sec:join_validation}{{3.6.3}{8}{FK整合JOIN検証（層7）}{subsubsection.3.6.3}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.6.4}ガード判定分類（層8）}{8}{subsubsection.3.6.4}\protected@file@percent }
-\newlabel{sec:guard_categories}{{3.6.4}{8}{ガード判定分類（層8）}{subsubsection.3.6.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.7}推奨運用構成：カスケードモード}{8}{subsection.3.7}\protected@file@percent }
-\newlabel{sec:cascade}{{3.7}{8}{推奨運用構成：カスケードモード}{subsection.3.7}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4}データ準備}{8}{section.4}\protected@file@percent }
-\newlabel{sec:data}{{4}{8}{データ準備}{section.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}検証データベースとしてのL1$_2$型金属間化合物}{8}{subsection.4.1}\protected@file@percent }
+\citation{sqlglot2023}
 \@LN@col{1}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.6.4}ガード判定分類（層8）}{9}{subsubsection.3.6.4}\protected@file@percent }
+\newlabel{sec:guard_categories}{{3.6.4}{9}{ガード判定分類（層8）}{subsubsection.3.6.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.7}推奨運用構成：カスケードモード}{9}{subsection.3.7}\protected@file@percent }
+\newlabel{sec:cascade}{{3.7}{9}{推奨運用構成：カスケードモード}{subsection.3.7}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}データ準備}{9}{section.4}\protected@file@percent }
+\newlabel{sec:data}{{4}{9}{データ準備}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}検証データベースとしてのL1$_2$型金属間化合物}{9}{subsection.4.1}\protected@file@percent }
+\@LN@col{2}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces 検証データベースの構成（全体1{,}471件）。\relax }}{9}{table.caption.16}\protected@file@percent }
+\newlabel{tab:db_composition}{{5}{9}{検証データベースの構成（全体1{,}471件）。\relax }{table.caption.16}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.2}ER設計の根拠：フラットデータから正規化RDBへ}{9}{subsection.4.2}\protected@file@percent }
 \newlabel{sec:er_design}{{4.2}{9}{ER設計の根拠：フラットデータから正規化RDBへ}{subsection.4.2}{}}
-\@writefile{toc}{\contentsline {paragraph}{設計判断1：組成テーブルの分離（1:N正規化）}{9}{section*.16}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{設計判断2：構造・安定性・計算条件の分離}{9}{section*.17}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{設計判断3：計算と物性の親子関係}{9}{section*.18}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{設計判断4：プロトタイプ定義のマスタ化}{9}{section*.19}\protected@file@percent }
-\@LN@col{2}
-\@writefile{toc}{\contentsline {paragraph}{正規化がSchema Graph走査を必要にする}{9}{section*.20}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}データ投入と変換}{9}{subsection.4.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {5}結果}{9}{section.5}\protected@file@percent }
-\newlabel{sec:results}{{5}{9}{結果}{section.5}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}評価設計}{9}{subsection.5.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.1.1}評価データセット（100クエリ）}{9}{subsubsection.5.1.1}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces 評価クエリ設計（全100件）。\relax }}{9}{table.caption.21}\protected@file@percent }
-\newlabel{tab:query_design}{{5}{9}{評価クエリ設計（全100件）。\relax }{table.caption.21}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.1.2}比較手法（5手法）}{9}{subsubsection.5.1.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.1.3}評価指標}{9}{subsubsection.5.1.3}\protected@file@percent }
-\newlabel{sec:metrics}{{5.1.3}{9}{評価指標}{subsubsection.5.1.3}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces 比較手法の構成（全手法共通：100クエリ）。\relax }}{10}{table.caption.22}\protected@file@percent }
-\newlabel{tab:methods}{{6}{10}{比較手法の構成（全手法共通：100クエリ）。\relax }{table.caption.22}{}}
+\@writefile{toc}{\contentsline {paragraph}{設計判断1：組成テーブルの分離（1:N正規化）}{9}{section*.17}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{設計判断2：構造・安定性・計算条件の分離}{9}{section*.18}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{設計判断3：計算と物性の親子関係}{9}{section*.19}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{設計判断4：プロトタイプ定義のマスタ化}{9}{section*.20}\protected@file@percent }
+\citation{jaccard1912distribution}
 \@LN@col{1}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.1.4}回帰テスト（80件）}{10}{subsubsection.5.1.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{正規化がSchema Graph走査を必要にする}{10}{section*.21}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}データ投入と変換}{10}{subsection.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}結果}{10}{section.5}\protected@file@percent }
+\newlabel{sec:results}{{5}{10}{結果}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}評価設計}{10}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.1.1}評価データセット（100クエリ）}{10}{subsubsection.5.1.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces 評価クエリ設計（全100件）。\relax }}{10}{table.caption.22}\protected@file@percent }
+\newlabel{tab:query_design}{{6}{10}{評価クエリ設計（全100件）。\relax }{table.caption.22}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.1.2}比較手法（5手法）}{10}{subsubsection.5.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.1.3}評価指標}{10}{subsubsection.5.1.3}\protected@file@percent }
+\newlabel{sec:metrics}{{5.1.3}{10}{評価指標}{subsubsection.5.1.3}{}}
+\@LN@col{2}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.1.4}評価指標の改善：共通カラム照合とLIMIT正規化}{10}{subsubsection.5.1.4}\protected@file@percent }
+\newlabel{sec:metric_improvements}{{5.1.4}{10}{評価指標の改善：共通カラム照合とLIMIT正規化}{subsubsection.5.1.4}{}}
+\@writefile{toc}{\contentsline {paragraph}{改善A：共通カラム照合（Column-aware matching）}{10}{section*.24}\protected@file@percent }
+\newlabel{eq:column_aware}{{1}{10}{改善A：共通カラム照合（Column-aware matching）}{equation.5.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{改善C：LIMIT 10{,}000正規化}{10}{section*.25}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{改善効果}{10}{section*.26}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.1.5}回帰テスト（80件）}{10}{subsubsection.5.1.5}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.2}5手法ベースライン比較}{10}{subsection.5.2}\protected@file@percent }
 \newlabel{sec:baseline_comparison}{{5.2}{10}{5手法ベースライン比較}{subsection.5.2}{}}
-\@writefile{toc}{\contentsline {paragraph}{主要な発見}{10}{section*.25}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}難易度別の詳細分析}{10}{subsection.5.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{難易度別の傾向}{10}{section*.27}\protected@file@percent }
-\@LN@col{2}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.3.1}レイテンシ比較}{10}{subsubsection.5.3.1}\protected@file@percent }
-\newlabel{sec:scalability}{{5.3.1}{10}{レイテンシ比較}{subsubsection.5.3.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}マルチホップクエリ分析}{10}{subsection.5.4}\protected@file@percent }
-\newlabel{sec:multihop}{{5.4}{10}{マルチホップクエリ分析}{subsection.5.4}{}}
-\@writefile{toc}{\contentsline {paragraph}{マルチホップの傾向}{10}{section*.30}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}エラー分析}{10}{subsection.5.5}\protected@file@percent }
-\newlabel{sec:error_analysis}{{5.5}{10}{エラー分析}{subsection.5.5}{}}
-\@writefile{toc}{\contentsline {paragraph}{失敗モードの分類}{10}{section*.32}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.6}SQLインジェクションと安全性結果}{10}{subsection.5.6}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces 回帰テストカテゴリ（全80件、全PASS）。\relax }}{11}{table.caption.23}\protected@file@percent }
-\newlabel{tab:test_categories}{{7}{11}{回帰テストカテゴリ（全80件、全PASS）。\relax }{table.caption.23}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces 5手法のベースライン比較（100クエリ、gpt-4.1-mini）。\relax }}{11}{table.caption.24}\protected@file@percent }
-\newlabel{tab:baseline_results}{{8}{11}{5手法のベースライン比較（100クエリ、gpt-4.1-mini）。\relax }{table.caption.24}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces 難易度別の実行精度（Exec Acc.）と実行成功率（Exec Val.）。\relax }}{11}{table.caption.26}\protected@file@percent }
-\newlabel{tab:difficulty_breakdown}{{9}{11}{難易度別の実行精度（Exec Acc.）と実行成功率（Exec Val.）。\relax }{table.caption.26}{}}
+\@writefile{toc}{\contentsline {paragraph}{主要な発見}{10}{section*.30}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces 比較手法の構成（全手法共通：100クエリ）。\relax }}{11}{table.caption.23}\protected@file@percent }
+\newlabel{tab:methods}{{7}{11}{比較手法の構成（全手法共通：100クエリ）。\relax }{table.caption.23}{}}
 \@LN@col{1}
-\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces 手法別レイテンシ比較（gpt-4.1-mini）。\relax }}{12}{table.caption.28}\protected@file@percent }
-\newlabel{tab:latency}{{10}{12}{手法別レイテンシ比較（gpt-4.1-mini）。\relax }{table.caption.28}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.7}材料工学的評価}{12}{subsection.5.7}\protected@file@percent }
-\newlabel{sec:materials_evaluation}{{5.7}{12}{材料工学的評価}{subsection.5.7}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.7.1}既知L1$_2$化合物の再発見}{12}{subsubsection.5.7.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.7.2}$\gamma '$相候補ランキング}{12}{subsubsection.5.7.2}\protected@file@percent }
-\newlabel{eq:composite_score}{{1}{12}{$\gamma '$相候補ランキング}{equation.5.1}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.7.3}Ni$_3$Al近傍格子定数候補}{12}{subsubsection.5.7.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.7.4}安定L1$_2$候補の抽出}{12}{subsubsection.5.7.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.7.5}材料設計仮説の生成}{12}{subsubsection.5.7.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces Proposed手法における評価指標改善の効果。\relax }}{11}{table.caption.27}\protected@file@percent }
+\newlabel{tab:metric_improvement}{{8}{11}{Proposed手法における評価指標改善の効果。\relax }{table.caption.27}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}難易度別の詳細分析}{11}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{難易度別の傾向}{11}{section*.32}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.3.1}レイテンシ比較}{11}{subsubsection.5.3.1}\protected@file@percent }
+\newlabel{sec:scalability}{{5.3.1}{11}{レイテンシ比較}{subsubsection.5.3.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}マルチホップクエリ分析}{11}{subsection.5.4}\protected@file@percent }
+\newlabel{sec:multihop}{{5.4}{11}{マルチホップクエリ分析}{subsection.5.4}{}}
+\@writefile{toc}{\contentsline {paragraph}{マルチホップの傾向}{11}{section*.35}\protected@file@percent }
 \@LN@col{2}
-\@writefile{toc}{\contentsline {section}{\numberline {6}考察}{12}{section.6}\protected@file@percent }
-\newlabel{sec:discussion}{{6}{12}{考察}{section.6}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Schema Graph制約の有効性}{12}{subsection.6.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{スキーマ情報注入が決定的}{12}{section*.37}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Schema Graph走査によるテーブル幻覚排除}{12}{section*.38}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{実行精度の課題}{12}{section*.39}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}材料工学的考察}{12}{subsection.6.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.2.1}既知化合物の完全再発見}{12}{subsubsection.6.2.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.2.2}$\gamma '$候補の材料工学的妥当性}{12}{subsubsection.6.2.2}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces ホップ数別の実行精度（Acc.）と実行成功率（Val.）。\relax }}{13}{table.caption.29}\protected@file@percent }
-\newlabel{tab:multihop}{{11}{13}{ホップ数別の実行精度（Acc.）と実行成功率（Val.）。\relax }{table.caption.29}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {12}{\ignorespaces 手法別エラー分析（100クエリ）。\relax }}{13}{table.caption.31}\protected@file@percent }
-\newlabel{tab:error_analysis}{{12}{13}{手法別エラー分析（100クエリ）。\relax }{table.caption.31}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {13}{\ignorespaces SQLインジェクション・安全性テスト結果（全件遮断）。\relax }}{13}{table.caption.33}\protected@file@percent }
-\newlabel{tab:injection_results}{{13}{13}{SQLインジェクション・安全性テスト結果（全件遮断）。\relax }{table.caption.33}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {14}{\ignorespaces 既知L1$_2$化合物の再発見結果（11/11）。\relax }}{13}{table.caption.34}\protected@file@percent }
-\newlabel{tab:known_l12}{{14}{13}{既知L1$_2$化合物の再発見結果（11/11）。\relax }{table.caption.34}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {15}{\ignorespaces $\gamma '$相候補Top 10（複合スコア$S$順）。\relax }}{13}{table.caption.35}\protected@file@percent }
-\newlabel{tab:gamma_prime}{{15}{13}{$\gamma '$相候補Top 10（複合スコア$S$順）。\relax }{table.caption.35}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {16}{\ignorespaces Ni$_3$Al近傍格子定数候補（$|\Delta a| \leq 0.03$\nobreakspace  {}\r A）。\relax }}{13}{table.caption.36}\protected@file@percent }
-\newlabel{tab:lattice_match}{{16}{13}{Ni$_3$Al近傍格子定数候補（$|\Delta a| \leq 0.03$~\AA ）。\relax }{table.caption.36}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}エラー分析}{11}{subsection.5.5}\protected@file@percent }
+\newlabel{sec:error_analysis}{{5.5}{11}{エラー分析}{subsection.5.5}{}}
+\@writefile{toc}{\contentsline {paragraph}{失敗モードの分類}{11}{section*.37}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.6}SQLインジェクションと安全性結果}{11}{subsection.5.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.7}材料工学的評価}{11}{subsection.5.7}\protected@file@percent }
+\newlabel{sec:materials_evaluation}{{5.7}{11}{材料工学的評価}{subsection.5.7}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.7.1}既知L1$_2$化合物の再発見}{11}{subsubsection.5.7.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.7.2}$\gamma '$相候補ランキング}{11}{subsubsection.5.7.2}\protected@file@percent }
+\newlabel{eq:composite_score}{{2}{11}{$\gamma '$相候補ランキング}{equation.5.2}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.7.3}Ni$_3$Al近傍格子定数候補}{11}{subsubsection.5.7.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces 回帰テストカテゴリ（全80件、全PASS）。\relax }}{12}{table.caption.28}\protected@file@percent }
+\newlabel{tab:test_categories}{{9}{12}{回帰テストカテゴリ（全80件、全PASS）。\relax }{table.caption.28}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces 5手法のベースライン比較（100クエリ、gpt-5.5、共通カラム照合+LIMIT 10{,}000）。\relax }}{12}{table.caption.29}\protected@file@percent }
+\newlabel{tab:baseline_results}{{10}{12}{5手法のベースライン比較（100クエリ、gpt-5.5、共通カラム照合+LIMIT 10{,}000）。\relax }{table.caption.29}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces 難易度別の実行成功率と実行精度（Proposed手法）。\relax }}{12}{table.caption.31}\protected@file@percent }
+\newlabel{tab:difficulty_breakdown}{{11}{12}{難易度別の実行成功率と実行精度（Proposed手法）。\relax }{table.caption.31}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {12}{\ignorespaces 手法別レイテンシ比較（gpt-5.5）。\relax }}{12}{table.caption.33}\protected@file@percent }
+\newlabel{tab:latency}{{12}{12}{手法別レイテンシ比較（gpt-5.5）。\relax }{table.caption.33}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {13}{\ignorespaces ホップ数別の実行精度比較（2-hop以上）。\relax }}{12}{table.caption.34}\protected@file@percent }
+\newlabel{tab:multihop}{{13}{12}{ホップ数別の実行精度比較（2-hop以上）。\relax }{table.caption.34}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {14}{\ignorespaces 手法別エラー分析（100クエリ）。\relax }}{12}{table.caption.36}\protected@file@percent }
+\newlabel{tab:error_analysis}{{14}{12}{手法別エラー分析（100クエリ）。\relax }{table.caption.36}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {15}{\ignorespaces SQLインジェクション・安全性テスト結果（全件遮断）。\relax }}{12}{table.caption.38}\protected@file@percent }
+\newlabel{tab:injection_results}{{15}{12}{SQLインジェクション・安全性テスト結果（全件遮断）。\relax }{table.caption.38}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {16}{\ignorespaces 既知L1$_2$化合物の再発見結果（11/11）。\relax }}{12}{table.caption.39}\protected@file@percent }
+\newlabel{tab:known_l12}{{16}{12}{既知L1$_2$化合物の再発見結果（11/11）。\relax }{table.caption.39}{}}
+\citation{vegard1921constitution}
+\citation{king1966volume}
+\@LN@col{1}
+\@writefile{lot}{\contentsline {table}{\numberline {17}{\ignorespaces $\gamma '$相候補Top 10（複合スコア$S$順）。\relax }}{13}{table.caption.40}\protected@file@percent }
+\newlabel{tab:gamma_prime}{{17}{13}{$\gamma '$相候補Top 10（複合スコア$S$順）。\relax }{table.caption.40}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {18}{\ignorespaces Ni$_3$Al近傍格子定数候補（$|\Delta a| \leq 0.03$\nobreakspace  {}\r A）。\relax }}{13}{table.caption.41}\protected@file@percent }
+\newlabel{tab:lattice_match}{{18}{13}{Ni$_3$Al近傍格子定数候補（$|\Delta a| \leq 0.03$~\AA ）。\relax }{table.caption.41}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.7.4}安定L1$_2$候補の抽出}{13}{subsubsection.5.7.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.7.5}材料設計仮説の生成}{13}{subsubsection.5.7.5}\protected@file@percent }
+\@LN@col{2}
+\@writefile{toc}{\contentsline {section}{\numberline {6}考察}{13}{section.6}\protected@file@percent }
+\newlabel{sec:discussion}{{6}{13}{考察}{section.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Schema Graph制約の有効性}{13}{subsection.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{スキーマ情報注入が決定的}{13}{section*.42}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Schema Graph走査によるテーブル幻覚排除}{13}{section*.43}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{実行精度の構造}{13}{section*.44}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}材料工学的考察}{13}{subsection.6.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.2.1}既知化合物の完全再発見}{13}{subsubsection.6.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.2.2}$\gamma '$候補の材料工学的妥当性}{13}{subsubsection.6.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}限界と制約}{13}{subsection.6.3}\protected@file@percent }
+\newlabel{sec:limitations}{{6.3}{13}{限界と制約}{subsection.6.3}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.3.1}データベース規模}{13}{subsubsection.6.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.3.2}テストケースの自己参照性}{13}{subsubsection.6.3.2}\protected@file@percent }
 \citation{yu2018spider}
 \citation{li2024bird}
 \citation{gao2023dail}
+\citation{wang2020ratsql}
+\citation{li2023resdsql}
+\citation{safdarian2026schemagraphsql}
 \citation{zhuang2026mkna}
 \citation{hu2026optimat}
 \citation{ishii2023supercon}
@@ -251,12 +282,13 @@
 \citation{minamoto2026pinax}
 \bibstyle{elsarticle-num}
 \bibdata{references}
+\bibcite{wang2023ai4s}{{1}{}{{}}{{}}}
+\bibcite{himanen2019dscribe}{{2}{}{{}}{{}}}
+\bibcite{saal2013oqmd}{{3}{}{{}}{{}}}
+\bibcite{kirklin2015oqmd}{{4}{}{{}}{{}}}
+\bibcite{jain2013mp}{{5}{}{{}}{{}}}
 \@LN@col{1}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}限界と制約}{14}{subsection.6.3}\protected@file@percent }
-\newlabel{sec:limitations}{{6.3}{14}{限界と制約}{subsection.6.3}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.3.1}データベース規模}{14}{subsubsection.6.3.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.3.2}テストケースの自己参照性}{14}{subsubsection.6.3.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.3.3}実行精度の低さ}{14}{subsubsection.6.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.3.3}実行精度の難易度依存性}{14}{subsubsection.6.3.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {6.3.4}seed dataバイアス}{14}{subsubsection.6.3.4}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {6.4}関連システムとの比較}{14}{subsection.6.4}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {6.5}AI for Science（AI4S）における意義}{14}{subsection.6.5}\protected@file@percent }
@@ -265,20 +297,63 @@
 \@LN@col{2}
 \@writefile{toc}{\contentsline {section}{\numberline {7}結論}{14}{section.7}\protected@file@percent }
 \newlabel{sec:conclusion}{{7}{14}{結論}{section.7}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {17}{\ignorespaces 関連する材料NLP / T2SQL / オントロジーシステムとの比較。\relax }}{15}{table.caption.40}\protected@file@percent }
-\newlabel{tab:related_comparison}{{17}{15}{関連する材料NLP / T2SQL / オントロジーシステムとの比較。\relax }{table.caption.40}{}}
+\bibcite{curtarolo2012aflow}{{6}{}{{}}{{}}}
+\bibcite{draxl2019nomad}{{7}{}{{}}{{}}}
+\bibcite{senkov2018hea}{{8}{}{{}}{{}}}
+\bibcite{george2019hea}{{9}{}{{}}{{}}}
+\bibcite{ishii2023supercon}{{10}{}{{}}{{}}}
+\bibcite{ishii2024polyinfo}{{11}{}{{}}{{}}}
+\bibcite{yu2018spider}{{12}{}{{}}{{}}}
+\bibcite{li2024bird}{{13}{}{{}}{{}}}
+\bibcite{gao2023dail}{{14}{}{{}}{{}}}
+\bibcite{pourreza2024dinsql}{{15}{}{{}}{{}}}
+\bibcite{gao2024xiyan}{{16}{}{{}}{{}}}
+\bibcite{hong2024survey}{{17}{}{{}}{{}}}
+\bibcite{maamari2024schema}{{18}{}{{}}{{}}}
+\bibcite{wang2020ratsql}{{19}{}{{}}{{}}}
+\bibcite{chen2021shadowgnn}{{20}{}{{}}{{}}}
+\bibcite{li2023resdsql}{{21}{}{{}}{{}}}
+\bibcite{lin2020bridge}{{22}{}{{}}{{}}}
+\bibcite{safdarian2026schemagraphsql}{{23}{}{{}}{{}}}
+\bibcite{hoang2025grastsql}{{24}{}{{}}{{}}}
+\bibcite{mcmillan2026context}{{25}{}{{}}{{}}}
+\bibcite{song2023matscnlp}{{26}{}{{}}{{}}}
+\bibcite{mishra2024llamat}{{27}{}{{}}{{}}}
+\bibcite{zhuang2026mkna}{{28}{}{{}}{{}}}
+\bibcite{hu2026optimat}{{29}{}{{}}{{}}}
+\@writefile{lot}{\contentsline {table}{\numberline {19}{\ignorespaces 関連する材料NLP / T2SQL / オントロジーシステムとの比較。\relax }}{15}{table.caption.45}\protected@file@percent }
+\newlabel{tab:related_comparison}{{19}{15}{関連する材料NLP / T2SQL / オントロジーシステムとの比較。\relax }{table.caption.45}{}}
 \@LN@col{1}
-\@writefile{toc}{\contentsline {section}{\numberline {A}回帰テストケース一覧}{15}{appendix.1.A}\protected@file@percent }
-\newlabel{app:all_tests}{{A}{15}{回帰テストケース一覧}{appendix.1.A}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {B}生成SQL例}{15}{appendix.1.B}\protected@file@percent }
-\newlabel{app:sql_examples}{{B}{15}{生成SQL例}{appendix.1.B}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {B.1}「Niを含む安定なL1$_2$化合物を出して」}{15}{subsection.1.B.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{LLM-only（B1）：}{15}{lstlisting.-1}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Proposed手法（P）：}{15}{lstlisting.-2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {B.2}「NiとAlの両方を含むL1$_2$化合物を出して」}{15}{subsection.1.B.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Full Schema（B2）：}{15}{lstlisting.-3}\protected@file@percent }
 \@LN@col{2}
-\@writefile{toc}{\contentsline {paragraph}{Proposed手法（P）：}{15}{lstlisting.-4}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {18}{\ignorespaces 回帰テストケース一覧（全44件、全PASS）。\relax }}{16}{table.caption.42}\protected@file@percent }
-\newlabel{tab:all_tests}{{18}{16}{回帰テストケース一覧（全44件、全PASS）。\relax }{table.caption.42}{}}
-\gdef \@abspage@last{16}
+\bibcite{mp_mcp2025}{{30}{}{{}}{{}}}
+\bibcite{emmo2020}{{31}{}{{}}{{}}}
+\bibcite{sequeda2024benchmark}{{32}{}{{}}{{}}}
+\bibcite{allemang2024obqc}{{33}{}{{}}{{}}}
+\bibcite{villars2004pauling}{{34}{}{{}}{{}}}
+\bibcite{networkx2008}{{35}{}{{}}{{}}}
+\bibcite{hwang1992steiner}{{36}{}{{}}{{}}}
+\bibcite{lewis2020rag}{{37}{}{{}}{{}}}
+\bibcite{brown2020fewshot}{{38}{}{{}}{{}}}
+\bibcite{salton1988tfidf}{{39}{}{{}}{{}}}
+\bibcite{sqlglot2023}{{40}{}{{}}{{}}}
+\bibcite{jaccard1912distribution}{{41}{}{{}}{{}}}
+\bibcite{vegard1921constitution}{{42}{}{{}}{{}}}
+\bibcite{king1966volume}{{43}{}{{}}{{}}}
+\bibcite{minamoto2020mint}{{44}{}{{}}{{}}}
+\bibcite{minamoto2026pinax}{{45}{}{{}}{{}}}
+\providecommand\NAT@force@numbers{}\NAT@force@numbers
+\@LN@col{1}
+\@LN@col{2}
+\@writefile{toc}{\contentsline {section}{\numberline {A}回帰テストケース一覧}{16}{appendix.1.A}\protected@file@percent }
+\newlabel{app:all_tests}{{A}{16}{回帰テストケース一覧}{appendix.1.A}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {B}生成SQL例}{16}{appendix.1.B}\protected@file@percent }
+\newlabel{app:sql_examples}{{B}{16}{生成SQL例}{appendix.1.B}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.1}「Niを含む安定なL1$_2$化合物を出して」}{16}{subsection.1.B.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{LLM-only（B1）：}{16}{lstlisting.-1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Proposed手法（P）：}{16}{lstlisting.-2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.2}「NiとAlの両方を含むL1$_2$化合物を出して」}{16}{subsection.1.B.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Full Schema（B2）：}{16}{lstlisting.-3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Proposed手法（P）：}{16}{lstlisting.-4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {20}{\ignorespaces 回帰テストケース一覧（全44件、全PASS）。\relax }}{17}{table.caption.48}\protected@file@percent }
+\newlabel{tab:all_tests}{{20}{17}{回帰テストケース一覧（全44件、全PASS）。\relax }{table.caption.48}{}}
+\gdef \@abspage@last{17}

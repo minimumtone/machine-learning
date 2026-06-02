@@ -1,4 +1,4 @@
-This is LuaHBTeX, Version 1.14.0 (TeX Live 2022/dev/Debian)  (format=lualatex 2026.6.2)  2 JUN 2026 02:12
+This is LuaHBTeX, Version 1.14.0 (TeX Live 2022/dev/Debian)  (format=lualatex 2026.6.2)  2 JUN 2026 11:43
  restricted system commands enabled.
 **t2sql_materials_paper.tex
 (./t2sql_materials_paper.tex
@@ -1368,9 +1368,9 @@ Package: lltjp-array 2019-07-18 Patch to array for LuaTeX-ja
 Package translations Info: No language package found. I am going to use `englis
 h' as default language. on input line 52.
 
-No file t2sql_materials_paper.aux.
-
+(./t2sql_materials_paper.aux)
 \openout1 = t2sql_materials_paper.aux
+
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 52.
 LaTeX Font Info:    ... okay on input line 52.
 LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 52.
@@ -1382,6 +1382,7 @@ LaTeX Font Info:    ... okay on input line 52.
 LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 52.
 LaTeX Font Info:    Trying loading font information for TS1+cmr on input line 5
 2.
+
 (/usr/share/texlive/texmf-dist/tex/latex/base/ts1cmr.fd
 File: ts1cmr.fd 2019/12/16 v2.5j Standard LaTeX font definitions
 )
@@ -1539,6 +1540,8 @@ Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 LaTeX Info: Redefining \ref on input line 52.
 LaTeX Info: Redefining \pageref on input line 52.
 LaTeX Info: Redefining \nameref on input line 52.
+
+(./t2sql_materials_paper.out) (./t2sql_materials_paper.out)
 \@outlinefile=\write6
 
 \openout6 = t2sql_materials_paper.out
@@ -1574,42 +1577,40 @@ LaTeX Font Info:    Trying loading font information for U+msb on input line 67.
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
 LaTeX Font Info:    Font shape `JT3/IPAexMincho(0)/b/n' will be
-(Font)              scaled to size 9.6222pt on input line 72.
+(Font)              scaled to size 9.6222pt on input line 71.
 LaTeX Font Info:    Font shape `JY3/IPAexMincho(0)/b/n' will be
-(Font)              scaled to size 9.6222pt on input line 72.
+(Font)              scaled to size 9.6222pt on input line 71.
 (load cache: extra_lmroman10-italic.luc)
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 117.
+(Font)              No change on input line 118.
 (load cache: extra_lmroman12-regular.luc)
 LaTeX Font Info:    Font shape `JT3/IPAexMincho(0)/m/n' will be
-(Font)              scaled to size 13.85594pt on input line 122.
+(Font)              scaled to size 13.85594pt on input line 123.
 LaTeX Font Info:    Font shape `JY3/IPAexMincho(0)/m/n' will be
-(Font)              scaled to size 13.85594pt on input line 122.
+(Font)              scaled to size 13.85594pt on input line 123.
 LaTeX Font Info:    Font shape `JT3/IPAexMincho(0)/m/n' will be
-(Font)              scaled to size 6.73553pt on input line 122.
+(Font)              scaled to size 6.73553pt on input line 123.
 (load cache: extra_lmroman8-regular.luc)
 LaTeX Font Info:    Font shape `JT3/IPAexMincho(0)/m/n' will be
-(Font)              scaled to size 7.69775pt on input line 122.
+(Font)              scaled to size 7.69775pt on input line 123.
 LaTeX Font Info:    Font shape `JY3/IPAexMincho(0)/m/n' will be
-(Font)              scaled to size 7.69775pt on input line 122.
+(Font)              scaled to size 7.69775pt on input line 123.
 (load cache: extra_lmroman8-italic.luc)
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 122.
+(Font)              No change on input line 123.
 (load cache: extra_lmroman6-regular.luc)
 LaTeX Font Info:    Font shape `JY3/IPAexMincho(0)/m/n' will be
-(Font)              scaled to size 5.77332pt on input line 122.
+(Font)              scaled to size 5.77332pt on input line 123.
 (load cache: extra_lmroman7-italic.luc)
 LaTeX Font Info:    Font shape `JT3/IPAexMincho(0)/m/n' will be
-(Font)              scaled to size 5.77332pt on input line 122.
+(Font)              scaled to size 5.77332pt on input line 123.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 128.
-
-
-Package natbib Warning: Citation `wang2023ai4s' on page 1 undefined on input li
-ne 140.
-
+(Font)              No change on input line 123.
+(load cache: extra_lmmono8-regular.luc)
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 148.
+(Font)              No change on input line 129.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 149.
 
 Overfull \hbox (2.22pt too wide) has occurred while \output is active
 [][] 
@@ -1617,309 +1618,141 @@ Overfull \hbox (2.22pt too wide) has occurred while \output is active
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 148.
+(hyperref)                removing `math shift' on input line 149.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `subscript' on input line 148.
+(hyperref)                removing `subscript' on input line 149.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 148.
+(hyperref)                removing `math shift' on input line 149.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 148.
+(hyperref)                removing `math shift' on input line 149.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `subscript' on input line 148.
+(hyperref)                removing `subscript' on input line 149.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 148.
+(hyperref)                removing `math shift' on input line 149.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\<def>-command' on input line 148.
+(hyperref)                removing `\<def>-command' on input line 149.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\cnotenum' on input line 148.
+(hyperref)                removing `\cnotenum' on input line 149.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\<def>-command' on input line 148.
+(hyperref)                removing `\<def>-command' on input line 149.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\@corref' on input line 148.
+(hyperref)                removing `\@corref' on input line 149.
 
 [1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}
 
 
 ]
-
-Package natbib Warning: Citation `saal2013oqmd' on page 2 undefined on input li
-ne 151.
-
-
-Package natbib Warning: Citation `kirklin2015oqmd' on page 2 undefined on input
- line 151.
-
-
-Package natbib Warning: Citation `jain2013mp' on page 2 undefined on input line
- 152.
-
-
-Package natbib Warning: Citation `curtarolo2012aflow' on page 2 undefined on in
-put line 153.
-
-
-Package natbib Warning: Citation `draxl2019nomad' on page 2 undefined on input 
-line 154.
-
-
-Package natbib Warning: Citation `senkov2018hea' on page 2 undefined on input l
-ine 155.
-
-
-Package natbib Warning: Citation `george2019hea' on page 2 undefined on input l
-ine 155.
-
-
-Package natbib Warning: Citation `ishii2023supercon' on page 2 undefined on inp
-ut line 159.
-
-
-Package natbib Warning: Citation `ishii2024polyinfo' on page 2 undefined on inp
-ut line 160.
-
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 195.
-
-Package natbib Warning: Citation `yu2018spider' on page 2 undefined on input li
-ne 198.
-
-
-Package natbib Warning: Citation `li2024bird' on page 2 undefined on input line
- 199.
-
-
-Package natbib Warning: Citation `gao2023dail' on page 2 undefined on input lin
-e 201.
-
-
-Package natbib Warning: Citation `pourreza2024dinsql' on page 2 undefined on in
-put line 203.
-
-
-Package natbib Warning: Citation `hong2024survey' on page 2 undefined on input 
-line 204.
-
-
-Package natbib Warning: Citation `maamari2024schema' on page 2 undefined on inp
-ut line 205.
-
+(Font)              No change on input line 196.
 LaTeX Font Info:    Font shape `JT3/IPAexMincho(0)/m/n' will be
-(Font)              scaled to size 4.8111pt on input line 214.
+(Font)              scaled to size 4.8111pt on input line 231.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 216.
-
-Package natbib Warning: Citation `song2023matscnlp' on page 2 undefined on inpu
-t line 219.
-
-
-Package natbib Warning: Citation `mishra2024llamat' on page 2 undefined on inpu
-t line 220.
-
-
-Package natbib Warning: Citation `zhuang2026mkna' on page 2 undefined on input 
-line 221.
-
-
-Package natbib Warning: Citation `hu2026optimat' on page 2 undefined on input l
-ine 223.
-
-
-Package natbib Warning: Citation `mp_mcp2025' on page 2 undefined on input line
- 224.
-
+(Font)              No change on input line 233.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 231.
-
-Package natbib Warning: Citation `ishii2023supercon' on page 2 undefined on inp
-ut line 237.
-
-
-Package natbib Warning: Citation `ishii2024polyinfo' on page 2 undefined on inp
-ut line 239.
-
-
-Package natbib Warning: Citation `emmo2020' on page 2 undefined on input line 2
-42.
-
-
-Package natbib Warning: Citation `sequeda2024benchmark' on page 2 undefined on 
-input line 244.
-
-
-Package natbib Warning: Citation `allemang2024obqc' on page 2 undefined on inpu
-t line 248.
-
-[2]
+(Font)              No change on input line 248.
+ [2]
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 272.
-
-
-LaTeX Warning: Reference `fig:pipeline_schematic' on page 3 undefined on input 
-line 300.
-
+(Font)              No change on input line 289.
 (load cache: extra_lmroman9-regular.luc)
 LaTeX Font Info:    Font shape `JT3/IPAexMincho(0)/m/n' will be
-(Font)              scaled to size 8.65997pt on input line 387.
+(Font)              scaled to size 8.65997pt on input line 405.
 LaTeX Font Info:    Font shape `JY3/IPAexMincho(0)/m/n' will be
-(Font)              scaled to size 8.65997pt on input line 387.
-(load cache: extra_lmroman9-bold.luc)
-LaTeX Font Info:    Font shape `JT3/IPAexMincho(0)/b/n' will be
-(Font)              scaled to size 8.65997pt on input line 387.
-LaTeX Font Info:    Font shape `JY3/IPAexMincho(0)/b/n' will be
-(Font)              scaled to size 8.65997pt on input line 387.
-
-LaTeX Warning: Reference `sec:intent_classifier' on page 3 undefined on input l
-ine 387.
-
-
-LaTeX Warning: Reference `sec:entity_extractor' on page 3 undefined on input li
-ne 387.
-
-
-LaTeX Warning: Reference `sec:coverage_score' on page 3 undefined on input line
- 387.
-
+(Font)              scaled to size 8.65997pt on input line 405.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 387.
+(Font)              No change on input line 405.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 387.
+(Font)              No change on input line 405.
 
-LaTeX Warning: Reference `sec:sql_generation' on page 3 undefined on input line
- 387.
-
-
-LaTeX Warning: Reference `sec:llm_mode' on page 3 undefined on input line 387.
-
-
-LaTeX Warning: Reference `sec:schema_graph' on page 3 undefined on input line 3
-87.
-
-
-Overfull \hbox (7.411pt too wide) in paragraph at lines 387--387
+Overfull \hbox (7.411pt too wide) in paragraph at lines 405--405
  \TU/lmr/m/n/9 lowed_schema 
  []
 
-
-LaTeX Warning: Reference `sec:sql_guard' on page 3 undefined on input line 387.
-
-
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 387.
+(Font)              No change on input line 405.
+LaTeX Font Info:    Trying loading font information for OMS+lmr on input line 4
+71.
+(/usr/share/texmf/tex/latex/lm/omslmr.fd
+File: omslmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
+)
+LaTeX Font Info:    Trying loading font information for OMS+lmsy on input line 
+471.
 
-LaTeX Warning: Reference `sec:numeric_parser' on page 3 undefined on input line
- 387.
-
-
-LaTeX Warning: Reference `sec:formula_parser' on page 3 undefined on input line
- 387.
-
+(/usr/share/texmf/tex/latex/lm/omslmsy.fd
+File: omslmsy.fd 2009/10/30 v1.6 Font defs for Latin Modern
+)
+LaTeX Font Info:    Font shape `OMS/lmr/m/n' in size <7> not available
+(Font)              Font shape `OMS/lmsy/m/n' tried instead on input line 471.
+(load cache: extra_lmroman7-bold.luc)
+LaTeX Font Info:    Font shape `JT3/IPAexMincho(0)/b/n' will be
+(Font)              scaled to size 6.73553pt on input line 471.
+LaTeX Font Info:    Font shape `JY3/IPAexMincho(0)/b/n' will be
+(Font)              scaled to size 6.73553pt on input line 471.
 LaTeX Font Info:    Font shape `JT3/IPAexGothic(0)/m/n' will be
-(Font)              scaled to size 9.6222pt on input line 410.
+(Font)              scaled to size 9.6222pt on input line 495.
 LaTeX Font Info:    Font shape `JY3/IPAexGothic(0)/m/n' will be
-(Font)              scaled to size 9.6222pt on input line 410.
+(Font)              scaled to size 9.6222pt on input line 495.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexGothic(0)/m/it' undefined
-(Font)              No change on input line 410.
-
-LaTeX Warning: Reference `fig:architecture' on page 3 undefined on input line 4
-46.
-
-<figures/fig1_architecture.png, id=38, 851.3406pt x 345.2097pt>
+(Font)              No change on input line 495.
+<figures/fig1_architecture.png, id=431, 851.3406pt x 345.2097pt>
 File: figures/fig1_architecture.png Graphic file (type png)
 <use figures/fig1_architecture.png>
-Package luatex.def Info: figures/fig1_architecture.png  used on input line 450.
+Package luatex.def Info: figures/fig1_architecture.png  used on input line 535.
 
 (luatex.def)             Requested size: 252.0pt x 102.18362pt.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 458.
+(Font)              No change on input line 543.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 461.
-
-LaTeX Warning: Reference `fig:er_diagram' on page 3 undefined on input line 467
-.
-
-
-LaTeX Warning: Reference `tab:schema' on page 3 undefined on input line 467.
-
-<figures/fig2_er_diagram.png, id=39, 779.0706pt x 489.7497pt>
-File: figures/fig2_er_diagram.png Graphic file (type png)
-<use figures/fig2_er_diagram.png>
-Package luatex.def Info: figures/fig2_er_diagram.png  used on input line 472.
-(luatex.def)             Requested size: 252.0pt x 158.41199pt.
-(load cache: extra_lmmono8-regular.luc)
+(Font)              No change on input line 546.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 500.
-(load cache: extra_lmmono10-regular.luc)
-
-LaTeX Warning: Reference `sec:multi_element' on page 3 undefined on input line 
-507.
-
+(Font)              No change on input line 578.
+(load cache: extra_lmmono10-regular.luc) [3] [4]
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 514.
+(Font)              No change on input line 592.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 519.
+(Font)              No change on input line 597.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 524.
-[3]
+(Font)              No change on input line 602.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 533.
-
-
-LaTeX Warning: Reference `sec:sql_guard' on page 4 undefined on input line 537.
-
-
-
-Package natbib Warning: Citation `gao2023dail' on page 4 undefined on input lin
-e 540.
-
-[4<./figures/fig1_architecture.png><./figures/fig2_er_diagram.png>]
+(Font)              No change on input line 611.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 544.
+(Font)              No change on input line 622.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 550.
+(Font)              No change on input line 628.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 571.
+(Font)              No change on input line 649.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 577.
+(Font)              No change on input line 655.
 
 (/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang1.sty
 File: lstlang1.sty 2020/03/24 1.8d listings language file
 )
 Package hyperref Info: bookmark level for unknown lstlisting defaults to 0 on i
-nput line 581.
+nput line 659.
 Removing  `ltj.process_input_buffer' from `process_input_buffer'.
 Inserting `ltj.listings_unicode' at position 1 in `process_input_buffer'.
 Inserting `ltj.process_input_buffer' at position 2 in `process_input_buffer'.
 Removing  `ltj.listings_unicode' from `process_input_buffer'.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 593.
-
-
-LaTeX Warning: Reference `tab:numeric_patterns' on page 5 undefined on input li
-ne 598.
-
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 628.
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 657.
-[5
+(Font)              No change on input line 671.
+ [5
 Missing character: There is no ₀ (U+2080) in font IPAexMincho:mode=node;script
 =hani;language=dflt;-kern;jfm=ujis!
 Missing character: There is no ₁ (U+2081) in font IPAexMincho:mode=node;script
@@ -1940,593 +1773,409 @@ Missing character: There is no ₈ (U+2088) in font IPAexMincho:mode=node;script
 =hani;language=dflt;-kern;jfm=ujis!
 Missing character: There is no ₉ (U+2089) in font IPAexMincho:mode=node;script
 =hani;language=dflt;-kern;jfm=ujis!
-]
+<./figures/fig1_architecture.png>]
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 687.
+(Font)              No change on input line 706.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 714.
+(Font)              No change on input line 735.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 721.
+(Font)              No change on input line 765.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 792.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 799.
 Removing  `ltj.process_input_buffer' from `process_input_buffer'.
 Inserting `ltj.listings_unicode' at position 1 in `process_input_buffer'.
 Inserting `ltj.process_input_buffer' at position 2 in `process_input_buffer'.
 LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <8> not available
-(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 726.
+(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 804.
 (load cache: extra_lmmonolt10-bold.luc)
 LaTeX Font Info:    Font shape `JT3/IPAexMincho(0)/b/n' will be
-(Font)              scaled to size 7.69775pt on input line 726.
+(Font)              scaled to size 7.69775pt on input line 804.
 LaTeX Font Info:    Font shape `JY3/IPAexMincho(0)/b/n' will be
-(Font)              scaled to size 7.69775pt on input line 726.
+(Font)              scaled to size 7.69775pt on input line 804.
 Removing  `ltj.listings_unicode' from `process_input_buffer'.
-
-Package natbib Warning: Citation `networkx2008' on page 6 undefined on input li
-ne 739.
-
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 744.
+(Font)              No change on input line 822.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 747.
-
-Package natbib Warning: Citation `hwang1992steiner' on page 6 undefined on inpu
-t line 749.
-
-
-LaTeX Warning: Reference `alg:steiner' on page 6 undefined on input line 753.
-
+(Font)              No change on input line 825.
 Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
-put line 756.
+put line 834.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 781.
+(Font)              No change on input line 859.
+ [6]
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 786.
+(Font)              No change on input line 864.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 791.
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 791.
+(Font)              No change on input line 869.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\to' on input line 791.
+(hyperref)                removing `math shift' on input line 869.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 791.
+(hyperref)                removing `\to' on input line 869.
 
-Removing  `ltj.process_input_buffer' from `process_input_buffer'.
-Inserting `ltj.listings_unicode' at position 1 in `process_input_buffer'.
-Inserting `ltj.process_input_buffer' at position 2 in `process_input_buffer'.
-Removing  `ltj.listings_unicode' from `process_input_buffer'. [6]
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 806.
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 869.
+
 Removing  `ltj.process_input_buffer' from `process_input_buffer'.
 Inserting `ltj.listings_unicode' at position 1 in `process_input_buffer'.
 Inserting `ltj.process_input_buffer' at position 2 in `process_input_buffer'.
 Removing  `ltj.listings_unicode' from `process_input_buffer'.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 831.
-
-
-LaTeX Warning: Reference `tab:naive_vs_sg' on page 7 undefined on input line 83
-3.
-
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 854.
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 860.
-
-LaTeX Warning: Reference `sec:scalability' on page 7 undefined on input line 86
-4.
-
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 867.
-
-LaTeX Warning: Reference `sec:numeric_parser' on page 7 undefined on input line
- 868.
-
-
-LaTeX Warning: Reference `sec:formula_parser' on page 7 undefined on input line
- 869.
-
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 874.
-
-LaTeX Warning: Reference `sec:coverage_score' on page 7 undefined on input line
- 875.
-
-
-LaTeX Warning: Reference `sec:intent_classifier' on page 7 undefined on input l
-ine 876.
-
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 886.
-
-LaTeX Warning: Reference `sec:few_shot' on page 7 undefined on input line 897.
-
-
-LaTeX Warning: Reference `sec:sql_guard' on page 7 undefined on input line 903.
-
-
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 905.
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 908.
-
-Package natbib Warning: Citation `lewis2020rag' on page 7 undefined on input li
-ne 910.
-
-
-Package natbib Warning: Citation `salton1988tfidf' on page 7 undefined on input
- line 916.
-
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 923.
+(Font)              No change on input line 884.
 Removing  `ltj.process_input_buffer' from `process_input_buffer'.
 Inserting `ltj.listings_unicode' at position 1 in `process_input_buffer'.
 Inserting `ltj.process_input_buffer' at position 2 in `process_input_buffer'.
-Removing  `ltj.listings_unicode' from `process_input_buffer'. [7]
+Removing  `ltj.listings_unicode' from `process_input_buffer'.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 909.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 932.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 938.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
 (Font)              No change on input line 945.
-
-
-LaTeX Warning: Reference `tab:few_shot_sources' on page 8 undefined on input li
-ne 959.
-
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 976.
+(Font)              No change on input line 952.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 964.
+[7]
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 983.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
 (Font)              No change on input line 986.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1001.
+(Font)              No change on input line 1004.
+Removing  `ltj.process_input_buffer' from `process_input_buffer'.
+Inserting `ltj.listings_unicode' at position 1 in `process_input_buffer'.
+Inserting `ltj.process_input_buffer' at position 2 in `process_input_buffer'.
+Removing  `ltj.listings_unicode' from `process_input_buffer'.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1010.
-
-LaTeX Warning: Reference `sec:schema_graph' on page 8 undefined on input line 1
-015.
-
+(Font)              No change on input line 1026.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1024.
-
-Package natbib Warning: Citation `sqlglot2023' on page 8 undefined on input lin
-e 1036.
-
+(Font)              No change on input line 1057.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1038.
-
-LaTeX Warning: Reference `sec:intent_classifier' on page 8 undefined on input l
-ine 1044.
-
-
-LaTeX Warning: Reference `sec:entity_extractor' on page 8 undefined on input li
-ne 1048.
-
-
-LaTeX Warning: Reference `sec:coverage_score' on page 8 undefined on input line
- 1049.
-
-
-LaTeX Warning: Reference `sec:sql_guard' on page 8 undefined on input line 1056
-.
-
+(Font)              No change on input line 1067.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1066.
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 1066.
+(Font)              No change on input line 1082.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1091.
+ [8]
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1105.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1119.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1147.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `subscript' on input line 1066.
+(hyperref)                removing `math shift' on input line 1147.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 1066.
+(hyperref)                removing `subscript' on input line 1147.
 
-[8]
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1092.
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1101.
 
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1147.
+
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1190.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1199.
 
 LaTeX Warning: Reference `sec:traversal_ablation' on page 9 undefined on input 
-line 1107.
-
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1111.
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1120.
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1126.
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1133.
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1139.
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1156.
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1158.
-
-LaTeX Warning: Reference `tab:query_design' on page 9 undefined on input line 1
-161.
-
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1185.
-
-LaTeX Warning: Reference `tab:methods' on page 9 undefined on input line 1188.
+line 1205.
 
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
 (Font)              No change on input line 1209.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1223.
-
-LaTeX Warning: Reference `tab:test_categories' on page 9 undefined on input lin
-e 1227.
-
+(Font)              No change on input line 1218.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1224.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1231.
 [9]
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1252.
+(Font)              No change on input line 1237.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1254.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1256.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1283.
+(load cache: extra_lmroman9-bold.luc)
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1307.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1321.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1328.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1346.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1353.
 
-
-LaTeX Warning: Reference `tab:baseline_results' on page 10 undefined on input l
-ine 1255.
+Overfull \hbox (26.82962pt too wide) in paragraph at lines 1360--1369
+ [][][][] 
+ []
 
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1278.
+(Font)              No change on input line 1374.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1299.
-
-LaTeX Warning: Reference `tab:difficulty_breakdown' on page 10 undefined on inp
-ut line 1301.
-
+(Font)              No change on input line 1403.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1325.
+(Font)              No change on input line 1429.
+[10]
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1336.
+(Font)              No change on input line 1445.
 
-LaTeX Warning: Reference `tab:latency' on page 10 undefined on input line 1339.
-
+Overfull \hbox (4.70921pt too wide) in paragraph at lines 1454--1464
+ [][][][] 
+ []
 
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1362.
-
-LaTeX Warning: Reference `tab:multihop' on page 10 undefined on input line 1365
-.
-
+(Font)              No change on input line 1469.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1391.
+(Font)              No change on input line 1478.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1402.
-
-LaTeX Warning: Reference `tab:error_analysis' on page 10 undefined on input lin
-e 1405.
-
+(Font)              No change on input line 1504.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1529.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1534.
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 1428.
+(enumitem)                sense, on input line 1560.
 
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1428.
+(Font)              No change on input line 1560.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1442.
+(Font)              No change on input line 1574.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1599.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1604.
 
-LaTeX Warning: Reference `tab:injection_results' on page 10 undefined on input 
-line 1445.
-
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1467.
-[10] [11]
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1472.
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1604.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 1472.
+(hyperref)                removing `subscript' on input line 1604.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `subscript' on input line 1472.
+(hyperref)                removing `math shift' on input line 1604.
+
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1633.
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1633.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 1472.
-
-
-LaTeX Warning: Reference `tab:known_l12' on page 12 undefined on input line 147
-4.
-
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1501.
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 1501.
+(hyperref)                removing `\gamma' on input line 1633.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\gamma' on input line 1501.
+(hyperref)                removing `math shift' on input line 1633.
+
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1674.
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1674.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 1501.
-
-
-LaTeX Warning: Reference `tab:gamma_prime' on page 12 undefined on input line 1
-505.
-
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1542.
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 1542.
+(hyperref)                removing `subscript' on input line 1674.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `subscript' on input line 1542.
+(hyperref)                removing `math shift' on input line 1674.
+
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1709.
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1709.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 1542.
-
-
-LaTeX Warning: Reference `tab:lattice_match' on page 12 undefined on input line
- 1545.
-
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1577.
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 1577.
+(hyperref)                removing `subscript' on input line 1709.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `subscript' on input line 1577.
+(hyperref)                removing `math shift' on input line 1709.
+
+[11] [12]
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1718.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1744.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1750.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1755.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1762.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1768.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1770.
+LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
+(Font)              No change on input line 1777.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 1577.
-
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1586.
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1612.
-
-LaTeX Warning: Reference `tab:baseline_results' on page 12 undefined on input l
-ine 1614.
-
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1618.
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1623.
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1629.
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1636.
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1638.
-
-LaTeX Warning: Reference `tab:known_l12' on page 12 undefined on input line 164
-0.
-
-LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1645.
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 1645.
+(hyperref)                removing `math shift' on input line 1777.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\gamma' on input line 1645.
+(hyperref)                removing `\gamma' on input line 1777.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 1645.
-
-
-LaTeX Warning: Reference `tab:gamma_prime' on page 12 undefined on input line 1
-647.
-
-
-LaTeX Warning: Reference `tab:lattice_match' on page 12 undefined on input line
- 1655.
+(hyperref)                removing `math shift' on input line 1777.
 
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1660.
+(Font)              No change on input line 1792.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1663.
-[12] [13]
+(Font)              No change on input line 1795.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1671.
+(Font)              No change on input line 1801.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1678.
+(Font)              No change on input line 1808.
+[13]
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1689.
+(Font)              No change on input line 1815.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1698.
-
-
-Package natbib Warning: Citation `yu2018spider' on page 14 undefined on input l
-ine 1722.
-
-
-Package natbib Warning: Citation `li2024bird' on page 14 undefined on input lin
-e 1722.
-
-
-Package natbib Warning: Citation `gao2023dail' on page 14 undefined on input li
-ne 1722.
-
-
-Package natbib Warning: Citation `zhuang2026mkna' on page 14 undefined on input
- line 1722.
-
-
-Package natbib Warning: Citation `hu2026optimat' on page 14 undefined on input 
-line 1722.
-
-
-Package natbib Warning: Citation `ishii2023supercon' on page 14 undefined on in
-put line 1722.
-
-
-Package natbib Warning: Citation `ishii2024polyinfo' on page 14 undefined on in
-put line 1722.
-
-
-Package natbib Warning: Citation `emmo2020' on page 14 undefined on input line 
-1722.
-
-
-Package natbib Warning: Citation `allemang2024obqc' on page 14 undefined on inp
-ut line 1722.
-
+(Font)              No change on input line 1824.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1725.
-
-LaTeX Warning: Reference `sec:schema_graph' on page 14 undefined on input line 
-1731.
-
-
-Package natbib Warning: Citation `minamoto2020mint' on page 14 undefined on inp
-ut line 1735.
-
-
-Package natbib Warning: Citation `minamoto2026pinax' on page 14 undefined on in
-put line 1737.
-
+(Font)              No change on input line 1854.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1745.
-No file t2sql_materials_paper.bbl.
-[14]
-
-LaTeX Warning: Reference `tab:all_tests' on page 15 undefined on input line 182
-6.
-
+(Font)              No change on input line 1874.
+ (./t2sql_materials_paper.bbl [14] [15])
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1896.
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 1896.
+(Font)              No change on input line 2021.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `subscript' on input line 1896.
+(hyperref)                removing `math shift' on input line 2021.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 1896.
+(hyperref)                removing `subscript' on input line 2021.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 2021.
 
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1899.
+(Font)              No change on input line 2024.
 Removing  `ltj.process_input_buffer' from `process_input_buffer'.
 Inserting `ltj.listings_unicode' at position 1 in `process_input_buffer'.
 Inserting `ltj.process_input_buffer' at position 2 in `process_input_buffer'.
 LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <7> not available
-(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 1900.
-LaTeX Font Info:    Font shape `JT3/IPAexMincho(0)/b/n' will be
-(Font)              scaled to size 6.73553pt on input line 1900.
-LaTeX Font Info:    Font shape `JY3/IPAexMincho(0)/b/n' will be
-(Font)              scaled to size 6.73553pt on input line 1900.
+(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 2025.
 Removing  `ltj.listings_unicode' from `process_input_buffer'.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1910.
+(Font)              No change on input line 2035.
 Removing  `ltj.process_input_buffer' from `process_input_buffer'.
 Inserting `ltj.listings_unicode' at position 1 in `process_input_buffer'.
 Inserting `ltj.process_input_buffer' at position 2 in `process_input_buffer'.
 Removing  `ltj.listings_unicode' from `process_input_buffer'.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1929.
+(Font)              No change on input line 2054.
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 1929.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `subscript' on input line 1929.
+(hyperref)                removing `math shift' on input line 2054.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 1929.
+(hyperref)                removing `subscript' on input line 2054.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 2054.
 
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1932.
+(Font)              No change on input line 2057.
 Removing  `ltj.process_input_buffer' from `process_input_buffer'.
 Inserting `ltj.listings_unicode' at position 1 in `process_input_buffer'.
 Inserting `ltj.process_input_buffer' at position 2 in `process_input_buffer'.
 Removing  `ltj.listings_unicode' from `process_input_buffer'.
 LaTeX Font Info:    Kanji font shape `JY3/IPAexMincho(0)/m/it' undefined
-(Font)              No change on input line 1947.
+(Font)              No change on input line 2072.
 Removing  `ltj.process_input_buffer' from `process_input_buffer'.
 Inserting `ltj.listings_unicode' at position 1 in `process_input_buffer'.
 Inserting `ltj.process_input_buffer' at position 2 in `process_input_buffer'.
-Removing  `ltj.listings_unicode' from `process_input_buffer'.
-
-Package natbib Warning: There were undefined citations.
-
-[15] [16] (./t2sql_materials_paper.aux)
+Removing  `ltj.listings_unicode' from `process_input_buffer'. [16] [17] (./t2sq
+l_materials_paper.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
 
 LaTeX Warning: There were undefined references.
 
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
-
-Package rerunfilecheck Warning: File `t2sql_materials_paper.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `t2sql_materials_paper.out':
-(rerunfilecheck)             Before: <no file>
-(rerunfilecheck)             After:  CFBC8D03A9509DA1DEC33EC7EC59E0CB;12664.
+Package rerunfilecheck Info: File `t2sql_materials_paper.out' has not changed.
+(rerunfilecheck)             Checksum: E1F86DD464F630F15866167A2AE54F75;12904.
 )
 
 Here is how much of LuaTeX's memory you used:
- 36681 strings out of 477805
- 1458160,1373583 words of node,token memory allocated
- 65516 words of node memory still in use:
-   10 hlist, 2 vlist, 5 rule, 3 glue, 560 kern, 1 glyph, 17923 attribute, 4653 g
-lue_spec, 958 attribute_list, 2 write, 359 user_defined nodes
-   avail lists: 1:44,2:343878,3:1663,4:21502,5:16743,6:199,7:15240,8:131,9:32241
-,10:46,11:1055
- 55649 multiletter control sequences out of 65536+600000
- 96 fonts using 49379463 bytes
- 91i,12n,128p,1768b,1074s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 37032 strings out of 477805
+ 1822757,1373583 words of node,token memory allocated
+ 72529 words of node memory still in use:
+   10 hlist, 2 vlist, 5 rule, 4 glue, 561 kern, 1 glyph, 19379 attribute, 5370 g
+lue_spec, 1041 attribute_list, 2 write, 427 user_defined, 11 pdf_action nodes
+   avail lists: 1:35,2:402447,3:2062,4:21661,5:16950,6:212,7:20760,8:190,9:31849
+,10:46,11:1514
+ 55919 multiletter control sequences out of 65536+600000
+ 99 fonts using 49636207 bytes
+ 91i,14n,128p,1768b,1155s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/share/texmf/fonts/opentype/public/lm/lmroman6-regular.otf></usr/share/texm
 f/fonts/opentype/public/lm/lmmono9-regular.otf></usr/share/texmf/fonts/opentype/
-public/lm/lmmonolt10-bold.otf></usr/share/texmf/fonts/opentype/public/lm/lmroman
-5-regular.otf></usr/share/texmf/fonts/opentype/public/lm/lmmono8-regular.otf></u
-sr/share/texmf/fonts/opentype/public/lm/lmroman9-bold.otf></usr/share/texmf/font
-s/opentype/public/lm/lmroman9-regular.otf></usr/share/texmf/fonts/opentype/publi
-c/lm/lmmono10-regular.otf></usr/share/texlive/texmf-dist/fonts/truetype/public/i
-paex/ipaexg.ttf></usr/share/texmf/fonts/opentype/public/lm/lmroman8-regular.otf>
-</usr/share/texmf/fonts/opentype/public/lm/lmroman10-italic.otf></usr/share/texm
-f/fonts/opentype/public/lm/lmroman10-bold.otf></usr/share/texmf/fonts/opentype/p
-ublic/lm/lmroman8-italic.otf></usr/share/texmf/fonts/opentype/public/lm/lmroman7
--italic.otf></usr/share/texmf/fonts/opentype/public/lm/lmroman7-regular.otf></us
-r/share/texmf/fonts/opentype/public/lm/lmroman10-regular.otf></usr/share/texlive
-/texmf-dist/fonts/truetype/public/ipaex/ipaexm.ttf></usr/share/texmf/fonts/opent
-ype/public/lm/lmroman12-regular.otf></usr/share/texlive/texmf-dist/fonts/type1/p
-ublic/amsfonts/cm/cmex10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/a
-msfonts/cm/cmmi10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts
-/cm/cmmi6.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi
-7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></
-usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi9.pfb></usr/shar
-e/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texliv
-e/texmf-dist/fonts/type1/public/amsfonts/cm/cmr5.pfb></usr/share/texlive/texmf-d
-ist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/share/texlive/texmf-dist/fonts
-/type1/public/amsfonts/cm/cmr7.pfb></usr/share/texlive/texmf-dist/fonts/type1/pu
-blic/amsfonts/cm/cmr8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsf
-onts/cm/cmr9.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/c
-msy10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pf
-b></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/
-share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/share/te
-xlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy9.pfb>
-Output written on t2sql_materials_paper.pdf (16 pages, 1278322 bytes).
+public/lm/lmroman9-bold.otf></usr/share/texmf/fonts/opentype/public/lm/lmmonolt1
+0-bold.otf></usr/share/texmf/fonts/opentype/public/lm/lmroman5-regular.otf></usr
+/share/texmf/fonts/opentype/public/lm/lmroman7-bold.otf>{/usr/share/texmf/fonts/
+enc/dvips/lm/lm-mathsy.enc}</usr/share/texmf/fonts/opentype/public/lm/lmroman9-r
+egular.otf></usr/share/texmf/fonts/opentype/public/lm/lmmono10-regular.otf></usr
+/share/texlive/texmf-dist/fonts/truetype/public/ipaex/ipaexg.ttf></usr/share/tex
+mf/fonts/opentype/public/lm/lmmono8-regular.otf></usr/share/texmf/fonts/opentype
+/public/lm/lmroman8-regular.otf></usr/share/texmf/fonts/opentype/public/lm/lmrom
+an10-italic.otf></usr/share/texmf/fonts/opentype/public/lm/lmroman10-bold.otf></
+usr/share/texmf/fonts/opentype/public/lm/lmroman8-italic.otf></usr/share/texmf/f
+onts/opentype/public/lm/lmroman7-italic.otf></usr/share/texmf/fonts/opentype/pub
+lic/lm/lmroman7-regular.otf></usr/share/texmf/fonts/opentype/public/lm/lmroman10
+-regular.otf></usr/share/texlive/texmf-dist/fonts/truetype/public/ipaex/ipaexm.t
+tf></usr/share/texmf/fonts/opentype/public/lm/lmroman12-regular.otf></usr/share/
+texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/share/texlive
+/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texmf-
+dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr/share/texlive/texmf-dist/fon
+ts/type1/public/amsfonts/cm/cmmi7.pfb></usr/share/texlive/texmf-dist/fonts/type1
+/public/amsfonts/cm/cmmi8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/
+amsfonts/cm/cmmi9.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts
+/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr5
+.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></us
+r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/share/t
+exlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/share/texlive/te
+xmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb></usr/share/texlive/texmf-dist/
+fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist/fonts/t
+ype1/public/amsfonts/cm/cmsy6.pfb></usr/share/texlive/texmf-dist/fonts/type1/pub
+lic/amsfonts/cm/cmsy7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsf
+onts/cm/cmsy8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/
+cmsy9.pfb></usr/share/texmf/fonts/type1/public/lm/lmsy7.pfb>
+Output written on t2sql_materials_paper.pdf (17 pages, 1100626 bytes).
 
-PDF statistics: 590 PDF objects out of 1000 (max. 8388607)
- 492 compressed objects within 5 object streams
- 317 named destinations out of 1000 (max. 131072)
- 16 words of extra memory for PDF output out of 10000 (max. 100000000)
+PDF statistics: 1084 PDF objects out of 1200 (max. 8388607)
+ 954 compressed objects within 10 object streams
+ 370 named destinations out of 1000 (max. 131072)
+ 648 words of extra memory for PDF output out of 10000 (max. 100000000)
 

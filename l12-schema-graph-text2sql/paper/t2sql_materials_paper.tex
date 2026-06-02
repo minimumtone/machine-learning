@@ -549,17 +549,10 @@ OQMDは組成・構造・熱力学的安定性を体系的に格納しており�
 材料データベースに典型的なスキーマ複雑性（多対多関係、正規化された組成テーブル、
 構造パラメータの分離）を備えた好例である。
 APIから取得したフラットなJSONレコードをリレーショナルスキーマに正規化する
-（図~\ref{fig:er_diagram}、表~\ref{tab:schema}）。
+（表~\ref{tab:schema}）。
 設計はBoyce-Codd正規形（BCNF）に従い、以下の材料ドメイン固有の考慮に基づく。
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=\linewidth]{figures/fig2_er_diagram.png}
-  \caption{材料データベーススキーマのEntity-Relationship図。
-    すべてのテーブルは外部キー（青線）により\texttt{material\_entry}に接続される。
-    赤=主キー、青=外部キー。}
-  \label{fig:er_diagram}
-\end{figure}
+
 
 \begin{table*}[htbp]
   \centering
