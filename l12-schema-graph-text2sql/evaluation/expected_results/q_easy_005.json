@@ -1,0 +1,74 @@
+{
+  "query_id": "q_easy_005",
+  "columns": [
+    "entry_id",
+    "formula"
+  ],
+  "row_count": 16,
+  "rows": [
+    [
+      "entry_Co3Al_009",
+      "Co3Al"
+    ],
+    [
+      "entry_Co3Ga_024",
+      "Co3Ga"
+    ],
+    [
+      "entry_Co3Ge_025",
+      "Co3Ge"
+    ],
+    [
+      "entry_Co3Hf_029",
+      "Co3Hf"
+    ],
+    [
+      "entry_Co3Mn_035",
+      "Co3Mn"
+    ],
+    [
+      "entry_Co3Nb_026",
+      "Co3Nb"
+    ],
+    [
+      "entry_Co3Sc_027",
+      "Co3Sc"
+    ],
+    [
+      "entry_Co3Si_030",
+      "Co3Si"
+    ],
+    [
+      "entry_Co3Sn_031",
+      "Co3Sn"
+    ],
+    [
+      "entry_Co3Ta_011",
+      "Co3Ta"
+    ],
+    [
+      "entry_Co3Ti_004",
+      "Co3Ti"
+    ],
+    [
+      "entry_Co3V_033",
+      "Co3V"
+    ],
+    [
+      "entry_Co3W_010",
+      "Co3W"
+    ],
+    [
+      "entry_Co3Y_028",
+      "Co3Y"
+    ],
+    [
+      "entry_Co3Zn_032",
+      "Co3Zn"
+    ],
+    [
+      "entry_Co3Zr_034",
+      "Co3Zr"
+    ]
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "query_id": "q_medium_018",
+  "columns": [
+    "formula",
+    "lattice_a"
+  ],
+  "row_count": 9,
+  "rows": [
+    [
+      "Al3Sc",
+      4.09
+    ],
+    [
+      "Co3Sc",
+      3.7
+    ],
+    [
+      "Cu3Sc",
+      3.6
+    ],
+    [
+      "Fe3Sc",
+      4.0
+    ],
+    [
+      "Ir3Sc",
+      3.76
+    ],
+    [
+      "Ni3Sc",
+      3.46
+    ],
+    [
+      "Pd3Sc",
+      3.9
+    ],
+    [
+      "Pt3Sc",
+      3.48
+    ],
+    [
+      "Rh3Sc",
+      4.06
+    ]
+  ]
+}

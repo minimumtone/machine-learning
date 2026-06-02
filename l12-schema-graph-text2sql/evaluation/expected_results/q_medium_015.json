@@ -1,0 +1,16 @@
+{
+  "query_id": "q_medium_015",
+  "columns": [
+    "formula",
+    "chemical_system",
+    "lattice_a"
+  ],
+  "row_count": 1,
+  "rows": [
+    [
+      "Ni3Al",
+      "Al-Ni",
+      3.572
+    ]
+  ]
+}

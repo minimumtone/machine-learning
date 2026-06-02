@@ -1,0 +1,30 @@
+{
+  "query_id": "q_medium_003",
+  "columns": [
+    "entry_id",
+    "formula",
+    "formation_energy_per_atom",
+    "energy_above_hull"
+  ],
+  "row_count": 3,
+  "rows": [
+    [
+      "entry_Pt3Al_007",
+      "Pt3Al",
+      -0.55,
+      0.0
+    ],
+    [
+      "entry_Al3Sc_005",
+      "Al3Sc",
+      -0.5,
+      0.0
+    ],
+    [
+      "entry_Ni3Al_001",
+      "Ni3Al",
+      -0.42,
+      0.0
+    ]
+  ]
+}

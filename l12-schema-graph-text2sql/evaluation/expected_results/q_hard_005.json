@@ -1,0 +1,36 @@
+{
+  "query_id": "q_hard_005",
+  "columns": [
+    "entry_id",
+    "formula",
+    "formation_energy_per_atom",
+    "energy_above_hull"
+  ],
+  "row_count": 4,
+  "rows": [
+    [
+      "entry_Co3Ti_004",
+      "Co3Ti",
+      -0.45,
+      0.0
+    ],
+    [
+      "entry_Ni3Al_001",
+      "Ni3Al",
+      -0.42,
+      0.0
+    ],
+    [
+      "entry_Co3Nb_026",
+      "Co3Nb",
+      -0.37,
+      0.0
+    ],
+    [
+      "entry_Ni3Ti_012",
+      "Ni3Ti",
+      -0.3,
+      0.0
+    ]
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "query_id": "q_easy_012",
+  "columns": [
+    "l12_count"
+  ],
+  "row_count": 1,
+  "rows": [
+    [
+      120.0
+    ]
+  ]
+}

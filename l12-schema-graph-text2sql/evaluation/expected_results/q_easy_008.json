@@ -1,0 +1,50 @@
+{
+  "query_id": "q_easy_008",
+  "columns": [
+    "entry_id",
+    "formula"
+  ],
+  "row_count": 10,
+  "rows": [
+    [
+      "entry_Al3Sc_005",
+      "Al3Sc"
+    ],
+    [
+      "entry_Al3Ti_006",
+      "Al3Ti"
+    ],
+    [
+      "entry_Co3Al_009",
+      "Co3Al"
+    ],
+    [
+      "entry_Cu3Al_051",
+      "Cu3Al"
+    ],
+    [
+      "entry_Fe3Al_036",
+      "Fe3Al"
+    ],
+    [
+      "entry_Ir3Al_095",
+      "Ir3Al"
+    ],
+    [
+      "entry_Ni3Al_001",
+      "Ni3Al"
+    ],
+    [
+      "entry_Pd3Al_066",
+      "Pd3Al"
+    ],
+    [
+      "entry_Pt3Al_007",
+      "Pt3Al"
+    ],
+    [
+      "entry_Rh3Al_109",
+      "Rh3Al"
+    ]
+  ]
+}

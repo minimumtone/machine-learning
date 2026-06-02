@@ -1,0 +1,46 @@
+{
+  "query_id": "q_easy_017",
+  "columns": [
+    "element",
+    "site_label"
+  ],
+  "row_count": 9,
+  "rows": [
+    [
+      "Al",
+      "A"
+    ],
+    [
+      "Co",
+      "A"
+    ],
+    [
+      "Cu",
+      "A"
+    ],
+    [
+      "Fe",
+      "A"
+    ],
+    [
+      "Ir",
+      "A"
+    ],
+    [
+      "Ni",
+      "A"
+    ],
+    [
+      "Pd",
+      "A"
+    ],
+    [
+      "Pt",
+      "A"
+    ],
+    [
+      "Rh",
+      "A"
+    ]
+  ]
+}

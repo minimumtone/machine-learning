@@ -1,0 +1,41 @@
+{
+  "query_id": "q_hard_029",
+  "columns": [
+    "formula",
+    "energy_above_hull",
+    "formation_energy_per_atom"
+  ],
+  "row_count": 6,
+  "rows": [
+    [
+      "Pt3Al",
+      0.0,
+      -0.55
+    ],
+    [
+      "Al3Sc",
+      0.0,
+      -0.5
+    ],
+    [
+      "Co3Ti",
+      0.0,
+      -0.45
+    ],
+    [
+      "Pt3Ge",
+      0.0,
+      -0.45
+    ],
+    [
+      "Fe3Nb",
+      0.0,
+      -0.44
+    ],
+    [
+      "Ni3Al",
+      0.0,
+      -0.42
+    ]
+  ]
+}

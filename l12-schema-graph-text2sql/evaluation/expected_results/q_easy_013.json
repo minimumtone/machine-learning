@@ -1,0 +1,70 @@
+{
+  "query_id": "q_easy_013",
+  "columns": [
+    "entry_id",
+    "formula"
+  ],
+  "row_count": 15,
+  "rows": [
+    [
+      "entry_Pt3Al_007",
+      "Pt3Al"
+    ],
+    [
+      "entry_Pt3Ga_081",
+      "Pt3Ga"
+    ],
+    [
+      "entry_Pt3Ge_082",
+      "Pt3Ge"
+    ],
+    [
+      "entry_Pt3Hf_088",
+      "Pt3Hf"
+    ],
+    [
+      "entry_Pt3Mn_094",
+      "Pt3Mn"
+    ],
+    [
+      "entry_Pt3Nb_084",
+      "Pt3Nb"
+    ],
+    [
+      "entry_Pt3Sc_086",
+      "Pt3Sc"
+    ],
+    [
+      "entry_Pt3Si_089",
+      "Pt3Si"
+    ],
+    [
+      "entry_Pt3Sn_090",
+      "Pt3Sn"
+    ],
+    [
+      "entry_Pt3Ta_085",
+      "Pt3Ta"
+    ],
+    [
+      "entry_Pt3Ti_083",
+      "Pt3Ti"
+    ],
+    [
+      "entry_Pt3V_092",
+      "Pt3V"
+    ],
+    [
+      "entry_Pt3Y_087",
+      "Pt3Y"
+    ],
+    [
+      "entry_Pt3Zn_091",
+      "Pt3Zn"
+    ],
+    [
+      "entry_Pt3Zr_093",
+      "Pt3Zr"
+    ]
+  ]
+}

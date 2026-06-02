@@ -1,0 +1,56 @@
+{
+  "query_id": "q_easy_010",
+  "columns": [
+    "entry_id",
+    "formula",
+    "prototype"
+  ],
+  "row_count": 9,
+  "rows": [
+    [
+      "entry_Al3Ti_006",
+      "Al3Ti",
+      "L12"
+    ],
+    [
+      "entry_Co3Ti_004",
+      "Co3Ti",
+      "L12"
+    ],
+    [
+      "entry_Cu3Ti_054",
+      "Cu3Ti",
+      "L12"
+    ],
+    [
+      "entry_Fe3Ti_039",
+      "Fe3Ti",
+      "L12"
+    ],
+    [
+      "entry_Ir3Ti_098",
+      "Ir3Ti",
+      "L12"
+    ],
+    [
+      "entry_Ni3Ti_012",
+      "Ni3Ti",
+      "L12"
+    ],
+    [
+      "entry_Pd3Ti_069",
+      "Pd3Ti",
+      "L12"
+    ],
+    [
+      "entry_Pt3Ti_083",
+      "Pt3Ti",
+      "L12"
+    ],
+    [
+      "entry_Rh3Ti_112",
+      "Rh3Ti",
+      "L12"
+    ]
+  ]
+}

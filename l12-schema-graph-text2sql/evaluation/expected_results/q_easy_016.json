@@ -1,0 +1,70 @@
+{
+  "query_id": "q_easy_016",
+  "columns": [
+    "entry_id",
+    "formula"
+  ],
+  "row_count": 15,
+  "rows": [
+    [
+      "entry_Fe3Al_036",
+      "Fe3Al"
+    ],
+    [
+      "entry_Fe3Ga_037",
+      "Fe3Ga"
+    ],
+    [
+      "entry_Fe3Ge_038",
+      "Fe3Ge"
+    ],
+    [
+      "entry_Fe3Hf_044",
+      "Fe3Hf"
+    ],
+    [
+      "entry_Fe3Mn_050",
+      "Fe3Mn"
+    ],
+    [
+      "entry_Fe3Nb_040",
+      "Fe3Nb"
+    ],
+    [
+      "entry_Fe3Sc_042",
+      "Fe3Sc"
+    ],
+    [
+      "entry_Fe3Si_045",
+      "Fe3Si"
+    ],
+    [
+      "entry_Fe3Sn_046",
+      "Fe3Sn"
+    ],
+    [
+      "entry_Fe3Ta_041",
+      "Fe3Ta"
+    ],
+    [
+      "entry_Fe3Ti_039",
+      "Fe3Ti"
+    ],
+    [
+      "entry_Fe3V_048",
+      "Fe3V"
+    ],
+    [
+      "entry_Fe3Y_043",
+      "Fe3Y"
+    ],
+    [
+      "entry_Fe3Zn_047",
+      "Fe3Zn"
+    ],
+    [
+      "entry_Fe3Zr_049",
+      "Fe3Zr"
+    ]
+  ]
+}
