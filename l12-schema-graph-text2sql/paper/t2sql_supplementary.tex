@@ -1,0 +1,339 @@
+% !TEX program = lualatex
+%% Supplementary Materials
+\documentclass[5p,twocolumn]{elsarticle}
+
+\usepackage{luatexja}
+\usepackage{luatexja-fontspec}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{siunitx}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{subcaption}
+\usepackage{listings}
+\usepackage{tabularx}
+\usepackage{url}
+
+\setlist{nosep,leftmargin=*}
+
+% Japanese fonts
+\setmainjfont{IPAexMincho}
+\setsansjfont{IPAexGothic}
+
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  frame=single,
+  language=SQL,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{green!50!black},
+  stringstyle=\color{red!70!black},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  tabsize=2,
+}
+
+\journal{---}
+
+% Section numbering as S1, S2, ...
+\renewcommand{\thesection}{S\arabic{section}}
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\theequation}{S\arabic{equation}}
+
+% =====================================================================
+\begin{document}
+
+\begin{frontmatter}
+
+\title{Supplementary Materials for:\\
+  Schema-Graph-Constrained Natural Language Interface for\\
+  L1$_2$ Intermetallic Compound Exploration}
+
+\author[nims]{Satoshi Minamoto\corref{cor1}}
+\cortext[cor1]{Corresponding author}
+\ead{minamoto.satoshi@nims.go.jp}
+\address[nims]{National Institute for Materials Science (NIMS),
+  1-2-1 Sengen, Tsukuba, Ibaraki 305-0047, Japan}
+
+\end{frontmatter}
+
+% =====================================================================
+\section{回帰テストカテゴリ詳細}
+\label{sec:sup_test_categories}
+
+開発安全性テストとして6カテゴリ39件の回帰テスト、
+SQL検証テスト6件、Coverage Score・パーサーテスト15件、
+Intent Classifierテスト20件の計80件を構築した（表~\ref{tab:test_categories}）。
+全80件がPASSを達成した。
+
+\begin{table*}[htbp]
+\centering
+\caption{回帰テストカテゴリ（全80件、全PASS）。}
+\label{tab:test_categories}
+\small
+\begin{tabularx}{\textwidth}{llcX}
+  \toprule
+  カテゴリ & ID & $n$ & 検証焦点 \\
+  \midrule
+  正常系 & A01--A15 & 15 & L1$_2$元素・プロトタイプ・安定性・ソート・複合条件 \\
+  該当なし & B01--B05 & 5 & 希ガス元素、非存在組合せ $\to$ 0行期待 \\
+  曖昧な入力 & C01--C10 & 10 & 空入力、無関係テキスト、単語のみ \\
+  矛盾条件 & D01--D02 & 2 & 「安定かつ準安定」等 \\
+  SQLインジェクション & E01--E05 & 5 & DROP, DELETE, INSERT、ピギーバック攻撃 \\
+  安全性検査 & F01--F02 & 2 & 直接SQL入力（SELECT, UPDATE） \\
+  SQL検証 & --- & 6 & カラム/テーブルホワイトリスト、JOIN検証 \\
+  Coverage・パーサー & --- & 15 & 数値条件、化学式、Coverage Score \\
+  Intent Classifier & --- & 20 & VASP/DFTワークフロー検出、分類 \\
+  \bottomrule
+\end{tabularx}
+\end{table*}
+
+% =====================================================================
+\section{回帰テストケース一覧}
+\label{sec:sup_all_tests}
+
+表~\ref{tab:all_tests}に回帰テスト44件（正常系・該当なし・曖昧・矛盾・
+SQLインジェクション・安全性）のクエリと結果を示す。
+全評価クエリ100件（Easy 20、Medium 30、Hard 30、Very Hard 20）の
+gold SQL、期待結果セット、5手法比較結果、
+プロンプトテンプレート、
+\texttt{allowed\_schema.yaml}、\texttt{material\_terms.yaml}は
+検証資材リポジトリに収録されている。
+
+\begin{table*}[htbp]
+\centering
+\caption{回帰テストケース一覧（全44件、全PASS）。}
+\label{tab:all_tests}
+\footnotesize
+\begin{tabular}{llp{8cm}l}
+  \toprule
+  ID & カテゴリ & 自然言語クエリ & 結果 \\
+  \midrule
+  A01 & 正常系 & Feを含むL1$_2$化合物を出して & PASS \\
+  A02 & 正常系 & 安定なL1$_2$化合物を形成エネルギー順に出して & PASS \\
+  A03 & 正常系 & NiとAlの両方を含む化合物を出して & PASS \\
+  A04 & 正常系 & L1$_2$化合物の全リストを出して & PASS \\
+  A05 & 正常系 & 準安定なL1$_2$化合物を出して & PASS \\
+  A06 & 正常系 & Coを含む安定なL1$_2$化合物を出して & PASS \\
+  A07 & 正常系 & FeとAlを含むL1$_2$化合物を出して & PASS \\
+  A08 & 正常系 & $\gamma'$化合物を出して & PASS \\
+  A09 & 正常系 & ニッケルを含むL1$_2$型化合物を出して & PASS \\
+  A10 & 正常系 & L1$_2$化合物の全データを出して & PASS \\
+  A11 & 正常系 & Tiを含むL1$_2$化合物を格子定数順（降順）に出して & PASS \\
+  A12 & 正常系 & 安定なL1$_2$で格子定数3.5\AA 以上のものを出して & PASS \\
+  A13 & 正常系 & Cu$_3$Au型化合物を出して & PASS \\
+  A14 & 正常系 & 鉄を含むL1$_2$化合物を出して & PASS \\
+  A15 & 正常系 & 安定なL1$_2$化合物でNiを含むものを出して & PASS \\
+  \midrule
+  B01 & 該当なし & Xeを含むL1$_2$化合物を出して & PASS \\
+  B02 & 該当なし & UとPuを含むL1$_2$化合物を出して & PASS \\
+  B03 & 該当なし & RnとOgを含むL1$_2$化合物を出して & PASS \\
+  B04 & 該当なし & ScとIrを含む安定なL1$_2$化合物を出して & PASS \\
+  B05 & 該当なし & PtとGaを含む安定なL1$_2$化合物を出して & PASS \\
+  \midrule
+  C01 & 曖昧 & 安定な化合物を出して & PASS \\
+  C02 & 曖昧 & L12 & PASS \\
+  C03 & 曖昧 & 安定なものを出して & PASS \\
+  C04 & 曖昧 & （空入力） & PASS \\
+  C05 & 曖昧 & 今日の天気を教えて & PASS \\
+  C06 & 曖昧 & Fe & PASS \\
+  C07 & 曖昧 & 格子定数 & PASS \\
+  C08 & 曖昧 & 形成エネルギーが低い安定なL1$_2$化合物 & PASS \\
+  C09 & 曖昧 & NiAl L12 & PASS \\
+  C10 & 曖昧 & NiのL12 & PASS \\
+  \midrule
+  D01 & 矛盾 & 安定かつ準安定なL1$_2$化合物 & PASS \\
+  D02 & 矛盾 & NiなしのNi L1$_2$化合物 & PASS \\
+  \midrule
+  E01 & 拒否 & DROP TABLE material\_entry; & PASS \\
+  E02 & 拒否 & SELECT *; DELETE FROM composition; & PASS \\
+  E03 & 拒否 & L1$_2$化合物; DROP TABLE structure; & PASS \\
+  E04 & 拒否 & SELECT * FROM secret\_passwords & PASS \\
+  E05 & 拒否 & INSERT INTO material\_entry VALUES (...) & PASS \\
+  \midrule
+  F01 & 安全性 & SELECT entry\_id FROM material\_entry & PASS \\
+  F02 & 安全性 & UPDATE material\_entry SET formula='X' & PASS \\
+  \bottomrule
+\end{tabular}
+\end{table*}
+
+% =====================================================================
+\section{生成SQL例}
+\label{sec:sup_sql_examples}
+
+代表的なクエリに対する各手法の生成SQL例を示す。
+
+\lstset{basicstyle=\ttfamily\scriptsize,breaklines=true,columns=flexible,numbers=none,frame=single,xleftmargin=0pt,xrightmargin=0pt,linewidth=\columnwidth}
+
+\subsection{「Niを含む安定なL1$_2$化合物を出して」}
+
+\paragraph{LLM-only（B1）：}
+\begin{lstlisting}
+SELECT formula, stability
+FROM materials
+WHERE element = 'Ni'
+  AND structure_type = 'L12'
+  AND stability = 'stable';
+-- テーブル幻覚: materials, stability等は
+-- 存在しないテーブル -> 実行不可
+\end{lstlisting}
+
+\paragraph{Proposed手法（P）：}
+\begin{lstlisting}
+SELECT DISTINCT m.entry_id, m.formula,
+  s.prototype, s.lattice_a, s.space_group
+FROM material_entry m
+  JOIN composition c
+    ON c.entry_id = m.entry_id
+  JOIN structure s
+    ON s.entry_id = m.entry_id
+  JOIN phase_stability ps
+    ON ps.entry_id = m.entry_id
+WHERE (s.prototype = 'L12'
+    OR s.strukturbericht = 'L12')
+  AND c.element = 'Ni'
+  AND ps.energy_above_hull = 0
+LIMIT 10000;
+-- Schema Graph走査で必要な3 JOINのみ
+-- テーブル幻覚0%, DISTINCT, LIMIT付き
+\end{lstlisting}
+
+\subsection{「NiとAlの両方を含むL1$_2$化合物を出して」}
+
+\paragraph{Full Schema（B2）：}
+\begin{lstlisting}
+SELECT m.entry_id, m.formula
+FROM material_entry m
+  JOIN composition c
+    ON c.entry_id = m.entry_id
+  JOIN structure s
+    ON s.entry_id = m.entry_id
+WHERE c.element = 'Ni'
+  AND c.element = 'Al'
+  AND s.prototype = 'L12';
+-- 致命的: 単一行が両条件を同時に
+-- 満たすことは不可能 -> 常に0行
+\end{lstlisting}
+
+\paragraph{Proposed手法（P）：}
+\begin{lstlisting}
+SELECT DISTINCT m.entry_id, m.formula
+FROM material_entry m
+  JOIN structure s
+    ON s.entry_id = m.entry_id
+WHERE (s.prototype = 'L12'
+    OR s.strukturbericht = 'L12')
+AND EXISTS (
+  SELECT 1 FROM composition
+  WHERE entry_id = m.entry_id
+    AND element = 'Ni')
+AND EXISTS (
+  SELECT 1 FROM composition
+  WHERE entry_id = m.entry_id
+    AND element = 'Al')
+LIMIT 10000;
+-- EXISTS副問い合わせで正確な多元素AND
+-- -> Ni3Al (1行) を正しく返却
+\end{lstlisting}
+
+% =====================================================================
+\section{SQLインジェクション・安全性テスト結果}
+\label{sec:sup_injection}
+
+7件の敵対的入力（E01--E05、F01--F02）はすべてSQLガードにより遮断された
+（表~\ref{tab:injection_results}）。
+
+\begin{table}[htbp]
+  \centering
+  \caption{SQLインジェクション・安全性テスト結果（全件遮断）。}
+  \label{tab:injection_results}
+  \small
+  \begin{tabularx}{\linewidth}{lXl}
+    \toprule
+    ID & 入力 & 遮断理由 \\
+    \midrule
+    E01 & \texttt{DROP TABLE material\_entry;} & 禁止キーワード：DROP \\
+    E02 & \texttt{SELECT *; DELETE FROM composition;} & 複数文 + DELETE \\
+    E03 & L1$_2$化合物; \texttt{DROP TABLE structure;} & 複数文 + DROP \\
+    E04 & \texttt{SELECT * FROM secret\_passwords} & 非許可テーブル \\
+    E05 & \texttt{INSERT INTO material\_entry ...} & 禁止キーワード：INSERT \\
+    F01 & \texttt{SELECT entry\_id FROM material\_entry} & LIMITなし $\to$ 自動付加 \\
+    F02 & \texttt{UPDATE material\_entry SET ...} & 禁止キーワード：UPDATE \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+% =====================================================================
+\section{Ni$_3$Al近傍格子定数候補}
+\label{sec:sup_lattice_match}
+
+$|a - a_{\text{Ni}_3\text{Al}}| \leq 0.03$~\AA を満たす候補を
+表~\ref{tab:lattice_match}に示す。
+
+\begin{table}[htbp]
+  \centering
+  \caption{Ni$_3$Al近傍格子定数候補（$|\Delta a| \leq 0.03$~\AA）。}
+  \label{tab:lattice_match}
+  \small
+  \begin{tabular}{lcccc}
+    \toprule
+    化合物 & $a$ (\AA) & $|\Delta a|$ & $E_\text{hull}$ & $E_f$ \\
+    \midrule
+    Ni$_3$Al & 3.572 & 0.002 & 0.000 & $-0.420$ \\
+    Ni$_3$Zn & 3.560 & 0.010 & 0.032 & $-0.340$ \\
+    Pt$_3$Sn & 3.560 & 0.010 & 0.032 & $-0.490$ \\
+    Cu$_3$Nb & 3.560 & 0.010 & 0.004 & $-0.315$ \\
+    Ni$_3$V & 3.580 & 0.010 & 0.036 & $-0.345$ \\
+    Cu$_3$Ta & 3.580 & 0.010 & 0.008 & $-0.320$ \\
+    Pt$_3$Zn & 3.580 & 0.010 & 0.036 & $-0.495$ \\
+    Co$_3$Ti & 3.550 & 0.020 & 0.000 & $-0.450$ \\
+    Cu$_3$Ti & 3.540 & 0.030 & 0.000 & $-0.310$ \\
+    Pt$_3$Si & 3.540 & 0.030 & 0.028 & $-0.485$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+格子整合性に優れた候補の中で、
+Cu$_3$Nb（$E_\text{hull} = 0.004$）とCu$_3$Ta（$E_\text{hull} = 0.008$）は
+準安定であり、Co$_3$Ti（$E_\text{hull} = 0.0$）とCu$_3$Ti（$E_\text{hull} = 0.0$）は
+安定相として確認された。
+これらはNi$_3$Alとの格子ミスマッチが小さく、
+析出強化の観点から有望な候補である。
+
+% =====================================================================
+\section{安定L1$_2$候補の抽出}
+\label{sec:sup_stable_l12}
+
+$E_\text{hull} \leq 0.05$~eV/atomを満たす安定・準安定L1$_2$候補を抽出した。
+安定（$E_\text{hull} = 0$）12件、準安定（$0 < E_\text{hull} \leq 0.05$）45件の
+計57件が候補として抽出された。
+安定相のうち、最も負の形成エネルギーを持つのは
+Pt$_3$Al（$E_f = -0.55$~eV/atom）であり、
+次いでAl$_3$Sc（$-0.50$）、Co$_3$Ti（$-0.45$）、Pt$_3$Ge（$-0.45$）が続く。
+
+% =====================================================================
+\section{LLMモード設定}
+\label{sec:sup_llm_config}
+
+LLMモード（Level 2）ではgpt-5.5を使用した。
+構造化プロンプトは以下の4要素から構成される：
+
+\begin{enumerate}
+  \item \textbf{システムメッセージ}：タスク説明 + スキーマYAML（テーブル名、カラム名、型、FK関係）
+  \item \textbf{Few-Shot事例}：RAGストアからのTop-$k$類似NL--SQLペア
+  \item \textbf{ユーザーメッセージ}：自然言語クエリ
+  \item \textbf{制約}：「SELECT文のみ生成」「LIMIT 10000を含める」
+        「スキーマに記載されたテーブルのみ使用」
+\end{enumerate}
+
+プロンプトテンプレート（\texttt{llm/prompt\_templates/sql\_generation\_prompt.md}）
+および\texttt{allowed\_schema.yaml}は検証資材リポジトリに収録されている。
+
+\end{document}

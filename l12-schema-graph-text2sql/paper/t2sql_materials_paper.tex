@@ -21,7 +21,6 @@
 \usepackage{algpseudocode}
 \usepackage{tabularx}
 \usepackage{url}
-\usepackage{appendix}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,calc,backgrounds}
 \usepackage{lineno}
@@ -274,7 +273,7 @@ OBQCによるSPARQLクエリ検証は、
 オントロジーアプローチはRDFトリプルストアへのデータ変換を前提とし、
 OWL推論による意味的推移律（例：「NiAlはL1$_2$型」$\to$「NiAlは金属間化合物」）や
 異種データベース間の相互運用性において優れた表現力を持つ。
-一方、OQMD・Materials Project・AFLOW等の大規模材料データベースは
+一方、OQMD~\citep{saal2013oqmd}・Materials Project~\citep{jain2013mp}・AFLOW~\citep{curtarolo2012aflow}等の大規模材料データベースは
 既にリレーショナルスキーマで運用されており、
 本手法はこれらの\textbf{既存RDBインフラをそのまま活用}する設計を採用している。
 FK関係のグラフ走査（Steiner木近似）は、
@@ -967,7 +966,7 @@ LLMフォールバック、明確化要求、またはスコープ外拒否に�
 Rule-basedモードの辞書カバレッジが不十分な場合
 （未登録元素、数値条件、複雑な表現など）、
 LLMベース生成にフォールバックする。
-LLM（本実験ではgpt-5.5、API設定の詳細はSupplementary S5節を参照）は
+LLM（本実験ではgpt-5.5、API設定の詳細はSupplementary S7節を参照）は
 以下の構造化プロンプトを受け取る：
 
 \begin{enumerate}
@@ -1373,32 +1372,13 @@ DB規模1{,}471件に対して実質的に制限なしと同等でありかつ�
 
 \subsubsection{回帰テスト（80件）}
 
-開発安全性テストとして6カテゴリ39件の回帰テスト、
-SQL検証テスト6件、Coverage Score・パーサーテスト15件、
-Intent Classifierテスト20件の計80件を構築した（表~\ref{tab:test_categories}）。
+開発安全性テストとして、正常系（15件）、該当なし（5件）、
+曖昧入力（10件）、矛盾条件（2件）、SQLインジェクション（5件）、
+安全性検査（2件）、SQL検証（6件）、Coverage・パーサー（15件）、
+Intent Classifier（20件）の計80件を構築した。
 全80件がPASSを達成した。
-
-\begin{table*}[htbp]
-  \centering
-  \caption{回帰テストカテゴリ（全80件、全PASS）。}
-  \label{tab:test_categories}
-  \small
-  \begin{tabularx}{\textwidth}{llcX}
-    \toprule
-    カテゴリ & ID & $n$ & 検証焦点 \\
-    \midrule
-    正常系 & A01--A15 & 15 & L1$_2$元素・プロトタイプ・安定性・ソート・複合条件 \\
-    該当なし & B01--B05 & 5 & 希ガス元素、非存在組合せ $\to$ 0行期待 \\
-    曖昧な入力 & C01--C10 & 10 & 空入力、無関係テキスト、単語のみ \\
-    矛盾条件 & D01--D02 & 2 & 「安定かつ準安定」等 \\
-    SQLインジェクション & E01--E05 & 5 & DROP, DELETE, INSERT、ピギーバック攻撃 \\
-    安全性検査 & F01--F02 & 2 & 直接SQL入力（SELECT, UPDATE） \\
-    SQL検証 & --- & 6 & カラム/テーブルホワイトリスト、JOIN検証 \\
-    Coverage・パーサー & --- & 15 & 数値条件、化学式、Coverage Score \\
-    Intent Classifier & --- & 20 & VASP/DFTワークフロー検出、分類 \\
-    \bottomrule
-  \end{tabularx}
-\end{table*}
+テストカテゴリの詳細および全テストケース一覧は
+Supplementary S1--S2節に掲載する。
 
 \subsection{5手法ベースライン比較}
 \label{sec:baseline_comparison}
@@ -1573,28 +1553,11 @@ LLMがWHERE句を生成する役割分担が機能している。
 
 \subsection{SQLインジェクションと安全性結果}
 
-7件の敵対的入力（E01--E05、F01--F02）はすべてSQLガードにより遮断された
-（表~\ref{tab:injection_results}）。
-
-\begin{table}[htbp]
-  \centering
-  \caption{SQLインジェクション・安全性テスト結果（全件遮断）。}
-  \label{tab:injection_results}
-  \small
-  \begin{tabularx}{\linewidth}{lXl}
-    \toprule
-    ID & 入力 & 遮断理由 \\
-    \midrule
-    E01 & \texttt{DROP TABLE material\_entry;} & 禁止キーワード：DROP \\
-    E02 & \texttt{SELECT *; DELETE FROM composition;} & 複数文 + DELETE \\
-    E03 & L1$_2$化合物; \texttt{DROP TABLE structure;} & 複数文 + DROP \\
-    E04 & \texttt{SELECT * FROM secret\_passwords} & 非許可テーブル \\
-    E05 & \texttt{INSERT INTO material\_entry ...} & 禁止キーワード：INSERT \\
-    F01 & \texttt{SELECT entry\_id FROM material\_entry} & LIMITなし $\to$ 自動付加 \\
-    F02 & \texttt{UPDATE material\_entry SET ...} & 禁止キーワード：UPDATE \\
-    \bottomrule
-  \end{tabularx}
-\end{table}
+7件の敵対的入力（E01--E05：DROP/DELETE/INSERT等、
+F01--F02：直接SQL入力）はすべてSQLガードにより遮断された。
+遮断理由は禁止キーワード検出、複数文検出、非許可テーブル検出、
+自動LIMIT注入の各層に分布する。
+詳細なテスト結果はSupplementary S4節に掲載する。
 
 \subsection{材料工学的評価}
 \label{sec:materials_evaluation}
@@ -1673,47 +1636,22 @@ Cu$_3$Nbは格子整合性（$\Delta a = 0.01$~\AA）と高バルクモジュラ
 
 \subsubsection{Ni$_3$Al近傍格子定数候補}
 
-$|a - a_{\text{Ni}_3\text{Al}}| \leq 0.03$~\AA を満たす候補を
-表~\ref{tab:lattice_match}に示す。
-
-\begin{table}[htbp]
-  \centering
-  \caption{Ni$_3$Al近傍格子定数候補（$|\Delta a| \leq 0.03$~\AA）。}
-  \label{tab:lattice_match}
-  \small
-  \begin{tabular}{lcccc}
-    \toprule
-    化合物 & $a$ (\AA) & $|\Delta a|$ & $E_\text{hull}$ & $E_f$ \\
-    \midrule
-    Ni$_3$Al & 3.572 & 0.002 & 0.000 & $-0.420$ \\
-    Ni$_3$Zn & 3.560 & 0.010 & 0.032 & $-0.340$ \\
-    Pt$_3$Sn & 3.560 & 0.010 & 0.032 & $-0.490$ \\
-    Cu$_3$Nb & 3.560 & 0.010 & 0.004 & $-0.315$ \\
-    Ni$_3$V & 3.580 & 0.010 & 0.036 & $-0.345$ \\
-    Cu$_3$Ta & 3.580 & 0.010 & 0.008 & $-0.320$ \\
-    Pt$_3$Zn & 3.580 & 0.010 & 0.036 & $-0.495$ \\
-    Co$_3$Ti & 3.550 & 0.020 & 0.000 & $-0.450$ \\
-    Cu$_3$Ti & 3.540 & 0.030 & 0.000 & $-0.310$ \\
-    Pt$_3$Si & 3.540 & 0.030 & 0.028 & $-0.485$ \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-格子整合性に優れた候補の中で、
-Cu$_3$Nb（$E_\text{hull} = 0.004$）とCu$_3$Ta（$E_\text{hull} = 0.008$）は
-準安定であり、Co$_3$Ti（$E_\text{hull} = 0.0$）とCu$_3$Ti（$E_\text{hull} = 0.0$）は
+$|a - a_{\text{Ni}_3\text{Al}}| \leq 0.03$~\AA を満たす候補10件を抽出した。
+Cu$_3$Nb（$E_\text{hull} = 0.004$）、Cu$_3$Ta（$E_\text{hull} = 0.008$）は
+準安定であり、Co$_3$Ti（$E_\text{hull} = 0.0$）、Cu$_3$Ti（$E_\text{hull} = 0.0$）は
 安定相として確認された。
 これらはNi$_3$Alとの格子ミスマッチが小さく、
 析出強化の観点から有望な候補である。
+候補一覧はSupplementary S5節に掲載する。
 
 \subsubsection{安定L1$_2$候補の抽出}
 
-$E_\text{hull} \leq 0.05$~eV/atomを満たす安定・準安定L1$_2$候補を抽出した。
-安定（$E_\text{hull} = 0$）12件、準安定（$0 < E_\text{hull} \leq 0.05$）45件の
-計57件が候補として抽出された。
-安定相のうち、最も負の形成エネルギーを持つのは
+$E_\text{hull} \leq 0.05$~eV/atomを満たす安定・準安定L1$_2$候補57件
+（安定12件、準安定45件）を抽出した。
+安定相のうち最も負の形成エネルギーを持つのは
 Pt$_3$Al（$E_f = -0.55$~eV/atom）であり、
-次いでAl$_3$Sc（$-0.50$）、Co$_3$Ti（$-0.45$）、Pt$_3$Ge（$-0.45$）が続く。
+次いでAl$_3$Sc（$-0.50$）、Co$_3$Ti（$-0.45$）が続く。
+詳細はSupplementary S6節に掲載する。
 
 \subsubsection{材料設計仮説の生成}
 
@@ -1858,7 +1796,7 @@ Few-shot例の拡充、Self-correction、プロンプト改善が今後の方向
 Schema Graphアーキテクチャは\textbf{スキーマ非依存}であり、
 FK関係は実行時にPostgreSQLメタデータからイントロスペクション
 （\ref{sec:schema_graph}節）されるため、
-任意の正規化RDB（Materials Project、AFLOW、NOMAD、機関内データベース）に
+任意の正規化RDB（Materials Project~\citep{jain2013mp}、AFLOW~\citep{curtarolo2012aflow}、NOMAD~\citep{draxl2019nomad}、機関内データベース）に
 コード変更なしで展開可能である---用語辞書のドメイン適応のみが必要である。
 
 とりわけ、Materials Integration（MInt）システム\cite{minamoto2020mint}における
@@ -1874,7 +1812,7 @@ NL $\to$ データ検索 $\to$ 材料設計仮説生成の
 \subsection{今後の展望}
 
 \begin{enumerate}
-  \item \textbf{マルチデータベース拡張}：Schema GraphをMaterials Project、AFLOWスキーマに適応。
+  \item \textbf{マルチデータベース拡張}：Schema GraphをMaterials Project~\citep{jain2013mp}、AFLOW~\citep{curtarolo2012aflow}スキーマに適応。
     動的FKイントロスペクションはアーキテクチャ上これを既にサポートする。
   \item \textbf{AI4Sエージェント統合}：T2SQL手法を自律材料探索エージェントのツールとして
     組み込み（MCPプロトコルやfunction calling経由）、
@@ -1905,7 +1843,7 @@ NL $\to$ データ検索 $\to$ 材料設計仮説生成の
     テーブル幻覚の排除と不要JOINの削減を同時に達成。
     1{,}471エントリ（L1$_2$+B2+NaCl+NiAs+BiF$_3$）で検証。
   \item \textbf{FKイントロスペクションによる汎用性}：
-    任意の正規化材料RDB（OQMD、Materials Project、AFLOW等）へ
+    任意の正規化材料RDB（OQMD~\citep{saal2013oqmd}、Materials Project~\citep{jain2013mp}、AFLOW~\citep{curtarolo2012aflow}等）へ
     コード変更なしで展開可能。用語辞書のドメイン適応のみが必要。
   \item \textbf{L1$_2$化合物探索で材料工学的有用性を実証}：
     既知L1$_2$ 11件の全件再発見、
@@ -1938,157 +1876,35 @@ OQMDの開発・維持管理にあたるNorthwestern大学Wolvertonグループ�
 本研究はNIMSの支援を受けた。
 
 % =====================================================================
-\bibliographystyle{elsarticle-num}
-\bibliography{references}
+\section*{Data Availability}
+
+本研究で使用した検証データベース（5プロトタイプ1{,}471エントリ）のseedデータ、
+評価クエリ100件（gold SQL・期待結果セット）、
+5手法の実験結果CSV、回帰テスト80件、
+ソースコード一式（Schema Graph走査エンジン・SQLガード・条件抽出器・LLMモード）、
+および検証手順書（VERIFICATION\_GUIDE.md）は
+検証資材リポジトリに収録されている。
 
 % =====================================================================
-\newpage
-\begin{appendices}
+\section*{Author Contributions}
 
-\section{回帰テストケース一覧}
-\label{app:all_tests}
+\textbf{Satoshi Minamoto}：研究構想、手法設計、ソフトウェア実装、
+データベース構築、実験実施、論文執筆。
 
-本付録には回帰テスト44件（表~\ref{tab:all_tests}）と
-代表的SQL生成例を掲載する。
-全評価クエリ100件（Easy 20、Medium 30、Hard 30、Very Hard 20）の
-gold SQL、期待結果セット、5手法比較結果、
-プロンプトテンプレート、
-\texttt{allowed\_schema.yaml}、\texttt{material\_terms.yaml}は
-Supplementary Materialsに収録する。
+% =====================================================================
+\section*{Supplementary Materials}
 
-\begin{table*}[htbp]
-\centering
-\caption{回帰テストケース一覧（全44件、全PASS）。}
-\label{tab:all_tests}
-\footnotesize
-\begin{tabular}{llp{8cm}l}
-  \toprule
-  ID & カテゴリ & 自然言語クエリ & 結果 \\
-  \midrule
-  A01 & 正常系 & Feを含むL1$_2$化合物を出して & PASS \\
-  A02 & 正常系 & 安定なL1$_2$化合物を形成エネルギー順に出して & PASS \\
-  A03 & 正常系 & NiとAlの両方を含む化合物を出して & PASS \\
-  A04 & 正常系 & L1$_2$化合物の全リストを出して & PASS \\
-  A05 & 正常系 & 準安定なL1$_2$化合物を出して & PASS \\
-  A06 & 正常系 & Coを含む安定なL1$_2$化合物を出して & PASS \\
-  A07 & 正常系 & FeとAlを含むL1$_2$化合物を出して & PASS \\
-  A08 & 正常系 & $\gamma'$化合物を出して & PASS \\
-  A09 & 正常系 & ニッケルを含むL1$_2$型化合物を出して & PASS \\
-  A10 & 正常系 & L1$_2$化合物の全データを出して & PASS \\
-  A11 & 正常系 & Tiを含むL1$_2$化合物を格子定数順（降順）に出して & PASS \\
-  A12 & 正常系 & 安定なL1$_2$で格子定数3.5\AA 以上のものを出して & PASS \\
-  A13 & 正常系 & Cu$_3$Au型化合物を出して & PASS \\
-  A14 & 正常系 & 鉄を含むL1$_2$化合物を出して & PASS \\
-  A15 & 正常系 & 安定なL1$_2$化合物でNiを含むものを出して & PASS \\
-  \midrule
-  B01 & 該当なし & Xeを含むL1$_2$化合物を出して & PASS \\
-  B02 & 該当なし & UとPuを含むL1$_2$化合物を出して & PASS \\
-  B03 & 該当なし & RnとOgを含むL1$_2$化合物を出して & PASS \\
-  B04 & 該当なし & ScとIrを含む安定なL1$_2$化合物を出して & PASS \\
-  B05 & 該当なし & PtとGaを含む安定なL1$_2$化合物を出して & PASS \\
-  \midrule
-  C01 & 曖昧 & 安定な化合物を出して & PASS \\
-  C02 & 曖昧 & L12 & PASS \\
-  C03 & 曖昧 & 安定なものを出して & PASS \\
-  C04 & 曖昧 & （空入力） & PASS \\
-  C05 & 曖昧 & 今日の天気を教えて & PASS \\
-  C06 & 曖昧 & Fe & PASS \\
-  C07 & 曖昧 & 格子定数 & PASS \\
-  C08 & 曖昧 & 形成エネルギーが低い安定なL1$_2$化合物 & PASS \\
-  C09 & 曖昧 & NiAl L12 & PASS \\
-  C10 & 曖昧 & NiのL12 & PASS \\
-  \midrule
-  D01 & 矛盾 & 安定かつ準安定なL1$_2$化合物 & PASS \\
-  D02 & 矛盾 & NiなしのNi L1$_2$化合物 & PASS \\
-  \midrule
-  E01 & 拒否 & DROP TABLE material\_entry; & PASS \\
-  E02 & 拒否 & SELECT *; DELETE FROM composition; & PASS \\
-  E03 & 拒否 & L1$_2$化合物; DROP TABLE structure; & PASS \\
-  E04 & 拒否 & SELECT * FROM secret\_passwords & PASS \\
-  E05 & 拒否 & INSERT INTO material\_entry VALUES (...) & PASS \\
-  \midrule
-  F01 & 安全性 & SELECT entry\_id FROM material\_entry & PASS \\
-  F02 & 安全性 & UPDATE material\_entry SET formula='X' & PASS \\
-  \bottomrule
-\end{tabular}
-\end{table*}
+Supplementary Materialsには以下を収録する：
+S1~回帰テストカテゴリ詳細、
+S2~回帰テストケース一覧（全44件）、
+S3~生成SQL例（LLM-only/Full Schema/Proposed比較）、
+S4~SQLインジェクション・安全性テスト結果、
+S5~Ni$_3$Al近傍格子定数候補、
+S6~安定L1$_2$候補の抽出、
+S7~LLMモード設定。
 
-\section{生成SQL例}
-\label{app:sql_examples}
-
-\lstset{basicstyle=\ttfamily\scriptsize,breaklines=true,columns=flexible,numbers=none,frame=single,xleftmargin=0pt,xrightmargin=0pt,linewidth=\columnwidth}
-
-\subsection{「Niを含む安定なL1$_2$化合物を出して」}
-
-\paragraph{LLM-only（B1）：}
-\begin{lstlisting}
-SELECT formula, stability
-FROM materials
-WHERE element = 'Ni'
-  AND structure_type = 'L12'
-  AND stability = 'stable';
--- テーブル幻覚: materials, stability等は
--- 存在しないテーブル -> 実行不可
-\end{lstlisting}
-
-\paragraph{Proposed手法（P）：}
-\begin{lstlisting}
-SELECT DISTINCT m.entry_id, m.formula,
-  s.prototype, s.lattice_a, s.space_group
-FROM material_entry m
-  JOIN composition c
-    ON c.entry_id = m.entry_id
-  JOIN structure s
-    ON s.entry_id = m.entry_id
-  JOIN phase_stability ps
-    ON ps.entry_id = m.entry_id
-WHERE (s.prototype = 'L12'
-    OR s.strukturbericht = 'L12')
-  AND c.element = 'Ni'
-  AND ps.energy_above_hull = 0
-LIMIT 10000;
--- Schema Graph走査で必要な3 JOINのみ
--- テーブル幻覚0%, DISTINCT, LIMIT付き
-\end{lstlisting}
-
-\subsection{「NiとAlの両方を含むL1$_2$化合物を出して」}
-
-\paragraph{Full Schema（B2）：}
-\begin{lstlisting}
-SELECT m.entry_id, m.formula
-FROM material_entry m
-  JOIN composition c
-    ON c.entry_id = m.entry_id
-  JOIN structure s
-    ON s.entry_id = m.entry_id
-WHERE c.element = 'Ni'
-  AND c.element = 'Al'
-  AND s.prototype = 'L12';
--- 致命的: 単一行が両条件を同時に
--- 満たすことは不可能 -> 常に0行
-\end{lstlisting}
-
-\paragraph{Proposed手法（P）：}
-\begin{lstlisting}
-SELECT DISTINCT m.entry_id, m.formula
-FROM material_entry m
-  JOIN structure s
-    ON s.entry_id = m.entry_id
-WHERE (s.prototype = 'L12'
-    OR s.strukturbericht = 'L12')
-AND EXISTS (
-  SELECT 1 FROM composition
-  WHERE entry_id = m.entry_id
-    AND element = 'Ni')
-AND EXISTS (
-  SELECT 1 FROM composition
-  WHERE entry_id = m.entry_id
-    AND element = 'Al')
-LIMIT 10000;
--- EXISTS副問い合わせで正確な多元素AND
--- -> Ni3Al (1行) を正しく返却
-\end{lstlisting}
-
-\end{appendices}
+% =====================================================================
+\bibliographystyle{elsarticle-num}
+\bibliography{references}
 
 \end{document}
