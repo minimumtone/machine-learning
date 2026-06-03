@@ -2096,6 +2096,7 @@ OQMDの開発・維持管理にあたるNorthwestern大学Wolvertonグループ�
 
 % =====================================================================
 % Supplementary Materials（本体と結合して1本のPDFとして出力）
+% 投稿時には本体から分離し、独立文書として公開する
 % =====================================================================
 \clearpage
 \onecolumn
@@ -2109,10 +2110,31 @@ OQMDの開発・維持管理にあたるNorthwestern大学Wolvertonグループ�
 \setcounter{figure}{0}
 \setcounter{equation}{0}
 
-\section*{Supplementary Materials}
+\begin{center}
+  {\LARGE\bfseries Supplementary Materials}\\[0.8em]
+  {\large Schema-Graph-Constrained Natural Language Interface for\\
+  Intermetallic Compound Exploration}\\[0.5em]
+  {\large 金属間化合物探索のためのSchema Graph制約型\\自然言語データベースインターフェース}\\[1.0em]
+  {\normalsize Satoshi Minamoto}\\[0.3em]
+  {\small National Institute for Materials Science (NIMS),\\
+  1-2-1 Sengen, Tsukuba, Ibaraki 305-0047, Japan}\\[0.3em]
+  {\small \texttt{minamoto.satoshi@nims.go.jp}}
+\end{center}
+\vspace{1.0em}
+\noindent\hrulefill
+\vspace{1.0em}
 
-以下のSupplementary Materials（S1--S7節）は投稿時には本体から分離し、
-リポジトリに独立文書として登録する予定である。
+\noindent
+本補足資料では、本論文で提案したSchema Graph制約型Text-to-SQLシステムの
+検証・評価に関する詳細情報を提供する。
+S1節では回帰テストの全カテゴリと検証焦点を示し、
+S2節で全44件のテストケース一覧を掲載する。
+S3節では代表的なクエリに対する各手法の生成SQL例を比較し、
+本手法のJOINパス制約の効果を具体的に示す。
+S4節ではSQLインジェクション攻撃を含む安全性テストの詳細結果を報告する。
+S5節ではNi$_3$Al近傍格子定数候補の抽出結果、
+S6節では安定L1$_2$候補の形成エネルギーランキングを示す。
+S7節ではLLMモード（gpt-5.5）の設定パラメータとプロンプト構成を記載する。
 
 % =====================================================================
 \section{回帰テストカテゴリ詳細}
