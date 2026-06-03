@@ -314,102 +314,8 @@ FK関係だけでなくドメイン知識に基づくJOINパス選択が可能�
     Proposed手法の実行精度と各ベースラインの比較を報告する。
 \end{enumerate}
 
-図~\ref{fig:pipeline_schematic}に本手法の解析フロー全体を示す。
-
-\begin{figure*}[htbp]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[
-  node distance=0.5cm and 0.4cm,
-  >=Stealth,
-  every node/.style={font=\small},
-  process/.style={rectangle, draw, rounded corners=3pt,
-    minimum height=0.8cm, minimum width=1.8cm, align=center,
-    fill=blue!8, text width=2.0cm},
-  decision/.style={diamond, draw, aspect=2.2,
-    minimum height=0.7cm, align=center,
-    fill=orange!12, text width=1.6cm, inner sep=1pt},
-  io/.style={trapezium, draw, trapezium left angle=70, trapezium right angle=110,
-    minimum height=0.7cm, align=center, fill=green!10, text width=1.8cm},
-  guard/.style={rectangle, draw, rounded corners=3pt,
-    minimum height=0.8cm, minimum width=1.8cm, align=center,
-    fill=red!10, text width=2.0cm},
-  data/.style={rectangle, draw, dashed,
-    minimum height=0.7cm, align=center,
-    fill=gray!8, text width=1.8cm},
-  arr/.style={->, thick, >=Stealth},
-  darr/.style={->, thick, dashed, >=Stealth},
-]
-
-% Row 1: Input
-\node[io] (input) {自然言語\\クエリ};
-\node[process, right=of input] (intent) {Intent\\Classifier\\(\S\ref{sec:intent_classifier})};
-\node[process, right=of intent] (extract) {条件抽出\\用語辞書照合\\(\S\ref{sec:entity_extractor})};
-\node[decision, right=of extract] (coverage) {Coverage\\Score\\(\S\ref{sec:coverage_score})};
-
-% Branch labels
-\node[above right=0.1cm and 0.3cm of coverage, font=\scriptsize\itshape] (high) {高};
-\node[below right=0.1cm and 0.3cm of coverage, font=\scriptsize\itshape] (low) {低};
-
-% Row 2: Dual path
-\node[process, right=2.2cm of coverage, yshift=0.8cm] (rb) {Rule-based\\SQL生成\\(\S\ref{sec:sql_generation})};
-\node[process, right=2.2cm of coverage, yshift=-0.8cm] (llm) {LLM SQL生成\\gpt-5.5\\(\S\ref{sec:llm_mode})};
-
-% Schema Graph (center, feeds both)
-\node[process, below=1.2cm of coverage, fill=cyan!15] (sg) {Schema Graph\\FK走査\\(\S\ref{sec:schema_graph})};
-\node[data, below=0.4cm of sg] (yaml) {allowed\_schema\\.yaml};
-
-% Row 3: Convergence
-\node[guard, right=of rb, yshift=-0.8cm] (guard) {SQLGuard\\8層検証\\(\S\ref{sec:sql_guard})};
-
-% Row 4: Output
-\node[io, right=of guard] (exec) {SQL実行\\結果返却};
-
-% Data stores
-\node[data, above=0.6cm of llm] (rag) {Few-Shot\\RAGストア};
-
-% Arrows: main flow
-\draw[arr] (input) -- (intent);
-\draw[arr] (intent) -- node[above, font=\scriptsize] {db\_query} (extract);
-\draw[arr] (extract) -- (coverage);
-
-% Coverage branching
-\draw[arr] (coverage.east) ++(0.1,0) |- (rb.west);
-\draw[arr] (coverage.east) ++(0.1,0) |- (llm.west);
-
-% Schema Graph feeds both
-\draw[darr] (sg.north) ++(0,0.1) -| ([xshift=-0.3cm]rb.south);
-\draw[darr] (sg.north) ++(0,0.1) -| ([xshift=-0.3cm]llm.south);
-\draw[arr] (yaml) -- (sg);
-
-% Converge to guard
-\draw[arr] (rb.east) -| (guard.north);
-\draw[arr] (llm.east) -| (guard.south);
-
-% Guard to output
-\draw[arr] (guard) -- (exec);
-
-% RAG to LLM
-\draw[darr] (rag) -- (llm);
-
-% Intent reject
-\node[below left=0.4cm and 0.1cm of intent, font=\scriptsize\itshape, text=red!70!black, align=center] (reject) {\shortstack{スコープ外\\ 拒否}};
-\draw[arr, red!60!black] (intent.south) -- (reject);
-
-% Parsers annotation
-\node[process, below=0.5cm of extract, fill=yellow!10, text width=2.4cm] (parsers) {数値パーサー\\化学式パーサー\\(\S\ref{sec:numeric_parser},\S\ref{sec:formula_parser})};
-\draw[darr] (parsers.north) -- (extract.south);
-
-\end{tikzpicture}%
-}% end resizebox
-\caption{提案手法の解析フロー全体図。
-  自然言語クエリはIntent Classifierでスコープ判定後、
-  用語辞書・数値/化学式パーサーで条件抽出される。
-  Coverage Scoreに基づきRule-based（高認識率）またはLLM（低認識率）経路に分岐し、
-  いずれもSchema Graph（FK走査）によるJOINパス制約とSQLGuard 8層検証を経て
-  安全なSQLが生成・実行される。破線矢印はデータ参照を示す。}
-\label{fig:pipeline_schematic}
-\end{figure*}
+本手法の全体アーキテクチャを図~\ref{fig:step3_pipeline}（概要）および
+図~\ref{fig:architecture}（詳細構成）に示す。
 
 % --- Step 3 パイプライン図（HTMLのStep 3に対応） ---
 \begin{figure*}[htbp]
@@ -1283,7 +1189,144 @@ Schema Graph制約型Text-to-SQLのコンセプト実証に適した
 独自の正規化ER図（30テーブル）を設計した。
 この独自設計により、FK関係を介したマルチホップJOINの自動算出という
 本手法の核心的機能を現実的な複雑さの中で検証できる。
+図~\ref{fig:er_diagram}に30テーブルの全体構成とFK関係を示す。
 以下に主要な設計判断を述べる。
+
+\begin{figure*}[htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  node distance=0.25cm and 0.25cm,
+  >=Stealth,
+  every node/.style={font=\scriptsize},
+  entity/.style={rectangle, draw, rounded corners=2pt,
+    minimum height=0.55cm, minimum width=1.6cm, align=center,
+    text width=1.7cm, font=\scriptsize},
+  core/.style={entity, fill=blue!15, line width=0.8pt},
+  prop/.style={entity, fill=green!12},
+  master/.style={entity, fill=orange!15},
+  junction/.style={entity, fill=yellow!15},
+  electronic/.style={entity, fill=cyan!12},
+  mechanical/.style={entity, fill=red!8},
+  surface/.style={entity, fill=purple!10},
+  phase/.style={entity, fill=teal!12},
+  experiment/.style={entity, fill=pink!15},
+  defect/.style={entity, fill=brown!12},
+  fk/.style={->, thick, color=gray!70, >=Stealth},
+  self/.style={->, thick, color=red!60, >=Stealth, bend left=40},
+  grouplabel/.style={font=\footnotesize\bfseries, text=gray!60},
+]
+
+% ========= Central Hub: material_entry =========
+\node[core, minimum width=2.2cm, minimum height=0.7cm, line width=1.2pt, font=\scriptsize\bfseries] (me) {material\_entry\\{\tiny (PK: entry\_id)}};
+
+% ========= Core Entity Layer (ring around material_entry) =========
+\node[core, above left=0.8cm and 2.0cm of me] (comp) {composition\\{\tiny element, fraction}};
+\node[core, above=0.8cm of me] (struct) {structure\\{\tiny prototype, lattice}};
+\node[core, above right=0.8cm and 2.0cm of me] (ps) {phase\_stability\\{\tiny $E_f$, $E_{hull}$}};
+\node[core, right=2.5cm of me] (calc) {calculation\\{\tiny method, functional}};
+
+% ========= Calculation child =========
+\node[prop, right=0.6cm of calc] (cprop) {calculated\_\\property\\{\tiny name, value, unit}};
+
+% ========= Master Tables =========
+\node[master, above=0.6cm of struct] (proto) {prototype\_\\definition\\{\tiny Strukturbericht}};
+\node[master, above=0.6cm of comp] (sg) {space\_group\\{\tiny H-M, crystal sys}};
+\node[master, left=2.5cm of me, yshift=0.5cm] (elem) {element\\{\tiny Z, mass, $\chi$}};
+\node[prop, below=0.5cm of elem] (eprop) {element\_\\property\\{\tiny property, value}};
+
+% ========= Electronic Structure =========
+\node[electronic, below right=0.8cm and 1.0cm of calc] (bs) {band\_structure\\{\tiny gap, CBM, VBM}};
+\node[electronic, right=0.5cm of bs] (dos) {density\_of\_states\\{\tiny DOS@$E_F$, metallic}};
+
+% ========= Mechanical Properties =========
+\node[mechanical, below=1.4cm of me, xshift=-2.5cm] (elastic) {elastic\_tensor\\{\tiny $B$, $G$, $E$, $\nu$}};
+\node[mechanical, right=0.5cm of elastic] (mag) {magnetic\_property\\{\tiny $M$, ordering, $T_C$}};
+\node[mechanical, right=0.5cm of mag] (therm) {thermal\_property\\{\tiny $\Theta_D$, $\kappa$, $C_v$}};
+
+% ========= Surface/Interface =========
+\node[surface, below=1.4cm of me, xshift=3.0cm] (surf) {surface\_energy\\{\tiny $(hkl)$, $\gamma$, $\phi$}};
+\node[surface, right=0.5cm of surf] (gb) {grain\_boundary\\{\tiny $\Sigma$, $E_{GB}$}};
+
+% ========= Phase/Alloy =========
+\node[phase, below=2.5cm of me, xshift=-1.0cm] (pde) {phase\_diagram\_\\entry\\{\tiny hull, decomp}};
+\node[phase, right=0.5cm of pde] (alloy) {alloy\_system\\{\tiny name, components}};
+\node[junction, right=0.5cm of alloy] (ma_alloy) {material\_alloy\_\\system\\{\tiny phase, comp type}};
+
+% ========= Literature & Applications =========
+\node[experiment, left=2.5cm of me, yshift=-1.5cm] (litref) {literature\_\\reference\\{\tiny DOI, journal}};
+\node[junction, above=0.5cm of litref] (matref) {material\_\\reference\\{\tiny context}};
+\node[experiment, below=0.5cm of litref] (expmt) {experimental\_\\measurement\\{\tiny method, T, P}};
+\node[experiment, below=0.5cm of expmt] (mprop) {measured\_\\property\\{\tiny name, value}};
+
+% ========= Applications =========
+\node[master, above left=2.0cm and 0.5cm of me] (appdom) {application\_\\domain\\{\tiny domain, hierarchy}};
+\node[junction, below=0.5cm of appdom] (matapp) {material\_\\application\\{\tiny relevance}};
+
+% ========= Synthesis =========
+\node[defect, below left=2.5cm and 1.0cm of me] (synm) {synthesis\_\\method\\{\tiny name, category}};
+\node[junction, right=0.5cm of synm] (matsyn) {material\_\\synthesis\\{\tiny T, duration, atm}};
+\node[defect, below=2.5cm of me, xshift=-4.0cm] (deftype) {defect\_type\\{\tiny vacancy, antisite}};
+\node[junction, right=0.5cm of deftype] (matdef) {material\_defect\\{\tiny $E_f$, site}};
+
+% ========= FK Arrows to material_entry =========
+\draw[fk] (comp.east) -- (me);
+\draw[fk] (struct.south) -- (me);
+\draw[fk] (ps.west) -- (me);
+\draw[fk] (calc.west) -- (me);
+\draw[fk] (bs) -- (me);
+\draw[fk] (dos) -- (me);
+\draw[fk] (elastic) -- (me);
+\draw[fk] (mag) -- (me);
+\draw[fk] (therm) -- (me);
+\draw[fk] (surf) -- (me);
+\draw[fk] (gb) -- (me);
+\draw[fk] (pde) -- (me);
+\draw[fk] (matref) -- (me);
+\draw[fk] (matapp) -- (me);
+\draw[fk] (matsyn) -- (me);
+\draw[fk] (matdef) -- (me);
+\draw[fk] (expmt) -- (me);
+\draw[fk] (ma_alloy) -- (me);
+
+% ========= FK: calculation children =========
+\draw[fk] (cprop) -- (calc);
+\draw[fk] (bs) -- (calc);
+\draw[fk] (dos) -- (calc);
+\draw[fk] (elastic) -- (calc);
+\draw[fk] (therm) -- (calc);
+
+% ========= FK: master tables =========
+\draw[fk] (eprop) -- (elem);
+\draw[fk] (matref) -- (litref);
+\draw[fk] (expmt) -- (litref);
+\draw[fk] (matsyn) -- (litref);
+\draw[fk] (matsyn) -- (synm);
+\draw[fk] (matdef) -- (deftype);
+\draw[fk] (matapp) -- (appdom);
+\draw[fk] (ma_alloy) -- (alloy);
+\draw[fk] (mprop) -- (expmt);
+\draw[fk] (matdef.east) to[bend left=15] (elem.south);
+
+% ========= Self-referencing FK =========
+\draw[self] (appdom.north west) to[out=150,in=210,looseness=4] node[left, font=\tiny, text=red!60] {parent} (appdom.south west);
+
+% ========= Group Labels =========
+\node[grouplabel, above=0.3cm of proto] {コアエンティティ \& マスタ};
+\node[grouplabel, below=0.15cm of elastic, xshift=-1.0cm] {機械的特性};
+\node[grouplabel, below=0.15cm of surf, xshift=0.5cm] {表面・界面};
+\node[grouplabel, below=0.15cm of pde, xshift=1.0cm] {相図・合金系};
+
+\end{tikzpicture}%
+}% end resizebox
+\caption{検証データベースの30テーブルER図。
+  中央の\texttt{material\_entry}を軸に、組成（composition）・構造（structure）・
+  安定性（phase\_stability）等のコアテーブルが直接FKで接続され、
+  計算特性・電子構造・機械特性・表面エネルギー等が2ホップ以上でアクセスされる。
+  灰色矢印はFK関係、赤矢印は自己参照FK（application\_domainの階層構造）を示す。
+  黄色のテーブルはN:M結合テーブルである。}
+\label{fig:er_diagram}
+\end{figure*}
 
 \paragraph{設計判断1：組成テーブルの分離（1:N正規化）}
 最も重要な設計判断は、\texttt{composition}テーブルの分離である。
