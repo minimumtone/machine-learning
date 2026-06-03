@@ -16,6 +16,8 @@
 \usepackage{enumitem}
 \usepackage{caption}
 \captionsetup{font=small,labelfont=bf}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric}
 
 \setlist{nosep,leftmargin=*}
 
@@ -197,6 +199,35 @@ Tian~\emph{et al.}~\cite{Tian2015}のEMTO-CPA法があるが、
   \item \textbf{独立テスト}:
     23 HEA（BCC 10、FCC 13）で検証。全体 RMSE = 0.0150~\AA{}（Vegard比13.4\%改善）、BCC RMSE = 0.0149~\AA{}（Vegard比19.7\%改善）。
 \end{enumerate}
+
+本手法の全体像を図~\ref{fig:pipeline}に示す。
+DFTデータベースから$\Omega_\text{sf}$を導出し、
+加法分解で元素パラメータに圧縮、
+最終的に任意組成HEAの格子定数を予測する一貫した流れである。
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  node distance=0.6cm and 1.2cm,
+  box/.style={rectangle, draw, rounded corners, minimum height=1.2cm,
+    minimum width=2.2cm, text width=2.0cm, align=center, font=\small},
+  arr/.style={-{Stealth[length=3mm]}, thick}
+]
+\node[box, fill=blue!10] (dft) {DFTデータ\\{\scriptsize 8,521件}};
+\node[box, fill=green!10, right=of dft] (omega) {$\Omega_\text{sf}$導出\\{\scriptsize B2: 758\\L1$_2$: 703}};
+\node[box, fill=orange!10, right=of omega] (add) {加法分解\\{\scriptsize $\delta_i^{(s)}$\\38元素}};
+\node[box, fill=red!10, right=of add] (pred) {格子定数\\予測\\{\scriptsize 式(\ref{eq:a_from_veff})}};
+\node[box, fill=purple!10, right=of pred] (test) {独立検証\\{\scriptsize 23 HEA\\10文献}};
+\draw[arr] (dft) -- (omega);
+\draw[arr] (omega) -- (add);
+\draw[arr] (add) -- (pred);
+\draw[arr] (pred) -- (test);
+\end{tikzpicture}
+\caption{本手法のパイプライン概要。DFT計算で得た二元系化合物の体積偏差を
+構造特異的$\Omega_\text{sf}$として導出し、加法分解で38元素パラメータに圧縮後、
+任意組成HEAの格子定数を予測する。}
+\label{fig:pipeline}
+\end{figure}
 
 
 %% =====================================================================
@@ -394,9 +425,19 @@ $V_\text{maj}$・$V_\text{min}$はそれぞれ
 
 物理モデルの残差
 $\Delta a_i = a_i^\text{exp} - a_i^\text{pred}$に
-7種のMLモデルをLOO-CVで評価した：
-Ridge回帰、XGBoost~\cite{Chen2016}、GPR（RBF・Mat\'{e}rn32・Mat\'{e}rn52）、
-SVR、Random Forest、Cubist、およびアンサンブル。
+7種のMLモデルをLOO-CV（Leave-One-Out交差検証：
+$N$点のうち1点を抜いて$N-1$点で学習し、
+抜いた1点を予測する操作を全点で繰り返し、
+過学習を排除した汎化誤差を推定する手法）で評価した：
+\begin{itemize}
+  \item \textbf{Ridge回帰}: 線形回帰にL2正則化を加え過学習を抑制する最も単純なMLモデル。
+  \item \textbf{XGBoost}~\cite{Chen2016}: 勾配ブースティング決定木。残差を逐次学習する非線形モデルで、表形式データにおいて最高精度を示すことが多い。
+  \item \textbf{GPR}（ガウス過程回帰）: データ点間のカーネル関数で相関を仮定し、予測値と不確かさを同時に出力するベイズ的手法。RBF・Mat\'{e}rn32・Mat\'{e}rn52の3種のカーネルを評価。
+  \item \textbf{SVR}: サポートベクター回帰。高次元特徴空間での$\varepsilon$-不感帯最適化。
+  \item \textbf{Random Forest}: 多数の決定木のバギング平均。過学習しにくいが表現力はXGBoostに劣る。
+  \item \textbf{Cubist}: ルールベースの区分線形モデル（Quinlan, 1993）。
+  \item \textbf{アンサンブル}: 上記全モデルの重み付き平均。最適重みをLOO-CVで決定。
+\end{itemize}
 23次元特徴量（Vegard予測値、DFTモデル予測値、組成統計、
 $\delta r$、VEC、$\Omega_\text{sf}$統計）を使用。
 転移学習（1,062二元系で事前学習後HEA残差で微調整）も評価した。
@@ -464,6 +505,12 @@ Alonsoモデル（0.0229~\AA）に対し6.9\%の改善を示す。
 ML残差補正はいずれも0.002~\AA{}未満の追加改善しか与えず、
 最適アンサンブルはDFT-$\Omega_\text{sf}$に重み100\%を割り当てた。
 残差が主に測定ノイズに支配されていることを示唆する。
+材料的観点では、これは現モデルの残差がもはや組成の体系的関数ではなく、
+合金作製条件（焼鈍温度・冷却速度・均質化度）に起因する
+実験間の再現性ばらつき（$\sigma \approx 0.016$~\AA）に相当することを意味する。
+すなわち、物理モデルが捉えうる格子定数の組成依存情報は
+すでに飽和しており、さらなる改善には
+合金作製プロセスの明示的制御が必要となる。
 
 図~\ref{fig:parity}にパリティプロットを、図~\ref{fig:rmse}に
 RMSE棒グラフを示す。
@@ -1324,6 +1371,240 @@ HEA予測ではRMSE = 0.0211~\AA{}（元素対: 0.0214~\AA）と
 実用上の問題はない。
 残差は元素対固有の電荷移動・磁気相互作用に起因し、
 加法性仮定の本質的限界を反映する。
+
+
+%% =====================================================================
+\section{記号一覧}
+\label{sec:nomenclature}
+%% =====================================================================
+
+\begin{table}[H]
+\centering
+\caption{本論文で用いる主要記号。}
+\label{tab:nomenclature}
+\footnotesize
+\begin{tabular}{@{}lll@{}}
+\toprule
+記号 & 定義 & 単位 \\
+\midrule
+$a$ & 格子定数 & \AA \\
+$V_i$ & 元素$i$のKing原子体積 & \AA$^3$ \\
+$c_i$ & 元素$i$の原子分率 & --- \\
+$n_\text{auc}$ & 単位胞あたり原子数（BCC: 2, FCC: 4） & --- \\
+$\Omega_\text{sf}^{(s)}(i\text{-}j)$ & 構造$s$での体積サイズファクター & --- \\
+$\delta_i^{(s)}$ & 元素$i$の加法分解パラメータ（構造$s$） & --- \\
+$q_s$ & 構造依存校正定数 & --- \\
+$V_\text{eff}(i;\,\mathbf{c})$ & 組成依存有効原子体積 & \AA$^3$ \\
+$\delta r$ & 原子サイズミスマッチパラメータ & \% \\
+$\alpha$ & Warren-Cowley短距離秩序パラメータ & --- \\
+\midrule
+\multicolumn{3}{@{}l}{\textit{略語}} \\
+HEA & 高エントロピー合金 (High-Entropy Alloy) & \\
+DFT & 密度汎関数理論 (Density Functional Theory) & \\
+VASP & Vienna Ab initio Simulation Package & \\
+GGA-PBE & 一般化勾配近似（Perdew-Burke-Ernzerhof） & \\
+SQS & Special Quasi-random Structure & \\
+LOO-CV & Leave-One-Out交差検証 & \\
+RMSE & 二乗平均平方根誤差 & \AA \\
+MAE & 平均絶対誤差 & \AA \\
+GPR & ガウス過程回帰 (Gaussian Process Regression) & \\
+XGBoost & eXtreme Gradient Boosting & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+%% =====================================================================
+\section{格子定数予測の計算例}
+\label{sec:appendix_examples}
+%% =====================================================================
+
+本付録では、本文の手法を用いて実際のHEAの格子定数を
+手計算で予測する手順を示す。
+読者はスプレッドシート等で追試可能である。
+
+\subsection{例題1: CoCrFeNi（FCC HEA）--- L1$_2$参照}
+\label{sec:example_fcc}
+
+等モル4元系FCC HEA CoCrFeNiの格子定数を予測する。
+
+\paragraph{Step 1: King原子体積の取得}
+
+表~\ref{tab:delta_params}または文献~\cite{King1966}より：
+\begin{align*}
+V_\text{Co} &= 11.073~\text{\AA}^3, & V_\text{Cr} &= 12.008~\text{\AA}^3, \\
+V_\text{Fe} &= 11.776~\text{\AA}^3, & V_\text{Ni} &= 10.941~\text{\AA}^3.
+\end{align*}
+
+\paragraph{Step 2: Vegard則による計算}
+
+等モル（$c_i = 0.25$）、FCC（$n_\text{auc} = 4$）：
+\begin{align}
+V_\text{Vegard} &= \sum_i c_i V_i = 0.25(11.073 + 12.008 + 11.776 + 10.941) \nonumber \\
+&= 11.450~\text{\AA}^3, \nonumber \\
+a_\text{Vegard} &= (4 \times 11.450)^{1/3} = 3.578~\text{\AA}. \label{eq:ex_vegard_fcc}
+\end{align}
+
+\paragraph{Step 3: L1$_2$~$\Omega_\text{sf}$の取得}
+
+$\binom{4}{2} = 6$ペアのDFT $\Omega_\text{sf}^{\text{L1}_2}$：
+\begin{center}
+\footnotesize
+\begin{tabular}{@{}lrlr@{}}
+\toprule
+ペア & $\Omega_\text{sf}$ & ペア & $\Omega_\text{sf}$ \\
+\midrule
+Co--Cr & $-0.047$ & Cr--Ni & $-0.032$ \\
+Co--Fe & $-0.017$ & Fe--Ni & $-0.004$ \\
+Co--Ni & $-0.014$ & Cr--Fe & $-0.057$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Step 4: 式~\eqref{eq:scaled_eq10}による補正}
+
+$q_\text{FCC} = 0.13$で二重和を計算する：
+\begin{equation}
+\text{補正項} = \sum_i \sum_{j \ne i} c_i\,c_j\,V_j\,\Omega_\text{sf}^{\text{L1}_2}(i,j)
+= -0.247~\text{\AA}^3.
+\label{eq:ex_correction_fcc}
+\end{equation}
+全体の体積と格子定数：
+\begin{align}
+V &= 4 \times (11.450 + 0.13 \times (-0.247)) = 45.67~\text{\AA}^3, \nonumber \\
+a_\text{pred} &= V^{1/3} = 3.574~\text{\AA}. \label{eq:ex_pred_fcc}
+\end{align}
+
+\paragraph{Step 5: 実験値との比較}
+
+$a_\text{exp} = 3.575$~\AA{}（Alonso Table~2）。
+誤差 $= |3.574 - 3.575| = 0.001$~\AA{}。
+Vegard（$a = 3.578$~\AA、誤差0.003~\AA）よりも実験値に近い。
+
+\medskip
+\noindent
+全$\Omega_\text{sf}$が負（収縮方向）であることは、
+3$d$遷移金属間の強い$d$--$d$結合が
+単純体積加算（Vegard）よりも密なパッキングを生むことを反映している。
+
+
+\subsection{例題2: HfNbTaTiZr（BCC HEA）--- B2参照}
+\label{sec:example_bcc}
+
+等モル5元系BCC HEA HfNbTaTiZr（Senkov合金）の格子定数を予測する。
+
+\paragraph{Step 1: King原子体積}
+\begin{align*}
+V_\text{Hf} &= 22.312~\text{\AA}^3, & V_\text{Nb} &= 17.978~\text{\AA}^3, \\
+V_\text{Ta} &= 18.014~\text{\AA}^3, & V_\text{Ti} &= 17.649~\text{\AA}^3, \\
+V_\text{Zr} &= 23.279~\text{\AA}^3. &
+\end{align*}
+
+\paragraph{Step 2: Vegard則}
+
+等モル（$c_i = 0.20$）、BCC（$n_\text{auc} = 2$）：
+\begin{align}
+V_\text{Vegard} &= 0.20 \times (22.312 + 17.978 + 18.014 + 17.649 + 23.279) \nonumber \\
+&= 19.846~\text{\AA}^3, \nonumber \\
+a_\text{Vegard} &= (2 \times 19.846)^{1/3} = 3.411~\text{\AA}. \label{eq:ex_vegard_bcc}
+\end{align}
+
+\paragraph{Step 3: B2~$\Omega_\text{sf}$}
+
+$\binom{5}{2} = 10$ペアのDFT $\Omega_\text{sf}^\text{B2}$：
+\begin{center}
+\footnotesize
+\begin{tabular}{@{}lrlr@{}}
+\toprule
+ペア & $\Omega_\text{sf}$ & ペア & $\Omega_\text{sf}$ \\
+\midrule
+Hf--Nb & $-0.013$ & Nb--Ti & $-0.028$ \\
+Hf--Ta & $-0.015$ & Nb--Zr & $-0.018$ \\
+Hf--Ti & $-0.023$ & Ta--Ti & $-0.028$ \\
+Hf--Zr & $-0.016$ & Ta--Zr & $-0.020$ \\
+Nb--Ta & $+0.017$ & Ti--Zr & $-0.030$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Step 4: B2参照での予測（$q_\text{BCC} = 0.49$）}
+\begin{align}
+\text{補正項} &= \sum_i \sum_{j \ne i} c_i\,c_j\,V_j\,\Omega_\text{sf}^\text{B2}(i,j)
+= -0.280~\text{\AA}^3, \nonumber \\
+V &= 2 \times (19.846 + 0.49 \times (-0.280)) = 39.42~\text{\AA}^3, \nonumber \\
+a_\text{pred}^{\text{B2}} &= 39.42^{1/3} = 3.403~\text{\AA}. \label{eq:ex_pred_bcc}
+\end{align}
+
+\paragraph{Step 5: 実験値との比較}
+
+$a_\text{exp} = 3.410$~\AA{}（Senkov 2012）。
+誤差 $= |3.403 - 3.410| = 0.007$~\AA。
+Vegard（$a = 3.411$~\AA、誤差0.001~\AA）と比較すると本例ではVegardが偶然よい。
+この合金は$\Omega_\text{sf}$のほとんどが負（収縮方向）であり
+$q < 1$の補正がVegard側に引き戻す効果が不十分な例である。
+
+\paragraph{補足: SQS参照（$q = 1$）の場合}
+SQS $\Omega_\text{sf}$を用いると補正量が小さくなり
+$a_\text{pred}^{\text{SQS}} \approx 3.41$~\AA{}となる。
+B2の秩序効果（$\alpha = -1$）による$\Omega_\text{sf}$の過大評価が
+SQS（$\alpha \approx 0$）で解消されるためである。
+
+
+%% =====================================================================
+\section{$\delta^{(s)}$パラメータ一覧}
+\label{sec:appendix_delta}
+%% =====================================================================
+
+表~\ref{tab:delta_params}に38元素の加法分解パラメータ$\delta_i^{(s)}$を示す。
+任意の$N$元HEA（BCC/FCC）について、
+本表の$\delta$値とKing原子体積$V_i$のみで式~\eqref{eq:a_from_veff}により
+格子定数を予測できる。
+
+\begin{table*}[!t]
+\centering
+\caption{38元素の加法分解パラメータ$\delta^{(s)}$およびKing原子体積。
+$\delta^\text{B2}$はBCC HEA予測に、$\delta^{\text{L1}_2}$はFCC HEA予測に使用する。}
+\label{tab:delta_params}
+\footnotesize
+\begin{tabular}{@{}lrrr|lrrr@{}}
+\toprule
+元素 & $V_i$ (\AA$^3$) & $\delta^\text{B2}$ & $\delta^{\text{L1}_2}$ &
+元素 & $V_i$ (\AA$^3$) & $\delta^\text{B2}$ & $\delta^{\text{L1}_2}$ \\
+\midrule
+Ag & 17.061 & $+$0.042 & $+$0.024 & Ni & 10.941 & $-$0.025 & $-$0.007 \\
+Al & 16.602 & $-$0.028 & $-$0.017 & Os & 13.977 & $-$0.025 & $-$0.018 \\
+Au & 16.966 & $+$0.037 & $+$0.026 & Pb & 30.321 & $-$0.028 & $-$0.019 \\
+B  &  7.241 & $-$0.075 & $-$0.022 & Pd & 14.716 & $+$0.017 & $+$0.006 \\
+Be &  8.111 & $+$0.006 & $+$0.008 & Pt & 15.095 & $+$0.009 & $+$0.002 \\
+Ca & 43.630 & $-$0.152 & $-$0.166 & Re & 14.712 & $-$0.028 & $+$0.015 \\
+Co & 11.073 & $-$0.047 & $-$0.038 & Rh & 13.754 & $-$0.011 & $-$0.023 \\
+Cr & 12.008 & $+$0.022 & $-$0.014 & Ru & 13.571 & $-$0.025 & $-$0.017 \\
+Cu & 11.810 & $+$0.007 & $+$0.005 & Sc & 24.987 & $-$0.057 & $-$0.042 \\
+Dy & 31.540 & $-$0.037 & $-$0.029 & Si & 20.024 & $-$0.163 & $-$0.155 \\
+Er & 30.660 & $-$0.041 & $-$0.147 & Sn & 27.053 & $-$0.056 & $-$0.029 \\
+Fe & 11.776 & $-$0.048 & $-$0.039 & Ta & 18.014 & $-$0.010 & $-$0.000 \\
+Ge & 22.634 & $-$0.138 & $-$0.119 & Tb & 32.090 & $-$0.036 & $-$0.074 \\
+Hf & 22.312 & $-$0.023 & $-$0.024 & Ti & 17.649 & $-$0.034 & $-$0.040 \\
+Ir & 14.155 & $-$0.011 & $-$0.013 & V  & 13.824 & $-$0.002 & $+$0.018 \\
+La & 37.168 & $-$0.017 & $-$0.069 & W  & 15.850 & $-$0.020 & $+$0.038 \\
+Mg & 23.240 & $-$0.063 & $-$0.058 & Y  & 33.018 & $-$0.046 & $-$0.069 \\
+Mn & 12.210 & $-$0.016 & $-$0.028 & Zn & 15.207 & $-$0.007 & $-$0.019 \\
+Mo & 15.583 & $-$0.016 & $-$0.004 & Zr & 23.279 & $-$0.016 & $-$0.021 \\
+Nb & 17.978 & $+$0.001 & $+$0.012 & & & & \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\noindent
+使用法：任意のHEA（元素$\{i\}$、組成$\{c_i\}$、構造$s$）の格子定数を以下で予測する。
+\begin{enumerate}
+  \item 構造$s$を選択（BCC: $\delta^\text{B2}$使用、FCC: $\delta^{\text{L1}_2}$使用）。
+  \item 各元素の有効体積を計算：
+    $V_\text{eff}(i) = V_i\,[1 + q_s \sum_{j \ne i} c_j\,(\delta_i^{(s)} + \delta_j^{(s)})]$。
+  \item 格子定数を求める：
+    $a = (n_\text{auc} \sum_i c_i\,V_\text{eff}(i))^{1/3}$。
+\end{enumerate}
+校正定数: $q_\text{BCC} = 0.49$（B2参照）または$1.0$（SQS参照）、$q_\text{FCC} = 0.13$。
 
 
 %% =====================================================================
