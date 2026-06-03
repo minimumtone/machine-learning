@@ -896,7 +896,7 @@ WHERE EXISTS (
   AND EXISTS (
     SELECT 1 FROM composition
     WHERE entry_id = m.entry_id AND element = 'Al')
-LIMIT 100;
+LIMIT 10000;
 \end{lstlisting}
 
 Schema Graphエンジンは複数元素が指定された場合を検出し、
@@ -922,7 +922,7 @@ Schema Graphエンジンは複数元素が指定された場合を検出し、
     JOINテーブル & 常に全テーブル & 必要テーブルのみ \\
     JOIN数 & 全テーブル分 & 最小限 \\
     DISTINCT & なし $\to$ 重複行 & あり \\
-    LIMIT & なし $\to$ 無制限 & あり（100） \\
+    LIMIT & なし $\to$ 無制限 & あり（10{,}000） \\
     安全性検証 & なし & 完全（キーワード + テーブルWL） \\
     多元素AND & 不正（0行） & 正確（EXISTS） \\
     \bottomrule
@@ -974,7 +974,7 @@ LLM（本実験ではgpt-5.5、API設定の詳細はSupplementary S5節を参照
   \item \textbf{システムメッセージ}：タスク説明 + スキーマYAML（テーブル名、カラム名、型、FK関係）
   \item \textbf{Few-Shot事例}：RAGストアからのTop-$k$類似NL--SQLペア（\ref{sec:few_shot}節）
   \item \textbf{ユーザーメッセージ}：自然言語クエリ
-  \item \textbf{制約}：「SELECT文のみ生成」「LIMIT 100を含める」
+  \item \textbf{制約}：「SELECT文のみ生成」「LIMIT 10000を含める」
         「スキーマに記載されたテーブルのみ使用」
 \end{enumerate}
 
@@ -1075,7 +1075,7 @@ FK整合JOIN検証（層7）、ガード判定分類（層8）を追加した。
   \item \textbf{テーブルホワイトリスト検証}：FROM/JOIN句の全テーブル名を抽出し、
     \texttt{allowed\_schema.yaml}に存在するか検証。
     未宣言テーブル（例：\texttt{secret\_passwords}）参照クエリは拒否。
-  \item \textbf{自動LIMIT注入}：LIMIT句がなければ\texttt{LIMIT 100}を付加し、
+  \item \textbf{自動LIMIT注入}：LIMIT句がなければ\texttt{LIMIT 10000}を付加し、
     無制限結果セットによる過剰メモリ・計算消費を防止。
 \end{enumerate}
 
@@ -2046,7 +2046,7 @@ WHERE (s.prototype = 'L12'
     OR s.strukturbericht = 'L12')
   AND c.element = 'Ni'
   AND ps.energy_above_hull = 0
-LIMIT 100;
+LIMIT 10000;
 -- Schema Graph走査で必要な3 JOINのみ
 -- テーブル幻覚0%, DISTINCT, LIMIT付き
 \end{lstlisting}
@@ -2084,7 +2084,7 @@ AND EXISTS (
   SELECT 1 FROM composition
   WHERE entry_id = m.entry_id
     AND element = 'Al')
-LIMIT 100;
+LIMIT 10000;
 -- EXISTS副問い合わせで正確な多元素AND
 -- -> Ni3Al (1行) を正しく返却
 \end{lstlisting}
