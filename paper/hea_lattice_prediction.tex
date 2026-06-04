@@ -809,6 +809,18 @@ $q_\text{FCC}^\text{add} = -0.170$を得た。
 \label{fig:reff_comp}
 \end{figure*}
 
+構造依存有効体積$V_\text{eff}$の効果を二元系レベルで検証した結果を
+図~\ref{fig:vegard_absorbed}に示す。
+二元系ペア（B2: 741、L1$_2$: 677）に対するRMSE改善は
+0.222~\AA{}$\to$0.209~\AA（5.9\%）にとどまる。
+これは組成が$c = 25\%, 50\%, 75\%$に限定されるため、
+Vegard則からの偏差の大部分が線形補間の精度内に収まることによる。
+一方、多成分HEAでは$n(n-1)/2$ペアの$\Omega_\text{sf}$が
+非線形に寄与するため、構造情報の価値が顕在化する:
+独立テスト23 HEAでは13.4\%改善（0.0173~\AA{}$\to$0.0150~\AA）を達成した。
+すなわち$V_\text{eff}$の有用性は成分数の増加に伴い増大し、
+二元系での限定的改善はHEAへの適用を否定するものではない。
+
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=0.75\textwidth]{fig_vegard_structure_absorbed.png}
@@ -816,7 +828,8 @@ $q_\text{FCC}^\text{add} = -0.170$を得た。
   左: King純元素体積によるVegard予測（RMSE = 0.222~\AA）。
   右: 構造依存有効体積$V_\text{eff}$による予測（RMSE = 0.209~\AA）。
   改善幅は5.9\%にとどまり、二元系レベルでは
-  大部分の分散が組成効果で説明されることを示す。}
+  大部分の分散が組成効果で説明されることを示す。
+  ただし多成分HEAでは13.4\%改善に拡大する（本文参照）。}
 \label{fig:vegard_absorbed}
 \end{figure*}
 
