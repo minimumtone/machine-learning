@@ -820,8 +820,6 @@ elif section_key == "regression":
     fig_svr = px.scatter(x=y_test, y=y_pred_svr,
                          labels={"x": f"実測値 ({target_col})", "y": "予測値"},
                          title=f"SVR ({svr_kernel}): R² = {r2_svr:.4f}")
-    fig_svr.add_shape(type="line", x0=min_val, y0=min_val, x1=max_val, y1=max_val,
-                      line=dict(dash="dash", color="red"))
     min_val = min(y_test.min(), y_pred_svr.min())
     max_val = max(y_test.max(), y_pred_svr.max())
     fig_svr.add_shape(type="line", x0=min_val, y0=min_val, x1=max_val, y1=max_val,
@@ -1148,9 +1146,12 @@ elif section_key == "classification":
     st.subheader("決定境界の可視化（PCA 2D 射影）")
     pca_cls = PCA(n_components=2)
     X_cls_2d = pca_cls.fit_transform(X_cls_scaled)
+    X_tr_2d, X_te_2d, y_tr_2d, y_te_2d = train_test_split(
+        X_cls_2d, y_cls, test_size=0.2, random_state=42, stratify=y_cls
+    )
 
     svc_2d = SVC(kernel=svm_kernel, C=svm_C, random_state=42)
-    svc_2d.fit(X_cls_2d[: len(X_tr_c)], y_tr_c)
+    svc_2d.fit(X_tr_2d, y_tr_2d)
 
     h = 0.2
     x_min, x_max = X_cls_2d[:, 0].min() - 1, X_cls_2d[:, 0].max() + 1
@@ -1341,31 +1342,43 @@ elif section_key == "cv_generalization":
     if cv_method == "k-fold CV":
         k = st.slider("フォールド数 k", 2, 20, 5)
         cv = KFold(n_splits=k, shuffle=True, random_state=42)
+        scoring = "r2"
+        score_label = "R²"
     else:
         cv = LeaveOneOut()
+        scoring = "neg_mean_squared_error"
+        score_label = "負MSE"
         st.warning(f"LOOCV: データ数 {len(X_scaled)} 回の学習を行います。少し時間がかかります。")
+        st.info("LOOCV では各フォールドが1サンプルのため R² は定義できません。代わりに MSE を使用し、全予測値から総合 R² を算出します。")
 
     with st.spinner("交差検証を実行中..."):
-        scoring = "r2"
         scores = cross_val_score(model_cv, X_scaled, y, cv=cv, scoring=scoring)
 
     st.markdown(f"### 結果 ({cv_method})")
-    col1, col2, col3 = st.columns(3)
-    col1.metric("平均 R²", f"{scores.mean():.4f}")
-    col2.metric("標準偏差", f"{scores.std():.4f}")
-    col3.metric("フォールド数", f"{len(scores)}")
-
-    if len(scores) <= 30:
+    if cv_method == "LOOCV":
+        mse_scores = -scores  # neg_mean_squared_error → positive MSE
+        from sklearn.model_selection import cross_val_predict
+        y_pred_loocv = cross_val_predict(model_cv, X_scaled, y, cv=LeaveOneOut())
+        overall_r2 = r2_score(y, y_pred_loocv)
+        overall_rmse = np.sqrt(mse_scores.mean())
+        col1, col2, col3 = st.columns(3)
+        col1.metric("総合 R²（全予測から算出）", f"{overall_r2:.4f}")
+        col2.metric("平均 RMSE", f"{overall_rmse:.4f}")
+        col3.metric("フォールド数", f"{len(scores)}")
+        fig_cv = px.histogram(x=mse_scores, nbins=30, title="LOOCV 各サンプルの二乗誤差分布",
+                              labels={"x": "二乗誤差"})
+        fig_cv.update_layout(height=400)
+        st.plotly_chart(fig_cv, use_container_width=True)
+    else:
+        col1, col2, col3 = st.columns(3)
+        col1.metric("平均 R²", f"{scores.mean():.4f}")
+        col2.metric("標準偏差", f"{scores.std():.4f}")
+        col3.metric("フォールド数", f"{len(scores)}")
         fig_cv = px.bar(x=[f"Fold {i+1}" for i in range(len(scores))], y=scores,
                         title="各フォールドの R² スコア",
                         labels={"x": "フォールド", "y": "R²"})
         fig_cv.add_hline(y=scores.mean(), line_dash="dash", line_color="red",
                         annotation_text=f"平均: {scores.mean():.4f}")
-        fig_cv.update_layout(height=400)
-        st.plotly_chart(fig_cv, use_container_width=True)
-    else:
-        fig_cv = px.histogram(x=scores, nbins=30, title="LOOCV スコア分布",
-                              labels={"x": "R²"})
         fig_cv.update_layout(height=400)
         st.plotly_chart(fig_cv, use_container_width=True)
 
