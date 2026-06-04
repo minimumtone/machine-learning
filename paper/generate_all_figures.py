@@ -384,7 +384,7 @@ def fig04_indep_test(y_test, a_veg_te, a_ss_te, heas_test, gb, gf):
         ax.scatter(y_test[idx], a_ss_te[idx], c=c, marker=marker, s=70, alpha=0.7, label=label)
     ax.set_xlabel("Experimental $a$ (\u00c5)")
     ax.set_ylabel("Predicted $a$ (\u00c5)")
-    ax.set_title(f"(c) Independent test ($\\gamma_{{BCC}}$={gb:.2f}, $\\gamma_{{FCC}}$={gf:.2f})")
+    ax.set_title(f"(c) Independent test ($q_{{BCC}}$={gb:.2f}, $q_{{FCC}}$={gf:.2f})")
     ax.legend(fontsize=11)
     ax.set_aspect("equal")
 
@@ -1048,9 +1048,9 @@ def main():
     print(f"    MP: {n_mp}, OQMD: {n_oqmd}, VASP: {n_vasp}")
     print(f"    Total: {len(all_df)} compounds (Gd/Ce excluded)")
 
-    # 2. Compute pairwise Omega_sf (MP+OQMD only, len>=2)
-    print("\n[2] Computing pairwise Omega_sf (MP+OQMD, len>=2)...")
-    ob2, ol12 = compute_omega_sf_pairwise(all_df, sources=("MP", "OQMD"), min_count=2)
+    # 2. Compute pairwise Omega_sf (all 3 sources)
+    print("\n[2] Computing pairwise Omega_sf (MP+OQMD+VASP)...")
+    ob2, ol12 = compute_omega_sf_pairwise(all_df, sources=("MP", "OQMD", "VASP"), min_count=1)
     print(f"    B2 pairs: {len(ob2)}, L1_2 pairs: {len(ol12)}")
 
     # 3. Optimize gamma
