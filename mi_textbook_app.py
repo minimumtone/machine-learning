@@ -2,17 +2,17 @@
 マテリアルズ・インフォマティクス (MI) 講義用アプリケーション
 ============================================================
 対象: 大学3回生 材料工学専攻 初心者向け
-想定: 100分講義1コマで一連のMIワークフローを体験
+想定: 講義1コマで一連のMIワークフローを体験
 
 セクション構成:
-  1. MIとは（10分）
-  2. データ探索（10分）
-  3. 次元削減 PCA（5分）
-  4. 回帰問題（20分）
-  5. 正則化・モデル選択（10分）
-  6. 分類問題（15分）
-  7. 交差検証・汎化性能評価（15分）
-  8. まとめ + レポート課題（15分）
+  1. MIとは
+  2. データ探索
+  3. 次元削減 PCA
+  4. 回帰問題
+  5. 正則化・モデル選択
+  6. 分類問題
+  7. 交差検証・汎化性能評価
+  8. まとめ + レポート課題
 """
 
 import streamlit as st
@@ -187,17 +187,17 @@ def generate_classification_data(n=250, seed=789):
 # ---------------------------------------------------------------------------
 st.sidebar.title("📚 MI 講義ナビゲーション")
 st.sidebar.markdown("---")
-st.sidebar.markdown("**100分講義の構成**")
+st.sidebar.markdown("**講義の構成**")
 
 SECTIONS = {
-    "1. MIとは（10分）": "mi_intro",
-    "2. データ探索（10分）": "data_exploration",
-    "3. 次元削減 PCA（5分）": "pca",
-    "4. 回帰問題（20分）": "regression",
-    "5. 正則化・モデル選択（10分）": "regularization",
-    "6. 分類問題（15分）": "classification",
-    "7. 交差検証・汎化性能（15分）": "cv_generalization",
-    "8. まとめ＋レポート課題（15分）": "summary_assignments",
+    "1. MIとは": "mi_intro",
+    "2. データ探索": "data_exploration",
+    "3. 次元削減 PCA": "pca",
+    "4. 回帰問題": "regression",
+    "5. 正則化・モデル選択": "regularization",
+    "6. 分類問題": "classification",
+    "7. 交差検証・汎化性能": "cv_generalization",
+    "8. まとめ＋レポート課題": "summary_assignments",
 }
 
 selected = st.sidebar.radio("セクションを選択", list(SECTIONS.keys()))
@@ -291,7 +291,7 @@ if section_key == "mi_intro":
 
     st.header("1.4 本講義で学ぶこと")
     st.info(r"""
-    **本日の講義（100分）で以下を体験します：**
+    **本日の講義で以下を体験します：**
 
     1. **データ探索** — 要約統計量・ペアプロット・外れ値検出
     2. **次元削減** — 主成分分析 (PCA)
