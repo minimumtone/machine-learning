@@ -16,6 +16,20 @@ venv/
 *.pdf
 *.html
 
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.spl
+
 # IDE
 .vscode/
 .idea/
