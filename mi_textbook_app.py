@@ -20,19 +20,18 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-import seaborn as sns
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 from sklearn.model_selection import (
-    train_test_split, cross_val_score, KFold, LeaveOneOut, learning_curve,
-    validation_curve
+    train_test_split, cross_val_score, cross_val_predict, KFold, LeaveOneOut,
+    learning_curve, validation_curve
 )
 from sklearn.preprocessing import StandardScaler, PolynomialFeatures
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.svm import SVR, SVC
-from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier, IsolationForest
+from sklearn.ensemble import RandomForestRegressor, IsolationForest
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
@@ -603,11 +602,12 @@ elif section_key == "regression":
 
     X = df_main[feature_cols].values
     y = df_main[target_col].values
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X_scaled, y, test_size=0.2, random_state=42
+    X_train_raw, X_test_raw, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
     )
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train_raw)
+    X_test = scaler.transform(X_test_raw)
 
     # 4.1 線形回帰
     st.header("4.1 線形回帰 (Linear Regression)")
@@ -921,11 +921,12 @@ elif section_key == "regularization":
 
     X = df_main[feature_cols].values
     y = df_main[target_col].values
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X_scaled, y, test_size=0.2, random_state=42
+    X_train_raw, X_test_raw, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
     )
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train_raw)
+    X_test = scaler.transform(X_test_raw)
 
     st.header("5.1 正則化の理論")
     st.markdown(r"""
@@ -1268,8 +1269,6 @@ elif section_key == "cv_generalization":
 
     X = df_main[feature_cols].values
     y = df_main[target_col].values
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
 
     st.header("7.1 交差検証の理論")
     st.markdown(r"""
@@ -1328,16 +1327,16 @@ elif section_key == "cv_generalization":
     cv_method = st.selectbox("CV 方法", ["k-fold CV", "LOOCV"])
 
     if cv_model_name == "線形回帰":
-        model_cv = LinearRegression()
+        model_cv = Pipeline([("scaler", StandardScaler()), ("model", LinearRegression())])
     elif cv_model_name == "Ridge":
-        model_cv = Ridge(alpha=1.0)
+        model_cv = Pipeline([("scaler", StandardScaler()), ("model", Ridge(alpha=1.0))])
     elif cv_model_name == "Lasso":
-        model_cv = Lasso(alpha=0.1, max_iter=10000)
+        model_cv = Pipeline([("scaler", StandardScaler()), ("model", Lasso(alpha=0.1, max_iter=10000))])
     elif cv_model_name == "SVR":
-        model_cv = SVR(kernel="rbf", C=10)
+        model_cv = Pipeline([("scaler", StandardScaler()), ("model", SVR(kernel="rbf", C=10))])
     else:
-        model_cv = RandomForestRegressor(n_estimators=100, max_depth=10,
-                                          random_state=42, n_jobs=-1)
+        model_cv = Pipeline([("scaler", StandardScaler()), ("model", RandomForestRegressor(n_estimators=100, max_depth=10,
+                                          random_state=42, n_jobs=-1))])
 
     if cv_method == "k-fold CV":
         k = st.slider("フォールド数 k", 2, 20, 5)
@@ -1348,17 +1347,16 @@ elif section_key == "cv_generalization":
         cv = LeaveOneOut()
         scoring = "neg_mean_squared_error"
         score_label = "負MSE"
-        st.warning(f"LOOCV: データ数 {len(X_scaled)} 回の学習を行います。少し時間がかかります。")
+        st.warning(f"LOOCV: データ数 {len(X)} 回の学習を行います。少し時間がかかります。")
         st.info("LOOCV では各フォールドが1サンプルのため R² は定義できません。代わりに MSE を使用し、全予測値から総合 R² を算出します。")
 
     with st.spinner("交差検証を実行中..."):
-        scores = cross_val_score(model_cv, X_scaled, y, cv=cv, scoring=scoring)
+        scores = cross_val_score(model_cv, X, y, cv=cv, scoring=scoring)
 
     st.markdown(f"### 結果 ({cv_method})")
     if cv_method == "LOOCV":
         mse_scores = -scores  # neg_mean_squared_error → positive MSE
-        from sklearn.model_selection import cross_val_predict
-        y_pred_loocv = cross_val_predict(model_cv, X_scaled, y, cv=LeaveOneOut())
+        y_pred_loocv = cross_val_predict(model_cv, X, y, cv=LeaveOneOut())
         overall_r2 = r2_score(y, y_pred_loocv)
         overall_rmse = np.sqrt(mse_scores.mean())
         col1, col2, col3 = st.columns(3)
@@ -1401,7 +1399,7 @@ elif section_key == "cv_generalization":
 
     with st.spinner("学習曲線を計算中..."):
         train_sizes_abs, train_scores, test_scores = learning_curve(
-            model_cv, X_scaled, y, cv=5,
+            model_cv, X, y, cv=5,
             train_sizes=np.linspace(0.1, 1.0, 10),
             scoring="r2", n_jobs=-1
         )
@@ -1433,7 +1431,8 @@ elif section_key == "cv_generalization":
         if val_model == "Ridge":
             param_range = np.logspace(-3, 3, 20)
             train_s, test_s = validation_curve(
-                Ridge(), X_scaled, y, param_name="alpha",
+                Pipeline([("scaler", StandardScaler()), ("model", Ridge())]),
+                X, y, param_name="model__alpha",
                 param_range=param_range, cv=5, scoring="r2", n_jobs=-1
             )
             param_label = "α (log scale)"
@@ -1441,7 +1440,8 @@ elif section_key == "cv_generalization":
         elif val_model == "Lasso":
             param_range = np.logspace(-4, 1, 20)
             train_s, test_s = validation_curve(
-                Lasso(max_iter=10000), X_scaled, y, param_name="alpha",
+                Pipeline([("scaler", StandardScaler()), ("model", Lasso(max_iter=10000))]),
+                X, y, param_name="model__alpha",
                 param_range=param_range, cv=5, scoring="r2", n_jobs=-1
             )
             param_label = "α (log scale)"
@@ -1449,8 +1449,8 @@ elif section_key == "cv_generalization":
         else:
             param_range = np.arange(2, 25)
             train_s, test_s = validation_curve(
-                RandomForestRegressor(n_estimators=50, random_state=42, n_jobs=-1),
-                X_scaled, y, param_name="max_depth",
+                Pipeline([("scaler", StandardScaler()), ("model", RandomForestRegressor(n_estimators=50, random_state=42, n_jobs=-1))]),
+                X, y, param_name="model__max_depth",
                 param_range=param_range, cv=5, scoring="r2", n_jobs=-1
             )
             param_label = "max_depth"

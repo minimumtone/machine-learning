@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MI講義アプリ インストールガイド</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background: #f8f9fa;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        h1 {
+            text-align: center;
+            color: #1a73e8;
+            margin-bottom: 10px;
+            font-size: 1.8em;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 0.95em;
+        }
+        h2 {
+            color: #1a73e8;
+            border-left: 4px solid #1a73e8;
+            padding-left: 12px;
+            margin-top: 40px;
+            margin-bottom: 16px;
+            font-size: 1.3em;
+        }
+        h3 {
+            color: #444;
+            margin-top: 24px;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        p { margin-bottom: 12px; }
+        .step {
+            background: #f0f7ff;
+            border: 1px solid #d0e3f7;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 16px 0;
+        }
+        .step-number {
+            display: inline-block;
+            background: #1a73e8;
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 28px;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-right: 8px;
+        }
+        .step-title {
+            font-weight: bold;
+            font-size: 1.05em;
+            color: #1a73e8;
+        }
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 16px 20px;
+            border-radius: 6px;
+            font-family: "Consolas", "Monaco", "Courier New", monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 12px 0;
+            position: relative;
+        }
+        .code-block .comment {
+            color: #6a9955;
+        }
+        .code-block .prompt {
+            color: #569cd6;
+            user-select: none;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .warning::before {
+            content: "⚠️ 注意: ";
+            font-weight: bold;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #28a745;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .success::before {
+            content: "✅ ";
+        }
+        .info {
+            background: #e8f4fd;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .info::before {
+            content: "💡 ヒント: ";
+            font-weight: bold;
+        }
+        .os-tabs {
+            display: flex;
+            gap: 0;
+            margin-top: 16px;
+            margin-bottom: 0;
+        }
+        .os-tab {
+            padding: 10px 20px;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            background: #f5f5f5;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .os-tab.active {
+            background: #fff;
+            border-bottom: 2px solid #fff;
+            color: #1a73e8;
+        }
+        .os-content {
+            border: 1px solid #ddd;
+            border-radius: 0 8px 8px 8px;
+            padding: 20px;
+            background: #fff;
+        }
+        .os-panel { display: none; }
+        .os-panel.active { display: block; }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 16px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px 14px;
+            text-align: left;
+        }
+        th { background: #f0f7ff; color: #1a73e8; }
+        .screenshot-placeholder {
+            background: #eee;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            color: #888;
+            margin: 12px 0;
+        }
+        a { color: #1a73e8; }
+        ul, ol { margin: 8px 0 12px 24px; }
+        li { margin-bottom: 6px; }
+        .toc {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px 30px;
+            margin: 20px 0 40px;
+        }
+        .toc h3 { margin-top: 0; color: #1a73e8; }
+        .toc ol { margin-left: 20px; }
+        .toc li { margin-bottom: 4px; }
+        .toc a { text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+        .faq dt {
+            font-weight: bold;
+            color: #d32f2f;
+            margin-top: 16px;
+        }
+        .faq dd {
+            margin-left: 20px;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+<h1>MI講義アプリ インストールガイド</h1>
+<p class="subtitle">マテリアルズ・インフォマティクス講義用 Streamlit アプリケーション</p>
+
+<div class="toc">
+    <h3>目次</h3>
+    <ol>
+        <li><a href="#overview">はじめに（このアプリについて）</a></li>
+        <li><a href="#requirements">必要なもの</a></li>
+        <li><a href="#install-python">Step 1: Python のインストール</a></li>
+        <li><a href="#download-app">Step 2: アプリのダウンロード</a></li>
+        <li><a href="#install-packages">Step 3: 必要なパッケージのインストール</a></li>
+        <li><a href="#run-app">Step 4: アプリの起動</a></li>
+        <li><a href="#usage">Step 5: アプリの使い方</a></li>
+        <li><a href="#shutdown">Step 6: アプリの終了</a></li>
+        <li><a href="#troubleshooting">トラブルシューティング（困ったとき）</a></li>
+    </ol>
+</div>
+
+<!-- ===== Section 1: Overview ===== -->
+<h2 id="overview">1. はじめに（このアプリについて）</h2>
+<p>
+    このアプリは、<strong>ブラウザ上で動く対話的な教材</strong>です。
+    自分の PC にインストールして使います。インターネット接続はインストール時のみ必要で、
+    一度インストールすればオフラインでも動作します。
+</p>
+<p>アプリでは以下のことが学べます：</p>
+<ul>
+    <li>材料データの探索・可視化</li>
+    <li>主成分分析（PCA）による次元削減</li>
+    <li>回帰分析（線形回帰、SVR、ランダムフォレスト）</li>
+    <li>分類（SVM、k-means）</li>
+    <li>交差検証による汎化性能評価</li>
+</ul>
+
+<!-- ===== Section 2: Requirements ===== -->
+<h2 id="requirements">2. 必要なもの</h2>
+<table>
+    <tr><th>項目</th><th>内容</th></tr>
+    <tr><td>パソコン</td><td>Windows 10/11、macOS、または Linux</td></tr>
+    <tr><td>インターネット</td><td>インストール時に必要（アプリ実行時は不要）</td></tr>
+    <tr><td>ディスク容量</td><td>約 1 GB の空き</td></tr>
+    <tr><td>ブラウザ</td><td>Chrome, Edge, Firefox など（既にインストール済みのものでOK）</td></tr>
+</table>
+
+<div class="info">
+    プログラミングの経験は不要です。このガイドの手順をそのまま実行すれば動きます。
+</div>
+
+<!-- ===== Section 3: Install Python ===== -->
+<h2 id="install-python">3. Step 1: Python のインストール</h2>
+<p>
+    このアプリは <strong>Python</strong>（パイソン）というプログラミング言語で書かれています。
+    まず Python をインストールします。
+</p>
+
+<div class="os-tabs">
+    <div class="os-tab active" onclick="showOS('windows')">Windows</div>
+    <div class="os-tab" onclick="showOS('mac')">macOS</div>
+</div>
+<div class="os-content">
+    <div id="os-windows" class="os-panel active">
+        <div class="step">
+            <span class="step-number">1</span>
+            <span class="step-title">Python 公式サイトを開く</span>
+            <p>ブラウザで以下の URL にアクセスしてください：</p>
+            <p><a href="https://www.python.org/downloads/" target="_blank">https://www.python.org/downloads/</a></p>
+        </div>
+
+        <div class="step">
+            <span class="step-number">2</span>
+            <span class="step-title">「Download Python 3.xx.x」ボタンをクリック</span>
+            <p>ページ上部にある黄色い「Download Python 3.xx.x」ボタンをクリックします。</p>
+            <p>（数字はバージョン番号です。最新のものをダウンロードしてください）</p>
+        </div>
+
+        <div class="step">
+            <span class="step-number">3</span>
+            <span class="step-title">インストーラーを実行する</span>
+            <p>ダウンロードしたファイル（<code>python-3.xx.x-amd64.exe</code>）をダブルクリックして実行します。</p>
+            <div class="warning">
+                <strong>最も重要な操作：</strong>インストール画面の一番下にある
+                <strong>「Add python.exe to PATH」にチェックを入れてください</strong>。
+                これを忘れるとアプリが動きません。
+            </div>
+            <p>チェックを入れたら「Install Now」をクリックしてください。</p>
+        </div>
+
+        <div class="step">
+            <span class="step-number">4</span>
+            <span class="step-title">インストール確認</span>
+            <p>インストールが完了したら、以下の方法で確認します：</p>
+            <ol>
+                <li>キーボードで <code>Windows キー</code> を押す</li>
+                <li>「<code>cmd</code>」と入力して Enter（コマンドプロンプトが開きます）</li>
+                <li>黒い画面が開いたら、以下を入力して Enter：</li>
+            </ol>
+            <div class="code-block">
+<span class="prompt">C:\Users\あなたの名前&gt;</span> python --version
+            </div>
+            <div class="success">
+                <code>Python 3.xx.x</code> と表示されればインストール成功です。
+            </div>
+        </div>
+    </div>
+
+    <div id="os-mac" class="os-panel">
+        <div class="step">
+            <span class="step-number">1</span>
+            <span class="step-title">Python 公式サイトを開く</span>
+            <p>ブラウザで以下の URL にアクセスしてください：</p>
+            <p><a href="https://www.python.org/downloads/" target="_blank">https://www.python.org/downloads/</a></p>
+        </div>
+
+        <div class="step">
+            <span class="step-number">2</span>
+            <span class="step-title">「Download Python 3.xx.x」ボタンをクリック</span>
+            <p>ページ上部にある黄色い「Download Python 3.xx.x」ボタンをクリックします。</p>
+        </div>
+
+        <div class="step">
+            <span class="step-number">3</span>
+            <span class="step-title">インストーラーを実行する</span>
+            <p>ダウンロードした <code>.pkg</code> ファイルをダブルクリックして、画面の指示に従ってインストールします。</p>
+        </div>
+
+        <div class="step">
+            <span class="step-number">4</span>
+            <span class="step-title">インストール確認</span>
+            <p>インストールが完了したら、以下の方法で確認します：</p>
+            <ol>
+                <li>Spotlight 検索（<code>Command + Space</code>）で「ターミナル」と検索して開く</li>
+                <li>以下を入力して Enter：</li>
+            </ol>
+            <div class="code-block">
+<span class="prompt">$</span> python3 --version
+            </div>
+            <div class="success">
+                <code>Python 3.xx.x</code> と表示されればインストール成功です。
+            </div>
+            <div class="info">
+                macOS では <code>python3</code> と入力します（<code>python</code> だけだと古いバージョンが起動する場合があります）。
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Section 4: Download App ===== -->
+<h2 id="download-app">4. Step 2: アプリのダウンロード</h2>
+
+<div class="step">
+    <span class="step-number">1</span>
+    <span class="step-title">アプリファイルをダウンロード</span>
+    <p>以下の GitHub ページからアプリをダウンロードします：</p>
+    <p><a href="https://github.com/minimumtone/machine-learning" target="_blank">https://github.com/minimumtone/machine-learning</a></p>
+    <ol>
+        <li>緑色の「<strong>Code</strong>」ボタンをクリック</li>
+        <li>「<strong>Download ZIP</strong>」をクリック</li>
+        <li>ダウンロードされた ZIP ファイルを好きな場所に展開（解凍）する</li>
+    </ol>
+    <div class="info">
+        展開先は「デスクトップ」や「ドキュメント」など、わかりやすい場所がおすすめです。
+    </div>
+</div>
+
+<!-- ===== Section 5: Install Packages ===== -->
+<h2 id="install-packages">5. Step 3: 必要なパッケージのインストール</h2>
+<p>
+    アプリの動作に必要な追加ソフトウェア（ライブラリ）をインストールします。
+    「パッケージ」とは、Python に追加機能を提供するプログラムの集まりです。
+</p>
+
+<div class="step">
+    <span class="step-number">1</span>
+    <span class="step-title">コマンドプロンプト（ターミナル）を開く</span>
+    <p><strong>Windows の場合：</strong></p>
+    <ol>
+        <li><code>Windows キー</code> を押して「<code>cmd</code>」と入力 → Enter</li>
+    </ol>
+    <p><strong>macOS の場合：</strong></p>
+    <ol>
+        <li><code>Command + Space</code> で「ターミナル」と検索 → Enter</li>
+    </ol>
+</div>
+
+<div class="step">
+    <span class="step-number">2</span>
+    <span class="step-title">アプリのフォルダに移動する</span>
+    <p>ダウンロードして展開したフォルダに移動します。</p>
+    <p><strong>Windows の場合（デスクトップに展開した例）：</strong></p>
+    <div class="code-block">
+<span class="prompt">C:\Users\あなたの名前&gt;</span> cd Desktop\machine-learning-main
+    </div>
+    <p><strong>macOS の場合（デスクトップに展開した例）：</strong></p>
+    <div class="code-block">
+<span class="prompt">$</span> cd ~/Desktop/machine-learning-main
+    </div>
+    <div class="info">
+        「<code>cd</code>」は「change directory（ディレクトリを変更）」の略で、フォルダを移動するコマンドです。
+    </div>
+</div>
+
+<div class="step">
+    <span class="step-number">3</span>
+    <span class="step-title">パッケージを一括インストール</span>
+    <p>以下のコマンドを<strong>コピー＆ペースト</strong>して Enter を押してください：</p>
+    <p><strong>Windows の場合：</strong></p>
+    <div class="code-block">
+<span class="prompt">C:\...\machine-learning-main&gt;</span> pip install streamlit pandas numpy matplotlib seaborn plotly scikit-learn
+    </div>
+    <p><strong>macOS の場合：</strong></p>
+    <div class="code-block">
+<span class="prompt">$</span> pip3 install streamlit pandas numpy matplotlib seaborn plotly scikit-learn
+    </div>
+    <div class="warning">
+        インストールには数分かかることがあります。画面にたくさんの文字が流れますが、
+        エラーが出なければ正常です。最後に「Successfully installed ...」と表示されれば成功です。
+    </div>
+</div>
+
+<div class="step">
+    <span class="step-number">4</span>
+    <span class="step-title">インストール確認</span>
+    <p>以下を入力して、エラーが出ないことを確認します：</p>
+    <p><strong>Windows：</strong></p>
+    <div class="code-block">
+<span class="prompt">C:\...\machine-learning-main&gt;</span> python -c "import streamlit; print(streamlit.__version__)"
+    </div>
+    <p><strong>macOS：</strong></p>
+    <div class="code-block">
+<span class="prompt">$</span> python3 -c "import streamlit; print(streamlit.__version__)"
+    </div>
+    <div class="success">
+        バージョン番号（例: <code>1.38.0</code>）が表示されれば成功です。
+    </div>
+</div>
+
+<!-- ===== Section 6: Run App ===== -->
+<h2 id="run-app">6. Step 4: アプリの起動</h2>
+
+<div class="step">
+    <span class="step-number">1</span>
+    <span class="step-title">アプリを起動するコマンドを実行</span>
+    <p>アプリのフォルダ内で、以下のコマンドを実行します：</p>
+    <p><strong>Windows：</strong></p>
+    <div class="code-block">
+<span class="prompt">C:\...\machine-learning-main&gt;</span> streamlit run mi_textbook_app.py
+    </div>
+    <p><strong>macOS：</strong></p>
+    <div class="code-block">
+<span class="prompt">$</span> streamlit run mi_textbook_app.py
+    </div>
+</div>
+
+<div class="step">
+    <span class="step-number">2</span>
+    <span class="step-title">ブラウザが自動で開く</span>
+    <p>コマンド実行後、自動的にブラウザが開き、アプリが表示されます。</p>
+    <p>もし自動で開かない場合は、ブラウザのアドレスバーに以下を入力してください：</p>
+    <div class="code-block">
+http://localhost:8501
+    </div>
+    <div class="success">
+        ブラウザに「マテリアルズ・インフォマティクス (MI) とは」という画面が表示されれば成功です。
+    </div>
+</div>
+
+<div class="info">
+    コマンドプロンプト（ターミナル）の画面は<strong>閉じないでください</strong>。
+    閉じるとアプリも停止します。アプリを使っている間は、その画面はそのまま放置してください。
+</div>
+
+<!-- ===== Section 7: Usage ===== -->
+<h2 id="usage">7. Step 5: アプリの使い方</h2>
+<p>アプリの操作はすべてブラウザ上で行います。</p>
+
+<h3>画面の構成</h3>
+<table>
+    <tr><th>場所</th><th>機能</th></tr>
+    <tr><td><strong>左側サイドバー</strong></td><td>セクション（章）の切り替え、データセットの選択</td></tr>
+    <tr><td><strong>メイン画面</strong></td><td>理論の説明、数式、グラフ、操作パネル</td></tr>
+</table>
+
+<h3>基本操作</h3>
+<ul>
+    <li><strong>セクションの移動</strong>：左のサイドバーでセクション名をクリック</li>
+    <li><strong>データセットの変更</strong>：サイドバーの「材料データ」ドロップダウンで選択</li>
+    <li><strong>スライダー</strong>：パラメータ（正則化の強さ、次数など）を変更して結果の変化を観察</li>
+    <li><strong>グラフの操作</strong>：マウスホバーで数値表示、ドラッグでズーム、ダブルクリックでリセット</li>
+</ul>
+
+<h3>推奨する学習順序</h3>
+<p>サイドバーの番号順（1 → 2 → ... → 8）に進めてください。各セクションは前のセクションの知識を前提としています。</p>
+
+<!-- ===== Section 8: Shutdown ===== -->
+<h2 id="shutdown">8. Step 6: アプリの終了</h2>
+
+<div class="step">
+    <span class="step-number">1</span>
+    <span class="step-title">コマンドプロンプト（ターミナル）で停止</span>
+    <p>アプリを起動したコマンドプロンプト（ターミナル）の画面で：</p>
+    <div class="code-block">
+<span class="comment"># キーボードで Ctrl キーを押しながら C を押す</span>
+Ctrl + C
+    </div>
+    <p>これでアプリが停止します。ブラウザの画面を閉じても OK です。</p>
+</div>
+
+<div class="step">
+    <span class="step-number">2</span>
+    <span class="step-title">次回の起動方法</span>
+    <p>次にアプリを使いたいときは、Step 4 のコマンド（<code>streamlit run mi_textbook_app.py</code>）を
+    再度実行するだけで起動できます。パッケージの再インストールは不要です。</p>
+</div>
+
+<!-- ===== Section 9: Troubleshooting ===== -->
+<h2 id="troubleshooting">9. トラブルシューティング（困ったとき）</h2>
+
+<dl class="faq">
+    <dt>Q: 「python が見つかりません」「'python' is not recognized」と表示される</dt>
+    <dd>
+        <strong>原因</strong>：Python インストール時に「Add python.exe to PATH」にチェックを入れなかった可能性があります。<br>
+        <strong>対処法</strong>：Python を一度アンインストールし、再インストールしてください。
+        インストール時に必ず「Add python.exe to PATH」にチェックを入れてください。
+    </dd>
+
+    <dt>Q: 「pip が見つかりません」と表示される</dt>
+    <dd>
+        <strong>対処法（Windows）</strong>：<code>pip</code> の代わりに <code>python -m pip</code> を使ってみてください：
+        <div class="code-block">
+<span class="prompt">&gt;</span> python -m pip install streamlit pandas numpy matplotlib seaborn plotly scikit-learn
+        </div>
+        <strong>対処法（macOS）</strong>：<code>pip3</code> を使ってください。
+    </dd>
+
+    <dt>Q: 「ModuleNotFoundError: No module named 'streamlit'」と表示される</dt>
+    <dd>
+        <strong>原因</strong>：パッケージのインストールが完了していません。<br>
+        <strong>対処法</strong>：Step 3 のインストールコマンドを再度実行してください。
+    </dd>
+
+    <dt>Q: 「Permission denied」「アクセスが拒否されました」と表示される</dt>
+    <dd>
+        <strong>対処法（Windows）</strong>：コマンドプロンプトを「管理者として実行」してください。
+        スタートメニューで「cmd」と検索し、右クリック → 「管理者として実行」。<br>
+        <strong>対処法（macOS）</strong>：コマンドの先頭に <code>sudo</code> を付けてください：
+        <div class="code-block">
+<span class="prompt">$</span> sudo pip3 install streamlit pandas numpy matplotlib seaborn plotly scikit-learn
+        </div>
+        パスワードを求められたら、Mac のログインパスワードを入力してください（入力中は画面に何も表示されません）。
+    </dd>
+
+    <dt>Q: ブラウザに何も表示されない / 「このサイトにアクセスできません」と出る</dt>
+    <dd>
+        <strong>対処法</strong>：
+        <ol>
+            <li>コマンドプロンプト（ターミナル）が開いたままか確認する</li>
+            <li>画面に「You can now view your Streamlit app in your browser」と表示されているか確認する</li>
+            <li>ブラウザのアドレスバーに <code>http://localhost:8501</code> を直接入力する</li>
+        </ol>
+    </dd>
+
+    <dt>Q: 「Address already in use（ポートが使用中）」と表示される</dt>
+    <dd>
+        <strong>原因</strong>：前回のアプリが完全に終了していない可能性があります。<br>
+        <strong>対処法</strong>：別のポート番号で起動できます：
+        <div class="code-block">
+<span class="prompt">&gt;</span> streamlit run mi_textbook_app.py --server.port 8502
+        </div>
+        ブラウザでは <code>http://localhost:8502</code> にアクセスしてください。
+    </dd>
+
+    <dt>Q: グラフが表示されない / 画面が白いまま</dt>
+    <dd>
+        <strong>対処法</strong>：ブラウザのキャッシュをクリアしてページを再読み込みしてください
+        （<code>Ctrl + Shift + R</code> または <code>Command + Shift + R</code>）。
+    </dd>
+
+    <dt>Q: 上記で解決しない</dt>
+    <dd>
+        エラーメッセージのスクリーンショットを撮って、担当教員に連絡してください。
+    </dd>
+</dl>
+
+</div>
+
+<script>
+function showOS(os) {
+    document.querySelectorAll('.os-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.os-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('os-' + os).classList.add('active');
+    event.target.classList.add('active');
+}
+</script>
+
+</body>
+</html>
