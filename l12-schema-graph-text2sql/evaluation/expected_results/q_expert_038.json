@@ -1,0 +1,42 @@
+{
+  "query_id": "q_expert_038",
+  "columns": [
+    "entry_id",
+    "formula",
+    "energy_above_hull",
+    "is_stable"
+  ],
+  "row_count": 5,
+  "rows": [
+    [
+      "entry_Ni3Al_001",
+      "Ni3Al",
+      "0.0",
+      "True"
+    ],
+    [
+      "oqmd_94913",
+      "AlNi",
+      "0.0",
+      "True"
+    ],
+    [
+      "oqmd_17890",
+      "AlNi3",
+      "0.0",
+      "True"
+    ],
+    [
+      "oqmd_10516",
+      "AlNi",
+      "6.6560000001048e-05",
+      "True"
+    ],
+    [
+      "oqmd_94919",
+      "AlNi",
+      "0.0002513600000000338",
+      "True"
+    ]
+  ]
+}

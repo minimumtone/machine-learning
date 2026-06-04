@@ -1,0 +1,21 @@
+{
+  "query_id": "q_expert_067",
+  "columns": [
+    "entry_id",
+    "formula",
+    "dopant"
+  ],
+  "row_count": 2,
+  "rows": [
+    [
+      "oqmd_3686",
+      "RbBr",
+      "B"
+    ],
+    [
+      "oqmd_8294",
+      "SmP",
+      "B"
+    ]
+  ]
+}

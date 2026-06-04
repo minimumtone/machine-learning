@@ -1,0 +1,74 @@
+{
+  "query_id": "q_expert_072",
+  "columns": [
+    "entry_id",
+    "formula"
+  ],
+  "row_count": 16,
+  "rows": [
+    [
+      "oqmd_17084",
+      "Ce3Ga"
+    ],
+    [
+      "entry_Co3Hf_029",
+      "Co3Hf"
+    ],
+    [
+      "entry_Co3Nb_026",
+      "Co3Nb"
+    ],
+    [
+      "entry_Co3Ti_004",
+      "Co3Ti"
+    ],
+    [
+      "oqmd_17159",
+      "Cu3Pd"
+    ],
+    [
+      "oqmd_17231",
+      "Fe3Sn"
+    ],
+    [
+      "oqmd_30421",
+      "GdSn3"
+    ],
+    [
+      "oqmd_10638",
+      "InAg3"
+    ],
+    [
+      "entry_Ir3Ge_097",
+      "Ir3Ge"
+    ],
+    [
+      "oqmd_17062",
+      "NbCd3"
+    ],
+    [
+      "oqmd_10537",
+      "NpAl3"
+    ],
+    [
+      "oqmd_11158",
+      "ScIn3"
+    ],
+    [
+      "oqmd_18908",
+      "SmSn3"
+    ],
+    [
+      "oqmd_18004",
+      "SnPt3"
+    ],
+    [
+      "oqmd_10614",
+      "YAl3"
+    ],
+    [
+      "oqmd_11181",
+      "Zr3In"
+    ]
+  ]
+}

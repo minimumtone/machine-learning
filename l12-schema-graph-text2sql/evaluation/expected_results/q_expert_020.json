@@ -1,0 +1,10 @@
+{
+  "query_id": "q_expert_020",
+  "columns": [
+    "entry_id",
+    "formula",
+    "energy_above_hull"
+  ],
+  "row_count": 0,
+  "rows": []
+}

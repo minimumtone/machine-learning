@@ -1,0 +1,12 @@
+{
+  "query_id": "q_expert_001",
+  "columns": [
+    "total_count"
+  ],
+  "row_count": 1,
+  "rows": [
+    [
+      "1471"
+    ]
+  ]
+}

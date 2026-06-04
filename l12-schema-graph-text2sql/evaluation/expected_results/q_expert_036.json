@@ -1,0 +1,10 @@
+{
+  "query_id": "q_expert_036",
+  "columns": [
+    "entry_id",
+    "formula",
+    "band_gap"
+  ],
+  "row_count": 0,
+  "rows": []
+}

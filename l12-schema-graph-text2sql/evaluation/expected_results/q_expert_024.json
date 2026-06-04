@@ -1,0 +1,12 @@
+{
+  "query_id": "q_expert_024",
+  "columns": [
+    "entry_id",
+    "formula",
+    "lattice_a",
+    "lattice_c",
+    "crystal_system"
+  ],
+  "row_count": 0,
+  "rows": []
+}
