@@ -2216,6 +2216,7 @@ S4節ではSQLインジェクション攻撃を含む安全性テストの詳細
 S5節ではNi$_3$Al近傍格子定数候補の抽出結果、
 S6節では安定L1$_2$候補の形成エネルギーランキングを示す。
 S7節ではLLMモード（gpt-5.5）の設定パラメータとプロンプト構成を記載する。
+S8節では独立設計クエリ100件の詳細結果（クエリ文、難易度、実行成否、精度）を一覧する。
 
 % =====================================================================
 \section{回帰テストカテゴリ詳細}
@@ -2512,5 +2513,196 @@ LLMモード（Level 2）ではOpenAI APIを介してgpt-5.5を使用した。
 再現性確保のため、Temperature=0.0を使用しているが、
 LLMの内部バージョン更新により出力が変化する可能性がある。
 本研究の結果は2026年5月時点のgpt-5.5に基づく。
+
+% =====================================================================
+\section{独立設計クエリ100件の詳細結果}
+\label{sec:sup_expert_queries}
+
+本論文\ref{sec:independent_eval}節で報告した独立設計クエリ100件について、
+各クエリの質問文、難易度、実行成否、実行精度、正誤判定の詳細を
+表~\ref{tab:sup_expert_detail}に示す。
+難易度はE（Easy）、M（Medium）、H（Hard）、VH（Very Hard）の4段階であり、
+正誤判定は実行精度$\geq 0.8$を正解（$\checkmark$）と判定した。
+
+\begin{longtable}{clcccl}
+  \caption{独立設計クエリ100件の詳細結果。}
+  \label{tab:sup_expert_detail} \\
+  \toprule
+  No. & クエリ（抜粋） & 難度 & 実行 & 精度 & 正誤 \\
+  \midrule
+  \endfirsthead
+  \toprule
+  No. & クエリ（抜粋） & 難度 & 実行 & 精度 & 正誤 \\
+  \midrule
+  \endhead
+  \midrule
+  \multicolumn{6}{r}{\textit{次ページに続く}} \\
+  \endfoot
+  \bottomrule
+  \endlastfoot
+    \multicolumn{6}{l}{\textbf{A. 基本検索}} \\
+    \midrule
+    1 & データベースに登録されている化合物の総数を教えて。 & E & $\checkmark$ & 1.00 & $\checkmark$ \\
+    2 & BCC\_B2構造を持つ化合物を全て表示して。 & E & $\checkmark$ & 1.00 & $\checkmark$ \\
+    3 & 3元素以上で構成される化合物はあるか？ & E & --- & 0.00 & --- \\
+    4 & 化学式にFeが含まれる化合物を一覧にして。 & E & $\checkmark$ & 1.00 & $\checkmark$ \\
+    5 & NaCl型構造の化合物は何件あるか。 & E & $\checkmark$ & 1.00 & $\checkmark$ \\
+    6 & Ni3Alのエントリを表示して。 & E & $\checkmark$ & 1.00 & $\checkmark$ \\
+    7 & 空間群Pm-3mの化合物を一覧にして。 & E & $\checkmark$ & 0.88 & $\checkmark$ \\
+    8 & OQMDのエントリ数を教えて。 & E & $\checkmark$ & 0.00 & --- \\
+    9 & 化学系にTiを含む化合物のformulaを表示して。 & E & $\checkmark$ & 1.00 & $\checkmark$ \\
+    10 & BiF3型構造の化合物を全て出して。 & E & $\checkmark$ & 1.00 & $\checkmark$ \\
+    \midrule
+    \multicolumn{6}{l}{\textbf{B. 組成・元素}} \\
+    \midrule
+    11 & Ptを25\%以上含むL12型化合物を表示して。 & M & --- & 0.00 & --- \\
+    12 & RhとAlの両方を含む化合物を教えて。 & M & $\checkmark$ & 1.00 & $\checkmark$ \\
+    13 & 希土類元素を含むL12型化合物はあるか。 & H & $\checkmark$ & 1.00 & $\checkmark$ \\
+    14 & 遷移金属のみで構成されるL12型化合物を抽出して。 & H & $\checkmark$ & 0.69 & --- \\
+    15 & Cuの原子分率が0.75であるL12型化合物を出して。 & M & --- & 0.00 & --- \\
+    16 & 4d遷移金属をBサイトに持つL12型化合物を表示して。 & H & $\checkmark$ & 0.37 & --- \\
+    17 & データベース中に登場する元素を全て一覧にして。 & E & $\checkmark$ & 1.00 & $\checkmark$ \\
+    18 & Mnを含む化合物はどのプロトタイプに多いか。 & M & $\checkmark$ & 1.00 & $\checkmark$ \\
+    19 & 原子番号が40以上の元素を含むL12型化合物を教えて。 & H & --- & 0.00 & --- \\
+    20 & VとAlの両方を含む安定な化合物を出して。 & M & $\checkmark$ & 1.00 & $\checkmark$ \\
+    \midrule
+    \multicolumn{6}{l}{\textbf{C. 構造・格子定数}} \\
+    \midrule
+    21 & 格子定数aが3.50--3.60\AA の範囲にあるL12型化合物をリストして。 & M & $\checkmark$ & 1.00 & $\checkmark$ \\
+    22 & B2構造でcubic以外の結晶系を持つものはあるか。 & M & $\checkmark$ & 0.00 & --- \\
+    23 & 体積が最小のL12化合物はどれか。 & M & --- & 0.00 & --- \\
+    24 & 格子定数aとcが異なる化合物を表示して。 & M & $\checkmark$ & 1.00 & $\checkmark$ \\
+    25 & Strukturbericht記号がL12の化合物をprototypeと共に表示して。 & E & $\checkmark$ & 1.00 & $\checkmark$ \\
+    26 & 空間群番号225の化合物は何件か。 & E & --- & 0.00 & --- \\
+    27 & NiAs型でヘキサゴナルの結晶系、格子定数cが最大のもの。 & M & $\checkmark$ & 0.00 & --- \\
+    28 & 格子定数aが4.0\AA 以上のB2化合物を表示して。 & M & $\checkmark$ & 1.00 & $\checkmark$ \\
+    29 & L12型化合物の格子定数aの平均値と標準偏差を教えて。 & M & $\checkmark$ & 1.00 & $\checkmark$ \\
+    30 & 全プロトタイプについて、それぞれの登録件数を教えて。 & E & $\checkmark$ & 1.00 & $\checkmark$ \\
+    \midrule
+    \multicolumn{6}{l}{\textbf{D. 安定性・形成エネルギー}} \\
+    \midrule
+    31 & convex\_hullを構成するL12化合物を全て出して。 & M & $\checkmark$ & 0.70 & --- \\
+    32 & 形成エネルギーが正の化合物はあるか。 & M & $\checkmark$ & 1.00 & $\checkmark$ \\
+    33 & B2構造で安定かつ形成エネルギーが負のものを表示して。 & M & $\checkmark$ & 1.00 & $\checkmark$ \\
+    34 & 準安定（$E_\text{hull} > 0$ かつ $< 0.1$~eV/atom）なL12化合物。 & M & $\checkmark$ & 1.00 & $\checkmark$ \\
+    35 & NaCl型構造で不安定な化合物の割合を教えて。 & H & $\checkmark$ & 0.00 & --- \\
+    36 & バンドギャップが0より大きいL12型化合物はあるか。 & M & $\checkmark$ & 1.00 & $\checkmark$ \\
+    37 & 安定なL12化合物のうち、バンドギャップが0のもの。 & M & $\checkmark$ & 0.62 & --- \\
+    38 & Ni-Al系の化合物のconvex\_hull距離を全て表示して。 & M & $\checkmark$ & 1.00 & $\checkmark$ \\
+    39 & 形成エネルギーが$-0.5$~eV/atom以下の極めて安定な化合物。 & M & $\checkmark$ & 0.30 & --- \\
+    40 & プロトタイプ別の平均energy\_above\_hullを比較して。 & M & $\checkmark$ & 1.00 & $\checkmark$ \\
+    \midrule
+    \multicolumn{6}{l}{\textbf{E. DFT計算・物性}} \\
+    \midrule
+    41 & GGA-PBE以外の汎関数で計算されたエントリはあるか。 & E & --- & 0.00 & --- \\
+    42 & バルクモジュラスが200GPa以上のL12化合物を出して。 & H & $\checkmark$ & 1.00 & $\checkmark$ \\
+    43 & せん断弾性率が最も高いL12化合物TOP3を教えて。 & H & $\checkmark$ & 1.00 & $\checkmark$ \\
+    44 & ヤング率が記録されている化合物を全て表示して。 & M & $\checkmark$ & 1.00 & $\checkmark$ \\
+    45 & ポアソン比が0.3以上の化合物をリストして。 & M & $\checkmark$ & 1.00 & $\checkmark$ \\
+    46 & B/G比が2以上のL12化合物。 & VH & $\checkmark$ & 1.00 & $\checkmark$ \\
+    47 & DFT計算で弾性的に不安定とされた化合物はあるか。 & M & $\checkmark$ & 0.00 & --- \\
+    48 & 格子定数にc/aが大きいものを探してほしい。 & M & $\checkmark$ & 1.00 & $\checkmark$ \\
+    49 & Ni3Alのバルクモジュラスと形成エネルギーを教えて。 & H & $\checkmark$ & 1.00 & $\checkmark$ \\
+    50 & 磁気モーメントが0でないL12化合物を全て出して。 & H & $\checkmark$ & 1.00 & $\checkmark$ \\
+    \midrule
+    \multicolumn{6}{l}{\textbf{F. 電子構造・磁性・熱特性}} \\
+    \midrule
+    51 & フェルミ面でのDOSが最も高いL12化合物は。 & H & $\checkmark$ & 1.00 & $\checkmark$ \\
+    52 & 直接バンドギャップを持つ化合物はあるか。 & M & $\checkmark$ & 1.00 & $\checkmark$ \\
+    53 & スピン偏極計算がされている化合物を表示して。 & M & $\checkmark$ & 1.00 & $\checkmark$ \\
+    54 & 強磁性のL12化合物を出して。 & H & $\checkmark$ & 1.00 & $\checkmark$ \\
+    55 & キュリー温度が最も高い化合物はどれか。 & M & $\checkmark$ & 1.00 & $\checkmark$ \\
+    56 & デバイ温度が500K以上の化合物を教えて。 & M & $\checkmark$ & 1.00 & $\checkmark$ \\
+    57 & 熱伝導率が記録されているL12化合物を表示して。 & H & $\checkmark$ & 1.00 & $\checkmark$ \\
+    58 & グリュナイゼン定数が2以上の化合物はあるか。 & M & $\checkmark$ & 1.00 & $\checkmark$ \\
+    59 & 磁気異方性エネルギーが最も大きいL12化合物を出して。 & H & $\checkmark$ & 1.00 & $\checkmark$ \\
+    60 & 金属的かつ強磁性のL12化合物を探して。 & VH & $\checkmark$ & 1.00 & $\checkmark$ \\
+    \midrule
+    \multicolumn{6}{l}{\textbf{G. 表面・粒界・欠陥}} \\
+    \midrule
+    61 & (111)面の表面エネルギーが最も低いL12化合物を教えて。 & H & $\checkmark$ & 0.00 & --- \\
+    62 & 仕事関数が5~eV以上のL12化合物を出して。 & H & $\checkmark$ & 1.00 & $\checkmark$ \\
+    63 & 表面再構成が起こる化合物はあるか。 & M & $\checkmark$ & 0.00 & --- \\
+    64 & $\Sigma 5$粒界エネルギーが記録されている化合物を表示して。 & M & $\checkmark$ & 1.00 & $\checkmark$ \\
+    65 & 空孔形成エネルギーが最も低いL12化合物は。 & H & $\checkmark$ & 1.00 & $\checkmark$ \\
+    66 & アンチサイト欠陥の情報があるL12化合物を教えて。 & H & $\checkmark$ & 1.00 & $\checkmark$ \\
+    67 & ドーパント元素としてBが使われている化合物はあるか。 & H & $\checkmark$ & 0.00 & --- \\
+    68 & 格子間原子欠陥の情報がある化合物を表示して。 & M & --- & 0.00 & --- \\
+    69 & (100)面と(110)面の表面エネルギーを両方持つ化合物。 & VH & $\checkmark$ & 0.00 & --- \\
+    70 & Vegard則からの乖離が大きいL12、B2化合物の情報。 & VH & $\checkmark$ & 1.00 & $\checkmark$ \\
+    \midrule
+    \multicolumn{6}{l}{\textbf{H. 文献・合成・応用}} \\
+    \midrule
+    71 & 実験で合成されたことのあるL12化合物はどれか。 & H & $\checkmark$ & 1.00 & $\checkmark$ \\
+    72 & アーク溶解法で合成されたL12化合物を表示して。 & H & $\checkmark$ & 1.00 & $\checkmark$ \\
+    73 & 1000K以上の温度で合成されたL12化合物を出して。 & H & $\checkmark$ & 1.00 & $\checkmark$ \\
+    74 & 文献参照が3件以上あるL12化合物を教えて。 & VH & $\checkmark$ & 1.00 & $\checkmark$ \\
+    75 & 高温超合金の応用領域に分類されている化合物を表示して。 & H & $\checkmark$ & 0.00 & --- \\
+    76 & 2020年以降の文献で報告されたL12化合物を出して。 & VH & $\checkmark$ & 1.00 & $\checkmark$ \\
+    77 & 実験値と計算値の両方がある化合物を表示して。 & H & $\checkmark$ & 1.00 & $\checkmark$ \\
+    78 & ボールミリングで合成された化合物はあるか。 & H & --- & 0.00 & --- \\
+    79 & 耐熱材料として分類されている化合物を表示して。 & H & $\checkmark$ & 1.00 & $\checkmark$ \\
+    80 & DOIが記録されている文献の一覧を出して。 & E & --- & 0.00 & --- \\
+    \midrule
+    \multicolumn{6}{l}{\textbf{I. 材料設計・スクリーニング}} \\
+    \midrule
+    81 & Ni3Alと格子定数が0.05\AA 以内で安定でバルクモジュラス150GPa以上。 & VH & $\checkmark$ & 0.00 & --- \\
+    82 & $\gamma'$相候補として有望なL12化合物を形成エネルギー順にランキング。 & H & --- & 0.00 & --- \\
+    83 & Coを含む安定なL12でバルクモジュラス180GPa以上かつデバイ温度高。 & VH & $\checkmark$ & 0.00 & --- \\
+    84 & 格子定数3.56\AA $\pm$0.03\AA でせん断弾性率70GPa以上の安定なL12。 & VH & $\checkmark$ & 0.75 & --- \\
+    85 & 強磁性かつ弾性的に安定なL12化合物を全て表示して。 & VH & $\checkmark$ & 0.14 & --- \\
+    86 & 実験合成実績ありかつDFTで安定なL12化合物を出して。 & VH & --- & 0.00 & --- \\
+    87 & Ni3Alよりバルクモジュラスが高くハル距離が0.01以下の化合物。 & VH & $\checkmark$ & 1.00 & $\checkmark$ \\
+    88 & 元素数2の安定な化合物をプロトタイプ別に集計して。 & H & $\checkmark$ & 1.00 & $\checkmark$ \\
+    89 & L12でポアソン比が低く（$<$0.25）延性が低いと予想される化合物。 & H & $\checkmark$ & 1.00 & $\checkmark$ \\
+    90 & 表面エネルギーが低い（$<$1.5~J/m$^2$）かつ安定なL12化合物。 & VH & $\checkmark$ & 0.38 & --- \\
+    \midrule
+    \multicolumn{6}{l}{\textbf{J. 比較・統計}} \\
+    \midrule
+    91 & L12とB2で、安定な化合物の割合を比較して。 & H & $\checkmark$ & 0.00 & --- \\
+    92 & プロトタイプ別の平均バルクモジュラスを教えて。 & H & --- & 0.00 & --- \\
+    93 & Aサイト元素ごとのL12化合物数を集計して。 & H & $\checkmark$ & 0.10 & --- \\
+    94 & 格子定数と形成エネルギーに相関はあるか。全L12化合物データ。 & M & $\checkmark$ & 1.00 & $\checkmark$ \\
+    95 & 安定/不安定L12で平均バルクモジュラスに差はあるか。 & VH & $\checkmark$ & 0.00 & --- \\
+    96 & 化学系ごとのエントリ数TOP10を教えて。 & E & $\checkmark$ & 1.00 & $\checkmark$ \\
+    97 & DFT計算手法ごとのエントリ数を出して。 & E & $\checkmark$ & 1.00 & $\checkmark$ \\
+    98 & L12型化合物のバンドギャップの分布。0とそうでないものを分けて。 & H & $\checkmark$ & 0.00 & --- \\
+    99 & 格子定数aの分布を0.1\AA 刻みでヒストグラム的に表示するデータ。 & H & $\checkmark$ & 1.00 & $\checkmark$ \\
+    100 & 全プロトタイプについて安定/不安定/準安定の件数内訳。 & H & --- & 0.00 & --- \\
+\end{longtable}
+
+カテゴリ別の正答率を表~\ref{tab:sup_expert_category}に示す。
+
+\begin{table}[htbp]
+  \centering
+  \caption{独立設計クエリのカテゴリ別正答率。}
+  \label{tab:sup_expert_category}
+  \small
+  \begin{tabular}{llcc}
+    \toprule
+    カテゴリ & 内容 & 正答数/件数 & 正答率 \\
+    \midrule
+    A & 基本検索 & 8/10 & 80.0\% \\
+    B & 組成・元素 & 5/10 & 50.0\% \\
+    C & 構造・格子定数 & 6/10 & 60.0\% \\
+    D & 安定性・形成エネルギー & 6/10 & 60.0\% \\
+    E & DFT計算・物性 & 8/10 & 80.0\% \\
+    F & 電子構造・磁性・熱特性 & 10/10 & 100.0\% \\
+    G & 表面・粒界・欠陥 & 5/10 & 50.0\% \\
+    H & 文献・合成・応用 & 7/10 & 70.0\% \\
+    I & 材料設計・スクリーニング & 3/10 & 30.0\% \\
+    J & 比較・統計 & 4/10 & 40.0\% \\
+    \midrule
+    \textbf{全体} & & \textbf{62/100} & \textbf{62.0\%} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+カテゴリF（電子構造・磁性・熱特性）が100\%を達成した一方、
+カテゴリI（材料設計・スクリーニング）は30\%にとどまった。
+Iカテゴリのクエリは4テーブル以上のJOIN・複合条件・サブクエリを要求する
+Very Hardクエリが集中しており、現行システムの限界を示している。
+また、カテゴリJ（比較・統計）の40\%も、
+プロトタイプ横断的な集約やGROUP BY複合条件の処理が課題であることを示唆する。
 
 \end{document}
