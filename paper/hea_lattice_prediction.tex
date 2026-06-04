@@ -183,16 +183,16 @@ DFTデータベースから$\Omega_\text{sf}$を導出し、
 \begin{figure*}[!t]
 \centering
 \begin{tikzpicture}[
-  node distance=0.8cm and 2.0cm,
-  box/.style={rectangle, draw, rounded corners, minimum height=1.4cm,
-    minimum width=2.8cm, text width=2.6cm, align=center, font=\normalsize},
-  arr/.style={-{Stealth[length=3mm]}, thick}
+  node distance=0.5cm and 1.0cm,
+  box/.style={rectangle, draw, rounded corners, minimum height=1.2cm,
+    minimum width=2.2cm, text width=2.0cm, align=center, font=\small},
+  arr/.style={-{Stealth[length=2.5mm]}, thick}
 ]
-\node[box, fill=blue!10] (dft) {DFTデータ\\{\small 8,521件}};
-\node[box, fill=green!10, right=of dft] (omega) {$\Omega_\text{sf}$導出\\{\small B2: 758, L1$_2$: 703}};
-\node[box, fill=orange!10, right=of omega] (add) {加法分解\\{\small $\delta_i^{(s)}$（38元素）}};
-\node[box, fill=red!10, right=of add] (pred) {格子定数予測\\{\small 式(\ref{eq:a_from_veff})}};
-\node[box, fill=purple!10, right=of pred] (test) {独立検証\\{\small 23 HEA, 10文献}};
+\node[box, fill=blue!10] (dft) {DFTデータ\\{\scriptsize 8,521件}};
+\node[box, fill=green!10, right=of dft] (omega) {$\Omega_\text{sf}$導出\\{\scriptsize B2: 758\\L1$_2$: 703}};
+\node[box, fill=orange!10, right=of omega] (add) {加法分解\\{\scriptsize $\delta_i^{(s)}$\\38元素}};
+\node[box, fill=red!10, right=of add] (pred) {格子定数予測\\{\scriptsize 式(\ref{eq:a_from_veff})}};
+\node[box, fill=purple!10, right=of pred] (test) {独立検証\\{\scriptsize 23 HEA\\10文献}};
 \draw[arr] (dft) -- (omega);
 \draw[arr] (omega) -- (add);
 \draw[arr] (add) -- (pred);
@@ -623,18 +623,26 @@ HEA予測では加法モデルRMSE = 0.0211~\AA{}と
 (c)~$q_s$がバイアス成分を吸収すること、
 による。
 
-図~\ref{fig:element_delta}に元素別$\delta$パラメータと
-加法分解のフィット品質を示す。
+図~\ref{fig:element_delta}に元素別$\delta$パラメータを、
+図~\ref{fig:additive_fit}にフィット品質を示す。
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=\textwidth]{fig_element_delta.png}\\[8pt]
-\includegraphics[width=0.85\textwidth]{fig_additive_fit.png}
-\caption{加法分解の結果。
-  上2段: 元素別$\delta^{(s)}$パラメータ（上: B2、下: L1$_2$。赤: 膨張、青: 収縮）。
-  下段: フィット品質（左: B2、右: L1$_2$。
-  横軸: DFTペア$\Omega_\text{sf}$、縦軸: 加法予測$\delta_A + \delta_B$）。}
+\includegraphics[width=\textwidth]{fig_element_delta.png}
+\caption{元素別加法分解パラメータ$\delta^{(s)}$。
+  上段: B2（BCC参照、$R^2 = 0.54$）、下段: L1$_2$（FCC参照、$R^2 = 0.26$）。
+  赤: 負（収縮傾向）、青: 正（膨張傾向）。
+  元素は$\delta^{(s)}$の昇順にソート。}
 \label{fig:element_delta}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.85\textwidth]{fig_additive_fit.png}
+\caption{加法分解のフィット品質。
+  左: B2（$R^2 = 0.62$）、右: L1$_2$（$R^2 = 0.69$）。
+  横軸: DFTペア$\Omega_\text{sf}$、
+  縦軸: 加法予測$\delta_A + \delta_B$。破線は完全一致線。}
 \label{fig:additive_fit}
 \end{figure*}
 
@@ -652,10 +660,11 @@ HEA予測では加法モデルRMSE = 0.0211~\AA{}と
 \centering
 \includegraphics[width=\textwidth]{fig_composition_examples.png}
 \caption{代表6元素ペアの組成軸Vegardプロット。
-  破線: King原子体積から算出したVegard則（B2換算）、
-  青丸: DFT B2計算値（$c = 50\%$）、赤三角: DFT L1$_2$計算値（$c = 25\%, 75\%$、B2等価スケールに変換）。
-  破線の両端点は各元素のKing体積に対応する仮想B2格子定数であり、
-  安定相の実測格子定数とは異なる。}
+  破線: King原子体積（実験値）から算出したVegard則（B2換算）、
+  実線: DFT純元素体積から算出したVegard則（GGA系統誤差を含む）、
+  青丸: DFT B2計算値（$c = 50\%$）、
+  赤三角: DFT L1$_2$計算値（$c = 25\%, 75\%$、B2等価スケールに変換）。
+  DFT点と実線の乖離が$\Omega_\text{sf}$の構造依存成分に対応する。}
 \label{fig:composition}
 \end{figure*}
 
@@ -687,10 +696,20 @@ L1$_2$格子定数差$|a(A_3B) - a(B_3A)|$の平均は0.328~\AA、
 \centering
 \includegraphics[width=\textwidth]{fig_delta_r_proof.png}
 \caption{$\delta r$の構造不変性の証明（703ペア）。
-  (a)(b)~$\delta r$は構造間偏差ゼロ。
-  (c)~$\Omega_\text{sf}$は大きな構造間偏差（$r = 0.15$）。
-  (d)~L1$_2$格子定数差分布（平均差0.328~\AA）。}
+  (a)~$\delta r(A_3B)$ vs $\delta r(B_3A)$: 完全一致（構造情報ゼロ）。
+  (b)~$\delta r(A_3B)$ vs $\delta r(\text{B2})$: 滑らかな曲線（組成のみの関数）。
+  (c)~$\Omega_\text{sf}(A_3B)$ vs $\Omega_\text{sf}(B_3A)$: 大きな散布（$r = 0.15$）。}
 \label{fig:delta_r_proof}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.85\textwidth]{fig_l12_b2_correlation.png}
+\caption{L1$_2$構造の非対称性と構造間相関。
+  (d)~L1$_2$格子定数差$|a(A_3B)-a(B_3A)|$の分布（平均0.362~\AA）。
+  (e)~L1$_2$ $\Omega_\text{sf}$ vs B2 $\Omega_\text{sf}$（$r = 0.49$）:
+  構造間で$\Omega_\text{sf}$は中程度の相関を持つが一致はしない。}
+\label{fig:l12_b2_corr}
 \end{figure*}
 
 
@@ -1138,22 +1157,22 @@ DFT体積サイズファクターの元素別加法分解に基づく、
 \centering
 \caption{本手法の予測精度の全体像。}
 \label{tab:conclusion_summary}
-\footnotesize
+\scriptsize
 \begin{tabular}{@{}llcc@{}}
 \toprule
-データセット & モデル & RMSE (\AA) & vs Vegard \\
+データ & モデル & RMSE (\AA) & vs Vegard \\
 \midrule
-\multirow{3}{*}{訓練64 HEA}
-  & B2/L1$_2$参照（$q_\text{BCC}\!=\!0.49$, $q_\text{FCC}\!=\!0.13$） & 0.0214 & $+$5.7\% \\
+\multirow{3}{*}{訓練64}
+  & B2/L1$_2$（$q_\text{BCC}\!=\!0.49$） & 0.0214 & $+$5.7\% \\
   & DFT自己整合（$q\!\approx\!1$） & 0.0203 & $+$12.2\% \\
   & SQS参照（$q\!=\!1$） & 0.0202 & $+$11.0\% \\
 \midrule
-\multirow{3}{*}{独立23 HEA}
+\multirow{3}{*}{独立23}
   & 全体 & 0.0150 & $+$13.4\% \\
-  & BCC 10合金 & 0.0149 & $+$19.7\% \\
-  & FCC 13合金 & 0.0151 & $+$7.6\% \\
+  & BCC 10 & 0.0149 & $+$19.7\% \\
+  & FCC 13 & 0.0151 & $+$7.6\% \\
 \midrule
-推定ノイズフロア & $\sigma$ & 0.016 & --- \\
+ノイズ & $\sigma$ & 0.016 & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
