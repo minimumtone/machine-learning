@@ -25,7 +25,45 @@ MAX_SUBQUERY_DEPTH = 3
 DISALLOWED_FUNCTIONS = [
     "pg_sleep", "dblink", "lo_import", "lo_export",
     "pg_read_file", "pg_ls_dir", "pg_stat_file",
+    "pg_read_binary_file", "pg_stat_statements",
+    "query_to_xml", "query_to_json",
 ]
+
+# System/catalog tables that should never be queried by generated SQL
+SYSTEM_TABLE_PREFIXES = [
+    "pg_",       # pg_shadow, pg_authid, pg_roles, pg_stat_*, etc.
+    "information_schema.",
+]
+SYSTEM_TABLES = [
+    "pg_shadow", "pg_authid", "pg_roles", "pg_user",
+    "pg_stat_activity", "pg_stat_statements",
+    "pg_catalog", "pg_class", "pg_namespace",
+    "pg_proc", "pg_settings",
+]
+
+# Column type registry for type-safety checks
+# Maps table.column -> expected type category
+COLUMN_TYPE_REGISTRY: dict[str, str] = {
+    # numeric columns
+    "structure.lattice_a": "numeric",
+    "structure.lattice_b": "numeric",
+    "structure.lattice_c": "numeric",
+    "phase_stability.energy_above_hull": "numeric",
+    "phase_stability.formation_energy_per_atom": "numeric",
+    "calculated_property.value": "numeric",
+    "composition.atomic_fraction": "numeric",
+    "composition.weight_fraction": "numeric",
+    # text columns
+    "material_entry.formula": "text",
+    "material_entry.reduced_formula": "text",
+    "composition.element": "text",
+    "structure.prototype": "text",
+    "structure.strukturbericht": "text",
+    "structure.space_group": "text",
+    "calculation.method": "text",
+    "calculated_property.property_name": "text",
+    "calculated_property.unit": "text",
+}
 
 
 def _load_allowed_schema(path: Path | None = None) -> dict[str, Any]:
@@ -327,6 +365,163 @@ def check_allowed_tables(
     return [t for t in used if t not in allowed_lower]
 
 
+def check_system_tables(sql: str) -> list[str]:
+    """Detect references to system/catalog tables (pg_shadow, pg_authid, etc.).
+
+    These tables may expose sensitive metadata even with read-only access.
+    """
+    used = extract_tables_from_sql(sql)
+    violations: list[str] = []
+    for table in used:
+        tl = table.lower()
+        if tl in SYSTEM_TABLES:
+            violations.append(table)
+            continue
+        for prefix in SYSTEM_TABLE_PREFIXES:
+            if tl.startswith(prefix):
+                violations.append(table)
+                break
+    return violations
+
+
+def check_cte_bodies_select_only(sql: str) -> list[str]:
+    """Verify that all CTE bodies are pure SELECT statements.
+
+    PostgreSQL supports writable CTEs (INSERT/UPDATE/DELETE inside WITH).
+    This check ensures no CTE body contains data-modification statements.
+    """
+    if not HAS_SQLGLOT:
+        # Regex fallback: extract CTE bodies and check for DML
+        return _regex_check_cte_bodies(sql)
+
+    try:
+        parsed = sqlglot.parse(sql, dialect="postgres")
+    except Exception:
+        return _regex_check_cte_bodies(sql)
+
+    violations: list[str] = []
+    dml_types = {"Insert", "Update", "Delete"}
+
+    for stmt in parsed:
+        if stmt is None:
+            continue
+        for cte in stmt.find_all(sqlglot_exp.CTE):
+            alias_node = cte.args.get("alias")
+            cte_name = alias_node.name if alias_node else "<unnamed>"
+            # The CTE body is the 'this' expression
+            body = cte.args.get("this")
+            if body is None:
+                continue
+            body_type = type(body).__name__
+            if body_type in dml_types:
+                violations.append(
+                    f"CTE '{cte_name}' contains {body_type.upper()} (writable CTE)"
+                )
+            # Also check for DML nested inside the CTE body
+            for node in body.walk():
+                node_type = type(node[0]).__name__ if isinstance(node, tuple) else type(node).__name__
+                actual_node = node[0] if isinstance(node, tuple) else node
+                if type(actual_node).__name__ in dml_types:
+                    if f"CTE '{cte_name}'" not in " ".join(violations):
+                        violations.append(
+                            f"CTE '{cte_name}' contains nested {type(actual_node).__name__.upper()}"
+                        )
+                    break
+    return violations
+
+
+def _regex_check_cte_bodies(sql: str) -> list[str]:
+    """Regex fallback for CTE body DML detection."""
+    violations: list[str] = []
+    clean = _strip_literals(sql)
+    # Find WITH ... AS (...) patterns
+    cte_pattern = re.compile(
+        r"\b(\w+)\s+AS\s*\(", re.IGNORECASE
+    )
+    for m in cte_pattern.finditer(clean):
+        cte_name = m.group(1)
+        # Skip if it's not after WITH or a comma
+        start = m.start()
+        prefix = clean[:start].rstrip()
+        if not (prefix.upper().endswith("WITH") or prefix.endswith(",")):
+            continue
+        # Extract the CTE body (find matching parenthesis)
+        paren_start = m.end() - 1
+        depth = 0
+        body_end = paren_start
+        for i in range(paren_start, len(clean)):
+            if clean[i] == '(':
+                depth += 1
+            elif clean[i] == ')':
+                depth -= 1
+                if depth == 0:
+                    body_end = i
+                    break
+        body = clean[paren_start + 1:body_end].upper()
+        for kw in ["INSERT", "UPDATE", "DELETE"]:
+            if re.search(rf"\b{kw}\b", body):
+                violations.append(
+                    f"CTE '{cte_name}' contains {kw} (writable CTE)"
+                )
+                break
+    return violations
+
+
+def check_column_type_safety(
+    sql: str,
+    type_registry: dict[str, str] | None = None,
+) -> list[str]:
+    """Detect type mismatches in WHERE conditions.
+
+    Catches cases like:
+      WHERE energy_above_hull = 'stable'  (string compared to numeric column)
+      WHERE element > 100                  (numeric compared to text column)
+    """
+    if type_registry is None:
+        type_registry = COLUMN_TYPE_REGISTRY
+
+    warnings: list[str] = []
+    alias_to_table = {
+        "m": "material_entry", "c": "composition", "s": "structure",
+        "ps": "phase_stability", "calc": "calculation", "cp": "calculated_property",
+    }
+
+    # Pattern: alias.column op 'string_value'
+    string_compare = re.compile(
+        r"(\w+)\.(\w+)\s*(?:=|!=|<>|<|>|<=|>=)\s*'([^']*)'", re.IGNORECASE
+    )
+    # Pattern: alias.column op numeric_value
+    numeric_compare = re.compile(
+        r"(\w+)\.(\w+)\s*(?:=|!=|<>|<|>|<=|>=)\s*(-?\d+\.?\d*)", re.IGNORECASE
+    )
+
+    clean = _strip_literals(sql)
+    # For string comparisons, we need original SQL (with literals)
+    for m in string_compare.finditer(sql):
+        alias = m.group(1).lower()
+        col = m.group(2).lower()
+        table = alias_to_table.get(alias, alias)
+        canonical = f"{table}.{col}"
+        expected_type = type_registry.get(canonical)
+        if expected_type == "numeric":
+            warnings.append(
+                f"Type mismatch: {canonical} is numeric but compared with string '{m.group(3)}'"
+            )
+
+    for m in numeric_compare.finditer(clean):
+        alias = m.group(1).lower()
+        col = m.group(2).lower()
+        table = alias_to_table.get(alias, alias)
+        canonical = f"{table}.{col}"
+        expected_type = type_registry.get(canonical)
+        if expected_type == "text":
+            warnings.append(
+                f"Type mismatch: {canonical} is text but compared with number {m.group(3)}"
+            )
+
+    return warnings
+
+
 def check_allowed_columns(
     sql: str,
     allowed_columns: list[str] | None = None,
@@ -479,6 +674,18 @@ def validate_sql(
         errors.append(f"Disallowed functions: {', '.join(bad_funcs)}")
         _escalate("rejected_security")
 
+    # Layer: System/catalog table access prevention
+    sys_tables = check_system_tables(sql)
+    if sys_tables:
+        errors.append(f"System table access blocked: {', '.join(sys_tables)}")
+        _escalate("rejected_security")
+
+    # Layer: CTE body must be pure SELECT (no writable CTEs)
+    cte_violations = check_cte_bodies_select_only(sql)
+    if cte_violations:
+        errors.append(f"Writable CTE detected: {'; '.join(cte_violations)}")
+        _escalate("rejected_security")
+
     tautologies = check_tautology(sql)
     if tautologies:
         errors.append("Tautological condition detected (possible injection)")
@@ -516,6 +723,11 @@ def validate_sql(
         except Exception as e:
             errors.append(f"SQL parse error: {e}")
             _escalate("rejected_syntax")
+
+    # Layer: Column type safety (warnings, not errors — does not reject)
+    type_warnings = check_column_type_safety(sql)
+    for tw in type_warnings:
+        warnings.append(tw)
 
     return {
         "valid": len(errors) == 0,
