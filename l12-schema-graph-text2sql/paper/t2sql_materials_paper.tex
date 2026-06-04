@@ -97,7 +97,7 @@ Ni$_3$Al、Co$_3$Ti、Al$_3$Sc等の既知L1$_2$化合物11件を含む）を
 LIMIT切り詰め影響を排除する\textbf{LIMIT 10{,}000正規化}を導入した。
 Proposed手法（LLM: gpt-5.5）は\textbf{構文妥当率100\%}、実行成功率96\%、
 平均実行精度\textbf{76.3\%}を達成し、
-\textbf{テーブル幻覚率0\%}（LLM-onlyは9\%）を実現した。
+\textbf{テーブル幻覚率0\%}（LLM-onlyは100\%）を実現した。
 Medium難易度では実行精度89.2\%に達し、
 2-hop以上のマルチホップクエリでも84.4\%（2-hop）、70.1\%（3-hop）、68.8\%（4-hop）を記録した。
 Schema Graph走査によりLLMの視界を必要テーブルに限定することで
@@ -586,6 +586,9 @@ APIから取得したフラットなJSONレコードをリレーショナルス�
 \texttt{calculated\_property}テーブルはEAVパターン
 （\texttt{property\_name}, \texttt{value}, \texttt{unit}）を使用し、
 スキーマ変更なしに任意の計算物性（体積弾性率、せん断弾性率等）を収容する。
+EAV設計ではカラムホワイトリストに加え、
+\texttt{property\_name}の許可値リスト（\texttt{bulk\_modulus}、\texttt{shear\_modulus}等）
+を管理し、LLMが存在しない物性名を生成した場合に検出する。
 
 \paragraph{ER設計の汎用性に関する注記}
 OQMDは内部的にリレーショナルデータベース（Django ORM + PostgreSQL）で運用されているが、
@@ -628,7 +631,10 @@ LLMが利用可能なテーブル・カラム・型を理解する。
 
   \item \textbf{安定性用語}：自然言語 $\to$ 数値閾値。\\
     「安定」/ ``stable'' $\to$ \texttt{energy\_above\_hull} $\leq 0.001$~eV/atom\\
-    「準安定」/ ``metastable'' $\to$ \texttt{energy\_above\_hull} $\leq 0.05$~eV/atom
+    「準安定」/ ``metastable'' $\to$ $0.001 <$ \texttt{energy\_above\_hull} $\leq 0.05$~eV/atom\\
+    「安定または準安定」$\to$ \texttt{energy\_above\_hull} $\leq 0.05$~eV/atom\\
+    SQL条件では浮動小数点精度を考慮し、等号比較（\texttt{= 0}）ではなく
+    範囲条件（\texttt{<= 0.001}）を使用する。
 
   \item \textbf{物性用語}：物性記述からテーブル.カラム参照への対応。\\
     「格子定数」/ ``lattice constant'' $\to$ \texttt{structure.lattice\_a}\\
@@ -638,6 +644,9 @@ LLMが利用可能なテーブル・カラム・型を理解する。
 \subsubsection{Unicode正規化とパターンマッチング}
 
 Unicode下付き文字（₀₁₂₃₄₅₆₇₈₉）はマッチング前にASCII数字に正規化される。
+プロトタイプ名は投入時にASCII表記（\texttt{L12}、\texttt{B2}等）へ正規化し、
+自然言語側の表記揺れ（\texttt{L1\_2}、L1$_2$、$\gamma'$、Cu$_3$Au型）は
+辞書でDB内部値（\texttt{L12}）に写像する。
 元素記号認識はワード境界正規表現を使用し、
 独立した「Fe」を「FeCoNi」部分文字列から正しく区別する。
 
@@ -689,8 +698,23 @@ Unicode下付き文字（₀₁₂₃₄₅₆₇₈₉）はマッチング前�
 「形成エネルギー」$\to$~\texttt{phase\_stability.formation\_energy\_per\_atom}
 等の変換を行う。
 単位変換（eV, Å, GPa等）も内蔵するが、
-現スキーマではOQMDの内部単位がそのまま格納されているため、
-変換係数は全て1.0である。
+現検証DBでは物性値を投入時に標準単位（eV/atom, \AA, GPa）へ正規化しており、
+変換係数は全て1.0である。一般化の際には、入力単位を標準単位へ変換した上で
+WHERE条件を生成する機構が必要となる。
+
+\paragraph{浮動小数点比較と許容誤差}
+DFT計算値は浮動小数点精度の制約を受けるため、
+厳密等号比較（例：\texttt{lattice\_a = 3.572}）は避け、
+範囲条件（\texttt{BETWEEN 3.571 AND 3.573}）を優先する。
+「近傍」「同程度」等の自然言語表現に対しては、
+物性種別ごとに定義された許容幅（格子定数：$\pm 0.03$~\AA、
+$E_\text{hull}$：$\pm 0.001$~eV/atom）を辞書から適用する。
+
+\paragraph{NULL値の処理}
+物性値が未計算（\texttt{NULL}）のエントリは、
+数値比較クエリ（例：「バルクモジュラスが高い」）の結果から自動的に除外される。
+SQL生成時に暗黙的に\texttt{IS NOT NULL}条件が付加され、
+欠損値がランキングや統計値を歪めることを防止する。
 
 \subsubsection{化学式パーサーと曖昧性処理}
 \label{sec:formula_parser}
@@ -787,7 +811,13 @@ DBパターンが優勢な場合はdb\_queryとしてパイプラインに通過
 
 \subsubsection{PostgreSQLメタデータからのグラフ構築}
 
-外部キー関係はPostgreSQLの\texttt{information\_schema}から動的に抽出される：
+本実装はPostgreSQLを対象とする。アーキテクチャは他のRDBMSにも移植可能だが、
+メタデータ取得SQL、LIMIT構文、型情報、権限設計はDBMSごとの調整が必要である。
+
+外部キー関係はPostgreSQLの\texttt{information\_schema}から動的に抽出される。
+本研究の検証スキーマでは単一カラムFKを対象としたが、
+複合外部キー（\texttt{(a, b) REFERENCES parent(a, b)}）や
+複数スキーマを跨ぐ場合は\texttt{pg\_catalog}による抽出への拡張が必要である：
 
 \begin{lstlisting}[language=SQL,caption={FK関係抽出クエリ。},label=lst:fk_query]
 SELECT tc.table_name AS source_table,
@@ -805,8 +835,12 @@ SELECT tc.table_name AS source_table,
 
 結果はNetworkX~\citep{networkx2008}の無向グラフ$G = (V, E)$として格納される。
 ここで$V$ = \{テーブル名\}、$E$ = \{FK関係\}である。
-FKメタデータは実行時に読み取られるため、
-コード変更なしにスキーマ変更に自動適応する。
+経路探索には無向グラフを用いるが、各エッジにはFKの方向（参照元テーブル・カラム、
+参照先テーブル・カラム）を属性として保持し、JOIN句生成時にはこの有向メタデータを用いる。
+FKメタデータは実行時にPostgreSQLから読み取られるため、
+FK経路探索部分はスキーマ変更に追随できる。
+ただし、自然言語語彙とカラム意味の対応（用語辞書）、
+\texttt{property\_name}の許可値リスト、Few-Shot例は別途更新を必要とする。
 
 \subsubsection{最小被覆JOIN経路：Steiner木近似}
 \label{sec:steiner}
@@ -815,8 +849,10 @@ FKメタデータは実行時に読み取られるため、
 $R$のすべてのテーブルを接続する$G$の最小部分グラフが必要となる。
 これはグラフにおけるSteiner木問題~\citep{hwang1992steiner}であり、一般にNP困難である。
 
-30テーブル規模のスキーマグラフに対し、
-木構造グラフでは厳密解を与える貪欲ヒューリスティック
+本研究の検証DBでは30テーブル規模であるため計算コストは小さいが、
+提案手法は100テーブル以上の拡張スキーマを想定し、
+必要テーブル集合を接続する最小部分グラフ問題として定式化した。
+30テーブル規模では木構造グラフにおいて厳密解を与える貪欲ヒューリスティック
 （アルゴリズム~\ref{alg:steiner}）を採用する：
 
 \begin{algorithm}[htbp]
@@ -868,7 +904,13 @@ FKメタデータが結合カラム名を提供する：
 #   JOIN structure s ON s.entry_id = m.entry_id
 \end{lstlisting}
 
-テーブル別名はテーブル名の先頭文字から自動割当される（衝突時は解決処理あり）。
+テーブル別名はテーブル名の先頭文字から自動割当される
+（例：\texttt{material\_entry}$\to$\texttt{m}、\texttt{composition}$\to$\texttt{c}）。
+\texttt{structure}と\texttt{space\_group}のように先頭文字が衝突する場合は
+2文字目以降を追加して解決する（\texttt{s}、\texttt{sg}）。
+同一テーブルが複数回出現する場合（多元素ANDクエリ等）は
+出現順で\texttt{c1}、\texttt{c2}のように一意な別名を割り当て、
+カラム参照も別名解決後の名前空間で検証する。
 
 \subsubsection{多元素ANDクエリ：EXISTS副問い合わせパターン}
 \label{sec:multi_element}
@@ -1091,6 +1133,10 @@ Schema Graph走査（\ref{sec:schema_graph}節）が生成したJOIN経路と
   \item JOIN条件の欠落（Cartesian product リスク）
 \end{itemize}
 
+原則としてFKメタデータに存在する結合のみを許可する。
+FKが存在しないが業務上必要な結合（将来のマスタテーブル拡張等）は、
+\texttt{allowed\_joins.yaml}に明示登録することで許可する拡張点を設けている。
+
 \subsubsection{ガード判定分類（層8）}
 \label{sec:guard_categories}
 
@@ -1103,7 +1149,19 @@ Schema Graph走査（\ref{sec:schema_graph}節）が生成したJOIN経路と
   \item \textbf{WARNING}：軽微な逸脱（カラム幻覚疑い等）。実行するが警告付き。
 \end{enumerate}
 
-オプションでSQLGlot~\citep{sqlglot2023}がAST（抽象構文木）レベルの構文検証を行う。
+層1--5の正規表現ベース検証に加え、SQLGlot~\citep{sqlglot2023}による
+AST（抽象構文木）レベルの構文検証を標準で併用する。
+ASTパーサーにより、CTE（\texttt{WITH}句）を許可する場合も各CTE本体が
+\texttt{SELECT}であることを検証し、\texttt{INSERT}/\texttt{UPDATE}/\texttt{DELETE}を
+含むwritable CTEは拒否する。
+正規表現のみでは検出困難なquoted identifier、schema-qualified name、
+ネストされたサブクエリ内の危険操作もAST走査で捕捉する。
+本番運用ではASTベース検証を主軸とし、正規表現検証は高速な事前フィルタとして位置づける。
+
+\paragraph{DB権限による多層防御}
+SQLGuardに加え、データベース層でもread-onlyロールを適用する。
+実行ユーザーには対象スキーマに対する\texttt{SELECT}権限のみを付与し、
+DDL/DML権限は付与しない。SQLGuardが万一破られた場合でもデータ改変を防止する。
 
 \subsubsection{空結果診断}
 \label{sec:empty_diagnosis}
@@ -1161,13 +1219,16 @@ SQLが正常に実行され結果が0行となった場合、
 
 本研究では、OQMD（Open Quantum Materials Database）~\citep{saal2013oqmd}の
 データを参考に、複数プロトタイプを含む検証データベースを構築した。
-OQMDのオリジナルスキーマはフラットな単一テーブル構造であり、
-多元素AND検索や構造・安定性・計算条件を跨ぐ複合検索が困難である。
+OQMD APIから取得可能なデータはフラットなJSONレコード形式であり、
+そのままでは多元素AND検索や構造・安定性・計算条件を跨ぐ複合検索が困難である。
 そこで本研究では、Schema Graph制約型Text-to-SQLのコンセプト実証のために、
 組成・構造・熱力学的安定性・計算条件・物性を分離した
 独自の正規化ER図（30テーブル）を設計した。
 この独自設計により、FK関係を通じたマルチホップJOINの自動算出を
 検証するための現実的な複雑さを備えたスキーマを実現している。
+なお、本研究における\texttt{material\_entry}は単なる組成ではなく、
+化学式・プロトタイプ・構造を含む計算エントリ単位を表す
+（同一組成でも異なるプロトタイプは別エントリとなる）。
 
 データベースには5プロトタイプ1{,}471件を格納した（表~\ref{tab:db_composition}）。
 
@@ -1472,9 +1533,11 @@ LLMにはgpt-5.5（OpenAI、2026年5月アクセス、Temperature=0.0）を使�
   \item \textbf{構文妥当率}（Syntax validity）：SQLパーサーを通る割合。LIMITの影響を受けない。
   \item \textbf{実行成功率}（Execution validity）：PostgreSQLでエラーなく実行できる割合。LIMITの影響を受けない。
   \item \textbf{実行精度}（Execution accuracy）：返された結果セットがgold結果と一致する割合。
-  \item \textbf{テーブル幻覚率}（Hallucinated table rate）：存在しないテーブルを使った割合。LIMITの影響を受けない。
-  \item \textbf{JOIN幻覚数}（Hallucinated JOIN count）：許可されたFK関係に基づかないJOINを含むクエリの件数。
+  \item \textbf{テーブル幻覚率}（Hallucinated table rate）：スキーマに存在しないテーブルを1つ以上参照するクエリの割合。
+    SQLGuard適用\textbf{前}の生成SQL（LLM出力直後）に対して測定する。
+  \item \textbf{JOIN幻覚数}（Hallucinated JOIN count）：FK関係に基づかないJOINを含むクエリの件数。
     Rule-basedおよびProposedは、Schema Graph走査によりFKに基づくJOINのみを生成するため、0件である。
+    本指標もSQLGuard適用前の生成SQLに対して測定する。
   \item \textbf{マルチホップ成功率}（Multi-hop success rate）：2-hop以上クエリの正解割合。
 \end{itemize}
 
@@ -1507,9 +1570,11 @@ SQL生成において、LLMはgold SQLと異なるSELECT列を出力すること
 \paragraph{改善C：LIMIT 10{,}000正規化}
 SQLGuardが自動付加するLIMITの値がgold SQLと生成SQLで異なる場合、
 行数の差異により精度が過小評価される。
-本研究では、gold SQLと生成SQLの両方にLIMIT 10{,}000を統一的に適用する。
+本研究では、\textbf{評価時のみ}gold SQLと生成SQLの両方にLIMIT 10{,}000を統一的に適用する。
 DB規模1{,}471件に対して実質的に制限なしと同等でありかつ、
 暴走クエリ防止の安全弁としての役割を果たす。
+実運用ではユーザー指定値、管理者設定上限、またはクエリ種別
+（集約クエリではLIMITなし許可等）に応じた値を適用する。
 
 \paragraph{改善効果}
 表~\ref{tab:metric_improvement}に評価指標改善の効果を示す。
@@ -1558,7 +1623,7 @@ Supplementary S1--S2節に掲載する。
     \toprule
     ID & 手法 & \shortstack{構文\\妥当率} & \shortstack{実行\\成功率} & \shortstack{平均\\実行精度} & \shortstack{テーブル\\幻覚率} & \shortstack{不要\\ JOIN} \\
     \midrule
-    B1 & LLM-only & 100\% & 0\% & 0\% & 9\% & --- \\
+    B1 & LLM-only & 100\% & 0\% & 0\% & 100\% & --- \\
     B2 & Full Schema & 100\% & 23\% & 21.0\% & 0\% & 多い \\
     B3 & Rule-based & 100\% & 98\% & 58.5\% & 0\% & なし \\
     B4 & FK-list & 100\% & 4\% & 4.0\% & 0\% & --- \\
@@ -1570,7 +1635,7 @@ Supplementary S1--S2節に掲載する。
 \paragraph{主要な発見}
 
 \begin{enumerate}
-  \item \textbf{LLM-only（B1）は実行成功率0\%}：
+  \item \textbf{LLM-only（B1）は実行成功率0\%・テーブル幻覚率100\%}：
     スキーマ情報なしではLLMが存在しないテーブル名を幻覚し、
     生成されたSQLは一切実行できない。
   \item \textbf{Proposed（P）はテーブル幻覚率0\%かつ実行精度76.3\%}：
@@ -1687,18 +1752,18 @@ LLMがWHERE句を生成する役割分担が機能している。
 
 \begin{table}[htbp]
   \centering
-  \caption{手法別エラー分析（100クエリ）。}
+  \caption{手法別エラー分析（100クエリ）。実行エラー＝PostgreSQL実行時エラー件数、テーブル幻覚＝存在しないテーブルを1つ以上参照するクエリ件数、JOIN幻覚＝FK関係に基づかないJOINを含むクエリ件数。}
   \label{tab:error_analysis}
   \small
   \begin{tabular}{clcccc}
     \toprule
-    ID & 手法 & \shortstack{実行\\失敗} & \shortstack{構文\\エラー} & \shortstack{テーブル\\幻覚} & \shortstack{JOIN\\幻覚数} \\
+    ID & 手法 & \shortstack{実行\\エラー} & \shortstack{構文\\エラー} & \shortstack{テーブル\\幻覚} & \shortstack{JOIN\\幻覚} \\
     \midrule
     B1 & LLM-only & 100 & 1 & 100 & 4 \\
-    B2 & Full Schema & 0 & 0 & 2 & 25 \\
+    B2 & Full Schema & 77 & 0 & 0 & 25 \\
     B3 & Rule-based & 2 & 0 & 0 & 0 \\
-    B4 & FK-list & 89 & 2 & 2 & 81 \\
-    P & \textbf{Proposed} & \textbf{18} & \textbf{0} & \textbf{0} & \textbf{0} \\
+    B4 & FK-list & 96 & 2 & 2 & 81 \\
+    P & \textbf{Proposed} & \textbf{4} & \textbf{0} & \textbf{0} & \textbf{0} \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1892,6 +1957,8 @@ LLM-only（B1）の実行成功率0\%とProposed（P）の96\%の対比は、
 Proposed手法がテーブル幻覚率0\%を達成した。
 Schema Graph走査が提供する\textbf{関連テーブルのみ}のサブグラフ提示が、
 テーブル幻覚を原理的に排除し、同時に不要JOINも削減する。
+ここで「不要JOIN」とは、Schema Graphが返す最小接続部分グラフ（Steiner木）に
+含まれないテーブルへのJOINと定義する。
 Full Schema手法（21.0\%）との精度差（55.3pt）は、
 LLMに提示するテーブルの絞り込みが精度に直結することを示す。
 
@@ -2057,12 +2124,14 @@ RDF/SPARQLを前提とし、セマンティク推論に優れるが、
 \label{sec:ai4s}
 
 本手法はAI4Sパラダイムに直接的な含意を持つ。
-Schema Graphアーキテクチャは\textbf{スキーマ非依存}であり、
+Schema Graphアーキテクチャは\textbf{FK経路探索部分がスキーマ非依存}であり、
 FK関係は実行時にPostgreSQLメタデータからイントロスペクション
 （\ref{sec:schema_graph}節）されるため、
-アーキテクチャ上は任意の正規化RDB（Materials Project~\citep{jain2013mp}、AFLOW~\citep{curtarolo2012aflow}、NOMAD~\citep{draxl2019nomad}、機関内データベース）に
-適用可能である。ただし、用語辞書のドメイン適応および大規模スキーマ（100テーブル以上）での
-Steiner木探索性能は未検証であり、別途評価が必要である。
+FK経路探索は任意の正規化RDB（Materials Project~\citep{jain2013mp}、AFLOW~\citep{curtarolo2012aflow}、NOMAD~\citep{draxl2019nomad}、機関内データベース）に
+自動適応可能である。ただし、用語辞書のドメイン適応、
+\texttt{property\_name}の意味対応、Few-Shot例の整備、
+および大規模スキーマ（100テーブル以上）でのSteiner木探索性能は
+ターゲットDB毎に調整・検証が必要である。
 
 とりわけ、Materials Integration（MInt）システム\cite{minamoto2020mint}における
 PSPP連鎖の各モジュールが出力するRDBや、
@@ -2103,6 +2172,26 @@ NL $\to$ データ検索 $\to$ 材料設計仮説生成の
     Chain-of-Thought推論やFew-Shotプロンプトの拡充との組合せが期待される。
   \item \textbf{大規模データ検証}：10万レコード・100テーブル以上での
     Steiner木近似の計算性能とSQL生成精度の検証が残る。
+  \item \textbf{SQLGuardのAST検証完全化}：
+    現行の正規表現+SQLGlot併用を、ASTベース検証を主軸とする構成に移行し、
+    型制約検証（数値カラムへの文字列比較禁止等）を追加する。
+  \item \textbf{EAV物性テーブルのVIEW化}：
+    頻用物性（\texttt{bulk\_modulus}、\texttt{shear\_modulus}等）を
+    ピボットVIEWとして提示し、LLMのSQL生成安定性を向上させる。
+  \item \textbf{インデックス設計と性能評価}：
+    \texttt{composition(element, entry\_id)}、
+    \texttt{calculated\_property(property\_name, value)}等の
+    複合インデックスを追加し、大規模DB（100万件）での応答時間を評価する。
+  \item \textbf{評価指標の多軸化}：
+    現行の実行結果一致に加え、SELECT列適合率、JOIN経路一致率、
+    ORDER BY正確性（Top-k accuracy、NDCG）を分離評価し、
+    エラーの原因特定を容易にする。
+  \item \textbf{多元素検索の代替戦略比較}：
+    EXISTS方式とGROUP BY/HAVING方式の性能・可読性比較を実施し、
+    DBサイズに応じた最適戦略を明確化する。
+  \item \textbf{集約クエリのテンプレート化}：
+    COUNT、AVG、MAX/MIN、ORDER BY...LIMITの各パターンを
+    intent分類に基づき半自動生成し、Rule-basedモードの適用範囲を拡大する。
 \end{enumerate}
 
 % =====================================================================
@@ -2119,8 +2208,8 @@ NL $\to$ データ検索 $\to$ 材料設計仮説生成の
     テーブル幻覚の排除と不要JOINの削減を同時に達成。
     1{,}471エントリ（L1$_2$+B2+NaCl+NiAs+BiF$_3$）で検証。
   \item \textbf{FKイントロスペクションによる汎用性}：
-    アーキテクチャ上は任意の正規化材料RDB（OQMD~\citep{saal2013oqmd}、Materials Project~\citep{jain2013mp}、AFLOW~\citep{curtarolo2012aflow}等）に適用可能。
-    ただし用語辞書のドメイン適応および大規模スキーマでの性能検証が別途必要。
+    FK経路探索部分は任意の正規化材料RDB（OQMD~\citep{saal2013oqmd}、Materials Project~\citep{jain2013mp}、AFLOW~\citep{curtarolo2012aflow}等）に自動適応可能。
+    ただし用語辞書・\texttt{property\_name}対応のドメイン適応および大規模スキーマでの性能検証が別途必要。
   \item \textbf{L1$_2$化合物探索で材料工学的有用性を実証}：
     既知L1$_2$ 11件の全件再発見、
     Cu$_3$Nbを$\gamma'$候補として計算的に抽出（実験的検証が必要）。
@@ -2351,10 +2440,11 @@ FROM material_entry m
 WHERE (s.prototype = 'L12'
     OR s.strukturbericht = 'L12')
   AND c.element = 'Ni'
-  AND ps.energy_above_hull = 0
+  AND ps.energy_above_hull <= 0.001
 LIMIT 10000;
 -- Schema Graph走査で必要な3 JOINのみ
 -- テーブル幻覚0%, DISTINCT, LIMIT付き
+-- 安定条件は浮動小数点を考慮し <= 0.001 を使用
 \end{lstlisting}
 
 \subsection{「NiとAlの両方を含むL1$_2$化合物を出して」}
