@@ -1063,7 +1063,7 @@ elif section_key == "classification":
     """)
 
     X_cls = df_cls[["VEC", "原子半径差 δ (%)", "混合エンタルピー ΔH_mix (kJ/mol)", "電気陰性度差"]].values
-    y_cls = df_cls["結晶構造"].values
+    y_cls = np.array(df_cls["結晶構造"].tolist())
     scaler_cls = StandardScaler()
     X_cls_scaled = scaler_cls.fit_transform(X_cls)
     X_tr_c, X_te_c, y_tr_c, y_te_c = train_test_split(
