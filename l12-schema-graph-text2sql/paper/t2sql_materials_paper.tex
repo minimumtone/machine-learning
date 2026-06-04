@@ -1159,9 +1159,12 @@ ASTパーサーにより、CTE（\texttt{WITH}句）を許可する場合も各C
 本番運用ではASTベース検証を主軸とし、正規表現検証は高速な事前フィルタとして位置づける。
 
 \paragraph{DB権限による多層防御}
-SQLGuardに加え、データベース層でもread-onlyロールを適用する。
-実行ユーザーには対象スキーマに対する\texttt{SELECT}権限のみを付与し、
-DDL/DML権限は付与しない。SQLGuardが万一破られた場合でもデータ改変を防止する。
+SQLGuardは文字列・AST検査によるベストエフォートの事前フィルタであり、
+安全性の最終保証はDB権限層が担う。
+実行ユーザーにはread-onlyロールを適用し、対象スキーマに対する\texttt{SELECT}権限のみを付与する。
+DDL/DML権限は付与しない。
+これにより、SQLGuardを迂回する未知の攻撃パターン（DB固有関数の悪用等）に対しても
+データ改変・権限昇格を原理的に防止する。
 
 \subsubsection{空結果診断}
 \label{sec:empty_diagnosis}
