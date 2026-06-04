@@ -384,7 +384,7 @@ def fig04_indep_test(y_test, a_veg_te, a_ss_te, heas_test, gb, gf):
         ax.scatter(y_test[idx], a_ss_te[idx], c=c, marker=marker, s=70, alpha=0.7, label=label)
     ax.set_xlabel("Experimental $a$ (\u00c5)")
     ax.set_ylabel("Predicted $a$ (\u00c5)")
-    ax.set_title(f"(c) Independent test ($\\gamma_{{BCC}}$={gb:.2f}, $\\gamma_{{FCC}}$={gf:.2f})")
+    ax.set_title(f"(c) Independent test ($q_{{BCC}}$={gb:.2f}, $q_{{FCC}}$={gf:.2f})")
     ax.legend(fontsize=11)
     ax.set_aspect("equal")
 
@@ -416,22 +416,32 @@ def fig05_element_delta(decomp):
 
 def fig06_additive_fit(ob2, ol12, decomp):
     """Fig 6: Pairwise Omega_sf vs additive delta_A + delta_B."""
+    OUTLIER_THRESHOLD = 0.3  # |Omega_sf| > 0.3 are unphysical (f-electron issues)
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
     for ax, omega, key, title in [(ax1, ob2, "B2", "B2"),
                                    (ax2, ol12, "L12", r"L1$_2$")]:
         d = decomp[key]["delta"]
-        x_vals, y_vals = [], []
+        x_vals, y_vals, x_out, y_out = [], [], [], []
         for (a, b), val in omega.items():
             if a in d and b in d:
-                x_vals.append(d[a] + d[b])
-                y_vals.append(val)
+                if abs(val) > OUTLIER_THRESHOLD:
+                    x_out.append(d[a] + d[b])
+                    y_out.append(val)
+                else:
+                    x_vals.append(d[a] + d[b])
+                    y_vals.append(val)
         ax.scatter(x_vals, y_vals, c="C0", alpha=0.4, s=20)
+        if x_out:
+            ax.scatter(x_out, y_out, c="C3", alpha=0.6, s=40, marker="x",
+                       label=f"excluded ({len(x_out)})")
+            ax.legend(fontsize=10)
         lims = [min(min(x_vals), min(y_vals)) - 0.01,
                 max(max(x_vals), max(y_vals)) + 0.01]
         ax.plot(lims, lims, "k--", lw=1)
         ax.set_xlabel(r"$\delta_A^{(s)} + \delta_B^{(s)}$")
         ax.set_ylabel(r"$\Omega_\mathrm{sf}^{(s)}$ (pairwise)")
-        ax.set_title(f"{title}  R$^2$ = {decomp[key]['r2']:.3f}")
+        n_total = len(x_vals) + len(x_out)
+        ax.set_title(f"{title} ({n_total} pairs)  R$^2$ = {decomp[key]['r2']:.3f}")
         ax.set_aspect("equal")
     fig.tight_layout()
     fig.savefig(OUTDIR / "fig_additive_fit.png", bbox_inches="tight")
@@ -443,6 +453,16 @@ def fig07_composition_examples(all_df):
     """Fig 7: Vegard composition plots for representative pairs."""
     examples = [("Cu", "Zr"), ("Al", "Ni"), ("Fe", "Ti"),
                 ("Co", "Cr"), ("Pd", "Ti"), ("Nb", "Ta")]
+
+    # Build DFT pure element volumes from same-element B2 entries
+    same_el_b2 = all_df[(all_df["stype"] == "B2") &
+                         (all_df["element_A"] == all_df["element_B"])]
+    dft_volumes = {}
+    for _, row in same_el_b2.iterrows():
+        el = row["element_A"]
+        v = row["lattice_constant"] ** 3 / 2
+        dft_volumes[el] = v  # last entry wins (VASP preferred)
+
     fig, axes = plt.subplots(2, 3, figsize=(18, 11))
     axes = axes.flatten()
 
@@ -450,10 +470,19 @@ def fig07_composition_examples(all_df):
         ax = axes[idx]
         vX = KING_ATOMIC_VOLUMES.get(elX, 15)
         vY = KING_ATOMIC_VOLUMES.get(elY, 15)
-        # Vegard line
+        # King Vegard line
         c_arr = np.linspace(0, 1, 100)
         a_veg = [(2 * ((1 - c) * vX + c * vY)) ** (1/3) for c in c_arr]
-        ax.plot(c_arr * 100, a_veg, "k--", lw=1.5, label="Vegard (B2)")
+        ax.plot(c_arr * 100, a_veg, "k--", lw=1.5, label="Vegard (King)")
+
+        # DFT Vegard line (if both elements have DFT volumes)
+        if elX in dft_volumes and elY in dft_volumes:
+            vX_dft = dft_volumes[elX]
+            vY_dft = dft_volumes[elY]
+            a_veg_dft = [(2 * ((1 - c) * vX_dft + c * vY_dft)) ** (1/3)
+                         for c in c_arr]
+            ax.plot(c_arr * 100, a_veg_dft, "k-", lw=1.5,
+                    alpha=0.6, label="Vegard (DFT)")
 
         # DFT data points
         sub = all_df[(all_df["stype"] == "B2")]
@@ -492,6 +521,7 @@ def fig07_composition_examples(all_df):
         ax.set_xlabel(f"% {elY}")
         ax.set_ylabel("$a$ (\u00c5)")
         ax.set_title(f"{elX}-{elY}")
+        ax.legend(fontsize=10, loc="best")
     fig.tight_layout()
     fig.savefig(OUTDIR / "fig_composition_examples.png", bbox_inches="tight")
     plt.close(fig)
@@ -547,10 +577,11 @@ def fig08_delta_r_proof(all_df):
         print("  fig_delta_r_proof.png — skipped (no pairs with all 3 structures)")
         return
 
-    fig, axes = plt.subplots(2, 3, figsize=(18, 11))
+    # --- Figure 1: (a)(b)(c) structural invariance proof ---
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5.5))
 
     # (a) delta_r X3Y vs Y3X — should show NO scatter
-    ax = axes[0, 0]
+    ax = axes[0]
     dr_a3b, dr_ab3 = [], []
     for (elA, elB) in complete:
         vA, vB = KING_ATOMIC_VOLUMES[elA], KING_ATOMIC_VOLUMES[elB]
@@ -571,7 +602,7 @@ def fig08_delta_r_proof(all_df):
     ax.set_aspect("equal")
 
     # (b) delta_r A3B vs B2
-    ax = axes[0, 1]
+    ax = axes[1]
     dr_b2 = []
     for (elA, elB) in complete:
         vA, vB = KING_ATOMIC_VOLUMES[elA], KING_ATOMIC_VOLUMES[elB]
@@ -587,7 +618,7 @@ def fig08_delta_r_proof(all_df):
     ax.set_aspect("equal")
 
     # (c) Omega_sf X3Y vs Y3X — should show LARGE scatter
-    ax = axes[0, 2]
+    ax = axes[2]
     osf_a3b = [complete[p]["L12_A3B"] for p in complete]
     osf_ab3 = [complete[p]["L12_AB3"] for p in complete]
     ax.scatter(osf_a3b, osf_ab3, c="C3", alpha=0.4, s=20)
@@ -600,8 +631,16 @@ def fig08_delta_r_proof(all_df):
     ax.set_title(f"(c) $\\Omega_{{sf}}$: large scatter (r={r_corr:.2f})")
     ax.set_aspect("equal")
 
+    fig.tight_layout()
+    fig.savefig(OUTDIR / "fig_delta_r_proof.png", bbox_inches="tight")
+    plt.close(fig)
+    print("  fig_delta_r_proof.png")
+
+    # --- Figure 2: (d)(e) L12 asymmetry and L12-B2 correlation ---
+    fig2, axes2 = plt.subplots(1, 2, figsize=(12, 5))
+
     # (d) DFT lattice constant difference |a(A3B) - a(B3A)|
-    ax = axes[1, 0]
+    ax = axes2[0]
     a_diffs = []
     for pair, data in pair_data.items():
         if data["L12_A3B"] and data["L12_AB3"]:
@@ -635,35 +674,18 @@ def fig08_delta_r_proof(all_df):
     ax.legend(fontsize=12)
 
     # (e) Omega_sf A3B vs B2
-    ax = axes[1, 1]
+    ax = axes2[1]
     osf_b2_list = [complete[p]["B2"] for p in complete]
     ax.scatter(osf_a3b, osf_b2_list, c="C0", alpha=0.4, s=20)
     r2 = np.corrcoef(osf_a3b, osf_b2_list)[0, 1]
     ax.set_xlabel(r"$\Omega_\mathrm{sf}$ (A$_3$B, L1$_2$)")
     ax.set_ylabel(r"$\Omega_\mathrm{sf}$ (AB, B2)")
     ax.set_title(f"(e) L1$_2$ vs B2 (r={r2:.2f})")
-    ax.set_aspect("equal")
 
-    # (f) summary text
-    ax = axes[1, 2]
-    ax.axis("off")
-    txt = (
-        "$\\delta r = f(c_i, r_i)$\n"
-        "Structure argument: NONE\n\n"
-        "$\\Omega_{sf}$ from DFT volume:\n"
-        "  $V_{actual}(structure) \\neq V_{Vegard}$\n"
-        "  Structure $\\rightarrow$ volume $\\rightarrow$ $\\Omega_{sf}$\n\n"
-        f"Complete pairs: {len(complete)}\n"
-        f"L1$_2$ |$\\Delta a$| mean: {np.mean(diffs):.3f} \u00c5"
-    )
-    ax.text(0.1, 0.5, txt, fontsize=16, va="center", family="monospace",
-            transform=ax.transAxes)
-    ax.set_title("(f) Why $\\delta r$ fails")
-
-    fig.tight_layout()
-    fig.savefig(OUTDIR / "fig_delta_r_proof.png", bbox_inches="tight")
-    plt.close(fig)
-    print("  fig_delta_r_proof.png")
+    fig2.tight_layout()
+    fig2.savefig(OUTDIR / "fig_l12_b2_correlation.png", bbox_inches="tight")
+    plt.close(fig2)
+    print("  fig_l12_b2_correlation.png")
 
 
 def fig09_packing(all_df):
@@ -1048,9 +1070,9 @@ def main():
     print(f"    MP: {n_mp}, OQMD: {n_oqmd}, VASP: {n_vasp}")
     print(f"    Total: {len(all_df)} compounds (Gd/Ce excluded)")
 
-    # 2. Compute pairwise Omega_sf (MP+OQMD only, len>=2)
-    print("\n[2] Computing pairwise Omega_sf (MP+OQMD, len>=2)...")
-    ob2, ol12 = compute_omega_sf_pairwise(all_df, sources=("MP", "OQMD"), min_count=2)
+    # 2. Compute pairwise Omega_sf (all 3 sources)
+    print("\n[2] Computing pairwise Omega_sf (MP+OQMD+VASP)...")
+    ob2, ol12 = compute_omega_sf_pairwise(all_df, sources=("MP", "OQMD", "VASP"), min_count=1)
     print(f"    B2 pairs: {len(ob2)}, L1_2 pairs: {len(ol12)}")
 
     # 3. Optimize gamma

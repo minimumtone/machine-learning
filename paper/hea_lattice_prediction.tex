@@ -38,46 +38,21 @@
 \address{物質・材料研究機構 (NIMS), 茨城県つくば市}
 
 \begin{abstract}
-高エントロピー合金(HEA)の格子定数を、元素パラメータのみから
+高エントロピー合金(HEA)の格子定数を元素パラメータのみから
 任意組成で予測する手法を提案する。
 King (1966) の体積サイズファクター$\Omega_\text{sf}$を
-第一原理（DFT）計算によって構造特異的に再導出し
-（B2構造$\to$BCC予測、L1$_2$構造$\to$FCC予測）、
-Materials Project・OQMD・独自VASP計算の3ソースから
-合計8,521件の二元系化合物データを統合した。
-収束判定後、758個のB2ペアと703個のL1$_2$ペアから
-構造別$\Omega_\text{sf}$を取得し、
-検証に用いる64個のHEAに必要な全元素ペアのカバレッジを達成した
-（BCC 59/59、FCC 42/42）。
-元素対$\Omega_\text{sf}$を加法分解
-$\Omega_\text{sf}^{(s)}(i\text{-}j) \approx \delta_i^{(s)} + \delta_j^{(s)}$
-により38元素パラメータに圧縮し、
-各元素の組成依存有効原子体積
-$V_\text{eff}(i;\,\{c_j\})$を定義した。
-これにより、等モル・非等モルを問わず
-$a = (n_\text{auc}\sum c_i V_\text{eff})^{1/3}$
-で格子定数を予測できる。
-B2/L1$_2$参照での64 HEAに対するRMSE = 0.0214~\AA{}は
-Vegard則（0.0227~\AA）比5.7\%の改善に相当する。
-推定ノイズフロアは$\sigma \approx 0.016$~\AA{}であり、
-残余改善の余地は限られる。
-加えて、BCC-Special Quasi-random Structure (SQS, $\alpha \approx 0$)
-からの$\Omega_\text{sf}$導出により
-校正定数$q_\text{BCC} = 1$を採用でき、
-全体RMSE = 0.0202~\AA{}（Vegard比11\%改善）を達成した。
-Alonsoデータセット外の23個のHEA（BCC 10、FCC 13、10文献18元素）で
-汎化性能を検証し、全体RMSE = 0.0150~\AA{}（Vegard比13.4\%改善）、
-BCC RMSE = 0.0149~\AA{}（Vegard比19.7\%改善）を確認した。
-DFT自己整合的に$\Omega_\text{sf}$を定義
-（参照体積にもVASP計算値を使用）すると
-B2参照でもq$\approx$1が達成されるという新知見も得られた。
-703二元系ペアの網羅的解析により、
-従来の原子サイズミスマッチ$\delta r$が構造情報を
-数学的に含み得ないことを証明し、
-DFT体積由来の記述子の必要性を確立した。
+第一原理（DFT）計算により構造特異的に再導出し
+（B2$\to$BCC、L1$_2$$\to$FCC）、
+加法分解$\Omega_\text{sf}^{(s)}(i\text{-}j) \approx \delta_i^{(s)} + \delta_j^{(s)}$
+により38元素パラメータに圧縮した。
+これにより$a = (n_\text{auc}\sum c_i V_\text{eff})^{1/3}$で
+等モル・非等モルを問わず格子定数を予測できる。
+64 HEAに対するRMSE = 0.0214~\AA{}（Vegard則比5.7\%改善）、
+独立23 HEAでRMSE = 0.0150~\AA{}（同13.4\%改善）を達成した。
+従来の$\delta r$が構造情報を数学的に含み得ないことを証明し、
+DFT体積由来記述子の必要性を確立した。
 $\delta^{(s)}$パラメータは表1枚で提供され、
-DFT計算なしに任意HEA組成をスプレッドシートで即座に
-スクリーニング可能である。
+DFT計算なしに任意組成をスプレッドシートで即座にスクリーニング可能である。
 \end{abstract}
 
 \begin{keyword}
@@ -205,18 +180,18 @@ DFTデータベースから$\Omega_\text{sf}$を導出し、
 加法分解で元素パラメータに圧縮、
 最終的に任意組成HEAの格子定数を予測する一貫した流れである。
 
-\begin{figure}[H]
+\begin{figure*}[!t]
 \centering
 \begin{tikzpicture}[
-  node distance=0.6cm and 1.2cm,
+  node distance=0.5cm and 1.0cm,
   box/.style={rectangle, draw, rounded corners, minimum height=1.2cm,
     minimum width=2.2cm, text width=2.0cm, align=center, font=\small},
-  arr/.style={-{Stealth[length=3mm]}, thick}
+  arr/.style={-{Stealth[length=2.5mm]}, thick}
 ]
 \node[box, fill=blue!10] (dft) {DFTデータ\\{\scriptsize 8,521件}};
 \node[box, fill=green!10, right=of dft] (omega) {$\Omega_\text{sf}$導出\\{\scriptsize B2: 758\\L1$_2$: 703}};
-\node[box, fill=orange!10, right=of omega] (add) {加法分解\\{\scriptsize $\delta_i^{(s)}$\\39元素}};
-\node[box, fill=red!10, right=of add] (pred) {格子定数\\予測\\{\scriptsize 式(\ref{eq:a_from_veff})}};
+\node[box, fill=orange!10, right=of omega] (add) {加法分解\\{\scriptsize $\delta_i^{(s)}$\\38元素}};
+\node[box, fill=red!10, right=of add] (pred) {格子定数予測\\{\scriptsize 式(\ref{eq:a_from_veff})}};
 \node[box, fill=purple!10, right=of pred] (test) {独立検証\\{\scriptsize 23 HEA\\10文献}};
 \draw[arr] (dft) -- (omega);
 \draw[arr] (omega) -- (add);
@@ -224,10 +199,10 @@ DFTデータベースから$\Omega_\text{sf}$を導出し、
 \draw[arr] (pred) -- (test);
 \end{tikzpicture}
 \caption{本手法のパイプライン概要。DFT計算で得た二元系化合物の体積偏差を
-構造特異的$\Omega_\text{sf}$として導出し、加法分解で39元素パラメータに圧縮後、
+構造特異的$\Omega_\text{sf}$として導出し、加法分解で38元素パラメータに圧縮後、
 任意組成HEAの格子定数を予測する。}
 \label{fig:pipeline}
-\end{figure}
+\end{figure*}
 
 
 %% =====================================================================
@@ -512,28 +487,20 @@ ML残差補正はいずれも0.002~\AA{}未満の追加改善しか与えず、
 すでに飽和しており、さらなる改善には
 合金作製プロセスの明示的制御が必要となる。
 
-図~\ref{fig:parity}にパリティプロットを、図~\ref{fig:rmse}に
-RMSE棒グラフを示す。
+図~\ref{fig:parity}にパリティプロットを示す。
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\columnwidth]{fig_parity.png}
-\caption{パリティプロット（予測 vs 実験格子定数）。
-  灰丸: Vegard則（64 HEA）、
-  青丸: DFT-$\Omega_\text{sf}$（64 HEA、RMSE = 0.0214~\AA）、
-  赤三角: 独立テスト（23 HEA）。
-  独立テスト全体 RMSE = 0.0150~\AA（Vegard比13.4\%改善）。
-  実線は完全一致線。}
+\caption{全87 HEAのパリティプロット（予測 vs 実験格子定数）。
+  灰色: Vegard則による予測（64 HEA訓練セット）、
+  青色: DFT-$\Omega_\text{sf}$モデルによる予測（同64 HEA、RMSE = 0.0214~\AA）、
+  赤色三角: 独立テストセット（23 HEA、RMSE = 0.0150~\AA）。
+  対角線は$a_\text{pred} = a_\text{exp}$を表す。}
 \label{fig:parity}
 \end{figure}
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.9\columnwidth]{fig_rmse_bar.png}
-\caption{各手法のRMSE比較（64 HEA）。
-  水平破線は推定ノイズフロア$\sigma \approx 0.016$~\AA{}。}
-\label{fig:rmse}
-\end{figure}
+
 
 
 \subsection{BCC/FCC構造別分析}
@@ -559,8 +526,9 @@ FCC HEAはRMSE = 0.0096~\AA{}と推定$\sigma$以下の精度を示す。
 構成元素（Co, Cr, Fe, Mn, Ni等の3$d$遷移金属）の
 原子サイズが類似しVegard則の近似精度が元来高いこと、
 L1$_2$がFCC配位の良い近似であり
-$q_\text{FCC} = 0.13$が示すように補正がほぼ不要であること
-が要因である。
+$q_\text{FCC} = 0.13$が示すように$\Omega_\text{sf}$補正が
+ほぼ不要であること（$q = 0$がVegard則に相当し、
+$q = 0.13$はVegard体積の13\%のみを補正に配分）が要因である。
 BCC HEA（0.0299~\AA）はSQS参照で0.0281~\AA{}に
 改善される（\ref{sec:sqs_improvement}節）。
 
@@ -569,7 +537,8 @@ BCC HEA（0.0299~\AA）はSQS参照で0.0281~\AA{}に
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=\textwidth]{fig_bcc_fcc.png}
-\caption{BCC/FCC構造別の誤差分布と予測精度比較。}
+\caption{BCC/FCC構造別の誤差分布（64 HEA: BCC 29合金 + FCC 35合金）。
+  各手法（Vegard, Alonso, DFT-$\Omega_\text{sf}$）の合金別絶対誤差を構造で分離して比較。}
 \label{fig:bcc_fcc}
 \end{figure*}
 
@@ -595,7 +564,7 @@ BCC HEA（0.0299~\AA）はSQS参照で0.0281~\AA{}に
 \midrule
 Vegard（単純平均）          & 0.0173 & 0.0185 & 0.0164 \\
 Alonso体積ズレ補正（King実験値）    & 0.0185 & 0.0178 & 0.0190 \\
-DFT-$\Omega_\text{sf}$（構造別, 最適$\gamma$） & \textbf{0.0150} & \textbf{0.0149} & \textbf{0.0151} \\
+DFT-$\Omega_\text{sf}$（構造別, 最適$q_s$） & \textbf{0.0150} & \textbf{0.0149} & \textbf{0.0151} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -613,8 +582,10 @@ BCC予測精度が大幅に改善された。
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=\textwidth]{fig_indep_test.png}
-\caption{独立テストセット（23 HEA）の予測 vs 実験。
-  BCC 10合金（赤）とFCC 13合金（青）。}
+\caption{独立テストセット（23 HEA、10文献18元素）の予測性能。
+  (a)~合金別絶対誤差。(b)~構造別RMSE（灰: Vegard、青: DFT-$\Omega_\text{sf}$）。
+  (c)~パリティプロット（$q_\text{BCC} = 0.49$、$q_\text{FCC} = 0.13$）。
+  BCC 10合金（青四角）とFCC 13合金（赤丸）。}
 \label{fig:indep_test}
 \end{figure*}
 
@@ -659,14 +630,15 @@ HEA予測では加法モデルRMSE = 0.0211~\AA{}と
 \centering
 \includegraphics[width=\textwidth]{fig_element_delta.png}
 \caption{元素別加法分解パラメータ$\delta^{(s)}$。
-  上段: $\delta^\text{B2}$、下段: $\delta^{\text{L1}_2}$。
-  赤: 正（膨張傾向）、青: 負（収縮傾向）。}
+  上段: B2（BCC参照、$R^2 = 0.54$）、下段: L1$_2$（FCC参照、$R^2 = 0.26$）。
+  赤: 負（収縮傾向）、青: 正（膨張傾向）。
+  元素は$\delta^{(s)}$の昇順にソート。}
 \label{fig:element_delta}
 \end{figure*}
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=\textwidth]{fig_additive_fit.png}
+\includegraphics[width=0.85\textwidth]{fig_additive_fit.png}
 \caption{加法分解のフィット品質。
   左: B2（$R^2 = 0.62$）、右: L1$_2$（$R^2 = 0.69$）。
   横軸: DFTペア$\Omega_\text{sf}$、
@@ -688,7 +660,11 @@ HEA予測では加法モデルRMSE = 0.0211~\AA{}と
 \centering
 \includegraphics[width=\textwidth]{fig_composition_examples.png}
 \caption{代表6元素ペアの組成軸Vegardプロット。
-  破線: Vegard則、丸印: DFT計算値（L1$_2$ $B_3A$, B2 $AB$, L1$_2$ $A_3B$）。}
+  破線: King原子体積（実験値）から算出したVegard則（B2換算）、
+  実線: DFT純元素体積から算出したVegard則（GGA系統誤差を含む）、
+  青丸: DFT B2計算値（$c = 50\%$）、
+  赤三角: DFT L1$_2$計算値（$c = 25\%, 75\%$、B2等価スケールに変換）。
+  DFT点と実線の乖離が$\Omega_\text{sf}$の構造依存成分に対応する。}
 \label{fig:composition}
 \end{figure*}
 
@@ -720,10 +696,20 @@ L1$_2$格子定数差$|a(A_3B) - a(B_3A)|$の平均は0.328~\AA、
 \centering
 \includegraphics[width=\textwidth]{fig_delta_r_proof.png}
 \caption{$\delta r$の構造不変性の証明（703ペア）。
-  (a)(b)~$\delta r$は構造間偏差ゼロ。
-  (c)~$\Omega_\text{sf}$は大きな構造間偏差（$r = 0.15$）。
-  (d)~L1$_2$格子定数差分布（平均差0.328~\AA）。}
+  (a)~$\delta r(A_3B)$ vs $\delta r(B_3A)$: 完全一致（構造情報ゼロ）。
+  (b)~$\delta r(A_3B)$ vs $\delta r(\text{B2})$: 滑らかな曲線（組成のみの関数）。
+  (c)~$\Omega_\text{sf}(A_3B)$ vs $\Omega_\text{sf}(B_3A)$: 大きな散布（$r = 0.15$）。}
 \label{fig:delta_r_proof}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.85\textwidth]{fig_l12_b2_correlation.png}
+\caption{L1$_2$構造の非対称性と構造間相関。
+  (d)~L1$_2$格子定数差$|a(A_3B)-a(B_3A)|$の分布（平均0.362~\AA）。
+  (e)~L1$_2$ $\Omega_\text{sf}$ vs B2 $\Omega_\text{sf}$（$r = 0.49$）:
+  構造間で$\Omega_\text{sf}$は中程度の相関を持つが一致はしない。}
+\label{fig:l12_b2_corr}
 \end{figure*}
 
 
@@ -760,6 +746,17 @@ $a(A_3B) = a(B_3A)$を強制すること。
   RMSE = 0.162~\AA{}。}
 \label{fig:packing}
 \end{figure*}
+
+\paragraph{max制約をHEA予測に適用した場合}
+剛体球モデルでは$a = \max(2(r_A+r_B)/\sqrt{3},\, 2r_A,\, 2r_B)$のmax制約が
+接触条件から生じる。
+多成分HEAへの拡張では$a \geq 2r_\text{max}$（最大元素半径）が
+下界制約として働く。
+しかし構造別フィット（max制約込み）でもRMSE = 0.045~\AA{}であり、
+体積由来モデル（0.038~\AA）の1.2倍である（表~\ref{tab:packing}）。
+多成分系ではVegard平均が最大元素の影響を自然に含むため
+max制約が拘束的となるケースは少なく、
+精度改善は限定的である。
 
 
 \subsection{L1$_2$非対称性と有効半径}
@@ -798,7 +795,8 @@ $q_\text{FCC}^\text{add} = -0.170$を得た。
 \centering
 \includegraphics[width=0.75\textwidth]{fig_hea_prediction_additive.png}
 \caption{加法$\delta^{(s)}$モデルによるHEA予測（64 HEA）。
-  (a)~RMSE比較。(b)~パリティプロット。(c)~BCC/FCC別分解。}
+  (a)~RMSE比較。(b)~パリティプロット。
+  (c)~独立テスト（$q_\text{BCC}$, $q_\text{FCC}$は各構造の最適校正定数）。}
 \label{fig:veff_hea}
 \end{figure*}
 
@@ -811,11 +809,27 @@ $q_\text{FCC}^\text{add} = -0.170$を得た。
 \label{fig:reff_comp}
 \end{figure*}
 
+構造依存有効体積$V_\text{eff}$の効果を二元系レベルで検証した結果を
+図~\ref{fig:vegard_absorbed}に示す。
+二元系ペア（B2: 741、L1$_2$: 677）に対するRMSE改善は
+0.222~\AA{}$\to$0.209~\AA（5.9\%）にとどまる。
+これは組成が$c = 25\%, 50\%, 75\%$に限定されるため、
+Vegard則からの偏差の大部分が線形補間の精度内に収まることによる。
+一方、多成分HEAでは$n(n-1)/2$ペアの$\Omega_\text{sf}$が
+非線形に寄与するため、構造情報の価値が顕在化する:
+独立テスト23 HEAでは13.4\%改善（0.0173~\AA{}$\to$0.0150~\AA）を達成した。
+すなわち$V_\text{eff}$の有用性は成分数の増加に伴い増大し、
+二元系での限定的改善はHEAへの適用を否定するものではない。
+
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=0.75\textwidth]{fig_vegard_structure_absorbed.png}
-\caption{構造情報吸収によるVegard則の改善（代表3ペア）。
-  上段: Vegard則。下段: $V_\text{eff}$（$\delta^{(s)}$補正後）。}
+\caption{構造情報吸収によるVegard則の改善（全二元系ペア）。
+  左: King純元素体積によるVegard予測（RMSE = 0.222~\AA）。
+  右: 構造依存有効体積$V_\text{eff}$による予測（RMSE = 0.209~\AA）。
+  改善幅は5.9\%にとどまり、二元系レベルでは
+  大部分の分散が組成効果で説明されることを示す。
+  ただし多成分HEAでは13.4\%改善に拡大する（本文参照）。}
 \label{fig:vegard_absorbed}
 \end{figure*}
 
@@ -885,28 +899,6 @@ RMSE = 0.0218~\AA{}を示し、物理モデル単体（0.0214~\AA）とほぼ同
 \section{考察}
 \label{sec:discussion}
 %% =====================================================================
-
-\subsection{先行研究との比較}
-
-\paragraph{Vegard則 (1921)}
-Vegard則~\cite{Vegard1921}は64 HEAに対しRMSE = 0.0227~\AA{}を与える。
-化学結合効果を無視しても比較的良い近似が得られるのは、
-多成分混合で個々のペア効果が平均化されるためである。
-
-\paragraph{Coreño-Alonsoモデル (2004)}
-Coreño-Alonso~\cite{CorenoAlonso2004}のMiedemaモデル~\cite{deBoer1988}は
-二元系金属間化合物（B2: 17種、L1$_2$: 22種）の格子定数を予測した。
-本研究のDFTデータでカバーされる39件について比較すると、
-DFT-$\Omega_\text{sf}$モデル（全体0.76\%）が
-Miedema（1.43\%）・Vegard（1.45\%）を大幅に上回る。
-特にB2ではDFT: 0.59\% vs Miedema: 1.77\%と67\%改善。
-
-\paragraph{Alonsoモデル (2022)}
-Alonso~\cite{Alonso2021}はRMSE = 0.0229~\AA{}を達成したが、
-$q = 1$・構造共通$\Omega_\text{sf}$であった。
-本研究は構造特異的$\Omega_\text{sf}$とDFTカバレッジの
-完全化により6.9\%の改善を実現した。
-
 
 \subsection{$\delta r$が構造情報を含まない理由}
 
@@ -1141,22 +1133,67 @@ $q$最適化が残余バイアスを吸収するため、
 データソース間の最終的な精度差は小さい。
 
 
+\subsection{先行研究との比較}
+
+\paragraph{Vegard則 (1921)}
+Vegard則~\cite{Vegard1921}は64 HEAに対しRMSE = 0.0227~\AA{}を与える。
+化学結合効果を無視しても比較的良い近似が得られるのは、
+多成分混合で個々のペア効果が平均化されるためである。
+
+\paragraph{Coreño-Alonsoモデル (2004)}
+Coreño-Alonso~\cite{CorenoAlonso2004}のMiedemaモデル~\cite{deBoer1988}は
+二元系金属間化合物（B2: 17種、L1$_2$: 22種）の格子定数を予測した。
+本研究のDFTデータでカバーされる39件について比較すると、
+DFT-$\Omega_\text{sf}$モデル（全体0.76\%）が
+Miedema（1.43\%）・Vegard（1.45\%）を大幅に上回る。
+特にB2ではDFT: 0.59\% vs Miedema: 1.77\%と67\%改善。
+
+\paragraph{Alonsoモデル (2022)}
+Alonso~\cite{Alonso2021}はRMSE = 0.0229~\AA{}を達成したが、
+$q = 1$・構造共通$\Omega_\text{sf}$であった。
+本研究は構造特異的$\Omega_\text{sf}$とDFTカバレッジの
+完全化により6.9\%の改善を実現した。
+
+
 %% =====================================================================
 \section{結論}
 \label{sec:conclusions}
 %% =====================================================================
 
 DFT体積サイズファクターの元素別加法分解に基づく、
-任意組成HEA格子定数予測手法を確立した。主要知見を以下にまとめる。
+任意組成HEA格子定数予測手法を確立した。
+定量的成果と主要知見を以下にまとめる。
+
+\paragraph{定量的成果}
+
+\begin{table}[H]
+\centering
+\caption{本手法の予測精度の全体像。}
+\label{tab:conclusion_summary}
+\scriptsize
+\begin{tabular}{@{}llcc@{}}
+\toprule
+データ & モデル & RMSE (\AA) & vs Vegard \\
+\midrule
+\multirow{3}{*}{訓練64}
+  & B2/L1$_2$（$q_\text{BCC}\!=\!0.49$） & 0.0214 & $+$5.7\% \\
+  & DFT自己整合（$q\!\approx\!1$） & 0.0203 & $+$12.2\% \\
+  & SQS参照（$q\!=\!1$） & 0.0202 & $+$11.0\% \\
+\midrule
+\multirow{3}{*}{独立23}
+  & 全体 & 0.0150 & $+$13.4\% \\
+  & BCC 10 & 0.0149 & $+$19.7\% \\
+  & FCC 13 & 0.0151 & $+$7.6\% \\
+\midrule
+ノイズ & $\sigma$ & 0.016 & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \begin{enumerate}
-  \item \textbf{予測精度}:
-    B2/L1$_2$参照でRMSE = 0.0214~\AA{}（Vegard比5.7\%改善）。
-    SQS参照・$q = 1$採用でRMSE = 0.0202~\AA{}（同11\%改善）。
-    FCC: 0.0096~\AA{}、BCC（SQS参照）: 0.0281~\AA{}。
-
   \item \textbf{DFTカバレッジの完全化}:
-    8,521件の二元系化合物（MP/OQMD/VASP統合）から
+    Materials Project・OQMD・独自VASP計算の3ソースから
+    8,521件の二元系化合物を統合し、
     758 B2 + 703 L1$_2$ペアの$\Omega_\text{sf}$を取得。
     HEA予測に必要な全ペアをカバー（BCC 59/59、FCC 42/42）。
 
@@ -1165,25 +1202,31 @@ DFT体積サイズファクターの元素別加法分解に基づく、
     741ペアの全組み合わせをカバーし、
     RMSE = 0.0211~\AA{}と元素対モデルとほぼ同等の精度を維持。
 
-  \item \textbf{DFT自己整合q$\approx$1}:
+  \item \textbf{DFT自己整合q$\approx$1の達成}:
     $\Omega_\text{sf}$の参照体積にVASP計算値を用いると
-    B2参照でも$q \approx 1$が達成され（RMSE = 0.0203~\AA）、
-    GGA系統誤差のキャンセルによるパラメータフリー予測が可能。
+    B2参照でも$q_\text{BCC} = 1.17$, $q_\text{FCC} = 0.94$と
+    q$\approx$1が達成され、GGA系統誤差のキャンセルに起因する
+    パラメータフリー予測が可能であることを示した。
+    $q \neq 1$の主因はΩ$_\text{sf}$参照体積の不整合による
+    アーティファクトであったと結論される。
 
-  \item \textbf{汎化性能}:
-    23 HEA（BCC 10、FCC 13、10文献18元素）の多様な独立テストで検証。
-    全体 RMSE = 0.0150~\AA{}（Vegard比13.4\%改善）、
-    BCC RMSE = 0.0149~\AA{}（Vegard比19.7\%改善）を確認。
-    B2 $\Omega_\text{sf}$を473ペアに拡充した効果が顕著。
+  \item \textbf{校正定数$q_s$の物理的意味}:
+    $q = 0$はVegard則（補正なし）、$q = 1$は$\Omega_\text{sf}$の完全適用に相当。
+    $q_\text{FCC} = 0.13$はL1$_2$がFCC固溶体に近く補正がほぼ不要であること、
+    $q_\text{BCC} = 0.49$はB2の秩序構造（$\alpha = -1$）による
+    体積収縮の過大評価を反映する。
 
-  \item \textbf{$\delta r$の限界}:
+  \item \textbf{$\delta r$の限界の証明}:
     $\delta r = f(c_i, r_i)$は構造引数を持たず、
-    703ペアで構造情報の非含有を実証。
-
-  \item \textbf{体積由来半径の優位性}:
-    DFT原子体積は電子構造を通じて構造効果を内包。
+    703ペアで$\delta r$が構造間偏差ゼロであることを実証。
     L1$_2$非対称性（$\langle|a(A_3B)-a(B_3A)|\rangle = 0.33$~\AA）の
-    表現には体積記述子が不可欠。
+    表現にはDFT体積記述子が不可欠。
+
+  \item \textbf{残差のノイズ支配}:
+    7種のMLモデルがいずれもRMSE改善0.002~\AA{}未満。
+    推定ノイズフロア$\sigma \approx 0.016$~\AA（実験再現性由来）に対し
+    最良RMSE = 0.0214~\AA{}は$\sigma$の1.3倍以内であり、
+    さらなる改善には焼鈍条件・短距離秩序の明示的制御が必要。
 \end{enumerate}
 
 \paragraph{既存手法に対する改善}
