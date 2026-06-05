@@ -1,6 +1,6 @@
-method,n_queries,syntax_validity,execution_validity,avg_execution_accuracy,avg_hallucinated_table_rate,avg_hallucinated_join_rate,avg_token_usage,avg_latency_ms,multi_hop_count,multi_hop_success_rate,easy_exec_accuracy,easy_exec_validity,medium_exec_accuracy,medium_exec_validity,hard_exec_accuracy,hard_exec_validity,very_hard_exec_accuracy,very_hard_exec_validity
-baseline1_llm_only,100,1.0,0.0,0.0,0.09,0.0,569.72,10778.3,47,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-baseline2_full_schema,100,1.0,0.23,0.21,0.0,0.01,900.15,9689.67,47,0.02127659574468085,0.65,0.65,0.23333333333333334,0.3,0.03333333333333333,0.03333333333333333,0.0,0.0
-baseline3_rule_based,100,1.0,0.98,0.5852654830889205,0.0,0.94,0.0,17.66,47,0.3404255319148936,0.85,1.0,0.7067532369420678,1.0,0.5410532708658684,0.9666666666666667,0.20461765373269797,0.95
-baseline4_fk_list,100,1.0,0.04,0.04,0.0,0.0,627.56,10982.04,47,0.0,0.2,0.2,0.0,0.0,0.0,0.0,0.0,0.0
-proposed,100,0.99,0.96,0.7633699218473091,0.0,0.94,1275.34,8300.57,47,0.6595744680851063,0.8236641221374045,0.95,0.8916433566433567,1.0,0.77065729257318,0.9333333333333333,0.4997345132743363,0.95
+method,n_queries,syntax_validity,execution_validity,avg_execution_accuracy,avg_raw_execution_accuracy,avg_hallucinated_table_rate,avg_hallucinated_join_rate,avg_token_usage,avg_latency_ms,multi_hop_count,multi_hop_success_rate,easy_exec_accuracy,easy_exec_validity,medium_exec_accuracy,medium_exec_validity,hard_exec_accuracy,hard_exec_validity,very_hard_exec_accuracy,very_hard_exec_validity
+baseline1_llm_only,100,1.0,0.0,0.0,0.0,0.08,0.0,567.19,18370.13,47,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+baseline2_full_schema,100,1.0,0.32,0.2863269230769231,0.01,0.0,0.01,2339.43,11192.78,47,0.06382978723404255,0.75,0.75,0.31025641025641026,0.3333333333333333,0.14416666666666667,0.2,0.0,0.05
+baseline3_rule_based,100,0.99,0.97,0.5046806114564174,0.06,0.0,0.94,0.0,39.04,47,0.1702127659574468,0.75,1.0,0.6734199036087344,1.0,0.42373049772060706,0.9333333333333333,0.12767745528807475,0.95
+baseline4_fk_list,100,1.0,0.02,0.02,0.0,0.0,0.0,983.96,13659.5,47,0.0,0.1,0.1,0.0,0.0,0.0,0.0,0.0,0.0
+proposed,100,0.99,0.95,0.7138172024940963,0.08617857142857144,0.0,0.94,1318.35,15408.33,47,0.5319148936170213,0.85,0.95,0.8255719280719281,0.9333333333333333,0.699323126992419,0.9666666666666667,0.43174342987396086,0.95

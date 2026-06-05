@@ -95,11 +95,11 @@ Ni$_3$Al、Co$_3$Ti、Al$_3$Sc等の既知L1$_2$化合物11件を含む）を
 評価指標には、SELECT列の差異による過小評価を解消する
 \textbf{共通カラム照合}（列名ベースの行マッチング）と、
 LIMIT切り詰め影響を排除する\textbf{LIMIT 10{,}000正規化}を導入した。
-Proposed手法（LLM: gpt-5.5）は\textbf{構文妥当率100\%}、実行成功率96\%、
-平均実行精度\textbf{76.3\%}を達成し、
-\textbf{テーブル幻覚率0\%}（LLM-onlyは100\%）を実現した。
-Medium難易度では実行精度89.2\%に達し、
-2-hop以上のマルチホップクエリでも84.4\%（2-hop）、70.1\%（3-hop）、68.8\%（4-hop）を記録した。
+Proposed手法（LLM: gpt-5.5）は\textbf{構文妥当率99\%}、実行成功率95\%、
+平均実行精度\textbf{71.4\%}を達成し、
+\textbf{テーブル幻覚率0\%}（LLM-onlyは8\%）を実現した。
+Medium難易度では実行精度82.6\%に達し、
+2-hop以上のマルチホップクエリでも78.7\%（2-hop）、73.2\%（3-hop）、50.9\%（4-hop）を記録した。
 Schema Graph走査によりLLMの視界を必要テーブルに限定することで
 不要JOINの排除とテーブル幻覚の防止を同時に達成した。
 独立した材料研究者が設計した100件のクエリ（30テーブル対象）での
@@ -137,7 +137,7 @@ SQL文の構文生成そのものではなく、
 本論文では、L1$_2$型金属間化合物（$\gamma'$相候補）の探索を対象として、
 Schema Graph走査（FK関係のグラフ表現とSteiner木近似）に基づく
 制約型手法を提案し、1{,}471エントリ（5プロトタイプ）・100クエリの評価で
-Proposed手法がテーブル幻覚率0\%、実行精度76.3\%を達成したことを報告する。
+Proposed手法がテーブル幻覚率0\%、実行精度71.4\%を達成したことを報告する。
 
 \textbf{AI for Science（AI4S）}---科学的発見を加速するための人工知能の体系的応用---は、
 材料研究を変革しつつある~\citep{wang2023ai4s,himanen2019dscribe}。
@@ -299,7 +299,7 @@ FK関係だけでなくドメイン知識に基づくJOINパス選択が可能�
     正規化材料データベース上の自動JOIN経路計算を実現する。
     Schema Graph制約により\textbf{テーブル幻覚率0\%}を達成し、
     LLM-only手法の幻覚を解消するとともに、
-    不要JOINの排除により\textbf{実行精度76.3\%}を達成する。
+    不要JOINの排除により\textbf{実行精度71.4\%}を達成する。
   \item \textbf{5手法ベースライン比較による定量評価}：
     LLM-only、Full Schema、Rule-based、FK-list、Proposedの5手法を
     100クエリ（Easy/Medium/Hard/Very Hard、最大4-hop）で比較し、
@@ -1604,14 +1604,13 @@ DB規模1{,}471件に対して実質的に制限なしと同等でありかつ�
     \toprule
     評価条件 & \shortstack{平均\\実行精度} & 改善幅 \\
     \midrule
-    従来（タプル完全一致, LIMIT 100） & 8.4\% & --- \\
-    +A（共通カラム照合） & 53.7\% & +45.3pt \\
-    +A+C（LIMIT 10{,}000正規化） & \textbf{76.3\%} & +22.6pt \\
+    従来（タプル完全一致） & 8.6\% & --- \\
+    +A+C（共通カラム照合 + LIMIT正規化） & \textbf{71.4\%} & +62.8pt \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-改善Aにより+45.3ポイント、改善Cによりさらに+22.6ポイントの精度向上が得られた。
+改善A（共通カラム照合）および改善C（LIMIT 10{,}000正規化）の併用により+62.8ポイントの精度向上が得られた。
 いずれの修正も、gold SQLと生成SQLのペアさえあれば第三者が独立に再現可能である。
 以降の結果はすべてA+C適用後の値を報告する。
 
@@ -1639,11 +1638,11 @@ Supplementary S1--S2節に掲載する。
     \toprule
     ID & 手法 & \shortstack{構文\\妥当率} & \shortstack{実行\\成功率} & \shortstack{平均\\実行精度} & \shortstack{テーブル\\幻覚率} & \shortstack{不要\\ JOIN} \\
     \midrule
-    B1 & LLM-only & 100\% & 0\% & 0\% & 100\% & --- \\
-    B2 & Full Schema & 100\% & 23\% & 21.0\% & 0\% & 多い \\
-    B3 & Rule-based & 100\% & 98\% & 58.5\% & 0\% & なし \\
-    B4 & FK-list & 100\% & 4\% & 4.0\% & 0\% & --- \\
-    P & \textbf{Proposed} & \textbf{100\%} & \textbf{96\%} & \textbf{76.3\%} & \textbf{0\%} & \textbf{最小} \\
+    B1 & LLM-only & 100\% & 0\% & 0\% & 8\% & --- \\
+    B2 & Full Schema & 100\% & 32\% & 28.6\% & 0\% & 多い \\
+    B3 & Rule-based & 99\% & 97\% & 50.5\% & 0\% & なし \\
+    B4 & FK-list & 100\% & 2\% & 2.0\% & 0\% & --- \\
+    P & \textbf{Proposed} & \textbf{99\%} & \textbf{95\%} & \textbf{71.4\%} & \textbf{0\%} & \textbf{最小} \\
     \bottomrule
   \end{tabular}
 \end{table*}
@@ -1651,19 +1650,19 @@ Supplementary S1--S2節に掲載する。
 \paragraph{主要な発見}
 
 \begin{enumerate}
-  \item \textbf{LLM-only（B1）は実行成功率0\%・テーブル幻覚率100\%}：
+  \item \textbf{LLM-only（B1）は実行成功率0\%・テーブル幻覚率8\%}：
     スキーマ情報なしではLLMが存在しないテーブル名を幻覚し、
     生成されたSQLは一切実行できない。
-  \item \textbf{Proposed（P）はテーブル幻覚率0\%かつ実行精度76.3\%}：
+  \item \textbf{Proposed（P）はテーブル幻覚率0\%かつ実行精度71.4\%}：
     Schema Graph走査によりLLMの視界を必要テーブルに限定し、
     不要JOINの排除とテーブル幻覚の防止を同時に達成する。
-    Medium難易度では89.2\%、Easyでは82.4\%に達する。
-  \item \textbf{Rule-based（B3）はLLMなしで実行精度58.5\%}：
+    Medium難易度では82.6\%、Easyでは85.0\%に達する。
+  \item \textbf{Rule-based（B3）はLLMなしで実行精度50.5\%}：
     辞書カバー範囲内ではLLM呼び出しが不要だが、
     テンプレートの柔軟性が制約となり精度はProposedに劣る。
-  \item \textbf{Full Schema（B2）は不要JOINが多く精度21.0\%}：
+  \item \textbf{Full Schema（B2）は不要JOINが多く精度28.6\%}：
     全スキーマ提示では不要なJOINが発生し、実行コストと精度の両面で劣化する。
-  \item \textbf{FK-list（B4）は実行成功率4\%}：
+  \item \textbf{FK-list（B4）は実行成功率2\%}：
     FK情報のみの提示ではJOIN経路を正しく構成できない。
 \end{enumerate}
 
@@ -1680,10 +1679,10 @@ Supplementary S1--S2節に掲載する。
     \toprule
     難易度 & 件数 & 主な構成 & 実行成功率 & 実行精度 \\
     \midrule
-    Easy & 20 & 1--2 hop、単純条件 & 95\% & \textbf{82.4\%} \\
-    Medium & 30 & 2--3 hop、横断検索 & 100\% & \textbf{89.2\%} \\
-    Hard & 30 & 3--4 hop、複合条件 & 93\% & 77.1\% \\
-    Very Hard & 20 & 3--4 hop、複合設計条件 & 95\% & 50.0\% \\
+    Easy & 20 & 1--2 hop、単純条件 & 95\% & \textbf{85.0\%} \\
+    Medium & 30 & 2--3 hop、横断検索 & 93\% & \textbf{82.6\%} \\
+    Hard & 30 & 3--4 hop、複合条件 & 97\% & 69.9\% \\
+    Very Hard & 20 & 3--4 hop、複合設計条件 & 95\% & 43.2\% \\
     \bottomrule
   \end{tabular}
   \vspace{2pt}
@@ -1695,13 +1694,13 @@ Supplementary S1--S2節に掲載する。
 \paragraph{難易度別の傾向}
 
 \begin{itemize}
-  \item \textbf{Easy（20件）}：実行精度82.4\%。
+  \item \textbf{Easy（20件）}：実行精度85.0\%。
     単純な元素・プロトタイプ条件ではSchema Graph制約が有効に機能する。
-  \item \textbf{Medium（30件）}：89.2\%で全難易度中最高。
+  \item \textbf{Medium（30件）}：82.6\%。
     構造・組成・安定性の横断クエリでも
     Steiner木近似によるJOIN経路制約が有効に機能する。
-  \item \textbf{Hard（30件）}：77.1\%。複数テーブルを横断するWHERE句の条件組合せが複雑化する。
-  \item \textbf{Very Hard（20件）}：50.0\%。材料設計条件（安定性・物性・構造の複合絞り込み）を含むクエリでは
+  \item \textbf{Hard（30件）}：69.9\%。複数テーブルを横断するWHERE句の条件組合せが複雑化する。
+  \item \textbf{Very Hard（20件）}：43.2\%。材料設計条件（安定性・物性・構造の複合絞り込み）を含むクエリでは
     LLMのWHERE句生成が主なボトルネック。
 \end{itemize}
 
@@ -1709,9 +1708,9 @@ Supplementary S1--S2節に掲載する。
 \label{sec:scalability}
 
 表~\ref{tab:latency}に手法別の平均レイテンシを示す。
-Rule-based（B3）はLLM APIを呼び出さないため17.6~msで最速である。
+Rule-based（B3）はLLM APIを呼び出さないため39~msで最速である。
 LLMベース手法はAPI呼び出し時間が支配的であり、
-Proposed手法は平均2{,}557~ms（Rule-basedの145倍）である。
+Proposed手法は平均15{,}408~ms（Rule-basedの約395倍）である。
 
 \begin{table}[htbp]
   \centering
@@ -1722,11 +1721,11 @@ Proposed手法は平均2{,}557~ms（Rule-basedの145倍）である。
     \toprule
     ID & 手法 & 平均Latency (ms) & 平均Token数 \\
     \midrule
-    B1 & LLM-only & 1{,}330 & 115 \\
-    B2 & Full Schema & 2{,}455 & 587 \\
-    B3 & Rule-based & \textbf{18} & 0 \\
-    B4 & FK-list & 2{,}231 & 246 \\
-    P & Proposed & 2{,}557 & 955 \\
+    B1 & LLM-only & 18{,}370 & 567 \\
+    B2 & Full Schema & 11{,}193 & 2{,}339 \\
+    B3 & Rule-based & \textbf{39} & 0 \\
+    B4 & FK-list & 13{,}660 & 984 \\
+    P & Proposed & 15{,}408 & 1{,}318 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1747,16 +1746,16 @@ Proposed手法は平均2{,}557~ms（Rule-basedの145倍）である。
     \toprule
     ホップ数 & 件数 & Proposed精度 & Full Schema精度 \\
     \midrule
-    2-hop & 37 & \textbf{84.4\%} & 21.6\% \\
-    3-hop & 24 & \textbf{70.1\%} & 0\% \\
-    4-hop & 23 & \textbf{68.8\%} & 4.3\% \\
+    2-hop & 37 & \textbf{78.7\%} & 27.9\% \\
+    3-hop & 24 & \textbf{73.2\%} & 8.3\% \\
+    4-hop & 23 & \textbf{50.9\%} & 10.1\% \\
     \bottomrule
   \end{tabular}
 \end{table}
 
 \paragraph{マルチホップの傾向}
 
-JOINが深くなるほど精度が低下する傾向がある（2-hop 84.4\% $\to$ 4-hop 68.8\%）。
+JOINが深くなるほど精度が低下する傾向がある（2-hop 78.7\% $\to$ 4-hop 50.9\%）。
 ただし、Full SchemaやLLM-onlyと比較すると、
 どのホップ数でもProposedが大幅に優位である。
 Schema GraphがJOIN経路の正確性を保証し、
@@ -1775,11 +1774,11 @@ LLMがWHERE句を生成する役割分担が機能している。
     \toprule
     ID & 手法 & \shortstack{実行\\エラー} & \shortstack{構文\\エラー} & \shortstack{テーブル\\幻覚} & \shortstack{JOIN\\幻覚} \\
     \midrule
-    B1 & LLM-only & 100 & 1 & 100 & 4 \\
-    B2 & Full Schema & 77 & 0 & 0 & 25 \\
-    B3 & Rule-based & 2 & 0 & 0 & 0 \\
-    B4 & FK-list & 96 & 2 & 2 & 81 \\
-    P & \textbf{Proposed} & \textbf{4} & \textbf{0} & \textbf{0} & \textbf{0} \\
+    B1 & LLM-only & 100 & 0 & 10 & 0 \\
+    B2 & Full Schema & 68 & 0 & 0 & 1 \\
+    B3 & Rule-based & 3 & 1 & 0 & 0 \\
+    B4 & FK-list & 98 & 0 & 0 & 0 \\
+    P & \textbf{Proposed} & \textbf{5} & \textbf{1} & \textbf{0} & \textbf{0} \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1787,12 +1786,12 @@ LLMがWHERE句を生成する役割分担が機能している。
 \paragraph{失敗モードの分類}
 
 \begin{description}
-  \item[B1: テーブル幻覚が支配的]
-    LLM-onlyでは100件中100件でテーブル名を幻覚する。
-    \texttt{materials}、\texttt{compounds}等の汎用名を生成し、
-    実在の\texttt{material\_entry}、\texttt{phase\_stability}を推測できない。
+  \item[B1: テーブル幻覚と全件実行失敗]
+    LLM-onlyでは100件全てが実行エラー。10件でテーブル名を幻覚し、
+    \texttt{materials}、\texttt{compounds}等の汎用名を生成する。
+    残りも存在するテーブル名を使用するがカラム構造を誤る。
   \item[B4: FK情報だけでは不十分]
-    FK一覧の提示では96件が実行エラー。
+    FK一覧の提示では98件が実行エラー。
     テーブル間関係は伝わるが、カラム名・型・テーブル構造が不足するため、
     SELECT句やWHERE句の生成に失敗する。
   \item[P: 高難度でのWHERE句複雑性]
@@ -1803,7 +1802,7 @@ LLMがWHERE句を生成する役割分担が機能している。
 
 \paragraph{Very Hard失敗の内訳分析}
 
-Very Hard 20件のうち精度50.0\%（10件が不正解）の失敗内訳を以下に分類する。
+Very Hard 20件のうち精度43.2\%（11件が精度50\%未満）の失敗内訳を以下に分類する。
 
 \begin{table}[htbp]
   \centering
@@ -1975,14 +1974,14 @@ Schema Graph走査が提供する\textbf{関連テーブルのみ}のサブグ�
 テーブル幻覚を原理的に排除し、同時に不要JOINも削減する。
 ここで「不要JOIN」とは、Schema Graphが返す最小接続部分グラフ（Steiner木）に
 含まれないテーブルへのJOINと定義する。
-Full Schema手法（21.0\%）との精度差（55.3pt）は、
+Full Schema手法（28.6\%）との精度差（42.8pt）は、
 LLMに提示するテーブルの絞り込みが精度に直結することを示す。
 
 \paragraph{実行精度の構造}
-Proposed手法の実行精度76.3\%はMedium 89.2\%、Very Hard 50.0\%と難易度に依存する。
+Proposed手法の実行精度71.4\%はEasy 85.0\%、Medium 82.6\%、Very Hard 43.2\%と難易度に依存する。
 これはSchema Graph制約がJOIN経路の正確性を保証する一方、
 WHERE句の生成品質がLLMの能力に依存することを示す。
-4-hopクエリでも精度68.8\%を達成しており、
+4-hopクエリでも精度50.9\%を達成しており、
 Schema Graph走査とLLMの役割分担が機能している。
 
 \subsection{材料工学的考察}
@@ -2029,21 +2028,21 @@ Proposed手法の精度を再評価した。
     \toprule
     指標 & 著者設計 (100件) & 独立設計 (100件) \\
     \midrule
-    全体精度 & \textbf{76.3\%} & \textbf{62.0\%} \\
-    SQL構文正当率 & 97.0\% & 98.0\% \\
-    実行成功率 & 96.0\% & 84.0\% \\
+    全体精度 & \textbf{71.4\%} & \textbf{62.0\%} \\
+    SQL構文正当率 & 99.0\% & 98.0\% \\
+    実行成功率 & 95.0\% & 84.0\% \\
     \midrule
-    Easy & ${\sim}$90\% & 72.2\% (13/18) \\
-    Medium & 89.2\% & 67.6\% (23/34) \\
-    Hard & 62.5\% & 58.8\% (20/34) \\
-    Very Hard & 50.0\% & 42.9\% (6/14) \\
+    Easy & 85.0\% & 72.2\% (13/18) \\
+    Medium & 82.6\% & 67.6\% (23/34) \\
+    Hard & 69.9\% & 58.8\% (20/34) \\
+    Very Hard & 43.2\% & 42.9\% (6/14) \\
     \bottomrule
   \end{tabular}
 \end{table}
 
 表~\ref{tab:independent_eval}に結果を示す。
 独立設計クエリでの実行精度は62.0\%であり、
-著者設計クエリの76.3\%から14.3ポイント低下した。
+著者設計クエリの71.4\%から9.4ポイント低下した。
 この差は主に以下の要因に帰属する：
 (1) 独立設計クエリは30テーブルの拡張スキーマを対象とし、
 著者設計クエリ（7テーブル）より広範なJOIN経路を要求する、
@@ -2070,13 +2069,13 @@ JOINの深さに対するロバスト性が示唆される。
 80件の回帰テストおよび100件の著者設計評価クエリは
 システム開発者が設計したものである。
 独立設計100件による追加評価（\ref{sec:independent_eval}節）で
-精度低下（76.3\% $\to$ 62.0\%）を定量化したが、
+精度低下（71.4\% $\to$ 62.0\%）を定量化したが、
 クエリ設計者が1名に限られる点は依然として制約であり、
 複数の材料研究者によるブラインドテストが今後の課題である。
 
 \subsubsection{実行精度の難易度依存性}
 
-Proposed手法の実行精度76.3\%はMediumでは89.2\%だがVery Hardでは50.0\%に低下する。
+Proposed手法の実行精度71.4\%はEasyでは85.0\%だがVery Hardでは43.2\%に低下する。
 JOINが深くなるほどWHERE句の複雑性が増すため、
 LLMの生成能力が精度の上限を制約する。
 Few-shot例の拡充、Self-correction、プロンプト改善が今後の方向性である。
@@ -2189,8 +2188,8 @@ NL $\to$ データ検索 $\to$ 材料設計仮説生成の
   \item \textbf{CALPHAD連携}：Schema Graph走査でRDBから候補を絞り込んだ後、
     CALPHADの自由エネルギー計算により温度依存相安定性を判定する
     二段階フローを想定する。
-  \item \textbf{LLM能力向上との組合せ}：gpt-5.5での実行精度76.3\%は、
-    Very Hard難易度（50.0\%）に改善余地がある。
+  \item \textbf{LLM能力向上との組合せ}：gpt-5.5での実行精度71.4\%は、
+    Very Hard難易度（43.2\%）に改善余地がある。
     Chain-of-Thought推論やFew-Shotプロンプトの拡充との組合せが期待される。
   \item \textbf{大規模データ検証}：10万レコード・100テーブル以上での
     Steiner木近似の計算性能とSQL生成精度の検証が残る。
@@ -2225,7 +2224,7 @@ NL $\to$ データ検索 $\to$ 材料設計仮説生成の
 主要な知見：
 
 \begin{enumerate}
-  \item \textbf{テーブル幻覚率0\%かつ実行精度76.3\%}：
+  \item \textbf{テーブル幻覚率0\%かつ実行精度71.4\%}：
     Schema Graph走査（Steiner木近似）によりLLMの視界を必要テーブルに限定し、
     テーブル幻覚の排除と不要JOINの削減を同時に達成。
     1{,}471エントリ（L1$_2$+B2+NaCl+NiAs+BiF$_3$）で検証。
@@ -2245,12 +2244,12 @@ NL $\to$ データ検索 $\to$ 材料設計仮説生成の
 
 \textbf{独立評価}：
 材料研究者が独立に設計した100件のクエリ（30テーブル対象）での
-実行精度は62.0\%であり、著者設計100件（76.3\%）から14.3ポイント低下したが、
+実行精度は62.0\%であり、著者設計100件（71.4\%）から9.4ポイント低下したが、
 SQL構文正当率は98.0\%を維持した（表~\ref{tab:independent_eval}）。
 
 \textbf{実証の限界}：
 検証は1{,}471エントリに限定される。
-Very Hard精度は50.0\%（著者設計）/ 42.9\%（独立設計）であり、
+Very Hard精度は43.2\%（著者設計）/ 42.9\%（独立設計）であり、
 複合WHERE句の生成が今後の課題である。
 
 本手法は正規化RDB全般に対するSchema Graph制約型T2SQLの

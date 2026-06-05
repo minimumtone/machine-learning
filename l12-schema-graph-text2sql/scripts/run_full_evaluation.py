@@ -62,6 +62,15 @@ ALLOWED_TABLES = [
     "material_entry", "composition", "structure",
     "calculation", "calculated_property", "phase_stability",
     "prototype_definition",
+    # Extended schema (30 tables total)
+    "alloy_system", "application_domain", "band_structure",
+    "defect_type", "density_of_states", "elastic_tensor",
+    "element", "element_property", "experimental_measurement",
+    "grain_boundary", "literature_reference", "magnetic_property",
+    "material_alloy_system", "material_application", "material_defect",
+    "material_reference", "material_synthesis", "measured_property",
+    "phase_diagram_entry", "space_group", "surface_energy",
+    "synthesis_method", "thermal_property",
 ]
 
 
@@ -474,6 +483,7 @@ def write_result_csv(results: list[dict], path: Path) -> None:
         return
     fieldnames = [
         "query_id", "question", "difficulty", "hop_count", "method",
+        "sql",
         "syntax_valid", "execution_valid", "execution_accuracy",
         "raw_execution_accuracy",
         "hallucinated_table_rate", "hallucinated_join_rate",

@@ -73,7 +73,13 @@ def add_example(
 # ---------------------------------------------------------------------------
 
 _TOKENIZE_RE = re.compile(
-    r"[A-Z][a-z]?|[a-z]+|[\u3040-\u309F]+|[\u30A0-\u30FF]+|[\u4E00-\u9FFF]+"
+    r"[A-Za-z]\d+[_]?\d*"       # Strukturbericht: L12, B2, A15, D0_3
+    r"|[A-Z][a-z]?\d*"          # Chemical formula tokens: Ni3, Al, Fe2
+    r"|[\u3040-\u309F]+"        # Hiragana
+    r"|[\u30A0-\u30FF]+"        # Katakana
+    r"|[\u4E00-\u9FFF]+"        # Kanji
+    r"|[a-z]+"                  # English words
+    r"|\d+"                     # Numbers
 )
 
 
