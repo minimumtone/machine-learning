@@ -22,6 +22,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import plotly.express as px
 import plotly.graph_objects as go
+import plotly.io as pio
 from plotly.subplots import make_subplots
 
 from sklearn.model_selection import (
@@ -61,6 +62,20 @@ try:
 except Exception:
     pass
 plt.rcParams["axes.unicode_minus"] = False
+
+# Plotly 日本語フォント設定（中国語フォントへのフォールバックを防止）
+_JP_FONT = "Yu Gothic, YuGothic, Meiryo, Hiragino Sans, Hiragino Kaku Gothic ProN, Noto Sans JP, sans-serif"
+_plotly_template = pio.templates["plotly"]
+_plotly_template.layout.font = dict(family=_JP_FONT)
+pio.templates.default = "plotly"
+
+# Streamlit の Plotly テーマが上書きするため CSS でも強制指定
+st.markdown(f"""<style>
+.js-plotly-plot text, .js-plotly-plot .gtitle, .js-plotly-plot .xtitle,
+.js-plotly-plot .ytitle, .js-plotly-plot .legendtext {{
+    font-family: {_JP_FONT} !important;
+}}
+</style>""", unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
 # 材料データセット生成
@@ -214,14 +229,48 @@ if dataset_choice == "鉄鋼（構造材料）":
     df_main = generate_steel_data()
     target_col = "降伏強度 (MPa)"
     dataset_desc = "鉄鋼合金の組成・プロセス条件から降伏強度を予測（OQMD参照）"
+    dataset_detail = """
+| 特徴量 | 説明 | 単位 | 範囲 |
+|:---|:---|:---|:---|
+| C (wt%) | 炭素含有量 — 強度に最も影響する元素 | wt% | 0.05–0.8 |
+| Mn (wt%) | マンガン — 固溶強化・靭性向上 | wt% | 0.3–2.0 |
+| Si (wt%) | ケイ素 — 脱酸・固溶強化 | wt% | 0.1–1.0 |
+| Cr (wt%) | クロム — 耐食性・焼入性向上 | wt% | 0–18 |
+| Ni (wt%) | ニッケル — 靭性・耐食性向上 | wt% | 0–10 |
+| 焼入温度 (°C) | オーステナイト化温度 | °C | 800–1200 |
+
+**目的変数**: 降伏強度 (MPa) — 材料が塑性変形を開始する応力値
+"""
 elif dataset_choice == "熱電材料（機能材料）":
     df_main = generate_thermoelectric_data()
     target_col = "性能指数 ZT"
     dataset_desc = "熱電材料の電子構造特徴から性能指数ZTを予測（Materials Project参照）"
+    dataset_detail = """
+| 特徴量 | 説明 | 単位 | 範囲 |
+|:---|:---|:---|:---|
+| キャリア濃度 log(cm⁻³) | 電荷キャリア密度の対数値 | log(cm⁻³) | 18–21 |
+| バンドギャップ (eV) | 電子の禁制帯幅 — 熱電性能の最適値が存在 | eV | 0.05–2.0 |
+| 有効質量 (m_e) | キャリアの有効質量 — ゼーベック係数に寄与 | m_e | 0.5–5.0 |
+| 格子熱伝導率 (W/mK) | フォノン輸送による熱伝導 — 低いほど高性能 | W/mK | 0.5–10 |
+| 測定温度 (K) | 熱電性能評価温度 | K | 300–900 |
+
+**目的変数**: 性能指数 ZT — 熱電変換効率を表す無次元数（ZT = S²σT/κ）
+"""
 else:
     df_main = generate_polymer_data()
     target_col = "ガラス転移温度 Tg (°C)"
     dataset_desc = "高分子の分子特徴からガラス転移温度を予測（PolyInfo参照）"
+    dataset_detail = """
+| 特徴量 | 説明 | 単位 | 範囲 |
+|:---|:---|:---|:---|
+| 分子量 log(g/mol) | 重量平均分子量の対数値 | log(g/mol) | 3–6 |
+| 主鎖柔軟性 | 高分子主鎖の回転しやすさ指標 | — | 0–10 |
+| 極性指標 | 側鎖の極性の強さ — 分子間力に影響 | — | 0–5 |
+| 架橋密度 | 架橋点の密度 — Tg上昇要因 | — | 0–3 |
+| 結晶化度 (%) | 結晶領域の割合 | % | 0–80 |
+
+**目的変数**: ガラス転移温度 Tg (°C) — 非晶質領域がガラス状態からゴム状態に転移する温度
+"""
 
 feature_cols = [c for c in df_main.columns if c != target_col]
 df_cls = generate_classification_data()
@@ -352,6 +401,8 @@ elif section_key == "data_exploration":
 
     # 2.1 データの確認
     st.header("2.1 データの概要")
+    st.markdown("#### データセットの説明")
+    st.markdown(dataset_detail)
     st.dataframe(df_main.head(20), use_container_width=True)
     st.markdown(f"データ数: **{len(df_main)}** 件、特徴量数: **{len(feature_cols)}** 個、目的変数: **{target_col}**")
 
