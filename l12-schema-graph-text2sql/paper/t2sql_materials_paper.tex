@@ -643,7 +643,7 @@ LLMが利用可能なテーブル・カラム・型を理解する。
 
 \subsubsection{Unicode正規化とパターンマッチング}
 
-Unicode下付き文字（₀₁₂₃₄₅₆₇₈₉）はマッチング前にASCII数字に正規化される。
+Unicode下付き文字（\texttt{U+2080}--\texttt{U+2089}、すなわち$_0 {}_1 {}_2 \ldots {}_9$）はマッチング前にASCII数字に正規化される。
 プロトタイプ名は投入時にASCII表記（\texttt{L12}、\texttt{B2}等）へ正規化し、
 自然言語側の表記揺れ（\texttt{L1\_2}、L1$_2$、$\gamma'$、Cu$_3$Au型）は
 辞書でDB内部値（\texttt{L12}）に写像する。
@@ -937,6 +937,12 @@ Schema Graphエンジンは複数元素が指定された場合を検出し、
 単一組成行が両条件を同時に満たすことが不可能なため常に0行を返す。
 これがSchema Graph手法により防止される\textbf{最も重要な故障モード}である。
 
+なお、EXISTSパターンの適用はAND意図が検出された場合に限定する。
+「NiまたはAl」「いずれかを含む」等のOR指示語が検出された場合は
+\texttt{WHERE c.element IN ('Ni', 'Al')}を生成し、EXISTSパターンは適用しない。
+条件抽出器（\ref{sec:condition_extractor}節）が接続詞・助詞から
+AND/OR意図を分類し、適切なSQL構造を選択する。
+
 \subsubsection{比較：Naive vs. Schema Graph（具体例）}
 
 表~\ref{tab:naive_vs_sg}に「Feを含むB2化合物を出して」に対する差異を示す：
@@ -1039,15 +1045,21 @@ task-agnosticな精度向上が広く知られており、
 本トークナイザは複合正規表現パターンを使用する：
 
 \begin{lstlisting}[language=Python,caption={材料クエリ用TF-IDFトークナイザ。},label=lst:tokenizer,numbers=none]
-# トークナイゼーションパターン:
-# 1. 化学記号: [A-Z][a-z]? (Fe, Ni, Al, ...)
-# 2. 日本語文字: [\u3040-\u9fff]+
-# 3. 英単語: [a-z]+
-# 4. 数字: \d+
+# トークナイゼーションパターン (優先順):
+# 1. Strukturbericht記号: L12, B2, A15, D0_3, ...
+# 2. 化学式: Ni3Al, Fe2O3, ...
+# 3. 化学記号: Fe, Ni, Al, ...
+# 4. 日本語文字列: [\u3040-\u9fff]+
+# 5. 英単語: [a-z]+
+# 6. 数字: \d+
+PROTO_PAT = r'[A-Za-z]\d+[_]?\d*'   # L12, B2, A15
+FORMULA_PAT = r'[A-Z][a-z]?\d*'      # Ni3, Al, Fe2
 tokens = re.findall(
-  r'[A-Z][a-z]?|[\u3040-\u9fff]+|[a-z]+|\d+',
-  query.lower()
+  PROTO_PAT + r'|' + FORMULA_PAT
+  + r'|[\u3040-\u9fff]+|[a-z]+|\d+',
+  query   # 大文字保持で照合後、最終的に小文字化
 )
+tokens = [t.lower() for t in tokens]
 \end{lstlisting}
 
 IDFは$\text{IDF}(t) = \log(N / n_t)$で計算される。
@@ -1098,8 +1110,9 @@ FK整合JOIN検証（層7）、ガード判定分類（層8）を追加した。
 \subsubsection{基本安全性検証（層1--5）}
 
 \begin{enumerate}
-  \item \textbf{複数文検出}：SQL本体内にセミコロンがあれば拒否
+  \item \textbf{複数文検出}：文字列リテラル除去後のSQL本体内にセミコロンがあれば拒否
     （\texttt{SELECT ...; DROP TABLE ...}等のピギーバック攻撃を防止）。
+    リテラル内のセミコロン（例：\texttt{SELECT 'A;B'}）は誤検出しない。
   \item \textbf{禁止キーワード検出}：INSERT, UPDATE, DELETE, DROP, ALTER,
     TRUNCATE, CREATE, GRANT, REVOKE, COPYをワード境界正規表現で走査。
   \item \textbf{SELECT専用制約}：SELECTまたはWITHで始まらない文を拒否。
@@ -1587,13 +1600,13 @@ DB規模1{,}471件に対して実質的に制限なしと同等でありかつ�
   \caption{Proposed手法における評価指標改善の効果。}
   \label{tab:metric_improvement}
   \small
-  \begin{tabular}{lcc}
+  \begin{tabular}{p{4.8cm}cc}
     \toprule
-    評価条件 & 平均実行精度 & 改善幅 \\
+    評価条件 & \shortstack{平均\\実行精度} & 改善幅 \\
     \midrule
-    従来指標（タプル完全一致, LIMIT 100） & 8.4\% & --- \\
+    従来（タプル完全一致, LIMIT 100） & 8.4\% & --- \\
     +A（共通カラム照合） & 53.7\% & +45.3pt \\
-    +A+C（+LIMIT 10{,}000正規化） & \textbf{76.3\%} & +22.6pt \\
+    +A+C（LIMIT 10{,}000正規化） & \textbf{76.3\%} & +22.6pt \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -2097,28 +2110,34 @@ RDF/SPARQLを前提とし、セマンティク推論に優れるが、
 
 \begin{table*}[htbp]
   \centering
-  \caption{関連する材料NLP / T2SQL / オントロジーシステムとの比較。}
+  \caption{関連する材料NLP / T2SQL / オントロジーシステム・手法・データセットとの比較。}
   \label{tab:related_comparison}
   \small
-  \begin{tabularx}{\textwidth}{lccccX}
+  \begin{tabularx}{\textwidth}{llccccX}
     \toprule
-    システム & スキーマ認識 & 正規化RDB & 材料特化 & NL$\to$クエリ & 主な差異 \\
+    種別 & 名称 & \shortstack{スキーマ\\認識} & \shortstack{正規化\\RDB} & \shortstack{材料\\特化} & \shortstack{NL$\to$\\クエリ} & 主な差異 \\
     \midrule
-    Spider~\citep{yu2018spider} & あり & あり & なし & SQL & 汎用ベンチマーク \\
-    BIRD~\citep{li2024bird} & あり & あり & なし & SQL & 大規模実データ \\
-    DAIL-SQL~\citep{gao2023dail} & あり & あり & なし & SQL & スケルトン選択 \\
-    RAT-SQL~\citep{wang2020ratsql} & あり & あり & なし & SQL & 関係認識符号化 \\
-    RESDSQL~\citep{li2023resdsql} & あり & あり & なし & SQL & リンク分離 \\
-    SchemaGraphSQL~\citep{safdarian2026schemagraphsql} & あり & あり & なし & SQL & パスファインディング \\
-    MKNA~\citep{zhuang2026mkna} & なし & なし & あり & API & エージェント \\
-    OptiMat~\citep{hu2026optimat} & なし & なし & あり & API & オンデマンドDFT \\
+    \multicolumn{7}{l}{\textit{T2SQLベンチマーク}} \\
+    データセット & Spider~\citep{yu2018spider} & あり & あり & なし & SQL & 汎用ベンチマーク（10{,}181件） \\
+    データセット & BIRD~\citep{li2024bird} & あり & あり & なし & SQL & 大規模実データ（12{,}751件） \\
     \midrule
-    SuperCon~\citep{ishii2023supercon} & あり & なし & あり & SPARQL & RDFオントロジー \\
-    PoLyInfo~\citep{ishii2024polyinfo} & あり & なし & あり & SPARQL & BFO準拠 \\
-    EMMO~\citep{emmo2020} & あり & なし & あり & --- & 上位オントロジー \\
-    KG+OBQC~\citep{allemang2024obqc} & あり & なし & なし & SPARQL & 72\%精度 \\
+    \multicolumn{7}{l}{\textit{T2SQL手法}} \\
+    手法 & DAIL-SQL~\citep{gao2023dail} & あり & あり & なし & SQL & スケルトン選択 \\
+    手法 & RAT-SQL~\citep{wang2020ratsql} & あり & あり & なし & SQL & 関係認識符号化 \\
+    手法 & RESDSQL~\citep{li2023resdsql} & あり & あり & なし & SQL & スキーマリンク分離 + スケルトン分離 \\
+    手法 & SchemaGraphSQL~\citep{safdarian2026schemagraphsql} & あり & あり & なし & SQL & パスファインディング \\
     \midrule
-    \textbf{本手法} & \textbf{あり} & \textbf{あり} & \textbf{あり} & \textbf{SQL} & FK走査 + L1$_2$辞書 \\
+    \multicolumn{7}{l}{\textit{材料情報学}} \\
+    手法 & MKNA~\citep{zhuang2026mkna} & なし & なし & あり & API & エージェント \\
+    手法 & OptiMat~\citep{hu2026optimat} & なし & なし & あり & API & オンデマンドDFT \\
+    \midrule
+    \multicolumn{7}{l}{\textit{オントロジー・知識グラフ}} \\
+    手法 & SuperCon~\citep{ishii2023supercon} & あり & なし & あり & SPARQL & RDFオントロジー \\
+    手法 & PoLyInfo~\citep{ishii2024polyinfo} & あり & なし & あり & SPARQL & BFO準拠 \\
+    手法 & EMMO~\citep{emmo2020} & あり & なし & あり & --- & 上位オントロジー \\
+    手法 & KG+OBQC~\citep{allemang2024obqc} & あり & なし & なし & SPARQL & 72\%精度 \\
+    \midrule
+    手法 & \textbf{本手法} & \textbf{あり} & \textbf{あり} & \textbf{あり} & \textbf{SQL} & FK走査 + L1$_2$辞書 \\
     \bottomrule
   \end{tabularx}
 \end{table*}
