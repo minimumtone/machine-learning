@@ -311,8 +311,8 @@ def _parse_xml_dos(array_el: ET.Element, fermi: float) -> DosData:
         rows.append([float(x) for x in r.text.split()])
     arr = np.array(rows)
     return DosData(
-        energies=arr[:, 0] if arr.size else np.array([]),
-        total_dos=arr[:, 1] if arr.shape[1] > 1 else np.array([]),
+        energies=arr[:, 0] if arr.size and arr.ndim > 1 else np.array([]),
+        total_dos=arr[:, 1] if arr.ndim > 1 and arr.shape[1] > 1 else np.array([]),
         fermi_energy=fermi,
     )
 
