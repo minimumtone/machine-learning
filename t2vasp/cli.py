@@ -1,8 +1,9 @@
 """
-Command-line interface for t2vasp.
+Command-line interface for t2vasp (Text-to-VASP).
 
 Subcommands
 -----------
+run        : Generate VASP input files from a natural-language query.
 parse      : Parse a single VASP directory and print a summary.
 batch      : Batch-process all calculations under a directory.
 generate   : Generate candidate structures from a reference POSCAR.
@@ -10,6 +11,9 @@ optimise   : Run the iterative optimisation loop (VASP + analyse + generate).
 
 Usage
 -----
+    python -m t2vasp run "Ni3AlのL12構造を最適化して" -o calc_Ni3Al/
+    python -m t2vasp run "BaTiO3の自発分極" -o calc_BTO/ --scheduler slurm
+    python -m t2vasp run "Cu酸化物の結晶場分裂" --dry-run
     python -m t2vasp parse /path/to/calc
     python -m t2vasp batch /path/to/all_calcs --output results/
     python -m t2vasp generate CONTCAR --strains -0.02,-0.01,0.01,0.02
@@ -28,7 +32,7 @@ from .utils import setup_logging
 def _build_parser() -> argparse.ArgumentParser:
     root = argparse.ArgumentParser(
         prog="t2vasp",
-        description="VASP post-processing and structure optimisation toolkit.",
+        description="Text-to-VASP: natural language \u2192 VASP calculation setup & post-processing.",
     )
     root.add_argument("-V", "--version", action="version", version=f"t2vasp {__version__}")
     root.add_argument("-v", "--verbose", action="count", default=1,
@@ -39,6 +43,19 @@ def _build_parser() -> argparse.ArgumentParser:
                       help="Path to user YAML config (overrides defaults).")
 
     sub = root.add_subparsers(dest="command", required=True)
+
+    # -- run -----------------------------------------------------------
+    p_run = sub.add_parser("run",
+                           help="Generate VASP inputs from natural language.")
+    p_run.add_argument("query", type=str,
+                       help='Natural-language query, e.g. "Ni3AlのL12構造を最適化して"')
+    p_run.add_argument("-o", "--output", type=str, default=None,
+                       help="Output directory (auto-generated if omitted).")
+    p_run.add_argument("--scheduler", type=str, default="slurm",
+                       choices=["slurm", "pbs", "local"],
+                       help="Job scheduler (default: slurm).")
+    p_run.add_argument("--dry-run", action="store_true",
+                       help="Show plan without writing files.")
 
     # -- parse ---------------------------------------------------------
     p_parse = sub.add_parser("parse", help="Parse a single VASP directory.")
@@ -85,7 +102,40 @@ def main(argv: list[str] | None = None) -> int:
     setup_logging(verbosity)
     cfg = load_config(args.config)
 
-    if args.command == "parse":
+    if args.command == "run":
+        import yaml as _yaml
+        from .intent import classify
+        from .entity import extract
+        from .generator import generate as gen_vasp
+
+        intent = classify(args.query)
+        entity = extract(args.query)
+
+        # Auto-generate output dir name if not specified
+        if args.output:
+            out_dir = Path(args.output)
+        else:
+            formula = entity.formula_str or "_".join(entity.elements) or "calc"
+            out_dir = Path(f"calc_{formula}_{intent.calc_type}")
+
+        if args.dry_run:
+            plan = gen_vasp(intent, entity, out_dir, scheduler=args.scheduler,
+                            dry_run=True)
+            print(_yaml.dump(plan, default_flow_style=False, allow_unicode=True))
+        else:
+            plan = gen_vasp(intent, entity, out_dir, scheduler=args.scheduler)
+            print(f"Generated VASP inputs in: {out_dir}/")
+            print(f"  Calculation: {intent.calc_type}")
+            print(f"  Formula:     {plan['formula']}")
+            print(f"  Prototype:   {plan['prototype']}")
+            print(f"  Lattice:     {plan['lattice_constant_angstrom']} Å")
+            print(f"  K-points:    {plan['kpoints']}")
+            print(f"  Scheduler:   {args.scheduler}")
+            print(f"  Files:       {', '.join(plan['files'])}")
+            if plan.get("secondary_steps"):
+                print(f"  Multi-step:  {plan['secondary_steps']}")
+
+    elif args.command == "parse":
         from .pipeline import process_single
         from .exporter import export_summary
         result = process_single(args.calc_dir, cfg)

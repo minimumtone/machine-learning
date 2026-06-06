@@ -46,6 +46,17 @@ pipeline:
   # VASP executable (override via CLI --vasp-cmd)
   vasp_command: "mpirun -np 4 vasp_std"
 
+# --- Scheduler --------------------------------------------------------
+scheduler:
+  type: slurm              # slurm | pbs | local
+  nodes: 1
+  ncpus_per_node: 16
+  walltime: "24:00:00"
+  queue: ""
+  modules: []              # e.g. ["vasp/6.4.0", "intel-mpi/2021"]
+  vasp_command: "mpirun -np 16 vasp_std"
+  potcar_dir: "${VASPPOT}"
+
 # --- Optimizer --------------------------------------------------------
 optimizer:
   # Genetic-algorithm defaults
