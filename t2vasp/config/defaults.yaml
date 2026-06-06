@@ -19,6 +19,14 @@ calculator:
   crystal_field:
     # Energy window around Fermi level for t2g/eg projection (eV)
     window: [-6.0, 4.0]
+    # Electron pairing energy P (eV) — used in CFSE calculation.
+    # Set to 0 to compute CFSE without pairing contribution.
+    pairing_energy: 0.0
+    # Number of d-electrons for CFSE / Jahn-Teller analysis.
+    # Set per-element or leave null for auto-detection.
+    # n_d_electrons: null
+    # Low-spin vs high-spin configuration
+    low_spin: false
   # Elastic constant fitting
   elastic:
     strain_magnitudes: [-0.02, -0.01, 0.0, 0.01, 0.02]
