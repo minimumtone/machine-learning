@@ -33,6 +33,7 @@ from graph.join_path_generator import generate_joins_for_tables, get_allowed_joi
 from graph.schema_parser import get_foreign_keys, get_tables, get_columns
 from graph.traversal_engine import find_join_subgraph
 from llm.entity_extractor import extract_conditions
+from llm.repair_loop import attempt_repair, execution_repair_loop
 from llm.schema_linker import link_schema
 from llm.sql_generator import generate_sql_via_llm, _rule_based_fallback
 from safety.sql_validator import (
@@ -282,6 +283,7 @@ def proposed_schema_graph(query: str, table_graph, allowed_columns: list[str],
 
     # Step 1: Extract conditions
     conditions = extract_conditions(query)
+    coverage = conditions.get("_coverage", {})
 
     # Step 2: Schema linking
     linked = link_schema(conditions)
@@ -309,6 +311,8 @@ def proposed_schema_graph(query: str, table_graph, allowed_columns: list[str],
     result["latency_ms"] = latency_ms
     result["linked_tables"] = required_tables
     result["linked_columns"] = required_columns
+    result["coverage"] = coverage
+    result["effective_joins"] = join_list if join_list else allowed_joins
     return result
 
 
@@ -423,6 +427,8 @@ def run_evaluation():
                 sql = gen.get("sql", "")
                 tokens = gen.get("tokens", 0)
                 latency_ms = gen.get("latency_ms", 0)
+                repair_attempts = 0
+                repair_tokens = 0
 
                 # Normalize LIMIT to 10000
                 if sql:
@@ -432,6 +438,51 @@ def run_evaluation():
 
                 # Execute
                 exec_result = execute_sql(conn, sql) if sql else {"success": False, "rows": [], "row_count": 0}
+
+                # ── Repair loop for proposed method ──
+                if method == "proposed" and sql and has_llm:
+                    needs_repair = (
+                        not exec_result.get("success", False)
+                        or exec_result.get("row_count", 0) == 0
+                    )
+                    if needs_repair:
+                        coverage = gen.get("coverage", {})
+                        effective_joins = gen.get("effective_joins", allowed_joins)
+                        linked_tables = gen.get("linked_tables", ALLOWED_TABLES)
+                        linked_cols = gen.get("linked_columns", allowed_columns)
+
+                        def _exec_fn(s: str) -> dict:
+                            s_norm = re.sub(r"\bLIMIT\s+\d+", "LIMIT 10000", s, flags=re.IGNORECASE)
+                            if not re.search(r"\bLIMIT\b", s_norm, re.IGNORECASE):
+                                s_norm = s_norm.rstrip().rstrip(";") + "\nLIMIT 10000;"
+                            return execute_sql(conn, s_norm)
+
+                        repair_result = execution_repair_loop(
+                            original_sql=sql,
+                            question=question,
+                            execute_fn=_exec_fn,
+                            allowed_tables=linked_tables,
+                            allowed_columns=linked_cols,
+                            allowed_joins=effective_joins,
+                            coverage=coverage,
+                            max_retries=2,
+                            model=model,
+                            api_key=api_key,
+                        )
+                        if repair_result.get("repaired", False):
+                            sql = repair_result["sql"]
+                            exec_result = repair_result["exec_result"]
+                            # Re-normalize LIMIT on repaired SQL
+                            sql = re.sub(r"\bLIMIT\s+\d+", "LIMIT 10000", sql, flags=re.IGNORECASE)
+                            if not re.search(r"\bLIMIT\b", sql, re.IGNORECASE):
+                                sql = sql.rstrip().rstrip(";") + "\nLIMIT 10000;"
+                        elif repair_result["exec_result"].get("success", False):
+                            # Repair ran but 0-row stayed; use latest SQL/exec
+                            sql = repair_result["sql"]
+                            exec_result = repair_result["exec_result"]
+                        repair_attempts = len(repair_result.get("attempts", []))
+                        repair_tokens = repair_result.get("repair_tokens", 0)
+                        tokens += repair_tokens
 
                 # Metrics
                 metrics = compute_single_metrics(
@@ -449,6 +500,8 @@ def run_evaluation():
                     "sql": sql,
                     "tokens": tokens,
                     "latency_ms": latency_ms,
+                    "repair_attempts": repair_attempts,
+                    "repair_tokens": repair_tokens,
                     **metrics,
                 })
             except Exception as e:
@@ -488,6 +541,7 @@ def write_result_csv(results: list[dict], path: Path) -> None:
         "raw_execution_accuracy",
         "hallucinated_table_rate", "hallucinated_join_rate",
         "token_usage", "latency_ms",
+        "repair_attempts", "repair_tokens",
     ]
     with open(path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
@@ -752,7 +806,9 @@ def run_materials_analysis(conn) -> None:
     ]
     for row in element_trends:
         a, b, total, stable, avg_e, avg_lat = row
-        lines.append(f"| {a} | {b} | {total} | {stable} | {float(avg_e):.3f} | {float(avg_lat):.3f} |")
+        avg_e_s = f"{float(avg_e):.3f}" if avg_e is not None else "N/A"
+        avg_lat_s = f"{float(avg_lat):.3f}" if avg_lat is not None else "N/A"
+        lines.append(f"| {a} | {b} | {total} | {stable} | {avg_e_s} | {avg_lat_s} |")
 
     lines.extend([
         "",

@@ -6,7 +6,7 @@
 - Total queries: 100
 - Execution failures: 100 (100.0%)
 - Syntax errors: 0
-- Hallucinated tables: 8
+- Hallucinated tables: 12
 - Hallucinated joins: 0
 
 ### Lowest accuracy queries:
@@ -20,16 +20,16 @@
 ## baseline2_full_schema
 
 - Total queries: 100
-- Execution failures: 68 (68.0%)
+- Execution failures: 74 (74.0%)
 - Syntax errors: 0
 - Hallucinated tables: 0
-- Hallucinated joins: 1
+- Hallucinated joins: 2
 
 ### Lowest accuracy queries:
-- q_easy_001 (easy): acc=0.00
 - q_easy_002 (easy): acc=0.00
-- q_easy_007 (easy): acc=0.00
+- q_easy_004 (easy): acc=0.00
 - q_easy_010 (easy): acc=0.00
+- q_easy_019 (easy): acc=0.00
 - q_easy_020 (easy): acc=0.00
 
 
@@ -68,14 +68,14 @@
 ## proposed
 
 - Total queries: 100
-- Execution failures: 5 (5.0%)
-- Syntax errors: 1
+- Execution failures: 3 (3.0%)
+- Syntax errors: 3
 - Hallucinated tables: 0
-- Hallucinated joins: 94
+- Hallucinated joins: 92
 
 ### Lowest accuracy queries:
 - q_easy_009 (easy): acc=0.00
 - q_easy_017 (easy): acc=0.00
 - q_easy_018 (easy): acc=0.00
-- q_medium_004 (medium): acc=0.00
 - q_medium_007 (medium): acc=0.00
+- q_medium_029 (medium): acc=0.00

@@ -1,132 +1,159 @@
-query_id,question,difficulty,hop_count,method,sql,syntax_valid,execution_valid,execution_accuracy,raw_execution_accuracy,hallucinated_table_rate,hallucinated_join_rate,token_usage,latency_ms
-q_easy_001,L1₂構造を持つ化合物を一覧にして。,easy,1,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,571,13695
-q_easy_002,Niを含むL1₂型金属間化合物を抽出して。,easy,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,574,11990
-q_easy_003,A₃B型組成を持つ化合物を表示して。,easy,1,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,572,12512
-q_easy_004,L12型化合物の格子定数を一覧にして。,easy,1,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,571,11751
-q_easy_005,Coを含む化合物を表示して。,easy,1,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,566,13776
-q_easy_006,cubic構造の化合物を一覧にして。,easy,1,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,567,10907
-q_easy_007,L1₂型化合物のリストを出して。,easy,1,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,569,12790
-q_easy_008,Alを含む化合物を抽出して。,easy,1,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,567,14124
+query_id,question,difficulty,hop_count,method,sql,syntax_valid,execution_valid,execution_accuracy,raw_execution_accuracy,hallucinated_table_rate,hallucinated_join_rate,token_usage,latency_ms,repair_attempts,repair_tokens
+q_easy_001,L1₂構造を持つ化合物を一覧にして。,easy,1,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,571,13245,0,0
+q_easy_002,Niを含むL1₂型金属間化合物を抽出して。,easy,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,574,10004,0,0
+q_easy_003,A₃B型組成を持つ化合物を表示して。,easy,1,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,572,11777,0,0
+q_easy_004,L12型化合物の格子定数を一覧にして。,easy,1,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,571,11321,0,0
+q_easy_005,Coを含む化合物を表示して。,easy,1,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,566,12787,0,0
+q_easy_006,cubic構造の化合物を一覧にして。,easy,1,baseline1_llm_only,"SELECT DISTINCT formula AS compound
+FROM materials
+WHERE crystal_system ILIKE 'cubic'
+   OR structure ILIKE '%cubic%'
+ORDER BY compound
+LIMIT 10000;",True,False,0.0,0.0,1.0,0.0,316,13492,0,0
+q_easy_007,L1₂型化合物のリストを出して。,easy,1,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,569,11689,0,0
+q_easy_008,Alを含む化合物を抽出して。,easy,1,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,567,12588,0,0
 q_easy_009,空間群番号221の化合物を表示して。,easy,1,baseline1_llm_only,"SELECT *
 FROM compounds
 WHERE space_group_number = 221
-LIMIT 10000;",True,False,0.0,0.0,1.0,0.0,435,8744
-q_easy_010,Tiを含むL1₂型化合物を一覧にして。,easy,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,571,12165
+LIMIT 10000;",True,False,0.0,0.0,1.0,0.0,447,9065,0,0
+q_easy_010,Tiを含むL1₂型化合物を一覧にして。,easy,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,571,13481,0,0
 q_easy_011,全化合物のformula一覧を出して。,easy,0,baseline1_llm_only,"SELECT formula
 FROM compounds
-ORDER BY formula
-LIMIT 10000;",True,False,0.0,0.0,1.0,0.0,478,10700
-q_easy_012,L12型化合物の数を教えて。,easy,1,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,567,12271
-q_easy_013,Ptを含む化合物を表示して。,easy,1,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,566,15203
-q_easy_014,NiとAlの両方を含む化合物を抽出して。,easy,1,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,573,12356
-q_easy_015,Gaを含むL1₂型化合物を表示して。,easy,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,570,16253
-q_easy_016,Feを含む化合物を一覧にして。,easy,1,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,567,13308
-q_easy_017,Aサイトの元素を一覧にして。,easy,1,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,564,14229
-q_easy_018,化合物の元素系を表示して。,easy,0,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,565,14092
+LIMIT 10000;",True,False,0.0,0.0,1.0,0.0,390,608313,0,0
+q_easy_012,L12型化合物の数を教えて。,easy,1,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,567,12967,0,0
+q_easy_013,Ptを含む化合物を表示して。,easy,1,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,566,13540,0,0
+q_easy_014,NiとAlの両方を含む化合物を抽出して。,easy,1,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,573,11396,0,0
+q_easy_015,Gaを含むL1₂型化合物を表示して。,easy,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,570,13217,0,0
+q_easy_016,Feを含む化合物を一覧にして。,easy,1,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,567,12081,0,0
+q_easy_017,Aサイトの元素を一覧にして。,easy,1,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,564,11663,0,0
+q_easy_018,化合物の元素系を表示して。,easy,0,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,565,11949,0,0
 q_easy_019,L1₂型でcubic構造の化合物を出して。,easy,1,baseline1_llm_only,"SELECT DISTINCT compound
 FROM materials
-WHERE crystal_system ILIKE 'cubic'
-  AND structure_type IN ('L1₂', 'L1_2', 'L12')
-LIMIT 10000;",True,False,0.0,0.0,1.0,0.0,511,11164
-q_easy_020,Wを含むL1₂型化合物を表示して。,easy,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,570,14393
-q_medium_001,Niを含む安定なL1₂型化合物を抽出して。,medium,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,574,13154
-q_medium_002,形成エネルギーが負のL1₂型化合物を元素組み合わせごとに整理して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,582,526451
-q_medium_003,Alを含む安定なL1₂型金属間化合物を抽出して。,medium,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,577,12859
-q_medium_004,Ni₃Alに近い格子定数を持つL1₂化合物を探して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,579,15760
-q_medium_005,安定なL1₂型化合物を形成エネルギーが低い順に出して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,579,13562
-q_medium_006,準安定なL1₂型化合物を抽出して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,573,12530
-q_medium_007,L1₂型化合物の形成エネルギー分布を教えて。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,574,15864
-q_medium_008,Co含有L1₂型化合物を安定性の高い順に表示して。,medium,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,577,13875
-q_medium_009,格子定数が3.5Å以上のL1₂化合物を出して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,0,0
-q_medium_010,NiまたはCoを含むL1₂型化合物を一覧にして。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,574,12916
-q_medium_011,形成エネルギーが-0.4以下のL1₂型化合物を出して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,579,13903
-q_medium_012,energy above hullが0.01以下のL1₂型化合物を表示して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,575,12101
-q_medium_013,Ti含有L1₂型化合物の格子定数と形成エネルギーを表示して。,medium,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,580,13882
-q_medium_014,L1₂化合物の格子定数を小さい順にソートして。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,575,11847
-q_medium_015,化学系Al-Niに属するL1₂化合物を抽出して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,575,12828
-q_medium_016,安定で格子定数が3.6Å未満のL1₂化合物を出して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,580,13612
-q_medium_017,Nbを含むL1₂型化合物の安定性情報を出して。,medium,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,575,13798
-q_medium_018,Scを含むL1₂型化合物を格子定数と共に表示して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,577,12572
-q_medium_019,L1₂型化合物のうちis_stableがtrueのものを出して。,medium,2,baseline1_llm_only,"SELECT *
-FROM materials
-WHERE structure_type = 'L1₂'
-  AND is_stable IS TRUE
-LIMIT 10000;",True,False,0.0,0.0,1.0,0.0,463,9475
-q_medium_020,Ni-Al系以外のL1₂型化合物を一覧にして。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,573,14600
-q_medium_021,Aサイト元素ごとのL1₂型化合物数を集計して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,573,11851
-q_medium_022,形成エネルギーが最も低いL1₂型化合物TOP5を出して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,579,12112
-q_medium_023,格子定数が4.0Å以上のL1₂化合物を出して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,576,11776
-q_medium_024,Pdを含むL1₂型化合物を形成エネルギー順に出して。,medium,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,577,11948
-q_medium_025,Cu含有のL1₂型化合物を安定性で分類して。,medium,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,574,12569
-q_medium_026,Bサイト元素ごとの平均形成エネルギーを出して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,570,14379
-q_medium_027,格子体積が12Å³/atom以下のL1₂化合物を出して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,577,13588
-q_medium_028,Ir含有L1₂型化合物の一覧を出して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,571,14262
-q_medium_029,2元素系のL1₂型化合物をchemical_systemで分類して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,574,11018
-q_medium_030,安定なL1₂型化合物のうち格子定数が大きい順に並べて。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,582,12704
-q_hard_001,Ni基超合金のγ'相候補として有望な、安定または準安定なL1₂型化合物を抽出して。,hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,591,15355
-q_hard_002,L1₂型化合物において、Aサイト元素とBサイト元素の組み合わせが形成エネルギーに与える傾向を調べて。,hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,594,14034
-q_hard_003,L1₂構造を持つ化合物のうち、格子定数がNi₃Alに近く、形成エネルギーが低い候補を抽出して。,hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,598,11514
-q_hard_004,安定なL1₂型化合物のバルクモジュラスを高い順に表示して。,hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,580,12505
-q_hard_005,NiまたはCoを含む安定なL1₂化合物を形成エネルギー順に並べて。,hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,583,14250
-q_hard_006,Aサイト元素別にL1₂型化合物の平均格子定数を集計して。,hard,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,578,13409
-q_hard_007,形成エネルギーが-0.3以下で格子定数が3.5〜3.7ÅのL1₂化合物を抽出して。,hard,3,baseline1_llm_only,"SELECT *
-FROM materials
-WHERE structure_type IN ('L1_2', 'L12', 'L1₂')
-  AND formation_energy <= -0.3
-  AND lattice_constant BETWEEN 3.5 AND 3.7
-LIMIT 10000;",True,False,0.0,0.0,1.0,0.0,479,10600
-q_hard_008,L1₂型化合物でバルクモジュラスが180GPa以上のものを抽出して。,hard,4,baseline1_llm_only,"SELECT *
-FROM materials
-WHERE structure_type IN ('L1_2', 'L1₂')
-  AND bulk_modulus_gpa >= 180
-LIMIT 10000;",True,False,0.0,0.0,1.0,0.0,372,10111
-q_hard_009,Co基L1₂化合物のうち、Ni₃Alに近い格子定数のものを安定性順に出して。,hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,589,13761
-q_hard_010,Bサイト元素がAlまたはTiのL1₂化合物を形成エネルギー順に出して。,hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,581,13914
-q_hard_011,L1₂化合物のせん断弾性率を表示して。,hard,4,baseline1_llm_only,"SELECT formula, shear_modulus
+WHERE structure_type IN ('L1₂', 'L1_2', 'L12')
+  AND crystal_system ILIKE 'cubic'
+LIMIT 10000;",True,False,0.0,0.0,1.0,0.0,414,7315,0,0
+q_easy_020,Wを含むL1₂型化合物を表示して。,easy,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,570,10444,0,0
+q_medium_001,Niを含む安定なL1₂型化合物を抽出して。,medium,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,574,10702,0,0
+q_medium_002,形成エネルギーが負のL1₂型化合物を元素組み合わせごとに整理して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,582,12263,0,0
+q_medium_003,Alを含む安定なL1₂型金属間化合物を抽出して。,medium,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,577,17196,0,0
+q_medium_004,Ni₃Alに近い格子定数を持つL1₂化合物を探して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,579,12953,0,0
+q_medium_005,安定なL1₂型化合物を形成エネルギーが低い順に出して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,579,12986,0,0
+q_medium_006,準安定なL1₂型化合物を抽出して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,573,10222,0,0
+q_medium_007,L1₂型化合物の形成エネルギー分布を教えて。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,574,11625,0,0
+q_medium_008,Co含有L1₂型化合物を安定性の高い順に表示して。,medium,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,577,10556,0,0
+q_medium_009,格子定数が3.5Å以上のL1₂化合物を出して。,medium,2,baseline1_llm_only,"SELECT *
 FROM materials
 WHERE structure_type IN ('L1₂', 'L1_2', 'L12')
-LIMIT 10000;",True,False,0.0,0.0,1.0,0.0,566,14920
-q_hard_012,安定で形成エネルギーが最も低いL1₂化合物のトップ10を出して。,hard,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,581,14437
-q_hard_013,Ni含有L1₂化合物のバルクモジュラスと形成エネルギーの関係を出して。,hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,584,16131
-q_hard_014,安定なL1₂化合物をAサイト元素でグループ化し、各グループの平均形成エネルギーを出して。,hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,590,13981
-q_hard_015,格子定数3.55Å付近でバルクモジュラスの高いL1₂化合物を探して。,hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,585,14155
-q_hard_016,L1₂型化合物の格子定数と形成エネルギーの相関を見たい。,hard,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,580,16060
-q_hard_017,Co3TiとNi3Alの格子定数差を計算して。,hard,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,573,14763
-q_hard_018,Al系L1₂化合物のうち安定なものとそうでないものの数を出して。,hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,581,14854
-q_hard_019,準安定L1₂化合物をenergy above hull順にランキングして。,hard,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,575,16772
-q_hard_020,Bサイト元素ごとの安定L1₂化合物数を集計して。,hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,574,16253
-q_hard_021,DFT計算で得られたL1₂化合物の物性一覧を出して。,hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,578,14712
-q_hard_022,PBE汎関数で計算されたL1₂化合物のバルクモジュラスを表示して。,hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,582,14590
-q_hard_023,L1₂化合物の格子ミスマッチ（Ni3Alとの差）を計算して小さい順に表示して。,hard,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,584,16047
-q_hard_024,Fe含有L1₂化合物の安定性と弾性特性を同時に表示して。,hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,581,16237
-q_hard_025,安定なL1₂化合物でバルクモジュラスが160GPa以上のものを抽出して。,hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,583,17591
-q_hard_026,L1₂化合物で安定性と格子定数の両面でNi3Alに近い候補を出して。,hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,587,19189
-q_hard_027,Aサイト元素がNiまたはCoで、Bサイト元素がAlまたはTiのL1₂化合物を出して。,hard,3,baseline1_llm_only,"SELECT *
-FROM compounds
-WHERE structure_type IN ('L1₂', 'L12', 'L1_2')
-  AND a_site_element IN ('Ni', 'Co')
-  AND b_site_element IN ('Al', 'Ti')
-LIMIT 10000;",True,False,0.0,0.0,1.0,0.0,563,11867
-q_hard_028,L1₂型化合物の体積あたり原子数と格子定数の関係を出して。,hard,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,582,13436
-q_hard_029,L1₂化合物でenergy above hullが0で形成エネルギーが-0.4以下のものを出して。,hard,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,585,14640
-q_hard_030,遷移金属を含むL1₂型化合物のうち安定なものを出して。,hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,581,14205
-q_vhard_001,L1₂型金属間化合物において、相安定性、格子ミスマッチ、弾性特性を同時に考慮した析出強化相候補を抽出して。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,605,14006
-q_vhard_002,Ni₃Al代替またはCo基γ'相候補として有望なL1₂型金属間化合物を、形成エネルギー、格子定数、弾性率の観点から探索して。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,608,12829
-q_vhard_003,γ'相候補のランキングを安定性・格子整合性・バルクモジュラスの重み付きスコアで出して。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,590,13435
-q_vhard_004,NiまたはCo含有で安定かつバルクモジュラスが高いL1₂化合物トップ10を出して。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,587,12554
-q_vhard_005,L1₂型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して材料設計の指針を得たい。,very_hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,596,13502
-q_vhard_006,Ni3Alの格子定数に近く、バルクモジュラスが高く、安定なL1₂候補を総合的にランキングして。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,593,13508
-q_vhard_007,析出強化に適したL1₂化合物を格子ミスマッチ、弾性率、安定性の多基準で評価して上位候補を出して。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,599,14726
-q_vhard_008,Co基超合金のγ'相候補として、Co含有で安定なL1₂化合物をNi3Alとの比較で評価して。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,591,12911
-q_vhard_009,L1₂型化合物データベースから、バルクモジュラスとせん断弾性率の比(B/G比)を計算して延性候補を抽出して。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,601,12108
-q_vhard_010,L1₂型化合物の安定性マップ（formation energy vs energy above hull）を出力して、候補を4象限に分類して。,very_hard,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,591,11280
-q_vhard_011,高温安定性の観点で有望なL1₂型化合物を形成エネルギーの深さで評価して上位を出して。,very_hard,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,592,12216
-q_vhard_012,Ni基超合金のγ'相代替候補として、Ni-Al系以外で安定なL1₂化合物を格子整合性で評価して。,very_hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,595,12963
-q_vhard_013,L1₂型化合物で体積弾性率と格子定数を散布図データとして出力して。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,585,12753
-q_vhard_014,元素周期の観点から、3d遷移金属と4d/5d遷移金属をAサイトに持つL1₂化合物の安定性傾向を比較して。,very_hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,604,13349
-q_vhard_015,L1₂化合物のうちNi3Alより安定でバルクモジュラスが高い候補を出して。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,586,10504
-q_vhard_016,Co-Al-W系L1₂候補の安定性と弾性特性を評価して。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,578,13034
-q_vhard_017,全L1₂化合物について、安定性スコア×格子整合性スコア×弾性スコアの複合スコアを計算してランキングして。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,600,12630
-q_vhard_018,Ni3Al代替γ'相候補をバルクモジュラス、形成エネルギー、格子ミスマッチの3軸パレート面で出力して。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,597,10960
-q_vhard_019,L1₂型化合物データベースから材料設計仮説を導出するため、安定化合物の元素分布とその物性傾向を包括的に集計して。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,603,12371
-q_vhard_020,次世代γ'相候補として、Ni-Al-Co-Ti四元系でL1₂構造をとりうる組成を探索して。,very_hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,590,12862
+  AND lattice_constant >= 3.5
+LIMIT 10000;",True,False,0.0,0.0,1.0,0.0,348,7711,0,0
+q_medium_010,NiまたはCoを含むL1₂型化合物を一覧にして。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,574,10897,0,0
+q_medium_011,形成エネルギーが-0.4以下のL1₂型化合物を出して。,medium,2,baseline1_llm_only,"SELECT *
+FROM materials
+WHERE formation_energy <= -0.4
+  AND (structure_type = 'L1₂' OR structure_type = 'L1_2' OR structure_type ILIKE 'L12')
+LIMIT 10000;",True,False,0.0,0.0,1.0,0.0,410,6778,0,0
+q_medium_012,energy above hullが0.01以下のL1₂型化合物を表示して。,medium,2,baseline1_llm_only,"SELECT *
+FROM materials
+WHERE structure_type IN ('L1_2', 'L1₂')
+  AND energy_above_hull <= 0.01
+ORDER BY energy_above_hull
+LIMIT 10000;",True,False,0.0,0.0,1.0,0.0,491,7695,0,0
+q_medium_013,Ti含有L1₂型化合物の格子定数と形成エネルギーを表示して。,medium,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,580,11063,0,0
+q_medium_014,L1₂化合物の格子定数を小さい順にソートして。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,575,10572,0,0
+q_medium_015,化学系Al-Niに属するL1₂化合物を抽出して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,575,11622,0,0
+q_medium_016,安定で格子定数が3.6Å未満のL1₂化合物を出して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,580,10538,0,0
+q_medium_017,Nbを含むL1₂型化合物の安定性情報を出して。,medium,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,575,12908,0,0
+q_medium_018,Scを含むL1₂型化合物を格子定数と共に表示して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,577,13499,0,0
+q_medium_019,L1₂型化合物のうちis_stableがtrueのものを出して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,576,11327,0,0
+q_medium_020,Ni-Al系以外のL1₂型化合物を一覧にして。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,573,13851,0,0
+q_medium_021,Aサイト元素ごとのL1₂型化合物数を集計して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,573,12287,0,0
+q_medium_022,形成エネルギーが最も低いL1₂型化合物TOP5を出して。,medium,2,baseline1_llm_only,"SELECT
+  material_id,
+  formula,
+  formation_energy
+FROM materials
+WHERE structure_type IN ('L1₂', 'L1_2', 'L12')
+  AND formation_energy IS NOT NULL
+ORDER BY formation_energy ASC
+LIMIT 10000;",True,False,0.0,0.0,1.0,0.0,474,9468,0,0
+q_medium_023,格子定数が4.0Å以上のL1₂化合物を出して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,576,11316,0,0
+q_medium_024,Pdを含むL1₂型化合物を形成エネルギー順に出して。,medium,3,baseline1_llm_only,"SELECT
+  material_id,
+  formula,
+  formation_energy_per_atom
+FROM materials
+WHERE elements @> ARRAY['Pd']::text[]
+  AND structure_type IN ('L1₂', 'L1_2')
+ORDER BY formation_energy_per_atom ASC
+LIMIT 10000;",True,False,0.0,0.0,1.0,0.0,535,10904,0,0
+q_medium_025,Cu含有のL1₂型化合物を安定性で分類して。,medium,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,574,13761,0,0
+q_medium_026,Bサイト元素ごとの平均形成エネルギーを出して。,medium,2,baseline1_llm_only,"SELECT
+  b_site_element,
+  AVG(formation_energy) AS avg_formation_energy
+FROM materials
+GROUP BY b_site_element
+ORDER BY b_site_element
+LIMIT 10000;",True,False,0.0,0.0,1.0,0.0,272,4303,0,0
+q_medium_027,格子体積が12Å³/atom以下のL1₂化合物を出して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,577,12388,0,0
+q_medium_028,Ir含有L1₂型化合物の一覧を出して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,571,13172,0,0
+q_medium_029,2元素系のL1₂型化合物をchemical_systemで分類して。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,574,12209,0,0
+q_medium_030,安定なL1₂型化合物のうち格子定数が大きい順に並べて。,medium,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,582,11777,0,0
+q_hard_001,Ni基超合金のγ'相候補として有望な、安定または準安定なL1₂型化合物を抽出して。,hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,591,13011,0,0
+q_hard_002,L1₂型化合物において、Aサイト元素とBサイト元素の組み合わせが形成エネルギーに与える傾向を調べて。,hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,594,12133,0,0
+q_hard_003,L1₂構造を持つ化合物のうち、格子定数がNi₃Alに近く、形成エネルギーが低い候補を抽出して。,hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,598,10370,0,0
+q_hard_004,安定なL1₂型化合物のバルクモジュラスを高い順に表示して。,hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,580,11928,0,0
+q_hard_005,NiまたはCoを含む安定なL1₂化合物を形成エネルギー順に並べて。,hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,583,10082,0,0
+q_hard_006,Aサイト元素別にL1₂型化合物の平均格子定数を集計して。,hard,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,578,11538,0,0
+q_hard_007,形成エネルギーが-0.3以下で格子定数が3.5〜3.7ÅのL1₂化合物を抽出して。,hard,3,baseline1_llm_only,"SELECT *
+FROM materials
+WHERE structure_type IN ('L1₂', 'L12')
+  AND formation_energy <= -0.3
+  AND lattice_constant BETWEEN 3.5 AND 3.7
+LIMIT 10000;",True,False,0.0,0.0,1.0,0.0,549,9734,0,0
+q_hard_008,L1₂型化合物でバルクモジュラスが180GPa以上のものを抽出して。,hard,4,baseline1_llm_only,"SELECT *
+FROM materials
+WHERE structure_type = 'L1₂'
+  AND bulk_modulus_gpa >= 180
+LIMIT 10000;",True,False,0.0,0.0,1.0,0.0,563,10846,0,0
+q_hard_009,Co基L1₂化合物のうち、Ni₃Alに近い格子定数のものを安定性順に出して。,hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,589,13355,0,0
+q_hard_010,Bサイト元素がAlまたはTiのL1₂化合物を形成エネルギー順に出して。,hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,581,11046,0,0
+q_hard_011,L1₂化合物のせん断弾性率を表示して。,hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,573,10869,0,0
+q_hard_012,安定で形成エネルギーが最も低いL1₂化合物のトップ10を出して。,hard,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,581,11795,0,0
+q_hard_013,Ni含有L1₂化合物のバルクモジュラスと形成エネルギーの関係を出して。,hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,584,10449,0,0
+q_hard_014,安定なL1₂化合物をAサイト元素でグループ化し、各グループの平均形成エネルギーを出して。,hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,590,11533,0,0
+q_hard_015,格子定数3.55Å付近でバルクモジュラスの高いL1₂化合物を探して。,hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,585,11174,0,0
+q_hard_016,L1₂型化合物の格子定数と形成エネルギーの相関を見たい。,hard,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,580,11964,0,0
+q_hard_017,Co3TiとNi3Alの格子定数差を計算して。,hard,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,573,15230,0,0
+q_hard_018,Al系L1₂化合物のうち安定なものとそうでないものの数を出して。,hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,581,12288,0,0
+q_hard_019,準安定L1₂化合物をenergy above hull順にランキングして。,hard,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,575,12208,0,0
+q_hard_020,Bサイト元素ごとの安定L1₂化合物数を集計して。,hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,574,11084,0,0
+q_hard_021,DFT計算で得られたL1₂化合物の物性一覧を出して。,hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,578,10374,0,0
+q_hard_022,PBE汎関数で計算されたL1₂化合物のバルクモジュラスを表示して。,hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,582,10682,0,0
+q_hard_023,L1₂化合物の格子ミスマッチ（Ni3Alとの差）を計算して小さい順に表示して。,hard,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,584,10624,0,0
+q_hard_024,Fe含有L1₂化合物の安定性と弾性特性を同時に表示して。,hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,581,12617,0,0
+q_hard_025,安定なL1₂化合物でバルクモジュラスが160GPa以上のものを抽出して。,hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,583,12757,0,0
+q_hard_026,L1₂化合物で安定性と格子定数の両面でNi3Alに近い候補を出して。,hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,587,11108,0,0
+q_hard_027,Aサイト元素がNiまたはCoで、Bサイト元素がAlまたはTiのL1₂化合物を出して。,hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,584,10969,0,0
+q_hard_028,L1₂型化合物の体積あたり原子数と格子定数の関係を出して。,hard,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,582,12659,0,0
+q_hard_029,L1₂化合物でenergy above hullが0で形成エネルギーが-0.4以下のものを出して。,hard,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,585,11451,0,0
+q_hard_030,遷移金属を含むL1₂型化合物のうち安定なものを出して。,hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,581,11170,0,0
+q_vhard_001,L1₂型金属間化合物において、相安定性、格子ミスマッチ、弾性特性を同時に考慮した析出強化相候補を抽出して。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,605,13481,0,0
+q_vhard_002,Ni₃Al代替またはCo基γ'相候補として有望なL1₂型金属間化合物を、形成エネルギー、格子定数、弾性率の観点から探索して。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,608,14484,0,0
+q_vhard_003,γ'相候補のランキングを安定性・格子整合性・バルクモジュラスの重み付きスコアで出して。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,590,12492,0,0
+q_vhard_004,NiまたはCo含有で安定かつバルクモジュラスが高いL1₂化合物トップ10を出して。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,587,12773,0,0
+q_vhard_005,L1₂型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して材料設計の指針を得たい。,very_hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,596,13316,0,0
+q_vhard_006,Ni3Alの格子定数に近く、バルクモジュラスが高く、安定なL1₂候補を総合的にランキングして。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,593,12166,0,0
+q_vhard_007,析出強化に適したL1₂化合物を格子ミスマッチ、弾性率、安定性の多基準で評価して上位候補を出して。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,599,13319,0,0
+q_vhard_008,Co基超合金のγ'相候補として、Co含有で安定なL1₂化合物をNi3Alとの比較で評価して。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,591,13277,0,0
+q_vhard_009,L1₂型化合物データベースから、バルクモジュラスとせん断弾性率の比(B/G比)を計算して延性候補を抽出して。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,601,10658,0,0
+q_vhard_010,L1₂型化合物の安定性マップ（formation energy vs energy above hull）を出力して、候補を4象限に分類して。,very_hard,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,591,11969,0,0
+q_vhard_011,高温安定性の観点で有望なL1₂型化合物を形成エネルギーの深さで評価して上位を出して。,very_hard,2,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,592,11913,0,0
+q_vhard_012,Ni基超合金のγ'相代替候補として、Ni-Al系以外で安定なL1₂化合物を格子整合性で評価して。,very_hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,595,12913,0,0
+q_vhard_013,L1₂型化合物で体積弾性率と格子定数を散布図データとして出力して。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,585,10016,0,0
+q_vhard_014,元素周期の観点から、3d遷移金属と4d/5d遷移金属をAサイトに持つL1₂化合物の安定性傾向を比較して。,very_hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,604,12449,0,0
+q_vhard_015,L1₂化合物のうちNi3Alより安定でバルクモジュラスが高い候補を出して。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,586,11852,0,0
+q_vhard_016,Co-Al-W系L1₂候補の安定性と弾性特性を評価して。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,578,13176,0,0
+q_vhard_017,全L1₂化合物について、安定性スコア×格子整合性スコア×弾性スコアの複合スコアを計算してランキングして。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,600,11844,0,0
+q_vhard_018,Ni3Al代替γ'相候補をバルクモジュラス、形成エネルギー、格子ミスマッチの3軸パレート面で出力して。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,597,11215,0,0
+q_vhard_019,L1₂型化合物データベースから材料設計仮説を導出するため、安定化合物の元素分布とその物性傾向を包括的に集計して。,very_hard,4,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,603,11764,0,0
+q_vhard_020,次世代γ'相候補として、Ni-Al-Co-Ti四元系でL1₂構造をとりうる組成を探索して。,very_hard,3,baseline1_llm_only,,True,False,0.0,0.0,0.0,0.0,590,12577,0,0
