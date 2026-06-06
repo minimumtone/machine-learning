@@ -1,0 +1,50 @@
+# t2vasp default configuration
+# Override per-project by passing --config <path>.yaml
+
+# --- Parsing ----------------------------------------------------------
+parser:
+  # Preferred structure source for lattice extraction
+  structure_source: "CONTCAR"          # CONTCAR | POSCAR
+  # Energy tag searched in OUTCAR
+  energy_tag: "free  energy   TOTEN"
+  # Lattice constant sanity range (Angstrom)
+  lattice_range: [1.5, 10.0]
+
+# --- Calculator -------------------------------------------------------
+calculator:
+  # Reference energies per element (eV/atom, DFT ground-state)
+  # Extend this map when adding new elements.
+  reference_energies: {}
+  # Crystal-field analysis settings
+  crystal_field:
+    # Energy window around Fermi level for t2g/eg projection (eV)
+    window: [-6.0, 4.0]
+  # Elastic constant fitting
+  elastic:
+    strain_magnitudes: [-0.02, -0.01, 0.0, 0.01, 0.02]
+
+# --- Exporter ---------------------------------------------------------
+exporter:
+  csv_delimiter: ","
+  float_precision: 6
+  json_indent: 2
+
+# --- Pipeline ---------------------------------------------------------
+pipeline:
+  # Maximum parallel VASP jobs (subprocess pool)
+  max_parallel_jobs: 4
+  # Seconds between polling for job completion
+  poll_interval: 30
+  # VASP executable (override via CLI --vasp-cmd)
+  vasp_command: "mpirun -np 4 vasp_std"
+
+# --- Optimizer --------------------------------------------------------
+optimizer:
+  # Genetic-algorithm defaults
+  population_size: 20
+  num_generations: 50
+  mutation_rate: 0.15
+  crossover_rate: 0.7
+  elite_fraction: 0.1
+  # Random seed for reproducibility
+  seed: 42
