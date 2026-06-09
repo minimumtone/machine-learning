@@ -102,7 +102,8 @@ def baseline3_rule_based(question: str) -> str:
     sql += "\n".join(joins)
     if where_parts:
         sql += "\nWHERE " + " AND ".join(where_parts)
-    sql += "\nLIMIT 100;"
+    row_limit = int(os.getenv("SQL_ROW_LIMIT", "100"))
+    sql += f"\nLIMIT {row_limit};"
     return sql
 
 
