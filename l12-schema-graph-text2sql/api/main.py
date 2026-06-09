@@ -8,6 +8,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from llm.entity_extractor import extract_conditions
+from llm.few_shot_store import add_example
 from llm.schema_linker import link_schema
 from llm.sql_generator import pipeline
 from safety.sql_validator import validate_sql
@@ -49,12 +50,31 @@ def query_endpoint(req: QueryRequest) -> QueryResponse:
     """Process a natural language query and optionally execute the SQL."""
     result = pipeline(req.query)
 
+    if result.get("mode") == "rejected":
+        raise HTTPException(
+            status_code=403,
+            detail=result.get("reason", "Query rejected by intent classifier"),
+        )
+
     validation = validate_sql(result["sql"])
     sql = validation["sql"]
 
     exec_result = None
     if req.execute and validation["valid"]:
         exec_result = execute_sql(sql, validate=False)
+        if (
+            result.get("_store_on_success")
+            and exec_result
+            and exec_result.get("success")
+            and exec_result.get("row_count", 0) > 0
+        ):
+            add_example(
+                nl_query=req.query,
+                sql=sql,
+                conditions=result.get("conditions", {}),
+                row_count=exec_result.get("row_count", 0),
+                source="api",
+            )
 
     return QueryResponse(
         query=req.query,

@@ -12,4 +12,4 @@ JOIN calculated_property cp_sm ON cp_sm.calculation_id = calc.calculation_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND ps.energy_above_hull <= 0.05
 ORDER BY ps.energy_above_hull ASC, cp_bm.value DESC
-LIMIT 100;
+LIMIT 10000;

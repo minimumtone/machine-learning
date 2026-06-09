@@ -8,4 +8,4 @@ WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND c.site_label = 'B'
 GROUP BY c.element
 ORDER BY avg_formation_energy ASC
-LIMIT 100;
+LIMIT 10000;

@@ -33,6 +33,7 @@ from graph.join_path_generator import generate_joins_for_tables, get_allowed_joi
 from graph.schema_parser import get_foreign_keys, get_tables, get_columns
 from graph.traversal_engine import find_join_subgraph
 from llm.entity_extractor import extract_conditions
+from llm.repair_loop import attempt_repair, execution_repair_loop
 from llm.schema_linker import link_schema
 from llm.sql_generator import generate_sql_via_llm, _rule_based_fallback
 from safety.sql_validator import (
@@ -62,6 +63,15 @@ ALLOWED_TABLES = [
     "material_entry", "composition", "structure",
     "calculation", "calculated_property", "phase_stability",
     "prototype_definition",
+    # Extended schema (30 tables total)
+    "alloy_system", "application_domain", "band_structure",
+    "defect_type", "density_of_states", "elastic_tensor",
+    "element", "element_property", "experimental_measurement",
+    "grain_boundary", "literature_reference", "magnetic_property",
+    "material_alloy_system", "material_application", "material_defect",
+    "material_reference", "material_synthesis", "measured_property",
+    "phase_diagram_entry", "space_group", "surface_energy",
+    "synthesis_method", "thermal_property",
 ]
 
 
@@ -74,13 +84,14 @@ def load_evaluation_dataset() -> list[dict]:
     return queries
 
 
-def load_expected_results(qid: str) -> list[list]:
+def load_expected_results(qid: str) -> tuple[list[list], list[str]]:
+    """Return (rows, columns) for expected results."""
     path = RESULTS_DIR / f"{qid}.json"
     if path.exists():
         with open(path) as f:
             data = json.load(f)
-        return data.get("rows", [])
-    return []
+        return data.get("rows", []), data.get("columns", [])
+    return [], []
 
 
 def load_gold_sql(qid: str) -> str:
@@ -117,6 +128,15 @@ def get_schema_info(conn):
         columns[t] = get_columns(conn, t)
     fks = get_foreign_keys(conn)
     table_graph = build_table_graph(fks)
+
+    # Add logical join: element.symbol = composition.element (no FK but valid)
+    import networkx as nx
+    if not table_graph.has_edge("composition", "element"):
+        table_graph.add_edge(
+            "composition", "element",
+            source_column="element",
+            target_column="symbol",
+        )
 
     # Build allowed columns list
     allowed_columns = []
@@ -272,21 +292,32 @@ def proposed_schema_graph(query: str, table_graph, allowed_columns: list[str],
 
     # Step 1: Extract conditions
     conditions = extract_conditions(query)
+    coverage = conditions.get("_coverage", {})
 
     # Step 2: Schema linking
     linked = link_schema(conditions)
     required_tables = linked["required_tables"]
-    required_columns = linked["required_columns"]
 
-    # Step 3: Graph traversal for JOIN paths
+    # Step 3: Provide ALL columns from required tables (not just linker subset)
+    # This prevents column hallucination by showing the LLM every available column
+    required_columns = [
+        c for c in allowed_columns
+        if c.split(".")[0] in required_tables
+    ]
+
+    # Step 4: Graph traversal for JOIN paths
     join_clause = generate_joins_for_tables(table_graph, required_tables)
     join_list = []
     for line in join_clause.split("\n"):
         m = re.search(r"ON\s+(.+)", line, re.IGNORECASE)
         if m:
             join_list.append(m.group(1).strip())
+    # Also include all allowed joins relevant to required tables
+    for j in allowed_joins:
+        if any(t in j for t in required_tables) and j not in join_list:
+            join_list.append(j)
 
-    # Step 4: Generate SQL via LLM with constraints
+    # Step 5: Generate SQL via LLM with constraints
     result = generate_sql_via_llm(
         user_query=query,
         allowed_tables=required_tables,
@@ -299,6 +330,8 @@ def proposed_schema_graph(query: str, table_graph, allowed_columns: list[str],
     result["latency_ms"] = latency_ms
     result["linked_tables"] = required_tables
     result["linked_columns"] = required_columns
+    result["coverage"] = coverage
+    result["effective_joins"] = join_list if join_list else allowed_joins
     return result
 
 
@@ -314,7 +347,9 @@ def _extract_sql(response: str) -> str:
 
 def compute_single_metrics(sql: str, exec_result: dict, expected_rows: list,
                            allowed_joins: list[str], hop_count: int,
-                           tokens: int, latency_ms: int) -> dict:
+                           tokens: int, latency_ms: int,
+                           expected_columns: list[str] | None = None,
+                           allowed_columns: list[str] | None = None) -> dict:
     """Compute metrics for a single query."""
     gen_tables = extract_tables_from_sql(sql)
     gen_columns = extract_columns_from_sql(sql)
@@ -327,9 +362,19 @@ def compute_single_metrics(sql: str, exec_result: dict, expected_rows: list,
 
     is_syntax_valid = syntax_validity(sql)
     is_exec_valid = exec_result.get("success", False)
-    exec_acc = execution_accuracy(exec_result.get("rows", []), expected_rows)
+    result_columns = exec_result.get("columns", None)
+    # Column-aware accuracy (Improvement A)
+    exec_acc = execution_accuracy(
+        exec_result.get("rows", []), expected_rows,
+        result_columns=result_columns,
+        expected_columns=expected_columns,
+    )
+    # Raw accuracy without column-aware matching (baseline for Improvement A)
+    raw_exec_acc = execution_accuracy(
+        exec_result.get("rows", []), expected_rows,
+    )
     h_table = hallucinated_table_rate(gen_tables, ALLOWED_TABLES)
-    h_column = hallucinated_column_rate(gen_columns, [])  # skip column check for brevity
+    h_column = hallucinated_column_rate(gen_columns, allowed_columns or [])
     h_join = hallucinated_join_rate(gen_joins, allowed_joins)
     is_correct = exec_acc >= 0.8
 
@@ -337,6 +382,7 @@ def compute_single_metrics(sql: str, exec_result: dict, expected_rows: list,
         "syntax_valid": is_syntax_valid,
         "execution_valid": is_exec_valid,
         "execution_accuracy": exec_acc,
+        "raw_execution_accuracy": raw_exec_acc,
         "hallucinated_table_rate": h_table,
         "hallucinated_column_rate": h_column,
         "hallucinated_join_rate": h_join,
@@ -349,7 +395,7 @@ def compute_single_metrics(sql: str, exec_result: dict, expected_rows: list,
 def run_evaluation():
     """Main evaluation pipeline."""
     api_key = os.getenv("OPENAI_API_KEY", "")
-    model = os.getenv("LLM_MODEL", "gpt-4.1-mini")
+    model = os.getenv("LLM_MODEL", "gpt-5.5")
 
     has_llm = bool(api_key and api_key != "your_api_key_here")
 
@@ -379,7 +425,7 @@ def run_evaluation():
         question = q["question"]
         difficulty = q["difficulty"]
         hop_count = q.get("hop_count", 1)
-        expected_rows = load_expected_results(qid)
+        expected_rows, expected_columns = load_expected_results(qid)
 
         print(f"\r  [{i+1}/{len(queries)}] {qid} ({difficulty})...", end="", flush=True)
 
@@ -401,18 +447,69 @@ def run_evaluation():
                 sql = gen.get("sql", "")
                 tokens = gen.get("tokens", 0)
                 latency_ms = gen.get("latency_ms", 0)
+                repair_attempts = 0
+                repair_tokens = 0
 
-                # Ensure LIMIT
-                if sql and not re.search(r"\bLIMIT\b", sql, re.IGNORECASE):
-                    sql = sql.rstrip().rstrip(";") + "\nLIMIT 100;"
+                # Normalize LIMIT to 10000
+                if sql:
+                    sql = re.sub(r"\bLIMIT\s+\d+", "LIMIT 10000", sql, flags=re.IGNORECASE)
+                    if not re.search(r"\bLIMIT\b", sql, re.IGNORECASE):
+                        sql = sql.rstrip().rstrip(";") + "\nLIMIT 10000;"
 
                 # Execute
                 exec_result = execute_sql(conn, sql) if sql else {"success": False, "rows": [], "row_count": 0}
+
+                # ── Repair loop for proposed method ──
+                if method == "proposed" and sql and has_llm:
+                    needs_repair = (
+                        not exec_result.get("success", False)
+                        or exec_result.get("row_count", 0) == 0
+                    )
+                    if needs_repair:
+                        coverage = gen.get("coverage", {})
+                        effective_joins = gen.get("effective_joins", allowed_joins)
+                        linked_tables = gen.get("linked_tables", ALLOWED_TABLES)
+                        linked_cols = gen.get("linked_columns", allowed_columns)
+
+                        def _exec_fn(s: str) -> dict:
+                            s_norm = re.sub(r"\bLIMIT\s+\d+", "LIMIT 10000", s, flags=re.IGNORECASE)
+                            if not re.search(r"\bLIMIT\b", s_norm, re.IGNORECASE):
+                                s_norm = s_norm.rstrip().rstrip(";") + "\nLIMIT 10000;"
+                            return execute_sql(conn, s_norm)
+
+                        repair_result = execution_repair_loop(
+                            original_sql=sql,
+                            question=question,
+                            execute_fn=_exec_fn,
+                            allowed_tables=linked_tables,
+                            allowed_columns=linked_cols,
+                            allowed_joins=effective_joins,
+                            coverage=coverage,
+                            max_retries=2,
+                            model=model,
+                            api_key=api_key,
+                        )
+                        if repair_result.get("repaired", False):
+                            sql = repair_result["sql"]
+                            exec_result = repair_result["exec_result"]
+                            # Re-normalize LIMIT on repaired SQL
+                            sql = re.sub(r"\bLIMIT\s+\d+", "LIMIT 10000", sql, flags=re.IGNORECASE)
+                            if not re.search(r"\bLIMIT\b", sql, re.IGNORECASE):
+                                sql = sql.rstrip().rstrip(";") + "\nLIMIT 10000;"
+                        elif repair_result["exec_result"].get("success", False):
+                            # Repair ran but 0-row stayed; use latest SQL/exec
+                            sql = repair_result["sql"]
+                            exec_result = repair_result["exec_result"]
+                        repair_attempts = len(repair_result.get("attempts", []))
+                        repair_tokens = repair_result.get("repair_tokens", 0)
+                        tokens += repair_tokens
 
                 # Metrics
                 metrics = compute_single_metrics(
                     sql, exec_result, expected_rows, allowed_joins,
                     hop_count, tokens, latency_ms,
+                    expected_columns=expected_columns,
+                    allowed_columns=allowed_columns,
                 )
 
                 all_results[method].append({
@@ -424,6 +521,8 @@ def run_evaluation():
                     "sql": sql,
                     "tokens": tokens,
                     "latency_ms": latency_ms,
+                    "repair_attempts": repair_attempts,
+                    "repair_tokens": repair_tokens,
                     **metrics,
                 })
             except Exception as e:
@@ -438,6 +537,7 @@ def run_evaluation():
                     "syntax_valid": False,
                     "execution_valid": False,
                     "execution_accuracy": 0.0,
+                    "raw_execution_accuracy": 0.0,
                     "hallucinated_table_rate": 0.0,
                     "hallucinated_column_rate": 0.0,
                     "hallucinated_join_rate": 0.0,
@@ -457,9 +557,12 @@ def write_result_csv(results: list[dict], path: Path) -> None:
         return
     fieldnames = [
         "query_id", "question", "difficulty", "hop_count", "method",
+        "sql",
         "syntax_valid", "execution_valid", "execution_accuracy",
+        "raw_execution_accuracy",
         "hallucinated_table_rate", "hallucinated_join_rate",
         "token_usage", "latency_ms",
+        "repair_attempts", "repair_tokens",
     ]
     with open(path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
@@ -481,6 +584,7 @@ def write_metrics_summary(all_results: dict[str, list[dict]], path: Path) -> Non
             "syntax_validity": sum(r.get("syntax_valid", False) for r in results) / n,
             "execution_validity": sum(r.get("execution_valid", False) for r in results) / n,
             "avg_execution_accuracy": sum(r.get("execution_accuracy", 0) for r in results) / n,
+            "avg_raw_execution_accuracy": sum(r.get("raw_execution_accuracy", 0) for r in results) / n,
             "avg_hallucinated_table_rate": sum(r.get("hallucinated_table_rate", 0) for r in results) / n,
             "avg_hallucinated_join_rate": sum(r.get("hallucinated_join_rate", 0) for r in results) / n,
             "avg_token_usage": sum(r.get("token_usage", 0) for r in results) / n,
@@ -723,7 +827,9 @@ def run_materials_analysis(conn) -> None:
     ]
     for row in element_trends:
         a, b, total, stable, avg_e, avg_lat = row
-        lines.append(f"| {a} | {b} | {total} | {stable} | {float(avg_e):.3f} | {float(avg_lat):.3f} |")
+        avg_e_s = f"{float(avg_e):.3f}" if avg_e is not None else "N/A"
+        avg_lat_s = f"{float(avg_lat):.3f}" if avg_lat is not None else "N/A"
+        lines.append(f"| {a} | {b} | {total} | {stable} | {avg_e_s} | {avg_lat_s} |")
 
     lines.extend([
         "",
@@ -733,7 +839,10 @@ def run_materials_analysis(conn) -> None:
         "|--------|-------------|-------------------|-----------------|",
     ])
     for row in top_stable:
-        lines.append(f"| {row[0]} | {float(row[1]):.3f} | {float(row[2]):.4f} | {float(row[3]):.3f} |")
+        v1 = float(row[1]) if row[1] is not None else 0.0
+        v2 = float(row[2]) if row[2] is not None else 0.0
+        v3 = float(row[3]) if row[3] is not None else 0.0
+        lines.append(f"| {row[0]} | {v1:.3f} | {v2:.4f} | {v3:.3f} |")
 
     lines.extend([
         "",

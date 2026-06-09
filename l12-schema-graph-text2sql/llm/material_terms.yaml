@@ -36,10 +36,16 @@ stability_terms:
   stable:
     description: thermodynamically stable
     condition:
-      column: phase_stability.energy_above_hull
-      operator: "<="
-      value: 0.001
-      unit: eV/atom
+      column: phase_stability.is_stable
+      operator: "="
+      value: "TRUE"
+
+  unstable:
+    description: thermodynamically unstable
+    condition:
+      column: phase_stability.is_stable
+      operator: "="
+      value: "FALSE"
 
   metastable:
     description: metastable within 50 meV/atom
@@ -69,14 +75,124 @@ property_terms:
       - bulk modulus
       - "\u4F53\u7A4D\u5F3E\u6027\u7387"
       - "\u30D0\u30EB\u30AF\u30E2\u30B8\u30E5\u30E9\u30B9"
-    property_name: bulk_modulus
+    column: elastic_tensor.bulk_modulus_vrh
 
   shear_modulus:
     aliases:
       - shear modulus
       - "\u305B\u3093\u65AD\u5F3E\u6027\u7387"
       - "\u30B7\u30A2\u30E2\u30B8\u30E5\u30E9\u30B9"
-    property_name: shear_modulus
+    column: elastic_tensor.shear_modulus_vrh
+
+  youngs_modulus:
+    aliases:
+      - "Young's modulus"
+      - "\u30E4\u30F3\u30B0\u7387"
+      - youngs modulus
+    column: elastic_tensor.youngs_modulus
+
+  poisson_ratio:
+    aliases:
+      - Poisson ratio
+      - "\u30DD\u30A2\u30BD\u30F3\u6BD4"
+      - poisson
+    column: elastic_tensor.poisson_ratio
+
+  total_magnetization:
+    aliases:
+      - "\u78C1\u6C17\u30E2\u30FC\u30E1\u30F3\u30C8"
+      - magnetization
+      - magnetic moment
+    column: magnetic_property.total_magnetization
+
+  magnetic_ordering:
+    aliases:
+      - "\u5F37\u78C1\u6027"
+      - ferromagnetic
+      - "\u78C1\u6C17\u79E9\u5E8F"
+      - magnetic ordering
+    column: magnetic_property.magnetic_ordering
+
+  curie_temperature:
+    aliases:
+      - "\u30AD\u30E5\u30EA\u30FC\u6E29\u5EA6"
+      - Curie temperature
+    column: magnetic_property.curie_temperature_k
+
+  magnetic_anisotropy:
+    aliases:
+      - "\u78C1\u6C17\u7570\u65B9\u6027\u30A8\u30CD\u30EB\u30AE\u30FC"
+      - magnetic anisotropy
+    column: magnetic_property.magnetic_anisotropy_energy
+
+  debye_temperature:
+    aliases:
+      - "\u30C7\u30D0\u30A4\u6E29\u5EA6"
+      - Debye temperature
+    column: thermal_property.debye_temperature_k
+
+  thermal_conductivity:
+    aliases:
+      - "\u71B1\u4F1D\u5C0E\u7387"
+      - thermal conductivity
+    column: thermal_property.thermal_conductivity
+
+  gruneisen_parameter:
+    aliases:
+      - "\u30B0\u30EA\u30E5\u30CA\u30A4\u30BC\u30F3\u5B9A\u6570"
+      - Gruneisen
+    column: thermal_property.gruneisen_parameter
+
+  dos_at_fermi:
+    aliases:
+      - "\u30D5\u30A7\u30EB\u30DF\u9762\u3067\u306EDOS"
+      - DOS at Fermi
+      - density of states
+    column: density_of_states.total_dos_at_fermi
+
+  is_metallic:
+    aliases:
+      - "\u91D1\u5C5E\u7684"
+      - metallic
+      - is_metallic
+    column: density_of_states.is_metallic
+
+  surface_energy:
+    aliases:
+      - "\u8868\u9762\u30A8\u30CD\u30EB\u30AE\u30FC"
+      - surface energy
+    column: surface_energy.surface_energy_j_m2
+
+  work_function:
+    aliases:
+      - "\u4ED5\u4E8B\u95A2\u6570"
+      - work function
+    column: surface_energy.work_function
+
+  grain_boundary_energy:
+    aliases:
+      - "\u7C92\u754C\u30A8\u30CD\u30EB\u30AE\u30FC"
+      - grain boundary
+    column: grain_boundary.gb_energy_j_m2
+
+  vacancy_formation:
+    aliases:
+      - "\u7A7A\u5B54\u5F62\u6210\u30A8\u30CD\u30EB\u30AE\u30FC"
+      - vacancy
+    column: material_defect.formation_energy
+
+  direct_gap:
+    aliases:
+      - "\u76F4\u63A5\u30D0\u30F3\u30C9\u30AE\u30E3\u30C3\u30D7"
+      - direct gap
+      - direct band gap
+    column: band_structure.is_direct_gap
+
+  spin_polarized:
+    aliases:
+      - "\u30B9\u30D4\u30F3\u504F\u6975"
+      - spin polarized
+    column: density_of_states.spin_polarized
 
   energy_above_hull:
     aliases:
@@ -134,3 +250,41 @@ elements:
     aliases: [Ga, gallium, "\u30AC\u30EA\u30A6\u30E0"]
   Ge:
     aliases: [Ge, germanium, "\u30B2\u30EB\u30DE\u30CB\u30A6\u30E0"]
+  Rh:
+    aliases: [Rh, rhodium, "\u30ED\u30B8\u30A6\u30E0"]
+  Pd:
+    aliases: [Pd, palladium, "\u30D1\u30E9\u30B8\u30A6\u30E0"]
+  V:
+    aliases: [V, vanadium, "\u30D0\u30CA\u30B8\u30A6\u30E0"]
+  Mn:
+    aliases: [Mn, manganese, "\u30DE\u30F3\u30AC\u30F3"]
+  Cr:
+    aliases: [Cr, chromium, "\u30AF\u30ED\u30E0"]
+  Zr:
+    aliases: [Zr, zirconium, "\u30B8\u30EB\u30B3\u30CB\u30A6\u30E0"]
+  Mo:
+    aliases: [Mo, molybdenum, "\u30E2\u30EA\u30D6\u30C7\u30F3"]
+  Ru:
+    aliases: [Ru, ruthenium, "\u30EB\u30C6\u30CB\u30A6\u30E0"]
+  Ag:
+    aliases: [Ag, silver, "\u9280"]
+  Au:
+    aliases: [Au, gold, "\u91D1"]
+  Zn:
+    aliases: [Zn, zinc, "\u4E9C\u925B"]
+  Si:
+    aliases: [Si, silicon, "\u30B1\u30A4\u7D20"]
+  B:
+    aliases: [B, boron, "\u30DB\u30A6\u7D20"]
+  Y:
+    aliases: [Y, yttrium, "\u30A4\u30C3\u30C8\u30EA\u30A6\u30E0"]
+  Hf:
+    aliases: [Hf, hafnium, "\u30CF\u30D5\u30CB\u30A6\u30E0"]
+  Re:
+    aliases: [Re, rhenium, "\u30EC\u30CB\u30A6\u30E0"]
+  La:
+    aliases: [La, lanthanum, "\u30E9\u30F3\u30BF\u30F3"]
+  Ce:
+    aliases: [Ce, cerium, "\u30BB\u30EA\u30A6\u30E0"]
+  Bi:
+    aliases: [Bi, bismuth, "\u30D3\u30B9\u30DE\u30B9"]

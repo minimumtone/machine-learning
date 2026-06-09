@@ -14,4 +14,4 @@ WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND cp_bm.property_name = 'bulk_modulus'
 GROUP BY ca.element, cb.element
 ORDER BY avg_eform ASC
-LIMIT 100;
+LIMIT 10000;

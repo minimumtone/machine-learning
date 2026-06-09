@@ -12,4 +12,4 @@ WHERE c.element IN ('Ni','Co','Fe','Pt','Ir','Pd','Rh')
   AND ps.energy_above_hull <= 0.001
   AND cp_bm.property_name = 'bulk_modulus'
 ORDER BY cp_bm.value DESC
-LIMIT 100;
+LIMIT 10000;

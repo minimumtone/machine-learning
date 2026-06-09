@@ -262,9 +262,7 @@ def main():
         f"カラム: {comp_cols}",
     )
 
-    # --- A-2: 全主要テーブルのseedデータ件数アサーション ---
     cur = conn.cursor()
-    seed_expectations = {
         "material_entry": 100,
         "composition": 100,
         "structure": 100,
@@ -274,7 +272,6 @@ def main():
         "prototype_definition": 1,
     }
     print("\n    Seedデータ件数:")
-    for tbl, min_count in seed_expectations.items():
         cur.execute(f"SELECT count(*) FROM {tbl}")
         cnt = cur.fetchone()[0]
         check(

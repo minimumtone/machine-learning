@@ -68,23 +68,16 @@ def generate_sql_via_llm(
     if model is None:
         model = os.getenv("LLM_MODEL", "gpt-5.5")
 
-    prompt = build_constrained_prompt(
-        user_query, allowed_tables, allowed_columns, allowed_joins,
-    )
-
-    # Retrieve similar few-shot examples
-    few_shot = retrieve_similar(user_query, top_k=3)
-
-    # Check coverage score for fallback decision
+    # Check API key early so fallback doesn't need the prompt template
     conditions = extract_conditions(user_query)
     coverage_info = conditions.get("_coverage", {})
-    coverage_action = coverage_info.get("action", "execute_rule_based")
+    few_shot = retrieve_similar(user_query, top_k=3)
 
     if not api_key or api_key == "your_api_key_here":
         sql = _rule_based_fallback(user_query, allowed_tables, allowed_columns, allowed_joins)
         return {
             "sql": sql,
-            "prompt": prompt,
+            "prompt": "",
             "model": "rule_based_fallback",
             "tokens": 0,
             "latency_ms": 0,
@@ -93,11 +86,6 @@ def generate_sql_via_llm(
             "coverage": coverage_info,
         }
 
-    # If coverage is low and we have an API key, force LLM mode
-    # If coverage action is clarification_required, still try LLM but flag it
-    use_llm = True  # We have API key, so always use LLM when available
-
-    # Rebuild prompt with few-shot examples for LLM mode
     prompt = build_constrained_prompt(
         user_query, allowed_tables, allowed_columns, allowed_joins,
         few_shot_examples=few_shot,
@@ -145,7 +133,7 @@ def _rule_based_fallback(
     allowed_joins: list[str],
 ) -> str:
     """Generate SQL deterministically when no LLM API key is available."""
-    conditions = extract_conditions(user_query)
+    conditions = extract_conditions(user_query)  # cached at caller if possible
     linked = link_schema(conditions)
 
     select_cols = ["m.entry_id", "m.formula"]
@@ -213,7 +201,8 @@ def _rule_based_fallback(
         sql_parts.append("WHERE\n    " + "\n    AND ".join(where_clauses))
     if order_by:
         sql_parts.append(order_by)
-    sql_parts.append("LIMIT 100;")
+    row_limit = int(os.getenv("SQL_ROW_LIMIT", "100"))
+    sql_parts.append(f"LIMIT {row_limit};")
 
     return "\n".join(sql_parts)
 
@@ -254,30 +243,42 @@ def pipeline(
     conditions = extract_conditions(user_query)
     linked = link_schema(conditions)
 
+    all_columns: list[str] | None = None
     if join_list is None:
-        join_list = [
-            "composition.entry_id = material_entry.entry_id",
-            "structure.entry_id = material_entry.entry_id",
-            "phase_stability.entry_id = material_entry.entry_id",
-            "calculation.entry_id = material_entry.entry_id",
-            "calculated_property.calculation_id = calculation.calculation_id",
-        ]
+        try:
+            from graph.graph_builder import build_table_graph
+            from graph.join_path_generator import get_allowed_join_list
+            from graph.schema_parser import get_columns
+            table_graph = build_table_graph()
+            join_list = get_allowed_join_list(table_graph)
+            all_columns = get_columns()
+        except Exception:
+            # Fallback to core 5-table joins if graph unavailable
+            join_list = [
+                "composition.entry_id = material_entry.entry_id",
+                "structure.entry_id = material_entry.entry_id",
+                "phase_stability.entry_id = material_entry.entry_id",
+                "calculation.entry_id = material_entry.entry_id",
+                "calculated_property.calculation_id = calculation.calculation_id",
+            ]
+            all_columns = None
 
-    all_columns = [
-        "material_entry.entry_id", "material_entry.formula",
-        "material_entry.reduced_formula", "material_entry.chemical_system",
-        "composition.element", "composition.atomic_fraction", "composition.site_label",
-        "structure.prototype", "structure.strukturbericht", "structure.lattice_a",
-        "structure.lattice_b", "structure.lattice_c", "structure.volume_per_atom",
-        "structure.formula_type", "structure.space_group_number",
-        "structure.space_group",
-        "phase_stability.formation_energy_per_atom",
-        "phase_stability.energy_above_hull", "phase_stability.is_stable",
-        "phase_stability.band_gap",
-        "calculation.method", "calculation.functional",
-        "calculated_property.property_name", "calculated_property.value",
-        "calculated_property.unit",
-    ]
+    if all_columns is None:
+        all_columns = [
+            "material_entry.entry_id", "material_entry.formula",
+            "material_entry.reduced_formula", "material_entry.chemical_system",
+            "composition.element", "composition.atomic_fraction", "composition.site_label",
+            "structure.prototype", "structure.strukturbericht", "structure.lattice_a",
+            "structure.lattice_b", "structure.lattice_c", "structure.volume_per_atom",
+            "structure.formula_type", "structure.space_group_number",
+            "structure.space_group",
+            "phase_stability.formation_energy_per_atom",
+            "phase_stability.energy_above_hull", "phase_stability.is_stable",
+            "phase_stability.band_gap",
+            "calculation.method", "calculation.functional",
+            "calculated_property.property_name", "calculated_property.value",
+            "calculated_property.unit",
+        ]
     result = generate_sql_via_llm(
         user_query=user_query,
         allowed_tables=linked["required_tables"],
@@ -293,13 +294,8 @@ def pipeline(
     result["conditions"] = conditions
     result["linked_schema"] = linked
 
-    if store_on_success:
-        add_example(
-            nl_query=user_query,
-            sql=result["sql"],
-            conditions=conditions,
-            row_count=-1,
-            source="pipeline",
-        )
+    # NOTE: store_on_success is deferred — caller must invoke add_example()
+    # after DB execution confirms the SQL is valid and returns rows.
+    result["_store_on_success"] = store_on_success
 
     return result

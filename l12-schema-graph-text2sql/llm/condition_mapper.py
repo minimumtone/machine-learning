@@ -1,12 +1,15 @@
 """Map extracted conditions to SQL WHERE-clause fragments."""
 from __future__ import annotations
 
+import functools
+import re
 from pathlib import Path
 from typing import Any
 
 import yaml
 
 
+@functools.lru_cache(maxsize=1)
 def _load_terms(path: Path | None = None) -> dict[str, Any]:
     if path is None:
         path = Path(__file__).parent / "material_terms.yaml"
@@ -14,14 +17,21 @@ def _load_terms(path: Path | None = None) -> dict[str, Any]:
         return yaml.safe_load(f)
 
 
+def _escape_sql_value(value: str) -> str:
+    """Escape single quotes in SQL string values to prevent injection."""
+    return value.replace("'", "''")
+
+
 def map_prototype_condition(prototype: str | list[str]) -> dict[str, Any]:
     if isinstance(prototype, list):
         parts = " OR ".join(
-            f"s.prototype = '{p}' OR s.strukturbericht = '{p}'" for p in prototype
+            f"s.prototype = '{_escape_sql_value(p)}' OR s.strukturbericht = '{_escape_sql_value(p)}'"
+            for p in prototype
         )
         sql_fragment = f"({parts})"
     else:
-        sql_fragment = f"(s.prototype = '{prototype}' OR s.strukturbericht = '{prototype}')"
+        safe = _escape_sql_value(prototype)
+        sql_fragment = f"(s.prototype = '{safe}' OR s.strukturbericht = '{safe}')"
     return {
         "type": "prototype",
         "sql_fragment": sql_fragment,
@@ -33,20 +43,23 @@ def map_prototype_condition(prototype: str | list[str]) -> dict[str, Any]:
 def map_element_condition(elements: list[str]) -> list[dict[str, Any]]:
     conditions: list[dict[str, Any]] = []
     if len(elements) == 1:
+        safe = _escape_sql_value(elements[0])
         conditions.append({
             "type": "element",
-            "sql_fragment": f"c.element = '{elements[0]}'",
+            "sql_fragment": f"c.element = '{safe}'",
             "tables": ["composition"],
             "columns": ["composition.element"],
         })
     elif len(elements) > 1:
         for elem in elements:
+            safe = _escape_sql_value(elem)
+            alias = re.sub(r"[^a-z0-9]", "", elem.lower())
             conditions.append({
                 "type": "element_exists",
                 "sql_fragment": (
-                    f"EXISTS (SELECT 1 FROM composition c_{elem.lower()}"
-                    f" WHERE c_{elem.lower()}.entry_id = m.entry_id"
-                    f" AND c_{elem.lower()}.element = '{elem}')"
+                    f"EXISTS (SELECT 1 FROM composition c_{alias}"
+                    f" WHERE c_{alias}.entry_id = m.entry_id"
+                    f" AND c_{alias}.element = '{safe}')"
                 ),
                 "tables": ["composition"],
                 "columns": ["composition.element"],
@@ -55,11 +68,37 @@ def map_element_condition(elements: list[str]) -> list[dict[str, Any]]:
 
 
 def map_stability_condition(
-    stability: str,
+    stability: str | list[str],
     terms: dict[str, Any] | None = None,
 ) -> dict[str, Any] | None:
     if terms is None:
         terms = _load_terms()
+
+    # Handle list of stability values (e.g. ["stable", "metastable"])
+    if isinstance(stability, list):
+        fragments: list[str] = []
+        tables: set[str] = set()
+        columns: set[str] = set()
+        for s in stability:
+            stab_info = terms.get("stability_terms", {}).get(s)
+            if not stab_info:
+                continue
+            cond = stab_info["condition"]
+            col_parts = cond["column"].split(".")
+            alias = "ps" if col_parts[0] == "phase_stability" else col_parts[0][:2]
+            fragments.append(f"{alias}.{col_parts[1]} {cond['operator']} {cond['value']}")
+            tables.add(col_parts[0])
+            columns.add(cond["column"])
+        if not fragments:
+            return None
+        sql_fragment = "(" + " OR ".join(fragments) + ")" if len(fragments) > 1 else fragments[0]
+        return {
+            "type": "stability",
+            "sql_fragment": sql_fragment,
+            "tables": list(tables),
+            "columns": list(columns),
+        }
+
     stab_info = terms.get("stability_terms", {}).get(stability)
     if not stab_info:
         return None

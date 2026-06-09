@@ -1,0 +1,24 @@
+{
+  "query_id": "q_expert_083",
+  "columns": [
+    "entry_id",
+    "formula",
+    "bulk_modulus_vrh",
+    "debye_temperature_k"
+  ],
+  "row_count": 2,
+  "rows": [
+    [
+      "entry_Co3Sn_031",
+      "Co3Sn",
+      "324.58",
+      "544.4"
+    ],
+    [
+      "entry_Co3Sc_027",
+      "Co3Sc",
+      "186.99",
+      "784.6"
+    ]
+  ]
+}

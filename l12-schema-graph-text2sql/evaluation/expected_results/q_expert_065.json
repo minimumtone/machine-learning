@@ -1,0 +1,16 @@
+{
+  "query_id": "q_expert_065",
+  "columns": [
+    "entry_id",
+    "formula",
+    "formation_energy"
+  ],
+  "row_count": 1,
+  "rows": [
+    [
+      "oqmd_18125",
+      "ThSn3",
+      "0.423196"
+    ]
+  ]
+}

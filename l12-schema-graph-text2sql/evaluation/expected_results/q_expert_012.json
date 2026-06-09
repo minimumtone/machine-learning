@@ -1,0 +1,24 @@
+{
+  "query_id": "q_expert_012",
+  "columns": [
+    "entry_id",
+    "formula",
+    "prototype",
+    "crystal_system"
+  ],
+  "row_count": 2,
+  "rows": [
+    [
+      "oqmd_10576",
+      "AlRh",
+      "CsCl",
+      "cubic"
+    ],
+    [
+      "entry_Rh3Al_109",
+      "Rh3Al",
+      "L12",
+      "cubic"
+    ]
+  ]
+}

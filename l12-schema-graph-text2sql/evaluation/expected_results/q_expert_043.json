@@ -1,0 +1,26 @@
+{
+  "query_id": "q_expert_043",
+  "columns": [
+    "entry_id",
+    "formula",
+    "shear_modulus_vrh"
+  ],
+  "row_count": 3,
+  "rows": [
+    [
+      "entry_Ir3Hf_102",
+      "Ir3Hf",
+      "199.17"
+    ],
+    [
+      "oqmd_17573",
+      "LaPt3",
+      "197.13"
+    ],
+    [
+      "oqmd_17227",
+      "Fe3Pd",
+      "196.32"
+    ]
+  ]
+}

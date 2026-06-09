@@ -8,6 +8,7 @@ Includes:
 """
 from __future__ import annotations
 
+import functools
 import re
 from pathlib import Path
 from typing import Any
@@ -30,6 +31,7 @@ _ALL_ELEMENTS = {
 }
 
 
+@functools.lru_cache(maxsize=1)
 def _load_terms(path: Path | None = None) -> dict[str, Any]:
     if path is None:
         path = Path(__file__).parent / "material_terms.yaml"
@@ -90,16 +92,24 @@ def extract_elements(query: str, terms: dict[str, Any] | None = None) -> list[st
     return found
 
 
-def extract_stability(query: str, terms: dict[str, Any] | None = None) -> str | None:
+def extract_stability(query: str, terms: dict[str, Any] | None = None) -> str | list[str] | None:
     if terms is None:
         terms = _load_terms()
     q = _normalize(query).lower()
-    stab_terms = terms.get("stability_terms", {})
+    found: list[str] = []
     if "準安定" in query or "metastable" in q:
-        return "metastable"
+        found.append("metastable")
     if "安定" in query or "stable" in q:
-        return "stable"
-    return None
+        # Only add "stable" if we didn't just match it as part of "metastable"
+        if "metastable" not in found:
+            found.append("stable")
+        elif re.search(r"(?<!meta)(?<!準)安定|(?<!meta)stable\b", q):
+            found.append("stable")
+    if not found:
+        return None
+    if len(found) == 1:
+        return found[0]
+    return found
 
 
 def extract_properties(
@@ -224,14 +234,15 @@ _JA_YORI_OP: dict[str, str] = {
 }
 
 
-def _build_numeric_regex() -> list[tuple[re.Pattern[str], str]]:
+@functools.lru_cache(maxsize=1)
+def _build_numeric_regex() -> tuple[tuple[re.Pattern[str], str], ...]:
     props_alt = "|".join(re.escape(p) for p in sorted(_PROPERTY_COLUMN_MAP, key=len, reverse=True))
     units_alt = "|".join(re.escape(u) for u in sorted(_UNIT_CONVERSION, key=len, reverse=True))
     compiled = []
     for pat_template, kind in _NUMERIC_PATTERNS:
         pat = pat_template.replace("{props}", props_alt).replace("{units}", units_alt)
         compiled.append((re.compile(pat, re.IGNORECASE), kind))
-    return compiled
+    return tuple(compiled)
 
 
 def extract_numeric_conditions(query: str) -> list[dict[str, Any]]:
@@ -364,21 +375,30 @@ def extract_formula(query: str) -> dict[str, Any] | None:
     if not candidates:
         return None
 
-    token = candidates[0]
-    parsed = _parse_formula_token(token)
-    if not parsed:
+    # Parse all formula candidates (supports multi-formula queries like "Ni3AlとCo3Ti")
+    all_formulas: list[dict[str, Any]] = []
+    for token in candidates:
+        parsed = _parse_formula_token(token)
+        if not parsed:
+            continue
+        elements = sorted(parsed.keys())
+        has_counts = any(v != 1.0 for v in parsed.values())
+        interpretation = "exact_formula" if has_counts else "contains_elements"
+        all_formulas.append({
+            "formula_str": token,
+            "composition": parsed,
+            "elements": elements,
+            "interpretation": interpretation,
+        })
+
+    if not all_formulas:
         return None
 
-    elements = sorted(parsed.keys())
-    has_counts = any(v != 1.0 for v in parsed.values())
-    interpretation = "exact_formula" if has_counts else "contains_elements"
-
-    return {
-        "formula_str": token,
-        "composition": parsed,
-        "elements": elements,
-        "interpretation": interpretation,
-    }
+    # Return first formula as primary (backward-compatible), all in "all_formulas"
+    result = all_formulas[0]
+    if len(all_formulas) > 1:
+        result["all_formulas"] = all_formulas
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -560,6 +580,44 @@ def extract_conditions(query: str) -> dict[str, Any]:
         result["formula"] = formula
         if not elements and formula["interpretation"] == "contains_elements":
             result["contains_elements"] = formula["elements"]
+
+    # Extended keyword detection for 30-table schema
+    ql = query.lower()
+    _EXTENDED_KEYWORDS = {
+        "atomic_number": ["原子番号", "atomic number", "atomic_number"],
+        "number_of_elements": ["元素数", "3元素", "4元素", "5元素", "多元素", "number of elements"],
+        "source_db": ["oqmd", "materials project", "aflow", "source"],
+        "synthesis": ["合成", "synthesis", "作製"],
+        "ball_milling": ["ボールミリング", "ball milling", "ball_milling"],
+        "arc_melting": ["アーク溶解", "arc melting"],
+        "experimental": ["実験", "experimental", "合成実績"],
+        "doi": ["doi", "文献", "論文", "paper"],
+        "literature": ["文献", "参考文献", "literature", "reference"],
+        "application": ["応用", "用途", "application", "超合金"],
+        "defect": ["欠陥", "defect", "vacancy", "空孔"],
+        "interstitial": ["格子間", "interstitial"],
+        "dopant": ["ドーパント", "dopant", "添加"],
+        "surface_energy": ["表面エネルギー", "surface energy"],
+        "miller_index": ["面", "(100)", "(110)", "(111)", "miller"],
+        "surface_reconstruction": ["再構成", "reconstruction", "reconstructed"],
+        "grain_boundary_energy": ["粒界", "grain boundary"],
+        "elastic_stability": ["弾性的に不安定", "elastic.*stable", "is_stable.*false"],
+        "crystal_system": ["結晶系", "crystal system", "cubic", "hexagonal", "tetragonal"],
+        "space_group": ["空間群", "space group"],
+        "volume": ["体積", "volume"],
+        "band_gap": ["バンドギャップ", "band gap", "bandgap"],
+        "functional": ["汎関数", "functional", "gga", "pbe", "lda"],
+        "calculation_method": ["計算手法", "calculation method"],
+        "phase_diagram": ["相図", "phase diagram", "hull"],
+        "alloy_system": ["合金系", "alloy system"],
+        "lattice_c": ["格子定数c", "lattice_c", "c軸"],
+    }
+    for key, keywords in _EXTENDED_KEYWORDS.items():
+        if key not in result:
+            for kw in keywords:
+                if re.search(kw, ql):
+                    result[key] = True
+                    break
 
     # Coverage score
     coverage = compute_coverage(query, result, terms)

@@ -11,4 +11,4 @@ WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND cp_bm.property_name = 'bulk_modulus'
   AND m.formula != 'Ni3Al'
 ORDER BY ABS(s.lattice_a - 3.57) ASC, cp_bm.value DESC
-LIMIT 100;
+LIMIT 10000;

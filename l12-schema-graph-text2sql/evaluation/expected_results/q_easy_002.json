@@ -5,8 +5,33 @@
     "formula",
     "prototype"
   ],
-  "row_count": 15,
+  "row_count": 24,
   "rows": [
+    [
+      "oqmd_17890",
+      "AlNi3",
+      "L12"
+    ],
+    [
+      "oqmd_7241",
+      "FeNi3",
+      "L12"
+    ],
+    [
+      "oqmd_30308",
+      "GaNi3",
+      "L12"
+    ],
+    [
+      "oqmd_11117",
+      "InNi3",
+      "L12"
+    ],
+    [
+      "oqmd_17672",
+      "MnNi3",
+      "L12"
+    ],
     [
       "entry_Ni3Al_001",
       "Ni3Al",
@@ -19,6 +44,11 @@
     ],
     [
       "entry_Ni3Ge_003",
+      "Ni3Ge",
+      "L12"
+    ],
+    [
+      "oqmd_17342",
       "Ni3Ge",
       "L12"
     ],
@@ -38,6 +68,11 @@
       "L12"
     ],
     [
+      "oqmd_19455",
+      "Ni3Pt",
+      "L12"
+    ],
+    [
       "entry_Ni3Sc_015",
       "Ni3Sc",
       "L12"
@@ -49,6 +84,11 @@
     ],
     [
       "entry_Ni3Sn_019",
+      "Ni3Sn",
+      "L12"
+    ],
+    [
+      "oqmd_17808",
       "Ni3Sn",
       "L12"
     ],
@@ -80,6 +120,11 @@
     [
       "entry_Ni3Zr_022",
       "Ni3Zr",
+      "L12"
+    ],
+    [
+      "oqmd_17803",
+      "SiNi3",
       "L12"
     ]
   ]

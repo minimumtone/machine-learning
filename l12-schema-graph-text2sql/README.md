@@ -10,36 +10,56 @@ ERスキーマをNetworkXグラフ化し、関連テーブル・カラム・JOIN
 
 ```
 Natural Language Query → 材料用語正規化 → 条件抽出 → テーブル・カラム推定
-→ スキーマグラフJOIN経路探索 → 制約付きSQL生成 → SQL安全検査
+→ スキーマグラフJOIN経路探索 → 制約付きSQL生成 → SQL安全検査（SQLGuard 8層）
 → PostgreSQL実行 → 結果表示
 ```
 
 ## Quick Start
 
-### 1. PostgreSQL起動
+### 前提条件
+
+- Python 3.11+
+- Docker / Docker Compose
+- OpenAI API key（Proposed手法の実行に必要。Rule-based fallbackはAPI key不要）
+
+### 1. 依存パッケージのインストール
+
+```bash
+cd l12-schema-graph-text2sql
+pip install -e ".[dev]"
+```
+
+### 2. PostgreSQL起動
 
 ```bash
 cd docker
 docker compose up -d
+cd ..
 ```
 
-### 2. Seed dataの生成・投入
+これにより `db/schema.sql` が自動適用され、7テーブルが作成されます。
+`db/seed/` 内のCSVファイルがコンテナ内 `/seed/` にマウントされます。
+
+### 3. Seed dataの生成・投入
 
 ```bash
-# Generate seed CSVs (120 compounds)
+# Seed CSVを生成（db/seed/ に120件のL1₂化合物データを出力）
 python ingestion/generate_seed_data.py
 
-# Load into PostgreSQL
+# PostgreSQLにロード
 python ingestion/load_seed_data.py
 ```
 
-### 3. Text-to-SQL実行
+### 4. 環境変数の設定
 
 ```bash
-# Copy and edit .env
 cp .env.example .env
+# .env を編集し OPENAI_API_KEY を設定
+```
 
-# Run the pipeline
+### 5. Text-to-SQL実行
+
+```bash
 python -c "
 from llm.sql_generator import pipeline
 result = pipeline('Niを含む安定なL1₂型化合物を形成エネルギーが低い順に出して')
@@ -47,61 +67,113 @@ print(result['sql'])
 "
 ```
 
-### 4. FastAPI起動
+### 6. FastAPI起動（オプション）
 
 ```bash
 uvicorn api.main:app --reload
 # POST /query with {"query": "L1₂構造を持つ化合物を一覧にして"}
 ```
 
-### 5. テスト実行
+### 7. テスト実行
 
 ```bash
-pip install -e ".[dev]"
 pytest tests/ -v
+# 80テスト全パスを確認
+```
+
+### 8. 評価パイプライン実行（オプション）
+
+```bash
+# 100クエリ×5手法の完全評価（OpenAI API key必要、10-15分程度）
+python scripts/run_full_evaluation.py
 ```
 
 ## Project Structure
 
 ```
 l12-schema-graph-text2sql/
-├── docker/              # Docker Compose for PostgreSQL
-├── db/                  # Schema, seed data, sample queries
-├── ingestion/           # Data generation and loading
-├── graph/               # Schema parser, graph builder, traversal
-├── llm/                 # Entity extraction, schema linking, SQL generation
-├── safety/              # SQL validation and safe execution
-├── evaluation/          # Evaluation dataset, baselines, metrics
-├── notebooks/           # Analysis notebooks
-├── api/                 # FastAPI application
-└── tests/               # Unit tests
+├── docker/              # Docker Compose設定（docker-compose.yml）
+│   └── docker-compose.yml
+├── db/                  # スキーマ定義、seed data
+│   ├── schema.sql       # 7テーブルスキーマ（PostgreSQL初期化時に自動適用）
+│   ├── extended_schema.sql  # 30テーブル拡張スキーマ
+│   ├── seed/            # Seed CSV（generate_seed_data.pyで生成）
+│   └── sample_queries.sql
+├── ingestion/           # データ生成・ロード
+│   ├── generate_seed_data.py   # Seed CSV生成（120件L1₂化合物）
+│   ├── load_seed_data.py       # PostgreSQLへのロード
+│   ├── data_normalizer.py      # データ正規化
+│   └── validate_seed_data.py   # Seedデータ検証
+├── graph/               # Schema Graph構築・走査
+│   ├── schema_parser.py        # FK関係抽出（information_schema）
+│   ├── graph_builder.py        # NetworkXグラフ構築
+│   ├── traversal_engine.py     # Steiner木近似走査
+│   └── join_path_generator.py  # JOIN条件生成
+├── llm/                 # LLM連携・条件抽出
+│   ├── entity_extractor.py     # 材料用語抽出（元素、構造、安定性等）
+│   ├── schema_linker.py        # テーブル・カラムマッピング
+│   ├── condition_mapper.py     # SQL WHERE句生成
+│   ├── sql_generator.py        # 制約付きSQL生成パイプライン
+│   ├── few_shot_store.py       # Few-shot例の蓄積・検索
+│   └── material_terms.yaml     # 材料用語辞書（L1₂, B2, γ'等）
+├── safety/              # SQL安全検査（SQLGuard 8層）
+│   └── sql_validator.py
+├── evaluation/          # 評価パイプライン
+│   ├── evaluation_dataset.jsonl # 100クエリ（Easy/Medium/Hard/VeryHard）
+│   ├── gold_sql/        # 正解SQL 100件
+│   ├── expected_results/ # 正解実行結果JSON
+│   ├── metrics.py       # 評価指標（構文妥当率、実行精度等）
+│   ├── run_proposed.py  # Proposed手法実行
+│   └── *.csv            # 各手法の評価結果
+├── scripts/             # 評価・分析スクリプト
+│   ├── run_full_evaluation.py      # 5手法完全評価
+│   └── generate_gold_sql_and_results.py  # Gold SQL生成
+├── api/                 # FastAPI アプリケーション
+│   └── main.py
+├── tests/               # ユニットテスト（80件）
+├── paper/               # LaTeX原稿
+├── pyproject.toml       # Python依存パッケージ定義
+└── .env.example         # 環境変数テンプレート
 ```
 
 ## Evaluation
 
-100件の評価クエリ（Easy 20, Medium 30, Hard 30, Very Hard 20）で以下を比較:
+100件の評価クエリ（Easy 20, Medium 30, Hard 30, Very Hard 20）で以下の5手法を比較:
 
-| Method | Description |
-|--------|-------------|
-| Baseline 1 | LLM only (no schema info) |
-| Baseline 2 | LLM + full schema prompt |
-| Baseline 3 | LLM + embedding-based retrieval |
-| Baseline 4 | LLM + FK list |
-| **Proposed** | **LLM + schema linking + graph traversal** |
+| Method | LLMに渡す情報 | 構文妥当率 | 実行成功率 | 実行精度 | テーブル幻覚率 |
+|--------|--------------|-----------|-----------|---------|--------------|
+| B1: LLM-only | 何も渡さない | 99% | 0% | 0% | 100% |
+| B2: Full Schema | 全テーブル一覧 | 100% | 100% | 4.6% | 0.7% |
+| B3: Rule-based | 辞書ルール（LLM不使用） | 100% | 98% | 5.8% | 0% |
+| B4: FK-list | FK関係リストのみ | 98% | 11% | 0% | 0.5% |
+| **P: Proposed** | **Steiner木で選んだサブグラフ** | **100%** | **82%** | **10.6%** | **0%** |
 
 ## Key Features
 
-- **スキーマグラフ**: NetworkXによるER関係のグラフ化とJOIN経路自動生成
-- **材料用語辞書**: L1₂, γ', Cu₃Au型などの正規化辞書
+- **Schema Graph走査**: NetworkXによるFK関係のグラフ化、Steiner木近似による最小JOINパス探索
+- **材料用語辞書**: L1₂, B2, γ', Cu₃Au型, CsCl型などの日英バイリンガル同義語辞書
 - **制約付きSQL生成**: 許可テーブル・カラム・JOINのみ使用可能
-- **SQL安全検査**: sqlglotによるパース検証、禁止操作検出
+- **SQLGuard 8層検証**: ブラックリスト、SELECT-only、複文検出、危険関数、テーブル/カラムホワイトリスト、JOIN整合性、LIMIT自動注入
 - **Rule-based fallback**: API keyなしでも動作する決定的SQL生成
+- **B2対応**: CsCl型（B2）、NaCl型、NiAs型、BiF3型にも対応可能な設計
 
 ## Seed Data
 
-120件のL1₂型化合物mock data（11件の既知化合物を含む）:
+デフォルト: 120件のL1₂型化合物mock data（既知11件を含む）:
 Ni₃Al, Ni₃Ga, Ni₃Ge, Co₃Ti, Al₃Sc, Al₃Ti, Pt₃Al, Ir₃Nb, Co₃Al, Co₃W, Co₃Ta
+
+OQMD拡張データ投入で最大1,471件（L12 393 + B2 636 + NaCl 355 + NiAs 74 + BiF3 13）まで拡張可能。
 
 ## Environment Variables
 
-See `.env.example` for configuration options.
+| 変数名 | 説明 | デフォルト |
+|--------|------|-----------|
+| POSTGRES_USER | PostgreSQLユーザー | l12_user |
+| POSTGRES_PASSWORD | PostgreSQLパスワード | l12_password |
+| POSTGRES_DB | データベース名 | l12_materials |
+| POSTGRES_HOST | ホスト | localhost |
+| POSTGRES_PORT | ポート | 5432 |
+| OPENAI_API_KEY | OpenAI APIキー | （要設定） |
+| LLM_MODEL | 使用するLLMモデル | gpt-4o-mini |
+| SQL_ROW_LIMIT | SQL結果の最大行数 | 100 |
+| SQL_TIMEOUT_SECONDS | SQL実行タイムアウト | 10 |

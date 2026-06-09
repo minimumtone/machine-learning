@@ -5,7 +5,7 @@
     "formula",
     "space_group_number"
   ],
-  "row_count": 100,
+  "row_count": 120,
   "rows": [
     [
       "entry_Al3Sc_005",
@@ -505,6 +505,106 @@
     [
       "entry_Pt3Sc_086",
       "Pt3Sc",
+      221.0
+    ],
+    [
+      "entry_Pt3Si_089",
+      "Pt3Si",
+      221.0
+    ],
+    [
+      "entry_Pt3Sn_090",
+      "Pt3Sn",
+      221.0
+    ],
+    [
+      "entry_Pt3Ta_085",
+      "Pt3Ta",
+      221.0
+    ],
+    [
+      "entry_Pt3Ti_083",
+      "Pt3Ti",
+      221.0
+    ],
+    [
+      "entry_Pt3V_092",
+      "Pt3V",
+      221.0
+    ],
+    [
+      "entry_Pt3Y_087",
+      "Pt3Y",
+      221.0
+    ],
+    [
+      "entry_Pt3Zn_091",
+      "Pt3Zn",
+      221.0
+    ],
+    [
+      "entry_Pt3Zr_093",
+      "Pt3Zr",
+      221.0
+    ],
+    [
+      "entry_Rh3Al_109",
+      "Rh3Al",
+      221.0
+    ],
+    [
+      "entry_Rh3Ga_110",
+      "Rh3Ga",
+      221.0
+    ],
+    [
+      "entry_Rh3Ge_111",
+      "Rh3Ge",
+      221.0
+    ],
+    [
+      "entry_Rh3Hf_117",
+      "Rh3Hf",
+      221.0
+    ],
+    [
+      "entry_Rh3Nb_113",
+      "Rh3Nb",
+      221.0
+    ],
+    [
+      "entry_Rh3Sc_115",
+      "Rh3Sc",
+      221.0
+    ],
+    [
+      "entry_Rh3Si_118",
+      "Rh3Si",
+      221.0
+    ],
+    [
+      "entry_Rh3Sn_119",
+      "Rh3Sn",
+      221.0
+    ],
+    [
+      "entry_Rh3Ta_114",
+      "Rh3Ta",
+      221.0
+    ],
+    [
+      "entry_Rh3Ti_112",
+      "Rh3Ti",
+      221.0
+    ],
+    [
+      "entry_Rh3Y_116",
+      "Rh3Y",
+      221.0
+    ],
+    [
+      "entry_Rh3Zn_120",
+      "Rh3Zn",
       221.0
     ]
   ]

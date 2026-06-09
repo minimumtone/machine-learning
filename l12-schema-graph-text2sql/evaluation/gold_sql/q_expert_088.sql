@@ -1,0 +1,9 @@
+SELECT s.prototype, COUNT(*) AS cnt
+FROM material_entry m
+JOIN structure s ON s.entry_id = m.entry_id
+JOIN phase_stability ps ON ps.entry_id = m.entry_id
+WHERE m.number_of_elements = 2
+  AND ps.is_stable = TRUE
+GROUP BY s.prototype
+ORDER BY cnt DESC
+LIMIT 10000;

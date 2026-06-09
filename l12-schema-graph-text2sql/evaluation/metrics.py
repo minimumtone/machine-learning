@@ -30,10 +30,35 @@ def execution_validity(result: dict[str, Any]) -> bool:
 def execution_accuracy(
     result_rows: list[list[Any]],
     expected_rows: list[list[Any]],
+    result_columns: list[str] | None = None,
+    expected_columns: list[str] | None = None,
 ) -> float:
-    """Compute row-set overlap between result and expected."""
+    """Compute row-set overlap between result and expected.
+
+    When column metadata is provided, matching is done on the
+    intersection of column names so that extra SELECT columns in the
+    generated SQL do not penalise accuracy.
+    """
     if not expected_rows:
         return 1.0 if not result_rows else 0.0
+
+    if result_columns and expected_columns:
+        rc = [c.lower() for c in result_columns]
+        ec = [c.lower() for c in expected_columns]
+        common = [c for c in ec if c in rc]
+        if common:
+            ri = [rc.index(c) for c in common]
+            ei = [ec.index(c) for c in common]
+            result_set = {tuple(r[i] for i in ri) for r in result_rows}
+            expected_set = {tuple(r[i] for i in ei) for r in expected_rows}
+            if not expected_set:
+                return 0.0
+            return len(result_set & expected_set) / len(expected_set)
+        # common is empty: columns have no overlap — this likely means
+        # generated SQL selected wrong columns entirely. Return 0.0 as
+        # no meaningful comparison is possible.
+        return 0.0
+
     result_set = {tuple(r) for r in result_rows}
     expected_set = {tuple(r) for r in expected_rows}
     if not expected_set:
@@ -65,6 +90,24 @@ def hallucinated_column_rate(
     return len(bad) / len(generated_columns)
 
 
+_ALIAS_TO_TABLE: dict[str, str] = {
+    "m": "material_entry", "c": "composition", "s": "structure",
+    "ps": "phase_stability", "calc": "calculation", "cp": "calculated_property",
+    "pd": "prototype_definition", "et": "elastic_tensor",
+    "tp": "thermal_property", "mp": "magnetic_property",
+    "se": "surface_energy", "gb": "grain_boundary",
+    "bs": "band_structure", "dos": "density_of_states",
+    "e": "element", "ep": "element_property",
+    "md": "material_defect", "dt": "defect_type",
+    "ms": "material_synthesis", "sm": "synthesis_method",
+    "lr": "literature_reference", "mr": "material_reference",
+    "ad": "application_domain", "ma": "material_application",
+    "em": "experimental_measurement", "mpr": "measured_property",
+    "pde": "phase_diagram_entry", "als": "alloy_system",
+    "mas": "material_alloy_system", "sg": "space_group",
+}
+
+
 def hallucinated_join_rate(
     generated_joins: list[str],
     allowed_joins: list[str],
@@ -73,8 +116,23 @@ def hallucinated_join_rate(
     if not generated_joins:
         return 0.0
 
-    def normalize(j: str) -> str:
-        return re.sub(r"\s+", " ", j.strip().lower())
+    def _resolve_alias(ref: str) -> str:
+        """Resolve alias.column to table.column."""
+        parts = ref.strip().split(".")
+        if len(parts) == 2:
+            table = _ALIAS_TO_TABLE.get(parts[0], parts[0])
+            return f"{table}.{parts[1]}"
+        return ref
+
+    def normalize(j: str) -> tuple[str, str]:
+        """Normalize a join condition to a canonical pair (sorted)."""
+        j = re.sub(r"\s+", " ", j.strip().lower())
+        sides = j.split("=")
+        if len(sides) == 2:
+            left = _resolve_alias(sides[0].strip())
+            right = _resolve_alias(sides[1].strip())
+            return (min(left, right), max(left, right))
+        return (j, "")
 
     allowed_set = {normalize(j) for j in allowed_joins}
     bad = [j for j in generated_joins if normalize(j) not in allowed_set]

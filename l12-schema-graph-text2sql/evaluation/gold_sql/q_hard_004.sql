@@ -8,4 +8,4 @@ WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND ps.energy_above_hull <= 0.001
   AND cp.property_name = 'bulk_modulus'
 ORDER BY cp.value DESC
-LIMIT 100;
+LIMIT 10000;

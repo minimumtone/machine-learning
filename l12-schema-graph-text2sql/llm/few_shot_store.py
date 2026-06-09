@@ -11,6 +11,7 @@ Ni₃Al") and register them as seed few-shot examples.
 """
 from __future__ import annotations
 
+import fcntl
 import json
 import math
 import os
@@ -52,8 +53,9 @@ def add_example(
     row_count: int,
     source: str = "runtime",
 ) -> dict[str, Any]:
-    """Register a successful NL→SQL pair in the store."""
-    examples = load_store()
+    """Register a successful NL→SQL pair in the store (file-lock protected)."""
+    p = _store_path()
+    lock_path = p.with_suffix(".lock")
     entry = {
         "nl_query": nl_query,
         "sql": sql,
@@ -61,10 +63,15 @@ def add_example(
         "row_count": row_count,
         "source": source,
     }
-    # Deduplicate by NL query
-    examples = [e for e in examples if e["nl_query"] != nl_query]
-    examples.append(entry)
-    save_store(examples)
+    with lock_path.open("w") as lock_f:
+        fcntl.flock(lock_f, fcntl.LOCK_EX)
+        try:
+            examples = load_store()
+            examples = [e for e in examples if e["nl_query"] != nl_query]
+            examples.append(entry)
+            save_store(examples)
+        finally:
+            fcntl.flock(lock_f, fcntl.LOCK_UN)
     return entry
 
 
@@ -73,7 +80,13 @@ def add_example(
 # ---------------------------------------------------------------------------
 
 _TOKENIZE_RE = re.compile(
-    r"[A-Z][a-z]?|[a-z]+|[\u3040-\u309F]+|[\u30A0-\u30FF]+|[\u4E00-\u9FFF]+"
+    r"[A-Za-z]\d+[_]?\d*"       # Strukturbericht: L12, B2, A15, D0_3
+    r"|[A-Z][a-z]?\d*"          # Chemical formula tokens: Ni3, Al, Fe2
+    r"|[\u3040-\u309F]+"        # Hiragana
+    r"|[\u30A0-\u30FF]+"        # Katakana
+    r"|[\u4E00-\u9FFF]+"        # Kanji
+    r"|[a-z]+"                  # English words
+    r"|\d+"                     # Numbers
 )
 
 
@@ -197,7 +210,13 @@ def extract_examples_from_paper(
         return []
     text = tex_path.read_text(encoding="utf-8")
     # Remove LaTeX commands but keep content
-    text_clean = re.sub(r"\\[a-zA-Z]+\{([^}]*)\}", r"\1", text)
+    text_clean = re.sub(r"\\text\{([^}]*)\}", r"\1", text)  # \text{Ni} → Ni
+    text_clean = re.sub(r"\\mathrm\{([^}]*)\}", r"\1", text_clean)
+    text_clean = re.sub(r"\\[a-zA-Z]+\{([^}]*)\}", r"\1", text_clean)
+    # Remove subscript/superscript delimiters: _{3} → 3, ^{2} → 2
+    text_clean = re.sub(r"[_^]\{([^}]*)\}", r"\1", text_clean)
+    # Remove remaining underscores used as subscript markers: L1_2 → L12
+    text_clean = re.sub(r"_(\d)", r"\1", text_clean)
     text_clean = re.sub(r"[\\${}]", "", text_clean)
 
     found_compounds: dict[str, str] = {}  # formula -> prototype

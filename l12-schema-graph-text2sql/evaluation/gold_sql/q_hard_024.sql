@@ -9,4 +9,4 @@ JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id
 WHERE c.element = 'Fe'
   AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
 ORDER BY m.formula, cp.property_name
-LIMIT 100;
+LIMIT 10000;

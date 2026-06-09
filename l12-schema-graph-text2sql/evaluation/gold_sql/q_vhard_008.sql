@@ -12,4 +12,4 @@ WHERE c.element = 'Co'
   AND ps.energy_above_hull <= 0.05
   AND cp_bm.property_name = 'bulk_modulus'
 ORDER BY ps.energy_above_hull ASC, ABS(s.lattice_a - 3.57) ASC
-LIMIT 100;
+LIMIT 10000;

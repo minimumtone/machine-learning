@@ -8,4 +8,4 @@ WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND cp.property_name = 'bulk_modulus'
   AND ABS(s.lattice_a - 3.55) <= 0.1
 ORDER BY cp.value DESC
-LIMIT 100;
+LIMIT 10000;

@@ -1,0 +1,34 @@
+{
+  "query_id": "q_expert_081",
+  "columns": [
+    "entry_id",
+    "formula",
+    "lattice_a",
+    "energy_above_hull",
+    "bulk_modulus_vrh"
+  ],
+  "row_count": 3,
+  "rows": [
+    [
+      "entry_Cu3Nb_055",
+      "Cu3Nb",
+      "3.56",
+      "0.004",
+      "315.63"
+    ],
+    [
+      "entry_Co3Ti_004",
+      "Co3Ti",
+      "3.55",
+      "0.0",
+      "269.1"
+    ],
+    [
+      "entry_Cu3Sc_057",
+      "Cu3Sc",
+      "3.6",
+      "0.012",
+      "266.38"
+    ]
+  ]
+}

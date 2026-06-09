@@ -4,4 +4,4 @@ JOIN structure s ON s.entry_id = m.entry_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND s.volume_per_atom <= 12.0
 ORDER BY s.volume_per_atom ASC
-LIMIT 100;
+LIMIT 10000;

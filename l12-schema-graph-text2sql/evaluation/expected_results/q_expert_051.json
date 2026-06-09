@@ -1,0 +1,16 @@
+{
+  "query_id": "q_expert_051",
+  "columns": [
+    "entry_id",
+    "formula",
+    "total_dos_at_fermi"
+  ],
+  "row_count": 1,
+  "rows": [
+    [
+      "oqmd_17947",
+      "SmPd3",
+      "49.8637"
+    ]
+  ]
+}

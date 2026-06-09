@@ -9,4 +9,4 @@ WHERE c.element = 'Al'
   AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
 GROUP BY CASE WHEN ps.energy_above_hull <= 0.001 THEN 'stable' ELSE 'not_stable' END
 ORDER BY stability
-LIMIT 100;
+LIMIT 10000;

@@ -4,8 +4,24 @@
     "entry_id",
     "formula"
   ],
-  "row_count": 1,
+  "row_count": 5,
   "rows": [
+    [
+      "oqmd_10516",
+      "AlNi"
+    ],
+    [
+      "oqmd_94913",
+      "AlNi"
+    ],
+    [
+      "oqmd_94919",
+      "AlNi"
+    ],
+    [
+      "oqmd_17890",
+      "AlNi3"
+    ],
     [
       "entry_Ni3Al_001",
       "Ni3Al"

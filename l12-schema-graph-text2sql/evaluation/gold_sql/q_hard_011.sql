@@ -6,4 +6,4 @@ JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND cp.property_name = 'shear_modulus'
 ORDER BY cp.value DESC
-LIMIT 100;
+LIMIT 10000;

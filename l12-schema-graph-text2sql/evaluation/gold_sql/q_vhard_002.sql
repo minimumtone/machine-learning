@@ -10,4 +10,4 @@ WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND ps.energy_above_hull <= 0.05
   AND cp_bm.property_name = 'bulk_modulus'
 ORDER BY ps.formation_energy_per_atom ASC, ABS(s.lattice_a - 3.57) ASC
-LIMIT 100;
+LIMIT 10000;

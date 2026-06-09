@@ -1,0 +1,16 @@
+{
+  "query_id": "q_expert_059",
+  "columns": [
+    "entry_id",
+    "formula",
+    "magnetic_anisotropy_energy"
+  ],
+  "row_count": 1,
+  "rows": [
+    [
+      "entry_Co3Hf_029",
+      "Co3Hf",
+      "9.75645900945699"
+    ]
+  ]
+}

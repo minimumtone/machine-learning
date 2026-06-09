@@ -9,4 +9,4 @@ WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
                      'Zr','Nb','Mo','Ru','Rh','Pd','Ag',
                      'Hf','Ta','W','Re','Os','Ir','Pt','Au')
 ORDER BY ps.energy_above_hull ASC
-LIMIT 100;
+LIMIT 10000;

@@ -1,0 +1,14 @@
+{
+  "query_id": "q_expert_097",
+  "columns": [
+    "method",
+    "cnt"
+  ],
+  "row_count": 1,
+  "rows": [
+    [
+      "DFT",
+      "1471"
+    ]
+  ]
+}

@@ -11,4 +11,4 @@ WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND cp_bm.value >= 100
   AND ABS(s.lattice_a - 3.57) <= 0.2
 ORDER BY ps.energy_above_hull ASC, cp_bm.value DESC
-LIMIT 100;
+LIMIT 10000;

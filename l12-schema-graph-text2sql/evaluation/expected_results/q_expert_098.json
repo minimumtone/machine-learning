@@ -1,0 +1,16 @@
+{
+  "query_id": "q_expert_098",
+  "columns": [
+    "gap_category",
+    "cnt",
+    "avg_gap"
+  ],
+  "row_count": 1,
+  "rows": [
+    [
+      "metallic (gap=0)",
+      "393",
+      "0.0"
+    ]
+  ]
+}

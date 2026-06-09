@@ -1,0 +1,30 @@
+{
+  "query_id": "q_expert_030",
+  "columns": [
+    "prototype",
+    "cnt"
+  ],
+  "row_count": 5,
+  "rows": [
+    [
+      "CsCl",
+      "636"
+    ],
+    [
+      "L12",
+      "393"
+    ],
+    [
+      "NaCl",
+      "355"
+    ],
+    [
+      "NiAs",
+      "74"
+    ],
+    [
+      "BiF3",
+      "13"
+    ]
+  ]
+}
