@@ -66,7 +66,7 @@ def generate_sql_via_llm(
     if api_key is None:
         api_key = os.getenv("OPENAI_API_KEY", "")
     if model is None:
-        model = os.getenv("LLM_MODEL", "gpt-5.5")
+        model = os.getenv("LLM_MODEL", "gpt-4.1-mini")
 
     # Check API key early so fallback doesn't need the prompt template
     conditions = extract_conditions(user_query)

@@ -82,7 +82,12 @@ def proposed_pipeline(query, table_graph, allowed_columns, allowed_joins, api_ke
     conditions = extract_conditions(query)
     linked = link_schema(conditions)
     required_tables = linked["required_tables"]
-    required_columns = linked["required_columns"]
+
+    # Provide ALL columns from required tables (not just linker subset)
+    required_columns = [
+        c for c in allowed_columns
+        if c.split(".")[0] in required_tables
+    ]
 
     join_clause = generate_joins_for_tables(table_graph, required_tables)
     join_list = []
@@ -90,6 +95,10 @@ def proposed_pipeline(query, table_graph, allowed_columns, allowed_joins, api_ke
         m = re.search(r"ON\s+(.+)", line, re.IGNORECASE)
         if m:
             join_list.append(m.group(1).strip())
+    # Also include all allowed joins relevant to required tables
+    for j in allowed_joins:
+        if any(t in j for t in required_tables) and j not in join_list:
+            join_list.append(j)
 
     result = generate_sql_via_llm(
         user_query=query,
@@ -132,6 +141,15 @@ def main():
         columns_map[t] = get_columns(conn, t)
     fks = get_foreign_keys(conn)
     table_graph = build_table_graph(fks)
+
+    # Add logical join: element.symbol = composition.element (no FK but valid)
+    if not table_graph.has_edge("composition", "element"):
+        table_graph.add_edge(
+            "composition", "element",
+            source_column="element",
+            target_column="symbol",
+        )
+
     allowed_columns = []
     for t, cols in columns_map.items():
         for c in cols:

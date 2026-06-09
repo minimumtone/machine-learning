@@ -129,6 +129,15 @@ def get_schema_info(conn):
     fks = get_foreign_keys(conn)
     table_graph = build_table_graph(fks)
 
+    # Add logical join: element.symbol = composition.element (no FK but valid)
+    import networkx as nx
+    if not table_graph.has_edge("composition", "element"):
+        table_graph.add_edge(
+            "composition", "element",
+            source_column="element",
+            target_column="symbol",
+        )
+
     # Build allowed columns list
     allowed_columns = []
     for t, cols in columns.items():
@@ -288,17 +297,27 @@ def proposed_schema_graph(query: str, table_graph, allowed_columns: list[str],
     # Step 2: Schema linking
     linked = link_schema(conditions)
     required_tables = linked["required_tables"]
-    required_columns = linked["required_columns"]
 
-    # Step 3: Graph traversal for JOIN paths
+    # Step 3: Provide ALL columns from required tables (not just linker subset)
+    # This prevents column hallucination by showing the LLM every available column
+    required_columns = [
+        c for c in allowed_columns
+        if c.split(".")[0] in required_tables
+    ]
+
+    # Step 4: Graph traversal for JOIN paths
     join_clause = generate_joins_for_tables(table_graph, required_tables)
     join_list = []
     for line in join_clause.split("\n"):
         m = re.search(r"ON\s+(.+)", line, re.IGNORECASE)
         if m:
             join_list.append(m.group(1).strip())
+    # Also include all allowed joins relevant to required tables
+    for j in allowed_joins:
+        if any(t in j for t in required_tables) and j not in join_list:
+            join_list.append(j)
 
-    # Step 4: Generate SQL via LLM with constraints
+    # Step 5: Generate SQL via LLM with constraints
     result = generate_sql_via_llm(
         user_query=query,
         allowed_tables=required_tables,
@@ -818,7 +837,10 @@ def run_materials_analysis(conn) -> None:
         "|--------|-------------|-------------------|-----------------|",
     ])
     for row in top_stable:
-        lines.append(f"| {row[0]} | {float(row[1]):.3f} | {float(row[2]):.4f} | {float(row[3]):.3f} |")
+        v1 = float(row[1]) if row[1] is not None else 0.0
+        v2 = float(row[2]) if row[2] is not None else 0.0
+        v3 = float(row[3]) if row[3] is not None else 0.0
+        lines.append(f"| {row[0]} | {v1:.3f} | {v2:.4f} | {v3:.3f} |")
 
     lines.extend([
         "",

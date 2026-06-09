@@ -11,11 +11,17 @@ CONDITION_TABLE_MAP: dict[str, list[str]] = {
     "stability": ["phase_stability"],
     "lattice_reference": ["structure"],
     "lattice_constant": ["structure"],
+    "lattice_c": ["structure"],
+    "volume": ["structure"],
+    "crystal_system": ["structure"],
+    "space_group": ["structure"],
     "formation_energy": ["phase_stability"],
+    "band_gap": ["phase_stability"],
     "bulk_modulus": ["elastic_tensor"],
     "shear_modulus": ["elastic_tensor"],
     "youngs_modulus": ["elastic_tensor"],
     "poisson_ratio": ["elastic_tensor"],
+    "elastic_stability": ["elastic_tensor"],
     "total_magnetization": ["magnetic_property"],
     "magnetic_ordering": ["magnetic_property"],
     "curie_temperature": ["magnetic_property"],
@@ -29,25 +35,54 @@ CONDITION_TABLE_MAP: dict[str, list[str]] = {
     "direct_gap": ["band_structure"],
     "surface_energy": ["surface_energy"],
     "work_function": ["surface_energy"],
+    "miller_index": ["surface_energy"],
+    "surface_reconstruction": ["surface_energy"],
     "grain_boundary_energy": ["grain_boundary"],
     "vacancy_formation": ["material_defect", "defect_type"],
+    "interstitial": ["material_defect", "defect_type"],
+    "defect": ["material_defect", "defect_type"],
+    "dopant": ["material_defect", "element"],
     "formula": ["material_entry"],
     "chemical_system": ["material_entry"],
+    "number_of_elements": ["material_entry"],
+    "source_db": ["material_entry"],
+    "atomic_number": ["composition", "element"],
+    "electronegativity": ["composition", "element"],
+    "element_property": ["composition", "element"],
+    "synthesis": ["material_synthesis", "synthesis_method"],
+    "ball_milling": ["material_synthesis", "synthesis_method"],
+    "arc_melting": ["material_synthesis", "synthesis_method"],
+    "experimental": ["material_synthesis"],
+    "doi": ["material_reference", "literature_reference"],
+    "literature": ["material_reference", "literature_reference"],
+    "reference": ["material_reference", "literature_reference"],
+    "application": ["material_application", "application_domain"],
+    "functional": ["calculation"],
+    "calculation_method": ["calculation"],
+    "phase_diagram": ["phase_diagram_entry"],
+    "alloy_system": ["material_alloy_system", "alloy_system"],
 }
 
 CONDITION_COLUMN_MAP: dict[str, list[str]] = {
     "prototype": ["structure.prototype", "structure.strukturbericht"],
-    "contains_elements": ["composition.element"],
+    "contains_elements": ["composition.element", "composition.atomic_fraction"],
     "stability": [
         "phase_stability.energy_above_hull",
+        "phase_stability.is_stable",
     ],
     "lattice_reference": ["structure.lattice_a"],
-    "lattice_constant": ["structure.lattice_a"],
+    "lattice_constant": ["structure.lattice_a", "structure.lattice_b", "structure.lattice_c"],
+    "lattice_c": ["structure.lattice_c"],
+    "volume": ["structure.volume_per_atom"],
+    "crystal_system": ["structure.crystal_system"],
+    "space_group": ["structure.space_group_number", "structure.space_group"],
     "formation_energy": ["phase_stability.formation_energy_per_atom"],
+    "band_gap": ["phase_stability.band_gap"],
     "bulk_modulus": ["elastic_tensor.bulk_modulus_vrh"],
     "shear_modulus": ["elastic_tensor.shear_modulus_vrh"],
     "youngs_modulus": ["elastic_tensor.youngs_modulus"],
     "poisson_ratio": ["elastic_tensor.poisson_ratio"],
+    "elastic_stability": ["elastic_tensor.is_stable"],
     "total_magnetization": ["magnetic_property.total_magnetization"],
     "magnetic_ordering": ["magnetic_property.magnetic_ordering"],
     "curie_temperature": ["magnetic_property.curie_temperature_k"],
@@ -59,12 +94,46 @@ CONDITION_COLUMN_MAP: dict[str, list[str]] = {
     "is_metallic": ["density_of_states.is_metallic"],
     "spin_polarized": ["density_of_states.spin_polarized"],
     "direct_gap": ["band_structure.is_direct_gap"],
-    "surface_energy": ["surface_energy.surface_energy_j_m2"],
+    "surface_energy": ["surface_energy.surface_energy_j_m2", "surface_energy.miller_index"],
     "work_function": ["surface_energy.work_function"],
+    "miller_index": ["surface_energy.miller_index"],
+    "surface_reconstruction": ["surface_energy.is_reconstructed"],
     "grain_boundary_energy": ["grain_boundary.gb_energy_j_m2"],
-    "vacancy_formation": ["material_defect.formation_energy"],
+    "vacancy_formation": ["material_defect.formation_energy", "defect_type.category"],
+    "interstitial": ["material_defect.formation_energy", "defect_type.category"],
+    "defect": ["material_defect.formation_energy", "defect_type.defect_name", "defect_type.category"],
+    "dopant": ["material_defect.dopant_element_id", "element.symbol"],
     "formula": ["material_entry.formula"],
     "chemical_system": ["material_entry.chemical_system"],
+    "number_of_elements": ["material_entry.number_of_elements"],
+    "source_db": ["material_entry.source_db"],
+    "atomic_number": ["element.atomic_number", "element.symbol", "composition.element"],
+    "electronegativity": ["element.electronegativity", "element.symbol"],
+    "element_property": ["element_property.property_name", "element_property.value"],
+    "synthesis": ["synthesis_method.method_name", "material_synthesis.success"],
+    "ball_milling": ["synthesis_method.method_name"],
+    "arc_melting": ["synthesis_method.method_name"],
+    "experimental": ["material_synthesis.success"],
+    "doi": ["literature_reference.doi", "literature_reference.title"],
+    "literature": ["literature_reference.doi", "literature_reference.title", "literature_reference.year"],
+    "reference": ["literature_reference.doi", "literature_reference.title"],
+    "application": ["application_domain.domain_name"],
+    "functional": ["calculation.functional"],
+    "calculation_method": ["calculation.method"],
+    "phase_diagram": ["phase_diagram_entry.is_on_hull", "phase_diagram_entry.hull_distance"],
+    "alloy_system": ["alloy_system.system_name", "alloy_system.num_components"],
+}
+
+# Multi-hop JOIN definitions (table -> prerequisite tables + join clause)
+MULTI_HOP_JOINS: dict[str, list[str]] = {
+    "element": ["composition"],
+    "element_property": ["composition", "element"],
+    "synthesis_method": ["material_synthesis"],
+    "defect_type": ["material_defect"],
+    "literature_reference": ["material_reference"],
+    "application_domain": ["material_application"],
+    "measured_property": ["experimental_measurement"],
+    "alloy_system": ["material_alloy_system"],
 }
 
 BASE_TABLE = "material_entry"
@@ -83,6 +152,17 @@ def link_schema(conditions: dict[str, Any]) -> dict[str, Any]:
             required_tables.update(CONDITION_TABLE_MAP[key])
         if key in CONDITION_COLUMN_MAP:
             required_columns.update(CONDITION_COLUMN_MAP[key])
+
+    # Resolve multi-hop dependencies
+    added = True
+    while added:
+        added = False
+        for table in list(required_tables):
+            if table in MULTI_HOP_JOINS:
+                for prereq in MULTI_HOP_JOINS[table]:
+                    if prereq not in required_tables:
+                        required_tables.add(prereq)
+                        added = True
 
     if "sort_by" in conditions:
         col = conditions["sort_by"]

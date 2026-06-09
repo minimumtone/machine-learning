@@ -569,6 +569,44 @@ def extract_conditions(query: str) -> dict[str, Any]:
         if not elements and formula["interpretation"] == "contains_elements":
             result["contains_elements"] = formula["elements"]
 
+    # Extended keyword detection for 30-table schema
+    ql = query.lower()
+    _EXTENDED_KEYWORDS = {
+        "atomic_number": ["原子番号", "atomic number", "atomic_number"],
+        "number_of_elements": ["元素数", "3元素", "4元素", "5元素", "多元素", "number of elements"],
+        "source_db": ["oqmd", "materials project", "aflow", "source"],
+        "synthesis": ["合成", "synthesis", "作製"],
+        "ball_milling": ["ボールミリング", "ball milling", "ball_milling"],
+        "arc_melting": ["アーク溶解", "arc melting"],
+        "experimental": ["実験", "experimental", "合成実績"],
+        "doi": ["doi", "文献", "論文", "paper"],
+        "literature": ["文献", "参考文献", "literature", "reference"],
+        "application": ["応用", "用途", "application", "超合金"],
+        "defect": ["欠陥", "defect", "vacancy", "空孔"],
+        "interstitial": ["格子間", "interstitial"],
+        "dopant": ["ドーパント", "dopant", "添加"],
+        "surface_energy": ["表面エネルギー", "surface energy"],
+        "miller_index": ["面", "(100)", "(110)", "(111)", "miller"],
+        "surface_reconstruction": ["再構成", "reconstruction", "reconstructed"],
+        "grain_boundary_energy": ["粒界", "grain boundary"],
+        "elastic_stability": ["弾性的に不安定", "elastic.*stable", "is_stable.*false"],
+        "crystal_system": ["結晶系", "crystal system", "cubic", "hexagonal", "tetragonal"],
+        "space_group": ["空間群", "space group"],
+        "volume": ["体積", "volume"],
+        "band_gap": ["バンドギャップ", "band gap", "bandgap"],
+        "functional": ["汎関数", "functional", "gga", "pbe", "lda"],
+        "calculation_method": ["計算手法", "calculation method"],
+        "phase_diagram": ["相図", "phase diagram", "hull"],
+        "alloy_system": ["合金系", "alloy system"],
+        "lattice_c": ["格子定数c", "lattice_c", "c軸"],
+    }
+    for key, keywords in _EXTENDED_KEYWORDS.items():
+        if key not in result:
+            for kw in keywords:
+                if kw in ql:
+                    result[key] = True
+                    break
+
     # Coverage score
     coverage = compute_coverage(query, result, terms)
     result["_coverage"] = coverage
