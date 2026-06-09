@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -534,6 +535,7 @@ def check_column_type_safety(
     return warnings
 
 
+@lru_cache(maxsize=1)
 def _load_column_synonyms() -> dict[str, str]:
     """Load column synonym mappings from material_terms.yaml."""
     path = Path(__file__).parent.parent / "llm" / "material_terms.yaml"
