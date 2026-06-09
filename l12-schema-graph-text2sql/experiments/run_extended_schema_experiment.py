@@ -12,7 +12,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import psycopg2
+import psycopg
 from openai import OpenAI
 
 DB_CONFIG = {
@@ -458,7 +458,7 @@ def execute_sql(sql: str) -> dict:
     """Execute SQL and return results or error."""
     conn = None
     try:
-        conn = psycopg2.connect(**DB_CONFIG)
+        conn = psycopg.connect(f"dbname={DB_CONFIG["dbname"]} user={DB_CONFIG["user"]} password={DB_CONFIG["password"]} host={DB_CONFIG["host"]} port={DB_CONFIG["port"]}")
         cur = conn.cursor()
         cur.execute(sql)
         rows = cur.fetchall()

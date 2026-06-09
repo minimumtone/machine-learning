@@ -4,7 +4,7 @@ Set up extended 20-table schema and populate with realistic data.
 Uses existing 1,351 material entries + adds element properties, applications,
 literature, synthesis methods, defect info, and experimental measurements.
 """
-import psycopg2
+import psycopg
 import random
 import json
 from pathlib import Path
@@ -143,7 +143,7 @@ SPACE_GROUPS = [
 
 
 def setup_extended_db():
-    conn = psycopg2.connect(**DB_CONFIG)
+    conn = psycopg.connect(f"dbname={DB_CONFIG["dbname"]} user={DB_CONFIG["user"]} password={DB_CONFIG["password"]} host={DB_CONFIG["host"]} port={DB_CONFIG["port"]}")
     cur = conn.cursor()
 
     # Drop new tables if they exist (keep original tables intact)
