@@ -119,7 +119,6 @@ def test_e2_docker_persistence():
     # named volumeがないことの注意表示
     print("    ※ 現構成ではnamed volumeを使用していないため、")
     print("      docker compose downでデータは消え、upで再作成されます。")
-    print("      seedデータがdocker-entrypoint-initdb.dで再投入されることを確認。")
 
 
 def test_e3_rate_limit_retry():

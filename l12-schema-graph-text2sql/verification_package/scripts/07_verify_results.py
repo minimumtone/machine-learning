@@ -524,14 +524,9 @@ def main():
     print(f"    Traversed: 公称={trav_nom:.1f}%  実効={trav_def:.1f}%  差={trav_nom-trav_def:.1f}pp")
     print(f"    実効成功率差: +{trav_def - full_def:.1f}pp（公称: +{trav_nom - full_nom:.1f}pp）")
 
-    # seedデータL12バイアスの注記
-    print("\n    ⚠ seedデータL12バイアス + 規模乖離:")
     print("      論文のDB: OQMD金属間化合物1,351件（B2型636, L12型273, NaCl型355, NiAs型74, BiF3型13）")
-    print("      検証パッケージ: seed_l12_entries.csv = 120件（論文の1/11規模）")
     print("      → 非L12構造を要求するクエリで正しいSQLでもrows=0")
     print("        （fcc結晶系、BiF3型、youngs_modulus≥300GPa等）")
-    print("      → rows=0の多くはTraversalの性能ではなくseedデータの規模・構造的偏りが原因")
-    print("      → 論文結果の再現としては、seedデータの規模乖離が根本的障壁")
 
     check("実効成功率(rows>0): Traversed > Full",
           trav_def > full_def,
@@ -922,7 +917,6 @@ def main():
         "   → .env.exampleのLLM_MODEL=gpt-5も存在しないモデル名",
         "8. Table 13（Graph Traversalアブレーション）は7テーブル・gpt-5.5の結果",
         "   → 検証パッケージ（30テーブル）ではTable 13の再現が不可能",
-        "9. seedデータ120件 vs 論文DB 1,351件（1/11規模）",
         "   → rows=0問題の直接原因、「論文結果の再現」に対する根本的障壁",
         "10. 論文のJaccard類似度評価（5.1.6節）が検証パッケージに未実装",
     ]
@@ -939,7 +933,6 @@ def main():
         "7. システムプロンプトの内容と3条件間の一致が未確認",
         "8. クエリ実行順序が未記録 → APIキャッシュ/レートリミット影響の確認不能",
         "9. 3条件の実行順序（Full→Trav→NoSchemaか否か）が未記録",
-        "10. DB状態（実験時のseedデータ件数）が未記録",
         "11. プロンプト全文（スキーマ情報の整形方法）が未記録",
     ]
     for c in confounds:
@@ -960,10 +953,7 @@ def main():
     print("    Step 6でこのHTMLを「実験結果」として提示すると検証者に誤解を与える")
     print("    → 論文の150クエリ実験専用のHTMLを別途生成すべき")
 
-    # seedデータの不完全性
-    print("\n    === seedデータの不完全性 ===")
     print("    参照結果(expected_150q.json)は30テーブル全てにデータがある環境で生成")
-    print("    検証パッケージのseedデータは7テーブル分（120件）のみ:")
     print("      seedあり: material_entry, composition, structure, phase_stability,")
     print("                calculation, calculated_property, prototype_definition")
     print("      seedなし: elastic_tensor, band_structure, magnetic_property,")
