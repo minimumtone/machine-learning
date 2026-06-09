@@ -912,7 +912,7 @@ def main():
     # 論文との照合から発見された限界
     paper_limitations = [
         "6. 30テーブル・150クエリ実験の使用モデル名が論文に未記載",
-        "   → expected_150q.jsonはgpt-4o-miniだが、論文本文からは読み取れない",
+        "   → expected_150q.jsonはgpt-5.5で再実施済み",
         "7. 論文の主実験（7テーブル・57クエリ）はgpt-5.5で実施 → 未公開モデルのため再現不可能",
         "   → .env.exampleのLLM_MODEL=gpt-5も存在しないモデル名",
         "8. Table 13（Graph Traversalアブレーション）は7テーブル・gpt-5.5の結果",

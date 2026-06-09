@@ -19,6 +19,23 @@ def _load_prompt_template() -> str:
     return path.read_text(encoding="utf-8")
 
 
+def _format_columns_by_table(columns: list[str]) -> str:
+    """Group columns by table for clearer prompt presentation."""
+    by_table: dict[str, list[str]] = {}
+    for col in columns:
+        parts = col.split(".", 1)
+        if len(parts) == 2:
+            table, colname = parts
+            by_table.setdefault(table, []).append(colname)
+        else:
+            by_table.setdefault("_other", []).append(col)
+    lines: list[str] = []
+    for table in sorted(by_table):
+        cols = sorted(by_table[table])
+        lines.append(f"  {table}: {', '.join(cols)}")
+    return "\n".join(lines)
+
+
 def build_constrained_prompt(
     user_query: str,
     allowed_tables: list[str],
@@ -31,7 +48,7 @@ def build_constrained_prompt(
     prompt = template.format(
         user_query=user_query,
         allowed_tables="\n".join(f"- {t}" for t in allowed_tables),
-        allowed_columns="\n".join(f"- {c}" for c in allowed_columns),
+        allowed_columns=_format_columns_by_table(allowed_columns),
         allowed_joins="\n".join(f"- {j}" for j in allowed_joins),
     )
     if few_shot_examples:

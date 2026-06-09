@@ -1,5 +1,6 @@
 """Tests for safety.sql_validator."""
 from safety.sql_validator import (
+    check_allowed_columns,
     check_forbidden_keywords,
     check_multiple_statements,
     check_select_only,
@@ -8,6 +9,7 @@ from safety.sql_validator import (
     check_system_tables,
     check_cte_bodies_select_only,
     check_column_type_safety,
+    suggest_column_correction,
     validate_sql,
 )
 
@@ -226,3 +228,62 @@ def test_type_safety_in_validate_as_warning():
     # Type mismatch is a warning, not an error — SQL still passes validation
     assert result["valid"]
     assert any("Type mismatch" in w for w in result["warnings"])
+
+
+# ── Column hallucination prevention tests ──
+
+ALLOWED_COLS = [
+    "composition.entry_id", "composition.element", "composition.atomic_fraction",
+    "structure.entry_id", "structure.prototype", "structure.lattice_a",
+    "calculation.entry_id", "calculation.functional",
+    "phase_stability.entry_id", "phase_stability.is_stable",
+]
+
+
+def test_column_synonym_correction_fractional_amount():
+    """Synonym map: fractional_amount -> atomic_fraction."""
+    result = suggest_column_correction("composition.fractional_amount", ALLOWED_COLS)
+    assert result == "composition.atomic_fraction"
+
+
+def test_column_synonym_correction_xc_functional():
+    """Synonym map: xc_functional -> functional."""
+    result = suggest_column_correction("calculation.xc_functional", ALLOWED_COLS)
+    assert result == "calculation.functional"
+
+
+def test_column_fuzzy_match():
+    """Fuzzy match: atomc_fraction (typo) -> atomic_fraction."""
+    result = suggest_column_correction("composition.atomc_fraction", ALLOWED_COLS)
+    assert result == "composition.atomic_fraction"
+
+
+def test_column_no_suggestion_for_unrelated():
+    """No suggestion for completely unrelated column names."""
+    result = suggest_column_correction("composition.xyz_zzz_unknown", ALLOWED_COLS)
+    assert result is None
+
+
+def test_check_allowed_columns_with_suggestion():
+    """check_allowed_columns includes correction suggestion in error message."""
+    sql = "SELECT c.element, c.fractional_amount FROM composition c LIMIT 10"
+    bad = check_allowed_columns(sql, ALLOWED_COLS)
+    assert len(bad) == 1
+    assert "fractional_amount" in bad[0]
+    assert "composition.atomic_fraction" in bad[0]
+
+
+def test_check_allowed_columns_correct():
+    """No errors for SQL using only valid column names."""
+    sql = "SELECT c.element, c.atomic_fraction FROM composition c LIMIT 10"
+    bad = check_allowed_columns(sql, ALLOWED_COLS)
+    assert bad == []
+
+
+def test_validate_sql_rejects_hallucinated_column():
+    """validate_sql() rejects SQL with hallucinated columns via allowed_schema.yaml."""
+    sql = "SELECT c.fractional_amount FROM composition c LIMIT 10"
+    result = validate_sql(sql)
+    assert not result["valid"]
+    assert result["classification"] == "rejected_schema"
+    assert any("fractional_amount" in e for e in result["errors"])
