@@ -37,19 +37,16 @@ def test_e2_docker_persistence():
     print("\n■ E-2: Docker再起動後データ永続性テスト")
 
     try:
-        import psycopg2
+        import psycopg
     except ImportError:
-        skip("Docker永続性", "psycopg2がインストールされていません")
+        skip("Docker永続性", "psycopgがインストールされていません")
         return
 
-    db_config = {
-        "dbname": "l12_materials", "user": "l12_user",
-        "password": "l12_password", "host": "localhost", "port": 5432,
-    }
+    conninfo = "dbname=l12_materials user=l12_user password=l12_password host=localhost port=5432"
 
     # 1. 現在の件数を記録
     try:
-        conn = psycopg2.connect(**db_config)
+        conn = psycopg.connect(conninfo)
         cur = conn.cursor()
         cur.execute("SELECT count(*) FROM material_entry")
         before_count = cur.fetchone()[0]
@@ -100,7 +97,7 @@ def test_e2_docker_persistence():
 
     # 4. 件数を再確認
     try:
-        conn = psycopg2.connect(**db_config)
+        conn = psycopg.connect(conninfo)
         cur = conn.cursor()
         cur.execute("SELECT count(*) FROM material_entry")
         after_count = cur.fetchone()[0]

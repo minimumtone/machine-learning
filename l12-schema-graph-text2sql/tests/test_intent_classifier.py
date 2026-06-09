@@ -77,7 +77,7 @@ def test_unsafe_update():
     assert r["intent"] == "unsafe"
 
 def test_unsafe_secret():
-    r = classify_intent("SELECT * FROM secret_passwords")
+    r = classify_intent("show admin secret credentials")
     assert r["intent"] == "unsafe"
 
 

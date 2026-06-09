@@ -1,20 +1,29 @@
 """Error analysis for baseline vs proposed comparison."""
 from __future__ import annotations
 
+import csv
 import json
 from collections import Counter
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from evaluation.metrics import syntax_validity
 from safety.sql_validator import extract_tables_from_sql
 
 
-ALL_ALLOWED_TABLES = [
-    "material_entry", "composition", "structure",
-    "calculation", "calculated_property", "phase_stability",
-    "prototype_definition",
-]
+def _load_allowed_tables() -> list[str]:
+    """Load the 30-table allowed list from allowed_schema.yaml."""
+    schema_path = Path(__file__).parent.parent / "safety" / "allowed_schema.yaml"
+    if schema_path.exists():
+        with schema_path.open(encoding="utf-8") as f:
+            schema = yaml.safe_load(f)
+        return schema.get("allowed_tables", [])
+    return []
+
+
+ALL_ALLOWED_TABLES = _load_allowed_tables()
 
 
 def analyze_results(
@@ -60,10 +69,9 @@ def generate_error_report(
     sections: list[str] = ["# Error Analysis Report\n"]
 
     for bp in baseline_paths:
-        if not bp.exists():
+        data = _load_results_file(bp)
+        if not data:
             continue
-        with bp.open() as f:
-            data = json.load(f)
         analysis = analyze_results(data, bp.stem)
         sections.append(f"## {analysis['method']}\n")
         sections.append(f"- Total queries: {analysis['total']}")
@@ -79,9 +87,8 @@ def generate_error_report(
             )
         sections.append("")
 
-    if proposed_path.exists():
-        with proposed_path.open() as f:
-            data = json.load(f)
+    data = _load_results_file(proposed_path)
+    if data:
         analysis = analyze_results(data, "proposed")
         sections.append(f"## Proposed Method\n")
         sections.append(f"- Total queries: {analysis['total']}")
@@ -99,12 +106,32 @@ def generate_error_report(
     return report
 
 
+def _load_results_file(path: Path) -> list[dict[str, Any]]:
+    """Load results from JSON or CSV file."""
+    if not path.exists():
+        return []
+    if path.suffix == ".csv":
+        with path.open(encoding="utf-8") as f:
+            return list(csv.DictReader(f))
+    else:
+        with path.open(encoding="utf-8") as f:
+            return json.load(f)
+
+
 if __name__ == "__main__":
     eval_dir = Path(__file__).parent
-    baseline_paths = [
-        eval_dir / f"baseline{i}_result.json" for i in range(1, 5)
-    ]
-    generate_error_report(
-        baseline_paths,
-        eval_dir / "proposed_result.json",
-    )
+    # Try CSV first (output of run_full_evaluation.py), then JSON
+    baseline_paths = []
+    for i in range(1, 5):
+        csv_path = eval_dir / f"baseline_result_baseline{i}_llm_only.csv"
+        json_path = eval_dir / f"baseline{i}_result.json"
+        if csv_path.exists():
+            baseline_paths.append(csv_path)
+        else:
+            baseline_paths.append(json_path)
+
+    proposed_csv = eval_dir / "proposed_result.csv"
+    proposed_json = eval_dir / "proposed_result.json"
+    proposed_path = proposed_csv if proposed_csv.exists() else proposed_json
+
+    generate_error_report(baseline_paths, proposed_path)
