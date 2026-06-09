@@ -458,7 +458,8 @@ def execute_sql(sql: str) -> dict:
     """Execute SQL and return results or error."""
     conn = None
     try:
-        conn = psycopg.connect(f"dbname={DB_CONFIG["dbname"]} user={DB_CONFIG["user"]} password={DB_CONFIG["password"]} host={DB_CONFIG["host"]} port={DB_CONFIG["port"]}")
+        conninfo = f"dbname={DB_CONFIG['dbname']} user={DB_CONFIG['user']} password={DB_CONFIG['password']} host={DB_CONFIG['host']} port={DB_CONFIG['port']}"
+        conn = psycopg.connect(conninfo)
         cur = conn.cursor()
         cur.execute(sql)
         rows = cur.fetchall()

@@ -83,7 +83,7 @@ def baseline3_rule_based(question: str) -> str:
             where_parts.append(result["sql_fragment"])
             tables_needed.update(result.get("tables", []))
 
-    elements = conditions.get("elements", [])
+    elements = conditions.get("contains_elements", [])
     if elements:
         tables_needed.add("composition")
         elem_conds = " OR ".join(f"c.element = '{e}'" for e in elements)
