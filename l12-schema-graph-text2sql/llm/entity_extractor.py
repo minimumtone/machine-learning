@@ -72,6 +72,12 @@ _NON_ALNUM = r'(?:(?<=\s)|(?<=[\u3000-\u9FFF\uFF00-\uFFEF])|(?<=^)|(?<=[^A-Za-z0
 _NON_ALNUM_END = r'(?=\s|[\u3000-\u9FFF\uFF00-\uFFEF]|$|[^A-Za-z0-9])'
 
 
+# CJK aliases that are substrings of common compound words (false positives)
+_CJK_FALSE_POSITIVE_CONTEXTS: dict[str, re.Pattern[str]] = {
+    "金": re.compile(r"合金|金属|金型|超合金"),
+}
+
+
 def extract_elements(query: str, terms: dict[str, Any] | None = None) -> list[str]:
     if terms is None:
         terms = _load_terms()
@@ -86,6 +92,10 @@ def extract_elements(query: str, terms: dict[str, Any] | None = None) -> list[st
                     break
             else:
                 if alias in query:
+                    # Check for false positive CJK contexts
+                    ctx_pat = _CJK_FALSE_POSITIVE_CONTEXTS.get(alias)
+                    if ctx_pat and ctx_pat.search(query):
+                        continue
                     if elem not in found:
                         found.append(elem)
                     break
