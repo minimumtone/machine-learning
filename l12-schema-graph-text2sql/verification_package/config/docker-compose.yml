@@ -7,8 +7,6 @@ services:
       POSTGRES_PASSWORD: l12_password
       POSTGRES_DB: l12_materials
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - ../data/extended_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
-      - ../data/02_seed_data.sql:/docker-entrypoint-initdb.d/02_seed_data.sql
-      - ../data/seed:/seed

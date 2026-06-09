@@ -127,7 +127,7 @@ def normalize_limit(sql: str) -> str:
 
 def main():
     api_key = os.getenv("OPENAI_API_KEY", "")
-    model = os.getenv("LLM_MODEL", "gpt-4.1-mini")
+    model = os.getenv("LLM_MODEL", "gpt-5.5")
     has_llm = bool(api_key and api_key != "your_api_key_here")
 
     print(f"LLM: {has_llm}, model: {model}")

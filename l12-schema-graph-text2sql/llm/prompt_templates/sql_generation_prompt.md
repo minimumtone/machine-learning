@@ -66,6 +66,7 @@ Multi-hop JOIN patterns:
 - Element properties: composition c JOIN element e ON e.symbol = c.element
 - Synthesis methods: material_synthesis ms JOIN synthesis_method sm ON sm.synthesis_id = ms.synthesis_id
 - Defect categories: material_defect md JOIN defect_type dt ON dt.defect_type_id = md.defect_type_id
+- Dopant elements: material_defect md JOIN element e ON e.element_id = md.dopant_element_id
 - Literature DOI: material_reference mr JOIN literature_reference lr ON lr.reference_id = mr.reference_id
 - Applications: material_application ma JOIN application_domain ad ON ad.domain_id = ma.domain_id
 

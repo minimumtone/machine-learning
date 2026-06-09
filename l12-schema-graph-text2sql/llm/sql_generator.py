@@ -201,7 +201,8 @@ def _rule_based_fallback(
         sql_parts.append("WHERE\n    " + "\n    AND ".join(where_clauses))
     if order_by:
         sql_parts.append(order_by)
-    sql_parts.append("LIMIT 100;")
+    row_limit = int(os.getenv("SQL_ROW_LIMIT", "100"))
+    sql_parts.append(f"LIMIT {row_limit};")
 
     return "\n".join(sql_parts)
 

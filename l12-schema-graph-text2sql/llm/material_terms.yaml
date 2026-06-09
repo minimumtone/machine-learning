@@ -36,10 +36,16 @@ stability_terms:
   stable:
     description: thermodynamically stable
     condition:
-      column: phase_stability.energy_above_hull
-      operator: "<="
-      value: 0.001
-      unit: eV/atom
+      column: phase_stability.is_stable
+      operator: "="
+      value: "TRUE"
+
+  unstable:
+    description: thermodynamically unstable
+    condition:
+      column: phase_stability.is_stable
+      operator: "="
+      value: "FALSE"
 
   metastable:
     description: metastable within 50 meV/atom

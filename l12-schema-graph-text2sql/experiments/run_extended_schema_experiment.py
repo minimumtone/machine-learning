@@ -491,7 +491,7 @@ def count_tables_in_sql(sql: str) -> list:
     return sorted(tables)
 
 
-def run_llm_query(query: str, model: str = "gpt-4o-mini", schema_mode: str = "full",
+def run_llm_query(query: str, model: str = "gpt-5.5", schema_mode: str = "full",
                   relevant_tables: list = None) -> dict:
     """Generate SQL via LLM and execute."""
     client = OpenAI()
@@ -556,7 +556,7 @@ def run_experiment(quick=False):
         print(f"\n[{q['id']}] {q['query'][:60]}...")
         
         # Condition 1: LLM + Full Schema (all 30 tables, no traversal)
-        r1 = run_llm_query(q["query"], model="gpt-4o-mini", schema_mode="full")
+        r1 = run_llm_query(q["query"], model="gpt-5.5", schema_mode="full")
         r1["condition"] = "llm_full_schema"
         r1["query_id"] = q["id"]
         r1["query_text"] = q["query"]
@@ -568,7 +568,7 @@ def run_experiment(quick=False):
             print(f"    Error: {r1.get('error', '')[:80]}")
         
         # Condition 2: LLM + Traversed Schema (only relevant tables)
-        r2 = run_llm_query(q["query"], model="gpt-4o-mini", schema_mode="traversed",
+        r2 = run_llm_query(q["query"], model="gpt-5.5", schema_mode="traversed",
                           relevant_tables=q["expected_tables"])
         r2["condition"] = "llm_traversed"
         r2["query_id"] = q["id"]
@@ -581,7 +581,7 @@ def run_experiment(quick=False):
             print(f"    Error: {r2.get('error', '')[:80]}")
         
         # Condition 3: LLM without schema (baseline)
-        r3 = run_llm_query(q["query"], model="gpt-4o-mini", schema_mode="none")
+        r3 = run_llm_query(q["query"], model="gpt-5.5", schema_mode="none")
         r3["condition"] = "llm_no_schema"
         r3["query_id"] = q["id"]
         r3["query_text"] = q["query"]

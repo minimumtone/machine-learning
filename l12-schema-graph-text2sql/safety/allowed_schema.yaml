@@ -1,11 +1,232 @@
+# 30-table schema (auto-generated from extended_schema.sql)
+
 allowed_tables:
   - material_entry
   - composition
   - structure
+  - phase_stability
   - calculation
   - calculated_property
-  - phase_stability
   - prototype_definition
+  - space_group
+  - element
+  - element_property
+  - application_domain
+  - material_application
+  - literature_reference
+  - material_reference
+  - experimental_measurement
+  - measured_property
+  - synthesis_method
+  - material_synthesis
+  - defect_type
+  - material_defect
+  - band_structure
+  - density_of_states
+  - elastic_tensor
+  - magnetic_property
+  - thermal_property
+  - surface_energy
+  - grain_boundary
+  - phase_diagram_entry
+  - alloy_system
+  - material_alloy_system
+
+allowed_columns:
+  - material_entry.entry_id
+  - material_entry.source_db
+  - material_entry.source_material_id
+  - material_entry.formula
+  - material_entry.reduced_formula
+  - material_entry.chemical_system
+  - material_entry.number_of_elements
+  - composition.composition_id
+  - composition.entry_id
+  - composition.element
+  - composition.atomic_fraction
+  - composition.site_label
+  - structure.structure_id
+  - structure.entry_id
+  - structure.prototype
+  - structure.strukturbericht
+  - structure.formula_type
+  - structure.space_group_number
+  - structure.crystal_system
+  - structure.lattice_a
+  - structure.lattice_b
+  - structure.lattice_c
+  - structure.volume_per_atom
+  - structure.space_group
+  - phase_stability.stability_id
+  - phase_stability.entry_id
+  - phase_stability.formation_energy_per_atom
+  - phase_stability.energy_above_hull
+  - phase_stability.is_stable
+  - phase_stability.band_gap
+  - calculation.calculation_id
+  - calculation.entry_id
+  - calculation.method
+  - calculation.functional
+  - calculation.calculation_type
+  - calculated_property.property_id
+  - calculated_property.calculation_id
+  - calculated_property.property_name
+  - calculated_property.value
+  - calculated_property.unit
+  - calculated_property.tensor_component
+  - prototype_definition.prototype_id
+  - prototype_definition.prototype_name
+  - prototype_definition.strukturbericht
+  - prototype_definition.formula_type
+  - prototype_definition.description
+  - space_group.space_group_id
+  - space_group.space_group_number
+  - space_group.hermann_mauguin
+  - space_group.crystal_system
+  - space_group.point_group
+  - space_group.laue_class
+  - space_group.is_centrosymmetric
+  - element.element_id
+  - element.symbol
+  - element.name
+  - element.atomic_number
+  - element.atomic_mass
+  - element.electronegativity
+  - element.atomic_radius
+  - element.group_number
+  - element.period_number
+  - element.block
+  - element.category
+  - element_property.element_property_id
+  - element_property.element_id
+  - element_property.property_name
+  - element_property.value
+  - element_property.unit
+  - element_property.temperature_k
+  - element_property.source
+  - application_domain.domain_id
+  - application_domain.domain_name
+  - application_domain.description
+  - application_domain.parent_domain_id
+  - material_application.material_application_id
+  - material_application.entry_id
+  - material_application.domain_id
+  - material_application.relevance_score
+  - material_application.notes
+  - literature_reference.reference_id
+  - literature_reference.doi
+  - literature_reference.title
+  - literature_reference.authors
+  - literature_reference.journal
+  - literature_reference.year
+  - literature_reference.volume
+  - literature_reference.pages
+  - material_reference.material_reference_id
+  - material_reference.entry_id
+  - material_reference.reference_id
+  - material_reference.context
+  - experimental_measurement.measurement_id
+  - experimental_measurement.entry_id
+  - experimental_measurement.reference_id
+  - experimental_measurement.method
+  - experimental_measurement.temperature_k
+  - experimental_measurement.pressure_gpa
+  - measured_property.measured_property_id
+  - measured_property.measurement_id
+  - measured_property.property_name
+  - measured_property.value
+  - measured_property.uncertainty
+  - measured_property.unit
+  - synthesis_method.synthesis_id
+  - synthesis_method.method_name
+  - synthesis_method.category
+  - synthesis_method.description
+  - material_synthesis.material_synthesis_id
+  - material_synthesis.entry_id
+  - material_synthesis.synthesis_id
+  - material_synthesis.reference_id
+  - material_synthesis.temperature_k
+  - material_synthesis.duration_hours
+  - material_synthesis.atmosphere
+  - material_synthesis.success
+  - defect_type.defect_type_id
+  - defect_type.defect_name
+  - defect_type.category
+  - defect_type.description
+  - material_defect.material_defect_id
+  - material_defect.entry_id
+  - material_defect.defect_type_id
+  - material_defect.formation_energy
+  - material_defect.concentration
+  - material_defect.site
+  - material_defect.dopant_element_id
+  - band_structure.band_structure_id
+  - band_structure.calculation_id
+  - band_structure.entry_id
+  - band_structure.is_direct_gap
+  - band_structure.cbm_energy
+  - band_structure.vbm_energy
+  - band_structure.band_gap_type
+  - band_structure.num_bands
+  - band_structure.num_kpoints
+  - density_of_states.dos_id
+  - density_of_states.calculation_id
+  - density_of_states.entry_id
+  - density_of_states.total_dos_at_fermi
+  - density_of_states.efermi
+  - density_of_states.is_metallic
+  - density_of_states.spin_polarized
+  - elastic_tensor.elastic_id
+  - elastic_tensor.entry_id
+  - elastic_tensor.calculation_id
+  - elastic_tensor.bulk_modulus_vrh
+  - elastic_tensor.shear_modulus_vrh
+  - elastic_tensor.youngs_modulus
+  - elastic_tensor.poisson_ratio
+  - elastic_tensor.is_stable
+  - magnetic_property.magnetic_id
+  - magnetic_property.entry_id
+  - magnetic_property.total_magnetization
+  - magnetic_property.magnetic_ordering
+  - magnetic_property.curie_temperature_k
+  - magnetic_property.magnetic_anisotropy_energy
+  - thermal_property.thermal_id
+  - thermal_property.entry_id
+  - thermal_property.calculation_id
+  - thermal_property.debye_temperature_k
+  - thermal_property.thermal_conductivity
+  - thermal_property.specific_heat_cv
+  - thermal_property.gruneisen_parameter
+  - thermal_property.temperature_k
+  - surface_energy.surface_id
+  - surface_energy.entry_id
+  - surface_energy.miller_index
+  - surface_energy.surface_energy_j_m2
+  - surface_energy.work_function
+  - surface_energy.is_reconstructed
+  - grain_boundary.grain_boundary_id
+  - grain_boundary.entry_id
+  - grain_boundary.sigma_value
+  - grain_boundary.rotation_axis
+  - grain_boundary.tilt_angle
+  - grain_boundary.gb_energy_j_m2
+  - grain_boundary.excess_volume
+  - phase_diagram_entry.phase_entry_id
+  - phase_diagram_entry.entry_id
+  - phase_diagram_entry.chemical_system
+  - phase_diagram_entry.is_on_hull
+  - phase_diagram_entry.decomposition_products
+  - phase_diagram_entry.hull_distance
+  - alloy_system.alloy_system_id
+  - alloy_system.system_name
+  - alloy_system.num_components
+  - alloy_system.category
+  - alloy_system.description
+  - material_alloy_system.material_alloy_id
+  - material_alloy_system.entry_id
+  - material_alloy_system.alloy_system_id
+  - material_alloy_system.phase
+  - material_alloy_system.composition_type
 
 allowed_joins:
   - source_table: composition
@@ -14,6 +235,11 @@ allowed_joins:
     target_column: entry_id
 
   - source_table: structure
+    source_column: entry_id
+    target_table: material_entry
+    target_column: entry_id
+
+  - source_table: phase_stability
     source_column: entry_id
     target_table: material_entry
     target_column: entry_id
@@ -28,7 +254,147 @@ allowed_joins:
     target_table: calculation
     target_column: calculation_id
 
-  - source_table: phase_stability
+  - source_table: element_property
+    source_column: element_id
+    target_table: element
+    target_column: element_id
+
+  - source_table: application_domain
+    source_column: parent_domain_id
+    target_table: application_domain
+    target_column: domain_id
+
+  - source_table: material_application
     source_column: entry_id
     target_table: material_entry
     target_column: entry_id
+
+  - source_table: material_application
+    source_column: domain_id
+    target_table: application_domain
+    target_column: domain_id
+
+  - source_table: material_reference
+    source_column: entry_id
+    target_table: material_entry
+    target_column: entry_id
+
+  - source_table: material_reference
+    source_column: reference_id
+    target_table: literature_reference
+    target_column: reference_id
+
+  - source_table: experimental_measurement
+    source_column: entry_id
+    target_table: material_entry
+    target_column: entry_id
+
+  - source_table: experimental_measurement
+    source_column: reference_id
+    target_table: literature_reference
+    target_column: reference_id
+
+  - source_table: measured_property
+    source_column: measurement_id
+    target_table: experimental_measurement
+    target_column: measurement_id
+
+  - source_table: material_synthesis
+    source_column: entry_id
+    target_table: material_entry
+    target_column: entry_id
+
+  - source_table: material_synthesis
+    source_column: synthesis_id
+    target_table: synthesis_method
+    target_column: synthesis_id
+
+  - source_table: material_synthesis
+    source_column: reference_id
+    target_table: literature_reference
+    target_column: reference_id
+
+  - source_table: material_defect
+    source_column: entry_id
+    target_table: material_entry
+    target_column: entry_id
+
+  - source_table: material_defect
+    source_column: defect_type_id
+    target_table: defect_type
+    target_column: defect_type_id
+
+  - source_table: material_defect
+    source_column: dopant_element_id
+    target_table: element
+    target_column: element_id
+
+  - source_table: band_structure
+    source_column: calculation_id
+    target_table: calculation
+    target_column: calculation_id
+
+  - source_table: band_structure
+    source_column: entry_id
+    target_table: material_entry
+    target_column: entry_id
+
+  - source_table: density_of_states
+    source_column: calculation_id
+    target_table: calculation
+    target_column: calculation_id
+
+  - source_table: density_of_states
+    source_column: entry_id
+    target_table: material_entry
+    target_column: entry_id
+
+  - source_table: elastic_tensor
+    source_column: entry_id
+    target_table: material_entry
+    target_column: entry_id
+
+  - source_table: elastic_tensor
+    source_column: calculation_id
+    target_table: calculation
+    target_column: calculation_id
+
+  - source_table: magnetic_property
+    source_column: entry_id
+    target_table: material_entry
+    target_column: entry_id
+
+  - source_table: thermal_property
+    source_column: entry_id
+    target_table: material_entry
+    target_column: entry_id
+
+  - source_table: thermal_property
+    source_column: calculation_id
+    target_table: calculation
+    target_column: calculation_id
+
+  - source_table: surface_energy
+    source_column: entry_id
+    target_table: material_entry
+    target_column: entry_id
+
+  - source_table: grain_boundary
+    source_column: entry_id
+    target_table: material_entry
+    target_column: entry_id
+
+  - source_table: phase_diagram_entry
+    source_column: entry_id
+    target_table: material_entry
+    target_column: entry_id
+
+  - source_table: material_alloy_system
+    source_column: entry_id
+    target_table: material_entry
+    target_column: entry_id
+
+  - source_table: material_alloy_system
+    source_column: alloy_system_id
+    target_table: alloy_system
+    target_column: alloy_system_id

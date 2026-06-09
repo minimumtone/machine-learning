@@ -395,7 +395,7 @@ def compute_single_metrics(sql: str, exec_result: dict, expected_rows: list,
 def run_evaluation():
     """Main evaluation pipeline."""
     api_key = os.getenv("OPENAI_API_KEY", "")
-    model = os.getenv("LLM_MODEL", "gpt-4.1-mini")
+    model = os.getenv("LLM_MODEL", "gpt-5.5")
 
     has_llm = bool(api_key and api_key != "your_api_key_here")
 
