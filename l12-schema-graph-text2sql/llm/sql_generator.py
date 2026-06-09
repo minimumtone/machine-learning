@@ -66,7 +66,7 @@ def generate_sql_via_llm(
     if api_key is None:
         api_key = os.getenv("OPENAI_API_KEY", "")
     if model is None:
-        model = os.getenv("LLM_MODEL", "gpt-4.1-mini")
+        model = os.getenv("LLM_MODEL", "gpt-5.5")
 
     # Check API key early so fallback doesn't need the prompt template
     conditions = extract_conditions(user_query)
@@ -133,7 +133,7 @@ def _rule_based_fallback(
     allowed_joins: list[str],
 ) -> str:
     """Generate SQL deterministically when no LLM API key is available."""
-    conditions = extract_conditions(user_query)
+    conditions = extract_conditions(user_query)  # cached at caller if possible
     linked = link_schema(conditions)
 
     select_cols = ["m.entry_id", "m.formula"]
@@ -242,30 +242,42 @@ def pipeline(
     conditions = extract_conditions(user_query)
     linked = link_schema(conditions)
 
+    all_columns: list[str] | None = None
     if join_list is None:
-        join_list = [
-            "composition.entry_id = material_entry.entry_id",
-            "structure.entry_id = material_entry.entry_id",
-            "phase_stability.entry_id = material_entry.entry_id",
-            "calculation.entry_id = material_entry.entry_id",
-            "calculated_property.calculation_id = calculation.calculation_id",
-        ]
+        try:
+            from graph.graph_builder import build_table_graph
+            from graph.join_path_generator import get_allowed_join_list
+            from graph.schema_parser import get_columns
+            table_graph = build_table_graph()
+            join_list = get_allowed_join_list(table_graph)
+            all_columns = get_columns()
+        except Exception:
+            # Fallback to core 5-table joins if graph unavailable
+            join_list = [
+                "composition.entry_id = material_entry.entry_id",
+                "structure.entry_id = material_entry.entry_id",
+                "phase_stability.entry_id = material_entry.entry_id",
+                "calculation.entry_id = material_entry.entry_id",
+                "calculated_property.calculation_id = calculation.calculation_id",
+            ]
+            all_columns = None
 
-    all_columns = [
-        "material_entry.entry_id", "material_entry.formula",
-        "material_entry.reduced_formula", "material_entry.chemical_system",
-        "composition.element", "composition.atomic_fraction", "composition.site_label",
-        "structure.prototype", "structure.strukturbericht", "structure.lattice_a",
-        "structure.lattice_b", "structure.lattice_c", "structure.volume_per_atom",
-        "structure.formula_type", "structure.space_group_number",
-        "structure.space_group",
-        "phase_stability.formation_energy_per_atom",
-        "phase_stability.energy_above_hull", "phase_stability.is_stable",
-        "phase_stability.band_gap",
-        "calculation.method", "calculation.functional",
-        "calculated_property.property_name", "calculated_property.value",
-        "calculated_property.unit",
-    ]
+    if all_columns is None:
+        all_columns = [
+            "material_entry.entry_id", "material_entry.formula",
+            "material_entry.reduced_formula", "material_entry.chemical_system",
+            "composition.element", "composition.atomic_fraction", "composition.site_label",
+            "structure.prototype", "structure.strukturbericht", "structure.lattice_a",
+            "structure.lattice_b", "structure.lattice_c", "structure.volume_per_atom",
+            "structure.formula_type", "structure.space_group_number",
+            "structure.space_group",
+            "phase_stability.formation_energy_per_atom",
+            "phase_stability.energy_above_hull", "phase_stability.is_stable",
+            "phase_stability.band_gap",
+            "calculation.method", "calculation.functional",
+            "calculated_property.property_name", "calculated_property.value",
+            "calculated_property.unit",
+        ]
     result = generate_sql_via_llm(
         user_query=user_query,
         allowed_tables=linked["required_tables"],
@@ -281,13 +293,8 @@ def pipeline(
     result["conditions"] = conditions
     result["linked_schema"] = linked
 
-    if store_on_success:
-        add_example(
-            nl_query=user_query,
-            sql=result["sql"],
-            conditions=conditions,
-            row_count=-1,
-            source="pipeline",
-        )
+    # NOTE: store_on_success is deferred — caller must invoke add_example()
+    # after DB execution confirms the SQL is valid and returns rows.
+    result["_store_on_success"] = store_on_success
 
     return result

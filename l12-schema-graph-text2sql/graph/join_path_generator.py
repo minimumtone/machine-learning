@@ -131,7 +131,7 @@ def generate_joins_for_tables(
         else:
             join_table = tgt_t
             ja = _alias(tgt_t, used_aliases)
-            sa = _alias(src_t)  # src already joined; use its known alias
+            sa = TABLE_ALIASES.get(src_t, src_t[:3])  # src already joined; use its known alias
             on_clause = f"{ja}.{tgt_c} = {sa}.{src_c}"
         parts.append(f"JOIN {join_table} {ja} ON {on_clause}")
 

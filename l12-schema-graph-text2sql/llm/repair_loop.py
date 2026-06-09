@@ -108,7 +108,8 @@ def repair_loop(
         if result.get("valid", False):
             return {"sql": sql, "valid": True, "attempts": attempts}
 
-        error_msg = result.get("error", "Unknown validation error")
+        errors = result.get("errors", [])
+        error_msg = "; ".join(errors) if errors else "Unknown validation error"
         repair_result = attempt_repair(
             sql, error_msg, allowed_tables, allowed_columns, allowed_joins,
         )
@@ -207,8 +208,9 @@ def execution_repair_loop(
 
         # Determine error type and build diagnostic message
         if not exec_result.get("success"):
+            db_errors = exec_result.get("errors", [exec_result.get("error", "Unknown error")])
             error_msg = _build_execution_error_msg(
-                sql, exec_result.get("error", "Unknown error"), coverage,
+                sql, "; ".join(str(e) for e in db_errors), coverage,
             )
             repair_reason = "execution_error"
         else:

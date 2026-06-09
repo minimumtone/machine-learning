@@ -239,7 +239,7 @@ def _ast_check_limit(sql: str) -> bool:
             while parent is not None:
                 if isinstance(parent, sqlglot_exp.Subquery):
                     return False  # LIMIT is inside subquery, not outer
-                parent = parent.parent if hasattr(parent, 'parent') else None
+                parent = getattr(parent, "parent", None)
             return True
     return False
 
@@ -484,6 +484,18 @@ def check_column_type_safety(
     alias_to_table = {
         "m": "material_entry", "c": "composition", "s": "structure",
         "ps": "phase_stability", "calc": "calculation", "cp": "calculated_property",
+        "pd": "prototype_definition", "et": "elastic_tensor",
+        "tp": "thermal_property", "mp": "magnetic_property",
+        "se": "surface_energy", "gb": "grain_boundary",
+        "bs": "band_structure", "dos": "density_of_states",
+        "e": "element", "ep": "element_property",
+        "md": "material_defect", "dt": "defect_type",
+        "ms": "material_synthesis", "sm": "synthesis_method",
+        "lr": "literature_reference", "mr": "material_reference",
+        "ad": "application_domain", "ma": "material_application",
+        "em": "experimental_measurement", "mpr": "measured_property",
+        "pde": "phase_diagram_entry", "als": "alloy_system",
+        "mas": "material_alloy_system", "sg": "space_group",
     }
 
     # Pattern: alias.column op 'string_value'
@@ -538,6 +550,18 @@ def check_allowed_columns(
     alias_to_table = {
         "m": "material_entry", "c": "composition", "s": "structure",
         "ps": "phase_stability", "calc": "calculation", "cp": "calculated_property",
+        "pd": "prototype_definition", "et": "elastic_tensor",
+        "tp": "thermal_property", "mp": "magnetic_property",
+        "se": "surface_energy", "gb": "grain_boundary",
+        "bs": "band_structure", "dos": "density_of_states",
+        "e": "element", "ep": "element_property",
+        "md": "material_defect", "dt": "defect_type",
+        "ms": "material_synthesis", "sm": "synthesis_method",
+        "lr": "literature_reference", "mr": "material_reference",
+        "ad": "application_domain", "ma": "material_application",
+        "em": "experimental_measurement", "mpr": "measured_property",
+        "pde": "phase_diagram_entry", "als": "alloy_system",
+        "mas": "material_alloy_system", "sg": "space_group",
     }
     disallowed: list[str] = []
     for col_ref in used:
@@ -576,6 +600,18 @@ def check_join_validity(
     alias_to_table = {
         "m": "material_entry", "c": "composition", "s": "structure",
         "ps": "phase_stability", "calc": "calculation", "cp": "calculated_property",
+        "pd": "prototype_definition", "et": "elastic_tensor",
+        "tp": "thermal_property", "mp": "magnetic_property",
+        "se": "surface_energy", "gb": "grain_boundary",
+        "bs": "band_structure", "dos": "density_of_states",
+        "e": "element", "ep": "element_property",
+        "md": "material_defect", "dt": "defect_type",
+        "ms": "material_synthesis", "sm": "synthesis_method",
+        "lr": "literature_reference", "mr": "material_reference",
+        "ad": "application_domain", "ma": "material_application",
+        "em": "experimental_measurement", "mpr": "measured_property",
+        "pde": "phase_diagram_entry", "als": "alloy_system",
+        "mas": "material_alloy_system", "sg": "space_group",
     }
     warnings: list[str] = []
     # Match JOINs with or without explicit alias
@@ -611,9 +647,8 @@ def check_tautology(sql: str) -> list[str]:
         r"\bWHERE\s+1\s*=\s*1\b",
         r"\bOR\s+(\d+)\s*=\s*\1\b",
     ]
-    for pat in patterns:
-        if re.search(pat, clean):
-            warnings.append(f"Tautological condition detected")
+    if any(re.search(pat, clean) for pat in patterns):
+        warnings.append("Tautological condition detected")
     return warnings
 
 

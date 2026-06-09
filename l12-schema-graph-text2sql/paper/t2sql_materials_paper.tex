@@ -95,7 +95,7 @@ Ni$_3$Al、Co$_3$Ti、Al$_3$Sc等の既知L1$_2$化合物11件を含む）を
 評価指標には、SELECT列の差異による過小評価を解消する
 \textbf{共通カラム照合}（列名ベースの行マッチング）と、
 LIMIT切り詰め影響を排除する\textbf{LIMIT 10{,}000正規化}を導入した。
-Proposed手法（LLM: gpt-4.1-mini）は\textbf{構文妥当率99\%}、実行成功率99\%、
+Proposed手法（LLM: gpt-5.5）は\textbf{構文妥当率99\%}、実行成功率99\%、
 平均実行精度\textbf{73.4\%}を達成し、
 \textbf{テーブル幻覚率0\%}（LLM-onlyは12\%）を実現した。
 Medium難易度では実行精度93.4\%に達し、
@@ -347,7 +347,7 @@ FK関係だけでなくドメイン知識に基づくJOINパス選択が可能�
   {\scriptsize 30テーブル→\\ 必要な4テーブル}};
 
 \node[stepbox, fill=cyan!12, right=of steiner] (llmgen) {制約付き\\ LLM SQL生成\\
-  {\scriptsize gpt-4.1-mini}};
+  {\scriptsize gpt-5.5}};
 
 \node[stepbox, fill=red!10, right=of llmgen] (guard) {SQLGuard\\ 8層安全検証\\
   {\scriptsize \textcircled{\scriptsize 1}BL
@@ -471,7 +471,7 @@ SQL文の構文生成そのものではなく、
 
 % === Layer 4: Dual Generation ===
 \node[module, fill=blue!10, right=1.0cm of coverage, yshift=0.9cm] (rb) {Rule-based\\SQL生成\\{\scriptsize (\S\ref{sec:sql_generation})}};
-\node[module, fill=violet!15, right=1.0cm of coverage, yshift=-0.9cm] (llm) {LLM SQL生成\\{\scriptsize (\S\ref{sec:llm_mode})}\\{\scriptsize gpt-4.1-mini}};
+\node[module, fill=violet!15, right=1.0cm of coverage, yshift=-0.9cm] (llm) {LLM SQL生成\\{\scriptsize (\S\ref{sec:llm_mode})}\\{\scriptsize gpt-5.5}};
 
 % === Layer 5: Guard ===
 \node[module, fill=red!12, right=0.6cm of rb, yshift=-0.9cm] (guard) {SQLGuard\\8層検証\\{\scriptsize (\S\ref{sec:sql_guard})}\\{\scriptsize BL/SELECT/複文/関数/\\テーブル/カラム/JOIN/LIMIT}};
@@ -1008,7 +1008,7 @@ LLMフォールバック、明確化要求、またはスコープ外拒否に�
 Rule-basedモードの辞書カバレッジが不十分な場合
 （未登録元素、数値条件、複雑な表現など）、
 LLMベース生成にフォールバックする。
-LLM（本実験ではgpt-4.1-mini、API設定の詳細はSupplementary S7節を参照）は
+LLM（本実験ではgpt-5.5、API設定の詳細はSupplementary S7節を参照）は
 以下の構造化プロンプトを受け取る：
 
 \begin{enumerate}
@@ -1581,7 +1581,7 @@ L1$_2$型化合物探索に特化した100件の自然言語クエリを、
 
 スキーマ情報の提示方法がSQL品質に与える影響を評価するため、
 以下の5手法を比較した（表~\ref{tab:methods}）。
-LLMにはgpt-4.1-mini（OpenAI、2026年5月アクセス、Temperature=0.0）を使用した
+LLMにはgpt-5.5（OpenAI、2026年5月アクセス、Temperature=0.0）を使用した
 （詳細はSupplementary S7節）。
 
 \begin{table*}[htbp]
@@ -1689,11 +1689,11 @@ Supplementary S1--S2節に掲載する。
 \subsection{5手法ベースライン比較}
 \label{sec:baseline_comparison}
 
-表~\ref{tab:baseline_results}に5手法の比較結果を示す（gpt-4.1-mini使用、100クエリ、評価指標A+C適用）。
+表~\ref{tab:baseline_results}に5手法の比較結果を示す（gpt-5.5使用、100クエリ、評価指標A+C適用）。
 
 \begin{table*}[htbp]
   \centering
-  \caption{5手法のベースライン比較（100クエリ、gpt-4.1-mini、共通カラム照合+LIMIT 10{,}000）。}
+  \caption{5手法のベースライン比較（100クエリ、gpt-5.5、共通カラム照合+LIMIT 10{,}000）。}
   \label{tab:baseline_results}
   \small
   \begin{tabular}{clccccc}
@@ -1779,7 +1779,7 @@ Proposed手法は平均9{,}294~ms（Rule-basedの約282倍）である。
 
 \begin{table}[htbp]
   \centering
-  \caption{手法別レイテンシ比較（gpt-4.1-mini）。}
+  \caption{手法別レイテンシ比較（gpt-5.5）。}
   \label{tab:latency}
   \small
   \begin{tabular}{clcc}
@@ -2324,7 +2324,7 @@ NL $\to$ データ検索 $\to$ 材料設計仮説生成の
   \item \textbf{CALPHAD連携}：Schema Graph走査でRDBから候補を絞り込んだ後、
     CALPHADの自由エネルギー計算により温度依存相安定性を判定する
     二段階フローを想定する。
-  \item \textbf{LLM能力向上との組合せ}：gpt-4.1-miniでの実行精度73.4\%は、
+  \item \textbf{LLM能力向上との組合せ}：gpt-5.5での実行精度73.4\%は、
     Very Hard難易度（30.7\%）に改善余地がある。
     Chain-of-Thought推論やFew-Shotプロンプトの拡充との組合せが期待される。
   \item \textbf{大規模データ検証}：10万レコード・100テーブル以上での
@@ -2461,7 +2461,7 @@ S3節では代表的なクエリに対する各手法の生成SQL例を比較し
 S4節ではSQLインジェクション攻撃を含む安全性テストの詳細結果を報告する。
 S5節ではNi$_3$Al近傍格子定数候補の抽出結果、
 S6節では安定L1$_2$候補の形成エネルギーランキングを示す。
-S7節ではLLMモード（gpt-4.1-mini）の設定パラメータとプロンプト構成を記載する。
+S7節ではLLMモード（gpt-5.5）の設定パラメータとプロンプト構成を記載する。
 S8節では独立設計クエリ100件の詳細結果（クエリ文、難易度、実行成否、精度）を一覧する。
 
 % =====================================================================
@@ -2722,7 +2722,7 @@ Pt$_3$Al（$E_f = -0.55$~eV/atom）であり、
 \section{LLMモード設定}
 \label{sec:sup_llm_config}
 
-LLMモード（Level 2）ではOpenAI APIを介してgpt-4.1-miniを使用した。
+LLMモード（Level 2）ではOpenAI APIを介してgpt-5.5を使用した。
 表~\ref{tab:sup_llm_params}にモデルパラメータを示す。
 
 \begin{table}[htbp]
@@ -2734,7 +2734,7 @@ LLMモード（Level 2）ではOpenAI APIを介してgpt-4.1-miniを使用した
     \toprule
     パラメータ & 値 \\
     \midrule
-    モデル名 & gpt-4.1-mini（OpenAI） \\
+    モデル名 & gpt-5.5（OpenAI） \\
     APIアクセス日 & 2026年5月 \\
     Temperature & 0.0（決定的生成） \\
     Max tokens & 2{,}048 \\
@@ -2759,7 +2759,7 @@ LLMモード（Level 2）ではOpenAI APIを介してgpt-4.1-miniを使用した
 および\texttt{allowed\_schema.yaml}は検証資材リポジトリに収録されている。
 再現性確保のため、Temperature=0.0を使用しているが、
 LLMの内部バージョン更新により出力が変化する可能性がある。
-本研究の結果は2026年5月時点のgpt-4.1-miniに基づく。
+本研究の結果は2026年5月時点のgpt-5.5に基づく。
 
 % =====================================================================
 \section{独立設計クエリ100件の詳細結果}

@@ -1,6 +1,7 @@
 """Map extracted conditions to SQL WHERE-clause fragments."""
 from __future__ import annotations
 
+import functools
 import re
 from pathlib import Path
 from typing import Any
@@ -8,6 +9,7 @@ from typing import Any
 import yaml
 
 
+@functools.lru_cache(maxsize=1)
 def _load_terms(path: Path | None = None) -> dict[str, Any]:
     if path is None:
         path = Path(__file__).parent / "material_terms.yaml"
@@ -66,11 +68,37 @@ def map_element_condition(elements: list[str]) -> list[dict[str, Any]]:
 
 
 def map_stability_condition(
-    stability: str,
+    stability: str | list[str],
     terms: dict[str, Any] | None = None,
 ) -> dict[str, Any] | None:
     if terms is None:
         terms = _load_terms()
+
+    # Handle list of stability values (e.g. ["stable", "metastable"])
+    if isinstance(stability, list):
+        fragments: list[str] = []
+        tables: set[str] = set()
+        columns: set[str] = set()
+        for s in stability:
+            stab_info = terms.get("stability_terms", {}).get(s)
+            if not stab_info:
+                continue
+            cond = stab_info["condition"]
+            col_parts = cond["column"].split(".")
+            alias = "ps" if col_parts[0] == "phase_stability" else col_parts[0][:2]
+            fragments.append(f"{alias}.{col_parts[1]} {cond['operator']} {cond['value']}")
+            tables.add(col_parts[0])
+            columns.add(cond["column"])
+        if not fragments:
+            return None
+        sql_fragment = "(" + " OR ".join(fragments) + ")" if len(fragments) > 1 else fragments[0]
+        return {
+            "type": "stability",
+            "sql_fragment": sql_fragment,
+            "tables": list(tables),
+            "columns": list(columns),
+        }
+
     stab_info = terms.get("stability_terms", {}).get(stability)
     if not stab_info:
         return None

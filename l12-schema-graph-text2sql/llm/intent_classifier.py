@@ -61,7 +61,8 @@ _GREETING_PATTERNS: list[re.Pattern[str]] = [
 _UNSAFE_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:DROP|DELETE|UPDATE|INSERT|ALTER|TRUNCATE|GRANT|REVOKE)\s+", re.I),
     re.compile(r";\s*(?:DROP|DELETE|UPDATE|INSERT|ALTER)", re.I),
-    re.compile(r"secret|password|credential", re.I),
+    re.compile(r"(?:system|admin|root)\s*(?:secret|password|credential)", re.I),
+    re.compile(r"(?:show|dump|list|get|extract)\s*(?:secret|password|credential)", re.I),
 ]
 
 # Properties not in the DB schema

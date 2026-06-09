@@ -348,7 +348,8 @@ def _extract_sql(response: str) -> str:
 def compute_single_metrics(sql: str, exec_result: dict, expected_rows: list,
                            allowed_joins: list[str], hop_count: int,
                            tokens: int, latency_ms: int,
-                           expected_columns: list[str] | None = None) -> dict:
+                           expected_columns: list[str] | None = None,
+                           allowed_columns: list[str] | None = None) -> dict:
     """Compute metrics for a single query."""
     gen_tables = extract_tables_from_sql(sql)
     gen_columns = extract_columns_from_sql(sql)
@@ -373,7 +374,7 @@ def compute_single_metrics(sql: str, exec_result: dict, expected_rows: list,
         exec_result.get("rows", []), expected_rows,
     )
     h_table = hallucinated_table_rate(gen_tables, ALLOWED_TABLES)
-    h_column = hallucinated_column_rate(gen_columns, [])  # skip column check for brevity
+    h_column = hallucinated_column_rate(gen_columns, allowed_columns or [])
     h_join = hallucinated_join_rate(gen_joins, allowed_joins)
     is_correct = exec_acc >= 0.8
 
@@ -508,6 +509,7 @@ def run_evaluation():
                     sql, exec_result, expected_rows, allowed_joins,
                     hop_count, tokens, latency_ms,
                     expected_columns=expected_columns,
+                    allowed_columns=allowed_columns,
                 )
 
                 all_results[method].append({

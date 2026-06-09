@@ -8,6 +8,7 @@ Includes:
 """
 from __future__ import annotations
 
+import functools
 import re
 from pathlib import Path
 from typing import Any
@@ -30,6 +31,7 @@ _ALL_ELEMENTS = {
 }
 
 
+@functools.lru_cache(maxsize=1)
 def _load_terms(path: Path | None = None) -> dict[str, Any]:
     if path is None:
         path = Path(__file__).parent / "material_terms.yaml"
@@ -232,14 +234,15 @@ _JA_YORI_OP: dict[str, str] = {
 }
 
 
-def _build_numeric_regex() -> list[tuple[re.Pattern[str], str]]:
+@functools.lru_cache(maxsize=1)
+def _build_numeric_regex() -> tuple[tuple[re.Pattern[str], str], ...]:
     props_alt = "|".join(re.escape(p) for p in sorted(_PROPERTY_COLUMN_MAP, key=len, reverse=True))
     units_alt = "|".join(re.escape(u) for u in sorted(_UNIT_CONVERSION, key=len, reverse=True))
     compiled = []
     for pat_template, kind in _NUMERIC_PATTERNS:
         pat = pat_template.replace("{props}", props_alt).replace("{units}", units_alt)
         compiled.append((re.compile(pat, re.IGNORECASE), kind))
-    return compiled
+    return tuple(compiled)
 
 
 def extract_numeric_conditions(query: str) -> list[dict[str, Any]]:
@@ -372,21 +375,30 @@ def extract_formula(query: str) -> dict[str, Any] | None:
     if not candidates:
         return None
 
-    token = candidates[0]
-    parsed = _parse_formula_token(token)
-    if not parsed:
+    # Parse all formula candidates (supports multi-formula queries like "Ni3AlとCo3Ti")
+    all_formulas: list[dict[str, Any]] = []
+    for token in candidates:
+        parsed = _parse_formula_token(token)
+        if not parsed:
+            continue
+        elements = sorted(parsed.keys())
+        has_counts = any(v != 1.0 for v in parsed.values())
+        interpretation = "exact_formula" if has_counts else "contains_elements"
+        all_formulas.append({
+            "formula_str": token,
+            "composition": parsed,
+            "elements": elements,
+            "interpretation": interpretation,
+        })
+
+    if not all_formulas:
         return None
 
-    elements = sorted(parsed.keys())
-    has_counts = any(v != 1.0 for v in parsed.values())
-    interpretation = "exact_formula" if has_counts else "contains_elements"
-
-    return {
-        "formula_str": token,
-        "composition": parsed,
-        "elements": elements,
-        "interpretation": interpretation,
-    }
+    # Return first formula as primary (backward-compatible), all in "all_formulas"
+    result = all_formulas[0]
+    if len(all_formulas) > 1:
+        result["all_formulas"] = all_formulas
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -603,7 +615,7 @@ def extract_conditions(query: str) -> dict[str, Any]:
     for key, keywords in _EXTENDED_KEYWORDS.items():
         if key not in result:
             for kw in keywords:
-                if kw in ql:
+                if re.search(kw, ql):
                     result[key] = True
                     break
 

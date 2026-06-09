@@ -112,7 +112,7 @@ def diagnose_empty_result(
                 else:
                     missing.append(entry)
     except Exception as e:
-        return {"diagnosis": f"診断中にDBエラー: {e}", "suggestion": ""}
+        return {"diagnosis": "db_error", "message": f"診断中にDBエラー: {e}", "suggestion": ""}
 
     if missing:
         names = "、".join(e["label"] for e in missing)
