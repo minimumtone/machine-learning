@@ -605,7 +605,11 @@ LLMが利用可能なテーブル・カラム・型を理解する。
     「準安定」/ ``metastable'' $\to$ $0.001 <$ \texttt{energy\_above\_hull} $\leq 0.05$~eV/atom\\
     「安定または準安定」$\to$ \texttt{energy\_above\_hull} $\leq 0.05$~eV/atom\\
     SQL条件では浮動小数点精度を考慮し、等号比較（\texttt{= 0}）ではなく
-    範囲条件（\texttt{<= 0.001}）を使用する。
+    範囲条件（\texttt{<= 0.001}）を使用する。\\
+    なお、DBカラム \texttt{phase\_stability.is\_stable} はデータ投入時に
+    概ね $E_\text{hull} \leq 0.01$~eV/atom で付与されたブール値であり、
+    上記の辞書定義（$\leq 0.001$）とは閾値が異なる。
+    Gold SQLでは文脈に応じて両方を使い分けている。
 
   \item \textbf{物性用語}：物性記述からテーブル.カラム参照への対応。\\
     「格子定数」/ ``lattice constant'' $\to$ \texttt{structure.lattice\_a}\\
@@ -1662,6 +1666,8 @@ DB規模1{,}470件に対して実質的に制限なしと同等でありかつ�
 
 共通カラム照合およびLIMIT正規化の併用により+65.4ポイントの精度向上が得られた。
 いずれの修正も、gold SQLと生成SQLのペアさえあれば第三者が独立に再現可能である。
+なお、ベースライン手法の実行失敗行（B1: 92件、B2: 70件、B4: 91件）では
+LLM生成SQLが保存されていないため、精度0の結果のみ同梱CSVに記録されている。
 以降の結果はすべてA+C適用後の値を報告する。
 
 \subsubsection{回帰テスト（80件）}
@@ -1670,7 +1676,7 @@ DB規模1{,}470件に対して実質的に制限なしと同等でありかつ�
 曖昧入力（10件）、矛盾条件（2件）、SQLインジェクション（5件）、
 安全性検査（2件）、SQL検証（6件）、Coverage・パーサー（15件）、
 Intent Classifier（20件）の計80件を構築した。
-全80件がPASSを達成した。
+これらを含む全123件のユニットテストが全PASSを達成した。
 テストカテゴリの詳細および全テストケース一覧は
 Supplementary S1--S2節に掲載する。
 
@@ -1730,7 +1736,7 @@ Supplementary S1--S2節に掲載する。
     \toprule
     難易度 & 件数 & 主な構成 & 実行成功率 & 実行精度 \\
     \midrule
-    Easy & 20 & 1--2 hop、単純条件 & 100\% & \textbf{90.0\%} \\
+    Easy & 20 & 0--2 hop、単純条件 & 100\% & \textbf{90.0\%} \\
     Medium & 30 & 2--3 hop、横断検索 & 96.7\% & \textbf{83.9\%} \\
     Hard & 30 & 3--4 hop、複合条件 & 100\% & 64.3\% \\
     Very Hard & 20 & 3--4 hop、複合設計条件 & 100\% & 38.4\% \\
@@ -1855,7 +1861,7 @@ LLMがWHERE句を生成する役割分担が機能している。
 
 \paragraph{Very Hard失敗の内訳分析}
 
-Very Hard 20件のうち精度38.4\%（10件が精度50\%未満）の失敗内訳を以下に分類する。
+Very Hard 20件のうち精度38.4\%（10件が精度45\%未満）の失敗内訳を以下に分類する。
 
 \begin{table}[htbp]
   \centering
@@ -2179,10 +2185,12 @@ precision/F1の併記が必要である。
 
 \subsubsection{ベースラインの公平性}
 
-リペアループ（最大3回実行）とFew-Shot RAGはProposedのみに適用されている。
+リペアループ（リペア最大2回、初回生成を含め最大3回の実行機会）とFew-Shot RAGはProposedのみに適用されている。
 表~\ref{tab:baseline_results}の差分はSchema Graph制約のみの効果ではなく、
 複数要素の合算である。
-コンポーネント別アブレーション実験（リペアループOFF時のProposed精度等）は未実施であり、
+予備的なアブレーション実験（Traversal有無、RAG有無）は実施済みであり、
+結果は \texttt{experiments/results/} に格納されているが、
+体系的なコンポーネント別分離（リペアループOFF時のProposed精度等）は未実施であり、
 今後の課題である。
 
 \subsubsection{LLMの単一・単一実行}
@@ -2347,8 +2355,9 @@ NL $\to$ データ検索 $\to$ 材料設計仮説生成の
 \subsection{今後の展望}
 
 \begin{enumerate}
-  \item \textbf{コンポーネント別アブレーション実験}：
-    現状の5手法比較は「何を足したか」の検証であり、各コンポーネントの個別寄与が未分離である。
+  \item \textbf{体系的コンポーネント別アブレーション実験}：
+    予備的なTraversal/RAGアブレーションは実施済みだが、
+    各コンポーネントの個別寄与は未分離である。
     Schema Graphなし版、EXISTSパターンなし版、SQLGuardなし版、辞書なし版を構成し、
     各要素の精度寄与を定量化することで提案手法の設計根拠を明確化する。
   \item \textbf{FK循環スキーマでの動作検証}：
@@ -2523,7 +2532,8 @@ S8節では独立設計クエリ100件の詳細結果（クエリ文、難易度
 開発安全性テストとして6カテゴリ39件の回帰テスト、
 SQL検証テスト6件、Coverage Score・パーサーテスト15件、
 Intent Classifierテスト20件の計80件を構築した（表~\ref{tab:sup_test_categories}）。
-全80件がPASSを達成した。
+これらに加え、エイリアス解決テスト、スーパーセット検出テスト等を含む
+全123件のユニットテストが全PASSを達成した。
 
 \begin{table*}[htbp]
 \centering

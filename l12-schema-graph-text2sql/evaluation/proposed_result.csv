@@ -163,7 +163,7 @@ WHERE c.element = 'Ni'
   AND ps.is_stable = TRUE
   AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
 LIMIT 10000;",True,True,1.0,0.0,0.0,0.0,2000,4129,0,0
-q_medium_002,形成エネルギーが負のL1₂型化合物を元素組み合わせごとに整理して。,medium,2,proposed,,False,False,0.0,0.0,0.0,0.0,0,0,,
+q_medium_002,形成エネルギーが負のL1₂型化合物を元素組み合わせごとに整理して。,medium,2,proposed,,False,False,0.0,0.0,0.0,0.0,0,0,0,0
 q_medium_003,Alを含む安定なL1₂型金属間化合物を抽出して。,medium,3,proposed,"SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.strukturbericht, ps.formation_energy_per_atom, ps.energy_above_hull
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id

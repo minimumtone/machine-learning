@@ -62,42 +62,65 @@ def generate_error_report(
     proposed_path: Path,
     output_path: Path | None = None,
 ) -> str:
-    """Generate a Markdown error analysis report."""
+    """Generate a Markdown error analysis report.
+
+    Output format matches run_full_evaluation.py's write_error_analysis().
+    """
     if output_path is None:
         output_path = proposed_path.parent / "error_analysis_report.md"
 
-    sections: list[str] = ["# Error Analysis Report\n"]
+    sections: list[str] = [
+        "# Error Analysis Report\n",
+        "> Paper ref: Table (tab:error_analysis) -- error breakdown by method\n",
+    ]
 
-    for bp in baseline_paths:
+    all_paths = list(baseline_paths) + [proposed_path]
+    for bp in all_paths:
         data = _load_results_file(bp)
         if not data:
             continue
-        analysis = analyze_results(data, bp.stem)
-        sections.append(f"## {analysis['method']}\n")
-        sections.append(f"- Total queries: {analysis['total']}")
-        sections.append(
-            f"- Syntax validity: {analysis['syntax_validity_rate']:.1%}"
-        )
-        sections.append(
-            f"- Hallucinated tables: {analysis['hallucinated_table_count']}"
-        )
-        if analysis["hallucinated_tables"]:
-            sections.append(
-                f"  - Examples: {', '.join(analysis['hallucinated_tables'][:5])}"
-            )
-        sections.append("")
+        method = bp.stem
+        # Normalize method name from CSV filename
+        if method.startswith("baseline_result_"):
+            method = method.replace("baseline_result_", "")
+        total = len(data)
+        sections.append(f"\n## {method}\n")
+        sections.append(f"- Total queries: {total}")
 
-    data = _load_results_file(proposed_path)
-    if data:
-        analysis = analyze_results(data, "proposed")
-        sections.append(f"## Proposed Method\n")
-        sections.append(f"- Total queries: {analysis['total']}")
-        sections.append(
-            f"- Syntax validity: {analysis['syntax_validity_rate']:.1%}"
+        # Execution failures
+        exec_fail = sum(
+            1 for r in data
+            if str(r.get("execution_valid", "True")).lower() in ("false", "0", "")
         )
         sections.append(
-            f"- Hallucinated tables: {analysis['hallucinated_table_count']}"
+            f"- Execution failures: {exec_fail} ({exec_fail / total * 100:.1f}%)"
         )
+
+        # Syntax errors
+        syntax_err = sum(
+            1 for r in data
+            if str(r.get("syntax_valid", "True")).lower() in ("false", "0")
+        )
+        sections.append(f"- Syntax errors: {syntax_err}")
+
+        # Hallucinated tables / joins
+        ht = sum(
+            1 for r in data if float(r.get("hallucinated_table_rate", 0)) > 0
+        )
+        hj = sum(
+            1 for r in data if float(r.get("hallucinated_join_rate", 0)) > 0
+        )
+        sections.append(f"- Hallucinated tables: {ht}")
+        sections.append(f"- Hallucinated joins: {hj}")
+
+        # Lowest accuracy queries
+        sorted_by_acc = sorted(data, key=lambda r: float(r.get("execution_accuracy", 0)))
+        sections.append(f"\n### Lowest accuracy queries:")
+        for r in sorted_by_acc[:5]:
+            sections.append(
+                f"- {r['query_id']} ({r['difficulty']}): "
+                f"acc={float(r.get('execution_accuracy', 0)):.2f}"
+            )
         sections.append("")
 
     report = "\n".join(sections)
@@ -120,10 +143,16 @@ def _load_results_file(path: Path) -> list[dict[str, Any]]:
 
 if __name__ == "__main__":
     eval_dir = Path(__file__).parent
-    # Try CSV first (output of run_full_evaluation.py), then JSON
+    # CSV names match run_full_evaluation.py output
+    _baseline_suffixes = {
+        1: "llm_only",
+        2: "full_schema",
+        3: "rule_based",
+        4: "fk_list",
+    }
     baseline_paths = []
     for i in range(1, 5):
-        csv_path = eval_dir / f"baseline_result_baseline{i}_llm_only.csv"
+        csv_path = eval_dir / f"baseline_result_baseline{i}_{_baseline_suffixes[i]}.csv"
         json_path = eval_dir / f"baseline{i}_result.json"
         if csv_path.exists():
             baseline_paths.append(csv_path)

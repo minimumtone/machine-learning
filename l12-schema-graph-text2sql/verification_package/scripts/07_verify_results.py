@@ -918,7 +918,7 @@ def main():
         "8. Table 13（Graph Traversalアブレーション）は7テーブル・gpt-5.5の結果",
         "   → 検証パッケージ（30テーブル）ではTable 13の再現が不可能",
         "   → rows=0問題の直接原因、「論文結果の再現」に対する根本的障壁",
-        "10. 論文のJaccard類似度評価（5.1.6節）が検証パッケージに未実装",
+        "10. Jaccard類似度評価は以下の■18で実装済み",
     ]
     for lim in limitations:
         print(f"    {lim}")
@@ -1029,9 +1029,9 @@ def main():
           f"{len(divergent_pairs)}件")
 
     # ------------------------------------------------------------------
-    # ■ 18. テーブル選択Jaccard類似度（論文5.1.6節の指標）
+    # ■ 18. テーブル選択Jaccard類似度（論文テーブル整合性指標）
     # ------------------------------------------------------------------
-    print("\n■ 18. テーブル選択Jaccard類似度（論文5.1.6節の指標）")
+    print("\n■ 18. テーブル選択Jaccard類似度（論文テーブル整合性指標）")
 
     jaccard_full = []
     jaccard_trav = []
@@ -1058,7 +1058,7 @@ def main():
         print(f"    Full Schema:  Jaccard平均 = {avg_jf:.3f}")
         print(f"    Traversed:    Jaccard平均 = {avg_jt:.3f}")
         print(f"    差: +{avg_jt - avg_jf:.3f}")
-        print("    ※ 論文5.1.6節のJaccard=0.897は7テーブル環境のSG+RB vs LLM+SG比較")
+        print("    ※ Jaccard=0.897は旧版7テーブル環境のSG+RB vs LLM+SG比較の参考値")
         print("    ※ 上記は30テーブル環境のexpected_tables vs tables_usedのJaccard")
         check("Jaccard類似度: Traversed ≥ Full",
               avg_jt >= avg_jf,

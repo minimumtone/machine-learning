@@ -263,6 +263,7 @@ def main():
     )
 
     cur = conn.cursor()
+    min_counts = {
         "material_entry": 100,
         "composition": 100,
         "structure": 100,
@@ -272,6 +273,7 @@ def main():
         "prototype_definition": 1,
     }
     print("\n    Seedデータ件数:")
+    for tbl, min_count in min_counts.items():
         cur.execute(f"SELECT count(*) FROM {tbl}")
         cnt = cur.fetchone()[0]
         check(

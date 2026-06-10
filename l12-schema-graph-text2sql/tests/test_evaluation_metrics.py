@@ -59,8 +59,10 @@ def test_hallucinated_column_rate():
 
 
 def test_hallucinated_join_rate():
+    # Fix B5: first arg is now a SQL string, not a list of joins
+    sql = "SELECT * FROM a JOIN b ON a.x = b.y"
     rate = hallucinated_join_rate(
-        ["a.x = b.y"],
+        sql,
         ["a.x = b.y", "c.z = d.w"],
     )
     assert rate == 0.0
@@ -68,26 +70,32 @@ def test_hallucinated_join_rate():
 
 def test_hallucinated_join_rate_alias_resolution():
     """Test that alias-form joins are resolved to table-form before comparison."""
-    # Generated SQL uses aliases: c.entry_id = m.entry_id
-    # Allowed list uses full table names: composition.entry_id = material_entry.entry_id
+    # Fix B5: first arg is now a SQL string with aliases
+    sql = ("SELECT * FROM material_entry AS m "
+           "JOIN structure AS s ON s.entry_id = m.entry_id "
+           "JOIN phase_stability AS ps ON ps.entry_id = m.entry_id")
     rate = hallucinated_join_rate(
-        ["c.entry_id = m.entry_id", "ps.entry_id = m.entry_id"],
-        ["composition.entry_id = material_entry.entry_id",
+        sql,
+        ["structure.entry_id = material_entry.entry_id",
          "phase_stability.entry_id = material_entry.entry_id"],
     )
     assert rate == 0.0
 
     # Reversed order should also match (canonical sorting)
+    sql2 = "SELECT * FROM material_entry AS m JOIN structure AS s ON m.entry_id = s.entry_id"
     rate2 = hallucinated_join_rate(
-        ["m.entry_id = c.entry_id"],
-        ["composition.entry_id = material_entry.entry_id"],
+        sql2,
+        ["structure.entry_id = material_entry.entry_id"],
     )
     assert rate2 == 0.0
 
     # Truly hallucinated join should still be caught
+    sql3 = ("SELECT * FROM material_entry AS m "
+            "JOIN structure AS s ON s.entry_id = m.entry_id "
+            "JOIN x ON x.foo = y.bar")
     rate3 = hallucinated_join_rate(
-        ["c.entry_id = m.entry_id", "x.foo = y.bar"],
-        ["composition.entry_id = material_entry.entry_id"],
+        sql3,
+        ["structure.entry_id = material_entry.entry_id"],
     )
     assert rate3 == 0.5
 
