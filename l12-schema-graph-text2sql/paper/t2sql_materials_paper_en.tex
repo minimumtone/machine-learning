@@ -60,60 +60,29 @@
 \address[nims]{National Institute for Materials Science (NIMS),
   1-2-1 Sengen, Tsukuba, Ibaraki 305-0047, Japan}
 
+\date{\today}
+
 % =====================================================================
 \begin{abstract}
-L1$_2$-type intermetallic compounds (Cu$_3$Au-type, including Ni$_3$Al-based $\gamma'$ phase candidates) are
-important as precipitation-strengthening phases for next-generation heat-resistant superalloys; however,
-SQL knowledge is indispensable for cross-sectional exploration of structural, compositional, phase stability, and property data
-accumulated in first-principles calculation databases.
-In this study, we propose a \textbf{Schema Graph-constrained Text-to-SQL (T2SQL) method}.
-
-This method consists of the following technical components:
-(1)~a \textbf{domain-specific condition extractor} equipped with a Japanese--English bilingual materials terminology dictionary
-(including synonym normalization for L1$_2$/$\gamma'$/Cu$_3$Au-type expressions, a numerical condition parser, and a chemical formula parser),
-(2)~a \textbf{Schema Graph traversal engine} that represents foreign-key (FK) relationships as a NetworkX graph and
-computes minimal JOIN paths using Steiner tree approximation,
-(3)~a \textbf{multilayer SQL guard} (8-layer validation) that performs keyword blacklisting, table/column whitelisting,
-JOIN validation, and automatic LIMIT injection,
-(4)~a \textbf{Schema Linker} that infers tables and columns from extracted conditions, and
-(5)~\textbf{LLM-constrained SQL generation} using prompts with JOIN constraints.
-
-As a validation database, 1{,}471 entries across 5 prototypes
-(393 L1$_2$-type, 636 B2-type, 355 NaCl-type, 74 NiAs-type, and 13 BiF$_3$-type entries,
-including 11 known L1$_2$ compounds such as Ni$_3$Al, Co$_3$Ti, and Al$_3$Sc) were
-stored in a normalized RDB in which composition, structure, thermodynamic stability, calculation conditions, and properties are connected by foreign keys.
-For 100 evaluation queries (20 Easy, 30 Medium, 30 Hard, and 20 Very Hard,
-with up to 4-hop JOINs), comparative experiments were conducted for five methods:
-(i)~LLM-only (without schema information),
-(ii)~Full Schema (all schema presented),
-(iii)~Rule-based (without an LLM),
-(iv)~FK-list (only FK information presented), and
-(v)~\textbf{Proposed} (Schema Graph + entity extraction + Schema Linker + constrained LLM).
-
-As evaluation metrics, we introduced
-\textbf{common-column matching} (row matching based on column names), which eliminates underestimation due to differences in SELECT columns, and
-\textbf{LIMIT 10{,}000 normalization}, which removes the effect of LIMIT truncation.
-The Proposed method (LLM: gpt-5.5) achieved a \textbf{syntax validity rate of 99\%}, an execution success rate of 99\%,
-and a mean execution accuracy of \textbf{70.2\%},
-while realizing a \textbf{table hallucination rate of 0\%} (compared with 5\% for LLM-only).
-For Medium difficulty, the execution accuracy reached 83.9\%,
-and even for multihop queries of 2 hops or more, accuracies of 76.9\% (2-hop), 71.8\% (3-hop), and 45.4\% (4-hop) were recorded.
-A repair loop for execution errors or empty results (up to two retries)
-recovered 3 of the 4 cases that failed in the initial generation.
-By limiting the LLM's field of view to the necessary tables through Schema Graph traversal,
-the method simultaneously eliminated unnecessary JOINs and prevented table hallucination.
-In an additional evaluation using 100 queries (covering 30 tables) designed by an independent materials researcher,
-an execution accuracy of \textbf{69.0\%} was recorded,
-while maintaining an SQL syntax validity rate of 100.0\%.
-
-As a materials-engineering evaluation, the method achieved \textbf{complete rediscovery} (11/11) of the 11 known L1$_2$ compounds,
-ranking output of $\gamma'$ phase candidates (a weighted composite score of stability, lattice matching, and bulk modulus;
-top candidates: Cu$_3$Nb, Ni$_3$Al, Cu$_3$Ti, and Co$_3$Ti; however, Cu-based candidates require experimental validation),
-extraction of candidates with lattice constants near that of Ni$_3$Al, and automatic generation of materials-design hypotheses.
-
-Because this method is based on runtime introspection of FK relationships,
-it is architecturally applicable to arbitrary normalized materials RDBs (OQMD, Materials Project, AFLOW, etc.);
-however, domain adaptation of the terminology dictionary and Steiner tree performance for large-scale schemas require separate validation.
+Cross-sectional exploration of materials data accumulated in first-principles calculation databases
+requires SQL expertise, posing a significant barrier for materials researchers.
+This study proposes a Schema Graph-constrained Text-to-SQL method
+that automatically generates SQL queries on normalized relational databases from natural-language questions.
+The proposed method integrates a pipeline consisting of
+foreign-key relationship representation as a graph with Steiner tree approximation for minimal JOIN path identification,
+a domain-specific condition extractor for materials terminology normalization,
+a multilayer SQL guard for table and column hallucination prevention,
+and schema-constrained large language model (LLM) generation.
+Using a validation database of 30 tables containing 1{,}471 entries centered on L1$_2$-type intermetallic compounds,
+comparative experiments with five methods on 100 evaluation queries (up to 4-hop JOINs) showed that
+the proposed method achieved a mean execution accuracy of 70.2\% with a syntax validity rate of 99\% and a table hallucination rate of 0\%,
+representing an improvement of +43.6 percentage points over the full-schema baseline (26.6\%).
+In an additional evaluation using 100 queries designed by an independent materials researcher,
+an execution accuracy of 79.3\% was recorded while maintaining a syntax validity rate of 100\%.
+For materials-engineering validation, the method achieved complete rediscovery of all 11 known L1$_2$ compounds
+and ranking output of $\gamma'$ phase candidates.
+Because the method is based on runtime introspection of foreign-key relationships,
+it is applicable to arbitrary normalized materials databases.
 
 \end{abstract}
 
