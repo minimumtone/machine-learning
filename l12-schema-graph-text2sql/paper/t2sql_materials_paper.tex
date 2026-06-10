@@ -2223,6 +2223,24 @@ DAIL-SQL/DIN-SQL等の既存SOTAパイプラインを同DBに適用した比較�
 
 gold SQL・期待結果は著者1名が作成し、第三者による独立検証は行っていない。
 
+\subsubsection{用語辞書のカバレッジ限界}
+
+現行の用語辞書（表~\ref{tab:numeric_patterns}）は5種類の数値条件パターンと
+L1$_2$探索に特化したプロトタイプ・物性語彙を収録するが、
+カバレッジは検証DBの30テーブルに限定される。
+具体的な課題は以下の通りである：
+（1）数値条件パーサー（表~\ref{tab:numeric_patterns}）は
+日英の比較・範囲表現に対応するが、
+「室温付近」「高温」等の定性的表現への変換規則が未実装であり、
+Coverage Scoreの低下によりLLMフォールバックが発生する；
+（2）物性名$\to$カラム名マッピング（\texttt{\_PROPERTY\_COLUMN\_MAP}）は
+現在約20物性に限定されており、
+熱膨張係数やポアソン比等の拡張スキーマ物性が未登録である；
+（3）プロトタイプ同義語辞書はL1$_2$/B2/NaCl/NiAs/BiF$_3$の5種に限定され、
+Heusler型やPerovskite型等の拡張には手動登録が必要である。
+辞書カバレッジの拡充は、Rule-basedモードの適用範囲拡大と
+LLM API呼び出し削減の双方に直結するため、優先度の高い改善課題である。
+
 \subsection{大規模データベースにおける精度変化の想定}
 \label{sec:scale_prediction}
 
@@ -2400,6 +2418,16 @@ NL $\to$ データ検索 $\to$ 材料設計仮説生成の
   \item \textbf{LLM能力向上との組合せ}：gpt-5.5での実行精度70.2\%は、
     Very Hard難易度（42.0\%）に改善余地がある。
     Chain-of-Thought推論やFew-Shotプロンプトの拡充との組合せが期待される。
+  \item \textbf{用語辞書の体系的拡張}：
+    現行の数値条件パーサー（表~\ref{tab:numeric_patterns}）を
+    定性的表現（「室温付近」$\to$ \texttt{BETWEEN 273 AND 323}、
+    「高温」$\to$ \texttt{> 1000}）に拡張し、
+    Coverage Scoreの底上げを図る。
+    また、物性名$\to$カラム名マッピングを
+    スキーマメタデータからの半自動生成に移行し、
+    新テーブル追加時の辞書保守コストを削減する。
+    プロトタイプ同義語もCrystallographic Open Database等の
+    外部オントロジーとの連携により自動拡充を検討する。
   \item \textbf{大規模データ検証}：10万レコード・100テーブル以上での
     Steiner木近似の計算性能とSQL生成精度の検証が残る。
   \item \textbf{SQLGuardのAST検証完全化}：
