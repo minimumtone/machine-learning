@@ -707,6 +707,7 @@ def run_materials_analysis(conn) -> None:
     known_formulas = ["Ni3Al", "Ni3Ga", "Ni3Ge", "Co3Ti", "Al3Sc",
                       "Al3Ti", "Pt3Al", "Ir3Nb", "Co3Al", "Co3Ta", "Co3W"]
     # Fix: Use DISTINCT ON formula to avoid counting duplicates from multiple sources
+    # Prefer rows with non-null lattice_a so the known L1₂ table has lattice values
     cur.execute("""
         SELECT DISTINCT ON (m.formula)
                m.formula, s.prototype, s.lattice_a, ps.energy_above_hull,
@@ -715,7 +716,9 @@ def run_materials_analysis(conn) -> None:
         JOIN structure s ON s.entry_id = m.entry_id
         JOIN phase_stability ps ON ps.entry_id = m.entry_id
         WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-        ORDER BY m.formula, ps.energy_above_hull ASC
+        ORDER BY m.formula,
+               CASE WHEN s.lattice_a IS NULL THEN 1 ELSE 0 END,
+               ps.energy_above_hull ASC
     """)
     all_l12 = cur.fetchall()
     recovery_path = EVAL_DIR / "known_l12_recovery.csv"
@@ -755,8 +758,9 @@ def run_materials_analysis(conn) -> None:
             w.writerow([*row, cls])
     print(f"  Stable candidates written to {stable_path}")
 
-    # 3. Ni3Al lattice-matched candidates (deduplicated)
+    # 3. Ni3Al lattice-matched candidates (|Δa| ≤ 0.03, deduplicated)
     # Reference: 3.57 Å (hardcoded, consistent with paper and CSV)
+    # Use ROUND to avoid floating-point exclusion at boundary (e.g. 3.60 - 3.57 = 0.030000...025)
     NI3AL_LATTICE = 3.57
     cur.execute(f"""
         SELECT DISTINCT ON (m.formula)
@@ -767,6 +771,8 @@ def run_materials_analysis(conn) -> None:
         JOIN structure s ON s.entry_id = m.entry_id
         JOIN phase_stability ps ON ps.entry_id = m.entry_id
         WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+          AND s.lattice_a IS NOT NULL
+          AND ROUND(CAST(ABS(s.lattice_a - {NI3AL_LATTICE}) AS numeric), 3) <= 0.03
         ORDER BY m.formula, ABS(s.lattice_a - {NI3AL_LATTICE}) ASC
     """)
     lattice_path = EVAL_DIR / "ni3al_lattice_matched_candidates.csv"
@@ -776,7 +782,7 @@ def run_materials_analysis(conn) -> None:
                      "energy_above_hull", "formation_energy_per_atom"])
         for row in cur.fetchall():
             w.writerow(row)
-    print(f"  Lattice-matched candidates written to {lattice_path}")
+    print(f"  Lattice-matched candidates written to {lattice_path} ({cur.rowcount} rows)")
 
     # 4. γ' candidate ranking (deduplicated by formula)
     cur.execute("""

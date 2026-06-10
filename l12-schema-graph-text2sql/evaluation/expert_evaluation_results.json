@@ -29,7 +29,7 @@
     }
   },
   "comparison": {
-    "note": "author_designed accuracy must be re-evaluated with the same pipeline version; 63.0 was from an earlier pipeline. Current author-designed mean execution_accuracy is 70.2% (binary correct rate).",
+    "note": "author_designed and expert_designed were evaluated with different pipeline versions. Current author-designed mean execution_accuracy is 70.2%. Expert-designed mean execution_accuracy is 79.3%, and binary correct rate is 77.0%.",
     "expert_designed": {
       "queries": 100,
       "binary_correct_rate": 77.0,

@@ -246,6 +246,9 @@ def main():
         if r["is_correct"]:
             diff_stats[d]["correct"] += 1
 
+    # Mean execution accuracy (continuous, distinct from binary correct rate)
+    mean_exec_acc = sum(r["execution_accuracy"] for r in results) / len(results) * 100
+
     print("\n" + "="*60)
     print("EXPERT EVALUATION RESULTS (Proposed Method)")
     print("="*60)
@@ -280,8 +283,16 @@ def main():
                                   for d, s in diff_stats.items()},
             },
             "comparison": {
-                "note": "author_designed must be re-evaluated with the same pipeline version",
-                "expert_designed": {"queries": total, "accuracy_f1_binary": round(100*correct/total, 1)},
+                "note": ("author_designed and expert_designed were evaluated with different "
+                         "pipeline versions. Current author-designed mean execution_accuracy "
+                         "is 70.2%. Expert-designed mean execution_accuracy is "
+                         f"{round(mean_exec_acc, 1)}%, and binary correct rate is "
+                         f"{round(100*correct/total, 1)}%."),
+                "expert_designed": {
+                    "queries": total,
+                    "binary_correct_rate": round(100 * correct / total, 1),
+                    "mean_execution_accuracy": round(mean_exec_acc, 1),
+                },
             },
             "results": results,
         }, f, indent=2, ensure_ascii=False)
