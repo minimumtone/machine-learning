@@ -29,13 +29,11 @@
     }
   },
   "comparison": {
-    "author_designed": {
-      "queries": 100,
-      "accuracy": 63.0
-    },
+    "note": "author_designed accuracy must be re-evaluated with the same pipeline version; 63.0 was from an earlier pipeline. Current author-designed mean execution_accuracy is 70.2% (binary correct rate).",
     "expert_designed": {
       "queries": 100,
-      "accuracy": 77.0
+      "binary_correct_rate": 77.0,
+      "mean_execution_accuracy": 79.3
     }
   },
   "results": [
