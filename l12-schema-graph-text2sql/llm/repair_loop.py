@@ -1,13 +1,15 @@
 """SQL repair loop: retry SQL generation when validation or execution fails.
 
-Supports three failure modes:
+Supports four failure modes:
 1. Validation failure (SQLGuard reject) — repair with validation error message
 2. Execution failure (PostgreSQL error) — repair with DB error message
 3. Empty result (0 rows returned) — repair with coverage diagnostic hints
+4. Superset result (too many rows / missing WHERE) — repair with condition feedback
 """
 from __future__ import annotations
 
 import os
+import re
 import time
 from pathlib import Path
 from typing import Any, Callable
@@ -37,7 +39,10 @@ def _call_llm(prompt: str, system_msg: str, model: str, api_key: str) -> tuple[s
     else:
         create_kwargs["temperature"] = 0.0
         create_kwargs["max_tokens"] = 512
-    resp = client.chat.completions.create(**create_kwargs)
+    try:
+        resp = client.chat.completions.create(**create_kwargs)
+    except Exception:
+        return "", 0
     raw = resp.choices[0].message.content or ""
     sql = extract_sql_from_response(raw)
     usage = resp.usage
@@ -84,9 +89,9 @@ def attempt_repair(
         model, api_key,
     )
     return {
-        "repaired_sql": sql,
+        "repaired_sql": sql if sql else original_sql,
         "repair_prompt": prompt,
-        "success": True,
+        "success": bool(sql),
         "tokens": tokens,
     }
 
@@ -120,6 +125,149 @@ def repair_loop(
         sql = repair_result["repaired_sql"]
 
     return {"sql": sql, "valid": False, "attempts": attempts}
+
+
+# ── Superset / condition-insufficiency detection ──
+
+
+def count_sql_conditions(sql: str) -> int:
+    """Count the number of WHERE/AND/OR filtering conditions in SQL.
+
+    Strips string literals first to avoid false positives.
+    """
+    cleaned = re.sub(r"'[^']*'", "'X'", sql)
+    cleaned = re.sub(r"/\*.*?\*/", " ", cleaned, flags=re.DOTALL)
+    cleaned = re.sub(r"--[^\n]*", " ", cleaned)
+    upper = cleaned.upper()
+    count = 0
+    # Count WHERE clause presence
+    if "WHERE" in upper:
+        count += 1
+    # Count AND/OR conditions (each adds a condition)
+    count += len(re.findall(r"\bAND\b", upper))
+    count += len(re.findall(r"\bOR\b", upper))
+    return count
+
+
+def count_expected_conditions(conditions: dict[str, Any]) -> int:
+    """Estimate the expected number of SQL WHERE conditions from extracted entities.
+
+    Each recognized entity type maps to at least one WHERE condition.
+    """
+    count = 0
+    if conditions.get("prototype"):
+        count += 1
+    elements = conditions.get("contains_elements", [])
+    if elements:
+        count += len(elements)  # Each element → subquery or AND
+    if conditions.get("stability"):
+        count += 1
+    props = conditions.get("properties", [])
+    if props:
+        count += len(props)
+    numeric = conditions.get("numeric_conditions", [])
+    if numeric:
+        count += len(numeric)
+    if conditions.get("formula"):
+        count += 1
+    return count
+
+
+def detect_superset(
+    sql: str,
+    row_count: int,
+    conditions: dict[str, Any],
+    total_db_rows: int = 1471,
+) -> dict[str, Any]:
+    """Detect if a query result is likely a superset (missing WHERE conditions).
+
+    Returns a dict with:
+      - is_superset: bool
+      - reason: str (diagnostic message)
+      - sql_conditions: int
+      - expected_conditions: int
+      - row_ratio: float
+    """
+    sql_conds = count_sql_conditions(sql)
+    expected_conds = count_expected_conditions(conditions)
+    row_ratio = row_count / total_db_rows if total_db_rows > 0 else 0.0
+
+    is_superset = False
+    reasons: list[str] = []
+
+    # Heuristic 1: SQL has significantly fewer conditions than expected
+    if expected_conds > 0 and sql_conds < expected_conds:
+        missing = expected_conds - sql_conds
+        if missing >= 2 or (expected_conds >= 2 and sql_conds == 0):
+            is_superset = True
+            reasons.append(
+                f"SQL has {sql_conds} conditions but query mentions "
+                f"{expected_conds} constraints (missing ~{missing})"
+            )
+
+    # Heuristic 2: Row count is suspiciously high relative to DB size
+    if row_ratio > 0.5 and expected_conds >= 2:
+        is_superset = True
+        reasons.append(
+            f"Query returned {row_count} rows ({row_ratio:.0%} of DB), "
+            f"suggesting insufficient filtering"
+        )
+
+    # Heuristic 3: Row count > 100 with multiple expected conditions but few SQL conditions
+    if row_count > 100 and expected_conds >= 2 and sql_conds <= 1:
+        is_superset = True
+        reasons.append(
+            f"High row count ({row_count}) with only {sql_conds} SQL condition(s) "
+            f"despite {expected_conds} expected constraints"
+        )
+
+    return {
+        "is_superset": is_superset,
+        "reason": "; ".join(reasons) if reasons else "No superset detected",
+        "sql_conditions": sql_conds,
+        "expected_conditions": expected_conds,
+        "row_ratio": round(row_ratio, 3),
+    }
+
+
+def _build_superset_msg(
+    sql: str,
+    question: str,
+    row_count: int,
+    conditions: dict[str, Any],
+    superset_info: dict[str, Any],
+) -> str:
+    """Build diagnostic message for superset results."""
+    parts = [
+        f"The query returned {row_count} rows, which appears to be a SUPERSET "
+        f"of the expected results (too many rows due to missing WHERE conditions).",
+        f"Original question: {question}",
+        f"Diagnosis: {superset_info['reason']}",
+        "",
+        "Missing conditions detected from the query:",
+    ]
+
+    # List specific missing conditions
+    if conditions.get("contains_elements"):
+        parts.append(f"- Element filter: {conditions['contains_elements']}")
+    if conditions.get("prototype"):
+        parts.append(f"- Prototype/structure filter: {conditions['prototype']}")
+    if conditions.get("stability"):
+        parts.append(f"- Stability condition: {conditions['stability']}")
+    if conditions.get("properties"):
+        parts.append(f"- Property filters: {conditions['properties']}")
+    if conditions.get("numeric_conditions"):
+        for nc in conditions["numeric_conditions"]:
+            parts.append(f"- Numeric condition: {nc}")
+    if conditions.get("formula"):
+        parts.append(f"- Formula condition: {conditions['formula']}")
+
+    parts.append("")
+    parts.append(
+        "Please add the missing WHERE conditions to narrow the result set. "
+        "Each constraint from the original question should map to a WHERE clause."
+    )
+    return "\n".join(parts)
 
 
 # ── Enhanced execution-aware repair loop ──
@@ -174,16 +322,18 @@ def execution_repair_loop(
     allowed_columns: list[str],
     allowed_joins: list[str],
     coverage: dict[str, Any] | None = None,
+    conditions: dict[str, Any] | None = None,
     max_retries: int = 2,
     model: str | None = None,
     api_key: str | None = None,
 ) -> dict[str, Any]:
-    """Retry SQL when execution fails or returns 0 rows.
+    """Retry SQL when execution fails, returns 0 rows, or returns a superset.
 
     This is called **after** the initial SQL has passed SQLGuard validation.
-    It handles two failure modes:
+    It handles three failure modes:
       1. DB execution error (syntax ok but runtime failure)
       2. Empty result set (query runs but returns nothing)
+      3. Superset result (too many rows / missing WHERE conditions)
 
     Returns dict with: sql, exec_result, attempts, repair_tokens
     """
@@ -195,6 +345,33 @@ def execution_repair_loop(
         exec_result = execute_fn(sql)
 
         if exec_result.get("success") and exec_result.get("row_count", 0) > 0:
+            # Check for superset (only if conditions were extracted)
+            if conditions and i < max_retries:
+                row_count = exec_result.get("row_count", 0)
+                superset_info = detect_superset(sql, row_count, conditions)
+                if superset_info["is_superset"]:
+                    error_msg = _build_superset_msg(
+                        sql, question, row_count, conditions, superset_info,
+                    )
+                    repair_result = attempt_repair(
+                        sql, error_msg, allowed_tables, allowed_columns,
+                        allowed_joins, model=model, api_key=api_key,
+                    )
+                    repair_tokens = repair_result.get("tokens", 0)
+                    total_repair_tokens += repair_tokens
+                    attempts.append({
+                        "attempt": i + 1,
+                        "reason": "superset",
+                        "error": error_msg,
+                        "repair": repair_result,
+                        "tokens": repair_tokens,
+                        "superset_info": superset_info,
+                    })
+                    if repair_result.get("success"):
+                        new_sql = repair_result["repaired_sql"]
+                        if new_sql != sql:
+                            sql = new_sql
+                            continue  # Re-execute with repaired SQL
             return {
                 "sql": sql,
                 "exec_result": exec_result,
