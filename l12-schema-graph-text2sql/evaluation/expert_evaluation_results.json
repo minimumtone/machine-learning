@@ -1,4 +1,9 @@
 {
+  "paper_ref": {
+    "summary": "Table (tab:independent_eval) -- author vs independent evaluation",
+    "by_difficulty": "Table (tab:independent_eval) difficulty rows",
+    "results": "Supplementary (tab:sup_expert_detail), (tab:sup_expert_category)"
+  },
   "summary": {
     "total": 100,
     "syntax_valid": 100,

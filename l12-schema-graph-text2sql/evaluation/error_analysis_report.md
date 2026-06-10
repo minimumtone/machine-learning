@@ -1,5 +1,6 @@
 # Error Analysis Report
 
+> Paper ref: Table (tab:error_analysis) -- error breakdown by method
 
 ## baseline1_llm_only
 
