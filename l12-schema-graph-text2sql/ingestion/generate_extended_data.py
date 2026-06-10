@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate data for the 30-table extended schema.
 
-Produces ~1,471 material entries across 5 prototypes (L12, B2, A15, D019, C15)
+Produces ~1,471 material entries across 5 prototypes (L12, B2, NaCl, NiAs, BiF3)
 with full coverage of all 30 tables. Output: a single SQL file that can be
 loaded after the schema (extended_schema.sql) is applied.
 
@@ -28,12 +28,12 @@ PROTOTYPES = {
              "sg_number": 221, "sg_symbol": "Pm-3m"},
     "B2":  {"strukturbericht": "B2", "formula_type": "AB", "crystal_system": "cubic",
              "sg_number": 221, "sg_symbol": "Pm-3m"},
-    "A15": {"strukturbericht": "A15", "formula_type": "A3B", "crystal_system": "cubic",
-             "sg_number": 223, "sg_symbol": "Pm-3n"},
-    "D019": {"strukturbericht": "D019", "formula_type": "A3B", "crystal_system": "hexagonal",
+    "NaCl": {"strukturbericht": "B1", "formula_type": "AB", "crystal_system": "cubic",
+              "sg_number": 225, "sg_symbol": "Fm-3m"},
+    "NiAs": {"strukturbericht": "B81", "formula_type": "AB", "crystal_system": "hexagonal",
               "sg_number": 194, "sg_symbol": "P6_3/mmc"},
-    "C15": {"strukturbericht": "C15", "formula_type": "AB2", "crystal_system": "cubic",
-             "sg_number": 227, "sg_symbol": "Fd-3m"},
+    "BiF3": {"strukturbericht": "D03", "formula_type": "AB3", "crystal_system": "cubic",
+              "sg_number": 225, "sg_symbol": "Fm-3m"},
 }
 
 A_ELEMENTS = [
@@ -145,7 +145,7 @@ def _esc(s: str) -> str:
 def generate(out: TextIO = sys.stdout) -> None:
     """Generate full INSERT statements for 30-table schema."""
     out.write("-- Auto-generated data for 30-table extended schema\n")
-    out.write("-- ~1,471 material entries across 5 prototypes\n")
+    out.write("-- ~1,471 material entries across 5 prototypes (L12, B2, NaCl, NiAs, BiF3)\n")
     out.write("BEGIN;\n\n")
 
     # --- 1. Element table ---
@@ -205,7 +205,7 @@ def generate(out: TextIO = sys.stdout) -> None:
     for sid, (name, category) in enumerate(SYNTHESIS_METHODS, 1):
         synth_ids[name] = sid
         out.write(
-            f"INSERT INTO synthesis_method (method_id, method_name, category, description) "
+            f"INSERT INTO synthesis_method (synthesis_id, method_name, category, description) "
             f"VALUES ({sid}, '{name}', '{category}', '{name} synthesis');\n"
         )
 
@@ -215,7 +215,7 @@ def generate(out: TextIO = sys.stdout) -> None:
     for did, (name, category, desc) in enumerate(DEFECT_TYPES, 1):
         defect_ids[name] = did
         out.write(
-            f"INSERT INTO defect_type (defect_type_id, name, category, description) "
+            f"INSERT INTO defect_type (defect_type_id, defect_name, category, description) "
             f"VALUES ({did}, '{name}', '{category}', '{_esc(desc)}');\n"
         )
 
@@ -225,8 +225,8 @@ def generate(out: TextIO = sys.stdout) -> None:
     for dom_id, (name, sector) in enumerate(APPLICATION_DOMAINS, 1):
         domain_ids[name] = dom_id
         out.write(
-            f"INSERT INTO application_domain (domain_id, domain_name, sector, description) "
-            f"VALUES ({dom_id}, '{_esc(name)}', '{sector}', '{_esc(name)} applications');\n"
+            f"INSERT INTO application_domain (domain_id, domain_name, description) "
+            f"VALUES ({dom_id}, '{_esc(name)}', '{_esc(name)} applications');\n"
         )
 
     # --- 8. Alloy systems ---
@@ -245,6 +245,7 @@ def generate(out: TextIO = sys.stdout) -> None:
     entry_count = 0
     calc_count = 0
     prop_count = 0
+    ref_count = 0
 
     def _gen_entry(
         proto_key: str, a_elem: str, b_elem: str,
@@ -252,7 +253,7 @@ def generate(out: TextIO = sys.stdout) -> None:
         bulk_mod: float, shear_mod: float,
         source: str = "OQMD",
     ) -> None:
-        nonlocal entry_count, calc_count, prop_count
+        nonlocal entry_count, calc_count, prop_count, ref_count
         entry_count += 1
         eid = f"entry_{entry_count:05d}"
         pinfo = PROTOTYPES[proto_key]
@@ -263,6 +264,9 @@ def generate(out: TextIO = sys.stdout) -> None:
         elif pinfo["formula_type"] == "AB":
             formula = f"{a_elem}{b_elem}"
             a_frac, b_frac = 0.50, 0.50
+        elif pinfo["formula_type"] == "AB3":
+            formula = f"{a_elem}{b_elem}3"
+            a_frac, b_frac = 0.25, 0.75
         else:  # AB2
             formula = f"{a_elem}{b_elem}2"
             a_frac, b_frac = 0.333, 0.667
@@ -332,13 +336,11 @@ def generate(out: TextIO = sys.stdout) -> None:
 
         # elastic_tensor (50% of entries)
         if random.random() < 0.5:
-            c11 = bulk_mod * 1.5 + random.uniform(-20, 20)
-            c12 = bulk_mod * 0.8 + random.uniform(-10, 10)
             c44 = shear_mod * 0.9 + random.uniform(-5, 5)
             out.write(
-                f"INSERT INTO elastic_tensor (entry_id, c11, c12, c44, "
+                f"INSERT INTO elastic_tensor (entry_id, "
                 f"bulk_modulus_vrh, shear_modulus_vrh, is_stable) VALUES "
-                f"('{eid}', {c11:.1f}, {c12:.1f}, {c44:.1f}, "
+                f"('{eid}', "
                 f"{bulk_mod:.1f}, {shear_mod:.1f}, {'TRUE' if c44 > 0 else 'FALSE'});\n"
             )
 
@@ -368,20 +370,19 @@ def generate(out: TextIO = sys.stdout) -> None:
         if random.random() < 0.25:
             out.write(
                 f"INSERT INTO band_structure (entry_id, calculation_id, "
-                f"band_gap_ev, is_direct, vbm_energy, cbm_energy, fermi_energy) VALUES "
-                f"('{eid}', '{cid}', {random.uniform(0, 3.0):.3f}, "
+                f"is_direct_gap, cbm_energy, vbm_energy) VALUES "
+                f"('{eid}', '{cid}', "
                 f"{'TRUE' if random.random() > 0.5 else 'FALSE'}, "
-                f"{random.uniform(-5, -1):.3f}, {random.uniform(0, 3):.3f}, "
-                f"{random.uniform(-2, 0):.3f});\n"
+                f"{random.uniform(0, 3):.3f}, {random.uniform(-5, -1):.3f});\n"
             )
 
         # density_of_states (25% of entries)
         if random.random() < 0.25:
             out.write(
                 f"INSERT INTO density_of_states (entry_id, calculation_id, "
-                f"total_dos_at_fermi, spin_polarization, band_gap_ev) VALUES "
+                f"total_dos_at_fermi, spin_polarized) VALUES "
                 f"('{eid}', '{cid}', {random.uniform(0, 50):.3f}, "
-                f"{random.uniform(0, 1):.3f}, {random.uniform(0, 3):.3f});\n"
+                f"{'TRUE' if random.random() > 0.5 else 'FALSE'});\n"
             )
 
         # surface_energy (20% of entries, multiple surfaces)
@@ -412,10 +413,10 @@ def generate(out: TextIO = sys.stdout) -> None:
             method = random.choice(SYNTHESIS_METHODS)
             mid = synth_ids[method[0]]
             out.write(
-                f"INSERT INTO material_synthesis (entry_id, method_id, "
-                f"temperature_k, pressure_gpa, duration_hours, success) VALUES "
+                f"INSERT INTO material_synthesis (entry_id, synthesis_id, "
+                f"temperature_k, duration_hours, success) VALUES "
                 f"('{eid}', {mid}, {random.uniform(800, 2000):.0f}, "
-                f"{random.uniform(0, 5):.2f}, {random.uniform(1, 48):.1f}, "
+                f"{random.uniform(1, 48):.1f}, "
                 f"{'TRUE' if random.random() > 0.2 else 'FALSE'});\n"
             )
 
@@ -425,7 +426,7 @@ def generate(out: TextIO = sys.stdout) -> None:
             did = defect_ids[defect[0]]
             out.write(
                 f"INSERT INTO material_defect (entry_id, defect_type_id, "
-                f"formation_energy_ev, concentration, dopant_element_id) VALUES "
+                f"formation_energy, concentration, dopant_element_id) VALUES "
                 f"('{eid}', {did}, {random.uniform(0.5, 5.0):.3f}, "
                 f"{random.uniform(1e-6, 0.01):.6f}, "
                 f"{elem_ids.get(random.choice(list(ELEMENT_DATA.keys())[:30]), 1)});\n"
@@ -437,26 +438,25 @@ def generate(out: TextIO = sys.stdout) -> None:
             dom_id = domain_ids[domain[0]]
             out.write(
                 f"INSERT INTO material_application (entry_id, domain_id, "
-                f"performance_score, notes) VALUES "
+                f"relevance_score, notes) VALUES "
                 f"('{eid}', {dom_id}, {random.uniform(0.3, 1.0):.3f}, "
                 f"'Candidate for {_esc(domain[0])}');\n"
             )
 
         # literature_reference + material_reference (25% of entries)
         if random.random() < 0.25:
-            ref_id = f"ref_{entry_count:05d}"
+            ref_count += 1
             year = random.randint(2000, 2025)
             doi = f"10.1000/test.{entry_count:05d}"
             out.write(
                 f"INSERT INTO literature_reference (reference_id, doi, title, "
-                f"authors, journal, year, url) VALUES "
-                f"('{ref_id}', '{doi}', 'Study of {formula} properties', "
-                f"'Author et al.', 'J. Mater. Sci.', {year}, "
-                f"'https://doi.org/{doi}');\n"
+                f"authors, journal, year) VALUES "
+                f"({ref_count}, '{doi}', 'Study of {formula} properties', "
+                f"'Author et al.', 'J. Mater. Sci.', {year});\n"
             )
             out.write(
                 f"INSERT INTO material_reference (entry_id, reference_id) VALUES "
-                f"('{eid}', '{ref_id}');\n"
+                f"('{eid}', {ref_count});\n"
             )
 
         # phase_diagram_entry (40% of entries)
@@ -481,12 +481,12 @@ def generate(out: TextIO = sys.stdout) -> None:
                 )
 
     # Generate entries per prototype
-    # L12: ~400 entries (known + generated)
+    # L12: ~393 entries (known + generated) — paper Table 3
     out.write("\n-- L12 entries (known + generated)\n")
     for a, b, lat, fe, eah, stab, bulk, shear in KNOWN_L12:
         _gen_entry("L12", a, b, lat, fe, eah, stab, bulk, shear)
 
-    for _ in range(389):
+    for _ in range(381):
         a = random.choice(A_ELEMENTS)
         b = random.choice(B_ELEMENTS)
         while b == a:
@@ -499,9 +499,9 @@ def generate(out: TextIO = sys.stdout) -> None:
         shear = random.uniform(40, 120)
         _gen_entry("L12", a, b, lat, fe, eah, stab, bulk, shear)
 
-    # B2: ~350 entries
+    # B2: ~636 entries — paper Table 3
     out.write("\n-- B2 entries\n")
-    for _ in range(350):
+    for _ in range(636):
         a = random.choice(A_ELEMENTS)
         b = random.choice(B_ELEMENTS)
         while b == a:
@@ -514,9 +514,9 @@ def generate(out: TextIO = sys.stdout) -> None:
         shear = random.uniform(30, 100)
         _gen_entry("B2", a, b, lat, fe, eah, stab, bulk, shear, "Materials Project")
 
-    # A15: ~250 entries
-    out.write("\n-- A15 entries\n")
-    for _ in range(250):
+    # NaCl: ~355 entries — paper Table 3
+    out.write("\n-- NaCl entries\n")
+    for _ in range(355):
         a = random.choice(A_ELEMENTS[:15])
         b = random.choice(B_ELEMENTS[:12])
         while b == a:
@@ -527,11 +527,11 @@ def generate(out: TextIO = sys.stdout) -> None:
         stab = eah < 0.01
         bulk = random.uniform(120, 280)
         shear = random.uniform(50, 130)
-        _gen_entry("A15", a, b, lat, fe, eah, stab, bulk, shear, "AFLOW")
+        _gen_entry("NaCl", a, b, lat, fe, eah, stab, bulk, shear, "AFLOW")
 
-    # D019: ~250 entries
-    out.write("\n-- D019 entries\n")
-    for _ in range(250):
+    # NiAs: ~74 entries — paper Table 3
+    out.write("\n-- NiAs entries\n")
+    for _ in range(74):
         a = random.choice(A_ELEMENTS[:12])
         b = random.choice(B_ELEMENTS[:10])
         while b == a:
@@ -542,11 +542,11 @@ def generate(out: TextIO = sys.stdout) -> None:
         stab = eah < 0.01
         bulk = random.uniform(90, 200)
         shear = random.uniform(35, 95)
-        _gen_entry("D019", a, b, lat, fe, eah, stab, bulk, shear, "OQMD")
+        _gen_entry("NiAs", a, b, lat, fe, eah, stab, bulk, shear, "OQMD")
 
-    # C15: ~220 entries
-    out.write("\n-- C15 entries\n")
-    for _ in range(220):
+    # BiF3: ~13 entries — paper Table 3
+    out.write("\n-- BiF3 entries\n")
+    for _ in range(13):
         a = random.choice(A_ELEMENTS[:14])
         b = random.choice(B_ELEMENTS[:14])
         while b == a:
@@ -557,7 +557,7 @@ def generate(out: TextIO = sys.stdout) -> None:
         stab = eah < 0.01
         bulk = random.uniform(70, 180)
         shear = random.uniform(25, 85)
-        _gen_entry("C15", a, b, lat, fe, eah, stab, bulk, shear, "Materials Project")
+        _gen_entry("BiF3", a, b, lat, fe, eah, stab, bulk, shear, "Materials Project")
 
     # Experimental measurements (100 random entries)
     out.write("\n-- Experimental measurements\n")
@@ -565,15 +565,14 @@ def generate(out: TextIO = sys.stdout) -> None:
         eid = f"entry_{random.randint(1, entry_count):05d}"
         out.write(
             f"INSERT INTO experimental_measurement (measurement_id, entry_id, "
-            f"measurement_type, instrument, temperature_k, date_measured) VALUES "
-            f"('meas_{i:04d}', '{eid}', "
+            f"method, temperature_k) VALUES "
+            f"({i}, '{eid}', "
             f"'{random.choice(['XRD', 'TEM', 'SEM', 'DSC', 'Nanoindentation'])}', "
-            f"'{random.choice(['Rigaku', 'Bruker', 'JEOL', 'FEI', 'Hysitron'])}', "
-            f"{random.uniform(77, 1200):.1f}, '2024-{random.randint(1,12):02d}-{random.randint(1,28):02d}');\n"
+            f"{random.uniform(77, 1200):.1f});\n"
         )
         out.write(
             f"INSERT INTO measured_property (measurement_id, property_name, value, unit, uncertainty) VALUES "
-            f"('meas_{i:04d}', '{random.choice(['hardness', 'lattice_a', 'density', 'resistivity'])}', "
+            f"({i}, '{random.choice(['hardness', 'lattice_a', 'density', 'resistivity'])}', "
             f"{random.uniform(1, 500):.3f}, '{random.choice(['GPa', 'A', 'g/cm3', 'uOhm.cm'])}', "
             f"{random.uniform(0.01, 5):.3f});\n"
         )

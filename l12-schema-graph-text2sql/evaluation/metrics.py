@@ -6,6 +6,8 @@ Fixes applied (audit 2026-06-02):
 - B4: Unified type normalization (str-cast all values)
 - B5: AST-based alias resolution for JOIN hallucination
 - B15: syntax_validity handles WITH/CTE queries
+- B16: ON-clause regex word-boundary fix (composition/calculation false match)
+- B17: CTE names excluded from hallucinated-join detection
 """
 from __future__ import annotations
 
@@ -234,6 +236,15 @@ def hallucinated_join_rate(
 
     alias_map = _extract_aliases_from_sql(sql)
 
+    # Fix B17: add CTE names as identity mappings so they pass alias resolution
+    _cte_names: set[str] = set()
+    for _cte_m in re.finditer(r"\bWITH\b\s+(\w+)\s+AS\b", sql, re.IGNORECASE):
+        _cte_names.add(_cte_m.group(1).lower())
+    for _cte_m in re.finditer(r",\s*(\w+)\s+AS\s*\(", sql, re.IGNORECASE):
+        _cte_names.add(_cte_m.group(1).lower())
+    for cte in _cte_names:
+        alias_map.setdefault(cte, cte)
+
     def _resolve(ref: str) -> str:
         parts = ref.strip().split(".")
         if len(parts) == 2:
@@ -250,11 +261,25 @@ def hallucinated_join_rate(
             return (min(left, right), max(left, right))
         return (j, "")
 
+    # Fix B17: collect CTE names from WITH clause so JOINs to CTEs are not
+    # treated as hallucinated (CTE names are valid virtual tables).
+    cte_names: set[str] = set()
+    for cte_m in re.finditer(
+        r"\bWITH\b\s+(\w+)\s+AS\b", sql, re.IGNORECASE,
+    ):
+        cte_names.add(cte_m.group(1).lower())
+    # Also handle comma-separated CTEs: WITH a AS (...), b AS (...)
+    for cte_m in re.finditer(
+        r",\s*(\w+)\s+AS\s*\(", sql, re.IGNORECASE,
+    ):
+        cte_names.add(cte_m.group(1).lower())
+
     # Extract join conditions from SQL, including AND-combined ON clauses
     gen_joins: list[str] = []
-    # Match ON ... conditions up to next JOIN/WHERE/GROUP/ORDER/LIMIT/;/)
+    # Fix B16: \bON\b prevents matching the suffix "on" in words like
+    # "composition" or "calculation" (34/100 queries affected without \b)
     for m in re.finditer(
-        r"ON\s+(.*?)(?=\s+(?:JOIN|WHERE|GROUP|ORDER|HAVING|LIMIT|UNION)\b|;|\)|$)",
+        r"\bON\b\s+(.*?)(?=\s+(?:JOIN|WHERE|GROUP|ORDER|HAVING|LIMIT|UNION)\b|;|\)|$)",
         sql, re.IGNORECASE | re.DOTALL,
     ):
         on_clause = m.group(1).strip()
@@ -269,8 +294,25 @@ def hallucinated_join_rate(
         return 0.0
 
     allowed_set = {normalize(j) for j in allowed_joins}
-    bad = [j for j in gen_joins if normalize(j) not in allowed_set]
-    return len(bad) / len(gen_joins)
+    # Fix B17: JOINs where either side references a CTE name are valid
+    # (the CTE is defined in the query itself, not a hallucinated table).
+    bad = []
+    for j in gen_joins:
+        nj = normalize(j)
+        if nj in allowed_set:
+            continue
+        # Check if either side of the join references a CTE
+        parts = j.lower().split("=")
+        is_cte_join = False
+        for part in parts:
+            table = part.strip().split(".")[0].strip()
+            resolved = alias_map.get(table, table)
+            if resolved in cte_names:
+                is_cte_join = True
+                break
+        if not is_cte_join:
+            bad.append(j)
+    return len(bad) / len(gen_joins) if gen_joins else 0.0
 
 
 def multi_hop_success(hop_count: int, is_correct: bool) -> dict[str, Any]:

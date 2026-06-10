@@ -100,6 +100,43 @@ def test_hallucinated_join_rate_alias_resolution():
     assert rate3 == 0.5
 
 
+def test_hallucinated_join_rate_word_boundary_b16():
+    """Fix B16: 'ON' in 'composition'/'calculation' must not be treated as ON clause."""
+    sql = ("SELECT m.formula, c.element, c.fraction "
+           "FROM material_entry m "
+           "JOIN composition c ON c.entry_id = m.entry_id "
+           "WHERE c.element = 'Ni'")
+    rate = hallucinated_join_rate(
+        sql,
+        ["composition.entry_id = material_entry.entry_id"],
+    )
+    # Without \b, the regex matches "compositi*ON*" producing a bogus join → rate > 0
+    assert rate == 0.0
+
+    sql2 = ("SELECT * FROM calculation cal "
+            "JOIN calculated_property cp ON cp.calc_id = cal.calc_id")
+    rate2 = hallucinated_join_rate(
+        sql2,
+        ["calculated_property.calc_id = calculation.calc_id"],
+    )
+    assert rate2 == 0.0
+
+
+def test_hallucinated_join_rate_cte_b17():
+    """Fix B17: JOINs to CTE names should not count as hallucinated."""
+    sql = ("WITH stable AS ("
+           "  SELECT entry_id FROM phase_stability WHERE energy_above_hull <= 0.001"
+           ") "
+           "SELECT m.formula FROM material_entry m "
+           "JOIN stable s ON s.entry_id = m.entry_id")
+    rate = hallucinated_join_rate(
+        sql,
+        ["material_entry.entry_id = phase_stability.entry_id"],
+    )
+    # The join is to the CTE 'stable', not a hallucinated table
+    assert rate == 0.0
+
+
 def test_multi_hop_success():
     result = multi_hop_success(3, True)
     assert result["is_multi_hop"]

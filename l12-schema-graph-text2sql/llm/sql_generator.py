@@ -2,11 +2,14 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 import time
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 from llm.entity_extractor import extract_conditions
 from llm.few_shot_store import add_example, format_few_shot_block, retrieve_similar
@@ -232,6 +235,15 @@ def pipeline(
 ) -> dict[str, Any]:
     """Full pipeline: intent classify -> extract -> link -> generate SQL.
 
+    Parameters
+    ----------
+    join_list : list[str] | None
+        Pre-computed join conditions from ``get_allowed_join_list()``.
+        When *None* (default) the pipeline falls back to a hard-coded
+        5-table core join set.  For full 30-table schema graph traversal,
+        callers should build the join list explicitly via a live DB
+        connection and pass it here.
+
     When *store_on_success* is True the result is persisted in the few-shot
     store after successful DB execution so that future queries can benefit
     from it as a few-shot example.
@@ -262,23 +274,22 @@ def pipeline(
 
     all_columns: list[str] | None = None
     if join_list is None:
-        try:
-            from graph.graph_builder import build_table_graph
-            from graph.join_path_generator import get_allowed_join_list
-            from graph.schema_parser import get_columns
-            table_graph = build_table_graph()
-            join_list = get_allowed_join_list(table_graph)
-            all_columns = get_columns()
-        except Exception:
-            # Fallback to core 5-table joins if graph unavailable
-            join_list = [
-                "composition.entry_id = material_entry.entry_id",
-                "structure.entry_id = material_entry.entry_id",
-                "phase_stability.entry_id = material_entry.entry_id",
-                "calculation.entry_id = material_entry.entry_id",
-                "calculated_property.calculation_id = calculation.calculation_id",
-            ]
-            all_columns = None
+        # Schema graph auto-construction requires a live DB connection.
+        # When no join_list is provided and no connection is available,
+        # fall back to the core 5-table join set with an explicit warning.
+        logger.warning(
+            "join_list not provided; using hard-coded 5-table fallback. "
+            "Pass join_list explicitly via get_allowed_join_list() for "
+            "full 30-table schema graph traversal."
+        )
+        join_list = [
+            "composition.entry_id = material_entry.entry_id",
+            "structure.entry_id = material_entry.entry_id",
+            "phase_stability.entry_id = material_entry.entry_id",
+            "calculation.entry_id = material_entry.entry_id",
+            "calculated_property.calculation_id = calculation.calculation_id",
+        ]
+        all_columns = None
 
     if all_columns is None:
         all_columns = [

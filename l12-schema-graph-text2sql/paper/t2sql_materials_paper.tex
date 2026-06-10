@@ -1305,7 +1305,7 @@ OQMD APIから取得可能なデータはフラットなJSONレコード形式�
     \toprule
     プロトタイプ & 件数 & 備考 \\
     \midrule
-    L1$_2$型（Cu$_3$Au型） & 393 & 既知L1$_2$ 11件含む \\
+    L1$_2$型（Cu$_3$Au型） & 392 & 既知L1$_2$ 11件含む \\
     B2型（CsCl型） & 636 & --- \\
     NaCl型（岩塩型） & 355 & --- \\
     NiAs型（ニッケルヒ素型） & 74 & --- \\
@@ -2428,7 +2428,7 @@ NL $\to$ データ検索 $\to$ 材料設計仮説生成の
     共通カラム照合とLIMIT 10{,}000正規化の併用（合計+65.4pt）により、
     T2SQL評価におけるSELECT列差異とLIMIT切り詰めの影響を排除。
   \item \textbf{回帰テスト39/39 PASS}：
-    SQLインジェクション遮断、Intent分類を含む
+    SQLインジェクション安全処理、Intent分類を含む
     安全性・頑健性テストに全件合格。
 \end{enumerate}
 
@@ -2708,24 +2708,25 @@ LIMIT 10000;
 \section{SQLインジェクション・安全性テスト結果}
 \label{sec:sup_injection}
 
-7件の敵対的入力（E01--E05、F01--F02）はすべてSQLガードにより遮断された
-（表~\ref{tab:sup_injection_results}）。
+7件の敵対的入力（E01--E05、F01--F02）はすべてSQLガードにより安全に処理された
+（表~\ref{tab:sup_injection_results}）。破壊的・注入的入力は遮断され、
+LIMITなしの直接SELECTはLIMIT自動付加により安全化された。
 
 \begin{table}[htbp]
   \centering
-  \caption{SQLインジェクション・安全性テスト結果（全件遮断）。}
+  \caption{SQLインジェクション・安全性テスト結果（全件安全処理）。}
   \label{tab:sup_injection_results}
   \small
   \begin{tabularx}{\linewidth}{lXl}
     \toprule
-    ID & 入力 & 遮断理由 \\
+    ID & 入力 & 処理 \\
     \midrule
     E01 & \texttt{DROP TABLE material\_entry;} & 禁止キーワード：DROP \\
     E02 & \texttt{SELECT *; DELETE FROM composition;} & 複数文 + DELETE \\
     E03 & L1$_2$化合物; \texttt{DROP TABLE structure;} & 複数文 + DROP \\
     E04 & \texttt{SELECT * FROM secret\_passwords} & 非許可テーブル \\
     E05 & \texttt{INSERT INTO material\_entry ...} & 禁止キーワード：INSERT \\
-    F01 & \texttt{SELECT entry\_id FROM material\_entry} & LIMITなし $\to$ 自動付加 \\
+    F01 & \texttt{SELECT entry\_id FROM material\_entry} & LIMIT自動付加（安全化） \\
     F02 & \texttt{UPDATE material\_entry SET ...} & 禁止キーワード：UPDATE \\
     \bottomrule
   \end{tabularx}
