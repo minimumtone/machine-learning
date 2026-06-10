@@ -112,7 +112,11 @@ def generate_joins_for_tables(
                 all_edges.append(e)
 
     used_aliases: set[str] = set()
+    # Fix B11: Track table→assigned_alias mapping so intermediate edges
+    # reference the correct (possibly numbered) alias like 'cp2' not 'cp'.
+    table_to_alias: dict[str, str] = {}
     base_alias = _alias(base_table, used_aliases)
+    table_to_alias[base_table] = base_alias
     parts: list[str] = []
 
     for edge in all_edges:
@@ -123,15 +127,19 @@ def generate_joins_for_tables(
         if src_t == base_table:
             join_table = tgt_t
             ja = _alias(join_table, used_aliases)
+            table_to_alias[join_table] = ja
             on_clause = f"{ja}.{tgt_c} = {base_alias}.{src_c}"
         elif tgt_t == base_table:
             join_table = src_t
             ja = _alias(join_table, used_aliases)
+            table_to_alias[join_table] = ja
             on_clause = f"{ja}.{src_c} = {base_alias}.{tgt_c}"
         else:
             join_table = tgt_t
             ja = _alias(tgt_t, used_aliases)
-            sa = TABLE_ALIASES.get(src_t, src_t[:3])  # src already joined; use its known alias
+            table_to_alias[tgt_t] = ja
+            # Fix B11: Look up the already-assigned alias for the source table
+            sa = table_to_alias.get(src_t, _alias(src_t))
             on_clause = f"{ja}.{tgt_c} = {sa}.{src_c}"
         parts.append(f"JOIN {join_table} {ja} ON {on_clause}")
 
@@ -143,9 +151,12 @@ def get_allowed_join_list(
 ) -> list[str]:
     """Return a list of allowed join conditions from the table graph."""
     joins: list[str] = []
+    # Fix B12: Emit both directions so that join matching works regardless of
+    # which table appears on each side of the = in generated SQL.
     for u, v, data in table_graph.edges(data=True):
         sc = data.get("source_column", "")
         tc = data.get("target_column", "")
         if sc and tc:
             joins.append(f"{u}.{sc} = {v}.{tc}")
+            joins.append(f"{v}.{tc} = {u}.{sc}")  # reverse
     return joins

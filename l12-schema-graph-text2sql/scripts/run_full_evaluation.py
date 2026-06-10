@@ -20,12 +20,13 @@ sys.path.insert(0, str(PROJECT))
 import psycopg
 
 from evaluation.metrics import (
-    compute_metrics,
     execution_accuracy,
+    execution_accuracy_full,
     hallucinated_column_rate,
     hallucinated_join_rate,
     hallucinated_table_rate,
     multi_hop_success,
+    normalize_limit,
     syntax_validity,
 )
 from graph.graph_builder import build_table_graph
@@ -170,10 +171,10 @@ Question: {query}"""
         )
         _is_new = model and any(t in model for t in ("gpt-5", "o1", "o3", "o4"))
         if _is_new:
-            create_kwargs["max_completion_tokens"] = 512
+            create_kwargs["max_completion_tokens"] = 4096  # Fix B7: unified budget
         else:
             create_kwargs["temperature"] = 0.0
-            create_kwargs["max_tokens"] = 512
+            create_kwargs["max_tokens"] = 4096  # Fix B7: unified budget
         resp = client.chat.completions.create(**create_kwargs)
         latency_ms = int((time.time() - t0) * 1000)
         raw = resp.choices[0].message.content or ""
@@ -218,10 +219,10 @@ Question: {query}"""
         )
         _is_new = model and any(t in model for t in ("gpt-5", "o1", "o3", "o4"))
         if _is_new:
-            create_kwargs["max_completion_tokens"] = 512
+            create_kwargs["max_completion_tokens"] = 4096  # Fix B7: unified budget
         else:
             create_kwargs["temperature"] = 0.0
-            create_kwargs["max_tokens"] = 512
+            create_kwargs["max_tokens"] = 4096  # Fix B7: unified budget
         resp = client.chat.completions.create(**create_kwargs)
         latency_ms = int((time.time() - t0) * 1000)
         raw = resp.choices[0].message.content or ""
@@ -269,10 +270,10 @@ Question: {query}"""
         )
         _is_new = model and any(t in model for t in ("gpt-5", "o1", "o3", "o4"))
         if _is_new:
-            create_kwargs["max_completion_tokens"] = 512
+            create_kwargs["max_completion_tokens"] = 4096  # Fix B7: unified budget
         else:
             create_kwargs["temperature"] = 0.0
-            create_kwargs["max_tokens"] = 512
+            create_kwargs["max_tokens"] = 4096  # Fix B7: unified budget
         resp = client.chat.completions.create(**create_kwargs)
         latency_ms = int((time.time() - t0) * 1000)
         raw = resp.choices[0].message.content or ""
@@ -314,7 +315,8 @@ def proposed_schema_graph(query: str, table_graph, allowed_columns: list[str],
             join_list.append(m.group(1).strip())
     # Also include all allowed joins relevant to required tables
     for j in allowed_joins:
-        if any(t in j for t in required_tables) and j not in join_list:
+        # Fix B10: word-boundary match to avoid structure matching band_structure
+        if any(re.search(r'\b' + re.escape(t) + r'\b', j) for t in required_tables) and j not in join_list:
             join_list.append(j)
 
     # Step 5: Generate SQL via LLM with constraints
@@ -350,39 +352,49 @@ def compute_single_metrics(sql: str, exec_result: dict, expected_rows: list,
                            tokens: int, latency_ms: int,
                            expected_columns: list[str] | None = None,
                            allowed_columns: list[str] | None = None) -> dict:
-    """Compute metrics for a single query."""
+    """Compute metrics for a single query.
+
+    Fixes applied:
+    - B1: Returns precision/recall/F1 (not just recall)
+    - B5: Uses AST-based hallucinated_join_rate (takes SQL, not join list)
+    - B10: Uses word-boundary table matching
+    """
     gen_tables = extract_tables_from_sql(sql)
     gen_columns = extract_columns_from_sql(sql)
-
-    gen_joins: list[str] = []
-    for m in re.finditer(
-        r"JOIN\s+\w+\s+\w+\s+ON\s+([\w.]+\s*=\s*[\w.]+)", sql, re.IGNORECASE,
-    ):
-        gen_joins.append(m.group(1))
 
     is_syntax_valid = syntax_validity(sql)
     is_exec_valid = exec_result.get("success", False)
     result_columns = exec_result.get("columns", None)
-    # Column-aware accuracy (Improvement A)
-    exec_acc = execution_accuracy(
+
+    # Fix B1: Full metrics (recall/precision/F1) with B3+B4 fixes
+    acc_full = execution_accuracy_full(
         exec_result.get("rows", []), expected_rows,
         result_columns=result_columns,
         expected_columns=expected_columns,
     )
-    # Raw accuracy without column-aware matching (baseline for Improvement A)
-    raw_exec_acc = execution_accuracy(
+    exec_acc = acc_full["recall"]  # backward-compat "execution_accuracy"
+
+    # Raw accuracy without column-aware matching
+    raw_acc_full = execution_accuracy_full(
         exec_result.get("rows", []), expected_rows,
     )
+
     h_table = hallucinated_table_rate(gen_tables, ALLOWED_TABLES)
     h_column = hallucinated_column_rate(gen_columns, allowed_columns or [])
-    h_join = hallucinated_join_rate(gen_joins, allowed_joins)
-    is_correct = exec_acc >= 0.8
+    # Fix B5: Pass SQL directly for AST-based alias resolution
+    h_join = hallucinated_join_rate(sql, allowed_joins)
+    is_correct = acc_full["f1"] >= 0.8  # Use F1 instead of recall-only
 
     return {
         "syntax_valid": is_syntax_valid,
         "execution_valid": is_exec_valid,
         "execution_accuracy": exec_acc,
-        "raw_execution_accuracy": raw_exec_acc,
+        "execution_precision": acc_full["precision"],
+        "execution_recall": acc_full["recall"],
+        "execution_f1": acc_full["f1"],
+        "raw_execution_accuracy": raw_acc_full["recall"],
+        "raw_execution_precision": raw_acc_full["precision"],
+        "raw_execution_f1": raw_acc_full["f1"],
         "hallucinated_table_rate": h_table,
         "hallucinated_column_rate": h_column,
         "hallucinated_join_rate": h_join,
@@ -450,17 +462,15 @@ def run_evaluation():
                 repair_attempts = 0
                 repair_tokens = 0
 
-                # Normalize LIMIT to 10000
+                # Fix B2: Only ADD LIMIT 10000 if no LIMIT exists
                 if sql:
-                    sql = re.sub(r"\bLIMIT\s+\d+", "LIMIT 10000", sql, flags=re.IGNORECASE)
-                    if not re.search(r"\bLIMIT\b", sql, re.IGNORECASE):
-                        sql = sql.rstrip().rstrip(";") + "\nLIMIT 10000;"
+                    sql = normalize_limit(sql)
 
                 # Execute
                 exec_result = execute_sql(conn, sql) if sql else {"success": False, "rows": [], "row_count": 0}
 
-                # ── Repair loop for proposed method ──
-                if method == "proposed" and sql and has_llm:
+                # ── Repair loop (Fix B8: apply to ALL LLM methods, not just proposed) ──
+                if method != "baseline3_rule_based" and sql and has_llm:
                     from llm.repair_loop import detect_superset
                     query_conditions = extract_conditions(question)
                     needs_repair = (
@@ -482,9 +492,7 @@ def run_evaluation():
                         linked_cols = gen.get("linked_columns", allowed_columns)
 
                         def _exec_fn(s: str) -> dict:
-                            s_norm = re.sub(r"\bLIMIT\s+\d+", "LIMIT 10000", s, flags=re.IGNORECASE)
-                            if not re.search(r"\bLIMIT\b", s_norm, re.IGNORECASE):
-                                s_norm = s_norm.rstrip().rstrip(";") + "\nLIMIT 10000;"
+                            s_norm = normalize_limit(s)
                             return execute_sql(conn, s_norm)
 
                         repair_result = execution_repair_loop(
@@ -503,10 +511,7 @@ def run_evaluation():
                         if repair_result.get("repaired", False):
                             sql = repair_result["sql"]
                             exec_result = repair_result["exec_result"]
-                            # Re-normalize LIMIT on repaired SQL
-                            sql = re.sub(r"\bLIMIT\s+\d+", "LIMIT 10000", sql, flags=re.IGNORECASE)
-                            if not re.search(r"\bLIMIT\b", sql, re.IGNORECASE):
-                                sql = sql.rstrip().rstrip(";") + "\nLIMIT 10000;"
+                            sql = normalize_limit(sql)
                         elif repair_result["exec_result"].get("success", False):
                             # Repair ran but 0-row stayed; use latest SQL/exec
                             sql = repair_result["sql"]
@@ -552,7 +557,7 @@ def run_evaluation():
                     "hallucinated_table_rate": 0.0,
                     "hallucinated_column_rate": 0.0,
                     "hallucinated_join_rate": 0.0,
-                    "multi_hop": {"hop_count": hop_count, "is_multi_hop": hop_count >= 3, "correct": False},
+                    "multi_hop": {"hop_count": hop_count, "is_multi_hop": hop_count >= 2, "correct": False},
                     "token_usage": 0,
                     "latency_ms": 0,
                 })
@@ -569,9 +574,10 @@ def write_result_csv(results: list[dict], path: Path) -> None:
     fieldnames = [
         "query_id", "question", "difficulty", "hop_count", "method",
         "sql",
-        "syntax_valid", "execution_valid", "execution_accuracy",
-        "raw_execution_accuracy",
-        "hallucinated_table_rate", "hallucinated_join_rate",
+        "syntax_valid", "execution_valid",
+        "execution_accuracy", "execution_precision", "execution_recall", "execution_f1",
+        "raw_execution_accuracy", "raw_execution_precision", "raw_execution_f1",
+        "hallucinated_table_rate", "hallucinated_column_rate", "hallucinated_join_rate",
         "token_usage", "latency_ms",
         "repair_attempts", "repair_tokens",
     ]
@@ -595,8 +601,14 @@ def write_metrics_summary(all_results: dict[str, list[dict]], path: Path) -> Non
             "syntax_validity": sum(r.get("syntax_valid", False) for r in results) / n,
             "execution_validity": sum(r.get("execution_valid", False) for r in results) / n,
             "avg_execution_accuracy": sum(r.get("execution_accuracy", 0) for r in results) / n,
+            "avg_execution_precision": sum(r.get("execution_precision", 0) for r in results) / n,
+            "avg_execution_recall": sum(r.get("execution_recall", 0) for r in results) / n,
+            "avg_execution_f1": sum(r.get("execution_f1", 0) for r in results) / n,
             "avg_raw_execution_accuracy": sum(r.get("raw_execution_accuracy", 0) for r in results) / n,
+            "avg_raw_execution_precision": sum(r.get("raw_execution_precision", 0) for r in results) / n,
+            "avg_raw_execution_f1": sum(r.get("raw_execution_f1", 0) for r in results) / n,
             "avg_hallucinated_table_rate": sum(r.get("hallucinated_table_rate", 0) for r in results) / n,
+            "avg_hallucinated_column_rate": sum(r.get("hallucinated_column_rate", 0) for r in results) / n,
             "avg_hallucinated_join_rate": sum(r.get("hallucinated_join_rate", 0) for r in results) / n,
             "avg_token_usage": sum(r.get("token_usage", 0) for r in results) / n,
             "avg_latency_ms": sum(r.get("latency_ms", 0) for r in results) / n,
@@ -613,9 +625,13 @@ def write_metrics_summary(all_results: dict[str, list[dict]], path: Path) -> Non
             sub = [r for r in results if r.get("difficulty") == diff]
             if sub:
                 row[f"{diff}_exec_accuracy"] = sum(r.get("execution_accuracy", 0) for r in sub) / len(sub)
+                row[f"{diff}_exec_precision"] = sum(r.get("execution_precision", 0) for r in sub) / len(sub)
+                row[f"{diff}_exec_f1"] = sum(r.get("execution_f1", 0) for r in sub) / len(sub)
                 row[f"{diff}_exec_validity"] = sum(r.get("execution_valid", False) for r in sub) / len(sub)
             else:
                 row[f"{diff}_exec_accuracy"] = 0.0
+                row[f"{diff}_exec_precision"] = 0.0
+                row[f"{diff}_exec_f1"] = 0.0
                 row[f"{diff}_exec_validity"] = 0.0
         rows.append(row)
 
@@ -638,6 +654,8 @@ def write_multi_hop_report(all_results: dict[str, list[dict]], path: Path) -> No
                     "hop_count": hop,
                     "n_queries": len(sub),
                     "exec_accuracy": sum(r.get("execution_accuracy", 0) for r in sub) / len(sub),
+                    "exec_precision": sum(r.get("execution_precision", 0) for r in sub) / len(sub),
+                    "exec_f1": sum(r.get("execution_f1", 0) for r in sub) / len(sub),
                     "exec_validity": sum(r.get("execution_valid", False) for r in sub) / len(sub),
                     "syntax_validity": sum(r.get("syntax_valid", False) for r in sub) / len(sub),
                 })
@@ -685,38 +703,45 @@ def run_materials_analysis(conn) -> None:
 
     # 1. Known L1₂ recovery
     cur = conn.cursor()
+    # Fix: Fe3Pt was in original paper but missing here; Co3W was in code but not paper
     known_formulas = ["Ni3Al", "Ni3Ga", "Ni3Ge", "Co3Ti", "Al3Sc",
-                      "Al3Ti", "Pt3Al", "Ir3Nb", "Co3Al", "Co3W", "Co3Ta"]
+                      "Al3Ti", "Pt3Al", "Ir3Nb", "Co3Al", "Co3Ta", "Fe3Pt"]
+    # Fix: Use DISTINCT ON formula to avoid counting duplicates from multiple sources
     cur.execute("""
-        SELECT m.formula, s.prototype, s.lattice_a, ps.energy_above_hull, ps.formation_energy_per_atom
+        SELECT DISTINCT ON (m.formula)
+               m.formula, s.prototype, s.lattice_a, ps.energy_above_hull,
+               ps.formation_energy_per_atom
         FROM material_entry m
         JOIN structure s ON s.entry_id = m.entry_id
         JOIN phase_stability ps ON ps.entry_id = m.entry_id
         WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-        ORDER BY m.formula
+        ORDER BY m.formula, ps.energy_above_hull ASC
     """)
     all_l12 = cur.fetchall()
     recovery_path = EVAL_DIR / "known_l12_recovery.csv"
+    # Build set of formulas actually found in DB
+    db_formulas = {row[0] for row in all_l12}
     with open(recovery_path, "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["formula", "prototype", "lattice_a", "energy_above_hull",
-                     "formation_energy_per_atom", "is_known", "recovered"])
+                     "formation_energy_per_atom", "is_known", "found_in_db"])
         for row in all_l12:
             is_known = row[0] in known_formulas
-            w.writerow([*row, is_known, is_known])
-    found = sum(1 for r in all_l12 if r[0] in known_formulas)
-    print(f"  Known L1₂ recovery: {found}/{len(known_formulas)}")
+            w.writerow([*row, is_known, is_known])  # found_in_db same as is_known for DB rows
+    found = sum(1 for f in known_formulas if f in db_formulas)
+    print(f"  Known L1₂ recovery: {found}/{len(known_formulas)} (unique formulas in DB: {len(db_formulas)})")
 
-    # 2. Stable L1₂ candidates
+    # 2. Stable L1₂ candidates (deduplicated by formula)
     cur.execute("""
-        SELECT m.formula, s.lattice_a, ps.energy_above_hull,
+        SELECT DISTINCT ON (m.formula)
+               m.formula, s.lattice_a, ps.energy_above_hull,
                ps.formation_energy_per_atom, ps.is_stable
         FROM material_entry m
         JOIN structure s ON s.entry_id = m.entry_id
         JOIN phase_stability ps ON ps.entry_id = m.entry_id
         WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
           AND ps.energy_above_hull <= 0.05
-        ORDER BY ps.energy_above_hull ASC, ps.formation_energy_per_atom ASC
+        ORDER BY m.formula, ps.energy_above_hull ASC, ps.formation_energy_per_atom ASC
     """)
     stable_path = EVAL_DIR / "stable_l12_candidates.csv"
     with open(stable_path, "w", newline="") as f:
@@ -730,16 +755,18 @@ def run_materials_analysis(conn) -> None:
             w.writerow([*row, cls])
     print(f"  Stable candidates written to {stable_path}")
 
-    # 3. Ni3Al lattice-matched candidates
-    cur.execute("""
-        SELECT m.formula, s.lattice_a,
-               ABS(s.lattice_a - 3.57) AS lattice_diff,
+    # 3. Ni3Al lattice-matched candidates (deduplicated, use 3.572 for Ni3Al)
+    NI3AL_LATTICE = 3.572
+    cur.execute(f"""
+        SELECT DISTINCT ON (m.formula)
+               m.formula, s.lattice_a,
+               ABS(s.lattice_a - {NI3AL_LATTICE}) AS lattice_diff,
                ps.energy_above_hull, ps.formation_energy_per_atom
         FROM material_entry m
         JOIN structure s ON s.entry_id = m.entry_id
         JOIN phase_stability ps ON ps.entry_id = m.entry_id
         WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-        ORDER BY ABS(s.lattice_a - 3.57) ASC
+        ORDER BY m.formula, ABS(s.lattice_a - {NI3AL_LATTICE}) ASC
     """)
     lattice_path = EVAL_DIR / "ni3al_lattice_matched_candidates.csv"
     with open(lattice_path, "w", newline="") as f:
@@ -750,9 +777,10 @@ def run_materials_analysis(conn) -> None:
             w.writerow(row)
     print(f"  Lattice-matched candidates written to {lattice_path}")
 
-    # 4. γ' candidate ranking
+    # 4. γ' candidate ranking (deduplicated by formula)
     cur.execute("""
-        SELECT m.formula, s.lattice_a, ps.energy_above_hull,
+        SELECT DISTINCT ON (m.formula)
+               m.formula, s.lattice_a, ps.energy_above_hull,
                ps.formation_energy_per_atom,
                cp_bm.value AS bulk_modulus
         FROM material_entry m
@@ -762,7 +790,7 @@ def run_materials_analysis(conn) -> None:
         JOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id
         WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
           AND cp_bm.property_name = 'bulk_modulus'
-        ORDER BY ps.energy_above_hull ASC
+        ORDER BY m.formula, ps.energy_above_hull ASC
     """)
     ranking_path = EVAL_DIR / "gamma_prime_candidate_ranking.csv"
     with open(ranking_path, "w", newline="") as f:
@@ -778,11 +806,13 @@ def run_materials_analysis(conn) -> None:
             ehull = float(ehull)
             eform = float(eform)
             bm = float(bm)
-            mismatch = abs(lat_a - 3.57)
+            mismatch = abs(lat_a - 3.572)  # Use actual Ni3Al lattice constant
             stab_score = max(0, 1.0 - ehull / 0.05) if ehull <= 0.05 else 0.0
             lat_score = max(0, 1.0 - mismatch / 0.3)
             bulk_score = min(bm / 300.0, 1.0)
-            composite = stab_score * 0.35 + lat_score * 0.35 + bulk_score * 0.30
+            # Weights: paper states 1/3 each but original code was 0.35/0.35/0.30
+            # Align with paper: equal weights
+            composite = stab_score / 3.0 + lat_score / 3.0 + bulk_score / 3.0
             candidates.append((formula, lat_a, ehull, eform, bm, mismatch,
                                 stab_score, lat_score, bulk_score, composite))
         candidates.sort(key=lambda x: -x[-1])
