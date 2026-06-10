@@ -193,8 +193,9 @@ else:
 """
 
 feature_cols = [c for c in df_main.columns if c != target_col]
-# Remove non-numeric columns from features
-feature_cols = [c for c in feature_cols if df_main[c].dtype in ['float64', 'int64', 'float32', 'int32']]
+# Remove non-numeric columns and co-measured response variables from features
+_response_cols = {"tensile strength", "elongation"}  # co-measured outputs, not input features
+feature_cols = [c for c in feature_cols if df_main[c].dtype in ['float64', 'int64', 'float32', 'int32'] and c not in _response_cols]
 
 df_hea = load_hea_data()
 
@@ -1389,35 +1390,36 @@ elif section_key == "data_augmentation":
     noise_level = st.slider("ノイズレベル σ（標準偏差の割合 %）", 1, 20, 5)
     aug_multiplier = st.slider("増強倍率", 1, 10, 3)
 
-    # ノイズ付加で増強
-    rng = np.random.default_rng(42)
-    X_aug_list = [X]
-    y_aug_list = [y]
-    for _ in range(aug_multiplier - 1):
-        noise = rng.normal(0, noise_level / 100.0, X.shape) * X.std(axis=0)
-        X_aug_list.append(X + noise)
-        y_aug_list.append(y + rng.normal(0, y.std() * noise_level / 200.0, y.shape))
+    # まず train/test 分割（テストデータは増強しない — データリーク防止）
+    X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    X_aug = np.vstack(X_aug_list)
-    y_aug = np.concatenate(y_aug_list)
+    # 訓練データのみにノイズ付加で増強
+    rng = np.random.default_rng(42)
+    X_aug_list = [X_tr]
+    y_aug_list = [y_tr]
+    for _ in range(aug_multiplier - 1):
+        noise = rng.normal(0, noise_level / 100.0, X_tr.shape) * X_tr.std(axis=0)
+        X_aug_list.append(X_tr + noise)
+        y_aug_list.append(y_tr + rng.normal(0, y_tr.std() * noise_level / 200.0, y_tr.shape))
+
+    X_tr_aug = np.vstack(X_aug_list)
+    y_tr_aug = np.concatenate(y_aug_list)
 
     col1, col2 = st.columns(2)
     with col1:
-        st.metric("元データ数", f"{len(X)}")
+        st.metric("訓練データ数（元）", f"{len(X_tr)}")
     with col2:
-        st.metric("増強後データ数", f"{len(X_aug)}")
+        st.metric("訓練データ数（増強後）", f"{len(X_tr_aug)}")
 
     # 増強前後のモデル性能比較
     st.header("8.3 増強前後のモデル性能比較")
 
     # 元データ
-    X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42)
     pipe_orig = Pipeline([("scaler", StandardScaler()), ("model", Ridge(alpha=1.0))])
     pipe_orig.fit(X_tr, y_tr)
     r2_orig = r2_score(y_te, pipe_orig.predict(X_te))
 
-    # 増強データ（テストは同じ）
-    X_tr_aug, _, y_tr_aug, _ = train_test_split(X_aug, y_aug, test_size=0.2, random_state=42)
+    # 増強データ（テストは同じ X_te, y_te で評価）
     pipe_aug = Pipeline([("scaler", StandardScaler()), ("model", Ridge(alpha=1.0))])
     pipe_aug.fit(X_tr_aug, y_tr_aug)
     r2_aug = r2_score(y_te, pipe_aug.predict(X_te))
