@@ -784,8 +784,10 @@ elif section_key == "regression":
         x_plot = np.linspace(X_demo.min(), X_demo.max(), 200).reshape(-1, 1)
 
         fig_fit = go.Figure()
-        fig_fit.add_scatter(x=X_demo.ravel(), y=y_demo, mode="markers",
-                           name="データ", marker=dict(size=4, opacity=0.5))
+        fig_fit.add_scatter(x=X_tr_d.ravel(), y=y_tr_d, mode="markers",
+                           name="訓練データ", marker=dict(size=4, opacity=0.5))
+        fig_fit.add_scatter(x=X_te_d.ravel(), y=y_te_d, mode="markers",
+                           name="テストデータ", marker=dict(size=4, opacity=0.5, symbol="x"))
         colors = px.colors.qualitative.Set1
         for i, d in enumerate(selected_degrees):
             pipe = Pipeline([
@@ -793,7 +795,7 @@ elif section_key == "regression":
                 ("scaler", StandardScaler()),
                 ("lr", LinearRegression()),
             ])
-            pipe.fit(X_demo, y_demo)
+            pipe.fit(X_tr_d, y_tr_d)
             y_plot = pipe.predict(x_plot)
             fig_fit.add_scatter(x=x_plot.ravel(), y=y_plot, mode="lines",
                                name=f"次数 {d}", line=dict(color=colors[i % len(colors)]))
@@ -1114,13 +1116,15 @@ elif section_key == "classification":
     - 超伝導体の分類
     """)
 
-    X_cls = df_cls[["VEC", "原子半径差 δ (%)", "混合エンタルピー ΔH_mix (kJ/mol)", "電気陰性度差"]].values
+    _cls_features = ["VEC", "原子半径差 δ (%)", "混合エンタルピー ΔH_mix (kJ/mol)", "電気陰性度差"]
+    X_cls = df_cls[_cls_features].values
     y_cls = np.array(df_cls["結晶構造"].tolist())
-    scaler_cls = StandardScaler()
-    X_cls_scaled = scaler_cls.fit_transform(X_cls)
-    X_tr_c, X_te_c, y_tr_c, y_te_c = train_test_split(
-        X_cls_scaled, y_cls, test_size=0.2, random_state=42, stratify=y_cls
+    X_tr_c_raw, X_te_c_raw, y_tr_c, y_te_c = train_test_split(
+        X_cls, y_cls, test_size=0.2, random_state=42, stratify=y_cls
     )
+    scaler_cls = StandardScaler()
+    X_tr_c = scaler_cls.fit_transform(X_tr_c_raw)
+    X_te_c = scaler_cls.transform(X_te_c_raw)
 
     st.dataframe(df_cls.head(10), use_container_width=True)
 
@@ -1197,7 +1201,8 @@ elif section_key == "classification":
     # 決定境界の可視化（2D PCA空間）
     st.subheader("決定境界の可視化（PCA 2D 射影）")
     pca_cls = PCA(n_components=2)
-    X_cls_2d = pca_cls.fit_transform(X_cls_scaled)
+    X_cls_scaled_all = scaler_cls.transform(X_cls)
+    X_cls_2d = pca_cls.fit_transform(X_cls_scaled_all)
     X_tr_2d, X_te_2d, y_tr_2d, y_te_2d = train_test_split(
         X_cls_2d, y_cls, test_size=0.2, random_state=42, stratify=y_cls
     )
@@ -1265,8 +1270,7 @@ elif section_key == "classification":
 
     n_clusters = st.slider("クラスタ数 k", 2, 10, 3)
 
-    X_cls_num = df_cls[["VEC", "原子半径差 δ (%)", "混合エンタルピー ΔH_mix (kJ/mol)", "電気陰性度差"]].values
-    X_cls_num_scaled = StandardScaler().fit_transform(X_cls_num)
+    X_cls_num_scaled = scaler_cls.transform(X_cls)
     pca_km = PCA(n_components=2)
     X_km_2d = pca_km.fit_transform(X_cls_num_scaled)
 
@@ -1386,7 +1390,7 @@ elif section_key == "cv_generalization":
     elif cv_model_name == "SVR":
         model_cv = Pipeline([("scaler", StandardScaler()), ("model", SVR(kernel="rbf", C=10))])
     else:
-        model_cv = Pipeline([("scaler", StandardScaler()), ("model", RandomForestRegressor(n_estimators=100, max_depth=10,
+        model_cv = Pipeline([("model", RandomForestRegressor(n_estimators=100, max_depth=10,
                                           random_state=42, n_jobs=-1))])
 
     if cv_method == "k-fold CV":
@@ -1500,7 +1504,7 @@ elif section_key == "cv_generalization":
         else:
             param_range = np.arange(2, 25)
             train_s, test_s = validation_curve(
-                Pipeline([("scaler", StandardScaler()), ("model", RandomForestRegressor(n_estimators=50, random_state=42, n_jobs=-1))]),
+                Pipeline([("model", RandomForestRegressor(n_estimators=50, random_state=42, n_jobs=-1))]),
                 X, y, param_name="model__max_depth",
                 param_range=param_range, cv=5, scoring="r2", n_jobs=-1
             )
