@@ -1614,7 +1614,8 @@ LLMにはgpt-5.5（OpenAI、2026年5月アクセス、Temperature=0.0）を使�
   \item \textbf{テーブル幻覚率}（Hallucinated table rate）：スキーマに存在しないテーブルを1つ以上参照するクエリの割合。
     SQLGuard適用\textbf{前}の生成SQL（LLM出力直後）に対して測定する。
   \item \textbf{JOIN幻覚数}（Hallucinated JOIN count）：FK関係に基づかないJOINを含むクエリの件数。
-    Rule-basedおよびProposedは、Schema Graph走査によりFKに基づくJOINのみを生成するため、0件である。
+    Proposedは5件（3.6\%）、Rule-basedは22件（7.7\%）であり、
+    Schema Graph走査によりFK準拠率は高いが、エイリアス解決やLLM生成条件の差異により完全には排除されない。
     本指標もSQLGuard適用前の生成SQLに対して測定する。
   \item \textbf{マルチホップ成功率}（Multi-hop success rate）：2-hop以上クエリの正解割合。
 \end{itemize}
