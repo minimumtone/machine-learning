@@ -733,10 +733,10 @@ def run_materials_analysis(conn) -> None:
         f.write("# is_known=True rows correspond to the 11 known compounds in the paper table\n")
         w = csv.writer(f)
         w.writerow(["formula", "prototype", "lattice_a", "energy_above_hull",
-                     "formation_energy_per_atom", "is_known", "found_in_db"])
+                     "formation_energy_per_atom", "is_known", "known_l12_recovered"])
         for row in all_l12:
             is_known = row[0] in known_formulas
-            w.writerow([*row, is_known, is_known])  # found_in_db same as is_known for DB rows
+            w.writerow([*row, is_known, is_known])  # known_l12_recovered: True if formula is in the known list and present in DB
     found = sum(1 for f in known_formulas if f in db_formulas)
     print(f"  Known L1₂ recovery: {found}/{len(known_formulas)} (unique formulas in DB: {len(db_formulas)})")
 
