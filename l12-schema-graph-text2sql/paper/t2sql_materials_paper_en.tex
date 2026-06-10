@@ -1957,7 +1957,7 @@ experimental validation is essential to assess its feasibility as a $\gamma'$-ph
 
 \subsubsection{Candidates with Lattice Constants Near Ni$_3$Al}
 
-We extracted 11 candidates satisfying $|a - a_{\text{Ni}_3\text{Al}}| \leq 0.03$~\AA.
+We extracted 14 candidates satisfying $|a - a_{\text{Ni}_3\text{Al}}| \leq 0.03$~\AA.
 Note that the reference value is hardcoded as $a_{\text{ref}} = 3.57$~\AA\ in the implementation;
 thus, $\Delta a = |3.572 - 3.57| = 0.002$ for Ni$_3$Al itself reflects this reference.
 Cu$_3$Nb ($E_\text{hull} = 0.004$) and Cu$_3$Ta ($E_\text{hull} = 0.008$) are
@@ -2066,17 +2066,21 @@ and comparison and statistics), and target the entire extended schema of 30 tabl
 
 \begin{table}[htbp]
   \centering
-  \caption{Accuracy comparison between author-designed queries and independently designed queries.}
+  \caption{Accuracy comparison between author-designed queries and independently designed queries.
+  ``Mean execution accuracy'' is the arithmetic mean of continuous-valued per-query accuracy;
+  ``Binary correct rate'' uses a threshold of $\geq 0.8$.}
   \label{tab:independent_eval}
   \small
   \begin{tabular}{lcc}
     \toprule
-    Metric & Author-designed (100 queries) & Independently designed (100 queries) \\
+    Metric & Author-designed (100) & Independently designed (100) \\
     \midrule
-    Overall accuracy & \textbf{70.2\%} & \textbf{79.3\%} \\
+    Mean execution accuracy (continuous) & \textbf{70.2\%} & \textbf{79.3\%} \\
+    Binary correct rate & --- & 77.0\% (77/100) \\
     SQL syntax validity rate & 99.0\% & 100.0\% \\
     Execution success rate & 99.0\% & 100.0\% \\
     \midrule
+    \multicolumn{3}{l}{\textit{Binary correct rate by difficulty}} \\
     Easy & 90.0\% & 66.7\% (12/18) \\
     Medium & 83.9\% & 85.3\% (29/34) \\
     Hard & 64.3\% & 67.6\% (23/34) \\
@@ -2700,7 +2704,7 @@ shown in Table~\ref{tab:sup_lattice_match}.
 
 \begin{table}[htbp]
   \centering
-  \caption{Lattice-constant candidates near Ni$_3$Al ($|\Delta a| \leq 0.03$~\AA).}
+  \caption{Lattice-constant candidates near Ni$_3$Al ($|a - a_{\text{ref}}| \leq 0.03$~\AA, $a_{\text{ref}} = 3.57$~\AA, 14 candidates).}
   \label{tab:sup_lattice_match}
   \small
   \begin{tabular}{lcccc}
@@ -2716,7 +2720,11 @@ shown in Table~\ref{tab:sup_lattice_match}.
     Pt$_3$Zn & 3.580 & 0.010 & 0.036 & $-0.495$ \\
     Co$_3$Ti & 3.550 & 0.020 & 0.000 & $-0.450$ \\
     Cu$_3$Ti & 3.540 & 0.030 & 0.000 & $-0.310$ \\
+    Ni$_3$Sn & 3.540 & 0.030 & 0.028 & $-0.345$ \\
     Pt$_3$Si & 3.540 & 0.030 & 0.028 & $-0.485$ \\
+    Pt$_3$V & 3.600 & 0.030 & 0.040 & $-0.480$ \\
+    Cu$_3$Sc & 3.600 & 0.030 & 0.012 & $-0.290$ \\
+    Ni$_3$Zr & 3.600 & 0.030 & 0.040 & $-0.350$ \\
     \bottomrule
   \end{tabular}
 \end{table}

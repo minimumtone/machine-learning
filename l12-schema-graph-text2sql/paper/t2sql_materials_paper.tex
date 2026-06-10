@@ -1972,7 +1972,7 @@ $\gamma'$相候補としての実現可能性には実験的検証が不可欠�
 
 \subsubsection{Ni$_3$Al近傍格子定数候補}
 
-$|a - a_{\text{Ni}_3\text{Al}}| \leq 0.03$~\AA を満たす候補11件を抽出した。
+$|a - a_{\text{Ni}_3\text{Al}}| \leq 0.03$~\AA を満たす候補14件を抽出した。
 なお、基準値はコード内で$a_{\text{ref}} = 3.57$~\AAとハードコードされており、
 Ni$_3$Al自身の$\Delta a = |3.572 - 3.57| = 0.002$はこの基準値との差である。
 Cu$_3$Nb（$E_\text{hull} = 0.004$）、Cu$_3$Ta（$E_\text{hull} = 0.008$）は
@@ -2081,17 +2081,20 @@ Proposed手法の精度を再評価した。
 
 \begin{table}[htbp]
   \centering
-  \caption{著者設計クエリと独立設計クエリの精度比較。}
+  \caption{著者設計クエリと独立設計クエリの精度比較。「平均実行精度」は連続値の単純平均、
+  「二値正答率」は閾値$\geq 0.8$で二値化した正答率である。}
   \label{tab:independent_eval}
   \small
   \begin{tabular}{lcc}
     \toprule
     指標 & 著者設計 (100件) & 独立設計 (100件) \\
     \midrule
-    全体精度 & \textbf{70.2\%} & \textbf{79.3\%} \\
+    平均実行精度（連続値） & \textbf{70.2\%} & \textbf{79.3\%} \\
+    二値正答率 & --- & 77.0\% (77/100) \\
     構文妥当率 & 99.0\% & 100.0\% \\
     実行成功率 & 99.0\% & 100.0\% \\
     \midrule
+    \multicolumn{3}{l}{\textit{難易度別 二値正答率}} \\
     Easy & 90.0\% & 66.7\% (12/18) \\
     Medium & 83.9\% & 85.3\% (29/34) \\
     Hard & 64.3\% & 67.6\% (23/34) \\
@@ -2725,7 +2728,7 @@ $|a - a_{\text{Ni}_3\text{Al}}| \leq 0.03$~\AA を満たす候補を
 
 \begin{table}[htbp]
   \centering
-  \caption{Ni$_3$Al近傍格子定数候補（$|\Delta a| \leq 0.03$~\AA）。}
+  \caption{Ni$_3$Al近傍格子定数候補（$|a - a_{\text{ref}}| \leq 0.03$~\AA、$a_{\text{ref}} = 3.57$~\AA、14件）。}
   \label{tab:sup_lattice_match}
   \small
   \begin{tabular}{lcccc}
@@ -2741,7 +2744,11 @@ $|a - a_{\text{Ni}_3\text{Al}}| \leq 0.03$~\AA を満たす候補を
     Pt$_3$Zn & 3.580 & 0.010 & 0.036 & $-0.495$ \\
     Co$_3$Ti & 3.550 & 0.020 & 0.000 & $-0.450$ \\
     Cu$_3$Ti & 3.540 & 0.030 & 0.000 & $-0.310$ \\
+    Ni$_3$Sn & 3.540 & 0.030 & 0.028 & $-0.345$ \\
     Pt$_3$Si & 3.540 & 0.030 & 0.028 & $-0.485$ \\
+    Pt$_3$V & 3.600 & 0.030 & 0.040 & $-0.480$ \\
+    Cu$_3$Sc & 3.600 & 0.030 & 0.012 & $-0.290$ \\
+    Ni$_3$Zr & 3.600 & 0.030 & 0.040 & $-0.350$ \\
     \bottomrule
   \end{tabular}
 \end{table}

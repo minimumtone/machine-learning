@@ -703,9 +703,9 @@ def run_materials_analysis(conn) -> None:
 
     # 1. Known L1₂ recovery
     cur = conn.cursor()
-    # Fix: Fe3Pt was in original paper but missing here; Co3W was in code but not paper
+    # Aligned with paper and CSV: Co3W is known (not Fe3Pt)
     known_formulas = ["Ni3Al", "Ni3Ga", "Ni3Ge", "Co3Ti", "Al3Sc",
-                      "Al3Ti", "Pt3Al", "Ir3Nb", "Co3Al", "Co3Ta", "Fe3Pt"]
+                      "Al3Ti", "Pt3Al", "Ir3Nb", "Co3Al", "Co3Ta", "Co3W"]
     # Fix: Use DISTINCT ON formula to avoid counting duplicates from multiple sources
     cur.execute("""
         SELECT DISTINCT ON (m.formula)
@@ -755,8 +755,9 @@ def run_materials_analysis(conn) -> None:
             w.writerow([*row, cls])
     print(f"  Stable candidates written to {stable_path}")
 
-    # 3. Ni3Al lattice-matched candidates (deduplicated, use 3.572 for Ni3Al)
-    NI3AL_LATTICE = 3.572
+    # 3. Ni3Al lattice-matched candidates (deduplicated)
+    # Reference: 3.57 Å (hardcoded, consistent with paper and CSV)
+    NI3AL_LATTICE = 3.57
     cur.execute(f"""
         SELECT DISTINCT ON (m.formula)
                m.formula, s.lattice_a,
@@ -806,13 +807,12 @@ def run_materials_analysis(conn) -> None:
             ehull = float(ehull)
             eform = float(eform)
             bm = float(bm)
-            mismatch = abs(lat_a - 3.572)  # Use actual Ni3Al lattice constant
+            mismatch = abs(lat_a - 3.57)  # Consistent with NI3AL_LATTICE and paper
             stab_score = max(0, 1.0 - ehull / 0.05) if ehull <= 0.05 else 0.0
             lat_score = max(0, 1.0 - mismatch / 0.3)
             bulk_score = min(bm / 300.0, 1.0)
-            # Weights: paper states 1/3 each but original code was 0.35/0.35/0.30
-            # Align with paper: equal weights
-            composite = stab_score / 3.0 + lat_score / 3.0 + bulk_score / 3.0
+            # Weights aligned with paper and CSV: w1=0.35 (stability), w2=0.35 (lattice), w3=0.30 (bulk)
+            composite = 0.35 * stab_score + 0.35 * lat_score + 0.30 * bulk_score
             candidates.append((formula, lat_a, ehull, eform, bm, mismatch,
                                 stab_score, lat_score, bulk_score, composite))
         candidates.sort(key=lambda x: -x[-1])
