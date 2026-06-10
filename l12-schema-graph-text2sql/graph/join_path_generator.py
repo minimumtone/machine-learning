@@ -112,7 +112,11 @@ def generate_joins_for_tables(
                 all_edges.append(e)
 
     used_aliases: set[str] = set()
+    # Fix B11: Track table→assigned_alias mapping so intermediate edges
+    # reference the correct (possibly numbered) alias like 'cp2' not 'cp'.
+    table_to_alias: dict[str, str] = {}
     base_alias = _alias(base_table, used_aliases)
+    table_to_alias[base_table] = base_alias
     parts: list[str] = []
 
     for edge in all_edges:
@@ -123,17 +127,19 @@ def generate_joins_for_tables(
         if src_t == base_table:
             join_table = tgt_t
             ja = _alias(join_table, used_aliases)
+            table_to_alias[join_table] = ja
             on_clause = f"{ja}.{tgt_c} = {base_alias}.{src_c}"
         elif tgt_t == base_table:
             join_table = src_t
             ja = _alias(join_table, used_aliases)
+            table_to_alias[join_table] = ja
             on_clause = f"{ja}.{src_c} = {base_alias}.{tgt_c}"
         else:
             join_table = tgt_t
             ja = _alias(tgt_t, used_aliases)
-            # Fix B11: Use the alias from used_aliases tracker, not the base TABLE_ALIASES
-            # When aliases are numbered (e.g., cp2), TABLE_ALIASES.get returns 'cp', not 'cp2'
-            sa = _alias(src_t)  # Lookup base alias; if numbered, caller must track
+            table_to_alias[tgt_t] = ja
+            # Fix B11: Look up the already-assigned alias for the source table
+            sa = table_to_alias.get(src_t, _alias(src_t))
             on_clause = f"{ja}.{tgt_c} = {sa}.{src_c}"
         parts.append(f"JOIN {join_table} {ja} ON {on_clause}")
 

@@ -557,7 +557,7 @@ def run_evaluation():
                     "hallucinated_table_rate": 0.0,
                     "hallucinated_column_rate": 0.0,
                     "hallucinated_join_rate": 0.0,
-                    "multi_hop": {"hop_count": hop_count, "is_multi_hop": hop_count >= 3, "correct": False},
+                    "multi_hop": {"hop_count": hop_count, "is_multi_hop": hop_count >= 2, "correct": False},
                     "token_usage": 0,
                     "latency_ms": 0,
                 })

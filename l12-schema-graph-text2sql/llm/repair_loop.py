@@ -360,14 +360,14 @@ def execution_repair_loop(
                     error_msg = _build_superset_msg(
                         sql, question, row_count, conditions, superset_info,
                     )
+                    t_repair = time.time()
                     repair_result = attempt_repair(
                         sql, error_msg, allowed_tables, allowed_columns,
                         allowed_joins, model=model, api_key=api_key,
                     )
-                    t_repair = time.time()
+                    repair_lat = int((time.time() - t_repair) * 1000)
                     repair_tokens = repair_result.get("tokens", 0)
                     total_repair_tokens += repair_tokens
-                    repair_lat = int((time.time() - t_repair) * 1000)
                     total_repair_latency_ms += repair_lat
                     attempts.append({
                         "attempt": i + 1,
@@ -406,13 +406,15 @@ def execution_repair_loop(
             error_msg = _build_empty_result_msg(sql, question, coverage)
             repair_reason = "empty_result"
 
+        t_repair = time.time()
         repair_result = attempt_repair(
             sql, error_msg, allowed_tables, allowed_columns, allowed_joins,
             model=model, api_key=api_key,
         )
+        repair_latency_llm = int((time.time() - t_repair) * 1000)
         repair_tokens = repair_result.get("tokens", 0)
         total_repair_tokens += repair_tokens
-        total_repair_latency_ms += repair_latency
+        total_repair_latency_ms += repair_latency_llm
 
         attempts.append({
             "attempt": i + 1,
@@ -420,7 +422,7 @@ def execution_repair_loop(
             "error": error_msg,
             "repair": repair_result,
             "tokens": repair_tokens,
-            "latency_ms": repair_latency,
+            "latency_ms": repair_latency_llm,
         })
 
         if not repair_result.get("success"):
