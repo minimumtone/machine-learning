@@ -20,19 +20,19 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-import seaborn as sns
 import plotly.express as px
 import plotly.graph_objects as go
+import plotly.io as pio
 from plotly.subplots import make_subplots
 
 from sklearn.model_selection import (
-    train_test_split, cross_val_score, KFold, LeaveOneOut, learning_curve,
-    validation_curve
+    train_test_split, cross_val_score, cross_val_predict, KFold, LeaveOneOut,
+    learning_curve, validation_curve
 )
 from sklearn.preprocessing import StandardScaler, PolynomialFeatures
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.svm import SVR, SVC
-from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier, IsolationForest
+from sklearn.ensemble import RandomForestRegressor, IsolationForest
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
@@ -62,6 +62,20 @@ try:
 except Exception:
     pass
 plt.rcParams["axes.unicode_minus"] = False
+
+# Plotly 日本語フォント設定（中国語フォントへのフォールバックを防止）
+_JP_FONT = "Yu Gothic, YuGothic, Meiryo, Hiragino Sans, Hiragino Kaku Gothic ProN, Noto Sans JP, sans-serif"
+_plotly_template = pio.templates["plotly"]
+_plotly_template.layout.font = dict(family=_JP_FONT)
+pio.templates.default = "plotly"
+
+# Streamlit の Plotly テーマが上書きするため CSS でも強制指定
+st.markdown(f"""<style>
+.js-plotly-plot text, .js-plotly-plot .gtitle, .js-plotly-plot .xtitle,
+.js-plotly-plot .ytitle, .js-plotly-plot .legendtext {{
+    font-family: {_JP_FONT} !important;
+}}
+</style>""", unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
 # 材料データセット生成
@@ -215,14 +229,48 @@ if dataset_choice == "鉄鋼（構造材料）":
     df_main = generate_steel_data()
     target_col = "降伏強度 (MPa)"
     dataset_desc = "鉄鋼合金の組成・プロセス条件から降伏強度を予測（OQMD参照）"
+    dataset_detail = """
+| 特徴量 | 説明 | 単位 | 範囲 |
+|:---|:---|:---|:---|
+| C (wt%) | 炭素含有量 — 強度に最も影響する元素 | wt% | 0.05–0.8 |
+| Mn (wt%) | マンガン — 固溶強化・靭性向上 | wt% | 0.3–2.0 |
+| Si (wt%) | ケイ素 — 脱酸・固溶強化 | wt% | 0.1–1.0 |
+| Cr (wt%) | クロム — 耐食性・焼入性向上 | wt% | 0–18 |
+| Ni (wt%) | ニッケル — 靭性・耐食性向上 | wt% | 0–10 |
+| 焼入温度 (°C) | オーステナイト化温度 | °C | 800–1200 |
+
+**目的変数**: 降伏強度 (MPa) — 材料が塑性変形を開始する応力値
+"""
 elif dataset_choice == "熱電材料（機能材料）":
     df_main = generate_thermoelectric_data()
     target_col = "性能指数 ZT"
     dataset_desc = "熱電材料の電子構造特徴から性能指数ZTを予測（Materials Project参照）"
+    dataset_detail = """
+| 特徴量 | 説明 | 単位 | 範囲 |
+|:---|:---|:---|:---|
+| キャリア濃度 log(cm⁻³) | 電荷キャリア密度の対数値 | log(cm⁻³) | 18–21 |
+| バンドギャップ (eV) | 電子の禁制帯幅 — 熱電性能の最適値が存在 | eV | 0.05–2.0 |
+| 有効質量 (m_e) | キャリアの有効質量 — ゼーベック係数に寄与 | m_e | 0.5–5.0 |
+| 格子熱伝導率 (W/mK) | フォノン輸送による熱伝導 — 低いほど高性能 | W/mK | 0.5–10 |
+| 測定温度 (K) | 熱電性能評価温度 | K | 300–900 |
+
+**目的変数**: 性能指数 ZT — 熱電変換効率を表す無次元数（ZT = S²σT/κ）
+"""
 else:
     df_main = generate_polymer_data()
     target_col = "ガラス転移温度 Tg (°C)"
     dataset_desc = "高分子の分子特徴からガラス転移温度を予測（PolyInfo参照）"
+    dataset_detail = """
+| 特徴量 | 説明 | 単位 | 範囲 |
+|:---|:---|:---|:---|
+| 分子量 log(g/mol) | 重量平均分子量の対数値 | log(g/mol) | 3–6 |
+| 主鎖柔軟性 | 高分子主鎖の回転しやすさ指標 | — | 0–10 |
+| 極性指標 | 側鎖の極性の強さ — 分子間力に影響 | — | 0–5 |
+| 架橋密度 | 架橋点の密度 — Tg上昇要因 | — | 0–3 |
+| 結晶化度 (%) | 結晶領域の割合 | % | 0–80 |
+
+**目的変数**: ガラス転移温度 Tg (°C) — 非晶質領域がガラス状態からゴム状態に転移する温度
+"""
 
 feature_cols = [c for c in df_main.columns if c != target_col]
 df_cls = generate_classification_data()
@@ -353,6 +401,8 @@ elif section_key == "data_exploration":
 
     # 2.1 データの確認
     st.header("2.1 データの概要")
+    st.markdown("#### データセットの説明")
+    st.markdown(dataset_detail)
     st.dataframe(df_main.head(20), use_container_width=True)
     st.markdown(f"データ数: **{len(df_main)}** 件、特徴量数: **{len(feature_cols)}** 個、目的変数: **{target_col}**")
 
@@ -603,11 +653,12 @@ elif section_key == "regression":
 
     X = df_main[feature_cols].values
     y = df_main[target_col].values
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X_scaled, y, test_size=0.2, random_state=42
+    X_train_raw, X_test_raw, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
     )
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train_raw)
+    X_test = scaler.transform(X_test_raw)
 
     # 4.1 線形回帰
     st.header("4.1 線形回帰 (Linear Regression)")
@@ -921,11 +972,12 @@ elif section_key == "regularization":
 
     X = df_main[feature_cols].values
     y = df_main[target_col].values
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X_scaled, y, test_size=0.2, random_state=42
+    X_train_raw, X_test_raw, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
     )
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train_raw)
+    X_test = scaler.transform(X_test_raw)
 
     st.header("5.1 正則化の理論")
     st.markdown(r"""
@@ -1268,8 +1320,6 @@ elif section_key == "cv_generalization":
 
     X = df_main[feature_cols].values
     y = df_main[target_col].values
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
 
     st.header("7.1 交差検証の理論")
     st.markdown(r"""
@@ -1328,16 +1378,16 @@ elif section_key == "cv_generalization":
     cv_method = st.selectbox("CV 方法", ["k-fold CV", "LOOCV"])
 
     if cv_model_name == "線形回帰":
-        model_cv = LinearRegression()
+        model_cv = Pipeline([("scaler", StandardScaler()), ("model", LinearRegression())])
     elif cv_model_name == "Ridge":
-        model_cv = Ridge(alpha=1.0)
+        model_cv = Pipeline([("scaler", StandardScaler()), ("model", Ridge(alpha=1.0))])
     elif cv_model_name == "Lasso":
-        model_cv = Lasso(alpha=0.1, max_iter=10000)
+        model_cv = Pipeline([("scaler", StandardScaler()), ("model", Lasso(alpha=0.1, max_iter=10000))])
     elif cv_model_name == "SVR":
-        model_cv = SVR(kernel="rbf", C=10)
+        model_cv = Pipeline([("scaler", StandardScaler()), ("model", SVR(kernel="rbf", C=10))])
     else:
-        model_cv = RandomForestRegressor(n_estimators=100, max_depth=10,
-                                          random_state=42, n_jobs=-1)
+        model_cv = Pipeline([("scaler", StandardScaler()), ("model", RandomForestRegressor(n_estimators=100, max_depth=10,
+                                          random_state=42, n_jobs=-1))])
 
     if cv_method == "k-fold CV":
         k = st.slider("フォールド数 k", 2, 20, 5)
@@ -1348,17 +1398,16 @@ elif section_key == "cv_generalization":
         cv = LeaveOneOut()
         scoring = "neg_mean_squared_error"
         score_label = "負MSE"
-        st.warning(f"LOOCV: データ数 {len(X_scaled)} 回の学習を行います。少し時間がかかります。")
+        st.warning(f"LOOCV: データ数 {len(X)} 回の学習を行います。少し時間がかかります。")
         st.info("LOOCV では各フォールドが1サンプルのため R² は定義できません。代わりに MSE を使用し、全予測値から総合 R² を算出します。")
 
     with st.spinner("交差検証を実行中..."):
-        scores = cross_val_score(model_cv, X_scaled, y, cv=cv, scoring=scoring)
+        scores = cross_val_score(model_cv, X, y, cv=cv, scoring=scoring)
 
     st.markdown(f"### 結果 ({cv_method})")
     if cv_method == "LOOCV":
         mse_scores = -scores  # neg_mean_squared_error → positive MSE
-        from sklearn.model_selection import cross_val_predict
-        y_pred_loocv = cross_val_predict(model_cv, X_scaled, y, cv=LeaveOneOut())
+        y_pred_loocv = cross_val_predict(model_cv, X, y, cv=LeaveOneOut())
         overall_r2 = r2_score(y, y_pred_loocv)
         overall_rmse = np.sqrt(mse_scores.mean())
         col1, col2, col3 = st.columns(3)
@@ -1401,7 +1450,7 @@ elif section_key == "cv_generalization":
 
     with st.spinner("学習曲線を計算中..."):
         train_sizes_abs, train_scores, test_scores = learning_curve(
-            model_cv, X_scaled, y, cv=5,
+            model_cv, X, y, cv=5,
             train_sizes=np.linspace(0.1, 1.0, 10),
             scoring="r2", n_jobs=-1
         )
@@ -1433,7 +1482,8 @@ elif section_key == "cv_generalization":
         if val_model == "Ridge":
             param_range = np.logspace(-3, 3, 20)
             train_s, test_s = validation_curve(
-                Ridge(), X_scaled, y, param_name="alpha",
+                Pipeline([("scaler", StandardScaler()), ("model", Ridge())]),
+                X, y, param_name="model__alpha",
                 param_range=param_range, cv=5, scoring="r2", n_jobs=-1
             )
             param_label = "α (log scale)"
@@ -1441,7 +1491,8 @@ elif section_key == "cv_generalization":
         elif val_model == "Lasso":
             param_range = np.logspace(-4, 1, 20)
             train_s, test_s = validation_curve(
-                Lasso(max_iter=10000), X_scaled, y, param_name="alpha",
+                Pipeline([("scaler", StandardScaler()), ("model", Lasso(max_iter=10000))]),
+                X, y, param_name="model__alpha",
                 param_range=param_range, cv=5, scoring="r2", n_jobs=-1
             )
             param_label = "α (log scale)"
@@ -1449,8 +1500,8 @@ elif section_key == "cv_generalization":
         else:
             param_range = np.arange(2, 25)
             train_s, test_s = validation_curve(
-                RandomForestRegressor(n_estimators=50, random_state=42, n_jobs=-1),
-                X_scaled, y, param_name="max_depth",
+                Pipeline([("scaler", StandardScaler()), ("model", RandomForestRegressor(n_estimators=50, random_state=42, n_jobs=-1))]),
+                X, y, param_name="model__max_depth",
                 param_range=param_range, cv=5, scoring="r2", n_jobs=-1
             )
             param_label = "max_depth"
