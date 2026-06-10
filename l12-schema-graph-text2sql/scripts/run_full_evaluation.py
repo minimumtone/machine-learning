@@ -637,6 +637,8 @@ def write_metrics_summary(all_results: dict[str, list[dict]], path: Path) -> Non
 
     fieldnames = list(rows[0].keys()) if rows else []
     with open(path, "w", newline="", encoding="utf-8") as f:
+        f.write("# Paper ref: Table (tab:baseline_results) -- 5-method baseline comparison\n")
+        f.write("# Also: Table (tab:difficulty_breakdown), Table (tab:latency)\n")
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
@@ -662,6 +664,7 @@ def write_multi_hop_report(all_results: dict[str, list[dict]], path: Path) -> No
 
     if rows:
         with open(path, "w", newline="", encoding="utf-8") as f:
+            f.write("# Paper ref: Table (tab:multihop) -- multi-hop accuracy by hop count\n")
             writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
             writer.writeheader()
             writer.writerows(rows)
@@ -669,7 +672,8 @@ def write_multi_hop_report(all_results: dict[str, list[dict]], path: Path) -> No
 
 def write_error_analysis(all_results: dict[str, list[dict]], path: Path) -> None:
     """Write error analysis report in Markdown."""
-    lines = ["# Error Analysis Report\n"]
+    lines = ["# Error Analysis Report\n",
+             "# Paper ref: Table (tab:error_analysis) -- error breakdown by method\n"]
 
     for method, results in all_results.items():
         lines.append(f"\n## {method}\n")
@@ -725,12 +729,14 @@ def run_materials_analysis(conn) -> None:
     # Build set of formulas actually found in DB
     db_formulas = {row[0] for row in all_l12}
     with open(recovery_path, "w", newline="") as f:
+        f.write("# Paper ref: Table (tab:known_l12) -- known L1_2 compound rediscovery\n")
+        f.write("# is_known=True rows correspond to the 11 known compounds in the paper table\n")
         w = csv.writer(f)
         w.writerow(["formula", "prototype", "lattice_a", "energy_above_hull",
-                     "formation_energy_per_atom", "is_known", "found_in_db"])
+                     "formation_energy_per_atom", "is_known", "known_l12_recovered"])
         for row in all_l12:
             is_known = row[0] in known_formulas
-            w.writerow([*row, is_known, is_known])  # found_in_db same as is_known for DB rows
+            w.writerow([*row, is_known, is_known])  # known_l12_recovered: True if formula is in the known list and present in DB
     found = sum(1 for f in known_formulas if f in db_formulas)
     print(f"  Known L1₂ recovery: {found}/{len(known_formulas)} (unique formulas in DB: {len(db_formulas)})")
 
@@ -748,6 +754,8 @@ def run_materials_analysis(conn) -> None:
     """)
     stable_path = EVAL_DIR / "stable_l12_candidates.csv"
     with open(stable_path, "w", newline="") as f:
+        f.write("# Paper ref: Section 4.3.3, Supplementary S6 (tab:sup_injection_results)\n")
+        f.write("# 337 candidates (stable=100, metastable=237). Use stability_class, not is_stable\n")
         w = csv.writer(f)
         w.writerow(["formula", "lattice_a", "energy_above_hull",
                      "formation_energy_per_atom", "is_stable",
@@ -777,6 +785,8 @@ def run_materials_analysis(conn) -> None:
     """)
     lattice_path = EVAL_DIR / "ni3al_lattice_matched_candidates.csv"
     with open(lattice_path, "w", newline="") as f:
+        f.write(f"# Paper ref: Supplementary (tab:sup_lattice_match) -- Ni3Al lattice-matched 14 candidates\n")
+        f.write(f"# a_ref = {NI3AL_LATTICE} A (hardcoded), |da| <= 0.03 A, ROUND() for float boundary\n")
         w = csv.writer(f)
         w.writerow(["formula", "lattice_a", "lattice_diff_ni3al",
                      "energy_above_hull", "formation_energy_per_atom"])
@@ -801,6 +811,8 @@ def run_materials_analysis(conn) -> None:
     """)
     ranking_path = EVAL_DIR / "gamma_prime_candidate_ranking.csv"
     with open(ranking_path, "w", newline="") as f:
+        f.write("# Paper ref: Table (tab:gamma_prime) -- gamma' candidate ranking Top 10\n")
+        f.write("# composite_score = 0.35*stability + 0.35*lattice + 0.30*bulk (Eq.(2), a_ref=3.57A)\n")
         w = csv.writer(f)
         w.writerow(["rank", "formula", "lattice_a", "energy_above_hull",
                      "formation_energy_per_atom", "bulk_modulus",
@@ -861,6 +873,8 @@ def run_materials_analysis(conn) -> None:
 
     lines = [
         "# L1₂型金属間化合物 材料設計仮説レポート",
+        "",
+        "> Paper ref: Section 4.3.4 材料設計仮説の生成",
         "",
         "## 1. 概要",
         "",

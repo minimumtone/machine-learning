@@ -272,6 +272,11 @@ def main():
     output_path = EVAL_DIR / "expert_evaluation_results.json"
     with open(output_path, "w") as f:
         json.dump({
+            "paper_ref": {
+                "summary": "Table (tab:independent_eval) -- author vs independent evaluation",
+                "by_difficulty": "Table (tab:independent_eval) difficulty rows",
+                "results": "Supplementary (tab:sup_expert_detail), (tab:sup_expert_category)",
+            },
             "summary": {
                 "total": total,
                 "syntax_valid": syntax_ok,

@@ -1,3 +1,5 @@
+# Paper ref: Section 4.3.3, Supplementary S6 (tab:sup_injection_results)
+# 337 candidates (stable=100, metastable=237). Use stability_class, not is_stable
 formula,lattice_a,energy_above_hull,formation_energy_per_atom,is_stable,stability_class
 Ag3Pt,,0.03703386710547107,0.0123437043749997,False,metastable
 Al3Sc,4.09,0.0,-0.5,True,stable

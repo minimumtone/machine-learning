@@ -1,3 +1,5 @@
+# Paper ref: Table (tab:gamma_prime) -- gamma-prime candidate ranking Top 10
+# composite_score = 0.35*stability + 0.35*lattice + 0.30*bulk (Eq.(2), a_ref=3.57A)
 rank,formula,lattice_a,energy_above_hull,formation_energy_per_atom,bulk_modulus,lattice_mismatch,stability_score,lattice_score,bulk_score,composite_score
 1,Cu3Nb,3.56,0.004,-0.315,218.0,0.009999999999999787,0.92,0.9666666666666673,0.7266666666666667,0.8783333333333335
 2,Ni3Al,3.572,0.0,-0.42,180.0,0.002000000000000224,1.0,0.9933333333333326,0.6,0.8776666666666664

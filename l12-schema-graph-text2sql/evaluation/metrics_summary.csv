@@ -1,3 +1,5 @@
+# Paper ref: Table (tab:baseline_results) -- 5-method baseline comparison
+# Also: Table (tab:difficulty_breakdown), Table (tab:latency)
 method,n_queries,syntax_validity,execution_validity,avg_execution_accuracy,avg_raw_execution_accuracy,avg_hallucinated_table_rate,avg_hallucinated_join_rate,avg_token_usage,avg_latency_ms,multi_hop_count,multi_hop_success_rate,easy_exec_accuracy,easy_exec_validity,medium_exec_accuracy,medium_exec_validity,hard_exec_accuracy,hard_exec_validity,very_hard_exec_accuracy,very_hard_exec_validity
 baseline1_llm_only,100,1.0,0.0,0.0,0.0,0.08,0.0,562.17,12098.28,47,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
 baseline2_full_schema,100,1.0,0.3,0.26558333333333334,0.03725,0.0,0.0,2299.41,10190.05,47,0.06382978723404255,0.65,0.75,0.3333333333333333,0.36666666666666664,0.11861111111111113,0.13333333333333333,0.0,0.0

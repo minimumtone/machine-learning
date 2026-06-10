@@ -1,3 +1,4 @@
+# Paper ref: Table (tab:multihop) -- multi-hop accuracy by hop count
 method,hop_count,n_queries,exec_accuracy,exec_validity,syntax_validity
 baseline1_llm_only,2,37,0.0,0.0,1.0
 baseline1_llm_only,3,24,0.0,0.0,1.0
