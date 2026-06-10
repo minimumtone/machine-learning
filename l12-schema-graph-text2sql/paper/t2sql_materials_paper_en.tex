@@ -1969,9 +1969,9 @@ The candidate list is provided in Supplementary S5.
 
 \subsubsection{Extraction of Stable L1$_2$ Candidates}
 
-We extracted 339 stable or metastable L1$_2$ candidates satisfying
+We extracted 337 stable or metastable L1$_2$ candidates satisfying
 $E_\text{hull} \leq 0.05$~eV/atom
-(100 stable and 239 metastable).
+(100 stable and 237 metastable).
 This is a substantial increase from the original 57 candidates, reflecting the extended database import.
 Among the stable phases, the one with the most negative formation energy is
 YPt$_3$ ($E_f = -0.981$~eV/atom),
@@ -2080,16 +2080,19 @@ and comparison and statistics), and target the entire extended schema of 30 tabl
     SQL syntax validity rate & 99.0\% & 100.0\% \\
     Execution success rate & 99.0\% & 100.0\% \\
     \midrule
-    \multicolumn{3}{l}{\textit{Binary correct rate by difficulty}} \\
-    Easy & 90.0\% & 66.7\% (12/18) \\
-    Medium & 83.9\% & 85.3\% (29/34) \\
-    Hard & 64.3\% & 67.6\% (23/34) \\
-    Very Hard & 38.4\% & 92.9\% (13/14) \\
+    \multicolumn{3}{l}{\textit{By difficulty}} \\
+    Easy & 90.0\%$^\dagger$ & 66.7\% (12/18)$^\ddagger$ \\
+    Medium & 83.9\%$^\dagger$ & 85.3\% (29/34)$^\ddagger$ \\
+    Hard & 64.3\%$^\dagger$ & 67.6\% (23/34)$^\ddagger$ \\
+    Very Hard & 38.4\%$^\dagger$ & 92.9\% (13/14)$^\ddagger$ \\
     \bottomrule
+    \multicolumn{3}{l}{\scriptsize $^\dagger$Mean execution accuracy (continuous) \quad $^\ddagger$Binary correct rate} \\
   \end{tabular}
 \end{table}
 
 The results are shown in Table~\ref{tab:independent_eval}.
+The author-designed per-difficulty values are mean execution accuracy (continuous),
+while the independently-designed per-difficulty values are binary correct rates.
 The mean execution accuracy on the independently designed queries was 79.3\%,
 exceeding the 70.2\% for the author-designed queries by 9.1 points.
 This is because the addition of column synonym mappings and
@@ -2720,10 +2723,10 @@ shown in Table~\ref{tab:sup_lattice_match}.
     Pt$_3$Zn & 3.580 & 0.010 & 0.036 & $-0.495$ \\
     Co$_3$Ti & 3.550 & 0.020 & 0.000 & $-0.450$ \\
     Cu$_3$Ti & 3.540 & 0.030 & 0.000 & $-0.310$ \\
-    Ni$_3$Sn & 3.540 & 0.030 & 0.028 & $-0.345$ \\
+    Ni$_3$Sn & 3.540 & 0.030 & 0.028 & $-0.335$ \\
     Pt$_3$Si & 3.540 & 0.030 & 0.028 & $-0.485$ \\
-    Pt$_3$V & 3.600 & 0.030 & 0.040 & $-0.480$ \\
-    Cu$_3$Sc & 3.600 & 0.030 & 0.012 & $-0.290$ \\
+    Pt$_3$V & 3.600 & 0.030 & 0.040 & $-0.300$ \\
+    Cu$_3$Sc & 3.600 & 0.030 & 0.012 & $-0.325$ \\
     Ni$_3$Zr & 3.600 & 0.030 & 0.040 & $-0.350$ \\
     \bottomrule
   \end{tabular}
@@ -2743,9 +2746,9 @@ although experimental synthesis and validation are required.
 
 Stable and metastable L1$_2$ candidates satisfying
 $E_\text{hull} \leq 0.05$~eV/atom were extracted.
-A total of 339 candidates were extracted (100 stable, 239 metastable):
-12 stable cases ($E_\text{hull} = 0$) and 45 metastable cases
-($0 < E_\text{hull} \leq 0.05$).
+A total of 337 candidates were extracted:
+100 stable ($E_\text{hull} \leq 0.001$) and 237 metastable
+($0.001 < E_\text{hull} \leq 0.05$).
 Among the stable phases, the most negative formation energy was found for
 Pt$_3$Al ($E_f = -0.55$~eV/atom),
 followed by Al$_3$Sc ($-0.50$), Co$_3$Ti ($-0.45$), and Pt$_3$Ge ($-0.45$).
