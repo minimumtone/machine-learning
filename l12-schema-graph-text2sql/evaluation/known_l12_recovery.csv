@@ -1,4 +1,4 @@
-formula,prototype,lattice_a,energy_above_hull,formation_energy_per_atom,is_known,found_in_db
+formula,prototype,lattice_a,energy_above_hull,formation_energy_per_atom,is_known,known_l12_recovered
 Ag3Pt,L12,,0.03703386710547107,0.0123437043749997,False,False
 AgPt3,L12,,0.05142231083333414,0.0274021581250006,False,False
 Al3Sc,L12,4.09,0.0,-0.5,True,True
