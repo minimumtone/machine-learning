@@ -73,7 +73,7 @@ foreign-key relationship representation as a graph with Steiner tree approximati
 a domain-specific condition extractor for materials terminology normalization,
 a multilayer SQL guard for table and column hallucination prevention,
 and schema-constrained large language model (LLM) generation.
-Using a validation database of 30 tables containing 1{,}471 entries centered on L1$_2$-type intermetallic compounds,
+Using a validation database of 30 tables containing 1{,}470 entries centered on L1$_2$-type intermetallic compounds,
 comparative experiments with five methods on 100 evaluation queries (up to 4-hop JOINs) showed that
 the proposed method achieved a mean execution accuracy of 70.2\% with a syntax validity rate of 99\% and a table hallucination rate of 0\%,
 representing an improvement of +43.6 percentage points over the full-schema baseline (26.6\%).
@@ -105,7 +105,7 @@ correctly joining normalized heterogeneous materials data according to foreign-k
 In this paper, targeting the exploration of L1$_2$-type intermetallic compounds ($\gamma'$ phase candidates),
 we propose a constrained method based on Schema Graph traversal
 (a graph representation of FK relationships and Steiner tree approximation), and report that,
-in an evaluation using 1{,}471 entries (5 prototypes) and 100 queries,
+in an evaluation using 1{,}470 entries (5 prototypes) and 100 queries,
 the Proposed method achieved a table hallucination rate of 0\% and an execution accuracy of 70.2\%.
 
 \textbf{AI for Science (AI4S)}---the systematic application of artificial intelligence to accelerate scientific discovery---is
@@ -443,7 +443,7 @@ Figure~\ref{fig:architecture} shows the overall pipeline architecture of the sys
 
 \node[store, below=1.4cm of guard] (yaml) {allowed\_schema.yaml\\{\scriptsize Table/column\\whitelist}};
 
-\node[store, below=1.4cm of exec] (db) {PostgreSQL\\{\scriptsize 30 tables\\1{,}471 entries\\5 prototypes}};
+\node[store, below=1.4cm of exec] (db) {PostgreSQL\\{\scriptsize 30 tables\\1{,}470 entries\\5 prototypes}};
 
 % === Arrows: Main flow ===
 \draw[arr] (input) -- (intent);
@@ -1272,11 +1272,11 @@ Note that \texttt{material\_entry} in this study does not represent merely a com
 but rather a calculation-entry unit that includes the chemical formula, prototype, and structure
 (different prototypes with the same composition are treated as separate entries).
 
-The database contains 1{,}471 entries across 5 prototypes (Table~\ref{tab:db_composition}).
+The database contains 1{,}470 entries across 5 prototypes (Table~\ref{tab:db_composition}).
 
 \begin{table}[htbp]
   \centering
-  \caption{Composition of the validation database (1{,}471 entries in total).}
+  \caption{Composition of the validation database (1{,}470 entries in total).}
   \label{tab:db_composition}
   \small
   \begin{tabular}{lrl}
@@ -1289,7 +1289,7 @@ The database contains 1{,}471 entries across 5 prototypes (Table~\ref{tab:db_com
     NiAs type (nickel arsenide type) & 74 & --- \\
     BiF$_3$ type & 13 & --- \\
     \midrule
-    Total & 1{,}471 & \\
+    Total & 1{,}470 & \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1297,7 +1297,7 @@ The database contains 1{,}471 entries across 5 prototypes (Table~\ref{tab:db_com
 The L1$_2$ type (Cu$_3$Au type) is an ordered FCC structure with A$_3$B composition
 and is important as the $\gamma'$ precipitate phase in Ni-based superalloys.
 It includes 11 known L1$_2$ compounds (Ni$_3$Al, Ni$_3$Ga, Ni$_3$Ge, Co$_3$Ti, Co$_3$Ta, Co$_3$Al,
-Al$_3$Sc, Al$_3$Ti, Pt$_3$Al, Fe$_3$Pt, Ir$_3$Nb).
+Al$_3$Sc, Al$_3$Ti, Pt$_3$Al, Co$_3$W, Ir$_3$Nb).
 The B2 type (CsCl type) is a BCC ordered structure with AB composition,
 and 636 entries were stored, including heat-resistant materials such as NiAl, FeAl, and CoAl,
 as well as shape-memory alloys (NiTi).
@@ -1554,8 +1554,9 @@ including 24 3-hop queries and 23 4-hop queries.
 
 To evaluate the effect of how schema information is presented on SQL quality,
 we compared the following five methods (Table~\ref{tab:methods}).
-We used gpt-5.5 (OpenAI, accessed May 2026, Temperature=0.0) as the LLM
-(see Supplementary S7 for details).
+We used gpt-5.5 (OpenAI, accessed May 2026) as the LLM.
+The gpt-5 series API does not support the temperature parameter, and it was not specified in this implementation (see Supplementary S7).
+All methods used a unified max\_completion\_tokens of 4{,}096.
 
 \begin{table*}[htbp]
   \centering
@@ -1587,7 +1588,7 @@ Each method is evaluated using the following metrics:
   \item \textbf{Hallucinated table rate}: the proportion of queries that reference at least one table not present in the schema.
     Measured on the generated SQL \textbf{before} SQLGuard is applied (immediately after LLM output).
   \item \textbf{Hallucinated JOIN count}: the number of queries containing JOINs not based on FK relationships.
-    Proposed has 5 cases (3.6\%), and Rule-based has 22 cases (7.7\%);
+    Proposed has 6 cases, and Rule-based has 22 cases;
     although FK compliance is high owing to Schema Graph traversal, such JOINs are not completely eliminated because of differences in alias resolution and LLM-generated conditions.
     This metric is also measured on the generated SQL before SQLGuard is applied.
   \item \textbf{Multi-hop success rate}: the proportion of correct answers among queries of 2-hop or more.
@@ -1622,7 +1623,7 @@ but it is a recall-based metric whose denominator is restricted to the gold side
 When the LIMIT value automatically appended by SQLGuard differs between the gold SQL and generated SQL,
 accuracy is underestimated because of differences in the number of rows.
 In this study, \textbf{only during evaluation}, LIMIT 10{,}000 is applied uniformly to both the gold SQL and the generated SQL.
-For the database size of 1{,}471 records, this is effectively equivalent to no limit, while also
+For the database size of 1{,}470 records, this is effectively equivalent to no limit, while also
 serving as a safety valve to prevent runaway queries.
 In practical operation, a value is applied according to the user-specified value, the administrator-configured upper bound, or the query type
 (e.g., allowing no LIMIT for aggregate queries).
@@ -1674,7 +1675,7 @@ Table~\ref{tab:baseline_results} shows the comparison results for the five metho
     \toprule
     ID & Method & \shortstack{Syntax\\validity} & \shortstack{Execution\\validity} & \shortstack{Mean\\execution accuracy} & \shortstack{Table\\hallucination rate} & \shortstack{Unnecessary\\ JOIN} \\
     \midrule
-    B1 & LLM-only & 100\% & 0\% & 0\% & 5\% & --- \\
+    B1 & LLM-only & 100\% & 0\% & 0\% & 8\% & --- \\
     B2 & Full Schema & 100\% & 30\% & 26.6\% & 0\% & Many \\
     B3 & Rule-based & 100\% & 95\% & 58.2\% & 0\% & None \\
     B4 & FK-list & 100\% & 8\% & 7.0\% & 0\% & --- \\
@@ -1686,7 +1687,7 @@ Table~\ref{tab:baseline_results} shows the comparison results for the five metho
 \paragraph{Key findings}
 
 \begin{enumerate}
-  \item \textbf{LLM-only (B1) has an execution validity of 0\% and a hallucinated table rate of 5\%}:
+  \item \textbf{LLM-only (B1) has an execution validity of 0\% and a hallucinated table rate of 8\%}:
     Without schema information, the LLM hallucinates nonexistent table names,
     and none of the generated SQL can be executed.
   \item \textbf{Proposed (P) achieves a hallucinated table rate of 0\% and execution accuracy of 70.2\%}:
@@ -1717,7 +1718,7 @@ Table~\ref{tab:difficulty_breakdown} shows the execution validity and execution 
     Difficulty & Count & Main configuration & Execution validity & Execution accuracy \\
     \midrule
     Easy & 20 & 1--2 hop, simple conditions & 100\% & \textbf{90.0\%} \\
-    Medium & 30 & 2--3 hop, cross-cutting search & 100\% & \textbf{83.9\%} \\
+    Medium & 30 & 2--3 hop, cross-cutting search & 96.7\% & \textbf{83.9\%} \\
     Hard & 30 & 3--4 hop, complex conditions & 100\% & 64.3\% \\
     Very Hard & 20 & 3--4 hop, complex design conditions & 100\% & 38.4\% \\
     \bottomrule
@@ -1747,9 +1748,9 @@ Table~\ref{tab:difficulty_breakdown} shows the execution validity and execution 
 Table~\ref{tab:latency} shows the mean latency by method.
 Rule-based (B3) is the fastest at 8~ms because it does not call the LLM API.
 For LLM-based methods, API call time is dominant,
-and the Proposed method averages 13{,}201~ms.
+and the Proposed method averages 11{,}422~ms.
 When the repair loop is triggered, latency increases owing to additional LLM calls,
-but the trigger rate is low at 4\% (4/100 cases), so its effect on the overall average is limited.
+but the trigger rate is low at 5\% (5/100 cases, 8 total attempts), so its effect on the overall average is limited.
 
 \begin{table}[htbp]
   \centering
@@ -1760,11 +1761,11 @@ but the trigger rate is low at 4\% (4/100 cases), so its effect on the overall a
     \toprule
     ID & Method & Mean latency (ms) & Mean token count \\
     \midrule
-    B1 & LLM-only & 13{,}491 & 570 \\
-    B2 & Full Schema & 11{,}235 & 2{,}306 \\
+    B1 & LLM-only & 12{,}098 & 562 \\
+    B2 & Full Schema & 10{,}190 & 2{,}299 \\
     B3 & Rule-based & \textbf{8} & 0 \\
-    B4 & FK-list & 13{,}273 & 981 \\
-    P & Proposed & 13{,}201 & 2{,}558 \\
+    B4 & FK-list & 12{,}605 & 967 \\
+    P & Proposed & 11{,}422 & 2{,}550 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1785,8 +1786,8 @@ are classified as multi-hop queries.
     \toprule
     Hop count & Count & Proposed accuracy & Full Schema accuracy \\
     \midrule
-    2-hop & 37 & \textbf{76.9\%} & 24.3\% \\
-    3-hop & 24 & \textbf{71.8\%} & 8.3\% \\
+    2-hop & 37 & \textbf{76.9\%} & 27.0\% \\
+    3-hop & 24 & \textbf{71.8\%} & 12.5\% \\
     4-hop & 23 & \textbf{45.4\%} & 2.4\% \\
     \bottomrule
   \end{tabular}
@@ -1813,11 +1814,11 @@ Table~\ref{tab:error_analysis} shows the major failure modes of each method.
     \toprule
     ID & Method & \shortstack{Execution\\errors} & \shortstack{Syntax\\errors} & \shortstack{Table\\hallucinations} & \shortstack{JOIN\\hallucinations} \\
     \midrule
-    B1 & LLM-only & 100 & 0 & 5 & 0 \\
-    B2 & Full Schema & 69 & 1 & 0 & 0 \\
+    B1 & LLM-only & 100 & 0 & 8 & 0 \\
+    B2 & Full Schema & 70 & 0 & 0 & 0 \\
     B3 & Rule-based & 5 & 0 & 0 & 22 \\
-    B4 & FK-list & 94 & 0 & 0 & 0 \\
-    P & \textbf{Proposed} & \textbf{1} & \textbf{0} & \textbf{0} & \textbf{5} \\
+    B4 & FK-list & 92 & 0 & 0 & 0 \\
+    P & \textbf{Proposed} & \textbf{1} & \textbf{1} & \textbf{0} & \textbf{6} \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1826,11 +1827,11 @@ Table~\ref{tab:error_analysis} shows the major failure modes of each method.
 
 \begin{description}
   \item[B1: Table hallucinations and execution failure for all cases]
-    In LLM-only, all 100 cases result in execution errors. In 5 cases, table names are hallucinated,
+    In LLM-only, all 100 cases result in execution errors. In 8 cases, table names are hallucinated,
     generating generic names such as \texttt{materials} and \texttt{compounds}.
     The remaining cases use existing table names but misrepresent the column structure.
   \item[B4: FK information alone is insufficient]
-    With the FK list, 94 cases result in execution errors.
+    With the FK list, 92 cases result in execution errors.
     Although inter-table relationships are conveyed, column names, types, and table structures are insufficient,
     causing failures in generating SELECT and WHERE clauses.
   \item[P: WHERE-clause complexity at high difficulty]
@@ -1898,16 +1899,16 @@ Searches using the Proposed method \textbf{correctly rediscovered all 11 compoun
     Compound & $a$ (\AA) & $E_\text{hull}$ (eV/atom) & Rediscovered \\
     \midrule
     Ni$_3$Al & 3.572 & 0.000 & $\circ$ \\
-    Ni$_3$Ga & 3.58 & 0.036 & $\circ$ \\
-    Ni$_3$Ge & 3.56 & 0.032 & $\circ$ \\
+    Ni$_3$Ga & 3.66 & 0.010 & $\circ$ \\
+    Ni$_3$Ge & 3.61 & 0.040 & $\circ$ \\
     Co$_3$Ti & 3.55 & 0.000 & $\circ$ \\
-    Co$_3$Ta & 3.64 & 0.012 & $\circ$ \\
+    Co$_3$Ta & 3.72 & 0.040 & $\circ$ \\
     Co$_3$Al & 3.67 & 0.010 & $\circ$ \\
+    Co$_3$W & 3.74 & 0.050 & $\circ$ \\
     Al$_3$Sc & 4.09 & 0.000 & $\circ$ \\
     Al$_3$Ti & 3.98 & 0.020 & $\circ$ \\
     Pt$_3$Al & 3.90 & 0.000 & $\circ$ \\
-    Fe$_3$Pt & 3.74 & 0.020 & $\circ$ \\
-    Ir$_3$Nb & 3.87 & 0.000 & $\circ$ \\
+    Ir$_3$Nb & 3.87 & 0.030 & $\circ$ \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1923,7 +1924,9 @@ and bulk modulus $B$ (Table~\ref{tab:gamma_prime}).
   \label{eq:composite_score}
 \end{equation}
 
-Here, $w_1 = w_2 = w_3 = 1/3$, and each score is normalized to 0--1.
+Here, $w_1 = 0.35$ (stability), $w_2 = 0.35$ (lattice matching), $w_3 = 0.30$ (bulk modulus).
+Each score is normalized to 0--1 ($S_\text{stability} = 1 - E_\text{hull}/0.05$,
+$S_\text{lattice} = 1 - |\Delta a|/0.3$, $S_\text{bulk} = B/300$).
 
 \begin{table}[htbp]
   \centering
@@ -1938,12 +1941,12 @@ Here, $w_1 = w_2 = w_3 = 1/3$, and each score is normalized to 0--1.
     2 & Ni$_3$Al & 3.572 & 0.000 & 180 & 0.002 & 0.878 \\
     3 & Cu$_3$Ti & 3.54 & 0.000 & 212 & 0.03 & 0.877 \\
     4 & Co$_3$Ti & 3.55 & 0.000 & 190 & 0.02 & 0.867 \\
-    5 & Ni$_3$Ti & 3.40 & 0.000 & 195 & 0.17 & 0.812 \\
-    6 & Pt$_3$Al & 3.90 & 0.000 & 230 & 0.33 & 0.801 \\
-    7 & Co$_3$Nb & 3.68 & 0.000 & 205 & 0.11 & 0.798 \\
-    8 & Cu$_3$Ta & 3.58 & 0.008 & 215 & 0.01 & 0.795 \\
-    9 & Fe$_3$Nb & 3.96 & 0.000 & 198 & 0.39 & 0.785 \\
-    10 & Pd$_3$Ge & 3.82 & 0.000 & 170 & 0.25 & 0.765 \\
+    5 & Cu$_3$Ta & 3.58 & 0.008 & 224 & 0.01 & 0.856 \\
+    6 & Co$_3$Nb & 3.68 & 0.000 & 224 & 0.11 & 0.796 \\
+    7 & Ir$_3$Ga & 3.68 & 0.000 & 194 & 0.11 & 0.766 \\
+    8 & Cu$_3$Sc & 3.60 & 0.012 & 140 & 0.03 & 0.721 \\
+    9 & Ir$_3$Ge & 3.70 & 0.004 & 200 & 0.13 & 0.720 \\
+    10 & Pt$_3$Sc & 3.48 & 0.016 & 224 & 0.09 & 0.707 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1954,7 +1957,9 @@ experimental validation is essential to assess its feasibility as a $\gamma'$-ph
 
 \subsubsection{Candidates with Lattice Constants Near Ni$_3$Al}
 
-We extracted 10 candidates satisfying $|a - a_{\text{Ni}_3\text{Al}}| \leq 0.03$~\AA.
+We extracted 11 candidates satisfying $|a - a_{\text{Ni}_3\text{Al}}| \leq 0.03$~\AA.
+Note that the reference value is hardcoded as $a_{\text{ref}} = 3.57$~\AA\ in the implementation;
+thus, $\Delta a = |3.572 - 3.57| = 0.002$ for Ni$_3$Al itself reflects this reference.
 Cu$_3$Nb ($E_\text{hull} = 0.004$) and Cu$_3$Ta ($E_\text{hull} = 0.008$) are
 metastable, whereas Co$_3$Ti ($E_\text{hull} = 0.0$) and Cu$_3$Ti ($E_\text{hull} = 0.0$) were
 confirmed as stable phases.
@@ -1964,12 +1969,13 @@ The candidate list is provided in Supplementary S5.
 
 \subsubsection{Extraction of Stable L1$_2$ Candidates}
 
-We extracted 57 stable or metastable L1$_2$ candidates satisfying
+We extracted 339 stable or metastable L1$_2$ candidates satisfying
 $E_\text{hull} \leq 0.05$~eV/atom
-(12 stable and 45 metastable).
+(100 stable and 239 metastable).
+This is a substantial increase from the original 57 candidates, reflecting the extended database import.
 Among the stable phases, the one with the most negative formation energy is
-Pt$_3$Al ($E_f = -0.55$~eV/atom),
-followed by Al$_3$Sc ($-0.50$) and Co$_3$Ti ($-0.45$).
+YPt$_3$ ($E_f = -0.981$~eV/atom),
+followed by ErPd$_3$ ($-0.914$) and ScPd$_3$ ($-0.854$).
 Details are provided in Supplementary S6.
 
 \subsubsection{Generation of Materials Design Hypotheses}
@@ -2088,7 +2094,11 @@ the explicit specification of multi-stage JOIN paths enabled correct columns and
 For the independently designed queries, Hard (67.6\%) and Very Hard (92.9\%)
 outperformed the author-designed queries (Hard 64.3\%, Very Hard 38.4\%),
 confirming robustness for queries requiring multi-stage JOINs.
-The SUPERSET detection repair loop had a large effect by automatically correcting queries with insufficient conditions.
+Note that the SUPERSET detection repair loop is implemented only in the author-designed evaluation
+(\texttt{run\_full\_evaluation.py}); the independent evaluation (\texttt{run\_expert\_evaluation.py})
+does not include this mechanism.
+Therefore, the improvement in the independent evaluation is attributed primarily to
+Schema Graph constraints, column synonym mappings, and Few-Shot RAG rather than repair-loop correction.
 The SQL syntax validity rate (100.0\%) also supports the independence of Schema Graph constraints from the query origin.
 
 \subsection{Limitations and Constraints}
@@ -2096,7 +2106,7 @@ The SQL syntax validity rate (100.0\%) also supports the independence of Schema 
 
 \subsubsection{Database scale}
 
-The validation database of 1{,}471 entries and 5 prototypes
+The validation database of 1{,}470 entries and 5 prototypes
 is smaller than production-scale materials databases (OQMD: ${\sim}30$ tables and over one million records).
 Validation at the scale of 30 tables and one million records has not yet been conducted and remains future work.
 
@@ -2116,19 +2126,45 @@ As JOINs become deeper, the complexity of WHERE clauses increases,
 so the generation capability of the LLM constrains the upper bound of accuracy.
 Expanding few-shot examples, self-correction, and prompt improvement are future directions.
 
-\subsubsection{Data bias}
+\subsubsection{Data bias and synthetic data limitations}
 
-The validation data of 1{,}471 entries
-are estimated values based on first-principles calculations,
-not experimentally synthesized and validated data.
-The values of formation energies and lattice constants are
-estimated values based on first-principles calculations,
-and experimental support is required to validate materials-design hypotheses.
+The validation database of 1{,}470 entries was constructed with reference to OQMD DFT calculation values.
+However, the majority of the 30-table attributes (Curie temperature, grain boundary energy, synthesis methods,
+literature references, etc.) are \textbf{synthetic verification data generated for schema validation purposes}
+and are not experimental measurements.
+The materials analysis in Section~5.7 should be understood as a \textbf{case study demonstrating the
+Text-to-SQL pipeline's capabilities}, not as material science conclusions.
+Experimental verification is essential for any materials design hypothesis derived from these results.
+
+\subsubsection{Evaluation metric limitations}
+
+The execution accuracy metric (Equation~\ref{eq:column_aware}) is recall-based,
+with the gold result set as the denominator.
+When the generated SQL returns a superset of the expected rows, accuracy can reach 1.0
+despite the presence of false positives.
+Precision and F1 metrics were not computed in this evaluation and are left as future work.
+
+\subsubsection{Baseline fairness}
+
+The repair loop and Few-Shot RAG store are implemented only in the Proposed method;
+no equivalent retry mechanism is available for the baselines.
+The comparison in Table~\ref{tab:comparison} therefore reflects the combined effect of
+Schema Graph constraints, the repair loop, and Few-Shot RAG, not Schema Graph constraints alone.
+
+\subsubsection{Single model and single run}
+
+All experiments were conducted with a single LLM (gpt-5.5) and a single execution run.
+No variance estimates or confidence intervals were computed.
+
+\subsubsection{Gold SQL verification}
+
+The 100 gold SQL queries were authored and verified by a single researcher.
+Independent third-party verification of the gold SQL has not been conducted.
 
 \subsection{Expected Accuracy Changes in Large-Scale Databases}
 \label{sec:scale_prediction}
 
-This evaluation was conducted on a validation DB of 1{,}471 entries,
+This evaluation was conducted on a validation DB of 1{,}470 entries,
 but production operation is expected to involve scales of 10$\times$ (${\sim}$15{,}000 records) to 100$\times$ (${\sim}$150{,}000 records).
 The effects of increasing data scale on each failure category are analyzed below.
 
@@ -2165,7 +2201,7 @@ applies directly to large-scale operation as well.
 \paragraph{Missing WHERE conditions (SUPERSET returns)}
 Missing filter conditions have an impact that increases in proportion to data scale.
 For example, omitting the \texttt{source\_db='OQMD'} condition
-returns all 1{,}471 rows at 1{,}471 records,
+returns all 1{,}470 rows at 1{,}470 records,
 but returns 150{,}000 rows at 100$\times$ scale, causing a pronounced decrease in precision.
 This can be mitigated by strengthening the detection of ``excessive result row counts'' in the repair loop.
 
@@ -2186,7 +2222,7 @@ accuracy becomes 1.0 regardless of scale if the aggregation results are correct.
 \hline
 Data scale & Predicted accuracy range & Rationale \\
 \hline
-Current (1{,}471 records) & 70.2\% & Measured value (standard 100 queries) \\
+Current (1{,}470 records) & 70.2\% & Measured value (standard 100 queries) \\
 10$\times$ (${\sim}$15{,}000 records) & 66--70\% & Partially mitigated by SUPERSET detection \\
 100$\times$ (${\sim}$150{,}000 records) & 62--68\% & SUPERSET + LIMIT effects become apparent \\
 \hline
@@ -2331,14 +2367,14 @@ NL $\to$ data retrieval $\to$ materials-design hypothesis generation.
 \label{sec:conclusion}
 
 In this study, we proposed a Schema Graph-constrained Text-to-SQL method
-and validated it in an evaluation with 1{,}471 entries (5 prototypes) and 100 queries.
+and validated it in an evaluation with 1{,}470 entries (5 prototypes) and 100 queries.
 The main findings are as follows:
 
 \begin{enumerate}
   \item \textbf{Table hallucination rate of 0\% and execution accuracy of 70.2\%}:
     Schema Graph traversal (Steiner tree approximation) restricts the LLM's view to the necessary tables,
     simultaneously eliminating table hallucination and reducing unnecessary JOINs.
-    Validation was performed on 1{,}471 entries (L1$_2$+B2+NaCl+NiAs+BiF$_3$).
+    Validation was performed on 1{,}470 entries (L1$_2$+B2+NaCl+NiAs+BiF$_3$).
   \item \textbf{Generality through FK introspection}:
     The FK path search component can automatically adapt to arbitrary normalized materials RDBs (OQMD~\citep{saal2013oqmd}, Materials Project~\citep{jain2013mp}, AFLOW~\citep{curtarolo2012aflow}, etc.).
     However, domain adaptation of the terminology dictionary and \texttt{property\_name} mappings, as well as performance validation on large-scale schemas, are separately required.
@@ -2348,7 +2384,7 @@ The main findings are as follows:
   \item \textbf{Improvement of evaluation metrics}:
     The combined use of common-column matching and LIMIT 10{,}000 normalization (total +65.4pt)
     eliminated the effects of SELECT-column differences and LIMIT truncation in T2SQL evaluation.
-  \item \textbf{Regression tests 80/80 PASS}:
+  \item \textbf{Regression tests 39/39 PASS}:
     All safety and robustness tests, including SQL injection blocking and intent classification,
     were passed.
 \end{enumerate}
@@ -2356,11 +2392,12 @@ The main findings are as follows:
 \textbf{Independent evaluation}:
 For 100 queries independently designed by a materials researcher (targeting 30 tables),
 the mean execution accuracy was 79.3\%, exceeding that of the 100 author-designed queries (70.2\%).
-Owing to the effect of the SUPERSET detection repair loop, insufficient conditions in independently designed queries were automatically corrected.
+The improvement is attributed primarily to Schema Graph constraints, column synonym mappings, and Few-Shot RAG
+(the SUPERSET detection repair loop is not active in the independent evaluation).
 The SQL syntax validity rate reached 100.0\% (Table~\ref{tab:independent_eval}).
 
 \textbf{Limitations of the demonstration}:
-Validation was limited to 1{,}471 entries.
+Validation was limited to 1{,}470 entries.
 Very Hard accuracy was 38.4\% (author-designed) / 92.9\% (independently designed),
 and generation of complex WHERE clauses remains a future challenge.
 
@@ -2375,14 +2412,22 @@ AI4S agent integration, and CALPHAD integration.
 The DFT calculation data for L1$_2$-type intermetallic compounds were
 constructed with reference to values from the Open Quantum Materials Database (OQMD).
 We thank the Wolverton group at Northwestern University for developing and maintaining OQMD.
+\textbf{Note on data provenance}: The validation database is synthetic verification data
+constructed with reference to OQMD.
+Lattice constants and $E_\text{hull}$ for the 5 prototypes are based on OQMD DFT values,
+but the remaining attributes (Curie temperature, grain boundary energy, synthesis methods,
+literature references, etc.) are synthetic data for schema validation purposes
+and are not experimental measurements.
+The materials analysis in Section~5.7 should be understood as a case study demonstrating
+the Text-to-SQL pipeline's capabilities, not as material science conclusions.
 This work was supported by NIMS.
 
 % =====================================================================
 \section*{Data Availability}
 
-The seed data of the validation database used in this study (5 prototypes and 1{,}471 entries),
+The seed data of the validation database used in this study (5 prototypes and 1{,}470 entries),
 100 evaluation queries (gold SQL and expected result sets),
-CSV files of the experimental results for the five methods, 80 regression tests,
+CSV files of the experimental results for the five methods, 39 regression tests,
 the complete source code (Schema Graph traversal engine, SQL guard, condition extractor, and LLM mode),
 and the verification procedure document (VERIFICATION\_GUIDE.md) are
 included in the validation materials repository.
@@ -2429,7 +2474,7 @@ database construction, experiments, and manuscript writing.
 This supplementary material provides detailed information on the
 validation and evaluation of the Schema Graph-constrained Text-to-SQL system proposed in this paper.
 Section S1 presents all categories of regression tests and their validation focus,
-and Section S2 lists all 44 test cases.
+and Section S2 lists all 39 test cases.
 Section S3 compares examples of SQL generated by each method for representative queries,
 concretely demonstrating the effect of the JOIN path constraints in the proposed method.
 Section S4 reports detailed results of safety tests, including SQL injection attacks.
@@ -2690,7 +2735,7 @@ although experimental synthesis and validation are required.
 
 Stable and metastable L1$_2$ candidates satisfying
 $E_\text{hull} \leq 0.05$~eV/atom were extracted.
-A total of 57 candidates were extracted:
+A total of 339 candidates were extracted (100 stable, 239 metastable):
 12 stable cases ($E_\text{hull} = 0$) and 45 metastable cases
 ($0 < E_\text{hull} \leq 0.05$).
 Among the stable phases, the most negative formation energy was found for
@@ -2715,8 +2760,8 @@ Table~\ref{tab:sup_llm_params} shows the model parameters.
     \midrule
     Model name & gpt-5.5 (OpenAI) \\
     API access date & May 2026 \\
-    Temperature & 0.0 (deterministic generation) \\
-    Max tokens & 2{,}048 \\
+    Temperature & Not specified (gpt-5 series does not support the temperature parameter) \\
+    Max tokens & 4{,}096 (unified across all methods) \\
     Top-$p$ & 1.0 \\
     Request timeout & 30 s \\
     Number of retries & Up to 3 (exponential backoff) \\
@@ -2736,8 +2781,8 @@ The structured prompt consists of the following four components:
 
 The prompt template (\texttt{llm/prompt\_templates/sql\_generation\_prompt.md})
 and \texttt{allowed\_schema.yaml} are included in the validation materials repository.
-To ensure reproducibility, Temperature=0.0 was used;
-however, the output may change due to updates to the internal version of the LLM.
+The gpt-5 series API does not support the temperature parameter, and it was not specified in this implementation.
+The output may change due to updates to the internal version of the LLM.
 The results of this study are based on gpt-5.5 as of May 2026.
 % =====================================================================
 \section{Detailed Results for the 100 Independently Designed Queries}
