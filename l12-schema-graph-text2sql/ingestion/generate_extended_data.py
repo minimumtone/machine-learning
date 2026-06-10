@@ -338,9 +338,9 @@ def generate(out: TextIO = sys.stdout) -> None:
         if random.random() < 0.5:
             c44 = shear_mod * 0.9 + random.uniform(-5, 5)
             out.write(
-                f"INSERT INTO elastic_tensor (entry_id, "
+                f"INSERT INTO elastic_tensor (entry_id, calculation_id, "
                 f"bulk_modulus_vrh, shear_modulus_vrh, is_stable) VALUES "
-                f"('{eid}', "
+                f"('{eid}', '{cid}', "
                 f"{bulk_mod:.1f}, {shear_mod:.1f}, {'TRUE' if c44 > 0 else 'FALSE'});\n"
             )
 
