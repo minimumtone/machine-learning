@@ -1,0 +1,438 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyperFirstAtBeginDocument{\AtBeginDocument}
+\HyperFirstAtBeginDocument{\ifx\hyper@anchor\@undefined
+\global\let\oldcontentsline\contentsline
+\gdef\contentsline#1#2#3#4{\oldcontentsline{#1}{#2}{#3}}
+\global\let\oldnewlabel\newlabel
+\gdef\newlabel#1#2{\newlabelxx{#1}#2}
+\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
+\AtEndDocument{\ifx\hyper@anchor\@undefined
+\let\contentsline\oldcontentsline
+\let\newlabel\oldnewlabel
+\fi}
+\fi}
+\global\let\hyper@last\relax 
+\gdef\HyperFirstAtBeginDocument#1{#1}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\emailauthor{minamoto.satoshi@nims.go.jp}{Satoshi Minamoto\corref {cor1}}
+\Newlabel{nims}{a}
+\@LN@col{1}
+\@LN@col{2}
+\Newlabel{cor1}{1}
+\citation{wang2023ai4s,himanen2019dscribe}
+\citation{saal2013oqmd,kirklin2015oqmd}
+\citation{jain2013mp}
+\citation{curtarolo2012aflow}
+\citation{draxl2019nomad}
+\citation{senkov2018hea,george2019hea}
+\citation{ishii2023supercon}
+\citation{ishii2024polyinfo}
+\citation{yu2018spider}
+\citation{li2024bird}
+\citation{gao2023dail}
+\citation{pourreza2024dinsql}
+\citation{gao2024xiyan}
+\citation{hong2024survey}
+\citation{maamari2024schema}
+\citation{wang2020ratsql}
+\citation{chen2021shadowgnn}
+\citation{li2023resdsql}
+\citation{lin2020bridge}
+\citation{safdarian2026schemagraphsql}
+\citation{hoang2025grastsql}
+\citation{mcmillan2026context}
+\@LN@col{1}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{2}{section.1}\protected@file@percent }
+\newlabel{sec:introduction}{{1}{2}{Introduction}{section.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}Data-Access Barriers in AI for Science and Materials Informatics}{2}{subsection.1.1}\protected@file@percent }
+\@LN@col{2}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}Technical Trends in Text-to-SQL}{2}{subsection.1.2}\protected@file@percent }
+\citation{song2023matscnlp}
+\citation{mishra2024llamat}
+\citation{zhuang2026mkna}
+\citation{hu2026optimat}
+\citation{mp_mcp2025}
+\citation{ishii2023supercon}
+\citation{ishii2024polyinfo}
+\citation{emmo2020}
+\citation{sequeda2024benchmark}
+\citation{allemang2024obqc}
+\citation{saal2013oqmd}
+\citation{jain2013mp}
+\citation{curtarolo2012aflow}
+\@LN@col{1}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.3}NLP in Materials Informatics}{3}{subsection.1.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.4}Relationship to Ontology and Knowledge Graph Approaches}{3}{subsection.1.4}\protected@file@percent }
+\newlabel{sec:ontology_comparison}{{1.4}{3}{Relationship to Ontology and Knowledge Graph Approaches}{subsection.1.4}{}}
+\@LN@col{2}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.5}Objectives and Novelty}{3}{subsection.1.5}\protected@file@percent }
+\citation{villars2004pauling}
+\@LN@col{1}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Design Requirements for Materials Text-to-SQL}{4}{section.2}\protected@file@percent }
+\newlabel{sec:design_requirements}{{2}{4}{Design Requirements for Materials Text-to-SQL}{section.2}{}}
+\@LN@col{2}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Methods}{4}{section.3}\protected@file@percent }
+\newlabel{sec:methods}{{3}{4}{Methods}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Database Schema Design for Materials Data}{4}{subsection.3.1}\protected@file@percent }
+\newlabel{sec:schema_design}{{3.1}{4}{Database Schema Design for Materials Data}{subsection.3.1}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.1}Normalized Schema Design for OQMD Data}{4}{subsubsection.3.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Separation of the Composition Table}{4}{section*.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Separation of Structure/Phase Stability/Calculation}{4}{section*.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Entity-Attribute-Value (EAV) Pattern for Calculated Properties}{4}{section*.6}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Overview of the Step 3 pipeline. Starting from a natural language query and condition extraction (Step 2), Steiner tree approximation (Step 3) extracts the minimal necessary subgraph from 30 tables. The extracted tables, columns, and JOIN conditions are injected into the LLM as YAML (Step 4), and safe SQLFN is executed after passing through the 8-layer SQLGuard (Step 5). Because the LLM's field of view is limited to the necessary tables, unnecessary JOINs and table hallucinations are eliminated in principle.\relax }}{5}{figure.caption.1}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:step3_pipeline}{{1}{5}{Overview of the Step 3 pipeline. Starting from a natural language query and condition extraction (Step 2), Steiner tree approximation (Step 3) extracts the minimal necessary subgraph from 30 tables. The extracted tables, columns, and JOIN conditions are injected into the LLM as YAML (Step 4), and safe SQLFN is executed after passing through the 8-layer SQLGuard (Step 5). Because the LLM's field of view is limited to the necessary tables, unnecessary JOINs and table hallucinations are eliminated in principle.\relax }{figure.caption.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Overall configuration of the system architecture. Solid arrows indicate the main data flow, and dashed arrows (orange) indicate data references and feedback loops. Based on the Coverage Score, the pipeline branches to either the Rule-based path (high coverage) or the LLM path (low coverage), and in both cases, safe SQL is generated and executed through JOIN-path constraints imposed by the Schema Graph (FK traversal over 30 tables) and SQLGuard 8-layer validation. When an execution error or an empty result is detected, a repair loop (up to 2 attempts) is activated, requesting the LLM to perform a repair with error diagnostic information. Successful query pairs are accumulated in the Few-Shot RAG store and used for subsequent LLM generation.\relax }}{5}{figure.caption.2}\protected@file@percent }
+\newlabel{fig:architecture}{{2}{5}{Overall configuration of the system architecture. Solid arrows indicate the main data flow, and dashed arrows (orange) indicate data references and feedback loops. Based on the Coverage Score, the pipeline branches to either the Rule-based path (high coverage) or the LLM path (low coverage), and in both cases, safe SQL is generated and executed through JOIN-path constraints imposed by the Schema Graph (FK traversal over 30 tables) and SQLGuard 8-layer validation. When an execution error or an empty result is detected, a repair loop (up to 2 attempts) is activated, requesting the LLM to perform a repair with error diagnostic information. Successful query pairs are accumulated in the Few-Shot RAG store and used for subsequent LLM generation.\relax }{figure.caption.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Overview of the database schema.\relax }}{5}{table.caption.3}\protected@file@percent }
+\newlabel{tab:schema}{{1}{5}{Overview of the database schema.\relax }{table.caption.3}{}}
+\citation{gao2023dail}
+\@LN@col{1}
+\@writefile{toc}{\contentsline {paragraph}{Note on the Generality of ER Design}{6}{section*.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.2}XML/YAML Representation for RAG Context Injection}{6}{subsubsection.3.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Condition Extractor with a Materials Terminology Dictionary}{6}{subsection.3.2}\protected@file@percent }
+\newlabel{sec:entity_extractor}{{3.2}{6}{Condition Extractor with a Materials Terminology Dictionary}{subsection.3.2}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.1}Dictionary Structure}{6}{subsubsection.3.2.1}\protected@file@percent }
+\@LN@col{2}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.2}Unicode Normalization and Pattern Matching}{6}{subsubsection.3.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.3}Output Format}{6}{subsubsection.3.2.3}\protected@file@percent }
+\newlabel{lst:extract}{{1}{6}{Example of condition extraction}{lstlisting.1}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {1}Example of condition extraction.}{6}{lstlisting.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.4}Numeric Condition Parser}{6}{subsubsection.3.2.4}\protected@file@percent }
+\newlabel{sec:numeric_parser}{{3.2.4}{6}{Numeric Condition Parser}{subsubsection.3.2.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Supported patterns of the numeric condition parser.\relax }}{6}{table.caption.8}\protected@file@percent }
+\newlabel{tab:numeric_patterns}{{2}{6}{Supported patterns of the numeric condition parser.\relax }{table.caption.8}{}}
+\@LN@col{1}
+\@writefile{toc}{\contentsline {paragraph}{Floating-Point Comparisons and Tolerances}{7}{section*.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Handling NULL Values}{7}{section*.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.5}Chemical Formula Parser and Ambiguity Handling}{7}{subsubsection.3.2.5}\protected@file@percent }
+\newlabel{sec:formula_parser}{{3.2.5}{7}{Chemical Formula Parser and Ambiguity Handling}{subsubsection.3.2.5}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.6}Coverage Score: Detection of Unrecognized Vocabulary}{7}{subsubsection.3.2.6}\protected@file@percent }
+\newlabel{sec:coverage_score}{{3.2.6}{7}{Coverage Score: Detection of Unrecognized Vocabulary}{subsubsection.3.2.6}{}}
+\@LN@col{2}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.7}Intent Classifier: Preemptive Exclusion of Out-of-Scope Questions}{7}{subsubsection.3.2.7}\protected@file@percent }
+\newlabel{sec:intent_classifier}{{3.2.7}{7}{Intent Classifier: Preemptive Exclusion of Out-of-Scope Questions}{subsubsection.3.2.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Schema Graph Traversal Engine}{7}{subsection.3.3}\protected@file@percent }
+\newlabel{sec:schema_graph}{{3.3}{7}{Schema Graph Traversal Engine}{subsection.3.3}{}}
+\citation{networkx2008}
+\citation{hwang1992steiner}
+\@LN@col{1}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.1}Graph Construction from PostgreSQL Metadata}{8}{subsubsection.3.3.1}\protected@file@percent }
+\newlabel{lst:fk_query}{{2}{8}{FK relationship extraction query}{lstlisting.2}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {2}FK relationship extraction query.}{8}{lstlisting.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.2}Minimum-Covering JOIN Path: Steiner Tree Approximation}{8}{subsubsection.3.3.2}\protected@file@percent }
+\newlabel{sec:steiner}{{3.3.2}{8}{Minimum-Covering JOIN Path: Steiner Tree Approximation}{subsubsection.3.3.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{Computational Complexity}{8}{section*.11}\protected@file@percent }
+\@LN@col{2}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces Minimum-covering JOIN subgraph (Steiner tree approximation).\relax }}{8}{algorithm.1}\protected@file@percent }
+\newlabel{alg:steiner}{{1}{8}{Minimum-covering JOIN subgraph (Steiner tree approximation).\relax }{algorithm.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{Correctness on Tree-Structured FK Graphs}{8}{section*.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.3}JOIN Path $\to $ SQL FROM/JOIN Clause Generation}{8}{subsubsection.3.3.3}\protected@file@percent }
+\newlabel{lst:join_gen}{{3}{8}{JOIN clause generation from paths}{lstlisting.3}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {3}JOIN clause generation from paths.}{8}{lstlisting.3}\protected@file@percent }
+\citation{lewis2020rag}
+\citation{brown2020fewshot}
+\@LN@col{1}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.4}Multi-Element AND Queries: EXISTS Subquery Pattern}{9}{subsubsection.3.3.4}\protected@file@percent }
+\newlabel{sec:multi_element}{{3.3.4}{9}{Multi-Element AND Queries: EXISTS Subquery Pattern}{subsubsection.3.3.4}{}}
+\newlabel{lst:exists}{{4}{9}{Multi-element AND query using EXISTS subqueries}{lstlisting.4}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {4}Multi-element AND query using EXISTS subqueries.}{9}{lstlisting.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.5}Comparison: Naive vs. Schema Graph (Concrete Example)}{9}{subsubsection.3.3.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces SQL generation comparison: Naive vs. Schema Graph for ``B2 compounds containing Fe''.\relax }}{9}{table.caption.13}\protected@file@percent }
+\newlabel{tab:naive_vs_sg}{{3}{9}{SQL generation comparison: Naive vs. Schema Graph for ``B2 compounds containing Fe''.\relax }{table.caption.13}{}}
+\@LN@col{2}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}SQL Generation: Rule-based Mode and LLM Mode}{9}{subsection.3.4}\protected@file@percent }
+\newlabel{sec:sql_generation}{{3.4}{9}{SQL Generation: Rule-based Mode and LLM Mode}{subsection.3.4}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.4.1}Rule-based Mode (Level 1)}{9}{subsubsection.3.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Extensions in the Revised Version}{9}{section*.14}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Remaining Limitations}{9}{section*.15}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.4.2}LLM Mode with Few-Shot RAG (Level 2)}{9}{subsubsection.3.4.2}\protected@file@percent }
+\newlabel{sec:llm_mode}{{3.4.2}{9}{LLM Mode with Few-Shot RAG (Level 2)}{subsubsection.3.4.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Few-Shot RAG Store (SQL-as-Few-Shot-Examples)}{9}{subsection.3.5}\protected@file@percent }
+\newlabel{sec:few_shot}{{3.5}{9}{Few-Shot RAG Store (SQL-as-Few-Shot-Examples)}{subsection.3.5}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.5.1}Architecture}{9}{subsubsection.3.5.1}\protected@file@percent }
+\citation{salton1988tfidf}
+\@LN@col{1}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.5.2}TF-IDF Tokenization for Materials Queries}{10}{subsubsection.3.5.2}\protected@file@percent }
+\newlabel{lst:tokenizer}{{5}{10}{TF-IDF tokenizer for materials queries}{lstlisting.5}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {5}TF-IDF tokenizer for materials queries.}{10}{lstlisting.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.5.3}Extraction of Seed Examples from Research Papers}{10}{subsubsection.3.5.3}\protected@file@percent }
+\@LN@col{2}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Composition of the Few-Shot store (11 examples).\relax }}{10}{table.caption.16}\protected@file@percent }
+\newlabel{tab:few_shot_sources}{{4}{10}{Composition of the Few-Shot store (11 examples).\relax }{table.caption.16}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.6}SQL Guard: Multi-Layer Safety Validation}{10}{subsection.3.6}\protected@file@percent }
+\newlabel{sec:sql_guard}{{3.6}{10}{SQL Guard: Multi-Layer Safety Validation}{subsection.3.6}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.6.1}Basic Safety Validation (Layers 1--5)}{10}{subsubsection.3.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.6.2}Column Whitelist Validation (Layer 6)}{10}{subsubsection.3.6.2}\protected@file@percent }
+\newlabel{sec:column_wl}{{3.6.2}{10}{Column Whitelist Validation (Layer 6)}{subsubsection.3.6.2}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.6.3}FK-Consistent JOIN Validation (Layer 7)}{10}{subsubsection.3.6.3}\protected@file@percent }
+\newlabel{sec:join_validation}{{3.6.3}{10}{FK-Consistent JOIN Validation (Layer 7)}{subsubsection.3.6.3}{}}
+\citation{sqlglot2023}
+\@LN@col{1}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.6.4}Guard-Decision Classification (Layer 8)}{11}{subsubsection.3.6.4}\protected@file@percent }
+\newlabel{sec:guard_categories}{{3.6.4}{11}{Guard-Decision Classification (Layer 8)}{subsubsection.3.6.4}{}}
+\@writefile{toc}{\contentsline {paragraph}{Defense in Depth through DB Privileges}{11}{section*.17}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.6.5}Empty-Result Diagnosis}{11}{subsubsection.3.6.5}\protected@file@percent }
+\newlabel{sec:empty_diagnosis}{{3.6.5}{11}{Empty-Result Diagnosis}{subsubsection.3.6.5}{}}
+\@LN@col{2}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.7}Recommended Operational Configuration: Cascaded Fallback Strategy}{11}{subsection.3.7}\protected@file@percent }
+\newlabel{sec:cascade}{{3.7}{11}{Recommended Operational Configuration: Cascaded Fallback Strategy}{subsection.3.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.8}Runtime Repair Loop: Failure Diagnosis and Automatic Regeneration}{11}{subsection.3.8}\protected@file@percent }
+\newlabel{sec:repair_loop}{{3.8}{11}{Runtime Repair Loop: Failure Diagnosis and Automatic Regeneration}{subsection.3.8}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.8.1}Classification of Failure Modes}{11}{subsubsection.3.8.1}\protected@file@percent }
+\citation{saal2013oqmd}
+\@LN@col{1}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.8.2}Repair Process}{12}{subsubsection.3.8.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.8.3}Improving Diagnostic Accuracy with the Coverage Score}{12}{subsubsection.3.8.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Data Preparation}{12}{section.4}\protected@file@percent }
+\newlabel{sec:data}{{4}{12}{Data Preparation}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Construction of the Validation Database}{12}{subsection.4.1}\protected@file@percent }
+\@LN@col{2}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Composition of the validation database (1{,}471 entries in total).\relax }}{12}{table.caption.18}\protected@file@percent }
+\newlabel{tab:db_composition}{{5}{12}{Composition of the validation database (1{,}471 entries in total).\relax }{table.caption.18}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Rationale for the ER Design: From Flat Data to a Normalized RDB}{12}{subsection.4.2}\protected@file@percent }
+\newlabel{sec:er_design}{{4.2}{12}{Rationale for the ER Design: From Flat Data to a Normalized RDB}{subsection.4.2}{}}
+\@LN@col{1}
+\@writefile{toc}{\contentsline {paragraph}{Design Decision 1: Separation of the Composition Table (1:N Normalization)}{13}{section*.20}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Design Decision 2: Separation of Structure, Stability, and Calculation Conditions}{13}{section*.21}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Design Decision 3: Parent--Child Relationship Between Calculations and Properties}{13}{section*.22}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Design Decision 4: Master Table for Prototype Definitions}{13}{section*.23}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Normalization Necessitates Schema Graph Traversal}{13}{section*.24}\protected@file@percent }
+\@LN@col{2}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Data Ingestion and Transformation}{13}{subsection.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Results}{13}{section.5}\protected@file@percent }
+\newlabel{sec:results}{{5}{13}{Results}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Evaluation Design}{13}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.1.1}Evaluation Dataset (100 Queries)}{13}{subsubsection.5.1.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Evaluation query design (100 queries in total).\relax }}{13}{table.caption.25}\protected@file@percent }
+\newlabel{tab:query_design}{{6}{13}{Evaluation query design (100 queries in total).\relax }{table.caption.25}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.1.2}Compared Methods (5 Methods)}{13}{subsubsection.5.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.1.3}Evaluation Metrics}{13}{subsubsection.5.1.3}\protected@file@percent }
+\newlabel{sec:metrics}{{5.1.3}{13}{Evaluation Metrics}{subsubsection.5.1.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces ER diagram of the 30-table validation database. Centered on \texttt  {material\_entry}, core tables such as composition, structure, and phase\_stability are directly connected by FKs, while calculated properties, electronic structure, mechanical properties, surface energy, and related data are accessed through two or more hops. Gray arrows indicate FK relationships, and the red arrow indicates a self-referencing FK (the hierarchical structure of application\_domain). Yellow tables are N:M junction tables.\relax }}{14}{figure.caption.19}\protected@file@percent }
+\newlabel{fig:er_diagram}{{3}{14}{ER diagram of the 30-table validation database. Centered on \texttt {material\_entry}, core tables such as composition, structure, and phase\_stability are directly connected by FKs, while calculated properties, electronic structure, mechanical properties, surface energy, and related data are accessed through two or more hops. Gray arrows indicate FK relationships, and the red arrow indicates a self-referencing FK (the hierarchical structure of application\_domain). Yellow tables are N:M junction tables.\relax }{figure.caption.19}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Configuration of compared methods (common to all methods: 100 queries).\relax }}{14}{table.caption.26}\protected@file@percent }
+\newlabel{tab:methods}{{7}{14}{Configuration of compared methods (common to all methods: 100 queries).\relax }{table.caption.26}{}}
+\citation{jaccard1912distribution}
+\@LN@col{1}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.1.4}Improvements to Evaluation Metrics: Column-aware Matching and LIMIT Normalization}{15}{subsubsection.5.1.4}\protected@file@percent }
+\newlabel{sec:metric_improvements}{{5.1.4}{15}{Improvements to Evaluation Metrics: Column-aware Matching and LIMIT Normalization}{subsubsection.5.1.4}{}}
+\@writefile{toc}{\contentsline {paragraph}{Improvement A: Column-aware matching}{15}{section*.27}\protected@file@percent }
+\newlabel{eq:column_aware}{{1}{15}{Improvement A: Column-aware matching}{equation.5.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{Improvement C: LIMIT 10{,}000 normalization}{15}{section*.28}\protected@file@percent }
+\@LN@col{2}
+\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces Effect of evaluation-metric improvements in the Proposed method.\relax }}{15}{table.caption.30}\protected@file@percent }
+\newlabel{tab:metric_improvement}{{8}{15}{Effect of evaluation-metric improvements in the Proposed method.\relax }{table.caption.30}{}}
+\@writefile{toc}{\contentsline {paragraph}{Improvement effect}{15}{section*.29}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.1.5}Regression Tests (80 Cases)}{15}{subsubsection.5.1.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Five-Method Baseline Comparison}{15}{subsection.5.2}\protected@file@percent }
+\newlabel{sec:baseline_comparison}{{5.2}{15}{Five-Method Baseline Comparison}{subsection.5.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{Key findings}{15}{section*.32}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces Baseline comparison of the five methods (100 queries, gpt-5.5, column-aware matching + LIMIT 10{,}000).\relax }}{16}{table.caption.31}\protected@file@percent }
+\newlabel{tab:baseline_results}{{9}{16}{Baseline comparison of the five methods (100 queries, gpt-5.5, column-aware matching + LIMIT 10{,}000).\relax }{table.caption.31}{}}
+\@LN@col{1}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Detailed Analysis by Difficulty}{16}{subsection.5.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces Execution validity and execution accuracy by difficulty level (Proposed method).\relax }}{16}{table.caption.33}\protected@file@percent }
+\newlabel{tab:difficulty_breakdown}{{10}{16}{Execution validity and execution accuracy by difficulty level (Proposed method).\relax }{table.caption.33}{}}
+\@writefile{toc}{\contentsline {paragraph}{Trends by difficulty}{16}{section*.34}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.3.1}Latency Comparison}{16}{subsubsection.5.3.1}\protected@file@percent }
+\newlabel{sec:scalability}{{5.3.1}{16}{Latency Comparison}{subsubsection.5.3.1}{}}
+\@LN@col{2}
+\@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces Latency comparison by method (gpt-5.5).\relax }}{16}{table.caption.35}\protected@file@percent }
+\newlabel{tab:latency}{{11}{16}{Latency comparison by method (gpt-5.5).\relax }{table.caption.35}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Multi-hop Query Analysis}{16}{subsection.5.4}\protected@file@percent }
+\newlabel{sec:multihop}{{5.4}{16}{Multi-hop Query Analysis}{subsection.5.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {12}{\ignorespaces Execution accuracy comparison by hop count (2-hop or more).\relax }}{16}{table.caption.36}\protected@file@percent }
+\newlabel{tab:multihop}{{12}{16}{Execution accuracy comparison by hop count (2-hop or more).\relax }{table.caption.36}{}}
+\@writefile{toc}{\contentsline {paragraph}{Multi-hop trends}{16}{section*.37}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}Error Analysis}{16}{subsection.5.5}\protected@file@percent }
+\newlabel{sec:error_analysis}{{5.5}{16}{Error Analysis}{subsection.5.5}{}}
+\@writefile{toc}{\contentsline {paragraph}{Classification of failure modes}{16}{section*.39}\protected@file@percent }
+\@LN@col{1}
+\@writefile{lot}{\contentsline {table}{\numberline {13}{\ignorespaces Error analysis by method (100 queries). Execution errors = number of PostgreSQL runtime errors; table hallucinations = number of queries referencing at least one nonexistent table; JOIN hallucinations = number of queries containing JOINs not based on FK relationships.\relax }}{17}{table.caption.38}\protected@file@percent }
+\newlabel{tab:error_analysis}{{13}{17}{Error analysis by method (100 queries). Execution errors = number of PostgreSQL runtime errors; table hallucinations = number of queries referencing at least one nonexistent table; JOIN hallucinations = number of queries containing JOINs not based on FK relationships.\relax }{table.caption.38}{}}
+\@writefile{toc}{\contentsline {paragraph}{Breakdown analysis of Very Hard failures}{17}{section*.40}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {14}{\ignorespaces Failure-mode classification for Very Hard queries (20 cases).\relax }}{17}{table.caption.41}\protected@file@percent }
+\newlabel{tab:vhard_failure}{{14}{17}{Failure-mode classification for Very Hard queries (20 cases).\relax }{table.caption.41}{}}
+\@LN@col{2}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.6}SQL Injection and Safety Results}{17}{subsection.5.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.7}Materials Engineering Evaluation}{17}{subsection.5.7}\protected@file@percent }
+\newlabel{sec:materials_evaluation}{{5.7}{17}{Materials Engineering Evaluation}{subsection.5.7}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.7.1}Rediscovery of Known L1$_2$ Compounds}{17}{subsubsection.5.7.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {15}{\ignorespaces Rediscovery results for known L1$_2$ compounds (11/11).\relax }}{17}{table.caption.42}\protected@file@percent }
+\newlabel{tab:known_l12}{{15}{17}{Rediscovery results for known L1$_2$ compounds (11/11).\relax }{table.caption.42}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.7.2}Ranking of $\gamma '$-Phase Candidates}{17}{subsubsection.5.7.2}\protected@file@percent }
+\newlabel{eq:composite_score}{{2}{17}{Ranking of $\gamma '$-Phase Candidates}{equation.5.2}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.7.3}Candidates with Lattice Constants Near Ni$_3$Al}{17}{subsubsection.5.7.3}\protected@file@percent }
+\citation{vegard1921constitution}
+\citation{king1966volume}
+\@LN@col{1}
+\@writefile{lot}{\contentsline {table}{\numberline {16}{\ignorespaces Top 10 $\gamma '$-phase candidates (ordered by composite score $S$).\relax }}{18}{table.caption.43}\protected@file@percent }
+\newlabel{tab:gamma_prime}{{16}{18}{Top 10 $\gamma '$-phase candidates (ordered by composite score $S$).\relax }{table.caption.43}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.7.4}Extraction of Stable L1$_2$ Candidates}{18}{subsubsection.5.7.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.7.5}Generation of Materials Design Hypotheses}{18}{subsubsection.5.7.5}\protected@file@percent }
+\@LN@col{2}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Discussion}{18}{section.6}\protected@file@percent }
+\newlabel{sec:discussion}{{6}{18}{Discussion}{section.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Effectiveness of Schema Graph Constraints}{18}{subsection.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Schema information injection is decisive}{18}{section*.44}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Eliminating table hallucination through Schema Graph traversal}{18}{section*.45}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Structure of execution accuracy}{18}{section*.46}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Materials-Engineering Considerations}{18}{subsection.6.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.2.1}Complete rediscovery of known compounds}{18}{subsubsection.6.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.2.2}Materials-engineering validity of $\gamma '$ candidates}{18}{subsubsection.6.2.2}\protected@file@percent }
+\@LN@col{1}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Evaluation Using Independently Designed Queries (B1 Validation)}{19}{subsection.6.3}\protected@file@percent }
+\newlabel{sec:independent_eval}{{6.3}{19}{Evaluation Using Independently Designed Queries (B1 Validation)}{subsection.6.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {17}{\ignorespaces Accuracy comparison between author-designed queries and independently designed queries.\relax }}{19}{table.caption.47}\protected@file@percent }
+\newlabel{tab:independent_eval}{{17}{19}{Accuracy comparison between author-designed queries and independently designed queries.\relax }{table.caption.47}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}Limitations and Constraints}{19}{subsection.6.4}\protected@file@percent }
+\newlabel{sec:limitations}{{6.4}{19}{Limitations and Constraints}{subsection.6.4}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.4.1}Database scale}{19}{subsubsection.6.4.1}\protected@file@percent }
+\@LN@col{2}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.4.2}Self-referential nature of test cases}{19}{subsubsection.6.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.4.3}Difficulty dependence of execution accuracy}{19}{subsubsection.6.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.4.4}Data bias}{19}{subsubsection.6.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.5}Expected Accuracy Changes in Large-Scale Databases}{19}{subsection.6.5}\protected@file@percent }
+\newlabel{sec:scale_prediction}{{6.5}{19}{Expected Accuracy Changes in Large-Scale Databases}{subsection.6.5}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.5.1}Classification of failure patterns by scale dependence}{19}{subsubsection.6.5.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {18}{\ignorespaces Data-scale dependence of failure patterns\relax }}{19}{table.caption.48}\protected@file@percent }
+\newlabel{tab:scale_dependency}{{18}{19}{Data-scale dependence of failure patterns\relax }{table.caption.48}{}}
+\citation{yu2018spider}
+\citation{li2024bird}
+\citation{gao2023dail}
+\citation{wang2020ratsql}
+\citation{li2023resdsql}
+\citation{safdarian2026schemagraphsql}
+\citation{zhuang2026mkna}
+\citation{hu2026optimat}
+\citation{ishii2023supercon}
+\citation{ishii2024polyinfo}
+\citation{emmo2020}
+\citation{allemang2024obqc}
+\citation{jain2013mp}
+\citation{curtarolo2012aflow}
+\citation{draxl2019nomad}
+\citation{minamoto2020mint}
+\citation{minamoto2026pinax}
+\@LN@col{1}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.5.2}Accuracy prediction by scale}{20}{subsubsection.6.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Schema-dependent errors (column hallucination and insufficient JOINs)}{20}{section*.49}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Missing WHERE conditions (SUPERSET returns)}{20}{section*.50}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Aggregation queries (COUNT/AVG/distribution)}{20}{section*.51}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {19}{\ignorespaces Predicted accuracy by data scale\relax }}{20}{table.caption.53}\protected@file@percent }
+\newlabel{tab:scale_accuracy}{{19}{20}{Predicted accuracy by data scale\relax }{table.caption.53}{}}
+\@writefile{toc}{\contentsline {paragraph}{Overall prediction}{20}{table.caption.53}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.6}Comparison with Related Systems}{20}{subsection.6.6}\protected@file@percent }
+\@LN@col{2}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.7}Significance for AI for Science (AI4S)}{20}{subsection.6.7}\protected@file@percent }
+\newlabel{sec:ai4s}{{6.7}{20}{Significance for AI for Science (AI4S)}{subsection.6.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.8}Future Prospects}{20}{subsection.6.8}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {20}{\ignorespaces Comparison with related materials NLP / T2SQL / ontology systems, methods, and datasets.\relax }}{21}{table.caption.54}\protected@file@percent }
+\newlabel{tab:related_comparison}{{20}{21}{Comparison with related materials NLP / T2SQL / ontology systems, methods, and datasets.\relax }{table.caption.54}{}}
+\@LN@col{1}
+\@LN@col{2}
+\citation{saal2013oqmd}
+\citation{jain2013mp}
+\citation{curtarolo2012aflow}
+\bibstyle{elsarticle-num}
+\bibdata{references}
+\bibcite{wang2023ai4s}{{1}{}{{}}{{}}}
+\bibcite{himanen2019dscribe}{{2}{}{{}}{{}}}
+\bibcite{saal2013oqmd}{{3}{}{{}}{{}}}
+\bibcite{kirklin2015oqmd}{{4}{}{{}}{{}}}
+\bibcite{jain2013mp}{{5}{}{{}}{{}}}
+\bibcite{curtarolo2012aflow}{{6}{}{{}}{{}}}
+\bibcite{draxl2019nomad}{{7}{}{{}}{{}}}
+\bibcite{senkov2018hea}{{8}{}{{}}{{}}}
+\bibcite{george2019hea}{{9}{}{{}}{{}}}
+\bibcite{ishii2023supercon}{{10}{}{{}}{{}}}
+\@LN@col{1}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Conclusion}{22}{section.7}\protected@file@percent }
+\newlabel{sec:conclusion}{{7}{22}{Conclusion}{section.7}{}}
+\@LN@col{2}
+\bibcite{ishii2024polyinfo}{{11}{}{{}}{{}}}
+\bibcite{yu2018spider}{{12}{}{{}}{{}}}
+\bibcite{li2024bird}{{13}{}{{}}{{}}}
+\bibcite{gao2023dail}{{14}{}{{}}{{}}}
+\bibcite{pourreza2024dinsql}{{15}{}{{}}{{}}}
+\bibcite{gao2024xiyan}{{16}{}{{}}{{}}}
+\bibcite{hong2024survey}{{17}{}{{}}{{}}}
+\bibcite{maamari2024schema}{{18}{}{{}}{{}}}
+\bibcite{wang2020ratsql}{{19}{}{{}}{{}}}
+\bibcite{chen2021shadowgnn}{{20}{}{{}}{{}}}
+\bibcite{li2023resdsql}{{21}{}{{}}{{}}}
+\bibcite{lin2020bridge}{{22}{}{{}}{{}}}
+\bibcite{safdarian2026schemagraphsql}{{23}{}{{}}{{}}}
+\bibcite{hoang2025grastsql}{{24}{}{{}}{{}}}
+\bibcite{mcmillan2026context}{{25}{}{{}}{{}}}
+\bibcite{song2023matscnlp}{{26}{}{{}}{{}}}
+\bibcite{mishra2024llamat}{{27}{}{{}}{{}}}
+\bibcite{zhuang2026mkna}{{28}{}{{}}{{}}}
+\bibcite{hu2026optimat}{{29}{}{{}}{{}}}
+\bibcite{mp_mcp2025}{{30}{}{{}}{{}}}
+\bibcite{emmo2020}{{31}{}{{}}{{}}}
+\bibcite{sequeda2024benchmark}{{32}{}{{}}{{}}}
+\bibcite{allemang2024obqc}{{33}{}{{}}{{}}}
+\bibcite{villars2004pauling}{{34}{}{{}}{{}}}
+\bibcite{networkx2008}{{35}{}{{}}{{}}}
+\bibcite{hwang1992steiner}{{36}{}{{}}{{}}}
+\bibcite{lewis2020rag}{{37}{}{{}}{{}}}
+\bibcite{brown2020fewshot}{{38}{}{{}}{{}}}
+\bibcite{salton1988tfidf}{{39}{}{{}}{{}}}
+\bibcite{sqlglot2023}{{40}{}{{}}{{}}}
+\bibcite{jaccard1912distribution}{{41}{}{{}}{{}}}
+\bibcite{vegard1921constitution}{{42}{}{{}}{{}}}
+\bibcite{king1966volume}{{43}{}{{}}{{}}}
+\bibcite{minamoto2020mint}{{44}{}{{}}{{}}}
+\bibcite{minamoto2026pinax}{{45}{}{{}}{{}}}
+\@LN@col{1}
+\@LN@col{2}
+\@writefile{toc}{\let\numberline\tmptocnumberline}
+\@writefile{toc}{\contentsline {section}{\numberline {S1}Details of Regression Test Categories}{24}{appendix.A}\protected@file@percent }
+\newlabel{sec:sup_test_categories}{{S1}{24}{Details of Regression Test Categories}{appendix.A}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {S1}{\ignorespaces Regression test categories (all 80 cases, all PASS).\relax }}{24}{table.caption.59}\protected@file@percent }
+\newlabel{tab:sup_test_categories}{{S1}{24}{Regression test categories (all 80 cases, all PASS).\relax }{table.caption.59}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {S2}List of Regression Test Cases}{24}{appendix.B}\protected@file@percent }
+\newlabel{sec:sup_all_tests}{{S2}{24}{List of Regression Test Cases}{appendix.B}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {S3}Examples of Generated SQL}{24}{appendix.C}\protected@file@percent }
+\newlabel{sec:sup_sql_examples}{{S3}{24}{Examples of Generated SQL}{appendix.C}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {S2}{\ignorespaces List of regression test cases (all 44 cases, all PASS).\relax }}{25}{table.caption.60}\protected@file@percent }
+\newlabel{tab:sup_all_tests}{{S2}{25}{List of regression test cases (all 44 cases, all PASS).\relax }{table.caption.60}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {S3.1}``List stable L1$_2$ compounds containing Ni''}{26}{subsection.C.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{LLM-only (B1):}{26}{lstlisting.-1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Proposed method (P):}{26}{lstlisting.-2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {S3.2}``List L1$_2$ compounds containing both Ni and Al''}{26}{subsection.C.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Full Schema (B2):}{26}{lstlisting.-3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Proposed method (P):}{26}{lstlisting.-4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {S4}SQL Injection and Safety Test Results}{26}{appendix.D}\protected@file@percent }
+\newlabel{sec:sup_injection}{{S4}{26}{SQL Injection and Safety Test Results}{appendix.D}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {S3}{\ignorespaces SQL injection and safety test results (all cases blocked).\relax }}{27}{table.caption.65}\protected@file@percent }
+\newlabel{tab:sup_injection_results}{{S3}{27}{SQL injection and safety test results (all cases blocked).\relax }{table.caption.65}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {S5}Lattice-Constant Candidates Near Ni$_3$Al}{27}{appendix.E}\protected@file@percent }
+\newlabel{sec:sup_lattice_match}{{S5}{27}{Lattice-Constant Candidates Near Ni$_3$Al}{appendix.E}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {S4}{\ignorespaces Lattice-constant candidates near Ni$_3$Al ($|\Delta a| \leq 0.03$\nobreakspace  {}\r A).\relax }}{27}{table.caption.66}\protected@file@percent }
+\newlabel{tab:sup_lattice_match}{{S4}{27}{Lattice-constant candidates near Ni$_3$Al ($|\Delta a| \leq 0.03$~\AA ).\relax }{table.caption.66}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {S6}Extraction of Stable L1$_2$ Candidates}{27}{appendix.F}\protected@file@percent }
+\newlabel{sec:sup_stable_l12}{{S6}{27}{Extraction of Stable L1$_2$ Candidates}{appendix.F}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {S7}LLM Mode Configuration}{27}{appendix.G}\protected@file@percent }
+\newlabel{sec:sup_llm_config}{{S7}{27}{LLM Mode Configuration}{appendix.G}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {S5}{\ignorespaces LLM mode configuration parameters.\relax }}{27}{table.caption.67}\protected@file@percent }
+\newlabel{tab:sup_llm_params}{{S5}{27}{LLM mode configuration parameters.\relax }{table.caption.67}{}}
+\gdef \LT@i {\LT@entry 
+    {1}{27.28001pt}\LT@entry 
+    {5}{484.7pt}\LT@entry 
+    {1}{52.42001pt}\LT@entry 
+    {1}{55.76001pt}\LT@entry 
+    {1}{52.30002pt}\LT@entry 
+    {1}{62.71002pt}}
+\@writefile{toc}{\contentsline {section}{\numberline {S8}Detailed Results for the 100 Independently Designed Queries}{28}{appendix.H}\protected@file@percent }
+\newlabel{sec:sup_expert_queries}{{S8}{28}{Detailed Results for the 100 Independently Designed Queries}{appendix.H}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {S6}{\ignorespaces Detailed results for the 100 independently designed queries.\relax }}{28}{table.6}\protected@file@percent }
+\newlabel{tab:sup_expert_detail}{{S6}{28}{Detailed results for the 100 independently designed queries.\relax }{table.6}{}}
+\providecommand\NAT@force@numbers{}\NAT@force@numbers
+\@writefile{lot}{\contentsline {table}{\numberline {S7}{\ignorespaces Accuracy by category for the independently designed queries.\relax }}{30}{table.caption.68}\protected@file@percent }
+\newlabel{tab:sup_expert_category}{{S7}{30}{Accuracy by category for the independently designed queries.\relax }{table.caption.68}{}}
+\gdef \@abspage@last{30}
