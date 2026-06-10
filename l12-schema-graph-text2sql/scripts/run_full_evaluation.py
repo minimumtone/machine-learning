@@ -703,38 +703,45 @@ def run_materials_analysis(conn) -> None:
 
     # 1. Known L1₂ recovery
     cur = conn.cursor()
+    # Fix: Fe3Pt was in original paper but missing here; Co3W was in code but not paper
     known_formulas = ["Ni3Al", "Ni3Ga", "Ni3Ge", "Co3Ti", "Al3Sc",
-                      "Al3Ti", "Pt3Al", "Ir3Nb", "Co3Al", "Co3W", "Co3Ta"]
+                      "Al3Ti", "Pt3Al", "Ir3Nb", "Co3Al", "Co3Ta", "Fe3Pt"]
+    # Fix: Use DISTINCT ON formula to avoid counting duplicates from multiple sources
     cur.execute("""
-        SELECT m.formula, s.prototype, s.lattice_a, ps.energy_above_hull, ps.formation_energy_per_atom
+        SELECT DISTINCT ON (m.formula)
+               m.formula, s.prototype, s.lattice_a, ps.energy_above_hull,
+               ps.formation_energy_per_atom
         FROM material_entry m
         JOIN structure s ON s.entry_id = m.entry_id
         JOIN phase_stability ps ON ps.entry_id = m.entry_id
         WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-        ORDER BY m.formula
+        ORDER BY m.formula, ps.energy_above_hull ASC
     """)
     all_l12 = cur.fetchall()
     recovery_path = EVAL_DIR / "known_l12_recovery.csv"
+    # Build set of formulas actually found in DB
+    db_formulas = {row[0] for row in all_l12}
     with open(recovery_path, "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["formula", "prototype", "lattice_a", "energy_above_hull",
-                     "formation_energy_per_atom", "is_known", "recovered"])
+                     "formation_energy_per_atom", "is_known", "found_in_db"])
         for row in all_l12:
             is_known = row[0] in known_formulas
-            w.writerow([*row, is_known, is_known])
-    found = sum(1 for r in all_l12 if r[0] in known_formulas)
-    print(f"  Known L1₂ recovery: {found}/{len(known_formulas)}")
+            w.writerow([*row, is_known, is_known])  # found_in_db same as is_known for DB rows
+    found = sum(1 for f in known_formulas if f in db_formulas)
+    print(f"  Known L1₂ recovery: {found}/{len(known_formulas)} (unique formulas in DB: {len(db_formulas)})")
 
-    # 2. Stable L1₂ candidates
+    # 2. Stable L1₂ candidates (deduplicated by formula)
     cur.execute("""
-        SELECT m.formula, s.lattice_a, ps.energy_above_hull,
+        SELECT DISTINCT ON (m.formula)
+               m.formula, s.lattice_a, ps.energy_above_hull,
                ps.formation_energy_per_atom, ps.is_stable
         FROM material_entry m
         JOIN structure s ON s.entry_id = m.entry_id
         JOIN phase_stability ps ON ps.entry_id = m.entry_id
         WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
           AND ps.energy_above_hull <= 0.05
-        ORDER BY ps.energy_above_hull ASC, ps.formation_energy_per_atom ASC
+        ORDER BY m.formula, ps.energy_above_hull ASC, ps.formation_energy_per_atom ASC
     """)
     stable_path = EVAL_DIR / "stable_l12_candidates.csv"
     with open(stable_path, "w", newline="") as f:
@@ -748,16 +755,18 @@ def run_materials_analysis(conn) -> None:
             w.writerow([*row, cls])
     print(f"  Stable candidates written to {stable_path}")
 
-    # 3. Ni3Al lattice-matched candidates
-    cur.execute("""
-        SELECT m.formula, s.lattice_a,
-               ABS(s.lattice_a - 3.57) AS lattice_diff,
+    # 3. Ni3Al lattice-matched candidates (deduplicated, use 3.572 for Ni3Al)
+    NI3AL_LATTICE = 3.572
+    cur.execute(f"""
+        SELECT DISTINCT ON (m.formula)
+               m.formula, s.lattice_a,
+               ABS(s.lattice_a - {NI3AL_LATTICE}) AS lattice_diff,
                ps.energy_above_hull, ps.formation_energy_per_atom
         FROM material_entry m
         JOIN structure s ON s.entry_id = m.entry_id
         JOIN phase_stability ps ON ps.entry_id = m.entry_id
         WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-        ORDER BY ABS(s.lattice_a - 3.57) ASC
+        ORDER BY m.formula, ABS(s.lattice_a - {NI3AL_LATTICE}) ASC
     """)
     lattice_path = EVAL_DIR / "ni3al_lattice_matched_candidates.csv"
     with open(lattice_path, "w", newline="") as f:
@@ -768,9 +777,10 @@ def run_materials_analysis(conn) -> None:
             w.writerow(row)
     print(f"  Lattice-matched candidates written to {lattice_path}")
 
-    # 4. γ' candidate ranking
+    # 4. γ' candidate ranking (deduplicated by formula)
     cur.execute("""
-        SELECT m.formula, s.lattice_a, ps.energy_above_hull,
+        SELECT DISTINCT ON (m.formula)
+               m.formula, s.lattice_a, ps.energy_above_hull,
                ps.formation_energy_per_atom,
                cp_bm.value AS bulk_modulus
         FROM material_entry m
@@ -780,7 +790,7 @@ def run_materials_analysis(conn) -> None:
         JOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id
         WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
           AND cp_bm.property_name = 'bulk_modulus'
-        ORDER BY ps.energy_above_hull ASC
+        ORDER BY m.formula, ps.energy_above_hull ASC
     """)
     ranking_path = EVAL_DIR / "gamma_prime_candidate_ranking.csv"
     with open(ranking_path, "w", newline="") as f:
@@ -796,11 +806,13 @@ def run_materials_analysis(conn) -> None:
             ehull = float(ehull)
             eform = float(eform)
             bm = float(bm)
-            mismatch = abs(lat_a - 3.57)
+            mismatch = abs(lat_a - 3.572)  # Use actual Ni3Al lattice constant
             stab_score = max(0, 1.0 - ehull / 0.05) if ehull <= 0.05 else 0.0
             lat_score = max(0, 1.0 - mismatch / 0.3)
             bulk_score = min(bm / 300.0, 1.0)
-            composite = stab_score * 0.35 + lat_score * 0.35 + bulk_score * 0.30
+            # Weights: paper states 1/3 each but original code was 0.35/0.35/0.30
+            # Align with paper: equal weights
+            composite = stab_score / 3.0 + lat_score / 3.0 + bulk_score / 3.0
             candidates.append((formula, lat_a, ehull, eform, bm, mismatch,
                                 stab_score, lat_score, bulk_score, composite))
         candidates.sort(key=lambda x: -x[-1])
