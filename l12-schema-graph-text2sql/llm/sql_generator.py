@@ -124,7 +124,7 @@ def generate_sql_via_llm(
         create_kwargs["max_completion_tokens"] = 4096
     else:
         create_kwargs["temperature"] = 0.0
-        create_kwargs["max_tokens"] = 512
+        create_kwargs["max_tokens"] = 4096  # Fix B7: unified budget
     resp = client.chat.completions.create(**create_kwargs)
     latency_ms = int((time.time() - t0) * 1000)
     raw = resp.choices[0].message.content or ""

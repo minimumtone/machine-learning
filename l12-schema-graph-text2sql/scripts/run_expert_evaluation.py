@@ -18,8 +18,10 @@ import psycopg
 
 from evaluation.metrics import (
     execution_accuracy,
+    execution_accuracy_full,
     hallucinated_table_rate,
     hallucinated_join_rate,
+    normalize_limit as _normalize_limit,
     syntax_validity,
 )
 from graph.graph_builder import build_table_graph
@@ -97,7 +99,8 @@ def proposed_pipeline(query, table_graph, allowed_columns, allowed_joins, api_ke
             join_list.append(m.group(1).strip())
     # Also include all allowed joins relevant to required tables
     for j in allowed_joins:
-        if any(t in j for t in required_tables) and j not in join_list:
+        # Fix B10: word-boundary match
+        if any(re.search(r'\b' + re.escape(t) + r'\b', j) for t in required_tables) and j not in join_list:
             join_list.append(j)
 
     result = generate_sql_via_llm(
@@ -115,14 +118,8 @@ def proposed_pipeline(query, table_graph, allowed_columns, allowed_joins, api_ke
 
 
 def normalize_limit(sql: str) -> str:
-    if not sql:
-        return sql
-    # Replace any existing LIMIT N with LIMIT 10000
-    sql = re.sub(r"\bLIMIT\s+\d+", "LIMIT 10000", sql, flags=re.IGNORECASE)
-    # Add LIMIT 10000 if none present
-    if not re.search(r"\bLIMIT\b", sql, re.IGNORECASE):
-        sql = sql.rstrip().rstrip(";") + "\nLIMIT 10000;"
-    return sql
+    """Fix B2: Only add LIMIT if absent — delegate to metrics.normalize_limit."""
+    return _normalize_limit(sql)
 
 
 def main():
@@ -194,22 +191,23 @@ def main():
         else:
             exec_result = {"success": False, "error": "empty SQL", "rows": [], "row_count": 0}
 
-        # Normalize types for comparison (gold results stored as strings)
-        def normalize_row(row):
-            return [str(v) if v is not None else None for v in row]
+        # Fix B4: Type normalization is now handled inside execution_accuracy_full
+        # via _normalize_value — no need for manual str() conversion
+        actual_rows = exec_result.get("rows", [])
 
-        actual_rows = [normalize_row(r) for r in exec_result.get("rows", [])]
-
-        # Metrics
+        # Metrics — Fix B1: use full metrics (precision/recall/F1)
         is_syntax = syntax_validity(sql) if sql else False
         is_exec = exec_result.get("success", False)
         result_columns = exec_result.get("columns", None)
-        exec_acc = execution_accuracy(
+        acc_full = execution_accuracy_full(
             actual_rows, expected_rows,
             result_columns=result_columns,
             expected_columns=expected_columns,
         )
-        is_correct = exec_acc >= 0.8
+        exec_acc = acc_full["recall"]
+        exec_prec = acc_full["precision"]
+        exec_f1 = acc_full["f1"]
+        is_correct = exec_f1 >= 0.8  # Use F1, not recall-only
 
         if is_syntax:
             syntax_ok += 1
@@ -225,6 +223,8 @@ def main():
             "generated_sql": sql,
             "execution_success": is_exec,
             "execution_accuracy": exec_acc,
+            "execution_precision": exec_prec,
+            "execution_f1": exec_f1,
             "is_correct": is_correct,
             "expected_row_count": len(expected_rows),
             "actual_row_count": exec_result.get("row_count", 0),
@@ -262,8 +262,8 @@ def main():
 
     print()
     print("COMPARISON:")
-    print(f"  著者設計100件:   76.3%")
-    print(f"  独立設計100件:   {100*correct/total:.1f}%")
+    print(f"  著者設計100件:   (re-evaluate with same pipeline)")
+    print(f"  独立設計100件:   {100*correct/total:.1f}% (F1-based)")
 
     # Save detailed results
     output_path = EVAL_DIR / "expert_evaluation_results.json"
@@ -280,8 +280,8 @@ def main():
                                   for d, s in diff_stats.items()},
             },
             "comparison": {
-                "author_designed": {"queries": 100, "accuracy": 76.3},
-                "expert_designed": {"queries": total, "accuracy": round(100*correct/total, 1)},
+                "note": "author_designed must be re-evaluated with the same pipeline version",
+                "expert_designed": {"queries": total, "accuracy_f1_binary": round(100*correct/total, 1)},
             },
             "results": results,
         }, f, indent=2, ensure_ascii=False)

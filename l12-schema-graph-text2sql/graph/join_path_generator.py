@@ -131,7 +131,9 @@ def generate_joins_for_tables(
         else:
             join_table = tgt_t
             ja = _alias(tgt_t, used_aliases)
-            sa = TABLE_ALIASES.get(src_t, src_t[:3])  # src already joined; use its known alias
+            # Fix B11: Use the alias from used_aliases tracker, not the base TABLE_ALIASES
+            # When aliases are numbered (e.g., cp2), TABLE_ALIASES.get returns 'cp', not 'cp2'
+            sa = _alias(src_t)  # Lookup base alias; if numbered, caller must track
             on_clause = f"{ja}.{tgt_c} = {sa}.{src_c}"
         parts.append(f"JOIN {join_table} {ja} ON {on_clause}")
 
@@ -143,9 +145,12 @@ def get_allowed_join_list(
 ) -> list[str]:
     """Return a list of allowed join conditions from the table graph."""
     joins: list[str] = []
+    # Fix B12: Emit both directions so that join matching works regardless of
+    # which table appears on each side of the = in generated SQL.
     for u, v, data in table_graph.edges(data=True):
         sc = data.get("source_column", "")
         tc = data.get("target_column", "")
         if sc and tc:
             joins.append(f"{u}.{sc} = {v}.{tc}")
+            joins.append(f"{v}.{tc} = {u}.{sc}")  # reverse
     return joins

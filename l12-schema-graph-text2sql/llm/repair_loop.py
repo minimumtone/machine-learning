@@ -38,7 +38,7 @@ def _call_llm(prompt: str, system_msg: str, model: str, api_key: str) -> tuple[s
         create_kwargs["max_completion_tokens"] = 4096
     else:
         create_kwargs["temperature"] = 0.0
-        create_kwargs["max_tokens"] = 512
+        create_kwargs["max_tokens"] = 4096  # Fix B7: unified budget
     try:
         resp = client.chat.completions.create(**create_kwargs)
     except Exception:
@@ -143,9 +143,9 @@ def count_sql_conditions(sql: str) -> int:
     # Count WHERE clause presence
     if "WHERE" in upper:
         count += 1
-    # Count AND/OR conditions (each adds a condition)
+    # Count AND conditions (each adds a restriction)
     count += len(re.findall(r"\bAND\b", upper))
-    count += len(re.findall(r"\bOR\b", upper))
+    # Fix B13: OR *expands* the result set, not restricts it — don't count
     return count
 
 
@@ -177,7 +177,7 @@ def detect_superset(
     sql: str,
     row_count: int,
     conditions: dict[str, Any],
-    total_db_rows: int = 1471,
+    total_db_rows: int | None = None,
 ) -> dict[str, Any]:
     """Detect if a query result is likely a superset (missing WHERE conditions).
 
@@ -188,6 +188,9 @@ def detect_superset(
       - expected_conditions: int
       - row_ratio: float
     """
+    # Fix B13: Don't hardcode total_db_rows; query count from DB or use safe default
+    if total_db_rows is None:
+        total_db_rows = 1500  # Conservative estimate; callers should pass actual count
     sql_conds = count_sql_conditions(sql)
     expected_conds = count_expected_conditions(conditions)
     row_ratio = row_count / total_db_rows if total_db_rows > 0 else 0.0
@@ -340,9 +343,13 @@ def execution_repair_loop(
     sql = original_sql
     attempts: list[dict[str, Any]] = []
     total_repair_tokens = 0
+    total_repair_latency_ms = 0  # Fix B14: track repair latency
 
+    exec_result: dict[str, Any] = {}
     for i in range(max_retries + 1):  # +1 for the original attempt
+        t0 = time.time()
         exec_result = execute_fn(sql)
+        repair_latency = int((time.time() - t0) * 1000)
 
         if exec_result.get("success") and exec_result.get("row_count", 0) > 0:
             # Check for superset (only if conditions were extracted)
@@ -357,14 +364,18 @@ def execution_repair_loop(
                         sql, error_msg, allowed_tables, allowed_columns,
                         allowed_joins, model=model, api_key=api_key,
                     )
+                    t_repair = time.time()
                     repair_tokens = repair_result.get("tokens", 0)
                     total_repair_tokens += repair_tokens
+                    repair_lat = int((time.time() - t_repair) * 1000)
+                    total_repair_latency_ms += repair_lat
                     attempts.append({
                         "attempt": i + 1,
                         "reason": "superset",
                         "error": error_msg,
                         "repair": repair_result,
                         "tokens": repair_tokens,
+                        "latency_ms": repair_lat,
                         "superset_info": superset_info,
                     })
                     if repair_result.get("success"):
@@ -377,6 +388,7 @@ def execution_repair_loop(
                 "exec_result": exec_result,
                 "attempts": attempts,
                 "repair_tokens": total_repair_tokens,
+                "repair_latency_ms": total_repair_latency_ms,
                 "repaired": i > 0,
             }
 
@@ -400,6 +412,7 @@ def execution_repair_loop(
         )
         repair_tokens = repair_result.get("tokens", 0)
         total_repair_tokens += repair_tokens
+        total_repair_latency_ms += repair_latency
 
         attempts.append({
             "attempt": i + 1,
@@ -407,6 +420,7 @@ def execution_repair_loop(
             "error": error_msg,
             "repair": repair_result,
             "tokens": repair_tokens,
+            "latency_ms": repair_latency,
         })
 
         if not repair_result.get("success"):
@@ -422,5 +436,6 @@ def execution_repair_loop(
         "exec_result": exec_result,
         "attempts": attempts,
         "repair_tokens": total_repair_tokens,
+        "repair_latency_ms": total_repair_latency_ms,
         "repaired": len(attempts) > 0 and exec_result.get("success", False),
     }

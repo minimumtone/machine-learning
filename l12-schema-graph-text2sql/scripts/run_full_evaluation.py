@@ -20,12 +20,13 @@ sys.path.insert(0, str(PROJECT))
 import psycopg
 
 from evaluation.metrics import (
-    compute_metrics,
     execution_accuracy,
+    execution_accuracy_full,
     hallucinated_column_rate,
     hallucinated_join_rate,
     hallucinated_table_rate,
     multi_hop_success,
+    normalize_limit,
     syntax_validity,
 )
 from graph.graph_builder import build_table_graph
@@ -170,10 +171,10 @@ Question: {query}"""
         )
         _is_new = model and any(t in model for t in ("gpt-5", "o1", "o3", "o4"))
         if _is_new:
-            create_kwargs["max_completion_tokens"] = 512
+            create_kwargs["max_completion_tokens"] = 4096  # Fix B7: unified budget
         else:
             create_kwargs["temperature"] = 0.0
-            create_kwargs["max_tokens"] = 512
+            create_kwargs["max_tokens"] = 4096  # Fix B7: unified budget
         resp = client.chat.completions.create(**create_kwargs)
         latency_ms = int((time.time() - t0) * 1000)
         raw = resp.choices[0].message.content or ""
@@ -218,10 +219,10 @@ Question: {query}"""
         )
         _is_new = model and any(t in model for t in ("gpt-5", "o1", "o3", "o4"))
         if _is_new:
-            create_kwargs["max_completion_tokens"] = 512
+            create_kwargs["max_completion_tokens"] = 4096  # Fix B7: unified budget
         else:
             create_kwargs["temperature"] = 0.0
-            create_kwargs["max_tokens"] = 512
+            create_kwargs["max_tokens"] = 4096  # Fix B7: unified budget
         resp = client.chat.completions.create(**create_kwargs)
         latency_ms = int((time.time() - t0) * 1000)
         raw = resp.choices[0].message.content or ""
@@ -269,10 +270,10 @@ Question: {query}"""
         )
         _is_new = model and any(t in model for t in ("gpt-5", "o1", "o3", "o4"))
         if _is_new:
-            create_kwargs["max_completion_tokens"] = 512
+            create_kwargs["max_completion_tokens"] = 4096  # Fix B7: unified budget
         else:
             create_kwargs["temperature"] = 0.0
-            create_kwargs["max_tokens"] = 512
+            create_kwargs["max_tokens"] = 4096  # Fix B7: unified budget
         resp = client.chat.completions.create(**create_kwargs)
         latency_ms = int((time.time() - t0) * 1000)
         raw = resp.choices[0].message.content or ""
@@ -314,7 +315,8 @@ def proposed_schema_graph(query: str, table_graph, allowed_columns: list[str],
             join_list.append(m.group(1).strip())
     # Also include all allowed joins relevant to required tables
     for j in allowed_joins:
-        if any(t in j for t in required_tables) and j not in join_list:
+        # Fix B10: word-boundary match to avoid structure matching band_structure
+        if any(re.search(r'\b' + re.escape(t) + r'\b', j) for t in required_tables) and j not in join_list:
             join_list.append(j)
 
     # Step 5: Generate SQL via LLM with constraints
@@ -350,39 +352,49 @@ def compute_single_metrics(sql: str, exec_result: dict, expected_rows: list,
                            tokens: int, latency_ms: int,
                            expected_columns: list[str] | None = None,
                            allowed_columns: list[str] | None = None) -> dict:
-    """Compute metrics for a single query."""
+    """Compute metrics for a single query.
+
+    Fixes applied:
+    - B1: Returns precision/recall/F1 (not just recall)
+    - B5: Uses AST-based hallucinated_join_rate (takes SQL, not join list)
+    - B10: Uses word-boundary table matching
+    """
     gen_tables = extract_tables_from_sql(sql)
     gen_columns = extract_columns_from_sql(sql)
-
-    gen_joins: list[str] = []
-    for m in re.finditer(
-        r"JOIN\s+\w+\s+\w+\s+ON\s+([\w.]+\s*=\s*[\w.]+)", sql, re.IGNORECASE,
-    ):
-        gen_joins.append(m.group(1))
 
     is_syntax_valid = syntax_validity(sql)
     is_exec_valid = exec_result.get("success", False)
     result_columns = exec_result.get("columns", None)
-    # Column-aware accuracy (Improvement A)
-    exec_acc = execution_accuracy(
+
+    # Fix B1: Full metrics (recall/precision/F1) with B3+B4 fixes
+    acc_full = execution_accuracy_full(
         exec_result.get("rows", []), expected_rows,
         result_columns=result_columns,
         expected_columns=expected_columns,
     )
-    # Raw accuracy without column-aware matching (baseline for Improvement A)
-    raw_exec_acc = execution_accuracy(
+    exec_acc = acc_full["recall"]  # backward-compat "execution_accuracy"
+
+    # Raw accuracy without column-aware matching
+    raw_acc_full = execution_accuracy_full(
         exec_result.get("rows", []), expected_rows,
     )
+
     h_table = hallucinated_table_rate(gen_tables, ALLOWED_TABLES)
     h_column = hallucinated_column_rate(gen_columns, allowed_columns or [])
-    h_join = hallucinated_join_rate(gen_joins, allowed_joins)
-    is_correct = exec_acc >= 0.8
+    # Fix B5: Pass SQL directly for AST-based alias resolution
+    h_join = hallucinated_join_rate(sql, allowed_joins)
+    is_correct = acc_full["f1"] >= 0.8  # Use F1 instead of recall-only
 
     return {
         "syntax_valid": is_syntax_valid,
         "execution_valid": is_exec_valid,
         "execution_accuracy": exec_acc,
-        "raw_execution_accuracy": raw_exec_acc,
+        "execution_precision": acc_full["precision"],
+        "execution_recall": acc_full["recall"],
+        "execution_f1": acc_full["f1"],
+        "raw_execution_accuracy": raw_acc_full["recall"],
+        "raw_execution_precision": raw_acc_full["precision"],
+        "raw_execution_f1": raw_acc_full["f1"],
         "hallucinated_table_rate": h_table,
         "hallucinated_column_rate": h_column,
         "hallucinated_join_rate": h_join,
@@ -450,17 +462,15 @@ def run_evaluation():
                 repair_attempts = 0
                 repair_tokens = 0
 
-                # Normalize LIMIT to 10000
+                # Fix B2: Only ADD LIMIT 10000 if no LIMIT exists
                 if sql:
-                    sql = re.sub(r"\bLIMIT\s+\d+", "LIMIT 10000", sql, flags=re.IGNORECASE)
-                    if not re.search(r"\bLIMIT\b", sql, re.IGNORECASE):
-                        sql = sql.rstrip().rstrip(";") + "\nLIMIT 10000;"
+                    sql = normalize_limit(sql)
 
                 # Execute
                 exec_result = execute_sql(conn, sql) if sql else {"success": False, "rows": [], "row_count": 0}
 
-                # ── Repair loop for proposed method ──
-                if method == "proposed" and sql and has_llm:
+                # ── Repair loop (Fix B8: apply to ALL LLM methods, not just proposed) ──
+                if method != "baseline3_rule_based" and sql and has_llm:
                     from llm.repair_loop import detect_superset
                     query_conditions = extract_conditions(question)
                     needs_repair = (
@@ -482,9 +492,7 @@ def run_evaluation():
                         linked_cols = gen.get("linked_columns", allowed_columns)
 
                         def _exec_fn(s: str) -> dict:
-                            s_norm = re.sub(r"\bLIMIT\s+\d+", "LIMIT 10000", s, flags=re.IGNORECASE)
-                            if not re.search(r"\bLIMIT\b", s_norm, re.IGNORECASE):
-                                s_norm = s_norm.rstrip().rstrip(";") + "\nLIMIT 10000;"
+                            s_norm = normalize_limit(s)
                             return execute_sql(conn, s_norm)
 
                         repair_result = execution_repair_loop(
@@ -503,10 +511,7 @@ def run_evaluation():
                         if repair_result.get("repaired", False):
                             sql = repair_result["sql"]
                             exec_result = repair_result["exec_result"]
-                            # Re-normalize LIMIT on repaired SQL
-                            sql = re.sub(r"\bLIMIT\s+\d+", "LIMIT 10000", sql, flags=re.IGNORECASE)
-                            if not re.search(r"\bLIMIT\b", sql, re.IGNORECASE):
-                                sql = sql.rstrip().rstrip(";") + "\nLIMIT 10000;"
+                            sql = normalize_limit(sql)
                         elif repair_result["exec_result"].get("success", False):
                             # Repair ran but 0-row stayed; use latest SQL/exec
                             sql = repair_result["sql"]
@@ -569,9 +574,10 @@ def write_result_csv(results: list[dict], path: Path) -> None:
     fieldnames = [
         "query_id", "question", "difficulty", "hop_count", "method",
         "sql",
-        "syntax_valid", "execution_valid", "execution_accuracy",
-        "raw_execution_accuracy",
-        "hallucinated_table_rate", "hallucinated_join_rate",
+        "syntax_valid", "execution_valid",
+        "execution_accuracy", "execution_precision", "execution_recall", "execution_f1",
+        "raw_execution_accuracy", "raw_execution_precision", "raw_execution_f1",
+        "hallucinated_table_rate", "hallucinated_column_rate", "hallucinated_join_rate",
         "token_usage", "latency_ms",
         "repair_attempts", "repair_tokens",
     ]
@@ -595,8 +601,14 @@ def write_metrics_summary(all_results: dict[str, list[dict]], path: Path) -> Non
             "syntax_validity": sum(r.get("syntax_valid", False) for r in results) / n,
             "execution_validity": sum(r.get("execution_valid", False) for r in results) / n,
             "avg_execution_accuracy": sum(r.get("execution_accuracy", 0) for r in results) / n,
+            "avg_execution_precision": sum(r.get("execution_precision", 0) for r in results) / n,
+            "avg_execution_recall": sum(r.get("execution_recall", 0) for r in results) / n,
+            "avg_execution_f1": sum(r.get("execution_f1", 0) for r in results) / n,
             "avg_raw_execution_accuracy": sum(r.get("raw_execution_accuracy", 0) for r in results) / n,
+            "avg_raw_execution_precision": sum(r.get("raw_execution_precision", 0) for r in results) / n,
+            "avg_raw_execution_f1": sum(r.get("raw_execution_f1", 0) for r in results) / n,
             "avg_hallucinated_table_rate": sum(r.get("hallucinated_table_rate", 0) for r in results) / n,
+            "avg_hallucinated_column_rate": sum(r.get("hallucinated_column_rate", 0) for r in results) / n,
             "avg_hallucinated_join_rate": sum(r.get("hallucinated_join_rate", 0) for r in results) / n,
             "avg_token_usage": sum(r.get("token_usage", 0) for r in results) / n,
             "avg_latency_ms": sum(r.get("latency_ms", 0) for r in results) / n,
@@ -613,9 +625,13 @@ def write_metrics_summary(all_results: dict[str, list[dict]], path: Path) -> Non
             sub = [r for r in results if r.get("difficulty") == diff]
             if sub:
                 row[f"{diff}_exec_accuracy"] = sum(r.get("execution_accuracy", 0) for r in sub) / len(sub)
+                row[f"{diff}_exec_precision"] = sum(r.get("execution_precision", 0) for r in sub) / len(sub)
+                row[f"{diff}_exec_f1"] = sum(r.get("execution_f1", 0) for r in sub) / len(sub)
                 row[f"{diff}_exec_validity"] = sum(r.get("execution_valid", False) for r in sub) / len(sub)
             else:
                 row[f"{diff}_exec_accuracy"] = 0.0
+                row[f"{diff}_exec_precision"] = 0.0
+                row[f"{diff}_exec_f1"] = 0.0
                 row[f"{diff}_exec_validity"] = 0.0
         rows.append(row)
 
@@ -638,6 +654,8 @@ def write_multi_hop_report(all_results: dict[str, list[dict]], path: Path) -> No
                     "hop_count": hop,
                     "n_queries": len(sub),
                     "exec_accuracy": sum(r.get("execution_accuracy", 0) for r in sub) / len(sub),
+                    "exec_precision": sum(r.get("execution_precision", 0) for r in sub) / len(sub),
+                    "exec_f1": sum(r.get("execution_f1", 0) for r in sub) / len(sub),
                     "exec_validity": sum(r.get("execution_valid", False) for r in sub) / len(sub),
                     "syntax_validity": sum(r.get("syntax_valid", False) for r in sub) / len(sub),
                 })

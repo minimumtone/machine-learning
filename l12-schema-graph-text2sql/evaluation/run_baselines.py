@@ -1,4 +1,10 @@
-"""Run baseline Text-to-SQL methods for comparison."""
+"""Run baseline Text-to-SQL methods for comparison.
+
+DEPRECATED: This is the legacy standalone baseline runner.
+Use scripts/run_full_evaluation.py which runs ALL methods (baselines + proposed)
+in a single pass with unified metrics, token budgets, and repair loops.
+This file is kept for reference only and should NOT be used for evaluation.
+"""
 from __future__ import annotations
 
 import json
