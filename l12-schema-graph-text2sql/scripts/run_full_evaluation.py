@@ -461,10 +461,20 @@ def run_evaluation():
 
                 # ── Repair loop for proposed method ──
                 if method == "proposed" and sql and has_llm:
+                    from llm.repair_loop import detect_superset
+                    query_conditions = extract_conditions(question)
                     needs_repair = (
                         not exec_result.get("success", False)
                         or exec_result.get("row_count", 0) == 0
                     )
+                    # Also check for superset (too many rows / missing conditions)
+                    if not needs_repair and exec_result.get("success"):
+                        superset_check = detect_superset(
+                            sql, exec_result.get("row_count", 0), query_conditions,
+                        )
+                        if superset_check["is_superset"]:
+                            needs_repair = True
+
                     if needs_repair:
                         coverage = gen.get("coverage", {})
                         effective_joins = gen.get("effective_joins", allowed_joins)
@@ -485,6 +495,7 @@ def run_evaluation():
                             allowed_columns=linked_cols,
                             allowed_joins=effective_joins,
                             coverage=coverage,
+                            conditions=query_conditions,
                             max_retries=2,
                             model=model,
                             api_key=api_key,

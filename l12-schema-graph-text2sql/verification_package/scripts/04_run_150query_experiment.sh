@@ -58,14 +58,14 @@ fi
 
 if [ -n "$QUICK" ]; then
     echo ""
-    echo "  モデル: gpt-4o-mini"
+    echo "  モデル: gpt-5.5"
     echo "  クエリ数: 50 (medium 25件 + complex 25件)"
     echo "  条件: Full Schema / Traversed / No Schema"
     echo "  推定API料金: $0.3-1"
     echo "  推定所要時間: 10-20分"
 else
     echo ""
-    echo "  モデル: gpt-4o-mini"
+    echo "  モデル: gpt-5.5"
     echo "  クエリ数: 150 (6カテゴリ × 25件)"
     echo "  条件: Full Schema / Traversed / No Schema"
     echo "  推定API料金: $1-3"

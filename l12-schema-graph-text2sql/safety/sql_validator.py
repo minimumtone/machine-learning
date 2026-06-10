@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -534,14 +535,90 @@ def check_column_type_safety(
     return warnings
 
 
+@lru_cache(maxsize=1)
+def _load_column_synonyms() -> dict[str, str]:
+    """Load column synonym mappings from material_terms.yaml."""
+    path = Path(__file__).parent.parent / "llm" / "material_terms.yaml"
+    if not path.exists():
+        return {}
+    with path.open(encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+    if not isinstance(data, dict):
+        return {}
+    raw = data.get("column_synonyms")
+    if not isinstance(raw, dict):
+        return {}
+    return {k.lower(): v.lower() for k, v in raw.items()}
+
+
+def suggest_column_correction(
+    bad_column: str,
+    allowed_columns: list[str],
+) -> str | None:
+    """Suggest the correct column for a hallucinated column reference.
+
+    Checks column_synonyms first, then falls back to fuzzy matching
+    (same table, shortest edit distance).
+    """
+    synonyms = _load_column_synonyms()
+    bad_lower = bad_column.lower()
+    allowed_lower = {c.lower() for c in allowed_columns}
+
+    # Check synonym mapping (only if target is in allowed_columns)
+    if bad_lower in synonyms:
+        target = synonyms[bad_lower]
+        if target in allowed_lower:
+            return target
+        # Cross-table synonym: target table not in current context
+        # Fall through to fuzzy matching within same table
+
+    # Fuzzy match: find closest column in the same table
+    parts = bad_lower.split(".")
+    if len(parts) != 2:
+        return None
+    table, col = parts
+    same_table = [c for c in allowed_columns if c.lower().startswith(f"{table}.")]
+    if not same_table:
+        return None
+
+    # Simple edit distance for short strings
+    def _edit_distance(a: str, b: str) -> int:
+        if len(a) < len(b):
+            a, b = b, a
+        prev = list(range(len(b) + 1))
+        for i, ca in enumerate(a, 1):
+            curr = [i] + [0] * len(b)
+            for j, cb in enumerate(b, 1):
+                curr[j] = min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + (ca != cb))
+            prev = curr
+        return prev[-1]
+
+    best_col = None
+    best_dist = 999
+    for candidate in same_table:
+        cand_col = candidate.lower().split(".", 1)[1]
+        dist = _edit_distance(col, cand_col)
+        if dist < best_dist:
+            best_dist = dist
+            best_col = candidate
+    # Only suggest if reasonably close (edit distance <= half the column name length)
+    if best_col and best_dist <= max(3, len(col) // 2):
+        return best_col.lower()
+    return None
+
+
 def check_allowed_columns(
     sql: str,
     allowed_columns: list[str] | None = None,
     schema_path: Path | None = None,
 ) -> list[str]:
-    """Return list of disallowed column references found in SQL."""
-    schema = _load_allowed_schema(schema_path)
+    """Return list of disallowed column references found in SQL.
+
+    Each entry includes a correction suggestion if available, e.g.:
+    "c.fractional_amount (did you mean: composition.atomic_fraction?)"
+    """
     if allowed_columns is None:
+        schema = _load_allowed_schema(schema_path)
         allowed_columns = schema.get("allowed_columns", [])
     if not allowed_columns:
         return []
@@ -572,7 +649,11 @@ def check_allowed_columns(
         table = alias_to_table.get(alias.lower(), alias.lower())
         canonical = f"{table}.{col}".lower()
         if canonical not in allowed_lower:
-            disallowed.append(col_ref)
+            suggestion = suggest_column_correction(canonical, allowed_columns)
+            if suggestion:
+                disallowed.append(f"{col_ref} (use {suggestion} instead)")
+            else:
+                disallowed.append(col_ref)
     return disallowed
 
 

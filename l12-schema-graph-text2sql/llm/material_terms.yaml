@@ -221,6 +221,46 @@ property_terms:
       - spacegroup
     column: structure.space_group
 
+# Column synonym corrections: LLM-hallucinated name → correct table.column
+# Used by sql_validator to suggest corrections in repair loop
+column_synonyms:
+  # composition table
+  "composition.fractional_amount": "composition.atomic_fraction"
+  "composition.fraction": "composition.atomic_fraction"
+  "composition.atomic_percent": "composition.atomic_fraction"
+  "composition.weight_fraction": "composition.atomic_fraction"
+  "composition.element_id": "composition.element"
+  "composition.atomic_number": "element.atomic_number"
+  # structure table
+  "structure.volume": "structure.volume_per_atom"
+  "structure.cell_volume": "structure.volume_per_atom"
+  "structure.lattice_volume": "structure.volume_per_atom"
+  # calculation table
+  "calculation.xc_functional": "calculation.functional"
+  "calculation.exchange_correlation": "calculation.functional"
+  # surface_energy table
+  "surface_energy.surface_reconstruction": "surface_energy.is_reconstructed"
+  "surface_energy.surface_orientation": "surface_energy.miller_index"
+  "surface_energy.orientation": "surface_energy.miller_index"
+  # elastic_tensor table
+  "elastic_tensor.bulk_modulus": "elastic_tensor.bulk_modulus_vrh"
+  "elastic_tensor.shear_modulus": "elastic_tensor.shear_modulus_vrh"
+  # material_entry table
+  "material_entry.name": "material_entry.formula"
+  "material_entry.compound": "material_entry.formula"
+  # phase_stability table
+  "phase_stability.stability": "phase_stability.is_stable"
+  "phase_stability.formation_energy": "phase_stability.formation_energy_per_atom"
+  # magnetic_property table
+  "magnetic_property.magnetization": "magnetic_property.total_magnetization"
+  "magnetic_property.curie_temperature": "magnetic_property.curie_temperature_k"
+  # thermal_property table
+  "thermal_property.debye_temperature": "thermal_property.debye_temperature_k"
+  # density_of_states table
+  "density_of_states.dos_at_fermi": "density_of_states.total_dos_at_fermi"
+  # material_defect table
+  "material_defect.defect_type": "material_defect.defect_type_id"
+
 elements:
   Ni:
     aliases: [Ni, nickel, "\u30CB\u30C3\u30B1\u30EB"]

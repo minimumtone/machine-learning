@@ -79,7 +79,7 @@ Aggregation patterns:
 Allowed tables:
 {allowed_tables}
 
-Allowed columns:
+Allowed columns (ONLY use these exact column names — do NOT invent or guess column names):
 {allowed_columns}
 
 Allowed JOINs:
