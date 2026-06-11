@@ -408,11 +408,15 @@
     <p>以下のコマンドを<strong>コピー＆ペースト</strong>して Enter を押してください：</p>
     <p><strong>Windows の場合：</strong></p>
     <div class="code-block">
-<span class="prompt">C:\...\machine-learning-main&gt;</span> pip install streamlit pandas numpy matplotlib seaborn plotly scikit-learn
+<span class="prompt">C:\...\machine-learning-main&gt;</span> pip install -r requirements.txt
     </div>
     <p><strong>macOS の場合：</strong></p>
     <div class="code-block">
-<span class="prompt">$</span> pip3 install streamlit pandas numpy matplotlib seaborn plotly scikit-learn
+<span class="prompt">$</span> pip3 install -r requirements.txt
+    </div>
+    <div class="info">
+        <code>requirements.txt</code> はアプリに必要な全パッケージが記載されたファイルです。
+        このコマンドで一括インストールされます。
     </div>
     <div class="warning">
         インストールには数分かかることがあります。画面にたくさんの文字が流れますが、
@@ -530,7 +534,7 @@ Ctrl + C
     <dd>
         <strong>対処法（Windows）</strong>：<code>pip</code> の代わりに <code>python -m pip</code> を使ってみてください：
         <div class="code-block">
-<span class="prompt">&gt;</span> python -m pip install streamlit pandas numpy matplotlib seaborn plotly scikit-learn
+<span class="prompt">&gt;</span> python -m pip install -r requirements.txt
         </div>
         <strong>対処法（macOS）</strong>：<code>pip3</code> を使ってください。
     </dd>
@@ -547,7 +551,7 @@ Ctrl + C
         スタートメニューで「cmd」と検索し、右クリック → 「管理者として実行」。<br>
         <strong>対処法（macOS）</strong>：コマンドの先頭に <code>sudo</code> を付けてください：
         <div class="code-block">
-<span class="prompt">$</span> sudo pip3 install streamlit pandas numpy matplotlib seaborn plotly scikit-learn
+<span class="prompt">$</span> sudo pip3 install -r requirements.txt
         </div>
         パスワードを求められたら、Mac のログインパスワードを入力してください（入力中は画面に何も表示されません）。
     </dd>

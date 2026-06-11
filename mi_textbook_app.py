@@ -673,10 +673,9 @@ elif section_key == "regression":
     col3.metric("MAE", f"{mae_lr:.2f}")
 
     if r2_lr < 0:
-        st.warning(r"""
+        st.warning(f"""
         **R² が負値** — 線形回帰モデルが平均値予測よりも悪い結果です。
-        これは組成情報だけでは降伏強度の予測が困難であることを意味します
-        （降伏強度は熱処理・加工履歴にも強く依存するため）。
+        これは現在の特徴量だけでは {target_col} の予測が困難であることを意味します。
         非線形モデル（SVR, Random Forest）との比較で改善を確認してください。
         """)
 
