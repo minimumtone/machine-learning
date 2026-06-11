@@ -59,8 +59,10 @@ def test_hallucinated_column_rate():
 
 
 def test_hallucinated_join_rate():
+    # Fix B5: first arg is now a SQL string, not a list of joins
+    sql = "SELECT * FROM a JOIN b ON a.x = b.y"
     rate = hallucinated_join_rate(
-        ["a.x = b.y"],
+        sql,
         ["a.x = b.y", "c.z = d.w"],
     )
     assert rate == 0.0
@@ -68,28 +70,71 @@ def test_hallucinated_join_rate():
 
 def test_hallucinated_join_rate_alias_resolution():
     """Test that alias-form joins are resolved to table-form before comparison."""
-    # Generated SQL uses aliases: c.entry_id = m.entry_id
-    # Allowed list uses full table names: composition.entry_id = material_entry.entry_id
+    # Fix B5: first arg is now a SQL string with aliases
+    sql = ("SELECT * FROM material_entry AS m "
+           "JOIN structure AS s ON s.entry_id = m.entry_id "
+           "JOIN phase_stability AS ps ON ps.entry_id = m.entry_id")
     rate = hallucinated_join_rate(
-        ["c.entry_id = m.entry_id", "ps.entry_id = m.entry_id"],
-        ["composition.entry_id = material_entry.entry_id",
+        sql,
+        ["structure.entry_id = material_entry.entry_id",
          "phase_stability.entry_id = material_entry.entry_id"],
     )
     assert rate == 0.0
 
     # Reversed order should also match (canonical sorting)
+    sql2 = "SELECT * FROM material_entry AS m JOIN structure AS s ON m.entry_id = s.entry_id"
     rate2 = hallucinated_join_rate(
-        ["m.entry_id = c.entry_id"],
-        ["composition.entry_id = material_entry.entry_id"],
+        sql2,
+        ["structure.entry_id = material_entry.entry_id"],
     )
     assert rate2 == 0.0
 
     # Truly hallucinated join should still be caught
+    sql3 = ("SELECT * FROM material_entry AS m "
+            "JOIN structure AS s ON s.entry_id = m.entry_id "
+            "JOIN x ON x.foo = y.bar")
     rate3 = hallucinated_join_rate(
-        ["c.entry_id = m.entry_id", "x.foo = y.bar"],
-        ["composition.entry_id = material_entry.entry_id"],
+        sql3,
+        ["structure.entry_id = material_entry.entry_id"],
     )
     assert rate3 == 0.5
+
+
+def test_hallucinated_join_rate_word_boundary_b16():
+    """Fix B16: 'ON' in 'composition'/'calculation' must not be treated as ON clause."""
+    sql = ("SELECT m.formula, c.element, c.fraction "
+           "FROM material_entry m "
+           "JOIN composition c ON c.entry_id = m.entry_id "
+           "WHERE c.element = 'Ni'")
+    rate = hallucinated_join_rate(
+        sql,
+        ["composition.entry_id = material_entry.entry_id"],
+    )
+    # Without \b, the regex matches "compositi*ON*" producing a bogus join → rate > 0
+    assert rate == 0.0
+
+    sql2 = ("SELECT * FROM calculation cal "
+            "JOIN calculated_property cp ON cp.calc_id = cal.calc_id")
+    rate2 = hallucinated_join_rate(
+        sql2,
+        ["calculated_property.calc_id = calculation.calc_id"],
+    )
+    assert rate2 == 0.0
+
+
+def test_hallucinated_join_rate_cte_b17():
+    """Fix B17: JOINs to CTE names should not count as hallucinated."""
+    sql = ("WITH stable AS ("
+           "  SELECT entry_id FROM phase_stability WHERE energy_above_hull <= 0.001"
+           ") "
+           "SELECT m.formula FROM material_entry m "
+           "JOIN stable s ON s.entry_id = m.entry_id")
+    rate = hallucinated_join_rate(
+        sql,
+        ["material_entry.entry_id = phase_stability.entry_id"],
+    )
+    # The join is to the CTE 'stable', not a hallucinated table
+    assert rate == 0.0
 
 
 def test_multi_hop_success():

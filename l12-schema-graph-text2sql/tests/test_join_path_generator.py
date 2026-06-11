@@ -32,5 +32,6 @@ def test_generate_joins_for_tables():
 def test_get_allowed_join_list():
     g = build_table_graph(_sample_fks())
     joins = get_allowed_join_list(g)
-    assert len(joins) == 5
+    # Fix B12: both directions emitted, so 5 edges * 2 = 10
+    assert len(joins) == 10
     assert any("composition" in j for j in joins)

@@ -10,3 +10,4 @@ services:
       - "127.0.0.1:5432:5432"
     volumes:
       - ../data/extended_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ../data/insert_data.sql:/docker-entrypoint-initdb.d/02_data.sql

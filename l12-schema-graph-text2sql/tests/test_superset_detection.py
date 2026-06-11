@@ -29,7 +29,8 @@ def test_count_sql_conditions_complex():
         "WHERE s.prototype = 'L12' AND ps.is_stable = TRUE "
         "AND m.formula LIKE '%Ni%' OR m.formula LIKE '%Co%'"
     )
-    assert count_sql_conditions(sql) == 4  # WHERE + 2 AND + OR
+    # Fix B13: OR expands result set, not counted as restriction
+    assert count_sql_conditions(sql) == 3  # WHERE + 2 AND (OR not counted)
 
 
 def test_count_sql_conditions_no_where():

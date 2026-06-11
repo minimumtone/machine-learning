@@ -29,7 +29,7 @@ cd l12-schema-graph-text2sql
 pip install -e ".[dev]"
 ```
 
-### 2. PostgreSQL起動
+### 2. PostgreSQL起動（スキーマ + データ自動投入）
 
 ```bash
 cd docker
@@ -37,27 +37,17 @@ docker compose up -d
 cd ..
 ```
 
-これにより `db/schema.sql` が自動適用され、7テーブルが作成されます。
-`db/seed/` 内のCSVファイルがコンテナ内 `/seed/` にマウントされます。
+これにより `db/extended_schema.sql`（30テーブル）と `db/insert_data.sql`（データ投入）が
+自動適用され、material_entry等にデータが投入されます。
 
-### 3. Seed dataの生成・投入
-
-```bash
-# Seed CSVを生成（db/seed/ に120件のL1₂化合物データを出力）
-python ingestion/generate_seed_data.py
-
-# PostgreSQLにロード
-python ingestion/load_seed_data.py
-```
-
-### 4. 環境変数の設定
+### 3. 環境変数の設定
 
 ```bash
 cp .env.example .env
 # .env を編集し OPENAI_API_KEY を設定
 ```
 
-### 5. Text-to-SQL実行
+### 4. Text-to-SQL実行
 
 ```bash
 python -c "
@@ -67,21 +57,21 @@ print(result['sql'])
 "
 ```
 
-### 6. FastAPI起動（オプション）
+### 5. FastAPI起動（オプション）
 
 ```bash
 uvicorn api.main:app --reload
 # POST /query with {"query": "L1₂構造を持つ化合物を一覧にして"}
 ```
 
-### 7. テスト実行
+### 6. テスト実行
 
 ```bash
 pytest tests/ -v
-# 80テスト全パスを確認
+# 123テスト全パスを確認
 ```
 
-### 8. 評価パイプライン実行（オプション）
+### 7. 評価パイプライン実行（オプション）
 
 ```bash
 # 100クエリ×5手法の完全評価（OpenAI API key必要、10-15分程度）
@@ -94,16 +84,13 @@ python scripts/run_full_evaluation.py
 l12-schema-graph-text2sql/
 ├── docker/              # Docker Compose設定（docker-compose.yml）
 │   └── docker-compose.yml
-├── db/                  # スキーマ定義、seed data
-│   ├── schema.sql       # 7テーブルスキーマ（PostgreSQL初期化時に自動適用）
-│   ├── extended_schema.sql  # 30テーブル拡張スキーマ
-│   ├── seed/            # Seed CSV（generate_seed_data.pyで生成）
+├── db/                  # スキーマ定義・データ投入
+│   ├── extended_schema.sql  # 30テーブルスキーマ（Docker起動時に自動適用）
+│   ├── insert_data.sql      # データ投入SQL（Docker起動時に自動適用）
 │   └── sample_queries.sql
-├── ingestion/           # データ生成・ロード
-│   ├── generate_seed_data.py   # Seed CSV生成（120件L1₂化合物）
-│   ├── load_seed_data.py       # PostgreSQLへのロード
-│   ├── data_normalizer.py      # データ正規化
-│   └── validate_seed_data.py   # Seedデータ検証
+├── ingestion/           # データ生成・正規化
+│   ├── generate_extended_data.py  # 拡張データ生成
+│   └── data_normalizer.py        # データ正規化
 ├── graph/               # Schema Graph構築・走査
 │   ├── schema_parser.py        # FK関係抽出（information_schema）
 │   ├── graph_builder.py        # NetworkXグラフ構築
@@ -130,7 +117,7 @@ l12-schema-graph-text2sql/
 │   └── generate_gold_sql_and_results.py  # Gold SQL生成
 ├── api/                 # FastAPI アプリケーション
 │   └── main.py
-├── tests/               # ユニットテスト（80件）
+├── tests/               # ユニットテスト（123件）
 ├── paper/               # LaTeX原稿
 ├── pyproject.toml       # Python依存パッケージ定義
 └── .env.example         # 環境変数テンプレート

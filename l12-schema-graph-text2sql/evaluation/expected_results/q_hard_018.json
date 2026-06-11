@@ -1,18 +1,1 @@
-{
-  "query_id": "q_hard_018",
-  "columns": [
-    "stability",
-    "count"
-  ],
-  "row_count": 2,
-  "rows": [
-    [
-      "not_stable",
-      28.0
-    ],
-    [
-      "stable",
-      8.0
-    ]
-  ]
-}
+{"columns": ["stability", "count"], "rows": [["not_stable", 18], ["stable", 3]]}

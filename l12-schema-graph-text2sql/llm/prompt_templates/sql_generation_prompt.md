@@ -9,7 +9,7 @@ Rules:
 - Always include a LIMIT clause (default LIMIT 10000).
 - For "最小/最大/最も" questions, use ORDER BY + LIMIT 1.
 - For "割合/比較/分布" questions, use GROUP BY + COUNT/AVG/SUM.
-- For "何件/数を教えて" questions, use COUNT(*) with appropriate WHERE.
+- For "何件/数を教えて" questions, use COUNT(*) with appropriate WHERE. Use a descriptive alias (e.g., COUNT(*) AS l12_count, not just AS count).
 - When comparing categories (stable vs unstable, L12 vs B2), use GROUP BY with CASE or boolean column.
 - When filtering by element properties (atomic_number, electronegativity), JOIN the element table via composition.element = element.symbol.
 - For synthesis methods, JOIN material_synthesis → synthesis_method.
@@ -19,6 +19,10 @@ Rules:
 - For space group filtering, use structure.space_group_number (INTEGER) not structure.space_group (TEXT).
 - For atomic fraction, use composition.atomic_fraction (not fraction, fractional_amount, or atomic_percent).
 - For volume, use structure.volume_per_atom (not volume or cell_volume).
+- For site information (A-site, B-site), use composition.site_label (e.g., WHERE c.site_label = 'A').
+- For "体積あたり原子数" or atoms per volume, use structure.volume_per_atom directly (it already represents volume per atom).
+- For Ni3Al reference lattice constant comparisons, use the known value 3.57 Å directly: ABS(s.lattice_a - 3.57).
+- When asked to compare two specific compounds, return both rows with their values — do NOT compute aggregated differences.
 - For crystal system filtering, use structure.crystal_system.
 - For surface properties, miller_index identifies the surface (e.g., '100', '110', '111').
 - For surface reconstruction, use surface_energy.is_reconstructed (BOOLEAN).

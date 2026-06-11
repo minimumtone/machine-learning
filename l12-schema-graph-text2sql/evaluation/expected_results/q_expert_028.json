@@ -1,10 +1,1 @@
-{
-  "query_id": "q_expert_028",
-  "columns": [
-    "entry_id",
-    "formula",
-    "lattice_a"
-  ],
-  "row_count": 0,
-  "rows": []
-}
+{"columns": ["entry_id", "formula", "lattice_a"], "rows": []}

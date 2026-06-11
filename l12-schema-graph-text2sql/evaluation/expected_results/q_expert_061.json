@@ -1,16 +1,1 @@
-{
-  "query_id": "q_expert_061",
-  "columns": [
-    "entry_id",
-    "formula",
-    "surface_energy_j_m2"
-  ],
-  "row_count": 1,
-  "rows": [
-    [
-      "oqmd_17075",
-      "V3Cd",
-      "0.569"
-    ]
-  ]
-}
+{"columns": ["entry_id", "formula", "surface_energy_j_m2"], "rows": [["entry_00089", "Ag3Si", 0.522]]}

@@ -1,12 +1,1 @@
-{
-  "query_id": "q_expert_026",
-  "columns": [
-    "cnt"
-  ],
-  "row_count": 1,
-  "rows": [
-    [
-      "0"
-    ]
-  ]
-}
+{"columns": ["cnt"], "rows": [[368]]}

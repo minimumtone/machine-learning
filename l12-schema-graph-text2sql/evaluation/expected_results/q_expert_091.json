@@ -1,18 +1,1 @@
-{
-  "query_id": "q_expert_091",
-  "columns": [
-    "prototype",
-    "total",
-    "stable",
-    "stable_pct"
-  ],
-  "row_count": 1,
-  "rows": [
-    [
-      "L12",
-      "393",
-      "143",
-      "36.39"
-    ]
-  ]
-}
+{"columns": ["prototype", "total", "stable", "stable_pct"], "rows": [["B2", 636, 48, "7.55"], ["L12", 392, 37, "9.44"]]}

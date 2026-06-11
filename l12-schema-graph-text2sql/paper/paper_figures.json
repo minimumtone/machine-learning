@@ -1,0 +1,367 @@
+{
+  "_meta": {
+    "description": "論文掲載用数値 (Single Source of Truth)",
+    "generated_by": "scripts/compute_paper_figures.py",
+    "policy": "論文に掲載する数値はすべてこのファイルから参照すること"
+  },
+  "proposed_overall": {
+    "paper_ref": "Abstract, Table (tab:baseline_results) P行, Table (tab:independent_eval) 著者設計列",
+    "n_queries": 100,
+    "exec_accuracy_pct": 76.3,
+    "syntax_validity_pct": 100.0,
+    "exec_validity_pct": 100.0,
+    "table_halluc_rate_pct": 0.0,
+    "join_halluc_rate_pct": 0.8,
+    "avg_latency_ms": 9395.0,
+    "avg_token_usage": 3126.0,
+    "repair_query_count": 29,
+    "repair_total_attempts": 35
+  },
+  "proposed_by_difficulty": {
+    "paper_ref": "Table (tab:difficulty_breakdown), 難易度別の傾向",
+    "classification": "gold SQLの参照テーブル数 (n_tables): 1-2=Easy, 3=Medium, 4=Hard, 5+=Very Hard",
+    "easy": {
+      "n": 27,
+      "exec_accuracy": 96.3,
+      "exec_validity": 100.0
+    },
+    "medium": {
+      "n": 28,
+      "exec_accuracy": 80.2,
+      "exec_validity": 100.0
+    },
+    "hard": {
+      "n": 22,
+      "exec_accuracy": 84.3,
+      "exec_validity": 100.0
+    },
+    "very_hard": {
+      "n": 23,
+      "exec_accuracy": 40.4,
+      "exec_validity": 100.0
+    }
+  },
+  "baseline_comparison": {
+    "paper_ref": "Table (tab:baseline_results), 主要な発見",
+    "B1": {
+      "method": "baseline1_llm_only",
+      "n": 100,
+      "exec_accuracy": 68.0,
+      "syntax_validity": 100.0,
+      "exec_validity": 100.0,
+      "table_halluc_rate_pct": 0.0,
+      "join_halluc_count": 17,
+      "exec_error_count": 0,
+      "syntax_error_count": 0,
+      "avg_latency_ms": 17799.91,
+      "avg_token_usage": 5251.06,
+      "difficulty_breakdown": {
+        "easy": {
+          "n": 27,
+          "exec_accuracy": 81.7
+        },
+        "medium": {
+          "n": 28,
+          "exec_accuracy": 82.1
+        },
+        "hard": {
+          "n": 22,
+          "exec_accuracy": 74.1
+        },
+        "very_hard": {
+          "n": 23,
+          "exec_accuracy": 28.9
+        }
+      }
+    },
+    "B2": {
+      "method": "baseline2_full_schema",
+      "n": 100,
+      "exec_accuracy": 74.2,
+      "syntax_validity": 95.0,
+      "exec_validity": 95.0,
+      "table_halluc_rate_pct": 0.0,
+      "join_halluc_count": 21,
+      "exec_error_count": 5,
+      "syntax_error_count": 5,
+      "avg_latency_ms": 19863.53,
+      "avg_token_usage": 4166.22,
+      "difficulty_breakdown": {
+        "easy": {
+          "n": 27,
+          "exec_accuracy": 93.1
+        },
+        "medium": {
+          "n": 28,
+          "exec_accuracy": 78.6
+        },
+        "hard": {
+          "n": 22,
+          "exec_accuracy": 84.9
+        },
+        "very_hard": {
+          "n": 23,
+          "exec_accuracy": 36.6
+        }
+      }
+    },
+    "B3": {
+      "method": "baseline3_rule_based",
+      "n": 100,
+      "exec_accuracy": 48.5,
+      "syntax_validity": 100.0,
+      "exec_validity": 95.0,
+      "table_halluc_rate_pct": 0.0,
+      "join_halluc_count": 3,
+      "exec_error_count": 5,
+      "syntax_error_count": 0,
+      "avg_latency_ms": 0.5,
+      "avg_token_usage": 0.0,
+      "difficulty_breakdown": {
+        "easy": {
+          "n": 27,
+          "exec_accuracy": 42.6
+        },
+        "medium": {
+          "n": 28,
+          "exec_accuracy": 64.6
+        },
+        "hard": {
+          "n": 22,
+          "exec_accuracy": 61.5
+        },
+        "very_hard": {
+          "n": 23,
+          "exec_accuracy": 23.5
+        }
+      }
+    },
+    "B4": {
+      "method": "baseline4_fk_list",
+      "n": 100,
+      "exec_accuracy": 73.7,
+      "syntax_validity": 98.0,
+      "exec_validity": 98.0,
+      "table_halluc_rate_pct": 0.0,
+      "join_halluc_count": 17,
+      "exec_error_count": 2,
+      "syntax_error_count": 2,
+      "avg_latency_ms": 22894.89,
+      "avg_token_usage": 5154.02,
+      "difficulty_breakdown": {
+        "easy": {
+          "n": 27,
+          "exec_accuracy": 89.4
+        },
+        "medium": {
+          "n": 28,
+          "exec_accuracy": 82.4
+        },
+        "hard": {
+          "n": 22,
+          "exec_accuracy": 81.8
+        },
+        "very_hard": {
+          "n": 23,
+          "exec_accuracy": 37.0
+        }
+      }
+    },
+    "P": {
+      "method": "proposed",
+      "n": 100,
+      "exec_accuracy": 76.3,
+      "syntax_validity": 100.0,
+      "exec_validity": 100.0,
+      "table_halluc_rate_pct": 0.0,
+      "join_halluc_count": 2,
+      "exec_error_count": 0,
+      "syntax_error_count": 0,
+      "avg_latency_ms": 9394.88,
+      "avg_token_usage": 3125.72,
+      "difficulty_breakdown": {
+        "easy": {
+          "n": 27,
+          "exec_accuracy": 96.3
+        },
+        "medium": {
+          "n": 28,
+          "exec_accuracy": 80.2
+        },
+        "hard": {
+          "n": 22,
+          "exec_accuracy": 84.3
+        },
+        "very_hard": {
+          "n": 23,
+          "exec_accuracy": 40.4
+        }
+      }
+    }
+  },
+  "multihop_comparison": {
+    "paper_ref": "Table (tab:multihop)",
+    "multihop_total": 73,
+    "multihop_success_count": 44,
+    "multihop_success_rate_pct": 60.3,
+    "by_n_tables": {
+      "3": {
+        "B2": 78.6,
+        "B2_n": 28,
+        "P": 80.2,
+        "P_n": 28
+      },
+      "4": {
+        "B2": 84.9,
+        "B2_n": 22,
+        "P": 84.3,
+        "P_n": 22
+      },
+      "5-6": {
+        "B2": 36.6,
+        "B2_n": 23,
+        "P": 40.4,
+        "P_n": 23
+      }
+    }
+  },
+  "error_analysis": {
+    "paper_ref": "Table (tab:error_analysis), Very Hard失敗内訳 (tab:vhard_failure)",
+    "by_method": {
+      "B1": {
+        "exec_error_count": 0,
+        "syntax_error_count": 0,
+        "table_halluc_rate_pct": 0.0,
+        "join_halluc_count": 17
+      },
+      "B2": {
+        "exec_error_count": 5,
+        "syntax_error_count": 5,
+        "table_halluc_rate_pct": 0.0,
+        "join_halluc_count": 21
+      },
+      "B3": {
+        "exec_error_count": 5,
+        "syntax_error_count": 0,
+        "table_halluc_rate_pct": 0.0,
+        "join_halluc_count": 3
+      },
+      "B4": {
+        "exec_error_count": 2,
+        "syntax_error_count": 2,
+        "table_halluc_rate_pct": 0.0,
+        "join_halluc_count": 17
+      },
+      "P": {
+        "exec_error_count": 0,
+        "syntax_error_count": 0,
+        "table_halluc_rate_pct": 0.0,
+        "join_halluc_count": 2
+      }
+    },
+    "very_hard_failure_count": 13,
+    "very_hard_total": 23,
+    "very_hard_accuracy_pct": 40.4
+  },
+  "latency": {
+    "paper_ref": "Table (tab:latency)",
+    "by_method": {
+      "B1": {
+        "avg_latency_ms": 17799.91,
+        "avg_token_usage": 5251.06
+      },
+      "B2": {
+        "avg_latency_ms": 19863.53,
+        "avg_token_usage": 4166.22
+      },
+      "B3": {
+        "avg_latency_ms": 0.5,
+        "avg_token_usage": 0.0
+      },
+      "B4": {
+        "avg_latency_ms": 22894.89,
+        "avg_token_usage": 5154.02
+      },
+      "P": {
+        "avg_latency_ms": 9394.88,
+        "avg_token_usage": 3125.72
+      }
+    }
+  },
+  "metric_improvement": {
+    "paper_ref": "Table (tab:metric_improvement)",
+    "raw_accuracy": 18.0,
+    "improved_accuracy": 76.3,
+    "improvement_pt": 58.3
+  },
+  "independent_eval": {
+    "paper_ref": "Table (tab:independent_eval), 独立評価セクション",
+    "total": 100,
+    "syntax_valid": 100,
+    "execution_success": 100,
+    "binary_correct": 77,
+    "binary_correct_rate": 77.0,
+    "mean_exec_accuracy": 79.3,
+    "by_difficulty": {
+      "easy": {
+        "correct": 12,
+        "total": 18,
+        "accuracy": 66.7
+      },
+      "medium": {
+        "correct": 29,
+        "total": 34,
+        "accuracy": 85.3
+      },
+      "hard": {
+        "correct": 23,
+        "total": 34,
+        "accuracy": 67.6
+      },
+      "very_hard": {
+        "correct": 13,
+        "total": 14,
+        "accuracy": 92.9
+      }
+    }
+  },
+  "materials_engineering": {
+    "paper_ref": "Table (tab:known_l12), Section 4.3.3, Table (tab:gamma_prime)",
+    "known_l12_total": 11,
+    "known_l12_recovered": 11,
+    "known_l12_recovery_rate_pct": 100.0,
+    "total_l12_in_db": 259,
+    "stable_candidates": 8,
+    "metastable_candidates": 154,
+    "gamma_prime_total": 162,
+    "gamma_prime_top1_formula": "Ni3Al",
+    "gamma_prime_top1_score": 0.8776666666666664,
+    "lattice_matched_candidates": 32
+  },
+  "db_stats": {
+    "paper_ref": "Abstract, Section 3.1",
+    "n_tables": 30,
+    "n_entries": 1470,
+    "n_prototypes": 5,
+    "prototype_distribution": {
+      "L12": 259,
+      "B2": 636,
+      "NaCl": 355,
+      "NiAs": 74,
+      "BiF3": 13
+    }
+  },
+  "test_counts": {
+    "paper_ref": "Section 4.1 (回帰テスト), 結論",
+    "regression_tests": 80,
+    "total_unit_tests": 125,
+    "note": "pytest tests/ -q で確認"
+  },
+  "difficulty_distribution": {
+    "paper_ref": "Table (tab:difficulty_def)",
+    "easy": 27,
+    "medium": 28,
+    "hard": 22,
+    "very_hard": 23
+  }
+}
