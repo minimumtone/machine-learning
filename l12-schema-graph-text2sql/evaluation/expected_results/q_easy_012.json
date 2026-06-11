@@ -1,12 +1,1 @@
-{
-  "query_id": "q_easy_012",
-  "columns": [
-    "l12_count"
-  ],
-  "row_count": 1,
-  "rows": [
-    [
-      393.0
-    ]
-  ]
-}
+{"columns": ["l12_count"], "rows": [[392]]}

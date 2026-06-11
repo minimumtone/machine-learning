@@ -1,16 +1,1 @@
-{
-  "query_id": "q_expert_023",
-  "columns": [
-    "entry_id",
-    "formula",
-    "volume_per_atom"
-  ],
-  "row_count": 1,
-  "rows": [
-    [
-      "entry_Ni3Ti_012",
-      "Ni3Ti",
-      "9.83"
-    ]
-  ]
-}
+{"columns": ["entry_id", "formula", "volume_per_atom"], "rows": [["entry_00083", "Fe3Ti", 2.4584]]}

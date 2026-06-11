@@ -1,12 +1,1 @@
-{
-  "query_id": "q_expert_005",
-  "columns": [
-    "nacl_count"
-  ],
-  "row_count": 1,
-  "rows": [
-    [
-      "355"
-    ]
-  ]
-}
+{"columns": ["nacl_count"], "rows": [[355]]}

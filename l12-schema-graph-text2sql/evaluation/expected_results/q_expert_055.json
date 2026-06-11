@@ -1,16 +1,1 @@
-{
-  "query_id": "q_expert_055",
-  "columns": [
-    "entry_id",
-    "formula",
-    "curie_temperature_k"
-  ],
-  "row_count": 1,
-  "rows": [
-    [
-      "oqmd_29867",
-      "DyHg",
-      "1450.3983519243245"
-    ]
-  ]
-}
+{"columns": ["entry_id", "formula", "curie_temperature_k"], "rows": [["entry_01155", "PtZn", 1394.4]]}

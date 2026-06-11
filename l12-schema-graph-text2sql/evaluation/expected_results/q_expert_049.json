@@ -1,18 +1,1 @@
-{
-  "query_id": "q_expert_049",
-  "columns": [
-    "entry_id",
-    "formula",
-    "bulk_modulus_vrh",
-    "formation_energy_per_atom"
-  ],
-  "row_count": 1,
-  "rows": [
-    [
-      "entry_Ni3Al_001",
-      "Ni3Al",
-      "149.48",
-      "-0.42"
-    ]
-  ]
-}
+{"columns": ["entry_id", "formula", "bulk_modulus_vrh", "formation_energy_per_atom"], "rows": [["entry_00001", "Ni3Al", 180.0, -0.42]]}
