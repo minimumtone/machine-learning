@@ -1,5 +1,5 @@
 # Paper ref: Section 4.3.3, Supplementary S6 (tab:sup_injection_results)
-# 337 candidates (stable=100, metastable=237). Use stability_class, not is_stable
+# 162 candidates (stable=8, metastable=154). Use stability_class, not is_stable
 formula,lattice_a,energy_above_hull,formation_energy_per_atom,is_stable,stability_class
 Ag3Fe,3.5285,0.0344,-0.1192,False,metastable
 Ag3In,3.6729,0.0228,-0.2051,False,metastable

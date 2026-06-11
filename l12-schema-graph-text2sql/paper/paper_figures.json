@@ -12,8 +12,8 @@
     "exec_validity_pct": 100.0,
     "table_halluc_rate_pct": 0.0,
     "join_halluc_rate_pct": 0.8,
-    "avg_latency_ms": 9395.0,
-    "avg_token_usage": 3126.0,
+    "avg_latency_ms": 9394.88,
+    "avg_token_usage": 3125.72,
     "repair_query_count": 29,
     "repair_total_attempts": 35
   },
@@ -330,7 +330,8 @@
     "known_l12_total": 11,
     "known_l12_recovered": 11,
     "known_l12_recovery_rate_pct": 100.0,
-    "total_l12_in_db": 259,
+    "total_l12_in_db": 392,
+    "total_l12_formulae": 259,
     "stable_candidates": 8,
     "metastable_candidates": 154,
     "gamma_prime_total": 162,
@@ -344,18 +345,19 @@
     "n_entries": 1470,
     "n_prototypes": 5,
     "prototype_distribution": {
-      "L12": 259,
+      "L12": 392,
       "B2": 636,
       "NaCl": 355,
       "NiAs": 74,
       "BiF3": 13
-    }
+    },
+    "l12_distinct_formulae": 259
   },
   "test_counts": {
     "paper_ref": "Section 4.1 (回帰テスト), 結論",
     "regression_tests": 80,
     "total_unit_tests": 125,
-    "note": "pytest tests/ -q で確認"
+    "note": "total_unit_tests は pytest --co -q で自動取得（失敗時 125）"
   },
   "difficulty_distribution": {
     "paper_ref": "Table (tab:difficulty_def)",
