@@ -918,7 +918,7 @@ Schema Graphエンジンは複数元素が指定された場合を検出し、
 なお、EXISTSパターンの適用はAND意図が検出された場合に限定する。
 「NiまたはAl」「いずれかを含む」等のOR指示語が検出された場合は
 \texttt{WHERE c.element IN ('Ni', 'Al')}を生成し、EXISTSパターンは適用しない。
-条件抽出器（\ref{sec:condition_extractor}節）が接続詞・助詞から
+条件抽出器（\ref{sec:entity_extractor}節）が接続詞・助詞から
 AND/OR意図を分類し、適切なSQL構造を選択する。
 
 \subsubsection{比較：Naive vs. Schema Graph（具体例）}
