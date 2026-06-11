@@ -45,7 +45,7 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.metrics import (
     mean_squared_error, r2_score, mean_absolute_error,
-    classification_report, confusion_matrix, silhouette_score,
+    confusion_matrix, silhouette_score,
     accuracy_score
 )
 from sklearn.pipeline import Pipeline
@@ -672,6 +672,13 @@ elif section_key == "regression":
     col2.metric("RMSE", f"{rmse_lr:.2f}")
     col3.metric("MAE", f"{mae_lr:.2f}")
 
+    if r2_lr < 0:
+        st.warning(f"""
+        **R² が負値** — 線形回帰モデルが平均値予測よりも悪い結果です。
+        これは現在の特徴量だけでは {target_col} の予測が困難であることを意味します。
+        非線形モデル（SVR, Random Forest）との比較で改善を確認してください。
+        """)
+
     fig_lr = px.scatter(x=y_test, y=y_pred_lr,
                         labels={"x": f"実測値 ({target_col})", "y": "予測値"},
                         title=f"線形回帰: 予測 vs 実測 (R² = {r2_lr:.4f})")
@@ -1032,7 +1039,8 @@ elif section_key == "classification":
     """)
 
     n_clusters_km = st.slider("クラスタ数 k", 2, 8, 4, key="km_cls")
-    X_cls_scaled = scaler_cls.fit_transform(X_cls)
+    scaler_km = StandardScaler()
+    X_cls_scaled = scaler_km.fit_transform(X_cls)
     km = KMeans(n_clusters=n_clusters_km, random_state=42, n_init=10)
     km_labels = km.fit_predict(X_cls_scaled)
     sil = silhouette_score(X_cls_scaled, km_labels)
