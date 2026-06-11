@@ -257,6 +257,14 @@ stable_cands = read_csv(EVAL / "stable_l12_candidates.csv")
 stable_count = sum(1 for r in stable_cands if r["stability_class"] == "stable")
 metastable_count = sum(1 for r in stable_cands if r["stability_class"] == "metastable")
 
+# top stable compounds (by most negative formation energy)
+stable_only = [r for r in stable_cands if r["stability_class"] == "stable"]
+stable_only.sort(key=lambda x: float(x["formation_energy_per_atom"]))
+top_stable = [
+    {"formula": r["formula"], "formation_energy_per_atom": float(r["formation_energy_per_atom"])}
+    for r in stable_only[:4]
+]
+
 # 5c. γ' ランキング
 gamma = read_csv(EVAL / "gamma_prime_candidate_ranking.csv")
 top1 = gamma[0] if gamma else {}
@@ -420,6 +428,7 @@ output = {
         "stable_candidates": stable_count,
         "metastable_candidates": metastable_count,
         "gamma_prime_total": stable_count + metastable_count,
+        "top_stable_compounds": top_stable,
         "gamma_prime_top1_formula": top1.get("formula", ""),
         "gamma_prime_top1_score": float(top1.get("composite_score", 0)),
         "lattice_matched_candidates": lattice_matched_count,

@@ -335,6 +335,24 @@
     "stable_candidates": 8,
     "metastable_candidates": 154,
     "gamma_prime_total": 162,
+    "top_stable_compounds": [
+      {
+        "formula": "Pt3Al",
+        "formation_energy_per_atom": -0.55
+      },
+      {
+        "formula": "Al3Sc",
+        "formation_energy_per_atom": -0.5
+      },
+      {
+        "formula": "Co3Ti",
+        "formation_energy_per_atom": -0.45
+      },
+      {
+        "formula": "Ni3Al",
+        "formation_energy_per_atom": -0.42
+      }
+    ],
     "gamma_prime_top1_formula": "Ni3Al",
     "gamma_prime_top1_score": 0.8776666666666664,
     "lattice_matched_candidates": 32
