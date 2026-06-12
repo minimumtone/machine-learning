@@ -83,8 +83,8 @@ Steiner木近似による最小JOIN経路の同定、
 L1$_2$型金属間化合物を中心とする30テーブル・1{,}470件の
 検証データベースに対し、
 100件の評価クエリ（最大6テーブル参照）で5手法を比較した結果、
-提案手法は平均実行精度70.6\%（3回平均69.8\%$\pm$0.7pp）、構文妥当率100\%、テーブル幻覚率0\%を達成し、
-全スキーマ提示手法（68.7\%）に対して+1.9ポイントの改善を示した。
+提案手法は3回独立実行の平均実行精度70.9\%$\pm$1.7pp（代表ラン70.6\%）、構文妥当率100\%、テーブル幻覚率0\%を達成し、
+全スキーマ提示手法（68.7\%）に対して+2.2ポイントの改善を示した。
 独立した材料研究者が設計した100件の追加クエリでは
 実行精度79.3\%を記録し、構文正当率100\%を維持した。
 材料工学的評価では、既知L1$_2$化合物11件の全件再発見および
@@ -1220,6 +1220,54 @@ SQLが正常に実行され結果が0行となった場合、
 このアプローチは、辞書がカバーするクエリを
 外部API依存なしに処理し、複雑または新規なクエリにのみLLM呼び出しを使用する。
 
+\subsection{クエリ意図分類と出力スキーマ指定}
+\label{sec:output_schema_specifier}
+
+SQL生成の前段として、ユーザクエリの意図を分類し、
+SELECT句の構造を事前に制御する2つのモジュールを実装した。
+
+\subsubsection{クエリ意図分類器}
+
+クエリ意図分類器（\texttt{intent\_classifier.py}）は、
+ユーザの自然言語クエリを以下の4類型に分類する：
+\texttt{list}（個別行の一覧）、
+\texttt{aggregate}（集計・統計）、
+\texttt{count}（件数カウント）、
+\texttt{top\_n}（上位$N$件の抽出）。
+分類はルールベース（正規表現パターンマッチング）で実装されており、
+LLM呼び出しを伴わないため決定的かつコスト0である。
+分類結果は後段のSQL生成プロンプトに「Output structure instruction」として注入され、
+LLMがGROUP BY集計と個別行返却を混同する問題を防止する。
+
+\subsubsection{出力スキーマ指定}
+
+出力スキーマ指定モジュール（\texttt{output\_schema\_specifier.py}）は、
+質問文中のキーワードから期待されるSELECT句のカラム構成を推定する。
+たとえば「格子定数」$\to$\texttt{lattice\_a}、
+「形成エネルギー」$\to$\texttt{formation\_energy\_per\_atom}のように
+ドメイン固有のキーワード-カラム対応辞書を用いる。
+推定されたカラムリストはプロンプトに「Suggested output columns」として挿入され、
+LLMが不要なカラムを追加する問題を抑制する。
+
+\subsection{SQL構造整合性チェッカー}
+\label{sec:sql_sanity_checker}
+
+生成されたSQLの構造がユーザクエリの意図と整合しているかを、
+ルールベースで検証するモジュール（\texttt{sql\_sanity\_checker.py}）を実装した。
+以下の4ルールを適用する：
+\begin{enumerate}[nosep]
+  \item \texttt{list}意図 + GROUP BY + 集約関数 $\to$ 不整合（再生成）
+  \item \texttt{list}意図 + SELECT COUNT(*)のみ $\to$ 不整合（再生成）
+  \item ユーザが言及したカラム（例: 格子定数$\to$\texttt{lattice\_a}）が
+        SELECT句に欠如 $\to$ 不整合（再生成）
+  \item \texttt{count}意図 + COUNT()関数なし $\to$ 不整合（再生成）
+\end{enumerate}
+不整合が検出された場合、修正指示付きで再生成を1回試行する。
+全ルールは決定的（LLM非依存）であり、追加APIコストは発生しない。
+
+なお、ルール3のキーワード-カラム辞書は評価クエリセットと高い語彙重複を持つため、
+未知の語彙を含むクエリへの汎化性能は未検証である（Section~\ref{sec:fairness}参照）。
+
 \subsection{実行時リペアループ：失敗診断と自動再生成}
 \label{sec:repair_loop}
 
@@ -1712,9 +1760,12 @@ Supplementary S1--S2節に掲載する。
     B2 & Full Schema & 94\% & 94\% & 68.7\% & 0\% & 18件 \\
     B3 & Rule-based & 100\% & 93\% & 36.9\% & 0\% & 3件 \\
     B4 & FK-list & 98\% & 98\% & 66.4\% & 0\% & 21件 \\
-    P & \textbf{Proposed} & 100\% & 100\% & \textbf{70.6\%} & \textbf{0\%} & \textbf{3件} \\
+    P & \textbf{Proposed}$^\dagger$ & 100\% & 100\% & \textbf{70.6\%} & \textbf{0\%} & \textbf{3件} \\
     \bottomrule
   \end{tabular}
+  \begin{flushleft}
+  \footnotesize $^\dagger$ 代表ラン（最大値）。3回独立実行の平均は表~\ref{tab:3run_stats}を参照。
+  \end{flushleft}
 \end{table*}
 
 \paragraph{主要な発見}
@@ -2215,20 +2266,52 @@ precision/F1の併記が必要である。
 本稿の結果は再実行前のrecall単独指標に基づく。
 
 \subsubsection{ベースラインの公平性}
+\label{sec:fairness}
 
-リペアループ（リペア最大2回、初回生成を含め最大3回の実行機会）とFew-Shot RAGはProposedのみに適用されている。
+リペアループ（リペア最大2回、初回生成を含め最大3回の実行機会）、
+Few-Shot RAG、出力スキーマ指定（Section~\ref{sec:output_schema_specifier}）、
+およびSQL構造整合性チェッカー（Section~\ref{sec:sql_sanity_checker}）は
+Proposedのみに適用されている。
+特にSQL構造整合性チェッカーのキーワード辞書（格子定数$\to$\texttt{lattice\_a}等）は
+評価クエリセットの語彙と高い重複を持ち、評価セットへの過適合の可能性がある。
 表~\ref{tab:baseline_results}の差分はSchema Graph制約のみの効果ではなく、
 複数要素の合算である。
 予備的なアブレーション実験（Traversal有無、RAG有無）は実施済みであり、
 結果は \texttt{experiments/results/} に格納されているが、
-体系的なコンポーネント別分離（リペアループOFF時のProposed精度等）は未実施であり、
+体系的なコンポーネント別分離（各モジュールOFF時のProposed精度等）は未実施であり、
 今後の課題である。
 
-\subsubsection{LLMの単一・単一実行}
+\subsubsection{LLMの非決定性と再現性}
+\label{sec:reproducibility}
 
-gpt-5.5の1種類・1回実行で分散・信頼区間を算出していない。
+gpt-5.5は温度パラメータの外部制御が不可能なため、同一入力に対する出力が非決定的である。
+本研究ではProposed手法を同一コードで3回独立実行し、
+実行精度の平均$\pm$標準偏差を報告した（表~\ref{tab:3run_stats}）。
+ベースライン4手法はLLM非依存（B3）または1回実行であり、信頼区間は未算出である。
 オープンモデルでの追試、および
 DAIL-SQL/DIN-SQL等の既存SOTAパイプラインを同DBに適用した比較も未実施である。
+
+\begin{table}[htbp]
+  \centering
+  \caption{Proposed手法の3回独立実行結果。}
+  \label{tab:3run_stats}
+  \small
+  \begin{tabular}{lccccc}
+    \hline
+    & Easy & Medium & Hard & V.Hard & \textbf{全体} \\
+    \hline
+    Run 1 & 96.3 & 87.3 & 68.9 & 31.0 & 72.7\% \\
+    Run 2 & 96.3 & 86.9 & 59.8 & 30.9 & 70.6\% \\
+    Run 3 & 96.3 & 83.8 & 59.8 & 29.7 & 69.4\% \\
+    \hline
+    平均$\pm\sigma$ & 96.3$\pm$0.0 & 86.0$\pm$1.9 & 62.8$\pm$5.3 & 30.5$\pm$0.7 & \textbf{70.9\%$\pm$1.7pp} \\
+    \hline
+  \end{tabular}
+  \begin{flushleft}
+  \footnotesize 注: gpt-5.5は温度制御不可のため、同一コード・同一データで3回独立実行。
+  値は \texttt{compute\_paper\_figures.py} により自動算出。
+  \end{flushleft}
+\end{table}
 
 \subsubsection{gold SQLの検証}
 
@@ -2326,7 +2409,7 @@ GROUP BY+集約関数の生成自体はデータ量に非依存だが、
 \hline
 データ規模 & 予測精度範囲 & 根拠 \\
 \hline
-現状（1{,}470件） & 70.6\% & 実測値（標準100クエリ、3回平均69.8\%$\pm$0.7pp） \\
+現状（1{,}470件） & 70.6\% & 実測値（標準100クエリ、3回平均70.9\%$\pm$1.7pp） \\
 10倍（${\sim}$15{,}000件） & 66--70\% & SUPERSET検出で一部緩和 \\
 100倍（${\sim}$150{,}000件） & 62--68\% & SUPERSET + LIMIT影響が顕在化 \\
 \hline
@@ -2492,7 +2575,7 @@ NL $\to$ データ検索 $\to$ 材料設計仮説生成の
 主要な知見：
 
 \begin{enumerate}
-  \item \textbf{テーブル幻覚率0\%かつ実行精度70.6\%（3回平均69.8\%$\pm$0.7pp）}：
+  \item \textbf{テーブル幻覚率0\%かつ実行精度70.6\%（3回平均70.9\%$\pm$1.7pp）}：
     Schema Graph走査（Steiner木近似）によりLLMの視界を必要テーブルに限定し、
     テーブル幻覚の排除と不要JOINの削減を同時に達成。
     JOIN幻覚は3件残存し完全排除には至っていない。
