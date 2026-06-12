@@ -717,7 +717,7 @@ def check_join_validity(
     clean = _strip_literals(sql)
     # Match all ON conditions including AND-chained ones
     for m in re.finditer(
-        r"\bON\s+(.*?)(?=\s+(?:JOIN|WHERE|ORDER|GROUP|HAVING|LIMIT|UNION|$))",
+        r"\bON\s+(.*?)(?=\s+(?:JOIN|WHERE|ORDER|GROUP|HAVING|LIMIT|UNION)\b|;|\)|$)",
         clean, re.IGNORECASE | re.DOTALL,
     ):
         on_clause = m.group(1)

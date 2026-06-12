@@ -294,7 +294,10 @@ db_stats = {
     "n_entries": 1470,
     "n_prototypes": 5,
     "prototype_distribution": {
-        "L12": total_l12,
+        # Counts from db/insert_data.sql (authoritative).
+        # known_l12_recovery.csv contains 259 rows (query output subset),
+        # not the full 392 L12 entries in the DB.
+        "L12": 392,
         "B2": 636,
         "NaCl": 355,
         "NiAs": 74,
@@ -485,7 +488,7 @@ output = {
         "known_l12_total": len(known_l12),
         "known_l12_recovered": len(recovered),
         "known_l12_recovery_rate_pct": pct(len(recovered) / len(known_l12)) if known_l12 else 0,
-        "total_l12_in_db": total_l12,
+        "total_l12_in_db": 392,  # from db/insert_data.sql, not from CSV subset
         "stable_candidates": stable_count,
         "metastable_candidates": metastable_count,
         "gamma_prime_total": stable_count + metastable_count,

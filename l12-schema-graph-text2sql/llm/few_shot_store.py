@@ -11,7 +11,10 @@ Ni₃Al") and register them as seed few-shot examples.
 """
 from __future__ import annotations
 
-import fcntl
+try:
+    import fcntl
+except ImportError:
+    fcntl = None  # type: ignore[assignment]  # Windows: no file locking
 import json
 import math
 import os
@@ -64,14 +67,16 @@ def add_example(
         "source": source,
     }
     with lock_path.open("w") as lock_f:
-        fcntl.flock(lock_f, fcntl.LOCK_EX)
+        if fcntl is not None:
+            fcntl.flock(lock_f, fcntl.LOCK_EX)
         try:
             examples = load_store()
             examples = [e for e in examples if e["nl_query"] != nl_query]
             examples.append(entry)
             save_store(examples)
         finally:
-            fcntl.flock(lock_f, fcntl.LOCK_UN)
+            if fcntl is not None:
+                fcntl.flock(lock_f, fcntl.LOCK_UN)
     return entry
 
 

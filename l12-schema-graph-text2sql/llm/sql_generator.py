@@ -225,6 +225,9 @@ def _rule_based_fallback(
         "phase_stability": "ps",
         "calculation": "calc",
         "calculated_property": "cp",
+        "elastic_tensor": "et",
+        "thermal_property": "tp",
+        "magnetic_property": "mp",
     }
 
     indirect_join_map = {
@@ -267,6 +270,17 @@ def _rule_based_fallback(
         select_cols.append("ps.formation_energy_per_atom")
         select_cols.append("ps.energy_above_hull")
         select_cols.append("ps.band_gap")
+    if "calculated_property" in tables_needed:
+        select_cols.append("cp.property_name")
+        select_cols.append("cp.value")
+        select_cols.append("cp.unit")
+    if "elastic_tensor" in tables_needed:
+        et_alias = alias_map.get("elastic_tensor", "et")
+        select_cols.append(f"{et_alias}.bulk_modulus_vrh")
+        select_cols.append(f"{et_alias}.shear_modulus_vrh")
+    if "thermal_property" in tables_needed:
+        tp_alias = alias_map.get("thermal_property", "tp")
+        select_cols.append(f"{tp_alias}.debye_temperature")
 
     sql_parts = [f"SELECT DISTINCT\n    {', '.join(select_cols)}"]
     sql_parts.append("FROM material_entry m")

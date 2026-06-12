@@ -67,6 +67,7 @@ def build_table_graph(
             fk.target_table,
             source_column=fk.source_column,
             target_column=fk.target_column,
+            _edge_source=fk.source_table,
         )
     return g
 
