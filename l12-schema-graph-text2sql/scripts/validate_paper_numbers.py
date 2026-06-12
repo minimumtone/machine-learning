@@ -138,9 +138,9 @@ def main() -> int:
 
     # Difficulty breakdown (by_difficulty from proposed)
     by_diff = fig.get("proposed_by_difficulty", {})
-    for diff_key in ["Easy", "Medium", "Hard", "Very Hard"]:
+    for diff_key in ["easy", "medium", "hard", "very_hard"]:
         d = by_diff.get(diff_key, {})
-        acc = d.get("exec_accuracy_pct")
+        acc = d.get("exec_accuracy")
         if acc is not None:
             check(f"Difficulty {diff_key} accuracy", acc, required=False)
         n = d.get("n")

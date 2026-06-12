@@ -296,7 +296,7 @@ def _rule_based_fallback(
         select_cols.append("lr.year")
 
     if is_count_query:
-        sql_parts = ["SELECT COUNT(*) AS total_count"]
+        sql_parts = ["SELECT COUNT(DISTINCT m.entry_id) AS total_count"]
     else:
         sql_parts = [f"SELECT DISTINCT\n    {', '.join(select_cols)}"]
     sql_parts.append("FROM material_entry m")
