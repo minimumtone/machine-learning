@@ -111,7 +111,11 @@ l12-schema-graph-text2sql/
 │   ├── expected_results/ # 正解実行結果JSON
 │   ├── metrics.py       # 評価指標（構文妥当率、実行精度等）
 │   ├── run_proposed.py  # Proposed手法実行
-│   └── *.csv            # 各手法の評価結果
+│   ├── proposed_result.csv      # 代表ラン (= Run 2, 70.6%)
+│   ├── proposed_result_run1.csv # Run 1 (72.7%)
+│   ├── proposed_result_run2.csv # Run 2 (70.6%)
+│   ├── proposed_result_run3.csv # Run 3 (69.4%)
+│   └── baseline_result.csv     # ベースライン4手法結果
 ├── scripts/             # 評価・分析スクリプト
 │   ├── run_full_evaluation.py      # 5手法完全評価
 │   └── generate_gold_sql_and_results.py  # Gold SQL生成
@@ -133,7 +137,7 @@ l12-schema-graph-text2sql/
 | B2: Full Schema | 全テーブル一覧 | 94% | 94% | 68.7% | 0% | 18件 |
 | B3: Rule-based | 辞書ルール（LLM不使用） | 100% | 93% | 36.9% | 0% | 3件 |
 | B4: FK-list | FK関係リストのみ | 98% | 98% | 66.4% | 0% | 21件 |
-| **P: Proposed** | **Steiner木で選んだサブグラフ** | **100%** | **100%** | **70.6%** (3回平均69.8%±0.7pp) | **0%** | **3件** |
+| **P: Proposed** | **Steiner木で選んだサブグラフ** | **100%** | **100%** | **70.6%** (3回平均70.9%±1.7pp) | **0%** | **3件** |
 
 ## Key Features
 

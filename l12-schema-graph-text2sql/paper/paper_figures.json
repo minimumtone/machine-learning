@@ -4,17 +4,6 @@
     "generated_by": "scripts/compute_paper_figures.py",
     "policy": "論文に掲載する数値はすべてこのファイルから参照すること"
   },
-  "proposed_3run_stats": {
-    "paper_ref": "Section 4.2 (再現性評価), Abstract",
-    "n_runs": 3,
-    "run_accuracies": [69.3, 70.6, 69.4],
-    "mean_accuracy_pct": 69.8,
-    "stdev_pp": 0.7,
-    "max_accuracy_pct": 70.6,
-    "min_accuracy_pct": 69.3,
-    "representative_run": "Run 2 (70.6%)",
-    "note": "gpt-5.5は温度制御不可のため3回実行し平均±標準偏差を報告"
-  },
   "proposed_overall": {
     "paper_ref": "Abstract, Table (tab:baseline_results) P行, Table (tab:independent_eval) 著者設計列",
     "n_queries": 100,
@@ -27,6 +16,64 @@
     "avg_token_usage": 3123.0,
     "repair_query_count": 23,
     "repair_total_attempts": 29
+  },
+  "proposed_3run_stats": {
+    "paper_ref": "Abstract, Section 4.2 (再現性評価), Conclusion",
+    "n_runs": 3,
+    "run_files": [
+      "proposed_result_run1.csv",
+      "proposed_result_run2.csv",
+      "proposed_result_run3.csv"
+    ],
+    "run_accuracies": [
+      72.7,
+      70.6,
+      69.4
+    ],
+    "mean_accuracy_pct": 70.9,
+    "stdev_pp": 1.7,
+    "max_accuracy_pct": 72.7,
+    "min_accuracy_pct": 69.4,
+    "representative_run": "最大値ラン (72.7%)",
+    "by_difficulty": {
+      "easy": {
+        "mean": 96.3,
+        "stdev": 0.0,
+        "values": [
+          96.3,
+          96.3,
+          96.3
+        ]
+      },
+      "medium": {
+        "mean": 86.0,
+        "stdev": 1.9,
+        "values": [
+          87.3,
+          86.9,
+          83.8
+        ]
+      },
+      "hard": {
+        "mean": 62.8,
+        "stdev": 5.3,
+        "values": [
+          68.9,
+          59.8,
+          59.8
+        ]
+      },
+      "very_hard": {
+        "mean": 30.5,
+        "stdev": 0.7,
+        "values": [
+          31.0,
+          30.9,
+          29.7
+        ]
+      }
+    },
+    "note": "gpt-5.5は温度制御不可のため複数回実行し平均±標準偏差を報告"
   },
   "proposed_by_difficulty": {
     "paper_ref": "Table (tab:difficulty_breakdown), 難易度別の傾向",

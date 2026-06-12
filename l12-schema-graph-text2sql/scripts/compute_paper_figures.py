@@ -27,6 +27,7 @@
 
 import csv
 import json
+import math
 import os
 import re
 import sys
@@ -304,6 +305,59 @@ metric_improvement = {
 }
 
 # ---------------------------------------------------------------------------
+# 7b. 3-run 再現性統計 (proposed_result_run{1,2,3}.csv から自動計算)
+# ---------------------------------------------------------------------------
+
+run_csv_paths = sorted(EVAL.glob("proposed_result_run*.csv"))
+run_stats: dict = {}
+if len(run_csv_paths) >= 2:
+    run_accuracies = []
+    run_by_difficulty: dict[str, list[float]] = defaultdict(list)
+    for csv_path in run_csv_paths:
+        rows = read_csv(csv_path)
+        acc = sum(float(r["execution_accuracy"]) for r in rows) / len(rows)
+        run_accuracies.append(pct(acc))
+        for diff in ["easy", "medium", "hard", "very_hard"]:
+            subset = [r for r in rows if ntables_difficulty_map.get(r["query_id"], r["difficulty"]) == diff]
+            if subset:
+                dacc = sum(float(r["execution_accuracy"]) for r in subset) / len(subset)
+                run_by_difficulty[diff].append(pct(dacc))
+
+    n_runs = len(run_accuracies)
+    mean_acc = round(sum(run_accuracies) / n_runs, 1)
+    if n_runs >= 2:
+        variance = sum((x - mean_acc) ** 2 for x in run_accuracies) / (n_runs - 1)
+        stdev = round(math.sqrt(variance), 1)
+    else:
+        stdev = 0.0
+
+    diff_stats = {}
+    for diff, vals in run_by_difficulty.items():
+        dmean = round(sum(vals) / len(vals), 1)
+        if len(vals) >= 2:
+            dvar = sum((x - dmean) ** 2 for x in vals) / (len(vals) - 1)
+            dstd = round(math.sqrt(dvar), 1)
+        else:
+            dstd = 0.0
+        diff_stats[diff] = {"mean": dmean, "stdev": dstd, "values": vals}
+
+    run_stats = {
+        "paper_ref": "Abstract, Section 4.2 (再現性評価), Conclusion",
+        "n_runs": n_runs,
+        "run_files": [p.name for p in run_csv_paths],
+        "run_accuracies": run_accuracies,
+        "mean_accuracy_pct": mean_acc,
+        "stdev_pp": stdev,
+        "max_accuracy_pct": max(run_accuracies),
+        "min_accuracy_pct": min(run_accuracies),
+        "representative_run": f"最大値ラン ({max(run_accuracies)}%)",
+        "by_difficulty": diff_stats,
+        "note": "gpt-5.5は温度制御不可のため複数回実行し平均±標準偏差を報告",
+    }
+else:
+    print("WARNING: proposed_result_run*.csv が2つ未満のため3-run統計をスキップ")
+
+# ---------------------------------------------------------------------------
 # 8. エラー分析 (error analysis)
 # ---------------------------------------------------------------------------
 
@@ -345,6 +399,8 @@ output = {
         "repair_query_count": repair_count,
         "repair_total_attempts": repair_total_attempts,
     },
+
+    **({"proposed_3run_stats": run_stats} if run_stats else {}),
 
     "proposed_by_difficulty": {
         "paper_ref": "Table (tab:difficulty_breakdown), 難易度別の傾向",
@@ -456,6 +512,8 @@ print(f"  Very Hard:          {diff_metrics['very_hard']['exec_accuracy']}% ({di
 for label in ["B1", "B2", "B3", "B4"]:
     m = baseline_metrics[label]
     print(f"{label} ({m['method']}): {m['exec_accuracy']}%")
+if run_stats:
+    print(f"3-run統計:            {run_stats['mean_accuracy_pct']}% ± {run_stats['stdev_pp']}pp ({run_stats['run_accuracies']})")
 print(f"独立評価: 二値正答率 {expert_out['binary_correct_rate']}%, 平均精度 {expert_out['mean_exec_accuracy']}%")
 print(f"既知L12回収: {len(recovered)}/{len(known_l12)}")
 print(f"γ'候補: {stable_count + metastable_count}件 (安定{stable_count} + 準安定{metastable_count})")
