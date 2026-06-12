@@ -279,7 +279,7 @@ def main():
                     elif repair_result["exec_result"].get("success", False):
                         sql = repair_result["sql"]
                         exec_result = repair_result["exec_result"]
-                    repair_attempts = len(repair_result.get("attempts", []))
+                    repair_attempts += len(repair_result.get("attempts", []))
                     repair_tokens = repair_result.get("repair_tokens", 0)
                     tokens += repair_tokens
 

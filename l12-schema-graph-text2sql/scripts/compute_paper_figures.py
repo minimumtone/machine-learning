@@ -242,21 +242,26 @@ for group_key in ["3", "4", "5-6"]:
 # 4. 独立設計クエリ（専門家評価）
 # ---------------------------------------------------------------------------
 
-with open(EVAL / "expert_evaluation_results.json", encoding="utf-8") as f:
-    expert_data = json.load(f)
+_expert_path = EVAL / "expert_evaluation_results.json"
+if _expert_path.exists():
+    with open(_expert_path, encoding="utf-8") as f:
+        expert_data = json.load(f)
 
-expert_summary = expert_data["summary"]
-expert_results = expert_data["results"]
+    expert_summary = expert_data["summary"]
+    expert_results = expert_data["results"]
 
-expert_out = {
-    "total": expert_summary["total"],
-    "syntax_valid": expert_summary["syntax_valid"],
-    "execution_success": expert_summary["execution_success"],
-    "binary_correct": expert_summary["correct"],
-    "binary_correct_rate": expert_summary["accuracy"],
-    "mean_exec_accuracy": expert_data["comparison"]["expert_designed"]["mean_execution_accuracy"],
-    "by_difficulty": expert_summary["by_difficulty"],
-}
+    expert_out = {
+        "total": expert_summary["total"],
+        "syntax_valid": expert_summary["syntax_valid"],
+        "execution_success": expert_summary["execution_success"],
+        "binary_correct": expert_summary["correct"],
+        "binary_correct_rate": expert_summary["accuracy"],
+        "mean_exec_accuracy": expert_data["comparison"]["expert_designed"]["mean_execution_accuracy"],
+        "by_difficulty": expert_summary["by_difficulty"],
+    }
+else:
+    print(f"WARNING: {_expert_path} not found — skipping expert evaluation section")
+    expert_out = None
 
 # ---------------------------------------------------------------------------
 # 5. 材料工学的評価
@@ -480,7 +485,7 @@ output = {
 
     "independent_eval": {
         "paper_ref": "Table (tab:independent_eval), 独立評価セクション",
-        **expert_out,
+        **(expert_out if expert_out else {"note": "expert_evaluation_results.json not available"}),
     },
 
     "materials_engineering": {
@@ -539,6 +544,9 @@ for label in ["B1", "B2", "B3", "B4"]:
     print(f"{label} ({m['method']}): {m['exec_accuracy']}%")
 if run_stats:
     print(f"3-run統計:            {run_stats['mean_accuracy_pct']}% ± {run_stats['stdev_pp']}pp ({run_stats['run_accuracies']})")
-print(f"独立評価: 二値正答率 {expert_out['binary_correct_rate']}%, 平均精度 {expert_out['mean_exec_accuracy']}%")
+if expert_out:
+    print(f"独立評価: 二値正答率 {expert_out['binary_correct_rate']}%, 平均精度 {expert_out['mean_exec_accuracy']}%")
+else:
+    print("独立評価: expert_evaluation_results.json が存在しないためスキップ")
 print(f"既知L12回収: {len(recovered)}/{len(known_l12)}")
 print(f"γ'候補: {stable_count + metastable_count}件 (安定{stable_count} + 準安定{metastable_count})")

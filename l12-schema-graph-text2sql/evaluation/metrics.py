@@ -334,15 +334,19 @@ def hallucinated_join_rate(
     return len(bad) / len(gen_joins) if gen_joins else 0.0
 
 
-def multi_hop_success(hop_count: int, is_correct: bool) -> dict[str, Any]:
+def multi_hop_success(n_tables: int, is_correct: bool) -> dict[str, Any]:
     """Tag multi-hop success.
 
     Multi-hop defined as n_tables >= 3 (3+ tables referenced in gold SQL).
     With current evaluation set: 28 Medium + 22 Hard + 23 Very Hard = 73 queries.
+
+    Args:
+        n_tables: Number of tables referenced in the gold SQL.
+        is_correct: Whether the query was judged correct (F1 >= 0.8).
     """
     return {
-        "hop_count": hop_count,
-        "is_multi_hop": hop_count >= 3,
+        "n_tables": n_tables,
+        "is_multi_hop": n_tables >= 3,
         "correct": is_correct,
     }
 

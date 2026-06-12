@@ -16,10 +16,9 @@ Natural Language Query → 材料用語正規化 → 条件抽出 → テーブ�
 
 ## Quick Start
 
-> **Note**: デリバリZIPには論文・評価CSV・ソースコード・gold SQLが同梱されていますが、
-> `docker/`, `db/`, `api/`, `tests/`, `.env.example`, `pyproject.toml` は
-> リポジトリ内にのみ存在し、ZIPには含まれません。
-> 完全な環境構築にはリポジトリのクローンが必要です。
+> **Note**: デリバリZIPを受け取った方は `README_DELIVERY.md` を参照してください。
+> 以下はリポジトリのクローンを前提とした完全環境構築手順です。
+> ZIPには `docker/`, `db/`, `api/`, `tests/`, `.env.example`, `pyproject.toml` は含まれません。
 
 ### 前提条件
 
@@ -153,6 +152,19 @@ l12-schema-graph-text2sql/
 
 v1の69.3%ランは生CSVが消失しており復元不可能。現3ランは全て独立実行（MD5一意確認済み）。
 代表ラン = Run 2 (70.6%, 中央値ラン) を `proposed_result.csv` として使用。
+
+### JOIN方向バグ修正の評価影響
+
+v4でgraph層のJOIN方向バグ（`_edge_source`による逆方向走査時のカラム入れ替え）を修正。
+結果CSVは修正前コードで生成されたものだが、評価100クエリへの影響はなし:
+非対称カラム名のJOINは2件（`material_defect–element`, `application_domain`自己参照）のみで、
+評価クエリでこれらのテーブルに触れるものは0件。残りは全て`entry_id=entry_id`型の対称JOIN。
+
+### ベースラインCSVの注記
+
+`baseline_result.csv` は `condition_mapper`/`entity_extractor` の辞書拡張
+（elastic_tensor, thermal_property, magnetic_property対応）前のコードで生成。
+辞書拡張後にB3 (Rule-based) を再ランすると36.9%から変動する可能性あり。
 
 ## Key Features
 
