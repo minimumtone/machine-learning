@@ -289,8 +289,9 @@ def main():
             },
             "comparison": {
                 "note": ("author_designed and expert_designed were evaluated with different "
-                         "pipeline versions. Current author-designed mean execution_accuracy "
-                         "is 70.2%. Expert-designed mean execution_accuracy is "
+                         "pipeline versions. Current author-designed representative run "
+                         "execution_accuracy is 70.6% (3-run mean 70.9%). "
+                         "Expert-designed mean execution_accuracy is "
                          f"{round(mean_exec_acc, 1)}%, and binary correct rate is "
                          f"{round(100*correct/total, 1)}%."),
                 "expert_designed": {
