@@ -235,9 +235,9 @@ _PROPERTY_COLUMN_MAP: dict[str, str] = {
     "shear_modulus_vrh": "elastic_tensor.shear_modulus_vrh",
     "弾性係数": "calculated_property.value",
     # Thermal properties
-    "debye_temperature": "thermal_property.debye_temperature",
-    "debye temperature": "thermal_property.debye_temperature",
-    "デバイ温度": "thermal_property.debye_temperature",
+    "debye_temperature": "thermal_property.debye_temperature_k",
+    "debye temperature": "thermal_property.debye_temperature_k",
+    "デバイ温度": "thermal_property.debye_temperature_k",
 }
 
 _UNIT_CONVERSION.update({
