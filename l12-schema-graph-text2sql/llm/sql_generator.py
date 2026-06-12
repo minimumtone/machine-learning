@@ -235,6 +235,10 @@ def _rule_based_fallback(
             "JOIN calculation calc ON calc.entry_id = m.entry_id\n"
             "    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id"
         ),
+        "literature_reference": (
+            "JOIN material_reference mr ON mr.entry_id = m.entry_id\n"
+            "    JOIN literature_reference lr ON lr.reference_id = mr.reference_id"
+        ),
     }
 
     sorted_tables = sorted(tables_needed)
@@ -244,6 +248,7 @@ def _rule_based_fallback(
         if t in indirect_join_map:
             joins.append(indirect_join_map[t])
             tables_needed.discard("calculation")
+            tables_needed.discard("material_reference")
         else:
             a = alias_map.get(t, t[:2])
             joins.append(f"JOIN {t} {a} ON {a}.entry_id = m.entry_id")

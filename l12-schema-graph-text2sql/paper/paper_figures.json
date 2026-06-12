@@ -391,7 +391,8 @@
     "total_l12_in_db": 392,
     "stable_candidates": 8,
     "metastable_candidates": 154,
-    "gamma_prime_total": 162,
+    "stable_l12_screened_total": 162,
+    "gamma_prime_ranking_total": 259,
     "gamma_prime_top1_formula": "Ni3Al",
     "gamma_prime_top1_score": 0.8776666666666664,
     "lattice_matched_candidates": 32

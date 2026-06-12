@@ -1680,7 +1680,7 @@ gpt-5系APIではtemperatureパラメータはサポートされておらず未�
   \item \textbf{実行精度}（Execution accuracy）：返された結果セットとgold結果の行レベル一致率。
     式~\eqref{eq:column_aware}に基づく再現率（recall）が主指標である。
     \textbf{注意}：本指標は再現率ベースであり、生成SQLがgoldより多くの行を返してもペナルティがない。
-    precisionとF1の併記は今後の再実行で追加予定である。
+    評価CSVにはprecisionおよびF1も併記しており、過剰取得の影響評価にはこれらを参照する必要がある。
   \item \textbf{テーブル幻覚率}（Hallucinated table rate）：スキーマに存在しないテーブルを1つ以上参照するクエリの割合。
     SQLGuard適用\textbf{前}の生成SQL（LLM出力直後）に対して測定する。
   \item \textbf{JOIN幻覚数}（Hallucinated JOIN count）：FK関係に基づかないJOINを含むクエリの件数。
@@ -1952,14 +1952,14 @@ Very Hard 23件のうち精度30.9\%（16件が精度45\%未満）の失敗内�
   \caption{Very Hardクエリ（23件）の失敗モード分類（代表的な10件を分類。残り6件は複数モード競合または部分的正解）。}
   \label{tab:vhard_failure}
   \small
-  \begin{tabular}{lcp{3.6cm}}
+  \begin{tabular}{lcl}
     \toprule
     失敗モード & 件数 & 代表例 \\
     \midrule
-    WHERE条件組合せミス & 5 & 3条件以上の複合WHERE \\
-    集約・サブクエリ誤用 & 2 & GROUP BY/HAVING/EXISTS \\
-    多元素AND失敗 & 2 & SELF-JOIN/INTERSECT展開 \\
-    実行エラー（型不一致） & 1 & 数値列への文字列比較 \\
+    WHERE条件組合せミス & 5 & 複合WHERE（3条件以上） \\
+    集約・サブクエリ誤用 & 2 & GROUP BY/HAVING \\
+    多元素AND失敗 & 2 & SELF-JOIN展開 \\
+    実行エラー（型不一致） & 1 & 文字列↔数値比較 \\
     \midrule
     合計 & 10 & \\
     \bottomrule
@@ -2926,6 +2926,7 @@ $|a - a_{\text{Ni}_3\text{Al}}| \leq 0.03$~\AA を満たす候補を
 \begin{table}[htbp]
   \centering
   \caption{Ni$_3$Al近傍格子定数候補（$|a - a_{\text{ref}}| \leq 0.03$~\AA、$a_{\text{ref}} = 3.57$~\AA、全32件中代表14件）。
+  代表14件は格子差が小さい順に選定した。
   完全な一覧は \texttt{ni3al\_lattice\_matched\_candidates.csv} を参照。}
   \label{tab:sup_lattice_match}
   \small
