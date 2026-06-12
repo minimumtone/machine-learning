@@ -42,12 +42,18 @@ def _normalize_column_aliases(sql: str) -> str:
         (r'\bAS\s+a_site_element\b', 'AS a_site'),
         (r'\bAS\s+b_site_element\b', 'AS b_site'),
         (r'\bAS\s+avg_formation_energy_per_atom\b', 'AS avg_eform'),
+        (r'\bAS\s+avg_formation_energy\b', 'AS avg_eform'),
+        (r'\bAS\s+avg_eform_per_atom\b', 'AS avg_eform'),
         (r'\bAS\s+lattice_a_difference_from_ni3al\b', 'AS lattice_diff'),
         (r'\bAS\s+lattice_a_difference\b', 'AS lattice_diff'),
+        (r'\bAS\s+lattice_a_mismatch\b', 'AS lattice_diff'),
         (r'\bAS\s+lattice_mismatch_to_ni3al\b', 'AS lattice_diff'),
-        (r'\bAS\s+lattice_mismatch\b', 'AS mismatch'),
+        (r'\bAS\s+lattice_mismatch\b', 'AS lattice_diff'),
         (r'\bAS\s+stability_category\b', 'AS stability'),
         (r'\bAS\s+stability_class\b', 'AS stability'),
+        (r'\bAS\s+stable_count\b', 'AS count'),
+        (r'\bAS\s+l12_count\b', 'AS count'),
+        (r'\bAS\s+compound_count\b', 'AS count'),
     ]
     for pattern, replacement in alias_map:
         sql = re.sub(pattern, replacement, sql, flags=re.IGNORECASE)

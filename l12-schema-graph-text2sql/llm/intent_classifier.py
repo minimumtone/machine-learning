@@ -222,7 +222,7 @@ _AGGREGATE_PATTERNS_STRICT: list[re.Pattern[str]] = [
     # 「平均」 can appear as 「平均を」 or 「平均形成エネルギー」
     re.compile(r"平均|average|avg|mean", re.I),
     re.compile(r"(?:合計|total|sum)\s*(?:を|の|は)", re.I),
-    re.compile(r"(?:統計|statistics|ヒストグラム|histogram)", re.I),
+    re.compile(r"(?:統計|集計|statistics|ヒストグラム|histogram)", re.I),
     re.compile(r"グループ化|group\s*by", re.I),
 ]
 
