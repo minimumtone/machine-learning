@@ -36,27 +36,31 @@ def _normalize_column_aliases(sql: str) -> str:
     The LLM sometimes generates verbose aliases like 'a_site_element'
     instead of the gold SQL's 'a_site'. This normalizes to the shorter
     standard forms used in gold SQL.
+
+    Both the AS definition and bare references (ORDER BY, HAVING, etc.)
+    are updated to avoid broken alias references.
     """
-    # Normalize common verbose aliases
-    alias_map = [
-        (r'\bAS\s+a_site_element\b', 'AS a_site'),
-        (r'\bAS\s+b_site_element\b', 'AS b_site'),
-        (r'\bAS\s+avg_formation_energy_per_atom\b', 'AS avg_eform'),
-        (r'\bAS\s+avg_formation_energy\b', 'AS avg_eform'),
-        (r'\bAS\s+avg_eform_per_atom\b', 'AS avg_eform'),
-        (r'\bAS\s+lattice_a_difference_from_ni3al\b', 'AS lattice_diff'),
-        (r'\bAS\s+lattice_a_difference\b', 'AS lattice_diff'),
-        (r'\bAS\s+lattice_a_mismatch\b', 'AS lattice_diff'),
-        (r'\bAS\s+lattice_mismatch_to_ni3al\b', 'AS lattice_diff'),
-        (r'\bAS\s+lattice_mismatch\b', 'AS lattice_diff'),
-        (r'\bAS\s+stability_category\b', 'AS stability'),
-        (r'\bAS\s+stability_class\b', 'AS stability'),
-        (r'\bAS\s+stable_count\b', 'AS count'),
-        (r'\bAS\s+l12_count\b', 'AS count'),
-        (r'\bAS\s+compound_count\b', 'AS count'),
+    # (old_alias_name, new_alias_name) — order matters: longest first
+    alias_map: list[tuple[str, str]] = [
+        ('a_site_element', 'a_site'),
+        ('b_site_element', 'b_site'),
+        ('avg_formation_energy_per_atom', 'avg_eform'),
+        ('avg_formation_energy', 'avg_eform'),
+        ('avg_eform_per_atom', 'avg_eform'),
+        ('lattice_a_difference_from_ni3al', 'lattice_diff'),
+        ('lattice_a_difference', 'lattice_diff'),
+        ('lattice_a_mismatch', 'lattice_diff'),
+        ('lattice_mismatch_to_ni3al', 'lattice_diff'),
+        ('lattice_mismatch', 'lattice_diff'),
+        ('stability_category', 'stability'),
+        ('stability_class', 'stability'),
+        ('stable_count', 'count'),
+        ('compound_count', 'count'),
     ]
-    for pattern, replacement in alias_map:
-        sql = re.sub(pattern, replacement, sql, flags=re.IGNORECASE)
+    for old_alias, new_alias in alias_map:
+        if re.search(rf'\bAS\s+{old_alias}\b', sql, flags=re.IGNORECASE):
+            sql = re.sub(rf'\bAS\s+{old_alias}\b', f'AS {new_alias}', sql, flags=re.IGNORECASE)
+            sql = re.sub(rf'\b{old_alias}\b', new_alias, sql, flags=re.IGNORECASE)
     return sql
 
 
