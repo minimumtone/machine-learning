@@ -294,75 +294,54 @@ FK関係だけでなくドメイン知識に基づくJOINパス選択が可能�
     Proposed手法の実行精度と各ベースラインの比較を報告する。
 \end{enumerate}
 
-本手法の全体アーキテクチャを図~\ref{fig:step3_pipeline}（概要）および
-図~\ref{fig:architecture}（詳細構成）に示す。
+本手法の概念を図~\ref{fig:step3_pipeline}に、
+Steiner木近似によるJOIN経路探索の動作例を図~\ref{fig:architecture}に示す。
 
-% --- Step 3 パイプライン図（HTMLのStep 3に対応） ---
-\begin{figure*}[htbp]
+% --- 概念図（4ブロック） ---
+\begin{figure}[htbp]
 \centering
-\resizebox{\textwidth}{!}{%
+\resizebox{\columnwidth}{!}{%
 \begin{tikzpicture}[
-  node distance=0.3cm and 0.6cm,
+  node distance=0.15cm and 0.5cm,
   >=Stealth,
   every node/.style={font=\small},
-  stepbox/.style={rectangle, draw, rounded corners=4pt,
-    minimum height=1.2cm, minimum width=2.2cm, align=center,
-    text width=2.4cm},
-  arr/.style={->, thick, >=Stealth},
+  block/.style={rectangle, draw, rounded corners=4pt,
+    minimum height=1.6cm, minimum width=2.8cm, align=center,
+    text width=3.0cm},
+  arr/.style={->, very thick, >=Stealth},
 ]
 
-% Step boxes
-\node[stepbox, fill=green!10] (nl) {自然言語\\
-  {\scriptsize「Niを含む安定な\\ L1$_2$のバルクモジュラス」}};
+% 4 blocks
+\node[block, fill=green!10] (nl) {\textbf{自然言語}\\
+  {\scriptsize「Niを含む安定な\\L1$_2$のバルクモジュラス」}};
 
-\node[stepbox, fill=blue!8, right=of nl] (extract) {条件抽出\\
-  {\scriptsize Ni, L1$_2$, 安定,\\ バルクモジュラス}};
+\node[block, fill=blue!10, right=of nl] (extract) {\textbf{ドメイン理解}\\
+  {\scriptsize 用語辞書照合\\条件抽出・意図分類}};
 
-\node[stepbox, fill=violet!15, right=of extract] (steiner) {Steiner木近似\\
-  {\scriptsize 30テーブル→\\ 必要な4テーブル}};
+\node[block, fill=violet!15, right=of extract] (graph) {\textbf{Schema Graph}\\
+  {\scriptsize Steiner木近似\\30→4テーブルに絞込}};
 
-\node[stepbox, fill=cyan!12, right=of steiner] (llmgen) {制約付き\\ LLM SQL生成\\
-  {\scriptsize gpt-5.5}};
-
-\node[stepbox, fill=red!10, right=of llmgen] (guard) {SQLGuard\\ 8層安全検証\\
-  {\scriptsize \textcircled{\scriptsize 1}BL
-  \textcircled{\scriptsize 2}SELECT
-  \textcircled{\scriptsize 3}複文\\
-  \textcircled{\scriptsize 4}関数
-  \textcircled{\scriptsize 5}テーブル
-  \textcircled{\scriptsize 6}カラム\\
-  \textcircled{\scriptsize 7}JOIN
-  \textcircled{\scriptsize 8}LIMIT}};
-
-\node[stepbox, fill=green!10, right=of guard] (exec) {SQL実行\\
-  {\scriptsize PostgreSQL}};
+\node[block, fill=orange!12, right=of graph] (sql) {\textbf{制約付きSQL生成}\\
+  {\scriptsize 許可テーブル/カラム/JOIN\\SQLGuard 8層検証}};
 
 % Arrows
 \draw[arr] (nl) -- (extract);
-\draw[arr] (extract) -- (steiner);
-\draw[arr] (steiner) -- (llmgen);
-\draw[arr] (llmgen) -- (guard);
-\draw[arr] (guard) -- (exec);
+\draw[arr] (extract) -- (graph);
+\draw[arr] (graph) -- (sql);
 
-% Step labels
-\node[above=0.15cm of nl, font=\scriptsize\bfseries, color=gray] {Step 1};
-\node[above=0.15cm of extract, font=\scriptsize\bfseries, color=gray] {Step 2};
-\node[above=0.15cm of steiner, font=\scriptsize\bfseries, color=gray] {Step 3};
-\node[above=0.15cm of llmgen, font=\scriptsize\bfseries, color=gray] {Step 4};
-\node[above=0.15cm of guard, font=\scriptsize\bfseries, color=gray] {Step 5};
-\node[above=0.15cm of exec, font=\scriptsize\bfseries, color=gray] {Step 6};
+% Key insight annotation
+\node[below=0.5cm of graph, font=\scriptsize\itshape, text width=4cm, align=center, color=violet!70!black]
+  {LLMの視界を必要テーブルに限定\\→ テーブル幻覚・不要JOINを排除};
 
 \end{tikzpicture}%
 }% end resizebox
-\caption{Step 3パイプラインの概要。
-  自然言語クエリから条件抽出（Step 2）を経て、
-  Steiner木近似（Step 3）が30テーブルから必要最小限のサブグラフを抽出する。
-  抽出されたテーブル・カラム・JOIN条件をYAMLでLLMに注入し（Step 4）、
-  8層SQLGuard（Step 5）を経て安全なSQLFNを実行する。
-  LLMの視界が必要テーブルに限定されるため、
-  不要JOINとテーブル幻覚が原理的に排除される。}
+\caption{提案手法の概念。
+  自然言語クエリからドメイン用語辞書で条件を抽出し、
+  Schema Graph上のSteiner木近似で必要テーブルのみを特定する。
+  LLMに渡す情報がこの部分グラフに限定されるため、
+  テーブル幻覚と不要JOINが原理的に排除される。}
 \label{fig:step3_pipeline}
-\end{figure*}
+\end{figure}
 
 % =====================================================================
 \section{材料Text-to-SQLの設計要件}
@@ -410,98 +389,110 @@ FK関係だけでなくドメイン知識に基づくJOINパス選択が可能�
 \label{sec:methods}
 
 本節では各技術要素を詳述する。
-システム全体のパイプラインアーキテクチャを図~\ref{fig:architecture}に示す。
+Steiner木近似によるJOIN経路探索の動作例を図~\ref{fig:architecture}に示す。
 
 \begin{figure*}[htbp]
 \centering
-\resizebox{\textwidth}{!}{%
+\resizebox{0.92\textwidth}{!}{%
 \begin{tikzpicture}[
-  node distance=0.4cm and 0.5cm,
+  node distance=1.2cm and 1.4cm,
   >=Stealth,
   every node/.style={font=\small},
-  module/.style={rectangle, draw, rounded corners=3pt,
-    minimum height=1.0cm, minimum width=2.4cm, align=center,
-    text width=2.6cm},
-  store/.style={rectangle, draw, dashed, rounded corners=2pt,
-    minimum height=0.8cm, align=center,
-    fill=gray!10, text width=2.2cm},
-  arr/.style={->, thick, >=Stealth},
-  darr/.style={->, thick, dashed, >=Stealth, color=orange!70!black},
-  lbl/.style={font=\scriptsize, midway},
+  tbl/.style={circle, draw, minimum size=0.9cm, align=center, font=\scriptsize},
+  req/.style={tbl, fill=violet!25, line width=1.2pt},
+  inter/.style={tbl, fill=orange!15, line width=0.8pt, dashed},
+  graytbl/.style={tbl, fill=gray!8, draw=gray!50, text=gray!60},
+  fk/.style={-, gray!40, thin},
+  path/.style={-, violet!70!black, very thick},
+  pathlbl/.style={font=\tiny, midway, color=violet!70!black},
 ]
 
-% === Layer 1: Input ===
-\node[module, fill=green!12] (input) {自然言語クエリ\\{\scriptsize 「Niを含む安定な\\ L1$_2$のバルクモジュラス」}};
+% ============ Left: Full Schema Graph (30 tables, showing key subset) ============
+\node[font=\normalsize\bfseries, color=gray!70] at (-0.5, 3.5) {(a) FKグラフ（30テーブル）};
 
-% === Layer 2: Intent & Extraction ===
-\node[module, fill=blue!10, right=0.6cm of input] (intent) {Intent Classifier\\{\scriptsize (\S\ref{sec:intent_classifier})}\\{\scriptsize スコープ判定}};
+% Hub
+\node[tbl, fill=blue!15, minimum size=1.2cm, font=\scriptsize\bfseries] (me) at (0, 0) {material\\entry};
 
-\node[module, fill=blue!10, right=0.6cm of intent] (extract) {Entity Extractor\\{\scriptsize (\S\ref{sec:entity_extractor})}\\{\scriptsize 条件抽出・用語辞書照合}};
+% Inner ring
+\node[graytbl] (comp) at (-2.5, 1.5) {comp};
+\node[graytbl] (struct) at (-2.5, -0.5) {struct};
+\node[graytbl] (calc) at (-1.0, 2.5) {calc};
+\node[graytbl] (cp) at (2.5, 1.5) {calc\\prop};
+\node[graytbl] (ps) at (2.5, -0.5) {phase\\stab};
+\node[graytbl] (pd) at (1.0, 2.5) {proto\\def};
+\node[graytbl] (sg) at (0, -2.0) {space\\grp};
 
-% === Layer 3: Coverage → Branching ===
-\node[module, fill=orange!12, right=0.6cm of extract] (coverage) {Coverage Score\\{\scriptsize (\S\ref{sec:coverage_score})}\\{\scriptsize 辞書カバレッジ判定}};
+% Outer ring
+\node[graytbl] (elem) at (-4.0, 2.5) {elem};
+\node[graytbl] (ep) at (-5.5, 1.5) {elem\\prop};
+\node[graytbl] (et) at (-1.0, -2.5) {elastic\\tens};
+\node[graytbl] (tp) at (1.0, -2.5) {therm\\prop};
+\node[graytbl] (bs) at (3.5, 2.5) {band\\struct};
+\node[graytbl] (dos) at (4.5, 0.5) {dos};
+\node[graytbl] (lr) at (-3.5, -1.5) {lit\\ref};
+\node[graytbl] (mr) at (-4.5, -0.2) {mat\\ref};
+\node[graytbl] (md) at (3.5, -1.5) {mat\\defect};
 
-% === Layer 4: Dual Generation ===
-\node[module, fill=blue!10, right=1.0cm of coverage, yshift=0.9cm] (rb) {Rule-based\\SQL生成\\{\scriptsize (\S\ref{sec:sql_generation})}};
-\node[module, fill=violet!15, right=1.0cm of coverage, yshift=-0.9cm] (llm) {LLM SQL生成\\{\scriptsize (\S\ref{sec:llm_mode})}\\{\scriptsize gpt-5.5}};
+% FK edges (gray, showing full graph)
+\draw[fk] (me) -- (comp);
+\draw[fk] (me) -- (struct);
+\draw[fk] (me) -- (calc);
+\draw[fk] (me) -- (cp);
+\draw[fk] (me) -- (ps);
+\draw[fk] (me) -- (pd);
+\draw[fk] (me) -- (sg);
+\draw[fk] (comp) -- (elem);
+\draw[fk] (elem) -- (ep);
+\draw[fk] (calc) -- (et);
+\draw[fk] (calc) -- (tp);
+\draw[fk] (calc) -- (bs);
+\draw[fk] (calc) -- (dos);
+\draw[fk] (me) -- (et);
+\draw[fk] (me) -- (tp);
+\draw[fk] (me) -- (bs);
+\draw[fk] (me) -- (dos);
+\draw[fk] (me) -- (lr);
+\draw[fk] (mr) -- (me);
+\draw[fk] (mr) -- (lr);
+\draw[fk] (me) -- (md);
 
-% === Layer 5: Guard ===
-\node[module, fill=red!12, right=0.6cm of rb, yshift=-0.9cm] (guard) {SQLGuard\\8層検証\\{\scriptsize (\S\ref{sec:sql_guard})}\\{\scriptsize BL/SELECT/複文/関数/\\テーブル/カラム/JOIN/LIMIT}};
+% ============ Right: Steiner tree result ============
+\node[font=\normalsize\bfseries, color=violet!70!black] at (10, 3.5) {(b) Steiner木近似の結果};
 
-% === Layer 6: Output ===
-\node[module, fill=green!12, right=0.6cm of guard] (exec) {SQL実行\\結果返却\\{\scriptsize PostgreSQL}};
+% Required tables (R = {composition, phase_stability, elastic_tensor, element})
+\node[req, minimum size=1.1cm, font=\scriptsize\bfseries] (me2) at (10, 0) {material\\entry};
+\node[req] (comp2) at (7.5, 1.5) {comp};
+\node[req] (ps2) at (12.5, 1.5) {phase\\stab};
+\node[req] (et2) at (10, -2.2) {elastic\\tens};
+\node[req] (elem2) at (5.5, 2.5) {elem};
 
-% === Data Stores (bottom) ===
-\node[store, below=1.4cm of extract] (dict) {材料用語辞書\\{\scriptsize material\_terms.yaml}\\{\scriptsize 数値/化学式パーサー\\(\S\ref{sec:numeric_parser},\S\ref{sec:formula_parser})}};
+% Intermediate node (material_entry acts as hub)
+% No extra intermediate needed — material_entry connects all
 
-\node[store, below=1.4cm of coverage] (sg) {Schema Graph\\{\scriptsize (\S\ref{sec:schema_graph})}\\{\scriptsize FK走査・Steiner木\\30テーブル対応}};
+% Selected paths (bold violet)
+\draw[path] (comp2) -- node[pathlbl, above] {FK} (me2);
+\draw[path] (ps2) -- node[pathlbl, above] {FK} (me2);
+\draw[path] (et2) -- node[pathlbl, right] {FK} (me2);
+\draw[path] (comp2) -- node[pathlbl, above] {FK} (elem2);
 
-\node[store, below=1.4cm of rb, xshift=-0.3cm] (rag) {Few-Shot RAGストア\\{\scriptsize (\S\ref{sec:few_shot})}\\{\scriptsize 11事例}};
+% Legend
+\node[req, minimum size=0.5cm] at (7.5, -3.5) {};
+\node[font=\scriptsize, right] at (7.9, -3.5) {必要テーブル ($R$)};
+\node[font=\scriptsize, right] at (10.0, -3.5) {\textcolor{violet!70!black}{\rule[0.3ex]{1cm}{1.5pt}} 選択されたJOIN経路};
 
-\node[store, below=1.4cm of guard] (yaml) {allowed\_schema.yaml\\{\scriptsize テーブル/カラム\\ホワイトリスト}};
-
-\node[store, below=1.4cm of exec] (db) {PostgreSQL\\{\scriptsize 30テーブル\\1{,}470エントリ\\5プロトタイプ}};
-
-% === Arrows: Main flow ===
-\draw[arr] (input) -- (intent);
-\draw[arr] (intent) -- (extract);
-\draw[arr] (extract) -- (coverage);
-\draw[arr] (coverage.east) ++(0.1,0) |- (rb.west);
-\draw[arr] (coverage.east) ++(0.1,0) |- (llm.west);
-\draw[arr] (rb.east) -| (guard.north);
-\draw[arr] (llm.east) -| (guard.south);
-\draw[arr] (guard) -- (exec);
-
-% === Arrows: Data stores ===
-\draw[darr] (dict) -- (extract);
-\draw[darr] (sg) -- (coverage);
-\draw[darr] (sg.north) ++(0,0.1) -| ([xshift=-0.3cm]rb.south);
-\draw[darr] (sg.north) ++(0,0.1) -| ([xshift=-0.3cm]llm.south);
-\draw[darr] (rag) -- (llm);
-\draw[darr] (yaml) -- (guard);
-\draw[darr] (db) -- (exec);
-
-% === Labels ===
-\node[above=0.05cm of coverage, font=\scriptsize\itshape, xshift=1.4cm, color=gray] {高→Rule-based};
-\node[below=0.05cm of coverage, font=\scriptsize\itshape, xshift=1.4cm, color=gray] {低→LLM};
-
-% === Feedback loop ===
-\draw[darr, bend left=15] (exec.south) -- node[below, font=\scriptsize, color=orange!70!black] {成功ペア蓄積} (rag.east);
-
-% === Reject ===
-\node[below left=0.3cm and -0.2cm of intent, font=\scriptsize\itshape, text=red!70!black, align=center] (reject) {スコープ外\\拒否};
-\draw[arr, red!60!black] (intent.south) ++(0,-0.05) -- (reject);
+% Arrow between (a) and (b)
+\draw[->, ultra thick, color=violet!60!black] (5.2, 0) -- node[above, font=\scriptsize\bfseries] {Union-Find} node[below, font=\scriptsize] {$R = \{$comp, ps, et, elem$\}$} (6.8, 0);
 
 \end{tikzpicture}%
 }% end resizebox
-\caption{システムアーキテクチャの全体構成。
-  実線矢印は主要データフロー、破線矢印（橙色）はデータ参照・フィードバックループを示す。
-  Coverage Scoreに基づきRule-based（高カバレッジ）またはLLM（低カバレッジ）経路に分岐し、
-  いずれもSchema Graph（30テーブルFK走査）によるJOINパス制約と
-  SQLGuard 8層検証を経て安全なSQLが生成・実行される。
-  実行エラーまたは空結果が検出された場合は、
-  エラー診断情報付きでLLMにリペアを依頼するリペアループ（最大2回）が作動する。
-  成功したクエリペアはFew-Shot RAGストアに蓄積され、以降のLLM生成に活用される。}
+\caption{Steiner木近似によるJOIN経路探索の動作例。
+  (a)~30テーブルのFKグラフ全体。\texttt{material\_entry}がハブとなるスター型構造を基調とするが、
+  計算系テーブル（\texttt{elastic\_tensor}等）は\texttt{material\_entry}と\texttt{calculation}の
+  双方にFKを持ちサイクルが存在する。
+  (b)~クエリ「Niを含む安定な化合物のバルクモジュラス」に対し、
+  必要テーブル集合$R$（紫塗り）をUnion-Findで連結するSteiner木近似の結果。
+  30テーブルから4テーブル+ハブに絞り込まれ、
+  LLMに渡されるスキーマ情報が最小限に限定される。}
 \label{fig:architecture}
 \end{figure*}
 
