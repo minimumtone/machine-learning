@@ -54,15 +54,15 @@ def main() -> int:
             warnings.append(msg)
 
     # --- Proposed accuracy ---
-    proposed = fig.get("proposed_metrics", {})
-    acc = proposed.get("execution_accuracy_pct")
+    proposed = fig.get("proposed_overall", {})
+    acc = proposed.get("exec_accuracy_pct")
     if acc is not None:
         check("Proposed accuracy", acc, rf"{acc}\s*\\?%")
 
     # --- 3-run stats ---
     stats = fig.get("proposed_3run_stats", {})
     mean_acc = stats.get("mean_accuracy_pct")
-    std_acc = stats.get("std_accuracy_pp")
+    std_acc = stats.get("stdev_pp")
     if mean_acc is not None:
         check("3-run mean", mean_acc, rf"{mean_acc}")
     if std_acc is not None:
@@ -81,21 +81,20 @@ def main() -> int:
 
     # --- Materials engineering ---
     mat = fig.get("materials_engineering", {})
-    stable = mat.get("stable_candidates")
-    meta = mat.get("metastable_candidates")
     screened = mat.get("stable_l12_screened_total")
     if screened is not None:
         check("Stable+metastable L12", screened, rf"\b{screened}\b")
 
     # --- Baselines ---
-    for key in ["baseline1_llm_only", "baseline2_full_schema", "baseline3_rule_based", "baseline4_fk_list"]:
-        bl = fig.get(key, {})
-        bl_acc = bl.get("execution_accuracy_pct")
+    bl_comp = fig.get("baseline_comparison", {})
+    for bl_key, bl_label in [("B1", "LLM-only"), ("B2", "Full-schema"), ("B3", "Rule-based"), ("B4", "FK-list")]:
+        bl = bl_comp.get(bl_key, {})
+        bl_acc = bl.get("exec_accuracy")
         if bl_acc is not None:
-            check(f"{key} accuracy", bl_acc, rf"{bl_acc}", required=False)
+            check(f"{bl_label} ({bl_key}) accuracy", bl_acc, rf"{bl_acc}", required=False)
 
-    # --- Expert evaluation ---
-    expert = fig.get("expert_evaluation", {})
+    # --- Independent evaluation ---
+    expert = fig.get("independent_eval", {})
     if expert:
         binary = expert.get("binary_correct_rate")
         if binary is not None:
@@ -107,9 +106,9 @@ def main() -> int:
     # --- Latency ---
     latency = proposed.get("avg_latency_ms")
     if latency is not None:
-        # TeX may format as 9,342 or 9342
-        lat_str = f"{latency:,.0f}" if isinstance(latency, (int, float)) else str(latency)
-        check("Avg latency", lat_str, rf"{lat_str}|{str(latency)}", required=False)
+        # check() handles LaTeX {,} format for integers >= 4 digits
+        lat_int = int(latency) if isinstance(latency, (int, float)) else latency
+        check("Avg latency", lat_int, rf"\b{lat_int}\b", required=False)
 
     # --- Report ---
     if errors:

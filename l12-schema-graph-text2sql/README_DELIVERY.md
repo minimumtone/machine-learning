@@ -18,6 +18,7 @@
 - **評価スクリプト** (`scripts/run_full_evaluation.py`, `scripts/run_proposed_only.py`, `scripts/compute_paper_figures.py`)
 - **安全検査定義** (`safety/allowed_schema.yaml`)
 - **論文数値JSON** (`paper/paper_figures.json` — Single Source of Truth)
+- **pytest設定** (`pytest.ini` — テスト収集を `tests/` に制限。ZIP単体では `tests/` 未同梱のため実行不可）
 
 ## ZIP に含まれないもの
 
