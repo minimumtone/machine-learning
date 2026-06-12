@@ -280,7 +280,7 @@ def _rule_based_fallback(
         select_cols.append(f"{et_alias}.shear_modulus_vrh")
     if "thermal_property" in tables_needed:
         tp_alias = alias_map.get("thermal_property", "tp")
-        select_cols.append(f"{tp_alias}.debye_temperature")
+        select_cols.append(f"{tp_alias}.debye_temperature_k")
 
     sql_parts = [f"SELECT DISTINCT\n    {', '.join(select_cols)}"]
     sql_parts.append("FROM material_entry m")
