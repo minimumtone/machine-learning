@@ -80,8 +80,10 @@ def execution_accuracy_full(
     """
     if not expected_rows:
         if not result_rows:
+            # Both empty → perfect match
             return {"recall": 1.0, "precision": 1.0, "f1": 1.0}
-        return {"recall": 1.0, "precision": 0.0, "f1": 0.0}
+        # Expected is empty but result is non-empty → wrong (should return nothing)
+        return {"recall": 0.0, "precision": 0.0, "f1": 0.0}
 
     if not result_rows:
         return {"recall": 0.0, "precision": 0.0, "f1": 0.0}
@@ -164,13 +166,30 @@ def hallucinated_table_rate(
 def hallucinated_column_rate(
     generated_columns: list[str],
     allowed_columns: list[str],
+    sql: str = "",
 ) -> float:
-    """Fraction of generated columns not in allowed list."""
+    """Fraction of generated columns not in allowed list.
+
+    Resolves alias-qualified columns (e.g. ``m.formula``) to their
+    full ``table.column`` form using the alias map extracted from *sql*
+    so that comparison against the ``table.column`` allowed list is
+    meaningful.
+    """
     if not generated_columns:
         return 0.0
+    alias_map = _extract_aliases_from_sql(sql) if sql else {}
     allowed_lower = {c.lower() for c in allowed_columns}
-    bad = [c for c in generated_columns if c.lower() not in allowed_lower]
-    return len(bad) / len(generated_columns)
+
+    def _resolve_col(col: str) -> str:
+        parts = col.strip().lower().split(".")
+        if len(parts) == 2:
+            table = alias_map.get(parts[0], parts[0])
+            return f"{table}.{parts[1]}"
+        return col.lower()
+
+    resolved = [_resolve_col(c) for c in generated_columns]
+    bad = [c for c in resolved if c not in allowed_lower]
+    return len(bad) / len(resolved)
 
 
 def _extract_aliases_from_sql(sql: str) -> dict[str, str]:

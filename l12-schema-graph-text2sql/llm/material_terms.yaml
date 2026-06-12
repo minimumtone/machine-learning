@@ -261,6 +261,16 @@ column_synonyms:
   # material_defect table
   "material_defect.defect_type": "material_defect.defect_type_id"
 
+# Value mappings: correct literal values to use in WHERE clauses
+value_mappings:
+  composition.site_label:
+    "A": "A-site"
+    "B": "B-site"
+  calculation.functional:
+    "PBE": "GGA-PBE"
+    "pbe": "GGA-PBE"
+    "GGA": "GGA-PBE"
+
 elements:
   Ni:
     aliases: [Ni, nickel, "\u30CB\u30C3\u30B1\u30EB"]

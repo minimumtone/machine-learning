@@ -143,7 +143,7 @@
   },
   {
     "nl_query": "Bサイトの元素を一覧にして。",
-    "sql": "SELECT DISTINCT c.element, c.site_label\nFROM composition c\nWHERE c.site_label = 'B'\nORDER BY c.element\nLIMIT 10000;",
+    "sql": "SELECT DISTINCT c.element, c.site_label\nFROM composition c\nWHERE c.site_label = 'B-site'\nORDER BY c.element\nLIMIT 10000;",
     "conditions": {
       "site_label": "B"
     },

@@ -208,6 +208,22 @@ def map_formula_condition(formula_info: dict[str, Any]) -> list[dict[str, Any]]:
     return fragments
 
 
+def map_site_label_condition(site_label: str | list[str]) -> dict[str, Any]:
+    """Map a site_label condition to a SQL fragment."""
+    if isinstance(site_label, list):
+        values = ", ".join(f"'{_escape_sql_value(s)}'" for s in site_label)
+        sql_fragment = f"c.site_label IN ({values})"
+    else:
+        safe = _escape_sql_value(site_label)
+        sql_fragment = f"c.site_label = '{safe}'"
+    return {
+        "type": "site_label",
+        "sql_fragment": sql_fragment,
+        "tables": ["composition"],
+        "columns": ["composition.site_label"],
+    }
+
+
 def map_conditions(conditions: dict[str, Any]) -> list[dict[str, Any]]:
     """Map a conditions dict (from entity_extractor) to SQL fragments."""
     mapped: list[dict[str, Any]] = []
@@ -234,6 +250,9 @@ def map_conditions(conditions: dict[str, Any]) -> list[dict[str, Any]]:
 
     if "formula" in conditions and "contains_elements" not in conditions:
         mapped.extend(map_formula_condition(conditions["formula"]))
+
+    if "site_label" in conditions:
+        mapped.append(map_site_label_condition(conditions["site_label"]))
 
     if "sort_by" in conditions:
         mapped.append(

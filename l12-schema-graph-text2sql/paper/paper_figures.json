@@ -7,15 +7,15 @@
   "proposed_overall": {
     "paper_ref": "Abstract, Table (tab:baseline_results) P行, Table (tab:independent_eval) 著者設計列",
     "n_queries": 100,
-    "exec_accuracy_pct": 76.3,
+    "exec_accuracy_pct": 72.2,
     "syntax_validity_pct": 100.0,
     "exec_validity_pct": 100.0,
     "table_halluc_rate_pct": 0.0,
-    "join_halluc_rate_pct": 0.8,
-    "avg_latency_ms": 9395.0,
-    "avg_token_usage": 3126.0,
-    "repair_query_count": 29,
-    "repair_total_attempts": 35
+    "join_halluc_rate_pct": 0.7,
+    "avg_latency_ms": 7676.0,
+    "avg_token_usage": 2924.0,
+    "repair_query_count": 16,
+    "repair_total_attempts": 22
   },
   "proposed_by_difficulty": {
     "paper_ref": "Table (tab:difficulty_breakdown), 難易度別の傾向",
@@ -32,12 +32,12 @@
     },
     "hard": {
       "n": 22,
-      "exec_accuracy": 84.3,
+      "exec_accuracy": 73.5,
       "exec_validity": 100.0
     },
     "very_hard": {
       "n": 23,
-      "exec_accuracy": 40.4,
+      "exec_accuracy": 33.2,
       "exec_validity": 100.0
     }
   },
@@ -46,108 +46,46 @@
     "B1": {
       "method": "baseline1_llm_only",
       "n": 100,
-      "exec_accuracy": 68.0,
-      "syntax_validity": 100.0,
-      "exec_validity": 100.0,
+      "exec_accuracy": 64.6,
+      "syntax_validity": 98.0,
+      "exec_validity": 98.0,
       "table_halluc_rate_pct": 0.0,
-      "join_halluc_count": 17,
-      "exec_error_count": 0,
-      "syntax_error_count": 0,
-      "avg_latency_ms": 17799.91,
-      "avg_token_usage": 5251.06,
+      "join_halluc_count": 16,
+      "exec_error_count": 2,
+      "syntax_error_count": 2,
+      "avg_latency_ms": 15530.86,
+      "avg_token_usage": 5197.63,
       "difficulty_breakdown": {
         "easy": {
           "n": 27,
-          "exec_accuracy": 81.7
+          "exec_accuracy": 79.3
         },
         "medium": {
           "n": 28,
-          "exec_accuracy": 82.1
+          "exec_accuracy": 80.9
         },
         "hard": {
           "n": 22,
-          "exec_accuracy": 74.1
+          "exec_accuracy": 68.1
         },
         "very_hard": {
           "n": 23,
-          "exec_accuracy": 28.9
+          "exec_accuracy": 24.1
         }
       }
     },
     "B2": {
       "method": "baseline2_full_schema",
       "n": 100,
-      "exec_accuracy": 74.2,
-      "syntax_validity": 95.0,
-      "exec_validity": 95.0,
+      "exec_accuracy": 68.7,
+      "syntax_validity": 94.0,
+      "exec_validity": 94.0,
       "table_halluc_rate_pct": 0.0,
-      "join_halluc_count": 21,
-      "exec_error_count": 5,
-      "syntax_error_count": 5,
-      "avg_latency_ms": 19863.53,
-      "avg_token_usage": 4166.22,
-      "difficulty_breakdown": {
-        "easy": {
-          "n": 27,
-          "exec_accuracy": 93.1
-        },
-        "medium": {
-          "n": 28,
-          "exec_accuracy": 78.6
-        },
-        "hard": {
-          "n": 22,
-          "exec_accuracy": 84.9
-        },
-        "very_hard": {
-          "n": 23,
-          "exec_accuracy": 36.6
-        }
-      }
-    },
-    "B3": {
-      "method": "baseline3_rule_based",
-      "n": 100,
-      "exec_accuracy": 48.5,
-      "syntax_validity": 100.0,
-      "exec_validity": 95.0,
-      "table_halluc_rate_pct": 0.0,
-      "join_halluc_count": 3,
-      "exec_error_count": 5,
-      "syntax_error_count": 0,
-      "avg_latency_ms": 0.5,
-      "avg_token_usage": 0.0,
-      "difficulty_breakdown": {
-        "easy": {
-          "n": 27,
-          "exec_accuracy": 42.6
-        },
-        "medium": {
-          "n": 28,
-          "exec_accuracy": 64.6
-        },
-        "hard": {
-          "n": 22,
-          "exec_accuracy": 61.5
-        },
-        "very_hard": {
-          "n": 23,
-          "exec_accuracy": 23.5
-        }
-      }
-    },
-    "B4": {
-      "method": "baseline4_fk_list",
-      "n": 100,
-      "exec_accuracy": 73.7,
-      "syntax_validity": 98.0,
-      "exec_validity": 98.0,
-      "table_halluc_rate_pct": 0.0,
-      "join_halluc_count": 17,
-      "exec_error_count": 2,
-      "syntax_error_count": 2,
-      "avg_latency_ms": 22894.89,
-      "avg_token_usage": 5154.02,
+      "join_halluc_count": 18,
+      "exec_error_count": 6,
+      "syntax_error_count": 6,
+      "avg_latency_ms": 17061.67,
+      "avg_token_usage": 4269.54,
       "difficulty_breakdown": {
         "easy": {
           "n": 27,
@@ -155,30 +93,92 @@
         },
         "medium": {
           "n": 28,
-          "exec_accuracy": 82.4
+          "exec_accuracy": 78.6
         },
         "hard": {
           "n": 22,
-          "exec_accuracy": 81.8
+          "exec_accuracy": 78.0
         },
         "very_hard": {
           "n": 23,
-          "exec_accuracy": 37.0
+          "exec_accuracy": 23.3
+        }
+      }
+    },
+    "B3": {
+      "method": "baseline3_rule_based",
+      "n": 100,
+      "exec_accuracy": 36.9,
+      "syntax_validity": 100.0,
+      "exec_validity": 93.0,
+      "table_halluc_rate_pct": 0.0,
+      "join_halluc_count": 3,
+      "exec_error_count": 7,
+      "syntax_error_count": 0,
+      "avg_latency_ms": 0.85,
+      "avg_token_usage": 0.0,
+      "difficulty_breakdown": {
+        "easy": {
+          "n": 27,
+          "exec_accuracy": 38.9
+        },
+        "medium": {
+          "n": 28,
+          "exec_accuracy": 53.9
+        },
+        "hard": {
+          "n": 22,
+          "exec_accuracy": 31.3
+        },
+        "very_hard": {
+          "n": 23,
+          "exec_accuracy": 19.2
+        }
+      }
+    },
+    "B4": {
+      "method": "baseline4_fk_list",
+      "n": 100,
+      "exec_accuracy": 66.4,
+      "syntax_validity": 98.0,
+      "exec_validity": 98.0,
+      "table_halluc_rate_pct": 0.0,
+      "join_halluc_count": 21,
+      "exec_error_count": 2,
+      "syntax_error_count": 2,
+      "avg_latency_ms": 18683.33,
+      "avg_token_usage": 5488.69,
+      "difficulty_breakdown": {
+        "easy": {
+          "n": 27,
+          "exec_accuracy": 91.2
+        },
+        "medium": {
+          "n": 28,
+          "exec_accuracy": 80.5
+        },
+        "hard": {
+          "n": 22,
+          "exec_accuracy": 51.1
+        },
+        "very_hard": {
+          "n": 23,
+          "exec_accuracy": 35.1
         }
       }
     },
     "P": {
       "method": "proposed",
       "n": 100,
-      "exec_accuracy": 76.3,
+      "exec_accuracy": 72.2,
       "syntax_validity": 100.0,
       "exec_validity": 100.0,
       "table_halluc_rate_pct": 0.0,
-      "join_halluc_count": 2,
+      "join_halluc_count": 1,
       "exec_error_count": 0,
       "syntax_error_count": 0,
-      "avg_latency_ms": 9394.88,
-      "avg_token_usage": 3125.72,
+      "avg_latency_ms": 7675.52,
+      "avg_token_usage": 2924.3,
       "difficulty_breakdown": {
         "easy": {
           "n": 27,
@@ -190,11 +190,11 @@
         },
         "hard": {
           "n": 22,
-          "exec_accuracy": 84.3
+          "exec_accuracy": 73.5
         },
         "very_hard": {
           "n": 23,
-          "exec_accuracy": 40.4
+          "exec_accuracy": 33.2
         }
       }
     }
@@ -202,8 +202,8 @@
   "multihop_comparison": {
     "paper_ref": "Table (tab:multihop)",
     "multihop_total": 73,
-    "multihop_success_count": 44,
-    "multihop_success_rate_pct": 60.3,
+    "multihop_success_count": 39,
+    "multihop_success_rate_pct": 53.4,
     "by_n_tables": {
       "3": {
         "B2": 78.6,
@@ -212,15 +212,15 @@
         "P_n": 28
       },
       "4": {
-        "B2": 84.9,
+        "B2": 78.0,
         "B2_n": 22,
-        "P": 84.3,
+        "P": 73.5,
         "P_n": 22
       },
       "5-6": {
-        "B2": 36.6,
+        "B2": 23.3,
         "B2_n": 23,
-        "P": 40.4,
+        "P": 33.2,
         "P_n": 23
       }
     }
@@ -229,19 +229,19 @@
     "paper_ref": "Table (tab:error_analysis), Very Hard失敗内訳 (tab:vhard_failure)",
     "by_method": {
       "B1": {
-        "exec_error_count": 0,
-        "syntax_error_count": 0,
+        "exec_error_count": 2,
+        "syntax_error_count": 2,
         "table_halluc_rate_pct": 0.0,
-        "join_halluc_count": 17
+        "join_halluc_count": 16
       },
       "B2": {
-        "exec_error_count": 5,
-        "syntax_error_count": 5,
+        "exec_error_count": 6,
+        "syntax_error_count": 6,
         "table_halluc_rate_pct": 0.0,
-        "join_halluc_count": 21
+        "join_halluc_count": 18
       },
       "B3": {
-        "exec_error_count": 5,
+        "exec_error_count": 7,
         "syntax_error_count": 0,
         "table_halluc_rate_pct": 0.0,
         "join_halluc_count": 3
@@ -250,49 +250,49 @@
         "exec_error_count": 2,
         "syntax_error_count": 2,
         "table_halluc_rate_pct": 0.0,
-        "join_halluc_count": 17
+        "join_halluc_count": 21
       },
       "P": {
         "exec_error_count": 0,
         "syntax_error_count": 0,
         "table_halluc_rate_pct": 0.0,
-        "join_halluc_count": 2
+        "join_halluc_count": 1
       }
     },
-    "very_hard_failure_count": 13,
+    "very_hard_failure_count": 15,
     "very_hard_total": 23,
-    "very_hard_accuracy_pct": 40.4
+    "very_hard_accuracy_pct": 33.2
   },
   "latency": {
     "paper_ref": "Table (tab:latency)",
     "by_method": {
       "B1": {
-        "avg_latency_ms": 17799.91,
-        "avg_token_usage": 5251.06
+        "avg_latency_ms": 15530.86,
+        "avg_token_usage": 5197.63
       },
       "B2": {
-        "avg_latency_ms": 19863.53,
-        "avg_token_usage": 4166.22
+        "avg_latency_ms": 17061.67,
+        "avg_token_usage": 4269.54
       },
       "B3": {
-        "avg_latency_ms": 0.5,
+        "avg_latency_ms": 0.85,
         "avg_token_usage": 0.0
       },
       "B4": {
-        "avg_latency_ms": 22894.89,
-        "avg_token_usage": 5154.02
+        "avg_latency_ms": 18683.33,
+        "avg_token_usage": 5488.69
       },
       "P": {
-        "avg_latency_ms": 9394.88,
-        "avg_token_usage": 3125.72
+        "avg_latency_ms": 7675.52,
+        "avg_token_usage": 2924.3
       }
     }
   },
   "metric_improvement": {
     "paper_ref": "Table (tab:metric_improvement)",
-    "raw_accuracy": 18.0,
-    "improved_accuracy": 76.3,
-    "improvement_pt": 58.3
+    "raw_accuracy": 7.3,
+    "improved_accuracy": 72.2,
+    "improvement_pt": 64.9
   },
   "independent_eval": {
     "paper_ref": "Table (tab:independent_eval), 独立評価セクション",

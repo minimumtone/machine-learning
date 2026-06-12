@@ -1,1 +1,29 @@
-{"columns": ["formula", "a_site", "b_site"], "rows": []}
+{
+  "columns": [
+    "formula",
+    "a_site",
+    "b_site"
+  ],
+  "rows": [
+    [
+      "Co3Al",
+      "Co",
+      "Al"
+    ],
+    [
+      "Co3Ti",
+      "Co",
+      "Ti"
+    ],
+    [
+      "Ni3Al",
+      "Ni",
+      "Al"
+    ],
+    [
+      "Ni3Ti",
+      "Ni",
+      "Ti"
+    ]
+  ]
+}

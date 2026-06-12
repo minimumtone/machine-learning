@@ -17,6 +17,18 @@ from llm.intent_classifier import classify_intent
 from llm.schema_linker import link_schema
 
 
+def _fix_known_literals(sql: str) -> str:
+    """Post-process generated SQL to correct known DB literal values."""
+    # site_label: 'A' -> 'A-site', 'B' -> 'B-site'
+    sql = re.sub(r"site_label\s*=\s*'A'", "site_label = 'A-site'", sql)
+    sql = re.sub(r"site_label\s*=\s*'B'", "site_label = 'B-site'", sql)
+    sql = re.sub(r"site_label\s+IN\s*\('A',\s*'B'\)", "site_label IN ('A-site', 'B-site')", sql)
+    # functional: 'PBE' -> 'GGA-PBE'
+    sql = re.sub(r"functional\s*=\s*'PBE'", "functional = 'GGA-PBE'", sql, flags=re.IGNORECASE)
+    sql = re.sub(r"functional\s*=\s*'GGA'", "functional = 'GGA-PBE'", sql, flags=re.IGNORECASE)
+    return sql
+
+
 def _load_prompt_template() -> str:
     path = Path(__file__).parent / "prompt_templates" / "sql_generation_prompt.md"
     return path.read_text(encoding="utf-8")
@@ -132,6 +144,7 @@ def generate_sql_via_llm(
     latency_ms = int((time.time() - t0) * 1000)
     raw = resp.choices[0].message.content or ""
     sql = extract_sql_from_response(raw)
+    sql = _fix_known_literals(sql)
     usage = resp.usage
     tokens = (usage.prompt_tokens + usage.completion_tokens) if usage else 0
     return {

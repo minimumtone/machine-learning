@@ -58,6 +58,7 @@ CONDITION_TABLE_MAP: dict[str, list[str]] = {
     "reference": ["material_reference", "literature_reference"],
     "application": ["material_application", "application_domain"],
     "functional": ["calculation"],
+    "site_label": ["composition"],
     "calculation_method": ["calculation"],
     "phase_diagram": ["phase_diagram_entry"],
     "alloy_system": ["material_alloy_system", "alloy_system"],
@@ -66,6 +67,7 @@ CONDITION_TABLE_MAP: dict[str, list[str]] = {
 CONDITION_COLUMN_MAP: dict[str, list[str]] = {
     "prototype": ["structure.prototype", "structure.strukturbericht"],
     "contains_elements": ["composition.element", "composition.atomic_fraction"],
+    "site_label": ["composition.site_label"],
     "stability": [
         "phase_stability.energy_above_hull",
         "phase_stability.is_stable",

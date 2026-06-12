@@ -1,1 +1,28 @@
-{"columns": ["b_site_element", "stable_count"], "rows": []}
+{
+  "columns": [
+    "b_site_element",
+    "stable_count"
+  ],
+  "rows": [
+    [
+      "Al",
+      "2"
+    ],
+    [
+      "Sc",
+      "2"
+    ],
+    [
+      "Ti",
+      "2"
+    ],
+    [
+      "Cu",
+      "1"
+    ],
+    [
+      "Sb",
+      "1"
+    ]
+  ]
+}
