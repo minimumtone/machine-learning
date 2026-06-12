@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 
 from llm.entity_extractor import extract_conditions
 from llm.few_shot_store import add_example, format_few_shot_block, retrieve_similar
-from llm.intent_classifier import classify_intent
+from llm.intent_classifier import classify_intent, classify_query_type
+from llm.output_schema_specifier import specify_output_schema
 from llm.schema_linker import link_schema
 
 
@@ -26,6 +27,36 @@ def _fix_known_literals(sql: str) -> str:
     # functional: 'PBE' -> 'GGA-PBE'
     sql = re.sub(r"functional\s*=\s*'PBE'", "functional = 'GGA-PBE'", sql, flags=re.IGNORECASE)
     sql = re.sub(r"functional\s*=\s*'GGA'", "functional = 'GGA-PBE'", sql, flags=re.IGNORECASE)
+    return sql
+
+
+def _normalize_column_aliases(sql: str) -> str:
+    """Normalize common LLM column alias variants to standard forms.
+
+    The LLM sometimes generates verbose aliases like 'a_site_element'
+    instead of the gold SQL's 'a_site'. This normalizes to the shorter
+    standard forms used in gold SQL.
+    """
+    # Normalize common verbose aliases
+    alias_map = [
+        (r'\bAS\s+a_site_element\b', 'AS a_site'),
+        (r'\bAS\s+b_site_element\b', 'AS b_site'),
+        (r'\bAS\s+avg_formation_energy_per_atom\b', 'AS avg_eform'),
+        (r'\bAS\s+avg_formation_energy\b', 'AS avg_eform'),
+        (r'\bAS\s+avg_eform_per_atom\b', 'AS avg_eform'),
+        (r'\bAS\s+lattice_a_difference_from_ni3al\b', 'AS lattice_diff'),
+        (r'\bAS\s+lattice_a_difference\b', 'AS lattice_diff'),
+        (r'\bAS\s+lattice_a_mismatch\b', 'AS lattice_diff'),
+        (r'\bAS\s+lattice_mismatch_to_ni3al\b', 'AS lattice_diff'),
+        (r'\bAS\s+lattice_mismatch\b', 'AS lattice_diff'),
+        (r'\bAS\s+stability_category\b', 'AS stability'),
+        (r'\bAS\s+stability_class\b', 'AS stability'),
+        (r'\bAS\s+stable_count\b', 'AS count'),
+        (r'\bAS\s+l12_count\b', 'AS count'),
+        (r'\bAS\s+compound_count\b', 'AS count'),
+    ]
+    for pattern, replacement in alias_map:
+        sql = re.sub(pattern, replacement, sql, flags=re.IGNORECASE)
     return sql
 
 
@@ -57,6 +88,8 @@ def build_constrained_prompt(
     allowed_columns: list[str],
     allowed_joins: list[str],
     few_shot_examples: list[dict[str, Any]] | None = None,
+    query_type_instruction: str = "",
+    column_hint: str = "",
 ) -> str:
     """Build the LLM prompt with schema constraints and optional few-shot examples."""
     template = _load_prompt_template()
@@ -65,6 +98,8 @@ def build_constrained_prompt(
         allowed_tables="\n".join(f"- {t}" for t in allowed_tables),
         allowed_columns=_format_columns_by_table(allowed_columns),
         allowed_joins="\n".join(f"- {j}" for j in allowed_joins),
+        query_type_instruction=query_type_instruction or "Follow the question's intent.",
+        column_hint=column_hint or "Return only columns relevant to the question.",
     )
     if few_shot_examples:
         few_shot_block = format_few_shot_block(few_shot_examples)
@@ -105,6 +140,10 @@ def generate_sql_via_llm(
     coverage_info = conditions.get("_coverage", {})
     few_shot = retrieve_similar(user_query, top_k=3)
 
+    # Classify query type and determine output schema
+    query_type_info = classify_query_type(user_query)
+    column_hint = specify_output_schema(user_query, conditions, allowed_columns)
+
     if not api_key or api_key == "your_api_key_here":
         sql = _rule_based_fallback(user_query, allowed_tables, allowed_columns, allowed_joins)
         return {
@@ -121,6 +160,8 @@ def generate_sql_via_llm(
     prompt = build_constrained_prompt(
         user_query, allowed_tables, allowed_columns, allowed_joins,
         few_shot_examples=few_shot,
+        query_type_instruction=query_type_info["instruction"],
+        column_hint=column_hint,
     )
 
     import openai
@@ -145,6 +186,7 @@ def generate_sql_via_llm(
     raw = resp.choices[0].message.content or ""
     sql = extract_sql_from_response(raw)
     sql = _fix_known_literals(sql)
+    sql = _normalize_column_aliases(sql)
     usage = resp.usage
     tokens = (usage.prompt_tokens + usage.completion_tokens) if usage else 0
     return {

@@ -4,18 +4,29 @@
     "generated_by": "scripts/compute_paper_figures.py",
     "policy": "論文に掲載する数値はすべてこのファイルから参照すること"
   },
+  "proposed_3run_stats": {
+    "paper_ref": "Section 4.2 (再現性評価), Abstract",
+    "n_runs": 3,
+    "run_accuracies": [69.3, 70.6, 69.4],
+    "mean_accuracy_pct": 69.8,
+    "stdev_pp": 0.7,
+    "max_accuracy_pct": 70.6,
+    "min_accuracy_pct": 69.3,
+    "representative_run": "Run 2 (70.6%)",
+    "note": "gpt-5.5は温度制御不可のため3回実行し平均±標準偏差を報告"
+  },
   "proposed_overall": {
     "paper_ref": "Abstract, Table (tab:baseline_results) P行, Table (tab:independent_eval) 著者設計列",
     "n_queries": 100,
-    "exec_accuracy_pct": 72.2,
+    "exec_accuracy_pct": 70.6,
     "syntax_validity_pct": 100.0,
     "exec_validity_pct": 100.0,
     "table_halluc_rate_pct": 0.0,
-    "join_halluc_rate_pct": 0.7,
-    "avg_latency_ms": 7676.0,
-    "avg_token_usage": 2924.0,
-    "repair_query_count": 16,
-    "repair_total_attempts": 22
+    "join_halluc_rate_pct": 1.0,
+    "avg_latency_ms": 9342.0,
+    "avg_token_usage": 3123.0,
+    "repair_query_count": 23,
+    "repair_total_attempts": 29
   },
   "proposed_by_difficulty": {
     "paper_ref": "Table (tab:difficulty_breakdown), 難易度別の傾向",
@@ -27,17 +38,17 @@
     },
     "medium": {
       "n": 28,
-      "exec_accuracy": 80.2,
+      "exec_accuracy": 86.9,
       "exec_validity": 100.0
     },
     "hard": {
       "n": 22,
-      "exec_accuracy": 73.5,
+      "exec_accuracy": 59.8,
       "exec_validity": 100.0
     },
     "very_hard": {
       "n": 23,
-      "exec_accuracy": 33.2,
+      "exec_accuracy": 30.9,
       "exec_validity": 100.0
     }
   },
@@ -170,15 +181,15 @@
     "P": {
       "method": "proposed",
       "n": 100,
-      "exec_accuracy": 72.2,
+      "exec_accuracy": 70.6,
       "syntax_validity": 100.0,
       "exec_validity": 100.0,
       "table_halluc_rate_pct": 0.0,
-      "join_halluc_count": 1,
+      "join_halluc_count": 3,
       "exec_error_count": 0,
       "syntax_error_count": 0,
-      "avg_latency_ms": 7675.52,
-      "avg_token_usage": 2924.3,
+      "avg_latency_ms": 9341.71,
+      "avg_token_usage": 3122.78,
       "difficulty_breakdown": {
         "easy": {
           "n": 27,
@@ -186,15 +197,15 @@
         },
         "medium": {
           "n": 28,
-          "exec_accuracy": 80.2
+          "exec_accuracy": 86.9
         },
         "hard": {
           "n": 22,
-          "exec_accuracy": 73.5
+          "exec_accuracy": 59.8
         },
         "very_hard": {
           "n": 23,
-          "exec_accuracy": 33.2
+          "exec_accuracy": 30.9
         }
       }
     }
@@ -208,19 +219,19 @@
       "3": {
         "B2": 78.6,
         "B2_n": 28,
-        "P": 80.2,
+        "P": 86.9,
         "P_n": 28
       },
       "4": {
         "B2": 78.0,
         "B2_n": 22,
-        "P": 73.5,
+        "P": 59.8,
         "P_n": 22
       },
       "5-6": {
         "B2": 23.3,
         "B2_n": 23,
-        "P": 33.2,
+        "P": 30.9,
         "P_n": 23
       }
     }
@@ -256,12 +267,12 @@
         "exec_error_count": 0,
         "syntax_error_count": 0,
         "table_halluc_rate_pct": 0.0,
-        "join_halluc_count": 1
+        "join_halluc_count": 3
       }
     },
-    "very_hard_failure_count": 15,
+    "very_hard_failure_count": 16,
     "very_hard_total": 23,
-    "very_hard_accuracy_pct": 33.2
+    "very_hard_accuracy_pct": 30.9
   },
   "latency": {
     "paper_ref": "Table (tab:latency)",
@@ -283,16 +294,16 @@
         "avg_token_usage": 5488.69
       },
       "P": {
-        "avg_latency_ms": 7675.52,
-        "avg_token_usage": 2924.3
+        "avg_latency_ms": 9341.71,
+        "avg_token_usage": 3122.78
       }
     }
   },
   "metric_improvement": {
     "paper_ref": "Table (tab:metric_improvement)",
-    "raw_accuracy": 7.3,
-    "improved_accuracy": 72.2,
-    "improvement_pt": 64.9
+    "raw_accuracy": 17.6,
+    "improved_accuracy": 70.6,
+    "improvement_pt": 53.0
   },
   "independent_eval": {
     "paper_ref": "Table (tab:independent_eval), 独立評価セクション",

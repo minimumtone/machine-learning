@@ -4,74 +4,73 @@ FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 WHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'
 ORDER BY m.formula
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2265,6619,0,0
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2260,6480,0,0
 q_easy_002,Niを含むL1₂型金属間化合物を抽出して。,easy,2,proposed,"SELECT DISTINCT m.formula, c.element, c.atomic_fraction
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
-WHERE c.element = 'Ni'
-  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+  AND c.element = 'Ni'
+  AND m.number_of_elements > 1
 ORDER BY m.formula
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2785,14534,0,0
-q_easy_003,A₃B型組成を持つ化合物を表示して。,easy,1,proposed,"SELECT DISTINCT m.formula, c.element, c.atomic_fraction
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2765,13078,0,0
+q_easy_003,A₃B型組成を持つ化合物を表示して。,easy,1,proposed,"SELECT DISTINCT m.formula
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
 WHERE m.number_of_elements = 2
   AND EXISTS (
     SELECT 1
-    FROM composition
-    WHERE composition.entry_id = m.entry_id
-      AND ABS(composition.atomic_fraction - 0.75) < 0.000001
+    FROM composition c_a
+    WHERE c_a.entry_id = m.entry_id
+      AND ABS(c_a.atomic_fraction - 0.75) < 0.001
   )
   AND EXISTS (
     SELECT 1
-    FROM composition
-    WHERE composition.entry_id = m.entry_id
-      AND ABS(composition.atomic_fraction - 0.25) < 0.000001
+    FROM composition c_b
+    WHERE c_b.entry_id = m.entry_id
+      AND ABS(c_b.atomic_fraction - 0.25) < 0.001
   )
-ORDER BY m.formula, c.atomic_fraction DESC, c.element
-LIMIT 10000;",True,True,1.0,0.9522058823529411,1.0,0.975517890772128,0.0,0.0,0.0,0.0,0.0,0.0,3096,22930,0,0
+ORDER BY m.formula
+LIMIT 10000;",True,True,1.0,0.9522058823529411,1.0,0.975517890772128,0.0,0.0,0.0,0.0,0.0,0.0,2700,13965,0,0
 q_easy_004,L12型化合物の格子定数を一覧にして。,easy,1,proposed,"SELECT m.formula, s.lattice_a
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND s.lattice_a IS NOT NULL
 ORDER BY m.formula
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,3148,3542,1,1017
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,3140,3187,1,1043
 q_easy_005,Coを含む化合物を表示して。,easy,1,proposed,"SELECT DISTINCT m.formula, c.element, c.atomic_fraction
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
 WHERE c.element = 'Co'
-ORDER BY m.formula
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2353,4528,0,0
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2265,4664,0,0
 q_easy_006,cubic構造の化合物を一覧にして。,easy,1,proposed,"SELECT DISTINCT
     m.formula,
     s.crystal_system
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
-WHERE s.crystal_system = 'cubic'
+WHERE LOWER(s.crystal_system) = 'cubic'
 ORDER BY m.formula
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2138,3093,0,0
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2248,6511,0,0
 q_easy_007,L1₂型化合物のリストを出して。,easy,1,proposed,"SELECT DISTINCT
     m.formula,
     s.prototype,
     s.strukturbericht
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
-WHERE s.prototype = 'L12'
-   OR s.strukturbericht = 'L12'
+WHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'
 ORDER BY m.formula
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2343,6444,0,0
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2289,5262,0,0
 q_easy_008,Alを含む化合物を抽出して。,easy,1,proposed,"SELECT DISTINCT m.formula, c.element, c.atomic_fraction
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
 WHERE c.element = 'Al'
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2302,3829,0,0
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2290,5401,0,0
 q_easy_009,空間群番号221の化合物を表示して。,easy,1,proposed,"SELECT DISTINCT m.formula, s.space_group_number
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 WHERE s.space_group_number = 221
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2289,4262,0,0
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2243,3751,0,0
 q_easy_010,Tiを含むL1₂型化合物を一覧にして。,easy,2,proposed,"SELECT DISTINCT m.formula, c.element, c.atomic_fraction
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
@@ -79,75 +78,80 @@ JOIN structure s ON s.entry_id = m.entry_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND c.element = 'Ti'
 ORDER BY m.formula
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2553,9537,0,0
-q_easy_011,全化合物のformula一覧を出して。,easy,0,proposed,"SELECT m.formula
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2460,7977,0,0
+q_easy_011,全化合物のformula一覧を出して。,easy,0,proposed,"SELECT DISTINCT m.formula
 FROM material_entry m
 ORDER BY m.formula
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2057,3201,0,0
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2048,3342,0,0
 q_easy_012,L12型化合物の数を教えて。,easy,1,proposed,"SELECT COUNT(*) AS count
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 WHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2096,2284,0,0
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2097,2256,0,0
 q_easy_013,Ptを含む化合物を表示して。,easy,1,proposed,"SELECT DISTINCT m.formula, c.element, c.atomic_fraction
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
 WHERE c.element = 'Pt'
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2292,3629,0,0
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2326,6306,0,0
 q_easy_014,NiとAlの両方を含む化合物を抽出して。,easy,1,proposed,"SELECT DISTINCT m.formula
 FROM material_entry m
 WHERE EXISTS (
     SELECT 1
-    FROM composition c
-    WHERE c.entry_id = m.entry_id
-      AND c.element = 'Ni'
+    FROM composition c_ni
+    WHERE c_ni.entry_id = m.entry_id
+      AND c_ni.element = 'Ni'
 )
 AND EXISTS (
     SELECT 1
-    FROM composition c
-    WHERE c.entry_id = m.entry_id
-      AND c.element = 'Al'
+    FROM composition c_al
+    WHERE c_al.entry_id = m.entry_id
+      AND c_al.element = 'Al'
 )
 ORDER BY m.formula
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2561,10351,0,0
-q_easy_015,Gaを含むL1₂型化合物を表示して。,easy,2,proposed,"SELECT DISTINCT m.formula, c.element, c.atomic_fraction, s.prototype
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2461,6882,0,0
+q_easy_015,Gaを含むL1₂型化合物を表示して。,easy,2,proposed,"SELECT DISTINCT m.formula, c.element, c.atomic_fraction
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
 WHERE c.element = 'Ga'
   AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2456,6947,0,0
-q_easy_016,Feを含む化合物を一覧にして。,easy,1,proposed,"SELECT DISTINCT m.formula, c.element, c.atomic_fraction
+ORDER BY m.formula
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2534,7899,0,0
+q_easy_016,Feを含む化合物を一覧にして。,easy,1,proposed,"SELECT DISTINCT m.formula
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
 WHERE c.element = 'Fe'
 ORDER BY m.formula
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2345,6732,0,0
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2183,3698,0,0
 q_easy_017,Aサイトの元素を一覧にして。,easy,1,proposed,"SELECT DISTINCT c.element, c.site_label
 FROM composition c
 WHERE c.site_label = 'A-site'
 ORDER BY c.element
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2143,2565,0,0
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2140,2828,0,0
 q_easy_018,化合物の元素系を表示して。,easy,0,proposed,"SELECT m.formula, m.chemical_system
 FROM material_entry m
 ORDER BY m.chemical_system, m.formula
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2212,3131,0,0
-q_easy_019,L1₂型でcubic構造の化合物を出して。,easy,1,proposed,"SELECT DISTINCT m.formula, s.prototype, s.strukturbericht, s.crystal_system
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2189,9241,0,0
+q_easy_019,L1₂型でcubic構造の化合物を出して。,easy,1,proposed,"SELECT DISTINCT
+  m.formula,
+  s.prototype,
+  s.strukturbericht,
+  s.crystal_system
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND s.crystal_system = 'cubic'
-ORDER BY m.formula
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2313,4597,0,0
-q_easy_020,Wを含むL1₂型化合物を表示して。,easy,2,proposed,"SELECT DISTINCT m.formula, c.element, c.atomic_fraction
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2313,4945,0,0
+q_easy_020,Wを含むL1₂型化合物を表示して。,easy,2,proposed,"SELECT DISTINCT m.formula, s.prototype, s.strukturbericht
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
-WHERE c.element = 'W'
-  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2561,9794,0,0
+WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+  AND c.element = 'W'
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2457,7009,0,0
 q_medium_001,Niを含む安定なL1₂型化合物を抽出して。,medium,3,proposed,"SELECT DISTINCT
   m.formula,
+  s.prototype,
   c.element,
   c.atomic_fraction,
   ps.is_stable,
@@ -156,25 +160,25 @@ FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
-WHERE c.element = 'Ni'
+WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+  AND c.element = 'Ni'
   AND ps.is_stable = TRUE
-  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-ORDER BY m.formula
-LIMIT 10000;",True,True,1.0,0.4,1.0,0.5714285714285715,0.0,0.0,0.0,0.0,0.0,0.0,2879,13514,0,0
+ORDER BY ps.energy_above_hull ASC, m.formula
+LIMIT 10000;",True,True,1.0,0.4,1.0,0.5714285714285715,0.0,0.0,0.0,0.0,0.0,0.0,2756,11753,0,0
 q_medium_002,形成エネルギーが負のL1₂型化合物を元素組み合わせごとに整理して。,medium,2,proposed,"SELECT DISTINCT
-    m.chemical_system,
-    m.formula,
-    ps.formation_energy_per_atom
+  m.chemical_system,
+  m.formula,
+  ps.formation_energy_per_atom
 FROM material_entry m
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
 WHERE
-    (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-    AND ps.formation_energy_per_atom < 0
+  (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+  AND ps.formation_energy_per_atom < 0
 ORDER BY
-    m.chemical_system ASC,
-    ps.formation_energy_per_atom ASC
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2667,8434,0,0
+  m.chemical_system ASC,
+  ps.formation_energy_per_atom ASC
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2621,7907,0,0
 q_medium_003,Alを含む安定なL1₂型金属間化合物を抽出して。,medium,3,proposed,"SELECT DISTINCT m.formula, c.element, c.atomic_fraction, ps.is_stable, ps.energy_above_hull
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
@@ -183,43 +187,43 @@ JOIN structure s ON s.entry_id = m.entry_id
 WHERE c.element = 'Al'
   AND ps.is_stable = TRUE
   AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-LIMIT 10000;",True,True,1.0,0.6,1.0,0.7499999999999999,0.0,0.0,0.0,0.0,0.0,0.0,2614,8456,0,0
-q_medium_004,Ni₃Alに近い格子定数を持つL1₂化合物を探して。,medium,2,proposed,"SELECT DISTINCT
-    m.formula,
-    s.lattice_a,
-    ABS(s.lattice_a - 3.57) AS lattice_diff
-FROM material_entry m
-JOIN structure s ON s.entry_id = m.entry_id
-WHERE
-    (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-    AND s.lattice_a IS NOT NULL
-    AND EXISTS (
-        SELECT 1
-        FROM composition c
-        WHERE c.entry_id = m.entry_id
-          AND c.element = 'Ni'
-    )
-    AND EXISTS (
-        SELECT 1
-        FROM composition c
-        WHERE c.entry_id = m.entry_id
-          AND c.element = 'Al'
-    )
-ORDER BY lattice_diff ASC
-LIMIT 10000;",True,True,0.002551020408163265,1.0,0.002551020408163265,0.0050890585241730275,0.002551020408163265,1.0,0.0050890585241730275,0.0,0.0,0.0,4252,7886,1,1508
+LIMIT 10000;",True,True,1.0,0.6,1.0,0.7499999999999999,0.0,0.0,0.0,0.0,0.0,0.0,2599,8531,0,0
+q_medium_004,Ni₃Alに近い格子定数を持つL1₂化合物を探して。,medium,2,proposed,"SELECT formula, lattice_a
+FROM (
+    SELECT DISTINCT m.formula, s.lattice_a
+    FROM material_entry m
+    JOIN structure s ON s.entry_id = m.entry_id
+    WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+      AND s.lattice_a IS NOT NULL
+      AND EXISTS (
+          SELECT 1
+          FROM composition c
+          WHERE c.entry_id = m.entry_id
+            AND c.element = 'Ni'
+      )
+      AND EXISTS (
+          SELECT 1
+          FROM composition c
+          WHERE c.entry_id = m.entry_id
+            AND c.element = 'Al'
+      )
+) AS q
+ORDER BY ABS(lattice_a - 3.57) ASC
+LIMIT 10000;",True,True,0.002551020408163265,1.0,0.002551020408163265,0.0050890585241730275,0.0,0.0,0.0,0.0,0.0,0.0,4970,6024,2,2437
 q_medium_005,安定なL1₂型化合物を形成エネルギーが低い順に出して。,medium,2,proposed,"SELECT DISTINCT
-    m.formula,
-    ps.formation_energy_per_atom,
-    ps.energy_above_hull,
-    ps.is_stable
+  m.formula,
+  s.prototype,
+  ps.formation_energy_per_atom,
+  ps.energy_above_hull,
+  ps.is_stable
 FROM material_entry m
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
 WHERE
-    (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-    AND ps.is_stable = TRUE
+  (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+  AND ps.is_stable = TRUE
 ORDER BY ps.formation_energy_per_atom ASC
-LIMIT 10000;",True,True,1.0,0.21621621621621623,1.0,0.35555555555555557,1.0,0.21621621621621623,0.35555555555555557,0.0,0.0,0.0,2691,8493,0,0
+LIMIT 10000;",True,True,1.0,0.21621621621621623,1.0,0.35555555555555557,0.0,0.0,0.0,0.0,0.0,0.0,2655,9717,0,0
 q_medium_006,準安定なL1₂型化合物を抽出して。,medium,2,proposed,"SELECT DISTINCT m.formula, ps.is_stable, ps.energy_above_hull
 FROM material_entry m
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
@@ -228,7 +232,7 @@ WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND ps.is_stable = FALSE
   AND ps.energy_above_hull <= 0.05
 ORDER BY ps.energy_above_hull ASC
-LIMIT 10000;",True,True,0.8449197860962567,1.0,0.8449197860962567,0.9159420289855073,0.0,0.0,0.0,0.0,0.0,0.0,2821,10554,0,0
+LIMIT 10000;",True,True,0.8449197860962567,1.0,0.8449197860962567,0.9159420289855073,0.0,0.0,0.0,0.0,0.0,0.0,2845,11453,0,0
 q_medium_007,L1₂型化合物の形成エネルギー分布を教えて。,medium,2,proposed,"SELECT DISTINCT
     m.formula,
     ps.formation_energy_per_atom
@@ -239,42 +243,48 @@ WHERE
     (s.prototype = 'L12' OR s.strukturbericht = 'L12')
     AND ps.formation_energy_per_atom IS NOT NULL
 ORDER BY ps.formation_energy_per_atom ASC
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,3603,6787,1,1165
-q_medium_008,Co含有L1₂型化合物を安定性の高い順に表示して。,medium,3,proposed,"SELECT DISTINCT m.formula, s.prototype, ps.is_stable, ps.energy_above_hull
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,3753,9526,1,1189
+q_medium_008,Co含有L1₂型化合物を安定性の高い順に表示して。,medium,3,proposed,"SELECT DISTINCT
+    m.formula,
+    ps.is_stable,
+    ps.energy_above_hull
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
-WHERE c.element = 'Co'
-  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-ORDER BY ps.is_stable DESC, ps.energy_above_hull ASC
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2956,11645,0,0
+WHERE
+    c.element = 'Co'
+    AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+ORDER BY ps.energy_above_hull ASC
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2730,9212,0,0
 q_medium_009,格子定数が3.5Å以上のL1₂化合物を出して。,medium,2,proposed,"SELECT DISTINCT
     m.formula,
     s.lattice_a
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
-WHERE
-    (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-    AND s.lattice_a >= 3.5
+WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+  AND s.lattice_a >= 3.5
 ORDER BY s.lattice_a ASC
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2291,4350,0,0
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2255,3904,0,0
 q_medium_010,NiまたはCoを含むL1₂型化合物を一覧にして。,medium,2,proposed,"SELECT DISTINCT m.formula, c.element, c.atomic_fraction
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
-WHERE c.element IN ('Ni', 'Co')
-  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+  AND c.element IN ('Ni', 'Co')
 ORDER BY m.formula, c.element
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2424,6418,0,0
-q_medium_011,形成エネルギーが-0.4以下のL1₂型化合物を出して。,medium,2,proposed,"SELECT DISTINCT m.formula, ps.formation_energy_per_atom
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2675,10973,0,0
+q_medium_011,形成エネルギーが-0.4以下のL1₂型化合物を出して。,medium,2,proposed,"SELECT DISTINCT
+  m.formula,
+  ps.formation_energy_per_atom
 FROM material_entry m
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
-WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+WHERE
+  (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND ps.formation_energy_per_atom <= -0.4
 ORDER BY ps.formation_energy_per_atom ASC
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2544,5519,0,0
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2541,7194,0,0
 q_medium_012,energy above hullが0.01以下のL1₂型化合物を表示して。,medium,2,proposed,"SELECT DISTINCT m.formula, ps.energy_above_hull, ps.is_stable
 FROM material_entry m
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
@@ -282,11 +292,11 @@ JOIN structure s ON s.entry_id = m.entry_id
 WHERE ps.energy_above_hull <= 0.01
   AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
 ORDER BY ps.energy_above_hull ASC
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2398,4562,0,0
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2502,6127,0,0
 q_medium_013,Ti含有L1₂型化合物の格子定数と形成エネルギーを表示して。,medium,3,proposed,"SELECT DISTINCT
-    m.formula,
-    s.lattice_a,
-    ps.formation_energy_per_atom
+  m.formula,
+  s.lattice_a,
+  ps.formation_energy_per_atom
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
@@ -296,30 +306,25 @@ WHERE c.element = 'Ti'
   AND s.lattice_a IS NOT NULL
   AND ps.formation_energy_per_atom IS NOT NULL
 ORDER BY m.formula
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,3804,5682,1,1379
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,3750,4939,1,1340
 q_medium_014,L1₂化合物の格子定数を小さい順にソートして。,medium,2,proposed,"SELECT m.formula, s.lattice_a
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND s.lattice_a IS NOT NULL
 ORDER BY s.lattice_a ASC
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,3255,3357,1,961
-q_medium_015,化学系Al-Niに属するL1₂化合物を抽出して。,medium,2,proposed,"SELECT DISTINCT
-  m.formula,
-  m.chemical_system,
-  s.prototype,
-  s.strukturbericht
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,3590,3925,1,1295
+q_medium_015,化学系Al-Niに属するL1₂化合物を抽出して。,medium,2,proposed,"SELECT DISTINCT m.formula, m.chemical_system, s.prototype, s.strukturbericht
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 WHERE m.chemical_system = 'Al-Ni'
   AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-ORDER BY m.formula
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2543,6647,0,0
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2470,5127,0,0
 q_medium_016,安定で格子定数が3.6Å未満のL1₂化合物を出して。,medium,2,proposed,"SELECT DISTINCT
     m.formula,
+    s.lattice_a,
     ps.is_stable,
-    ps.energy_above_hull,
-    s.lattice_a
+    ps.energy_above_hull
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
@@ -328,58 +333,70 @@ WHERE
     AND ps.is_stable = TRUE
     AND s.lattice_a < 3.6
 ORDER BY s.lattice_a ASC
-LIMIT 10000;",True,True,1.0,0.18181818181818182,1.0,0.3076923076923077,0.0,0.0,0.0,0.0,0.0,0.0,2447,3563,0,0
-q_medium_017,Nbを含むL1₂型化合物の安定性情報を出して。,medium,3,proposed,"SELECT DISTINCT
-  m.formula,
-  ps.is_stable,
-  ps.energy_above_hull,
-  ps.formation_energy_per_atom
+LIMIT 10000;",True,True,1.0,0.18181818181818182,1.0,0.3076923076923077,0.0,0.0,0.0,0.0,0.0,0.0,2435,4097,0,0
+q_medium_017,Nbを含むL1₂型化合物の安定性情報を出して。,medium,3,proposed,"SELECT DISTINCT m.formula, c.element, c.atomic_fraction, ps.is_stable, ps.energy_above_hull, ps.formation_energy_per_atom
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
-JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
+JOIN structure s ON s.entry_id = m.entry_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND c.element = 'Nb'
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2680,8775,0,0
-q_medium_018,Scを含むL1₂型化合物を格子定数と共に表示して。,medium,2,proposed,"SELECT DISTINCT m.formula, s.lattice_a
+ORDER BY ps.energy_above_hull ASC
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2717,10409,0,0
+q_medium_018,Scを含むL1₂型化合物を格子定数と共に表示して。,medium,2,proposed,"SELECT DISTINCT m.formula, s.prototype, s.lattice_a
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
 WHERE c.element = 'Sc'
   AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-ORDER BY m.formula
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2581,6832,0,0
+ORDER BY m.formula, s.lattice_a
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2621,7887,0,0
 q_medium_019,L1₂型化合物のうちis_stableがtrueのものを出して。,medium,2,proposed,"SELECT DISTINCT m.formula, ps.is_stable, ps.energy_above_hull
 FROM material_entry m
-JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
+JOIN structure s ON s.entry_id = m.entry_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND ps.is_stable = TRUE
 ORDER BY m.formula ASC
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2450,4471,0,0
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2419,4292,0,0
 q_medium_020,Ni-Al系以外のL1₂型化合物を一覧にして。,medium,2,proposed,"SELECT DISTINCT m.formula, m.chemical_system, s.prototype, s.strukturbericht
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-  AND (m.chemical_system IS NULL OR m.chemical_system NOT IN ('Ni-Al', 'Al-Ni'))
+  AND NOT (
+    EXISTS (
+      SELECT 1
+      FROM composition c_ni
+      WHERE c_ni.entry_id = m.entry_id
+        AND c_ni.element = 'Ni'
+    )
+    AND EXISTS (
+      SELECT 1
+      FROM composition c_al
+      WHERE c_al.entry_id = m.entry_id
+        AND c_al.element = 'Al'
+    )
+  )
 ORDER BY m.chemical_system, m.formula
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2717,12409,0,0
-q_medium_021,Aサイト元素ごとのL1₂型化合物数を集計して。,medium,2,proposed,"SELECT c.element, COUNT(*) AS l12_compound_count
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2774,14851,0,0
+q_medium_021,Aサイト元素ごとのL1₂型化合物数を集計して。,medium,2,proposed,"SELECT c.element, c.site_label, COUNT(DISTINCT m.entry_id) AS l12_compound_count
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
 WHERE c.site_label = 'A-site'
   AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-GROUP BY c.element
+GROUP BY c.element, c.site_label
 ORDER BY l12_compound_count DESC, c.element
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2580,9565,0,0
-q_medium_022,形成エネルギーが最も低いL1₂型化合物TOP5を出して。,medium,2,proposed,"SELECT DISTINCT m.formula, ps.formation_energy_per_atom
+LIMIT 10000;",True,True,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2381,6438,0,0
+q_medium_022,形成エネルギーが最も低いL1₂型化合物TOP5を出して。,medium,2,proposed,"SELECT DISTINCT
+  m.formula,
+  ps.formation_energy_per_atom
 FROM material_entry m
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
 ORDER BY ps.formation_energy_per_atom ASC
-LIMIT 5;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2500,4736,0,0
+LIMIT 5;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2599,6965,0,0
 q_medium_023,格子定数が4.0Å以上のL1₂化合物を出して。,medium,2,proposed,"SELECT DISTINCT
     m.formula,
     s.lattice_a
@@ -388,12 +405,8 @@ JOIN structure s ON s.entry_id = m.entry_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND s.lattice_a >= 4.0
 ORDER BY s.lattice_a ASC
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2299,4389,0,0
-q_medium_024,Pdを含むL1₂型化合物を形成エネルギー順に出して。,medium,3,proposed,"SELECT DISTINCT
-    m.formula,
-    c.element,
-    c.atomic_fraction,
-    ps.formation_energy_per_atom
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2261,4410,0,0
+q_medium_024,Pdを含むL1₂型化合物を形成エネルギー順に出して。,medium,3,proposed,"SELECT DISTINCT m.formula, ps.formation_energy_per_atom
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
@@ -401,8 +414,8 @@ JOIN phase_stability ps ON ps.entry_id = m.entry_id
 WHERE c.element = 'Pd'
   AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
 ORDER BY ps.formation_energy_per_atom ASC
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2754,9275,0,0
-q_medium_025,Cu含有のL1₂型化合物を安定性で分類して。,medium,3,proposed,"SELECT DISTINCT m.formula, ps.is_stable, ps.energy_above_hull
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2878,13178,0,0
+q_medium_025,Cu含有のL1₂型化合物を安定性で分類して。,medium,3,proposed,"SELECT m.formula, ps.is_stable, ps.energy_above_hull
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
@@ -410,7 +423,7 @@ JOIN phase_stability ps ON ps.entry_id = m.entry_id
 WHERE c.element = 'Cu'
   AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
 ORDER BY ps.is_stable DESC, ps.energy_above_hull ASC
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2659,10665,0,0
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2464,6833,0,0
 q_medium_026,Bサイト元素ごとの平均形成エネルギーを出して。,medium,2,proposed,"SELECT
   c.element,
   AVG(ps.formation_energy_per_atom) AS avg_eform
@@ -419,15 +432,15 @@ JOIN composition c ON c.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
 WHERE c.site_label = 'B-site'
 GROUP BY c.element
-ORDER BY c.element
-LIMIT 10000;",True,True,0.045454545454545456,0.045454545454545456,0.045454545454545456,0.045454545454545456,0.045454545454545456,0.045454545454545456,0.045454545454545456,0.0,0.0,0.0,2369,4853,0,0
+ORDER BY avg_eform ASC
+LIMIT 10000;",True,True,0.045454545454545456,0.045454545454545456,0.045454545454545456,0.045454545454545456,0.045454545454545456,0.045454545454545456,0.045454545454545456,0.0,0.0,0.0,3267,6647,1,888
 q_medium_027,格子体積が12Å³/atom以下のL1₂化合物を出して。,medium,2,proposed,"SELECT DISTINCT m.formula, s.volume_per_atom
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND s.volume_per_atom <= 12
 ORDER BY s.volume_per_atom ASC
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2337,3930,0,0
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2386,4908,0,0
 q_medium_028,Ir含有L1₂型化合物の一覧を出して。,medium,2,proposed,"SELECT DISTINCT m.formula, s.prototype, s.strukturbericht
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
@@ -435,30 +448,24 @@ JOIN structure s ON s.entry_id = m.entry_id
 WHERE c.element = 'Ir'
   AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
 ORDER BY m.formula
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2370,5992,0,0
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2292,5444,0,0
 q_medium_029,2元素系のL1₂型化合物をchemical_systemで分類して。,medium,2,proposed,"SELECT m.chemical_system, m.formula
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 WHERE m.number_of_elements = 2
   AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
 ORDER BY m.chemical_system ASC, m.formula ASC
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2270,6749,0,0
-q_medium_030,安定なL1₂型化合物のうち格子定数が大きい順に並べて。,medium,2,proposed,"SELECT DISTINCT
-  m.formula,
-  s.prototype,
-  s.lattice_a,
-  ps.is_stable,
-  ps.energy_above_hull
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2224,3691,0,0
+q_medium_030,安定なL1₂型化合物のうち格子定数が大きい順に並べて。,medium,2,proposed,"SELECT DISTINCT m.formula, s.lattice_a, ps.is_stable, ps.energy_above_hull
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND ps.is_stable = TRUE
 ORDER BY s.lattice_a DESC
-LIMIT 10000;",True,True,1.0,0.21621621621621623,1.0,0.35555555555555557,0.0,0.0,0.0,0.0,0.0,0.0,2705,7976,0,0
+LIMIT 10000;",True,True,1.0,0.21621621621621623,1.0,0.35555555555555557,0.0,0.0,0.0,0.0,0.0,0.0,2652,7965,0,0
 q_hard_001,Ni基超合金のγ'相候補として有望な、安定または準安定なL1₂型化合物を抽出して。,hard,3,proposed,"SELECT DISTINCT
     m.formula,
-    c.atomic_fraction AS ni_atomic_fraction,
     ps.is_stable,
     ps.energy_above_hull
 FROM material_entry m
@@ -470,37 +477,24 @@ WHERE
     AND c.element = 'Ni'
     AND c.atomic_fraction >= 0.5
     AND (ps.is_stable = TRUE OR ps.energy_above_hull <= 0.05)
-ORDER BY
-    ps.energy_above_hull ASC,
-    c.atomic_fraction DESC
-LIMIT 10000;",True,True,0.06153846153846154,1.0,0.06153846153846154,0.11594202898550725,0.0,0.0,0.0,0.0,0.0,0.0,3064,11989,0,0
+ORDER BY ps.energy_above_hull ASC
+LIMIT 10000;",True,True,0.06153846153846154,1.0,0.06153846153846154,0.11594202898550725,0.0,0.0,0.0,0.0,0.0,0.0,3047,13674,0,0
 q_hard_002,L1₂型化合物において、Aサイト元素とBサイト元素の組み合わせが形成エネルギーに与える傾向を調べて。,hard,3,proposed,"SELECT DISTINCT
   m.formula,
-  c.element AS a_site,
-  (
-    SELECT composition.element
-    FROM composition
-    WHERE composition.entry_id = m.entry_id
-      AND composition.site_label = 'B-site'
-    ORDER BY composition.element
-    LIMIT 1
-  ) AS b_site,
+  c_a.element AS a_site,
+  c_b.element AS b_site,
   ps.formation_energy_per_atom
 FROM material_entry m
-JOIN composition c ON c.entry_id = m.entry_id
-JOIN phase_stability ps ON ps.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
+JOIN phase_stability ps ON ps.entry_id = m.entry_id
+JOIN composition c_a ON c_a.entry_id = m.entry_id
+JOIN composition c_b ON c_b.entry_id = m.entry_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-  AND c.site_label = 'A-site'
-  AND EXISTS (
-    SELECT 1
-    FROM composition
-    WHERE composition.entry_id = m.entry_id
-      AND composition.site_label = 'B-site'
-  )
-ORDER BY a_site, b_site, formation_energy_per_atom
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,4809,23449,1,1360
-q_hard_003,L1₂構造を持つ化合物のうち、格子定数がNi₃Alに近く、形成エネルギーが低い候補を抽出して。,hard,3,proposed,"SELECT DISTINCT
+  AND c_a.site_label = 'A-site'
+  AND c_b.site_label = 'B-site'
+ORDER BY c_a.element, c_b.element, ps.formation_energy_per_atom ASC
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,3169,18263,0,0
+q_hard_003,L1₂構造を持つ化合物のうち、格子定数がNi₃Alに近く、形成エネルギーが低い候補を抽出して。,hard,3,proposed,"SELECT
     m.formula,
     s.lattice_a,
     ps.formation_energy_per_atom,
@@ -523,29 +517,31 @@ WHERE
           AND c.element = 'Al'
     )
     AND s.lattice_a IS NOT NULL
+    AND ABS(s.lattice_a - 3.57) <= 0.10
     AND ps.formation_energy_per_atom IS NOT NULL
+    AND ps.formation_energy_per_atom < 0
 ORDER BY
     ABS(s.lattice_a - 3.57) ASC,
     ps.formation_energy_per_atom ASC
-LIMIT 10000;",True,True,0.009433962264150943,1.0,0.009433962264150943,0.018691588785046728,0.009433962264150943,1.0,0.018691588785046728,0.0,0.0,0.0,4515,9048,1,1688
+LIMIT 10000;",True,True,0.009433962264150943,1.0,0.009433962264150943,0.018691588785046728,0.009433962264150943,1.0,0.018691588785046728,0.0,0.0,0.0,4580,10712,1,1715
 q_hard_004,安定なL1₂型化合物のバルクモジュラスを高い順に表示して。,hard,4,proposed,"SELECT DISTINCT
-  m.formula,
-  ps.is_stable,
-  ps.energy_above_hull,
-  et.bulk_modulus_vrh AS bulk_modulus
+    m.formula,
+    ps.is_stable,
+    ps.energy_above_hull,
+    et.bulk_modulus_vrh AS bulk_modulus
 FROM material_entry m
-JOIN phase_stability ps ON ps.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
+JOIN phase_stability ps ON ps.entry_id = m.entry_id
 JOIN elastic_tensor et ON et.entry_id = m.entry_id
 WHERE
-  (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-  AND ps.is_stable = TRUE
-  AND et.bulk_modulus_vrh IS NOT NULL
+    (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+    AND ps.is_stable = TRUE
 ORDER BY et.bulk_modulus_vrh DESC
-LIMIT 10000;",True,True,0.375,0.2,0.375,0.26086956521739135,0.0,0.0,0.0,0.0,0.0,0.0,2766,8021,0,0
+LIMIT 10000;",True,True,0.375,0.2,0.375,0.26086956521739135,0.0,0.0,0.0,0.0,0.0,0.0,2754,8175,0,0
 q_hard_005,NiまたはCoを含む安定なL1₂化合物を形成エネルギー順に並べて。,hard,3,proposed,"SELECT DISTINCT
     m.formula,
     ps.formation_energy_per_atom,
+    ps.energy_above_hull,
     ps.is_stable
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
@@ -558,7 +554,7 @@ WHERE
     AND ps.formation_energy_per_atom IS NOT NULL
     AND m.number_of_elements > 1
 ORDER BY ps.formation_energy_per_atom ASC
-LIMIT 10000;",True,True,1.0,0.42857142857142855,1.0,0.6,0.0,0.0,0.0,0.0,0.0,0.0,4495,12346,1,1583
+LIMIT 10000;",True,True,1.0,0.42857142857142855,1.0,0.6,0.0,0.0,0.0,0.0,0.0,0.0,4470,10371,1,1599
 q_hard_006,Aサイト元素別にL1₂型化合物の平均格子定数を集計して。,hard,2,proposed,"SELECT c.element, AVG(s.lattice_a) AS avg_lattice_a
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
@@ -567,31 +563,30 @@ WHERE c.site_label = 'A-site'
   AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
 GROUP BY c.element
 ORDER BY c.element
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2373,6398,0,0
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2375,7225,0,0
 q_hard_007,形成エネルギーが-0.3以下で格子定数が3.5〜3.7ÅのL1₂化合物を抽出して。,hard,3,proposed,"SELECT DISTINCT
     m.formula,
-    ps.formation_energy_per_atom,
-    s.lattice_a
+    s.lattice_a,
+    ps.formation_energy_per_atom
 FROM material_entry m
-JOIN phase_stability ps ON ps.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
+JOIN phase_stability ps ON ps.entry_id = m.entry_id
 WHERE
     (s.prototype = 'L12' OR s.strukturbericht = 'L12')
     AND ps.formation_energy_per_atom <= -0.3
     AND s.lattice_a BETWEEN 3.5 AND 3.7
 ORDER BY ps.formation_energy_per_atom ASC
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2652,8575,0,0
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2551,7369,0,0
 q_hard_008,L1₂型化合物でバルクモジュラスが180GPa以上のものを抽出して。,hard,4,proposed,"SELECT DISTINCT
-    m.formula,
-    et.bulk_modulus_vrh AS bulk_modulus
+  m.formula,
+  et.bulk_modulus_vrh AS bulk_modulus
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 JOIN elastic_tensor et ON et.entry_id = m.entry_id
-WHERE
-    (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-    AND et.bulk_modulus_vrh >= 180
+WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+  AND et.bulk_modulus_vrh >= 180
 ORDER BY et.bulk_modulus_vrh DESC
-LIMIT 10000;",True,True,0.08,0.14736842105263157,0.08,0.1037037037037037,0.08,0.14736842105263157,0.1037037037037037,0.0,0.0,0.0,2523,5671,0,0
+LIMIT 10000;",True,True,0.08,0.14736842105263157,0.08,0.1037037037037037,0.08,0.14736842105263157,0.1037037037037037,0.0,0.0,0.0,2588,8422,0,0
 q_hard_009,Co基L1₂化合物のうち、Ni₃Alに近い格子定数のものを安定性順に出して。,hard,3,proposed,"SELECT DISTINCT
     m.formula,
     s.lattice_a,
@@ -599,16 +594,11 @@ q_hard_009,Co基L1₂化合物のうち、Ni₃Alに近い格子定数のもの�
     ps.is_stable,
     ps.energy_above_hull
 FROM material_entry m
+JOIN composition c ON c.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
 WHERE
-    EXISTS (
-        SELECT 1
-        FROM composition c_co
-        WHERE c_co.entry_id = m.entry_id
-          AND c_co.element = 'Co'
-          AND c_co.atomic_fraction >= 0.5
-    )
+    c.element = 'Co'
     AND EXISTS (
         SELECT 1
         FROM composition c_ni
@@ -625,33 +615,32 @@ WHERE
         s.prototype ILIKE '%L12%'
         OR s.prototype ILIKE '%L1_2%'
         OR s.prototype ILIKE '%L1₂%'
+        OR s.prototype ILIKE '%Cu3Au%'
         OR s.strukturbericht ILIKE '%L12%'
         OR s.strukturbericht ILIKE '%L1_2%'
         OR s.strukturbericht ILIKE '%L1₂%'
-        OR s.prototype ILIKE '%Cu3Au%'
-        OR s.strukturbericht ILIKE '%Cu3Au%'
     )
-    AND ps.is_stable = TRUE
     AND s.lattice_a IS NOT NULL
+    AND ps.is_stable = TRUE
 ORDER BY
     ps.energy_above_hull ASC NULLS LAST,
     lattice_diff ASC
-LIMIT 10000;",True,True,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,8467,12977,3,5463
+LIMIT 10000;",True,True,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,8883,14281,3,5889
 q_hard_010,Bサイト元素がAlまたはTiのL1₂化合物を形成エネルギー順に出して。,hard,3,proposed,"SELECT DISTINCT
-  m.formula,
-  c.element,
-  c.site_label,
-  ps.formation_energy_per_atom
+    m.formula,
+    c.element,
+    c.site_label,
+    ps.formation_energy_per_atom
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
 WHERE
-  c.site_label = 'B-site'
-  AND c.element IN ('Al', 'Ti')
-  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+    (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+    AND c.site_label = 'B-site'
+    AND c.element IN ('Al', 'Ti')
 ORDER BY ps.formation_energy_per_atom ASC
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2533,6778,0,0
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2579,8608,0,0
 q_hard_011,L1₂化合物のせん断弾性率を表示して。,hard,4,proposed,"SELECT DISTINCT
     m.formula,
     et.shear_modulus_vrh
@@ -664,7 +653,7 @@ WHERE
     (s.prototype = 'L12' OR s.strukturbericht = 'L12')
     AND et.shear_modulus_vrh IS NOT NULL
 ORDER BY m.formula
-LIMIT 10000;",True,True,0.6216216216216216,1.0,0.6216216216216216,0.7666666666666667,0.06887755102040816,0.13705583756345177,0.09168081494057724,0.0,0.0,0.0,3956,4938,1,1443
+LIMIT 10000;",True,True,0.6216216216216216,1.0,0.6216216216216216,0.7666666666666667,0.06887755102040816,0.13705583756345177,0.09168081494057724,0.0,0.0,0.0,3633,4911,1,1165
 q_hard_012,安定で形成エネルギーが最も低いL1₂化合物のトップ10を出して。,hard,2,proposed,"SELECT DISTINCT
     m.formula,
     ps.formation_energy_per_atom,
@@ -677,7 +666,7 @@ WHERE
     ps.is_stable = TRUE
     AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
 ORDER BY ps.formation_energy_per_atom ASC
-LIMIT 10;",True,True,0.5,0.4,0.5,0.4444444444444445,0.0,0.0,0.0,0.0,0.0,0.0,2709,8179,0,0
+LIMIT 10;",True,True,0.5,0.4,0.5,0.4444444444444445,0.0,0.0,0.0,0.0,0.0,0.0,2651,7601,0,0
 q_hard_013,Ni含有L1₂化合物のバルクモジュラスと形成エネルギーの関係を出して。,hard,4,proposed,"SELECT DISTINCT
   m.formula,
   et.bulk_modulus_vrh AS bulk_modulus,
@@ -692,7 +681,7 @@ WHERE c.element = 'Ni'
   AND et.bulk_modulus_vrh IS NOT NULL
   AND ps.formation_energy_per_atom IS NOT NULL
 ORDER BY ps.formation_energy_per_atom ASC
-LIMIT 10000;",True,True,0.125,0.25,0.125,0.16666666666666666,0.125,0.25,0.16666666666666666,0.0,0.0,0.0,4033,6037,1,1322
+LIMIT 10000;",True,True,0.125,0.25,0.125,0.16666666666666666,0.125,0.25,0.16666666666666666,0.0,0.0,0.0,4223,10720,1,1427
 q_hard_014,安定なL1₂化合物をAサイト元素でグループ化し、各グループの平均形成エネルギーを出して。,hard,3,proposed,"SELECT
   c.element AS a_site,
   AVG(ps.formation_energy_per_atom) AS avg_eform
@@ -702,27 +691,31 @@ JOIN phase_stability ps ON ps.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
 WHERE
   c.site_label = 'A-site'
-  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND ps.is_stable = TRUE
+  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
 GROUP BY c.element
 ORDER BY avg_eform ASC
-LIMIT 10000;",True,True,0.14285714285714285,0.05263157894736842,0.14285714285714285,0.07692307692307693,0.0,0.0,0.0,0.0,0.0,0.0,3628,6604,1,1039
+LIMIT 10000;",True,True,0.14285714285714285,0.05263157894736842,0.14285714285714285,0.07692307692307693,0.0,0.0,0.0,0.0,0.0,0.0,3572,9670,1,1058
 q_hard_015,格子定数3.55Å付近でバルクモジュラスの高いL1₂化合物を探して。,hard,4,proposed,"SELECT
-    m.formula,
-    s.lattice_a,
-    et.bulk_modulus_vrh AS bulk_modulus
-FROM material_entry m
-JOIN structure s ON s.entry_id = m.entry_id
-JOIN elastic_tensor et ON et.entry_id = m.entry_id
-WHERE
-    (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-    AND s.lattice_a IS NOT NULL
-    AND et.bulk_modulus_vrh IS NOT NULL
-    AND ABS(s.lattice_a - 3.55) <= 0.05
-ORDER BY
-    et.bulk_modulus_vrh DESC,
-    ABS(s.lattice_a - 3.55) ASC
-LIMIT 10000;",True,True,0.020202020202020204,0.0625,0.020202020202020204,0.03053435114503817,0.0,0.0,0.0,0.0,0.0,0.0,2823,11859,0,0
+    q.formula,
+    q.lattice_a,
+    q.bulk_modulus
+FROM (
+    SELECT DISTINCT
+        m.formula,
+        s.lattice_a,
+        et.bulk_modulus_vrh AS bulk_modulus,
+        ABS(s.lattice_a - 3.55) AS lattice_delta
+    FROM material_entry m
+    JOIN structure s ON s.entry_id = m.entry_id
+    JOIN elastic_tensor et ON et.entry_id = m.entry_id
+    WHERE
+        (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+        AND ABS(s.lattice_a - 3.55) <= 0.05
+        AND et.bulk_modulus_vrh IS NOT NULL
+) q
+ORDER BY q.bulk_modulus DESC, q.lattice_delta ASC
+LIMIT 10000;",True,True,0.020202020202020204,0.0625,0.020202020202020204,0.03053435114503817,0.0,0.0,0.0,0.0,0.3333333333333333,0.0,3794,6707,1,1293
 q_hard_016,L1₂型化合物の格子定数と形成エネルギーの相関を見たい。,hard,2,proposed,"SELECT
   m.formula,
   s.lattice_a,
@@ -735,29 +728,23 @@ WHERE
   AND s.lattice_a IS NOT NULL
   AND ps.formation_energy_per_atom IS NOT NULL
 ORDER BY s.lattice_a ASC
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,3450,3227,1,1100
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,3543,3578,1,1198
 q_hard_017,Co3TiとNi3Alの格子定数差を計算して。,hard,2,proposed,"SELECT m.formula, s.lattice_a, ABS(s.lattice_a - 3.57) AS lattice_diff
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
-WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-  AND m.formula IN ('Co3Ti', 'Ni3Al')
+WHERE m.formula IN ('Co3Ti', 'Ni3Al')
 ORDER BY m.formula
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2628,7272,0,0
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2454,6234,0,0
 q_hard_018,Al系L1₂化合物のうち安定なものとそうでないものの数を出して。,hard,3,proposed,"SELECT
-  COUNT(*) FILTER (WHERE ps.is_stable = TRUE) AS stable_l12_al_count,
-  COUNT(*) FILTER (WHERE ps.is_stable = FALSE) AS unstable_l12_al_count
+  COUNT(*) FILTER (WHERE ps.is_stable = TRUE) AS stable_al_l12_count,
+  COUNT(*) FILTER (WHERE ps.is_stable = FALSE) AS unstable_al_l12_count
 FROM material_entry m
+JOIN composition c ON c.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
-WHERE
-  (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-  AND EXISTS (
-    SELECT 1
-    FROM composition c
-    WHERE c.entry_id = m.entry_id
-      AND c.element = 'Al'
-  )
-LIMIT 10000;",True,True,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2918,12803,0,0
+WHERE c.element = 'Al'
+  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+LIMIT 10000;",True,True,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2742,11125,0,0
 q_hard_019,準安定L1₂化合物をenergy above hull順にランキングして。,hard,2,proposed,"SELECT DISTINCT
     m.formula,
     ps.energy_above_hull,
@@ -770,21 +757,20 @@ WHERE
     AND ps.is_stable = FALSE
     AND ps.energy_above_hull <= 0.05
 ORDER BY ps.energy_above_hull ASC
-LIMIT 10000;",True,True,0.8449197860962567,1.0,0.8449197860962567,0.9159420289855073,0.0,0.0,0.0,0.0,0.0,0.0,2889,11541,0,0
+LIMIT 10000;",True,True,0.8449197860962567,1.0,0.8449197860962567,0.9159420289855073,0.0,0.0,0.0,0.0,0.0,0.0,2889,13295,0,0
 q_hard_020,Bサイト元素ごとの安定L1₂化合物数を集計して。,hard,3,proposed,"SELECT
     c.element,
     COUNT(DISTINCT m.entry_id) AS stable_l12_count
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
-JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
-WHERE
-    c.site_label = 'B-site'
-    AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-    AND ps.is_stable = TRUE
+JOIN structure s ON s.entry_id = m.entry_id
+WHERE c.site_label = 'B-site'
+  AND ps.is_stable = TRUE
+  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
 GROUP BY c.element
 ORDER BY stable_l12_count DESC, c.element
-LIMIT 10000;",True,True,0.2,0.05263157894736842,0.2,0.08333333333333333,0.2,0.05263157894736842,0.08333333333333333,0.0,0.0,0.0,2570,7818,0,0
+LIMIT 10000;",True,True,0.2,0.05263157894736842,0.2,0.08333333333333333,0.2,0.05263157894736842,0.08333333333333333,0.0,0.0,0.0,2576,8904,0,0
 q_hard_021,DFT計算で得られたL1₂化合物の物性一覧を出して。,hard,4,proposed,"SELECT DISTINCT
     m.formula,
     m.source_db,
@@ -802,8 +788,9 @@ JOIN structure s ON s.entry_id = m.entry_id
 WHERE
     (s.prototype = 'L12' OR s.strukturbericht = 'L12')
 ORDER BY
-    m.formula
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2497,6786,0,0
+    m.formula,
+    m.source_db
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2765,14506,0,0
 q_hard_022,PBE汎関数で計算されたL1₂化合物のバルクモジュラスを表示して。,hard,4,proposed,"SELECT DISTINCT
     m.formula,
     et.bulk_modulus_vrh AS bulk_modulus
@@ -814,7 +801,7 @@ JOIN elastic_tensor et ON et.calculation_id = calc.calculation_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND calc.functional = 'GGA-PBE'
 ORDER BY m.formula
-LIMIT 10000;",True,True,0.05357142857142857,0.1065989847715736,0.05357142857142857,0.07130730050933787,0.05357142857142857,0.1065989847715736,0.07130730050933787,0.0,0.0,0.0,2595,6402,0,0
+LIMIT 10000;",True,True,0.05357142857142857,0.1065989847715736,0.05357142857142857,0.07130730050933787,0.05357142857142857,0.1065989847715736,0.07130730050933787,0.0,0.0,0.0,2603,7660,0,0
 q_hard_023,L1₂化合物の格子ミスマッチ（Ni3Alとの差）を計算して小さい順に表示して。,hard,2,proposed,"SELECT
   m.formula,
   s.lattice_a,
@@ -823,16 +810,16 @@ FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 WHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'
 ORDER BY ABS(s.lattice_a - 3.57) ASC
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2319,2760,0,0
-q_hard_024,Fe含有L1₂化合物の安定性と弾性特性を同時に表示して。,hard,4,proposed,"SELECT DISTINCT m.formula, ps.is_stable, ps.energy_above_hull
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2329,3298,0,0
+q_hard_024,Fe含有L1₂化合物の安定性と弾性特性を同時に表示して。,hard,4,proposed,"SELECT DISTINCT m.formula, ps.is_stable, ps.energy_above_hull, ps.formation_energy_per_atom
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
-JOIN phase_stability ps ON ps.entry_id = m.entry_id
 JOIN composition c ON c.entry_id = m.entry_id
-WHERE c.element = 'Fe'
-  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+JOIN phase_stability ps ON ps.entry_id = m.entry_id
+WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+  AND c.element = 'Fe'
 ORDER BY ps.is_stable DESC, ps.energy_above_hull ASC
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2591,6864,0,0
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2804,13830,0,0
 q_hard_025,安定なL1₂化合物でバルクモジュラスが160GPa以上のものを抽出して。,hard,4,proposed,"SELECT DISTINCT
     m.formula,
     ps.is_stable,
@@ -847,7 +834,7 @@ WHERE
     AND ps.is_stable = TRUE
     AND et.bulk_modulus_vrh >= 160
 ORDER BY et.bulk_modulus_vrh DESC
-LIMIT 10000;",True,True,0.6,0.25,0.6,0.35294117647058826,0.0,0.0,0.0,0.0,0.0,0.0,2825,13964,0,0
+LIMIT 10000;",True,True,0.6,0.25,0.6,0.35294117647058826,0.0,0.0,0.0,0.0,0.0,0.0,2807,9998,0,0
 q_hard_026,L1₂化合物で安定性と格子定数の両面でNi3Alに近い候補を出して。,hard,3,proposed,"SELECT m.formula,
        ps.is_stable,
        ps.energy_above_hull,
@@ -858,53 +845,42 @@ JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND ps.is_stable = TRUE
-  AND s.lattice_a BETWEEN 3.47 AND 3.67
-ORDER BY ps.is_stable DESC,
-         ps.energy_above_hull ASC NULLS LAST,
-         ABS(s.lattice_a - 3.57) ASC
-LIMIT 10000;",True,True,0.06153846153846154,1.0,0.06153846153846154,0.11594202898550725,0.0,0.0,0.0,0.0,0.0,0.0,4534,12645,1,1616
-q_hard_027,Aサイト元素がNiまたはCoで、Bサイト元素がAlまたはTiのL1₂化合物を出して。,hard,3,proposed,"SELECT DISTINCT m.formula, c.site_label, c.element, c.atomic_fraction
+ORDER BY ABS(s.lattice_a - 3.57) ASC,
+         ps.energy_above_hull ASC
+LIMIT 10000;",True,True,0.18974358974358974,1.0,0.18974358974358974,0.3189655172413793,0.0,0.0,0.0,0.0,0.0,0.0,2918,13037,0,0
+q_hard_027,Aサイト元素がNiまたはCoで、Bサイト元素がAlまたはTiのL1₂化合物を出して。,hard,3,proposed,"SELECT DISTINCT
+  m.formula,
+  c_a.element AS a_site,
+  c_a.atomic_fraction AS a_site_atomic_fraction,
+  c_b.element AS b_site,
+  c_b.atomic_fraction AS b_site_atomic_fraction
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
-JOIN composition c ON c.entry_id = m.entry_id
+JOIN composition c_a ON c_a.entry_id = m.entry_id
+JOIN composition c_b ON c_b.entry_id = m.entry_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-  AND EXISTS (
-    SELECT 1
-    FROM composition c_a
-    WHERE c_a.entry_id = m.entry_id
-      AND c_a.site_label = 'A-site'
-      AND c_a.element IN ('Ni', 'Co')
-  )
-  AND EXISTS (
-    SELECT 1
-    FROM composition c_b
-    WHERE c_b.entry_id = m.entry_id
-      AND c_b.site_label = 'B-site'
-      AND c_b.element IN ('Al', 'Ti')
-  )
-  AND (
-    (c.site_label = 'A-site' AND c.element IN ('Ni', 'Co'))
-    OR (c.site_label = 'B-site' AND c.element IN ('Al', 'Ti'))
-  )
-ORDER BY m.formula, c.site_label, c.element
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2921,14461,0,0
+  AND c_a.site_label = 'A-site'
+  AND c_a.element IN ('Ni', 'Co')
+  AND c_b.site_label = 'B-site'
+  AND c_b.element IN ('Al', 'Ti')
+ORDER BY m.formula, c_a.element, c_b.element
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2867,16318,0,0
 q_hard_028,L1₂型化合物の体積あたり原子数と格子定数の関係を出して。,hard,2,proposed,"SELECT
   m.formula,
   1.0 / s.volume_per_atom AS atoms_per_volume,
   s.lattice_a
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
-WHERE
-  (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-  AND s.volume_per_atom IS NOT NULL
+WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND s.lattice_a IS NOT NULL
-ORDER BY atoms_per_volume ASC
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,3552,3220,1,1363
+  AND s.volume_per_atom IS NOT NULL
+  AND s.volume_per_atom > 0
+ORDER BY s.lattice_a ASC
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,3573,3192,1,1372
 q_hard_029,L1₂化合物でenergy above hullが0で形成エネルギーが-0.4以下のものを出して。,hard,2,proposed,"SELECT DISTINCT
     m.formula,
     ps.energy_above_hull,
-    ps.formation_energy_per_atom,
-    ps.is_stable
+    ps.formation_energy_per_atom
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
@@ -913,19 +889,16 @@ WHERE
     AND ps.energy_above_hull = 0
     AND ps.formation_energy_per_atom <= -0.4
 ORDER BY ps.formation_energy_per_atom ASC
-LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,2783,11341,0,0
-q_hard_030,遷移金属を含むL1₂型化合物のうち安定なものを出して。,hard,3,proposed,"SELECT DISTINCT
-  m.formula,
-  s.prototype,
-  ps.is_stable,
-  ps.energy_above_hull
+LIMIT 10000;",True,True,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,2830,13210,0,0
+q_hard_030,遷移金属を含むL1₂型化合物のうち安定なものを出して。,hard,3,proposed,"SELECT DISTINCT m.formula, s.prototype, ps.is_stable, ps.energy_above_hull
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND ps.is_stable = TRUE
   AND m.chemical_system ~ '(^|-)(Sc|Ti|V|Cr|Mn|Fe|Co|Ni|Cu|Zn|Y|Zr|Nb|Mo|Tc|Ru|Rh|Pd|Ag|Cd|Hf|Ta|W|Re|Os|Ir|Pt|Au|Hg)(-|$)'
-LIMIT 10000;",True,True,1.0,0.1891891891891892,1.0,0.3181818181818182,0.0,0.0,0.0,0.0,0.0,0.0,2884,15951,0,0
+ORDER BY m.formula
+LIMIT 10000;",True,True,1.0,0.1891891891891892,1.0,0.3181818181818182,0.0,0.0,0.0,0.0,0.0,0.0,2885,14305,0,0
 q_vhard_001,L1₂型金属間化合物において、相安定性、格子ミスマッチ、弾性特性を同時に考慮した析出強化相候補を抽出して。,very_hard,4,proposed,"SELECT DISTINCT
     m.formula,
     ps.is_stable,
@@ -933,51 +906,47 @@ q_vhard_001,L1₂型金属間化合物において、相安定性、格子ミス
     s.lattice_a,
     ABS(s.lattice_a - 3.57) AS lattice_diff
 FROM material_entry m
-JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
+JOIN structure s ON s.entry_id = m.entry_id
 WHERE
     (s.prototype = 'L12' OR s.strukturbericht = 'L12')
     AND ps.is_stable = TRUE
 ORDER BY
-    ps.energy_above_hull ASC,
-    ABS(s.lattice_a - 3.57) ASC
-LIMIT 10000;",True,True,0.18974358974358974,1.0,0.18974358974358974,0.3189655172413793,0.0,0.0,0.0,0.0,0.0,0.0,2968,12880,0,0
+    lattice_diff ASC,
+    ps.energy_above_hull ASC
+LIMIT 10000;",True,True,0.18974358974358974,1.0,0.18974358974358974,0.3189655172413793,0.0,0.0,0.0,0.0,0.0,0.0,2968,15599,0,0
 q_vhard_002,Ni₃Al代替またはCo基γ'相候補として有望なL1₂型金属間化合物を、形成エネルギー、格子定数、弾性率の観点から探索して。,very_hard,4,proposed,"SELECT DISTINCT
   m.formula,
   ps.formation_energy_per_atom,
   s.lattice_a,
   ABS(s.lattice_a - 3.57) AS lattice_a_deviation_from_ni3al
 FROM material_entry m
-JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
+JOIN structure s ON s.entry_id = m.entry_id
+JOIN composition c ON c.entry_id = m.entry_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND ps.is_stable = TRUE
   AND ps.formation_energy_per_atom < 0
-  AND (
-    (
-      EXISTS (
-        SELECT 1
-        FROM composition c_ni
-        WHERE c_ni.entry_id = m.entry_id
-          AND c_ni.element = 'Ni'
-      )
-      AND EXISTS (
-        SELECT 1
-        FROM composition c_al
-        WHERE c_al.entry_id = m.entry_id
-          AND c_al.element = 'Al'
-      )
-    )
-    OR EXISTS (
-      SELECT 1
-      FROM composition c_co
-      WHERE c_co.entry_id = m.entry_id
-        AND c_co.element = 'Co'
-    )
+  AND s.lattice_a IS NOT NULL
+  AND ABS(s.lattice_a - 3.57) <= 0.20
+  AND c.element IN ('Ni', 'Al', 'Co')
+  AND EXISTS (
+    SELECT 1
+    FROM composition c_al
+    WHERE c_al.entry_id = m.entry_id
+      AND c_al.element = 'Al'
   )
-ORDER BY ps.formation_energy_per_atom ASC, ABS(s.lattice_a - 3.57) ASC
-LIMIT 10000;",True,True,0.015384615384615385,1.0,0.015384615384615385,0.030303030303030307,0.0,0.0,0.0,0.0,0.0,0.0,3647,25540,0,0
-q_vhard_003,γ'相候補のランキングを安定性・格子整合性・バルクモジュラスの重み付きスコアで出して。,very_hard,4,proposed,"SELECT
+  AND EXISTS (
+    SELECT 1
+    FROM composition c_base
+    WHERE c_base.entry_id = m.entry_id
+      AND c_base.element IN ('Ni', 'Co')
+  )
+ORDER BY
+  ABS(s.lattice_a - 3.57) ASC,
+  ps.formation_energy_per_atom ASC
+LIMIT 10000;",True,True,0.010256410256410256,1.0,0.010256410256410256,0.020304568527918784,0.0,0.0,0.0,0.0,0.0,0.0,4783,17036,1,1773
+q_vhard_003,γ'相候補のランキングを安定性・格子整合性・バルクモジュラスの重み付きスコアで出して。,very_hard,4,proposed,"SELECT DISTINCT
     m.formula,
     ps.is_stable,
     ps.energy_above_hull,
@@ -985,9 +954,12 @@ q_vhard_003,γ'相候補のランキングを安定性・格子整合性・バ�
     ABS(s.lattice_a - 3.57) AS lattice_diff,
     et.bulk_modulus_vrh AS bulk_modulus,
     (
-        0.4 * CASE WHEN ps.is_stable = TRUE THEN 1.0 ELSE 0.0 END
-        + 0.4 * (1.0 / (1.0 + ABS(s.lattice_a - 3.57)))
-        + 0.2 * (et.bulk_modulus_vrh / 300.0)
+        0.4 * CASE
+            WHEN ps.is_stable = TRUE THEN 1.0
+            ELSE GREATEST(0.0, 1.0 - ps.energy_above_hull)
+        END
+        + 0.3 * GREATEST(0.0, 1.0 - ABS(s.lattice_a - 3.57) / 3.57)
+        + 0.3 * (et.bulk_modulus_vrh / 300.0)
     ) AS weighted_score
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
@@ -995,11 +967,11 @@ JOIN phase_stability ps ON ps.entry_id = m.entry_id
 JOIN elastic_tensor et ON et.entry_id = m.entry_id
 WHERE
     (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-    AND s.lattice_a IS NOT NULL
-    AND ps.is_stable IS NOT NULL
+    AND ps.is_stable = TRUE
     AND et.bulk_modulus_vrh IS NOT NULL
+    AND s.lattice_a IS NOT NULL
 ORDER BY weighted_score DESC
-LIMIT 10000;",True,True,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,3024,13930,0,0
+LIMIT 10000;",True,True,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,5437,25921,1,1896
 q_vhard_004,NiまたはCo含有で安定かつバルクモジュラスが高いL1₂化合物トップ10を出して。,very_hard,4,proposed,"SELECT DISTINCT
     m.formula,
     s.prototype,
@@ -1012,43 +984,57 @@ JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
 JOIN elastic_tensor et ON et.entry_id = m.entry_id
 WHERE
-    c.element IN ('Ni', 'Co')
+    (c.element = 'Ni' OR c.element = 'Co')
     AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
     AND ps.is_stable = TRUE
     AND et.bulk_modulus_vrh IS NOT NULL
-    AND et.bulk_modulus_vrh > 0
 ORDER BY et.bulk_modulus_vrh DESC
-LIMIT 10;",True,True,0.6666666666666666,0.5,0.6666666666666666,0.5714285714285715,0.0,0.0,0.0,0.0,0.0,0.0,4729,14091,1,1735
+LIMIT 10;",True,True,0.6666666666666666,0.5,0.6666666666666666,0.5714285714285715,0.0,0.0,0.0,0.0,0.0,0.0,3012,19745,0,0
 q_vhard_005,L1₂型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して材料設計の指針を得たい。,very_hard,3,proposed,"SELECT
-    c.site_label,
-    c.element,
-    ps.is_stable,
-    COUNT(*) AS l12_site_element_count,
-    AVG(c.atomic_fraction) AS avg_atomic_fraction,
-    AVG(ps.energy_above_hull) AS avg_energy_above_hull
-FROM material_entry m
-JOIN structure s ON s.entry_id = m.entry_id
-JOIN composition c ON c.entry_id = m.entry_id
-JOIN phase_stability ps ON ps.entry_id = m.entry_id
-WHERE
-    (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-    AND c.site_label IN ('A-site', 'B-site')
+    lc.a_site_element,
+    lc.b_site_element,
+    COUNT(*) AS l12_compound_count,
+    COUNT(*) FILTER (WHERE lc.is_stable = TRUE) AS stable_l12_count,
+    COUNT(*) FILTER (WHERE lc.is_stable = FALSE) AS unstable_l12_count,
+    COUNT(*) FILTER (WHERE lc.is_stable = TRUE) * 100.0 / COUNT(*) AS stable_percentage,
+    AVG(lc.energy_above_hull) AS avg_energy_above_hull,
+    AVG(lc.formation_energy_per_atom) AS avg_eform
+FROM (
+    SELECT
+        m.entry_id,
+        MAX(c.element) FILTER (WHERE c.site_label = 'A-site') AS a_site,
+        MAX(c.element) FILTER (WHERE c.site_label = 'B-site') AS b_site,
+        ps.is_stable,
+        ps.energy_above_hull,
+        ps.formation_energy_per_atom
+    FROM material_entry m
+    JOIN structure s ON s.entry_id = m.entry_id
+    JOIN phase_stability ps ON ps.entry_id = m.entry_id
+    JOIN composition c ON c.entry_id = m.entry_id
+    WHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'
+    GROUP BY
+        m.entry_id,
+        ps.is_stable,
+        ps.energy_above_hull,
+        ps.formation_energy_per_atom
+) lc
+WHERE lc.a_site_element IS NOT NULL
+  AND lc.b_site_element IS NOT NULL
 GROUP BY
-    c.site_label,
-    c.element,
-    ps.is_stable
+    lc.a_site_element,
+    lc.b_site_element
 ORDER BY
-    c.site_label,
-    c.element,
-    ps.is_stable DESC
-LIMIT 10000;",True,True,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2779,17224,0,0
-q_vhard_006,Ni3Alの格子定数に近く、バルクモジュラスが高く、安定なL1₂候補を総合的にランキングして。,very_hard,4,proposed,"SELECT
+    stable_percentage DESC,
+    avg_energy_above_hull ASC
+LIMIT 10000;",True,False,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.3125,0.0,6642,28164,2,3167
+q_vhard_006,Ni3Alの格子定数に近く、バルクモジュラスが高く、安定なL1₂候補を総合的にランキングして。,very_hard,4,proposed,"SELECT DISTINCT
     m.formula,
     s.lattice_a,
     ABS(s.lattice_a - 3.57) AS lattice_diff,
     et.bulk_modulus_vrh AS bulk_modulus,
     ps.energy_above_hull,
-    ps.is_stable
+    ps.is_stable,
+    et.bulk_modulus_vrh / (1.0 + ABS(s.lattice_a - 3.57)) AS ranking_score
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
@@ -1056,31 +1042,26 @@ JOIN elastic_tensor et ON et.entry_id = m.entry_id
 WHERE
     (s.prototype = 'L12' OR s.strukturbericht = 'L12')
     AND ps.is_stable = TRUE
-    AND ABS(s.lattice_a - 3.57) <= 0.10
-    AND et.bulk_modulus_vrh >= 150
-ORDER BY
-    (et.bulk_modulus_vrh / (1.0 + ABS(s.lattice_a - 3.57))) DESC,
-    ABS(s.lattice_a - 3.57) ASC,
-    et.bulk_modulus_vrh DESC
-LIMIT 10000;",True,True,0.015384615384615385,0.42857142857142855,0.015384615384615385,0.029702970297029705,0.0,0.0,0.0,0.0,0.0,0.0,4673,13872,1,1690
+    AND s.lattice_a IS NOT NULL
+    AND et.bulk_modulus_vrh IS NOT NULL
+ORDER BY ranking_score DESC
+LIMIT 10000;",True,True,0.02564102564102564,0.3333333333333333,0.02564102564102564,0.047619047619047616,0.0,0.0,0.0,0.0,0.0,0.0,3077,14276,0,0
 q_vhard_007,析出強化に適したL1₂化合物を格子ミスマッチ、弾性率、安定性の多基準で評価して上位候補を出して。,very_hard,4,proposed,"SELECT
-  m.formula,
-  s.lattice_a,
-  ABS(s.lattice_a - 3.57) AS lattice_diff,
-  ps.is_stable,
-  ps.energy_above_hull,
-  ps.formation_energy_per_atom
+    m.formula,
+    s.lattice_a,
+    ABS(s.lattice_a - 3.57) AS lattice_diff,
+    ps.is_stable,
+    ps.energy_above_hull
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
 WHERE
-  (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-  AND ps.is_stable = TRUE
+    (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+    AND ps.is_stable = TRUE
 ORDER BY
-  ABS(s.lattice_a - 3.57) ASC,
-  ps.energy_above_hull ASC,
-  ps.formation_energy_per_atom ASC
-LIMIT 10000;",True,True,0.18974358974358974,1.0,0.18974358974358974,0.3189655172413793,0.0,0.0,0.0,0.0,0.0,0.0,4157,14519,1,1257
+    ABS(s.lattice_a - 3.57) ASC,
+    ps.energy_above_hull ASC
+LIMIT 10000;",True,True,0.18974358974358974,1.0,0.18974358974358974,0.3189655172413793,0.0,0.0,0.0,0.0,0.0,0.0,4166,12939,1,1279
 q_vhard_008,Co基超合金のγ'相候補として、Co含有で安定なL1₂化合物をNi3Alとの比較で評価して。,very_hard,4,proposed,"SELECT DISTINCT
   m.formula,
   s.lattice_a,
@@ -1089,63 +1070,63 @@ q_vhard_008,Co基超合金のγ'相候補として、Co含有で安定なL1₂�
   ps.is_stable
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
-JOIN phase_stability ps ON ps.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
-WHERE c.element = 'Co'
+JOIN phase_stability ps ON ps.entry_id = m.entry_id
+WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+  AND c.element = 'Co'
   AND ps.is_stable = TRUE
-  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
 ORDER BY ABS(s.lattice_a - 3.57) ASC
-LIMIT 10000;",True,True,0.10526315789473684,1.0,0.10526315789473684,0.1904761904761905,0.0,0.0,0.0,0.0,0.0,0.0,2774,7998,0,0
+LIMIT 10000;",True,True,0.10526315789473684,1.0,0.10526315789473684,0.1904761904761905,0.0,0.0,0.0,0.0,0.0,0.0,2765,7287,0,0
 q_vhard_009,L1₂型化合物データベースから、バルクモジュラスとせん断弾性率の比(B/G比)を計算して延性候補を抽出して。,very_hard,4,proposed,"SELECT
   m.formula,
   et.bulk_modulus_vrh,
   et.shear_modulus_vrh,
-  et.bulk_modulus_vrh / NULLIF(et.shear_modulus_vrh, 0) AS bg_ratio
+  (et.bulk_modulus_vrh / NULLIF(et.shear_modulus_vrh, 0)) AS bg_ratio
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 JOIN elastic_tensor et ON et.entry_id = m.entry_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-  AND et.shear_modulus_vrh IS NOT NULL
   AND et.bulk_modulus_vrh IS NOT NULL
-  AND et.shear_modulus_vrh > 0
-  AND et.bulk_modulus_vrh / NULLIF(et.shear_modulus_vrh, 0) >= 1.75
+  AND et.shear_modulus_vrh IS NOT NULL
+  AND (et.bulk_modulus_vrh / NULLIF(et.shear_modulus_vrh, 0)) > 1.75
 ORDER BY bg_ratio DESC
-LIMIT 10000;",True,True,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2502,6244,0,0
+LIMIT 10000;",True,True,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2603,7883,0,0
 q_vhard_010,L1₂型化合物の安定性マップ（formation energy vs energy above hull）を出力して、候補を4象限に分類して。,very_hard,2,proposed,"SELECT
   m.formula,
   ps.formation_energy_per_atom,
   ps.energy_above_hull,
   ps.is_stable,
   CASE
-    WHEN ps.formation_energy_per_atom < 0 AND ps.energy_above_hull <= 0 THEN 'Q1: negative formation energy / on hull'
-    WHEN ps.formation_energy_per_atom < 0 AND ps.energy_above_hull > 0 THEN 'Q2: negative formation energy / above hull'
-    WHEN ps.formation_energy_per_atom >= 0 AND ps.energy_above_hull <= 0 THEN 'Q3: positive formation energy / on hull'
-    WHEN ps.formation_energy_per_atom >= 0 AND ps.energy_above_hull > 0 THEN 'Q4: positive formation energy / above hull'
+    WHEN ps.formation_energy_per_atom < 0 AND ps.energy_above_hull <= 0 THEN 'Q1: formation_energy < 0, energy_above_hull <= 0'
+    WHEN ps.formation_energy_per_atom < 0 AND ps.energy_above_hull > 0 THEN 'Q2: formation_energy < 0, energy_above_hull > 0'
+    WHEN ps.formation_energy_per_atom >= 0 AND ps.energy_above_hull <= 0 THEN 'Q3: formation_energy >= 0, energy_above_hull <= 0'
+    ELSE 'Q4: formation_energy >= 0, energy_above_hull > 0'
   END AS stability_quadrant
 FROM material_entry m
-JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
+JOIN structure s ON s.entry_id = m.entry_id
 WHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'
 ORDER BY stability_quadrant, ps.formation_energy_per_atom ASC, ps.energy_above_hull ASC
-LIMIT 10000;",True,True,1.0,0.49744897959183676,1.0,0.6643952299829642,0.0,0.0,0.0,0.0,0.0,0.5,3024,15353,0,0
+LIMIT 10000;",True,True,1.0,0.49744897959183676,1.0,0.6643952299829642,0.0,0.0,0.0,0.0,0.0,0.0,3036,13854,0,0
 q_vhard_011,高温安定性の観点で有望なL1₂型化合物を形成エネルギーの深さで評価して上位を出して。,very_hard,2,proposed,"SELECT DISTINCT
-  m.formula,
-  ps.is_stable,
-  ps.formation_energy_per_atom,
-  ps.energy_above_hull
+    m.formula,
+    ps.is_stable,
+    ps.formation_energy_per_atom,
+    ps.energy_above_hull
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
-WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-  AND ps.is_stable = TRUE
+WHERE
+    (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+    AND ps.is_stable = TRUE
 ORDER BY ps.formation_energy_per_atom ASC
-LIMIT 10000;",True,True,0.09438775510204081,1.0,0.09438775510204081,0.17249417249417248,0.0,0.0,0.0,0.0,0.0,0.0,2802,10719,0,0
+LIMIT 10000;",True,True,0.09438775510204081,1.0,0.09438775510204081,0.17249417249417248,0.0,0.0,0.0,0.0,0.0,0.0,2891,12495,0,0
 q_vhard_012,Ni基超合金のγ'相代替候補として、Ni-Al系以外で安定なL1₂化合物を格子整合性で評価して。,very_hard,3,proposed,"SELECT DISTINCT
     m.formula,
-    s.lattice_a,
-    ABS(s.lattice_a - 3.57) AS lattice_diff,
+    ps.is_stable,
     ps.energy_above_hull,
-    ps.is_stable
+    s.lattice_a,
+    ABS(s.lattice_a - 3.57) AS lattice_diff
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
@@ -1155,19 +1136,19 @@ WHERE
     AND NOT (
         EXISTS (
             SELECT 1
-            FROM composition c
-            WHERE c.entry_id = m.entry_id
-              AND c.element = 'Ni'
+            FROM composition c_ni
+            WHERE c_ni.entry_id = m.entry_id
+              AND c_ni.element = 'Ni'
         )
         AND EXISTS (
             SELECT 1
-            FROM composition c
-            WHERE c.entry_id = m.entry_id
-              AND c.element = 'Al'
+            FROM composition c_al
+            WHERE c_al.entry_id = m.entry_id
+              AND c_al.element = 'Al'
         )
     )
 ORDER BY lattice_diff ASC
-LIMIT 10000;",True,True,0.18461538461538463,1.0,0.18461538461538463,0.3116883116883117,0.0,0.0,0.0,0.0,0.0,0.0,3159,14725,0,0
+LIMIT 10000;",True,True,0.18461538461538463,1.0,0.18461538461538463,0.3116883116883117,0.0,0.0,0.0,0.0,0.0,0.0,3168,13502,0,0
 q_vhard_013,L1₂型化合物で体積弾性率と格子定数を散布図データとして出力して。,very_hard,4,proposed,"SELECT
   m.formula,
   et.bulk_modulus_vrh AS bulk_modulus,
@@ -1180,138 +1161,141 @@ WHERE
   AND et.bulk_modulus_vrh IS NOT NULL
   AND s.lattice_a IS NOT NULL
 ORDER BY s.lattice_a ASC
-LIMIT 10000;",True,True,0.75,0.015228426395939087,0.75,0.029850746268656712,0.0,0.0,0.0,0.0,0.0,0.0,3589,4284,1,1147
+LIMIT 10000;",True,True,0.75,0.015228426395939087,0.75,0.029850746268656712,0.0,0.0,0.0,0.0,0.0,0.0,3553,6621,1,1089
 q_vhard_014,元素周期の観点から、3d遷移金属と4d/5d遷移金属をAサイトに持つL1₂化合物の安定性傾向を比較して。,very_hard,3,proposed,"SELECT DISTINCT
-    m.formula,
-    c.element,
     CASE
-        WHEN c.element IN ('Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn') THEN '3d'
-        WHEN c.element IN ('Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd',
-                           'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg') THEN '4d/5d'
-    END AS transition_metal_period,
-    c.site_label,
+        WHEN c.element IN ('Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn') THEN '3d transition metal'
+        WHEN c.element IN ('Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg') THEN '4d/5d transition metal'
+    END AS a_site_transition_series,
+    m.formula,
+    c.element AS a_site,
     c.atomic_fraction,
     ps.is_stable,
     ps.energy_above_hull
 FROM material_entry m
-JOIN composition c ON c.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
+JOIN composition c ON c.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
 WHERE
     (s.prototype = 'L12' OR s.strukturbericht = 'L12')
     AND c.site_label = 'A-site'
-    AND c.element IN ('Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn',
-                      'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd',
-                      'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg')
-ORDER BY transition_metal_period, ps.energy_above_hull ASC, m.formula
-LIMIT 10000;",True,True,0.875,0.017948717948717947,0.875,0.035175879396984924,0.0,0.0,0.0,0.0,0.0,0.0,3143,15664,0,0
+    AND c.element IN (
+        'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn',
+        'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd',
+        'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg'
+    )
+ORDER BY
+    a_site_transition_series,
+    c.element,
+    ps.energy_above_hull ASC,
+    m.formula
+LIMIT 10000;",True,True,0.875,0.017948717948717947,0.875,0.035175879396984924,0.0,0.0,0.0,0.0,0.0,0.0,3166,15357,0,0
 q_vhard_015,L1₂化合物のうちNi3Alより安定でバルクモジュラスが高い候補を出して。,very_hard,4,proposed,"SELECT DISTINCT
     m.formula,
     ps.formation_energy_per_atom,
     ps.energy_above_hull,
-    ps.is_stable,
     et.bulk_modulus_vrh AS bulk_modulus
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
 JOIN elastic_tensor et ON et.entry_id = m.entry_id
-JOIN material_entry m_ref ON m_ref.formula = 'Ni3Al'
-JOIN phase_stability ps_ref ON ps_ref.entry_id = m_ref.entry_id
-JOIN elastic_tensor et_ref ON et_ref.entry_id = m_ref.entry_id
 WHERE
     (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-    AND ps.formation_energy_per_atom < ps_ref.formation_energy_per_atom
-    AND et.bulk_modulus_vrh > et_ref.bulk_modulus_vrh
+    AND ps.formation_energy_per_atom < (
+        SELECT ps.formation_energy_per_atom
+        FROM material_entry m
+        JOIN phase_stability ps ON ps.entry_id = m.entry_id
+        WHERE m.formula = 'Ni3Al'
+        ORDER BY ps.formation_energy_per_atom ASC
+        LIMIT 1
+    )
+    AND et.bulk_modulus_vrh > (
+        SELECT et.bulk_modulus_vrh
+        FROM material_entry m
+        JOIN elastic_tensor et ON et.entry_id = m.entry_id
+        WHERE m.formula = 'Ni3Al'
+        ORDER BY et.bulk_modulus_vrh DESC
+        LIMIT 1
+    )
+    AND m.formula <> 'Ni3Al'
 ORDER BY ps.formation_energy_per_atom ASC, et.bulk_modulus_vrh DESC
-LIMIT 10000;",True,True,0.020512820512820513,0.18181818181818182,0.020512820512820513,0.03686635944700461,0.0,0.0,0.0,0.0,0.0,0.16666666666666666,3092,17156,0,0
-q_vhard_016,Co-Al-W系L1₂候補の安定性と弾性特性を評価して。,very_hard,4,proposed,"WITH comp AS (
-  SELECT
-    c.entry_id,
-    COALESCE(SUM(CASE WHEN c.element = 'Co' THEN c.atomic_fraction ELSE 0 END), 0) AS x_co,
-    COALESCE(SUM(CASE WHEN c.element = 'Al' THEN c.atomic_fraction ELSE 0 END), 0) AS x_al,
-    COALESCE(SUM(CASE WHEN c.element = 'W'  THEN c.atomic_fraction ELSE 0 END), 0) AS x_w,
-    COUNT(DISTINCT CASE WHEN c.element IN ('Co', 'Al', 'W') THEN c.element END) AS n_target_elements,
-    COUNT(DISTINCT CASE WHEN c.element NOT IN ('Co', 'Al', 'W') THEN c.element END) AS n_other_elements
-  FROM composition c
-  GROUP BY c.entry_id
-)
-SELECT
-  m.formula,
-  m.reduced_formula,
-  m.chemical_system,
-  comp.x_co,
-  comp.x_al,
-  comp.x_w,
-  ps.is_stable,
-  ps.energy_above_hull,
-  ps.formation_energy_per_atom,
-  s.prototype,
-  s.strukturbericht,
-  s.formula_type,
-  s.space_group_number,
-  s.space_group,
-  s.crystal_system,
-  s.lattice_a,
-  s.lattice_b,
-  s.lattice_c,
-  s.volume_per_atom,
-  CASE
-    WHEN COALESCE(s.prototype, '') ILIKE '%L12%'
-      OR COALESCE(s.prototype, '') ILIKE '%L1_2%'
-      OR COALESCE(s.prototype, '') ILIKE '%L1₂%'
-      OR COALESCE(s.prototype, '') ILIKE '%Cu3Au%'
-      OR COALESCE(s.prototype, '') ILIKE '%AuCu3%'
-      OR COALESCE(s.strukturbericht, '') ILIKE '%L12%'
-      OR COALESCE(s.strukturbericht, '') ILIKE '%L1_2%'
-      OR COALESCE(s.strukturbericht, '') ILIKE '%L1₂%'
-      OR COALESCE(s.strukturbericht, '') ILIKE '%Cu3Au%'
-      OR COALESCE(s.strukturbericht, '') ILIKE '%AuCu3%'
-      OR COALESCE(s.formula_type, '') ILIKE '%A3B%'
-      OR COALESCE(s.formula_type, '') ILIKE '%AB3%'
-      OR s.space_group_number = 221
-    THEN TRUE
-    ELSE FALSE
-  END AS l12_like_candidate,
-  CASE
-    WHEN comp.x_co > 0 AND comp.x_al > 0 AND comp.x_w > 0 THEN 'Co-Al-W ternary'
-    WHEN comp.x_co > 0 AND comp.x_al > 0 THEN 'Co-Al binary'
-    WHEN comp.x_co > 0 AND comp.x_w > 0 THEN 'Co-W binary'
-    WHEN comp.x_al > 0 AND comp.x_w > 0 THEN 'Al-W binary'
-    ELSE 'single-element reference'
-  END AS system_class
+LIMIT 10000;",True,True,0.020512820512820513,0.18181818181818182,0.020512820512820513,0.03686635944700461,0.0,0.0,0.0,0.0,0.0,0.0,3151,16231,0,0
+q_vhard_016,Co-Al-W系L1₂候補の安定性と弾性特性を評価して。,very_hard,4,proposed,"SELECT DISTINCT
+    m.formula,
+    m.reduced_formula,
+    m.chemical_system,
+    s.prototype,
+    s.strukturbericht,
+    s.formula_type,
+    s.space_group_number,
+    s.space_group,
+    s.crystal_system,
+    s.volume_per_atom,
+    ps.is_stable,
+    ps.energy_above_hull,
+    ps.formation_energy_per_atom,
+    ps.band_gap
 FROM material_entry m
-JOIN comp ON comp.entry_id = m.entry_id
-LEFT JOIN structure s ON s.entry_id = m.entry_id
-LEFT JOIN phase_stability ps ON ps.entry_id = m.entry_id
-WHERE
-  comp.n_other_elements = 0
-  AND comp.n_target_elements >= 2
+JOIN structure s
+  ON s.entry_id = m.entry_id
+LEFT JOIN phase_stability ps
+  ON ps.entry_id = m.entry_id
+WHERE EXISTS (
+    SELECT 1
+    FROM composition c_co
+    WHERE c_co.entry_id = m.entry_id
+      AND c_co.element = 'Co'
+)
+AND (
+    EXISTS (
+        SELECT 1
+        FROM composition c_al
+        WHERE c_al.entry_id = m.entry_id
+          AND c_al.element = 'Al'
+    )
+    OR EXISTS (
+        SELECT 1
+        FROM composition c_w
+        WHERE c_w.entry_id = m.entry_id
+          AND c_w.element = 'W'
+    )
+)
+AND (
+    s.strukturbericht ILIKE '%L1%'
+    OR s.strukturbericht ILIKE '%L12%'
+    OR s.strukturbericht ILIKE '%L1_2%'
+    OR s.prototype ILIKE '%Cu3Au%'
+    OR s.prototype ILIKE '%Cu 3 Au%'
+    OR s.formula_type ILIKE '%A3B%'
+    OR s.formula_type ILIKE '%AB3%'
+    OR s.space_group_number = 221
+)
 ORDER BY
-  l12_like_candidate DESC,
-  CASE WHEN comp.x_co > 0 AND comp.x_al > 0 AND comp.x_w > 0 THEN 0 ELSE 1 END,
-  ps.energy_above_hull ASC NULLS LAST,
-  ps.formation_energy_per_atom ASC NULLS LAST,
-  m.formula
-LIMIT 10000;",True,True,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.21428571428571427,0.3333333333333333,11004,15443,3,8006
+    ps.energy_above_hull ASC NULLS LAST,
+    ps.formation_energy_per_atom ASC NULLS LAST,
+    m.formula
+LIMIT 10000;",True,True,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,8836,15544,3,5810
 q_vhard_017,全L1₂化合物について、安定性スコア×格子整合性スコア×弾性スコアの複合スコアを計算してランキングして。,very_hard,4,proposed,"SELECT DISTINCT
     m.formula,
     ps.is_stable,
     ps.energy_above_hull,
     s.lattice_a,
     ABS(s.lattice_a - 3.57) AS lattice_diff,
-    CASE
-        WHEN ps.is_stable = TRUE THEN 1.0
-        ELSE 0.0
-    END AS stability_score,
-    1.0 / (1.0 + ABS(s.lattice_a - 3.57)) AS lattice_matching_score,
-    1.0 AS elastic_score,
     (
         CASE
             WHEN ps.is_stable = TRUE THEN 1.0
-            ELSE 0.0
+            ELSE 1.0 / (1.0 + ps.energy_above_hull)
         END
+    ) AS stability_score,
+    (1.0 / (1.0 + ABS(s.lattice_a - 3.57))) AS lattice_matching_score,
+    (
+        (
+            CASE
+                WHEN ps.is_stable = TRUE THEN 1.0
+                ELSE 1.0 / (1.0 + ps.energy_above_hull)
+            END
+        )
         * (1.0 / (1.0 + ABS(s.lattice_a - 3.57)))
-        * 1.0
     ) AS composite_score
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
@@ -1319,119 +1303,100 @@ JOIN phase_stability ps ON ps.entry_id = m.entry_id
 WHERE
     (s.prototype = 'L12' OR s.strukturbericht = 'L12')
     AND ps.is_stable = TRUE
-ORDER BY composite_score DESC, lattice_diff ASC
-LIMIT 10000;",True,True,0.6,0.32432432432432434,0.6,0.4210526315789474,0.0,0.0,0.0,0.0,0.0,0.0,5429,36859,1,1478
+ORDER BY composite_score DESC
+LIMIT 10000;",True,True,0.6,0.32432432432432434,0.6,0.4210526315789474,0.0,0.0,0.0,0.0,0.0,0.0,4599,16245,1,1594
 q_vhard_018,Ni3Al代替γ'相候補をバルクモジュラス、形成エネルギー、格子ミスマッチの3軸パレート面で出力して。,very_hard,4,proposed,"SELECT DISTINCT
     m.formula,
     et.bulk_modulus_vrh AS bulk_modulus,
     ps.formation_energy_per_atom,
-    s.lattice_a,
     ABS(s.lattice_a - 3.57) AS lattice_diff
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
 JOIN elastic_tensor et ON et.entry_id = m.entry_id
-WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-  AND m.formula <> 'Ni3Al'
-  AND ps.is_stable = TRUE
-  AND NOT EXISTS (
-      SELECT 1
-      FROM material_entry m2
-      JOIN structure s2 ON s2.entry_id = m2.entry_id
-      JOIN phase_stability ps2 ON ps2.entry_id = m2.entry_id
-      JOIN elastic_tensor et2 ON et2.entry_id = m2.entry_id
-      WHERE (s2.prototype = 'L12' OR s2.strukturbericht = 'L12')
-        AND m2.formula <> 'Ni3Al'
-        AND ps2.is_stable = TRUE
-        AND et2.bulk_modulus_vrh >= et.bulk_modulus_vrh
-        AND ps2.formation_energy_per_atom <= ps.formation_energy_per_atom
-        AND ABS(s2.lattice_a - 3.57) <= ABS(s.lattice_a - 3.57)
-        AND (
-            et2.bulk_modulus_vrh > et.bulk_modulus_vrh
-            OR ps2.formation_energy_per_atom < ps.formation_energy_per_atom
-            OR ABS(s2.lattice_a - 3.57) < ABS(s.lattice_a - 3.57)
-        )
-  )
-ORDER BY lattice_diff ASC, ps.formation_energy_per_atom ASC, bulk_modulus DESC
-LIMIT 10000;",True,True,0.2857142857142857,0.5,0.2857142857142857,0.36363636363636365,0.0,0.0,0.0,0.0,0.0,0.0,3261,18220,0,0
+WHERE
+    (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+    AND m.formula <> 'Ni3Al'
+    AND et.bulk_modulus_vrh IS NOT NULL
+    AND ps.formation_energy_per_atom IS NOT NULL
+    AND s.lattice_a IS NOT NULL
+    AND NOT EXISTS (
+        SELECT 1
+        FROM material_entry m2
+        JOIN structure s2 ON s2.entry_id = m2.entry_id
+        JOIN phase_stability ps2 ON ps2.entry_id = m2.entry_id
+        JOIN elastic_tensor et2 ON et2.entry_id = m2.entry_id
+        WHERE
+            (s2.prototype = 'L12' OR s2.strukturbericht = 'L12')
+            AND m2.formula <> 'Ni3Al'
+            AND et2.bulk_modulus_vrh IS NOT NULL
+            AND ps2.formation_energy_per_atom IS NOT NULL
+            AND s2.lattice_a IS NOT NULL
+            AND et2.bulk_modulus_vrh >= et.bulk_modulus_vrh
+            AND ps2.formation_energy_per_atom <= ps.formation_energy_per_atom
+            AND ABS(s2.lattice_a - 3.57) <= ABS(s.lattice_a - 3.57)
+            AND (
+                et2.bulk_modulus_vrh > et.bulk_modulus_vrh
+                OR ps2.formation_energy_per_atom < ps.formation_energy_per_atom
+                OR ABS(s2.lattice_a - 3.57) < ABS(s.lattice_a - 3.57)
+            )
+    )
+ORDER BY
+    lattice_diff ASC,
+    formation_energy_per_atom ASC,
+    bulk_modulus DESC
+LIMIT 10000;",True,True,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,3831,27246,0,0
 q_vhard_019,L1₂型化合物データベースから材料設計仮説を導出するため、安定化合物の元素分布とその物性傾向を包括的に集計して。,very_hard,4,proposed,"SELECT
   m.chemical_system,
+  m.number_of_elements,
   COUNT(*) AS stable_l12_count,
   AVG(ps.formation_energy_per_atom) AS avg_eform,
   AVG(ps.energy_above_hull) AS avg_energy_above_hull,
   AVG(ps.band_gap) AS avg_band_gap,
   AVG(s.volume_per_atom) AS avg_volume_per_atom,
-  AVG(s.lattice_a) AS avg_lattice_a,
-  AVG(s.lattice_b) AS avg_lattice_b,
-  AVG(s.lattice_c) AS avg_lattice_c
+  AVG(s.lattice_a) AS avg_lattice_a
 FROM material_entry m
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
-WHERE
-  (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND ps.is_stable = TRUE
-GROUP BY m.chemical_system
-ORDER BY stable_l12_count DESC, avg_eform ASC
-LIMIT 10000;",True,True,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,4098,14269,1,1187
-q_vhard_020,次世代γ'相候補として、Ni-Al-Co-Ti四元系でL1₂構造をとりうる組成を探索して。,very_hard,3,proposed,"SELECT DISTINCT
-  m.formula,
-  c.element,
-  c.atomic_fraction
-FROM material_entry m
-JOIN structure s ON s.entry_id = m.entry_id
-JOIN composition c ON c.entry_id = m.entry_id
-WHERE
-  NOT EXISTS (
-    SELECT 1
-    FROM composition c_bad
-    WHERE c_bad.entry_id = m.entry_id
-      AND c_bad.element NOT IN ('Ni', 'Al', 'Co', 'Ti')
-  )
-  AND EXISTS (
-    SELECT 1
-    FROM composition c_ni
-    WHERE c_ni.entry_id = m.entry_id
-      AND c_ni.element = 'Ni'
-  )
-  AND EXISTS (
-    SELECT 1
-    FROM composition c_gamma
-    WHERE c_gamma.entry_id = m.entry_id
-      AND c_gamma.element IN ('Al', 'Ti')
-  )
-  AND c.element IN ('Ni', 'Al', 'Co', 'Ti')
-  AND (
-    LOWER(
-      REPLACE(
-        REPLACE(
-          REPLACE(
-            REPLACE(COALESCE(s.prototype, ''), '_', ''),
-            '-', ''
-          ),
-          ' ', ''
-        ),
-        '₂', '2'
+GROUP BY m.chemical_system, m.number_of_elements
+ORDER BY stable_l12_count DESC, avg_formation_energy_per_atom ASC
+LIMIT 10000;",True,False,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,3983,12177,1,1151
+q_vhard_020,次世代γ'相候補として、Ni-Al-Co-Ti四元系でL1₂構造をとりうる組成を探索して。,very_hard,3,proposed,"WITH candidate_entries AS (
+    SELECT
+        m.entry_id
+    FROM material_entry m
+    JOIN composition c
+        ON c.entry_id = m.entry_id
+    JOIN structure s
+        ON s.entry_id = m.entry_id
+    WHERE UPPER(c.element) IN ('NI', 'AL', 'CO', 'TI')
+      AND (
+          COALESCE(s.prototype, '') ILIKE '%L1%'
+          OR COALESCE(s.prototype, '') ILIKE '%Cu%Au%'
+          OR COALESCE(s.prototype, '') ILIKE '%Au%Cu%'
+          OR COALESCE(s.strukturbericht, '') ILIKE '%L1%'
+          OR COALESCE(s.strukturbericht, '') ILIKE '%Cu%Au%'
+          OR COALESCE(s.strukturbericht, '') ILIKE '%Au%Cu%'
+          OR COALESCE(s.formula_type, '') ILIKE '%AB3%'
+          OR COALESCE(s.formula_type, '') ILIKE '%A3B%'
+          OR s.space_group_number = 221
+          OR COALESCE(s.space_group, '') ILIKE '%Pm%'
+          OR COALESCE(s.space_group, '') ILIKE '%P m%'
       )
-    ) LIKE '%l12%'
-    OR LOWER(
-      REPLACE(
-        REPLACE(
-          REPLACE(
-            REPLACE(COALESCE(s.strukturbericht, ''), '_', ''),
-            '-', ''
-          ),
-          ' ', ''
-        ),
-        '₂', '2'
-      )
-    ) LIKE '%l12%'
-    OR LOWER(COALESCE(s.prototype, '')) LIKE '%cu3au%'
-    OR LOWER(COALESCE(s.strukturbericht, '')) LIKE '%cu3au%'
-    OR LOWER(COALESCE(s.formula_type, '')) IN ('a3b', 'ab3')
-    OR s.space_group_number = 221
-    OR LOWER(
-      REPLACE(COALESCE(s.space_group, ''), ' ', '')
-    ) LIKE '%pm-3m%'
-  )
+    GROUP BY m.entry_id
+    HAVING COUNT(DISTINCT UPPER(c.element)) >= 2
+)
+SELECT DISTINCT
+    m.formula,
+    c.element,
+    c.atomic_fraction
+FROM candidate_entries ce
+JOIN material_entry m
+    ON m.entry_id = ce.entry_id
+JOIN composition c
+    ON c.entry_id = m.entry_id
+WHERE UPPER(c.element) IN ('NI', 'AL', 'CO', 'TI')
 ORDER BY m.formula, c.element
-LIMIT 10000;",True,True,0.007722007722007722,0.6666666666666666,0.007722007722007722,0.015267175572519085,0.0,0.0,0.0,0.0,0.0,0.0,9354,16224,3,6321
+LIMIT 10000;",True,True,0.019305019305019305,0.5555555555555556,0.019305019305019305,0.0373134328358209,0.0,0.0,0.0,0.0,0.08333333333333333,0.0,9545,14568,3,6499

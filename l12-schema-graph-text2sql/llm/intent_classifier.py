@@ -200,3 +200,86 @@ def classify_intent(query: str) -> dict[str, Any]:
         "reason": "No strong signal; defaulting to DB query",
         "matched_patterns": [],
     }
+
+
+# --- Query Type Classification ---
+# Determines the SELECT structure: list individual rows vs. aggregate
+
+_COUNT_PATTERNS: list[re.Pattern[str]] = [
+    re.compile(r"(?:何件|件数|総数|カウント|count)", re.I),
+    # 「数え」「数を」 but NOT when part of compound words like 格子定数, 弾性係数
+    re.compile(r"(?<![定係変])数(?:え|を(?:教|出|数))", re.I),
+]
+
+_RATIO_PATTERNS: list[re.Pattern[str]] = [
+    re.compile(r"(?:割合|比率|percentage|ratio)", re.I),
+]
+
+# Only trigger GROUP BY when the question explicitly asks for aggregated
+# statistics (average, sum) — NOT for "ごとに整理" or "分類" which in
+# materials science context typically expect individual rows.
+_AGGREGATE_PATTERNS_STRICT: list[re.Pattern[str]] = [
+    # 「平均」 can appear as 「平均を」 or 「平均形成エネルギー」
+    re.compile(r"平均|average|avg|mean", re.I),
+    re.compile(r"(?:合計|total|sum)\s*(?:を|の|は)", re.I),
+    re.compile(r"(?:統計|集計|statistics|ヒストグラム|histogram)", re.I),
+    re.compile(r"グループ化|group\s*by", re.I),
+]
+
+_TOP_N_PATTERNS: list[re.Pattern[str]] = [
+    re.compile(r"(?:最も多い|最も少ない|most|least|最頻)", re.I),
+]
+
+
+def classify_query_type(query: str) -> dict[str, Any]:
+    """Classify the expected output structure of a DB query.
+
+    Conservative strategy: default to individual rows. Only use GROUP BY
+    when the question explicitly asks for counts, averages, or ratios.
+    Words like "ごとに整理", "分類", "分布" in materials science context
+    typically expect individual rows with relevant columns for sorting.
+
+    Returns:
+      - query_type: "list" | "aggregate" | "count" | "top_n"
+      - instruction: prompt instruction for the LLM
+    """
+    for pat in _COUNT_PATTERNS:
+        if pat.search(query):
+            return {
+                "query_type": "count",
+                "instruction": "Return a COUNT query. Do NOT list individual rows.",
+            }
+
+    for pat in _RATIO_PATTERNS:
+        if pat.search(query):
+            return {
+                "query_type": "aggregate",
+                "instruction": "Return a ratio/percentage using COUNT with FILTER or CASE. Do NOT list individual rows.",
+            }
+
+    for pat in _TOP_N_PATTERNS:
+        if pat.search(query):
+            return {
+                "query_type": "top_n",
+                "instruction": "Use GROUP BY + ORDER BY + LIMIT to find the top/bottom items.",
+            }
+
+    for pat in _AGGREGATE_PATTERNS_STRICT:
+        if pat.search(query):
+            return {
+                "query_type": "aggregate",
+                "instruction": "Use aggregate functions (AVG, COUNT, SUM) with GROUP BY as appropriate.",
+            }
+
+    # Default: list individual rows (most common and safest).
+    # "ごとに整理", "分類", "分布", "傾向" all return individual rows
+    # with ORDER BY for organization. Do NOT use GROUP BY.
+    return {
+        "query_type": "list",
+        "instruction": (
+            "Return individual rows. Do NOT use GROUP BY or aggregate functions. "
+            "If the question mentions organizing by category (ごとに, 分類, 分布), "
+            "include the category column and use ORDER BY to organize results. "
+            "Return only columns directly relevant to the question."
+        ),
+    }

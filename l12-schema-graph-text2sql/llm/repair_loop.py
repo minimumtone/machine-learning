@@ -14,7 +14,7 @@ import time
 from pathlib import Path
 from typing import Any, Callable
 
-from llm.sql_generator import _fix_known_literals
+from llm.sql_generator import _fix_known_literals, _normalize_column_aliases
 
 
 def _load_repair_template() -> str:
@@ -92,6 +92,7 @@ def attempt_repair(
     )
     if sql:
         sql = _fix_known_literals(sql)
+        sql = _normalize_column_aliases(sql)
     return {
         "repaired_sql": sql if sql else original_sql,
         "repair_prompt": prompt,
