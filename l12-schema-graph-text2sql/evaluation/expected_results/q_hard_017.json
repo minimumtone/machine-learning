@@ -1,1 +1,16 @@
-{"columns": ["formula", "lattice_a"], "rows": [["Co3Ti", 3.55], ["Ni3Al", 3.572]]}
+{
+  "columns": [
+    "formula",
+    "lattice_a"
+  ],
+  "rows": [
+    [
+      "Co3Ti",
+      3.55
+    ],
+    [
+      "Ni3Al",
+      3.572
+    ]
+  ]
+}

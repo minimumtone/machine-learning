@@ -162,11 +162,35 @@ def main() -> int:
         "Stable L12 count": 8,
         "Metastable L12 count": 154,
         "Gamma-prime ranking total": 259,
-        "Independent binary correct rate": 79.3,
-        "Independent mean accuracy": 77.0,
+        "Independent binary correct rate": 67.0,
+        "Independent mean accuracy": 76.6,
     }
     for label, val in critical_values.items():
         check(f"[CRITICAL] {label}", val)
+
+    # Independent eval difficulty breakdown
+    indep_by_diff = indep.get("by_difficulty", {})
+    for diff_key in ["easy", "medium", "hard", "very_hard"]:
+        d = indep_by_diff.get(diff_key, {})
+        acc = d.get("accuracy")
+        if acc is not None:
+            check(f"Independent {diff_key} accuracy", acc, required=False)
+
+    # ================================================================
+    # Part 3: TeX unresolved reference detection
+    # ================================================================
+    unresolved = []
+    for m in re.finditer(r'(?<![\\%])(\?\?)', tex):
+        line_num = tex[:m.start()].count('\n') + 1
+        unresolved.append(f"Line {line_num}: unresolved reference '??'")
+    for m in re.finditer(r'\[\\?\?\]', tex):
+        line_num = tex[:m.start()].count('\n') + 1
+        unresolved.append(f"Line {line_num}: unresolved citation '[?]'")
+    if unresolved:
+        for u in unresolved[:10]:
+            errors.append(f"[UNRESOLVED] {u}")
+        if len(unresolved) > 10:
+            errors.append(f"[UNRESOLVED] ... and {len(unresolved) - 10} more")
 
     # ================================================================
     # Report

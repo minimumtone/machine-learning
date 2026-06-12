@@ -33,7 +33,6 @@
 | `api/` | FastAPIアプリケーション |
 | `.env.example` | 環境変数テンプレート |
 | `experiments/` | アブレーション実験スクリプト・結果 |
-| `pytest.ini` | pytest設定（`tests/`に収集制限） |
 | `VERIFICATION_GUIDE.md` | 検証手順書 |
 
 ## 検証可能な項目（ZIP単体）

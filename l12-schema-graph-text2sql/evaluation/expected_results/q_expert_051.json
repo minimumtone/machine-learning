@@ -1,1 +1,14 @@
-{"columns": ["entry_id", "formula", "total_dos_at_fermi"], "rows": [["entry_00191", "Co3Sn", 48.508]]}
+{
+  "columns": [
+    "entry_id",
+    "formula",
+    "total_dos_at_fermi"
+  ],
+  "rows": [
+    [
+      "entry_00191",
+      "Co3Sn",
+      48.508
+    ]
+  ]
+}

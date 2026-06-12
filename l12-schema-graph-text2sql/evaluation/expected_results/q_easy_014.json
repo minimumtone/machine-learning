@@ -1,1 +1,20 @@
-{"columns": ["entry_id", "formula"], "rows": [["entry_00001", "Ni3Al"], ["entry_00575", "NiAl"], ["entry_00996", "NiAl"]]}
+{
+  "columns": [
+    "entry_id",
+    "formula"
+  ],
+  "rows": [
+    [
+      "entry_00001",
+      "Ni3Al"
+    ],
+    [
+      "entry_00575",
+      "NiAl"
+    ],
+    [
+      "entry_00996",
+      "NiAl"
+    ]
+  ]
+}

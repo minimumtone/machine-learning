@@ -1,1 +1,32 @@
-{"columns": ["entry_id", "formula", "lattice_a", "shear_modulus_vrh", "energy_above_hull"], "rows": [["entry_00004", "Co3Ti", 3.55, 90.0, 0.0], ["entry_00001", "Ni3Al", 3.572, 85.0, 0.0], ["entry_00028", "Mo3Nb", 3.5858, 77.2, 0.0074]]}
+{
+  "columns": [
+    "entry_id",
+    "formula",
+    "lattice_a",
+    "shear_modulus_vrh",
+    "energy_above_hull"
+  ],
+  "rows": [
+    [
+      "entry_00004",
+      "Co3Ti",
+      3.55,
+      90.0,
+      0.0
+    ],
+    [
+      "entry_00001",
+      "Ni3Al",
+      3.572,
+      85.0,
+      0.0
+    ],
+    [
+      "entry_00028",
+      "Mo3Nb",
+      3.5858,
+      77.2,
+      0.0074
+    ]
+  ]
+}

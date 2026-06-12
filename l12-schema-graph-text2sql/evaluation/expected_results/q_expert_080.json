@@ -1,1 +1,2924 @@
-{"columns": ["reference_id", "doi", "title", "authors", "journal", "year"], "rows": [[75, "10.1000/test.00284", "Study of Ta3Al properties", "Author et al.", "J. Mater. Sci.", 2025], [45, "10.1000/test.00189", "Study of V3In properties", "Author et al.", "J. Mater. Sci.", 2025], [138, "10.1000/test.00539", "Study of WZr properties", "Author et al.", "J. Mater. Sci.", 2025], [350, "10.1000/test.01392", "Study of AgHf properties", "Author et al.", "J. Mater. Sci.", 2025], [332, "10.1000/test.01319", "Study of RuGa properties", "Author et al.", "J. Mater. Sci.", 2025], [81, "10.1000/test.00315", "Study of Ag3Y properties", "Author et al.", "J. Mater. Sci.", 2025], [290, "10.1000/test.01157", "Study of HfSc properties", "Author et al.", "J. Mater. Sci.", 2025], [349, "10.1000/test.01386", "Study of AgSi properties", "Author et al.", "J. Mater. Sci.", 2025], [342, "10.1000/test.01359", "Study of AgSc properties", "Author et al.", "J. Mater. Sci.", 2025], [364, "10.1000/test.01464", "Study of AuSi3 properties", "Author et al.", "J. Mater. Sci.", 2025], [308, "10.1000/test.01213", "Study of ZrZn properties", "Author et al.", "J. Mater. Sci.", 2025], [126, "10.1000/test.00510", "Study of PtNb properties", "Author et al.", "J. Mater. Sci.", 2025], [117, "10.1000/test.00456", "Study of TiMg properties", "Author et al.", "J. Mater. Sci.", 2024], [265, "10.1000/test.01026", "Study of AgMg properties", "Author et al.", "J. Mater. Sci.", 2024], [224, "10.1000/test.00879", "Study of IrZr properties", "Author et al.", "J. Mater. Sci.", 2024], [16, "10.1000/test.00060", "Study of Ni3Si properties", "Author et al.", "J. Mater. Sci.", 2024], [352, "10.1000/test.01399", "Study of FeTi properties", "Author et al.", "J. Mater. Sci.", 2024], [35, "10.1000/test.00143", "Study of W3In properties", "Author et al.", "J. Mater. Sci.", 2024], [316, "10.1000/test.01247", "Study of RhSn properties", "Author et al.", "J. Mater. Sci.", 2024], [255, "10.1000/test.00986", "Study of ZrV properties", "Author et al.", "J. Mater. Sci.", 2023], [127, "10.1000/test.00512", "Study of RhZr properties", "Author et al.", "J. Mater. Sci.", 2023], [118, "10.1000/test.00457", "Study of AgGa properties", "Author et al.", "J. Mater. Sci.", 2023], [212, "10.1000/test.00831", "Study of RhGe properties", "Author et al.", "J. Mater. Sci.", 2023], [1, "10.1000/test.00004", "Study of Co3Ti properties", "Author et al.", "J. Mater. Sci.", 2023], [201, "10.1000/test.00799", "Study of ZrSn properties", "Author et al.", "J. Mater. Sci.", 2023], [208, "10.1000/test.00820", "Study of HfGe properties", "Author et al.", "J. Mater. Sci.", 2023], [246, "10.1000/test.00956", "Study of CoMg properties", "Author et al.", "J. Mater. Sci.", 2023], [329, "10.1000/test.01311", "Study of VSn properties", "Author et al.", "J. Mater. Sci.", 2023], [358, "10.1000/test.01428", "Study of FeSc properties", "Author et al.", "J. Mater. Sci.", 2023], [269, "10.1000/test.01052", "Study of RuSc properties", "Author et al.", "J. Mater. Sci.", 2023], [177, "10.1000/test.00708", "Study of AuCu properties", "Author et al.", "J. Mater. Sci.", 2023], [286, "10.1000/test.01131", "Study of CoZn properties", "Author et al.", "J. Mater. Sci.", 2023], [248, "10.1000/test.00961", "Study of FeSi properties", "Author et al.", "J. Mater. Sci.", 2023], [94, "10.1000/test.00369", "Study of Ni3Cu properties", "Author et al.", "J. Mater. Sci.", 2023], [32, "10.1000/test.00125", "Study of Co3Be properties", "Author et al.", "J. Mater. Sci.", 2023], [293, "10.1000/test.01172", "Study of IrAl properties", "Author et al.", "J. Mater. Sci.", 2023], [299, "10.1000/test.01189", "Study of TiNb properties", "Author et al.", "J. Mater. Sci.", 2023], [106, "10.1000/test.00433", "Study of MnNb properties", "Author et al.", "J. Mater. Sci.", 2023], [279, "10.1000/test.01096", "Study of CuZn properties", "Author et al.", "J. Mater. Sci.", 2022], [362, "10.1000/test.01439", "Study of AgAl properties", "Author et al.", "J. Mater. Sci.", 2022], [87, "10.1000/test.00333", "Study of Pt3Mn properties", "Author et al.", "J. Mater. Sci.", 2022], [253, "10.1000/test.00972", "Study of MnZn properties", "Author et al.", "J. Mater. Sci.", 2022], [250, "10.1000/test.00965", "Study of VMg properties", "Author et al.", "J. Mater. Sci.", 2022], [4, "10.1000/test.00012", "Study of Pt3Ge properties", "Author et al.", "J. Mater. Sci.", 2022], [20, "10.1000/test.00070", "Study of Ru3V properties", "Author et al.", "J. Mater. Sci.", 2022], [27, "10.1000/test.00109", "Study of W3Sb properties", "Author et al.", "J. Mater. Sci.", 2022], [341, "10.1000/test.01355", "Study of PdSc properties", "Author et al.", "J. Mater. Sci.", 2022], [173, "10.1000/test.00699", "Study of NiSc properties", "Author et al.", "J. Mater. Sci.", 2022], [170, "10.1000/test.00680", "Study of PtMg properties", "Author et al.", "J. Mater. Sci.", 2022], [327, "10.1000/test.01294", "Study of PtZn properties", "Author et al.", "J. Mater. Sci.", 2022], [309, "10.1000/test.01216", "Study of FeTi properties", "Author et al.", "J. Mater. Sci.", 2022], [235, "10.1000/test.00907", "Study of RhAl properties", "Author et al.", "J. Mater. Sci.", 2022], [273, "10.1000/test.01077", "Study of VAl properties", "Author et al.", "J. Mater. Sci.", 2022], [272, "10.1000/test.01072", "Study of IrTi properties", "Author et al.", "J. Mater. Sci.", 2022], [43, "10.1000/test.00186", "Study of Mo3Y properties", "Author et al.", "J. Mater. Sci.", 2021], [216, "10.1000/test.00844", "Study of WV properties", "Author et al.", "J. Mater. Sci.", 2021], [292, "10.1000/test.01162", "Study of IrSc properties", "Author et al.", "J. Mater. Sci.", 2021], [65, "10.1000/test.00264", "Study of Au3Mn properties", "Author et al.", "J. Mater. Sci.", 2021], [228, "10.1000/test.00890", "Study of VAl properties", "Author et al.", "J. Mater. Sci.", 2021], [25, "10.1000/test.00090", "Study of Ag3Ti properties", "Author et al.", "J. Mater. Sci.", 2021], [230, "10.1000/test.00895", "Study of TaGe properties", "Author et al.", "J. Mater. Sci.", 2021], [24, "10.1000/test.00089", "Study of Ag3Si properties", "Author et al.", "J. Mater. Sci.", 2021], [102, "10.1000/test.00402", "Study of MnCu properties", "Author et al.", "J. Mater. Sci.", 2021], [271, "10.1000/test.01062", "Study of HfSc properties", "Author et al.", "J. Mater. Sci.", 2021], [137, "10.1000/test.00537", "Study of RhMg properties", "Author et al.", "J. Mater. Sci.", 2021], [178, "10.1000/test.00710", "Study of FeSb properties", "Author et al.", "J. Mater. Sci.", 2021], [314, "10.1000/test.01239", "Study of PtNb properties", "Author et al.", "J. Mater. Sci.", 2021], [145, "10.1000/test.00567", "Study of CuGe properties", "Author et al.", "J. Mater. Sci.", 2021], [300, "10.1000/test.01190", "Study of CuSi properties", "Author et al.", "J. Mater. Sci.", 2021], [188, "10.1000/test.00749", "Study of MnHf properties", "Author et al.", "J. Mater. Sci.", 2021], [353, "10.1000/test.01410", "Study of IrAl properties", "Author et al.", "J. Mater. Sci.", 2020], [304, "10.1000/test.01199", "Study of AuGa properties", "Author et al.", "J. Mater. Sci.", 2020], [12, "10.1000/test.00040", "Study of Mo3Ga properties", "Author et al.", "J. Mater. Sci.", 2020], [344, "10.1000/test.01365", "Study of CoSn properties", "Author et al.", "J. Mater. Sci.", 2020], [8, "10.1000/test.00031", "Study of Cr3Zr properties", "Author et al.", "J. Mater. Sci.", 2020], [132, "10.1000/test.00526", "Study of VHf properties", "Author et al.", "J. Mater. Sci.", 2020], [306, "10.1000/test.01201", "Study of AgTi properties", "Author et al.", "J. Mater. Sci.", 2020], [182, "10.1000/test.00736", "Study of ZrSn properties", "Author et al.", "J. Mater. Sci.", 2020], [151, "10.1000/test.00587", "Study of CrMn properties", "Author et al.", "J. Mater. Sci.", 2020], [276, "10.1000/test.01084", "Study of HfGa properties", "Author et al.", "J. Mater. Sci.", 2020], [335, "10.1000/test.01330", "Study of RuZn properties", "Author et al.", "J. Mater. Sci.", 2020], [343, "10.1000/test.01364", "Study of HfZn properties", "Author et al.", "J. Mater. Sci.", 2020], [330, "10.1000/test.01316", "Study of FeHf properties", "Author et al.", "J. Mater. Sci.", 2019], [161, "10.1000/test.00640", "Study of TaGe properties", "Author et al.", "J. Mater. Sci.", 2019], [15, "10.1000/test.00054", "Study of Ir3Ta properties", "Author et al.", "J. Mater. Sci.", 2019], [19, "10.1000/test.00069", "Study of Ta3Ga properties", "Author et al.", "J. Mater. Sci.", 2019], [21, "10.1000/test.00071", "Study of Co3Ge properties", "Author et al.", "J. Mater. Sci.", 2019], [339, "10.1000/test.01343", "Study of CuNb properties", "Author et al.", "J. Mater. Sci.", 2019], [326, "10.1000/test.01286", "Study of TiSn properties", "Author et al.", "J. Mater. Sci.", 2019], [54, "10.1000/test.00240", "Study of Zr3Sc properties", "Author et al.", "J. Mater. Sci.", 2019], [56, "10.1000/test.00243", "Study of Co3Zr properties", "Author et al.", "J. Mater. Sci.", 2019], [281, "10.1000/test.01117", "Study of CuNb properties", "Author et al.", "J. Mater. Sci.", 2019], [268, "10.1000/test.01050", "Study of ZrSn properties", "Author et al.", "J. Mater. Sci.", 2019], [249, "10.1000/test.00964", "Study of HfMg properties", "Author et al.", "J. Mater. Sci.", 2019], [113, "10.1000/test.00447", "Study of FeCu properties", "Author et al.", "J. Mater. Sci.", 2019], [192, "10.1000/test.00771", "Study of ZrZn properties", "Author et al.", "J. Mater. Sci.", 2019], [134, "10.1000/test.00532", "Study of MnGa properties", "Author et al.", "J. Mater. Sci.", 2019], [141, "10.1000/test.00550", "Study of CuGa properties", "Author et al.", "J. Mater. Sci.", 2019], [128, "10.1000/test.00514", "Study of TaMn properties", "Author et al.", "J. Mater. Sci.", 2018], [198, "10.1000/test.00792", "Study of MnTa properties", "Author et al.", "J. Mater. Sci.", 2018], [66, "10.1000/test.00265", "Study of Pt3Ge properties", "Author et al.", "J. Mater. Sci.", 2018], [199, "10.1000/test.00795", "Study of CoTi properties", "Author et al.", "J. Mater. Sci.", 2018], [84, "10.1000/test.00320", "Study of Hf3Mn properties", "Author et al.", "J. Mater. Sci.", 2018], [86, "10.1000/test.00332", "Study of Cu3Be properties", "Author et al.", "J. Mater. Sci.", 2018], [179, "10.1000/test.00718", "Study of MoGa properties", "Author et al.", "J. Mater. Sci.", 2018], [18, "10.1000/test.00065", "Study of W3Ga properties", "Author et al.", "J. Mater. Sci.", 2018], [231, "10.1000/test.00897", "Study of HfTi properties", "Author et al.", "J. Mater. Sci.", 2018], [22, "10.1000/test.00078", "Study of Fe3Nb properties", "Author et al.", "J. Mater. Sci.", 2018], [33, "10.1000/test.00127", "Study of Ti3In properties", "Author et al.", "J. Mater. Sci.", 2018], [135, "10.1000/test.00533", "Study of AgCu properties", "Author et al.", "J. Mater. Sci.", 2017], [242, "10.1000/test.00946", "Study of FeSc properties", "Author et al.", "J. Mater. Sci.", 2017], [85, "10.1000/test.00329", "Study of Hf3Ga properties", "Author et al.", "J. Mater. Sci.", 2017], [103, "10.1000/test.00409", "Study of ZrV properties", "Author et al.", "J. Mater. Sci.", 2017], [60, "10.1000/test.00253", "Study of Ti3Ge properties", "Author et al.", "J. Mater. Sci.", 2017], [40, "10.1000/test.00179", "Study of Nb3In properties", "Author et al.", "J. Mater. Sci.", 2017], [184, "10.1000/test.00741", "Study of CoMg properties", "Author et al.", "J. Mater. Sci.", 2017], [6, "10.1000/test.00020", "Study of Ru3Mg properties", "Author et al.", "J. Mater. Sci.", 2017], [140, "10.1000/test.00545", "Study of TaNb properties", "Author et al.", "J. Mater. Sci.", 2017], [88, "10.1000/test.00341", "Study of Cu3Mn properties", "Author et al.", "J. Mater. Sci.", 2017], [263, "10.1000/test.01017", "Study of CuFe properties", "Author et al.", "J. Mater. Sci.", 2016], [321, "10.1000/test.01257", "Study of PtNb properties", "Author et al.", "J. Mater. Sci.", 2016], [333, "10.1000/test.01323", "Study of HfTi properties", "Author et al.", "J. Mater. Sci.", 2016], [171, "10.1000/test.00681", "Study of RhGe properties", "Author et al.", "J. Mater. Sci.", 2016], [68, "10.1000/test.00271", "Study of Mn3Ti properties", "Author et al.", "J. Mater. Sci.", 2016], [355, "10.1000/test.01421", "Study of NiSi properties", "Author et al.", "J. Mater. Sci.", 2016], [62, "10.1000/test.00258", "Study of Ti3V properties", "Author et al.", "J. Mater. Sci.", 2016], [99, "10.1000/test.00384", "Study of Ni3Mn properties", "Author et al.", "J. Mater. Sci.", 2016], [190, "10.1000/test.00758", "Study of CrMg properties", "Author et al.", "J. Mater. Sci.", 2016], [125, "10.1000/test.00503", "Study of PtY properties", "Author et al.", "J. Mater. Sci.", 2016], [108, "10.1000/test.00436", "Study of FeIn properties", "Author et al.", "J. Mater. Sci.", 2015], [234, "10.1000/test.00901", "Study of TiV properties", "Author et al.", "J. Mater. Sci.", 2015], [259, "10.1000/test.01003", "Study of NbV properties", "Author et al.", "J. Mater. Sci.", 2015], [222, "10.1000/test.00877", "Study of MoGa properties", "Author et al.", "J. Mater. Sci.", 2015], [115, "10.1000/test.00454", "Study of ZrGa properties", "Author et al.", "J. Mater. Sci.", 2015], [347, "10.1000/test.01383", "Study of IrNb properties", "Author et al.", "J. Mater. Sci.", 2015], [58, "10.1000/test.00245", "Study of Ti3Ta properties", "Author et al.", "J. Mater. Sci.", 2015], [311, "10.1000/test.01223", "Study of PtNb properties", "Author et al.", "J. Mater. Sci.", 2015], [305, "10.1000/test.01200", "Study of AgTa properties", "Author et al.", "J. Mater. Sci.", 2015], [49, "10.1000/test.00218", "Study of Ru3Cu properties", "Author et al.", "J. Mater. Sci.", 2015], [176, "10.1000/test.00706", "Study of AgY properties", "Author et al.", "J. Mater. Sci.", 2015], [251, "10.1000/test.00966", "Study of VHf properties", "Author et al.", "J. Mater. Sci.", 2015], [284, "10.1000/test.01121", "Study of RuSc properties", "Author et al.", "J. Mater. Sci.", 2015], [38, "10.1000/test.00161", "Study of Cr3Hf properties", "Author et al.", "J. Mater. Sci.", 2015], [10, "10.1000/test.00035", "Study of Nb3Ge properties", "Author et al.", "J. Mater. Sci.", 2015], [109, "10.1000/test.00438", "Study of TiIn properties", "Author et al.", "J. Mater. Sci.", 2015], [254, "10.1000/test.00977", "Study of MnTa properties", "Author et al.", "J. Mater. Sci.", 2015], [136, "10.1000/test.00534", "Study of RhCu properties", "Author et al.", "J. Mater. Sci.", 2015], [46, "10.1000/test.00196", "Study of Ti3In properties", "Author et al.", "J. Mater. Sci.", 2014], [98, "10.1000/test.00383", "Study of Ir3Mg properties", "Author et al.", "J. Mater. Sci.", 2014], [101, "10.1000/test.00399", "Study of VHf properties", "Author et al.", "J. Mater. Sci.", 2014], [213, "10.1000/test.00834", "Study of CrY properties", "Author et al.", "J. Mater. Sci.", 2014], [244, "10.1000/test.00952", "Study of NbSc properties", "Author et al.", "J. Mater. Sci.", 2014], [282, "10.1000/test.01119", "Study of FeNb properties", "Author et al.", "J. Mater. Sci.", 2014], [285, "10.1000/test.01130", "Study of NiTi properties", "Author et al.", "J. Mater. Sci.", 2014], [289, "10.1000/test.01150", "Study of PdNb properties", "Author et al.", "J. Mater. Sci.", 2014], [297, "10.1000/test.01187", "Study of ZrGe properties", "Author et al.", "J. Mater. Sci.", 2014], [345, "10.1000/test.01368", "Study of RuY properties", "Author et al.", "J. Mater. Sci.", 2014], [361, "10.1000/test.01434", "Study of FeSi properties", "Author et al.", "J. Mater. Sci.", 2014], [210, "10.1000/test.00826", "Study of VMn properties", "Author et al.", "J. Mater. Sci.", 2013], [111, "10.1000/test.00443", "Study of NbCu properties", "Author et al.", "J. Mater. Sci.", 2013], [74, "10.1000/test.00283", "Study of Co3Mg properties", "Author et al.", "J. Mater. Sci.", 2013], [28, "10.1000/test.00114", "Study of V3Sn properties", "Author et al.", "J. Mater. Sci.", 2013], [174, "10.1000/test.00701", "Study of AgSn properties", "Author et al.", "J. Mater. Sci.", 2013], [142, "10.1000/test.00555", "Study of RuMn properties", "Author et al.", "J. Mater. Sci.", 2013], [328, "10.1000/test.01297", "Study of CoSi properties", "Author et al.", "J. Mater. Sci.", 2013], [154, "10.1000/test.00622", "Study of FeMg properties", "Author et al.", "J. Mater. Sci.", 2013], [59, "10.1000/test.00246", "Study of Pt3Sb properties", "Author et al.", "J. Mater. Sci.", 2013], [193, "10.1000/test.00778", "Study of HfIn properties", "Author et al.", "J. Mater. Sci.", 2013], [298, "10.1000/test.01188", "Study of NiSc properties", "Author et al.", "J. Mater. Sci.", 2013], [7, "10.1000/test.00024", "Study of Nb3Si properties", "Author et al.", "J. Mater. Sci.", 2013], [315, "10.1000/test.01244", "Study of ZrSi properties", "Author et al.", "J. Mater. Sci.", 2012], [166, "10.1000/test.00653", "Study of NbSb properties", "Author et al.", "J. Mater. Sci.", 2012], [48, "10.1000/test.00211", "Study of Fe3In properties", "Author et al.", "J. Mater. Sci.", 2012], [114, "10.1000/test.00451", "Study of TaAl properties", "Author et al.", "J. Mater. Sci.", 2012], [73, "10.1000/test.00282", "Study of Co3Ta properties", "Author et al.", "J. Mater. Sci.", 2012], [162, "10.1000/test.00644", "Study of FeTa properties", "Author et al.", "J. Mater. Sci.", 2012], [23, "10.1000/test.00088", "Study of Cu3Y properties", "Author et al.", "J. Mater. Sci.", 2012], [82, "10.1000/test.00316", "Study of Ti3Be properties", "Author et al.", "J. Mater. Sci.", 2012], [334, "10.1000/test.01329", "Study of FeSn properties", "Author et al.", "J. Mater. Sci.", 2012], [236, "10.1000/test.00916", "Study of PdGa properties", "Author et al.", "J. Mater. Sci.", 2012], [160, "10.1000/test.00639", "Study of RuZr properties", "Author et al.", "J. Mater. Sci.", 2012], [257, "10.1000/test.00997", "Study of TiFe properties", "Author et al.", "J. Mater. Sci.", 2012], [200, "10.1000/test.00796", "Study of MnIn properties", "Author et al.", "J. Mater. Sci.", 2012], [266, "10.1000/test.01031", "Study of RhGa properties", "Author et al.", "J. Mater. Sci.", 2012], [80, "10.1000/test.00312", "Study of Nb3Y properties", "Author et al.", "J. Mater. Sci.", 2011], [97, "10.1000/test.00380", "Study of Fe3Sn properties", "Author et al.", "J. Mater. Sci.", 2011], [225, "10.1000/test.00884", "Study of HfGa properties", "Author et al.", "J. Mater. Sci.", 2011], [296, "10.1000/test.01186", "Study of IrGa properties", "Author et al.", "J. Mater. Sci.", 2011], [100, "10.1000/test.00388", "Study of Pt3Al properties", "Author et al.", "J. Mater. Sci.", 2011], [64, "10.1000/test.00262", "Study of Pt3Sc properties", "Author et al.", "J. Mater. Sci.", 2011], [83, "10.1000/test.00318", "Study of Ag3Al properties", "Author et al.", "J. Mater. Sci.", 2011], [241, "10.1000/test.00943", "Study of MoFe properties", "Author et al.", "J. Mater. Sci.", 2011], [323, "10.1000/test.01269", "Study of RuAl properties", "Author et al.", "J. Mater. Sci.", 2011], [191, "10.1000/test.00768", "Study of CuMn properties", "Author et al.", "J. Mater. Sci.", 2011], [238, "10.1000/test.00927", "Study of VBe properties", "Author et al.", "J. Mater. Sci.", 2011], [116, "10.1000/test.00455", "Study of TiSi properties", "Author et al.", "J. Mater. Sci.", 2011], [123, "10.1000/test.00496", "Study of CoMn properties", "Author et al.", "J. Mater. Sci.", 2011], [164, "10.1000/test.00647", "Study of IrTi properties", "Author et al.", "J. Mater. Sci.", 2011], [264, "10.1000/test.01018", "Study of AgSc properties", "Author et al.", "J. Mater. Sci.", 2011], [119, "10.1000/test.00458", "Study of AuMg properties", "Author et al.", "J. Mater. Sci.", 2010], [247, "10.1000/test.00957", "Study of CoAl properties", "Author et al.", "J. Mater. Sci.", 2010], [237, "10.1000/test.00918", "Study of ZrMg properties", "Author et al.", "J. Mater. Sci.", 2010], [331, "10.1000/test.01318", "Study of TiSc properties", "Author et al.", "J. Mater. Sci.", 2010], [181, "10.1000/test.00732", "Study of FeZn properties", "Author et al.", "J. Mater. Sci.", 2010], [44, "10.1000/test.00187", "Study of Mo3Mg properties", "Author et al.", "J. Mater. Sci.", 2010], [185, "10.1000/test.00744", "Study of FeGa properties", "Author et al.", "J. Mater. Sci.", 2010], [187, "10.1000/test.00748", "Study of CuTi properties", "Author et al.", "J. Mater. Sci.", 2010], [287, "10.1000/test.01140", "Study of HfSn properties", "Author et al.", "J. Mater. Sci.", 2010], [356, "10.1000/test.01422", "Study of AgGe properties", "Author et al.", "J. Mater. Sci.", 2010], [204, "10.1000/test.00806", "Study of WTa properties", "Author et al.", "J. Mater. Sci.", 2010], [77, "10.1000/test.00287", "Study of Zr3Cu properties", "Author et al.", "J. Mater. Sci.", 2010], [261, "10.1000/test.01014", "Study of CuSn properties", "Author et al.", "J. Mater. Sci.", 2010], [165, "10.1000/test.00650", "Study of NiTa properties", "Author et al.", "J. Mater. Sci.", 2010], [91, "10.1000/test.00348", "Study of Fe3Ti properties", "Author et al.", "J. Mater. Sci.", 2010], [207, "10.1000/test.00817", "Study of TiMn properties", "Author et al.", "J. Mater. Sci.", 2009], [71, "10.1000/test.00278", "Study of Pt3V properties", "Author et al.", "J. Mater. Sci.", 2009], [217, "10.1000/test.00849", "Study of NbV properties", "Author et al.", "J. Mater. Sci.", 2009], [51, "10.1000/test.00226", "Study of Au3Zn properties", "Author et al.", "J. Mater. Sci.", 2009], [13, "10.1000/test.00044", "Study of Ir3Cu properties", "Author et al.", "J. Mater. Sci.", 2009], [252, "10.1000/test.00970", "Study of TaSc properties", "Author et al.", "J. Mater. Sci.", 2009], [39, "10.1000/test.00171", "Study of Ni3Nb properties", "Author et al.", "J. Mater. Sci.", 2009], [143, "10.1000/test.00556", "Study of NiIn properties", "Author et al.", "J. Mater. Sci.", 2009], [31, "10.1000/test.00123", "Study of Cr3Ge properties", "Author et al.", "J. Mater. Sci.", 2009], [112, "10.1000/test.00446", "Study of RhHf properties", "Author et al.", "J. Mater. Sci.", 2009], [340, "10.1000/test.01350", "Study of ZrTi properties", "Author et al.", "J. Mater. Sci.", 2009], [26, "10.1000/test.00099", "Study of Co3Hf properties", "Author et al.", "J. Mater. Sci.", 2009], [256, "10.1000/test.00990", "Study of HfZn properties", "Author et al.", "J. Mater. Sci.", 2009], [96, "10.1000/test.00374", "Study of Ir3Zn properties", "Author et al.", "J. Mater. Sci.", 2009], [76, "10.1000/test.00286", "Study of Mo3Ti properties", "Author et al.", "J. Mater. Sci.", 2009], [214, "10.1000/test.00836", "Study of ZrSc properties", "Author et al.", "J. Mater. Sci.", 2009], [158, "10.1000/test.00632", "Study of MoTa properties", "Author et al.", "J. Mater. Sci.", 2008], [139, "10.1000/test.00542", "Study of VNb properties", "Author et al.", "J. Mater. Sci.", 2008], [189, "10.1000/test.00752", "Study of RuTa properties", "Author et al.", "J. Mater. Sci.", 2008], [194, "10.1000/test.00781", "Study of FeTi properties", "Author et al.", "J. Mater. Sci.", 2008], [203, "10.1000/test.00805", "Study of CoTi properties", "Author et al.", "J. Mater. Sci.", 2008], [206, "10.1000/test.00813", "Study of VTi properties", "Author et al.", "J. Mater. Sci.", 2008], [220, "10.1000/test.00869", "Study of MnAl properties", "Author et al.", "J. Mater. Sci.", 2008], [223, "10.1000/test.00878", "Study of PtAl properties", "Author et al.", "J. Mater. Sci.", 2008], [240, "10.1000/test.00941", "Study of MnBe properties", "Author et al.", "J. Mater. Sci.", 2008], [93, "10.1000/test.00354", "Study of Pd3Ge properties", "Author et al.", "J. Mater. Sci.", 2008], [92, "10.1000/test.00352", "Study of Cu3Be properties", "Author et al.", "J. Mater. Sci.", 2008], [320, "10.1000/test.01256", "Study of TiZn properties", "Author et al.", "J. Mater. Sci.", 2008], [363, "10.1000/test.01444", "Study of IrTa properties", "Author et al.", "J. Mater. Sci.", 2008], [351, "10.1000/test.01396", "Study of CoGe properties", "Author et al.", "J. Mater. Sci.", 2008], [354, "10.1000/test.01420", "Study of TiTa properties", "Author et al.", "J. Mater. Sci.", 2008], [275, "10.1000/test.01081", "Study of HfTi properties", "Author et al.", "J. Mater. Sci.", 2007], [55, "10.1000/test.00242", "Study of W3Ge properties", "Author et al.", "J. Mater. Sci.", 2007], [221, "10.1000/test.00873", "Study of RhSn properties", "Author et al.", "J. Mater. Sci.", 2007], [219, "10.1000/test.00854", "Study of MnBe properties", "Author et al.", "J. Mater. Sci.", 2007], [5, "10.1000/test.00018", "Study of Mo3Hf properties", "Author et al.", "J. Mater. Sci.", 2007], [95, "10.1000/test.00370", "Study of Ta3In properties", "Author et al.", "J. Mater. Sci.", 2007], [175, "10.1000/test.00705", "Study of PtAl properties", "Author et al.", "J. Mater. Sci.", 2007], [196, "10.1000/test.00786", "Study of NbMg properties", "Author et al.", "J. Mater. Sci.", 2007], [312, "10.1000/test.01225", "Study of ZrGe properties", "Author et al.", "J. Mater. Sci.", 2007], [50, "10.1000/test.00225", "Study of Hf3Fe properties", "Author et al.", "J. Mater. Sci.", 2007], [205, "10.1000/test.00809", "Study of FeMg properties", "Author et al.", "J. Mater. Sci.", 2007], [324, "10.1000/test.01270", "Study of IrSn properties", "Author et al.", "J. Mater. Sci.", 2007], [149, "10.1000/test.00573", "Study of PtSn properties", "Author et al.", "J. Mater. Sci.", 2007], [294, "10.1000/test.01177", "Study of AuTi properties", "Author et al.", "J. Mater. Sci.", 2007], [148, "10.1000/test.00570", "Study of FeSi properties", "Author et al.", "J. Mater. Sci.", 2007], [280, "10.1000/test.01115", "Study of RuY properties", "Author et al.", "J. Mater. Sci.", 2007], [346, "10.1000/test.01372", "Study of PtSc properties", "Author et al.", "J. Mater. Sci.", 2007], [307, "10.1000/test.01202", "Study of ZrSc properties", "Author et al.", "J. Mater. Sci.", 2007], [202, "10.1000/test.00802", "Study of RhTi properties", "Author et al.", "J. Mater. Sci.", 2006], [155, "10.1000/test.00623", "Study of RhZn properties", "Author et al.", "J. Mater. Sci.", 2006], [29, "10.1000/test.00119", "Study of Pt3Ge properties", "Author et al.", "J. Mater. Sci.", 2006], [232, "10.1000/test.00899", "Study of NiSn properties", "Author et al.", "J. Mater. Sci.", 2006], [11, "10.1000/test.00037", "Study of Au3Mg properties", "Author et al.", "J. Mater. Sci.", 2006], [67, "10.1000/test.00268", "Study of Nb3V properties", "Author et al.", "J. Mater. Sci.", 2006], [267, "10.1000/test.01033", "Study of RhHf properties", "Author et al.", "J. Mater. Sci.", 2006], [337, "10.1000/test.01337", "Study of FeSc properties", "Author et al.", "J. Mater. Sci.", 2006], [233, "10.1000/test.00900", "Study of NiTa properties", "Author et al.", "J. Mater. Sci.", 2006], [57, "10.1000/test.00244", "Study of Au3V properties", "Author et al.", "J. Mater. Sci.", 2006], [36, "10.1000/test.00153", "Study of Cu3Si properties", "Author et al.", "J. Mater. Sci.", 2006], [89, "10.1000/test.00344", "Study of Au3Hf properties", "Author et al.", "J. Mater. Sci.", 2005], [258, "10.1000/test.01000", "Study of RuMg properties", "Author et al.", "J. Mater. Sci.", 2005], [133, "10.1000/test.00530", "Study of VNb properties", "Author et al.", "J. Mater. Sci.", 2005], [180, "10.1000/test.00728", "Study of ZrTi properties", "Author et al.", "J. Mater. Sci.", 2005], [218, "10.1000/test.00851", "Study of CuMn properties", "Author et al.", "J. Mater. Sci.", 2005], [168, "10.1000/test.00673", "Study of AgTi properties", "Author et al.", "J. Mater. Sci.", 2005], [120, "10.1000/test.00463", "Study of CuAl properties", "Author et al.", "J. Mater. Sci.", 2005], [274, "10.1000/test.01079", "Study of VZn properties", "Author et al.", "J. Mater. Sci.", 2005], [295, "10.1000/test.01178", "Study of AuSn properties", "Author et al.", "J. Mater. Sci.", 2005], [90, "10.1000/test.00346", "Study of V3Sc properties", "Author et al.", "J. Mater. Sci.", 2005], [172, "10.1000/test.00682", "Study of RhGa properties", "Author et al.", "J. Mater. Sci.", 2005], [129, "10.1000/test.00519", "Study of MnMg properties", "Author et al.", "J. Mater. Sci.", 2005], [47, "10.1000/test.00203", "Study of Pt3Sb properties", "Author et al.", "J. Mater. Sci.", 2005], [122, "10.1000/test.00486", "Study of AuIn properties", "Author et al.", "J. Mater. Sci.", 2004], [2, "10.1000/test.00006", "Study of Al3Ti properties", "Author et al.", "J. Mater. Sci.", 2004], [152, "10.1000/test.00614", "Study of PtTa properties", "Author et al.", "J. Mater. Sci.", 2004], [147, "10.1000/test.00569", "Study of CoZn properties", "Author et al.", "J. Mater. Sci.", 2004], [239, "10.1000/test.00935", "Study of FeSb properties", "Author et al.", "J. Mater. Sci.", 2004], [9, "10.1000/test.00033", "Study of Hf3Sb properties", "Author et al.", "J. Mater. Sci.", 2004], [41, "10.1000/test.00180", "Study of V3Si properties", "Author et al.", "J. Mater. Sci.", 2004], [42, "10.1000/test.00182", "Study of Pt3Sn properties", "Author et al.", "J. Mater. Sci.", 2004], [338, "10.1000/test.01340", "Study of PtAl properties", "Author et al.", "J. Mater. Sci.", 2004], [186, "10.1000/test.00746", "Study of IrZn properties", "Author et al.", "J. Mater. Sci.", 2004], [283, "10.1000/test.01120", "Study of VGe properties", "Author et al.", "J. Mater. Sci.", 2004], [359, "10.1000/test.01430", "Study of IrY properties", "Author et al.", "J. Mater. Sci.", 2004], [79, "10.1000/test.00295", "Study of Ta3Sb properties", "Author et al.", "J. Mater. Sci.", 2003], [146, "10.1000/test.00568", "Study of WY properties", "Author et al.", "J. Mater. Sci.", 2003], [288, "10.1000/test.01144", "Study of NiZn properties", "Author et al.", "J. Mater. Sci.", 2003], [303, "10.1000/test.01198", "Study of AuSi properties", "Author et al.", "J. Mater. Sci.", 2003], [144, "10.1000/test.00563", "Study of MoZn properties", "Author et al.", "J. Mater. Sci.", 2003], [183, "10.1000/test.00737", "Study of RuSc properties", "Author et al.", "J. Mater. Sci.", 2003], [159, "10.1000/test.00636", "Study of MnNb properties", "Author et al.", "J. Mater. Sci.", 2003], [104, "10.1000/test.00421", "Study of VMn properties", "Author et al.", "J. Mater. Sci.", 2003], [72, "10.1000/test.00279", "Study of Au3Ga properties", "Author et al.", "J. Mater. Sci.", 2003], [69, "10.1000/test.00273", "Study of Ti3Mg properties", "Author et al.", "J. Mater. Sci.", 2003], [63, "10.1000/test.00261", "Study of Mo3Si properties", "Author et al.", "J. Mater. Sci.", 2003], [278, "10.1000/test.01090", "Study of RuY properties", "Author et al.", "J. Mater. Sci.", 2003], [322, "10.1000/test.01262", "Study of AgY properties", "Author et al.", "J. Mater. Sci.", 2003], [270, "10.1000/test.01054", "Study of RhGa properties", "Author et al.", "J. Mater. Sci.", 2003], [318, "10.1000/test.01252", "Study of TiHf properties", "Author et al.", "J. Mater. Sci.", 2003], [348, "10.1000/test.01384", "Study of IrSc properties", "Author et al.", "J. Mater. Sci.", 2003], [153, "10.1000/test.00616", "Study of CoSn properties", "Author et al.", "J. Mater. Sci.", 2003], [336, "10.1000/test.01334", "Study of TiGa properties", "Author et al.", "J. Mater. Sci.", 2002], [260, "10.1000/test.01007", "Study of IrSb properties", "Author et al.", "J. Mater. Sci.", 2002], [262, "10.1000/test.01016", "Study of HfMn properties", "Author et al.", "J. Mater. Sci.", 2002], [357, "10.1000/test.01427", "Study of PtTi properties", "Author et al.", "J. Mater. Sci.", 2002], [78, "10.1000/test.00293", "Study of Mn3V properties", "Author et al.", "J. Mater. Sci.", 2002], [277, "10.1000/test.01088", "Study of IrGa properties", "Author et al.", "J. Mater. Sci.", 2002], [121, "10.1000/test.00484", "Study of CoSn properties", "Author et al.", "J. Mater. Sci.", 2002], [197, "10.1000/test.00788", "Study of MnZr properties", "Author et al.", "J. Mater. Sci.", 2002], [3, "10.1000/test.00007", "Study of Pt3Al properties", "Author et al.", "J. Mater. Sci.", 2002], [124, "10.1000/test.00500", "Study of CuMn properties", "Author et al.", "J. Mater. Sci.", 2002], [302, "10.1000/test.01195", "Study of RhGa properties", "Author et al.", "J. Mater. Sci.", 2002], [53, "10.1000/test.00238", "Study of Ni3Ti properties", "Author et al.", "J. Mater. Sci.", 2002], [131, "10.1000/test.00524", "Study of TaTi properties", "Author et al.", "J. Mater. Sci.", 2002], [37, "10.1000/test.00155", "Study of Hf3Y properties", "Author et al.", "J. Mater. Sci.", 2002], [156, "10.1000/test.00628", "Study of IrMg properties", "Author et al.", "J. Mater. Sci.", 2002], [17, "10.1000/test.00064", "Study of Cr3Nb properties", "Author et al.", "J. Mater. Sci.", 2002], [157, "10.1000/test.00629", "Study of TiMn properties", "Author et al.", "J. Mater. Sci.", 2002], [195, "10.1000/test.00785", "Study of HfCu properties", "Author et al.", "J. Mater. Sci.", 2001], [301, "10.1000/test.01194", "Study of RhGa properties", "Author et al.", "J. Mater. Sci.", 2001], [215, "10.1000/test.00841", "Study of IrFe properties", "Author et al.", "J. Mater. Sci.", 2001], [107, "10.1000/test.00435", "Study of MnTi properties", "Author et al.", "J. Mater. Sci.", 2001], [167, "10.1000/test.00656", "Study of FeSc properties", "Author et al.", "J. Mater. Sci.", 2001], [163, "10.1000/test.00646", "Study of ZrHf properties", "Author et al.", "J. Mater. Sci.", 2001], [150, "10.1000/test.00586", "Study of AgSc properties", "Author et al.", "J. Mater. Sci.", 2001], [227, "10.1000/test.00889", "Study of MnSn properties", "Author et al.", "J. Mater. Sci.", 2001], [70, "10.1000/test.00275", "Study of Rh3Cu properties", "Author et al.", "J. Mater. Sci.", 2001], [110, "10.1000/test.00442", "Study of IrMn properties", "Author et al.", "J. Mater. Sci.", 2001], [105, "10.1000/test.00432", "Study of AuFe properties", "Author et al.", "J. Mater. Sci.", 2001], [130, "10.1000/test.00523", "Study of AgGa properties", "Author et al.", "J. Mater. Sci.", 2001], [209, "10.1000/test.00825", "Study of IrBe properties", "Author et al.", "J. Mater. Sci.", 2001], [34, "10.1000/test.00131", "Study of Ir3Zr properties", "Author et al.", "J. Mater. Sci.", 2001], [229, "10.1000/test.00892", "Study of PdHf properties", "Author et al.", "J. Mater. Sci.", 2000], [325, "10.1000/test.01274", "Study of AuZn properties", "Author et al.", "J. Mater. Sci.", 2000], [319, "10.1000/test.01254", "Study of NiY properties", "Author et al.", "J. Mater. Sci.", 2000], [14, "10.1000/test.00048", "Study of Hf3Cu properties", "Author et al.", "J. Mater. Sci.", 2000], [313, "10.1000/test.01238", "Study of TiHf properties", "Author et al.", "J. Mater. Sci.", 2000], [310, "10.1000/test.01220", "Study of NiNb properties", "Author et al.", "J. Mater. Sci.", 2000], [52, "10.1000/test.00233", "Study of Cr3Fe properties", "Author et al.", "J. Mater. Sci.", 2000], [30, "10.1000/test.00122", "Study of Zr3Ti properties", "Author et al.", "J. Mater. Sci.", 2000], [61, "10.1000/test.00254", "Study of V3Nb properties", "Author et al.", "J. Mater. Sci.", 2000], [291, "10.1000/test.01160", "Study of CuSn properties", "Author et al.", "J. Mater. Sci.", 2000], [169, "10.1000/test.00677", "Study of WMg properties", "Author et al.", "J. Mater. Sci.", 2000], [243, "10.1000/test.00950", "Study of ZrSc properties", "Author et al.", "J. Mater. Sci.", 2000], [360, "10.1000/test.01431", "Study of TiAl properties", "Author et al.", "J. Mater. Sci.", 2000], [317, "10.1000/test.01249", "Study of FeZn properties", "Author et al.", "J. Mater. Sci.", 2000], [245, "10.1000/test.00954", "Study of RuTa properties", "Author et al.", "J. Mater. Sci.", 2000], [211, "10.1000/test.00828", "Study of MnV properties", "Author et al.", "J. Mater. Sci.", 2000], [226, "10.1000/test.00888", "Study of NiY properties", "Author et al.", "J. Mater. Sci.", 2000]]}
+{
+  "columns": [
+    "reference_id",
+    "doi",
+    "title",
+    "authors",
+    "journal",
+    "year"
+  ],
+  "rows": [
+    [
+      75,
+      "10.1000/test.00284",
+      "Study of Ta3Al properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2025
+    ],
+    [
+      45,
+      "10.1000/test.00189",
+      "Study of V3In properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2025
+    ],
+    [
+      138,
+      "10.1000/test.00539",
+      "Study of WZr properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2025
+    ],
+    [
+      350,
+      "10.1000/test.01392",
+      "Study of AgHf properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2025
+    ],
+    [
+      332,
+      "10.1000/test.01319",
+      "Study of RuGa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2025
+    ],
+    [
+      81,
+      "10.1000/test.00315",
+      "Study of Ag3Y properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2025
+    ],
+    [
+      290,
+      "10.1000/test.01157",
+      "Study of HfSc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2025
+    ],
+    [
+      349,
+      "10.1000/test.01386",
+      "Study of AgSi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2025
+    ],
+    [
+      342,
+      "10.1000/test.01359",
+      "Study of AgSc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2025
+    ],
+    [
+      364,
+      "10.1000/test.01464",
+      "Study of AuSi3 properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2025
+    ],
+    [
+      308,
+      "10.1000/test.01213",
+      "Study of ZrZn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2025
+    ],
+    [
+      126,
+      "10.1000/test.00510",
+      "Study of PtNb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2025
+    ],
+    [
+      117,
+      "10.1000/test.00456",
+      "Study of TiMg properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2024
+    ],
+    [
+      265,
+      "10.1000/test.01026",
+      "Study of AgMg properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2024
+    ],
+    [
+      224,
+      "10.1000/test.00879",
+      "Study of IrZr properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2024
+    ],
+    [
+      16,
+      "10.1000/test.00060",
+      "Study of Ni3Si properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2024
+    ],
+    [
+      352,
+      "10.1000/test.01399",
+      "Study of FeTi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2024
+    ],
+    [
+      35,
+      "10.1000/test.00143",
+      "Study of W3In properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2024
+    ],
+    [
+      316,
+      "10.1000/test.01247",
+      "Study of RhSn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2024
+    ],
+    [
+      255,
+      "10.1000/test.00986",
+      "Study of ZrV properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2023
+    ],
+    [
+      127,
+      "10.1000/test.00512",
+      "Study of RhZr properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2023
+    ],
+    [
+      118,
+      "10.1000/test.00457",
+      "Study of AgGa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2023
+    ],
+    [
+      212,
+      "10.1000/test.00831",
+      "Study of RhGe properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2023
+    ],
+    [
+      1,
+      "10.1000/test.00004",
+      "Study of Co3Ti properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2023
+    ],
+    [
+      201,
+      "10.1000/test.00799",
+      "Study of ZrSn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2023
+    ],
+    [
+      208,
+      "10.1000/test.00820",
+      "Study of HfGe properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2023
+    ],
+    [
+      246,
+      "10.1000/test.00956",
+      "Study of CoMg properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2023
+    ],
+    [
+      329,
+      "10.1000/test.01311",
+      "Study of VSn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2023
+    ],
+    [
+      358,
+      "10.1000/test.01428",
+      "Study of FeSc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2023
+    ],
+    [
+      269,
+      "10.1000/test.01052",
+      "Study of RuSc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2023
+    ],
+    [
+      177,
+      "10.1000/test.00708",
+      "Study of AuCu properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2023
+    ],
+    [
+      286,
+      "10.1000/test.01131",
+      "Study of CoZn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2023
+    ],
+    [
+      248,
+      "10.1000/test.00961",
+      "Study of FeSi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2023
+    ],
+    [
+      94,
+      "10.1000/test.00369",
+      "Study of Ni3Cu properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2023
+    ],
+    [
+      32,
+      "10.1000/test.00125",
+      "Study of Co3Be properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2023
+    ],
+    [
+      293,
+      "10.1000/test.01172",
+      "Study of IrAl properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2023
+    ],
+    [
+      299,
+      "10.1000/test.01189",
+      "Study of TiNb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2023
+    ],
+    [
+      106,
+      "10.1000/test.00433",
+      "Study of MnNb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2023
+    ],
+    [
+      279,
+      "10.1000/test.01096",
+      "Study of CuZn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2022
+    ],
+    [
+      362,
+      "10.1000/test.01439",
+      "Study of AgAl properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2022
+    ],
+    [
+      87,
+      "10.1000/test.00333",
+      "Study of Pt3Mn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2022
+    ],
+    [
+      253,
+      "10.1000/test.00972",
+      "Study of MnZn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2022
+    ],
+    [
+      250,
+      "10.1000/test.00965",
+      "Study of VMg properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2022
+    ],
+    [
+      4,
+      "10.1000/test.00012",
+      "Study of Pt3Ge properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2022
+    ],
+    [
+      20,
+      "10.1000/test.00070",
+      "Study of Ru3V properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2022
+    ],
+    [
+      27,
+      "10.1000/test.00109",
+      "Study of W3Sb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2022
+    ],
+    [
+      341,
+      "10.1000/test.01355",
+      "Study of PdSc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2022
+    ],
+    [
+      173,
+      "10.1000/test.00699",
+      "Study of NiSc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2022
+    ],
+    [
+      170,
+      "10.1000/test.00680",
+      "Study of PtMg properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2022
+    ],
+    [
+      327,
+      "10.1000/test.01294",
+      "Study of PtZn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2022
+    ],
+    [
+      309,
+      "10.1000/test.01216",
+      "Study of FeTi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2022
+    ],
+    [
+      235,
+      "10.1000/test.00907",
+      "Study of RhAl properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2022
+    ],
+    [
+      273,
+      "10.1000/test.01077",
+      "Study of VAl properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2022
+    ],
+    [
+      272,
+      "10.1000/test.01072",
+      "Study of IrTi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2022
+    ],
+    [
+      43,
+      "10.1000/test.00186",
+      "Study of Mo3Y properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2021
+    ],
+    [
+      216,
+      "10.1000/test.00844",
+      "Study of WV properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2021
+    ],
+    [
+      292,
+      "10.1000/test.01162",
+      "Study of IrSc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2021
+    ],
+    [
+      65,
+      "10.1000/test.00264",
+      "Study of Au3Mn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2021
+    ],
+    [
+      228,
+      "10.1000/test.00890",
+      "Study of VAl properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2021
+    ],
+    [
+      25,
+      "10.1000/test.00090",
+      "Study of Ag3Ti properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2021
+    ],
+    [
+      230,
+      "10.1000/test.00895",
+      "Study of TaGe properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2021
+    ],
+    [
+      24,
+      "10.1000/test.00089",
+      "Study of Ag3Si properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2021
+    ],
+    [
+      102,
+      "10.1000/test.00402",
+      "Study of MnCu properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2021
+    ],
+    [
+      271,
+      "10.1000/test.01062",
+      "Study of HfSc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2021
+    ],
+    [
+      137,
+      "10.1000/test.00537",
+      "Study of RhMg properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2021
+    ],
+    [
+      178,
+      "10.1000/test.00710",
+      "Study of FeSb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2021
+    ],
+    [
+      314,
+      "10.1000/test.01239",
+      "Study of PtNb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2021
+    ],
+    [
+      145,
+      "10.1000/test.00567",
+      "Study of CuGe properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2021
+    ],
+    [
+      300,
+      "10.1000/test.01190",
+      "Study of CuSi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2021
+    ],
+    [
+      188,
+      "10.1000/test.00749",
+      "Study of MnHf properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2021
+    ],
+    [
+      353,
+      "10.1000/test.01410",
+      "Study of IrAl properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2020
+    ],
+    [
+      304,
+      "10.1000/test.01199",
+      "Study of AuGa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2020
+    ],
+    [
+      12,
+      "10.1000/test.00040",
+      "Study of Mo3Ga properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2020
+    ],
+    [
+      344,
+      "10.1000/test.01365",
+      "Study of CoSn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2020
+    ],
+    [
+      8,
+      "10.1000/test.00031",
+      "Study of Cr3Zr properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2020
+    ],
+    [
+      132,
+      "10.1000/test.00526",
+      "Study of VHf properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2020
+    ],
+    [
+      306,
+      "10.1000/test.01201",
+      "Study of AgTi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2020
+    ],
+    [
+      182,
+      "10.1000/test.00736",
+      "Study of ZrSn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2020
+    ],
+    [
+      151,
+      "10.1000/test.00587",
+      "Study of CrMn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2020
+    ],
+    [
+      276,
+      "10.1000/test.01084",
+      "Study of HfGa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2020
+    ],
+    [
+      335,
+      "10.1000/test.01330",
+      "Study of RuZn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2020
+    ],
+    [
+      343,
+      "10.1000/test.01364",
+      "Study of HfZn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2020
+    ],
+    [
+      330,
+      "10.1000/test.01316",
+      "Study of FeHf properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2019
+    ],
+    [
+      161,
+      "10.1000/test.00640",
+      "Study of TaGe properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2019
+    ],
+    [
+      15,
+      "10.1000/test.00054",
+      "Study of Ir3Ta properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2019
+    ],
+    [
+      19,
+      "10.1000/test.00069",
+      "Study of Ta3Ga properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2019
+    ],
+    [
+      21,
+      "10.1000/test.00071",
+      "Study of Co3Ge properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2019
+    ],
+    [
+      339,
+      "10.1000/test.01343",
+      "Study of CuNb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2019
+    ],
+    [
+      326,
+      "10.1000/test.01286",
+      "Study of TiSn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2019
+    ],
+    [
+      54,
+      "10.1000/test.00240",
+      "Study of Zr3Sc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2019
+    ],
+    [
+      56,
+      "10.1000/test.00243",
+      "Study of Co3Zr properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2019
+    ],
+    [
+      281,
+      "10.1000/test.01117",
+      "Study of CuNb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2019
+    ],
+    [
+      268,
+      "10.1000/test.01050",
+      "Study of ZrSn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2019
+    ],
+    [
+      249,
+      "10.1000/test.00964",
+      "Study of HfMg properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2019
+    ],
+    [
+      113,
+      "10.1000/test.00447",
+      "Study of FeCu properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2019
+    ],
+    [
+      192,
+      "10.1000/test.00771",
+      "Study of ZrZn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2019
+    ],
+    [
+      134,
+      "10.1000/test.00532",
+      "Study of MnGa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2019
+    ],
+    [
+      141,
+      "10.1000/test.00550",
+      "Study of CuGa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2019
+    ],
+    [
+      128,
+      "10.1000/test.00514",
+      "Study of TaMn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2018
+    ],
+    [
+      198,
+      "10.1000/test.00792",
+      "Study of MnTa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2018
+    ],
+    [
+      66,
+      "10.1000/test.00265",
+      "Study of Pt3Ge properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2018
+    ],
+    [
+      199,
+      "10.1000/test.00795",
+      "Study of CoTi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2018
+    ],
+    [
+      84,
+      "10.1000/test.00320",
+      "Study of Hf3Mn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2018
+    ],
+    [
+      86,
+      "10.1000/test.00332",
+      "Study of Cu3Be properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2018
+    ],
+    [
+      179,
+      "10.1000/test.00718",
+      "Study of MoGa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2018
+    ],
+    [
+      18,
+      "10.1000/test.00065",
+      "Study of W3Ga properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2018
+    ],
+    [
+      231,
+      "10.1000/test.00897",
+      "Study of HfTi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2018
+    ],
+    [
+      22,
+      "10.1000/test.00078",
+      "Study of Fe3Nb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2018
+    ],
+    [
+      33,
+      "10.1000/test.00127",
+      "Study of Ti3In properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2018
+    ],
+    [
+      135,
+      "10.1000/test.00533",
+      "Study of AgCu properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2017
+    ],
+    [
+      242,
+      "10.1000/test.00946",
+      "Study of FeSc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2017
+    ],
+    [
+      85,
+      "10.1000/test.00329",
+      "Study of Hf3Ga properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2017
+    ],
+    [
+      103,
+      "10.1000/test.00409",
+      "Study of ZrV properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2017
+    ],
+    [
+      60,
+      "10.1000/test.00253",
+      "Study of Ti3Ge properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2017
+    ],
+    [
+      40,
+      "10.1000/test.00179",
+      "Study of Nb3In properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2017
+    ],
+    [
+      184,
+      "10.1000/test.00741",
+      "Study of CoMg properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2017
+    ],
+    [
+      6,
+      "10.1000/test.00020",
+      "Study of Ru3Mg properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2017
+    ],
+    [
+      140,
+      "10.1000/test.00545",
+      "Study of TaNb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2017
+    ],
+    [
+      88,
+      "10.1000/test.00341",
+      "Study of Cu3Mn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2017
+    ],
+    [
+      263,
+      "10.1000/test.01017",
+      "Study of CuFe properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2016
+    ],
+    [
+      321,
+      "10.1000/test.01257",
+      "Study of PtNb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2016
+    ],
+    [
+      333,
+      "10.1000/test.01323",
+      "Study of HfTi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2016
+    ],
+    [
+      171,
+      "10.1000/test.00681",
+      "Study of RhGe properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2016
+    ],
+    [
+      68,
+      "10.1000/test.00271",
+      "Study of Mn3Ti properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2016
+    ],
+    [
+      355,
+      "10.1000/test.01421",
+      "Study of NiSi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2016
+    ],
+    [
+      62,
+      "10.1000/test.00258",
+      "Study of Ti3V properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2016
+    ],
+    [
+      99,
+      "10.1000/test.00384",
+      "Study of Ni3Mn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2016
+    ],
+    [
+      190,
+      "10.1000/test.00758",
+      "Study of CrMg properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2016
+    ],
+    [
+      125,
+      "10.1000/test.00503",
+      "Study of PtY properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2016
+    ],
+    [
+      108,
+      "10.1000/test.00436",
+      "Study of FeIn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2015
+    ],
+    [
+      234,
+      "10.1000/test.00901",
+      "Study of TiV properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2015
+    ],
+    [
+      259,
+      "10.1000/test.01003",
+      "Study of NbV properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2015
+    ],
+    [
+      222,
+      "10.1000/test.00877",
+      "Study of MoGa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2015
+    ],
+    [
+      115,
+      "10.1000/test.00454",
+      "Study of ZrGa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2015
+    ],
+    [
+      347,
+      "10.1000/test.01383",
+      "Study of IrNb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2015
+    ],
+    [
+      58,
+      "10.1000/test.00245",
+      "Study of Ti3Ta properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2015
+    ],
+    [
+      311,
+      "10.1000/test.01223",
+      "Study of PtNb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2015
+    ],
+    [
+      305,
+      "10.1000/test.01200",
+      "Study of AgTa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2015
+    ],
+    [
+      49,
+      "10.1000/test.00218",
+      "Study of Ru3Cu properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2015
+    ],
+    [
+      176,
+      "10.1000/test.00706",
+      "Study of AgY properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2015
+    ],
+    [
+      251,
+      "10.1000/test.00966",
+      "Study of VHf properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2015
+    ],
+    [
+      284,
+      "10.1000/test.01121",
+      "Study of RuSc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2015
+    ],
+    [
+      38,
+      "10.1000/test.00161",
+      "Study of Cr3Hf properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2015
+    ],
+    [
+      10,
+      "10.1000/test.00035",
+      "Study of Nb3Ge properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2015
+    ],
+    [
+      109,
+      "10.1000/test.00438",
+      "Study of TiIn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2015
+    ],
+    [
+      254,
+      "10.1000/test.00977",
+      "Study of MnTa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2015
+    ],
+    [
+      136,
+      "10.1000/test.00534",
+      "Study of RhCu properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2015
+    ],
+    [
+      46,
+      "10.1000/test.00196",
+      "Study of Ti3In properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2014
+    ],
+    [
+      98,
+      "10.1000/test.00383",
+      "Study of Ir3Mg properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2014
+    ],
+    [
+      101,
+      "10.1000/test.00399",
+      "Study of VHf properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2014
+    ],
+    [
+      213,
+      "10.1000/test.00834",
+      "Study of CrY properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2014
+    ],
+    [
+      244,
+      "10.1000/test.00952",
+      "Study of NbSc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2014
+    ],
+    [
+      282,
+      "10.1000/test.01119",
+      "Study of FeNb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2014
+    ],
+    [
+      285,
+      "10.1000/test.01130",
+      "Study of NiTi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2014
+    ],
+    [
+      289,
+      "10.1000/test.01150",
+      "Study of PdNb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2014
+    ],
+    [
+      297,
+      "10.1000/test.01187",
+      "Study of ZrGe properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2014
+    ],
+    [
+      345,
+      "10.1000/test.01368",
+      "Study of RuY properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2014
+    ],
+    [
+      361,
+      "10.1000/test.01434",
+      "Study of FeSi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2014
+    ],
+    [
+      210,
+      "10.1000/test.00826",
+      "Study of VMn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2013
+    ],
+    [
+      111,
+      "10.1000/test.00443",
+      "Study of NbCu properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2013
+    ],
+    [
+      74,
+      "10.1000/test.00283",
+      "Study of Co3Mg properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2013
+    ],
+    [
+      28,
+      "10.1000/test.00114",
+      "Study of V3Sn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2013
+    ],
+    [
+      174,
+      "10.1000/test.00701",
+      "Study of AgSn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2013
+    ],
+    [
+      142,
+      "10.1000/test.00555",
+      "Study of RuMn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2013
+    ],
+    [
+      328,
+      "10.1000/test.01297",
+      "Study of CoSi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2013
+    ],
+    [
+      154,
+      "10.1000/test.00622",
+      "Study of FeMg properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2013
+    ],
+    [
+      59,
+      "10.1000/test.00246",
+      "Study of Pt3Sb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2013
+    ],
+    [
+      193,
+      "10.1000/test.00778",
+      "Study of HfIn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2013
+    ],
+    [
+      298,
+      "10.1000/test.01188",
+      "Study of NiSc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2013
+    ],
+    [
+      7,
+      "10.1000/test.00024",
+      "Study of Nb3Si properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2013
+    ],
+    [
+      315,
+      "10.1000/test.01244",
+      "Study of ZrSi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2012
+    ],
+    [
+      166,
+      "10.1000/test.00653",
+      "Study of NbSb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2012
+    ],
+    [
+      48,
+      "10.1000/test.00211",
+      "Study of Fe3In properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2012
+    ],
+    [
+      114,
+      "10.1000/test.00451",
+      "Study of TaAl properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2012
+    ],
+    [
+      73,
+      "10.1000/test.00282",
+      "Study of Co3Ta properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2012
+    ],
+    [
+      162,
+      "10.1000/test.00644",
+      "Study of FeTa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2012
+    ],
+    [
+      23,
+      "10.1000/test.00088",
+      "Study of Cu3Y properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2012
+    ],
+    [
+      82,
+      "10.1000/test.00316",
+      "Study of Ti3Be properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2012
+    ],
+    [
+      334,
+      "10.1000/test.01329",
+      "Study of FeSn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2012
+    ],
+    [
+      236,
+      "10.1000/test.00916",
+      "Study of PdGa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2012
+    ],
+    [
+      160,
+      "10.1000/test.00639",
+      "Study of RuZr properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2012
+    ],
+    [
+      257,
+      "10.1000/test.00997",
+      "Study of TiFe properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2012
+    ],
+    [
+      200,
+      "10.1000/test.00796",
+      "Study of MnIn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2012
+    ],
+    [
+      266,
+      "10.1000/test.01031",
+      "Study of RhGa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2012
+    ],
+    [
+      80,
+      "10.1000/test.00312",
+      "Study of Nb3Y properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2011
+    ],
+    [
+      97,
+      "10.1000/test.00380",
+      "Study of Fe3Sn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2011
+    ],
+    [
+      225,
+      "10.1000/test.00884",
+      "Study of HfGa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2011
+    ],
+    [
+      296,
+      "10.1000/test.01186",
+      "Study of IrGa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2011
+    ],
+    [
+      100,
+      "10.1000/test.00388",
+      "Study of Pt3Al properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2011
+    ],
+    [
+      64,
+      "10.1000/test.00262",
+      "Study of Pt3Sc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2011
+    ],
+    [
+      83,
+      "10.1000/test.00318",
+      "Study of Ag3Al properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2011
+    ],
+    [
+      241,
+      "10.1000/test.00943",
+      "Study of MoFe properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2011
+    ],
+    [
+      323,
+      "10.1000/test.01269",
+      "Study of RuAl properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2011
+    ],
+    [
+      191,
+      "10.1000/test.00768",
+      "Study of CuMn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2011
+    ],
+    [
+      238,
+      "10.1000/test.00927",
+      "Study of VBe properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2011
+    ],
+    [
+      116,
+      "10.1000/test.00455",
+      "Study of TiSi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2011
+    ],
+    [
+      123,
+      "10.1000/test.00496",
+      "Study of CoMn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2011
+    ],
+    [
+      164,
+      "10.1000/test.00647",
+      "Study of IrTi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2011
+    ],
+    [
+      264,
+      "10.1000/test.01018",
+      "Study of AgSc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2011
+    ],
+    [
+      119,
+      "10.1000/test.00458",
+      "Study of AuMg properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2010
+    ],
+    [
+      247,
+      "10.1000/test.00957",
+      "Study of CoAl properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2010
+    ],
+    [
+      237,
+      "10.1000/test.00918",
+      "Study of ZrMg properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2010
+    ],
+    [
+      331,
+      "10.1000/test.01318",
+      "Study of TiSc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2010
+    ],
+    [
+      181,
+      "10.1000/test.00732",
+      "Study of FeZn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2010
+    ],
+    [
+      44,
+      "10.1000/test.00187",
+      "Study of Mo3Mg properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2010
+    ],
+    [
+      185,
+      "10.1000/test.00744",
+      "Study of FeGa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2010
+    ],
+    [
+      187,
+      "10.1000/test.00748",
+      "Study of CuTi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2010
+    ],
+    [
+      287,
+      "10.1000/test.01140",
+      "Study of HfSn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2010
+    ],
+    [
+      356,
+      "10.1000/test.01422",
+      "Study of AgGe properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2010
+    ],
+    [
+      204,
+      "10.1000/test.00806",
+      "Study of WTa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2010
+    ],
+    [
+      77,
+      "10.1000/test.00287",
+      "Study of Zr3Cu properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2010
+    ],
+    [
+      261,
+      "10.1000/test.01014",
+      "Study of CuSn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2010
+    ],
+    [
+      165,
+      "10.1000/test.00650",
+      "Study of NiTa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2010
+    ],
+    [
+      91,
+      "10.1000/test.00348",
+      "Study of Fe3Ti properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2010
+    ],
+    [
+      207,
+      "10.1000/test.00817",
+      "Study of TiMn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2009
+    ],
+    [
+      71,
+      "10.1000/test.00278",
+      "Study of Pt3V properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2009
+    ],
+    [
+      217,
+      "10.1000/test.00849",
+      "Study of NbV properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2009
+    ],
+    [
+      51,
+      "10.1000/test.00226",
+      "Study of Au3Zn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2009
+    ],
+    [
+      13,
+      "10.1000/test.00044",
+      "Study of Ir3Cu properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2009
+    ],
+    [
+      252,
+      "10.1000/test.00970",
+      "Study of TaSc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2009
+    ],
+    [
+      39,
+      "10.1000/test.00171",
+      "Study of Ni3Nb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2009
+    ],
+    [
+      143,
+      "10.1000/test.00556",
+      "Study of NiIn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2009
+    ],
+    [
+      31,
+      "10.1000/test.00123",
+      "Study of Cr3Ge properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2009
+    ],
+    [
+      112,
+      "10.1000/test.00446",
+      "Study of RhHf properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2009
+    ],
+    [
+      340,
+      "10.1000/test.01350",
+      "Study of ZrTi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2009
+    ],
+    [
+      26,
+      "10.1000/test.00099",
+      "Study of Co3Hf properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2009
+    ],
+    [
+      256,
+      "10.1000/test.00990",
+      "Study of HfZn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2009
+    ],
+    [
+      96,
+      "10.1000/test.00374",
+      "Study of Ir3Zn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2009
+    ],
+    [
+      76,
+      "10.1000/test.00286",
+      "Study of Mo3Ti properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2009
+    ],
+    [
+      214,
+      "10.1000/test.00836",
+      "Study of ZrSc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2009
+    ],
+    [
+      158,
+      "10.1000/test.00632",
+      "Study of MoTa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2008
+    ],
+    [
+      139,
+      "10.1000/test.00542",
+      "Study of VNb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2008
+    ],
+    [
+      189,
+      "10.1000/test.00752",
+      "Study of RuTa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2008
+    ],
+    [
+      194,
+      "10.1000/test.00781",
+      "Study of FeTi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2008
+    ],
+    [
+      203,
+      "10.1000/test.00805",
+      "Study of CoTi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2008
+    ],
+    [
+      206,
+      "10.1000/test.00813",
+      "Study of VTi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2008
+    ],
+    [
+      220,
+      "10.1000/test.00869",
+      "Study of MnAl properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2008
+    ],
+    [
+      223,
+      "10.1000/test.00878",
+      "Study of PtAl properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2008
+    ],
+    [
+      240,
+      "10.1000/test.00941",
+      "Study of MnBe properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2008
+    ],
+    [
+      93,
+      "10.1000/test.00354",
+      "Study of Pd3Ge properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2008
+    ],
+    [
+      92,
+      "10.1000/test.00352",
+      "Study of Cu3Be properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2008
+    ],
+    [
+      320,
+      "10.1000/test.01256",
+      "Study of TiZn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2008
+    ],
+    [
+      363,
+      "10.1000/test.01444",
+      "Study of IrTa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2008
+    ],
+    [
+      351,
+      "10.1000/test.01396",
+      "Study of CoGe properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2008
+    ],
+    [
+      354,
+      "10.1000/test.01420",
+      "Study of TiTa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2008
+    ],
+    [
+      275,
+      "10.1000/test.01081",
+      "Study of HfTi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2007
+    ],
+    [
+      55,
+      "10.1000/test.00242",
+      "Study of W3Ge properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2007
+    ],
+    [
+      221,
+      "10.1000/test.00873",
+      "Study of RhSn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2007
+    ],
+    [
+      219,
+      "10.1000/test.00854",
+      "Study of MnBe properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2007
+    ],
+    [
+      5,
+      "10.1000/test.00018",
+      "Study of Mo3Hf properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2007
+    ],
+    [
+      95,
+      "10.1000/test.00370",
+      "Study of Ta3In properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2007
+    ],
+    [
+      175,
+      "10.1000/test.00705",
+      "Study of PtAl properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2007
+    ],
+    [
+      196,
+      "10.1000/test.00786",
+      "Study of NbMg properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2007
+    ],
+    [
+      312,
+      "10.1000/test.01225",
+      "Study of ZrGe properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2007
+    ],
+    [
+      50,
+      "10.1000/test.00225",
+      "Study of Hf3Fe properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2007
+    ],
+    [
+      205,
+      "10.1000/test.00809",
+      "Study of FeMg properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2007
+    ],
+    [
+      324,
+      "10.1000/test.01270",
+      "Study of IrSn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2007
+    ],
+    [
+      149,
+      "10.1000/test.00573",
+      "Study of PtSn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2007
+    ],
+    [
+      294,
+      "10.1000/test.01177",
+      "Study of AuTi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2007
+    ],
+    [
+      148,
+      "10.1000/test.00570",
+      "Study of FeSi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2007
+    ],
+    [
+      280,
+      "10.1000/test.01115",
+      "Study of RuY properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2007
+    ],
+    [
+      346,
+      "10.1000/test.01372",
+      "Study of PtSc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2007
+    ],
+    [
+      307,
+      "10.1000/test.01202",
+      "Study of ZrSc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2007
+    ],
+    [
+      202,
+      "10.1000/test.00802",
+      "Study of RhTi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2006
+    ],
+    [
+      155,
+      "10.1000/test.00623",
+      "Study of RhZn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2006
+    ],
+    [
+      29,
+      "10.1000/test.00119",
+      "Study of Pt3Ge properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2006
+    ],
+    [
+      232,
+      "10.1000/test.00899",
+      "Study of NiSn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2006
+    ],
+    [
+      11,
+      "10.1000/test.00037",
+      "Study of Au3Mg properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2006
+    ],
+    [
+      67,
+      "10.1000/test.00268",
+      "Study of Nb3V properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2006
+    ],
+    [
+      267,
+      "10.1000/test.01033",
+      "Study of RhHf properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2006
+    ],
+    [
+      337,
+      "10.1000/test.01337",
+      "Study of FeSc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2006
+    ],
+    [
+      233,
+      "10.1000/test.00900",
+      "Study of NiTa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2006
+    ],
+    [
+      57,
+      "10.1000/test.00244",
+      "Study of Au3V properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2006
+    ],
+    [
+      36,
+      "10.1000/test.00153",
+      "Study of Cu3Si properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2006
+    ],
+    [
+      89,
+      "10.1000/test.00344",
+      "Study of Au3Hf properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2005
+    ],
+    [
+      258,
+      "10.1000/test.01000",
+      "Study of RuMg properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2005
+    ],
+    [
+      133,
+      "10.1000/test.00530",
+      "Study of VNb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2005
+    ],
+    [
+      180,
+      "10.1000/test.00728",
+      "Study of ZrTi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2005
+    ],
+    [
+      218,
+      "10.1000/test.00851",
+      "Study of CuMn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2005
+    ],
+    [
+      168,
+      "10.1000/test.00673",
+      "Study of AgTi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2005
+    ],
+    [
+      120,
+      "10.1000/test.00463",
+      "Study of CuAl properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2005
+    ],
+    [
+      274,
+      "10.1000/test.01079",
+      "Study of VZn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2005
+    ],
+    [
+      295,
+      "10.1000/test.01178",
+      "Study of AuSn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2005
+    ],
+    [
+      90,
+      "10.1000/test.00346",
+      "Study of V3Sc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2005
+    ],
+    [
+      172,
+      "10.1000/test.00682",
+      "Study of RhGa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2005
+    ],
+    [
+      129,
+      "10.1000/test.00519",
+      "Study of MnMg properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2005
+    ],
+    [
+      47,
+      "10.1000/test.00203",
+      "Study of Pt3Sb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2005
+    ],
+    [
+      122,
+      "10.1000/test.00486",
+      "Study of AuIn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2004
+    ],
+    [
+      2,
+      "10.1000/test.00006",
+      "Study of Al3Ti properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2004
+    ],
+    [
+      152,
+      "10.1000/test.00614",
+      "Study of PtTa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2004
+    ],
+    [
+      147,
+      "10.1000/test.00569",
+      "Study of CoZn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2004
+    ],
+    [
+      239,
+      "10.1000/test.00935",
+      "Study of FeSb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2004
+    ],
+    [
+      9,
+      "10.1000/test.00033",
+      "Study of Hf3Sb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2004
+    ],
+    [
+      41,
+      "10.1000/test.00180",
+      "Study of V3Si properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2004
+    ],
+    [
+      42,
+      "10.1000/test.00182",
+      "Study of Pt3Sn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2004
+    ],
+    [
+      338,
+      "10.1000/test.01340",
+      "Study of PtAl properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2004
+    ],
+    [
+      186,
+      "10.1000/test.00746",
+      "Study of IrZn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2004
+    ],
+    [
+      283,
+      "10.1000/test.01120",
+      "Study of VGe properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2004
+    ],
+    [
+      359,
+      "10.1000/test.01430",
+      "Study of IrY properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2004
+    ],
+    [
+      79,
+      "10.1000/test.00295",
+      "Study of Ta3Sb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2003
+    ],
+    [
+      146,
+      "10.1000/test.00568",
+      "Study of WY properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2003
+    ],
+    [
+      288,
+      "10.1000/test.01144",
+      "Study of NiZn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2003
+    ],
+    [
+      303,
+      "10.1000/test.01198",
+      "Study of AuSi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2003
+    ],
+    [
+      144,
+      "10.1000/test.00563",
+      "Study of MoZn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2003
+    ],
+    [
+      183,
+      "10.1000/test.00737",
+      "Study of RuSc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2003
+    ],
+    [
+      159,
+      "10.1000/test.00636",
+      "Study of MnNb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2003
+    ],
+    [
+      104,
+      "10.1000/test.00421",
+      "Study of VMn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2003
+    ],
+    [
+      72,
+      "10.1000/test.00279",
+      "Study of Au3Ga properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2003
+    ],
+    [
+      69,
+      "10.1000/test.00273",
+      "Study of Ti3Mg properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2003
+    ],
+    [
+      63,
+      "10.1000/test.00261",
+      "Study of Mo3Si properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2003
+    ],
+    [
+      278,
+      "10.1000/test.01090",
+      "Study of RuY properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2003
+    ],
+    [
+      322,
+      "10.1000/test.01262",
+      "Study of AgY properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2003
+    ],
+    [
+      270,
+      "10.1000/test.01054",
+      "Study of RhGa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2003
+    ],
+    [
+      318,
+      "10.1000/test.01252",
+      "Study of TiHf properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2003
+    ],
+    [
+      348,
+      "10.1000/test.01384",
+      "Study of IrSc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2003
+    ],
+    [
+      153,
+      "10.1000/test.00616",
+      "Study of CoSn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2003
+    ],
+    [
+      336,
+      "10.1000/test.01334",
+      "Study of TiGa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2002
+    ],
+    [
+      260,
+      "10.1000/test.01007",
+      "Study of IrSb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2002
+    ],
+    [
+      262,
+      "10.1000/test.01016",
+      "Study of HfMn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2002
+    ],
+    [
+      357,
+      "10.1000/test.01427",
+      "Study of PtTi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2002
+    ],
+    [
+      78,
+      "10.1000/test.00293",
+      "Study of Mn3V properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2002
+    ],
+    [
+      277,
+      "10.1000/test.01088",
+      "Study of IrGa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2002
+    ],
+    [
+      121,
+      "10.1000/test.00484",
+      "Study of CoSn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2002
+    ],
+    [
+      197,
+      "10.1000/test.00788",
+      "Study of MnZr properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2002
+    ],
+    [
+      3,
+      "10.1000/test.00007",
+      "Study of Pt3Al properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2002
+    ],
+    [
+      124,
+      "10.1000/test.00500",
+      "Study of CuMn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2002
+    ],
+    [
+      302,
+      "10.1000/test.01195",
+      "Study of RhGa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2002
+    ],
+    [
+      53,
+      "10.1000/test.00238",
+      "Study of Ni3Ti properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2002
+    ],
+    [
+      131,
+      "10.1000/test.00524",
+      "Study of TaTi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2002
+    ],
+    [
+      37,
+      "10.1000/test.00155",
+      "Study of Hf3Y properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2002
+    ],
+    [
+      156,
+      "10.1000/test.00628",
+      "Study of IrMg properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2002
+    ],
+    [
+      17,
+      "10.1000/test.00064",
+      "Study of Cr3Nb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2002
+    ],
+    [
+      157,
+      "10.1000/test.00629",
+      "Study of TiMn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2002
+    ],
+    [
+      195,
+      "10.1000/test.00785",
+      "Study of HfCu properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2001
+    ],
+    [
+      301,
+      "10.1000/test.01194",
+      "Study of RhGa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2001
+    ],
+    [
+      215,
+      "10.1000/test.00841",
+      "Study of IrFe properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2001
+    ],
+    [
+      107,
+      "10.1000/test.00435",
+      "Study of MnTi properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2001
+    ],
+    [
+      167,
+      "10.1000/test.00656",
+      "Study of FeSc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2001
+    ],
+    [
+      163,
+      "10.1000/test.00646",
+      "Study of ZrHf properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2001
+    ],
+    [
+      150,
+      "10.1000/test.00586",
+      "Study of AgSc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2001
+    ],
+    [
+      227,
+      "10.1000/test.00889",
+      "Study of MnSn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2001
+    ],
+    [
+      70,
+      "10.1000/test.00275",
+      "Study of Rh3Cu properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2001
+    ],
+    [
+      110,
+      "10.1000/test.00442",
+      "Study of IrMn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2001
+    ],
+    [
+      105,
+      "10.1000/test.00432",
+      "Study of AuFe properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2001
+    ],
+    [
+      130,
+      "10.1000/test.00523",
+      "Study of AgGa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2001
+    ],
+    [
+      209,
+      "10.1000/test.00825",
+      "Study of IrBe properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2001
+    ],
+    [
+      34,
+      "10.1000/test.00131",
+      "Study of Ir3Zr properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2001
+    ],
+    [
+      229,
+      "10.1000/test.00892",
+      "Study of PdHf properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2000
+    ],
+    [
+      325,
+      "10.1000/test.01274",
+      "Study of AuZn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2000
+    ],
+    [
+      319,
+      "10.1000/test.01254",
+      "Study of NiY properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2000
+    ],
+    [
+      14,
+      "10.1000/test.00048",
+      "Study of Hf3Cu properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2000
+    ],
+    [
+      313,
+      "10.1000/test.01238",
+      "Study of TiHf properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2000
+    ],
+    [
+      310,
+      "10.1000/test.01220",
+      "Study of NiNb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2000
+    ],
+    [
+      52,
+      "10.1000/test.00233",
+      "Study of Cr3Fe properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2000
+    ],
+    [
+      30,
+      "10.1000/test.00122",
+      "Study of Zr3Ti properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2000
+    ],
+    [
+      61,
+      "10.1000/test.00254",
+      "Study of V3Nb properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2000
+    ],
+    [
+      291,
+      "10.1000/test.01160",
+      "Study of CuSn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2000
+    ],
+    [
+      169,
+      "10.1000/test.00677",
+      "Study of WMg properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2000
+    ],
+    [
+      243,
+      "10.1000/test.00950",
+      "Study of ZrSc properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2000
+    ],
+    [
+      360,
+      "10.1000/test.01431",
+      "Study of TiAl properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2000
+    ],
+    [
+      317,
+      "10.1000/test.01249",
+      "Study of FeZn properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2000
+    ],
+    [
+      245,
+      "10.1000/test.00954",
+      "Study of RuTa properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2000
+    ],
+    [
+      211,
+      "10.1000/test.00828",
+      "Study of MnV properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2000
+    ],
+    [
+      226,
+      "10.1000/test.00888",
+      "Study of NiY properties",
+      "Author et al.",
+      "J. Mater. Sci.",
+      2000
+    ]
+  ]
+}

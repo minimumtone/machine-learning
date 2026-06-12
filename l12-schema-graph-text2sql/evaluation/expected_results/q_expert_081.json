@@ -1,1 +1,46 @@
-{"columns": ["entry_id", "formula", "lattice_a", "energy_above_hull", "bulk_modulus_vrh"], "rows": [["entry_00001", "Ni3Al", 3.572, 0.0, 180.0], ["entry_00028", "Mo3Nb", 3.5858, 0.0074, 234.8], ["entry_00004", "Co3Ti", 3.55, 0.0, 190.0], ["entry_00256", "Pd3Sn", 3.5403, 0.0078, 200.0], ["entry_00014", "Nb3Mn", 3.6074, 0.0058, 178.2]]}
+{
+  "columns": [
+    "entry_id",
+    "formula",
+    "lattice_a",
+    "energy_above_hull",
+    "bulk_modulus_vrh"
+  ],
+  "rows": [
+    [
+      "entry_00001",
+      "Ni3Al",
+      3.572,
+      0.0,
+      180.0
+    ],
+    [
+      "entry_00028",
+      "Mo3Nb",
+      3.5858,
+      0.0074,
+      234.8
+    ],
+    [
+      "entry_00004",
+      "Co3Ti",
+      3.55,
+      0.0,
+      190.0
+    ],
+    [
+      "entry_00256",
+      "Pd3Sn",
+      3.5403,
+      0.0078,
+      200.0
+    ],
+    [
+      "entry_00014",
+      "Nb3Mn",
+      3.6074,
+      0.0058,
+      178.2
+    ]
+  ]
+}

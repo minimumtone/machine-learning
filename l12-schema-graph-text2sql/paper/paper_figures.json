@@ -357,29 +357,35 @@
     "total": 100,
     "syntax_valid": 100,
     "execution_success": 100,
-    "binary_correct": 77,
-    "binary_correct_rate": 77.0,
-    "mean_exec_accuracy": 79.3,
+    "binary_correct": 67,
+    "binary_correct_rate": 67.0,
+    "mean_exec_accuracy": 76.6,
+    "mean_exec_precision": 72.6,
+    "mean_exec_f1": 69.8,
     "by_difficulty": {
       "easy": {
-        "correct": 12,
+        "correct": 14,
         "total": 18,
-        "accuracy": 66.7
+        "accuracy": 77.8,
+        "mean_exec_accuracy": 83.3
       },
       "medium": {
-        "correct": 29,
+        "correct": 25,
         "total": 34,
-        "accuracy": 85.3
+        "accuracy": 73.5,
+        "mean_exec_accuracy": 84.2
       },
       "hard": {
-        "correct": 23,
+        "correct": 16,
         "total": 34,
-        "accuracy": 67.6
+        "accuracy": 47.1,
+        "mean_exec_accuracy": 58.3
       },
       "very_hard": {
-        "correct": 13,
+        "correct": 12,
         "total": 14,
-        "accuracy": 92.9
+        "accuracy": 85.7,
+        "mean_exec_accuracy": 94.2
       }
     }
   },

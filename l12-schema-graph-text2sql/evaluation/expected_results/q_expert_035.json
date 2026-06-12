@@ -1,1 +1,14 @@
-{"columns": ["total", "unstable", "unstable_pct"], "rows": [[355, 341, "96.06"]]}
+{
+  "columns": [
+    "total",
+    "unstable",
+    "unstable_pct"
+  ],
+  "rows": [
+    [
+      355,
+      341,
+      96.06
+    ]
+  ]
+}

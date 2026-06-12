@@ -1,1 +1,14 @@
-{"columns": ["entry_id", "formula", "lattice_c"], "rows": [["entry_01398", "IrHf", 9.4483]]}
+{
+  "columns": [
+    "entry_id",
+    "formula",
+    "lattice_c"
+  ],
+  "rows": [
+    [
+      "entry_01398",
+      "IrHf",
+      9.4483
+    ]
+  ]
+}

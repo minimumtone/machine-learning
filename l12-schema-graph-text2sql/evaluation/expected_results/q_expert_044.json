@@ -1,1 +1,8 @@
-{"columns": ["entry_id", "formula", "youngs_modulus"], "rows": []}
+{
+  "columns": [
+    "entry_id",
+    "formula",
+    "youngs_modulus"
+  ],
+  "rows": []
+}

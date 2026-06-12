@@ -1,1 +1,28 @@
-{"columns": ["formula", "formation_energy_per_atom"], "rows": [["Cu3Y", -0.5982], ["Pd3In", -0.5963], ["Mo3V", -0.5945], ["Co3Zr", -0.5895], ["Ti3Sb", -0.5877]]}
+{
+  "columns": [
+    "formula",
+    "formation_energy_per_atom"
+  ],
+  "rows": [
+    [
+      "Cu3Y",
+      -0.5982
+    ],
+    [
+      "Pd3In",
+      -0.5963
+    ],
+    [
+      "Mo3V",
+      -0.5945
+    ],
+    [
+      "Co3Zr",
+      -0.5895
+    ],
+    [
+      "Ti3Sb",
+      -0.5877
+    ]
+  ]
+}

@@ -1,1 +1,16 @@
-{"columns": ["entry_id", "formula", "bulk_modulus_vrh", "formation_energy_per_atom"], "rows": [["entry_00001", "Ni3Al", 180.0, -0.42]]}
+{
+  "columns": [
+    "entry_id",
+    "formula",
+    "bulk_modulus_vrh",
+    "formation_energy_per_atom"
+  ],
+  "rows": [
+    [
+      "entry_00001",
+      "Ni3Al",
+      180.0,
+      -0.42
+    ]
+  ]
+}

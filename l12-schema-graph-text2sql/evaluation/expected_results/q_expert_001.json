@@ -1,1 +1,10 @@
-{"columns": ["total_count"], "rows": [[1470]]}
+{
+  "columns": [
+    "total_count"
+  ],
+  "rows": [
+    [
+      1470
+    ]
+  ]
+}

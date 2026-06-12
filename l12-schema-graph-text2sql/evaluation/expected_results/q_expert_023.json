@@ -1,1 +1,14 @@
-{"columns": ["entry_id", "formula", "volume_per_atom"], "rows": [["entry_00083", "Fe3Ti", 2.4584]]}
+{
+  "columns": [
+    "entry_id",
+    "formula",
+    "volume_per_atom"
+  ],
+  "rows": [
+    [
+      "entry_00083",
+      "Fe3Ti",
+      2.4584
+    ]
+  ]
+}

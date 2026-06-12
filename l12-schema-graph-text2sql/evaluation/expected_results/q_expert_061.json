@@ -1,1 +1,14 @@
-{"columns": ["entry_id", "formula", "surface_energy_j_m2"], "rows": [["entry_00089", "Ag3Si", 0.522]]}
+{
+  "columns": [
+    "entry_id",
+    "formula",
+    "surface_energy_j_m2"
+  ],
+  "rows": [
+    [
+      "entry_00089",
+      "Ag3Si",
+      0.522
+    ]
+  ]
+}

@@ -1,1 +1,49 @@
-{"columns": ["entry_id", "formula", "energy_above_hull"], "rows": [["entry_00123", "Cr3Ge", 0.0045], ["entry_00044", "Ir3Cu", 0.0014], ["entry_00290", "Mn3Y", 0.0048], ["entry_00001", "Ni3Al", 0.0], ["entry_00038", "Pd3Hf", 0.0076], ["entry_00007", "Pt3Al", 0.0], ["entry_00343", "Pt3Si", 0.0081], ["entry_00015", "Zr3In", 0.0019]]}
+{
+  "columns": [
+    "entry_id",
+    "formula",
+    "energy_above_hull"
+  ],
+  "rows": [
+    [
+      "entry_00123",
+      "Cr3Ge",
+      0.0045
+    ],
+    [
+      "entry_00044",
+      "Ir3Cu",
+      0.0014
+    ],
+    [
+      "entry_00290",
+      "Mn3Y",
+      0.0048
+    ],
+    [
+      "entry_00001",
+      "Ni3Al",
+      0.0
+    ],
+    [
+      "entry_00038",
+      "Pd3Hf",
+      0.0076
+    ],
+    [
+      "entry_00007",
+      "Pt3Al",
+      0.0
+    ],
+    [
+      "entry_00343",
+      "Pt3Si",
+      0.0081
+    ],
+    [
+      "entry_00015",
+      "Zr3In",
+      0.0019
+    ]
+  ]
+}

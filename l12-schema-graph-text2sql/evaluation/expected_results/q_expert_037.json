@@ -1,1 +1,14 @@
-{"columns": ["entry_id", "formula", "band_gap"], "rows": [["entry_00001", "Ni3Al", 0.0]]}
+{
+  "columns": [
+    "entry_id",
+    "formula",
+    "band_gap"
+  ],
+  "rows": [
+    [
+      "entry_00001",
+      "Ni3Al",
+      0.0
+    ]
+  ]
+}
