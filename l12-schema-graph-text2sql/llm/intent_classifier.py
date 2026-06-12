@@ -206,7 +206,9 @@ def classify_intent(query: str) -> dict[str, Any]:
 # Determines the SELECT structure: list individual rows vs. aggregate
 
 _COUNT_PATTERNS: list[re.Pattern[str]] = [
-    re.compile(r"(?:何件|件数|総数|数え|数を|カウント|count)", re.I),
+    re.compile(r"(?:何件|件数|総数|カウント|count)", re.I),
+    # 「数え」「数を」 but NOT when part of compound words like 格子定数, 弾性係数
+    re.compile(r"(?<![定係変])数(?:え|を(?:教|出|数))", re.I),
 ]
 
 _RATIO_PATTERNS: list[re.Pattern[str]] = [
@@ -217,9 +219,11 @@ _RATIO_PATTERNS: list[re.Pattern[str]] = [
 # statistics (average, sum) — NOT for "ごとに整理" or "分類" which in
 # materials science context typically expect individual rows.
 _AGGREGATE_PATTERNS_STRICT: list[re.Pattern[str]] = [
-    re.compile(r"(?:平均|average|avg|mean)\s*(?:を|の|は|値)", re.I),
+    # 「平均」 can appear as 「平均を」 or 「平均形成エネルギー」
+    re.compile(r"平均|average|avg|mean", re.I),
     re.compile(r"(?:合計|total|sum)\s*(?:を|の|は)", re.I),
     re.compile(r"(?:統計|statistics|ヒストグラム|histogram)", re.I),
+    re.compile(r"グループ化|group\s*by", re.I),
 ]
 
 _TOP_N_PATTERNS: list[re.Pattern[str]] = [
