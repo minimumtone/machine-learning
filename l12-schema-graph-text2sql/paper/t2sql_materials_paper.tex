@@ -298,9 +298,9 @@ FK関係だけでなくドメイン知識に基づくJOINパス選択が可能�
 Steiner木近似によるJOIN経路探索の動作例を図~\ref{fig:architecture}に示す。
 
 % --- 概念図（4ブロック） ---
-\begin{figure}[htbp]
+\begin{figure*}[htbp]
 \centering
-\resizebox{\columnwidth}{!}{%
+\resizebox{0.8\textwidth}{!}{%
 \begin{tikzpicture}[
   node distance=0.15cm and 0.5cm,
   >=Stealth,
@@ -341,7 +341,7 @@ Steiner木近似によるJOIN経路探索の動作例を図~\ref{fig:architectur
   LLMに渡す情報がこの部分グラフに限定されるため、
   テーブル幻覚と不要JOINが原理的に排除される。}
 \label{fig:step3_pipeline}
-\end{figure}
+\end{figure*}
 
 % =====================================================================
 \section{材料Text-to-SQLの設計要件}
@@ -433,27 +433,39 @@ Steiner木近似によるJOIN経路探索の動作例を図~\ref{fig:architectur
 \node[graytbl] (mr) at (-4.5, -0.2) {mat\\ref};
 \node[graytbl] (md) at (3.5, -1.5) {mat\\defect};
 
-% FK edges (gray, showing full graph)
+% FK edges (gray, matching extended_schema.sql)
+% composition.entry_id → material_entry
 \draw[fk] (me) -- (comp);
+% structure.entry_id → material_entry
 \draw[fk] (me) -- (struct);
+% calculation.entry_id → material_entry
 \draw[fk] (me) -- (calc);
-\draw[fk] (me) -- (cp);
+% calculated_property.calculation_id → calculation (NOT material_entry)
+\draw[fk] (calc) -- (cp);
+% phase_stability.entry_id → material_entry
 \draw[fk] (me) -- (ps);
-\draw[fk] (me) -- (pd);
-\draw[fk] (me) -- (sg);
-\draw[fk] (comp) -- (elem);
+% structure references prototype_definition via prototype column (logical link)
+\draw[fk] (struct) -- (pd);
+% structure.space_group_number → space_group (logical link)
+\draw[fk] (struct) -- (sg);
+% element_property.element_id → element
 \draw[fk] (elem) -- (ep);
+% elastic_tensor: dual FK (entry_id → me, calculation_id → calc)
 \draw[fk] (calc) -- (et);
-\draw[fk] (calc) -- (tp);
-\draw[fk] (calc) -- (bs);
-\draw[fk] (calc) -- (dos);
 \draw[fk] (me) -- (et);
+% thermal_property: dual FK (entry_id → me, calculation_id → calc)
+\draw[fk] (calc) -- (tp);
 \draw[fk] (me) -- (tp);
+% band_structure: dual FK
+\draw[fk] (calc) -- (bs);
 \draw[fk] (me) -- (bs);
+% density_of_states: dual FK
+\draw[fk] (calc) -- (dos);
 \draw[fk] (me) -- (dos);
-\draw[fk] (me) -- (lr);
+% material_reference.entry_id → me, .reference_id → lr
 \draw[fk] (mr) -- (me);
 \draw[fk] (mr) -- (lr);
+% material_defect.entry_id → material_entry
 \draw[fk] (me) -- (md);
 
 % ============ Right: Steiner tree result ============
