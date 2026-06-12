@@ -1,1 +1,12 @@
-{"columns": ["method", "cnt"], "rows": [["DFT", 1470]]}
+{
+  "columns": [
+    "method",
+    "cnt"
+  ],
+  "rows": [
+    [
+      "DFT",
+      1470
+    ]
+  ]
+}

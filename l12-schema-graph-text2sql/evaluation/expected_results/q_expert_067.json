@@ -1,1 +1,49 @@
-{"columns": ["entry_id", "formula", "dopant"], "rows": [["entry_01397", "AgGa", "B"], ["entry_01231", "AgSi", "B"], ["entry_01464", "AuSi3", "B"], ["entry_01023", "CoHf", "B"], ["entry_00436", "FeIn", "B"], ["entry_00556", "NiIn", "B"], ["entry_00738", "TaGe", "B"], ["entry_00760", "ZrSn", "B"]]}
+{
+  "columns": [
+    "entry_id",
+    "formula",
+    "dopant"
+  ],
+  "rows": [
+    [
+      "entry_01397",
+      "AgGa",
+      "B"
+    ],
+    [
+      "entry_01231",
+      "AgSi",
+      "B"
+    ],
+    [
+      "entry_01464",
+      "AuSi3",
+      "B"
+    ],
+    [
+      "entry_01023",
+      "CoHf",
+      "B"
+    ],
+    [
+      "entry_00436",
+      "FeIn",
+      "B"
+    ],
+    [
+      "entry_00556",
+      "NiIn",
+      "B"
+    ],
+    [
+      "entry_00738",
+      "TaGe",
+      "B"
+    ],
+    [
+      "entry_00760",
+      "ZrSn",
+      "B"
+    ]
+  ]
+}

@@ -1,1 +1,48 @@
-{"columns": ["chemical_system", "cnt"], "rows": [["Ru-Sc", 12], ["Fe-Sc", 12], ["Nb-V", 11], ["Hf-Mn", 11], ["Hf-Ti", 11], ["V-Zr", 11], ["Ru-Y", 10], ["Hf-V", 10], ["Ga-Zr", 10], ["Cu-Nb", 10]]}
+{
+  "columns": [
+    "chemical_system",
+    "cnt"
+  ],
+  "rows": [
+    [
+      "Ru-Sc",
+      12
+    ],
+    [
+      "Fe-Sc",
+      12
+    ],
+    [
+      "Nb-V",
+      11
+    ],
+    [
+      "Hf-Mn",
+      11
+    ],
+    [
+      "Hf-Ti",
+      11
+    ],
+    [
+      "V-Zr",
+      11
+    ],
+    [
+      "Ru-Y",
+      10
+    ],
+    [
+      "Hf-V",
+      10
+    ],
+    [
+      "Ga-Zr",
+      10
+    ],
+    [
+      "Cu-Nb",
+      10
+    ]
+  ]
+}

@@ -1,1 +1,19 @@
-{"columns": ["formula", "lattice_a", "energy_above_hull"], "rows": [["Co3Ti", 3.55, 0.0], ["Ni3Al", 3.572, 0.0]]}
+{
+  "columns": [
+    "formula",
+    "lattice_a",
+    "energy_above_hull"
+  ],
+  "rows": [
+    [
+      "Co3Ti",
+      3.55,
+      0.0
+    ],
+    [
+      "Ni3Al",
+      3.572,
+      0.0
+    ]
+  ]
+}

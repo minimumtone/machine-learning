@@ -1,1 +1,22 @@
-{"columns": ["entry_id", "formula", "formation_energy_per_atom", "energy_above_hull"], "rows": [["entry_00001", "Ni3Al", -0.42, 0.0], ["entry_00101", "Ni3Cu", -0.0528, 0.0005]]}
+{
+  "columns": [
+    "entry_id",
+    "formula",
+    "formation_energy_per_atom",
+    "energy_above_hull"
+  ],
+  "rows": [
+    [
+      "entry_00001",
+      "Ni3Al",
+      -0.42,
+      0.0
+    ],
+    [
+      "entry_00101",
+      "Ni3Cu",
+      -0.0528,
+      0.0005
+    ]
+  ]
+}

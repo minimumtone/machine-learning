@@ -251,12 +251,22 @@ def map_conditions(conditions: dict[str, Any]) -> list[dict[str, Any]]:
             map_lattice_reference_condition(conditions["lattice_reference"])
         )
 
+    if "lattice_range" in conditions:
+        lr = conditions["lattice_range"]
+        mapped.append({
+            "type": "lattice_range",
+            "sql_fragment": f"s.lattice_a BETWEEN {lr['low']} AND {lr['high']}",
+            "tables": ["structure"],
+            "columns": ["structure.lattice_a"],
+        })
+
     if "numeric_conditions" in conditions:
         for nc in conditions["numeric_conditions"]:
             mapped.append(map_numeric_condition(nc))
 
     if "formula" in conditions and "contains_elements" not in conditions:
-        mapped.extend(map_formula_condition(conditions["formula"]))
+        if "lattice_reference" not in conditions:
+            mapped.extend(map_formula_condition(conditions["formula"]))
 
     if "site_label" in conditions:
         mapped.append(map_site_label_condition(conditions["site_label"]))

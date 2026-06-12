@@ -1,1 +1,16 @@
-{"columns": ["stability", "count"], "rows": [["not_stable", 18], ["stable", 3]]}
+{
+  "columns": [
+    "stability",
+    "count"
+  ],
+  "rows": [
+    [
+      "not_stable",
+      18
+    ],
+    [
+      "stable",
+      3
+    ]
+  ]
+}

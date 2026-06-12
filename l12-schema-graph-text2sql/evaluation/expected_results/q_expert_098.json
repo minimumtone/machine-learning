@@ -1,1 +1,19 @@
-{"columns": ["gap_category", "cnt", "avg_gap"], "rows": [["non-zero gap", 391, 0.24843734015345265], ["metallic (gap=0)", 1, 0.0]]}
+{
+  "columns": [
+    "gap_category",
+    "cnt",
+    "avg_gap"
+  ],
+  "rows": [
+    [
+      "non-zero gap",
+      391,
+      0.24843734015345265
+    ],
+    [
+      "metallic (gap=0)",
+      1,
+      0.0
+    ]
+  ]
+}

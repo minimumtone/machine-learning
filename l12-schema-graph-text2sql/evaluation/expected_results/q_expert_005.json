@@ -1,1 +1,10 @@
-{"columns": ["nacl_count"], "rows": [[355]]}
+{
+  "columns": [
+    "nacl_count"
+  ],
+  "rows": [
+    [
+      355
+    ]
+  ]
+}

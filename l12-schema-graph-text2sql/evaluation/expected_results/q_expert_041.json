@@ -1,1 +1,8 @@
-{"columns": ["entry_id", "formula", "functional"], "rows": []}
+{
+  "columns": [
+    "entry_id",
+    "formula",
+    "functional"
+  ],
+  "rows": []
+}

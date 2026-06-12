@@ -1,1 +1,8 @@
-{"columns": ["entry_id", "formula", "poisson_ratio"], "rows": []}
+{
+  "columns": [
+    "entry_id",
+    "formula",
+    "poisson_ratio"
+  ],
+  "rows": []
+}

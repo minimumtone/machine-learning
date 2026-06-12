@@ -1,1 +1,14 @@
-{"columns": ["entry_id", "formula", "energy_above_hull"], "rows": [["entry_01369", "VAl", 0.0066]]}
+{
+  "columns": [
+    "entry_id",
+    "formula",
+    "energy_above_hull"
+  ],
+  "rows": [
+    [
+      "entry_01369",
+      "VAl",
+      0.0066
+    ]
+  ]
+}

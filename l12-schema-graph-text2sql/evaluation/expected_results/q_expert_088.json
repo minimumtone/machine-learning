@@ -1,1 +1,28 @@
-{"columns": ["prototype", "cnt"], "rows": [["B2", 48], ["L12", 37], ["NaCl", 14], ["NiAs", 7], ["BiF3", 1]]}
+{
+  "columns": [
+    "prototype",
+    "cnt"
+  ],
+  "rows": [
+    [
+      "B2",
+      48
+    ],
+    [
+      "L12",
+      37
+    ],
+    [
+      "NaCl",
+      14
+    ],
+    [
+      "NiAs",
+      7
+    ],
+    [
+      "BiF3",
+      1
+    ]
+  ]
+}

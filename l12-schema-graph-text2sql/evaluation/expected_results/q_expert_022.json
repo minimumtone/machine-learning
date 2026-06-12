@@ -1,1 +1,8 @@
-{"columns": ["entry_id", "formula", "crystal_system"], "rows": []}
+{
+  "columns": [
+    "entry_id",
+    "formula",
+    "crystal_system"
+  ],
+  "rows": []
+}

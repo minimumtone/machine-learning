@@ -1,1 +1,48 @@
-{"columns": ["entry_id", "formula"], "rows": [["entry_00207", "Ag3Fe"], ["entry_00321", "Co3Sc"], ["entry_00251", "Cr3Zr"], ["entry_00110", "Hf3Ti"], ["entry_00214", "Ir3Cu"], ["entry_00178", "Ru3Zr"], ["entry_00285", "Ta3Hf"], ["entry_00295", "Ta3Sb"], ["entry_00189", "V3In"], ["entry_00149", "W3Mn"]]}
+{
+  "columns": [
+    "entry_id",
+    "formula"
+  ],
+  "rows": [
+    [
+      "entry_00207",
+      "Ag3Fe"
+    ],
+    [
+      "entry_00321",
+      "Co3Sc"
+    ],
+    [
+      "entry_00251",
+      "Cr3Zr"
+    ],
+    [
+      "entry_00110",
+      "Hf3Ti"
+    ],
+    [
+      "entry_00214",
+      "Ir3Cu"
+    ],
+    [
+      "entry_00178",
+      "Ru3Zr"
+    ],
+    [
+      "entry_00285",
+      "Ta3Hf"
+    ],
+    [
+      "entry_00295",
+      "Ta3Sb"
+    ],
+    [
+      "entry_00189",
+      "V3In"
+    ],
+    [
+      "entry_00149",
+      "W3Mn"
+    ]
+  ]
+}

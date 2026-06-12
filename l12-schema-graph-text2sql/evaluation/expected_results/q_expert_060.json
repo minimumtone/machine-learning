@@ -1,1 +1,9 @@
-{"columns": ["entry_id", "formula", "total_dos_at_fermi", "magnetic_ordering"], "rows": []}
+{
+  "columns": [
+    "entry_id",
+    "formula",
+    "total_dos_at_fermi",
+    "magnetic_ordering"
+  ],
+  "rows": []
+}

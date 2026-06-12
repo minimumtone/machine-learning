@@ -1,1 +1,9 @@
-{"columns": ["entry_id", "formula", "formation_energy", "site"], "rows": []}
+{
+  "columns": [
+    "entry_id",
+    "formula",
+    "formation_energy",
+    "site"
+  ],
+  "rows": []
+}

@@ -1,1 +1,16 @@
-{"columns": ["prototype", "cnt"], "rows": [["B2", 66], ["L12", 31]]}
+{
+  "columns": [
+    "prototype",
+    "cnt"
+  ],
+  "rows": [
+    [
+      "B2",
+      66
+    ],
+    [
+      "L12",
+      31
+    ]
+  ]
+}

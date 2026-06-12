@@ -1,1 +1,29 @@
-{"columns": ["formula", "energy_above_hull", "formation_energy_per_atom"], "rows": [["Pt3Al", 0.0, -0.55], ["Al3Sc", 0.0, -0.5], ["Co3Ti", 0.0, -0.45], ["Ni3Al", 0.0, -0.42]]}
+{
+  "columns": [
+    "formula",
+    "energy_above_hull",
+    "formation_energy_per_atom"
+  ],
+  "rows": [
+    [
+      "Pt3Al",
+      0.0,
+      -0.55
+    ],
+    [
+      "Al3Sc",
+      0.0,
+      -0.5
+    ],
+    [
+      "Co3Ti",
+      0.0,
+      -0.45
+    ],
+    [
+      "Ni3Al",
+      0.0,
+      -0.42
+    ]
+  ]
+}

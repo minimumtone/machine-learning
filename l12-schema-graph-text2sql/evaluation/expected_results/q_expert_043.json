@@ -1,1 +1,24 @@
-{"columns": ["entry_id", "formula", "shear_modulus_vrh"], "rows": [["entry_00217", "Ru3Mg", 117.7], ["entry_00193", "V3Zr", 117.6], ["entry_00333", "Pt3Mn", 117.3]]}
+{
+  "columns": [
+    "entry_id",
+    "formula",
+    "shear_modulus_vrh"
+  ],
+  "rows": [
+    [
+      "entry_00217",
+      "Ru3Mg",
+      117.7
+    ],
+    [
+      "entry_00193",
+      "V3Zr",
+      117.6
+    ],
+    [
+      "entry_00333",
+      "Pt3Mn",
+      117.3
+    ]
+  ]
+}

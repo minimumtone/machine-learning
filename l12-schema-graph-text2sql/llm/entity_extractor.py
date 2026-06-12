@@ -635,6 +635,27 @@ def extract_conditions(query: str) -> dict[str, Any]:
     if lattice_ref:
         result["lattice_reference"] = lattice_ref
 
+    # Standalone lattice range: "格子定数が3.56 Å±0.03 Å" → BETWEEN 3.53 AND 3.59
+    if "lattice_reference" not in result:
+        lat_range_m = re.search(
+            r"格子定数[がの]?\s*(\d+\.?\d*)\s*(?:Å|A\b)?\s*[±]\s*(\d+\.?\d*)\s*(?:Å|A\b)?",
+            query,
+        )
+        if lat_range_m is None:
+            lat_range_m = re.search(
+                r"lattice.*?(\d+\.?\d*)\s*(?:Å|A\b)?\s*[±]\s*(\d+\.?\d*)\s*(?:Å|A\b)?",
+                query, re.IGNORECASE,
+            )
+        if lat_range_m:
+            center = float(lat_range_m.group(1))
+            half_range = float(lat_range_m.group(2))
+            result["lattice_range"] = {
+                "center": center,
+                "half_range": half_range,
+                "low": round(center - half_range, 4),
+                "high": round(center + half_range, 4),
+            }
+
     # Numeric conditions
     numeric_conds = extract_numeric_conditions(query)
     if numeric_conds:

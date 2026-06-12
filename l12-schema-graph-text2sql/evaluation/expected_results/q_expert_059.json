@@ -1,1 +1,8 @@
-{"columns": ["entry_id", "formula", "magnetic_anisotropy_energy"], "rows": []}
+{
+  "columns": [
+    "entry_id",
+    "formula",
+    "magnetic_anisotropy_energy"
+  ],
+  "rows": []
+}

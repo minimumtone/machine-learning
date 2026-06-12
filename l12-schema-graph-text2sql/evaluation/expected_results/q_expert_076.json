@@ -1,1 +1,118 @@
-{"columns": ["entry_id", "formula", "year", "title"], "rows": [["entry_00315", "Ag3Y", 2025, "Study of Ag3Y properties"], ["entry_00284", "Ta3Al", 2025, "Study of Ta3Al properties"], ["entry_00189", "V3In", 2025, "Study of V3In properties"], ["entry_00060", "Ni3Si", 2024, "Study of Ni3Si properties"], ["entry_00143", "W3In", 2024, "Study of W3In properties"], ["entry_00125", "Co3Be", 2023, "Study of Co3Be properties"], ["entry_00004", "Co3Ti", 2023, "Study of Co3Ti properties"], ["entry_00369", "Ni3Cu", 2023, "Study of Ni3Cu properties"], ["entry_00012", "Pt3Ge", 2022, "Study of Pt3Ge properties"], ["entry_00333", "Pt3Mn", 2022, "Study of Pt3Mn properties"], ["entry_00070", "Ru3V", 2022, "Study of Ru3V properties"], ["entry_00109", "W3Sb", 2022, "Study of W3Sb properties"], ["entry_00089", "Ag3Si", 2021, "Study of Ag3Si properties"], ["entry_00090", "Ag3Ti", 2021, "Study of Ag3Ti properties"], ["entry_00264", "Au3Mn", 2021, "Study of Au3Mn properties"], ["entry_00186", "Mo3Y", 2021, "Study of Mo3Y properties"], ["entry_00031", "Cr3Zr", 2020, "Study of Cr3Zr properties"], ["entry_00040", "Mo3Ga", 2020, "Study of Mo3Ga properties"]]}
+{
+  "columns": [
+    "entry_id",
+    "formula",
+    "year",
+    "title"
+  ],
+  "rows": [
+    [
+      "entry_00315",
+      "Ag3Y",
+      2025,
+      "Study of Ag3Y properties"
+    ],
+    [
+      "entry_00284",
+      "Ta3Al",
+      2025,
+      "Study of Ta3Al properties"
+    ],
+    [
+      "entry_00189",
+      "V3In",
+      2025,
+      "Study of V3In properties"
+    ],
+    [
+      "entry_00060",
+      "Ni3Si",
+      2024,
+      "Study of Ni3Si properties"
+    ],
+    [
+      "entry_00143",
+      "W3In",
+      2024,
+      "Study of W3In properties"
+    ],
+    [
+      "entry_00125",
+      "Co3Be",
+      2023,
+      "Study of Co3Be properties"
+    ],
+    [
+      "entry_00004",
+      "Co3Ti",
+      2023,
+      "Study of Co3Ti properties"
+    ],
+    [
+      "entry_00369",
+      "Ni3Cu",
+      2023,
+      "Study of Ni3Cu properties"
+    ],
+    [
+      "entry_00012",
+      "Pt3Ge",
+      2022,
+      "Study of Pt3Ge properties"
+    ],
+    [
+      "entry_00333",
+      "Pt3Mn",
+      2022,
+      "Study of Pt3Mn properties"
+    ],
+    [
+      "entry_00070",
+      "Ru3V",
+      2022,
+      "Study of Ru3V properties"
+    ],
+    [
+      "entry_00109",
+      "W3Sb",
+      2022,
+      "Study of W3Sb properties"
+    ],
+    [
+      "entry_00089",
+      "Ag3Si",
+      2021,
+      "Study of Ag3Si properties"
+    ],
+    [
+      "entry_00090",
+      "Ag3Ti",
+      2021,
+      "Study of Ag3Ti properties"
+    ],
+    [
+      "entry_00264",
+      "Au3Mn",
+      2021,
+      "Study of Au3Mn properties"
+    ],
+    [
+      "entry_00186",
+      "Mo3Y",
+      2021,
+      "Study of Mo3Y properties"
+    ],
+    [
+      "entry_00031",
+      "Cr3Zr",
+      2020,
+      "Study of Cr3Zr properties"
+    ],
+    [
+      "entry_00040",
+      "Mo3Ga",
+      2020,
+      "Study of Mo3Ga properties"
+    ]
+  ]
+}

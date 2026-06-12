@@ -1,1 +1,14 @@
-{"columns": ["entry_id", "formula", "curie_temperature_k"], "rows": [["entry_01155", "PtZn", 1394.4]]}
+{
+  "columns": [
+    "entry_id",
+    "formula",
+    "curie_temperature_k"
+  ],
+  "rows": [
+    [
+      "entry_01155",
+      "PtZn",
+      1394.4
+    ]
+  ]
+}

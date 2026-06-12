@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Iterable
+from typing import TYPE_CHECKING, Any, Iterable
 
-import psycopg
+if TYPE_CHECKING:
+    import psycopg
 
 PUBLIC_SCHEMA = "public"
 

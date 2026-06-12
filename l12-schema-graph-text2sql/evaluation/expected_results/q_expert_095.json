@@ -1,1 +1,19 @@
-{"columns": ["stability", "avg_bulk", "cnt"], "rows": [["unstable", 173.61978021978024, 182], ["stable", 178.9, 15]]}
+{
+  "columns": [
+    "stability",
+    "avg_bulk",
+    "cnt"
+  ],
+  "rows": [
+    [
+      "unstable",
+      173.61978021978024,
+      182
+    ],
+    [
+      "stable",
+      178.9,
+      15
+    ]
+  ]
+}

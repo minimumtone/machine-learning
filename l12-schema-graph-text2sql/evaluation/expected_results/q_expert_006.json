@@ -1,1 +1,22 @@
-{"columns": ["entry_id", "source_db", "source_material_id", "formula", "reduced_formula", "chemical_system", "number_of_elements"], "rows": [["entry_00001", "OQMD", "oqmd_1", "Ni3Al", "Ni3Al", "Al-Ni", 2]]}
+{
+  "columns": [
+    "entry_id",
+    "source_db",
+    "source_material_id",
+    "formula",
+    "reduced_formula",
+    "chemical_system",
+    "number_of_elements"
+  ],
+  "rows": [
+    [
+      "entry_00001",
+      "OQMD",
+      "oqmd_1",
+      "Ni3Al",
+      "Ni3Al",
+      "Al-Ni",
+      2
+    ]
+  ]
+}

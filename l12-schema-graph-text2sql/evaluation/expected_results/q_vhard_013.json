@@ -1,1 +1,39 @@
-{"columns": ["formula", "energy_above_hull", "formation_energy_per_atom", "lattice_a", "bulk_modulus"], "rows": [["Pt3Al", 0.0, -0.55, 3.9, 210.0], ["Al3Sc", 0.0, -0.5, 4.09, 155.0], ["Co3Ti", 0.0, -0.45, 3.55, 190.0], ["Ni3Al", 0.0, -0.42, 3.572, 180.0]]}
+{
+  "columns": [
+    "formula",
+    "energy_above_hull",
+    "formation_energy_per_atom",
+    "lattice_a",
+    "bulk_modulus"
+  ],
+  "rows": [
+    [
+      "Pt3Al",
+      0.0,
+      -0.55,
+      3.9,
+      210.0
+    ],
+    [
+      "Al3Sc",
+      0.0,
+      -0.5,
+      4.09,
+      155.0
+    ],
+    [
+      "Co3Ti",
+      0.0,
+      -0.45,
+      3.55,
+      190.0
+    ],
+    [
+      "Ni3Al",
+      0.0,
+      -0.42,
+      3.572,
+      180.0
+    ]
+  ]
+}
