@@ -294,20 +294,22 @@ else:
 # 6. DB 規模
 # ---------------------------------------------------------------------------
 
+_proto_csv = EVAL / "prototype_distribution.csv"
+_proto_dist: dict[str, int] = {}
+if _proto_csv.exists():
+    for _row in read_csv(_proto_csv):
+        if _row["prototype"] != "total":
+            _proto_dist[_row["prototype"]] = int(_row["count"])
+else:
+    # Fallback (db/insert_data.sql authoritative values)
+    _proto_dist = {"L12": 392, "B2": 636, "NaCl": 355, "NiAs": 74, "BiF3": 13}
+    print(f"WARNING: {_proto_csv} not found — using hardcoded prototype distribution")
+
 db_stats = {
     "n_tables": 30,
-    "n_entries": 1470,
-    "n_prototypes": 5,
-    "prototype_distribution": {
-        # Counts from db/insert_data.sql (authoritative).
-        # known_l12_recovery.csv contains 259 rows (query output subset),
-        # not the full 392 L12 entries in the DB.
-        "L12": 392,
-        "B2": 636,
-        "NaCl": 355,
-        "NiAs": 74,
-        "BiF3": 13,
-    },
+    "n_entries": sum(_proto_dist.values()),
+    "n_prototypes": len(_proto_dist),
+    "prototype_distribution": _proto_dist,
 }
 
 # ---------------------------------------------------------------------------
@@ -325,11 +327,20 @@ metric_improvement = {
 def _identify_representative_run(
     run_paths: list[Path], representative_path: Path
 ) -> str:
-    """proposed_result.csv がどのランと一致するかをMD5で照合して返す。"""
-    import hashlib
-    rep_hash = hashlib.md5(representative_path.read_bytes()).hexdigest()
+    """proposed_result.csv がどのランと一致するかを共通列のデータで照合して返す。
+
+    MD5ではなく query_id + execution_accuracy の全行一致で判定するため、
+    proposed_result.csv に分析用カラム(n_tables等)が追加されていても正しく照合できる。
+    """
+    import csv as _csv
+
+    def _key_data(path: Path) -> list[tuple[str, str]]:
+        with open(path, encoding="utf-8") as f:
+            return [(r["query_id"], r["execution_accuracy"]) for r in _csv.DictReader(f)]
+
+    rep_data = _key_data(representative_path)
     for p in run_paths:
-        if hashlib.md5(p.read_bytes()).hexdigest() == rep_hash:
+        if _key_data(p) == rep_data:
             return f"{p.name} (= proposed_result.csv)"
     return "proposed_result.csv (ランファイルと不一致)"
 
@@ -496,7 +507,8 @@ output = {
         "total_l12_in_db": 392,  # from db/insert_data.sql, not from CSV subset
         "stable_candidates": stable_count,
         "metastable_candidates": metastable_count,
-        "gamma_prime_total": stable_count + metastable_count,
+        "stable_l12_screened_total": stable_count + metastable_count,
+        "gamma_prime_ranking_total": len(gamma),
         "gamma_prime_top1_formula": top1.get("formula", ""),
         "gamma_prime_top1_score": float(top1.get("composite_score", 0)),
         "lattice_matched_candidates": lattice_matched_count,
@@ -549,4 +561,4 @@ if expert_out:
 else:
     print("独立評価: expert_evaluation_results.json が存在しないためスキップ")
 print(f"既知L12回収: {len(recovered)}/{len(known_l12)}")
-print(f"γ'候補: {stable_count + metastable_count}件 (安定{stable_count} + 準安定{metastable_count})")
+print(f"安定・準安定L12: {stable_count + metastable_count}件 (安定{stable_count} + 準安定{metastable_count}), γ'ランキング: {len(gamma)}件")

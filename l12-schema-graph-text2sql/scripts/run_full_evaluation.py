@@ -755,15 +755,17 @@ def run_materials_analysis(conn) -> None:
     stable_path = EVAL_DIR / "stable_l12_candidates.csv"
     with open(stable_path, "w", newline="") as f:
         f.write("# Paper ref: Section 4.3.3, Supplementary S6 (tab:sup_injection_results)\n")
-        f.write("# 337 candidates (stable=100, metastable=237). Use stability_class, not is_stable\n")
+        f.write("# stability_class is authoritative (stable: Ehull<=0.001, metastable: 0.001<Ehull<=0.05)\n")
+        f.write("# is_stable_legacy: original DB flag (may conflict with stability_class)\n")
         w = csv.writer(f)
         w.writerow(["formula", "lattice_a", "energy_above_hull",
-                     "formation_energy_per_atom", "is_stable",
-                     "stability_class"])
+                     "formation_energy_per_atom", "stability_class",
+                     "is_stable_legacy"])
         for row in cur.fetchall():
             ehull = float(row[2])
             cls = "stable" if ehull <= 0.001 else "metastable"
-            w.writerow([*row, cls])
+            # row = (formula, lattice_a, ehull, fe, is_stable)
+            w.writerow([row[0], row[1], row[2], row[3], cls, row[4]])
     print(f"  Stable candidates written to {stable_path}")
 
     # 3. Ni3Al lattice-matched candidates (|Δa| ≤ 0.03, deduplicated)

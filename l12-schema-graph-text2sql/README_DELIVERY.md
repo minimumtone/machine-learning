@@ -10,14 +10,15 @@
 - **論文PDF** (`paper/t2sql_materials_paper.pdf`)
 - **評価結果CSV** (`evaluation/proposed_result*.csv`, `baseline_result.csv`)
 - **分析用注釈付CSV** (`evaluation/proposed_result_annotated.csv` — `n_tables`/`ntables_difficulty`/`original_difficulty`列付き。代表ランCSVはrun2とバイト同一を維持)
-- **Gold SQL** (`evaluation/gold_sql/` 100件)
-- **期待結果JSON** (`evaluation/expected_results/` 100件)
+- **Gold SQL** (`evaluation/gold_sql/` 200件：著者設計100件 + 独立設計100件)
+- **期待結果JSON** (`evaluation/expected_results/` 200件：著者設計100件 + 独立設計100件)
 - **材料分析CSV** (`evaluation/known_l12_recovery.csv`, `stable_l12_candidates.csv`, `gamma_prime_candidate_ranking.csv`, `ni3al_lattice_matched_candidates.csv`)
 - **プロトタイプ分布** (`evaluation/prototype_distribution.csv` — L12=392件等の集計根拠)
 - **ソースコード** (`graph/`, `llm/`, `safety/`, `evaluation/metrics.py`)
 - **評価スクリプト** (`scripts/run_full_evaluation.py`, `scripts/run_proposed_only.py`, `scripts/compute_paper_figures.py`)
 - **安全検査定義** (`safety/allowed_schema.yaml`)
 - **論文数値JSON** (`paper/paper_figures.json` — Single Source of Truth)
+- **pytest設定** (`pytest.ini` — テスト収集を `tests/` に制限。ZIP単体では `tests/` 未同梱のため実行不可）
 
 ## ZIP に含まれないもの
 
@@ -31,7 +32,7 @@
 | `tests/` | ユニットテスト125件 |
 | `api/` | FastAPIアプリケーション |
 | `.env.example` | 環境変数テンプレート |
-| `experiments/results/` | アブレーション実験結果 |
+| `experiments/` | アブレーション実験スクリプト・結果 |
 | `VERIFICATION_GUIDE.md` | 検証手順書 |
 
 ## 検証可能な項目（ZIP単体）
@@ -119,6 +120,28 @@ v4でgraph層のJOIN方向バグ（`_edge_source`による逆方向走査時の�
 結果CSVは修正前コードで生成されたもの。検証の結果、評価100クエリへの影響はなし:
 非対称カラム名のJOINは2件のみ（`material_defect–element`, `application_domain`自己参照）で、
 評価クエリでこれらのテーブルに触れるものは0件。残りは全て`entry_id=entry_id`型の対称JOINで結果同一。
+
+## pipeline() の簡易実行について
+
+`llm.sql_generator.pipeline()` を `join_list=None` で呼ぶと、5テーブルのフォールバックJOINセットで動作します。
+論文が主張する30テーブルSchema Graph走査を再現するには、DBからFK情報を取得して `join_list` を明示的に渡す必要があります:
+
+```python
+from graph.join_path_generator import get_allowed_join_list
+join_list = get_allowed_join_list(db_connection)  # requires live DB
+result = pipeline(query, join_list=join_list)
+```
+
+## LaTeX再コンパイルに必要な環境
+
+論文PDFの再コンパイルには以下が必要です:
+
+- LuaLaTeX (TeX Live 2024以降推奨)
+- 日本語フォント: IPAexMincho, IPAexGothic (`apt install fonts-ipaexfont` 等)
+- パッケージ: `fontspec`, `luatexja`, `booktabs`, `amsmath`, `hyperref` 等
+
+フォントが未インストールの環境では `fontspec Error: The font "IPAexMincho" cannot be found` で停止します。
+PDF自体は同梱済みのため、閲覧のみであれば再コンパイル不要です。
 
 ## ベースラインCSVに関する注記
 

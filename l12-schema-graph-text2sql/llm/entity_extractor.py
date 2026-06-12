@@ -223,17 +223,17 @@ _PROPERTY_COLUMN_MAP: dict[str, str] = {
     "volume_per_atom": "structure.volume_per_atom",
     "volume per atom": "structure.volume_per_atom",
     "原子あたり体積": "structure.volume_per_atom",
-    # Elastic properties (calculated_property / elastic_tensor)
-    "bulk_modulus": "calculated_property.value",
-    "bulk modulus": "calculated_property.value",
-    "バルクモジュラス": "calculated_property.value",
-    "体積弾性率": "calculated_property.value",
+    # Elastic properties → elastic_tensor columns
+    "bulk_modulus": "elastic_tensor.bulk_modulus_vrh",
+    "bulk modulus": "elastic_tensor.bulk_modulus_vrh",
+    "バルクモジュラス": "elastic_tensor.bulk_modulus_vrh",
+    "体積弾性率": "elastic_tensor.bulk_modulus_vrh",
     "bulk_modulus_vrh": "elastic_tensor.bulk_modulus_vrh",
-    "shear_modulus": "calculated_property.value",
-    "shear modulus": "calculated_property.value",
-    "せん断弾性率": "calculated_property.value",
+    "shear_modulus": "elastic_tensor.shear_modulus_vrh",
+    "shear modulus": "elastic_tensor.shear_modulus_vrh",
+    "せん断弾性率": "elastic_tensor.shear_modulus_vrh",
     "shear_modulus_vrh": "elastic_tensor.shear_modulus_vrh",
-    "弾性係数": "calculated_property.value",
+    "弾性係数": "elastic_tensor.bulk_modulus_vrh",
     # Thermal properties
     "debye_temperature": "thermal_property.debye_temperature_k",
     "debye temperature": "thermal_property.debye_temperature_k",
@@ -418,7 +418,10 @@ def extract_formula(query: str) -> dict[str, Any] | None:
     """
     q = _normalize(query)
     candidates: list[str] = []
-    for m in re.finditer(r"\b([A-Z][a-z]?\d*(?:[A-Z][a-z]?\d*){1,5})\b", q):
+    # Use Unicode-aware boundaries: Japanese chars, whitespace, punctuation, start/end
+    _FB = r'(?:(?<=\s)|(?<=[\u3000-\u9FFF\u3040-\u309F\u30A0-\u30FF\uFF00-\uFFEF])|(?<=^)|(?<=[^A-Za-z0-9]))'
+    _FE = r'(?=\s|[\u3000-\u9FFF\u3040-\u309F\u30A0-\u30FF\uFF00-\uFFEF]|$|[^A-Za-z0-9])'
+    for m in re.finditer(_FB + r'([A-Z][a-z]?\d*(?:[A-Z][a-z]?\d*){1,5})' + _FE, q):
         token = m.group(1)
         parsed = _parse_formula_token(token)
         if parsed and len(parsed) >= 2:
