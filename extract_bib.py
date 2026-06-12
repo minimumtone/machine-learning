@@ -164,8 +164,8 @@ DEFAULT_PROVIDERS: Dict[str, Dict[str, Any]] = {
         "api_key_required": True,
     },
     "lmstudio": {
-        "base_url": "http://localhost:1234/v1",
-        "model": "local-model",
+        "base_url": "http://192.168.1.23:1234/v1",
+        "model": "google/gemma-4-12b",
         "api_key_env": None,
         "api_key_required": False,
     },

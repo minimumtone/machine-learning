@@ -179,8 +179,8 @@ DEFAULT_PROVIDERS: Dict[str, Dict[str, Any]] = {
         "api_key_required": True,
     },
     "lmstudio": {
-        "base_url": "http://localhost:1234/v1",
-        "model": "local-model",
+        "base_url": "http://192.168.1.23:1234/v1",
+        "model": "google/gemma-4-12b",
         "api_key_env": None,
         "api_key_required": False,
     },
@@ -601,11 +601,11 @@ with st.sidebar:
     else:
         provider_key = "lmstudio"
         api_key = None
-        base_url = st.text_input("LM Studio URL", value="http://localhost:1234/v1")
+        base_url = st.text_input("LM Studio URL", value="http://192.168.1.23:1234/v1")
         model = st.text_input(
             "モデル名",
-            value="",
-            placeholder="例: bonsai-8b, gemma-3-4b など",
+            value="google/gemma-4-12b",
+            placeholder="例: google/gemma-4-12b, bonsai-8b など",
             help="LM Studio で読み込んでいるモデル名を入力してください",
         )
 
@@ -615,7 +615,7 @@ with st.sidebar:
         "チャンクあたり最大トークン数",
         min_value=500,
         max_value=50000,
-        value=2500,
+        value=5000,
         step=500,
         help="ローカル LLM のコンテキスト長が小さい場合は値を下げてください。"
              "OpenAI (128k) なら大きくしても OK です。",
