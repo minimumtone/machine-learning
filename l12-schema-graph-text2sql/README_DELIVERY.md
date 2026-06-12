@@ -18,7 +18,7 @@
 - **評価スクリプト** (`scripts/run_full_evaluation.py`, `scripts/run_proposed_only.py`, `scripts/compute_paper_figures.py`)
 - **安全検査定義** (`safety/allowed_schema.yaml`)
 - **論文数値JSON** (`paper/paper_figures.json` — Single Source of Truth)
-- **pytest設定** (`pytest.ini` — テスト収集を `tests/` に制限。ZIP単体では `tests/` 未同梱のため実行不可）
+- **数値検証スクリプト** (`scripts/validate_paper_numbers.py` — `paper_figures.json`とTeX本文の整合検証）
 
 ## ZIP に含まれないもの
 
@@ -33,6 +33,7 @@
 | `api/` | FastAPIアプリケーション |
 | `.env.example` | 環境変数テンプレート |
 | `experiments/` | アブレーション実験スクリプト・結果 |
+| `pytest.ini` | pytest設定（`tests/`に収集制限） |
 | `VERIFICATION_GUIDE.md` | 検証手順書 |
 
 ## 検証可能な項目（ZIP単体）
