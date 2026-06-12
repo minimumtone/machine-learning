@@ -55,6 +55,7 @@ def _normalize_column_aliases(sql: str) -> str:
         ('stability_category', 'stability'),
         ('stability_class', 'stability'),
         ('stable_count', 'count'),
+        ('l12_count', 'count'),
         ('compound_count', 'count'),
     ]
     for old_alias, new_alias in alias_map:

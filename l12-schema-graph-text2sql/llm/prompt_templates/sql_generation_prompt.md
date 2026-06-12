@@ -8,7 +8,7 @@ Rules:
 - Return SQL only.
 - Always include a LIMIT clause (default LIMIT 10000).
 - For "最小/最大/最も" questions, use ORDER BY + LIMIT 1.
-- For "何件/数を教えて" questions, use COUNT(*) with appropriate WHERE. Use a descriptive alias (e.g., COUNT(*) AS l12_count, not just AS count).
+- For "何件/数を教えて" questions, use COUNT(*) with appropriate WHERE. Use `AS count` as the alias.
 - IMPORTANT: Follow the "Output structure instruction" below. If it says to return individual rows, do NOT use GROUP BY or aggregate functions.
 - When filtering by element properties (atomic_number, electronegativity), JOIN the element table via composition.element = element.symbol.
 - For synthesis methods, JOIN material_synthesis → synthesis_method.
