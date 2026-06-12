@@ -643,8 +643,8 @@ def extract_conditions(query: str) -> dict[str, Any]:
                     break
 
     # Site label extraction (A-site / B-site)
-    _site_a = re.search(r'[Aa]サイト|A[\-\s]?site', query)
-    _site_b = re.search(r'[Bb]サイト|B[\-\s]?site', query)
+    _site_a = re.search(r'[Aa]サイト|A[\-\s]?site', query, re.IGNORECASE)
+    _site_b = re.search(r'[Bb]サイト|B[\-\s]?site', query, re.IGNORECASE)
     if _site_a or _site_b:
         sites = []
         if _site_a:
