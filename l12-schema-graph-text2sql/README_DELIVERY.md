@@ -9,6 +9,7 @@
 
 - **論文PDF** (`paper/t2sql_materials_paper.pdf`)
 - **評価結果CSV** (`evaluation/proposed_result*.csv`, `baseline_result.csv`)
+- **分析用注釈付CSV** (`evaluation/proposed_result_annotated.csv` — `n_tables`/`ntables_difficulty`/`original_difficulty`列付き。代表ランCSVはrun2とバイト同一を維持)
 - **Gold SQL** (`evaluation/gold_sql/` 100件)
 - **期待結果JSON** (`evaluation/expected_results/` 100件)
 - **材料分析CSV** (`evaluation/known_l12_recovery.csv`, `stable_l12_candidates.csv`, `gamma_prime_candidate_ranking.csv`, `ni3al_lattice_matched_candidates.csv`)
