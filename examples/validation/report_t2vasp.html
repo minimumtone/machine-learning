@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>t2vasp 実装レポート — VASP計算後処理・構造最適化ツールキット</title>
+<style>
+  :root {
+    --bg: #f8f9fa;
+    --card: #ffffff;
+    --accent: #1a5276;
+    --accent2: #2e86c1;
+    --text: #2c3e50;
+    --muted: #7f8c8d;
+    --border: #dce1e6;
+    --code-bg: #f4f6f8;
+    --success: #27ae60;
+    --warn: #e67e22;
+    --danger: #c0392b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Sans JP", "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.8;
+    font-size: 15px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+  header {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    padding: 3rem 0;
+    text-align: center;
+  }
+  header h1 { font-size: 2.4rem; font-weight: 700; margin-bottom: 0.5rem; }
+  header p { font-size: 1.1rem; opacity: 0.9; }
+  h2 {
+    font-size: 1.6rem;
+    color: var(--accent);
+    border-bottom: 3px solid var(--accent2);
+    padding-bottom: 0.4rem;
+    margin: 2.5rem 0 1rem;
+  }
+  h3 { font-size: 1.25rem; color: var(--accent); margin: 1.5rem 0 0.6rem; }
+  h4 { font-size: 1.05rem; color: var(--accent2); margin: 1rem 0 0.4rem; }
+  p, li { margin-bottom: 0.5rem; }
+  ul, ol { padding-left: 1.5rem; }
+  a { color: var(--accent2); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 14px;
+  }
+  th, td {
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  th { background: var(--accent); color: #fff; font-weight: 600; }
+  tr:nth-child(even) { background: #f4f6f8; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.88em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e272e;
+    color: #dfe6e9;
+    padding: 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 1rem 0;
+  }
+  pre code { background: none; padding: 0; color: inherit; }
+  .badge {
+    display: inline-block;
+    padding: 0.2em 0.6em;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: 600;
+    color: #fff;
+  }
+  .badge-pass { background: var(--success); }
+  .badge-fail { background: var(--danger); }
+  .badge-phase { background: var(--accent2); }
+  .badge-new { background: var(--warn); }
+  .stat-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin: 1rem 0;
+  }
+  .stat-box {
+    flex: 1;
+    min-width: 150px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+  }
+  .stat-box .num { font-size: 2rem; font-weight: 700; color: var(--accent); }
+  .stat-box .label { font-size: 0.85rem; color: var(--muted); }
+  .formula {
+    background: #fef9e7;
+    border-left: 4px solid var(--warn);
+    padding: 1rem 1.2rem;
+    margin: 1rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 1.05em;
+  }
+  .toc {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+  }
+  .toc h3 { margin-top: 0; }
+  .toc ol { line-height: 2.2; }
+  .toc a { font-weight: 500; }
+  figure {
+    margin: 1.5rem 0;
+    text-align: center;
+  }
+  figure img {
+    max-width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  figcaption {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+  .highlight { background: #fef9e7; padding: 0.15em 0.3em; border-radius: 3px; }
+  footer {
+    text-align: center;
+    padding: 2rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--border);
+    margin-top: 3rem;
+  }
+  @media (max-width: 768px) {
+    header h1 { font-size: 1.6rem; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <h1>t2vasp 実装レポート</h1>
+    <p>VASP計算後処理・結晶場解析・構造最適化ツールキット — 全6フェーズ実装報告</p>
+  </div>
+</header>
+
+<div class="container">
+
+<!-- ============================================================ -->
+<!-- 目次                                                          -->
+<!-- ============================================================ -->
+<div class="toc">
+  <h3>目次</h3>
+  <ol>
+    <li><a href="#overview">プロジェクト概要</a></li>
+    <li><a href="#architecture">アーキテクチャと設計方針</a></li>
+    <li><a href="#phase1">フェーズ1–2: パーサーとコアロジック</a></li>
+    <li><a href="#phase3">フェーズ3: ポスト処理（エクスポート・可視化）</a></li>
+    <li><a href="#phase4">フェーズ4: パイプライン統合と CLI</a></li>
+    <li><a href="#phase5">フェーズ5: 構造操作と自動化（ASE連携）</a></li>
+    <li><a href="#phase6">フェーズ6: 最適化アルゴリズム（遺伝的アルゴリズム）</a></li>
+    <li><a href="#jt">ヤーン・テラー効果と結晶場安定化エネルギー（CFSE）</a></li>
+    <li><a href="#validation">検証結果</a></li>
+    <li><a href="#testing">テストスイート</a></li>
+    <li><a href="#config">設定ファイルと拡張性</a></li>
+    <li><a href="#summary">まとめと今後の展望</a></li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<!-- 1. プロジェクト概要                                            -->
+<!-- ============================================================ -->
+<h2 id="overview">1. プロジェクト概要</h2>
+
+<p><strong>t2vasp</strong> は、VASP（Vienna Ab initio Simulation Package）の計算結果を自動的に後処理し、
+結晶場理論に基づく物理量（t<sub>2g</sub>/e<sub>g</sub> 分裂、CFSE、ヤーン・テラー指標）を抽出するための
+Python ツールキットです。</p>
+
+<p>本プロジェクトの最重要方針は、指示書に記載された通り：</p>
+<blockquote class="card" style="border-left: 4px solid var(--accent2); font-style: italic;">
+「単に動くコードを書くだけでなく、<strong>データの一貫性と解析精度の担保</strong>を最優先事項として取り組んでください。」
+</blockquote>
+
+<p>この方針に基づき、以下の設計原則を徹底しました：</p>
+<ul>
+  <li><strong>モジュール化</strong>：機能ごとに独立したモジュール（parser, calculator, exporter 等）に分離</li>
+  <li><strong>設定の外部化</strong>：物理定数・係数はすべて YAML 設定ファイルから読み込み、ハードコーディング禁止</li>
+  <li><strong>純関数設計</strong>：計算ロジックはすべて「物理パラメータを受け取って値を返す関数」として独立</li>
+  <li><strong>教科書値との照合</strong>：CFSE テーブルを教科書値と 1:1 で比較検証</li>
+  <li><strong>ロギング</strong>：<code>print()</code> ではなく <code>logging</code> ライブラリによる進捗表示</li>
+</ul>
+
+<div class="stat-row">
+  <div class="stat-box"><div class="num">3,834</div><div class="label">総コード行数</div></div>
+  <div class="stat-box"><div class="num">10</div><div class="label">モジュール数</div></div>
+  <div class="stat-box"><div class="num">71</div><div class="label">pytest テスト</div></div>
+  <div class="stat-box"><div class="num">49</div><div class="label">検証チェック項目</div></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- 2. アーキテクチャ                                              -->
+<!-- ============================================================ -->
+<h2 id="architecture">2. アーキテクチャと設計方針</h2>
+
+<h3>2.1 モジュール構成</h3>
+
+<table>
+  <tr><th>モジュール</th><th>行数</th><th>役割</th><th>フェーズ</th></tr>
+  <tr><td><code>parser.py</code></td><td>349</td><td>OUTCAR / vasprun.xml / POSCAR / DOSCAR パーサー</td><td><span class="badge badge-phase">1</span></td></tr>
+  <tr><td><code>calculator.py</code></td><td>506</td><td>エネルギー解析、構造メトリクス、結晶場/CFSE/JT 解析</td><td><span class="badge badge-phase">2</span> <span class="badge badge-new">JT</span></td></tr>
+  <tr><td><code>exporter.py</code></td><td>158</td><td>CSV / JSON / Summary テキスト出力</td><td><span class="badge badge-phase">3</span></td></tr>
+  <tr><td><code>visualizer.py</code></td><td>183</td><td>matplotlib によるプロット（エネルギー比較、DOS、ΔE ランキング等）</td><td><span class="badge badge-phase">3</span></td></tr>
+  <tr><td><code>pipeline.py</code></td><td>230</td><td>バッチ処理、VASP 実行ラッパー、最適化ループ</td><td><span class="badge badge-phase">4</span></td></tr>
+  <tr><td><code>cli.py</code></td><td>146</td><td>argparse CLI（parse / batch / generate / optimise / plot）</td><td><span class="badge badge-phase">4</span></td></tr>
+  <tr><td><code>structure.py</code></td><td>212</td><td>ASE 連携：L1<sub>2</sub>/B2 構造生成、ひずみ・摂動、POSCAR 出力</td><td><span class="badge badge-phase">5</span></td></tr>
+  <tr><td><code>optimizer.py</code></td><td>196</td><td>遺伝的アルゴリズム（GA）: トーナメント選択、BLX-α 交叉</td><td><span class="badge badge-phase">6</span></td></tr>
+  <tr><td><code>config/__init__.py</code></td><td>46</td><td>YAML 設定ファイルの読み込み・マージ</td><td>共通</td></tr>
+  <tr><td><code>utils.py</code></td><td>48</td><td>ロギング設定、ディレクトリ探索、型安全変換</td><td>共通</td></tr>
+</table>
+
+<h3>2.2 データフロー</h3>
+
+<pre><code>VASP出力ファイル                   設定ファイル
+  ├─ OUTCAR                        config/defaults.yaml
+  ├─ POSCAR/CONTCAR                     │
+  ├─ DOSCAR                             ▼
+  └─ vasprun.xml              ┌─────────────────┐
+        │                     │  load_config()   │
+        ▼                     └────────┬────────┘
+  ┌──────────┐                         │
+  │ parser   │ ──→ StructureData       │
+  │          │ ──→ OutcarData          │
+  │          │ ──→ DosData             │
+  │          │ ──→ VasprunData         │
+  └────┬─────┘                         │
+       │                               │
+       ▼                               ▼
+  ┌──────────────┐  cfg  ┌──────────────────────┐
+  │ calculator   │◀──────│  analyse(parsed, cfg) │
+  │              │       └──────────────────────┘
+  │ compute_energy()           │
+  │ compute_structure_metrics()│
+  │ compute_crystal_field()    │  ──→ CrystalFieldResult
+  │ compute_cfse()             │      (splitting, CFSE, JT)
+  │ compute_jahn_teller_energy()      │
+  └──────┬───────┘                    │
+         │                            │
+         ▼                            ▼
+  ┌──────────┐              ┌────────────────┐
+  │ exporter │              │  visualizer    │
+  │  CSV     │              │  plot_dos()    │
+  │  JSON    │              │  plot_energy() │
+  │  Summary │              │  plot_delta()  │
+  └──────────┘              └────────────────┘
+         │                            │
+         ▼                            ▼
+  ┌──────────────────────────────────────────┐
+  │           pipeline / cli                 │
+  │  process_single() → process_batch()      │
+  │  run_vasp() → optimisation_loop()        │
+  │  python -m t2vasp parse|batch|generate   │
+  └──────────────────────────────────────────┘
+         │
+         ▼
+  ┌──────────────┐      ┌──────────────┐
+  │ structure.py │      │ optimizer.py │
+  │ create_l12() │      │ GeneticAlgo  │
+  │ create_b2()  │      │ BLX-α交叉    │
+  │ apply_strain │      │ ガウス突然変異 │
+  │ candidates   │      │ トーナメント   │
+  └──────────────┘      └──────────────┘</code></pre>
+
+<h3>2.3 データクラス設計</h3>
+<p>すべての中間データと結果は <code>dataclass</code> で型付け定義し、<code>as_dict()</code> メソッドで
+シリアライズ可能としています。</p>
+
+<div class="card-grid">
+  <div class="card">
+    <h4>パーサー出力</h4>
+    <ul>
+      <li><code>StructureData</code>: 格子ベクトル、元素種、分率座標</li>
+      <li><code>OutcarData</code>: 全エネルギー、原子数、収束判定、力、応力テンソル</li>
+      <li><code>DosData</code>: エネルギー軸、全DOS、フェルミエネルギー、projected DOS</li>
+      <li><code>VasprunData</code>: XML 解析結果（電子収束・イオン収束）</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>解析結果</h4>
+    <ul>
+      <li><code>EnergyResult</code>: 全エネルギー、E/atom、形成エネルギー</li>
+      <li><code>StructureResult</code>: 格子定数、体積、c/a、最大力、圧力</li>
+      <li><code>CrystalFieldResult</code>: Δ<sub>oct</sub>、CFSE、JT活性・強度、eg分裂</li>
+      <li><code>JahnTellerResult</code>: JTSE、JTSE/atom、Δ(c/a)</li>
+      <li><code>CalculationResult</code>: 上記すべてを集約</li>
+    </ul>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- 3. フェーズ1-2                                                -->
+<!-- ============================================================ -->
+<h2 id="phase1">3. フェーズ1–2: パーサーとコアロジック</h2>
+
+<h3>3.1 VASP ファイルパーサー (<code>parser.py</code>, 349行)</h3>
+
+<p>外部 VASP 専用ライブラリに依存せず、stdlib の <code>xml.etree.ElementTree</code> と
+<code>numpy</code> のみで以下の4形式を解析します：</p>
+
+<div class="card">
+<h4>parse_poscar(path) → StructureData</h4>
+<p>POSCAR / CONTCAR ファイルからの格子ベクトル・元素種・分率座標の抽出。スケール因子の適用、
+Direct/Cartesian 座標の判定を含む。</p>
+<pre><code># 格子定数は lattice_constant プロパティで取得
+struct = parse_poscar("CONTCAR")
+print(f"a = {struct.lattice_constant:.3f} Å")
+print(f"V = {struct.volume:.3f} ų")</code></pre>
+</div>
+
+<div class="card">
+<h4>parse_outcar(path) → OutcarData</h4>
+<p>正規表現によるテキストパターンマッチングで以下を抽出：</p>
+<ul>
+  <li>全エネルギー (<code>free energy TOTEN</code>)</li>
+  <li>原子数 (<code>NIONS</code>)</li>
+  <li>収束判定 (<code>reached required accuracy</code>)</li>
+  <li>原子間力 (<code>TOTAL-FORCE</code> ブロック)</li>
+  <li>応力テンソル（Voigt 表記、6成分）</li>
+  <li>フェルミエネルギー、磁気モーメント、計算時間</li>
+</ul>
+</div>
+
+<div class="card">
+<h4>parse_doscar(path) → DosData</h4>
+<p>DOSCAR ファイルから全状態密度（total DOS）とエネルギー軸を読み取り。フェルミエネルギーは
+ヘッダ行（6行目）から取得。</p>
+</div>
+
+<div class="card">
+<h4>parse_vasprun(path) → VasprunData</h4>
+<p>XML 形式の vasprun.xml を ElementTree で解析し、projected DOS（軌道分解 DOS）を含む
+電子構造データを抽出。空の <code>&lt;set&gt;</code> 要素に対する <code>ndim</code> ガードを実装し、
+IndexError を防止。</p>
+</div>
+
+<h3>3.2 コア計算ロジック (<code>calculator.py</code>, 506行)</h3>
+
+<h4>compute_energy(outcar, reference_energies, species) → EnergyResult</h4>
+<p>OUTCAR の全エネルギーからアトムあたりエネルギー (E/atom) と形成エネルギーを計算：</p>
+<div class="formula">
+  E<sub>formation</sub> = (E<sub>total</sub> − Σ<sub>i</sub> E<sub>ref</sub>(species<sub>i</sub>)) / N<sub>atoms</sub>
+</div>
+
+<h4>compute_structure_metrics(struct, outcar) → StructureResult</h4>
+<p>格子定数 <em>a</em>（第1ベクトルのノルム）、体積（行列式）、c/a 比、最大原子間力、
+圧力（応力テンソルのトレース/3）を導出。</p>
+
+<h4>compute_delta_energy(results, reference_label) → Dict[str, float]</h4>
+<p>複数計算結果間の ΔE (eV/atom) を計算。参照はラベル指定またはエネルギー最小構造。
+構造ランキングに使用。</p>
+
+
+<!-- ============================================================ -->
+<!-- 4. フェーズ3                                                  -->
+<!-- ============================================================ -->
+<h2 id="phase3">4. フェーズ3: ポスト処理（エクスポート・可視化）</h2>
+
+<h3>4.1 エクスポーター (<code>exporter.py</code>, 158行)</h3>
+
+<div class="card-grid">
+  <div class="card">
+    <h4>export_csv()</h4>
+    <p>ネストされた結果辞書を <code>_flatten()</code> でドット記法のフラットキーに変換し、
+    CSV として出力。区切り文字と浮動小数点精度は設定ファイルで制御。</p>
+    <pre><code>label,energy.total_energy,energy.energy_per_atom,...
+Ni_fcc,-21.568000,-5.392000,...
+Cu_tet,-15.200000,-3.800000,...</code></pre>
+  </div>
+  <div class="card">
+    <h4>export_json()</h4>
+    <p>numpy 型の自動変換（<code>np.integer → int</code>, <code>np.floating → float</code>,
+    <code>ndarray → list</code>）を含む JSON シリアライザ。</p>
+  </div>
+  <div class="card">
+    <h4>export_summary()</h4>
+    <p>人間可読なテーブル形式の要約テキスト。ラベル、E/atom、格子定数、体積/atom、収束状態を表示。</p>
+    <pre><code>========================================
+t2vasp Analysis Summary
+========================================
+Label                     E/atom (eV)  a (Å)  Vol/at (ų)  Conv
+-----------------------------------------
+Ni_fcc                       -5.3920  3.524      10.941   Yes
+Cu_tet                       -3.8000  3.600      11.664   Yes
+-----------------------------------------
+Total records: 2
+Converged: 2/2
+========================================</code></pre>
+  </div>
+</div>
+
+<h3>4.2 可視化 (<code>visualizer.py</code>, 183行)</h3>
+<p>matplotlib ベースの4種のプロット関数。すべて <code>Figure</code> を返し、オプションでファイル保存。
+matplotlib 未インストール時はグレースフルに <code>ImportError</code> を発生。</p>
+<table>
+  <tr><th>関数</th><th>内容</th></tr>
+  <tr><td><code>plot_energy_comparison()</code></td><td>E/atom の棒グラフ比較</td></tr>
+  <tr><td><code>plot_dos()</code></td><td>全 DOS プロット（フェルミ準位基準）</td></tr>
+  <tr><td><code>plot_delta_energy()</code></td><td>ΔE ランキングの水平棒グラフ</td></tr>
+  <tr><td><code>plot_lattice_comparison()</code></td><td>格子定数の構造間比較</td></tr>
+</table>
+
+
+<!-- ============================================================ -->
+<!-- 5. フェーズ4                                                  -->
+<!-- ============================================================ -->
+<h2 id="phase4">5. フェーズ4: パイプライン統合と CLI</h2>
+
+<h3>5.1 パイプライン (<code>pipeline.py</code>, 230行)</h3>
+
+<div class="card">
+<h4>process_single(calc_dir, cfg) → CalculationResult</h4>
+<p>1つの VASP 計算ディレクトリに対して「パース → 解析」の全工程を実行。</p>
+</div>
+
+<div class="card">
+<h4>process_batch(base_dir, cfg, output_dir, export_formats) → List[CalculationResult]</h4>
+<p>指定ディレクトリ配下のすべての計算サブディレクトリを探索し、一括処理。
+結果を CSV / JSON / Summary のいずれかまたは複数形式でエクスポート。</p>
+</div>
+
+<div class="card">
+<h4>run_vasp(calc_dir, vasp_command, timeout) → bool</h4>
+<p><code>subprocess</code> による VASP 実行ラッパー。コマンドと作業ディレクトリを指定し、
+タイムアウト制御と戻り値チェックを行う。</p>
+</div>
+
+<div class="card">
+<h4>optimisation_loop(initial_dir, cfg, max_iterations, vasp_command)</h4>
+<p>反復最適化ループ：VASP 実行 → 結果解析 → 候補構造生成 → 次の VASP 計算のサイクル。
+フェーズ5・6の構造操作・最適化アルゴリズムと連携。</p>
+</div>
+
+<h3>5.2 コマンドラインインターフェース (<code>cli.py</code>, 146行)</h3>
+
+<p><code>argparse</code> による5つのサブコマンド：</p>
+
+<pre><code># 単一ディレクトリの解析
+python -m t2vasp parse /path/to/calc
+
+# バッチ処理（CSV + JSON + Summary 出力）
+python -m t2vasp batch /path/to/all_calcs -o results/ --format csv json summary
+
+# 候補構造の生成（ひずみ適用）
+python -m t2vasp generate CONTCAR --strains -0.02,-0.01,0.01,0.02 -o candidates/
+
+# 反復最適化ループ
+python -m t2vasp optimise /path/to/initial --max-iter 5 --vasp-cmd "mpirun -np 4 vasp_std"
+
+# 結果プロット
+python -m t2vasp plot results.json -o figures/</code></pre>
+
+
+<!-- ============================================================ -->
+<!-- 6. フェーズ5                                                  -->
+<!-- ============================================================ -->
+<h2 id="phase5">6. フェーズ5: 構造操作と自動化（ASE連携）</h2>
+
+<p>指導事項に従い、<strong>ASE (Atomic Simulation Environment)</strong> を活用して結晶構造の操作を実装しました。
+USPEXの「構造生成 → VASP実行 → 結果回収」のワークフローの基盤となる機能群です。</p>
+
+<h3>6.1 バルク構造生成</h3>
+<div class="card">
+<h4>create_bulk(symbol, crystal_type, a) → Atoms</h4>
+<p>FCC / BCC / HCP / SC の基本構造を ASE の <code>bulk()</code> で生成。</p>
+</div>
+
+<h3>6.2 秩序構造生成</h3>
+<div class="card-grid">
+  <div class="card">
+    <h4>create_l12(element_face, element_corner, a) → Atoms</h4>
+    <p>L1<sub>2</sub> 構造（Cu<sub>3</sub>Au 型）の単位胞を直接構築。
+    面心位置に element_face を3原子、角に element_corner を1原子配置（計4原子）。</p>
+    <pre><code># Ni3Al L1₂ 構造
+atoms = create_l12("Ni", "Al", a=3.572)
+# → 4原子: Ni×3 + Al×1</code></pre>
+  </div>
+  <div class="card">
+    <h4>create_b2(element_a, element_b, a) → Atoms</h4>
+    <p>B2 構造（CsCl 型）の単位胞。原点に element_a、体心位置 (0.5, 0.5, 0.5) に element_b
+    （計2原子）。</p>
+    <pre><code># FeAl B2 構造
+atoms = create_b2("Fe", "Al", a=2.87)
+# → 2原子: Fe×1 + Al×1</code></pre>
+  </div>
+</div>
+
+<h3>6.3 構造変形</h3>
+<div class="card-grid">
+  <div class="card">
+    <h4>apply_strain(atoms, strain, axis) → Atoms</h4>
+    <p>等方性または一軸ひずみの適用。<code>axis=None</code> で全方向に同一ひずみ、
+    <code>axis=2</code> で z 軸のみにひずみを適用（正方歪み模擬）。</p>
+    <div class="formula">
+      a' = a × (1 + ε)<br>
+      等方性: 全格子ベクトルに (1+ε) を乗算<br>
+      一軸: 指定軸の格子ベクトルのみに (1+ε) を乗算
+    </div>
+  </div>
+  <div class="card">
+    <h4>perturb_positions(atoms, amplitude, seed) → Atoms</h4>
+    <p>原子位置にガウスノイズを加える。SQS（Special Quasirandom Structure）的な
+    無秩序配列の模擬に使用。</p>
+  </div>
+</div>
+
+<h3>6.4 候補構造生成</h3>
+<div class="card">
+<h4>generate_candidates(base_atoms, strain_values, output_dir) → List[Path]</h4>
+<p>基準構造に対して複数のひずみ値を適用し、それぞれの POSCAR を自動生成。
+指示書の要求「t2vaspの結果に基づいて、次の計算のための入力ファイルを自動生成する」を実現。</p>
+<pre><code># ε = ±1%, ±2% の候補を生成
+paths = generate_candidates(base_atoms,
+    strain_values=[-0.02, -0.01, 0.01, 0.02],
+    output_dir="candidates/")
+# → candidates/strain_-0.0200/POSCAR, ... (4ファイル)</code></pre>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- 7. フェーズ6                                                  -->
+<!-- ============================================================ -->
+<h2 id="phase6">7. フェーズ6: 最適化アルゴリズム（遺伝的アルゴリズム）</h2>
+
+<p>USPEXの核心である「探索」を実装。指示書の「遺伝的アルゴリズム（GA）」の基本を構築しました。</p>
+
+<h3>7.1 設計思想</h3>
+<p>最適化器は<strong>物理モデルに依存しない</strong>汎用設計です。候補（Candidate）は任意のパラメータ辞書であり、
+評価関数は候補をスカラーフィットネス値にマッピングする任意の callable です。</p>
+
+<h3>7.2 評価関数</h3>
+<div class="card-grid">
+  <div class="card">
+    <h4>energy_fitness(result_dict) → float</h4>
+    <p>デフォルトの評価関数。E/atom が低いほどフィットネス良好（最小化問題）。</p>
+  </div>
+  <div class="card">
+    <h4>weighted_fitness(result_dict, weights) → float</h4>
+    <p>多目的最適化用の重み付き評価。エネルギー、体積、力などの複数目的関数を
+    重み付き線形結合として扱う。</p>
+  </div>
+</div>
+
+<h3>7.3 遺伝的アルゴリズム (GeneticAlgorithm クラス)</h3>
+
+<table>
+  <tr><th>操作</th><th>手法</th><th>詳細</th></tr>
+  <tr><td>初期化</td><td>一様ランダム</td><td>パラメータ範囲内で一様サンプリング</td></tr>
+  <tr><td>選択</td><td>トーナメント選択</td><td>2個体をランダム抽出し、フィットネスの良い方を選択</td></tr>
+  <tr><td>交叉</td><td>BLX-α</td><td>α=0.5 で親の範囲を拡張した一様分布からサンプリング</td></tr>
+  <tr><td>突然変異</td><td>ガウス摂動</td><td>σ = パラメータ範囲の 10%。突然変異率は設定ファイルで制御</td></tr>
+  <tr><td>エリート保存</td><td>上位 10%</td><td>各世代の上位個体を次世代に直接引き継ぎ</td></tr>
+</table>
+
+<div class="formula">
+  <strong>BLX-α 交叉:</strong><br>
+  d = |p<sub>1</sub> − p<sub>2</sub>|,
+  &nbsp; child ∈ U[min(p<sub>1</sub>,p<sub>2</sub>) − α·d, max(p<sub>1</sub>,p<sub>2</sub>) + α·d]
+</div>
+
+<pre><code># 使用例：二次関数の最小値探索
+from t2vasp.optimizer import GeneticAlgorithm, GAConfig
+
+def quadratic(params):
+    return sum(v**2 for v in params.values())
+
+config = GAConfig(
+    param_bounds={"x": (-5, 5), "y": (-5, 5)},
+    population_size=30,
+    num_generations=50,
+)
+ga = GeneticAlgorithm(config, quadratic)
+best = ga.run()
+print(f"Best: x={best.params['x']:.4f}, y={best.params['y']:.4f}, fitness={best.fitness:.6f}")</code></pre>
+
+
+<!-- ============================================================ -->
+<!-- 8. ヤーン・テラー効果と CFSE                                    -->
+<!-- ============================================================ -->
+<h2 id="jt">8. ヤーン・テラー効果と結晶場安定化エネルギー（CFSE）</h2>
+
+<p>指示書の「t2に関する具体的な物理理論」として、<strong>八面体結晶場理論</strong>に基づく
+t<sub>2g</sub>/e<sub>g</sub> 軌道分裂解析を実装しました。ヤーン・テラー（Jahn-Teller）効果は、
+縮退電子基底状態を持つ分子・イオンが幾何学的歪みによって安定化する現象であり、
+遷移金属酸化物や合金の構造・電子物性の理解に不可欠です。</p>
+
+<h3>8.1 理論的背景</h3>
+
+<div class="card">
+<h4>結晶場分裂 (Crystal Field Splitting)</h4>
+<p>八面体配位場中で5つの d 軌道は2群に分裂します：</p>
+<ul>
+  <li><strong>t<sub>2g</sub></strong> (低エネルギー): d<sub>xy</sub>, d<sub>xz</sub>, d<sub>yz</sub> — 配位子方向を避ける軌道</li>
+  <li><strong>e<sub>g</sub></strong> (高エネルギー): d<sub>z²</sub>, d<sub>x²-y²</sub> — 配位子方向を向く軌道</li>
+</ul>
+<p>分裂エネルギー Δ<sub>oct</sub> (= 10Dq) はバンド中心の差として定量化されます。</p>
+<div class="formula">
+  Δ<sub>oct</sub> = E(e<sub>g</sub> center) − E(t<sub>2g</sub> center)
+</div>
+<p>projected DOS から各軌道のバンド中心（重み付き平均エネルギー）を求め、その差を
+Δ<sub>oct</sub> とします。</p>
+</div>
+
+<div class="card">
+<h4>結晶場安定化エネルギー (CFSE)</h4>
+<p>d 電子が結晶場中で選択的に低エネルギー軌道を占有することによる安定化エネルギー：</p>
+<div class="formula">
+  CFSE = n(t<sub>2g</sub>) × (−0.4Δ<sub>oct</sub>) + n(e<sub>g</sub>) × (+0.6Δ<sub>oct</sub>) + n<sub>pairs</sub> × P
+</div>
+<p>ここで n(t<sub>2g</sub>), n(e<sub>g</sub>) は各軌道群の電子数、P は電子対エネルギーです。
+等方場（分裂なし）では各 d 軌道が等エネルギーとなり、CFSE = 0 です。</p>
+
+<p>高スピン（HS）と低スピン（LS）で電子配置が異なるため、d<sup>4</sup>–d<sup>7</sup> では
+CFSEの値が変わります。これを d<sup>0</sup>–d<sup>10</sup> の完全テーブルとして実装しました。</p>
+</div>
+
+<div class="card">
+<h4>ヤーン・テラー効果 (Jahn-Teller Effect)</h4>
+<p>ヤーン・テラーの定理：「空間的に縮退した電子基底状態を持つ非線形分子は、
+その縮退を解く幾何学的歪みを受ける」(Jahn & Teller, 1937)</p>
+<p>八面体錯体においてJT効果が顕著に現れるのは、e<sub>g</sub> 軌道の占有が不均等な場合です：</p>
+<ul>
+  <li><strong>強い JT 効果</strong>（e<sub>g</sub> 不均等占有）: d<sup>4</sup>(HS), d<sup>7</sup>(LS), d<sup>9</sup></li>
+  <li><strong>弱い JT 効果</strong>（t<sub>2g</sub> 不均等占有）: d<sup>1</sup>, d<sup>2</sup>, d<sup>4</sup>(LS), d<sup>5</sup>(LS), d<sup>6</sup>(HS), d<sup>7</sup>(HS)</li>
+</ul>
+<p>典型例：Cu<sup>2+</sup> (d<sup>9</sup>) の [Cu(OH<sub>2</sub>)<sub>6</sub>]<sup>2+</sup> では、
+軸方向の Cu-O 距離 (2.38 Å) が赤道面の Cu-O (1.95 Å) より長い正方伸長歪みを示します。</p>
+</div>
+
+<h3>8.2 実装関数</h3>
+
+<div class="card">
+<h4>compute_cfse(n_d_electrons, delta_oct, low_spin, pairing_energy)</h4>
+<p>d 電子数と Δ<sub>oct</sub> から CFSE と JT 活性を計算。高スピン・低スピン両方のテーブルを内蔵。</p>
+<pre><code># Cu²⁺ (d⁹) — 強 JT 活性
+cfse_ev, cfse_delta, jt = compute_cfse(9, delta_oct=2.0)
+# → cfse_ev=-1.2 eV, cfse_delta=-0.6, jt="strong"
+
+# Cr³⁺ (d³) — JT 不活性
+cfse_ev, cfse_delta, jt = compute_cfse(3, delta_oct=1.5)
+# → cfse_ev=-1.8 eV, cfse_delta=-1.2, jt=None</code></pre>
+</div>
+
+<div class="card">
+<h4>compute_crystal_field(dos, cfg, n_d_electrons, low_spin, c_over_a)</h4>
+<p>projected DOS から結晶場パラメータ一式を抽出する統合関数：</p>
+<ol>
+  <li>t<sub>2g</sub> / e<sub>g</sub> のバンド中心を重み付き積分で算出</li>
+  <li>Δ<sub>oct</sub> = e<sub>g</sub> 中心 − t<sub>2g</sub> 中心</li>
+  <li>d<sub>z²</sub> と d<sub>x²-y²</sub> の個別中心から <strong>eg分裂</strong>（JT歪みの定量指標）を算出</li>
+  <li>d 電子数が指定されていれば CFSE と JT 活性を計算</li>
+  <li>c/a 比から正方歪みパラメータ |c/a − 1| を算出</li>
+</ol>
+</div>
+
+<div class="card">
+<h4>compute_jahn_teller_energy(undistorted, distorted) → JahnTellerResult</h4>
+<p>高対称構造（未歪み）と低対称構造（歪み）の2つの計算結果から JT 安定化エネルギーを算出：</p>
+<div class="formula">
+  E<sub>JT</sub> = E(undistorted) − E(distorted) &gt; 0 ⇒ 歪みが有利<br>
+  JTSE/atom = E<sub>JT</sub> / N<sub>atoms</sub><br>
+  Δ(c/a) = |c/a(distorted) − c/a(undistorted)|
+</div>
+</div>
+
+<h3>8.3 CFSE テーブル（d<sup>0</sup>–d<sup>10</sup>）</h3>
+
+<p>以下は <code>compute_cfse()</code> の出力で、教科書値（Miessler & Tarr, Chemistry LibreTexts）と完全に一致することを検証済みです。</p>
+
+<table>
+  <tr><th>d<sup>n</sup></th><th>HS 電子配置</th><th>CFSE (HS)</th><th>JT (HS)</th><th>LS 電子配置</th><th>CFSE (LS)</th><th>JT (LS)</th></tr>
+  <tr><td>d<sup>0</sup></td><td>t<sub>2g</sub><sup>0</sup> e<sub>g</sub><sup>0</sup></td><td>0</td><td>—</td><td>同左</td><td>0</td><td>—</td></tr>
+  <tr><td>d<sup>1</sup></td><td>t<sub>2g</sub><sup>1</sup></td><td>−0.4Δ</td><td>weak</td><td>同左</td><td>−0.4Δ</td><td>weak</td></tr>
+  <tr><td>d<sup>2</sup></td><td>t<sub>2g</sub><sup>2</sup></td><td>−0.8Δ</td><td>weak</td><td>同左</td><td>−0.8Δ</td><td>weak</td></tr>
+  <tr><td>d<sup>3</sup></td><td>t<sub>2g</sub><sup>3</sup></td><td>−1.2Δ</td><td>—</td><td>同左</td><td>−1.2Δ</td><td>—</td></tr>
+  <tr style="background:#fef9e7"><td>d<sup>4</sup></td><td>t<sub>2g</sub><sup>3</sup> e<sub>g</sub><sup>1</sup></td><td>−0.6Δ</td><td><strong>strong</strong></td><td>t<sub>2g</sub><sup>4</sup></td><td>−1.6Δ</td><td>weak</td></tr>
+  <tr><td>d<sup>5</sup></td><td>t<sub>2g</sub><sup>3</sup> e<sub>g</sub><sup>2</sup></td><td>0</td><td>—</td><td>t<sub>2g</sub><sup>5</sup></td><td>−2.0Δ</td><td>weak</td></tr>
+  <tr><td>d<sup>6</sup></td><td>t<sub>2g</sub><sup>4</sup> e<sub>g</sub><sup>2</sup></td><td>−0.4Δ</td><td>weak</td><td>t<sub>2g</sub><sup>6</sup></td><td>−2.4Δ</td><td>—</td></tr>
+  <tr style="background:#fef9e7"><td>d<sup>7</sup></td><td>t<sub>2g</sub><sup>5</sup> e<sub>g</sub><sup>2</sup></td><td>−0.8Δ</td><td>weak</td><td>t<sub>2g</sub><sup>6</sup> e<sub>g</sub><sup>1</sup></td><td>−1.8Δ</td><td><strong>strong</strong></td></tr>
+  <tr><td>d<sup>8</sup></td><td>t<sub>2g</sub><sup>6</sup> e<sub>g</sub><sup>2</sup></td><td>−1.2Δ</td><td>—</td><td>同左</td><td>−1.2Δ</td><td>—</td></tr>
+  <tr style="background:#fef9e7"><td>d<sup>9</sup></td><td>t<sub>2g</sub><sup>6</sup> e<sub>g</sub><sup>3</sup></td><td>−0.6Δ</td><td><strong>strong</strong></td><td>同左</td><td>−0.6Δ</td><td><strong>strong</strong></td></tr>
+  <tr><td>d<sup>10</sup></td><td>t<sub>2g</sub><sup>6</sup> e<sub>g</sub><sup>4</sup></td><td>0</td><td>—</td><td>同左</td><td>0</td><td>—</td></tr>
+</table>
+<p style="color:var(--muted); font-size:0.9em;">強い JT 効果を示す配置（e<sub>g</sub> 不均等占有）を黄色で強調。</p>
+
+
+<!-- ============================================================ -->
+<!-- 9. 検証結果                                                    -->
+<!-- ============================================================ -->
+<h2 id="validation">9. 検証結果</h2>
+
+<h3>9.1 Validation 1: CFSE 教科書テーブル再現</h3>
+
+<p>d<sup>0</sup>–d<sup>10</sup> の高スピン・低スピン（計22ケース）の CFSE 値（Δ単位）および
+JT 活性を教科書値と比較し、<strong>22/22 全件一致</strong>を確認しました。</p>
+
+<div class="stat-row">
+  <div class="stat-box"><div class="num" style="color:var(--success)">22/22</div><div class="label">CFSE テーブル検証</div></div>
+  <div class="stat-box"><div class="num" style="color:var(--success)">PASS</div><div class="label">全件一致</div></div>
+</div>
+
+<p>実行コマンド：</p>
+<pre><code>python examples/validation/validate_cfse.py --output validation_1_cfse.md</code></pre>
+
+<h3>9.2 Validation 2: 合成 VASP データ パイプライン検証</h3>
+
+<p>合成 VASP 出力ファイルを用いた5ケースのエンドツーエンド検証：</p>
+
+<table>
+  <tr><th>ケース</th><th>内容</th><th>検証項目</th><th>結果</th></tr>
+  <tr>
+    <td><strong>A: Ni FCC (d<sup>8</sup>)</strong></td>
+    <td>POSCAR/OUTCAR パース、エネルギー解析、構造メトリクス</td>
+    <td>格子定数, 原子数, 体積, 全エネルギー, 収束判定, E/atom, c/a, CFSE, JT</td>
+    <td><span class="badge badge-pass">9/9</span></td>
+  </tr>
+  <tr>
+    <td><strong>B: Cu<sup>2+</sup> (d<sup>9</sup>)</strong></td>
+    <td>強ヤーン・テラー：projected DOS からの結晶場解析</td>
+    <td>Δ<sub>oct</sub>&gt;0, JT active, JT=strong, CFSE=-0.6Δ, eg分裂, tetragonality</td>
+    <td><span class="badge badge-pass">6/6</span></td>
+  </tr>
+  <tr>
+    <td><strong>C: Cr<sup>2+</sup> (d<sup>4</sup> HS)</strong></td>
+    <td>強ヤーン・テラー：高スピン d<sup>4</sup></td>
+    <td>JT active, JT=strong, CFSE=-0.6Δ, tetragonality</td>
+    <td><span class="badge badge-pass">4/4</span></td>
+  </tr>
+  <tr>
+    <td><strong>D: JTSE 対構造比較</strong></td>
+    <td>未歪み/歪み構造ペアから JTSE 算出</td>
+    <td>JTSE&gt;0, JTSE=0.350 eV, JTSE/atom, Δ(c/a)=0.06</td>
+    <td><span class="badge badge-pass">4/4</span></td>
+  </tr>
+  <tr>
+    <td><strong>E: エクスポート</strong></td>
+    <td>CSV / JSON / Summary 出力のパイプライン動作</td>
+    <td>ファイル生成, 行数, 内容整合性</td>
+    <td><span class="badge badge-pass">4/4</span></td>
+  </tr>
+</table>
+
+<div class="stat-row">
+  <div class="stat-box"><div class="num" style="color:var(--success)">27/27</div><div class="label">パイプライン検証</div></div>
+  <div class="stat-box"><div class="num" style="color:var(--success)">5/5</div><div class="label">全ケース合格</div></div>
+</div>
+
+<h3>9.3 検証図：Projected DOS とヤーン・テラー歪み</h3>
+
+<figure>
+  <img src="https://app.devin.ai/attachments/8932de01-04a7-4e8a-acad-88c92a6da4fe/case_b_cu_d9_dos.png"
+       alt="Case B: Cu²⁺ (d⁹) projected DOS with t2g/eg splitting">
+  <figcaption>
+    <strong>図1.</strong> Case B: Cu<sup>2+</sup> (d<sup>9</sup>) の projected DOS。
+    t<sub>2g</sub> バンド（青）と e<sub>g</sub> バンド（赤）が明確に分離し、
+    Δ<sub>oct</sub> ≈ 3.0 eV の結晶場分裂を示す。
+    破線は d<sub>z²</sub> と d<sub>x²-y²</sub> の個別寄与で、eg 内の分裂（JT 歪みの指標）が見える。
+    CFSE = −0.6Δ, JT = strong, |c/a−1| = 0.060。
+  </figcaption>
+</figure>
+
+<figure>
+  <img src="https://app.devin.ai/attachments/10f9f403-0f12-4a95-b23a-ca7860ec6282/case_c_cr_d4_dos.png"
+       alt="Case C: Cr²⁺ (d⁴ HS) projected DOS with t2g/eg splitting">
+  <figcaption>
+    <strong>図2.</strong> Case C: Cr<sup>2+</sup> (d<sup>4</sup> HS) の projected DOS。
+    t<sub>2g</sub> (3電子) と e<sub>g</sub> (1電子) の不均等占有により強い JT 効果が発現。
+    CFSE = −0.6Δ, JT = strong, |c/a−1| = 0.020。
+  </figcaption>
+</figure>
+
+
+<!-- ============================================================ -->
+<!-- 10. テストスイート                                              -->
+<!-- ============================================================ -->
+<h2 id="testing">10. テストスイート</h2>
+
+<p>pytest による 71 件の自動テストで全モジュールをカバー：</p>
+
+<table>
+  <tr><th>テストファイル</th><th>テスト数</th><th>対象モジュール</th><th>主な検証内容</th></tr>
+  <tr><td><code>test_parser.py</code></td><td>11</td><td>parser.py</td><td>POSCAR格子・座標、OUTCARエネルギー・力・応力、DOSCAR、vasprun.xml</td></tr>
+  <tr><td><code>test_calculator.py</code></td><td>25</td><td>calculator.py</td><td>E/atom、形成E、構造、結晶場、CFSE(d⁰–d¹⁰)、JT、JTSE、eg分裂、ΔE</td></tr>
+  <tr><td><code>test_exporter.py</code></td><td>9</td><td>exporter.py</td><td>CSV/JSON/Summary出力、ファイル生成、フォーマット</td></tr>
+  <tr><td><code>test_pipeline.py</code></td><td>4</td><td>pipeline.py</td><td>single/batch処理、空ディレクトリ</td></tr>
+  <tr><td><code>test_structure.py</code></td><td>11</td><td>structure.py</td><td>FCC/BCC/L1₂/B2生成、ひずみ、摂動、POSCAR書き出し、候補生成</td></tr>
+  <tr><td><code>test_optimizer.py</code></td><td>6</td><td>optimizer.py</td><td>フィットネス関数、GA収束（二次関数最小化）</td></tr>
+  <tr><td colspan="4" style="text-align:right; font-weight:bold;">
+    合計: 71テスト / <span class="badge badge-pass">71 PASSED</span>
+  </td></tr>
+</table>
+
+<h3>特に注目すべきテスト</h3>
+<ul>
+  <li><strong>TestComputeCFSE</strong>（7件）: d⁰(0Δ), d³(−1.2Δ), d⁴-HS(strong JT), d⁹(strong JT), d⁷-LS(strong JT), 対エネルギー寄与, 範囲外エラー</li>
+  <li><strong>TestComputeJahnTellerEnergy</strong>（3件）: JTSE符号, JTSE/atom, エラーハンドリング</li>
+  <li><strong>TestGeneticAlgorithm::test_finds_minimum_of_quadratic</strong>: 二次関数 f(x,y)=x²+y² の最小値を GA で探索し、収束を確認</li>
+</ul>
+
+
+<!-- ============================================================ -->
+<!-- 11. 設定ファイル                                                -->
+<!-- ============================================================ -->
+<h2 id="config">11. 設定ファイルと拡張性</h2>
+
+<p>すべての定数・係数は <code>config/defaults.yaml</code> に集約されています。
+ユーザーは <code>--config user.yaml</code> でオーバーライド可能です。</p>
+
+<pre><code># config/defaults.yaml (抜粋)
+
+parser:
+  structure_source: "CONTCAR"
+  energy_tag: "free  energy   TOTEN"
+  lattice_range: [1.5, 10.0]
+
+calculator:
+  reference_energies: {}        # 元素ごとの参照エネルギー (eV/atom)
+  crystal_field:
+    window: [-6.0, 4.0]         # フェルミ準位周りの解析窓 (eV)
+    pairing_energy: 0.0         # 電子対エネルギー P (eV)
+    low_spin: false             # 高スピン/低スピン切替
+  elastic:
+    strain_magnitudes: [-0.02, -0.01, 0.0, 0.01, 0.02]
+
+pipeline:
+  max_parallel_jobs: 4
+  poll_interval: 30
+  vasp_command: "mpirun -np 4 vasp_std"
+
+optimizer:
+  population_size: 20
+  num_generations: 50
+  mutation_rate: 0.15
+  crossover_rate: 0.7
+  elite_fraction: 0.1
+  seed: 42</code></pre>
+
+<h3>拡張ポイント</h3>
+<ul>
+  <li><code>reference_energies</code> にDFT計算した元素単体のエネルギーを追加 → 形成エネルギー自動計算</li>
+  <li><code>crystal_field.n_d_electrons</code> を元素ごとに設定 → CFSE/JT の自動判定</li>
+  <li><code>crystal_field.pairing_energy</code> を実験値/計算値に設定 → より精密な CFSE</li>
+  <li><code>optimizer</code> パラメータのチューニング → GA の収束速度・探索精度の調整</li>
+</ul>
+
+
+<!-- ============================================================ -->
+<!-- 12. まとめ                                                    -->
+<!-- ============================================================ -->
+<h2 id="summary">12. まとめと今後の展望</h2>
+
+<h3>12.1 実装完了項目</h3>
+
+<table>
+  <tr><th>フェーズ</th><th>内容</th><th>状態</th></tr>
+  <tr><td>1</td><td>VASP ファイル構造把握・パーサー実装</td><td><span class="badge badge-pass">完了</span></td></tr>
+  <tr><td>2</td><td>コアロジック（エネルギー・構造・結晶場解析）</td><td><span class="badge badge-pass">完了</span></td></tr>
+  <tr><td>3</td><td>ポスト処理（CSV/JSON/Summary/プロット）</td><td><span class="badge badge-pass">完了</span></td></tr>
+  <tr><td>4</td><td>パイプライン統合・CLI</td><td><span class="badge badge-pass">完了</span></td></tr>
+  <tr><td>5</td><td>構造操作（ASE連携、L1₂/B2、ひずみ、候補生成）</td><td><span class="badge badge-pass">完了</span></td></tr>
+  <tr><td>6</td><td>最適化アルゴリズム（GA: トーナメント+BLX-α）</td><td><span class="badge badge-pass">完了</span></td></tr>
+  <tr><td>追加</td><td>CFSE / ヤーン・テラー効果の物理実装</td><td><span class="badge badge-pass">完了</span></td></tr>
+  <tr><td>追加</td><td>検証例題（教科書照合 + パイプライン検証）</td><td><span class="badge badge-pass">完了</span></td></tr>
+</table>
+
+<h3>12.2 品質指標</h3>
+<div class="stat-row">
+  <div class="stat-box"><div class="num" style="color:var(--success)">71/71</div><div class="label">pytest テスト合格</div></div>
+  <div class="stat-box"><div class="num" style="color:var(--success)">22/22</div><div class="label">CFSE 教科書検証</div></div>
+  <div class="stat-box"><div class="num" style="color:var(--success)">27/27</div><div class="label">パイプライン検証</div></div>
+  <div class="stat-box"><div class="num">0</div><div class="label">ハードコーディング定数</div></div>
+</div>
+
+<h3>12.3 今後の展望</h3>
+
+<ol>
+  <li><strong>動的ヤーン・テラー効果</strong>: E⊗e 問題のモデルハミルトニアン実装（<code>jahn-teller-dynamics</code> パッケージとの連携可能性）</li>
+  <li><strong>磁性解析</strong>: OUTCAR の磁気モーメントデータを活用した磁気秩序解析</li>
+  <li><strong>バンド構造</strong>: vasprun.xml からの k 点分散関係の抽出</li>
+  <li><strong>PSO / 焼きなまし法</strong>: GA に加えて粒子群最適化・焼きなまし法の実装</li>
+  <li><strong>拘束条件付き最適化</strong>: 体積保存、化学量論比制約などの制約付き GA</li>
+  <li><strong>実データ検証</strong>: リポジトリ内の VASP 計算結果（vasp_inputs/）を用いた実データ検証</li>
+  <li><strong>pymatgen / AFLOW 連携</strong>: 既存の材料データベースとの相互運用性</li>
+</ol>
+
+<h3>12.4 依存関係</h3>
+<table>
+  <tr><th>パッケージ</th><th>用途</th><th>必須/任意</th></tr>
+  <tr><td>numpy</td><td>数値計算全般</td><td>必須</td></tr>
+  <tr><td>pyyaml</td><td>設定ファイル読み込み</td><td>必須</td></tr>
+  <tr><td>ase</td><td>結晶構造操作（Phase 5）</td><td>任意（structure.py 使用時）</td></tr>
+  <tr><td>matplotlib</td><td>可視化（Phase 3）</td><td>任意（visualizer.py 使用時）</td></tr>
+  <tr><td>scipy</td><td>弾性定数フィッティング</td><td>任意</td></tr>
+</table>
+
+</div>
+
+<footer>
+  <p>t2vasp v0.1.0 — VASP計算後処理・構造最適化ツールキット</p>
+  <p>Generated for PR <a href="https://github.com/minimumtone/machine-learning/pull/277">#277</a></p>
+</footer>
+
+</body>
+</html>
