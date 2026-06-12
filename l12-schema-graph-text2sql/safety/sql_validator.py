@@ -657,6 +657,40 @@ def check_allowed_columns(
     return disallowed
 
 
+def _extract_aliases_from_sql(sql: str) -> dict[str, str]:
+    """Extract alias→table mappings from FROM/JOIN clauses in SQL.
+
+    Handles: FROM table alias, JOIN table alias ON ..., FROM table AS alias.
+    Falls back to identity (alias=table name) if no alias is found.
+    """
+    alias_map: dict[str, str] = {}
+    clean = _strip_literals(sql)
+    # FROM table [AS] alias
+    for m in re.finditer(
+        r"\bFROM\s+(\w+)(?:\s+AS\s+(\w+)|\s+(\w+))?",
+        clean, re.IGNORECASE,
+    ):
+        table = m.group(1).lower()
+        alias = (m.group(2) or m.group(3) or table).lower()
+        # Skip if "alias" is a SQL keyword
+        if alias.upper() in {"WHERE", "ON", "JOIN", "INNER", "LEFT", "RIGHT",
+                              "FULL", "CROSS", "ORDER", "GROUP", "HAVING",
+                              "LIMIT", "UNION", "EXCEPT", "INTERSECT"}:
+            alias = table
+        alias_map[alias] = table
+        alias_map[table] = table  # table name also resolves to itself
+    # JOIN table [AS] alias
+    for m in re.finditer(
+        r"\bJOIN\s+(\w+)(?:\s+AS\s+(\w+)|\s+(\w+))?\s+ON\b",
+        clean, re.IGNORECASE,
+    ):
+        table = m.group(1).lower()
+        alias = (m.group(2) or m.group(3) or table).lower()
+        alias_map[alias] = table
+        alias_map[table] = table
+    return alias_map
+
+
 def check_join_validity(
     sql: str,
     schema_path: Path | None = None,
@@ -678,36 +712,26 @@ def check_join_validity(
             j["source_table"].lower(),
             j["source_column"].lower(),
         ))
-    alias_to_table = {
-        "m": "material_entry", "c": "composition", "s": "structure",
-        "ps": "phase_stability", "calc": "calculation", "cp": "calculated_property",
-        "pd": "prototype_definition", "et": "elastic_tensor",
-        "tp": "thermal_property", "mp": "magnetic_property",
-        "se": "surface_energy", "gb": "grain_boundary",
-        "bs": "band_structure", "dos": "density_of_states",
-        "e": "element", "ep": "element_property",
-        "md": "material_defect", "dt": "defect_type",
-        "ms": "material_synthesis", "sm": "synthesis_method",
-        "lr": "literature_reference", "mr": "material_reference",
-        "ad": "application_domain", "ma": "material_application",
-        "em": "experimental_measurement", "mpr": "measured_property",
-        "pde": "phase_diagram_entry", "als": "alloy_system",
-        "mas": "material_alloy_system", "sg": "space_group",
-    }
+    alias_to_table = _extract_aliases_from_sql(sql)
     warnings: list[str] = []
-    # Match JOINs with or without explicit alias
+    clean = _strip_literals(sql)
+    # Match all ON conditions including AND-chained ones
     for m in re.finditer(
-        r"JOIN\s+(\w+)(?:\s+(\w+))?\s+ON\s+(\w+)\.(\w+)\s*=\s*(\w+)\.(\w+)",
-        _strip_literals(sql), re.IGNORECASE,
+        r"\bON\s+(.*?)(?=\s+(?:JOIN|WHERE|ORDER|GROUP|HAVING|LIMIT|UNION|$))",
+        clean, re.IGNORECASE | re.DOTALL,
     ):
-        alias1 = m.group(3).lower()
-        col1 = m.group(4).lower()
-        alias2 = m.group(5).lower()
-        col2 = m.group(6).lower()
-        t1 = alias_to_table.get(alias1, alias1)
-        t2 = alias_to_table.get(alias2, alias2)
-        if (t1, col1, t2, col2) not in valid_pairs:
-            warnings.append(f"Non-FK JOIN: {t1}.{col1} = {t2}.{col2}")
+        on_clause = m.group(1)
+        for cond in re.finditer(
+            r"(\w+)\.(\w+)\s*=\s*(\w+)\.(\w+)", on_clause
+        ):
+            alias1 = cond.group(1).lower()
+            col1 = cond.group(2).lower()
+            alias2 = cond.group(3).lower()
+            col2 = cond.group(4).lower()
+            t1 = alias_to_table.get(alias1, alias1)
+            t2 = alias_to_table.get(alias2, alias2)
+            if (t1, col1, t2, col2) not in valid_pairs:
+                warnings.append(f"Non-FK JOIN: {t1}.{col1} = {t2}.{col2}")
     return warnings
 
 
