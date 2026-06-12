@@ -162,8 +162,8 @@ def main() -> int:
         "Stable L12 count": 8,
         "Metastable L12 count": 154,
         "Gamma-prime ranking total": 259,
-        "Independent binary correct rate": 79.3,
-        "Independent mean accuracy": 77.0,
+        "Independent binary correct rate": 77.0,
+        "Independent mean accuracy": 79.3,
     }
     for label, val in critical_values.items():
         check(f"[CRITICAL] {label}", val)
