@@ -264,7 +264,11 @@ def _regex_extract_columns(sql: str) -> list[str]:
     clean = _strip_literals(sql)
     cols: set[str] = set()
     for m in re.finditer(r"(\w+)\.(\w+)", clean):
-        cols.add(f"{m.group(1)}.{m.group(2)}")
+        lhs, rhs = m.group(1), m.group(2)
+        # Skip numeric literals (e.g. 180.0, 3.57)
+        if lhs.isdigit() or rhs.isdigit():
+            continue
+        cols.add(f"{lhs}.{rhs}")
     return sorted(cols)
 
 

@@ -132,6 +132,9 @@ join_list = get_allowed_join_list(db_connection)  # requires live DB
 result = pipeline(query, join_list=join_list)
 ```
 
+**LIMIT値について**: rule-based fallbackのデフォルトは `LIMIT 100`（環境変数 `SQL_ROW_LIMIT` で変更可）。
+論文評価時は `SQL_ROW_LIMIT=10000` を使用しています。「L12型化合物を全て出して」のような広いクエリでは結果数が異なります。
+
 ## LaTeX再コンパイルに必要な環境
 
 論文PDFの再コンパイルには以下が必要です:

@@ -1,5 +1,8 @@
 # L1₂ Schema-Graph-Assisted Text-to-SQL
 
+> **デリバリZIPをお持ちの方は [README_DELIVERY.md](README_DELIVERY.md) を先にお読みください。**
+> 本READMEは完全リポジトリ（Docker・DB・テスト含む）向けです。
+
 L1₂型金属間化合物探索のためのスキーマグラフ支援型Text-to-SQLシステム。
 
 ## Overview

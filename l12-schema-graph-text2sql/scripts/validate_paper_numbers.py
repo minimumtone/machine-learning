@@ -6,6 +6,7 @@ Usage:
 
 Checks key numeric values in paper/t2sql_materials_paper.tex against
 paper/paper_figures.json to detect drift between the two.
+Additionally validates a hardcoded list of critical values that must appear in TeX.
 """
 from __future__ import annotations
 
@@ -17,6 +18,19 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 TEX = ROOT / "paper" / "t2sql_materials_paper.tex"
 JSON_PATH = ROOT / "paper" / "paper_figures.json"
+
+
+def _tex_contains(tex: str, value: str | int | float) -> bool:
+    """Check if value appears in TeX, considering LaTeX number formatting."""
+    s = str(value)
+    if s in tex:
+        return True
+    # LaTeX thousand separator: 1{,}470
+    if s.isdigit() and len(s) >= 4:
+        latex_num = re.sub(r"(\d)(?=(\d{3})+$)", r"\1{,}", s)
+        if latex_num in tex:
+            return True
+    return False
 
 
 def main() -> int:
@@ -33,84 +47,131 @@ def main() -> int:
 
     errors: list[str] = []
     warnings: list[str] = []
+    checked = 0
 
-    def check(label: str, json_val: str, tex_pattern: str, *, required: bool = True):
-        """Check if json_val appears in TeX matching the pattern."""
-        if re.search(tex_pattern, tex):
+    def check(label: str, value, *, required: bool = True):
+        nonlocal checked
+        checked += 1
+        if _tex_contains(tex, value):
             return
-        # Try plain containment
-        if str(json_val) in tex:
-            return
-        # Try LaTeX number format (e.g. 1{,}470 for 1470)
-        val_str = str(json_val)
-        if val_str.isdigit() and len(val_str) >= 4:
-            latex_num = re.sub(r'(\d)(?=(\d{3})+$)', r'\1{,}', val_str)
-            if latex_num in tex:
-                return
-        msg = f"{label}: JSON={json_val}, pattern not found in TeX"
+        msg = f"{label}: value={value} not found in TeX"
         if required:
             errors.append(msg)
         else:
             warnings.append(msg)
 
-    # --- Proposed accuracy ---
+    # ================================================================
+    # Part 1: JSON-driven checks (keys must match paper_figures.json)
+    # ================================================================
+
+    # Proposed overall
     proposed = fig.get("proposed_overall", {})
-    acc = proposed.get("exec_accuracy_pct")
-    if acc is not None:
-        check("Proposed accuracy", acc, rf"{acc}\s*\\?%")
+    if proposed.get("exec_accuracy_pct") is not None:
+        check("Proposed accuracy", proposed["exec_accuracy_pct"])
+    else:
+        errors.append("KEY MISSING: proposed_overall.exec_accuracy_pct")
 
-    # --- 3-run stats ---
+    # 3-run stats
     stats = fig.get("proposed_3run_stats", {})
-    mean_acc = stats.get("mean_accuracy_pct")
-    std_acc = stats.get("stdev_pp")
-    if mean_acc is not None:
-        check("3-run mean", mean_acc, rf"{mean_acc}")
-    if std_acc is not None:
-        check("3-run std", std_acc, rf"{std_acc}")
+    if stats.get("mean_accuracy_pct") is not None:
+        check("3-run mean", stats["mean_accuracy_pct"])
+    else:
+        errors.append("KEY MISSING: proposed_3run_stats.mean_accuracy_pct")
+    if stats.get("stdev_pp") is not None:
+        check("3-run stdev", stats["stdev_pp"])
+    else:
+        errors.append("KEY MISSING: proposed_3run_stats.stdev_pp")
 
-    # --- DB stats ---
+    # DB stats
     db = fig.get("db_stats", {})
     proto = db.get("prototype_distribution", {})
-    l12_count = proto.get("L12")
-    if l12_count is not None:
-        check("L12 count", l12_count, rf"\b{l12_count}\b")
+    for pname in ["L12", "B2", "NaCl", "NiAs", "BiF3"]:
+        if proto.get(pname) is not None:
+            check(f"Prototype {pname}", proto[pname], required=(pname == "L12"))
 
     n_entries = db.get("n_entries")
     if n_entries is not None:
-        check("DB entries", n_entries, rf"\b{n_entries}\b", required=False)
+        check("DB total entries", n_entries)
+    n_tables = db.get("n_tables")
+    if n_tables is not None:
+        check("DB n_tables", n_tables, required=False)
 
-    # --- Materials engineering ---
+    # Materials engineering
     mat = fig.get("materials_engineering", {})
-    screened = mat.get("stable_l12_screened_total")
-    if screened is not None:
-        check("Stable+metastable L12", screened, rf"\b{screened}\b")
+    for key in ["stable_l12_screened_total", "stable_candidates", "metastable_candidates",
+                "gamma_prime_ranking_total"]:
+        val = mat.get(key)
+        if val is not None:
+            check(f"materials_engineering.{key}", val)
 
-    # --- Baselines ---
+    # L12 recovery
+    recovery = mat.get("known_l12_recovery")
+    if recovery:
+        total = recovery.get("total")
+        recovered = recovery.get("recovered")
+        if total is not None and recovered is not None:
+            check("L12 recovery", f"{recovered}/{total}")
+
+    # Baselines
     bl_comp = fig.get("baseline_comparison", {})
-    for bl_key, bl_label in [("B1", "LLM-only"), ("B2", "Full-schema"), ("B3", "Rule-based"), ("B4", "FK-list")]:
+    for bl_key in ["B1", "B2", "B3", "B4"]:
         bl = bl_comp.get(bl_key, {})
         bl_acc = bl.get("exec_accuracy")
         if bl_acc is not None:
-            check(f"{bl_label} ({bl_key}) accuracy", bl_acc, rf"{bl_acc}", required=False)
+            check(f"Baseline {bl_key} accuracy", bl_acc, required=False)
 
-    # --- Independent evaluation ---
-    expert = fig.get("independent_eval", {})
-    if expert:
-        binary = expert.get("binary_correct_rate")
-        if binary is not None:
-            check("Expert binary correct", binary, rf"{binary}")
-        expert_acc = expert.get("mean_exec_accuracy")
-        if expert_acc is not None:
-            check("Expert mean accuracy", expert_acc, rf"{expert_acc}")
+    # Independent evaluation
+    indep = fig.get("independent_eval", {})
+    if indep:
+        for key in ["binary_correct_rate", "mean_exec_accuracy"]:
+            val = indep.get(key)
+            if val is not None:
+                check(f"independent_eval.{key}", val)
 
-    # --- Latency ---
+    # Latency
     latency = proposed.get("avg_latency_ms")
     if latency is not None:
-        # check() handles LaTeX {,} format for integers >= 4 digits
-        lat_int = int(latency) if isinstance(latency, (int, float)) else latency
-        check("Avg latency", lat_int, rf"\b{lat_int}\b", required=False)
+        check("Avg latency (ms)", int(latency))
+    avg_tokens = proposed.get("avg_token_usage")
+    if avg_tokens is not None:
+        check("Avg token usage", int(avg_tokens), required=False)
 
-    # --- Report ---
+    # Difficulty breakdown (by_difficulty from proposed)
+    by_diff = fig.get("proposed_by_difficulty", {})
+    for diff_key in ["Easy", "Medium", "Hard", "Very Hard"]:
+        d = by_diff.get(diff_key, {})
+        acc = d.get("exec_accuracy_pct")
+        if acc is not None:
+            check(f"Difficulty {diff_key} accuracy", acc, required=False)
+        n = d.get("n")
+        if n is not None:
+            check(f"Difficulty {diff_key} count", n, required=False)
+
+    # ================================================================
+    # Part 2: Explicit critical values (safety net)
+    # These MUST appear in TeX regardless of JSON structure.
+    # ================================================================
+    critical_values = {
+        "Proposed representative accuracy": 70.6,
+        "3-run mean accuracy": 70.9,
+        "3-run stdev": 1.7,
+        "Very Hard query count": 23,
+        "L12 prototype count": 392,
+        "DB total entries": 1470,
+        "Stable+metastable L12 total": 162,
+        "Stable L12 count": 8,
+        "Metastable L12 count": 154,
+        "Gamma-prime ranking total": 259,
+        "Independent binary correct rate": 79.3,
+        "Independent mean accuracy": 77.0,
+    }
+    for label, val in critical_values.items():
+        check(f"[CRITICAL] {label}", val)
+
+    # ================================================================
+    # Report
+    # ================================================================
+    print(f"Checked {checked} values.")
     if errors:
         print(f"\n{'='*60}")
         print(f"VALIDATION FAILED: {len(errors)} error(s), {len(warnings)} warning(s)")
@@ -121,7 +182,7 @@ def main() -> int:
             print(f"  WARN:  {w}")
         return 1
 
-    print(f"✓ All key values in paper_figures.json found in TeX ({len(warnings)} warning(s))")
+    print(f"All {checked} values verified in TeX ({len(warnings)} warning(s))")
     for w in warnings:
         print(f"  WARN: {w}")
     return 0

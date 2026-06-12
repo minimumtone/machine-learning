@@ -504,7 +504,7 @@ output = {
         "known_l12_total": len(known_l12),
         "known_l12_recovered": len(recovered),
         "known_l12_recovery_rate_pct": pct(len(recovered) / len(known_l12)) if known_l12 else 0,
-        "total_l12_in_db": 392,  # from db/insert_data.sql, not from CSV subset
+        "total_l12_in_db": _proto_dist.get("L12", 392),
         "stable_candidates": stable_count,
         "metastable_candidates": metastable_count,
         "stable_l12_screened_total": stable_count + metastable_count,

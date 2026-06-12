@@ -118,9 +118,10 @@ def map_lattice_reference_condition(
     tolerance: float = 0.03,
 ) -> dict[str, Any]:
     val = ref["reference_lattice_a"]
+    tol = ref.get("tolerance", tolerance)
     return {
         "type": "lattice_reference",
-        "sql_fragment": f"ABS(s.lattice_a - {val}) <= {tolerance}",
+        "sql_fragment": f"ABS(s.lattice_a - {val}) <= {tol}",
         "tables": ["structure"],
         "columns": ["structure.lattice_a"],
     }

@@ -171,10 +171,14 @@ def extract_sort(query: str, terms: dict[str, Any] | None = None) -> dict[str, s
 
 
 def extract_lattice_reference(query: str) -> dict[str, float] | None:
-    """Detect 'near Ni3Al lattice constant'-type queries."""
+    """Detect 'near Ni3Al lattice constant'-type queries.
+
+    Also extracts user-specified tolerance (e.g. '0.05 Å以内') if present.
+    """
     q = _normalize(query)
     pattern = r"([A-Z][a-z]?)3([A-Z][a-z]?).*(?:格子定数|lattice)"
     m = re.search(pattern, q, re.IGNORECASE)
+    result: dict[str, float] | None = None
     if m:
         ref_formulas = {
             "Ni3Al": 3.572,
@@ -184,10 +188,17 @@ def extract_lattice_reference(query: str) -> dict[str, float] | None:
         formula = f"{m.group(1)}3{m.group(2)}"
         ref_val = ref_formulas.get(formula)
         if ref_val:
-            return {"reference_formula": formula, "reference_lattice_a": ref_val}
-    if "ni3al" in q.lower() and ("格子定数" in query or "lattice" in q.lower()):
-        return {"reference_formula": "Ni3Al", "reference_lattice_a": 3.572}
-    return None
+            result = {"reference_formula": formula, "reference_lattice_a": ref_val}
+    if result is None and "ni3al" in q.lower() and ("格子定数" in query or "lattice" in q.lower()):
+        result = {"reference_formula": "Ni3Al", "reference_lattice_a": 3.572}
+    if result is not None:
+        # Extract user-specified tolerance: "0.05 Å以内" or "±0.05" or "within 0.05"
+        tol_m = re.search(r"(?:±|以内|within)\s*(\d+\.?\d*)\s*(?:Å|A\b|angstrom)?|(\d+\.?\d*)\s*(?:Å|A\b)\s*以内", q, re.IGNORECASE)
+        if tol_m:
+            tol_val = float(tol_m.group(1) or tol_m.group(2))
+            if 0 < tol_val < 1.0:
+                result["tolerance"] = tol_val
+    return result
 
 
 # ---------------------------------------------------------------------------

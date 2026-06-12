@@ -211,6 +211,10 @@ def _rule_based_fallback(
     conditions = extract_conditions(user_query)  # cached at caller if possible
     linked = link_schema(conditions)
 
+    # Detect COUNT-type queries
+    _q = user_query.lower()
+    is_count_query = any(kw in _q for kw in ["総数", "何件", "いくつ", "数を", "count", "何種類"])
+
     select_cols = ["m.entry_id", "m.formula"]
     where_clauses: list[str] = []
     order_by = ""
@@ -286,17 +290,27 @@ def _rule_based_fallback(
     if "thermal_property" in tables_needed:
         tp_alias = alias_map.get("thermal_property", "tp")
         select_cols.append(f"{tp_alias}.debye_temperature_k")
+    if "literature_reference" in tables_needed:
+        select_cols.append("lr.doi")
+        select_cols.append("lr.title")
+        select_cols.append("lr.year")
 
-    sql_parts = [f"SELECT DISTINCT\n    {', '.join(select_cols)}"]
+    if is_count_query:
+        sql_parts = ["SELECT COUNT(*) AS total_count"]
+    else:
+        sql_parts = [f"SELECT DISTINCT\n    {', '.join(select_cols)}"]
     sql_parts.append("FROM material_entry m")
     for j in joins:
         sql_parts.append(f"    {j}")
     if where_clauses:
         sql_parts.append("WHERE\n    " + "\n    AND ".join(where_clauses))
-    if order_by:
-        sql_parts.append(order_by)
-    row_limit = int(os.getenv("SQL_ROW_LIMIT", "100"))
-    sql_parts.append(f"LIMIT {row_limit};")
+    if not is_count_query:
+        if order_by:
+            sql_parts.append(order_by)
+        row_limit = int(os.getenv("SQL_ROW_LIMIT", "100"))
+        sql_parts.append(f"LIMIT {row_limit};")
+    else:
+        sql_parts.append(";")
 
     return "\n".join(sql_parts)
 
