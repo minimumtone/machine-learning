@@ -8,9 +8,8 @@ Rules:
 - Return SQL only.
 - Always include a LIMIT clause (default LIMIT 10000).
 - For "最小/最大/最も" questions, use ORDER BY + LIMIT 1.
-- For "割合/比較/分布" questions, use GROUP BY + COUNT/AVG/SUM.
 - For "何件/数を教えて" questions, use COUNT(*) with appropriate WHERE. Use a descriptive alias (e.g., COUNT(*) AS l12_count, not just AS count).
-- When comparing categories (stable vs unstable, L12 vs B2), use GROUP BY with CASE or boolean column.
+- IMPORTANT: Follow the "Output structure instruction" below. If it says to return individual rows, do NOT use GROUP BY or aggregate functions.
 - When filtering by element properties (atomic_number, electronegativity), JOIN the element table via composition.element = element.symbol.
 - For synthesis methods, JOIN material_synthesis → synthesis_method.
 - For defect types, JOIN material_defect → defect_type.
@@ -74,11 +73,10 @@ Multi-hop JOIN patterns:
 - Literature DOI: material_reference mr JOIN literature_reference lr ON lr.reference_id = mr.reference_id
 - Applications: material_application ma JOIN application_domain ad ON ad.domain_id = ma.domain_id
 
-Aggregation patterns:
+Aggregation patterns (use ONLY when the Output structure instruction says to aggregate):
 - "割合" (ratio/percentage): SELECT COUNT(*) FILTER(WHERE condition) * 100.0 / COUNT(*) or use CASE+SUM
-- "比較" (comparison): GROUP BY category, then AVG/COUNT per group
-- "分布" (distribution): GROUP BY binning_column, COUNT(*)
 - "最も多い/少ない" (most/least): GROUP BY + ORDER BY COUNT(*) DESC/ASC LIMIT 1
+- Default: return individual rows with ORDER BY. Do NOT use GROUP BY unless explicitly instructed.
 
 Allowed tables:
 {allowed_tables}
@@ -88,6 +86,12 @@ Allowed columns (ONLY use these exact column names — do NOT invent or guess co
 
 Allowed JOINs:
 {allowed_joins}
+
+Output structure instruction:
+{query_type_instruction}
+
+Column selection guidance:
+{column_hint}
 
 User query:
 {user_query}
