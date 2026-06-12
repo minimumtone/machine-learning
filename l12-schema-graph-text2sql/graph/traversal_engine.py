@@ -83,14 +83,35 @@ def extract_join_edges(
     graph: nx.Graph,
     path: list[str],
 ) -> list[dict[str, str]]:
-    """Extract the join column info for each edge in a table path."""
+    """Extract the join column info for each edge in a table path.
+
+    In an undirected graph, edge data is stored with the original source/target
+    from edge creation. When traversing in the reverse direction, we must swap
+    the column assignments to match the actual traversal direction.
+    """
     edges: list[dict[str, str]] = []
     for i in range(len(path) - 1):
-        data = graph.edges[path[i], path[i + 1]]
-        edges.append({
-            "source_table": path[i],
-            "source_column": data.get("source_column", ""),
-            "target_table": path[i + 1],
-            "target_column": data.get("target_column", ""),
-        })
+        u, v = path[i], path[i + 1]
+        data = graph.edges[u, v]
+        # Determine if we are traversing in the original FK direction.
+        # nx.Graph stores edges keyed by the first two args of add_edge.
+        # graph_builder.build_table_graph calls add_edge(src, tgt, ...),
+        # so the canonical node order may be (src, tgt) or (tgt, src).
+        # We check which node was the original source_table.
+        edge_src = data.get("_edge_source", None)
+        if edge_src is not None and edge_src != u:
+            # Reverse direction — swap columns
+            edges.append({
+                "source_table": u,
+                "source_column": data.get("target_column", ""),
+                "target_table": v,
+                "target_column": data.get("source_column", ""),
+            })
+        else:
+            edges.append({
+                "source_table": u,
+                "source_column": data.get("source_column", ""),
+                "target_table": v,
+                "target_column": data.get("target_column", ""),
+            })
     return edges

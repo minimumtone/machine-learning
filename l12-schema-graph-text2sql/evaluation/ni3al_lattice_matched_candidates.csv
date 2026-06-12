@@ -1,4 +1,4 @@
-# Paper ref: Supplementary (tab:sup_lattice_match) -- Ni3Al lattice-matched 14 candidates
+# Paper ref: Supplementary (tab:sup_lattice_match) -- Ni3Al lattice-matched 32 candidates
 # a_ref = 3.57 A (hardcoded), |da| <= 0.03 A, ROUND() for float boundary
 formula,lattice_a,lattice_diff_ni3al,energy_above_hull,formation_energy_per_atom
 Ag3Ti,3.5642,0.005799999999999805,0.0393,0.0882

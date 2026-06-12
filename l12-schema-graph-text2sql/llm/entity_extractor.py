@@ -223,7 +223,28 @@ _PROPERTY_COLUMN_MAP: dict[str, str] = {
     "volume_per_atom": "structure.volume_per_atom",
     "volume per atom": "structure.volume_per_atom",
     "原子あたり体積": "structure.volume_per_atom",
+    # Elastic properties (calculated_property / elastic_tensor)
+    "bulk_modulus": "calculated_property.value",
+    "bulk modulus": "calculated_property.value",
+    "バルクモジュラス": "calculated_property.value",
+    "体積弾性率": "calculated_property.value",
+    "bulk_modulus_vrh": "elastic_tensor.bulk_modulus_vrh",
+    "shear_modulus": "calculated_property.value",
+    "shear modulus": "calculated_property.value",
+    "せん断弾性率": "calculated_property.value",
+    "shear_modulus_vrh": "elastic_tensor.shear_modulus_vrh",
+    "弾性係数": "calculated_property.value",
+    # Thermal properties
+    "debye_temperature": "thermal_property.debye_temperature",
+    "debye temperature": "thermal_property.debye_temperature",
+    "デバイ温度": "thermal_property.debye_temperature",
 }
+
+_UNIT_CONVERSION.update({
+    "gpa": ("GPa", 1.0),
+    "mpa": ("GPa", 0.001),
+    "k": ("K", 1.0),
+})
 
 # Regex patterns for numeric comparison in natural language
 _NUMERIC_PATTERNS: list[tuple[str, str]] = [
@@ -345,7 +366,16 @@ def extract_numeric_conditions(query: str) -> list[dict[str, Any]]:
                     "value": [lo, hi], "raw_match": m.group(0),
                 })
 
-    return results
+    # Deduplicate: same (column, operator, value) may be matched by multiple patterns
+    seen: set[tuple[str, str, float | str]] = set()
+    deduped: list[dict[str, Any]] = []
+    for r in results:
+        v = r["value"] if not isinstance(r["value"], list) else tuple(r["value"])
+        key = (r["column"], r["operator"], v)
+        if key not in seen:
+            seen.add(key)
+            deduped.append(r)
+    return deduped
 
 
 # ---------------------------------------------------------------------------

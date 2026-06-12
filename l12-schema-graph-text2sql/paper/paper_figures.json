@@ -388,7 +388,7 @@
     "known_l12_total": 11,
     "known_l12_recovered": 11,
     "known_l12_recovery_rate_pct": 100.0,
-    "total_l12_in_db": 259,
+    "total_l12_in_db": 392,
     "stable_candidates": 8,
     "metastable_candidates": 154,
     "gamma_prime_total": 162,
@@ -402,7 +402,7 @@
     "n_entries": 1470,
     "n_prototypes": 5,
     "prototype_distribution": {
-      "L12": 259,
+      "L12": 392,
       "B2": 636,
       "NaCl": 355,
       "NiAs": 74,

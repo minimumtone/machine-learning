@@ -337,11 +337,12 @@ def hallucinated_join_rate(
 def multi_hop_success(hop_count: int, is_correct: bool) -> dict[str, Any]:
     """Tag multi-hop success.
 
-    Fix: multi-hop is hop_count >= 2, matching 5.1.1 definition of 84 queries.
+    Multi-hop defined as n_tables >= 3 (3+ tables referenced in gold SQL).
+    With current evaluation set: 28 Medium + 22 Hard + 23 Very Hard = 73 queries.
     """
     return {
         "hop_count": hop_count,
-        "is_multi_hop": hop_count >= 2,
+        "is_multi_hop": hop_count >= 3,
         "correct": is_correct,
     }
 

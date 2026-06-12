@@ -16,6 +16,11 @@ Natural Language Query → 材料用語正規化 → 条件抽出 → テーブ�
 
 ## Quick Start
 
+> **Note**: デリバリZIPには論文・評価CSV・ソースコード・gold SQLが同梱されていますが、
+> `docker/`, `db/`, `api/`, `tests/`, `.env.example`, `pyproject.toml` は
+> リポジトリ内にのみ存在し、ZIPには含まれません。
+> 完全な環境構築にはリポジトリのクローンが必要です。
+
 ### 前提条件
 
 - Python 3.11+
@@ -163,7 +168,7 @@ v1の69.3%ランは生CSVが消失しており復元不可能。現3ランは全
 デフォルト: 120件のL1₂型化合物mock data（既知11件を含む）:
 Ni₃Al, Ni₃Ga, Ni₃Ge, Co₃Ti, Al₃Sc, Al₃Ti, Pt₃Al, Ir₃Nb, Co₃Al, Co₃W, Co₃Ta
 
-OQMD拡張データ投入で最大1,471件（L12 393 + B2 636 + NaCl 355 + NiAs 74 + BiF3 13）まで拡張可能。
+OQMD拡張データ投入で最大1,470件（L12 392 + B2 636 + NaCl 355 + NiAs 74 + BiF3 13）。
 
 ## Environment Variables
 
