@@ -380,7 +380,7 @@ def compute_single_metrics(sql: str, exec_result: dict, expected_rows: list,
     )
 
     h_table = hallucinated_table_rate(gen_tables, ALLOWED_TABLES)
-    h_column = hallucinated_column_rate(gen_columns, allowed_columns or [])
+    h_column = hallucinated_column_rate(gen_columns, allowed_columns or [], sql=sql)
     # Fix B5: Pass SQL directly for AST-based alias resolution
     h_join = hallucinated_join_rate(sql, allowed_joins)
     is_correct = acc_full["f1"] >= 0.8  # Use F1 instead of recall-only
@@ -504,7 +504,7 @@ def run_evaluation():
                             allowed_joins=effective_joins,
                             coverage=coverage,
                             conditions=query_conditions,
-                            max_retries=2,
+                            max_retries=3,
                             model=model,
                             api_key=api_key,
                         )

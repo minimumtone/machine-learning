@@ -19,7 +19,7 @@ Rules:
 - For space group filtering, use structure.space_group_number (INTEGER) not structure.space_group (TEXT).
 - For atomic fraction, use composition.atomic_fraction (not fraction, fractional_amount, or atomic_percent).
 - For volume, use structure.volume_per_atom (not volume or cell_volume).
-- For site information (A-site, B-site), use composition.site_label (e.g., WHERE c.site_label = 'A').
+- For site information (A-site, B-site), use composition.site_label with values 'A-site' or 'B-site' (e.g., WHERE c.site_label = 'A-site').
 - For "体積あたり原子数" or atoms per volume, use structure.volume_per_atom directly (it already represents volume per atom).
 - For Ni3Al reference lattice constant comparisons, use the known value 3.57 Å directly: ABS(s.lattice_a - 3.57).
 - When asked to compare two specific compounds, return both rows with their values — do NOT compute aggregated differences.
@@ -57,7 +57,7 @@ Table aliases:
 Column synonym corrections (use RIGHT side):
 - element_id (in composition) -> composition.element (TEXT, symbol like 'Ni')
 - fractional_amount, fraction, atomic_percent -> composition.atomic_fraction
-- xc_functional -> calculation.functional
+- xc_functional, PBE, GGA -> calculation.functional (use value 'GGA-PBE', not 'PBE')
 - space_group (for filtering by number) -> structure.space_group_number (INTEGER)
 - surface_reconstruction -> surface_energy.is_reconstructed
 - surface_orientation -> surface_energy.miller_index

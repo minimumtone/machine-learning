@@ -120,8 +120,8 @@ avg_table_halluc = sum(float(r["hallucinated_table_rate"]) for r in proposed) / 
 avg_join_halluc = sum(float(r["hallucinated_join_rate"]) for r in proposed) / n_total
 avg_latency = sum(float(r["latency_ms"]) for r in proposed) / n_total
 avg_tokens = sum(float(r["token_usage"]) for r in proposed) / n_total
-repair_count = sum(1 for r in proposed if int(r["repair_attempts"]) > 0)
-repair_total_attempts = sum(int(r["repair_attempts"]) for r in proposed)
+repair_count = sum(1 for r in proposed if int(r.get("repair_attempts") or 0) > 0)
+repair_total_attempts = sum(int(r.get("repair_attempts") or 0) for r in proposed)
 
 # per-difficulty (n_tables-based)
 diff_metrics = {}

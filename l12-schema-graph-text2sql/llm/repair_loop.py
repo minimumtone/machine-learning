@@ -329,6 +329,7 @@ def execution_repair_loop(
     max_retries: int = 2,
     model: str | None = None,
     api_key: str | None = None,
+    allow_empty_result: bool = False,
 ) -> dict[str, Any]:
     """Retry SQL when execution fails, returns 0 rows, or returns a superset.
 
@@ -337,6 +338,9 @@ def execution_repair_loop(
       1. DB execution error (syntax ok but runtime failure)
       2. Empty result set (query runs but returns nothing)
       3. Superset result (too many rows / missing WHERE conditions)
+
+    If allow_empty_result is True, 0-row results are treated as success
+    (the correct answer may legitimately be an empty set).
 
     Returns dict with: sql, exec_result, attempts, repair_tokens
     """
@@ -351,7 +355,8 @@ def execution_repair_loop(
         exec_result = execute_fn(sql)
         repair_latency = int((time.time() - t0) * 1000)
 
-        if exec_result.get("success") and exec_result.get("row_count", 0) > 0:
+        row_count = exec_result.get("row_count", 0)
+        if exec_result.get("success") and (row_count > 0 or allow_empty_result):
             # Check for superset (only if conditions were extracted)
             if conditions and i < max_retries:
                 row_count = exec_result.get("row_count", 0)

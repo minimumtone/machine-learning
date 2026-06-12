@@ -77,6 +77,11 @@ _CJK_FALSE_POSITIVE_CONTEXTS: dict[str, re.Pattern[str]] = {
     "金": re.compile(r"合金|金属|金型|超合金"),
 }
 
+# ASCII element symbols that appear in domain-specific terms (false positives)
+_ASCII_ELEMENT_FALSE_POSITIVE: dict[str, re.Pattern[str]] = {
+    "B": re.compile(r"Bサイト|B[\-\s]?site", re.IGNORECASE),
+}
+
 
 def extract_elements(query: str, terms: dict[str, Any] | None = None) -> list[str]:
     if terms is None:
@@ -87,6 +92,13 @@ def extract_elements(query: str, terms: dict[str, Any] | None = None) -> list[st
             if _is_ascii(alias):
                 pattern = _NON_ALNUM + re.escape(alias) + _NON_ALNUM_END
                 if re.search(pattern, query, re.IGNORECASE):
+                    # Check for false positive ASCII element contexts
+                    fp_pat = _ASCII_ELEMENT_FALSE_POSITIVE.get(elem)
+                    if fp_pat and fp_pat.search(query):
+                        # Only skip if the element ONLY appears in the false-positive context
+                        cleaned = fp_pat.sub("", query)
+                        if not re.search(pattern, cleaned, re.IGNORECASE):
+                            continue
                     if elem not in found:
                         found.append(elem)
                     break
@@ -617,6 +629,7 @@ def extract_conditions(query: str) -> dict[str, Any]:
         "volume": ["体積", "volume"],
         "band_gap": ["バンドギャップ", "band gap", "bandgap"],
         "functional": ["汎関数", "functional", "gga", "pbe", "lda"],
+        "site_label": ["aサイト", "bサイト", "a-site", "b-site", "a site", "b site", "サイト元素", "サイト"],
         "calculation_method": ["計算手法", "calculation method"],
         "phase_diagram": ["相図", "phase diagram", "hull"],
         "alloy_system": ["合金系", "alloy system"],
@@ -628,6 +641,17 @@ def extract_conditions(query: str) -> dict[str, Any]:
                 if re.search(kw, ql):
                     result[key] = True
                     break
+
+    # Site label extraction (A-site / B-site)
+    _site_a = re.search(r'[Aa]サイト|A[\-\s]?site', query)
+    _site_b = re.search(r'[Bb]サイト|B[\-\s]?site', query)
+    if _site_a or _site_b:
+        sites = []
+        if _site_a:
+            sites.append('A-site')
+        if _site_b:
+            sites.append('B-site')
+        result['site_label'] = sites if len(sites) > 1 else sites[0]
 
     # Coverage score
     coverage = compute_coverage(query, result, terms)
