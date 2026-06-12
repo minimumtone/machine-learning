@@ -191,7 +191,7 @@ def main():
         "execution_accuracy", "execution_precision", "execution_recall", "execution_f1",
         "raw_execution_accuracy", "raw_execution_precision", "raw_execution_f1",
         "hallucinated_table_rate", "hallucinated_column_rate", "hallucinated_join_rate",
-        "token_usage", "latency_ms", "repair_attempts", "repair_tokens",
+        "token_usage", "latency_ms", "sanity_regen", "repair_attempts", "repair_tokens",
     ]
 
     output_path = EVAL_DIR / "proposed_result.csv"
@@ -212,6 +212,7 @@ def main():
             sql = gen.get("sql", "")
             tokens = gen.get("tokens", 0)
             latency_ms = gen.get("latency_ms", 0)
+            sanity_regen = 0
             repair_attempts = 0
             repair_tokens = 0
 
@@ -232,7 +233,7 @@ def main():
                     if gen2.get("sql", ""):
                         sql = normalize_limit(gen2["sql"])
                         tokens += gen2.get("tokens", 0)
-                        repair_attempts += 1
+                        sanity_regen += 1
 
             exec_result = execute_sql(conn, sql) if sql else {"success": False, "rows": [], "row_count": 0}
 
@@ -324,6 +325,7 @@ def main():
                 "hallucinated_join_rate": h_join,
                 "token_usage": tokens,
                 "latency_ms": latency_ms,
+                "sanity_regen": sanity_regen,
                 "repair_attempts": repair_attempts,
                 "repair_tokens": repair_tokens,
             }
@@ -342,7 +344,7 @@ def main():
                 "hallucinated_table_rate": 0.0, "hallucinated_column_rate": 0.0,
                 "hallucinated_join_rate": 0.0,
                 "token_usage": 0, "latency_ms": 0,
-                "repair_attempts": 0, "repair_tokens": 0,
+                "sanity_regen": 0, "repair_attempts": 0, "repair_tokens": 0,
             })
 
     print(f"\n\nWriting results to {output_path}...")

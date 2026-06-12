@@ -324,7 +324,7 @@ FK関係だけでなくドメイン知識に基づくJOINパス選択が可能�
 \node[stepbox, fill=cyan!12, right=of steiner] (llmgen) {制約付き\\ LLM SQL生成\\
   {\scriptsize gpt-5.5}};
 
-\node[stepbox, fill=red!10, right=of llmgen] (guard) {SQLGuard\\ 8層安全検証\\
+\node[stepbox, fill=red!10, right=of llmgen] (guard) {SQLGuard\\ 多層安全検証\\
   {\scriptsize \textcircled{\scriptsize 1}BL
   \textcircled{\scriptsize 2}SELECT
   \textcircled{\scriptsize 3}複文\\
@@ -358,7 +358,7 @@ FK関係だけでなくドメイン知識に基づくJOINパス選択が可能�
   自然言語クエリから条件抽出（Step 2）を経て、
   Steiner木近似（Step 3）が30テーブルから必要最小限のサブグラフを抽出する。
   抽出されたテーブル・カラム・JOIN条件をYAMLでLLMに注入し（Step 4）、
-  8層SQLGuard（Step 5）を経て安全なSQLFNを実行する。
+  多層SQLGuard（Step 5）を経て安全なSQLFNを実行する。
   LLMの視界が必要テーブルに限定されるため、
   不要JOINとテーブル幻覚が原理的に排除される。}
 \label{fig:step3_pipeline}
@@ -446,7 +446,7 @@ FK関係だけでなくドメイン知識に基づくJOINパス選択が可能�
 \node[module, fill=violet!15, right=1.0cm of coverage, yshift=-0.9cm] (llm) {LLM SQL生成\\{\scriptsize (\S\ref{sec:llm_mode})}\\{\scriptsize gpt-5.5}};
 
 % === Layer 5: Guard ===
-\node[module, fill=red!12, right=0.6cm of rb, yshift=-0.9cm] (guard) {SQLGuard\\8層検証\\{\scriptsize (\S\ref{sec:sql_guard})}\\{\scriptsize BL/SELECT/複文/関数/\\テーブル/カラム/JOIN/LIMIT}};
+\node[module, fill=red!12, right=0.6cm of rb, yshift=-0.9cm] (guard) {SQLGuard\\多層検証\\{\scriptsize (\S\ref{sec:sql_guard})}\\{\scriptsize BL/SELECT/複文/関数/\\テーブル/カラム/JOIN/LIMIT}};
 
 % === Layer 6: Output ===
 \node[module, fill=green!12, right=0.6cm of guard] (exec) {SQL実行\\結果返却\\{\scriptsize PostgreSQL}};
@@ -498,9 +498,9 @@ FK関係だけでなくドメイン知識に基づくJOINパス選択が可能�
   実線矢印は主要データフロー、破線矢印（橙色）はデータ参照・フィードバックループを示す。
   Coverage Scoreに基づきRule-based（高カバレッジ）またはLLM（低カバレッジ）経路に分岐し、
   いずれもSchema Graph（30テーブルFK走査）によるJOINパス制約と
-  SQLGuard 8層検証を経て安全なSQLが生成・実行される。
+  SQLGuard 多層検証を経て安全なSQLが生成・実行される。
   実行エラーまたは空結果が検出された場合は、
-  エラー診断情報付きでLLMにリペアを依頼するリペアループ（最大2回）が作動する。
+  エラー診断情報付きでLLMにリペアを依頼するリペアループ（最大3回）が作動する。
   成功したクエリペアはFew-Shot RAGストアに蓄積され、以降のLLM生成に活用される。}
 \label{fig:architecture}
 \end{figure*}
@@ -1096,11 +1096,10 @@ LaTeX原稿からの自動種事例抽出を実装した。
 本手法はCRUD操作のうち参照系（Read）のみを対象とし、
 生成SQLはSELECT文に限定される。
 Rule-basedモード・LLMモードを問わず、
-生成された全SQLはデータベース実行前に8層検証パイプラインを通過する。
-前稿の5層構成に対し、カラムホワイトリスト検証（層6）、
-FK整合JOIN検証（層7）、ガード判定分類（層8）を追加した。
+生成された全SQLはデータベース実行前に14種の検査から成る多層検証パイプラインを通過する。
+論理的に以下の8カテゴリに分類される。
 
-\subsubsection{基本安全性検証（層1--5）}
+\subsubsection{基本安全性検証（カテゴリ1--5）}
 
 \begin{enumerate}
   \item \textbf{複数文検出}：文字列リテラル除去後のSQL本体内にセミコロンがあれば拒否
@@ -1109,12 +1108,24 @@ FK整合JOIN検証（層7）、ガード判定分類（層8）を追加した。
   \item \textbf{禁止キーワード検出}：INSERT, UPDATE, DELETE, DROP, ALTER,
     TRUNCATE, CREATE, GRANT, REVOKE, COPYをワード境界正規表現で走査。
   \item \textbf{SELECT専用制約}：SELECTまたはWITHで始まらない文を拒否。
-  \item \textbf{テーブルホワイトリスト検証}：FROM/JOIN句の全テーブル名を抽出し、
-    \texttt{allowed\_schema.yaml}に存在するか検証。
-    未宣言テーブル（例：\texttt{secret\_passwords}）参照クエリは拒否。
+  \item \textbf{危険関数検出}：\texttt{pg\_sleep}, \texttt{dblink},
+    \texttt{lo\_import/export}, \texttt{pg\_read\_file}等の
+    ファイルシステムアクセス・遅延注入関数を検出し拒否。
   \item \textbf{自動LIMIT注入}：LIMIT句がなければ\texttt{LIMIT 10000}を付加し、
     無制限結果セットによる過剰メモリ・計算消費を防止。
 \end{enumerate}
+
+さらに以下の検査が独立に実行される：
+\textbf{システムテーブル検出}（\texttt{pg\_shadow}, \texttt{pg\_authid}等への参照を拒否）、
+\textbf{writable CTE検出}（WITH句内のINSERT/UPDATE/DELETEを拒否）、
+\textbf{トートロジー検出}（\texttt{OR 1=1}等のインジェクションパターンを拒否）、
+\textbf{サブクエリ深度検査}（ネスト深度が上限$d_{\max}=3$を超えるクエリを拒否）、
+\textbf{AST構文検証}（SQLGlotパーサーで構文エラーを検出）。
+合計14種の独立検査がカテゴリ1--5に包含される。
+
+\textbf{テーブルホワイトリスト検証}：FROM/JOIN句の全テーブル名を抽出し、
+\texttt{allowed\_schema.yaml}に存在するか検証。
+未宣言テーブル（例：\texttt{secret\_passwords}）参照クエリは拒否。
 
 \subsubsection{カラムホワイトリスト検証（層6）}
 \label{sec:column_wl}
@@ -1139,21 +1150,27 @@ Schema Graph走査（\ref{sec:schema_graph}節）が生成したJOIN経路と
   \item JOIN条件の欠落（Cartesian product リスク）
 \end{itemize}
 
-原則としてFKメタデータに存在する結合のみを許可する。
+非FK JOINを検出し警告する（拒否はせず、DB権限層に委ねる）。
 FKが存在しないが業務上必要な結合（将来のマスタテーブル拡張等）は、
-\texttt{allowed\_joins.yaml}に明示登録することで許可する拡張点を設けている。
+\texttt{allowed\_schema.yaml}の\texttt{allowed\_joins}キーに
+明示登録することで警告を抑制する拡張点を設けている。
 
 \subsubsection{ガード判定分類（層8）}
 \label{sec:guard_categories}
 
-8層検証の結果に基づき、生成SQLを以下の4カテゴリに分類する：
+多層検証の結果に基づき、生成SQLを以下の6分類値で判定する：
 
 \begin{enumerate}
-  \item \textbf{SAFE}：全層パス。実行可能。
-  \item \textbf{MODIFIED}：自動修正適用（LIMIT注入等）。修正後実行可能。
-  \item \textbf{BLOCKED}：安全性違反により実行拒否。ユーザーに理由を通知。
-  \item \textbf{WARNING}：軽微な逸脱（カラム幻覚疑い等）。実行するが警告付き。
+  \item \texttt{accepted}：全層パス。実行可能。
+  \item \texttt{modified}：自動修正適用（LIMIT注入等）。修正後実行可能。
+  \item \texttt{rejected\_security}：セキュリティ違反（禁止KW、DML、システムテーブル、トートロジー等）により拒否。
+  \item \texttt{rejected\_syntax}：AST解析エラーにより拒否。
+  \item \texttt{rejected\_schema}：スキーマ違反（未許可テーブル・カラム参照）により拒否。
+  \item \texttt{rejected\_complexity}：サブクエリ深度超過により拒否。
 \end{enumerate}
+
+これらに加え、\texttt{warnings}リスト（非FK JOIN検出、型安全警告、LIMIT付加通知）が
+分類値と独立に記録される。警告は実行を止めないが、ログとして保持される。
 
 層1--5の正規表現ベース検証に加え、SQLGlot~\citep{sqlglot2023}による
 AST（抽象構文木）レベルの構文検証を標準で併用する。
@@ -1214,7 +1231,7 @@ SQLが正常に実行され結果が0行となった場合、
     Schema Graph制約付きLLM生成にエスカレーション（Level 2、2.4--6.1秒）。
   \item \textbf{明確化要求（Coverage $< 0.5$）}：
     ユーザーに追加情報を要求。
-  \item \textbf{SQLガード}：生成モードによらず8層検証（\ref{sec:sql_guard}節）を常に適用。
+  \item \textbf{SQLガード}：生成モードによらず多層検証（\ref{sec:sql_guard}節）を常に適用。
 \end{enumerate}
 
 このアプローチは、辞書がカバーするクエリを
@@ -1279,7 +1296,7 @@ LLMによるSQL再生成を試みるリペアループを実装した。
 
 \subsubsection{失敗モードの分類}
 
-リペアループは以下の3種の失敗モードを区別する：
+リペアループは以下の4種の失敗モードを区別する：
 
 \begin{enumerate}
   \item \textbf{実行エラー}：PostgreSQLが返すランタイムエラー
@@ -1291,7 +1308,7 @@ LLMによるSQL再生成を試みるリペアループを実装した。
     未認識語彙リストを診断情報としてLLMに提供し、
     WHERE条件の緩和（完全一致$\to$ILIKE、値の正規化等）や
     JOIN経路の修正を促す。
-  \item \textbf{SQLGuard拒否}：8層検証で拒否されたSQL。
+  \item \textbf{SQLGuard拒否}：多層検証で拒否されたSQL。
     拒否理由（禁止テーブル、DML検出等）をフィードバックして再生成する。
   \item \textbf{SUPERSET検出}：クエリは正常に実行され結果が非空だが、
     返却行数が過大（WHERE条件数に対して不釣り合いに多い行を返却）な場合。
@@ -1305,7 +1322,7 @@ LLMによるSQL再生成を試みるリペアループを実装した。
 
 \subsubsection{リペアプロセス}
 
-リペアは最大2回まで試行する（初回生成を含め最大3回の実行機会）。
+リペアは最大3回まで試行する（初回生成を含め最大4回の実行機会）。
 各リペア試行では以下の情報をLLMに提供する：
 
 \begin{itemize}
@@ -2268,7 +2285,7 @@ precision/F1の併記が必要である。
 \subsubsection{ベースラインの公平性}
 \label{sec:fairness}
 
-リペアループ（リペア最大2回、初回生成を含め最大3回の実行機会）、
+リペアループ（リペア最大3回、初回生成を含め最大4回の実行機会）、
 Few-Shot RAG、出力スキーマ指定（Section~\ref{sec:output_schema_specifier}）、
 およびSQL構造整合性チェッカー（Section~\ref{sec:sql_sanity_checker}）は
 Proposedのみに適用されている。
@@ -2589,7 +2606,7 @@ NL $\to$ データ検索 $\to$ 材料設計仮説生成の
   \item \textbf{評価指標の改善}：
     共通カラム照合とLIMIT 10{,}000正規化の併用（合計+53.0pt）により、
     T2SQL評価におけるSELECT列差異とLIMIT切り詰めの影響を排除。
-  \item \textbf{回帰テスト125/125 PASS}：
+  \item \textbf{ユニットテスト125/125 PASS}：
     SQLインジェクション安全処理、Intent分類を含む
     安全性・頑健性テストに全件合格。
 \end{enumerate}
@@ -2629,7 +2646,7 @@ OQMDの開発・維持管理にあたるNorthwestern大学Wolvertonグループ�
 
 本研究で使用した検証データベース（5プロトタイプ1{,}470エントリ）のseedデータ、
 評価クエリ100件（gold SQL・期待結果セット）、
-5手法の実験結果CSV、回帰テスト39件、
+5手法の実験結果CSV、回帰テスト39件（付録S2掲載分。全ユニットテスト125件）、
 ソースコード一式（Schema Graph走査エンジン・SQLガード・条件抽出器・LLMモード）、
 および検証手順書（VERIFICATION\_GUIDE.md）は
 検証資材リポジトリに収録されている。

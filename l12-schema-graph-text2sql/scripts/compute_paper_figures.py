@@ -54,9 +54,18 @@ def read_csv(path):
 
 
 def count_tables_in_sql(sql_text: str) -> int:
-    """gold SQL の FROM / JOIN 句から参照テーブル数を数える。"""
+    """gold SQL の FROM / JOIN 句から参照テーブル数を数える。
+
+    制約: CTE (WITH ... AS) の名前をテーブルとして誤計上する潜在弱点あり。
+    現行の gold SQL 100件に CTE・サブクエリ・EXISTS は皆無のため実害なし。
+    将来 CTE を含む gold SQL を追加する場合は WITH 句名の除外が必要。
+    """
     sql_upper = sql_text.upper()
     tables = set()
+    # Extract CTE names to exclude (future-proofing comment; no CTEs in current gold SQL)
+    cte_names: set[str] = set()
+    for m in re.finditer(r'\bWITH\s+(\w+)\s+AS\s*\(', sql_upper):
+        cte_names.add(m.group(1))
     # FROM table
     for m in re.finditer(r'\bFROM\s+(\w+)', sql_upper):
         tables.add(m.group(1))
@@ -65,6 +74,7 @@ def count_tables_in_sql(sql_text: str) -> int:
         tables.add(m.group(1))
     # remove common aliases / keywords that aren't tables
     tables -= {"SELECT", "WHERE", "AND", "OR", "ON", "AS", "LATERAL"}
+    tables -= cte_names
     return len(tables)
 
 

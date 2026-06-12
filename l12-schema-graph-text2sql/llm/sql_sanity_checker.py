@@ -1,9 +1,9 @@
 """Rule-based SQL sanity checker: detect structural mismatches between
 the user's query intent and the generated SQL.
 
-Unlike the LLM-based semantic checker, this uses deterministic rules
-for fast, reliable mismatch detection. Runs BEFORE execution and
-triggers re-generation when a clear structural error is detected.
+Uses deterministic rules for fast, reliable mismatch detection.
+Runs BEFORE execution and triggers re-generation when a clear
+structural error is detected.
 """
 from __future__ import annotations
 
