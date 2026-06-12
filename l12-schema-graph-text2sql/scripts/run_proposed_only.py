@@ -35,6 +35,8 @@ from llm.entity_extractor import extract_conditions
 from llm.repair_loop import execution_repair_loop, detect_superset
 from llm.schema_linker import link_schema
 from llm.sql_generator import generate_sql_via_llm
+from llm.intent_classifier import classify_query_type
+from llm.sql_sanity_checker import check_sql_sanity
 from llm.sql_semantic_checker import check_semantic_consistency
 from safety.sql_validator import (
     extract_columns_from_sql,
@@ -217,22 +219,15 @@ def main():
             if sql:
                 sql = normalize_limit(sql)
 
-            # Semantic consistency check: reverse-translate SQL and compare
+            # Rule-based sanity check: detect structural mismatches
             if sql:
-                sem_check = check_semantic_consistency(
-                    question, sql, model=model, api_key=api_key
-                )
-                if not sem_check["consistent"]:
-                    # Regenerate with corrective feedback
-                    corrective_msg = (
-                        f"前回生成したSQLは意味的に不整合です。\n"
-                        f"SQLの意味: {sem_check['sql_summary']}\n"
-                        f"不整合の理由: {sem_check['reason']}\n"
-                        f"ユーザの質問: {question}\n"
-                        f"ユーザの意図に合ったSQLを再生成してください。"
-                    )
+                qt_info = classify_query_type(question)
+                sanity = check_sql_sanity(question, sql, qt_info["query_type"])
+                if not sanity["sane"]:
+                    # Regenerate with corrective hints
+                    corrective = sanity["correction_hints"]
                     gen2 = proposed_schema_graph(
-                        question + "\n\n[修正指示] " + corrective_msg,
+                        question + "\n\n[修正指示] " + corrective,
                         table_graph, allowed_columns, allowed_joins, api_key, model
                     )
                     if gen2.get("sql", ""):
