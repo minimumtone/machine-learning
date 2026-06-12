@@ -652,6 +652,10 @@ def extract_conditions(query: str) -> dict[str, Any]:
         if _site_b:
             sites.append('B-site')
         result['site_label'] = sites if len(sites) > 1 else sites[0]
+    elif result.get('site_label') is True:
+        # Generic 'サイト' keyword matched but no A/B prefix found;
+        # remove the boolean to avoid downstream crash in condition_mapper
+        del result['site_label']
 
     # Coverage score
     coverage = compute_coverage(query, result, terms)

@@ -14,6 +14,8 @@ import time
 from pathlib import Path
 from typing import Any, Callable
 
+from llm.sql_generator import _fix_known_literals
+
 
 def _load_repair_template() -> str:
     path = Path(__file__).parent / "prompt_templates" / "sql_repair_prompt.md"
@@ -88,6 +90,8 @@ def attempt_repair(
         "You are a PostgreSQL expert for a materials science database. Fix the SQL.",
         model, api_key,
     )
+    if sql:
+        sql = _fix_known_literals(sql)
     return {
         "repaired_sql": sql if sql else original_sql,
         "repair_prompt": prompt,
@@ -326,7 +330,7 @@ def execution_repair_loop(
     allowed_joins: list[str],
     coverage: dict[str, Any] | None = None,
     conditions: dict[str, Any] | None = None,
-    max_retries: int = 2,
+    max_retries: int = 3,
     model: str | None = None,
     api_key: str | None = None,
     allow_empty_result: bool = False,
