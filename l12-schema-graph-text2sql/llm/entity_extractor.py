@@ -643,8 +643,8 @@ def extract_conditions(query: str) -> dict[str, Any]:
                     break
 
     # Site label extraction (A-site / B-site)
-    _site_a = re.search(r'[Aa]サイト|A[\-\s]?site', query)
-    _site_b = re.search(r'[Bb]サイト|B[\-\s]?site', query)
+    _site_a = re.search(r'[Aa]サイト|A[\-\s]?site', query, re.IGNORECASE)
+    _site_b = re.search(r'[Bb]サイト|B[\-\s]?site', query, re.IGNORECASE)
     if _site_a or _site_b:
         sites = []
         if _site_a:
@@ -652,6 +652,10 @@ def extract_conditions(query: str) -> dict[str, Any]:
         if _site_b:
             sites.append('B-site')
         result['site_label'] = sites if len(sites) > 1 else sites[0]
+    elif result.get('site_label') is True:
+        # Generic 'サイト' keyword matched but no A/B prefix found;
+        # remove the boolean to avoid downstream crash in condition_mapper
+        del result['site_label']
 
     # Coverage score
     coverage = compute_coverage(query, result, terms)
