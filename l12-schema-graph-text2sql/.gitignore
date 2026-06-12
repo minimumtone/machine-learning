@@ -15,7 +15,7 @@ venv/
 # Generated artifacts
 *.pdf
 *.html
-*.lock
+few_shot_examples.lock
 
 # LaTeX build artifacts
 *.aux
