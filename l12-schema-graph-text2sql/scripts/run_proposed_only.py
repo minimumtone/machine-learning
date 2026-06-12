@@ -37,7 +37,6 @@ from llm.schema_linker import link_schema
 from llm.sql_generator import generate_sql_via_llm
 from llm.intent_classifier import classify_query_type
 from llm.sql_sanity_checker import check_sql_sanity
-from llm.sql_semantic_checker import check_semantic_consistency
 from safety.sql_validator import (
     extract_columns_from_sql,
     extract_tables_from_sql,

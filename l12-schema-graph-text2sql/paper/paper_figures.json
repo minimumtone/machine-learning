@@ -34,7 +34,7 @@
     "stdev_pp": 1.7,
     "max_accuracy_pct": 72.7,
     "min_accuracy_pct": 69.4,
-    "representative_run": "最大値ラン (72.7%)",
+    "representative_run": "proposed_result_run2.csv (= proposed_result.csv)",
     "by_difficulty": {
       "easy": {
         "mean": 96.3,

@@ -304,6 +304,18 @@ metric_improvement = {
     "improvement_pt": round(pct(avg_exec_acc) - pct(raw_acc), 1),
 }
 
+def _identify_representative_run(
+    run_paths: list[Path], representative_path: Path
+) -> str:
+    """proposed_result.csv がどのランと一致するかをMD5で照合して返す。"""
+    import hashlib
+    rep_hash = hashlib.md5(representative_path.read_bytes()).hexdigest()
+    for p in run_paths:
+        if hashlib.md5(p.read_bytes()).hexdigest() == rep_hash:
+            return f"{p.name} (= proposed_result.csv)"
+    return "proposed_result.csv (ランファイルと不一致)"
+
+
 # ---------------------------------------------------------------------------
 # 7b. 3-run 再現性統計 (proposed_result_run{1,2,3}.csv から自動計算)
 # ---------------------------------------------------------------------------
@@ -350,7 +362,7 @@ if len(run_csv_paths) >= 2:
         "stdev_pp": stdev,
         "max_accuracy_pct": max(run_accuracies),
         "min_accuracy_pct": min(run_accuracies),
-        "representative_run": f"最大値ラン ({max(run_accuracies)}%)",
+        "representative_run": _identify_representative_run(run_csv_paths, EVAL / "proposed_result.csv"),
         "by_difficulty": diff_stats,
         "note": "gpt-5.5は温度制御不可のため複数回実行し平均±標準偏差を報告",
     }
