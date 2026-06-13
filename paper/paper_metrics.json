@@ -42,6 +42,8 @@
   "additive_decomposition": {
     "B2_R2": 0.5393,
     "L12_R2": 0.2625,
+    "B2_RMSE_Omega_sf": 0.0559,
+    "L12_RMSE_Omega_sf": 0.1124,
     "B2_n_elements": 39,
     "L12_n_elements": 39,
     "B2_extended_R2": 0.5393,
