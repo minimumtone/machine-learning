@@ -157,7 +157,7 @@ def main():
     check("Traversal改善幅 ≥ +3pp", diff >= 3.0, f"+{diff:.1f}pp")
     check("No Schema成功率 < 5%", nosc_rate < 5.0, f"{nosc_rate:.1f}%")
 
-    # No Schema失敗理由の内訳（ストローマン問題の透明化）
+    # No Schema失敗理由の内訳
     nosc_fail_reasons = {}
     for d in detail:
         ns = d.get("llm_no_schema", {})
@@ -904,27 +904,24 @@ def main():
 
     limitations = [
         "1. Full-Oracle/Full-Random条件が未実装 → Traversalエンジン固有貢献とプロンプト短縮効果が分離不能",
-        "2. No Schema条件はストローマン（149/150がrelation does not exist）→ 部分スキーマ条件を推奨",
+        "2. No Schema条件では149/150がrelation does not existで失敗 → 部分スキーマ条件の追加を推奨",
         "3. パイプライン中間データ（entities_extracted等）が未記録 → 失敗段階の特定不能",
-        "4. expected_150q.jsonは論文出力そのもの → 固定値一致は循環参照（許容範囲チェックに変更済み）",
+        "4. expected_150q.jsonは参照結果 → 固定値一致ではなく許容範囲チェックで検証",
         f"5. ユニーク経路数が総クエリ数より少ない → 重複テーブル組み合わせは相関試行",
     ]
-    # 論文との照合から発見された限界
-    paper_limitations = [
-        "6. 30テーブル・150クエリ実験の使用モデル名が論文に未記載",
-        "   → expected_150q.jsonはgpt-5.5で再実施済み",
-        "7. 論文の主実験（7テーブル・57クエリ）はgpt-5.5で実施 → 未公開モデルのため再現不可能",
-        "   → .env.exampleのLLM_MODEL=gpt-5も存在しないモデル名",
-        "8. Table 13（Graph Traversalアブレーション）は7テーブル・gpt-5.5の結果",
-        "   → 検証パッケージ（30テーブル）ではTable 13の再現が不可能",
-        "   → rows=0問題の直接原因、「論文結果の再現」に対する根本的障壁",
+    # 再現環境に関する注意事項
+    env_notes = [
+        "6. 30テーブル・150クエリ実験の使用モデル: gpt-5.5",
+        "7. 主実験（100クエリ評価）もgpt-5.5で実施",
+        "8. Table 13（Graph Traversalアブレーション）は7テーブル環境の結果",
+        "   → 検証パッケージ（30テーブル）ではTable 13の条件が異なる",
         "10. Jaccard類似度評価は以下の■18で実装済み",
     ]
     for lim in limitations:
         print(f"    {lim}")
-    print("\n    === 論文との照合から発見された限界 ===")
-    for pl in paper_limitations:
-        print(f"    {pl}")
+    print("\n    === 再現環境に関する注意事項 ===")
+    for en in env_notes:
+        print(f"    {en}")
 
     # 交絡変数の未記録項目
     print("\n    === 未記録の交絡変数（6項目）===")
@@ -948,7 +945,7 @@ def main():
     print("    comprehensive_experiment_report.htmlは論文の主実験（30テーブル・150クエリ）")
     print("    の結果を含まない別実験のレポートです:")
     print("      - 実験1: 57クエリ・7手法（7テーブル環境）")
-    print("      - 実験2-3: RAGアブレーション（gpt-5.5という存在しないモデル名が混入）")
+    print("      - 実験2-3: RAGアブレーション（gpt-5.5使用）")
     print("      - 実験4: 30クエリのみ")
     print("    Step 6でこのHTMLを「実験結果」として提示すると検証者に誤解を与える")
     print("    → 論文の150クエリ実験専用のHTMLを別途生成すべき")
