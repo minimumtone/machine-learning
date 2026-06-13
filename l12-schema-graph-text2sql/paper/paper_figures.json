@@ -168,10 +168,10 @@
       "n": 100,
       "exec_accuracy": 52.8,
       "syntax_validity": 100.0,
-      "exec_validity": 95.0,
+      "exec_validity": 100.0,
       "table_halluc_rate_pct": 0.0,
       "join_halluc_count": 0,
-      "exec_error_count": 5,
+      "exec_error_count": 0,
       "syntax_error_count": 0,
       "avg_latency_ms": 0.0,
       "avg_token_usage": 0.0,
@@ -182,11 +182,11 @@
         },
         "medium": {
           "n": 28,
-          "exec_accuracy": 66.7
+          "exec_accuracy": 66.8
         },
         "hard": {
           "n": 22,
-          "exec_accuracy": 39.0
+          "exec_accuracy": 39.1
         },
         "very_hard": {
           "n": 23,
@@ -299,7 +299,7 @@
         "join_halluc_count": 18
       },
       "B3": {
-        "exec_error_count": 5,
+        "exec_error_count": 0,
         "syntax_error_count": 0,
         "table_halluc_rate_pct": 0.0,
         "join_halluc_count": 0

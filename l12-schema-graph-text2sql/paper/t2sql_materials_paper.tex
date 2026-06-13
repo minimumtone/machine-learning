@@ -1745,7 +1745,7 @@ DB規模1{,}470件に対して実質的に制限なしと同等でありかつ�
 
 共通カラム照合およびLIMIT正規化の併用により+53.0ポイントの精度向上が得られた。
 いずれの修正も、gold SQLと生成SQLのペアさえあれば第三者が独立に再現可能である。
-なお、ベースライン手法の実行失敗行（B2: 6件、B3: 5件、B4: 2件）では
+なお、ベースライン手法の実行失敗行（B2: 6件、B4: 2件）では
 LLM生成SQLが保存されていないため、精度0の結果のみ同梱CSVに記録されている。
 以降の結果はすべてA+C適用後の値を報告する。
 
@@ -1775,7 +1775,7 @@ Supplementary S1--S2節に掲載する。
     \midrule
     B1 & LLM-only & 98\% & 98\% & 64.6\% & 0\% & 16件 \\
     B2 & Full Schema & 94\% & 94\% & 68.7\% & 0\% & 18件 \\
-    B3 & Rule-based & 100\% & 95\% & 52.8\% & 0\% & 3件 \\
+    B3 & Rule-based & 100\% & 100\% & 52.8\% & 0\% & 0件 \\
     B4 & FK-list & 98\% & 98\% & 66.4\% & 0\% & 21件 \\
     P & \textbf{Proposed}$^\dagger$ & 100\% & 100\% & \textbf{70.6\%} & \textbf{0\%} & \textbf{3件} \\
     \bottomrule
@@ -1920,7 +1920,7 @@ Schema Graph走査によるJOIN経路制約の効果が顕著である。
     \midrule
     B1 & LLM-only & 2 & 2 & 0 & 16 \\
     B2 & Full Schema & 6 & 6 & 0 & 18 \\
-    B3 & Rule-based & 5 & 0 & 0 & 3 \\
+    B3 & Rule-based & 0 & 0 & 0 & 0 \\
     B4 & FK-list & 2 & 2 & 0 & 21 \\
     P & \textbf{Proposed} & \textbf{0} & \textbf{0} & \textbf{0} & \textbf{3} \\
     \bottomrule

@@ -217,11 +217,16 @@ def _rule_based_fallback(
     _q = user_query.lower()
     _count_keywords = ["総数", "何件", "いくつ", "何種類"]
     is_count_query = any(kw in _q for kw in _count_keywords)
-    if not is_count_query and "数を" in _q:
-        idx = _q.index("数を")
-        preceding = _q[max(0, idx - 1):idx]
-        if preceding not in ("定", "係", "指", "変", "常"):
-            is_count_query = True
+    if not is_count_query:
+        _search_start = 0
+        while not is_count_query:
+            idx = _q.find("数を", _search_start)
+            if idx == -1:
+                break
+            preceding = _q[max(0, idx - 1):idx]
+            if preceding not in ("定", "係", "指", "変", "常"):
+                is_count_query = True
+            _search_start = idx + 1
     if not is_count_query and "count" in _q:
         is_count_query = True
 
@@ -253,6 +258,10 @@ def _rule_based_fallback(
             "JOIN material_reference mr ON mr.entry_id = m.entry_id\n"
             "    JOIN literature_reference lr ON lr.reference_id = mr.reference_id"
         ),
+        "application_domain": (
+            "JOIN material_application ma ON ma.entry_id = m.entry_id\n"
+            "    JOIN application_domain ad ON ad.domain_id = ma.domain_id"
+        ),
     }
 
     sorted_tables = sorted(tables_needed)
@@ -263,6 +272,7 @@ def _rule_based_fallback(
             joins.append(indirect_join_map[t])
             tables_needed.discard("calculation")
             tables_needed.discard("material_reference")
+            tables_needed.discard("material_application")
         else:
             a = alias_map.get(t, t[:2])
             joins.append(f"JOIN {t} {a} ON {a}.entry_id = m.entry_id")
@@ -279,6 +289,23 @@ def _rule_based_fallback(
             where_clauses.append(sql_f)
 
     if has_exists_elements:
+        has_site_label = any(
+            "site_label" in frag["sql_fragment"]
+            for frag in linked["sql_fragments"]
+            if frag["type"] not in ("sort", "element_exists")
+        )
+        if has_site_label:
+            # Convert site_label conditions to EXISTS subqueries
+            new_where: list[str] = []
+            for wc in where_clauses:
+                if "c.site_label" in wc:
+                    new_where.append(
+                        f"EXISTS (SELECT 1 FROM composition c_sl "
+                        f"WHERE c_sl.entry_id = m.entry_id AND c_sl.{wc.split('c.', 1)[1]})"
+                    )
+                else:
+                    new_where.append(wc)
+            where_clauses = new_where
         joins = [j for j in joins if not j.startswith("JOIN composition")]
 
     if "structure" in tables_needed:
