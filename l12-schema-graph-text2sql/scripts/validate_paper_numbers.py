@@ -206,7 +206,7 @@ def main() -> int:
                 pdf_unresolved = []
                 for pattern, desc in [
                     (r'(?<!\w)\?\?(?!\w)', 'unresolved reference ??'),
-                    (r'\[\?\]', 'unresolved citation [?]'),
+                    (r'\[\s*\?(?:\s+\?)*\s*\]', 'unresolved citation [?]'),
                 ]:
                     for m in re.finditer(pattern, pdf_text):
                         ctx_start = max(0, m.start() - 20)
@@ -220,6 +220,15 @@ def main() -> int:
                         errors.append(f"[PDF] ... and {len(pdf_unresolved) - 10} more")
                 else:
                     print("PDF: no unresolved references found")
+                # Check for References section
+                if 'References' not in pdf_text and '参考文献' not in pdf_text:
+                    warnings.append("[PDF] No 'References' section found — "
+                                    "bibtex may not have been run")
+                # Check .bbl existence
+                bbl_path = pdf_path.with_suffix('.bbl')
+                if not bbl_path.exists():
+                    warnings.append(f"[PDF] {bbl_path.name} not found — "
+                                    "bibtex has not been run")
         except (FileNotFoundError, subprocess.TimeoutExpired):
             warnings.append("pdftotext not available; PDF check skipped")
 

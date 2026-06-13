@@ -111,36 +111,56 @@ def generate_joins_for_tables(
                 seen_pairs.add(pair)
                 all_edges.append(e)
 
+    # Build an adjacency structure from collected edges so we can BFS from
+    # base_table and emit JOINs in parent-first order.  This guarantees
+    # that the alias referenced on the right side of every ON clause has
+    # already been introduced by a prior JOIN (or is the FROM table).
+    adj: dict[str, list[dict[str, str]]] = {}
+    for edge in all_edges:
+        s, t = edge["source_table"], edge["target_table"]
+        adj.setdefault(s, []).append(edge)
+        adj.setdefault(t, []).append(edge)
+
+    visited: set[str] = {base_table}
+    queue: list[str] = [base_table]
+    ordered_edges: list[dict[str, str]] = []
+    while queue:
+        node = queue.pop(0)
+        for edge in adj.get(node, []):
+            s, t = edge["source_table"], edge["target_table"]
+            neighbour = t if s == node else s
+            if neighbour not in visited:
+                visited.add(neighbour)
+                ordered_edges.append(edge)
+                queue.append(neighbour)
+
     used_aliases: set[str] = set()
-    # Fix B11: Track table→assigned_alias mapping so intermediate edges
-    # reference the correct (possibly numbered) alias like 'cp2' not 'cp'.
     table_to_alias: dict[str, str] = {}
     base_alias = _alias(base_table, used_aliases)
     table_to_alias[base_table] = base_alias
     parts: list[str] = []
 
-    for edge in all_edges:
+    for edge in ordered_edges:
         src_t = edge["source_table"]
         src_c = edge["source_column"]
         tgt_t = edge["target_table"]
         tgt_c = edge["target_column"]
-        if src_t == base_table:
+        # Determine which side is already joined (parent) vs new (child)
+        if src_t in table_to_alias and tgt_t not in table_to_alias:
             join_table = tgt_t
             ja = _alias(join_table, used_aliases)
             table_to_alias[join_table] = ja
-            on_clause = f"{ja}.{tgt_c} = {base_alias}.{src_c}"
-        elif tgt_t == base_table:
+            parent_alias = table_to_alias[src_t]
+            on_clause = f"{ja}.{tgt_c} = {parent_alias}.{src_c}"
+        elif tgt_t in table_to_alias and src_t not in table_to_alias:
             join_table = src_t
             ja = _alias(join_table, used_aliases)
             table_to_alias[join_table] = ja
-            on_clause = f"{ja}.{src_c} = {base_alias}.{tgt_c}"
+            parent_alias = table_to_alias[tgt_t]
+            on_clause = f"{ja}.{src_c} = {parent_alias}.{tgt_c}"
         else:
-            join_table = tgt_t
-            ja = _alias(tgt_t, used_aliases)
-            table_to_alias[tgt_t] = ja
-            # Fix B11: Look up the already-assigned alias for the source table
-            sa = table_to_alias.get(src_t, _alias(src_t))
-            on_clause = f"{ja}.{tgt_c} = {sa}.{src_c}"
+            # Both already visited (cycle edge) — skip
+            continue
         parts.append(f"JOIN {join_table} {ja} ON {on_clause}")
 
     return "\n".join(parts)

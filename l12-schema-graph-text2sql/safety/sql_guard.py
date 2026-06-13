@@ -9,11 +9,13 @@ from __future__ import annotations
 import os
 import re
 import time
+import typing
 from typing import Any
 
-import psycopg
-
 from safety.sql_validator import validate_sql
+
+if typing.TYPE_CHECKING:
+    import psycopg
 
 
 def get_readonly_connection_string() -> str:
@@ -64,7 +66,7 @@ def _extract_referenced_entities(sql: str) -> dict[str, list[str]]:
 
 def diagnose_empty_result(
     sql: str,
-    conn: psycopg.Connection,
+    conn: "psycopg.Connection",
 ) -> dict[str, Any]:
     """When a query returns 0 rows, check whether referenced entities exist in the DB.
 
@@ -174,9 +176,11 @@ def execute_sql(
     conninfo = get_readonly_connection_string()
     t0 = time.time()
     try:
+        import psycopg
         conn = psycopg.connect(conninfo)
         try:
             with conn.cursor() as cur:
+                cur.execute("SET TRANSACTION READ ONLY")
                 cur.execute(f"SET statement_timeout = '{timeout_seconds * 1000}'")
                 cur.execute(sql)
                 columns = [desc[0] for desc in cur.description] if cur.description else []

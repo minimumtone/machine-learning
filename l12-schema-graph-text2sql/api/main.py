@@ -1,10 +1,13 @@
 """FastAPI application for L1_2 schema-graph-assisted Text-to-SQL."""
 from __future__ import annotations
 
+import logging
 import os
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
+
+logger = logging.getLogger(__name__)
 from pydantic import BaseModel
 
 from llm.entity_extractor import extract_conditions
@@ -38,11 +41,17 @@ class QueryResponse(BaseModel):
     generated_sql: str
     validation: dict[str, Any]
     results: dict[str, Any] | None = None
+    schema_mode: str = "full_30_table"
 
 
 @app.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
+def health() -> dict[str, Any]:
+    ctx = _get_schema_ctx()
+    schema_ok = ctx.get("join_list") is not None
+    return {
+        "status": "ok",
+        "schema_context": "full_30_table" if schema_ok else "fallback_5_table",
+    }
 
 
 _schema_ctx: dict[str, list[str]] | None = None
@@ -69,7 +78,11 @@ def _get_schema_ctx() -> dict[str, list[str]]:
         _schema_ctx = build_schema_context_from_db(conn)
         conn.close()
         return _schema_ctx
-    except Exception:
+    except Exception as exc:
+        logger.error(
+            "DB schema context unavailable — falling back to 5-table mode: %s",
+            exc,
+        )
         return {"join_list": None, "all_columns": None}
 
 
@@ -109,6 +122,10 @@ def query_endpoint(req: QueryRequest) -> QueryResponse:
                 source="api",
             )
 
+    ctx_mode = (
+        "full_30_table" if ctx.get("join_list") is not None
+        else "fallback_5_table"
+    )
     return QueryResponse(
         query=req.query,
         conditions=result.get("conditions", {}),
@@ -117,6 +134,7 @@ def query_endpoint(req: QueryRequest) -> QueryResponse:
         generated_sql=sql,
         validation=validation,
         results=exec_result,
+        schema_mode=ctx_mode,
     )
 
 
