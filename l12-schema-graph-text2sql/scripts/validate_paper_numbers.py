@@ -105,12 +105,10 @@ def main() -> int:
             check(f"materials_engineering.{key}", val)
 
     # L12 recovery
-    recovery = mat.get("known_l12_recovery")
-    if recovery:
-        total = recovery.get("total")
-        recovered = recovery.get("recovered")
-        if total is not None and recovered is not None:
-            check("L12 recovery", f"{recovered}/{total}")
+    l12_total = mat.get("known_l12_total")
+    l12_recovered = mat.get("known_l12_recovered")
+    if l12_total is not None and l12_recovered is not None:
+        check("L12 recovery", f"{l12_recovered}/{l12_total}")
 
     # Baselines
     bl_comp = fig.get("baseline_comparison", {})
@@ -140,10 +138,10 @@ def main() -> int:
     by_diff = fig.get("proposed_by_difficulty", {})
     for diff_key in ["easy", "medium", "hard", "very_hard"]:
         d = by_diff.get(diff_key, {})
-        acc = d.get("exec_accuracy_pct") or d.get("exec_accuracy")
+        acc = d.get("exec_accuracy_pct") if "exec_accuracy_pct" in d else d.get("exec_accuracy")
         if acc is not None:
             check(f"Difficulty {diff_key} accuracy", acc, required=False)
-        n = d.get("n") or d.get("total")
+        n = d.get("n") if "n" in d else d.get("total")
         if n is not None:
             check(f"Difficulty {diff_key} count", n, required=False)
 
