@@ -627,6 +627,7 @@ def check_allowed_columns(
         return []
     used = extract_columns_from_sql(sql)
     allowed_lower = {c.lower() for c in allowed_columns}
+    # Static well-known aliases
     alias_to_table = {
         "m": "material_entry", "c": "composition", "s": "structure",
         "ps": "phase_stability", "calc": "calculation", "cp": "calculated_property",
@@ -643,6 +644,11 @@ def check_allowed_columns(
         "pde": "phase_diagram_entry", "als": "alloy_system",
         "mas": "material_alloy_system", "sg": "space_group",
     }
+    # Merge dynamic aliases extracted from the SQL itself (e.g. cp_bm, c_ni)
+    dynamic_aliases = _extract_aliases_from_sql(sql)
+    for alias, table in dynamic_aliases.items():
+        if alias not in alias_to_table:
+            alias_to_table[alias] = table
     disallowed: list[str] = []
     for col_ref in used:
         parts = col_ref.split(".")
