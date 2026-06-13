@@ -75,21 +75,24 @@ property_terms:
       - bulk modulus
       - "\u4F53\u7A4D\u5F3E\u6027\u7387"
       - "\u30D0\u30EB\u30AF\u30E2\u30B8\u30E5\u30E9\u30B9"
-    column: elastic_tensor.bulk_modulus_vrh
+    column: calculated_property.value
+    property_name: bulk_modulus
 
   shear_modulus:
     aliases:
       - shear modulus
       - "\u305B\u3093\u65AD\u5F3E\u6027\u7387"
       - "\u30B7\u30A2\u30E2\u30B8\u30E5\u30E9\u30B9"
-    column: elastic_tensor.shear_modulus_vrh
+    column: calculated_property.value
+    property_name: shear_modulus
 
   youngs_modulus:
     aliases:
       - "Young's modulus"
       - "\u30E4\u30F3\u30B0\u7387"
       - youngs modulus
-    column: elastic_tensor.youngs_modulus
+    column: calculated_property.value
+    property_name: youngs_modulus
 
   poisson_ratio:
     aliases:

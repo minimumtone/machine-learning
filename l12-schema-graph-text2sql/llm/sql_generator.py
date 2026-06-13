@@ -320,6 +320,21 @@ def _rule_based_fallback(
         select_cols.append("cp.property_name")
         select_cols.append("cp.value")
         select_cols.append("cp.unit")
+        # Detect which calculated property is queried and add filter
+        _prop_keywords = {
+            "bulk_modulus": ["バルクモジュラス", "体積弾性率", "bulk modulus", "弾性係数"],
+            "shear_modulus": ["せん断弾性率", "シアモジュラス", "shear modulus"],
+            "youngs_modulus": ["ヤング率", "youngs modulus", "young's modulus"],
+        }
+        _matched_props: list[str] = []
+        for pname, kws in _prop_keywords.items():
+            if any(kw in _q for kw in kws):
+                _matched_props.append(pname)
+        if len(_matched_props) == 1:
+            where_clauses.append(f"cp.property_name = '{_matched_props[0]}'")
+        elif _matched_props:
+            _in = ", ".join(f"'{p}'" for p in _matched_props)
+            where_clauses.append(f"cp.property_name IN ({_in})")
     if "elastic_tensor" in tables_needed:
         et_alias = alias_map.get("elastic_tensor", "et")
         select_cols.append(f"{et_alias}.bulk_modulus_vrh")
@@ -351,9 +366,78 @@ def _rule_based_fallback(
     return "\n".join(sql_parts)
 
 
+_CORE_5_TABLE_JOINS = [
+    "composition.entry_id = material_entry.entry_id",
+    "structure.entry_id = material_entry.entry_id",
+    "phase_stability.entry_id = material_entry.entry_id",
+    "calculation.entry_id = material_entry.entry_id",
+    "calculated_property.calculation_id = calculation.calculation_id",
+]
+
+_CORE_5_TABLE_COLUMNS = [
+    "material_entry.entry_id", "material_entry.formula",
+    "material_entry.reduced_formula", "material_entry.chemical_system",
+    "composition.element", "composition.atomic_fraction", "composition.site_label",
+    "structure.prototype", "structure.strukturbericht", "structure.lattice_a",
+    "structure.lattice_b", "structure.lattice_c", "structure.volume_per_atom",
+    "structure.formula_type", "structure.space_group_number",
+    "structure.space_group",
+    "phase_stability.formation_energy_per_atom",
+    "phase_stability.energy_above_hull", "phase_stability.is_stable",
+    "phase_stability.band_gap",
+    "calculation.method", "calculation.functional",
+    "calculated_property.property_name", "calculated_property.value",
+    "calculated_property.unit",
+]
+
+
+def build_schema_context_from_db(
+    conn: Any,
+) -> dict[str, Any]:
+    """Build full 30-table schema context from a live DB connection.
+
+    Returns a dict with ``join_list`` and ``all_columns`` suitable for
+    passing to :func:`pipeline`.
+    """
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT table_name, column_name "
+            "FROM information_schema.columns "
+            "WHERE table_schema = 'public' "
+            "ORDER BY table_name, ordinal_position"
+        )
+        col_rows = cur.fetchall()
+    all_columns = [f"{t}.{c}" for t, c in col_rows]
+    all_tables = sorted({t for t, _ in col_rows})
+
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT tc.table_name, kcu.column_name, "
+            "       ccu.table_name, ccu.column_name "
+            "FROM information_schema.table_constraints tc "
+            "JOIN information_schema.key_column_usage kcu "
+            "  ON tc.constraint_name = kcu.constraint_name "
+            "JOIN information_schema.constraint_column_usage ccu "
+            "  ON tc.constraint_name = ccu.constraint_name "
+            "WHERE tc.constraint_type = 'FOREIGN KEY'"
+        )
+        fk_rows = cur.fetchall()
+    join_list = [f"{r[0]}.{r[1]}={r[2]}.{r[3]}" for r in fk_rows]
+
+    return {
+        "join_list": join_list,
+        "all_columns": all_columns,
+        "all_tables": all_tables,
+        "n_tables": len(all_tables),
+        "n_columns": len(all_columns),
+        "n_joins": len(join_list),
+    }
+
+
 def pipeline(
     user_query: str,
     join_list: list[str] | None = None,
+    all_columns: list[str] | None = None,
     store_on_success: bool = False,
     skip_intent_check: bool = False,
 ) -> dict[str, Any]:
@@ -362,18 +446,16 @@ def pipeline(
     Parameters
     ----------
     join_list : list[str] | None
-        Pre-computed join conditions from ``get_allowed_join_list()``.
-        When *None* (default) the pipeline falls back to a hard-coded
-        5-table core join set.  For full 30-table schema graph traversal,
-        callers should build the join list explicitly via a live DB
-        connection and pass it here.
-
-    When *store_on_success* is True the result is persisted in the few-shot
-    store after successful DB execution so that future queries can benefit
-    from it as a few-shot example.
-
-    When *skip_intent_check* is True, bypass intent classification
-    (useful for benchmarking or when intent is pre-verified).
+        Pre-computed join conditions from ``get_allowed_join_list()`` or
+        ``build_schema_context_from_db()``.  When *None* the pipeline
+        falls back to the core 5-table join set.
+    all_columns : list[str] | None
+        Full ``table.column`` list from ``build_schema_context_from_db()``.
+        When *None* the pipeline uses the core 5-table column set.
+    store_on_success : bool
+        Persist result in the few-shot store after successful DB execution.
+    skip_intent_check : bool
+        Bypass intent classification (useful for benchmarking).
     """
     # Intent classification gate
     if not skip_intent_check:
@@ -396,41 +478,16 @@ def pipeline(
     conditions = extract_conditions(user_query)
     linked = link_schema(conditions)
 
-    all_columns: list[str] | None = None
     if join_list is None:
-        # Schema graph auto-construction requires a live DB connection.
-        # When no join_list is provided and no connection is available,
-        # fall back to the core 5-table join set with an explicit warning.
         logger.warning(
             "join_list not provided; using hard-coded 5-table fallback. "
-            "Pass join_list explicitly via get_allowed_join_list() for "
+            "Pass join_list via build_schema_context_from_db() for "
             "full 30-table schema graph traversal."
         )
-        join_list = [
-            "composition.entry_id = material_entry.entry_id",
-            "structure.entry_id = material_entry.entry_id",
-            "phase_stability.entry_id = material_entry.entry_id",
-            "calculation.entry_id = material_entry.entry_id",
-            "calculated_property.calculation_id = calculation.calculation_id",
-        ]
-        all_columns = None
-
+        join_list = _CORE_5_TABLE_JOINS
     if all_columns is None:
-        all_columns = [
-            "material_entry.entry_id", "material_entry.formula",
-            "material_entry.reduced_formula", "material_entry.chemical_system",
-            "composition.element", "composition.atomic_fraction", "composition.site_label",
-            "structure.prototype", "structure.strukturbericht", "structure.lattice_a",
-            "structure.lattice_b", "structure.lattice_c", "structure.volume_per_atom",
-            "structure.formula_type", "structure.space_group_number",
-            "structure.space_group",
-            "phase_stability.formation_energy_per_atom",
-            "phase_stability.energy_above_hull", "phase_stability.is_stable",
-            "phase_stability.band_gap",
-            "calculation.method", "calculation.functional",
-            "calculated_property.property_name", "calculated_property.value",
-            "calculated_property.unit",
-        ]
+        all_columns = _CORE_5_TABLE_COLUMNS
+
     result = generate_sql_via_llm(
         user_query=user_query,
         allowed_tables=linked["required_tables"],

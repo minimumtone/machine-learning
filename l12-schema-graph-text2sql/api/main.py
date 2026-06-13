@@ -1,6 +1,7 @@
 """FastAPI application for L1_2 schema-graph-assisted Text-to-SQL."""
 from __future__ import annotations
 
+import os
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
@@ -9,7 +10,7 @@ from pydantic import BaseModel
 from llm.entity_extractor import extract_conditions
 from llm.few_shot_store import add_example
 from llm.schema_linker import link_schema
-from llm.sql_generator import pipeline
+from llm.sql_generator import build_schema_context_from_db, pipeline
 from safety.sql_validator import validate_sql
 from safety.sql_guard import execute_sql
 
@@ -44,10 +45,38 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+_schema_ctx: dict[str, list[str]] | None = None
+
+
+def _get_schema_ctx() -> dict[str, list[str]]:
+    """Lazily build and cache schema context from the live DB."""
+    global _schema_ctx  # noqa: PLW0603
+    if _schema_ctx is None:
+        try:
+            import psycopg
+            conn = psycopg.connect(
+                host=os.getenv("DB_HOST", "/var/run/postgresql"),
+                port=int(os.getenv("DB_PORT", "5433")),
+                dbname=os.getenv("DB_NAME", "l12_materials"),
+                user=os.getenv("DB_USER", "l12_user"),
+                password=os.getenv("DB_PASSWORD", "l12_password"),
+            )
+            _schema_ctx = build_schema_context_from_db(conn)
+            conn.close()
+        except Exception:
+            _schema_ctx = {"join_list": None, "all_columns": None}
+    return _schema_ctx
+
+
 @app.post("/query", response_model=QueryResponse)
 def query_endpoint(req: QueryRequest) -> QueryResponse:
     """Process a natural language query and optionally execute the SQL."""
-    result = pipeline(req.query)
+    ctx = _get_schema_ctx()
+    result = pipeline(
+        req.query,
+        join_list=ctx.get("join_list"),
+        all_columns=ctx.get("all_columns"),
+    )
 
     if result.get("mode") == "rejected":
         raise HTTPException(
