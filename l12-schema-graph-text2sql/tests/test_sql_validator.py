@@ -83,9 +83,11 @@ def test_validate_unknown_table_rejected():
 
 
 def test_validate_imaginary_column():
+    """Unqualified imaginary columns should be rejected when FROM table is known."""
     sql = "SELECT imaginary_column FROM material_entry LIMIT 10;"
     result = validate_sql(sql)
-    assert result["valid"]
+    assert not result["valid"]
+    assert any("imaginary_column" in e for e in result["errors"])
 
 
 # ── System table blocking tests ──

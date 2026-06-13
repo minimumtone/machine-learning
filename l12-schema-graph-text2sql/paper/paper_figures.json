@@ -402,7 +402,7 @@
   },
   "harmonized_comparison": {
     "paper_ref": "Table (tab:harmonized_comparison), 難易度調和比較セクション",
-    "classification_method": "Unified complexity score: tables*3 + conditions + group_by*2 + exists*3 + subquery*3",
+    "classification_method": "Unified complexity score: tables*3 + conditions + group_by*2 + exists*3 + subquery*3 (exists and subquery are mutually exclusive)",
     "thresholds": {
       "easy": "<8",
       "medium": "8-11",

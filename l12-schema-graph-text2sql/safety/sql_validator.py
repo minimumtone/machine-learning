@@ -612,6 +612,42 @@ def suggest_column_correction(
     return None
 
 
+def _extract_unqualified_columns(sql: str) -> list[str]:
+    """Extract unqualified column names from SELECT/WHERE/ORDER BY clauses.
+
+    Uses sqlglot AST when available; returns column names that have no
+    table qualifier (e.g. ``SELECT col1 FROM t`` yields ``["col1"]``).
+    """
+    if HAS_SQLGLOT:
+        try:
+            parsed = sqlglot.parse(sql, dialect="postgres")
+            cols: set[str] = set()
+            for stmt in parsed:
+                if stmt is None:
+                    continue
+                for col in stmt.find_all(sqlglot_exp.Column):
+                    table_node = col.args.get("table")
+                    if not table_node and col.name:
+                        name_lower = col.name.lower()
+                        # Skip SQL keywords / aggregates / common aliases
+                        if name_lower not in {
+                            "count", "sum", "avg", "min", "max", "coalesce",
+                            "case", "when", "then", "else", "end", "as",
+                            "true", "false", "null", "distinct",
+                        }:
+                            cols.add(col.name)
+            return sorted(cols)
+        except Exception:
+            pass
+    return []
+
+
+def _get_from_tables(sql: str) -> list[str]:
+    """Extract actual table names from FROM/JOIN clauses (not aliases)."""
+    alias_map = _extract_aliases_from_sql(sql)
+    return sorted({v for v in alias_map.values()})
+
+
 def check_allowed_columns(
     sql: str,
     allowed_columns: list[str] | None = None,
@@ -621,6 +657,8 @@ def check_allowed_columns(
 
     Each entry includes a correction suggestion if available, e.g.:
     "c.fractional_amount (did you mean: composition.atomic_fraction?)"
+
+    Also checks unqualified columns when the query has a single FROM table.
     """
     if allowed_columns is None:
         schema = _load_allowed_schema(schema_path)
@@ -664,6 +702,20 @@ def check_allowed_columns(
                 disallowed.append(f"{col_ref} (use {suggestion} instead)")
             else:
                 disallowed.append(col_ref)
+
+    # Check unqualified columns against FROM tables
+    unqualified = _extract_unqualified_columns(sql)
+    if unqualified:
+        from_tables = _get_from_tables(sql)
+        if from_tables:
+            for col in unqualified:
+                found = False
+                for tbl in from_tables:
+                    if f"{tbl}.{col}".lower() in allowed_lower:
+                        found = True
+                        break
+                if not found:
+                    disallowed.append(col)
     return disallowed
 
 

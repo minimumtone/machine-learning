@@ -171,3 +171,12 @@ PDF自体は同梱済みのため、閲覧のみであれば再コンパイル�
 `baseline_result.csv` は `condition_mapper`/`entity_extractor` の辞書拡張（elastic_tensor,
 thermal_property, magnetic_property対応）前のコードで生成されたもの。
 辞書拡張後にB3 (Rule-based) を再ランすると52.8%から変動する可能性がある。
+
+## 150クエリ参考実験について
+
+`experiments/results/` の150クエリ実験結果（`extended_schema_experiment.json` 等）は
+**論文の主実験（100クエリ評価）とは別の参考実験**です。
+
+- **使用モデル**: gpt-4o-mini（主実験はgpt-5.5）
+- **環境**: 30テーブル・150クエリ（3条件比較）
+- **位置づけ**: Graph Traversalの効果検証用の補助実験。論文の主張（70.6%等）の根拠ではない
