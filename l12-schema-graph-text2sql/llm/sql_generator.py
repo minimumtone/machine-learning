@@ -440,12 +440,124 @@ def build_schema_context_from_db(
     }
 
 
+def _score_sql_candidate(
+    sql: str,
+    conditions: dict[str, Any],
+    execute_fn: Any | None = None,
+) -> dict[str, Any]:
+    """Score a SQL candidate by validation, execution, and domain heuristics.
+
+    Returns dict with score (0-100), breakdown, and execution result.
+    """
+    from safety.sql_validator import validate_sql
+
+    score = 0
+    breakdown: dict[str, int] = {}
+
+    # 1. SQLGuard validation (30 points)
+    validation = validate_sql(sql)
+    if validation.get("valid"):
+        score += 30
+        breakdown["sqlguard"] = 30
+    else:
+        breakdown["sqlguard"] = 0
+        return {"score": score, "breakdown": breakdown, "exec_result": None,
+                "validation": validation}
+
+    # 2. Execution success (30 points)
+    exec_result = None
+    if execute_fn is not None:
+        try:
+            exec_result = execute_fn(sql)
+            if exec_result and exec_result.get("success"):
+                score += 20
+                breakdown["exec_success"] = 20
+                row_count = exec_result.get("row_count", 0)
+                if row_count > 0:
+                    score += 10
+                    breakdown["has_rows"] = 10
+                else:
+                    breakdown["has_rows"] = 0
+            else:
+                breakdown["exec_success"] = 0
+                breakdown["has_rows"] = 0
+        except Exception:
+            breakdown["exec_success"] = 0
+            breakdown["has_rows"] = 0
+    else:
+        breakdown["exec_success"] = 0
+        breakdown["has_rows"] = 0
+
+    # 3. Domain heuristics (40 points)
+    sql_upper = sql.upper()
+
+    # Expected conditions coverage (20 points)
+    expected = 0
+    found = 0
+    if conditions.get("prototype"):
+        expected += 1
+        if "PROTOTYPE" in sql_upper or "STRUKTURBERICHT" in sql_upper:
+            found += 1
+    if conditions.get("contains_elements"):
+        expected += 1
+        if "ELEMENT" in sql_upper or "EXISTS" in sql_upper:
+            found += 1
+    if conditions.get("stability"):
+        expected += 1
+        if "ENERGY_ABOVE_HULL" in sql_upper or "IS_STABLE" in sql_upper:
+            found += 1
+    if conditions.get("sort_by"):
+        expected += 1
+        if "ORDER BY" in sql_upper:
+            found += 1
+    cond_score = int(20 * (found / expected)) if expected > 0 else 20
+    score += cond_score
+    breakdown["conditions"] = cond_score
+
+    # Appropriate row count (10 points)
+    if exec_result and exec_result.get("success"):
+        row_count = exec_result.get("row_count", 0)
+        if 1 <= row_count <= 500:
+            score += 10
+            breakdown["row_range"] = 10
+        elif row_count > 500:
+            score += 5
+            breakdown["row_range"] = 5
+        else:
+            breakdown["row_range"] = 0
+    else:
+        breakdown["row_range"] = 0
+
+    # DISTINCT usage (5 points)
+    if "DISTINCT" in sql_upper:
+        score += 5
+        breakdown["distinct"] = 5
+    else:
+        breakdown["distinct"] = 0
+
+    # LIMIT presence (5 points)
+    if "LIMIT" in sql_upper:
+        score += 5
+        breakdown["limit"] = 5
+    else:
+        breakdown["limit"] = 0
+
+    return {
+        "score": score,
+        "breakdown": breakdown,
+        "exec_result": exec_result,
+        "validation": validation,
+    }
+
+
 def pipeline(
     user_query: str,
     join_list: list[str] | None = None,
     all_columns: list[str] | None = None,
     store_on_success: bool = False,
     skip_intent_check: bool = False,
+    n_best: int = 1,
+    execute_fn: Any | None = None,
 ) -> dict[str, Any]:
     """Full pipeline: intent classify -> extract -> link -> generate SQL.
 
@@ -462,6 +574,13 @@ def pipeline(
         Persist result in the few-shot store after successful DB execution.
     skip_intent_check : bool
         Bypass intent classification (useful for benchmarking).
+    n_best : int
+        Number of SQL candidates to generate (default 1). When > 1,
+        generates multiple candidates and selects the highest-scored one.
+    execute_fn : callable | None
+        SQL execution function for n-best scoring. Signature:
+        ``execute_fn(sql) -> {"success": bool, "row_count": int, ...}``.
+        Required when n_best > 1 for execution-based scoring.
     """
     # Intent classification gate
     if not skip_intent_check:
@@ -494,23 +613,90 @@ def pipeline(
     if all_columns is None:
         all_columns = _CORE_5_TABLE_COLUMNS
 
-    result = generate_sql_via_llm(
-        user_query=user_query,
-        allowed_tables=linked["required_tables"],
-        allowed_columns=[
-            c for c in all_columns
-            if c.split(".")[0] in linked["required_tables"]
-        ],
-        allowed_joins=[
-            j for j in join_list
-            if any(t in j for t in linked["required_tables"])
-        ],
+    filtered_columns = [
+        c for c in all_columns
+        if c.split(".")[0] in linked["required_tables"]
+    ]
+    filtered_joins = [
+        j for j in join_list
+        if any(t in j for t in linked["required_tables"])
+    ]
+
+    if n_best <= 1:
+        result = generate_sql_via_llm(
+            user_query=user_query,
+            allowed_tables=linked["required_tables"],
+            allowed_columns=filtered_columns,
+            allowed_joins=filtered_joins,
+        )
+        result["conditions"] = conditions
+        result["linked_schema"] = linked
+        result["_store_on_success"] = store_on_success
+        return result
+
+    # n-best: generate multiple candidates and score
+    candidates: list[dict[str, Any]] = []
+    total_tokens = 0
+    total_latency = 0
+
+    for i in range(n_best):
+        gen_result = generate_sql_via_llm(
+            user_query=user_query,
+            allowed_tables=linked["required_tables"],
+            allowed_columns=filtered_columns,
+            allowed_joins=filtered_joins,
+        )
+        sql = gen_result.get("sql", "")
+        total_tokens += gen_result.get("tokens", 0)
+        total_latency += gen_result.get("latency_ms", 0)
+
+        if not sql:
+            candidates.append({"sql": "", "score": 0, "gen_result": gen_result})
+            continue
+
+        scored = _score_sql_candidate(sql, conditions, execute_fn)
+        candidates.append({
+            "sql": sql,
+            "score": scored["score"],
+            "breakdown": scored["breakdown"],
+            "exec_result": scored.get("exec_result"),
+            "gen_result": gen_result,
+        })
+
+    # Also include rule-based as a candidate
+    rb_sql = _rule_based_fallback(
+        user_query, linked["required_tables"],
+        filtered_columns, filtered_joins,
     )
+    if rb_sql:
+        rb_scored = _score_sql_candidate(rb_sql, conditions, execute_fn)
+        candidates.append({
+            "sql": rb_sql,
+            "score": rb_scored["score"],
+            "breakdown": rb_scored["breakdown"],
+            "exec_result": rb_scored.get("exec_result"),
+            "gen_result": {
+                "sql": rb_sql, "model": "rule_based", "tokens": 0,
+                "latency_ms": 0,
+            },
+        })
+
+    # Select best candidate
+    candidates.sort(key=lambda c: c["score"], reverse=True)
+    best = candidates[0]
+
+    result = best.get("gen_result", {})
+    result["sql"] = best["sql"]
     result["conditions"] = conditions
     result["linked_schema"] = linked
-
-    # NOTE: store_on_success is deferred — caller must invoke add_example()
-    # after DB execution confirms the SQL is valid and returns rows.
     result["_store_on_success"] = store_on_success
+    result["n_best_info"] = {
+        "n_candidates": len(candidates),
+        "best_score": best["score"],
+        "best_breakdown": best.get("breakdown", {}),
+        "all_scores": [c["score"] for c in candidates],
+        "total_tokens": total_tokens,
+        "total_latency_ms": total_latency,
+    }
 
     return result
