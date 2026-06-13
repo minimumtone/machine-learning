@@ -29,6 +29,7 @@ from evaluation.metrics import (
 from graph.graph_builder import build_table_graph
 from graph.join_path_generator import generate_joins_for_tables, get_allowed_join_list
 from graph.schema_parser import get_foreign_keys, get_tables, get_columns
+from llm.domain_validator import validate_result_rows
 from llm.entity_extractor import extract_conditions
 from llm.repair_loop import execution_repair_loop, detect_superset
 from llm.schema_linker import link_schema
@@ -189,6 +190,7 @@ def main():
         "raw_execution_accuracy", "raw_execution_precision", "raw_execution_f1",
         "hallucinated_table_rate", "hallucinated_column_rate", "hallucinated_join_rate",
         "token_usage", "latency_ms", "sanity_regen", "repair_attempts", "repair_tokens",
+        "domain_warnings",
     ]
 
     output_path = EVAL_DIR / "proposed_result.csv"
@@ -302,6 +304,15 @@ def main():
             h_column = hallucinated_column_rate(gen_columns, allowed_columns, sql=sql)
             h_join = hallucinated_join_rate(sql, allowed_joins)
 
+            # Domain validation
+            domain = validate_result_rows(
+                rows=exec_result.get("rows", []),
+                columns=exec_result.get("columns", []),
+                conditions=query_conditions if sql else {},
+                query=question,
+            )
+            domain_warnings = len(domain.get("warnings", []))
+
             row = {
                 "query_id": qid,
                 "question": question,
@@ -326,6 +337,7 @@ def main():
                 "sanity_regen": sanity_regen,
                 "repair_attempts": repair_attempts,
                 "repair_tokens": repair_tokens,
+                "domain_warnings": domain_warnings,
             }
             results.append(row)
 
@@ -343,6 +355,7 @@ def main():
                 "hallucinated_join_rate": 0.0,
                 "token_usage": 0, "latency_ms": 0,
                 "sanity_regen": 0, "repair_attempts": 0, "repair_tokens": 0,
+                "domain_warnings": 0,
             })
 
     print(f"\n\nWriting results to {output_path}...")
