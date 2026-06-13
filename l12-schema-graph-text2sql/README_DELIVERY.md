@@ -13,8 +13,8 @@
 - **論文数値JSON** (`paper/paper_figures.json` — Single Source of Truth)
 - **評価結果CSV** (`evaluation/proposed_result*.csv`, `baseline_result.csv`)
 - **分析用注釈付CSV** (`evaluation/proposed_result_annotated.csv` — `n_tables`/`ntables_difficulty`/`original_difficulty`列付き。代表ランCSVはrun2とバイト同一を維持)
-- **Gold SQL** (`evaluation/gold_sql/` 200件：著者設計100件 + 独立設計100件)
-- **期待結果JSON** (`evaluation/expected_results/` 200件：著者設計100件 + 独立設計100件)
+- **Gold SQL** (`evaluation/gold_sql/` 212件：著者設計100件 + 独立設計元100件 + 新規VH12件)
+- **期待結果JSON** (`evaluation/expected_results/` 212件：著者設計100件 + 独立設計元100件 + 新規VH12件)
 - **独立評価結果** (`evaluation/expert_evaluation_results.json`)
 - **材料分析CSV** (`evaluation/known_l12_recovery.csv`, `stable_l12_candidates.csv`, `gamma_prime_candidate_ranking.csv`, `ni3al_lattice_matched_candidates.csv`)
 - **プロトタイプ分布** (`evaluation/prototype_distribution.csv` — L12=392件等の集計根拠)
@@ -30,7 +30,7 @@
 ### インフラ・テスト
 - **Docker設定** (`docker/docker-compose.yml`)
 - **DB定義** (`db/extended_schema.sql`, `db/insert_data.sql` — 1,470件)
-- **テスト** (`tests/` — 125件)
+- **テスト** (`tests/` — 126件)
 - **依存定義** (`pyproject.toml`)
 - **環境変数テンプレート** (`.env.example`)
 - **実験スクリプト** (`experiments/`)
@@ -119,9 +119,16 @@ python scripts/run_full_evaluation.py  # 100クエリ×5手法 (10-15分)
 | 版 | 平均実行精度 | 二値正答率 | 根拠 |
 |---|---|---|---|
 | v10以前 | 79.3% | 77.0% | 旧DB（insert_data.sql変更前）で評価。expected_resultsとJSONが74/100件不一致 |
-| v11（現行） | **76.6%** | **67.0%** | 現DB（insert_data.sql最終版）で再採点。expected_results全100件一致 |
+| v11 | 76.6% | 67.0% | 現DB（insert_data.sql最終版）で再採点。expected_results全100件一致 |
+| v14（現行） | **62.5%** | **53.3%** | 統一難易度基準で60件調和セットに再構成（元プール48件＋新規VH12件） |
 
-生成SQLは100件すべて旧版と同一（再ランではない）。insert_data.sqlがv10以前の評価後に
+v11→v14の変化は生成SQLの変更ではなく、評価セットの再構成による：
+- 元の100件プールからEasy/Medium/Hardを統一複雑度スコアで48件選定
+- 5-7テーブルJOINを必要とするVery Hard 12件を新規設計・追加
+- 結果として難易度分布がEasy 12 / Medium 18 / Hard 18 / Very Hard 12に均等化
+- 新規VH12件の平均精度は19.4%であり、全体精度を引き下げている
+
+v10→v11の変化はDB変更による：insert_data.sqlがv10以前の評価後に
 3回変更され（commit `82a661e`, `1bd9f2e`, `41a1861`）、DB状態が変化したため
 同じSQLでも期待結果の行数が変わり、22件の正誤が反転した（16件↓6件↑）。
 著者設計100件のexpected_resultsは現DBと完全一致しており影響なし。

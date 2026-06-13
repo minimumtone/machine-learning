@@ -75,7 +75,7 @@ uvicorn api.main:app --reload
 
 ```bash
 pytest tests/ -v
-# 125テスト全パスを確認
+# 126テスト全パスを確認
 ```
 
 ### 7. 評価パイプライン実行（オプション）
@@ -116,8 +116,8 @@ l12-schema-graph-text2sql/
 │   └── allowed_schema.yaml   # 許可テーブル・カラム定義
 ├── evaluation/          # 評価パイプライン
 │   ├── evaluation_dataset.jsonl # 100クエリ（Easy/Medium/Hard/VeryHard）
-│   ├── gold_sql/        # 正解SQL 200件（著者設計100件 + 独立設計100件）
-│   ├── expected_results/ # 正解実行結果JSON
+│   ├── gold_sql/        # 正解SQL 212件（著者100件 + 独立100件 + VH追加12件）
+│   ├── expected_results/ # 正解実行結果JSON（212件）
 │   ├── metrics.py       # 評価指標（構文妥当率、実行精度等）
 │   ├── run_proposed.py  # Proposed手法実行
 │   ├── proposed_result.csv      # 代表ラン (= Run 2, 70.6%)
@@ -133,7 +133,7 @@ l12-schema-graph-text2sql/
 │   └── validate_paper_numbers.py   # TeX数値検証
 ├── api/                 # FastAPI アプリケーション
 │   └── main.py
-├── tests/               # ユニットテスト（125件）
+├── tests/               # ユニットテスト（126件）
 ├── paper/               # LaTeX原稿
 ├── pyproject.toml       # Python依存パッケージ定義
 └── .env.example         # 環境変数テンプレート

@@ -1,0 +1,28 @@
+{
+  "columns": [
+    "formula",
+    "bulk_modulus",
+    "debye_temperature_k",
+    "energy_above_hull"
+  ],
+  "rows": [
+    [
+      "Ni3Cu",
+      182.81,
+      736.7,
+      0.0385
+    ],
+    [
+      "Ni3Ga",
+      165,
+      624.7,
+      0.01
+    ],
+    [
+      "Ni3Nb",
+      153.63,
+      710.4,
+      0.0366
+    ]
+  ]
+}

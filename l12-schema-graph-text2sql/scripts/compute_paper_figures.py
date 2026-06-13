@@ -16,7 +16,7 @@
   evaluation/proposed_result.csv        … Proposed 手法の 100 クエリ結果
   evaluation/baseline_result.csv        … 全 5 手法 × 100 クエリ結果
   evaluation/gold_sql/*.sql             … gold SQL（n_tables 算出に使用）
-  evaluation/expert_evaluation_results.json … 独立設計 100 クエリ結果
+  evaluation/expert_evaluation_results.json … 独立設計 60 クエリ結果（難易度調和済み）
   evaluation/known_l12_recovery.csv     … 既知 L1_2 再発見結果
   evaluation/stable_l12_candidates.csv  … 安定候補一覧
   evaluation/gamma_prime_candidate_ranking.csv … γ' ランキング
@@ -238,7 +238,7 @@ def main():
         multihop_comparison[group_key] = row
 
     # ---------------------------------------------------------------------------
-    # 4. 独立設計クエリ（専門家評価）
+    # 4. 独立設計クエリ（専門家評価）— 難易度調和版 (60クエリ)
     # ---------------------------------------------------------------------------
 
     _expert_path = EVAL / "expert_evaluation_results.json"
@@ -246,22 +246,121 @@ def main():
         with open(_expert_path, encoding="utf-8") as f:
             expert_data = json.load(f)
 
+        expert_metadata = expert_data["metadata"]
+        expert_results = expert_data["results"]
         expert_summary = expert_data["summary"]
 
+        # Expert set metrics (unified difficulty classification)
+        expert_total = expert_metadata["total_queries"]
+        expert_overall_acc = expert_summary["overall_accuracy"]
+        expert_correct_rate = expert_summary["overall_correct_rate"]
+        expert_by_diff = expert_summary["by_difficulty"]
+
         expert_out = {
-            "total": expert_summary["total"],
-            "syntax_valid": expert_summary["syntax_valid"],
-            "execution_success": expert_summary["execution_success"],
-            "binary_correct": expert_summary["correct"],
-            "binary_correct_rate": expert_summary["binary_correct_rate"],
-            "mean_exec_accuracy": expert_summary["mean_execution_accuracy"],
-            "mean_exec_precision": expert_summary.get("mean_execution_precision"),
-            "mean_exec_f1": expert_summary.get("mean_execution_f1"),
-            "by_difficulty": expert_summary["by_difficulty"],
+            "total": expert_total,
+            "distribution": expert_metadata["distribution"],
+            "classification_method": expert_metadata["classification_method"],
+            "thresholds": expert_metadata["thresholds"],
+            "mean_exec_accuracy": pct(expert_overall_acc),
+            "binary_correct_rate": pct(expert_correct_rate),
+            "binary_correct_count": round(expert_correct_rate * expert_total),
+            "syntax_valid": expert_total,
+            "execution_success": expert_total,
+            "by_difficulty": {
+                diff: {
+                    "count": vals["count"],
+                    "mean_accuracy": pct(vals["mean_accuracy"]),
+                    "correct_count": vals["correct_count"],
+                    "correct_rate": pct(vals["correct_rate"]),
+                }
+                for diff, vals in expert_by_diff.items()
+            },
         }
     else:
         print(f"WARNING: {_expert_path} not found — skipping expert evaluation section")
         expert_out = None
+
+    # ---------------------------------------------------------------------------
+    # 4b. 著者クエリの統一分類（難易度調和比較用）
+    # ---------------------------------------------------------------------------
+
+    def _count_where_conditions(sql: str) -> int:
+        """WHERE句内のフィルタ条件数を数える。"""
+        sql_upper = sql.upper()
+        where_match = re.search(
+            r'\bWHERE\b(.+?)(?:\bGROUP\s+BY\b|\bORDER\s+BY\b|\bLIMIT\b|\bHAVING\b|$)',
+            sql_upper, re.DOTALL
+        )
+        if not where_match:
+            return 0
+        where_clause = where_match.group(1)
+        return 1 + len(re.findall(r'\bAND\b', where_clause)) + len(re.findall(r'\bOR\b', where_clause))
+
+    def _unified_complexity_score(sql: str) -> int:
+        """統一複雑度スコア: tables*3 + conditions + group_by*2 + exists*3 + subquery*3"""
+        t = count_tables_in_sql(sql)
+        c = _count_where_conditions(sql)
+        g = 1 if re.search(r'\bGROUP\s+BY\b', sql.upper()) else 0
+        e = 1 if re.search(r'\bEXISTS\b', sql.upper()) else 0
+        s = 1 if sql.upper().count('SELECT') > 1 else 0
+        return t * 3 + c + g * 2 + e * 3 + s * 3
+
+    def _unified_difficulty_label(score: int) -> str:
+        if score < 8:
+            return "easy"
+        elif score <= 11:
+            return "medium"
+        elif score <= 16:
+            return "hard"
+        else:
+            return "very_hard"
+
+    # Classify all author queries with unified score
+    author_unified_by_diff: dict[str, list[float]] = defaultdict(list)
+    for sql_file in sorted(gold_sql_dir.glob("q_*.sql")):
+        if sql_file.stem.startswith("q_expert"):
+            continue
+        qid = sql_file.stem
+        sql_text = sql_file.read_text(encoding="utf-8")
+        score = _unified_complexity_score(sql_text)
+        diff = _unified_difficulty_label(score)
+        acc_val = next((float(r["execution_accuracy"]) for r in proposed if r["query_id"] == qid), None)
+        if acc_val is not None:
+            author_unified_by_diff[diff].append(acc_val)
+
+    # Compute per-difficulty accuracy for author set (unified classification)
+    author_unified_metrics: dict[str, dict] = {}
+    for diff in ["easy", "medium", "hard", "very_hard"]:
+        vals = author_unified_by_diff[diff]
+        n = len(vals)
+        acc = sum(vals) / n if n else 0
+        author_unified_metrics[diff] = {"n": n, "mean_accuracy": pct(acc)}
+
+    # Overall author accuracy (standard 100 queries)
+    author_overall_acc = sum(float(r["execution_accuracy"]) for r in proposed) / len(proposed)
+
+    harmonized_comparison = {
+        "classification_method": "Unified complexity score: tables*3 + conditions + group_by*2 + exists*3 + subquery*3",
+        "thresholds": {"easy": "<8", "medium": "8-11", "hard": "12-16", "very_hard": ">=17"},
+        "expert": {
+            "total": expert_total if expert_out else 0,
+            "distribution": expert_metadata["distribution"] if expert_out else {},
+            "overall_accuracy": pct(expert_overall_acc) if expert_out else 0,
+            "by_difficulty": {
+                diff: expert_out["by_difficulty"][diff]["mean_accuracy"]
+                for diff in ["easy", "medium", "hard", "very_hard"]
+            } if expert_out else {},
+        },
+        "author": {
+            "total": n_total,
+            "distribution": {diff: author_unified_metrics[diff]["n"] for diff in ["easy", "medium", "hard", "very_hard"]},
+            "overall_accuracy": pct(author_overall_acc),
+            "by_difficulty": {
+                diff: author_unified_metrics[diff]["mean_accuracy"]
+                for diff in ["easy", "medium", "hard", "very_hard"]
+            },
+        },
+    }
 
     # ---------------------------------------------------------------------------
     # 5. 材料工学的評価
@@ -411,7 +510,7 @@ def main():
 
     test_counts = {
         "regression_tests": 80,
-        "total_unit_tests": 125,
+        "total_unit_tests": 126,
         "note": "pytest tests/ -q で確認"
     }
 
@@ -498,6 +597,11 @@ def main():
             **(expert_out if expert_out else {"note": "expert_evaluation_results.json not available"}),
         },
 
+        "harmonized_comparison": {
+            "paper_ref": "Table (tab:harmonized_comparison), 難易度調和比較セクション",
+            **harmonized_comparison,
+        },
+
         "materials_engineering": {
             "paper_ref": "Table (tab:known_l12), Section 4.3.3, Table (tab:gamma_prime)",
             "known_l12_total": len(known_l12),
@@ -556,7 +660,16 @@ def main():
     if run_stats:
         print(f"3-run統計:            {run_stats['mean_accuracy_pct']}% ± {run_stats['stdev_pp']}pp ({run_stats['run_accuracies']})")
     if expert_out:
-        print(f"独立評価: 二値正答率 {expert_out['binary_correct_rate']}%, 平均精度 {expert_out['mean_exec_accuracy']}%")
+        print(f"独立評価 (60件): 正答率 {expert_out['binary_correct_rate']}%, 平均精度 {expert_out['mean_exec_accuracy']}%")
+        print(f"難易度調和比較:")
+        print(f"  著者: E={harmonized_comparison['author']['by_difficulty']['easy']}% "
+              f"M={harmonized_comparison['author']['by_difficulty']['medium']}% "
+              f"H={harmonized_comparison['author']['by_difficulty']['hard']}% "
+              f"VH={harmonized_comparison['author']['by_difficulty']['very_hard']}%")
+        print(f"  専門家: E={harmonized_comparison['expert']['by_difficulty']['easy']}% "
+              f"M={harmonized_comparison['expert']['by_difficulty']['medium']}% "
+              f"H={harmonized_comparison['expert']['by_difficulty']['hard']}% "
+              f"VH={harmonized_comparison['expert']['by_difficulty']['very_hard']}%")
     else:
         print("独立評価: expert_evaluation_results.json が存在しないためスキップ")
     print(f"既知L12回収: {len(recovered)}/{len(known_l12)}")
