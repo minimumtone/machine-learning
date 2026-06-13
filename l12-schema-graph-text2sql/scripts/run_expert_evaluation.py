@@ -17,21 +17,16 @@ sys.path.insert(0, str(PROJECT))
 import psycopg
 
 from evaluation.metrics import (
-    execution_accuracy,
     execution_accuracy_full,
-    hallucinated_table_rate,
-    hallucinated_join_rate,
     normalize_limit as _normalize_limit,
     syntax_validity,
 )
 from graph.graph_builder import build_table_graph
 from graph.join_path_generator import generate_joins_for_tables, get_allowed_join_list
 from graph.schema_parser import get_foreign_keys, get_tables, get_columns
-from graph.traversal_engine import find_join_subgraph
 from llm.entity_extractor import extract_conditions
 from llm.schema_linker import link_schema
-from llm.sql_generator import generate_sql_via_llm, _rule_based_fallback
-from safety.sql_validator import extract_tables_from_sql, extract_columns_from_sql
+from llm.sql_generator import generate_sql_via_llm
 
 EVAL_DIR = PROJECT / "evaluation"
 CONNINFO = (
@@ -265,7 +260,7 @@ def main():
 
     print()
     print("COMPARISON:")
-    print(f"  著者設計100件:   (re-evaluate with same pipeline)")
+    print("  著者設計100件:   (re-evaluate with same pipeline)")
     print(f"  独立設計100件:   {100*correct/total:.1f}% (F1-based)")
 
     # Save detailed results

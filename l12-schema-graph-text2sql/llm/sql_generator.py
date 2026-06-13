@@ -1,7 +1,6 @@
 """Generate constrained SQL from natural language using LLM with schema graph constraints."""
 from __future__ import annotations
 
-import json
 import logging
 import os
 import re
@@ -12,7 +11,7 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 from llm.entity_extractor import extract_conditions
-from llm.few_shot_store import add_example, format_few_shot_block, retrieve_similar
+from llm.few_shot_store import format_few_shot_block, retrieve_similar
 from llm.intent_classifier import classify_intent, classify_query_type
 from llm.output_schema_specifier import specify_output_schema
 from llm.schema_linker import link_schema

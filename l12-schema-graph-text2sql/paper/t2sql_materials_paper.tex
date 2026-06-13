@@ -332,7 +332,7 @@ FK関係だけでなくドメイン知識に基づくJOINパス選択が可能�
   \textcircled{\scriptsize 5}テーブル
   \textcircled{\scriptsize 6}カラム\\
   \textcircled{\scriptsize 7}JOIN
-  \textcircled{\scriptsize 8}LIMIT}};
+  \textcircled{\scriptsize 8}LIMIT 等14種}};
 
 \node[stepbox, fill=green!10, right=of guard] (exec) {SQL実行\\
   {\scriptsize PostgreSQL}};
@@ -354,13 +354,13 @@ FK関係だけでなくドメイン知識に基づくJOINパス選択が可能�
 
 \end{tikzpicture}%
 }% end resizebox
-\caption{Step 3パイプラインの概要。
+\caption{提案パイプラインの概要。
   自然言語クエリから条件抽出（Step 2）を経て、
   Steiner木近似（Step 3）が30テーブルから必要最小限のサブグラフを抽出する。
   抽出されたテーブル・カラム・JOIN条件をYAMLでLLMに注入し（Step 4）、
-  多層SQLGuard（Step 5）を経て安全なSQLFNを実行する。
+  多層SQLGuard（Step 5、14種検査のうち主要8項目を図示）を経て安全なSQL文を実行する。
   LLMの視界が必要テーブルに限定されるため、
-  不要JOINとテーブル幻覚が原理的に排除される。}
+  テーブル幻覚は原理的に排除され、JOIN幻覚も大幅に抑制される。}
 \label{fig:step3_pipeline}
 \end{figure*}
 
@@ -446,7 +446,7 @@ FK関係だけでなくドメイン知識に基づくJOINパス選択が可能�
 \node[module, fill=violet!15, right=1.0cm of coverage, yshift=-0.9cm] (llm) {LLM SQL生成\\{\scriptsize (\S\ref{sec:llm_mode})}\\{\scriptsize gpt-5.5}};
 
 % === Layer 5: Guard ===
-\node[module, fill=red!12, right=0.6cm of rb, yshift=-0.9cm] (guard) {SQLGuard\\多層検証\\{\scriptsize (\S\ref{sec:sql_guard})}\\{\scriptsize BL/SELECT/複文/関数/\\テーブル/カラム/JOIN/LIMIT}};
+\node[module, fill=red!12, right=0.6cm of rb, yshift=-0.9cm] (guard) {SQLGuard\\多層検証\\{\scriptsize (\S\ref{sec:sql_guard})}\\{\scriptsize BL/SELECT/複文/関数/\\テーブル/カラム/JOIN/LIMIT等}};
 
 % === Layer 6: Output ===
 \node[module, fill=green!12, right=0.6cm of guard] (exec) {SQL実行\\結果返却\\{\scriptsize PostgreSQL}};
@@ -499,7 +499,7 @@ FK関係だけでなくドメイン知識に基づくJOINパス選択が可能�
   Coverage Scoreに基づきRule-based（高カバレッジ）またはLLM（低カバレッジ）経路に分岐し、
   いずれもSchema Graph（30テーブルFK走査）によるJOINパス制約と
   SQLGuard 多層検証を経て安全なSQLが生成・実行される。
-  実行エラーまたは空結果が検出された場合は、
+  実行エラー・空結果・過剰取得等が検出された場合は、
   エラー診断情報付きでLLMにリペアを依頼するリペアループ（最大3回）が作動する。
   成功したクエリペアはFew-Shot RAGストアに蓄積され、以降のLLM生成に活用される。}
 \label{fig:architecture}
@@ -1549,7 +1549,7 @@ Schema Graph制約型Text-to-SQLのコンセプト実証に適した
 \caption{検証データベースの30テーブルER図。
   中央の\texttt{material\_entry}を軸に、組成（composition）・構造（structure）・
   安定性（phase\_stability）等のコアテーブルが直接FKで接続され、
-  計算特性・電子構造・機械特性・表面エネルギー等が2ホップ以上でアクセスされる。
+  計算特性・電子構造・機械特性・表面エネルギー等は直接FKとcalculation経由の2経路を持つ。
   灰色矢印はFK関係、赤矢印は自己参照FK（application\_domainの階層構造）を示す。
   黄色のテーブルはN:M結合テーブルである。}
 \label{fig:er_diagram}
@@ -1855,7 +1855,9 @@ Proposed手法は平均9{,}342~msである。
 
 \begin{table}[htbp]
   \centering
-  \caption{手法別レイテンシ比較（gpt-5.5）。}
+  \caption{手法別レイテンシ比較（gpt-5.5）。
+  レイテンシは初回SQL生成のみを計上し、リペアループの追加API呼び出し時間は含まない。
+  トークン数はリペア分を含む合計値である。}
   \label{tab:latency}
   \small
   \begin{tabular}{clcc}
@@ -2020,7 +2022,7 @@ Proposed手法による探索で\textbf{全11件を正しく再発見}した。
 
 \subsubsection{$\gamma'$相候補ランキング}
 
-L1$_2$型化合物全259件を対象に、
+L1$_2$型化合物のユニーク組成259件を対象に、
 安定性（$E_\text{hull}$）、格子整合性（$|a - a_{\text{Ni}_3\text{Al}}|$）、
 バルクモジュラス$B$の3指標による重み付き複合スコアで
 $\gamma'$相候補をランキングした（表~\ref{tab:gamma_prime}）。
@@ -2164,7 +2166,7 @@ Co$_3$Ti（$\Delta a = 0.02$~\AA、安定）が析出強化候補として最も
 Co$_3$TiはCo基超合金の$\gamma'$相として既に研究されており、
 本データベースからの抽出結果は既知の材料工学的知見と整合する。
 
-\subsection{独立設計クエリによる評価（B1検証）}
+\subsection{独立設計クエリによる評価（自己参照性バイアス検証）}
 \label{sec:independent_eval}
 
 自己参照性バイアスの検証として、システム開発に関与していない
@@ -2178,7 +2180,7 @@ Proposed手法の精度を再評価した。
 \begin{table}[htbp]
   \centering
   \caption{著者設計クエリと独立設計クエリの精度比較。「平均実行精度」は連続値の単純平均、
-  「二値正答率」は閾値$\geq 0.8$で二値化した正答率である。}
+  「二値正答率」は実行F1$\geq 0.8$で二値化した正答率である。}
   \label{tab:independent_eval}
   \small
   \begin{tabular}{lcc}
@@ -2225,7 +2227,7 @@ SUPERSET検出リペアループは著者設計100件の評価パイプライン
 著者設計クエリの難易度はgold SQLの参照テーブル数で客観的に分類しており、
 精度は難易度の上昇に伴い低下する（96.3\% $\to$ 30.9\%）。
 一方、独立設計クエリの難易度は専門家の主観的判定であり、
-Easyクエリ（66.7\%）がVery Hardクエリ（92.9\%）より低い精度を示す逆転が観測された。
+Easyクエリ（77.8\%）がVery Hardクエリ（85.7\%）より低い精度を示す逆転が観測された。
 この乖離の主因は\textbf{意図解釈の曖昧性}である：
 構造的に単純なクエリ（1--2テーブル）でも
 「あるか」（EXISTS判定 vs 全件列挙）、
@@ -3025,17 +3027,19 @@ gpt-5系APIではtemperatureパラメータはサポートされておらず、�
 各クエリの質問文、難易度、実行成否、実行精度、正誤判定の詳細を
 表~\ref{tab:sup_expert_detail}に示す。
 難易度はE（Easy）、M（Medium）、H（Hard）、VH（Very Hard）の4段階であり、
-正誤判定は実行精度$\geq 0.8$を正解（$\checkmark$）と判定した。
+正誤判定は実行F1$\geq 0.8$を正解（$\checkmark$）と判定した。
+実行精度（表中「精度」列）はrecall型指標であり、過剰取得は罰しない。
+正誤はprecisionも考慮したF1で判定している。
 
 \begin{longtable}{clcccl}
   \caption{独立設計クエリ100件の詳細結果。}
   \label{tab:sup_expert_detail} \\
   \toprule
-  No. & クエリ（抜粋） & 難度 & 実行 & 精度 & 正誤 \\
+  No. & クエリ（抜粋） & 難度 & 実行 & 精度(recall) & 正誤(F1) \\
   \midrule
   \endfirsthead
   \toprule
-  No. & クエリ（抜粋） & 難度 & 実行 & 精度 & 正誤 \\
+  No. & クエリ（抜粋） & 難度 & 実行 & 精度(recall) & 正誤(F1) \\
   \midrule
   \endhead
   \midrule

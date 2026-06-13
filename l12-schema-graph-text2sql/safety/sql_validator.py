@@ -424,7 +424,6 @@ def check_cte_bodies_select_only(sql: str) -> list[str]:
                 )
             # Also check for DML nested inside the CTE body
             for node in body.walk():
-                node_type = type(node[0]).__name__ if isinstance(node, tuple) else type(node).__name__
                 actual_node = node[0] if isinstance(node, tuple) else node
                 if type(actual_node).__name__ in dml_types:
                     if f"CTE '{cte_name}'" not in " ".join(violations):

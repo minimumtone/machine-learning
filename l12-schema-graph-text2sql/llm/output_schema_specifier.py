@@ -56,8 +56,6 @@ def specify_output_schema(
     Returns a string instruction about which columns to include,
     or empty string if no specific hint can be determined.
     """
-    hints: list[str] = []
-
     # Collect column hints from question keywords
     matched_cols: set[str] = set()
     for pat, cols in _COLUMN_HINTS:

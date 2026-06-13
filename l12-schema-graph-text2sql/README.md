@@ -13,7 +13,7 @@ ERスキーマをNetworkXグラフ化し、関連テーブル・カラム・JOIN
 
 ```
 Natural Language Query → 材料用語正規化 → 条件抽出 → テーブル・カラム推定
-→ スキーマグラフJOIN経路探索 → 制約付きSQL生成 → SQL安全検査（SQLGuard 8層）
+→ スキーマグラフJOIN経路探索 → 制約付きSQL生成 → SQL安全検査（SQLGuard 14種検証）
 → PostgreSQL実行 → 結果表示
 ```
 
@@ -21,7 +21,7 @@ Natural Language Query → 材料用語正規化 → 条件抽出 → テーブ�
 
 > **Note**: デリバリZIPを受け取った方は `README_DELIVERY.md` を参照してください。
 > 以下はリポジトリのクローンを前提とした完全環境構築手順です。
-> ZIPには `docker/`, `db/`, `api/`, `tests/`, `.env.example`, `pyproject.toml` は含まれません。
+> ZIPにはリポジトリの主要ファイルが同梱されています。詳細は `README_DELIVERY.md` を参照。
 
 ### 前提条件
 
@@ -110,8 +110,10 @@ l12-schema-graph-text2sql/
 │   ├── sql_generator.py        # 制約付きSQL生成パイプライン
 │   ├── few_shot_store.py       # Few-shot例の蓄積・検索
 │   └── material_terms.yaml     # 材料用語辞書（L1₂, B2, γ'等）
-├── safety/              # SQL安全検査（SQLGuard 8層）
-│   └── sql_validator.py
+├── safety/              # SQL安全検査（SQLGuard 14種検証）
+│   ├── sql_validator.py      # 13種の個別検査 + 統合検証
+│   ├── sql_guard.py          # ガードエントリポイント
+│   └── allowed_schema.yaml   # 許可テーブル・カラム定義
 ├── evaluation/          # 評価パイプライン
 │   ├── evaluation_dataset.jsonl # 100クエリ（Easy/Medium/Hard/VeryHard）
 │   ├── gold_sql/        # 正解SQL 100件
@@ -174,7 +176,7 @@ v4でgraph層のJOIN方向バグ（`_edge_source`による逆方向走査時の�
 - **Schema Graph走査**: NetworkXによるFK関係のグラフ化、Steiner木近似による最小JOINパス探索
 - **材料用語辞書**: L1₂, B2, γ', Cu₃Au型, CsCl型などの日英バイリンガル同義語辞書
 - **制約付きSQL生成**: 許可テーブル・カラム・JOINのみ使用可能
-- **SQLGuard 8層検証**: ブラックリスト、SELECT-only、複文検出、危険関数、テーブル/カラムホワイトリスト、JOIN整合性、LIMIT自動注入
+- **SQLGuard 14種検証**: ブラックリスト、SELECT-only、複文検出、危険関数、テーブル/カラムホワイトリスト、JOIN整合性、LIMIT自動注入、CTE検査、型安全、トートロジー検出、サブクエリ深度制限、システムテーブル検出
 - **Rule-based fallback**: API keyなしでも動作する決定的SQL生成
 - **B2対応**: CsCl型（B2）、NaCl型、NiAs型、BiF3型にも対応可能な設計
 

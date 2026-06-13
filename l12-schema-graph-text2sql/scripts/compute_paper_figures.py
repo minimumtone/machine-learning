@@ -30,7 +30,6 @@ import json
 import math
 import os
 import re
-import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -118,7 +117,6 @@ def main():
     # ---------------------------------------------------------------------------
 
     proposed = read_csv(EVAL / "proposed_result.csv")
-    proposed_by_qid = {r["query_id"]: r for r in proposed}
 
     # assign n_tables difficulty
     for r in proposed:
@@ -186,7 +184,6 @@ def main():
         syn = sum(1 for r in rows if r["syntax_valid"].lower() == "true") / n
         exe = sum(1 for r in rows if r["execution_valid"].lower() == "true") / n
         th = sum(float(r["hallucinated_table_rate"]) for r in rows) / n
-        jh = sum(float(r["hallucinated_join_rate"]) for r in rows) / n
         lat = sum(float(r["latency_ms"]) for r in rows) / n
         tok = sum(float(r["token_usage"]) for r in rows) / n
 
@@ -250,7 +247,6 @@ def main():
             expert_data = json.load(f)
 
         expert_summary = expert_data["summary"]
-        expert_results = expert_data["results"]
 
         expert_out = {
             "total": expert_summary["total"],
@@ -275,7 +271,6 @@ def main():
     known = read_csv(EVAL / "known_l12_recovery.csv")
     known_l12 = [r for r in known if r["is_known"].lower() == "true"]
     recovered = [r for r in known_l12 if r["known_l12_recovered"].lower() == "true"]
-    total_l12 = sum(1 for r in known if r["prototype"] == "L12")
 
     # 5b. 安定候補
     stable_cands = read_csv(EVAL / "stable_l12_candidates.csv")

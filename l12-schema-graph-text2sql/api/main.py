@@ -1,7 +1,6 @@
 """FastAPI application for L1_2 schema-graph-assisted Text-to-SQL."""
 from __future__ import annotations
 
-import os
 from typing import Any
 
 from fastapi import FastAPI, HTTPException

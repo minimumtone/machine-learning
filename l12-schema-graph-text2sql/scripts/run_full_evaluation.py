@@ -20,7 +20,6 @@ sys.path.insert(0, str(PROJECT))
 import psycopg
 
 from evaluation.metrics import (
-    execution_accuracy,
     execution_accuracy_full,
     hallucinated_column_rate,
     hallucinated_join_rate,
@@ -32,20 +31,13 @@ from evaluation.metrics import (
 from graph.graph_builder import build_table_graph
 from graph.join_path_generator import generate_joins_for_tables, get_allowed_join_list
 from graph.schema_parser import get_foreign_keys, get_tables, get_columns
-from graph.traversal_engine import find_join_subgraph
 from llm.entity_extractor import extract_conditions
-from llm.repair_loop import attempt_repair, execution_repair_loop
+from llm.repair_loop import execution_repair_loop
 from llm.schema_linker import link_schema
 from llm.sql_generator import generate_sql_via_llm, _rule_based_fallback
 from safety.sql_validator import (
-    check_allowed_tables,
-    check_forbidden_keywords,
-    check_limit,
-    check_multiple_statements,
-    check_select_only,
     extract_columns_from_sql,
     extract_tables_from_sql,
-    validate_sql,
 )
 
 EVAL_DIR = PROJECT / "evaluation"
@@ -106,7 +98,7 @@ def execute_sql(conn, sql: str) -> dict:
     """Execute SQL and return result dict."""
     try:
         with conn.cursor() as cur:
-            cur.execute(f"SET statement_timeout = '10s'")
+            cur.execute("SET statement_timeout = '10s'")
             cur.execute(sql)
             columns = [d[0] for d in cur.description] if cur.description else []
             rows = cur.fetchall()
@@ -131,7 +123,6 @@ def get_schema_info(conn):
     table_graph = build_table_graph(fks)
 
     # Add logical join: element.symbol = composition.element (no FK but valid)
-    import networkx as nx
     if not table_graph.has_edge("composition", "element"):
         table_graph.add_edge(
             "composition", "element",
@@ -693,7 +684,7 @@ def write_error_analysis(all_results: dict[str, list[dict]], path: Path) -> None
 
         # Show worst queries
         sorted_by_acc = sorted(results, key=lambda r: r.get("execution_accuracy", 0))
-        lines.append(f"\n### Lowest accuracy queries:")
+        lines.append("\n### Lowest accuracy queries:")
         for r in sorted_by_acc[:5]:
             lines.append(f"- {r['query_id']} ({r['difficulty']}): acc={r.get('execution_accuracy', 0):.2f}")
         lines.append("")
@@ -787,7 +778,7 @@ def run_materials_analysis(conn) -> None:
     """)
     lattice_path = EVAL_DIR / "ni3al_lattice_matched_candidates.csv"
     with open(lattice_path, "w", newline="") as f:
-        f.write(f"# Paper ref: Supplementary (tab:sup_lattice_match) -- Ni3Al lattice-matched 14 candidates\n")
+        f.write("# Paper ref: Supplementary (tab:sup_lattice_match) -- Ni3Al lattice-matched 14 candidates\n")
         f.write(f"# a_ref = {NI3AL_LATTICE} A (hardcoded), |da| <= 0.03 A, ROUND() for float boundary\n")
         w = csv.writer(f)
         w.writerow(["formula", "lattice_a", "lattice_diff_ni3al",
@@ -965,15 +956,15 @@ def main():
 
     # Metrics summary
     write_metrics_summary(all_results, EVAL_DIR / "metrics_summary.csv")
-    print(f"  metrics_summary.csv written")
+    print("  metrics_summary.csv written")
 
     # Multi-hop report
     write_multi_hop_report(all_results, EVAL_DIR / "multi_hop_accuracy_report.csv")
-    print(f"  multi_hop_accuracy_report.csv written")
+    print("  multi_hop_accuracy_report.csv written")
 
     # Error analysis
     write_error_analysis(all_results, EVAL_DIR / "error_analysis_report.md")
-    print(f"  error_analysis_report.md written")
+    print("  error_analysis_report.md written")
 
     # Materials analysis
     conn = psycopg.connect(CONNINFO)

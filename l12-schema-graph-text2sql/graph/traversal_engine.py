@@ -5,8 +5,6 @@ from itertools import combinations
 
 import networkx as nx
 
-from graph.schema_parser import ForeignKeyMetadata
-
 
 def find_shortest_table_path(
     graph: nx.Graph,

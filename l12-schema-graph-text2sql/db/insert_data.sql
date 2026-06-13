@@ -1,5 +1,5 @@
 -- Auto-generated data for 30-table extended schema
--- ~1,471 material entries across 5 prototypes (L12, B2, NaCl, NiAs, BiF3)
+-- 1,470 material entries across 5 prototypes (L12, B2, NaCl, NiAs, BiF3)
 BEGIN;
 
 -- Elements
