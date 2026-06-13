@@ -661,7 +661,7 @@ def main():
         print(f"3-run統計:            {run_stats['mean_accuracy_pct']}% ± {run_stats['stdev_pp']}pp ({run_stats['run_accuracies']})")
     if expert_out:
         print(f"独立評価 (60件): 正答率 {expert_out['binary_correct_rate']}%, 平均精度 {expert_out['mean_exec_accuracy']}%")
-        print(f"難易度調和比較:")
+        print("難易度調和比較:")
         print(f"  著者: E={harmonized_comparison['author']['by_difficulty']['easy']}% "
               f"M={harmonized_comparison['author']['by_difficulty']['medium']}% "
               f"H={harmonized_comparison['author']['by_difficulty']['hard']}% "

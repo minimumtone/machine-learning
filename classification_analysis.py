@@ -93,8 +93,8 @@ def run_stock_market_analysis():
     with col1:
         st.write("**Dataset Information:**")
         st.write(f"Samples: {len(df)}")
-        st.write(f"Features: Lag1-Lag5, Volume")
-        st.write(f"Target: Direction (Up/Down)")
+        st.write("Features: Lag1-Lag5, Volume")
+        st.write("Target: Direction (Up/Down)")
         
         direction_counts = df['Direction'].value_counts()
         st.write(f"Up: {direction_counts.get('Up', 0)} ({direction_counts.get('Up', 0)/len(df)*100:.1f}%)")
@@ -204,8 +204,8 @@ def run_iris_analysis():
     with col1:
         st.write("**Dataset Information:**")
         st.write(f"Samples: {len(df)}")
-        st.write(f"Features: sepal/petal length/width")
-        st.write(f"Classes: 3 species")
+        st.write("Features: sepal/petal length/width")
+        st.write("Classes: 3 species")
         
         species_counts = df['species'].value_counts()
         for species, count in species_counts.items():

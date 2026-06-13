@@ -947,7 +947,6 @@ def fdm_ternary_regular_solution(
     Returns (t_grid, C_history) where C_history has shape (n_saved, Nx, n_components).
     """
     use_comp_dep_M = log_M_endmembers is not None
-    Nx = len(x)
     dx = float(x[1] - x[0])
     n_components = c0_full.shape[1]
     n_ind = n_components - 1

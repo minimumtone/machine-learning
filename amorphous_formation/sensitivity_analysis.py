@@ -367,7 +367,7 @@ class SensitivityAnalysis:
             "Sensitivity Analysis Results / 感度解析結果",
             "=" * 70,
             "",
-            f"Base Parameters / 基準パラメータ:",
+            "Base Parameters / 基準パラメータ:",
             f"  σ (base) = {self.sigma_base:.4e} J/m²",
             f"  R_c (base) = {self.base_R_c:.2e} K/s",
             f"  T_nose (base) = {self.base_T_nose:.1f} K",

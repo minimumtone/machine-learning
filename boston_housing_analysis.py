@@ -61,7 +61,7 @@ def run_boston_analysis():
         st.subheader("Dataset Information")
         st.write(f"**Samples:** {len(df)}")
         st.write(f"**Features:** {len(df.columns) - 1}")
-        st.write(f"**Target:** medv (median house value)")
+        st.write("**Target:** medv (median house value)")
         
     with col2:
         st.subheader("Target Variable Statistics")

@@ -47,8 +47,8 @@ def run_advertising_analysis():
     with col1:
         st.subheader("Dataset Information")
         st.write(f"**Samples:** {len(df)}")
-        st.write(f"**Features:** TV, Radio, Newspaper budgets")
-        st.write(f"**Target:** Sales (in thousands of units)")
+        st.write("**Features:** TV, Radio, Newspaper budgets")
+        st.write("**Target:** Sales (in thousands of units)")
         
     with col2:
         st.subheader("Target Variable Statistics")

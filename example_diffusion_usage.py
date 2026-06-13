@@ -149,13 +149,13 @@ def example_1_constant_diffusion():
     
     plt.tight_layout()
     plt.savefig('/home/ubuntu/repos/machine-learning/example1_constant_diffusion.png', dpi=150)
-    print(f"図を保存しました: example1_constant_diffusion.png")
+    print("図を保存しました: example1_constant_diffusion.png")
     plt.close()
     
     np.savetxt('/home/ubuntu/repos/machine-learning/example1_data.csv', 
                C[-1, :], delimiter=',', 
                header='Concentration at t=72h')
-    print(f"データを保存しました: example1_data.csv")
+    print("データを保存しました: example1_data.csv")
     print()
 
 
@@ -211,7 +211,7 @@ def example_2_concentration_dependent():
     
     plt.tight_layout()
     plt.savefig('/home/ubuntu/repos/machine-learning/example2_concentration_dependent.png', dpi=150)
-    print(f"図を保存しました: example2_concentration_dependent.png")
+    print("図を保存しました: example2_concentration_dependent.png")
     plt.close()
     
     print()
@@ -251,14 +251,14 @@ def example_3_comparison():
     
     plt.tight_layout()
     plt.savefig('/home/ubuntu/repos/machine-learning/example3_comparison.png', dpi=150)
-    print(f"図を保存しました: example3_comparison.png")
+    print("図を保存しました: example3_comparison.png")
     plt.close()
     
-    print(f"\n統計情報:")
-    print(f"  定数拡散係数:")
+    print("\n統計情報:")
+    print("  定数拡散係数:")
     print(f"    最終濃度範囲: [{C_const[-1, :].min():.4f}, {C_const[-1, :].max():.4f}]")
     print(f"    中心濃度: {C_const[-1, len(solver.x)//2]:.4f}")
-    print(f"  濃度依存拡散係数:")
+    print("  濃度依存拡散係数:")
     print(f"    最終濃度範囲: [{C_dep[-1, :].min():.4f}, {C_dep[-1, :].max():.4f}]")
     print(f"    中心濃度: {C_dep[-1, len(solver.x)//2]:.4f}")
     print(f"  最大差分: {np.abs(diff).max():.4f}")

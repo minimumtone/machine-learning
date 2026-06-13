@@ -19,7 +19,7 @@ except ImportError:
 import time
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -61,6 +61,9 @@ from extrapolation_discovery_platform.model_selection import (
     run_model_selection,
 )
 from extrapolation_discovery_platform._compat import as_serializable
+
+if TYPE_CHECKING:
+    from extrapolation_discovery_platform.ood import OODResult
 
 logger = logging.getLogger(__name__)
 

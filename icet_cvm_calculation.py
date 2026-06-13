@@ -273,7 +273,7 @@ def prepare_database(structures=None):
         print("ダミーDFTデータを生成しています...")
         structures = generate_dummy_structures(n_structures=50)
     
-    print(f"データベースを作成しています...")
+    print("データベースを作成しています...")
     db = connect(DB_FILENAME)
     
     count = 0
@@ -548,6 +548,6 @@ if __name__ == "__main__":
     print("\n" + "="*60)
     print("処理完了")
     print("="*60)
-    print(f"生成されたファイル:")
+    print("生成されたファイル:")
     print(f"  - {DB_FILENAME}: ASEデータベース")
-    print(f"  - fe_v_eci_for_cvm.csv: ECI値")
+    print("  - fe_v_eci_for_cvm.csv: ECI値")

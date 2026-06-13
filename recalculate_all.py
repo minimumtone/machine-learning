@@ -78,7 +78,7 @@ for key, path in sources.items():
         counts[key] = 0
         print(f"  {key}: FILE NOT FOUND")
 
-print(f"\n  === Tab.1 correct values ===")
+print("\n  === Tab.1 correct values ===")
 print(f"  MP:   B2={counts['MP_B2']}, L12={counts['MP_L12']}, total={counts['MP_B2']+counts['MP_L12']}")
 print(f"  OQMD: B2={counts['OQMD_B2']}, L12={counts['OQMD_L12']}, total={counts['OQMD_B2']+counts['OQMD_L12']}")
 print(f"  VASP: B2={counts['VASP_B2']}, L12={counts['VASP_L12']}, total={counts['VASP_B2']+counts['VASP_L12']}")
@@ -200,7 +200,7 @@ a_vegard = np.array([compute_vegard(h["comp"], h["struct"]) for h in ALONSO_TABL
 err_veg = y_hea - a_vegard
 err_ss = y_hea - a_eq10_ss
 
-print(f"\n  === Training Set Results (64 HEA) ===")
+print("\n  === Training Set Results (64 HEA) ===")
 print(f"  q_BCC = {best_gb:.2f}, q_FCC = {best_gf:.2f}")
 print(f"  Vegard  RMSE = {rmse(err_veg):.4f} Å")
 print(f"  DFT-SS  RMSE = {rmse(err_ss):.4f} Å")
@@ -253,7 +253,7 @@ fcc_ind = ind_df["struct"] == "FCC"
 err_veg_ind = ind_df["err_vegard"].values
 err_ss_ind = ind_df["err_ss"].values
 
-print(f"\n  === Independent Test Results ===")
+print("\n  === Independent Test Results ===")
 print(f"  Vegard  RMSE = {rmse(err_veg_ind):.4f} Å")
 print(f"  DFT-SS  RMSE = {rmse(err_ss_ind):.4f} Å")
 print(f"  BCC ({bcc_ind.sum()}): Vegard={rmse(err_veg_ind[bcc_ind]):.4f}, DFT-SS={rmse(err_ss_ind[bcc_ind]):.4f}")
@@ -262,9 +262,9 @@ print(f"  FCC ({fcc_ind.sum()}): Vegard={rmse(err_veg_ind[fcc_ind]):.4f}, DFT-SS
 # Check Vegard degeneracy
 n_degen = ind_df[bcc_ind]["vegard_degeneracy"].sum()
 print(f"\n  BCC Vegard degeneracy: {n_degen}/{bcc_ind.sum()} alloys")
-print(f"  (Old paper claimed 7/8 — now should be much less)")
+print("  (Old paper claimed 7/8 — now should be much less)")
 
-print(f"\n  Per-alloy detail:")
+print("\n  Per-alloy detail:")
 print(f"  {'Alloy':<30} {'St':>3} {'a_exp':>7} {'a_Veg':>7} {'a_SS':>7} {'Err_SS':>7} {'Cov':>5} {'Deg':>4}")
 for _, r in ind_df.iterrows():
     deg = "V" if r["vegard_degeneracy"] else ""
@@ -331,7 +331,7 @@ for pair in pair_b2_raw:
         count_all3 += 1
 
 print(f"  Pairs with all 3 structures (A3B + B3A + B2): {count_all3}")
-print(f"  Paper claims: 905")
+print("  Paper claims: 905")
 
 # Also count without requiring both L12 directions
 count_any_l12 = 0

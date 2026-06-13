@@ -1048,8 +1048,8 @@ def run_analysis(api_key: str, fig_dir: str):
         # Top 10 differences
         sorted_idx = np.argsort(np.abs(diff))[::-1]
         top_n = min(10, len(common))
-        lines.append(f"\n| 元素 | $r_{{\\mathrm{{MP}}}}$ (A) | $r_{{\\mathrm{{OQMD}}}}$ (A) "
-                     f"| $\\Delta r$ (A) |")
+        lines.append("\n| 元素 | $r_{\\mathrm{MP}}$ (A) | $r_{\\mathrm{OQMD}}$ (A) "
+                     "| $\\Delta r$ (A) |")
         lines.append("|:---:|:---:|:---:|:---:|")
         for i in sorted_idx[:top_n]:
             sign = "+" if diff[i] >= 0 else ""

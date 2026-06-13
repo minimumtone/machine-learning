@@ -379,7 +379,7 @@ for eta_val in sorted(df_eq['eta'].unique()):
 # Perfect B2: all A sites = Fe (0000), all B sites = V (1111) -> 00001111 = 15
 # Or: all A sites = V (1111), all B sites = Fe (0000) -> 11110000 = 240
 b2_perfect = df[(df['config_index'] == 15) | (df['config_index'] == 240)]
-print(f"\nPerfect B2 configurations:")
+print("\nPerfect B2 configurations:")
 for _, row in b2_perfect.iterrows():
     binary = format(row['config_index'], '08b')
     print(f"  config_{row['config_index']:03d} ({binary}): dHf = {row['dH_f_Jmol_corrected']:.0f} J/mol, eta = {row['eta']:.2f}")
@@ -474,7 +474,7 @@ y_pred_2sl = X_2sl @ coeffs_2sl
 rmse_2sl = np.sqrt(np.mean((y_dHf - y_pred_2sl)**2))
 r2_2sl = 1 - np.sum((y_dHf - y_pred_2sl)**2) / np.sum((y_dHf - np.mean(y_dHf))**2)
 
-print(f"\n2-sublattice B2 model:")
+print("\n2-sublattice B2 model:")
 print(f"  G_FeFe = {coeffs_2sl[0]:.0f} J/mol")
 print(f"  G_VV   = {coeffs_2sl[1]:.0f} J/mol")
 print(f"  G_FeV  = {coeffs_2sl[2]:.0f} J/mol")
@@ -506,7 +506,7 @@ y_pred_2sl_ext = X_2sl_ext @ coeffs_2sl_ext
 rmse_2sl_ext = np.sqrt(np.mean((y_dHf - y_pred_2sl_ext)**2))
 r2_2sl_ext = 1 - np.sum((y_dHf - y_pred_2sl_ext)**2) / np.sum((y_dHf - np.mean(y_dHf))**2)
 
-print(f"\n2-sublattice B2 model (extended with L parameters):")
+print("\n2-sublattice B2 model (extended with L parameters):")
 print(f"  G_FeFe = {coeffs_2sl_ext[0]:.0f} J/mol")
 print(f"  G_VV   = {coeffs_2sl_ext[1]:.0f} J/mol")
 print(f"  G_FeV  = {coeffs_2sl_ext[2]:.0f} J/mol")
@@ -517,7 +517,7 @@ print(f"  RMSE   = {rmse_2sl_ext:.0f} J/mol")
 print(f"  R²     = {r2_2sl_ext:.4f}")
 
 # Full 8-sublattice CEF (identity, trivially perfect)
-print(f"\n8-sublattice CEF (256 endmembers): RMSE = 0 J/mol, R² = 1.0000")
+print("\n8-sublattice CEF (256 endmembers): RMSE = 0 J/mol, R² = 1.0000")
 
 # ============================================================
 # 8. Degeneracy Analysis
@@ -545,7 +545,7 @@ for _, row in df_sorted.iterrows():
         unique_energies.append({'energy': e, 'count': 1, 'configs': [row['config_index']]})
 
 print(f"Number of unique energy levels (tolerance={energy_tolerance} J/mol): {len(unique_energies)}")
-print(f"\nTop 10 most degenerate levels:")
+print("\nTop 10 most degenerate levels:")
 ue_sorted = sorted(unique_energies, key=lambda x: -x['count'])
 for ue in ue_sorted[:10]:
     # Find composition
@@ -597,7 +597,7 @@ if common_funcs:
         diff = new_gf[func] - old_gf[func]
         diffs.append(diff)
     diffs = np.array(diffs)
-    print(f"\nDifferences (New - Old) for common functions:")
+    print("\nDifferences (New - Old) for common functions:")
     print(f"  Mean  = {np.mean(diffs):.0f} J/mol")
     print(f"  Std   = {np.std(diffs):.0f} J/mol")
     print(f"  Min   = {np.min(diffs):.0f} J/mol")
@@ -1135,7 +1135,6 @@ for nv in range(1, 8):
     ordering_by_comp[xv] = E_avg - E_min  # positive = B2 is more stable
 
 # Interpolate ordering energy
-from scipy.interpolate import interp1d
 xv_data = sorted(ordering_by_comp.keys())
 oe_data = [ordering_by_comp[x] for x in xv_data]
 oe_interp = interp1d(xv_data, oe_data, kind='quadratic', fill_value=0, bounds_error=False)
@@ -1210,5 +1209,5 @@ pd.DataFrame(ord_summary).to_csv(f'{OUT}/ordering_energies.csv', index=False)
 print("\n" + "="*70)
 print("Analysis complete! Files saved to:", OUT)
 print("="*70)
-print(f"\nFigures: 8 PNG files")
-print(f"Data: rk_parameters.csv, sro_analysis.csv, ordering_energies.csv")
+print("\nFigures: 8 PNG files")
+print("Data: rk_parameters.csv, sro_analysis.csv, ordering_energies.csv")

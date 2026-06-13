@@ -480,7 +480,7 @@ class ARDOptimizer:
         n_relevant = np.sum(relevant_mask)
         relevant_indices = np.where(relevant_mask)[0]
         
-        print(f"\nARD Results:")
+        print("\nARD Results:")
         print(f"  Total parameters: {self.n_parameters}")
         print(f"  Relevant parameters: {n_relevant} ({100*n_relevant/self.n_parameters:.1f}%)")
         print(f"  Irrelevant parameters: {self.n_parameters - n_relevant}")
@@ -499,7 +499,7 @@ class ARDOptimizer:
         
         # Print top relevant parameters
         if n_relevant > 0:
-            print(f"\nTop 10 most relevant parameters:")
+            print("\nTop 10 most relevant parameters:")
             # Sort by absolute coefficient value
             sorted_indices = np.argsort(np.abs(L_params))[::-1]
             for i, idx in enumerate(sorted_indices[:10]):
@@ -853,7 +853,7 @@ def main():
     print("Optimization Summary")
     print("=" * 70)
     n_relevant = np.sum(np.abs(L_params_refined) > 1e-6)
-    print(f"Total L parameters: 1024")
+    print("Total L parameters: 1024")
     print(f"Relevant parameters (ARD): {n_relevant} ({100*n_relevant/1024:.1f}%)")
     print(f"Sparsity achieved: {100*(1024-n_relevant)/1024:.1f}%")
     

@@ -431,20 +431,20 @@ class DavisUhlmannModel:
             "Davis-Uhlmannモデル検証レポート",
             "=" * 60,
             "",
-            f"Input Parameters / 入力パラメータ:",
+            "Input Parameters / 入力パラメータ:",
             f"  T_m (融点) = {self.T_m:.1f} K",
             f"  T_g (ガラス転移点) = {self.T_g:.1f} K",
             f"  ΔH_f (融解熱) = {self.delta_H_f:.1f} J/mol",
             f"  σ (界面エネルギー) = {self.sigma:.4e} J/m²",
             f"  V_m (モル体積) = {self.V_m:.2e} m³/mol",
             "",
-            f"TTT Curve Results / TTT曲線結果:",
+            "TTT Curve Results / TTT曲線結果:",
             f"  Nose temperature T_n = {T_nose:.1f} K",
             f"  Nose time t_n = {t_nose:.2e} s",
             f"  T_n/T_m = {T_nose/self.T_m:.3f}",
             f"  Critical cooling rate R_c = {R_c:.2e} K/s",
             "",
-            f"Validation Checks / 検証チェック:",
+            "Validation Checks / 検証チェック:",
         ]
         
         pass_nose, msg_nose = self.verify_nose_position()
@@ -461,7 +461,7 @@ class DavisUhlmannModel:
         U_nose = self.growth_rate(T_nose)
         lines.extend([
             "",
-            f"Kinetic Parameters at Nose / ノーズでの動力学パラメータ:",
+            "Kinetic Parameters at Nose / ノーズでの動力学パラメータ:",
             f"  Nucleation rate I = {I_nose:.2e} m⁻³s⁻¹",
             f"  Growth rate U = {U_nose:.2e} m/s",
             f"  Critical radius r* = {self.critical_radius(T_nose):.2e} m",

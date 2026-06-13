@@ -126,63 +126,6 @@ def generate_materials_data(data_type, n_samples=200, random_state=42):
         })
         return df, '機械的強度_MPa'
 
-def generate_materials_data(data_type, n_samples=200, random_state=42):
-    np.random.seed(random_state)
-    
-    if data_type == "thermal_conductivity":
-        temperature = np.random.uniform(800, 1400, n_samples)
-        pressure = np.random.uniform(1.0, 5.0, n_samples) 
-        time = np.random.uniform(1.0, 10.0, n_samples)
-        
-        thermal_conductivity = (
-            50 + 0.1 * temperature + 20 * pressure + 5 * time +
-            np.random.normal(0, 10, n_samples)
-        )
-        
-        df = pd.DataFrame({
-            '温度_K': temperature,
-            '圧力_GPa': pressure, 
-            '処理時間_h': time,
-            '熱伝導率_W_per_mK': thermal_conductivity
-        })
-        return df, '熱伝導率_W_per_mK'
-        
-    elif data_type == "electrical_conductivity":
-        composition = np.random.uniform(0.1, 0.9, n_samples)
-        annealing_temp = np.random.uniform(600, 1200, n_samples)
-        grain_size = np.random.uniform(1, 50, n_samples)
-        
-        electrical_conductivity = (
-            1000 * composition + 0.5 * annealing_temp + 10 * grain_size +
-            np.random.normal(0, 100, n_samples)
-        )
-        
-        df = pd.DataFrame({
-            '組成比': composition,
-            'アニール温度_K': annealing_temp,
-            '結晶粒径_μm': grain_size,
-            '電気伝導率_S_per_m': electrical_conductivity
-        })
-        return df, '電気伝導率_S_per_m'
-        
-    elif data_type == "mechanical_strength":
-        grain_size = np.random.uniform(1, 50, n_samples)
-        treatment_time = np.random.uniform(0.5, 20, n_samples)
-        treatment_temp = np.random.uniform(800, 1200, n_samples)
-        
-        strength = (
-            500 - 5 * grain_size + 10 * treatment_time + 0.2 * treatment_temp +
-            np.random.normal(0, 50, n_samples)
-        )
-        
-        df = pd.DataFrame({
-            '結晶粒径_μm': grain_size,
-            '熱処理時間_h': treatment_time,
-            '熱処理温度_K': treatment_temp,
-            '機械的強度_MPa': strength
-        })
-        return df, '機械的強度_MPa'
-
 @st.cache_data
 def load_data(dataset_option):
     if dataset_option == "熱伝導率データ":

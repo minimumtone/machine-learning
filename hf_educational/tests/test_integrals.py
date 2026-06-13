@@ -122,7 +122,7 @@ He 0.0 0.0 0.0
 """)
     
     basis = BasisSet(he, 'sto-3g')
-    print(f"\nComputing ERI for He (STO-3G)...")
+    print("\nComputing ERI for He (STO-3G)...")
     print(f"Basis functions: {basis.n_basis}")
     
     ERI = compute_eri_tensor(basis, schwarz_threshold=1e-12)

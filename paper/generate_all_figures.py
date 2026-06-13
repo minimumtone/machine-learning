@@ -237,7 +237,6 @@ def compute_effective_radii(all_df, sources=("MP", "OQMD", "VASP")):
             vol_b2[elB].append(v)
         elif stype == "L12":
             cA = row.get("count_A", 3)
-            cB = row.get("count_B", 1)
             v = a**3 / 4
             if cA == 3:
                 vol_l12_maj[elA].append(v)
@@ -641,11 +640,6 @@ def fig08_delta_r_proof(all_df):
 
     # (d) DFT lattice constant difference |a(A3B) - a(B3A)|
     ax = axes2[0]
-    a_diffs = []
-    for pair, data in pair_data.items():
-        if data["L12_A3B"] and data["L12_AB3"]:
-            # need actual lattice constants, not Omega_sf
-            pass
     # Use raw lattice constants
     pair_a = defaultdict(lambda: {"A3B": [], "AB3": []})
     for _, row in all_df[all_df["stype"] == "L12"].iterrows():
@@ -1089,7 +1083,7 @@ def main():
 
     rmse_veg_tr = np.sqrt(np.mean((a_veg_tr - y_train) ** 2))
     rmse_ss_tr = np.sqrt(np.mean((a_ss_tr - y_train) ** 2))
-    print(f"\n    Training RMSE:")
+    print("\n    Training RMSE:")
     print(f"      Vegard:       {rmse_veg_tr:.4f} A")
     print(f"      DFT-Omega_sf: {rmse_ss_tr:.4f} A")
     print(f"      BCC:          {np.sqrt(np.mean((a_ss_tr[bcc_i]-y_train[bcc_i])**2)):.4f}")
@@ -1105,7 +1099,7 @@ def main():
 
     rmse_veg_te = np.sqrt(np.mean((a_veg_te - y_test) ** 2))
     rmse_ss_te = np.sqrt(np.mean((a_ss_te - y_test) ** 2))
-    print(f"    Test RMSE:")
+    print("    Test RMSE:")
     print(f"      Vegard:       {rmse_veg_te:.4f}")
     print(f"      DFT-Omega_sf: {rmse_ss_te:.4f}")
     print(f"      BCC:          {np.sqrt(np.mean((a_ss_te[bcc_t]-y_test[bcc_t])**2)):.4f}")
@@ -1272,7 +1266,7 @@ def main():
     print(f"  Pairwise RMSE:     {rmse_ss_te:.4f} A")
     print(f"  Additive RMSE:     {rmse_add_te:.4f} A")
     print(f"  BCC=Vegard:        {id_v}/{len(bcc_t)}")
-    print(f"\nAdditive decomposition:")
+    print("\nAdditive decomposition:")
     print(f"  B2  R2: {decomp['B2']['r2']:.4f} ({len(decomp['B2']['elements'])} elements)")
     print(f"  L12 R2: {decomp['L12']['r2']:.4f} ({len(decomp['L12']['elements'])} elements)")
     print(f"\nFigures: 16 PNGs saved to {OUTDIR}")
@@ -1394,7 +1388,7 @@ def main():
 
     with open(OUTDIR / "paper_metrics.json", "w") as f:
         json.dump(metrics, f, indent=2, ensure_ascii=False)
-    print(f"\n    paper_metrics.json saved (all numerical values for manuscript)")
+    print("\n    paper_metrics.json saved (all numerical values for manuscript)")
 
 
 if __name__ == "__main__":

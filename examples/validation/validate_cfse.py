@@ -169,7 +169,7 @@ def format_markdown(results: list[dict]) -> str:
 
     n_pass = sum(1 for r in results if r["pass"])
     lines.append("")
-    lines.append(f"## Summary")
+    lines.append("## Summary")
     lines.append("")
     lines.append(f"**{n_pass}/{len(results)}** tests passed.")
     if n_pass == len(results):

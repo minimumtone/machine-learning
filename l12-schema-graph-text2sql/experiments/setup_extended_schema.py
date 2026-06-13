@@ -465,7 +465,7 @@ def setup_extended_db():
             (SELECT count(*) FROM material_defect) as defects
     """)
     summary = cur.fetchone()
-    print(f"\n=== EXTENDED DB SUMMARY ===")
+    print("\n=== EXTENDED DB SUMMARY ===")
     print(f"Material entries: {summary[0]}")
     print(f"Elements: {summary[1]}")
     print(f"Application domains: {summary[2]}")

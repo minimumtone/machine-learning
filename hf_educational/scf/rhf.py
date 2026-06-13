@@ -46,7 +46,7 @@ class RHF:
         self.basis_name = basis_name
         
         print(f"\n{'='*60}")
-        print(f"Restricted Hartree-Fock (RHF) Calculation")
+        print("Restricted Hartree-Fock (RHF) Calculation")
         print(f"{'='*60}")
         print(self.molecule)
         print(f"\nBasis set: {basis_name.upper()}")
@@ -108,13 +108,13 @@ class RHF:
         print(f"   Computed in {time.time() - start:.2f}s")
         
         self.H_core = self.T + self.V
-        print(f"\n4. Core Hamiltonian H = T + V")
+        print("\n4. Core Hamiltonian H = T + V")
         
         self.E_nuc = self.molecule.nuclear_repulsion()
         print(f"\n5. Nuclear repulsion energy: {self.E_nuc:.10f} Eh")
         
         start = time.time()
-        print(f"\n6. Two-electron integrals (ERI)...")
+        print("\n6. Two-electron integrals (ERI)...")
         print(f"   Schwarz threshold: {schwarz_threshold}")
         self.ERI = compute_eri_tensor(self.basis, schwarz_threshold)
         print(f"   Computed in {time.time() - start:.2f}s")
@@ -138,7 +138,7 @@ class RHF:
             C_occ = C[:, :self.n_occ]
             self.P = 2.0 * C_occ @ C_occ.T
             
-            print(f"Initial orbital energies (occupied):")
+            print("Initial orbital energies (occupied):")
             for i in range(self.n_occ):
                 print(f"  MO {i+1}: {eps[i]:12.6f} Eh")
         
@@ -379,7 +379,7 @@ class RHF:
         
         components = self.compute_energy_components(self.P, *self.build_fock(self.P)[1:])
         
-        print(f"\nEnergy Decomposition:")
+        print("\nEnergy Decomposition:")
         print(f"  Kinetic energy:           {components['E_kinetic']:16.10f} Eh")
         print(f"  Nuclear attraction:       {components['E_nuclear_attraction']:16.10f} Eh")
         print(f"  One-electron energy:      {components['E_one_electron']:16.10f} Eh")
@@ -391,7 +391,7 @@ class RHF:
         print(f"  {'─'*50}")
         print(f"  Total energy:             {components['E_total']:16.10f} Eh")
         
-        print(f"\nMolecular Orbital Energies:")
+        print("\nMolecular Orbital Energies:")
         print(f"  {'MO':>4} {'Occupancy':>10} {'Energy (Eh)':>14} {'Energy (eV)':>14}")
         print(f"  {'-'*50}")
         

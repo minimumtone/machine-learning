@@ -53,7 +53,7 @@ old_vals = np.array([old_gf[f] for f in common])
 new_vals = np.array([new_gf[f] for f in common])
 diffs = new_vals - old_vals
 
-print(f"\nDifferences (New - Old):")
+print("\nDifferences (New - Old):")
 print(f"  Mean  = {np.mean(diffs):.0f} J/mol")
 print(f"  Std   = {np.std(diffs):.0f} J/mol")
 print(f"  Min   = {np.min(diffs):.0f} J/mol")

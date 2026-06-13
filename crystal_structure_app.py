@@ -819,7 +819,7 @@ def main():
         )
         st.plotly_chart(fig_struct, use_container_width=True)
         
-        st.markdown(f"""
+        st.markdown("""
         **解釈:**
         - β ≈ 0: 構造相関なし（ランダムな位置ゆらぎ）
         - β > 0: 類似環境がクラスター化

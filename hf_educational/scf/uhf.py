@@ -44,7 +44,7 @@ class UHF:
         self.basis_name = basis_name
         
         print(f"\n{'='*60}")
-        print(f"Unrestricted Hartree-Fock (UHF) Calculation")
+        print("Unrestricted Hartree-Fock (UHF) Calculation")
         print(f"{'='*60}")
         print(self.molecule)
         print(f"\nBasis set: {basis_name.upper()}")
@@ -111,7 +111,7 @@ class UHF:
         print(f"\n4. Nuclear repulsion energy: {self.E_nuc:.10f} Eh")
         
         start = time.time()
-        print(f"\n5. Two-electron integrals (ERI)...")
+        print("\n5. Two-electron integrals (ERI)...")
         self.ERI = compute_eri_tensor(self.basis, schwarz_threshold)
         print(f"   Computed in {time.time() - start:.2f}s")
         
@@ -133,12 +133,12 @@ class UHF:
             self.P_alpha = C_alpha_occ @ C_alpha_occ.T
             self.P_beta = C_beta_occ @ C_beta_occ.T
             
-            print(f"Initial orbital energies (alpha occupied):")
+            print("Initial orbital energies (alpha occupied):")
             for i in range(self.n_alpha):
                 print(f"  MO {i+1}: {eps[i]:12.6f} Eh")
             
             if self.n_beta < self.n_alpha:
-                print(f"\nInitial orbital energies (beta occupied):")
+                print("\nInitial orbital energies (beta occupied):")
                 for i in range(self.n_beta):
                     print(f"  MO {i+1}: {eps[i]:12.6f} Eh")
         
@@ -372,13 +372,13 @@ class UHF:
         print(f"Nuclear repulsion: {self.E_nuc:.10f} Eh")
         
         spin_props = self.compute_spin_contamination()
-        print(f"\nSpin Properties:")
+        print("\nSpin Properties:")
         print(f"  S_z = {spin_props['S_z']:.4f}")
         print(f"  <S^2> expected = {spin_props['S2_expected']:.4f}")
         print(f"  <S^2> computed = {spin_props['S2_computed']:.4f}")
         print(f"  Spin contamination = {spin_props['spin_contamination']:.4f}")
         
-        print(f"\nAlpha Molecular Orbital Energies:")
+        print("\nAlpha Molecular Orbital Energies:")
         print(f"  {'MO':>4} {'Occupancy':>10} {'Energy (Eh)':>14} {'Energy (eV)':>14}")
         print(f"  {'-'*50}")
         
@@ -392,7 +392,7 @@ class UHF:
             
             print(f"  {i+1:4d} {occ:10.1f} {self.eps_alpha[i]:14.6f} {self.eps_alpha[i]*27.2114:14.6f}{label}")
         
-        print(f"\nBeta Molecular Orbital Energies:")
+        print("\nBeta Molecular Orbital Energies:")
         print(f"  {'MO':>4} {'Occupancy':>10} {'Energy (Eh)':>14} {'Energy (eV)':>14}")
         print(f"  {'-'*50}")
         

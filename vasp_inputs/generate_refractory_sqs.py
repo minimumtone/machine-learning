@@ -152,7 +152,7 @@ def write_poscar_sqs(dirpath, el_a, el_b, a_super):
             f"  0.000000  {a_super:.6f}  0.000000",
             f"  0.000000  0.000000  {a_super:.6f}",
             f"  {el_a}",
-            f"  16",
+            "  16",
             "Direct",
         ]
         for pos in BCC_2x2x2_POSITIONS:
@@ -632,16 +632,16 @@ def main():
     print(f"  - {n_hetero} binary pairs (A8B8)")
     print(f"  - {n_homo} same-element references (A8A8)")
     print(f"  - Total: {n_total} calculations")
-    print(f"  - Each: 16 atoms (2×2×2 BCC supercell)")
+    print("  - Each: 16 atoms (2×2×2 BCC supercell)")
     print()
     print("Directory naming: A8B8 format (e.g., Cr8Hf8, Mo8Mo8)")
     print(f"  Elements: {', '.join(elements)}")
     print()
     print("Next steps:")
-    print(f"  1. export VASP_PP_PATH=/path/to/vasp_pp  # (potpaw_PBE/ が含まれるディレクトリ)")
-    print(f"     export VASPBIN=/path/to/vasp_std")
+    print("  1. export VASP_PP_PATH=/path/to/vasp_pp  # (potpaw_PBE/ が含まれるディレクトリ)")
+    print("     export VASPBIN=/path/to/vasp_std")
     print(f"  2. cd {os.path.basename(base_dir)}")
-    print(f"  3. bash run_all.sh   # POTCAR生成→並列計算→結果抽出 (all-in-one)")
+    print("  3. bash run_all.sh   # POTCAR生成→並列計算→結果抽出 (all-in-one)")
     print()
     if n_total > 100:
         est_hours = n_total * 0.75 / 8  # 8並列想定

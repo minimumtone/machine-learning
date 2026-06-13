@@ -637,7 +637,7 @@ def format_markdown_all(all_checks: dict[str, list[CheckResult]]) -> str:
             lines.append(f"![{fig.stem}]({rel})")
             lines.append("")
 
-    lines.append(f"## Summary")
+    lines.append("## Summary")
     lines.append("")
     lines.append(f"**{total_pass}/{total_count}** checks passed.")
     if total_pass == total_count:

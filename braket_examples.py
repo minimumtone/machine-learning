@@ -325,7 +325,7 @@ def example_6_time_evolution():
     print(f"\nH =\n{H.matrix}")
     
     initial_state = QuantumStates.plus_state()
-    print(f"\n6.2 Initial state |ψ(0)⟩ = |+⟩:")
+    print("\n6.2 Initial state |ψ(0)⟩ = |+⟩:")
     print(f"State vector: {initial_state.state}")
     
     bloch_initial = BlochSphere.state_to_bloch_vector(initial_state)

@@ -866,7 +866,7 @@ if uploaded_file is not None:
                     alpha_l = st.session_state.l_a if not optimize_hp else 1.0
                     model=Lasso(alpha=alpha_l, max_iter=10000,random_state=42)
                 elif model_type=="Polynomial Regression":
-                    if optimize_hp: model=Ridge(random_state=42); st.write(f"- Ridge (alpha=GS) after Poly")
+                    if optimize_hp: model=Ridge(random_state=42); st.write("- Ridge (alpha=GS) after Poly")
                     else:
                         use_ridge_poly_state = st.session_state.p_r_c
                         alpha_poly_r_state = st.session_state.p_r_a
@@ -1016,7 +1016,7 @@ if uploaded_file is not None:
 
                     if final_model_trained and X_train is not None and not X_train.empty:
                         _est_imp = final_model_trained; _X_imp_train = X_train; _mt_imp = st.session_state.get('model_type_full_global');
-                        st.write(f"Calculating Feature Importance/Coefficients...")
+                        st.write("Calculating Feature Importance/Coefficients...")
                         try:
                             pipe_imp = _est_imp.regressor_ if isinstance(_est_imp, TransformedTargetRegressor) else _est_imp
                             final_model_imp_step = pipe_imp.named_steps['model']
@@ -1075,7 +1075,7 @@ if uploaded_file is not None:
                     primary_metric_short_disp = primary_metric_short
 
                     # --- Performance Metrics Display ---
-                    st.subheader(f"📊 Performance Results")
+                    st.subheader("📊 Performance Results")
                     col_cv, col_test = st.columns(2)
                     with col_cv:
                         st.markdown(f"**Training Set CV Results ({k_folds_run}-Fold Avg ± Std)**")
@@ -1274,7 +1274,7 @@ if uploaded_file is not None:
 
                 if st.session_state.get('lhs_results_df') is not None:
                     res_lhs=st.session_state['lhs_results_df']; pred_col=f'{tgt_lhs}_predicted'
-                    st.subheader("LHS Simulation Results"); st.write(f"Top/Bottom 10 Predictions:"); st.markdown("##### Top 10"); st.dataframe(res_lhs.nlargest(10,pred_col).round(4)); st.markdown("##### Bottom 10"); st.dataframe(res_lhs.nsmallest(10,pred_col).round(4))
+                    st.subheader("LHS Simulation Results"); st.write("Top/Bottom 10 Predictions:"); st.markdown("##### Top 10"); st.dataframe(res_lhs.nlargest(10,pred_col).round(4)); st.markdown("##### Bottom 10"); st.dataframe(res_lhs.nsmallest(10,pred_col).round(4))
                     try: csv_l=res_lhs.to_csv(index=False).encode('utf-8-sig'); st.download_button("⬇️ DL LHS Results",csv_l,f'lhs_{mt_lhs}_{tgt_lhs}_{lhs_n}.csv','text/csv',key='dl_lhs')
                     except Exception as e: st.error(f"DL prep error (LHS): {e}")
 

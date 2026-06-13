@@ -2054,7 +2054,7 @@ def main():
     fig_desc.tight_layout()
     fig_desc.savefig(OUTDIR / "fig_delta_sf_analysis.png", dpi=150, bbox_inches="tight")
     plt.close(fig_desc)
-    print(f"    Saved fig_delta_sf_analysis.png")
+    print("    Saved fig_delta_sf_analysis.png")
 
     # =====================================================================
     # Figure: Ω_Yang vs δ_sf (phase stability map)
@@ -2082,7 +2082,7 @@ def main():
     fig_phase.tight_layout()
     fig_phase.savefig(OUTDIR / "fig_phase_stability_map.png", dpi=150, bbox_inches="tight")
     plt.close(fig_phase)
-    print(f"    Saved fig_phase_stability_map.png")
+    print("    Saved fig_phase_stability_map.png")
 
     # =====================================================================
     # Figures
@@ -2401,7 +2401,7 @@ def main():
 
     # Save results
     ind_df.to_csv(OUTDIR / "independent_test_results.csv", index=False)
-    print(f"\n    Saved independent_test_results.csv")
+    print("\n    Saved independent_test_results.csv")
 
     # --- Figure: Independent test parity plot ---
     fig_ind, axes_ind = plt.subplots(1, 3, figsize=(24, 8))
@@ -2436,10 +2436,10 @@ def main():
     fig_ind.tight_layout()
     fig_ind.savefig(OUTDIR / "fig_independent_test.png", dpi=200, bbox_inches="tight")
     plt.close(fig_ind)
-    print(f"    Saved fig_independent_test.png")
+    print("    Saved fig_independent_test.png")
 
     # Per-alloy detail table
-    print(f"\n    Per-alloy predictions:")
+    print("\n    Per-alloy predictions:")
     print(f"    {'Composition':<30} {'Struct':>5} {'a_exp':>7} {'a_SS':>7} {'Err':>7} {'Ref'}")
     for _, row in ind_df.iterrows():
         print(f"    {row['composition']:<30} {row['struct']:>5} "
@@ -2556,7 +2556,7 @@ def main():
     fpr_om, tpr_om, thresh_om = roc_curve(y_true, omega_scores)
     auc_om = auc(fpr_om, tpr_om)
 
-    print(f"\n    === ROC AUC ===")
+    print("\n    === ROC AUC ===")
     print(f"    δr:          AUC = {auc_dr:.3f}")
     print(f"    δ_sf (comb): AUC = {auc_dsf:.3f}")
     print(f"    Ω (Yang):    AUC = {auc_om:.3f}")
@@ -2571,7 +2571,7 @@ def main():
     prec_om, rec_om, _ = precision_recall_curve(y_true, omega_scores)
     ap_om = average_precision_score(y_true, omega_scores)
 
-    print(f"\n    === Average Precision ===")
+    print("\n    === Average Precision ===")
     print(f"    δr:          AP = {ap_dr:.3f}")
     print(f"    δ_sf (comb): AP = {ap_dsf:.3f}")
     print(f"    Ω (Yang):    AP = {ap_om:.3f}")
@@ -2582,9 +2582,9 @@ def main():
     yz_f1 = f1_score(y_true, yz_pred, zero_division=0)
     cm_yz = confusion_matrix(y_true, yz_pred, labels=[0, 1])
 
-    print(f"\n    === Yang-Zhang Criterion (δr<6.6%, Ω>1.1) ===")
+    print("\n    === Yang-Zhang Criterion (δr<6.6%, Ω>1.1) ===")
     print(f"    Accuracy: {yz_acc:.3f}, F1: {yz_f1:.3f}")
-    print(f"    Confusion matrix (rows=true, cols=pred):")
+    print("    Confusion matrix (rows=true, cols=pred):")
     print(f"      [non-SS pred non-SS, non-SS pred SS] = [{cm_yz[0,0]:2d}, {cm_yz[0,1]:2d}]")
     print(f"      [SS pred non-SS,     SS pred SS    ] = [{cm_yz[1,0]:2d}, {cm_yz[1,1]:2d}]")
 
@@ -2601,14 +2601,12 @@ def main():
     pred_dr_opt = (mp_df["delta_r"] < opt_thresh_dr).astype(int)
     acc_dr_opt = accuracy_score(y_true, pred_dr_opt)
     f1_dr_opt = f1_score(y_true, pred_dr_opt, zero_division=0)
-    cm_dr_opt = confusion_matrix(y_true, pred_dr_opt, labels=[0, 1])
 
     pred_dsf_opt = (mp_df["delta_sf_combined"] < opt_thresh_dsf).astype(int)
     acc_dsf_opt = accuracy_score(y_true, pred_dsf_opt)
     f1_dsf_opt = f1_score(y_true, pred_dsf_opt, zero_division=0)
-    cm_dsf_opt = confusion_matrix(y_true, pred_dsf_opt, labels=[0, 1])
 
-    print(f"\n    === Optimal Thresholds (Youden's J) ===")
+    print("\n    === Optimal Thresholds (Youden's J) ===")
     print(f"    δr:  threshold = {opt_thresh_dr:.2f}%, Acc = {acc_dr_opt:.3f}, F1 = {f1_dr_opt:.3f}")
     print(f"    δ_sf: threshold = {opt_thresh_dsf:.4f}, Acc = {acc_dsf_opt:.3f}, F1 = {f1_dsf_opt:.3f}")
 
@@ -2620,7 +2618,7 @@ def main():
     f1_dsf_yz = f1_score(y_true, pred_dsf_yz, zero_division=0)
     cm_dsf_yz = confusion_matrix(y_true, pred_dsf_yz, labels=[0, 1])
 
-    print(f"\n    === Combined δ_sf + Ω Criterion ===")
+    print("\n    === Combined δ_sf + Ω Criterion ===")
     print(f"    δ_sf<{opt_thresh_dsf:.4f} AND Ω>1.1: Acc = {acc_dsf_yz:.3f}, F1 = {f1_dsf_yz:.3f}")
 
     # ==================================================================
@@ -2711,7 +2709,7 @@ def main():
     fig_roc.tight_layout()
     fig_roc.savefig(OUTDIR / "fig_multiphase_roc.png", dpi=200, bbox_inches="tight")
     plt.close(fig_roc)
-    print(f"\n    Saved fig_multiphase_roc.png")
+    print("\n    Saved fig_multiphase_roc.png")
 
     # --- Figure 2: δr vs δ_sf scatter colored by phase ---
     fig_sc, axes_sc = plt.subplots(1, 3, figsize=(24, 8))
@@ -2786,7 +2784,7 @@ def main():
     fig_sc.tight_layout()
     fig_sc.savefig(OUTDIR / "fig_multiphase_scatter.png", dpi=200, bbox_inches="tight")
     plt.close(fig_sc)
-    print(f"    Saved fig_multiphase_scatter.png")
+    print("    Saved fig_multiphase_scatter.png")
 
     # --- Figure 3: Threshold optimization ---
     fig_thresh, axes_thresh = plt.subplots(1, 2, figsize=(16, 8))
@@ -2847,7 +2845,7 @@ def main():
     fig_thresh.savefig(OUTDIR / "fig_multiphase_threshold.png", dpi=200,
                        bbox_inches="tight")
     plt.close(fig_thresh)
-    print(f"    Saved fig_multiphase_threshold.png")
+    print("    Saved fig_multiphase_threshold.png")
 
     # --- Summary table ---
     print(f"\n    === Discrimination Summary ({len(mp_df)} HEAs) ===")

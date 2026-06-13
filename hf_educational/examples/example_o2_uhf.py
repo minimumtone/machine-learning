@@ -63,7 +63,7 @@ O 0.0 0.0 1.21
                     spin_pop += P_spin[mu, nu] * uhf.S[nu, mu]
         spin_populations.append(spin_pop)
     
-    print(f"\nSpin populations:")
+    print("\nSpin populations:")
     for i, spin_pop in enumerate(spin_populations):
         print(f"  O{i+1}: {spin_pop:8.4f}")
     
@@ -90,7 +90,7 @@ O 0.0 0.0 1.21
     print(f"Converged: {results['converged']}")
     
     spin_props = results['spin_properties']
-    print(f"\nSpin Properties:")
+    print("\nSpin Properties:")
     print(f"  S_z = {spin_props['S_z']:.4f}")
     print(f"  <S²> expected = {spin_props['S2_expected']:.4f}")
     print(f"  <S²> computed = {spin_props['S2_computed']:.4f}")
