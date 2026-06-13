@@ -501,6 +501,8 @@ def check_column_type_safety(
         "pde": "phase_diagram_entry", "als": "alloy_system",
         "mas": "material_alloy_system", "sg": "space_group",
     }
+    # Dynamic aliases override static ones (e.g. cp_bm, c_ni)
+    alias_to_table.update(_extract_aliases_from_sql(sql))
 
     # Pattern: alias.column op 'string_value'
     string_compare = re.compile(
@@ -644,11 +646,10 @@ def check_allowed_columns(
         "pde": "phase_diagram_entry", "als": "alloy_system",
         "mas": "material_alloy_system", "sg": "space_group",
     }
-    # Merge dynamic aliases extracted from the SQL itself (e.g. cp_bm, c_ni)
+    # Merge dynamic aliases extracted from the SQL itself (e.g. cp_bm, c_ni).
+    # Dynamic aliases override static ones since they reflect actual SQL declarations.
     dynamic_aliases = _extract_aliases_from_sql(sql)
-    for alias, table in dynamic_aliases.items():
-        if alias not in alias_to_table:
-            alias_to_table[alias] = table
+    alias_to_table.update(dynamic_aliases)
     disallowed: list[str] = []
     for col_ref in used:
         parts = col_ref.split(".")
