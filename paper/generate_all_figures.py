@@ -442,7 +442,6 @@ def fig06_additive_fit(ob2, ol12, decomp):
         ax.set_ylabel(r"$\Omega_\mathrm{sf}^{(s)}$ (pairwise)")
         n_total = len(x_vals) + len(x_out)
         ax.set_title(f"{title} ({n_total} pairs)  R$^2$ = {decomp[key]['r2']:.3f}")
-        ax.set_aspect("equal")
     fig.tight_layout()
     fig.savefig(OUTDIR / "fig_additive_fit.png", bbox_inches="tight")
     plt.close(fig)
