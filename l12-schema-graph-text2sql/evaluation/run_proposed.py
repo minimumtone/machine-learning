@@ -26,11 +26,11 @@ def run_proposed(
         import psycopg
         import os
         conn = psycopg.connect(
-            host=os.getenv("DB_HOST", "/var/run/postgresql"),
-            port=int(os.getenv("DB_PORT", "5433")),
-            dbname=os.getenv("DB_NAME", "l12_materials"),
-            user=os.getenv("DB_USER", "l12_user"),
-            password=os.getenv("DB_PASSWORD", "l12_password"),
+            host=os.getenv("POSTGRES_HOST", "localhost"),
+            port=int(os.getenv("POSTGRES_PORT", "5432")),
+            dbname=os.getenv("POSTGRES_DB", "l12_materials"),
+            user=os.getenv("POSTGRES_USER", "l12_user"),
+            password=os.getenv("POSTGRES_PASSWORD", "l12_password"),
         )
         ctx = build_schema_context_from_db(conn)
         join_list = ctx["join_list"]
