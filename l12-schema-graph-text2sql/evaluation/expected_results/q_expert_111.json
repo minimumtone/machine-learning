@@ -1,0 +1,20 @@
+{
+  "columns": [
+    "formula",
+    "lattice_a",
+    "bulk_modulus_vrh",
+    "shear_modulus_vrh",
+    "youngs_modulus",
+    "energy_above_hull"
+  ],
+  "rows": [
+    [
+      "Pt3Al",
+      3.9,
+      210,
+      95,
+      "",
+      0
+    ]
+  ]
+}

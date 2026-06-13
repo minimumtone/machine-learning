@@ -1,0 +1,16 @@
+{
+  "columns": [
+    "formula",
+    "lattice_a",
+    "bulk_modulus",
+    "lattice_diff"
+  ],
+  "rows": [
+    [
+      "Ni3Al",
+      3.572,
+      180,
+      0.002000000000000224
+    ]
+  ]
+}

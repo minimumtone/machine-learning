@@ -88,7 +88,7 @@ L1$_2$型金属間化合物を中心とする30テーブル・1{,}470件の
 独立した材料研究者が設計した60件の追加クエリ（統一難易度基準で分類、Easy/Medium/Hard/Very Hard = 12/18/18/12件）では
 平均実行精度62.5\%を記録し、構文正当率100\%を維持した。
 著者設計クエリとの難易度調和比較（同一分類基準）により、
-テーブルカバレッジ偏りとfew-shot最適化バイアスが精度差16ポイントの主因であることを示した。
+テーブルカバレッジ偏りとfew-shot最適化バイアスが精度差8.1ポイントの主因であることを示した。
 材料工学的評価では、既知L1$_2$化合物11件の全件再発見および
 $\gamma'$相候補のランキング出力を達成した。
 本手法は外部キー関係の実行時イントロスペクションに基づくため、
@@ -971,7 +971,7 @@ Rule-basedモードは、辞書ベースで抽出した条件から
 
 決定論的テンプレートベース生成器が、抽出された条件と
 Schema Graph JOIN経路からSQLを構築する。
-外部APIは不要で、レイテンシは約8~ms（表~\ref{tab:latency}参照）。
+外部APIは不要で、レイテンシは$< 1$~ms（表~\ref{tab:latency}参照）。
 
 \paragraph{改訂版での拡張}
 前稿のRule-basedモードでは数値比較WHERE句の生成が不可であったが、
@@ -1577,7 +1577,7 @@ FK整合JOINで正確に検索できる。
 
 \paragraph{設計判断3：計算と物性の親子関係}
 1つのDFT計算から複数の物性値（体積弾性率、剪断弾性率等）が出力されるため、
-\texttt{calculation} $\to$ \texttt{properties}（1:N）の親子関係とした。
+\texttt{calculation} $\to$ \texttt{calculated\_property}（1:N）の親子関係とした。
 物性名・値・単位を行として格納するEAV（Entity-Attribute-Value）パターンにより、
 新しい物性を追加する際にスキーマ変更が不要である。
 
@@ -1606,7 +1606,7 @@ Schema Graph走査エンジンの存在意義である。
 \texttt{calculation}に1行（method=GGA-PBE）、
 \texttt{calculated\_property}にバルクモジュラス（180~GPa）、剪断弾性率（78~GPa）の2行。
 プロトタイプ別のseed CSVファイルから
-\texttt{ingestion/load\_seed\_data.py}により自動投入される。
+\texttt{ingestion/generate\_extended\_data.py}により生成し、\texttt{db/insert\_data.sql}として投入される。
 
 % =====================================================================
 \section{結果}
@@ -1757,7 +1757,7 @@ LLM生成SQLが保存されていないため、精度0の結果のみ同梱CSV�
 曖昧入力（10件）、矛盾条件（2件）、SQLインジェクション（5件）、
 安全性検査（2件）、SQL検証（6件）、Coverage・パーサー（15件）、
 Intent Classifier（20件）の計80件を構築した。
-これらを含む全125件のユニットテストが全PASSを達成した。
+これらを含む全126件のユニットテストが全PASSを達成した。
 テストカテゴリの詳細および全テストケース一覧は
 Supplementary S1--S2節に掲載する。
 
@@ -2610,7 +2610,7 @@ NL $\to$ データ検索 $\to$ 材料設計仮説生成の
   \item \textbf{評価指標の改善}：
     共通カラム照合とLIMIT 10{,}000正規化の併用（合計+53.0pt）により、
     T2SQL評価におけるSELECT列差異とLIMIT切り詰めの影響を排除。
-  \item \textbf{ユニットテスト125/125 PASS}：
+  \item \textbf{ユニットテスト126/126 PASS}：
     SQLインジェクション安全処理、Intent分類を含む
     安全性・頑健性テストに全件合格。
 \end{enumerate}
@@ -2649,12 +2649,12 @@ OQMDの開発・維持管理にあたるNorthwestern大学Wolvertonグループ�
 \section*{Data Availability}
 
 本研究で使用した検証データベース（5プロトタイプ1{,}470エントリ）のseedデータ、
-評価クエリ100件（gold SQL・期待結果セット）、
-5手法の実験結果CSV、回帰テスト39件（付録S2掲載分。全ユニットテスト125件）、
+評価クエリ212件（gold SQL・期待結果セット：著者設計100件＋独立設計100件＋VH追加12件）、
+5手法の実験結果CSV、回帰テスト39件（付録S2掲載分。全ユニットテスト126件）、
 ソースコード一式（Schema Graph走査エンジン・SQLガード・条件抽出器・LLMモード）、
-および検証手順書（VERIFICATION\_GUIDE.md）は
-検証資材リポジトリ（完全リポジトリ）に収録されている。
-デリバリZIPには論文・CSV・コアモジュールのみを含む。
+および検証手順書（README\_DELIVERY.md）と検証スクリプト群（verification\_package/）は
+デリバリZIPに収録されている。
+ZIPにはDocker設定、DBスキーマ、テスト、論文ソース、評価CSV、コアモジュールを含む。
 
 % =====================================================================
 \section*{Author Contributions}
@@ -2718,7 +2718,7 @@ S8節では独立設計クエリプール（100件）の詳細結果（クエリ
 SQL検証テスト6件、Coverage Score・パーサーテスト15件、
 Intent Classifierテスト20件の計80件を構築した（表~\ref{tab:sup_test_categories}）。
 これらに加え、エイリアス解決テスト、スーパーセット検出テスト等を含む
-全125件のユニットテストが全PASSを達成した。
+全126件のユニットテストが全PASSを達成した。
 
 \begin{table*}[htbp]
 \centering

@@ -472,7 +472,7 @@
   "test_counts": {
     "paper_ref": "Section 4.1 (回帰テスト), 結論",
     "regression_tests": 80,
-    "total_unit_tests": 125,
+    "total_unit_tests": 126,
     "note": "pytest tests/ -q で確認"
   },
   "difficulty_distribution": {

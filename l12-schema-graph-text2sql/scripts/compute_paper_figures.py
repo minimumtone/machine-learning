@@ -510,7 +510,7 @@ def main():
 
     test_counts = {
         "regression_tests": 80,
-        "total_unit_tests": 125,
+        "total_unit_tests": 126,
         "note": "pytest tests/ -q で確認"
     }
 

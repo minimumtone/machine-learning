@@ -1,0 +1,22 @@
+{
+  "columns": [
+    "formula",
+    "system_name",
+    "bulk_modulus",
+    "energy_above_hull"
+  ],
+  "rows": [
+    [
+      "Al3Sc",
+      "Co-Ni-Al",
+      155,
+      0
+    ],
+    [
+      "Ni3Cu",
+      "Co-Ni-Al",
+      116.88,
+      0.0005
+    ]
+  ]
+}
