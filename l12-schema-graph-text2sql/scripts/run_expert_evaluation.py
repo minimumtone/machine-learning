@@ -271,7 +271,7 @@ def main():
         json.dump({
             "metadata": {
                 "description": "Independent expert-designed 100 queries evaluation",
-                "model": os.getenv("OPENAI_MODEL", "gpt-5.5"),
+                "model": os.getenv("LLM_MODEL", "gpt-5.5"),
                 "note": ("author_designed and expert_designed were evaluated with different "
                          "pipeline versions. Expert-designed queries use F1>=0.8 for binary "
                          "correct judgment."),

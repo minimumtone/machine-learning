@@ -6768,9 +6768,9 @@ LIMIT 10000;",True,True,1.0,0.21621621621621623,1.0,0.35555555555555557,1.0,0.21
 q_hard_001,Ni基超合金のγ'相候補として有望な、安定または準安定なL1₂型化合物を抽出して。,hard,3,baseline3_rule_based,"SELECT DISTINCT
     m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap
 FROM material_entry m
-    JOIN application_domain ap ON ap.entry_id = m.entry_id
-    JOIN composition c ON c.entry_id = m.entry_id
     JOIN material_application ma ON ma.entry_id = m.entry_id
+    JOIN application_domain ad ON ad.domain_id = ma.domain_id
+    JOIN composition c ON c.entry_id = m.entry_id
     JOIN phase_stability ps ON ps.entry_id = m.entry_id
     JOIN structure s ON s.entry_id = m.entry_id
 WHERE
@@ -6778,7 +6778,7 @@ WHERE
     AND c.element = 'Ni'
     AND (ps.energy_above_hull <= 0.05 OR ps.is_stable = TRUE)
 
-LIMIT 10000;",True,False,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0
+LIMIT 10000;",True,True,0.035897435897435895,1.0,0.035897435897435895,0.0693069306930693,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0
 q_hard_002,L1₂型化合物において、Aサイト元素とBサイト元素の組み合わせが形成エネルギーに与える傾向を調べて。,hard,3,baseline3_rule_based,"SELECT DISTINCT
     m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap
 FROM material_entry m
@@ -6882,10 +6882,10 @@ WHERE
     (s.prototype = 'L12' OR s.strukturbericht = 'L12')
     AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al')
     AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti')
-    AND c.site_label = 'B-site'
+    AND EXISTS (SELECT 1 FROM composition c_sl WHERE c_sl.entry_id = m.entry_id AND c_sl.site_label = 'B-site')
 ORDER BY ps.formation_energy_per_atom ASC
 
-LIMIT 10000;",True,False,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0
+LIMIT 10000;",True,True,0.025,1.0,0.025,0.04878048780487806,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0
 q_hard_011,L1₂化合物のせん断弾性率を表示して。,hard,4,baseline3_rule_based,"SELECT DISTINCT
     m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, et.bulk_modulus_vrh, et.shear_modulus_vrh
 FROM material_entry m
@@ -7062,9 +7062,9 @@ WHERE
     AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al')
     AND EXISTS (SELECT 1 FROM composition c_co WHERE c_co.entry_id = m.entry_id AND c_co.element = 'Co')
     AND EXISTS (SELECT 1 FROM composition c_ti WHERE c_ti.entry_id = m.entry_id AND c_ti.element = 'Ti')
-    AND c.site_label IN ('A-site', 'B-site')
+    AND EXISTS (SELECT 1 FROM composition c_sl WHERE c_sl.entry_id = m.entry_id AND c_sl.site_label IN ('A-site', 'B-site'))
 
-LIMIT 10000;",True,False,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0
+LIMIT 10000;",True,True,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0
 q_hard_028,L1₂型化合物の体積あたり原子数と格子定数の関係を出して。,hard,2,baseline3_rule_based,"SELECT DISTINCT
     m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group
 FROM material_entry m
@@ -7180,9 +7180,9 @@ LIMIT 10000;",True,True,0.18974358974358974,1.0,0.18974358974358974,0.3189655172
 q_vhard_008,Co基超合金のγ'相候補として、Co含有で安定なL1₂化合物をNi3Alとの比較で評価して。,very_hard,4,baseline3_rule_based,"SELECT DISTINCT
     m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap
 FROM material_entry m
-    JOIN application_domain ap ON ap.entry_id = m.entry_id
-    JOIN composition c ON c.entry_id = m.entry_id
     JOIN material_application ma ON ma.entry_id = m.entry_id
+    JOIN application_domain ad ON ad.domain_id = ma.domain_id
+    JOIN composition c ON c.entry_id = m.entry_id
     JOIN phase_stability ps ON ps.entry_id = m.entry_id
     JOIN structure s ON s.entry_id = m.entry_id
 WHERE
@@ -7190,7 +7190,7 @@ WHERE
     AND c.element = 'Co'
     AND ps.is_stable = TRUE
 
-LIMIT 10000;",True,False,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0
+LIMIT 10000;",True,True,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0
 q_vhard_009,L1₂型化合物データベースから、バルクモジュラスとせん断弾性率の比(B/G比)を計算して延性候補を抽出して。,very_hard,4,baseline3_rule_based,"SELECT DISTINCT
     m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, et.bulk_modulus_vrh, et.shear_modulus_vrh
 FROM material_entry m
@@ -7226,8 +7226,8 @@ LIMIT 10000;",True,True,0.09438775510204081,1.0,0.09438775510204081,0.1724941724
 q_vhard_012,Ni基超合金のγ'相代替候補として、Ni-Al系以外で安定なL1₂化合物を格子整合性で評価して。,very_hard,3,baseline3_rule_based,"SELECT DISTINCT
     m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap
 FROM material_entry m
-    JOIN application_domain ap ON ap.entry_id = m.entry_id
     JOIN material_application ma ON ma.entry_id = m.entry_id
+    JOIN application_domain ad ON ad.domain_id = ma.domain_id
     JOIN phase_stability ps ON ps.entry_id = m.entry_id
     JOIN structure s ON s.entry_id = m.entry_id
 WHERE
@@ -7236,7 +7236,7 @@ WHERE
     AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al')
     AND ps.is_stable = TRUE
 
-LIMIT 10000;",True,False,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0
+LIMIT 10000;",True,True,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0
 q_vhard_013,L1₂型化合物で体積弾性率と格子定数を散布図データとして出力して。,very_hard,4,baseline3_rule_based,"SELECT DISTINCT
     m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, et.bulk_modulus_vrh, et.shear_modulus_vrh
 FROM material_entry m

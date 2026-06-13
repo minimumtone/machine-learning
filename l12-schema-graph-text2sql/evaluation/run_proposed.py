@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from llm.sql_generator import pipeline
+from llm.sql_generator import build_schema_context_from_db, pipeline
 
 
 def run_proposed(
@@ -19,13 +19,38 @@ def run_proposed(
     if output_path is None:
         output_path = dataset_path.parent / "proposed_result.json"
 
+    # Try to use full 30-table schema context from live DB
+    join_list = None
+    all_columns = None
+    try:
+        import psycopg
+        import os
+        conn = psycopg.connect(
+            host=os.getenv("DB_HOST", "/var/run/postgresql"),
+            port=int(os.getenv("DB_PORT", "5433")),
+            dbname=os.getenv("DB_NAME", "l12_materials"),
+            user=os.getenv("DB_USER", "l12_user"),
+            password=os.getenv("DB_PASSWORD", "l12_password"),
+        )
+        ctx = build_schema_context_from_db(conn)
+        join_list = ctx["join_list"]
+        all_columns = ctx["all_columns"]
+        conn.close()
+        print(f"Using full schema: {ctx['n_tables']} tables, {ctx['n_columns']} columns")
+    except Exception:
+        print("DB unavailable; using 5-table fallback")
+
     results: list[dict[str, Any]] = []
     with dataset_path.open() as f:
         queries = [json.loads(line) for line in f if line.strip()]
 
     for q in queries:
         t0 = time.time()
-        result = pipeline(q["question"])
+        result = pipeline(
+            q["question"],
+            join_list=join_list,
+            all_columns=all_columns,
+        )
         total_ms = int((time.time() - t0) * 1000)
 
         results.append({

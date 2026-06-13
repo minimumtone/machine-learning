@@ -136,9 +136,18 @@ def map_sort_condition(sort_by: str, sort_order: str) -> dict[str, Any]:
             "structure": "s",
             "material_entry": "m",
             "composition": "c",
+            "calculation": "calc",
+            "calculated_property": "cp",
             "elastic_tensor": "et",
             "thermal_property": "tp",
             "magnetic_property": "mp",
+            "density_of_states": "dos",
+            "band_structure": "bs",
+            "surface_energy": "se",
+            "grain_boundary": "gb",
+            "literature_reference": "lr",
+            "material_defect": "md",
+            "defect_type": "dt",
         }
         alias = alias_map.get(table, table[:2])
         order_sql = f"{alias}.{col} {sort_order.upper()}"
@@ -169,6 +178,13 @@ def map_numeric_condition(cond: dict[str, Any]) -> dict[str, Any]:
         "elastic_tensor": "et",
         "thermal_property": "tp",
         "magnetic_property": "mp",
+        "density_of_states": "dos",
+        "band_structure": "bs",
+        "surface_energy": "se",
+        "grain_boundary": "gb",
+        "literature_reference": "lr",
+        "material_defect": "md",
+        "defect_type": "dt",
     }
     if len(col_parts) == 2:
         table, col = col_parts

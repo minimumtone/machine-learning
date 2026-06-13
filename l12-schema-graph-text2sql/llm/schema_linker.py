@@ -17,9 +17,9 @@ CONDITION_TABLE_MAP: dict[str, list[str]] = {
     "space_group": ["structure"],
     "formation_energy": ["phase_stability"],
     "band_gap": ["phase_stability"],
-    "bulk_modulus": ["elastic_tensor"],
-    "shear_modulus": ["elastic_tensor"],
-    "youngs_modulus": ["elastic_tensor"],
+    "bulk_modulus": ["calculation", "calculated_property"],
+    "shear_modulus": ["calculation", "calculated_property"],
+    "youngs_modulus": ["calculation", "calculated_property"],
     "poisson_ratio": ["elastic_tensor"],
     "elastic_stability": ["elastic_tensor"],
     "total_magnetization": ["magnetic_property"],
@@ -80,9 +80,9 @@ CONDITION_COLUMN_MAP: dict[str, list[str]] = {
     "space_group": ["structure.space_group_number", "structure.space_group"],
     "formation_energy": ["phase_stability.formation_energy_per_atom"],
     "band_gap": ["phase_stability.band_gap"],
-    "bulk_modulus": ["elastic_tensor.bulk_modulus_vrh"],
-    "shear_modulus": ["elastic_tensor.shear_modulus_vrh"],
-    "youngs_modulus": ["elastic_tensor.youngs_modulus"],
+    "bulk_modulus": ["calculated_property.property_name", "calculated_property.value"],
+    "shear_modulus": ["calculated_property.property_name", "calculated_property.value"],
+    "youngs_modulus": ["calculated_property.property_name", "calculated_property.value"],
     "poisson_ratio": ["elastic_tensor.poisson_ratio"],
     "elastic_stability": ["elastic_tensor.is_stable"],
     "total_magnetization": ["magnetic_property.total_magnetization"],
@@ -130,6 +130,7 @@ CONDITION_COLUMN_MAP: dict[str, list[str]] = {
 MULTI_HOP_JOINS: dict[str, list[str]] = {
     "element": ["composition"],
     "element_property": ["composition", "element"],
+    "calculated_property": ["calculation"],
     "synthesis_method": ["material_synthesis"],
     "defect_type": ["material_defect"],
     "literature_reference": ["material_reference"],
@@ -154,17 +155,6 @@ def link_schema(conditions: dict[str, Any]) -> dict[str, Any]:
             required_tables.update(CONDITION_TABLE_MAP[key])
         if key in CONDITION_COLUMN_MAP:
             required_columns.update(CONDITION_COLUMN_MAP[key])
-
-    # Resolve multi-hop dependencies
-    added = True
-    while added:
-        added = False
-        for table in list(required_tables):
-            if table in MULTI_HOP_JOINS:
-                for prereq in MULTI_HOP_JOINS[table]:
-                    if prereq not in required_tables:
-                        required_tables.add(prereq)
-                        added = True
 
     if "sort_by" in conditions:
         col = conditions["sort_by"]
@@ -193,6 +183,17 @@ def link_schema(conditions: dict[str, Any]) -> dict[str, Any]:
     if "formula" in conditions:
         required_columns.add("material_entry.formula")
         required_columns.add("material_entry.reduced_formula")
+
+    # Resolve multi-hop dependencies (after all tables are collected)
+    added = True
+    while added:
+        added = False
+        for table in list(required_tables):
+            if table in MULTI_HOP_JOINS:
+                for prereq in MULTI_HOP_JOINS[table]:
+                    if prereq not in required_tables:
+                        required_tables.add(prereq)
+                        added = True
 
     mapped_fragments = map_conditions(conditions)
 
