@@ -138,12 +138,12 @@ def main() -> int:
 
     # Difficulty breakdown (by_difficulty from proposed)
     by_diff = fig.get("proposed_by_difficulty", {})
-    for diff_key in ["Easy", "Medium", "Hard", "Very Hard"]:
+    for diff_key in ["easy", "medium", "hard", "very_hard"]:
         d = by_diff.get(diff_key, {})
-        acc = d.get("exec_accuracy_pct")
+        acc = d.get("exec_accuracy_pct") or d.get("exec_accuracy")
         if acc is not None:
             check(f"Difficulty {diff_key} accuracy", acc, required=False)
-        n = d.get("n")
+        n = d.get("n") or d.get("total")
         if n is not None:
             check(f"Difficulty {diff_key} count", n, required=False)
 
@@ -191,6 +191,39 @@ def main() -> int:
             errors.append(f"[UNRESOLVED] {u}")
         if len(unresolved) > 10:
             errors.append(f"[UNRESOLVED] ... and {len(unresolved) - 10} more")
+
+    # ================================================================
+    # Part 4: PDF unresolved reference detection (if pdftotext available)
+    # ================================================================
+    pdf_path = ROOT / "paper" / "t2sql_materials_paper.pdf"
+    if pdf_path.exists():
+        import subprocess
+        try:
+            result = subprocess.run(
+                ["pdftotext", str(pdf_path), "-"],
+                capture_output=True, text=True, timeout=30
+            )
+            if result.returncode == 0:
+                pdf_text = result.stdout
+                pdf_unresolved = []
+                for pattern, desc in [
+                    (r'(?<!\w)\?\?(?!\w)', 'unresolved reference ??'),
+                    (r'\[\?\]', 'unresolved citation [?]'),
+                ]:
+                    for m in re.finditer(pattern, pdf_text):
+                        ctx_start = max(0, m.start() - 20)
+                        ctx_end = min(len(pdf_text), m.end() + 20)
+                        ctx = pdf_text[ctx_start:ctx_end].replace('\n', ' ')
+                        pdf_unresolved.append(f"{desc}: ...{ctx}...")
+                if pdf_unresolved:
+                    for u in pdf_unresolved[:10]:
+                        errors.append(f"[PDF] {u}")
+                    if len(pdf_unresolved) > 10:
+                        errors.append(f"[PDF] ... and {len(pdf_unresolved) - 10} more")
+                else:
+                    print("PDF: no unresolved references found")
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            warnings.append("pdftotext not available; PDF check skipped")
 
     # ================================================================
     # Report

@@ -1,39 +1,39 @@
-# L1₂ Schema-Graph-Assisted Text-to-SQL — デリバリZIP向けガイド
+# L1₂ Schema-Graph-Assisted Text-to-SQL — 配布ZIP向けガイド
 
-> **このドキュメントはデリバリZIP同梱用です。**
-> 完全リポジトリ（Docker・DB・テスト含む）での再現手順は `README.md` を参照してください。
+> **このドキュメントは配布ZIP同梱用です。**
+> 本ZIPはリポジトリの完全検証可能パッケージです。
 
 ## ZIP内容物
 
-本ZIPには以下が含まれます:
+本ZIPはリポジトリのほぼ完全なコピーであり、以下が含まれます:
 
+### 論文・評価データ
 - **論文PDF** (`paper/t2sql_materials_paper.pdf`)
+- **論文TeXソース** (`paper/t2sql_materials_paper.tex`)
+- **論文数値JSON** (`paper/paper_figures.json` — Single Source of Truth)
 - **評価結果CSV** (`evaluation/proposed_result*.csv`, `baseline_result.csv`)
 - **分析用注釈付CSV** (`evaluation/proposed_result_annotated.csv` — `n_tables`/`ntables_difficulty`/`original_difficulty`列付き。代表ランCSVはrun2とバイト同一を維持)
 - **Gold SQL** (`evaluation/gold_sql/` 200件：著者設計100件 + 独立設計100件)
 - **期待結果JSON** (`evaluation/expected_results/` 200件：著者設計100件 + 独立設計100件)
+- **独立評価結果** (`evaluation/expert_evaluation_results.json`)
 - **材料分析CSV** (`evaluation/known_l12_recovery.csv`, `stable_l12_candidates.csv`, `gamma_prime_candidate_ranking.csv`, `ni3al_lattice_matched_candidates.csv`)
 - **プロトタイプ分布** (`evaluation/prototype_distribution.csv` — L12=392件等の集計根拠)
-- **ソースコード** (`graph/`, `llm/`, `safety/`, `evaluation/metrics.py`)
-- **評価スクリプト** (`scripts/run_full_evaluation.py`, `scripts/run_proposed_only.py`, `scripts/compute_paper_figures.py`)
-- **安全検査定義** (`safety/allowed_schema.yaml`)
-- **論文数値JSON** (`paper/paper_figures.json` — Single Source of Truth)
-- **数値検証スクリプト** (`scripts/validate_paper_numbers.py` — `paper_figures.json`とTeX本文の整合検証）
 
-## ZIP に含まれないもの
+### ソースコード
+- **スキーマグラフ** (`graph/` — schema_parser, graph_builder, traversal_engine, join_path_generator)
+- **LLM連携** (`llm/` — entity_extractor, schema_linker, condition_mapper, sql_generator, few_shot_store)
+- **SQL安全検査** (`safety/` — sql_validator.py 14種検証, sql_guard.py, allowed_schema.yaml)
+- **評価スクリプト** (`scripts/run_full_evaluation.py`, `scripts/run_proposed_only.py`, `scripts/compute_paper_figures.py`, `scripts/validate_paper_numbers.py`)
+- **データ生成** (`ingestion/` — generate_extended_data.py, data_normalizer.py)
+- **FastAPI** (`api/main.py`)
 
-以下はリポジトリ内にのみ存在し、ZIPには同梱されていません:
-
-| ファイル/ディレクトリ | 用途 |
-|---|---|
-| `pyproject.toml` | Python依存パッケージ定義 |
-| `docker/` | Docker Compose設定 |
-| `db/` | スキーマSQL・データ投入SQL |
-| `tests/` | ユニットテスト125件 |
-| `api/` | FastAPIアプリケーション |
-| `.env.example` | 環境変数テンプレート |
-| `experiments/` | アブレーション実験スクリプト・結果 |
-| `VERIFICATION_GUIDE.md` | 検証手順書 |
+### インフラ・テスト
+- **Docker設定** (`docker/docker-compose.yml`)
+- **DB定義** (`db/extended_schema.sql`, `db/insert_data.sql` — 1,470件)
+- **テスト** (`tests/` — 125件)
+- **依存定義** (`pyproject.toml`)
+- **環境変数テンプレート** (`.env.example`)
+- **実験スクリプト** (`experiments/`)
 
 ## 検証可能な項目（ZIP単体）
 
@@ -113,6 +113,18 @@ python scripts/run_full_evaluation.py  # 100クエリ×5手法 (10-15分)
 | v2 (現行) | 72.7, 70.6, 69.4 | 70.9%±1.7pp | 69.3ランのCSV復元不可→新規Run 1を独立再評価 |
 
 代表ラン = Run 2 (70.6%, 中央値ラン) を `proposed_result.csv` として使用。
+
+## 独立評価の再採点経緯
+
+| 版 | 平均実行精度 | 二値正答率 | 根拠 |
+|---|---|---|---|
+| v10以前 | 79.3% | 77.0% | 旧DB（insert_data.sql変更前）で評価。expected_resultsとJSONが74/100件不一致 |
+| v11（現行） | **76.6%** | **67.0%** | 現DB（insert_data.sql最終版）で再採点。expected_results全100件一致 |
+
+生成SQLは100件すべて旧版と同一（再ランではない）。insert_data.sqlがv10以前の評価後に
+3回変更され（commit `82a661e`, `1bd9f2e`, `41a1861`）、DB状態が変化したため
+同じSQLでも期待結果の行数が変わり、22件の正誤が反転した（16件↓6件↑）。
+著者設計100件のexpected_resultsは現DBと完全一致しており影響なし。
 
 ## JOIN方向バグ修正の影響確認
 
