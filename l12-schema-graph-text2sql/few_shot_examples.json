@@ -180,5 +180,51 @@
     },
     "row_count": 392,
     "source": "seed:easy_pattern"
+  },
+  {
+    "nl_query": "L1₂型化合物のγ'相候補をランキングして、安定性とバルクモジュラスで評価して。",
+    "sql": "SELECT m.formula, s.lattice_a, ps.energy_above_hull,\n       cp_bm.value AS bulk_modulus,\n       ABS(s.lattice_a - 3.57) AS lattice_mismatch\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\n     AND cp_bm.property_name = 'bulk_modulus'\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY ps.energy_above_hull ASC, cp_bm.value DESC\nLIMIT 10000;",
+    "conditions": {
+      "prototype": "L12",
+      "bulk_modulus": true
+    },
+    "row_count": 392,
+    "source": "seed:vhard_pattern"
+  },
+  {
+    "nl_query": "安定なL1₂化合物のバルクモジュラスとせん断弾性率を同時に出して。",
+    "sql": "SELECT m.formula, ps.energy_above_hull,\n       cp_bm.value AS bulk_modulus,\n       cp_sm.value AS shear_modulus\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\n     AND cp_bm.property_name = 'bulk_modulus'\nJOIN calculated_property cp_sm ON cp_sm.calculation_id = calc.calculation_id\n     AND cp_sm.property_name = 'shear_modulus'\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.001\nORDER BY cp_bm.value DESC\nLIMIT 10000;",
+    "conditions": {
+      "prototype": "L12",
+      "stability": "stable",
+      "bulk_modulus": true
+    },
+    "row_count": 8,
+    "source": "seed:vhard_pattern"
+  },
+  {
+    "nl_query": "Aサイト元素ごとにL1₂型化合物の平均格子定数と安定割合を集計して。",
+    "sql": "SELECT c.element AS a_site_element,\n       COUNT(*) AS total,\n       AVG(s.lattice_a) AS avg_lattice_a,\n       SUM(CASE WHEN ps.energy_above_hull <= 0.001 THEN 1 ELSE 0 END) AS stable_count\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.site_label = 'A-site'\nGROUP BY c.element\nORDER BY total DESC\nLIMIT 10000;",
+    "conditions": {
+      "prototype": "L12",
+      "site_label": "A-site"
+    },
+    "row_count": 30,
+    "source": "seed:vhard_pattern"
+  },
+  {
+    "nl_query": "NiまたはCoを含む安定なL1₂化合物でバルクモジュラスが高いトップ10を出して。",
+    "sql": "SELECT DISTINCT m.formula, cp_bm.value AS bulk_modulus, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\n     AND cp_bm.property_name = 'bulk_modulus'\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.001\n  AND (EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni')\n       OR EXISTS (SELECT 1 FROM composition c_co WHERE c_co.entry_id = m.entry_id AND c_co.element = 'Co'))\nORDER BY cp_bm.value DESC\nLIMIT 10;",
+    "conditions": {
+      "prototype": "L12",
+      "stability": "stable",
+      "contains_elements": [
+        "Ni",
+        "Co"
+      ],
+      "bulk_modulus": true
+    },
+    "row_count": 3,
+    "source": "seed:vhard_pattern"
   }
 ]

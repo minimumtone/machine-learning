@@ -264,15 +264,21 @@ def _rule_based_fallback(
         ),
     }
 
+    # Map each indirect join to the prerequisite tables it includes
+    _indirect_discards: dict[str, list[str]] = {
+        "calculated_property": ["calculation"],
+        "literature_reference": ["material_reference"],
+        "application_domain": ["material_application"],
+    }
+
     sorted_tables = sorted(tables_needed)
     for t in sorted_tables:
         if t not in tables_needed:
             continue
         if t in indirect_join_map:
             joins.append(indirect_join_map[t])
-            tables_needed.discard("calculation")
-            tables_needed.discard("material_reference")
-            tables_needed.discard("material_application")
+            for dep in _indirect_discards.get(t, []):
+                tables_needed.discard(dep)
         else:
             a = alias_map.get(t, t[:2])
             joins.append(f"JOIN {t} {a} ON {a}.entry_id = m.entry_id")

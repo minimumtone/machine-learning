@@ -49,23 +49,28 @@ _schema_ctx: dict[str, list[str]] | None = None
 
 
 def _get_schema_ctx() -> dict[str, list[str]]:
-    """Lazily build and cache schema context from the live DB."""
+    """Lazily build and cache schema context from the live DB.
+
+    On connection failure, returns fallback without caching so
+    subsequent requests retry (e.g. DB not yet ready at startup).
+    """
     global _schema_ctx  # noqa: PLW0603
-    if _schema_ctx is None:
-        try:
-            import psycopg
-            conn = psycopg.connect(
-                host=os.getenv("DB_HOST", "/var/run/postgresql"),
-                port=int(os.getenv("DB_PORT", "5433")),
-                dbname=os.getenv("DB_NAME", "l12_materials"),
-                user=os.getenv("DB_USER", "l12_user"),
-                password=os.getenv("DB_PASSWORD", "l12_password"),
-            )
-            _schema_ctx = build_schema_context_from_db(conn)
-            conn.close()
-        except Exception:
-            _schema_ctx = {"join_list": None, "all_columns": None}
-    return _schema_ctx
+    if _schema_ctx is not None:
+        return _schema_ctx
+    try:
+        import psycopg
+        conn = psycopg.connect(
+            host=os.getenv("POSTGRES_HOST", "localhost"),
+            port=int(os.getenv("POSTGRES_PORT", "5432")),
+            dbname=os.getenv("POSTGRES_DB", "l12_materials"),
+            user=os.getenv("POSTGRES_USER", "l12_user"),
+            password=os.getenv("POSTGRES_PASSWORD", "l12_password"),
+        )
+        _schema_ctx = build_schema_context_from_db(conn)
+        conn.close()
+        return _schema_ctx
+    except Exception:
+        return {"join_list": None, "all_columns": None}
 
 
 @app.post("/query", response_model=QueryResponse)
