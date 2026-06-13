@@ -1,5 +1,5 @@
-# Paper ref: Supplementary (tab:sup_lattice_match) -- Ni3Al lattice-matched 32 candidates
-# a_ref = 3.57 A (rounded from Ni3Al CSV value 3.572 A), |da| <= 0.03 A after ROUND(4) for float boundary
+# Paper ref: Supplementary (tab:sup_lattice_match) -- Ni3Al lattice-matched 31 candidates
+# a_ref = 3.57 A (rounded from Ni3Al CSV value 3.572 A), |da| <= 0.03 A strictly
 formula,lattice_a,lattice_diff_ni3al,energy_above_hull,formation_energy_per_atom
 Ag3Ti,3.5642,0.005799999999999805,0.0393,0.0882
 Au3Mn,3.5868,0.01680000000000037,0.0452,-0.2608
@@ -24,7 +24,6 @@ Pd3V,3.5821,0.012100000000000222,0.0752,-0.0937
 Pd3Zr,3.5596,0.010399999999999743,0.1046,0.0193
 Pt3Ge,3.5496,0.020399999999999974,0.0207,-0.4783
 Rh3In,3.5854,0.01540000000000008,0.056,-0.415
-Rh3Sb,3.5396,0.03039999999999976,0.0239,-0.4879
 Rh3Zr,3.5744,0.0043999999999999595,0.0263,-0.5252
 Ta3In,3.5403,0.02970000000000006,0.0765,0.028
 W3Ga,3.5941,0.024100000000000232,0.0596,-0.1458

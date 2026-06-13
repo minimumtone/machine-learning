@@ -454,7 +454,7 @@
     "gamma_prime_ranking_total": 259,
     "gamma_prime_top1_formula": "Ni3Al",
     "gamma_prime_top1_score": 0.8776666666666664,
-    "lattice_matched_candidates": 32
+    "lattice_matched_candidates": 31
   },
   "db_stats": {
     "paper_ref": "Abstract, Section 3.1",
