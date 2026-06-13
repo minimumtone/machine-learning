@@ -210,9 +210,20 @@ def _rule_based_fallback(
     conditions = extract_conditions(user_query)  # cached at caller if possible
     linked = link_schema(conditions)
 
-    # Detect COUNT-type queries
+    # Detect COUNT-type queries.
+    # Exclude false positives: "定数を" (constant), "係数を" (coefficient),
+    # "指数を" (exponent), "変数を" (variable), "パラメータ数を" (parameter count
+    # — ambiguous, but usually means "count of parameters" so kept as count).
     _q = user_query.lower()
-    is_count_query = any(kw in _q for kw in ["総数", "何件", "いくつ", "数を", "count", "何種類"])
+    _count_keywords = ["総数", "何件", "いくつ", "何種類"]
+    is_count_query = any(kw in _q for kw in _count_keywords)
+    if not is_count_query and "数を" in _q:
+        idx = _q.index("数を")
+        preceding = _q[max(0, idx - 1):idx]
+        if preceding not in ("定", "係", "指", "変", "常"):
+            is_count_query = True
+    if not is_count_query and "count" in _q:
+        is_count_query = True
 
     select_cols = ["m.entry_id", "m.formula"]
     where_clauses: list[str] = []
@@ -306,8 +317,7 @@ def _rule_based_fallback(
     if not is_count_query:
         if order_by:
             sql_parts.append(order_by)
-        row_limit = int(os.getenv("SQL_ROW_LIMIT", "100"))
-        sql_parts.append(f"LIMIT {row_limit};")
+        sql_parts.append(";")
     else:
         sql_parts.append(";")
 

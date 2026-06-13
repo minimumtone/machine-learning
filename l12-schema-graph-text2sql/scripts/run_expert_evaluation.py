@@ -241,8 +241,10 @@ def main():
         if r["is_correct"]:
             diff_stats[d]["correct"] += 1
 
-    # Mean execution accuracy (continuous, distinct from binary correct rate)
+    # Continuous metrics (distinct from binary correct rate)
     mean_exec_acc = sum(r["execution_accuracy"] for r in results) / len(results) * 100
+    mean_exec_prec = sum(r["execution_precision"] for r in results) / len(results) * 100
+    mean_exec_f1 = sum(r["execution_f1"] for r in results) / len(results) * 100
 
     print("\n" + "="*60)
     print("EXPERT EVALUATION RESULTS (Proposed Method)")
@@ -250,7 +252,7 @@ def main():
     print(f"Total queries:       {total}")
     print(f"Syntax valid:        {syntax_ok}/{total} ({100*syntax_ok/total:.1f}%)")
     print(f"Execution success:   {exec_success}/{total} ({100*exec_success/total:.1f}%)")
-    print(f"Correct (acc>=0.8):  {correct}/{total} ({100*correct/total:.1f}%)")
+    print(f"Correct (F1>=0.8):   {correct}/{total} ({100*correct/total:.1f}%)")
     print()
     print("By difficulty:")
     for d in ["easy", "medium", "hard", "very_hard"]:
@@ -263,21 +265,26 @@ def main():
     print("  著者設計100件:   (re-evaluate with same pipeline)")
     print(f"  独立設計100件:   {100*correct/total:.1f}% (F1-based)")
 
-    # Save detailed results
+    # Save detailed results — schema matches compute_paper_figures.py expectations
     output_path = EVAL_DIR / "expert_evaluation_results.json"
     with open(output_path, "w") as f:
         json.dump({
-            "paper_ref": {
-                "summary": "Table (tab:independent_eval) -- author vs independent evaluation",
-                "by_difficulty": "Table (tab:independent_eval) difficulty rows",
-                "results": "Supplementary (tab:sup_expert_detail), (tab:sup_expert_category)",
+            "metadata": {
+                "description": "Independent expert-designed 100 queries evaluation",
+                "model": os.getenv("OPENAI_MODEL", "gpt-5.5"),
+                "note": ("author_designed and expert_designed were evaluated with different "
+                         "pipeline versions. Expert-designed queries use F1>=0.8 for binary "
+                         "correct judgment."),
             },
             "summary": {
                 "total": total,
                 "syntax_valid": syntax_ok,
                 "execution_success": exec_success,
                 "correct": correct,
-                "accuracy": round(100 * correct / total, 1),
+                "binary_correct_rate": round(100 * correct / total, 1),
+                "mean_execution_accuracy": round(mean_exec_acc, 1),
+                "mean_execution_precision": round(mean_exec_prec, 1),
+                "mean_execution_f1": round(mean_exec_f1, 1),
                 "by_difficulty": {d: {"correct": s["correct"], "total": s["total"],
                                       "accuracy": round(100*s["correct"]/s["total"], 1)}
                                   for d, s in diff_stats.items()},
