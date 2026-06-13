@@ -118,13 +118,27 @@ def main() -> int:
         if bl_acc is not None:
             check(f"Baseline {bl_key} accuracy", bl_acc, required=False)
 
-    # Independent evaluation
+    # Independent evaluation (harmonized 60-query set)
     indep = fig.get("independent_eval", {})
     if indep:
-        for key in ["binary_correct_rate", "mean_exec_accuracy"]:
+        for key in ["binary_correct_rate", "mean_exec_accuracy", "total"]:
             val = indep.get(key)
             if val is not None:
                 check(f"independent_eval.{key}", val)
+
+    # Harmonized comparison
+    harmonized = fig.get("harmonized_comparison", {})
+    if harmonized:
+        for side in ["author", "expert"]:
+            side_data = harmonized.get(side, {})
+            overall = side_data.get("overall_accuracy")
+            if overall is not None:
+                check(f"harmonized_{side}_overall", overall)
+            by_diff = side_data.get("by_difficulty", {})
+            for diff_key in ["easy", "medium", "hard", "very_hard"]:
+                val = by_diff.get(diff_key)
+                if val is not None:
+                    check(f"harmonized_{side}_{diff_key}", val, required=False)
 
     # Latency
     latency = proposed.get("avg_latency_ms")
@@ -160,17 +174,18 @@ def main() -> int:
         "Stable L12 count": 8,
         "Metastable L12 count": 154,
         "Gamma-prime ranking total": 259,
-        "Independent binary correct rate": 67.0,
-        "Independent mean accuracy": 76.6,
+        "Expert total queries": 60,
+        "Expert mean accuracy": 62.5,
+        "Expert binary correct rate": 53.3,
     }
     for label, val in critical_values.items():
         check(f"[CRITICAL] {label}", val)
 
-    # Independent eval difficulty breakdown
+    # Independent eval difficulty breakdown (new format: by_difficulty.{diff}.mean_accuracy)
     indep_by_diff = indep.get("by_difficulty", {})
     for diff_key in ["easy", "medium", "hard", "very_hard"]:
         d = indep_by_diff.get(diff_key, {})
-        acc = d.get("accuracy")
+        acc = d.get("mean_accuracy")
         if acc is not None:
             check(f"Independent {diff_key} accuracy", acc, required=False)
 

@@ -354,38 +354,91 @@
   },
   "independent_eval": {
     "paper_ref": "Table (tab:independent_eval), 独立評価セクション",
-    "total": 100,
-    "syntax_valid": 100,
-    "execution_success": 100,
-    "binary_correct": 67,
-    "binary_correct_rate": 67.0,
-    "mean_exec_accuracy": 76.6,
-    "mean_exec_precision": 72.6,
-    "mean_exec_f1": 69.8,
+    "total": 60,
+    "distribution": {
+      "easy": 12,
+      "medium": 18,
+      "hard": 18,
+      "very_hard": 12
+    },
+    "classification_method": "Unified complexity score: tables*3 + conditions + group_by*2 + exists*3 + subquery*3",
+    "thresholds": {
+      "easy": "<8",
+      "medium": "8-11",
+      "hard": "12-16",
+      "very_hard": ">=17"
+    },
+    "mean_exec_accuracy": 62.5,
+    "binary_correct_rate": 53.3,
+    "binary_correct_count": 31,
+    "syntax_valid": 60,
+    "execution_success": 60,
     "by_difficulty": {
       "easy": {
-        "correct": 14,
-        "total": 18,
-        "accuracy": 77.8,
-        "mean_exec_accuracy": 83.3
+        "count": 12,
+        "mean_accuracy": 83.3,
+        "correct_count": 9,
+        "correct_rate": 75.0
       },
       "medium": {
-        "correct": 25,
-        "total": 34,
-        "accuracy": 73.5,
-        "mean_exec_accuracy": 84.2
+        "count": 18,
+        "mean_accuracy": 69.9,
+        "correct_count": 10,
+        "correct_rate": 55.6
       },
       "hard": {
-        "correct": 16,
-        "total": 34,
-        "accuracy": 47.1,
-        "mean_exec_accuracy": 58.3
+        "count": 18,
+        "mean_accuracy": 70.1,
+        "correct_count": 11,
+        "correct_rate": 61.1
       },
       "very_hard": {
-        "correct": 12,
-        "total": 14,
-        "accuracy": 85.7,
-        "mean_exec_accuracy": 94.2
+        "count": 12,
+        "mean_accuracy": 19.4,
+        "correct_count": 2,
+        "correct_rate": 16.7
+      }
+    }
+  },
+  "harmonized_comparison": {
+    "paper_ref": "Table (tab:harmonized_comparison), 難易度調和比較セクション",
+    "classification_method": "Unified complexity score: tables*3 + conditions + group_by*2 + exists*3 + subquery*3",
+    "thresholds": {
+      "easy": "<8",
+      "medium": "8-11",
+      "hard": "12-16",
+      "very_hard": ">=17"
+    },
+    "expert": {
+      "total": 60,
+      "distribution": {
+        "easy": 12,
+        "medium": 18,
+        "hard": 18,
+        "very_hard": 12
+      },
+      "overall_accuracy": 62.5,
+      "by_difficulty": {
+        "easy": 83.3,
+        "medium": 69.9,
+        "hard": 70.1,
+        "very_hard": 19.4
+      }
+    },
+    "author": {
+      "total": 100,
+      "distribution": {
+        "easy": 12,
+        "medium": 18,
+        "hard": 41,
+        "very_hard": 29
+      },
+      "overall_accuracy": 70.6,
+      "by_difficulty": {
+        "easy": 100.0,
+        "medium": 94.5,
+        "hard": 78.3,
+        "very_hard": 32.7
       }
     }
   },
