@@ -56,7 +56,14 @@
   "phase_classification": {
     "n_HEA": 54,
     "AUC_delta_r": 0.869,
-    "AUC_delta_sf": 0.723
+    "AUC_delta_sf": 0.723,
+    "accuracy_delta_r": 0.815,
+    "accuracy_delta_sf": 0.704,
+    "F1_delta_r": 0.833,
+    "F1_delta_sf": 0.784,
+    "threshold_delta_r_pct": 4.72,
+    "threshold_delta_sf": 0.016,
+    "convention": "non-SS (IM+AM) = positive class"
   },
   "noise_floor": {
     "sigma_approx": 0.016,
