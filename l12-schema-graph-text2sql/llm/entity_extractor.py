@@ -600,6 +600,26 @@ def compute_coverage(
     }
 
 
+def _detect_element_logic(query: str, elements: list[str]) -> str:
+    """Detect whether multi-element references use AND or OR logic.
+
+    Returns "OR" for disjunctive patterns ("NiまたはCo", "Ni or Co"),
+    "AND" for conjunctive patterns (default: "Ni-Al系", "NiとAl").
+    """
+    q = query.lower()
+    # Build pattern between element pairs to check connectors
+    _or_markers = ["または", "もしくは", "あるいは", "いずれか"]
+    for marker in _or_markers:
+        if marker in query:
+            return "OR"
+
+    # English "or" between elements
+    if re.search(r"\bor\b", q):
+        return "OR"
+
+    return "AND"
+
+
 def extract_conditions(query: str) -> dict[str, Any]:
     """Extract all structured conditions from a natural language query.
 
@@ -617,6 +637,8 @@ def extract_conditions(query: str) -> dict[str, Any]:
     elements = extract_elements(query, terms)
     if elements:
         result["contains_elements"] = elements
+        if len(elements) >= 2:
+            result["element_logic"] = _detect_element_logic(query, elements)
 
     stability = extract_stability(query, terms)
     if stability:

@@ -288,7 +288,7 @@ def _rule_based_fallback(
         sql_f = frag["sql_fragment"]
         if frag["type"] == "sort":
             order_by = sql_f
-        elif frag["type"] == "element_exists":
+        elif frag["type"] in ("element_exists", "element_or"):
             has_exists_elements = True
             where_clauses.append(sql_f)
         else:
@@ -298,7 +298,7 @@ def _rule_based_fallback(
         has_site_label = any(
             "site_label" in frag["sql_fragment"]
             for frag in linked["sql_fragments"]
-            if frag["type"] not in ("sort", "element_exists")
+            if frag["type"] not in ("sort", "element_exists", "element_or")
         )
         if has_site_label:
             # Convert site_label conditions to EXISTS subqueries
