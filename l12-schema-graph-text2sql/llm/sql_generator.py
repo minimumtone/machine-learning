@@ -656,12 +656,17 @@ def pipeline(
         join_clause = generate_joins_for_tables(
             table_graph, linked["required_tables"]
         )
-        filtered_joins = (
-            get_allowed_join_list(table_graph)
-            if join_clause
-            else [j for j in join_list
-                  if any(t in j for t in linked["required_tables"])]
-        )
+        if join_clause:
+            req = set(linked["required_tables"])
+            filtered_joins = [
+                j for j in get_allowed_join_list(table_graph)
+                if any(t in j for t in req)
+            ]
+        else:
+            filtered_joins = [
+                j for j in join_list
+                if any(t in j for t in linked["required_tables"])
+            ]
     else:
         filtered_joins = [
             j for j in join_list

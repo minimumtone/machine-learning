@@ -169,14 +169,23 @@ def generate_joins_for_tables(
 def get_allowed_join_list(
     table_graph: nx.Graph,
 ) -> list[str]:
-    """Return a list of allowed join conditions from the table graph."""
+    """Return a list of allowed join conditions from the table graph.
+
+    Uses ``_edge_source`` attribute to emit correct column mappings
+    regardless of NetworkX iteration order.
+    """
     joins: list[str] = []
-    # Fix B12: Emit both directions so that join matching works regardless of
-    # which table appears on each side of the = in generated SQL.
     for u, v, data in table_graph.edges(data=True):
         sc = data.get("source_column", "")
         tc = data.get("target_column", "")
-        if sc and tc:
-            joins.append(f"{u}.{sc} = {v}.{tc}")
-            joins.append(f"{v}.{tc} = {u}.{sc}")  # reverse
+        if not sc or not tc:
+            continue
+        edge_src = data.get("_edge_source")
+        if edge_src is not None and edge_src != u:
+            # NetworkX yielded (target, source) — swap to canonical direction
+            src_table, tgt_table = v, u
+        else:
+            src_table, tgt_table = u, v
+        joins.append(f"{src_table}.{sc} = {tgt_table}.{tc}")
+        joins.append(f"{tgt_table}.{tc} = {src_table}.{sc}")
     return joins
