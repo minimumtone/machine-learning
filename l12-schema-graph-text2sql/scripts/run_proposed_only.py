@@ -266,6 +266,7 @@ def main():
                         allowed_joins=effective_joins,
                         coverage=coverage,
                         conditions=query_conditions,
+                        required_tables=linked_tables,
                         max_retries=3,
                         model=model,
                         api_key=api_key,

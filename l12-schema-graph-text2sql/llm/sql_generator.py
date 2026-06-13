@@ -123,6 +123,7 @@ def generate_sql_via_llm(
     allowed_joins: list[str],
     model: str | None = None,
     api_key: str | None = None,
+    temperature: float | None = None,
 ) -> dict[str, Any]:
     """Call the OpenAI API to generate SQL from a constrained prompt.
 
@@ -177,8 +178,10 @@ def generate_sql_via_llm(
     _is_new_model = model and any(t in model for t in ("gpt-5", "o1", "o3", "o4"))
     if _is_new_model:
         create_kwargs["max_completion_tokens"] = 4096
+        if temperature is not None and temperature > 0:
+            create_kwargs["temperature"] = temperature
     else:
-        create_kwargs["temperature"] = 0.0
+        create_kwargs["temperature"] = temperature if temperature is not None else 0.0
         create_kwargs["max_tokens"] = 4096  # Fix B7: unified budget
     resp = client.chat.completions.create(**create_kwargs)
     latency_ms = int((time.time() - t0) * 1000)
@@ -640,11 +643,14 @@ def pipeline(
     total_latency = 0
 
     for i in range(n_best):
+        # Vary temperature for candidate diversity (0.0, 0.3, 0.6, ...)
+        temp_override = round(i * 0.3, 1) if i > 0 else 0.0
         gen_result = generate_sql_via_llm(
             user_query=user_query,
             allowed_tables=linked["required_tables"],
             allowed_columns=filtered_columns,
             allowed_joins=filtered_joins,
+            temperature=temp_override,
         )
         sql = gen_result.get("sql", "")
         total_tokens += gen_result.get("tokens", 0)
