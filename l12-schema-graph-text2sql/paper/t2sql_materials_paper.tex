@@ -2176,12 +2176,12 @@ Proposed手法の精度を再評価した。
 表面・粒界・欠陥、文献・合成・応用、材料設計・スクリーニング、
 比較・統計）から構成され、30テーブルの拡張スキーマ全体を対象とする。
 
-\begin{table}[htbp]
+\begin{table}[tbp]
   \centering
   \caption{著者設計クエリと独立設計クエリの精度比較。「平均実行精度」は連続値の単純平均、
   「二値正答率」は実行F1$\geq 0.8$で二値化した正答率である。}
   \label{tab:independent_eval}
-  \small
+  \footnotesize
   \begin{tabular}{lcc}
     \toprule
     指標 & 著者設計 (100件) & 独立設計 (100件) \\
@@ -2315,11 +2315,11 @@ gpt-5.5は温度パラメータの外部制御が不可能なため、同一入�
 オープンモデルでの追試、および
 DAIL-SQL/DIN-SQL等の既存SOTAパイプラインを同DBに適用した比較も未実施である。
 
-\begin{table}[htbp]
+\begin{table}[tbp]
   \centering
   \caption{Proposed手法の3回独立実行結果。}
   \label{tab:3run_stats}
-  \small
+  \footnotesize
   \begin{tabular}{lccccc}
     \hline
     & Easy & Medium & Hard & V.Hard & \textbf{全体} \\
@@ -2390,7 +2390,7 @@ LLM API呼び出し削減の双方に直結するため、優先度の高い改�
 \caption{失敗パターンのデータ規模依存性}
 \label{tab:scale_dependency}
 \footnotesize
-\begin{tabular}{p{2.4cm}cp{3.2cm}}
+\begin{tabular}{p{2.0cm}cp{2.8cm}}
 \hline
 失敗パターン & 規模依存性 & 根拠 \\
 \hline
@@ -2431,7 +2431,7 @@ GROUP BY+集約関数の生成自体はデータ量に非依存だが、
 \caption{データ規模別の予測精度}
 \label{tab:scale_accuracy}
 \footnotesize
-\begin{tabular}{lcp{3.8cm}}
+\begin{tabular}{lcp{3.2cm}}
 \hline
 データ規模 & 予測精度範囲 & 根拠 \\
 \hline
