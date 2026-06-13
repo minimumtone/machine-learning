@@ -545,6 +545,19 @@ def _score_sql_candidate(
     else:
         breakdown["limit"] = 0
 
+    # 4. Domain validation penalty (up to -30)
+    if exec_result and exec_result.get("success"):
+        from llm.domain_validator import validate_result_rows
+        domain_result = validate_result_rows(
+            rows=exec_result.get("rows", []),
+            columns=exec_result.get("columns", []),
+            conditions=conditions,
+        )
+        penalty = domain_result.get("score_penalty", 0)
+        if penalty > 0:
+            score = max(0, score - penalty)
+            breakdown["domain_penalty"] = -penalty
+
     return {
         "score": score,
         "breakdown": breakdown,
@@ -643,8 +656,8 @@ def pipeline(
     total_latency = 0
 
     for i in range(n_best):
-        # Vary temperature for candidate diversity (0.0, 0.3, 0.6, ...)
-        temp_override = round(i * 0.3, 1) if i > 0 else 0.0
+        # Vary temperature for candidate diversity (0.0, 0.3, 0.6, ..., max 2.0)
+        temp_override = min(round(i * 0.3, 1), 2.0) if i > 0 else 0.0
         gen_result = generate_sql_via_llm(
             user_query=user_query,
             allowed_tables=linked["required_tables"],
