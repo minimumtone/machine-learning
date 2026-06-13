@@ -56,7 +56,7 @@
   "phase_classification": {
     "n_HEA": 54,
     "AUC_delta_r": 0.869,
-    "AUC_delta_sf": 0.698
+    "AUC_delta_sf": 0.723
   },
   "noise_floor": {
     "sigma_approx": 0.016,

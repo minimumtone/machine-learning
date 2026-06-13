@@ -857,20 +857,20 @@ $\bar{\Omega}_i = \sum_{j \ne i} c_j \Omega_\text{sf}(i,j)$。
 基準 & AUC & 精度 & F1 \\
 \midrule
 $\delta r$ (閾値4.72\%) & \textbf{0.869} & \textbf{0.796} & \textbf{0.766} \\
-$\delta_\text{sf}$ (閾値0.016) & 0.734 & 0.722 & 0.571 \\
+$\delta_\text{sf}$ (閾値0.016) & 0.723 & 0.722 & 0.571 \\
 Yang--Zhang & --- & 0.648 & 0.725 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-$\delta r$は$\delta_\text{sf}$より相分類に優れる（AUC 0.869 vs 0.734）。
+$\delta r$は$\delta_\text{sf}$より相分類に優れる（AUC 0.869 vs 0.723）。
 固溶体安定性が主に幾何学的サイズ適合性で支配されることを示す。
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.7\columnwidth]{fig_roc.png}
 \caption{SS vs 非SS分類のROC曲線（54 HEA）。
-  $\delta r$（AUC = 0.869）が$\delta_\text{sf}$（AUC = 0.734）を上回る。}
+  $\delta r$（AUC = 0.869）が$\delta_\text{sf}$（AUC = 0.723）を上回る。}
 \label{fig:roc}
 \end{figure}
 
@@ -1020,7 +1020,7 @@ $q \neq 1$の主因はΩ$_\text{sf}$参照体積の不整合に
 第一に、7種のMLモデルがDFT-$\Omega_\text{sf}$モデルを
 実質的に改善できないことは、残差が測定ノイズに支配されていることを示す。
 第二に、DFT由来$\delta_\text{sf}$が$\delta r$より
-相分類で劣ること（AUC 0.734 vs 0.869）は、
+相分類で劣ること（AUC 0.723 vs 0.869）は、
 固溶体安定性が幾何学的サイズ適合性で支配されることの証拠であり、
 $\Omega_\text{sf}$の価値は格子定数の定量予測にある。
 第三に、DFT自己整合体積がKing実験値を超えられないことは、
