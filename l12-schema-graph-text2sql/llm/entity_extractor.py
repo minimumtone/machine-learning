@@ -726,15 +726,23 @@ def extract_conditions(query: str) -> dict[str, Any]:
     # Most Very Hard queries need bulk_modulus/shear_modulus even if not
     # explicitly mentioned, because the gold SQL includes them as standard
     # output columns for ranking/scoring/candidate evaluation.
-    _cp_triggers = [
-        "候補", "ランキング", "ranking", "スコア", "score",
-        "探索", "弾性特性", "弾性的", "強度", "機械特性",
-        "γ'", "γ'", "ガンマプライム",
-        "材料設計", "材料探索", "総合", "多角的",
-        "ランク", "rank", "top",
+    # CJK keywords: safe for substring matching (no word-boundary issues)
+    _cp_triggers_ja = [
+        "候補", "ランキング", "スコア", "探索", "弾性特性",
+        "弾性的", "強度", "機械特性", "γ'", "γ'",
+        "ガンマプライム", "材料設計", "材料探索", "総合",
+        "多角的", "ランク",
+    ]
+    # English keywords: use word-boundary regex to avoid false positives
+    # (e.g. "rank" in "frank", "top" in "topological")
+    _cp_triggers_en = [
+        r"\branking\b", r"\bscore\b", r"\brank\b", r"\btop\b",
     ]
     if "bulk_modulus" not in result and "properties" not in result:
-        if any(kw in ql for kw in _cp_triggers):
+        _triggered = any(kw in ql for kw in _cp_triggers_ja) or any(
+            re.search(pat, ql) for pat in _cp_triggers_en
+        )
+        if _triggered:
             result.setdefault("properties", []).append("calculated_property.value")
             result["bulk_modulus"] = True
 
