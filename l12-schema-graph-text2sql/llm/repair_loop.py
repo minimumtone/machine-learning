@@ -132,6 +132,78 @@ def repair_loop(
     return {"sql": sql, "valid": False, "attempts": attempts}
 
 
+# ── Missing table / column detection ──
+
+
+def detect_missing_tables(
+    sql: str,
+    required_tables: list[str],
+) -> list[str]:
+    """Detect tables that are required by schema linking but absent from SQL."""
+    sql_upper = sql.upper()
+    missing = []
+    for table in required_tables:
+        if table.upper() not in sql_upper:
+            missing.append(table)
+    return missing
+
+
+def detect_missing_columns(
+    sql: str,
+    conditions: dict[str, Any],
+) -> list[str]:
+    """Detect expected output columns missing from the SELECT clause."""
+    sql_upper = sql.upper()
+    # Extract SELECT portion
+    select_match = re.match(r"SELECT\s+(.*?)\s+FROM\b", sql_upper, re.DOTALL)
+    if not select_match:
+        return []
+    select_clause = select_match.group(1)
+
+    missing = []
+    # Check for expected columns based on extracted conditions
+    if conditions.get("sort_by"):
+        sort_col = conditions["sort_by"].split(".")[-1].upper()
+        if sort_col not in select_clause and sort_col not in sql_upper.split("ORDER BY")[-1] if "ORDER BY" in sql_upper else "":
+            missing.append(conditions["sort_by"])
+
+    if conditions.get("properties"):
+        for prop in conditions["properties"]:
+            col = prop.split(".")[-1].upper()
+            if col not in select_clause:
+                missing.append(prop)
+
+    return missing
+
+
+def _build_missing_table_msg(
+    sql: str,
+    question: str,
+    missing_tables: list[str],
+    required_tables: list[str],
+) -> str:
+    """Build diagnostic message for missing required tables."""
+    return (
+        f"The SQL is missing required tables: {', '.join(missing_tables)}.\n"
+        f"Original question: {question}\n"
+        f"Required tables from schema linking: {', '.join(required_tables)}\n"
+        f"Please add the missing JOINs for these tables."
+    )
+
+
+def _build_missing_column_msg(
+    sql: str,
+    question: str,
+    missing_columns: list[str],
+) -> str:
+    """Build diagnostic message for missing required columns."""
+    return (
+        f"The SQL SELECT clause is missing expected columns: {', '.join(missing_columns)}.\n"
+        f"Original question: {question}\n"
+        f"Please add these columns to the SELECT clause."
+    )
+
+
 # ── Superset / condition-insufficiency detection ──
 
 
@@ -331,6 +403,7 @@ def execution_repair_loop(
     allowed_joins: list[str],
     coverage: dict[str, Any] | None = None,
     conditions: dict[str, Any] | None = None,
+    required_tables: list[str] | None = None,
     max_retries: int = 3,
     model: str | None = None,
     api_key: str | None = None,
@@ -339,10 +412,12 @@ def execution_repair_loop(
     """Retry SQL when execution fails, returns 0 rows, or returns a superset.
 
     This is called **after** the initial SQL has passed SQLGuard validation.
-    It handles three failure modes:
+    It handles five failure modes:
       1. DB execution error (syntax ok but runtime failure)
       2. Empty result set (query runs but returns nothing)
       3. Superset result (too many rows / missing WHERE conditions)
+      4. Missing required tables (schema linking tables absent from SQL)
+      5. Missing required columns (expected output columns absent from SELECT)
 
     If allow_empty_result is True, 0-row results are treated as success
     (the correct answer may legitimately be an empty set).
@@ -363,6 +438,68 @@ def execution_repair_loop(
 
         row_count = exec_result.get("row_count", 0)
         if exec_result.get("success") and (row_count > 0 or allow_empty_result):
+            # Check for missing tables (before superset, as it's more fundamental)
+            if required_tables and i < max_retries:
+                missing_tables = detect_missing_tables(sql, required_tables)
+                if missing_tables:
+                    error_msg = _build_missing_table_msg(
+                        sql, question, missing_tables, required_tables,
+                    )
+                    t_repair = time.time()
+                    repair_result = attempt_repair(
+                        sql, error_msg, allowed_tables, allowed_columns,
+                        allowed_joins, model=model, api_key=api_key,
+                    )
+                    repair_lat = int((time.time() - t_repair) * 1000)
+                    repair_tokens = repair_result.get("tokens", 0)
+                    total_repair_tokens += repair_tokens
+                    total_repair_latency_ms += repair_lat
+                    attempts.append({
+                        "attempt": i + 1,
+                        "reason": "missing_tables",
+                        "error": error_msg,
+                        "repair": repair_result,
+                        "tokens": repair_tokens,
+                        "latency_ms": repair_lat,
+                        "missing_tables": missing_tables,
+                    })
+                    if repair_result.get("success"):
+                        new_sql = repair_result["repaired_sql"]
+                        if new_sql != sql:
+                            sql = new_sql
+                            continue
+
+            # Check for missing columns
+            if conditions and i < max_retries:
+                missing_cols = detect_missing_columns(sql, conditions)
+                if missing_cols:
+                    error_msg = _build_missing_column_msg(
+                        sql, question, missing_cols,
+                    )
+                    t_repair = time.time()
+                    repair_result = attempt_repair(
+                        sql, error_msg, allowed_tables, allowed_columns,
+                        allowed_joins, model=model, api_key=api_key,
+                    )
+                    repair_lat = int((time.time() - t_repair) * 1000)
+                    repair_tokens = repair_result.get("tokens", 0)
+                    total_repair_tokens += repair_tokens
+                    total_repair_latency_ms += repair_lat
+                    attempts.append({
+                        "attempt": i + 1,
+                        "reason": "missing_columns",
+                        "error": error_msg,
+                        "repair": repair_result,
+                        "tokens": repair_tokens,
+                        "latency_ms": repair_lat,
+                        "missing_columns": missing_cols,
+                    })
+                    if repair_result.get("success"):
+                        new_sql = repair_result["repaired_sql"]
+                        if new_sql != sql:
+                            sql = new_sql
+                            continue
+
             # Check for superset (only if conditions were extracted)
             if conditions and i < max_retries:
                 row_count = exec_result.get("row_count", 0)

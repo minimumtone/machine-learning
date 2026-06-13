@@ -40,7 +40,10 @@ def map_prototype_condition(prototype: str | list[str]) -> dict[str, Any]:
     }
 
 
-def map_element_condition(elements: list[str]) -> list[dict[str, Any]]:
+def map_element_condition(
+    elements: list[str],
+    logic: str = "AND",
+) -> list[dict[str, Any]]:
     conditions: list[dict[str, Any]] = []
     if len(elements) == 1:
         safe = _escape_sql_value(elements[0])
@@ -50,7 +53,21 @@ def map_element_condition(elements: list[str]) -> list[dict[str, Any]]:
             "tables": ["composition"],
             "columns": ["composition.element"],
         })
+    elif len(elements) > 1 and logic == "OR":
+        # OR: single EXISTS with IN clause
+        safe_elems = ", ".join(f"'{_escape_sql_value(e)}'" for e in elements)
+        conditions.append({
+            "type": "element_or",
+            "sql_fragment": (
+                f"EXISTS (SELECT 1 FROM composition c_or"
+                f" WHERE c_or.entry_id = m.entry_id"
+                f" AND c_or.element IN ({safe_elems}))"
+            ),
+            "tables": ["composition"],
+            "columns": ["composition.element"],
+        })
     elif len(elements) > 1:
+        # AND: separate EXISTS per element (all must be present)
         for elem in elements:
             safe = _escape_sql_value(elem)
             alias = re.sub(r"[^a-z0-9]", "", elem.lower())
@@ -255,7 +272,8 @@ def map_conditions(conditions: dict[str, Any]) -> list[dict[str, Any]]:
         mapped.append(map_prototype_condition(conditions["prototype"]))
 
     if "contains_elements" in conditions:
-        mapped.extend(map_element_condition(conditions["contains_elements"]))
+        logic = conditions.get("element_logic", "AND")
+        mapped.extend(map_element_condition(conditions["contains_elements"], logic))
 
     if "stability" in conditions:
         stab = map_stability_condition(conditions["stability"])

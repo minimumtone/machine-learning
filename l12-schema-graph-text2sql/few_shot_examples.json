@@ -226,5 +226,74 @@
     },
     "row_count": 3,
     "source": "seed:vhard_pattern"
+  },
+  {
+    "nl_query": "Aサイト元素ごとにL1₂型化合物の数を集計して。",
+    "sql": "SELECT c.element AS a_site_element, COUNT(DISTINCT m.entry_id) AS compound_count\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.site_label = 'A-site'\nGROUP BY c.element\nORDER BY compound_count DESC\nLIMIT 10000;",
+    "conditions": {
+      "prototype": "L12",
+      "site_label": "A-site"
+    },
+    "row_count": 30,
+    "source": "seed:group_by_pattern"
+  },
+  {
+    "nl_query": "Bサイト元素ごとの平均形成エネルギーを出して。",
+    "sql": "SELECT c.element AS b_site_element,\n       AVG(ps.formation_energy_per_atom) AS avg_formation_energy\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.site_label = 'B-site'\nGROUP BY c.element\nORDER BY avg_formation_energy ASC\nLIMIT 10000;",
+    "conditions": {
+      "prototype": "L12",
+      "site_label": "B-site"
+    },
+    "row_count": 40,
+    "source": "seed:group_by_pattern"
+  },
+  {
+    "nl_query": "2元系L1₂型化合物をchemical_systemで分類して。",
+    "sql": "SELECT m.chemical_system, COUNT(*) AS count\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND m.number_of_elements = 2\nGROUP BY m.chemical_system\nORDER BY count DESC\nLIMIT 10000;",
+    "conditions": {
+      "prototype": "L12"
+    },
+    "row_count": 25,
+    "source": "seed:group_by_pattern"
+  },
+  {
+    "nl_query": "NiまたはCoを含むL1₂型化合物を一覧して。",
+    "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND EXISTS (SELECT 1 FROM composition c_or\n              WHERE c_or.entry_id = m.entry_id\n              AND c_or.element IN ('Ni', 'Co'))\nORDER BY m.formula\nLIMIT 10000;",
+    "conditions": {
+      "prototype": "L12",
+      "contains_elements": ["Ni", "Co"],
+      "element_logic": "OR"
+    },
+    "row_count": 45,
+    "source": "seed:element_or_pattern"
+  },
+  {
+    "nl_query": "Fe含有L1₂化合物の安定性と弾性特性を同時に示して。",
+    "sql": "SELECT DISTINCT m.formula, ps.energy_above_hull, ps.is_stable,\n       cp.property_name, cp.value\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE c.element = 'Fe'\n  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY m.formula, cp.property_name\nLIMIT 10000;",
+    "conditions": {
+      "prototype": "L12",
+      "contains_elements": ["Fe"],
+      "bulk_modulus": true
+    },
+    "row_count": 56,
+    "source": "seed:calc_prop_pattern"
+  },
+  {
+    "nl_query": "Ni-Al系以外のL1₂型化合物を一覧して。",
+    "sql": "SELECT m.formula, m.chemical_system, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND m.chemical_system != 'Al-Ni'\nORDER BY m.formula\nLIMIT 10000;",
+    "conditions": {
+      "prototype": "L12"
+    },
+    "row_count": 380,
+    "source": "seed:exclusion_pattern"
+  },
+  {
+    "nl_query": "A₃B型の組成を持つ化合物を表示して。",
+    "sql": "SELECT m.entry_id, m.formula, s.formula_type\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.formula_type = 'A3B'\nORDER BY m.formula\nLIMIT 10000;",
+    "conditions": {
+      "formula_type": "A3B"
+    },
+    "row_count": 392,
+    "source": "seed:formula_type_pattern"
   }
 ]
