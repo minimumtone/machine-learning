@@ -164,7 +164,8 @@ def detect_missing_columns(
     # Check for expected columns based on extracted conditions
     if conditions.get("sort_by"):
         sort_col = conditions["sort_by"].split(".")[-1].upper()
-        if sort_col not in select_clause and sort_col not in sql_upper.split("ORDER BY")[-1] if "ORDER BY" in sql_upper else "":
+        in_order_by = sort_col in sql_upper.split("ORDER BY")[-1] if "ORDER BY" in sql_upper else False
+        if sort_col not in select_clause and not in_order_by:
             missing.append(conditions["sort_by"])
 
     if conditions.get("properties"):
@@ -236,7 +237,8 @@ def count_expected_conditions(conditions: dict[str, Any]) -> int:
         count += 1
     elements = conditions.get("contains_elements", [])
     if elements:
-        count += len(elements)  # Each element → subquery or AND
+        logic = conditions.get("element_logic", "AND")
+        count += 1 if logic == "OR" else len(elements)
     if conditions.get("stability"):
         count += 1
     props = conditions.get("properties", [])
