@@ -370,7 +370,7 @@
     },
     "mean_exec_accuracy": 62.5,
     "binary_correct_rate": 53.3,
-    "binary_correct_count": 31,
+    "binary_correct_count": 32,
     "syntax_valid": 60,
     "execution_success": 60,
     "by_difficulty": {

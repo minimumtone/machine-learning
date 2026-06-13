@@ -263,7 +263,7 @@ def main():
             "thresholds": expert_metadata["thresholds"],
             "mean_exec_accuracy": pct(expert_overall_acc),
             "binary_correct_rate": pct(expert_correct_rate),
-            "binary_correct_count": int(expert_correct_rate * expert_total),
+            "binary_correct_count": round(expert_correct_rate * expert_total),
             "syntax_valid": expert_total,
             "execution_success": expert_total,
             "by_difficulty": {
