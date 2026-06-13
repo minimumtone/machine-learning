@@ -1,7 +1,10 @@
 __pycache__/
 *.pyc
 *.pyo
+*.egg-info/
 
+# LaTeX build artifacts
+*.pdf
 # LaTeX auxiliary files
 *.aux
 *.bbl
