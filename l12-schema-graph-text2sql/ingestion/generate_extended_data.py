@@ -577,7 +577,7 @@ def generate(out: TextIO = sys.stdout) -> None:
             f"{random.uniform(0.01, 5):.3f});\n"
         )
 
-    out.write(f"\nCOMMIT;\n")
+    out.write("\nCOMMIT;\n")
     out.write(f"-- Total entries: {entry_count}\n")
     print(f"-- Generated {entry_count} material entries", file=sys.stderr)
 

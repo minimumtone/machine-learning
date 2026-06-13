@@ -50,7 +50,7 @@ def run_auto_analysis():
         st.subheader("Dataset Information")
         st.write(f"**Samples:** {len(df)}")
         st.write(f"**Features:** {len(df.columns) - 1}")
-        st.write(f"**Target:** mpg (miles per gallon)")
+        st.write("**Target:** mpg (miles per gallon)")
         
     with col2:
         st.subheader("Target Variable Statistics")

@@ -111,10 +111,12 @@ if TORCH_AVAILABLE:
         def __init__(
             self,
             input_dim: int,
-            hidden_dims: List[int] = [128, 64, 32],
+            hidden_dims: Optional[List[int]] = None,
             output_dim: int = 1
         ):
             super(MaterialPropertyPredictor, self).__init__()
+            if hidden_dims is None:
+                hidden_dims = [128, 64, 32]
 
             layers = []
             prev_dim = input_dim
@@ -145,7 +147,7 @@ def train_neural_network(
     y_train: np.ndarray,
     x_val: Optional[np.ndarray] = None,
     y_val: Optional[np.ndarray] = None,
-    hidden_dims: List[int] = [64, 32],
+    hidden_dims: Optional[List[int]] = None,
     epochs: int = 100,
     batch_size: int = 32,
     learning_rate: float = 0.001,
@@ -178,6 +180,9 @@ def train_neural_network(
     """
     if not TORCH_AVAILABLE:
         return {'error': 'PyTorchがインストールされていません'}
+
+    if hidden_dims is None:
+        hidden_dims = [64, 32]
 
     # デバイスの設定
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

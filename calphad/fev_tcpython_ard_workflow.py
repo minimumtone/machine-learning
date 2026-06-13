@@ -560,7 +560,7 @@ class ARDParameterOptimizer:
         y_pred = self.ard_model.predict(X_scaled)
         rmse = np.sqrt(np.mean((y - y_pred) ** 2))
         
-        print(f"\nARD Results:")
+        print("\nARD Results:")
         print(f"  Relevant parameters: {n_relevant} / {len(L_params)} "
               f"({100*n_relevant/len(L_params):.1f}%)")
         print(f"  RMSE: {rmse:.2f} J/mol")
@@ -857,7 +857,7 @@ def main():
     # Load data
     print("\n1. Loading data...")
     sanchez_data = load_sanchez_data(SANCHEZ_DATA_FILE)
-    print(f"   Loaded Sanchez phase diagram data")
+    print("   Loaded Sanchez phase diagram data")
     
     # Create calculator
     print("\n2. Setting up calculator...")
@@ -900,7 +900,7 @@ def main():
     print("Optimization Summary")
     print("=" * 70)
     n_nonzero = np.sum(np.abs(optimized_params) > config.sparsity_threshold)
-    print(f"Total L parameters: 1024")
+    print("Total L parameters: 1024")
     print(f"Non-zero parameters: {n_nonzero} ({100*n_nonzero/1024:.1f}%)")
     print(f"Sparsity achieved: {100*(1024-n_nonzero)/1024:.1f}%")
     

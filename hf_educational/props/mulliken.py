@@ -88,7 +88,7 @@ def print_mulliken_analysis(results: Dict, molecule: Molecule):
     print("-" * 50)
     print(f"{'Total':>14s} {np.sum(results['atomic_populations']):12.6f} {total_charge:12.6f}")
     
-    print(f"\nBond Orders (> 0.1):")
+    print("\nBond Orders (> 0.1):")
     print(f"{'Atom I':>8} {'Atom J':>8} {'Bond Order':>12}")
     print("-" * 40)
     

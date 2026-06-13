@@ -329,7 +329,7 @@ with tab1:
             
             # Configurational entropy
             S_conf = st.session_state.get('S_conf', 0)
-            st.markdown(f"**配置エントロピー:**")
+            st.markdown("**配置エントロピー:**")
             st.write(f"S_conf = {S_conf:.2f} J/mol·K")
             
             # Cell parameters

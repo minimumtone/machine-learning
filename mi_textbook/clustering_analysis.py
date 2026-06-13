@@ -548,7 +548,7 @@ if __name__ == "__main__":
     print("-" * 50)
 
     kmeans_result = train_kmeans(x_data, n_clusters=4)
-    print(f"クラスタ数: 4")
+    print("クラスタ数: 4")
     print(f"シルエットスコア: {kmeans_result['metrics']['silhouette']:.4f}")
 
     # 階層的クラスタリング
@@ -556,7 +556,7 @@ if __name__ == "__main__":
     print("-" * 50)
 
     hierarchical_result = train_hierarchical(x_data, n_clusters=4)
-    print(f"クラスタ数: 4")
+    print("クラスタ数: 4")
     print(f"シルエットスコア: {hierarchical_result['metrics']['silhouette']:.4f}")
 
     # DBSCANクラスタリング

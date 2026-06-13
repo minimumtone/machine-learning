@@ -349,19 +349,19 @@ class DoolittleViscosity:
             "Doolittle/VFT粘度モデル検証レポート",
             "=" * 60,
             "",
-            f"Input Parameters / 入力パラメータ:",
+            "Input Parameters / 入力パラメータ:",
             f"  T_m (融点) = {self.T_m:.1f} K",
             f"  T_g (ガラス転移点) = {self.T_g:.1f} K",
             f"  T_0 (VFT温度) = {self.T_0:.1f} K",
             f"  η₀ (前指数因子) = {self.eta_0:.2e} Pa·s",
             f"  D* (脆弱性パラメータ) = {self.D_star:.2f}",
             "",
-            f"Derived Parameters / 導出パラメータ:",
+            "Derived Parameters / 導出パラメータ:",
             f"  T_rg = T_g/T_m = {self.T_g/self.T_m:.3f}",
             f"  Fragility index m = {self.fragility_index_m():.1f}",
             f"  Classification: {self.classify_fragility()}",
             "",
-            f"Validation Checks / 検証チェック:",
+            "Validation Checks / 検証チェック:",
         ]
         
         log_eta_Tg = self.log_viscosity(self.T_g)
@@ -382,7 +382,7 @@ class DoolittleViscosity:
         
         lines.extend([
             "",
-            f"Viscosity at Key Temperatures / 主要温度での粘度:",
+            "Viscosity at Key Temperatures / 主要温度での粘度:",
             f"  At T_g ({self.T_g:.1f} K): η = {self.viscosity(self.T_g):.2e} Pa·s",
             f"  At T_m ({self.T_m:.1f} K): η = {self.viscosity(self.T_m):.2e} Pa·s",
             f"  At 1.2·T_m ({1.2*self.T_m:.1f} K): η = {self.viscosity(1.2*self.T_m):.2e} Pa·s",

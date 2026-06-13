@@ -208,7 +208,7 @@ def parse_doscar(path: str | Path) -> DosData:
     lines = path.read_text().splitlines()
 
     header = lines[5].split()
-    e_max, e_min, ndos = float(header[0]), float(header[1]), int(header[2])
+    ndos = int(header[2])
     e_fermi = float(header[3])
 
     energies = np.zeros(ndos)

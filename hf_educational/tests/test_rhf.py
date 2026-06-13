@@ -33,7 +33,7 @@ H 0.0 0.0 0.74
     print(f"\nFinal energy: {rhf.E_total:.10f} Eh")
     
     expected_energy = -1.117  # Approximate STO-3G energy
-    assert abs(rhf.E_total - expected_energy) < 0.01, f"H2 energy too far from expected"
+    assert abs(rhf.E_total - expected_energy) < 0.01, "H2 energy too far from expected"
     
     print("\n✓ H2 RHF test passed")
     return rhf
@@ -61,7 +61,7 @@ He 0.0 0.0 0.0
     print(f"Converged in {rhf.iteration} iterations")
     
     expected_energy = -2.8078  # STO-3G reference energy
-    assert abs(rhf.E_total - expected_energy) < 0.001, f"He energy too far from expected"
+    assert abs(rhf.E_total - expected_energy) < 0.001, "He energy too far from expected"
     
     print("\n✓ He RHF test passed")
     return rhf
@@ -90,7 +90,7 @@ H -0.757 0.586 0.0
     print(f"\nFinal energy: {rhf.E_total:.10f} Eh")
     
     expected_energy = -74.96  # Approximate STO-3G energy
-    assert abs(rhf.E_total - expected_energy) < 0.1, f"H2O energy too far from expected"
+    assert abs(rhf.E_total - expected_energy) < 0.1, "H2O energy too far from expected"
     
     print("\n✓ H2O RHF test passed")
     return rhf

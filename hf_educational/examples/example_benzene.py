@@ -47,9 +47,9 @@ H    1.235500   -2.139700    0.000000
 
 benzene = Molecule.from_xyz_string(benzene_xyz, charge=0, multiplicity=1)
 
-print(f"\nMolecular formula: C6H6")
+print("\nMolecular formula: C6H6")
 print(f"Total electrons: {benzene.n_electrons}")
-print(f"Expected aromatic character with delocalized π system")
+print("Expected aromatic character with delocalized π system")
 
 rhf = RHF(benzene, 'sto-3g')
 basis = rhf.basis
@@ -88,7 +88,7 @@ if rhf.converged:
     print(f"\n  HOMO energy: {homo_energy:.6f} Eh ({homo_energy * 27.211386:.2f} eV)")
     print(f"  LUMO energy: {lumo_energy:.6f} Eh ({lumo_energy * 27.211386:.2f} eV)")
     print(f"  HOMO-LUMO gap: {gap_ev:.2f} eV")
-    print(f"  (Typical for aromatic systems: 5-8 eV)")
+    print("  (Typical for aromatic systems: 5-8 eV)")
     
 else:
     print(f"✗ SCF did not converge in {rhf.max_iter} iterations")
@@ -125,7 +125,7 @@ print("\nCharge Distribution on Carbons:")
 carbon_charges = mulliken_results['atomic_charges'][:6]
 print(f"  Mean: {np.mean(carbon_charges):8.4f}")
 print(f"  Std:  {np.std(carbon_charges):8.4f}")
-print(f"  (Should be near zero and uniform for symmetric benzene)")
+print("  (Should be near zero and uniform for symmetric benzene)")
 
 print("\n" + "="*70)
 print(" Dipole Moment")
@@ -133,7 +133,7 @@ print("="*70)
 
 dipole = compute_dipole_moment(rhf.P, basis, benzene)
 print_dipole_moment(dipole)
-print(f"\n(Should be ~0 for D6h symmetric benzene)")
+print("\n(Should be ~0 for D6h symmetric benzene)")
 
 print("\n" + "="*70)
 print(" Generating Visualizations")
@@ -145,17 +145,17 @@ try:
     import matplotlib.pyplot as plt
     
     plot_convergence(rhf.convergence_history, save_path='benzene_convergence.png')
-    print(f"✓ Saved convergence plot to benzene_convergence.png")
+    print("✓ Saved convergence plot to benzene_convergence.png")
     
     n_occ = benzene.n_electrons // 2
     plot_mo_diagram(rhf.orbital_energies, n_occ, 
                    title="Benzene Molecular Orbital Energies",
                    save_path='benzene_mo_diagram.png')
-    print(f"✓ Saved MO diagram to benzene_mo_diagram.png")
+    print("✓ Saved MO diagram to benzene_mo_diagram.png")
     
     plot_all_matrices(rhf.S, rhf.H, rhf.J, rhf.K, rhf.F,
                      save_path='benzene_matrices.png')
-    print(f"✓ Saved matrix heatmaps to benzene_matrices.png")
+    print("✓ Saved matrix heatmaps to benzene_matrices.png")
     
 except Exception as e:
     print(f"Warning: Could not generate visualizations: {e}")
@@ -163,13 +163,13 @@ except Exception as e:
 print("\n" + "="*70)
 print(" Calculation Complete!")
 print("="*70)
-print(f"\nBenzene RHF/STO-3G Results:")
+print("\nBenzene RHF/STO-3G Results:")
 print(f"  Energy: {rhf.energy:.6f} Eh")
 print(f"  HOMO-LUMO gap: {gap_ev:.2f} eV")
 print(f"  Average C-C bond order: {avg_cc_bond_order:.4f}")
 print(f"  Converged: {rhf.converged} ({rhf.iteration} iterations)")
-print(f"\nThis calculation demonstrates:")
-print(f"  • Aromatic π-electron delocalization")
-print(f"  • D6h symmetry preservation")
-print(f"  • DIIS convergence for conjugated systems")
-print(f"  • Mulliken analysis of aromatic character")
+print("\nThis calculation demonstrates:")
+print("  • Aromatic π-electron delocalization")
+print("  • D6h symmetry preservation")
+print("  • DIIS convergence for conjugated systems")
+print("  • Mulliken analysis of aromatic character")

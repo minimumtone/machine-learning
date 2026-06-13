@@ -66,9 +66,9 @@ def main():
     
     material_name = material_map.get(args.material, args.material)
     
-    print(f"=" * 60)
+    print("=" * 60)
     print(f"SQD Band Gap Calculation for {material_name}")
-    print(f"=" * 60)
+    print("=" * 60)
     
     if args.results_path:
         # Load results from specified path
@@ -137,7 +137,7 @@ def main():
     print(f"\n{'=' * 60}")
     print("Band Gap Calculation")
     print(f"{'=' * 60}")
-    print(f"Formula: Eg = E[Ne-1] + E[Ne+1] - 2*E[Ne]")
+    print("Formula: Eg = E[Ne-1] + E[Ne+1] - 2*E[Ne]")
     print(f"       = {energies[ne-1]:.6f} + {energies[ne+1]:.6f} - 2*{energies[ne]:.6f}")
     print(f"       = {bandgap:.4f} eV")
     
@@ -152,7 +152,7 @@ def main():
     if exp_bandgap:
         comparison = compare_with_experiment(bandgap, exp_bandgap, dft_bandgap)
         
-        print(f"\nSummary:")
+        print("\nSummary:")
         print(f"  SQD achieves {comparison['sqd_error_percent']:.1f}% error vs experiment")
         if dft_bandgap:
             print(f"  DFT+U+V has {comparison['dft_error_percent']:.1f}% error vs experiment")

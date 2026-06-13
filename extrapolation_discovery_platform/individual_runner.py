@@ -122,10 +122,10 @@ class IndividualRunResult:
             )
 
         lines = [
-            f"## ✅ 個別実行結果",
-            f"",
-            f"| 項目 | 値 |",
-            f"|---|---|",
+            "## ✅ 個別実行結果",
+            "",
+            "| 項目 | 値 |",
+            "|---|---|",
             f"| アルゴリズム | **{self.workflow}** |",
             f"| 特徴量セット | **{self.feature_set}** |",
             f"| 分割方法 | {self.split_policy} |",
@@ -135,11 +135,11 @@ class IndividualRunResult:
             f"| テストサンプル数 | {self.n_test_samples} |",
             f"| 有効特徴量数 | {self.n_features_after} / {self.n_features_before} |",
             f"| 実行時間 | {self.elapsed_sec:.2f} 秒 |",
-            f"",
+            "",
             f"### 📊 性能指標（{self.n_folds_executed} Fold 平均）",
-            f"",
-            f"| 指標 | 値 |",
-            f"|---|---|",
+            "",
+            "| 指標 | 値 |",
+            "|---|---|",
             f"| RMSE (Test) | **{self.rmse_test_mean:.4f}** ± {self.rmse_test_std:.4f} |",
             f"| RMSE (Train) | {self.rmse_train_mean:.4f} |",
             f"| MAE (Test) | {self.mae_test_mean:.4f} |",
@@ -148,28 +148,28 @@ class IndividualRunResult:
 
         if self.leak_suspects:
             lines += [
-                f"",
-                f"### ⚠️ リーク疑い特徴量",
-                f"",
+                "",
+                "### ⚠️ リーク疑い特徴量",
+                "",
             ]
             for feat, r in sorted(self.leak_suspects.items(), key=lambda x: -abs(x[1])):
                 lines.append(f"- `{feat}` (|r| = {abs(r):.4f})")
 
         if self.dropped_columns:
             lines += [
-                f"",
-                f"### 🗑️ 除去された特徴量",
+                "",
+                "### 🗑️ 除去された特徴量",
                 f"（定数列・完全共線）: {', '.join(f'`{c}`' for c in self.dropped_columns[:10])}",
             ]
 
         if self.ood_result is not None:
             ood = self.ood_result
             lines += [
-                f"",
-                f"### 🗺️ OOD 検出",
-                f"",
-                f"| 項目 | 値 |",
-                f"|---|---|",
+                "",
+                "### 🗺️ OOD 検出",
+                "",
+                "| 項目 | 値 |",
+                "|---|---|",
                 f"| OOD サンプル数 | {ood.n_ood} / {ood.n_total} |",
                 f"| OOD 比率 | {ood.ood_ratio:.1%} |",
                 f"| OOD 閾値 | {ood.ood_threshold:.4f} |",
@@ -181,11 +181,11 @@ class IndividualRunResult:
             if isinstance(coef, dict) and coef:
                 top = sorted(coef.items(), key=lambda x: abs(x[1]), reverse=True)[:10]
                 lines += [
-                    f"",
-                    f"### 📐 係数 Top 10 (|coef|降順)",
-                    f"",
-                    f"| 特徴量 | 係数 |",
-                    f"|---|---|",
+                    "",
+                    "### 📐 係数 Top 10 (|coef|降順)",
+                    "",
+                    "| 特徴量 | 係数 |",
+                    "|---|---|",
                 ]
                 for feat, val in top:
                     lines.append(f"| `{feat}` | {val:.6f} |")
@@ -195,11 +195,11 @@ class IndividualRunResult:
             if isinstance(fi, dict) and fi:
                 top = sorted(fi.items(), key=lambda x: x[1], reverse=True)[:10]
                 lines += [
-                    f"",
-                    f"### 🌲 特徴量重要度 Top 10",
-                    f"",
-                    f"| 特徴量 | 重要度 |",
-                    f"|---|---|",
+                    "",
+                    "### 🌲 特徴量重要度 Top 10",
+                    "",
+                    "| 特徴量 | 重要度 |",
+                    "|---|---|",
                 ]
                 for feat, val in top:
                     lines.append(f"| `{feat}` | {val:.6f} |")

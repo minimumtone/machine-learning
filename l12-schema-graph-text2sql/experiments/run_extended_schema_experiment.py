@@ -434,7 +434,7 @@ def build_prompt(query: str, schema_mode: str = "full", relevant_tables: list = 
       - "traversed": Include only relevant tables (simulates: Schema Graph traversal)
       - "none": No schema information (baseline)
     """
-    base = f"""あなたは材料科学データベースのSQL生成エンジンです。
+    base = """あなたは材料科学データベースのSQL生成エンジンです。
 ユーザーの自然言語クエリを、PostgreSQL SQLに変換してください。
 
 重要なルール:

@@ -1196,11 +1196,11 @@ def _analyze_csv_format(
     # Build HTML report
     lines: List[str] = []
     lines.append(
-        f'<div style="background:#f8f9fa; border:1px solid #dee2e6; '
-        f'border-radius:8px; padding:16px; margin:8px 0;">'
+        '<div style="background:#f8f9fa; border:1px solid #dee2e6; '
+        'border-radius:8px; padding:16px; margin:8px 0;">'
     )
     lines.append(
-        f'<h3 style="margin-top:0;">CSV書式確認</h3>'
+        '<h3 style="margin-top:0;">CSV書式確認</h3>'
     )
     lines.append(
         f'<b>ファイル名</b>: <code>{html_mod.escape(fname)}</code><br/>'
@@ -3505,7 +3505,7 @@ def create_app() -> gr.Blocks:
                                 for k, v in suspects.items()
                             ]
                             mc_lines.append(
-                                f"- ⚠ リーク疑い: "
+                                "- ⚠ リーク疑い: "
                                 + ", ".join(leak_strs)
                             )
                         mc_lines.append("")

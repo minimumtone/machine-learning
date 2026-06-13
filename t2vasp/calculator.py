@@ -405,7 +405,6 @@ def compute_jahn_teller_energy(
     e_dis = distorted.energy.total_energy
     jtse = e_und - e_dis
 
-    n_und = undistorted.energy.total_energy / undistorted.energy.energy_per_atom
     n_dis = distorted.energy.total_energy / distorted.energy.energy_per_atom
     natoms = max(round(n_dis), 1)
     jtse_per_atom = jtse / natoms

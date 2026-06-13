@@ -478,7 +478,7 @@ def demonstrate_basic_operations():
     print()
     
     proj = outer_product(psi, psi)
-    print(f"Projection operator |ψ⟩⟨ψ|:")
+    print("Projection operator |ψ⟩⟨ψ|:")
     print(proj.matrix)
     print()
     

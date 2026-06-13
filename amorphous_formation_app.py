@@ -148,7 +148,7 @@ with tab1:
         
         delta_S_f = thermo.get_entropy_of_fusion()
         ratio, classification = thermo.richard_rule_check()
-        st.markdown(f"**3. 融解エントロピー:**")
+        st.markdown("**3. 融解エントロピー:**")
         st.markdown(f"   $\\Delta S_f$ = {delta_S_f:.2f} J/(mol·K)")
         st.markdown(f"   $\\Delta S_f / R$ = {ratio:.2f}")
         st.markdown(f"   {classification}")

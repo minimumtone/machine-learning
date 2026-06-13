@@ -34,7 +34,7 @@ def test_chunking_methods(md_text):
     chunk_overlap = 200
     similarity_threshold = 0.7
     
-    print(f"\nParameters:")
+    print("\nParameters:")
     print(f"  Chunk Size: {chunk_size}")
     print(f"  Chunk Overlap: {chunk_overlap}")
     print(f"  Similarity Threshold: {similarity_threshold}")

@@ -64,7 +64,7 @@ def test_gc_symmetry():
     T = 200.0
     n_trajectories = 10000
     
-    print(f"\nパラメータ:")
+    print("\nパラメータ:")
     print(f"  基準遷移レート k₀ = {k0}")
     print(f"  外部駆動力 F = {F}")
     print(f"  逆温度 β = {beta}")
@@ -74,14 +74,14 @@ def test_gc_symmetry():
     k01 = k0 * np.exp(beta * F / 2)
     k10 = k0 * np.exp(-beta * F / 2)
     
-    print(f"\n遷移レート:")
+    print("\n遷移レート:")
     print(f"  k₀₁ = {k01:.4f}")
     print(f"  k₁₀ = {k10:.4f}")
     
-    print(f"\nシミュレーション実行中...")
+    print("\nシミュレーション実行中...")
     entropy_rates = run_simulation(k0, F, beta, T, n_trajectories)
     
-    print(f"\n統計情報:")
+    print("\n統計情報:")
     print(f"  平均エントロピー生成率: {np.mean(entropy_rates):.4f}")
     print(f"  標準偏差: {np.std(entropy_rates):.4f}")
     print(f"  正のエントロピー生成: {np.sum(entropy_rates > 0) / len(entropy_rates) * 100:.2f}%")
@@ -104,20 +104,20 @@ def test_gc_symmetry():
         slope, intercept, r_value, p_value, std_err = stats.linregress(sigma_values, log_ratio)
         theoretical_slope = beta * T
         
-        print(f"\nGC対称性の検証:")
+        print("\nGC対称性の検証:")
         print(f"  理論傾き (βT): {theoretical_slope:.4f}")
         print(f"  実測傾き: {slope:.4f}")
         print(f"  相対誤差: {abs(slope - theoretical_slope) / theoretical_slope * 100:.2f}%")
         print(f"  決定係数 R²: {r_value**2:.4f}")
         
         if r_value**2 > 0.95 and abs(slope - theoretical_slope) / theoretical_slope < 0.1:
-            print(f"\n✓ GC対称性が確認されました！")
+            print("\n✓ GC対称性が確認されました！")
             return True
         else:
-            print(f"\n✗ GC対称性の検証に問題があります。")
+            print("\n✗ GC対称性の検証に問題があります。")
             return False
     else:
-        print(f"\n✗ 検証に十分なデータがありません。")
+        print("\n✗ 検証に十分なデータがありません。")
         return False
 
 
@@ -187,7 +187,7 @@ def create_visualization():
     
     theoretical_line = beta * sigma_values * T
     ax4.plot(sigma_values, theoretical_line, 'r-', linewidth=2.5, 
-             label=f'理論値: βΣt', zorder=2)
+             label='理論値: βΣt', zorder=2)
     
     if len(sigma_values) > 1:
         slope, intercept, r_value, p_value, std_err = stats.linregress(sigma_values, log_ratio)
@@ -203,7 +203,7 @@ def create_visualization():
     
     plt.tight_layout()
     plt.savefig('/home/ubuntu/repos/machine-learning/gc_symmetry_test.png', dpi=150, bbox_inches='tight')
-    print(f"\n可視化を保存しました: gc_symmetry_test.png")
+    print("\n可視化を保存しました: gc_symmetry_test.png")
     plt.close()
 
 

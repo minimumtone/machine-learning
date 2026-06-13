@@ -825,7 +825,7 @@ def show_representation_theory():
             
             decomp_dim = sum(int(2*j + 1) for j in j_values)
             
-            st.markdown(f"**次元の確認:**")
+            st.markdown("**次元の確認:**")
             st.markdown(f"- 左辺: {dim1} × {dim2} = {total_dim}")
             st.markdown(f"- 右辺: {' + '.join([str(int(2*j + 1)) for j in j_values])} = {decomp_dim}")
             

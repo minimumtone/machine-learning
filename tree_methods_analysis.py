@@ -93,7 +93,7 @@ def run_regression_trees():
         st.write("**Dataset Information:**")
         st.write(f"Samples: {len(df)}")
         st.write(f"Features: {len(df.columns) - 1}")
-        st.write(f"Target: medv (median house value)")
+        st.write("Target: medv (median house value)")
     
     with col2:
         fig, ax = plt.subplots(figsize=(8, 6))
@@ -198,7 +198,7 @@ def run_classification_trees():
         st.write("**Dataset Information:**")
         st.write(f"Samples: {len(df)}")
         st.write(f"Features: {len(df.columns) - 1}")
-        st.write(f"Target: heart disease (0/1)")
+        st.write("Target: heart disease (0/1)")
         
         target_counts = df['target'].value_counts()
         st.write(f"No Disease: {target_counts.get(0, 0)}")

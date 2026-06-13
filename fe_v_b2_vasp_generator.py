@@ -236,7 +236,7 @@ def write_vasp_inputs(
         for elem in elements:
             f.write(f"#   {elem}_pv (recommended) or {elem}\n")
         f.write("\n# Example command:\n")
-        f.write(f"# cat ")
+        f.write("# cat ")
         for elem in elements:
             f.write(f"$VASP_PP_PATH/PBE/{elem}_pv/POTCAR ")
         f.write("> POTCAR\n")

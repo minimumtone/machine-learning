@@ -1175,9 +1175,9 @@ if prob_name == "External Program":
             with col1:
                 var_name = st.text_input(f"Variable {i} name", value=f"x{i}", key=f"var_name_{i}")
             with col2:
-                var_lower = st.number_input(f"Lower bound", value=0.0, key=f"var_lower_{i}")
+                var_lower = st.number_input("Lower bound", value=0.0, key=f"var_lower_{i}")
             with col3:
-                var_upper = st.number_input(f"Upper bound", value=1.0, key=f"var_upper_{i}")
+                var_upper = st.number_input("Upper bound", value=1.0, key=f"var_upper_{i}")
             
             variables.append({
                 'name': var_name,
@@ -1255,7 +1255,7 @@ if prob_name == "External Program":
                         st.write(f"- Run directory: `{result['run_dir']}`")
                         st.write(f"- Duration: {result['duration']:.2f}s")
                     else:
-                        st.error(f"❌ Test failed!")
+                        st.error("❌ Test failed!")
                         st.write(f"- Run directory: `{result['run_dir']}`")
                         st.write(f"- Error: {result['error_msg']}")
                 except Exception as e:

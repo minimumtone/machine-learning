@@ -284,8 +284,8 @@ def main():
     col1, col2 = st.columns(2)
     with col1:
         st.write(f"**Samples:** {len(df)}")
-        st.write(f"**Features:** horsepower")
-        st.write(f"**Target:** mpg")
+        st.write("**Features:** horsepower")
+        st.write("**Target:** mpg")
     
     with col2:
         fig, ax = plt.subplots(figsize=(8, 6))

@@ -322,10 +322,10 @@ def _generate_llm_with_traversal(query: str, model: str, api_key: str) -> dict[s
 def run_traversal_ablation() -> list[dict[str, Any]]:
     """Run the full traversal ablation experiment."""
     results = []
-    print(f"=" * 70)
-    print(f"Graph Traversal Ablation Experiment")
+    print("=" * 70)
+    print("Graph Traversal Ablation Experiment")
     print(f"Model: {LLM_MODEL}, Queries: {len(TRAVERSAL_QUERIES)}")
-    print(f"=" * 70)
+    print("=" * 70)
 
     for test in TRAVERSAL_QUERIES:
         qid = test["id"]

@@ -1407,7 +1407,7 @@ def build_summary_stats_md(
         )
 
     lines = ["### Dataset Overview\n"]
-    lines.append(f"| Item | Value |")
+    lines.append("| Item | Value |")
     lines.append("|---|---|")
     lines.append(f"| Samples | {len(target)} |")
 

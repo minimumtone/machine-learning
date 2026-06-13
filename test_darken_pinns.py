@@ -16,7 +16,7 @@ def test_darken_fdm_generation():
     )
     
     assert x.shape[0] == 51, f"Expected 51 spatial points, got {x.shape[0]}"
-    assert t.shape[0] == C.shape[0], f"Time and concentration arrays should have consistent time dimension"
+    assert t.shape[0] == C.shape[0], "Time and concentration arrays should have consistent time dimension"
     assert C.shape[1] == 51, f"Expected 51 spatial points in C, got {C.shape[1]}"
     
     assert np.all(C >= 0) and np.all(C <= 1), "Concentration values should be between 0 and 1"
@@ -33,7 +33,7 @@ def test_darken_fdm_generation():
     print(f'  ✅ FDM data shape: {C.shape}')
     print(f'  ✅ Time steps adjusted for stability: Nt = {t.shape[0]}')
     print(f'  ✅ Concentration range: [{C.min():.4f}, {C.max():.4f}]')
-    print(f'  ✅ Initial condition verified')
+    print('  ✅ Initial condition verified')
     
     return True
 
@@ -154,7 +154,7 @@ def test_darken_pinn_training():
     
     improvement_ratio = initial_loss / final_loss if final_loss > 0 else float('inf')
     
-    print(f'  ✅ Training completed without NaN')
+    print('  ✅ Training completed without NaN')
     print(f'  ✅ Initial loss: {initial_loss:.3e}')
     print(f'  ✅ Final loss: {final_loss:.3e}')
     print(f'  ✅ Improvement ratio: {improvement_ratio:.2f}x')
@@ -201,11 +201,11 @@ def test_darken_physics_constraints():
     ln_gamma_values = pinn._ln_gamma(C_range)
     assert torch.all(torch.abs(ln_gamma_values) < 10), "Activity coefficient should be reasonable"
     
-    print(f'  ✅ D̃(C) > 0 for all C ∈ [0.01, 0.99]')
-    print(f'  ✅ D_A(C) ≥ 0 for all C')
-    print(f'  ✅ D_B(C) ≥ 0 for all C')
-    print(f'  ✅ |lnγ(C)| < 10 for all C')
-    print(f'  ✅ Physics constraints satisfied')
+    print('  ✅ D̃(C) > 0 for all C ∈ [0.01, 0.99]')
+    print('  ✅ D_A(C) ≥ 0 for all C')
+    print('  ✅ D_B(C) ≥ 0 for all C')
+    print('  ✅ |lnγ(C)| < 10 for all C')
+    print('  ✅ Physics constraints satisfied')
     
     return True
 

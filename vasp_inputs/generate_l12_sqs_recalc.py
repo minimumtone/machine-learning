@@ -396,7 +396,7 @@ def write_poscar_sqs_bcc(dirpath, el_a, el_b, a_super):
             f"  0.000000  {a_super:.6f}  0.000000",
             f"  0.000000  0.000000  {a_super:.6f}",
             f"  {el_a}",
-            f"  16",
+            "  16",
             "Direct",
         ]
         for pos in BCC_2x2x2_POSITIONS:
@@ -417,7 +417,7 @@ def write_poscar_sqs_bcc(dirpath, el_a, el_b, a_super):
             f"  0.000000  {a_super:.6f}  0.000000",
             f"  0.000000  0.000000  {a_super:.6f}",
             f"  {el_a}  {el_b}",
-            f"  8  8",
+            "  8  8",
             "Direct",
         ]
         for pos in pos_a:
@@ -440,7 +440,7 @@ def write_poscar_sqs_fcc(dirpath, el_a, el_b, a_super):
             f"  0.000000  {a_super:.6f}  0.000000",
             f"  0.000000  0.000000  {a_super:.6f}",
             f"  {el_a}",
-            f"  32",
+            "  32",
             "Direct",
         ]
         for pos in FCC_2x2x2_POSITIONS:
@@ -631,34 +631,34 @@ def generate_extract_script_l12(base_dir, calculations):
         mag_cfg = "AF" if "_AF" in dirname else "FM"
 
         lines.append(f'DIR="{subdir}"')
-        lines.append(f'if [ -f "$DIR/CONTCAR" ]; then')
-        lines.append(f'    A=$(head -3 "$DIR/CONTCAR" | tail -1 | '
-                     f"awk '{{print $1}}')")
-        lines.append(f'    E=$(grep "energy  without entropy" '
-                     f'"$DIR/OUTCAR" 2>/dev/null | tail -1 | '
-                     f"awk '{{print $NF}}')")
-        lines.append(f'    NATOM=$(grep "NIONS" "$DIR/OUTCAR" '
-                     f"2>/dev/null | awk '{{print $NF}}')")
-        lines.append(f'    EMAG=$(grep "number of electron" '
-                     f'"$DIR/OUTCAR" 2>/dev/null | tail -1 | '
-                     f"awk '{{print $6}}')")
-        lines.append(f'    CONV="no"')
-        lines.append(f'    grep -q "reached required accuracy" '
-                     f'"$DIR/OUTCAR" 2>/dev/null && CONV="yes"')
-        lines.append(f'    if [ -n "$E" ] && [ -n "$NATOM" ] && '
-                     f'[ "$NATOM" -gt 0 ] 2>/dev/null; then')
-        lines.append(f'        EPA=$(echo "scale=10; $E / $NATOM" | bc)')
-        lines.append(f'    else')
-        lines.append(f'        EPA="NA"')
-        lines.append(f'    fi')
+        lines.append('if [ -f "$DIR/CONTCAR" ]; then')
+        lines.append('    A=$(head -3 "$DIR/CONTCAR" | tail -1 | '
+                     "awk '{print $1}')")
+        lines.append('    E=$(grep "energy  without entropy" '
+                     '"$DIR/OUTCAR" 2>/dev/null | tail -1 | '
+                     "awk '{print $NF}')")
+        lines.append('    NATOM=$(grep "NIONS" "$DIR/OUTCAR" '
+                     "2>/dev/null | awk '{print $NF}')")
+        lines.append('    EMAG=$(grep "number of electron" '
+                     '"$DIR/OUTCAR" 2>/dev/null | tail -1 | '
+                     "awk '{print $6}')")
+        lines.append('    CONV="no"')
+        lines.append('    grep -q "reached required accuracy" '
+                     '"$DIR/OUTCAR" 2>/dev/null && CONV="yes"')
+        lines.append('    if [ -n "$E" ] && [ -n "$NATOM" ] && '
+                     '[ "$NATOM" -gt 0 ] 2>/dev/null; then')
+        lines.append('        EPA=$(echo "scale=10; $E / $NATOM" | bc)')
+        lines.append('    else')
+        lines.append('        EPA="NA"')
+        lines.append('    fi')
         lines.append(f'    echo "{dirname},{el_face}3{el_corner},'
                      f'{el_face},{el_corner},3,1,$A,$EPA,$CONV,'
                      f'{mag_cfg},$EMAG"')
-        lines.append(f'else')
+        lines.append('else')
         lines.append(f'    echo "{dirname},{el_face}3{el_corner},'
                      f'{el_face},{el_corner},3,1,NA,NA,not_run,'
                      f'{mag_cfg},NA"')
-        lines.append(f'fi')
+        lines.append('fi')
         lines.append("")
 
     path = os.path.join(base_dir, "extract_results.sh")
@@ -677,8 +677,8 @@ def generate_extract_script_sqs(base_dir, calculations, sqs_type="BCC"):
         f"# Extract results from {sqs_type}-SQS recalculations",
         "# Usage: bash extract_results.sh > sqs_recalc_results.csv",
         "",
-        f'echo "dirname,formula,element_A,element_B,count_A,count_B,'
-        f'lattice_constant,energy_per_atom,converged,mag_config,total_mag"',
+        'echo "dirname,formula,element_A,element_B,count_A,count_B,'
+        'lattice_constant,energy_per_atom,converged,mag_config,total_mag"',
         "",
     ]
 
@@ -696,35 +696,35 @@ def generate_extract_script_sqs(base_dir, calculations, sqs_type="BCC"):
             cA, cB = n_each, n_each
 
         lines.append(f'DIR="{subdir}"')
-        lines.append(f'if [ -f "$DIR/CONTCAR" ]; then')
-        lines.append(f'    ASUPER=$(head -3 "$DIR/CONTCAR" | tail -1 | '
-                     f"awk '{{print $1}}')")
-        lines.append(f'    A=$(echo "scale=10; $ASUPER / 2" | bc)')
-        lines.append(f'    E=$(grep "energy  without entropy" '
-                     f'"$DIR/OUTCAR" 2>/dev/null | tail -1 | '
-                     f"awk '{{print $NF}}')")
-        lines.append(f'    NATOM=$(grep "NIONS" "$DIR/OUTCAR" '
-                     f"2>/dev/null | awk '{{print $NF}}')")
-        lines.append(f'    EMAG=$(grep "number of electron" '
-                     f'"$DIR/OUTCAR" 2>/dev/null | tail -1 | '
-                     f"awk '{{print $6}}')")
-        lines.append(f'    CONV="no"')
-        lines.append(f'    grep -q "reached required accuracy" '
-                     f'"$DIR/OUTCAR" 2>/dev/null && CONV="yes"')
-        lines.append(f'    if [ -n "$E" ] && [ -n "$NATOM" ] && '
-                     f'[ "$NATOM" -gt 0 ] 2>/dev/null; then')
-        lines.append(f'        EPA=$(echo "scale=10; $E / $NATOM" | bc)')
-        lines.append(f'    else')
-        lines.append(f'        EPA="NA"')
-        lines.append(f'    fi')
+        lines.append('if [ -f "$DIR/CONTCAR" ]; then')
+        lines.append('    ASUPER=$(head -3 "$DIR/CONTCAR" | tail -1 | '
+                     "awk '{print $1}')")
+        lines.append('    A=$(echo "scale=10; $ASUPER / 2" | bc)')
+        lines.append('    E=$(grep "energy  without entropy" '
+                     '"$DIR/OUTCAR" 2>/dev/null | tail -1 | '
+                     "awk '{print $NF}')")
+        lines.append('    NATOM=$(grep "NIONS" "$DIR/OUTCAR" '
+                     "2>/dev/null | awk '{print $NF}')")
+        lines.append('    EMAG=$(grep "number of electron" '
+                     '"$DIR/OUTCAR" 2>/dev/null | tail -1 | '
+                     "awk '{print $6}')")
+        lines.append('    CONV="no"')
+        lines.append('    grep -q "reached required accuracy" '
+                     '"$DIR/OUTCAR" 2>/dev/null && CONV="yes"')
+        lines.append('    if [ -n "$E" ] && [ -n "$NATOM" ] && '
+                     '[ "$NATOM" -gt 0 ] 2>/dev/null; then')
+        lines.append('        EPA=$(echo "scale=10; $E / $NATOM" | bc)')
+        lines.append('    else')
+        lines.append('        EPA="NA"')
+        lines.append('    fi')
         lines.append(f'    echo "{dirname},{formula},'
                      f'{el_a},{el_b},{cA},{cB},$A,$EPA,$CONV,'
                      f'{mag_cfg},$EMAG"')
-        lines.append(f'else')
+        lines.append('else')
         lines.append(f'    echo "{dirname},{formula},'
                      f'{el_a},{el_b},{cA},{cB},NA,NA,not_run,'
                      f'{mag_cfg},NA"')
-        lines.append(f'fi')
+        lines.append('fi')
         lines.append("")
 
     path = os.path.join(base_dir, "extract_results.sh")

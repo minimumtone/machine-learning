@@ -112,11 +112,11 @@ def print_dipole_moment(dipole: Dict[str, float]):
     print("Electric Dipole Moment")
     print(f"{'='*60}")
     
-    print(f"\nCartesian components (Debye):")
+    print("\nCartesian components (Debye):")
     print(f"  μ_x = {dipole['mu_x_debye']:12.6f}")
     print(f"  μ_y = {dipole['mu_y_debye']:12.6f}")
     print(f"  μ_z = {dipole['mu_z_debye']:12.6f}")
     
-    print(f"\nMagnitude:")
+    print("\nMagnitude:")
     print(f"  |μ| = {dipole['mu_magnitude_debye']:12.6f} Debye")
     print(f"  |μ| = {dipole['mu_magnitude']:12.6f} a.u.")

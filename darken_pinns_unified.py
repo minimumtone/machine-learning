@@ -703,7 +703,7 @@ def verify_diffusion_pair_constraints():
         lambda_pde=1.0, lambda_ic=2.0, lambda_bc=0.5
     )
     
-    print(f'\nLoss function test:')
+    print('\nLoss function test:')
     print(f'Total loss: {total_loss.item():.6f}')
     print(f'Data loss: {data_loss.item():.6f}')
     print(f'PDE loss: {pde_loss.item():.6f}')
@@ -742,9 +742,9 @@ def main():
         verify_diffusion_pair_constraints()
     else:
         results = run_standalone_training()
-        print(f"\n=== Training Summary ===")
+        print("\n=== Training Summary ===")
         print(f"Final loss: {results['final_loss']:.3e}")
-        print(f"Diffusion pair concentration range restrictions successfully implemented!")
+        print("Diffusion pair concentration range restrictions successfully implemented!")
 
 
 def is_streamlit_context():

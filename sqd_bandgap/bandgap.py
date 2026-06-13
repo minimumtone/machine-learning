@@ -106,11 +106,11 @@ def compute_bandgap_from_results(results_folder: str,
         'sampling': sampling
     }
     
-    print(f"\n=== Band Gap Calculation ===")
+    print("\n=== Band Gap Calculation ===")
     print(f"E[Ne-1] = E[{ne_neutral-1}e] = {e_minus:.6f} eV")
     print(f"E[Ne]   = E[{ne_neutral}e] = {e_neutral:.6f} eV")
     print(f"E[Ne+1] = E[{ne_neutral+1}e] = {e_plus:.6f} eV")
-    print(f"\nBand Gap = E[Ne-1] + E[Ne+1] - 2*E[Ne]")
+    print("\nBand Gap = E[Ne-1] + E[Ne+1] - 2*E[Ne]")
     print(f"         = {e_minus:.6f} + {e_plus:.6f} - 2*{e_neutral:.6f}")
     print(f"         = {bandgap:.4f} eV")
     
@@ -141,7 +141,7 @@ def compare_with_experiment(sqd_bandgap: float,
         'sqd_error_percent': sqd_error_percent
     }
     
-    print(f"\n=== Comparison with Experiment ===")
+    print("\n=== Comparison with Experiment ===")
     print(f"SQD Band Gap:          {sqd_bandgap:.4f} eV")
     print(f"Experimental:          {experimental_bandgap:.4f} eV")
     print(f"SQD Error:             {sqd_error:.4f} eV ({sqd_error_percent:.1f}%)")

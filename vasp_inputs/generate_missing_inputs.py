@@ -318,7 +318,7 @@ def write_poscar_sqs(dirpath, el_a, el_b, a_super):
             f"  0.000000  {a_super:.6f}  0.000000",
             f"  0.000000  0.000000  {a_super:.6f}",
             f"  {el_a}",
-            f"  16",
+            "  16",
             "Direct",
         ]
         for pos in BCC_2x2x2_POSITIONS:
@@ -333,7 +333,7 @@ def write_poscar_sqs(dirpath, el_a, el_b, a_super):
             f"  0.000000  {a_super:.6f}  0.000000",
             f"  0.000000  0.000000  {a_super:.6f}",
             f"  {el_a}  {el_b}",
-            f"  8  8",
+            "  8  8",
             "Direct",
         ]
         for pos in pos_a:
@@ -355,7 +355,7 @@ def write_poscar_fcc_sqs(dirpath, el_a, el_b, a_super):
             f"  0.000000  {a_super:.6f}  0.000000",
             f"  0.000000  0.000000  {a_super:.6f}",
             f"  {el_a}",
-            f"  32",
+            "  32",
             "Direct",
         ]
         for pos in FCC_2x2x2_POSITIONS:
@@ -370,7 +370,7 @@ def write_poscar_fcc_sqs(dirpath, el_a, el_b, a_super):
             f"  0.000000  {a_super:.6f}  0.000000",
             f"  0.000000  0.000000  {a_super:.6f}",
             f"  {el_a}  {el_b}",
-            f"  16  16",
+            "  16  16",
             "Direct",
         ]
         for pos in pos_a:
@@ -451,7 +451,7 @@ def generate_run_script(base_dir, all_calcs):
         'BASE=$(cd "$(dirname "$0")" && pwd)',
         'LOG="$BASE/run_status.log"',
         "",
-        f'echo "=== Missing VASP Calculations ===" | tee "$LOG"',
+        'echo "=== Missing VASP Calculations ===" | tee "$LOG"',
         f'echo "Total: {len(all_calcs)} calculations" | tee -a "$LOG"',
         'echo "VASPBIN=$VASPBIN" | tee -a "$LOG"',
         'echo "Started: $(date)" | tee -a "$LOG"',
@@ -463,16 +463,16 @@ def generate_run_script(base_dir, all_calcs):
         lines.append(f'echo "[{i}/{len(all_calcs)}] {subdir}..." | tee -a "$LOG"')
         lines.append(f'cd "$BASE/{subdir}"')
         lines.append('if [ ! -f POTCAR ]; then')
-        lines.append(f'    echo "  SKIP (no POTCAR)" | tee -a "$LOG"')
+        lines.append('    echo "  SKIP (no POTCAR)" | tee -a "$LOG"')
         lines.append('else')
         lines.append('$VASPBIN > vasp.out 2>&1')
         lines.append('if grep -q "reached required accuracy" OUTCAR 2>/dev/null; then')
-        lines.append(f'    echo "  CONVERGED" | tee -a "$LOG"')
+        lines.append('    echo "  CONVERGED" | tee -a "$LOG"')
         lines.append('else')
-        lines.append(f'    echo "  WARNING: not converged" | tee -a "$LOG"')
+        lines.append('    echo "  WARNING: not converged" | tee -a "$LOG"')
         lines.append('fi')
         lines.append('fi')
-        lines.append(f'cd "$BASE"')
+        lines.append('cd "$BASE"')
         lines.append("")
 
     lines.append('echo "" | tee -a "$LOG"')

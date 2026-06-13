@@ -335,14 +335,14 @@ class CALPHADThermodynamics:
             "CALPHAD熱力学検証レポート",
             "=" * 60,
             "",
-            f"Input Parameters / 入力パラメータ:",
+            "Input Parameters / 入力パラメータ:",
             f"  T_m (融点) = {self.T_m:.1f} K",
             f"  T_g (ガラス転移点) = {self.T_g:.1f} K",
             f"  ΔH_f (融解熱) = {self.delta_H_f:.1f} J/mol",
             f"  ΔS_f (融解エントロピー) = {self.delta_S_f:.2f} J/(mol·K)",
             f"  ΔCp (熱容量差) = {self.delta_Cp:.2f} J/(mol·K)",
             "",
-            f"Validation Checks / 検証チェック:",
+            "Validation Checks / 検証チェック:",
         ]
         
         delta_G_at_Tm = self.delta_G(self.T_m, method)
@@ -364,7 +364,7 @@ class CALPHADThermodynamics:
         
         lines.extend([
             "",
-            f"Calculated Values at Key Temperatures / 主要温度での計算値:",
+            "Calculated Values at Key Temperatures / 主要温度での計算値:",
             f"  At T_m ({self.T_m:.1f} K):",
             f"    ΔG = {delta_G_at_Tm:.2e} J/mol",
             f"  At T_g ({self.T_g:.1f} K):",

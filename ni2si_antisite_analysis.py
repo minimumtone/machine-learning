@@ -1830,14 +1830,14 @@ def run_full_workflow_with_selection(
         print("\n" + "=" * 70)
         print("Workflow completed successfully!")
         print("=" * 70)
-        print(f"\nSummary:")
+        print("\nSummary:")
         print(f"  - Generated {len(all_candidates)} candidate structures")
         print(f"  - Selected top {len(selected_configs)} by KL divergence (highest ordering)")
-        print(f"\nNext steps:")
+        print("\nNext steps:")
         print(f"1. Copy POTCAR files to {dirs['vasp_runs']}")
         print(f"2. Submit VASP jobs for {len(selected_configs)} selected structures")
         print(f"3. Update {csv_path} with calculated energies")
-        print(f"4. Run LOBSTER for COHP/COOP analysis")
+        print("4. Run LOBSTER for COHP/COOP analysis")
     
     return {
         "structure": structure,
@@ -2016,11 +2016,11 @@ def run_full_workflow(
         print("\n" + "=" * 60)
         print("Workflow completed successfully!")
         print("=" * 60)
-        print(f"\nNext steps:")
+        print("\nNext steps:")
         print(f"1. Copy POTCAR files to {dirs['vasp_runs']}")
-        print(f"2. Submit VASP jobs for all structures")
+        print("2. Submit VASP jobs for all structures")
         print(f"3. Update {csv_path} with calculated energies")
-        print(f"4. Run LOBSTER for COHP/COOP analysis")
+        print("4. Run LOBSTER for COHP/COOP analysis")
     
     return {
         "structure": structure,

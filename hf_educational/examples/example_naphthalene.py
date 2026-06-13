@@ -54,10 +54,10 @@ H    0.000000   -1.250000   -4.350000
 
 naphthalene = Molecule.from_xyz_string(naphthalene_xyz, charge=0, multiplicity=1)
 
-print(f"\nMolecular formula: C10H8")
+print("\nMolecular formula: C10H8")
 print(f"Total electrons: {naphthalene.n_electrons}")
-print(f"Structure: Two fused benzene rings (D2h symmetry)")
-print(f"Expected: Extended π-conjugation across both rings")
+print("Structure: Two fused benzene rings (D2h symmetry)")
+print("Expected: Extended π-conjugation across both rings")
 
 rhf = RHF(naphthalene, 'sto-3g')
 basis = rhf.basis
@@ -65,7 +65,7 @@ basis = rhf.basis
 print("\n" + "="*70)
 print(" Running RHF-SCF Calculation")
 print("="*70)
-print(f"\nNote: Larger system may take longer to converge...")
+print("\nNote: Larger system may take longer to converge...")
 
 start_time = time.time()
 rhf.compute_integrals(schwarz_threshold=1e-10)
@@ -97,7 +97,7 @@ if rhf.converged:
     print(f"\n  HOMO energy: {homo_energy:.6f} Eh ({homo_energy * 27.211386:.2f} eV)")
     print(f"  LUMO energy: {lumo_energy:.6f} Eh ({lumo_energy * 27.211386:.2f} eV)")
     print(f"  HOMO-LUMO gap: {gap_ev:.2f} eV")
-    print(f"  (Smaller than benzene due to extended conjugation)")
+    print("  (Smaller than benzene due to extended conjugation)")
     
 else:
     print(f"✗ SCF did not converge in {rhf.max_iter} iterations")
@@ -157,12 +157,12 @@ for i, j, bond_type in all_bonds:
     elif bond_type == "Bridge":
         bridge_orders.append(bo)
 
-print(f"\nAverage bond orders:")
+print("\nAverage bond orders:")
 print(f"  Peripheral C-C: {np.mean(peripheral_orders):.4f}")
 print(f"  Fusion C-C:     {np.mean(fusion_orders):.4f}")
 print(f"  Bridge C-C:     {np.mean(bridge_orders):.4f}")
-print(f"\nNote: Fusion bonds typically have higher bond order (~1.6)")
-print(f"      due to increased π-electron density between rings")
+print("\nNote: Fusion bonds typically have higher bond order (~1.6)")
+print("      due to increased π-electron density between rings")
 
 print("\nCharge Distribution on Carbons:")
 carbon_charges = mulliken_results['atomic_charges'][:10]
@@ -176,7 +176,7 @@ print("="*70)
 
 dipole = compute_dipole_moment(rhf.P, basis, naphthalene)
 print_dipole_moment(dipole)
-print(f"\n(Should be ~0 for D2h symmetric naphthalene)")
+print("\n(Should be ~0 for D2h symmetric naphthalene)")
 
 print("\n" + "="*70)
 print(" Generating Visualizations")
@@ -188,17 +188,17 @@ try:
     import matplotlib.pyplot as plt
     
     plot_convergence(rhf.convergence_history, save_path='naphthalene_convergence.png')
-    print(f"✓ Saved convergence plot to naphthalene_convergence.png")
+    print("✓ Saved convergence plot to naphthalene_convergence.png")
     
     n_occ = naphthalene.n_electrons // 2
     plot_mo_diagram(rhf.orbital_energies, n_occ, 
                    title="Naphthalene Molecular Orbital Energies",
                    save_path='naphthalene_mo_diagram.png')
-    print(f"✓ Saved MO diagram to naphthalene_mo_diagram.png")
+    print("✓ Saved MO diagram to naphthalene_mo_diagram.png")
     
     plot_all_matrices(rhf.S, rhf.H, rhf.J, rhf.K, rhf.F,
                      save_path='naphthalene_matrices.png')
-    print(f"✓ Saved matrix heatmaps to naphthalene_matrices.png")
+    print("✓ Saved matrix heatmaps to naphthalene_matrices.png")
     
 except Exception as e:
     print(f"Warning: Could not generate visualizations: {e}")
@@ -206,15 +206,15 @@ except Exception as e:
 print("\n" + "="*70)
 print(" Calculation Complete!")
 print("="*70)
-print(f"\nNaphthalene RHF/STO-3G Results:")
+print("\nNaphthalene RHF/STO-3G Results:")
 print(f"  Energy: {rhf.energy:.6f} Eh")
 print(f"  HOMO-LUMO gap: {gap_ev:.2f} eV")
 print(f"  Average peripheral C-C bond order: {np.mean(peripheral_orders):.4f}")
 print(f"  Average fusion C-C bond order: {np.mean(fusion_orders):.4f}")
 print(f"  Converged: {rhf.converged} ({rhf.iteration} iterations)")
-print(f"\nThis calculation demonstrates:")
-print(f"  • Extended π-conjugation in polycyclic aromatic systems")
-print(f"  • D2h symmetry preservation")
-print(f"  • Different bond orders in peripheral vs fusion bonds")
-print(f"  • DIIS convergence for larger conjugated systems")
-print(f"  • Comparison with benzene for aromatic character")
+print("\nThis calculation demonstrates:")
+print("  • Extended π-conjugation in polycyclic aromatic systems")
+print("  • D2h symmetry preservation")
+print("  • Different bond orders in peripheral vs fusion bonds")
+print("  • DIIS convergence for larger conjugated systems")
+print("  • Comparison with benzene for aromatic character")

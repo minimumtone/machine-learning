@@ -516,14 +516,14 @@ def main():
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     print("=" * 70)
-    print(f"VASP結果 一括スキャン・再解析")
+    print("VASP結果 一括スキャン・再解析")
     print(f"  データ: {data_dir}")
     print(f"  出力:   {out_dir}")
     print(f"  時刻:   {timestamp}")
     print("=" * 70)
 
     report = []
-    report.append(f"# VASP再解析レポート\n")
+    report.append("# VASP再解析レポート\n")
     report.append(f"- 実行時刻: {timestamp}")
     report.append(f"- データディレクトリ: `{data_dir}`\n")
 
@@ -569,7 +569,7 @@ def main():
         print(f"    結果取得: {n_total} (収束: {n_conv}, 未収束: {n_notconv})")
         print(f"    結果なし: {n_noresult}")
         if no_result_dirs:
-            print(f"    結果なしリスト:")
+            print("    結果なしリスト:")
             for d in no_result_dirs:
                 print(f"      - {d}")
 
@@ -727,7 +727,7 @@ def main():
     print(f"{'='*70}")
 
     # Print summary to console
-    print(f"\n【サマリー】")
+    print("\n【サマリー】")
     for label in ['B2', 'L12', 'SQS']:
         cov = all_coverage[label]
         n_res = len(all_results[label])

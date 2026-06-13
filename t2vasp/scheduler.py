@@ -207,7 +207,7 @@ def _write_local(output_dir: Path, vasp_cmd: str) -> Path:
         "    bash make_potcar.sh",
         "fi",
         "",
-        f'echo "Running VASP locally..."',
+        'echo "Running VASP locally..."',
         f"{vasp_cmd} > vasp.log 2>&1",
         "",
         'if grep -q "reached required accuracy" OUTCAR 2>/dev/null; then',

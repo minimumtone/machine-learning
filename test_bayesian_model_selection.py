@@ -23,12 +23,12 @@ def test_bayesian_evaluation():
     print(f"Test complexity calculation: {test_complexity}")
     
     results_standard = pde_regression.discover_diffusion_equation(use_exhaustive_search=False)
-    print(f"Standard Bayesian evaluation completed")
+    print("Standard Bayesian evaluation completed")
     print(f"Best model: {results_standard['best_model']['name'] if results_standard['best_model'] else 'None'}")
     print(f"Number of candidates: {len(results_standard['all_results'])}")
     
     results_exhaustive = pde_regression.discover_diffusion_equation(use_exhaustive_search=True, max_complexity=2)
-    print(f"Exhaustive search completed")
+    print("Exhaustive search completed")
     print(f"Best model: {results_exhaustive['best_model']['name'] if results_exhaustive['best_model'] else 'None'}")
     print(f"Number of candidates: {len(results_exhaustive['all_results'])}")
     

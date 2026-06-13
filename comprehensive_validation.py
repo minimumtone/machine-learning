@@ -737,7 +737,7 @@ def main():
     os.makedirs(FIG_DIR, exist_ok=True)
     
     report_lines = ["# Comprehensive Validation Report\n"]
-    report_lines.append(f"r_WS definition: $r_{{WS}} = (3 V_{{atom}} / 4\\pi)^{{1/3}}$\n\n")
+    report_lines.append("r_WS definition: $r_{WS} = (3 V_{atom} / 4\\pi)^{1/3}$\n\n")
     
     # Load all data
     print("Loading data...")

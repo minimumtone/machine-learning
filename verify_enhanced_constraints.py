@@ -41,10 +41,10 @@ def verify_enhanced_constraints():
         lambda_pde=1.0, lambda_ic=2.0, lambda_bc=0.5, lambda_Dbc=20.0
     )
     
-    print(f'\nLoss function test:')
+    print('\nLoss function test:')
     print(f'Total loss: {total_loss.item():.6f}')
     print(f'D_bc loss (4 constraints): {D_bc_loss.item():.6f}')
-    print(f'Lambda_Dbc weight: 20.0 (enhanced from 10.0)')
+    print('Lambda_Dbc weight: 20.0 (enhanced from 10.0)')
     
     print('\n✅ Enhanced loss function with 4 boundary conditions implemented successfully!')
     print('✅ All four pure substance constraints: D_A(0)=0, D_B(1)=0, D_A(1)=0.05, D_B(0)=0.05')

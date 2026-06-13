@@ -461,6 +461,7 @@ def run_vasp_job(calc_dir, vaspbin, ncore, job_timeout=7200):
 
     t0 = time.time()
     proc = None
+    log_f = None
     try:
         log_f = open(log_path, 'w')
         proc = subprocess.Popen(
@@ -470,6 +471,7 @@ def run_vasp_job(calc_dir, vaspbin, ncore, job_timeout=7200):
         )
         proc.wait(timeout=self_timeout)  # timeout per job
         log_f.close()
+        log_f = None
 
         elapsed = time.time() - t0
         # Quick convergence check
@@ -501,6 +503,9 @@ def run_vasp_job(calc_dir, vaspbin, ncore, job_timeout=7200):
             except (ProcessLookupError, OSError):
                 pass
         return dirname, False, elapsed, f"ERROR: {e}"
+    finally:
+        if log_f is not None:
+            log_f.close()
 
 
 def run_all_jobs(rerun_dirs, vaspbin, ncore, max_jobs, job_timeout=7200):
@@ -539,7 +544,7 @@ def run_all_jobs(rerun_dirs, vaspbin, ncore, max_jobs, job_timeout=7200):
     print(f"RESULTS: {succeeded}/{total} converged, "
           f"{total - succeeded} still unconverged")
     if failed_dirs:
-        print(f"\nStill unconverged:")
+        print("\nStill unconverged:")
         for d in failed_dirs:
             print(f"  {d}")
     print(f"{'='*70}")
@@ -626,7 +631,7 @@ Examples:
 
     # Summary
     print("=" * 70)
-    print(f"SUMMARY")
+    print("SUMMARY")
     print(f"  Total directories:  {total}")
     print(f"  Converged (OUTCAR): {converged} ({100*converged/max(total,1):.1f}%)")
     print(f"  Rerun needed:       {rerun_needed} ({100*rerun_needed/max(total,1):.1f}%)")
