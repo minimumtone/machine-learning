@@ -613,39 +613,77 @@ def suggest_column_correction(
 
 
 def _extract_unqualified_columns(sql: str) -> list[str]:
-    """Extract unqualified column names from SELECT/WHERE/ORDER BY clauses.
+    """Extract unqualified column names from SELECT/WHERE clauses only.
 
     Uses sqlglot AST when available; returns column names that have no
     table qualifier (e.g. ``SELECT col1 FROM t`` yields ``["col1"]``).
+    Excludes SELECT aliases (used in ORDER BY/HAVING) and CTE names.
     """
     if HAS_SQLGLOT:
         try:
             parsed = sqlglot.parse(sql, dialect="postgres")
             cols: set[str] = set()
+            select_aliases: set[str] = set()
+            cte_names: set[str] = set()
             for stmt in parsed:
                 if stmt is None:
                     continue
-                for col in stmt.find_all(sqlglot_exp.Column):
-                    table_node = col.args.get("table")
-                    if not table_node and col.name:
-                        name_lower = col.name.lower()
-                        # Skip SQL keywords / aggregates / common aliases
-                        if name_lower not in {
-                            "count", "sum", "avg", "min", "max", "coalesce",
-                            "case", "when", "then", "else", "end", "as",
-                            "true", "false", "null", "distinct",
-                        }:
+                # Collect CTE names
+                for cte in stmt.find_all(sqlglot_exp.CTE):
+                    alias_node = cte.args.get("alias")
+                    if alias_node:
+                        cte_names.add(alias_node.name.lower())
+                # Collect SELECT aliases (e.g. COUNT(*) AS cnt → "cnt")
+                for alias in stmt.find_all(sqlglot_exp.Alias):
+                    select_aliases.add(alias.alias.lower())
+                # Collect unqualified columns from WHERE clauses only
+                for where in stmt.find_all(sqlglot_exp.Where):
+                    for col in where.find_all(sqlglot_exp.Column):
+                        table_node = col.args.get("table")
+                        if not table_node and col.name:
                             cols.add(col.name)
-            return sorted(cols)
+                # Collect from SELECT expressions (but not from ORDER BY)
+                select_node = stmt.find(sqlglot_exp.Select)
+                if select_node:
+                    for expr in (select_node.expressions or []):
+                        for col in expr.find_all(sqlglot_exp.Column):
+                            table_node = col.args.get("table")
+                            if not table_node and col.name:
+                                cols.add(col.name)
+            # Remove SELECT aliases and CTE names
+            skip = select_aliases | cte_names | {
+                "count", "sum", "avg", "min", "max", "coalesce",
+                "case", "when", "then", "else", "end", "as",
+                "true", "false", "null", "distinct",
+            }
+            return sorted(c for c in cols if c.lower() not in skip)
         except Exception:
             pass
     return []
 
 
 def _get_from_tables(sql: str) -> list[str]:
-    """Extract actual table names from FROM/JOIN clauses (not aliases)."""
+    """Extract actual table names from FROM/JOIN clauses (not aliases).
+
+    Excludes CTE names so that ``WITH data AS (...) SELECT ... FROM data``
+    doesn't treat ``data`` as a real table for column validation.
+    """
     alias_map = _extract_aliases_from_sql(sql)
-    return sorted({v for v in alias_map.values()})
+    tables = {v for v in alias_map.values()}
+    # Remove CTE names
+    if HAS_SQLGLOT:
+        try:
+            parsed = sqlglot.parse(sql, dialect="postgres")
+            for stmt in parsed:
+                if stmt is None:
+                    continue
+                for cte in stmt.find_all(sqlglot_exp.CTE):
+                    alias_node = cte.args.get("alias")
+                    if alias_node:
+                        tables.discard(alias_node.name.lower())
+        except Exception:
+            pass
+    return sorted(tables)
 
 
 def check_allowed_columns(
