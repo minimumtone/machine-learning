@@ -302,7 +302,7 @@ def main():
         c = _count_where_conditions(sql)
         g = 1 if re.search(r'\bGROUP\s+BY\b', sql.upper()) else 0
         e = 1 if re.search(r'\bEXISTS\b', sql.upper()) else 0
-        s = 1 if sql.upper().count('SELECT') > 1 else 0
+        s = 1 if (sql.upper().count('SELECT') > 1 and e == 0) else 0
         return t * 3 + c + g * 2 + e * 3 + s * 3
 
     def _unified_difficulty_label(score: int) -> str:
