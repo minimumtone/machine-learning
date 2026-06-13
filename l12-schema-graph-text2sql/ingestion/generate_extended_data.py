@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate data for the 30-table extended schema.
 
-Produces ~1,471 material entries across 5 prototypes (L12, B2, NaCl, NiAs, BiF3)
+Produces 1,470 material entries across 5 prototypes (L12, B2, NaCl, NiAs, BiF3)
 with full coverage of all 30 tables. Output: a single SQL file that can be
 loaded after the schema (extended_schema.sql) is applied.
 
@@ -145,7 +145,7 @@ def _esc(s: str) -> str:
 def generate(out: TextIO = sys.stdout) -> None:
     """Generate full INSERT statements for 30-table schema."""
     out.write("-- Auto-generated data for 30-table extended schema\n")
-    out.write("-- ~1,471 material entries across 5 prototypes (L12, B2, NaCl, NiAs, BiF3)\n")
+    out.write("-- 1,470 material entries across 5 prototypes (L12, B2, NaCl, NiAs, BiF3)\n")
     out.write("BEGIN;\n\n")
 
     # --- 1. Element table ---
@@ -481,7 +481,7 @@ def generate(out: TextIO = sys.stdout) -> None:
                 )
 
     # Generate entries per prototype
-    # L12: ~393 entries (known + generated) — paper Table 3
+    # L12: 392 entries (known + generated) — paper Table 3
     out.write("\n-- L12 entries (known + generated)\n")
     for a, b, lat, fe, eah, stab, bulk, shear in KNOWN_L12:
         _gen_entry("L12", a, b, lat, fe, eah, stab, bulk, shear)

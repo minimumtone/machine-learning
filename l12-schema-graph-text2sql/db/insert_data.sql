@@ -19394,7 +19394,6 @@ INSERT INTO measured_property (measurement_id, property_name, value, unit, uncer
 INSERT INTO experimental_measurement (measurement_id, entry_id, method, temperature_k) VALUES (75, 'entry_00065', 'DSC', 436.6);
 INSERT INTO measured_property (measurement_id, property_name, value, unit, uncertainty) VALUES (75, 'resistivity', 366.292, 'A', 4.309);
 INSERT INTO experimental_measurement (measurement_id, entry_id, method, temperature_k) VALUES (76, 'entry_01379', 'DSC', 621.9);
--- Generated 1470 material entries
 INSERT INTO measured_property (measurement_id, property_name, value, unit, uncertainty) VALUES (76, 'hardness', 380.496, 'GPa', 4.073);
 INSERT INTO experimental_measurement (measurement_id, entry_id, method, temperature_k) VALUES (77, 'entry_01042', 'SEM', 205.1);
 INSERT INTO measured_property (measurement_id, property_name, value, unit, uncertainty) VALUES (77, 'density', 301.788, 'A', 3.411);

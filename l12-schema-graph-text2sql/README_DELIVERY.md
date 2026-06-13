@@ -92,12 +92,12 @@ for sql_file in sorted(os.listdir("evaluation/gold_sql")):
 python scripts/compute_paper_figures.py
 ```
 
-## 完全再現（リポジトリ必要）
+## 完全再現
 
-完全な評価再現にはリポジトリのクローンが必要です:
+完全な評価再現は、このZIP展開版またはリポジトリクローンのどちらでも可能です:
 
 ```bash
-git clone <repository_url>
+# ZIP展開版の場合
 cd l12-schema-graph-text2sql
 pip install -e ".[dev]"
 cd docker && docker compose up -d && cd ..
@@ -144,8 +144,9 @@ join_list = get_allowed_join_list(db_connection)  # requires live DB
 result = pipeline(query, join_list=join_list)
 ```
 
-**LIMIT値について**: rule-based fallbackのデフォルトは `LIMIT 100`（環境変数 `SQL_ROW_LIMIT` で変更可）。
-論文評価時は `SQL_ROW_LIMIT=10000` を使用しています。「L12型化合物を全て出して」のような広いクエリでは結果数が異なります。
+**LIMIT値について**: rule-based fallbackはLIMITを生成しません。評価時は `normalize_limit()` により
+LIMITなしのSQLに `LIMIT 10000` が統一的に付加されます（全手法共通）。
+API経由の場合は `sql_validator.check_limit()` が `LIMIT 10000` を自動付加します。
 
 ## LaTeX再コンパイルに必要な環境
 
@@ -162,4 +163,4 @@ PDF自体は同梱済みのため、閲覧のみであれば再コンパイル�
 
 `baseline_result.csv` は `condition_mapper`/`entity_extractor` の辞書拡張（elastic_tensor,
 thermal_property, magnetic_property対応）前のコードで生成されたもの。
-辞書拡張後にB3 (Rule-based) を再ランすると36.9%から変動する可能性がある。
+辞書拡張後にB3 (Rule-based) を再ランすると52.8%から変動する可能性がある。

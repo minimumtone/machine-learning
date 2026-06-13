@@ -116,7 +116,7 @@ l12-schema-graph-text2sql/
 │   └── allowed_schema.yaml   # 許可テーブル・カラム定義
 ├── evaluation/          # 評価パイプライン
 │   ├── evaluation_dataset.jsonl # 100クエリ（Easy/Medium/Hard/VeryHard）
-│   ├── gold_sql/        # 正解SQL 100件
+│   ├── gold_sql/        # 正解SQL 200件（著者設計100件 + 独立設計100件）
 │   ├── expected_results/ # 正解実行結果JSON
 │   ├── metrics.py       # 評価指標（構文妥当率、実行精度等）
 │   ├── run_proposed.py  # Proposed手法実行
@@ -127,7 +127,10 @@ l12-schema-graph-text2sql/
 │   └── baseline_result.csv     # ベースライン4手法結果
 ├── scripts/             # 評価・分析スクリプト
 │   ├── run_full_evaluation.py      # 5手法完全評価
-│   └── generate_gold_sql_and_results.py  # Gold SQL生成
+│   ├── run_proposed_only.py        # Proposed手法のみ再評価
+│   ├── run_expert_evaluation.py    # 独立設計100件評価
+│   ├── compute_paper_figures.py    # 論文数値JSON生成
+│   └── validate_paper_numbers.py   # TeX数値検証
 ├── api/                 # FastAPI アプリケーション
 │   └── main.py
 ├── tests/               # ユニットテスト（125件）
@@ -144,7 +147,7 @@ l12-schema-graph-text2sql/
 |--------|--------------|-----------|-----------|---------|--------------|---------|
 | B1: LLM-only | 何も渡さない | 98% | 98% | 64.6% | 0% | 16件 |
 | B2: Full Schema | 全テーブル一覧 | 94% | 94% | 68.7% | 0% | 18件 |
-| B3: Rule-based | 辞書ルール（LLM不使用） | 100% | 93% | 36.9% | 0% | 3件 |
+| B3: Rule-based | 辞書ルール（LLM不使用） | 100% | 95% | 52.8% | 0% | 3件 |
 | B4: FK-list | FK関係リストのみ | 98% | 98% | 66.4% | 0% | 21件 |
 | **P: Proposed** | **Steiner木で選んだサブグラフ** | **100%** | **100%** | **70.6%** (3回平均70.9%±1.7pp) | **0%** | **3件** |
 
@@ -169,7 +172,7 @@ v4でgraph層のJOIN方向バグ（`_edge_source`による逆方向走査時の�
 
 `baseline_result.csv` は `condition_mapper`/`entity_extractor` の辞書拡張
 （elastic_tensor, thermal_property, magnetic_property対応）前のコードで生成。
-辞書拡張後にB3 (Rule-based) を再ランすると36.9%から変動する可能性あり。
+辞書拡張後にB3 (Rule-based) を再ランすると52.8%から変動する可能性あり。
 
 ## Key Features
 
