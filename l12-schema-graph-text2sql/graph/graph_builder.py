@@ -56,12 +56,28 @@ def build_schema_graph(
     return g
 
 
+# Semantic JOINs not expressed as physical FKs in the schema.
+# composition.element (TEXT) semantically matches element.symbol (VARCHAR).
+_SEMANTIC_JOINS: list[ForeignKeyMetadata] = [
+    ForeignKeyMetadata(
+        source_table="composition",
+        source_column="element",
+        target_table="element",
+        target_column="symbol",
+    ),
+]
+
+
 def build_table_graph(
     foreign_keys: list[ForeignKeyMetadata],
 ) -> nx.Graph:
-    """Build an undirected graph containing only table-level join edges."""
+    """Build an undirected graph containing only table-level join edges.
+
+    Includes semantic JOINs (e.g. composition.element → element.symbol)
+    in addition to physical FK relationships.
+    """
     g = nx.Graph()
-    for fk in foreign_keys:
+    for fk in [*foreign_keys, *_SEMANTIC_JOINS]:
         g.add_edge(
             fk.source_table,
             fk.target_table,

@@ -866,6 +866,11 @@ def validate_sql(
         except Exception as e:
             errors.append(f"SQL parse error: {e}")
             _escalate("rejected_syntax")
+    else:
+        warnings.append(
+            "sqlglot not installed — SQL syntax validation degraded. "
+            "Install with: pip install sqlglot>=20.0"
+        )
 
     # Layer: Column type safety (warnings, not errors — does not reject)
     type_warnings = check_column_type_safety(sql)

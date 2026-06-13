@@ -16,6 +16,13 @@ from llm.intent_classifier import classify_intent, classify_query_type
 from llm.output_schema_specifier import specify_output_schema
 from llm.schema_linker import link_schema
 
+try:
+    import networkx as nx
+    from graph.join_path_generator import generate_joins_for_tables, get_allowed_join_list
+    _HAS_GRAPH = True
+except ImportError:
+    _HAS_GRAPH = False
+
 
 def _fix_known_literals(sql: str) -> str:
     """Post-process generated SQL to correct known DB literal values."""
@@ -426,9 +433,12 @@ def build_schema_context_from_db(
             "FROM information_schema.table_constraints tc "
             "JOIN information_schema.key_column_usage kcu "
             "  ON tc.constraint_name = kcu.constraint_name "
+            " AND tc.table_schema = kcu.table_schema "
             "JOIN information_schema.constraint_column_usage ccu "
             "  ON tc.constraint_name = ccu.constraint_name "
-            "WHERE tc.constraint_type = 'FOREIGN KEY'"
+            " AND ccu.table_schema = tc.table_schema "
+            "WHERE tc.constraint_type = 'FOREIGN KEY' "
+            " AND tc.table_schema = 'public'"
         )
         fk_rows = cur.fetchall()
     join_list = [f"{r[0]}.{r[1]}={r[2]}.{r[3]}" for r in fk_rows]
@@ -574,6 +584,7 @@ def pipeline(
     skip_intent_check: bool = False,
     n_best: int = 1,
     execute_fn: Any | None = None,
+    table_graph: Any | None = None,
 ) -> dict[str, Any]:
     """Full pipeline: intent classify -> extract -> link -> generate SQL.
 
@@ -597,6 +608,11 @@ def pipeline(
         SQL execution function for n-best scoring. Signature:
         ``execute_fn(sql) -> {"success": bool, "row_count": int, ...}``.
         Required when n_best > 1 for execution-based scoring.
+    table_graph : nx.Graph | None
+        Schema graph for JOIN path generation. When provided, pipeline
+        uses ``generate_joins_for_tables()`` to compute JOIN clauses
+        from schema graph traversal instead of filtering pre-computed
+        join_list.
     """
     # Intent classification gate
     if not skip_intent_check:
@@ -633,10 +649,29 @@ def pipeline(
         c for c in all_columns
         if c.split(".")[0] in linked["required_tables"]
     ]
-    filtered_joins = [
-        j for j in join_list
-        if any(t in j for t in linked["required_tables"])
-    ]
+
+    # Schema Graph JOIN path generation: when table_graph is provided,
+    # compute JOIN clauses via BFS traversal instead of filtering.
+    if table_graph is not None and _HAS_GRAPH:
+        join_clause = generate_joins_for_tables(
+            table_graph, linked["required_tables"]
+        )
+        if join_clause:
+            req = set(linked["required_tables"])
+            filtered_joins = [
+                j for j in get_allowed_join_list(table_graph)
+                if any(t in j for t in req)
+            ]
+        else:
+            filtered_joins = [
+                j for j in join_list
+                if any(t in j for t in linked["required_tables"])
+            ]
+    else:
+        filtered_joins = [
+            j for j in join_list
+            if any(t in j for t in linked["required_tables"])
+        ]
 
     if n_best <= 1:
         result = generate_sql_via_llm(
@@ -655,9 +690,19 @@ def pipeline(
     total_tokens = 0
     total_latency = 0
 
+    current_model = os.getenv("LLM_MODEL", "gpt-5.5")
+    _is_new = current_model and any(
+        t in current_model for t in ("gpt-5", "o1", "o3", "o4")
+    )
+
     for i in range(n_best):
-        # Vary temperature for candidate diversity (0.0, 0.3, 0.6, ..., max 2.0)
-        temp_override = min(round(i * 0.3, 1), 2.0) if i > 0 else 0.0
+        # For GPT-5/o-series: temperature may not be supported; use None
+        # and rely on seed variation for candidate diversity.
+        # For other models: vary temperature (0.0, 0.3, 0.6, ...).
+        if _is_new:
+            temp_override = None
+        else:
+            temp_override = min(round(i * 0.3, 1), 2.0) if i > 0 else 0.0
         gen_result = generate_sql_via_llm(
             user_query=user_query,
             allowed_tables=linked["required_tables"],
