@@ -95,7 +95,6 @@ def check_sql_sanity(
         return {"sane": True, "issues": [], "correction_hints": ""}
 
     issues: list[str] = []
-    sql_upper = generated_sql.upper()
     select_cols = _extract_select_columns(generated_sql)
 
     # Rule 1: query_type="list" but SQL has GROUP BY + aggregates (not just ORDER BY)

@@ -358,7 +358,8 @@ def execution_repair_loop(
     for i in range(max_retries + 1):  # +1 for the original attempt
         t0 = time.time()
         exec_result = execute_fn(sql)
-        repair_latency = int((time.time() - t0) * 1000)
+        exec_latency = int((time.time() - t0) * 1000)
+        total_repair_latency_ms += exec_latency
 
         row_count = exec_result.get("row_count", 0)
         if exec_result.get("success") and (row_count > 0 or allow_empty_result):

@@ -115,7 +115,7 @@ def generate_error_report(
 
         # Lowest accuracy queries
         sorted_by_acc = sorted(data, key=lambda r: float(r.get("execution_accuracy", 0)))
-        sections.append(f"\n### Lowest accuracy queries:")
+        sections.append("\n### Lowest accuracy queries:")
         for r in sorted_by_acc[:5]:
             sections.append(
                 f"- {r['query_id']} ({r['difficulty']}): "

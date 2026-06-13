@@ -23,14 +23,12 @@ from evaluation.metrics import (
     hallucinated_column_rate,
     hallucinated_join_rate,
     hallucinated_table_rate,
-    multi_hop_success,
     normalize_limit,
     syntax_validity,
 )
 from graph.graph_builder import build_table_graph
 from graph.join_path_generator import generate_joins_for_tables, get_allowed_join_list
 from graph.schema_parser import get_foreign_keys, get_tables, get_columns
-from graph.traversal_engine import find_join_subgraph
 from llm.entity_extractor import extract_conditions
 from llm.repair_loop import execution_repair_loop, detect_superset
 from llm.schema_linker import link_schema
@@ -113,7 +111,6 @@ def get_schema_info(conn):
     fks = get_foreign_keys(conn)
     table_graph = build_table_graph(fks)
 
-    import networkx as nx
     if not table_graph.has_edge("composition", "element"):
         table_graph.add_edge(
             "composition", "element",
@@ -282,6 +279,7 @@ def main():
                     repair_attempts += len(repair_result.get("attempts", []))
                     repair_tokens = repair_result.get("repair_tokens", 0)
                     tokens += repair_tokens
+                    latency_ms += repair_result.get("repair_latency_ms", 0)
 
             # Metrics
             gen_tables = extract_tables_from_sql(sql)
@@ -302,7 +300,6 @@ def main():
             h_table = hallucinated_table_rate(gen_tables, ALLOWED_TABLES)
             h_column = hallucinated_column_rate(gen_columns, allowed_columns, sql=sql)
             h_join = hallucinated_join_rate(sql, allowed_joins)
-            is_correct = acc_full["f1"] >= 0.8
 
             row = {
                 "query_id": qid,

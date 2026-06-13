@@ -6,9 +6,6 @@ no JOIN path validation, no coverage scoring.
 """
 from __future__ import annotations
 
-import re
-from typing import Any
-
 from .entity_extractor import _normalize, _load_terms
 
 
