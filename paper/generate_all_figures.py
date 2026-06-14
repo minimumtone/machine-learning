@@ -1723,6 +1723,111 @@ def main():
         },
     }
 
+    # --- Compute delta_r_proof, l12_asymmetry, effective_radius metrics ---
+    F_ELEMENTS = {"La","Ce","Pr","Nd","Sm","Eu","Gd","Tb","Dy","Ho","Er","Tm","Yb","Lu"}
+
+    # delta_r_proof: pairs with all 3 structures (B2, L12_A3B, L12_AB3)
+    pair_data_m = defaultdict(lambda: {"B2": [], "L12_A3B": [], "L12_AB3": []})
+    for _, row in all_df.iterrows():
+        elA, elB = row.get("element_A", ""), row.get("element_B", "")
+        a = row.get("lattice_constant", 0)
+        stype = row.get("stype", "")
+        if a <= 2 or a >= 8 or elA == elB:
+            continue
+        if elA not in KING_ATOMIC_VOLUMES or elB not in KING_ATOMIC_VOLUMES:
+            continue
+        pair = tuple(sorted([elA, elB]))
+        vA, vB = KING_ATOMIC_VOLUMES[elA], KING_ATOMIC_VOLUMES[elB]
+        if stype == "B2":
+            osf = (a**3 / 2 - (vA + vB) / 2) / ((vA + vB) / 2)
+            pair_data_m[pair]["B2"].append(osf)
+        elif stype == "L12":
+            cA = row.get("count_A", 3)
+            cB = row.get("count_B", 1)
+            total = cA + cB
+            v_veg = (cA * vA + cB * vB) / total
+            osf = (a**3 / 4 - v_veg) / v_veg
+            bucket = "L12_" + _l12_bucket(elA, elB, cA, cB)
+            pair_data_m[pair][bucket].append(osf)
+
+    complete_m = {}
+    for pair, data in pair_data_m.items():
+        if data["B2"] and data["L12_A3B"] and data["L12_AB3"]:
+            complete_m[pair] = {
+                "B2": np.median(data["B2"]),
+                "L12_A3B": np.median(data["L12_A3B"]),
+                "L12_AB3": np.median(data["L12_AB3"]),
+            }
+
+    if complete_m:
+        osf_a3b_no4f_m, osf_ab3_no4f_m = [], []
+        osf_a3b_4f_m, osf_ab3_4f_m = [], []
+        for p in complete_m:
+            a3b_val = complete_m[p]["L12_A3B"]
+            ab3_val = complete_m[p]["L12_AB3"]
+            if p[0] in F_ELEMENTS or p[1] in F_ELEMENTS:
+                osf_a3b_4f_m.append(a3b_val)
+                osf_ab3_4f_m.append(ab3_val)
+            else:
+                osf_a3b_no4f_m.append(a3b_val)
+                osf_ab3_no4f_m.append(ab3_val)
+        all_a3b_m = osf_a3b_no4f_m + osf_a3b_4f_m
+        all_ab3_m = osf_ab3_no4f_m + osf_ab3_4f_m
+        r_all_m = round(float(np.corrcoef(all_a3b_m, all_ab3_m)[0, 1]), 2)
+        r_no4f_m = round(float(np.corrcoef(osf_a3b_no4f_m, osf_ab3_no4f_m)[0, 1]), 2) if len(osf_a3b_no4f_m) > 2 else 0
+        metrics["delta_r_proof"] = {
+            "delta_r_proof_n_complete": len(complete_m),
+            "delta_r_proof_n_non4f": len(osf_a3b_no4f_m),
+            "delta_r_proof_n_4f": len(osf_a3b_4f_m),
+            "delta_r_proof_r_all": r_all_m,
+            "delta_r_proof_r_non4f": r_no4f_m,
+        }
+
+    # l12_asymmetry: |a(A3B) - a(B3A)| distribution
+    pair_a_m = defaultdict(lambda: {"A3B": [], "AB3": []})
+    for _, row in all_df[all_df["stype"] == "L12"].iterrows():
+        elA, elB = row["element_A"], row["element_B"]
+        a = row["lattice_constant"]
+        if a <= 2 or a >= 8 or elA == elB:
+            continue
+        if elA not in KING_ATOMIC_VOLUMES or elB not in KING_ATOMIC_VOLUMES:
+            continue
+        pair = tuple(sorted([elA, elB]))
+        cA = row.get("count_A", 3)
+        cB = row.get("count_B", 1)
+        bucket = _l12_bucket(elA, elB, cA, cB)
+        pair_a_m[pair][bucket].append(a)
+    diffs_m = []
+    for pair in pair_a_m:
+        if pair_a_m[pair]["A3B"] and pair_a_m[pair]["AB3"]:
+            diffs_m.append(abs(np.median(pair_a_m[pair]["A3B"]) -
+                              np.median(pair_a_m[pair]["AB3"])))
+    if diffs_m:
+        metrics["l12_asymmetry"] = {
+            "l12_asymmetry_n_pairs": len(diffs_m),
+            "l12_asymmetry_std": round(float(np.std(diffs_m)), 2),
+            "l12_asymmetry_mean_abs_diff": round(float(np.mean(diffs_m)), 3),
+            "l12_asymmetry_max_abs_diff": round(float(np.max(diffs_m)), 2),
+        }
+
+    # effective_radius: minority/majority deviations from L12 packing
+    if radii:
+        min_devs, maj_devs = [], []
+        for elem, r_data in radii.items():
+            if "r_l12_min" in r_data and "r_l12_maj" in r_data:
+                r_king = (3 * KING_ATOMIC_VOLUMES.get(elem, 15) / (4 * np.pi)) ** (1/3)
+                min_devs.append(abs(r_data["r_l12_min"] - r_king))
+                maj_devs.append(abs(r_data["r_l12_maj"] - r_king))
+        if min_devs and maj_devs:
+            min_mean = round(float(np.mean(min_devs)), 3)
+            maj_mean = round(float(np.mean(maj_devs)), 3)
+            ratio = round(min_mean / maj_mean * 100, 0) if maj_mean > 0 else 0
+            metrics["effective_radius"] = {
+                "eff_radius_min_dev": min_mean,
+                "eff_radius_maj_dev": maj_mean,
+                "eff_radius_min_over_maj_pct": ratio,
+            }
+
     with open(OUTDIR / "paper_metrics.json", "w") as f:
         json.dump(metrics, f, indent=2, ensure_ascii=False)
     print("\n    paper_metrics.json saved (all numerical values for manuscript)")

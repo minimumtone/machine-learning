@@ -1,0 +1,189 @@
+\begin{thebibliography}{10}
+\expandafter\ifx\csname url\endcsname\relax
+  \def\url#1{\texttt{#1}}\fi
+\expandafter\ifx\csname urlprefix\endcsname\relax\def\urlprefix{URL }\fi
+\expandafter\ifx\csname href\endcsname\relax
+  \def\href#1#2{#2} \def\path#1{#1}\fi
+
+\bibitem{Yeh2004}
+J.-W. Yeh, S.-K. Chen, S.-J. Lin, J.-Y. Gan, T.-S. Chin, T.-T. Shun, C.-H.
+  Tsau, S.-Y. Chang, Nanostructured high-entropy alloys with multiple principal
+  elements: Novel alloy design concepts and outcomes, Adv. Eng. Mater. 6 (2004)
+  299--303.
+\newblock \href {https://doi.org/10.1002/adem.200300567}
+  {\path{doi:10.1002/adem.200300567}}.
+
+\bibitem{Cantor2004}
+B.~Cantor, I.~T.~H. Chang, P.~Knight, A.~J.~B. Vincent, Microstructural
+  development in equiatomic multicomponent alloys, Mater. Sci. Eng. A 375--377
+  (2004) 213--218.
+\newblock \href {https://doi.org/10.1016/j.msea.2003.10.257}
+  {\path{doi:10.1016/j.msea.2003.10.257}}.
+
+\bibitem{Miracle2017}
+D.~B. Miracle, O.~N. Senkov, A critical review of high entropy alloys and
+  related concepts, Acta Mater. 122 (2017) 448--511.
+\newblock \href {https://doi.org/10.1016/j.actamat.2016.08.081}
+  {\path{doi:10.1016/j.actamat.2016.08.081}}.
+
+\bibitem{Senkov2015}
+O.~N. Senkov, et~al., Refractory high-entropy alloys, Nat. Commun. 6 (2015)
+  6529.
+\newblock \href {https://doi.org/10.1038/ncomms7529}
+  {\path{doi:10.1038/ncomms7529}}.
+
+\bibitem{Vegard1921}
+L.~Vegard, {Die Konstitution der Mischkristalle und die Raumf\"ullung der
+  Atome}, Z. Phys. 5 (1921) 17--26.
+\newblock \href {https://doi.org/10.1007/BF01349680}
+  {\path{doi:10.1007/BF01349680}}.
+
+\bibitem{King1966}
+H.~W. King, Quantitative size-factors for metallic solid solutions, J. Mater.
+  Sci. 1 (1966) 79--90.
+\newblock \href {https://doi.org/10.1007/BF00549722}
+  {\path{doi:10.1007/BF00549722}}.
+
+\bibitem{Alonso2021}
+J.~A. Alonso, Estimation of the lattice parameters of {HEAs}, J. Phase Equilib.
+  Diffus. 43 (2022) 555--566.
+\newblock \href {https://doi.org/10.1007/s11669-022-00988-z}
+  {\path{doi:10.1007/s11669-022-00988-z}}.
+
+\bibitem{Zhang2008}
+Y.~Zhang, et~al., Solid-solution phase formation rules for multi-component
+  alloys, Adv. Eng. Mater. 10 (2008) 534--538.
+\newblock \href {https://doi.org/10.1002/adem.200700240}
+  {\path{doi:10.1002/adem.200700240}}.
+
+\bibitem{Guo2011}
+S.~Guo, C.~T. Liu, Phase stability in high entropy alloys: Formation of
+  solid-solution phase or amorphous phase, Prog. Nat. Sci. 21 (2011) 433--446.
+\newblock \href {https://doi.org/10.1016/S1002-0071(12)60080-X}
+  {\path{doi:10.1016/S1002-0071(12)60080-X}}.
+
+\bibitem{Yang2012}
+X.~Yang, Y.~Zhang, Prediction of high-entropy stabilized solid-solution in
+  multi-component alloys, Mater. Chem. Phys. 132 (2012) 233--238.
+\newblock \href {https://doi.org/10.1016/j.matchemphys.2011.11.021}
+  {\path{doi:10.1016/j.matchemphys.2011.11.021}}.
+
+\bibitem{CorenoAlonso2004}
+O.~Core{\~n}o-Alonso, J.~Core{\~n}o-Alonso, Volume size factor and lattice
+  parameter in cubic intermetallics with {L1}$_2$ or {B2} structure derived
+  from the ``{Macroscopic Atom}'' model, Intermetallics 12 (2004) 117--122.
+\newblock \href {https://doi.org/10.1016/j.intermet.2003.09.001}
+  {\path{doi:10.1016/j.intermet.2003.09.001}}.
+
+\bibitem{deBoer1988}
+F.~R. de~Boer, R.~Boom, W.~C.~M. Mattens, A.~R. Miedema, A.~K. Niessen,
+  Cohesion in Metals: Transition Metal Alloys, North-Holland, Amsterdam, 1988.
+
+\bibitem{Jain2013}
+A.~Jain, et~al., Commentary: {The Materials Project}: A materials genome
+  approach to accelerating materials innovation, APL Mater. 1 (2013) 011002.
+\newblock \href {https://doi.org/10.1063/1.4812323}
+  {\path{doi:10.1063/1.4812323}}.
+
+\bibitem{Saal2013}
+J.~E. Saal, et~al., Materials design and discovery with high-throughput density
+  functional theory: The {Open Quantum Materials Database (OQMD)}, JOM 65
+  (2013) 1501--1509.
+\newblock \href {https://doi.org/10.1007/s11837-013-0755-4}
+  {\path{doi:10.1007/s11837-013-0755-4}}.
+
+\bibitem{Tian2013}
+F.~Tian, et~al., Calculating elastic constants in high-entropy alloys using the
+  coherent potential approximation: Current issues and errors, Phys. Rev. B 88
+  (2013) 085128.
+\newblock \href {https://doi.org/10.1103/PhysRevB.88.085128}
+  {\path{doi:10.1103/PhysRevB.88.085128}}.
+
+\bibitem{Tian2015}
+F.~Tian, et~al., Structural stability of {NiCoFeCrAl}$_x$ high-entropy alloy
+  from ab initio theory, Sci. Rep. 5 (2015) 12334.
+\newblock \href {https://doi.org/10.1038/srep12334}
+  {\path{doi:10.1038/srep12334}}.
+
+\bibitem{Senkov2013}
+O.~N. Senkov, et~al., Refractory high-entropy alloys, Intermetallics 19 (2011)
+  698--706.
+\newblock \href {https://doi.org/10.1016/j.intermet.2011.01.004}
+  {\path{doi:10.1016/j.intermet.2011.01.004}}.
+
+\bibitem{Senkov2013_ActaMat}
+O.~N. Senkov, S.~V. Senkova, C.~Woodward, D.~B. Miracle, Low-density,
+  refractory multi-principal element alloys of the {Cr--Nb--Ti--V--Zr} system:
+  Microstructure and phase analysis, Acta Materialia 61 (2013) 1545--1557.
+\newblock \href {https://doi.org/10.1016/j.actamat.2012.11.032}
+  {\path{doi:10.1016/j.actamat.2012.11.032}}.
+
+\bibitem{Yao2016}
+H.~W. Yao, et~al., {NbTaV-(Ti,W)} refractory high-entropy alloys, Entropy 18
+  (2016) 189.
+\newblock \href {https://doi.org/10.3390/e18050189}
+  {\path{doi:10.3390/e18050189}}.
+
+\bibitem{Otto2013}
+F.~Otto, et~al., The influences of temperature and microstructure on the
+  tensile properties of a {CoCrFeMnNi} high-entropy alloy, Acta Mater. 61
+  (2013) 5743--5755.
+\newblock \href {https://doi.org/10.1016/j.actamat.2013.06.018}
+  {\path{doi:10.1016/j.actamat.2013.06.018}}.
+
+\bibitem{Leong2017}
+Z.~Leong, et~al., The effect of electronic structure on the phases present in
+  high entropy alloys, Sci. Rep. 7 (2017) 39803.
+\newblock \href {https://doi.org/10.1038/srep39803}
+  {\path{doi:10.1038/srep39803}}.
+
+\bibitem{Tseng2019}
+K.-K. Tseng, C.-C. Juan, S.~Tso, H.-C. Chen, C.-W. Tsai, J.-W. Yeh, Effects of
+  {Mo}, {Nb}, {Ta}, {Ti}, and {Zr} on mechanical properties of equiatomic
+  {Hf-Mo-Nb-Ta-Ti-Zr} alloys, Entropy 21 (2019) 15, table~2: HfMoNbTaTiZr and 5
+  equiatomic BCC subsets with XRD lattice parameters.
+\newblock \href {https://doi.org/10.3390/e21010015}
+  {\path{doi:10.3390/e21010015}}.
+
+\bibitem{Freudenberger2017}
+J.~Freudenberger, D.~Rafaja, D.~Geissler, L.~Giebeler, C.~L.~H. de~Oliveira,
+  J.~Eckert, Face-centred cubic multi-component equiatomic solid solutions in
+  the {Au-Cu-Ni-Pd-Pt} system, Metals 7 (2017) 135, table~A1: Rietveld-refined
+  lattice parameters for 5 quaternary + 1 quinary FCC alloys.
+\newblock \href {https://doi.org/10.3390/met7040135}
+  {\path{doi:10.3390/met7040135}}.
+
+\bibitem{Reget2020}
+F.~Reget, M.~Maa{\ss}, J.~Haas, J.~Fiehn, N.~Seifried, T.~G. Bley, L.~Pichl,
+  B.~Kieback, T.~Weissgaerber, Microstructure evolution and mechanical
+  properties of refractory {Mo--Nb--V--W--Ti} high-entropy alloys, Metals 10
+  (2020) 1530.
+\newblock \href {https://doi.org/10.3390/met10111530}
+  {\path{doi:10.3390/met10111530}}.
+
+\bibitem{TodaCaraballo2016}
+I.~Toda-Caraballo, P.~E. J. R.-D. del Castillo, Modelling solid solution
+  hardening in high entropy alloys, Intermetallics 71 (2016) 76--87.
+\newblock \href {https://doi.org/10.1016/j.intermet.2015.12.011}
+  {\path{doi:10.1016/j.intermet.2015.12.011}}.
+
+\bibitem{Ye2015}
+Y.~F. Ye, C.~T. Liu, Y.~Yang, A geometric model for intrinsic residual strain
+  and phase stability in high entropy alloys, Acta Mater. 94 (2015) 152--161.
+\newblock \href {https://doi.org/10.1016/j.actamat.2015.04.051}
+  {\path{doi:10.1016/j.actamat.2015.04.051}}.
+
+\bibitem{Chen2016}
+T.~Chen, C.~Guestrin, {XGBoost}: A scalable tree boosting system, in: Proc.
+  22nd ACM SIGKDD, 2016, pp. 785--794.
+\newblock \href {https://doi.org/10.1145/2939672.2939785}
+  {\path{doi:10.1145/2939672.2939785}}.
+
+\bibitem{Wang2004lattice}
+Y.~Wang, S.~Curtarolo, C.~Jiang, R.~Arroyave, T.~Wang, G.~Ceder, L.-Q. Chen,
+  Z.-K. Liu, Ab initio lattice stability in comparison with {CALPHAD} lattice
+  stability, Calphad 28 (2004) 79--90.
+\newblock \href {https://doi.org/10.1016/j.calphad.2004.05.002}
+  {\path{doi:10.1016/j.calphad.2004.05.002}}.
+
+\end{thebibliography}
