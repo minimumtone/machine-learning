@@ -588,6 +588,90 @@ def _l12_bucket(elA, elB, cA, cB):
     return "A3B" if maj_elem == pair[0] else "AB3"
 
 
+def fig07b_vegard_heatmap(all_df):
+    """Fig 7c/7d: Heatmap of Vegard deviation (Omega_sf) for all element pairs.
+
+    Uses structure-matched DFT homonuclear endpoints so the deviation
+    is pure Omega_sf without structure-mismatch artifacts.
+    Separate heatmaps for B2 (BCC) and L12 (FCC).
+    """
+    # Build DFT homonuclear volumes
+    dft_vol = {}
+    for stype, n_auc in [("B2", 2), ("L12", 4)]:
+        homo = all_df[(all_df["stype"] == stype) &
+                      (all_df["element_A"] == all_df["element_B"])]
+        for _, row in homo.iterrows():
+            el = row["element_A"]
+            a = row["lattice_constant"]
+            if 2 < a < 8:
+                dft_vol[(el, stype)] = a ** 3 / n_auc
+
+    for stype, n_auc, cmap_name, fig_suffix in [
+        ("B2", 2, "RdBu_r", "b2"),
+        ("L12", 4, "RdBu_r", "l12"),
+    ]:
+        sub = all_df[(all_df["stype"] == stype) &
+                     (all_df["element_A"] != all_df["element_B"])]
+
+        # Compute Omega_sf with structure-matched DFT endpoints
+        pair_omega = defaultdict(list)
+        for _, row in sub.iterrows():
+            elA, elB = row["element_A"], row["element_B"]
+            a = row["lattice_constant"]
+            if a <= 2 or a >= 8:
+                continue
+            vA_key = (elA, stype)
+            vB_key = (elB, stype)
+            if vA_key not in dft_vol or vB_key not in dft_vol:
+                continue
+            vA, vB = dft_vol[vA_key], dft_vol[vB_key]
+            cA = row.get("count_A", 1 if stype == "B2" else 3)
+            cB = row.get("count_B", 1)
+            total = cA + cB
+            v_act = a ** 3 / n_auc
+            v_veg = (cA * vA + cB * vB) / total
+            if v_veg > 0:
+                omega = (v_act - v_veg) / v_veg
+                pair = tuple(sorted([elA, elB]))
+                pair_omega[pair].append(omega)
+
+        omega_median = {p: np.median(v) for p, v in pair_omega.items() if v}
+
+        # Collect elements that appear in pairs
+        elements = sorted({el for pair in omega_median for el in pair})
+        n_el = len(elements)
+        el_idx = {el: i for i, el in enumerate(elements)}
+
+        # Build matrix
+        mat = np.full((n_el, n_el), np.nan)
+        for (a, b), val in omega_median.items():
+            i, j = el_idx[a], el_idx[b]
+            mat[i, j] = val
+            mat[j, i] = val
+
+        # Plot
+        fig, ax = plt.subplots(figsize=(16, 14))
+        vmax = np.nanpercentile(np.abs(mat[~np.isnan(mat)]), 95)
+        im = ax.imshow(mat, cmap=cmap_name, vmin=-vmax, vmax=vmax,
+                       aspect="equal", interpolation="nearest")
+        ax.set_xticks(range(n_el))
+        ax.set_xticklabels(elements, fontsize=7, rotation=90)
+        ax.set_yticks(range(n_el))
+        ax.set_yticklabels(elements, fontsize=7)
+        struct_label = "B2 (BCC)" if stype == "B2" else r"L1$_2$ (FCC)"
+        ax.set_title(f"Vegard deviation $\\Omega_{{\\mathrm{{sf}}}}$ — {struct_label}"
+                     f"  ({len(omega_median)} pairs, DFT endpoints)",
+                     fontsize=14)
+        cbar = fig.colorbar(im, ax=ax, shrink=0.8, pad=0.02)
+        cbar.set_label(r"$\Omega_{\mathrm{sf}}$ (structure-matched DFT)",
+                       fontsize=12)
+        fig.tight_layout()
+        fname = f"fig_vegard_heatmap_{fig_suffix}.png"
+        fig.savefig(OUTDIR / fname, bbox_inches="tight", dpi=150)
+        plt.close(fig)
+        print(f"  {fname} ({n_el} elements, {len(omega_median)} pairs)")
+
+
 def fig08_delta_r_proof(all_df):
     """Fig 8: 6-panel proof that delta_r cannot absorb structure info."""
     # Compute delta_r and Omega_sf for each pair×structure
@@ -1249,6 +1333,7 @@ def main():
     fig05_element_delta(decomp_table)
     fig06_additive_fit(ob2, ol12, decomp)
     fig07_composition_examples(all_df)
+    fig07b_vegard_heatmap(all_df)
     fig08_delta_r_proof(all_df)
     fig09_packing(all_df)
     fig10_l12_asymmetry(all_df)

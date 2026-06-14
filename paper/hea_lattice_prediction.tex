@@ -691,6 +691,37 @@ $\Omega_\text{sf}$が組成比だけでなく構造に依存する直接的証�
 \label{fig:composition_l12}
 \end{figure*}
 
+全元素ペアの$\Omega_\text{sf}$を構造別にヒートマップとして
+図~\ref{fig:vegard_heatmap_b2}（B2、666ペア）および
+図~\ref{fig:vegard_heatmap_l12}（L1$_2$、1275ペア）に示す。
+構造整合DFT端点を基準としており、色の濃さがVegard則からの
+偏差の大きさに対応する。B2では大半のペアが負の$\Omega_\text{sf}$
+（体積収縮）を示す一方、L1$_2$では希土類4f元素（Dy, Er, Tb等）が
+極端な正の偏差を示し、GGA-PBEの4f電子記述の限界を反映する。
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_vegard_heatmap_b2.png}
+\caption{全元素ペアのB2（BCC型）$\Omega_\text{sf}$ヒートマップ
+  （666ペア、37元素）。
+  DFT B2同種体積を端点としたVegard偏差。
+  青: 体積収縮（$\Omega_\text{sf} < 0$）、
+  赤: 体積膨張（$\Omega_\text{sf} > 0$）。
+  大半のペアが負の偏差を示し、B2秩序構造における体積収縮傾向を反映する。}
+\label{fig:vegard_heatmap_b2}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_vegard_heatmap_l12.png}
+\caption{全元素ペアのL1$_2$（FCC型）$\Omega_\text{sf}$ヒートマップ
+  （1275ペア、51元素）。
+  DFT L1$_2$同種体積を端点としたVegard偏差。
+  Dy, Er, Tb, Sm等の希土類4f元素が極端な正の偏差を示すのは
+  GGA-PBEが4f局在電子の体積を過大評価するためである。}
+\label{fig:vegard_heatmap_l12}
+\end{figure*}
+
 
 \subsection{$\delta r$の構造不変性}
 \label{sec:structural}
