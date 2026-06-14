@@ -48,7 +48,7 @@ King (1966) の体積サイズファクター$\Omega_\text{sf}$を
 これにより$a = (n_\text{auc}\sum c_i V_\text{eff})^{1/3}$で
 等モル・非等モルを問わず格子定数を予測できる。
 64 HEAに対するRMSE = 0.0214~\AA{}（Vegard則比5.8\%改善）、
-独立23 HEAでRMSE = 0.0150~\AA{}（同13.5\%改善）を達成した。
+独立28 HEAでRMSE = 0.0154~\AA{}（同12.5\%改善）を達成した。
 従来の$\delta r$が構造情報を数学的に含み得ないことを証明し、
 DFT体積由来記述子の必要性を確立した。
 $\delta^{(s)}$パラメータは表1枚で提供され、
@@ -172,7 +172,7 @@ Tian~\emph{et al.}~\cite{Tian2015}のEMTO-CPA法があるが、
   \item \textbf{$\delta r$の限界の証明}:
     677二元系ペアで$\delta r$が構造情報を含み得ないことを厳密に検証。
   \item \textbf{独立テスト}:
-    23 HEA（BCC 10、FCC 13）で検証。全体 RMSE = 0.0150~\AA{}（Vegard比13.5\%改善）、BCC RMSE = 0.0149~\AA{}（Vegard比19.6\%改善）。
+    28 HEA（BCC 15、FCC 13）で検証。全体 RMSE = 0.0154~\AA{}（Vegard比12.5\%改善）、BCC RMSE = 0.0157~\AA{}（Vegard比15.6\%改善）。
 \end{enumerate}
 
 本手法の全体像を図~\ref{fig:pipeline}に示す。
@@ -192,7 +192,7 @@ DFTデータベースから$\Omega_\text{sf}$を導出し、
 \node[box, fill=green!10, right=of dft] (omega) {$\Omega_\text{sf}$導出\\{\scriptsize B2: 741\\L1$_2$: 677}};
 \node[box, fill=orange!10, right=of omega] (add) {加法分解\\{\scriptsize $\delta_i^{(s)}$\\39元素}};
 \node[box, fill=red!10, right=of add] (pred) {格子定数予測\\{\scriptsize 式(\ref{eq:a_from_veff})}};
-\node[box, fill=purple!10, right=of pred] (test) {独立検証\\{\scriptsize 23 HEA\\10文献}};
+\node[box, fill=purple!10, right=of pred] (test) {独立検証\\{\scriptsize 28 HEA\\12文献}};
 \draw[arr] (dft) -- (omega);
 \draw[arr] (omega) -- (add);
 \draw[arr] (add) -- (pred);
@@ -263,9 +263,9 @@ B2で741・L1$_2$で677のユニーク元素ペアを得た。
 \subsubsection{HEA検証データ}
 主検証セットはAlonso~\cite{Alonso2021} Table~2の
 64個の立方晶HEA（BCC 29、FCC 35、$a = 2.883$--$3.856$~\AA、
-22元素）。独立テストセットとしてAlonsoデータ外の23 HEA
-（BCC 10、FCC 13）を10文献~\cite{Senkov2013,Yao2016,Otto2013,Leong2017,Tseng2019,Freudenberger2017}
-から収集した。18元素をカバーし、耐火金属系BCC（Tseng 2019）、
+22元素）。独立テストセットとしてAlonsoデータ外の28 HEA
+（BCC 15、FCC 13）を12文献~\cite{Senkov2013,Senkov2013_ActaMat,Yao2016,Otto2013,Leong2017,Tseng2019,Freudenberger2017,Reget2020}
+から収集した。18元素をカバーし、耐火金属系BCC（Tseng 2019、Reget 2020）、
 貴金属系FCC（Freudenberger 2017）を含む多様な組成で汎化性能を評価する。
 
 \subsubsection{多相HEAデータベース}
@@ -439,6 +439,42 @@ $\delta r$、VEC、$\Omega_\text{sf}$統計）を使用。
 \label{sec:results_hea}
 
 表~\ref{tab:comparison}に64 HEAに対する全手法の精度を示す。
+各手法の定義は以下の通りである。
+
+\paragraph{ベースライン}
+\begin{itemize}
+  \item \textbf{Alonso Vegard}:
+    Alonso~\cite{Alonso2021} Table~2記載の純元素原子体積$V_i$による
+    Vegard予測$a = (n_\text{auc}\sum c_i V_i)^{1/3}$。
+    $\Omega_\text{sf}$補正なし。
+  \item \textbf{Alonsoモデル}:
+    Alonso~\cite{Alonso2021}のEq.10（式~\ref{eq:alonso}）に
+    King実験値$\Omega_\text{sf}$を適用。
+    データ欠損ペアは$\Omega_\text{sf} = 0$（Vegard縮退）。
+\end{itemize}
+
+\paragraph{本研究: 物理モデル}
+\begin{itemize}
+  \item \textbf{King Vegard}:
+    King~\cite{King1966}の原子体積（本研究で41元素に拡張）による
+    Vegard予測。Alonsoの体積セットとわずかに異なる。
+  \item \textbf{DFT-$\Omega_\text{sf}$}:
+    式~\ref{eq:alonso}にDFT由来の構造別$\Omega_\text{sf}$を適用し、
+    構造依存スケーリング$q_s$（BCC: $q_\text{BCC} = 0.49$、
+    FCC: $q_\text{FCC} = 0.13$）で校正。
+    B2: 741ペア、L1$_2$: 677ペアの完全カバレッジ。
+  \item \textbf{加法$\delta^{(s)}$}:
+    ペアワイズ$\Omega_\text{sf}$を加法分解
+    $\Omega_\text{sf}(i,j) \approx \delta_i^{(s)} + \delta_j^{(s)}$で
+    39元素パラメータに圧縮したモデル。
+\end{itemize}
+
+\paragraph{ML残差補正 (LOO-CV)}
+物理モデル（DFT-$\Omega_\text{sf}$）の残差
+$\Delta a = a^\text{exp} - a^\text{pred}$を
+23次元特徴量（§\ref{sec:ml}参照）で学習。
+全モデルをLOO-CV（64 HEAから1点を抜いて予測を繰り返す）で評価。
+アンサンブルは全モデルの重み付き平均（最適重みをLOO-CVで決定）。
 
 \begin{table}[H]
 \centering
@@ -495,7 +531,7 @@ ML残差補正はいずれも0.002~\AA{}未満の追加改善しか与えず、
 \caption{全87 HEAのパリティプロット（予測 vs 実験格子定数）。
   灰色: Vegard則による予測（64 HEA訓練セット）、
   青色: DFT-$\Omega_\text{sf}$モデルによる予測（同64 HEA、RMSE = 0.0214~\AA）、
-  赤色三角: 独立テストセット（23 HEA、RMSE = 0.0150~\AA）。
+  赤色三角: 独立テストセット（28 HEA、RMSE = 0.0154~\AA）。
   対角線は$a_\text{pred} = a_\text{exp}$を表す。}
 \label{fig:parity}
 \end{figure}
@@ -547,31 +583,32 @@ BCC HEA（0.0299~\AA）はSQS参照で0.0281~\AA{}に
 \label{sec:indep_test}
 
 従来の20点テストセット（実質10種の合金組成、HfNbTaTiZr$\times$3重複）の
-組成多様性の問題を解消するため、10文献から23個のHEA（BCC 10、FCC 13）を
+組成多様性の問題を解消するため、12文献から28個のHEA（BCC 15、FCC 13）を
 新たに収集した（表~\ref{tab:indep_test}）。
 18元素をカバーし、Tseng (2019)の耐火金属系BCCバリアント（HfMoNbTaTiZrの
-系統的元素除去）、Freudenberger (2017)の貴金属系FCC（Au-Cu-Ni-Pd-Pt四元・五元系）
+系統的元素除去）、Reget (2020)のMo--Nb--V--W--Ti系BCC、
+Freudenberger (2017)の貴金属系FCC（Au-Cu-Ni-Pd-Pt四元・五元系）
 を含む。
 
 \begin{table}[H]
 \centering
-\caption{独立テストセットの予測精度（RMSE / \AA）。23 HEA（BCC 10 + FCC 13）、10文献18元素。}
+\caption{独立テストセットの予測精度（RMSE / \AA）。28 HEA（BCC 15 + FCC 13）、12文献18元素。}
 \label{tab:indep_test}
 \footnotesize
 \begin{tabular}{@{}lccc@{}}
 \toprule
-手法 & 全体 (23) & BCC (10) & FCC (13) \\
+手法 & 全体 (28) & BCC (15) & FCC (13) \\
 \midrule
-Vegard（単純平均）          & 0.0173 & 0.0185 & 0.0164 \\
+Vegard（単純平均）          & 0.0176 & 0.0186 & 0.0164 \\
 Alonso体積ズレ補正（King実験値）    & 0.0185 & 0.0178 & 0.0190 \\
-DFT-$\Omega_\text{sf}$（構造別, 最適$q_s$） & \textbf{0.0150} & \textbf{0.0149} & \textbf{0.0151} \\
+DFT-$\Omega_\text{sf}$（構造別, 最適$q_s$） & \textbf{0.0154} & \textbf{0.0157} & \textbf{0.0151} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 DFT-$\Omega_\text{sf}$モデルが全カテゴリで最良である。
-全体RMSE = 0.0150~\AA{}でVegard（0.0173~\AA）から\textbf{13.5\%改善}した。
-BCC 10合金ではRMSE = 0.0149~\AA（Vegard比\textbf{19.6\%改善}）、
+全体RMSE = 0.0154~\AA{}でVegard（0.0176~\AA）から\textbf{12.5\%改善}した。
+BCC 15合金ではRMSE = 0.0157~\AA（Vegard比\textbf{15.6\%改善}）、
 FCC 13合金ではRMSE = 0.0151~\AA（Vegard比\textbf{7.8\%改善}）。
 B2参照構造の$\Omega_\text{sf}$データを473ペアに拡充し、
 耐火金属28ペアを全カバーしたことで、
@@ -582,10 +619,10 @@ BCC予測精度が大幅に改善された。
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=\textwidth]{fig_indep_test.png}
-\caption{独立テストセット（23 HEA、10文献18元素）の予測性能。
+\caption{独立テストセット（28 HEA、12文献18元素）の予測性能。
   (a)~合金別絶対誤差。(b)~構造別RMSE（灰: Vegard、青: DFT-$\Omega_\text{sf}$）。
   (c)~パリティプロット（$q_\text{BCC} = 0.49$、$q_\text{FCC} = 0.13$）。
-  BCC 10合金（青四角）とFCC 13合金（赤丸）。}
+  BCC 15合金（青四角）とFCC 13合金（赤丸）。}
 \label{fig:indep_test}
 \end{figure*}
 
@@ -714,21 +751,29 @@ $\Omega_\text{sf}$がサイズ差だけでは説明できないことを示す�
 L1$_2$（$c_A = 0.25$/$0.75$）かB2（$c_A = 0.50$）かとは
 無関係である。
 
-\subsubsection{677ペアによる計算検証}
+\subsubsection{666ペアによる計算検証}
 $\delta r(A_3B)$--$\delta r(B_3A)$プロットは偏差ゼロの
 1次元曲線を描く（図~\ref{fig:delta_r_proof}(a)(b)）。
 一方$\Omega_\text{sf}(A_3B)$--$\Omega_\text{sf}(B_3A)$は
-相関$r = 0.15$とほぼ無相関を示す（図~\ref{fig:delta_r_proof}(c)）。
+全666ペアで$r = 0.07$とほぼ無相関を示す（図~\ref{fig:delta_r_proof}(c)）。
+ただしこの低相関の主因は4f希土類元素（Dy, Tb, Er等）を含む138ペアであり、
+GGA-PBEが4f局在電子を正しく扱えないため
+L1$_2$格子定数が非物理的に膨張する（例: Dy-Reで$\Omega_\text{sf} = +3.4$）。
+4f元素を除外した528ペアでは$r = 0.70$と中程度の正相関を示し、
+「同一ペアでも多数派/少数派サイトの入れ替えで$\Omega_\text{sf}$が変化する
+（完全には一致しない）が、ランダムではない」ことを意味する。
 L1$_2$格子定数差$|a(A_3B) - a(B_3A)|$の平均は0.328~\AA、
 最大2.74~\AA{}に達し、$\delta r$ではこの構造非対称性は不可視である。
 
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=\textwidth]{fig_delta_r_proof.png}
-\caption{$\delta r$の構造不変性の証明（677ペア）。
+\caption{$\delta r$の構造不変性の証明（666ペア）。
   (a)~$\delta r(A_3B)$ vs $\delta r(B_3A)$: 完全一致（構造情報ゼロ）。
   (b)~$\delta r(A_3B)$ vs $\delta r(\text{B2})$: 滑らかな曲線（組成のみの関数）。
-  (c)~$\Omega_\text{sf}(A_3B)$ vs $\Omega_\text{sf}(B_3A)$: 大きな散布（$r = 0.15$）。}
+  (c)~$\Omega_\text{sf}(A_3B)$ vs $\Omega_\text{sf}(B_3A)$:
+  全体$r = 0.07$（青丸: 非4f 528ペア $r = 0.70$、赤×: 4f希土類 138ペア）。
+  4f元素のGGA過大評価が低相関の主因。}
 \label{fig:delta_r_proof}
 \end{figure*}
 
@@ -847,7 +892,7 @@ $q_\text{FCC}^\text{add} = 0.054$を得た。
 Vegard則からの偏差の大部分が線形補間の精度内に収まることによる。
 一方、多成分HEAでは$n(n-1)/2$ペアの$\Omega_\text{sf}$が
 非線形に寄与するため、構造情報の価値が顕在化する:
-独立テスト23 HEAでは13.5\%改善（0.0173~\AA{}$\to$0.0150~\AA）を達成した。
+独立テスト28 HEAでは12.5\%改善（0.0176~\AA{}$\to$0.0154~\AA）を達成した。
 すなわち$V_\text{eff}$の有用性は成分数の増加に伴い増大し、
 二元系での限定的改善はHEAへの適用を否定するものではない。
 
@@ -859,7 +904,7 @@ Vegard則からの偏差の大部分が線形補間の精度内に収まるこ�
   右: 構造依存有効体積$V_\text{eff}$による予測（RMSE = 0.209~\AA）。
   改善幅は5.9\%にとどまり、二元系レベルでは
   大部分の分散が組成効果で説明されることを示す。
-  ただし多成分HEAでは13.5\%改善に拡大する（本文参照）。}
+  ただし多成分HEAでは12.5\%改善に拡大する（本文参照）。}
 \label{fig:vegard_absorbed}
 \end{figure*}
 
@@ -1244,9 +1289,9 @@ DFT体積サイズファクターの元素別加法分解に基づく、
   & DFT自己整合（$q\!\approx\!1$） & 0.0203 & $+$12.2\% \\
   & SQS参照（$q\!=\!1$） & 0.0202 & $+$11.0\% \\
 \midrule
-\multirow{3}{*}{独立23}
-  & 全体 & 0.0150 & $+$13.5\% \\
-  & BCC 10 & 0.0149 & $+$19.6\% \\
+\multirow{3}{*}{独立28}
+  & 全体 & 0.0154 & $+$12.5\% \\
+  & BCC 15 & 0.0157 & $+$15.6\% \\
   & FCC 13 & 0.0151 & $+$7.8\% \\
 \midrule
 ノイズ & $\sigma$ & 0.016 & --- \\

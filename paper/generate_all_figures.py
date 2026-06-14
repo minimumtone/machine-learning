@@ -908,16 +908,32 @@ def fig08_delta_r_proof(all_df):
 
     # (c) Omega_sf X3Y vs Y3X — should show LARGE scatter
     ax = axes[2]
-    osf_a3b = [complete[p]["L12_A3B"] for p in complete]
-    osf_ab3 = [complete[p]["L12_AB3"] for p in complete]
-    ax.scatter(osf_a3b, osf_ab3, c="C3", alpha=0.4, s=20)
-    lims2 = [min(min(osf_a3b), min(osf_ab3)) - 0.02,
-             max(max(osf_a3b), max(osf_ab3)) + 0.02]
+    F_ELEMENTS = {"La","Ce","Pr","Nd","Sm","Eu","Gd","Tb","Dy","Ho","Er","Tm","Yb","Lu"}
+    osf_a3b_no4f, osf_ab3_no4f = [], []
+    osf_a3b_4f, osf_ab3_4f = [], []
+    for p in complete:
+        a3b_val = complete[p]["L12_A3B"]
+        ab3_val = complete[p]["L12_AB3"]
+        if p[0] in F_ELEMENTS or p[1] in F_ELEMENTS:
+            osf_a3b_4f.append(a3b_val)
+            osf_ab3_4f.append(ab3_val)
+        else:
+            osf_a3b_no4f.append(a3b_val)
+            osf_ab3_no4f.append(ab3_val)
+    ax.scatter(osf_a3b_no4f, osf_ab3_no4f, c="C0", alpha=0.4, s=20, label="non-4f")
+    if osf_a3b_4f:
+        ax.scatter(osf_a3b_4f, osf_ab3_4f, c="C3", marker="x", alpha=0.6, s=30, label="4f (RE)")
+    all_a3b = osf_a3b_no4f + osf_a3b_4f
+    all_ab3 = osf_ab3_no4f + osf_ab3_4f
+    lims2 = [min(min(all_a3b), min(all_ab3)) - 0.02,
+             max(max(all_a3b), max(all_ab3)) + 0.02]
     ax.plot(lims2, lims2, "k--", lw=1)
-    r_corr = np.corrcoef(osf_a3b, osf_ab3)[0, 1]
+    r_all = np.corrcoef(all_a3b, all_ab3)[0, 1]
+    r_no4f = np.corrcoef(osf_a3b_no4f, osf_ab3_no4f)[0, 1] if len(osf_a3b_no4f) > 2 else 0
     ax.set_xlabel(r"$\Omega_\mathrm{sf}$ (A$_3$B)")
     ax.set_ylabel(r"$\Omega_\mathrm{sf}$ (B$_3$A)")
-    ax.set_title(f"(c) $\\Omega_{{sf}}$: large scatter (r={r_corr:.2f})")
+    ax.set_title(f"(c) $\\Omega_{{sf}}$: r={r_all:.2f} (non-4f: r={r_no4f:.2f})")
+    ax.legend(fontsize=9, loc="upper left")
     ax.set_aspect("equal")
 
     fig.tight_layout()
@@ -959,9 +975,10 @@ def fig08_delta_r_proof(all_df):
 
     # (e) Omega_sf A3B vs B2
     ax = axes2[1]
+    osf_a3b_all = [complete[p]["L12_A3B"] for p in complete]
     osf_b2_list = [complete[p]["B2"] for p in complete]
-    ax.scatter(osf_a3b, osf_b2_list, c="C0", alpha=0.4, s=20)
-    r2 = np.corrcoef(osf_a3b, osf_b2_list)[0, 1]
+    ax.scatter(osf_a3b_all, osf_b2_list, c="C0", alpha=0.4, s=20)
+    r2 = np.corrcoef(osf_a3b_all, osf_b2_list)[0, 1]
     ax.set_xlabel(r"$\Omega_\mathrm{sf}$ (A$_3$B, L1$_2$)")
     ax.set_ylabel(r"$\Omega_\mathrm{sf}$ (AB, B2)")
     ax.set_title(f"(e) L1$_2$ vs B2 (r={r2:.2f})")
