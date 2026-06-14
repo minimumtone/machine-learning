@@ -26,7 +26,7 @@
     "RMSE_BCC": 0.0299,
     "RMSE_FCC": 0.0096
   },
-  "independent_test_23HEA": {
+  "independent_test_28HEA": {
     "RMSE_Vegard": 0.0176,
     "RMSE_DFT_Omega_sf": 0.0154,
     "RMSE_additive": 0.0159,

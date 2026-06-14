@@ -1674,7 +1674,7 @@ def main():
             "RMSE_BCC": round(float(rmse_ss_tr_bcc), 4),
             "RMSE_FCC": round(float(rmse_ss_tr_fcc), 4),
         },
-        "independent_test_23HEA": {
+        "independent_test_28HEA": {
             "RMSE_Vegard": round(float(rmse_veg_te), 4),
             "RMSE_DFT_Omega_sf": round(float(rmse_ss_te), 4),
             "RMSE_additive": round(float(rmse_add_te), 4),
