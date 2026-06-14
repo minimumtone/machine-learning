@@ -994,6 +994,40 @@ $\Omega_\text{sf}$は偏差の比として定義されるためGGA誤差が
 元素ごとのばらつきがそのまま影響する。
 
 
+\subsection{構造整合Vegard検証の意義}
+\label{sec:vegard_structure}
+
+図~\ref{fig:composition_b2}・\ref{fig:composition_l12}で
+構造ファミリーごとにVegard則の成立を検証した。
+この分離には本質的な理由がある。
+純元素の平衡体積は構造依存であり（$V_X^\text{BCC} \neq V_X^\text{FCC}$）、
+King原子体積のような構造非依存の単一値をB2とL1$_2$の両方に
+当てると、Vegardからの偏差（＝$\Omega_\text{sf}$）の中に
+合金化由来ではない純元素の構造体積差というアーティファクトが混入する。
+
+構造整合の端点（B2同種体積$V^\text{BCC}$、L1$_2$同種体積$V^\text{FCC}$）を
+用いることで、同一汎関数・同一セルタイプで端点と化合物が揃い、
+GGA系統誤差が偏差比の中でキャンセルする。
+残る偏差が構造体積差を含まない純粋な$\Omega_\text{sf}$となり、
+Vegard則がどこまで成立し、どこから$\Omega_\text{sf}$が効くかを
+クリーンに判定できる。
+
+ここで\ref{sec:self_consistency}節の「DFT体積はKingに劣る」との
+整合性を確認しておく。目的が異なる。
+Vegard成立の検証は相対量でありDFT内で完結するため
+構造整合DFT端点が正しい。
+一方、実合金の格子定数の絶対予測では元素依存GGA誤差が
+直接影響するためKing実験値が優る。
+両者は相補的であり矛盾しない。
+
+なお、この検証は体積空間で行うべきである。
+半径に変換すると、同じ原子体積でもBCCとFCCで最近接距離が
+異なるという別の構造ジオメトリが入り込む。
+剛体球接触モデルの単一半径セットが
+RMSE = 0.162~\AA{}と破綻したこと（\ref{sec:packing_results}節）は
+この問題を裏付ける。
+
+
 \subsection{DFT自己整合Ω$_\text{sf}$によるq$\approx$1の達成}
 \label{sec:dft_self_consistent}
 
