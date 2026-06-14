@@ -672,6 +672,160 @@ def fig07b_vegard_heatmap(all_df):
         print(f"  {fname} ({n_el} elements, {len(omega_median)} pairs)")
 
 
+def fig07c_vegard_parity(all_df):
+    """Vegard parity plots: V_DFT vs V_Vegard for all pairs.
+
+    Two figures (B2 and L12). Each shows DFT actual atomic volume vs
+    structure-matched Vegard predicted volume. Points on y=x means
+    Vegard law holds perfectly.
+    """
+    # Build DFT homonuclear volumes
+    dft_vol = {}
+    for stype, n_auc in [("B2", 2), ("L12", 4)]:
+        homo = all_df[(all_df["stype"] == stype) &
+                      (all_df["element_A"] == all_df["element_B"])]
+        for _, row in homo.iterrows():
+            el = row["element_A"]
+            a = row["lattice_constant"]
+            if 2 < a < 8:
+                dft_vol[(el, stype)] = a ** 3 / n_auc
+
+    for stype, n_auc, color, marker, fig_suffix in [
+        ("B2", 2, "C0", "o", "b2"),
+        ("L12", 4, "C3", "^", "l12"),
+    ]:
+        sub = all_df[(all_df["stype"] == stype) &
+                     (all_df["element_A"] != all_df["element_B"])]
+        v_dft_list, v_veg_list = [], []
+        for _, row in sub.iterrows():
+            elA, elB = row["element_A"], row["element_B"]
+            a = row["lattice_constant"]
+            if a <= 2 or a >= 8:
+                continue
+            vA_key, vB_key = (elA, stype), (elB, stype)
+            if vA_key not in dft_vol or vB_key not in dft_vol:
+                continue
+            vA, vB = dft_vol[vA_key], dft_vol[vB_key]
+            cA = row.get("count_A", 1 if stype == "B2" else 3)
+            cB = row.get("count_B", 1)
+            total = cA + cB
+            v_act = a ** 3 / n_auc
+            v_veg = (cA * vA + cB * vB) / total
+            if v_veg > 0:
+                v_dft_list.append(v_act)
+                v_veg_list.append(v_veg)
+
+        v_dft_arr = np.array(v_dft_list)
+        v_veg_arr = np.array(v_veg_list)
+
+        fig, ax = plt.subplots(figsize=(8, 8))
+        ax.scatter(v_veg_arr, v_dft_arr, c=color, marker=marker,
+                   s=15, alpha=0.4, edgecolors="none")
+        vmin = min(v_veg_arr.min(), v_dft_arr.min()) * 0.95
+        vmax = max(v_veg_arr.max(), v_dft_arr.max()) * 1.05
+        ax.plot([vmin, vmax], [vmin, vmax], "k--", lw=1.5, alpha=0.6,
+                label="Vegard (y = x)")
+        ax.set_xlim(vmin, vmax)
+        ax.set_ylim(vmin, vmax)
+        ax.set_aspect("equal")
+        ax.set_xlabel(r"$V_{\mathrm{Vegard}}$ (Å³/atom, DFT endpoints)", fontsize=13)
+        ax.set_ylabel(r"$V_{\mathrm{DFT}}$ (Å³/atom)", fontsize=13)
+        struct_label = "B2 (BCC)" if stype == "B2" else r"L1$_2$ (FCC)"
+        # R² and RMSE
+        ss_res = np.sum((v_dft_arr - v_veg_arr) ** 2)
+        ss_tot = np.sum((v_dft_arr - v_dft_arr.mean()) ** 2)
+        r2 = 1 - ss_res / ss_tot if ss_tot > 0 else 0
+        rmse_v = np.sqrt(np.mean((v_dft_arr - v_veg_arr) ** 2))
+        ax.set_title(f"Vegard parity — {struct_label}  "
+                     f"({len(v_dft_arr)} points, R²={r2:.4f}, "
+                     f"RMSE={rmse_v:.3f} ų/atom)", fontsize=12)
+        ax.legend(fontsize=11, loc="upper left")
+        fig.tight_layout()
+        fname = f"fig_vegard_parity_{fig_suffix}.png"
+        fig.savefig(OUTDIR / fname, bbox_inches="tight", dpi=150)
+        plt.close(fig)
+        print(f"  {fname} ({len(v_dft_arr)} points, R²={r2:.4f})")
+
+
+def fig07d_vegard_vs_radius(all_df):
+    """Omega_sf vs atomic radius difference for all pairs.
+
+    Two figures (B2 and L12). Each shows the Vegard deviation as a
+    function of the pure-element radius difference, to test whether
+    size mismatch correlates with Vegard deviation.
+    """
+    # Build DFT homonuclear volumes
+    dft_vol = {}
+    for stype, n_auc in [("B2", 2), ("L12", 4)]:
+        homo = all_df[(all_df["stype"] == stype) &
+                      (all_df["element_A"] == all_df["element_B"])]
+        for _, row in homo.iterrows():
+            el = row["element_A"]
+            a = row["lattice_constant"]
+            if 2 < a < 8:
+                dft_vol[(el, stype)] = a ** 3 / n_auc
+
+    for stype, n_auc, color, marker, fig_suffix in [
+        ("B2", 2, "C0", "o", "b2"),
+        ("L12", 4, "C3", "^", "l12"),
+    ]:
+        sub = all_df[(all_df["stype"] == stype) &
+                     (all_df["element_A"] != all_df["element_B"])]
+
+        # Collect per-pair data
+        pair_data = defaultdict(lambda: {"omega": [], "rA": 0, "rB": 0})
+        for _, row in sub.iterrows():
+            elA, elB = row["element_A"], row["element_B"]
+            a = row["lattice_constant"]
+            if a <= 2 or a >= 8:
+                continue
+            vA_key, vB_key = (elA, stype), (elB, stype)
+            if vA_key not in dft_vol or vB_key not in dft_vol:
+                continue
+            vA, vB = dft_vol[vA_key], dft_vol[vB_key]
+            cA = row.get("count_A", 1 if stype == "B2" else 3)
+            cB = row.get("count_B", 1)
+            total = cA + cB
+            v_act = a ** 3 / n_auc
+            v_veg = (cA * vA + cB * vB) / total
+            if v_veg > 0:
+                omega = (v_act - v_veg) / v_veg
+                pair = tuple(sorted([elA, elB]))
+                pair_data[pair]["omega"].append(omega)
+                # Pure element radii from DFT volume: r = (3V/4π)^(1/3)
+                rA = (3 * vA / (4 * np.pi)) ** (1/3)
+                rB = (3 * vB / (4 * np.pi)) ** (1/3)
+                pair_data[pair]["rA"] = rA
+                pair_data[pair]["rB"] = rB
+
+        dr_list, omega_list = [], []
+        for pair, d in pair_data.items():
+            if d["omega"]:
+                dr = abs(d["rA"] - d["rB"])
+                omega_med = np.median(d["omega"])
+                dr_list.append(dr)
+                omega_list.append(omega_med)
+
+        dr_arr = np.array(dr_list)
+        omega_arr = np.array(omega_list)
+
+        fig, ax = plt.subplots(figsize=(10, 7))
+        ax.scatter(dr_arr, omega_arr, c=color, marker=marker,
+                   s=20, alpha=0.4, edgecolors="none")
+        ax.axhline(0, color="k", ls="--", lw=1, alpha=0.5)
+        ax.set_xlabel(r"$|\Delta r_{\mathrm{DFT}}|$ (Å)", fontsize=13)
+        ax.set_ylabel(r"$\Omega_{\mathrm{sf}}$ (structure-matched DFT)", fontsize=13)
+        struct_label = "B2 (BCC)" if stype == "B2" else r"L1$_2$ (FCC)"
+        corr = np.corrcoef(dr_arr, omega_arr)[0, 1] if len(dr_arr) > 2 else 0
+        ax.set_title(f"Vegard deviation vs radius difference — {struct_label}  "
+                     f"({len(dr_arr)} pairs, r = {corr:.3f})", fontsize=12)
+        fig.tight_layout()
+        fname = f"fig_vegard_vs_radius_{fig_suffix}.png"
+        fig.savefig(OUTDIR / fname, bbox_inches="tight", dpi=150)
+        plt.close(fig)
+        print(f"  {fname} ({len(dr_arr)} pairs, r={corr:.3f})")
+
+
 def fig08_delta_r_proof(all_df):
     """Fig 8: 6-panel proof that delta_r cannot absorb structure info."""
     # Compute delta_r and Omega_sf for each pair×structure
@@ -1334,6 +1488,8 @@ def main():
     fig06_additive_fit(ob2, ol12, decomp)
     fig07_composition_examples(all_df)
     fig07b_vegard_heatmap(all_df)
+    fig07c_vegard_parity(all_df)
+    fig07d_vegard_vs_radius(all_df)
     fig08_delta_r_proof(all_df)
     fig09_packing(all_df)
     fig10_l12_asymmetry(all_df)
