@@ -650,22 +650,45 @@ HEA予測では加法モデルRMSE = 0.0216~\AA{}と
 \subsection{Vegard則からの偏差の可視化}
 \label{sec:vegard_vis}
 
-代表6元素ペアの組成軸プロット（図~\ref{fig:composition}）は、
-同一ペアでもA$_3$BとB$_3$Aで偏差の方向・大きさが異なること、
-3構造のDFT点がVegard直線上にも滑らかな曲線上にも乗らないことを
-示す。$\Omega_\text{sf}$が組成比だけでなく構造に依存する
-直接的証拠である。
+Vegard則の成立を構造ファミリーごとに検証するため、
+B2（BCC型）とL1$_2$（FCC型）を分離してプロットする。
+各図の実線はDFT同種体積（B2: $V_X^\text{BCC} = a_\text{B2}(X\text{-}X)^3/2$、
+L1$_2$: $V_X^\text{FCC} = a_{\mathrm{L1}_2}(X\text{-}X)^3/4$）を端点とした
+構造整合Vegard線であり、同一汎関数・同一セルタイプで端点と化合物を揃えることで
+GGA系統誤差が相殺され、残る偏差が純粋な$\Omega_\text{sf}$となる。
+破線は比較用のKing実験値ベースVegard線である。
+
+B2プロット（図~\ref{fig:composition_b2}）では、
+DFT点が構造整合Vegard線から系統的に偏位しており、
+$\Omega_\text{sf}$の存在を明示する。
+L1$_2$プロット（図~\ref{fig:composition_l12}）でも同様の偏位が確認されるが、
+A$_3$BとB$_3$Aで偏差の方向・大きさが非対称であり、
+$\Omega_\text{sf}$が組成比だけでなく構造に依存する直接的証拠である。
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=\textwidth]{fig_composition_examples.png}
-\caption{代表6元素ペアの組成軸Vegardプロット。
-  破線: King原子体積（実験値）から算出したVegard則（B2換算）、
-  実線: DFT純元素体積から算出したVegard則（GGA系統誤差を含む）、
-  青丸: DFT B2計算値（$c = 50\%$）、
-  赤三角: DFT L1$_2$計算値（$c = 25\%, 75\%$、B2等価スケールに変換）。
-  DFT点と実線の乖離が$\Omega_\text{sf}$の構造依存成分に対応する。}
-\label{fig:composition}
+\includegraphics[width=\textwidth]{fig_composition_b2.png}
+\caption{代表6元素ペアのB2（BCC型）Vegardプロット。
+  破線: King原子体積（実験値）から算出したVegard則、
+  実線: DFT B2同種体積$V_X^\text{BCC} = a_\text{B2}(X\text{-}X)^3/2$
+  を端点としたVegard則。
+  青丸: DFT B2計算値（$c = 0, 50, 100\%$）。
+  DFT同種端点を基準とすることで、GGA系統誤差が相殺され、
+  点と実線の偏差が純粋な$\Omega_\text{sf}$に対応する。}
+\label{fig:composition_b2}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_composition_l12.png}
+\caption{代表6元素ペアのL1$_2$（FCC型）Vegardプロット。
+  破線: King原子体積（実験値）から算出したVegard則、
+  実線: DFT L1$_2$同種体積$V_X^\text{FCC} = a_{\mathrm{L1}_2}(X\text{-}X)^3/4$
+  を端点としたVegard則。
+  赤三角: DFT L1$_2$計算値（$c = 0, 25, 75, 100\%$）。
+  構造整合の端点を用いることで、BCC/FCC間の構造体積差
+  アーティファクトを排除し、$\Omega_\text{sf}$をクリーンに評価できる。}
+\label{fig:composition_l12}
 \end{figure*}
 
 

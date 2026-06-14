@@ -449,82 +449,134 @@ def fig06_additive_fit(ob2, ol12, decomp):
 
 
 def fig07_composition_examples(all_df):
-    """Fig 7: Vegard composition plots for representative pairs."""
+    """Fig 7a/7b: Structure-matched Vegard composition plots.
+
+    B2 figure: DFT B2 homonuclear volumes as BCC endpoints.
+    L12 figure: DFT L12 homonuclear volumes as FCC endpoints.
+    Each figure uses structure-consistent DFT endpoints so that
+    the deviation from Vegard is the pure Omega_sf, free of
+    structure-mismatch artifacts.  King Vegard shown as dashed
+    reference for comparison.
+    """
     examples = [("Cu", "Zr"), ("Al", "Ni"), ("Fe", "Ti"),
                 ("Co", "Cr"), ("Pd", "Ti"), ("Nb", "Ta")]
 
-    # Build DFT pure element volumes from same-element B2 entries
-    same_el_b2 = all_df[(all_df["stype"] == "B2") &
-                         (all_df["element_A"] == all_df["element_B"])]
-    dft_volumes = {}
-    for _, row in same_el_b2.iterrows():
-        el = row["element_A"]
-        v = row["lattice_constant"] ** 3 / 2
-        dft_volumes[el] = v  # last entry wins (VASP preferred)
+    # Build DFT pure element volumes: B2 → V_BCC, L12 → V_FCC
+    dft_vol_b2 = {}   # V_X^BCC = a_B2(X-X)^3 / 2
+    dft_vol_l12 = {}  # V_X^FCC = a_L12(X-X)^3 / 4
+    for stype, vol_dict, n_auc in [("B2", dft_vol_b2, 2),
+                                    ("L12", dft_vol_l12, 4)]:
+        homo = all_df[(all_df["stype"] == stype) &
+                      (all_df["element_A"] == all_df["element_B"])]
+        for _, row in homo.iterrows():
+            el = row["element_A"]
+            a = row["lattice_constant"]
+            if a <= 2 or a >= 8:
+                continue
+            vol_dict[el] = a ** 3 / n_auc
 
-    fig, axes = plt.subplots(2, 3, figsize=(18, 11))
-    axes = axes.flatten()
+    # --- Fig 7a: B2 (BCC-like) ---
+    fig_b2, axes_b2 = plt.subplots(2, 3, figsize=(18, 11))
+    axes_b2 = axes_b2.flatten()
+    c_arr = np.linspace(0, 1, 100)
 
     for idx, (elX, elY) in enumerate(examples):
-        ax = axes[idx]
-        vX = KING_ATOMIC_VOLUMES.get(elX, 15)
-        vY = KING_ATOMIC_VOLUMES.get(elY, 15)
-        # King Vegard line
-        c_arr = np.linspace(0, 1, 100)
-        a_veg = [(2 * ((1 - c) * vX + c * vY)) ** (1/3) for c in c_arr]
-        ax.plot(c_arr * 100, a_veg, "k--", lw=1.5, label="Vegard (King)")
+        ax = axes_b2[idx]
+        # King Vegard line (dashed reference)
+        vX_k = KING_ATOMIC_VOLUMES.get(elX, 15)
+        vY_k = KING_ATOMIC_VOLUMES.get(elY, 15)
+        a_king = [(2 * ((1 - c) * vX_k + c * vY_k)) ** (1/3) for c in c_arr]
+        ax.plot(c_arr * 100, a_king, "k--", lw=1.5, alpha=0.5,
+                label="Vegard (King)")
 
-        # DFT Vegard line (if both elements have DFT volumes)
-        if elX in dft_volumes and elY in dft_volumes:
-            vX_dft = dft_volumes[elX]
-            vY_dft = dft_volumes[elY]
-            a_veg_dft = [(2 * ((1 - c) * vX_dft + c * vY_dft)) ** (1/3)
-                         for c in c_arr]
-            ax.plot(c_arr * 100, a_veg_dft, "k-", lw=1.5,
-                    alpha=0.6, label="Vegard (DFT)")
+        # Structure-matched DFT Vegard line (solid)
+        if elX in dft_vol_b2 and elY in dft_vol_b2:
+            vX_d = dft_vol_b2[elX]
+            vY_d = dft_vol_b2[elY]
+            a_dft = [(2 * ((1 - c) * vX_d + c * vY_d)) ** (1/3) for c in c_arr]
+            ax.plot(c_arr * 100, a_dft, "C0-", lw=2,
+                    label="Vegard (DFT-BCC)")
 
-        # DFT data points
-        sub = all_df[(all_df["stype"] == "B2")]
+        # B2 DFT data points (including homonuclear endpoints)
+        sub = all_df[all_df["stype"] == "B2"]
         for _, row in sub.iterrows():
             elA, elB = row["element_A"], row["element_B"]
             a = row["lattice_constant"]
             if a <= 2 or a >= 8:
                 continue
-            if {elA, elB} == {elX, elY}:
+            if {elA, elB} == {elX, elY} or \
+               (elA == elB and elA in {elX, elY}):
                 cA = row.get("count_A", 1)
                 cB = row.get("count_B", 1)
                 total = cA + cB
-                if elA == elY:
+                if elA == elB:
+                    c_B = 0.0 if elA == elX else 1.0
+                elif elA == elY:
                     c_B = cA / total
                 else:
                     c_B = cB / total
                 ax.scatter(c_B * 100, a, c="C0", s=80, zorder=5)
 
-        sub_l12 = all_df[all_df["stype"] == "L12"]
-        for _, row in sub_l12.iterrows():
+        ax.set_xlabel(f"% {elY}")
+        ax.set_ylabel("$a$ (\u00c5)")
+        ax.set_title(f"B2: {elX}\u2013{elY}")
+        ax.legend(fontsize=10, loc="best")
+
+    fig_b2.tight_layout()
+    fig_b2.savefig(OUTDIR / "fig_composition_b2.png", bbox_inches="tight")
+    plt.close(fig_b2)
+    print("  fig_composition_b2.png")
+
+    # --- Fig 7b: L12 (FCC-like) ---
+    fig_l12, axes_l12 = plt.subplots(2, 3, figsize=(18, 11))
+    axes_l12 = axes_l12.flatten()
+
+    for idx, (elX, elY) in enumerate(examples):
+        ax = axes_l12[idx]
+        # King Vegard line (dashed, in FCC scale: n_auc=4)
+        vX_k = KING_ATOMIC_VOLUMES.get(elX, 15)
+        vY_k = KING_ATOMIC_VOLUMES.get(elY, 15)
+        a_king = [(4 * ((1 - c) * vX_k + c * vY_k)) ** (1/3) for c in c_arr]
+        ax.plot(c_arr * 100, a_king, "k--", lw=1.5, alpha=0.5,
+                label="Vegard (King)")
+
+        # Structure-matched DFT Vegard line (solid)
+        if elX in dft_vol_l12 and elY in dft_vol_l12:
+            vX_d = dft_vol_l12[elX]
+            vY_d = dft_vol_l12[elY]
+            a_dft = [(4 * ((1 - c) * vX_d + c * vY_d)) ** (1/3) for c in c_arr]
+            ax.plot(c_arr * 100, a_dft, "C3-", lw=2,
+                    label=r"Vegard (DFT-FCC)")
+
+        # L12 DFT data points (including homonuclear endpoints)
+        sub = all_df[all_df["stype"] == "L12"]
+        for _, row in sub.iterrows():
             elA, elB = row["element_A"], row["element_B"]
             a = row["lattice_constant"]
             if a <= 2 or a >= 8:
                 continue
-            if {elA, elB} == {elX, elY}:
+            if {elA, elB} == {elX, elY} or \
+               (elA == elB and elA in {elX, elY}):
                 cA = row.get("count_A", 3)
                 cB = row.get("count_B", 1)
                 total = cA + cB
-                if elA == elY:
+                if elA == elB:
+                    c_B = 0.0 if elA == elX else 1.0
+                elif elA == elY:
                     c_B = cA / total
                 else:
                     c_B = cB / total
-                a_fcc = a / (2 ** (1/3))  # convert L12 to equivalent B2 scale
-                ax.scatter(c_B * 100, a_fcc, c="C3", s=80, zorder=5, marker="^")
+                ax.scatter(c_B * 100, a, c="C3", s=80, zorder=5, marker="^")
 
         ax.set_xlabel(f"% {elY}")
         ax.set_ylabel("$a$ (\u00c5)")
-        ax.set_title(f"{elX}-{elY}")
+        ax.set_title(r"L1$_2$: " + f"{elX}\u2013{elY}")
         ax.legend(fontsize=10, loc="best")
-    fig.tight_layout()
-    fig.savefig(OUTDIR / "fig_composition_examples.png", bbox_inches="tight")
-    plt.close(fig)
-    print("  fig_composition_examples.png")
+
+    fig_l12.tight_layout()
+    fig_l12.savefig(OUTDIR / "fig_composition_l12.png", bbox_inches="tight")
+    plt.close(fig_l12)
+    print("  fig_composition_l12.png")
 
 
 def _l12_bucket(elA, elB, cA, cB):
