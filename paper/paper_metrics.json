@@ -8,10 +8,10 @@
     "n_B2_pairs": 741,
     "n_L12_pairs": 677,
     "n_training_HEA": 64,
-    "n_test_HEA": 23,
+    "n_test_HEA": 28,
     "n_BCC_train": 29,
     "n_FCC_train": 35,
-    "n_BCC_test": 10,
+    "n_BCC_test": 15,
     "n_FCC_test": 13
   },
   "calibration": {
@@ -26,18 +26,18 @@
     "RMSE_BCC": 0.0299,
     "RMSE_FCC": 0.0096
   },
-  "independent_test_23HEA": {
-    "RMSE_Vegard": 0.0173,
-    "RMSE_DFT_Omega_sf": 0.015,
-    "RMSE_additive": 0.0156,
-    "improvement_vs_Vegard_pct": 13.5,
-    "RMSE_Vegard_BCC": 0.0185,
+  "independent_test_28HEA": {
+    "RMSE_Vegard": 0.0176,
+    "RMSE_DFT_Omega_sf": 0.0154,
+    "RMSE_additive": 0.0159,
+    "improvement_vs_Vegard_pct": 12.4,
+    "RMSE_Vegard_BCC": 0.0186,
     "RMSE_Vegard_FCC": 0.0164,
-    "RMSE_BCC": 0.0149,
+    "RMSE_BCC": 0.0157,
     "RMSE_FCC": 0.0151,
-    "improvement_BCC_pct": 19.6,
+    "improvement_BCC_pct": 15.6,
     "improvement_FCC_pct": 7.8,
-    "BCC_identical_to_Vegard": "0/10"
+    "BCC_identical_to_Vegard": "0/15"
   },
   "additive_decomposition": {
     "B2_R2": 0.5393,
@@ -53,18 +53,18 @@
     "additive_mode_A_q_BCC": 0.4412,
     "additive_mode_A_q_FCC": 0.054,
     "additive_mode_A_RMSE_train": 0.0216,
-    "additive_mode_A_RMSE_test": 0.0156
+    "additive_mode_A_RMSE_test": 0.0159
   },
   "phase_classification": {
     "n_HEA": 54,
     "AUC_delta_r": 0.869,
     "AUC_delta_sf": 0.723,
     "accuracy_delta_r": 0.815,
-    "accuracy_delta_sf": 0.704,
+    "accuracy_delta_sf": 0.722,
     "F1_delta_r": 0.833,
-    "F1_delta_sf": 0.784,
-    "threshold_delta_r_pct": 4.72,
-    "threshold_delta_sf": 0.016,
+    "F1_delta_sf": 0.795,
+    "threshold_delta_r_pct": 4.73,
+    "threshold_delta_sf": 0.0179,
     "convention": "non-SS (IM+AM) = positive class"
   },
   "noise_floor": {

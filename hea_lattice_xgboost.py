@@ -308,6 +308,23 @@ INDEPENDENT_TEST = [
     # Freudenberger 2017: AuCuNiPdPt quinary
     {"comp":{"Au":0.20,"Cu":0.20,"Ni":0.20,"Pd":0.20,"Pt":0.20},"struct":"FCC","a_exp":3.8307,
      "ref":"Freudenberger2017_Metals","note":"noble metal 5-element quinary"},
+    #
+    # --- Additional BCC HEAs to balance low-a coverage ---
+    # Reget 2020 Metals: Mo25Nb25V25W25 single BCC (powder metallurgy)
+    {"comp":{"Mo":0.25,"Nb":0.25,"V":0.25,"W":0.25},"struct":"BCC","a_exp":3.157,
+     "ref":"Reget2020_Metals","note":"equiatomic 4-element refractory (no Ti)"},
+    # Reget 2020 Metals: Mo25Nb25V25Ti25 single BCC
+    {"comp":{"Mo":0.25,"Nb":0.25,"V":0.25,"Ti":0.25},"struct":"BCC","a_exp":3.174,
+     "ref":"Reget2020_Metals","note":"equiatomic 4-element (Ti replaces W)"},
+    # Reget 2020 Metals: Mo20Nb20V20W20Ti20 single BCC
+    {"comp":{"Mo":0.20,"Nb":0.20,"V":0.20,"W":0.20,"Ti":0.20},"struct":"BCC","a_exp":3.164,
+     "ref":"Reget2020_Metals","note":"equiatomic 5-element refractory"},
+    # Reget 2020 Metals: Mo30Nb30V30Ti10 single BCC (Ti-lean)
+    {"comp":{"Mo":0.30,"Nb":0.30,"V":0.30,"Ti":0.10},"struct":"BCC","a_exp":3.156,
+     "ref":"Reget2020_Metals","note":"non-equiatomic Ti-lean 4-element"},
+    # Senkov 2013 Acta Mater: NbTiVZr single BCC (HIP + 1200C/24h)
+    {"comp":{"Nb":0.25,"Ti":0.25,"V":0.25,"Zr":0.25},"struct":"BCC","a_exp":3.338,
+     "ref":"Senkov2013_ActaMat","note":"equiatomic 4-element low-density"},
 ]
 
 
