@@ -975,6 +975,9 @@ def compute_eq10_scaled(comp, struct, omega_sf, gamma=1.0):
     elements = list(comp.keys())
     fracs = np.array([comp[e] for e in elements])
     fracs = fracs / fracs.sum()
+    for e in elements:
+        if e not in KING_ATOMIC_VOLUMES:
+            _warn_unknown_element(e, "compute_eq10_scaled")
     vols = np.array([KING_ATOMIC_VOLUMES.get(e, 15.0) for e in elements])
     n_auc = 4 if struct == "FCC" else 2
     n_elem = len(elements)
@@ -1058,6 +1061,9 @@ def compute_vegard(comp, struct):
     elements = list(comp.keys())
     fracs = np.array([comp[e] for e in elements])
     fracs = fracs / fracs.sum()
+    for e in elements:
+        if e not in KING_ATOMIC_VOLUMES:
+            _warn_unknown_element(e, "compute_vegard")
     vols = np.array([KING_ATOMIC_VOLUMES.get(e, 15.0) for e in elements])
     v_avg = np.sum(fracs * vols)
     n_auc = 4 if struct == "FCC" else 2
@@ -1081,6 +1087,9 @@ def compute_features(comp, struct, omega_sf):
 
     features = np.zeros(23)
 
+    for e in elements:
+        if e not in KING_ATOMIC_VOLUMES:
+            _warn_unknown_element(e, "compute_features")
     vols = np.array([KING_ATOMIC_VOLUMES.get(e, 15.0) for e in elements])
     v_avg = np.sum(fracs * vols)
     n_auc = 4 if struct == "FCC" else 2
