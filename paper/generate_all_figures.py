@@ -7,8 +7,7 @@ Usage:
     cd paper/ && python generate_all_figures.py
 
 Input data (relative to repo root):
-    four_case_output/figures/compounds_{MP,OQMD}_{B2,L12}.csv
-    data/compounds_VASP_{B2,L12}.csv
+    data/compounds_{MP,OQMD,VASP}_{B2,L12}.csv
 
 Output:
     paper/fig_*.png          — all paper figures
@@ -73,28 +72,19 @@ EXCLUDE_ELEMENTS = {"Gd", "Ce"}
 # ---------------------------------------------------------------------------
 def load_compounds():
     """Load MP + OQMD + VASP compound data, excluding Gd/Ce."""
-    base = REPO / "four_case_output" / "figures"
+    data_dir = REPO / "data"
     dfs = []
-    for src in ["MP", "OQMD"]:
+    for src in ["MP", "OQMD", "VASP"]:
         for struct in ["B2", "L12"]:
-            f = base / f"compounds_{src}_{struct}.csv"
+            f = data_dir / f"compounds_{src}_{struct}.csv"
             if f.exists():
                 df = pd.read_csv(f)
                 df["db"] = src
                 df["stype"] = struct
                 dfs.append(df)
-    for struct in ["B2", "L12"]:
-        for search_dir in [REPO / "data", base]:
-            f = search_dir / f"compounds_VASP_{struct}.csv"
-            if f.exists():
-                df = pd.read_csv(f)
-                df["db"] = "VASP"
-                df["stype"] = struct
-                dfs.append(df)
-                break
     if not dfs:
         raise FileNotFoundError(
-            "No compound CSV files found. Check four_case_output/figures/ and data/ directories.")
+            "No compound CSV files found in data/ directory.")
     all_df = pd.concat(dfs, ignore_index=True)
     # Exclude Gd/Ce
     mask = ~(all_df["element_A"].isin(EXCLUDE_ELEMENTS) |

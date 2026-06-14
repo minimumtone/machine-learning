@@ -455,27 +455,18 @@ MULTIPHASE_HEA_DB = [
 # Load DFT data
 # =====================================================================
 def load_compound_data():
-    base = Path("four_case_output/figures")
+    data_dir = Path("data")
     dfs = []
-    for src in ["MP", "OQMD"]:
+    for src in ["MP", "OQMD", "VASP"]:
         for struct in ["B2", "L12"]:
-            f = base / f"compounds_{src}_{struct}.csv"
+            f = data_dir / f"compounds_{src}_{struct}.csv"
             if f.exists():
                 df = pd.read_csv(f)
                 df["db"] = src
                 df["stype"] = struct
                 dfs.append(df)
-    # Also load VASP-calculated data if available
-    for struct in ["B2", "L12"]:
-        for search_dir in [Path("data"), base]:
-            f = search_dir / f"compounds_VASP_{struct}.csv"
-            if f.exists():
-                df = pd.read_csv(f)
-                df["db"] = "VASP"
-                df["stype"] = struct
-                dfs.append(df)
-                print(f"    Loaded VASP {struct}: {len(df)} compounds from {f}")
-                break
+                if src == "VASP":
+                    print(f"    Loaded VASP {struct}: {len(df)} compounds from {f}")
     return pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
 
 
