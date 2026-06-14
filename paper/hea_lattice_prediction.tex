@@ -691,89 +691,12 @@ $\Omega_\text{sf}$が組成比だけでなく構造に依存する直接的証�
 \label{fig:composition_l12}
 \end{figure*}
 
-全元素ペアの$\Omega_\text{sf}$を構造別にヒートマップとして
-図~\ref{fig:vegard_heatmap_b2}（B2、666ペア）および
-図~\ref{fig:vegard_heatmap_l12}（L1$_2$、1275ペア）に示す。
-構造整合DFT端点を基準としており、色の濃さがVegard則からの
-偏差の大きさに対応する。B2では大半のペアが負の$\Omega_\text{sf}$
-（体積収縮）を示す一方、L1$_2$では希土類4f元素（Dy, Er, Tb等）が
-極端な正の偏差を示し、GGA-PBEの4f電子記述の限界を反映する。
-
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=\textwidth]{fig_vegard_heatmap_b2.png}
-\caption{全元素ペアのB2（BCC型）$\Omega_\text{sf}$ヒートマップ
-  （666ペア、37元素）。
-  DFT B2同種体積を端点としたVegard偏差。
-  青: 体積収縮（$\Omega_\text{sf} < 0$）、
-  赤: 体積膨張（$\Omega_\text{sf} > 0$）。
-  大半のペアが負の偏差を示し、B2秩序構造における体積収縮傾向を反映する。}
-\label{fig:vegard_heatmap_b2}
-\end{figure*}
-
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=\textwidth]{fig_vegard_heatmap_l12.png}
-\caption{全元素ペアのL1$_2$（FCC型）$\Omega_\text{sf}$ヒートマップ
-  （1275ペア、51元素）。
-  DFT L1$_2$同種体積を端点としたVegard偏差。
-  Dy, Er, Tb, Sm等の希土類4f元素が極端な正の偏差を示すのは
-  GGA-PBEが4f局在電子の体積を過大評価するためである。}
-\label{fig:vegard_heatmap_l12}
-\end{figure*}
-
-Vegard則の成立度を定量的に評価するため、全ペアの
-DFT原子体積$V_\text{DFT}$と構造整合Vegard予測体積$V_\text{Vegard}$の
-パリティプロットを図~\ref{fig:vegard_parity_b2}（B2）および
-図~\ref{fig:vegard_parity_l12}（L1$_2$）に示す。
+全元素ペアについてVegard則の成立度を系統的に検証した結果を
+\ref{sec:appendix_vegard_all}節に示す。
 B2では$R^2 = 0.81$とVegard則が比較的良好に成立するのに対し、
 L1$_2$では$R^2 = 0.51$と散乱が大きい。
-L1$_2$の散乱は4f希土類元素の異常体積と
-A$_3$B/B$_3$Aの非対称性に起因する。
-
-図~\ref{fig:vegard_vs_radius_b2}・\ref{fig:vegard_vs_radius_l12}では
-$\Omega_\text{sf}$を純元素の半径差$|\Delta r_\text{DFT}|$に対して
-プロットした。B2では弱い負の相関（$r = -0.45$）があり、
-サイズ差が大きいほど体積収縮が大きい傾向を示す。
-L1$_2$では相関がさらに弱く（$r = -0.17$）、
-$\Omega_\text{sf}$がサイズ差だけでは説明できないことを示唆する。
-
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=0.7\textwidth]{fig_vegard_parity_b2.png}
-\caption{全B2ペアのVegardパリティプロット
-  （2045点、$R^2 = 0.81$、RMSE = 2.50~\AA$^3$/atom）。
-  横軸: 構造整合DFT端点によるVegard予測体積、
-  縦軸: DFT計算体積。破線はy = x（Vegard完全成立）。}
-\label{fig:vegard_parity_b2}
-\end{figure*}
-
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=0.7\textwidth]{fig_vegard_parity_l12.png}
-\caption{全L1$_2$ペアのVegardパリティプロット
-  （3148点、$R^2 = 0.51$、RMSE = 5.34~\AA$^3$/atom）。
-  B2に比べ散乱が大きく、4f希土類の異常点が上方に突出する。}
-\label{fig:vegard_parity_l12}
-\end{figure*}
-
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=0.7\textwidth]{fig_vegard_vs_radius_b2.png}
-\caption{B2 $\Omega_\text{sf}$と純元素DFT半径差の関係
-  （666ペア、$r = -0.45$）。
-  半径差が大きいほど体積収縮（負の$\Omega_\text{sf}$）が増大する傾向。}
-\label{fig:vegard_vs_radius_b2}
-\end{figure*}
-
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=0.7\textwidth]{fig_vegard_vs_radius_l12.png}
-\caption{L1$_2$ $\Omega_\text{sf}$と純元素DFT半径差の関係
-  （1275ペア、$r = -0.17$）。
-  B2に比べ相関が弱く、$\Omega_\text{sf}$はサイズ差だけでは説明できない。}
-\label{fig:vegard_vs_radius_l12}
-\end{figure*}
+また半径差との相関はB2で$r = -0.45$、L1$_2$で$r = -0.17$であり、
+$\Omega_\text{sf}$がサイズ差だけでは説明できないことを示す。
 
 
 \subsection{$\delta r$の構造不変性}
@@ -1789,6 +1712,132 @@ Nb & 17.978 & $+$0.001 & $+$0.011 & & & & \\
     $a = (n_\text{auc} \sum_i c_i\,V_\text{eff}(i))^{1/3}$。
 \end{enumerate}
 校正定数: $q_\text{BCC} = 0.49$（B2参照）または$1.0$（SQS参照）、$q_\text{FCC} = 0.13$。
+
+
+%% =====================================================================
+%% Supplementary: Vegard則の全ペア検証
+%% =====================================================================
+
+\section{全元素ペアにおけるVegard則の成立度}
+\label{sec:appendix_vegard_all}
+
+本文§\ref{sec:vegard_vis}では代表6ペアで構造整合Vegard検証を行った。
+ここでは全元素ペアに対する系統的検証の結果を示す。
+すべての図においてDFT同種体積
+（B2: $V_X^\text{BCC} = a_\text{B2}(X\text{-}X)^3/2$、
+L1$_2$: $V_X^\text{FCC} = a_{\mathrm{L1}_2}(X\text{-}X)^3/4$）
+を構造整合端点として使用している。
+
+\subsection{$\Omega_\text{sf}$ヒートマップ}
+
+図~\ref{fig:vegard_heatmap_b2}・\ref{fig:vegard_heatmap_l12}に
+全ペアの$\Omega_\text{sf}$を元素$\times$元素の行列として示す。
+B2（図~\ref{fig:vegard_heatmap_b2}）では
+大半のペアが負の$\Omega_\text{sf}$（体積収縮）を示し、
+B2秩序構造における系統的なVegard過大評価が確認される。
+L1$_2$（図~\ref{fig:vegard_heatmap_l12}）では
+Dy, Er, Tb, Sm等の希土類4f元素が行・列全体にわたって
+極端な正の偏差を示す。
+これはGGA-PBEが4f局在電子の体積を過大評価するためであり、
+これらの元素を含むペアの$\Omega_\text{sf}$は
+物理的に信頼できない。
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_vegard_heatmap_b2.png}
+\caption{全元素ペアのB2（BCC型）$\Omega_\text{sf}$ヒートマップ
+  （666ペア、37元素）。
+  DFT B2同種体積を端点としたVegard偏差。
+  青: 体積収縮（$\Omega_\text{sf} < 0$）、
+  赤: 体積膨張（$\Omega_\text{sf} > 0$）。
+  大半のペアが負の偏差を示し、B2秩序構造における体積収縮傾向を反映する。}
+\label{fig:vegard_heatmap_b2}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_vegard_heatmap_l12.png}
+\caption{全元素ペアのL1$_2$（FCC型）$\Omega_\text{sf}$ヒートマップ
+  （1275ペア、51元素）。
+  DFT L1$_2$同種体積を端点としたVegard偏差。
+  Dy, Er, Tb, Sm等の希土類4f元素が行・列で極端な正の偏差を示す。}
+\label{fig:vegard_heatmap_l12}
+\end{figure*}
+
+\subsection{Vegardパリティプロット（体積空間）}
+
+図~\ref{fig:vegard_parity_b2}・\ref{fig:vegard_parity_l12}に
+DFT原子体積$V_\text{DFT}$と構造整合Vegard予測体積
+$V_\text{Vegard}$のパリティプロットを示す。
+B2では$R^2 = 0.81$（RMSE = 2.50~\AA$^3$/atom、2045点）と
+Vegard則が比較的良好に成立する。
+一方、L1$_2$では$R^2 = 0.51$（RMSE = 5.34~\AA$^3$/atom、3148点）
+と散乱が大きい。
+L1$_2$の精度低下には2つの要因がある。
+第一に、A$_3$B/B$_3$Aの非対称性により同一ペアでも
+$\Omega_\text{sf}$が大きく異なる。
+第二に、4f希土類元素のDFT体積異常が系統的な外れ値を生む。
+B2が相対的に高精度である理由は、
+c = 50\%の1点のみ（対称組成）であり
+非線形効果が最大となる組成に限定されるためである。
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.7\textwidth]{fig_vegard_parity_b2.png}
+\caption{全B2ペアのVegardパリティプロット
+  （2045点、$R^2 = 0.81$、RMSE = 2.50~\AA$^3$/atom）。
+  横軸: 構造整合DFT端点によるVegard予測体積、
+  縦軸: DFT計算体積。破線はy = x（Vegard完全成立）。}
+\label{fig:vegard_parity_b2}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.7\textwidth]{fig_vegard_parity_l12.png}
+\caption{全L1$_2$ペアのVegardパリティプロット
+  （3148点、$R^2 = 0.51$、RMSE = 5.34~\AA$^3$/atom）。
+  B2に比べ散乱が大きく、4f希土類の異常点が上方に突出する。}
+\label{fig:vegard_parity_l12}
+\end{figure*}
+
+\subsection{$\Omega_\text{sf}$と原子半径差の関係}
+
+図~\ref{fig:vegard_vs_radius_b2}・\ref{fig:vegard_vs_radius_l12}に
+$\Omega_\text{sf}$を純元素のDFT半径差
+$|\Delta r_\text{DFT}| = |r_A - r_B|$
+（$r = (3V/4\pi)^{1/3}$で体積から変換）に対してプロットした。
+B2では弱い負の相関（$r = -0.45$）があり、
+サイズ差が大きいほど体積収縮（負の$\Omega_\text{sf}$）が
+増大する傾向を示す。
+これは異種原子間の電荷移動や$d$軌道結合が
+サイズ差の大きいペアでより顕著であることと整合する。
+L1$_2$では相関がさらに弱く（$r = -0.17$）、
+$\Omega_\text{sf}$がサイズ差だけでは説明できない。
+L1$_2$固有のA$_3$B/B$_3$A非対称性と
+4f元素の異常が相関を希釈していると考えられる。
+
+以上の結果は、$\Omega_\text{sf}$が単純なサイズ効果を超えた
+電子構造由来の体積変化を含むことを示しており、
+DFT計算による構造依存有効体積の導出が
+Vegard則の補正に不可欠であることを裏付ける。
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.7\textwidth]{fig_vegard_vs_radius_b2.png}
+\caption{B2 $\Omega_\text{sf}$と純元素DFT半径差の関係
+  （666ペア、$r = -0.45$）。
+  半径差が大きいほど体積収縮（負の$\Omega_\text{sf}$）が増大する傾向。}
+\label{fig:vegard_vs_radius_b2}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.7\textwidth]{fig_vegard_vs_radius_l12.png}
+\caption{L1$_2$ $\Omega_\text{sf}$と純元素DFT半径差の関係
+  （1275ペア、$r = -0.17$）。
+  B2に比べ相関が弱く、$\Omega_\text{sf}$はサイズ差だけでは説明できない。}
+\label{fig:vegard_vs_radius_l12}
+\end{figure*}
 
 
 %% =====================================================================
