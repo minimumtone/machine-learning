@@ -70,5 +70,23 @@
   "noise_floor": {
     "sigma_approx": 0.016,
     "comment": "Experimental reproducibility limit from literature variance"
+  },
+  "delta_r_proof": {
+    "delta_r_proof_n_complete": 595,
+    "delta_r_proof_n_non4f": 465,
+    "delta_r_proof_n_4f": 130,
+    "delta_r_proof_r_all": 0.02,
+    "delta_r_proof_r_non4f": 0.69
+  },
+  "l12_asymmetry": {
+    "l12_asymmetry_n_pairs": 595,
+    "l12_asymmetry_std": 0.31,
+    "l12_asymmetry_mean_abs_diff": 0.312,
+    "l12_asymmetry_max_abs_diff": 2.74
+  },
+  "effective_radius": {
+    "eff_radius_min_dev": 0.144,
+    "eff_radius_maj_dev": 0.059,
+    "eff_radius_min_over_maj_pct": 244.0
   }
 }
