@@ -73,28 +73,19 @@ EXCLUDE_ELEMENTS = {"Gd", "Ce"}
 # ---------------------------------------------------------------------------
 def load_compounds():
     """Load MP + OQMD + VASP compound data, excluding Gd/Ce."""
-    base = REPO / "four_case_output" / "figures"
+    data_dir = REPO / "data"
     dfs = []
-    for src in ["MP", "OQMD"]:
+    for src in ["MP", "OQMD", "VASP"]:
         for struct in ["B2", "L12"]:
-            f = base / f"compounds_{src}_{struct}.csv"
+            f = data_dir / f"compounds_{src}_{struct}.csv"
             if f.exists():
                 df = pd.read_csv(f)
                 df["db"] = src
                 df["stype"] = struct
                 dfs.append(df)
-    for struct in ["B2", "L12"]:
-        for search_dir in [REPO / "data", base]:
-            f = search_dir / f"compounds_VASP_{struct}.csv"
-            if f.exists():
-                df = pd.read_csv(f)
-                df["db"] = "VASP"
-                df["stype"] = struct
-                dfs.append(df)
-                break
     if not dfs:
         raise FileNotFoundError(
-            "No compound CSV files found. Check four_case_output/figures/ and data/ directories.")
+            "No compound CSV files found in data/ directory.")
     all_df = pd.concat(dfs, ignore_index=True)
     # Exclude Gd/Ce
     mask = ~(all_df["element_A"].isin(EXCLUDE_ELEMENTS) |
@@ -451,29 +442,41 @@ def fig06_additive_fit(ob2, ol12, decomp):
 def fig07_composition_examples(all_df):
     """Fig 7a/7b: Structure-matched Vegard composition plots.
 
-    B2 figure: DFT B2 homonuclear volumes as BCC endpoints.
-    L12 figure: DFT L12 homonuclear volumes as FCC endpoints.
-    Each figure uses structure-consistent DFT endpoints so that
-    the deviation from Vegard is the pure Omega_sf, free of
-    structure-mismatch artifacts.  King Vegard shown as dashed
+    B2 figure: MP BCC volumes as BCC endpoints.
+    L12 figure: MP FCC volumes as FCC endpoints.
+    Each figure uses structure-consistent DFT endpoints (from Materials
+    Project) so that the deviation from Vegard is the pure Omega_sf,
+    free of structure-mismatch artifacts.  King Vegard shown as dashed
     reference for comparison.
     """
     examples = [("Cu", "Zr"), ("Al", "Ni"), ("Fe", "Ti"),
-                ("Co", "Cr"), ("Pd", "Ti"), ("Nb", "Ta")]
+                ("Co", "Cr"), ("Pd", "Ti"), ("Nb", "Ti")]
 
-    # Build DFT pure element volumes: B2 → V_BCC, L12 → V_FCC
-    dft_vol_b2 = {}   # V_X^BCC = a_B2(X-X)^3 / 2
-    dft_vol_l12 = {}  # V_X^FCC = a_L12(X-X)^3 / 4
-    for stype, vol_dict, n_auc in [("B2", dft_vol_b2, 2),
-                                    ("L12", dft_vol_l12, 4)]:
-        homo = all_df[(all_df["stype"] == stype) &
-                      (all_df["element_A"] == all_df["element_B"])]
-        for _, row in homo.iterrows():
-            el = row["element_A"]
-            a = row["lattice_constant"]
-            if a <= 2 or a >= 8:
-                continue
-            vol_dict[el] = a ** 3 / n_auc
+    # Build DFT pure element volumes from Materials Project
+    dft_vol_b2 = {}   # V_X^BCC from MP Im-3m
+    dft_vol_l12 = {}  # V_X^FCC from MP Fm-3m
+    mp_bcc_file = REPO / "data" / "mp_pure_elements_bcc.csv"
+    mp_fcc_file = REPO / "data" / "mp_pure_elements_fcc.csv"
+    if mp_bcc_file.exists():
+        mp_bcc = pd.read_csv(mp_bcc_file)
+        for _, row in mp_bcc.iterrows():
+            dft_vol_b2[row["element"]] = row["volume_per_atom"]
+    if mp_fcc_file.exists():
+        mp_fcc = pd.read_csv(mp_fcc_file)
+        for _, row in mp_fcc.iterrows():
+            dft_vol_l12[row["element"]] = row["volume_per_atom"]
+    # Fallback to VASP homonuclear if MP data missing
+    if not dft_vol_b2 or not dft_vol_l12:
+        for stype, vol_dict, n_auc in [("B2", dft_vol_b2, 2),
+                                        ("L12", dft_vol_l12, 4)]:
+            homo = all_df[(all_df["stype"] == stype) &
+                          (all_df["element_A"] == all_df["element_B"])]
+            for _, row in homo.iterrows():
+                el = row["element_A"]
+                a = row["lattice_constant"]
+                if a <= 2 or a >= 8:
+                    continue
+                vol_dict.setdefault(el, a ** 3 / n_auc)
 
     # --- Fig 7a: B2 (BCC-like) ---
     fig_b2, axes_b2 = plt.subplots(2, 3, figsize=(18, 11))
@@ -495,7 +498,7 @@ def fig07_composition_examples(all_df):
             vY_d = dft_vol_b2[elY]
             a_dft = [(2 * ((1 - c) * vX_d + c * vY_d)) ** (1/3) for c in c_arr]
             ax.plot(c_arr * 100, a_dft, "C0-", lw=2,
-                    label="Vegard (DFT-BCC)")
+                    label="Vegard (MP-BCC)")
 
         # B2 DFT data points (including homonuclear endpoints)
         sub = all_df[all_df["stype"] == "B2"]
@@ -546,7 +549,7 @@ def fig07_composition_examples(all_df):
             vY_d = dft_vol_l12[elY]
             a_dft = [(4 * ((1 - c) * vX_d + c * vY_d)) ** (1/3) for c in c_arr]
             ax.plot(c_arr * 100, a_dft, "C3-", lw=2,
-                    label=r"Vegard (DFT-FCC)")
+                    label=r"Vegard (MP-FCC)")
 
         # L12 DFT data points (including homonuclear endpoints)
         sub = all_df[all_df["stype"] == "L12"]
