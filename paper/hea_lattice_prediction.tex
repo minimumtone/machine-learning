@@ -150,7 +150,7 @@ Tian~\emph{et al.}~\cite{Tian2015}のEMTO-CPA法があるが、
 \begin{enumerate}
   \item \textbf{DFT由来の構造特異的$\Omega_\text{sf}$}:
     MP・OQMD・独自VASP計算の3ソース統合により
-    8,521件の二元系化合物から$\Omega_\text{sf}$を導出。
+    5,152件の二元系化合物から$\Omega_\text{sf}$を導出。
     B2$\to$BCC（配位数8）、L1$_2$$\to$FCC（配位数12）の構造分離により
     同じ配位環境を持つ参照構造から$\Omega_\text{sf}$を導出。
   \item \textbf{元素別加法分解}:
@@ -225,7 +225,7 @@ DFTデータベースから$\Omega_\text{sf}$を導出し、
     （PAW-PBE、ENCUT = 520~eV、$k$メッシュ$\geq 12\times12\times12$、
     EDIFF = $10^{-6}$~eV）。
 \end{itemize}
-合計8,521エントリを取得した（表~\ref{tab:dft_data}）。
+合計8,521エントリを取得し、4f希土類+Y除外後5,152件を使用した（表~\ref{tab:dft_data}）。
 格子定数は非直交セル（$0.0\;0.5\;0.5$形式等）にも対応するため
 $a_\text{cubic} = V^{1/3}$（等価立方体格子定数）を採用した。
 
@@ -567,7 +567,7 @@ L1$_2$がFCC配位の良い近似であり
 $q_\text{FCC} = 0.13$が示すように$\Omega_\text{sf}$補正が
 ほぼ不要であること（$q = 0$がVegard則に相当し、
 $q = 0.13$はVegard体積の13\%のみを補正に配分）が要因である。
-BCC HEA（0.0305~\AA）はSQS参照で0.0281~\AA{}に
+BCC HEA（0.0299~\AA）はSQS参照で0.0281~\AA{}に
 改善される（\ref{sec:sqs_improvement}節）。
 
 図~\ref{fig:bcc_fcc}にBCC/FCC別の誤差分布を示す。
@@ -610,8 +610,8 @@ DFT-$\Omega_\text{sf}$（構造別, 最適$q_s$） & \textbf{0.0154} & \textbf{0
 
 DFT-$\Omega_\text{sf}$モデルが全カテゴリで最良である。
 全体RMSE = 0.0154~\AA{}でVegard（0.0176~\AA）から\textbf{12.4\%改善}した。
-BCC 15合金ではRMSE = 0.0163~\AA（Vegard比\textbf{12.4\%改善}）、
-FCC 13合金ではRMSE = 0.0152~\AA（Vegard比\textbf{7.3\%改善}）。
+BCC 15合金ではRMSE = 0.0157~\AA（Vegard比\textbf{15.6\%改善}）、
+FCC 13合金ではRMSE = 0.0151~\AA（Vegard比\textbf{7.8\%改善}）。
 B2参照構造の$\Omega_\text{sf}$データを473ペアに拡充し、
 耐火金属28ペアを全カバーしたことで、
 BCC予測精度が大幅に改善された。
@@ -675,7 +675,7 @@ HEA予測では加法モデルRMSE = 0.0221~\AA{}と
 \centering
 \includegraphics[width=\textwidth]{fig_element_delta.png}
 \caption{元素別加法分解パラメータ$\delta^{(s)}$。
-  上段: B2（BCC参照、$R^2 = 0.40$）、下段: L1$_2$（FCC参照、$R^2 = 0.19$）。
+  B2（BCC参照、$R^2 = 0.56$）とL1$_2$（FCC参照、$R^2 = 0.66$）のグループバーチャート。
   赤: 負（収縮傾向）、青: 正（膨張傾向）。
   元素は$\delta^{(s)}$の昇順にソート。}
 \label{fig:element_delta}
@@ -685,7 +685,7 @@ HEA予測では加法モデルRMSE = 0.0221~\AA{}と
 \centering
 \includegraphics[width=0.85\textwidth]{fig_additive_fit.png}
 \caption{加法分解のフィット品質。
-  左: B2（$R^2 = 0.40$）、右: L1$_2$（$R^2 = 0.19$）。
+  左: B2（$R^2 = 0.56$）、右: L1$_2$（$R^2 = 0.66$）。
   横軸: DFTペア$\Omega_\text{sf}$、
   縦軸: 加法予測$\delta_A + \delta_B$。破線は完全一致線。}
 \label{fig:additive_fit}
@@ -787,7 +787,7 @@ $A_3B$と$B_3A$の区別はできず、
 \centering
 \includegraphics[width=0.85\textwidth]{fig_l12_b2_correlation.png}
 \caption{L1$_2$構造の非対称性と構造間相関。
-  (d)~L1$_2$格子定数差$|a(A_3B)-a(B_3A)|$の分布（平均0.312~\AA）。
+  (d)~L1$_2$格子定数差$|a(A_3B)-a(B_3A)|$の分布（平均0.248~\AA）。
   (e)~L1$_2$ $\Omega_\text{sf}$ vs B2 $\Omega_\text{sf}$（$r = 0.43$）:
   構造間で$\Omega_\text{sf}$は中程度の相関を持つが一致はしない。}
 \label{fig:l12_b2_corr}
@@ -801,7 +801,7 @@ $A_3B$と$B_3A$の区別はできず、
 全体RMSE = 0.162~\AA{}であり、Vegard則の5倍以上である。
 根本原因は$d_\text{nn} = r_A + r_B$が対称操作であり
 $a(A_3B) = a(B_3A)$を強制すること。
-実際のDFTデータは$\langle|a(A_3B)-a(B_3A)|\rangle = 0.312$~\AA{}を示す。
+実際のDFTデータは$\langle|a(A_3B)-a(B_3A)|\rangle = 0.248$~\AA{}を示す。
 
 \begin{table}[H]
 \centering
@@ -843,13 +843,13 @@ max制約が拘束的となるケースは少なく、
 \subsection{L1$_2$非対称性と有効半径}
 \label{sec:l12_asymmetry}
 
-595ペアのL1$_2$格子定数差の絶対値$|a(A_3B) - a(B_3A)|$は
-平均0.312~\AA{}、標準偏差0.31~\AA{}であり、
+435ペアのL1$_2$格子定数差の絶対値$|a(A_3B) - a(B_3A)|$は
+平均0.248~\AA{}、標準偏差0.20~\AA{}であり、
 FCC HEA格子定数範囲の約10\%に相当する。
 少数派サイトの半径偏差
-$\langle|\Delta r_\text{min}|\rangle = 0.144$~\AA{}は
-多数派サイト（$\langle|\Delta r_\text{maj}|\rangle = 0.059$~\AA）
-より約144\%大きく、完全異種配位殻における化学環境の影響を反映する。
+$\langle|\Delta r_\text{min}|\rangle = 0.109$~\AA{}は
+多数派サイト（$\langle|\Delta r_\text{maj}|\rangle = 0.039$~\AA）
+より約179\%大きく、完全異種配位殻における化学環境の影響を反映する。
 
 \begin{figure*}[!t]
 \centering
@@ -1021,7 +1021,7 @@ $\sigma \approx 0.016$~\AA{}は達成可能精度の\emph{目安}を与える。
 温度・短距離秩序を組み込んだモデルが必要である。
 FCC RMSE（0.0095~\AA）は$\sigma$以下だが、
 これはモデルの完全性ではなく実験データの解像度限界を反映する。
-BCC RMSE（0.0305~\AA）は$\sigma$の1.9倍であり、
+BCC RMSE（0.0299~\AA）は$\sigma$の1.9倍であり、
 まだ改善の余地がある。
 
 
@@ -1206,7 +1206,7 @@ B2参照 & 0.0214 & 0.0299 & 0.49 & 0/29 \\
 \end{tabular}
 \end{table}
 
-SQS参照によりBCC RMSE: 0.0305$\to$0.0281~\AA{}（7.9\%改善）、
+SQS参照によりBCC RMSE: 0.0299$\to$0.0281~\AA{}（6.0\%改善）、
 全体RMSE: 0.0214$\to$0.0202~\AA{}（5.6\%改善、Vegard比11\%）。
 $q_\text{BCC} = 1$を採用でき校正定数が不要となる。
 $q$感度解析（表~\ref{tab:q_sensitivity}）は
