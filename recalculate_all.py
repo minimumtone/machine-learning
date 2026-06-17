@@ -30,18 +30,18 @@ from hea_lattice_xgboost import (
     build_omega_sf_ml_model, fill_missing_omega_sf,
 )
 
-# 38 target elements (41 King elements minus Gd, Ce, Li which are excluded)
+# Exclude 4f rare earths + Y (GGA-PBE unreliable for 4f localized electrons)
+# Also exclude Si, Ge, B (non-BCC/FCC stable structure)
+_EXCLUDE = {
+    "Gd", "Ce", "La", "Pr", "Nd", "Sm", "Eu", "Tb", "Dy", "Ho", "Er", "Tm", "Yb", "Lu",  # 4f RE
+    "Y",   # similar RE behavior
+    "Si", "Ge", "B",  # non-BCC/FCC stable structure
+    "Li", "P",  # non-metals
+}
 TARGET_ELEMENTS = sorted([
     e for e in KING_ATOMIC_VOLUMES.keys()
-    if e not in ("Gd", "Ce", "Li", "B", "P")  # Exclude non-metals and 4f
-    # Actually the paper says 38 = 41 - Gd - Ce - Li
+    if e not in _EXCLUDE
 ])
-# More accurately: the 38 target elements used in the paper
-TARGET_ELEMENTS = [
-    'Ag','Al','Au','Be','Ca','Co','Cr','Cu','Dy','Er','Fe','Ge','Hf','Ir',
-    'La','Mg','Mn','Mo','Nb','Ni','Os','Pb','Pd','Pt','Re','Rh','Ru','Sc',
-    'Si','Sn','Ta','Tb','Ti','V','W','Y','Zn','Zr'
-]
 
 OUTDIR = Path("recalc_output")
 OUTDIR.mkdir(exist_ok=True)

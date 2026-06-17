@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Clean re-analysis script: generates ALL figures and tables for the paper.
-Excludes Gd/Ce from all analyses.
+Excludes 4f rare earths (Gd, Ce, La, Pr, Nd, Sm, Eu, Tb, Dy, Ho, Er, Tm, Yb, Lu) and Y from all analyses.
 
 Usage:
     cd paper/ && python generate_all_figures.py
@@ -66,13 +66,17 @@ from hea_lattice_xgboost import (
     compute_delta_r, compute_delta_sf, PAULING_EN, VEC, D_ELECTRONS,
 )
 
-EXCLUDE_ELEMENTS = {"Gd", "Ce"}
+EXCLUDE_ELEMENTS = {
+    "Gd", "Ce",  # 4f instability (already excluded)
+    "La", "Pr", "Nd", "Sm", "Eu", "Tb", "Dy", "Ho", "Er", "Tm", "Yb", "Lu",  # 4f RE
+    "Y",  # similar RE behavior
+}
 
 # ---------------------------------------------------------------------------
 # 1. Load & filter compound data
 # ---------------------------------------------------------------------------
 def load_compounds():
-    """Load MP + OQMD + VASP compound data, excluding Gd/Ce."""
+    """Load MP + OQMD + VASP compound data, excluding 4f RE + Y."""
     data_dir = REPO / "data"
     dfs = []
     for src in ["MP", "OQMD", "VASP"]:
@@ -321,36 +325,55 @@ def fig03_bcc_fcc(y_train, a_ss_tr, heas_train):
 
 
 def fig04_indep_test(y_test, a_veg_te, a_ss_te, heas_test, gb, gf):
-    """Fig 4: Multi-panel independent test figure."""
+    """Fig 4: Multi-panel independent test figure.
+
+    Layout: top row = (a) per-alloy error bars + (b) RMSE breakdown
+            bottom row spanning = (c) parity plot
+    Improved readability: larger figure, sorted bars, bigger fonts.
+    """
     bcc_t = [i for i, h in enumerate(heas_test) if h["struct"] == "BCC"]
     fcc_t = [i for i, h in enumerate(heas_test) if h["struct"] == "FCC"]
 
-    fig, axes = plt.subplots(1, 3, figsize=(20, 6))
+    fig = plt.figure(figsize=(20, 14))
+    # Top-left: per-alloy error (takes 2/3 width)
+    ax_a = fig.add_axes([0.06, 0.42, 0.55, 0.55])
+    # Top-right: RMSE breakdown (1/3 width)
+    ax_b = fig.add_axes([0.68, 0.50, 0.28, 0.40])
+    # Bottom: parity
+    ax_c = fig.add_axes([0.30, 0.05, 0.40, 0.32])
 
-    # (a) Per-alloy absolute error
-    ax = axes[0]
-    alloy_names = []
-    err_veg = []
-    err_ss = []
+    # (a) Per-alloy absolute error — sorted by DFT-Omega_sf error
+    alloy_names, err_veg, err_ss, structs = [], [], [], []
     for i in range(len(heas_test)):
         h = heas_test[i]
         elems = sorted(h["comp"].keys())
         alloy_names.append("-".join(elems))
         err_veg.append(abs(a_veg_te[i] - y_test[i]) * 1000)
         err_ss.append(abs(a_ss_te[i] - y_test[i]) * 1000)
+        structs.append(h["struct"])
+    # Sort by DFT error descending
+    order = np.argsort(err_ss)
+    alloy_names = [alloy_names[i] for i in order]
+    err_veg = [err_veg[i] for i in order]
+    err_ss = [err_ss[i] for i in order]
+    structs = [structs[i] for i in order]
+
     x = np.arange(len(alloy_names))
-    w = 0.35
-    ax.barh(x - w/2, err_veg, w, color="gray", alpha=0.7, label="Vegard")
-    ax.barh(x + w/2, err_ss, w, color="C0", alpha=0.7, label=r"DFT-$\Omega_{\mathrm{sf}}$")
-    ax.set_yticks(x)
-    ax.set_yticklabels(alloy_names, fontsize=10)
-    ax.set_xlabel("|Error| (m\u00c5)")
-    ax.set_title("(a) Per-alloy error")
-    ax.legend(fontsize=11)
-    ax.invert_yaxis()
+    w = 0.38
+    ax_a.barh(x - w/2, err_veg, w, color="gray", alpha=0.7, label="Vegard")
+    ax_a.barh(x + w/2, err_ss, w, color="C0", alpha=0.7, label=r"DFT-$\Omega_{\mathrm{sf}}$")
+    ax_a.set_yticks(x)
+    # Color-code labels by BCC/FCC
+    labels = []
+    for name, s in zip(alloy_names, structs):
+        labels.append(f"{name} [{s}]")
+    ax_a.set_yticklabels(labels, fontsize=13, fontfamily="monospace")
+    ax_a.set_xlabel("|Error| (m\u00c5)", fontsize=16)
+    ax_a.set_title("(a) Per-alloy absolute error", fontsize=18)
+    ax_a.legend(fontsize=14, loc="lower right")
+    ax_a.invert_yaxis()
 
     # (b) BCC/FCC RMSE breakdown
-    ax = axes[1]
     categories = ["All", "BCC", "FCC"]
     rmse_v = [np.sqrt(np.mean((a_veg_te - y_test) ** 2)) * 1000,
               np.sqrt(np.mean((a_veg_te[bcc_t] - y_test[bcc_t]) ** 2)) * 1000,
@@ -359,46 +382,59 @@ def fig04_indep_test(y_test, a_veg_te, a_ss_te, heas_test, gb, gf):
               np.sqrt(np.mean((a_ss_te[bcc_t] - y_test[bcc_t]) ** 2)) * 1000,
               np.sqrt(np.mean((a_ss_te[fcc_t] - y_test[fcc_t]) ** 2)) * 1000]
     x2 = np.arange(len(categories))
-    ax.bar(x2 - 0.2, rmse_v, 0.35, color="gray", alpha=0.7, label="Vegard")
-    ax.bar(x2 + 0.2, rmse_s, 0.35, color="C0", alpha=0.7, label=r"DFT-$\Omega_{\mathrm{sf}}$")
-    ax.set_xticks(x2)
-    ax.set_xticklabels(categories)
-    ax.set_ylabel("RMSE (m\u00c5)")
-    ax.set_title("(b) RMSE breakdown")
-    ax.legend(fontsize=11)
+    bars_v = ax_b.bar(x2 - 0.2, rmse_v, 0.35, color="gray", alpha=0.7, label="Vegard")
+    bars_s = ax_b.bar(x2 + 0.2, rmse_s, 0.35, color="C0", alpha=0.7, label=r"DFT-$\Omega_{\mathrm{sf}}$")
+    # Add value labels on bars
+    for bar in list(bars_v) + list(bars_s):
+        h = bar.get_height()
+        ax_b.text(bar.get_x() + bar.get_width()/2, h + 0.3, f"{h:.1f}",
+                  ha="center", va="bottom", fontsize=12)
+    ax_b.set_xticks(x2)
+    ax_b.set_xticklabels(categories, fontsize=14)
+    ax_b.set_ylabel("RMSE (m\u00c5)", fontsize=14)
+    ax_b.set_title("(b) RMSE breakdown", fontsize=18)
+    ax_b.legend(fontsize=12)
 
     # (c) Parity
-    ax = axes[2]
     lims = [min(y_test) - 0.02, max(y_test) + 0.02]
-    ax.plot(lims, lims, "k-", lw=1)
+    ax_c.plot(lims, lims, "k-", lw=1)
     for idx, label, marker, c in [(bcc_t, "BCC", "s", "C0"), (fcc_t, "FCC", "o", "C3")]:
-        ax.scatter(y_test[idx], a_ss_te[idx], c=c, marker=marker, s=70, alpha=0.7, label=label)
-    ax.set_xlabel("Experimental $a$ (\u00c5)")
-    ax.set_ylabel("Predicted $a$ (\u00c5)")
-    ax.set_title(f"(c) Independent test ($q_{{BCC}}$={gb:.2f}, $q_{{FCC}}$={gf:.2f})")
-    ax.legend(fontsize=11)
-    ax.set_aspect("equal")
+        ax_c.scatter(y_test[idx], a_ss_te[idx], c=c, marker=marker, s=90, alpha=0.7, label=label)
+    ax_c.set_xlabel("Experimental $a$ (\u00c5)", fontsize=14)
+    ax_c.set_ylabel("Predicted $a$ (\u00c5)", fontsize=14)
+    ax_c.set_title(f"(c) Independent test ($q_{{BCC}}$={gb:.2f}, $q_{{FCC}}$={gf:.2f})", fontsize=18)
+    ax_c.legend(fontsize=13)
+    ax_c.set_aspect("equal")
 
-    fig.tight_layout()
     fig.savefig(OUTDIR / "fig_indep_test.png", bbox_inches="tight")
     plt.close(fig)
     print("  fig_indep_test.png")
 
 
 def fig05_element_delta(decomp):
-    """Fig 5: Element delta bar chart (B2 and L12)."""
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 10))
-    for ax, key, title in [(ax1, "B2", "B2 (BCC)"), (ax2, "L12", r"L1$_2$ (FCC)")]:
-        d = decomp[key]["delta"]
-        elems = sorted(d.keys(), key=lambda e: d[e])
-        vals = [d[e] for e in elems]
-        colors = ["C3" if v < 0 else "C0" for v in vals]
-        ax.bar(range(len(elems)), vals, color=colors, edgecolor="black", linewidth=0.3)
-        ax.set_xticks(range(len(elems)))
-        ax.set_xticklabels(elems, fontsize=10, rotation=45)
-        ax.set_ylabel(r"$\delta^{(s)}$")
-        ax.set_title(f"{title}  (R$^2$ = {decomp[key]['r2']:.3f})")
-        ax.axhline(0, color="k", linewidth=0.5)
+    """Fig 5: Element delta — B2 and L12 grouped bar chart (single panel)."""
+    d_b2 = decomp["B2"]["delta"]
+    d_l12 = decomp["L12"]["delta"]
+    # Union of elements, sorted by B2 delta
+    all_elems = sorted(set(d_b2.keys()) | set(d_l12.keys()),
+                       key=lambda e: d_b2.get(e, 0))
+    n = len(all_elems)
+    x = np.arange(n)
+    w = 0.38
+
+    fig, ax = plt.subplots(figsize=(max(16, n * 0.6), 7))
+    vals_b2 = [d_b2.get(e, 0) for e in all_elems]
+    vals_l12 = [d_l12.get(e, 0) for e in all_elems]
+    ax.bar(x - w/2, vals_b2, w, color="C0", alpha=0.8, edgecolor="black",
+           linewidth=0.3, label=f"B2 (R$^2$={decomp['B2']['r2']:.3f})")
+    ax.bar(x + w/2, vals_l12, w, color="C3", alpha=0.8, edgecolor="black",
+           linewidth=0.3, label=r"L1$_2$" + f" (R$^2$={decomp['L12']['r2']:.3f})")
+    ax.set_xticks(x)
+    ax.set_xticklabels(all_elems, fontsize=14, rotation=45, ha="right")
+    ax.set_ylabel(r"$\delta^{(s)}$", fontsize=16)
+    ax.set_title(f"Additive element parameters ({n} elements)", fontsize=18)
+    ax.axhline(0, color="k", linewidth=0.5)
+    ax.legend(fontsize=14, loc="upper left")
     fig.tight_layout()
     fig.savefig(OUTDIR / "fig_element_delta.png", bbox_inches="tight")
     plt.close(fig)
@@ -909,34 +945,20 @@ def fig08_delta_r_proof(all_df):
     ax.set_title(r"(b) $\delta r$: smooth curve ($\equiv$ no structure info)")
     ax.set_aspect("equal")
 
-    # (c) Omega_sf X3Y vs Y3X — should show LARGE scatter
+    # (c) Omega_sf X3Y vs Y3X — should show scatter (structure-dependent)
     ax = axes[2]
-    F_ELEMENTS = {"La","Ce","Pr","Nd","Sm","Eu","Gd","Tb","Dy","Ho","Er","Tm","Yb","Lu"}
-    osf_a3b_no4f, osf_ab3_no4f = [], []
-    osf_a3b_4f, osf_ab3_4f = [], []
+    osf_a3b, osf_ab3 = [], []
     for p in complete:
-        a3b_val = complete[p]["L12_A3B"]
-        ab3_val = complete[p]["L12_AB3"]
-        if p[0] in F_ELEMENTS or p[1] in F_ELEMENTS:
-            osf_a3b_4f.append(a3b_val)
-            osf_ab3_4f.append(ab3_val)
-        else:
-            osf_a3b_no4f.append(a3b_val)
-            osf_ab3_no4f.append(ab3_val)
-    ax.scatter(osf_a3b_no4f, osf_ab3_no4f, c="C0", alpha=0.4, s=20, label="non-4f")
-    if osf_a3b_4f:
-        ax.scatter(osf_a3b_4f, osf_ab3_4f, c="C3", marker="x", alpha=0.6, s=30, label="4f (RE)")
-    all_a3b = osf_a3b_no4f + osf_a3b_4f
-    all_ab3 = osf_ab3_no4f + osf_ab3_4f
-    lims2 = [min(min(all_a3b), min(all_ab3)) - 0.02,
-             max(max(all_a3b), max(all_ab3)) + 0.02]
+        osf_a3b.append(complete[p]["L12_A3B"])
+        osf_ab3.append(complete[p]["L12_AB3"])
+    ax.scatter(osf_a3b, osf_ab3, c="C0", alpha=0.4, s=20)
+    lims2 = [min(min(osf_a3b), min(osf_ab3)) - 0.02,
+             max(max(osf_a3b), max(osf_ab3)) + 0.02]
     ax.plot(lims2, lims2, "k--", lw=1)
-    r_all = np.corrcoef(all_a3b, all_ab3)[0, 1]
-    r_no4f = np.corrcoef(osf_a3b_no4f, osf_ab3_no4f)[0, 1] if len(osf_a3b_no4f) > 2 else 0
+    r_all = np.corrcoef(osf_a3b, osf_ab3)[0, 1] if len(osf_a3b) > 2 else 0
     ax.set_xlabel(r"$\Omega_\mathrm{sf}$ (A$_3$B)")
     ax.set_ylabel(r"$\Omega_\mathrm{sf}$ (B$_3$A)")
-    ax.set_title(f"(c) $\\Omega_{{sf}}$: r={r_all:.2f} (non-4f: r={r_no4f:.2f})")
-    ax.legend(fontsize=9, loc="upper left")
+    ax.set_title(f"(c) $\\Omega_{{sf}}$: r={r_all:.2f} ({len(osf_a3b)} pairs)")
     ax.set_aspect("equal")
 
     fig.tight_layout()
@@ -1122,7 +1144,7 @@ def fig11_volume_radius(radii):
 
 def fig12_hea_additive(y_train, a_add_tr, heas_train, y_test, a_add_te, heas_test):
     """Fig 12: HEA prediction using additive delta."""
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 8))
     lims = [2.85, 3.65]
 
     ax1.plot(lims, lims, "k-", lw=1)
@@ -1164,7 +1186,7 @@ def fig13_composition_reff(decomp, gb, gf):
     delta_b2 = decomp["B2"]["delta"]
 
     # Vary each element's fraction from 0 to 0.4 while keeping others equal
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    fig, axes = plt.subplots(1, 2, figsize=(18, 8))
 
     for ax, delta, gamma, title, struct in [
         (axes[0], delta_b2, gb, "BCC ($\\delta^{(B2)}$)", "BCC"),
@@ -1258,7 +1280,7 @@ def fig14_vegard_absorbed(all_df, radii):
     a_veg_pure = np.array(a_veg_pure)
     a_veg_eff = np.array(a_veg_eff)
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 8))
     lims = [2.5, 7.0]
 
     rmse1 = np.sqrt(np.mean((a_veg_pure - a_dft) ** 2))
@@ -1763,27 +1785,12 @@ def main():
             }
 
     if complete_m:
-        osf_a3b_no4f_m, osf_ab3_no4f_m = [], []
-        osf_a3b_4f_m, osf_ab3_4f_m = [], []
-        for p in complete_m:
-            a3b_val = complete_m[p]["L12_A3B"]
-            ab3_val = complete_m[p]["L12_AB3"]
-            if p[0] in F_ELEMENTS or p[1] in F_ELEMENTS:
-                osf_a3b_4f_m.append(a3b_val)
-                osf_ab3_4f_m.append(ab3_val)
-            else:
-                osf_a3b_no4f_m.append(a3b_val)
-                osf_ab3_no4f_m.append(ab3_val)
-        all_a3b_m = osf_a3b_no4f_m + osf_a3b_4f_m
-        all_ab3_m = osf_ab3_no4f_m + osf_ab3_4f_m
-        r_all_m = round(float(np.corrcoef(all_a3b_m, all_ab3_m)[0, 1]), 2)
-        r_no4f_m = round(float(np.corrcoef(osf_a3b_no4f_m, osf_ab3_no4f_m)[0, 1]), 2) if len(osf_a3b_no4f_m) > 2 else 0
+        all_a3b_m = [complete_m[p]["L12_A3B"] for p in complete_m]
+        all_ab3_m = [complete_m[p]["L12_AB3"] for p in complete_m]
+        r_all_m = round(float(np.corrcoef(all_a3b_m, all_ab3_m)[0, 1]), 2) if len(all_a3b_m) > 2 else 0
         metrics["delta_r_proof"] = {
             "delta_r_proof_n_complete": len(complete_m),
-            "delta_r_proof_n_non4f": len(osf_a3b_no4f_m),
-            "delta_r_proof_n_4f": len(osf_a3b_4f_m),
             "delta_r_proof_r_all": r_all_m,
-            "delta_r_proof_r_non4f": r_no4f_m,
         }
 
     # l12_asymmetry: |a(A3B) - a(B3A)| distribution
