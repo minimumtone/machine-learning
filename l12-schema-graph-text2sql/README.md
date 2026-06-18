@@ -141,7 +141,7 @@ l12-schema-graph-text2sql/
 
 ## Evaluation
 
-100件の評価クエリ（Easy 27, Medium 28, Hard 22, Very Hard 23）で以下の5手法を比較:
+100件の評価クエリ（Gold SQL参照テーブル数による再分類: Easy 27, Medium 28, Hard 22, Very Hard 23）で以下の5手法を比較:
 
 | Method | LLMに渡す情報 | 構文妥当率 | 実行成功率 | 実行精度 | テーブル幻覚率 | JOIN幻覚 |
 |--------|--------------|-----------|-----------|---------|--------------|---------|
@@ -200,6 +200,6 @@ OQMD拡張データ投入で最大1,470件（L12 392 + B2 636 + NaCl 355 + NiAs 
 | POSTGRES_HOST | ホスト | localhost |
 | POSTGRES_PORT | ポート | 5432 |
 | OPENAI_API_KEY | OpenAI APIキー | （要設定） |
-| LLM_MODEL | 使用するLLMモデル | gpt-4o-mini |
+| LLM_MODEL | 使用するLLMモデル | gpt-5.5 |
 | SQL_ROW_LIMIT | SQL結果の最大行数 | 100 |
 | SQL_TIMEOUT_SECONDS | SQL実行タイムアウト | 10 |
