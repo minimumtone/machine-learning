@@ -169,7 +169,7 @@ POTCAR_VARIANTS = {
     "Ti": "Ti_pv",
     "Nb": "Nb_pv",
     "Ta": "Ta_pv",
-    "W":  "W_pv",
+    "W":  "W_sv",
     "Hf": "Hf_pv",
     "Zr": "Zr_sv",
     "Zn": "Zn",

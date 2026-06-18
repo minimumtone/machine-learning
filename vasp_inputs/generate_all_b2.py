@@ -107,7 +107,7 @@ POTCAR_VARIANTS = {
     "Y": "Y_sv",   "Zr": "Zr_sv", "Nb": "Nb_pv", "Mo": "Mo_pv",
     "Ru": "Ru_pv", "Rh": "Rh_pv", "Pd": "Pd",    "Ag": "Ag",
     # 5d
-    "La": "La",    "Hf": "Hf_pv", "Ta": "Ta_pv", "W": "W_pv",
+    "La": "La",    "Hf": "Hf_pv", "Ta": "Ta_pv", "W": "W_sv",
     "Re": "Re_pv", "Os": "Os_pv", "Ir": "Ir",    "Pt": "Pt",
     "Au": "Au",
     # Rare earths
