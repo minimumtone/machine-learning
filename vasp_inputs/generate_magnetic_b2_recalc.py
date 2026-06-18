@@ -272,12 +272,15 @@ def generate_run_script(base_dir, calculations):
         "#!/bin/bash",
         "# Batch execution for magnetic B2 recalculations",
         "# Usage: bash run_all.sh",
+        "# Runs: mpirun -np $NP $VASPBIN (default NP=8)",
         "",
         'if [ -z "$VASPBIN" ]; then',
         '    echo "Error: VASPBIN not set"',
         '    echo "  export VASPBIN=/path/to/vasp_std"',
         '    exit 1',
         'fi',
+        '',
+        'NP=${NP:-8}',
         "",
         'BASE=$(cd "$(dirname "$0")" && pwd)',
         'LOG="$BASE/run_status.log"',
@@ -293,7 +296,7 @@ def generate_run_script(base_dir, calculations):
         lines.append('if [ ! -f POTCAR ]; then')
         lines.append('    echo "  SKIP (no POTCAR)" | tee -a "$LOG"')
         lines.append('else')
-        lines.append('    $VASPBIN > vasp.out 2>&1')
+        lines.append('    mpirun -np $NP $VASPBIN > vasp.out 2>&1')
         lines.append('    if grep -q "reached required accuracy" OUTCAR 2>/dev/null; then')
         lines.append('        echo "  CONVERGED" | tee -a "$LOG"')
         lines.append('    else')
