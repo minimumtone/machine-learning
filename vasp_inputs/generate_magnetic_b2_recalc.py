@@ -77,7 +77,7 @@ POTCAR_VARIANTS = {
     "Cu": "Cu_pv", "Zn": "Zn",
     "Zr": "Zr_sv", "Nb": "Nb_pv", "Mo": "Mo_pv",
     "Ru": "Ru_pv", "Rh": "Rh_pv", "Pd": "Pd", "Ag": "Ag",
-    "Hf": "Hf_pv", "Ta": "Ta_pv", "W": "W_pv",
+    "Hf": "Hf_pv", "Ta": "Ta_pv", "W": "W_sv",
     "Re": "Re_pv", "Os": "Os_pv", "Ir": "Ir", "Pt": "Pt", "Au": "Au",
     "Ca": "Ca_sv", "Mg": "Mg_pv", "Be": "Be",
     "Al": "Al", "Si": "Si", "Ge": "Ge_d", "Sn": "Sn_d", "Pb": "Pb_d",

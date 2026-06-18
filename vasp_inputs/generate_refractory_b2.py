@@ -55,7 +55,7 @@ POTCAR_VARIANTS = {
     "Ta": "Ta_pv",
     "Ti": "Ti_pv",
     "V":  "V_sv",
-    "W":  "W_pv",
+    "W":  "W_sv",
     "Zr": "Zr_sv",
 }
 
