@@ -1243,6 +1243,112 @@ SQS全元素モデルはRMSE = 0.0218~\AA{}とB2参照（0.0214~\AA）とほぼ�
 および収束率の低さが主因と考えられる。
 NSW増加やセルサイズ拡大による改善が今後の課題である。
 
+\subsubsection{秩序構造とSQSの$\Omega_\text{sf}$相関}
+\label{sec:sqs_correlation}
+
+秩序構造の$\Omega_\text{sf}$がSQS（無秩序）でどの程度保存されるかを
+ISIF=3全緩和SQS計算（641件: BCC 409 + FCC 232、収束率BCC 89\%/FCC 77\%）
+で検証した。
+B2純元素体積を統一Vegard参照とし、共通ペアの$\Omega_\text{sf}$を
+比較した結果を表~\ref{tab:sqs_omega_correlation}に示す。
+
+\begin{table}[H]
+\centering
+\caption{秩序構造 vs SQSの$\Omega_\text{sf}$相関比較。}
+\label{tab:sqs_omega_correlation}
+\footnotesize
+\begin{tabular}{@{}lcc@{}}
+\toprule
+指標 & BCC: B2 vs SQS & FCC: L1$_2$ vs SQS (1:1) \\
+\midrule
+共通ペア数 & 166 & 128 \\
+Pearson $r$ & 0.86 & 0.77 \\
+傾き (SQS/秩序) & 0.80 & 0.94 \\
+RMSE & 0.045 & 0.034 \\
+秩序 $\Omega_\text{sf}$ mean & $-0.056$ & $-0.027$ \\
+SQS $\Omega_\text{sf}$ mean & $-0.035$ & $-0.017$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+BCCでは傾き0.80であり、SQSの$\Omega_\text{sf}$は
+B2の約80\%に収まる。
+B2の100\%異種最近接配位がBCC無秩序（ランダム配位）より
+体積収縮を約20\%増幅しており、
+$q_\text{BCC} = 0.49$の物理的起源を直接示す。
+一方FCCでは傾き0.94とほぼ1:1であり、
+L1$_2$とFCC SQS 1:1で$\Omega_\text{sf}$の大きさが保存される。
+L1$_2$の75\%同種+25\%異種配位環境はFCC無秩序と大きく異ならないためであり、
+$q_\text{FCC} = 0.13$（ほぼVegard）と整合する。
+
+\subsubsection{FCC SQS 1:1の$q$値と組成効果}
+\label{sec:fcc_sqs_q}
+
+FCC SQS 1:1データによる$q$最適化では$q_\text{FCC}^\text{SQS} = 0.30$が得られ、
+L1$_2$参照の$q = 0.13$より大きいが$q = 1$からは遠い（表~\ref{tab:q_fcc_sqs}）。
+
+\begin{table}[H]
+\centering
+\caption{FCC HEA予測における参照構造の比較。}
+\label{tab:q_fcc_sqs}
+\footnotesize
+\begin{tabular}{@{}lccc@{}}
+\toprule
+参照構造 & 組成 & $q_\text{FCC}$ & テスト RMSE (\AA) \\
+\midrule
+L1$_2$ (現行) & 3:1 & 0.13 & 0.0153 \\
+FCC SQS 1:1 & 1:1 & 0.30 & 0.0148 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+$q \neq 1$の残存はSQS 1:1（= L1$_0$の無秩序版）と
+FCC HEAの構造差に帰着される。
+L1$_0$は層状秩序（$\langle100\rangle$方向にABAB交互面）で
+100\%同種面と100\%異種面が交互する極端な化学環境であり、
+SQS化しても1:1組成が多成分HEAと異なるため$q < 1$となる。
+3:1組成（L1$_2$対応）のSQS計算により
+組成効果と秩序効果を分離できるが、
+FCCでは$q = 0.13$でもRMSE = 0.0096~\AA{}（ノイズフロア以下）であり
+実用上の改善余地は限定的である。
+
+\subsubsection{秩序化エネルギーと体積偏差の独立性}
+\label{sec:ordering_energy}
+
+SQSエネルギーとB2エネルギーの差
+$E_\text{ord} = E(\text{B2}) - E(\text{SQS})$（eV/atom）を
+138共通ペア（4f+Y除外）で算出した。
+$\Delta\Omega_\text{sf}$（= $\Omega_\text{sf}^\text{SQS} - \Omega_\text{sf}^\text{B2}$）
+との相関はPearson $r = -0.31$（$p = 2 \times 10^{-4}$）であり、弱い負の相関に留まる。
+体積差$\Delta V$との相関も$r = -0.39$と中程度に過ぎない。
+
+B2が特に安定なペア（$E_\text{ord} < -0.4$~eV: Fe-Hf, Co-Sc, Co-Hf, Al-Co）は
+$d$--$d$混成の強い3$d$--4$d$/5$d$系であり、
+体積変化（$\Omega_\text{sf}$）とは異なる電子構造効果が支配的である。
+逆に$E_\text{ord} > +0.5$~eV（B2が不安定：Ca-W, Ca-Ta, Ca-Mo等）は
+アルカリ土類と遷移金属の低相溶性ペアである。
+
+この結果は$q$パラメータの物理的意味を明確にする。
+$q_\text{BCC} = 0.49$は「B2とBCCの秩序化エネルギー差」ではなく、
+「B2とBCCの配位殻化学環境の差が体積偏差に及ぼす幾何学的効果」を反映する。
+安定化エネルギーは電子構造（電荷移動、$d$--$d$混成、磁気的相互作用）に支配され、
+体積変化はその副次的結果に過ぎない。
+
+\subsubsection{剛体球近似の構造依存性}
+
+上記の結果はFCC系における剛体球近似の妥当性とも整合する。
+$q_\text{FCC} = 0.13$（ほぼVegard）は
+FCC HEAでは純元素体積の線形加重平均が良い近似であることを意味し、
+原子の有効半径がL1$_2$秩序→FCC無秩序で保存される
+（傾き0.94）ことはこの剛体球的振る舞いの直接的証拠である。
+FCC（配位数12、充填率74\%）では最密充填環境が
+個々の化学的相互作用を平均化し、
+有効半径の環境依存性を抑制する。
+対照的にBCC（配位数8、充填率68\%）では
+空間的余裕があり原子は化学環境に応じて半径を変えやすい。
+B2→BCC無秩序で$\Omega_\text{sf}$が20\%減少する（傾き0.80）ことは
+剛体球仮定の破れを示しており、$q_\text{BCC} \neq 1$の物理的根拠となる。
+
 
 \subsection{データソース間の一貫性}
 

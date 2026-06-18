@@ -85,5 +85,26 @@
     "eff_radius_min_dev": 0.109,
     "eff_radius_maj_dev": 0.039,
     "eff_radius_min_over_maj_pct": 279.0
+  },
+  "sqs_analysis": {
+    "n_sqs_total": 641,
+    "n_sqs_bcc": 409,
+    "n_sqs_fcc": 232,
+    "convergence_bcc_pct": 89,
+    "convergence_fcc_pct": 77,
+    "bcc_common_pairs": 166,
+    "bcc_pearson_r": 0.86,
+    "bcc_slope": 0.80,
+    "bcc_rmse": 0.045,
+    "fcc_common_pairs": 128,
+    "fcc_pearson_r": 0.77,
+    "fcc_slope": 0.94,
+    "fcc_rmse": 0.034,
+    "q_FCC_SQS_1to1": 0.30,
+    "q_BCC_SQS": 1.11,
+    "ordering_energy_n_pairs": 138,
+    "ordering_energy_r_delta_omega": -0.31,
+    "ordering_energy_r_delta_V": -0.39,
+    "comment": "ISIF=3 full relaxation SQS (A8B8 BCC 16atom, A16B16 FCC 32atom)"
   }
 }
