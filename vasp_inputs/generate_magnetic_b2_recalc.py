@@ -227,13 +227,22 @@ def generate_potcar_script(base_dir, calculations):
         "#!/bin/bash",
         "# POTCAR generation for magnetic B2 recalculations",
         "# Usage: bash make_potcar.sh",
-        "# Requires: $VASP_PP_PATH pointing to potpaw_PBE directory",
+        "# Requires: $VASP_PP_PATH pointing to base pseudopotential directory",
+        "#   e.g., export VASP_PP_PATH=/path/to/vasp/pot",
+        "# Expects: $VASP_PP_PATH/potpaw_PBE/{variant}/POTCAR",
         "",
         'if [ -z "$VASP_PP_PATH" ]; then',
         '    echo "Error: VASP_PP_PATH not set"',
-        '    echo "  export VASP_PP_PATH=/path/to/potpaw_PBE.64"',
+        '    echo "  export VASP_PP_PATH=/path/to/vasp/pot"',
         '    exit 1',
         'fi',
+        "",
+        '# Auto-detect potpaw_PBE subdirectory',
+        'PP="$VASP_PP_PATH"',
+        'if [ -d "$VASP_PP_PATH/potpaw_PBE" ]; then',
+        '    PP="$VASP_PP_PATH/potpaw_PBE"',
+        'fi',
+        'echo "Using PP=$PP"',
         "",
         f'echo "Generating POTCAR for {len(calculations)} calculations..."',
         "FAIL=0",
@@ -242,7 +251,7 @@ def generate_potcar_script(base_dir, calculations):
     for calc_name, elements in calculations:
         pots = [POTCAR_VARIANTS.get(el, el) for el in elements]
         cat_args = " ".join(
-            [f'"$VASP_PP_PATH"/{p}/POTCAR' for p in pots]
+            [f'"$PP"/{p}/POTCAR' for p in pots]
         )
         lines.append(f"cat {cat_args} > {calc_name}/POTCAR 2>/dev/null")
         lines.append(
@@ -379,7 +388,7 @@ def main():
             "element_A": elements[0],
             "element_B": elements[1] if len(elements) > 1 else elements[0],
             "lattice_constant_A": a,
-            "energy_per_atom": e / natoms if e else None,
+            "energy_per_atom": e / natoms if e is not None else None,
             "magnetization": mag,
         })
 
