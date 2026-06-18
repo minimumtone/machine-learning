@@ -327,20 +327,20 @@ def fig03_bcc_fcc(y_train, a_ss_tr, heas_train):
 def fig04_indep_test(y_test, a_veg_te, a_ss_te, heas_test, gb, gf):
     """Fig 4: Multi-panel independent test figure.
 
-    Layout: top row = (a) per-alloy error bars + (b) RMSE breakdown
-            bottom row spanning = (c) parity plot
+    Layout: top row = (a) per-alloy error bars (full width)
+            bottom row = (b) RMSE breakdown + (c) parity plot side by side
     Improved readability: larger figure, sorted bars, bigger fonts.
     """
     bcc_t = [i for i, h in enumerate(heas_test) if h["struct"] == "BCC"]
     fcc_t = [i for i, h in enumerate(heas_test) if h["struct"] == "FCC"]
 
-    fig = plt.figure(figsize=(20, 14))
-    # Top-left: per-alloy error (takes 2/3 width)
-    ax_a = fig.add_axes([0.06, 0.42, 0.55, 0.55])
-    # Top-right: RMSE breakdown (1/3 width)
-    ax_b = fig.add_axes([0.68, 0.50, 0.28, 0.40])
-    # Bottom: parity
-    ax_c = fig.add_axes([0.30, 0.05, 0.40, 0.32])
+    fig = plt.figure(figsize=(20, 16))
+    # Top: per-alloy error (full width)
+    ax_a = fig.add_axes([0.06, 0.45, 0.90, 0.52])
+    # Bottom-left: RMSE breakdown
+    ax_b = fig.add_axes([0.06, 0.06, 0.38, 0.32])
+    # Bottom-right: parity
+    ax_c = fig.add_axes([0.55, 0.06, 0.38, 0.32])
 
     # (a) Per-alloy absolute error — sorted by DFT-Omega_sf error
     alloy_names, err_veg, err_ss, structs = [], [], [], []
