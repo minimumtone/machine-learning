@@ -864,6 +864,50 @@ Full Schema提示（no\_fewshot条件に相当）は
 異なる手法（DIN-SQL、DAIL-SQL等）との同一DB上の直接比較は未実施である
 （制約6項参照）。
 
+\subsection{多段計算クエリへの対応}
+
+本パイプラインの重要な拡張として、
+自然言語による多段計算指示への対応を実現した。
+代表例として「Ni$_3$Alの生成エンタルピーを純物質基準で計算して」
+というクエリを考える。
+このクエリに正しく応答するためには、
+以下の多段的なデータ抽出と計算が必要である：
+\begin{enumerate}
+  \item 化合物Ni$_3$Alの形成エネルギー$E_\mathrm{f}$を
+    \texttt{phase\_stability}テーブルから取得する、
+  \item 構成元素Ni, Alの組成比$x_i$を
+    \texttt{composition}テーブルから取得する、
+  \item 各元素の基底状態エネルギー$E_\mathrm{ref}(i)$を
+    \texttt{pure\_element\_reference}テーブル
+    （OQMD由来、89元素）から取得する、
+  \item 加重基準エネルギー
+    $\sum_i x_i E_\mathrm{ref}(i)$を計算する、
+  \item 補正された生成エンタルピー
+    $\Delta H_\mathrm{f} = E_\mathrm{f} - \sum_i x_i E_\mathrm{ref}(i)$
+    を出力する。
+\end{enumerate}
+
+この処理は単一テーブルの検索ではなく、
+3テーブルのJOIN、サブクエリによる集約計算、
+および算術演算を含むCTE（Common Table Expression）として
+SQLに変換される必要がある。
+本パイプラインでは、\texttt{formation\_enthalpy}ビューと
+対応するfew-shot例の追加により、
+LLMがビュー経由の単純クエリとCTE経由の明示的計算の
+両方のパターンを生成できるようにした。
+
+従来のText-to-SQLベンチマーク（Spider~\cite{yu2018spider}、
+BIRD~\cite{li2024bird}等）では
+SELECT--WHERE--JOIN--GROUP BYの組合せが主であり、
+科学計算に不可欠な多段的データ統合と
+導出量の算出を要するクエリは評価対象に含まれていない。
+材料データベースにおいては、
+生成エンタルピー、体積サイズファクタ、
+格子ミスマッチ等の導出量が研究上重要であり、
+自然言語から直接これらの計算を指示できることは
+材料インフォマティクスにおけるNLインターフェースの
+実用性を大きく向上させる。
+
 \subsection{制約と今後の課題}
 
 \begin{enumerate}
@@ -899,9 +943,10 @@ Full Schema提示（no\_fewshot条件に相当）は
   \item \textbf{大規模データ検証}：
     OQMD単元素データの統合により1万件規模でのSteiner木探索と
     SQL生成精度の検証を行う。
-  \item \textbf{生成エンタルピー計算対応}：
-    Text-to-SQLパイプラインで計算指示を
-    受け取れるインターフェースの実装。
+  \item \textbf{多段計算クエリの評価}：
+    生成エンタルピー計算対応（5.7節）を
+    評価クエリセットに追加し、
+    CTE・ビュー経由の多段計算精度を定量評価する。
   \item \textbf{AI4Sエージェント統合}：
     T2SQL手法をMCPプロトコルやfunction calling経由で
     自律材料探索エージェントのツールとして組み込む。
@@ -942,6 +987,15 @@ FKイントロスペクションに基づくSteiner木アーキテクチャは�
 Materials Integration（MInt）システム~\cite{minamoto2020mint}や
 provenance管理システムpinax~\cite{minamoto2026pinax}への
 適用が期待される。
+
+さらに、OQMD由来の89元素基底状態データの統合と
+\texttt{formation\_enthalpy}ビューの導入により、
+「Ni$_3$Alの生成エンタルピーを純物質基準で計算して」
+のような多段計算を伴うクエリに
+自然言語から対応可能であることを示した。
+3テーブルJOINとCTEによる加重基準エネルギー計算を含む
+この種のクエリは従来のText-to-SQLベンチマークの範囲外であり、
+材料データベース固有の要求に応える機能拡張である。
 
 本評価は単一ランの結果であり、
 LLMの非決定性に起因する約1--2\,ppの変動を含む可能性がある。
