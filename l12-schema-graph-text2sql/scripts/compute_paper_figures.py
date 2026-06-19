@@ -297,12 +297,13 @@ def main():
         return 1 + len(re.findall(r'\bAND\b', where_clause)) + len(re.findall(r'\bOR\b', where_clause))
 
     def _unified_complexity_score(sql: str) -> int:
-        """統一複雑度スコア: tables*3 + conditions + group_by*2 + exists*3 + subquery*3"""
+        """統一複雑度スコア: tables*3 + conditions + group_by*2 + exists*3 + subquery*3
+        existsとsubqueryは相互排他（EXISTS句は常にsub-SELECTを含むため二重カウント防止）。"""
         t = count_tables_in_sql(sql)
         c = _count_where_conditions(sql)
         g = 1 if re.search(r'\bGROUP\s+BY\b', sql.upper()) else 0
         e = 1 if re.search(r'\bEXISTS\b', sql.upper()) else 0
-        s = 1 if sql.upper().count('SELECT') > 1 else 0
+        s = 1 if (sql.upper().count('SELECT') > 1 and e == 0) else 0
         return t * 3 + c + g * 2 + e * 3 + s * 3
 
     def _unified_difficulty_label(score: int) -> str:
@@ -340,7 +341,7 @@ def main():
     author_overall_acc = sum(float(r["execution_accuracy"]) for r in proposed) / len(proposed)
 
     harmonized_comparison = {
-        "classification_method": "Unified complexity score: tables*3 + conditions + group_by*2 + exists*3 + subquery*3",
+        "classification_method": "Unified complexity score: tables*3 + conditions + group_by*2 + exists*3 + subquery*3 (exists and subquery are mutually exclusive)",
         "thresholds": {"easy": "<8", "medium": "8-11", "hard": "12-16", "very_hard": ">=17"},
         "expert": {
             "total": expert_total if expert_out else 0,
@@ -510,7 +511,7 @@ def main():
 
     test_counts = {
         "regression_tests": 80,
-        "total_unit_tests": 126,
+        "total_unit_tests": 134,
         "note": "pytest tests/ -q で確認"
     }
 

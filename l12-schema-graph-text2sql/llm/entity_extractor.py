@@ -771,5 +771,6 @@ def extract_conditions(query: str) -> dict[str, Any]:
     # Coverage score
     coverage = compute_coverage(query, result, terms)
     result["_coverage"] = coverage
+    result["_raw_query"] = query
 
     return result

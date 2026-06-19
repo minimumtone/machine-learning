@@ -212,7 +212,7 @@ def test_e1_llm_nondeterminism():
         return
 
     client = OpenAI(api_key=api_key)
-    model = os.environ.get("LLM_MODEL", "gpt-5.5")
+    model = os.environ.get("LLM_MODEL", "gpt-4o-mini")
 
     # 同一プロンプトを3回実行
     test_prompt = (

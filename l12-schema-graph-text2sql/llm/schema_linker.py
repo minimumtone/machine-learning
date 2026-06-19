@@ -197,8 +197,18 @@ def link_schema(conditions: dict[str, Any]) -> dict[str, Any]:
 
     mapped_fragments = map_conditions(conditions)
 
+    # Rerank tables by semantic relevance when query text is available
+    sorted_tables = sorted(required_tables)
+    query_text = conditions.get("_raw_query", "")
+    if query_text and len(sorted_tables) > 2:
+        try:
+            from llm.reranker import rerank_schema_tables
+            sorted_tables = rerank_schema_tables(query_text, sorted_tables)
+        except Exception:
+            pass
+
     return {
-        "required_tables": sorted(required_tables),
+        "required_tables": sorted_tables,
         "required_columns": sorted(required_columns),
         "sql_fragments": mapped_fragments,
     }
