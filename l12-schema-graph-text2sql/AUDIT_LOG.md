@@ -81,3 +81,24 @@ Ran: `python3 scripts/compute_all_figures.py`
 Output: paper/paper_data.json
 Exit code: 0
 All numbers verified against source JSONs.
+
+## Phase 6: LaTeX paper expansion (2026-06-02)
+
+Expanded paper/main.tex from 534 lines to 1056 lines.
+Restored from old version (3,214 lines at commit a9f5974):
+- Figure 1: Pipeline TikZ diagram (8 components)
+- Figure 2: ER diagram (30 tables, full TikZ)
+- Algorithm 1: Steiner tree pseudocode
+- Table: DB statistics, query design, MeCab dictionary, latency, related systems comparison
+- 24 bibliography entries (from old 43, retaining all cited)
+- Detailed discussion sections: per-component analysis, related comparison table, limitations, future work
+- Acknowledgments, Data Availability, Author Contributions sections
+
+All numerical values sourced from paper/paper_data.json (EVID-20260619-1335-ablation-json).
+No hand-typed numbers.
+
+Compilation:
+- lualatex main.tex (pass 1): exit code 0, 7 pages
+- lualatex main.tex (pass 2): exit code 0, 7 pages, 602494 bytes
+- No missing references or undefined citations
+- Only cosmetic warnings: Kanji font shape info, hyperref bookmark tokens
