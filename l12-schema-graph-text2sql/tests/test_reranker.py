@@ -1,7 +1,7 @@
-"""Tests for LLM reranker module.
+"""Tests for hybrid reranker module.
 
-These tests verify graceful degradation (no API key) and basic logic.
-API-dependent scoring is tested only when OPENAI_API_KEY is set.
+Cross-Encoder tests run locally (no API key needed).
+LLM-based tests verify graceful degradation without API key.
 """
 import os
 
@@ -15,7 +15,7 @@ from llm.reranker import (
 
 
 # ---------------------------------------------------------------------------
-# SQL candidate reranking
+# SQL candidate reranking (LLM-based)
 # ---------------------------------------------------------------------------
 
 
@@ -50,7 +50,7 @@ def test_rerank_sql_no_api_key(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# Few-shot reranking
+# Few-shot reranking (Cross-Encoder)
 # ---------------------------------------------------------------------------
 
 
@@ -64,22 +64,25 @@ def test_rerank_fewshot_within_topk():
     assert len(result) == 2
 
 
-def test_rerank_fewshot_no_api_key(monkeypatch):
-    """Without API key, return first top_k examples."""
-    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+def test_rerank_fewshot_cross_encoder():
+    """Cross-Encoder should rerank by semantic relevance."""
     examples = [
-        {"nl_query": "Q1", "sql": "S1"},
-        {"nl_query": "Q2", "sql": "S2"},
-        {"nl_query": "Q3", "sql": "S3"},
-        {"nl_query": "Q4", "sql": "S4"},
+        {"nl_query": "バルクモジュラスが高い化合物", "sql": "SELECT FROM calculated_property"},
+        {"nl_query": "L1₂構造を持つ化合物一覧", "sql": "SELECT FROM structure"},
+        {"nl_query": "Niを含む化合物", "sql": "SELECT FROM composition"},
+        {"nl_query": "格子定数が小さい化合物", "sql": "SELECT FROM structure"},
     ]
-    result = rerank_few_shot_examples("test", examples, top_k=2)
+    result = rerank_few_shot_examples(
+        "L1₂型の化合物を一覧にせよ", examples, top_k=2,
+    )
     assert len(result) == 2
-    assert result[0]["nl_query"] == "Q1"
+    # The L12/structure-related example should rank higher than bulk modulus
+    top_queries = [e["nl_query"] for e in result]
+    assert "L1₂構造を持つ化合物一覧" in top_queries
 
 
 # ---------------------------------------------------------------------------
-# Schema table reranking
+# Schema table reranking (LLM-based, sort-only)
 # ---------------------------------------------------------------------------
 
 
@@ -98,9 +101,9 @@ def test_rerank_schema_no_api_key(monkeypatch):
     assert result == tables
 
 
-def test_rerank_schema_preserves_material_entry(monkeypatch):
-    """material_entry should always be preserved as hub table."""
+def test_rerank_schema_never_drops_tables(monkeypatch):
+    """Schema reranker must never remove tables from the list."""
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     tables = ["material_entry", "composition", "structure"]
     result = rerank_schema_tables("find something", tables)
-    assert "material_entry" in result
+    assert set(result) == set(tables)

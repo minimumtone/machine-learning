@@ -1,7 +1,11 @@
-"""LLM-based reranker for SQL candidates, few-shot examples, and schema linking.
+"""Hybrid reranker: Cross-Encoder for few-shot, LLM for SQL candidates & schema.
 
-Uses OpenAI API for semantic scoring. All functions gracefully degrade
-when the API key is unavailable — returning input unchanged.
+Performance-oriented design:
+- Few-shot example reranking: Cross-Encoder (ms-marco-MiniLM, <50ms, local)
+- SQL candidate reranking: GPT-5.5 (semantic SQL correctness)
+- Schema table reranking: GPT-5.5 (domain knowledge, sort-only — never drops tables)
+
+All functions gracefully degrade when dependencies are unavailable.
 """
 from __future__ import annotations
 
@@ -12,6 +16,32 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------------------------
+# Cross-Encoder singleton (lazy-loaded)
+# ---------------------------------------------------------------------------
+
+_cross_encoder = None
+_CROSS_ENCODER_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+
+
+def _get_cross_encoder() -> Any | None:
+    """Lazy-load Cross-Encoder model. Returns None if unavailable."""
+    global _cross_encoder
+    if _cross_encoder is not None:
+        return _cross_encoder
+    try:
+        from sentence_transformers import CrossEncoder
+        _cross_encoder = CrossEncoder(_CROSS_ENCODER_MODEL)
+        logger.info("Cross-Encoder loaded: %s", _CROSS_ENCODER_MODEL)
+        return _cross_encoder
+    except Exception as e:
+        logger.debug("Cross-Encoder unavailable: %s", e)
+        return None
+
+
+# ---------------------------------------------------------------------------
+# OpenAI client
+# ---------------------------------------------------------------------------
 
 def _get_client() -> Any | None:
     """Return an OpenAI client if API key is available, else None."""
@@ -26,12 +56,12 @@ def _get_client() -> Any | None:
 
 
 def _rerank_model() -> str:
-    """Model used for reranking (lighter/cheaper than main generation model)."""
-    return os.getenv("RERANK_MODEL", "gpt-4o-mini")
+    """LLM model used for SQL/schema reranking."""
+    return os.getenv("RERANK_MODEL", "gpt-5.5")
 
 
 # ---------------------------------------------------------------------------
-# 1. SQL candidate reranking
+# 1. SQL candidate reranking (LLM-based)
 # ---------------------------------------------------------------------------
 
 _SQL_RERANK_PROMPT = """\
@@ -79,7 +109,6 @@ def rerank_sql_candidates(
     if len(candidates) <= 1:
         return candidates
 
-    # Filter out empty SQL candidates
     valid = [c for c in candidates if c.get("sql")]
     if not valid:
         return candidates
@@ -99,17 +128,23 @@ def rerank_sql_candidates(
 
     try:
         t0 = time.time()
-        resp = client.chat.completions.create(
-            model=_rerank_model(),
+        model = _rerank_model()
+        _is_reasoning = model and any(t in model for t in ("gpt-5", "o1", "o3", "o4"))
+        create_kwargs: dict[str, Any] = dict(
+            model=model,
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.0,
-            max_tokens=256,
         )
+        if _is_reasoning:
+            create_kwargs["max_completion_tokens"] = 1024
+        else:
+            create_kwargs["temperature"] = 0.0
+            create_kwargs["max_tokens"] = 256
+
+        resp = client.chat.completions.create(**create_kwargs)
         raw = resp.choices[0].message.content or ""
         latency_ms = int((time.time() - t0) * 1000)
         logger.debug("Reranker SQL scoring: %dms, raw=%s", latency_ms, raw)
 
-        # Parse scores from response
         import json
         import re
         match = re.search(r"\[[\d\s,]+\]", raw)
@@ -118,13 +153,11 @@ def rerank_sql_candidates(
         else:
             return candidates
 
-        # Apply reranker scores
         for i, c in enumerate(valid):
             if i < len(scores):
                 reranker_score = min(max(scores[i], 0), 100)
                 c["reranker_score"] = reranker_score
                 original = c.get("score", 0)
-                # Normalize original to 0-100 scale
                 c["score"] = (1 - weight) * original + weight * reranker_score
 
     except Exception as e:
@@ -134,99 +167,58 @@ def rerank_sql_candidates(
 
 
 # ---------------------------------------------------------------------------
-# 2. Few-shot example reranking
+# 2. Few-shot example reranking (Cross-Encoder)
 # ---------------------------------------------------------------------------
-
-_FEWSHOT_RERANK_PROMPT = """\
-You are a materials database query expert.
-
-Given a new query and several candidate few-shot examples, rank the examples
-by how useful they would be as SQL generation guidance for the new query.
-Consider: similar table usage, similar conditions, similar query structure.
-
-New query: {query}
-
-{examples_block}
-
-Respond with ONLY a JSON array of scores (0-100), one per example.
-Example: [90, 45, 72]
-"""
-
 
 def rerank_few_shot_examples(
     query: str,
     examples: list[dict[str, Any]],
     top_k: int = 3,
 ) -> list[dict[str, Any]]:
-    """Rerank few-shot examples by semantic relevance to the query.
+    """Rerank few-shot examples using Cross-Encoder (ms-marco-MiniLM).
 
-    Parameters
-    ----------
-    query : str
-        The new natural language query.
-    examples : list[dict]
-        Candidate examples from the TF-IDF retrieval stage.
-    top_k : int
-        Number of examples to return after reranking.
-
-    Returns
-    -------
-    list[dict]
-        Top-k examples sorted by reranker score.
+    ~50ms local inference, no API calls.
+    Falls back to returning first top_k if Cross-Encoder is unavailable.
     """
     if len(examples) <= top_k:
         return examples
 
-    client = _get_client()
-    if client is None:
+    ce = _get_cross_encoder()
+    if ce is None:
         return examples[:top_k]
-
-    examples_block = "\n".join(
-        f"Example {i+1}:\n  Query: {e['nl_query']}\n  SQL: {e.get('sql', 'N/A')}"
-        for i, e in enumerate(examples)
-    )
-    prompt = _FEWSHOT_RERANK_PROMPT.format(
-        query=query, examples_block=examples_block,
-    )
 
     try:
         t0 = time.time()
-        resp = client.chat.completions.create(
-            model=_rerank_model(),
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.0,
-            max_tokens=256,
-        )
-        raw = resp.choices[0].message.content or ""
+        pairs = [
+            [query, e["nl_query"] + " " + e.get("sql", "")]
+            for e in examples
+        ]
+        scores = ce.predict(pairs)
         latency_ms = int((time.time() - t0) * 1000)
-        logger.debug("Reranker few-shot scoring: %dms", latency_ms)
+        logger.debug("Cross-Encoder few-shot scoring: %dms", latency_ms)
 
-        import json
-        import re
-        match = re.search(r"\[[\d\s,]+\]", raw)
-        if match:
-            scores = json.loads(match.group())
-            scored = []
-            for i, e in enumerate(examples):
-                s = scores[i] if i < len(scores) else 0
-                scored.append((s, e))
-            scored.sort(key=lambda x: x[0], reverse=True)
-            return [e for _, e in scored[:top_k]]
+        scored = sorted(
+            zip(scores, examples),
+            key=lambda x: x[0],
+            reverse=True,
+        )
+        return [e for _, e in scored[:top_k]]
+
     except Exception as e:
-        logger.warning("Reranker few-shot scoring failed: %s", e)
-
-    return examples[:top_k]
+        logger.warning("Cross-Encoder few-shot scoring failed: %s", e)
+        return examples[:top_k]
 
 
 # ---------------------------------------------------------------------------
-# 3. Schema linking reranking
+# 3. Schema table reranking (LLM-based, sort-only)
 # ---------------------------------------------------------------------------
 
 _SCHEMA_RERANK_PROMPT = """\
 You are a materials database schema expert.
 
-Given a natural language query about materials, and a list of candidate database
-tables, score each table on how likely it is needed to answer the query (0-100).
+Given a natural language query about materials, and a list of required database
+tables, score each table on how relevant it is to the query (0-100).
+All tables are required — do NOT remove any. Just rank by relevance.
 
 Schema overview:
 - material_entry: base table, formula, source_db
@@ -246,11 +238,10 @@ Schema overview:
 - element / element_property: atomic properties
 - prototype_definition: Strukturbericht designations
 - literature_reference / material_reference: citations
-- (+ others for synthesis, applications, alloy systems, etc.)
 
 Query: {query}
 
-Candidate tables: {tables}
+Tables: {tables}
 
 Respond with ONLY a JSON object mapping table name to score (0-100).
 Example: {{"material_entry": 95, "composition": 80, "structure": 30}}
@@ -260,24 +251,12 @@ Example: {{"material_entry": 95, "composition": 80, "structure": 30}}
 def rerank_schema_tables(
     query: str,
     candidate_tables: list[str],
-    threshold: float = 30.0,
 ) -> list[str]:
-    """Rerank candidate tables by relevance to the query.
+    """Sort tables by relevance to the query. Never removes tables.
 
-    Parameters
-    ----------
-    query : str
-        Natural language query.
-    candidate_tables : list[str]
-        Tables identified by the rule-based schema linker.
-    threshold : float
-        Minimum score to keep a table (0-100).
-
-    Returns
-    -------
-    list[str]
-        Tables sorted by relevance, low-scoring ones removed.
-        Always includes material_entry as the hub table.
+    Unlike the previous implementation, this function only reorders tables
+    by relevance score — it never drops tables from the list. This ensures
+    that required_tables, required_columns, and sql_fragments stay consistent.
     """
     if len(candidate_tables) <= 2:
         return candidate_tables
@@ -292,12 +271,19 @@ def rerank_schema_tables(
 
     try:
         t0 = time.time()
-        resp = client.chat.completions.create(
-            model=_rerank_model(),
+        model = _rerank_model()
+        _is_reasoning = model and any(t in model for t in ("gpt-5", "o1", "o3", "o4"))
+        create_kwargs: dict[str, Any] = dict(
+            model=model,
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.0,
-            max_tokens=512,
         )
+        if _is_reasoning:
+            create_kwargs["max_completion_tokens"] = 1024
+        else:
+            create_kwargs["temperature"] = 0.0
+            create_kwargs["max_tokens"] = 512
+
+        resp = client.chat.completions.create(**create_kwargs)
         raw = resp.choices[0].message.content or ""
         latency_ms = int((time.time() - t0) * 1000)
         logger.debug("Reranker schema scoring: %dms", latency_ms)
@@ -308,15 +294,11 @@ def rerank_schema_tables(
         if match:
             scores = json.loads(match.group())
             scored = [
-                (scores.get(t, scores.get(t.lower(), 0)), t)
+                (scores.get(t, scores.get(t.lower(), 50)), t)
                 for t in candidate_tables
             ]
             scored.sort(key=lambda x: x[0], reverse=True)
-            result = [t for s, t in scored if s >= threshold]
-            # Always keep material_entry as the hub
-            if "material_entry" not in result and "material_entry" in candidate_tables:
-                result.append("material_entry")
-            return result if result else candidate_tables
+            return [t for _, t in scored]
     except Exception as e:
         logger.warning("Reranker schema scoring failed: %s", e)
 
