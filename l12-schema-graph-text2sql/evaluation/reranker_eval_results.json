@@ -1,0 +1,169 @@
+{
+  "model": "gpt-5.5",
+  "sample_size": 20,
+  "overall_reranker": 0.8046153846153846,
+  "overall_baseline": 0.6160159158002824,
+  "delta": 0.18859946881510226,
+  "results": [
+    {
+      "qid": "q_easy_001",
+      "difficulty": "easy",
+      "accuracy_reranker": 1.0,
+      "accuracy_baseline": 1.0,
+      "reranked": true,
+      "latency_s": 26.8
+    },
+    {
+      "qid": "q_easy_002",
+      "difficulty": "easy",
+      "accuracy_reranker": 1.0,
+      "accuracy_baseline": 1.0,
+      "reranked": true,
+      "latency_s": 38.3
+    },
+    {
+      "qid": "q_easy_003",
+      "difficulty": "easy",
+      "accuracy_reranker": 1.0,
+      "accuracy_baseline": 1.0,
+      "reranked": true,
+      "latency_s": 36.3
+    },
+    {
+      "qid": "q_easy_004",
+      "difficulty": "easy",
+      "accuracy_reranker": 1.0,
+      "accuracy_baseline": 1.0,
+      "reranked": true,
+      "latency_s": 13.1
+    },
+    {
+      "qid": "q_easy_005",
+      "difficulty": "easy",
+      "accuracy_reranker": 1.0,
+      "accuracy_baseline": 1.0,
+      "reranked": true,
+      "latency_s": 13.2
+    },
+    {
+      "qid": "q_medium_001",
+      "difficulty": "medium",
+      "accuracy_reranker": 1.0,
+      "accuracy_baseline": 1.0,
+      "reranked": true,
+      "latency_s": 35.5
+    },
+    {
+      "qid": "q_medium_002",
+      "difficulty": "medium",
+      "accuracy_reranker": 1.0,
+      "accuracy_baseline": 1.0,
+      "reranked": true,
+      "latency_s": 30.3
+    },
+    {
+      "qid": "q_medium_003",
+      "difficulty": "medium",
+      "accuracy_reranker": 1.0,
+      "accuracy_baseline": 1.0,
+      "reranked": true,
+      "latency_s": 35.1
+    },
+    {
+      "qid": "q_medium_004",
+      "difficulty": "medium",
+      "accuracy_reranker": 1.0,
+      "accuracy_baseline": 0.002551020408163265,
+      "reranked": true,
+      "latency_s": 25.2
+    },
+    {
+      "qid": "q_medium_005",
+      "difficulty": "medium",
+      "accuracy_reranker": 1.0,
+      "accuracy_baseline": 1.0,
+      "reranked": true,
+      "latency_s": 30.8
+    },
+    {
+      "qid": "q_hard_001",
+      "difficulty": "hard",
+      "accuracy_reranker": 0.06153846153846154,
+      "accuracy_baseline": 0.06153846153846154,
+      "reranked": true,
+      "latency_s": 47.1
+    },
+    {
+      "qid": "q_hard_002",
+      "difficulty": "hard",
+      "accuracy_reranker": 1.0,
+      "accuracy_baseline": 1.0,
+      "reranked": true,
+      "latency_s": 35.8
+    },
+    {
+      "qid": "q_hard_003",
+      "difficulty": "hard",
+      "accuracy_reranker": 1.0,
+      "accuracy_baseline": 0.009433962264150943,
+      "reranked": true,
+      "latency_s": 36.3
+    },
+    {
+      "qid": "q_hard_004",
+      "difficulty": "hard",
+      "accuracy_reranker": 1.0,
+      "accuracy_baseline": 0.375,
+      "reranked": true,
+      "latency_s": 27.1
+    },
+    {
+      "qid": "q_hard_005",
+      "difficulty": "hard",
+      "accuracy_reranker": 1.0,
+      "accuracy_baseline": 1.0,
+      "reranked": true,
+      "latency_s": 33.9
+    },
+    {
+      "qid": "q_vhard_001",
+      "difficulty": "very_hard",
+      "accuracy_reranker": 0.0,
+      "accuracy_baseline": 0.18974358974358974,
+      "reranked": true,
+      "latency_s": 47.4
+    },
+    {
+      "qid": "q_vhard_002",
+      "difficulty": "very_hard",
+      "accuracy_reranker": 0.03076923076923077,
+      "accuracy_baseline": 0.015384615384615385,
+      "reranked": true,
+      "latency_s": 50.4
+    },
+    {
+      "qid": "q_vhard_003",
+      "difficulty": "very_hard",
+      "accuracy_reranker": 0.0,
+      "accuracy_baseline": 0.0,
+      "reranked": true,
+      "latency_s": 62.3
+    },
+    {
+      "qid": "q_vhard_004",
+      "difficulty": "very_hard",
+      "accuracy_reranker": 1.0,
+      "accuracy_baseline": 0.6666666666666666,
+      "reranked": true,
+      "latency_s": 24.7
+    },
+    {
+      "qid": "q_vhard_005",
+      "difficulty": "very_hard",
+      "accuracy_reranker": 1.0,
+      "accuracy_baseline": 0.0,
+      "reranked": true,
+      "latency_s": 50.6
+    }
+  ]
+}

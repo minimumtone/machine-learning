@@ -215,10 +215,14 @@ def _rule_based_fallback(
     allowed_tables: list[str],
     allowed_columns: list[str],
     allowed_joins: list[str],
+    conditions: dict[str, Any] | None = None,
+    linked: dict[str, Any] | None = None,
 ) -> str:
     """Generate SQL deterministically when no LLM API key is available."""
-    conditions = extract_conditions(user_query)  # cached at caller if possible
-    linked = link_schema(conditions)
+    if conditions is None:
+        conditions = extract_conditions(user_query)
+    if linked is None:
+        linked = link_schema(conditions)
 
     # Detect COUNT-type queries.
     # Exclude false positives: "定数を" (constant), "係数を" (coefficient),
@@ -727,10 +731,12 @@ def pipeline(
             "gen_result": gen_result,
         })
 
-    # Also include rule-based as a candidate
+    # Also include rule-based as a candidate (pass pre-computed data to avoid
+    # redundant extract_conditions/link_schema/reranker calls)
     rb_sql = _rule_based_fallback(
         user_query, linked["required_tables"],
         filtered_columns, filtered_joins,
+        conditions=conditions, linked=linked,
     )
     if rb_sql:
         rb_scored = _score_sql_candidate(rb_sql, conditions, execute_fn)
