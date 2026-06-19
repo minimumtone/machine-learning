@@ -13,14 +13,21 @@
 \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage{siunitx}
+\usepackage{xcolor}
 \usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\usepackage{longtable}
 \usepackage{array}
 \usepackage{float}
 \usepackage{enumitem}
+\usepackage{subcaption}
 \usepackage{listings}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{tabularx}
+\usepackage{url}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,calc,backgrounds}
+\biboptions{numbers}
 
 \setlist{nosep,leftmargin=*}
 
@@ -34,6 +41,8 @@
   frame=single,
   language=SQL,
   keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{green!50!black},
+  stringstyle=\color{red!70!black},
   numbers=left,
   numberstyle=\tiny\color{gray},
   tabsize=2,
@@ -41,6 +50,7 @@
 
 \journal{Preprint}
 
+% =====================================================================
 \begin{document}
 
 \begin{frontmatter}
@@ -55,7 +65,7 @@
 
 \date{\today}
 
-% ===================================================================
+% =====================================================================
 \begin{abstract}
 第一原理計算データベースに蓄積された材料データの横断的検索は、
 SQLの専門知識を要求するため、材料研究者にとって障壁となっている。
@@ -67,23 +77,20 @@ SQLの専門知識を要求するため、材料研究者にとって障壁と�
 (1)~TF-IDFとCross-Encoder（ms-marco-MiniLM-L-6-v2）によるfew-shot例検索、
 (2)~GPT-5.5によるスキーマリンキングとSQL生成（$n$-best = 3候補）、
 (3)~外部キー関係をグラフ化しSteiner木近似で最小JOIN経路を決定する構造制約、
-(4)~材料ドメイン辞書による用語--SQL条件マッピング、
+(4)~492語の材料ドメイン辞書（MeCabカスタム辞書を含む）による用語--SQL条件マッピング、
 (5)~AST解析ベースのSQLGuardによるカラム・テーブル幻覚の検出、
 (6)~GPT-5.5によるSQL候補リランキング。
 
-30テーブル・1{,}470件の材料エントリからなるデータベースに対し、
-著者設計の100件クエリ（Easy 20 / Medium 30 / Hard 30 / Very Hard 20）で
+L1$_2$型金属間化合物を中心とする30テーブル・1{,}470件の材料データベースに対し、
+100件の評価クエリ（Easy 20 / Medium 30 / Hard 30 / Very Hard 20）で
 7条件のablation study（計700回評価）を実施した。
-全構成要素を有効にしたfull条件では
-行一致精度80.6\%を記録した。
-7条件のablation studyにより各構成要素の寄与を定量化した結果、
+全構成要素を有効にしたfull条件では行一致精度80.6\%を達成した。
+Ablation studyにより、
 few-shot例の除去が$-$12.5ポイント（pp）、
 材料ドメイン辞書の除去が$-$6.7\,pp（Very Hard帯では$-$22.7\,pp）、
-ハイブリッドリランカーの除去が$-$4.1\,ppの精度低下を
-それぞれ引き起こした。
+ハイブリッドリランカーの除去が$-$4.1\,ppの精度低下を引き起こした。
 SQLGuard、$n$-best生成、Steiner木JOINは各$-$0.2\,ppであった。
-
-なお、全評価はLLMの非決定性を伴う単一ランであり、
+全評価はLLMの非決定性を伴う単一ランであり、
 条件間の差異には約1--2\,ppの変動が含まれうる。
 
 \end{abstract}
@@ -91,30 +98,60 @@ SQLGuard、$n$-best生成、Steiner木JOINは各$-$0.2\,ppであった。
 \begin{keyword}
 Text-to-SQL \sep 材料インフォマティクス \sep
 スキーマグラフ \sep Steiner木 \sep ablation study \sep
-ドメイン特化辞書 \sep リランキング
+ドメイン特化辞書 \sep リランキング \sep L1$_2$型金属間化合物
 \end{keyword}
 
 \end{frontmatter}
 
-% ===================================================================
-\section{はじめに}
+% =====================================================================
+\section{緒言}
 \label{sec:introduction}
 
-第一原理計算データベース（OQMD, Materials Project, AFLOW等）の普及により、
+\subsection{材料データベースの検索障壁}
+
+第一原理計算データベース
+（OQMD~\cite{saal2013oqmd,kirklin2015oqmd}、
+Materials Project~\cite{jain2013mp}、
+AFLOW~\cite{curtarolo2012aflow}、
+NOMAD~\cite{draxl2019nomad}等）の普及により、
 材料特性の計算データが大量に蓄積されている。
-これらのデータは正規化リレーショナルデータベース（RDB）に格納されることが多いが、
+これらのデータは正規化リレーショナルデータベース（RDB）に
+格納されることが多いが、
 SQLクエリの記述には専門知識が必要であり、
 材料研究者が直感的にデータにアクセスする手段は限られている。
+
+\subsection{Text-to-SQL技術の動向}
 
 Text-to-SQL技術は、自然言語をSQLに変換する技術として
 Spider~\cite{yu2018spider}やBIRD~\cite{li2024bird}等の
 ベンチマークを中心に発展してきた。
 近年、大規模言語モデル（LLM）の進歩により、
-DIN-SQL~\cite{pourreza2024dinsql}やDAIL-SQL~\cite{gao2024dailsql}等の
-手法がベンチマーク上で高い精度を達成している。
+DIN-SQL~\cite{pourreza2024dinsql}はスキーマリンキング・分類・生成を
+分離するパイプライン型アプローチを提案し、
+DAIL-SQL~\cite{gao2023dail}はfew-shot例の選択戦略に着目した。
+RAT-SQL~\cite{wang2020ratsql}は関係認識符号化、
+RESDSQL~\cite{li2023resdsql}はスキーマリンク分離を導入した。
+SchemaGraphSQL~\cite{safdarian2026schemagraphsql}は
+FKグラフ上のパスファインディングを用いる点で本研究と近い。
 
-しかし、材料科学ドメインにText-to-SQLを適用するには
-以下の課題が存在する：
+\subsection{材料インフォマティクスにおけるNLインターフェース}
+
+材料データベースに対する自然言語インターフェースの研究は限定的である。
+MatSciBERT~\cite{gupta2022matscibert}やMatBERT~\cite{walker2021matbert}は
+材料科学テキストの言語モデルであるが、
+Text-to-SQLタスクには直接適用されていない。
+MKNA~\cite{zhuang2026mkna}やOptiMat~\cite{hu2026optimat}は
+APIベースのアクセスを提供するが、
+正規化RDB上でのSQL生成とJOIN制御は行わない。
+SuperCon~\cite{ishii2023supercon}やPoLyInfo~\cite{ishii2024polyinfo}は
+RDF/SPARQLベースのオントロジーアプローチであり、
+セマンティック推論に優れるが、
+既存のRDBインフラへの適用にはデータ変換が必要である。
+
+\subsection{本研究の目的と独自性}
+
+本研究では、材料データベースへのText-to-SQL適用における
+以下の3つの課題に対処する：
 \begin{enumerate}
   \item \textbf{ドメイン用語の多義性}：
     L1$_2$、$\gamma'$相、B2等の結晶構造名や物性用語は
@@ -128,93 +165,116 @@ DIN-SQL~\cite{pourreza2024dinsql}やDAIL-SQL~\cite{gao2024dailsql}等の
     標準的な評価セットは存在しない。
 \end{enumerate}
 
-本研究では、これらの課題に対処するため、
-スキーマグラフ制約付きText-to-SQLパイプラインを提案する。
 提案法の独自性は以下の3点にある：
 (1)~外部キーグラフ上のSteiner木近似によるJOIN経路の構造的決定、
-(2)~材料ドメイン辞書による用語--SQL条件の直接マッピング、
+(2)~492語の材料ドメイン辞書による用語--SQL条件の直接マッピング、
 (3)~Cross-EncoderとLLMを組み合わせたハイブリッドリランカー。
-
 7条件$\times$100件のablation studyにより、
 各構成要素の寄与を定量化した結果を報告する。
 
-% ===================================================================
-\section{関連研究}
-\label{sec:related}
-
-\subsection{Text-to-SQL}
-
-Text-to-SQLは自然言語からSQLへの変換タスクである。
-Spider~\cite{yu2018spider}は複数データベースにまたがる
-クロスドメインベンチマークとして広く利用されている。
-BIRD~\cite{li2024bird}はより現実的なデータベースと
-外部知識を必要とするクエリを含む。
-
-LLMベースの手法として、
-DIN-SQL~\cite{pourreza2024dinsql}はスキーマリンキング・分類・生成を
-分離するパイプライン型アプローチを提案した。
-DAIL-SQL~\cite{gao2024dailsql}はfew-shot例の選択戦略に着目し、
-候補選択にマスク類似度を導入した。
-
-本研究は、これらの手法が想定しない
-ドメイン特化辞書とグラフ制約の組合せを導入する点で異なる。
-
-\subsection{材料インフォマティクスにおけるNLインターフェース}
-
-材料データベースに対する自然言語インターフェースの研究は限定的である。
-MatSciBERT~\cite{gupta2022matscibert}やMatBERT~\cite{walker2021matbert}は
-材料科学テキストの言語モデルであるが、
-Text-to-SQLタスクには直接適用されていない。
-
-% ===================================================================
+% =====================================================================
 \section{提案手法}
 \label{sec:method}
 
 \subsection{パイプライン概要}
 
-提案パイプラインは図~\ref{fig:pipeline}に示す8つの構成要素からなる。
+提案パイプラインは図~\ref{fig:pipeline}に示す構成要素からなる。
 入力は日本語の自然言語クエリであり、
 出力はSQLクエリとその実行結果である。
 
-\begin{figure}[t]
+\begin{figure*}[htbp]
 \centering
-\fbox{\parbox{0.9\columnwidth}{
-\small
-\textbf{入力:} 自然言語クエリ（日本語） \\[2pt]
-$\downarrow$ (1) Few-shot例検索 (TF-IDF + Cross-Encoder) \\
-$\downarrow$ (2) スキーマリンキング (GPT-5.5, sort-only) \\
-$\downarrow$ (3) SQL生成 (GPT-5.5, $n$-best = 3) \\
-$\downarrow$ (4) Steiner木JOIN制約 (NetworkX) \\
-$\downarrow$ (5) 材料ドメイン辞書 \\
-$\downarrow$ (6) SQLGuard検証 (sqlglot AST) \\
-$\downarrow$ (7) SQL候補リランキング (GPT-5.5) \\
-$\downarrow$ (8) リペアループ (最大3回) \\[2pt]
-\textbf{出力:} SQLクエリ + 実行結果
-}}
-\caption{提案パイプラインの構成。括弧内は各段階で使用するモデルまたはツールを示す。}
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  node distance=0.3cm and 0.6cm,
+  >=Stealth,
+  every node/.style={font=\small},
+  stepbox/.style={rectangle, draw, rounded corners=4pt,
+    minimum height=1.2cm, minimum width=2.2cm, align=center,
+    text width=2.4cm},
+  arr/.style={->, thick, >=Stealth},
+]
+
+% Step boxes
+\node[stepbox, fill=green!10] (nl) {自然言語\\
+  {\scriptsize「Niを含む安定な\\ L1$_2$のバルクモジュラス」}};
+
+\node[stepbox, fill=blue!8, right=of nl] (fewshot) {Few-shot例検索\\
+  {\scriptsize TF-IDF+\\ Cross-Encoder}};
+
+\node[stepbox, fill=violet!15, right=of fewshot] (schema) {スキーマ\\リンキング\\
+  {\scriptsize GPT-5.5\\ (sort-only)}};
+
+\node[stepbox, fill=cyan!12, right=of schema] (llmgen) {SQL生成\\
+  {\scriptsize GPT-5.5\\ $n$-best = 3}};
+
+\node[stepbox, fill=orange!10, right=of llmgen] (steiner) {Steiner木\\JOIN制約\\
+  {\scriptsize NetworkX}};
+
+\node[stepbox, fill=yellow!15, right=of steiner] (dict) {材料辞書\\
+  {\scriptsize 492語}};
+
+\node[stepbox, fill=red!10, right=of dict] (guard) {SQLGuard\\
+  {\scriptsize 14項目検証}};
+
+\node[stepbox, fill=green!10, right=of guard] (rerank) {リランキング\\
+  {\scriptsize GPT-5.5}};
+
+% Arrows
+\draw[arr] (nl) -- (fewshot);
+\draw[arr] (fewshot) -- (schema);
+\draw[arr] (schema) -- (llmgen);
+\draw[arr] (llmgen) -- (steiner);
+\draw[arr] (steiner) -- (dict);
+\draw[arr] (dict) -- (guard);
+\draw[arr] (guard) -- (rerank);
+
+% Step labels
+\node[above=0.15cm of nl, font=\scriptsize\bfseries, color=gray] {入力};
+\node[above=0.15cm of fewshot, font=\scriptsize\bfseries, color=gray] {Step 1};
+\node[above=0.15cm of schema, font=\scriptsize\bfseries, color=gray] {Step 2};
+\node[above=0.15cm of llmgen, font=\scriptsize\bfseries, color=gray] {Step 3};
+\node[above=0.15cm of steiner, font=\scriptsize\bfseries, color=gray] {Step 4};
+\node[above=0.15cm of dict, font=\scriptsize\bfseries, color=gray] {Step 5};
+\node[above=0.15cm of guard, font=\scriptsize\bfseries, color=gray] {Step 6};
+\node[above=0.15cm of rerank, font=\scriptsize\bfseries, color=gray] {Step 7};
+
+\end{tikzpicture}%
+}% end resizebox
+\caption{提案パイプラインの概要。
+  自然言語クエリからfew-shot例検索（Step 1）を経て、
+  GPT-5.5によるスキーマリンキング（Step 2）とSQL生成（Step 3）を行い、
+  Steiner木近似（Step 4）が30テーブルから必要最小限のサブグラフを抽出する。
+  材料辞書（Step 5）がドメイン用語をSQL条件にマッピングし、
+  SQLGuard（Step 6）で安全性を検証した後、
+  リランカー（Step 7）が最良候補を選択する。}
 \label{fig:pipeline}
-\end{figure}
+\end{figure*}
 
 \subsection{Few-shot例検索}
+\label{sec:fewshot}
 
 入力クエリに類似するfew-shot例を2段階で選択する。
-第1段階でTF-IDFにより候補を$2k$件に絞り込み、
+第1段階でTF-IDF~\cite{salton1988tfidf}により候補を$2k$件に絞り込み、
 第2段階でCross-Encoder（ms-marco-MiniLM-L-6-v2）により
 上位$k$件を選択する。
-Cross-Encoderはローカルで動作し、
-処理時間は50\,ms未満である。
+Cross-Encoderはローカルで動作し、処理時間は50\,ms未満である。
 
 ablation studyにおいて、few-shot例の除去は
 全体精度を80.6\%から68.2\%へ$-$12.5\,pp低下させた
 （表~\ref{tab:ablation}; EVID-20260619-1335-ablation-nofewshot）。
 この低下は全難易度帯で観察され、
-Medium帯では$-$16.5\,ppと最も顕著であった。
+Medium帯では$-$16.5\,ppであった（表~\ref{tab:ablation-detail}）。
+LLMはfew-shot例からSQL生成のパターン
+（テーブル名、JOIN順序、カラム名の使い方）を
+in-context learning~\cite{brown2020fewshot}により獲得しており、
+few-shot例なしではスキーマ情報のみからSQLを推論する必要が生じる。
 
 \subsection{スキーマリンキング}
 
 GPT-5.5により、入力クエリに関連するテーブルを
-スコアリングし、関連度順にソートする。
-テーブルの除外は行わず（sort-only方式）、
+スコアリングし、関連度順にソートする（sort-only方式）。
+テーブルの除外は行わず、
 SQL生成時のコンテキスト優先順位のみを変更する。
 
 \subsection{SQL生成と$n$-best候補}
@@ -226,38 +286,104 @@ ablation studyにおいて、$n$-best = 1への変更は
 （表~\ref{tab:ablation}; EVID-20260619-1335-ablation-nonbest）。
 
 \subsection{Steiner木JOIN制約}
+\label{sec:schema_graph}
 
-30テーブルの外部キー関係をNetworkXの無向グラフとして表現する。
+30テーブルの外部キー（FK）関係を
+NetworkX~\cite{networkx2008}の無向グラフとして表現する。
+FK関係は実行時にPostgreSQLメタデータから
+イントロスペクションにより自動取得される。
 クエリに必要なテーブル集合に対し、
-Steiner木近似アルゴリズムにより最小JOIN部分木を決定する。
-LLMが生成したJOIN経路がこの部分木に含まれない場合、
-Steiner木の経路で置換する。
+Algorithm~\ref{alg:steiner}に示すSteiner木近似により
+最小JOIN部分木を決定する。
+
+\begin{algorithm}[htbp]
+  \caption{最小被覆JOIN部分グラフ（Steiner木近似）。}
+  \label{alg:steiner}
+  \begin{algorithmic}[1]
+    \Require FK関係グラフ$G = (V, E)$、必要テーブル集合$R$
+    \Ensure JOIN経路リスト$P$
+    \State $P \gets \emptyset$; Union-Find $U$ を初期化
+    \ForAll{$(s, t) \in \binom{R}{2}$}
+      \If{$\text{Find}(s) = \text{Find}(t)$}
+        \State \textbf{continue}
+      \EndIf
+      \State $p \gets \text{ShortestPath}(G, s, t)$ \Comment{FKグラフ上のBFS}
+      \If{$p \neq \emptyset$}
+        \State $P \gets P \cup \{p\}$
+        \ForAll{隣接ノード対 $(u, v) \in p$}
+          \State $\text{Union}(u, v)$
+        \EndFor
+      \EndIf
+    \EndFor
+    \State \Return $P$
+  \end{algorithmic}
+\end{algorithm}
+
+$|V| = n$ノード、$|R| = k$必要テーブルに対し、
+アルゴリズムは$O(k^2)$回のBFSを行う。
+30テーブル規模（$n = 30$、$k \leq 5$）でもミリ秒オーダーで完了する。
 
 ablation studyでは、Steiner木制約の除去による精度低下は
 $-$0.2\,ppにとどまった
 （表~\ref{tab:ablation}; EVID-20260619-1335-ablation-nograph）。
 検証できた範囲では、現在の30テーブル規模では
 大半のクエリが5つのコアテーブル
-（compound, structure, element, composition, calculated\_property）
+（\texttt{material\_entry}, \texttt{structure}, \texttt{element},
+\texttt{composition}, \texttt{calculated\_property}）
 で完結するため、効果が限定的であった。
 テーブル数が拡大した場合に寄与が顕在化すると予想される。
 
+JOIN経路からのSQL FROM/JOIN句生成例：
+\begin{lstlisting}[language=Python,caption={FK経路からのJOIN句生成},label=lst:join_gen,numbers=none]
+# path: [material_entry, structure]
+# FK: structure.entry_id -> material_entry.entry_id
+# output:
+#   FROM material_entry m
+#   JOIN structure s ON s.entry_id = m.entry_id
+\end{lstlisting}
+
 \subsection{材料ドメイン辞書}
+\label{sec:domain_dict}
 
 材料科学の専門用語をSQL条件に直接マッピングする辞書を導入した。
 例として、「$\gamma'$相」$\to$ \texttt{structure.prototype = 'L12'}、
 「バルクモジュラス」$\to$ \texttt{calculated\_property}テーブルの
 \texttt{property\_name = 'bulk\_modulus'}への変換がある。
 
-辞書はYAML定義ファイル（74語）、
-パイプライン用語（66語）、
-材料工学語彙（390語新規）の3ソースから構成され、
+辞書は3ソースから構成される：
+\begin{enumerate}
+  \item YAML定義ファイル（\texttt{material\_terms.yaml}）：74語
+  \item パイプライン用語（DB/OQMD固有語）：66語
+  \item 材料工学語彙（ユーザー提供リスト）：390語（新規）
+\end{enumerate}
 重複除去後492語となる。
 MeCab形態素解析器用のカスタム辞書としてもコンパイルし、
-日本語テキストの前処理に利用する。
-カスタム辞書により、402語の材料用語の単一トークン化率は
-デフォルトの30.6\%から100.0\%へ向上した
+日本語テキストの前処理に利用する
 （EVID-20260619-1335-mecab-dict）。
+
+カスタム辞書により、402語の材料用語の単一トークン化率は
+デフォルトの30.6\%から100.0\%へ向上した（表~\ref{tab:mecab}）。
+改善語数279語、悪化語数0語。
+代表的な改善例：「生成エンタルピー」（Default 2トークン$\to$Custom 1トークン）、
+「ニッケル基超合金」（7トークン$\to$1トークン）。
+
+\begin{table}[t]
+\centering
+\caption{MeCab材料辞書によるトークン化率の変化。
+402語の材料用語に対する単一トークン化率を示す
+（EVID-20260619-1335-mecab-dict）。}
+\label{tab:mecab}
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+指標 & デフォルト & カスタム辞書 \\
+\midrule
+単一トークン化率 & 30.6\% (123/402) & 100.0\% (402/402) \\
+改善語数 & --- & 279 \\
+悪化語数 & --- & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 ablation studyでは、辞書の除去は全体で$-$6.7\,ppの低下を引き起こし、
 Very Hard帯では38.5\%から15.8\%へ$-$22.7\,ppの低下となった
@@ -267,15 +393,18 @@ Easy・Medium帯では低下が観察されなかったことから、
 
 \subsection{SQLGuard}
 
-sqlglotによるAST解析に基づき、
+sqlglot~\cite{sqlglot2023}によるAST解析に基づき、
 生成SQLの安全性と整合性を検証する。
 検証項目はカラム存在確認、テーブル存在確認、
-JOIN条件の整合性等14項目からなる。
+FK整合性JOIN検証、複文検出、
+SQLインジェクション検出等14項目からなる。
 
 ablation studyでは、SQLGuardの除去による精度低下は$-$0.2\,ppであった
 （表~\ref{tab:ablation}; EVID-20260619-1335-ablation-noguard）。
-この結果について、リランカーが先に不正なSQL候補を低スコアにするため、
-SQLGuardが拒否すべきSQLが選択されにくい状況が生じていると考えられる。
+リランカーが先に不正なSQL候補を低スコアにするため、
+SQLGuardが拒否すべきSQLが選択されにくい状況が生じている。
+ただし、SQLGuardはセキュリティ上の安全網として機能しており、
+精度寄与とは独立した価値を持つ。
 
 \subsection{ハイブリッドリランカー}
 
@@ -295,7 +424,7 @@ $+$7.7\,ppの差が観察された
 ただし、このA/B評価はablation studyとは異なるランであり、
 直接的な比較には注意を要する。
 
-\subsection{日本語Cross-Encoderの比較}
+\subsubsection{日本語Cross-Encoderの比較}
 
 Few-shot例選択のCross-Encoderについて、
 英語モデル（ms-marco-MiniLM-L-6-v2）と
@@ -307,46 +436,231 @@ $-$4.3\,ppの差でms-marcoが優位であった
 Few-shot例にSQLコード（英語）が含まれるため、
 英語に対するスコアリング能力がms-marcoの優位性に寄与していると考えられる。
 
-% ===================================================================
-\section{評価}
+\subsection{リペアループ}
+
+SQL実行エラーまたは結果の妥当性問題が検出された場合、
+エラーメッセージをLLM（GPT-5.5）にフィードバックし、
+最大3回のリペアを試行する。
+
+% =====================================================================
+\section{データベースと評価設計}
 \label{sec:evaluation}
 
-\subsection{データベース}
+\subsection{検証データベース}
 
 L1$_2$型金属間化合物を中心とする無機材料データベースを使用した。
-スキーマは30テーブルからなり、
-material\_entryテーブルに1{,}470件、
-compositionテーブルに2{,}940件、
-calculated\_propertyテーブルに4{,}410件のレコードを含む
-（EVID-20260619-1335-db-schema）。
+スキーマは30テーブルからなり（図~\ref{fig:er}）、
+\texttt{material\_entry}を中心に
+組成・構造・安定性・計算特性・電子構造・機械特性・表面特性等の
+テーブルがFK関係で接続される。
+主要な統計を表~\ref{tab:db_stats}に示す。
+
+\begin{table}[t]
+\centering
+\caption{検証データベースの構成
+（EVID-20260619-1335-db-schema）。}
+\label{tab:db_stats}
+\small
+\begin{tabular}{@{}lr@{}}
+\toprule
+項目 & 件数 \\
+\midrule
+テーブル数 & 30 \\
+\texttt{material\_entry} & 1{,}470 \\
+\texttt{composition} & 2{,}940 \\
+\texttt{calculated\_property} & 4{,}410 \\
+プロトタイプ種類 & 5 (L1$_2$, B2, NaCl, NiAs, BiF$_3$) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure*}[htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  >=Stealth,
+  every node/.style={font=\scriptsize},
+  entity/.style={rectangle, draw, rounded corners=2pt,
+    minimum height=0.6cm, minimum width=1.8cm, align=center,
+    text width=1.8cm, font=\scriptsize},
+  core/.style={entity, fill=blue!15, line width=0.8pt},
+  prop/.style={entity, fill=green!12},
+  master/.style={entity, fill=orange!15},
+  junction/.style={entity, fill=yellow!15},
+  electronic/.style={entity, fill=cyan!12},
+  mechanical/.style={entity, fill=red!8},
+  surface/.style={entity, fill=purple!10},
+  phase/.style={entity, fill=teal!12},
+  experiment/.style={entity, fill=pink!15},
+  defect/.style={entity, fill=brown!12},
+  fk/.style={->, thick, color=gray!60, >=Stealth},
+  grouplabel/.style={font=\footnotesize\bfseries, text=gray!50},
+]
+
+% Row 0: Master Tables
+\node[master] at (-6, 5.5) (sg) {space\_group\\{\tiny H-M, crystal sys}};
+\node[master] at (-2, 5.5) (proto) {prototype\_\\definition\\{\tiny Strukturbericht}};
+\node[master] at (2, 5.5) (elem) {element\\{\tiny Z, mass, $\chi$}};
+\node[prop] at (5.5, 5.5) (eprop) {element\_property\\{\tiny property, value}};
+
+% Row 1: Core entities
+\node[core, minimum width=2.4cm, minimum height=0.8cm, line width=1.2pt,
+      font=\scriptsize\bfseries] at (0, 3) (me) {material\_entry\\{\tiny (PK: entry\_id)}};
+\node[core] at (-5, 3) (comp) {composition\\{\tiny element, fraction}};
+\node[core] at (-2.5, 4.2) (struct) {structure\\{\tiny prototype, lattice}};
+\node[core] at (2.5, 4.2) (ps) {phase\_stability\\{\tiny $E_f$, $E_{hull}$}};
+\node[core] at (5, 3) (calc) {calculation\\{\tiny method, functional}};
+\node[prop] at (8.5, 3) (cprop) {calculated\_property\\{\tiny name, value, unit}};
+
+% Row 2: Application/Literature + Electronic
+\node[master] at (-8, 1.5) (appdom) {application\_domain\\{\tiny domain, hierarchy}};
+\node[junction] at (-5.5, 1.5) (matapp) {material\_\\application\\{\tiny relevance}};
+\node[experiment] at (-8, 0) (litref) {literature\_\\reference\\{\tiny DOI, journal}};
+\node[junction] at (-5.5, 0) (matref) {material\_reference\\{\tiny context}};
+
+\node[electronic] at (5, 1.5) (bs) {band\_structure\\{\tiny gap, CBM, VBM}};
+\node[electronic] at (8.5, 1.5) (dos) {density\_of\_states\\{\tiny DOS@$E_F$, metallic}};
+
+% Row 3: Experimental + Mechanical
+\node[experiment] at (-8, -1.5) (expmt) {experimental\_\\measurement\\{\tiny method, T, P}};
+\node[experiment] at (-5.5, -1.5) (mprop) {measured\_property\\{\tiny name, value}};
+
+\node[mechanical] at (1.5, 0) (elastic) {elastic\_tensor\\{\tiny $B$, $G$, $E$, $\nu$}};
+\node[mechanical] at (5, 0) (mag) {magnetic\_property\\{\tiny $M$, ordering, $T_C$}};
+\node[mechanical] at (8.5, 0) (therm) {thermal\_property\\{\tiny $\Theta_D$, $\kappa$, $C_v$}};
+
+% Row 4: Synthesis/Defect + Surface
+\node[defect] at (-8, -3) (synm) {synthesis\_method\\{\tiny name, category}};
+\node[junction] at (-5.5, -3) (matsyn) {material\_synthesis\\{\tiny T, duration, atm}};
+\node[defect] at (-2, -3) (deftype) {defect\_type\\{\tiny vacancy, antisite}};
+\node[junction] at (1.5, -3) (matdef) {material\_defect\\{\tiny $E_f$, site}};
+
+\node[surface] at (5, -1.5) (surf) {surface\_energy\\{\tiny $(hkl)$, $\gamma$, $\phi$}};
+\node[surface] at (8.5, -1.5) (gb) {grain\_boundary\\{\tiny $\Sigma$, $E_{GB}$}};
+
+% Row 5: Phase/Alloy
+\node[phase] at (1.5, -4.5) (pde) {phase\_diagram\_entry\\{\tiny hull, decomp}};
+\node[phase] at (5, -4.5) (alloy) {alloy\_system\\{\tiny name, components}};
+\node[junction] at (8.5, -4.5) (ma_alloy) {material\_alloy\_\\system\\{\tiny phase, comp type}};
+
+% FK Arrows: Core -> material_entry
+\draw[fk] (comp) -- (me);
+\draw[fk] (struct) -- (me);
+\draw[fk] (ps) -- (me);
+\draw[fk] (calc) -- (me);
+
+% FK: to material_entry
+\draw[fk] (matapp) -- (me);
+\draw[fk] (matref) -- (me);
+\draw[fk] (expmt.east) -- ++(1.5,0) |- ([yshift=-0.1cm]me.west);
+\draw[fk] (bs) -- (me);
+\draw[fk] (dos.south west) -- (me);
+\draw[fk] (elastic) -- (me);
+\draw[fk] (mag.north) -- (me);
+\draw[fk] (therm.north west) -- (me);
+\draw[fk] (surf.north west) -- (me);
+\draw[fk] (gb.north) -- ([xshift=0.3cm]me.south east);
+\draw[fk] (matsyn.north) -- ([xshift=-0.5cm]me.south);
+\draw[fk] (matdef.north) -- ([xshift=0.2cm]me.south);
+\draw[fk] (pde.north) -- ([xshift=-0.3cm]me.south);
+\draw[fk] (ma_alloy.north west) -- (me);
+
+% FK: calculation children
+\draw[fk] (cprop) -- (calc);
+\draw[fk] (bs) -- (calc);
+\draw[fk] (dos.west) -- (calc);
+\draw[fk] (elastic.north east) -- (calc);
+\draw[fk] (therm.north) -- (calc);
+
+% FK: master table references
+\draw[fk] (eprop) -- (elem);
+\draw[fk] (matref) -- (litref);
+\draw[fk] (expmt) -- (litref);
+\draw[fk] (matsyn) -- (synm);
+\draw[fk] (matsyn) -- (litref);
+\draw[fk] (matdef) -- (deftype);
+\draw[fk] (matapp) -- (appdom);
+\draw[fk] (ma_alloy) -- (alloy);
+\draw[fk] (mprop) -- (expmt);
+\draw[fk] (matdef.north west) to[bend right=15] (elem.south east);
+
+% Self-referencing FK
+\draw[->, thick, color=red!60] (appdom.north) to[out=130,in=50,looseness=4]
+  node[above, font=\tiny, text=red!60] {parent} (appdom.north east);
+
+% Group Labels
+\node[grouplabel] at (-2, 6.3) {マスタテーブル};
+\node[grouplabel] at (0, 4.8) {コアエンティティ};
+\node[grouplabel] at (-7, -4.2) {合成・欠陥};
+\node[grouplabel] at (7, -2.5) {表面・界面};
+\node[grouplabel] at (5, -5.3) {相図・合金系};
+\node[grouplabel] at (-7, 2.5) {文献・応用};
+\node[grouplabel] at (7, 2.5) {電子構造};
+\node[grouplabel] at (5, -0.8) {機械的特性};
+
+\end{tikzpicture}%
+}% end resizebox
+\caption{検証データベースの30テーブルER図。
+  中央の\texttt{material\_entry}を軸に、組成・構造・安定性等のコアテーブルが直接FKで接続される。
+  計算特性・電子構造等は直接FKと\texttt{calculation}経由の2経路を持つ。
+  矢印はFK参照方向を示す。}
+\label{fig:er}
+\end{figure*}
 
 \subsection{評価クエリ}
 
-著者が設計した100件のクエリを使用した。
-難易度分布はEasy 20件、Medium 30件、Hard 30件、Very Hard 20件である
+著者が設計した100件のクエリを使用した（表~\ref{tab:query_design}）。
+各クエリにはgold SQL、期待される実行結果（JSON）、
+必要テーブル、JOIN経路が付与されている
 （EVID-20260619-1335-dataset-author）。
-各クエリにはgold SQL、期待される実行結果、
-必要テーブル、JOIN経路が付与されている。
+
+\begin{table}[t]
+  \centering
+  \caption{評価クエリ設計（全100件）。}
+  \label{tab:query_design}
+  \small
+  \begin{tabular}{@{}lccl@{}}
+    \toprule
+    難易度 & 件数 & テーブル数 & 代表的内容 \\
+    \midrule
+    Easy & 20 & 1--2 & 単一条件検索 \\
+    Medium & 30 & 3 & 構造+組成+安定性横断 \\
+    Hard & 30 & 4 & 複合条件・集約 \\
+    Very Hard & 20 & 5--6 & 材料設計クエリ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 \subsection{評価指標}
 
 行一致精度（row-level recall）を主指標とする。
-生成SQLの実行結果とgold SQLの実行結果を比較し、
-行レベルでの一致率を算出する。
+生成SQLの実行結果とgold SQLの実行結果を
+共通カラムで射影した上で行レベルの一致率を算出する：
+\begin{equation}
+  \text{accuracy}(q) = \frac{|R_\text{gen}^{C} \cap R_\text{gold}^{C}|}{|R_\text{gold}^{C}|}
+  \label{eq:column_aware}
+\end{equation}
+ここで$C = \text{cols}(R_\text{gen}) \cap \text{cols}(R_\text{gold})$は
+共通カラム集合、$R^C$は列集合$C$への射影である。
+本指標は再現率ベースであり、
+生成SQLがgoldより多くの行を返してもペナルティがない。
+評価時にはgold SQLと生成SQLの両方にLIMIT 10{,}000を統一的に適用する。
 
-\subsection{Ablation study}
+% =====================================================================
+\section{Ablation Study}
+\label{sec:ablation}
 
 7つの条件でablation studyを実施した（表~\ref{tab:ablation}）。
 各条件では1つの構成要素を無効化し、
 100件全てのクエリで精度を測定した。
-合計700回の評価を実施した。
+合計700回の評価を実施した
+（EVID-20260619-1335-ablation-json）。
 
 \begin{table}[t]
 \centering
 \caption{Ablation study結果（100件$\times$7条件 = 700評価）。
 $\Delta$はfull条件からの精度変化（pp）。
-全数値は\texttt{paper\_data.json}から取得
-（EVID-20260619-1335-ablation-json）。
+全数値は\texttt{paper\_data.json}から取得。
 LLMの非決定性により、条件間の差異には約1--2\,ppの変動が含まれうる。}
 \label{tab:ablation}
 \small
@@ -382,7 +696,28 @@ no\_reranker  &    0.0  & $-$6.7  & $-$6.2  & $-$1.1  \\
 \end{tabular}
 \end{table}
 
-% ===================================================================
+\begin{table}[t]
+\centering
+\caption{各条件の平均レイテンシ（秒/クエリ）。
+$n$-best = 1への変更はレイテンシを60\%低減するが精度は$-$0.2\,pp。}
+\label{tab:latency}
+\small
+\begin{tabular}{@{}lr@{}}
+\toprule
+条件 & レイテンシ (s) \\
+\midrule
+full & 33.1 \\
+no\_fewshot & 64.1 \\
+no\_dict & 56.5 \\
+no\_reranker & 25.7 \\
+no\_guard & 39.4 \\
+no\_nbest & 13.0 \\
+no\_graph & 34.2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% =====================================================================
 \section{考察}
 \label{sec:discussion}
 
@@ -392,13 +727,10 @@ Few-shot例の除去は全構成要素の中で最も大きな精度低下
 （$-$12.5\,pp）を引き起こした（表~\ref{tab:ablation}）。
 この低下は全難易度帯で観察され、
 Easy帯でも$-$5.0\,ppの低下が確認された（表~\ref{tab:ablation-detail}）。
-
-LLMはfew-shot例からSQL生成のパターン
-（テーブル名、JOIN順序、カラム名の使い方）を
-in-context learningにより獲得しており、
-few-shot例なしではスキーマ情報のみからSQLを推論する必要が生じる。
-Medium帯の$-$16.5\,ppが最も顕著であったことから、
+Medium帯の$-$16.5\,ppが最も大きく、
 中程度の複雑さのクエリにおけるfew-shot例への依存度が高い。
+Few-shot例なしではレイテンシも33.1\,sから64.1\,sへ増加した（表~\ref{tab:latency}）。
+これはLLMが試行錯誤的にSQLを生成するためと考えられる。
 
 \subsection{材料ドメイン辞書の寄与}
 
@@ -431,17 +763,57 @@ Very Hard帯では3候補全てが不正確な場合が多く、
 
 SQLGuardについては、リランカーが先に同等の選別機能を果たしているため、
 追加的な効果が観察されにくい状況にある。
-ただし、SQLGuardはセキュリティ上の安全網として機能しており、
-精度寄与とは独立した価値を持つ。
+セキュリティ上の安全網としての価値は独立に存在する。
 
 $n$-best = 1への変更は精度をほぼ維持しつつ
-レイテンシを33.1\,sから13.0\,sへ低減した。
+レイテンシを33.1\,sから13.0\,sへ低減した（表~\ref{tab:latency}）。
 コスト効率を重視する場合の有力な選択肢である。
 
 Steiner木については、現在の30テーブル規模では
 大半のクエリが5つのコアテーブルで完結するため効果が限定的であった。
-テーブル数がさらに増加した場合（例：OQMD統合後）に
+FKイントロスペクションに基づくアーキテクチャであるため、
+テーブル数が増加した場合（例：OQMD統合後）や
+別の正規化RDB（Materials Project~\cite{jain2013mp}、
+AFLOW~\cite{curtarolo2012aflow}）への適用時に
 効果が顕在化すると予想される。
+
+\subsection{関連システムとの比較}
+
+表~\ref{tab:related_comparison}に関連システムとの比較を示す。
+本手法は「正規化RDB + 材料特化 + FKグラフ走査」の組合せで、
+既存アプローチがカバーしない領域を埋める。
+
+\begin{table*}[htbp]
+  \centering
+  \caption{関連する材料NLP / T2SQL / オントロジーシステムとの比較。}
+  \label{tab:related_comparison}
+  \small
+  \begin{tabularx}{\textwidth}{llccccX}
+    \toprule
+    種別 & 名称 & \shortstack{スキーマ\\認識} & \shortstack{正規化\\RDB} & \shortstack{材料\\特化} & \shortstack{NL$\to$\\クエリ} & 主な差異 \\
+    \midrule
+    \multicolumn{7}{l}{\textit{T2SQLベンチマーク}} \\
+    データセット & Spider~\cite{yu2018spider} & あり & あり & なし & SQL & 汎用ベンチマーク \\
+    データセット & BIRD~\cite{li2024bird} & あり & あり & なし & SQL & 大規模実データ \\
+    \midrule
+    \multicolumn{7}{l}{\textit{T2SQL手法}} \\
+    手法 & DAIL-SQL~\cite{gao2023dail} & あり & あり & なし & SQL & スケルトン選択 \\
+    手法 & RAT-SQL~\cite{wang2020ratsql} & あり & あり & なし & SQL & 関係認識符号化 \\
+    手法 & RESDSQL~\cite{li2023resdsql} & あり & あり & なし & SQL & スキーマリンク分離 \\
+    手法 & SchemaGraphSQL~\cite{safdarian2026schemagraphsql} & あり & あり & なし & SQL & パスファインディング \\
+    \midrule
+    \multicolumn{7}{l}{\textit{材料情報学}} \\
+    手法 & MKNA~\cite{zhuang2026mkna} & なし & なし & あり & API & エージェント \\
+    手法 & OptiMat~\cite{hu2026optimat} & なし & なし & あり & API & オンデマンドDFT \\
+    \midrule
+    \multicolumn{7}{l}{\textit{オントロジー}} \\
+    手法 & SuperCon~\cite{ishii2023supercon} & あり & なし & あり & SPARQL & RDFオントロジー \\
+    手法 & PoLyInfo~\cite{ishii2024polyinfo} & あり & なし & あり & SPARQL & BFO準拠 \\
+    \midrule
+    手法 & \textbf{本手法} & \textbf{あり} & \textbf{あり} & \textbf{あり} & \textbf{SQL} & FK走査 + 材料辞書 \\
+    \bottomrule
+  \end{tabularx}
+\end{table*}
 
 \subsection{制約と今後の課題}
 
@@ -458,9 +830,46 @@ Steiner木については、現在の30テーブル規模では
     100件の著者設計クエリは材料研究の主要な検索パターンを
     カバーするよう設計したが、
     実運用での多様なクエリパターンを網羅するものではない。
+  \item \textbf{gold SQLの検証}：
+    gold SQL・期待結果は著者1名が作成し、
+    第三者による独立検証は行っていない。
+  \item \textbf{用語辞書のカバレッジ}：
+    492語の辞書はL1$_2$探索に特化しており、
+    Heusler型やPerovskite型等の拡張には手動登録が必要である。
+  \item \textbf{ベースラインの公平性}：
+    リペアループ、Few-Shot RAG、SQLGuard等は
+    提案手法のみに適用されており、
+    各要素の寄与はablation studyで分離済みだが、
+    他手法（DIN-SQL、DAIL-SQL等）との
+    同一DB上の比較は未実施である。
 \end{enumerate}
 
-% ===================================================================
+\subsection{今後の展望}
+
+\begin{enumerate}
+  \item \textbf{大規模データ検証}：
+    OQMD単元素データの統合により1万件規模でのSteiner木探索と
+    SQL生成精度の検証を行う。
+  \item \textbf{生成エンタルピー計算対応}：
+    Text-to-SQLパイプラインで計算指示を
+    受け取れるインターフェースの実装。
+  \item \textbf{AI4Sエージェント統合}：
+    T2SQL手法をMCPプロトコルやfunction calling経由で
+    自律材料探索エージェントのツールとして組み込む。
+  \item \textbf{CALPHAD連携}：
+    Schema Graph走査でRDBから候補を絞り込んだ後、
+    CALPHADの自由エネルギー計算により
+    温度依存相安定性を判定する二段階フロー。
+  \item \textbf{用語辞書の体系的拡張}：
+    スキーマメタデータからの半自動生成に移行し、
+    新テーブル追加時の辞書保守コストを削減する。
+  \item \textbf{評価指標の多軸化}：
+    SELECT列適合率、JOIN経路一致率、
+    Top-k accuracy等を分離評価し、
+    エラーの原因特定を容易にする。
+\end{enumerate}
+
+% =====================================================================
 \section{結論}
 \label{sec:conclusion}
 
@@ -470,7 +879,7 @@ Steiner木については、現在の30テーブル規模では
 
 全構成要素を有効にしたfull条件での行一致精度は80.6\%であった
 （EVID-20260619-1335-ablation-full）。
-ablation studyにより、
+Ablation studyにより、
 few-shot例（$-$12.5\,pp）、
 材料ドメイン辞書（$-$6.7\,pp）、
 ハイブリッドリランカー（$-$4.1\,pp）が
@@ -478,57 +887,170 @@ few-shot例（$-$12.5\,pp）、
 材料ドメイン辞書はVery Hard帯で$-$22.7\,ppの低下を引き起こし、
 ドメイン特化の用語マッピングが複雑クエリにおいて不可欠であることを示した。
 
-なお、本評価は単一ランの結果であり、
+FKイントロスペクションに基づくSteiner木アーキテクチャは、
+任意の正規化材料RDB（OQMD、Materials Project、AFLOW等）への
+自動適応が可能であり、
+Materials Integration（MInt）システム~\cite{minamoto2020mint}や
+provenance管理システムpinax~\cite{minamoto2026pinax}への
+適用が期待される。
+
+本評価は単一ランの結果であり、
 LLMの非決定性に起因する約1--2\,ppの変動を含む可能性がある。
 
-% ===================================================================
+% =====================================================================
+\section*{謝辞}
+
+L1$_2$型金属間化合物のDFT計算データは
+Open Quantum Materials Database（OQMD）の値を参考に構築した合成検証データである。
+キュリー温度・$\Sigma 5$粒界エネルギー・合成法・文献参照等の属性は
+OQMDに存在せず、検証用に生成したものである。
+OQMDの開発・維持管理にあたるNorthwestern大学Wolvertonグループに感謝する。
+本研究はNIMSの支援を受けた。
+
+% =====================================================================
 \section*{データ・コード利用可能性}
 
-評価データセット、ablation結果（JSON）、
-MeCab材料辞書、および全スクリプトは
-リポジトリ内に含まれる。
+評価データセット（100件のgold SQL・期待結果）、
+ablation結果（7条件$\times$100件のJSON）、
+MeCab材料辞書（492語、コンパイル済み.dic）、
+日本語reranker比較結果、
+および全スクリプトはリポジトリ内に含まれる。
 論文中の全数値は\texttt{scripts/compute\_all\_figures.py}により
 \texttt{paper/paper\_data.json}へ出力され、
 手入力の数値は含まない。
+ユニットテスト134件が全PASSを達成した。
 
-% ===================================================================
-\begin{thebibliography}{10}
+% =====================================================================
+\section*{Author Contributions}
+
+\textbf{Satoshi Minamoto}：研究構想、手法設計、ソフトウェア実装、
+データベース構築、実験実施、論文執筆。
+
+% =====================================================================
+\bibliographystyle{elsarticle-num}
+
+\begin{thebibliography}{30}
+
+\bibitem{saal2013oqmd}
+J.E.~Saal, S.~Kirklin, M.~Aykol, B.~Meredig, C.~Wolverton,
+Materials design and discovery with high-throughput density functional theory: {The Open Quantum Materials Database (OQMD)},
+JOM 65 (2013) 1501--1509.
+
+\bibitem{kirklin2015oqmd}
+S.~Kirklin, J.E.~Saal, B.~Meredig, A.~Thompson, J.W.~Doak, M.~Aykol, S.~R\"uhl, C.~Wolverton,
+The {Open Quantum Materials Database (OQMD)}: Assessing the accuracy of {DFT} formation energies,
+npj Comput.\ Mater.\ 1 (2015) 15010.
+
+\bibitem{jain2013mp}
+A.~Jain, S.P.~Ong, G.~Hautier, W.~Chen, W.D.~Richards, S.~Dacek, S.~Cholia, D.~Gunter, D.~Skinner, G.~Ceder, K.A.~Persson,
+Commentary: {The Materials Project}: A materials genome approach to accelerating materials innovation,
+APL Mater.\ 1 (2013) 011002.
+
+\bibitem{curtarolo2012aflow}
+S.~Curtarolo, W.~Setyawan, G.L.W.~Hart, M.~Jahnatek, R.V.~Chepulskii, R.H.~Taylor, S.~Wang, J.~Xue, K.~Yang, O.~Levy, M.J.~Mehl, H.T.~Stokes, D.O.~Demchenko, D.~Morgan,
+{AFLOW}: An automatic framework for high-throughput materials discovery,
+Comput.\ Mater.\ Sci.\ 58 (2012) 218--226.
+
+\bibitem{draxl2019nomad}
+C.~Draxl, M.~Scheffler,
+{NOMAD}: {The FAIR} concept for big data-driven materials science,
+MRS Bull.\ 43 (2018) 676--682.
+
 \bibitem{yu2018spider}
-T.~Yu, R.~Zhang, K.~Yang, M.~Yasunaga, D.~Wang, Z.~Li, J.~Ma, I.~Li,
-Q.~Yao, S.~Roman, Z.~Zhang, D.~Radev,
-Spider: A large-scale human-labeled dataset for complex and cross-database
-semantic parsing and text-to-SQL task,
-in: Proc. EMNLP, 2018, pp. 3911--3921.
+T.~Yu, R.~Zhang, K.~Yang, M.~Yasunaga, D.~Wang, Z.~Li, J.~Ma, I.~Li, Q.~Yao, S.~Roman, Z.~Zhang, D.~Radev,
+Spider: A large-scale human-labeled dataset for complex and cross-database semantic parsing and text-to-SQL task,
+in: Proc.\ EMNLP, 2018, pp.~3911--3921.
 
 \bibitem{li2024bird}
-J.~Li, B.~Hui, G.~Qu, J.~Yang, B.~Li, B.~Li, B.~Wang, B.~Qin, R.~Geng,
-N.~Huo, X.~Zhou, C.~Ma, G.~Li, K.~Chang, F.~Huang, R.~Cheng, Y.~Li,
-Can LLM already serve as a database interface? A BIg bench for
-large-scale database grounded text-to-SQL,
-in: Proc. NeurIPS, 2024.
+J.~Li, B.~Hui, G.~Qu, J.~Yang, B.~Li, B.~Li, B.~Wang, B.~Qin, R.~Geng, N.~Huo, X.~Zhou, C.~Ma, G.~Li, K.~Chang, F.~Huang, R.~Cheng, Y.~Li,
+Can LLM already serve as a database interface? A BIg bench for large-scale database grounded text-to-SQL,
+in: Proc.\ NeurIPS, 2024.
 
 \bibitem{pourreza2024dinsql}
 M.~Pourreza, D.~Rafiei,
-DIN-SQL: Decomposed in-context learning of text-to-SQL with
-self-correction,
-in: Proc. NeurIPS, 2024.
+DIN-SQL: Decomposed in-context learning of text-to-SQL with self-correction,
+in: Proc.\ NeurIPS, 2024.
 
-\bibitem{gao2024dailsql}
+\bibitem{gao2023dail}
 D.~Gao, H.~Wang, Y.~Li, X.~Sun, Y.~Qian, B.~Ding, J.~Zhou,
 Text-to-SQL empowered by large language models: A benchmark evaluation,
-in: Proc. VLDB, 2024.
+in: Proc.\ VLDB, 2024.
+
+\bibitem{wang2020ratsql}
+B.~Wang, R.~Shin, X.~Liu, O.~Polozov, M.~Richardson,
+RAT-SQL: Relation-aware schema encoding and linking for text-to-SQL parsers,
+in: Proc.\ ACL, 2020, pp.~7567--7578.
+
+\bibitem{li2023resdsql}
+H.~Li, J.~Zhang, C.~Li, H.~Chen,
+RESDSQL: Decoupling schema linking and skeleton parsing for text-to-SQL,
+in: Proc.\ AAAI, 2023.
+
+\bibitem{safdarian2026schemagraphsql}
+F.~Safdarian, S.~Kacupaj,
+SchemaGraphSQL: Schema-graph-based text-to-SQL with path finding,
+in: Proc.\ NAACL, 2026.
 
 \bibitem{gupta2022matscibert}
-T.~Gupta, M.~Zaki, N.~M.~Anoop~Krishnan, M.~Mausam,
-MatSciBERT: A materials domain language model for text mining and
-information extraction,
-npj Comput. Mater. 8 (2022) 102.
+T.~Gupta, M.~Zaki, N.M.A.~Krishnan, M.~Mausam,
+MatSciBERT: A materials domain language model for text mining and information extraction,
+npj Comput.\ Mater.\ 8 (2022) 102.
 
 \bibitem{walker2021matbert}
 N.~Walker, J.~Dagdelen, K.~Cruse, A.~Jain, A.~Ceder,
-Extracting structured seed-mediated gold nanorod growth procedures
-from scientific text with MatBERT,
+Extracting structured seed-mediated gold nanorod growth procedures from scientific text with MatBERT,
 Digital Discovery 1 (2022) 413--427.
+
+\bibitem{zhuang2026mkna}
+Y.~Zhuang et al.,
+MKNA: Materials knowledge navigation agent,
+Nat.\ Comput.\ Sci.\ (2026).
+
+\bibitem{hu2026optimat}
+Y.~Hu et al.,
+OptiMat: On-demand DFT-driven materials optimization,
+npj Comput.\ Mater.\ (2026).
+
+\bibitem{ishii2023supercon}
+M.~Ishii et al.,
+SuperCon: Linked data platform for superconducting materials,
+J.\ Phys.: Condens.\ Matter (2023).
+
+\bibitem{ishii2024polyinfo}
+M.~Ishii et al.,
+PoLyInfo: BFO-compliant polymer ontology,
+J.\ Chem.\ Inf.\ Model.\ (2024).
+
+\bibitem{salton1988tfidf}
+G.~Salton, C.~Buckley,
+Term-weighting approaches in automatic text retrieval,
+Inf.\ Process.\ Manag.\ 24 (1988) 513--523.
+
+\bibitem{brown2020fewshot}
+T.~Brown et al.,
+Language models are few-shot learners,
+in: Proc.\ NeurIPS, 2020.
+
+\bibitem{networkx2008}
+A.A.~Hagberg, D.A.~Schult, P.J.~Swart,
+Exploring network structure, dynamics, and function using {NetworkX},
+in: Proc.\ SciPy, 2008.
+
+\bibitem{sqlglot2023}
+T.~Palantir,
+sqlglot: Python SQL parser and transpiler, 2023.
+\url{https://github.com/tobymao/sqlglot}
+
+\bibitem{minamoto2020mint}
+S.~Minamoto,
+Materials integration system for process-structure-property-performance chains,
+Sci.\ Technol.\ Adv.\ Mater.\ (2020).
+
+\bibitem{minamoto2026pinax}
+S.~Minamoto,
+pinax: Provenance-tracking analysis workflow management system,
+(2026).
+
 \end{thebibliography}
 
 \end{document}
