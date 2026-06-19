@@ -345,3 +345,22 @@ CREATE INDEX idx_gb_entry ON grain_boundary(entry_id);
 CREATE INDEX idx_phase_entry ON phase_diagram_entry(entry_id);
 CREATE INDEX idx_mat_alloy_entry ON material_alloy_system(entry_id);
 CREATE INDEX idx_mat_alloy_system ON material_alloy_system(alloy_system_id);
+
+-- === Pure Element Reference (Table 31) ===
+-- Ground-state DFT energies for formation enthalpy calculation
+-- Source: OQMD (https://oqmd.org)
+
+CREATE TABLE pure_element_reference (
+    pure_ref_id SERIAL PRIMARY KEY,
+    element_symbol VARCHAR(5) NOT NULL UNIQUE REFERENCES element(symbol),
+    oqmd_entry_id INTEGER,
+    ground_state_spacegroup VARCHAR(30),
+    energy_per_atom DOUBLE PRECISION,  -- eV/atom (delta_e from OQMD)
+    volume_per_atom DOUBLE PRECISION,  -- Angstrom^3/atom
+    stability DOUBLE PRECISION,  -- eV/atom above hull
+    band_gap DOUBLE PRECISION,  -- eV
+    n_polymorphs INTEGER,
+    source TEXT DEFAULT 'OQMD'
+);
+
+CREATE INDEX idx_pure_ref_symbol ON pure_element_reference(element_symbol);

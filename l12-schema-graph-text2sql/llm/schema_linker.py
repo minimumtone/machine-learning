@@ -62,6 +62,11 @@ CONDITION_TABLE_MAP: dict[str, list[str]] = {
     "calculation_method": ["calculation"],
     "phase_diagram": ["phase_diagram_entry"],
     "alloy_system": ["material_alloy_system", "alloy_system"],
+    "pure_element": ["pure_element_reference"],
+    "reference_energy": ["pure_element_reference"],
+    "ground_state": ["pure_element_reference"],
+    "polymorph": ["pure_element_reference"],
+    "formation_enthalpy": ["phase_stability", "pure_element_reference"],
 }
 
 CONDITION_COLUMN_MAP: dict[str, list[str]] = {
@@ -124,6 +129,25 @@ CONDITION_COLUMN_MAP: dict[str, list[str]] = {
     "calculation_method": ["calculation.method"],
     "phase_diagram": ["phase_diagram_entry.is_on_hull", "phase_diagram_entry.hull_distance"],
     "alloy_system": ["alloy_system.system_name", "alloy_system.num_components"],
+    "pure_element": [
+        "pure_element_reference.element_symbol",
+        "pure_element_reference.energy_per_atom",
+        "pure_element_reference.ground_state_spacegroup",
+        "pure_element_reference.n_polymorphs",
+    ],
+    "reference_energy": [
+        "pure_element_reference.energy_per_atom",
+        "pure_element_reference.element_symbol",
+    ],
+    "ground_state": [
+        "pure_element_reference.ground_state_spacegroup",
+        "pure_element_reference.energy_per_atom",
+    ],
+    "polymorph": ["pure_element_reference.n_polymorphs"],
+    "formation_enthalpy": [
+        "phase_stability.formation_energy_per_atom",
+        "pure_element_reference.energy_per_atom",
+    ],
 }
 
 # Multi-hop JOIN definitions (table -> prerequisite tables + join clause)
@@ -137,6 +161,7 @@ MULTI_HOP_JOINS: dict[str, list[str]] = {
     "application_domain": ["material_application"],
     "measured_property": ["experimental_measurement"],
     "alloy_system": ["material_alloy_system"],
+    "pure_element_reference": ["composition", "element"],
 }
 
 BASE_TABLE = "material_entry"

@@ -39,7 +39,7 @@ Create a new LaTeX paper and PDF for "Graph-Constrained Text-to-SQL Pipeline for
 | no_nbest delta | -0.2pp | EVID-20260619-1335-ablation-nonbest |
 | no_graph delta | -0.2pp | EVID-20260619-1335-ablation-nograph |
 | Reranker A/B delta (90q) | +7.7pp | EVID-20260619-1335-reranker-eval |
-| JP reranker VH delta | -4.3pp | EVID-20260619-1335-jp-reranker |
+| JP reranker VH delta | -4.4pp | EVID-20260619-1335-jp-reranker |
 | MeCab single-token rate | 100.0% (vs 30.6% default) | EVID-20260619-1335-mecab-dict |
 
 ## Current valid scripts / notebooks
@@ -61,6 +61,17 @@ Create a new LaTeX paper and PDF for "Graph-Constrained Text-to-SQL Pipeline for
 - Old compute_paper_figures.py (SUPERSEDED by compute_all_figures.py)
 - Old t2sql_materials_paper.tex/pdf (to be deleted per user request)
 - gpt-4o-mini (DO-NOT-USE per user instruction)
+
+## Pure element reference data
+
+- 89 elements from OQMD ground-state calculations [EVID-20260602-0045-oqmd-pure-elements]
+- Table: `pure_element_reference` (element_symbol FK → element.symbol)
+- Each element: energy_per_atom, volume_per_atom, ground_state_spacegroup, stability, band_gap, n_polymorphs
+- Source: OQMD REST API v1 (https://oqmd.org/oqmdapi/formationenergy?filter=ntypes=1)
+- 3,212 polymorphs total, lowest delta_e per element selected as ground state
+- View: `formation_enthalpy` computes corrected formation enthalpy using pure element references
+- DB total: 31 tables, 1559 material entries (1470 compounds + 89 pure elements)
+- Schema graph: 31 tables, 204 columns, 70 FK edges
 
 ## Remaining uncertainties
 
