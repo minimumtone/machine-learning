@@ -1,0 +1,526 @@
+word_ja,word_en,category
+鋼,steel,金属材料・合金
+高強度鋼,high-strength steel,金属材料・合金
+ステンレス鋼,stainless steel,金属材料・合金
+炭素鋼,carbon steel,金属材料・合金
+合金鋼,alloy steel,金属材料・合金
+工具鋼,tool steel,金属材料・合金
+ステンレス,stainless,金属材料・合金
+アルミニウム合金,aluminum alloy,金属材料・合金
+アルミ合金,Al alloy,金属材料・合金
+銅合金,copper alloy,金属材料・合金
+真鍮,brass,金属材料・合金
+ブロンズ,bronze,金属材料・合金
+チタン合金,titanium alloy,金属材料・合金
+Ti 合金,Ti alloy,金属材料・合金
+マグネシウム合金,magnesium alloy,金属材料・合金
+Mg 合金,Mg alloy,金属材料・合金
+ニッケル合金,nickel alloy,金属材料・合金
+Ni 合金,Ni alloy,金属材料・合金
+超合金,superalloy,金属材料・合金
+耐熱合金,heat-resistant alloy,金属材料・合金
+金属間化合物,intermetallic compound,金属材料・合金
+間化合物,intermetallic,金属材料・合金
+L12 化合物,L12 compound,金属材料・合金
+B2 化合物,B2 compound,金属材料・合金
+ダイヤモンド,diamond,金属材料・合金
+炭化物,carbide,金属材料・合金
+酸化物,oxide,金属材料・合金
+窒化物,nitride,金属材料・合金
+けい化物,silicide,金属材料・合金
+硼化物,boride,金属材料・合金
+単結晶,single crystal,金属材料・合金
+多結晶,polycrystal,金属材料・合金
+ナノ結晶,nanocrystal,金属材料・合金
+微細結晶,fine crystal,金属材料・合金
+粗大結晶,coarse crystal,金属材料・合金
+アモルファス,amorphous,金属材料・合金
+非晶質,non-crystalline,金属材料・合金
+ガラス金属,metallic glass,金属材料・合金
+高entropy合金,high-entropy alloy,金属材料・合金
+HEA,HEA,金属材料・合金
+結晶構造,crystal structure,結晶構造・結晶学
+FCC,FCC,結晶構造・結晶学
+面心立方,face-centered cubic,結晶構造・結晶学
+BCC,BCC,結晶構造・結晶学
+体心立方,body-centered cubic,結晶構造・結晶学
+HCP,HCP,結晶構造・結晶学
+_hexagonal 密立,hexagonal close-packed,結晶構造・結晶学
+六方密立,hexagonal close-packed,結晶構造・結晶学
+B2 構造,B2 structure,結晶構造・結晶学
+L12 構造,L12 structure,結晶構造・結晶学
+D019 構造,D019 structure,結晶構造・結晶学
+ urat 構造,Laves structure,結晶構造・結晶学
+ラーブス構造,Laves structure,結晶構造・結晶学
+格子定数,lattice constant,結晶構造・結晶学
+格子パラメータ,lattice parameter,結晶構造・結晶学
+格子間,lattice spacing,結晶構造・結晶学
+対称性,symmetry,結晶構造・結晶学
+結晶系,crystal system,結晶構造・結晶学
+単位格子,unit cell,結晶構造・結晶学
+ブラヴィアス格子,Bravais lattice,結晶構造・結晶学
+転位,dislocation,結晶構造・結晶学
+品界,grain boundary,結晶構造・結晶学
+粒界,grain boundary,結晶構造・結晶学
+双晶,twin,結晶構造・結晶学
+双晶界,twin boundary,結晶構造・結晶学
+点欠陥,point defect,結晶構造・結晶学
+線欠陥,line defect,結晶構造・結晶学
+面欠陥,planar defect,結晶構造・結晶学
+空孔,vacancy,結晶構造・結晶学
+隙間原子,interstitial atom,結晶構造・結晶学
+不純物,impurity,結晶構造・結晶学
+助子,substitutional atom,結晶構造・結晶学
+置換原子,substitutional atom,結晶構造・結晶学
+結晶orientation,crystal orientation,結晶構造・結晶学
+結晶方位,crystal orientation,結晶構造・結晶学
+ミラー指数,Miller index,結晶構造・結晶学
+方位関係,orientation relationship,結晶構造・結晶学
+極点図,pole figure,結晶構造・結晶学
+逆極点図,inverse pole figure,結晶構造・結晶学
+EBSD,EBSD,結晶構造・結晶学
+XRD,XRD,結晶構造・結晶学
+X 線回折,X-ray diffraction,結晶構造・結晶学
+中性子回折,neutron diffraction,結晶構造・結晶学
+電子回折,electron diffraction,結晶構造・結晶学
+TEM,TEM,結晶構造・結晶学
+SEM,SEM,結晶構造・結晶学
+AFM,AFM,結晶構造・結晶学
+相図,phase diagram,熱力学・相平衡
+平衡相図,equilibrium phase diagram,熱力学・相平衡
+ギブス自由エネルギー,Gibbs free energy,熱力学・相平衡
+自由エネルギー,free energy,熱力学・相平衡
+エンタルピー,enthalpy,熱力学・相平衡
+エントロピー,entropy,熱力学・相平衡
+活量,activity,熱力学・相平衡
+化学ポテンシャル,chemical potential,熱力学・相平衡
+溶解度,solubility,熱力学・相平衡
+飽和溶解度,saturation solubility,熱力学・相平衡
+相変態,phase transformation,熱力学・相平衡
+相転移,phase transition,熱力学・相平衡
+固相変態,solid-state transformation,熱力学・相平衡
+液相,liquid phase,熱力学・相平衡
+固相,solid phase,熱力学・相平衡
+気相,gas phase,熱力学・相平衡
+単相,single phase,熱力学・相平衡
+複相,multi-phase,熱力学・相平衡
+二相,two-phase,熱力学・相平衡
+三相,three-phase,熱力学・相平衡
+CALPHAD,CALPHAD,熱力学・相平衡
+DICTRA,DICTRA,熱力学・相平衡
+相平衡,phase equilibrium,熱力学・相平衡
+臨界点,critical point,熱力学・相平衡
+融点,melting point,熱力学・相平衡
+凝固点,freezing point,熱力学・相平衡
+沸点,boiling point,熱力学・相平衡
+析出,precipitation,熱力学・相平衡
+析出物,precipitate,熱力学・相平衡
+析出相,precipitation phase,熱力学・相平衡
+生成エントロピー,formation entropy,熱力学・相平衡
+生成エンタルピー,formation enthalpy,熱力学・相平衡
+混合エントロピー,mixing entropy,熱力学・相平衡
+混合エンタルピー,mixing enthalpy,熱力学・相平衡
+活量係数,activity coefficient,熱力学・相平衡
+分配係数,partition coefficient,熱力学・相平衡
+セグネーション,segregation,熱力学・相平衡
+偏析,segregation,熱力学・相平衡
+粒界偏析,grain boundary segregation,熱力学・相平衡
+表面偏析,surface segregation,熱力学・相平衡
+拡散,diffusion,拡散・kinetics
+拡散係数,diffusion coefficient,拡散・kinetics
+自己拡散,self-diffusion,拡散・kinetics
+隙間拡散,interstitial diffusion,拡散・kinetics
+空孔拡散,vacancy diffusion,拡散・kinetics
+粒界拡散,grain boundary diffusion,拡散・kinetics
+表面拡散,surface diffusion,拡散・kinetics
+体積拡散,volume diffusion,拡散・kinetics
+拡散速度,diffusion rate,拡散・kinetics
+活性化エネルギー,activation energy,拡散・kinetics
+アレニウス式,Arrhenius equation,拡散・kinetics
+拡散場,diffusion field,拡散・kinetics
+拡散流,diffusion flux,拡散・kinetics
+フィックの法則,Fick's law,拡散・kinetics
+第 1フィック法則,Fick's first law,拡散・kinetics
+第 2フィック法則,Fick's second law,拡散・kinetics
+interdiffusion,interdiffusion,拡散・kinetics
+相互拡散,interdiffusion,拡散・kinetics
+化学拡散,chemical diffusion,拡散・kinetics
+拡散長,diffusion length,拡散・kinetics
+拡散時間,diffusion time,拡散・kinetics
+coherent,coherent,拡散・kinetics
+coherent 界面,coherent interface,拡散・kinetics
+incoherent,incoherent,拡散・kinetics
+incoherent 界面,incoherent interface,拡散・kinetics
+semi-coherent,semi-coherent,拡散・kinetics
+kinetics,kinetics,拡散・kinetics
+反応速度,reaction rate,拡散・kinetics
+成長速度,growth rate,拡散・kinetics
+析出速度,precipitation rate,拡散・kinetics
+強度,strength,機械的特性
+引張強度,tensile strength,機械的特性
+圧縮強度,compressive strength,機械的特性
+曲げ強度,bending strength,機械的特性
+降伏強度,yield strength,機械的特性
+耐力,yield strength,機械的特性
+延性,ductility,機械的特性
+靭性,toughness,機械的特性
+破壊靭性,fracture toughness,機械的特性
+硬さ,hardness,機械的特性
+ビッカース硬さ,Vickers hardness,機械的特性
+ロックウェル硬さ,Rockwell hardness,機械的特性
+ブリネル硬さ,Brinell hardness,機械的特性
+ヤング率,Young's modulus,機械的特性
+縦弾性係数,Young's modulus,機械的特性
+横弾性係数,shear modulus,機械的特性
+ポアソン比,Poisson's ratio,機械的特性
+ひずみ,strain,機械的特性
+応力,stress,機械的特性
+応力-ひずみ曲線,stress-strain curve,機械的特性
+疲労,fatigue,機械的特性
+疲労強度,fatigue strength,機械的特性
+疲労寿命,fatigue life,機械的特性
+クリープ,creep,機械的特性
+クリープ強度,creep strength,機械的特性
+クリープ寿命,creep life,機械的特性
+ひずみ速度,strain rate,機械的特性
+応力緩和,stress relaxation,機械的特性
+ひずみ硬化,strain hardening,機械的特性
+加工硬化,work hardening,機械的特性
+焼入硬化,quench hardening,機械的特性
+時効硬化,precipitation hardening,機械的特性
+時効,aging,機械的特性
+時効処理,aging treatment,機械的特性
+超弾性,superelasticity,機械的特性
+形状記憶,shape memory,機械的特性
+形状記憶効果,shape memory effect,機械的特性
+破壊,fracture,破壊・劣化
+脆性破壊,brittle fracture,破壊・劣化
+延性破壊,ductile fracture,破壊・劣化
+亀裂,crack,破壊・劣化
+亀裂進展,crack propagation,破壊・劣化
+亀裂 initiation,crack initiation,破壊・劣化
+亀裂起始,crack initiation,破壊・劣化
+腐食,corrosion,破壊・劣化
+酸化,oxidation,破壊・劣化
+高温酸化,high-temperature oxidation,破壊・劣化
+水素破壊,hydrogen embrittlement,破壊・劣化
+水素脆化,hydrogen embrittlement,破壊・劣化
+焼損,burnout,破壊・劣化
+焼着,burning,破壊・劣化
+摩耗,wear,破壊・劣化
+摩擦摩耗,friction wear,破壊・劣化
+腐食摩耗,corrosion wear,破壊・劣化
+応力腐食割れ,stress corrosion cracking,破壊・劣化
+SCC,stress corrosion cracking,破壊・劣化
+腐食割れ,corrosion cracking,破壊・劣化
+熱疲労,thermal fatigue,破壊・劣化
+熱クリープ,thermal creep,破壊・劣化
+劣化,degradation,破壊・劣化
+寿命,lifetime,破壊・劣化
+耐用寿命,service life,破壊・劣化
+信頼性,reliability,破壊・劣化
+耐久性,durability,破壊・劣化
+熱処理,heat treatment,熱処理・加工
+焼入れ,quenching,熱処理・加工
+焼鈍,annealing,熱処理・加工
+焼なまし,annealing,熱処理・加工
+焼戻し,tempering,熱処理・加工
+溶体化処理,solution treatment,熱処理・加工
+時効処理,aging treatment,熱処理・加工
+ normalize,normalizing,熱処理・加工
+正火,normalizing,熱処理・加工
+冷間加工,cold working,熱処理・加工
+熱間加工,hot working,熱処理・加工
+圧延,rolling,熱処理・加工
+鍛造,forging,熱処理・加工
+引抜,drawing,熱処理・加工
+押し出し,extrusion,熱処理・加工
+板圧延,plate rolling,熱処理・加工
+線圧延,wire rolling,熱処理・加工
+切削,cutting,熱処理・加工
+研削,grinding,熱処理・加工
+研磨,polishing,熱処理・加工
+電気分解研磨,electro-polishing,熱処理・加工
+イオンミリング,ion milling,熱処理・加工
+FIB,FIB,熱処理・加工
+ECM,ECM,熱処理・加工
+第一原理計算,first-principles calculation,第一原理計算・電子構造
+第一原理,first-principles,第一原理計算・電子構造
+DFT,DFT,第一原理計算・電子構造
+密度汎関数法,density functional theory,第一原理計算・電子構造
+VASP,VASP,第一原理計算・電子構造
+Quantum ESPRESSO,Quantum ESPRESSO,第一原理計算・電子構造
+ABINIT,ABINIT,第一原理計算・電子構造
+ハドソン,Hudson,第一原理計算・電子構造
+ハトリックス,Hartree,第一原理計算・電子構造
+ハートリー,Hartree,第一原理計算・電子構造
+ハートリーフォック,Hartree-Fock,第一原理計算・電子構造
+バンド構造,band structure,第一原理計算・電子構造
+バンドギャップ,band gap,第一原理計算・電子構造
+フェルミ面,Fermi surface,第一原理計算・電子構造
+フェルミエネルギー,Fermi energy,第一原理計算・電子構造
+電子密度,electron density,第一原理計算・電子構造
+電荷密度,charge density,第一原理計算・電子構造
+ポテンシャル,potential,第一原理計算・電子構造
+交換相関,exchange-correlation,第一原理計算・電子構造
+LDA,LDA,第一原理計算・電子構造
+GGA,GGA,第一原理計算・電子構造
+PAW,PAW,第一原理計算・電子構造
+擬ポテンシャル,pseudo potential,第一原理計算・電子構造
+planes wave,plane wave,第一原理計算・電子構造
+平面波,plane wave,第一原理計算・電子構造
+基底関数,basis function,第一原理計算・電子構造
+エネルギー収束,energy convergence,第一原理計算・電子構造
+力収束,force convergence,第一原理計算・電子構造
+k 点,k-point,第一原理計算・電子構造
+k 点サンプリング,k-point sampling,第一原理計算・電子構造
+分子動力学,molecular dynamics,分子動力学・シミュレーション
+MD,MD,分子動力学・シミュレーション
+MD シミュレーション,MD simulation,分子動力学・シミュレーション
+ポテンシャル,potential,分子動力学・シミュレーション
+相互作用ポテンシャル,interaction potential,分子動力学・シミュレーション
+eams,EAM,分子動力学・シミュレーション
+EAM ポテンシャル,EAM potential,分子動力学・シミュレーション
+メタポテンシャル,metapotential,分子動力学・シミュレーション
+時ステップ,time step,分子動力学・シミュレーション
+時間ステップ,time step,分子動力学・シミュレーション
+温度制御,temperature control,分子動力学・シミュレーション
+圧力制御,pressure control,分子動力学・シミュレーション
+ Nose-Hoover,Nose-Hoover,分子動力学・シミュレーション
+Berendsen,Berendsen,分子動力学・シミュレーション
+ランジウィアン,Langevin,分子動力学・シミュレーション
+モンテカルロ,Monte Carlo,分子動力学・シミュレーション
+MC,MC,分子動力学・シミュレーション
+シミュレーション,simulation,分子動力学・シミュレーション
+coarse-graining,coarse-graining,分子動力学・シミュレーション
+マルチスケール,multi-scale,分子動力学・シミュレーション
+マルチスケールシミュレーション,multi-scale simulation,分子動力学・シミュレーション
+材料インフォマティクス,materials informatics,材料データ・情報科学
+材料情報学,materials informatics,材料データ・情報科学
+材料データ,materials data,材料データ・情報科学
+材料データベース,materials database,材料データ・情報科学
+Machine Learning,machine learning,材料データ・情報科学
+ML,ML,材料データ・情報科学
+機械学習,machine learning,材料データ・情報科学
+deep learning,deep learning,材料データ・情報科学
+DL,DL,材料データ・情報科学
+深層学習,deep learning,材料データ・情報科学
+特徴量,feature,材料データ・情報科学
+特徴ベクトル,feature vector,材料データ・情報科学
+ラベル,label,材料データ・情報科学
+教師データ,training data,材料データ・情報科学
+テストデータ,test data,材料データ・情報科学
+訓練データ,training data,材料データ・情報科学
+validation,validation,材料データ・情報科学
+評価データ,validation data,材料データ・情報科学
+regression,regression,材料データ・情報科学
+回帰,regression,材料データ・情報科学
+classification,classification,材料データ・情報科学
+分類,classification,材料データ・情報科学
+clustering,clustering,材料データ・情報科学
+クラスタリング,clustering,材料データ・情報科学
+Bayesian inference,Bayesian inference,材料データ・情報科学
+ベイズ推定,Bayesian inference,材料データ・情報科学
+Uncertainty,uncertainty,材料データ・情報科学
+不確かさ,uncertainty,材料データ・情報科学
+Uncertainty quantification,uncertainty quantification,材料データ・情報科学
+不確かさ定量化,uncertainty quantification,材料データ・情報科学
+LLM,LLM,材料データ・情報科学
+大規模言語モデル,large language model,材料データ・情報科学
+Transformer,Transformer,材料データ・情報科学
+ atención,attention,材料データ・情報科学
+アテンション,attention,材料データ・情報科学
+tokenizer,tokenizer,材料データ・情報科学
+トークナイザー,tokenizer,材料データ・情報科学
+reranker,reranker,材料データ・情報科学
+リランキング,reranking,材料データ・情報科学
+embeddings,embeddings,材料データ・情報科学
+埋め込み,embeddings,材料データ・情報科学
+RAG,RAG,材料データ・情報科学
+retrieval augmented generation,retrieval augmented generation,材料データ・情報科学
+ベイズ推論,Bayesian inference,材料データ・情報科学
+kernel method,kernel method,材料データ・情報科学
+カーネル法,kernel method,材料データ・情報科学
+相,phase,追加
+合金,alloy,追加
+金属,metal,追加
+非金属,non-metal,追加
+元素,element,追加
+原子,atom,追加
+分子,molecule,追加
+イオン,ion,追加
+電子,electron,追加
+陽子,proton,追加
+中性子,neutron,追加
+核,nucleus,追加
+軌道,orbital,追加
+価電子,valence electron,追加
+結合,bonding,追加
+化学結合,chemical bond,追加
+金属結合,metallic bond,追加
+イオン結合,ionic bond,追加
+共有結合,covalent bond,追加
+ファンデルワールス力,van der Waals force,追加
+温度,temperature,追加
+圧力,pressure,追加
+密度,density,追加
+粘度,viscosity,追加
+熱伝導率,thermal conductivity,追加
+電気伝導率,electrical conductivity,追加
+抵抗率,resistivity,追加
+比熱,specific heat,追加
+熱容量,heat capacity,追加
+融解熱,melting heat,追加
+蒸発熱,evaporation heat,追加
+結晶化,crystallization,追加
+凝固,solidification,追加
+融解,melting,追加
+蒸発,evaporation,追加
+-condensation,condensation,追加
+凝縮,condensation,追加
+sublimation,sublimation,追加
+昇華,sublimation,追加
+核生成,nucleation,追加
+成長,growth,追加
+析出成長,precipitation growth,追加
+coarsening,coarsening,追加
+粗大化,coarsening,追加
+sintering,sintering,追加
+焼結,sintering,追加
+powder,powder,追加
+粉末,powder,追加
+粉末冶金,powder metallurgy,追加
+casting,casting,追加
+鋳造,casting,追加
+injection,injection,追加
+射出,injection,追加
+sputtering,sputtering,追加
+スパッタリング,sputtering,追加
+CVD,CVD,追加
+chemical vapor deposition,chemical vapor deposition,追加
+PVD,PVD,追加
+physical vapor deposition,physical vapor deposition,追加
+エピキシス,epitaxy,追加
+ epitaxy,epitaxy,追加
+薄膜,thin film,追加
+coating,coating,追加
+コーティング,coating,追加
+surface,surface,追加
+表面,surface,追加
+interface,interface,追加
+界面,interface,追加
+bulk,bulk,追加
+バルク,bulk,追加
+nanoparticle,nanoparticle,追加
+ナノ粒子,nanoparticle,追加
+nanowire,nanowire,追加
+ナノワイヤー,nanowire,追加
+nanotube,nanotube,追加
+ナノチューブ,nanotube,追加
+graphene,graphene,追加
+カーボンナノチューブ,carbon nanotube,追加
+CNT,CNT,追加
+応力場,stress field,追加
+歪場,strain field,追加
+変位,displacement,追加
+変形,deformation,追加
+塑性変形,plastic deformation,追加
+弾性変形,elastic deformation,追加
+弾性,elasticity,追加
+塑性,plasticity,追加
+バースト,burst,追加
+shear,shear,追加
+せん断,shear,追加
+せん断応力,shear stress,追加
+せん断ひずみ,shear strain,追加
+主応力,principal stress,追加
+主ひずみ,principal strain,追加
+モーメント,moment,追加
+トルク,torque,追加
+荷重,load,追加
+負荷,loading,追加
+unloading,unloading,追加
+除荷,unloading,追加
+cyclic,cyclic,追加
+繰返し,cyclic,追加
+繰返し荷重,cyclic load,追加
+residual stress,residual stress,追加
+残留応力,residual stress,追加
+残留ひずみ,residual strain,追加
+annealing stress,annealing stress,追加
+焼入応力,quenching stress,追加
+transformation,transformation,追加
+martensite,martensite,追加
+マルテンサイト,martensite,追加
+martensitic transformation,martensitic transformation,追加
+マルテンサイト変態,martensitic transformation,追加
+bainite,bainite,追加
+ベインサイト,bainite,追加
+pearlite,pearlite,追加
+パーライト,pearlite,追加
+austenite,austenite,追加
+オーステナイト,austenite,追加
+ferrite,ferrite,追加
+フェライト,ferrite,追加
+cementite,cementite,追加
+セメンタイト,cementite,追加
+graphite,graphite,追加
+グラファイト,graphite,追加
+spheroidite,spheroidite,追加
+スペロイド,spheroidite,追加
+skin,skin,追加
+皮膜,skin,追加
+layer,layer,追加
+層,layer,追加
+multilayer,multilayer,追加
+多層,multilayer,追加
+coating layer,coating layer,追加
+コーティング層,coating layer,追加
+interface layer,interface layer,追加
+界面層,interface layer,追加
+gradient,gradient,追加
+勾配,gradient,追加
+concentration gradient,concentration gradient,追加
+濃度勾配,concentration gradient,追加
+temperature gradient,temperature gradient,追加
+温度勾配,temperature gradient,追加
+stress gradient,stress gradient,追加
+応力勾配,stress gradient,追加
+heterogeneous,heterogeneous,追加
+不均一,heterogeneous,追加
+homogeneous,homogeneous,追加
+均一,homogeneous,追加
+isotropic,isotropic,追加
+等方性,isotropic,追加
+anisotropic,anisotropic,追加
+異方性,anisotropic,追加
+texture,texture,追加
+組織,texture,追加
+microstructure,microstructure,追加
+微細組織,microstructure,追加
+macrostructure,macrostructure,追加
+粗視組織,macrostructure,追加
+grain size,grain size,追加
+粒 size,grain size,追加
+粒径,grain size,追加
+particle size,particle size,追加
+粒子 size,particle size,追加
+粒子径,particle size,追加
+diameter,diameter,追加
+直径,diameter,追加
+radius,radius,追加
+半径,radius,追加
+thickness,thickness,追加
+厚さ,thickness,追加
+length,length,追加
+長さ,length,追加
+width,width,追加
+幅,width,追加
+height,height,追加
+高さ,height,追加
+volume,volume,追加
+体積,volume,追加
+area,area,追加
+面積,area,追加
+surface area,surface area,追加
+表面積,surface area,追加
