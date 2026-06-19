@@ -45,7 +45,7 @@ Reranker A/B eval (RES-RR-*): ACTIVE
 - RES-RR-DELTA: +7.7pp (90 queries, separate run)
 
 JP reranker (RES-JP-*): ACTIVE
-- RES-JP-DELTA: -4.3pp (20 VH queries)
+- RES-JP-DELTA: -4.4pp (20 VH queries)
 
 MeCab (RES-MECAB-RATE): VERIFIED
 - 100.0% single-token rate (vs 30.6% default)

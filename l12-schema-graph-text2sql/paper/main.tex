@@ -815,6 +815,55 @@ AFLOW~\cite{curtarolo2012aflow}）への適用時に
   \end{tabularx}
 \end{table*}
 
+\subsection{LLM-onlyおよびスキーマ提示のみとの定量比較}
+
+ablation studyの結果を手法レベルの比較として再構成する。
+各ablation条件は、構成要素を除去した簡略手法に対応する
+（表~\ref{tab:method_comparison}）。
+
+\begin{table}[t]
+\centering
+\caption{手法レベルの定量比較。ablation条件を手法構成として再解釈。
+全数値はablation study（100クエリ、単一ラン）の結果
+（EVID-20260619-1335-ablation-json）。}
+\label{tab:method_comparison}
+\small
+\begin{tabular}{@{}p{4.2cm}cccc@{}}
+\toprule
+手法構成 & Overall & Easy & VH & $\Delta$ \\
+\midrule
+LLM-only（スキーマ情報なし） & \multicolumn{4}{l}{\textit{テーブル幻覚により実行不可（S3節参照）}} \\
+\midrule
+Full Schema提示 & 68.2\% & 95.0 & 26.2 & $-$12.5 \\
+{\scriptsize （= no\_fewshot: スキーマ+LLM、} & & & & \\
+{\scriptsize \phantom{（= }few-shot例なし）} & & & & \\
+\midrule
++ Few-shot RAG & 73.9\% & 100 & 15.8 & $-$6.7 \\
+{\scriptsize （= no\_dict: +few-shot、辞書なし）} & & & & \\
+\midrule
++ 材料辞書 & 76.6\% & 100 & 37.4 & $-$4.1 \\
+{\scriptsize （= no\_reranker: +辞書、} & & & & \\
+{\scriptsize \phantom{（= }rerankerなし）} & & & & \\
+\midrule
+\textbf{提案手法（全構成要素）} & \textbf{80.6\%} & \textbf{100} & \textbf{38.5} & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+LLM-onlyはスキーマ情報を与えない構成であり、
+S3節（Supplementary Materials）に示すように
+テーブル名・カラム名の幻覚が発生し実行可能なSQLが生成されない。
+Full Schema提示（no\_fewshot条件に相当）は
+スキーマ定義をプロンプトに含めるがfew-shot例・辞書・rerankerを持たず、
+68.2\%にとどまる。
+構成要素を段階的に追加するにつれ精度は単調に向上し、
+全構成要素を含む提案手法で80.6\%に達した。
+
+なお、上記は各ablation条件の単一除去結果を段階的追加として再解釈したものであり、
+条件間の交互作用は分離されていない。
+異なる手法（DIN-SQL、DAIL-SQL等）との同一DB上の直接比較は未実施である
+（制約6項参照）。
+
 \subsection{制約と今後の課題}
 
 \begin{enumerate}
@@ -1198,7 +1247,10 @@ SQLインジェクション・安全性）のクエリと結果を示す。
 \section{生成SQL例}
 \label{sec:sup_sql_examples}
 
-代表的なクエリに対する生成SQL例を示す。
+代表的なクエリに対する生成SQL例を、
+3段階の手法構成（LLM-only、Full Schema提示、本手法）で比較する。
+本文の表~\ref{tab:method_comparison}の定量比較を補完し、
+各構成の出力SQLの質的差異を具体的に示す。
 
 \subsection{「Niを含む安定なL1$_2$化合物を出して」}
 
@@ -1210,9 +1262,27 @@ WHERE element = 'Ni'
   AND structure_type = 'L12'
   AND stability = 'stable';
 -- テーブル幻覚: materials, stability等は存在しない
+-- 実行不可（ERROR: relation "materials" does not exist）
 \end{lstlisting}
 
-\paragraph{本手法（Schema Graph制約あり）：}
+\paragraph{Full Schema提示（スキーマ定義をプロンプトに含めるがfew-shot例なし）：}
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
+SELECT m.formula, ps.is_stable
+FROM material_entry m
+  JOIN composition c ON c.entry_id = m.entry_id
+  JOIN structure s ON s.entry_id = m.entry_id
+  JOIN phase_stability ps ON ps.entry_id = m.entry_id
+WHERE c.element = 'Ni'
+  AND s.strukturbericht = 'L12'
+  AND ps.is_stable = true;
+-- 実行可能だが不完全:
+-- (1) prototype条件なし（L12がstrukturberichtに
+--     ない場合を見落とし）
+-- (2) DISTINCT/LIMITなし
+-- (3) 格子定数等の材料的に有用な列を選択していない
+\end{lstlisting}
+
+\paragraph{本手法（Schema Graph制約 + Few-shot + 辞書）：}
 \begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
 SELECT DISTINCT m.entry_id, m.formula,
   s.prototype, s.lattice_a, s.space_group
@@ -1231,7 +1301,15 @@ LIMIT 10000;
 
 \subsection{「NiとAlの両方を含むL1$_2$化合物を出して」}
 
-\paragraph{Full Schema（全スキーマ提示）：}
+\paragraph{LLM-only（スキーマ情報なし）：}
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
+SELECT * FROM compounds
+WHERE elements LIKE '%Ni%' AND elements LIKE '%Al%'
+  AND crystal_structure = 'L12';
+-- テーブル幻覚: compounds, elements列は存在しない
+\end{lstlisting}
+
+\paragraph{Full Schema提示（few-shot例なし）：}
 \begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
 SELECT m.entry_id, m.formula
 FROM material_entry m
@@ -1528,7 +1606,7 @@ $-$GD = no\_guard、$-$NB = no\_nbest、$-$GR = no\_graph。
   \item no\_dict（$-$Dict）ではVery Hard帯で集中的に0化し、ドメイン辞書がVH帯に不可欠であることを裏付ける。
   \item no\_reranker（$-$RR）ではq\_hard\_003, q\_hard\_026, q\_medium\_004, q\_medium\_020で完全失敗し、候補選別の効果を示す。
   \item no\_guard, no\_nbest, no\_graphは差異クエリ数が限定的であり、本文で報告した$-$0.2ppと整合する。
-  \item q\_vhard\_001は全7条件中full条件のみ0.19であり、他の条件では多くが0。これはfew-shot + dict + rerankerの複合効果を示唆する。
+  \item q\_vhard\_001はfull条件と$-$RR条件で0.19であるが、他の5条件では0。これはfew-shot + dictの複合効果を示唆する（リランカーの除去は精度に影響しなかった）。
 \end{itemize}
 
 \end{document}
