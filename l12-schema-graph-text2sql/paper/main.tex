@@ -865,6 +865,7 @@ Full Schema提示（no\_fewshot条件に相当）は
 （制約6項参照）。
 
 \subsection{多段計算クエリへの対応}
+\label{sec:multistep_query}
 
 本パイプラインの重要な拡張として、
 自然言語による多段計算指示への対応を実現した。
@@ -944,7 +945,7 @@ SELECT--WHERE--JOIN--GROUP BYの組合せが主であり、
     OQMD単元素データの統合により1万件規模でのSteiner木探索と
     SQL生成精度の検証を行う。
   \item \textbf{多段計算クエリの評価}：
-    生成エンタルピー計算対応（5.7節）を
+    生成エンタルピー計算対応（\ref{sec:multistep_query}節）を
     評価クエリセットに追加し、
     CTE・ビュー経由の多段計算精度を定量評価する。
   \item \textbf{AI4Sエージェント統合}：
