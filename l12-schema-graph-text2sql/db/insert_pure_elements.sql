@@ -671,4 +671,34 @@ INSERT INTO structure (structure_id, entry_id, prototype, strukturbericht, space
 INSERT INTO phase_stability (stability_id, entry_id, formation_energy_per_atom, energy_above_hull, is_stable, band_gap) VALUES ('stab_elem_zr', 'elem_zr_1791927', -0.00017190500000019426, 0.0, true, 0.0);
 INSERT INTO calculation (calculation_id, entry_id, method, functional, calculation_type) VALUES ('calc_elem_zr', 'elem_zr_1791927', 'DFT', 'PBE', 'ground_state');
 
+-- Formation enthalpy view: computes corrected ΔH_f using pure element references
+CREATE OR REPLACE VIEW formation_enthalpy AS
+SELECT 
+    m.entry_id,
+    m.formula,
+    m.reduced_formula,
+    ps.formation_energy_per_atom AS formation_enthalpy_ev_per_atom,
+    ps.energy_above_hull,
+    ps.is_stable,
+    s.prototype,
+    s.strukturbericht,
+    s.space_group,
+    s.lattice_a,
+    (SELECT SUM(c2.atomic_fraction * per.energy_per_atom)
+     FROM composition c2
+     JOIN pure_element_reference per ON per.element_symbol = c2.element
+     WHERE c2.entry_id = m.entry_id
+    ) AS weighted_ref_energy,
+    ps.formation_energy_per_atom - COALESCE(
+        (SELECT SUM(c2.atomic_fraction * per.energy_per_atom)
+         FROM composition c2
+         JOIN pure_element_reference per ON per.element_symbol = c2.element
+         WHERE c2.entry_id = m.entry_id
+        ), 0
+    ) AS corrected_formation_enthalpy
+FROM material_entry m
+JOIN phase_stability ps ON ps.entry_id = m.entry_id
+LEFT JOIN structure s ON s.entry_id = m.entry_id
+WHERE m.number_of_elements >= 2;
+
 COMMIT;

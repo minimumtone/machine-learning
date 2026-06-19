@@ -303,7 +303,7 @@
       "prototype": "L12",
       "stability": "stable",
       "formation_enthalpy": true,
-      "sort_by": "formation_enthalpy_ev_per_atom",
+      "sort_by": "formation_enthalpy.formation_enthalpy_ev_per_atom",
       "sort_order": "asc"
     },
     "row_count": 15,
@@ -350,7 +350,7 @@
       "prototype": "L12",
       "stability": "stable",
       "formation_enthalpy": true,
-      "sort_by": "formation_enthalpy_ev_per_atom",
+      "sort_by": "formation_enthalpy.formation_enthalpy_ev_per_atom",
       "sort_order": "asc"
     },
     "row_count": 15,
