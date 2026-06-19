@@ -295,5 +295,76 @@
     },
     "row_count": 392,
     "source": "seed:formula_type_pattern"
+  },
+  {
+    "nl_query": "安定なL1₂化合物の生成エンタルピーを低い順に出して。",
+    "sql": "SELECT fh.formula, fh.formation_enthalpy_ev_per_atom,\n       fh.corrected_formation_enthalpy, fh.is_stable\nFROM formation_enthalpy fh\nJOIN structure s ON s.entry_id = fh.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND fh.is_stable = true\nORDER BY fh.formation_enthalpy_ev_per_atom ASC\nLIMIT 10000;",
+    "conditions": {
+      "prototype": "L12",
+      "stability": "stable",
+      "formation_enthalpy": true,
+      "sort_by": "formation_enthalpy_ev_per_atom",
+      "sort_order": "asc"
+    },
+    "row_count": 15,
+    "source": "seed:formation_enthalpy_view"
+  },
+  {
+    "nl_query": "Ni3Alの生成エンタルピーを純物質基準エネルギーから計算して。",
+    "sql": "WITH compound AS (\n    SELECT m.entry_id, m.formula, ps.formation_energy_per_atom\n    FROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    WHERE m.formula = 'Ni3Al'\n    LIMIT 1\n),\nref_energies AS (\n    SELECT c.entry_id,\n           SUM(comp.atomic_fraction * per.energy_per_atom) AS weighted_ref\n    FROM compound c\n    JOIN composition comp ON comp.entry_id = c.entry_id\n    JOIN pure_element_reference per ON per.element_symbol = comp.element\n    GROUP BY c.entry_id\n)\nSELECT c.formula,\n       c.formation_energy_per_atom,\n       r.weighted_ref AS ref_energy,\n       c.formation_energy_per_atom - r.weighted_ref AS corrected_enthalpy\nFROM compound c\nJOIN ref_energies r ON r.entry_id = c.entry_id;",
+    "conditions": {
+      "formulas": ["Ni3Al"],
+      "formation_enthalpy": true,
+      "pure_element": true
+    },
+    "row_count": 1,
+    "source": "seed:formation_enthalpy_cte"
+  },
+  {
+    "nl_query": "各元素の多形数を多い順にリストして。",
+    "sql": "SELECT per.element_symbol, per.n_polymorphs,\n       per.ground_state_spacegroup, per.energy_per_atom\nFROM pure_element_reference per\nORDER BY per.n_polymorphs DESC\nLIMIT 10000;",
+    "conditions": {
+      "pure_element": true,
+      "polymorph": true,
+      "sort_by": "pure_element_reference.n_polymorphs",
+      "sort_order": "desc"
+    },
+    "row_count": 89,
+    "source": "seed:pure_element_pattern"
+  },
+  {
+    "nl_query": "Niの基底状態エネルギーと空間群を教えて。",
+    "sql": "SELECT per.element_symbol, per.energy_per_atom,\n       per.ground_state_spacegroup, per.volume_per_atom,\n       per.band_gap, per.n_polymorphs\nFROM pure_element_reference per\nWHERE per.element_symbol = 'Ni';",
+    "conditions": {
+      "pure_element": true,
+      "contains_elements": ["Ni"],
+      "ground_state": true
+    },
+    "row_count": 1,
+    "source": "seed:pure_element_pattern"
+  },
+  {
+    "nl_query": "生成エンタルピーが-0.3eV/atom未満の安定なL1₂化合物を格子定数付きで出して。",
+    "sql": "SELECT fh.formula, fh.formation_enthalpy_ev_per_atom,\n       fh.corrected_formation_enthalpy,\n       fh.space_group, fh.lattice_a\nFROM formation_enthalpy fh\nJOIN structure s ON s.entry_id = fh.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND fh.is_stable = true\n  AND fh.formation_enthalpy_ev_per_atom < -0.3\nORDER BY fh.formation_enthalpy_ev_per_atom ASC\nLIMIT 10000;",
+    "conditions": {
+      "prototype": "L12",
+      "stability": "stable",
+      "formation_enthalpy": true,
+      "sort_by": "formation_enthalpy_ev_per_atom",
+      "sort_order": "asc"
+    },
+    "row_count": 15,
+    "source": "seed:formation_enthalpy_view"
+  },
+  {
+    "nl_query": "遷移金属の基底状態エネルギーを原子番号順に出して。",
+    "sql": "SELECT per.element_symbol, e.atomic_number,\n       per.energy_per_atom, per.ground_state_spacegroup\nFROM pure_element_reference per\nJOIN element e ON e.symbol = per.element_symbol\nWHERE e.block = 'd'\nORDER BY e.atomic_number ASC\nLIMIT 10000;",
+    "conditions": {
+      "pure_element": true,
+      "reference_energy": true,
+      "element_property": true
+    },
+    "row_count": 30,
+    "source": "seed:pure_element_pattern"
   }
 ]
