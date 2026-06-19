@@ -745,6 +745,10 @@ def pipeline(
             },
         })
 
+    # Rerank candidates using LLM semantic scoring
+    from llm.reranker import rerank_sql_candidates
+    candidates = rerank_sql_candidates(user_query, candidates)
+
     # Select best candidate
     candidates.sort(key=lambda c: c["score"], reverse=True)
     best = candidates[0]
@@ -759,6 +763,7 @@ def pipeline(
         "best_score": best["score"],
         "best_breakdown": best.get("breakdown", {}),
         "all_scores": [c["score"] for c in candidates],
+        "reranked": any(c.get("reranker_score") is not None for c in candidates),
         "total_tokens": total_tokens,
         "total_latency_ms": total_latency,
     }

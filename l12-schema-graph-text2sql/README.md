@@ -180,6 +180,7 @@ v4でgraph層のJOIN方向バグ（`_edge_source`による逆方向走査時の�
 - **材料用語辞書**: L1₂, B2, γ', Cu₃Au型, CsCl型などの日英バイリンガル同義語辞書
 - **制約付きSQL生成**: 許可テーブル・カラム・JOINのみ使用可能
 - **SQLGuard 14種検証**: ブラックリスト、SELECT-only、複文検出、危険関数、テーブル/カラムホワイトリスト、JOIN整合性、LIMIT自動注入、CTE検査、型安全、トートロジー検出、サブクエリ深度制限、システムテーブル検出
+- **LLM Reranker**: 3箇所でのLLMベース意味的再ランキング（n-best SQL候補選択、Few-shot例取得、Schema linkingテーブル選択）
 - **Rule-based fallback**: API keyなしでも動作する決定的SQL生成
 - **B2対応**: CsCl型（B2）、NaCl型、NiAs型、BiF3型にも対応可能な設計
 
@@ -201,5 +202,6 @@ OQMD拡張データ投入で最大1,470件（L12 392 + B2 636 + NaCl 355 + NiAs 
 | POSTGRES_PORT | ポート | 5432 |
 | OPENAI_API_KEY | OpenAI APIキー | （要設定） |
 | LLM_MODEL | 使用するLLMモデル | gpt-5.5 |
+| RERANK_MODEL | Reranker用LLMモデル | gpt-4o-mini |
 | SQL_ROW_LIMIT | SQL結果の最大行数 | 100 |
 | SQL_TIMEOUT_SECONDS | SQL実行タイムアウト | 10 |

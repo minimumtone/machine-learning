@@ -126,7 +126,11 @@ def _cosine(v1: dict[str, float], v2: dict[str, float]) -> float:
 
 
 def retrieve_similar(query: str, top_k: int = 3) -> list[dict[str, Any]]:
-    """Return the top-k most similar stored examples for a given query."""
+    """Return the top-k most similar stored examples for a given query.
+
+    Two-stage retrieval: TF-IDF recall (2× top_k) → LLM reranker (top_k).
+    Falls back to TF-IDF only when the API key is unavailable.
+    """
     examples = load_store()
     if not examples:
         return []
@@ -145,11 +149,24 @@ def retrieve_similar(query: str, top_k: int = 3) -> list[dict[str, Any]]:
         sim = _cosine(q_vec, d_vec)
         scored.append((sim, i))
     scored.sort(reverse=True)
-    return [
+
+    # Stage 1: TF-IDF recall — retrieve 2× candidates for reranking
+    recall_k = min(top_k * 2, len(scored))
+    tfidf_results = [
         {**examples[idx], "similarity": sim}
-        for sim, idx in scored[:top_k]
+        for sim, idx in scored[:recall_k]
         if sim > 0.05
     ]
+
+    if len(tfidf_results) <= top_k:
+        return tfidf_results
+
+    # Stage 2: LLM reranking
+    try:
+        from llm.reranker import rerank_few_shot_examples
+        return rerank_few_shot_examples(query, tfidf_results, top_k=top_k)
+    except Exception:
+        return tfidf_results[:top_k]
 
 
 # ---------------------------------------------------------------------------

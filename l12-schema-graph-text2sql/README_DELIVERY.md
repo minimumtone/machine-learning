@@ -30,7 +30,7 @@
 ### インフラ・テスト
 - **Docker設定** (`docker/docker-compose.yml`)
 - **DB定義** (`db/extended_schema.sql`, `db/insert_data.sql` — 1,470件)
-- **テスト** (`tests/` — 126件)
+- **テスト** (`tests/` — 134件)
 - **依存定義** (`pyproject.toml`)
 - **環境変数テンプレート** (`.env.example`)
 - **実験スクリプト** (`experiments/`)
