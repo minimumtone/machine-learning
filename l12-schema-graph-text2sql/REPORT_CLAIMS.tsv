@@ -1,0 +1,23 @@
+claim_id	claim_text	evidence_ids	source_registry	status	allowed_in_report	reason
+CLM-001	Full pipeline accuracy = 80.6%	EVID-20260619-1335-ablation-full	RESULT_REGISTRY RES-ABL-FULL	VERIFIED	YES	From ablation_results.json via paper_data.json
+CLM-002	no_fewshot delta = -12.5pp	EVID-20260619-1335-ablation-nofewshot	RESULT_REGISTRY RES-ABL-NOFS	VERIFIED	YES	From ablation_results.json via paper_data.json
+CLM-003	no_fewshot Medium delta = -16.5pp	EVID-20260619-1335-ablation-nofewshot	RESULT_REGISTRY RES-ABL-NOFS-M	VERIFIED	YES	From paper_data.json top3_per_difficulty_deltas
+CLM-004	no_dict delta = -6.7pp	EVID-20260619-1335-ablation-nodict	RESULT_REGISTRY RES-ABL-NODICT	VERIFIED	YES	From ablation_results.json via paper_data.json
+CLM-005	no_dict VH delta = -22.7pp (38.5% -> 15.8%)	EVID-20260619-1335-ablation-nodict	RESULT_REGISTRY RES-ABL-NODICT-VH	VERIFIED	YES	From paper_data.json
+CLM-006	no_reranker delta = -4.1pp	EVID-20260619-1335-ablation-noreranker	RESULT_REGISTRY RES-ABL-NORR	VERIFIED	YES	From ablation_results.json via paper_data.json
+CLM-007	no_reranker Medium delta = -6.7pp	EVID-20260619-1335-ablation-noreranker	RESULT_REGISTRY RES-ABL-NORR	VERIFIED	YES	From paper_data.json top3_per_difficulty_deltas
+CLM-008	no_reranker Hard delta = -6.2pp	EVID-20260619-1335-ablation-noreranker	RESULT_REGISTRY RES-ABL-NORR	VERIFIED	YES	From paper_data.json top3_per_difficulty_deltas
+CLM-009	no_guard delta = -0.2pp	EVID-20260619-1335-ablation-noguard	RESULT_REGISTRY RES-ABL-NOGUARD	VERIFIED	YES	From ablation_results.json via paper_data.json
+CLM-010	no_nbest delta = -0.2pp, latency 33.1s -> 13.0s	EVID-20260619-1335-ablation-nonbest	RESULT_REGISTRY RES-ABL-NONBEST	VERIFIED	YES	From ablation_results.json via paper_data.json
+CLM-011	no_graph delta = -0.2pp	EVID-20260619-1335-ablation-nograph	RESULT_REGISTRY RES-ABL-NOGRAPH	VERIFIED	YES	From ablation_results.json via paper_data.json
+CLM-012	Reranker A/B: 77.2% vs 69.4% (+7.7pp) on 90 queries	EVID-20260619-1335-reranker-eval	RESULT_REGISTRY RES-RR-DELTA	ACTIVE	YES	Different run from ablation, noted in text
+CLM-013	JP reranker VH: ms-marco 32.4% vs jp 28.1% (-4.3pp)	EVID-20260619-1335-jp-reranker	RESULT_REGISTRY RES-JP-DELTA	ACTIVE	YES	20 VH queries
+CLM-014	MeCab dictionary: 492 terms, 100% single-token rate vs 30.6% default	EVID-20260619-1335-mecab-dict	RESULT_REGISTRY RES-MECAB-RATE	VERIFIED	YES	build_mecab_materials_dict.py output
+CLM-015	Database: 30 tables, 1470 material entries	EVID-20260619-1335-db-schema	PARAMETER_REGISTRY	ACTIVE	YES	psql verified
+CLM-016	Evaluation: 100 queries (E=20 M=30 H=30 VH=20)	EVID-20260619-1335-dataset-author	PARAMETER_REGISTRY	ACTIVE	YES	evaluation_dataset.jsonl
+CLM-017	Total evaluations: 700 (7 conditions x 100 queries)	EVID-20260619-1335-ablation-json	PARAMETER_REGISTRY	ACTIVE	YES	Computed from JSON
+CLM-018	LLM non-determinism ~1-2pp variance	N/A	N/A	DRAFT	YES	Stated as limitation, not as precise measurement
+CLM-019	no_fewshot Easy delta = -5.0pp	EVID-20260619-1335-ablation-nofewshot	RESULT_REGISTRY	VERIFIED	YES	From paper_data.json
+CLM-020	no_dict Easy/Medium delta = 0.0pp	EVID-20260619-1335-ablation-nodict	RESULT_REGISTRY	VERIFIED	YES	From paper_data.json
+CLM-021	no_dict Hard delta = -7.3pp	EVID-20260619-1335-ablation-nodict	RESULT_REGISTRY	VERIFIED	YES	From paper_data.json
+CLM-022	no_reranker VH delta = -1.1pp	EVID-20260619-1335-ablation-noreranker	RESULT_REGISTRY	VERIFIED	YES	From paper_data.json
