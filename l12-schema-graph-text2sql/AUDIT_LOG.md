@@ -82,7 +82,7 @@ Output: paper/paper_data.json
 Exit code: 0
 All numbers verified against source JSONs.
 
-## Phase 6: LaTeX paper expansion (2026-06-02)
+## Phase 6: LaTeX paper expansion (2026-06-19)
 
 Expanded paper/main.tex from 534 lines to 1056 lines.
 Restored from old version (3,214 lines at commit a9f5974):
@@ -100,5 +100,28 @@ No hand-typed numbers.
 Compilation:
 - lualatex main.tex (pass 1): exit code 0, 7 pages
 - lualatex main.tex (pass 2): exit code 0, 7 pages, 602494 bytes
+- No missing references or undefined citations
+- Only cosmetic warnings: Kanji font shape info, hyperref bookmark tokens
+
+## Phase 7: Supplementary Materials (2026-06-19)
+
+Expanded paper/main.tex from 1056 lines to 1534 lines (+478 lines).
+Added 7 supplementary sections (S1--S7):
+- S1: Unit test categories (12 categories, 134 tests, all PASS)
+- S2: Regression test cases (39 cases, all PASS)
+- S3: Generated SQL examples (LLM-only vs Schema Graph-constrained, 2 comparisons)
+- S4: SQL injection / safety tests (7 adversarial inputs, all blocked)
+- S5: LLM configuration (GPT-5.5 parameters, prompt structure)
+- S6: Per-query detail for 100 evaluation queries (full condition)
+- S7: Ablation cross-condition comparison (30 queries with differing results across 7 conditions)
+
+Devin Review fixes applied:
+- JP reranker delta: -4.3pp -> -4.4pp (match paper_data.json)
+- sqlglot author: T. Palantir -> T. Mao
+- FINAL_AUDIT date: chronological correction
+
+Compilation:
+- lualatex main.tex (pass 1): exit code 0, 14 pages
+- lualatex main.tex (pass 2): exit code 0, 14 pages, 700319 bytes
 - No missing references or undefined citations
 - Only cosmetic warnings: Kanji font shape info, hyperref bookmark tokens

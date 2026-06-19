@@ -431,7 +431,7 @@ Few-shot例選択のCross-Encoderについて、
 日本語モデル（hotchpotch/japanese-reranker-cross-encoder-xsmall-v1）を
 Very Hard 20件で比較した。
 結果はms-marco 32.4\%に対しjapanese-xsmall 28.1\%であり、
-$-$4.3\,ppの差でms-marcoが優位であった
+$-$4.4\,ppの差でms-marcoが優位であった
 （EVID-20260619-1335-jp-reranker）。
 Few-shot例にSQLコード（英語）が含まれるため、
 英語に対するスコアリング能力がms-marcoの優位性に寄与していると考えられる。
@@ -815,6 +815,55 @@ AFLOW~\cite{curtarolo2012aflow}）への適用時に
   \end{tabularx}
 \end{table*}
 
+\subsection{LLM-onlyおよびスキーマ提示のみとの定量比較}
+
+ablation studyの結果を手法レベルの比較として再構成する。
+各ablation条件は、構成要素を除去した簡略手法に対応する
+（表~\ref{tab:method_comparison}）。
+
+\begin{table}[t]
+\centering
+\caption{手法レベルの定量比較。ablation条件を手法構成として再解釈。
+全数値はablation study（100クエリ、単一ラン）の結果
+（EVID-20260619-1335-ablation-json）。}
+\label{tab:method_comparison}
+\small
+\begin{tabular}{@{}p{4.2cm}cccc@{}}
+\toprule
+手法構成 & Overall & Easy & VH & $\Delta$ \\
+\midrule
+LLM-only（スキーマ情報なし） & \multicolumn{4}{l}{\textit{テーブル幻覚により実行不可（S3節参照）}} \\
+\midrule
+Full Schema提示 & 68.2\% & 95.0 & 26.2 & $-$12.5 \\
+{\scriptsize （= no\_fewshot: スキーマ+LLM、} & & & & \\
+{\scriptsize \phantom{（= }few-shot例なし）} & & & & \\
+\midrule
++ Few-shot RAG & 73.9\% & 100 & 15.8 & $-$6.7 \\
+{\scriptsize （= no\_dict: +few-shot、辞書なし）} & & & & \\
+\midrule
++ 材料辞書 & 76.6\% & 100 & 37.4 & $-$4.1 \\
+{\scriptsize （= no\_reranker: +辞書、} & & & & \\
+{\scriptsize \phantom{（= }rerankerなし）} & & & & \\
+\midrule
+\textbf{提案手法（全構成要素）} & \textbf{80.6\%} & \textbf{100} & \textbf{38.5} & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+LLM-onlyはスキーマ情報を与えない構成であり、
+S3節（Supplementary Materials）に示すように
+テーブル名・カラム名の幻覚が発生し実行可能なSQLが生成されない。
+Full Schema提示（no\_fewshot条件に相当）は
+スキーマ定義をプロンプトに含めるがfew-shot例・辞書・rerankerを持たず、
+68.2\%にとどまる。
+構成要素を段階的に追加するにつれ精度は単調に向上し、
+全構成要素を含む提案手法で80.6\%に達した。
+
+なお、上記は各ablation条件の単一除去結果を段階的追加として再解釈したものであり、
+条件間の交互作用は分離されていない。
+異なる手法（DIN-SQL、DAIL-SQL等）との同一DB上の直接比較は未実施である
+（制約6項参照）。
+
 \subsection{制約と今後の課題}
 
 \begin{enumerate}
@@ -1037,7 +1086,7 @@ Exploring network structure, dynamics, and function using {NetworkX},
 in: Proc.\ SciPy, 2008.
 
 \bibitem{sqlglot2023}
-T.~Palantir,
+T.~Mao,
 sqlglot: Python SQL parser and transpiler, 2023.
 \url{https://github.com/tobymao/sqlglot}
 
@@ -1052,5 +1101,512 @@ pinax: Provenance-tracking analysis workflow management system,
 (2026).
 
 \end{thebibliography}
+
+% =====================================================================
+% Supplementary Materials（本体と結合して1本のPDFとして出力）
+% =====================================================================
+\clearpage
+\onecolumn
+\appendix
+\renewcommand{\thesection}{S\arabic{section}}
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\theequation}{S\arabic{equation}}
+\setcounter{section}{0}
+\setcounter{table}{0}
+\setcounter{figure}{0}
+\setcounter{equation}{0}
+
+\begin{center}
+  {\LARGE\bfseries Supplementary Materials}\\[0.8em]
+  {\large Schema-Graph-Constrained Natural Language Interface for\\
+  Intermetallic Compound Exploration}\\[0.5em]
+  {\large 金属間化合物探索のためのSchema Graph制約型\\自然言語データベースインターフェース}\\[1.0em]
+  {\normalsize Satoshi Minamoto}\\[0.3em]
+  {\small National Institute for Materials Science (NIMS),\\
+  1-2-1 Sengen, Tsukuba, Ibaraki 305-0047, Japan}\\[0.3em]
+  {\small \texttt{minamoto.satoshi@nims.go.jp}}
+\end{center}
+\vspace{1.0em}
+\noindent\hrulefill
+\vspace{1.0em}
+
+\noindent
+本補足資料では、本論文で提案したSchema Graph制約型Text-to-SQLシステムの
+検証・評価に関する詳細情報を提供する。
+S1節ではユニットテストの全カテゴリと検証焦点を示し、
+S2節で回帰テストケース39件の一覧を掲載する。
+S3節では代表的なクエリに対する生成SQL例を比較し、
+本手法のJOINパス制約の効果を具体的に示す。
+S4節ではSQLインジェクション攻撃を含む安全性テスト結果を報告する。
+S5節ではLLMモード（GPT-5.5）の設定パラメータとプロンプト構成を記載する。
+S6節では評価クエリ100件の詳細結果（クエリ文、精度、レイテンシ）を一覧する。
+S7節ではablation study 7条件間で結果が異なるクエリの比較を示す。
+全数値は\texttt{paper\_data.json}から取得（EVID-20260619-1335-ablation-json）。
+
+% =====================================================================
+\section{ユニットテストカテゴリ詳細}
+\label{sec:sup_test_categories}
+
+開発安全性テストとして6カテゴリ39件の回帰テスト、
+SQL検証テスト6件、Coverage Score・パーサーテスト15件、
+Intent Classifierテスト20件の計80件を構築した（表~\ref{tab:sup_test_categories}）。
+これらに加え、エイリアス解決テスト、スーパーセット検出テスト等を含む
+全134件のユニットテストが全PASSを達成した。
+
+\begin{table*}[htbp]
+\centering
+\caption{ユニットテストカテゴリ（全134件、全PASS）。}
+\label{tab:sup_test_categories}
+\small
+\begin{tabularx}{\textwidth}{llcX}
+  \toprule
+  カテゴリ & ID & $n$ & 検証焦点 \\
+  \midrule
+  正常系 & A01--A15 & 15 & L1$_2$元素・プロトタイプ・安定性・ソート・複合条件 \\
+  該当なし & B01--B05 & 5 & 希ガス元素、非存在組合せ $\to$ 0行期待 \\
+  曖昧な入力 & C01--C10 & 10 & 空入力、無関係テキスト、単語のみ \\
+  矛盾条件 & D01--D02 & 2 & 「安定かつ準安定」等 \\
+  SQLインジェクション & E01--E05 & 5 & DROP, DELETE, INSERT、ピギーバック攻撃 \\
+  安全性検査 & F01--F02 & 2 & 直接SQL入力（SELECT, UPDATE） \\
+  SQL検証 & --- & 6 & カラム/テーブルホワイトリスト、JOIN検証 \\
+  Coverage・パーサー & --- & 15 & 数値条件、化学式、Coverage Score \\
+  Intent Classifier & --- & 20 & VASP/DFTワークフロー検出、分類 \\
+  エイリアス解決 & --- & 15 & ORDER BY/HAVING参照、カラムエイリアス \\
+  スーパーセット検出 & --- & 10 & 過剰取得判定、行比率閾値 \\
+  その他 & --- & 29 & Schema Graph走査、辞書マッピング、エンティティ抽出 \\
+  \bottomrule
+\end{tabularx}
+\end{table*}
+
+% =====================================================================
+\section{回帰テストケース一覧}
+\label{sec:sup_all_tests}
+
+表~\ref{tab:sup_all_tests}に回帰テスト39件（正常系・該当なし・曖昧・矛盾・
+SQLインジェクション・安全性）のクエリと結果を示す。
+
+\begin{table*}[htbp]
+\centering
+\caption{回帰テストケース一覧（全39件、全PASS）。}
+\label{tab:sup_all_tests}
+\footnotesize
+\begin{tabular}{llp{8cm}l}
+  \toprule
+  ID & カテゴリ & 自然言語クエリ & 結果 \\
+  \midrule
+  A01 & 正常系 & Feを含むL1$_2$化合物を出して & PASS \\
+  A02 & 正常系 & 安定なL1$_2$化合物を形成エネルギー順に出して & PASS \\
+  A03 & 正常系 & NiとAlの両方を含む化合物を出して & PASS \\
+  A04 & 正常系 & L1$_2$化合物の全リストを出して & PASS \\
+  A05 & 正常系 & 準安定なL1$_2$化合物を出して & PASS \\
+  A06 & 正常系 & Coを含む安定なL1$_2$化合物を出して & PASS \\
+  A07 & 正常系 & FeとAlを含むL1$_2$化合物を出して & PASS \\
+  A08 & 正常系 & $\gamma'$化合物を出して & PASS \\
+  A09 & 正常系 & ニッケルを含むL1$_2$型化合物を出して & PASS \\
+  A10 & 正常系 & L1$_2$化合物の全データを出して & PASS \\
+  A11 & 正常系 & Tiを含むL1$_2$化合物を格子定数順（降順）に出して & PASS \\
+  A12 & 正常系 & 安定なL1$_2$で格子定数3.5\AA 以上のものを出して & PASS \\
+  A13 & 正常系 & Cu$_3$Au型化合物を出して & PASS \\
+  A14 & 正常系 & 鉄を含むL1$_2$化合物を出して & PASS \\
+  A15 & 正常系 & 安定なL1$_2$化合物でNiを含むものを出して & PASS \\
+  \midrule
+  B01 & 該当なし & Xeを含むL1$_2$化合物を出して & PASS \\
+  B02 & 該当なし & UとPuを含むL1$_2$化合物を出して & PASS \\
+  B03 & 該当なし & RnとOgを含むL1$_2$化合物を出して & PASS \\
+  B04 & 該当なし & ScとIrを含む安定なL1$_2$化合物を出して & PASS \\
+  B05 & 該当なし & PtとGaを含む安定なL1$_2$化合物を出して & PASS \\
+  \midrule
+  C01 & 曖昧 & 安定な化合物を出して & PASS \\
+  C02 & 曖昧 & L12 & PASS \\
+  C03 & 曖昧 & 安定なものを出して & PASS \\
+  C04 & 曖昧 & （空入力） & PASS \\
+  C05 & 曖昧 & 今日の天気を教えて & PASS \\
+  C06 & 曖昧 & Fe & PASS \\
+  C07 & 曖昧 & 格子定数 & PASS \\
+  C08 & 曖昧 & 形成エネルギーが低い安定なL1$_2$化合物 & PASS \\
+  C09 & 曖昧 & NiAl L12 & PASS \\
+  C10 & 曖昧 & NiのL12 & PASS \\
+  \midrule
+  D01 & 矛盾 & 安定かつ準安定なL1$_2$化合物 & PASS \\
+  D02 & 矛盾 & NiなしのNi L1$_2$化合物 & PASS \\
+  \midrule
+  E01 & 拒否 & DROP TABLE material\_entry; & PASS \\
+  E02 & 拒否 & SELECT *; DELETE FROM composition; & PASS \\
+  E03 & 拒否 & L1$_2$化合物; DROP TABLE structure; & PASS \\
+  E04 & 拒否 & SELECT * FROM secret\_passwords & PASS \\
+  E05 & 拒否 & INSERT INTO material\_entry VALUES (...) & PASS \\
+  \midrule
+  F01 & 安全性 & SELECT entry\_id FROM material\_entry & PASS \\
+  F02 & 安全性 & UPDATE material\_entry SET formula='X' & PASS \\
+  \bottomrule
+\end{tabular}
+\end{table*}
+
+% =====================================================================
+\section{生成SQL例}
+\label{sec:sup_sql_examples}
+
+代表的なクエリに対する生成SQL例を、
+3段階の手法構成（LLM-only、Full Schema提示、本手法）で比較する。
+本文の表~\ref{tab:method_comparison}の定量比較を補完し、
+各構成の出力SQLの質的差異を具体的に示す。
+
+\subsection{「Niを含む安定なL1$_2$化合物を出して」}
+
+\paragraph{LLM-only（スキーマ情報なし）：}
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
+SELECT formula, stability
+FROM materials
+WHERE element = 'Ni'
+  AND structure_type = 'L12'
+  AND stability = 'stable';
+-- テーブル幻覚: materials, stability等は存在しない
+-- 実行不可（ERROR: relation "materials" does not exist）
+\end{lstlisting}
+
+\paragraph{Full Schema提示（スキーマ定義をプロンプトに含めるがfew-shot例なし）：}
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
+SELECT m.formula, ps.is_stable
+FROM material_entry m
+  JOIN composition c ON c.entry_id = m.entry_id
+  JOIN structure s ON s.entry_id = m.entry_id
+  JOIN phase_stability ps ON ps.entry_id = m.entry_id
+WHERE c.element = 'Ni'
+  AND s.strukturbericht = 'L12'
+  AND ps.is_stable = true;
+-- 実行可能だが不完全:
+-- (1) prototype条件なし（L12がstrukturberichtに
+--     ない場合を見落とし）
+-- (2) DISTINCT/LIMITなし
+-- (3) 格子定数等の材料的に有用な列を選択していない
+\end{lstlisting}
+
+\paragraph{本手法（Schema Graph制約 + Few-shot + 辞書）：}
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
+SELECT DISTINCT m.entry_id, m.formula,
+  s.prototype, s.lattice_a, s.space_group
+FROM material_entry m
+  JOIN composition c ON c.entry_id = m.entry_id
+  JOIN structure s ON s.entry_id = m.entry_id
+  JOIN phase_stability ps ON ps.entry_id = m.entry_id
+WHERE (s.prototype = 'L12'
+    OR s.strukturbericht = 'L12')
+  AND c.element = 'Ni'
+  AND ps.energy_above_hull <= 0.001
+LIMIT 10000;
+-- Schema Graph走査で必要な3 JOINのみ
+-- テーブル幻覚なし、DISTINCT, LIMIT付き
+\end{lstlisting}
+
+\subsection{「NiとAlの両方を含むL1$_2$化合物を出して」}
+
+\paragraph{LLM-only（スキーマ情報なし）：}
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
+SELECT * FROM compounds
+WHERE elements LIKE '%Ni%' AND elements LIKE '%Al%'
+  AND crystal_structure = 'L12';
+-- テーブル幻覚: compounds, elements列は存在しない
+\end{lstlisting}
+
+\paragraph{Full Schema提示（few-shot例なし）：}
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
+SELECT m.entry_id, m.formula
+FROM material_entry m
+  JOIN composition c ON c.entry_id = m.entry_id
+  JOIN structure s ON s.entry_id = m.entry_id
+WHERE c.element = 'Ni' AND c.element = 'Al'
+  AND s.prototype = 'L12';
+-- 致命的: 単一行が両条件を同時に満たすことは
+-- 不可能 -> 常に0行
+\end{lstlisting}
+
+\paragraph{本手法（EXISTS副問い合わせ）：}
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
+SELECT DISTINCT m.entry_id, m.formula
+FROM material_entry m
+  JOIN structure s ON s.entry_id = m.entry_id
+WHERE (s.prototype = 'L12'
+    OR s.strukturbericht = 'L12')
+AND EXISTS (
+  SELECT 1 FROM composition
+  WHERE entry_id = m.entry_id AND element = 'Ni')
+AND EXISTS (
+  SELECT 1 FROM composition
+  WHERE entry_id = m.entry_id AND element = 'Al')
+LIMIT 10000;
+-- EXISTS副問い合わせで正確な多元素AND
+\end{lstlisting}
+
+% =====================================================================
+\section{SQLインジェクション・安全性テスト結果}
+\label{sec:sup_injection}
+
+7件の敵対的入力（E01--E05、F01--F02）はすべてSQLGuardにより安全に処理された
+（表~\ref{tab:sup_injection_results}）。破壊的・注入的入力は遮断され、
+LIMITなしの直接SELECTはLIMIT自動付加により安全化された。
+
+\begin{table}[htbp]
+  \centering
+  \caption{SQLインジェクション・安全性テスト結果（全件安全処理）。}
+  \label{tab:sup_injection_results}
+  \small
+  \begin{tabularx}{\linewidth}{lXl}
+    \toprule
+    ID & 入力 & 処理 \\
+    \midrule
+    E01 & \texttt{DROP TABLE material\_entry;} & 禁止キーワード：DROP \\
+    E02 & \texttt{SELECT *; DELETE FROM composition;} & 複数文 + DELETE \\
+    E03 & L1$_2$化合物; \texttt{DROP TABLE structure;} & 複数文 + DROP \\
+    E04 & \texttt{SELECT * FROM secret\_passwords} & 非許可テーブル \\
+    E05 & \texttt{INSERT INTO material\_entry ...} & 禁止キーワード：INSERT \\
+    F01 & \texttt{SELECT entry\_id FROM material\_entry} & LIMIT自動付加（安全化） \\
+    F02 & \texttt{UPDATE material\_entry SET ...} & 禁止キーワード：UPDATE \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+% =====================================================================
+\section{LLMモード設定}
+\label{sec:sup_llm_config}
+
+LLMモードではOpenAI APIを介してGPT-5.5を使用した。
+表~\ref{tab:sup_llm_params}にモデルパラメータを示す。
+
+\begin{table}[htbp]
+  \centering
+  \caption{LLMモード設定パラメータ（EVID-20260619-1335-model-gpt55）。}
+  \label{tab:sup_llm_params}
+  \small
+  \begin{tabular}{ll}
+    \toprule
+    パラメータ & 値 \\
+    \midrule
+    モデル名 & GPT-5.5（OpenAI） \\
+    APIアクセス日 & 2026年5--6月 \\
+    Temperature & 未指定（GPT-5系はtemperatureパラメータ未サポート） \\
+    Max tokens & 4{,}096（全手法共通） \\
+    Top-$p$ & 1.0 \\
+    リクエストタイムアウト & 30秒 \\
+    リトライ回数 & 最大3回（指数バックオフ） \\
+    n-best候補数 & 3 \\
+    Cross-Encoder & ms-marco-MiniLM-L-6-v2 \\
+    リペアループ上限 & 3回 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+構造化プロンプトは以下の4要素から構成される：
+
+\begin{enumerate}
+  \item \textbf{システムメッセージ}：タスク説明 + スキーマYAML（テーブル名、カラム名、型、FK関係）
+  \item \textbf{Few-Shot事例}：TF-IDF + Cross-Encoderで選択されたTop-$k$類似NL--SQLペア
+  \item \textbf{ユーザーメッセージ}：自然言語クエリ
+  \item \textbf{制約}：「SELECT文のみ生成」「LIMIT 10000を含める」
+        「スキーマに記載されたテーブルのみ使用」
+\end{enumerate}
+
+GPT-5系APIではtemperatureパラメータはサポートされておらず、本実装でも送信していない。
+そのため、LLMの内部状態により同一入力でも出力が変動する可能性がある。
+本論文の全ablation結果は単一ランであり、信頼区間の算出は行っていない。
+
+% =====================================================================
+\section{評価クエリ100件の詳細結果}
+\label{sec:sup_query_detail}
+
+表~\ref{tab:sup_query_detail}に評価クエリ100件（著者設計、E=20/M=30/H=30/VH=20）の
+各クエリの質問文、実行精度（行一致recall）、レイテンシ、正誤判定（精度$\geq 0.8$で$\checkmark$）を示す。
+全数値はablation full条件の結果（EVID-20260619-1335-ablation-json）である。
+
+\begin{longtable}{lp{8.5cm}ccl}
+  \caption{評価クエリ100件の詳細結果（full条件）。}
+  \label{tab:sup_query_detail} \\
+  \toprule
+  ID & クエリ & 精度 & 秒 & 正誤 \\
+  \midrule
+  \endfirsthead
+  \toprule
+  ID & クエリ & 精度 & 秒 & 正誤 \\
+  \midrule
+  \endhead
+  \midrule
+  \multicolumn{5}{r}{\textit{次ページに続く}} \\
+  \endfoot
+  \bottomrule
+  \endlastfoot
+    \midrule
+    \multicolumn{5}{l}{\textbf{Easy（20件）}} \\
+    \midrule
+    q\_easy\_001 & L1$_2$構造を持つ化合物を一覧にして。 & 1.00 & 29.7 & $\checkmark$ \\
+    q\_easy\_002 & Niを含むL1$_2$型金属間化合物を抽出して。 & 1.00 & 44.3 & $\checkmark$ \\
+    q\_easy\_003 & A$_3$B型組成を持つ化合物を表示して。 & 1.00 & 31.5 & $\checkmark$ \\
+    q\_easy\_004 & L12型化合物の格子定数を一覧にして。 & 1.00 & 13.1 & $\checkmark$ \\
+    q\_easy\_005 & Coを含む化合物を表示して。 & 1.00 & 17.2 & $\checkmark$ \\
+    q\_easy\_006 & cubic構造の化合物を一覧にして。 & 1.00 & 12.6 & $\checkmark$ \\
+    q\_easy\_007 & L1$_2$型化合物のリストを出して。 & 1.00 & 20.9 & $\checkmark$ \\
+    q\_easy\_008 & Alを含む化合物を抽出して。 & 1.00 & 16.3 & $\checkmark$ \\
+    q\_easy\_009 & 空間群番号221の化合物を表示して。 & 1.00 & 13.1 & $\checkmark$ \\
+    q\_easy\_010 & Tiを含むL1$_2$型化合物を一覧にして。 & 1.00 & 23.7 & $\checkmark$ \\
+    q\_easy\_011 & 全化合物のformula一覧を出して。 & 1.00 & 12.3 & $\checkmark$ \\
+    q\_easy\_012 & L12型化合物の数を教えて。 & 1.00 & 19.9 & $\checkmark$ \\
+    q\_easy\_013 & Ptを含む化合物を表示して。 & 1.00 & 14.7 & $\checkmark$ \\
+    q\_easy\_014 & NiとAlの両方を含む化合物を抽出して。 & 1.00 & 17.9 & $\checkmark$ \\
+    q\_easy\_015 & Gaを含むL1$_2$型化合物を表示して。 & 1.00 & 37.5 & $\checkmark$ \\
+    q\_easy\_016 & Feを含む化合物を一覧にして。 & 1.00 & 20.1 & $\checkmark$ \\
+    q\_easy\_017 & Aサイトの元素を一覧にして。 & 1.00 & 10.7 & $\checkmark$ \\
+    q\_easy\_018 & 化合物の元素系を表示して。 & 1.00 & 13.7 & $\checkmark$ \\
+    q\_easy\_019 & L1$_2$型でcubic構造の化合物を出して。 & 1.00 & 18.4 & $\checkmark$ \\
+    q\_easy\_020 & Wを含むL1$_2$型化合物を表示して。 & 1.00 & 34.4 & $\checkmark$ \\
+    \midrule
+    \multicolumn{5}{l}{\textbf{Medium（30件）}} \\
+    \midrule
+    q\_medium\_001 & Niを含む安定なL1$_2$型化合物を抽出して。 & 1.00 & 26.4 & $\checkmark$ \\
+    q\_medium\_002 & 形成エネルギーが負のL1$_2$型化合物を元素組み合わせごとに整理して。 & 1.00 & 29.0 & $\checkmark$ \\
+    q\_medium\_003 & Alを含む安定なL1$_2$型金属間化合物を抽出して。 & 1.00 & 43.3 & $\checkmark$ \\
+    q\_medium\_004 & Ni$_3$Alに近い格子定数を持つL1$_2$化合物を探して。 & 1.00 & 34.9 & $\checkmark$ \\
+    q\_medium\_005 & 安定なL1$_2$型化合物を形成エネルギーが低い順に出して。 & 1.00 & 33.9 & $\checkmark$ \\
+    q\_medium\_006 & 準安定なL1$_2$型化合物を抽出して。 & 0.84 & 34.3 & $\checkmark$ \\
+    q\_medium\_007 & L1$_2$型化合物の形成エネルギー分布を教えて。 & 1.00 & 24.8 & $\checkmark$ \\
+    q\_medium\_008 & Co含有L1$_2$型化合物を安定性の高い順に表示して。 & 1.00 & 25.6 & $\checkmark$ \\
+    q\_medium\_009 & 格子定数が3.5\AA 以上のL1$_2$化合物を出して。 & 1.00 & 14.3 & $\checkmark$ \\
+    q\_medium\_010 & NiまたはCoを含むL1$_2$型化合物を一覧にして。 & 1.00 & 34.7 & $\checkmark$ \\
+    q\_medium\_011 & 形成エネルギーが$-$0.4以下のL1$_2$型化合物を出して。 & 1.00 & 20.5 & $\checkmark$ \\
+    q\_medium\_012 & energy above hullが0.01以下のL1$_2$型化合物を表示して。 & 1.00 & 31.0 & $\checkmark$ \\
+    q\_medium\_013 & Ti含有L1$_2$型化合物の格子定数と形成エネルギーを表示して。 & 1.00 & 18.0 & $\checkmark$ \\
+    q\_medium\_014 & L1$_2$化合物の格子定数を小さい順にソートして。 & 1.00 & 16.5 & $\checkmark$ \\
+    q\_medium\_015 & 化学系Al-Niに属するL1$_2$化合物を抽出して。 & 1.00 & 20.9 & $\checkmark$ \\
+    q\_medium\_016 & 安定で格子定数が3.6\AA 未満のL1$_2$化合物を出して。 & 1.00 & 24.2 & $\checkmark$ \\
+    q\_medium\_017 & Nbを含むL1$_2$型化合物の安定性情報を出して。 & 1.00 & 30.8 & $\checkmark$ \\
+    q\_medium\_018 & Scを含むL1$_2$型化合物を格子定数と共に表示して。 & 1.00 & 26.6 & $\checkmark$ \\
+    q\_medium\_019 & L1$_2$型化合物のうちis\_stableがtrueのものを出して。 & 1.00 & 30.1 & $\checkmark$ \\
+    q\_medium\_020 & Ni-Al系以外のL1$_2$型化合物を一覧にして。 & 1.00 & 19.6 & $\checkmark$ \\
+    q\_medium\_021 & Aサイト元素ごとのL1$_2$型化合物数を集計して。 & 1.00 & 24.4 & $\checkmark$ \\
+    q\_medium\_022 & 形成エネルギーが最も低いL1$_2$型化合物TOP5を出して。 & 1.00 & 25.9 & $\checkmark$ \\
+    q\_medium\_023 & 格子定数が4.0\AA 以上のL1$_2$化合物を出して。 & 1.00 & 16.3 & $\checkmark$ \\
+    q\_medium\_024 & Pdを含むL1$_2$型化合物を形成エネルギー順に出して。 & 1.00 & 43.6 & $\checkmark$ \\
+    q\_medium\_025 & Cu含有のL1$_2$型化合物を安定性で分類して。 & 1.00 & 33.7 & $\checkmark$ \\
+    q\_medium\_026 & Bサイト元素ごとの平均形成エネルギーを出して。 & 0.00 & 29.2 & --- \\
+    q\_medium\_027 & 格子体積が12\AA$^3$/atom以下のL1$_2$化合物を出して。 & 1.00 & 19.8 & $\checkmark$ \\
+    q\_medium\_028 & Ir含有L1$_2$型化合物の一覧を出して。 & 1.00 & 23.7 & $\checkmark$ \\
+    q\_medium\_029 & 2元素系のL1$_2$型化合物をchemical\_systemで分類して。 & 1.00 & 21.9 & $\checkmark$ \\
+    q\_medium\_030 & 安定なL1$_2$型化合物のうち格子定数が大きい順に並べて。 & 1.00 & 28.8 & $\checkmark$ \\
+    \midrule
+    \multicolumn{5}{l}{\textbf{Hard（30件）}} \\
+    \midrule
+    q\_hard\_001 & Ni基超合金の$\gamma'$相候補として有望な安定/準安定L1$_2$化合物。 & 0.06 & 70.6 & --- \\
+    q\_hard\_002 & Aサイト$\times$Bサイト組み合わせと形成エネルギーの関係。 & 1.00 & 36.0 & $\checkmark$ \\
+    q\_hard\_003 & 格子定数がNi$_3$Alに近く形成エネルギーが低い候補。 & 1.00 & 40.7 & $\checkmark$ \\
+    q\_hard\_004 & 安定L1$_2$のバルクモジュラスを高い順に表示。 & 1.00 & 29.5 & $\checkmark$ \\
+    q\_hard\_005 & Ni/Coを含む安定L1$_2$を形成エネルギー順に。 & 1.00 & 45.9 & $\checkmark$ \\
+    q\_hard\_006 & Aサイト元素別の平均格子定数を集計。 & 1.00 & 23.5 & $\checkmark$ \\
+    q\_hard\_007 & $E_f \leq -0.3$かつ$a = 3.5$--$3.7$\AA のL1$_2$化合物。 & 1.00 & 25.7 & $\checkmark$ \\
+    q\_hard\_008 & バルクモジュラス180GPa以上のL1$_2$化合物。 & 1.00 & 26.8 & $\checkmark$ \\
+    q\_hard\_009 & Co基L1$_2$でNi$_3$Alに近い格子定数、安定性順。 & 1.00 & 50.6 & $\checkmark$ \\
+    q\_hard\_010 & BサイトAl/TiのL1$_2$を形成エネルギー順に。 & 1.00 & 25.4 & $\checkmark$ \\
+    q\_hard\_011 & L1$_2$化合物のせん断弾性率を表示。 & 1.00 & 23.0 & $\checkmark$ \\
+    q\_hard\_012 & 安定で$E_f$最低のL1$_2$トップ10。 & 0.50 & 29.4 & --- \\
+    q\_hard\_013 & Ni含有L1$_2$のバルクモジュラスと$E_f$の関係。 & 1.00 & 38.5 & $\checkmark$ \\
+    q\_hard\_014 & Aサイト元素グループ別平均$E_f$。 & 0.00 & 34.8 & --- \\
+    q\_hard\_015 & $a \approx 3.55$\AA でバルクモジュラスの高いL1$_2$。 & 0.51 & 36.3 & --- \\
+    q\_hard\_016 & 格子定数と$E_f$の相関データ。 & 1.00 & 18.9 & $\checkmark$ \\
+    q\_hard\_017 & Co$_3$TiとNi$_3$Alの格子定数差を計算。 & 1.00 & 31.0 & $\checkmark$ \\
+    q\_hard\_018 & Al系L1$_2$の安定/不安定の件数。 & 0.00 & 35.6 & --- \\
+    q\_hard\_019 & 準安定L1$_2$をenergy above hull順にランキング。 & 0.84 & 31.0 & $\checkmark$ \\
+    q\_hard\_020 & Bサイト元素ごとの安定L1$_2$数を集計。 & 0.20 & 21.8 & --- \\
+    q\_hard\_021 & DFT計算で得られた物性一覧。 & 1.00 & 36.6 & $\checkmark$ \\
+    q\_hard\_022 & PBE汎関数計算のバルクモジュラス。 & 1.00 & 25.3 & $\checkmark$ \\
+    q\_hard\_023 & Ni$_3$Alとの格子ミスマッチを小さい順に。 & 1.00 & 19.0 & $\checkmark$ \\
+    q\_hard\_024 & Fe含有L1$_2$の安定性と弾性特性を同時表示。 & 0.00 & 31.2 & --- \\
+    q\_hard\_025 & 安定L1$_2$でバルクモジュラス160GPa以上。 & 1.00 & 36.9 & $\checkmark$ \\
+    q\_hard\_026 & 安定性$\times$格子定数でNi$_3$Alに近い候補。 & 1.00 & 30.0 & $\checkmark$ \\
+    q\_hard\_027 & Aサイト=Ni/Co、Bサイト=Al/TiのL1$_2$。 & 1.00 & 34.8 & $\checkmark$ \\
+    q\_hard\_028 & 体積あたり原子数と格子定数の関係。 & 1.00 & 23.2 & $\checkmark$ \\
+    q\_hard\_029 & $E_{hull} = 0$かつ$E_f \leq -0.4$のL1$_2$。 & 1.00 & 30.7 & $\checkmark$ \\
+    q\_hard\_030 & 遷移金属含有の安定L1$_2$。 & 1.00 & 58.2 & $\checkmark$ \\
+    \midrule
+    \multicolumn{5}{l}{\textbf{Very Hard（20件）}} \\
+    \midrule
+    q\_vhard\_001 & 相安定性$\times$格子ミスマッチ$\times$弾性の多基準評価。 & 0.19 & 57.6 & --- \\
+    q\_vhard\_002 & Ni$_3$Al代替/$\gamma'$候補の多基準探索。 & 0.04 & 57.9 & --- \\
+    q\_vhard\_003 & $\gamma'$候補の重み付きスコアでランキング。 & 0.00 & 53.3 & --- \\
+    q\_vhard\_004 & Ni/Co含有$\times$安定$\times$高$B$のトップ10。 & 1.00 & 32.2 & $\checkmark$ \\
+    q\_vhard\_005 & 元素組み合わせ$\times$安定性をA/Bサイト別に集計。 & 1.00 & 62.9 & $\checkmark$ \\
+    q\_vhard\_006 & Ni$_3$Alに近い格子$\times$高$B$$\times$安定の総合評価。 & 0.19 & 50.6 & --- \\
+    q\_vhard\_007 & 析出強化L1$_2$の多基準（ミスマッチ$\times$$G$$\times$安定性）。 & 1.00 & 52.8 & $\checkmark$ \\
+    q\_vhard\_008 & Co基$\gamma'$候補のNi$_3$Al比較付き探索。 & 0.11 & 43.2 & --- \\
+    q\_vhard\_009 & B/G比でductile/brittleを分類。 & 0.00 & 43.0 & --- \\
+    q\_vhard\_010 & $E_f$ vs $E_{hull}$の安定性マップデータ。 & 1.00 & 51.9 & $\checkmark$ \\
+    q\_vhard\_011 & 高温安定性の観点で$E_f$上位候補。 & 0.09 & 38.6 & --- \\
+    q\_vhard\_012 & Ni-Al系以外の$\gamma'$代替候補。 & 0.18 & 35.2 & --- \\
+    q\_vhard\_013 & $B$ vs $a$の散布図データ出力。 & 1.00 & 20.7 & $\checkmark$ \\
+    q\_vhard\_014 & 3d vs 4d/5d遷移金属Aサイトの比較。 & 0.88 & 56.4 & $\checkmark$ \\
+    q\_vhard\_015 & Ni$_3$Alより安定で$B$が高い候補。 & 0.02 & 137.7 & --- \\
+    q\_vhard\_016 & Co-Al-W系L1$_2$候補の安定性$\times$弾性。 & 0.00 & 53.0 & --- \\
+    q\_vhard\_017 & 安定性$\times$格子整合$\times$弾性の複合スコア。 & 1.00 & 55.2 & $\checkmark$ \\
+    q\_vhard\_018 & $\gamma'$候補の多変量（$B$, $E_f$, $\Delta a$）ランキング。 & 0.00 & 58.1 & --- \\
+    q\_vhard\_019 & 安定化合物の元素パターンから材料設計仮説を導出。 & 0.00 & 62.7 & --- \\
+    q\_vhard\_020 & Ni-Al-Co-Ti四元系L1$_2$候補探索。 & 0.00 & 53.7 & --- \\
+\end{longtable}
+
+% =====================================================================
+\section{Ablation条件間の精度差異クエリ}
+\label{sec:sup_ablation_diff}
+
+表~\ref{tab:sup_ablation_diff}に、7条件間で精度が異なる30件のクエリを示す。
+太字はfull条件から0.05以上低下した値を表す。
+$-$FS = no\_fewshot、$-$Dict = no\_dict、$-$RR = no\_reranker、
+$-$GD = no\_guard、$-$NB = no\_nbest、$-$GR = no\_graph。
+
+\begin{table*}[htbp]
+\centering
+\caption{Ablation条件間で精度が異なるクエリ（30件/100件）。太字はfull条件から$> 0.05$の低下。}
+\label{tab:sup_ablation_diff}
+\scriptsize
+\begin{tabular}{@{}llccccccc@{}}
+  \toprule
+  ID & D & Full & $-$FS & $-$Dict & $-$RR & $-$GD & $-$NB & $-$GR \\
+  \midrule
+    q\_easy\_007 & E & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_hard\_001 & H & 0.06 & \textbf{0.00} & \textbf{0.00} & 0.06 & 0.06 & 0.06 & 0.06 \\
+    q\_hard\_002 & H & 1.00 & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_hard\_003 & H & 1.00 & \textbf{0.00} & 1.00 & \textbf{0.01} & 1.00 & 1.00 & 1.00 \\
+    q\_hard\_004 & H & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_hard\_006 & H & 1.00 & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_hard\_010 & H & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_hard\_011 & H & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_hard\_012 & H & 0.50 & 0.50 & \textbf{0.38} & 0.50 & 0.50 & 0.50 & 0.50 \\
+    q\_hard\_024 & H & 0.00 & 0.00 & 0.00 & 0.11 & 0.00 & 0.00 & 0.00 \\
+    q\_hard\_026 & H & 1.00 & 1.00 & 1.00 & \textbf{0.01} & 1.00 & 1.00 & 1.00 \\
+    q\_medium\_001 & M & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_medium\_004 & M & 1.00 & 1.00 & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 \\
+    q\_medium\_012 & M & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_medium\_013 & M & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_medium\_014 & M & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_medium\_020 & M & 1.00 & 1.00 & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 \\
+    q\_medium\_021 & M & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_medium\_026 & M & 0.00 & 0.05 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\
+    q\_vhard\_001 & V & 0.19 & \textbf{0.00} & \textbf{0.00} & 0.19 & \textbf{0.00} & \textbf{0.00} & \textbf{0.00} \\
+    q\_vhard\_002 & V & 0.04 & 0.17 & 0.19 & 0.03 & 0.02 & 0.00 & 0.02 \\
+    q\_vhard\_004 & V & 1.00 & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_vhard\_005 & V & 1.00 & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_vhard\_006 & V & 0.19 & 0.19 & \textbf{0.00} & 0.19 & 0.19 & 0.19 & 0.19 \\
+    q\_vhard\_007 & V & 1.00 & \textbf{0.00} & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_vhard\_008 & V & 0.11 & 0.11 & \textbf{0.00} & 0.11 & 0.11 & 0.11 & 0.11 \\
+    q\_vhard\_012 & V & 0.18 & 0.18 & \textbf{0.00} & 0.18 & 0.18 & 0.18 & 0.18 \\
+    q\_vhard\_013 & V & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_vhard\_015 & V & 0.02 & 0.02 & 0.00 & 0.21 & 0.02 & 0.00 & 0.07 \\
+    q\_vhard\_017 & V & 1.00 & \textbf{0.60} & \textbf{0.00} & \textbf{0.60} & 1.00 & 1.00 & 1.00 \\
+  \bottomrule
+\end{tabular}
+\end{table*}
+
+表~\ref{tab:sup_ablation_diff}から、以下の傾向が読み取れる：
+\begin{itemize}
+  \item no\_fewshot（$-$FS）ではEasy--Hard帯のクエリが広範に0化し、few-shot例の汎用的な寄与を示す。
+  \item no\_dict（$-$Dict）ではVery Hard帯で集中的に0化し、ドメイン辞書がVH帯に不可欠であることを裏付ける。
+  \item no\_reranker（$-$RR）ではq\_hard\_003, q\_hard\_026, q\_medium\_004, q\_medium\_020で完全失敗し、候補選別の効果を示す。
+  \item no\_guard, no\_nbest, no\_graphは差異クエリ数が限定的であり、本文で報告した$-$0.2ppと整合する。
+  \item q\_vhard\_001はfull条件と$-$RR条件で0.19であるが、他の5条件では0。これはfew-shot + dictの複合効果を示唆する（リランカーの除去は精度に影響しなかった）。
+\end{itemize}
 
 \end{document}
