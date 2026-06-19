@@ -1,0 +1,216 @@
+{
+  "ms-marco (current)": {
+    "model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+    "overall_accuracy": 0.32424536616265937,
+    "avg_latency": 64.15,
+    "results": [
+      {
+        "qid": "q_vhard_001",
+        "accuracy": 0.0,
+        "latency_s": 75.5
+      },
+      {
+        "qid": "q_vhard_002",
+        "accuracy": 0.035897435897435895,
+        "latency_s": 66.6
+      },
+      {
+        "qid": "q_vhard_003",
+        "accuracy": 0.0,
+        "latency_s": 84.7
+      },
+      {
+        "qid": "q_vhard_004",
+        "accuracy": 1.0,
+        "latency_s": 34.8
+      },
+      {
+        "qid": "q_vhard_005",
+        "accuracy": 1.0,
+        "latency_s": 63.8
+      },
+      {
+        "qid": "q_vhard_006",
+        "accuracy": 0.18974358974358974,
+        "latency_s": 69.8
+      },
+      {
+        "qid": "q_vhard_007",
+        "accuracy": 1.0,
+        "latency_s": 61.4
+      },
+      {
+        "qid": "q_vhard_008",
+        "accuracy": 0.10526315789473684,
+        "latency_s": 40.8
+      },
+      {
+        "qid": "q_vhard_009",
+        "accuracy": 0.0,
+        "latency_s": 36.7
+      },
+      {
+        "qid": "q_vhard_010",
+        "accuracy": 1.0,
+        "latency_s": 67.0
+      },
+      {
+        "qid": "q_vhard_011",
+        "accuracy": 0.09438775510204081,
+        "latency_s": 40.2
+      },
+      {
+        "qid": "q_vhard_012",
+        "accuracy": 0.18461538461538463,
+        "latency_s": 33.5
+      },
+      {
+        "qid": "q_vhard_013",
+        "accuracy": 1.0,
+        "latency_s": 21.9
+      },
+      {
+        "qid": "q_vhard_014",
+        "accuracy": 0.875,
+        "latency_s": 67.9
+      },
+      {
+        "qid": "q_vhard_015",
+        "accuracy": 0.0,
+        "latency_s": 158.9
+      },
+      {
+        "qid": "q_vhard_016",
+        "accuracy": 0.0,
+        "latency_s": 73.3
+      },
+      {
+        "qid": "q_vhard_017",
+        "accuracy": 0.0,
+        "latency_s": 84.5
+      },
+      {
+        "qid": "q_vhard_018",
+        "accuracy": 0.0,
+        "latency_s": 65.1
+      },
+      {
+        "qid": "q_vhard_019",
+        "accuracy": 0.0,
+        "latency_s": 71.4
+      },
+      {
+        "qid": "q_vhard_020",
+        "accuracy": 0.0,
+        "latency_s": 65.2
+      }
+    ]
+  },
+  "japanese-xsmall": {
+    "model": "hotchpotch/japanese-reranker-cross-encoder-xsmall-v1",
+    "overall_accuracy": 0.2806556225729158,
+    "avg_latency": 65.865,
+    "results": [
+      {
+        "qid": "q_vhard_001",
+        "accuracy": 0.0,
+        "latency_s": 73.0
+      },
+      {
+        "qid": "q_vhard_002",
+        "accuracy": 0.1641025641025641,
+        "latency_s": 97.5
+      },
+      {
+        "qid": "q_vhard_003",
+        "accuracy": 0.0,
+        "latency_s": 64.4
+      },
+      {
+        "qid": "q_vhard_004",
+        "accuracy": 1.0,
+        "latency_s": 46.4
+      },
+      {
+        "qid": "q_vhard_005",
+        "accuracy": 0.0,
+        "latency_s": 68.7
+      },
+      {
+        "qid": "q_vhard_006",
+        "accuracy": 0.18974358974358974,
+        "latency_s": 72.5
+      },
+      {
+        "qid": "q_vhard_007",
+        "accuracy": 1.0,
+        "latency_s": 64.5
+      },
+      {
+        "qid": "q_vhard_008",
+        "accuracy": 0.10526315789473684,
+        "latency_s": 49.7
+      },
+      {
+        "qid": "q_vhard_009",
+        "accuracy": 0.0,
+        "latency_s": 46.5
+      },
+      {
+        "qid": "q_vhard_010",
+        "accuracy": 1.0,
+        "latency_s": 58.7
+      },
+      {
+        "qid": "q_vhard_011",
+        "accuracy": 0.09438775510204081,
+        "latency_s": 50.9
+      },
+      {
+        "qid": "q_vhard_012",
+        "accuracy": 0.18461538461538463,
+        "latency_s": 39.3
+      },
+      {
+        "qid": "q_vhard_013",
+        "accuracy": 1.0,
+        "latency_s": 30.8
+      },
+      {
+        "qid": "q_vhard_014",
+        "accuracy": 0.875,
+        "latency_s": 67.0
+      },
+      {
+        "qid": "q_vhard_015",
+        "accuracy": 0.0,
+        "latency_s": 93.3
+      },
+      {
+        "qid": "q_vhard_016",
+        "accuracy": 0.0,
+        "latency_s": 66.5
+      },
+      {
+        "qid": "q_vhard_017",
+        "accuracy": 0.0,
+        "latency_s": 86.9
+      },
+      {
+        "qid": "q_vhard_018",
+        "accuracy": 0.0,
+        "latency_s": 104.1
+      },
+      {
+        "qid": "q_vhard_019",
+        "accuracy": 0.0,
+        "latency_s": 64.6
+      },
+      {
+        "qid": "q_vhard_020",
+        "accuracy": 0.0,
+        "latency_s": 72.0
+      }
+    ]
+  }
+}
