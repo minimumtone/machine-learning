@@ -161,6 +161,7 @@ MULTI_HOP_JOINS: dict[str, list[str]] = {
     "application_domain": ["material_application"],
     "measured_property": ["experimental_measurement"],
     "alloy_system": ["material_alloy_system"],
+    "pure_element_reference": ["composition", "element"],
 }
 
 BASE_TABLE = "material_entry"

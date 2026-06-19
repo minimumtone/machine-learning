@@ -39,7 +39,7 @@ Create a new LaTeX paper and PDF for "Graph-Constrained Text-to-SQL Pipeline for
 | no_nbest delta | -0.2pp | EVID-20260619-1335-ablation-nonbest |
 | no_graph delta | -0.2pp | EVID-20260619-1335-ablation-nograph |
 | Reranker A/B delta (90q) | +7.7pp | EVID-20260619-1335-reranker-eval |
-| JP reranker VH delta | -4.3pp | EVID-20260619-1335-jp-reranker |
+| JP reranker VH delta | -4.4pp | EVID-20260619-1335-jp-reranker |
 | MeCab single-token rate | 100.0% (vs 30.6% default) | EVID-20260619-1335-mecab-dict |
 
 ## Current valid scripts / notebooks

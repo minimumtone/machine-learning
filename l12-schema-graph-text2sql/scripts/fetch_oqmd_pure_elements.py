@@ -67,7 +67,7 @@ def main():
             "oqmd_entry_id": gs["entry_id"],
             "spacegroup": gs.get("spacegroup"),
             "natoms": gs.get("natoms"),
-            "volume_per_atom": gs.get("volume"),
+            "volume_per_atom": (gs.get("volume") or 0) / (gs.get("natoms") or 1),
             "delta_e_per_atom": gs.get("delta_e"),
             "stability": gs.get("stability"),
             "band_gap": gs.get("band_gap"),
