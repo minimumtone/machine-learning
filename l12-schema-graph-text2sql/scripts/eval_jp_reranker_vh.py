@@ -22,11 +22,12 @@ from graph.graph_builder import build_table_graph
 from scripts.eval_ablation import (
     load_queries, get_tables, get_columns, get_foreign_keys,
     get_allowed_join_list, normalize_limit, compute_accuracy,
+    execute_sql,
 )
 
 CONNINFO = (
     f"host={os.getenv('POSTGRES_HOST', 'localhost')} "
-    f"port={os.getenv('POSTGRES_PORT', '5433')} "
+    f"port={os.getenv('POSTGRES_PORT', '5432')} "
     f"dbname={os.getenv('POSTGRES_DB', 'l12_materials')} "
     f"user={os.getenv('POSTGRES_USER', 'l12_user')} "
     f"password={os.getenv('POSTGRES_PASSWORD', 'l12_password')}"
@@ -97,7 +98,7 @@ def main():
     vh_queries = [q for q in all_queries if q["difficulty"] == "very_hard"]
     print(f"VH queries: {len(vh_queries)}")
 
-    exec_fn = lambda sql: __import__('llm.sql_generator', fromlist=['execute_sql']).execute_sql(conn, sql)
+    exec_fn = lambda sql: execute_sql(conn, sql)
 
     models = [
         ("ms-marco (current)", "cross-encoder/ms-marco-MiniLM-L-6-v2"),
