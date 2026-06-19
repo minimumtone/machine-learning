@@ -62,6 +62,17 @@ Create a new LaTeX paper and PDF for "Graph-Constrained Text-to-SQL Pipeline for
 - Old t2sql_materials_paper.tex/pdf (to be deleted per user request)
 - gpt-4o-mini (DO-NOT-USE per user instruction)
 
+## Pure element reference data
+
+- 89 elements from OQMD ground-state calculations [EVID-20260602-0045-oqmd-pure-elements]
+- Table: `pure_element_reference` (element_symbol FK → element.symbol)
+- Each element: energy_per_atom, volume_per_atom, ground_state_spacegroup, stability, band_gap, n_polymorphs
+- Source: OQMD REST API v1 (https://oqmd.org/oqmdapi/formationenergy?filter=ntypes=1)
+- 3,212 polymorphs total, lowest delta_e per element selected as ground state
+- View: `formation_enthalpy` computes corrected formation enthalpy using pure element references
+- DB total: 31 tables, 1559 material entries (1470 compounds + 89 pure elements)
+- Schema graph: 31 tables, 204 columns, 70 FK edges
+
 ## Remaining uncertainties
 
 - LLM non-determinism: same query may yield different SQL across runs (~1-2pp variance)
