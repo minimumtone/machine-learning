@@ -915,6 +915,51 @@ SELECT--WHERE--JOIN--GROUP BYの組合せが主であり、
 材料インフォマティクスにおけるNLインターフェースの
 実用性を大きく向上させる。
 
+\subsection{カラム間比較クエリへの対応}
+\label{sec:column_comparison}
+
+多段計算に加え、材料研究で頻出する重要なクエリパターンとして
+カラム間比較がある。
+「Aの値がBの値より小さいものを出せ」という形式のクエリは、
+単一の閾値によるフィルタリング
+（\texttt{WHERE col > 0.5}）
+とは異なり、
+同一行の異なるカラム値を比較する条件式
+（\texttt{WHERE col\_a > col\_b}）
+を含むSQLの生成を必要とする。
+
+本パイプラインでは、以下の3種類のカラム間比較パターンに
+対応するfew-shot例を整備した：
+\begin{enumerate}
+  \item \textbf{同一テーブル内比較}：
+    同一テーブルの2カラムを直接比較する。
+    例：\texttt{phase\_stability}テーブルにおける
+    \texttt{formation\_energy\_per\_atom < energy\_above\_hull}、
+    \texttt{elastic\_tensor}テーブルにおける
+    \texttt{bulk\_modulus\_vrh > 2.0 * shear\_modulus\_vrh}
+    （Pugh延性指標）。
+  \item \textbf{異テーブル間比較}：
+    JOINにより異なるテーブルのカラムを比較する。
+    例：\texttt{thermal\_property.debye\_temperature\_k >
+    magnetic\_property.curie\_temperature\_k}
+    や、全磁化と形成エネルギー絶対値の比較。
+  \item \textbf{集約関数を伴う比較}：
+    GROUP BY--HAVINGと組合せ、
+    構成元素間の電気陰性度差のような
+    導出量の閾値判定を行う。
+    例：
+    \texttt{HAVING MAX(electronegativity) - MIN(electronegativity) > 0.5}。
+\end{enumerate}
+
+これらのパターンは、定数との比較（\texttt{WHERE col > 0.5}）
+に比べLLMが正しく生成する難度が高い。
+特に異テーブル間比較では、
+比較対象カラムがどのテーブルに属するかを
+スキーマ情報から正確に把握する必要がある。
+few-shot例にカラム間比較パターンを9例追加し
+（33例$\to$42例）、
+LLMがこれらのパターンを学習できるようにした。
+
 \subsection{RDBスキーマ設計とText-to-SQLコスト}
 \label{sec:schema_design_cost}
 

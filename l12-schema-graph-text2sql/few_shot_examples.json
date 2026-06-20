@@ -366,5 +366,100 @@
     },
     "row_count": 30,
     "source": "seed:pure_element_pattern"
+  },
+  {
+    "nl_query": "形成エネルギーがエネルギーアバブハルより小さいL1₂化合物を出して。",
+    "sql": "SELECT m.formula, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.formation_energy_per_atom < ps.energy_above_hull\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;",
+    "conditions": {
+      "prototype": "L12",
+      "column_comparison": "phase_stability.formation_energy_per_atom < phase_stability.energy_above_hull"
+    },
+    "row_count": 372,
+    "source": "seed:column_comparison"
+  },
+  {
+    "nl_query": "体積弾性率が剪断弾性率の2倍以上大きい化合物を出して。延性指標として。",
+    "sql": "SELECT m.formula, et.bulk_modulus_vrh, et.shear_modulus_vrh,\n       et.bulk_modulus_vrh / NULLIF(et.shear_modulus_vrh, 0) AS bulk_shear_ratio\nFROM material_entry m\nJOIN elastic_tensor et ON et.entry_id = m.entry_id\nWHERE et.bulk_modulus_vrh > 2.0 * et.shear_modulus_vrh\n  AND et.shear_modulus_vrh > 0\nORDER BY et.bulk_modulus_vrh / et.shear_modulus_vrh DESC\nLIMIT 10000;",
+    "conditions": {
+      "column_comparison": "elastic_tensor.bulk_modulus_vrh > 2.0 * elastic_tensor.shear_modulus_vrh",
+      "elastic": true
+    },
+    "row_count": 29,
+    "source": "seed:column_comparison"
+  },
+  {
+    "nl_query": "デバイ温度がキュリー温度より高い化合物を出して。",
+    "sql": "SELECT m.formula, tp.debye_temperature_k, mp.curie_temperature_k\nFROM material_entry m\nJOIN thermal_property tp ON tp.entry_id = m.entry_id\nJOIN magnetic_property mp ON mp.entry_id = m.entry_id\nWHERE tp.debye_temperature_k > mp.curie_temperature_k\n  AND mp.curie_temperature_k > 0\nORDER BY tp.debye_temperature_k - mp.curie_temperature_k DESC\nLIMIT 10000;",
+    "conditions": {
+      "column_comparison": "thermal_property.debye_temperature_k > magnetic_property.curie_temperature_k",
+      "thermal": true,
+      "magnetic": true
+    },
+    "row_count": 53,
+    "source": "seed:column_comparison"
+  },
+  {
+    "nl_query": "CBMエネルギーがVBMエネルギーより高く、バンドギャップが2eV未満の化合物を出して。",
+    "sql": "SELECT m.formula, bs.cbm_energy, bs.vbm_energy,\n       bs.cbm_energy - bs.vbm_energy AS calculated_gap,\n       bs.is_direct_gap\nFROM material_entry m\nJOIN band_structure bs ON bs.entry_id = m.entry_id\nWHERE bs.cbm_energy > bs.vbm_energy\n  AND bs.cbm_energy - bs.vbm_energy < 2.0\nORDER BY bs.cbm_energy - bs.vbm_energy ASC\nLIMIT 10000;",
+    "conditions": {
+      "column_comparison": "band_structure.cbm_energy > band_structure.vbm_energy",
+      "band_structure": true
+    },
+    "row_count": 475,
+    "source": "seed:column_comparison"
+  },
+  {
+    "nl_query": "A-site元素の原子半径がB-site元素より大きいL1₂化合物を出して。",
+    "sql": "SELECT m.formula,\n       ea.symbol AS a_site, ea.atomic_radius AS a_radius,\n       eb.symbol AS b_site, eb.atomic_radius AS b_radius,\n       ea.atomic_radius - eb.atomic_radius AS radius_diff\nFROM material_entry m\nJOIN composition ca ON ca.entry_id = m.entry_id AND ca.site_label = 'A-site'\nJOIN composition cb ON cb.entry_id = m.entry_id AND cb.site_label = 'B-site'\nJOIN element ea ON ea.symbol = ca.element\nJOIN element eb ON eb.symbol = cb.element\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ea.atomic_radius > eb.atomic_radius\nORDER BY ea.atomic_radius - eb.atomic_radius DESC\nLIMIT 10000;",
+    "conditions": {
+      "prototype": "L12",
+      "site_label": ["A-site", "B-site"],
+      "column_comparison": "element.atomic_radius(A-site) > element.atomic_radius(B-site)"
+    },
+    "row_count": 148,
+    "source": "seed:column_comparison"
+  },
+  {
+    "nl_query": "粒界エネルギーが余剰体積より大きい化合物を出して。",
+    "sql": "SELECT m.formula, gb.gb_energy_j_m2, gb.excess_volume,\n       gb.sigma_value, gb.tilt_angle\nFROM material_entry m\nJOIN grain_boundary gb ON gb.entry_id = m.entry_id\nWHERE gb.gb_energy_j_m2 > gb.excess_volume\n  AND gb.excess_volume > 0\nORDER BY gb.gb_energy_j_m2 DESC\nLIMIT 10000;",
+    "conditions": {
+      "column_comparison": "grain_boundary.gb_energy_j_m2 > grain_boundary.excess_volume",
+      "grain_boundary": true
+    },
+    "row_count": 137,
+    "source": "seed:column_comparison"
+  },
+  {
+    "nl_query": "全磁化が形成エネルギーの絶対値より大きい化合物を出して。",
+    "sql": "SELECT m.formula, mp.total_magnetization,\n       ps.formation_energy_per_atom,\n       ABS(ps.formation_energy_per_atom) AS abs_formation_energy\nFROM material_entry m\nJOIN magnetic_property mp ON mp.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE mp.total_magnetization > ABS(ps.formation_energy_per_atom)\nORDER BY mp.total_magnetization DESC\nLIMIT 10000;",
+    "conditions": {
+      "column_comparison": "magnetic_property.total_magnetization > ABS(phase_stability.formation_energy_per_atom)",
+      "magnetic": true,
+      "stability": true
+    },
+    "row_count": 475,
+    "source": "seed:column_comparison"
+  },
+  {
+    "nl_query": "構成元素間の電気陰性度差が0.5より大きいL1₂化合物を出して。",
+    "sql": "SELECT m.formula,\n       MAX(e.electronegativity) - MIN(e.electronegativity) AS en_diff,\n       MAX(e.electronegativity) AS max_en,\n       MIN(e.electronegativity) AS min_en\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN element e ON e.symbol = c.element\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND m.number_of_elements >= 2\nGROUP BY m.formula\nHAVING MAX(e.electronegativity) - MIN(e.electronegativity) > 0.5\nORDER BY MAX(e.electronegativity) - MIN(e.electronegativity) DESC\nLIMIT 10000;",
+    "conditions": {
+      "prototype": "L12",
+      "column_comparison": "MAX(element.electronegativity) - MIN(element.electronegativity) > 0.5",
+      "element_property": true
+    },
+    "row_count": 29,
+    "source": "seed:column_comparison"
+  },
+  {
+    "nl_query": "補正前と補正後の生成エンタルピーの差が0.01eV/atomより大きいL1₂化合物を出して。",
+    "sql": "SELECT fh.formula, fh.formation_enthalpy_ev_per_atom,\n       fh.corrected_formation_enthalpy,\n       fh.formation_enthalpy_ev_per_atom - fh.corrected_formation_enthalpy AS correction_magnitude\nFROM formation_enthalpy fh\nJOIN structure s ON s.entry_id = fh.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ABS(fh.formation_enthalpy_ev_per_atom - fh.corrected_formation_enthalpy) > 0.01\nORDER BY ABS(fh.formation_enthalpy_ev_per_atom - fh.corrected_formation_enthalpy) DESC\nLIMIT 10000;",
+    "conditions": {
+      "prototype": "L12",
+      "formation_enthalpy": true,
+      "column_comparison": "ABS(formation_enthalpy.formation_enthalpy_ev_per_atom - formation_enthalpy.corrected_formation_enthalpy) > 0.01"
+    },
+    "row_count": 29,
+    "source": "seed:column_comparison"
   }
 ]
