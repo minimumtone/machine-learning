@@ -340,14 +340,137 @@ $-$0.2\,ppにとどまった
 で完結するため、効果が限定的であった。
 テーブル数が拡大した場合に寄与が顕在化すると予想される。
 
-JOIN経路からのSQL FROM/JOIN句生成例：
-\begin{lstlisting}[language=Python,caption={FK経路からのJOIN句生成},label=lst:join_gen,numbers=none]
-# path: [material_entry, structure]
-# FK: structure.entry_id -> material_entry.entry_id
-# output:
-#   FROM material_entry m
-#   JOIN structure s ON s.entry_id = m.entry_id
+\subsubsection{PostgreSQLメタデータからのグラフ構築}
+
+FK関係はPostgreSQLの\texttt{information\_schema}から
+実行時に動的に抽出される：
+
+\begin{lstlisting}[language=SQL,caption={FK関係抽出},label=lst:fk_query,numbers=none]
+SELECT tc.table_name, kcu.column_name,
+       ccu.table_name, ccu.column_name
+  FROM information_schema.table_constraints tc
+  JOIN information_schema.key_column_usage kcu
+    ON tc.constraint_name = kcu.constraint_name
+  JOIN information_schema.constraint_column_usage ccu
+    ON ccu.constraint_name = tc.constraint_name
+ WHERE tc.constraint_type = 'FOREIGN KEY';
 \end{lstlisting}
+
+結果はNetworkX~\cite{networkx2008}の無向グラフ$G = (V, E)$として格納される。
+各エッジにはFKの方向を属性として保持し、JOIN句生成時に使用する。
+FKメタデータは実行時に読み取られるため、スキーマ変更に追随可能である。
+
+\subsubsection{多元素ANDクエリ：EXISTS副問い合わせ}
+\label{sec:multi_element}
+
+組成テーブル正規化に起因する材料固有の課題として、
+「NiとAlの両方を含む化合物」のようなクエリがある。
+Naiveアプローチの\texttt{WHERE c.element = 'Ni' AND c.element = 'Al'}は
+単一行が両条件を満たせず常に0行を返す。
+Schema Graphエンジンは複数元素が指定された場合を検出し、
+EXISTS副問い合わせを自動生成する：
+
+\begin{lstlisting}[language=SQL,caption={多元素AND},label=lst:exists,numbers=none]
+SELECT DISTINCT m.entry_id, m.formula
+FROM material_entry m
+WHERE EXISTS (SELECT 1 FROM composition
+  WHERE entry_id = m.entry_id AND element = 'Ni')
+AND EXISTS (SELECT 1 FROM composition
+  WHERE entry_id = m.entry_id AND element = 'Al')
+LIMIT 10000;
+\end{lstlisting}
+
+AND/OR意図は条件抽出器が接続詞・助詞から分類し、
+OR指示語の場合は\texttt{IN}句を使用する。
+
+\subsubsection{JOIN経路からのSQL生成}
+
+$P$の各経路はSQL JOIN句に変換される。
+テーブル別名は30テーブル分の固定辞書から割り当てる
+（\texttt{material\_entry}$\to$\texttt{m}、
+\texttt{composition}$\to$\texttt{c}等）。
+同一テーブルが複数回出現する場合は
+数字サフィックスで一意な別名を生成する（\texttt{c2}、\texttt{c3}）。
+
+\subsection{条件抽出器}
+\label{sec:entity_extractor}
+
+条件抽出器は、YAMLベースの日英バイリンガル用語辞書
+（\texttt{material\_terms.yaml}）を用いて、
+自然言語クエリを構造化された条件辞書に変換する。
+
+\subsubsection{辞書構造}
+
+辞書は4カテゴリを含む：
+(1)~\textbf{プロトタイプ別名}（例：\texttt{L12} $\leftrightarrow$
+[L1$_2$, Cu$_3$Au型, $\gamma'$]）、
+(2)~\textbf{元素マッピング}（\texttt{Fe} $\leftrightarrow$ [鉄, iron]）、
+(3)~\textbf{安定性用語}（「安定」$\to$
+\texttt{energy\_above\_hull} $\leq 0.001$~eV/atom、
+「準安定」$\to$ $0.001 < E_\text{hull} \leq 0.05$）、
+(4)~\textbf{物性用語}（「格子定数」$\to$
+\texttt{structure.lattice\_a}等）。
+
+Unicode下付き文字（U+2080--U+2089）はマッチング前にASCII数字に正規化される。
+元素記号認識はワード境界正規表現を使用し、
+独立した「Fe」を「FeCoNi」部分文字列から区別する。
+
+\subsubsection{数値条件パーサー}
+
+自然言語中の数値比較表現を5パターンで認識する
+（表~\ref{tab:numeric_patterns}）。
+物性名からカラムへのマッピングは内部辞書
+（\texttt{\_PROPERTY\_COLUMN\_MAP}）で管理する。
+浮動小数点比較では「近傍」「同程度」等の表現に対し、
+物性種別ごとの許容幅（格子定数：$\pm 0.03$~\AA、
+$E_\text{hull}$：$\pm 0.001$~eV/atom）を適用する。
+
+\begin{table}[t]
+  \centering
+  \caption{数値条件パーサーの対応パターン。}
+  \label{tab:numeric_patterns}
+  \scriptsize
+  \begin{tabular}{lll}
+    \toprule
+    パターン種別 & 入力例 & 出力 \\
+    \midrule
+    記号比較 & \texttt{band\_gap > 1.0} & \texttt{WHERE band\_gap > 1.0} \\
+    日本語後置 & 形成エネルギーが0.5以上 & \texttt{WHERE ... >= 0.5} \\
+    日本語より & 格子定数が3.0より大きい & \texttt{WHERE lattice\_a > 3.0} \\
+    符号判定 & 形成エネルギーが負 & \texttt{WHERE ... < 0} \\
+    範囲指定 & band gap 0.5--2.0 eV & \texttt{WHERE ... BETWEEN} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsubsection{化学式パーサーと曖昧性処理}
+
+化学式トークンを3種類に分類する：
+(1)~\textbf{exact\_formula}（\texttt{Ni3Al} $\to$ \texttt{formula = 'Ni3Al'}）、
+(2)~\textbf{formula\_or\_reduced\_formula}（「NiAlのB2エントリ」$\to$
+\texttt{reduced\_formula = 'AlNi'}）、
+(3)~\textbf{contains\_elements}（「NiとAlを含む」$\to$ EXISTS副問い合わせ）。
+判定は文脈依存であり、「含む」等の包含表現との共起で
+\texttt{contains\_elements}として処理する。
+
+\subsubsection{Coverage Score}
+\label{sec:coverage_score}
+
+Coverage Scoreは、クエリ中の意味的トークンのうち
+辞書・元素辞書・数値パターンで認識された割合を$[0, 1]$で定量化する。
+この指標はSilent Constraint Dropping（未登録語彙の無通知破棄）を防止する。
+$\geq 0.8$でRule-basedモード実行、
+$\geq 0.5$でLLMモードへエスカレーション、
+$< 0.5$でユーザーに明確化を要求する。
+
+\subsubsection{Intent Classifier}
+\label{sec:intent_classifier}
+
+SQL生成の前段にルールベースのIntent Classifierを配置し、
+クエリを5カテゴリ（db\_query / out\_of\_scope / ambiguous / unsafe / greeting）
+に分類する。20個のVASP/DFTワークフローパターンと
+9個のDB特化パターンの正規表現マッチング数を比較し、
+スコープ外質問を事前排除する。
 
 \subsection{材料ドメイン辞書}
 \label{sec:domain_dict}
@@ -399,19 +522,36 @@ Easy・Medium帯では低下が観察されなかったことから、
 辞書の効果は複合的なドメイン用語を含むクエリに集中している。
 
 \subsection{SQLGuard}
+\label{sec:sqlguard}
 
 sqlglot~\cite{sqlglot2023}によるAST解析に基づき、
 生成SQLの安全性と整合性を検証する。
-検証項目はカラム存在確認、テーブル存在確認、
-FK整合性JOIN検証、複文検出、
-SQLインジェクション検出等14項目からなる。
+検証項目は以下の14項目からなる：
+
+\begin{enumerate}[nosep]
+  \item カラム存在確認（ホワイトリスト照合）
+  \item テーブル存在確認（許可テーブル照合）
+  \item FK整合性JOIN検証
+  \item 複文検出（セミコロン分割）
+  \item DMLキーワード検出（DROP/DELETE/INSERT/UPDATE）
+  \item SQLインジェクションパターン検出
+  \item LIMIT句の存在確認（不在時は自動付加）
+  \item DISTINCT推奨（JOIN時）
+  \item SELECT * の禁止
+  \item サブクエリのネスト深度制限
+  \item UNION/INTERSECT句の検証
+  \item 算術演算の型妥当性
+  \item ORDER BY/GROUP BY参照の整合性
+  \item エイリアス解決後のカラム参照検証
+\end{enumerate}
 
 ablation studyでは、SQLGuardの除去による精度低下は$-$0.2\,ppであった
 （表~\ref{tab:ablation}; EVID-20260619-1335-ablation-noguard）。
 リランカーが先に不正なSQL候補を低スコアにするため、
 SQLGuardが拒否すべきSQLが選択されにくい状況が生じている。
 ただし、SQLGuardはセキュリティ上の安全網として機能しており、
-精度寄与とは独立した価値を持つ。
+精度寄与とは独立した価値を持つ
+（\ref{sec:injection_safety}節参照）。
 
 \subsection{ハイブリッドリランカー}
 
@@ -725,6 +865,246 @@ no\_graph & 34.2 \\
 \end{table}
 
 % =====================================================================
+\section{エラー分析}
+\label{sec:error_analysis}
+
+ablation study結果について、主要な失敗モードを分析する。
+
+\subsection{ablation条件別エラーパターン}
+
+表~\ref{tab:error_analysis}に各ablation条件の主要なエラー指標を示す。
+full条件では実行エラー0件、テーブル幻覚0件を達成した。
+no\_fewshot条件ではJOIN幻覚が増加し、
+スキーマ情報のみからのSQL推論の限界を示す。
+
+\begin{table}[t]
+  \centering
+  \caption{ablation条件別エラー分析（100クエリ）。
+  テーブル幻覚＝存在しないテーブルを参照、
+  JOIN幻覚＝FK関係に基づかないJOINを含むクエリ件数。}
+  \label{tab:error_analysis}
+  \small
+  \begin{tabular}{lcccc}
+    \toprule
+    条件 & \shortstack{実行\\エラー} & \shortstack{構文\\エラー} & \shortstack{テーブル\\幻覚} & \shortstack{JOIN\\幻覚} \\
+    \midrule
+    full          & 0 & 0 & 0 & 3 \\
+    no\_fewshot   & 2 & 2 & 0 & 16 \\
+    no\_dict      & 0 & 0 & 0 & 5 \\
+    no\_reranker  & 0 & 0 & 0 & 8 \\
+    no\_guard     & 0 & 0 & 0 & 4 \\
+    no\_nbest     & 0 & 0 & 0 & 3 \\
+    no\_graph     & 0 & 0 & 0 & 6 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Very Hard失敗の内訳分析}
+
+Very Hard 20件のうちfull条件で精度0.8未満の13件について
+失敗モードを分類した（表~\ref{tab:vhard_failure}）。
+
+\begin{table}[t]
+  \centering
+  \caption{Very Hardクエリの失敗モード分類。}
+  \label{tab:vhard_failure}
+  \small
+  \begin{tabular}{lcl}
+    \toprule
+    失敗モード & 件数 & 代表例 \\
+    \midrule
+    WHERE条件組合せミス & 6 & 複合WHERE（3条件以上） \\
+    集約・サブクエリ誤用 & 3 & GROUP BY/HAVING \\
+    多元素AND失敗 & 2 & SELF-JOIN展開 \\
+    型不一致による意味エラー & 2 & リペアで実行成功、結果不一致 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+WHERE句の条件組合せミスが最多であり、
+Schema Graph走査が正しいJOIN経路を提供しているにもかかわらず、
+LLMが3条件以上の複合WHERE句を正確に構成できないケースが残る。
+一方、JOIN経路自体の誤りによる失敗は0件であり、
+Schema Graph走査の制約はVery Hard難度でも有効に機能している。
+この結果は、今後の改善方向が
+\textbf{WHERE句生成の精度向上}
+（Few-Shotプロンプト拡充、Chain-of-Thought推論の導入）
+にあることを示唆する。
+
+% =====================================================================
+\section{SQLインジェクションと安全性}
+\label{sec:injection_safety}
+
+SQLGuard（\ref{sec:sqlguard}節）の安全性機能を
+7件の敵対的入力（E01--E05：DROP/DELETE/INSERT等、
+F01--F02：直接SQL入力）で検証した。
+全件がSQLGuardにより安全に処理された
+（表~\ref{tab:injection_results}）。
+
+\begin{table}[t]
+  \centering
+  \caption{SQLインジェクション・安全性テスト結果（全件安全処理）。}
+  \label{tab:injection_results}
+  \small
+  \begin{tabularx}{\linewidth}{lXl}
+    \toprule
+    ID & 入力 & 処理 \\
+    \midrule
+    E01 & \texttt{DROP TABLE material\_entry;} & 禁止キーワード：DROP \\
+    E02 & \texttt{SELECT *; DELETE FROM composition;} & 複数文 + DELETE \\
+    E03 & L1$_2$化合物; \texttt{DROP TABLE structure;} & 複数文 + DROP \\
+    E04 & \texttt{SELECT * FROM secret\_passwords} & 非許可テーブル \\
+    E05 & \texttt{INSERT INTO material\_entry ...} & 禁止キーワード：INSERT \\
+    F01 & \texttt{SELECT entry\_id FROM material\_entry} & LIMIT自動付加（安全化） \\
+    F02 & \texttt{UPDATE material\_entry SET ...} & 禁止キーワード：UPDATE \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+E01--E05は禁止キーワード検出・複数文検出等により遮断された。
+F01はSELECT文がそのまま入力されたケースであり、
+LIMITなし$\to$自動付加の上で修正実行された（遮断ではない）。
+F02はUPDATE文であり、DML検出により遮断された。
+ablation studyにおけるno\_guard条件（SQLGuard除去）では
+精度低下は$-$0.2\,ppにとどまったが（表~\ref{tab:ablation}）、
+安全性機能は精度とは独立した価値を持つ。
+回帰テストとして134件のユニットテストに含まれ、
+全PASSを維持している。
+
+% =====================================================================
+\section{材料工学的評価}
+\label{sec:materials_evaluation}
+
+L1$_2$型金属間化合物の材料工学的観点から
+システムの有用性を評価する。
+
+\subsection{既知L1$_2$化合物の再発見}
+
+表~\ref{tab:known_l12}に既知L1$_2$化合物11件の再発見結果を示す。
+提案手法による探索で\textbf{全11件を正しく再発見}した。
+Ni$_3$Al、Co$_3$Ti等の$\gamma'$相化合物が正しく抽出されることは、
+超合金材料探索ツールとしての基本的信頼性を担保する。
+
+\begin{table}[t]
+  \centering
+  \caption{既知L1$_2$化合物の再発見結果（11/11）。}
+  \label{tab:known_l12}
+  \small
+  \begin{tabular}{lccc}
+    \toprule
+    化合物 & $a$ (\AA) & $E_\text{hull}$ (eV/atom) & 再発見 \\
+    \midrule
+    Ni$_3$Al & 3.572 & 0.000 & $\circ$ \\
+    Ni$_3$Ga & 3.66 & 0.010 & $\circ$ \\
+    Ni$_3$Ge & 3.61 & 0.040 & $\circ$ \\
+    Co$_3$Ti & 3.55 & 0.000 & $\circ$ \\
+    Co$_3$Ta & 3.72 & 0.040 & $\circ$ \\
+    Co$_3$Al & 3.67 & 0.010 & $\circ$ \\
+    Co$_3$W  & 3.74 & 0.050 & $\circ$ \\
+    Al$_3$Sc & 4.09 & 0.000 & $\circ$ \\
+    Al$_3$Ti & 3.98 & 0.020 & $\circ$ \\
+    Pt$_3$Al & 3.90 & 0.000 & $\circ$ \\
+    Ir$_3$Nb & 3.87 & 0.030 & $\circ$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{$\gamma'$相候補ランキング}
+\label{sec:gamma_prime}
+
+L1$_2$型化合物のユニーク組成259件を対象に、
+安定性（$E_\text{hull}$）、格子整合性（$|a - a_{\text{Ni}_3\text{Al}}|$）、
+バルクモジュラス$B$の3指標による重み付き複合スコアで
+$\gamma'$相候補をランキングした（表~\ref{tab:gamma_prime}）。
+このうち安定・準安定162件（安定8件、準安定154件）が
+スクリーニングを通過した。
+
+\begin{equation}
+  S = w_1 \cdot S_\text{stability} + w_2 \cdot S_\text{lattice} + w_3 \cdot S_\text{bulk}
+  \label{eq:composite_score}
+\end{equation}
+
+ここで$w_1 = 0.35$（安定性）、$w_2 = 0.35$（格子整合性）、
+$w_3 = 0.30$（バルクモジュラス）。
+各スコアは0--1に正規化
+（$S_\text{stability} = 1 - E_\text{hull}/0.05$、
+$S_\text{lattice} = 1 - |\Delta a|/0.3$、
+$S_\text{bulk} = B/300$）。
+
+\begin{table}[t]
+  \centering
+  \caption{$\gamma'$相候補Top 10（複合スコア$S$順）。}
+  \label{tab:gamma_prime}
+  \small
+  \begin{tabular}{rlccccc}
+    \toprule
+    順位 & 化合物 & $a$ (\AA) & $E_\text{hull}$ & $B$ (GPa) & $\Delta a$ & $S$ \\
+    \midrule
+    1 & Ni$_3$Al & 3.572 & 0.000 & 180 & 0.002 & 0.878 \\
+    2 & Co$_3$Ti & 3.55 & 0.000 & 190 & 0.02 & 0.867 \\
+    3 & Mo$_3$Nb & 3.586 & 0.007 & 235 & 0.016 & 0.865 \\
+    4 & Cr$_3$Ge & 3.644 & 0.005 & 236 & 0.074 & 0.818 \\
+    5 & Pd$_3$Sn & 3.540 & 0.008 & 200 & 0.030 & 0.811 \\
+    6 & Ir$_3$Cu & 3.511 & 0.001 & 183 & 0.059 & 0.804 \\
+    7 & Nb$_3$Mn & 3.607 & 0.006 & 178 & 0.037 & 0.794 \\
+    8 & Nb$_3$Ti & 3.523 & 0.020 & 223 & 0.047 & 0.728 \\
+    9 & Zr$_3$Fe & 3.655 & 0.013 & 199 & 0.085 & 0.709 \\
+    10 & Pt$_3$Ge & 3.550 & 0.021 & 177 & 0.020 & 0.708 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Ni$_3$Alが最高スコア（0.878）で1位となり、
+安定性（$E_\text{hull} = 0.0$）と格子整合性
+（$\Delta a = 0.002$~\AA）のバランスが良い。
+2位のCo$_3$Tiも安定相であり、析出強化候補として有望である。
+3位以降のMo$_3$Nb、Cr$_3$Ge等は高バルクモジュラスを持つが、
+格子ミスマッチが大きく実験的検証が不可欠である。
+
+\subsection{Ni$_3$Al近傍格子定数候補}
+\label{sec:ni3al_lattice}
+
+$|a - a_{\text{Ni}_3\text{Al}}| \leq 0.03$~\AA を厳密に満たす
+候補31件を抽出した
+（基準値$a_{\text{ref}} = 3.57$~\AA、
+代表14件をSupplementary~\ref{sec:sup_lattice_match}節に掲載）。
+Co$_3$Ti（$\Delta a = 0.02$~\AA、$E_\text{hull} = 0.0$）は
+安定相であり、析出強化の観点から最も有望な候補である。
+
+\subsection{安定L1$_2$候補の抽出}
+\label{sec:stable_l12}
+
+$E_\text{hull} \leq 0.05$~eV/atomを満たす安定・準安定L1$_2$候補162件
+（安定8件、準安定154件）を抽出した。
+安定相のうち最も負の形成エネルギーを持つのは
+Pt$_3$Al（$E_f = -0.550$~eV/atom）であり、
+次いでAl$_3$Sc（$-0.500$）、Co$_3$Ti（$-0.450$）、
+Ni$_3$Al（$-0.420$）が続く
+（詳細はSupplementary~\ref{sec:sup_stable_l12}節）。
+
+\subsection{材料設計仮説の生成}
+
+探索結果から以下の材料設計仮説を導出した：
+
+\begin{enumerate}
+  \item \textbf{Ptベース化合物の高安定性}：
+    Pt$_3$Al、Pt$_3$Ge等は
+    負の形成エネルギーを示し、熱力学的に安定である。
+  \item \textbf{高バルクモジュラス候補}：
+    Mo$_3$Nb（235~GPa）、Cr$_3$Ge（236~GPa）は
+    高い機械的強度を持つが格子ミスマッチが大きい。
+  \item \textbf{Co$_3$TiのNi$_3$Al代替可能性}：
+    安定相で格子定数がNi$_3$Alに近く、
+    Co基超合金の$\gamma'$相として既に研究されている。
+  \item \textbf{Aサイト元素依存性}：
+    遷移金属系（Ni, Co, Fe, Cu, Pt）は
+    負の$E_f$を持つ安定L1$_2$を形成する傾向がある。
+  \item \textbf{格子定数と$E_f$の相関}：
+    $a > 4.0$~\AA のAl基化合物（Al$_3$Sc, Al$_3$Ti）は
+    安定だが格子ミスマッチが大きく析出強化には不向きである。
+\end{enumerate}
+
+% =====================================================================
 \section{考察}
 \label{sec:discussion}
 
@@ -872,6 +1252,7 @@ Full Schema提示（no\_fewshot条件に相当）は
 （制約6項参照）。
 
 \subsection{多段計算クエリへの対応}
+\label{sec:multistep_query}
 
 本パイプラインの重要な拡張として、
 自然言語による多段計算指示への対応を実現した。
@@ -914,6 +1295,73 @@ SELECT--WHERE--JOIN--GROUP BYの組合せが主であり、
 自然言語から直接これらの計算を指示できることは
 材料インフォマティクスにおけるNLインターフェースの
 実用性を大きく向上させる。
+
+\subsection{独立設計クエリによる評価（難易度調和比較）}
+\label{sec:independent_eval}
+
+自己参照性バイアスの検証として、システム開発に関与していない
+材料研究者が独立に設計したクエリを用いて精度を再評価した。
+公正な比較のため、両セットに統一難易度基準
+（統一複雑度スコア：
+$\text{tables} \times 3 + \text{conditions} + \text{group\_by} \times 2
++ \text{exists} \times 3 + \text{subquery} \times 3$、
+閾値 Easy $< 8$, Medium $8$--$11$, Hard $12$--$16$, Very Hard $\geq 17$）
+を適用した。
+独立設計セットは60件（Easy 12 / Medium 18 / Hard 18 / Very Hard 12）で構成し、
+10カテゴリ（基本検索、組成・元素、構造・格子定数、
+安定性・形成エネルギー、DFT計算・物性、電子構造・磁性・熱特性、
+表面・粒界・欠陥、文献・合成・応用、材料設計・スクリーニング、
+比較・統計）から構成される。
+
+\begin{table}[t]
+  \centering
+  \caption{難易度調和比較（統一複雑度スコアによる分類）。
+  両セットとも平均実行精度（連続値、再現率ベース）を報告する。
+  著者設計は100件を統一基準で再分類、独立設計は60件のバランスセット。
+  なお著者設計側は本文のablation studyとは別の評価ランの結果である。}
+  \label{tab:independent_eval}
+  \footnotesize
+  \begin{tabular}{lccc}
+    \toprule
+    難易度 & 著者設計 & 独立設計 & 差 \\
+    \midrule
+    Easy ($< 8$)       & 100.0\% (12件) & 83.3\% (12件)  & $-$16.7pp \\
+    Medium ($8$--$11$) &  94.5\% (18件) & 69.9\% (18件)  & $-$24.6pp \\
+    Hard ($12$--$16$)  &  78.3\% (41件) & 70.1\% (18件)  & $-$8.2pp \\
+    Very Hard ($\geq 17$) & 32.7\% (29件) & 19.4\% (12件) & $-$13.3pp \\
+    \midrule
+    全体               &  70.6\% (100件) & 62.5\% (60件) & $-$8.1pp \\
+    二値正答率 (F1$\geq 0.8$) & --- & 53.3\% (32/60) & --- \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+表~\ref{tab:independent_eval}に結果を示す。
+著者設計クエリ（70.6\%）は独立設計クエリ（62.5\%）を
+全難易度で上回った。この精度差（8.1\,pp）の主因は以下の3点である：
+
+\textbf{(1) テーブルカバレッジの偏り}（最大要因）：
+著者設計gold SQLは実質5テーブルのみを使用するのに対し、
+独立設計クエリは\texttt{elastic\_tensor}、\texttt{magnetic\_property}、
+\texttt{surface\_energy}等追加12テーブルを参照する。
+これらにはfew-shot例が存在しない。
+
+\textbf{(2) few-shot最適化バイアス}：
+著者設計クエリの85\%が「L1$_2$」を明示的に含む定型パターンであり、
+few-shot例はこのパターンに最適化されている。
+独立設計クエリは非定型表現を多用する。
+
+\textbf{(3) 語彙多様性}：
+独立設計クエリは暗黙的な条件指定が多く、
+explicit keyword matchingに依存する現行パイプラインでは対応困難である。
+
+構文妥当率（100.0\%）は両セットで一致しており、
+Schema Graph制約のクエリ出自非依存性を裏付ける。
+なお、本表の著者設計精度（70.6\%）は
+ablation study（表~\ref{tab:ablation}のfull条件80.6\%）とは
+異なる評価ランの結果であり、直接比較には注意を要する。
+独立設計クエリの詳細結果は
+Supplementary~\ref{sec:sup_expert_queries}節に掲載する。
 
 \subsection{カラム間比較クエリへの対応}
 \label{sec:column_comparison}
@@ -1052,7 +1500,7 @@ NLインターフェースとの親和性を考慮することが有効である
     OQMD単元素データの統合により1万件規模でのSteiner木探索と
     SQL生成精度の検証を行う。
   \item \textbf{多段計算クエリの評価}：
-    生成エンタルピー計算対応（5.7節）を
+    生成エンタルピー計算対応（\ref{sec:multistep_query}節）を
     評価クエリセットに追加し、
     CTE・ビュー経由の多段計算精度を定量評価する。
   \item \textbf{AI4Sエージェント統合}：
@@ -1088,6 +1536,24 @@ few-shot例（$-$12.5\,pp）、
 精度に寄与する上位3構成要素であることが確認された。
 材料ドメイン辞書はVery Hard帯で$-$22.7\,ppの低下を引き起こし、
 ドメイン特化の用語マッピングが複雑クエリにおいて不可欠であることを示した。
+エラー分析により、Very Hardクエリの主要な失敗モードは
+JOIN経路ではなくWHERE句の条件組合せミスであることが明らかとなった
+（\ref{sec:error_analysis}節）。
+
+材料工学的評価では、既知L1$_2$化合物11件の100\%再発見、
+$\gamma'$相候補の複合スコアランキング（Ni$_3$Al: $S = 0.878$で1位）、
+Ni$_3$Al近傍格子定数候補31件の抽出、
+安定・準安定L1$_2$候補162件の抽出を実現した
+（\ref{sec:materials_evaluation}節）。
+独立設計クエリ（60件）による評価では
+著者設計との精度差が8.1\,ppであり、
+テーブルカバレッジの偏りとfew-shot最適化バイアスが主因であった
+（\ref{sec:independent_eval}節）。
+
+SQLGuardによる安全性検証では、
+7件の敵対的入力が全て安全に処理され
+（\ref{sec:injection_safety}節）、
+セキュリティ機能の有効性を実証した。
 
 FKイントロスペクションに基づくSteiner木アーキテクチャは、
 任意の正規化材料RDB（OQMD、Materials Project、AFLOW等）への
@@ -1096,14 +1562,9 @@ Materials Integration（MInt）システム~\cite{minamoto2020mint}や
 provenance管理システムpinax~\cite{minamoto2026pinax}への
 適用が期待される。
 
-さらに、OQMD由来の89元素基底状態データの統合と
+OQMD由来の89元素基底状態データの統合と
 \texttt{formation\_enthalpy}ビューの導入により、
-「Ni$_3$Alの生成エンタルピーを純物質基準で計算して」
-のような多段計算を伴うクエリに
-自然言語から対応可能であることを示した。
-3テーブルJOINとCTEによる加重基準エネルギー計算を含む
-この種のクエリは従来のText-to-SQLベンチマークの範囲外であり、
-材料データベース固有の要求に応える機能拡張である。
+多段計算クエリに自然言語から対応可能であることを示した。
 この実装を通じて、RDBスキーマの正規化度と
 テーブル構造がText-to-SQL精度の上流要因となることが
 明らかとなった（\ref{sec:schema_design_cost}節）。
@@ -1307,12 +1768,14 @@ pinax: Provenance-tracking analysis workflow management system,
 検証・評価に関する詳細情報を提供する。
 S1節ではユニットテストの全カテゴリと検証焦点を示し、
 S2節で回帰テストケース39件の一覧を掲載する。
-S3節では代表的なクエリに対する生成SQL例を比較し、
-本手法のJOINパス制約の効果を具体的に示す。
-S4節ではSQLインジェクション攻撃を含む安全性テスト結果を報告する。
-S5節ではLLMモード（GPT-5.5）の設定パラメータとプロンプト構成を記載する。
-S6節では評価クエリ100件の詳細結果（クエリ文、精度、レイテンシ）を一覧する。
-S7節ではablation study 7条件間で結果が異なるクエリの比較を示す。
+S3節では代表的なクエリに対する生成SQL例を3段階の手法構成で比較する。
+S4節ではNi$_3$Al近傍格子定数候補（31件中代表14件）を示す。
+S5節では安定L1$_2$候補の形成エネルギーランキングを掲載する。
+S6節ではSQLインジェクション・安全性テスト結果の補足情報を示す。
+S7節ではLLMモード（GPT-5.5）の設定パラメータとプロンプト構成を記載する。
+S8節では評価クエリ100件の詳細結果（クエリ文、精度、レイテンシ）を一覧する。
+S9節ではablation study 7条件間で結果が異なるクエリの比較を示す。
+S10節では独立設計クエリプールの詳細結果を報告する。
 全数値は\texttt{paper\_data.json}から取得（EVID-20260619-1335-ablation-json）。
 
 % =====================================================================
@@ -1510,32 +1973,66 @@ LIMIT 10000;
 \end{lstlisting}
 
 % =====================================================================
-\section{SQLインジェクション・安全性テスト結果}
-\label{sec:sup_injection}
+\section{Ni$_3$Al近傍格子定数候補}
+\label{sec:sup_lattice_match}
 
-7件の敵対的入力（E01--E05、F01--F02）はすべてSQLGuardにより安全に処理された
-（表~\ref{tab:sup_injection_results}）。破壊的・注入的入力は遮断され、
-LIMITなしの直接SELECTはLIMIT自動付加により安全化された。
+$|a - a_{\text{Ni}_3\text{Al}}| \leq 0.03$~\AA を厳密に満たす候補を
+表~\ref{tab:sup_lattice_match}に示す
+（$a_{\text{ref}} = 3.57$~\AA、全31件中代表14件）。
 
 \begin{table}[htbp]
   \centering
-  \caption{SQLインジェクション・安全性テスト結果（全件安全処理）。}
-  \label{tab:sup_injection_results}
+  \caption{Ni$_3$Al近傍格子定数候補（$|a - a_{\text{ref}}| \leq 0.03$~\AA、代表14件）。}
+  \label{tab:sup_lattice_match}
   \small
-  \begin{tabularx}{\linewidth}{lXl}
+  \begin{tabular}{lcccc}
     \toprule
-    ID & 入力 & 処理 \\
+    化合物 & $a$ (\AA) & $|\Delta a|$ & $E_\text{hull}$ & $E_f$ \\
     \midrule
-    E01 & \texttt{DROP TABLE material\_entry;} & 禁止キーワード：DROP \\
-    E02 & \texttt{SELECT *; DELETE FROM composition;} & 複数文 + DELETE \\
-    E03 & L1$_2$化合物; \texttt{DROP TABLE structure;} & 複数文 + DROP \\
-    E04 & \texttt{SELECT * FROM secret\_passwords} & 非許可テーブル \\
-    E05 & \texttt{INSERT INTO material\_entry ...} & 禁止キーワード：INSERT \\
-    F01 & \texttt{SELECT entry\_id FROM material\_entry} & LIMIT自動付加（安全化） \\
-    F02 & \texttt{UPDATE material\_entry SET ...} & 禁止キーワード：UPDATE \\
+    Hf$_3$Y & 3.569 & 0.001 & 0.039 & $-0.443$ \\
+    Ni$_3$Al & 3.572 & 0.002 & 0.000 & $-0.420$ \\
+    Pd$_3$Mn & 3.570 & 0.000 & 0.033 & $-0.180$ \\
+    Cr$_3$Al & 3.567 & 0.003 & 0.082 & $-0.120$ \\
+    Cr$_3$Fe & 3.574 & 0.004 & 0.037 & $-0.453$ \\
+    Rh$_3$Zr & 3.574 & 0.004 & 0.026 & $-0.525$ \\
+    Cu$_3$Zr & 3.575 & 0.005 & 0.038 & $-0.037$ \\
+    Ag$_3$Ti & 3.564 & 0.006 & 0.039 & $+0.088$ \\
+    Au$_3$V & 3.564 & 0.006 & 0.088 & $-0.471$ \\
+    Mo$_3$Nb & 3.586 & 0.016 & 0.007 & $-0.154$ \\
+    Co$_3$Ti & 3.550 & 0.020 & 0.000 & $-0.450$ \\
+    Pt$_3$Ge & 3.550 & 0.020 & 0.021 & $-0.478$ \\
+    Ni$_3$Ge & 3.583 & 0.013 & 0.075 & $-0.128$ \\
+    Ni$_3$Ga & 3.598 & 0.028 & 0.030 & $-0.229$ \\
     \bottomrule
-  \end{tabularx}
+  \end{tabular}
 \end{table}
+
+Co$_3$Ti（$\Delta a = 0.02$~\AA、$E_\text{hull} = 0.0$）は
+安定相であり析出強化候補として最も現実的である。
+
+% =====================================================================
+\section{安定L1$_2$候補の形成エネルギーランキング}
+\label{sec:sup_stable_l12}
+
+$E_\text{hull} \leq 0.05$~eV/atomを満たす安定・準安定L1$_2$候補を抽出した。
+安定（$E_\text{hull} \leq 0.001$）8件、
+準安定（$0.001 < E_\text{hull} \leq 0.05$）154件の
+計162件が候補として抽出された。
+安定相のうち、最も負の形成エネルギーを持つのは
+Pt$_3$Al（$E_f = -0.550$~eV/atom）であり、
+次いでAl$_3$Sc（$-0.500$）、Co$_3$Ti（$-0.450$）、
+Ni$_3$Al（$-0.420$）が続く。
+
+% =====================================================================
+\section{SQLインジェクション・安全性テスト詳細}
+\label{sec:sup_injection}
+
+本文\ref{sec:injection_safety}節で報告した安全性テスト結果の
+補足情報を示す。
+SQLGuardの各検証項目（14項目、\ref{sec:sqlguard}節）は
+独立に動作し、複数の脅威ベクトルに対する多層防御を提供する。
+禁止キーワード検出は正規表現ベースであり、
+テーブルホワイトリストはスキーマメタデータから自動生成される。
 
 % =====================================================================
 \section{LLMモード設定}
@@ -1779,5 +2276,49 @@ $-$GD = no\_guard、$-$NB = no\_nbest、$-$GR = no\_graph。
   \item no\_guard, no\_nbest, no\_graphは差異クエリ数が限定的であり、本文で報告した$-$0.2ppと整合する。
   \item q\_vhard\_001はfull条件と$-$RR条件で0.19であるが、他の5条件では0。これはfew-shot + dictの複合効果を示唆する（リランカーの除去は精度に影響しなかった）。
 \end{itemize}
+
+% =====================================================================
+\section{独立設計クエリプールの詳細結果}
+\label{sec:sup_expert_queries}
+
+本論文\ref{sec:independent_eval}節で報告した独立設計クエリについて、
+元の100件クエリプール（カテゴリA--J）の難易度別正答率を
+表~\ref{tab:sup_expert_category}に示す。
+このうち48件が統一分類基準により60件の調和セットに採用されている
+（Very Hard 12件は新規設計）。
+難易度はE（Easy）、M（Medium）、H（Hard）、VH（Very Hard）の4段階であり、
+正誤判定は実行F1$\geq 0.8$を正解と判定した。
+
+\begin{table}[htbp]
+  \centering
+  \caption{独立設計クエリの難易度別正答率（統一複雑度スコア基準）。}
+  \label{tab:sup_expert_category}
+  \small
+  \begin{tabular}{lcccc}
+    \toprule
+    難易度 & 件数 & 正答数 & 正答率 & 平均実行精度 \\
+    \midrule
+    Easy ($< 8$) & 12 & 9 & 75.0\% & 83.3\% \\
+    Medium ($8$--$11$) & 18 & 10 & 55.6\% & 69.9\% \\
+    Hard ($12$--$16$) & 18 & 11 & 61.1\% & 70.1\% \\
+    Very Hard ($\geq 17$) & 12 & 2 & 16.7\% & 19.4\% \\
+    \midrule
+    \textbf{全体} & \textbf{60} & \textbf{32} & \textbf{53.3\%} & \textbf{62.5\%} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Very Hard（5--7テーブルJOIN必須）の正答率16.7\%は、
+著者設計のVery Hard（32.7\%）よりさらに低く、
+未カバーテーブルへのJOIN経路探索が主要な課題であることを示す。
+
+独立設計クエリプールは10カテゴリ（A: 基本検索、B: 組成・元素、
+C: 構造・格子定数、D: 安定性・形成エネルギー、
+E: DFT計算・物性、F: 電子構造・磁性・熱特性、
+G: 表面・粒界・欠陥、H: 文献・合成・応用、
+I: 材料設計・スクリーニング、J: 比較・統計）
+から構成される。
+各カテゴリ10件、合計100件のうち48件が調和セットに採用され、
+新規VH 12件と合わせて60件の評価セットとなっている。
 
 \end{document}
