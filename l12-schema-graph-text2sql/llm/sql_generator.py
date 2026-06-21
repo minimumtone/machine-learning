@@ -1,14 +1,14 @@
 """Generate constrained SQL from natural language using LLM with schema graph constraints."""
 from __future__ import annotations
 
+import importlib
+import importlib.util
 import logging
 import os
 import re
 import time
 from pathlib import Path
-from typing import Any
-
-logger = logging.getLogger(__name__)
+from typing import TYPE_CHECKING, Any
 
 from llm.entity_extractor import extract_conditions
 from llm.few_shot_store import format_few_shot_block, retrieve_similar
@@ -16,12 +16,14 @@ from llm.intent_classifier import classify_intent, classify_query_type
 from llm.output_schema_specifier import specify_output_schema
 from llm.schema_linker import link_schema
 
-try:
-    import networkx as nx
+if TYPE_CHECKING:
     from graph.join_path_generator import generate_joins_for_tables, get_allowed_join_list
-    _HAS_GRAPH = True
-except ImportError:
-    _HAS_GRAPH = False
+
+logger = logging.getLogger(__name__)
+
+_HAS_GRAPH = importlib.util.find_spec("networkx") is not None
+if not TYPE_CHECKING and _HAS_GRAPH:
+    from graph.join_path_generator import generate_joins_for_tables, get_allowed_join_list
 
 
 def _fix_known_literals(sql: str) -> str:

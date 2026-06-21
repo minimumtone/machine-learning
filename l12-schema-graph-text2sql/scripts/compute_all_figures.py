@@ -27,6 +27,7 @@ import sys
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 import psycopg
 import yaml
@@ -34,7 +35,7 @@ import yaml
 PROJECT = Path(__file__).resolve().parent.parent
 
 
-def load_json(relpath: str) -> dict | list:
+def load_json(relpath: str) -> Any:
     p = PROJECT / relpath
     if not p.exists():
         print(f"ERROR: {p} not found", file=sys.stderr)
@@ -65,8 +66,15 @@ def count_file_lines(relpath: str, skip_header: bool = False) -> int:
     if not p.exists():
         return 0
     with open(p) as f:
-        lines = [l for l in f if l.strip()]
+        lines = [line for line in f if line.strip()]
     return len(lines) - (1 if skip_header else 0)
+
+
+def _fetchone_scalar(cur: Any) -> Any:
+    """Fetch single scalar value from cursor; raises if no row."""
+    row = cur.fetchone()
+    assert row is not None, "Expected a result row"
+    return row[0]
 
 
 def main():
@@ -83,27 +91,27 @@ def main():
         "SELECT count(*) FROM information_schema.tables "
         "WHERE table_schema='public' AND table_type='BASE TABLE'"
     )
-    n_tables = cur.fetchone()[0]
+    n_tables = _fetchone_scalar(cur)
 
     cur.execute(
         "SELECT count(*) FROM information_schema.tables "
         "WHERE table_schema='public' AND table_type='VIEW'"
     )
-    n_views = cur.fetchone()[0]
+    n_views = _fetchone_scalar(cur)
 
     table_counts = {}
     for tbl in [
         "material_entry", "composition", "calculated_property",
         "pure_element_reference", "element",
     ]:
-        cur.execute(f"SELECT count(*) FROM {tbl}")
-        table_counts[tbl] = cur.fetchone()[0]
+        cur.execute(f"SELECT count(*) FROM {tbl}")  # type: ignore[arg-type]
+        table_counts[tbl] = _fetchone_scalar(cur)
 
     cur.execute(
         "SELECT count(DISTINCT formula) FROM material_entry "
         "WHERE formula IS NOT NULL"
     )
-    n_unique_formulas = cur.fetchone()[0]
+    n_unique_formulas = _fetchone_scalar(cur)
 
     # Materials evaluation queries
     cur.execute(
@@ -113,7 +121,7 @@ def main():
         "WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') "
         "AND ps.energy_above_hull <= 0.05"
     )
-    n_stable_metastable_l12 = cur.fetchone()[0]
+    n_stable_metastable_l12 = _fetchone_scalar(cur)
 
     cur.execute(
         "SELECT count(DISTINCT me.formula) FROM material_entry me "
@@ -122,7 +130,7 @@ def main():
         "WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') "
         "AND ps.energy_above_hull <= 0.001"
     )
-    n_stable_l12 = cur.fetchone()[0]
+    n_stable_l12 = _fetchone_scalar(cur)
 
     n_metastable_l12 = n_stable_metastable_l12 - n_stable_l12
 
@@ -132,14 +140,14 @@ def main():
         "WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') "
         "AND ABS(s.lattice_a - 3.57) <= 0.03"
     )
-    n_ni3al_lattice_match = cur.fetchone()[0]
+    n_ni3al_lattice_match = _fetchone_scalar(cur)
 
     cur.execute(
         "SELECT count(DISTINCT me.formula) FROM material_entry me "
         "JOIN structure s ON s.entry_id = me.entry_id "
         "WHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'"
     )
-    n_l12_unique_compositions = cur.fetchone()[0]
+    n_l12_unique_compositions = _fetchone_scalar(cur)
 
     conn.close()
 
@@ -322,8 +330,8 @@ def main():
             capture_output=True, text=True, cwd=str(PROJECT),
         )
         n_unit_tests = len(
-            [l for l in result.stdout.strip().split("\n")
-             if l.strip() and "::" in l]
+            [line for line in result.stdout.strip().split("\n")
+             if line.strip() and "::" in line]
         )
     except Exception:
         n_unit_tests = 0
@@ -498,7 +506,7 @@ def main():
 
     # Print summary
     t = ablation_table
-    print(f"\n=== VERIFICATION SUMMARY ===")
+    print("\n=== VERIFICATION SUMMARY ===")
     print(f"Database: {n_tables} tables, {n_views} views, "
           f"{table_counts['material_entry']} entries")
     print(f"Dataset: {n_queries} queries ({n_cte_queries} CTE), "

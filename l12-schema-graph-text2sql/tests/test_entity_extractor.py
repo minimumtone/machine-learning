@@ -52,7 +52,7 @@ def test_extract_lattice_reference():
     ref = extract_lattice_reference("Ni₃Alに近い格子定数を持つ候補を探して")
     assert ref is not None
     assert ref["reference_formula"] == "Ni3Al"
-    assert abs(ref["reference_lattice_a"] - 3.572) < 0.01
+    assert abs(float(ref["reference_lattice_a"]) - 3.572) < 0.01
 
 
 def test_conditions_l12_list():

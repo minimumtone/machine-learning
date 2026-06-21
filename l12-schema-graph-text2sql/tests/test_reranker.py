@@ -3,9 +3,7 @@
 Cross-Encoder tests run locally (no API key needed).
 LLM-based tests verify graceful degradation without API key.
 """
-import os
 
-import pytest
 
 from llm.reranker import (
     rerank_few_shot_examples,

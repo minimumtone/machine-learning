@@ -28,7 +28,7 @@ from pathlib import Path
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
-import yaml
+import yaml  # noqa: E402 — must follow sys.path manipulation
 
 
 def load_material_terms():
@@ -295,8 +295,8 @@ def main():
     for q in test_queries:
         d_result = tagger_default.parse(q)
         c_result = tagger_custom.parse(q)
-        d_words = [l.split("\t")[0] for l in d_result.strip().split("\n") if "\t" in l] if d_result else []
-        c_words = [l.split("\t")[0] for l in c_result.strip().split("\n") if "\t" in l] if c_result else []
+        d_words = [tok.split("\t")[0] for tok in d_result.strip().split("\n") if "\t" in tok] if d_result else []
+        c_words = [tok.split("\t")[0] for tok in c_result.strip().split("\n") if "\t" in tok] if c_result else []
         is_improved = len(c_words) < len(d_words)
         if is_improved:
             improved += 1
@@ -306,7 +306,7 @@ def main():
         print(f"  Custom  ({len(c_words):2d} tok): {' / '.join(c_words)}  [{marker}]")
     print(f"\nImproved: {improved}/{len(test_queries)} queries")
 
-    print(f"\n=== Summary ===")
+    print("\n=== Summary ===")
     print(f"Total unique terms: {n_unique}")
     print(f"CSV: {csv_path}")
     print(f"DIC: {dic_path}")

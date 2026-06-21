@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import random
 import sys
-from dataclasses import dataclass, field
 from typing import TextIO
 
 random.seed(42)

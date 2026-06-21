@@ -188,7 +188,7 @@ def main():
     with open(outpath, "w") as f:
         f.write("\n".join(lines))
 
-    n_inserts = sum(1 for l in lines if l.startswith("INSERT"))
+    n_inserts = sum(1 for line in lines if line.startswith("INSERT"))
     print(f"Wrote {outpath} ({len(gs)} elements, {n_inserts} INSERTs, "
           f"{len(ELEMENT_DATA)} new element rows)")
 

@@ -21,7 +21,7 @@ def find_shortest_table_path(
 def find_join_subgraph(
     graph: nx.Graph,
     required_tables: list[str],
-) -> dict[str, list[str]]:
+) -> dict[str, list[list[str]]]:
     """Return join paths connecting all required tables via a Steiner-tree approximation.
 
     Uses a union-find to track connected components so that pairs already

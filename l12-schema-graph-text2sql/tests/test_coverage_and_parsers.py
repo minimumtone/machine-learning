@@ -1,10 +1,8 @@
 """Tests for coverage score, numeric condition parser, and chemical formula parser."""
 from __future__ import annotations
 
-import pytest
 
 from llm.entity_extractor import (
-    compute_coverage,
     extract_conditions,
     extract_formula,
     extract_numeric_conditions,

@@ -2,8 +2,8 @@
   "_meta": {
     "description": "Single source of truth for paper numerical values",
     "generated_by": "scripts/compute_all_figures.py",
-    "generated_at": "2026-06-21 13:50:27 UTC",
-    "git_commit": "7c013075f6335b23a6d713c90cdaced09f1b1f0d",
+    "generated_at": "2026-06-21 14:57:00 UTC",
+    "git_commit": "c59164cce1105f2538eb4a3ed014465ed64a2602",
     "source_files": [
       "evaluation/ablation_results.json",
       "evaluation/jp_reranker_vh_results.json",
@@ -54,13 +54,13 @@
         "avg_latency_s": 27.7
       },
       "no_fewshot": {
-        "overall_pct": 68.2,
-        "easy_pct": 95.0,
-        "medium_pct": 79.6,
-        "hard_pct": 66.8,
-        "vhard_pct": 26.2,
-        "delta_pp": -16.2,
-        "avg_latency_s": 64.1
+        "overall_pct": 75.4,
+        "easy_pct": 100.0,
+        "medium_pct": 86.8,
+        "hard_pct": 69.2,
+        "vhard_pct": 43.2,
+        "delta_pp": -8.9,
+        "avg_latency_s": 33.7
       },
       "no_dict": {
         "overall_pct": 78.5,
@@ -110,10 +110,10 @@
     },
     "top3_per_difficulty_deltas": {
       "no_fewshot": {
-        "easy_delta_pp": -5.0,
-        "medium_delta_pp": -16.5,
-        "hard_delta_pp": -13.5,
-        "vhard_delta_pp": -30.7
+        "easy_delta_pp": 0.0,
+        "medium_delta_pp": -9.3,
+        "hard_delta_pp": -11.2,
+        "vhard_delta_pp": -13.7
       },
       "no_dict": {
         "easy_delta_pp": 0.0,
@@ -138,7 +138,7 @@
         "CTE_column_compare"
       ],
       "full_cte_accuracy_pct": 100.0,
-      "no_fewshot_cte_accuracy_pct": 0.0,
+      "no_fewshot_cte_accuracy_pct": 80.0,
       "no_dict_cte_accuracy_pct": 92.0,
       "no_reranker_cte_accuracy_pct": 100.0,
       "no_guard_cte_accuracy_pct": 0.0,
@@ -151,7 +151,7 @@
         "vh_total": 20
       },
       "no_fewshot": {
-        "vh_failures": 16,
+        "vh_failures": 12,
         "vh_total": 20
       },
       "no_dict": {

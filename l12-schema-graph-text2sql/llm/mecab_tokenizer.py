@@ -11,9 +11,7 @@ Usage:
 from __future__ import annotations
 
 import functools
-import os
 from pathlib import Path
-from typing import Any
 
 _PROJECT = Path(__file__).resolve().parent.parent
 _DICT_PATH = Path(__file__).resolve().parent / "mecab_materials.dic"

@@ -12,13 +12,20 @@ Fixes applied (audit 2026-06-02):
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-try:
+if TYPE_CHECKING:
     import sqlglot
+    import sqlglot.expressions
     HAS_SQLGLOT = True
-except ImportError:
-    HAS_SQLGLOT = False
+else:
+    try:
+        import sqlglot
+        import sqlglot.expressions
+        HAS_SQLGLOT = True
+    except ImportError:
+        sqlglot = None
+        HAS_SQLGLOT = False
 
 
 def syntax_validity(sql: str) -> bool:
@@ -200,13 +207,13 @@ def _extract_aliases_from_sql(sql: str) -> dict[str, str]:
     """
     alias_map: dict[str, str] = {}
 
-    if HAS_SQLGLOT:
+    if HAS_SQLGLOT and sqlglot is not None:
         try:
             parsed = sqlglot.parse(sql, dialect="postgres")
             for stmt in parsed:
                 if stmt is None:
                     continue
-                for table in stmt.find_all(sqlglot.exp.Table):
+                for table in stmt.find_all(sqlglot.expressions.Table):
                     table_name = table.name
                     alias_node = table.args.get("alias")
                     if alias_node:
