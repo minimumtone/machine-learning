@@ -92,7 +92,7 @@ L1$_2$型金属間化合物を中心とする31テーブル・1{,}559件のRDB�
 材料ドメイン辞書は複雑なクエリ（Very Hard帯）で
 $-$18.1ポイント（pp）の精度低下を引き起こし、
 ドメイン固有用語のマッピングが不可欠であることを示した。
-few-shot例の除去は全難易度帯で$-$8.9\,ppの低下を引き起こし、
+few-shot例の除去はMedium帯以上で$-$8.9\,ppの低下を引き起こし、
 テンプレートパターンの学習効果を確認した。
 さらに、RDBスキーマの正規化度とテーブル構造が
 Text-to-SQL精度の上流要因となることを明らかにし、
@@ -316,8 +316,8 @@ Cross-Encoderはローカルで動作し、処理時間は50\,ms未満である�
 ablation studyにおいて、few-shot例の除去は
 全体精度を84.3\%から75.4\%へ$-$8.9\,pp低下させた
 （表~\ref{tab:ablation}）。
-この低下は全難易度帯で観察され、
-Medium帯では$-$16.5\,ppであった（表~\ref{tab:ablation-detail}）。
+この低下はMedium帯以上で観察され（Easy帯は低下なし）、
+Medium帯では$-$9.3\,ppであった（表~\ref{tab:ablation-detail}）。
 LLMはfew-shot例からSQL生成のパターン
 （テーブル名、JOIN順序、カラム名の使い方）を
 in-context learning~\cite{brown2020fewshot}により獲得しており、
@@ -1593,8 +1593,9 @@ Very Hard帯の5件をCTEクエリに差し替えて評価を実施した。
 \centering
 \caption{CTE多段計算クエリ（5件）のablation条件別精度。
 full条件では全5件が100\%正解であった一方、
-few-shot例・SQLGuardの除去により全件不正解となった。
-辞書除去では4/5件が正解を維持した。}
+SQLGuardの除去により全件不正解となった。
+few-shot例の除去では4/5件が正解を維持し（80\%）、
+辞書除去でも同様4/5件が正解を維持した。}
 \label{tab:cte_results}
 \small
 \begin{tabular}{@{}lr@{}}
@@ -1602,7 +1603,7 @@ few-shot例・SQLGuardの除去により全件不正解となった。
 条件 & CTE精度（5件） \\
 \midrule
 full          & 100\% (5/5) \\
-no\_fewshot   & 0\% (0/5) \\
+no\_fewshot   & 80\% (4/5) \\
 no\_dict      & 80\% (4/5)$^\dagger$ \\
 no\_reranker  & 100\% (5/5) \\
 no\_guard     & 0\% (0/5) \\
@@ -1613,9 +1614,10 @@ no\_graph     & 100\% (5/5) \\
 \end{tabular}
 \end{table}
 
-CTE多段計算では、few-shot例とSQLGuardが100\%精度の達成に不可欠であった。
-few-shot例の除去により全件不正解となったことは、
-CTE構文のパターン学習がin-context learningに強く依存していることを示す。
+CTE多段計算では、SQLGuardが100\%精度の達成に不可欠であった。
+few-shot例の除去でも4/5件が正解を維持したが、
+full条件の100\%からは低下しており、
+CTE構文の完全なパターン学習にはin-context learningが寄与していることを示す。
 SQLGuardの除去でも全件不正解となったことは、
 CTE構文の安全性検証が生成SQL品質に直結していることを示す。
 辞書の除去では4/5件が正解を維持（80\%）し、
@@ -1743,8 +1745,9 @@ $\gamma'$相候補ランキング、安定・準安定候補162件の抽出を�
 
 CTE（Common Table Expression）を用いた多段計算クエリ
 （生成エンタルピー計算等）5件の評価では、
-few-shot例とSQLGuardの両方が揃った条件で100\%の精度を達成し、
-いずれかの除去で全件不正解となった（\ref{sec:cte_evaluation}節）。
+few-shot例とSQLGuardの両方が揃った条件で100\%の精度を達成した（\ref{sec:cte_evaluation}節）。
+SQLGuardの除去では全件不正解となり、
+few-shot例の除去では80\%（4/5件）に低下した。
 辞書の除去では4/5件が正解を維持（80\%）し、
 few-shot例からの語彙学習が大部分のCTEパターンで有効であることを示した。
 
