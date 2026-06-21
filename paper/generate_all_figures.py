@@ -478,12 +478,11 @@ def fig06_additive_fit(ob2, ol12, decomp):
 def fig07_composition_examples(all_df):
     """Fig 7a/7b: Structure-matched Vegard composition plots.
 
-    B2 figure: MP BCC volumes as BCC endpoints.
+    B2 figure: King, MP-BCC, and VASP-BCC (magnetic) Vegard lines.
     L12 figure: MP FCC volumes as FCC endpoints.
-    Each figure uses structure-consistent DFT endpoints (from Materials
-    Project) so that the deviation from Vegard is the pure Omega_sf,
-    free of structure-mismatch artifacts.  King Vegard shown as dashed
-    reference for comparison.
+    Each figure uses structure-consistent DFT endpoints so that the
+    deviation from Vegard is the pure Omega_sf, free of structure-
+    mismatch artifacts.
     """
     examples = [("Cu", "Zr"), ("Al", "Ni"), ("Fe", "Ti"),
                 ("Co", "Cr"), ("Pd", "Ti"), ("Nb", "Ti")]
@@ -514,6 +513,29 @@ def fig07_composition_examples(all_df):
                     continue
                 vol_dict.setdefault(el, a ** 3 / n_auc)
 
+    # Build VASP-BCC (magnetic) pure element volumes
+    vasp_vol_b2 = {}  # V_X^BCC from VASP ISPIN=2 magnetic recalc
+    mag_b2_file = REPO / "data" / "magnetic_b2_results.csv"
+    mag_b2_df = None
+    if mag_b2_file.exists():
+        mag_b2_df = pd.read_csv(mag_b2_file)
+        # Use pure_ entries (explicit MAGMOM) for magnetic elements
+        for _, row in mag_b2_df[mag_b2_df["type"] == "pure"].iterrows():
+            el = row["element_A"]
+            a = row["lattice_constant_A"]
+            if 2 < a < 8:
+                vasp_vol_b2[el] = a ** 3 / 2
+        # Fill remaining from B2 self-pairs (X1X1 where A==B)
+        self_pairs = mag_b2_df[
+            (mag_b2_df["type"] == "B2") &
+            (mag_b2_df["element_A"] == mag_b2_df["element_B"])
+        ]
+        for _, row in self_pairs.iterrows():
+            el = row["element_A"]
+            a = row["lattice_constant_A"]
+            if 2 < a < 8:
+                vasp_vol_b2.setdefault(el, a ** 3 / 2)
+
     # --- Fig 7a: B2 (BCC-like) ---
     fig_b2, axes_b2 = plt.subplots(2, 3, figsize=(18, 11))
     axes_b2 = axes_b2.flatten()
@@ -528,16 +550,30 @@ def fig07_composition_examples(all_df):
         ax.plot(c_arr * 100, a_king, "k--", lw=1.5, alpha=0.5,
                 label="Vegard (King)")
 
-        # Structure-matched DFT Vegard line (solid)
+        # MP-BCC Vegard line (dotted)
         if elX in dft_vol_b2 and elY in dft_vol_b2:
             vX_d = dft_vol_b2[elX]
             vY_d = dft_vol_b2[elY]
             a_dft = [(2 * ((1 - c) * vX_d + c * vY_d)) ** (1/3) for c in c_arr]
-            ax.plot(c_arr * 100, a_dft, "C0-", lw=2,
+            ax.plot(c_arr * 100, a_dft, "C0:", lw=1.5, alpha=0.6,
                     label="Vegard (MP-BCC)")
 
-        # B2 DFT data points (including homonuclear endpoints)
+        # VASP-BCC (magnetic) Vegard line (solid)
+        if elX in vasp_vol_b2 and elY in vasp_vol_b2:
+            vX_v = vasp_vol_b2[elX]
+            vY_v = vasp_vol_b2[elY]
+            a_vasp = [(2 * ((1 - c) * vX_v + c * vY_v)) ** (1/3)
+                      for c in c_arr]
+            ax.plot(c_arr * 100, a_vasp, "C0-", lw=2,
+                    label="Vegard (VASP-BCC)")
+
+        # B2 DFT data points — existing (gray, if magnetic data overlays)
+        has_mag = (mag_b2_df is not None and
+                   any(e in {"Fe", "Co", "Ni", "Mn", "Cr"}
+                       for e in [elX, elY]))
+
         sub = all_df[all_df["stype"] == "B2"]
+        ispin1_labeled = False
         for _, row in sub.iterrows():
             elA, elB = row["element_A"], row["element_B"]
             a = row["lattice_constant"]
@@ -554,12 +590,50 @@ def fig07_composition_examples(all_df):
                     c_B = cA / total
                 else:
                     c_B = cB / total
-                ax.scatter(c_B * 100, a, c="C0", s=80, zorder=5)
+                color = "gray" if has_mag else "C0"
+                alpha = 0.4 if has_mag else 1.0
+                label = None
+                if has_mag and not ispin1_labeled:
+                    label = "ISPIN=1"
+                    ispin1_labeled = True
+                ax.scatter(c_B * 100, a, c=color, s=60, zorder=4,
+                           alpha=alpha, label=label)
+
+        # Magnetic B2 data points (orange, overlaid)
+        if has_mag and mag_b2_df is not None:
+            mag_sub = mag_b2_df[mag_b2_df["type"] == "B2"]
+            plotted_mag = set()
+            first_label = True
+            for _, row in mag_sub.iterrows():
+                elA, elB = row["element_A"], row["element_B"]
+                a = row["lattice_constant_A"]
+                if a <= 2 or a >= 8:
+                    continue
+                if {elA, elB} == {elX, elY} or \
+                   (elA == elB and elA in {elX, elY}):
+                    if elA == elB:
+                        pure_row = mag_b2_df[
+                            mag_b2_df["directory"] == f"pure_{elA}"]
+                        if len(pure_row) > 0:
+                            a = pure_row.iloc[0]["lattice_constant_A"]
+                        c_B = 0.0 if elA == elX else 1.0
+                        key = (elA, c_B)
+                    else:
+                        c_B = 0.5
+                        key = (frozenset([elA, elB]), c_B)
+                    if key in plotted_mag:
+                        continue
+                    plotted_mag.add(key)
+                    label = "ISPIN=2" if first_label else None
+                    ax.scatter(c_B * 100, a, c="C1", s=100, zorder=5,
+                               marker="D", edgecolors="k", linewidths=0.5,
+                               label=label)
+                    first_label = False
 
         ax.set_xlabel(f"% {elY}")
         ax.set_ylabel("$a$ (\u00c5)")
         ax.set_title(f"B2: {elX}\u2013{elY}")
-        ax.legend(fontsize=10, loc="best")
+        ax.legend(fontsize=9, loc="best")
 
     fig_b2.tight_layout()
     fig_b2.savefig(OUTDIR / "fig_composition_b2.png", bbox_inches="tight")
