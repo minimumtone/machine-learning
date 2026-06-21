@@ -594,7 +594,7 @@ def fig07_composition_examples(all_df):
                 alpha = 0.4 if has_mag else 1.0
                 label = None
                 if has_mag and not ispin1_labeled:
-                    label = "ISPIN=1"
+                    label = "MAGMOM default"
                     ispin1_labeled = True
                 ax.scatter(c_B * 100, a, c=color, s=60, zorder=4,
                            alpha=alpha, label=label)
@@ -624,7 +624,7 @@ def fig07_composition_examples(all_df):
                     if key in plotted_mag:
                         continue
                     plotted_mag.add(key)
-                    label = "ISPIN=2" if first_label else None
+                    label = "MAGMOM explicit" if first_label else None
                     ax.scatter(c_B * 100, a, c="C1", s=100, zorder=5,
                                marker="D", edgecolors="k", linewidths=0.5,
                                label=label)
