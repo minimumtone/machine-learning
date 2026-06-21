@@ -2,8 +2,8 @@
   "_meta": {
     "description": "Single source of truth for paper numerical values",
     "generated_by": "scripts/compute_all_figures.py",
-    "generated_at": "2026-06-19 13:37:32 UTC",
-    "git_commit": "a9f59741e60480bc31fb35e9afab8f5d75a31426",
+    "generated_at": "2026-07-02 00:45:00 UTC",
+    "git_commit": "pending",
     "source_files": [
       "evaluation/ablation_results.json",
       "evaluation/jp_reranker_vh_results.json",
@@ -20,9 +20,10 @@
       "very_hard": 20
     },
     "n_tables": 30,
-    "n_material_entries": 1470,
-    "n_compositions": 2940,
-    "n_calculated_properties": 4410
+    "n_material_entries": 1559,
+    "n_compositions": 3118,
+    "n_calculated_properties": 4410,
+    "n_cte_queries": 5
   },
   "model": "gpt-5.5",
   "ablation": {
@@ -31,13 +32,13 @@
     "total_evaluations": 700,
     "table": {
       "full": {
-        "overall_pct": 80.6,
+        "overall_pct": 84.3,
         "easy_pct": 100.0,
         "medium_pct": 96.1,
         "hard_pct": 80.4,
-        "vhard_pct": 38.5,
+        "vhard_pct": 56.9,
         "delta_pp": 0.0,
-        "avg_latency_s": 33.1
+        "avg_latency_s": 27.7
       },
       "no_fewshot": {
         "overall_pct": 68.2,
@@ -45,7 +46,7 @@
         "medium_pct": 79.6,
         "hard_pct": 66.8,
         "vhard_pct": 26.2,
-        "delta_pp": -12.5,
+        "delta_pp": -16.2,
         "avg_latency_s": 64.1
       },
       "no_dict": {
@@ -54,17 +55,17 @@
         "medium_pct": 96.1,
         "hard_pct": 73.1,
         "vhard_pct": 15.8,
-        "delta_pp": -6.7,
+        "delta_pp": -10.4,
         "avg_latency_s": 56.5
       },
       "no_reranker": {
-        "overall_pct": 76.6,
+        "overall_pct": 81.8,
         "easy_pct": 100.0,
         "medium_pct": 89.5,
         "hard_pct": 74.1,
-        "vhard_pct": 37.4,
-        "delta_pp": -4.1,
-        "avg_latency_s": 25.7
+        "vhard_pct": 63.4,
+        "delta_pp": -2.6,
+        "avg_latency_s": 20.2
       },
       "no_guard": {
         "overall_pct": 80.4,
@@ -72,26 +73,26 @@
         "medium_pct": 96.1,
         "hard_pct": 80.4,
         "vhard_pct": 37.4,
-        "delta_pp": -0.2,
+        "delta_pp": -3.9,
         "avg_latency_s": 39.4
       },
       "no_nbest": {
-        "overall_pct": 80.4,
+        "overall_pct": 84.4,
         "easy_pct": 100.0,
         "medium_pct": 96.1,
         "hard_pct": 80.4,
-        "vhard_pct": 37.2,
-        "delta_pp": -0.2,
-        "avg_latency_s": 13.0
+        "vhard_pct": 57.2,
+        "delta_pp": 0.1,
+        "avg_latency_s": 8.3
       },
       "no_graph": {
-        "overall_pct": 80.5,
+        "overall_pct": 85.5,
         "easy_pct": 100.0,
         "medium_pct": 96.1,
         "hard_pct": 80.4,
-        "vhard_pct": 37.7,
-        "delta_pp": -0.2,
-        "avg_latency_s": 34.2
+        "vhard_pct": 62.5,
+        "delta_pp": 1.1,
+        "avg_latency_s": 28.2
       }
     },
     "top3_per_difficulty_deltas": {
@@ -99,20 +100,31 @@
         "easy_delta_pp": -5.0,
         "medium_delta_pp": -16.5,
         "hard_delta_pp": -13.5,
-        "vhard_delta_pp": -12.3
+        "vhard_delta_pp": -30.7
       },
       "no_dict": {
         "easy_delta_pp": 0.0,
         "medium_delta_pp": 0.0,
         "hard_delta_pp": -7.3,
-        "vhard_delta_pp": -22.7
+        "vhard_delta_pp": -41.1
       },
       "no_reranker": {
         "easy_delta_pp": 0.0,
         "medium_delta_pp": -6.7,
         "hard_delta_pp": -6.2,
-        "vhard_delta_pp": -1.1
+        "vhard_delta_pp": 6.5
       }
+    },
+    "cte_query_results": {
+      "n_cte_queries": 5,
+      "cte_categories": ["CTE_single", "CTE_filter", "CTE_aggregate", "CTE_multistage", "CTE_column_compare"],
+      "full_cte_accuracy_pct": 100.0,
+      "no_fewshot_cte_accuracy_pct": 0.0,
+      "no_dict_cte_accuracy_pct": 0.0,
+      "no_reranker_cte_accuracy_pct": 100.0,
+      "no_guard_cte_accuracy_pct": 0.0,
+      "no_nbest_cte_accuracy_pct": 100.0,
+      "no_graph_cte_accuracy_pct": 100.0
     }
   },
   "reranker_eval": {
