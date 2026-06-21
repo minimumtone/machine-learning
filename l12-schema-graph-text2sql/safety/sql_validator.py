@@ -4,16 +4,23 @@ from __future__ import annotations
 import re
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
-try:
+if TYPE_CHECKING:
     import sqlglot
-    from sqlglot import exp as sqlglot_exp
+    from sqlglot import expressions as sqlglot_exp
     HAS_SQLGLOT = True
-except ImportError:
-    HAS_SQLGLOT = False
+else:
+    try:
+        import sqlglot
+        from sqlglot import exp as sqlglot_exp
+        HAS_SQLGLOT = True
+    except ImportError:
+        sqlglot = None
+        sqlglot_exp = None
+        HAS_SQLGLOT = False
 
 
 FORBIDDEN_KEYWORDS = [
@@ -93,6 +100,7 @@ def _strip_literals(sql: str) -> str:
 
 def _ast_extract_tables(sql: str) -> list[str]:
     """Extract real table names using sqlglot AST, excluding CTE aliases."""
+    assert sqlglot is not None and sqlglot_exp is not None
     try:
         parsed = sqlglot.parse(sql, dialect="postgres")
     except Exception:
@@ -118,6 +126,7 @@ def _ast_extract_tables(sql: str) -> list[str]:
 
 def _ast_extract_columns(sql: str) -> list[str]:
     """Extract table.column references using sqlglot AST."""
+    assert sqlglot is not None and sqlglot_exp is not None
     try:
         parsed = sqlglot.parse(sql, dialect="postgres")
     except Exception:
@@ -138,6 +147,7 @@ def _ast_extract_columns(sql: str) -> list[str]:
 
 def _ast_check_multiple_statements(sql: str) -> bool:
     """Check for multiple statements via sqlglot parse."""
+    assert sqlglot is not None
     try:
         stmts = sqlglot.parse(sql, dialect="postgres")
         real = [s for s in stmts if s is not None]
@@ -148,6 +158,7 @@ def _ast_check_multiple_statements(sql: str) -> bool:
 
 def _ast_check_forbidden_keywords(sql: str) -> list[str]:
     """Check forbidden keywords via AST node types."""
+    assert sqlglot is not None
     try:
         parsed = sqlglot.parse(sql, dialect="postgres")
     except Exception:
@@ -182,6 +193,7 @@ def _ast_check_forbidden_keywords(sql: str) -> list[str]:
 
 def _ast_check_disallowed_functions(sql: str) -> list[str]:
     """Check for disallowed functions via AST."""
+    assert sqlglot is not None and sqlglot_exp is not None
     try:
         parsed = sqlglot.parse(sql, dialect="postgres")
     except Exception:
@@ -202,12 +214,13 @@ def _ast_check_disallowed_functions(sql: str) -> list[str]:
 
 def _ast_subquery_depth(sql: str) -> int:
     """Compute max subquery nesting via AST."""
+    assert sqlglot is not None and sqlglot_exp is not None
     try:
         parsed = sqlglot.parse(sql, dialect="postgres")
     except Exception:
         return _regex_subquery_depth(sql)
 
-    def _depth(node: sqlglot_exp.Expression, current: int) -> int:
+    def _depth(node: Any, current: int) -> int:
         max_d = current
         for child in node.iter_expressions():
             d = current
@@ -225,6 +238,7 @@ def _ast_subquery_depth(sql: str) -> int:
 
 def _ast_check_limit(sql: str) -> bool:
     """Check if outermost statement has a LIMIT clause via AST."""
+    assert sqlglot is not None and sqlglot_exp is not None
     try:
         parsed = sqlglot.parse(sql, dialect="postgres")
     except Exception:
@@ -395,8 +409,7 @@ def check_cte_bodies_select_only(sql: str) -> list[str]:
     PostgreSQL supports writable CTEs (INSERT/UPDATE/DELETE inside WITH).
     This check ensures no CTE body contains data-modification statements.
     """
-    if not HAS_SQLGLOT:
-        # Regex fallback: extract CTE bodies and check for DML
+    if not HAS_SQLGLOT or sqlglot is None or sqlglot_exp is None:
         return _regex_check_cte_bodies(sql)
 
     try:

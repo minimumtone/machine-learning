@@ -170,7 +170,7 @@ def extract_sort(query: str, terms: dict[str, Any] | None = None) -> dict[str, s
     return None
 
 
-def extract_lattice_reference(query: str) -> dict[str, float] | None:
+def extract_lattice_reference(query: str) -> dict[str, str | float] | None:
     """Detect 'near Ni3Al lattice constant'-type queries.
 
     Also extracts user-specified tolerance (e.g. '0.05 Å以内') if present.
@@ -178,7 +178,7 @@ def extract_lattice_reference(query: str) -> dict[str, float] | None:
     q = _normalize(query)
     pattern = r"([A-Z][a-z]?)3([A-Z][a-z]?).*(?:格子定数|lattice)"
     m = re.search(pattern, q, re.IGNORECASE)
-    result: dict[str, float] | None = None
+    result: dict[str, str | float] | None = None
     if m:
         ref_formulas = {
             "Ni3Al": 3.572,
@@ -378,7 +378,7 @@ def extract_numeric_conditions(query: str) -> list[dict[str, Any]]:
                 })
 
     # Deduplicate: same (column, operator, value) may be matched by multiple patterns
-    seen: set[tuple[str, str, float | str]] = set()
+    seen: set[tuple[str, str, Any]] = set()
     deduped: list[dict[str, Any]] = []
     for r in results:
         v = r["value"] if not isinstance(r["value"], list) else tuple(r["value"])

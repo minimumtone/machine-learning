@@ -15,25 +15,24 @@ Conditions:
 """
 from __future__ import annotations
 
-import csv
 import json
 import os
 import sys
 import time
-import copy
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
-import psycopg
+import psycopg  # noqa: E402
 
-from evaluation.metrics import execution_accuracy_full, normalize_limit
-from graph.graph_builder import build_table_graph
-from graph.join_path_generator import get_allowed_join_list
-from graph.schema_parser import get_foreign_keys, get_tables, get_columns
-from llm.sql_generator import pipeline as sql_pipeline
+from evaluation.metrics import execution_accuracy_full, normalize_limit  # noqa: E402
+from graph.graph_builder import build_table_graph  # noqa: E402
+from graph.join_path_generator import get_allowed_join_list  # noqa: E402
+from graph.schema_parser import get_foreign_keys, get_tables, get_columns  # noqa: E402
+from llm.sql_generator import pipeline as sql_pipeline  # noqa: E402
 
 EVAL_DIR = PROJECT / "evaluation"
 RESULTS_DIR = EVAL_DIR / "expected_results"
@@ -106,6 +105,7 @@ def run_condition(conn, queries, condition, allowed_joins, allowed_columns, tabl
         t0 = time.time()
         
         try:
+            pipe_result: dict[str, Any] = {}
             if condition == "full":
                 pipe_result = sql_pipeline(
                     user_query=question,

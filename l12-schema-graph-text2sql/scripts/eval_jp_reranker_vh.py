@@ -15,11 +15,11 @@ from pathlib import Path
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
-import psycopg
+import psycopg  # noqa: E402
 
-from llm.sql_generator import pipeline as sql_pipeline
-from graph.graph_builder import build_table_graph
-from scripts.eval_ablation import (
+from graph.graph_builder import build_table_graph  # noqa: E402
+from llm.sql_generator import pipeline as sql_pipeline  # noqa: E402
+from scripts.eval_ablation import (  # noqa: E402
     load_queries, get_tables, get_columns, get_foreign_keys,
     get_allowed_join_list, normalize_limit, compute_accuracy,
     execute_sql,
@@ -98,7 +98,8 @@ def main():
     vh_queries = [q for q in all_queries if q["difficulty"] == "very_hard"]
     print(f"VH queries: {len(vh_queries)}")
 
-    exec_fn = lambda sql: execute_sql(conn, sql)
+    def exec_fn(sql: str) -> dict:
+        return execute_sql(conn, sql)
 
     models = [
         ("ms-marco (current)", "cross-encoder/ms-marco-MiniLM-L-6-v2"),

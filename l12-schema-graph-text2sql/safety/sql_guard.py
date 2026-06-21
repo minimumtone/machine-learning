@@ -103,10 +103,10 @@ def diagnose_empty_result(
 
     try:
         with conn.cursor() as cur:
-            cur.execute("SET statement_timeout = '5s'")
+            cur.execute("SET statement_timeout = '5s'")  # type: ignore[arg-type]
             for etype, value, check_sql, label in checks:
                 params = (value,) if check_sql.count("%s") == 1 else (value, value)
-                cur.execute(check_sql, params)
+                cur.execute(check_sql, params)  # type: ignore[arg-type]
                 row = cur.fetchone()
                 entry = {"type": etype, "value": value, "label": label}
                 if row:
@@ -180,9 +180,9 @@ def execute_sql(
         conn = psycopg.connect(conninfo)
         try:
             with conn.cursor() as cur:
-                cur.execute("SET TRANSACTION READ ONLY")
-                cur.execute(f"SET statement_timeout = '{timeout_seconds * 1000}'")
-                cur.execute(sql)
+                cur.execute("SET TRANSACTION READ ONLY")  # type: ignore[arg-type]
+                cur.execute(f"SET statement_timeout = '{timeout_seconds * 1000}'")  # type: ignore[arg-type]
+                cur.execute(sql)  # type: ignore[arg-type]
                 columns = [desc[0] for desc in cur.description] if cur.description else []
                 rows = cur.fetchall()
             latency_ms = int((time.time() - t0) * 1000)

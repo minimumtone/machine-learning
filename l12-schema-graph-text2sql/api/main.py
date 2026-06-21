@@ -6,16 +6,16 @@ import os
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
-
-logger = logging.getLogger(__name__)
 from pydantic import BaseModel
 
 from llm.entity_extractor import extract_conditions
 from llm.few_shot_store import add_example
 from llm.schema_linker import link_schema
 from llm.sql_generator import build_schema_context_from_db, pipeline
-from safety.sql_validator import validate_sql
 from safety.sql_guard import execute_sql
+from safety.sql_validator import validate_sql
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="L1₂ Schema-Graph Text-to-SQL",
@@ -83,7 +83,7 @@ def _get_schema_ctx() -> dict[str, list[str]]:
             "DB schema context unavailable — falling back to 5-table mode: %s",
             exc,
         )
-        return {"join_list": None, "all_columns": None}
+        return {"join_list": None, "all_columns": None}  # type: ignore[dict-item]
 
 
 @app.post("/query", response_model=QueryResponse)
