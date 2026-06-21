@@ -714,11 +714,12 @@ $\Omega_\text{sf}$が組成比だけでなく構造に依存する直接的証�
 \centering
 \includegraphics[width=\textwidth]{fig_composition_b2.png}
 \caption{代表6元素ペアのB2（BCC型）Vegardプロット。
-  破線: King原子体積（実験値）から算出したVegard則、
-  実線: Materials Project (MP) のBCC原子体積を端点としたVegard則。
-  青丸: DFT B2計算値（$c = 0, 50, 100\%$）。
-  MP端点を基準とすることで、GGA系統誤差が相殺され、
-  点と実線の偏差が純粋な$\Omega_\text{sf}$に対応する。}
+  破線: King原子体積（実験値）、点線: Materials Project (MP) BCC体積、
+  実線: VASP BCC（ISPIN=2磁性計算）体積を端点としたVegard則。
+  磁性元素を含むペア（Al--Ni, Fe--Ti, Co--Cr）では
+  灰色丸がISPIN=1（非磁性）、橙ダイヤがISPIN=2（磁性）のB2計算値。
+  VASP-BCC端点は同一汎関数・同一磁性設定でB2と整合しており、
+  GGA系統誤差の相殺に加え、磁気体積効果も正しく反映される。}
 \label{fig:composition_b2}
 \end{figure*}
 
