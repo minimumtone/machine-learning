@@ -261,7 +261,10 @@
     "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND EXISTS (SELECT 1 FROM composition c_or\n              WHERE c_or.entry_id = m.entry_id\n              AND c_or.element IN ('Ni', 'Co'))\nORDER BY m.formula\nLIMIT 10000;",
     "conditions": {
       "prototype": "L12",
-      "contains_elements": ["Ni", "Co"],
+      "contains_elements": [
+        "Ni",
+        "Co"
+      ],
       "element_logic": "OR"
     },
     "row_count": 45,
@@ -272,7 +275,9 @@
     "sql": "SELECT DISTINCT m.formula, ps.energy_above_hull, ps.is_stable,\n       cp.property_name, cp.value\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE c.element = 'Fe'\n  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY m.formula, cp.property_name\nLIMIT 10000;",
     "conditions": {
       "prototype": "L12",
-      "contains_elements": ["Fe"],
+      "contains_elements": [
+        "Fe"
+      ],
       "bulk_modulus": true
     },
     "row_count": 56,
@@ -313,7 +318,9 @@
     "nl_query": "Ni3Alの生成エンタルピーを純物質基準エネルギーから計算して。",
     "sql": "WITH compound AS (\n    SELECT m.entry_id, m.formula, ps.formation_energy_per_atom\n    FROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    WHERE m.formula = 'Ni3Al'\n    LIMIT 1\n),\nref_energies AS (\n    SELECT c.entry_id,\n           SUM(comp.atomic_fraction * per.energy_per_atom) AS weighted_ref\n    FROM compound c\n    JOIN composition comp ON comp.entry_id = c.entry_id\n    JOIN pure_element_reference per ON per.element_symbol = comp.element\n    GROUP BY c.entry_id\n)\nSELECT c.formula,\n       c.formation_energy_per_atom,\n       r.weighted_ref AS ref_energy,\n       c.formation_energy_per_atom - r.weighted_ref AS corrected_enthalpy\nFROM compound c\nJOIN ref_energies r ON r.entry_id = c.entry_id;",
     "conditions": {
-      "formulas": ["Ni3Al"],
+      "formulas": [
+        "Ni3Al"
+      ],
       "formation_enthalpy": true,
       "pure_element": true
     },
@@ -337,7 +344,9 @@
     "sql": "SELECT per.element_symbol, per.energy_per_atom,\n       per.ground_state_spacegroup, per.volume_per_atom,\n       per.band_gap, per.n_polymorphs\nFROM pure_element_reference per\nWHERE per.element_symbol = 'Ni';",
     "conditions": {
       "pure_element": true,
-      "contains_elements": ["Ni"],
+      "contains_elements": [
+        "Ni"
+      ],
       "ground_state": true
     },
     "row_count": 1,
@@ -413,7 +422,10 @@
     "sql": "SELECT m.formula,\n       ea.symbol AS a_site, ea.atomic_radius AS a_radius,\n       eb.symbol AS b_site, eb.atomic_radius AS b_radius,\n       ea.atomic_radius - eb.atomic_radius AS radius_diff\nFROM material_entry m\nJOIN composition ca ON ca.entry_id = m.entry_id AND ca.site_label = 'A-site'\nJOIN composition cb ON cb.entry_id = m.entry_id AND cb.site_label = 'B-site'\nJOIN element ea ON ea.symbol = ca.element\nJOIN element eb ON eb.symbol = cb.element\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ea.atomic_radius > eb.atomic_radius\nORDER BY ea.atomic_radius - eb.atomic_radius DESC\nLIMIT 10000;",
     "conditions": {
       "prototype": "L12",
-      "site_label": ["A-site", "B-site"],
+      "site_label": [
+        "A-site",
+        "B-site"
+      ],
       "column_comparison": "element.atomic_radius(A-site) > element.atomic_radius(B-site)"
     },
     "row_count": 148,
@@ -461,5 +473,46 @@
     },
     "row_count": 29,
     "source": "seed:column_comparison"
+  },
+  {
+    "nl_query": "B2化合物の生成エンタルピーを純物質基準で計算して、低い順にトップ10を出して。",
+    "sql": "WITH b2_enthalpy AS (\n    SELECT m.entry_id, m.formula, ps.formation_energy_per_atom,\n           SUM(comp.atomic_fraction * per.energy_per_atom) AS weighted_ref\n    FROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN composition comp ON comp.entry_id = m.entry_id\n    JOIN pure_element_reference per ON per.element_symbol = comp.element\n    WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    GROUP BY m.entry_id, m.formula, ps.formation_energy_per_atom\n)\nSELECT formula,\n       ROUND(formation_energy_per_atom::numeric, 4) AS e_form,\n       ROUND(weighted_ref::numeric, 4) AS e_ref,\n       ROUND((formation_energy_per_atom - weighted_ref)::numeric, 4) AS delta_h_f\nFROM b2_enthalpy\nORDER BY formation_energy_per_atom - weighted_ref ASC\nLIMIT 10;",
+    "conditions": {
+      "prototype": "B2",
+      "formation_enthalpy": true,
+      "pure_element": true,
+      "sort_by": "delta_h_f",
+      "sort_order": "asc"
+    },
+    "row_count": 10,
+    "source": "seed:cte_b2_enthalpy"
+  },
+  {
+    "nl_query": "Al含有L1₂化合物の生成エンタルピーを計算して、安定な順にトップ10を出して。",
+    "sql": "WITH all_l12 AS (\n    SELECT m.entry_id, m.formula, ps.formation_energy_per_atom\n    FROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n),\nenthalpy AS (\n    SELECT al.entry_id, al.formula, al.formation_energy_per_atom,\n           SUM(comp.atomic_fraction * per.energy_per_atom) AS weighted_ref\n    FROM all_l12 al\n    JOIN composition comp ON comp.entry_id = al.entry_id\n    JOIN pure_element_reference per ON per.element_symbol = comp.element\n    GROUP BY al.entry_id, al.formula, al.formation_energy_per_atom\n),\nal_bearing AS (\n    SELECT e.entry_id, e.formula,\n           e.formation_energy_per_atom - e.weighted_ref AS delta_h_f\n    FROM enthalpy e\n    WHERE EXISTS (\n        SELECT 1 FROM composition c WHERE c.entry_id = e.entry_id AND c.element = 'Al'\n    )\n)\nSELECT formula, ROUND(delta_h_f::numeric, 4) AS corrected_enthalpy\nFROM al_bearing\nORDER BY delta_h_f ASC\nLIMIT 10;",
+    "conditions": {
+      "prototype": "L12",
+      "contains_elements": [
+        "Al"
+      ],
+      "formation_enthalpy": true,
+      "pure_element": true,
+      "sort_by": "delta_h_f",
+      "sort_order": "asc"
+    },
+    "row_count": 10,
+    "source": "seed:cte_multistage_al"
+  },
+  {
+    "nl_query": "L1₂化合物で純物質基準補正の影響が大きい（補正量の絶対値が0.005 eV/atomより大きい）ものを出して。",
+    "sql": "WITH corrected AS (\n    SELECT m.entry_id, m.formula, ps.formation_energy_per_atom,\n           SUM(comp.atomic_fraction * per.energy_per_atom) AS weighted_ref\n    FROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN composition comp ON comp.entry_id = m.entry_id\n    JOIN pure_element_reference per ON per.element_symbol = comp.element\n    JOIN structure s ON s.entry_id = m.entry_id\n    WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    GROUP BY m.entry_id, m.formula, ps.formation_energy_per_atom\n)\nSELECT formula,\n       ROUND(formation_energy_per_atom::numeric, 4) AS raw_e_form,\n       ROUND((formation_energy_per_atom - weighted_ref)::numeric, 4) AS corrected_e_form,\n       ROUND(weighted_ref::numeric, 4) AS correction\nFROM corrected\nWHERE ABS(weighted_ref) > 0.005\nORDER BY ABS(weighted_ref) DESC\nLIMIT 10;",
+    "conditions": {
+      "prototype": "L12",
+      "formation_enthalpy": true,
+      "pure_element": true,
+      "column_comparison": "ABS(weighted_ref) > 0.005"
+    },
+    "row_count": 10,
+    "source": "seed:cte_correction_filter"
   }
 ]

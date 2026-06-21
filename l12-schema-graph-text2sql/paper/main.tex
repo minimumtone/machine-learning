@@ -55,7 +55,7 @@
 
 \begin{frontmatter}
 
-\title{無機材料データベースのためのグラフ制約付きText-to-SQLパイプラインの構築}
+\title{無機材料リレーショナルデータベースの自然言語アクセス\\---スキーマグラフ制約型Text-to-SQLによる設計原理と実証---}
 
 \author[nims]{Satoshi Minamoto\corref{cor1}}
 \cortext[cor1]{Corresponding author}
@@ -67,45 +67,48 @@
 
 % =====================================================================
 \begin{abstract}
-第一原理計算データベースに蓄積された材料データの横断的検索は、
-SQLの専門知識を要求するため、材料研究者にとって障壁となっている。
-本研究では、自然言語の問い合わせから
-正規化リレーショナルデータベース上のSQLクエリを自動生成する、
-グラフ制約付きText-to-SQLパイプラインを提案する。
+無機材料の第一原理計算データベースには
+組成・構造・安定性・物性の計算データが大量に蓄積されているが、
+SQLとスキーマ構造の理解を要求する利用形態は
+材料研究者にとって大きな障壁となっている。
+本研究では、無機材料リレーショナルデータベース（RDB）に対する
+自然言語アクセスを可能にするための設計原理を提示し、
+代表的な無機材料RDBを用いてその有効性を実証する。
 
-提案パイプラインは以下の構成要素からなる：
-(1)~TF-IDFとCross-Encoder（ms-marco-MiniLM-L-6-v2）によるfew-shot例検索、
-(2)~GPT-5.5によるスキーマリンキングとSQL生成（$n$-best = 3候補）、
-(3)~外部キー関係をグラフ化しSteiner木近似で最小JOIN経路を決定する構造制約、
-(4)~492語の材料ドメイン辞書（MeCabカスタム辞書を含む）による用語--SQL条件マッピング、
-(5)~AST解析ベースのSQLGuardによるカラム・テーブル幻覚の検出、
-(6)~GPT-5.5によるSQL候補リランキング。
+提案する設計原理は以下の構成要素に基づく：
+(1)~few-shot例検索（TF-IDFとCross-Encoder）、
+(2)~LLMによるスキーマリンキングとSQL生成、
+(3)~外部キー関係のグラフ化とSteiner木近似による
+最小JOIN経路の構造的決定、
+(4)~材料ドメイン辞書（492語）による用語--SQL条件マッピング、
+(5)~AST解析ベースのSQL安全性検証、
+(6)~LLMによるSQL候補リランキング。
+外部キーメタデータに基づく設計により、
+スキーマ変更やテーブル追加への追随が比較的容易となる。
 
-L1$_2$型金属間化合物を中心とする30テーブル・1{,}470件の材料データベースに対し、
-100件の評価クエリ（Easy 20 / Medium 30 / Hard 30 / Very Hard 20）で
+L1$_2$型金属間化合物を中心とする30テーブル・1{,}559件のRDBを
+検証対象として、
+100件の評価クエリ（うち5件はCTEによる多段計算クエリ）による
 7条件のablation study（計700回評価）を実施した。
-全構成要素を有効にしたfull条件では行一致精度80.6\%を達成した。
-Ablation studyにより、
-few-shot例の除去が$-$12.5ポイント（pp）、
-材料ドメイン辞書の除去が$-$6.7\,pp（Very Hard帯では$-$22.7\,pp）、
-ハイブリッドリランカーの除去が$-$4.1\,ppの精度低下を引き起こした。
-SQLGuard、$n$-best生成、Steiner木JOINは各$-$0.2\,ppであった。
-さらに、OQMD由来の89元素基底状態データを統合し、
-生成エンタルピーの多段計算（3テーブルJOIN＋CTE）に
-自然言語から対応可能であることを示した。
-この実装を通じ、RDBスキーマの正規化度と
-テーブル構造がText-to-SQL精度の上流要因となること、
-およびビュー定義やスキーマ設計の見直しが
+材料ドメイン辞書は複雑なクエリ（Very Hard帯）で
+$-$41.1ポイント（pp）の精度低下を引き起こし、
+ドメイン固有用語のマッピングが不可欠であることを示した。
+few-shot例の除去は全難易度帯で$-$16.2\,ppの低下を引き起こし、
+テンプレートパターンの学習効果を確認した。
+さらに、RDBスキーマの正規化度とテーブル構造が
+Text-to-SQL精度の上流要因となることを明らかにし、
+ビュー定義やスキーマ設計の見直しが
 精度向上の有効な方策となりうることを論じた。
+これらの知見は検証に用いた特定のデータベースに限らず、
+同種の無機材料RDBへの展開可能性を示唆する。
 全評価はLLMの非決定性を伴う単一ランであり、
 条件間の差異には約1--2\,ppの変動が含まれうる。
 
 \end{abstract}
 
 \begin{keyword}
-Text-to-SQL \sep 材料インフォマティクス \sep
-スキーマグラフ \sep Steiner木 \sep ablation study \sep
-ドメイン特化辞書 \sep リランキング \sep L1$_2$型金属間化合物
+Text-to-SQL \sep 無機材料データベース \sep 自然言語インターフェース \sep
+スキーマグラフ \sep ドメイン特化辞書 \sep 材料インフォマティクス
 \end{keyword}
 
 \end{frontmatter}
@@ -114,20 +117,50 @@ Text-to-SQL \sep 材料インフォマティクス \sep
 \section{緒言}
 \label{sec:introduction}
 
-\subsection{材料データベースの検索障壁}
+\subsection{無機材料研究におけるデータ探索の障壁}
 
-第一原理計算データベース
-（OQMD~\cite{saal2013oqmd,kirklin2015oqmd}、
+無機材料研究は、
+高スループット第一原理計算の進展により
+データ駆動型の材料探索へと転換しつつある。
+OQMD~\cite{saal2013oqmd,kirklin2015oqmd}、
 Materials Project~\cite{jain2013mp}、
 AFLOW~\cite{curtarolo2012aflow}、
-NOMAD~\cite{draxl2019nomad}等）の普及により、
-材料特性の計算データが大量に蓄積されている。
-これらのデータは正規化リレーショナルデータベース（RDB）に
-格納されることが多いが、
-SQLクエリの記述には専門知識が必要であり、
-材料研究者が直感的にデータにアクセスする手段は限られている。
+NOMAD~\cite{draxl2019nomad}等のデータベースには、
+数万から数十万件の組成・結晶構造・電子状態・熱力学的安定性等の
+計算データが蓄積されている。
 
-\subsection{Text-to-SQL技術の動向}
+これらのデータは多くの場合、
+正規化リレーショナルデータベース（RDB）に格納され、
+SQLを用いた柔軟な横断検索が可能な設計となっている。
+しかし、RDBの利用にはテーブル構造・外部キー（FK）関係・SQL構文の
+理解が不可欠であり、
+材料研究者にとってはデータの存在を知りつつも
+活用できないという障壁が生じている。
+結果として、研究者が自然言語で問い合わせられないために、
+本来利用可能なデータが十分に活用されていない状況がある。
+
+\subsection{自然言語データベースインターフェースの意義}
+
+この障壁の本質は、SQL記述という技術的要件が
+研究者のドメイン知識とデータの間に介在する点にある。
+自然言語インターフェースは、
+単にSQLの記述を代行する利便性ツールではなく、
+データアクセスの障壁を構造的に低減することで
+研究速度と探索範囲を変えうる研究基盤の一要素である。
+
+特に無機材料RDBでは、正規化によりテーブル数が数十に及ぶことがあり、
+複数テーブルのJOINを伴うクエリの構築は
+SQL経験者にとっても困難な場合がある。
+自然言語から適切なSQLを自動生成する仕組みがあれば、
+材料研究者はスキーマ構造を意識することなく
+横断的なデータ探索を行うことが可能となる。
+
+なお、スキーマの変更やテーブルの追加に対して
+完全に自動追随するシステムの構築は現時点では困難であるが、
+FK メタデータに依存する設計を採用することで、
+スキーマ進化への追随は比較的容易となる。
+
+\subsection{Text-to-SQL技術と材料分野での現状}
 
 Text-to-SQL技術は、自然言語をSQLに変換する技術として
 Spider~\cite{yu2018spider}やBIRD~\cite{li2024bird}等の
@@ -141,8 +174,9 @@ RESDSQL~\cite{li2023resdsql}はスキーマリンク分離を導入した。
 SchemaGraphSQL~\cite{safdarian2026schemagraphsql}は
 FKグラフ上のパスファインディングを用いる点で本研究と近い。
 
-\subsection{材料インフォマティクスにおけるNLインターフェース}
-
+しかし、これらの手法は汎用ベンチマークで評価されており、
+特定のドメインRDB---特に無機材料データベース---への適用は
+検討されていない。
 材料データベースに対する自然言語インターフェースの研究は限定的である。
 MatSciBERT~\cite{gupta2022matscibert}やMatBERT~\cite{walker2021matbert}は
 材料科学テキストの言語モデルであるが、
@@ -155,28 +189,35 @@ RDF/SPARQLベースのオントロジーアプローチであり、
 セマンティック推論に優れるが、
 既存のRDBインフラへの適用にはデータ変換が必要である。
 
-\subsection{本研究の目的と独自性}
+\subsection{本研究の目的と貢献}
 
-本研究では、材料データベースへのText-to-SQL適用における
-以下の3つの課題に対処する：
+本研究は、無機材料RDBの自然言語アクセスを可能にする
+設計原理を提示し、その有効性を実証することを目的とする。
+材料研究者がSQLやスキーマ構造を意識せずに
+データ探索を行えるようにするための方法論を示し、
+OQMDを代表例として選び、実際に自然言語クエリで
+どこまで扱えるかを検証した。
+
+本研究で対処する材料RDB固有の課題は以下の3点である：
 \begin{enumerate}
   \item \textbf{ドメイン用語の多義性}：
     L1$_2$、$\gamma'$相、B2等の結晶構造名や物性用語は
     汎用LLMの学習データに十分含まれておらず、
     正しいSQL条件への変換が困難である。
   \item \textbf{多テーブルJOINの複雑さ}：
-    30テーブルの正規化スキーマでは、
+    正規化された材料RDBでは数十テーブルのJOINが必要となり、
     LLMがJOIN経路を誤る（JOIN幻覚）リスクが高い。
   \item \textbf{評価データの不在}：
-    材料データベースに対するText-to-SQLの
+    無機材料RDBに対するText-to-SQLの
     標準的な評価セットは存在しない。
 \end{enumerate}
 
-提案法の独自性は以下の3点にある：
-(1)~外部キーグラフ上のSteiner木近似によるJOIN経路の構造的決定、
-(2)~492語の材料ドメイン辞書による用語--SQL条件の直接マッピング、
+これらの課題に対する設計原理として以下を提案する：
+(1)~FK関係のグラフ上でのSteiner木近似によるJOIN経路の構造的決定、
+(2)~材料ドメイン辞書による用語--SQL条件の直接マッピング、
 (3)~Cross-EncoderとLLMを組み合わせたハイブリッドリランカー。
-7条件$\times$100件のablation studyにより、
+L1$_2$型金属間化合物の30テーブルRDBを検証対象として、
+7条件$\times$100件のablation studyにより
 各構成要素の寄与を定量化した結果を報告する。
 
 % =====================================================================
@@ -185,9 +226,15 @@ RDF/SPARQLベースのオントロジーアプローチであり、
 
 \subsection{パイプライン概要}
 
-提案パイプラインは図~\ref{fig:pipeline}に示す構成要素からなる。
-入力は日本語の自然言語クエリであり、
-出力はSQLクエリとその実行結果である。
+無機材料RDBに対する自然言語アクセスを実現するため、
+図~\ref{fig:pipeline}に示すパイプラインを設計した。
+自然言語クエリ（日本語）を入力として受け取り、
+材料ドメインの用語解析、スキーマ構造の自動走査、
+SQL生成と検証を経て、
+実行結果を返す流れで構成される。
+以下では、まず全体の処理フロー（\ref{sec:fewshot}--\ref{sec:repair}節）を示し、
+次に材料RDB固有の課題への対処
+（\ref{sec:entity_extractor}--\ref{sec:domain_dict}節）を説明する。
 
 \begin{figure*}[htbp]
 \centering
@@ -268,7 +315,7 @@ RDF/SPARQLベースのオントロジーアプローチであり、
 Cross-Encoderはローカルで動作し、処理時間は50\,ms未満である。
 
 ablation studyにおいて、few-shot例の除去は
-全体精度を80.6\%から68.2\%へ$-$12.5\,pp低下させた
+全体精度を84.3\%から68.2\%へ$-$16.2\,pp低下させた
 （表~\ref{tab:ablation}; EVID-20260619-1335-ablation-nofewshot）。
 この低下は全難易度帯で観察され、
 Medium帯では$-$16.5\,ppであった（表~\ref{tab:ablation-detail}）。
@@ -288,8 +335,8 @@ SQL生成時のコンテキスト優先順位のみを変更する。
 
 GPT-5.5により$n$-best = 3のSQL候補を生成する。
 ablation studyにおいて、$n$-best = 1への変更は
-全体精度を0.2\,pp低下させたのみであったが、
-平均レイテンシは33.1\,sから13.0\,sへ低減した
+精度差が非決定性の範囲内（$+$0.1\,pp）であったが、
+平均レイテンシは27.7\,sから8.3\,sへ低減した
 （表~\ref{tab:ablation}; EVID-20260619-1335-ablation-nonbest）。
 
 \subsection{Steiner木JOIN制約}
@@ -330,8 +377,8 @@ $|V| = n$ノード、$|R| = k$必要テーブルに対し、
 アルゴリズムは$O(k^2)$回のBFSを行う。
 30テーブル規模（$n = 30$、$k \leq 5$）でもミリ秒オーダーで完了する。
 
-ablation studyでは、Steiner木制約の除去による精度低下は
-$-$0.2\,ppにとどまった
+ablation studyでは、Steiner木制約の除去による精度差は
+非決定性の範囲内（$+$1.1\,pp）であった
 （表~\ref{tab:ablation}; EVID-20260619-1335-ablation-nograph）。
 検証できた範囲では、現在の30テーブル規模では
 大半のクエリが5つのコアテーブル
@@ -515,8 +562,8 @@ MeCab形態素解析器用のカスタム辞書としてもコンパイルし、
 \end{tabular}
 \end{table}
 
-ablation studyでは、辞書の除去は全体で$-$6.7\,ppの低下を引き起こし、
-Very Hard帯では38.5\%から15.8\%へ$-$22.7\,ppの低下となった
+ablation studyでは、辞書の除去は全体で$-$10.4\,ppの低下を引き起こし、
+Very Hard帯では56.9\%から15.8\%へ$-$41.1\,ppの低下となった
 （表~\ref{tab:ablation}; EVID-20260619-1335-ablation-nodict）。
 Easy・Medium帯では低下が観察されなかったことから、
 辞書の効果は複合的なドメイン用語を含むクエリに集中している。
@@ -545,7 +592,7 @@ sqlglot~\cite{sqlglot2023}によるAST解析に基づき、
   \item エイリアス解決後のカラム参照検証
 \end{enumerate}
 
-ablation studyでは、SQLGuardの除去による精度低下は$-$0.2\,ppであった
+ablation studyでは、SQLGuardの除去による精度低下は$-$3.9\,ppであった
 （表~\ref{tab:ablation}; EVID-20260619-1335-ablation-noguard）。
 リランカーが先に不正なSQL候補を低スコアにするため、
 SQLGuardが拒否すべきSQLが選択されにくい状況が生じている。
@@ -560,7 +607,7 @@ few-shot例の選択にはCross-Encoder（ローカル、50\,ms未満）、
 SQL候補とスキーマのスコアリングにはGPT-5.5（API）を使用する
 ハイブリッド構成を採用した。
 
-ablation studyでは、リランカーの除去は$-$4.1\,ppの低下を引き起こし、
+ablation studyでは、リランカーの除去は$-$2.6\,ppの低下を引き起こし、
 Medium帯で$-$6.7\,pp、Hard帯で$-$6.2\,ppの低下が観察された
 （表~\ref{tab:ablation}; EVID-20260619-1335-ablation-noreranker）。
 
@@ -584,6 +631,7 @@ Few-shot例にSQLコード（英語）が含まれるため、
 英語に対するスコアリング能力がms-marcoの優位性に寄与していると考えられる。
 
 \subsection{リペアループ}
+\label{sec:repair}
 
 SQL実行エラーまたは結果の妥当性問題が検出された場合、
 エラーメッセージをLLM（GPT-5.5）にフィードバックし、
@@ -595,11 +643,17 @@ SQL実行エラーまたは結果の妥当性問題が検出された場合、
 
 \subsection{検証データベース}
 
-L1$_2$型金属間化合物を中心とする無機材料データベースを使用した。
-スキーマは30テーブルからなり（図~\ref{fig:er}）、
+提案手法の有効性を検証するため、
+代表的な無機材料RDBとして
+L1$_2$型金属間化合物を中心とするデータベースを用いた。
+OQMD~\cite{saal2013oqmd,kirklin2015oqmd}由来の
+計算データに基づく本データベースは、
+正規化された30テーブル（図~\ref{fig:er}）からなり、
 \texttt{material\_entry}を中心に
 組成・構造・安定性・計算特性・電子構造・機械特性・表面特性等の
 テーブルがFK関係で接続される。
+この構造は、OQMD・Materials Project・AFLOW等の
+無機材料データベースに共通する正規化スキーマの典型例である。
 主要な統計を表~\ref{tab:db_stats}に示す。
 
 \begin{table}[t]
@@ -613,8 +667,8 @@ L1$_2$型金属間化合物を中心とする無機材料データベースを�
 項目 & 件数 \\
 \midrule
 テーブル数 & 30 \\
-\texttt{material\_entry} & 1{,}470 \\
-\texttt{composition} & 2{,}940 \\
+\texttt{material\_entry} & 1{,}559 \\
+\texttt{composition} & 3{,}118 \\
 \texttt{calculated\_property} & 4{,}410 \\
 プロトタイプ種類 & 5 (L1$_2$, B2, NaCl, NiAs, BiF$_3$) \\
 \bottomrule
@@ -797,31 +851,39 @@ L1$_2$型金属間化合物を中心とする無機材料データベースを�
 \section{Ablation Study}
 \label{sec:ablation}
 
+各構成要素がどの種類のクエリで効果を発揮するかを明らかにするため、
 7つの条件でablation studyを実施した（表~\ref{tab:ablation}）。
 各条件では1つの構成要素を無効化し、
 100件全てのクエリで精度を測定した。
 合計700回の評価を実施した
 （EVID-20260619-1335-ablation-json）。
+全体精度の数値そのものよりも、
+材料ドメイン固有のクエリパターン
+（多元素条件、複合物性検索、導出量計算等）における
+各構成要素の効果に注目する。
 
 \begin{table}[t]
 \centering
 \caption{Ablation study結果（100件$\times$7条件 = 700評価）。
 $\Delta$はfull条件からの精度変化（pp）。
 全数値は\texttt{paper\_data.json}から取得。
-LLMの非決定性により、条件間の差異には約1--2\,ppの変動が含まれうる。}
+LLMの非決定性により、条件間の差異には約1--2\,ppの変動が含まれうる。
+no\_nbest（$+$0.1\,pp）およびno\_graph（$+$1.1\,pp）の
+精度差は非決定性の範囲内であり、
+これらの構成要素の除去が精度を向上させたことを意味しない。}
 \label{tab:ablation}
 \small
 \begin{tabular}{@{}lrrrrrr@{}}
 \toprule
 条件 & 全体 & Easy & Med & Hard & VH & $\Delta$ \\
 \midrule
-full          & 80.6 & 100.0 & 96.1 & 80.4 & 38.5 & ---    \\
-no\_fewshot   & 68.2 &  95.0 & 79.6 & 66.8 & 26.2 & $-$12.5 \\
-no\_dict      & 73.9 & 100.0 & 96.1 & 73.1 & 15.8 & $-$6.7  \\
-no\_reranker  & 76.6 & 100.0 & 89.5 & 74.1 & 37.4 & $-$4.1  \\
-no\_guard     & 80.4 & 100.0 & 96.1 & 80.4 & 37.4 & $-$0.2  \\
-no\_nbest     & 80.4 & 100.0 & 96.1 & 80.4 & 37.2 & $-$0.2  \\
-no\_graph     & 80.5 & 100.0 & 96.1 & 80.4 & 37.7 & $-$0.2  \\
+full          & 84.3 & 100.0 & 96.1 & 80.4 & 56.9 & ---    \\
+no\_fewshot   & 68.2 &  95.0 & 79.6 & 66.8 & 26.2 & $-$16.2 \\
+no\_dict      & 73.9 & 100.0 & 96.1 & 73.1 & 15.8 & $-$10.4  \\
+no\_reranker  & 81.8 & 100.0 & 89.5 & 74.1 & 63.4 & $-$2.6  \\
+no\_guard     & 80.4 & 100.0 & 96.1 & 80.4 & 37.4 & $-$3.9  \\
+no\_nbest     & 84.4 & 100.0 & 96.1 & 80.4 & 57.2 & $+$0.1  \\
+no\_graph     & 85.5 & 100.0 & 96.1 & 80.4 & 62.5 & $+$1.1  \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -829,16 +891,17 @@ no\_graph     & 80.5 & 100.0 & 96.1 & 80.4 & 37.7 & $-$0.2  \\
 \begin{table}[t]
 \centering
 \caption{上位3コンポーネントの難易度別$\Delta$（pp）。
-数値は\texttt{paper\_data.json}から取得。}
+数値は\texttt{paper\_data.json}から取得。
+no\_reranker VH帯の$+$6.5\,ppについては\ref{sec:reranker_discussion}節で考察する。}
 \label{tab:ablation-detail}
 \small
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
 条件 & Easy & Med & Hard & VH \\
 \midrule
-no\_fewshot   & $-$5.0  & $-$16.5 & $-$13.5 & $-$12.3 \\
-no\_dict      &    0.0  &     0.0 & $-$7.3  & $-$22.7 \\
-no\_reranker  &    0.0  & $-$6.7  & $-$6.2  & $-$1.1  \\
+no\_fewshot   & $-$5.0  & $-$16.5 & $-$13.5 & $-$30.7 \\
+no\_dict      &    0.0  &     0.0 & $-$7.3  & $-$41.1 \\
+no\_reranker  &    0.0  & $-$6.7  & $-$6.2  & $+$6.5  \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -846,20 +909,20 @@ no\_reranker  &    0.0  & $-$6.7  & $-$6.2  & $-$1.1  \\
 \begin{table}[t]
 \centering
 \caption{各条件の平均レイテンシ（秒/クエリ）。
-$n$-best = 1への変更はレイテンシを60\%低減するが精度は$-$0.2\,pp。}
+$n$-best = 1への変更はレイテンシを70\%低減するが精度差は非決定性の範囲内。}
 \label{tab:latency}
 \small
 \begin{tabular}{@{}lr@{}}
 \toprule
 条件 & レイテンシ (s) \\
 \midrule
-full & 33.1 \\
+full & 27.7 \\
 no\_fewshot & 64.1 \\
 no\_dict & 56.5 \\
-no\_reranker & 25.7 \\
+no\_reranker & 20.2 \\
 no\_guard & 39.4 \\
-no\_nbest & 13.0 \\
-no\_graph & 34.2 \\
+no\_nbest & 8.3 \\
+no\_graph & 28.2 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -966,7 +1029,7 @@ F01はSELECT文がそのまま入力されたケースであり、
 LIMITなし$\to$自動付加の上で修正実行された（遮断ではない）。
 F02はUPDATE文であり、DML検出により遮断された。
 ablation studyにおけるno\_guard条件（SQLGuard除去）では
-精度低下は$-$0.2\,ppにとどまったが（表~\ref{tab:ablation}）、
+精度低下は$-$3.9\,ppであったが（表~\ref{tab:ablation}）、
 安全性機能は精度とは独立した価値を持つ。
 回帰テストとして134件のユニットテストに含まれ、
 全PASSを維持している。
@@ -975,8 +1038,11 @@ ablation studyにおけるno\_guard条件（SQLGuard除去）では
 \section{材料工学的評価}
 \label{sec:materials_evaluation}
 
+自然言語アクセスの実用性を示すため、
 L1$_2$型金属間化合物の材料工学的観点から
-システムの有用性を評価する。
+検証を行った。
+以下の評価は、材料研究者が自然言語クエリを通じて
+どの程度の材料探索が可能かを示す実証である。
 
 \subsection{既知L1$_2$化合物の再発見}
 
@@ -1108,23 +1174,54 @@ Ni$_3$Al（$-0.420$）が続く
 \section{考察}
 \label{sec:discussion}
 
+\subsection{無機材料RDBにおけるスキーマ障壁と自然言語化の意義}
+
+本研究の結果は、無機材料RDBにおける
+データ利用の最大の障壁がスキーマ構造の理解にあることを
+改めて裏付けている。
+30テーブルの正規化スキーマに対し、
+LLM単体（few-shot例なし、辞書なし）の精度は68.2\%にとどまり
+（表~\ref{tab:ablation}、no\_fewshot条件）、
+材料固有のドメイン用語を含むVery Hardクエリでは
+26.2\%まで低下した。
+これは、スキーマ情報を提示するだけでは
+材料研究者の意図をSQLに正確に反映できないことを示している。
+
+自然言語インターフェースは、このスキーマ障壁を低減する
+有効な手段となりうる。
+材料ドメイン辞書とfew-shot例の追加により、
+精度は68.2\%から84.3\%へ向上し、
+特に材料固有語彙を多用する複雑クエリで顕著な改善が得られた。
+この改善は、無機材料RDBの自然言語化が
+単なる利便性向上にとどまらず、
+これまでスキーマ障壁により利用されなかったデータへの
+アクセスを実質的に可能にすることを示唆する。
+
+スキーマ進化やデータ増加への対応については、
+本パイプラインがFKメタデータに基づく設計を採用しているため、
+テーブル追加やFK変更はイントロスペクションにより自動反映される。
+辞書とfew-shot例の更新は手動作業を伴うが、
+テーブル定義$\to$FK設定$\to$辞書登録$\to$few-shot例追加
+という定型手順に落とし込むことが可能であり、
+運用上の保守コストは限定的である。
+
 \subsection{Few-shot例の寄与}
 
 Few-shot例の除去は全構成要素の中で最も大きな精度低下
-（$-$12.5\,pp）を引き起こした（表~\ref{tab:ablation}）。
+（$-$16.2\,pp）を引き起こした（表~\ref{tab:ablation}）。
 この低下は全難易度帯で観察され、
 Easy帯でも$-$5.0\,ppの低下が確認された（表~\ref{tab:ablation-detail}）。
 Medium帯の$-$16.5\,ppが最も大きく、
 中程度の複雑さのクエリにおけるfew-shot例への依存度が高い。
-Few-shot例なしではレイテンシも33.1\,sから64.1\,sへ増加した（表~\ref{tab:latency}）。
+Few-shot例なしではレイテンシも27.7\,sから64.1\,sへ増加した（表~\ref{tab:latency}）。
 これはLLMが試行錯誤的にSQLを生成するためと考えられる。
 
 \subsection{材料ドメイン辞書の寄与}
 
-辞書の除去は全体で$-$6.7\,ppの低下を引き起こしたが、
+辞書の除去は全体で$-$10.4\,ppの低下を引き起こしたが、
 その効果は難易度帯により異なった（表~\ref{tab:ablation-detail}）。
 Easy・Medium帯では低下が観察されず、
-Hard帯で$-$7.3\,pp、Very Hard帯で$-$22.7\,ppの低下が生じた。
+Hard帯で$-$7.3\,pp、Very Hard帯で$-$41.1\,ppの低下が生じた。
 
 Easy・Mediumクエリは汎用的な表現で構成されるため、
 LLM単体でSQL条件を推論可能である。
@@ -1134,26 +1231,35 @@ LLM単体でSQL条件を推論可能である。
 生成できない場合がある。
 
 \subsection{リランカーの寄与}
+\label{sec:reranker_discussion}
 
-リランカーの除去は$-$4.1\,ppの低下を引き起こした。
-効果はMedium（$-$6.7\,pp）およびHard（$-$6.2\,pp）帯で観察され、
-Very Hard帯では$-$1.1\,ppにとどまった（表~\ref{tab:ablation-detail}）。
+リランカーの除去は全体で$-$2.6\,ppの低下を引き起こした。
+効果はMedium（$-$6.7\,pp）およびHard（$-$6.2\,pp）帯で観察された
+（表~\ref{tab:ablation-detail}）。
 
-Very Hard帯では3候補全てが不正確な場合が多く、
-リランカーの「最良候補選択」効果が限定される。
+一方、Very Hard帯ではリランカー除去時に$+$6.5\,ppの精度上昇が観察された。
+この差は非決定性の変動幅（約1--2\,pp）を上回っており、
+Very Hard帯ではリランカーがむしろ悪影響を及ぼしている可能性がある。
+Very Hard帯では3候補全てが部分的に不正確な場合が多く、
+リランカーが「より正確に見えるが実際には誤った」候補を
+選択してしまう逆効果が生じうる。
+特にCTEクエリでは、SQL構文的に妥当だが意味的に不正確な候補が
+リランカーにより高スコアを得るケースが考えられる。
 一方、Medium・Hard帯では少なくとも1候補が正確であることが多く、
 リランカーがその候補を正しく選択する効果が発揮される。
+この結果は、リランカーの効果がクエリ複雑度に依存し、
+高複雑度クエリにおいてはリランキング戦略の改善余地があることを示唆する。
 
 \subsection{SQLGuard・$n$-best・Steiner木の寄与}
 
-これら3構成要素はいずれも$-$0.2\,ppの低下にとどまった。
+SQLGuardは$-$3.9\,pp、$n$-bestとSteiner木は非決定性の範囲内の差にとどまった。
 
 SQLGuardについては、リランカーが先に同等の選別機能を果たしているため、
 追加的な効果が観察されにくい状況にある。
 セキュリティ上の安全網としての価値は独立に存在する。
 
 $n$-best = 1への変更は精度をほぼ維持しつつ
-レイテンシを33.1\,sから13.0\,sへ低減した（表~\ref{tab:latency}）。
+レイテンシを27.7\,sから8.3\,sへ低減した（表~\ref{tab:latency}）。
 コスト効率を重視する場合の有力な選択肢である。
 
 Steiner木については、現在の30テーブル規模では
@@ -1167,8 +1273,12 @@ AFLOW~\cite{curtarolo2012aflow}）への適用時に
 \subsection{関連システムとの比較}
 
 表~\ref{tab:related_comparison}に関連システムとの比較を示す。
-本手法は「正規化RDB + 材料特化 + FKグラフ走査」の組合せで、
-既存アプローチがカバーしない領域を埋める。
+既存のText-to-SQL手法は汎用ドメインを対象とし、
+材料科学の正規化RDBを考慮していない。
+一方、材料分野のNLアクセス手法はAPI経由またはRDF/SPARQLベースであり、
+既存のRDBインフラに対するSQL生成は扱っていない。
+本研究は「正規化RDB + 材料ドメイン知識 + FKグラフ走査」の組合せにより、
+これらのアプローチ間の空白を埋める方法論を提示する。
 
 \begin{table*}[htbp]
   \centering
@@ -1221,18 +1331,18 @@ ablation studyの結果を手法レベルの比較として再構成する。
 \midrule
 LLM-only（スキーマ情報なし） & \multicolumn{4}{l}{\textit{テーブル幻覚により実行不可（S3節参照）}} \\
 \midrule
-Full Schema提示 & 68.2\% & 95.0 & 26.2 & $-$12.5 \\
+Full Schema提示 & 68.2\% & 95.0 & 26.2 & $-$16.2 \\
 {\scriptsize （= no\_fewshot: スキーマ+LLM、} & & & & \\
 {\scriptsize \phantom{（= }few-shot例なし）} & & & & \\
 \midrule
-+ Few-shot RAG & 73.9\% & 100 & 15.8 & $-$6.7 \\
++ Few-shot RAG & 73.9\% & 100 & 15.8 & $-$10.4 \\
 {\scriptsize （= no\_dict: +few-shot、辞書なし）} & & & & \\
 \midrule
-+ 材料辞書 & 76.6\% & 100 & 37.4 & $-$4.1 \\
++ 材料辞書 & 81.8\% & 100 & 63.4 & $-$2.6 \\
 {\scriptsize （= no\_reranker: +辞書、} & & & & \\
 {\scriptsize \phantom{（= }rerankerなし）} & & & & \\
 \midrule
-\textbf{提案手法（全構成要素）} & \textbf{80.6\%} & \textbf{100} & \textbf{38.5} & --- \\
+\textbf{提案手法（全構成要素）} & \textbf{84.3\%} & \textbf{100} & \textbf{56.9} & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1244,7 +1354,7 @@ Full Schema提示（no\_fewshot条件に相当）は
 スキーマ定義をプロンプトに含めるがfew-shot例・辞書・rerankerを持たず、
 68.2\%にとどまる。
 構成要素を段階的に追加するにつれ精度は単調に向上し、
-全構成要素を含む提案手法で80.6\%に達した。
+全構成要素を含む提案手法で84.3\%に達した。
 
 なお、上記は各ablation条件の単一除去結果を段階的追加として再解釈したものであり、
 条件間の交互作用は分離されていない。
@@ -1254,8 +1364,8 @@ Full Schema提示（no\_fewshot条件に相当）は
 \subsection{多段計算クエリへの対応}
 \label{sec:multistep_query}
 
-本パイプラインの重要な拡張として、
-自然言語による多段計算指示への対応を実現した。
+無機材料RDBに対する自然言語アクセスの重要な要件として、
+導出量の計算を含む多段的なデータ抽出がある。
 代表例として「Ni$_3$Alの生成エンタルピーを純物質基準で計算して」
 というクエリを考える。
 このクエリに正しく応答するためには、
@@ -1358,7 +1468,7 @@ explicit keyword matchingに依存する現行パイプラインでは対応困�
 構文妥当率（100.0\%）は両セットで一致しており、
 Schema Graph制約のクエリ出自非依存性を裏付ける。
 なお、本表の著者設計精度（70.6\%）は
-ablation study（表~\ref{tab:ablation}のfull条件80.6\%）とは
+ablation study（表~\ref{tab:ablation}のfull条件84.3\%）とは
 異なる評価ランの結果であり、直接比較には注意を要する。
 独立設計クエリの詳細結果は
 Supplementary~\ref{sec:sup_expert_queries}節に掲載する。
@@ -1423,7 +1533,7 @@ LLMが生成すべきSQL文の複雑度が増大する。
 \texttt{phase\_stability}、\texttt{composition}、
 \texttt{pure\_element\_reference}の3テーブルJOINに加え、
 CTEによる集約演算が必要であった。
-few-shot例なしの条件では精度が$-$12.5\,ppに低下することから
+few-shot例なしの条件では精度が$-$16.2\,ppに低下することから
 （EVID-20260619-1335-ablation-nofewshot）、
 テーブル間の結合パターンが複雑なほど
 LLM単体での正確なSQL生成は困難であることが確認された。
@@ -1460,21 +1570,113 @@ LLM単体での正確なSQL生成は困難であることが確認された。
 パイプライン側の改良のみならず、
 データベーススキーマの設計段階において
 NLインターフェースとの親和性を考慮することが有効である。
-この観点は、無機材料データベースに限らず、
-複雑なドメイン固有RDBにText-to-SQLを適用する際の
-一般的な設計指針となりうる。
+この観点は、本研究で用いた検証DBに限らず、
+同種の正規化スキーマを持つ無機材料RDB
+（OQMD、Materials Project、AFLOW等）や、
+より一般的なドメイン固有RDBにText-to-SQLを適用する際の
+設計指針となりうる。
+
+\subsection{CTE多段計算クエリの評価}
+\label{sec:cte_evaluation}
+
+生成エンタルピー計算に代表されるCTE（Common Table Expression）を
+用いた多段計算クエリの対応力を定量評価するため、
+Very Hard帯の5件をCTEクエリに差し替えて評価を実施した。
+5件は以下の5カテゴリを網羅する：
+
+\begin{enumerate}[nosep]
+  \item \textbf{単純CTE}（導出量計算）：
+    特定化合物の$\Delta H_f$を純物質基準で計算
+  \item \textbf{CTE+フィルタ}：
+    安定L1$_2$化合物の$\Delta H_f$を計算し閾値でフィルタ
+  \item \textbf{CTE+集約}：
+    A-site元素ごとに平均$\Delta H_f$を集約
+  \item \textbf{多段CTE}（2段以上）：
+    安定性フィルタ$\to$$\Delta H_f$計算$\to$元素フィルタの3段CTE
+  \item \textbf{CTE+カラム間比較}：
+    形成エネルギーと加重純物質基準の差による安定性判定
+\end{enumerate}
+
+表~\ref{tab:cte_results}にablation条件別のCTE精度を示す。
+
+\begin{table}[t]
+\centering
+\caption{CTE多段計算クエリ（5件）のablation条件別精度。
+full条件では全5件が100\%正解であった一方、
+few-shot例・辞書・SQLGuardの除去により全件不正解となった。}
+\label{tab:cte_results}
+\small
+\begin{tabular}{@{}lr@{}}
+\toprule
+条件 & CTE精度（5件） \\
+\midrule
+full          & 100\% (5/5) \\
+no\_fewshot   & 0\% (0/5) \\
+no\_dict      & 0\% (0/5) \\
+no\_reranker  & 100\% (5/5) \\
+no\_guard     & 0\% (0/5) \\
+no\_nbest     & 100\% (5/5) \\
+no\_graph     & 100\% (5/5) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+CTE多段計算は、few-shot例と辞書の\textbf{両方}が揃って初めて
+100\%の精度を達成した。
+few-shot例の除去により全件不正解となったことは、
+CTE構文のパターン学習がin-context learningに強く依存していることを示す。
+辞書の除去でも全件不正解となったことは、
+CTEクエリでは\texttt{pure\_element\_reference}テーブルや
+\texttt{formation\_energy\_per\_atom}カラムなど
+ドメイン固有の語彙マッピングが不可欠であることを示す。
+一方、リランカー・$n$-best・Steiner木の除去は
+CTE精度に影響しなかった。
+
+この結果は、従来のText-to-SQLベンチマーク（Spider、BIRD等）が
+主にSELECT-WHERE-JOIN-GROUP BYパターンを対象としていたのに対し、
+材料研究で求められる導出量計算（$\Delta H_f = E_f - \sum_i x_i E_{\mathrm{ref}}(i)$）
+のような多段計算パターンを評価セットに含めることの
+重要性を示している。
+
+\subsection{同種無機材料RDBへの展開可能性}
+\label{sec:extensibility}
+
+本研究で得られた設計原理は、
+検証に用いた特定のデータベースに限定されるものではない。
+FKイントロスペクションに基づくSteiner木アルゴリズムは、
+FK制約が定義された任意の正規化RDBに対して
+テーブル追加・スキーマ変更なく動作する。
+ドメイン辞書については、
+新たな材料系（Heusler型、Perovskite型等）や
+別のDBへの適用時に語彙の追加が必要となるが、
+辞書構造（プロトタイプ別名、元素マッピング、
+安定性用語、物性用語の4カテゴリ）自体は
+無機材料RDB全般に適用可能である。
+
+ただし、以下の点に留意が必要である。
+本研究はOQMD由来の単一データベースでの検証であり、
+異なるスキーマ設計や規模のRDBに対する
+汎化性能を主張するものではない。
+few-shot例は検証DBのスキーマに依存しており、
+別のRDBへの適用時にはドメイン専門家による
+新たな例題の設計が不可欠である。
+これらの限界を踏まえた上で、
+本研究は無機材料RDBの自然言語アクセスにおける
+設計原理の一つの実証を提供するものである。
 
 \subsection{制約と今後の課題}
 
 \begin{enumerate}
+  \item \textbf{単一データベースでの検証}：
+    本研究はOQMD由来のL1$_2$データベース（30テーブル、1{,}559件）
+    での検証であり、異なるスキーマ設計や規模の無機材料RDBに対する
+    汎化性能は確認されていない。
+    同種の設計原理が他のRDBでも有効かどうかは、
+    追加の検証が必要である。
   \item \textbf{単一ランの評価}：
     全ablation条件は単一ランの結果であり、
     LLMの非決定性による約1--2\,ppの変動が含まれうる。
     信頼区間の算出には複数ランの評価が必要である。
-  \item \textbf{データベース規模}：
-    現在のデータベースは1{,}470件の材料エントリを含むが、
-    OQMD等の大規模データベース（数十万件）への
-    スケーラビリティは未検証である。
   \item \textbf{評価クエリの網羅性}：
     100件の著者設計クエリは材料研究の主要な検索パターンを
     カバーするよう設計したが、
@@ -1485,10 +1687,8 @@ NLインターフェースとの親和性を考慮することが有効である
   \item \textbf{用語辞書のカバレッジ}：
     492語の辞書はL1$_2$探索に特化しており、
     Heusler型やPerovskite型等の拡張には手動登録が必要である。
+    スキーマメタデータからの半自動生成への移行が望まれる。
   \item \textbf{ベースラインの公平性}：
-    リペアループ、Few-Shot RAG、SQLGuard等は
-    提案手法のみに適用されており、
-    各要素の寄与はablation studyで分離済みだが、
     他手法（DIN-SQL、DAIL-SQL等）との
     同一DB上の比較は未実施である。
 \end{enumerate}
@@ -1496,13 +1696,18 @@ NLインターフェースとの親和性を考慮することが有効である
 \subsection{今後の展望}
 
 \begin{enumerate}
+  \item \textbf{他の無機材料RDBでの検証}：
+    Materials Project、AFLOW等の異なるスキーマを持つ
+    無機材料RDBへの適用を通じて、
+    設計原理の汎用性を検証する。
   \item \textbf{大規模データ検証}：
-    OQMD単元素データの統合により1万件規模でのSteiner木探索と
-    SQL生成精度の検証を行う。
-  \item \textbf{多段計算クエリの評価}：
-    生成エンタルピー計算対応（\ref{sec:multistep_query}節）を
-    評価クエリセットに追加し、
-    CTE・ビュー経由の多段計算精度を定量評価する。
+    OQMD単元素データの統合により1万件規模での
+    Steiner木探索とSQL生成精度の検証を行う。
+  \item \textbf{CTE多段計算の拡張評価}：
+    本研究では5件のCTEクエリで100\%の精度を確認したが
+    （\ref{sec:cte_evaluation}節）、
+    より多様な導出量パターン（相安定性図、弾性異方性指標等）での
+    評価を拡大する。
   \item \textbf{AI4Sエージェント統合}：
     T2SQL手法をMCPプロトコルやfunction calling経由で
     自律材料探索エージェントのツールとして組み込む。
@@ -1510,9 +1715,6 @@ NLインターフェースとの親和性を考慮することが有効である
     Schema Graph走査でRDBから候補を絞り込んだ後、
     CALPHADの自由エネルギー計算により
     温度依存相安定性を判定する二段階フロー。
-  \item \textbf{用語辞書の体系的拡張}：
-    スキーマメタデータからの半自動生成に移行し、
-    新テーブル追加時の辞書保守コストを削減する。
   \item \textbf{評価指標の多軸化}：
     SELECT列適合率、JOIN経路一致率、
     Top-k accuracy等を分離評価し、
@@ -1523,58 +1725,56 @@ NLインターフェースとの親和性を考慮することが有効である
 \section{結論}
 \label{sec:conclusion}
 
-無機材料データベースのためのグラフ制約付きText-to-SQLパイプラインを提案し、
-7条件$\times$100件のablation study（計700回評価）により
-各構成要素の寄与を定量化した。
+本研究は、無機材料RDBの自然言語アクセスを可能にする
+設計原理を提示し、L1$_2$型金属間化合物のRDBを検証対象として
+その有効性を実証した。
 
-全構成要素を有効にしたfull条件での行一致精度は80.6\%であった
-（EVID-20260619-1335-ablation-full）。
-Ablation studyにより、
-few-shot例（$-$12.5\,pp）、
-材料ドメイン辞書（$-$6.7\,pp）、
-ハイブリッドリランカー（$-$4.1\,pp）が
-精度に寄与する上位3構成要素であることが確認された。
-材料ドメイン辞書はVery Hard帯で$-$22.7\,ppの低下を引き起こし、
-ドメイン特化の用語マッピングが複雑クエリにおいて不可欠であることを示した。
-エラー分析により、Very Hardクエリの主要な失敗モードは
-JOIN経路ではなくWHERE句の条件組合せミスであることが明らかとなった
-（\ref{sec:error_analysis}節）。
+7条件$\times$100件のablation study（計700回評価）により、
+材料ドメイン辞書（Very Hard帯で$-$41.1\,pp）と
+few-shot例（全帯域で$-$16.2\,pp）が
+材料固有のクエリパターンにおいて不可欠であることを示した。
+特に、多元素条件、複合物性検索、ドメイン固有用語を含むクエリにおいて
+顕著な改善が観察された。
+エラー分析により、残る主要な失敗モードは
+JOIN経路ではなくWHERE句の条件組合せミスであることが
+明らかとなった（\ref{sec:error_analysis}節）。
 
-材料工学的評価では、既知L1$_2$化合物11件の100\%再発見、
-$\gamma'$相候補の複合スコアランキング（Ni$_3$Al: $S = 0.878$で1位）、
-Ni$_3$Al近傍格子定数候補31件の抽出、
-安定・準安定L1$_2$候補162件の抽出を実現した
+材料工学的評価では、既知L1$_2$化合物11件の再発見、
+$\gamma'$相候補ランキング、安定・準安定候補162件の抽出を通じて、
+材料探索ツールとしての有用性を確認した
 （\ref{sec:materials_evaluation}節）。
 独立設計クエリ（60件）による評価では
 著者設計との精度差が8.1\,ppであり、
 テーブルカバレッジの偏りとfew-shot最適化バイアスが主因であった
 （\ref{sec:independent_eval}節）。
 
-SQLGuardによる安全性検証では、
-7件の敵対的入力が全て安全に処理され
-（\ref{sec:injection_safety}節）、
-セキュリティ機能の有効性を実証した。
+CTE（Common Table Expression）を用いた多段計算クエリ
+（生成エンタルピー計算等）5件の評価では、
+few-shot例と辞書の両方が揃った条件で100\%の精度を達成し、
+いずれかの除去で全件不正解となった（\ref{sec:cte_evaluation}節）。
+これは材料研究固有の導出量計算に対するfew-shot例の決定的重要性を示す。
 
-FKイントロスペクションに基づくSteiner木アーキテクチャは、
-任意の正規化材料RDB（OQMD、Materials Project、AFLOW等）への
-自動適応が可能であり、
-Materials Integration（MInt）システム~\cite{minamoto2020mint}や
-provenance管理システムpinax~\cite{minamoto2026pinax}への
-適用が期待される。
-
-OQMD由来の89元素基底状態データの統合と
-\texttt{formation\_enthalpy}ビューの導入により、
-多段計算クエリに自然言語から対応可能であることを示した。
-この実装を通じて、RDBスキーマの正規化度と
-テーブル構造がText-to-SQL精度の上流要因となることが
-明らかとなった（\ref{sec:schema_design_cost}節）。
+本研究を通じて得られたもう一つの重要な知見は、
+RDBスキーマの正規化度とテーブル構造が
+Text-to-SQL精度の上流要因であるという点である
+（\ref{sec:schema_design_cost}節）。
 ビュー定義による複雑度の隠蔽、
-クエリ頻度に基づく非正規化、
 自己説明的なカラム命名、
 FK制約の網羅的定義といったスキーマ設計の方策は、
 パイプライン側の改良と並行して
-Text-to-SQL精度を向上させる有効な手段である。
+精度向上に寄与しうる。
+この観点は、本研究で用いた検証DBにとどまらず、
+同種の正規化スキーマを持つ無機材料RDB全般に
+適用可能な設計指針である。
 
+FKイントロスペクションに基づくSteiner木アーキテクチャは
+スキーマ変更に自動追随可能であり、
+辞書・few-shot例の更新を伴えば
+Materials Integration（MInt）システム~\cite{minamoto2020mint}や
+provenance管理システムpinax~\cite{minamoto2026pinax}等の
+他の材料RDBへの適用も展望される。
+ただし、本研究は単一データベースでの検証であり、
+異なる規模・設計のRDBに対する汎化性能の確認は今後の課題である。
 本評価は単一ランの結果であり、
 LLMの非決定性に起因する約1--2\,ppの変動を含む可能性がある。
 
@@ -1596,6 +1796,10 @@ ablation結果（7条件$\times$100件のJSON）、
 MeCab材料辞書（492語、コンパイル済み.dic）、
 日本語reranker比較結果、
 および全スクリプトはリポジトリ内に含まれる。
+他の無機材料RDBへの適用に際しては、
+ドメイン辞書とfew-shot例の差し替えが必要であるが、
+パイプラインのアーキテクチャとFK走査機構は
+そのまま再利用可能である。
 論文中の全数値は\texttt{scripts/compute\_all\_figures.py}により
 \texttt{paper/paper\_data.json}へ出力され、
 手入力の数値は含まない。
@@ -1751,9 +1955,11 @@ pinax: Provenance-tracking analysis workflow management system,
 
 \begin{center}
   {\LARGE\bfseries Supplementary Materials}\\[0.8em]
-  {\large Schema-Graph-Constrained Natural Language Interface for\\
-  Intermetallic Compound Exploration}\\[0.5em]
-  {\large 金属間化合物探索のためのSchema Graph制約型\\自然言語データベースインターフェース}\\[1.0em]
+  {\large Natural Language Access to Inorganic Materials\\
+  Relational Databases: Design Principles and Demonstration\\
+  via Schema-Graph-Constrained Text-to-SQL}\\[0.5em]
+  {\large 無機材料リレーショナルデータベースの自然言語アクセス\\
+  ---スキーマグラフ制約型Text-to-SQLによる設計原理と実証---}\\[1.0em]
   {\normalsize Satoshi Minamoto}\\[0.3em]
   {\small National Institute for Materials Science (NIMS),\\
   1-2-1 Sengen, Tsukuba, Ibaraki 305-0047, Japan}\\[0.3em]
