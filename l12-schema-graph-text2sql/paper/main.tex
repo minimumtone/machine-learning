@@ -918,7 +918,7 @@ $n$-best = 1への変更はレイテンシを70\%低減するが精度差は非�
 \midrule
 full & 27.7 \\
 no\_fewshot & 64.1 \\
-no\_dict & 56.5 \\
+no\_dict & 32.2 \\
 no\_reranker & 20.2 \\
 no\_guard & 39.4 \\
 no\_nbest & 8.3 \\
@@ -1613,12 +1613,13 @@ few-shot例・SQLGuardの除去により全件不正解となった。
 \midrule
 full          & 100\% (5/5) \\
 no\_fewshot   & 0\% (0/5) \\
-no\_dict      & 80\% (4/5) \\
+no\_dict      & 80\% (4/5)$^\dagger$ \\
 no\_reranker  & 100\% (5/5) \\
 no\_guard     & 0\% (0/5) \\
 no\_nbest     & 100\% (5/5) \\
 no\_graph     & 100\% (5/5) \\
 \bottomrule
+\multicolumn{2}{l}{\scriptsize $^\dagger$精度$\geq$0.8を正解と判定。平均精度は92.0\%。}
 \end{tabular}
 \end{table}
 
@@ -1752,9 +1753,10 @@ $\gamma'$相候補ランキング、安定・準安定候補162件の抽出を�
 
 CTE（Common Table Expression）を用いた多段計算クエリ
 （生成エンタルピー計算等）5件の評価では、
-few-shot例と辞書の両方が揃った条件で100\%の精度を達成し、
+few-shot例とSQLGuardの両方が揃った条件で100\%の精度を達成し、
 いずれかの除去で全件不正解となった（\ref{sec:cte_evaluation}節）。
-これは材料研究固有の導出量計算に対するfew-shot例の決定的重要性を示す。
+辞書の除去では4/5件が正解を維持（80\%）し、
+few-shot例からの語彙学習が大部分のCTEパターンで有効であることを示した。
 
 本研究を通じて得られたもう一つの重要な知見は、
 RDBスキーマの正規化度とテーブル構造が
