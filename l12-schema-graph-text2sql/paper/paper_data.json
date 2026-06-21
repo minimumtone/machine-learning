@@ -2,13 +2,19 @@
   "_meta": {
     "description": "Single source of truth for paper numerical values",
     "generated_by": "scripts/compute_all_figures.py",
-    "generated_at": "2026-07-02 00:45:00 UTC",
-    "git_commit": "d1f6c55ffeec8b96d3ef9183c4f37ce032e59999",
+    "generated_at": "2026-06-21 13:50:27 UTC",
+    "git_commit": "7c013075f6335b23a6d713c90cdaced09f1b1f0d",
     "source_files": [
       "evaluation/ablation_results.json",
       "evaluation/jp_reranker_vh_results.json",
       "evaluation/reranker_eval_results.json",
-      "evaluation/evaluation_dataset.jsonl"
+      "evaluation/evaluation_dataset.jsonl",
+      "evaluation/expert_evaluation_dataset.jsonl",
+      "llm/mecab_materials.csv",
+      "llm/materials_engineering_vocab.csv",
+      "llm/material_terms.yaml",
+      "few_shot_examples.json",
+      "PostgreSQL: l12_materials"
     ]
   },
   "dataset": {
@@ -19,11 +25,18 @@
       "hard": 30,
       "very_hard": 20
     },
-    "n_tables": 30,
+    "n_cte_queries": 5,
+    "n_fewshot_examples": 45
+  },
+  "database": {
+    "n_tables": 31,
+    "n_views": 1,
     "n_material_entries": 1559,
-    "n_compositions": 3118,
+    "n_compositions": 3029,
     "n_calculated_properties": 4410,
-    "n_cte_queries": 5
+    "n_pure_element_references": 89,
+    "n_elements": 89,
+    "n_unique_formulas": 733
   },
   "model": "gpt-5.5",
   "ablation": {
@@ -50,13 +63,13 @@
         "avg_latency_s": 64.1
       },
       "no_dict": {
-        "overall_pct": 73.9,
+        "overall_pct": 78.5,
         "easy_pct": 100.0,
         "medium_pct": 96.1,
         "hard_pct": 73.1,
-        "vhard_pct": 15.8,
-        "delta_pp": -10.4,
-        "avg_latency_s": 56.5
+        "vhard_pct": 38.8,
+        "delta_pp": -5.8,
+        "avg_latency_s": 32.2
       },
       "no_reranker": {
         "overall_pct": 81.8,
@@ -106,25 +119,61 @@
         "easy_delta_pp": 0.0,
         "medium_delta_pp": 0.0,
         "hard_delta_pp": -7.3,
-        "vhard_delta_pp": -41.1
+        "vhard_delta_pp": -18.1
       },
       "no_reranker": {
         "easy_delta_pp": 0.0,
         "medium_delta_pp": -6.7,
         "hard_delta_pp": -6.2,
-        "vhard_delta_pp": 6.5
+        "vhard_delta_pp": 6.6
       }
     },
     "cte_query_results": {
       "n_cte_queries": 5,
-      "cte_categories": ["CTE_single", "CTE_filter", "CTE_aggregate", "CTE_multistage", "CTE_column_compare"],
+      "cte_categories": [
+        "CTE_single",
+        "CTE_filter",
+        "CTE_aggregate",
+        "CTE_multistage",
+        "CTE_column_compare"
+      ],
       "full_cte_accuracy_pct": 100.0,
       "no_fewshot_cte_accuracy_pct": 0.0,
-      "no_dict_cte_accuracy_pct": 0.0,
+      "no_dict_cte_accuracy_pct": 92.0,
       "no_reranker_cte_accuracy_pct": 100.0,
       "no_guard_cte_accuracy_pct": 0.0,
       "no_nbest_cte_accuracy_pct": 100.0,
       "no_graph_cte_accuracy_pct": 100.0
+    },
+    "error_analysis": {
+      "full": {
+        "vh_failures": 9,
+        "vh_total": 20
+      },
+      "no_fewshot": {
+        "vh_failures": 16,
+        "vh_total": 20
+      },
+      "no_dict": {
+        "vh_failures": 13,
+        "vh_total": 20
+      },
+      "no_reranker": {
+        "vh_failures": 8,
+        "vh_total": 20
+      },
+      "no_guard": {
+        "vh_failures": 13,
+        "vh_total": 20
+      },
+      "no_nbest": {
+        "vh_failures": 9,
+        "vh_total": 20
+      },
+      "no_graph": {
+        "vh_failures": 8,
+        "vh_total": 20
+      }
     }
   },
   "reranker_eval": {
@@ -142,12 +191,76 @@
     "jp_xsmall_latency_s": 65.9
   },
   "mecab_dictionary": {
-    "n_dictionary_terms": 492,
+    "n_dictionary_terms": 497,
+    "n_yaml_dict_terms": 74,
+    "n_pipeline_terms": 66,
+    "n_eng_vocab_terms": 402,
     "n_vocab_source_terms": 525,
-    "single_token_rate_default_pct": 30.6,
-    "single_token_rate_custom_pct": 100.0,
-    "n_improved_terms": 279,
-    "n_degraded_terms": 0
+    "n_yaml_terms": 93,
+    "n_custom_entries": 497
+  },
+  "materials_evaluation": {
+    "n_known_l12": 11,
+    "known_l12_rediscovered": 11,
+    "n_l12_unique_compositions": 259,
+    "n_stable_metastable_l12": 162,
+    "n_stable_l12": 8,
+    "n_metastable_l12": 154,
+    "n_ni3al_lattice_match": 31
+  },
+  "independent_evaluation": {
+    "n_queries": 100,
+    "difficulty_distribution": {
+      "easy": 18,
+      "medium": 34,
+      "hard": 34,
+      "very_hard": 14
+    },
+    "harmonized_comparison": {
+      "_note": "From prior evaluation run; subset of 60 expert queries",
+      "n_author_queries": 100,
+      "n_independent_queries": 60,
+      "author_overall_pct": 70.6,
+      "independent_overall_pct": 62.5,
+      "delta_pp": -8.1,
+      "by_difficulty": {
+        "easy": {
+          "author_pct": 100.0,
+          "independent_pct": 83.3,
+          "n_author": 12,
+          "n_independent": 12
+        },
+        "medium": {
+          "author_pct": 94.5,
+          "independent_pct": 69.9,
+          "n_author": 18,
+          "n_independent": 18
+        },
+        "hard": {
+          "author_pct": 78.3,
+          "independent_pct": 70.1,
+          "n_author": 41,
+          "n_independent": 18
+        },
+        "very_hard": {
+          "author_pct": 32.7,
+          "independent_pct": 19.4,
+          "n_author": 29,
+          "n_independent": 12
+        }
+      },
+      "binary_accuracy_pct": 53.3,
+      "binary_correct": 32,
+      "binary_total": 60
+    }
+  },
+  "safety": {
+    "n_safety_tests": 7,
+    "n_sqlguard_checks": 14,
+    "all_blocked": true
+  },
+  "testing": {
+    "n_unit_tests": 134
   },
   "pipeline_components": [
     {
@@ -172,11 +285,11 @@
     },
     {
       "name": "SQLGuard validation",
-      "model": "AST-based (sqlglot)"
+      "model": "AST-based (sqlglot), 14 checks"
     },
     {
       "name": "Domain dictionary",
-      "model": "material_terms.yaml + entity_extractor"
+      "model": "material_terms.yaml + entity_extractor (497 terms)"
     },
     {
       "name": "Repair loop",

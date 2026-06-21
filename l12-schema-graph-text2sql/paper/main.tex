@@ -80,18 +80,18 @@ SQLとスキーマ構造の理解を要求する利用形態は
 (2)~LLMによるスキーマリンキングとSQL生成、
 (3)~外部キー関係のグラフ化とSteiner木近似による
 最小JOIN経路の構造的決定、
-(4)~材料ドメイン辞書（492語）による用語--SQL条件マッピング、
+(4)~材料ドメイン辞書（497語）による用語--SQL条件マッピング、
 (5)~AST解析ベースのSQL安全性検証、
 (6)~LLMによるSQL候補リランキング。
 外部キーメタデータに基づく設計により、
 スキーマ変更やテーブル追加への追随が比較的容易となる。
 
-L1$_2$型金属間化合物を中心とする30テーブル・1{,}559件のRDBを
+L1$_2$型金属間化合物を中心とする31テーブル・1{,}559件のRDBを
 検証対象として、
 100件の評価クエリ（うち5件はCTEによる多段計算クエリ）による
 7条件のablation study（計700回評価）を実施した。
 材料ドメイン辞書は複雑なクエリ（Very Hard帯）で
-$-$41.1ポイント（pp）の精度低下を引き起こし、
+$-$18.1ポイント（pp）の精度低下を引き起こし、
 ドメイン固有用語のマッピングが不可欠であることを示した。
 few-shot例の除去は全難易度帯で$-$16.2\,ppの低下を引き起こし、
 テンプレートパターンの学習効果を確認した。
@@ -216,7 +216,7 @@ OQMDを代表例として選び、実際に自然言語クエリで
 (1)~FK関係のグラフ上でのSteiner木近似によるJOIN経路の構造的決定、
 (2)~材料ドメイン辞書による用語--SQL条件の直接マッピング、
 (3)~Cross-EncoderとLLMを組み合わせたハイブリッドリランカー。
-L1$_2$型金属間化合物の30テーブルRDBを検証対象として、
+L1$_2$型金属間化合物の31テーブルRDBを検証対象として、
 7条件$\times$100件のablation studyにより
 各構成要素の寄与を定量化した結果を報告する。
 
@@ -266,7 +266,7 @@ SQL生成と検証を経て、
   {\scriptsize NetworkX}};
 
 \node[stepbox, fill=yellow!15, right=of steiner] (dict) {材料辞書\\
-  {\scriptsize 492語}};
+  {\scriptsize 497語}};
 
 \node[stepbox, fill=red!10, right=of dict] (guard) {SQLGuard\\
   {\scriptsize 14項目検証}};
@@ -298,7 +298,7 @@ SQL生成と検証を経て、
 \caption{提案パイプラインの概要。
   自然言語クエリからfew-shot例検索（Step 1）を経て、
   GPT-5.5によるスキーマリンキング（Step 2）とSQL生成（Step 3）を行い、
-  Steiner木近似（Step 4）が30テーブルから必要最小限のサブグラフを抽出する。
+  Steiner木近似（Step 4）が31テーブルから必要最小限のサブグラフを抽出する。
   材料辞書（Step 5）がドメイン用語をSQL条件にマッピングし、
   SQLGuard（Step 6）で安全性を検証した後、
   リランカー（Step 7）が最良候補を選択する。}
@@ -342,7 +342,7 @@ ablation studyにおいて、$n$-best = 1への変更は
 \subsection{Steiner木JOIN制約}
 \label{sec:schema_graph}
 
-30テーブルの外部キー（FK）関係を
+31テーブルの外部キー（FK）関係を
 NetworkX~\cite{networkx2008}の無向グラフとして表現する。
 FK関係は実行時にPostgreSQLメタデータから
 イントロスペクションにより自動取得される。
@@ -375,12 +375,12 @@ Algorithm~\ref{alg:steiner}に示すSteiner木近似により
 
 $|V| = n$ノード、$|R| = k$必要テーブルに対し、
 アルゴリズムは$O(k^2)$回のBFSを行う。
-30テーブル規模（$n = 30$、$k \leq 5$）でもミリ秒オーダーで完了する。
+31テーブル規模（$n = 31$、$k \leq 5$）でもミリ秒オーダーで完了する。
 
 ablation studyでは、Steiner木制約の除去による精度差は
 非決定性の範囲内（$+$1.1\,pp）であった
 （表~\ref{tab:ablation}; EVID-20260619-1335-ablation-nograph）。
-検証できた範囲では、現在の30テーブル規模では
+検証できた範囲では、現在の31テーブル規模では
 大半のクエリが5つのコアテーブル
 （\texttt{material\_entry}, \texttt{structure}, \texttt{element},
 \texttt{composition}, \texttt{calculated\_property}）
@@ -433,7 +433,7 @@ OR指示語の場合は\texttt{IN}句を使用する。
 \subsubsection{JOIN経路からのSQL生成}
 
 $P$の各経路はSQL JOIN句に変換される。
-テーブル別名は30テーブル分の固定辞書から割り当てる
+テーブル別名は31テーブル分の固定辞書から割り当てる
 （\texttt{material\_entry}$\to$\texttt{m}、
 \texttt{composition}$\to$\texttt{c}等）。
 同一テーブルが複数回出現する場合は
@@ -531,9 +531,9 @@ SQL生成の前段にルールベースのIntent Classifierを配置し、
 \begin{enumerate}
   \item YAML定義ファイル（\texttt{material\_terms.yaml}）：74語
   \item パイプライン用語（DB/OQMD固有語）：66語
-  \item 材料工学語彙（ユーザー提供リスト）：390語（新規）
+  \item 材料工学語彙（ユーザー提供リスト）：402語
 \end{enumerate}
-重複除去後492語となる。
+重複除去後497語となる。
 MeCab形態素解析器用のカスタム辞書としてもコンパイルし、
 日本語テキストの前処理に利用する
 （EVID-20260619-1335-mecab-dict）。
@@ -562,8 +562,8 @@ MeCab形態素解析器用のカスタム辞書としてもコンパイルし、
 \end{tabular}
 \end{table}
 
-ablation studyでは、辞書の除去は全体で$-$10.4\,ppの低下を引き起こし、
-Very Hard帯では56.9\%から15.8\%へ$-$41.1\,ppの低下となった
+ablation studyでは、辞書の除去は全体で$-$5.8\,ppの低下を引き起こし、
+Very Hard帯では56.9\%から38.8\%へ$-$18.1\,ppの低下となった
 （表~\ref{tab:ablation}; EVID-20260619-1335-ablation-nodict）。
 Easy・Medium帯では低下が観察されなかったことから、
 辞書の効果は複合的なドメイン用語を含むクエリに集中している。
@@ -648,7 +648,7 @@ SQL実行エラーまたは結果の妥当性問題が検出された場合、
 L1$_2$型金属間化合物を中心とするデータベースを用いた。
 OQMD~\cite{saal2013oqmd,kirklin2015oqmd}由来の
 計算データに基づく本データベースは、
-正規化された30テーブル（図~\ref{fig:er}）からなり、
+正規化された31テーブル（図~\ref{fig:er}）からなり、
 \texttt{material\_entry}を中心に
 組成・構造・安定性・計算特性・電子構造・機械特性・表面特性等の
 テーブルがFK関係で接続される。
@@ -666,9 +666,9 @@ OQMD~\cite{saal2013oqmd,kirklin2015oqmd}由来の
 \toprule
 項目 & 件数 \\
 \midrule
-テーブル数 & 30 \\
+テーブル数 & 31 \\
 \texttt{material\_entry} & 1{,}559 \\
-\texttt{composition} & 3{,}118 \\
+\texttt{composition} & 3{,}029 \\
 \texttt{calculated\_property} & 4{,}410 \\
 プロトタイプ種類 & 5 (L1$_2$, B2, NaCl, NiAs, BiF$_3$) \\
 \bottomrule
@@ -801,7 +801,7 @@ OQMD~\cite{saal2013oqmd,kirklin2015oqmd}由来の
 
 \end{tikzpicture}%
 }% end resizebox
-\caption{検証データベースの30テーブルER図。
+\caption{検証データベースの31テーブルER図。
   中央の\texttt{material\_entry}を軸に、組成・構造・安定性等のコアテーブルが直接FKで接続される。
   計算特性・電子構造等は直接FKと\texttt{calculation}経由の2経路を持つ。
   矢印はFK参照方向を示す。}
@@ -879,7 +879,7 @@ no\_nbest（$+$0.1\,pp）およびno\_graph（$+$1.1\,pp）の
 \midrule
 full          & 84.3 & 100.0 & 96.1 & 80.4 & 56.9 & ---    \\
 no\_fewshot   & 68.2 &  95.0 & 79.6 & 66.8 & 26.2 & $-$16.2 \\
-no\_dict      & 73.9 & 100.0 & 96.1 & 73.1 & 15.8 & $-$10.4  \\
+no\_dict      & 78.5 & 100.0 & 96.1 & 73.1 & 38.8 & $-$5.8  \\
 no\_reranker  & 81.8 & 100.0 & 89.5 & 74.1 & 63.4 & $-$2.6  \\
 no\_guard     & 80.4 & 100.0 & 96.1 & 80.4 & 37.4 & $-$3.9  \\
 no\_nbest     & 84.4 & 100.0 & 96.1 & 80.4 & 57.2 & $+$0.1  \\
@@ -892,7 +892,7 @@ no\_graph     & 85.5 & 100.0 & 96.1 & 80.4 & 62.5 & $+$1.1  \\
 \centering
 \caption{上位3コンポーネントの難易度別$\Delta$（pp）。
 数値は\texttt{paper\_data.json}から取得。
-no\_reranker VH帯の$+$6.5\,ppについては\ref{sec:reranker_discussion}節で考察する。}
+no\_reranker VH帯の$+$6.6\,ppについては\ref{sec:reranker_discussion}節で考察する。}
 \label{tab:ablation-detail}
 \small
 \begin{tabular}{@{}lrrrr@{}}
@@ -900,8 +900,8 @@ no\_reranker VH帯の$+$6.5\,ppについては\ref{sec:reranker_discussion}節�
 条件 & Easy & Med & Hard & VH \\
 \midrule
 no\_fewshot   & $-$5.0  & $-$16.5 & $-$13.5 & $-$30.7 \\
-no\_dict      &    0.0  &     0.0 & $-$7.3  & $-$41.1 \\
-no\_reranker  &    0.0  & $-$6.7  & $-$6.2  & $+$6.5  \\
+no\_dict      &    0.0  &     0.0 & $-$7.3  & $-$18.1 \\
+no\_reranker  &    0.0  & $-$6.7  & $-$6.2  & $+$6.6  \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -964,7 +964,7 @@ no\_fewshot条件ではJOIN幻覚が増加し、
 
 \subsection{Very Hard失敗の内訳分析}
 
-Very Hard 20件のうちfull条件で精度0.8未満の13件について
+Very Hard 20件のうちfull条件で精度0.8未満の9件について
 失敗モードを分類した（表~\ref{tab:vhard_failure}）。
 
 \begin{table}[t]
@@ -976,10 +976,10 @@ Very Hard 20件のうちfull条件で精度0.8未満の13件について
     \toprule
     失敗モード & 件数 & 代表例 \\
     \midrule
-    WHERE条件組合せミス & 6 & 複合WHERE（3条件以上） \\
-    集約・サブクエリ誤用 & 3 & GROUP BY/HAVING \\
+    WHERE条件組合せミス & 4 & 複合WHERE（3条件以上） \\
+    集約・サブクエリ誤用 & 2 & GROUP BY/HAVING \\
     多元素AND失敗 & 2 & SELF-JOIN展開 \\
-    型不一致による意味エラー & 2 & リペアで実行成功、結果不一致 \\
+    型不一致による意味エラー & 1 & リペアで実行成功、結果不一致 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1179,7 +1179,7 @@ Ni$_3$Al（$-0.420$）が続く
 本研究の結果は、無機材料RDBにおける
 データ利用の最大の障壁がスキーマ構造の理解にあることを
 改めて裏付けている。
-30テーブルの正規化スキーマに対し、
+31テーブルの正規化スキーマに対し、
 LLM単体（few-shot例なし、辞書なし）の精度は68.2\%にとどまり
 （表~\ref{tab:ablation}、no\_fewshot条件）、
 材料固有のドメイン用語を含むVery Hardクエリでは
@@ -1218,10 +1218,10 @@ Few-shot例なしではレイテンシも27.7\,sから64.1\,sへ増加した（�
 
 \subsection{材料ドメイン辞書の寄与}
 
-辞書の除去は全体で$-$10.4\,ppの低下を引き起こしたが、
+辞書の除去は全体で$-$5.8\,ppの低下を引き起こしたが、
 その効果は難易度帯により異なった（表~\ref{tab:ablation-detail}）。
 Easy・Medium帯では低下が観察されず、
-Hard帯で$-$7.3\,pp、Very Hard帯で$-$41.1\,ppの低下が生じた。
+Hard帯で$-$7.3\,pp、Very Hard帯で$-$18.1\,ppの低下が生じた。
 
 Easy・Mediumクエリは汎用的な表現で構成されるため、
 LLM単体でSQL条件を推論可能である。
@@ -1237,7 +1237,7 @@ LLM単体でSQL条件を推論可能である。
 効果はMedium（$-$6.7\,pp）およびHard（$-$6.2\,pp）帯で観察された
 （表~\ref{tab:ablation-detail}）。
 
-一方、Very Hard帯ではリランカー除去時に$+$6.5\,ppの精度上昇が観察された。
+一方、Very Hard帯ではリランカー除去時に$+$6.6\,ppの精度上昇が観察された。
 この差は非決定性の変動幅（約1--2\,pp）を上回っており、
 Very Hard帯ではリランカーがむしろ悪影響を及ぼしている可能性がある。
 Very Hard帯では3候補全てが部分的に不正確な場合が多く、
@@ -1262,7 +1262,7 @@ $n$-best = 1への変更は精度をほぼ維持しつつ
 レイテンシを27.7\,sから8.3\,sへ低減した（表~\ref{tab:latency}）。
 コスト効率を重視する場合の有力な選択肢である。
 
-Steiner木については、現在の30テーブル規模では
+Steiner木については、現在の31テーブル規模では
 大半のクエリが5つのコアテーブルで完結するため効果が限定的であった。
 FKイントロスペクションに基づくアーキテクチャであるため、
 テーブル数が増加した場合（例：OQMD統合後）や
@@ -1335,7 +1335,7 @@ Full Schema提示 & 68.2\% & 95.0 & 26.2 & $-$16.2 \\
 {\scriptsize （= no\_fewshot: スキーマ+LLM、} & & & & \\
 {\scriptsize \phantom{（= }few-shot例なし）} & & & & \\
 \midrule
-+ Few-shot RAG & 73.9\% & 100 & 15.8 & $-$10.4 \\
++ Few-shot RAG & 78.5\% & 100 & 38.8 & $-$5.8 \\
 {\scriptsize （= no\_dict: +few-shot、辞書なし）} & & & & \\
 \midrule
 + 材料辞書 & 81.8\% & 100 & 63.4 & $-$2.6 \\
@@ -1603,7 +1603,8 @@ Very Hard帯の5件をCTEクエリに差し替えて評価を実施した。
 \centering
 \caption{CTE多段計算クエリ（5件）のablation条件別精度。
 full条件では全5件が100\%正解であった一方、
-few-shot例・辞書・SQLGuardの除去により全件不正解となった。}
+few-shot例・SQLGuardの除去により全件不正解となった。
+辞書除去では4/5件が正解を維持した。}
 \label{tab:cte_results}
 \small
 \begin{tabular}{@{}lr@{}}
@@ -1612,7 +1613,7 @@ few-shot例・辞書・SQLGuardの除去により全件不正解となった。}
 \midrule
 full          & 100\% (5/5) \\
 no\_fewshot   & 0\% (0/5) \\
-no\_dict      & 0\% (0/5) \\
+no\_dict      & 80\% (4/5) \\
 no\_reranker  & 100\% (5/5) \\
 no\_guard     & 0\% (0/5) \\
 no\_nbest     & 100\% (5/5) \\
@@ -1621,14 +1622,15 @@ no\_graph     & 100\% (5/5) \\
 \end{tabular}
 \end{table}
 
-CTE多段計算は、few-shot例と辞書の\textbf{両方}が揃って初めて
-100\%の精度を達成した。
+CTE多段計算では、few-shot例とSQLGuardが100\%精度の達成に不可欠であった。
 few-shot例の除去により全件不正解となったことは、
 CTE構文のパターン学習がin-context learningに強く依存していることを示す。
-辞書の除去でも全件不正解となったことは、
-CTEクエリでは\texttt{pure\_element\_reference}テーブルや
-\texttt{formation\_energy\_per\_atom}カラムなど
-ドメイン固有の語彙マッピングが不可欠であることを示す。
+SQLGuardの除去でも全件不正解となったことは、
+CTE構文の安全性検証が生成SQL品質に直結していることを示す。
+辞書の除去では4/5件が正解を維持（80\%）し、
+CTEクエリの大部分はfew-shot例から語彙マッピングを学習できることが示された。
+ただし1件（q\_vhard\_019、多段CTE）では辞書なしで精度が0.60に低下しており、
+複雑な多段計算では辞書による補完が有効である。
 一方、リランカー・$n$-best・Steiner木の除去は
 CTE精度に影響しなかった。
 
@@ -1668,7 +1670,7 @@ few-shot例は検証DBのスキーマに依存しており、
 
 \begin{enumerate}
   \item \textbf{単一データベースでの検証}：
-    本研究はOQMD由来のL1$_2$データベース（30テーブル、1{,}559件）
+    本研究はOQMD由来のL1$_2$データベース（31テーブル、1{,}559件）
     での検証であり、異なるスキーマ設計や規模の無機材料RDBに対する
     汎化性能は確認されていない。
     同種の設計原理が他のRDBでも有効かどうかは、
@@ -1685,7 +1687,7 @@ few-shot例は検証DBのスキーマに依存しており、
     gold SQL・期待結果は著者1名が作成し、
     第三者による独立検証は行っていない。
   \item \textbf{用語辞書のカバレッジ}：
-    492語の辞書はL1$_2$探索に特化しており、
+    497語の辞書はL1$_2$探索に特化しており、
     Heusler型やPerovskite型等の拡張には手動登録が必要である。
     スキーマメタデータからの半自動生成への移行が望まれる。
   \item \textbf{ベースラインの公平性}：
@@ -1730,7 +1732,7 @@ few-shot例は検証DBのスキーマに依存しており、
 その有効性を実証した。
 
 7条件$\times$100件のablation study（計700回評価）により、
-材料ドメイン辞書（Very Hard帯で$-$41.1\,pp）と
+材料ドメイン辞書（Very Hard帯で$-$18.1\,pp）と
 few-shot例（全帯域で$-$16.2\,pp）が
 材料固有のクエリパターンにおいて不可欠であることを示した。
 特に、多元素条件、複合物性検索、ドメイン固有用語を含むクエリにおいて
@@ -1793,7 +1795,7 @@ OQMDの開発・維持管理にあたるNorthwestern大学Wolvertonグループ�
 
 評価データセット（100件のgold SQL・期待結果）、
 ablation結果（7条件$\times$100件のJSON）、
-MeCab材料辞書（492語、コンパイル済み.dic）、
+MeCab材料辞書（497語、コンパイル済み.dic）、
 日本語reranker比較結果、
 および全スクリプトはリポジトリ内に含まれる。
 他の無機材料RDBへの適用に際しては、
@@ -2400,40 +2402,40 @@ GPT-5系APIではtemperatureパラメータはサポートされておらず、�
     \midrule
     \multicolumn{5}{l}{\textbf{Very Hard（20件）}} \\
     \midrule
-    q\_vhard\_001 & 相安定性$\times$格子ミスマッチ$\times$弾性の多基準評価。 & 0.19 & 57.6 & --- \\
-    q\_vhard\_002 & Ni$_3$Al代替/$\gamma'$候補の多基準探索。 & 0.04 & 57.9 & --- \\
-    q\_vhard\_003 & $\gamma'$候補の重み付きスコアでランキング。 & 0.00 & 53.3 & --- \\
-    q\_vhard\_004 & Ni/Co含有$\times$安定$\times$高$B$のトップ10。 & 1.00 & 32.2 & $\checkmark$ \\
-    q\_vhard\_005 & 元素組み合わせ$\times$安定性をA/Bサイト別に集計。 & 1.00 & 62.9 & $\checkmark$ \\
-    q\_vhard\_006 & Ni$_3$Alに近い格子$\times$高$B$$\times$安定の総合評価。 & 0.19 & 50.6 & --- \\
-    q\_vhard\_007 & 析出強化L1$_2$の多基準（ミスマッチ$\times$$G$$\times$安定性）。 & 1.00 & 52.8 & $\checkmark$ \\
-    q\_vhard\_008 & Co基$\gamma'$候補のNi$_3$Al比較付き探索。 & 0.11 & 43.2 & --- \\
-    q\_vhard\_009 & B/G比でductile/brittleを分類。 & 0.00 & 43.0 & --- \\
-    q\_vhard\_010 & $E_f$ vs $E_{hull}$の安定性マップデータ。 & 1.00 & 51.9 & $\checkmark$ \\
-    q\_vhard\_011 & 高温安定性の観点で$E_f$上位候補。 & 0.09 & 38.6 & --- \\
-    q\_vhard\_012 & Ni-Al系以外の$\gamma'$代替候補。 & 0.18 & 35.2 & --- \\
-    q\_vhard\_013 & $B$ vs $a$の散布図データ出力。 & 1.00 & 20.7 & $\checkmark$ \\
-    q\_vhard\_014 & 3d vs 4d/5d遷移金属Aサイトの比較。 & 0.88 & 56.4 & $\checkmark$ \\
-    q\_vhard\_015 & Ni$_3$Alより安定で$B$が高い候補。 & 0.02 & 137.7 & --- \\
-    q\_vhard\_016 & Co-Al-W系L1$_2$候補の安定性$\times$弾性。 & 0.00 & 53.0 & --- \\
-    q\_vhard\_017 & 安定性$\times$格子整合$\times$弾性の複合スコア。 & 1.00 & 55.2 & $\checkmark$ \\
-    q\_vhard\_018 & $\gamma'$候補の多変量（$B$, $E_f$, $\Delta a$）ランキング。 & 0.00 & 58.1 & --- \\
-    q\_vhard\_019 & 安定化合物の元素パターンから材料設計仮説を導出。 & 0.00 & 62.7 & --- \\
-    q\_vhard\_020 & Ni-Al-Co-Ti四元系L1$_2$候補探索。 & 0.00 & 53.7 & --- \\
+    q\_vhard\_001 & 相安定性$\times$格子ミスマッチ$\times$弾性の多基準評価。 & 0.00 & 49.9 & --- \\
+    q\_vhard\_002 & Ni$_3$Al代替/$\gamma'$候補の多基準探索。 & 0.04 & 48.9 & --- \\
+    q\_vhard\_003 & $\gamma'$候補の重み付きスコアでランキング。 & 0.00 & 48.3 & --- \\
+    q\_vhard\_004 & Ni/Co含有$\times$安定$\times$高$B$のトップ10。 & 1.00 & 33.5 & $\checkmark$ \\
+    q\_vhard\_005 & 元素組み合わせ$\times$安定性をA/Bサイト別に集計。 & 1.00 & 47.7 & $\checkmark$ \\
+    q\_vhard\_006 & Ni$_3$Alに近い格子$\times$高$B$$\times$安定の総合評価。 & 0.19 & 42.4 & --- \\
+    q\_vhard\_007 & 析出強化L1$_2$の多基準（ミスマッチ$\times$$G$$\times$安定性）。 & 0.05 & 45.8 & --- \\
+    q\_vhard\_008 & Co基$\gamma'$候補のNi$_3$Al比較付き探索。 & 0.11 & 27.9 & --- \\
+    q\_vhard\_009 & Co$_3$Tiの生成エンタルピーを純物質基準から計算（CTE）。 & 1.00 & 23.0 & $\checkmark$ \\
+    q\_vhard\_010 & $E_f$ vs $E_{hull}$の安定性マップデータ。 & 1.00 & 48.8 & $\checkmark$ \\
+    q\_vhard\_011 & 高温安定性の観点で$E_f$上位候補。 & 0.09 & 39.2 & --- \\
+    q\_vhard\_012 & Ni-Al系以外の$\gamma'$代替候補。 & 0.02 & 37.3 & --- \\
+    q\_vhard\_013 & $B$ vs $a$の散布図データ出力。 & 1.00 & 18.6 & $\checkmark$ \\
+    q\_vhard\_014 & 3d vs 4d/5d遷移金属Aサイトの比較。 & 0.88 & 53.1 & $\checkmark$ \\
+    q\_vhard\_015 & Ni$_3$Alより安定で$B$が高い候補。 & 0.00 & 49.6 & --- \\
+    q\_vhard\_016 & 安定L1$_2$の$\Delta H_f$をCTEで算出、$<$$-$0.3でフィルタ。 & 1.00 & 30.3 & $\checkmark$ \\
+    q\_vhard\_017 & 安定性$\times$格子整合$\times$弾性の複合スコア。 & 1.00 & 68.3 & $\checkmark$ \\
+    q\_vhard\_018 & A-site元素ごとの平均$\Delta H_f$をCTEで集約。 & 1.00 & 28.2 & $\checkmark$ \\
+    q\_vhard\_019 & Ni含有安定L1$_2$の$\Delta H_f$を多段CTEで算出、Top5。 & 1.00 & 32.7 & $\checkmark$ \\
+    q\_vhard\_020 & 形成Eが加重純物質基準より0.1以上低い化合物（CTE）。 & 1.00 & 23.9 & $\checkmark$ \\
 \end{longtable}
 
 % =====================================================================
 \section{Ablation条件間の精度差異クエリ}
 \label{sec:sup_ablation_diff}
 
-表~\ref{tab:sup_ablation_diff}に、7条件間で精度が異なる30件のクエリを示す。
+表~\ref{tab:sup_ablation_diff}に、7条件間で精度が異なる35件のクエリを示す。
 太字はfull条件から0.05以上低下した値を表す。
 $-$FS = no\_fewshot、$-$Dict = no\_dict、$-$RR = no\_reranker、
 $-$GD = no\_guard、$-$NB = no\_nbest、$-$GR = no\_graph。
 
 \begin{table*}[htbp]
 \centering
-\caption{Ablation条件間で精度が異なるクエリ（30件/100件）。太字はfull条件から$> 0.05$の低下。}
+\caption{Ablation条件間で精度が異なるクエリ（35件/100件）。太字はfull条件から$> 0.05$の低下。}
 \label{tab:sup_ablation_diff}
 \scriptsize
 \begin{tabular}{@{}llccccccc@{}}
@@ -2441,6 +2443,14 @@ $-$GD = no\_guard、$-$NB = no\_nbest、$-$GR = no\_graph。
   ID & D & Full & $-$FS & $-$Dict & $-$RR & $-$GD & $-$NB & $-$GR \\
   \midrule
     q\_easy\_007 & E & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_medium\_001 & M & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_medium\_004 & M & 1.00 & 1.00 & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 \\
+    q\_medium\_012 & M & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_medium\_013 & M & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_medium\_014 & M & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_medium\_020 & M & 1.00 & 1.00 & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 \\
+    q\_medium\_021 & M & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_medium\_026 & M & 0.00 & 0.05 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\
     q\_hard\_001 & H & 0.06 & \textbf{0.00} & \textbf{0.00} & 0.06 & 0.06 & 0.06 & 0.06 \\
     q\_hard\_002 & H & 1.00 & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 \\
     q\_hard\_003 & H & 1.00 & \textbf{0.00} & 1.00 & \textbf{0.01} & 1.00 & 1.00 & 1.00 \\
@@ -2451,25 +2461,22 @@ $-$GD = no\_guard、$-$NB = no\_nbest、$-$GR = no\_graph。
     q\_hard\_012 & H & 0.50 & 0.50 & \textbf{0.38} & 0.50 & 0.50 & 0.50 & 0.50 \\
     q\_hard\_024 & H & 0.00 & 0.00 & 0.00 & 0.11 & 0.00 & 0.00 & 0.00 \\
     q\_hard\_026 & H & 1.00 & 1.00 & 1.00 & \textbf{0.01} & 1.00 & 1.00 & 1.00 \\
-    q\_medium\_001 & M & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
-    q\_medium\_004 & M & 1.00 & 1.00 & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 \\
-    q\_medium\_012 & M & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
-    q\_medium\_013 & M & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
-    q\_medium\_014 & M & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
-    q\_medium\_020 & M & 1.00 & 1.00 & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 \\
-    q\_medium\_021 & M & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
-    q\_medium\_026 & M & 0.00 & 0.05 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\
-    q\_vhard\_001 & V & 0.19 & \textbf{0.00} & \textbf{0.00} & 0.19 & \textbf{0.00} & \textbf{0.00} & \textbf{0.00} \\
-    q\_vhard\_002 & V & 0.04 & 0.17 & 0.19 & 0.03 & 0.02 & 0.00 & 0.02 \\
+    q\_vhard\_001 & V & 0.00 & 0.00 & 0.00 & 0.19 & 0.00 & 0.00 & 0.00 \\
+    q\_vhard\_002 & V & 0.04 & 0.17 & 0.19 & 0.03 & 0.02 & 0.00 & 0.03 \\
     q\_vhard\_004 & V & 1.00 & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 \\
-    q\_vhard\_005 & V & 1.00 & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_vhard\_005 & V & 1.00 & 1.00 & \textbf{0.00} & 1.00 & 1.00 & \textbf{0.00} & 1.00 \\
     q\_vhard\_006 & V & 0.19 & 0.19 & \textbf{0.00} & 0.19 & 0.19 & 0.19 & 0.19 \\
-    q\_vhard\_007 & V & 1.00 & \textbf{0.00} & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_vhard\_007 & V & 0.05 & \textbf{0.00} & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 \\
     q\_vhard\_008 & V & 0.11 & 0.11 & \textbf{0.00} & 0.11 & 0.11 & 0.11 & 0.11 \\
-    q\_vhard\_012 & V & 0.18 & 0.18 & \textbf{0.00} & 0.18 & 0.18 & 0.18 & 0.18 \\
+    q\_vhard\_009 & V & 1.00 & \textbf{0.00} & 1.00 & 1.00 & \textbf{0.00} & 1.00 & 1.00 \\
+    q\_vhard\_012 & V & 0.02 & 0.18 & \textbf{0.00} & 0.18 & 0.18 & 0.18 & 0.18 \\
     q\_vhard\_013 & V & 1.00 & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
-    q\_vhard\_015 & V & 0.02 & 0.02 & 0.00 & 0.21 & 0.02 & 0.00 & 0.07 \\
-    q\_vhard\_017 & V & 1.00 & \textbf{0.60} & \textbf{0.00} & \textbf{0.60} & 1.00 & 1.00 & 1.00 \\
+    q\_vhard\_015 & V & 0.00 & 0.02 & 0.00 & 0.02 & 0.02 & 0.00 & 0.02 \\
+    q\_vhard\_016 & V & 1.00 & \textbf{0.00} & 1.00 & 1.00 & \textbf{0.00} & 1.00 & 1.00 \\
+    q\_vhard\_017 & V & 1.00 & \textbf{0.60} & \textbf{0.00} & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_vhard\_018 & V & 1.00 & \textbf{0.00} & 1.00 & 1.00 & \textbf{0.00} & 1.00 & 1.00 \\
+    q\_vhard\_019 & V & 1.00 & \textbf{0.00} & \textbf{0.60} & 1.00 & \textbf{0.00} & 1.00 & 1.00 \\
+    q\_vhard\_020 & V & 1.00 & \textbf{0.00} & 1.00 & 1.00 & \textbf{0.00} & 1.00 & 1.00 \\
   \bottomrule
 \end{tabular}
 \end{table*}
@@ -2479,8 +2486,8 @@ $-$GD = no\_guard、$-$NB = no\_nbest、$-$GR = no\_graph。
   \item no\_fewshot（$-$FS）ではEasy--Hard帯のクエリが広範に0化し、few-shot例の汎用的な寄与を示す。
   \item no\_dict（$-$Dict）ではVery Hard帯で集中的に0化し、ドメイン辞書がVH帯に不可欠であることを裏付ける。
   \item no\_reranker（$-$RR）ではq\_hard\_003, q\_hard\_026, q\_medium\_004, q\_medium\_020で完全失敗し、候補選別の効果を示す。
-  \item no\_guard, no\_nbest, no\_graphは差異クエリ数が限定的であり、本文で報告した$-$0.2ppと整合する。
-  \item q\_vhard\_001はfull条件と$-$RR条件で0.19であるが、他の5条件では0。これはfew-shot + dictの複合効果を示唆する（リランカーの除去は精度に影響しなかった）。
+  \item no\_guard（$-$GD）ではCTEクエリ（q\_vhard\_009/016/018/019/020）が全件0化し、SQLGuardがCTE構文の安全性検証に不可欠であることを示す。
+  \item q\_vhard\_007はfull条件で0.05であるが、$-$RR/$-$GD/$-$NB/$-$GR条件で1.00に上昇。リランカー・SQLGuardが過剰フィルタリングする例である。
 \end{itemize}
 
 % =====================================================================
