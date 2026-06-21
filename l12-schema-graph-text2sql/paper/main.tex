@@ -667,8 +667,8 @@ OQMD~\cite{saal2013oqmd,kirklin2015oqmd}由来の
 項目 & 件数 \\
 \midrule
 テーブル数 & 30 \\
-\texttt{material\_entry} & 1{,}470 \\
-\texttt{composition} & 2{,}940 \\
+\texttt{material\_entry} & 1{,}559 \\
+\texttt{composition} & 3{,}118 \\
 \texttt{calculated\_property} & 4{,}410 \\
 プロトタイプ種類 & 5 (L1$_2$, B2, NaCl, NiAs, BiF$_3$) \\
 \bottomrule
@@ -891,7 +891,8 @@ no\_graph     & 85.5 & 100.0 & 96.1 & 80.4 & 62.5 & $+$1.1  \\
 \begin{table}[t]
 \centering
 \caption{上位3コンポーネントの難易度別$\Delta$（pp）。
-数値は\texttt{paper\_data.json}から取得。}
+数値は\texttt{paper\_data.json}から取得。
+no\_reranker VH帯の$+$6.5\,ppについては\ref{sec:reranker_discussion}節で考察する。}
 \label{tab:ablation-detail}
 \small
 \begin{tabular}{@{}lrrrr@{}}
@@ -1230,15 +1231,24 @@ LLM単体でSQL条件を推論可能である。
 生成できない場合がある。
 
 \subsection{リランカーの寄与}
+\label{sec:reranker_discussion}
 
-リランカーの除去は$-$2.6\,ppの低下を引き起こした。
-効果はMedium（$-$6.7\,pp）およびHard（$-$6.2\,pp）帯で観察され、
-Very Hard帯では$+$6.5\,pp（非決定性の範囲内）であった（表~\ref{tab:ablation-detail}）。
+リランカーの除去は全体で$-$2.6\,ppの低下を引き起こした。
+効果はMedium（$-$6.7\,pp）およびHard（$-$6.2\,pp）帯で観察された
+（表~\ref{tab:ablation-detail}）。
 
-Very Hard帯では3候補全てが不正確な場合が多く、
-リランカーの「最良候補選択」効果が限定される。
+一方、Very Hard帯ではリランカー除去時に$+$6.5\,ppの精度上昇が観察された。
+この差は非決定性の変動幅（約1--2\,pp）を上回っており、
+Very Hard帯ではリランカーがむしろ悪影響を及ぼしている可能性がある。
+Very Hard帯では3候補全てが部分的に不正確な場合が多く、
+リランカーが「より正確に見えるが実際には誤った」候補を
+選択してしまう逆効果が生じうる。
+特にCTEクエリでは、SQL構文的に妥当だが意味的に不正確な候補が
+リランカーにより高スコアを得るケースが考えられる。
 一方、Medium・Hard帯では少なくとも1候補が正確であることが多く、
 リランカーがその候補を正しく選択する効果が発揮される。
+この結果は、リランカーの効果がクエリ複雑度に依存し、
+高複雑度クエリにおいてはリランキング戦略の改善余地があることを示唆する。
 
 \subsection{SQLGuard・$n$-best・Steiner木の寄与}
 
@@ -1658,7 +1668,7 @@ few-shot例は検証DBのスキーマに依存しており、
 
 \begin{enumerate}
   \item \textbf{単一データベースでの検証}：
-    本研究はOQMD由来のL1$_2$データベース（30テーブル、1{,}470件）
+    本研究はOQMD由来のL1$_2$データベース（30テーブル、1{,}559件）
     での検証であり、異なるスキーマ設計や規模の無機材料RDBに対する
     汎化性能は確認されていない。
     同種の設計原理が他のRDBでも有効かどうかは、
