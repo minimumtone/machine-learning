@@ -1195,18 +1195,18 @@ $q \neq 1$の主因はDFT--実験間の体積不整合であり、
 
 \begin{table}[H]
 \centering
-\caption{BCC HEA予測精度の参照構造比較（独立テスト15合金）。}
+\caption{BCC独立テスト15合金の参照構造比較。}
 \label{tab:sqs_rmse}
-\footnotesize
-\begin{tabular}{@{}lccc@{}}
+\scriptsize
+\begin{tabular}{@{}lrrl@{}}
 \toprule
-モデル & $q_\text{BCC}$ & テスト RMSE (\AA) & vs Vegard \\
+参照 & $q$ & RMSE (\AA) & 改善 \\
 \midrule
 Vegard & 0 & 0.0186 & --- \\
-B2 + King体積（本手法） & 0.49 & 0.0157 & $+$15.6\% \\
-BCC SQS + King体積 & 0.62 & 0.0163 & $+$12.5\% \\
-\textbf{BCC SQS + DFT Vegard ($q = 1$)} & \textbf{1.00} & \textbf{0.0147} & \textbf{$+$21.0\%} \\
-BCC SQS + DFT Vegard ($q_\text{opt}$) & 1.96 & 0.0162 & $+$13.0\% \\
+B2+King（本手法） & 0.49 & 0.0157 & 15.6\% \\
+SQS+King & 0.62 & 0.0163 & 12.5\% \\
+\textbf{SQS+DFT ($q\!=\!1$)} & \textbf{1.00} & \textbf{0.0147} & \textbf{21.0\%} \\
+SQS+DFT ($q_\text{opt}$) & 1.96 & 0.0162 & 13.0\% \\
 \bottomrule
 \end{tabular}
 \end{table}
