@@ -16,6 +16,8 @@ Output:
 """
 
 import sys
+import csv
+import re
 from pathlib import Path
 
 # Ensure repo root is on path
@@ -30,6 +32,7 @@ import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 from collections import defaultdict
 from scipy.optimize import minimize_scalar
+from scipy.stats import pearsonr
 from itertools import combinations
 
 # ---------------------------------------------------------------------------
@@ -256,6 +259,537 @@ def compute_effective_radii(all_df, sources=("MP", "OQMD", "VASP")):
             entry["r_l12_min"] = (3 * v_eff / (4 * np.pi)) ** (1/3)
         radii[elem] = entry
     return radii
+
+
+# ---------------------------------------------------------------------------
+# SQS analysis: DFT-consistent Vegard reference
+# ---------------------------------------------------------------------------
+SQS_FILE = REPO / "data" / "sqs_results.csv"
+
+
+def load_sqs_data():
+    """Load BCC SQS 1:1 results and compute Omega_sf with DFT Vegard reference.
+
+    Returns dict with keys:
+        omega_dft: {pair: Omega_sf} using SQS pure element volumes as Vegard ref
+        omega_king: {pair: Omega_sf} using King volumes as Vegard ref
+        pure_vol: {element: volume_per_atom} from SQS A8A8
+        pure_a: {element: lattice_constant} from SQS A8A8
+        n_converged: total converged BCC SQS 1:1 rows
+        n_pairs: number of unique pairs (after 4f+Y exclusion)
+    """
+    if not SQS_FILE.exists():
+        return None
+
+    with open(SQS_FILE) as f:
+        rows = list(csv.DictReader(f))
+
+    # Extract BCC SQS pure element data (A8A8 same element)
+    pure_vol = {}
+    pure_a = {}
+    for r in rows:
+        if r["status"] != "OK" or r.get("relax_converged", "") != "yes":
+            continue
+        if r["lattice_type"] != "bcc":
+            continue
+        pairs = re.findall(r"([A-Z][a-z]?)(\d+)", r["dir"])
+        if len(pairs) != 2:
+            continue
+        el1, n1 = pairs[0][0], int(pairs[0][1])
+        el2, n2 = pairs[1][0], int(pairs[1][1])
+        if el1 == el2 and n1 == 8 and n2 == 8:
+            try:
+                a = float(r["a_bcc_A"])
+            except (ValueError, KeyError):
+                continue
+            if 2.0 < a < 8.0:
+                pure_a[el1] = a
+                pure_vol[el1] = a**3 / 2.0
+
+    # BCC SQS 1:1 (A8B8) pairs
+    omega_dft = {}
+    omega_king = {}
+    sqs_a = {}
+    n_converged = 0
+
+    for r in rows:
+        if r["status"] != "OK" or r.get("relax_converged", "") != "yes":
+            continue
+        if r["lattice_type"] != "bcc":
+            continue
+        pairs = re.findall(r"([A-Z][a-z]?)(\d+)", r["dir"])
+        if len(pairs) != 2:
+            continue
+        el1, n1 = pairs[0][0], int(pairs[0][1])
+        el2, n2 = pairs[1][0], int(pairs[1][1])
+        if n1 != 8 or n2 != 8 or el1 == el2:
+            continue
+        n_converged += 1
+        if el1 in EXCLUDE_ELEMENTS or el2 in EXCLUDE_ELEMENTS:
+            continue
+        if el1 not in KING_ATOMIC_VOLUMES or el2 not in KING_ATOMIC_VOLUMES:
+            continue
+        try:
+            a = float(r["a_bcc_A"])
+        except (ValueError, KeyError):
+            continue
+        if a < 2.0 or a > 8.0:
+            continue
+
+        pair = tuple(sorted([el1, el2]))
+        v_actual = a**3 / 2.0
+        sqs_a[pair] = a
+
+        # King Vegard reference
+        v_king = 0.5 * KING_ATOMIC_VOLUMES[pair[0]] + 0.5 * KING_ATOMIC_VOLUMES[pair[1]]
+        omega_king[pair] = (v_actual - v_king) / v_king
+
+        # DFT Vegard reference (requires both pure elements)
+        if pair[0] in pure_vol and pair[1] in pure_vol:
+            v_dft = 0.5 * pure_vol[pair[0]] + 0.5 * pure_vol[pair[1]]
+            omega_dft[pair] = (v_actual - v_dft) / v_dft
+
+    # FCC SQS 1:1 (A16B16) pairs
+    fcc_omega_king = {}
+    fcc_n_converged = 0
+    for r in rows:
+        if r["status"] != "OK" or r.get("relax_converged", "") != "yes":
+            continue
+        if r["lattice_type"] != "fcc":
+            continue
+        pairs = re.findall(r"([A-Z][a-z]?)(\d+)", r["dir"])
+        if len(pairs) != 2:
+            continue
+        el1, n1 = pairs[0][0], int(pairs[0][1])
+        el2, n2 = pairs[1][0], int(pairs[1][1])
+        if n1 != 16 or n2 != 16 or el1 == el2:
+            continue
+        fcc_n_converged += 1
+        if el1 in EXCLUDE_ELEMENTS or el2 in EXCLUDE_ELEMENTS:
+            continue
+        if el1 not in KING_ATOMIC_VOLUMES or el2 not in KING_ATOMIC_VOLUMES:
+            continue
+        try:
+            a = float(r["a_lattice_A"])
+        except (ValueError, KeyError):
+            continue
+        if a < 2.0 or a > 8.0:
+            continue
+        pair = tuple(sorted([el1, el2]))
+        v_actual = a**3 / 4.0
+        v_king = 0.5 * KING_ATOMIC_VOLUMES[pair[0]] + 0.5 * KING_ATOMIC_VOLUMES[pair[1]]
+        fcc_omega_king[pair] = (v_actual - v_king) / v_king
+
+    return {
+        "omega_dft": omega_dft,
+        "omega_king": omega_king,
+        "pure_vol": pure_vol,
+        "pure_a": pure_a,
+        "sqs_a": sqs_a,
+        "n_converged": n_converged,
+        "n_pairs_king": len(omega_king),
+        "n_pairs_dft": len(omega_dft),
+        "n_pure_elements": len(pure_vol),
+        "fcc_omega_king": fcc_omega_king,
+        "fcc_n_converged": fcc_n_converged,
+        "fcc_n_pairs": len(fcc_omega_king),
+    }
+
+
+def analyze_sqs(sqs_data, ob2, ol12, heas_train, heas_test):
+    """Run SQS + DFT Vegard analysis and return metrics dict.
+
+    Args:
+        sqs_data: output of load_sqs_data()
+        ob2: B2 Omega_sf dict (for comparison)
+        ol12: L12 Omega_sf dict (for FCC SQS comparison)
+        heas_train: training BCC HEAs
+        heas_test: test BCC HEAs
+    Returns:
+        dict of metrics for paper_metrics.json
+    """
+    if sqs_data is None:
+        return {}
+
+    omega_dft = sqs_data["omega_dft"]
+    omega_king = sqs_data["omega_king"]
+
+    def _rmse(omega_dict, q, heas):
+        y = np.array([h["a_exp"] for h in heas])
+        p = np.array([
+            compute_eq10_scaled(h["comp"], h["struct"], omega_dict, q)
+            for h in heas
+        ])
+        return float(np.sqrt(np.mean((p - y) ** 2)))
+
+    def _optimize_q(omega_dict, heas):
+        y = np.array([h["a_exp"] for h in heas])
+
+        def obj(q):
+            p = np.array([
+                compute_eq10_scaled(h["comp"], h["struct"], omega_dict, q)
+                for h in heas
+            ])
+            return float(np.sqrt(np.mean((p - y) ** 2)))
+
+        res = minimize_scalar(obj, bounds=(-5, 5), method="bounded")
+        return res.x, res.fun
+
+    # Vegard baseline
+    rmse_veg_train = _rmse({}, 0, heas_train)
+    rmse_veg_test = _rmse({}, 0, heas_test)
+
+    # B2 reference
+    q_b2, rmse_b2_train = _optimize_q(ob2, heas_train)
+    rmse_b2_test = _rmse(ob2, q_b2, heas_test)
+
+    # SQS + King Vegard
+    q_king, rmse_king_train = _optimize_q(omega_king, heas_train)
+    rmse_king_test = _rmse(omega_king, q_king, heas_test)
+    rmse_king_test_q1 = _rmse(omega_king, 1.0, heas_test)
+
+    # SQS + DFT Vegard
+    q_dft, rmse_dft_train = _optimize_q(omega_dft, heas_train)
+    rmse_dft_test = _rmse(omega_dft, q_dft, heas_test)
+    rmse_dft_test_q1 = _rmse(omega_dft, 1.0, heas_test)
+    rmse_dft_train_q1 = _rmse(omega_dft, 1.0, heas_train)
+
+    # Correlation: B2 vs SQS (DFT Vegard)
+    common_b2_dft = set(ob2.keys()) & set(omega_dft.keys())
+    if len(common_b2_dft) > 2:
+        x_b2 = [ob2[p] for p in common_b2_dft]
+        y_dft = [omega_dft[p] for p in common_b2_dft]
+        r_b2_dft, _ = pearsonr(x_b2, y_dft)
+        slope_b2_dft = float(np.polyfit(x_b2, y_dft, 1)[0])
+    else:
+        r_b2_dft, slope_b2_dft = 0.0, 0.0
+
+    # Correlation: B2 vs SQS (King Vegard)
+    common_b2_king = set(ob2.keys()) & set(omega_king.keys())
+    if len(common_b2_king) > 2:
+        x_b2k = [ob2[p] for p in common_b2_king]
+        y_king = [omega_king[p] for p in common_b2_king]
+        r_b2_king, _ = pearsonr(x_b2k, y_king)
+        slope_b2_king = float(np.polyfit(x_b2k, y_king, 1)[0])
+    else:
+        r_b2_king, slope_b2_king = 0.0, 0.0
+
+    # Omega_sf distribution for SQS (DFT Vegard)
+    vals_dft = list(omega_dft.values())
+    n_positive = sum(1 for v in vals_dft if v > 0)
+    n_negative = sum(1 for v in vals_dft if v <= 0)
+
+    # q sensitivity: test RMSE at q=0.6, 0.8, 1.0, 1.2, 1.4
+    q_scan = {}
+    for q_val in [0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 2.0]:
+        q_scan[f"q{q_val:.1f}"] = round(_rmse(omega_dft, q_val, heas_test), 4)
+
+    # FCC: L12 vs FCC SQS 1:1 correlation
+    fcc_omega_king = sqs_data.get("fcc_omega_king", {})
+    common_l12_fcc = set(ol12.keys()) & set(fcc_omega_king.keys())
+    if len(common_l12_fcc) > 2:
+        x_l12 = [ol12[p] for p in common_l12_fcc]
+        y_fcc = [fcc_omega_king[p] for p in common_l12_fcc]
+        r_l12_fcc, _ = pearsonr(x_l12, y_fcc)
+        slope_l12_fcc = float(np.polyfit(x_l12, y_fcc, 1)[0])
+    else:
+        r_l12_fcc, slope_l12_fcc = 0.0, 0.0
+
+    metrics = {
+        "n_sqs_pure_elements": sqs_data["n_pure_elements"],
+        "n_sqs_pairs_king": sqs_data["n_pairs_king"],
+        "n_sqs_pairs_dft": sqs_data["n_pairs_dft"],
+        "n_sqs_converged_11": sqs_data["n_converged"],
+        "q_BCC_b2": round(q_b2, 4),
+        "q_BCC_sqs_king": round(q_king, 4),
+        "q_BCC_sqs_dft_opt": round(q_dft, 3),
+        "q_BCC_sqs_dft_adopted": 1.0,
+        "RMSE_vegard_BCC_train": round(rmse_veg_train, 4),
+        "RMSE_vegard_BCC_test": round(rmse_veg_test, 4),
+        "RMSE_b2_BCC_train": round(rmse_b2_train, 4),
+        "RMSE_b2_BCC_test": round(rmse_b2_test, 4),
+        "RMSE_sqs_king_train": round(rmse_king_train, 4),
+        "RMSE_sqs_king_test": round(rmse_king_test, 4),
+        "RMSE_sqs_king_test_q1": round(rmse_king_test_q1, 4),
+        "RMSE_sqs_dft_train_qopt": round(rmse_dft_train, 4),
+        "RMSE_sqs_dft_test_qopt": round(rmse_dft_test, 4),
+        "RMSE_sqs_dft_train_q1": round(rmse_dft_train_q1, 4),
+        "RMSE_sqs_dft_test_q1": round(rmse_dft_test_q1, 4),
+        "improvement_sqs_dft_q1_vs_vegard_pct": round(
+            (1 - rmse_dft_test_q1 / rmse_veg_test) * 100, 1
+        ),
+        "improvement_b2_vs_vegard_pct": round(
+            (1 - rmse_b2_test / rmse_veg_test) * 100, 1
+        ),
+        "correlation_b2_vs_sqs_dft_n": len(common_b2_dft),
+        "correlation_b2_vs_sqs_dft_r": round(r_b2_dft, 3),
+        "correlation_b2_vs_sqs_dft_slope": round(slope_b2_dft, 3),
+        "correlation_b2_vs_sqs_king_n": len(common_b2_king),
+        "correlation_b2_vs_sqs_king_r": round(r_b2_king, 3),
+        "correlation_b2_vs_sqs_king_slope": round(slope_b2_king, 3),
+        "omega_dft_positive_pct": round(n_positive / len(vals_dft) * 100, 0),
+        "omega_dft_negative_pct": round(n_negative / len(vals_dft) * 100, 0),
+        "omega_dft_mean": round(float(np.mean(vals_dft)), 4),
+        "omega_dft_range_min": round(float(np.min(vals_dft)), 4),
+        "omega_dft_range_max": round(float(np.max(vals_dft)), 4),
+        "q_sensitivity_test": q_scan,
+        "fcc_sqs_n_pairs": sqs_data.get("fcc_n_pairs", 0),
+        "fcc_sqs_n_converged": sqs_data.get("fcc_n_converged", 0),
+        "correlation_l12_vs_fcc_sqs_n": len(common_l12_fcc),
+        "correlation_l12_vs_fcc_sqs_r": round(r_l12_fcc, 3),
+        "correlation_l12_vs_fcc_sqs_slope": round(slope_l12_fcc, 3),
+    }
+    return metrics
+
+
+def analyze_ml_residual(y_train, a_ss_tr, heas_train, ob2, ol12):
+    """ML residual correction analysis (Section 4.12).
+
+    Tests whether ML models can improve upon the physics model residuals.
+    Uses LOO-CV to avoid overfitting on the small (64 HEA) dataset.
+
+    Returns dict of metrics for paper_metrics.json.
+    """
+    from sklearn.linear_model import Ridge
+    from sklearn.model_selection import LeaveOneOut
+
+    residuals = y_train - a_ss_tr  # physics model residual
+    n = len(heas_train)
+
+    # Features: composition-based descriptors
+    X = np.zeros((n, 6))  # VEC, deltaR, deltaSf, mean_EN, nElements, VEC_std
+    for i, h in enumerate(heas_train):
+        comp = h["comp"]
+        elements = list(comp.keys())
+        fracs = np.array([comp[e] for e in elements])
+        vecs = np.array([VEC.get(e, 0) for e in elements])
+        ens = np.array([PAULING_EN.get(e, 0) for e in elements])
+        omega = ob2 if h["struct"] == "BCC" else ol12
+        X[i, 0] = np.dot(fracs, vecs)  # mean VEC
+        X[i, 1] = compute_delta_r(comp)
+        X[i, 2] = compute_delta_sf(comp, omega)
+        X[i, 3] = np.dot(fracs, ens)  # mean EN
+        X[i, 4] = len(elements)
+        X[i, 5] = np.std(vecs)  # VEC std
+
+    # LOO-CV with Ridge regression (residual correction)
+    loo = LeaveOneOut()
+    residual_pred = np.zeros(n)
+    for train_idx, test_idx in loo.split(X):
+        model = Ridge(alpha=1.0)
+        model.fit(X[train_idx], residuals[train_idx])
+        residual_pred[test_idx] = model.predict(X[test_idx])
+
+    corrected = a_ss_tr + residual_pred
+    rmse_ridge_loo = float(np.sqrt(np.mean((corrected - y_train) ** 2)))
+
+    # Direct XGBoost (overfitting test)
+    try:
+        from sklearn.ensemble import GradientBoostingRegressor
+        gb = GradientBoostingRegressor(n_estimators=100, max_depth=3,
+                                        random_state=42)
+        gb.fit(X, y_train)
+        pred_gb_train = gb.predict(X)
+        rmse_xgb_train = float(np.sqrt(np.mean((pred_gb_train - y_train) ** 2)))
+
+        # LOO for XGBoost
+        gb_loo_pred = np.zeros(n)
+        for train_idx, test_idx in loo.split(X):
+            gb_loo = GradientBoostingRegressor(n_estimators=100, max_depth=3,
+                                                random_state=42)
+            gb_loo.fit(X[train_idx], y_train[train_idx])
+            gb_loo_pred[test_idx] = gb_loo.predict(X[test_idx])
+        rmse_xgb_loo = float(np.sqrt(np.mean((gb_loo_pred - y_train) ** 2)))
+    except ImportError:
+        rmse_xgb_train = 0.0
+        rmse_xgb_loo = 0.0
+
+    # Physics model RMSE for comparison
+    rmse_physics = float(np.sqrt(np.mean((a_ss_tr - y_train) ** 2)))
+
+    return {
+        "RMSE_physics_train": round(rmse_physics, 4),
+        "RMSE_ridge_loo": round(rmse_ridge_loo, 4),
+        "RMSE_xgb_train": round(rmse_xgb_train, 4),
+        "RMSE_xgb_loo": round(rmse_xgb_loo, 4),
+        "improvement_ridge_loo_pct": round(
+            (1 - rmse_ridge_loo / rmse_physics) * 100, 1
+        ),
+    }
+
+
+def analyze_dft_self_consistent(all_df, ob2, ol12, heas_train, heas_test):
+    """Recompute Omega_sf using VASP DFT pure element volumes as Vegard reference.
+
+    This replaces King experimental volumes with DFT-computed volumes in the
+    Vegard reference, keeping B2/L12 structures. Tests whether q≈1 can be
+    achieved by eliminating DFT-experiment volume mismatch.
+
+    Returns dict of metrics for paper_metrics.json.
+    """
+    # Extract VASP pure element volumes from compound data
+    vasp_b2 = all_df[(all_df["db"] == "VASP") & (all_df["stype"] == "B2")]
+    vasp_l12 = all_df[(all_df["db"] == "VASP") & (all_df["stype"] == "L12")]
+
+    # B2 pure elements (element_A == element_B)
+    pure_b2 = vasp_b2[vasp_b2["element_A"] == vasp_b2["element_B"]]
+    dft_vol_b2 = {}
+    for _, row in pure_b2.iterrows():
+        el = row["element_A"]
+        a = row["lattice_constant"]
+        if 2.0 < a < 8.0:
+            dft_vol_b2[el] = a**3 / 2.0
+
+    # L12 pure elements
+    pure_l12 = vasp_l12[vasp_l12["element_A"] == vasp_l12["element_B"]]
+    dft_vol_l12 = {}
+    for _, row in pure_l12.iterrows():
+        el = row["element_A"]
+        a = row["lattice_constant"]
+        if 2.0 < a < 8.0:
+            dft_vol_l12[el] = a**3 / 4.0
+
+    # Recompute B2 Omega_sf with DFT Vegard reference
+    ob2_dft = {}
+    vasp_b2_pairs = vasp_b2[vasp_b2["element_A"] != vasp_b2["element_B"]]
+    for _, row in vasp_b2_pairs.iterrows():
+        elA, elB = row["element_A"], row["element_B"]
+        a = row["lattice_constant"]
+        if a <= 2 or a >= 8:
+            continue
+        if elA in EXCLUDE_ELEMENTS or elB in EXCLUDE_ELEMENTS:
+            continue
+        pair = tuple(sorted([elA, elB]))
+        if pair[0] not in dft_vol_b2 or pair[1] not in dft_vol_b2:
+            continue
+        v_act = a**3 / 2.0
+        v_veg_dft = 0.5 * dft_vol_b2[pair[0]] + 0.5 * dft_vol_b2[pair[1]]
+        ob2_dft[pair] = (v_act - v_veg_dft) / v_veg_dft
+
+    # Recompute L12 Omega_sf with DFT Vegard reference
+    ol12_dft = {}
+    vasp_l12_pairs = vasp_l12[vasp_l12["element_A"] != vasp_l12["element_B"]]
+    for _, row in vasp_l12_pairs.iterrows():
+        elA, elB = row["element_A"], row["element_B"]
+        a = row["lattice_constant"]
+        if a <= 2 or a >= 8:
+            continue
+        if elA in EXCLUDE_ELEMENTS or elB in EXCLUDE_ELEMENTS:
+            continue
+        pair = tuple(sorted([elA, elB]))
+        cA = row.get("count_A", 3)
+        cB = row.get("count_B", 1)
+        total = cA + cB
+        if pair[0] not in dft_vol_l12 or pair[1] not in dft_vol_l12:
+            continue
+        v_act = a**3 / 4.0
+        # For L12 A3B: V_Vegard = (3*V_A + V_B)/4
+        fA = cA / total
+        fB = cB / total
+        # Determine which element is A (majority) and B (minority)
+        if elA == pair[0]:
+            v_veg_dft = fA * dft_vol_l12[pair[0]] + fB * dft_vol_l12[pair[1]]
+        else:
+            v_veg_dft = fA * dft_vol_l12[pair[1]] + fB * dft_vol_l12[pair[0]]
+        ol12_dft[pair] = (v_act - v_veg_dft) / v_veg_dft
+
+    # Also use MP/OQMD B2/L12 data with DFT Vegard reference
+    # For the "all sources" approach, recompute using all compound data
+    ob2_dft_all = {}
+    ol12_dft_all = {}
+    sources = ("MP", "OQMD", "VASP")
+    sub = all_df[all_df["db"].isin(sources)]
+    for _, row in sub.iterrows():
+        elA = row.get("element_A", "")
+        elB = row.get("element_B", "")
+        a = row.get("lattice_constant", 0)
+        stype = row.get("stype", "")
+        if a <= 2 or a >= 8 or elA == elB:
+            continue
+        if elA in EXCLUDE_ELEMENTS or elB in EXCLUDE_ELEMENTS:
+            continue
+        pair = tuple(sorted([elA, elB]))
+        if stype == "B2":
+            if pair[0] not in dft_vol_b2 or pair[1] not in dft_vol_b2:
+                continue
+            v_act = a**3 / 2.0
+            v_veg = 0.5 * dft_vol_b2[pair[0]] + 0.5 * dft_vol_b2[pair[1]]
+            ob2_dft_all.setdefault(pair, []).append((v_act - v_veg) / v_veg)
+        elif stype == "L12":
+            if pair[0] not in dft_vol_l12 or pair[1] not in dft_vol_l12:
+                continue
+            cA = row.get("count_A", 3)
+            cB = row.get("count_B", 1)
+            total = cA + cB
+            v_act = a**3 / 4.0
+            fA = cA / total
+            fB = cB / total
+            if elA == pair[0]:
+                v_veg = fA * dft_vol_l12[pair[0]] + fB * dft_vol_l12[pair[1]]
+            else:
+                v_veg = fA * dft_vol_l12[pair[1]] + fB * dft_vol_l12[pair[0]]
+            ol12_dft_all.setdefault(pair, []).append((v_act - v_veg) / v_veg)
+
+    ob2_dft_med = {p: np.median(v) for p, v in ob2_dft_all.items() if len(v) >= 2}
+    ol12_dft_med = {p: np.median(v) for p, v in ol12_dft_all.items() if len(v) >= 2}
+
+    # Optimize q with DFT Vegard reference on training 64 HEAs
+    y_tr = np.array([h["a_exp"] for h in heas_train])
+    bcc_tr = [i for i, h in enumerate(heas_train) if h["struct"] == "BCC"]
+    fcc_tr = [i for i, h in enumerate(heas_train) if h["struct"] == "FCC"]
+
+    def _pred(heas, ob, ol, qb, qf):
+        return np.array([
+            compute_eq10_scaled(h["comp"], h["struct"],
+                                ob if h["struct"] == "BCC" else ol,
+                                qb if h["struct"] == "BCC" else qf)
+            for h in heas
+        ])
+
+    def _rmse_bcc(q):
+        p = _pred(heas_train, ob2_dft_med, ol12_dft_med, q, 1.0)
+        return float(np.sqrt(np.mean((p[bcc_tr] - y_tr[bcc_tr]) ** 2)))
+
+    def _rmse_fcc(q):
+        p = _pred(heas_train, ob2_dft_med, ol12_dft_med, 1.0, q)
+        return float(np.sqrt(np.mean((p[fcc_tr] - y_tr[fcc_tr]) ** 2)))
+
+    q_bcc_dft = minimize_scalar(_rmse_bcc, bounds=(0, 5), method="bounded").x
+    q_fcc_dft = minimize_scalar(_rmse_fcc, bounds=(0, 5), method="bounded").x
+
+    # RMSE with optimized q (training 64 HEAs)
+    p_opt = _pred(heas_train, ob2_dft_med, ol12_dft_med, q_bcc_dft, q_fcc_dft)
+    rmse_opt = float(np.sqrt(np.mean((p_opt - y_tr) ** 2)))
+
+    # RMSE with q=1 (training 64 HEAs)
+    p_q1 = _pred(heas_train, ob2_dft_med, ol12_dft_med, 1.0, 1.0)
+    rmse_q1 = float(np.sqrt(np.mean((p_q1 - y_tr) ** 2)))
+
+    # Vegard RMSE for comparison (training 64)
+    p_veg = _pred(heas_train, ob2_dft_med, ol12_dft_med, 0.0, 0.0)
+    rmse_veg = float(np.sqrt(np.mean((p_veg - y_tr) ** 2)))
+
+    # King reference RMSE for comparison table row
+    p_king_opt = _pred(heas_train, ob2, ol12, 0.49, 0.13)
+    rmse_king_opt = float(np.sqrt(np.mean((p_king_opt - y_tr) ** 2)))
+    p_king_q1 = _pred(heas_train, ob2, ol12, 1.0, 1.0)
+    rmse_king_q1 = float(np.sqrt(np.mean((p_king_q1 - y_tr) ** 2)))
+
+    return {
+        "n_pure_b2": len(dft_vol_b2),
+        "n_pure_l12": len(dft_vol_l12),
+        "n_pairs_b2_dft": len(ob2_dft_med),
+        "n_pairs_l12_dft": len(ol12_dft_med),
+        "q_BCC_dft_ref": round(q_bcc_dft, 2),
+        "q_FCC_dft_ref": round(q_fcc_dft, 2),
+        "RMSE_dft_ref_opt_q": round(rmse_opt, 4),
+        "RMSE_dft_ref_q1": round(rmse_q1, 4),
+        "RMSE_vegard_64": round(rmse_veg, 4),
+        "RMSE_king_opt_64": round(rmse_king_opt, 4),
+        "RMSE_king_q1_64": round(rmse_king_q1, 4),
+        "improvement_dft_ref_opt_pct": round((1 - rmse_opt / rmse_veg) * 100, 1),
+        "improvement_dft_ref_q1_pct": round((1 - rmse_q1 / rmse_veg) * 100, 1),
+    }
 
 
 # ===========================================================================
@@ -1682,6 +2216,58 @@ def main():
     print(f"Data:    3 CSVs saved to {OUTDIR}")
 
     # -----------------------------------------------------------------------
+    # 9b. SQS analysis (BCC only, DFT-consistent Vegard reference)
+    # -----------------------------------------------------------------------
+    print("\n[9] SQS + DFT Vegard analysis...")
+    sqs_data = load_sqs_data()
+    if sqs_data is not None:
+        bcc_train = [h for h in ALONSO_TABLE2 if h["struct"] == "BCC"]
+        bcc_test = [h for h in INDEPENDENT_TEST if h["struct"] == "BCC"]
+        sqs_metrics = analyze_sqs(sqs_data, ob2, ol12, bcc_train, bcc_test)
+        print(f"    SQS pure elements: {sqs_data['n_pure_elements']}")
+        print(f"    SQS pairs (King): {sqs_data['n_pairs_king']}")
+        print(f"    SQS pairs (DFT Vegard): {sqs_data['n_pairs_dft']}")
+        print(f"    q_BCC (SQS+DFT, optimal): {sqs_metrics['q_BCC_sqs_dft_opt']}")
+        print(f"    q_BCC (SQS+DFT, adopted): 1.0")
+        print(f"    BCC test RMSE (B2, q={sqs_metrics['q_BCC_b2']:.3f}): "
+              f"{sqs_metrics['RMSE_b2_BCC_test']}")
+        print(f"    BCC test RMSE (SQS+DFT, q=1): "
+              f"{sqs_metrics['RMSE_sqs_dft_test_q1']}")
+        print(f"    Improvement vs Vegard: "
+              f"{sqs_metrics['improvement_sqs_dft_q1_vs_vegard_pct']}%")
+        print(f"    B2 vs SQS(DFT) correlation: r={sqs_metrics['correlation_b2_vs_sqs_dft_r']}, "
+              f"slope={sqs_metrics['correlation_b2_vs_sqs_dft_slope']}")
+    else:
+        sqs_metrics = {}
+        print("    SQS data not found, skipping.")
+
+    # -----------------------------------------------------------------------
+    # 9b. DFT self-consistent Omega_sf (B2/L12 with DFT Vegard reference)
+    # -----------------------------------------------------------------------
+    print("\n[9b] DFT self-consistent Omega_sf analysis...")
+    dft_sc_metrics = analyze_dft_self_consistent(
+        all_df, ob2, ol12, ALONSO_TABLE2, INDEPENDENT_TEST
+    )
+    print(f"    q_BCC (DFT ref): {dft_sc_metrics['q_BCC_dft_ref']}")
+    print(f"    q_FCC (DFT ref): {dft_sc_metrics['q_FCC_dft_ref']}")
+    print(f"    RMSE (opt q): {dft_sc_metrics['RMSE_dft_ref_opt_q']}")
+    print(f"    RMSE (q=1): {dft_sc_metrics['RMSE_dft_ref_q1']}")
+    print(f"    Improvement (opt q vs Vegard): "
+          f"{dft_sc_metrics['improvement_dft_ref_opt_pct']}%")
+    print(f"    Improvement (q=1 vs Vegard): "
+          f"{dft_sc_metrics['improvement_dft_ref_q1_pct']}%")
+
+    # -----------------------------------------------------------------------
+    # 9c. ML residual correction analysis
+    # -----------------------------------------------------------------------
+    print("\n[9c] ML residual correction analysis...")
+    ml_metrics = analyze_ml_residual(y_train, a_ss_tr, ALONSO_TABLE2, ob2, ol12)
+    print(f"    Physics model RMSE: {ml_metrics['RMSE_physics_train']}")
+    print(f"    Ridge LOO-CV RMSE: {ml_metrics['RMSE_ridge_loo']}")
+    print(f"    XGBoost train RMSE: {ml_metrics['RMSE_xgb_train']}")
+    print(f"    XGBoost LOO RMSE: {ml_metrics['RMSE_xgb_loo']}")
+
+    # -----------------------------------------------------------------------
     # 10. Paper metrics JSON — ALL numerical values used in the manuscript
     # -----------------------------------------------------------------------
     import json
@@ -1911,6 +2497,16 @@ def main():
                 "eff_radius_maj_dev": maj_mean,
                 "eff_radius_min_over_maj_pct": ratio,
             }
+
+    # Add SQS metrics
+    if sqs_metrics:
+        metrics["sqs_analysis"] = sqs_metrics
+
+    # Add DFT self-consistent metrics
+    metrics["dft_self_consistent"] = dft_sc_metrics
+
+    # Add ML residual metrics
+    metrics["ml_residual"] = ml_metrics
 
     with open(OUTDIR / "paper_metrics.json", "w") as f:
         json.dump(metrics, f, indent=2, ensure_ascii=False)
