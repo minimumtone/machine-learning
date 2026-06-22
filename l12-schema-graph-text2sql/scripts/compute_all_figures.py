@@ -256,17 +256,35 @@ def main():
                 sum(run_means) / len(run_means) * 100, 1
             )
 
-    # Error analysis from ablation
+    # Error analysis from ablation (5-run average VH failures)
     error_analysis = {}
     for cond_name in ["full", "no_fewshot", "no_dict", "no_reranker",
                        "no_guard", "no_nbest", "no_graph"]:
-        c = conditions[cond_name]
-        vh_results = [r for r in c["results"] if "vhard" in r["qid"]]
-        n_vh_fail = sum(1 for r in vh_results if r["accuracy"] < 0.8)
-        error_analysis[cond_name] = {
-            "vh_failures": n_vh_fail,
-            "vh_total": len(vh_results),
-        }
+        run_vh_fails: list[int] = []
+        run_vh_totals: list[int] = []
+        for rf in run_files:
+            if rf.exists():
+                with open(rf) as f:
+                    rd = json.load(f)
+                rc = rd["conditions"][cond_name]
+                vh_res = [r for r in rc["results"] if "vhard" in r["qid"]]
+                run_vh_fails.append(
+                    sum(1 for r in vh_res if r["accuracy"] < 0.8)
+                )
+                run_vh_totals.append(len(vh_res))
+        if run_vh_fails:
+            error_analysis[cond_name] = {
+                "vh_failures": round(sum(run_vh_fails) / len(run_vh_fails)),
+                "vh_total": run_vh_totals[0],
+            }
+        else:
+            c = conditions[cond_name]
+            vh_results = [r for r in c["results"] if "vhard" in r["qid"]]
+            n_vh_fail = sum(1 for r in vh_results if r["accuracy"] < 0.8)
+            error_analysis[cond_name] = {
+                "vh_failures": n_vh_fail,
+                "vh_total": len(vh_results),
+            }
 
     # ==================================================================
     # Reranker A/B eval (90 queries)
@@ -427,6 +445,12 @@ def main():
             ),
             "git_commit": git_hash,
             "source_files": [
+                "evaluation/ablation_multirun_stats.json",
+                "evaluation/ablation_run_1.json",
+                "evaluation/ablation_run_2.json",
+                "evaluation/ablation_run_3.json",
+                "evaluation/ablation_run_4.json",
+                "evaluation/ablation_run_5.json",
                 "evaluation/ablation_results.json",
                 "evaluation/jp_reranker_vh_results.json",
                 "evaluation/reranker_eval_results.json",
