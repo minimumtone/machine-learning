@@ -2237,6 +2237,83 @@ def main():
               f"{sqs_metrics['improvement_sqs_dft_q1_vs_vegard_pct']}%")
         print(f"    B2 vs SQS(DFT) correlation: r={sqs_metrics['correlation_b2_vs_sqs_dft_r']}, "
               f"slope={sqs_metrics['correlation_b2_vs_sqs_dft_slope']}")
+
+        # --- SQS additive decomposition ---
+        print("\n[9a] SQS additive decomposition...")
+        omega_dft = sqs_data["omega_dft"]
+        omega_king = sqs_data["omega_king"]
+
+        # Decompose SQS Omega_sf into element-level delta
+        for label, omega_src in [("SQS_DFT", omega_dft), ("SQS_King", omega_king)]:
+            elements = set()
+            for (a, b) in omega_src:
+                elements.add(a)
+                elements.add(b)
+            elements = sorted(elements)
+            elem_idx = {e: i for i, e in enumerate(elements)}
+            n_elem = len(elements)
+
+            rows_A = []
+            rows_b = []
+            for (a, b), val in omega_src.items():
+                row = np.zeros(n_elem)
+                row[elem_idx[a]] = 1.0
+                row[elem_idx[b]] = 1.0
+                rows_A.append(row)
+                rows_b.append(val)
+
+            A_mat = np.array(rows_A)
+            b_vec = np.array(rows_b)
+            delta, _, _, _ = np.linalg.lstsq(A_mat, b_vec, rcond=None)
+
+            delta_dict = {elements[i]: delta[i] for i in range(n_elem)}
+            pred = A_mat @ delta
+            ss_res = np.sum((b_vec - pred) ** 2)
+            ss_tot = np.sum((b_vec - b_vec.mean()) ** 2)
+            r2 = 1 - ss_res / ss_tot if ss_tot > 0 else 0
+            rmse_decomp = float(np.sqrt(np.mean((b_vec - pred) ** 2)))
+
+            # Build additive omega for BCC HEA prediction
+            omega_add = {}
+            for pair in omega_src:
+                a, b = pair
+                if a in delta_dict and b in delta_dict:
+                    omega_add[pair] = delta_dict[a] + delta_dict[b]
+
+            # Predict BCC HEAs with additive SQS delta (q=1 for DFT, q_opt for King)
+            if label == "SQS_DFT":
+                q_use = 1.0
+                rmse_train_add = float(np.sqrt(np.mean(np.array([
+                    (compute_eq10_scaled(h["comp"], h["struct"], omega_add, q_use)
+                     - h["a_exp"]) ** 2
+                    for h in bcc_train
+                ]))))
+                rmse_test_add = float(np.sqrt(np.mean(np.array([
+                    (compute_eq10_scaled(h["comp"], h["struct"], omega_add, q_use)
+                     - h["a_exp"]) ** 2
+                    for h in bcc_test
+                ]))))
+                sqs_metrics["sqs_additive_dft_n_elements"] = n_elem
+                sqs_metrics["sqs_additive_dft_n_pairs"] = len(omega_src)
+                sqs_metrics["sqs_additive_dft_R2"] = round(r2, 4)
+                sqs_metrics["sqs_additive_dft_RMSE_omega"] = round(rmse_decomp, 4)
+                sqs_metrics["sqs_additive_dft_RMSE_BCC_train_q1"] = round(rmse_train_add, 4)
+                sqs_metrics["sqs_additive_dft_RMSE_BCC_test_q1"] = round(rmse_test_add, 4)
+                sqs_metrics["sqs_additive_dft_improvement_vs_vegard_pct"] = round(
+                    (1 - rmse_test_add / sqs_metrics["RMSE_vegard_BCC_test"]) * 100, 1
+                )
+                print(f"    {label}: {n_elem} elements, {len(omega_src)} pairs, "
+                      f"R2={r2:.4f}, RMSE(Ω)={rmse_decomp:.4f}")
+                print(f"      BCC test RMSE (q=1, additive): {rmse_test_add:.4f}")
+                print(f"      vs pairwise (q=1): {sqs_metrics['RMSE_sqs_dft_test_q1']}")
+            else:
+                sqs_metrics["sqs_additive_king_n_elements"] = n_elem
+                sqs_metrics["sqs_additive_king_n_pairs"] = len(omega_src)
+                sqs_metrics["sqs_additive_king_R2"] = round(r2, 4)
+                sqs_metrics["sqs_additive_king_RMSE_omega"] = round(rmse_decomp, 4)
+                print(f"    {label}: {n_elem} elements, {len(omega_src)} pairs, "
+                      f"R2={r2:.4f}, RMSE(Ω)={rmse_decomp:.4f}")
+
     else:
         sqs_metrics = {}
         print("    SQS data not found, skipping.")
