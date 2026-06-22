@@ -231,7 +231,7 @@ $a_\text{cubic} = V^{1/3}$（等価立方体格子定数）を採用した。
 
 \begin{table}[H]
 \centering
-\caption{DFTデータソースの概要。}
+\caption{DFTデータソースの概要（二元系B2・L1$_2$計算）。}
 \label{tab:dft_data}
 \footnotesize
 \begin{tabular}{@{}lrrr@{}}
@@ -480,10 +480,9 @@ $\Delta a = a^\text{exp} - a^\text{pred}$を
 
 \begin{table}[H]
 \centering
-\caption{64個の立方晶HEAに対する格子定数予測精度。
+\caption{訓練64 HEA（BCC 29 + FCC 35）の格子定数予測精度。
   DFT-$\Omega_\text{sf}$モデルはRMSE = 0.0214~\AA{}で
-  Vegard比5.8\%改善。推定ノイズフロア$\sigma \approx 0.016$~\AA{}が
-  達成可能精度の目安を与える。}
+  Vegard比5.8\%改善。}
 \label{tab:comparison}
 \footnotesize
 \begin{tabular}{@{}lcccc@{}}
@@ -546,7 +545,7 @@ ML残差補正はいずれも0.002~\AA{}未満の追加改善しか与えず、
 
 \begin{table}[H]
 \centering
-\caption{BCC/FCC別RMSE (\AA)。FCC HEAは推定ノイズフロア以下の精度を達成。}
+\caption{訓練64 HEAのBCC/FCC別RMSE (\AA)。BCC 29合金 + FCC 35合金。}
 \label{tab:bcc_fcc}
 \footnotesize
 \begin{tabular}{@{}lccc@{}}
@@ -595,7 +594,7 @@ Freudenberger (2017)の貴金属系FCC（Au-Cu-Ni-Pd-Pt四元・五元系）
 
 \begin{table}[H]
 \centering
-\caption{独立テストセットの予測精度（RMSE / \AA）。28 HEA（BCC 15 + FCC 13）、12文献18元素。}
+\caption{独立テスト28 HEA（BCC 15 + FCC 13）の予測精度（RMSE / \AA）。訓練と非重複の12文献18元素。}
 \label{tab:indep_test}
 \footnotesize
 \begin{tabular}{@{}lccc@{}}
@@ -648,7 +647,7 @@ HEA予測では加法モデルRMSE = 0.0221~\AA{}と
 
 \begin{table}[H]
 \centering
-\caption{元素対 vs 加法分解によるHEA予測の比較。}
+\caption{元素対 vs 加法分解によるHEA予測の比較（訓練64 HEA）。}
 \label{tab:pw_vs_add}
 \footnotesize
 \begin{tabular}{@{}lcccc@{}}
@@ -808,7 +807,7 @@ $a(A_3B) = a(B_3A)$を強制すること。
 
 \begin{table}[H]
 \centering
-\caption{剛体球 vs 体積由来半径のRMSE (\AA)。}
+\caption{剛体球 vs 体積由来半径のRMSE (\AA)。二元系DFT格子定数からのフィット。}
 \label{tab:packing}
 \footnotesize
 \begin{tabular}{@{}lcc@{}}
@@ -932,8 +931,7 @@ $\bar{\Omega}_i = \sum_{j \ne i} c_j \Omega_\text{sf}(i,j)$。
 
 \begin{table}[H]
 \centering
-\caption{相分類性能（SS vs 非SS、54 HEA）。
-  $\delta r$が$\delta_\text{sf}$より相分類に優れる。}
+\caption{相分類性能（SS vs 非SS）。訓練64 + 独立28 = 全92 HEAのうちSS 54合金を対象。}
 \label{tab:phase}
 \footnotesize
 \begin{tabular}{@{}lccc@{}}
@@ -1104,7 +1102,7 @@ FCC系では$\Omega_\text{sf}$補正自体が微小であることと整合す�
 
 \begin{table}[H]
 \centering
-\caption{$\Omega_\text{sf}$参照体積の影響（訓練64 HEA）。}
+\caption{$\Omega_\text{sf}$参照体積の影響。訓練64 HEA（BCC 29 + FCC 35）での$q$最適化。}
 \label{tab:omega_ref}
 \footnotesize
 \begin{tabular}{@{}lcccc@{}}
@@ -1195,7 +1193,7 @@ $q \neq 1$の主因はDFT--実験間の体積不整合であり、
 
 \begin{table}[H]
 \centering
-\caption{BCC独立テスト15合金の参照構造比較。}
+\caption{参照構造別の予測精度。独立テストBCC 15合金。}
 \label{tab:sqs_rmse}
 \scriptsize
 \begin{tabular}{@{}lrrl@{}}
@@ -1219,7 +1217,7 @@ $q$感度解析（表~\ref{tab:q_sensitivity}）は
 
 \begin{table}[H]
 \centering
-\caption{BCC SQS＋DFT Vegard参照における$q_\text{BCC}$感度解析（独立テスト15合金）。}
+\caption{$q_\text{BCC}$感度解析（BCC SQS＋DFT Vegard参照）。独立テストBCC 15合金でのRMSE。}
 \label{tab:q_sensitivity}
 \footnotesize
 \begin{tabular}{@{}cc@{}}
@@ -1250,7 +1248,7 @@ King実験体積を共通Vegard参照とした比較である。
 
 \begin{table}[H]
 \centering
-\caption{秩序構造 vs SQSの$\Omega_\text{sf}$相関（King体積参照）。}
+\caption{秩序構造 vs SQSの$\Omega_\text{sf}$相関（King体積参照）。二元系ペアの比較。}
 \label{tab:sqs_omega_correlation}
 \footnotesize
 \begin{tabular}{@{}lcc@{}}
@@ -1333,7 +1331,7 @@ DFT体積サイズファクターの元素別加法分解に基づく、
 
 \begin{table}[H]
 \centering
-\caption{本手法の予測精度の全体像。}
+\caption{本手法の予測精度の全体像。訓練64 HEAと独立テスト28 HEAの両方を掲載。}
 \label{tab:conclusion_summary}
 \scriptsize
 \begin{tabular}{@{}llcc@{}}
@@ -1396,7 +1394,7 @@ DFT体積サイズファクターの元素別加法分解に基づく、
 
 \begin{table}[H]
 \centering
-\caption{HEA格子定数予測手法の比較。}
+\caption{HEA格子定数予測手法の比較。RMSEは独立テスト28 HEA（$^*$はBCC 15合金のみ）。}
 \label{tab:method_comparison}
 \footnotesize
 \begin{tabular}{@{}lrccl@{}}
