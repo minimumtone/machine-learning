@@ -299,7 +299,7 @@ VASP（本研究） & 2,200 & 2,810 & 5,010 \\
 Si・Ge・Bは安定構造がBCC/FCCでなくKing体積との乖離が15--29\%に達するため除外。
 $4f$希土類14元素（La, Ce, Pr, Nd, Sm, Eu, Gd, Tb, Dy, Ho, Er, Tm, Yb, Lu）および
 Yは、GGA-PBEが$4f$局在電子を正しく扱えず格子定数が非物理的に膨張・未収束となるため除外
-（Supplementary §S4.1参照）。}
+（付録~\ref{sec:appendix_gdce}参照）。}
 \end{table}
 
 収束判定と物理的格子定数範囲（2.0--8.0~\AA）でのフィルタリング後、
@@ -665,6 +665,7 @@ B2参照構造の$\Omega_\text{sf}$データを473ペアに拡充し、
 BCC予測精度が大幅に改善された。
 全体RMSEはノイズフロア（0.0157~\AA）以下であり、
 独立テストでも実質的な精度限界に到達している。
+図~\ref{fig:indep_test}に合金別誤差・構造別RMSE・パリティプロットを示す。
 
 \begin{figure*}[!t]
 \centering
@@ -785,7 +786,7 @@ $\Omega_\text{sf}$が組成比だけでなく構造に依存する直接的証�
 \end{figure*}
 
 全元素ペアについてVegard則の成立度を系統的に検証した結果を
-Supplementary §S8に示す。
+付録~\ref{sec:appendix_vegard_all}に示す。
 B2では$R^2 = 0.81$とVegard則が比較的良好に成立するのに対し、
 L1$_2$では$R^2 = 0.51$と散乱が大きい。
 また半径差との相関はB2で$r = -0.45$、L1$_2$で$r = -0.17$であり、
@@ -833,6 +834,12 @@ $A_3B$と$B_3A$の区別はできず、
 \label{fig:delta_r_proof}
 \end{figure*}
 
+\noindent
+さらに図~\ref{fig:l12_b2_corr}にL1$_2$非対称性の分布と
+B2--L1$_2$間の$\Omega_\text{sf}$相関を示す。
+構造間相関は$r = 0.43$と中程度であり、
+$\Omega_\text{sf}$が構造依存であることを裏付ける。
+
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=0.85\textwidth]{fig_l12_b2_correlation.png}
@@ -851,7 +858,8 @@ $A_3B$と$B_3A$の区別はできず、
 全体RMSE = 0.162~\AA{}であり、Vegard則の5倍以上である。
 根本原因は$d_\text{nn} = r_A + r_B$が対称操作であり
 $a(A_3B) = a(B_3A)$を強制すること。
-実際のDFTデータは$\langle|a(A_3B)-a(B_3A)|\rangle = 0.248$~\AA{}を示す。
+実際のDFTデータは$\langle|a(A_3B)-a(B_3A)|\rangle = 0.248$~\AA{}を示す
+（図~\ref{fig:packing}）。
 
 \begin{table}[H]
 \centering
@@ -899,7 +907,8 @@ FCC HEA格子定数範囲の約10\%に相当する。
 少数派サイトの半径偏差
 $\langle|\Delta r_\text{min}|\rangle = 0.109$~\AA{}は
 多数派サイト（$\langle|\Delta r_\text{maj}|\rangle = 0.039$~\AA）
-より約179\%大きく、完全異種配位殻における化学環境の影響を反映する。
+より約179\%大きく、完全異種配位殻における化学環境の影響を反映する
+（図~\ref{fig:l12_asymmetry}）。
 
 \begin{figure*}[!t]
 \centering
@@ -920,7 +929,8 @@ $\langle|\Delta r_\text{min}|\rangle = 0.109$~\AA{}は
 $q_\text{BCC}^\text{add} = 0.347$、
 $q_\text{FCC}^\text{add} = 0.076$を得た。
 加法モデルはRMSE = 0.0221~\AA{}を達成し、
-元素対モデルとの差は0.0007~\AA{}（3.3\%）である。
+元素対モデルとの差は0.0007~\AA{}（3.3\%）である
+（図~\ref{fig:veff_hea}）。
 
 \begin{figure*}[!t]
 \centering
@@ -930,6 +940,12 @@ $q_\text{FCC}^\text{add} = 0.076$を得た。
   (c)~独立テスト（$q_\text{BCC}$, $q_\text{FCC}$は各構造の最適校正定数）。}
 \label{fig:veff_hea}
 \end{figure*}
+
+\noindent
+図~\ref{fig:reff_comp}にCoCrFeMnNi系FCC合金における
+各元素の組成依存有効半径$r_\text{eff}$を示す。
+元素の配位環境が組成に応じて変化し、
+$r_\text{eff}$が非自明な組成依存性を持つことがわかる。
 
 \begin{figure*}[!t]
 \centering
@@ -994,7 +1010,10 @@ Yang--Zhang & --- & 0.648 & 0.725 \\
 \end{table}
 
 $\delta r$は$\delta_\text{sf}$より相分類に優れる（AUC 0.869 vs 0.710）。
-固溶体安定性が主に幾何学的サイズ適合性で支配されることを示す。
+固溶体安定性が主に幾何学的サイズ適合性で支配されることを示す
+（図~\ref{fig:roc}）。
+図~\ref{fig:phase_map}に$\delta r$--$\Omega$空間での
+相安定性マップを示す。
 
 \begin{figure}[H]
 \centering
@@ -1097,7 +1116,7 @@ $\Omega_\text{sf}$との自己整合性が確保されるが、
 3つの代替案（VASP B2同種体積、Wang~\cite{Wang2004lattice}の
 ab initio体積、465ペア直接予測）のいずれも
 HEA予測精度（RMSE）でKing実験値を上回れないことを確認した
-（Supplementary §S2参照）。
+（付録~\ref{sec:appendix_volumes}参照）。
 GGA-PBEの元素依存系統誤差（Au: $+7.1$\%, Fe: $-4.6$\%等）が
 Vegardベースラインを直接劣化させるためである。
 $\Omega_\text{sf}$は偏差の比として定義されるためGGA誤差が
