@@ -1165,21 +1165,33 @@ $2\times2\times2$ BCC超格子（16原子、A$_8$B$_8$組成）のSQS~\cite{Zung
 （PAW法~\cite{Blochl1994}、GGA-PBE~\cite{Perdew1996}、ENCUT = 520~eV、
 $12\times12\times12$ $\Gamma$中心$k$メッシュ~\cite{Monkhorst1976}、ISIF = 3、ISPIN = 2）。
 SQS $\Omega_\text{sf}$はDFT自己整合Vegard参照（SQS純元素体積を端点に使用）で定義する：
-\begin{equation}
-  \Omega_\text{sf}^\text{SQS}(A\text{-}B) =
+\begin{align}
+  \Omega_\text{sf}^\text{SQS}(A\text{-}B) &=
   \frac{V_\text{SQS}(A_8 B_8) - V_\text{Vegard}^\text{DFT}}{V_\text{Vegard}^\text{DFT}},
-  \quad V_\text{Vegard}^\text{DFT} = \tfrac{1}{2}\bigl(V_\text{SQS}(A_8 A_8) + V_\text{SQS}(B_8 B_8)\bigr).
-  \label{eq:omega_sqs}
-\end{equation}
+  \label{eq:omega_sqs} \\
+  V_\text{Vegard}^\text{DFT} &= \tfrac{1}{2}\bigl(V_\text{SQS}(A_8 A_8) + V_\text{SQS}(B_8 B_8)\bigr).
+  \label{eq:vegard_dft}
+\end{align}
 分子・分母が同一のGGA-PBE設定から導出されるため、
 DFT系統誤差（hcp安定元素のBCC格子定数過小評価等）が相殺される。
 
 \subsubsection{BCC HEA予測の改善}
 
-SQS＋DFT Vegard参照による$q$最適化で$q = 1.96$が得られるが、
-$q = 1$固定が独立テストで最良精度を与える（表~\ref{tab:sqs_rmse}）。
-$q = 1$は「SQSの$\Omega_\text{sf}$がそのままHEAに適用できる」ことを意味し、
-スケーリング校正が不要となる。
+SQS＋DFT Vegard参照で全44 BCC HEAに対する$q$最適化を行うと
+$q_\text{opt} = 1.96$が得られる。
+しかし$q_\text{opt}$は訓練データへの過適合を含み、
+独立テスト15合金では$q = 1$固定の方が良い精度を示す
+（表~\ref{tab:sqs_rmse}）。
+$q = 1$は式~(\ref{eq:scaled_eq10})において
+$\Omega_\text{sf}^\text{SQS}$をスケーリングなしで
+そのままHEAに適用することを意味する。
+すなわち、SQS（$\alpha \approx 0$）の二元系体積偏差が
+多元素HEAの体積偏差を直接近似でき、
+B2参照のような秩序--無秩序間のスケーリング校正$q_\text{BCC} = 0.49$が不要となる。
+この結果は、\ref{sec:dft_self_consistent}節で示した
+DFT自己整合Vegard参照による$q_\text{BCC} \approx 1$の知見と整合する：
+$q \neq 1$の主因はDFT--実験間の体積不整合であり、
+参照体積を統一すれば二元系$\to$多元系の外挿に追加パラメータは不要である。
 
 \begin{table}[H]
 \centering
