@@ -88,11 +88,10 @@ SQLとスキーマ構造の理解を要求する利用形態は
 L1$_2$型金属間化合物を中心とする31テーブル・1{,}559件のRDBを
 検証対象として、
 100件の評価クエリ（うち5件はCTEによる多段計算クエリ）による
-7条件のablation study（計700回評価）を実施した。
-材料ドメイン辞書は複雑なクエリ（Very Hard帯）で
-$-$18.1ポイント（pp）の精度低下を引き起こし、
+7条件のablation study（5独立ラン、計3{,}500回評価）を実施した。
+材料ドメイン辞書の除去は全体で$-$7.3\,pp（$p<0.001$）の精度低下を引き起こし、
 ドメイン固有用語のマッピングが不可欠であることを示した。
-few-shot例の除去はMedium帯以上で$-$8.9\,ppの低下を引き起こし、
+few-shot例の除去は$-$7.4\,pp（$p<0.001$）の低下を引き起こし、
 テンプレートパターンの学習効果を確認した。
 さらに、RDBスキーマの正規化度とテーブル構造が
 Text-to-SQL精度の上流要因となることを明らかにし、
@@ -100,8 +99,8 @@ Text-to-SQL精度の上流要因となることを明らかにし、
 精度向上の有効な方策となりうることを論じた。
 これらの知見は検証に用いた特定のデータベースに限らず、
 同種の無機材料RDBへの展開可能性を示唆する。
-全評価はLLMの非決定性を伴う単一ランであり、
-条件間の差異には約1--2\,ppの変動が含まれうる。
+全評価は5独立ランの平均$\pm$標準偏差で報告し、
+Wilcoxon符号順位検定（$\alpha=0.05$）による統計的有意性を確認した。
 
 \end{abstract}
 
@@ -314,10 +313,10 @@ SQL生成と検証を経て、
 Cross-Encoderはローカルで動作し、処理時間は50\,ms未満である。
 
 ablation studyにおいて、few-shot例の除去は
-全体精度を84.3\%から75.4\%へ$-$8.9\,pp低下させた
-（表~\ref{tab:ablation}）。
+全体精度を84.7\%から77.3\%へ$-$7.4\,pp低下させた
+（$p<0.001$、表~\ref{tab:ablation}）。
 この低下はMedium帯以上で観察され（Easy帯は低下なし）、
-Medium帯では$-$9.3\,ppであった（表~\ref{tab:ablation-detail}）。
+Medium帯では$-$9.2\,ppであった（表~\ref{tab:ablation-detail}）。
 LLMはfew-shot例からSQL生成のパターン
 （テーブル名、JOIN順序、カラム名の使い方）を
 in-context learning~\cite{brown2020fewshot}により獲得しており、
@@ -334,8 +333,8 @@ SQL生成時のコンテキスト優先順位のみを変更する。
 
 GPT-5.5により$n$-best = 3のSQL候補を生成する。
 ablation studyにおいて、$n$-best = 1への変更は
-精度差が非決定性の範囲内（$+$0.1\,pp）であったが、
-平均レイテンシは27.7\,sから8.3\,sへ低減した
+精度差は統計的に非有意（$-$0.6\,pp、$p=0.069$）であったが、
+平均レイテンシは31.0\,sから10.9\,sへ低減した
 （表~\ref{tab:ablation}）。
 
 \subsection{Steiner木JOIN制約}
@@ -377,7 +376,7 @@ $|V| = n$ノード、$|R| = k$必要テーブルに対し、
 31テーブル規模（$n = 31$、$k \leq 5$）でもミリ秒オーダーで完了する。
 
 ablation studyでは、Steiner木制約の除去による精度差は
-非決定性の範囲内（$+$1.1\,pp）であった
+統計的に非有意（$+$0.0\,pp、$p=1.000$）であった
 （表~\ref{tab:ablation}）。
 検証できた範囲では、現在の31テーブル規模では
 大半のクエリが5つのコアテーブル
@@ -559,8 +558,8 @@ MeCab形態素解析器用のカスタム辞書としてもコンパイルし、
 \end{tabular}
 \end{table}
 
-ablation studyでは、辞書の除去は全体で$-$5.8\,ppの低下を引き起こし、
-Very Hard帯では56.9\%から38.8\%へ$-$18.1\,ppの低下となった
+ablation studyでは、辞書の除去は全体で$-$7.3\,pp（$p<0.001$）の低下を引き起こし、
+Very Hard帯では58.6\%から37.1\%へ$-$21.5\,ppの低下となった
 （表~\ref{tab:ablation}）。
 Easy・Medium帯では低下が観察されなかったことから、
 辞書の効果は複合的なドメイン用語を含むクエリに集中している。
@@ -589,7 +588,7 @@ sqlglot~\cite{sqlglot2023}によるAST解析に基づき、
   \item エイリアス解決後のカラム参照検証
 \end{enumerate}
 
-ablation studyでは、SQLGuardの除去による精度低下は$-$3.9\,ppであった
+ablation studyでは、SQLGuardの除去による精度低下は$-$0.2\,pp（$p=0.891$、統計的に非有意）であった
 （表~\ref{tab:ablation}）。
 リランカーが先に不正なSQL候補を低スコアにするため、
 SQLGuardが拒否すべきSQLが選択されにくい状況が生じている。
@@ -604,8 +603,8 @@ few-shot例の選択にはCross-Encoder（ローカル、50\,ms未満）、
 SQL候補とスキーマのスコアリングにはGPT-5.5（API）を使用する
 ハイブリッド構成を採用した。
 
-ablation studyでは、リランカーの除去は$-$2.6\,ppの低下を引き起こし、
-Medium帯で$-$6.7\,pp、Hard帯で$-$6.2\,ppの低下が観察された
+ablation studyでは、リランカーの除去は$-$3.3\,pp（$p=0.364$、統計的に非有意）の低下を引き起こした。
+Medium帯で$-$6.7\,pp、Hard帯で$-$5.6\,ppの低下が観察された
 （表~\ref{tab:ablation}）。
 
 別途実施した90件のA/B評価では、
@@ -848,7 +847,7 @@ OQMD~\cite{saal2013oqmd,kirklin2015oqmd}由来の
 7つの条件でablation studyを実施した（表~\ref{tab:ablation}）。
 各条件では1つの構成要素を無効化し、
 100件全てのクエリで精度を測定した。
-合計700回の評価を実施した。
+合計3{,}500回の評価（7条件$\times$100件$\times$5ラン）を実施した。
 全体精度の数値そのものよりも、
 材料ドメイン固有のクエリパターン
 （多元素条件、複合物性検索、導出量計算等）における
@@ -856,26 +855,24 @@ OQMD~\cite{saal2013oqmd,kirklin2015oqmd}由来の
 
 \begin{table}[t]
 \centering
-\caption{Ablation study結果（100件$\times$7条件 = 700評価）。
+\caption{Ablation study結果（100件$\times$7条件$\times$5ラン = 3{,}500評価）。
 $\Delta$はfull条件からの精度変化（pp）。
-全数値は\texttt{paper\_data.json}から取得。
-LLMの非決定性により、条件間の差異には約1--2\,ppの変動が含まれうる。
-no\_nbest（$+$0.1\,pp）およびno\_graph（$+$1.1\,pp）の
-精度差は非決定性の範囲内であり、
-これらの構成要素の除去が精度を向上させたことを意味しない。}
+全数値は5独立ランの平均。括弧内は標準偏差。
+$^{***}$はWilcoxon符号順位検定で$p<0.001$。
+n.s.は統計的に非有意（$p\geq 0.05$）。}
 \label{tab:ablation}
 \small
-\begin{tabular}{@{}lrrrrrr@{}}
+\begin{tabular}{@{}lrrrrrrr@{}}
 \toprule
-条件 & 全体 & Easy & Med & Hard & VH & $\Delta$ \\
+条件 & 全体 & Easy & Med & Hard & VH & $\Delta$ & 有意性 \\
 \midrule
-full          & 84.3 & 100.0 & 96.1 & 80.4 & 56.9 & ---    \\
-no\_fewshot   & 75.4 & 100.0 & 86.8 & 69.2 & 43.2 & $-$8.9  \\
-no\_dict      & 78.5 & 100.0 & 96.1 & 73.1 & 38.8 & $-$5.8  \\
-no\_reranker  & 81.8 & 100.0 & 89.5 & 74.1 & 63.4 & $-$2.6  \\
-no\_guard     & 80.4 & 100.0 & 96.1 & 80.4 & 37.4 & $-$3.9  \\
-no\_nbest     & 84.4 & 100.0 & 96.1 & 80.4 & 57.2 & $+$0.1  \\
-no\_graph     & 85.5 & 100.0 & 96.1 & 80.4 & 62.5 & $+$1.1  \\
+full          & 84.7 (0.5) & 100.0 & 96.1 & 80.4 & 58.6 (2.4) & ---    & --- \\
+no\_fewshot   & 77.3 (1.6) & 100.0 & 87.0 & 71.9 & 48.3 (1.8) & $-$7.4  & $^{***}$ \\
+no\_dict      & 77.4 (1.2) & 100.0 & 95.5 & 71.1 & 37.1 (4.5) & $-$7.3  & $^{***}$ \\
+no\_reranker  & 81.4 (0.6) & 99.0 & 89.5 & 74.8 & 61.7 (2.2) & $-$3.3  & n.s. \\
+no\_guard     & 84.5 (0.8) & 100.0 & 96.1 & 80.4 & 57.7 (3.8) & $-$0.2  & n.s. \\
+no\_nbest     & 84.0 (1.0) & 100.0 & 96.1 & 80.5 & 55.2 (2.5) & $-$0.6  & n.s. \\
+no\_graph     & 84.7 (0.9) & 100.0 & 96.1 & 80.4 & 58.7 (4.3) & $+$0.0  & n.s. \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -884,16 +881,16 @@ no\_graph     & 85.5 & 100.0 & 96.1 & 80.4 & 62.5 & $+$1.1  \\
 \centering
 \caption{上位3コンポーネントの難易度別$\Delta$（pp）。
 数値は\texttt{paper\_data.json}から取得。
-no\_reranker VH帯の$+$6.6\,ppについては\ref{sec:reranker_discussion}節で考察する。}
+no\_reranker VH帯の$+$3.1\,ppについては\ref{sec:reranker_discussion}節で考察する。}
 \label{tab:ablation-detail}
 \small
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
 条件 & Easy & Med & Hard & VH \\
 \midrule
-no\_fewshot   &    0.0  & $-$9.3  & $-$11.2 & $-$13.7 \\
-no\_dict      &    0.0  &     0.0 & $-$7.3  & $-$18.1 \\
-no\_reranker  &    0.0  & $-$6.7  & $-$6.2  & $+$6.6  \\
+no\_fewshot   &    0.0  & $-$9.2  & $-$8.5  & $-$10.3 \\
+no\_dict      &    0.0  & $-$0.7  & $-$9.3  & $-$21.5 \\
+no\_reranker  & $-$1.0  & $-$6.7  & $-$5.6  & $+$3.1  \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -901,20 +898,20 @@ no\_reranker  &    0.0  & $-$6.7  & $-$6.2  & $+$6.6  \\
 \begin{table}[t]
 \centering
 \caption{各条件の平均レイテンシ（秒/クエリ）。
-$n$-best = 1への変更はレイテンシを70\%低減するが精度差は非決定性の範囲内。}
+$n$-best = 1への変更はレイテンシを65\%低減するが精度差は統計的に非有意。}
 \label{tab:latency}
 \small
 \begin{tabular}{@{}lr@{}}
 \toprule
 条件 & レイテンシ (s) \\
 \midrule
-full & 27.7 \\
-no\_fewshot & 33.7 \\
-no\_dict & 32.2 \\
-no\_reranker & 20.2 \\
-no\_guard & 39.4 \\
-no\_nbest & 8.3 \\
-no\_graph & 28.2 \\
+full & 31.0 \\
+no\_fewshot & 50.7 \\
+no\_dict & 44.8 \\
+no\_reranker & 23.2 \\
+no\_guard & 36.1 \\
+no\_nbest & 10.9 \\
+no\_graph & 31.6 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1172,17 +1169,17 @@ Ni$_3$Al（$-0.420$）が続く
 データ利用の最大の障壁がスキーマ構造の理解にあることを
 改めて裏付けている。
 31テーブルの正規化スキーマに対し、
-LLM単体（few-shot例なし、辞書なし）の精度は75.4\%にとどまり
+LLM単体（few-shot例なし、辞書なし）の精度は77.3\%にとどまり
 （表~\ref{tab:ablation}、no\_fewshot条件）、
 材料固有のドメイン用語を含むVery Hardクエリでは
-43.2\%まで低下した。
+48.3\%まで低下した。
 これは、スキーマ情報を提示するだけでは
 材料研究者の意図をSQLに正確に反映できないことを示している。
 
 自然言語インターフェースは、このスキーマ障壁を低減する
 有効な手段となりうる。
 材料ドメイン辞書とfew-shot例の追加により、
-精度は75.4\%から84.3\%へ向上し、
+精度は77.3\%から84.7\%へ向上し、
 特に材料固有語彙を多用する複雑クエリで顕著な改善が得られた。
 この改善は、無機材料RDBの自然言語化が
 単なる利便性向上にとどまらず、
@@ -1200,20 +1197,20 @@ LLM単体（few-shot例なし、辞書なし）の精度は75.4\%にとどまり
 \subsection{Few-shot例の寄与}
 
 Few-shot例の除去は全構成要素の中で最も大きな精度低下
-（$-$8.9\,pp）を引き起こした（表~\ref{tab:ablation}）。
+（$-$7.4\,pp、$p<0.001$）を引き起こした（表~\ref{tab:ablation}）。
 この低下はMedium帯以上で観察され、
-Very Hard帯で$-$13.7\,ppの低下が確認された（表~\ref{tab:ablation-detail}）。
-Hard帯の$-$11.2\,pp、Medium帯の$-$9.3\,ppと続き、
+Very Hard帯で$-$10.3\,ppの低下が確認された（表~\ref{tab:ablation-detail}）。
+Hard帯の$-$8.5\,pp、Medium帯の$-$9.2\,ppと続き、
 複雑なクエリほどfew-shot例への依存度が高い。
-Few-shot例なしではレイテンシも27.7\,sから33.7\,sへ増加した（表~\ref{tab:latency}）。
+Few-shot例なしではレイテンシも31.0\,sから50.7\,sへ増加した（表~\ref{tab:latency}）。
 これはLLMが試行錯誤的にSQLを生成するためと考えられる。
 
 \subsection{材料ドメイン辞書の寄与}
 
-辞書の除去は全体で$-$5.8\,ppの低下を引き起こしたが、
+辞書の除去は全体で$-$7.3\,pp（$p<0.001$）の低下を引き起こしたが、
 その効果は難易度帯により異なった（表~\ref{tab:ablation-detail}）。
-Easy・Medium帯では低下が観察されず、
-Hard帯で$-$7.3\,pp、Very Hard帯で$-$18.1\,ppの低下が生じた。
+Easy帯では低下が観察されず、
+Hard帯で$-$9.3\,pp、Very Hard帯で$-$21.5\,ppの低下が生じた。
 
 Easy・Mediumクエリは汎用的な表現で構成されるため、
 LLM単体でSQL条件を推論可能である。
@@ -1225,12 +1222,12 @@ LLM単体でSQL条件を推論可能である。
 \subsection{リランカーの寄与}
 \label{sec:reranker_discussion}
 
-リランカーの除去は全体で$-$2.6\,ppの低下を引き起こした。
-効果はMedium（$-$6.7\,pp）およびHard（$-$6.2\,pp）帯で観察された
+リランカーの除去は$-$3.3\,pp（$p=0.364$、統計的に非有意）の低下を引き起こした。
+効果はMedium（$-$6.7\,pp）およびHard（$-$5.6\,pp）帯で観察された
 （表~\ref{tab:ablation-detail}）。
 
-一方、Very Hard帯ではリランカー除去時に$+$6.6\,ppの精度上昇が観察された。
-この差は非決定性の変動幅（約1--2\,pp）を上回っており、
+一方、Very Hard帯ではリランカー除去時に$+$3.1\,ppの精度上昇が観察された。
+この差は標準偏差の範囲内（VH帯 SD=2.2\,pp）であるが、
 Very Hard帯ではリランカーがむしろ悪影響を及ぼしている可能性がある。
 Very Hard帯では3候補全てが部分的に不正確な場合が多く、
 リランカーが「より正確に見えるが実際には誤った」候補を
@@ -1244,14 +1241,14 @@ Very Hard帯では3候補全てが部分的に不正確な場合が多く、
 
 \subsection{SQLGuard・$n$-best・Steiner木の寄与}
 
-SQLGuardは$-$3.9\,pp、$n$-bestとSteiner木は非決定性の範囲内の差にとどまった。
+SQLGuardは$-$0.2\,pp（n.s.）、$n$-bestは$-$0.6\,pp（n.s.）、Steiner木は$+$0.0\,pp（n.s.）といずれも統計的に非有意であった。
 
 SQLGuardについては、リランカーが先に同等の選別機能を果たしているため、
 追加的な効果が観察されにくい状況にある。
 セキュリティ上の安全網としての価値は独立に存在する。
 
 $n$-best = 1への変更は精度をほぼ維持しつつ
-レイテンシを27.7\,sから8.3\,sへ低減した（表~\ref{tab:latency}）。
+レイテンシを31.0\,sから10.9\,sへ低減した（表~\ref{tab:latency}）。
 コスト効率を重視する場合の有力な選択肢である。
 
 Steiner木については、現在の31テーブル規模では
@@ -1313,7 +1310,7 @@ ablation studyの結果を手法レベルの比較として再構成する。
 \begin{table}[t]
 \centering
 \caption{手法レベルの定量比較。ablation条件を手法構成として再解釈。
-全数値はablation study（100クエリ、単一ラン）の結果。}
+全数値はablation study（100クエリ×5ランの平均）の結果。}
 \label{tab:method_comparison}
 \small
 \begin{tabular}{@{}p{4.2cm}cccc@{}}
@@ -1322,18 +1319,18 @@ ablation studyの結果を手法レベルの比較として再構成する。
 \midrule
 LLM-only（スキーマ情報なし） & \multicolumn{4}{l}{\textit{テーブル幻覚により実行不可（S3節参照）}} \\
 \midrule
-Full Schema提示 & 75.4\% & 100.0 & 43.2 & $-$8.9  \\
+Full Schema提示 & 77.3\% & 100.0 & 48.3 & $-$7.4  \\
 {\scriptsize （= no\_fewshot: スキーマ+LLM、} & & & & \\
 {\scriptsize \phantom{（= }few-shot例なし）} & & & & \\
 \midrule
-+ Few-shot RAG & 78.5\% & 100 & 38.8 & $-$5.8 \\
++ Few-shot RAG & 77.4\% & 100 & 37.1 & $-$7.3 \\
 {\scriptsize （= no\_dict: +few-shot、辞書なし）} & & & & \\
 \midrule
-+ 材料辞書 & 81.8\% & 100 & 63.4 & $-$2.6 \\
++ 材料辞書 & 81.4\% & 99.0 & 61.7 & $-$3.3 \\
 {\scriptsize （= no\_reranker: +辞書、} & & & & \\
 {\scriptsize \phantom{（= }rerankerなし）} & & & & \\
 \midrule
-\textbf{提案手法（全構成要素）} & \textbf{84.3\%} & \textbf{100} & \textbf{56.9} & --- \\
+\textbf{提案手法（全構成要素）} & \textbf{84.7\%} & \textbf{100} & \textbf{58.6} & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1343,9 +1340,9 @@ S3節（Supplementary Materials）に示すように
 テーブル名・カラム名の幻覚が発生し実行可能なSQLが生成されない。
 Full Schema提示（no\_fewshot条件に相当）は
 スキーマ定義をプロンプトに含めるがfew-shot例・辞書・rerankerを持たず、
-75.4\%にとどまる。
+77.3\%にとどまる。
 構成要素を段階的に追加するにつれ精度は向上し、
-全構成要素を含む提案手法で84.3\%に達した。
+全構成要素を含む提案手法で84.7\%に達した。
 
 なお、上記は各ablation条件の単一除去結果を段階的追加として再解釈したものであり、
 条件間の交互作用は分離されていない。
@@ -1459,7 +1456,7 @@ explicit keyword matchingに依存する現行パイプラインでは対応困�
 構文妥当率（100.0\%）は両セットで一致しており、
 Schema Graph制約のクエリ出自非依存性を裏付ける。
 なお、本表の著者設計精度（70.6\%）は
-ablation study（表~\ref{tab:ablation}のfull条件84.3\%）とは
+ablation study（表~\ref{tab:ablation}のfull条件84.7\%）とは
 異なる評価ランの結果であり、直接比較には注意を要する。
 独立設計クエリの詳細結果は
 Supplementary~\ref{sec:sup_expert_queries}節に掲載する。
@@ -1524,7 +1521,7 @@ LLMが生成すべきSQL文の複雑度が増大する。
 \texttt{phase\_stability}、\texttt{composition}、
 \texttt{pure\_element\_reference}の3テーブルJOINに加え、
 CTEによる集約演算が必要であった。
-few-shot例なしの条件では精度が$-$8.9\,ppに低下することから、
+few-shot例なしの条件では精度が$-$7.4\,ppに低下することから、
 テーブル間の結合パターンが複雑なほど
 LLM単体での正確なSQL生成は困難であることが確認された。
 
@@ -1591,41 +1588,37 @@ Very Hard帯の5件をCTEクエリに差し替えて評価を実施した。
 
 \begin{table}[t]
 \centering
-\caption{CTE多段計算クエリ（5件）のablation条件別精度。
-full条件では全5件が100\%正解であった一方、
-SQLGuardの除去により全件不正解となった。
-few-shot例の除去では4/5件が正解を維持し（80\%）、
-辞書除去でも同様4/5件が正解を維持した。}
+\caption{CTE多段計算クエリ（5件）のablation条件別精度（5ラン平均）。
+full条件では5ラン全てで100\%正解。
+few-shot例の除去で76\%、辞書の除去で86\%に低下し、
+CTE構文生成へのin-context learningと辞書の寄与を示す。}
 \label{tab:cte_results}
 \small
 \begin{tabular}{@{}lr@{}}
 \toprule
-条件 & CTE精度（5件） \\
+条件 & CTE精度（5件、5ラン平均） \\
 \midrule
-full          & 100\% (5/5) \\
-no\_fewshot   & 80\% (4/5) \\
-no\_dict      & 80\% (4/5)$^\dagger$ \\
-no\_reranker  & 100\% (5/5) \\
-no\_guard     & 0\% (0/5) \\
-no\_nbest     & 100\% (5/5) \\
-no\_graph     & 100\% (5/5) \\
+full          & 100\% \\
+no\_fewshot   & 76\% \\
+no\_dict      & 86\% \\
+no\_reranker  & 100\% \\
+no\_guard     & 92\% \\
+no\_nbest     & 100\% \\
+no\_graph     & 100\% \\
 \bottomrule
-\multicolumn{2}{l}{\scriptsize $^\dagger$精度$\geq$0.8を正解と判定。平均精度は92.0\%。}
 \end{tabular}
 \end{table}
 
-CTE多段計算では、SQLGuardが100\%精度の達成に不可欠であった。
-few-shot例の除去でも4/5件が正解を維持したが、
-full条件の100\%からは低下しており、
-CTE構文の完全なパターン学習にはin-context learningが寄与していることを示す。
-SQLGuardの除去でも全件不正解となったことは、
-CTE構文の安全性検証が生成SQL品質に直結していることを示す。
-辞書の除去では4/5件が正解を維持（80\%）し、
+CTE多段計算では、few-shot例の除去で76\%、辞書の除去で86\%に低下し（full条件100\%）、
+CTE構文の完全なパターン学習にはin-context learningと辞書が寄与していることを示す。
+リランカー・$n$-best・Steiner木の除去では100\%を維持した。
+SQLGuardの除去では92\%と若干の低下にとどまり、
 CTEクエリの大部分はfew-shot例から語彙マッピングを学習できることが示された。
 ただし1件（q\_vhard\_019、多段CTE）では辞書なしで精度が0.60に低下しており、
 複雑な多段計算では辞書による補完が有効である。
-一方、リランカー・$n$-best・Steiner木の除去は
-CTE精度に影響しなかった。
+リランカー・$n$-best・Steiner木はCTE精度100\%を維持しており、
+CTE構文生成にはこれらの構成要素よりも
+few-shot例と辞書が主要な寄与を果たしていることが確認された。
 
 この結果は、従来のText-to-SQLベンチマーク（Spider、BIRD等）が
 主にSELECT-WHERE-JOIN-GROUP BYパターンを対象としていたのに対し、
@@ -1668,10 +1661,10 @@ few-shot例は検証DBのスキーマに依存しており、
     汎化性能は確認されていない。
     同種の設計原理が他のRDBでも有効かどうかは、
     追加の検証が必要である。
-  \item \textbf{単一ランの評価}：
-    全ablation条件は単一ランの結果であり、
-    LLMの非決定性による約1--2\,ppの変動が含まれうる。
-    信頼区間の算出には複数ランの評価が必要である。
+  \item \textbf{統計的検定の範囲}：
+    5独立ランによるWilcoxon符号順位検定を実施したが、
+    ラン数が限定的であり、より精密な信頼区間の算出には
+    bootstrap等の追加的な手法が有効である。
   \item \textbf{評価クエリの網羅性}：
     100件の著者設計クエリは材料研究の主要な検索パターンを
     カバーするよう設計したが、
@@ -1724,9 +1717,9 @@ few-shot例は検証DBのスキーマに依存しており、
 設計原理を提示し、L1$_2$型金属間化合物のRDBを検証対象として
 その有効性を実証した。
 
-7条件$\times$100件のablation study（計700回評価）により、
-材料ドメイン辞書（Very Hard帯で$-$18.1\,pp）と
-few-shot例（全体で$-$8.9\,pp）が
+7条件$\times$100件$\times$5ランのablation study（計3{,}500回評価）により、
+材料ドメイン辞書（$-$7.3\,pp、$p<0.001$）と
+few-shot例（$-$7.4\,pp、$p<0.001$）が
 材料固有のクエリパターンにおいて不可欠であることを示した。
 特に、多元素条件、複合物性検索、ドメイン固有用語を含むクエリにおいて
 顕著な改善が観察された。
@@ -1772,8 +1765,8 @@ provenance管理システムpinax~\cite{minamoto2026pinax}等の
 他の材料RDBへの適用も展望される。
 ただし、本研究は単一データベースでの検証であり、
 異なる規模・設計のRDBに対する汎化性能の確認は今後の課題である。
-本評価は単一ランの結果であり、
-LLMの非決定性に起因する約1--2\,ppの変動を含む可能性がある。
+本評価は5独立ランの平均$\pm$標準偏差で報告し、
+Wilcoxon符号順位検定による統計的有意性を確認した。
 
 % =====================================================================
 \section*{謝辞}
@@ -2279,7 +2272,7 @@ LLMモードではOpenAI APIを介してGPT-5.5を使用した。
 
 GPT-5系APIではtemperatureパラメータはサポートされておらず、本実装でも送信していない。
 そのため、LLMの内部状態により同一入力でも出力が変動する可能性がある。
-本論文の全ablation結果は単一ランであり、信頼区間の算出は行っていない。
+本論文の全ablation結果は5独立ランの平均$\pm$標準偏差で報告し、Wilcoxon符号順位検定で統計的有意性を確認した。
 
 % =====================================================================
 \section{評価クエリ100件の詳細結果}

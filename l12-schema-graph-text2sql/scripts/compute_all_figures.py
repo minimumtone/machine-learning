@@ -5,7 +5,8 @@ Every number in the LaTeX paper MUST originate from the JSON output
 of this script.  No hand-typed numbers allowed.
 
 Reads:
-  evaluation/ablation_results.json   — 7-condition ablation (700 queries)
+  evaluation/ablation_multirun_stats.json — 5-run ablation statistics
+  evaluation/ablation_results.json   — latest single-run (for per-query CTE/error)
   evaluation/jp_reranker_vh_results.json — JP reranker VH comparison
   evaluation/reranker_eval_results.json  — 90-query reranker A/B eval
   evaluation/evaluation_dataset.jsonl    — author query set metadata
@@ -174,65 +175,116 @@ def main():
     n_fewshot_examples = len(fse)
 
     # ==================================================================
-    # Ablation: extract from JSON
+    # Ablation: 5-run statistics (mean ± SD)
     # ==================================================================
+    multirun = load_json("evaluation/ablation_multirun_stats.json")
+    n_runs = multirun["n_runs"]
+    mrc = multirun["conditions"]  # per-condition stats
+    sig = multirun["significance_tests"]  # Wilcoxon p-values
+
+    # Also load latest single-run for per-query CTE/error analysis
     abl = load_json("evaluation/ablation_results.json")
     conditions = abl["conditions"]
-    full = conditions["full"]
+
+    full_mean = mrc["full"]["overall_mean"]
 
     ablation_table = {}
     for cond_name in ["full", "no_fewshot", "no_dict", "no_reranker",
                        "no_guard", "no_nbest", "no_graph"]:
-        c = conditions[cond_name]
-        bd = c["by_difficulty"]
-        delta = pp(c["overall"], full["overall"])
+        mc = mrc[cond_name]
+        bd = mc["by_difficulty"]
+        delta = round((mc["overall_mean"] - full_mean) * 100, 1)
         ablation_table[cond_name] = {
-            "overall_pct": pct(c["overall"]),
-            "easy_pct": pct(bd["easy"]),
-            "medium_pct": pct(bd["medium"]),
-            "hard_pct": pct(bd["hard"]),
-            "vhard_pct": pct(bd["very_hard"]),
+            "overall_pct": pct(mc["overall_mean"]),
+            "overall_std": round(mc["overall_std"] * 100, 1),
+            "easy_pct": pct(bd["easy"]["mean"]),
+            "easy_std": round(bd["easy"]["std"] * 100, 1),
+            "medium_pct": pct(bd["medium"]["mean"]),
+            "medium_std": round(bd["medium"]["std"] * 100, 1),
+            "hard_pct": pct(bd["hard"]["mean"]),
+            "hard_std": round(bd["hard"]["std"] * 100, 1),
+            "vhard_pct": pct(bd["very_hard"]["mean"]),
+            "vhard_std": round(bd["very_hard"]["std"] * 100, 1),
             "delta_pp": delta,
-            "avg_latency_s": round(c["avg_latency"], 1),
+            "avg_latency_s": round(mc["avg_latency_mean"], 1),
         }
+        # Add significance info for ablation conditions
+        if cond_name in sig:
+            s = sig[cond_name]
+            ablation_table[cond_name]["p_value"] = s["p_value"]
+            ablation_table[cond_name]["significant"] = (
+                s["p_value"] is not None and s["p_value"] < 0.05
+            )
 
     # Per-difficulty deltas for top-3 components
     ablation_deltas = {}
+    full_bd = mrc["full"]["by_difficulty"]
     for cond_name in ["no_fewshot", "no_dict", "no_reranker"]:
-        c = conditions[cond_name]
-        bd = c["by_difficulty"]
-        fbd = full["by_difficulty"]
+        bd = mrc[cond_name]["by_difficulty"]
         ablation_deltas[cond_name] = {
-            "easy_delta_pp": pp(bd["easy"], fbd["easy"]),
-            "medium_delta_pp": pp(bd["medium"], fbd["medium"]),
-            "hard_delta_pp": pp(bd["hard"], fbd["hard"]),
-            "vhard_delta_pp": pp(bd["very_hard"], fbd["very_hard"]),
+            "easy_delta_pp": round(
+                (bd["easy"]["mean"] - full_bd["easy"]["mean"]) * 100, 1),
+            "medium_delta_pp": round(
+                (bd["medium"]["mean"] - full_bd["medium"]["mean"]) * 100, 1),
+            "hard_delta_pp": round(
+                (bd["hard"]["mean"] - full_bd["hard"]["mean"]) * 100, 1),
+            "vhard_delta_pp": round(
+                (bd["very_hard"]["mean"] - full_bd["very_hard"]["mean"]) * 100, 1),
         }
 
-    # CTE query results per condition
+    # CTE query results per condition (5-run average)
     cte_results = {}
+    run_files = [
+        PROJECT / f"evaluation/ablation_run_{i}.json" for i in range(1, 6)
+    ]
     for cond_name in ["full", "no_fewshot", "no_dict", "no_reranker",
                        "no_guard", "no_nbest", "no_graph"]:
-        c = conditions[cond_name]
-        cte_accs = [
-            r["accuracy"] for r in c["results"] if r["qid"] in cte_qids
-        ]
-        if cte_accs:
-            cte_results[f"{cond_name}_cte_accuracy_pct"] = pct(
-                sum(cte_accs) / len(cte_accs)
+        run_means = []
+        for rf in run_files:
+            if rf.exists():
+                with open(rf) as f:
+                    rd = json.load(f)
+                rc = rd["conditions"][cond_name]
+                cte_accs = [
+                    r["accuracy"] for r in rc["results"]
+                    if r["qid"] in cte_qids
+                ]
+                if cte_accs:
+                    run_means.append(sum(cte_accs) / len(cte_accs))
+        if run_means:
+            cte_results[f"{cond_name}_cte_accuracy_pct"] = round(
+                sum(run_means) / len(run_means) * 100, 1
             )
 
-    # Error analysis from ablation
+    # Error analysis from ablation (5-run average VH failures)
     error_analysis = {}
     for cond_name in ["full", "no_fewshot", "no_dict", "no_reranker",
                        "no_guard", "no_nbest", "no_graph"]:
-        c = conditions[cond_name]
-        vh_results = [r for r in c["results"] if "vhard" in r["qid"]]
-        n_vh_fail = sum(1 for r in vh_results if r["accuracy"] < 0.8)
-        error_analysis[cond_name] = {
-            "vh_failures": n_vh_fail,
-            "vh_total": len(vh_results),
-        }
+        run_vh_fails: list[int] = []
+        run_vh_totals: list[int] = []
+        for rf in run_files:
+            if rf.exists():
+                with open(rf) as f:
+                    rd = json.load(f)
+                rc = rd["conditions"][cond_name]
+                vh_res = [r for r in rc["results"] if "vhard" in r["qid"]]
+                run_vh_fails.append(
+                    sum(1 for r in vh_res if r["accuracy"] < 0.8)
+                )
+                run_vh_totals.append(len(vh_res))
+        if run_vh_fails:
+            error_analysis[cond_name] = {
+                "vh_failures": round(sum(run_vh_fails) / len(run_vh_fails)),
+                "vh_total": run_vh_totals[0],
+            }
+        else:
+            c = conditions[cond_name]
+            vh_results = [r for r in c["results"] if "vhard" in r["qid"]]
+            n_vh_fail = sum(1 for r in vh_results if r["accuracy"] < 0.8)
+            error_analysis[cond_name] = {
+                "vh_failures": n_vh_fail,
+                "vh_total": len(vh_results),
+            }
 
     # ==================================================================
     # Reranker A/B eval (90 queries)
@@ -393,6 +445,12 @@ def main():
             ),
             "git_commit": git_hash,
             "source_files": [
+                "evaluation/ablation_multirun_stats.json",
+                "evaluation/ablation_run_1.json",
+                "evaluation/ablation_run_2.json",
+                "evaluation/ablation_run_3.json",
+                "evaluation/ablation_run_4.json",
+                "evaluation/ablation_run_5.json",
                 "evaluation/ablation_results.json",
                 "evaluation/jp_reranker_vh_results.json",
                 "evaluation/reranker_eval_results.json",
@@ -429,8 +487,9 @@ def main():
         "model": abl["model"],
         "ablation": {
             "n_conditions": 7,
+            "n_runs": n_runs,
             "n_queries_per_condition": abl["n_queries"],
-            "total_evaluations": 7 * abl["n_queries"],
+            "total_evaluations": 7 * abl["n_queries"] * n_runs,
             "table": ablation_table,
             "top3_per_difficulty_deltas": ablation_deltas,
             "cte_query_results": {
