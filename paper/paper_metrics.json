@@ -148,6 +148,7 @@
     "omega_b2_std": 0.0778,
     "omega_sqs_king_mean": -0.0141,
     "omega_sqs_king_std": 0.0741,
+    "omega_sqs_dft_mean": -0.0231,
     "omega_sqs_dft_std": 0.0694,
     "omega_b2_negative_pct": 64.1
   },

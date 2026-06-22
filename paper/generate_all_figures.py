@@ -2329,7 +2329,7 @@ def main():
         sqs_dft_common = np.array([omega_dft[p] for p in common_pairs])
 
         fig_hist, axes = plt.subplots(1, 3, figsize=(18, 6))
-        bins = np.linspace(-0.15, 0.10, 51)
+        bins = np.linspace(-0.35, 0.20, 56)
 
         ax = axes[0]
         ax.hist(b2_vals, bins=bins, alpha=0.6,
@@ -2382,6 +2382,7 @@ def main():
         sqs_metrics["omega_b2_std"] = round(float(b2_vals.std()), 4)
         sqs_metrics["omega_sqs_king_mean"] = round(float(sqs_king_vals.mean()), 4)
         sqs_metrics["omega_sqs_king_std"] = round(float(sqs_king_vals.std()), 4)
+        sqs_metrics["omega_sqs_dft_mean"] = round(float(sqs_dft_vals.mean()), 4)
         sqs_metrics["omega_sqs_dft_std"] = round(float(sqs_dft_vals.std()), 4)
         sqs_metrics["omega_b2_negative_pct"] = round(
             float(np.sum(b2_vals < 0) / len(b2_vals) * 100), 1)
@@ -2407,7 +2408,7 @@ def main():
           f"{dft_sc_metrics['improvement_dft_ref_q1_pct']}%")
 
     # -----------------------------------------------------------------------
-    # 9c. ML residual correction analysis
+    # 9d. ML residual correction analysis
     # -----------------------------------------------------------------------
     print("\n[9d] ML residual correction analysis...")
     ml_metrics = analyze_ml_residual(y_train, a_ss_tr, ALONSO_TABLE2, ob2, ol12)
