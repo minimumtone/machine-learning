@@ -132,7 +132,18 @@
     "fcc_sqs_n_converged": 248,
     "correlation_l12_vs_fcc_sqs_n": 176,
     "correlation_l12_vs_fcc_sqs_r": 0.846,
-    "correlation_l12_vs_fcc_sqs_slope": 0.932
+    "correlation_l12_vs_fcc_sqs_slope": 0.932,
+    "sqs_additive_dft_n_elements": 31,
+    "sqs_additive_dft_n_pairs": 414,
+    "sqs_additive_dft_R2": 0.6064,
+    "sqs_additive_dft_RMSE_omega": 0.0435,
+    "sqs_additive_dft_RMSE_BCC_train_q1": 0.0326,
+    "sqs_additive_dft_RMSE_BCC_test_q1": 0.0183,
+    "sqs_additive_dft_improvement_vs_vegard_pct": 1.5,
+    "sqs_additive_king_n_elements": 31,
+    "sqs_additive_king_n_pairs": 414,
+    "sqs_additive_king_R2": 0.6172,
+    "sqs_additive_king_RMSE_omega": 0.0458
   },
   "dft_self_consistent": {
     "n_pure_b2": 35,
