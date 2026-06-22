@@ -1308,10 +1308,34 @@ $q_\text{opt} = 1.96$は訓練データへの過学習を起こし
 テスト精度が低下する。$q = 1.0$はバイアス--バリアンスの
 最適バランスを与え、物理的解釈とも整合する。
 
+\subsubsection{$\Omega_\text{sf}$分布の比較}
+\label{sec:omega_distribution}
+
+図~\ref{fig:omega_hist}にB2とSQSの$\Omega_\text{sf}$分布を比較する。
+B2（King Vegard参照）は負側（体積収縮）に偏り
+（465ペア、平均$-0.037$）、
+秩序化による異種原子間結合が体積を系統的に収縮させることを反映する。
+SQS 1:1（King Vegard参照）はゼロ近傍に分布し（414ペア、平均$-0.014$）、
+ランダム配位では秩序化による収縮が緩和される。
+SQS 1:1（DFT Vegard参照）は平均$-0.023$を示し、
+DFT純元素体積を参照に取ることで系統誤差が部分的に相殺される。
+B2とSQS（DFT Vegard）の相関（$r = 0.82$、傾き0.76）は
+SQSの$\Omega_\text{sf}$がB2の約76\%に収まることを示す。
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_omega_hist_b2_sqs.png}
+\caption{$\Omega_\text{sf}$分布の比較。
+(左)~B2 vs SQS 1:1（King Vegard参照）。B2は負側に偏る。
+(中)~B2 vs SQS 1:1（DFT Vegard参照）。DFT参照でゼロ近傍に集中。
+(右)~B2--SQS散布図（DFT Vegard参照、414共通ペア）。傾き0.76。}
+\label{fig:omega_hist}
+\end{figure*}
+
 \subsubsection{秩序構造とSQSの$\Omega_\text{sf}$相関}
 \label{sec:sqs_correlation}
 
-秩序構造とSQSの$\Omega_\text{sf}$の相関を
+秩序構造とSQSの$\Omega_\text{sf}$の定量的相関を
 表~\ref{tab:sqs_omega_correlation}に示す。
 King実験体積を共通Vegard参照とした比較である。
 
@@ -1644,7 +1668,7 @@ $q_\text{FCC} = 0.13$で二重和を計算する：
 全体の体積と格子定数：
 \begin{align}
 V &= 4 \times (11.450 + 0.13 \times (-0.247)) = 45.67~\text{\AA}^3, \nonumber \\
-a_\text{pred} &= V^{1/3} = 3.573~\text{\AA}. \label{eq:ex_pred_fcc}
+a_\text{pred} &= V^{1/3} = 3.574~\text{\AA}. \label{eq:ex_pred_fcc}
 \end{align}
 
 \paragraph{Step 5: 実験値との比較}
@@ -1704,7 +1728,7 @@ Nb--Ta & $+0.017$ & Ti--Zr & $-0.030$ \\
 \text{補正項} &= \sum_i \sum_{j \ne i} c_i\,c_j\,V_j\,\Omega_\text{sf}^\text{B2}(i,j)
 = -0.280~\text{\AA}^3, \nonumber \\
 V &= 2 \times (19.846 + 0.49 \times (-0.280)) = 39.42~\text{\AA}^3, \nonumber \\
-a_\text{pred}^{\text{B2}} &= 39.43^{1/3} = 3.403~\text{\AA}. \label{eq:ex_pred_bcc}
+a_\text{pred}^{\text{B2}} &= 39.42^{1/3} = 3.403~\text{\AA}. \label{eq:ex_pred_bcc}
 \end{align}
 
 \paragraph{Step 5: 実験値との比較}

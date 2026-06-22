@@ -143,7 +143,13 @@
     "sqs_additive_king_n_elements": 31,
     "sqs_additive_king_n_pairs": 414,
     "sqs_additive_king_R2": 0.6172,
-    "sqs_additive_king_RMSE_omega": 0.0458
+    "sqs_additive_king_RMSE_omega": 0.0458,
+    "omega_b2_mean": -0.0373,
+    "omega_b2_std": 0.0778,
+    "omega_sqs_king_mean": -0.0141,
+    "omega_sqs_king_std": 0.0741,
+    "omega_sqs_dft_std": 0.0694,
+    "omega_b2_negative_pct": 64.1
   },
   "dft_self_consistent": {
     "n_pure_b2": 35,

@@ -2314,14 +2314,86 @@ def main():
                 print(f"    {label}: {n_elem} elements, {len(omega_src)} pairs, "
                       f"R2={r2:.4f}, RMSE(Ω)={rmse_decomp:.4f}")
 
+        # --- Omega_sf distribution histogram: B2 vs SQS ---
+        print("\n[9b] Omega_sf distribution histogram (B2 vs SQS)...")
+        omega_dft = sqs_data["omega_dft"]
+        omega_king_sqs = sqs_data["omega_king"]
+
+        b2_vals = np.array(list(ob2.values()))
+        sqs_king_vals = np.array(list(omega_king_sqs.values()))
+        sqs_dft_vals = np.array(list(omega_dft.values()))
+
+        # Common pairs for scatter
+        common_pairs = sorted(set(ob2.keys()) & set(omega_dft.keys()))
+        b2_common = np.array([ob2[p] for p in common_pairs])
+        sqs_dft_common = np.array([omega_dft[p] for p in common_pairs])
+
+        fig_hist, axes = plt.subplots(1, 3, figsize=(18, 6))
+        bins = np.linspace(-0.15, 0.10, 51)
+
+        ax = axes[0]
+        ax.hist(b2_vals, bins=bins, alpha=0.6,
+                label=f'B2 (King Vegard)\n{len(ob2)} pairs',
+                color='steelblue', edgecolor='white')
+        ax.hist(sqs_king_vals, bins=bins, alpha=0.6,
+                label=f'SQS 1:1 (King Vegard)\n{len(omega_king_sqs)} pairs',
+                color='coral', edgecolor='white')
+        ax.set_xlabel(r'$\Omega_{\mathrm{sf}}$', fontsize=14)
+        ax.set_ylabel('Count', fontsize=14)
+        ax.set_title('B2 vs SQS (King Vegard ref.)', fontsize=14)
+        ax.legend(fontsize=11)
+        ax.axvline(0, color='gray', linestyle='--', alpha=0.5)
+
+        ax = axes[1]
+        ax.hist(b2_vals, bins=bins, alpha=0.6,
+                label=f'B2 (King Vegard)\n{len(ob2)} pairs',
+                color='steelblue', edgecolor='white')
+        ax.hist(sqs_dft_vals, bins=bins, alpha=0.6,
+                label=f'SQS 1:1 (DFT Vegard)\n{len(omega_dft)} pairs',
+                color='forestgreen', edgecolor='white')
+        ax.set_xlabel(r'$\Omega_{\mathrm{sf}}$', fontsize=14)
+        ax.set_ylabel('Count', fontsize=14)
+        ax.set_title('B2 vs SQS (DFT Vegard ref.)', fontsize=14)
+        ax.legend(fontsize=11)
+        ax.axvline(0, color='gray', linestyle='--', alpha=0.5)
+
+        ax = axes[2]
+        ax.scatter(b2_common, sqs_dft_common, alpha=0.4, s=20, color='purple')
+        r_scatter = float(np.corrcoef(b2_common, sqs_dft_common)[0, 1])
+        slope_scatter = float(np.polyfit(b2_common, sqs_dft_common, 1)[0])
+        ax.plot([-0.35, 0.20], [-0.35, 0.20], 'k--', alpha=0.3, label='1:1')
+        ax.set_xlabel(r'$\Omega_{\mathrm{sf}}^{\mathrm{B2}}$ (King)', fontsize=14)
+        ax.set_ylabel(r'$\Omega_{\mathrm{sf}}^{\mathrm{SQS}}$ (DFT Vegard)', fontsize=14)
+        ax.set_title(f'B2 vs SQS correlation\n'
+                     f'r = {r_scatter:.3f}, slope = {slope_scatter:.3f}, '
+                     f'{len(common_pairs)} pairs', fontsize=13)
+        ax.set_aspect('equal')
+        ax.axhline(0, color='gray', linestyle=':', alpha=0.3)
+        ax.axvline(0, color='gray', linestyle=':', alpha=0.3)
+
+        fig_hist.tight_layout()
+        fig_hist.savefig(OUTDIR / "fig_omega_hist_b2_sqs.png",
+                         bbox_inches="tight", dpi=150)
+        plt.close(fig_hist)
+        print("  fig_omega_hist_b2_sqs.png")
+
+        # Add distribution stats to metrics
+        sqs_metrics["omega_b2_mean"] = round(float(b2_vals.mean()), 4)
+        sqs_metrics["omega_b2_std"] = round(float(b2_vals.std()), 4)
+        sqs_metrics["omega_sqs_king_mean"] = round(float(sqs_king_vals.mean()), 4)
+        sqs_metrics["omega_sqs_king_std"] = round(float(sqs_king_vals.std()), 4)
+        sqs_metrics["omega_sqs_dft_std"] = round(float(sqs_dft_vals.std()), 4)
+        sqs_metrics["omega_b2_negative_pct"] = round(
+            float(np.sum(b2_vals < 0) / len(b2_vals) * 100), 1)
+
     else:
         sqs_metrics = {}
         print("    SQS data not found, skipping.")
 
     # -----------------------------------------------------------------------
-    # 9b. DFT self-consistent Omega_sf (B2/L12 with DFT Vegard reference)
+    # 9c. DFT self-consistent Omega_sf (B2/L12 with DFT Vegard reference)
     # -----------------------------------------------------------------------
-    print("\n[9b] DFT self-consistent Omega_sf analysis...")
+    print("\n[9c] DFT self-consistent Omega_sf analysis...")
     dft_sc_metrics = analyze_dft_self_consistent(
         all_df, ob2, ol12, ALONSO_TABLE2, INDEPENDENT_TEST
     )
@@ -2337,7 +2409,7 @@ def main():
     # -----------------------------------------------------------------------
     # 9c. ML residual correction analysis
     # -----------------------------------------------------------------------
-    print("\n[9c] ML residual correction analysis...")
+    print("\n[9d] ML residual correction analysis...")
     ml_metrics = analyze_ml_residual(y_train, a_ss_tr, ALONSO_TABLE2, ob2, ol12)
     print(f"    Physics model RMSE: {ml_metrics['RMSE_physics_train']}")
     print(f"    Ridge LOO-CV RMSE: {ml_metrics['RMSE_ridge_loo']}")
