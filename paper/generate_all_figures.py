@@ -1241,7 +1241,9 @@ def fig07b_vegard_heatmap(all_df):
     Uses structure-matched DFT homonuclear endpoints so the deviation
     is pure Omega_sf without structure-mismatch artifacts.
     Separate heatmaps for B2 (BCC) and L12 (FCC).
+    Returns dict of stats for paper_metrics.
     """
+    stats = {}
     # Build DFT homonuclear volumes
     dft_vol = {}
     for stype, n_auc in [("B2", 2), ("L12", 4)]:
@@ -1317,15 +1319,16 @@ def fig07b_vegard_heatmap(all_df):
         fig.savefig(OUTDIR / fname, bbox_inches="tight", dpi=150)
         plt.close(fig)
         print(f"  {fname} ({n_el} elements, {len(omega_median)} pairs)")
+        stats[f"heatmap_{fig_suffix}_n_pairs"] = len(omega_median)
+        stats[f"heatmap_{fig_suffix}_n_elements"] = n_el
+    return stats
 
 
 def fig07c_vegard_parity(all_df):
     """Vegard parity plots: V_DFT vs V_Vegard for all pairs.
-
-    Two figures (B2 and L12). Each shows DFT actual atomic volume vs
-    structure-matched Vegard predicted volume. Points on y=x means
-    Vegard law holds perfectly.
+    Returns dict of stats for paper_metrics.
     """
+    stats = {}
     # Build DFT homonuclear volumes
     dft_vol = {}
     for stype, n_auc in [("B2", 2), ("L12", 4)]:
@@ -1392,15 +1395,17 @@ def fig07c_vegard_parity(all_df):
         fig.savefig(OUTDIR / fname, bbox_inches="tight", dpi=150)
         plt.close(fig)
         print(f"  {fname} ({len(v_dft_arr)} points, R²={r2:.4f})")
+        stats[f"parity_{fig_suffix}_n_points"] = len(v_dft_arr)
+        stats[f"parity_{fig_suffix}_R2"] = round(r2, 4)
+        stats[f"parity_{fig_suffix}_RMSE"] = round(float(rmse_v), 3)
+    return stats
 
 
 def fig07d_vegard_vs_radius(all_df):
     """Omega_sf vs atomic radius difference for all pairs.
-
-    Two figures (B2 and L12). Each shows the Vegard deviation as a
-    function of the pure-element radius difference, to test whether
-    size mismatch correlates with Vegard deviation.
+    Returns dict of stats for paper_metrics.
     """
+    stats = {}
     # Build DFT homonuclear volumes
     dft_vol = {}
     for stype, n_auc in [("B2", 2), ("L12", 4)]:
@@ -1471,10 +1476,15 @@ def fig07d_vegard_vs_radius(all_df):
         fig.savefig(OUTDIR / fname, bbox_inches="tight", dpi=150)
         plt.close(fig)
         print(f"  {fname} ({len(dr_arr)} pairs, r={corr:.3f})")
+        stats[f"radius_{fig_suffix}_n_pairs"] = len(dr_arr)
+        stats[f"radius_{fig_suffix}_corr"] = round(float(corr), 3)
+    return stats
 
 
 def fig08_delta_r_proof(all_df):
-    """Fig 8: 6-panel proof that delta_r cannot absorb structure info."""
+    """Fig 8: 6-panel proof that delta_r cannot absorb structure info.
+    Returns dict of stats for paper_metrics.
+    """
     # Compute delta_r and Omega_sf for each pair×structure
     pair_data = defaultdict(lambda: {"B2": [], "L12_A3B": [], "L12_AB3": []})
     for _, row in all_df.iterrows():
@@ -1511,7 +1521,7 @@ def fig08_delta_r_proof(all_df):
 
     if not complete:
         print("  fig_delta_r_proof.png — skipped (no pairs with all 3 structures)")
-        return
+        return {}
 
     # --- Figure 1: (a)(b)(c) structural invariance proof ---
     fig, axes = plt.subplots(1, 3, figsize=(18, 5.5))
@@ -1620,6 +1630,13 @@ def fig08_delta_r_proof(all_df):
     fig2.savefig(OUTDIR / "fig_l12_b2_correlation.png", bbox_inches="tight")
     plt.close(fig2)
     print("  fig_l12_b2_correlation.png")
+    return {
+        "delta_r_proof_n_pairs": len(complete),
+        "delta_r_proof_panel_c_r": round(float(r_all), 2),
+        "l12_asymmetry_n_pairs": len(diffs),
+        "l12_asymmetry_mean_diff": round(float(np.mean(diffs)), 3),
+        "l12_b2_corr_r": round(float(r2), 2),
+    }
 
 
 def fig09_packing(all_df):
@@ -2137,10 +2154,10 @@ def main():
     fig05_element_delta(decomp_table)
     fig06_additive_fit(ob2, ol12, decomp)
     fig07_composition_examples(all_df)
-    fig07b_vegard_heatmap(all_df)
-    fig07c_vegard_parity(all_df)
-    fig07d_vegard_vs_radius(all_df)
-    fig08_delta_r_proof(all_df)
+    heatmap_stats = fig07b_vegard_heatmap(all_df)
+    parity_stats = fig07c_vegard_parity(all_df)
+    radius_stats = fig07d_vegard_vs_radius(all_df)
+    proof_stats = fig08_delta_r_proof(all_df)
     fig09_packing(all_df)
     fig10_l12_asymmetry(all_df)
     fig11_volume_radius(radii)
@@ -2597,20 +2614,22 @@ def main():
     if complete_m:
         all_a3b_m = [complete_m[p]["L12_A3B"] for p in complete_m]
         all_ab3_m = [complete_m[p]["L12_AB3"] for p in complete_m]
+        all_b2_m = [complete_m[p]["B2"] for p in complete_m]
         r_all_m = round(float(np.corrcoef(all_a3b_m, all_ab3_m)[0, 1]), 2) if len(all_a3b_m) > 2 else 0
+        r_l12_b2_m = round(float(np.corrcoef(all_a3b_m, all_b2_m)[0, 1]), 2) if len(all_a3b_m) > 2 else 0
         metrics["delta_r_proof"] = {
             "delta_r_proof_n_complete": len(complete_m),
             "delta_r_proof_r_all": r_all_m,
+            "l12_vs_b2_corr_r": r_l12_b2_m,
         }
 
     # l12_asymmetry: |a(A3B) - a(B3A)| distribution
+    # No King filter — matches the figure which uses all DFT pairs
     pair_a_m = defaultdict(lambda: {"A3B": [], "AB3": []})
     for _, row in all_df[all_df["stype"] == "L12"].iterrows():
         elA, elB = row["element_A"], row["element_B"]
         a = row["lattice_constant"]
         if a <= 2 or a >= 8 or elA == elB:
-            continue
-        if elA not in KING_ATOMIC_VOLUMES or elB not in KING_ATOMIC_VOLUMES:
             continue
         pair = tuple(sorted([elA, elB]))
         cA = row.get("count_A", 3)
@@ -2657,6 +2676,14 @@ def main():
 
     # Add ML residual metrics
     metrics["ml_residual"] = ml_metrics
+
+    # Add figure-specific stats (ensures figure annotations match paper text)
+    fig_stats = {}
+    fig_stats.update(heatmap_stats or {})
+    fig_stats.update(parity_stats or {})
+    fig_stats.update(radius_stats or {})
+    fig_stats.update(proof_stats or {})
+    metrics["figure_stats"] = fig_stats
 
     with open(OUTDIR / "paper_metrics.json", "w") as f:
         json.dump(metrics, f, indent=2, ensure_ascii=False)
