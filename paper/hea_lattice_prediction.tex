@@ -129,9 +129,11 @@ Alonsoら~\cite{Alonso2021}はKingの$\Omega_\text{sf}$を
 多成分HEAに拡張し、補正因子$q$を含む予測式を提案した：
 \begin{equation}
   V_\text{uc}
-  = n_\text{auc} \sum_{i} c_i V_i
-  + n_\text{auc} \sum_{i} c_i V_i
-    \sum_{j \ne i} c_j\,\Omega_{\text{sf},\, j/i}.
+  = n_\text{auc} \!\left[
+    \sum_{i} c_i V_i
+    + \sum_{i} \sum_{j \ne i} c_i\, c_j\, V_j\,
+      \Omega_{\text{sf},\, j/i}
+  \right]\!.
   \label{eq:alonso}
 \end{equation}
 式~(\ref{eq:alonso})は暗黙に$q = 1$を仮定しており、
