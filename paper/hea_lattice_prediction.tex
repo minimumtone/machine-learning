@@ -38,21 +38,24 @@
 \address{物質・材料研究機構 (NIMS), 茨城県つくば市}
 
 \begin{abstract}
-高エントロピー合金(HEA)の格子定数を元素パラメータのみから
-任意組成で予測する手法を提案する。
-King (1966) の体積サイズファクター$\Omega_\text{sf}$を
-第一原理（DFT）計算により構造特異的に再導出し
-（B2$\to$BCC、L1$_2$$\to$FCC）、
-加法分解$\Omega_\text{sf}^{(s)}(i\text{-}j) \approx \delta_i^{(s)} + \delta_j^{(s)}$
-により31元素パラメータに圧縮した。
-これにより$a = (n_\text{auc}\sum c_i V_\text{eff})^{1/3}$で
-等モル・非等モルを問わず格子定数を予測できる。
-64 HEAに対するRMSE = 0.0221~\AA{}（Vegard則比2.5\%改善）、
-独立28 HEAでRMSE = 0.0162~\AA{}（同7.8\%改善）を達成した。
-従来の$\delta r$が構造情報を数学的に含み得ないことを証明し、
-DFT体積由来記述子の必要性を確立した。
-$\delta^{(s)}$パラメータは表1枚で提供され、
-DFT計算なしに任意組成をスプレッドシートで即座にスクリーニング可能である。
+King (1966) の体積サイズファクター$\Omega_\text{sf}$は
+合金の体積偏差を定量化する基本概念であるが、
+従来は実験値に依拠し、構造依存性も考慮されていなかった。
+本研究は$\Omega_\text{sf}$の導出を全面的にDFT計算に置換し、
+B2（BCC参照）とL1$_2$（FCC参照）で構造特異的に再定義する。
+5,152件の二元系DFT計算から465 B2 + 441 L1$_2$ペアの
+$\Omega_\text{sf}$を取得し、HEA予測に必要な全ペアをカバーした。
+本手法の核心的知見は校正定数$q$の物理的起源の解明である：
+SQS＋DFT自己整合Vegard参照により
+$q_\text{BCC} = 1$（補正因子が消える）が達成され、
+$q \neq 1$の主因がDFT--実験間の体積不整合であることを示した。
+FCC側では$q_\text{FCC} = 0.13 \approx 0$であり、
+Vegard則自体が十分な近似となる。
+独立テスト28 HEAで全体RMSE = 0.0154~\AA{}（Vegard比12.4\%改善）、
+SQS参照BCC 15合金でRMSE = 0.0147~\AA{}（同21\%改善）を達成した。
+加法分解$\delta_i^{(s)} + \delta_j^{(s)}$により
+906ペアを31元素パラメータに圧縮し、
+スプレッドシートで任意組成HEAの即座スクリーニングを可能にした。
 \end{abstract}
 
 \begin{keyword}
@@ -94,6 +97,9 @@ $N$元素から5元系合金を選ぶ組み合わせは$\binom{N}{5}$に達し�
 ここで$c_i$は原子分率、$V_i$は純元素原子体積、
 $n_\text{auc}$は単位胞あたり原子数（BCC: 2、FCC: 4）である。
 
+\subsection{体積サイズファクター研究の系譜}
+
+\paragraph{King (1966): サイズファクターの提唱}
 King~\cite{King1966}は体積サイズファクター$\Omega_\text{sf}$を導入し、
 溶質原子が母格子に固溶した際の体積偏差を定量化した：
 \begin{equation}
@@ -105,9 +111,22 @@ $\Omega_\text{sf} > 0$はVegard則からの膨張、
 $\Omega_\text{sf} < 0$は収縮を意味し、
 電荷移動や$d$--$d$軌道混成など純粋な原子サイズ差では
 説明できない化学結合効果を反映する。
+Kingの$\Omega_\text{sf}$は\textbf{実験値}に基づき、
+対象は希薄固溶体に限られていた。
 
+\paragraph{Coreño-Alonso (2004): 化合物での検証}
+Coreño-Alonso \& Coreño-Alonso~\cite{CorenoAlonso2004}は
+Kingの$\Omega_\text{sf}$を二元系金属間化合物（B2およびL1$_2$構造）に拡張した。
+しかし化合物の体積も\textbf{実験値}に依拠しており、
+Miedemaモデル~\cite{deBoer1988}による半経験的推算との相関は
+$r = 0.711$に留まった。
+BCC型（B2）とFCC型（L1$_2$）で異なる$\Omega_\text{sf}$が
+得られることは示されたが、
+多成分合金への体系的な適用には至らなかった。
+
+\paragraph{Alonso (2021): 多成分HEAへの拡張}
 Alonsoら~\cite{Alonso2021}はKingの$\Omega_\text{sf}$を
-多成分HEAに拡張した：
+多成分HEAに拡張し、補正因子$q$を含む予測式を提案した：
 \begin{equation}
   V_\text{uc}
   = n_\text{auc} \sum_{i} c_i V_i
@@ -115,13 +134,18 @@ Alonsoら~\cite{Alonso2021}はKingの$\Omega_\text{sf}$を
     \sum_{j \ne i} c_j\,\Omega_{\text{sf},\, j/i}.
   \label{eq:alonso}
 \end{equation}
-Alonsoモデルは$q = 1$（無補正）で64 HEAに対し
-RMSE $\approx 0.023$~\AA{}を達成したが、
-(1)~Kingの実験$\Omega_\text{sf}$データの不足、
-(2)~BCC・FCC間で同一$\Omega_\text{sf}$の使用、
-(3)~欠損ペアでのVegard縮退
-という限界がある。
+式~(\ref{eq:alonso})は暗黙に$q = 1$を仮定しており、
+64 HEAに対しRMSE $\approx 0.023$~\AA{}を達成した。
+しかし以下の限界がある：
+(1)~Kingの\textbf{実験}$\Omega_\text{sf}$を使用するためデータが不足
+（$\sim$200ペア）、
+(2)~BCC・FCC間で同一$\Omega_\text{sf}$を使用
+（構造依存性を無視）、
+(3)~欠損ペアではVegard則に縮退。
+重要な点として、\textbf{$q$はAlonsoの枠組みでは常に非ゼロ}であり、
+その物理的起源は未解明のままであった。
 
+\paragraph{$\delta r$の限界}
 原子サイズミスマッチパラメータ
 \begin{equation}
   \delta r = 100 \sqrt{\sum_i c_i\!\left(1 - \frac{r_i}{\bar{r}}\right)^{\!2}},
@@ -133,9 +157,7 @@ RMSE $\approx 0.023$~\AA{}を達成したが、
 結晶構造の情報を\emph{一切含まない}。
 この限界は本研究で441二元系ペアにより初めて厳密に証明する。
 
-Coreño-Alonso \& Coreño-Alonso~\cite{CorenoAlonso2004}は
-Miedemaモデル~\cite{deBoer1988}から$\Omega_\text{sf}$を
-半経験的に導出したが、King実験値との相関は$r = 0.711$に留まった。
+\paragraph{DFTによるHEA格子定数研究}
 DFTデータベース（Materials Project~\cite{Jain2013}、
 OQMD~\cite{Saal2013}）は数千の二元系化合物の正確な格子定数を
 提供しており、$\Omega_\text{sf}$のDFT再導出が可能である。
@@ -145,34 +167,61 @@ Tian~\emph{et al.}~\cite{Tian2015}のEMTO-CPA法があるが、
 いずれも特定組成のDFT直接計算であり、任意組成への外挿には
 新たなDFT計算が必要となる。
 
-本研究はKing/Alonsoの枠組みを踏襲しつつ、
-以下の革新により上記の限界を克服する：
+\subsection{本研究の新規性}
+
+King以来の体積サイズファクター研究は一貫して
+\textbf{実験値}（King体積、実験格子定数）に基づいてきた。
+本研究はこの枠組みを根本的に変え、
+$\Omega_\text{sf}$の導出を\textbf{全面的にDFT計算に置換}する。
+これにより以下の3つの本質的進展が実現される。
+
 \begin{enumerate}
-  \item \textbf{DFT由来の構造特異的$\Omega_\text{sf}$}:
+  \item \textbf{構造特異的$\Omega_\text{sf}$の完全カバレッジ}:
     MP・OQMD・独自VASP計算の3ソース統合により
     5,152件の二元系化合物から$\Omega_\text{sf}$を導出。
-    B2$\to$BCC（配位数8）、L1$_2$$\to$FCC（配位数12）の構造分離により
-    同じ配位環境を持つ参照構造から$\Omega_\text{sf}$を導出。
+    B2$\to$BCC、L1$_2$$\to$FCC の構造分離により、
+    King/Alonsoでは不可能だった構造依存的な体積偏差を取得。
+    HEA予測に必要な全ペアをカバー（BCC 59/59、FCC 42/42）。
+
+  \item \textbf{$q_\text{BCC} = 1$（校正パラメータ不要）の達成}:
+    過去の全研究で$q \neq 0$（BCC/FCC共に補正が必要）であったが、
+    SQS＋DFT自己整合Vegard参照で$q_\text{BCC} = 1$を達成。
+    $q = 1$は$\Omega_\text{sf}$がスケーリングなしでHEAに直接適用できることを意味し、
+    $q \neq 1$の主因がDFT--実験間の体積不整合（GGA系統誤差）に
+    あることを初めて解明した。
+    BCC独立テストRMSE = 0.0147~\AA{}（Vegard比21\%改善）。
+
+  \item \textbf{$q_\text{FCC} \approx 0$（Vegard則の十分性）の実証}:
+    $q_\text{FCC} = 0.13$（ほぼゼロ）は、
+    FCC HEAではVegard則自体が十分な近似であり
+    $\Omega_\text{sf}$補正がほぼ不要であることを示す。
+    最密充填（配位数12）では原子サイズの環境依存性が小さく、
+    体積の加法性が高い精度で成り立つためである。
+\end{enumerate}
+
+すなわち本研究の核心的主張は：
+\textbf{実験値をDFTに置換し構造別にサイズファクターを評価することで、
+BCCでは$q = 1$（補正因子が消える）、
+FCCでは$q \approx 0$（そもそも補正が不要）
+という物理的に明快な描像が得られる}点にある。
+HEA格子定数の予測精度自体は推定ノイズフロア
+$\sigma \approx 0.016$~\AA{}に近接しており、
+モデルの改善余地は限られる。
+したがって本研究の貢献は精度面での飛躍ではなく、
+\textbf{従来経験的であった$q$パラメータの物理的起源の解明と、
+それに基づく校正不要な予測体系の構築}にある。
+
+加えて以下の補助的貢献を行った：
+\begin{enumerate}[resume]
   \item \textbf{元素別加法分解}:
     $\Omega_\text{sf}^{(s)}(i\text{-}j) \approx \delta_i^{(s)} + \delta_j^{(s)}$
     により906ペアを31元素パラメータに圧縮。
-    465ペアの全組み合わせをカバーし、
     Hume-Rothery半径と同様の元素固有属性として活用可能。
-  \item \textbf{組成依存有効原子体積}:
-    $V_\text{eff}(i;\,\mathbf{c})$の定義により
-    任意組成HEAの格子定数を
-    $a = (n_\text{auc}\sum c_i V_\text{eff})^{1/3}$で予測。
-  \item \textbf{SQS＋DFT Vegard参照によるBCC改善}:
-    SQS（$\alpha \approx 0$）＋DFT自己整合Vegard参照で
-    $q_\text{BCC} = 1$（校正不要）を達成し、BCC独立テストRMSEを21\%改善。
-  \item \textbf{DFT自己整合Ω$_\text{sf}$}:
-    参照体積にもVASP計算値を用いると
-    B2参照でも$q_\text{BCC} = 1.19$が達成され、
-    GGA系統誤差のキャンセルが$q \neq 1$の主因であることを確認。
   \item \textbf{$\delta r$の限界の証明}:
     441二元系ペアで$\delta r$が構造情報を含み得ないことを厳密に検証。
   \item \textbf{独立テスト}:
-    28 HEA（BCC 15、FCC 13）で検証。全体 RMSE = 0.0154~\AA{}（Vegard比12.4\%改善）、BCC RMSE = 0.0157~\AA{}（Vegard比15.6\%改善）。
+    28 HEA（BCC 15、FCC 13）で検証。
+    全体RMSE = 0.0154~\AA{}（Vegard比12.4\%改善）。
 \end{enumerate}
 
 本手法の全体像を図~\ref{fig:pipeline}に示す。
@@ -1323,8 +1372,9 @@ $q = 1$・構造共通$\Omega_\text{sf}$であった。
 \label{sec:conclusions}
 %% =====================================================================
 
-DFT体積サイズファクターの元素別加法分解に基づく、
-任意組成HEA格子定数予測手法を確立した。
+King (1966) 以来、実験値に基づいてきた体積サイズファクター$\Omega_\text{sf}$を
+全面的にDFT計算に置換し、構造特異的（B2/L1$_2$）に再定義することで、
+校正定数$q$の物理的起源を解明した。
 定量的成果と主要知見を以下にまとめる。
 
 \paragraph{定量的成果}
@@ -1354,63 +1404,67 @@ DFT体積サイズファクターの元素別加法分解に基づく、
 \end{table}
 
 \begin{enumerate}
-  \item \textbf{DFTカバレッジの完全化}:
-    Materials Project・OQMD・独自VASP計算の3ソースから
-    5,152件の二元系化合物を統合し、
-    465 B2 + 441 L1$_2$ペアの$\Omega_\text{sf}$を取得。
+  \item \textbf{実験値$\to$DFT置換と構造分離}:
+    King以来、実験値に依拠してきた$\Omega_\text{sf}$を
+    5,152件の二元系DFT計算で全面的に置換。
+    B2$\to$BCC、L1$_2$$\to$FCCの構造分離により
     HEA予測に必要な全ペアをカバー（BCC 59/59、FCC 42/42）。
+
+  \item \textbf{$q_\text{BCC} = 1$の達成と$q$の起源解明}:
+    SQS＋DFT自己整合Vegard参照で$q_\text{BCC} = 1$
+    （校正パラメータ不要）を達成。
+    $q \neq 1$の主因は秩序--無秩序間の差ではなく、
+    \textbf{DFT--実験間の体積不整合}（GGA系統誤差）にあることを解明。
+    参照体積をDFT内で統一すれば二元系$\to$多元系の外挿に
+    追加パラメータは不要。
+    BCC独立テストRMSE = 0.0147~\AA{}（Vegard比21\%改善）。
+
+  \item \textbf{$q_\text{FCC} \approx 0$（Vegard則の十分性）}:
+    $q_\text{FCC} = 0.13$はFCC HEAでVegard則自体が十分な近似であることを示す。
+    最密充填構造では原子サイズの環境依存性が小さく、
+    $\Omega_\text{sf}$補正がほぼ不要。
 
   \item \textbf{パラメータ圧縮}:
     906ペアを31元素$\delta^{(s)}$に圧縮（97\%削減）。
-    465ペアの全組み合わせをカバーし、
     RMSE = 0.0221~\AA{}と元素対モデルとほぼ同等の精度を維持。
-
-  \item \textbf{SQS＋DFT Vegard参照で$q_\text{BCC} = 1$を達成}:
-    SQS（$\alpha \approx 0$）の$\Omega_\text{sf}$をDFT自己整合Vegard参照で定義すると
-    $q_\text{BCC} = 1$（校正パラメータ不要）が達成され、
-    BCC独立テストRMSE = 0.0147~\AA{}（Vegard比21\%改善）の最良精度を示した。
-    DFT系統誤差の相殺が$q = 1$の物理的起源である。
-
-  \item \textbf{校正定数$q_s$の物理的意味}:
-    $q = 0$はVegard則（補正なし）、$q = 1$は$\Omega_\text{sf}$の完全適用に相当。
-    $q_\text{FCC} = 0.13$はL1$_2$がFCC固溶体に近く補正がほぼ不要であること、
-    $q_\text{BCC} = 0.49$はB2の秩序構造（$\alpha = -1$）による
-    体積収縮の過大評価を反映する。
 
   \item \textbf{$\delta r$の限界の証明}:
     $\delta r = f(c_i, r_i)$は構造引数を持たず、
-    435ペアで$\delta r$が構造間偏差ゼロであることを実証。
-    L1$_2$非対称性（$\langle|a(A_3B)-a(B_3A)|\rangle = 0.25$~\AA）の
-    表現にはDFT体積記述子が不可欠。
+    435ペアで構造間偏差ゼロを実証。
+    DFT体積記述子の必要性を確立。
 
-  \item \textbf{残差のノイズ支配}:
-    7種のMLモデルがいずれもRMSE改善0.002~\AA{}未満。
-    推定ノイズフロア$\sigma \approx 0.016$~\AA{}（文献中の重複3組に基づく目安）に対し
-    最良RMSE = 0.0214~\AA{}は$\sigma$の1.3倍以内であり、
+  \item \textbf{予測精度の限界}:
+    推定ノイズフロア$\sigma \approx 0.016$~\AA{}に対し
+    最良RMSE = 0.0214~\AA{}は$\sigma$の1.3倍以内。
+    7種のMLモデルがいずれもRMSE改善0.002~\AA{}未満であり、
+    モデル改善余地は限られる。
     さらなる改善には焼鈍条件・短距離秩序の明示的制御が必要。
 \end{enumerate}
 
-\paragraph{既存手法に対する改善}
+\paragraph{サイズファクター研究の系譜における位置づけ}
 
 \begin{table}[H]
 \centering
-\caption{HEA格子定数予測手法の比較。RMSEは独立テスト28 HEA（$^*$はBCC 15合金のみ）。}
+\caption{体積サイズファクター$\Omega_\text{sf}$研究の系譜と本研究の位置づけ。}
 \label{tab:method_comparison}
-\footnotesize
-\begin{tabular}{@{}lrccl@{}}
+\scriptsize
+\begin{tabular}{@{}llllcl@{}}
 \toprule
-手法 & $N_\text{pair}$ & RMSE (\AA)$^\ddagger$ & 構造 & 組成 \\
+研究 & $\Omega_\text{sf}$源 & 構造分離 & 対象 & $q$ & 備考 \\
 \midrule
-Vegard~\cite{Vegard1921}      & 31  & 0.0176 & --- & 任意 \\
-Alonso~\cite{Alonso2021}      & $\sim$200 & --- & --- & 限定 \\
-Coreño-Alonso~\cite{CorenoAlonso2004} & $\sim$150 & ---$^\dagger$ & B2/L1$_2$ & 限定 \\
-本手法(B2/L1$_2$参照)     & 906 & 0.0154 & B2/L1$_2$ & 任意 \\
-\textbf{本手法(SQS+DFT Vegard, $q\!=\!1$)} & 414 & \textbf{0.0147}$^*$ & SQS & 任意 \\
+King~\cite{King1966} & 実験 & なし & 希薄固溶体 & --- & サイズファクター提唱 \\
+Coreño-Alonso~\cite{CorenoAlonso2004} & 実験 & B2/L1$_2$ & 二元系化合物 & --- & 化合物への拡張 \\
+Alonso~\cite{Alonso2021} & 実験 & なし & 多成分HEA & $\neq 0$ & HEA予測式提案 \\
+\midrule
+\textbf{本手法(B2/L1$_2$)} & \textbf{DFT} & \textbf{BCC/FCC} & 任意HEA & $0.49/0.13$ & 構造別DFT置換 \\
+\textbf{本手法(SQS)} & \textbf{DFT} & \textbf{BCC} & 任意HEA & $\mathbf{1.0}$ & $q$不要を実証 \\
 \bottomrule
 \end{tabular}
 \par\smallskip
-{\scriptsize $^\dagger$二元系金属間化合物を対象。B2: 1.77\%, L1$_2$: 1.15\%。\\
-$^\ddagger$独立テスト28 HEA（又はBCC 15合金$^*$）のRMSE。}
+{\scriptsize
+独立テストRMSE: B2/L1$_2$参照 = 0.0154~\AA{}（28 HEA）、
+SQS参照 = 0.0147~\AA{}（BCC 15合金）。
+Vegardベースライン = 0.0176~\AA{}。}
 \end{table}
 
 \paragraph{実用的意義}
