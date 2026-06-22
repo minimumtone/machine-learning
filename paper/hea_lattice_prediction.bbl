@@ -186,4 +186,49 @@ Y.~Wang, S.~Curtarolo, C.~Jiang, R.~Arroyave, T.~Wang, G.~Ceder, L.-Q. Chen,
 \newblock \href {https://doi.org/10.1016/j.calphad.2004.05.002}
   {\path{doi:10.1016/j.calphad.2004.05.002}}.
 
+\bibitem{Zunger1990}
+A.~Zunger, S.-H. Wei, L.~G. Ferreira, J.~E. Bernard, Special quasirandom
+  structures, Phys. Rev. Lett. 65 (1990) 353--356.
+\newblock \href {https://doi.org/10.1103/PhysRevLett.65.353}
+  {\path{doi:10.1103/PhysRevLett.65.353}}.
+
+\bibitem{Jiang2004}
+C.~Jiang, C.~Wolverton, J.~Sofo, L.-Q. Chen, Z.-K. Liu, First-principles study
+  of binary bcc alloys using special quasirandom structures, Phys. Rev. B 69
+  (2004) 214202.
+\newblock \href {https://doi.org/10.1103/PhysRevB.69.214202}
+  {\path{doi:10.1103/PhysRevB.69.214202}}.
+
+\bibitem{vandeWalle2013}
+A.~{van de Walle}, P.~Tiwary, M.~{de Jong}, D.~L. Olmsted, M.~Asta, A.~Dick,
+  D.~Shin, Y.~Wang, L.-Q. Chen, Z.-K. Liu, Efficient stochastic generation of
+  special quasirandom structures, Calphad 42 (2013) 13--18.
+\newblock \href {https://doi.org/10.1016/j.calphad.2013.06.006}
+  {\path{doi:10.1016/j.calphad.2013.06.006}}.
+
+\bibitem{Kresse1996}
+G.~Kresse, J.~Furthm{\"u}ller, Efficient iterative schemes for ab initio
+  total-energy calculations using a plane-wave basis set, Phys. Rev. B 54
+  (1996) 11169--11186.
+\newblock \href {https://doi.org/10.1103/PhysRevB.54.11169}
+  {\path{doi:10.1103/PhysRevB.54.11169}}.
+
+\bibitem{Blochl1994}
+P.~E. Bl{\"o}chl, Projector augmented-wave method, Phys. Rev. B 50 (1994)
+  17953--17979.
+\newblock \href {https://doi.org/10.1103/PhysRevB.50.17953}
+  {\path{doi:10.1103/PhysRevB.50.17953}}.
+
+\bibitem{Perdew1996}
+J.~P. Perdew, K.~Burke, M.~Ernzerhof, Generalized gradient approximation made
+  simple, Phys. Rev. Lett. 77 (1996) 3865--3868.
+\newblock \href {https://doi.org/10.1103/PhysRevLett.77.3865}
+  {\path{doi:10.1103/PhysRevLett.77.3865}}.
+
+\bibitem{Monkhorst1976}
+H.~J. Monkhorst, J.~D. Pack, Special points for brillouin-zone integrations,
+  Phys. Rev. B 13 (1976) 5188--5192.
+\newblock \href {https://doi.org/10.1103/PhysRevB.13.5188}
+  {\path{doi:10.1103/PhysRevB.13.5188}}.
+
 \end{thebibliography}
