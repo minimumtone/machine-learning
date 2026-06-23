@@ -1149,7 +1149,7 @@ DFT--実験間不整合によるアーティファクトであったと結論さ
 固溶体安定性が幾何学的サイズ適合性で支配されることの証拠であり、
 $\Omega_\text{sf}$の価値は格子定数の定量予測にある。
 第三に、DFT自己整合参照によりBCCで$q \approx 1$が達成されるが
-RMSE改善は12.9\%に留まることは、
+訓練64合金でのRMSE改善は12.9\%に留まることは、
 $q$パラメータの主要部分がDFT--実験間不整合に起因する
 アーティファクトであることを示す。
 
@@ -1201,7 +1201,9 @@ $q \neq 1$の主因はDFT--実験間の体積不整合であり、
 \begin{table}[H]
 \centering
 \caption{参照構造別の予測精度。独立テスト28合金（BCC 15 + FCC 13）。
-$q$は訓練64合金で最適化。BCC側のΩ$_\text{sf}$参照構造が異なり、FCC側は全モデル共通（L1$_2$+King、$q_\text{FCC} = 0.133$）。}
+$q$は訓練64合金で最適化。BCC側のΩ$_\text{sf}$参照構造が異なる。
+SQS系モデルのFCC側はL1$_2$+King（$q_\text{FCC} = 0.133$）で共通。
+Vegard行は$q=0$（補正なし）、B2+DFT行はFCC側もDFT自己整合（$q_\text{FCC} = 0.280$）を使用。}
 \label{tab:sqs_rmse}
 \scriptsize
 \begin{tabular}{@{}lcrrrr@{}}
@@ -1389,7 +1391,9 @@ DFT計算に置換し（純元素体積$V_i$はKing実験値を保持）、
 \begin{table}[H]
 \centering
 \caption{本手法の予測精度の全体像。独立テスト28 HEA（BCC 15 + FCC 13）での公平比較。
-$q$は全モデル共通の訓練64合金で最適化。FCC側は全モデル共通（L1$_2$+King、$q_\text{FCC} = 0.133$）。}
+$q$は全モデル共通の訓練64合金で最適化。
+SQS系モデルのFCC側はL1$_2$+King（$q_\text{FCC} = 0.133$）で共通。
+Vegard行は$q=0$、B2+DFT行はFCC側もDFT自己整合（$q_\text{FCC} = 0.280$）を使用。}
 \label{tab:conclusion_summary}
 \scriptsize
 \begin{tabular}{@{}lcrrrr@{}}
