@@ -7,8 +7,7 @@ Usage:
     cd paper/ && python generate_all_figures.py
 
 Input data (relative to repo root):
-    four_case_output/figures/compounds_{MP,OQMD}_{B2,L12}.csv
-    data/compounds_VASP_{B2,L12}.csv
+    data/compounds_{MP,OQMD,VASP}_{B2,L12}.csv
 
 Output:
     paper/fig_*.png          — all paper figures
