@@ -41,18 +41,19 @@
 King (1966) の体積サイズファクター$\Omega_\text{sf}$は
 合金の体積偏差を定量化する基本概念であるが、
 従来は実験値に依拠し、構造依存性も考慮されていなかった。
-本研究は$\Omega_\text{sf}$の導出を全面的にDFT計算に置換し、
+本研究は$\Omega_\text{sf}$の導出をDFT計算に置換し（純元素体積$V_i$は実験値を保持）、
 B2（BCC参照）とL1$_2$（FCC参照）で構造特異的に再定義する。
 5,152件の二元系DFT計算から465 B2 + 441 L1$_2$ペアの
 $\Omega_\text{sf}$を取得し、HEA予測に必要な全ペアをカバーした。
 これにより校正定数$q$の物理的起源を解明した：
 SQS＋DFT自己整合Vegard参照により
-$q_\text{BCC} = 1$（補正因子が消える）が達成され、
+$q_\text{BCC} \approx 1$（補正因子がほぼ不要）となる示唆が得られ、
 $q \neq 1$の主因がDFT--実験間の体積不整合であることを示した。
 FCC側では$q_\text{FCC} = 0.13 \approx 0$であり、
 Vegard則自体が十分な近似となる。
-独立テスト28 HEAで全体RMSE = 0.0154~\AA{}（Vegard比12.4\%改善）、
-SQS参照BCC 15合金でRMSE = 0.0147~\AA{}（同21\%改善）を達成した。
+独立テスト28 HEAで全体RMSE = 0.0154~\AA{}（Vegard比12.4\%改善）。
+改善効果はBCC系に集中し（BCC 15合金: 15.6\%、SQS参照で21\%）、
+FCC系ではVegard則の精度が高くΩ$_\text{sf}$補正の寄与は限定的である。
 加法分解$\delta_i^{(s)} + \delta_j^{(s)}$により
 906ペアを31元素パラメータに圧縮し、
 スプレッドシートで任意組成HEAの即座スクリーニングを可能にした。
@@ -174,8 +175,8 @@ Tian~\emph{et al.}~\cite{Tian2015}のEMTO-CPA法があるが、
 King以来の体積サイズファクター研究は一貫して
 \textbf{実験値}（King体積、実験格子定数）に基づいてきた。
 本研究はこの枠組みを根本的に変え、
-$\Omega_\text{sf}$の導出を\textbf{全面的にDFT計算に置換}する。
-これにより以下の3つの本質的進展が実現される。
+$\Omega_\text{sf}$の導出を\textbf{DFT計算に置換}する（純元素体積$V_i$はKing実験値を保持するハイブリッド手法）。
+これにより以下の3つの進展が得られる。
 
 \begin{enumerate}
   \item \textbf{構造特異的$\Omega_\text{sf}$の完全カバレッジ}:
@@ -185,12 +186,13 @@ $\Omega_\text{sf}$の導出を\textbf{全面的にDFT計算に置換}する。
     King/Alonsoでは不可能だった構造依存的な体積偏差を取得。
     HEA予測に必要な全ペアをカバー（BCC 59/59、FCC 42/42）。
 
-  \item \textbf{$q_\text{BCC} = 1$（校正パラメータ不要）の達成}:
+  \item \textbf{$q_\text{BCC} \approx 1$への近接と$q$の起源解明}:
     過去の全研究で$q \neq 0$（BCC/FCC共に補正が必要）であったが、
-    SQS＋DFT自己整合Vegard参照で$q_\text{BCC} = 1$を達成。
-    $q = 1$は$\Omega_\text{sf}$がスケーリングなしでHEAに直接適用できることを意味し、
+    SQS＋DFT自己整合Vegard参照で$q_\text{BCC} = 1$固定がテスト最良精度を与える。
+    ただし訓練最適値は$q_\text{opt} = 1.96$であり、
+    16原子SQSのサイズ効果が残存する。
     $q \neq 1$の主因がDFT--実験間の体積不整合（GGA系統誤差）に
-    あることを初めて解明した。
+    あることを示した。
     BCC独立テストRMSE = 0.0147~\AA{}（Vegard比21\%改善）。
 
   \item \textbf{$q_\text{FCC} \approx 0$（Vegard則の十分性）の実証}:
@@ -202,9 +204,9 @@ $\Omega_\text{sf}$の導出を\textbf{全面的にDFT計算に置換}する。
 \end{enumerate}
 
 すなわち、実験値をDFTに置換し構造別にサイズファクターを評価することで、
-BCCでは$q = 1$（補正因子が消える）、
+BCCでは$q \approx 1$（補正因子がほぼ不要）、
 FCCでは$q \approx 0$（そもそも補正が不要）
-という明快な描像が得られる。
+という描像が得られる。
 HEA格子定数の予測精度自体は推定ノイズフロア
 $\sigma \approx 0.016$~\AA{}に近接しており、
 モデルの改善余地は限られる。
@@ -318,7 +320,10 @@ B2で465・L1$_2$で441のユニーク元素ペアを得た。
 22元素）。独立テストセットとしてAlonsoデータ外の28 HEA
 （BCC 15、FCC 13）を12文献~\cite{Senkov2013,Senkov2013_ActaMat,Yao2016,Otto2013,Leong2017,Tseng2019,Freudenberger2017,Reget2020}
 から収集した。18元素をカバーし、耐火金属系BCC（Tseng 2019、Reget 2020）、
-貴金属系FCC（Freudenberger 2017）を含む多様な組成で汎化性能を評価する。
+貴金属系FCC（Freudenberger 2017）を含む。
+ただしBCC 15合金はHf-Mo-Nb-Ta-Ti-Zrの系統的サブセットが主体であり、
+FCC 13合金もAu-Cu-Ni-Pd-Pt系とCoCrFeMnNi派生に偏る。
+実効的な化学多様性は合金数より限定的である点に留意が必要である。
 
 \subsubsection{多相HEAデータベース}
 相安定性解析のため54 HEAを5文献~\cite{Zhang2008,Guo2011,Yang2012,TodaCaraballo2016,Ye2015}から収集し、
@@ -570,9 +575,9 @@ ML残差補正はいずれも0.002~\AA{}未満の追加改善しか与えず、
 材料的観点では、これは現モデルの残差がもはや組成の体系的関数ではなく、
 合金作製条件（焼鈍温度・冷却速度・均質化度）に起因する
 実験間の再現性ばらつき（$\sigma \approx 0.016$~\AA）に相当することを意味する。
-すなわち、物理モデルが捉えうる格子定数の組成依存情報は
-すでに飽和しており、さらなる改善には
-合金作製プロセスの明示的制御が必要となる。
+すなわち、現在のデータ・モデルの範囲では組成依存の体系的改善が見えず、
+さらなる精度向上には
+合金作製プロセスの明示的制御または高品質実験データの拡充が必要と考えられる。
 
 図~\ref{fig:parity}にパリティプロットを示す。
 
@@ -665,8 +670,8 @@ FCC 13合金ではRMSE = 0.0151~\AA（Vegard比\textbf{7.8\%改善}）。
 B2参照構造の$\Omega_\text{sf}$データを473ペアに拡充し、
 耐火金属28ペアを全カバーしたことで、
 BCC予測精度が大幅に改善された。
-全体RMSEはノイズフロア（0.0157~\AA）以下であり、
-独立テストでも実質的な精度限界に到達している。
+全体RMSEは推定ノイズフロア（$\sigma \approx 0.016$~\AA）と同程度であり、
+現在のデータの範囲ではさらなる改善余地は限られる。
 図~\ref{fig:indep_test}に合金別誤差・構造別RMSE・パリティプロットを示す。
 
 \begin{figure*}[!t]
@@ -1160,12 +1165,12 @@ RMSE = 0.162~\AA{}と破綻したこと（\ref{sec:packing_results}節）は
 この問題を裏付ける。
 
 
-\subsection{DFT自己整合Ω$_\text{sf}$によるq$_\text{BCC}\approx$1の達成}
+\subsection{DFT自己整合Ω$_\text{sf}$による$q_\text{BCC} \approx 1$への近接}
 \label{sec:dft_self_consistent}
 
 $\Omega_\text{sf}$の参照体積をKing実験値からVASP DFT計算値に
 変更すると、B2参照でも$q_\text{BCC} = 1.19$と
-q$\approx$1が達成された（表~\ref{tab:omega_ref}）。
+$q \approx 1$に近づく（表~\ref{tab:omega_ref}）。
 $q_\text{FCC} = 0.28$はKing参照の0.13から増加するが依然として小さく、
 FCC系では$\Omega_\text{sf}$補正自体が微小であることと整合する。
 
@@ -1225,7 +1230,7 @@ B2（$\alpha = -1$）の完全秩序配位はHEAのランダム配位と異な�
 $q_\text{BCC} = 0.49$のスケーリングが必要であった。
 SQS（Special Quasi-random Structure）~\cite{Zunger1990,Jiang2004}は
 $\alpha \approx 0$のランダム配置を近似し、
-$q = 1$（補正不要）の達成が期待される。
+$q \approx 1$（補正がほぼ不要）となることが期待される。
 
 $2\times2\times2$ BCC超格子（16原子、A$_8$B$_8$組成）のSQS~\cite{Zunger1990,vandeWalle2013}を構築し、
 38元素・414ペアについてVASP~\cite{Kresse1996}による全緩和計算を実施した
@@ -1364,9 +1369,9 @@ $q_\text{BCC} = 0.49$の物理的起源を示す。
 L1$_2$とFCC SQS 1:1で$\Omega_\text{sf}$の大きさが保存される。
 $q_\text{FCC} = 0.13$（ほぼVegard）と整合する。
 
-\subsubsection{$q = 1$達成の物理的意味}
+\subsubsection{$q \approx 1$の物理的意味}
 
-DFT Vegard参照で$q = 1$が達成される物理的理由は、
+DFT Vegard参照で$q = 1$固定がテスト最良となる物理的理由は、
 GGA-PBE系統誤差の相殺にある。
 hcp安定元素（Ti, V, Zr等）はBCC格子定数を0.7--0.9\%過小評価するが、
 分子（合金SQS体積）と分母（純元素SQS体積）が同一バイアスを持つため
@@ -1376,7 +1381,7 @@ $\Omega_\text{sf}$の定義式で系統誤差がキャンセルされる。
 FCC系では$q_\text{FCC} = 0.13$（ほぼVegard）であり、
 $\Omega_\text{sf}$補正自体が小さいため
 参照構造（L1$_2$ vs SQS）や参照体積（King vs DFT）の選択は
-予測精度に実質的影響を与えない（テストRMSE差 $<$ 2~m\AA{}）。
+予測精度に実質的影響を与えない（テストRMSE差 $<$ 0.002~\AA{}）。
 
 \subsubsection{SQS $\Omega_\text{sf}$の加法分解}
 
@@ -1438,7 +1443,8 @@ $q = 1$・構造共通$\Omega_\text{sf}$であった。
 %% =====================================================================
 
 King (1966) 以来、実験値に基づいてきた体積サイズファクター$\Omega_\text{sf}$を
-全面的にDFT計算に置換し、構造特異的（B2/L1$_2$）に再定義することで、
+DFT計算に置換し（純元素体積$V_i$はKing実験値を保持）、
+構造特異的（B2/L1$_2$）に再定義することで、
 校正定数$q$の物理的起源を解明した。
 定量的成果と主要知見を以下にまとめる。
 
@@ -1471,13 +1477,13 @@ King (1966) 以来、実験値に基づいてきた体積サイズファクタ�
 \begin{enumerate}
   \item \textbf{実験値$\to$DFT置換と構造分離}:
     King以来、実験値に依拠してきた$\Omega_\text{sf}$を
-    5,152件の二元系DFT計算で全面的に置換。
+    5,152件の二元系DFT計算で置換（純元素$V_i$は実験値保持）。
     B2$\to$BCC、L1$_2$$\to$FCCの構造分離により
     HEA予測に必要な全ペアをカバー（BCC 59/59、FCC 42/42）。
 
-  \item \textbf{$q_\text{BCC} = 1$の達成と$q$の起源解明}:
-    SQS＋DFT自己整合Vegard参照で$q_\text{BCC} = 1$
-    （校正パラメータ不要）を達成。
+  \item \textbf{$q_\text{BCC} \approx 1$への近接と$q$の起源解明}:
+    SQS＋DFT自己整合Vegard参照で$q_\text{BCC} = 1$固定が
+    テスト最良精度を与える（訓練最適$q_\text{opt} = 1.96$）。
     $q \neq 1$の主因は秩序--無秩序間の差ではなく、
     \textbf{DFT--実験間の体積不整合}（GGA系統誤差）にあることを解明。
     参照体積をDFT内で統一すれば二元系$\to$多元系の外挿に
@@ -1546,7 +1552,7 @@ Hume-Rothery半径に代わるDFT由来の元素固有属性を提供する。
 (d)~SQS＋DFT Vegardの$q_\text{opt} = 1.96$と$q = 1$の乖離が
 16原子SQSのサイズ効果を示唆すること。
 今後の課題として、三体補正の導入、温度依存補正、
-大セルSQS（32原子以上）による$q = 1$の直接達成、
+大セルSQS（32原子以上）による$q_\text{opt} \to 1$の検証、
 FCC-SQS全ペア拡張の検討が挙げられる。
 
 
