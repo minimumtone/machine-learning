@@ -220,7 +220,8 @@ def main():
 
     models = MODELS
     if start_from:
-        models = [m for m in MODELS if m["name"] >= start_from or m["name"] == start_from]
+        idx = next((i for i, m in enumerate(MODELS) if m["name"] == start_from), 0)
+        models = MODELS[idx:]
 
     print(f"Models: {[m['name'] for m in models]}")
     print("Connecting to PostgreSQL...")
@@ -319,7 +320,7 @@ def main():
         full_cond = stats.get("conditions", {}).get("full", {})
         if full_cond:
             print(
-                f"{'gpt-5.5':>20s} {full_cond['mean']:.1%} "
+                f"{'gpt-5.5':>20s} {full_cond['overall_mean']:.1%} "
                 f"(5-run mean, baseline)"
             )
 

@@ -61,7 +61,7 @@ def compute_stats(runs: list[dict]) -> dict:
         # Overall accuracy
         overalls = [r["conditions"][cond]["overall"] for r in runs]
         cond_stats["overall_mean"] = float(np.mean(overalls))
-        cond_stats["overall_sd"] = float(np.std(overalls, ddof=1))
+        cond_stats["overall_std"] = float(np.std(overalls, ddof=1))
         cond_stats["overall_min"] = float(np.min(overalls))
         cond_stats["overall_max"] = float(np.max(overalls))
 
@@ -71,7 +71,7 @@ def compute_stats(runs: list[dict]) -> dict:
             vals = [r["conditions"][cond]["by_difficulty"].get(diff, 0) for r in runs]
             diff_stats[diff] = {
                 "mean": float(np.mean(vals)),
-                "sd": float(np.std(vals, ddof=1)),
+                "std": float(np.std(vals, ddof=1)),
                 "min": float(np.min(vals)),
                 "max": float(np.max(vals)),
             }

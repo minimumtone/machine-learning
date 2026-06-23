@@ -290,7 +290,8 @@ def main():
     start_from = os.getenv("DICT_START", "")
     configs = DICT_CONFIGS
     if start_from:
-        configs = [c for c in DICT_CONFIGS if c[0] >= start_from or c[0] == start_from]
+        idx = next((i for i, c in enumerate(DICT_CONFIGS) if c[0] == start_from), 0)
+        configs = DICT_CONFIGS[idx:]
 
     print(f"Model: {model}")
     print(f"Configs: {[c[0] for c in configs]}")
