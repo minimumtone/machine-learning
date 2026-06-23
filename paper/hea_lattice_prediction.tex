@@ -453,20 +453,18 @@ $V_\text{maj}$・$V_\text{min}$はそれぞれ
 \end{equation}
 
 
-\subsection{機械学習残差補正}
+\subsection{機械学習による残差解析}
 \label{sec:ml}
 
-物理モデルの残差
-$\Delta a_i = a_i^\text{exp} - a_i^\text{pred}$に
-MLモデルをLOO-CV（Leave-One-Out交差検証：
+物理モデルの残差が組成の体系的関数であるかを
+2種のMLモデルで検証した。評価にLOO-CV（Leave-One-Out交差検証：
 $N$点のうち1点を抜いて$N-1$点で学習し、
 抜いた1点を予測する操作を全点で繰り返し、
-過学習を排除した汎化誤差を推定する手法）で評価した：
+過学習を排除した汎化誤差を推定する手法）を用いた：
 \begin{itemize}
-  \item \textbf{Ridge回帰}（$\alpha = 1.0$）: 線形回帰にL2正則化を加え過学習を抑制する最も単純なMLモデル。6組成記述子（Vegard予測値、$\delta r$、$\delta\chi$、VEC、構造フラグ、$S_\text{mix}$）を使用。
-  \item \textbf{GradientBoosting}（100本、深さ3）: 勾配ブースティング決定木による直接予測。過学習診断のため同一記述子で評価。
+  \item \textbf{Ridge回帰（残差補正）}（$\alpha = 1.0$）: 物理モデル残差$\Delta a_i = a_i^\text{exp} - a_i^\text{pred}$を学習し、補正後予測$a_i^\text{pred} + \widehat{\Delta a}_i$を出力。6組成記述子（$\delta r$、$\delta\chi$、VEC、構造フラグ、$S_\text{mix}$、元素数）を使用。
+  \item \textbf{GradientBoosting（直接予測）}（100本、深さ3）: 同一6記述子から格子定数$a$を直接予測（物理モデルを介さない）。過学習の程度を診断するための対照実験。
 \end{itemize}
-残差が組成の体系的関数でないことを確認するための最小限のMLテストである。
 
 
 \subsection{ノイズフロア推定}
@@ -520,11 +518,9 @@ $N$点のうち1点を抜いて$N-1$点で学習し、
     31元素パラメータに圧縮したモデル。
 \end{itemize}
 
-\paragraph{ML残差補正 (LOO-CV)}
-物理モデル（DFT-$\Omega_\text{sf}$）の残差
-$\Delta a = a^\text{exp} - a^\text{pred}$を
-6組成記述子（§\ref{sec:ml}参照）で学習。
-Ridge回帰とGradientBoostingをLOO-CV（64 HEAから1点を抜いて予測を繰り返す）で評価。
+\paragraph{ML解析 (LOO-CV)}
+Ridge回帰（物理モデル残差の補正）とGradientBoosting（格子定数の直接予測）を
+LOO-CV（64 HEAから1点を抜いて予測を繰り返す）で評価（§\ref{sec:ml}参照）。
 
 \begin{table}[H]
 \centering
@@ -546,7 +542,7 @@ King Vegard         & 0.0227 & 0.0139 & 0.42 & 0.990 \\
 DFT-$\Omega_\text{sf}$  & \textbf{0.0214} & \textbf{0.0128} & \textbf{0.39} & \textbf{0.991} \\
 加法$\delta^{(s)}$  & 0.0221 & --- & --- & --- \\
 \midrule
-\multicolumn{5}{l}{\textit{ML残差補正 (LOO-CV)}} \\
+\multicolumn{5}{l}{\textit{ML解析 (LOO-CV)}} \\
 + Ridge ($\alpha$=1.0, 6記述子) & 0.0220 & --- & --- & --- \\
 + GradientBoosting (直接予測) & 0.170$^\dagger$ & --- & --- & --- \\
 \midrule
@@ -960,12 +956,14 @@ $\delta_\text{sf}$は格子定数予測に有用だが、
 \subsection{機械学習残差解析}
 \label{sec:ml_results}
 
-Ridge回帰（6組成記述子）によるLOO-CV残差補正は
-RMSE = 0.0220~\AA{}と物理モデル単体（0.0214~\AA）よりわずかに劣化した。
-GradientBoosting（100本、深さ3）は訓練RMSE = 0.0051~\AA{}だが
+Ridge回帰（6組成記述子）による残差補正のLOO-CV RMSEは
+0.0220~\AA{}と物理モデル単体（0.0214~\AA）よりわずかに劣化した。
+GradientBoosting（100本、深さ3）による格子定数の直接予測は
+訓練RMSE = 0.0051~\AA{}（64点をほぼ暗記）だが
 LOO-CV RMSE = 0.170~\AA{}と破滅的過学習を示した。
-いずれのMLモデルも64 HEAの残差を改善できず、
-残差がランダムノイズに支配されていることを強く示唆する。
+Ridge残差補正が改善を与えないことは残差に組成の体系的パターンがないことを、
+GradientBoostingの極端な過学習は6記述子のみでは格子定数の直接予測が不可能であることを示す。
+いずれも残差がランダムノイズに支配されていることと整合する。
 
 
 %% =====================================================================
@@ -1131,8 +1129,9 @@ DFT--実験間不整合によるアーティファクトであったと結論さ
 \subsection{否定的結果の意義}
 
 本研究では3つの重要な否定的結果を得た。
-第一に、MLモデル（Ridge回帰・GradientBoosting）がDFT-$\Omega_\text{sf}$モデルを
-実質的に改善できないことは、残差が測定ノイズに支配されていることを示す。
+第一に、Ridge残差補正がDFT-$\Omega_\text{sf}$モデルを改善できず、
+GradientBoosting直接予測が破滅的過学習を示すことは、
+残差が測定ノイズに支配されていることを示す。
 第二に、DFT由来$\delta_\text{sf}$が$\delta r$より
 相分類で劣ること（AUC 0.710 vs 0.869）は、
 固溶体安定性が幾何学的サイズ適合性で支配されることの証拠であり、
@@ -1435,7 +1434,7 @@ SQS+DFT ($q_\text{opt}$) & 1.958 & 0.0157 & 0.0162 & 0.0151 & $+$10.9\% \\
   \item \textbf{予測精度の限界}:
     推定ノイズフロア$\sigma \approx 0.016$~\AA{}に対し
     最良テストRMSE = 0.0149~\AA{}は$\sigma$に近い。
-    MLモデルがいずれもRMSE改善0.002~\AA{}未満であり、
+    Ridge残差補正が物理モデルを改善できず（GradientBoosting直接予測は破滅的過学習）、
     モデル改善余地は限られる。
     さらなる改善には焼鈍条件・短距離秩序の明示的制御が必要。
 \end{enumerate}
