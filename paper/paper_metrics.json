@@ -73,13 +73,14 @@
   },
   "delta_r_proof": {
     "delta_r_proof_n_complete": 435,
-    "delta_r_proof_r_all": 0.71
+    "delta_r_proof_r_all": 0.71,
+    "l12_vs_b2_corr_r": 0.83
   },
   "l12_asymmetry": {
-    "l12_asymmetry_n_pairs": 435,
-    "l12_asymmetry_std": 0.2,
-    "l12_asymmetry_mean_abs_diff": 0.248,
-    "l12_asymmetry_max_abs_diff": 1.0
+    "l12_asymmetry_n_pairs": 754,
+    "l12_asymmetry_std": 0.24,
+    "l12_asymmetry_mean_abs_diff": 0.286,
+    "l12_asymmetry_max_abs_diff": 1.73
   },
   "effective_radius": {
     "eff_radius_min_dev": 0.109,
@@ -173,5 +174,26 @@
     "RMSE_xgb_train": 0.0051,
     "RMSE_xgb_loo": 0.1696,
     "improvement_ridge_loo_pct": -3.0
+  },
+  "figure_stats": {
+    "heatmap_b2_n_pairs": 595,
+    "heatmap_b2_n_elements": 35,
+    "heatmap_l12_n_pairs": 741,
+    "heatmap_l12_n_elements": 39,
+    "parity_b2_n_points": 1854,
+    "parity_b2_R2": 0.754,
+    "parity_b2_RMSE": 2.641,
+    "parity_l12_n_points": 1827,
+    "parity_l12_R2": 0.8486,
+    "parity_l12_RMSE": 2.407,
+    "radius_b2_n_pairs": 595,
+    "radius_b2_corr": -0.484,
+    "radius_l12_n_pairs": 741,
+    "radius_l12_corr": -0.605,
+    "delta_r_proof_n_pairs": 435,
+    "delta_r_proof_panel_c_r": 0.71,
+    "l12_asymmetry_n_pairs": 754,
+    "l12_asymmetry_mean_diff": 0.286,
+    "l12_b2_corr_r": 0.83
   }
 }
