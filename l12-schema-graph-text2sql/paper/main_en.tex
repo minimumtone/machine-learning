@@ -45,11 +45,22 @@
 
 %%\jyear{2026}% commented: not defined in this cls version
 
+% Workaround: sn-jnl.cls calls \SetFootnoteHook and \DeclareNewFootnote
+% in \AtBeginDocument, but manyfoot marks them @onlypreamble.
+% Fix: call them here and redefine as no-ops so the cls hook is harmless.
+\SetFootnoteHook{\hspace*{-8pt}}
+\DeclareNewFootnote{A}[gobble]
+\renewcommand{\SetFootnoteHook}[1]{}% neutralize for \AtBeginDocument
+\renewcommand{\DeclareNewFootnote}[2][]{}% neutralize for \AtBeginDocument
+\definecolor{artcatboxgray}{cmyk}{0.0,0.0,0.0,0.30}
+\makeatletter
+\def\ArtType{}% no article-type banner
+\makeatother
+
 % =====================================================================
 \begin{document}
-\begin{CJK}{UTF8}{min}
 
-\title[Article Title]{Natural Language Access to Inorganic Materials Relational Databases: Design Principles and Validation via Schema-Graph-Constrained Text-to-SQL}
+\title[NL Access to Inorganic Materials RDBs via Text-to-SQL]{Natural Language Access to Inorganic Materials Relational Databases: Design Principles and Validation via Schema-Graph-Constrained Text-to-SQL}
 
 \author*[1]{\fnm{Satoshi} \sur{Minamoto}}\email{minamoto.satoshi@nims.go.jp}
 
@@ -59,8 +70,7 @@
   \postcode{305-0047}, \state{Ibaraki}, \country{Japan}}}
 
 % =====================================================================
-\begin{abstract}
-Inorganic materials databases require SQL knowledge,
+\abstract{Inorganic materials databases require SQL knowledge,
 creating a significant barrier for materials researchers.
 We present the design principles for a Text-to-SQL pipeline
 that enables natural language access to inorganic materials
@@ -70,7 +80,6 @@ few-shot example retrieval, LLM-based SQL generation,
 Steiner-tree JOIN constraints derived from the foreign-key graph,
 a materials domain dictionary, AST-based SQL safety verification,
 and an LLM reranker.
-
 Using a 31-table RDB centered on L1$_2$-type intermetallic compounds,
 we conducted a 7-condition ablation study with 100 evaluation queries
 (5 independent runs, 3{,}500 evaluations in total).
@@ -80,13 +89,14 @@ demonstrating statistically significant effects.
 Multi-axis evaluation achieved execution accuracy of 84.7\%,
 syntax validity of 100\%, and JOIN match rate of 93.2\%.
 All results are reported as mean $\pm$ standard deviation
-over 5 independent runs with Wilcoxon signed-rank test significance.
+over 5 independent runs with Wilcoxon signed-rank test significance.}
 
-\end{abstract}
+\keywords{Text-to-SQL, inorganic materials database, natural language interface,
+schema graph, domain-specific dictionary, materials informatics}
 
-\keywords{Text-to-SQL \and inorganic materials database \and natural language interface \and
-schema graph \and domain-specific dictionary \and materials informatics}
+\maketitle
 
+\begin{CJK}{UTF8}{min}
 % =====================================================================
 \section{Introduction}
 \label{sec:introduction}
