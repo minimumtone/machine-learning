@@ -101,7 +101,7 @@ def load_compounds():
     return all_df
 
 
-def compute_omega_sf_pairwise(df, sources=("MP", "OQMD"), min_count=2):
+def compute_omega_sf_pairwise(df, sources=("MP", "OQMD", "VASP"), min_count=1):
     """Compute structure-specific pairwise Omega_sf. Returns (ob2, ol12)."""
     pair_b2 = defaultdict(list)
     pair_l12 = defaultdict(list)
@@ -757,38 +757,58 @@ def analyze_dft_self_consistent(all_df, ob2, ol12, heas_train, heas_test):
     q_bcc_dft = minimize_scalar(_rmse_bcc, bounds=(0, 5), method="bounded").x
     q_fcc_dft = minimize_scalar(_rmse_fcc, bounds=(0, 5), method="bounded").x
 
-    # RMSE with optimized q (training 64 HEAs)
-    p_opt = _pred(heas_train, ob2_dft_med, ol12_dft_med, q_bcc_dft, q_fcc_dft)
-    rmse_opt = float(np.sqrt(np.mean((p_opt - y_tr) ** 2)))
+    # --- Training 64 HEA evaluation ---
+    p_opt_tr = _pred(heas_train, ob2_dft_med, ol12_dft_med, q_bcc_dft, q_fcc_dft)
+    rmse_opt_tr = float(np.sqrt(np.mean((p_opt_tr - y_tr) ** 2)))
 
-    # RMSE with q=1 (training 64 HEAs)
-    p_q1 = _pred(heas_train, ob2_dft_med, ol12_dft_med, 1.0, 1.0)
-    rmse_q1 = float(np.sqrt(np.mean((p_q1 - y_tr) ** 2)))
+    p_q1_tr = _pred(heas_train, ob2_dft_med, ol12_dft_med, 1.0, 1.0)
+    rmse_q1_tr = float(np.sqrt(np.mean((p_q1_tr - y_tr) ** 2)))
 
-    # Vegard RMSE for comparison (training 64)
-    p_veg = _pred(heas_train, ob2_dft_med, ol12_dft_med, 0.0, 0.0)
-    rmse_veg = float(np.sqrt(np.mean((p_veg - y_tr) ** 2)))
+    p_veg_tr = _pred(heas_train, ob2_dft_med, ol12_dft_med, 0.0, 0.0)
+    rmse_veg_tr = float(np.sqrt(np.mean((p_veg_tr - y_tr) ** 2)))
 
-    # King reference RMSE for comparison table row
-    p_king_opt = _pred(heas_train, ob2, ol12, 0.49, 0.13)
-    rmse_king_opt = float(np.sqrt(np.mean((p_king_opt - y_tr) ** 2)))
-    p_king_q1 = _pred(heas_train, ob2, ol12, 1.0, 1.0)
-    rmse_king_q1 = float(np.sqrt(np.mean((p_king_q1 - y_tr) ** 2)))
+    # King reference (use actual optimized q from main model, not hard-coded)
+    gb_king, gf_king = optimize_gamma(heas_train, ob2, ol12)
+    p_king_opt_tr = _pred(heas_train, ob2, ol12, gb_king, gf_king)
+    rmse_king_opt_tr = float(np.sqrt(np.mean((p_king_opt_tr - y_tr) ** 2)))
+
+    # --- Independent test 28 HEA evaluation ---
+    y_te = np.array([h["a_exp"] for h in heas_test])
+    bcc_te = [i for i, h in enumerate(heas_test) if h["struct"] == "BCC"]
+    fcc_te = [i for i, h in enumerate(heas_test) if h["struct"] == "FCC"]
+
+    p_opt_te = _pred(heas_test, ob2_dft_med, ol12_dft_med, q_bcc_dft, q_fcc_dft)
+    rmse_opt_te = float(np.sqrt(np.mean((p_opt_te - y_te) ** 2)))
+    rmse_opt_te_bcc = float(np.sqrt(np.mean((p_opt_te[bcc_te] - y_te[bcc_te]) ** 2)))
+    rmse_opt_te_fcc = float(np.sqrt(np.mean((p_opt_te[fcc_te] - y_te[fcc_te]) ** 2)))
+
+    p_veg_te = _pred(heas_test, ob2_dft_med, ol12_dft_med, 0.0, 0.0)
+    rmse_veg_te = float(np.sqrt(np.mean((p_veg_te - y_te) ** 2)))
+    rmse_veg_te_bcc = float(np.sqrt(np.mean((p_veg_te[bcc_te] - y_te[bcc_te]) ** 2)))
 
     return {
         "n_pure_b2": len(dft_vol_b2),
         "n_pure_l12": len(dft_vol_l12),
         "n_pairs_b2_dft": len(ob2_dft_med),
         "n_pairs_l12_dft": len(ol12_dft_med),
-        "q_BCC_dft_ref": round(q_bcc_dft, 2),
-        "q_FCC_dft_ref": round(q_fcc_dft, 2),
-        "RMSE_dft_ref_opt_q": round(rmse_opt, 4),
-        "RMSE_dft_ref_q1": round(rmse_q1, 4),
-        "RMSE_vegard_64": round(rmse_veg, 4),
-        "RMSE_king_opt_64": round(rmse_king_opt, 4),
-        "RMSE_king_q1_64": round(rmse_king_q1, 4),
-        "improvement_dft_ref_opt_pct": round((1 - rmse_opt / rmse_veg) * 100, 1),
-        "improvement_dft_ref_q1_pct": round((1 - rmse_q1 / rmse_veg) * 100, 1),
+        "q_BCC_dft_ref": round(q_bcc_dft, 4),
+        "q_FCC_dft_ref": round(q_fcc_dft, 4),
+        # Training 64
+        "RMSE_dft_ref_opt_q_train": round(rmse_opt_tr, 4),
+        "RMSE_dft_ref_q1_train": round(rmse_q1_tr, 4),
+        "RMSE_vegard_train": round(rmse_veg_tr, 4),
+        "RMSE_king_opt_train": round(rmse_king_opt_tr, 4),
+        "improvement_dft_ref_opt_train_pct": round(
+            (1 - rmse_opt_tr / rmse_veg_tr) * 100, 1),
+        # Test 28
+        "RMSE_dft_ref_opt_q_test": round(rmse_opt_te, 4),
+        "RMSE_dft_ref_opt_q_test_BCC": round(rmse_opt_te_bcc, 4),
+        "RMSE_dft_ref_opt_q_test_FCC": round(rmse_opt_te_fcc, 4),
+        "RMSE_vegard_test": round(rmse_veg_te, 4),
+        "improvement_dft_ref_opt_test_pct": round(
+            (1 - rmse_opt_te / rmse_veg_te) * 100, 1),
+        "improvement_dft_ref_opt_test_BCC_pct": round(
+            (1 - rmse_opt_te_bcc / rmse_veg_te_bcc) * 100, 1),
     }
 
 
@@ -2021,9 +2041,9 @@ def main():
     print(f"    MP: {n_mp}, OQMD: {n_oqmd}, VASP: {n_vasp}")
     print(f"    Total: {len(all_df)} compounds (Gd/Ce excluded)")
 
-    # 2. Compute pairwise Omega_sf (all 3 sources)
+    # 2. Compute pairwise Omega_sf (all 3 sources, min_count=1)
     print("\n[2] Computing pairwise Omega_sf (MP+OQMD+VASP)...")
-    ob2, ol12 = compute_omega_sf_pairwise(all_df, sources=("MP", "OQMD", "VASP"), min_count=1)
+    ob2, ol12 = compute_omega_sf_pairwise(all_df)
     print(f"    B2 pairs: {len(ob2)}, L1_2 pairs: {len(ol12)}")
 
     # 3. Optimize gamma
@@ -2070,13 +2090,10 @@ def main():
     print(f"    B2:  {len(decomp['B2']['elements'])} elements, R2 = {decomp['B2']['r2']:.4f}")
     print(f"    L12: {len(decomp['L12']['elements'])} elements, R2 = {decomp['L12']['r2']:.4f}")
 
-    # 6b. Extended decomposition for Table 6 (includes VASP, min_count=1)
-    #     This fills gaps (Ge, Pb for B2; Be, Mo, Os, Re, W for L12)
-    #     without affecting model predictions (which use ob2/ol12 from MP+OQMD).
-    print("\n[5b] Extended decomposition for Table 6 (MP+OQMD+VASP, min_count=1)...")
-    ob2_ext, ol12_ext = compute_omega_sf_pairwise(
-        all_df, sources=("MP", "OQMD", "VASP"), min_count=1
-    )
+    # 6b. Extended decomposition for Table 6
+    #     Now identical to main ob2/ol12 (defaults changed to all sources, min_count=1).
+    print("\n[5b] Extended decomposition for Table 6...")
+    ob2_ext, ol12_ext = ob2, ol12
     decomp_table = additive_decomposition(ob2_ext, ol12_ext)
     print(f"    B2:  {len(decomp_table['B2']['elements'])} elements, R2 = {decomp_table['B2']['r2']:.4f}")
     print(f"    L12: {len(decomp_table['L12']['elements'])} elements, R2 = {decomp_table['L12']['r2']:.4f}")
@@ -2255,6 +2272,44 @@ def main():
         print(f"    B2 vs SQS(DFT) correlation: r={sqs_metrics['correlation_b2_vs_sqs_dft_r']}, "
               f"slope={sqs_metrics['correlation_b2_vs_sqs_dft_slope']}")
 
+        # --- SQS: ALL 28 test evaluation (BCC: SQS omega, FCC: L12 omega) ---
+        omega_dft_sqs = sqs_data["omega_dft"]
+        omega_king_sqs = sqs_data["omega_king"]
+        q_sqs_king = sqs_metrics["q_BCC_sqs_king"]
+        q_sqs_dft_opt = sqs_metrics["q_BCC_sqs_dft_opt"]
+
+        y_te_all = np.array([h["a_exp"] for h in INDEPENDENT_TEST])
+        bcc_te_idx = [i for i, h in enumerate(INDEPENDENT_TEST) if h["struct"] == "BCC"]
+        fcc_te_idx = [i for i, h in enumerate(INDEPENDENT_TEST) if h["struct"] == "FCC"]
+
+        def _eval28_sqs(omega_bcc, omega_fcc, qb, qf):
+            p = np.array([
+                compute_eq10_scaled(h["comp"], h["struct"],
+                    omega_bcc if h["struct"] == "BCC" else omega_fcc,
+                    qb if h["struct"] == "BCC" else qf)
+                for h in INDEPENDENT_TEST])
+            return {
+                "ALL": round(float(np.sqrt(np.mean((y_te_all - p) ** 2))), 4),
+                "BCC": round(float(np.sqrt(np.mean((y_te_all[bcc_te_idx] - p[bcc_te_idx]) ** 2))), 4),
+                "FCC": round(float(np.sqrt(np.mean((y_te_all[fcc_te_idx] - p[fcc_te_idx]) ** 2))), 4),
+            }
+
+        vegard_te = _eval28_sqs({}, ol12, 0.0, 0.0)
+        sqs_king_te = _eval28_sqs(omega_king_sqs, ol12, q_sqs_king, gf)
+        sqs_dft_q1_te = _eval28_sqs(omega_dft_sqs, ol12, 1.0, gf)
+        sqs_dft_qopt_te = _eval28_sqs(omega_dft_sqs, ol12, q_sqs_dft_opt, gf)
+
+        sqs_metrics["test28_vegard"] = vegard_te
+        sqs_metrics["test28_sqs_king"] = sqs_king_te
+        sqs_metrics["test28_sqs_dft_q1"] = sqs_dft_q1_te
+        sqs_metrics["test28_sqs_dft_qopt"] = sqs_dft_qopt_te
+
+        print(f"    --- ALL 28 test (BCC: SQS, FCC: L12) ---")
+        print(f"    Vegard:          ALL={vegard_te['ALL']}, BCC={vegard_te['BCC']}, FCC={vegard_te['FCC']}")
+        print(f"    SQS+King:        ALL={sqs_king_te['ALL']}, BCC={sqs_king_te['BCC']}, FCC={sqs_king_te['FCC']}")
+        print(f"    SQS+DFT (q=1):   ALL={sqs_dft_q1_te['ALL']}, BCC={sqs_dft_q1_te['BCC']}, FCC={sqs_dft_q1_te['FCC']}")
+        print(f"    SQS+DFT (q_opt): ALL={sqs_dft_qopt_te['ALL']}, BCC={sqs_dft_qopt_te['BCC']}, FCC={sqs_dft_qopt_te['FCC']}")
+
         # --- SQS additive decomposition ---
         print("\n[9a] SQS additive decomposition...")
         omega_dft = sqs_data["omega_dft"]
@@ -2417,12 +2472,14 @@ def main():
     )
     print(f"    q_BCC (DFT ref): {dft_sc_metrics['q_BCC_dft_ref']}")
     print(f"    q_FCC (DFT ref): {dft_sc_metrics['q_FCC_dft_ref']}")
-    print(f"    RMSE (opt q): {dft_sc_metrics['RMSE_dft_ref_opt_q']}")
-    print(f"    RMSE (q=1): {dft_sc_metrics['RMSE_dft_ref_q1']}")
-    print(f"    Improvement (opt q vs Vegard): "
-          f"{dft_sc_metrics['improvement_dft_ref_opt_pct']}%")
-    print(f"    Improvement (q=1 vs Vegard): "
-          f"{dft_sc_metrics['improvement_dft_ref_q1_pct']}%")
+    print(f"    Train RMSE (opt q): {dft_sc_metrics['RMSE_dft_ref_opt_q_train']}")
+    print(f"    Test  RMSE (opt q): {dft_sc_metrics['RMSE_dft_ref_opt_q_test']}")
+    print(f"    Test  RMSE BCC:     {dft_sc_metrics['RMSE_dft_ref_opt_q_test_BCC']}")
+    print(f"    Test  RMSE FCC:     {dft_sc_metrics['RMSE_dft_ref_opt_q_test_FCC']}")
+    print(f"    Improvement (test vs Vegard): "
+          f"{dft_sc_metrics['improvement_dft_ref_opt_test_pct']}%")
+    print(f"    Improvement (test BCC vs Vegard): "
+          f"{dft_sc_metrics['improvement_dft_ref_opt_test_BCC_pct']}%")
 
     # -----------------------------------------------------------------------
     # 9d. ML residual correction analysis
