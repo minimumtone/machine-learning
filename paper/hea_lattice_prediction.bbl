@@ -44,6 +44,17 @@ H.~W. King, Quantitative size-factors for metallic solid solutions, J. Mater.
 \newblock \href {https://doi.org/10.1007/BF00549722}
   {\path{doi:10.1007/BF00549722}}.
 
+\bibitem{CorenoAlonso2004}
+O.~Core{\~n}o-Alonso, J.~Core{\~n}o-Alonso, Volume size factor and lattice
+  parameter in cubic intermetallics with {L1}$_2$ or {B2} structure derived
+  from the ``{Macroscopic Atom}'' model, Intermetallics 12 (2004) 117--122.
+\newblock \href {https://doi.org/10.1016/j.intermet.2003.09.001}
+  {\path{doi:10.1016/j.intermet.2003.09.001}}.
+
+\bibitem{deBoer1988}
+F.~R. de~Boer, R.~Boom, W.~C.~M. Mattens, A.~R. Miedema, A.~K. Niessen,
+  Cohesion in Metals: Transition Metal Alloys, North-Holland, Amsterdam, 1988.
+
 \bibitem{Alonso2021}
 J.~A. Alonso, Estimation of the lattice parameters of {HEAs}, J. Phase Equilib.
   Diffus. 43 (2022) 555--566.
@@ -67,17 +78,6 @@ X.~Yang, Y.~Zhang, Prediction of high-entropy stabilized solid-solution in
   multi-component alloys, Mater. Chem. Phys. 132 (2012) 233--238.
 \newblock \href {https://doi.org/10.1016/j.matchemphys.2011.11.021}
   {\path{doi:10.1016/j.matchemphys.2011.11.021}}.
-
-\bibitem{CorenoAlonso2004}
-O.~Core{\~n}o-Alonso, J.~Core{\~n}o-Alonso, Volume size factor and lattice
-  parameter in cubic intermetallics with {L1}$_2$ or {B2} structure derived
-  from the ``{Macroscopic Atom}'' model, Intermetallics 12 (2004) 117--122.
-\newblock \href {https://doi.org/10.1016/j.intermet.2003.09.001}
-  {\path{doi:10.1016/j.intermet.2003.09.001}}.
-
-\bibitem{deBoer1988}
-F.~R. de~Boer, R.~Boom, W.~C.~M. Mattens, A.~R. Miedema, A.~K. Niessen,
-  Cohesion in Metals: Transition Metal Alloys, North-Holland, Amsterdam, 1988.
 
 \bibitem{Jain2013}
 A.~Jain, et~al., Commentary: {The Materials Project}: A materials genome

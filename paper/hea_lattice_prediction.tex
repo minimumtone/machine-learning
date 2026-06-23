@@ -672,6 +672,18 @@ B2参照構造の$\Omega_\text{sf}$データを473ペアに拡充し、
 BCC予測精度が大幅に改善された。
 全体RMSEは推定ノイズフロア（$\sigma \approx 0.016$~\AA）と同程度であり、
 現在のデータの範囲ではさらなる改善余地は限られる。
+
+ただし$N = 28$（BCC 15、FCC 13）という小標本での
+RMSE差の統計的有意性には注意が必要である。
+10,000回ブートストラップリサンプリングによる95\%信頼区間を評価した結果、
+全28合金での$\Delta$RMSE（Vegard $-$ DFT-$\Omega_\text{sf}$）$= +0.0022$~\AA{}
+（95\% CI: $[-0.0001, +0.0045]$）であり、
+信頼区間がゼロを含むため統計的に有意とは言えない。
+BCC 15合金でも$\Delta = +0.0029$~\AA{}（CI: $[-0.0012, +0.0068]$）で有意でない。
+FCC 13合金のみ$\Delta = +0.0013$~\AA{}（CI: $[+0.0002, +0.0027]$）で
+有意な改善が確認された。
+すなわち、RMSE改善の傾向は一貫しているが、
+現在のテストセットサイズでは改善幅の統計的確証は限定的である。
 図~\ref{fig:indep_test}に合金別誤差・構造別RMSE・パリティプロットを示す。
 
 \begin{figure*}[!t]
@@ -803,59 +815,14 @@ $\Omega_\text{sf}$がサイズ差だけでは説明できないことを示す�
 \subsection{$\delta r$の構造不変性}
 \label{sec:structural}
 
-\subsubsection{数学的証明}
-式~\eqref{eq:delta_r}より$\delta r = f(c_i, r_i)$は
-組成と純元素半径のみの関数であり、結晶構造の引数が存在しない。
-二元系$A$--$B$では：
-\begin{equation}
-  \delta r(c_A) = 100\,\frac{|r_A - r_B|\sqrt{c_A(1-c_A)}}
-    {c_A r_A + (1-c_A) r_B}.
-  \label{eq:delta_r_binary}
-\end{equation}
-L1$_2$（$c_A = 0.25$/$0.75$）かB2（$c_A = 0.50$）かとは
-無関係である。
-
-\subsubsection{435ペアによる計算検証}
-$\delta r(A_3B)$--$\delta r(B_3A)$プロットは偏差ゼロの
-1次元曲線を描く（図~\ref{fig:delta_r_proof}(a)(b)）。
-一方$\Omega_\text{sf}(A_3B)$--$\Omega_\text{sf}(B_3A)$は
-全435ペアで$r = 0.71$の中程度の正相関を示す（図~\ref{fig:delta_r_proof}(c)）。
-これは「同一ペアでも多数派/少数派サイトの入れ替えで$\Omega_\text{sf}$が変化する
-（完全には一致しない）が、系統的な傾向がある」ことを意味する。
-L1$_2$格子定数差$|a(A_3B) - a(B_3A)|$の平均は0.286~\AA、
-最大1.73~\AA{}に達し（754ペア）、$\delta r$ではこの構造非対称性は不可視である。
-なお、この非対称性は「結晶構造が原子体積に影響する」ことの
-\emph{証拠}であり、最終的な加法予測モデルの機能ではない。
-加法モデル$\delta_i + \delta_j$は対称であるため
-$A_3B$と$B_3A$の区別はできず、
-非対称性がL1$_2$加法分解の$R^2$（0.66）を1.0から引き下げる一因となっている。
-
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=\textwidth]{fig_delta_r_proof.png}
-\caption{$\delta r$の構造不変性の証明（435ペア、4f希土類+Y除外後）。
-  (a)~$\delta r(A_3B)$ vs $\delta r(B_3A)$: 完全一致（構造情報ゼロ）。
-  (b)~$\delta r(A_3B)$ vs $\delta r(\text{B2})$: 滑らかな曲線（組成のみの関数）。
-  (c)~$\Omega_\text{sf}(A_3B)$ vs $\Omega_\text{sf}(B_3A)$:
-  $r = 0.71$（435ペア）。対称でない散布はL1$_2$の構造依存性を反映。}
-\label{fig:delta_r_proof}
-\end{figure*}
-
-\noindent
-さらに図~\ref{fig:l12_b2_corr}にL1$_2$非対称性の分布と
-B2--L1$_2$間の$\Omega_\text{sf}$相関を示す。
-構造間相関は$r = 0.83$であり、
-$\Omega_\text{sf}$が構造依存であることを裏付ける。
-
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=0.85\textwidth]{fig_l12_b2_correlation.png}
-\caption{L1$_2$構造の非対称性と構造間相関。
-  (d)~L1$_2$格子定数差$|a(A_3B)-a(B_3A)|$の分布（754ペア、平均0.286~\AA）。
-  (e)~L1$_2$ $\Omega_\text{sf}$ vs B2 $\Omega_\text{sf}$（435ペア、$r = 0.83$）:
-  構造間で$\Omega_\text{sf}$は強い相関を持つが完全には一致しない。}
-\label{fig:l12_b2_corr}
-\end{figure*}
+$\delta r = f(c_i, r_i)$は定義上、結晶構造の引数を持たないため
+L1$_2$（$c_A = 0.25$）とB2（$c_A = 0.50$）に同一値を割り当てる。
+一方$\Omega_\text{sf}$は構造依存であり、
+435ペアの検証で$\delta r$間偏差ゼロ、
+$\Omega_\text{sf}$間相関$r = 0.71$を確認した。
+格子定数の構造依存性の予測には$\Omega_\text{sf}$が必要であり、
+$\delta r$の有用性は相安定性指標に限られる。
+詳細は付録~\ref{sec:appendix_delta_r}に示す。
 
 
 \subsection{剛体球接触モデルの限界}
@@ -991,51 +958,13 @@ Vegard則からの偏差の大部分が線形補間の精度内に収まるこ�
 \subsection{多相HEA分類}
 \label{sec:phase}
 
-$\Omega_\text{sf}$に基づくミスマッチ$\delta_\text{sf}$を定義する：
-\begin{equation}
-  \delta_\text{sf} = 100\sqrt{
-    \sum_i c_i \!\left(1 - \frac{1 + \bar{\Omega}_i}{1 +
-    \bar{\Omega}}\right)^{\!2}},
-  \label{eq:delta_sf}
-\end{equation}
-$\bar{\Omega}_i = \sum_{j \ne i} c_j \Omega_\text{sf}(i,j)$。
-
-\begin{table}[H]
-\centering
-\caption{相分類性能（SS vs 非SS）。訓練64 + 独立28 = 全92 HEAのうちSS 54合金を対象。}
-\label{tab:phase}
-\footnotesize
-\begin{tabular}{@{}lccc@{}}
-\toprule
-基準 & AUC & 精度 & F1 \\
-\midrule
-$\delta r$ (閾値4.73\%) & \textbf{0.869} & \textbf{0.815} & \textbf{0.833} \\
-$\delta_\text{sf}$ (閾値0.017) & 0.710 & 0.722 & 0.795 \\
-Yang--Zhang & --- & 0.648 & 0.725 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-$\delta r$は$\delta_\text{sf}$より相分類に優れる（AUC 0.869 vs 0.710）。
-固溶体安定性が主に幾何学的サイズ適合性で支配されることを示す
-（図~\ref{fig:roc}）。
-図~\ref{fig:phase_map}に$\delta r$--$\Omega$空間での
-相安定性マップを示す。
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.7\columnwidth]{fig_roc.png}
-\caption{SS vs 非SS分類のROC曲線（54 HEA）。
-  $\delta r$（AUC = 0.869）が$\delta_\text{sf}$（AUC = 0.710）を上回る。}
-\label{fig:roc}
-\end{figure}
-
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=0.55\textwidth]{fig_phase_map.png}
-\caption{$\delta r$--$\Omega$空間の相安定性マップ（54 HEA）。}
-\label{fig:phase_map}
-\end{figure*}
+$\Omega_\text{sf}$に基づくミスマッチ$\delta_\text{sf}$と
+従来の$\delta r$による固溶体（SS）分類を比較した。
+$\delta r$が$\delta_\text{sf}$より相分類に優れ（AUC 0.869 vs 0.710）、
+固溶体安定性が主に幾何学的サイズ適合性で支配されることを示す。
+$\delta_\text{sf}$は格子定数予測に有用だが、
+相安定性予測には$\delta r$が適切である。
+定義・ROC曲線・相安定性マップの詳細は付録~\ref{sec:appendix_phase}に示す。
 
 
 \subsection{機械学習残差解析}
@@ -2058,6 +1987,104 @@ Vegard則の補正に不可欠であることを裏付ける。
 \label{fig:vegard_vs_radius_l12}
 \end{figure*}
 
+
+
+\section{$\delta r$の構造不変性の詳細}
+\label{sec:appendix_delta_r}
+
+式~\eqref{eq:delta_r}より$\delta r = f(c_i, r_i)$は
+組成と純元素半径のみの関数であり、結晶構造の引数が存在しない。
+二元系$A$--$B$では：
+\begin{equation}
+  \delta r(c_A) = 100\,\frac{|r_A - r_B|\sqrt{c_A(1-c_A)}}
+    {c_A r_A + (1-c_A) r_B}.
+  \label{eq:delta_r_binary}
+\end{equation}
+L1$_2$（$c_A = 0.25$/$0.75$）かB2（$c_A = 0.50$）かとは
+無関係である。
+
+$\delta r(A_3B)$--$\delta r(B_3A)$プロットは偏差ゼロの
+1次元曲線を描く（図~\ref{fig:delta_r_proof}(a)(b)）。
+一方$\Omega_\text{sf}(A_3B)$--$\Omega_\text{sf}(B_3A)$は
+全435ペアで$r = 0.71$の中程度の正相関を示す（図~\ref{fig:delta_r_proof}(c)）。
+これは「同一ペアでも多数派/少数派サイトの入れ替えで$\Omega_\text{sf}$が変化する
+（完全には一致しない）が、系統的な傾向がある」ことを意味する。
+L1$_2$格子定数差$|a(A_3B) - a(B_3A)|$の平均は0.286~\AA、
+最大1.73~\AA{}に達し（754ペア）、$\delta r$ではこの構造非対称性は不可視である。
+加法モデル$\delta_i + \delta_j$は対称であるため
+$A_3B$と$B_3A$の区別はできず、
+非対称性がL1$_2$加法分解の$R^2$（0.66）を1.0から引き下げる一因となっている。
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_delta_r_proof.png}
+\caption{$\delta r$の構造不変性の検証（435ペア、4f希土類+Y除外後）。
+  (a)~$\delta r(A_3B)$ vs $\delta r(B_3A)$: 完全一致（構造情報ゼロ）。
+  (b)~$\delta r(A_3B)$ vs $\delta r(\text{B2})$: 滑らかな曲線（組成のみの関数）。
+  (c)~$\Omega_\text{sf}(A_3B)$ vs $\Omega_\text{sf}(B_3A)$:
+  $r = 0.71$（435ペア）。対称でない散布はL1$_2$の構造依存性を反映。}
+\label{fig:delta_r_proof}
+\end{figure*}
+
+\noindent
+さらに図~\ref{fig:l12_b2_corr}にL1$_2$非対称性の分布と
+B2--L1$_2$間の$\Omega_\text{sf}$相関を示す。
+構造間相関は$r = 0.83$であり、
+$\Omega_\text{sf}$が構造依存であることを裏付ける。
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.85\textwidth]{fig_l12_b2_correlation.png}
+\caption{L1$_2$構造の非対称性と構造間相関。
+  (d)~L1$_2$格子定数差$|a(A_3B)-a(B_3A)|$の分布（754ペア、平均0.286~\AA）。
+  (e)~L1$_2$ $\Omega_\text{sf}$ vs B2 $\Omega_\text{sf}$（435ペア、$r = 0.83$）:
+  構造間で$\Omega_\text{sf}$は強い相関を持つが完全には一致しない。}
+\label{fig:l12_b2_corr}
+\end{figure*}
+
+
+\section{多相HEA分類の詳細}
+\label{sec:appendix_phase}
+
+$\Omega_\text{sf}$に基づくミスマッチ$\delta_\text{sf}$を以下のように定義する：
+\begin{equation}
+  \delta_\text{sf} = 100\sqrt{
+    \sum_i c_i \!\left(1 - \frac{1 + \bar{\Omega}_i}{1 +
+    \bar{\Omega}}\right)^{\!2}},
+  \label{eq:delta_sf}
+\end{equation}
+$\bar{\Omega}_i = \sum_{j \ne i} c_j \Omega_\text{sf}(i,j)$。
+
+\begin{table}[H]
+\centering
+\caption{相分類性能（SS vs 非SS）。訓練64 + 独立28 = 全92 HEAのうちSS 54合金を対象。}
+\label{tab:phase}
+\footnotesize
+\begin{tabular}{@{}lccc@{}}
+\toprule
+基準 & AUC & 精度 & F1 \\
+\midrule
+$\delta r$ (閾値4.73\%) & \textbf{0.869} & \textbf{0.815} & \textbf{0.833} \\
+$\delta_\text{sf}$ (閾値0.017) & 0.710 & 0.722 & 0.795 \\
+Yang--Zhang & --- & 0.648 & 0.725 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\columnwidth]{fig_roc.png}
+\caption{SS vs 非SS分類のROC曲線（54 HEA）。
+  $\delta r$（AUC = 0.869）が$\delta_\text{sf}$（AUC = 0.710）を上回る。}
+\label{fig:roc}
+\end{figure}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.55\textwidth]{fig_phase_map.png}
+\caption{$\delta r$--$\Omega$空間の相安定性マップ（54 HEA）。}
+\label{fig:phase_map}
+\end{figure*}
 
 
 %% =====================================================================
