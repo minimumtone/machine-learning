@@ -134,6 +134,26 @@
     "correlation_l12_vs_fcc_sqs_n": 176,
     "correlation_l12_vs_fcc_sqs_r": 0.846,
     "correlation_l12_vs_fcc_sqs_slope": 0.932,
+    "test28_vegard": {
+      "ALL": 0.0176,
+      "BCC": 0.0186,
+      "FCC": 0.0164
+    },
+    "test28_sqs_king": {
+      "ALL": 0.0158,
+      "BCC": 0.0163,
+      "FCC": 0.0151
+    },
+    "test28_sqs_dft_q1": {
+      "ALL": 0.0149,
+      "BCC": 0.0147,
+      "FCC": 0.0151
+    },
+    "test28_sqs_dft_qopt": {
+      "ALL": 0.0157,
+      "BCC": 0.0162,
+      "FCC": 0.0151
+    },
     "sqs_additive_dft_n_elements": 31,
     "sqs_additive_dft_n_pairs": 414,
     "sqs_additive_dft_R2": 0.6064,
@@ -158,15 +178,19 @@
     "n_pure_l12": 39,
     "n_pairs_b2_dft": 595,
     "n_pairs_l12_dft": 741,
-    "q_BCC_dft_ref": 1.19,
-    "q_FCC_dft_ref": 0.28,
-    "RMSE_dft_ref_opt_q": 0.0197,
-    "RMSE_dft_ref_q1": 0.0214,
-    "RMSE_vegard_64": 0.0227,
-    "RMSE_king_opt_64": 0.0214,
-    "RMSE_king_q1_64": 0.0295,
-    "improvement_dft_ref_opt_pct": 12.9,
-    "improvement_dft_ref_q1_pct": 5.4
+    "q_BCC_dft_ref": 1.1882,
+    "q_FCC_dft_ref": 0.2795,
+    "RMSE_dft_ref_opt_q_train": 0.0197,
+    "RMSE_dft_ref_q1_train": 0.0214,
+    "RMSE_vegard_train": 0.0227,
+    "RMSE_king_opt_train": 0.0214,
+    "improvement_dft_ref_opt_train_pct": 12.9,
+    "RMSE_dft_ref_opt_q_test": 0.015,
+    "RMSE_dft_ref_opt_q_test_BCC": 0.014,
+    "RMSE_dft_ref_opt_q_test_FCC": 0.016,
+    "RMSE_vegard_test": 0.0176,
+    "improvement_dft_ref_opt_test_pct": 15.0,
+    "improvement_dft_ref_opt_test_BCC_pct": 24.6
   },
   "ml_residual": {
     "RMSE_physics_train": 0.0214,
