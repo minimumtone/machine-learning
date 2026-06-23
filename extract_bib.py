@@ -169,6 +169,12 @@ DEFAULT_PROVIDERS: Dict[str, Dict[str, Any]] = {
         "api_key_env": None,
         "api_key_required": False,
     },
+    "nims": {
+        "base_url": "https://gpucalc01.nims.go.jp/llm/v1",
+        "model": "gemma4",
+        "api_key_env": "NIMS_LLM_API_KEY",
+        "api_key_required": True,
+    },
 }
 
 
@@ -683,7 +689,7 @@ def main() -> None:
     parser.add_argument("--input-dir", "-d", help="PDF ファイルを含むディレクトリ")
     parser.add_argument("--output", "-o", default="library.bib", help="出力 .bib ファイル")
     parser.add_argument("--checkpoint", default=".extract_bib_checkpoint.json", help="チェックポイントファイル")
-    parser.add_argument("--provider", "-p", choices=["openai", "lmstudio"], default="openai")
+    parser.add_argument("--provider", "-p", choices=["openai", "lmstudio", "nims"], default="openai")
     parser.add_argument("--model", "-m", default=None, help="モデル名 (省略時: プロバイダデフォルト)")
     parser.add_argument("--base-url", default=None, help="API ベース URL (LM Studio 等)")
     parser.add_argument("--workers", "-w", type=int, default=4, help="並行ワーカー数")

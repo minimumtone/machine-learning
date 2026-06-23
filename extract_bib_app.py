@@ -184,6 +184,12 @@ DEFAULT_PROVIDERS: Dict[str, Dict[str, Any]] = {
         "api_key_env": None,
         "api_key_required": False,
     },
+    "nims": {
+        "base_url": "https://gpucalc01.nims.go.jp/llm/v1",
+        "model": "gemma4",
+        "api_key_env": "NIMS_LLM_API_KEY",
+        "api_key_required": True,
+    },
 }
 
 
@@ -584,7 +590,11 @@ st.markdown(
 
 with st.sidebar:
     st.header("LLM 設定")
-    provider = st.radio("プロバイダ", ["OpenAI", "LM Studio (ローカル)"], horizontal=True)
+    provider = st.radio(
+        "プロバイダ",
+        ["OpenAI", "LM Studio (ローカル)", "NIMS GPU (Gemma4-31b)"],
+        horizontal=True,
+    )
 
     if provider == "OpenAI":
         provider_key = "openai"
@@ -598,6 +608,15 @@ with st.sidebar:
             "gpt-5.4-pro", "gpt-5.4-thinking", "gpt-5.3-instant",
         ])
         base_url = None
+    elif provider == "NIMS GPU (Gemma4-31b)":
+        provider_key = "nims"
+        api_key = st.text_input(
+            "NIMS API Key",
+            value=os.getenv("NIMS_LLM_API_KEY", "sk-wLRMbcd8vhRr35wcutnvfQ"),
+            type="password",
+        )
+        model = st.text_input("モデル名", value="gemma4")
+        base_url = "https://gpucalc01.nims.go.jp/llm/v1"
     else:
         provider_key = "lmstudio"
         api_key = None
