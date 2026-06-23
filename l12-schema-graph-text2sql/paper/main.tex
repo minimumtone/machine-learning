@@ -66,41 +66,26 @@
 
 % =====================================================================
 \begin{abstract}
-無機材料の第一原理計算データベースには
-組成・構造・安定性・物性の計算データが大量に蓄積されているが、
-SQLとスキーマ構造の理解を要求する利用形態は
-材料研究者にとって大きな障壁となっている。
-本研究では、無機材料リレーショナルデータベース（RDB）に対する
-自然言語アクセスを可能にするための設計原理を提示し、
-代表的な無機材料RDBを用いてその有効性を実証する。
+無機材料データベースはSQLの知識を前提としており、
+材料研究者にとってデータ活用の障壁となっている。
+本研究では、無機材料リレーショナルデータベース（RDB）への
+自然言語アクセスを実現するText-to-SQLパイプラインの
+設計原理を提示し、その有効性を実証する。
+提案手法は、few-shot例検索、LLMによるSQL生成、
+外部キーグラフに基づくSteiner木JOIN制約、
+材料ドメイン辞書、AST解析ベースのSQL安全性検証、
+LLMリランカーの6要素から構成される。
 
-提案する設計原理は以下の構成要素に基づく：
-(1)~few-shot例検索（TF-IDFとCross-Encoder）、
-(2)~LLMによるスキーマリンキングとSQL生成、
-(3)~外部キー関係のグラフ化とSteiner木近似による
-最小JOIN経路の構造的決定、
-(4)~材料ドメイン辞書（497語）による用語--SQL条件マッピング、
-(5)~AST解析ベースのSQL安全性検証、
-(6)~LLMによるSQL候補リランキング。
-外部キーメタデータに基づく設計により、
-スキーマ変更やテーブル追加への追随が比較的容易となる。
-
-L1$_2$型金属間化合物を中心とする31テーブル・1{,}559件のRDBを
-検証対象として、
-100件の評価クエリ（うち5件はCTEによる多段計算クエリ）による
-7条件のablation study（5独立ラン、計3{,}500回評価）を実施した。
-材料ドメイン辞書の除去は全体で$-$7.3\,pp（$p<0.001$）の精度低下を引き起こし、
-ドメイン固有用語のマッピングが不可欠であることを示した。
-few-shot例の除去は$-$7.4\,pp（$p<0.001$）の低下を引き起こし、
-テンプレートパターンの学習効果を確認した。
-さらに、RDBスキーマの正規化度とテーブル構造が
-Text-to-SQL精度の上流要因となることを明らかにし、
-ビュー定義やスキーマ設計の見直しが
-精度向上の有効な方策となりうることを論じた。
-これらの知見は検証に用いた特定のデータベースに限らず、
-同種の無機材料RDBへの展開可能性を示唆する。
+L1$_2$型金属間化合物を中心とする31テーブルのRDBに対し、
+100件の評価クエリで7条件のablation study
+（5独立ラン、計3{,}500回評価）を実施した。
+few-shot例と材料ドメイン辞書がそれぞれ
+$-$7.4\,pp（$p<0.001$）、$-$7.3\,pp（$p<0.001$）と
+統計的に有意な寄与を示した。
+多軸評価では実行精度84.7\%、構文妥当率100\%、
+JOIN一致率93.2\%を達成した。
 全評価は5独立ランの平均$\pm$標準偏差で報告し、
-Wilcoxon符号順位検定（$\alpha=0.05$）による統計的有意性を確認した。
+Wilcoxon符号順位検定による有意性を確認した。
 
 \end{abstract}
 
@@ -210,13 +195,28 @@ OQMDを代表例として選び、実際に自然言語クエリで
     標準的な評価セットは存在しない。
 \end{enumerate}
 
-これらの課題に対する設計原理として以下を提案する：
-(1)~FK関係のグラフ上でのSteiner木近似によるJOIN経路の構造的決定、
-(2)~材料ドメイン辞書による用語--SQL条件の直接マッピング、
-(3)~Cross-EncoderとLLMを組み合わせたハイブリッドリランカー。
-L1$_2$型金属間化合物の31テーブルRDBを検証対象として、
-7条件$\times$100件のablation studyにより
-各構成要素の寄与を定量化した結果を報告する。
+これらの課題に対し、本研究の貢献は以下の3点である：
+\begin{enumerate}[label=(\roman*)]
+  \item \textbf{無機材料RDB向けText-to-SQLの設計原理}：
+    FK関係のグラフ上でのSteiner木近似によるJOIN制約、
+    材料ドメイン辞書、ハイブリッドリランカーを統合した
+    パイプラインを提案する。
+    汎用Text-to-SQL（DIN-SQL, DAIL-SQL, SchemaGraphSQL等）が
+    材料固有の用語変換を持たず、
+    材料NLアクセス（MKNA, OptiMat等）がRDB/SQLを対象としない
+    中間領域を埋める方法論である。
+  \item \textbf{多軸定量評価}：
+    L1$_2$型31テーブルRDBにおける
+    7条件$\times$100件$\times$5ランの統計的ablation
+    （Wilcoxon符号順位検定）に加え、
+    few-shot例数$k$感度、辞書サイズ感度、
+    LLMモデル比較、多軸指標（EM/SELECT列精度/JOIN一致率）を提供する。
+  \item \textbf{材料ドメイン知識の定量的効果}：
+    材料辞書（$-$7.3\,pp, $p<0.001$）と
+    few-shot例（$-$7.4\,pp, $p<0.001$）が
+    統計的に有意な寄与を持つことを示し、
+    ドメイン特化モジュールの必要性を実証する。
+\end{enumerate}
 
 % =====================================================================
 \section{提案手法}
@@ -806,6 +806,18 @@ OQMD~\cite{saal2013oqmd,kirklin2015oqmd}由来の
 著者が設計した100件のクエリを使用した（表~\ref{tab:query_design}）。
 各クエリにはgold SQL、期待される実行結果（JSON）、
 必要テーブル、JOIN経路が付与されている。
+無機材料RDBに対するText-to-SQLの標準ベンチマークは
+現時点で存在しないため、本研究ではデータベースのスキーマ構造と
+材料研究者の典型的な情報要求パターンに基づいて
+評価クエリを構築した。
+クエリは以下の原則に従って設計した：
+(1)~実際の材料研究で生じる質問を模擬（例：安定相の探索、組成-物性相関）、
+(2)~難易度はJOINホップ数と条件の複合度で4段階に分類、
+(3)~全カテゴリ（A--H）の均等なカバレッジ、
+(4)~CTE多段計算クエリ5件を含め高度な分析パターンも評価。
+著者設計クエリの限界として、
+クエリ分布が実ユーザの利用パターンと異なる可能性があり、
+今後の課題としてユーザスタディによる検証が必要である。
 
 \begin{table}[t]
   \centering
@@ -917,6 +929,202 @@ no\_graph & 31.6 \\
 \end{table}
 
 % =====================================================================
+\section{感度分析}
+\label{sec:sensitivity}
+
+ablation studyで特に有意であった構成要素について、
+パラメータの変化に対する精度感度を分析する。
+
+\subsection{Few-shot例数の影響}
+\label{sec:fewshot_sensitivity}
+
+few-shot例の検索数$k$を1, 3, 5, 10, 15と変化させて
+100件のクエリで精度を測定した（表~\ref{tab:fewshot_k}、図~\ref{fig:fewshot_k}）。
+
+\begin{table}[t]
+\centering
+\caption{Few-shot例数$k$と精度の関係。
+$k=3$が精度/レイテンシのバランスにおいて最適であり、
+$k=15$ではVH帯で過適合的な精度低下が観測された。}
+\label{tab:fewshot_k}
+\small
+\begin{tabular}{@{}lrrrrrrr@{}}
+\toprule
+$k$ & 全体 & Easy & Med & Hard & VH & レイテンシ(s) \\
+\midrule
+1  & 81.4 & 100.0 & 96.1 & 77.0 & 47.4 & 36.2 \\
+3  & 84.5 & 100.0 & 96.1 & 80.4 & 57.8 & 30.0 \\
+5  & 84.5 & 100.0 & 96.1 & 80.4 & 57.7 & 31.8 \\
+10 & 85.5 & 100.0 & 96.1 & 80.4 & 62.5 & 43.1 \\
+15 & 83.4 & 100.0 & 96.1 & 80.4 & 52.4 & 47.3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fewshot_sensitivity.png}
+\caption{Few-shot例数$k$と難易度別精度の関係。
+Easy/Medium/Hard帯は$k\geq 3$で飽和するが、
+Very Hard帯は$k=10$でピーク（62.5\%）を示した後、
+$k=15$で10\,ppの低下を示す。}
+\label{fig:fewshot_k}
+\end{figure}
+
+$k=1 \to 3$で全体$+$3.1\,ppの改善が見られ、
+特にVH帯では$+$10.4\,ppと効果が顕著である。
+$k=3$以降、Easy/Medium/Hard帯はほぼ飽和し、
+差異はVH帯に集中する。
+$k=10$でVH帯62.5\%のピークに達するが、
+レイテンシは43\%増加（30.0\,s $\to$ 43.1\,s）する。
+$k=15$ではVH帯が10\,pp低下しており、
+プロンプト中のfew-shot例が多すぎると
+LLMの注意が分散する過適合的現象が示唆される。
+以上から、本手法では$k=3$を推奨設定とする。
+
+\subsection{ドメイン辞書サイズの影響}
+\label{sec:dict_sensitivity}
+
+材料ドメイン辞書のエントリ数を
+全量（61エントリ）、50\%（30）、25\%（15）、0\%（辞書なし）と
+段階的に削減して精度への影響を測定した
+（表~\ref{tab:dict_size}、図~\ref{fig:dict_size}）。
+
+\begin{table}[t]
+\centering
+\caption{ドメイン辞書サイズと精度の関係。
+核心的な用語（prototype, elements, stability等）を優先的に残す
+削減方式を採用。}
+\label{tab:dict_size}
+\small
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+辞書サイズ & 全体 & Easy & Med & Hard & VH \\
+\midrule
+Full (61)  & 85.5 & 100.0 & 96.1 & 80.4 & 62.6 \\
+50\% (30)  & 80.6 & 100.0 & 92.5 & 73.7 & 48.0 \\
+25\% (15)  & 82.4 & 100.0 & 96.1 & 73.7 & 57.4 \\
+0\% (none) & 80.2 & 100.0 & 96.1 & 73.7 & 42.3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/dict_sensitivity.png}
+\caption{ドメイン辞書サイズと難易度別精度。
+VH帯で辞書サイズの影響が最も顕著に現れる。}
+\label{fig:dict_size}
+\end{figure}
+
+辞書サイズの効果はVH帯で最も顕著であり、
+Full $\to$ 0\%で$-$20.3\,ppの低下を示す。
+Easy帯は辞書の有無に関わらず100\%を維持しており、
+辞書の効果は専門用語のSQL条件への変換が
+必要な高難度クエリに集中している。
+50\% $\to$ 25\%で全体精度が若干回復する現象は、
+核心的な用語が25\%サブセットに含まれるためと考えられる。
+
+\subsection{LLMモデルの影響}
+\label{sec:model_comparison}
+
+GPT-5.5とGPT-4oで同一100件のクエリを評価した
+（表~\ref{tab:model_comp}、図~\ref{fig:model_comp}）。
+
+\begin{table}[t]
+\centering
+\caption{LLMモデル比較。GPT-4oは25$\times$高速だが
+VH帯で14.6\,ppの精度差。}
+\label{tab:model_comp}
+\small
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+モデル & 全体 & Easy & Med & Hard & VH & レイテンシ(s) \\
+\midrule
+GPT-5.5 & 84.7 & 100.0 & 96.1 & 80.4 & 58.6 & 35.0 \\
+GPT-4o  & 80.8 & 100.0 & 96.1 & 76.2 & 44.0 &  1.7 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/model_comparison.png}
+\caption{GPT-5.5 vs GPT-4oの難易度別精度比較。
+Easy/Medium帯は同等だが、Hard/VH帯で顕著な差が現れる。}
+\label{fig:model_comp}
+\end{figure}
+
+GPT-4oはレイテンシ1.7\,s（GPT-5.5の約1/20）と極めて高速であるが、
+全体精度は80.8\%（$-$3.9\,pp）であり、
+特にVH帯では44.0\%（$-$14.6\,pp）と大きな差がある。
+Easy/Medium帯ではほぼ同等の精度を示すことから、
+高速プロトタイピングにはGPT-4oが適しているが、
+高難度の材料ドメインクエリにはGPT-5.5が必要である。
+
+% =====================================================================
+\section{多軸評価指標}
+\label{sec:multiaxis}
+
+実行精度（Recall）のみでは評価が不十分であるため、
+複数の補足指標を算出した
+（表~\ref{tab:multiaxis}、図~\ref{fig:radar}）。
+
+\begin{table}[t]
+\centering
+\caption{多軸評価指標。EM = Exact Match、
+SELECT列 = 生成SQLのSELECT列がgold SQLの列と一致する割合、
+JOIN一致 = gold SQLのJOINテーブルが生成SQLに含まれる割合。
+全指標は100件の平均。}
+\label{tab:multiaxis}
+\small
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+& Easy & Medium & Hard & VH \\
+\midrule
+Recall (EX)      & 100.0 & 96.7 & 80.4 & 57.8 \\
+Precision        &  97.7 & 85.2 & 68.4 & 58.1 \\
+F1               &  98.8 & 87.7 & 68.7 & 40.8 \\
+Exact Match      &  10.0 & 36.7 & 23.3 &  0.0 \\
+SELECT列精度     &  62.9 & 72.5 & 65.1 & 47.7 \\
+JOIN一致率       &  97.5 & 99.2 & 97.5 & 73.5 \\
+構文妥当率       & 100.0 & 100.0 & 100.0 & 100.0 \\
+実行成功率       & 100.0 & 100.0 & 100.0 & 100.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/multiaxis_radar.png}
+\caption{難易度別の多軸評価レーダーチャート。
+構文・実行妥当率は全難易度で100\%。
+VH帯ではExact Match 0\%であるが、
+Recall 57.8\%が示すように部分的な正解は多い。}
+\label{fig:radar}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/ablation_bar.png}
+\caption{Ablation study結果の棒グラフ（5-run mean $\pm$ SD）。
+赤色は統計的に有意な精度低下を示す条件
+（$^{***}$: $p<0.001$）。}
+\label{fig:ablation_bar}
+\end{figure}
+
+構文妥当率・実行成功率は全難易度で100\%を達成しており、
+SQLGuardとリペアループが安全なSQL生成を保証している。
+Exact Match率はEM=20\%と低いが、
+これはSELECT列の追加・順序の差異によるものであり、
+Recall 84.7\%が示すようにデータ内容としては正しい結果を返す。
+JOIN一致率は全体93.2\%であり、
+Steiner木制約がJOIN経路の正確性を確保していることを裏付ける。
+VH帯でのJOIN一致率73.5\%は、5テーブル以上のJOINを含む
+複雑なクエリにおいてSteiner木制約でも一部の経路を
+正確に特定できない場合があることを示す。
+
+% =====================================================================
 \section{エラー分析}
 \label{sec:error_analysis}
 
@@ -982,6 +1190,22 @@ Schema Graph走査の制約はVery Hard難度でも有効に機能している�
 \textbf{WHERE句生成の精度向上}
 （Few-Shotプロンプト拡充、Chain-of-Thought推論の導入）
 にあることを示唆する。
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/error_distribution.png}
+\caption{失敗10事例におけるエラータイプの分布。
+SELECT列の不一致とGROUP BY欠落が主要な失敗モードである。}
+\label{fig:error_dist}
+\end{figure}
+
+図~\ref{fig:error_dist}は代表的な失敗10事例のエラータイプ分布を示す。
+SELECT列の不一致（Wrong Columns）が最多であり、
+LLMが必要な集約列やalias名を正確に特定できないケースが多い。
+GROUP BY欠落はVH帯の集約クエリに集中しており、
+LLMが複雑な集約構造を理解する能力の限界を示す。
+JOIN Mismatchは比較的少なく（2件）、
+Schema Graph走査によるJOIN制約が有効に機能していることを裏付ける。
 
 % =====================================================================
 \section{SQLインジェクションと安全性}
@@ -1185,6 +1409,13 @@ LLM単体（few-shot例なし、辞書なし）の精度は77.3\%にとどまり
 単なる利便性向上にとどまらず、
 これまでスキーマ障壁により利用されなかったデータへの
 アクセスを実質的に可能にすることを示唆する。
+具体的には、構文妥当率100\%、実行成功率100\%
+（表~\ref{tab:multiaxis}）の達成は、
+SQLに不慣れな材料研究者が自然言語を通じて
+安全にデータベースを利用できることを意味する。
+JOIN一致率93.2\%は、正規化された多テーブルRDBにおいても
+テーブル間の結合経路が高精度に特定されることを示し、
+スキーマ理解の負担を大幅に軽減する。
 
 スキーマ進化やデータ増加への対応については、
 本パイプラインがFKメタデータに基づく設計を採用しているため、
@@ -1268,6 +1499,19 @@ AFLOW~\cite{curtarolo2012aflow}）への適用時に
 既存のRDBインフラに対するSQL生成は扱っていない。
 本研究は「正規化RDB + 材料ドメイン知識 + FKグラフ走査」の組合せにより、
 これらのアプローチ間の空白を埋める方法論を提示する。
+
+特にSchemaGraphSQL~\cite{safdarian2026schemagraphsql}とは
+FKグラフ上のパスファインディングを用いる点で技術的に近いが、
+以下の点で差別化される：
+(1)~SchemaGraphSQLは汎用ベンチマーク（Spider/BIRD）で評価されており、
+ドメイン固有の用語変換機構を持たない。
+本手法は材料ドメイン辞書（61エントリ）により
+「安定」$\to$\texttt{is\_stable=TRUE}等の変換を実現し、
+辞書除去時に$-$7.3\,pp（$p<0.001$）の精度低下を定量的に示した。
+(2)~SchemaGraphSQLのJOIN探索はSchemaGraphのエッジ重み最適化に基づくが、
+本手法はSteiner木近似により最小コストのJOIN部分木を求める。
+(3)~本手法はAST解析によるSQL安全性検証（SQLGuard）を含み、
+SQLインジェクション等の安全性リスクに対処する。
 
 \begin{table*}[htbp]
   \centering

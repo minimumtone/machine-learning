@@ -1,0 +1,619 @@
+{
+  "n_queries": 100,
+  "models": {
+    "gpt-4o": {
+      "provider": "openai",
+      "model_id": "gpt-4o",
+      "overall": 0.8075565323328482,
+      "by_difficulty": {
+        "easy": 1.0,
+        "medium": 0.9333333333333333,
+        "hard": 0.7983890708890709,
+        "very_hard": 0.44019905533063425
+      },
+      "avg_latency": 1.72,
+      "results": [
+        {
+          "qid": "q_easy_001",
+          "difficulty": "easy",
+          "accuracy": 1.0,
+          "latency_s": 12.2
+        },
+        {
+          "qid": "q_easy_002",
+          "difficulty": "easy",
+          "accuracy": 1.0,
+          "latency_s": 2.1
+        },
+        {
+          "qid": "q_easy_003",
+          "difficulty": "easy",
+          "accuracy": 1.0,
+          "latency_s": 1.7
+        },
+        {
+          "qid": "q_easy_004",
+          "difficulty": "easy",
+          "accuracy": 1.0,
+          "latency_s": 1.0
+        },
+        {
+          "qid": "q_easy_005",
+          "difficulty": "easy",
+          "accuracy": 1.0,
+          "latency_s": 0.9
+        },
+        {
+          "qid": "q_easy_006",
+          "difficulty": "easy",
+          "accuracy": 1.0,
+          "latency_s": 1.0
+        },
+        {
+          "qid": "q_easy_007",
+          "difficulty": "easy",
+          "accuracy": 1.0,
+          "latency_s": 1.2
+        },
+        {
+          "qid": "q_easy_008",
+          "difficulty": "easy",
+          "accuracy": 1.0,
+          "latency_s": 3.2
+        },
+        {
+          "qid": "q_easy_009",
+          "difficulty": "easy",
+          "accuracy": 1.0,
+          "latency_s": 1.1
+        },
+        {
+          "qid": "q_easy_010",
+          "difficulty": "easy",
+          "accuracy": 1.0,
+          "latency_s": 1.1
+        },
+        {
+          "qid": "q_easy_011",
+          "difficulty": "easy",
+          "accuracy": 1.0,
+          "latency_s": 0.7
+        },
+        {
+          "qid": "q_easy_012",
+          "difficulty": "easy",
+          "accuracy": 1.0,
+          "latency_s": 0.8
+        },
+        {
+          "qid": "q_easy_013",
+          "difficulty": "easy",
+          "accuracy": 1.0,
+          "latency_s": 2.1
+        },
+        {
+          "qid": "q_easy_014",
+          "difficulty": "easy",
+          "accuracy": 1.0,
+          "latency_s": 2.1
+        },
+        {
+          "qid": "q_easy_015",
+          "difficulty": "easy",
+          "accuracy": 1.0,
+          "latency_s": 1.1
+        },
+        {
+          "qid": "q_easy_016",
+          "difficulty": "easy",
+          "accuracy": 1.0,
+          "latency_s": 1.0
+        },
+        {
+          "qid": "q_easy_017",
+          "difficulty": "easy",
+          "accuracy": 1.0,
+          "latency_s": 1.5
+        },
+        {
+          "qid": "q_easy_018",
+          "difficulty": "easy",
+          "accuracy": 1.0,
+          "latency_s": 1.0
+        },
+        {
+          "qid": "q_easy_019",
+          "difficulty": "easy",
+          "accuracy": 1.0,
+          "latency_s": 1.1
+        },
+        {
+          "qid": "q_easy_020",
+          "difficulty": "easy",
+          "accuracy": 1.0,
+          "latency_s": 1.2
+        },
+        {
+          "qid": "q_medium_001",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.4
+        },
+        {
+          "qid": "q_medium_002",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.2
+        },
+        {
+          "qid": "q_medium_003",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 2.9
+        },
+        {
+          "qid": "q_medium_004",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.3
+        },
+        {
+          "qid": "q_medium_005",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.5
+        },
+        {
+          "qid": "q_medium_006",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.2
+        },
+        {
+          "qid": "q_medium_007",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.0
+        },
+        {
+          "qid": "q_medium_008",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.5
+        },
+        {
+          "qid": "q_medium_009",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.1
+        },
+        {
+          "qid": "q_medium_010",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.2
+        },
+        {
+          "qid": "q_medium_011",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.2
+        },
+        {
+          "qid": "q_medium_012",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.3
+        },
+        {
+          "qid": "q_medium_013",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.2
+        },
+        {
+          "qid": "q_medium_014",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.0
+        },
+        {
+          "qid": "q_medium_015",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.4
+        },
+        {
+          "qid": "q_medium_016",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.3
+        },
+        {
+          "qid": "q_medium_017",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.3
+        },
+        {
+          "qid": "q_medium_018",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.5
+        },
+        {
+          "qid": "q_medium_019",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 2.7
+        },
+        {
+          "qid": "q_medium_020",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.6
+        },
+        {
+          "qid": "q_medium_021",
+          "difficulty": "medium",
+          "accuracy": 0.0,
+          "latency_s": 1.3
+        },
+        {
+          "qid": "q_medium_022",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.1
+        },
+        {
+          "qid": "q_medium_023",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.2
+        },
+        {
+          "qid": "q_medium_024",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.4
+        },
+        {
+          "qid": "q_medium_025",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.5
+        },
+        {
+          "qid": "q_medium_026",
+          "difficulty": "medium",
+          "accuracy": 0.0,
+          "latency_s": 1.4
+        },
+        {
+          "qid": "q_medium_027",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.2
+        },
+        {
+          "qid": "q_medium_028",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.2
+        },
+        {
+          "qid": "q_medium_029",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.1
+        },
+        {
+          "qid": "q_medium_030",
+          "difficulty": "medium",
+          "accuracy": 1.0,
+          "latency_s": 1.2
+        },
+        {
+          "qid": "q_hard_001",
+          "difficulty": "hard",
+          "accuracy": 1.0,
+          "latency_s": 1.5
+        },
+        {
+          "qid": "q_hard_002",
+          "difficulty": "hard",
+          "accuracy": 1.0,
+          "latency_s": 1.8
+        },
+        {
+          "qid": "q_hard_003",
+          "difficulty": "hard",
+          "accuracy": 1.0,
+          "latency_s": 1.1
+        },
+        {
+          "qid": "q_hard_004",
+          "difficulty": "hard",
+          "accuracy": 1.0,
+          "latency_s": 1.6
+        },
+        {
+          "qid": "q_hard_005",
+          "difficulty": "hard",
+          "accuracy": 1.0,
+          "latency_s": 1.5
+        },
+        {
+          "qid": "q_hard_006",
+          "difficulty": "hard",
+          "accuracy": 1.0,
+          "latency_s": 1.5
+        },
+        {
+          "qid": "q_hard_007",
+          "difficulty": "hard",
+          "accuracy": 1.0,
+          "latency_s": 1.4
+        },
+        {
+          "qid": "q_hard_008",
+          "difficulty": "hard",
+          "accuracy": 1.0,
+          "latency_s": 1.4
+        },
+        {
+          "qid": "q_hard_009",
+          "difficulty": "hard",
+          "accuracy": 1.0,
+          "latency_s": 1.4
+        },
+        {
+          "qid": "q_hard_010",
+          "difficulty": "hard",
+          "accuracy": 1.0,
+          "latency_s": 1.3
+        },
+        {
+          "qid": "q_hard_011",
+          "difficulty": "hard",
+          "accuracy": 0.6216216216216216,
+          "latency_s": 1.3
+        },
+        {
+          "qid": "q_hard_012",
+          "difficulty": "hard",
+          "accuracy": 0.5,
+          "latency_s": 1.9
+        },
+        {
+          "qid": "q_hard_013",
+          "difficulty": "hard",
+          "accuracy": 0.125,
+          "latency_s": 1.4
+        },
+        {
+          "qid": "q_hard_014",
+          "difficulty": "hard",
+          "accuracy": 0.0,
+          "latency_s": 1.4
+        },
+        {
+          "qid": "q_hard_015",
+          "difficulty": "hard",
+          "accuracy": 0.5050505050505051,
+          "latency_s": 1.5
+        },
+        {
+          "qid": "q_hard_016",
+          "difficulty": "hard",
+          "accuracy": 1.0,
+          "latency_s": 1.1
+        },
+        {
+          "qid": "q_hard_017",
+          "difficulty": "hard",
+          "accuracy": 1.0,
+          "latency_s": 1.5
+        },
+        {
+          "qid": "q_hard_018",
+          "difficulty": "hard",
+          "accuracy": 0.0,
+          "latency_s": 1.9
+        },
+        {
+          "qid": "q_hard_019",
+          "difficulty": "hard",
+          "accuracy": 1.0,
+          "latency_s": 1.0
+        },
+        {
+          "qid": "q_hard_020",
+          "difficulty": "hard",
+          "accuracy": 0.2,
+          "latency_s": 1.5
+        },
+        {
+          "qid": "q_hard_021",
+          "difficulty": "hard",
+          "accuracy": 1.0,
+          "latency_s": 2.7
+        },
+        {
+          "qid": "q_hard_022",
+          "difficulty": "hard",
+          "accuracy": 1.0,
+          "latency_s": 1.5
+        },
+        {
+          "qid": "q_hard_023",
+          "difficulty": "hard",
+          "accuracy": 1.0,
+          "latency_s": 2.0
+        },
+        {
+          "qid": "q_hard_024",
+          "difficulty": "hard",
+          "accuracy": 1.0,
+          "latency_s": 1.6
+        },
+        {
+          "qid": "q_hard_025",
+          "difficulty": "hard",
+          "accuracy": 1.0,
+          "latency_s": 1.7
+        },
+        {
+          "qid": "q_hard_026",
+          "difficulty": "hard",
+          "accuracy": 1.0,
+          "latency_s": 1.3
+        },
+        {
+          "qid": "q_hard_027",
+          "difficulty": "hard",
+          "accuracy": 1.0,
+          "latency_s": 1.6
+        },
+        {
+          "qid": "q_hard_028",
+          "difficulty": "hard",
+          "accuracy": 1.0,
+          "latency_s": 1.0
+        },
+        {
+          "qid": "q_hard_029",
+          "difficulty": "hard",
+          "accuracy": 1.0,
+          "latency_s": 1.3
+        },
+        {
+          "qid": "q_hard_030",
+          "difficulty": "hard",
+          "accuracy": 0.0,
+          "latency_s": 1.8
+        },
+        {
+          "qid": "q_vhard_001",
+          "difficulty": "very_hard",
+          "accuracy": 0.5076923076923077,
+          "latency_s": 1.9
+        },
+        {
+          "qid": "q_vhard_002",
+          "difficulty": "very_hard",
+          "accuracy": 0.06666666666666667,
+          "latency_s": 1.8
+        },
+        {
+          "qid": "q_vhard_003",
+          "difficulty": "very_hard",
+          "accuracy": 0.0,
+          "latency_s": 2.1
+        },
+        {
+          "qid": "q_vhard_004",
+          "difficulty": "very_hard",
+          "accuracy": 1.0,
+          "latency_s": 4.7
+        },
+        {
+          "qid": "q_vhard_005",
+          "difficulty": "very_hard",
+          "accuracy": 1.0,
+          "latency_s": 1.5
+        },
+        {
+          "qid": "q_vhard_006",
+          "difficulty": "very_hard",
+          "accuracy": 0.18974358974358974,
+          "latency_s": 2.4
+        },
+        {
+          "qid": "q_vhard_007",
+          "difficulty": "very_hard",
+          "accuracy": 0.0,
+          "latency_s": 1.8
+        },
+        {
+          "qid": "q_vhard_008",
+          "difficulty": "very_hard",
+          "accuracy": 0.10526315789473684,
+          "latency_s": 1.6
+        },
+        {
+          "qid": "q_vhard_009",
+          "difficulty": "very_hard",
+          "accuracy": 0.0,
+          "latency_s": 2.5
+        },
+        {
+          "qid": "q_vhard_010",
+          "difficulty": "very_hard",
+          "accuracy": 1.0,
+          "latency_s": 1.3
+        },
+        {
+          "qid": "q_vhard_011",
+          "difficulty": "very_hard",
+          "accuracy": 1.0,
+          "latency_s": 1.5
+        },
+        {
+          "qid": "q_vhard_012",
+          "difficulty": "very_hard",
+          "accuracy": 0.18461538461538463,
+          "latency_s": 1.6
+        },
+        {
+          "qid": "q_vhard_013",
+          "difficulty": "very_hard",
+          "accuracy": 0.75,
+          "latency_s": 4.5
+        },
+        {
+          "qid": "q_vhard_014",
+          "difficulty": "very_hard",
+          "accuracy": 0.0,
+          "latency_s": 1.6
+        },
+        {
+          "qid": "q_vhard_015",
+          "difficulty": "very_hard",
+          "accuracy": 0.0,
+          "latency_s": 1.6
+        },
+        {
+          "qid": "q_vhard_016",
+          "difficulty": "very_hard",
+          "accuracy": 1.0,
+          "latency_s": 1.4
+        },
+        {
+          "qid": "q_vhard_017",
+          "difficulty": "very_hard",
+          "accuracy": 1.0,
+          "latency_s": 1.8
+        },
+        {
+          "qid": "q_vhard_018",
+          "difficulty": "very_hard",
+          "accuracy": 1.0,
+          "latency_s": 1.5
+        },
+        {
+          "qid": "q_vhard_019",
+          "difficulty": "very_hard",
+          "accuracy": 0.0,
+          "latency_s": 7.5
+        },
+        {
+          "qid": "q_vhard_020",
+          "difficulty": "very_hard",
+          "accuracy": 0.0,
+          "latency_s": 2.4
+        }
+      ]
+    }
+  }
+}
