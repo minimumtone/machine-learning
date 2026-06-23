@@ -462,7 +462,7 @@ $N$点のうち1点を抜いて$N-1$点で学習し、
 抜いた1点を予測する操作を全点で繰り返し、
 過学習を排除した汎化誤差を推定する手法）を用いた：
 \begin{itemize}
-  \item \textbf{Ridge回帰（残差補正）}（$\alpha = 1.0$）: 物理モデル残差$\Delta a_i = a_i^\text{exp} - a_i^\text{pred}$を学習し、補正後予測$a_i^\text{pred} + \widehat{\Delta a}_i$を出力。6組成記述子（$\delta r$、$\delta\chi$、VEC、構造フラグ、$S_\text{mix}$、元素数）を使用。
+  \item \textbf{Ridge回帰（残差補正）}（$\alpha = 1.0$）: 物理モデル残差$\Delta a_i = a_i^\text{exp} - a_i^\text{pred}$を学習し、補正後予測$a_i^\text{pred} + \widehat{\Delta a}_i$を出力。6記述子（平均VEC、$\delta r$、$\delta_\text{sf}$、平均電気陰性度、元素数、VEC標準偏差）を使用。
   \item \textbf{GradientBoosting（直接予測）}（100本、深さ3）: 同一6記述子から格子定数$a$を直接予測（物理モデルを介さない）。過学習の程度を診断するための対照実験。
 \end{itemize}
 
@@ -956,7 +956,7 @@ $\delta_\text{sf}$は格子定数予測に有用だが、
 \subsection{機械学習残差解析}
 \label{sec:ml_results}
 
-Ridge回帰（6組成記述子）による残差補正のLOO-CV RMSEは
+Ridge回帰（6記述子）による残差補正のLOO-CV RMSEは
 0.0220~\AA{}と物理モデル単体（0.0214~\AA）よりわずかに劣化した。
 GradientBoosting（100本、深さ3）による格子定数の直接予測は
 訓練RMSE = 0.0051~\AA{}（64点をほぼ暗記）だが
