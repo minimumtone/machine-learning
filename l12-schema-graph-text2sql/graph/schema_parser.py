@@ -12,6 +12,8 @@ PUBLIC_SCHEMA = "public"
 
 @dataclass(frozen=True)
 class ColumnMetadata:
+    """Metadata for a single database column."""
+
     table_name: str
     column_name: str
     data_type: str
@@ -21,6 +23,8 @@ class ColumnMetadata:
 
 @dataclass(frozen=True)
 class ForeignKeyMetadata:
+    """A foreign key relationship between two tables."""
+
     source_table: str
     source_column: str
     target_table: str
@@ -128,5 +132,6 @@ def introspect_schema(
 def iter_columns(
     columns: dict[str, list[ColumnMetadata]],
 ) -> Iterable[ColumnMetadata]:
+    """Flatten a table→columns mapping into a single iterable of ColumnMetadata."""
     for cols in columns.values():
         yield from cols

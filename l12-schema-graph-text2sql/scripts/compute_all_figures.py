@@ -37,6 +37,7 @@ PROJECT = Path(__file__).resolve().parent.parent
 
 
 def load_json(relpath: str) -> Any:
+    """Load a JSON file relative to the project root, exiting on failure."""
     p = PROJECT / relpath
     if not p.exists():
         print(f"ERROR: {p} not found", file=sys.stderr)
@@ -46,6 +47,7 @@ def load_json(relpath: str) -> Any:
 
 
 def load_jsonl(relpath: str) -> list[dict]:
+    """Load a JSONL file relative to the project root, exiting on failure."""
     p = PROJECT / relpath
     if not p.exists():
         print(f"ERROR: {p} not found", file=sys.stderr)
@@ -55,10 +57,12 @@ def load_jsonl(relpath: str) -> list[dict]:
 
 
 def pct(v: float) -> float:
+    """Convert a 0-1 fraction to a percentage rounded to 1 decimal."""
     return round(v * 100, 1)
 
 
 def pp(a: float, b: float) -> float:
+    """Compute percentage-point difference between two fractions."""
     return round((a - b) * 100, 1)
 
 
@@ -434,7 +438,8 @@ def main():
         if result.returncode == 0:
             git_hash = result.stdout.strip()
     except Exception:
-        pass
+        # git not available; non-critical for data generation
+        pass  # git hash is optional metadata
 
     output = {
         "_meta": {

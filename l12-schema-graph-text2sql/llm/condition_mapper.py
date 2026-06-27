@@ -23,6 +23,7 @@ def _escape_sql_value(value: str) -> str:
 
 
 def map_prototype_condition(prototype: str | list[str]) -> dict[str, Any]:
+    """Map a prototype identifier to a SQL WHERE fragment."""
     if isinstance(prototype, list):
         parts = " OR ".join(
             f"s.prototype = '{_escape_sql_value(p)}' OR s.strukturbericht = '{_escape_sql_value(p)}'"
@@ -44,6 +45,7 @@ def map_element_condition(
     elements: list[str],
     logic: str = "AND",
 ) -> list[dict[str, Any]]:
+    """Map element symbols to SQL EXISTS/IN fragments with AND/OR logic."""
     conditions: list[dict[str, Any]] = []
     if len(elements) == 1:
         safe = _escape_sql_value(elements[0])
@@ -88,6 +90,7 @@ def map_stability_condition(
     stability: str | list[str],
     terms: dict[str, Any] | None = None,
 ) -> dict[str, Any] | None:
+    """Map stability keywords to a SQL WHERE fragment."""
     if terms is None:
         terms = _load_terms()
 
@@ -134,6 +137,7 @@ def map_lattice_reference_condition(
     ref: dict[str, float],
     tolerance: float = 0.03,
 ) -> dict[str, Any]:
+    """Map a lattice-constant reference value to an ABS tolerance fragment."""
     val = ref["reference_lattice_a"]
     tol = ref.get("tolerance", tolerance)
     return {
@@ -145,6 +149,7 @@ def map_lattice_reference_condition(
 
 
 def map_sort_condition(sort_by: str, sort_order: str) -> dict[str, Any]:
+    """Map a sort specification to an ORDER BY fragment."""
     col_parts = sort_by.split(".")
     if len(col_parts) == 2:
         table, col = col_parts

@@ -16,6 +16,11 @@ from typing import Any, Callable
 
 from llm.sql_generator import _fix_known_literals, _normalize_column_aliases
 
+# Superset detection thresholds
+_DEFAULT_TOTAL_DB_ROWS = 1500
+_SUPERSET_ROW_RATIO_THRESHOLD = 0.5
+_SUPERSET_HIGH_ROW_COUNT = 100
+
 
 def _load_repair_template() -> str:
     path = Path(__file__).parent / "prompt_templates" / "sql_repair_prompt.md"
@@ -269,7 +274,7 @@ def detect_superset(
     """
     # Fix B13: Don't hardcode total_db_rows; query count from DB or use safe default
     if total_db_rows is None:
-        total_db_rows = 1500  # Conservative estimate; callers should pass actual count
+        total_db_rows = _DEFAULT_TOTAL_DB_ROWS
     sql_conds = count_sql_conditions(sql)
     expected_conds = count_expected_conditions(conditions)
     row_ratio = row_count / total_db_rows if total_db_rows > 0 else 0.0
@@ -288,7 +293,7 @@ def detect_superset(
             )
 
     # Heuristic 2: Row count is suspiciously high relative to DB size
-    if row_ratio > 0.5 and expected_conds >= 2:
+    if row_ratio > _SUPERSET_ROW_RATIO_THRESHOLD and expected_conds >= 2:
         is_superset = True
         reasons.append(
             f"Query returned {row_count} rows ({row_ratio:.0%} of DB), "
@@ -296,7 +301,7 @@ def detect_superset(
         )
 
     # Heuristic 3: Row count > 100 with multiple expected conditions but few SQL conditions
-    if row_count > 100 and expected_conds >= 2 and sql_conds <= 1:
+    if row_count > _SUPERSET_HIGH_ROW_COUNT and expected_conds >= 2 and sql_conds <= 1:
         is_superset = True
         reasons.append(
             f"High row count ({row_count}) with only {sql_conds} SQL condition(s) "

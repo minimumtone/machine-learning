@@ -1,9 +1,12 @@
 """Link extracted conditions to required tables, columns, and JOIN paths."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from llm.condition_mapper import map_conditions
+
+logger = logging.getLogger(__name__)
 
 CONDITION_TABLE_MAP: dict[str, list[str]] = {
     "prototype": ["structure"],
@@ -230,7 +233,8 @@ def link_schema(conditions: dict[str, Any]) -> dict[str, Any]:
             from llm.reranker import rerank_schema_tables
             sorted_tables = rerank_schema_tables(query_text, sorted_tables)
         except Exception:
-            pass
+            # Reranking is optional; fall back to alphabetical order
+            logger.debug("Schema table reranking unavailable, using sorted order")
 
     return {
         "required_tables": sorted_tables,

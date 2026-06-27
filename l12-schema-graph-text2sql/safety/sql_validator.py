@@ -1,6 +1,7 @@
 """Validate generated SQL for safety and schema compliance."""
 from __future__ import annotations
 
+import logging
 import re
 from functools import lru_cache
 from pathlib import Path
@@ -22,6 +23,7 @@ else:
         sqlglot_exp = None
         HAS_SQLGLOT = False
 
+logger = logging.getLogger(__name__)
 
 FORBIDDEN_KEYWORDS = [
     "INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "TRUNCATE",
@@ -671,7 +673,8 @@ def _extract_unqualified_columns(sql: str) -> list[str]:
             }
             return sorted(c for c in cols if c.lower() not in skip)
         except Exception:
-            pass
+            # sqlglot parse failure; fall back to empty column list
+            logger.debug("sqlglot failed to parse SQL for column extraction")
     return []
 
 
@@ -695,7 +698,8 @@ def _get_from_tables(sql: str) -> list[str]:
                     if alias_node:
                         tables.discard(alias_node.name.lower())
         except Exception:
-            pass
+            # sqlglot parse failure; proceed with alias-based table set
+            logger.debug("sqlglot failed to parse SQL for CTE name extraction")
     return sorted(tables)
 
 

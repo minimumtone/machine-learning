@@ -21,6 +21,19 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+# Scoring weights for SQL candidate ranking (total = 100)
+_SCORE_SQLGUARD = 30
+_SCORE_EXEC_SUCCESS = 20
+_SCORE_HAS_ROWS = 10
+_SCORE_CONDITIONS = 20
+_SCORE_ROW_RANGE_FULL = 10
+_SCORE_ROW_RANGE_PARTIAL = 5
+_SCORE_DISTINCT = 5
+_SCORE_LIMIT = 5
+
+# Row count thresholds for scoring
+_ROW_COUNT_MAX_IDEAL = 500
+
 _HAS_GRAPH = importlib.util.find_spec("networkx") is not None
 if not TYPE_CHECKING and _HAS_GRAPH:
     from graph.join_path_generator import generate_joins_for_tables, get_allowed_join_list
@@ -473,28 +486,28 @@ def _score_sql_candidate(
     score = 0
     breakdown: dict[str, int] = {}
 
-    # 1. SQLGuard validation (30 points)
+    # 1. SQLGuard validation
     validation = validate_sql(sql)
     if validation.get("valid"):
-        score += 30
-        breakdown["sqlguard"] = 30
+        score += _SCORE_SQLGUARD
+        breakdown["sqlguard"] = _SCORE_SQLGUARD
     else:
         breakdown["sqlguard"] = 0
         return {"score": score, "breakdown": breakdown, "exec_result": None,
                 "validation": validation}
 
-    # 2. Execution success (30 points)
+    # 2. Execution success
     exec_result = None
     if execute_fn is not None:
         try:
             exec_result = execute_fn(sql)
             if exec_result and exec_result.get("success"):
-                score += 20
-                breakdown["exec_success"] = 20
+                score += _SCORE_EXEC_SUCCESS
+                breakdown["exec_success"] = _SCORE_EXEC_SUCCESS
                 row_count = exec_result.get("row_count", 0)
                 if row_count > 0:
-                    score += 10
-                    breakdown["has_rows"] = 10
+                    score += _SCORE_HAS_ROWS
+                    breakdown["has_rows"] = _SCORE_HAS_ROWS
                 else:
                     breakdown["has_rows"] = 0
             else:
@@ -507,10 +520,10 @@ def _score_sql_candidate(
         breakdown["exec_success"] = 0
         breakdown["has_rows"] = 0
 
-    # 3. Domain heuristics (40 points)
+    # 3. Domain heuristics
     sql_upper = sql.upper()
 
-    # Expected conditions coverage (20 points)
+    # Expected conditions coverage
     expected = 0
     found = 0
     if conditions.get("prototype"):
@@ -529,35 +542,35 @@ def _score_sql_candidate(
         expected += 1
         if "ORDER BY" in sql_upper:
             found += 1
-    cond_score = int(20 * (found / expected)) if expected > 0 else 20
+    cond_score = int(_SCORE_CONDITIONS * (found / expected)) if expected > 0 else _SCORE_CONDITIONS
     score += cond_score
     breakdown["conditions"] = cond_score
 
-    # Appropriate row count (10 points)
+    # Appropriate row count
     if exec_result and exec_result.get("success"):
         row_count = exec_result.get("row_count", 0)
-        if 1 <= row_count <= 500:
-            score += 10
-            breakdown["row_range"] = 10
-        elif row_count > 500:
-            score += 5
-            breakdown["row_range"] = 5
+        if 1 <= row_count <= _ROW_COUNT_MAX_IDEAL:
+            score += _SCORE_ROW_RANGE_FULL
+            breakdown["row_range"] = _SCORE_ROW_RANGE_FULL
+        elif row_count > _ROW_COUNT_MAX_IDEAL:
+            score += _SCORE_ROW_RANGE_PARTIAL
+            breakdown["row_range"] = _SCORE_ROW_RANGE_PARTIAL
         else:
             breakdown["row_range"] = 0
     else:
         breakdown["row_range"] = 0
 
-    # DISTINCT usage (5 points)
+    # DISTINCT usage
     if "DISTINCT" in sql_upper:
-        score += 5
-        breakdown["distinct"] = 5
+        score += _SCORE_DISTINCT
+        breakdown["distinct"] = _SCORE_DISTINCT
     else:
         breakdown["distinct"] = 0
 
-    # LIMIT presence (5 points)
+    # LIMIT presence
     if "LIMIT" in sql_upper:
-        score += 5
-        breakdown["limit"] = 5
+        score += _SCORE_LIMIT
+        breakdown["limit"] = _SCORE_LIMIT
     else:
         breakdown["limit"] = 0
 

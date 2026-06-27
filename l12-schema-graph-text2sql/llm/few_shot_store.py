@@ -30,12 +30,16 @@ from typing import Any
 
 _DEFAULT_STORE_PATH = Path(__file__).parent.parent / "few_shot_examples.json"
 
+# Minimum TF-IDF similarity score to include a candidate in retrieval
+_TFIDF_MIN_SIMILARITY = 0.05
+
 
 def _store_path() -> Path:
     return Path(os.getenv("FEW_SHOT_STORE", str(_DEFAULT_STORE_PATH)))
 
 
 def load_store() -> list[dict[str, Any]]:
+    """Load all few-shot examples from the JSON store."""
     p = _store_path()
     if not p.exists():
         return []
@@ -44,6 +48,7 @@ def load_store() -> list[dict[str, Any]]:
 
 
 def save_store(examples: list[dict[str, Any]]) -> None:
+    """Persist the full list of few-shot examples to the JSON store."""
     p = _store_path()
     with p.open("w", encoding="utf-8") as f:
         json.dump(examples, f, ensure_ascii=False, indent=2)
@@ -155,7 +160,7 @@ def retrieve_similar(query: str, top_k: int = 3) -> list[dict[str, Any]]:
     tfidf_results = [
         {**examples[idx], "similarity": sim}
         for sim, idx in scored[:recall_k]
-        if sim > 0.05
+        if sim > _TFIDF_MIN_SIMILARITY
     ]
 
     if len(tfidf_results) <= top_k:

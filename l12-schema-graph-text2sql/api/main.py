@@ -25,15 +25,21 @@ app = FastAPI(
 
 
 class QueryRequest(BaseModel):
+    """Request body for the /query endpoint."""
+
     query: str
     execute: bool = True
 
 
 class ValidateRequest(BaseModel):
+    """Request body for the /validate endpoint."""
+
     sql: str
 
 
 class QueryResponse(BaseModel):
+    """Response body returned by /query."""
+
     query: str
     conditions: dict[str, Any]
     linked_tables: list[str]
@@ -46,6 +52,7 @@ class QueryResponse(BaseModel):
 
 @app.get("/health")
 def health() -> dict[str, Any]:
+    """Return service health status and schema context mode."""
     ctx = _get_schema_ctx()
     schema_ok = ctx.get("join_list") is not None
     return {
