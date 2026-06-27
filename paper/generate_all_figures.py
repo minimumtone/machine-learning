@@ -500,7 +500,7 @@ def analyze_sqs(sqs_data, ob2, ol12, heas_train, heas_test):
         "n_sqs_pairs_dft": sqs_data["n_pairs_dft"],
         "n_sqs_converged_11": sqs_data["n_converged"],
         "q_BCC_b2": round(q_b2, 4),
-        "q_BCC_sqs_king": round(q_king, 4),
+        "q_BCC_sqs_king": round(q_king, 6),
         "q_BCC_sqs_dft_opt": round(q_dft, 3),
         "q_BCC_sqs_dft_adopted": 1.0,
         "RMSE_vegard_BCC_train": round(rmse_veg_train, 4),
@@ -1407,7 +1407,7 @@ def fig07c_vegard_parity(all_df):
         rmse_v = np.sqrt(np.mean((v_dft_arr - v_veg_arr) ** 2))
         ax.set_title(f"Vegard parity — {struct_label}  "
                      f"({len(v_dft_arr)} points, R²={r2:.4f}, "
-                     f"RMSE={rmse_v:.3f} ų/atom)", fontsize=12)
+                     f"RMSE={rmse_v:.3f} Å³/atom)", fontsize=12)
         ax.legend(fontsize=11, loc="upper left")
         fig.tight_layout()
         fname = f"fig_vegard_parity_{fig_suffix}.png"
