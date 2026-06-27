@@ -41,12 +41,17 @@ def _load_terms(path: Path | None = None) -> dict[str, Any]:
 
 _SUBSCRIPT_MAP = str.maketrans("₀₁₂₃₄₅₆₇₈₉", "0123456789")
 
+# Coverage thresholds for rule-based vs LLM fallback decision
+_COVERAGE_RULE_BASED_THRESHOLD = 0.8
+_COVERAGE_LLM_FALLBACK_THRESHOLD = 0.5
+
 
 def _normalize(text: str) -> str:
     return text.translate(_SUBSCRIPT_MAP)
 
 
 def extract_prototype(query: str, terms: dict[str, Any] | None = None) -> str | list[str] | None:
+    """Extract crystal prototype identifiers (e.g. L12, B2) from a query."""
     if terms is None:
         terms = _load_terms()
     q = _normalize(query)
@@ -84,6 +89,7 @@ _ASCII_ELEMENT_FALSE_POSITIVE: dict[str, re.Pattern[str]] = {
 
 
 def extract_elements(query: str, terms: dict[str, Any] | None = None) -> list[str]:
+    """Extract chemical element symbols from a query, handling CJK and ASCII aliases."""
     if terms is None:
         terms = _load_terms()
     found: list[str] = []
@@ -115,6 +121,7 @@ def extract_elements(query: str, terms: dict[str, Any] | None = None) -> list[st
 
 
 def extract_stability(query: str, terms: dict[str, Any] | None = None) -> str | list[str] | None:
+    """Extract thermodynamic stability keywords (stable/metastable) from a query."""
     if terms is None:
         terms = _load_terms()
     q = _normalize(query).lower()
@@ -137,6 +144,7 @@ def extract_stability(query: str, terms: dict[str, Any] | None = None) -> str | 
 def extract_properties(
     query: str, terms: dict[str, Any] | None = None,
 ) -> list[str]:
+    """Extract material property column names referenced in a query."""
     if terms is None:
         terms = _load_terms()
     q = _normalize(query).lower()
@@ -152,6 +160,7 @@ def extract_properties(
 
 
 def extract_sort(query: str, terms: dict[str, Any] | None = None) -> dict[str, str] | None:
+    """Detect sort intent and return {column, order} or None."""
     if terms is None:
         terms = _load_terms()
     q = _normalize(query).lower()
@@ -584,9 +593,9 @@ def compute_coverage(
     unknown_elems = _detect_element_like_tokens(query, known_element_syms)
     coverage = recognized_count / len(tokens) if tokens else 1.0
 
-    if coverage >= 0.8 and not unknown_elems:
+    if coverage >= _COVERAGE_RULE_BASED_THRESHOLD and not unknown_elems:
         action = "execute_rule_based"
-    elif coverage >= 0.5 or unknown_elems:
+    elif coverage >= _COVERAGE_LLM_FALLBACK_THRESHOLD or unknown_elems:
         action = "fallback_to_llm"
     else:
         action = "clarification_required"

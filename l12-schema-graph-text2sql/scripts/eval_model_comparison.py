@@ -106,7 +106,12 @@ def _call_anthropic(prompt: str, model_id: str) -> str:
         system="You are a PostgreSQL expert for materials databases.",
         messages=[{"role": "user", "content": prompt}],
     )
-    return resp.content[0].text if resp.content else ""
+    if not resp.content:
+        return ""
+    block = resp.content[0]
+    if isinstance(block, anthropic.types.TextBlock):
+        return block.text
+    return ""
 
 
 def run_model_condition(

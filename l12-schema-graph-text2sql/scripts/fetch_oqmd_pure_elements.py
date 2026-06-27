@@ -5,17 +5,23 @@ For each element, identify the ground-state structure (lowest delta_e / most sta
 Output: db/pure_element_data.json
 """
 import json
+import os
 import time
-import urllib.request
 import urllib.error
+import urllib.request
 import sys
 
-BASE_URL = "https://oqmd.org/oqmdapi/formationenergy"
+# OQMD REST API endpoint for formation energy queries
+BASE_URL = os.getenv(
+    "OQMD_API_URL", "https://oqmd.org/oqmdapi/formationenergy"
+)
 FIELDS = "name,entry_id,spacegroup,ntypes,natoms,volume,delta_e,stability,band_gap"
-LIMIT = 100
+PAGE_LIMIT = 100
+MAX_RETRIES = 3
 
-def fetch_page(offset: int, retries: int = 3) -> dict:
-    url = f"{BASE_URL}?fields={FIELDS}&filter=ntypes=1&limit={LIMIT}&offset={offset}"
+def fetch_page(offset: int, retries: int = MAX_RETRIES) -> dict:
+    """Fetch a single page of OQMD formation energy data."""
+    url = f"{BASE_URL}?fields={FIELDS}&filter=ntypes=1&limit={PAGE_LIMIT}&offset={offset}"
     for attempt in range(retries):
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "NIMS-Research/1.0"})
@@ -41,7 +47,7 @@ def main():
 
         if not data["links"].get("next") or len(all_entries) >= total:
             break
-        offset += LIMIT
+        offset += PAGE_LIMIT
         time.sleep(0.5)  # rate limiting
 
     print(f"\nTotal entries fetched: {len(all_entries)}", file=sys.stderr)

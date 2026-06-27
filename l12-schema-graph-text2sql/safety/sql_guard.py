@@ -19,6 +19,7 @@ if typing.TYPE_CHECKING:
 
 
 def get_readonly_connection_string() -> str:
+    """Build a PostgreSQL connection string from environment variables."""
     user = os.getenv("POSTGRES_USER", "l12_user")
     password = os.getenv("POSTGRES_PASSWORD", "l12_password")
     host = os.getenv("POSTGRES_HOST", "localhost")

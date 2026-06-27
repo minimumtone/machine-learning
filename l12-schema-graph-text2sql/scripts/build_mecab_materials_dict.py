@@ -30,6 +30,19 @@ sys.path.insert(0, str(PROJECT))
 
 import yaml  # noqa: E402 — must follow sys.path manipulation
 
+# Candidate paths for MeCab ipadic source dictionary (platform-dependent)
+_MECAB_DICDIR_CANDIDATES = [
+    "/usr/share/mecab/dic/ipadic",
+    "/usr/lib/x86_64-linux-gnu/mecab/dic/ipadic",
+]
+
+# Candidate paths for mecab-dict-index binary
+_MECAB_DICT_INDEX_CANDIDATES = [
+    "/usr/lib/mecab/mecab-dict-index",
+    "/usr/bin/mecab-dict-index",
+    "/usr/local/libexec/mecab/mecab-dict-index",
+]
+
 
 def load_material_terms():
     """Extract Japanese material terms from material_terms.yaml."""
@@ -172,8 +185,7 @@ def load_engineering_vocab():
 def _get_dicdir():
     """Find the MeCab system dictionary *source* directory (needs pos-id.def etc)."""
     # System ipadic has the full source files needed for compilation
-    for d in ["/usr/share/mecab/dic/ipadic",
-              "/usr/lib/x86_64-linux-gnu/mecab/dic/ipadic"]:
+    for d in _MECAB_DICDIR_CANDIDATES:
         if os.path.exists(d) and os.path.exists(os.path.join(d, "pos-id.def")):
             return d
     raise RuntimeError("No MeCab ipadic source dictionary found. Install: apt-get install mecab-ipadic-utf8")
@@ -212,13 +224,11 @@ def compile_mecab_dict(csv_path, dic_path):
     """Compile CSV to binary .dic using mecab-dict-index."""
     dicdir = _get_dicdir()
 
-    mecab_dict_index = "/usr/lib/mecab/mecab-dict-index"
-    if not os.path.exists(mecab_dict_index):
-        for alt in ["/usr/bin/mecab-dict-index",
-                     "/usr/local/libexec/mecab/mecab-dict-index"]:
-            if os.path.exists(alt):
-                mecab_dict_index = alt
-                break
+    mecab_dict_index = _MECAB_DICT_INDEX_CANDIDATES[0]
+    for candidate in _MECAB_DICT_INDEX_CANDIDATES:
+        if os.path.exists(candidate):
+            mecab_dict_index = candidate
+            break
 
     cmd = [
         mecab_dict_index,
