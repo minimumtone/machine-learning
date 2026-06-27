@@ -240,8 +240,8 @@ INDEPENDENT_TEST = [
     # Yao 2016 / Senkov review: MoNbTaV single BCC
     {"comp":{"Mo":0.25,"Nb":0.25,"Ta":0.25,"V":0.25},"struct":"BCC","a_exp":3.208,
      "ref":"Yao2016_Entropy","note":"equiatomic 4-element refractory"},
-    # Stepanov 2015: AlNbTiV single BCC
-    {"comp":{"Al":0.25,"Nb":0.25,"Ti":0.25,"V":0.25},"struct":"BCC","a_exp":3.220,
+    # Stepanov 2015: AlNbTiV single BCC (density 5.59 g/cm³ → a=3.191 Å)
+    {"comp":{"Al":0.25,"Nb":0.25,"Ti":0.25,"V":0.25},"struct":"BCC","a_exp":3.191,
      "ref":"Stepanov2015_JAlloyCompd","note":"equiatomic 4-element with Al"},
     # Kantelis 2025 AIP Adv: MoNbTaVW
     {"comp":{"Mo":0.20,"Nb":0.20,"Ta":0.20,"V":0.20,"W":0.20},"struct":"BCC","a_exp":3.185,

@@ -51,8 +51,8 @@ $q_\text{BCC} \approx 1$（補正因子がほぼ不要）となる示唆が得�
 $q \neq 1$の主因がDFT--実験間の体積不整合であることを示した。
 FCC側では$q_\text{FCC} = 0.13 \approx 0$であり、
 Vegard則自体が十分な近似となる。
-独立テスト28 HEAで全体RMSE = 0.0154~\AA{}（Vegard比12.4\%改善）。
-改善効果はBCC系に集中し（BCC 15合金: 15.6\%、SQS参照で21\%）、
+独立テスト28 HEAで全体RMSE = 0.0148~\AA{}（Vegard比16.7\%改善）。
+改善効果はBCC系に集中し（BCC 15合金: 23.0\%、SQS参照で33.6\%）、
 FCC系ではVegard則の精度が高くΩ$_\text{sf}$補正の寄与は限定的である。
 加法分解$\delta_i^{(s)} + \delta_j^{(s)}$により
 906ペアを31元素パラメータに圧縮し、
@@ -193,8 +193,8 @@ $\Omega_\text{sf}$の導出を\textbf{DFT計算に置換}する（純元素体�
     16原子SQSのサイズ効果が残存する。
     $q \neq 1$の主因がDFT--実験間の体積不整合（GGA系統誤差）に
     あることを示した。
-    独立テスト28合金RMSE = 0.0149~\AA{}（Vegard比15.5\%改善）、
-    BCC 15合金ではRMSE = 0.0147~\AA{}（21\%改善）。
+    独立テスト28合金RMSE = 0.0138~\AA{}（Vegard比22.5\%改善）、
+    BCC 15合金ではRMSE = 0.0126~\AA{}（33.6\%改善）。
 
   \item \textbf{$q_\text{FCC} \approx 0$（Vegard則の十分性）の実証}:
     $q_\text{FCC} = 0.13$（ほぼゼロ）は、
@@ -225,7 +225,7 @@ $\sigma \approx 0.016$~\AA{}に近接しており、
     435二元系ペアで$\delta r$が構造情報を含み得ないことを厳密に検証。
   \item \textbf{独立テスト}:
     28 HEA（BCC 15、FCC 13）で検証。
-    全体RMSE = 0.0154~\AA{}（Vegard比12.4\%改善）。
+    全体RMSE = 0.0148~\AA{}（Vegard比16.7\%改善）。
 \end{enumerate}
 
 本手法の全体像を図~\ref{fig:pipeline}に示す。
@@ -577,7 +577,7 @@ GradientBoostingは訓練RMSE = 0.0051~\AA だがLOO-CV RMSE = 0.170~\AA と破�
 \caption{全87 HEAのパリティプロット（予測 vs 実験格子定数）。
   灰色: Vegard則による予測（64 HEA訓練セット）、
   青色: DFT-$\Omega_\text{sf}$モデルによる予測（同64 HEA、RMSE = 0.0214~\AA）、
-  赤色三角: 独立テストセット（28 HEA、RMSE = 0.0154~\AA）。
+  赤色三角: 独立テストセット（28 HEA、RMSE = 0.0148~\AA）。
   対角線は$a_\text{pred} = a_\text{exp}$を表す。}
 \label{fig:parity}
 \end{figure}
@@ -612,7 +612,7 @@ $q_\text{FCC} = 0.13$が示すように$\Omega_\text{sf}$補正が
 ほぼ不要であること（$q = 0$がVegard則に相当し、
 $q = 0.13$はVegard体積の13\%のみを補正に配分）が要因である。
 BCC HEA予測はSQS＋DFT Vegard参照（$q = 1$）で
-テストRMSE 0.0147~\AA{}（21\%改善）に達する
+テストRMSE 0.0126~\AA{}（33.6\%改善）に達する
 （\ref{sec:sqs_improvement}節）。
 
 図~\ref{fig:bcc_fcc}にBCC/FCC別の誤差分布を示す。
@@ -646,16 +646,16 @@ Freudenberger (2017)の貴金属系FCC（Au-Cu-Ni-Pd-Pt四元・五元系）
 \toprule
 手法 & 全体 (28) & BCC (15) & FCC (13) \\
 \midrule
-Vegard（単純平均）          & 0.0176 & 0.0186 & 0.0164 \\
+Vegard（単純平均）          & 0.0178 & 0.0189 & 0.0164 \\
 Alonso体積ズレ補正（King実験値）    & 0.0185 & 0.0178 & 0.0190 \\
-DFT-$\Omega_\text{sf}$（構造別, 最適$q_s$） & \textbf{0.0154} & \textbf{0.0157} & \textbf{0.0151} \\
+DFT-$\Omega_\text{sf}$（構造別, 最適$q_s$） & \textbf{0.0148} & \textbf{0.0146} & \textbf{0.0151} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 DFT-$\Omega_\text{sf}$モデルが全カテゴリで最良である。
-全体RMSE = 0.0154~\AA{}でVegard（0.0176~\AA）から\textbf{12.4\%改善}した。
-BCC 15合金ではRMSE = 0.0157~\AA（Vegard比\textbf{15.6\%改善}）、
+全体RMSE = 0.0148~\AA{}でVegard（0.0178~\AA）から\textbf{16.7\%改善}した。
+BCC 15合金ではRMSE = 0.0146~\AA（Vegard比\textbf{23.0\%改善}）、
 FCC 13合金ではRMSE = 0.0151~\AA（Vegard比\textbf{7.8\%改善}）。
 B2参照構造の$\Omega_\text{sf}$データを465ペアに拡充し、
 耐火金属28ペアを全カバーしたことで、
@@ -928,7 +928,7 @@ $r_\text{eff}$が非自明な組成依存性を持つことがわかる。
 Vegard則からの偏差の大部分が線形補間の精度内に収まることによる。
 一方、多成分HEAでは$n(n-1)/2$ペアの$\Omega_\text{sf}$が
 非線形に寄与するため、構造情報の価値が顕在化する:
-独立テスト28 HEAでは7.8\%改善（0.0176~\AA{}$\to$0.0162~\AA）を達成した。
+独立テスト28 HEAでは11.8\%改善（0.0178~\AA{}$\to$0.0157~\AA）を達成した。
 すなわち$V_\text{eff}$の有用性は成分数の増加に伴い増大し、
 二元系での限定的改善はHEAへの適用を否定するものではない。
 
@@ -1103,8 +1103,8 @@ $q$は訓練64合金で最適化。}
 \toprule
 参照体積 & $q_\text{BCC}$ & $q_\text{FCC}$ & RMSE$_\text{ALL}$ & RMSE$_\text{BCC}$ & RMSE$_\text{FCC}$ & 改善(ALL) \\
 \midrule
-King実験 (opt $q$) & 0.486 & 0.133 & 0.0154 & 0.0157 & 0.0151 & $+$12.4\% \\
-\textbf{DFT計算値 (opt $q$)} & \textbf{1.188} & \textbf{0.280} & \textbf{0.0150} & \textbf{0.0140} & 0.0160 & \textbf{$+$15.0\%} \\
+King実験 (opt $q$) & 0.486 & 0.133 & 0.0148 & 0.0146 & 0.0151 & $+$16.7\% \\
+\textbf{DFT計算値 (opt $q$)} & \textbf{1.188} & \textbf{0.280} & \textbf{0.0138} & \textbf{0.0115} & 0.0160 & \textbf{$+$22.7\%} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1115,8 +1115,8 @@ $V_\text{Vegard}$にもVASP計算値を用いると、
 分子・分母が同一のGGA-PBE汎関数から導出されるため
 BCC系のDFT系統誤差がキャンセルし、$q_\text{BCC} \approx 1$となる。
 $q \approx 1$は$\Omega_\text{sf}$のスケールが物理的に正しいことを意味する。
-DFT自己整合参照はBCC精度を24.6\%改善し（0.0186$\to$0.0140~\AA{}）、
-King参照（15.6\%改善）を大幅に上回る。
+DFT自己整合参照はBCC精度を39.4\%改善し（0.0189$\to$0.0115~\AA{}）、
+King参照（23.0\%改善）を大幅に上回る。
 
 従来$q \neq 1$はWarren-Cowley秩序度$\alpha$の差
 （B2: $\alpha = -1$ vs HEA: $\alpha \approx 0$）に
@@ -1199,20 +1199,20 @@ Vegard行は$q=0$（補正なし）、B2+DFT行はFCC側もDFT自己整合（$q_
 \toprule
 Ω$_\text{sf}$計算構造 (BCC) & $q_\text{BCC}$ & RMSE$_\text{ALL}$ & RMSE$_\text{BCC}$ & RMSE$_\text{FCC}$ & 改善(ALL) \\
 \midrule
-なし（Vegard則） & 0 & 0.0176 & 0.0186 & 0.0164 & --- \\
-B2+King（本手法） & 0.486 & 0.0154 & 0.0157 & 0.0151 & $+$12.4\% \\
-B2+DFT自己整合 & 1.188 & 0.0150 & 0.0140 & 0.0160 & $+$15.0\% \\
-SQS+King & 0.623 & 0.0158 & 0.0163 & 0.0151 & $+$10.6\% \\
-\textbf{SQS+DFT ($q\!=\!1$)} & \textbf{1.000} & \textbf{0.0149} & \textbf{0.0147} & 0.0151 & \textbf{$+$15.5\%} \\
-SQS+DFT ($q_\text{opt}$) & 1.958 & 0.0157 & 0.0162 & 0.0151 & $+$10.9\% \\
+なし（Vegard則） & 0 & 0.0178 & 0.0189 & 0.0164 & --- \\
+B2+King（本手法） & 0.486 & 0.0148 & 0.0146 & 0.0151 & $+$16.7\% \\
+B2+DFT自己整合 & 1.188 & 0.0138 & 0.0115 & 0.0160 & $+$22.7\% \\
+SQS+King & 0.623 & 0.0152 & 0.0152 & 0.0151 & $+$14.6\% \\
+\textbf{SQS+DFT ($q\!=\!1$)} & \textbf{1.000} & \textbf{0.0138} & \textbf{0.0126} & 0.0151 & \textbf{$+$22.5\%} \\
+SQS+DFT ($q_\text{opt}$) & 1.958 & 0.0134 & 0.0117 & 0.0151 & $+$24.7\% \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 SQS＋DFT Vegard参照（$q = 1$）により独立テスト28合金RMSE:
-0.0176（Vegard）$\to$ 0.0149~\AA{}（15.5\%改善）。
-BCC 15合金に限ればRMSE 0.0147~\AA{}（21.0\%改善）であり、
-B2参照（0.0157、BCC 15.6\%改善）を上回る。
+0.0178（Vegard）$\to$ 0.0138~\AA{}（22.5\%改善）。
+BCC 15合金に限ればRMSE 0.0126~\AA{}（33.6\%改善）であり、
+B2参照（0.0146、BCC 23.0\%改善）を上回る。
 $q$感度解析（表~\ref{tab:q_sensitivity}）は
 テストRMSEが$q = 1.0$--$1.4$で最小値付近にあることを示す。
 
@@ -1225,13 +1225,13 @@ $q$感度解析（表~\ref{tab:q_sensitivity}）は
 \toprule
 $q_\text{BCC}$ & テスト RMSE (\AA) \\
 \midrule
-0 (Vegard) & 0.0186 \\
-0.6 & 0.0157 \\
-0.8 & 0.0151 \\
-\textbf{1.0 (採用)} & \textbf{0.0147} \\
-1.2 & 0.0146 \\
-1.4 & 0.0147 \\
-2.0 ($\approx q_\text{opt}$) & 0.0164 \\
+0 (Vegard) & 0.0189 \\
+0.6 & 0.0147 \\
+0.8 & 0.0135 \\
+\textbf{1.0 (採用)} & \textbf{0.0126} \\
+1.2 & 0.0118 \\
+1.4 & 0.0113 \\
+2.0 ($\approx q_\text{opt}$) & 0.0118 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1322,7 +1322,7 @@ $\Omega_\text{sf}^\text{SQS}(i\text{-}j) \approx \delta_i^\text{SQS} + \delta_j^
 BCC独立テスト15合金に対し
 $q = 1$固定で加法SQS $\delta$を用いると
 RMSE = 0.0183~\AA{}であり、
-ペアワイズSQS（0.0147~\AA）に比べ精度が低下する。
+ペアワイズSQS（0.0126~\AA）に比べ精度が低下する。
 加法近似で失われるペア固有情報が
 $q = 1$の利点を相殺するためである。
 
@@ -1389,12 +1389,12 @@ Vegard行は$q=0$、B2+DFT行はFCC側もDFT自己整合（$q_\text{FCC} = 0.280
 \toprule
 モデル & $q_\text{BCC}$ & RMSE$_\text{ALL}$ & RMSE$_\text{BCC}$ & RMSE$_\text{FCC}$ & 改善(ALL) \\
 \midrule
-Vegard ($q\!=\!0$) & 0 & 0.0176 & 0.0186 & 0.0164 & --- \\
-B2/L1$_2$+King（本手法） & 0.486 & 0.0154 & 0.0157 & 0.0151 & $+$12.4\% \\
-B2/L1$_2$+DFT自己整合 & 1.188 & 0.0150 & 0.0140 & 0.0160 & $+$15.0\% \\
-SQS+King & 0.623 & 0.0158 & 0.0163 & 0.0151 & $+$10.6\% \\
-\textbf{SQS+DFT ($q\!=\!1$)} & \textbf{1.000} & \textbf{0.0149} & \textbf{0.0147} & 0.0151 & \textbf{$+$15.5\%} \\
-SQS+DFT ($q_\text{opt}$) & 1.958 & 0.0157 & 0.0162 & 0.0151 & $+$10.9\% \\
+Vegard ($q\!=\!0$) & 0 & 0.0178 & 0.0189 & 0.0164 & --- \\
+B2/L1$_2$+King（本手法） & 0.486 & 0.0148 & 0.0146 & 0.0151 & $+$16.7\% \\
+B2/L1$_2$+DFT自己整合 & 1.188 & 0.0138 & 0.0115 & 0.0160 & $+$22.7\% \\
+SQS+King & 0.623 & 0.0152 & 0.0152 & 0.0151 & $+$14.6\% \\
+\textbf{SQS+DFT ($q\!=\!1$)} & \textbf{1.000} & \textbf{0.0138} & \textbf{0.0126} & 0.0151 & \textbf{$+$22.5\%} \\
+SQS+DFT ($q_\text{opt}$) & 1.958 & 0.0134 & 0.0117 & 0.0151 & $+$24.7\% \\
 \midrule
 ノイズ & --- & 0.016 & --- & --- & --- \\
 \bottomrule
@@ -1415,8 +1415,8 @@ SQS+DFT ($q_\text{opt}$) & 1.958 & 0.0157 & 0.0162 & 0.0151 & $+$10.9\% \\
     \textbf{DFT--実験間の体積不整合}（GGA系統誤差）にあることを解明。
     参照体積をDFT内で統一すれば二元系$\to$多元系の外挿に
     追加パラメータは不要。
-    独立テスト28合金RMSE = 0.0149~\AA{}（Vegard比15.5\%改善）、
-    BCC 15合金ではRMSE = 0.0147~\AA{}（21\%改善）。
+    独立テスト28合金RMSE = 0.0138~\AA{}（Vegard比22.5\%改善）、
+    BCC 15合金ではRMSE = 0.0126~\AA{}（33.6\%改善）。
 
   \item \textbf{$q_\text{FCC} \approx 0$（Vegard則の十分性）}:
     $q_\text{FCC} = 0.13$はFCC HEAでVegard則自体が十分な近似であることを示す。
@@ -1434,7 +1434,7 @@ SQS+DFT ($q_\text{opt}$) & 1.958 & 0.0157 & 0.0162 & 0.0151 & $+$10.9\% \\
 
   \item \textbf{予測精度の限界}:
     推定ノイズフロア$\sigma \approx 0.016$~\AA{}に対し
-    最良テストRMSE = 0.0149~\AA{}は$\sigma$に近い。
+    最良テストRMSE = 0.0138~\AA{}は$\sigma$に近い。
     MLモデルがいずれもRMSE改善0.002~\AA{}未満であり、
     モデル改善余地は限られる。
     さらなる改善には焼鈍条件・短距離秩序の明示的制御が必要。
@@ -1461,9 +1461,9 @@ Alonso~\cite{Alonso2021} & 実験 & なし & 多成分HEA & $\neq 0$ & HEA予測
 \end{tabular}
 \par\smallskip
 {\scriptsize
-独立テストRMSE: B2/L1$_2$参照 = 0.0154~\AA{}（28 HEA）、
-SQS参照 = 0.0147~\AA{}（BCC 15合金）。
-Vegardベースライン = 0.0176~\AA{}。}
+独立テストRMSE: B2/L1$_2$参照 = 0.0148~\AA{}（28 HEA）、
+SQS参照 = 0.0126~\AA{}（BCC 15合金）。
+Vegardベースライン = 0.0178~\AA{}。}
 \end{table}
 
 \paragraph{実用的意義}
@@ -2459,7 +2459,7 @@ CoCrFeMnNi & 10 & 0/10 & 10/10 & $=$ Vegard \\
 \midrule
 HfNbTaTiZr & 3.404 & $+$0.007 & $-$0.001 & DFT \\
 MoNbTaVW   & 3.183 & $+$0.009 & $+$0.007 & DFT \\
-AlNbTiV    & 3.181 & $+$0.028 & $+$0.016 & DFT \\
+AlNbTiV    & 3.191 & $+$0.017 & $+$0.005 & DFT \\
 CoCrFeMnNi & 3.590 & $+$0.003 & $-$0.002 & DFT \\
 \midrule
 HfNbTiZr   & 3.520 & $-$0.082 & $-$0.091 & Vegard \\
