@@ -93,7 +93,7 @@
     "n_sqs_pairs_dft": 414,
     "n_sqs_converged_11": 612,
     "q_BCC_b2": 0.4861,
-    "q_BCC_sqs_king": 0.6235,
+    "q_BCC_sqs_king": 0.623482,
     "q_BCC_sqs_dft_opt": 1.958,
     "q_BCC_sqs_dft_adopted": 1.0,
     "RMSE_vegard_BCC_train": 0.0317,
