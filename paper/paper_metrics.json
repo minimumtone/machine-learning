@@ -71,6 +71,28 @@
     "sigma_approx": 0.016,
     "comment": "Experimental reproducibility limit from literature variance"
   },
+  "bootstrap_ci": {
+    "n_iterations": 10000,
+    "seed": 42,
+    "ALL": {
+      "N": 28,
+      "delta_RMSE": 0.003,
+      "CI_95_lower": 0.0009,
+      "CI_95_upper": 0.0052
+    },
+    "BCC": {
+      "N": 15,
+      "delta_RMSE": 0.0044,
+      "CI_95_lower": 0.0007,
+      "CI_95_upper": 0.0078
+    },
+    "FCC": {
+      "N": 13,
+      "delta_RMSE": 0.0013,
+      "CI_95_lower": 0.0002,
+      "CI_95_upper": 0.0027
+    }
+  },
   "delta_r_proof": {
     "delta_r_proof_n_complete": 435,
     "delta_r_proof_r_all": 0.71,
