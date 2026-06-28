@@ -1102,6 +1102,48 @@ RMSE = 0.162~\AA{}と破綻したこと（\ref{sec:packing_results}節）は
 \subsection{DFT自己整合Ω$_\text{sf}$による$q_\text{BCC} \approx 1$への近接}
 \label{sec:dft_self_consistent}
 
+$\Omega_\text{sf}$の算出に必要なデータは
+(1)~二元系化合物の体積$V_\text{compound}$と
+(2)~純元素の基準原子体積$V_i$
+の2種類であり、それぞれのソースにより結果が異なる。
+表~\ref{tab:data_provenance}に本研究で検討した全組合せを整理する。
+
+\begin{table}[H]
+\centering
+\caption{$\Omega_\text{sf}$算出に用いるデータソースの分類。
+$\Omega_\text{sf} = (V_\text{compound} - V_\text{Vegard})/V_\text{Vegard}$
+における$V_\text{compound}$と$V_\text{Vegard} = \sum_i x_i V_i$の由来。
+$q$は訓練64合金で最適化した値。}
+\label{tab:data_provenance}
+\scriptsize
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}lllcrr@{}}
+\toprule
+モデル名 & 基準原子体積 $V_i$ & $\Omega_\text{sf}$の化合物体積 & ペア数 & $q_\text{BCC}$ & $q_\text{FCC}$ \\
+\midrule
+\multicolumn{6}{@{}l}{\textit{(a) 基準原子体積 = 実験値（King 1966）}} \\[2pt]
+B2/L1$_2$+King（本手法） & King実験値（31元素） & B2/L1$_2$ DFT（MP/OQMD/VASP） & 465/441 & 0.486 & 0.133 \\
+SQS+King & King実験値（31元素） & BCC SQS DFT（A$_8$B$_8$） & 414 & 0.623 & 0.133$^*$ \\
+\midrule
+\multicolumn{6}{@{}l}{\textit{(b) 基準原子体積 = DFT（ユニットセル B2/L1$_2$ pure）}} \\[2pt]
+B2/L1$_2$+DFT自己整合 & B2/L1$_2$ pure DFT（35/39元素） & B2/L1$_2$ DFT（MP/OQMD/VASP） & 595/741 & 1.188 & 0.280 \\
+\midrule
+\multicolumn{6}{@{}l}{\textit{(c) 基準原子体積 = DFT（SQSサイズ A$_8$A$_8$）}} \\[2pt]
+SQS+DFT ($q\!=\!1$) & SQS pure DFT（A$_8$A$_8$、38元素） & BCC SQS DFT（A$_8$B$_8$） & 414 & \textbf{1.000} & 0.133$^*$ \\
+SQS+DFT ($q_\text{opt}$) & SQS pure DFT（A$_8$A$_8$、38元素） & BCC SQS DFT（A$_8$B$_8$） & 414 & 1.958 & 0.133$^*$ \\
+\bottomrule
+\end{tabular}}
+\par\smallskip
+{\scriptsize $^*$SQS系モデルのFCC側はL1$_2$+King（$q_\text{FCC} = 0.133$）で共通。
+BCC SQSのみ参照構造が変わる。}
+\par\smallskip
+{\scriptsize
+\textbf{(a)}ではKing実験値とDFT計算値の体系差（GGA系統誤差）が$q$に混入し$q_\text{BCC} = 0.49 \neq 1$となる。
+\textbf{(b)}では$V_i$もDFTに統一するため系統誤差が相殺し$q_\text{BCC} = 1.19 \approx 1$に近づく。
+\textbf{(c)}ではさらに化合物と純元素が同一超格子サイズ（16原子）で揃うため
+セルサイズ効果も相殺し、$q = 1$（スケーリング不要）が物理的目標となる。}
+\end{table}
+
 $\Omega_\text{sf}$の参照体積をKing実験値からVASP DFT計算値に
 変更すると、B2参照でも$q_\text{BCC} = 1.19$と
 $q \approx 1$に近づく（表~\ref{tab:omega_ref}）。
@@ -1111,7 +1153,7 @@ FCC系では$\Omega_\text{sf}$補正自体が微小であることと整合す�
 \begin{table}[H]
 \centering
 \caption{$\Omega_\text{sf}$参照体積の影響。独立テスト29合金（BCC 16 + FCC 13）での評価。
-$q$は訓練64合金で最適化。}
+$q$は訓練64合金で最適化。表~\ref{tab:data_provenance}の(a) vs (b)に対応。}
 \label{tab:omega_ref}
 \footnotesize
 \begin{tabular}{@{}lccrrrr@{}}
