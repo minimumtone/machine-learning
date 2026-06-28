@@ -161,6 +161,14 @@ F.~Reget, M.~Maa{\ss}, J.~Haas, J.~Fiehn, N.~Seifried, T.~G. Bley, L.~Pichl,
 \newblock \href {https://doi.org/10.3390/met10111530}
   {\path{doi:10.3390/met10111530}}.
 
+\bibitem{Chen2022}
+S.~Chen, Z.~H. Aitken, S.~Pattamatta, Z.~Wu, Z.~G. Yu, D.~J. Srolovitz, P.~K.
+  Liaw, Y.-W. Zhang, Phase decomposition and strengthening in {HfNbTaTiZr} high
+  entropy alloy from first-principles calculations, Acta Mater. 225 (2022)
+  117582.
+\newblock \href {https://doi.org/10.1016/j.actamat.2021.117582}
+  {\path{doi:10.1016/j.actamat.2021.117582}}.
+
 \bibitem{TodaCaraballo2016}
 I.~Toda-Caraballo, P.~E. J. R.-D. del Castillo, Modelling solid solution
   hardening in high entropy alloys, Intermetallics 71 (2016) 76--87.
@@ -172,12 +180,6 @@ Y.~F. Ye, C.~T. Liu, Y.~Yang, A geometric model for intrinsic residual strain
   and phase stability in high entropy alloys, Acta Mater. 94 (2015) 152--161.
 \newblock \href {https://doi.org/10.1016/j.actamat.2015.04.051}
   {\path{doi:10.1016/j.actamat.2015.04.051}}.
-
-\bibitem{Chen2016}
-T.~Chen, C.~Guestrin, {XGBoost}: A scalable tree boosting system, in: Proc.
-  22nd ACM SIGKDD, 2016, pp. 785--794.
-\newblock \href {https://doi.org/10.1145/2939672.2939785}
-  {\path{doi:10.1145/2939672.2939785}}.
 
 \bibitem{Wang2004lattice}
 Y.~Wang, S.~Curtarolo, C.~Jiang, R.~Arroyave, T.~Wang, G.~Ceder, L.-Q. Chen,

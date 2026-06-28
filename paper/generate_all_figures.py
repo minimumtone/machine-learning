@@ -771,7 +771,7 @@ def analyze_dft_self_consistent(all_df, ob2, ol12, heas_train, heas_test):
     p_king_opt_tr = _pred(heas_train, ob2, ol12, gb_king, gf_king)
     rmse_king_opt_tr = float(np.sqrt(np.mean((p_king_opt_tr - y_tr) ** 2)))
 
-    # --- Independent test 28 HEA evaluation ---
+    # --- Independent test evaluation ---
     y_te = np.array([h["a_exp"] for h in heas_test])
     bcc_te = [i for i, h in enumerate(heas_test) if h["struct"] == "BCC"]
     fcc_te = [i for i, h in enumerate(heas_test) if h["struct"] == "FCC"]
@@ -2271,7 +2271,7 @@ def main():
         print(f"    B2 vs SQS(DFT) correlation: r={sqs_metrics['correlation_b2_vs_sqs_dft_r']}, "
               f"slope={sqs_metrics['correlation_b2_vs_sqs_dft_slope']}")
 
-        # --- SQS: ALL 28 test evaluation (BCC: SQS omega, FCC: L12 omega) ---
+        # --- SQS: ALL test evaluation (BCC: SQS omega, FCC: L12 omega) ---
         omega_dft_sqs = sqs_data["omega_dft"]
         omega_king_sqs = sqs_data["omega_king"]
         q_sqs_king = sqs_metrics["q_BCC_sqs_king"]
@@ -2298,12 +2298,13 @@ def main():
         sqs_dft_q1_te = _eval28_sqs(omega_dft_sqs, ol12, 1.0, gf)
         sqs_dft_qopt_te = _eval28_sqs(omega_dft_sqs, ol12, q_sqs_dft_opt, gf)
 
-        sqs_metrics["test28_vegard"] = vegard_te
-        sqs_metrics["test28_sqs_king"] = sqs_king_te
-        sqs_metrics["test28_sqs_dft_q1"] = sqs_dft_q1_te
-        sqs_metrics["test28_sqs_dft_qopt"] = sqs_dft_qopt_te
+        n_te_sqs = len(INDEPENDENT_TEST)
+        sqs_metrics["test_vegard"] = vegard_te
+        sqs_metrics["test_sqs_king"] = sqs_king_te
+        sqs_metrics["test_sqs_dft_q1"] = sqs_dft_q1_te
+        sqs_metrics["test_sqs_dft_qopt"] = sqs_dft_qopt_te
 
-        print(f"    --- ALL 28 test (BCC: SQS, FCC: L12) ---")
+        print(f"    --- ALL {n_te_sqs} test (BCC: SQS, FCC: L12) ---")
         print(f"    Vegard:          ALL={vegard_te['ALL']}, BCC={vegard_te['BCC']}, FCC={vegard_te['FCC']}")
         print(f"    SQS+King:        ALL={sqs_king_te['ALL']}, BCC={sqs_king_te['BCC']}, FCC={sqs_king_te['FCC']}")
         print(f"    SQS+DFT (q=1):   ALL={sqs_dft_q1_te['ALL']}, BCC={sqs_dft_q1_te['BCC']}, FCC={sqs_dft_q1_te['FCC']}")
@@ -2612,6 +2613,141 @@ def main():
         },
     }
 
+    # --- LOO-DCV (Leave-One-Out Double Cross Validation) ---
+    # Outer loop: leave 1 alloy out; inner loop: optimize q on remaining N-1
+    print("\n[LOO-DCV] Leave-One-Out Double Cross Validation...")
+    all_heas = list(ALONSO_TABLE2) + list(INDEPENDENT_TEST)
+    N_all = len(all_heas)
+    loo_preds = np.empty(N_all)
+    loo_vegard = np.empty(N_all)
+    loo_y = np.array([h["a_exp"] for h in all_heas])
+    loo_structs = [h["struct"] for h in all_heas]
+
+    for i in range(N_all):
+        remaining = all_heas[:i] + all_heas[i + 1:]
+        gb_i, gf_i = optimize_gamma(remaining, ob2, ol12)
+        h = all_heas[i]
+        loo_preds[i] = compute_eq10_scaled(
+            h["comp"], h["struct"],
+            ob2 if h["struct"] == "BCC" else ol12,
+            gb_i if h["struct"] == "BCC" else gf_i,
+        )
+        loo_vegard[i] = compute_vegard(h["comp"], h["struct"])
+
+    loo_bcc = np.array([i for i, s in enumerate(loo_structs) if s == "BCC"])
+    loo_fcc = np.array([i for i, s in enumerate(loo_structs) if s == "FCC"])
+
+    loo_rmse_all = float(np.sqrt(np.mean((loo_preds - loo_y) ** 2)))
+    loo_rmse_bcc = float(np.sqrt(np.mean((loo_preds[loo_bcc] - loo_y[loo_bcc]) ** 2)))
+    loo_rmse_fcc = float(np.sqrt(np.mean((loo_preds[loo_fcc] - loo_y[loo_fcc]) ** 2)))
+    loo_veg_all = float(np.sqrt(np.mean((loo_vegard - loo_y) ** 2)))
+    loo_veg_bcc = float(np.sqrt(np.mean((loo_vegard[loo_bcc] - loo_y[loo_bcc]) ** 2)))
+    loo_veg_fcc = float(np.sqrt(np.mean((loo_vegard[loo_fcc] - loo_y[loo_fcc]) ** 2)))
+
+    print(f"  LOO-DCV ({N_all} alloys):")
+    print(f"    ALL: Vegard={loo_veg_all:.4f}, Ω_sf={loo_rmse_all:.4f} "
+          f"({(1 - loo_rmse_all / loo_veg_all) * 100:.1f}% improvement)")
+    print(f"    BCC ({len(loo_bcc)}): Vegard={loo_veg_bcc:.4f}, Ω_sf={loo_rmse_bcc:.4f} "
+          f"({(1 - loo_rmse_bcc / loo_veg_bcc) * 100:.1f}% improvement)")
+    print(f"    FCC ({len(loo_fcc)}): Vegard={loo_veg_fcc:.4f}, Ω_sf={loo_rmse_fcc:.4f} "
+          f"({(1 - loo_rmse_fcc / loo_veg_fcc) * 100:.1f}% improvement)")
+
+    loo_dcv_results = {
+        "N": N_all,
+        "N_BCC": int(len(loo_bcc)),
+        "N_FCC": int(len(loo_fcc)),
+        "ALL": {
+            "RMSE_Vegard": round(loo_veg_all, 4),
+            "RMSE_Omega_sf": round(loo_rmse_all, 4),
+            "improvement_pct": round((1 - loo_rmse_all / loo_veg_all) * 100, 1),
+        },
+        "BCC": {
+            "RMSE_Vegard": round(loo_veg_bcc, 4),
+            "RMSE_Omega_sf": round(loo_rmse_bcc, 4),
+            "improvement_pct": round((1 - loo_rmse_bcc / loo_veg_bcc) * 100, 1),
+        },
+        "FCC": {
+            "RMSE_Vegard": round(loo_veg_fcc, 4),
+            "RMSE_Omega_sf": round(loo_rmse_fcc, 4),
+            "improvement_pct": round((1 - loo_rmse_fcc / loo_veg_fcc) * 100, 1),
+        },
+    }
+
+    # --- Bootstrap with q re-optimization (10,000 iterations) ---
+    print("\n[Bootstrap-DCV] ΔRMSE CI with q re-optimization (10,000 iterations)...")
+    n_boot_dcv = 10_000
+    rng_dcv = np.random.RandomState(42)
+    boot_deltas_all = np.empty(n_boot_dcv)
+    boot_deltas_bcc = np.empty(n_boot_dcv)
+    boot_deltas_fcc = np.empty(n_boot_dcv)
+
+    for b in range(n_boot_dcv):
+        if b % 1000 == 0:
+            print(f"    iteration {b}/{n_boot_dcv}...")
+        ix = rng_dcv.randint(0, N_all, size=N_all)
+        train_b = [all_heas[j] for j in ix]
+        oob_mask = np.ones(N_all, dtype=bool)
+        oob_mask[ix] = False
+        oob_idx = np.where(oob_mask)[0]
+        if len(oob_idx) < 2:
+            boot_deltas_all[b] = 0.0
+            boot_deltas_bcc[b] = 0.0
+            boot_deltas_fcc[b] = 0.0
+            continue
+        gb_b, gf_b = optimize_gamma(train_b, ob2, ol12)
+        oob_heas = [all_heas[j] for j in oob_idx]
+        oob_y = np.array([h["a_exp"] for h in oob_heas])
+        oob_pred = predict_heas(oob_heas, ob2, ol12, gb_b, gf_b)
+        oob_veg = np.array([compute_vegard(h["comp"], h["struct"]) for h in oob_heas])
+        rmse_v = np.sqrt(np.mean((oob_veg - oob_y) ** 2))
+        rmse_o = np.sqrt(np.mean((oob_pred - oob_y) ** 2))
+        boot_deltas_all[b] = rmse_v - rmse_o
+
+        oob_bcc = [j for j, h in enumerate(oob_heas) if h["struct"] == "BCC"]
+        oob_fcc = [j for j, h in enumerate(oob_heas) if h["struct"] == "FCC"]
+        if len(oob_bcc) >= 2:
+            boot_deltas_bcc[b] = (
+                np.sqrt(np.mean((oob_veg[oob_bcc] - oob_y[oob_bcc]) ** 2)) -
+                np.sqrt(np.mean((oob_pred[oob_bcc] - oob_y[oob_bcc]) ** 2))
+            )
+        else:
+            boot_deltas_bcc[b] = np.nan
+        if len(oob_fcc) >= 2:
+            boot_deltas_fcc[b] = (
+                np.sqrt(np.mean((oob_veg[oob_fcc] - oob_y[oob_fcc]) ** 2)) -
+                np.sqrt(np.mean((oob_pred[oob_fcc] - oob_y[oob_fcc]) ** 2))
+            )
+        else:
+            boot_deltas_fcc[b] = np.nan
+
+    def _boot_summary(deltas, label):
+        valid = deltas[~np.isnan(deltas)]
+        n_valid = len(valid)
+        mean_d = float(np.mean(valid))
+        ci_lo = float(np.percentile(valid, 2.5))
+        ci_hi = float(np.percentile(valid, 97.5))
+        print(f"    {label}: ΔRMSE={mean_d:+.4f}, 95% CI=[{ci_lo:+.4f}, {ci_hi:+.4f}] "
+              f"(n_valid={n_valid})")
+        return {
+            "mean_delta_RMSE": round(mean_d, 4),
+            "CI_95_lower": round(ci_lo, 4),
+            "CI_95_upper": round(ci_hi, 4),
+            "n_valid": n_valid,
+        }
+
+    boot_dcv_all = _boot_summary(boot_deltas_all, f"ALL {N_all}")
+    boot_dcv_bcc = _boot_summary(boot_deltas_bcc, f"BCC {len(loo_bcc)}")
+    boot_dcv_fcc = _boot_summary(boot_deltas_fcc, f"FCC {len(loo_fcc)}")
+
+    bootstrap_dcv_results = {
+        "n_iterations": n_boot_dcv,
+        "seed": 42,
+        "method": "OOB with q re-optimization per bootstrap sample",
+        "ALL": boot_dcv_all,
+        "BCC": boot_dcv_bcc,
+        "FCC": boot_dcv_fcc,
+    }
+
     metrics = {
         "_description": "All numerical values used in the paper. Generated by generate_all_figures.py.",
         "data": {
@@ -2640,7 +2776,7 @@ def main():
             "RMSE_BCC": round(float(rmse_ss_tr_bcc), 4),
             "RMSE_FCC": round(float(rmse_ss_tr_fcc), 4),
         },
-        "independent_test_28HEA": {
+        "independent_test": {
             "RMSE_Vegard": round(float(rmse_veg_te), 4),
             "RMSE_DFT_Omega_sf": round(float(rmse_ss_te), 4),
             "RMSE_additive": round(float(rmse_add_te), 4),
@@ -2688,6 +2824,8 @@ def main():
             "comment": "Experimental reproducibility limit from literature variance",
         },
         "bootstrap_ci": bootstrap_ci,
+        "loo_dcv": loo_dcv_results,
+        "bootstrap_dcv": bootstrap_dcv_results,
     }
 
     # --- Compute delta_r_proof, l12_asymmetry, effective_radius metrics ---
