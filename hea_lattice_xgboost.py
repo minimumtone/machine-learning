@@ -325,6 +325,9 @@ INDEPENDENT_TEST = [
     # Senkov 2013 Acta Mater: NbTiVZr single BCC (HIP + 1200C/24h)
     {"comp":{"Nb":0.25,"Ti":0.25,"V":0.25,"Zr":0.25},"struct":"BCC","a_exp":3.338,
      "ref":"Senkov2013_ActaMat","note":"equiatomic 4-element low-density"},
+    # Chen 2022 Acta Mater: HfNbZr single BCC (equiatomic ternary)
+    {"comp":{"Hf":1/3,"Nb":1/3,"Zr":1/3},"struct":"BCC","a_exp":3.4869,
+     "ref":"Chen2022_ActaMat","note":"equiatomic ternary BCC"},
 ]
 
 
