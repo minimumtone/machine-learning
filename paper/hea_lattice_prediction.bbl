@@ -233,4 +233,10 @@ H.~J. Monkhorst, J.~D. Pack, Special points for brillouin-zone integrations,
 \newblock \href {https://doi.org/10.1103/PhysRevB.13.5188}
   {\path{doi:10.1103/PhysRevB.13.5188}}.
 
+\bibitem{Varma2006}
+S.~Varma, R.~Simon, Bias in error estimation when using cross-validation for
+  model selection, BMC Bioinformatics 7 (2006) 91.
+\newblock \href {https://doi.org/10.1186/1471-2105-7-91}
+  {\path{doi:10.1186/1471-2105-7-91}}.
+
 \end{thebibliography}
