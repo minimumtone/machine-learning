@@ -241,7 +241,7 @@ DFTデータベースから$\Omega_\text{sf}$を導出し、
     minimum width=2.2cm, text width=2.0cm, align=center, font=\small},
   arr/.style={-{Stealth[length=2.5mm]}, thick}
 ]
-\node[box, fill=blue!10] (dft) {DFTデータ\\{\scriptsize 5,152件}};
+\node[box, fill=blue!10] (dft) {DFTデータ\\{\scriptsize B2/L1$_2$: 5,152件\\SQS: 860件}};
 \node[box, fill=green!10, right=of dft] (omega) {$\Omega_\text{sf}$導出\\{\scriptsize B2: 465\\L1$_2$: 441}};
 \node[box, fill=orange!10, right=of omega] (add) {加法分解\\{\scriptsize $\delta_i^{(s)}$\\31元素}};
 \node[box, fill=red!10, right=of add] (pred) {格子定数予測\\{\scriptsize 式(\ref{eq:a_from_veff})}};
@@ -304,7 +304,12 @@ VASP（本研究） & 2,200 & 2,810 & 5,010 \\
 Si・Ge・Bは安定構造がBCC/FCCでなくKing体積との乖離が15--29\%に達するため除外。
 $4f$希土類14元素（La, Ce, Pr, Nd, Sm, Eu, Gd, Tb, Dy, Ho, Er, Tm, Yb, Lu）および
 Yは、GGA-PBEが$4f$局在電子を正しく扱えず格子定数が非物理的に膨張・未収束となるため除外
-（付録~\ref{sec:appendix_gdce}参照）。}
+（付録~\ref{sec:appendix_gdce}参照）。
+上記に加え、BCC SQS計算（A$_8$B$_8$超格子）612件収束・414ペア、
+FCC SQS計算 248件収束・189ペア、
+SQS純元素（A$_8$A$_8$）38元素、
+DFT自己整合参照用純元素（B2: 35元素、L1$_2$: 39元素）を使用。
+DFT計算総数は約6,000件超。}
 \end{table}
 
 収束判定と物理的格子定数範囲（2.0--8.0~\AA）でのフィルタリング後、
@@ -2486,12 +2491,13 @@ LOO-DCV改善率（6.3\%）は独立テストでの改善率（16.4\%）より�
 (b)~各LOOステップで$q$を92合金から再推定するため
 $q$推定の変動がRMSEに反映されること、による。
 
-一般にDCVは汎化誤差の\textbf{保守的な（pessimistic bias を持つ）推定}を与えることが
-知られている~\cite{Varma2006}。
-通常のCV（単一ループ）ではハイパーパラメータ選択のバイアスが推定誤差に混入するのに対し、
-DCVは外側ループでそのバイアスを排除する代わりに、
-内側ループの標本サイズが$N-1$に減少するため$q$推定の分散が増大し、
-結果として真の汎化誤差より高めのRMSEを返す傾向がある。
+Varma \& Simon~\cite{Varma2006}が示したように、
+通常のCV（単一ループ）ではモデル選択のバイアス（optimistic bias）が
+推定誤差に混入するのに対し、
+DCVは外側ループでそのバイアスを排除し「ほぼ不偏」な推定を与える。
+ただし小標本では、内側ループの標本サイズが$N-1$に減少するため
+$q$推定の分散が増大し、
+結果として\textbf{保守的な（pessimistic な）推定}を返す傾向がある。
 したがって、LOO-DCVの6.3\%改善は下限的な推定であり、
 実際の汎化性能はテスト分割の16.4\%とLOO-DCVの6.3\%の間にあると考えられる。
 
