@@ -320,7 +320,7 @@ B2で465・L1$_2$で441のユニーク元素ペアを得た。
 64個の立方晶HEA（BCC 29、FCC 35、$a = 2.883$--$3.856$~\AA、
 22元素）。独立テストセットとしてAlonsoデータ外の29 HEA
 （BCC 16、FCC 13）を13文献~\cite{Senkov2013,Senkov2013_ActaMat,Yao2016,Otto2013,Leong2017,Tseng2019,Freudenberger2017,Reget2020,Chen2022}
-から収集した。19元素をカバーし、耐火金属系BCC（Tseng 2019、Reget 2020）、
+から収集した。18元素をカバーし、耐火金属系BCC（Tseng 2019、Reget 2020）、
 貴金属系FCC（Freudenberger 2017）、三元系BCC（Chen 2022: HfNbZr）を含む。
 ただしBCC 16合金はHf-Mo-Nb-Ta-Ti-Zrの系統的サブセットが主体であり、
 FCC 13合金もAu-Cu-Ni-Pd-Pt系とCoCrFeMnNi派生に偏る。
@@ -632,14 +632,14 @@ BCC HEA予測はSQS＋DFT Vegard参照（$q = 1$）で
 従来の20点テストセット（実質10種の合金組成、HfNbTaTiZr$\times$3重複）の
 組成多様性の問題を解消するため、13文献から29個のHEA（BCC 16、FCC 13）を
 新たに収集した（表~\ref{tab:indep_test}）。
-19元素をカバーし、Tseng (2019)の耐火金属系BCCバリアント（HfMoNbTaTiZrの
+18元素をカバーし、Tseng (2019)の耐火金属系BCCバリアント（HfMoNbTaTiZrの
 系統的元素除去）、Reget (2020)のMo--Nb--V--W--Ti系BCC、
 Freudenberger (2017)の貴金属系FCC（Au-Cu-Ni-Pd-Pt四元・五元系）、
 Chen (2022)のHfNbZr三元系BCCを含む。
 
 \begin{table}[H]
 \centering
-\caption{独立テスト29 HEA（BCC 16 + FCC 13）の予測精度（RMSE / \AA）。訓練と非重複の13文献19元素。}
+\caption{独立テスト29 HEA（BCC 16 + FCC 13）の予測精度（RMSE / \AA）。訓練と非重複の13文献18元素。}
 \label{tab:indep_test}
 \footnotesize
 \begin{tabular}{@{}lccc@{}}
@@ -689,7 +689,7 @@ $\Delta = +0.0012$、CI: $[-0.0026, +0.0035]$）、
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=\textwidth]{fig_indep_test.png}
-\caption{独立テストセット（29 HEA、13文献19元素）の予測性能。
+\caption{独立テストセット（29 HEA、13文献18元素）の予測性能。
   (a)~合金別絶対誤差。(b)~構造別RMSE（灰: Vegard、青: DFT-$\Omega_\text{sf}$）。
   (c)~パリティプロット（$q_\text{BCC} = 0.49$、$q_\text{FCC} = 0.13$）。
   BCC 16合金（青四角）とFCC 13合金（赤丸）。}
@@ -1333,10 +1333,10 @@ $\Omega_\text{sf}^\text{SQS}(i\text{-}j) \approx \delta_i^\text{SQS} + \delta_j^
 分解の$R^2 = 0.61$はB2（0.56）と同程度であり、
 ペア固有の非加法的成分が約40\%残存する。
 
-BCC独立テスト15合金に対し
+BCC独立テスト16合金に対し
 $q = 1$固定で加法SQS $\delta$を用いると
-RMSE = 0.0183~\AA{}であり、
-ペアワイズSQS（0.0126~\AA）に比べ精度が低下する。
+RMSE = 0.0178~\AA{}であり、
+ペアワイズSQS（0.0122~\AA）に比べ精度が低下する。
 加法近似で失われるペア固有情報が
 $q = 1$の利点を相殺するためである。
 
@@ -1449,7 +1449,7 @@ SQS+DFT ($q_\text{opt}$) & 1.958 & 0.0133 & 0.0116 & 0.0151 & $+$24.0\% \\
 
   \item \textbf{予測精度の限界}:
     推定ノイズフロア$\sigma \approx 0.016$~\AA{}に対し
-    最良テストRMSE = 0.0138~\AA{}は$\sigma$に近い。
+    最良テストRMSE = 0.0133~\AA{}は$\sigma$に近い。
     MLモデルがいずれもRMSE改善0.002~\AA{}未満であり、
     モデル改善余地は限られる。
     さらなる改善には焼鈍条件・短距離秩序の明示的制御が必要。
@@ -1478,7 +1478,7 @@ Alonso~\cite{Alonso2021} & 実験 & なし & 多成分HEA & $\neq 0$ & HEA予測
 {\scriptsize
 独立テストRMSE: B2/L1$_2$参照 = 0.0146~\AA{}（29 HEA）、
 SQS参照 = 0.0122~\AA{}（BCC 16合金）。
-Vegardベースライン = 0.0178~\AA{}。}
+Vegardベースライン = 0.0175~\AA{}。}
 \end{table}
 
 \paragraph{実用的意義}
