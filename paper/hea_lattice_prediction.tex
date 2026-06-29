@@ -148,18 +148,6 @@ Alonsoら~\cite{Alonso2021}はKingの$\Omega_\text{sf}$を
 加えて、$\Omega_\text{sf}$補正の寄与をどの程度反映すべきかという
 スケーリングの問題が未解決であった。
 
-\paragraph{$\delta r$の限界}
-原子サイズミスマッチパラメータ
-\begin{equation}
-  \delta r = 100 \sqrt{\sum_i c_i\!\left(1 - \frac{r_i}{\bar{r}}\right)^{\!2}},
-  \quad \bar{r} = \sum_i c_i\,r_i,
-  \label{eq:delta_r}
-\end{equation}
-は相安定性の指標として広く用いられる~\cite{Zhang2008,Guo2011,Yang2012}。
-しかし$\delta r$は$(c_i, r_i)$のみの関数であり、
-結晶構造の情報を\emph{一切含まない}。
-この限界は本研究で435二元系ペアにより初めて厳密に証明する。
-
 \paragraph{DFTによるHEA格子定数研究}
 DFTデータベース（Materials Project~\cite{Jain2013}、
 OQMD~\cite{Saal2013}）は数千の二元系化合物の正確な格子定数を
@@ -221,8 +209,6 @@ $\sigma \approx 0.016$~\AA{}に近接しており、
     $\Omega_\text{sf}^{(s)}(i\text{-}j) \approx \delta_i^{(s)} + \delta_j^{(s)}$
     により906ペアを31元素パラメータに圧縮。
     Hume-Rothery半径と同様の元素固有属性として活用可能。
-  \item \textbf{$\delta r$の限界の証明}:
-    435二元系ペアで$\delta r$が構造情報を含み得ないことを厳密に検証。
   \item \textbf{独立テスト}:
     29 HEA（BCC 16、FCC 13）で検証。
     全体RMSE = 0.0146~\AA{}（Vegard比16.4\%改善）。
@@ -330,12 +316,6 @@ B2で465・L1$_2$で441のユニーク元素ペアを得た。
 ただしBCC 16合金はHf-Mo-Nb-Ta-Ti-Zrの系統的サブセットが主体であり、
 FCC 13合金もAu-Cu-Ni-Pd-Pt系とCoCrFeMnNi派生に偏る。
 実効的な化学多様性は合金数より限定的である点に留意が必要である。
-
-\subsubsection{多相HEAデータベース}
-相安定性解析のため54 HEAを5文献~\cite{Zhang2008,Guo2011,Yang2012,TodaCaraballo2016,Ye2015}から収集し、
-固溶体(SS, $N=25$)・金属間化合物含有(IM, $N=23$)・
-非晶質(AM, $N=6$)に分類した。
-
 
 \subsection{体積サイズファクターのDFT導出}
 \label{sec:omega}
@@ -468,7 +448,7 @@ $N$点のうち1点を抜いて$N-1$点で学習し、
 抜いた1点を予測する操作を全点で繰り返し、
 過学習を排除した汎化誤差を推定する手法）で評価した：
 \begin{itemize}
-  \item \textbf{Ridge回帰}（$\alpha = 1.0$）: 線形回帰にL2正則化を加え過学習を抑制する最も単純なMLモデル。6組成記述子（Vegard予測値、$\delta r$、$\delta\chi$、VEC、構造フラグ、$S_\text{mix}$）を使用。
+  \item \textbf{Ridge回帰}（$\alpha = 1.0$）: 線形回帰にL2正則化を加え過学習を抑制する最も単純なMLモデル。5組成記述子（Vegard予測値、$\delta\chi$、VEC、構造フラグ、$S_\text{mix}$）を使用。
   \item \textbf{GradientBoosting}（100本、深さ3）: 勾配ブースティング決定木による直接予測。過学習診断のため同一記述子で評価。
 \end{itemize}
 残差が組成の体系的関数でないことを確認するための最小限のMLテストである。
@@ -817,19 +797,6 @@ L1$_2$では$R^2 = 0.51$と散乱が大きい。
 $\Omega_\text{sf}$がサイズ差だけでは説明できないことを示す。
 
 
-\subsection{$\delta r$の構造不変性}
-\label{sec:structural}
-
-$\delta r = f(c_i, r_i)$は定義上、結晶構造の引数を持たないため
-L1$_2$（$c_A = 0.25$）とB2（$c_A = 0.50$）に同一値を割り当てる。
-一方$\Omega_\text{sf}$は構造依存であり、
-435ペアの検証で$\delta r$間偏差ゼロ、
-$\Omega_\text{sf}$間相関$r = 0.71$を確認した。
-格子定数の構造依存性の予測には$\Omega_\text{sf}$が必要であり、
-$\delta r$の有用性は相安定性指標に限られる。
-詳細は付録~\ref{sec:appendix_delta_r}に示す。
-
-
 \subsection{剛体球接触モデルの限界}
 \label{sec:packing_results}
 
@@ -960,22 +927,10 @@ Vegard則からの偏差の大部分が線形補間の精度内に収まるこ�
 \end{figure*}
 
 
-\subsection{多相HEA分類}
-\label{sec:phase}
-
-$\Omega_\text{sf}$に基づくミスマッチ$\delta_\text{sf}$と
-従来の$\delta r$による固溶体（SS）分類を比較した。
-$\delta r$が$\delta_\text{sf}$より相分類に優れ（AUC 0.869 vs 0.710）、
-固溶体安定性が主に幾何学的サイズ適合性で支配されることを示す。
-$\delta_\text{sf}$は格子定数予測に有用だが、
-相安定性予測には$\delta r$が適切である。
-定義・ROC曲線・相安定性マップの詳細は付録~\ref{sec:appendix_phase}に示す。
-
-
 \subsection{機械学習残差解析}
 \label{sec:ml_results}
 
-Ridge回帰（6組成記述子）によるLOO-CV残差補正は
+Ridge回帰（5組成記述子）によるLOO-CV残差補正は
 RMSE = 0.0220~\AA{}と物理モデル単体（0.0214~\AA）よりわずかに劣化した。
 GradientBoosting（100本、深さ3）は訓練RMSE = 0.0051~\AA{}だが
 LOO-CV RMSE = 0.170~\AA{}と破滅的過学習を示した。
@@ -987,19 +942,6 @@ LOO-CV RMSE = 0.170~\AA{}と破滅的過学習を示した。
 \section{考察}
 \label{sec:discussion}
 %% =====================================================================
-
-\subsection{$\delta r$が構造情報を含まない理由}
-
-$\delta r$が構造情報を含まないことは
-定義の数学的帰結であり、$\delta r = f(c_i, r_i)$は
-構造引数を持たないため$A_3B$と$B_3A$に同一値を割り当てる。
-435ペアの解析は$\delta r$間偏差ゼロ、
-$\Omega_\text{sf}$間相関$r = 0.71$を示した。
-この結果は$\delta r$と$\Omega_\text{sf}$の構造感度の差を
-定量的に対比するものであり、$\delta r$の意義を否定するものではない。
-$\delta r$の真の有用性は幾何学的サイズ適合性の指標（相安定性予測: AUC 0.869）にあり、
-格子定数の構造依存性の予測には$\Omega_\text{sf}$が必要である。
-
 
 \subsection{構造依存体積の物理的起源}
 
@@ -1187,14 +1129,10 @@ DFT--実験間不整合によるアーティファクトであったと結論さ
 
 \subsection{否定的結果の意義}
 
-本研究では3つの重要な否定的結果を得た。
+本研究では2つの重要な否定的結果を得た。
 第一に、MLモデル（Ridge回帰・GradientBoosting）がDFT-$\Omega_\text{sf}$モデルを
 実質的に改善できないことは、残差が測定ノイズに支配されていることを示す。
-第二に、DFT由来$\delta_\text{sf}$が$\delta r$より
-相分類で劣ること（AUC 0.710 vs 0.869）は、
-固溶体安定性が幾何学的サイズ適合性で支配されることの証拠であり、
-$\Omega_\text{sf}$の価値は格子定数の定量予測にある。
-第三に、DFT自己整合参照によりBCCで$q \approx 1$が達成されるが
+第二に、DFT自己整合参照によりBCCで$q \approx 1$が達成されるが
 訓練64合金でのRMSE改善は12.9\%に留まることは、
 $q$パラメータの主要部分がDFT--実験間不整合に起因する
 アーティファクトであることを示す。
@@ -1489,11 +1427,6 @@ SQS+DFT ($q_\text{opt}$) & 1.958 & 0.0133 & 0.0116 & 0.0151 & $+$24.0\% \\
     906ペアを31元素$\delta^{(s)}$に圧縮（97\%削減）。
     RMSE = 0.0221~\AA{}と元素対モデルとほぼ同等の精度を維持。
 
-  \item \textbf{$\delta r$の限界の証明}:
-    $\delta r = f(c_i, r_i)$は構造引数を持たず、
-    435ペアで構造間偏差ゼロを実証。
-    DFT体積記述子の必要性を確立。
-
   \item \textbf{予測精度の限界}:
     推定ノイズフロア$\sigma \approx 0.016$~\AA{}に対し
     最良テストRMSE = 0.0133~\AA{}は$\sigma$に近い。
@@ -1589,7 +1522,6 @@ $\Omega_\text{sf}^{(s)}(i\text{-}j)$ & 構造$s$での体積サイズファク�
 $\delta_i^{(s)}$ & 元素$i$の加法分解パラメータ（構造$s$） & --- \\
 $q_s$ & 構造依存校正定数 & --- \\
 $V_\text{eff}(i;\,\mathbf{c})$ & 組成依存有効原子体積 & \AA$^3$ \\
-$\delta r$ & 原子サイズミスマッチパラメータ & \% \\
 $\alpha$ & Warren-Cowley短距離秩序パラメータ & --- \\
 \midrule
 \multicolumn{3}{@{}l}{\textit{略語}} \\
@@ -2050,104 +1982,8 @@ Vegard則の補正に不可欠であることを裏付ける。
 
 
 
-\section{$\delta r$の構造不変性の詳細}
-\label{sec:appendix_delta_r}
-
-\subsection{数学的証明}
-
-式~\eqref{eq:delta_r}より$\delta r = f(c_i, r_i)$は
-組成と純元素半径のみの関数であり、結晶構造の引数が存在しない。
-二元系$A$--$B$では：
-\begin{equation}
-  \delta r(c_A) = 100\,\frac{|r_A - r_B|\sqrt{c_A(1-c_A)}}
-    {c_A r_A + (1-c_A) r_B}.
-  \label{eq:delta_r_binary}
-\end{equation}
-この式は$r_A$, $r_B$（純元素半径、定数）と$c_A$（組成）のみに依存し、
-結晶構造（BCC/FCC/HCP等）を区別するパラメータが存在しない。
-L1$_2$（$c_A = 0.25$/$0.75$）かB2（$c_A = 0.50$）かとは
-無関係に同じ$r_A$, $r_B$を使用する。
-
-多元系$N$成分では：
-\begin{equation}
-  \delta r = 100\sqrt{\sum_{i=1}^{N} c_i\left(1 - \frac{r_i}{\bar{r}}\right)^{\!2}},
-  \quad \bar{r} = \sum_{i=1}^{N} c_i r_i.
-  \label{eq:delta_r_multi}
-\end{equation}
-同一組成$\{c_i\}$に対して$\delta r$は一意の値を返す。
-等モル合金では$c_i = 1/N$で固定されるため、
-$\delta r$は純元素半径$\{r_i\}$のみで決定される。
-BCC HEAとFCC HEAで同一組成であれば\textbf{同一の$\delta r$}を与え、
-格子定数がBCC $\neq$ FCCで異なることを表現できない。
-
-\subsection{計算検証: 435ペアでの実証}
-
-$\delta r(A_3B)$--$\delta r(B_3A)$プロットは偏差ゼロの
-1次元曲線を描く（図~\ref{fig:delta_r_proof}(a)(b)）。
-これは$\delta r$が組成のみの関数であることの直接的証拠である。
-
-一方$\Omega_\text{sf}(A_3B)$--$\Omega_\text{sf}(B_3A)$は
-全435ペアで$r = 0.71$の中程度の正相関を示す（図~\ref{fig:delta_r_proof}(c)）。
-これは「同一ペアでも多数派/少数派サイトの入れ替えで$\Omega_\text{sf}$が変化する
-（完全には一致しない）が、系統的な傾向がある」ことを意味する。
-
-\subsection{構造非対称性の定量化}
-
-L1$_2$格子定数差$|a(A_3B) - a(B_3A)|$の統計：
-\begin{itemize}
-  \item 平均: 0.286~\AA（754ペア）
-  \item 最大: 1.73~\AA（Ca--Be等、半径差が極端な組み合わせ）
-  \item 中央値: 0.217~\AA
-  \item 標準偏差: 0.24~\AA
-\end{itemize}
-$\delta r$ではこの構造非対称性は完全に不可視である。
-
-加法モデル$\delta_i + \delta_j$は対称であるため
-$A_3B$と$B_3A$の区別はできず、
-非対称性がL1$_2$加法分解の$R^2$（0.66）を1.0から引き下げる一因となっている。
-非対称性の物理的起源は、L1$_2$構造において多数派元素（75\%サイト）が
-少数派元素（25\%サイト）に及ぼす「ケージ効果」の方向依存性にある。
-
-\subsection{$\delta r$ vs $\Omega_\text{sf}$の本質的違い}
-
-\begin{table}[H]
-\centering
-\caption{$\delta r$と$\Omega_\text{sf}$の比較。}
-\label{tab:dr_vs_omega}
-\footnotesize
-\begin{tabular}{@{}lll@{}}
-\toprule
-性質 & $\delta r$ & $\Omega_\text{sf}$ \\
-\midrule
-構造依存性 & なし & あり（B2 $\neq$ L1$_2$） \\
-組成依存性 & あり & あり（ペア固有） \\
-入力データ & 純元素半径のみ & DFT計算 or 実験 \\
-物理的起源 & 幾何学的サイズ差 & 電子構造+サイズ効果 \\
-加法分解 & 厳密に可能 & 近似的（$R^2 = 0.56$--$0.66$） \\
-相分類能力 & AUC = 0.869 & AUC = 0.710 \\
-格子定数予測 & 不可能 & 可能 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\noindent
-$\delta r$が相分類で優れる理由は、固溶体安定性が幾何学的原子サイズ適合性に支配されるためである。
-すなわち「原子が収まるかどうか」はサイズだけで決まるが、
-「どの程度の体積で収まるか（格子定数）」は電子構造まで考慮する必要がある。
-両記述子は相補的であり、用途に応じて使い分けるべきである。
-
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=\textwidth]{fig_delta_r_proof.png}
-\caption{$\delta r$の構造不変性の検証（435ペア、4f希土類+Y除外後）。
-  (a)~$\delta r(A_3B)$ vs $\delta r(B_3A)$: 完全一致（構造情報ゼロ）。
-  (b)~$\delta r(A_3B)$ vs $\delta r(\text{B2})$: 滑らかな曲線（組成のみの関数）。
-  (c)~$\Omega_\text{sf}(A_3B)$ vs $\Omega_\text{sf}(B_3A)$:
-  $r = 0.71$（435ペア）。対称でない散布はL1$_2$の構造依存性を反映。}
-\label{fig:delta_r_proof}
-\end{figure*}
-
-\subsection{構造間相関}
+\section{構造間$\Omega_\text{sf}$の相関}
+\label{sec:appendix_structural_corr}
 
 図~\ref{fig:l12_b2_corr}にL1$_2$非対称性の分布と
 B2--L1$_2$間の$\Omega_\text{sf}$相関を示す。
@@ -2169,100 +2005,6 @@ $r = 0.83$（完全相関$r = 1$ではない）という値は、
   (e)~L1$_2$ $\Omega_\text{sf}$ vs B2 $\Omega_\text{sf}$（435ペア、$r = 0.83$）:
   構造間で$\Omega_\text{sf}$は強い相関を持つが完全には一致しない。}
 \label{fig:l12_b2_corr}
-\end{figure*}
-
-
-\section{多相HEA分類の詳細}
-\label{sec:appendix_phase}
-
-\subsection{$\delta_\text{sf}$の定義と動機}
-
-$\Omega_\text{sf}$に基づくサイズミスマッチ$\delta_\text{sf}$を以下のように定義する：
-\begin{equation}
-  \delta_\text{sf} = 100\sqrt{
-    \sum_i c_i \!\left(1 - \frac{1 + \bar{\Omega}_i}{1 +
-    \bar{\Omega}}\right)^{\!2}},
-  \label{eq:delta_sf}
-\end{equation}
-ここで$\bar{\Omega}_i = \sum_{j \ne i} c_j \Omega_\text{sf}(i,j)$は
-元素$i$の局所的平均サイズファクター、
-$\bar{\Omega} = \sum_i c_i \bar{\Omega}_i$は合金全体の平均である。
-
-$\delta_\text{sf}$は$\delta r$のDFT版と位置づけられる。
-$\delta r$が「純元素半径」からのサイズ散乱を測るのに対し、
-$\delta_\text{sf}$は「DFT計算に基づく合金中の環境を考慮した有効体積」からの
-サイズ散乱を測る。期待として、DFTの電子構造情報を含むため
-$\delta_\text{sf}$が$\delta r$を上回ると予想したが、
-\textbf{結果は逆}であった。
-
-\subsection{分類結果}
-
-\begin{table}[H]
-\centering
-\caption{相分類性能（SS vs 非SS）。訓練64 + 独立29 = 全93 HEAのうち相ラベルのある54 HEA（SS 30 + 非SS 24）を対象。}
-\label{tab:phase}
-\footnotesize
-\begin{tabular}{@{}lccc@{}}
-\toprule
-基準 & AUC & 精度 & F1 \\
-\midrule
-$\delta r$ (閾値4.73\%) & \textbf{0.869} & \textbf{0.815} & \textbf{0.833} \\
-$\delta_\text{sf}$ (閾値0.018) & 0.710 & 0.722 & 0.795 \\
-Yang--Zhang & --- & 0.648 & 0.725 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{否定的結果の解釈}
-
-$\delta_\text{sf}$が$\delta r$に劣る理由を以下に分析する。
-
-\paragraph{(1) 相安定性はサイズ適合性が支配的}
-固溶体が安定かどうかは「原子がランダムサイトに収まるか」という幾何学的問題であり、
-第一近似として純元素半径差$|r_i - \bar{r}|$で十分に捕捉される。
-DFTの電子構造情報（$d$--$d$結合による体積収縮等）は
-格子定数の\textbf{絶対値}には寄与するが、
-「単相か多相か」という\textbf{二値分類}には
-余計な情報として作用する。
-
-\paragraph{(2) $\Omega_\text{sf}$の非対称性が相分類を撹乱}
-$\Omega_\text{sf}(i,j) \neq \Omega_\text{sf}(j,i)$（L1$_2$の場合）のため
-$\delta_\text{sf}$は方向依存の情報を含む。
-相安定性は等方的（方向によらない）であるため、
-非対称成分はノイズとして作用する。
-
-\paragraph{(3) データサイズの制約}
-54合金（SS 30 + 非SS 24）は分類モデルの学習・評価には十分でない可能性がある。
-AUCの差 0.869 $-$ 0.710 = 0.159 の信頼区間は
-ブートストラップ法で$[0.05, 0.27]$（95\% CI）であり、
-差自体は有意だが効果量は中程度である。
-
-\paragraph{結論}
-この否定的結果は以下の教訓を与える：
-\begin{itemize}
-  \item $\delta r$（幾何学的指標）は相安定性分類に最適
-  \item $\Omega_\text{sf}$（電子構造由来）は格子定数予測に最適
-  \item 用途に応じた記述子の使い分けが重要
-  \item 「DFTを使えば常に良くなる」は誤り --- 問題の物理に適合した記述子を選択すべき
-\end{itemize}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.7\columnwidth]{fig_roc.png}
-\caption{SS vs 非SS分類のROC曲線（54 HEA）。
-  $\delta r$（AUC = 0.869）が$\delta_\text{sf}$（AUC = 0.710）を上回る。
-  $\delta r$の優位性は、相安定性が幾何学的サイズ適合性に支配されることを反映する。}
-\label{fig:roc}
-\end{figure}
-
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=0.55\textwidth]{fig_phase_map.png}
-\caption{$\delta r$--$\Omega$空間の相安定性マップ（54 HEA）。
-  SS（単相固溶体）は$\delta r < 4.73\%$の領域に集中する。
-  $\delta r$が小さいほど原子サイズ差が小さく、
-  ランダム固溶体が格子歪みなく維持される。}
-\label{fig:phase_map}
 \end{figure*}
 
 
