@@ -602,13 +602,14 @@ BCC HEA予測はSQS＋DFT Vegard参照（$q = 1$）で
 
 図~\ref{fig:bcc_fcc}にBCC/FCC別の誤差分布を示す。
 
-\begin{figure*}[!t]
+\begin{figure}[!t]
 \centering
-\includegraphics[width=\textwidth]{fig_bcc_fcc.png}
-\caption{BCC/FCC構造別の誤差分布（64 HEA: BCC 29合金 + FCC 35合金）。
-  各手法（Vegard, Alonso, DFT-$\Omega_\text{sf}$）の合金別絶対誤差を構造で分離して比較。}
+\includegraphics[width=\columnwidth]{fig_bcc_fcc.png}
+\caption{訓練64 HEAのパリティプロット（BCC 29合金 + FCC 35合金）。
+  格子定数の分布域が異なるため（BCC: 2.9--3.5~\AA{}、FCC: 3.55--3.9~\AA{}）、
+  1パネルで構造別に識別可能。}
 \label{fig:bcc_fcc}
-\end{figure*}
+\end{figure}
 
 
 \subsection{独立テスト検証}
