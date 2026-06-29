@@ -517,10 +517,11 @@ Ridge回帰とGradientBoostingをLOO-CV（64 HEAから1点を抜いて予測を�
   DFT-$\Omega_\text{sf}$モデルはRMSE = 0.0214~\AA{}で
   Vegard比5.8\%改善。}
 \label{tab:comparison}
-\footnotesize
+\scriptsize
 \begin{tabular}{@{}lcccc@{}}
 \toprule
-手法 & RMSE (\AA) & MAE (\AA) & MAPE (\%) & $R^2$ \\
+手法 & RMSE & MAE & MAPE & $R^2$ \\
+   & (\AA) & (\AA) & (\%) & \\
 \midrule
 \multicolumn{5}{l}{\textit{ベースライン}} \\
 Alonso Vegard       & 0.0280 & 0.0167 & 0.50 & 0.985 \\
@@ -532,13 +533,15 @@ DFT-$\Omega_\text{sf}$  & \textbf{0.0214} & \textbf{0.0128} & \textbf{0.39} & \t
 加法$\delta^{(s)}$  & 0.0221 & --- & --- & --- \\
 \midrule
 \multicolumn{5}{l}{\textit{ML残差補正 (LOO-CV)}} \\
-+ Ridge ($\alpha$=1.0, 5記述子) & 0.0220 & --- & --- & --- \\
-+ GradientBoosting (直接予測) & 0.170$^\dagger$ & --- & --- & --- \\
++ Ridge ($\alpha$=1.0) & 0.0220 & --- & --- & --- \\
++ GB (直接予測) & 0.170$^\dagger$ & --- & --- & --- \\
 \midrule
-ノイズフロア ($\sigma$) & \multicolumn{4}{c}{$\approx 0.016$~\AA} \\
-\multicolumn{5}{l}{\footnotesize $^\dagger$訓練RMSE = 0.0051~\AA{}（破滅的過学習）。}\\
+ノイズ ($\sigma$) & \multicolumn{4}{c}{$\approx 0.016$~\AA} \\
 \bottomrule
 \end{tabular}
+\par\smallskip
+{\scriptsize $^\dagger$訓練RMSE = 0.0051~\AA{}（破滅的過学習）。
+Ridge: 5記述子、GB: GradientBoosting。}
 \end{table}
 
 DFT-$\Omega_\text{sf}$モデルはRMSE = 0.0214~\AA{}を達成し、
@@ -800,51 +803,10 @@ L1$_2$では$R^2 = 0.51$と散乱が大きい。
 $\Omega_\text{sf}$がサイズ差だけでは説明できないことを示す。
 
 
-\subsection{剛体球接触モデルの限界}
-\label{sec:packing_results}
-
-単一半径セット$(r_A, r_B)$の全構造同時フィットは
-全体RMSE = 0.162~\AA{}であり、Vegard則の5倍以上である。
-根本原因は$d_\text{nn} = r_A + r_B$が対称操作であり
-$a(A_3B) = a(B_3A)$を強制すること。
-実際のDFTデータは$\langle|a(A_3B)-a(B_3A)|\rangle = 0.286$~\AA{}を示す
-（図~\ref{fig:packing}）。
-
-\begin{table}[H]
-\centering
-\caption{剛体球 vs 体積由来半径のRMSE (\AA)。二元系DFT格子定数からのフィット。}
-\label{tab:packing}
-\footnotesize
-\begin{tabular}{@{}lcc@{}}
-\toprule
-手法 & RMSE (\AA) & L1$_2$非対称性 \\
-\midrule
-剛体球（単一セット） & 0.162 & 不可 \\
-剛体球（構造別） & 0.045 & 可 \\
-体積由来（構造別） & 0.038 & 可 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=0.85\textwidth]{fig_packing.png}
-\caption{剛体球接触モデルの解析。
-  単一半径セットではL1$_2$非対称性を表現できず
-  RMSE = 0.162~\AA{}。}
-\label{fig:packing}
-\end{figure*}
-
-\paragraph{max制約をHEA予測に適用した場合}
-剛体球モデルでは$a = \max(2(r_A+r_B)/\sqrt{3},\, 2r_A,\, 2r_B)$のmax制約が
-接触条件から生じる。
-多成分HEAへの拡張では$a \geq 2r_\text{max}$（最大元素半径）が
-下界制約として働く。
-しかし構造別フィット（max制約込み）でもRMSE = 0.045~\AA{}であり、
-体積由来モデル（0.038~\AA）の1.2倍である（表~\ref{tab:packing}）。
-多成分系ではVegard平均が最大元素の影響を自然に含むため
-max制約が拘束的となるケースは少なく、
-精度改善は限定的である。
+剛体球接触モデルによる半径フィットは
+RMSE = 0.162~\AA{}と大きく（Vegard則の5倍以上）、
+$d_\text{nn} = r_A + r_B$の対称性がL1$_2$非対称性を表現できないことが
+根本原因である（付録~\ref{sec:appendix_packing}に詳細を示す）。
 
 
 \subsection{L1$_2$非対称性と有効半径}
@@ -1040,7 +1002,7 @@ Vegard成立の検証は相対量でありDFT内で完結するため
 半径に変換すると、同じ原子体積でもBCCとFCCで最近接距離が
 異なるという別の構造ジオメトリが入り込む。
 剛体球接触モデルの単一半径セットが
-RMSE = 0.162~\AA{}と破綻したこと（\ref{sec:packing_results}節）は
+RMSE = 0.162~\AA{}と破綻したこと（付録~\ref{sec:appendix_packing}）は
 この問題を裏付ける。
 
 
@@ -1055,38 +1017,30 @@ $\Omega_\text{sf}$の算出に必要なデータは
 
 \begin{table}[H]
 \centering
-\caption{$\Omega_\text{sf}$算出に用いるデータソースの分類。
-$\Omega_\text{sf} = (V_\text{compound} - V_\text{Vegard})/V_\text{Vegard}$
-における$V_\text{compound}$と$V_\text{Vegard} = \sum_i x_i V_i$の由来。
-$q$は訓練64合金で最適化した値。}
+\caption{$\Omega_\text{sf}$算出のデータソース分類。
+$q$は訓練64合金で最適化。}
 \label{tab:data_provenance}
 \scriptsize
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{@{}lllcrr@{}}
+\begin{tabular}{@{}llrr@{}}
 \toprule
-モデル名 & 基準原子体積 $V_i$ & $\Omega_\text{sf}$の化合物体積 & ペア数 & $q_\text{BCC}$ & $q_\text{FCC}$ \\
+モデル名 & $V_i$の由来 & $q_\text{BCC}$ & $q_\text{FCC}$ \\
 \midrule
-\multicolumn{6}{@{}l}{\textit{(a) 基準原子体積 = 実験値（King 1966）}} \\[2pt]
-B2/L1$_2$+King（本手法） & King実験値（31元素） & B2/L1$_2$ DFT（MP/OQMD/VASP） & 465/441 & 0.486 & 0.133 \\
-SQS+King & King実験値（31元素） & BCC SQS DFT（A$_8$B$_8$） & 414 & 0.623 & 0.133$^*$ \\
+\multicolumn{4}{@{}l}{\textit{(a) $V_i$ = King実験値}} \\[2pt]
+B2/L1$_2$+King & King（31元素） & 0.486 & 0.133 \\
+SQS+King & King（31元素） & 0.623 & 0.133$^*$ \\
 \midrule
-\multicolumn{6}{@{}l}{\textit{(b) 基準原子体積 = DFT（ユニットセル B2/L1$_2$ pure）}} \\[2pt]
-B2/L1$_2$+DFT自己整合 & B2/L1$_2$ pure DFT（35/39元素） & B2/L1$_2$ DFT（MP/OQMD/VASP） & 595/741 & 1.188 & 0.280 \\
+\multicolumn{4}{@{}l}{\textit{(b) $V_i$ = DFT（B2/L1$_2$ pure）}} \\[2pt]
+B2/L1$_2$+DFT & DFT（35/39元素） & 1.188 & 0.280 \\
 \midrule
-\multicolumn{6}{@{}l}{\textit{(c) 基準原子体積 = DFT（SQSサイズ A$_8$A$_8$）}} \\[2pt]
-SQS+DFT ($q\!=\!1$) & SQS pure DFT（A$_8$A$_8$、38元素） & BCC SQS DFT（A$_8$B$_8$） & 414 & \textbf{1.000} & 0.133$^*$ \\
-SQS+DFT ($q_\text{opt}$) & SQS pure DFT（A$_8$A$_8$、38元素） & BCC SQS DFT（A$_8$B$_8$） & 414 & 1.958 & 0.133$^*$ \\
+\multicolumn{4}{@{}l}{\textit{(c) $V_i$ = DFT（SQS A$_8$A$_8$）}} \\[2pt]
+SQS+DFT ($q\!=\!1$) & DFT（38元素） & \textbf{1.000} & 0.133$^*$ \\
+SQS+DFT ($q_\text{opt}$) & DFT（38元素） & 1.958 & 0.133$^*$ \\
 \bottomrule
-\end{tabular}}
+\end{tabular}
 \par\smallskip
-{\scriptsize $^*$SQS系モデルのFCC側はL1$_2$+King（$q_\text{FCC} = 0.133$）で共通。
-BCC SQSのみ参照構造が変わる。}
-\par\smallskip
-{\scriptsize
-\textbf{(a)}ではKing実験値とDFT計算値の体系差（GGA系統誤差）が$q$に混入し$q_\text{BCC} = 0.49 \neq 1$となる。
-\textbf{(b)}では$V_i$もDFTに統一するため系統誤差が相殺し$q_\text{BCC} = 1.19 \approx 1$に近づく。
-\textbf{(c)}ではさらに化合物と純元素が同一超格子サイズ（16原子）で揃うため
-セルサイズ効果も相殺し、$q = 1$（スケーリング不要）が物理的目標となる。}
+{\scriptsize $^*$FCC側はL1$_2$+King（$q_\text{FCC} = 0.133$）で共通。
+(a)$\to$(b)$\to$(c)と$V_i$をDFTに統一することで
+$q_\text{BCC} \to 1$に収束。}
 \end{table}
 
 $\Omega_\text{sf}$の参照体積をKing実験値からVASP DFT計算値に
@@ -1392,20 +1346,23 @@ SQS系モデルのFCC側はL1$_2$+King（$q_\text{FCC} = 0.133$）で共通。
 Vegard行は$q=0$、B2+DFT行はFCC側もDFT自己整合（$q_\text{FCC} = 0.280$）を使用。}
 \label{tab:conclusion_summary}
 \scriptsize
-\begin{tabular}{@{}lcrrrr@{}}
+\begin{tabular}{@{}lcrrr@{}}
 \toprule
-モデル & $q_\text{BCC}$ & RMSE$_\text{ALL}$ & RMSE$_\text{BCC}$ & RMSE$_\text{FCC}$ & 改善(ALL) \\
+モデル & $q_\text{BCC}$ & RMSE$_\text{ALL}$ & RMSE$_\text{BCC}$ & 改善 \\
 \midrule
-Vegard ($q\!=\!0$) & 0 & 0.0175 & 0.0183 & 0.0164 & --- \\
-B2/L1$_2$+King（本手法） & 0.486 & 0.0146 & 0.0142 & 0.0151 & $+$16.4\% \\
-B2/L1$_2$+DFT自己整合 & 1.188 & 0.0136 & 0.0113 & 0.0160 & $+$22.1\% \\
-SQS+King & 0.623 & 0.0149 & 0.0148 & 0.0151 & $+$14.6\% \\
-\textbf{SQS+DFT ($q\!=\!1$)} & \textbf{1.000} & \textbf{0.0136} & \textbf{0.0122} & 0.0151 & \textbf{$+$22.1\%} \\
-SQS+DFT ($q_\text{opt}$) & 1.958 & 0.0133 & 0.0116 & 0.0151 & $+$24.0\% \\
+Vegard & 0 & 0.0175 & 0.0183 & --- \\
+B2/L1$_2$+King & 0.486 & 0.0146 & 0.0142 & 16.4\% \\
+B2/L1$_2$+DFT & 1.188 & 0.0136 & 0.0113 & 22.1\% \\
+SQS+King & 0.623 & 0.0149 & 0.0148 & 14.6\% \\
+\textbf{SQS+DFT ($q\!=\!1$)} & \textbf{1.000} & \textbf{0.0136} & \textbf{0.0122} & \textbf{22.1\%} \\
+SQS+DFT ($q_\text{opt}$) & 1.958 & 0.0133 & 0.0116 & 24.0\% \\
 \midrule
-ノイズ & --- & 0.016 & --- & --- & --- \\
+ノイズ & --- & 0.016 & --- & --- \\
 \bottomrule
 \end{tabular}
+\par\smallskip
+{\scriptsize SQS系のRMSE$_\text{FCC}$ = 0.0151~\AA{}（Vegard: 0.0164）。
+B2+DFT: RMSE$_\text{FCC}$ = 0.0160。}
 \end{table}
 
 \begin{enumerate}
@@ -1447,26 +1404,25 @@ SQS+DFT ($q_\text{opt}$) & 1.958 & 0.0133 & 0.0116 & 0.0151 & $+$24.0\% \\
 
 \begin{table}[H]
 \centering
-\caption{体積サイズファクター$\Omega_\text{sf}$研究の系譜と本研究の位置づけ。}
+\caption{$\Omega_\text{sf}$研究の系譜。}
 \label{tab:method_comparison}
 \scriptsize
-\begin{tabular}{@{}llllcl@{}}
+\begin{tabular}{@{}llll@{}}
 \toprule
-研究 & $\Omega_\text{sf}$源 & 構造分離 & 対象 & $q$ & 備考 \\
+研究 & $\Omega_\text{sf}$源 & 構造分離 & $q$ \\
 \midrule
-King~\cite{King1966} & 実験 & なし & 希薄固溶体 & --- & サイズファクター提唱 \\
-Coreño-Alonso~\cite{CorenoAlonso2004} & 実験 & B2/L1$_2$ & 二元系化合物 & --- & 化合物への拡張 \\
-Alonso~\cite{Alonso2021} & 実験 & なし & 多成分HEA & $\neq 0$ & HEA予測式提案 \\
+King~\cite{King1966} & 実験 & なし & --- \\
+Coreño-Alonso~\cite{CorenoAlonso2004} & 実験 & B2/L1$_2$ & --- \\
+Alonso~\cite{Alonso2021} & 実験 & なし & $\neq 0$ \\
 \midrule
-\textbf{本手法(B2/L1$_2$)} & \textbf{DFT} & \textbf{BCC/FCC} & 任意HEA & $0.49/0.13$ & 構造別DFT置換 \\
-\textbf{本手法(SQS)} & \textbf{DFT} & \textbf{BCC} & 任意HEA & $\mathbf{1.0}$ & $q$不要を実証 \\
+\textbf{本手法(B2/L1$_2$)} & \textbf{DFT} & \textbf{BCC/FCC} & $0.49/0.13$ \\
+\textbf{本手法(SQS)} & \textbf{DFT} & \textbf{BCC} & $\mathbf{1.0}$ \\
 \bottomrule
 \end{tabular}
 \par\smallskip
 {\scriptsize
-独立テストRMSE: B2/L1$_2$参照 = 0.0146~\AA{}（29 HEA）、
-SQS参照 = 0.0122~\AA{}（BCC 16合金）。
-Vegardベースライン = 0.0175~\AA{}。}
+テストRMSE: B2/L1$_2$ = 0.0146、SQS = 0.0122~\AA{}。
+Vegard = 0.0175~\AA{}。}
 \end{table}
 
 \paragraph{実用的意義}
@@ -1749,8 +1705,48 @@ B2では
     2r_A,\; 2r_B\right)\!.
   \label{eq:dnn_b2}
 \end{equation}
-単一半径セットの全構造同時フィットは
+単一半径セット$(r_A, r_B)$の全構造同時フィットは
 RMSE = 0.162~\AA{}と大きく、剛体球仮定の破綻を示す。
+根本原因は$d_\text{nn} = r_A + r_B$が対称操作であり
+$a(A_3B) = a(B_3A)$を強制すること。
+実際のDFTデータは$\langle|a(A_3B)-a(B_3A)|\rangle = 0.286$~\AA{}を示す
+（図~\ref{fig:packing}）。
+
+\begin{table}[H]
+\centering
+\caption{剛体球 vs 体積由来半径のRMSE (\AA)。二元系DFT格子定数からのフィット。}
+\label{tab:packing}
+\footnotesize
+\begin{tabular}{@{}lcc@{}}
+\toprule
+手法 & RMSE (\AA) & L1$_2$非対称性 \\
+\midrule
+剛体球（単一セット） & 0.162 & 不可 \\
+剛体球（構造別） & 0.045 & 可 \\
+体積由来（構造別） & 0.038 & 可 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.85\textwidth]{fig_packing.png}
+\caption{剛体球接触モデルの解析。
+  単一半径セットではL1$_2$非対称性を表現できず
+  RMSE = 0.162~\AA{}。}
+\label{fig:packing}
+\end{figure*}
+
+\paragraph{max制約をHEA予測に適用した場合}
+剛体球モデルでは$a = \max(2(r_A+r_B)/\sqrt{3},\, 2r_A,\, 2r_B)$のmax制約が
+接触条件から生じる。
+多成分HEAへの拡張では$a \geq 2r_\text{max}$（最大元素半径）が
+下界制約として働く。
+しかし構造別フィット（max制約込み）でもRMSE = 0.045~\AA{}であり、
+体積由来モデル（0.038~\AA）の1.2倍である（表~\ref{tab:packing}）。
+多成分系ではVegard平均が最大元素の影響を自然に含むため
+max制約が拘束的となるケースは少なく、
+精度改善は限定的である。
 
 
 \section{純元素原子体積のデータソース選択}
