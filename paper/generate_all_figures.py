@@ -1323,16 +1323,17 @@ def fig07b_vegard_heatmap(all_df):
         im = ax.imshow(mat, cmap=cmap_name, vmin=-vmax, vmax=vmax,
                        aspect="equal", interpolation="nearest")
         ax.set_xticks(range(n_el))
-        ax.set_xticklabels(elements, fontsize=7, rotation=90)
+        ax.set_xticklabels(elements, fontsize=12, rotation=90)
         ax.set_yticks(range(n_el))
-        ax.set_yticklabels(elements, fontsize=7)
+        ax.set_yticklabels(elements, fontsize=12)
         struct_label = "B2 (BCC)" if stype == "B2" else r"L1$_2$ (FCC)"
         ax.set_title(f"Vegard deviation $\\Omega_{{\\mathrm{{sf}}}}$ — {struct_label}"
                      f"  ({len(omega_median)} pairs, DFT endpoints)",
-                     fontsize=14)
+                     fontsize=18)
         cbar = fig.colorbar(im, ax=ax, shrink=0.8, pad=0.02)
         cbar.set_label(r"$\Omega_{\mathrm{sf}}$ (structure-matched DFT)",
-                       fontsize=12)
+                       fontsize=14)
+        cbar.ax.tick_params(labelsize=12)
         fig.tight_layout()
         fname = f"fig_vegard_heatmap_{fig_suffix}.png"
         fig.savefig(OUTDIR / fname, bbox_inches="tight", dpi=150)
