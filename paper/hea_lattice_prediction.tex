@@ -740,8 +740,10 @@ HEA予測では加法モデルRMSE = 0.0221~\AA{}と
 \includegraphics[width=0.85\textwidth]{fig_additive_fit.png}
 \caption{加法分解のフィット品質。
   左: B2（$R^2 = 0.56$）、右: L1$_2$（$R^2 = 0.66$）。
-  横軸: DFTペア$\Omega_\text{sf}$、
-  縦軸: 加法予測$\delta_A + \delta_B$。破線は完全一致線。}
+  横軸: 加法予測$\delta_A + \delta_B$、
+  縦軸: DFTペア$\Omega_\text{sf}$。破線は完全一致線。
+  赤$\times$: $|\Omega_\text{sf}| > 0.3$の外れ値ペア（f電子系等の
+  非物理的偏差）。加法分解の回帰から除外。}
 \label{fig:additive_fit}
 \end{figure*}
 
@@ -1098,15 +1100,17 @@ FCC系では$\Omega_\text{sf}$補正自体が微小であることと整合す�
 \caption{$\Omega_\text{sf}$参照体積の影響。独立テスト29合金（BCC 16 + FCC 13）での評価。
 $q$は訓練64合金で最適化。表~\ref{tab:data_provenance}の(a) vs (b)に対応。}
 \label{tab:omega_ref}
-\footnotesize
-\begin{tabular}{@{}lccrrrr@{}}
+\scriptsize
+\begin{tabular}{@{}lccrrr@{}}
 \toprule
-参照体積 & $q_\text{BCC}$ & $q_\text{FCC}$ & RMSE$_\text{ALL}$ & RMSE$_\text{BCC}$ & RMSE$_\text{FCC}$ & 改善(ALL) \\
+参照体積 & $q_\text{B}$ & $q_\text{F}$ & RMSE$_\text{ALL}$ & RMSE$_\text{BCC}$ & RMSE$_\text{FCC}$ \\
 \midrule
-King実験 (opt $q$) & 0.486 & 0.133 & 0.0146 & 0.0142 & 0.0151 & $+$16.4\% \\
-\textbf{DFT計算値 (opt $q$)} & \textbf{1.188} & \textbf{0.280} & \textbf{0.0136} & \textbf{0.0113} & 0.0160 & \textbf{$+$22.1\%} \\
+King実験 & 0.486 & 0.133 & 0.0146 & 0.0142 & 0.0151 \\
+\textbf{DFT計算値} & \textbf{1.188} & \textbf{0.280} & \textbf{0.0136} & \textbf{0.0113} & 0.0160 \\
 \bottomrule
 \end{tabular}
+\par\smallskip
+{\scriptsize 改善率: King 16.4\%、DFT 22.1\%（対Vegard）。$q_\text{B} = q_\text{BCC}$、$q_\text{F} = q_\text{FCC}$。}
 \end{table}
 
 この結果の物理的意味は明確である。
@@ -1189,22 +1193,24 @@ $q \neq 1$の主因はDFT--実験間の体積不整合であり、
 \centering
 \caption{参照構造別の予測精度。独立テスト29合金（BCC 16 + FCC 13）。
 $q$は訓練64合金で最適化。BCC側のΩ$_\text{sf}$参照構造が異なる。
-SQS系モデルのFCC側はL1$_2$+King（$q_\text{FCC} = 0.133$）で共通。
-Vegard行は$q=0$（補正なし）、B2+DFT行はFCC側もDFT自己整合（$q_\text{FCC} = 0.280$）を使用。}
+SQS系のFCC側はL1$_2$+King（$q_\text{FCC} = 0.133$）で共通。}
 \label{tab:sqs_rmse}
 \scriptsize
-\begin{tabular}{@{}lcrrrr@{}}
+\begin{tabular}{@{}lcrrr@{}}
 \toprule
-Ω$_\text{sf}$計算構造 (BCC) & $q_\text{BCC}$ & RMSE$_\text{ALL}$ & RMSE$_\text{BCC}$ & RMSE$_\text{FCC}$ & 改善(ALL) \\
+参照構造 & $q_\text{BCC}$ & RMSE$_\text{ALL}$ & RMSE$_\text{BCC}$ & 改善 \\
 \midrule
-なし（Vegard則） & 0 & 0.0175 & 0.0183 & 0.0164 & --- \\
-B2+King（本手法） & 0.486 & 0.0146 & 0.0142 & 0.0151 & $+$16.4\% \\
-B2+DFT自己整合 & 1.188 & 0.0136 & 0.0113 & 0.0160 & $+$22.1\% \\
-SQS+King & 0.623 & 0.0149 & 0.0148 & 0.0151 & $+$14.6\% \\
-\textbf{SQS+DFT ($q\!=\!1$)} & \textbf{1.000} & \textbf{0.0136} & \textbf{0.0122} & 0.0151 & \textbf{$+$22.1\%} \\
-SQS+DFT ($q_\text{opt}$) & 1.958 & 0.0133 & 0.0116 & 0.0151 & $+$24.0\% \\
+Vegard則 & 0 & 0.0175 & 0.0183 & --- \\
+B2+King & 0.486 & 0.0146 & 0.0142 & 16.4\% \\
+B2+DFT & 1.188 & 0.0136 & 0.0113 & 22.1\% \\
+SQS+King & 0.623 & 0.0149 & 0.0148 & 14.6\% \\
+\textbf{SQS+DFT ($q\!=\!1$)} & \textbf{1.000} & \textbf{0.0136} & \textbf{0.0122} & \textbf{22.1\%} \\
+SQS+DFT ($q_\text{opt}$) & 1.958 & 0.0133 & 0.0116 & 24.0\% \\
 \bottomrule
 \end{tabular}
+\par\smallskip
+{\scriptsize 全モデルのRMSE$_\text{FCC}$ = 0.0151~\AA{}（Vegard: 0.0164）。
+B2+DFT行はFCC側もDFT自己整合（$q_\text{FCC} = 0.280$）。}
 \end{table}
 
 SQS＋DFT Vegard参照（$q = 1$）により独立テスト29合金RMSE:
