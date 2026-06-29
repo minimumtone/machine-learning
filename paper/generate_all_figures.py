@@ -857,20 +857,29 @@ def fig02_rmse_bar(rmse_dict):
 
 
 def fig03_bcc_fcc(y_train, a_ss_tr, heas_train):
-    """Fig 3: BCC/FCC split parity."""
+    """Fig 3: Combined BCC/FCC parity (single panel)."""
     bcc_i = [i for i, h in enumerate(heas_train) if h["struct"] == "BCC"]
     fcc_i = [i for i, h in enumerate(heas_train) if h["struct"] == "FCC"]
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
-    for ax, idx, label, c in [(ax1, bcc_i, "BCC", "C0"), (ax2, fcc_i, "FCC", "C3")]:
-        lims = [min(y_train[idx]) - 0.02, max(y_train[idx]) + 0.02]
-        ax.plot(lims, lims, "k-", lw=1)
-        ax.scatter(y_train[idx], a_ss_tr[idx], c=c, s=60, alpha=0.7)
-        rmse = np.sqrt(np.mean((a_ss_tr[idx] - y_train[idx]) ** 2))
-        ax.set_title(f"{label} (RMSE = {rmse:.4f} \u00c5)")
-        ax.set_xlabel("Experimental $a$ (\u00c5)")
-        ax.set_ylabel("Predicted $a$ (\u00c5)")
-        ax.set_aspect("equal")
+    fig, ax = plt.subplots(figsize=(8, 8))
+    lims = [min(y_train) - 0.05, max(y_train) + 0.05]
+    ax.plot(lims, lims, "k-", lw=1)
+
+    rmse_bcc = np.sqrt(np.mean((a_ss_tr[bcc_i] - y_train[bcc_i]) ** 2))
+    rmse_fcc = np.sqrt(np.mean((a_ss_tr[fcc_i] - y_train[fcc_i]) ** 2))
+    rmse_all = np.sqrt(np.mean((a_ss_tr - y_train) ** 2))
+
+    ax.scatter(y_train[bcc_i], a_ss_tr[bcc_i], c="C0", marker="s",
+               s=70, alpha=0.7, label=f"BCC ({len(bcc_i)}, RMSE={rmse_bcc:.4f} \u00c5)")
+    ax.scatter(y_train[fcc_i], a_ss_tr[fcc_i], c="C3", marker="o",
+               s=70, alpha=0.7, label=f"FCC ({len(fcc_i)}, RMSE={rmse_fcc:.4f} \u00c5)")
+
+    ax.set_xlabel("Experimental $a$ (\u00c5)", fontsize=14)
+    ax.set_ylabel("Predicted $a$ (\u00c5)", fontsize=14)
+    ax.set_title(f"Training 64 HEA (RMSE = {rmse_all:.4f} \u00c5)", fontsize=16)
+    ax.legend(fontsize=13)
+    ax.set_aspect("equal")
+    ax.tick_params(labelsize=12)
     fig.tight_layout()
     fig.savefig(OUTDIR / "fig_bcc_fcc.png", bbox_inches="tight")
     plt.close(fig)
