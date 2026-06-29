@@ -895,7 +895,7 @@ def fig04_indep_test(y_test, a_veg_te, a_ss_te, heas_test, gb, gf):
     # Bottom-right: parity
     ax_c = fig.add_axes([0.55, 0.06, 0.38, 0.32])
 
-    # (a) Per-alloy absolute error — sorted by DFT-Omega_sf error
+    # (a) Per-alloy absolute error — grouped by BCC/FCC, sorted within each
     alloy_names, err_veg, err_ss, structs = [], [], [], []
     for i in range(len(heas_test)):
         h = heas_test[i]
@@ -904,27 +904,56 @@ def fig04_indep_test(y_test, a_veg_te, a_ss_te, heas_test, gb, gf):
         err_veg.append(abs(a_veg_te[i] - y_test[i]) * 1000)
         err_ss.append(abs(a_ss_te[i] - y_test[i]) * 1000)
         structs.append(h["struct"])
-    # Sort by DFT error descending
-    order = np.argsort(err_ss)
-    alloy_names = [alloy_names[i] for i in order]
-    err_veg = [err_veg[i] for i in order]
-    err_ss = [err_ss[i] for i in order]
-    structs = [structs[i] for i in order]
 
-    x = np.arange(len(alloy_names))
+    # Group by structure, sort within each group by DFT error
+    bcc_idx = [i for i, s in enumerate(structs) if s == "BCC"]
+    fcc_idx = [i for i, s in enumerate(structs) if s == "FCC"]
+    bcc_idx = sorted(bcc_idx, key=lambda i: err_ss[i])
+    fcc_idx = sorted(fcc_idx, key=lambda i: err_ss[i])
+    ordered = bcc_idx + fcc_idx  # BCC on top, FCC on bottom
+
+    ordered_names = [alloy_names[i] for i in ordered]
+    ordered_veg = [err_veg[i] for i in ordered]
+    ordered_ss = [err_ss[i] for i in ordered]
+    ordered_structs = [structs[i] for i in ordered]
+
+    n_bcc = len(bcc_idx)
+    n_fcc = len(fcc_idx)
+    n_total = n_bcc + n_fcc
+
+    x = np.arange(n_total)
     w = 0.38
-    ax_a.barh(x - w/2, err_veg, w, color="gray", alpha=0.7, label="Vegard")
-    ax_a.barh(x + w/2, err_ss, w, color="C0", alpha=0.7, label=r"DFT-$\Omega_{\mathrm{sf}}$")
+    # Color bars by structure
+    for k in range(n_total):
+        bar_color_veg = "#888888"
+        bar_color_ss = "C0" if k < n_bcc else "C3"
+        ax_a.barh(x[k] - w/2, ordered_veg[k], w, color=bar_color_veg, alpha=0.7)
+        ax_a.barh(x[k] + w/2, ordered_ss[k], w, color=bar_color_ss, alpha=0.7)
+
+    # Legend handles
+    from matplotlib.patches import Patch
+    ax_a.legend(handles=[
+        Patch(facecolor="#888888", alpha=0.7, label="Vegard"),
+        Patch(facecolor="C0", alpha=0.7, label=r"DFT-$\Omega_{\mathrm{sf}}$ (BCC)"),
+        Patch(facecolor="C3", alpha=0.7, label=r"DFT-$\Omega_{\mathrm{sf}}$ (FCC)"),
+    ], fontsize=13, loc="lower right")
+
     ax_a.set_yticks(x)
-    # Color-code labels by BCC/FCC
-    labels = []
-    for name, s in zip(alloy_names, structs):
-        labels.append(f"{name} [{s}]")
-    ax_a.set_yticklabels(labels, fontsize=13, fontfamily="monospace")
+    ax_a.set_yticklabels(ordered_names, fontsize=13, fontfamily="monospace")
     ax_a.set_xlabel("|Error| (m\u00c5)", fontsize=16)
     ax_a.set_title("(a) Per-alloy absolute error", fontsize=18)
-    ax_a.legend(fontsize=14, loc="lower right")
     ax_a.invert_yaxis()
+
+    # Separator line between BCC and FCC
+    if n_bcc > 0 and n_fcc > 0:
+        sep_y = n_bcc - 0.5
+        ax_a.axhline(sep_y, color="black", linewidth=1.5, linestyle="--")
+        ax_a.text(ax_a.get_xlim()[1] * 0.92, n_bcc / 2 - 0.5,
+                  f"BCC ({n_bcc})", ha="center", va="center",
+                  fontsize=14, fontweight="bold", color="C0")
+        ax_a.text(ax_a.get_xlim()[1] * 0.92, n_bcc + n_fcc / 2 - 0.5,
+                  f"FCC ({n_fcc})", ha="center", va="center",
+                  fontsize=14, fontweight="bold", color="C3")
 
     # (b) BCC/FCC RMSE breakdown
     categories = ["All", "BCC", "FCC"]
