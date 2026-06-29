@@ -483,6 +483,9 @@ $N$点のうち1点を抜いて$N-1$点で学習し、
 
 \paragraph{ベースライン}
 \begin{itemize}
+  \item \textbf{King Vegard}:
+    King~\cite{King1966}の原子体積（本研究で41元素に拡張）による
+    Vegard予測。Alonsoの体積セットとわずかに異なる。
   \item \textbf{Alonso Vegard}:
     Alonso~\cite{Alonso2021} Table~2記載の純元素原子体積$V_i$による
     Vegard予測$a = (n_\text{auc}\sum c_i V_i)^{1/3}$。
@@ -495,9 +498,6 @@ $N$点のうち1点を抜いて$N-1$点で学習し、
 
 \paragraph{本研究: 物理モデル}
 \begin{itemize}
-  \item \textbf{King Vegard}:
-    King~\cite{King1966}の原子体積（本研究で41元素に拡張）による
-    Vegard予測。Alonsoの体積セットとわずかに異なる。
   \item \textbf{DFT-$\Omega_\text{sf}$}:
     式~\ref{eq:alonso}にDFT由来の構造別$\Omega_\text{sf}$を適用し、
     構造依存スケーリング$q_s$（BCC: $q_\text{BCC} = 0.49$、
@@ -528,11 +528,11 @@ Ridge回帰とGradientBoostingをLOO-CV（64 HEAから1点を抜いて予測を�
    & (\AA) & (\AA) & (\%) & \\
 \midrule
 \multicolumn{5}{l}{\textit{ベースライン}} \\
+King Vegard         & 0.0227 & 0.0139 & 0.42 & 0.990 \\
 Alonso Vegard       & 0.0280 & 0.0167 & 0.50 & 0.985 \\
 Alonsoモデル       & 0.0229 & 0.0141 & 0.42 & 0.990 \\
 \midrule
 \multicolumn{5}{l}{\textit{本研究: 物理モデル}} \\
-King Vegard         & 0.0227 & 0.0139 & 0.42 & 0.990 \\
 DFT-$\Omega_\text{sf}$  & \textbf{0.0214} & \textbf{0.0128} & \textbf{0.39} & \textbf{0.991} \\
 加法$\delta^{(s)}$  & 0.0221 & --- & --- & --- \\
 \midrule
@@ -589,8 +589,8 @@ GradientBoostingは訓練RMSE = 0.0051~\AA だがLOO-CV RMSE = 0.170~\AA と重�
 \toprule
 手法 & BCC ($N\!=\!29$) & FCC ($N\!=\!35$) & 全体 \\
 \midrule
-Alonsoモデル        & 0.0309 & 0.0132 & 0.0229 \\
 King Vegard          & 0.0317 & 0.0104 & 0.0227 \\
+Alonsoモデル        & 0.0309 & 0.0132 & 0.0229 \\
 DFT-$\Omega_\text{sf}$ & 0.0299 & 0.0096 & 0.0214 \\
 \bottomrule
 \end{tabular}
