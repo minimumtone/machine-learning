@@ -216,30 +216,34 @@ $\sigma \approx 0.016$~\AA{}に近接しており、
 
 本手法の全体像を図~\ref{fig:pipeline}に示す。
 DFTデータベースから$\Omega_\text{sf}$を導出し、
-加法分解で元素パラメータに圧縮、
-最終的に任意組成HEAの格子定数を予測する一貫した流れである。
+元素対モデルで格子定数を予測する。
+さらに加法分解で31元素パラメータに圧縮すれば、
+DFT計算なしで任意組成のスクリーニングが可能になる。
 
 \begin{figure*}[!t]
 \centering
 \begin{tikzpicture}[
-  node distance=0.5cm and 1.0cm,
+  node distance=0.5cm and 0.8cm,
   box/.style={rectangle, draw, rounded corners, minimum height=1.2cm,
     minimum width=2.2cm, text width=2.0cm, align=center, font=\small},
-  arr/.style={-{Stealth[length=2.5mm]}, thick}
+  arr/.style={-{Stealth[length=2.5mm]}, thick},
+  darr/.style={-{Stealth[length=2.5mm]}, thick, dashed}
 ]
 \node[box, fill=blue!10] (dft) {DFTデータ\\{\scriptsize B2/L1$_2$: 5,152件\\SQS: 860件}};
 \node[box, fill=green!10, right=of dft] (omega) {$\Omega_\text{sf}$導出\\{\scriptsize B2: 465\\L1$_2$: 441}};
-\node[box, fill=orange!10, right=of omega] (add) {加法分解\\{\scriptsize $\delta_i^{(s)}$\\31元素}};
-\node[box, fill=red!10, right=of add] (pred) {格子定数予測\\{\scriptsize 式(\ref{eq:a_from_veff})}};
+\node[box, fill=red!10, right=of omega] (pred) {格子定数予測\\{\scriptsize 式(\ref{eq:alonso})\\元素対モデル}};
 \node[box, fill=purple!10, right=of pred] (test) {独立検証\\{\scriptsize 29 HEA\\13文献}};
+\node[box, fill=orange!10, below=0.6cm of pred] (add) {加法分解\\{\scriptsize $\delta_i^{(s)}$: 31元素\\式(\ref{eq:a_from_veff})}};
 \draw[arr] (dft) -- (omega);
-\draw[arr] (omega) -- (add);
-\draw[arr] (add) -- (pred);
+\draw[arr] (omega) -- (pred);
 \draw[arr] (pred) -- (test);
+\draw[darr] (omega) |- (add);
+\draw[darr] (add) -| (test);
 \end{tikzpicture}
 \caption{本手法のパイプライン概要。DFT計算で得た二元系化合物の体積偏差を
-構造特異的$\Omega_\text{sf}$として導出し、加法分解で31元素パラメータに圧縮後、
-任意組成HEAの格子定数を予測する。}
+構造特異的$\Omega_\text{sf}$として導出し、元素対モデルで格子定数を予測する（実線）。
+破線は加法分解による実用経路:
+906ペアを31元素パラメータ$\delta_i^{(s)}$に圧縮し、DFT計算なしで任意組成を予測する。}
 \label{fig:pipeline}
 \end{figure*}
 
@@ -540,7 +544,7 @@ DFT-$\Omega_\text{sf}$  & \textbf{0.0214} & \textbf{0.0128} & \textbf{0.39} & \t
 \bottomrule
 \end{tabular}
 \par\smallskip
-{\scriptsize $^\dagger$訓練RMSE = 0.0051~\AA{}（破滅的過学習）。
+{\scriptsize $^\dagger$訓練RMSE = 0.0051~\AA{}（重度の過学習）。
 Ridge: 5記述子、GB: GradientBoosting。}
 \end{table}
 
@@ -548,7 +552,7 @@ DFT-$\Omega_\text{sf}$モデルはRMSE = 0.0214~\AA{}を達成し、
 Vegard則（0.0227~\AA）に対し5.8\%、
 Alonsoモデル（0.0229~\AA）に対し6.6\%の改善を示す。
 ML残差補正（Ridge LOO-CV RMSE = 0.0220~\AA）は物理モデル単体を改善できず、
-GradientBoostingは訓練RMSE = 0.0051~\AA だがLOO-CV RMSE = 0.170~\AA と破滅的過学習を示した。
+GradientBoostingは訓練RMSE = 0.0051~\AA だがLOO-CV RMSE = 0.170~\AA と重度の過学習を示した。
 残差が主に測定ノイズに支配されていることを示唆する。
 材料的観点では、これは現モデルの残差がもはや組成の体系的関数ではなく、
 合金作製条件（焼鈍温度・冷却速度・均質化度）に起因する
@@ -898,7 +902,7 @@ Vegard則からの偏差の大部分が線形補間の精度内に収まるこ�
 Ridge回帰（5組成記述子）によるLOO-CV残差補正は
 RMSE = 0.0220~\AA{}と物理モデル単体（0.0214~\AA）よりわずかに劣化した。
 GradientBoosting（100本、深さ3）は訓練RMSE = 0.0051~\AA{}だが
-LOO-CV RMSE = 0.170~\AA{}と破滅的過学習を示した。
+LOO-CV RMSE = 0.170~\AA{}と重度の過学習を示した。
 いずれのMLモデルも64 HEAの残差を改善できず、
 残差がランダムノイズに支配されていることを強く示唆する。
 
@@ -2024,32 +2028,45 @@ $V_i$（King実験値）とDFT B2体積の相関は$r = 0.997$と非常に高い
 
 \begin{table}[H]
 \centering
-\caption{31元素の King実験体積 vs DFT B2体積（全元素）。$\Delta$は相対誤差。}
+\caption{31元素のKing実験体積 vs DFT B2体積。$\Delta$は相対誤差。
+誤差$|\Delta| > 3\%$の元素は構造不整合または磁性に起因。}
 \label{tab:king_dft_all}
-\footnotesize
-\begin{tabular}{@{}lcrrc|lcrrc@{}}
+\scriptsize
+\begin{tabular}{@{}lcrrr@{}}
 \toprule
-元素 & 安定 & King & DFT B2 & $\Delta$ &
-元素 & 安定 & King & DFT B2 & $\Delta$ \\
- & 構造 & (\AA$^3$) & (\AA$^3$) & (\%) &
- & 構造 & (\AA$^3$) & (\AA$^3$) & (\%) \\
+元素 & 安定構造 & King (\AA$^3$) & DFT B2 (\AA$^3$) & $\Delta$ (\%) \\
 \midrule
-Mn & $\alpha$ & 12.21 & 10.84 & $-11.2$ & Os & hcp & 13.98 & 14.37 & $+2.8$ \\
-Cr & BCC & 12.01 & 11.41 & $-5.0$ & Pb & FCC & 30.32 & 31.33 & $+3.3$ \\
-Fe & BCC & 11.78 & 11.29 & $-4.1$ & Re & hcp & 14.71 & 14.84 & $+0.9$ \\
-V  & BCC & 13.82 & 13.26 & $-4.1$ & Rh & FCC & 13.75 & 14.10 & $+2.5$ \\
-Ti & hcp & 17.65 & 17.00 & $-3.7$ & Ru & hcp & 13.57 & 14.13 & $+4.1$ \\
-Ca & FCC & 43.63 & 42.12 & $-3.5$ & Sc & hcp & 24.99 & 24.52 & $-1.9$ \\
-Be & hcp &  8.11 &  7.95 & $-2.0$ & Sn & dia & 27.05 & 28.82 & $+6.5$ \\
-Zr & hcp & 23.28 & 22.73 & $-2.4$ & Ta & BCC & 18.01 & 18.39 & $+2.1$ \\
-Hf & hcp & 22.31 & 21.69 & $-2.8$ & W  & BCC & 15.85 & 15.88 & $+0.2$ \\
-Mg & hcp & 23.24 & 22.58 & $-2.8$ & Zn & hcp & 15.21 & 15.74 & $+3.5$ \\
-Al & FCC & 16.60 & 16.78 & $+1.1$ & Co & hcp & 11.07 & 10.98 & $-0.8$ \\
-Nb & BCC & 17.98 & 18.14 & $+0.9$ & Cu & FCC & 11.81 & 12.14 & $+2.8$ \\
-Mo & BCC & 15.58 & 15.61 & $+0.2$ & Ni & FCC & 10.94 & 10.90 & $-0.3$ \\
-Ir & FCC & 14.16 & 14.43 & $+2.0$ & Ag & FCC & 17.06 & 17.98 & $+5.4$ \\
-Au & FCC & 17.00 & 17.29 & $+1.7$ & Pd & FCC & 14.72 & 15.46 & $+5.0$ \\
-Pt & FCC & 15.10 & 15.17 & $+0.5$ &    &     &       &       &       \\
+Mn & $\alpha$ & 12.21 & 10.84 & $-11.2$ \\
+Cr & BCC & 12.01 & 11.41 & $-5.0$ \\
+Fe & BCC & 11.78 & 11.29 & $-4.1$ \\
+V  & BCC & 13.82 & 13.26 & $-4.1$ \\
+Ti & hcp & 17.65 & 17.00 & $-3.7$ \\
+Ca & FCC & 43.63 & 42.12 & $-3.5$ \\
+Hf & hcp & 22.31 & 21.69 & $-2.8$ \\
+Mg & hcp & 23.24 & 22.58 & $-2.8$ \\
+Zr & hcp & 23.28 & 22.73 & $-2.4$ \\
+Be & hcp &  8.11 &  7.95 & $-2.0$ \\
+Sc & hcp & 24.99 & 24.52 & $-1.9$ \\
+Co & hcp & 11.07 & 10.98 & $-0.8$ \\
+Ni & FCC & 10.94 & 10.90 & $-0.3$ \\
+Mo & BCC & 15.58 & 15.61 & $+0.2$ \\
+W  & BCC & 15.85 & 15.88 & $+0.2$ \\
+Pt & FCC & 15.10 & 15.17 & $+0.5$ \\
+Re & hcp & 14.71 & 14.84 & $+0.9$ \\
+Nb & BCC & 17.98 & 18.14 & $+0.9$ \\
+Al & FCC & 16.60 & 16.78 & $+1.1$ \\
+Au & FCC & 17.00 & 17.29 & $+1.7$ \\
+Ir & FCC & 14.16 & 14.43 & $+2.0$ \\
+Ta & BCC & 18.01 & 18.39 & $+2.1$ \\
+Rh & FCC & 13.75 & 14.10 & $+2.5$ \\
+Cu & FCC & 11.81 & 12.14 & $+2.8$ \\
+Os & hcp & 13.98 & 14.37 & $+2.8$ \\
+Pb & FCC & 30.32 & 31.33 & $+3.3$ \\
+Zn & hcp & 15.21 & 15.74 & $+3.5$ \\
+Ru & hcp & 13.57 & 14.13 & $+4.1$ \\
+Pd & FCC & 14.72 & 15.46 & $+5.0$ \\
+Ag & FCC & 17.06 & 17.98 & $+5.4$ \\
+Sn & dia & 27.05 & 28.82 & $+6.5$ \\
 \bottomrule
 \end{tabular}
 \end{table}
