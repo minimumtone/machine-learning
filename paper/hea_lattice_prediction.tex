@@ -508,7 +508,7 @@ $N$点のうち1点を抜いて$N-1$点で学習し、
 \paragraph{ML残差補正 (LOO-CV)}
 物理モデル（DFT-$\Omega_\text{sf}$）の残差
 $\Delta a = a^\text{exp} - a^\text{pred}$を
-6組成記述子（§\ref{sec:ml}参照）で学習。
+5組成記述子（§\ref{sec:ml}参照）で学習。
 Ridge回帰とGradientBoostingをLOO-CV（64 HEAから1点を抜いて予測を繰り返す）で評価。
 
 \begin{table}[H]
@@ -532,7 +532,7 @@ DFT-$\Omega_\text{sf}$  & \textbf{0.0214} & \textbf{0.0128} & \textbf{0.39} & \t
 加法$\delta^{(s)}$  & 0.0221 & --- & --- & --- \\
 \midrule
 \multicolumn{5}{l}{\textit{ML残差補正 (LOO-CV)}} \\
-+ Ridge ($\alpha$=1.0, 6記述子) & 0.0220 & --- & --- & --- \\
++ Ridge ($\alpha$=1.0, 5記述子) & 0.0220 & --- & --- & --- \\
 + GradientBoosting (直接予測) & 0.170$^\dagger$ & --- & --- & --- \\
 \midrule
 ノイズフロア ($\sigma$) & \multicolumn{4}{c}{$\approx 0.016$~\AA} \\
