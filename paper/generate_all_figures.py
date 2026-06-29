@@ -1036,8 +1036,12 @@ def fig06_additive_fit(ob2, ol12, decomp):
     """Fig 6: Pairwise Omega_sf vs additive delta_A + delta_B."""
     OUTLIER_THRESHOLD = 0.3  # |Omega_sf| > 0.3 are unphysical (f-electron issues)
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
-    for ax, omega, key, title in [(ax1, ob2, "B2", "B2"),
-                                   (ax2, ol12, "L12", r"L1$_2$")]:
+
+    # Collect all data to determine unified axis limits
+    all_vals = []
+    panel_data = []
+    for omega, key, title in [(ob2, "B2", "B2"),
+                               (ol12, "L12", r"L1$_2$")]:
         d = decomp[key]["delta"]
         x_vals, y_vals, x_out, y_out = [], [], [], []
         for (a, b), val in omega.items():
@@ -1048,18 +1052,36 @@ def fig06_additive_fit(ob2, ol12, decomp):
                 else:
                     x_vals.append(d[a] + d[b])
                     y_vals.append(val)
+        all_vals.extend(x_vals + y_vals)
+        panel_data.append((x_vals, y_vals, x_out, y_out, key, title))
+
+    # Unified axis range
+    v_min = min(all_vals) - 0.02
+    v_max = max(all_vals) + 0.02
+    unified_lims = [v_min, v_max]
+
+    from matplotlib.ticker import MultipleLocator
+    for ax, (x_vals, y_vals, x_out, y_out, key, title) in zip(
+            [ax1, ax2], panel_data):
         ax.scatter(x_vals, y_vals, c="C0", alpha=0.4, s=20)
         if x_out:
             ax.scatter(x_out, y_out, c="C3", alpha=0.6, s=40, marker="x",
-                       label=f"excluded ({len(x_out)})")
+                       label=f"excluded ({len(x_out)}, "
+                             r"$|\Omega_{\mathrm{sf}}|>0.3$)")
             ax.legend(fontsize=10)
-        lims = [min(min(x_vals), min(y_vals)) - 0.01,
-                max(max(x_vals), max(y_vals)) + 0.01]
-        ax.plot(lims, lims, "k--", lw=1)
-        ax.set_xlabel(r"$\delta_A^{(s)} + \delta_B^{(s)}$")
-        ax.set_ylabel(r"$\Omega_\mathrm{sf}^{(s)}$ (pairwise)")
+        ax.plot(unified_lims, unified_lims, "k--", lw=1)
+        ax.set_xlim(unified_lims)
+        ax.set_ylim(unified_lims)
+        ax.xaxis.set_major_locator(MultipleLocator(0.1))
+        ax.yaxis.set_major_locator(MultipleLocator(0.1))
+        ax.xaxis.set_minor_locator(MultipleLocator(0.05))
+        ax.yaxis.set_minor_locator(MultipleLocator(0.05))
+        ax.set_xlabel(r"$\delta_A^{(s)} + \delta_B^{(s)}$", fontsize=13)
+        ax.set_ylabel(r"$\Omega_\mathrm{sf}^{(s)}$ (pairwise)", fontsize=13)
         n_total = len(x_vals) + len(x_out)
-        ax.set_title(f"{title} ({n_total} pairs)  R$^2$ = {decomp[key]['r2']:.3f}")
+        ax.set_title(f"{title} ({n_total} pairs)  R$^2$ = {decomp[key]['r2']:.3f}",
+                     fontsize=14)
+        ax.set_aspect("equal")
     fig.tight_layout()
     fig.savefig(OUTDIR / "fig_additive_fit.png", bbox_inches="tight")
     plt.close(fig)
