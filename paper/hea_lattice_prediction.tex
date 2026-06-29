@@ -1103,14 +1103,14 @@ $q$は訓練64合金で最適化。表~\ref{tab:data_provenance}の(a) vs (b)に
 \scriptsize
 \begin{tabular}{@{}lccrrr@{}}
 \toprule
-参照体積 & $q_\text{B}$ & $q_\text{F}$ & RMSE$_\text{ALL}$ & RMSE$_\text{BCC}$ & RMSE$_\text{FCC}$ \\
+参照体積 & $q_\text{BCC}$ & $q_\text{FCC}$ & RMSE$_\text{ALL}$ & RMSE$_\text{BCC}$ & RMSE$_\text{FCC}$ \\
 \midrule
 King実験 & 0.486 & 0.133 & 0.0146 & 0.0142 & 0.0151 \\
 \textbf{DFT計算値} & \textbf{1.188} & \textbf{0.280} & \textbf{0.0136} & \textbf{0.0113} & 0.0160 \\
 \bottomrule
 \end{tabular}
 \par\smallskip
-{\scriptsize 改善率: King 16.4\%、DFT 22.1\%（対Vegard）。$q_\text{B} = q_\text{BCC}$、$q_\text{F} = q_\text{FCC}$。}
+{\scriptsize 改善率: King 16.4\%、DFT 22.1\%（対Vegard）。}
 \end{table}
 
 この結果の物理的意味は明確である。
@@ -1209,8 +1209,9 @@ SQS+DFT ($q_\text{opt}$) & 1.958 & 0.0133 & 0.0116 & 24.0\% \\
 \bottomrule
 \end{tabular}
 \par\smallskip
-{\scriptsize 全モデルのRMSE$_\text{FCC}$ = 0.0151~\AA{}（Vegard: 0.0164）。
-B2+DFT行はFCC側もDFT自己整合（$q_\text{FCC} = 0.280$）。}
+{\scriptsize SQS系のRMSE$_\text{FCC}$ = 0.0151~\AA{}（Vegard: 0.0164）。
+B2+DFT行はFCC側もDFT自己整合（$q_\text{FCC} = 0.280$、
+RMSE$_\text{FCC}$ = 0.0160）。}
 \end{table}
 
 SQS＋DFT Vegard参照（$q = 1$）により独立テスト29合金RMSE:
