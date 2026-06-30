@@ -95,8 +95,8 @@ C.~Tandoc, et~al., Mining of lattice distortion, strength, and intrinsic
 
 \bibitem{San2021}
 S.~San, C.~Basak, W.~Y. Ching, Lattice distortion in {FCC} high entropy alloys:
-  A first-principles study of {NiFeCoCr-X} (x = mn, cu, pd), Mater. Des. 210
-  (2021) 110071.
+  {A} first-principles study of {NiFeCoCr-X} ({X} = {Mn}, {Cu}, {Pd}), Mater.
+  Des. 210 (2021) 110071.
 \newblock \href {https://doi.org/10.1016/j.matdes.2021.110071}
   {\path{doi:10.1016/j.matdes.2021.110071}}.
 
@@ -174,7 +174,7 @@ J.~Freudenberger, D.~Rafaja, D.~Geissler, L.~Giebeler, C.~L.~H. de~Oliveira,
 \bibitem{Niu2017}
 C.~Niu, A.~J. Zaddach, C.~C. Koch, D.~L. Irving, First principles exploration
   of near-equiatomic {NiFeCrCo} high entropy alloys, J. Alloys Compd. 672
-  (2016) 510--520, coCrFeNi--Pd/V lattice parameters.
+  (2016) 510--520, {CoCrFeNi}--{Pd}/{V} lattice parameters.
 \newblock \href {https://doi.org/10.1016/j.jallcom.2016.02.108}
   {\path{doi:10.1016/j.jallcom.2016.02.108}}.
 
