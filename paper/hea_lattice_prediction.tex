@@ -144,7 +144,7 @@ King以来の体積サイズファクター研究は実験値（King体積、実
 \node[box, fill=blue!10] (dft) {DFTデータ\\{\scriptsize B2/L1$_2$: 5,152件\\SQS: 860件}};
 \node[box, fill=green!10, right=of dft] (omega) {$\Omega_\text{sf}$導出\\{\scriptsize B2: 465\\L1$_2$: 441}};
 \node[box, fill=red!10, right=of omega] (pred) {格子定数予測\\{\scriptsize 式(\ref{eq:alonso})\\元素対モデル}};
-\node[box, fill=purple!10, right=of pred] (test) {独立検証\\{\scriptsize 31 HEA\\15文献}};
+\node[box, fill=purple!10, right=of pred] (test) {独立検証\\{\scriptsize 31 HEA\\14文献}};
 \node[box, fill=orange!10, below=0.6cm of pred] (add) {加法分解\\{\scriptsize $\delta_i^{(s)}$: 31元素\\式(\ref{eq:a_from_veff})}};
 \draw[arr] (dft) -- (omega);
 \draw[arr] (omega) -- (pred);
@@ -207,7 +207,7 @@ VASP（本研究） & 2,200 & 2,810 & 5,010 \\
 収束判定と物理的格子定数範囲（2.0--8.0~\AA）でのフィルタリング後、B2で465・L1$_2$で441のユニーク元素ペアを得た。同一ペアに複数データソースがある場合は中央値を採用し外れ値の影響を緩和した。3ソース間の$\Omega_\text{sf}$は高い整合性を示し（B2 $r = 0.990$、L1$_2$ $r = 0.990$）、統合前後の平均変化量は$|\Delta\Omega| < 0.006$であった。
 
 \subsubsection{HEA検証データ}
-主検証セットはAlonso~\cite{Alonso2021} Table~2の64個の立方晶HEA（BCC 29、FCC 35、$a = 2.883$--$3.856$~\AA、22元素）である。独立テストセットとしてAlonsoデータ外の31 HEA（BCC 17、FCC 14）を15文献~\cite{Senkov2013,Senkov2013_ActaMat,Yao2016,Otto2013,Leong2017,Tseng2019,Freudenberger2017,Reget2020,Chen2022,Chen2023}から収集した。20元素をカバーし、耐火金属系BCC（Tseng 2019、Reget 2020）、貴金属系FCC（Freudenberger 2017）、三元系BCC（Chen 2022: HfNbZr）、CALPHAD予測＋合成検証（Chen 2023: AlCoMnNiV, CoFeMnNiZn）を含む。ただしBCC 17合金はHf-Mo-Nb-Ta-Ti-Zrの系統的サブセットが主体であり、FCC 14合金もAu-Cu-Ni-Pd-Pt系とCoCrFeMnNi派生に偏る。実効的な化学多様性は合金数より限定的である点に留意が必要である。
+主検証セットはAlonso~\cite{Alonso2021} Table~2の64個の立方晶HEA（BCC 29、FCC 35、$a = 2.883$--$3.856$~\AA、22元素）である。独立テストセットとしてAlonsoデータ外の31 HEA（BCC 17、FCC 14）を14文献~\cite{Senkov2012,Senkov2013_ActaMat,Yao2016,Otto2013,Stepanov2015,Tseng2019,Dirras2016,Freudenberger2017,Niu2017,Wang2019,Reget2020,Kantelis2025,Chen2022,Chen2023}から収集した。20元素をカバーし、耐火金属系BCC（Tseng 2019、Reget 2020）、貴金属系FCC（Freudenberger 2017）、三元系BCC（Chen 2022: HfNbZr）、CALPHAD予測＋合成検証（Chen 2023: AlCoMnNiV, CoFeMnNiZn）を含む。ただしBCC 17合金はHf-Mo-Nb-Ta-Ti-Zrの系統的サブセットが主体であり、FCC 14合金もAu-Cu-Ni-Pd-Pt系とCoCrFeMnNi派生に偏る。実効的な化学多様性は合金数より限定的である点に留意が必要である。
 
 \subsection{体積サイズファクターのDFT導出}
 \label{sec:omega}
@@ -449,11 +449,11 @@ FCC HEAはRMSE = 0.0096~\AA{}と推定$\sigma$以下の精度を示す。構成�
 \subsection{独立テスト検証}
 \label{sec:indep_test}
 
-従来の20点テストセット（実質10種の合金組成、HfNbTaTiZr$\times$3重複）の組成多様性の制約を解消するため、15文献から31個のHEA（BCC 17、FCC 14）を新たに収集した（表~\ref{tab:indep_test}）。20元素をカバーし、Tseng (2019)の耐火金属系BCCバリアント（HfMoNbTaTiZrの系統的元素除去）、Reget (2020)のMo--Nb--V--W--Ti系BCC、Freudenberger (2017)の貴金属系FCC（Au-Cu-Ni-Pd-Pt四元・五元系）、Chen (2022)のHfNbZr三元系BCC、Chen~\cite{Chen2023}のCALPHAD予測に基づく合成検証（AlCoMnNiV, CoFeMnNiZn）を含む。
+従来の20点テストセット（実質10種の合金組成、HfNbTaTiZr$\times$3重複）の組成多様性の制約を解消するため、14文献から31個のHEA（BCC 17、FCC 14）を新たに収集した（表~\ref{tab:indep_test}）。20元素をカバーし、Tseng (2019)の耐火金属系BCCバリアント（HfMoNbTaTiZrの系統的元素除去）、Reget (2020)のMo--Nb--V--W--Ti系BCC、Freudenberger (2017)の貴金属系FCC（Au-Cu-Ni-Pd-Pt四元・五元系）、Chen (2022)のHfNbZr三元系BCC、Chen~\cite{Chen2023}のCALPHAD予測に基づく合成検証（AlCoMnNiV, CoFeMnNiZn）を含む。
 
 \begin{table}[H]
 \centering
-\caption{独立テスト31 HEA（BCC 17 + FCC 14）の予測精度（RMSE / \AA）。訓練と非重複の15文献20元素。}
+\caption{独立テスト31 HEA（BCC 17 + FCC 14）の予測精度（RMSE / \AA）。訓練と非重複の14文献20元素。}
 \label{tab:indep_test}
 \footnotesize
 \begin{tabular}{@{}lccc@{}}
@@ -476,7 +476,7 @@ DFT-$\Omega_\text{sf}$モデルが全カテゴリで最良である。全体RMSE
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=\textwidth]{fig_indep_test.png}
-\caption{独立テストセット（31 HEA、15文献20元素）の予測性能。
+\caption{独立テストセット（31 HEA、14文献20元素）の予測性能。
   (a)~合金別絶対誤差。(b)~構造別RMSE（灰: Vegard、青: DFT-$\Omega_\text{sf}$）。
   (c)~パリティプロット（$q_\text{BCC} = 0.49$、$q_\text{FCC} = 0.13$）。
   BCC 17合金（青四角）とFCC 14合金（赤丸）。}

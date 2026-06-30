@@ -61,24 +61,6 @@ J.~A. Alonso, Estimation of the lattice parameters of {HEAs}, J. Phase Equilib.
 \newblock \href {https://doi.org/10.1007/s11669-022-00988-z}
   {\path{doi:10.1007/s11669-022-00988-z}}.
 
-\bibitem{Zhang2008}
-Y.~Zhang, et~al., Solid-solution phase formation rules for multi-component
-  alloys, Adv. Eng. Mater. 10 (2008) 534--538.
-\newblock \href {https://doi.org/10.1002/adem.200700240}
-  {\path{doi:10.1002/adem.200700240}}.
-
-\bibitem{Guo2011}
-S.~Guo, C.~T. Liu, Phase stability in high entropy alloys: Formation of
-  solid-solution phase or amorphous phase, Prog. Nat. Sci. 21 (2011) 433--446.
-\newblock \href {https://doi.org/10.1016/S1002-0071(12)60080-X}
-  {\path{doi:10.1016/S1002-0071(12)60080-X}}.
-
-\bibitem{Yang2012}
-X.~Yang, Y.~Zhang, Prediction of high-entropy stabilized solid-solution in
-  multi-component alloys, Mater. Chem. Phys. 132 (2012) 233--238.
-\newblock \href {https://doi.org/10.1016/j.matchemphys.2011.11.021}
-  {\path{doi:10.1016/j.matchemphys.2011.11.021}}.
-
 \bibitem{Jain2013}
 A.~Jain, et~al., Commentary: {The Materials Project}: A materials genome
   approach to accelerating materials innovation, APL Mater. 1 (2013) 011002.
@@ -105,11 +87,38 @@ F.~Tian, et~al., Structural stability of {NiCoFeCrAl}$_x$ high-entropy alloy
 \newblock \href {https://doi.org/10.1038/srep12334}
   {\path{doi:10.1038/srep12334}}.
 
-\bibitem{Senkov2013}
-O.~N. Senkov, et~al., Refractory high-entropy alloys, Intermetallics 19 (2011)
-  698--706.
-\newblock \href {https://doi.org/10.1016/j.intermet.2011.01.004}
-  {\path{doi:10.1016/j.intermet.2011.01.004}}.
+\bibitem{Tandoc2023}
+C.~Tandoc, et~al., Mining of lattice distortion, strength, and intrinsic
+  ductility of refractory high entropy alloys, npj Comput. Mater. 9 (2023) 53.
+\newblock \href {https://doi.org/10.1038/s41524-023-00993-x}
+  {\path{doi:10.1038/s41524-023-00993-x}}.
+
+\bibitem{San2021}
+S.~San, C.~Basak, W.~Y. Ching, Lattice distortion in {FCC} high entropy alloys:
+  A first-principles study of {NiFeCoCr-X} (x = mn, cu, pd), Mater. Des. 210
+  (2021) 110071.
+\newblock \href {https://doi.org/10.1016/j.matdes.2021.110071}
+  {\path{doi:10.1016/j.matdes.2021.110071}}.
+
+\bibitem{Zhang2022}
+J.~Zhang, C.~Tandoc, Y.~Ou, V.~Shastri, M.~Todai, T.~Nakano, A.~Hu,
+  C.~Wolverton, Composition design of high-entropy alloys with deep sets
+  learning, npj Comput. Mater. 8 (2022) 89.
+\newblock \href {https://doi.org/10.1038/s41524-022-00779-7}
+  {\path{doi:10.1038/s41524-022-00779-7}}.
+
+\bibitem{Chen2023}
+Z.~Chen, J.~Wen, F.~Grasselli, M.~Bronstein, G.~Hautier, A map of single-phase
+  high-entropy alloys, Nat. Commun. 14 (2023) 2856.
+\newblock \href {https://doi.org/10.1038/s41467-023-38423-7}
+  {\path{doi:10.1038/s41467-023-38423-7}}.
+
+\bibitem{Senkov2012}
+O.~N. Senkov, J.~M. Scott, S.~V. Senkova, F.~Meisenkothen, D.~B. Miracle, C.~F.
+  Woodward, Microstructure and elevated temperature properties of a refractory
+  {TaNbHfZrTi} alloy, J. Mater. Sci. 47 (2012) 4062--4074.
+\newblock \href {https://doi.org/10.1007/s10853-012-6260-2}
+  {\path{doi:10.1007/s10853-012-6260-2}}.
 
 \bibitem{Senkov2013_ActaMat}
 O.~N. Senkov, S.~V. Senkova, C.~Woodward, D.~B. Miracle, Low-density,
@@ -131,11 +140,12 @@ F.~Otto, et~al., The influences of temperature and microstructure on the
 \newblock \href {https://doi.org/10.1016/j.actamat.2013.06.018}
   {\path{doi:10.1016/j.actamat.2013.06.018}}.
 
-\bibitem{Leong2017}
-Z.~Leong, et~al., The effect of electronic structure on the phases present in
-  high entropy alloys, Sci. Rep. 7 (2017) 39803.
-\newblock \href {https://doi.org/10.1038/srep39803}
-  {\path{doi:10.1038/srep39803}}.
+\bibitem{Stepanov2015}
+N.~D. Stepanov, et~al., Effect of {V} content on microstructure and mechanical
+  properties of the {CoCrFeMnNiV}$_x$ high entropy alloys, Mater. Lett. 142
+  (2015) 153--155.
+\newblock \href {https://doi.org/10.1016/j.matlet.2014.11.162}
+  {\path{doi:10.1016/j.matlet.2014.11.162}}.
 
 \bibitem{Tseng2019}
 K.-K. Tseng, C.-C. Juan, S.~Tso, H.-C. Chen, C.-W. Tsai, J.-W. Yeh, Effects of
@@ -145,6 +155,14 @@ K.-K. Tseng, C.-C. Juan, S.~Tso, H.-C. Chen, C.-W. Tsai, J.-W. Yeh, Effects of
 \newblock \href {https://doi.org/10.3390/e21010015}
   {\path{doi:10.3390/e21010015}}.
 
+\bibitem{Dirras2016}
+G.~Dirras, et~al., Microstructural investigation of plastically deformed
+  {Ti$_{20}$Zr$_{20}$Hf$_{20}$Nb$_{20}$Ta$_{20}$} high entropy alloy by {X}-ray
+  diffraction and transmission electron microscopy, Mater. Charact. 108 (2015)
+  1--7.
+\newblock \href {https://doi.org/10.1016/j.matchar.2015.08.007}
+  {\path{doi:10.1016/j.matchar.2015.08.007}}.
+
 \bibitem{Freudenberger2017}
 J.~Freudenberger, D.~Rafaja, D.~Geissler, L.~Giebeler, C.~L.~H. de~Oliveira,
   J.~Eckert, Face-centred cubic multi-component equiatomic solid solutions in
@@ -152,6 +170,19 @@ J.~Freudenberger, D.~Rafaja, D.~Geissler, L.~Giebeler, C.~L.~H. de~Oliveira,
   lattice parameters for 5 quaternary + 1 quinary FCC alloys.
 \newblock \href {https://doi.org/10.3390/met7040135}
   {\path{doi:10.3390/met7040135}}.
+
+\bibitem{Niu2017}
+C.~Niu, A.~J. Zaddach, C.~C. Koch, D.~L. Irving, First principles exploration
+  of near-equiatomic {NiFeCrCo} high entropy alloys, J. Alloys Compd. 672
+  (2016) 510--520, coCrFeNi--Pd/V lattice parameters.
+\newblock \href {https://doi.org/10.1016/j.jallcom.2016.02.108}
+  {\path{doi:10.1016/j.jallcom.2016.02.108}}.
+
+\bibitem{Wang2019}
+Z.~Wang, et~al., Atomic-size effect and solid solubility of multicomponent
+  alloys, Scr. Mater. 94 (2015) 28--31.
+\newblock \href {https://doi.org/10.1016/j.scriptamat.2014.09.010}
+  {\path{doi:10.1016/j.scriptamat.2014.09.010}}.
 
 \bibitem{Reget2020}
 F.~Reget, M.~Maa{\ss}, J.~Haas, J.~Fiehn, N.~Seifried, T.~G. Bley, L.~Pichl,
@@ -161,6 +192,12 @@ F.~Reget, M.~Maa{\ss}, J.~Haas, J.~Fiehn, N.~Seifried, T.~G. Bley, L.~Pichl,
 \newblock \href {https://doi.org/10.3390/met10111530}
   {\path{doi:10.3390/met10111530}}.
 
+\bibitem{Kantelis2025}
+K.~Kantelis, et~al., Lattice distortions in high-entropy alloys, AIP Adv. 15
+  (2025) 015030.
+\newblock \href {https://doi.org/10.1063/5.0245966}
+  {\path{doi:10.1063/5.0245966}}.
+
 \bibitem{Chen2022}
 S.~Chen, Z.~H. Aitken, S.~Pattamatta, Z.~Wu, Z.~G. Yu, D.~J. Srolovitz, P.~K.
   Liaw, Y.-W. Zhang, Phase decomposition and strengthening in {HfNbTaTiZr} high
@@ -168,18 +205,6 @@ S.~Chen, Z.~H. Aitken, S.~Pattamatta, Z.~Wu, Z.~G. Yu, D.~J. Srolovitz, P.~K.
   117582.
 \newblock \href {https://doi.org/10.1016/j.actamat.2021.117582}
   {\path{doi:10.1016/j.actamat.2021.117582}}.
-
-\bibitem{TodaCaraballo2016}
-I.~Toda-Caraballo, P.~E. J. R.-D. del Castillo, Modelling solid solution
-  hardening in high entropy alloys, Intermetallics 71 (2016) 76--87.
-\newblock \href {https://doi.org/10.1016/j.intermet.2015.12.011}
-  {\path{doi:10.1016/j.intermet.2015.12.011}}.
-
-\bibitem{Ye2015}
-Y.~F. Ye, C.~T. Liu, Y.~Yang, A geometric model for intrinsic residual strain
-  and phase stability in high entropy alloys, Acta Mater. 94 (2015) 152--161.
-\newblock \href {https://doi.org/10.1016/j.actamat.2015.04.051}
-  {\path{doi:10.1016/j.actamat.2015.04.051}}.
 
 \bibitem{Wang2004lattice}
 Y.~Wang, S.~Curtarolo, C.~Jiang, R.~Arroyave, T.~Wang, G.~Ceder, L.-Q. Chen,
