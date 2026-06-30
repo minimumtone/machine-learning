@@ -1116,11 +1116,11 @@ $\binom{5}{2} = 10$ペアのDFT $\Omega_\text{sf}^\text{B2}$：
 \toprule
 ペア & $\Omega_\text{sf}$ & ペア & $\Omega_\text{sf}$ \\
 \midrule
-Hf--Mo & $-0.036$ & Mo--Zr & $-0.035$ \\
-Hf--Nb & $-0.011$ & Nb--Ti & $-0.025$ \\
-Hf--Ti & $-0.033$ & Nb--Zr & $-0.016$ \\
-Hf--Zr & $-0.017$ & Ti--Zr & $-0.032$ \\
-Mo--Nb & $+0.005$ & Mo--Ti & $-0.051$ \\
+Hf--Mo & $-0.041$ & Mo--Zr & $-0.045$ \\
+Hf--Nb & $-0.013$ & Nb--Ti & $-0.028$ \\
+Hf--Ti & $-0.023$ & Nb--Zr & $-0.018$ \\
+Hf--Zr & $-0.016$ & Ti--Zr & $-0.030$ \\
+Mo--Nb & $+0.008$ & Mo--Ti & $-0.056$ \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1128,9 +1128,9 @@ Mo--Nb & $+0.005$ & Mo--Ti & $-0.051$ \\
 \paragraph{Step 4: B2参照での予測（$q_\text{BCC} = 0.49$）}
 \begin{align}
 \text{補正項} &= \sum_i \sum_{j \ne i} c_i\,c_j\,V_j\,\Omega_\text{sf}^\text{B2}(i,j)
-= -0.385~\text{\AA}^3, \nonumber \\
-V &= 2 \times (19.360 + 0.49 \times (-0.385)) = 38.34~\text{\AA}^3, \nonumber \\
-a_\text{pred}^{\text{B2}} &= 38.34^{1/3} = 3.372~\text{\AA}. \label{eq:ex_pred_bcc}
+= -0.401~\text{\AA}^3, \nonumber \\
+V &= 2 \times (19.360 + 0.49 \times (-0.401)) = 38.33~\text{\AA}^3, \nonumber \\
+a_\text{pred}^{\text{B2}} &= 38.33^{1/3} = 3.372~\text{\AA}. \label{eq:ex_pred_bcc}
 \end{align}
 
 \paragraph{Step 5: 実験値との比較}
@@ -1138,7 +1138,7 @@ a_\text{pred}^{\text{B2}} &= 38.34^{1/3} = 3.372~\text{\AA}. \label{eq:ex_pred_b
 $a_\text{exp} = 3.369$~\AA{}（Tseng 2019）。
 誤差 $= |3.372 - 3.369| = 0.003$~\AA。
 Vegard（$a = 3.383$~\AA、誤差0.014~\AA）と比較して78\%の誤差低減であり、$\Omega_\text{sf}$補正の典型的な改善例である。
-Mo--Ti（$-0.051$）やHf--Mo（$-0.036$）など原子サイズ差の大きいペアが負の$\Omega_\text{sf}$を持ち、Vegard則が過大評価する格子定数を収縮方向に補正している。
+Mo--Ti（$-0.056$）やMo--Zr（$-0.045$）など原子サイズ差の大きいペアが負の$\Omega_\text{sf}$を持ち、Vegard則が過大評価する格子定数を収縮方向に補正している。
 
 \paragraph{補足: SQS参照（$q = 1$）の場合}
 SQS $\Omega_\text{sf}$を用いると$a_\text{pred}^{\text{SQS}} \approx 3.367$~\AA{}（誤差0.002~\AA）となり、B2参照よりもさらに改善する。SQSはランダム固溶体の局所環境を直接模擬するため、B2の秩序効果（$\alpha = -1$）による$\Omega_\text{sf}$のバイアスが回避されるためである。
