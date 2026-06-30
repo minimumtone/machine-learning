@@ -272,12 +272,12 @@ INDEPENDENT_TEST = [
     # Otto 2013: CoCrFeMnNi (Cantor alloy)
     {"comp":{"Co":0.20,"Cr":0.20,"Fe":0.20,"Mn":0.20,"Ni":0.20},"struct":"FCC","a_exp":3.5988,
      "ref":"Otto2013_ActaMat","note":"Cantor alloy standard"},
-    # Wang2019 Scripta Mater: CoCrFeNi FCC (precision measurement)
+    # Wang2015 Scripta Mater: CoCrFeNi FCC (precision measurement)
     {"comp":{"Co":0.25,"Cr":0.25,"Fe":0.25,"Ni":0.25},"struct":"FCC","a_exp":3.5723,
-     "ref":"Wang2019_ScriptaMat","note":"equiatomic 4-element precision XRD"},
-    # Wang2019: Co0.5CrFeNi FCC
+     "ref":"Wang2015_ScriptaMat","note":"equiatomic 4-element precision XRD"},
+    # Wang2015: Co0.5CrFeNi FCC
     {"comp":{"Co":0.143,"Cr":0.286,"Fe":0.286,"Ni":0.286},"struct":"FCC","a_exp":3.5805,
-     "ref":"Wang2019_ScriptaMat","note":"Co-lean non-equiatomic"},
+     "ref":"Wang2015_ScriptaMat","note":"Co-lean non-equiatomic"},
     # Niu 2017 Sci Rep: (CoCrFeNi)0.89Pd0.11 single FCC
     {"comp":{"Co":0.2225,"Cr":0.2225,"Fe":0.2225,"Ni":0.2225,"Pd":0.11},"struct":"FCC","a_exp":3.620,
      "ref":"Niu2017_SciRep","note":"11% Pd addition to CoCrFeNi"},
