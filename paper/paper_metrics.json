@@ -8,11 +8,11 @@
     "n_B2_pairs": 465,
     "n_L12_pairs": 441,
     "n_training_HEA": 64,
-    "n_test_HEA": 29,
+    "n_test_HEA": 31,
     "n_BCC_train": 29,
     "n_FCC_train": 35,
-    "n_BCC_test": 16,
-    "n_FCC_test": 13
+    "n_BCC_test": 17,
+    "n_FCC_test": 14
   },
   "calibration": {
     "q_BCC": 0.4861,
@@ -27,17 +27,17 @@
     "RMSE_FCC": 0.0096
   },
   "independent_test": {
-    "RMSE_Vegard": 0.0175,
-    "RMSE_DFT_Omega_sf": 0.0146,
-    "RMSE_additive": 0.0155,
-    "improvement_vs_Vegard_pct": 16.4,
-    "RMSE_Vegard_BCC": 0.0183,
-    "RMSE_Vegard_FCC": 0.0164,
-    "RMSE_BCC": 0.0142,
-    "RMSE_FCC": 0.0151,
-    "improvement_BCC_pct": 22.5,
-    "improvement_FCC_pct": 7.8,
-    "BCC_identical_to_Vegard": "0/16"
+    "RMSE_Vegard": 0.0202,
+    "RMSE_DFT_Omega_sf": 0.0155,
+    "RMSE_additive": 0.0176,
+    "improvement_vs_Vegard_pct": 23.3,
+    "RMSE_Vegard_BCC": 0.0226,
+    "RMSE_Vegard_FCC": 0.017,
+    "RMSE_BCC": 0.0157,
+    "RMSE_FCC": 0.0152,
+    "improvement_BCC_pct": 30.3,
+    "improvement_FCC_pct": 10.2,
+    "BCC_identical_to_Vegard": "0/17"
   },
   "additive_decomposition": {
     "B2_R2": 0.5581,
@@ -53,7 +53,7 @@
     "additive_mode_A_q_BCC": 0.3473,
     "additive_mode_A_q_FCC": 0.0763,
     "additive_mode_A_RMSE_train": 0.0221,
-    "additive_mode_A_RMSE_test": 0.0155
+    "additive_mode_A_RMSE_test": 0.0176
   },
   "phase_classification": {
     "n_HEA": 54,
@@ -75,42 +75,42 @@
     "n_iterations": 10000,
     "seed": 42,
     "ALL": {
-      "N": 29,
-      "delta_RMSE": 0.0029,
-      "CI_95_lower": 0.0008,
-      "CI_95_upper": 0.005
+      "N": 31,
+      "delta_RMSE": 0.0047,
+      "CI_95_lower": 0.0016,
+      "CI_95_upper": 0.0083
     },
     "BCC": {
-      "N": 16,
-      "delta_RMSE": 0.0041,
-      "CI_95_lower": 0.0006,
-      "CI_95_upper": 0.0074
+      "N": 17,
+      "delta_RMSE": 0.0068,
+      "CI_95_lower": 0.0016,
+      "CI_95_upper": 0.0119
     },
     "FCC": {
-      "N": 13,
-      "delta_RMSE": 0.0013,
-      "CI_95_lower": 0.0002,
-      "CI_95_upper": 0.0027
+      "N": 14,
+      "delta_RMSE": 0.0017,
+      "CI_95_lower": 0.0005,
+      "CI_95_upper": 0.0033
     }
   },
   "loo_dcv": {
-    "N": 93,
-    "N_BCC": 45,
-    "N_FCC": 48,
+    "N": 95,
+    "N_BCC": 46,
+    "N_FCC": 49,
     "ALL": {
-      "RMSE_Vegard": 0.0212,
+      "RMSE_Vegard": 0.0219,
       "RMSE_Omega_sf": 0.0199,
-      "improvement_pct": 6.3
+      "improvement_pct": 9.1
     },
     "BCC": {
-      "RMSE_Vegard": 0.0277,
+      "RMSE_Vegard": 0.0286,
       "RMSE_Omega_sf": 0.026,
-      "improvement_pct": 6.2
+      "improvement_pct": 9.3
     },
     "FCC": {
-      "RMSE_Vegard": 0.0123,
-      "RMSE_Omega_sf": 0.0114,
-      "improvement_pct": 6.8
+      "RMSE_Vegard": 0.0126,
+      "RMSE_Omega_sf": 0.0115,
+      "improvement_pct": 8.5
     }
   },
   "bootstrap_dcv": {
@@ -118,21 +118,21 @@
     "seed": 42,
     "method": "OOB with q re-optimization per bootstrap sample",
     "ALL": {
-      "mean_delta_RMSE": 0.0012,
-      "CI_95_lower": -0.0026,
-      "CI_95_upper": 0.0035,
+      "mean_delta_RMSE": 0.0019,
+      "CI_95_lower": -0.0024,
+      "CI_95_upper": 0.0048,
       "n_valid": 10000
     },
     "BCC": {
-      "mean_delta_RMSE": 0.0016,
-      "CI_95_lower": -0.0045,
-      "CI_95_upper": 0.0055,
+      "mean_delta_RMSE": 0.0026,
+      "CI_95_lower": -0.0044,
+      "CI_95_upper": 0.0076,
       "n_valid": 10000
     },
     "FCC": {
-      "mean_delta_RMSE": 0.0008,
-      "CI_95_lower": -0.0012,
-      "CI_95_upper": 0.0022,
+      "mean_delta_RMSE": 0.001,
+      "CI_95_lower": -0.0013,
+      "CI_95_upper": 0.0025,
       "n_valid": 10000
     }
   },
@@ -162,18 +162,18 @@
     "q_BCC_sqs_dft_opt": 1.958,
     "q_BCC_sqs_dft_adopted": 1.0,
     "RMSE_vegard_BCC_train": 0.0317,
-    "RMSE_vegard_BCC_test": 0.0183,
+    "RMSE_vegard_BCC_test": 0.0226,
     "RMSE_b2_BCC_train": 0.0299,
-    "RMSE_b2_BCC_test": 0.0142,
+    "RMSE_b2_BCC_test": 0.0157,
     "RMSE_sqs_king_train": 0.0307,
-    "RMSE_sqs_king_test": 0.0148,
-    "RMSE_sqs_king_test_q1": 0.014,
+    "RMSE_sqs_king_test": 0.0163,
+    "RMSE_sqs_king_test_q1": 0.0141,
     "RMSE_sqs_dft_train_qopt": 0.0272,
-    "RMSE_sqs_dft_test_qopt": 0.0116,
+    "RMSE_sqs_dft_test_qopt": 0.0112,
     "RMSE_sqs_dft_train_q1": 0.0283,
-    "RMSE_sqs_dft_test_q1": 0.0122,
-    "improvement_sqs_dft_q1_vs_vegard_pct": 33.3,
-    "improvement_b2_vs_vegard_pct": 22.5,
+    "RMSE_sqs_dft_test_q1": 0.0137,
+    "improvement_sqs_dft_q1_vs_vegard_pct": 39.2,
+    "improvement_b2_vs_vegard_pct": 30.3,
     "correlation_b2_vs_sqs_dft_n": 414,
     "correlation_b2_vs_sqs_dft_r": 0.815,
     "correlation_b2_vs_sqs_dft_slope": 0.758,
@@ -186,13 +186,13 @@
     "omega_dft_range_min": -0.3275,
     "omega_dft_range_max": 0.1576,
     "q_sensitivity_test": {
-      "q0.6": 0.0143,
-      "q0.8": 0.0132,
-      "q1.0": 0.0122,
-      "q1.2": 0.0115,
-      "q1.4": 0.0111,
+      "q0.6": 0.0169,
+      "q0.8": 0.0152,
+      "q1.0": 0.0137,
+      "q1.2": 0.0124,
+      "q1.4": 0.0115,
       "q1.6": 0.011,
-      "q2.0": 0.0117
+      "q2.0": 0.0113
     },
     "fcc_sqs_n_pairs": 189,
     "fcc_sqs_n_converged": 248,
@@ -200,32 +200,32 @@
     "correlation_l12_vs_fcc_sqs_r": 0.846,
     "correlation_l12_vs_fcc_sqs_slope": 0.932,
     "test_vegard": {
-      "ALL": 0.0175,
-      "BCC": 0.0183,
-      "FCC": 0.0164
+      "ALL": 0.0202,
+      "BCC": 0.0226,
+      "FCC": 0.017
     },
     "test_sqs_king": {
-      "ALL": 0.0149,
-      "BCC": 0.0148,
-      "FCC": 0.0151
+      "ALL": 0.0158,
+      "BCC": 0.0163,
+      "FCC": 0.0152
     },
     "test_sqs_dft_q1": {
-      "ALL": 0.0136,
-      "BCC": 0.0122,
-      "FCC": 0.0151
+      "ALL": 0.0144,
+      "BCC": 0.0137,
+      "FCC": 0.0152
     },
     "test_sqs_dft_qopt": {
-      "ALL": 0.0133,
-      "BCC": 0.0116,
-      "FCC": 0.0151
+      "ALL": 0.0132,
+      "BCC": 0.0112,
+      "FCC": 0.0152
     },
     "sqs_additive_dft_n_elements": 31,
     "sqs_additive_dft_n_pairs": 414,
     "sqs_additive_dft_R2": 0.6064,
     "sqs_additive_dft_RMSE_omega": 0.0435,
     "sqs_additive_dft_RMSE_BCC_train_q1": 0.0326,
-    "sqs_additive_dft_RMSE_BCC_test_q1": 0.0154,
-    "sqs_additive_dft_improvement_vs_vegard_pct": 15.8,
+    "sqs_additive_dft_RMSE_BCC_test_q1": 0.0197,
+    "sqs_additive_dft_improvement_vs_vegard_pct": 12.8,
     "sqs_additive_king_n_elements": 31,
     "sqs_additive_king_n_pairs": 414,
     "sqs_additive_king_R2": 0.6172,
@@ -250,12 +250,12 @@
     "RMSE_vegard_train": 0.0227,
     "RMSE_king_opt_train": 0.0214,
     "improvement_dft_ref_opt_train_pct": 12.9,
-    "RMSE_dft_ref_opt_q_test": 0.0136,
-    "RMSE_dft_ref_opt_q_test_BCC": 0.0113,
+    "RMSE_dft_ref_opt_q_test": 0.014,
+    "RMSE_dft_ref_opt_q_test_BCC": 0.0121,
     "RMSE_dft_ref_opt_q_test_FCC": 0.016,
-    "RMSE_vegard_test": 0.0175,
-    "improvement_dft_ref_opt_test_pct": 22.1,
-    "improvement_dft_ref_opt_test_BCC_pct": 38.2
+    "RMSE_vegard_test": 0.0202,
+    "improvement_dft_ref_opt_test_pct": 30.7,
+    "improvement_dft_ref_opt_test_BCC_pct": 46.1
   },
   "ml_residual": {
     "RMSE_physics_train": 0.0214,
