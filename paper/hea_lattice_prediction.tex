@@ -96,6 +96,12 @@ Alonsoら~\cite{Alonso2021}はKingの$\Omega_\text{sf}$を多成分HEAに拡張�
 \paragraph{DFTによるHEA格子定数研究}
 DFTデータベース（Materials Project~\cite{Jain2013}、OQMD~\cite{Saal2013}）は数千の二元系化合物の格子定数を提供しており、$\Omega_\text{sf}$のDFT再導出が可能である。第一原理計算によるHEA格子定数研究としてはTian~\emph{et al.}~\cite{Tian2013}のKKR-CPA法やTian~\emph{et al.}~\cite{Tian2015}のEMTO-CPA法があるが、いずれも特定組成のDFT直接計算であり、任意組成への外挿には新たなDFT計算が必要となる。
 
+\paragraph{格子歪みの予測モデル}
+Tandoc~\emph{et al.}~\cite{Tandoc2023}は10元素BCC耐火合金空間（Ti, V, Cr, Zr, Nb, Mo, Hf, Ta, W, Re）において、二元系B2結合長から構成した記述子（結合長標準偏差$\sigma^L_{\text{B2/bcc}}$、双極子不変量$u^{\text{dip}}_{\text{B2/bcc}}$）にVECを組み合わせた3パラメータ回帰モデルでRMSAD（root mean square atomic displacement）を予測した（テストRMSE = 0.012~\AA{}）。「純元素サイズではなく二元系化合物の結合情報を使う」発想は本研究と共通するが、予測対象は格子歪みであり格子定数にはVegard則をそのまま使用している。San~\emph{et al.}~\cite{San2021}は500原子SQS＋VASPで4種のFCC HEA（NiFeCoCr, NiFeCoCrMn, NiFeCoCrCu, NiFeCoCrPd）の局所格子歪みを解析し、元素対に依存した原子間距離の変動を報告した。いずれも格子歪みの理解に資するが、格子定数の汎用予測手法は提案していない。
+
+\paragraph{機械学習による格子定数予測}
+Zhang~\emph{et al.}~\cite{Zhang2022}はEMTO-CPA法で計算した7,086件の四元系HEAデータからDeep Setsモデルを訓練し、Wigner--Seitz半径を含む複数物性を同時予測した（$s_{\text{ws}}$のMAE = 0.004~Bohr）。大規模なDFTデータと深層学習の組合せにより高い内挿精度を達成しているが、(1)~EMTO-CPA値の予測であり実験格子定数との系統誤差（$\sim$1.1\%）を内包する、(2)~学習に用いた10元素空間外への外挿は保証されない、(3)~DFT→DFTの内挿であるためVegard則からの改善量を実験値ベースで評価することが困難、という制約がある。Chen~\emph{et al.}~\cite{Chen2023}は40元素の二元系・三元系DFT形成エネルギーから熱力学モデルを構築し、66万通りの五元系HEAの相安定性マップを作成した。BCC AlCoMnNiV（$a = 2.9$~\AA{}）およびFCC CoFeMnNiZn（$a = 3.635$~\AA{}）を予測・合成し実験格子定数を報告しており、本研究の独立テストデータとして利用可能である。
+
 \subsection{本研究の新規性}
 
 King以来の体積サイズファクター研究は実験値（King体積、実験格子定数）に依拠してきた。本研究は$\Omega_\text{sf}$の導出をDFT計算に置換し（純元素体積$V_i$はKing実験値を保持）、以下の3つの進展を得た。
