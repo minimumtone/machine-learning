@@ -1086,15 +1086,15 @@ Vegard（$a = 3.578$~\AA、誤差0.003~\AA）よりも実験値に近い。
 全$\Omega_\text{sf}$が負（収縮方向）であることは、3$d$遷移金属間の強い$d$--$d$結合が単純体積加算（Vegard）よりも密な充填を生むことを反映している。
 
 
-\subsection{例題2: HfNbTaTiZr（BCC HEA）--- B2参照}
+\subsection{例題2: HfMoNbTiZr（BCC HEA）--- B2参照}
 \label{sec:example_bcc}
 
-等モル5元系BCC HEA HfNbTaTiZr（Senkov合金）の格子定数を予測する。
+等モル5元系BCC HEA HfMoNbTiZr（Tseng 2019）の格子定数を予測する。
 
 \paragraph{Step 1: King原子体積}
 \begin{align*}
-V_\text{Hf} &= 22.312~\text{\AA}^3, & V_\text{Nb} &= 17.978~\text{\AA}^3, \\
-V_\text{Ta} &= 18.014~\text{\AA}^3, & V_\text{Ti} &= 17.649~\text{\AA}^3, \\
+V_\text{Hf} &= 22.312~\text{\AA}^3, & V_\text{Mo} &= 15.583~\text{\AA}^3, \\
+V_\text{Nb} &= 17.978~\text{\AA}^3, & V_\text{Ti} &= 17.649~\text{\AA}^3, \\
 V_\text{Zr} &= 23.279~\text{\AA}^3. &
 \end{align*}
 
@@ -1102,9 +1102,9 @@ V_\text{Zr} &= 23.279~\text{\AA}^3. &
 
 等モル（$c_i = 0.20$）、BCC（$n_\text{auc} = 2$）：
 \begin{align}
-V_\text{Vegard} &= 0.20 \times (22.312 + 17.978 + 18.014 + 17.649 + 23.279) \nonumber \\
-&= 19.846~\text{\AA}^3, \nonumber \\
-a_\text{Vegard} &= (2 \times 19.846)^{1/3} = 3.411~\text{\AA}. \label{eq:ex_vegard_bcc}
+V_\text{Vegard} &= 0.20 \times (22.312 + 15.583 + 17.978 + 17.649 + 23.279) \nonumber \\
+&= 19.360~\text{\AA}^3, \nonumber \\
+a_\text{Vegard} &= (2 \times 19.360)^{1/3} = 3.383~\text{\AA}. \label{eq:ex_vegard_bcc}
 \end{align}
 
 \paragraph{Step 3: B2~$\Omega_\text{sf}$}
@@ -1116,11 +1116,11 @@ $\binom{5}{2} = 10$ペアのDFT $\Omega_\text{sf}^\text{B2}$：
 \toprule
 ペア & $\Omega_\text{sf}$ & ペア & $\Omega_\text{sf}$ \\
 \midrule
-Hf--Nb & $-0.013$ & Nb--Ti & $-0.028$ \\
-Hf--Ta & $-0.015$ & Nb--Zr & $-0.018$ \\
-Hf--Ti & $-0.023$ & Ta--Ti & $-0.028$ \\
-Hf--Zr & $-0.016$ & Ta--Zr & $-0.020$ \\
-Nb--Ta & $+0.017$ & Ti--Zr & $-0.030$ \\
+Hf--Mo & $-0.036$ & Mo--Zr & $-0.035$ \\
+Hf--Nb & $-0.011$ & Nb--Ti & $-0.025$ \\
+Hf--Ti & $-0.033$ & Nb--Zr & $-0.016$ \\
+Hf--Zr & $-0.017$ & Ti--Zr & $-0.032$ \\
+Mo--Nb & $+0.005$ & Mo--Ti & $-0.051$ \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1128,20 +1128,20 @@ Nb--Ta & $+0.017$ & Ti--Zr & $-0.030$ \\
 \paragraph{Step 4: B2参照での予測（$q_\text{BCC} = 0.49$）}
 \begin{align}
 \text{補正項} &= \sum_i \sum_{j \ne i} c_i\,c_j\,V_j\,\Omega_\text{sf}^\text{B2}(i,j)
-= -0.280~\text{\AA}^3, \nonumber \\
-V &= 2 \times (19.846 + 0.49 \times (-0.280)) = 39.42~\text{\AA}^3, \nonumber \\
-a_\text{pred}^{\text{B2}} &= 39.42^{1/3} = 3.403~\text{\AA}. \label{eq:ex_pred_bcc}
+= -0.385~\text{\AA}^3, \nonumber \\
+V &= 2 \times (19.360 + 0.49 \times (-0.385)) = 38.34~\text{\AA}^3, \nonumber \\
+a_\text{pred}^{\text{B2}} &= 38.34^{1/3} = 3.372~\text{\AA}. \label{eq:ex_pred_bcc}
 \end{align}
 
 \paragraph{Step 5: 実験値との比較}
 
-$a_\text{exp} = 3.410$~\AA{}（Senkov 2012）。
-誤差 $= |3.403 - 3.410| = 0.007$~\AA。
-Vegard（$a = 3.411$~\AA、誤差0.001~\AA）と比較すると本例ではVegardが偶然よい。
-この合金は$\Omega_\text{sf}$のほとんどが負（収縮方向）であり、$q < 1$の補正がVegard側への引き戻しとして不十分な例である。
+$a_\text{exp} = 3.369$~\AA{}（Tseng 2019）。
+誤差 $= |3.372 - 3.369| = 0.003$~\AA。
+Vegard（$a = 3.383$~\AA、誤差0.014~\AA）と比較して78\%の誤差低減であり、$\Omega_\text{sf}$補正の典型的な改善例である。
+Mo--Ti（$-0.051$）やHf--Mo（$-0.036$）など原子サイズ差の大きいペアが負の$\Omega_\text{sf}$を持ち、Vegard則が過大評価する格子定数を収縮方向に補正している。
 
 \paragraph{補足: SQS参照（$q = 1$）の場合}
-SQS $\Omega_\text{sf}$を用いると補正量が小さくなり$a_\text{pred}^{\text{SQS}} \approx 3.41$~\AA{}となる。B2の秩序効果（$\alpha = -1$）による$\Omega_\text{sf}$の過大評価がSQS（$\alpha \approx 0$）で解消されるためである。
+SQS $\Omega_\text{sf}$を用いると$a_\text{pred}^{\text{SQS}} \approx 3.367$~\AA{}（誤差0.002~\AA）となり、B2参照よりもさらに改善する。SQSはランダム固溶体の局所環境を直接模擬するため、B2の秩序効果（$\alpha = -1$）による$\Omega_\text{sf}$のバイアスが回避されるためである。
 
 
 \section{$\delta^{(s)}$パラメータ一覧}
