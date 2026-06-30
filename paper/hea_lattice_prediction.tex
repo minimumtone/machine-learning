@@ -38,7 +38,7 @@
 \address{物質・材料研究機構 (NIMS), 茨城県つくば市}
 
 \begin{abstract}
-King (1966) の体積サイズファクター$\Omega_\text{sf}$は合金の体積偏差を定量化する基本概念であるが、従来は実験値に依拠し構造依存性も考慮されていなかった。本研究は$\Omega_\text{sf}$の導出をDFT計算に置換し（純元素体積$V_i$は実験値を保持）、B2（BCC参照）とL1$_2$（FCC参照）で構造特異的に再定義する。5,152件の二元系DFT計算から465 B2 + 441 L1$_2$ペアの$\Omega_\text{sf}$を取得し、HEA予測に必要な全ペアをカバーした。これにより校正定数$q$の物理的起源を解明した：SQS＋DFT自己整合Vegard参照により$q_\text{BCC} \approx 1$（補正因子がほぼ不要）となる示唆が得られ、$q \neq 1$の主因がDFT--実験間の体積不整合であることを示した。FCC側では$q_\text{FCC} = 0.13 \approx 0$であり、Vegard則自体が十分な近似となる。独立テスト29 HEAで全体RMSE = 0.0146~\AA{}（Vegard比16.4\%改善）。改善効果はBCC系に集中し（BCC 16合金: 22.5\%、SQS参照で33.3\%）、FCC系ではVegard則の精度が高くΩ$_\text{sf}$補正の寄与は限定的である。加法分解$\delta_i^{(s)} + \delta_j^{(s)}$により906ペアを31元素パラメータに圧縮し、スプレッドシートで任意組成HEAの即座スクリーニングを可能にした。
+King (1966) の体積サイズファクター$\Omega_\text{sf}$は合金の体積偏差を定量化する基本概念であるが、従来は実験値に依拠し構造依存性も考慮されていなかった。本研究は$\Omega_\text{sf}$の導出をDFT計算に置換し（純元素体積$V_i$は実験値を保持）、B2（BCC参照）とL1$_2$（FCC参照）で構造特異的に再定義する。5,152件の二元系DFT計算から465 B2 + 441 L1$_2$ペアの$\Omega_\text{sf}$を取得し、HEA予測に必要な全ペアをカバーした。これにより校正定数$q$の物理的起源を解明した：SQS＋DFT自己整合Vegard参照により$q_\text{BCC} \approx 1$（補正因子がほぼ不要）となる示唆が得られ、$q \neq 1$の主因がDFT--実験間の体積不整合であることを示した。FCC側では$q_\text{FCC} = 0.13 \approx 0$であり、Vegard則自体が十分な近似となる。独立テスト31 HEAで全体RMSE = 0.0155~\AA{}（Vegard比23.3\%改善）。改善効果はBCC系に集中し（BCC 17合金: 30.3\%、SQS参照で39.2\%）、FCC系ではVegard則の精度が高くΩ$_\text{sf}$補正の寄与は限定的である。加法分解$\delta_i^{(s)} + \delta_j^{(s)}$により906ペアを31元素パラメータに圧縮し、スプレッドシートで任意組成HEAの即座スクリーニングを可能にした。
 \end{abstract}
 
 \begin{keyword}
@@ -111,7 +111,7 @@ King以来の体積サイズファクター研究は実験値（King体積、実
     MP・OQMD・独自VASP計算の3ソース統合により5,152件の二元系化合物から$\Omega_\text{sf}$を導出した。B2$\to$BCC、L1$_2$$\to$FCC の構造分離により、King/Alonsoでは取得できなかった構造依存的な体積偏差を得た。HEA予測に必要な全ペアをカバー（BCC 59/59、FCC 42/42）。
 
   \item \textbf{$q_\text{BCC} \approx 1$への近接と$q$の起源解明}:
-    過去の全研究で$q \neq 0$（BCC/FCC共に補正が必要）であったが、SQS＋DFT自己整合Vegard参照で$q_\text{BCC} = 1$固定がテスト最良精度を与える。ただし訓練最適値は$q_\text{opt} = 1.96$であり、16原子SQSのサイズ効果が残存する。$q \neq 1$の主因はDFT--実験間の体積不整合（GGA系統誤差）にある。独立テスト29合金RMSE = 0.0136~\AA{}（Vegard比22.1\%改善）、BCC 16合金ではRMSE = 0.0122~\AA{}（33.3\%改善）。
+    過去の全研究で$q \neq 0$（BCC/FCC共に補正が必要）であったが、SQS＋DFT自己整合Vegard参照で$q_\text{BCC} = 1$固定がテスト最良精度を与える。ただし訓練最適値は$q_\text{opt} = 1.96$であり、16原子SQSのサイズ効果が残存する。$q \neq 1$の主因はDFT--実験間の体積不整合（GGA系統誤差）にある。独立テスト31合金RMSE = 0.0144~\AA{}（Vegard比28.7\%改善）、BCC 17合金ではRMSE = 0.0137~\AA{}（39.2\%改善）。
 
   \item \textbf{$q_\text{FCC} \approx 0$（Vegard則の十分性）の実証}:
     $q_\text{FCC} = 0.13$（ほぼゼロ）は、FCC HEAではVegard則自体が十分な近似であり$\Omega_\text{sf}$補正がほぼ不要であることを示す。最密充填（配位数12）では原子サイズの環境依存性が小さく、体積の加法性が高い精度で成り立つためである。
@@ -126,8 +126,8 @@ King以来の体積サイズファクター研究は実験値（King体積、実
     により906ペアを31元素パラメータに圧縮。
     Hume-Rothery半径と同様の元素固有属性として活用可能。
   \item \textbf{独立テスト}:
-    29 HEA（BCC 16、FCC 13）で検証。
-    全体RMSE = 0.0146~\AA{}（Vegard比16.4\%改善）。
+    31 HEA（BCC 17、FCC 14）で検証。
+    全体RMSE = 0.0155~\AA{}（Vegard比23.3\%改善）。
 \end{enumerate}
 
 本手法の全体像を図~\ref{fig:pipeline}に示す。DFTデータベースから$\Omega_\text{sf}$を導出し、元素対モデルで格子定数を予測する。加法分解で31元素パラメータに圧縮すれば、DFT計算なしで任意組成のスクリーニングが可能になる。
@@ -144,7 +144,7 @@ King以来の体積サイズファクター研究は実験値（King体積、実
 \node[box, fill=blue!10] (dft) {DFTデータ\\{\scriptsize B2/L1$_2$: 5,152件\\SQS: 860件}};
 \node[box, fill=green!10, right=of dft] (omega) {$\Omega_\text{sf}$導出\\{\scriptsize B2: 465\\L1$_2$: 441}};
 \node[box, fill=red!10, right=of omega] (pred) {格子定数予測\\{\scriptsize 式(\ref{eq:alonso})\\元素対モデル}};
-\node[box, fill=purple!10, right=of pred] (test) {独立検証\\{\scriptsize 29 HEA\\13文献}};
+\node[box, fill=purple!10, right=of pred] (test) {独立検証\\{\scriptsize 31 HEA\\15文献}};
 \node[box, fill=orange!10, below=0.6cm of pred] (add) {加法分解\\{\scriptsize $\delta_i^{(s)}$: 31元素\\式(\ref{eq:a_from_veff})}};
 \draw[arr] (dft) -- (omega);
 \draw[arr] (omega) -- (pred);
@@ -207,7 +207,7 @@ VASP（本研究） & 2,200 & 2,810 & 5,010 \\
 収束判定と物理的格子定数範囲（2.0--8.0~\AA）でのフィルタリング後、B2で465・L1$_2$で441のユニーク元素ペアを得た。同一ペアに複数データソースがある場合は中央値を採用し外れ値の影響を緩和した。3ソース間の$\Omega_\text{sf}$は高い整合性を示し（B2 $r = 0.990$、L1$_2$ $r = 0.990$）、統合前後の平均変化量は$|\Delta\Omega| < 0.006$であった。
 
 \subsubsection{HEA検証データ}
-主検証セットはAlonso~\cite{Alonso2021} Table~2の64個の立方晶HEA（BCC 29、FCC 35、$a = 2.883$--$3.856$~\AA、22元素）である。独立テストセットとしてAlonsoデータ外の29 HEA（BCC 16、FCC 13）を13文献~\cite{Senkov2013,Senkov2013_ActaMat,Yao2016,Otto2013,Leong2017,Tseng2019,Freudenberger2017,Reget2020,Chen2022}から収集した。18元素をカバーし、耐火金属系BCC（Tseng 2019、Reget 2020）、貴金属系FCC（Freudenberger 2017）、三元系BCC（Chen 2022: HfNbZr）を含む。ただしBCC 16合金はHf-Mo-Nb-Ta-Ti-Zrの系統的サブセットが主体であり、FCC 13合金もAu-Cu-Ni-Pd-Pt系とCoCrFeMnNi派生に偏る。実効的な化学多様性は合金数より限定的である点に留意が必要である。
+主検証セットはAlonso~\cite{Alonso2021} Table~2の64個の立方晶HEA（BCC 29、FCC 35、$a = 2.883$--$3.856$~\AA、22元素）である。独立テストセットとしてAlonsoデータ外の31 HEA（BCC 17、FCC 14）を15文献~\cite{Senkov2013,Senkov2013_ActaMat,Yao2016,Otto2013,Leong2017,Tseng2019,Freudenberger2017,Reget2020,Chen2022,Chen2023}から収集した。20元素をカバーし、耐火金属系BCC（Tseng 2019、Reget 2020）、貴金属系FCC（Freudenberger 2017）、三元系BCC（Chen 2022: HfNbZr）、CALPHAD予測＋合成検証（Chen 2023: AlCoMnNiV, CoFeMnNiZn）を含む。ただしBCC 17合金はHf-Mo-Nb-Ta-Ti-Zrの系統的サブセットが主体であり、FCC 14合金もAu-Cu-Ni-Pd-Pt系とCoCrFeMnNi派生に偏る。実効的な化学多様性は合金数より限定的である点に留意が必要である。
 
 \subsection{体積サイズファクターのDFT導出}
 \label{sec:omega}
@@ -402,10 +402,10 @@ DFT-$\Omega_\text{sf}$モデルはRMSE = 0.0214~\AA{}を達成し、Vegard則（
 \begin{figure}[H]
 \centering
 \includegraphics[width=\columnwidth]{fig_parity.png}
-\caption{全87 HEAのパリティプロット（予測 vs 実験格子定数）。
+\caption{全95 HEAのパリティプロット（予測 vs 実験格子定数）。
   灰色: Vegard則による予測（64 HEA訓練セット）、
   青色: DFT-$\Omega_\text{sf}$モデルによる予測（同64 HEA、RMSE = 0.0214~\AA）、
-  赤色三角: 独立テストセット（29 HEA、RMSE = 0.0146~\AA）。
+  赤色三角: 独立テストセット（31 HEA、RMSE = 0.0155~\AA）。
   対角線は$a_\text{pred} = a_\text{exp}$を表す。}
 \label{fig:parity}
 \end{figure}
@@ -432,7 +432,7 @@ DFT-$\Omega_\text{sf}$ & 0.0299 & 0.0096 & 0.0214 \\
 \end{tabular}
 \end{table}
 
-FCC HEAはRMSE = 0.0096~\AA{}と推定$\sigma$以下の精度を示す。構成元素（Co, Cr, Fe, Mn, Ni等の3$d$遷移金属）の原子サイズが類似しVegard則の近似精度が元来高いこと、L1$_2$がFCC配位の良い近似であり$q_\text{FCC} = 0.13$が示すように$\Omega_\text{sf}$補正がほぼ不要であること（$q = 0$がVegard則に相当し、$q = 0.13$はVegard体積の13\%のみを補正に配分）が要因である。BCC HEA予測はSQS＋DFT Vegard参照（$q = 1$）でテストRMSE 0.0122~\AA{}（33.3\%改善）に達する（\ref{sec:sqs_improvement}節）。
+FCC HEAはRMSE = 0.0096~\AA{}と推定$\sigma$以下の精度を示す。構成元素（Co, Cr, Fe, Mn, Ni等の3$d$遷移金属）の原子サイズが類似しVegard則の近似精度が元来高いこと、L1$_2$がFCC配位の良い近似であり$q_\text{FCC} = 0.13$が示すように$\Omega_\text{sf}$補正がほぼ不要であること（$q = 0$がVegard則に相当し、$q = 0.13$はVegard体積の13\%のみを補正に配分）が要因である。BCC HEA予測はSQS＋DFT Vegard参照（$q = 1$）でテストRMSE 0.0137~\AA{}（39.2\%改善）に達する（\ref{sec:sqs_improvement}節）。
 
 図~\ref{fig:bcc_fcc}にBCC/FCC別の誤差分布を示す。
 
@@ -449,40 +449,41 @@ FCC HEAはRMSE = 0.0096~\AA{}と推定$\sigma$以下の精度を示す。構成�
 \subsection{独立テスト検証}
 \label{sec:indep_test}
 
-従来の20点テストセット（実質10種の合金組成、HfNbTaTiZr$\times$3重複）の組成多様性の制約を解消するため、13文献から29個のHEA（BCC 16、FCC 13）を新たに収集した（表~\ref{tab:indep_test}）。18元素をカバーし、Tseng (2019)の耐火金属系BCCバリアント（HfMoNbTaTiZrの系統的元素除去）、Reget (2020)のMo--Nb--V--W--Ti系BCC、Freudenberger (2017)の貴金属系FCC（Au-Cu-Ni-Pd-Pt四元・五元系）、Chen (2022)のHfNbZr三元系BCCを含む。
+従来の20点テストセット（実質10種の合金組成、HfNbTaTiZr$\times$3重複）の組成多様性の制約を解消するため、15文献から31個のHEA（BCC 17、FCC 14）を新たに収集した（表~\ref{tab:indep_test}）。20元素をカバーし、Tseng (2019)の耐火金属系BCCバリアント（HfMoNbTaTiZrの系統的元素除去）、Reget (2020)のMo--Nb--V--W--Ti系BCC、Freudenberger (2017)の貴金属系FCC（Au-Cu-Ni-Pd-Pt四元・五元系）、Chen (2022)のHfNbZr三元系BCC、Chen~\cite{Chen2023}のCALPHAD予測に基づく合成検証（AlCoMnNiV, CoFeMnNiZn）を含む。
 
 \begin{table}[H]
 \centering
-\caption{独立テスト29 HEA（BCC 16 + FCC 13）の予測精度（RMSE / \AA）。訓練と非重複の13文献18元素。}
+\caption{独立テスト31 HEA（BCC 17 + FCC 14）の予測精度（RMSE / \AA）。訓練と非重複の15文献20元素。}
 \label{tab:indep_test}
 \footnotesize
 \begin{tabular}{@{}lccc@{}}
 \toprule
-手法 & 全体 (29) & BCC (16) & FCC (13) \\
+手法 & 全体 (31) & BCC (17) & FCC (14) \\
 \midrule
-Vegard（単純平均）          & 0.0175 & 0.0183 & 0.0164 \\
-Alonso体積ズレ補正（King実験値）    & 0.0185 & 0.0178 & 0.0190 \\
-DFT-$\Omega_\text{sf}$（構造別, 最適$q_s$） & \textbf{0.0146} & \textbf{0.0142} & \textbf{0.0151} \\
+Vegard（単純平均）          & 0.0202 & 0.0226 & 0.0170 \\
+Alonso体積ズレ補正（King実験値）    & 0.0195 & 0.0157 & 0.0232 \\
+DFT-$\Omega_\text{sf}$（構造別, 最適$q_s$） & \textbf{0.0155} & \textbf{0.0157} & \textbf{0.0152} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-DFT-$\Omega_\text{sf}$モデルが全カテゴリで最良である。全体RMSE = 0.0146~\AA{}でVegard（0.0175~\AA）から\textbf{16.4\%改善}した。BCC 16合金ではRMSE = 0.0142~\AA（Vegard比\textbf{22.5\%改善}）、FCC 13合金ではRMSE = 0.0151~\AA（Vegard比\textbf{7.8\%改善}）。B2参照構造の$\Omega_\text{sf}$データを465ペアに拡充し、耐火金属28ペアを全カバーしたことでBCC予測精度が改善された。全体RMSEは推定ノイズフロア（$\sigma \approx 0.016$~\AA）と同程度であり、現在のデータの範囲では更なる改善の余地は限られる。
+DFT-$\Omega_\text{sf}$モデルが全カテゴリで最良である。全体RMSE = 0.0155~\AA{}でVegard（0.0202~\AA）から\textbf{23.3\%改善}した。BCC 17合金ではRMSE = 0.0157~\AA（Vegard比\textbf{30.3\%改善}）、FCC 14合金ではRMSE = 0.0152~\AA（Vegard比\textbf{10.2\%改善}）。B2参照構造の$\Omega_\text{sf}$データを465ペアに拡充し、耐火金属28ペアを全カバーしたことでBCC予測精度が改善された。
 
-ただし$N = 29$（BCC 16、FCC 13）という小標本でのRMSE差の統計的有意性には注意が必要である。10,000回ブートストラップリサンプリング（$q$固定）による95\%信頼区間を評価した結果、全29合金での$\Delta$RMSE（Vegard $-$ DFT-$\Omega_\text{sf}$）$= +0.0029$~\AA{}（95\% CI: $[+0.0008, +0.0050]$）であり、信頼区間がゼロを含まず統計的に有意である。BCC 16合金でも$\Delta = +0.0041$~\AA{}（CI: $[+0.0006, +0.0074]$）で有意。
+ただし$N = 31$（BCC 17、FCC 14）という小標本でのRMSE差の統計的有意性には注意が必要である。10,000回ブートストラップリサンプリング（$q$固定）による95\%信頼区間を評価した結果、全31合金での$\Delta$RMSE（Vegard $-$ DFT-$\Omega_\text{sf}$）$= +0.0047$~\AA{}（95\% CI: $[+0.0016, +0.0083]$）であり、信頼区間がゼロを含まず統計的に有意である。BCC 17合金でも$\Delta = +0.0068$~\AA{}（CI: $[+0.0016, +0.0119]$）で有意。
 
-パラメータ推定のバイアスを排除するため、訓練・テスト統合全93合金（BCC 45、FCC 48）でダブルクロスバリデーション（LOO-DCV）を実施した。外側LOOで各合金を除外し、内側で残り92合金から$q$を再最適化する。結果、LOO-DCV RMSE = 0.0199~\AA{}（Vegard 0.0212~\AA、6.3\%改善）、BCCでは0.0260~\AA（Vegard 0.0277~\AA、6.2\%改善）となった。訓練・テスト分割での16.4\%より保守的だが、$q$推定のバイアスを排除した上での改善である。Bootstrap-DCV（毎回$q$再最適化、10,000回）ではCIがゼロを含み（$\Delta = +0.0012$、CI: $[-0.0026, +0.0035]$）、小標本では$q$推定不確実性の影響が大きい。詳細は付録~\ref{sec:appendix_bootstrap}および~\ref{sec:appendix_loo_dcv}を参照。図~\ref{fig:indep_test}に合金別誤差・構造別RMSE・パリティプロットを示す。
+パラメータ推定のバイアスを排除するため、訓練・テスト統合全95合金（BCC 46、FCC 49）でダブルクロスバリデーション（LOO-DCV）を実施した。外側LOOで各合金を除外し、内側で残り94合金から$q$を再最適化する。結果、LOO-DCV RMSE = 0.0199~\AA{}（Vegard 0.0219~\AA、9.1\%改善）、BCCでは0.0260~\AA（Vegard 0.0286~\AA、9.3\%改善）となった。訓練・テスト分割での23.3\%より保守的だが、$q$推定のバイアスを排除した上での改善である。Bootstrap-DCV（毎回$q$再最適化、10,000回）ではCIがゼロを含み（$\Delta = +0.0019$、CI: $[-0.0024, +0.0048]$）、小標本では$q$推定不確実性の影響が大きい。詳細は付録~\ref{sec:appendix_bootstrap}および~\ref{sec:appendix_loo_dcv}を参照。図~\ref{fig:indep_test}に合金別誤差・構造別RMSE・パリティプロットを示す。
 
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=\textwidth]{fig_indep_test.png}
-\caption{独立テストセット（29 HEA、13文献18元素）の予測性能。
+\caption{独立テストセット（31 HEA、15文献20元素）の予測性能。
   (a)~合金別絶対誤差。(b)~構造別RMSE（灰: Vegard、青: DFT-$\Omega_\text{sf}$）。
   (c)~パリティプロット（$q_\text{BCC} = 0.49$、$q_\text{FCC} = 0.13$）。
-  BCC 16合金（青四角）とFCC 13合金（赤丸）。}
+  BCC 17合金（青四角）とFCC 14合金（赤丸）。}
 \label{fig:indep_test}
 \end{figure*}
 
+テストセット中で最大の誤差を示すAlCoMnNiV（BCC）について補足する。この合金の実験格子定数$a = 2.900$~\AA{}に対し、Vegard予測は$a = 2.957$~\AA（誤差$+0.057$~\AA）、$\Omega_\text{sf}$予測は$a = 2.930$~\AA（誤差$+0.030$~\AA）であり、$\Omega_\text{sf}$補正が誤差を約半分に縮小する。Vegard誤差が大きい主因はAlのKing原子体積（$V_\text{Al} = 16.60$~\AA$^3$、等価BCC格子定数3.21~\AA）が本来のFCC構造から換算した値であり、BCC環境でのAlの実効体積を過大評価するためである。全10ペアの$\Omega_\text{sf}^\text{B2}$は$-0.021$\textasciitilde$-0.129$と全て負値（体積収縮側）であり、特にAl--Co（$-0.129$）、Al--Mn（$-0.115$）が補正に寄与している。Chen~\cite{Chen2023}によるCALPHAD予測と実験の整合性は高いが、$a = 2.900$~\AA{}は3$d$遷移金属5元素としては異例に小さく、本モデルの二元系線形外挿の限界を示す事例である。
 
 \subsection{元素別加法分解パラメータ}
 \label{sec:delta_results}
@@ -614,7 +615,7 @@ B2プロット（図~\ref{fig:composition_b2}）ではDFT点が構造整合Vegar
 \label{fig:reff_comp}
 \end{figure*}
 
-構造依存有効体積$V_\text{eff}$の効果を二元系レベルで検証すると、二元系ペア（B2: 465、L1$_2$: 441）に対するRMSE改善は0.222~\AA{}$\to$0.209~\AA（5.9\%）にとどまる（付録~\ref{sec:appendix_vegard_binary}、図~\ref{fig:vegard_absorbed}）。組成が$c = 25\%, 50\%, 75\%$に限定されるため、Vegard則からの偏差の大部分が線形補間の精度内に収まることが主因である。一方、多成分HEAでは$n(n-1)/2$ペアの$\Omega_\text{sf}$が非線形に寄与するため構造情報の価値が顕在化し、独立テスト29 HEAでは11.4\%改善（0.0175~\AA{}$\to$0.0155~\AA）を達成した。$V_\text{eff}$の有用性は成分数の増加に伴い増大し、二元系での限定的改善はHEAへの適用を否定するものではない。
+構造依存有効体積$V_\text{eff}$の効果を二元系レベルで検証すると、二元系ペア（B2: 465、L1$_2$: 441）に対するRMSE改善は0.222~\AA{}$\to$0.209~\AA（5.9\%）にとどまる（付録~\ref{sec:appendix_vegard_binary}、図~\ref{fig:vegard_absorbed}）。組成が$c = 25\%, 50\%, 75\%$に限定されるため、Vegard則からの偏差の大部分が線形補間の精度内に収まることが主因である。一方、多成分HEAでは$n(n-1)/2$ペアの$\Omega_\text{sf}$が非線形に寄与するため構造情報の価値が顕在化し、独立テスト31 HEAでは23.3\%改善（0.0202~\AA{}$\to$0.0155~\AA）を達成した。$V_\text{eff}$の有用性は成分数の増加に伴い増大し、二元系での限定的改善はHEAへの適用を否定するものではない。
 
 
 \subsection{機械学習残差解析}
@@ -699,7 +700,7 @@ $\Omega_\text{sf}$の参照体積をKing実験値からVASP DFT計算値に変�
 
 \begin{table}[H]
 \centering
-\caption{$\Omega_\text{sf}$参照体積の影響。独立テスト29合金（BCC 16 + FCC 13）での評価。
+\caption{$\Omega_\text{sf}$参照体積の影響。独立テスト31合金（BCC 17 + FCC 14）での評価。
 $q$は訓練64合金で最適化。表~\ref{tab:data_provenance}の(a) vs (b)に対応。}
 \label{tab:omega_ref}
 \scriptsize
@@ -707,19 +708,19 @@ $q$は訓練64合金で最適化。表~\ref{tab:data_provenance}の(a) vs (b)に
 \toprule
 参照体積 & $q_\text{BCC}$ & $q_\text{FCC}$ & RMSE$_\text{ALL}$ & RMSE$_\text{BCC}$ & RMSE$_\text{FCC}$ \\
 \midrule
-King実験 & 0.486 & 0.133 & 0.0146 & 0.0142 & 0.0151 \\
-\textbf{DFT計算値} & \textbf{1.188} & \textbf{0.280} & \textbf{0.0136} & \textbf{0.0113} & 0.0160 \\
+King実験 & 0.486 & 0.133 & 0.0155 & 0.0157 & 0.0152 \\
+\textbf{DFT計算値} & \textbf{1.188} & \textbf{0.280} & \textbf{0.0140} & \textbf{0.0121} & 0.0160 \\
 \bottomrule
 \end{tabular}
 \par\smallskip
-{\scriptsize 改善率: King 16.4\%、DFT 22.1\%（対Vegard）。}
+{\scriptsize 改善率: King 23.3\%、DFT 30.7\%（対Vegard）。}
 \end{table}
 
 物理的意味は次のように整理できる。
 $\Omega_\text{sf} = (V_\text{DFT}(A,B) - V_\text{Vegard})/V_\text{Vegard}$において
 $V_\text{Vegard}$にもVASP計算値を用いると、分子・分母が同一のGGA-PBE汎関数から導出されるためBCC系のDFT系統誤差が相殺され、$q_\text{BCC} \approx 1$となる。
 $q \approx 1$は$\Omega_\text{sf}$のスケールが物理的に正しいことを意味する。
-DFT自己整合参照はBCC精度を38.2\%改善し（0.0183$\to$0.0113~\AA{}）、King参照（22.5\%改善）を上回る。
+DFT自己整合参照はBCC精度を46.1\%改善し（0.0226$\to$0.0121~\AA{}）、King参照（30.3\%改善）を上回る。
 
 従来$q \neq 1$はWarren-Cowley秩序度$\alpha$の差（B2: $\alpha = -1$ vs HEA: $\alpha \approx 0$）に帰着されると考えられていたが、B2参照でもDFT自己整合により$q_\text{BCC} \approx 1$が達成された。BCC系における$q \neq 1$の主因は$\Omega_\text{sf}$参照体積のDFT--実験間不整合によるアーティファクトであったと結論される。この知見は\ref{sec:sqs_improvement}節のSQS解析で定量的に確認される。
 
@@ -753,7 +754,7 @@ SQS＋DFT Vegard参照で全44 BCC HEAに対する$q$最適化を行うと$q_\te
 
 \begin{table}[H]
 \centering
-\caption{参照構造別の予測精度。独立テスト29合金（BCC 16 + FCC 13）。
+\caption{参照構造別の予測精度。独立テスト31合金（BCC 17 + FCC 14）。
 $q$は訓練64合金で最適化。BCC側のΩ$_\text{sf}$参照構造が異なる。
 SQS系のFCC側はL1$_2$+King（$q_\text{FCC} = 0.133$）で共通。}
 \label{tab:sqs_rmse}
@@ -762,39 +763,39 @@ SQS系のFCC側はL1$_2$+King（$q_\text{FCC} = 0.133$）で共通。}
 \toprule
 参照構造 & $q_\text{BCC}$ & RMSE$_\text{ALL}$ & RMSE$_\text{BCC}$ & 改善 \\
 \midrule
-Vegard則 & 0 & 0.0175 & 0.0183 & --- \\
-B2+King & 0.486 & 0.0146 & 0.0142 & 16.4\% \\
-B2+DFT & 1.188 & 0.0136 & 0.0113 & 22.1\% \\
-SQS+King & 0.623 & 0.0149 & 0.0148 & 14.6\% \\
-\textbf{SQS+DFT ($q\!=\!1$)} & \textbf{1.000} & \textbf{0.0136} & \textbf{0.0122} & \textbf{22.1\%} \\
-SQS+DFT ($q_\text{opt}$) & 1.958 & 0.0133 & 0.0116 & 24.0\% \\
+Vegard則 & 0 & 0.0202 & 0.0226 & --- \\
+B2+King & 0.486 & 0.0155 & 0.0157 & 23.3\% \\
+B2+DFT & 1.188 & 0.0140 & 0.0121 & 30.7\% \\
+SQS+King & 0.623 & 0.0158 & 0.0163 & 21.8\% \\
+\textbf{SQS+DFT ($q\!=\!1$)} & \textbf{1.000} & \textbf{0.0144} & \textbf{0.0137} & \textbf{28.7\%} \\
+SQS+DFT ($q_\text{opt}$) & 1.958 & 0.0132 & 0.0112 & 34.7\% \\
 \bottomrule
 \end{tabular}
 \par\smallskip
-{\scriptsize SQS系のRMSE$_\text{FCC}$ = 0.0151~\AA{}（Vegard: 0.0164）。
+{\scriptsize SQS系のRMSE$_\text{FCC}$ = 0.0152~\AA{}（Vegard: 0.0170）。
 B2+DFT行はFCC側もDFT自己整合（$q_\text{FCC} = 0.280$、
 RMSE$_\text{FCC}$ = 0.0160）。}
 \end{table}
 
-SQS＋DFT Vegard参照（$q = 1$）により独立テスト29合金RMSEは0.0175（Vegard）から0.0136~\AA{}（22.1\%改善）となる。BCC 16合金に限ればRMSE 0.0122~\AA{}（33.3\%改善）であり、B2参照（0.0142、BCC 22.5\%改善）を上回る。$q$感度解析（表~\ref{tab:q_sensitivity}）はテストRMSEが$q = 1.0$--$1.4$で最小値付近にあることを示す。
+SQS＋DFT Vegard参照（$q = 1$）により独立テスト31合金RMSEは0.0202（Vegard）から0.0144~\AA{}（28.7\%改善）となる。BCC 17合金に限ればRMSE 0.0137~\AA{}（39.2\%改善）であり、B2参照（0.0157、BCC 30.3\%改善）を上回る。$q$感度解析（表~\ref{tab:q_sensitivity}）はテストRMSEが$q = 1.0$--$1.4$で最小値付近にあることを示す。
 
 \begin{table}[H]
 \centering
-\caption{$q_\text{BCC}$感度解析（BCC SQS＋DFT Vegard参照）。独立テストBCC 16合金でのRMSE。}
+\caption{$q_\text{BCC}$感度解析（BCC SQS＋DFT Vegard参照）。独立テストBCC 17合金でのRMSE。}
 \label{tab:q_sensitivity}
 \footnotesize
 \begin{tabular}{@{}cc@{}}
 \toprule
 $q_\text{BCC}$ & テスト RMSE (\AA) \\
 \midrule
-0 (Vegard) & 0.0183 \\
-0.6 & 0.0143 \\
-0.8 & 0.0132 \\
-\textbf{1.0 (採用)} & \textbf{0.0122} \\
-1.2 & 0.0115 \\
-1.4 & 0.0111 \\
+0 (Vegard) & 0.0226 \\
+0.6 & 0.0169 \\
+0.8 & 0.0152 \\
+\textbf{1.0 (採用)} & \textbf{0.0137} \\
+1.2 & 0.0124 \\
+1.4 & 0.0115 \\
 1.6 & 0.0110 \\
-2.0 ($\approx q_\text{opt}$) & 0.0117 \\
+2.0 ($\approx q_\text{opt}$) & 0.0113 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -884,7 +885,7 @@ King (1966) 以来、実験値に基づいてきた体積サイズファクタ�
 
 \begin{table}[H]
 \centering
-\caption{本手法の予測精度の全体像。独立テスト29 HEA（BCC 16 + FCC 13）での公平比較。
+\caption{本手法の予測精度の全体像。独立テスト31 HEA（BCC 17 + FCC 14）での公平比較。
 $q$は全モデル共通の訓練64合金で最適化。
 SQS系モデルのFCC側はL1$_2$+King（$q_\text{FCC} = 0.133$）で共通。
 Vegard行は$q=0$、B2+DFT行はFCC側もDFT自己整合（$q_\text{FCC} = 0.280$）を使用。}
@@ -894,18 +895,18 @@ Vegard行は$q=0$、B2+DFT行はFCC側もDFT自己整合（$q_\text{FCC} = 0.280
 \toprule
 モデル & $q_\text{BCC}$ & RMSE$_\text{ALL}$ & RMSE$_\text{BCC}$ & 改善 \\
 \midrule
-Vegard & 0 & 0.0175 & 0.0183 & --- \\
-B2/L1$_2$+King & 0.486 & 0.0146 & 0.0142 & 16.4\% \\
-B2/L1$_2$+DFT & 1.188 & 0.0136 & 0.0113 & 22.1\% \\
-SQS+King & 0.623 & 0.0149 & 0.0148 & 14.6\% \\
-\textbf{SQS+DFT ($q\!=\!1$)} & \textbf{1.000} & \textbf{0.0136} & \textbf{0.0122} & \textbf{22.1\%} \\
-SQS+DFT ($q_\text{opt}$) & 1.958 & 0.0133 & 0.0116 & 24.0\% \\
+Vegard & 0 & 0.0202 & 0.0226 & --- \\
+B2/L1$_2$+King & 0.486 & 0.0155 & 0.0157 & 23.3\% \\
+B2/L1$_2$+DFT & 1.188 & 0.0140 & 0.0121 & 30.7\% \\
+SQS+King & 0.623 & 0.0158 & 0.0163 & 21.8\% \\
+\textbf{SQS+DFT ($q\!=\!1$)} & \textbf{1.000} & \textbf{0.0144} & \textbf{0.0137} & \textbf{28.7\%} \\
+SQS+DFT ($q_\text{opt}$) & 1.958 & 0.0132 & 0.0112 & 34.7\% \\
 \midrule
 ノイズ & --- & 0.016 & --- & --- \\
 \bottomrule
 \end{tabular}
 \par\smallskip
-{\scriptsize SQS系のRMSE$_\text{FCC}$ = 0.0151~\AA{}（Vegard: 0.0164）。
+{\scriptsize SQS系のRMSE$_\text{FCC}$ = 0.0152~\AA{}（Vegard: 0.0170）。
 B2+DFT: RMSE$_\text{FCC}$ = 0.0160。}
 \end{table}
 
@@ -914,7 +915,7 @@ B2+DFT: RMSE$_\text{FCC}$ = 0.0160。}
     King以来実験値に依拠してきた$\Omega_\text{sf}$を5,152件の二元系DFT計算で置換し（純元素$V_i$は実験値保持）、B2$\to$BCC、L1$_2$$\to$FCCの構造分離によりHEA予測に必要な全ペアをカバー（BCC 59/59、FCC 42/42）。
 
   \item \textbf{$q_\text{BCC} \approx 1$への近接と$q$の起源解明}:
-    SQS＋DFT自己整合Vegard参照で$q_\text{BCC} = 1$固定が追加パラメータなしで良好な精度を達成する（テストRMSEは$q = 1.0$--$1.6$で安定、訓練最適$q_\text{opt} = 1.96$）。$q \neq 1$の主因は秩序--無秩序間の差ではなくDFT--実験間の体積不整合（GGA系統誤差）にある。参照体積をDFT内で統一すれば二元系$\to$多元系の外挿に追加パラメータは不要である。独立テスト29合金RMSE = 0.0136~\AA{}（Vegard比22.1\%改善）、BCC 16合金ではRMSE = 0.0122~\AA{}（33.3\%改善）。
+    SQS＋DFT自己整合Vegard参照で$q_\text{BCC} = 1$固定が追加パラメータなしで良好な精度を達成する（テストRMSEは$q = 1.0$--$1.6$で安定、訓練最適$q_\text{opt} = 1.96$）。$q \neq 1$の主因は秩序--無秩序間の差ではなくDFT--実験間の体積不整合（GGA系統誤差）にある。参照体積をDFT内で統一すれば二元系$\to$多元系の外挿に追加パラメータは不要である。独立テスト31合金RMSE = 0.0144~\AA{}（Vegard比28.7\%改善）、BCC 17合金ではRMSE = 0.0137~\AA{}（39.2\%改善）。
 
   \item \textbf{$q_\text{FCC} \approx 0$（Vegard則の十分性）}:
     $q_\text{FCC} = 0.13$はFCC HEAでVegard則自体が十分な近似であることを示す。最密充填構造では原子サイズの環境依存性が小さく、$\Omega_\text{sf}$補正がほぼ不要である。
@@ -948,8 +949,8 @@ Alonso~\cite{Alonso2021} & 実験 & なし & $\neq 0$ \\
 \end{tabular}
 \par\smallskip
 {\scriptsize
-テストRMSE: B2/L1$_2$ = 0.0146、SQS = 0.0122~\AA{}。
-Vegard = 0.0175~\AA{}。}
+テストRMSE: B2/L1$_2$ = 0.0155、SQS = 0.0137~\AA{}。
+Vegard = 0.0202~\AA{}。}
 \end{table}
 
 \paragraph{実用的意義}
@@ -1582,7 +1583,7 @@ $q_\text{B2} \times |\Omega_\text{B2}| \approx q_\text{SQS} \times |\Omega_\text
 
 \subsection{手法A: $q$固定ブートストラップ}
 
-独立テスト29合金のRMSE改善量$\Delta\text{RMSE} = \text{RMSE}_\text{Vegard} - \text{RMSE}_{\Omega_\text{sf}}$の信頼区間を10,000回ブートストラップで推定する。$q$は訓練64合金で最適化した値（$q_\text{BCC} = 0.486$、$q_\text{FCC} = 0.133$）を固定し、各反復で$N$合金から重複ありで$N$合金を再抽出し$\Delta\text{RMSE}$を算出する。2.5\%--97.5\%パーセンタイルを95\% CIとする。
+独立テスト31合金のRMSE改善量$\Delta\text{RMSE} = \text{RMSE}_\text{Vegard} - \text{RMSE}_{\Omega_\text{sf}}$の信頼区間を10,000回ブートストラップで推定する。$q$は訓練64合金で最適化した値（$q_\text{BCC} = 0.486$、$q_\text{FCC} = 0.133$）を固定し、各反復で$N$合金から重複ありで$N$合金を再抽出し$\Delta\text{RMSE}$を算出する。2.5\%--97.5\%パーセンタイルを95\% CIとする。
 
 \begin{table}[H]
 \centering
@@ -1594,30 +1595,30 @@ $q_\text{B2} \times |\Omega_\text{B2}| \approx q_\text{SQS} \times |\Omega_\text
 \toprule
 サブセット & $N$ & $\Delta$RMSE [\AA] & 95\% CI [\AA] \\
 \midrule
-全29合金 & 29 & $+$0.0029 & [$+$0.0008, $+$0.0050] \\
-BCC 16合金 & 16 & $+$0.0041 & [$+$0.0006, $+$0.0074] \\
-FCC 13合金 & 13 & $+$0.0013 & [$+$0.0002, $+$0.0027] \\
+全31合金 & 31 & $+$0.0047 & [$+$0.0016, $+$0.0083] \\
+BCC 17合金 & 17 & $+$0.0068 & [$+$0.0016, $+$0.0119] \\
+FCC 14合金 & 14 & $+$0.0017 & [$+$0.0005, $+$0.0033] \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{手法B: Bootstrap-DCV（$q$毎回再最適化）}
 
-$q$固定ブートストラップは$q$の推定不確実性を考慮しない。より厳密な評価として、訓練・テスト統合全93合金（BCC 45、FCC 48）に対し各ブートストラップ反復で$N$合金を復元抽出し、抽出サンプルで$q_\text{BCC}$・$q_\text{FCC}$を再最適化した上でOOB（out-of-bag）サンプルのRMSEを評価するBootstrap-DCVを実施した。
+$q$固定ブートストラップは$q$の推定不確実性を考慮しない。より厳密な評価として、訓練・テスト統合全95合金（BCC 46、FCC 49）に対し各ブートストラップ反復で$N$合金を復元抽出し、抽出サンプルで$q_\text{BCC}$・$q_\text{FCC}$を再最適化した上でOOB（out-of-bag）サンプルのRMSEを評価するBootstrap-DCVを実施した。
 
 \begin{table}[H]
 \centering
 \caption{Bootstrap-DCV（$q$再最適化）の$\Delta$RMSE 95\% CI。
-  全93合金（訓練64 + テスト29）を統合。}
+  全95合金（訓練64 + テスト31）を統合。}
 \label{tab:bootstrap_dcv}
 \footnotesize
 \begin{tabular}{@{}lrcl@{}}
 \toprule
 サブセット & $N$ & $\Delta$RMSE [\AA] & 95\% CI [\AA] \\
 \midrule
-全93合金 & 93 & $+$0.0012 & [$-$0.0026, $+$0.0035] \\
-BCC 45合金 & 45 & $+$0.0016 & [$-$0.0045, $+$0.0055] \\
-FCC 48合金 & 48 & $+$0.0008 & [$-$0.0012, $+$0.0022] \\
+全95合金 & 95 & $+$0.0019 & [$-$0.0024, $+$0.0048] \\
+BCC 46合金 & 46 & $+$0.0026 & [$-$0.0044, $+$0.0076] \\
+FCC 49合金 & 49 & $+$0.0010 & [$-$0.0013, $+$0.0025] \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1626,45 +1627,45 @@ FCC 48合金 & 48 & $+$0.0008 & [$-$0.0012, $+$0.0022] \\
 
 \begin{enumerate}
   \item \textbf{$q$固定}: 全サブセットでCI下限が正であり、$p < 0.05$で統計的に有意である。$q$を訓練セットで固定した場合、テストセットでの改善は頑健である。
-  \item \textbf{Bootstrap-DCV（$q$再最適化）}: CIがゼロを含む。$q$推定の不確実性を含めると、$N = 93$の標本サイズでは改善の統計的有意性が失われる。これは手法の有効性を否定するものではなく、$q$パラメータの推定に要するデータ量が現在の93合金では不足であることを示す。
-  \item 訓練64合金のVegard RMSEが0.0227~\AA（テスト29合金の0.0175~\AA{}より大きい）であることから、統合93合金でのLOO-DCV RMSEはテストのみの場合より高くなり、$\Delta$RMSEの分散が増大する。
+  \item \textbf{Bootstrap-DCV（$q$再最適化）}: CIがゼロを含む。$q$推定の不確実性を含めると、$N = 95$の標本サイズでは改善の統計的有意性が失われる。これは手法の有効性を否定するものではなく、$q$パラメータの推定に要するデータ量が現在の95合金では不足であることを示す。
+  \item 訓練64合金のVegard RMSEが0.0227~\AA（テスト31合金の0.0202~\AA{}より大きい）であることから、統合95合金でのLOO-DCV RMSEはテストのみの場合より高くなり、$\Delta$RMSEの分散が増大する。
 \end{enumerate}
 
 
 \section{LOO-DCVによる汎化誤差推定}
 \label{sec:appendix_loo_dcv}
 
-訓練・テスト分割に依存しない汎化誤差推定として、全93合金（Alonso 64 + 独立テスト29）に対するLeave-One-Out Double Cross Validation (LOO-DCV) を実施した。
+訓練・テスト分割に依存しない汎化誤差推定として、全95合金（Alonso 64 + 独立テスト31）に対するLeave-One-Out Double Cross Validation (LOO-DCV) を実施した。
 
 \subsection{手法}
 
-外側LOOループで各合金$i$を除外し、残り92合金で$q_\text{BCC}$・$q_\text{FCC}$を再最適化（内側最適化）した上で合金$i$の格子定数を予測する。これを93回繰り返し、全合金の予測値からRMSEを算出する。
+外側LOOループで各合金$i$を除外し、残り94合金で$q_\text{BCC}$・$q_\text{FCC}$を再最適化（内側最適化）した上で合金$i$の格子定数を予測する。これを95回繰り返し、全合金の予測値からRMSEを算出する。
 
 \subsection{結果}
 
 \begin{table}[H]
 \centering
-\caption{LOO-DCV（$q$再最適化）によるRMSE推定。全93合金（訓練64 + テスト29）。}
+\caption{LOO-DCV（$q$再最適化）によるRMSE推定。全95合金（訓練64 + テスト31）。}
 \label{tab:loo_dcv}
 \footnotesize
 \begin{tabular}{@{}lrccr@{}}
 \toprule
 サブセット & $N$ & RMSE$_\text{Vegard}$ [\AA] & RMSE$_{\Omega_\text{sf}}$ [\AA] & 改善 \\
 \midrule
-全93合金 & 93 & 0.0212 & 0.0199 & 6.3\% \\
-BCC 45合金 & 45 & 0.0277 & 0.0260 & 6.2\% \\
-FCC 48合金 & 48 & 0.0123 & 0.0114 & 6.8\% \\
+全95合金 & 95 & 0.0219 & 0.0199 & 9.1\% \\
+BCC 46合金 & 46 & 0.0286 & 0.0260 & 9.3\% \\
+FCC 49合金 & 49 & 0.0126 & 0.0115 & 8.5\% \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{解釈}
 
-LOO-DCV改善率（6.3\%）は独立テストでの改善率（16.4\%）より保守的である。要因は、(a)~訓練64合金のVegard RMSEが0.0227~\AA{}と高く全体のRMSEベースラインが上昇すること、(b)~各LOOステップで$q$を92合金から再推定するため$q$推定の変動がRMSEに反映されること、の二点である。
+LOO-DCV改善率（9.1\%）は独立テストでの改善率（23.3\%）より保守的である。要因は、(a)~訓練64合金のVegard RMSEが0.0227~\AA{}と高く全体のRMSEベースラインが上昇すること、(b)~各LOOステップで$q$を94合金から再推定するため$q$推定の変動がRMSEに反映されること、の二点である。
 
-Varma \& Simon~\cite{Varma2006}が示したように、通常のCV（単一ループ）ではモデル選択のバイアス（optimistic bias）が推定誤差に混入するのに対し、DCVは外側ループでそのバイアスを排除しほぼ不偏な推定を与える。ただし小標本では内側ループの標本サイズが$N-1$に減少するため$q$推定の分散が増大し、保守的（pessimistic）な推定を返す傾向がある。LOO-DCVの6.3\%改善は下限的な推定であり、実際の汎化性能はテスト分割の16.4\%とLOO-DCVの6.3\%の間にあると考えられる。
+Varma \& Simon~\cite{Varma2006}が示したように、通常のCV（単一ループ）ではモデル選択のバイアス（optimistic bias）が推定誤差に混入するのに対し、DCVは外側ループでそのバイアスを排除しほぼ不偏な推定を与える。ただし小標本では内側ループの標本サイズが$N-1$に減少するため$q$推定の分散が増大し、保守的（pessimistic）な推定を返す傾向がある。LOO-DCVの9.1\%改善は下限的な推定であり、実際の汎化性能はテスト分割の23.3\%とLOO-DCVの9.1\%の間にあると考えられる。
 
-LOO-DCVはパラメータ推定のバイアスを完全に排除した汎化誤差推定であり、pessimistic biasを持つにもかかわらず全サブセットで$\Omega_\text{sf}$補正がVegard則を改善する方向で一貫している。Bootstrap-DCV（付録~\ref{sec:appendix_bootstrap}）でCIがゼロを含む結果もpessimistic biasの影響を受けており、改善の存在自体は頑健だが、統計的有意性を示すには93合金では標本サイズが不足であると結論される。
+LOO-DCVはパラメータ推定のバイアスを完全に排除した汎化誤差推定であり、pessimistic biasを持つにもかかわらず全サブセットで$\Omega_\text{sf}$補正がVegard則を改善する方向で一貫している。Bootstrap-DCV（付録~\ref{sec:appendix_bootstrap}）でCIがゼロを含む結果もpessimistic biasの影響を受けており、改善の存在自体は頑健だが、統計的有意性を示すには95合金では標本サイズが不足であると結論される。
 
 
 \section{Alonso実験$\Omega_\text{sf}$とのカバレッジ比較}
@@ -1735,7 +1736,7 @@ $\Omega_\text{sf}^\text{Alonso}$は実験データの制約から現代的なHEA
 
 \subsection{予測対象}
 
-独立テスト29合金に含まれない新規HEAに対して本手法の予測能力を検証した。
+独立テスト31合金に含まれない新規HEAに対して本手法の予測能力を検証した。
 BCC 6合金 + FCC 3合金の計9合金を対象とする。
 
 \subsection{予測結果}

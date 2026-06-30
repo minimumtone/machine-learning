@@ -328,6 +328,14 @@ INDEPENDENT_TEST = [
     # Chen 2022 Acta Mater: HfNbZr single BCC (equiatomic ternary)
     {"comp":{"Hf":1/3,"Nb":1/3,"Zr":1/3},"struct":"BCC","a_exp":3.4869,
      "ref":"Chen2022_ActaMat","note":"equiatomic ternary BCC"},
+    # Chen 2023 Nat Commun: AlCoMnNiV single BCC (CALPHAD prediction + synthesis)
+    {"comp":{"Al":0.20,"Co":0.20,"Mn":0.20,"Ni":0.20,"V":0.20},"struct":"BCC","a_exp":2.900,
+     "ref":"Chen2023_NatCommun","note":"equiatomic 5-element with Al,Mn"},
+    #
+    # --- Additional FCC HEAs ---
+    # Chen 2023 Nat Commun: CoFeMnNiZn single FCC (CALPHAD prediction + synthesis)
+    {"comp":{"Co":0.20,"Fe":0.20,"Mn":0.20,"Ni":0.20,"Zn":0.20},"struct":"FCC","a_exp":3.635,
+     "ref":"Chen2023_NatCommun","note":"equiatomic 5-element with Mn,Zn"},
 ]
 
 
