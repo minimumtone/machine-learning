@@ -332,14 +332,15 @@ def load_sqs_data():
         use_sqs = True
         if v_king is not None:
             pct = abs(v_sqs - v_king) / v_king * 100
+            pct_signed = (v_sqs - v_king) / v_king * 100
             if pct > 3.0:
                 # SQS unreliable; prefer MP if close to King, else King
                 if v_mp is not None and abs(v_mp - v_king) / v_king * 100 <= 3.0:
                     pure_vol[el] = v_mp
-                    sqs_override_log.append(f"  {el}: SQS {v_sqs:.3f} -> MP {v_mp:.3f} (SQS-King={pct:+.1f}%)")
+                    sqs_override_log.append(f"  {el}: SQS {v_sqs:.3f} -> MP {v_mp:.3f} (SQS-King={pct_signed:+.1f}%)")
                 else:
                     pure_vol[el] = v_king
-                    sqs_override_log.append(f"  {el}: SQS {v_sqs:.3f} -> King {v_king:.3f} (SQS-King={pct:+.1f}%)")
+                    sqs_override_log.append(f"  {el}: SQS {v_sqs:.3f} -> King {v_king:.3f} (SQS-King={pct_signed:+.1f}%)")
                 use_sqs = False
         if use_sqs:
             pure_vol[el] = v_sqs
@@ -427,13 +428,14 @@ def load_sqs_data():
         use_sqs = True
         if v_king is not None:
             pct = abs(v_sqs - v_king) / v_king * 100
+            pct_signed = (v_sqs - v_king) / v_king * 100
             if pct > 3.0:
                 if v_mp is not None and abs(v_mp - v_king) / v_king * 100 <= 3.0:
                     fcc_pure_vol[el] = v_mp
-                    fcc_override_log.append(f"  {el}: SQS {v_sqs:.3f} -> MP {v_mp:.3f} (SQS-King={pct:+.1f}%)")
+                    fcc_override_log.append(f"  {el}: SQS {v_sqs:.3f} -> MP {v_mp:.3f} (SQS-King={pct_signed:+.1f}%)")
                 else:
                     fcc_pure_vol[el] = v_king
-                    fcc_override_log.append(f"  {el}: SQS {v_sqs:.3f} -> King {v_king:.3f} (SQS-King={pct:+.1f}%)")
+                    fcc_override_log.append(f"  {el}: SQS {v_sqs:.3f} -> King {v_king:.3f} (SQS-King={pct_signed:+.1f}%)")
                 use_sqs = False
         if use_sqs:
             fcc_pure_vol[el] = v_sqs
