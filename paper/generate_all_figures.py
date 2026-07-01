@@ -937,7 +937,8 @@ def fig01_parity(y_train, a_veg_tr, a_ss_tr, y_test, a_veg_te, a_ss_te):
     from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
     fig, ax = plt.subplots(1, 1, figsize=(7, 7))
-    lims = [2.85, 3.65]
+    all_vals = np.concatenate([y_train, y_test, a_veg_tr, a_ss_tr, a_veg_te, a_ss_te])
+    lims = [min(all_vals) - 0.05, max(all_vals) + 0.05]
     ax.plot(lims, lims, "k-", lw=1)
     ax.scatter(y_train, a_veg_tr, c="gray", alpha=0.35, s=50,
                label="Vegard (calib. 64)", zorder=2)
