@@ -1406,6 +1406,7 @@ def fig07b_vegard_heatmap(all_df):
 
 def fig07c_vegard_parity(all_df):
     """Vegard parity plots: V_DFT vs V_Vegard for all pairs.
+    Overlays SQS data on B2 (BCC) and L1_2 (FCC) plots.
     Returns dict of stats for paper_metrics.
     """
     stats = {}
@@ -1419,6 +1420,107 @@ def fig07c_vegard_parity(all_df):
             a = row["lattice_constant"]
             if 2 < a < 8:
                 dft_vol[(el, stype)] = a ** 3 / n_auc
+
+    # Load SQS data for overlay
+    sqs_veg_b2, sqs_dft_b2 = [], []
+    sqs_veg_fcc, sqs_dft_fcc = [], []
+    if SQS_FILE.exists():
+        with open(SQS_FILE) as f:
+            sqs_rows = list(csv.DictReader(f))
+        # BCC SQS pure element volumes (A8A8)
+        sqs_pure_bcc = {}
+        for r in sqs_rows:
+            if r["status"] != "OK":
+                continue
+            if r.get("lattice_type", "") != "bcc":
+                continue
+            pairs = re.findall(r"([A-Z][a-z]?)(\d+)", r["dir"])
+            if len(pairs) != 2:
+                continue
+            el1, n1, el2, n2 = pairs[0][0], int(pairs[0][1]), pairs[1][0], int(pairs[1][1])
+            if el1 == el2 and n1 == 8 and n2 == 8:
+                try:
+                    a = float(r["a_bcc_A"])
+                except (ValueError, KeyError):
+                    continue
+                if 2.0 < a < 8.0:
+                    sqs_pure_bcc[el1] = a**3 / 2.0
+        # BCC SQS 1:1 (A8B8) Vegard parity
+        for r in sqs_rows:
+            if r["status"] != "OK":
+                continue
+            if r.get("lattice_type", "") != "bcc":
+                continue
+            pairs = re.findall(r"([A-Z][a-z]?)(\d+)", r["dir"])
+            if len(pairs) != 2:
+                continue
+            el1, n1, el2, n2 = pairs[0][0], int(pairs[0][1]), pairs[1][0], int(pairs[1][1])
+            if n1 != 8 or n2 != 8 or el1 == el2:
+                continue
+            if el1 in EXCLUDE_ELEMENTS or el2 in EXCLUDE_ELEMENTS:
+                continue
+            if el1 not in sqs_pure_bcc or el2 not in sqs_pure_bcc:
+                continue
+            try:
+                a = float(r["a_bcc_A"])
+            except (ValueError, KeyError):
+                continue
+            if a < 2.0 or a > 8.0:
+                continue
+            v_act = a**3 / 2.0
+            v_veg = 0.5 * sqs_pure_bcc[el1] + 0.5 * sqs_pure_bcc[el2]
+            sqs_veg_b2.append(v_veg)
+            sqs_dft_b2.append(v_act)
+
+        # FCC SQS pure element volumes (A16A16)
+        sqs_pure_fcc = {}
+        for r in sqs_rows:
+            if r["status"] != "OK":
+                continue
+            if r.get("lattice_type", "") != "fcc":
+                continue
+            pairs = re.findall(r"([A-Z][a-z]?)(\d+)", r["dir"])
+            if len(pairs) != 2:
+                continue
+            el1, n1, el2, n2 = pairs[0][0], int(pairs[0][1]), pairs[1][0], int(pairs[1][1])
+            if el1 == el2 and n1 == 16 and n2 == 16:
+                try:
+                    a = float(r["a_lattice_A"])
+                except (ValueError, KeyError):
+                    continue
+                if 2.0 < a < 8.0:
+                    sqs_pure_fcc[el1] = a**3 / 4.0
+        # FCC SQS 1:1 (A16B16) Vegard parity
+        for r in sqs_rows:
+            if r["status"] != "OK":
+                continue
+            if r.get("lattice_type", "") != "fcc":
+                continue
+            pairs = re.findall(r"([A-Z][a-z]?)(\d+)", r["dir"])
+            if len(pairs) != 2:
+                continue
+            el1, n1, el2, n2 = pairs[0][0], int(pairs[0][1]), pairs[1][0], int(pairs[1][1])
+            if n1 != 16 or n2 != 16 or el1 == el2:
+                continue
+            if el1 in EXCLUDE_ELEMENTS or el2 in EXCLUDE_ELEMENTS:
+                continue
+            if el1 not in sqs_pure_fcc or el2 not in sqs_pure_fcc:
+                continue
+            try:
+                a = float(r["a_lattice_A"])
+            except (ValueError, KeyError):
+                continue
+            if a < 2.0 or a > 8.0:
+                continue
+            v_act = a**3 / 4.0
+            v_veg = 0.5 * sqs_pure_fcc[el1] + 0.5 * sqs_pure_fcc[el2]
+            sqs_veg_fcc.append(v_veg)
+            sqs_dft_fcc.append(v_act)
+
+    sqs_overlay = {
+        "b2": (np.array(sqs_veg_b2), np.array(sqs_dft_b2)),
+        "l12": (np.array(sqs_veg_fcc), np.array(sqs_dft_fcc)),
+    }
 
     for stype, n_auc, color, marker, fig_suffix in [
         ("B2", 2, "C0", "o", "b2"),
@@ -1449,10 +1551,32 @@ def fig07c_vegard_parity(all_df):
         v_veg_arr = np.array(v_veg_list)
 
         fig, ax = plt.subplots(figsize=(8, 8))
+        struct_label = "B2 (BCC)" if stype == "B2" else r"L1$_2$ (FCC)"
         ax.scatter(v_veg_arr, v_dft_arr, c=color, marker=marker,
-                   s=15, alpha=0.4, edgecolors="none")
-        vmin = min(v_veg_arr.min(), v_dft_arr.min()) * 0.95
-        vmax = max(v_veg_arr.max(), v_dft_arr.max()) * 1.05
+                   s=15, alpha=0.4, edgecolors="none",
+                   label=f"{struct_label} ({len(v_dft_arr)})")
+
+        # Overlay SQS data
+        sqs_veg_ov, sqs_dft_ov = sqs_overlay[fig_suffix]
+        if len(sqs_veg_ov) > 0:
+            sqs_label = "BCC-SQS" if fig_suffix == "b2" else "FCC-SQS"
+            ax.scatter(sqs_veg_ov, sqs_dft_ov, c="C2", marker="D",
+                       s=20, alpha=0.5, edgecolors="none",
+                       label=f"{sqs_label} ({len(sqs_veg_ov)})")
+            # SQS stats
+            ss_res_sqs = np.sum((sqs_dft_ov - sqs_veg_ov) ** 2)
+            ss_tot_sqs = np.sum((sqs_dft_ov - sqs_dft_ov.mean()) ** 2)
+            r2_sqs = 1 - ss_res_sqs / ss_tot_sqs if ss_tot_sqs > 0 else 0
+            rmse_sqs = np.sqrt(np.mean((sqs_dft_ov - sqs_veg_ov) ** 2))
+            stats[f"parity_sqs_{fig_suffix}_n_points"] = len(sqs_veg_ov)
+            stats[f"parity_sqs_{fig_suffix}_R2"] = round(r2_sqs, 4)
+            stats[f"parity_sqs_{fig_suffix}_RMSE"] = round(float(rmse_sqs), 3)
+
+        # Axis limits from combined data
+        all_veg = np.concatenate([v_veg_arr, sqs_veg_ov]) if len(sqs_veg_ov) > 0 else v_veg_arr
+        all_dft = np.concatenate([v_dft_arr, sqs_dft_ov]) if len(sqs_dft_ov) > 0 else v_dft_arr
+        vmin = min(all_veg.min(), all_dft.min()) * 0.95
+        vmax = max(all_veg.max(), all_dft.max()) * 1.05
         ax.plot([vmin, vmax], [vmin, vmax], "k--", lw=1.5, alpha=0.6,
                 label="Vegard (y = x)")
         ax.set_xlim(vmin, vmax)
@@ -1460,8 +1584,7 @@ def fig07c_vegard_parity(all_df):
         ax.set_aspect("equal")
         ax.set_xlabel(r"$V_{\mathrm{Vegard}}$ (Å³/atom, DFT endpoints)", fontsize=13)
         ax.set_ylabel(r"$V_{\mathrm{DFT}}$ (Å³/atom)", fontsize=13)
-        struct_label = "B2 (BCC)" if stype == "B2" else r"L1$_2$ (FCC)"
-        # R² and RMSE
+        # R² and RMSE for ordered structure
         ss_res = np.sum((v_dft_arr - v_veg_arr) ** 2)
         ss_tot = np.sum((v_dft_arr - v_dft_arr.mean()) ** 2)
         r2 = 1 - ss_res / ss_tot if ss_tot > 0 else 0
@@ -1475,6 +1598,10 @@ def fig07c_vegard_parity(all_df):
         fig.savefig(OUTDIR / fname, bbox_inches="tight", dpi=150)
         plt.close(fig)
         print(f"  {fname} ({len(v_dft_arr)} points, R²={r2:.4f})")
+        if len(sqs_veg_ov) > 0:
+            print(f"    + SQS overlay: {len(sqs_veg_ov)} points, "
+                  f"R²={stats[f'parity_sqs_{fig_suffix}_R2']:.4f}, "
+                  f"RMSE={stats[f'parity_sqs_{fig_suffix}_RMSE']:.3f}")
         stats[f"parity_{fig_suffix}_n_points"] = len(v_dft_arr)
         stats[f"parity_{fig_suffix}_R2"] = round(r2, 4)
         stats[f"parity_{fig_suffix}_RMSE"] = round(float(rmse_v), 3)

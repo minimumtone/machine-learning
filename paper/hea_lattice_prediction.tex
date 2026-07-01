@@ -1359,13 +1359,17 @@ DFTは0~K格子定数を与えるが実験値は室温測定である。King体�
 
 図~\ref{fig:vegard_parity_b2}・\ref{fig:vegard_parity_l12}にDFT原子体積$V_\text{DFT}$と構造整合Vegard予測体積$V_\text{Vegard}$のパリティプロットを示す。B2では$R^2 = 0.754$（RMSE = 2.641~\AA$^3$/atom、1854点）とVegard則が比較的良好に成立する。一方L1$_2$では$R^2 = 0.849$（RMSE = 2.407~\AA$^3$/atom、1827点）とB2を上回る。これはA$_3$B/B$_3$A両組成のデータが含まれるため体積のダイナミックレンジが広く、Vegard則が第一近似として有効なためである。
 
+同図にSQS（Special Quasirandom Structure）データを重ねて表示した。BCC-SQSはRMSE = 1.821~\AA$^3$/atom（515点）、FCC-SQSはRMSE = 0.802~\AA$^3$/atom（43点）であり、いずれも秩序構造よりVegard線に近い。この差は、秩序構造（B2/L1$_2$）では化学的秩序化に伴う電荷移動・結合選択性が体積偏差を増大させるのに対し、SQS（ランダム配置）ではそれらが統計的に平均化・相殺されることに起因する。HEAがVegard則に比較的よく従う理由をDFTレベルで裏付ける結果である。
+
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=0.7\textwidth]{fig_vegard_parity_b2.png}
 \caption{全B2ペアのVegardパリティプロット
-  （1854点、$R^2 = 0.754$、RMSE = 2.641~\AA$^3$/atom）。
+  （青丸: B2 1854点、$R^2 = 0.754$、RMSE = 2.641~\AA$^3$/atom；
+  緑菱形: BCC-SQS 515点、$R^2 = 0.762$、RMSE = 1.821~\AA$^3$/atom）。
   横軸: 構造整合DFT端点によるVegard予測体積、
-  縦軸: DFT計算体積。破線はy = x（Vegard完全成立）。}
+  縦軸: DFT計算体積。破線はy = x（Vegard完全成立）。
+  SQSはB2よりVegard線に近く、ランダム固溶体で秩序化エネルギーによる体積偏差が緩和されることを示す。}
 \label{fig:vegard_parity_b2}
 \end{figure*}
 
@@ -1373,8 +1377,9 @@ DFTは0~K格子定数を与えるが実験値は室温測定である。King体�
 \centering
 \includegraphics[width=0.7\textwidth]{fig_vegard_parity_l12.png}
 \caption{全L1$_2$ペアのVegardパリティプロット
-  （1827点、$R^2 = 0.849$、RMSE = 2.407~\AA$^3$/atom）。
-  4f希土類+Y除外後は、B2と同程度のVegard則成立精度を示す。}
+  （赤三角: L1$_2$ 1827点、$R^2 = 0.849$、RMSE = 2.407~\AA$^3$/atom；
+  緑菱形: FCC-SQS 43点、$R^2 = 0.887$、RMSE = 0.802~\AA$^3$/atom）。
+  SQSデータはy = x線上に密集し、ランダム配置でVegard則がより良好に成立する傾向を示す。}
 \label{fig:vegard_parity_l12}
 \end{figure*}
 
