@@ -111,7 +111,7 @@ King以来の体積サイズファクター研究は実験値（King体積、実
     MP・OQMD・独自VASP計算の3ソース統合により5,152件の二元系化合物から$\Omega_\text{sf}$を導出した。B2$\to$BCC、L1$_2$$\to$FCC の構造分離により、King/Alonsoでは取得できなかった構造依存的な体積偏差を得た。HEA予測に必要な全ペアをカバー（BCC 59/59、FCC 42/42）。
 
   \item \textbf{$q_\text{BCC} \approx 1$への近接と$q$の起源解明}:
-    過去の全研究で$q \neq 0$（BCC/FCC共に補正が必要）であったが、SQS＋DFT自己整合Vegard参照で$q_\text{BCC} = 1$固定がテスト最良精度を与える。ただし訓練最適値は$q_\text{opt} = 1.27$であり、16原子SQSのサイズ効果が残存する。$q \neq 1$の主因はDFT--実験間の体積不整合（GGA系統誤差）にある。独立テスト31合金RMSE = 0.0138~\AA{}（Vegard比31.7\%改善）、BCC 17合金ではRMSE = 0.0125~\AA{}（44.7\%改善）。
+    過去の全研究で$q \neq 0$（BCC/FCC共に補正が必要）であったが、SQS＋DFT自己整合Vegard参照で$q_\text{BCC} = 1$固定がテスト最良精度を与える。ただし訓練最適値は$q_\text{opt} = 1.27$であり、16原子SQSのサイズ効果が残存する。$q \neq 1$の主因はDFT--実験間の体積不整合（GGA系統誤差）にある。独立テスト31合金RMSE = 0.0138~\AA{}（Vegard比31.7\%改善）、BCC 17合金ではRMSE = 0.0125~\AA{}（44.5\%改善）。
 
   \item \textbf{$q_\text{FCC} \approx 0$（Vegard則の十分性）の実証}:
     $q_\text{FCC} = 0.13$（ほぼゼロ）は、FCC HEAではVegard則自体が十分な近似であり$\Omega_\text{sf}$補正がほぼ不要であることを示す。最密充填（配位数12）では原子サイズの環境依存性が小さく、体積の加法性が高い精度で成り立つためである。
@@ -432,7 +432,7 @@ DFT-$\Omega_\text{sf}$ & 0.0299 & 0.0096 & 0.0214 \\
 \end{tabular}
 \end{table}
 
-FCC HEAはRMSE = 0.0096~\AA{}と推定$\sigma$以下の精度を示す。構成元素（Co, Cr, Fe, Mn, Ni等の3$d$遷移金属）の原子サイズが類似しVegard則の近似精度が元来高いこと、L1$_2$がFCC配位の良い近似であり$q_\text{FCC} = 0.13$が示すように$\Omega_\text{sf}$補正がほぼ不要であること（$q = 0$がVegard則に相当し、$q = 0.13$はVegard体積の13\%のみを補正に配分）が要因である。BCC HEA予測はSQS＋DFT Vegard参照（$q = 1$）でテストRMSE 0.0125~\AA{}（44.7\%改善）に達する（\ref{sec:sqs_improvement}節）。
+FCC HEAはRMSE = 0.0096~\AA{}と推定$\sigma$以下の精度を示す。構成元素（Co, Cr, Fe, Mn, Ni等の3$d$遷移金属）の原子サイズが類似しVegard則の近似精度が元来高いこと、L1$_2$がFCC配位の良い近似であり$q_\text{FCC} = 0.13$が示すように$\Omega_\text{sf}$補正がほぼ不要であること（$q = 0$がVegard則に相当し、$q = 0.13$はVegard体積の13\%のみを補正に配分）が要因である。BCC HEA予測はSQS＋DFT Vegard参照（$q = 1$）でテストRMSE 0.0125~\AA{}（44.5\%改善）に達する（\ref{sec:sqs_improvement}節）。
 
 図~\ref{fig:bcc_fcc}にBCC/FCC別の誤差分布を示す。
 
@@ -777,7 +777,7 @@ B2+DFT行はFCC側もDFT自己整合（$q_\text{FCC} = 0.280$、
 RMSE$_\text{FCC}$ = 0.0160）。SQS純元素体積はKing実験値・MP DFTとの信頼性チェック後に修正（BCC 16元素、FCC 5元素で3\%超乖離を検出しMP/Kingに置換）。}
 \end{table}
 
-SQS＋DFT Vegard参照（$q = 1$）により独立テスト31合金RMSEは0.0202（Vegard）から0.0138~\AA{}（31.7\%改善）となる。BCC 17合金に限ればRMSE 0.0125~\AA{}（44.7\%改善）であり、B2参照（0.0157、BCC 30.3\%改善）を上回る。$q$感度解析（表~\ref{tab:q_sensitivity}）はテストRMSEが$q = 1.0$--$1.4$で最小値付近にあることを示す。
+SQS＋DFT Vegard参照（$q = 1$）により独立テスト31合金RMSEは0.0202（Vegard）から0.0138~\AA{}（31.7\%改善）となる。BCC 17合金に限ればRMSE 0.0125~\AA{}（44.5\%改善）であり、B2参照（0.0157、BCC 30.3\%改善）を上回る。$q$感度解析（表~\ref{tab:q_sensitivity}）はテストRMSEが$q = 1.0$--$1.4$で最小値付近にあることを示す。
 
 \begin{table}[H]
 \centering
@@ -915,7 +915,7 @@ B2+DFT: RMSE$_\text{FCC}$ = 0.0160。}
     King以来実験値に依拠してきた$\Omega_\text{sf}$を5,152件の二元系DFT計算で置換し（純元素$V_i$は実験値保持）、B2$\to$BCC、L1$_2$$\to$FCCの構造分離によりHEA予測に必要な全ペアをカバー（BCC 59/59、FCC 42/42）。
 
   \item \textbf{$q_\text{BCC} \approx 1$への近接と$q$の起源解明}:
-    SQS＋DFT自己整合Vegard参照で$q_\text{BCC} = 1$固定が追加パラメータなしで良好な精度を達成する（テストRMSEは$q = 1.0$--$1.6$で安定、訓練最適$q_\text{opt} = 1.27$）。$q \neq 1$の主因は秩序--無秩序間の差ではなくDFT--実験間の体積不整合（GGA系統誤差）にある。参照体積をDFT内で統一すれば二元系$\to$多元系の外挿に追加パラメータは不要である。独立テスト31合金RMSE = 0.0138~\AA{}（Vegard比31.7\%改善）、BCC 17合金ではRMSE = 0.0125~\AA{}（44.7\%改善）。
+    SQS＋DFT自己整合Vegard参照で$q_\text{BCC} = 1$固定が追加パラメータなしで良好な精度を達成する（テストRMSEは$q = 1.0$--$1.6$で安定、訓練最適$q_\text{opt} = 1.27$）。$q \neq 1$の主因は秩序--無秩序間の差ではなくDFT--実験間の体積不整合（GGA系統誤差）にある。参照体積をDFT内で統一すれば二元系$\to$多元系の外挿に追加パラメータは不要である。独立テスト31合金RMSE = 0.0138~\AA{}（Vegard比31.7\%改善）、BCC 17合金ではRMSE = 0.0125~\AA{}（44.5\%改善）。
 
   \item \textbf{$q_\text{FCC} \approx 0$（Vegard則の十分性）}:
     $q_\text{FCC} = 0.13$はFCC HEAでVegard則自体が十分な近似であることを示す。最密充填構造では原子サイズの環境依存性が小さく、$\Omega_\text{sf}$補正がほぼ不要である。
