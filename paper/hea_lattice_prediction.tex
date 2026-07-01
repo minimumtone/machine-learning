@@ -1363,7 +1363,7 @@ DFTは0~K格子定数を与えるが実験値は室温測定である。King体�
 
 図~\ref{fig:vegard_pairs_b2_sqs}に代表6元素ペアの組成--体積プロットを示す。BCC-SQS（緑菱形）は$x = 0, 0.25, 0.5, 0.75, 1.0$の5組成を持ち、B2（青丸）は$x = 0.5$のみである。大半のペアにおいてB2の$\Omega_\text{sf}$はSQSより絶対値が大きい傾向にある：Nb--Tiでは$\Omega_\text{SQS} = -0.003$に対し$\Omega_\text{B2} = -0.021$（約7倍）である。Co--Crでは$\Omega_\text{SQS} = -0.019$に対し$\Omega_\text{B2} = +0.005$と符号が反転しており、Vegard参照の選択（Crに実験値を使用）が影響している可能性がある。SQSでは隣接原子種がランダムに分布するため特定ペア間の電荷移動が相殺されるのに対し、B2では全最近接が異種原子であり化学的秩序化エネルギーが体積変化として集中的に発現する。
 
-この傾向はエネルギー安定性とも関連する。Ti--Al（B2）のenergy above hull = 0.141~eV/atom（MP）であり比較的hullに近い（準安定だが実験的に観測される相）のに対し、Ti--Cr（B2）は0.151~eV/atomとやや不安定であるが同程度の準安定性を示す。しかし$\Omega_\text{B2}$はTi--Al（$-0.046$）の方がTi--Cr（$-0.021$）より大きい。SQS側でもTi--Al（$\Omega_\text{SQS} = -0.013$）はTi--Cr（$\Omega_\text{SQS} = -0.003$程度）より偏差が大きい。これはTi--Alでは原子サイズ差（$\Delta r/\bar{r} = 7.1\%$）と強い$d$--$sp$混成がVegardからの逸脱を増幅するためであり、生成エンタルピーの安定度よりも原子サイズ差と電子構造の異方性が$\Omega_\text{B2}$の主要因であることを示唆する。なお純元素BCC体積のVegard参照には、SQS超格子計算が信頼できない元素（Al: BCC力学不安定による超格子歪み、Cr: 反強磁性処理不足、Fe: 強磁性初期値不足）についてMP DFT BCC体積またはKing実験値を使用した。
+この傾向はエネルギー安定性とも関連する。Ti--Al（B2）のenergy above hull = 0.141~eV/atom（MP）であり比較的hullに近い（準安定だが実験的に観測される相）のに対し、Ti--Cr（B2）は0.151~eV/atomとやや不安定であるが同程度の準安定性を示す。しかし$\Omega_\text{B2}$はTi--Al（$-0.046$）の方がTi--Cr（$-0.021$）より大きい。SQS側でもTi--Al（$\Omega_\text{SQS} = -0.013$）はTi--Cr（$\Omega_\text{SQS} = -0.003$程度）より偏差が大きい。これはTi--Alでは原子サイズ差（$\Delta r/\bar{r} = 7.1\%$）と強い$d$--$sp$混成がVegardからの逸脱を増幅するためであり、生成エンタルピーの安定度よりも原子サイズ差と電子構造の異方性が$\Omega_\text{B2}$の主要因であることを示唆する。なお純元素BCC体積のVegard参照には、SQS超格子計算が信頼できない元素（Al: BCC力学不安定による超格子歪み、Cr: 反強磁性処理不足、Fe: 強磁性初期値不足）についてMP DFT BCC体積またはKing実験値を使用した。FCC側の同様の比較を図~\ref{fig:vegard_pairs_fcc_l12_sqs}に示す。L1$_2$（赤三角、$x = 0.25/0.75$）とFCC-SQS（緑菱形、$x = 0.5$）の関係はBCC側と定性的に一致し、秩序構造の偏差がランダム構造より大きい傾向が確認できる。
 
 \begin{figure*}[!t]
 \centering
@@ -1396,6 +1396,18 @@ DFTは0~K格子定数を与えるが実験値は室温測定である。King体�
   各パネル上部に$\Omega_\text{SQS}$と$\Omega_\text{B2}$を表示。
   全ペアでB2の方がVegard線からの偏差が大きく、秩序構造における化学的秩序化エネルギーの体積への集中的発現が確認できる。}
 \label{fig:vegard_pairs_b2_sqs}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.95\textwidth]{fig_vegard_pairs_fcc_l12_sqs.png}
+\caption{代表6元素ペアの組成--原子体積プロット（FCC）。
+  緑菱形: FCC-SQS（$x = 0.5$）、赤三角: L1$_2$（$x = 0.25, 0.75$）。
+  破線はVegard直線。
+  各パネル上部に$\Omega_\text{SQS}$と$\Omega_\text{L1_2}$を表示。
+  BCC側（図~\ref{fig:vegard_pairs_b2_sqs}）と同様にL1$_2$（秩序構造）のVegardからの偏差はSQS（ランダム構造）より大きい傾向にあるが、その差はBCC系より小さく、$q_\text{FCC} = 0.133$の物理的基盤と整合する。
+  SQS純元素体積がKing実験値から3\%以上乖離する元素（Nb, Os, Pd, Pt, Pb）についてはMP DFT FCC体積またはKing実験値をVegard参照に使用した。}
+\label{fig:vegard_pairs_fcc_l12_sqs}
 \end{figure*}
 
 \subsection{$\Omega_\text{sf}$と原子半径差の関係}
