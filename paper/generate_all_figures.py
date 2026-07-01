@@ -933,19 +933,47 @@ def analyze_dft_self_consistent(all_df, ob2, ol12, heas_train, heas_test):
 
 def fig01_parity(y_train, a_veg_tr, a_ss_tr, y_test, a_veg_te, a_ss_te):
     """Fig 1: Parity plot Vegard vs DFT-Omega_sf."""
+    from matplotlib.patches import Rectangle
+    from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+
     fig, ax = plt.subplots(1, 1, figsize=(7, 7))
     lims = [2.85, 3.65]
     ax.plot(lims, lims, "k-", lw=1)
-    ax.scatter(y_train, a_veg_tr, c="gray", alpha=0.5, s=50, label="Vegard (train)")
-    ax.scatter(y_train, a_ss_tr, c="C0", alpha=0.7, s=50, label=r"DFT-$\Omega_{\mathrm{sf}}$ (train)")
-    ax.scatter(y_test, a_veg_te, c="gray", alpha=0.5, s=50, marker="^")
-    ax.scatter(y_test, a_ss_te, c="C3", alpha=0.7, s=50, marker="^", label=r"DFT-$\Omega_{\mathrm{sf}}$ (test)")
+    ax.scatter(y_train, a_veg_tr, c="gray", alpha=0.35, s=50,
+               label="Vegard (calib. 64)", zorder=2)
+    ax.scatter(y_train, a_ss_tr, c="C0", alpha=0.35, s=50,
+               label=r"DFT-$\Omega_{\mathrm{sf}}$ (calib. 64)", zorder=3)
+    ax.scatter(y_test, a_veg_te, c="gray", alpha=0.35, s=50, marker="^",
+               label="Vegard (test 31)", zorder=2)
+    ax.scatter(y_test, a_ss_te, c="C3", alpha=0.35, s=50, marker="^",
+               label=r"DFT-$\Omega_{\mathrm{sf}}$ (test 31)", zorder=3)
     ax.set_xlabel("Experimental $a$ (\u00c5)")
     ax.set_ylabel("Predicted $a$ (\u00c5)")
     ax.set_xlim(lims)
     ax.set_ylim(lims)
     ax.legend(loc="upper left", fontsize=12)
     ax.set_aspect("equal")
+
+    # FCC inset (zoomed view)
+    fcc_lo, fcc_hi = 3.55, 3.90
+    ax.add_patch(Rectangle((fcc_lo, fcc_lo), fcc_hi - fcc_lo, fcc_hi - fcc_lo,
+                            fill=False, edgecolor="gray", linestyle="--", lw=1,
+                            zorder=4))
+    axins = inset_axes(ax, width="40%", height="40%", loc="lower right",
+                       borderpad=1.5)
+    axins.plot([fcc_lo, fcc_hi], [fcc_lo, fcc_hi], "k-", lw=1)
+    axins.scatter(y_train, a_veg_tr, c="gray", alpha=0.45, s=40, zorder=2)
+    axins.scatter(y_train, a_ss_tr, c="C0", alpha=0.45, s=40, zorder=3)
+    axins.scatter(y_test, a_veg_te, c="gray", alpha=0.45, s=40, marker="^",
+                  zorder=2)
+    axins.scatter(y_test, a_ss_te, c="C3", alpha=0.45, s=40, marker="^",
+                  zorder=3)
+    axins.set_xlim(fcc_lo, fcc_hi)
+    axins.set_ylim(fcc_lo, fcc_hi)
+    axins.set_aspect("equal")
+    axins.tick_params(labelsize=9)
+    axins.set_title("FCC region", fontsize=10)
+
     fig.tight_layout()
     fig.savefig(OUTDIR / "fig_parity.png", bbox_inches="tight")
     plt.close(fig)
@@ -972,28 +1000,48 @@ def fig02_rmse_bar(rmse_dict):
     print("  fig_rmse_bar.png")
 
 
-def fig03_bcc_fcc(y_train, a_ss_tr, heas_train):
-    """Fig 3: Combined BCC/FCC parity (single panel)."""
-    bcc_i = [i for i, h in enumerate(heas_train) if h["struct"] == "BCC"]
-    fcc_i = [i for i, h in enumerate(heas_train) if h["struct"] == "FCC"]
+def fig03_bcc_fcc(y_train, a_ss_tr, heas_train, y_test, a_ss_te, heas_test):
+    """Fig 3: Combined BCC/FCC parity (single panel), all 95 HEAs."""
+    bcc_tr = [i for i, h in enumerate(heas_train) if h["struct"] == "BCC"]
+    fcc_tr = [i for i, h in enumerate(heas_train) if h["struct"] == "FCC"]
+    bcc_te = [i for i, h in enumerate(heas_test) if h["struct"] == "BCC"]
+    fcc_te = [i for i, h in enumerate(heas_test) if h["struct"] == "FCC"]
+
+    y_all = np.concatenate([y_train, y_test])
+    a_all = np.concatenate([a_ss_tr, a_ss_te])
 
     fig, ax = plt.subplots(figsize=(8, 8))
-    lims = [min(y_train) - 0.05, max(y_train) + 0.05]
+    lims = [min(y_all) - 0.05, max(y_all) + 0.05]
     ax.plot(lims, lims, "k-", lw=1)
 
-    rmse_bcc = np.sqrt(np.mean((a_ss_tr[bcc_i] - y_train[bcc_i]) ** 2))
-    rmse_fcc = np.sqrt(np.mean((a_ss_tr[fcc_i] - y_train[fcc_i]) ** 2))
-    rmse_all = np.sqrt(np.mean((a_ss_tr - y_train) ** 2))
+    n_bcc = len(bcc_tr) + len(bcc_te)
+    n_fcc = len(fcc_tr) + len(fcc_te)
+    res_bcc = np.concatenate([a_ss_tr[bcc_tr] - y_train[bcc_tr],
+                              a_ss_te[bcc_te] - y_test[bcc_te]])
+    res_fcc = np.concatenate([a_ss_tr[fcc_tr] - y_train[fcc_tr],
+                              a_ss_te[fcc_te] - y_test[fcc_te]])
+    rmse_bcc = np.sqrt(np.mean(res_bcc ** 2))
+    rmse_fcc = np.sqrt(np.mean(res_fcc ** 2))
+    rmse_all = np.sqrt(np.mean((a_all - y_all) ** 2))
 
-    ax.scatter(y_train[bcc_i], a_ss_tr[bcc_i], c="C0", marker="s",
-               s=70, alpha=0.7, label=f"BCC ({len(bcc_i)}, RMSE={rmse_bcc:.4f} \u00c5)")
-    ax.scatter(y_train[fcc_i], a_ss_tr[fcc_i], c="C3", marker="o",
-               s=70, alpha=0.7, label=f"FCC ({len(fcc_i)}, RMSE={rmse_fcc:.4f} \u00c5)")
+    # Calibration set (circles)
+    ax.scatter(y_train[bcc_tr], a_ss_tr[bcc_tr], c="C0", marker="s",
+               s=70, alpha=0.5, label=f"BCC calib. ({len(bcc_tr)})")
+    ax.scatter(y_train[fcc_tr], a_ss_tr[fcc_tr], c="C3", marker="o",
+               s=70, alpha=0.5, label=f"FCC calib. ({len(fcc_tr)})")
+    # Test set (triangles)
+    ax.scatter(y_test[bcc_te], a_ss_te[bcc_te], c="C0", marker="^",
+               s=70, alpha=0.5, label=f"BCC test ({len(bcc_te)})")
+    ax.scatter(y_test[fcc_te], a_ss_te[fcc_te], c="C3", marker="^",
+               s=70, alpha=0.5, label=f"FCC test ({len(fcc_te)})")
 
     ax.set_xlabel("Experimental $a$ (\u00c5)", fontsize=14)
     ax.set_ylabel("Predicted $a$ (\u00c5)", fontsize=14)
-    ax.set_title(f"Training 64 HEA (RMSE = {rmse_all:.4f} \u00c5)", fontsize=16)
-    ax.legend(fontsize=13)
+    ax.set_title(
+        f"All 95 HEA — BCC {n_bcc} (RMSE={rmse_bcc:.4f} \u00c5)"
+        f" / FCC {n_fcc} (RMSE={rmse_fcc:.4f} \u00c5)",
+        fontsize=13)
+    ax.legend(fontsize=12)
     ax.set_aspect("equal")
     ax.tick_params(labelsize=12)
     fig.tight_layout()
@@ -2382,7 +2430,7 @@ def main():
         r"DFT-$\Omega_{\mathrm{sf}}$" + "\n(pairwise)": rmse_ss_tr,
         r"DFT-$\Omega_{\mathrm{sf}}$" + "\n(additive δ)": rmse_add_tr,
     })
-    fig03_bcc_fcc(y_train, a_ss_tr, ALONSO_TABLE2)
+    fig03_bcc_fcc(y_train, a_ss_tr, ALONSO_TABLE2, y_test, a_ss_te, INDEPENDENT_TEST)
     fig04_indep_test(y_test, a_veg_te, a_ss_te, INDEPENDENT_TEST, gb, gf)
     fig05_element_delta(decomp_table)
     fig06_additive_fit(ob2, ol12, decomp)
@@ -2450,7 +2498,7 @@ def main():
     print(f"Data: {n_mp} MP + {n_oqmd} OQMD + {n_vasp} VASP (Gd/Ce excluded)")
     print(f"B2 pairs: {len(ob2)}, L12 pairs: {len(ol12)}")
     print(f"gamma_BCC = {gb:.4f}, gamma_FCC = {gf:.4f}")
-    print(f"\nTraining ({len(ALONSO_TABLE2)} HEA):")
+    print(f"\nCalibration ({len(ALONSO_TABLE2)} HEA):")
     print(f"  Vegard RMSE:       {rmse_veg_tr:.4f} A")
     print(f"  Pairwise RMSE:     {rmse_ss_tr:.4f} A  (improvement: {(1-rmse_ss_tr/rmse_veg_tr)*100:.1f}%)")
     print(f"  Additive RMSE:     {rmse_add_tr:.4f} A")
