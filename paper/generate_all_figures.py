@@ -1373,6 +1373,7 @@ def fig07_composition_examples(all_df):
     fig_l12, axes_l12 = plt.subplots(2, 3, figsize=(18, 11))
     axes_l12 = axes_l12.flatten()
 
+    l12_omega_report = []
     for idx, (elX, elY) in enumerate(examples):
         ax = axes_l12[idx]
         # King Vegard line (dashed, in FCC scale: n_auc=4)
@@ -1383,15 +1384,17 @@ def fig07_composition_examples(all_df):
                 label="Vegard (King)")
 
         # Structure-matched DFT Vegard line (solid)
-        if elX in dft_vol_l12 and elY in dft_vol_l12:
+        has_mp = elX in dft_vol_l12 and elY in dft_vol_l12
+        if has_mp:
             vX_d = dft_vol_l12[elX]
             vY_d = dft_vol_l12[elY]
             a_dft = [(4 * ((1 - c) * vX_d + c * vY_d)) ** (1/3) for c in c_arr]
             ax.plot(c_arr * 100, a_dft, "C3-", lw=2,
                     label=r"Vegard (MP-FCC)")
 
-        # L12 DFT data points (including homonuclear endpoints)
+        # Collect L12 DFT data points and compute Omega at each composition
         sub = all_df[all_df["stype"] == "L12"]
+        comp_vols = {}  # {c_B_round: [vol_per_atom, ...]}
         for _, row in sub.iterrows():
             elA, elB = row["element_A"], row["element_B"]
             a = row["lattice_constant"]
@@ -1409,6 +1412,39 @@ def fig07_composition_examples(all_df):
                 else:
                     c_B = cB / total
                 ax.scatter(c_B * 100, a, c="C3", s=80, zorder=5, marker="^")
+                vol = a ** 3 / 4.0
+                c_round = round(c_B, 2)
+                if 0.1 < c_round < 0.9:
+                    comp_vols.setdefault(c_round, []).append(vol)
+
+        # Annotate Omega values (King and MP-FCC) at each composition
+        ann_lines = []
+        for c_B_val, vols in sorted(comp_vols.items()):
+            v_median = np.median(vols)
+            v_veg_king = (1 - c_B_val) * vX_k + c_B_val * vY_k
+            omega_king = (v_median - v_veg_king) / v_veg_king
+            omega_mp = None
+            if has_mp:
+                v_veg_mp = (1 - c_B_val) * vX_d + c_B_val * vY_d
+                omega_mp = (v_median - v_veg_mp) / v_veg_mp
+            if omega_mp is not None:
+                ann_lines.append(
+                    f"$\\Omega_{{\\mathrm{{K}}}}$={omega_king:+.3f}  "
+                    f"$\\Omega_{{\\mathrm{{MP}}}}$={omega_mp:+.3f}")
+                l12_omega_report.append(
+                    f"  {elX}-{elY} x_{elY}={c_B_val:.2f}: "
+                    f"Ω_King={omega_king:+.4f}, Ω_MP={omega_mp:+.4f}, "
+                    f"ratio={abs(omega_mp/omega_king):.2f}" if omega_king != 0 else
+                    f"  {elX}-{elY} x_{elY}={c_B_val:.2f}: "
+                    f"Ω_King={omega_king:+.4f}, Ω_MP={omega_mp:+.4f}")
+            else:
+                ann_lines.append(f"$\\Omega_{{\\mathrm{{K}}}}$={omega_king:+.3f}")
+
+        if ann_lines:
+            ann_text = "\n".join(ann_lines)
+            ax.text(0.03, 0.97, ann_text, transform=ax.transAxes,
+                    fontsize=8, va="top", ha="left",
+                    bbox=dict(boxstyle="round,pad=0.3", fc="wheat", alpha=0.8))
 
         ax.set_xlabel(f"% {elY}")
         ax.set_ylabel("$a$ (\u00c5)")
@@ -1419,6 +1455,10 @@ def fig07_composition_examples(all_df):
     fig_l12.savefig(OUTDIR / "fig_composition_l12.png", bbox_inches="tight")
     plt.close(fig_l12)
     print("  fig_composition_l12.png")
+    if l12_omega_report:
+        print("  L12 Omega comparison (King vs MP-FCC):")
+        for line in l12_omega_report:
+            print(line)
 
 
 def _l12_bucket(elA, elB, cA, cB):
