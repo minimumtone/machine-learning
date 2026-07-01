@@ -1359,13 +1359,21 @@ DFTは0~K格子定数を与えるが実験値は室温測定である。King体�
 
 図~\ref{fig:vegard_parity_b2}・\ref{fig:vegard_parity_l12}にDFT原子体積$V_\text{DFT}$と構造整合Vegard予測体積$V_\text{Vegard}$のパリティプロットを示す。B2では$R^2 = 0.754$（RMSE = 2.641~\AA$^3$/atom、1854点）とVegard則が比較的良好に成立する。一方L1$_2$では$R^2 = 0.849$（RMSE = 2.407~\AA$^3$/atom、1827点）とB2を上回る。これはA$_3$B/B$_3$A両組成のデータが含まれるため体積のダイナミックレンジが広く、Vegard則が第一近似として有効なためである。
 
+同図にSQS（Special Quasirandom Structure）データを重ねて表示した。BCC-SQSはRMSE = 1.821~\AA$^3$/atom（515点）、FCC-SQSはRMSE = 0.802~\AA$^3$/atom（43点）であり、いずれも秩序構造よりVegard線に近い。この差は、秩序構造（B2/L1$_2$）では化学的秩序化に伴う電荷移動・結合選択性が体積偏差を増大させるのに対し、SQS（ランダム配置）ではそれらが統計的に平均化・相殺されることに起因する。HEAがVegard則に比較的よく従う理由をDFTレベルで裏付ける結果である。
+
+図~\ref{fig:vegard_pairs_b2_sqs}に代表6元素ペアの組成--体積プロットを示す。BCC-SQS（緑菱形）は$x = 0, 0.25, 0.5, 0.75, 1.0$の5組成を持ち、B2（青丸）は$x = 0.5$のみである。全ペアにおいてB2の$\Omega_\text{sf}$はSQSと同符号だが絶対値が大きい傾向にある：Nb--Tiでは$\Omega_\text{SQS} = -0.003$に対し$\Omega_\text{B2} = -0.021$（約7倍）、Co--Crでは$\Omega_\text{SQS} = +0.002$に対し$\Omega_\text{B2} = +0.005$（2.5倍）である。SQSでは隣接原子種がランダムに分布するため特定ペア間の電荷移動が相殺されるのに対し、B2では全最近接が異種原子であり化学的秩序化エネルギーが体積変化として集中的に発現する。
+
+この傾向はエネルギー安定性とも関連する。Ti--Al（B2）のenergy above hull = 0.141~eV/atom（MP）であり比較的hullに近い（準安定だが実験的に観測される相）のに対し、Ti--Cr（B2）は0.151~eV/atomとやや不安定であるが同程度の準安定性を示す。しかし$\Omega_\text{sf}$はTi--Al（$-0.046$）の方がTi--Cr（$-0.021$）より大きい。これはTi--Alでは原子サイズ差（$\Delta r/\bar{r} = 7.1\%$）と強い$d$--$sp$混成がVegardからの逸脱を増幅するためであり、生成エンタルピーの安定度よりも原子サイズ差と電子構造の異方性が$\Omega_\text{sf}$の主要因であることを示唆する。
+
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=0.7\textwidth]{fig_vegard_parity_b2.png}
 \caption{全B2ペアのVegardパリティプロット
-  （1854点、$R^2 = 0.754$、RMSE = 2.641~\AA$^3$/atom）。
+  （青丸: B2 1854点、$R^2 = 0.754$、RMSE = 2.641~\AA$^3$/atom；
+  緑菱形: BCC-SQS 515点、$R^2 = 0.762$、RMSE = 1.821~\AA$^3$/atom）。
   横軸: 構造整合DFT端点によるVegard予測体積、
-  縦軸: DFT計算体積。破線はy = x（Vegard完全成立）。}
+  縦軸: DFT計算体積。破線はy = x（Vegard完全成立）。
+  SQSはB2よりVegard線に近く、ランダム固溶体で秩序化エネルギーによる体積偏差が緩和されることを示す。}
 \label{fig:vegard_parity_b2}
 \end{figure*}
 
@@ -1373,9 +1381,21 @@ DFTは0~K格子定数を与えるが実験値は室温測定である。King体�
 \centering
 \includegraphics[width=0.7\textwidth]{fig_vegard_parity_l12.png}
 \caption{全L1$_2$ペアのVegardパリティプロット
-  （1827点、$R^2 = 0.849$、RMSE = 2.407~\AA$^3$/atom）。
-  4f希土類+Y除外後は、B2と同程度のVegard則成立精度を示す。}
+  （赤三角: L1$_2$ 1827点、$R^2 = 0.849$、RMSE = 2.407~\AA$^3$/atom；
+  緑菱形: FCC-SQS 43点、$R^2 = 0.887$、RMSE = 0.802~\AA$^3$/atom）。
+  SQSデータはy = x線上に密集し、ランダム配置でVegard則がより良好に成立する傾向を示す。}
 \label{fig:vegard_parity_l12}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.95\textwidth]{fig_vegard_pairs_bcc_b2_sqs.png}
+\caption{代表6元素ペアの組成--原子体積プロット（BCC）。
+  緑菱形: BCC-SQS（$x = 0, 0.25, 0.5, 0.75, 1.0$）、青丸: B2（$x = 0.5$）。
+  破線はVegard直線（SQS純元素端点基準）。
+  各パネル上部に$\Omega_\text{SQS}$と$\Omega_\text{B2}$を表示。
+  全ペアでB2の方がVegard線からの偏差が大きく、秩序構造における化学的秩序化エネルギーの体積への集中的発現が確認できる。}
+\label{fig:vegard_pairs_b2_sqs}
 \end{figure*}
 
 \subsection{$\Omega_\text{sf}$と原子半径差の関係}
