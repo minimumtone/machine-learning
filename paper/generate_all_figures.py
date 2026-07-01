@@ -174,8 +174,12 @@ def predict_heas(heas, ob2, ol12, gb, gf):
     ])
 
 
-def additive_decomposition(ob2, ol12):
-    """Decompose pairwise Omega_sf into element-level delta parameters."""
+def additive_decomposition(ob2, ol12, outlier_threshold=0.3):
+    """Decompose pairwise Omega_sf into element-level delta parameters.
+
+    Pairs with |Omega_sf| > outlier_threshold are excluded from the fit
+    (consistent with fig06_additive_fit visual labeling).
+    """
     results = {}
     for label, omega in [("B2", ob2), ("L12", ol12)]:
         elements = set()
@@ -188,7 +192,11 @@ def additive_decomposition(ob2, ol12):
 
         rows_A = []
         rows_b = []
+        n_excluded = 0
         for (a, b), val in omega.items():
+            if abs(val) > outlier_threshold:
+                n_excluded += 1
+                continue
             row = np.zeros(n)
             row[elem_idx[a]] = 1.0
             row[elem_idx[b]] = 1.0
@@ -206,7 +214,10 @@ def additive_decomposition(ob2, ol12):
         ss_tot = np.sum((b_vec - b_vec.mean()) ** 2)
         r2 = 1 - ss_res / ss_tot if ss_tot > 0 else 0
         rmse = float(np.sqrt(np.mean((b_vec - pred) ** 2)))
-        results[label] = {"delta": delta_dict, "r2": r2, "rmse": rmse, "elements": elements}
+        results[label] = {
+            "delta": delta_dict, "r2": r2, "rmse": rmse,
+            "elements": elements, "n_excluded": n_excluded,
+        }
     return results
 
 
@@ -283,8 +294,15 @@ def load_sqs_data():
     with open(SQS_FILE) as f:
         rows = list(csv.DictReader(f))
 
+    # Load MP DFT BCC pure element volumes for reliability check
+    mp_bcc_file = REPO / "data" / "mp_pure_elements_bcc.csv"
+    mp_bcc_vol = {}
+    if mp_bcc_file.exists():
+        mp_df = pd.read_csv(mp_bcc_file)
+        mp_bcc_vol = dict(zip(mp_df["element"], mp_df["volume_per_atom"]))
+
     # Extract BCC SQS pure element data (A8A8 same element)
-    pure_vol = {}
+    pure_vol_raw = {}
     pure_a = {}
     for r in rows:
         if r["status"] != "OK" or r.get("relax_converged", "") != "yes":
@@ -303,7 +321,32 @@ def load_sqs_data():
                 continue
             if 2.0 < a < 8.0:
                 pure_a[el1] = a
-                pure_vol[el1] = a**3 / 2.0
+                pure_vol_raw[el1] = a**3 / 2.0
+
+    # Reliability check: flag SQS pure volumes >3% from King/MP
+    pure_vol = {}
+    sqs_override_log = []
+    for el, v_sqs in pure_vol_raw.items():
+        v_king = KING_ATOMIC_VOLUMES.get(el)
+        v_mp = mp_bcc_vol.get(el)
+        use_sqs = True
+        if v_king is not None:
+            pct = abs(v_sqs - v_king) / v_king * 100
+            if pct > 3.0:
+                # SQS unreliable; prefer MP if close to King, else King
+                if v_mp is not None and abs(v_mp - v_king) / v_king * 100 <= 3.0:
+                    pure_vol[el] = v_mp
+                    sqs_override_log.append(f"  {el}: SQS {v_sqs:.3f} -> MP {v_mp:.3f} (SQS-King={pct:+.1f}%)")
+                else:
+                    pure_vol[el] = v_king
+                    sqs_override_log.append(f"  {el}: SQS {v_sqs:.3f} -> King {v_king:.3f} (SQS-King={pct:+.1f}%)")
+                use_sqs = False
+        if use_sqs:
+            pure_vol[el] = v_sqs
+    if sqs_override_log:
+        print(f"  SQS BCC pure volume overrides ({len(sqs_override_log)} elements):")
+        for line in sqs_override_log:
+            print(line)
 
     # BCC SQS 1:1 (A8B8) pairs
     omega_dft = {}
@@ -348,8 +391,60 @@ def load_sqs_data():
             v_dft = 0.5 * pure_vol[pair[0]] + 0.5 * pure_vol[pair[1]]
             omega_dft[pair] = (v_actual - v_dft) / v_dft
 
+    # FCC SQS pure element data (A16A16 same element)
+    mp_fcc_file = REPO / "data" / "mp_pure_elements_fcc.csv"
+    mp_fcc_vol = {}
+    if mp_fcc_file.exists():
+        mp_fcc_df = pd.read_csv(mp_fcc_file)
+        mp_fcc_vol = dict(zip(mp_fcc_df["element"], mp_fcc_df["volume_per_atom"]))
+
+    fcc_pure_vol_raw = {}
+    for r in rows:
+        if r["status"] != "OK" or r.get("relax_converged", "") != "yes":
+            continue
+        if r["lattice_type"] != "fcc":
+            continue
+        pairs = re.findall(r"([A-Z][a-z]?)(\d+)", r["dir"])
+        if len(pairs) != 2:
+            continue
+        el1, n1 = pairs[0][0], int(pairs[0][1])
+        el2, n2 = pairs[1][0], int(pairs[1][1])
+        if el1 == el2 and n1 == 16 and n2 == 16:
+            try:
+                vol = float(r.get("volume_A3", "0"))
+                natoms = int(r.get("natoms", "32"))
+            except (ValueError, KeyError):
+                continue
+            if vol > 0:
+                fcc_pure_vol_raw[el1] = vol / natoms
+
+    # Reliability check for FCC pure volumes
+    fcc_pure_vol = {}
+    fcc_override_log = []
+    for el, v_sqs in fcc_pure_vol_raw.items():
+        v_king = KING_ATOMIC_VOLUMES.get(el)
+        v_mp = mp_fcc_vol.get(el)
+        use_sqs = True
+        if v_king is not None:
+            pct = abs(v_sqs - v_king) / v_king * 100
+            if pct > 3.0:
+                if v_mp is not None and abs(v_mp - v_king) / v_king * 100 <= 3.0:
+                    fcc_pure_vol[el] = v_mp
+                    fcc_override_log.append(f"  {el}: SQS {v_sqs:.3f} -> MP {v_mp:.3f} (SQS-King={pct:+.1f}%)")
+                else:
+                    fcc_pure_vol[el] = v_king
+                    fcc_override_log.append(f"  {el}: SQS {v_sqs:.3f} -> King {v_king:.3f} (SQS-King={pct:+.1f}%)")
+                use_sqs = False
+        if use_sqs:
+            fcc_pure_vol[el] = v_sqs
+    if fcc_override_log:
+        print(f"  SQS FCC pure volume overrides ({len(fcc_override_log)} elements):")
+        for line in fcc_override_log:
+            print(line)
+
     # FCC SQS 1:1 (A16B16) pairs
     fcc_omega_king = {}
+    fcc_omega_dft = {}
     fcc_n_converged = 0
     for r in rows:
         if r["status"] != "OK" or r.get("relax_converged", "") != "yes":
@@ -366,32 +461,49 @@ def load_sqs_data():
         fcc_n_converged += 1
         if el1 in EXCLUDE_ELEMENTS or el2 in EXCLUDE_ELEMENTS:
             continue
-        if el1 not in KING_ATOMIC_VOLUMES or el2 not in KING_ATOMIC_VOLUMES:
-            continue
         try:
-            a = float(r["a_lattice_A"])
+            vol = float(r.get("volume_A3", "0"))
+            natoms = int(r.get("natoms", "32"))
         except (ValueError, KeyError):
             continue
-        if a < 2.0 or a > 8.0:
+        if vol <= 0:
             continue
         pair = tuple(sorted([el1, el2]))
-        v_actual = a**3 / 4.0
-        v_king = 0.5 * KING_ATOMIC_VOLUMES[pair[0]] + 0.5 * KING_ATOMIC_VOLUMES[pair[1]]
-        fcc_omega_king[pair] = (v_actual - v_king) / v_king
+        v_actual = vol / natoms
+
+        # King Vegard reference
+        if pair[0] in KING_ATOMIC_VOLUMES and pair[1] in KING_ATOMIC_VOLUMES:
+            v_king = 0.5 * KING_ATOMIC_VOLUMES[pair[0]] + 0.5 * KING_ATOMIC_VOLUMES[pair[1]]
+            fcc_omega_king[pair] = (v_actual - v_king) / v_king
+
+        # DFT Vegard reference
+        if pair[0] in fcc_pure_vol and pair[1] in fcc_pure_vol:
+            v_dft = 0.5 * fcc_pure_vol[pair[0]] + 0.5 * fcc_pure_vol[pair[1]]
+            fcc_omega_dft[pair] = (v_actual - v_dft) / v_dft
+
+    # Count non-excluded pure elements
+    n_pure_bcc = len({el for el in pure_vol if el not in EXCLUDE_ELEMENTS})
+    n_pure_fcc = len({el for el in fcc_pure_vol if el not in EXCLUDE_ELEMENTS})
 
     return {
         "omega_dft": omega_dft,
         "omega_king": omega_king,
         "pure_vol": pure_vol,
+        "pure_vol_raw": pure_vol_raw,
         "pure_a": pure_a,
         "sqs_a": sqs_a,
         "n_converged": n_converged,
         "n_pairs_king": len(omega_king),
         "n_pairs_dft": len(omega_dft),
-        "n_pure_elements": len(pure_vol),
+        "n_pure_elements": n_pure_bcc,
+        "fcc_pure_vol": fcc_pure_vol,
+        "fcc_pure_vol_raw": fcc_pure_vol_raw,
         "fcc_omega_king": fcc_omega_king,
+        "fcc_omega_dft": fcc_omega_dft,
         "fcc_n_converged": fcc_n_converged,
         "fcc_n_pairs": len(fcc_omega_king),
+        "fcc_n_pairs_dft": len(fcc_omega_dft),
+        "n_pure_fcc_elements": n_pure_fcc,
     }
 
 
@@ -618,15 +730,17 @@ def analyze_ml_residual(y_train, a_ss_tr, heas_train, ob2, ol12):
 
 
 def analyze_dft_self_consistent(all_df, ob2, ol12, heas_train, heas_test):
-    """Recompute Omega_sf using VASP DFT pure element volumes as Vegard reference.
+    """Recompute Omega_sf using VASP homonuclear compound volumes as Vegard reference.
 
-    This replaces King experimental volumes with DFT-computed volumes in the
-    Vegard reference, keeping B2/L12 structures. Tests whether q≈1 can be
-    achieved by eliminating DFT-experiment volume mismatch.
+    Pure element volumes are extracted from VASP homonuclear rows in the compound
+    CSVs (B2: a^3/2, L12: a^3/4). These are NOT the same as MP pure-element DFT
+    volumes (data/mp_pure_elements_{bcc,fcc}.csv), which use different cell setups.
+    For the "all-source" omega (ob2_dft_all, ol12_dft_all), MP/OQMD compound
+    pair volumes are referenced against these VASP homonuclear endpoints.
 
     Returns dict of metrics for paper_metrics.json.
     """
-    # Extract VASP pure element volumes from compound data
+    # Extract VASP pure element volumes from homonuclear compound data
     vasp_b2 = all_df[(all_df["db"] == "VASP") & (all_df["stype"] == "B2")]
     vasp_l12 = all_df[(all_df["db"] == "VASP") & (all_df["stype"] == "L12")]
 

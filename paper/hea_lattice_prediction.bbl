@@ -61,24 +61,6 @@ J.~A. Alonso, Estimation of the lattice parameters of {HEAs}, J. Phase Equilib.
 \newblock \href {https://doi.org/10.1007/s11669-022-00988-z}
   {\path{doi:10.1007/s11669-022-00988-z}}.
 
-\bibitem{Zhang2008}
-Y.~Zhang, et~al., Solid-solution phase formation rules for multi-component
-  alloys, Adv. Eng. Mater. 10 (2008) 534--538.
-\newblock \href {https://doi.org/10.1002/adem.200700240}
-  {\path{doi:10.1002/adem.200700240}}.
-
-\bibitem{Guo2011}
-S.~Guo, C.~T. Liu, Phase stability in high entropy alloys: Formation of
-  solid-solution phase or amorphous phase, Prog. Nat. Sci. 21 (2011) 433--446.
-\newblock \href {https://doi.org/10.1016/S1002-0071(12)60080-X}
-  {\path{doi:10.1016/S1002-0071(12)60080-X}}.
-
-\bibitem{Yang2012}
-X.~Yang, Y.~Zhang, Prediction of high-entropy stabilized solid-solution in
-  multi-component alloys, Mater. Chem. Phys. 132 (2012) 233--238.
-\newblock \href {https://doi.org/10.1016/j.matchemphys.2011.11.021}
-  {\path{doi:10.1016/j.matchemphys.2011.11.021}}.
-
 \bibitem{Jain2013}
 A.~Jain, et~al., Commentary: {The Materials Project}: A materials genome
   approach to accelerating materials innovation, APL Mater. 1 (2013) 011002.
@@ -104,6 +86,32 @@ F.~Tian, et~al., Structural stability of {NiCoFeCrAl}$_x$ high-entropy alloy
   from ab initio theory, Sci. Rep. 5 (2015) 12334.
 \newblock \href {https://doi.org/10.1038/srep12334}
   {\path{doi:10.1038/srep12334}}.
+
+\bibitem{Tandoc2023}
+C.~Tandoc, et~al., Mining of lattice distortion, strength, and intrinsic
+  ductility of refractory high entropy alloys, npj Comput. Mater. 9 (2023) 53.
+\newblock \href {https://doi.org/10.1038/s41524-023-00993-x}
+  {\path{doi:10.1038/s41524-023-00993-x}}.
+
+\bibitem{San2021}
+S.~San, C.~Basak, W.~Y. Ching, Lattice distortion in {FCC} high entropy alloys:
+  A first-principles study of {NiFeCoCr-X} (x = mn, cu, pd), Mater. Des. 210
+  (2021) 110071.
+\newblock \href {https://doi.org/10.1016/j.matdes.2021.110071}
+  {\path{doi:10.1016/j.matdes.2021.110071}}.
+
+\bibitem{Zhang2022}
+J.~Zhang, C.~Tandoc, Y.~Ou, V.~Shastri, M.~Todai, T.~Nakano, A.~Hu,
+  C.~Wolverton, Composition design of high-entropy alloys with deep sets
+  learning, npj Comput. Mater. 8 (2022) 89.
+\newblock \href {https://doi.org/10.1038/s41524-022-00779-7}
+  {\path{doi:10.1038/s41524-022-00779-7}}.
+
+\bibitem{Chen2023}
+Z.~Chen, J.~Wen, F.~Grasselli, M.~Bronstein, G.~Hautier, A map of single-phase
+  high-entropy alloys, Nat. Commun. 14 (2023) 2856.
+\newblock \href {https://doi.org/10.1038/s41467-023-38423-7}
+  {\path{doi:10.1038/s41467-023-38423-7}}.
 
 \bibitem{Senkov2013}
 O.~N. Senkov, et~al., Refractory high-entropy alloys, Intermetallics 19 (2011)
@@ -168,18 +176,6 @@ S.~Chen, Z.~H. Aitken, S.~Pattamatta, Z.~Wu, Z.~G. Yu, D.~J. Srolovitz, P.~K.
   117582.
 \newblock \href {https://doi.org/10.1016/j.actamat.2021.117582}
   {\path{doi:10.1016/j.actamat.2021.117582}}.
-
-\bibitem{TodaCaraballo2016}
-I.~Toda-Caraballo, P.~E. J. R.-D. del Castillo, Modelling solid solution
-  hardening in high entropy alloys, Intermetallics 71 (2016) 76--87.
-\newblock \href {https://doi.org/10.1016/j.intermet.2015.12.011}
-  {\path{doi:10.1016/j.intermet.2015.12.011}}.
-
-\bibitem{Ye2015}
-Y.~F. Ye, C.~T. Liu, Y.~Yang, A geometric model for intrinsic residual strain
-  and phase stability in high entropy alloys, Acta Mater. 94 (2015) 152--161.
-\newblock \href {https://doi.org/10.1016/j.actamat.2015.04.051}
-  {\path{doi:10.1016/j.actamat.2015.04.051}}.
 
 \bibitem{Wang2004lattice}
 Y.~Wang, S.~Curtarolo, C.~Jiang, R.~Arroyave, T.~Wang, G.~Ceder, L.-Q. Chen,
