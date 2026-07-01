@@ -38,7 +38,7 @@
 \address{物質・材料研究機構 (NIMS), 茨城県つくば市}
 
 \begin{abstract}
-King (1966) の体積サイズファクター$\Omega_\text{sf}$は合金の体積偏差を定量化する基本概念であるが、従来は実験値に依拠し構造依存性も考慮されていなかった。本研究は$\Omega_\text{sf}$の導出をDFT計算に置換し（純元素体積$V_i$は実験値を保持）、B2（BCC参照）とL1$_2$（FCC参照）で構造特異的に再定義する。5,152件の二元系DFT計算から465 B2 + 441 L1$_2$ペアの$\Omega_\text{sf}$を取得し、HEA予測に必要な全ペアをカバーした。これにより校正定数$q$の物理的起源を解明した：SQS＋DFT自己整合Vegard参照により$q_\text{BCC} \approx 1$（補正因子がほぼ不要）となる示唆が得られ、$q \neq 1$の主因がDFT--実験間の体積不整合であることを示した。FCC側では$q_\text{FCC} = 0.13 \approx 0$であり、Vegard則自体が十分な近似となる。独立テスト31 HEAで全体RMSE = 0.0155~\AA{}（Vegard比23.3\%改善）。改善効果はBCC系に集中し（BCC 17合金: 30.3\%、SQS参照で39.2\%）、FCC系ではVegard則の精度が高くΩ$_\text{sf}$補正の寄与は限定的である。加法分解$\delta_i^{(s)} + \delta_j^{(s)}$により906ペアを31元素パラメータに圧縮し、スプレッドシートで任意組成HEAの即座スクリーニングを可能にした。
+King (1966) の体積サイズファクター$\Omega_\text{sf}$は合金の体積偏差を定量化する基本概念であるが、従来は実験値に依拠し構造依存性も考慮されていなかった。本研究は$\Omega_\text{sf}$の導出をDFT計算に置換し（純元素体積$V_i$は実験値を保持）、B2（BCC参照）とL1$_2$（FCC参照）で構造特異的に再定義する。5,152件の二元系DFT計算から465 B2 + 441 L1$_2$ペアの$\Omega_\text{sf}$を取得し、HEA予測に必要な全ペアをカバーした。これにより校正定数$q$の物理的起源を解明した：SQS＋DFT自己整合Vegard参照により$q_\text{BCC} \approx 1$（補正因子がほぼ不要）となる示唆が得られ、$q \neq 1$の主因がDFT--実験間の体積不整合であることを示した。FCC側では$q_\text{FCC} = 0.13 \approx 0$であり、Vegard則自体が十分な近似となる。独立テスト31 HEAで全体RMSE = 0.0155~\AA{}（Vegard比23.3\%改善）。改善効果はBCC系に集中し（BCC 17合金: 30.3\%、SQS参照で44.5\%）、FCC系ではVegard則の精度が高くΩ$_\text{sf}$補正の寄与は限定的である。加法分解$\delta_i^{(s)} + \delta_j^{(s)}$により906ペアを31元素パラメータに圧縮し、スプレッドシートで任意組成HEAの即座スクリーニングを可能にした。
 \end{abstract}
 
 \begin{keyword}
@@ -111,7 +111,7 @@ King以来の体積サイズファクター研究は実験値（King体積、実
     MP・OQMD・独自VASP計算の3ソース統合により5,152件の二元系化合物から$\Omega_\text{sf}$を導出した。B2$\to$BCC、L1$_2$$\to$FCC の構造分離により、King/Alonsoでは取得できなかった構造依存的な体積偏差を得た。HEA予測に必要な全ペアをカバー（BCC 59/59、FCC 42/42）。
 
   \item \textbf{$q_\text{BCC} \approx 1$への近接と$q$の起源解明}:
-    過去の全研究で$q \neq 0$（BCC/FCC共に補正が必要）であったが、SQS＋DFT自己整合Vegard参照で$q_\text{BCC} = 1$固定がテスト最良精度を与える。ただし訓練最適値は$q_\text{opt} = 1.96$であり、16原子SQSのサイズ効果が残存する。$q \neq 1$の主因はDFT--実験間の体積不整合（GGA系統誤差）にある。独立テスト31合金RMSE = 0.0144~\AA{}（Vegard比28.7\%改善）、BCC 17合金ではRMSE = 0.0137~\AA{}（39.2\%改善）。
+    過去の全研究で$q \neq 0$（BCC/FCC共に補正が必要）であったが、SQS＋DFT自己整合Vegard参照で$q_\text{BCC} = 1$固定がテスト最良精度を与える。ただし訓練最適値は$q_\text{opt} = 1.27$であり、16原子SQSのサイズ効果が残存する。$q \neq 1$の主因はDFT--実験間の体積不整合（GGA系統誤差）にある。独立テスト31合金RMSE = 0.0138~\AA{}（Vegard比31.7\%改善）、BCC 17合金ではRMSE = 0.0125~\AA{}（44.7\%改善）。
 
   \item \textbf{$q_\text{FCC} \approx 0$（Vegard則の十分性）の実証}:
     $q_\text{FCC} = 0.13$（ほぼゼロ）は、FCC HEAではVegard則自体が十分な近似であり$\Omega_\text{sf}$補正がほぼ不要であることを示す。最密充填（配位数12）では原子サイズの環境依存性が小さく、体積の加法性が高い精度で成り立つためである。
@@ -201,7 +201,7 @@ VASP（本研究） & 2,200 & 2,810 & 5,010 \\
 \end{tabular}
 \par\smallskip
 {\scriptsize 収束後のユニークペア数: B2 465、L1$_2$ 441。
-31ターゲット元素間で完全カバレッジ。Si・Ge・Bは安定構造がBCC/FCCでなくKing体積との乖離が15--29\%に達するため除外。$4f$希土類14元素（La, Ce, Pr, Nd, Sm, Eu, Gd, Tb, Dy, Ho, Er, Tm, Yb, Lu）およびYは、GGA-PBEが$4f$局在電子を正しく扱えず格子定数が非物理的に膨張・未収束となるため除外（付録~\ref{sec:appendix_gdce}参照）。上記に加えBCC SQS計算（A$_8$B$_8$超格子）612件収束・414ペア、FCC SQS計算 78件収束・70ペア、SQS純元素（A$_8$A$_8$）38元素、DFT自己整合参照用純元素（B2: 35元素、L1$_2$: 39元素）を使用。DFT計算総数は約6,000件超。}
+31ターゲット元素間で完全カバレッジ。Si・Ge・Bは安定構造がBCC/FCCでなくKing体積との乖離が15--29\%に達するため除外。$4f$希土類14元素（La, Ce, Pr, Nd, Sm, Eu, Gd, Tb, Dy, Ho, Er, Tm, Yb, Lu）およびYは、GGA-PBEが$4f$局在電子を正しく扱えず格子定数が非物理的に膨張・未収束となるため除外（付録~\ref{sec:appendix_gdce}参照）。上記に加えBCC SQS計算（A$_8$B$_8$超格子）612件収束・414ペア、FCC SQS計算 78件収束・70ペア、SQS純元素（A$_8$A$_8$）33元素、DFT自己整合参照用純元素（B2: 35元素、L1$_2$: 39元素）を使用。DFT計算総数は約6,000件超。}
 \end{table}
 
 収束判定と物理的格子定数範囲（2.0--8.0~\AA）でのフィルタリング後、B2で465・L1$_2$で441のユニーク元素ペアを得た。同一ペアに複数データソースがある場合は中央値を採用し外れ値の影響を緩和した。3ソース間の$\Omega_\text{sf}$は高い整合性を示し（B2 $r = 0.990$、L1$_2$ $r = 0.990$）、統合前後の平均変化量は$|\Delta\Omega| < 0.006$であった。
@@ -432,7 +432,7 @@ DFT-$\Omega_\text{sf}$ & 0.0299 & 0.0096 & 0.0214 \\
 \end{tabular}
 \end{table}
 
-FCC HEAはRMSE = 0.0096~\AA{}と推定$\sigma$以下の精度を示す。構成元素（Co, Cr, Fe, Mn, Ni等の3$d$遷移金属）の原子サイズが類似しVegard則の近似精度が元来高いこと、L1$_2$がFCC配位の良い近似であり$q_\text{FCC} = 0.13$が示すように$\Omega_\text{sf}$補正がほぼ不要であること（$q = 0$がVegard則に相当し、$q = 0.13$はVegard体積の13\%のみを補正に配分）が要因である。BCC HEA予測はSQS＋DFT Vegard参照（$q = 1$）でテストRMSE 0.0137~\AA{}（39.2\%改善）に達する（\ref{sec:sqs_improvement}節）。
+FCC HEAはRMSE = 0.0096~\AA{}と推定$\sigma$以下の精度を示す。構成元素（Co, Cr, Fe, Mn, Ni等の3$d$遷移金属）の原子サイズが類似しVegard則の近似精度が元来高いこと、L1$_2$がFCC配位の良い近似であり$q_\text{FCC} = 0.13$が示すように$\Omega_\text{sf}$補正がほぼ不要であること（$q = 0$がVegard則に相当し、$q = 0.13$はVegard体積の13\%のみを補正に配分）が要因である。BCC HEA予測はSQS＋DFT Vegard参照（$q = 1$）でテストRMSE 0.0125~\AA{}（44.7\%改善）に達する（\ref{sec:sqs_improvement}節）。
 
 図~\ref{fig:bcc_fcc}にBCC/FCC別の誤差分布を示す。
 
@@ -488,7 +488,7 @@ DFT-$\Omega_\text{sf}$モデルが全カテゴリで最良である。全体RMSE
 \subsection{元素別加法分解パラメータ}
 \label{sec:delta_results}
 
-加法モデルはB2分散の56\%（$R^2 = 0.56$、RMSE = 0.052）、L1$_2$分散の66\%（$R^2 = 0.66$、RMSE = 0.036）を説明する。$R^2$が1に達しないことは加法分解の構造的限界を示し、残余の34--44\%にはペア固有の電荷移動・$d$--$d$混成・L1$_2$の配位非対称性など、$\delta_i + \delta_j$では表現できない物理が含まれる。特にL1$_2$の低$R^2$の一因は、加法モデルが対称（$\delta_i + \delta_j = \delta_j + \delta_i$）であり$A_3B$と$B_3A$の非対称性を原理的に表現できないことにある。HEA予測では加法モデルRMSE = 0.0221~\AA{}と元素対モデル（0.0214~\AA）の差は0.0007~\AA{}（3.3\%）にとどまる（表~\ref{tab:pw_vs_add}）。
+加法モデルはB2分散の54\%（$R^2 = 0.54$、RMSE = 0.050）、L1$_2$分散の66\%（$R^2 = 0.66$、RMSE = 0.036）を説明する。$|\Omega_\text{sf}| > 0.3$の外れ値ペア（4f元素由来）はフィットから除外した。$R^2$が1に達しないことは加法分解の構造的限界を示し、残余の34--46\%にはペア固有の電荷移動・$d$--$d$混成・L1$_2$の配位非対称性など、$\delta_i + \delta_j$では表現できない物理が含まれる。特にL1$_2$の低$R^2$の一因は、加法モデルが対称（$\delta_i + \delta_j = \delta_j + \delta_i$）であり$A_3B$と$B_3A$の非対称性を原理的に表現できないことにある。HEA予測では加法モデルRMSE = 0.0221~\AA{}と元素対モデル（0.0214~\AA）の差は0.0007~\AA{}（3.3\%）にとどまる（表~\ref{tab:pw_vs_add}）。
 
 \begin{table}[H]
 \centering
@@ -505,7 +505,7 @@ DFT-$\Omega_\text{sf}$モデルが全カテゴリで最良である。全体RMSE
 \end{tabular}
 \end{table}
 
-加法近似の$R^2$が0.56--0.66にもかかわらず最終予測精度が維持される理由は、(a)~$\Omega_\text{sf}$補正が全体体積の$\pm 5$\%以内であり残差の影響が$0.35 \times 0.05 \approx 1.7$\%にとどまること、(b)~$n$元系で$n(n-1)/2$ペアの残差がランダムに相殺されること、(c)~$q_s$がバイアス成分を吸収すること、による。
+加法近似の$R^2$が0.54--0.66にもかかわらず最終予測精度が維持される理由は、(a)~$\Omega_\text{sf}$補正が全体体積の$\pm 5$\%以内であり残差の影響が$0.35 \times 0.05 \approx 1.7$\%にとどまること、(b)~$n$元系で$n(n-1)/2$ペアの残差がランダムに相殺されること、(c)~$q_s$がバイアス成分を吸収すること、による。
 
 図~\ref{fig:element_delta}に元素別$\delta$パラメータを、
 図~\ref{fig:additive_fit}にフィット品質を示す。
@@ -514,7 +514,7 @@ DFT-$\Omega_\text{sf}$モデルが全カテゴリで最良である。全体RMSE
 \centering
 \includegraphics[width=\textwidth]{fig_element_delta.png}
 \caption{元素別加法分解パラメータ$\delta^{(s)}$。
-  B2（BCC参照、$R^2 = 0.56$）とL1$_2$（FCC参照、$R^2 = 0.66$）のグループバーチャート。
+  B2（BCC参照、$R^2 = 0.54$）とL1$_2$（FCC参照、$R^2 = 0.66$）のグループバーチャート。
   赤: 負（収縮傾向）、青: 正（膨張傾向）。
   元素は$\delta^{(s)}$の昇順にソート。}
 \label{fig:element_delta}
@@ -524,7 +524,7 @@ DFT-$\Omega_\text{sf}$モデルが全カテゴリで最良である。全体RMSE
 \centering
 \includegraphics[width=0.85\textwidth]{fig_additive_fit.png}
 \caption{加法分解のフィット品質。
-  左: B2（$R^2 = 0.56$）、右: L1$_2$（$R^2 = 0.66$）。
+  左: B2（$R^2 = 0.54$）、右: L1$_2$（$R^2 = 0.66$）。
   横軸: 加法予測$\delta_A + \delta_B$、
   縦軸: DFTペア$\Omega_\text{sf}$。破線は完全一致線。
   赤$\times$: $|\Omega_\text{sf}| > 0.3$の外れ値ペア（f電子系等の
@@ -686,8 +686,8 @@ SQS+King & King（31元素） & 0.623 & 0.133$^*$ \\
 B2/L1$_2$+DFT & DFT（35/39元素） & 1.188 & 0.280 \\
 \midrule
 \multicolumn{4}{@{}l}{\textit{(c) $V_i$ = DFT（SQS A$_8$A$_8$）}} \\[2pt]
-SQS+DFT ($q\!=\!1$) & DFT（38元素） & \textbf{1.000} & 0.133$^*$ \\
-SQS+DFT ($q_\text{opt}$) & DFT（38元素） & 1.958 & 0.133$^*$ \\
+SQS+DFT ($q\!=\!1$) & DFT（33元素） & \textbf{1.000} & 0.133$^*$ \\
+SQS+DFT ($q_\text{opt}$) & DFT（33元素） & 1.267 & 0.133$^*$ \\
 \bottomrule
 \end{tabular}
 \par\smallskip
@@ -737,7 +737,7 @@ DFT自己整合参照はBCC精度を46.1\%改善し（0.0226$\to$0.0121~\AA{}）
 
 B2（$\alpha = -1$）の完全秩序配位はHEAのランダム配位と異なるため、$q_\text{BCC} = 0.49$のスケーリングが必要であった。SQS（Special Quasi-random Structure）~\cite{Zunger1990,Jiang2004}は$\alpha \approx 0$のランダム配置を近似し、$q \approx 1$（補正がほぼ不要）となることが期待される。
 
-$2\times2\times2$ BCC超格子（16原子、A$_8$B$_8$組成）のSQS~\cite{Zunger1990,vandeWalle2013}を構築し、38元素・414ペアについてVASP~\cite{Kresse1996}による全緩和計算を実施した（PAW法~\cite{Blochl1994}、GGA-PBE~\cite{Perdew1996}、ENCUT = 520~eV、$12\times12\times12$ $\Gamma$中心$k$メッシュ~\cite{Monkhorst1976}、ISIF = 3、ISPIN = 2）。
+$2\times2\times2$ BCC超格子（16原子、A$_8$B$_8$組成）のSQS~\cite{Zunger1990,vandeWalle2013}を構築し、33元素・414ペアについてVASP~\cite{Kresse1996}による全緩和計算を実施した（PAW法~\cite{Blochl1994}、GGA-PBE~\cite{Perdew1996}、ENCUT = 520~eV、$12\times12\times12$ $\Gamma$中心$k$メッシュ~\cite{Monkhorst1976}、ISIF = 3、ISPIN = 2）。
 SQS $\Omega_\text{sf}$はDFT自己整合Vegard参照（SQS純元素体積を端点に使用）で定義する：
 \begin{align}
   \Omega_\text{sf}^\text{SQS}(A\text{-}B) &=
@@ -750,7 +750,7 @@ SQS $\Omega_\text{sf}$はDFT自己整合Vegard参照（SQS純元素体積を端�
 
 \subsubsection{BCC HEA予測の改善}
 
-SQS＋DFT Vegard参照で全44 BCC HEAに対する$q$最適化を行うと$q_\text{opt} = 1.96$が得られる。$q = 1.0$--$1.6$の範囲でテストRMSEは安定しており（表~\ref{tab:q_sensitivity}）、$q_\text{opt}$もテストで良好な精度を示す（表~\ref{tab:sqs_rmse}）。$q = 1$は式~(\ref{eq:scaled_eq10})において$\Omega_\text{sf}^\text{SQS}$をスケーリングなしでHEAに適用することを意味し、追加パラメータが不要となる。SQS（$\alpha \approx 0$）の二元系体積偏差が多元系HEAの体積偏差を直接近似でき、B2参照で必要だった秩序--無秩序間のスケーリング校正$q_\text{BCC} = 0.49$が不要となる。2$\times$2$\times$2 SQSの有限サイズ効果により$q > 1$側への微小な偏りが生じうるが、$q = 1$固定でも十分な精度を達成する。この結果は\ref{sec:dft_self_consistent}節のDFT自己整合Vegard参照による$q_\text{BCC} \approx 1$の知見と整合する：$q \neq 1$の主因はDFT--実験間の体積不整合であり、参照体積を統一すれば二元系$\to$多元系の外挿に追加パラメータは不要である。
+SQS＋DFT Vegard参照で全44 BCC HEAに対する$q$最適化を行うと$q_\text{opt} = 1.27$が得られる。$q = 1.0$--$1.6$の範囲でテストRMSEは安定しており（表~\ref{tab:q_sensitivity}）、$q_\text{opt}$もテストで良好な精度を示す（表~\ref{tab:sqs_rmse}）。$q = 1$は式~(\ref{eq:scaled_eq10})において$\Omega_\text{sf}^\text{SQS}$をスケーリングなしでHEAに適用することを意味し、追加パラメータが不要となる。SQS（$\alpha \approx 0$）の二元系体積偏差が多元系HEAの体積偏差を直接近似でき、B2参照で必要だった秩序--無秩序間のスケーリング校正$q_\text{BCC} = 0.49$が不要となる。2$\times$2$\times$2 SQSの有限サイズ効果により$q > 1$側への微小な偏りが生じうるが、$q = 1$固定でも十分な精度を達成する。この結果は\ref{sec:dft_self_consistent}節のDFT自己整合Vegard参照による$q_\text{BCC} \approx 1$の知見と整合する：$q \neq 1$の主因はDFT--実験間の体積不整合であり、参照体積を統一すれば二元系$\to$多元系の外挿に追加パラメータは不要である。
 
 \begin{table}[H]
 \centering
@@ -767,17 +767,17 @@ Vegard則 & 0 & 0.0202 & 0.0226 & --- \\
 B2+King & 0.486 & 0.0155 & 0.0157 & 23.3\% \\
 B2+DFT & 1.188 & 0.0140 & 0.0121 & 30.7\% \\
 SQS+King & 0.623 & 0.0158 & 0.0163 & 21.8\% \\
-\textbf{SQS+DFT ($q\!=\!1$)} & \textbf{1.000} & \textbf{0.0144} & \textbf{0.0137} & \textbf{28.7\%} \\
-SQS+DFT ($q_\text{opt}$) & 1.958 & 0.0132 & 0.0112 & 34.7\% \\
+\textbf{SQS+DFT ($q\!=\!1$)} & \textbf{1.000} & \textbf{0.0138} & \textbf{0.0125} & \textbf{31.7\%} \\
+SQS+DFT ($q_\text{opt}$) & 1.267 & 0.0131 & 0.0111 & 35.1\% \\
 \bottomrule
 \end{tabular}
 \par\smallskip
 {\scriptsize SQS系のRMSE$_\text{FCC}$ = 0.0152~\AA{}（Vegard: 0.0170）。
 B2+DFT行はFCC側もDFT自己整合（$q_\text{FCC} = 0.280$、
-RMSE$_\text{FCC}$ = 0.0160）。}
+RMSE$_\text{FCC}$ = 0.0160）。SQS純元素体積はKing実験値・MP DFTとの信頼性チェック後に修正（BCC 16元素、FCC 5元素で3\%超乖離を検出しMP/Kingに置換）。}
 \end{table}
 
-SQS＋DFT Vegard参照（$q = 1$）により独立テスト31合金RMSEは0.0202（Vegard）から0.0144~\AA{}（28.7\%改善）となる。BCC 17合金に限ればRMSE 0.0137~\AA{}（39.2\%改善）であり、B2参照（0.0157、BCC 30.3\%改善）を上回る。$q$感度解析（表~\ref{tab:q_sensitivity}）はテストRMSEが$q = 1.0$--$1.4$で最小値付近にあることを示す。
+SQS＋DFT Vegard参照（$q = 1$）により独立テスト31合金RMSEは0.0202（Vegard）から0.0138~\AA{}（31.7\%改善）となる。BCC 17合金に限ればRMSE 0.0125~\AA{}（44.7\%改善）であり、B2参照（0.0157、BCC 30.3\%改善）を上回る。$q$感度解析（表~\ref{tab:q_sensitivity}）はテストRMSEが$q = 1.0$--$1.4$で最小値付近にあることを示す。
 
 \begin{table}[H]
 \centering
@@ -789,24 +789,24 @@ SQS＋DFT Vegard参照（$q = 1$）により独立テスト31合金RMSEは0.0202
 $q_\text{BCC}$ & テスト RMSE (\AA) \\
 \midrule
 0 (Vegard) & 0.0226 \\
-0.6 & 0.0169 \\
-0.8 & 0.0152 \\
-\textbf{1.0 (採用)} & \textbf{0.0137} \\
-1.2 & 0.0124 \\
-1.4 & 0.0115 \\
-1.6 & 0.0110 \\
-2.0 ($\approx q_\text{opt}$) & 0.0113 \\
+0.6 & 0.0160 \\
+0.8 & 0.0141 \\
+\textbf{1.0 (採用)} & \textbf{0.0125} \\
+1.2 & 0.0114 \\
+1.4 & 0.0108 \\
+1.6 & 0.0109 \\
+2.0 & 0.0130 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-テストRMSEは$q = 1.0$--$1.6$で安定し（BCC: 0.0110--0.0122~\AA{}）、$q = 1.0$は追加パラメータなしで物理的に自然な選択である。$q_\text{opt} = 1.96$も同等以上のテスト精度を示すが、2$\times$2$\times$2 SQSの有限サイズ効果を吸収した経験的パラメータとなる。
+テストRMSEは$q = 1.0$--$1.6$で安定し（BCC: 0.0108--0.0125~\AA{}）、$q = 1.0$は追加パラメータなしで物理的に自然な選択である。$q_\text{opt} = 1.27$も同等以上のテスト精度を示すが、2$\times$2$\times$2 SQSの有限サイズ効果を吸収した経験的パラメータとなる。
 
 \subsubsection{$\Omega_\text{sf}$分布の比較}
 \label{sec:omega_distribution}
 
 図~\ref{fig:omega_hist}にB2とSQSの$\Omega_\text{sf}$分布を比較する。
-B2（King Vegard参照）は負側（体積収縮）に偏り（465ペア、平均$-0.037$）、秩序化による異種原子間結合が体積を系統的に収縮させることを反映する。SQS 1:1（King Vegard参照）はゼロ近傍に分布し（414ペア、平均$-0.014$）、ランダム配位では秩序化による収縮が緩和される。SQS 1:1（DFT Vegard参照）は平均$-0.023$を示し、DFT純元素体積を参照に取ることで系統誤差が部分的に相殺される。B2とSQS（DFT Vegard）の相関（$r = 0.815$、傾き0.758）はSQSの$\Omega_\text{sf}$がB2の約76\%に収まることを示す。
+B2（King Vegard参照）は負側（体積収縮）に偏り（465ペア、平均$-0.037$）、秩序化による異種原子間結合が体積を系統的に収縮させることを反映する。SQS 1:1（King Vegard参照）はゼロ近傍に分布し（414ペア、平均$-0.014$）、ランダム配位では秩序化による収縮が緩和される。SQS 1:1（DFT Vegard参照）は平均$-0.013$を示し、DFT純元素体積を参照に取ることで系統誤差が大幅に相殺される。B2とSQS（DFT Vegard）の相関（$r = 0.879$、傾き0.852）はSQSの$\Omega_\text{sf}$がB2の約85\%に収まることを示す。
 
 \begin{figure*}[!t]
 \centering
@@ -814,7 +814,7 @@ B2（King Vegard参照）は負側（体積収縮）に偏り（465ペア、平�
 \caption{$\Omega_\text{sf}$分布の比較。
 (左)~B2 vs SQS 1:1（King Vegard参照）。B2は負側に偏る。
 (中)~B2 vs SQS 1:1（DFT Vegard参照）。DFT参照でゼロ近傍に集中。
-(右)~B2--SQS散布図（DFT Vegard参照、414共通ペア）。傾き0.758。}
+(右)~B2--SQS散布図（DFT Vegard参照、414共通ペア）。傾き0.852。}
 \label{fig:omega_hist}
 \end{figure*}
 
@@ -849,9 +849,9 @@ FCC系では$q_\text{FCC} = 0.13$（ほぼVegard）であり、$\Omega_\text{sf}
 
 \subsubsection{SQS $\Omega_\text{sf}$の加法分解}
 
-B2/L1$_2$と同様に、SQS $\Omega_\text{sf}$に対しても元素別加法分解$\Omega_\text{sf}^\text{SQS}(i\text{-}j) \approx \delta_i^\text{SQS} + \delta_j^\text{SQS}$を適用した（DFT Vegard参照、414ペア$\to$31元素）。分解の$R^2 = 0.61$はB2（0.56）と同程度であり、ペア固有の非加法的成分が約40\%残存する。
+B2/L1$_2$と同様に、SQS $\Omega_\text{sf}$に対しても元素別加法分解$\Omega_\text{sf}^\text{SQS}(i\text{-}j) \approx \delta_i^\text{SQS} + \delta_j^\text{SQS}$を適用した（DFT Vegard参照、414ペア$\to$31元素）。分解の$R^2 = 0.60$はB2（0.54）と同程度であり、ペア固有の非加法的成分が約40\%残存する。
 
-BCC独立テスト17合金に対し$q = 1$固定で加法SQS $\delta$を用いるとRMSE = 0.0197~\AA{}であり、ペアワイズSQS（0.0137~\AA）に比べ精度が低下する。加法近似で失われるペア固有情報が$q = 1$の利点を相殺するためである。
+BCC独立テスト17合金に対し$q = 1$固定で加法SQS $\delta$を用いるとRMSE = 0.0185~\AA{}であり、ペアワイズSQS（0.0125~\AA）に比べ精度が低下する。加法近似で失われるペア固有情報が$q = 1$の利点を相殺するためである。
 
 SQS参照での最良予測にはペアワイズ$\Omega_\text{sf}^\text{SQS}$が必要であり、B2/L1$_2$参照の加法$\delta^{(s)}$パラメータ（表~\ref{tab:delta_params}）が実用上の最良選択肢である。
 
@@ -899,8 +899,8 @@ Vegard & 0 & 0.0202 & 0.0226 & --- \\
 B2/L1$_2$+King & 0.486 & 0.0155 & 0.0157 & 23.3\% \\
 B2/L1$_2$+DFT & 1.188 & 0.0140 & 0.0121 & 30.7\% \\
 SQS+King & 0.623 & 0.0158 & 0.0163 & 21.8\% \\
-\textbf{SQS+DFT ($q\!=\!1$)} & \textbf{1.000} & \textbf{0.0144} & \textbf{0.0137} & \textbf{28.7\%} \\
-SQS+DFT ($q_\text{opt}$) & 1.958 & 0.0132 & 0.0112 & 34.7\% \\
+\textbf{SQS+DFT ($q\!=\!1$)} & \textbf{1.000} & \textbf{0.0138} & \textbf{0.0125} & \textbf{31.7\%} \\
+SQS+DFT ($q_\text{opt}$) & 1.267 & 0.0131 & 0.0111 & 35.1\% \\
 \midrule
 ノイズ & --- & 0.016 & --- & --- \\
 \bottomrule
@@ -915,7 +915,7 @@ B2+DFT: RMSE$_\text{FCC}$ = 0.0160。}
     King以来実験値に依拠してきた$\Omega_\text{sf}$を5,152件の二元系DFT計算で置換し（純元素$V_i$は実験値保持）、B2$\to$BCC、L1$_2$$\to$FCCの構造分離によりHEA予測に必要な全ペアをカバー（BCC 59/59、FCC 42/42）。
 
   \item \textbf{$q_\text{BCC} \approx 1$への近接と$q$の起源解明}:
-    SQS＋DFT自己整合Vegard参照で$q_\text{BCC} = 1$固定が追加パラメータなしで良好な精度を達成する（テストRMSEは$q = 1.0$--$1.6$で安定、訓練最適$q_\text{opt} = 1.96$）。$q \neq 1$の主因は秩序--無秩序間の差ではなくDFT--実験間の体積不整合（GGA系統誤差）にある。参照体積をDFT内で統一すれば二元系$\to$多元系の外挿に追加パラメータは不要である。独立テスト31合金RMSE = 0.0144~\AA{}（Vegard比28.7\%改善）、BCC 17合金ではRMSE = 0.0137~\AA{}（39.2\%改善）。
+    SQS＋DFT自己整合Vegard参照で$q_\text{BCC} = 1$固定が追加パラメータなしで良好な精度を達成する（テストRMSEは$q = 1.0$--$1.6$で安定、訓練最適$q_\text{opt} = 1.27$）。$q \neq 1$の主因は秩序--無秩序間の差ではなくDFT--実験間の体積不整合（GGA系統誤差）にある。参照体積をDFT内で統一すれば二元系$\to$多元系の外挿に追加パラメータは不要である。独立テスト31合金RMSE = 0.0138~\AA{}（Vegard比31.7\%改善）、BCC 17合金ではRMSE = 0.0125~\AA{}（44.7\%改善）。
 
   \item \textbf{$q_\text{FCC} \approx 0$（Vegard則の十分性）}:
     $q_\text{FCC} = 0.13$はFCC HEAでVegard則自体が十分な近似であることを示す。最密充填構造では原子サイズの環境依存性が小さく、$\Omega_\text{sf}$補正がほぼ不要である。
@@ -949,7 +949,7 @@ Alonso~\cite{Alonso2021} & 実験 & なし & $\neq 0$ \\
 \end{tabular}
 \par\smallskip
 {\scriptsize
-テストRMSE: B2/L1$_2$ = 0.0155、SQS = 0.0137~\AA{}。
+テストRMSE: B2/L1$_2$ = 0.0155、SQS = 0.0125~\AA{}。
 Vegard = 0.0202~\AA{}。}
 \end{table}
 
@@ -957,7 +957,7 @@ Vegard = 0.0202~\AA{}。}
 図~\ref{fig:element_delta}の31元素$\delta^{(s)}$パラメータのみで任意組成HEAの格子定数をDFT計算なしに予測でき、スプレッドシートで数万組成を秒単位でスクリーニング可能である。$\delta^{(s)}$はML記述子としても活用でき、Hume-Rothery半径に代わるDFT由来の元素固有属性を提供する。
 
 \paragraph{限界と今後の課題}
-(a)~$q$が構造ごとの単一定数であり組成依存性を持たないこと、(b)~加法分解が$\Omega_\text{sf}$分散の34--44\%を失うこと（B2: $R^2 = 0.56$、L1$_2$: $R^2 = 0.66$）、(c)~HCP HEAへの拡張がA3型DFTデータの不足で未達であること、(d)~SQS＋DFT Vegardの$q_\text{opt} = 1.96$と$q = 1$の乖離が16原子SQSのサイズ効果を示唆すること。今後の課題として、三体補正の導入、温度依存補正、大セルSQS（32原子以上）による$q_\text{opt} \to 1$の検証、FCC-SQS全ペア拡張の検討が挙げられる。
+(a)~$q$が構造ごとの単一定数であり組成依存性を持たないこと、(b)~加法分解が$\Omega_\text{sf}$分散の34--46\%を失うこと（B2: $R^2 = 0.54$、L1$_2$: $R^2 = 0.66$）、(c)~HCP HEAへの拡張がA3型DFTデータの不足で未達であること、(d)~SQS＋DFT Vegardの$q_\text{opt} = 1.27$と$q = 1$の乖離が16原子SQSのサイズ効果を示唆すること。今後の課題として、三体補正の導入、温度依存補正、大セルSQS（32原子以上）による$q_\text{opt} \to 1$の検証、FCC-SQS全ペア拡張の検討が挙げられる。
 
 
 %% =====================================================================
@@ -1313,7 +1313,7 @@ VASP B2（2,200計算、2,136収束）・L1$_2$（2,810計算、2,169収束）�
 \subsection{$4f$希土類+Y除外の理由}
 \label{sec:appendix_gdce}
 
-$4f$希土類14元素（La, Ce, Pr, Nd, Sm, Eu, Gd, Tb, Dy, Ho, Er, Tm, Yb, Lu）およびYは、GGA-PBEが$4f$局在電子を正しく扱えず格子定数が非物理的に膨張（$a \approx 4.000$~\AA{}で停止）または発散（$a > 5.5$~\AA）するため全解析から除外した。$\Omega_\text{sf}$に最大$+3.4$の異常値が混入しL1$_2$非対称性相関を$r = 0.02$に希釈していた。除外後は$r = 0.71$に回復し、B2 $R^2$は0.43$\to$0.56、L1$_2$ $R^2$は0.20$\to$0.66と大幅に改善した。HEA予測に使用する21元素には4f元素を含まないため予測精度への影響はない。DFT+$U$やハイブリッド汎関数の適用が今後の課題である。
+$4f$希土類14元素（La, Ce, Pr, Nd, Sm, Eu, Gd, Tb, Dy, Ho, Er, Tm, Yb, Lu）およびYは、GGA-PBEが$4f$局在電子を正しく扱えず格子定数が非物理的に膨張（$a \approx 4.000$~\AA{}で停止）または発散（$a > 5.5$~\AA）するため全解析から除外した。$\Omega_\text{sf}$に最大$+3.4$の異常値が混入しL1$_2$非対称性相関を$r = 0.02$に希釈していた。除外後は$r = 0.71$に回復し、B2 $R^2$は0.43$\to$0.54、L1$_2$ $R^2$は0.20$\to$0.66と大幅に改善した。HEA予測に使用する21元素には4f元素を含まないため予測精度への影響はない。DFT+$U$やハイブリッド汎関数の適用が今後の課題である。
 
 \subsection{温度効果}
 
@@ -1321,7 +1321,7 @@ DFTは0~K格子定数を与えるが実験値は室温測定である。King体�
 
 \subsection{加法分解の精度上限}
 
-加法$\delta_i + \delta_j$分解で全分散の34--44\%が失われるが（B2: $R^2 = 0.56$、L1$_2$: $R^2 = 0.66$）、HEA予測ではRMSE = 0.0221~\AA{}（元素対: 0.0214~\AA）と実用上の問題はない。残差は元素対固有の電荷移動・磁気相互作用に起因し、加法性の構造的限界を反映する。
+加法$\delta_i + \delta_j$分解で全分散の34--46\%が失われるが（B2: $R^2 = 0.54$、L1$_2$: $R^2 = 0.66$）、HEA予測ではRMSE = 0.0221~\AA{}（元素対: 0.0214~\AA）と実用上の問題はない。残差は元素対固有の電荷移動・磁気相互作用に起因し、加法性の構造的限界を反映する。
 
 
 \section{全元素ペアにおけるVegard則の成立度}
@@ -1587,9 +1587,9 @@ DFT Vegard参照はDFT同種体積を端点とするためGGA系統誤差が部�
 414ペアの共通データで：
 \begin{itemize}
   \item B2 vs SQS(King Vegard): $r = 0.887$, 傾き0.881
-  \item B2 vs SQS(DFT Vegard): $r = 0.815$, 傾き0.758
+  \item B2 vs SQS(DFT Vegard): $r = 0.879$, 傾き0.852
 \end{itemize}
-高い相関（$r > 0.8$）は秩序/無秩序に関わらず体積偏差の傾向が保存されることを示す。傾きが1未満（0.76--0.88）であることはSQSの$\Omega_\text{sf}$がB2の約76--88\%であり、秩序化効果によるB2の増幅を定量化している。
+高い相関（$r > 0.8$）は秩序/無秩序に関わらず体積偏差の傾向が保存されることを示す。傾きが1未満（0.85--0.88）であることはSQSの$\Omega_\text{sf}$がB2の約85--88\%であり、秩序化効果によるB2の増幅を定量化している。
 
 \subsection{$q$値への含意}
 
