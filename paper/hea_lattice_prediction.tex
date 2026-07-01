@@ -1365,6 +1365,8 @@ DFTは0~K格子定数を与えるが実験値は室温測定である。King体�
 
 この傾向はエネルギー安定性とも関連する。Ti--Al（B2）のenergy above hull = 0.141~eV/atom（MP）であり比較的hullに近い（準安定だが実験的に観測される相）のに対し、Ti--Cr（B2）は0.151~eV/atomとやや不安定であるが同程度の準安定性を示す。しかし$\Omega_\text{B2}$はTi--Al（$-0.046$）の方がTi--Cr（$-0.021$）より大きい。SQS側でもTi--Al（$\Omega_\text{SQS} = -0.013$）はTi--Cr（$\Omega_\text{SQS} = -0.003$程度）より偏差が大きい。これはTi--Alでは原子サイズ差（$\Delta r/\bar{r} = 7.1\%$）と強い$d$--$sp$混成がVegardからの逸脱を増幅するためであり、生成エンタルピーの安定度よりも原子サイズ差と電子構造の異方性が$\Omega_\text{B2}$の主要因であることを示唆する。なお純元素BCC体積のVegard参照には、SQS超格子計算が信頼できない元素（Al: BCC力学不安定による超格子歪み、Cr: 反強磁性処理不足、Fe: 強磁性初期値不足）についてMP DFT BCC体積またはKing実験値を使用した。
 
+図~\ref{fig:vegard_pairs_fcc_l12_sqs}にFCC側の代表6元素ペア（Mo--Ni, Ni--Pt, Ni--Ti, Pd--Pt, Pd--Zr, Pt--Ti）の組成--体積プロットを示す。L1$_2$（赤三角、$x = 0.25, 0.75$）とFCC-SQS（緑菱形、$x = 0.5$）を比較すると、Ni--Ti（$\Omega_{\mathrm{L1}_2} = -0.047$, $\Omega_{\mathrm{SQS}} = -0.044$）やPt--Ti（$\Omega_{\mathrm{L1}_2} = -0.051$, $\Omega_{\mathrm{SQS}} = -0.036$）などサイズ差の大きいペアで顕著な負偏差を示す。一方Pd--Pt（$\Omega_{\mathrm{L1}_2} = +0.028$, $\Omega_{\mathrm{SQS}} = +0.033$）は正偏差を示す。BCC側（図~\ref{fig:vegard_pairs_b2_sqs}）と対照的に、FCC系ではL1$_2$とSQSの$\Omega$が概ね同程度であり、$q_\text{FCC} = 0.133$が小さい（L1$_2$偏差のHEAへの寄与が小さい）こととも整合する。
+
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=0.7\textwidth]{fig_vegard_parity_b2.png}
@@ -1396,6 +1398,19 @@ DFTは0~K格子定数を与えるが実験値は室温測定である。King体�
   各パネル上部に$\Omega_\text{SQS}$と$\Omega_\text{B2}$を表示。
   全ペアでB2の方がVegard線からの偏差が大きく、秩序構造における化学的秩序化エネルギーの体積への集中的発現が確認できる。}
 \label{fig:vegard_pairs_b2_sqs}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.95\textwidth]{fig_vegard_pairs_fcc_l12_sqs.png}
+\caption{代表6元素ペアの組成--原子体積プロット（FCC）。
+  赤三角: L1$_2$（$x = 0.25, 0.75$）、緑菱形: FCC-SQS（$x = 0.5$）。
+  破線はVegard直線（純元素FCC体積基準）。
+  各パネルに$\Omega_{\mathrm{L1}_2}$と$\Omega_{\mathrm{SQS}}$を表示。
+  Ni--Ti, Pt--Tiなどサイズ差の大きいペアでは$|\Omega| > 0.04$の顕著な負偏差を示すが、
+  Pd--Ptなど同族ペアでは正偏差を示す。L1$_2$とSQSの$\Omega$は概ね同程度であり、
+  FCC系ではBCC系ほどの秩序--ランダム間差異は見られない。}
+\label{fig:vegard_pairs_fcc_l12_sqs}
 \end{figure*}
 
 \subsection{$\Omega_\text{sf}$と原子半径差の関係}
