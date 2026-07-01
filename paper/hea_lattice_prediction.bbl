@@ -113,11 +113,12 @@ Z.~Chen, J.~Wen, F.~Grasselli, M.~Bronstein, G.~Hautier, A map of single-phase
 \newblock \href {https://doi.org/10.1038/s41467-023-38423-7}
   {\path{doi:10.1038/s41467-023-38423-7}}.
 
-\bibitem{Senkov2013}
-O.~N. Senkov, et~al., Refractory high-entropy alloys, Intermetallics 19 (2011)
-  698--706.
-\newblock \href {https://doi.org/10.1016/j.intermet.2011.01.004}
-  {\path{doi:10.1016/j.intermet.2011.01.004}}.
+\bibitem{Senkov2012}
+O.~N. Senkov, J.~M. Scott, S.~V. Senkova, D.~B. Miracle, C.~F. Woodward,
+  Microstructure and room temperature properties of a high-entropy {TaNbHfZrTi}
+  alloy, J. Alloys Compd. 509 (2011) 6043--6048.
+\newblock \href {https://doi.org/10.1016/j.jallcom.2011.02.171}
+  {\path{doi:10.1016/j.jallcom.2011.02.171}}.
 
 \bibitem{Senkov2013_ActaMat}
 O.~N. Senkov, S.~V. Senkova, C.~Woodward, D.~B. Miracle, Low-density,
@@ -126,12 +127,6 @@ O.~N. Senkov, S.~V. Senkova, C.~Woodward, D.~B. Miracle, Low-density,
 \newblock \href {https://doi.org/10.1016/j.actamat.2012.11.032}
   {\path{doi:10.1016/j.actamat.2012.11.032}}.
 
-\bibitem{Yao2016}
-H.~W. Yao, et~al., {NbTaV-(Ti,W)} refractory high-entropy alloys, Entropy 18
-  (2016) 189.
-\newblock \href {https://doi.org/10.3390/e18050189}
-  {\path{doi:10.3390/e18050189}}.
-
 \bibitem{Otto2013}
 F.~Otto, et~al., The influences of temperature and microstructure on the
   tensile properties of a {CoCrFeMnNi} high-entropy alloy, Acta Mater. 61
@@ -139,19 +134,33 @@ F.~Otto, et~al., The influences of temperature and microstructure on the
 \newblock \href {https://doi.org/10.1016/j.actamat.2013.06.018}
   {\path{doi:10.1016/j.actamat.2013.06.018}}.
 
-\bibitem{Leong2017}
-Z.~Leong, et~al., The effect of electronic structure on the phases present in
-  high entropy alloys, Sci. Rep. 7 (2017) 39803.
-\newblock \href {https://doi.org/10.1038/srep39803}
-  {\path{doi:10.1038/srep39803}}.
+\bibitem{Niu2017}
+C.~Niu, A.~J. Zaddach, A.~A. Oni, X.~Sang, J.~W.~H. III, J.~M. LeBeau, C.~C.
+  Koch, D.~L. Irving, Spin-driven ordering of {Cr} in the equiatomic high
+  entropy alloy {NiFeCrCo}, Appl. Phys. Lett. 106 (2015) 161906.
+\newblock \href {https://doi.org/10.1063/1.4918996}
+  {\path{doi:10.1063/1.4918996}}.
 
-\bibitem{Tseng2019}
-K.-K. Tseng, C.-C. Juan, S.~Tso, H.-C. Chen, C.-W. Tsai, J.-W. Yeh, Effects of
-  {Mo}, {Nb}, {Ta}, {Ti}, and {Zr} on mechanical properties of equiatomic
-  {Hf-Mo-Nb-Ta-Ti-Zr} alloys, Entropy 21 (2019) 15, table~2: HfMoNbTaTiZr and 5
-  equiatomic BCC subsets with XRD lattice parameters.
-\newblock \href {https://doi.org/10.3390/e21010015}
-  {\path{doi:10.3390/e21010015}}.
+\bibitem{Stepanov2015}
+N.~D. Stepanov, et~al., Effect of {V} content on microstructure and mechanical
+  properties of the {CoCrFeMnNiV}$_x$ high entropy alloys, Mater. Lett. 142
+  (2015) 153--155.
+\newblock \href {https://doi.org/10.1016/j.matlet.2014.11.162}
+  {\path{doi:10.1016/j.matlet.2014.11.162}}.
+
+\bibitem{Dirras2016}
+G.~Dirras, et~al., Microstructural investigation of plastically deformed
+  {Ti$_{20}$Zr$_{20}$Hf$_{20}$Nb$_{20}$Ta$_{20}$} high entropy alloy by {X}-ray
+  diffraction and transmission electron microscopy, Mater. Charact. 108 (2015)
+  1--7.
+\newblock \href {https://doi.org/10.1016/j.matchar.2015.08.007}
+  {\path{doi:10.1016/j.matchar.2015.08.007}}.
+
+\bibitem{Yao2016}
+H.~W. Yao, et~al., {NbTaV-(Ti,W)} refractory high-entropy alloys, Entropy 18
+  (2016) 189.
+\newblock \href {https://doi.org/10.3390/e18050189}
+  {\path{doi:10.3390/e18050189}}.
 
 \bibitem{Freudenberger2017}
 J.~Freudenberger, D.~Rafaja, D.~Geissler, L.~Giebeler, C.~L.~H. de~Oliveira,
@@ -160,6 +169,20 @@ J.~Freudenberger, D.~Rafaja, D.~Geissler, L.~Giebeler, C.~L.~H. de~Oliveira,
   lattice parameters for 5 quaternary + 1 quinary FCC alloys.
 \newblock \href {https://doi.org/10.3390/met7040135}
   {\path{doi:10.3390/met7040135}}.
+
+\bibitem{Wang2019}
+Z.~Wang, et~al., Atomic-size effect and solid solubility of multicomponent
+  alloys, Scr. Mater. 94 (2015) 28--31.
+\newblock \href {https://doi.org/10.1016/j.scriptamat.2014.09.010}
+  {\path{doi:10.1016/j.scriptamat.2014.09.010}}.
+
+\bibitem{Tseng2019}
+K.-K. Tseng, C.-C. Juan, S.~Tso, H.-C. Chen, C.-W. Tsai, J.-W. Yeh, Effects of
+  {Mo}, {Nb}, {Ta}, {Ti}, and {Zr} on mechanical properties of equiatomic
+  {Hf-Mo-Nb-Ta-Ti-Zr} alloys, Entropy 21 (2019) 15, table~2: HfMoNbTaTiZr and 5
+  equiatomic BCC subsets with XRD lattice parameters.
+\newblock \href {https://doi.org/10.3390/e21010015}
+  {\path{doi:10.3390/e21010015}}.
 
 \bibitem{Reget2020}
 F.~Reget, M.~Maa{\ss}, J.~Haas, J.~Fiehn, N.~Seifried, T.~G. Bley, L.~Pichl,
@@ -176,6 +199,12 @@ S.~Chen, Z.~H. Aitken, S.~Pattamatta, Z.~Wu, Z.~G. Yu, D.~J. Srolovitz, P.~K.
   117582.
 \newblock \href {https://doi.org/10.1016/j.actamat.2021.117582}
   {\path{doi:10.1016/j.actamat.2021.117582}}.
+
+\bibitem{Kantelis2025}
+K.~Kantelis, et~al., Lattice distortions in high-entropy alloys, AIP Adv. 15
+  (2025) 015030.
+\newblock \href {https://doi.org/10.1063/5.0245966}
+  {\path{doi:10.1063/5.0245966}}.
 
 \bibitem{Wang2004lattice}
 Y.~Wang, S.~Curtarolo, C.~Jiang, R.~Arroyave, T.~Wang, G.~Ceder, L.-Q. Chen,
