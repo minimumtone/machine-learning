@@ -74,6 +74,19 @@ EXCLUDE_ELEMENTS = {
     "Y",  # similar RE behavior
 }
 
+
+# ---------------------------------------------------------------------------
+# Helper: lattice constant → atomic volume conversion
+# ---------------------------------------------------------------------------
+def a_to_vol(a_arr, heas):
+    """Convert lattice constants (Å) to atomic volumes (Å³/atom).
+
+    V = a³ / n_auc where n_auc = 2 (BCC) or 4 (FCC).
+    """
+    n_auc = np.array([4 if h["struct"] == "FCC" else 2 for h in heas])
+    return np.asarray(a_arr) ** 3 / n_auc
+
+
 # ---------------------------------------------------------------------------
 # 1. Load & filter compound data
 # ---------------------------------------------------------------------------
@@ -931,46 +944,60 @@ def analyze_dft_self_consistent(all_df, ob2, ol12, heas_train, heas_test):
 # FIGURE GENERATION
 # ===========================================================================
 
-def fig01_parity(y_train, a_veg_tr, a_ss_tr, y_test, a_veg_te, a_ss_te):
-    """Fig 1: Parity plot Vegard vs DFT-Omega_sf."""
+def fig01_parity(y_train, a_veg_tr, a_ss_tr, y_test, a_veg_te, a_ss_te,
+                 heas_train, heas_test):
+    """Fig 1: Parity plot Vegard vs DFT-Omega_sf (volume basis)."""
     from matplotlib.patches import Rectangle
     from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
+    # Convert lattice constants to atomic volumes (Å³/atom)
+    v_exp_tr = a_to_vol(y_train, heas_train)
+    v_veg_tr = a_to_vol(a_veg_tr, heas_train)
+    v_ss_tr = a_to_vol(a_ss_tr, heas_train)
+    v_exp_te = a_to_vol(y_test, heas_test)
+    v_veg_te = a_to_vol(a_veg_te, heas_test)
+    v_ss_te = a_to_vol(a_ss_te, heas_test)
+
     fig, ax = plt.subplots(1, 1, figsize=(7, 7))
-    all_vals = np.concatenate([y_train, y_test, a_veg_tr, a_ss_tr, a_veg_te, a_ss_te])
-    lims = [min(all_vals) - 0.05, max(all_vals) + 0.05]
+    all_vals = np.concatenate([v_exp_tr, v_exp_te, v_veg_tr, v_ss_tr, v_veg_te, v_ss_te])
+    lims = [min(all_vals) - 0.3, max(all_vals) + 0.3]
     ax.plot(lims, lims, "k-", lw=1)
-    ax.scatter(y_train, a_veg_tr, c="gray", alpha=0.35, s=50,
+    ax.scatter(v_exp_tr, v_veg_tr, c="gray", alpha=0.35, s=50,
                label="Vegard (calib. 64)", zorder=2)
-    ax.scatter(y_train, a_ss_tr, c="C0", alpha=0.35, s=50,
+    ax.scatter(v_exp_tr, v_ss_tr, c="C0", alpha=0.35, s=50,
                label=r"DFT-$\Omega_{\mathrm{sf}}$ (calib. 64)", zorder=3)
-    ax.scatter(y_test, a_veg_te, c="gray", alpha=0.35, s=50, marker="^",
+    ax.scatter(v_exp_te, v_veg_te, c="gray", alpha=0.35, s=50, marker="^",
                label="Vegard (test 31)", zorder=2)
-    ax.scatter(y_test, a_ss_te, c="C3", alpha=0.35, s=50, marker="^",
+    ax.scatter(v_exp_te, v_ss_te, c="C3", alpha=0.35, s=50, marker="^",
                label=r"DFT-$\Omega_{\mathrm{sf}}$ (test 31)", zorder=3)
-    ax.set_xlabel("Experimental $a$ (\u00c5)")
-    ax.set_ylabel("Predicted $a$ (\u00c5)")
+    ax.set_xlabel(r"Experimental $V$ ($\mathrm{\AA}^3$/atom)")
+    ax.set_ylabel(r"Predicted $V$ ($\mathrm{\AA}^3$/atom)")
     ax.set_xlim(lims)
     ax.set_ylim(lims)
     ax.legend(loc="upper left", fontsize=12)
     ax.set_aspect("equal")
 
-    # FCC inset (zoomed view)
-    fcc_lo, fcc_hi = 3.55, 3.90
-    ax.add_patch(Rectangle((fcc_lo, fcc_lo), fcc_hi - fcc_lo, fcc_hi - fcc_lo,
+    # Dense-region inset (FCC + low-V BCC overlap)
+    fcc_vols = np.concatenate([
+        v_exp_tr[[i for i, h in enumerate(heas_train) if h["struct"] == "FCC"]],
+        v_exp_te[[i for i, h in enumerate(heas_test) if h["struct"] == "FCC"]],
+    ])
+    ins_lo = float(fcc_vols.min()) - 0.3
+    ins_hi = float(fcc_vols.max()) + 0.3
+    ax.add_patch(Rectangle((ins_lo, ins_lo), ins_hi - ins_lo, ins_hi - ins_lo,
                             fill=False, edgecolor="gray", linestyle="--", lw=1,
                             zorder=4))
     axins = inset_axes(ax, width="40%", height="40%", loc="lower right",
                        borderpad=1.5)
-    axins.plot([fcc_lo, fcc_hi], [fcc_lo, fcc_hi], "k-", lw=1)
-    axins.scatter(y_train, a_veg_tr, c="gray", alpha=0.45, s=40, zorder=2)
-    axins.scatter(y_train, a_ss_tr, c="C0", alpha=0.45, s=40, zorder=3)
-    axins.scatter(y_test, a_veg_te, c="gray", alpha=0.45, s=40, marker="^",
+    axins.plot([ins_lo, ins_hi], [ins_lo, ins_hi], "k-", lw=1)
+    axins.scatter(v_exp_tr, v_veg_tr, c="gray", alpha=0.45, s=40, zorder=2)
+    axins.scatter(v_exp_tr, v_ss_tr, c="C0", alpha=0.45, s=40, zorder=3)
+    axins.scatter(v_exp_te, v_veg_te, c="gray", alpha=0.45, s=40, marker="^",
                   zorder=2)
-    axins.scatter(y_test, a_ss_te, c="C3", alpha=0.45, s=40, marker="^",
+    axins.scatter(v_exp_te, v_ss_te, c="C3", alpha=0.45, s=40, marker="^",
                   zorder=3)
-    axins.set_xlim(fcc_lo, fcc_hi)
-    axins.set_ylim(fcc_lo, fcc_hi)
+    axins.set_xlim(ins_lo, ins_hi)
+    axins.set_ylim(ins_lo, ins_hi)
     axins.set_aspect("equal")
     axins.tick_params(labelsize=9)
     axins.set_title("FCC region", fontsize=10)
@@ -982,19 +1009,19 @@ def fig01_parity(y_train, a_veg_tr, a_ss_tr, y_test, a_veg_te, a_ss_te):
 
 
 def fig02_rmse_bar(rmse_dict):
-    """Fig 2: RMSE bar chart comparing all methods."""
+    """Fig 2: RMSE bar chart comparing all methods (volume basis, Å³/atom)."""
     methods = list(rmse_dict.keys())
     vals = [rmse_dict[m] for m in methods]
     fig, ax = plt.subplots(figsize=(12, 5))
     colors = ["#aaaaaa", "#4c72b0", "#55a868", "#c44e52", "#8172b2"]
-    bars = ax.bar(range(len(methods)), [v * 1000 for v in vals],
+    bars = ax.bar(range(len(methods)), vals,
                   color=colors[:len(methods)], edgecolor="black", linewidth=0.5)
     ax.set_xticks(range(len(methods)))
     ax.set_xticklabels(methods, fontsize=14)
-    ax.set_ylabel("RMSE (m\u00c5)")
+    ax.set_ylabel(r"RMSE ($\mathrm{\AA}^3$/atom)")
     for bar, v in zip(bars, vals):
-        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.2,
-                f"{v*1000:.1f}", ha="center", va="bottom", fontsize=13)
+        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.001,
+                f"{v:.4f}", ha="center", va="bottom", fontsize=13)
     fig.tight_layout()
     fig.savefig(OUTDIR / "fig_rmse_bar.png", bbox_inches="tight")
     plt.close(fig)
@@ -1002,46 +1029,53 @@ def fig02_rmse_bar(rmse_dict):
 
 
 def fig03_bcc_fcc(y_train, a_ss_tr, heas_train, y_test, a_ss_te, heas_test):
-    """Fig 3: Combined BCC/FCC parity (single panel), all 95 HEAs."""
+    """Fig 3: Combined BCC/FCC parity (single panel), all 95 HEAs (volume basis)."""
     bcc_tr = [i for i, h in enumerate(heas_train) if h["struct"] == "BCC"]
     fcc_tr = [i for i, h in enumerate(heas_train) if h["struct"] == "FCC"]
     bcc_te = [i for i, h in enumerate(heas_test) if h["struct"] == "BCC"]
     fcc_te = [i for i, h in enumerate(heas_test) if h["struct"] == "FCC"]
 
-    y_all = np.concatenate([y_train, y_test])
-    a_all = np.concatenate([a_ss_tr, a_ss_te])
+    # Convert to atomic volumes
+    v_exp_tr = a_to_vol(y_train, heas_train)
+    v_ss_tr = a_to_vol(a_ss_tr, heas_train)
+    v_exp_te = a_to_vol(y_test, heas_test)
+    v_ss_te = a_to_vol(a_ss_te, heas_test)
+
+    v_exp_all = np.concatenate([v_exp_tr, v_exp_te])
+    v_ss_all = np.concatenate([v_ss_tr, v_ss_te])
 
     fig, ax = plt.subplots(figsize=(8, 8))
-    lims = [min(y_all) - 0.05, max(y_all) + 0.05]
+    lims = [min(v_exp_all) - 0.3, max(v_exp_all) + 0.3]
     ax.plot(lims, lims, "k-", lw=1)
 
     n_bcc = len(bcc_tr) + len(bcc_te)
     n_fcc = len(fcc_tr) + len(fcc_te)
-    res_bcc = np.concatenate([a_ss_tr[bcc_tr] - y_train[bcc_tr],
-                              a_ss_te[bcc_te] - y_test[bcc_te]])
-    res_fcc = np.concatenate([a_ss_tr[fcc_tr] - y_train[fcc_tr],
-                              a_ss_te[fcc_te] - y_test[fcc_te]])
+    res_bcc = np.concatenate([v_ss_tr[bcc_tr] - v_exp_tr[bcc_tr],
+                              v_ss_te[bcc_te] - v_exp_te[bcc_te]])
+    res_fcc = np.concatenate([v_ss_tr[fcc_tr] - v_exp_tr[fcc_tr],
+                              v_ss_te[fcc_te] - v_exp_te[fcc_te]])
     rmse_bcc = np.sqrt(np.mean(res_bcc ** 2))
     rmse_fcc = np.sqrt(np.mean(res_fcc ** 2))
-    rmse_all = np.sqrt(np.mean((a_all - y_all) ** 2))
 
     # Calibration set (circles)
-    ax.scatter(y_train[bcc_tr], a_ss_tr[bcc_tr], c="C0", marker="s",
+    ax.scatter(v_exp_tr[bcc_tr], v_ss_tr[bcc_tr], c="C0", marker="s",
                s=70, alpha=0.5, label=f"BCC calib. ({len(bcc_tr)})")
-    ax.scatter(y_train[fcc_tr], a_ss_tr[fcc_tr], c="C3", marker="o",
+    ax.scatter(v_exp_tr[fcc_tr], v_ss_tr[fcc_tr], c="C3", marker="o",
                s=70, alpha=0.5, label=f"FCC calib. ({len(fcc_tr)})")
     # Test set (triangles)
-    ax.scatter(y_test[bcc_te], a_ss_te[bcc_te], c="C0", marker="^",
+    ax.scatter(v_exp_te[bcc_te], v_ss_te[bcc_te], c="C0", marker="^",
                s=70, alpha=0.5, label=f"BCC test ({len(bcc_te)})")
-    ax.scatter(y_test[fcc_te], a_ss_te[fcc_te], c="C3", marker="^",
+    ax.scatter(v_exp_te[fcc_te], v_ss_te[fcc_te], c="C3", marker="^",
                s=70, alpha=0.5, label=f"FCC test ({len(fcc_te)})")
 
-    ax.set_xlabel("Experimental $a$ (\u00c5)", fontsize=14)
-    ax.set_ylabel("Predicted $a$ (\u00c5)", fontsize=14)
+    ax.set_xlabel(r"Experimental $V$ ($\mathrm{\AA}^3$/atom)", fontsize=14)
+    ax.set_ylabel(r"Predicted $V$ ($\mathrm{\AA}^3$/atom)", fontsize=14)
     ax.set_title(
-        f"All 95 HEA — BCC {n_bcc} (RMSE={rmse_bcc:.4f} \u00c5)"
-        f" / FCC {n_fcc} (RMSE={rmse_fcc:.4f} \u00c5)",
-        fontsize=13)
+        f"All 95 HEA \u2014 BCC {n_bcc} (RMSE={rmse_bcc:.3f} "
+        r"$\mathrm{\AA}^3$" f"/atom)"
+        f" / FCC {n_fcc} (RMSE={rmse_fcc:.3f} "
+        r"$\mathrm{\AA}^3$" f"/atom)",
+        fontsize=12)
     ax.legend(fontsize=12)
     ax.set_aspect("equal")
     ax.tick_params(labelsize=12)
@@ -1052,14 +1086,18 @@ def fig03_bcc_fcc(y_train, a_ss_tr, heas_train, y_test, a_ss_te, heas_test):
 
 
 def fig04_indep_test(y_test, a_veg_te, a_ss_te, heas_test, gb, gf):
-    """Fig 4: Multi-panel independent test figure.
+    """Fig 4: Multi-panel independent test figure (volume basis).
 
     Layout: top row = (a) per-alloy error bars (full width)
             bottom row = (b) RMSE breakdown + (c) parity plot side by side
-    Improved readability: larger figure, sorted bars, bigger fonts.
     """
     bcc_t = [i for i, h in enumerate(heas_test) if h["struct"] == "BCC"]
     fcc_t = [i for i, h in enumerate(heas_test) if h["struct"] == "FCC"]
+
+    # Convert to atomic volumes
+    v_exp = a_to_vol(y_test, heas_test)
+    v_veg = a_to_vol(a_veg_te, heas_test)
+    v_ss = a_to_vol(a_ss_te, heas_test)
 
     fig = plt.figure(figsize=(20, 16))
     # Top: per-alloy error (full width)
@@ -1069,14 +1107,14 @@ def fig04_indep_test(y_test, a_veg_te, a_ss_te, heas_test, gb, gf):
     # Bottom-right: parity
     ax_c = fig.add_axes([0.55, 0.06, 0.38, 0.32])
 
-    # (a) Per-alloy absolute error — grouped by BCC/FCC, sorted within each
+    # (a) Per-alloy absolute error in volume
     alloy_names, err_veg, err_ss, structs = [], [], [], []
     for i in range(len(heas_test)):
         h = heas_test[i]
         elems = sorted(h["comp"].keys())
         alloy_names.append("-".join(elems))
-        err_veg.append(abs(a_veg_te[i] - y_test[i]) * 1000)
-        err_ss.append(abs(a_ss_te[i] - y_test[i]) * 1000)
+        err_veg.append(abs(v_veg[i] - v_exp[i]))
+        err_ss.append(abs(v_ss[i] - v_exp[i]))
         structs.append(h["struct"])
 
     # Group by structure, sort within each group by DFT error
@@ -1084,12 +1122,11 @@ def fig04_indep_test(y_test, a_veg_te, a_ss_te, heas_test, gb, gf):
     fcc_idx = [i for i, s in enumerate(structs) if s == "FCC"]
     bcc_idx = sorted(bcc_idx, key=lambda i: err_ss[i])
     fcc_idx = sorted(fcc_idx, key=lambda i: err_ss[i])
-    ordered = bcc_idx + fcc_idx  # BCC on top, FCC on bottom
+    ordered = bcc_idx + fcc_idx
 
     ordered_names = [alloy_names[i] for i in ordered]
     ordered_veg = [err_veg[i] for i in ordered]
     ordered_ss = [err_ss[i] for i in ordered]
-    ordered_structs = [structs[i] for i in ordered]
 
     n_bcc = len(bcc_idx)
     n_fcc = len(fcc_idx)
@@ -1097,14 +1134,12 @@ def fig04_indep_test(y_test, a_veg_te, a_ss_te, heas_test, gb, gf):
 
     x = np.arange(n_total)
     w = 0.38
-    # Color bars by structure
     for k in range(n_total):
         bar_color_veg = "#888888"
         bar_color_ss = "C0" if k < n_bcc else "C3"
         ax_a.barh(x[k] - w/2, ordered_veg[k], w, color=bar_color_veg, alpha=0.7)
         ax_a.barh(x[k] + w/2, ordered_ss[k], w, color=bar_color_ss, alpha=0.7)
 
-    # Legend handles
     from matplotlib.patches import Patch
     ax_a.legend(handles=[
         Patch(facecolor="#888888", alpha=0.7, label="Vegard"),
@@ -1114,11 +1149,10 @@ def fig04_indep_test(y_test, a_veg_te, a_ss_te, heas_test, gb, gf):
 
     ax_a.set_yticks(x)
     ax_a.set_yticklabels(ordered_names, fontsize=13, fontfamily="monospace")
-    ax_a.set_xlabel("|Error| (m\u00c5)", fontsize=16)
-    ax_a.set_title("(a) Per-alloy absolute error", fontsize=18)
+    ax_a.set_xlabel(r"|Error| ($\mathrm{\AA}^3$/atom)", fontsize=16)
+    ax_a.set_title("(a) Per-alloy absolute error (volume)", fontsize=18)
     ax_a.invert_yaxis()
 
-    # Separator line between BCC and FCC
     if n_bcc > 0 and n_fcc > 0:
         sep_y = n_bcc - 0.5
         ax_a.axhline(sep_y, color="black", linewidth=1.5, linestyle="--")
@@ -1129,35 +1163,34 @@ def fig04_indep_test(y_test, a_veg_te, a_ss_te, heas_test, gb, gf):
                   f"FCC ({n_fcc})", ha="center", va="center",
                   fontsize=14, fontweight="bold", color="C3")
 
-    # (b) BCC/FCC RMSE breakdown
+    # (b) BCC/FCC RMSE breakdown (volume)
     categories = ["All", "BCC", "FCC"]
-    rmse_v = [np.sqrt(np.mean((a_veg_te - y_test) ** 2)) * 1000,
-              np.sqrt(np.mean((a_veg_te[bcc_t] - y_test[bcc_t]) ** 2)) * 1000,
-              np.sqrt(np.mean((a_veg_te[fcc_t] - y_test[fcc_t]) ** 2)) * 1000]
-    rmse_s = [np.sqrt(np.mean((a_ss_te - y_test) ** 2)) * 1000,
-              np.sqrt(np.mean((a_ss_te[bcc_t] - y_test[bcc_t]) ** 2)) * 1000,
-              np.sqrt(np.mean((a_ss_te[fcc_t] - y_test[fcc_t]) ** 2)) * 1000]
+    rmse_v = [np.sqrt(np.mean((v_veg - v_exp) ** 2)),
+              np.sqrt(np.mean((v_veg[bcc_t] - v_exp[bcc_t]) ** 2)),
+              np.sqrt(np.mean((v_veg[fcc_t] - v_exp[fcc_t]) ** 2))]
+    rmse_s = [np.sqrt(np.mean((v_ss - v_exp) ** 2)),
+              np.sqrt(np.mean((v_ss[bcc_t] - v_exp[bcc_t]) ** 2)),
+              np.sqrt(np.mean((v_ss[fcc_t] - v_exp[fcc_t]) ** 2))]
     x2 = np.arange(len(categories))
     bars_v = ax_b.bar(x2 - 0.2, rmse_v, 0.35, color="gray", alpha=0.7, label="Vegard")
     bars_s = ax_b.bar(x2 + 0.2, rmse_s, 0.35, color="C0", alpha=0.7, label=r"DFT-$\Omega_{\mathrm{sf}}$")
-    # Add value labels on bars
     for bar in list(bars_v) + list(bars_s):
         h = bar.get_height()
-        ax_b.text(bar.get_x() + bar.get_width()/2, h + 0.3, f"{h:.1f}",
+        ax_b.text(bar.get_x() + bar.get_width()/2, h + 0.005, f"{h:.3f}",
                   ha="center", va="bottom", fontsize=12)
     ax_b.set_xticks(x2)
     ax_b.set_xticklabels(categories, fontsize=14)
-    ax_b.set_ylabel("RMSE (m\u00c5)", fontsize=14)
-    ax_b.set_title("(b) RMSE breakdown", fontsize=18)
+    ax_b.set_ylabel(r"RMSE ($\mathrm{\AA}^3$/atom)", fontsize=14)
+    ax_b.set_title("(b) RMSE breakdown (volume)", fontsize=18)
     ax_b.legend(fontsize=12)
 
-    # (c) Parity
-    lims = [min(y_test) - 0.02, max(y_test) + 0.02]
+    # (c) Parity (volume)
+    lims = [min(v_exp) - 0.3, max(v_exp) + 0.3]
     ax_c.plot(lims, lims, "k-", lw=1)
     for idx, label, marker, c in [(bcc_t, "BCC", "s", "C0"), (fcc_t, "FCC", "o", "C3")]:
-        ax_c.scatter(y_test[idx], a_ss_te[idx], c=c, marker=marker, s=90, alpha=0.7, label=label)
-    ax_c.set_xlabel("Experimental $a$ (\u00c5)", fontsize=14)
-    ax_c.set_ylabel("Predicted $a$ (\u00c5)", fontsize=14)
+        ax_c.scatter(v_exp[idx], v_ss[idx], c=c, marker=marker, s=90, alpha=0.7, label=label)
+    ax_c.set_xlabel(r"Experimental $V$ ($\mathrm{\AA}^3$/atom)", fontsize=14)
+    ax_c.set_ylabel(r"Predicted $V$ ($\mathrm{\AA}^3$/atom)", fontsize=14)
     ax_c.set_title(f"(c) Independent test ($q_{{BCC}}$={gb:.2f}, $q_{{FCC}}$={gf:.2f})", fontsize=18)
     ax_c.legend(fontsize=13)
     ax_c.set_aspect("equal")
@@ -2053,19 +2086,27 @@ def fig11_volume_radius(radii):
 
 
 def fig12_hea_additive(y_train, a_add_tr, heas_train, y_test, a_add_te, heas_test):
-    """Fig 12: HEA prediction using additive delta."""
+    """Fig 12: HEA prediction using additive delta (volume basis)."""
+    # Convert to atomic volumes
+    v_exp_tr = a_to_vol(y_train, heas_train)
+    v_add_tr = a_to_vol(a_add_tr, heas_train)
+    v_exp_te = a_to_vol(y_test, heas_test)
+    v_add_te = a_to_vol(a_add_te, heas_test)
+
+    all_v = np.concatenate([v_exp_tr, v_add_tr, v_exp_te, v_add_te])
+    lims = [min(all_v) - 0.3, max(all_v) + 0.3]
+
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 8))
-    lims = [2.85, 3.65]
 
     ax1.plot(lims, lims, "k-", lw=1)
     bcc_tr = [i for i, h in enumerate(heas_train) if h["struct"] == "BCC"]
     fcc_tr = [i for i, h in enumerate(heas_train) if h["struct"] == "FCC"]
-    ax1.scatter(y_train[bcc_tr], a_add_tr[bcc_tr], c="C0", s=50, alpha=0.7, label="BCC")
-    ax1.scatter(y_train[fcc_tr], a_add_tr[fcc_tr], c="C3", s=50, alpha=0.7, marker="^", label="FCC")
-    rmse_tr = np.sqrt(np.mean((a_add_tr - y_train) ** 2))
-    ax1.set_title(f"Training (RMSE = {rmse_tr:.4f} \u00c5)")
-    ax1.set_xlabel("Experimental $a$ (\u00c5)")
-    ax1.set_ylabel("Predicted $a$ (\u00c5)")
+    ax1.scatter(v_exp_tr[bcc_tr], v_add_tr[bcc_tr], c="C0", s=50, alpha=0.7, label="BCC")
+    ax1.scatter(v_exp_tr[fcc_tr], v_add_tr[fcc_tr], c="C3", s=50, alpha=0.7, marker="^", label="FCC")
+    rmse_tr = np.sqrt(np.mean((v_add_tr - v_exp_tr) ** 2))
+    ax1.set_title(f"Calibration (RMSE = {rmse_tr:.3f} " + r"$\mathrm{\AA}^3$" + "/atom)")
+    ax1.set_xlabel(r"Experimental $V$ ($\mathrm{\AA}^3$/atom)")
+    ax1.set_ylabel(r"Predicted $V$ ($\mathrm{\AA}^3$/atom)")
     ax1.legend(fontsize=12)
     ax1.set_xlim(lims); ax1.set_ylim(lims)
     ax1.set_aspect("equal")
@@ -2073,12 +2114,12 @@ def fig12_hea_additive(y_train, a_add_tr, heas_train, y_test, a_add_te, heas_tes
     ax2.plot(lims, lims, "k-", lw=1)
     bcc_te = [i for i, h in enumerate(heas_test) if h["struct"] == "BCC"]
     fcc_te = [i for i, h in enumerate(heas_test) if h["struct"] == "FCC"]
-    ax2.scatter(y_test[bcc_te], a_add_te[bcc_te], c="C0", s=50, alpha=0.7, label="BCC")
-    ax2.scatter(y_test[fcc_te], a_add_te[fcc_te], c="C3", s=50, alpha=0.7, marker="^", label="FCC")
-    rmse_te = np.sqrt(np.mean((a_add_te - y_test) ** 2))
-    ax2.set_title(f"Independent test (RMSE = {rmse_te:.4f} \u00c5)")
-    ax2.set_xlabel("Experimental $a$ (\u00c5)")
-    ax2.set_ylabel("Predicted $a$ (\u00c5)")
+    ax2.scatter(v_exp_te[bcc_te], v_add_te[bcc_te], c="C0", s=50, alpha=0.7, label="BCC")
+    ax2.scatter(v_exp_te[fcc_te], v_add_te[fcc_te], c="C3", s=50, alpha=0.7, marker="^", label="FCC")
+    rmse_te = np.sqrt(np.mean((v_add_te - v_exp_te) ** 2))
+    ax2.set_title(f"Independent test (RMSE = {rmse_te:.3f} " + r"$\mathrm{\AA}^3$" + "/atom)")
+    ax2.set_xlabel(r"Experimental $V$ ($\mathrm{\AA}^3$/atom)")
+    ax2.set_ylabel(r"Predicted $V$ ($\mathrm{\AA}^3$/atom)")
     ax2.legend(fontsize=12)
     ax2.set_xlim(lims); ax2.set_ylim(lims)
     ax2.set_aspect("equal")
@@ -2423,13 +2464,27 @@ def main():
     radii = compute_effective_radii(all_df)
     print(f"    Elements with radii: {len(radii)}")
 
+    # 7b. Volume-based RMSE (for figures)
+    v_exp_tr_fig = a_to_vol(y_train, ALONSO_TABLE2)
+    v_veg_tr_fig = a_to_vol(a_veg_tr, ALONSO_TABLE2)
+    v_ss_tr_fig = a_to_vol(a_ss_tr, ALONSO_TABLE2)
+    v_add_tr_fig = a_to_vol(a_add_tr, ALONSO_TABLE2)
+    v_exp_te_fig = a_to_vol(y_test, INDEPENDENT_TEST)
+    v_veg_te_fig = a_to_vol(a_veg_te, INDEPENDENT_TEST)
+    v_ss_te_fig = a_to_vol(a_ss_te, INDEPENDENT_TEST)
+    v_add_te_fig = a_to_vol(a_add_te, INDEPENDENT_TEST)
+    vrmse_veg_tr_fig = float(np.sqrt(np.mean((v_veg_tr_fig - v_exp_tr_fig) ** 2)))
+    vrmse_ss_tr_fig = float(np.sqrt(np.mean((v_ss_tr_fig - v_exp_tr_fig) ** 2)))
+    vrmse_add_tr_fig = float(np.sqrt(np.mean((v_add_tr_fig - v_exp_tr_fig) ** 2)))
+
     # 8. Generate all figures
     print("\n[7] Generating figures...")
-    fig01_parity(y_train, a_veg_tr, a_ss_tr, y_test, a_veg_te, a_ss_te)
+    fig01_parity(y_train, a_veg_tr, a_ss_tr, y_test, a_veg_te, a_ss_te,
+                 ALONSO_TABLE2, INDEPENDENT_TEST)
     fig02_rmse_bar({
-        "Vegard": rmse_veg_tr,
-        r"DFT-$\Omega_{\mathrm{sf}}$" + "\n(pairwise)": rmse_ss_tr,
-        r"DFT-$\Omega_{\mathrm{sf}}$" + "\n(additive δ)": rmse_add_tr,
+        "Vegard": vrmse_veg_tr_fig,
+        r"DFT-$\Omega_{\mathrm{sf}}$" + "\n(pairwise)": vrmse_ss_tr_fig,
+        r"DFT-$\Omega_{\mathrm{sf}}$" + "\n(additive δ)": vrmse_add_tr_fig,
     })
     fig03_bcc_fcc(y_train, a_ss_tr, ALONSO_TABLE2, y_test, a_ss_te, INDEPENDENT_TEST)
     fig04_indep_test(y_test, a_veg_te, a_ss_te, INDEPENDENT_TEST, gb, gf)
@@ -2480,6 +2535,7 @@ def main():
     rows_test = []
     for i, h in enumerate(INDEPENDENT_TEST):
         elems = "-".join(sorted(h["comp"].keys()))
+        n_auc_i = 4 if h["struct"] == "FCC" else 2
         rows_test.append({
             "alloy": elems,
             "struct": h["struct"],
@@ -2487,6 +2543,9 @@ def main():
             "a_vegard": a_veg_te[i],
             "a_dft_eq10_ss": a_ss_te[i],
             "a_additive": a_add_te[i],
+            "V_exp": y_test[i] ** 3 / n_auc_i,
+            "V_vegard": a_veg_te[i] ** 3 / n_auc_i,
+            "V_dft_eq10_ss": a_ss_te[i] ** 3 / n_auc_i,
             "ref": h.get("ref", ""),
         })
     pd.DataFrame(rows_test).to_csv(OUTDIR / "results_independent_test.csv", index=False)
@@ -2768,6 +2827,33 @@ def main():
     rmse_ss_te_fcc = float(np.sqrt(np.mean((a_ss_te[fcc_t] - y_test[fcc_t]) ** 2)))
     rmse_ss_tr_bcc = float(np.sqrt(np.mean((a_ss_tr[bcc_i] - y_train[bcc_i]) ** 2)))
     rmse_ss_tr_fcc = float(np.sqrt(np.mean((a_ss_tr[fcc_i] - y_train[fcc_i]) ** 2)))
+
+    # Volume-based RMSE (Å³/atom)
+    v_exp_tr = a_to_vol(y_train, ALONSO_TABLE2)
+    v_veg_tr = a_to_vol(a_veg_tr, ALONSO_TABLE2)
+    v_ss_tr = a_to_vol(a_ss_tr, ALONSO_TABLE2)
+    v_exp_te = a_to_vol(y_test, INDEPENDENT_TEST)
+    v_veg_te = a_to_vol(a_veg_te, INDEPENDENT_TEST)
+    v_ss_te = a_to_vol(a_ss_te, INDEPENDENT_TEST)
+    v_add_tr = a_to_vol(a_add_tr, ALONSO_TABLE2)
+    v_add_te = a_to_vol(a_add_te, INDEPENDENT_TEST)
+
+    vrmse_veg_tr = float(np.sqrt(np.mean((v_veg_tr - v_exp_tr) ** 2)))
+    vrmse_ss_tr = float(np.sqrt(np.mean((v_ss_tr - v_exp_tr) ** 2)))
+    vrmse_add_tr = float(np.sqrt(np.mean((v_add_tr - v_exp_tr) ** 2)))
+    vrmse_veg_te = float(np.sqrt(np.mean((v_veg_te - v_exp_te) ** 2)))
+    vrmse_ss_te = float(np.sqrt(np.mean((v_ss_te - v_exp_te) ** 2)))
+    vrmse_add_te = float(np.sqrt(np.mean((v_add_te - v_exp_te) ** 2)))
+    vrmse_veg_te_bcc = float(np.sqrt(np.mean((v_veg_te[bcc_t] - v_exp_te[bcc_t]) ** 2)))
+    vrmse_veg_te_fcc = float(np.sqrt(np.mean((v_veg_te[fcc_t] - v_exp_te[fcc_t]) ** 2)))
+    vrmse_ss_te_bcc = float(np.sqrt(np.mean((v_ss_te[bcc_t] - v_exp_te[bcc_t]) ** 2)))
+    vrmse_ss_te_fcc = float(np.sqrt(np.mean((v_ss_te[fcc_t] - v_exp_te[fcc_t]) ** 2)))
+    vrmse_ss_tr_bcc = float(np.sqrt(np.mean((v_ss_tr[bcc_i] - v_exp_tr[bcc_i]) ** 2)))
+    vrmse_ss_tr_fcc = float(np.sqrt(np.mean((v_ss_tr[fcc_i] - v_exp_tr[fcc_i]) ** 2)))
+    print(f"\n    Volume-based RMSE (Å³/atom):")
+    print(f"      Train Vegard: {vrmse_veg_tr:.4f}, DFT-Ωsf: {vrmse_ss_tr:.4f}")
+    print(f"      Test  Vegard: {vrmse_veg_te:.4f}, DFT-Ωsf: {vrmse_ss_te:.4f}")
+    print(f"      Test  BCC:    {vrmse_ss_te_bcc:.4f}, FCC: {vrmse_ss_te_fcc:.4f}")
 
     # Binary system Vegard RMSE (for Fig14 discussion)
     # Compute from all B2+L12 pairs using King volumes
@@ -3054,6 +3140,24 @@ def main():
             "improvement_BCC_pct": round((1 - rmse_ss_te_bcc / rmse_veg_te_bcc) * 100, 1),
             "improvement_FCC_pct": round((1 - rmse_ss_te_fcc / rmse_veg_te_fcc) * 100, 1),
             "BCC_identical_to_Vegard": f"{id_v}/{len(bcc_t)}",
+        },
+        "volume_RMSE": {
+            "_unit": "Å³/atom",
+            "training_Vegard": round(vrmse_veg_tr, 4),
+            "training_DFT_Omega_sf": round(vrmse_ss_tr, 4),
+            "training_additive": round(vrmse_add_tr, 4),
+            "training_BCC": round(vrmse_ss_tr_bcc, 4),
+            "training_FCC": round(vrmse_ss_tr_fcc, 4),
+            "test_Vegard": round(vrmse_veg_te, 4),
+            "test_DFT_Omega_sf": round(vrmse_ss_te, 4),
+            "test_additive": round(vrmse_add_te, 4),
+            "test_Vegard_BCC": round(vrmse_veg_te_bcc, 4),
+            "test_Vegard_FCC": round(vrmse_veg_te_fcc, 4),
+            "test_BCC": round(vrmse_ss_te_bcc, 4),
+            "test_FCC": round(vrmse_ss_te_fcc, 4),
+            "improvement_vs_Vegard_pct": round((1 - vrmse_ss_te / vrmse_veg_te) * 100, 1),
+            "improvement_BCC_pct": round((1 - vrmse_ss_te_bcc / vrmse_veg_te_bcc) * 100, 1),
+            "improvement_FCC_pct": round((1 - vrmse_ss_te_fcc / vrmse_veg_te_fcc) * 100, 1),
         },
         "additive_decomposition": {
             "B2_R2": round(float(decomp["B2"]["r2"]), 4),

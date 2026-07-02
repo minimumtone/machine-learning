@@ -397,17 +397,17 @@ Ridge: 5記述子、GB: GradientBoosting。}
 
 DFT-$\Omega_\text{sf}$モデルはRMSE = 0.0214~\AA{}を達成し、Vegard則（0.0227~\AA）に対し5.8\%、Alonsoモデル（0.0229~\AA）に対し6.6\%の改善を示す。ML残差補正（Ridge LOO-CV RMSE = 0.0220~\AA）は物理モデル単体を改善できず、GradientBoostingは訓練RMSE = 0.0051~\AA だがLOO-CV RMSE = 0.170~\AA と重度の過学習を示した。残差が測定ノイズに支配されていることを示唆する。現モデルの残差は組成の体系的関数ではなく、合金作製条件（焼鈍温度・冷却速度・均質化度）に起因する実験間の再現性ばらつき（$\sigma \approx 0.016$~\AA）に相当すると考えられる。さらなる精度向上には合金作製プロセスの明示的制御または高品質実験データの拡充が必要となる。
 
-図~\ref{fig:parity}にパリティプロットを示す。
+図~\ref{fig:parity}にパリティプロットを示す。なお、BCC（$n_\text{auc} = 2$）とFCC（$n_\text{auc} = 4$）を同一空間で公平に比較するため、図では格子定数$a$を原子体積$V = a^3/n_\text{auc}$に変換して表示する。
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\columnwidth]{fig_parity.png}
-\caption{全95 HEAのパリティプロット（予測 vs 実験格子定数）。
+\caption{全95 HEAのパリティプロット（予測 vs 実験原子体積、$\mathrm{\AA}^3$/atom）。
   灰色丸: Vegard則（校正64 HEA）、
-  青丸: DFT-$\Omega_\text{sf}$（校正64 HEA、RMSE = 0.0214~\AA）、
+  青丸: DFT-$\Omega_\text{sf}$（校正64 HEA）、
   灰色三角: Vegard則（テスト31 HEA）、
-  赤三角: DFT-$\Omega_\text{sf}$（テスト31 HEA、RMSE = 0.0155~\AA）。
-  対角線は$a_\text{pred} = a_\text{exp}$。}
+  赤三角: DFT-$\Omega_\text{sf}$（テスト31 HEA）。
+  対角線は$V_\text{pred} = V_\text{exp}$。右下インセットはFCC領域の拡大図。}
 \label{fig:parity}
 \end{figure}
 
@@ -440,7 +440,7 @@ FCC HEAはRMSE = 0.0096~\AA{}と推定$\sigma$以下の精度を示す。構成�
 \begin{figure}[!t]
 \centering
 \includegraphics[width=\columnwidth]{fig_bcc_fcc.png}
-\caption{全95 HEAのBCC/FCC別パリティプロット。
+\caption{全95 HEAのBCC/FCC別パリティプロット（原子体積、$\mathrm{\AA}^3$/atom）。
   四角/丸: 校正64 HEA（BCC 29 + FCC 35）、三角: 独立テスト31 HEA（BCC 17 + FCC 14）。
   青: BCC、赤: FCC。}
 \label{fig:bcc_fcc}
@@ -477,8 +477,8 @@ DFT-$\Omega_\text{sf}$モデルが全カテゴリで最良である。全体RMSE
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=\textwidth]{fig_indep_test.png}
-\caption{独立テストセット（31 HEA、14文献20元素）の予測性能。
-  (a)~合金別絶対誤差。(b)~構造別RMSE（灰: Vegard、青: DFT-$\Omega_\text{sf}$）。
+\caption{独立テストセット（31 HEA、14文献20元素）の予測性能（原子体積、$\mathrm{\AA}^3$/atom）。
+  (a)~合金別絶対誤差。(b)~構造別RMSE。
   (c)~パリティプロット（$q_\text{BCC} = 0.49$、$q_\text{FCC} = 0.13$）。
   BCC 17合金（青四角）とFCC 14合金（赤丸）。}
 \label{fig:indep_test}
@@ -601,9 +601,8 @@ L1$_2$のVegard偏差に対するVegard端点の影響を定量評価した。Ki
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=\textwidth]{fig_hea_prediction_additive.png}
-\caption{加法$\delta^{(s)}$モデルによるHEA予測（64 HEA）。
-  (a)~RMSE比較。(b)~パリティプロット。
-  (c)~独立テスト（$q_\text{BCC}$, $q_\text{FCC}$は各構造の最適校正定数）。}
+\caption{加法$\delta^{(s)}$モデルによるHEA予測（原子体積、$\mathrm{\AA}^3$/atom）。
+  左: 校正64 HEA、右: 独立テスト31 HEA。}
 \label{fig:veff_hea}
 \end{figure*}
 
