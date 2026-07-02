@@ -39,6 +39,24 @@
     "improvement_FCC_pct": 10.2,
     "BCC_identical_to_Vegard": "0/17"
   },
+  "volume_RMSE": {
+    "_unit": "Å³/atom",
+    "training_Vegard": 0.3542,
+    "training_DFT_Omega_sf": 0.3416,
+    "training_additive": 0.35,
+    "training_BCC": 0.4967,
+    "training_FCC": 0.0945,
+    "test_Vegard": 0.2793,
+    "test_DFT_Omega_sf": 0.2111,
+    "test_additive": 0.2343,
+    "test_Vegard_BCC": 0.3422,
+    "test_Vegard_FCC": 0.1745,
+    "test_BCC": 0.2474,
+    "test_FCC": 0.1562,
+    "improvement_vs_Vegard_pct": 24.4,
+    "improvement_BCC_pct": 27.7,
+    "improvement_FCC_pct": 10.5
+  },
   "additive_decomposition": {
     "B2_R2": 0.5357,
     "L12_R2": 0.6606,
