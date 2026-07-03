@@ -1,0 +1,189 @@
+  SQS BCC pure volume overrides (16 elements):
+  Ag: SQS 17.910 -> King 17.061 (SQS-King=+5.0%)
+  Au: SQS 17.965 -> King 16.966 (SQS-King=+5.9%)
+  Be: SQS 7.843 -> MP 7.871 (SQS-King=-3.3%)
+  Ca: SQS 42.153 -> MP 42.711 (SQS-King=-3.4%)
+  Cr: SQS 11.522 -> King 12.008 (SQS-King=-4.0%)
+  Fe: SQS 11.312 -> MP 11.734 (SQS-King=-3.9%)
+  Ir: SQS 15.082 -> King 14.155 (SQS-King=+6.5%)
+  Mn: SQS 10.928 -> King 12.210 (SQS-King=-10.5%)
+  Os: SQS 14.874 -> King 13.977 (SQS-King=+6.4%)
+  Pb: SQS 35.229 -> MP 31.034 (SQS-King=+16.2%)
+  Pd: SQS 15.384 -> King 14.716 (SQS-King=+4.5%)
+  Pt: SQS 15.798 -> King 15.095 (SQS-King=+4.7%)
+  Re: SQS 15.177 -> King 14.712 (SQS-King=+3.2%)
+  Rh: SQS 14.478 -> King 13.754 (SQS-King=+5.3%)
+  Ru: SQS 14.225 -> King 13.571 (SQS-King=+4.8%)
+  Sn: SQS 27.973 -> MP 27.205 (SQS-King=+3.4%)
+  SQS FCC pure volume overrides (5 elements):
+  Nb: SQS 18.944 -> King 17.978 (SQS-King=+5.4%)
+  Os: SQS 14.407 -> MP 14.201 (SQS-King=+3.1%)
+  Pb: SQS 34.068 -> MP 31.054 (SQS-King=+12.4%)
+  Pd: SQS 15.299 -> MP 15.028 (SQS-King=+4.0%)
+  Pt: SQS 15.599 -> MP 15.327 (SQS-King=+3.3%)
+======================================================================
+[1] BCC pure elements replaced (SQS deviates >3% from King)
+======================================================================
+  Ag : SQS   17.910 -> used   17.061 (King   17.061, SQS-King +5.0%)
+  Au : SQS   17.965 -> used   16.966 (King   16.966, SQS-King +5.9%)
+  Be : SQS    7.843 -> used    7.871 (King    8.111, SQS-King -3.3%)
+  Ca : SQS   42.153 -> used   42.711 (King   43.630, SQS-King -3.4%)
+  Cr : SQS   11.522 -> used   12.008 (King   12.008, SQS-King -4.0%)
+  Fe : SQS   11.312 -> used   11.734 (King   11.776, SQS-King -3.9%)
+  Ir : SQS   15.082 -> used   14.155 (King   14.155, SQS-King +6.5%)
+  Mn : SQS   10.928 -> used   12.210 (King   12.210, SQS-King -10.5%)
+  Os : SQS   14.874 -> used   13.977 (King   13.977, SQS-King +6.4%)
+  Pb : SQS   35.229 -> used   31.034 (King   30.321, SQS-King +16.2%)
+  Pd : SQS   15.384 -> used   14.716 (King   14.716, SQS-King +4.5%)
+  Pt : SQS   15.798 -> used   15.095 (King   15.095, SQS-King +4.7%)
+  Re : SQS   15.177 -> used   14.712 (King   14.712, SQS-King +3.2%)
+  Rh : SQS   14.478 -> used   13.754 (King   13.754, SQS-King +5.3%)
+  Ru : SQS   14.225 -> used   13.571 (King   13.571, SQS-King +4.8%)
+  Sn : SQS   27.973 -> used   27.205 (King   27.053, SQS-King +3.4%)
+  Total: 16 elements: Ag, Au, Be, Ca, Cr, Fe, Ir, Mn, Os, Pb, Pd, Pt, Re, Rh, Ru, Sn
+
+======================================================================
+[2] FCC pure elements replaced
+======================================================================
+  Nb : SQS   18.944 -> used   17.978 (King   17.978, SQS-King +5.4%)
+  Os : SQS   14.407 -> used   14.201 (King   13.977, SQS-King +3.1%)
+  Pb : SQS   34.068 -> used   31.054 (King   30.321, SQS-King +12.4%)
+  Pd : SQS   15.299 -> used   15.028 (King   14.716, SQS-King +4.0%)
+  Pt : SQS   15.599 -> used   15.327 (King   15.095, SQS-King +3.3%)
+  Total: 5 elements: Nb, Os, Pb, Pd, Pt
+
+======================================================================
+[3] SQS BCC pair coverage vs independent test requirements
+======================================================================
+  MISSING (needed by calib/test BCC HEA): Co-Mn
+
+======================================================================
+[4] SQS pair coverage vs B2 pairs (systematic gap check)
+======================================================================
+  B2 pairs: 465, SQS pairs: 414, missing in SQS: 51
+  |Omega_B2| missing pairs:  mean 0.0869, median 0.0680
+  |Omega_B2| covered pairs:  mean 0.0592, median 0.0400
+  Missing pairs (sorted by |Omega_B2| desc, top 30):
+    Ca-Os: Omega_B2 = -0.3165
+    Ca-Rh: Omega_B2 = -0.3014
+    Ca-Co: Omega_B2 = -0.2625
+    Ca-Pb: Omega_B2 = -0.1832
+    Re-Sn: Omega_B2 = -0.1615
+    Pb-Re: Omega_B2 = -0.1540
+    Os-Pb: Omega_B2 = -0.1510
+    Pb-Ru: Omega_B2 = -0.1507
+    Cr-Pd: Omega_B2 = +0.1422
+    Pb-W: Omega_B2 = -0.1403
+    Mo-Pb: Omega_B2 = -0.1394
+    Ir-Sn: Omega_B2 = -0.1343
+    Co-Pb: Omega_B2 = -0.1325
+    Ni-Sn: Omega_B2 = -0.1309
+    Pb-Ta: Omega_B2 = -0.1266
+    Pb-Rh: Omega_B2 = -0.1261
+    Ir-Pb: Omega_B2 = -0.1167
+    Hf-Pb: Omega_B2 = -0.1054
+    Ni-Pb: Omega_B2 = -0.1004
+    Cr-Pt: Omega_B2 = +0.0982
+    Sc-Sn: Omega_B2 = -0.0905
+    Pt-Sn: Omega_B2 = -0.0872
+    Fe-Pb: Omega_B2 = -0.0762
+    Be-Pb: Omega_B2 = +0.0759
+    Al-Pt: Omega_B2 = -0.0684
+    Al-Pb: Omega_B2 = +0.0680
+    Pb-Pd: Omega_B2 = -0.0657
+    Ca-V: Omega_B2 = -0.0590
+    Pb-Pt: Omega_B2 = -0.0588
+    Co-Mn: Omega_B2 = -0.0511
+
+======================================================================
+[4b] SQS pure elements vs MP-BCC DFT volumes (same-functional check)
+======================================================================
+  el   SQS(A3)   MP(A3)   dev%  (sorted by |dev|)
+  Pb    35.229   31.034  +13.5 <-- >3%
+  Cr    11.522   13.084  -11.9 <-- >3%
+  Al    17.035   16.116   +5.7 <-- >3%
+  Fe    11.312   11.734   -3.6 <-- >3%
+  Cu    11.835   11.458   +3.3 <-- >3%
+  Sn    27.973   27.205   +2.8
+  Mg    22.909   22.285   +2.8
+  Ni    10.841   10.597   +2.3
+  Rh    14.478   14.707   -1.6
+  V     13.471   13.264   +1.6
+  W     16.173   15.932   +1.5
+  La    37.792   38.320   -1.4
+  Ag    17.910   18.154   -1.3
+  Au    17.965   18.207   -1.3
+  Ca    42.153   42.711   -1.3
+  Sc    24.869   25.158   -1.1
+  Pd    15.384   15.547   -1.0
+  Mn    10.928   10.819   +1.0
+  Ta    18.298   18.130   +0.9
+  Zr    22.818   22.974   -0.7
+  Pt    15.798   15.904   -0.7
+  Mo    15.791   15.892   -0.6
+  Ir    15.082   15.172   -0.6
+  Hf    22.208   22.087   +0.5
+  Co    11.088   11.031   +0.5
+  Be     7.843    7.871   -0.4
+  Er    31.063   30.953   +0.4
+  Dy    31.910   32.018   -0.3
+  Re    15.177   15.214   -0.2
+  Zn    15.473   15.451   +0.1
+  Nb    18.283   18.258   +0.1
+  Tb    32.503   32.527   -0.1
+  Os    14.874   14.868   +0.0
+  Ti    17.184   17.190   -0.0
+
+======================================================================
+[4c] SQS 1:1 pair volumes vs MP/OQMD B2 volumes (deviation ranking)
+======================================================================
+  414 SQS pairs have MP/OQMD B2 reference; |dev|>3%: 138, |dev|>5%: 69
+  Note: SQS(random) vs B2(ordered) differ physically; large |dev| is a flag.
+  pair        V_SQS   V_B2ref   dev%   ref  (top 40 by |dev|)
+  Mg-Pt     19.064   15.721   +21.3   OQMD
+  Mg-Os     18.342   15.162   +21.0   OQMD
+  Mg-Ni     16.925   14.014   +20.8   OQMD
+  Ca-Nb     23.970   29.429   -18.5   OQMD
+  Fe-Sn     18.568   15.975   +16.2   OQMD
+  Rh-Sc     19.315   16.671   +15.9   MP+OQMD
+  Ca-Zr     28.423   33.306   -14.7   OQMD
+  Co-Sn     17.747   15.621   +13.6   OQMD
+  Be-Ir     12.395   11.003   +12.7   OQMD
+  Fe-Mg     17.111   15.252   +12.2   OQMD
+  Ca-Mo     21.148   24.051   -12.1   OQMD
+  Be-Pd     12.524   11.180   +12.0   MP+OQMD
+  Be-Os     12.297   10.991   +11.9   OQMD
+  Be-Rh     11.905   10.704   +11.2   MP+OQMD
+  Be-Re     12.595   11.350   +11.0   OQMD
+  Be-Co      9.361    8.502   +10.1   MP+OQMD
+  Mg-V      16.654   18.527   -10.1   OQMD
+  Al-Fe     12.834   11.661   +10.1   MP+OQMD
+  Be-W      13.326   12.111   +10.0   OQMD
+  Ca-W      20.840   23.111    -9.8   OQMD
+  Au-Sc     21.334   19.437    +9.8   MP+OQMD
+  Be-Sn     19.840   18.083    +9.7   OQMD
+  Au-Be     14.262   13.022    +9.5   OQMD
+  Ca-Re     19.373   21.383    -9.4   OQMD
+  Ag-Be     13.794   12.634    +9.2   OQMD
+  Mn-Sc     18.640   17.073    +9.2   OQMD
+  Nb-Sc     21.619   19.811    +9.1   OQMD
+  Al-Co     12.394   11.364    +9.1   MP+OQMD
+  Be-Ta     14.601   13.404    +8.9   OQMD
+  Be-Ru     11.789   10.825    +8.9   OQMD
+  Ca-Zn     26.629   24.484    +8.8   MP+OQMD
+  Be-Hf     16.485   15.174    +8.6   OQMD
+  Pd-Zn     15.603   14.484    +7.7   OQMD
+  Ru-Ti     15.579   14.467    +7.7   MP+OQMD
+  Be-Nb     14.542   13.505    +7.7   OQMD
+  Be-Mo     12.932   12.035    +7.5   OQMD
+  Al-Ir     14.585   13.590    +7.3   MP+OQMD
+  Cr-Sn     20.987   19.557    +7.3   OQMD
+  Be-Ni      9.381    8.760    +7.1   MP+OQMD
+  Fe-Hf     16.344   15.264    +7.1   OQMD
+  Full ranking written to paper/sqs_vs_mp_oqmd_deviation.csv
+
+======================================================================
+[5] Elements present in SQS pure set
+======================================================================
+  BCC pure (38): Ag, Al, Au, Be, Ca, Co, Cr, Cu, Dy, Er, Fe, Ge, Hf, Ir, La, Mg, Mn, Mo, Nb, Ni, Os, Pb, Pd, Pt, Re, Rh, Ru, Sc, Si, Sn, Ta, Tb, Ti, V, W, Y, Zn, Zr
+  FCC pure (12): Mo, Nb, Ni, Os, Pb, Pd, Pt, Re, Rh, Ru, Sc, Si

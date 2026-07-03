@@ -1,0 +1,88 @@
+  SQS BCC pure volume overrides (16 elements):
+  Ag: SQS 17.910 -> King 17.061 (SQS-King=+5.0%)
+  Au: SQS 17.965 -> King 16.966 (SQS-King=+5.9%)
+  Be: SQS 7.843 -> MP 7.871 (SQS-King=-3.3%)
+  Ca: SQS 42.153 -> MP 42.711 (SQS-King=-3.4%)
+  Cr: SQS 11.522 -> King 12.008 (SQS-King=-4.0%)
+  Fe: SQS 11.312 -> MP 11.734 (SQS-King=-3.9%)
+  Ir: SQS 15.082 -> King 14.155 (SQS-King=+6.5%)
+  Mn: SQS 10.928 -> King 12.210 (SQS-King=-10.5%)
+  Os: SQS 14.874 -> King 13.977 (SQS-King=+6.4%)
+  Pb: SQS 35.229 -> MP 31.034 (SQS-King=+16.2%)
+  Pd: SQS 15.384 -> King 14.716 (SQS-King=+4.5%)
+  Pt: SQS 15.798 -> King 15.095 (SQS-King=+4.7%)
+  Re: SQS 15.177 -> King 14.712 (SQS-King=+3.2%)
+  Rh: SQS 14.478 -> King 13.754 (SQS-King=+5.3%)
+  Ru: SQS 14.225 -> King 13.571 (SQS-King=+4.8%)
+  Sn: SQS 27.973 -> MP 27.205 (SQS-King=+3.4%)
+  SQS FCC pure volume overrides (5 elements):
+  Nb: SQS 18.944 -> King 17.978 (SQS-King=+5.4%)
+  Os: SQS 14.407 -> MP 14.201 (SQS-King=+3.1%)
+  Pb: SQS 34.068 -> MP 31.054 (SQS-King=+12.4%)
+  Pd: SQS 15.299 -> MP 15.028 (SQS-King=+4.0%)
+  Pt: SQS 15.599 -> MP 15.327 (SQS-King=+3.3%)
+==============================================================================
+[1a] q re-optimization: raw SQS vs hybrid vs all-King pure volumes
+==============================================================================
+  (1) raw SQS (no replacement)       q_opt=+1.958  test(q_opt)=0.0112  test(q=1)=0.0137  [Vegard 0.0226] (n_pairs=414)
+  (2) hybrid (current, 16 replaced)  q_opt=+1.267  test(q_opt)=0.0111  test(q=1)=0.0125  [Vegard 0.0226] (n_pairs=414)
+  (3) all King                       q_opt=+0.623  test(q_opt)=0.0163  test(q=1)=0.0141  [Vegard 0.0226] (n_pairs=414)
+  (4) all MP-BCC DFT                 q_opt=+0.979  test(q_opt)=0.0171  test(q=1)=0.0170  [Vegard 0.0226] (n_pairs=386)
+
+==============================================================================
+[1b] Non-circular replacement: criterion = |SQS-MP| > 3% (same functional)
+==============================================================================
+  replaced (5): Al(+5.7%), Cr(-11.9%), Cu(+3.3%), Fe(-3.6%), Pb(+13.5%)
+  (5) MP-criterion hybrid            q_opt=+0.949  test(q_opt)=0.0157  test(q=1)=0.0154  [Vegard 0.0226] 
+
+==============================================================================
+[1c] Cr/Fe/Mn individual sensitivity (others = current hybrid)
+==============================================================================
+  Cr <- SQS (11.522 A3)              q_opt=+1.633  test(q_opt)=0.0110  test(q=1)=0.0125  [Vegard 0.0226] 
+  Cr <- MP (13.084 A3)               q_opt=+0.796  test(q_opt)=0.0141  test(q=1)=0.0125  [Vegard 0.0226] 
+  Cr <- King (12.008 A3)             q_opt=+1.267  test(q_opt)=0.0111  test(q=1)=0.0125  [Vegard 0.0226] 
+  Fe <- SQS (11.312 A3)              q_opt=+1.511  test(q_opt)=0.0107  test(q=1)=0.0125  [Vegard 0.0226] 
+  Fe <- MP (11.734 A3)               q_opt=+1.267  test(q_opt)=0.0111  test(q=1)=0.0125  [Vegard 0.0226] 
+  Fe <- King (11.776 A3)             q_opt=+1.245  test(q_opt)=0.0112  test(q=1)=0.0125  [Vegard 0.0226] 
+  Mn <- SQS (10.928 A3)              q_opt=+1.267  test(q_opt)=0.0121  test(q=1)=0.0137  [Vegard 0.0226] 
+  Mn <- MP (10.819 A3)               q_opt=+1.267  test(q_opt)=0.0122  test(q=1)=0.0138  [Vegard 0.0226] 
+  Mn <- King (12.210 A3)             q_opt=+1.267  test(q_opt)=0.0111  test(q=1)=0.0125  [Vegard 0.0226] 
+
+==============================================================================
+[3a] Test-set independence: exclude 3 compositions overlapping calibration
+==============================================================================
+  overlapping compositions (3): ['CoCrFeMnNi', 'CoCrFeNi', 'CoCrFeNiPd']
+  full test (31)       Vegard=0.0202  model=0.0155  improvement=23.3%
+  non-overlap (28)     Vegard=0.0210  model=0.0159  improvement=24.3%
+
+==============================================================================
+[3b] Leave-one-element-out (BCC): q re-optimized w/o element, eval on test alloys containing it
+==============================================================================
+  w/o Al: calib 24/29, test n= 2, q_BCC=+0.201, Vegard=0.0423, model=0.0340
+  w/o Co: calib 28/29, test n= 1, q_BCC=+0.476, Vegard=0.0572, model=0.0318
+  w/o Hf: calib 24/29, test n= 8, q_BCC=+0.693, Vegard=0.0199, model=0.0126
+  w/o Mn: calib 29/29, test n= 1, q_BCC=+0.486, Vegard=0.0572, model=0.0312
+  w/o Mo: calib 11/29, test n=11, q_BCC=+0.473, Vegard=0.0199, model=0.0137
+  w/o Nb: calib  6/29, test n=15, q_BCC=+0.394, Vegard=0.0183, model=0.0150
+  w/o Ni: calib 27/29, test n= 1, q_BCC=+0.427, Vegard=0.0572, model=0.0344
+  w/o Ta: calib 10/29, test n= 8, q_BCC=+0.377, Vegard=0.0197, model=0.0154
+  w/o Ti: calib 14/29, test n=11, q_BCC=+0.576, Vegard=0.0180, model=0.0129
+  w/o V : calib 15/29, test n= 9, q_BCC=+1.085, Vegard=0.0247, model=0.0155
+  w/o W : calib 18/29, test n= 3, q_BCC=+0.584, Vegard=0.0138, model=0.0073
+  w/o Zr: calib 21/29, test n= 8, q_BCC=+0.571, Vegard=0.0210, model=0.0179
+
+==============================================================================
+[5] L1_2 asymmetry: directional (A3B vs B3A kept separate) FCC impact
+==============================================================================
+  L1_2 pairs with both orientations: 435/441; |Omega(A3B)-Omega(B3A)| mean=0.0370, max=0.2430
+  FCC test RMSE: symmetric(median)=0.0152, min-orient=0.0159, max-orient=0.0149
+  max |prediction difference| across orientations: 0.0054 A (mean 0.0026 A)
+
+==============================================================================
+[8] Fair ML comparison: GradientBoosting on RESIDUALS (LOO-CV), and direct with Vegard feature
+==============================================================================
+  physics model train RMSE: 0.0214
+  Ridge residual LOO-CV:    0.0220
+  GB residual LOO-CV:       0.0267
+  GB direct (+Vegard feat): 0.0359
+  Ridge direct (+Vegard):   0.0850
