@@ -217,6 +217,12 @@
     "correlation_l12_vs_fcc_sqs_n": 70,
     "correlation_l12_vs_fcc_sqs_r": 0.913,
     "correlation_l12_vs_fcc_sqs_slope": 1.075,
+    "n_bcc_pure_replaced": 16,
+    "raw_sqs_q_opt": 1.958,
+    "raw_sqs_RMSE_test_qopt": 0.0112,
+    "raw_sqs_RMSE_test_q1": 0.0137,
+    "raw_sqs_improvement_q1_pct": 39.2,
+    "raw_sqs_improvement_qopt_pct": 50.3,
     "test_vegard": {
       "ALL": 0.0202,
       "BCC": 0.0226,

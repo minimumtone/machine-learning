@@ -158,7 +158,7 @@ KING_ATOMIC_VOLUMES = {
 }
 
 # =====================================================================
-# Alonso Table 2 — 68 cubic HEAs
+# Alonso Table 2 — 64 cubic HEAs (BCC 29 + FCC 35)
 # =====================================================================
 ALONSO_TABLE2 = [
     {"comp":{"W":0.273,"Nb":0.227,"Mo":0.256,"Ta":0.244},"struct":"BCC","a_exp":3.2134,"a_vegard":3.2263,"a_eq10":3.2148},
@@ -228,15 +228,14 @@ ALONSO_TABLE2 = [
 ]
 
 # =====================================================================
-# Independent Test Set — HEAs NOT in Alonso Table 2
-# Sources: Senkov (2010, 2011, 2013, 2018), Cantor (2004),
-#          Gali & George (2013), Wang et al. (2019), Feuerbacher (2018),
-#          Stepanov (2015), Youssef (2015), Tsai (2013), He (2014),
-#          Otto (2013), Zhang (2014), Tasan (2014)
-# All single-phase, XRD-verified compositions.
+# Independent Test Set — 31 HEAs NOT in Alonso Table 2 (BCC 17 + FCC 14)
+# Sources: Senkov (2012, 2013), Otto (2013), Niu (2017), Stepanov (2015),
+#          Dirras (2016), Yao (2016), Freudenberger (2017), Wang (2019),
+#          Tseng (2019), Reget (2020), Chen (2022), Kantelis (2025), Chen (2023)
+# All single-phase, XRD-verified compositions. 19 elements.
 # =====================================================================
 INDEPENDENT_TEST = [
-    # --- BCC HEAs (10) ---
+    # --- BCC HEAs (17) ---
     # Yao 2016 / Senkov review: MoNbTaV single BCC
     {"comp":{"Mo":0.25,"Nb":0.25,"Ta":0.25,"V":0.25},"struct":"BCC","a_exp":3.208,
      "ref":"Yao2016_Entropy","note":"equiatomic 4-element refractory"},
@@ -268,7 +267,7 @@ INDEPENDENT_TEST = [
     {"comp":{"Hf":0.20,"Mo":0.20,"Nb":0.20,"Ta":0.20,"Ti":0.20},"struct":"BCC","a_exp":3.305,
      "ref":"Tseng2019_Entropy","note":"equiatomic 5-element (no Zr)"},
     #
-    # --- FCC HEAs (13) ---
+    # --- FCC HEAs (14) ---
     # Otto 2013: CoCrFeMnNi (Cantor alloy)
     {"comp":{"Co":0.20,"Cr":0.20,"Fe":0.20,"Mn":0.20,"Ni":0.20},"struct":"FCC","a_exp":3.5988,
      "ref":"Otto2013_ActaMat","note":"Cantor alloy standard"},

@@ -610,6 +610,49 @@ def analyze_sqs(sqs_data, ob2, ol12, heas_train, heas_test):
     for q_val in [0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 2.0]:
         q_scan[f"q{q_val:.1f}"] = round(_rmse(omega_dft, q_val, heas_test), 4)
 
+    # --- Raw SQS sensitivity (no pure-volume replacement) ---
+    # Recompute omega using unmodified SQS pure volumes
+    pure_vol_raw = sqs_data.get("pure_vol_raw", {})
+    omega_raw = {}
+    if pure_vol_raw:
+        import csv as _csv
+        with open(SQS_FILE) as _f:
+            _rows = list(_csv.DictReader(_f))
+        for _r in _rows:
+            if _r["status"] != "OK" or _r.get("relax_converged", "") != "yes":
+                continue
+            if _r["lattice_type"] != "bcc":
+                continue
+            _pairs = re.findall(r"([A-Z][a-z]?)(\d+)", _r["dir"])
+            if len(_pairs) != 2:
+                continue
+            _el1, _n1 = _pairs[0][0], int(_pairs[0][1])
+            _el2, _n2 = _pairs[1][0], int(_pairs[1][1])
+            if _n1 != 8 or _n2 != 8 or _el1 == _el2:
+                continue
+            if _el1 in EXCLUDE_ELEMENTS or _el2 in EXCLUDE_ELEMENTS:
+                continue
+            if _el1 not in KING_ATOMIC_VOLUMES or _el2 not in KING_ATOMIC_VOLUMES:
+                continue
+            try:
+                _a = float(_r["a_bcc_A"])
+            except (ValueError, KeyError):
+                continue
+            if _a < 2.0 or _a > 8.0:
+                continue
+            _pair = tuple(sorted([_el1, _el2]))
+            _v_actual = _a**3 / 2.0
+            if _pair[0] in pure_vol_raw and _pair[1] in pure_vol_raw:
+                _v_dft = 0.5 * pure_vol_raw[_pair[0]] + 0.5 * pure_vol_raw[_pair[1]]
+                omega_raw[_pair] = (_v_actual - _v_dft) / _v_dft
+
+    if omega_raw:
+        q_raw, rmse_raw_train = _optimize_q(omega_raw, heas_train)
+        rmse_raw_test = _rmse(omega_raw, q_raw, heas_test)
+        rmse_raw_test_q1 = _rmse(omega_raw, 1.0, heas_test)
+    else:
+        q_raw, rmse_raw_train, rmse_raw_test, rmse_raw_test_q1 = 0, 0, 0, 0
+
     # FCC: L12 vs FCC SQS 1:1 correlation
     fcc_omega_king = sqs_data.get("fcc_omega_king", {})
     common_l12_fcc = set(ol12.keys()) & set(fcc_omega_king.keys())
@@ -664,6 +707,21 @@ def analyze_sqs(sqs_data, ob2, ol12, heas_train, heas_test):
         "correlation_l12_vs_fcc_sqs_n": len(common_l12_fcc),
         "correlation_l12_vs_fcc_sqs_r": round(r_l12_fcc, 3),
         "correlation_l12_vs_fcc_sqs_slope": round(slope_l12_fcc, 3),
+        # Raw SQS (no pure-volume replacement) sensitivity
+        "n_bcc_pure_replaced": len([
+            el for el in pure_vol_raw
+            if el in sqs_data["pure_vol"]
+            and abs(pure_vol_raw[el] - sqs_data["pure_vol"][el]) > 0.001
+        ]),
+        "raw_sqs_q_opt": round(q_raw, 3),
+        "raw_sqs_RMSE_test_qopt": round(rmse_raw_test, 4),
+        "raw_sqs_RMSE_test_q1": round(rmse_raw_test_q1, 4),
+        "raw_sqs_improvement_q1_pct": round(
+            (1 - rmse_raw_test_q1 / rmse_veg_test) * 100, 1
+        ) if rmse_veg_test > 0 else 0,
+        "raw_sqs_improvement_qopt_pct": round(
+            (1 - rmse_raw_test / rmse_veg_test) * 100, 1
+        ) if rmse_veg_test > 0 else 0,
     }
     return metrics
 
@@ -928,7 +986,7 @@ def analyze_dft_self_consistent(all_df, ob2, ol12, heas_train, heas_test):
         "RMSE_king_opt_train": round(rmse_king_opt_tr, 4),
         "improvement_dft_ref_opt_train_pct": round(
             (1 - rmse_opt_tr / rmse_veg_tr) * 100, 1),
-        # Test 28
+        # Test 31
         "RMSE_dft_ref_opt_q_test": round(rmse_opt_te, 4),
         "RMSE_dft_ref_opt_q_test_BCC": round(rmse_opt_te_bcc, 4),
         "RMSE_dft_ref_opt_q_test_FCC": round(rmse_opt_te_fcc, 4),
