@@ -2,9 +2,14 @@
 """Alonso experimental Omega_sf model (King 1966 Table II) test-set evaluation.
 
 Restores the previously unverifiable "Alonso volume size-factor" row (review
-item B1 / verification item 7) using digitized King (1966) data:
-  data/king_1966_table2_size_factors.csv   (directional volume size factors)
-  data/king_1966_table3_atomic_volumes.csv (atomic volumes / Seitz radii)
+item B1 / verification item 7) using digitized experimental data:
+  data/king_1966_table2_size_factors.csv     (directional volume size factors)
+  data/king_1966_table3_atomic_volumes.csv   (atomic volumes / Seitz radii)
+  data/alonso_table3_volume_size_factors.csv (Alonso 2022 Table 3 supplement)
+
+Duplicate directional (solvent, solute) entries in King Table II (different
+Cmax concentration ranges) are averaged. Alonso Table 3 values are used only
+for pairs absent from King Table II.
 
 Model: Alonso Eq.10 with directional experimental Omega_sf,j/i = Dsf/100
 (solute j in solvent i); missing pairs fall back to the reversed direction,
@@ -67,10 +72,53 @@ def eval_set(heas, omega_dir, qb, qf):
 
 def main():
     t2 = pd.read_csv(DATA / "king_1966_table2_size_factors.csv")
-    omega_dir = {(r.Solvent, r.Solute): r.Dsf_percent / 100.0
-                 for r in t2.itertuples()}
-    print(f"King Table II: {len(t2)} rows, "
-          f"{len(omega_dir)} directional pairs, "
+
+    self_pairs = t2[t2.Solvent == t2.Solute]
+    if len(self_pairs):
+        print(f"WARNING: {len(self_pairs)} self-pair rows excluded "
+              f"(solute likely misdigitized):")
+        for r in self_pairs.itertuples():
+            print(f"  line: {r.Solvent},{r.Solute},{r.Cmax_at_percent},"
+                  f"{r.Dsf_percent},...")
+        t2 = t2[t2.Solvent != t2.Solute]
+        print()
+
+    # internal-consistency check: lsf should equal (1+Dsf)^(1/3)-1
+    lsf_pred = 100 * ((1 + t2.Dsf_percent / 100.0) ** (1 / 3) - 1)
+    bad = t2[(t2.lsf_percent - lsf_pred).abs() > 0.5]
+    if len(bad):
+        print(f"WARNING: {len(bad)} rows with lsf inconsistent with Dsf "
+              f"(possible digitization errors):")
+        for r in bad.itertuples():
+            print(f"  {r.Solvent}-{r.Solute}: Dsf={r.Dsf_percent} "
+                  f"lsf={r.lsf_percent} (expected "
+                  f"{lsf_pred[r.Index]:.2f})")
+        print()
+
+    # average duplicate directional entries (different Cmax ranges)
+    grouped = t2.groupby(["Solvent", "Solute"])["Dsf_percent"]
+    dups = grouped.filter(lambda g: len(g) > 1)
+    if len(dups):
+        print("Duplicate (solvent, solute) entries averaged:")
+        for (sv, sl), g in t2.groupby(["Solvent", "Solute"]):
+            if len(g) > 1:
+                vals = ", ".join(f"{v:+.2f}" for v in g.Dsf_percent)
+                print(f"  {sv}-{sl}: [{vals}] -> {g.Dsf_percent.mean():+.2f}")
+        print()
+    omega_dir = {p: v / 100.0 for p, v in grouped.mean().items()}
+    n_king = len(omega_dir)
+
+    # Alonso (2022) Table 3 supplement: only pairs absent from King Table II
+    ta = pd.read_csv(DATA / "alonso_table3_volume_size_factors.csv")
+    n_added = 0
+    for r in ta.itertuples():
+        key = (r.Solvent, r.Solute)
+        if key not in omega_dir and key[::-1] not in omega_dir:
+            omega_dir[key] = r.Omega_f_percent / 100.0
+            n_added += 1
+    print(f"King Table II: {len(t2)} rows, {n_king} directional pairs; "
+          f"Alonso Table 3: {len(ta)} rows, {n_added} new pairs added; "
+          f"total {len(omega_dir)} directional, "
           f"{len({tuple(sorted(p)) for p in omega_dir})} unique pairs")
 
     # Coverage of pairs needed by calibration + test HEAs
@@ -104,8 +152,8 @@ def main():
     print(header)
     for label, args in [
         ("Vegard (King volumes)", (0.0, 0.0)),
-        ("Alonso-King Omega_sf, q=1", (1.0, 1.0)),
-        (f"Alonso-King, q calib", (qb, qf)),
+        ("Alonso-King+T3 Omega_sf, q=1", (1.0, 1.0)),
+        ("Alonso-King+T3, q calib", (qb, qf)),
     ]:
         r_all = eval_set(INDEPENDENT_TEST, omega_dir, *args)
         r_b = eval_set(test_b, omega_dir, *args)
