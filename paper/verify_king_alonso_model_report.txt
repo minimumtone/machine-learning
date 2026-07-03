@@ -1,13 +1,47 @@
-King Table II: 465 rows, 456 directional pairs, 352 unique pairs
-HEA-required pairs: 99, covered: 79 (80%)
-missing: [('Al', 'Mo'), ('Al', 'Nb'), ('Al', 'Ta'), ('Al', 'Zr'), ('Co', 'V'), ('Cr', 'Nb'), ('Fe', 'Ta'), ('Fe', 'Zn'), ('Hf', 'Nb'), ('Hf', 'Ta'), ('Hf', 'V'), ('Hf', 'Zr'), ('Ir', 'Os'), ('Mn', 'V'), ('Mo', 'Zr'), ('Os', 'Pt'), ('Os', 'Rh'), ('Rh', 'Ru'), ('Ti', 'W'), ('V', 'Zr')]
+WARNING: 3 self-pair rows excluded (solute likely misdigitized):
+  line: Pd,Pd,50.0,7.56,...
+  line: Pd,Pd,3.0,2.28,...
+  line: Ta,Ta,70.0,36.06,...
 
-calibrated q_BCC=+0.004, q_FCC=+0.000
+WARNING: 17 rows with lsf inconsistent with Dsf (possible digitization errors):
+  Au-Al: Dsf=10.17 lsf=-3.51 (expected 3.28)
+  Au-Tl: Dsf=23.82 lsf=-7.43 (expected 7.38)
+  Fe-Nb: Dsf=17.58 lsf=6.1 (expected 5.55)
+  Ir-Mn: Dsf=6.04 lsf=-2.06 (expected 1.97)
+  Ir-Ta: Dsf=-14.14 lsf=4.5 (expected -4.95)
+  Nb-W: Dsf=-98.22 lsf=-6.49 (expected -73.89)
+  Ni-Zn: Dsf=19.9 lsf=5.24 (expected 6.24)
+  Pd-Pt: Dsf=15.35 lsf=4.32 (expected 4.88)
+  Pd-Hg: Dsf=32.09 lsf=-9.72 (expected 9.72)
+  Pd-Mn: Dsf=3.68 lsf=2.2 (expected 1.21)
+  Re-Os: Dsf=-7.08 lsf=-0.34 (expected -2.42)
+  Rh-Pt: Dsf=10.52 lsf=4.84 (expected 3.39)
+  Si-Ge: Dsf=4.68 lsf=-1.53 (expected 1.54)
+  Sr-Pu: Dsf=1.41 lsf=-0.46 (expected 0.47)
+  Tc-Ir: Dsf=-2.43 lsf=-2.19 (expected -0.82)
+  Th-Zr: Dsf=-7.68 lsf=-10.25 (expected -2.63)
+  Ti-Mn: Dsf=51.17 lsf=-21.25 (expected 14.77)
+
+Duplicate (solvent, solute) entries averaged:
+  Co-Mn: [+7.33, +4.89] -> +6.11
+  Cr-Ni: [+4.65, -4.80] -> -0.07
+  Mg-Mn: [-17.43, +23.20] -> +2.88
+  Mn-Cr: [-4.78, -17.87] -> -11.33
+  Pd-Pt: [+15.35, +1.52] -> +8.44
+  Pd-Ru: [-9.02, -8.27] -> -8.64
+  Pt-Re: [+7.29, +2.02] -> +4.66
+  Pt-Rh: [-0.37, -8.86] -> -4.61
+
+King Table II: 462 rows, 454 directional pairs; Alonso Table 3: 75 rows, 31 new pairs added; total 485 directional, 381 unique pairs
+HEA-required pairs: 99, covered: 96 (97%)
+missing: [('Al', 'Zr'), ('Mn', 'V'), ('V', 'Zr')]
+
+calibrated q_BCC=+0.016, q_FCC=-0.004
 
   model                           all(31)  BCC(17)  FCC(14)
   Vegard (King volumes)            0.0202   0.0226   0.0170
-  Alonso-King Omega_sf, q=1        0.0563   0.0437   0.0685
-  Alonso-King, q calib             0.0202   0.0226   0.0170
+  Alonso-King+T3 Omega_sf, q=1     0.0553   0.0424   0.0677
+  Alonso-King+T3, q calib          0.0203   0.0226   0.0171
 
 Table III atomic volumes vs KING_ATOMIC_VOLUMES in code:
   Al : code  16.602  NOT in Table III
