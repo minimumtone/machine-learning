@@ -8,8 +8,10 @@ item B1 / verification item 7) using digitized experimental data:
   data/alonso_table3_volume_size_factors.csv (Alonso 2022 Table 3 supplement)
 
 Duplicate directional (solvent, solute) entries in King Table II (different
-Cmax concentration ranges) are averaged. Alonso Table 3 values are used only
-for pairs absent from King Table II.
+Cmax concentration ranges) are averaged. Rows whose lsf is inconsistent with
+Dsf (|lsf - ((1+Dsf)^(1/3)-1)| > 0.5%) are excluded as suspected digitization
+errors. Alonso Table 3 values supplement directional pairs absent from King
+Table II (both directions kept).
 
 Model: Alonso Eq.10 with directional experimental Omega_sf,j/i = Dsf/100
 (solute j in solvent i); missing pairs fall back to the reversed direction,
@@ -93,6 +95,9 @@ def main():
             print(f"  {r.Solvent}-{r.Solute}: Dsf={r.Dsf_percent} "
                   f"lsf={r.lsf_percent} (expected "
                   f"{lsf_pred[r.Index]:.2f})")
+        print("  -> these rows are EXCLUDED from the model "
+              "(pending re-check against the original table)")
+        t2 = t2.drop(bad.index)
         print()
 
     # average duplicate directional entries (different Cmax ranges)
@@ -113,7 +118,7 @@ def main():
     n_added = 0
     for r in ta.itertuples():
         key = (r.Solvent, r.Solute)
-        if key not in omega_dir and key[::-1] not in omega_dir:
+        if key not in omega_dir:
             omega_dir[key] = r.Omega_f_percent / 100.0
             n_added += 1
     print(f"King Table II: {len(t2)} rows, {n_king} directional pairs; "

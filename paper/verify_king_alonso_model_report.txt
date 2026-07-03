@@ -21,27 +21,27 @@ WARNING: 17 rows with lsf inconsistent with Dsf (possible digitization errors):
   Tc-Ir: Dsf=-2.43 lsf=-2.19 (expected -0.82)
   Th-Zr: Dsf=-7.68 lsf=-10.25 (expected -2.63)
   Ti-Mn: Dsf=51.17 lsf=-21.25 (expected 14.77)
+  -> these rows are EXCLUDED from the model (pending re-check against the original table)
 
 Duplicate (solvent, solute) entries averaged:
   Co-Mn: [+7.33, +4.89] -> +6.11
   Cr-Ni: [+4.65, -4.80] -> -0.07
   Mg-Mn: [-17.43, +23.20] -> +2.88
   Mn-Cr: [-4.78, -17.87] -> -11.33
-  Pd-Pt: [+15.35, +1.52] -> +8.44
   Pd-Ru: [-9.02, -8.27] -> -8.64
   Pt-Re: [+7.29, +2.02] -> +4.66
   Pt-Rh: [-0.37, -8.86] -> -4.61
 
-King Table II: 462 rows, 454 directional pairs; Alonso Table 3: 75 rows, 31 new pairs added; total 485 directional, 381 unique pairs
-HEA-required pairs: 99, covered: 96 (97%)
-missing: [('Al', 'Zr'), ('Mn', 'V'), ('V', 'Zr')]
+King Table II: 445 rows, 438 directional pairs; Alonso Table 3: 75 rows, 70 new pairs added; total 508 directional, 373 unique pairs
+HEA-required pairs: 99, covered: 95 (96%)
+missing: [('Al', 'Zr'), ('Mn', 'V'), ('Ni', 'Zn'), ('V', 'Zr')]
 
-calibrated q_BCC=+0.016, q_FCC=-0.004
+calibrated q_BCC=-0.036, q_FCC=+0.022
 
   model                           all(31)  BCC(17)  FCC(14)
   Vegard (King volumes)            0.0202   0.0226   0.0170
-  Alonso-King+T3 Omega_sf, q=1     0.0553   0.0424   0.0677
-  Alonso-King+T3, q calib          0.0203   0.0226   0.0171
+  Alonso-King+T3 Omega_sf, q=1     0.0513   0.0385   0.0635
+  Alonso-King+T3, q calib          0.0197   0.0223   0.0160
 
 Table III atomic volumes vs KING_ATOMIC_VOLUMES in code:
   Co : code  11.073  TableIII  11.130 (+0.5%)
