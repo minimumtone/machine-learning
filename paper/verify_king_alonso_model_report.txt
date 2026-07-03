@@ -1,0 +1,19 @@
+King Table II: 465 rows, 456 directional pairs, 352 unique pairs
+HEA-required pairs: 99, covered: 79 (80%)
+missing: [('Al', 'Mo'), ('Al', 'Nb'), ('Al', 'Ta'), ('Al', 'Zr'), ('Co', 'V'), ('Cr', 'Nb'), ('Fe', 'Ta'), ('Fe', 'Zn'), ('Hf', 'Nb'), ('Hf', 'Ta'), ('Hf', 'V'), ('Hf', 'Zr'), ('Ir', 'Os'), ('Mn', 'V'), ('Mo', 'Zr'), ('Os', 'Pt'), ('Os', 'Rh'), ('Rh', 'Ru'), ('Ti', 'W'), ('V', 'Zr')]
+
+calibrated q_BCC=+0.004, q_FCC=+0.000
+
+  model                           all(31)  BCC(17)  FCC(14)
+  Vegard (King volumes)            0.0202   0.0226   0.0170
+  Alonso-King Omega_sf, q=1        0.0563   0.0437   0.0685
+  Alonso-King, q calib             0.0202   0.0226   0.0170
+
+Table III atomic volumes vs KING_ATOMIC_VOLUMES in code:
+  Al : code  16.602  NOT in Table III
+  Co : code  11.073  NOT in Table III
+  Hf : code  22.312  TableIII  22.160 (-0.7%)
+  Sc : code  24.987  TableIII  23.410 (-6.3%)
+  Sn : code  27.053  TableIII  27.650 (+2.2%)
+  Tb : code  32.090  TableIII  31.140 (-3.0%)
+  (all other elements agree within 0.5%)
