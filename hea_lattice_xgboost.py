@@ -144,7 +144,10 @@ ATOMIC_MASS = {
     "Th":232.04,"U":238.03,"Pu":244.06,"Np":237.05,
 }
 
-# King1966 pure-element atomic volumes (Å³)
+# Pure-element atomic volumes (Å³) from room-temperature lattice constants
+# (a³/n_auc; hcp: √3·a²·c/4). Agree with King 1966 Table III within ±0.1%
+# for most elements; Co/Hf/Sn/Sc/Tb use modern crystallographic values
+# (King's entries for these are based on older measurements, up to 6% off).
 KING_ATOMIC_VOLUMES = {
     "Al":16.602,"Cu":11.810,"Ni":10.941,"Pd":14.716,"Pt":15.095,
     "Au":16.966,"Ag":17.061,"Ir":14.155,"Rh":13.754,
