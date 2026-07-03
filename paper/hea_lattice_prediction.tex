@@ -468,7 +468,7 @@ DFT-$\Omega_\text{sf}$（構造別, 最適$q_s$） & \textbf{0.0155} & \textbf{0
 \end{tabular}
 \end{table}
 
-DFT-$\Omega_\text{sf}$モデルが全カテゴリで最良である。全体RMSE = 0.0155~\AA{}でVegard（0.0202~\AA）から\textbf{23.3\%改善}した。BCC 17合金ではRMSE = 0.0157~\AA（Vegard比\textbf{30.3\%改善}）、FCC 14合金ではRMSE = 0.0152~\AA（Vegard比\textbf{10.2\%改善}）。B2参照構造の$\Omega_\text{sf}$データを465ペアに拡充し、耐火金属28ペアを全カバーしたことでBCC予測精度が改善された。
+DFT-$\Omega_\text{sf}$モデルが全カテゴリで最良である。全体RMSE = 0.0155~\AA{}（体積換算: 0.211~$\mathrm{\AA}^3$/atom、Vegard 0.279）から\textbf{23.3\%改善}した。BCC 17合金ではRMSE = 0.0157~\AA（Vegard比\textbf{30.3\%改善}）、FCC 14合金ではRMSE = 0.0152~\AA（Vegard比\textbf{10.2\%改善}）。B2参照構造の$\Omega_\text{sf}$データを465ペアに拡充し、耐火金属28ペアを全カバーしたことでBCC予測精度が改善された。
 
 ただし$N = 31$（BCC 17、FCC 14）という小標本でのRMSE差の統計的有意性には注意が必要である。10,000回ブートストラップリサンプリング（$q$固定）による95\%信頼区間を評価した結果、全31合金での$\Delta$RMSE（Vegard $-$ DFT-$\Omega_\text{sf}$）$= +0.0047$~\AA{}（95\% CI: $[+0.0016, +0.0083]$）であり、信頼区間がゼロを含まず統計的に有意である。BCC 17合金でも$\Delta = +0.0068$~\AA{}（CI: $[+0.0016, +0.0119]$）で有意。
 
@@ -596,7 +596,7 @@ L1$_2$のVegard偏差に対するVegard端点の影響を定量評価した。Ki
 \subsection{組成依存有効半径の振る舞い}
 \label{sec:veff_results}
 
-加法分解$\delta^{(s)}$から構造別$q_s$を再最適化し、$q_\text{BCC}^\text{add} = 0.347$、$q_\text{FCC}^\text{add} = 0.076$を得た。加法モデルはRMSE = 0.0221~\AA{}を達成し、元素対モデルとの差は0.0007~\AA{}（3.3\%）である（図~\ref{fig:veff_hea}）。
+加法分解$\delta^{(s)}$から構造別$q_s$を再最適化し、$q_\text{BCC}^\text{add} = 0.347$、$q_\text{FCC}^\text{add} = 0.076$を得た。加法モデルはRMSE = 0.0221~\AA{}（体積換算: 0.350~$\mathrm{\AA}^3$/atom）を達成し、元素対モデルとの差は0.0007~\AA{}（3.3\%）である（図~\ref{fig:veff_hea}）。
 
 \begin{figure*}[!t]
 \centering

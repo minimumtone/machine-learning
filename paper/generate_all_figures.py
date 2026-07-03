@@ -2546,6 +2546,7 @@ def main():
             "V_exp": y_test[i] ** 3 / n_auc_i,
             "V_vegard": a_veg_te[i] ** 3 / n_auc_i,
             "V_dft_eq10_ss": a_ss_te[i] ** 3 / n_auc_i,
+            "V_additive": a_add_te[i] ** 3 / n_auc_i,
             "ref": h.get("ref", ""),
         })
     pd.DataFrame(rows_test).to_csv(OUTDIR / "results_independent_test.csv", index=False)
