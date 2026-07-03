@@ -1,0 +1,25 @@
+==============================================================================
+[7-1] 3-source Omega_sf consistency (r and |Delta Omega|)
+==============================================================================
+  B2: MP vs OQMD: r=0.951 (n=109)
+  B2: MP vs VASP: r=0.905 (n=71)
+  B2: OQMD vs VASP: r=0.936 (n=253)
+  B2: mean |Delta Omega| (source -> merged median) = 0.0075; pairwise r range [0.905, 0.951]
+  L12: MP vs OQMD: r=0.924 (n=65)
+  L12: MP vs VASP: r=0.836 (n=173)
+  L12: OQMD vs VASP: r=0.905 (n=65)
+  L12: mean |Delta Omega| (source -> merged median) = 0.0102; pairwise r range [0.836, 0.924]
+
+==============================================================================
+[7-2] SQS overlay statistics on Vegard parity (volume space)
+==============================================================================
+  BCC-SQS: n=414, RMSE(vs Vegard)=1.788 A^3/atom, R^2=0.735
+  FCC-SQS: n=70, RMSE(vs Vegard)=0.667 A^3/atom, R^2=0.921
+
+  Paper claims: BCC-SQS 515 pts / RMSE 1.821 / R^2 0.762; FCC-SQS 43 pts / RMSE 0.802
+  -> NOT reproducible under any tested filter combination (all / converged / 50:50 / no-exclusion).
+     Recommended canonical stats: values printed above (converged, 50:50, exclusions applied).
+
+[7-3] NOT reproducible from bundled data (manual digitization needed):
+  - Coreno-Alonso 2004 39-case comparison (0.76% vs 1.43%)
+  - Alonso experimental Omega_sf (King 1966 table) test-set evaluation
