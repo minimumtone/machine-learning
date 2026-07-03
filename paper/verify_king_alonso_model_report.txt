@@ -44,8 +44,7 @@ calibrated q_BCC=+0.016, q_FCC=-0.004
   Alonso-King+T3, q calib          0.0203   0.0226   0.0171
 
 Table III atomic volumes vs KING_ATOMIC_VOLUMES in code:
-  Al : code  16.602  NOT in Table III
-  Co : code  11.073  NOT in Table III
+  Co : code  11.073  TableIII  11.130 (+0.5%)
   Hf : code  22.312  TableIII  22.160 (-0.7%)
   Sc : code  24.987  TableIII  23.410 (-6.3%)
   Sn : code  27.053  TableIII  27.650 (+2.2%)
