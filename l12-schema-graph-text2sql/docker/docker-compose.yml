@@ -11,3 +11,4 @@ services:
     volumes:
       - ../db/extended_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
       - ../db/insert_data.sql:/docker-entrypoint-initdb.d/02_data.sql
+      - ../db/insert_pure_elements.sql:/docker-entrypoint-initdb.d/03_pure_elements.sql

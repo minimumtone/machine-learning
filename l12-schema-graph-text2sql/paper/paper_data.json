@@ -2,8 +2,8 @@
   "_meta": {
     "description": "Single source of truth for paper numerical values",
     "generated_by": "scripts/compute_all_figures.py",
-    "generated_at": "2026-06-22 18:28:34 UTC",
-    "git_commit": "80aebdfe44efd74e1238d75a02ca950ba71578e0",
+    "generated_at": "2026-07-09 08:12:27 UTC",
+    "git_commit": "a35205dd03dede9534bf58435e65a22ebb378685",
     "source_files": [
       "evaluation/ablation_multirun_stats.json",
       "evaluation/ablation_run_1.json",
@@ -306,7 +306,44 @@
       "binary_accuracy_pct": 53.3,
       "binary_correct": 32,
       "binary_total": 60
+    },
+    "full_100q_rerun": {
+      "model": "gpt-5.5",
+      "n_queries": 100,
+      "overall_pct": 72.5,
+      "by_difficulty_pct": {
+        "easy": 83.3,
+        "medium": 81.8,
+        "hard": 57.2,
+        "very_hard": 73.3
+      },
+      "avg_latency_s": 27.7,
+      "source_file": "evaluation/independent_eval_results.json"
     }
+  },
+  "transfer_evaluation": {
+    "_note": "Zero-adaptation run against the OQMD-flavored transfer schema (5 tables, renamed columns)",
+    "model": "gpt-5.5",
+    "n_queries": 20,
+    "overall_pct": 80.5,
+    "by_difficulty_pct": {
+      "easy": 83.3,
+      "medium": 83.3,
+      "hard": 62.0,
+      "very_hard": 100.0
+    },
+    "avg_latency_s": 23.3,
+    "source_file": "evaluation/transfer_eval_results.json"
+  },
+  "cte_evaluation_15": {
+    "_note": "5 original CTE patterns (few-shot covered) + 10 novel patterns (zero-shot)",
+    "model": "gpt-5.5",
+    "n_queries": 15,
+    "overall_pct": 54.9,
+    "original_5_pct": 100.0,
+    "new_10_pct": 32.3,
+    "avg_latency_s": 42.5,
+    "source_file": "evaluation/cte_eval_results.json"
   },
   "safety": {
     "n_safety_tests": 7,

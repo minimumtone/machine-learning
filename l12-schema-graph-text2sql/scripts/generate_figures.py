@@ -194,7 +194,7 @@ def fig_multiaxis_radar():
     colors = ["#4CAF50", "#2196F3", "#FF9800", "#F44336"]
 
     N = len(categories)
-    angles = np.linspace(0, 2 * np.pi, N, endpoint=False).tolist()
+    angles = [float(a) for a in np.linspace(0, 2 * np.pi, N, endpoint=False)]
     angles += angles[:1]
 
     fig, ax = plt.subplots(figsize=(10, 10), subplot_kw=dict(polar=True))

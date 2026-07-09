@@ -1,0 +1,20 @@
+{"id": "q_transfer_001", "question": "データベースに登録されているエントリの総数を教えて。", "difficulty": "easy", "gold_sql_path": "gold_sql/q_transfer_001.sql", "expected_result_path": "expected_results/q_transfer_001.json"}
+{"id": "q_transfer_002", "question": "L1₂プロトタイプの化合物を一覧にして。", "difficulty": "easy", "gold_sql_path": "gold_sql/q_transfer_002.sql", "expected_result_path": "expected_results/q_transfer_002.json"}
+{"id": "q_transfer_003", "question": "Niを含む化合物を抽出して。", "difficulty": "easy", "gold_sql_path": "gold_sql/q_transfer_003.sql", "expected_result_path": "expected_results/q_transfer_003.json"}
+{"id": "q_transfer_004", "question": "格子定数が4Å未満のエントリを出して。", "difficulty": "easy", "gold_sql_path": "gold_sql/q_transfer_004.sql", "expected_result_path": "expected_results/q_transfer_004.json"}
+{"id": "q_transfer_005", "question": "登録されている元素の数を教えて。", "difficulty": "easy", "gold_sql_path": "gold_sql/q_transfer_005.sql", "expected_result_path": "expected_results/q_transfer_005.json"}
+{"id": "q_transfer_006", "question": "バンドギャップが大きい上位5件を出して。", "difficulty": "easy", "gold_sql_path": "gold_sql/q_transfer_006.sql", "expected_result_path": "expected_results/q_transfer_006.json"}
+{"id": "q_transfer_007", "question": "凸包上にある化合物の数を教えて。", "difficulty": "medium", "gold_sql_path": "gold_sql/q_transfer_007.sql", "expected_result_path": "expected_results/q_transfer_007.json"}
+{"id": "q_transfer_008", "question": "形成エネルギーが-0.5 eV/atom未満の化合物を安定な順に出して。", "difficulty": "medium", "gold_sql_path": "gold_sql/q_transfer_008.sql", "expected_result_path": "expected_results/q_transfer_008.json"}
+{"id": "q_transfer_009", "question": "元素ごとのエントリ数を数えて上位10元素を出して。", "difficulty": "medium", "gold_sql_path": "gold_sql/q_transfer_009.sql", "expected_result_path": "expected_results/q_transfer_009.json"}
+{"id": "q_transfer_010", "question": "Alを含む凸包上の化合物を形成エネルギー順に出して。", "difficulty": "medium", "gold_sql_path": "gold_sql/q_transfer_010.sql", "expected_result_path": "expected_results/q_transfer_010.json"}
+{"id": "q_transfer_011", "question": "結晶系ごとの平均形成エネルギーを計算して。", "difficulty": "medium", "gold_sql_path": "gold_sql/q_transfer_011.sql", "expected_result_path": "expected_results/q_transfer_011.json"}
+{"id": "q_transfer_012", "question": "凸包からの距離が0.05 eV/atom未満の準安定化合物の数を教えて。", "difficulty": "medium", "gold_sql_path": "gold_sql/q_transfer_012.sql", "expected_result_path": "expected_results/q_transfer_012.json"}
+{"id": "q_transfer_013", "question": "NiとAlの両方を含む化合物を出して。", "difficulty": "hard", "gold_sql_path": "gold_sql/q_transfer_013.sql", "expected_result_path": "expected_results/q_transfer_013.json"}
+{"id": "q_transfer_014", "question": "A-siteがCoの化合物で形成エネルギーが低い5件を出して。", "difficulty": "hard", "gold_sql_path": "gold_sql/q_transfer_014.sql", "expected_result_path": "expected_results/q_transfer_014.json"}
+{"id": "q_transfer_015", "question": "空間群番号221でバンドギャップが0より大きい化合物を出して。", "difficulty": "hard", "gold_sql_path": "gold_sql/q_transfer_015.sql", "expected_result_path": "expected_results/q_transfer_015.json"}
+{"id": "q_transfer_016", "question": "多形の数が多い上位5元素の基底状態空間群を出して。", "difficulty": "hard", "gold_sql_path": "gold_sql/q_transfer_016.sql", "expected_result_path": "expected_results/q_transfer_016.json"}
+{"id": "q_transfer_017", "question": "原子比0.75を占める元素ごとに平均凸包距離を計算して低い順に10件出して。", "difficulty": "hard", "gold_sql_path": "gold_sql/q_transfer_017.sql", "expected_result_path": "expected_results/q_transfer_017.json"}
+{"id": "q_transfer_018", "question": "Co3Tiの生成エンタルピーを純物質基準エネルギーから計算して。", "difficulty": "very_hard", "gold_sql_path": "gold_sql/q_transfer_018.sql", "expected_result_path": "expected_results/q_transfer_018.json"}
+{"id": "q_transfer_019", "question": "凸包上のL1₂化合物の生成エンタルピーを計算して-0.3 eV/atom未満のものを出して。", "difficulty": "very_hard", "gold_sql_path": "gold_sql/q_transfer_019.sql", "expected_result_path": "expected_results/q_transfer_019.json"}
+{"id": "q_transfer_020", "question": "凸包上のL1₂化合物のA-site元素ごとに平均生成エンタルピーを計算して。", "difficulty": "very_hard", "gold_sql_path": "gold_sql/q_transfer_020.sql", "expected_result_path": "expected_results/q_transfer_020.json"}

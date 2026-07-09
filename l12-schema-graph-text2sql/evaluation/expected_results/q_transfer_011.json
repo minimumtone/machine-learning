@@ -1,0 +1,19 @@
+{
+  "columns": [
+    "crystal_system",
+    "n",
+    "avg_delta_e"
+  ],
+  "rows": [
+    [
+      "cubic",
+      1396,
+      "-0.1836"
+    ],
+    [
+      "hexagonal",
+      74,
+      "-0.1487"
+    ]
+  ]
+}
