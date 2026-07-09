@@ -66,6 +66,22 @@ def pp(a: float, b: float) -> float:
     return round((a - b) * 100, 1)
 
 
+def summarize_eval_results(relpath: str) -> dict[str, Any]:
+    """Load a single-run eval result file and return a percentage summary."""
+    data = load_json(relpath)
+    summary = data["summary"]
+    return {
+        "model": data["model"],
+        "n_queries": data["n_queries"],
+        "overall_pct": pct(summary["overall"]),
+        "by_difficulty_pct": {
+            d: pct(v) for d, v in summary["by_difficulty"].items()
+        },
+        "avg_latency_s": round(summary["avg_latency"], 1),
+        "source_file": relpath,
+    }
+
+
 def count_file_lines(relpath: str, skip_header: bool = False) -> int:
     p = PROJECT / relpath
     if not p.exists():
@@ -171,6 +187,28 @@ def main():
     expert_queries = load_jsonl("evaluation/expert_evaluation_dataset.jsonl")
     n_expert_queries = len(expert_queries)
     expert_diff_counts = Counter(q["difficulty"] for q in expert_queries)
+
+    # Extended validation runs (independent 100q / transfer 20q / CTE 15q)
+    independent_eval = summarize_eval_results(
+        "evaluation/independent_eval_results.json")
+    transfer_eval = summarize_eval_results(
+        "evaluation/transfer_eval_results.json")
+    cte15_data = load_json("evaluation/cte_eval_results.json")
+    cte15_original = [r for r in cte15_data["results"]
+                      if r["qid"].startswith("q_vhard")]
+    cte15_new = [r for r in cte15_data["results"]
+                 if r["qid"].startswith("q_cte")]
+    cte15_eval = {
+        "model": cte15_data["model"],
+        "n_queries": cte15_data["n_queries"],
+        "overall_pct": pct(cte15_data["summary"]["overall"]),
+        "original_5_pct": pct(
+            sum(r["accuracy"] for r in cte15_original) / len(cte15_original)),
+        "new_10_pct": pct(
+            sum(r["accuracy"] for r in cte15_new) / len(cte15_new)),
+        "avg_latency_s": round(cte15_data["summary"]["avg_latency"], 1),
+        "source_file": "evaluation/cte_eval_results.json",
+    }
 
     # ==================================================================
     # Few-shot examples
@@ -548,6 +586,17 @@ def main():
                 "binary_correct": 32,
                 "binary_total": 60,
             },
+            "full_100q_rerun": independent_eval,
+        },
+        "transfer_evaluation": {
+            "_note": "Zero-adaptation run against the OQMD-flavored "
+                     "transfer schema (5 tables, renamed columns)",
+            **transfer_eval,
+        },
+        "cte_evaluation_15": {
+            "_note": "5 original CTE patterns (few-shot covered) + "
+                     "10 novel patterns (zero-shot)",
+            **cte15_eval,
         },
         "safety": {
             "n_safety_tests": n_safety_tests,

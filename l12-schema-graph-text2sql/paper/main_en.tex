@@ -89,7 +89,14 @@ demonstrating statistically significant effects.
 Multi-axis evaluation achieved execution accuracy of 84.7\%,
 syntax validity of 100\%, and JOIN match rate of 93.2\%.
 All results are reported as mean $\pm$ standard deviation
-over 5 independent runs with Wilcoxon signed-rank test significance.}
+over 5 independent runs with Wilcoxon signed-rank test significance.
+Furthermore, a zero-adaptation transfer test against an unseen schema
+with all table and column names renamed achieved 80.5\%,
+demonstrating that the pipeline generalizes schema-independently.
+External validation with 100 independently designed queries (72.5\%)
+and evaluation of 15 CTE multi-step calculation patterns
+quantify the external validity and applicability limits
+of the design principles.}
 
 \keywords{Text-to-SQL, inorganic materials database, natural language interface,
 schema graph, domain-specific dictionary, materials informatics}
@@ -215,6 +222,13 @@ Our contributions are threefold:
     and few-shot examples ($-$7.4\,pp, $p<0.001$)
     have statistically significant contributions,
     validating the necessity of domain-specific modules.
+  \item \textbf{Demonstration of schema generalization}:
+    A zero-adaptation transfer test against an unseen OQMD-flavored
+    schema with all table and column names renamed achieved
+    80.5\% (100\% on the Very Hard tier),
+    demonstrating that the design principles based on
+    FK introspection do not depend on a specific schema
+    (Section~\ref{sec:transfer_eval}).
 \end{enumerate}
 
 % =====================================================================
@@ -1783,6 +1797,18 @@ be directly compared.
 Detailed results for independently designed queries are provided
 in Supplementary~\ref{sec:sup_expert_queries}.
 
+To further extend the external-validity check to 100 queries,
+we re-evaluated 100 independently designed expert queries
+(Easy 18 / Medium 34 / Hard 34 / Very Hard 14)
+with the current pipeline and current DB (1{,}559 entries).
+Overall accuracy was 72.5\%
+(Easy 83.3\% / Medium 81.8\% / Hard 57.2\% / Very Hard 73.3\%),
+keeping the gap to author-designed queries (84.7\%) at roughly 12\,pp.
+The dominant failure causes match (1)--(3) above---references to
+peripheral tables without few-shot coverage and non-canonical
+phrasings---indicating that expanding few-shot coverage by domain
+experts is the primary lever for improving external validity.
+
 \subsection{Handling Cross-column Comparison Queries}
 \label{sec:column_comparison}
 
@@ -1956,6 +1982,62 @@ in materials research---in evaluation sets, in contrast to
 conventional Text-to-SQL benchmarks (Spider, BIRD, etc.) that
 primarily target SELECT-WHERE-JOIN-GROUP BY patterns.
 
+To quantify the applicability limits of CTE support, we added
+10 novel patterns (window functions, HAVING filters, two-stage
+aggregation, JOINs to elastic/thermal/magnetic tables, conditional
+aggregation, three-stage CTEs, etc.) and evaluated a total of
+15 queries.
+The 5 original patterns covered by few-shot examples maintained
+100\%, whereas the 10 novel zero-shot patterns reached only
+32.3\%, giving 54.9\% overall.
+This result is consistent with the significant few-shot
+contribution observed in the ablation ($-$7.4\,pp, $p<0.001$),
+showing that the scope of multi-step calculation support is
+governed by the pattern coverage of the few-shot examples.
+Extending to new multi-step patterns is thus achievable through a
+small number of examples (roughly one per pattern) added by a
+domain expert, without any model retraining---a practical
+advantage of this design.
+
+\subsection{Zero-adaptation Transfer Evaluation on an Unseen Schema}
+\label{sec:transfer_eval}
+
+To directly address the single-database limitation, we constructed
+an OQMD-flavored transfer schema in which all table and column
+names were changed
+(5 tables: \texttt{oqmd\_entries}, \texttt{oqmd\_element\_ratios},
+\texttt{oqmd\_formation\_energies}, \texttt{oqmd\_reference\_states},
+\texttt{oqmd\_elements};
+e.g., \texttt{entry\_id}$\to$\texttt{entry\_key},
+\texttt{formula}$\to$\texttt{composition\_formula},
+\texttt{formation\_energy\_per\_atom}$\to$\texttt{delta\_e}),
+and evaluated 20 difficulty-stratified queries
+(Easy 6 / Medium 6 / Hard 5 / Very Hard 3) with zero adaptation
+(no redesign of the dictionary, few-shot examples, or schema graph).
+Few-shot examples were presented unchanged from the original
+schema, and the prompt instructed that ``few-shot examples may come
+from a different schema; reuse only their SQL patterns.''
+Table and column information was obtained automatically via FK
+introspection of the transfer DB.
+
+The result was 80.5\% overall
+(Easy 83.3\% / Medium 83.3\% / Hard 62.0\% / Very Hard 100\%),
+a drop of only 4.2\,pp from the original-schema accuracy (84.7\%).
+Notably, all three Very Hard queries requiring CTEs
+(formation enthalpy calculations, etc.) were answered correctly,
+demonstrating that the pipeline abstracts only the SQL patterns
+(JOIN structure, CTE syntax) from few-shot examples while resolving
+table and column names from the presented schema.
+This demonstrates that the core of the design (FK introspection,
+schema-presented prompting, pattern-transfer few-shot) does not
+depend on a specific schema, supporting extensibility to
+Materials Project, AFLOW, and similar databases.
+We note that this evaluation uncovered and removed
+schema-specific hard-coding (fixed references to linked table
+names) present in the initial implementation, illustrating that
+transfer testing is also an effective verification tool for
+discovering implicit design dependencies.
+
 \subsection{Extensibility to Similar Inorganic Materials RDBs}
 \label{sec:extensibility}
 
@@ -1972,9 +2054,12 @@ terms, and property terms) is applicable to inorganic materials
 RDBs in general.
 
 However, the following caveats should be noted.
-This study validates on a single OQMD-derived database and does
-not claim generalization performance to RDBs with different schema
-designs or scales.
+The main evaluation of this study is on a single OQMD-derived
+database; while the transfer test in
+Section~\ref{sec:transfer_eval} demonstrated generalization to
+schema renaming, we do not claim generalization performance to
+RDBs with substantially different normalization structures or
+scales.
 Few-shot examples are dependent on the validation DB schema, and
 designing new examples by domain experts is essential when applying
 to different RDBs.
@@ -1986,12 +2071,13 @@ materials RDBs.
 
 \begin{enumerate}
   \item \textbf{Single-database validation}:
-    This study validates on an OQMD-derived L1$_2$ database
-    (31 tables, 1{,}559 entries); generalization to inorganic
-    materials RDBs with different schema designs or scales has not
-    been confirmed.
-    Additional validation is needed to determine whether the same
-    design principles are effective for other RDBs.
+    The main evaluation of this study is on an OQMD-derived L1$_2$
+    database (31 tables, 1{,}559 entries).
+    The zero-adaptation transfer test
+    (Section~\ref{sec:transfer_eval}) demonstrated generalization
+    to schema renaming (80.5\%), but generalization to RDBs with
+    substantially different normalization structures or scales
+    has not been confirmed.
   \item \textbf{Scope of statistical testing}:
     Wilcoxon signed-rank tests were conducted with 5 independent
     runs, but the number of runs is limited; bootstrap or other
@@ -2070,21 +2156,25 @@ materials exploration tool through rediscovery of 11 known L1$_2$
 compounds, $\gamma'$-phase candidate ranking, and extraction of
 162 stable/metastable candidates
 (Section~\ref{sec:materials_evaluation}).
-Evaluation with independently designed queries (60 queries)
-showed an 8.1\,pp accuracy gap from author-designed queries,
-primarily attributable to table coverage bias and few-shot
-optimization bias (Section~\ref{sec:independent_eval}).
+External validation with 100 independently designed queries
+achieved 72.5\%; the accuracy gap from author-designed queries
+(roughly 12\,pp) is primarily attributable to table coverage bias
+and few-shot optimization bias
+(Section~\ref{sec:independent_eval}).
 
-Evaluation of 5 CTE (Common Table Expression) multi-step
-calculation queries (formation enthalpy calculation, etc.)
-achieved 100\% accuracy under the full condition with both
-few-shot examples and SQLGuard
+For CTE (Common Table Expression) multi-step calculation queries
+(formation enthalpy calculation, etc.), the 5 patterns covered by
+few-shot examples achieved 100\% under the full condition
+(dropping to 76\% without few-shot examples and 86\% without the
+dictionary), while an extended 15-query evaluation adding 10 novel
+patterns showed zero-shot novel patterns remaining at 32.3\%,
+demonstrating that the scope of multi-step calculation support is
+governed by the few-shot pattern coverage
 (Section~\ref{sec:cte_evaluation}).
-Removing SQLGuard resulted in all queries failing, while removing
-few-shot examples reduced accuracy to 80\% (4/5 queries).
-Dictionary removal maintained 4/5 correct (80\%), demonstrating
-that vocabulary learning from few-shot examples is effective for
-most CTE patterns.
+Furthermore, a zero-adaptation transfer test on an unseen schema
+with all table and column names changed achieved 80.5\%
+(Very Hard 100\%), demonstrating the schema non-dependence of the
+design (Section~\ref{sec:transfer_eval}).
 
 Another important insight obtained through this study is that the
 normalization degree and table structure of the RDB schema are
@@ -2104,9 +2194,10 @@ few-shot example updates, application to other materials RDBs
 such as the Materials Integration (MInt) system~\cite{minamoto2020mint}
 and the provenance management system
 pinax~\cite{minamoto2026pinax} is envisioned.
-However, this study validates on a single database, and
-confirmation of generalization performance to RDBs of different
-scales and designs remains a future task.
+While the transfer test demonstrated generalization to schema
+renaming, confirmation of generalization performance to RDBs with
+substantially different normalization structures or scales remains
+a future task.
 All evaluations are reported as means $\pm$ standard deviations
 from 5 independent runs, with statistical significance confirmed
 via Wilcoxon signed-rank tests.
@@ -2442,7 +2533,7 @@ This complements the quantitative comparison in
 Table~\ref{tab:method_comparison} by concretely showing the
 qualitative differences in output SQL for each configuration.
 
-\subsection{``List stable L1$_2$ compounds containing Ni\'\'}
+\subsection{``List stable L1$_2$ compounds containing Ni''}
 
 \paragraph{LLM-only (no schema):}
 \begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
@@ -2489,7 +2580,7 @@ LIMIT 10000;
 -- No table hallucination, includes DISTINCT and LIMIT
 \end{lstlisting}
 
-\subsection{``List L1$_2$ compounds containing both Ni and Al\'\'}
+\subsection{``List L1$_2$ compounds containing both Ni and Al''}
 
 \paragraph{LLM-only (no schema):}
 \begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]

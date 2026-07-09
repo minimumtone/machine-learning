@@ -82,6 +82,14 @@ def _normalize_column_aliases(sql: str) -> str:
 
 
 def _load_prompt_template() -> str:
+    """Load the SQL generation prompt template.
+
+    The template path can be overridden via the ``SQL_PROMPT_TEMPLATE``
+    environment variable (used e.g. for schema-transfer experiments).
+    """
+    override = os.getenv("SQL_PROMPT_TEMPLATE")
+    if override:
+        return Path(override).read_text(encoding="utf-8")
     path = Path(__file__).parent / "prompt_templates" / "sql_generation_prompt.md"
     return path.read_text(encoding="utf-8")
 
@@ -663,6 +671,20 @@ def pipeline(
         join_list = _CORE_5_TABLE_JOINS
     if all_columns is None:
         all_columns = _CORE_5_TABLE_COLUMNS
+
+    # Restrict linked tables to those actually present in the target schema;
+    # if none match (e.g. an unseen schema), expose the full schema instead.
+    schema_tables = {c.split(".")[0] for c in all_columns}
+    required_tables = [
+        t for t in linked["required_tables"] if t in schema_tables
+    ]
+    if not required_tables:
+        logger.debug(
+            "No linked tables exist in the target schema; "
+            "falling back to the full schema"
+        )
+        required_tables = sorted(schema_tables)
+    linked = {**linked, "required_tables": required_tables}
 
     filtered_columns = [
         c for c in all_columns

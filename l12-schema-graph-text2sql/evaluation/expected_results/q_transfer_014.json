@@ -1,0 +1,28 @@
+{
+  "columns": [
+    "composition_formula",
+    "delta_e"
+  ],
+  "rows": [
+    [
+      "Co3Zr",
+      -0.5895
+    ],
+    [
+      "Co3Ta",
+      -0.5635
+    ],
+    [
+      "Co3Sn",
+      -0.5514
+    ],
+    [
+      "CoSb",
+      -0.499
+    ],
+    [
+      "CoGa",
+      -0.4974
+    ]
+  ]
+}

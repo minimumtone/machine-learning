@@ -1,0 +1,29 @@
+-- CTE O: 3段CTE（フィルタ → 計算 → 集約）
+-- 「純物質の原子あたり体積が15 Å³以上のA-site元素を持つ安定L1₂化合物の平均生成エンタルピーをA-site元素ごとに出して」
+WITH large_a_site AS (
+    SELECT c.entry_id, c.element AS a_site
+    FROM composition c
+    JOIN pure_element_reference per ON per.element_symbol = c.element
+    WHERE c.site_label = 'A-site'
+      AND per.volume_per_atom >= 15
+),
+enthalpy AS (
+    SELECT m.entry_id, m.formula, ps.formation_energy_per_atom,
+           SUM(comp.atomic_fraction * per.energy_per_atom) AS weighted_ref
+    FROM material_entry m
+    JOIN structure s ON s.entry_id = m.entry_id
+    JOIN phase_stability ps ON ps.entry_id = m.entry_id
+    JOIN composition comp ON comp.entry_id = m.entry_id
+    JOIN pure_element_reference per ON per.element_symbol = comp.element
+    WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+      AND ps.is_stable = true
+    GROUP BY m.entry_id, m.formula, ps.formation_energy_per_atom
+)
+SELECT la.a_site,
+       COUNT(*) AS n_compounds,
+       ROUND(AVG(e.formation_energy_per_atom - e.weighted_ref)::numeric, 4)
+           AS avg_delta_h_f
+FROM enthalpy e
+JOIN large_a_site la ON la.entry_id = e.entry_id
+GROUP BY la.a_site
+ORDER BY avg_delta_h_f ASC;
