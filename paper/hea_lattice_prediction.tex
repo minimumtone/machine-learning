@@ -948,7 +948,7 @@ B2+DFT: RMSE$_\text{FCC}$ = 0.0160。}
     King以来実験値に依拠してきた$\Omega_\text{sf}$を5,152件の二元系DFT計算で置換し（純元素$V_i$は実験値保持）、B2$\to$BCC、L1$_2$$\to$FCCの構造分離によりHEA予測に必要な全ペアをカバー（BCC 59/59、FCC 42/42）。
 
   \item \textbf{SQS参照による$q_\text{BCC}$の低減}:
-    SQS＋DFT参照（純元素体積キュレーション後）で$q_\text{BCC} = 1$固定が良好な精度を達成する（テストRMSEは$q = 1.0$--$1.6$で安定、校正最適$q_\text{opt} = 1.27$）。ただしこの結果は33元素中16元素のKing/MP置換に依存する（生SQS体積では$q_\text{opt} = 1.96$）。ただし実験値を経由しない非循環基準（$|V_\text{SQS}-V_\text{MP}|>3\%$の5元素のみMP-DFT置換）でも$q_\text{opt} = 0.95$となり、$q \approx 1$は非循環的に支持される（表~\ref{tab:pure_ref_sensitivity}）。$q \neq 1$の主因はBCC非安定元素の純元素参照体積の歪みであり、SQSサイズ効果との完全な分離は今後の課題である。独立テストBCC 17合金RMSE = 0.0125~\AA{}（Vegard比44.5\%改善）。
+    SQS＋DFT参照（純元素体積キュレーション後）で$q_\text{BCC} = 1$固定が良好な精度を達成する（テストRMSEは$q = 1.0$--$1.6$で安定、校正最適$q_\text{opt} = 1.27$）。ただしこの結果は33元素中16元素のKing/MP置換に依存する（生SQS体積では$q_\text{opt} = 1.96$）。一方、実験値を経由しない非循環基準（$|V_\text{SQS}-V_\text{MP}|>3\%$の5元素のみMP-DFT置換）でも$q_\text{opt} = 0.95$となり、$q \approx 1$は非循環的に支持される（表~\ref{tab:pure_ref_sensitivity}）。$q \neq 1$の主因はBCC非安定元素の純元素参照体積の歪みであり、SQSサイズ効果との完全な分離は今後の課題である。独立テストBCC 17合金RMSE = 0.0125~\AA{}（Vegard比44.5\%改善）。
 
   \item \textbf{$q_\text{FCC} \approx 0$（Vegard則の十分性）}:
     $q_\text{FCC} = 0.13$はFCC HEAでVegard則自体が十分な近似であることを示す。最密充填構造では原子サイズの環境依存性が小さく、$\Omega_\text{sf}$補正がほぼ不要である。
