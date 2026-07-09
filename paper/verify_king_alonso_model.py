@@ -9,9 +9,14 @@ item B1 / verification item 7) using digitized experimental data:
 
 Duplicate directional (solvent, solute) entries in King Table II (different
 Cmax concentration ranges) are averaged. Rows whose lsf is inconsistent with
-Dsf (|lsf - ((1+Dsf)^(1/3)-1)| > 0.5%) are excluded as suspected digitization
-errors. Alonso Table 3 values supplement directional pairs absent from King
-Table II (both directions kept).
+Dsf (|lsf - ((1+Dsf)^(1/3)-1)| > 0.5%) are excluded; rows verified against
+the original table pages (Ir-Mn, Ir-Ta, Nb-W, Ni-Zn, Pd-Hg, Pd-Mn, Re-Os,
+Re-Pt, Rh-Pt, Tc-Ir, U-Pu) match the original print, so the inconsistency is
+a typographical error in King 1966 itself. Fourteen rows whose solvent was
+misassigned during digitization (right-column bleed in the two-column layout,
+e.g. Pd-Pd -> Rh-Pd/Ru-Pd, Ta-Ta -> V-Ta, Sr-Pu -> U-Pu) were corrected
+against the original pages. Alonso Table 3 values supplement directional
+pairs absent from King Table II (both directions kept).
 
 Model: Alonso Eq.10 with directional experimental Omega_sf,j/i = Dsf/100
 (solute j in solvent i); missing pairs fall back to the reversed direction,
