@@ -74,6 +74,12 @@ EXCLUDE_ELEMENTS = {
     "Y",  # similar RE behavior
 }
 
+# Phase-classification DB with the same element exclusion as all other analyses
+# (entries containing 4f RE / Y would otherwise contribute artificially small
+#  delta_sf because their Omega_sf pairs are absent from the compound data).
+HEA_PHASE_DB = [h for h in MULTIPHASE_HEA_DB
+               if not set(h["comp"]) & EXCLUDE_ELEMENTS]
+
 
 # ---------------------------------------------------------------------------
 # Helper: lattice constant → atomic volume conversion
@@ -2365,7 +2371,8 @@ def fig16_phase_map(heas_mp, ob2, ol12):
         comp = h["comp"]
         phase = h.get("phase", "SS")
         dr = compute_delta_r(comp)
-        vec = sum(c * VEC.get(e, 5) for e, c in comp.items())
+        ctot = sum(comp.values())
+        vec = sum(c * VEC.get(e, 5) for e, c in comp.items()) / ctot
         if phase == "SS":
             dr_ss.append(dr)
             vec_ss.append(vec)
@@ -2559,8 +2566,8 @@ def main():
     fig12_hea_additive(y_train, a_add_tr, ALONSO_TABLE2, y_test, a_add_te, INDEPENDENT_TEST)
     fig13_composition_reff(decomp, gb_add, gf_add)
     fig14_vegard_absorbed(all_df, radii)
-    fig15_roc(MULTIPHASE_HEA_DB, ob2, ol12)
-    fig16_phase_map(MULTIPHASE_HEA_DB, ob2, ol12)
+    fig15_roc(HEA_PHASE_DB, ob2, ol12)
+    fig16_phase_map(HEA_PHASE_DB, ob2, ol12)
 
     # 9. Save data
     print("\n[8] Saving data files...")
@@ -2938,7 +2945,7 @@ def main():
     # Aligned with fig15_roc labeling and standard HEA literature.
     from sklearn.metrics import roc_auc_score, f1_score
     dr_vals, dsf_vals, labels = [], [], []
-    for h in MULTIPHASE_HEA_DB:
+    for h in HEA_PHASE_DB:
         dr = compute_delta_r(h["comp"])
         dsf = compute_delta_sf(h["comp"], ob2)
         if np.isnan(dr) or np.isnan(dsf):
@@ -3234,7 +3241,7 @@ def main():
             "additive_mode_A_RMSE_test": round(float(rmse_addA_te), 4),
         },
         "phase_classification": {
-            "n_HEA": int(len(MULTIPHASE_HEA_DB)),
+            "n_HEA": int(len(HEA_PHASE_DB)),
             "AUC_delta_r": round(float(auc_dr), 3),
             "AUC_delta_sf": round(float(auc_dsf), 3),
             "accuracy_delta_r": round(float(np.mean(
