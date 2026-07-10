@@ -74,13 +74,13 @@
     "additive_mode_A_RMSE_test": 0.0175
   },
   "phase_classification": {
-    "n_HEA": 54,
-    "AUC_delta_r": 0.869,
-    "AUC_delta_sf": 0.71,
-    "accuracy_delta_r": 0.815,
-    "accuracy_delta_sf": 0.722,
-    "F1_delta_r": 0.833,
-    "F1_delta_sf": 0.795,
+    "n_HEA": 53,
+    "AUC_delta_r": 0.864,
+    "AUC_delta_sf": 0.717,
+    "accuracy_delta_r": 0.811,
+    "accuracy_delta_sf": 0.717,
+    "F1_delta_r": 0.828,
+    "F1_delta_sf": 0.789,
     "threshold_delta_r_pct": 4.73,
     "threshold_delta_sf": 0.0179,
     "convention": "non-SS (IM+AM) = positive class"
