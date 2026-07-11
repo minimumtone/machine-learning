@@ -293,7 +293,6 @@ pandas_error_handling = 'strict' if encoding_error_handling == "Strict" else ('i
 st.sidebar.subheader("🧪 3. Data Split")
 test_size = st.sidebar.slider(
     "Validation Set Split Ratio (%)", 10, 50,
-    value=st.session_state.test_split_ratio,
     step=5,
     key="test_split_ratio",
     help="Percentage of data for validation."
@@ -309,25 +308,21 @@ if current_nan_strategy not in nan_strategy_options:
 
 missing_value_strategy = st.sidebar.selectbox(
     "NaN Handling", nan_strategy_options,
-    index=nan_strategy_options.index(current_nan_strategy),
     key="nan_strategy"
 )
 
 log_transform_target = st.sidebar.checkbox(
     "Log Target(Y)",
-    value=st.session_state.log_target_checkbox,
     key="log_target_checkbox"
 )
 
 log_transform_features = st.sidebar.checkbox(
     "Log Features(X)",
-    value=st.session_state.log_features_checkbox,
     key="log_features_checkbox"
 )
 
 use_scaling = st.sidebar.checkbox(
     "Scale Feats",
-    value=st.session_state.scaling_checkbox,
     key="scaling_checkbox"
 )
 
@@ -410,7 +405,6 @@ if uploaded_file is not None:
             target_col_selected = st.selectbox(
                 "Select Target Variable: Press enter to reflect",
                 numeric_cols_reg,
-                index=target_index,
                 key="target_selector",
                 on_change=update_dependent_selections_on_target_change,
                 help="Select the numeric variable to predict."
@@ -425,11 +419,12 @@ if uploaded_file is not None:
                 options_features = [col for col in available_features if col != target_col]
                 feature_selection_state = st.session_state.get('feature_selector', [])
                 valid_selection = [f for f in feature_selection_state if f in options_features]
+                if valid_selection != feature_selection_state:
+                    st.session_state.feature_selector = valid_selection
 
                 feature_cols_selected = st.multiselect(
                     "Select Feature Variables:",
                     options_features,
-                    default=st.session_state.feature_selector,
                     key="feature_selector",
                     help="Select the predictor variables. Automatically updated when Target changes."
                 )
@@ -442,7 +437,6 @@ if uploaded_file is not None:
         st.markdown("---"); st.header("🧩 PCA")
         st.checkbox(
             "Include Target in PCA Calculation",
-            value=st.session_state.pca_include_target,
             key="pca_include_target",
             help="Check to include target in PCA."
         )
@@ -496,8 +490,9 @@ if uploaded_file is not None:
                     with pc2: fig_c,ax_c=plt.subplots(figsize=(4.5,3)); ax_c.plot(comp_idx,cum_var,'o--'); ax_c.axhline(0.9,c='g',ls=':'); ax_c.axhline(0.95,c='r',ls=':'); ax_c.set_title("Cumulative Var"); ax_c.set_ylim(0,1.1); st.pyplot(fig_c)
                     st.dataframe(pd.DataFrame({'PC':comp_idx,'Expl Var':_expl_var,'Cum Var':cum_var}).round(4)); st.markdown("---")
                     if n_comps>=2:
-                        st.subheader("PCA Biplot (PC1 vs PC2)"); color_opts=["None"]+current_df.columns.tolist(); sel_color=st.session_state.get('pca_biplot_color_col',"None"); idx=color_opts.index(sel_color) if sel_color in color_opts else 0
-                        color_col_selected_pca = st.selectbox("🎨 Color Biplot:",color_opts,index=idx,key='pca_biplot_color_col')
+                        st.subheader("PCA Biplot (PC1 vs PC2)"); color_opts=["None"]+current_df.columns.tolist(); sel_color=st.session_state.get('pca_biplot_color_col',"None")
+                        if sel_color not in color_opts: st.session_state.pca_biplot_color_col = "None"
+                        color_col_selected_pca = st.selectbox("🎨 Color Biplot:",color_opts,key='pca_biplot_color_col')
                         color_data=None; is_cat=False; label=""
                         color_col = st.session_state.pca_biplot_color_col
                         if color_col!="None" and color_col in current_df.columns:
@@ -545,7 +540,7 @@ if uploaded_file is not None:
         model_options = ["Linear Regression","Ridge","Lasso","Polynomial Regression","Random Forest","Neural Network (MLP)"]
         current_model = st.session_state.model_selector
         if current_model not in model_options: current_model = model_options[0]
-        with mcol1: model_type=st.selectbox("Model", model_options, key="model_selector", index=model_options.index(current_model)); mt_full=model_type;
+        with mcol1: model_type=st.selectbox("Model", model_options, key="model_selector"); mt_full=model_type;
         if model_type=="Ridge": mt_full="Ridge(L2)"
         elif model_type=="Lasso": mt_full="Lasso(L1)"
         elif model_type=="Neural Network (MLP)": mt_full="MLP"
@@ -554,15 +549,15 @@ if uploaded_file is not None:
             metric_options = list(metric_map.keys());
             current_primary_metric = st.session_state.primary_metric_selector
             if current_primary_metric not in metric_options: current_primary_metric = "RMSE"
-            primary_metric=st.selectbox("Primary Metric (Test Set)", metric_options, index=metric_options.index(current_primary_metric), key="primary_metric_selector", help="Primary metric for validation set.")
+            primary_metric=st.selectbox("Primary Metric (Test Set)", metric_options, key="primary_metric_selector", help="Primary metric for validation set.")
 
         opt_metric=primary_metric; primary_metric_scorer=metric_map[primary_metric]; primary_metric_short=metric_disp_key_map[primary_metric_scorer]
         with mcol3:
-            k_folds=st.slider("k-Folds CV (for Training)",2,20,value=st.session_state.k_folds_slider, step=1,key="k_folds_slider", help="Folds for CV on TRAINING set.")
+            k_folds=st.slider("k-Folds CV (for Training)",2,20, step=1,key="k_folds_slider", help="Folds for CV on TRAINING set.")
 
         # Hyperparameters
         st.subheader("⚙️ Hyperparameters");
-        optimize_hp=st.checkbox("Enable Grid Search (on Training Data)",value=st.session_state.optimize_check, key="optimize_check");
+        optimize_hp=st.checkbox("Enable Grid Search (on Training Data)", key="optimize_check");
         if optimize_hp and model_type=="Linear Regression": st.info("Linear Reg no HP."); optimize_hp=False
 
         log_transform_target_state = st.session_state.log_target_checkbox
@@ -576,7 +571,7 @@ if uploaded_file is not None:
             with st.expander("Grid Search Opt Metric (Train CV)",True):
                  current_opt_metric = st.session_state.opt_metric_selector
                  if current_opt_metric not in metric_options: current_opt_metric = primary_metric
-                 opt_metric_display_gs=st.selectbox("Optimize Metric",metric_options,index=metric_options.index(current_opt_metric), key="opt_metric_selector")
+                 opt_metric_display_gs=st.selectbox("Optimize Metric",metric_options, key="opt_metric_selector")
                  opt_metric_display=opt_metric_display_gs; opt_metric_scorer=metric_map[opt_metric_display_gs]; opt_metric_short=metric_disp_key_map[opt_metric_scorer]
 
         exp_title=f"Configure: {mt_full}";
@@ -590,14 +585,14 @@ if uploaded_file is not None:
                     if optimize_hp:
                         alpha_options_r = [0.001, 0.01, 0.1, 1.0, 10.0, 100.0]
                         # Use state for default selection
-                        sel_alphas = st.multiselect("Alpha Options (Ridge):", alpha_options_r, default=st.session_state.r_a_gs, key="r_a_gs")
+                        sel_alphas = st.multiselect("Alpha Options (Ridge):", alpha_options_r, key="r_a_gs")
                         if sel_alphas: param_grid[grid_model_prefix+'alpha'] = sorted(sel_alphas)
                         else: st.warning("Select at least one Alpha for Ridge GridSearch.")
                     else: alpha_ridge=st.slider("Alpha",0.01,100.0,step=0.01,key="r_a")
                 elif model_type=="Lasso":
                     if optimize_hp:
                         alpha_options_l = [0.001, 0.01, 0.1, 1.0, 10.0]
-                        sel_alphas = st.multiselect("Alpha Options (Lasso):", alpha_options_l, default=st.session_state.l_a_gs, key="l_a_gs")
+                        sel_alphas = st.multiselect("Alpha Options (Lasso):", alpha_options_l, key="l_a_gs")
                         if sel_alphas: param_grid[grid_model_prefix+'alpha'] = sorted(sel_alphas)
                         else: st.warning("Select at least one Alpha for Lasso GridSearch.")
                     else: alpha_lasso=st.slider("Alpha",0.01,10.0,step=0.01,key="l_a")
@@ -605,13 +600,13 @@ if uploaded_file is not None:
                     poly_check_needed=True; poly_step_name='poly'; poly_degree_key=grid_step_prefix+poly_step_name+'__degree'; model_alpha_key=grid_model_prefix+'alpha'
                     if optimize_hp:
                         degree_opts = [2, 3, 4, 5]
-                        sel_degs = st.multiselect("Polynomial Degree(s):", degree_opts, default=st.session_state.p_d_gs, key="p_d_gs")
+                        sel_degs = st.multiselect("Polynomial Degree(s):", degree_opts, key="p_d_gs")
                         if not sel_degs: st.warning("Select degree(s)"); param_grid[poly_degree_key]=[2]; poly_max_degree=2
                         else: param_grid[poly_degree_key]=sorted(sel_degs); poly_max_degree=max(sel_degs)
 
                         st.write("Ridge Alpha Options (after Poly):")
                         alpha_options_pr = [0.01, 0.1, 1.0, 10.0, 100.0]
-                        sel_alphas_pr = st.multiselect("Alpha Options:", alpha_options_pr, default=st.session_state.p_r_a_gs, key="p_r_a_gs")
+                        sel_alphas_pr = st.multiselect("Alpha Options:", alpha_options_pr, key="p_r_a_gs")
                         if sel_alphas_pr: param_grid[model_alpha_key] = sorted(sel_alphas_pr)
                         else: st.warning("Select at least one Alpha for Polynomial+Ridge GridSearch.")
                     else:
@@ -626,14 +621,12 @@ if uploaded_file is not None:
                         with c1:
                             # n_estimators
                             n_est_options = [50, 100, 200, 500, 1000]
-                            n_est_selected = st.multiselect("Num Trees (n_estimators):", n_est_options, default=st.session_state.rf_n_est_gs, key="rf_n_est_gs")
+                            n_est_selected = st.multiselect("Num Trees (n_estimators):", n_est_options, key="rf_n_est_gs")
                             if n_est_selected: param_grid[rf_prefix+'n_estimators'] = sorted(n_est_selected)
 
                             # max_depth
                             max_depth_options_num = [5, 10, 20, 30, None]
-                            # Ensure default values are strings before passing to multiselect
-                            default_max_depth_gs_str = [str(d) for d in st.session_state.rf_max_depth_gs]
-                            max_depth_selected_str = st.multiselect("Max Depth (max_depth):", [str(d) for d in max_depth_options_num], default=default_max_depth_gs_str, key="rf_max_depth_gs")
+                            max_depth_selected_str = st.multiselect("Max Depth (max_depth):", [str(d) for d in max_depth_options_num], key="rf_max_depth_gs")
                             parsed_depths = []
                             for d_str in max_depth_selected_str:
                                 if d_str == 'None': parsed_depths.append(None)
@@ -642,8 +635,7 @@ if uploaded_file is not None:
 
                             # max_features
                             max_feat_options = ['sqrt', 'log2', 0.6, 0.8, 1.0]
-                            default_max_feat_gs_str = [str(f) for f in st.session_state.rf_max_feat_gs]
-                            max_feat_selected_str = st.multiselect("Max Feats (max_features):", [str(f) for f in max_feat_options], default=default_max_feat_gs_str, key="rf_max_feat_gs")
+                            max_feat_selected_str = st.multiselect("Max Feats (max_features):", [str(f) for f in max_feat_options], key="rf_max_feat_gs")
                             parsed_features = []
                             for f_str in max_feat_selected_str:
                                 if f_str in ['sqrt', 'log2']: parsed_features.append(f_str)
@@ -654,12 +646,12 @@ if uploaded_file is not None:
                         with c2:
                             # min_samples_split
                             min_split_options = [2, 5, 10, 20]
-                            min_split_selected = st.multiselect("Min Samples Split:", min_split_options, default=st.session_state.rf_min_split_gs, key="rf_min_split_gs")
+                            min_split_selected = st.multiselect("Min Samples Split:", min_split_options, key="rf_min_split_gs")
                             if min_split_selected: param_grid[rf_prefix+'min_samples_split'] = sorted(min_split_selected)
 
                             # min_samples_leaf
                             min_leaf_options = [1, 3, 5, 10]
-                            min_leaf_selected = st.multiselect("Min Samples Leaf:", min_leaf_options, default=st.session_state.rf_min_leaf_gs, key="rf_min_leaf_gs")
+                            min_leaf_selected = st.multiselect("Min Samples Leaf:", min_leaf_options, key="rf_min_leaf_gs")
                             if min_leaf_selected: param_grid[rf_prefix+'min_samples_leaf'] = sorted(min_leaf_selected)
 
                         st.caption("Select multiple values for each parameter to explore.")
@@ -684,26 +676,26 @@ if uploaded_file is not None:
 
                             # Activation
                             act_options = ["relu", "tanh", "logistic", "identity"]
-                            sel_act = st.multiselect("Activation:", act_options, default=st.session_state.mlp_a_gs, key="mlp_a_gs")
+                            sel_act = st.multiselect("Activation:", act_options, key="mlp_a_gs")
                             if sel_act: param_grid[mlp_prefix+'activation'] = sel_act
                             else: st.warning("Select at least one Activation for MLP GridSearch.")
 
                             # Solver
                             solver_options = ["adam", "sgd", "lbfgs"]
-                            sel_solver = st.multiselect("Solver:", solver_options, default=st.session_state.mlp_s_gs, key="mlp_s_gs")
+                            sel_solver = st.multiselect("Solver:", solver_options, key="mlp_s_gs")
                             if sel_solver: param_grid[mlp_prefix+'solver'] = sel_solver
                             else: st.warning("Select at least one Solver for MLP GridSearch.")
 
                         with c2:
                             # Alpha (L2 Regularization)
                             alpha_options = [0.00001, 0.0001, 0.001, 0.01, 0.1]
-                            sel_alpha = st.multiselect("Alpha (L2):", alpha_options, default=st.session_state.mlp_alpha_gs, key="mlp_alpha_gs")
+                            sel_alpha = st.multiselect("Alpha (L2):", alpha_options, key="mlp_alpha_gs")
                             if sel_alpha: param_grid[mlp_prefix+'alpha'] = sorted(sel_alpha)
                             else: st.warning("Select at least one Alpha for MLP GridSearch.")
 
                             # Learning Rate Init (only for 'sgd' or 'adam')
                             lr_options = [0.0001, 0.001, 0.01, 0.1]
-                            sel_lr = st.multiselect("Learning Rate Init:", lr_options, default=st.session_state.mlp_lr_gs, key="mlp_lr_gs")
+                            sel_lr = st.multiselect("Learning Rate Init:", lr_options, key="mlp_lr_gs")
                             if sel_lr: param_grid[mlp_prefix+'learning_rate_init'] = sorted(sel_lr)
                             # No warning if empty, as it might not be used by 'lbfgs'
 
@@ -915,8 +907,15 @@ if uploaded_file is not None:
             st.write("Final Estimator:"); st.code(str(estimator), language='python')
 
             # --- Execute CV/GS on TRAINING data ---
-            score_map = metric_map
-            refit_value_for_gs = opt_metric_display
+            # BUGFIX: scoring に辞書 {表示名: scorer名} を渡すと結果キーが
+            # 'test_R²' / 'mean_test_RMSE' のように表示名になり、後段の
+            # 'test_r2' / 'mean_test_neg_root_mean_squared_error' の検索と一致せず
+            # 全メトリクスが N/A になっていた。scorer名のリストを渡してキーを統一する。
+            score_map = list(metric_map.values())
+            refit_value_for_gs = metric_map[opt_metric_display]
+            # 実行時の最適化メトリクスを保存（GS結果表示で参照）
+            st.session_state['opt_metric_display'] = opt_metric_display
+            st.session_state['opt_metric_scorer'] = opt_metric_scorer
 
             scores_cv_dict={}; results_gs=None; best_p=None; final_model_trained = None
             processed_cv_scores = {}; y_pred_cv_train = None; imp_df = None; test_scores = {}; y_pred_test = None
@@ -1056,155 +1055,160 @@ if uploaded_file is not None:
                     st.session_state['final_estimator_trained'] = False
                     if gs_progress_bar: gs_progress_bar.empty()
 
-            # --- Display results AFTER button press logic (if successful) ---
-            if st.session_state.get('final_estimator_trained'):
-                try:
-                    if gs_progress_bar: gs_progress_bar.empty()
+        # --- Display results AFTER button press logic (if successful) ---
+        if st.session_state.get('final_estimator_trained'):
+            try:
+                # ボタン押下時以外の再実行では gs_progress_bar は未定義
+                if 'gs_progress_bar' in locals() and gs_progress_bar: gs_progress_bar.empty()
 
-                    cv_scores_display = st.session_state.get('cv_results_processed', {})
-                    test_scores_display = st.session_state.get('test_results', {})
-                    k_folds_run = st.session_state.get('k_folds_run', k_folds)
-                    test_split_ratio_run = st.session_state.get('test_split_ratio_run', 0.0)
-                    y_pred_cv_train_plot = st.session_state.get('y_pred_cv_train')
-                    y_train_plot = st.session_state.get('y_train')
-                    y_pred_test_plot = st.session_state.get('y_pred_test')
-                    y_test_plot = st.session_state.get('y_test')
-                    imp_df_display = st.session_state.get('importance_df')
-                    results_gs_display = st.session_state.get('grid_search_results_df')
-                    _mt_imp = st.session_state.get('model_type_full_global', 'Model')
-                    primary_metric_short_disp = primary_metric_short
+                cv_scores_display = st.session_state.get('cv_results_processed', {})
+                test_scores_display = st.session_state.get('test_results', {})
+                k_folds_run = st.session_state.get('k_folds_run', k_folds)
+                test_split_ratio_run = st.session_state.get('test_split_ratio_run', 0.0)
+                y_pred_cv_train_plot = st.session_state.get('y_pred_cv_train')
+                y_train_plot = st.session_state.get('y_train')
+                y_pred_test_plot = st.session_state.get('y_pred_test')
+                y_test_plot = st.session_state.get('y_test')
+                imp_df_display = st.session_state.get('importance_df')
+                results_gs_display = st.session_state.get('grid_search_results_df')
+                _mt_imp = st.session_state.get('model_type_full_global', 'Model')
+                primary_metric_short_disp = primary_metric_short
 
-                    # --- Performance Metrics Display ---
-                    st.subheader("📊 Performance Results")
-                    col_cv, col_test = st.columns(2)
-                    with col_cv:
-                        st.markdown(f"**Training Set CV Results ({k_folds_run}-Fold Avg ± Std)**")
-                        if cv_scores_display:
-                            for mkey in ['R²', 'MAE', 'RMSE']:
-                                mdata = cv_scores_display.get(mkey)
-                                if mdata and not np.isnan(mdata['mean']):
-                                    std_str = f" ± {mdata['std']:.4f}" if not np.isnan(mdata['std']) else ""
-                                    st.markdown(f"**{mkey}:** {mdata['mean']:.4f}{std_str}")
-                                else:
-                                    st.markdown(f"**{mkey}:** N/A")
-                        else: st.write("No CV metrics calculated.")
-                    with col_test:
-                        st.markdown(f"**Validation Set Results ({test_split_ratio_run:.0f}% Hold-out)**")
-                        if test_scores_display:
-                             test_r2 = test_scores_display.get('R²', np.nan); test_mae = test_scores_display.get('MAE', np.nan); test_rmse = test_scores_display.get('RMSE', np.nan)
-                             st.markdown(f"{'**' if primary_metric_short_disp == 'R²' else ''}Validation R²:{'**' if primary_metric_short_disp == 'R²' else ''} {test_r2:.4f}" if not np.isnan(test_r2) else "**Validation R²:** N/A")
-                             st.markdown(f"{'**' if primary_metric_short_disp == 'MAE' else ''}Validation MAE:{'**' if primary_metric_short_disp == 'MAE' else ''} {test_mae:.4f}" if not np.isnan(test_mae) else "**Validation MAE:** N/A")
-                             st.markdown(f"{'**' if primary_metric_short_disp == 'RMSE' else ''}Validation RMSE:{'**' if primary_metric_short_disp == 'RMSE' else ''} {test_rmse:.4f}" if not np.isnan(test_rmse) else "**Validation RMSE:** N/A")
-                        elif len(st.session_state.get('X_test', pd.DataFrame())) == 0:
-                             st.write("Validation set was empty.")
-                        else:
-                             st.write("No validation metrics calculated (e.g., prediction error).")
-
-                    # --- Visualizations ---
-                    st.subheader("📉 Visualizations: Actual vs. Predicted")
-                    plot_data_list = []
-                    if y_pred_cv_train_plot is not None and y_train_plot is not None and len(y_train_plot) > 0:
-                        valid_train = np.isfinite(y_pred_cv_train_plot) & np.isfinite(y_train_plot)
-                        if valid_train.sum() > 0: plot_data_list.append(pd.DataFrame({'Actual': y_train_plot[valid_train], 'Predicted': y_pred_cv_train_plot[valid_train], 'Data Source': 'Train (CV)'}))
-                    if y_pred_test_plot is not None and y_test_plot is not None and len(y_test_plot)>0:
-                        valid_test = np.isfinite(y_pred_test_plot) & np.isfinite(y_test_plot)
-                        if valid_test.sum() > 0: plot_data_list.append(pd.DataFrame({'Actual': y_test_plot[valid_test], 'Predicted': y_pred_test_plot[valid_test], 'Data Source': 'Validation'}))
-
-                    if plot_data_list:
-                        plot_df_combined = pd.concat(plot_data_list, ignore_index=True)
-                        if not plot_df_combined.empty:
-                            fig_combined, ax_combined = plt.subplots(figsize=(6, 6))
-                            sns.scatterplot(data=plot_df_combined, x='Actual', y='Predicted', hue='Data Source', style='Data Source', alpha=0.6, s=40, ax=ax_combined)
-                            actual_min, actual_max = plot_df_combined['Actual'].min(), plot_df_combined['Actual'].max()
-                            pred_min, pred_max = plot_df_combined['Predicted'].min(), plot_df_combined['Predicted'].max()
-                            if pd.isna(actual_min) or pd.isna(pred_min) or pd.isna(actual_max) or pd.isna(pred_max):
-                                st.warning("NaN values found in plot data, limits might be inaccurate.")
-                                lim_min, lim_max = -1, 1
+                # --- Performance Metrics Display ---
+                st.subheader("📊 Performance Results")
+                col_cv, col_test = st.columns(2)
+                with col_cv:
+                    st.markdown(f"**Training Set CV Results ({k_folds_run}-Fold Avg ± Std)**")
+                    if cv_scores_display:
+                        for mkey in ['R²', 'MAE', 'RMSE']:
+                            mdata = cv_scores_display.get(mkey)
+                            if mdata and not np.isnan(mdata['mean']):
+                                std_str = f" ± {mdata['std']:.4f}" if not np.isnan(mdata['std']) else ""
+                                st.markdown(f"**{mkey}:** {mdata['mean']:.4f}{std_str}")
                             else:
-                                lim_min = min(actual_min, pred_min); lim_max = max(actual_max, pred_max)
-                            if lim_min == lim_max: padding = 1.0
-                            else: padding = (lim_max - lim_min) * 0.05
-                            plot_min = lim_min - padding; plot_max = lim_max + padding
+                                st.markdown(f"**{mkey}:** N/A")
+                    else: st.write("No CV metrics calculated.")
+                with col_test:
+                    st.markdown(f"**Validation Set Results ({test_split_ratio_run:.0f}% Hold-out)**")
+                    if test_scores_display:
+                         test_r2 = test_scores_display.get('R²', np.nan); test_mae = test_scores_display.get('MAE', np.nan); test_rmse = test_scores_display.get('RMSE', np.nan)
+                         st.markdown(f"{'**' if primary_metric_short_disp == 'R²' else ''}Validation R²:{'**' if primary_metric_short_disp == 'R²' else ''} {test_r2:.4f}" if not np.isnan(test_r2) else "**Validation R²:** N/A")
+                         st.markdown(f"{'**' if primary_metric_short_disp == 'MAE' else ''}Validation MAE:{'**' if primary_metric_short_disp == 'MAE' else ''} {test_mae:.4f}" if not np.isnan(test_mae) else "**Validation MAE:** N/A")
+                         st.markdown(f"{'**' if primary_metric_short_disp == 'RMSE' else ''}Validation RMSE:{'**' if primary_metric_short_disp == 'RMSE' else ''} {test_rmse:.4f}" if not np.isnan(test_rmse) else "**Validation RMSE:** N/A")
+                    elif len(st.session_state.get('X_test', pd.DataFrame())) == 0:
+                         st.write("Validation set was empty.")
+                    else:
+                         st.write("No validation metrics calculated (e.g., prediction error).")
 
-                            ax_combined.plot([plot_min, plot_max], [plot_min, plot_max], '--r', lw=2, label='Ideal (y=x)')
-                            ax_combined.set_xlabel("Actual Value"); ax_combined.set_ylabel("Predicted Value"); ax_combined.set_title("Actual vs. Predicted"); ax_combined.legend(); ax_combined.grid(True); ax_combined.set_xlim(plot_min, plot_max); ax_combined.set_ylim(plot_min, plot_max); ax_combined.set_aspect('equal', adjustable='box'); plt.tight_layout(); st.pyplot(fig_combined)
-                        else: st.warning("No valid data points found for combined plot after filtering.")
-                    else: st.warning("Prediction data unavailable or invalid for plotting.")
+                # --- Visualizations ---
+                st.subheader("📉 Visualizations: Actual vs. Predicted")
+                plot_data_list = []
+                if y_pred_cv_train_plot is not None and y_train_plot is not None and len(y_train_plot) > 0:
+                    valid_train = np.isfinite(y_pred_cv_train_plot) & np.isfinite(y_train_plot)
+                    if valid_train.sum() > 0: plot_data_list.append(pd.DataFrame({'Actual': y_train_plot[valid_train], 'Predicted': y_pred_cv_train_plot[valid_train], 'Data Source': 'Train (CV)'}))
+                if y_pred_test_plot is not None and y_test_plot is not None and len(y_test_plot)>0:
+                    valid_test = np.isfinite(y_pred_test_plot) & np.isfinite(y_test_plot)
+                    if valid_test.sum() > 0: plot_data_list.append(pd.DataFrame({'Actual': y_test_plot[valid_test], 'Predicted': y_pred_test_plot[valid_test], 'Data Source': 'Validation'}))
 
-                    # --- Feature Importance ---
-                    st.markdown("---"); st.subheader("✨ Feature Importance / Coefficients")
-                    if imp_df_display is not None and not imp_df_display.empty:
-                        imp_type = 'Coefficient' if 'Coefficient' in imp_df_display.columns else 'Importance'
-                        st.write(f"Displaying {imp_type}s (based on model trained with Training Data).")
-                        n_plot=min(20,len(imp_df_display));
-                        if n_plot>0: fig,ax=plt.subplots(figsize=(7,max(4,n_plot*0.3))); sns.barplot(x=imp_type,y='Feature',data=imp_df_display.head(n_plot).iloc[::-1],ax=ax,palette='viridis'); ax.set_title(f'Top {n_plot} Feature {imp_type}s ({_mt_imp})'); plt.tight_layout(); st.pyplot(fig)
-                        st.dataframe(imp_df_display.round(4))
-                        try: csv_i=imp_df_display.to_csv(index=False).encode('utf-8-sig'); st.download_button("⬇️ DL Import/Coef",csv_i,f'{_mt_imp}_imp.csv','text/csv',key='dl_i')
-                        except Exception as e: st.error(f"DL prep error (Imp): {e}")
-                    else: st.info("No importance/coefficient data available or calculated.")
+                if plot_data_list:
+                    plot_df_combined = pd.concat(plot_data_list, ignore_index=True)
+                    if not plot_df_combined.empty:
+                        fig_combined, ax_combined = plt.subplots(figsize=(6, 6))
+                        sns.scatterplot(data=plot_df_combined, x='Actual', y='Predicted', hue='Data Source', style='Data Source', alpha=0.6, s=40, ax=ax_combined)
+                        actual_min, actual_max = plot_df_combined['Actual'].min(), plot_df_combined['Actual'].max()
+                        pred_min, pred_max = plot_df_combined['Predicted'].min(), plot_df_combined['Predicted'].max()
+                        if pd.isna(actual_min) or pd.isna(pred_min) or pd.isna(actual_max) or pd.isna(pred_max):
+                            st.warning("NaN values found in plot data, limits might be inaccurate.")
+                            lim_min, lim_max = -1, 1
+                        else:
+                            lim_min = min(actual_min, pred_min); lim_max = max(actual_max, pred_max)
+                        if lim_min == lim_max: padding = 1.0
+                        else: padding = (lim_max - lim_min) * 0.05
+                        plot_min = lim_min - padding; plot_max = lim_max + padding
 
-                    # Display Grid Search Results
-                    if results_gs_display is not None:
-                        with st.expander("🔍 Detailed Grid Search Results (from Training CV)", False):
-                             try:
-                                 opt_metric_disp_gs = st.session_state.get('opt_metric_display', primary_metric)
-                                 opt_metric_scorer_gs = st.session_state.get('opt_metric_scorer', primary_metric_scorer)
-                                 st.write(f"GS explored {len(results_gs_display)} combinations. Ranked by {opt_metric_disp_gs} (`{opt_metric_scorer_gs}`).")
-                                 cols_s=['params']; rank_c=f'rank_test_{opt_metric_scorer_gs}'
-                                 if rank_c not in results_gs_display.columns and f'mean_test_{opt_metric_scorer_gs}' in results_gs_display.columns:
-                                     rank_c = f'mean_test_{opt_metric_scorer_gs}'
-                                     st.warning(f"Rank column 'rank_test_{opt_metric_scorer_gs}' missing, ranking by '{rank_c}'.")
-                                 elif rank_c not in results_gs_display.columns:
-                                     st.error(f"Cannot rank GS results: Neither 'rank_test_{opt_metric_scorer_gs}' nor 'mean_test_{opt_metric_scorer_gs}' found.")
-                                     st.dataframe(results_gs_display)
-                                     raise ValueError("Missing ranking column in GS results")
+                        ax_combined.plot([plot_min, plot_max], [plot_min, plot_max], '--r', lw=2, label='Ideal (y=x)')
+                        ax_combined.set_xlabel("Actual Value"); ax_combined.set_ylabel("Predicted Value"); ax_combined.set_title("Actual vs. Predicted"); ax_combined.legend(); ax_combined.grid(True); ax_combined.set_xlim(plot_min, plot_max); ax_combined.set_ylim(plot_min, plot_max); ax_combined.set_aspect('equal', adjustable='box'); plt.tight_layout(); st.pyplot(fig_combined)
+                    else: st.warning("No valid data points found for combined plot after filtering.")
+                else: st.warning("Prediction data unavailable or invalid for plotting.")
 
-                                 for d_name, s_key in metric_map.items():
-                                     m_c,s_c=f'mean_test_{s_key}',f'std_test_{s_key}';
-                                     if m_c in results_gs_display: cols_s.append(m_c)
-                                     if s_c in results_gs_display: cols_s.append(s_c)
-                                 if rank_c in results_gs_display and rank_c not in cols_s: cols_s.append(rank_c)
-                                 if 'mean_fit_time' in results_gs_display: cols_s.append('mean_fit_time')
-                                 if 'mean_score_time' in results_gs_display: cols_s.append('mean_score_time')
+                # --- Feature Importance ---
+                st.markdown("---"); st.subheader("✨ Feature Importance / Coefficients")
+                if imp_df_display is not None and not imp_df_display.empty:
+                    imp_type = 'Coefficient' if 'Coefficient' in imp_df_display.columns else 'Importance'
+                    st.write(f"Displaying {imp_type}s (based on model trained with Training Data).")
+                    n_plot=min(20,len(imp_df_display));
+                    if n_plot>0: fig,ax=plt.subplots(figsize=(7,max(4,n_plot*0.3))); sns.barplot(x=imp_type,y='Feature',data=imp_df_display.head(n_plot).iloc[::-1],ax=ax,palette='viridis'); ax.set_title(f'Top {n_plot} Feature {imp_type}s ({_mt_imp})'); plt.tight_layout(); st.pyplot(fig)
+                    st.dataframe(imp_df_display.round(4))
+                    try: csv_i=imp_df_display.to_csv(index=False).encode('utf-8-sig'); st.download_button("⬇️ DL Import/Coef",csv_i,f'{_mt_imp}_imp.csv','text/csv',key='dl_i')
+                    except Exception as e: st.error(f"DL prep error (Imp): {e}")
+                else: st.info("No importance/coefficient data available or calculated.")
 
-                                 res_df_disp=results_gs_display[cols_s].copy(); res_df_disp['params_str']=res_df_disp['params'].astype(str)
-                                 rename_d={}; final_cols=['params_str']
-                                 for col in res_df_disp.columns:
-                                     if col in ['params','params_str']: continue
-                                     new_n,neg=col,False;
-                                     if col.startswith(('mean_test_neg_','std_test_neg_','rank_test_neg_')):
-                                         if not col.startswith('rank_'):
-                                             res_df_disp[col]=-res_df_disp[col];
-                                         neg=True
-                                     s_key_part = col.split('_test_')[-1]
-                                     prefix = col.split('_test_')[0]+'_' if '_test_' in col else col.split('_')[0]+'_'
-                                     orig_s_key = f"neg_{s_key_part}" if neg else s_key_part
-                                     short_m = metric_disp_key_map.get(orig_s_key)
-                                     if short_m:
-                                         new_n = prefix.replace('_test_','_') + short_m
-                                         rename_d[col]=new_n
-                                     final_cols.append(rename_d.get(col,col))
+                # Display Grid Search Results
+                if results_gs_display is not None:
+                    with st.expander("🔍 Detailed Grid Search Results (from Training CV)", False):
+                         try:
+                             opt_metric_disp_gs = st.session_state.get('opt_metric_display', primary_metric)
+                             opt_metric_scorer_gs = st.session_state.get('opt_metric_scorer', primary_metric_scorer)
+                             st.write(f"GS explored {len(results_gs_display)} combinations. Ranked by {opt_metric_disp_gs} (`{opt_metric_scorer_gs}`).")
+                             cols_s=['params']; rank_c=f'rank_test_{opt_metric_scorer_gs}'
+                             if rank_c not in results_gs_display.columns and f'mean_test_{opt_metric_scorer_gs}' in results_gs_display.columns:
+                                 rank_c = f'mean_test_{opt_metric_scorer_gs}'
+                                 st.warning(f"Rank column 'rank_test_{opt_metric_scorer_gs}' missing, ranking by '{rank_c}'.")
+                             elif rank_c not in results_gs_display.columns:
+                                 st.error(f"Cannot rank GS results: Neither 'rank_test_{opt_metric_scorer_gs}' nor 'mean_test_{opt_metric_scorer_gs}' found.")
+                                 st.dataframe(results_gs_display)
+                                 raise ValueError("Missing ranking column in GS results")
 
-                                 res_df_disp.rename(columns=rename_d,inplace=True);
-                                 rank_c_renamed = rename_d.get(rank_c, rank_c);
+                             for d_name, s_key in metric_map.items():
+                                 m_c,s_c=f'mean_test_{s_key}',f'std_test_{s_key}';
+                                 if m_c in results_gs_display: cols_s.append(m_c)
+                                 if s_c in results_gs_display: cols_s.append(s_c)
+                             if rank_c in results_gs_display and rank_c not in cols_s: cols_s.append(rank_c)
+                             if 'mean_fit_time' in results_gs_display: cols_s.append('mean_fit_time')
+                             if 'mean_score_time' in results_gs_display: cols_s.append('mean_score_time')
 
-                                 st.write(f"(Ranked by: {rank_c_renamed})")
-                                 sort_asc = True
-                                 if 'R²' in rank_c_renamed: sort_asc = False
+                             res_df_disp=results_gs_display[cols_s].copy(); res_df_disp['params_str']=res_df_disp['params'].astype(str)
+                             rename_d={}; final_cols=['params_str']
+                             for col in res_df_disp.columns:
+                                 if col in ['params','params_str']: continue
+                                 new_n,neg=col,False;
+                                 if col.startswith(('mean_test_neg_','std_test_neg_','rank_test_neg_')):
+                                     if not col.startswith('rank_'):
+                                         res_df_disp[col]=-res_df_disp[col];
+                                     neg=True
+                                 s_key_part = col.split('_test_')[-1]
+                                 prefix = col.split('_test_')[0]+'_' if '_test_' in col else col.split('_')[0]+'_'
+                                 # BUGFIX: s_key_part は 'neg_mean_absolute_error' のように
+                                 # 既に neg_ を含むため、さらに neg_ を付けると辞書と一致しない
+                                 short_m = metric_disp_key_map.get(s_key_part)
+                                 if short_m:
+                                     new_n = prefix.replace('_test_','_') + short_m
+                                     rename_d[col]=new_n
+                                 final_cols.append(rename_d.get(col,col))
 
-                                 if rank_c_renamed not in res_df_disp.columns: st.error(f"Sort column '{rank_c_renamed}' missing after renaming.")
-                                 else: res_df_disp=res_df_disp.sort_values(by=rank_c_renamed,ascending=sort_asc)
+                             res_df_disp.rename(columns=rename_d,inplace=True);
+                             rank_c_renamed = rename_d.get(rank_c, rank_c);
 
-                                 final_cols_exist=[c for c in final_cols if c in res_df_disp.columns]
-                                 [final_cols_exist.append(c) for c in res_df_disp.columns if c not in final_cols_exist]
-                                 st.dataframe(res_df_disp[final_cols_exist].round(5)); st.caption("Lower MAE/RMSE better. Higher R² better. Times in sec.")
-                                 mt_file_part = st.session_state.get('model_type_full_global', 'model')
-                                 csv_gs=res_df_disp[final_cols_exist].to_csv(index=False).encode('utf-8-sig'); st.download_button("⬇️ DL GridSearch Results",csv_gs,f'{mt_file_part}_gridsearch.csv','text/csv',key='dl_gs')
-                             except Exception as e: st.error(f"GS display error: {e}"); st.dataframe(results_gs_display)
+                             st.write(f"(Ranked by: {rank_c_renamed})")
+                             # BUGFIX: rank_test_* 列は rank=1 が常に最良なので必ず昇順。
+                             # mean_test_* 列にフォールバックした場合のみ R² は降順にする。
+                             if rank_c.startswith('rank_'): sort_asc = True
+                             elif 'R²' in rank_c_renamed: sort_asc = False
+                             else: sort_asc = True
 
-                except Exception as e:
-                    st.error(f"Error displaying results: {e}")
-                    st.code(traceback.format_exc(), language='python')
+                             if rank_c_renamed not in res_df_disp.columns: st.error(f"Sort column '{rank_c_renamed}' missing after renaming.")
+                             else: res_df_disp=res_df_disp.sort_values(by=rank_c_renamed,ascending=sort_asc)
+
+                             final_cols_exist=[c for c in final_cols if c in res_df_disp.columns]
+                             [final_cols_exist.append(c) for c in res_df_disp.columns if c not in final_cols_exist]
+                             st.dataframe(res_df_disp[final_cols_exist].round(5)); st.caption("Lower MAE/RMSE better. Higher R² better. Times in sec.")
+                             mt_file_part = st.session_state.get('model_type_full_global', 'model')
+                             csv_gs=res_df_disp[final_cols_exist].to_csv(index=False).encode('utf-8-sig'); st.download_button("⬇️ DL GridSearch Results",csv_gs,f'{mt_file_part}_gridsearch.csv','text/csv',key='dl_gs')
+                         except Exception as e: st.error(f"GS display error: {e}"); st.dataframe(results_gs_display)
+
+            except Exception as e:
+                st.error(f"Error displaying results: {e}")
+                st.code(traceback.format_exc(), language='python')
 
 
     # --- Sections displayed only AFTER successful analysis run ---
