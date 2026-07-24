@@ -38,14 +38,40 @@ def _chat_json(system: str, user: str) -> dict[str, Any] | None:
         return None
 
 
+# モデルレジストリの物性語彙への正規化（LLM が日本語・自由語彙で返す場合の吸収）
+_PROPERTY_ALIASES = {
+    "相安定性": "phase_stability",
+    "phase stability": "phase_stability",
+    "生成エンタルピー": "formation_enthalpy",
+    "formation enthalpy": "formation_enthalpy",
+    "欠陥形成エネルギー": "defect_formation_energy",
+    "defect formation": "defect_formation_energy",
+    "格子定数": "lattice_constant",
+    "lattice constant": "lattice_constant",
+    "拡散": "diffusivity",
+    "diffusivity": "diffusivity",
+}
+
+
+def _normalize_property(value: str | None) -> str | None:
+    if value is None:
+        return None
+    s = str(value).strip()
+    for alias, canonical in _PROPERTY_ALIASES.items():
+        if alias.lower() in s.lower():
+            return canonical
+    return s.replace(" ", "_").lower()
+
+
 def _normalize_goal(out: dict[str, Any]) -> dict[str, Any]:
-    """LLM 出力の型ゆらぎを吸収する（success_criteria が文字列で返る等）。"""
+    """LLM 出力の型・語彙のゆらぎを吸収する（success_criteria が文字列で返る等）。"""
     norm: dict[str, Any] = {}
     for key in ("target_material", "target_phase", "target_property"):
         v = out.get(key)
         if isinstance(v, list):
             v = v[0] if v else None
         norm[key] = str(v) if v is not None else None
+    norm["target_property"] = _normalize_property(norm["target_property"])
     sc = out.get("success_criteria")
     if isinstance(sc, str):
         sc = [s.strip() for s in sc.replace("\n", "。").split("。") if s.strip()]
@@ -62,7 +88,9 @@ def structure_goal(statement: str) -> dict[str, Any]:
     out = _chat_json(
         "あなたは材料科学の研究目標を構造化するアシスタントです。"
         "JSON で target_material (str), target_phase (str), target_property (str), "
-        "success_criteria (list[str]) を返してください。",
+        "success_criteria (list[str]) を返してください。"
+        "target_property は英語スネークケース（例: phase_stability, formation_enthalpy, "
+        "defect_formation_energy, lattice_constant, diffusivity）で返してください。",
         statement,
     )
     if out:

@@ -304,3 +304,12 @@ def test_evaluation_lists_data_gaps(manager, session):
     assert any("組成点" in g for g in gaps)  # デフォルトは4組成点のため
     assert any("温度" in g for g in gaps)  # デフォルトは単一温度のため
     assert session.evaluations[-1].data_gaps == gaps
+
+
+def test_normalize_goal_property_vocabulary():
+    """LLM が日本語物性名を返してもレジストリ語彙に正規化される。"""
+    from mi_hub.agent.llm import _normalize_goal
+    out = _normalize_goal({"target_property": "相安定性", "success_criteria": ["a"]})
+    assert out["target_property"] == "phase_stability"
+    out = _normalize_goal({"target_property": "Formation Enthalpy"})
+    assert out["target_property"] == "formation_enthalpy"
