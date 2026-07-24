@@ -38,15 +38,35 @@ def _chat_json(system: str, user: str) -> dict[str, Any] | None:
         return None
 
 
+def _normalize_goal(out: dict[str, Any]) -> dict[str, Any]:
+    """LLM 出力の型ゆらぎを吸収する（success_criteria が文字列で返る等）。"""
+    norm: dict[str, Any] = {}
+    for key in ("target_material", "target_phase", "target_property"):
+        v = out.get(key)
+        if isinstance(v, list):
+            v = v[0] if v else None
+        norm[key] = str(v) if v is not None else None
+    sc = out.get("success_criteria")
+    if isinstance(sc, str):
+        sc = [s.strip() for s in sc.replace("\n", "。").split("。") if s.strip()]
+    elif isinstance(sc, list):
+        sc = [str(s) for s in sc if s]
+    else:
+        sc = None
+    norm["success_criteria"] = sc or None
+    return norm
+
+
 def structure_goal(statement: str) -> dict[str, Any]:
     """研究目標文を構造化する。LLM 不可時はルールベース。"""
     out = _chat_json(
         "あなたは材料科学の研究目標を構造化するアシスタントです。"
-        "JSON で target_material, target_phase, target_property, success_criteria を返してください。",
+        "JSON で target_material (str), target_phase (str), target_property (str), "
+        "success_criteria (list[str]) を返してください。",
         statement,
     )
     if out:
-        return out
+        return _normalize_goal(out)
     # フォールバック: 簡易キーワード抽出
     phase = None
     for p in ("B2", "L12", "L1_2", "FCC", "BCC", "HCP"):
