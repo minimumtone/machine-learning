@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mi-hub"
+version = "0.2.0"
+description = "Integrated MI environment glue: datastore(parquet) + MLflow + OptiMat bridge + FLAML + research agent"
+requires-python = ">=3.10"
+dependencies = ["pandas>=2.0", "pyarrow>=14", "mlflow>=2.14"]
+
+[project.optional-dependencies]
+hub = ["jupyterlab>=4.4", "runcell==0.2.0", "pygwalker==0.5.0.1"]
+automl = ["flaml[automl]>=2.1", "scikit-learn>=1.3"]
+feast = ["feast>=0.40"]
+agent = ["pydantic>=2", "fastapi>=0.110", "uvicorn>=0.29", "streamlit>=1.35"]
+agent-llm = ["openai>=1.30"]
+dev = ["pytest>=8", "httpx>=0.27"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

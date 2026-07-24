@@ -1,0 +1,7 @@
+name: case_template
+channels: [conda-forge]
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      - -e ../..          # mi_hub(パスは配置に応じ調整)
