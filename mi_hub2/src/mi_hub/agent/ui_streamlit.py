@@ -14,6 +14,20 @@ from mi_hub.agent.states import HypothesisState
 
 st.set_page_config(page_title="MI-HUB2 研究エージェント", layout="wide")
 
+# 日本語グリフを優先（CJKフォールバックで簡体字字形になるのを防ぐ）
+st.markdown(
+    """
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+    html, body, [class*="css"], [data-testid="stAppViewContainer"] * {
+        font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Hiragino Sans",
+                     "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 
 @st.cache_resource
 def get_manager() -> ResearchManager:
