@@ -1,0 +1,7 @@
+# Phase 4: Feast 最小構成(registry + offline store のみ、オンラインサービング無し)
+project: mi_hub
+registry: data/registry.db
+provider: local
+offline_store:
+  type: file
+entity_key_serialization_version: 3

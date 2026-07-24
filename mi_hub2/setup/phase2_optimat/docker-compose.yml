@@ -1,0 +1,15 @@
+# Phase 2: OptiMat Alloys(GPU サーバ推奨)
+# イメージ名・コンテナ内 DB パスは配布元(optimat.chat / 論文付随リポジトリ)の
+# 最新 README に合わせて差し替えること。要点は living DB のホスト側マウントのみ。
+services:
+  optimat:
+    image: OPTIMAT_ALLOYS_IMAGE   # ← 配布イメージ名に置換
+    ports:
+      - "8000:8000"               # Chainlit UI
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:?set in .env}
+      # 完全ローカル運用時は Ollama 設定に切替(A100/H100 級がないと
+      # tool-calling 信頼性が落ちる点に注意)
+    volumes:
+      - /data/optimat_db:/app/database   # ← living DB をホストへ露出
+    restart: unless-stopped
