@@ -101,6 +101,41 @@ def generate_hypotheses(goal_statement: str, evidence_claims: list[str]) -> list
     ]
 
 
+def chat_reply(context: dict[str, Any], history: list[dict[str, str]], message: str) -> str | None:
+    """セッション状態を文脈にした自由対話の応答（説明・要約のみ）。LLM 不可時は None。
+
+    科学的結論の確定・承認判定・数値計算は行わない（§16）。
+    """
+    if not llm_available():
+        return None
+    try:
+        from openai import OpenAI
+
+        client = OpenAI()
+        system = (
+            "あなたは材料研究エージェント MI-HUB2 の対話アシスタントです。"
+            "以下のセッション状態を踏まえ、研究者の質問に日本語で簡潔に答えてください。"
+            "できること: 状態・計画・仮説・証拠・エラーの説明、次の操作の案内"
+            "（実行は「実行を続けて」、一時停止/再開/終了、承認はAgentペインの承認タブ）。"
+            "してはいけないこと: 仮説の最終判定、承認の代行、数値の捏造。"
+            "最終的な科学判断は研究者に委ねる旨を必要に応じて添えてください。\n\n"
+            f"セッション状態:\n{json.dumps(context, ensure_ascii=False, default=str)}"
+        )
+        messages: list[dict[str, str]] = [{"role": "system", "content": system}]
+        for msg in history[-10:]:
+            if msg.get("role") in ("user", "assistant"):
+                messages.append({"role": msg["role"], "content": msg["content"]})
+        messages.append({"role": "user", "content": message})
+        resp = client.chat.completions.create(
+            model=os.environ.get("MI_HUB_LLM_MODEL", "gpt-4o-mini"),
+            messages=messages,
+            temperature=0.3,
+        )
+        return resp.choices[0].message.content
+    except Exception:
+        return None
+
+
 def summarize_for_human(payload: dict[str, Any]) -> str:
     """人間向け説明の生成。LLM 不可時は構造化テキスト。"""
     out = _chat_json(

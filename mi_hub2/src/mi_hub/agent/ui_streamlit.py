@@ -8,6 +8,7 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+from mi_hub.agent import llm
 from mi_hub.agent.loop import ResearchManager
 from mi_hub.agent.models import SessionState
 from mi_hub.agent.states import HypothesisState
@@ -85,7 +86,7 @@ with chat_col:
         elif "終了" in user_msg:
             m.complete(state)
             reply = "セッションを終了しました。"
-        else:
+        elif any(k in user_msg for k in ("実行", "続けて", "進めて", "自動")):
             result = m.run_auto(state)
             n = len(result["executed"])
             reply = (
@@ -94,6 +95,41 @@ with chat_col:
             )
             if state.agent_state.value == "awaiting_approval":
                 reply += "\n\n承認待ちの操作があります。Agentタブで承認してください。"
+        else:
+            # 自由対話（LLM）。実行や承認は行わず、説明・案内のみ。
+            obs = m.observe(state)
+            context = {
+                "goal": state.goal.model_dump() if state.goal else None,
+                "agent_state": state.agent_state.value,
+                "observation": obs.model_dump(),
+                "plan": [
+                    {"task": t.task_id, "agent": t.agent, "action": t.action,
+                     "status": t.status.value, "description": t.description}
+                    for t in (state.plan.tasks if state.plan else [])
+                ],
+                "hypotheses": [
+                    {"id": h.hypothesis_id, "statement": h.statement,
+                     "status": h.status.value,
+                     "falsification_conditions": h.falsification_conditions}
+                    for h in state.hypotheses
+                ],
+                "pending_approvals": [
+                    {"id": a.approval_id, "description": a.description}
+                    for a in state.approvals if a.status == "pending"
+                ],
+                "errors": [e.message for e in state.errors if not e.resolved],
+                "stop_reason": state.stop_reason,
+            }
+            reply = llm.chat_reply(context, state.chat_history[:-1], user_msg)
+            if reply is None:
+                reply = (
+                    f"現在の状態: {state.agent_state.value}、"
+                    f"進捗 {obs.goal_progress:.0%}、証拠 {obs.evidence_count} 件。"
+                    + (f"停止理由: {state.stop_reason}。" if state.stop_reason else "")
+                    + "\n\n「実行を続けて」でタスクを進められます。"
+                    "承認・仮説判定はAgentペインの各タブから操作してください。"
+                    "（自由対話には OPENAI_API_KEY の設定が必要です）"
+                )
         state.chat_history.append({"role": "assistant", "content": reply})
         m.store.save(state)
         st.rerun()
