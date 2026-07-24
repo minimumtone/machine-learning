@@ -290,3 +290,17 @@ def test_full_cycle_end_to_end(manager, session):
     assert "最終判定は研究者が行う" in eval_task.result["note"]
     assert session.evaluations
     assert session.stop_reason and "正常終了" in session.stop_reason
+
+
+def test_evaluation_lists_data_gaps(manager, session):
+    """評価結果に追加的に必要なデータ（情報ギャップ）が含まれる。"""
+    manager.run_auto(session)
+    approval = next(a for a in session.approvals if a.status == "pending")
+    manager.resolve_approval(session, approval.approval_id, True)
+    manager.run_auto(session)
+    eval_task = next(t for t in session.plan.tasks if t.action == "evaluate_hypothesis")
+    gaps = eval_task.result["data_gaps"]
+    assert isinstance(gaps, list)
+    assert any("組成点" in g for g in gaps)  # デフォルトは4組成点のため
+    assert any("温度" in g for g in gaps)  # デフォルトは単一温度のため
+    assert session.evaluations[-1].data_gaps == gaps

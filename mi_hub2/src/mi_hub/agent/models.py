@@ -157,6 +157,7 @@ class StepEvaluation(BaseModel):
     new_conflicts: list[str] = Field(default_factory=list)
     result_quality: str = "acceptable"
     requires_replanning: bool = False
+    data_gaps: list[str] = Field(default_factory=list)  # 追加的に必要なデータ
 
 
 class ErrorRecord(BaseModel):

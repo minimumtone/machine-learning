@@ -95,6 +95,9 @@ with chat_col:
             )
             if state.agent_state.value == "awaiting_approval":
                 reply += "\n\n承認待ちの操作があります。Agentタブで承認してください。"
+            if state.evaluations and state.evaluations[-1].data_gaps:
+                gaps = "\n".join(f"- {g}" for g in state.evaluations[-1].data_gaps)
+                reply += f"\n\n**追加的に必要なデータ:**\n{gaps}"
         else:
             # 自由対話（LLM）。実行や承認は行わず、説明・案内のみ。
             obs = m.observe(state)
@@ -118,6 +121,7 @@ with chat_col:
                     for a in state.approvals if a.status == "pending"
                 ],
                 "errors": [e.message for e in state.errors if not e.resolved],
+                "data_gaps": (state.evaluations[-1].data_gaps if state.evaluations else []),
                 "stop_reason": state.stop_reason,
             }
             reply = llm.chat_reply(context, state.chat_history[:-1], user_msg)
@@ -146,6 +150,12 @@ with agent_col:
     c3.metric("証拠数", obs.evidence_count)
     if state.stop_reason:
         st.warning(f"停止理由: {state.stop_reason}")
+
+    if state.evaluations and state.evaluations[-1].data_gaps:
+        with st.container(border=True):
+            st.markdown("**追加的に必要なデータ**")
+            for gap in state.evaluations[-1].data_gaps:
+                st.write(f"- {gap}")
 
     tabs = st.tabs(["計画", "仮説", "承認", "証拠", "エラー", "履歴"])
 
