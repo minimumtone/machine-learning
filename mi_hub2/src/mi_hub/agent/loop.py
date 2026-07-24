@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +34,8 @@ from .roles import (
 from .states import AgentState, HypothesisState, TaskState
 from .tools import ToolGateway
 
+_SESSION_ID_RE = re.compile(r"[A-Za-z0-9_-]+")
+
 _DEFAULT_DIR = os.path.join(
     os.environ.get("MI_HUB_DATA", os.path.expanduser("~/mi_hub_data")), "agent_sessions"
 )
@@ -46,6 +49,8 @@ class SessionStore:
         self.base_dir.mkdir(parents=True, exist_ok=True)
 
     def path(self, session_id: str) -> Path:
+        if not _SESSION_ID_RE.fullmatch(session_id):
+            raise ValueError(f"invalid session_id: {session_id!r}")
         return self.base_dir / f"{session_id}.json"
 
     def save(self, state: SessionState) -> None:
@@ -55,7 +60,10 @@ class SessionStore:
         )
 
     def load(self, session_id: str) -> SessionState | None:
-        p = self.path(session_id)
+        try:
+            p = self.path(session_id)
+        except ValueError:
+            return None
         if not p.exists():
             return None
         return SessionState.model_validate(json.loads(p.read_text(encoding="utf-8")))
@@ -97,7 +105,7 @@ class ResearchManager:
 
     # ---------- Observe (§4.1 Step 2) ----------
     def observe(self, state: SessionState) -> Observation:
-        state.agent_state = AgentState.OBSERVING
+        """現在状態の観察。副作用は last_observation の更新のみ（agent_state は変更しない）。"""
         plan = state.plan
         completed = [t.task_id for t in plan.tasks if t.status == TaskState.COMPLETED] if plan else []
         failed = [t.task_id for t in plan.tasks if t.status == TaskState.FAILED] if plan else []
@@ -293,7 +301,6 @@ class ResearchManager:
 
     def _after_step(self, state: SessionState) -> None:
         """Observe Result → Evaluate → Replan 判定（§4.1 Step 5-7）。"""
-        state.stop_conditions.current_iteration += 1
         self.observe(state)
         stop = self.check_stop_conditions(state)
         if stop:
@@ -395,10 +402,20 @@ class ResearchManager:
 
     # ---------- Auto loop ----------
     def run_auto(self, state: SessionState, max_steps: int | None = None) -> dict[str, Any]:
-        """承認不要タスクを自動で連続実行する。承認要タスクで一時停止する。"""
+        """承認不要タスクを自動で連続実行する。承認要タスクで一時停止する。
+
+        1 回の呼出しが Observe→Plan→Act→Evaluate→Replan の 1 反復に相当する（§18）。
+        """
+        sc = state.stop_conditions
+        if sc.current_iteration >= sc.max_iterations:
+            state.stop_reason = "資源制約: 反復回数上限に到達"
+            state.agent_state = AgentState.BLOCKED
+            self.store.save(state)
+            return {"executed": [], "agent_state": state.agent_state.value,
+                    "stop_reason": state.stop_reason}
         executed = []
         steps = 0
-        limit = max_steps or state.stop_conditions.max_iterations
+        limit = max_steps or (len(state.plan.tasks) if state.plan else 10)
         while steps < limit:
             if state.agent_state in (AgentState.PAUSED, AgentState.COMPLETED,
                                      AgentState.CANCELLED, AgentState.FAILED):
@@ -419,5 +436,8 @@ class ResearchManager:
                 break
             if state.stop_reason:
                 break
+        if executed:
+            sc.current_iteration += 1
+            self.store.save(state)
         return {"executed": executed, "agent_state": state.agent_state.value,
                 "stop_reason": state.stop_reason}

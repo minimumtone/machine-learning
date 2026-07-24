@@ -26,6 +26,13 @@ GOAL = (
 )
 
 
+def test_session_store_rejects_path_traversal(tmp_path):
+    store = SessionStore(str(tmp_path))
+    with pytest.raises(ValueError):
+        store.path("../../etc/passwd")
+    assert store.load("../outside") is None
+
+
 @pytest.fixture()
 def manager(tmp_path):
     return ResearchManager(gateway=ToolGateway(), store=SessionStore(str(tmp_path)))
@@ -164,11 +171,14 @@ class TestErrorRecovery:
 # ---------- §19.4 停止機能 ----------
 class TestStopping:
     def test_iteration_limit_stops(self, manager, session):
+        # 1 反復 = run_auto 1 回（Observe→Plan→Act→Evaluate→Replan の一巡）
         session.stop_conditions.max_iterations = 1
-        t1 = session.plan.tasks[0]
-        manager.execute_task(session, t1.task_id)
-        assert session.stop_reason is not None
-        assert "反復回数上限" in session.stop_reason
+        first = manager.run_auto(session)
+        assert first["executed"]
+        second = manager.run_auto(session)
+        assert second["executed"] == []
+        assert second["stop_reason"] is not None
+        assert "反復回数上限" in second["stop_reason"]
 
     def test_budget_limit_stops(self, manager, session):
         session.budget.max_model_runs = 0
@@ -199,6 +209,15 @@ class TestStopping:
         assert len(reloaded.evidence) == n_evidence
         manager.resume(reloaded)
         assert reloaded.agent_state != AgentState.PAUSED
+
+    def test_observe_does_not_clobber_state(self, manager, session):
+        """読み取り経路（observe）が一時停止・完了状態を上書きしない。"""
+        manager.pause(session)
+        manager.observe(session)
+        assert session.agent_state == AgentState.PAUSED
+        manager.complete(session)
+        manager.observe(session)
+        assert session.agent_state == AgentState.COMPLETED
 
 
 # ---------- §19.5 Human-in-the-loop ----------
@@ -259,8 +278,7 @@ class TestHumanInTheLoop:
 
 # ---------- エンドツーエンド ----------
 def test_full_cycle_end_to_end(manager, session):
-    """Goal→Observe→Plan→承認→Act→Evaluate まで一巡できる。"""
-    session.stop_conditions.max_iterations = 20
+    """Goal→Observe→Plan→承認→Act→Evaluate までデフォルト設定のまま一巡できる。"""
     manager.run_auto(session)
     approval = next(a for a in session.approvals if a.status == "pending")
     manager.resolve_approval(session, approval.approval_id, True)
