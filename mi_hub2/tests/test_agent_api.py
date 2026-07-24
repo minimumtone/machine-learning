@@ -34,7 +34,7 @@ def test_goal_and_state(client):
     r = client.get(f"/api/agent/sessions/{sid}/state")
     assert r.status_code == 200
     body = r.json()
-    assert body["agent_state"] == "observing"
+    assert body["agent_state"] == "idle"
     assert body["goal"]["target_phase"] == "B2"
 
 

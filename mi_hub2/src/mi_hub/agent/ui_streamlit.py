@@ -86,8 +86,7 @@ with chat_col:
 
 with agent_col:
     st.subheader("Agent")
-    obs = m.observe(state)
-    m.store.save(state)
+    obs = m.observe(state)  # 読み取り専用（agent_state は変更・保存しない）
     c1, c2, c3 = st.columns(3)
     c1.metric("状態", state.agent_state.value)
     c2.metric("進捗", f"{obs.goal_progress:.0%}")

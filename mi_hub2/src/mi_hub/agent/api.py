@@ -89,8 +89,7 @@ def list_sessions() -> dict[str, Any]:
 def get_state(session_id: str) -> dict[str, Any]:
     m = get_manager()
     state = _load(session_id)
-    obs = m.observe(state)
-    m.store.save(state)
+    obs = m.observe(state)  # 読み取り専用（agent_state は変更・保存しない）
     return {
         "session_id": state.session_id,
         "agent_state": state.agent_state.value,
