@@ -120,7 +120,7 @@ with chat_col:
                 "errors": [e.message for e in state.errors if not e.resolved],
                 "stop_reason": state.stop_reason,
             }
-            reply = llm.chat_reply(context, state.chat_history, user_msg)
+            reply = llm.chat_reply(context, state.chat_history[:-1], user_msg)
             if reply is None:
                 reply = (
                     f"現在の状態: {state.agent_state.value}、"
