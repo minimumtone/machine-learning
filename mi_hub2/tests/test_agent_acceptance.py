@@ -540,3 +540,13 @@ class TestBugRegressions:
         provider.search("ナノ結晶粒微細化 を調べたい")
         added = provider.update_from_logs(min_count=2)
         assert isinstance(added, list)
+
+    def test_update_from_logs_adds_compound_terms(self, tmp_path):
+        from mi_hub.agent.graphrag import build_default_provider
+
+        provider = build_default_provider(str(tmp_path / "graphrag"))
+        provider.search("積層欠陥エネルギー と 相安定性 の関係")
+        provider.search("積層欠陥エネルギー の文献を調べたい")
+        added = provider.update_from_logs(min_count=2)
+        assert "積層欠陥エネルギー" in added
+        assert provider.tokenizer.tokenize("積層欠陥エネルギーの評価")[0] == "積層欠陥エネルギー"
