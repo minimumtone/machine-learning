@@ -133,8 +133,8 @@ def main():
                 fname = os.path.join(outroot, f'pure_{elem}.extxyz')
                 ase_write(fname, atoms)
                 pure_done[elem] = fname
-                rows.append([args.lattice, elem, elem, 0, 0, fname,
-                             len(atoms)])
+                rows.append([args.lattice, elem, elem, 0, 0,
+                             os.path.relpath(fname, outroot), len(atoms)])
                 continue
             for seed in range(1, N_SEEDS + 1):
                 atoms = generate_sqs(args.lattice, elem_a, elem_b, frac_b,
@@ -144,7 +144,7 @@ def main():
                     f'{elem_a}{100 - comp}{elem_b}{comp}_seed{seed}.extxyz')
                 ase_write(fname, atoms)
                 rows.append([args.lattice, elem_a, elem_b, comp, seed,
-                             fname, len(atoms)])
+                             os.path.relpath(fname, outroot), len(atoms)])
                 print(f'Generated {fname} ({len(atoms)} atoms)')
 
     with open(manifest_path, 'w', newline='') as f:

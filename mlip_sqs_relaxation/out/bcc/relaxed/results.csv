@@ -1,0 +1,2 @@
+lattice,element_a,element_b,at_percent_b,seed,n_atoms,energy_eV,energy_per_atom_eV,max_force_eV_A,volume_A3,volume_per_atom_A3,converged,n_opt_steps,relaxed_file
+bcc,Fe,Fe,0,0,128,-1075.358417,-8.401238,0.000000,1506.5842,11.7702,True,0,/home/ubuntu/repos/machine-learning/mlip_sqs_relaxation/out/bcc/relaxed/pure_Fe_relaxed.extxyz
