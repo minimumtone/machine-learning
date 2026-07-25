@@ -72,9 +72,7 @@ def main():
         for entry in entries:
             src = entry['file']
             if not os.path.isabs(src):
-                src = os.path.join(os.path.dirname(manifest_dir) if
-                                   os.path.dirname(src) else manifest_dir,
-                                   src)
+                src = os.path.join(manifest_dir, src)
                 if not os.path.exists(src):
                     src = entry['file']
             atoms = ase_read(src)
