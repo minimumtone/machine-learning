@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import os
 import time
 
 import pandas as pd
@@ -350,6 +351,19 @@ with agent_col:
     with tabs[3]:
         for e in state.evidence:
             st.write(f"- **{e.evidence_id}** [{e.evidence_type}] {e.claim}")
+            workdir = e.conditions.get("workdir")
+            files = e.conditions.get("generated_files") or []
+            if e.conditions.get("stdout"):
+                with st.expander(f"実行出力（{e.evidence_id}）"):
+                    st.code(str(e.conditions["stdout"]))
+            if workdir and files:
+                for fname in files:
+                    fpath = os.path.join(str(workdir), str(fname))
+                    if str(fname).lower().endswith((".png", ".jpg", ".jpeg", ".svg")) \
+                            and os.path.exists(fpath):
+                        st.image(fpath, caption=fname)
+                    else:
+                        st.write(f"  - 成果物: {fpath}")
 
     with tabs[4]:
         for err in state.errors:
