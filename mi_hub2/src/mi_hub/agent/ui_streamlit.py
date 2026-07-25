@@ -55,6 +55,90 @@ def execute_script_approval(manager: ResearchManager, s: SessionState,
     return reply
 
 
+LOOP_STAGES = ["Goal", "Observe", "Plan", "Human Check", "Act", "Evaluate", "Replan"]
+_STATE_TO_STAGE = {
+    "idle": 0, "observing": 1, "planning": 2,
+    "awaiting_human_input": 3, "awaiting_approval": 3,
+    "executing": 4, "monitoring": 4, "evaluating": 5, "replanning": 6,
+}
+
+
+def render_research_loop(s: SessionState) -> None:
+    """研究ループ（Goal→Observe→…→Replan）の現在地をピル表示する。"""
+    current = _STATE_TO_STAGE.get(s.agent_state.value)
+    pills = []
+    for i, stage in enumerate(LOOP_STAGES):
+        if i == current:
+            style = ("background:#ff4b4b;color:#fff;font-weight:700;"
+                     "box-shadow:0 0 0 2px #ffb3b3;")
+        else:
+            style = "background:#f0f2f6;color:#555;"
+        pills.append(
+            f'<span style="{style}padding:3px 10px;border-radius:12px;'
+            f'font-size:0.78rem;white-space:nowrap;">{stage}</span>'
+        )
+    arrow = '<span style="color:#bbb;font-size:0.75rem;">→</span>'
+    html = ('<div style="display:flex;gap:4px;align-items:center;'
+            'flex-wrap:wrap;margin-bottom:8px;">' + arrow.join(pills) + "</div>")
+    if current is None:
+        html += (f'<div style="font-size:0.8rem;color:#888;">現在の状態: '
+                 f'<b>{s.agent_state.value}</b>（ループ外）</div>')
+    st.markdown(html, unsafe_allow_html=True)
+
+
+AUDIT_ACTION_LABELS = {
+    "session_created": ("\U0001f195", "セッション開始"),
+    "plan_generated": ("\U0001f4cb", "計画生成"),
+    "plan_revised": ("\U0001f501", "計画改訂"),
+    "task_completed": ("\u2705", "タスク完了"),
+    "task_failed": ("\u274c", "タスク失敗"),
+    "approval_requested": ("\u270b", "承認依頼"),
+    "approval_resolved": ("\U0001f44d", "承認判断"),
+    "script_executed": ("\U0001f4bb", "スクリプト実行"),
+    "case_report_exported": ("\U0001f4c4", "事例レポート出力"),
+}
+
+
+def render_timeline(s: SessionState) -> None:
+    """研究ノート風タイムライン（監査ログ・承認・エラーを時系列で統合表示）。"""
+    events: list[tuple[float, str, str, str]] = []  # (ts, icon, label, detail)
+    for entry in s.audit_log:
+        icon, label = AUDIT_ACTION_LABELS.get(entry.action, ("\u2022", entry.action))
+        detail = ", ".join(
+            f"{k}={v}" for k, v in entry.detail.items()
+            if isinstance(v, (str, int, float)) and len(str(v)) <= 80
+        )
+        events.append((entry.timestamp, icon, f"{label}（{entry.actor}）", detail))
+    for a in s.approvals:
+        if a.resolved_at:
+            icon = "\U0001f44d" if a.status == "approved" else "\U0001f6ab"
+            events.append((
+                a.resolved_at, icon,
+                f"承認{'可' if a.status == 'approved' else '否'}（{a.resolved_by or 'human'}）",
+                a.description,
+            ))
+    for err in s.errors:
+        events.append((
+            err.created_at, "\u26a0\ufe0f",
+            f"エラー: {err.error_type.value}", err.message,
+        ))
+    events.sort(key=lambda e: -e[0])
+    if not events:
+        st.caption("まだ記録がありません。")
+        return
+    for ts, icon, label, detail in events:
+        t = time.strftime("%m/%d %H:%M:%S", time.localtime(ts))
+        st.markdown(
+            f'<div style="border-left:3px solid #ddd;padding:2px 0 2px 10px;'
+            f'margin-left:4px;"><span style="color:#999;font-size:0.75rem;">{t}</span>'
+            f'&nbsp;{icon} <b>{label}</b>'
+            + (f'<br><span style="font-size:0.85rem;color:#444;">{detail}</span>'
+               if detail else "")
+            + "</div>",
+            unsafe_allow_html=True,
+        )
+
+
 def pending_approval_summary(s: SessionState) -> str:
     lines = []
     for a in s.approvals:
@@ -238,6 +322,7 @@ with chat_col:
 
 with agent_col:
     st.subheader("Agent")
+    render_research_loop(state)
     obs = m.observe(state)  # 読み取り専用（agent_state は変更・保存しない）
     c1, c2, c3 = st.columns(3)
     c1.metric("状態", state.agent_state.value)
@@ -275,7 +360,7 @@ with agent_col:
             for gap in state.evaluations[-1].data_gaps:
                 st.write(f"- {gap}")
 
-    tabs = st.tabs(["計画", "仮説", "承認", "証拠", "エラー", "履歴"])
+    tabs = st.tabs(["計画", "仮説", "承認", "証拠", "エラー", "履歴", "タイムライン"])
 
     with tabs[0]:
         if state.plan:
@@ -417,3 +502,6 @@ with agent_col:
                 f"- v{c.version} by {c.created_by}: {c.reason_for_change} "
                 f"(+{len(c.added_tasks)} / -{len(c.removed_tasks)})"
             )
+
+    with tabs[6]:
+        render_timeline(state)
