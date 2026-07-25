@@ -203,6 +203,39 @@ with st.sidebar:
                     "レポートをダウンロード", rf.read(),
                     file_name=f"case_report_{cur.session_id}.md",
                 )
+    st.markdown("---")
+    st.header("LLM設定")
+    providers = llm.available_providers()
+    if providers:
+        cur_p = llm.current_provider()
+        labels = {
+            "openai": "OpenAI",
+            "anthropic": "Claude (Anthropic)",
+            "gemini": "Gemini",
+            "local": "ローカルLLM (OpenAI互換)",
+        }
+        choice = st.selectbox(
+            "プロバイダ",
+            providers,
+            index=providers.index(cur_p) if cur_p in providers else 0,
+            format_func=lambda p: labels.get(p, p),
+        )
+        os.environ["MI_HUB_LLM_PROVIDER"] = choice
+        model_override = st.text_input(
+            "モデル名（空欄で既定）",
+            os.environ.get("MI_HUB_LLM_MODEL", ""),
+            help="例: gpt-4o / claude-sonnet-4-20250514 / gemini-2.0-flash / llama3.1",
+        )
+        if model_override.strip():
+            os.environ["MI_HUB_LLM_MODEL"] = model_override.strip()
+        else:
+            os.environ.pop("MI_HUB_LLM_MODEL", None)
+    else:
+        st.caption(
+            "利用可能なLLMがありません。OPENAI_API_KEY / ANTHROPIC_API_KEY / "
+            "GEMINI_API_KEY のいずれか、またはローカルLLMの MI_HUB_LLM_BASE_URL "
+            "を設定してください（未設定時は決定論的フォールバック）。"
+        )
 
 sid = st.session_state.get("sid")
 if not sid:
@@ -314,7 +347,8 @@ with chat_col:
                     + (f"停止理由: {state.stop_reason}。" if state.stop_reason else "")
                     + "\n\n「実行を続けて」でタスクを進められます。"
                     "承認・仮説判定はAgentペインの各タブから操作してください。"
-                    "（自由対話には OPENAI_API_KEY の設定が必要です）"
+                    "（自由対話には LLM の APIキー設定が必要です: OPENAI_API_KEY / "
+                    "ANTHROPIC_API_KEY / GEMINI_API_KEY / MI_HUB_LLM_BASE_URL）"
                 )
         state.chat_history.append({"role": "assistant", "content": reply})
         m.store.save(state)

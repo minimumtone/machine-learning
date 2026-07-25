@@ -2,38 +2,119 @@
 
 LLM は自然言語の構造化・仮説候補生成・説明生成のみに使用する。
 数値計算・権限判定・承認状態判定・仮説の最終確定には使用しない。
-OPENAI_API_KEY が未設定の場合は決定論的フォールバックで動作する。
+
+複数の LLM プロバイダを OpenAI 互換 API 経由で切替できる：
+- openai: OPENAI_API_KEY
+- anthropic (Claude): ANTHROPIC_API_KEY（OpenAI 互換エンドポイント）
+- gemini: GEMINI_API_KEY または GOOGLE_API_KEY（OpenAI 互換エンドポイント）
+- local: Ollama 等の OpenAI 互換サーバ（MI_HUB_LLM_BASE_URL、既定
+  http://localhost:11434/v1）
+選択は MI_HUB_LLM_PROVIDER（未設定時はキーのある最初のプロバイダ）、
+モデルは MI_HUB_LLM_MODEL で上書きできる。
+キーが無い場合は決定論的フォールバックで動作する。
 """
 
 from __future__ import annotations
 
 import json
 import os
+import re
 from typing import Any
+
+# provider -> (base_url, api_key_env_vars, default_model)
+_PROVIDERS: dict[str, tuple[str | None, tuple[str, ...], str]] = {
+    "openai": (None, ("OPENAI_API_KEY",), "gpt-4o-mini"),
+    "anthropic": (
+        "https://api.anthropic.com/v1/",
+        ("ANTHROPIC_API_KEY",),
+        "claude-3-5-haiku-latest",
+    ),
+    "gemini": (
+        "https://generativelanguage.googleapis.com/v1beta/openai/",
+        ("GEMINI_API_KEY", "GOOGLE_API_KEY"),
+        "gemini-2.0-flash",
+    ),
+    "local": (None, (), "llama3.1"),
+}
+
+
+def _provider_key(provider: str) -> str | None:
+    for env in _PROVIDERS[provider][1]:
+        if os.environ.get(env):
+            return os.environ[env]
+    return None
+
+
+def available_providers() -> list[str]:
+    """利用可能なプロバイダ一覧（local は base_url 設定時のみ）。"""
+    out = [p for p in ("openai", "anthropic", "gemini") if _provider_key(p)]
+    if os.environ.get("MI_HUB_LLM_BASE_URL"):
+        out.append("local")
+    return out
+
+
+def current_provider() -> str | None:
+    p = os.environ.get("MI_HUB_LLM_PROVIDER")
+    if p in _PROVIDERS and (p == "local" or _provider_key(p)):
+        return p
+    avail = available_providers()
+    return avail[0] if avail else None
 
 
 def llm_available() -> bool:
-    return bool(os.environ.get("OPENAI_API_KEY"))
+    return current_provider() is not None
+
+
+def _client_and_model():
+    from openai import OpenAI
+
+    provider = current_provider()
+    if provider is None:
+        return None, None
+    base_url, _, default_model = _PROVIDERS[provider]
+    if provider == "local":
+        base_url = os.environ.get("MI_HUB_LLM_BASE_URL", "http://localhost:11434/v1")
+        api_key = os.environ.get("MI_HUB_LLM_API_KEY", "local")
+    else:
+        api_key = _provider_key(provider)
+    model = os.environ.get("MI_HUB_LLM_MODEL", default_model)
+    return OpenAI(base_url=base_url, api_key=api_key), model
+
+
+def _parse_json_text(text: str) -> dict[str, Any] | None:
+    text = re.sub(r"^```(?:json)?|```$", "", text.strip(), flags=re.MULTILINE).strip()
+    try:
+        out = json.loads(text)
+        return out if isinstance(out, dict) else None
+    except json.JSONDecodeError:
+        return None
 
 
 def _chat_json(system: str, user: str) -> dict[str, Any] | None:
-    """OpenAI へ JSON 応答を要求。失敗時は None（フォールバックへ）。"""
+    """選択中のプロバイダへ JSON 応答を要求。失敗時は None（フォールバックへ）。"""
     if not llm_available():
         return None
     try:
-        from openai import OpenAI
-
-        client = OpenAI()
-        resp = client.chat.completions.create(
-            model=os.environ.get("MI_HUB_LLM_MODEL", "gpt-4o-mini"),
-            messages=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": user},
-            ],
-            response_format={"type": "json_object"},
-            temperature=0.2,
-        )
-        return json.loads(resp.choices[0].message.content or "{}")
+        client, model = _client_and_model()
+        messages = [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ]
+        try:
+            resp = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                response_format={"type": "json_object"},
+                temperature=0.2,
+            )
+        except Exception:
+            # response_format 非対応のプロバイダ（一部ローカルLLM等）はテキストで再試行
+            resp = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=0.2,
+            )
+        return _parse_json_text(resp.choices[0].message.content or "{}")
     except Exception:
         return None
 
@@ -212,9 +293,7 @@ def chat_reply(context: dict[str, Any], history: list[dict[str, str]], message: 
     if not llm_available():
         return None
     try:
-        from openai import OpenAI
-
-        client = OpenAI()
+        client, model = _client_and_model()
         system = (
             "あなたは材料研究エージェント MI-HUB2 の対話アシスタントです。"
             "以下のセッション状態を踏まえ、研究者と議論を前進させる相棒として日本語で答えてください。"
@@ -234,7 +313,7 @@ def chat_reply(context: dict[str, Any], history: list[dict[str, str]], message: 
                 messages.append({"role": msg["role"], "content": msg["content"]})
         messages.append({"role": "user", "content": message})
         resp = client.chat.completions.create(
-            model=os.environ.get("MI_HUB_LLM_MODEL", "gpt-4o-mini"),
+            model=model,
             messages=messages,
             temperature=0.3,
         )

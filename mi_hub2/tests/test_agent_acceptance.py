@@ -452,3 +452,42 @@ def test_memory_context_short_and_long_term(manager, session):
     assert mem["short_term_memory"]["recent_tasks"]
     assert mem["long_term_memory"]["evaluation_history"]
     assert mem["long_term_memory"]["evidence"]
+
+
+class TestLLMProviders:
+    """複数LLMプロバイダの解決（実LLMは呼ばない）。"""
+
+    def test_no_keys_no_provider(self):
+        from mi_hub.agent import llm
+
+        assert llm.available_providers() == []
+        assert llm.current_provider() is None
+        assert not llm.llm_available()
+
+    def test_provider_resolution(self, monkeypatch):
+        from mi_hub.agent import llm
+
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "x")
+        monkeypatch.setenv("GEMINI_API_KEY", "y")
+        assert llm.available_providers() == ["anthropic", "gemini"]
+        assert llm.current_provider() == "anthropic"
+        monkeypatch.setenv("MI_HUB_LLM_PROVIDER", "gemini")
+        assert llm.current_provider() == "gemini"
+        # キーの無いプロバイダ指定はキーのあるものへフォールバック
+        monkeypatch.setenv("MI_HUB_LLM_PROVIDER", "openai")
+        assert llm.current_provider() == "anthropic"
+
+    def test_local_provider(self, monkeypatch):
+        from mi_hub.agent import llm
+
+        monkeypatch.setenv("MI_HUB_LLM_BASE_URL", "http://localhost:11434/v1")
+        assert "local" in llm.available_providers()
+        assert llm.current_provider() == "local"
+        assert llm.llm_available()
+
+    def test_parse_json_text_code_fence(self):
+        from mi_hub.agent.llm import _parse_json_text
+
+        assert _parse_json_text('```json\n{"a": 1}\n```') == {"a": 1}
+        assert _parse_json_text('{"a": 1}') == {"a": 1}
+        assert _parse_json_text("not json") is None
