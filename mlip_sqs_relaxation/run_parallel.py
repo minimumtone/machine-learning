@@ -183,13 +183,30 @@ def _relax_one(args):
     from ase.filters import FrechetCellFilter
     from ase.optimize import FIRE
 
+    base = {
+        'lattice': entry['lattice'],
+        'element_a': entry['element_a'],
+        'element_b': entry['element_b'],
+        'at_percent_b': entry['at_percent_b'],
+        'seed': entry['seed'],
+        'n_atoms': entry['n_atoms'],
+        'energy_eV': '',
+        'energy_per_atom_eV': '',
+        'max_force_eV_A': '',
+        'volume_A3': '',
+        'volume_per_atom_A3': '',
+        'converged': '',
+        'n_opt_steps': '',
+        'relaxed_file': '',
+    }
+
     src = entry['file']
     if not os.path.isabs(src):
         src = os.path.join(manifest_dir, src)
     try:
         atoms = ase_read(src)
     except Exception as e:
-        return {**entry, 'error': f'read failed: {e}'}
+        return {**base, 'error': f'read failed: {e}'}
 
     atoms.calc = _worker_calc
     ecf = FrechetCellFilter(atoms)
@@ -197,7 +214,7 @@ def _relax_one(args):
     try:
         converged = opt.run(fmax=fmax, steps=max_steps)
     except Exception as e:
-        return {**entry, 'error': f'opt failed: {e}'}
+        return {**base, 'error': f'opt failed: {e}'}
 
     energy = atoms.get_potential_energy()
     forces = atoms.get_forces()
@@ -210,11 +227,7 @@ def _relax_one(args):
     ase_write(relaxed_file, atoms)
 
     return {
-        'lattice': entry['lattice'],
-        'element_a': entry['element_a'],
-        'element_b': entry['element_b'],
-        'at_percent_b': entry['at_percent_b'],
-        'seed': entry['seed'],
+        **base,
         'n_atoms': n_atoms,
         'energy_eV': f'{energy:.6f}',
         'energy_per_atom_eV': f'{energy / n_atoms:.6f}',
@@ -259,10 +272,15 @@ def relax_lattice(manifest_path, workers, model, device,
             writer.writerow(result)
             f.flush()
             pair = f"{result['element_a']}-{result['element_b']}"
-            e_atom = result['energy_per_atom_eV']
-            print(f'[{i}/{n}] relaxed {pair} {result["at_percent_b"]}% '
-                  f'seed {result["seed"]}: conv={result["converged"]} '
-                  f'steps={result["n_opt_steps"]} energy={e_atom}', flush=True)
+            err = result.get('error', '')
+            if err:
+                print(f'[{i}/{n}] ERROR {pair} {result["at_percent_b"]}% '
+                      f'seed {result["seed"]}: {err}', flush=True)
+            else:
+                print(f'[{i}/{n}] relaxed {pair} {result["at_percent_b"]}% '
+                      f'seed {result["seed"]}: conv={result["converged"]} '
+                      f'steps={result["n_opt_steps"]} '
+                      f'energy={result["energy_per_atom_eV"]}', flush=True)
 
     print(f'Results written to {results_path}')
 
