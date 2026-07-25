@@ -47,7 +47,6 @@ METALLIC_RADIUS = {
 }
 
 COMPOSITIONS = [0, 25, 50, 75, 100]  # at.% of element B
-N_SEEDS = 3
 SUPERCELL = 4  # 4x4x4 conventional cells
 
 
@@ -99,6 +98,8 @@ def main():
                         help='Comma-separated pairs, e.g. "Fe-Ni,Nb-Ta"')
     parser.add_argument('--n-steps', type=int, default=10000,
                         help='MC steps for SQS annealing')
+    parser.add_argument('--n-seeds', type=int, default=3,
+                        help='Number of independent SQS seeds per mixed composition')
     args = parser.parse_args()
 
     if args.pairs:
@@ -136,7 +137,7 @@ def main():
                 rows.append([args.lattice, elem, elem, 0, 0,
                              os.path.relpath(fname, outroot), len(atoms)])
                 continue
-            for seed in range(1, N_SEEDS + 1):
+            for seed in range(1, args.n_seeds + 1):
                 atoms = generate_sqs(args.lattice, elem_a, elem_b, frac_b,
                                      seed, args.n_steps)
                 fname = os.path.join(
