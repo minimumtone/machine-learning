@@ -332,6 +332,44 @@ class ResearchManager:
             return None  # 承認待ちは execute 時に個別処理
         return None
 
+    # ---------- Memory ----------
+    def memory_context(self, state: SessionState) -> dict[str, Any]:
+        """短期記憶（直近の計算・評価）と長期記憶（セッション全体）を分けて返す。
+
+        短期: 直近ステップの妥当性評価に使う。長期: 蓄積された証拠・評価履歴から
+        全体としての妥当性を判断する材料に使う。判断は研究者が行う。
+        """
+        recent_tasks = [
+            {"task": t.task_id, "action": t.action, "status": t.status.value,
+             "description": t.description}
+            for t in (state.plan.tasks if state.plan else [])
+            if t.status in (TaskState.COMPLETED, TaskState.FAILED)
+        ][-3:]
+        short_term = {
+            "last_evaluation": state.evaluations[-1].model_dump() if state.evaluations else None,
+            "recent_tasks": recent_tasks,
+            "unresolved_errors": [e.message for e in state.errors if not e.resolved],
+        }
+        long_term = {
+            "goal": state.goal.model_dump() if state.goal else None,
+            "hypotheses": [
+                {"id": h.hypothesis_id, "statement": h.statement, "status": h.status.value,
+                 "falsification_conditions": h.falsification_conditions}
+                for h in state.hypotheses
+            ],
+            "evidence": [
+                {"id": e.evidence_id, "type": e.evidence_type, "claim": e.claim}
+                for e in state.evidence
+            ],
+            "evaluation_history": [
+                {"result": ev.step_result, "quality": ev.result_quality,
+                 "progress_after": ev.goal_progress_after, "data_gaps": ev.data_gaps}
+                for ev in state.evaluations
+            ],
+            "plan_versions": len(state.plan_history),
+        }
+        return {"short_term_memory": short_term, "long_term_memory": long_term}
+
     # ---------- Human-in-the-loop (§10) ----------
     def resolve_approval(self, state: SessionState, approval_id: str,
                          approve: bool, by: str = "human") -> dict[str, Any]:

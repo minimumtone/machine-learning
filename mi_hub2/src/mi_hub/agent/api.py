@@ -105,6 +105,7 @@ def get_state(session_id: str) -> dict[str, Any]:
         "stop_reason": state.stop_reason,
         "data_gaps": (state.evaluations[-1].data_gaps if state.evaluations else []),
         "plan_history": [c.model_dump() for c in state.plan_history],
+        "memory": m.memory_context(state),
     }
 
 

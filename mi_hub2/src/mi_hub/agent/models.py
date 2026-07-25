@@ -122,6 +122,7 @@ class ApprovalRequest(BaseModel):
     task_id: str | None = None
     kind: str = "task_execution"
     description: str = ""
+    payload: dict[str, Any] = Field(default_factory=dict)  # 例: script_execution の script 本文
     status: str = "pending"  # pending / approved / rejected
     requested_at: float = Field(default_factory=time.time)
     resolved_at: float | None = None

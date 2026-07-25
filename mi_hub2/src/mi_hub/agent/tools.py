@@ -8,7 +8,10 @@ MCP エンドポイントへ差し替える。ここでは MVP 用に決定論�
 from __future__ import annotations
 
 import hashlib
+import os
 import random
+import subprocess
+import tempfile
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -69,6 +72,29 @@ class ToolError(Exception):
         self.message = message
 
 
+class KnowledgeProvider:
+    """外部ナレッジ源（MCPサーバ・GraphRAG・社内DB等）の差し込み口。
+
+    search() を実装したオブジェクトを ToolGateway.register_knowledge_provider()
+    で登録すると、文献検索時にモックレジストリと併せて照会される。
+    MCP 接続の場合は search() 内で MCP クライアント呼出しを実装する。
+    """
+
+    name: str = "knowledge"
+
+    def __init__(self, name: str = "knowledge"):
+        self.name = name
+
+    def search(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
+        """query に関連する文書のリストを返す。
+
+        各文書は search_literature と同じスキーマ
+        （title / source_type / claim / evidence_type / conditions /
+        keywords / limitations）に従うこと。
+        """
+        raise NotImplementedError
+
+
 class ToolGateway:
     """MCPゲートウェイのインターフェイス兼モック実装。"""
 
@@ -77,6 +103,26 @@ class ToolGateway:
         self.literature = list(MOCK_LITERATURE)
         self._fail_next = fail_next  # テスト用: 次回呼出しを指定エラーで失敗させる
         self.call_log: list[dict[str, Any]] = []
+        self.knowledge_providers: list[KnowledgeProvider] = []
+
+    def register_knowledge_provider(self, provider: KnowledgeProvider) -> None:
+        """外部ナレッジ源（MCP/GraphRAG等）を登録する。"""
+        self.knowledge_providers.append(provider)
+
+    def search_knowledge(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
+        """モック文献DBと登録済みナレッジプロバイダを横断検索する。"""
+        results = self.search_literature(query, limit)
+        for r in results:
+            r.setdefault("provider", "mock_literature")
+        for p in self.knowledge_providers:
+            try:
+                for doc in p.search(query, limit):
+                    doc.setdefault("provider", p.name)
+                    results.append(doc)
+            except (ToolError, NotImplementedError, ConnectionError, TimeoutError, OSError, ValueError) as exc:
+                self.call_log.append({"tool": "search_knowledge", "provider": p.name,
+                                      "error": str(exc)})
+        return results[:limit]
 
     def _maybe_fail(self, tool: str) -> None:
         if self._fail_next:
@@ -159,6 +205,34 @@ class ToolGateway:
             "in_domain": True,
             "independence_group": model.independence_group,
         }
+
+    # --- t2Shell（サンドボックススクリプト実行。実行は必ず人間承認後） ---
+    def run_script(self, script: str, timeout_s: int = 300) -> dict[str, Any]:
+        """承認済みシェルスクリプトを実行し、exit code / stdout / stderr を返す。
+
+        ライブラリのインストール（pip 等）や計算スクリプトの実行に使う。
+        呼び出し側（UI/API）が承認ゲートを通した後にのみ呼ぶこと。
+        """
+        self._maybe_fail("run_script")
+        self.call_log.append({"tool": "run_script", "script_head": script[:200]})
+        fd, path = tempfile.mkstemp(suffix=".sh")
+        try:
+            with os.fdopen(fd, "w") as f:
+                f.write(script)
+            proc = subprocess.run(
+                ["bash", path], capture_output=True, text=True, timeout=timeout_s,
+                check=False,
+            )
+            return {
+                "exit_code": proc.returncode,
+                "stdout": proc.stdout[-8000:],
+                "stderr": proc.stderr[-8000:],
+            }
+        except subprocess.TimeoutExpired:
+            return {"exit_code": -1, "stdout": "",
+                    "stderr": f"timeout: 実行が {timeout_s} 秒を超過"}
+        finally:
+            os.unlink(path)
 
     # --- t2Python（統計評価） ---
     def analyze(self, values: list[float]) -> dict[str, float]:

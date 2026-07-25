@@ -89,7 +89,7 @@ class EvidenceAgent:
 
     def run(self, state: SessionState, gateway: ToolGateway, task: Task) -> dict[str, Any]:
         query = task.inputs.get("query") or (state.goal.statement if state.goal else "")
-        docs = gateway.search_literature(query)
+        docs = gateway.search_knowledge(query)
         added = []
         for doc in docs:
             ev = Evidence(

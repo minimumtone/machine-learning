@@ -313,3 +313,52 @@ def test_normalize_goal_property_vocabulary():
     assert out["target_property"] == "phase_stability"
     out = _normalize_goal({"target_property": "Formation Enthalpy"})
     assert out["target_property"] == "formation_enthalpy"
+
+
+def test_run_script_sandbox(manager):
+    """承認ゲート後に呼ぶ run_script が exit code / stdout / stderr を返す。"""
+    res = manager.gateway.run_script("echo hello && echo err >&2")
+    assert res["exit_code"] == 0
+    assert "hello" in res["stdout"]
+    assert "err" in res["stderr"]
+    res = manager.gateway.run_script("exit 3")
+    assert res["exit_code"] == 3
+
+
+def test_classify_intent_fallback():
+    """LLM 不可時、明示的コマンドのみ操作意図になり、それ以外は question。"""
+    from mi_hub.agent.llm import classify_intent
+    assert classify_intent("一時停止", False)["intent"] == "pause"
+    assert classify_intent("実行を続けて", False)["intent"] == "run"
+    assert classify_intent("承認", True)["intent"] == "approve"
+    assert classify_intent("承認", False)["intent"] == "question"
+    assert classify_intent("HEAの安定性について教えて", False)["intent"] == "question"
+
+
+def test_knowledge_provider_registration(manager, session):
+    """登録したナレッジプロバイダ（MCP/GraphRAG差込口）が文献検索に併用される。"""
+    from mi_hub.agent.tools import KnowledgeProvider
+
+    class FakeGraphRAG(KnowledgeProvider):
+        def search(self, query, limit=10):
+            return [{"title": "GraphRAG hit", "claim": "外部ナレッジの主張",
+                     "evidence_type": "computation", "keywords": [], "limitations": []}]
+
+    manager.gateway.register_knowledge_provider(FakeGraphRAG("graphrag"))
+    docs = manager.gateway.search_knowledge("B2 NiAl", limit=10)
+    providers = {d.get("provider") for d in docs}
+    assert "graphrag" in providers
+    assert "mock_literature" in providers
+
+
+def test_memory_context_short_and_long_term(manager, session):
+    """短期記憶（直近評価）と長期記憶（全体履歴）が分離して取得できる。"""
+    manager.run_auto(session)
+    approval = next(a for a in session.approvals if a.status == "pending")
+    manager.resolve_approval(session, approval.approval_id, True)
+    manager.run_auto(session)
+    mem = manager.memory_context(session)
+    assert mem["short_term_memory"]["last_evaluation"] is not None
+    assert mem["short_term_memory"]["recent_tasks"]
+    assert mem["long_term_memory"]["evaluation_history"]
+    assert mem["long_term_memory"]["evidence"]

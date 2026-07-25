@@ -149,6 +149,51 @@ def generate_hypotheses(goal_statement: str, evidence_claims: list[str]) -> list
     ]
 
 
+_INTENTS = {"run", "pause", "resume", "complete", "approve", "reject", "script", "question"}
+
+
+def classify_intent(message: str, has_pending_approval: bool) -> dict[str, Any]:
+    """ユーザ発話の意図を分類する。実行系操作の最終判定は決定論的コード側で行う。
+
+    返り値: {"intent": str, "script": str|None, "reason": str|None}
+    intent: run（タスク実行の継続指示）/ pause / resume / complete /
+            approve / reject（承認待ち操作への回答）/
+            script（シェルスクリプト実行の依頼: ライブラリのインストールや計算実行）/
+            question（質問・相談・その他）
+    """
+    out = _chat_json(
+        "あなたは研究エージェントUIの意図分類器です。ユーザの発話を次のいずれかに分類し、"
+        'JSON {"intent": str, "script": str|null, "reason": str} を返してください。\n'
+        "- run: エージェントの計画タスクの実行を進める明確な指示（例: 実行を続けて、次に進めて）\n"
+        "- pause / resume / complete: セッションの一時停止・再開・終了の指示\n"
+        f"- approve / reject: 承認待ち操作への諾否（現在の承認待ち: {'あり' if has_pending_approval else 'なし'}）\n"
+        "- script: シェル/Pythonでの計算実行やライブラリのインストールの依頼。"
+        "この場合 script フィールドに実行可能な bash スクリプト（pip install等を含めてよい）を生成すること\n"
+        "- question: 上記以外（質問・相談・要約依頼など）\n"
+        "迷った場合は question を選ぶこと。実行してよいかの最終判断は人間が行う。",
+        message,
+    )
+    if out and out.get("intent") in _INTENTS:
+        return {"intent": out["intent"],
+                "script": out.get("script") if isinstance(out.get("script"), str) else None,
+                "reason": out.get("reason")}
+    # フォールバック: 明示的コマンドのみ反応し、それ以外は question
+    stripped = message.strip()
+    if "一時停止" in stripped:
+        return {"intent": "pause", "script": None, "reason": None}
+    if "再開" in stripped:
+        return {"intent": "resume", "script": None, "reason": None}
+    if "終了" in stripped:
+        return {"intent": "complete", "script": None, "reason": None}
+    if has_pending_approval and stripped in ("承認", "承認します", "OK", "ok", "はい"):
+        return {"intent": "approve", "script": None, "reason": None}
+    if has_pending_approval and stripped in ("却下", "却下します", "いいえ"):
+        return {"intent": "reject", "script": None, "reason": None}
+    if any(k in stripped for k in ("実行を続けて", "続けて", "進めて", "自動で実行")):
+        return {"intent": "run", "script": None, "reason": None}
+    return {"intent": "question", "script": None, "reason": None}
+
+
 def chat_reply(context: dict[str, Any], history: list[dict[str, str]], message: str) -> str | None:
     """セッション状態を文脈にした自由対話の応答（説明・要約のみ）。LLM 不可時は None。
 
@@ -162,9 +207,13 @@ def chat_reply(context: dict[str, Any], history: list[dict[str, str]], message: 
         client = OpenAI()
         system = (
             "あなたは材料研究エージェント MI-HUB2 の対話アシスタントです。"
-            "以下のセッション状態を踏まえ、研究者の質問に日本語で簡潔に答えてください。"
-            "できること: 状態・計画・仮説・証拠・エラーの説明、次の操作の案内"
-            "（実行は「実行を続けて」、一時停止/再開/終了、承認はAgentペインの承認タブ）。"
+            "以下のセッション状態を踏まえ、研究者と議論を前進させる相棒として日本語で答えてください。"
+            "できること: 状態・計画・仮説・証拠・エラーの説明、研究方針の議論"
+            "（特徴量設計、SQS・MLIP・CALPHAD等の手法比較、Materials Project/OQMD等の"
+            "データソース活用案など）、次の一手の具体的な提案、次の操作の案内"
+            "（実行は「実行を続けて」、一時停止/再開/終了、承認は承認タブまたはチャットで「承認」）。"
+            "ライブラリのインストールや計算実行を求められたら、承認後にスクリプトとして"
+            "実行できることを案内してください。"
             "してはいけないこと: 仮説の最終判定、承認の代行、数値の捏造。"
             "最終的な科学判断は研究者に委ねる旨を必要に応じて添えてください。\n\n"
             f"セッション状態:\n{json.dumps(context, ensure_ascii=False, default=str)}"
