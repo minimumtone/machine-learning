@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import platform
 import re
 from pathlib import Path
 from typing import Any
@@ -338,6 +339,75 @@ class ResearchManager:
         d = self.store.base_dir / "workspaces" / state.session_id
         d.mkdir(parents=True, exist_ok=True)
         return str(d)
+
+    # ---------- Case report (事例の蓄積) ----------
+    def export_case_report(self, state: SessionState) -> str:
+        """セッションを事例レポート（Markdown）として作業ディレクトリに書き出す。
+
+        会話・提案スクリプト・実行環境・結果・情報ギャップを1ファイルに集約し、
+        今後の機能改修や類似研究の参照に使う。書き出し先のパスを返す。
+        """
+        lines: list[str] = [f"# 事例レポート: {state.session_id}", ""]
+        if state.goal:
+            lines += ["## 研究目標", state.goal.statement, ""]
+            if state.goal.success_criteria:
+                lines += ["成功基準:"] + [
+                    f"- {c}" for c in state.goal.success_criteria
+                ] + [""]
+        lines += [
+            "## 実行環境",
+            f"- python: {platform.python_version()} / {platform.platform()}",
+            f"- agent_state: {state.agent_state.value}"
+            + (f" / 停止理由: {state.stop_reason}" if state.stop_reason else ""),
+            "",
+        ]
+        if state.hypotheses:
+            lines += ["## 仮説"] + [
+                f"- [{h.status.value}] {h.statement}" for h in state.hypotheses
+            ] + [""]
+        if state.chat_history:
+            lines += ["## 会話ログ"]
+            for msg in state.chat_history:
+                lines += [f"### {msg['role']}", msg["content"], ""]
+        script_approvals = [a for a in state.approvals if a.kind == "script_execution"]
+        if script_approvals:
+            lines += ["## 提案・実行スクリプト"]
+            for a in script_approvals:
+                lines += [
+                    f"### {a.approval_id}（{a.status}）",
+                    a.description,
+                    "```bash",
+                    a.payload.get("script", ""),
+                    "```",
+                    "",
+                ]
+        if state.evidence:
+            lines += ["## 証拠・実行結果"]
+            for e in state.evidence:
+                lines += [f"### {e.evidence_id} [{e.evidence_type}]", e.claim]
+                if e.conditions.get("stdout"):
+                    lines += ["```", str(e.conditions["stdout"]), "```"]
+                for f in e.conditions.get("generated_files") or []:
+                    if str(f).lower().endswith((".png", ".jpg", ".jpeg", ".svg")):
+                        lines += [f"![{f}]({f})"]  # レポートと同じ作業ディレクトリ
+                    else:
+                        lines += [f"- 成果物: {e.conditions.get('workdir', '')}/{f}"]
+                lines += [""]
+        gaps = state.evaluations[-1].data_gaps if state.evaluations else []
+        if gaps:
+            lines += ["## 追加的に必要なデータ"] + [f"- {g}" for g in gaps] + [""]
+        if state.errors:
+            lines += ["## エラー"] + [
+                f"- {e.error_type.value}: {e.message}"
+                f"（{'解決済' if e.resolved else '未解決'}）"
+                for e in state.errors
+            ] + [""]
+        path = os.path.join(self.session_workspace(state), "case_report.md")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines))
+        state.audit("ResearchManager", "case_report_exported", path=path)
+        self.store.save(state)
+        return path
 
     # ---------- Memory ----------
     def memory_context(self, state: SessionState) -> dict[str, Any]:

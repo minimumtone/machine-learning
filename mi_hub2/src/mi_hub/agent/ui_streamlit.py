@@ -105,6 +105,16 @@ with st.sidebar:
         st.rerun()
     if selected != "(新規)":
         st.session_state["sid"] = selected
+    if st.session_state.get("sid"):
+        cur = m.store.load(st.session_state["sid"])
+        if cur is not None and st.button("事例レポートを書き出す"):
+            report_path = m.export_case_report(cur)
+            st.success(f"書き出しました: {report_path}")
+            with open(report_path, encoding="utf-8") as rf:
+                st.download_button(
+                    "レポートをダウンロード", rf.read(),
+                    file_name=f"case_report_{cur.session_id}.md",
+                )
 
 sid = st.session_state.get("sid")
 if not sid:

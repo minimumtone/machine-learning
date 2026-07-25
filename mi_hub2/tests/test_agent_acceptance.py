@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -323,6 +324,19 @@ def test_run_script_sandbox(manager):
     assert "err" in res["stderr"]
     res = manager.gateway.run_script("exit 3")
     assert res["exit_code"] == 3
+
+
+def test_export_case_report(manager, session):
+    session.chat_history.append({"role": "user", "content": "HEAの安定性を評価したい"})
+    manager.run_auto(session)
+    path = manager.export_case_report(session)
+    assert os.path.exists(path)
+    with open(path, encoding="utf-8") as f:
+        text = f.read()
+    assert "事例レポート" in text
+    assert "研究目標" in text
+    assert "会話ログ" in text
+    assert any(e.action == "case_report_exported" for e in session.audit_log)
 
 
 def test_run_script_workdir(manager, tmp_path):
