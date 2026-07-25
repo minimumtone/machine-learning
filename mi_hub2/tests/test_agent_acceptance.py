@@ -371,6 +371,12 @@ class TestGraphRAG:
             assert p["supporting_docs"]
             assert "研究者が判断" in p["note"]
 
+    def test_ml_knowledge_search(self, provider):
+        results = provider.search("AutoMLと交差検証でモデル選択したい")
+        assert results
+        titles = " ".join(r["title"] for r in results)
+        assert "AutoML" in titles or "機械学習" in titles
+
     def test_update_from_logs_adds_terms(self, provider):
         for _ in range(2):
             provider.search("ハイエントロピーセラミックスの安定性")
