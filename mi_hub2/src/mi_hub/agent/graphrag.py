@@ -292,7 +292,13 @@ class GraphRAGProvider(KnowledgeProvider):
         counts: dict[str, int] = {}
         with open(self.log_path, encoding="utf-8") as f:
             for line in f:
-                entry = json.loads(line)
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    entry = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
                 if entry.get("action") != "search":
                     continue
                 for tok in MaterialsTokenizer._segment(entry.get("query", "")):
