@@ -91,29 +91,39 @@ def generate_sqs(lattice, elem_a, elem_b, frac_b, seed, n_steps):
     )
 
 
-def generate_one(lattice, elem_a, elem_b, comp, seed, outroot, n_steps):
-    frac_b = comp / 100.0
-    if comp == 0 or comp == 100:
-        elem = elem_a if comp == 0 else elem_b
-        atoms = generate_pure(lattice, elem)
-        name = f'pure_{elem}'
-    else:
-        atoms = generate_sqs(lattice, elem_a, elem_b, frac_b, seed, n_steps)
-        name = f'{elem_a}{100 - comp}{elem_b}{comp}_seed{seed}'
-
-    pair_dir = os.path.join(outroot, f'{elem_a}-{elem_b}')
-    os.makedirs(pair_dir, exist_ok=True)
-    fname = os.path.join(pair_dir, f'{name}.extxyz')
-    ase_write(fname, atoms)
-    return {
+def generate_one(args):
+    lattice, elem_a, elem_b, comp, seed, outroot, n_steps = args
+    base = {
         'lattice': lattice,
         'element_a': elem_a,
         'element_b': elem_b,
         'at_percent_b': comp,
         'seed': seed,
-        'file': os.path.relpath(fname, outroot),
-        'n_atoms': len(atoms),
+        'file': '',
+        'n_atoms': '',
+        'error': '',
     }
+    try:
+        frac_b = comp / 100.0
+        if comp == 0 or comp == 100:
+            elem = elem_a if comp == 0 else elem_b
+            atoms = generate_pure(lattice, elem)
+            name = f'pure_{elem}'
+        else:
+            atoms = generate_sqs(lattice, elem_a, elem_b, frac_b, seed, n_steps)
+            name = f'{elem_a}{100 - comp}{elem_b}{comp}_seed{seed}'
+
+        pair_dir = os.path.join(outroot, f'{elem_a}-{elem_b}')
+        os.makedirs(pair_dir, exist_ok=True)
+        fname = os.path.join(pair_dir, f'{name}.extxyz')
+        ase_write(fname, atoms)
+        return {
+            **base,
+            'file': os.path.relpath(fname, outroot),
+            'n_atoms': len(atoms),
+        }
+    except Exception as e:
+        return {**base, 'error': f'generate failed: {e}'}
 
 
 def all_tasks(lattice, elements, outroot, n_steps, n_seeds):
@@ -131,12 +141,16 @@ def all_tasks(lattice, elements, outroot, n_steps, n_seeds):
     return tasks
 
 
+MANIFEST_FIELDS = [
+    'lattice', 'element_a', 'element_b', 'at_percent_b',
+    'seed', 'file', 'n_atoms', 'error',
+]
+
+
 def write_manifest(outroot, rows):
     manifest_path = os.path.join(outroot, 'manifest.csv')
     with open(manifest_path, 'w', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=[
-            'lattice', 'element_a', 'element_b', 'at_percent_b',
-            'seed', 'file', 'n_atoms'])
+        writer = csv.DictWriter(f, fieldnames=MANIFEST_FIELDS)
         writer.writeheader()
         writer.writerows(rows)
     return manifest_path
@@ -148,11 +162,24 @@ def generate_lattice(lattice, elements, workdir, n_steps, n_seeds, workers):
     tasks = all_tasks(lattice, elements, outroot, n_steps, n_seeds)
 
     ctx = get_context('spawn')
-    with ctx.Pool(workers) as pool:
-        rows = pool.starmap(generate_one, tasks)
+    manifest_path = os.path.join(outroot, 'manifest.csv')
+    with open(manifest_path, 'w', newline='') as f, ctx.Pool(workers) as pool:
+        writer = csv.DictWriter(f, fieldnames=MANIFEST_FIELDS)
+        writer.writeheader()
+        f.flush()
+        n = len(tasks)
+        for i, row in enumerate(pool.imap_unordered(generate_one, tasks), 1):
+            writer.writerow(row)
+            f.flush()
+            pair = f"{row['element_a']}-{row['element_b']}"
+            if row.get('error'):
+                print(f'[{i}/{n}] ERROR generating {pair} {row["at_percent_b"]}% '
+                      f'seed {row["seed"]}: {row["error"]}', flush=True)
+            else:
+                print(f'[{i}/{n}] generated {pair} {row["at_percent_b"]}% '
+                      f'seed {row["seed"]} (n_atoms={row["n_atoms"]})', flush=True)
 
-    manifest_path = write_manifest(outroot, rows)
-    print(f'[{lattice}] Generated {len(rows)} structures in {outroot}')
+    print(f'[{lattice}] Generated {n} structures; manifest at {manifest_path}')
     return manifest_path
 
 
@@ -200,7 +227,12 @@ def _relax_one(args):
         'relaxed_file': '',
     }
 
+    if entry.get('error'):
+        return {**base, 'error': f'skipped: {entry["error"]}'}
+
     src = entry['file']
+    if not src:
+        return {**base, 'error': 'skipped: no file in manifest'}
     if not os.path.isabs(src):
         src = os.path.join(manifest_dir, src)
     try:
