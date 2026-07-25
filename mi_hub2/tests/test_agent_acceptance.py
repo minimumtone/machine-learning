@@ -326,6 +326,55 @@ def test_run_script_sandbox(manager):
     assert res["exit_code"] == 3
 
 
+class TestGraphRAG:
+    @pytest.fixture()
+    def provider(self, tmp_path):
+        from mi_hub.agent.graphrag import build_default_provider
+
+        return build_default_provider(str(tmp_path / "graphrag"))
+
+    def test_materials_tokenizer(self):
+        from mi_hub.agent.graphrag import MaterialsTokenizer
+
+        tok = MaterialsTokenizer()
+        tokens = tok.tokenize("高エントロピー合金の相安定性をVECで評価する")
+        assert "高エントロピー合金" in tokens
+        assert "相安定性" in tokens
+        assert "VEC" in tokens
+
+    def test_search_and_usage_log(self, provider):
+        import os
+
+        docs = provider.search("高エントロピー合金の相安定性")
+        assert docs
+        assert any("VEC" in d["keywords"] or "相安定性" in d["keywords"]
+                   for d in docs)
+        assert os.path.exists(provider.log_path)
+
+    def test_propose_hypotheses_bridge(self, provider):
+        props = provider.propose_hypotheses("高エントロピー合金の相安定性とDFT")
+        assert props
+        for p in props:
+            assert p["supporting_docs"]
+            assert "研究者が判断" in p["note"]
+
+    def test_update_from_logs_adds_terms(self, provider):
+        for _ in range(2):
+            provider.search("ハイエントロピーセラミックスの安定性")
+        added = provider.update_from_logs(min_count=2)
+        assert added, "頻出未知語が辞書に追加される"
+        assert set(added) <= set(provider.tokenizer.user_terms)
+
+    def test_gateway_integration(self, manager, tmp_path):
+        from mi_hub.agent.graphrag import build_default_provider
+
+        manager.gateway.register_knowledge_provider(
+            build_default_provider(str(tmp_path / "graphrag"))
+        )
+        docs = manager.gateway.search_knowledge("相安定性", limit=20)
+        assert any(d.get("provider") == "graphrag" for d in docs)
+
+
 def test_export_case_report(manager, session):
     session.chat_history.append({"role": "user", "content": "HEAの安定性を評価したい"})
     manager.run_auto(session)

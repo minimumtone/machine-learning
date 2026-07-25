@@ -12,6 +12,7 @@ import pandas as pd
 import streamlit as st
 
 from mi_hub.agent import llm
+from mi_hub.agent.graphrag import GraphRAGProvider, build_default_provider
 from mi_hub.agent.loop import ResearchManager
 from mi_hub.agent.models import ApprovalRequest, Evidence, SessionState
 from mi_hub.agent.states import HypothesisState
@@ -81,7 +82,10 @@ st.markdown(
 
 @st.cache_resource
 def get_manager() -> ResearchManager:
-    return ResearchManager()
+    manager = ResearchManager()
+    graphrag_dir = os.path.join(str(manager.store.base_dir), "graphrag")
+    manager.gateway.register_knowledge_provider(build_default_provider(graphrag_dir))
+    return manager
 
 
 m = get_manager()
@@ -321,6 +325,31 @@ with agent_col:
                         state, h.hypothesis_id, HypothesisState.REJECTED_BY_HUMAN
                     )
                     st.rerun()
+
+        graphrag = next(
+            (p for p in m.gateway.knowledge_providers
+             if isinstance(p, GraphRAGProvider)), None,
+        )
+        if graphrag is not None:
+            st.markdown("---")
+            st.markdown("**GraphRAG 新規仮説候補**（取込済み文献の知識グラフから）")
+            if st.button("研究目標から仮説候補を生成", key="graphrag-hyp"):
+                query = state.goal.statement if state.goal else ""
+                st.session_state["graphrag_props"] = graphrag.propose_hypotheses(query)
+            for p in st.session_state.get("graphrag_props", []):
+                with st.container(border=True):
+                    st.write(p["statement"])
+                    st.caption(
+                        "根拠文献: "
+                        + " / ".join(d["title"] for d in p["supporting_docs"])
+                        + f" — {p['note']}"
+                    )
+            if st.button("利用ログから辞書を更新", key="graphrag-dict"):
+                added = graphrag.update_from_logs()
+                if added:
+                    st.success(f"辞書に追加: {', '.join(added)}")
+                else:
+                    st.info("追加すべき頻出未知語はありません。")
 
     with tabs[2]:
         pending = [a for a in state.approvals if a.status == "pending"]
