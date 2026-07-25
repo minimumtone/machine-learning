@@ -33,7 +33,13 @@ DEFAULT_MATERIALS_TERMS = [
     "欠陥形成エネルギー", "アンチサイト", "クリープ寿命", "相境界", "状態図",
     "第一原理計算", "擬ポテンシャル", "交換相関汎関数", "スーパーセル",
     "HEA", "VEC", "SQS", "DFT", "CALPHAD", "MLIP", "B2", "L12", "FCC", "BCC",
-    "Al-Mn-Al", "Ni-Al", "Hume-Rothery",
+    "Al-Mn-Al", "Ni-Al", "Hume-Rothery", "EAM",
+    "能動学習", "不確かさ定量化", "プロビナンス", "再現性", "エネルギー曲線",
+    "ペアポテンシャル", "経験ポテンシャル", "感度解析", "承認記録",
+    "機械学習", "交差検証", "過学習", "特徴量設計", "特徴量重要度",
+    "ハイパーパラメータ", "データリーク", "外挿性能", "ランダムフォレスト",
+    "勾配ブースティング", "組成記述子", "電気陰性度", "外部検証",
+    "scikit-learn", "PyCaret", "AutoML", "XGBoost", "LightGBM", "SHAP", "Magpie",
 ]
 
 _TERM_RE = re.compile(r"[A-Za-z][A-Za-z0-9$_\-]+|[\u4e00-\u9fff\u30a0-\u30ff]{2,}")
@@ -226,6 +232,53 @@ class GraphRAGProvider(KnowledgeProvider):
         self._log("propose_hypotheses", query=query, n_proposals=len(proposals))
         return proposals
 
+    # ---------- 研究プロセス改善提案 ----------
+    def suggest_process_improvements(
+        self, current_context: str, limit: int = 5
+    ) -> list[dict[str, Any]]:
+        """現在の研究プロセス（目標・使用手法・情報ギャップの要約文）と知識グラフを
+        照合し、文献上は隣接するが現プロセスに未登場の概念を、根拠文献付きの
+        改善提案として返す（採否は研究者が判断する）。"""
+        used = set(self.tokenizer.extract_entities(current_context))
+        in_graph = [e for e in used if e in self.edges]
+        candidates: dict[str, dict[str, Any]] = {}
+        for e in in_graph:
+            for nbr, doc_ids in self.edges.get(e, {}).items():
+                if len(nbr) < 2 or any(nbr in u or u in nbr for u in used):
+                    continue  # 既出概念（部分一致含む）は提案しない
+                c = candidates.setdefault(
+                    nbr, {"via": set(), "docs": set()}
+                )
+                c["via"].add(e)
+                c["docs"].update(doc_ids)
+        ranked = sorted(
+            candidates.items(),
+            key=lambda kv: (-len(kv[1]["via"]), -len(kv[1]["docs"])),
+        )
+        proposals = []
+        for concept, info in ranked[:limit]:
+            via = sorted(info["via"])
+            docs = sorted(info["docs"])
+            proposals.append({
+                "statement": (
+                    f"現在のプロセスには「{concept}」が登場していない。"
+                    f"文献上は「{'」「'.join(via)}」と関連しており、"
+                    "導入・検討の余地がある"
+                ),
+                "concept": concept,
+                "related_to": via,
+                "supporting_docs": [
+                    {"doc_id": d,
+                     "title": self.docs.get(d, {}).get("title", d)}
+                    for d in docs
+                ],
+                "note": "プロセス改善の候補。採否・優先度は研究者が判断する",
+            })
+        self._log("suggest_process_improvements",
+                  context_entities=sorted(used)[:30],
+                  n_proposals=len(proposals))
+        return proposals
+
     # ---------- 利用ログとログ駆動更新 ----------
     def _log(self, action: str, **payload: Any) -> None:
         entry = {"ts": time.time(), "action": action, **payload}
@@ -286,6 +339,53 @@ SEED_PAPERS: list[dict[str, str]] = [
         "text": "CALPHAD評価ではDFTの生成エンタルピーが入力になる。"
                 "DFTの計算誤差は状態図の相境界の位置に影響を与えるため、"
                 "感度解析による不確かさ評価が必要である。",
+        "source": "seed",
+    },
+    {
+        "doc_id": "PAPER-precision-ladder",
+        "title": "原子間ポテンシャルの精度階梯と検証ワークフロー（抜粋）",
+        "text": "簡易ペアポテンシャルは定性的な傾向把握に留まるため、EAMなどの"
+                "経験ポテンシャル、MLIP、DFTへと段階的に精度を上げる検証が推奨される。"
+                "各段階でのエネルギー曲線の比較は不確かさ評価に有効である。",
+        "source": "seed",
+    },
+    {
+        "doc_id": "PAPER-active-learning",
+        "title": "能動学習による計算点選択と不確かさ定量化（抜粋）",
+        "text": "能動学習は不確かさ定量化に基づいて次の計算点を選択し、DFTの計算コストを"
+                "削減する。情報ギャップの大きい組成点・温度条件を優先することで、"
+                "相安定性の検証効率が向上する。",
+        "source": "seed",
+    },
+    {
+        "doc_id": "PAPER-provenance",
+        "title": "計算材料科学における再現性とプロビナンス管理（抜粋）",
+        "text": "計算条件・入力構造・スクリプト・生成物を一体で保存するプロビナンス管理は、"
+                "再現性と事例の再利用性を高める。検証の各段階での承認記録も監査に重要である。",
+        "source": "seed",
+    },
+    {
+        "doc_id": "PAPER-ml-model-selection",
+        "title": "材料特性予測における機械学習モデル選択と交差検証（抜粋）",
+        "text": "scikit-learnのランダムフォレストや勾配ブースティング（XGBoost、LightGBM）は"
+                "組成記述子からの材料特性予測に広く用いられる。交差検証は過学習の検出に必須で、"
+                "外挿性能の評価には組成群を分けたグループ分割交差検証が推奨される。",
+        "source": "seed",
+    },
+    {
+        "doc_id": "PAPER-automl",
+        "title": "AutoMLによるモデル探索と材料インフォマティクス（抜粋）",
+        "text": "PyCaretなどのAutoMLはモデル選択とハイパーパラメータ探索を自動化し、"
+                "ベースライン構築を高速化する。ただし特徴量設計とデータリーク防止は"
+                "研究者の判断が必要で、AutoMLの結果は交差検証と外部検証で確認すべきである。",
+        "source": "seed",
+    },
+    {
+        "doc_id": "PAPER-feature-engineering",
+        "title": "組成記述子と特徴量設計（抜粋）",
+        "text": "組成加重平均によるMagpie型の組成記述子（VEC、原子半径、電気陰性度等）は"
+                "特徴量設計の標準である。特徴量重要度やSHAPによる解釈は、"
+                "相安定性の支配因子の仮説生成に有効である。",
         "source": "seed",
     },
     {

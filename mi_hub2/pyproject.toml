@@ -16,6 +16,12 @@ feast = ["feast>=0.40"]
 agent = ["pydantic>=2", "fastapi>=0.110", "uvicorn>=0.29", "streamlit>=1.35"]
 agent-llm = ["openai>=1.30"]
 agent-graphrag = ["fugashi>=1.3", "unidic-lite>=1.0.8"]
+agent-ml = [
+    "scikit-learn>=1.4",
+    "pycaret>=3.3",
+    "xgboost>=2",
+    "lightgbm>=4",
+]
 dev = ["pytest>=8", "httpx>=0.27"]
 
 [tool.setuptools.packages.find]

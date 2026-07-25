@@ -393,6 +393,33 @@ with agent_col:
                 m.generate_plan(state)
                 st.rerun()
 
+        graphrag_plan = next(
+            (p for p in m.gateway.knowledge_providers
+             if isinstance(p, GraphRAGProvider)), None,
+        )
+        if graphrag_plan is not None:
+            st.markdown("---")
+            st.markdown("**GraphRAG プロセス改善提案**（文献と現在のプロセスの照合から）")
+            if st.button("研究プロセス改善提案を生成", key="graphrag-improve"):
+                context = " ".join(
+                    [state.goal.statement if state.goal else ""]
+                    + [h.statement for h in state.hypotheses]
+                    + [e.claim for e in state.evidence]
+                    + (state.evaluations[-1].data_gaps if state.evaluations else [])
+                    + [c.get("content", "") for c in state.chat_history[-10:]]
+                )
+                st.session_state["graphrag_improvements"] = (
+                    graphrag_plan.suggest_process_improvements(context)
+                )
+            for p in st.session_state.get("graphrag_improvements", []):
+                with st.container(border=True):
+                    st.write(p["statement"])
+                    st.caption(
+                        "根拠文献: "
+                        + " / ".join(d["title"] for d in p["supporting_docs"])
+                        + f" — {p['note']}"
+                    )
+
     with tabs[1]:
         for h in state.hypotheses:
             with st.expander(f"{h.hypothesis_id}: {h.statement[:40]}"):

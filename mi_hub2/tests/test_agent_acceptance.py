@@ -358,6 +358,25 @@ class TestGraphRAG:
             assert p["supporting_docs"]
             assert "研究者が判断" in p["note"]
 
+    def test_suggest_process_improvements(self, provider):
+        context = (
+            "Al-Mn-Alの中距離秩序の安定性を検討する。"
+            "簡易ペアポテンシャルでエネルギー曲線を計算した。"
+        )
+        props = provider.suggest_process_improvements(context)
+        assert props
+        concepts = {p["concept"] for p in props}
+        assert not (concepts & {"中距離秩序", "エネルギー曲線"}), "既出概念は提案しない"
+        for p in props:
+            assert p["supporting_docs"]
+            assert "研究者が判断" in p["note"]
+
+    def test_ml_knowledge_search(self, provider):
+        results = provider.search("AutoMLと交差検証でモデル選択したい")
+        assert results
+        titles = " ".join(r["title"] for r in results)
+        assert "AutoML" in titles or "機械学習" in titles
+
     def test_update_from_logs_adds_terms(self, provider):
         for _ in range(2):
             provider.search("ハイエントロピーセラミックスの安定性")

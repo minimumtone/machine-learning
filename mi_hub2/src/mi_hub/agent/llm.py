@@ -176,7 +176,9 @@ def classify_intent(message: str, has_pending_approval: bool) -> dict[str, Any]:
         "結果を全て出力・保存すること（同じ計算の再実行を避ける）。"
         "matplotlib の図はフォントサイズを既定の約2倍にし"
         "（plt.rcParams['font.size']=20 程度）、化学式・記号の添字/上付きは "
-        "LaTeX 数式表記（例: L1$_2$, R$^2$）を使うこと\n"
+        "LaTeX 数式表記（例: L1$_2$, R$^2$）を使うこと。"
+        "機械学習タスクでは scikit-learn / PyCaret（AutoML）/ XGBoost / LightGBM "
+        "が利用可能で、交差検証と評価指標の出力を含めること\n"
         "- question: 上記以外（質問・相談・要約依頼など）\n"
         "迷った場合は question を選ぶこと。実行してよいかの最終判断は人間が行う。",
         message,
