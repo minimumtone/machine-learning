@@ -168,7 +168,12 @@ def classify_intent(message: str, has_pending_approval: bool) -> dict[str, Any]:
         "- pause / resume / complete: セッションの一時停止・再開・終了の指示\n"
         f"- approve / reject: 承認待ち操作への諾否（現在の承認待ち: {'あり' if has_pending_approval else 'なし'}）\n"
         "- script: シェル/Pythonでの計算実行やライブラリのインストールの依頼。"
-        "この場合 script フィールドに実行可能な bash スクリプト（pip install等を含めてよい）を生成すること\n"
+        "この場合 script フィールドに bash として実行可能なスクリプトを生成すること。"
+        "ライブラリは `pip install -q <pkg>`（`!pip` は不可）、Python コードは "
+        "`python3 - <<'PY'` ... `PY` のヒアドキュメントで埋め込むこと。"
+        "改行を保持した完全なスクリプトとし、物理定数・式は正確に書くこと。"
+        "図・CSV等の成果物はカレントディレクトリに保存し、1回の実行で"
+        "結果を全て出力・保存すること（同じ計算の再実行を避ける）\n"
         "- question: 上記以外（質問・相談・要約依頼など）\n"
         "迷った場合は question を選ぶこと。実行してよいかの最終判断は人間が行う。",
         message,

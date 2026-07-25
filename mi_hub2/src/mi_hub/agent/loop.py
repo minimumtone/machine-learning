@@ -332,6 +332,13 @@ class ResearchManager:
             return None  # 承認待ちは execute 時に個別処理
         return None
 
+    # ---------- Workspace ----------
+    def session_workspace(self, state: SessionState) -> str:
+        """セッション専用の作業ディレクトリ（スクリプト実行の成果物置き場）を返す。"""
+        d = self.store.base_dir / "workspaces" / state.session_id
+        d.mkdir(parents=True, exist_ok=True)
+        return str(d)
+
     # ---------- Memory ----------
     def memory_context(self, state: SessionState) -> dict[str, Any]:
         """短期記憶（直近の計算・評価）と長期記憶（セッション全体）を分けて返す。

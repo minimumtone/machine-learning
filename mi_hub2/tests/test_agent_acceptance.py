@@ -325,6 +325,14 @@ def test_run_script_sandbox(manager):
     assert res["exit_code"] == 3
 
 
+def test_run_script_workdir(manager, tmp_path):
+    wd = str(tmp_path / "ws")
+    res = manager.gateway.run_script("echo data > result.csv", workdir=wd)
+    assert res["exit_code"] == 0
+    assert res["generated_files"] == ["result.csv"]
+    assert res["workdir"] == wd
+
+
 def test_classify_intent_fallback():
     """LLM 不可時、明示的コマンドのみ操作意図になり、それ以外は question。"""
     from mi_hub.agent.llm import classify_intent

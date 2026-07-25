@@ -25,11 +25,17 @@ def execute_script_approval(manager: ResearchManager, s: SessionState,
                             approval: ApprovalRequest) -> str:
     """承認済みスクリプトを実行し、結果を証拠と監査ログに記録して応答文を返す。"""
     script = approval.payload.get("script", "")
-    res = manager.gateway.run_script(script)
+    workdir = manager.session_workspace(s)
+    res = manager.gateway.run_script(script, workdir=workdir)
     s.evidence.append(Evidence(
         source_type="script_execution",
         claim=f"スクリプト実行（exit code {res['exit_code']}）: {approval.description}",
-        conditions={"approval_id": approval.approval_id},
+        conditions={
+            "approval_id": approval.approval_id,
+            "stdout": res["stdout"][-2000:],
+            "workdir": workdir,
+            "generated_files": res["generated_files"],
+        },
         evidence_type="computation",
         limitations=["サンドボックス実行結果。再現性はスクリプト本文を参照"],
     ))
@@ -40,6 +46,9 @@ def execute_script_approval(manager: ResearchManager, s: SessionState,
         reply += f"\n\n出力:\n```\n{res['stdout'].strip()[-3000:]}\n```"
     if res["stderr"].strip():
         reply += f"\n\nstderr:\n```\n{res['stderr'].strip()[-2000:]}\n```"
+    if res["generated_files"]:
+        files = "\n".join(f"- {workdir}/{f}" for f in res["generated_files"])
+        reply += f"\n\n生成ファイル:\n{files}"
     reply += "\n\n実行結果は証拠タブに記録しました。"
     return reply
 

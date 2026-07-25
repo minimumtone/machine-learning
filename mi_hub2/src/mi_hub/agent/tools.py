@@ -207,30 +207,43 @@ class ToolGateway:
         }
 
     # --- t2Shell（サンドボックススクリプト実行。実行は必ず人間承認後） ---
-    def run_script(self, script: str, timeout_s: int = 300) -> dict[str, Any]:
+    def run_script(
+        self, script: str, timeout_s: int = 300, workdir: str | None = None
+    ) -> dict[str, Any]:
         """承認済みシェルスクリプトを実行し、exit code / stdout / stderr を返す。
 
         ライブラリのインストール（pip 等）や計算スクリプトの実行に使う。
         呼び出し側（UI/API）が承認ゲートを通した後にのみ呼ぶこと。
+        workdir を指定すると、その作業ディレクトリで実行し、生成された
+        ファイル（図・CSV等）の一覧を generated_files として返す。
         """
         self._maybe_fail("run_script")
         self.call_log.append({"tool": "run_script", "script_head": script[:200]})
+        if workdir:
+            os.makedirs(workdir, exist_ok=True)
+            before = set(os.listdir(workdir))
         fd, path = tempfile.mkstemp(suffix=".sh")
         try:
             with os.fdopen(fd, "w") as f:
                 f.write(script)
             proc = subprocess.run(
                 ["bash", path], capture_output=True, text=True, timeout=timeout_s,
-                check=False,
+                cwd=workdir, check=False,
             )
+            generated: list[str] = []
+            if workdir:
+                generated = sorted(set(os.listdir(workdir)) - before)
             return {
                 "exit_code": proc.returncode,
                 "stdout": proc.stdout[-8000:],
                 "stderr": proc.stderr[-8000:],
+                "workdir": workdir,
+                "generated_files": generated,
             }
         except subprocess.TimeoutExpired:
             return {"exit_code": -1, "stdout": "",
-                    "stderr": f"timeout: 実行が {timeout_s} 秒を超過"}
+                    "stderr": f"timeout: 実行が {timeout_s} 秒を超過",
+                    "workdir": workdir, "generated_files": []}
         finally:
             os.unlink(path)
 
