@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -290,3 +291,96 @@ def test_full_cycle_end_to_end(manager, session):
     assert "最終判定は研究者が行う" in eval_task.result["note"]
     assert session.evaluations
     assert session.stop_reason and "正常終了" in session.stop_reason
+
+
+def test_evaluation_lists_data_gaps(manager, session):
+    """評価結果に追加的に必要なデータ（情報ギャップ）が含まれる。"""
+    manager.run_auto(session)
+    approval = next(a for a in session.approvals if a.status == "pending")
+    manager.resolve_approval(session, approval.approval_id, True)
+    manager.run_auto(session)
+    eval_task = next(t for t in session.plan.tasks if t.action == "evaluate_hypothesis")
+    gaps = eval_task.result["data_gaps"]
+    assert isinstance(gaps, list)
+    assert any("組成点" in g for g in gaps)  # デフォルトは4組成点のため
+    assert any("温度" in g for g in gaps)  # デフォルトは単一温度のため
+    assert session.evaluations[-1].data_gaps == gaps
+
+
+def test_normalize_goal_property_vocabulary():
+    """LLM が日本語物性名を返してもレジストリ語彙に正規化される。"""
+    from mi_hub.agent.llm import _normalize_goal
+    out = _normalize_goal({"target_property": "相安定性", "success_criteria": ["a"]})
+    assert out["target_property"] == "phase_stability"
+    out = _normalize_goal({"target_property": "Formation Enthalpy"})
+    assert out["target_property"] == "formation_enthalpy"
+
+
+def test_run_script_sandbox(manager):
+    """承認ゲート後に呼ぶ run_script が exit code / stdout / stderr を返す。"""
+    res = manager.gateway.run_script("echo hello && echo err >&2")
+    assert res["exit_code"] == 0
+    assert "hello" in res["stdout"]
+    assert "err" in res["stderr"]
+    res = manager.gateway.run_script("exit 3")
+    assert res["exit_code"] == 3
+
+
+def test_export_case_report(manager, session):
+    session.chat_history.append({"role": "user", "content": "HEAの安定性を評価したい"})
+    manager.run_auto(session)
+    path = manager.export_case_report(session)
+    assert os.path.exists(path)
+    with open(path, encoding="utf-8") as f:
+        text = f.read()
+    assert "事例レポート" in text
+    assert "研究目標" in text
+    assert "会話ログ" in text
+    assert any(e.action == "case_report_exported" for e in session.audit_log)
+
+
+def test_run_script_workdir(manager, tmp_path):
+    wd = str(tmp_path / "ws")
+    res = manager.gateway.run_script("echo data > result.csv", workdir=wd)
+    assert res["exit_code"] == 0
+    assert res["generated_files"] == ["result.csv"]
+    assert res["workdir"] == wd
+
+
+def test_classify_intent_fallback():
+    """LLM 不可時、明示的コマンドのみ操作意図になり、それ以外は question。"""
+    from mi_hub.agent.llm import classify_intent
+    assert classify_intent("一時停止", False)["intent"] == "pause"
+    assert classify_intent("実行を続けて", False)["intent"] == "run"
+    assert classify_intent("承認", True)["intent"] == "approve"
+    assert classify_intent("承認", False)["intent"] == "question"
+    assert classify_intent("HEAの安定性について教えて", False)["intent"] == "question"
+
+
+def test_knowledge_provider_registration(manager, session):
+    """登録したナレッジプロバイダ（MCP/GraphRAG差込口）が文献検索に併用される。"""
+    from mi_hub.agent.tools import KnowledgeProvider
+
+    class FakeGraphRAG(KnowledgeProvider):
+        def search(self, query, limit=10):
+            return [{"title": "GraphRAG hit", "claim": "外部ナレッジの主張",
+                     "evidence_type": "computation", "keywords": [], "limitations": []}]
+
+    manager.gateway.register_knowledge_provider(FakeGraphRAG("graphrag"))
+    docs = manager.gateway.search_knowledge("B2 NiAl", limit=10)
+    providers = {d.get("provider") for d in docs}
+    assert "graphrag" in providers
+    assert "mock_literature" in providers
+
+
+def test_memory_context_short_and_long_term(manager, session):
+    """短期記憶（直近評価）と長期記憶（全体履歴）が分離して取得できる。"""
+    manager.run_auto(session)
+    approval = next(a for a in session.approvals if a.status == "pending")
+    manager.resolve_approval(session, approval.approval_id, True)
+    manager.run_auto(session)
+    mem = manager.memory_context(session)
+    assert mem["short_term_memory"]["last_evaluation"] is not None
+    assert mem["short_term_memory"]["recent_tasks"]
+    assert mem["long_term_memory"]["evaluation_history"]
+    assert mem["long_term_memory"]["evidence"]

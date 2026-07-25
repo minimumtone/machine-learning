@@ -89,7 +89,7 @@ class EvidenceAgent:
 
     def run(self, state: SessionState, gateway: ToolGateway, task: Task) -> dict[str, Any]:
         query = task.inputs.get("query") or (state.goal.statement if state.goal else "")
-        docs = gateway.search_literature(query)
+        docs = gateway.search_knowledge(query)
         added = []
         for doc in docs:
             ev = Evidence(
@@ -249,6 +249,7 @@ class EvaluationAgent:
         verdict_candidate = "inconclusive"
         if xs and abs(slope) > 3 * (mean_std + 1e-9):
             verdict_candidate = "supported" if slope > 0 else "falsification_candidate"
+        data_gaps = self._data_gaps(state, gateway, exec_results, xs, slope, mean_std)
         for h in state.hypotheses:
             if h.status == HypothesisState.APPROVED_FOR_TESTING:
                 h.status = HypothesisState.UNDER_EVALUATION
@@ -259,12 +260,48 @@ class EvaluationAgent:
             hypotheses_affected=[h.hypothesis_id for h in state.hypotheses],
             result_quality="acceptable" if exec_results else "insufficient",
             requires_replanning=not exec_results,
+            data_gaps=data_gaps,
         )
         state.evaluations.append(evaluation)
         return {
             "slope": slope,
             "mean_uncertainty": mean_std,
             "verdict_candidate": verdict_candidate,
+            "data_gaps": data_gaps,
             "note": "最終判定は研究者が行う（Human-in-the-loop）",
             "evaluation": evaluation.model_dump(),
         }
+
+    def _data_gaps(
+        self,
+        state: SessionState,
+        gateway: ToolGateway,
+        exec_results: list[dict[str, Any]],
+        xs: list[float],
+        slope: float,
+        mean_std: float,
+    ) -> list[str]:
+        """判定材料を強化するために追加的に必要なデータを決定論的に列挙する。"""
+        gaps: list[str] = []
+        if not exec_results:
+            gaps.append("モデル予測結果（承認済みジョブの実行結果）")
+            return gaps
+        if len(xs) < 5:
+            gaps.append(
+                f"追加の組成点（現在 {len(xs)} 点。傾き推定の信頼性向上に 5 点以上を推奨）"
+            )
+        groups = set()
+        for r in exec_results:
+            info = gateway.get_model(r["job"]["model_id"])
+            if info is not None:
+                groups.add(info.independence_group)
+        if len(groups) < 2:
+            gaps.append("独立なモデル系列（別の independence_group）による再予測")
+        if xs and abs(slope) <= 3 * (mean_std + 1e-9):
+            gaps.append("不確実性低減のための追加サンプリング（傾きが不確実性に埋もれている）")
+        if not any(e.evidence_type == "experiment" for e in state.evidence):
+            gaps.append("実験参照値（相安定性・欠陥形成エネルギーの実測データ）")
+        temps = {r["job"]["inputs"].get("temperature") for r in exec_results}
+        if len(temps) < 2:
+            gaps.append("温度依存性の確認（複数温度での予測）")
+        return gaps

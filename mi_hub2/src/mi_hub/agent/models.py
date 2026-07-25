@@ -122,6 +122,7 @@ class ApprovalRequest(BaseModel):
     task_id: str | None = None
     kind: str = "task_execution"
     description: str = ""
+    payload: dict[str, Any] = Field(default_factory=dict)  # 例: script_execution の script 本文
     status: str = "pending"  # pending / approved / rejected
     requested_at: float = Field(default_factory=time.time)
     resolved_at: float | None = None
@@ -157,6 +158,7 @@ class StepEvaluation(BaseModel):
     new_conflicts: list[str] = Field(default_factory=list)
     result_quality: str = "acceptable"
     requires_replanning: bool = False
+    data_gaps: list[str] = Field(default_factory=list)  # 追加的に必要なデータ
 
 
 class ErrorRecord(BaseModel):
