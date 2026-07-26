@@ -404,6 +404,12 @@ class ResearchManager:
         state.approvals.append(req)
         state.audit("ResearchManager", "job_proposed", job_id=job.job_id,
                     approval_id=req.approval_id, name=name, kind=kind)
+        state.chat_history.append({
+            "role": "assistant",
+            "content": f"「{req.description}」という提案がありますが、実行しますか？"
+                       "（承認するまで投入されません。実行する場合は「承認」、"
+                       "しない場合は「却下」と入力してください。承認タブからも操作可）",
+        })
         self.store.save(state)
         return job
 
