@@ -57,6 +57,16 @@ def execute_script_approval(manager: ResearchManager, s: SessionState,
         files = "\n".join(f"- {workdir}/{f}" for f in res["generated_files"])
         reply += f"\n\n生成ファイル:\n{files}"
     reply += "\n\n実行結果は証拠タブに記録しました。"
+    comment = llm.science_comment(
+        s.goal.statement if s.goal else "", "計算結果",
+        {"description": approval.description,
+         "exit_code": res["exit_code"],
+         "stdout": res["stdout"][-3000:],
+         "generated_files": res["generated_files"]})
+    if comment:
+        reply += f"\n\n【エージェント所見（計算結果）】\n{comment}"
+        s.audit("ResearchManager", "science_comment",
+                approval_id=approval.approval_id, kind="計算結果")
     return reply
 
 

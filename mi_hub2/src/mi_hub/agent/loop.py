@@ -11,7 +11,7 @@ import os
 import platform
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from . import llm
 from .graphrag import GraphRAGProvider
@@ -289,6 +289,8 @@ class ResearchManager:
             state.audit(task.agent, "task_executed", task_id=task.task_id,
                         status=task.status.value)
             status = "completed" if task.status != TaskState.FAILED else "failed"
+            if task.status != TaskState.FAILED:
+                self._add_science_comment(state, task)
         except Exception as exc:  # ツール層以外の予期しない失敗
             from .errors import record_error
 
@@ -302,6 +304,29 @@ class ResearchManager:
         self.store.save(state)
         return {"status": status, "task_id": task.task_id,
                 "result": task.result, "error": task.error}
+
+    _COMMENT_TARGETS: ClassVar[dict[str, str]] = {
+        "HypothesisAgent": "仮説",
+        "EvaluationAgent": "評価結果",
+        "ExecutionAgent": "計算結果",
+    }
+
+    def _add_science_comment(self, state: SessionState, task: Task) -> None:
+        """仮説・計算結果への専門的コメントを研究者へ提示する（LLM 不可時は何もしない）。"""
+        kind = self._COMMENT_TARGETS.get(task.agent)
+        if not kind or not task.result:
+            return
+        goal = state.goal.statement if state.goal else ""
+        payload = {"task": task.description, "result": task.result,
+                   "hypotheses": [h.statement for h in state.hypotheses]}
+        comment = llm.science_comment(goal, kind, payload)
+        if comment:
+            state.chat_history.append({
+                "role": "assistant",
+                "content": f"【エージェント所見（{kind}）】\n{comment}",
+            })
+            state.audit("ResearchManager", "science_comment",
+                        task_id=task.task_id, kind=kind)
 
     def _wire_inputs(self, state: SessionState, task: Task) -> None:
         plan = state.plan

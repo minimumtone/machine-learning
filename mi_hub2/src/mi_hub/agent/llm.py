@@ -328,6 +328,26 @@ def chat_reply(context: dict[str, Any], history: list[dict[str, str]], message: 
         return None
 
 
+def science_comment(goal: str, kind: str, payload: dict[str, Any]) -> str | None:
+    """仮説・計算結果への専門的コメント（解釈・妥当性・次の一手）。LLM 不可時は None。
+
+    科学的結論の確定は行わず、判断材料の提示に徹する（最終判断は研究者）。
+    """
+    out = _chat_json(
+        "あなたは材料科学の専門家として研究者に伴走するエージェントです。"
+        f"研究目標「{goal}」の文脈で、与えられた{kind}に対する専門的コメントを"
+        'JSON {"comment": str} で返してください。comment は日本語の Markdown 箇条書きで、'
+        "次を含めること: 科学的解釈（数値・仮説の意味づけ、既知の物理・文献知見との整合/不整合）/ "
+        "妥当性の留意点（近似・データの限界）/ 推奨する次の一手（検証手段を具体的に）。"
+        "数値は与えられたものだけを使い、捏造しないこと。"
+        "結論の確定はせず、最終判断は研究者に委ねる姿勢を保つこと。",
+        json.dumps(payload, ensure_ascii=False, default=str)[:6000],
+    )
+    if out and out.get("comment"):
+        return str(out["comment"])
+    return None
+
+
 def _fallback_proposal_summary(script: str) -> str:
     """LLM 不可時のスクリプト提案要約（決定論的）。"""
     installs = re.findall(r"pip install\s+(?:-q\s+)?([^\n]+)", script)
