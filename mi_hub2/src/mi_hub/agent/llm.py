@@ -328,6 +328,41 @@ def chat_reply(context: dict[str, Any], history: list[dict[str, str]], message: 
         return None
 
 
+def _fallback_proposal_summary(script: str) -> str:
+    """LLM 不可時のスクリプト提案要約（決定論的）。"""
+    installs = re.findall(r"pip install\s+(?:-q\s+)?([^\n]+)", script)
+    outputs = re.findall(r"savefig\(\s*[\"']([^\"']+)|to_csv\(\s*[\"']([^\"']+)"
+                         r"|savetxt\(\s*[\"']([^\"']+)", script)
+    files = sorted({x for tup in outputs for x in tup if x})
+    lines = ["**この提案で行うこと**"]
+    if installs:
+        lines.append("- ライブラリの導入: " + ", ".join(i.strip() for i in installs))
+    lines.append("- Pythonスクリプトをサンドボックス内で1回実行します")
+    if files:
+        lines.append("- 生成される成果物: " + ", ".join(files))
+    lines.append("- 実行結果（出力・図・終了コード）は証拠タブに記録されます")
+    lines.append("- 承認するまで実行されません。却下しても状態は変わりません")
+    return "\n".join(lines)
+
+
+def summarize_proposal(description: str, script: str) -> str:
+    """スクリプト提案の人間向け要約（目的・内容・成果物・コスト・リスク）。"""
+    out = _chat_json(
+        "研究エージェントが承認を求めるスクリプト提案を、研究者が判断しやすいよう"
+        "日本語で要約してください。JSON {\"summary\": str} を返すこと。summary は "
+        "Markdown の箇条書きで、次の項目を含める: "
+        "目的（何のための計算か）/ 何をするか（手法・モデル・主要パラメータ）/ "
+        "生成される成果物（ファイル名）/ おおよその実行時間・計算コスト / "
+        "リスク・限界（近似の程度、環境変更の有無）。"
+        "スクリプトに書かれていないことは推測と明記し、数値を捏造しないこと。",
+        json.dumps({"description": description, "script": script},
+                   ensure_ascii=False),
+    )
+    if out and out.get("summary"):
+        return str(out["summary"])
+    return _fallback_proposal_summary(script)
+
+
 def summarize_for_human(payload: dict[str, Any]) -> str:
     """人間向け説明の生成。LLM 不可時は構造化テキスト。"""
     out = _chat_json(

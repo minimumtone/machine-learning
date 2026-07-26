@@ -325,13 +325,16 @@ with chat_col:
             req = ApprovalRequest(
                 kind="script_execution",
                 description=(intent_info.get("reason") or user_msg)[:80],
-                payload={"script": script},
+                payload={"script": script,
+                         "summary": llm.summarize_proposal(
+                             (intent_info.get("reason") or user_msg)[:80], script)},
             )
             state.approvals.append(req)
             state.audit("human_chat", "script_proposed", approval_id=req.approval_id)
             reply = (
                 "以下のスクリプトを提案します（未実行）。内容を確認の上、"
                 "チャットで「承認」と入力するか承認タブから承認すると実行されます。\n\n"
+                f"{req.payload['summary']}\n\n"
                 f"```bash\n{script}\n```"
             )
         else:
@@ -524,7 +527,10 @@ with agent_col:
                     + f" / 要求: {time.strftime('%H:%M:%S', time.localtime(a.requested_at))}"
                 )
                 if a.kind == "script_execution" and a.payload.get("script"):
-                    st.code(a.payload["script"], language="bash")
+                    if a.payload.get("summary"):
+                        st.markdown(a.payload["summary"])
+                    with st.expander("スクリプト本文（実行される内容）"):
+                        st.code(a.payload["script"], language="bash")
                 cols = st.columns(2)
                 if cols[0].button("承認", key=f"ok-{a.approval_id}", type="primary"):
                     m.resolve_approval(state, a.approval_id, True)
