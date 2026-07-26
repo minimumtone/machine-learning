@@ -301,8 +301,9 @@ with chat_col:
             )
             if state.agent_state.value == "awaiting_approval":
                 reply += (
-                    "\n\n**承認待ちの操作:**\n" + pending_approval_summary(state)
-                    + "\n\nチャットで「承認」/「却下」と入力するか、承認タブから操作できます。"
+                    "\n\n**承認をお願いします。**次の操作を実行してよろしいですか？\n"
+                    + pending_approval_summary(state)
+                    + "\n\n実行する場合は「承認」、しない場合は「却下」と入力してください（承認タブからも操作可）。"
                 )
             if state.evaluations and state.evaluations[-1].data_gaps:
                 gaps = "\n".join(f"- {g}" for g in state.evaluations[-1].data_gaps)
@@ -342,10 +343,10 @@ with chat_col:
             state.approvals.append(req)
             state.audit("human_chat", "script_proposed", approval_id=req.approval_id)
             reply = (
-                "以下のスクリプトを提案します（未実行）。内容を確認の上、"
-                "チャットで「承認」と入力するか承認タブから承認すると実行されます。\n\n"
+                f"「{req.description}」という提案がありますが、実行しますか？（未実行）\n\n"
                 f"{req.payload['summary']}\n\n"
-                f"```bash\n{script}\n```"
+                f"```bash\n{script}\n```\n\n"
+                "実行する場合は「承認」、しない場合は「却下」と入力してください。"
             )
         else:
             # 自由対話（LLM）。実行や承認は行わず、議論・説明・案内のみ。
