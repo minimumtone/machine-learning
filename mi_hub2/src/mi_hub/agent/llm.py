@@ -259,7 +259,13 @@ def classify_intent(message: str, has_pending_approval: bool) -> dict[str, Any]:
         "（plt.rcParams['font.size']=20 程度）、化学式・記号の添字/上付きは "
         "LaTeX 数式表記（例: L1$_2$, R$^2$）を使うこと。"
         "機械学習タスクでは scikit-learn / PyCaret（AutoML）/ XGBoost / LightGBM "
-        "が利用可能で、交差検証と評価指標の出力を含めること\n"
+        "が利用可能で、交差検証と評価指標の出力を含めること。"
+        "原子・分子スケールのエネルギー・構造計算は大学院レベルの手法を開始点とすること: "
+        "原則として MLIP（CHGNet + ASE、インストール済み）または確立された "
+        "EAM ポテンシャルを用い、可能なら構造緩和を含めること。"
+        "Lennard-Jones 等の玩具的ペアポテンシャルは、ユーザが明示的に"
+        "簡易計算を要求した場合を除き使用しないこと。"
+        "手法の限界（MLIPはDFTの代替近似である等）を出力に明記すること\n"
         "- question: 上記以外（質問・相談・要約依頼など）\n"
         "迷った場合は question を選ぶこと。実行してよいかの最終判断は人間が行う。",
         message,
@@ -320,6 +326,61 @@ def chat_reply(context: dict[str, Any], history: list[dict[str, str]], message: 
         return resp.choices[0].message.content
     except Exception:
         return None
+
+
+def science_comment(goal: str, kind: str, payload: dict[str, Any]) -> str | None:
+    """仮説・計算結果への専門的コメント（解釈・妥当性・次の一手）。LLM 不可時は None。
+
+    科学的結論の確定は行わず、判断材料の提示に徹する（最終判断は研究者）。
+    """
+    out = _chat_json(
+        "あなたは材料科学の専門家として研究者に伴走するエージェントです。"
+        f"研究目標「{goal}」の文脈で、与えられた{kind}に対する専門的コメントを"
+        'JSON {"comment": str} で返してください。comment は日本語の Markdown 箇条書きで、'
+        "次を含めること: 科学的解釈（数値・仮説の意味づけ、既知の物理・文献知見との整合/不整合）/ "
+        "妥当性の留意点（近似・データの限界）/ 推奨する次の一手（検証手段を具体的に）。"
+        "数値は与えられたものだけを使い、捏造しないこと。"
+        "結論の確定はせず、最終判断は研究者に委ねる姿勢を保つこと。",
+        json.dumps(payload, ensure_ascii=False, default=str)[:6000],
+    )
+    if out and out.get("comment"):
+        return str(out["comment"])
+    return None
+
+
+def _fallback_proposal_summary(script: str) -> str:
+    """LLM 不可時のスクリプト提案要約（決定論的）。"""
+    installs = re.findall(r"pip install\s+(?:-q\s+)?([^\n]+)", script)
+    outputs = re.findall(r"savefig\(\s*[\"']([^\"']+)|to_csv\(\s*[\"']([^\"']+)"
+                         r"|savetxt\(\s*[\"']([^\"']+)", script)
+    files = sorted({x for tup in outputs for x in tup if x})
+    lines = ["**この提案で行うこと**"]
+    if installs:
+        lines.append("- ライブラリの導入: " + ", ".join(i.strip() for i in installs))
+    lines.append("- Pythonスクリプトをサンドボックス内で1回実行します")
+    if files:
+        lines.append("- 生成される成果物: " + ", ".join(files))
+    lines.append("- 実行結果（出力・図・終了コード）は証拠タブに記録されます")
+    lines.append("- 承認するまで実行されません。却下しても状態は変わりません")
+    return "\n".join(lines)
+
+
+def summarize_proposal(description: str, script: str) -> str:
+    """スクリプト提案の人間向け要約（目的・内容・成果物・コスト・リスク）。"""
+    out = _chat_json(
+        "研究エージェントが承認を求めるスクリプト提案を、研究者が判断しやすいよう"
+        "日本語で要約してください。JSON {\"summary\": str} を返すこと。summary は "
+        "Markdown の箇条書きで、次の項目を含める: "
+        "目的（何のための計算か）/ 何をするか（手法・モデル・主要パラメータ）/ "
+        "生成される成果物（ファイル名）/ おおよその実行時間・計算コスト / "
+        "リスク・限界（近似の程度、環境変更の有無）。"
+        "スクリプトに書かれていないことは推測と明記し、数値を捏造しないこと。",
+        json.dumps({"description": description, "script": script},
+                   ensure_ascii=False),
+    )
+    if out and out.get("summary"):
+        return str(out["summary"])
+    return _fallback_proposal_summary(script)
 
 
 def summarize_for_human(payload: dict[str, Any]) -> str:

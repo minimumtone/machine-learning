@@ -425,6 +425,22 @@ def test_classify_intent_fallback():
     assert classify_intent("HEAの安定性について教えて", False)["intent"] == "question"
 
 
+def test_fallback_proposal_summary():
+    """LLM 不可時のスクリプト提案要約に、導入・成果物・承認前提が含まれる。"""
+    from mi_hub.agent.llm import _fallback_proposal_summary
+    script = (
+        "pip install -q icet\n"
+        "python3 - <<'PY'\n"
+        "import matplotlib.pyplot as plt\n"
+        "plt.savefig(\"result.png\")\n"
+        "PY\n"
+    )
+    summary = _fallback_proposal_summary(script)
+    assert "icet" in summary
+    assert "result.png" in summary
+    assert "承認するまで実行されません" in summary
+
+
 def test_knowledge_provider_registration(manager, session):
     """登録したナレッジプロバイダ（MCP/GraphRAG差込口）が文献検索に併用される。"""
     from mi_hub.agent.tools import KnowledgeProvider

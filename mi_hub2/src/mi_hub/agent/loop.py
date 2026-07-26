@@ -11,7 +11,7 @@ import os
 import platform
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from . import llm
 from .graphrag import GraphRAGProvider
@@ -111,6 +111,12 @@ class ResearchManager:
             if structured.get(k) is not None
         })
         state = SessionState(goal=goal, agent_state=AgentState.IDLE)
+        # 会話は研究者の疑問・依頼（研究目標）から始める
+        state.chat_history.append({"role": "user", "content": goal_statement})
+        state.chat_history.append({
+            "role": "assistant",
+            "content": "研究目標を受け付けました。計画を生成し、承認をいただきながら検証を進めます。",
+        })
         state.audit("ResearchManager", "session_created", goal_id=goal.goal_id)
         self.store.save(state)
         return state
@@ -283,6 +289,8 @@ class ResearchManager:
             state.audit(task.agent, "task_executed", task_id=task.task_id,
                         status=task.status.value)
             status = "completed" if task.status != TaskState.FAILED else "failed"
+            if task.status != TaskState.FAILED:
+                self._add_science_comment(state, task)
         except Exception as exc:  # ツール層以外の予期しない失敗
             from .errors import record_error
 
@@ -296,6 +304,29 @@ class ResearchManager:
         self.store.save(state)
         return {"status": status, "task_id": task.task_id,
                 "result": task.result, "error": task.error}
+
+    _COMMENT_TARGETS: ClassVar[dict[str, str]] = {
+        "HypothesisAgent": "仮説",
+        "EvaluationAgent": "評価結果",
+        "ExecutionAgent": "計算結果",
+    }
+
+    def _add_science_comment(self, state: SessionState, task: Task) -> None:
+        """仮説・計算結果への専門的コメントを研究者へ提示する（LLM 不可時は何もしない）。"""
+        kind = self._COMMENT_TARGETS.get(task.agent)
+        if not kind or not task.result:
+            return
+        goal = state.goal.statement if state.goal else ""
+        payload = {"task": task.description, "result": task.result,
+                   "hypotheses": [h.statement for h in state.hypotheses]}
+        comment = llm.science_comment(goal, kind, payload)
+        if comment:
+            state.chat_history.append({
+                "role": "assistant",
+                "content": f"【エージェント所見（{kind}）】\n{comment}",
+            })
+            state.audit("ResearchManager", "science_comment",
+                        task_id=task.task_id, kind=kind)
 
     def _wire_inputs(self, state: SessionState, task: Task) -> None:
         plan = state.plan
@@ -394,11 +425,20 @@ class ResearchManager:
                 f"ノード時間予算不足: 残 {remaining:.1f}h < 推定 {job.estimated_node_hours:.1f}h"
             )
         job.scheduler_job_id = self.scheduler.submit(job.script, job.workdir, job.name)
-        job.state = self.scheduler.status(job.scheduler_job_id)
+        # 投入直後にまず永続化する（直後の状態確認が失敗しても二重投入を防ぐ）
+        job.state = "pending"
         job.submitted_at = _time.time()
         state.budget.used_node_hours += job.estimated_node_hours
         state.audit("ResearchManager", "job_submitted", job_id=job.job_id,
                     scheduler_job_id=job.scheduler_job_id, state=job.state)
+        self.store.save(state)
+        try:
+            job.state = self.scheduler.status(job.scheduler_job_id)
+        except SchedulerError as exc:
+            state.audit("ResearchManager", "job_poll_failed",
+                        job_id=job.job_id, error=str(exc))
+            self.store.save(state)
+            return job
         if job.state in ("completed", "failed", "cancelled"):
             self._finalize_job(state, job)
         self.store.save(state)
