@@ -259,7 +259,13 @@ def classify_intent(message: str, has_pending_approval: bool) -> dict[str, Any]:
         "（plt.rcParams['font.size']=20 程度）、化学式・記号の添字/上付きは "
         "LaTeX 数式表記（例: L1$_2$, R$^2$）を使うこと。"
         "機械学習タスクでは scikit-learn / PyCaret（AutoML）/ XGBoost / LightGBM "
-        "が利用可能で、交差検証と評価指標の出力を含めること\n"
+        "が利用可能で、交差検証と評価指標の出力を含めること。"
+        "原子・分子スケールのエネルギー・構造計算は大学院レベルの手法を開始点とすること: "
+        "原則として MLIP（CHGNet + ASE、インストール済み）または確立された "
+        "EAM ポテンシャルを用い、可能なら構造緩和を含めること。"
+        "Lennard-Jones 等の玩具的ペアポテンシャルは、ユーザが明示的に"
+        "簡易計算を要求した場合を除き使用しないこと。"
+        "手法の限界（MLIPはDFTの代替近似である等）を出力に明記すること\n"
         "- question: 上記以外（質問・相談・要約依頼など）\n"
         "迷った場合は question を選ぶこと。実行してよいかの最終判断は人間が行う。",
         message,
