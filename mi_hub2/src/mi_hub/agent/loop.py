@@ -14,7 +14,11 @@ from pathlib import Path
 from typing import Any
 
 from . import llm
+from .graphrag import GraphRAGProvider
 from .models import (
+    ApprovalRequest,
+    Evidence,
+    JobRecord,
     Observation,
     Plan,
     PlanChange,
@@ -31,6 +35,11 @@ from .roles import (
     ModelSelectionAgent,
     SafetyApprovalAgent,
     VerificationPlanningAgent,
+)
+from .scheduler import (
+    SchedulerError,
+    SchedulerGateway,
+    resolve_scheduler_from_env,
 )
 from .states import AgentState, HypothesisState, TaskState
 from .tools import ToolGateway
@@ -77,9 +86,11 @@ class ResearchManager:
     """研究セッション全体を統括する（§5.1）。"""
 
     def __init__(self, gateway: ToolGateway | None = None,
-                 store: SessionStore | None = None):
+                 store: SessionStore | None = None,
+                 scheduler: SchedulerGateway | None = None):
         self.gateway = gateway or ToolGateway()
         self.store = store or SessionStore()
+        self.scheduler = scheduler or resolve_scheduler_from_env()
         self.safety = SafetyApprovalAgent()
         self._roles = {
             "EvidenceAgent": EvidenceAgent(),
@@ -340,6 +351,99 @@ class ResearchManager:
         d.mkdir(parents=True, exist_ok=True)
         return str(d)
 
+    # ---------- 外部ジョブ（Slurm等、承認必須） ----------
+    def propose_job(self, state: SessionState, name: str, script: str,
+                    kind: str = "dft", description: str = "",
+                    estimated_node_hours: float = 1.0) -> JobRecord:
+        """外部ジョブを提案し、承認要求を登録する（投入は承認後のみ）。"""
+        job = JobRecord(
+            scheduler=self.scheduler.name, name=name, kind=kind, script=script,
+            workdir=os.path.join(self.session_workspace(state), "jobs", name),
+            estimated_node_hours=estimated_node_hours,
+        )
+        req = ApprovalRequest(
+            kind="job_submission",
+            description=description or f"外部ジョブ投入: {name}（{kind}、"
+                        f"推定 {estimated_node_hours:.1f} ノード時間）",
+            payload={"job_id": job.job_id, "script": script,
+                     "estimated_node_hours": estimated_node_hours},
+        )
+        job.approval_id = req.approval_id
+        state.jobs.append(job)
+        state.approvals.append(req)
+        state.audit("ResearchManager", "job_proposed", job_id=job.job_id,
+                    approval_id=req.approval_id, name=name, kind=kind)
+        self.store.save(state)
+        return job
+
+    def submit_approved_job(self, state: SessionState, job_id: str) -> JobRecord:
+        """承認済みジョブをスケジューラへ投入する。"""
+        import time as _time
+
+        job = state.job(job_id)
+        if job is None:
+            raise ValueError(f"ジョブが存在しません: {job_id}")
+        if job.state != "proposed":
+            raise ValueError(f"ジョブは投入済みです: {job_id}（{job.state}）")
+        approval = state.approval(job.approval_id) if job.approval_id else None
+        if approval is None or approval.status != "approved":
+            raise ValueError(f"未承認のジョブは投入できません: {job_id}")
+        remaining = state.budget.max_node_hours - state.budget.used_node_hours
+        if job.estimated_node_hours > remaining:
+            raise ValueError(
+                f"ノード時間予算不足: 残 {remaining:.1f}h < 推定 {job.estimated_node_hours:.1f}h"
+            )
+        job.scheduler_job_id = self.scheduler.submit(job.script, job.workdir, job.name)
+        job.state = self.scheduler.status(job.scheduler_job_id)
+        job.submitted_at = _time.time()
+        state.budget.used_node_hours += job.estimated_node_hours
+        state.audit("ResearchManager", "job_submitted", job_id=job.job_id,
+                    scheduler_job_id=job.scheduler_job_id, state=job.state)
+        if job.state in ("completed", "failed", "cancelled"):
+            self._finalize_job(state, job)
+        self.store.save(state)
+        return job
+
+    def poll_jobs(self, state: SessionState) -> list[JobRecord]:
+        """未完了ジョブの状態をポーリングし、完了したものを証拠化する。"""
+        updated = []
+        for job in state.jobs:
+            if job.state not in ("pending", "running") or not job.scheduler_job_id:
+                continue
+            try:
+                new_state = self.scheduler.status(job.scheduler_job_id)
+            except SchedulerError as exc:
+                state.audit("ResearchManager", "job_poll_failed",
+                            job_id=job.job_id, error=str(exc))
+                continue
+            if new_state != job.state:
+                job.state = new_state
+                if new_state in ("completed", "failed", "cancelled"):
+                    self._finalize_job(state, job)
+                updated.append(job)
+        if updated:
+            self.store.save(state)
+        return updated
+
+    def _finalize_job(self, state: SessionState, job: JobRecord) -> None:
+        import time as _time
+
+        job.finished_at = _time.time()
+        generated = sorted(os.listdir(job.workdir)) if os.path.isdir(job.workdir) else []
+        state.evidence.append(Evidence(
+            source_type="external_job",
+            claim=f"外部ジョブ {job.name}（{job.kind}）が {job.state} で終了",
+            conditions={"job_id": job.job_id,
+                        "scheduler": job.scheduler,
+                        "scheduler_job_id": job.scheduler_job_id,
+                        "workdir": job.workdir,
+                        "generated_files": generated},
+            evidence_type="computation",
+            limitations=["外部計算の終了状態。科学的妥当性は出力の検証が必要"],
+        ))
+        state.audit("ResearchManager", "job_finished", job_id=job.job_id,
+                    state=job.state)
+
     # ---------- Case report (事例の蓄積) ----------
     def export_case_report(self, state: SessionState) -> str:
         """セッションを事例レポート（Markdown）として作業ディレクトリに書き出す。
@@ -403,9 +507,19 @@ class ResearchManager:
                 for e in state.errors
             ] + [""]
         path = os.path.join(self.session_workspace(state), "case_report.md")
+        report_text = "\n".join(lines)
         with open(path, "w", encoding="utf-8") as f:
-            f.write("\n".join(lines))
+            f.write(report_text)
         state.audit("ResearchManager", "case_report_exported", path=path)
+        # 事例ナレッジの自動還元: GraphRAG が登録済みなら事例として取り込む
+        for provider in self.gateway.knowledge_providers:
+            if isinstance(provider, GraphRAGProvider):
+                provider.ingest_case_report(
+                    state.session_id,
+                    state.goal.statement if state.goal else state.session_id,
+                    report_text)
+                state.audit("ResearchManager", "case_knowledge_ingested",
+                            provider=provider.name)
         self.store.save(state)
         return path
 
