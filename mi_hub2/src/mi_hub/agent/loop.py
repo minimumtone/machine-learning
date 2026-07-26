@@ -455,6 +455,10 @@ class ResearchManager:
         req = state.approval(approval_id)
         if req is None:
             raise ValueError(f"承認要求が存在しません: {approval_id}")
+        if req.status != "pending":
+            raise ValueError(
+                f"承認要求は既に解決済みです: {approval_id}（{req.status}）"
+            )
         req.status = "approved" if approve else "rejected"
         req.resolved_at = _time.time()
         req.resolved_by = by

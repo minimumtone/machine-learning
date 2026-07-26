@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import html
 import os
 import time
 
@@ -34,7 +35,9 @@ def execute_script_approval(manager: ResearchManager, s: SessionState,
         claim=f"スクリプト実行（exit code {res['exit_code']}）: {approval.description}",
         conditions={
             "approval_id": approval.approval_id,
+            "exit_code": res["exit_code"],
             "stdout": res["stdout"][-2000:],
+            "stderr": res["stderr"][-2000:],
             "workdir": workdir,
             "generated_files": res["generated_files"],
         },
@@ -78,12 +81,12 @@ def render_research_loop(s: SessionState) -> None:
             f'font-size:0.78rem;white-space:nowrap;">{stage}</span>'
         )
     arrow = '<span style="color:#bbb;font-size:0.75rem;">→</span>'
-    html = ('<div style="display:flex;gap:4px;align-items:center;'
-            'flex-wrap:wrap;margin-bottom:8px;">' + arrow.join(pills) + "</div>")
+    block = ('<div style="display:flex;gap:4px;align-items:center;'
+             'flex-wrap:wrap;margin-bottom:8px;">' + arrow.join(pills) + "</div>")
     if current is None:
-        html += (f'<div style="font-size:0.8rem;color:#888;">現在の状態: '
-                 f'<b>{s.agent_state.value}</b>（ループ外）</div>')
-    st.markdown(html, unsafe_allow_html=True)
+        block += (f'<div style="font-size:0.8rem;color:#888;">現在の状態: '
+                  f'<b>{s.agent_state.value}</b>（ループ外）</div>')
+    st.markdown(block, unsafe_allow_html=True)
 
 
 AUDIT_ACTION_LABELS = {
@@ -128,6 +131,8 @@ def render_timeline(s: SessionState) -> None:
         return
     for ts, icon, label, detail in events:
         t = time.strftime("%m/%d %H:%M:%S", time.localtime(ts))
+        label = html.escape(label)
+        detail = html.escape(detail)
         st.markdown(
             f'<div style="border-left:3px solid #ddd;padding:2px 0 2px 10px;'
             f'margin-left:4px;"><span style="color:#999;font-size:0.75rem;">{t}</span>'
@@ -191,8 +196,9 @@ with st.sidebar:
         m.generate_plan(state)
         st.session_state["sid"] = state.session_id
         st.rerun()
-    if selected != "(新規)":
+    if selected != "(新規)" and selected != st.session_state.get("last_selected"):
         st.session_state["sid"] = selected
+    st.session_state["last_selected"] = selected
     if st.session_state.get("sid"):
         cur = m.store.load(st.session_state["sid"])
         if cur is not None and st.button("事例レポートを書き出す"):
