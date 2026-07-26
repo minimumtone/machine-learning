@@ -16,11 +16,13 @@ from mi_hub.agent import llm
 from mi_hub.agent.graphrag import GraphRAGProvider, build_default_provider
 from mi_hub.agent.loop import ResearchManager
 from mi_hub.agent.models import ApprovalRequest, Evidence, SessionState
+from mi_hub.agent.oqmd import OQMDProvider
 from mi_hub.agent.states import HypothesisState
 
 APPROVAL_KIND_LABELS = {
     "task_execution": "タスク実行",
     "script_execution": "スクリプト実行",
+    "job_submission": "外部ジョブ投入",
 }
 
 
@@ -99,6 +101,10 @@ AUDIT_ACTION_LABELS = {
     "approval_resolved": ("\U0001f44d", "承認判断"),
     "script_executed": ("\U0001f4bb", "スクリプト実行"),
     "case_report_exported": ("\U0001f4c4", "事例レポート出力"),
+    "case_knowledge_ingested": ("\U0001f9e0", "事例ナレッジ取込"),
+    "job_proposed": ("\U0001f4e6", "ジョブ提案"),
+    "job_submitted": ("\U0001f680", "ジョブ投入"),
+    "job_finished": ("\U0001f3c1", "ジョブ終了"),
 }
 
 
@@ -174,6 +180,7 @@ def get_manager() -> ResearchManager:
     manager = ResearchManager()
     graphrag_dir = os.path.join(str(manager.store.base_dir), "graphrag")
     manager.gateway.register_knowledge_provider(build_default_provider(graphrag_dir))
+    manager.gateway.register_knowledge_provider(OQMDProvider())
     return manager
 
 
@@ -400,7 +407,7 @@ with agent_col:
             for gap in state.evaluations[-1].data_gaps:
                 st.write(f"- {gap}")
 
-    tabs = st.tabs(["計画", "仮説", "承認", "証拠", "エラー", "履歴", "タイムライン"])
+    tabs = st.tabs(["計画", "仮説", "承認", "証拠", "エラー", "履歴", "タイムライン", "ジョブ"])
 
     with tabs[0]:
         if state.plan:
@@ -572,3 +579,34 @@ with agent_col:
 
     with tabs[6]:
         render_timeline(state)
+
+    with tabs[7]:
+        st.caption(
+            f"スケジューラ: {m.scheduler.name}（MI_HUB_SCHEDULER で切替） / "
+            f"ノード時間: {state.budget.used_node_hours:.1f}"
+            f" / {state.budget.max_node_hours:.1f} h"
+        )
+        if st.button("ジョブ状態を更新（ポーリング）"):
+            updated = m.poll_jobs(state)
+            if updated:
+                st.success(f"{len(updated)} 件のジョブ状態を更新しました")
+            st.rerun()
+        if state.jobs:
+            st.dataframe(pd.DataFrame([
+                {"job": j.job_id, "name": j.name, "kind": j.kind,
+                 "state": j.state, "scheduler_job_id": j.scheduler_job_id,
+                 "推定ノード時間": j.estimated_node_hours,
+                 "workdir": j.workdir}
+                for j in state.jobs
+            ]), use_container_width=True)
+            for j in state.jobs:
+                if j.state == "proposed":
+                    approval = state.approval(j.approval_id) if j.approval_id else None
+                    if approval and approval.status == "approved":
+                        if st.button(f"投入: {j.name}", key=f"submit-{j.job_id}"):
+                            m.submit_approved_job(state, j.job_id)
+                            st.rerun()
+                    else:
+                        st.info(f"{j.name}: 承認待ち（承認タブで判断してください）")
+        else:
+            st.write("外部ジョブはまだありません。")
