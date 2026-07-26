@@ -400,11 +400,20 @@ class ResearchManager:
                 f"ノード時間予算不足: 残 {remaining:.1f}h < 推定 {job.estimated_node_hours:.1f}h"
             )
         job.scheduler_job_id = self.scheduler.submit(job.script, job.workdir, job.name)
-        job.state = self.scheduler.status(job.scheduler_job_id)
+        # 投入直後にまず永続化する（直後の状態確認が失敗しても二重投入を防ぐ）
+        job.state = "pending"
         job.submitted_at = _time.time()
         state.budget.used_node_hours += job.estimated_node_hours
         state.audit("ResearchManager", "job_submitted", job_id=job.job_id,
                     scheduler_job_id=job.scheduler_job_id, state=job.state)
+        self.store.save(state)
+        try:
+            job.state = self.scheduler.status(job.scheduler_job_id)
+        except SchedulerError as exc:
+            state.audit("ResearchManager", "job_poll_failed",
+                        job_id=job.job_id, error=str(exc))
+            self.store.save(state)
+            return job
         if job.state in ("completed", "failed", "cancelled"):
             self._finalize_job(state, job)
         self.store.save(state)

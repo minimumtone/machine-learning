@@ -113,6 +113,28 @@ class TestJobWorkflow:
         with pytest.raises(ValueError, match="投入済み"):
             manager.submit_approved_job(session, job.job_id)
 
+    def test_status_failure_after_submit_persists_job(self, manager, session,
+                                                      monkeypatch):
+        """投入直後の状態確認が失敗しても投入済みとして永続化される（二重投入防止）。"""
+        job = manager.propose_job(session, "flaky", "echo x",
+                                  estimated_node_hours=0.5)
+        manager.resolve_approval(session, job.approval_id, True)
+
+        def flaky_status(scheduler_job_id):
+            raise SchedulerError("job not visible yet")
+
+        monkeypatch.setattr(manager.scheduler, "status", flaky_status)
+        job = manager.submit_approved_job(session, job.job_id)
+        assert job.state == "pending"
+        assert job.scheduler_job_id is not None
+        loaded = manager.store.load(session.session_id)
+        assert loaded.jobs[0].state == "pending"
+        assert loaded.jobs[0].scheduler_job_id == job.scheduler_job_id
+        assert loaded.budget.used_node_hours == pytest.approx(0.5)
+        # 再投入はガードされる
+        with pytest.raises(ValueError, match="投入済み"):
+            manager.submit_approved_job(session, job.job_id)
+
     def test_budget_limit_blocks_submission(self, manager, session):
         session.budget.max_node_hours = 1.0
         job = manager.propose_job(session, "big", "echo x",
