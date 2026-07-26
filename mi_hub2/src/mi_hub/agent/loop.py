@@ -111,6 +111,12 @@ class ResearchManager:
             if structured.get(k) is not None
         })
         state = SessionState(goal=goal, agent_state=AgentState.IDLE)
+        # 会話は研究者の疑問・依頼（研究目標）から始める
+        state.chat_history.append({"role": "user", "content": goal_statement})
+        state.chat_history.append({
+            "role": "assistant",
+            "content": "研究目標を受け付けました。計画を生成し、承認をいただきながら検証を進めます。",
+        })
         state.audit("ResearchManager", "session_created", goal_id=goal.goal_id)
         self.store.save(state)
         return state
