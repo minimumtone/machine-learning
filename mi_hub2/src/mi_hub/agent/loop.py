@@ -13,7 +13,9 @@ import re
 from pathlib import Path
 from typing import Any, ClassVar
 
-from . import llm
+from pydantic import ValidationError
+
+from . import codes, llm, scriptgen
 from .graphrag import GraphRAGProvider
 from .models import (
     ApprovalRequest,
@@ -412,6 +414,184 @@ class ResearchManager:
         })
         self.store.save(state)
         return job
+
+    # ---------- 計算コード選択（仮説 → コード推薦 → 入力生成 → 承認付き提案） ----------
+    def plan_calculation(self, state: SessionState,
+                         hypothesis_id: str | None = None,
+                         hypothesis_text: str | None = None) -> dict[str, Any]:
+        """検証したい仮説に最適な計算コードを推薦する。
+
+        LLM で仮説から計算要件を構造化し、codes.CODE_CATALOG の決定論的
+        ルールで順位付けする。推薦と根拠はチャットへ提示される（実行はしない）。
+        """
+        text = hypothesis_text
+        if text is None and hypothesis_id:
+            h = state.hypothesis(hypothesis_id)
+            if h is None:
+                raise ValueError(f"仮説が存在しません: {hypothesis_id}")
+            text = h.statement
+        if not text:
+            raise ValueError("仮説（hypothesis_id または hypothesis_text）が必要です")
+        goal = state.goal.statement if state.goal else ""
+        raw = llm.structure_calc_requirements(text, goal, codes.catalog_summary())
+        try:
+            req = codes.CalcRequirements.model_validate(raw)
+        except ValidationError:
+            req = codes.CalcRequirements()
+        recs = codes.recommend_codes(req)
+        message = codes.format_recommendation(req, recs)
+        if recs:
+            message += (
+                f"\n\n第1候補（{recs[0].code}）の入力スクリプトを生成して"
+                "承認付きジョブとして提案できます。実行しますか？（承認/却下）"
+            )
+        state.chat_history.append({"role": "assistant", "content": message})
+        state.audit("ResearchManager", "calculation_planned",
+                    hypothesis=text[:200],
+                    requirements=req.model_dump(),
+                    recommended=[r.code for r in recs])
+        self.store.save(state)
+        return {"requirements": req.model_dump(),
+                "recommendations": [r.model_dump() for r in recs]}
+
+    def propose_calculation_job(self, state: SessionState, code: str,
+                                elements: list[str],
+                                params: dict[str, Any] | None = None,
+                                description: str = "",
+                                estimated_node_hours: float = 1.0) -> JobRecord:
+        """選択したコードの入力一式を生成し、承認付き外部ジョブとして提案する。"""
+        p = dict(params or {})
+        name = p.get("job_name", f"{code}_{'-'.join(elements).lower()}")
+        workdir = os.path.join(self.session_workspace(state), "jobs", name)
+        gen = scriptgen.generate_inputs(code, workdir, elements=elements, params=p)
+        job = self.propose_job(
+            state, name=name, script=gen["sbatch"], kind=code,
+            description=description
+            or f"{code} 計算ジョブ投入: {name}（入力: {', '.join(gen['files'])}、"
+               f"推定 {estimated_node_hours:.1f} ノード時間）",
+            estimated_node_hours=estimated_node_hours,
+        )
+        job.detail["generated_files"] = gen["files"]
+        job.detail["command"] = gen["command"]
+        self.store.save(state)
+        return job
+
+    # ---------- 解析パイプライン（生成 → 承認 → 実行 → エラー自動修正 → 結果返却） ----------
+    def propose_analysis(self, state: SessionState, purpose: str,
+                         script: str | None = None,
+                         job_id: str | None = None) -> ApprovalRequest:
+        """計算データの解析スクリプトを提案し、承認要求を登録する。
+
+        script 未指定なら LLM が生成する（対象データはジョブ作業ディレクトリの
+        ファイル一覧）。実行は承認後 run_approved_analysis() で行う。
+        """
+        data_dir = self.session_workspace(state)
+        if job_id:
+            job = state.job(job_id)
+            if job is None:
+                raise ValueError(f"ジョブが存在しません: {job_id}")
+            data_dir = job.workdir
+        data_files = sorted(os.listdir(data_dir)) if os.path.isdir(data_dir) else []
+        if script is None:
+            script = llm.generate_analysis_script(
+                purpose, data_files,
+                context=state.goal.statement if state.goal else "")
+        if not script:
+            raise ValueError(
+                "解析スクリプトを生成できません（LLM 未設定時は script を指定してください）")
+        req = ApprovalRequest(
+            kind="analysis_execution",
+            description=f"解析スクリプト実行: {purpose}",
+            payload={"script": script, "purpose": purpose,
+                     "workdir": data_dir, "data_files": data_files},
+        )
+        state.approvals.append(req)
+        state.audit("ResearchManager", "analysis_proposed",
+                    approval_id=req.approval_id, purpose=purpose)
+        state.chat_history.append({
+            "role": "assistant",
+            "content": f"「解析スクリプト実行: {purpose}」という提案がありますが、"
+                       "実行しますか？（承認するまで実行されません。実行する場合は"
+                       "「承認」、しない場合は「却下」と入力してください）\n\n"
+                       f"```bash\n{script[:2000]}\n```",
+        })
+        self.store.save(state)
+        return req
+
+    def run_approved_analysis(self, state: SessionState, approval_id: str,
+                              max_fix_attempts: int = 2) -> dict[str, Any]:
+        """承認済み解析を実行する。失敗時は LLM でスクリプトを自動修正して再試行し、
+        結果（出力・生成ファイル・要約）をチャットと証拠に返却する。"""
+        req = state.approval(approval_id)
+        if req is None:
+            raise ValueError(f"承認要求が存在しません: {approval_id}")
+        if req.kind != "analysis_execution":
+            raise ValueError(f"解析の承認要求ではありません: {approval_id}（{req.kind}）")
+        if req.status != "approved":
+            raise ValueError(f"未承認の解析は実行できません: {approval_id}")
+        purpose = str(req.payload.get("purpose", ""))
+        script = str(req.payload.get("script", ""))
+        workdir = str(req.payload.get("workdir") or self.session_workspace(state))
+        attempts: list[dict[str, Any]] = []
+        result: dict[str, Any] = {}
+        for attempt in range(1 + max_fix_attempts):
+            result = self.gateway.run_script(script, workdir=workdir)
+            attempts.append({"attempt": attempt + 1,
+                             "exit_code": result["exit_code"],
+                             "stderr_tail": result["stderr"][-500:]})
+            if result["exit_code"] == 0:
+                break
+            state.audit("ResearchManager", "analysis_failed",
+                        approval_id=approval_id, attempt=attempt + 1,
+                        exit_code=result["exit_code"])
+            if attempt >= max_fix_attempts:
+                break
+            fixed = llm.fix_analysis_script(script, result["stdout"],
+                                            result["stderr"])
+            if not fixed or fixed == script:
+                break
+            script = fixed
+            state.audit("ResearchManager", "analysis_script_fixed",
+                        approval_id=approval_id, attempt=attempt + 1)
+        ok = result.get("exit_code") == 0
+        generated = result.get("generated_files") or []
+        state.evidence.append(Evidence(
+            source_type="analysis",
+            claim=f"解析「{purpose}」が{'成功' if ok else '失敗'}"
+                  f"（{len(attempts)} 回試行）",
+            conditions={"approval_id": approval_id, "workdir": workdir,
+                        "stdout": result.get("stdout", ""),
+                        "stderr": result.get("stderr", ""),
+                        "generated_files": generated,
+                        "attempts": attempts, "final_script": script},
+            evidence_type="computation",
+            limitations=["解析結果の科学的解釈は研究者の確認が必要"],
+        ))
+        summary = None
+        if ok:
+            summary = llm.summarize_analysis_result(
+                purpose, result.get("stdout", ""), generated)
+        lines = [(f"【解析結果】{purpose}（{'成功' if ok else '失敗'}、"
+                  f"{len(attempts)} 回試行）")]
+        if summary:
+            lines.append(summary)
+        stdout_tail = (result.get("stdout") or "").strip()[-1500:]
+        if stdout_tail:
+            lines += ["```", stdout_tail, "```"]
+        if generated:
+            lines.append("生成ファイル: " + ", ".join(generated)
+                         + f"（{workdir}）")
+        if not ok:
+            lines.append("エラー: " + (result.get("stderr") or "")[-800:])
+            lines.append("自動修正でも解決できませんでした。データや前提の確認をお願いします。")
+        state.chat_history.append({"role": "assistant",
+                                   "content": "\n".join(lines)})
+        state.audit("ResearchManager", "analysis_finished",
+                    approval_id=approval_id, ok=ok,
+                    attempts=len(attempts), generated_files=generated)
+        self.store.save(state)
+        return {"ok": ok, "attempts": attempts, "result": result,
+                "summary": summary, "final_script": script}
 
     def submit_approved_job(self, state: SessionState, job_id: str) -> JobRecord:
         """承認済みジョブをスケジューラへ投入する。"""

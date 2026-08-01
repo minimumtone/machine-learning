@@ -230,6 +230,115 @@ def generate_hypotheses(goal_statement: str, evidence_claims: list[str]) -> list
     ]
 
 
+def structure_calc_requirements(hypothesis: str, goal: str = "",
+                                catalog: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    """仮説文から計算要件（codes.CalcRequirements のフィールド）を構造化する。
+
+    LLM は要件の抽出のみに使い、コードの採否は codes.recommend_codes の
+    決定論的ルールで行う。LLM 不可時はキーワードベースのフォールバック。
+    """
+    out = _chat_json(
+        "あなたは材料計算の計画を支援するアシスタントです。検証したい仮説から、"
+        "必要な計算の要件を JSON で返してください: "
+        '{"properties": list[str]（英語スネークケース、例: formation_enthalpy, '
+        "phase_stability, defect_formation_energy, lattice_constant, diffusivity, "
+        'phase_diagram, elastic_constants）, "elements": list[str]（元素記号）, '
+        '"n_atoms": int（必要な系サイズの目安）, "temperature_dependent": bool, '
+        '"dynamics": bool（MD・拡散等の時間発展が必要か）, '
+        '"phase_diagram": bool, "accuracy": "screening"|"standard"|"benchmark", '
+        '"magnetic": bool, "notes": str}。'
+        "利用可能な計算コードの参考情報: "
+        + json.dumps(catalog or [], ensure_ascii=False),
+        f"研究目標: {goal}\n仮説: {hypothesis}",
+    )
+    if out:
+        return out
+    # フォールバック: キーワード抽出
+    text = f"{goal} {hypothesis}"
+    props: list[str] = []
+    for alias, canonical in _PROPERTY_ALIASES.items():
+        if alias.lower() in text.lower() and canonical not in props:
+            props.append(canonical)
+    if "相図" in text or "phase diagram" in text.lower():
+        props.append("phase_diagram")
+    if "弾性" in text:
+        props.append("elastic_constants")
+    elements = re.findall(r"\b([A-Z][a-z]?)(?=[-\s、,/]|$)", hypothesis)
+    return {
+        "properties": props or ["formation_enthalpy"],
+        "elements": list(dict.fromkeys(elements))[:6],
+        "n_atoms": 100,
+        "temperature_dependent": ("温度" in text or "Kで" in text),
+        "dynamics": ("拡散" in text or "MD" in text),
+        "phase_diagram": ("相図" in text),
+        "accuracy": "standard",
+        "magnetic": ("磁" in text),
+        "notes": "ルールベース抽出（LLM不可時フォールバック）",
+    }
+
+
+_SCRIPT_RULES = (
+    "bash として実行可能な完全なスクリプトを生成すること。"
+    "ライブラリは `pip install -q <pkg>`（`!pip` は不可）、Python コードは "
+    "`python3 - <<'PY'` ... `PY` のヒアドキュメントで埋め込むこと。"
+    "図・CSV等の成果物はカレントディレクトリに保存し、1回の実行で"
+    "結果を全て出力・保存すること（同じ計算の再実行を避ける）。"
+    "matplotlib は `matplotlib.use('Agg')` を先頭で指定し、フォントサイズを"
+    "既定の約2倍（plt.rcParams['font.size']=20 程度）、化学式・記号の"
+    "添字/上付きは LaTeX 数式表記（例: L1$_2$, R$^2$）を使うこと。"
+)
+
+
+def generate_analysis_script(purpose: str, data_files: list[str],
+                             context: str = "") -> str | None:
+    """計算データの解析スクリプトを生成する。LLM 不可時は None。"""
+    out = _chat_json(
+        "あなたは材料計算データの解析スクリプトを書く専門家です。"
+        'JSON {"script": str, "summary": str} を返してください。' + _SCRIPT_RULES +
+        "データファイルは作業ディレクトリに既に存在するものだけを読み、"
+        "存在しないファイルを仮定しないこと。解析結果（統計量・図・表）を"
+        "標準出力へ日本語で分かりやすく出力すること。",
+        json.dumps({"purpose": purpose, "data_files": data_files,
+                    "context": context}, ensure_ascii=False),
+    )
+    if out and isinstance(out.get("script"), str) and out["script"].strip():
+        return out["script"]
+    return None
+
+
+def fix_analysis_script(script: str, stdout: str, stderr: str) -> str | None:
+    """実行に失敗した解析スクリプトをエラー内容から修正する。LLM 不可時は None。"""
+    out = _chat_json(
+        "あなたは解析スクリプトのデバッグ専門家です。実行に失敗したスクリプトと"
+        "エラー出力から、原因を特定して修正済みスクリプト全文を返してください。"
+        'JSON {"script": str, "diagnosis": str} を返すこと。' + _SCRIPT_RULES +
+        "エラーの根本原因（ライブラリ不足・ファイル名誤り・型不一致等）を"
+        "diagnosis に日本語で書くこと。修正はスクリプト側で行い、"
+        "同じエラーを繰り返さないこと。",
+        json.dumps({"script": script, "stdout": stdout[-4000:],
+                    "stderr": stderr[-4000:]}, ensure_ascii=False),
+    )
+    if out and isinstance(out.get("script"), str) and out["script"].strip():
+        return out["script"]
+    return None
+
+
+def summarize_analysis_result(purpose: str, stdout: str,
+                              generated_files: list[str]) -> str | None:
+    """解析結果の人間向け要約。LLM 不可時は None。"""
+    out = _chat_json(
+        "計算データ解析の実行結果を研究者向けに日本語で要約してください。"
+        'JSON {"summary": str} を返すこと。summary は Markdown 箇条書きで、'
+        "主要な数値結果の解釈 / 生成された成果物の説明 / 留意点・次の一手を含める。"
+        "数値は出力にあるものだけを使い、捏造しないこと。",
+        json.dumps({"purpose": purpose, "stdout": stdout[-6000:],
+                    "generated_files": generated_files}, ensure_ascii=False),
+    )
+    if out and out.get("summary"):
+        return str(out["summary"])
+    return None
+
+
 _INTENTS = {"run", "pause", "resume", "complete", "approve", "reject", "script", "question"}
 
 
@@ -309,6 +418,11 @@ def chat_reply(context: dict[str, Any], history: list[dict[str, str]], message: 
             "（実行は「実行を続けて」、一時停止/再開/終了、承認は承認タブまたはチャットで「承認」）。"
             "ライブラリのインストールや計算実行を求められたら、承認後にスクリプトとして"
             "実行できることを案内してください。"
+            "仮説の検証にどの計算コードが適するか聞かれたら、利用可能なコード"
+            "（VASP=DFT高精度・小規模・HPC必要、MLIP=CHGNet/MACEで中精度・低コスト、"
+            "LAMMPS=大規模MD・拡散・有限温度、pycalphad=相図・熱力学平衡）の"
+            "適用範囲・精度・コストを比較して根拠付きで推薦し、入力スクリプトの"
+            "自動生成と承認付きジョブ投入ができることを案内してください。"
             "承認待ちの操作（pending_approvals）がある場合は、応答の末尾で必ず"
             "「『（操作内容）』という承認事項があります。実行しますか？（承認/却下）」の形で"
             "具体的に問いかけてください。何か実行可能な提案をする場合も"
