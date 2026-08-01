@@ -9,6 +9,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from mi_hub.agent import scriptgen, sqs
 from mi_hub.agent.codes import (
     CODE_CATALOG,
     CalcRequirements,
@@ -228,3 +229,72 @@ class TestReviewFixes:
             Path(job.workdir, f).write_text("dummy")
         submitted = manager.submit_approved_job(session, job.job_id)
         assert submitted.state in ("pending", "running", "completed", "failed")
+
+
+class TestSQS:
+    def test_normalize_concentrations_default_equimolar(self):
+        conc = sqs.normalize_concentrations(["Al", "Cu"])
+        assert conc == {"Al": 0.5, "Cu": 0.5}
+
+    def test_normalize_concentrations_missing_element(self):
+        with pytest.raises(ValueError, match="未指定"):
+            sqs.normalize_concentrations(["Al", "Cu"], {"Al": 1.0})
+
+    def test_generate_sqs_structure(self):
+        atoms = sqs.generate_sqs_structure(
+            ["Al", "Cu"], prototype="fcc", a0=3.9, max_size=8, n_steps=300)
+        assert len(atoms) <= 8
+        symbols = set(atoms.get_chemical_symbols())
+        assert symbols == {"Al", "Cu"}
+
+    def test_write_sqs_files(self, tmp_path):
+        atoms = sqs.generate_sqs_structure(
+            ["Fe", "Ni"], prototype="bcc", a0=2.9, max_size=8, n_steps=300)
+        files = sqs.write_sqs_files(atoms, str(tmp_path))
+        assert set(files) == {"POSCAR", "data.lammps", "sqs.extxyz"}
+        for f in files:
+            assert (tmp_path / f).is_file()
+
+    def test_poscar_species_grouped(self):
+        atoms = sqs.generate_sqs_structure(
+            ["Al", "Cu"], prototype="fcc", a0=3.9, max_size=8, n_steps=300)
+        lines = sqs.atoms_to_poscar(atoms).splitlines()
+        species = lines[5].split()
+        assert len(species) == len(set(species))  # 元素はまとめて1回ずつ
+
+    def test_lammps_data_respects_specorder(self, tmp_path):
+        atoms = sqs.generate_sqs_structure(
+            ["Ni", "Fe"], prototype="fcc", a0=3.6, max_size=8, n_steps=300)
+        sqs.write_sqs_files(atoms, str(tmp_path), formats=["lammps"],
+                            specorder=["Ni", "Fe"])
+        data = (tmp_path / "data.lammps").read_text()
+        # タイプ1=Ni, タイプ2=Fe の順で質量が割り当てられる
+        masses = [ln.split() for ln in
+                  data.split("Masses")[1].split("Atoms")[0].splitlines()
+                  if ln.strip()]
+        assert masses[0][0] == "1" and masses[0][1].startswith("58.69")
+        assert masses[1][0] == "2" and masses[1][1].startswith("55.84")
+
+    def test_generate_inputs_vasp_sqs(self, tmp_path):
+        out = scriptgen.generate_inputs(
+            "vasp", str(tmp_path), elements=["Al", "Cu"],
+            params={"structure": "sqs", "a0": 3.9, "max_size": 8,
+                    "sqs_steps": 300})
+        assert "POSCAR" in out["files"]
+        poscar = (tmp_path / "POSCAR").read_text()
+        assert "Al" in poscar and "Cu" in poscar
+
+    def test_generate_inputs_lammps_sqs_provides_data(self, tmp_path):
+        out = scriptgen.generate_inputs(
+            "lammps", str(tmp_path), elements=["Al", "Cu"],
+            params={"structure": "sqs", "a0": 3.9, "max_size": 8,
+                    "sqs_steps": 300})
+        assert "data.lammps" in out["files"]
+        assert out["missing_files"] == ["potential.eam.alloy"]
+
+    def test_manager_generate_sqs(self, manager, session):
+        out = manager.generate_sqs(session, ["Al", "Cu"], a0=3.9,
+                                   max_size=8, n_steps=300)
+        assert out["n_atoms"] <= 8
+        assert set(out["files"]) == {"POSCAR", "data.lammps", "sqs.extxyz"}
+        assert any(e.claim.startswith("SQS 生成") for e in session.evidence)

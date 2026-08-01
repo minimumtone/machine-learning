@@ -15,7 +15,7 @@ from typing import Any, ClassVar
 
 from pydantic import ValidationError
 
-from . import codes, llm, scriptgen
+from . import codes, llm, scriptgen, sqs
 from .graphrag import GraphRAGProvider
 from .models import (
     ApprovalRequest,
@@ -414,6 +414,49 @@ class ResearchManager:
         })
         self.store.save(state)
         return job
+
+    # ---------- SQS 構造生成（icet） ----------
+    def generate_sqs(self, state: SessionState, elements: list[str],
+                     concentrations: dict[str, float] | None = None,
+                     prototype: str = "fcc", a0: float = 3.6,
+                     max_size: int = 16,
+                     n_steps: int = 10000) -> dict[str, Any]:
+        """icet で SQS 超格子を生成し、POSCAR / data.lammps / extxyz を
+        セッション作業領域に書き出す。生成は決定論的な後処理のみで承認不要。"""
+        atoms = sqs.generate_sqs_structure(
+            elements, concentrations, prototype=prototype, a0=a0,
+            max_size=max_size, n_steps=n_steps)
+        name = f"sqs_{'-'.join(elements).lower()}_{len(atoms)}at"
+        workdir = os.path.join(self.session_workspace(state),
+                               "structures", name)
+        files = sqs.write_sqs_files(atoms, workdir, specorder=list(elements))
+        formula = atoms.get_chemical_formula()
+        state.evidence.append(Evidence(
+            source_type="structure_generation",
+            claim=f"SQS 生成: {formula}（{prototype}, a0={a0}, "
+                  f"{len(atoms)} 原子）",
+            conditions={"workdir": workdir, "files": files,
+                        "elements": elements,
+                        "concentrations": concentrations,
+                        "prototype": prototype, "a0": a0,
+                        "max_size": max_size, "n_steps": n_steps},
+            evidence_type="computation",
+            limitations=[("SQS は有限セルでランダム合金を近似した構造であり、"
+                          "短距離秩序の完全な再現ではない")],
+        ))
+        state.chat_history.append({
+            "role": "assistant",
+            "content": f"SQS 構造を生成しました: {formula}"
+                       f"（{prototype}, {len(atoms)} 原子）\n"
+                       f"出力: {', '.join(files)}（{workdir}）\n"
+                       "この構造は VASP（structure='sqs'）や LAMMPS の "
+                       "data.lammps としてジョブ提案に利用できます。",
+        })
+        state.audit("ResearchManager", "sqs_generated", formula=formula,
+                    n_atoms=len(atoms), workdir=workdir)
+        self.store.save(state)
+        return {"formula": formula, "n_atoms": len(atoms),
+                "workdir": workdir, "files": files}
 
     # ---------- 計算コード選択（仮説 → コード推薦 → 入力生成 → 承認付き提案） ----------
     def plan_calculation(self, state: SessionState,
