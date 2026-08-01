@@ -199,3 +199,32 @@ class TestAnalysisPipeline:
         assert out["ok"] is False
         assert any("自動修正でも解決できませんでした" in m["content"]
                    for m in session.chat_history)
+
+    def test_approval_single_use(self, manager, session):
+        req = manager.propose_analysis(session, "一回限り", script="echo once")
+        manager.resolve_approval(session, req.approval_id, approve=True)
+        assert manager.run_approved_analysis(session, req.approval_id)["ok"]
+        with pytest.raises(ValueError, match="実行済み"):
+            manager.run_approved_analysis(session, req.approval_id)
+
+
+class TestReviewFixes:
+    def test_unknown_property_falls_back(self):
+        req = CalcRequirements(properties=["formation enthalpy of B2"])
+        recs = recommend_codes(req)
+        assert recs
+        assert all("カタログ語彙と一致せず" in r.cautions[0] for r in recs)
+
+    def test_lammps_missing_files_block_submission(self, manager, session):
+        job = manager.propose_calculation_job(session, "lammps", ["Al", "Cu"])
+        assert set(job.detail["missing_files"]) == {"data.lammps",
+                                                    "potential.eam.alloy"}
+        approval = session.approval(job.approval_id)
+        assert approval is not None and "要配置ファイル" in approval.description
+        manager.resolve_approval(session, job.approval_id, approve=True)
+        with pytest.raises(ValueError, match="未配置"):
+            manager.submit_approved_job(session, job.job_id)
+        for f in ("data.lammps", "potential.eam.alloy"):
+            Path(job.workdir, f).write_text("dummy")
+        submitted = manager.submit_approved_job(session, job.job_id)
+        assert submitted.state in ("pending", "running", "completed", "failed")

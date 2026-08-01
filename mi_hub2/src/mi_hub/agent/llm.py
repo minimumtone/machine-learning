@@ -252,6 +252,12 @@ def structure_calc_requirements(hypothesis: str, goal: str = "",
         f"研究目標: {goal}\n仮説: {hypothesis}",
     )
     if out:
+        props_raw = out.get("properties")
+        if isinstance(props_raw, str):
+            props_raw = [props_raw]
+        if isinstance(props_raw, list):
+            normed = [_normalize_property(p) for p in props_raw if p]
+            out["properties"] = list(dict.fromkeys(p for p in normed if p))
         return out
     # フォールバック: キーワード抽出
     text = f"{goal} {hypothesis}"
