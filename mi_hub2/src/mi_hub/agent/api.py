@@ -65,6 +65,16 @@ class PlanCalculationRequest(BaseModel):
     hypothesis_text: str | None = None
 
 
+class SQSRequest(BaseModel):
+    session_id: str
+    elements: list[str]
+    concentrations: dict[str, float] | None = None
+    prototype: str = "fcc"
+    a0: float = 3.6
+    max_size: int = 16
+    n_steps: int = 10000
+
+
 class CalculationJobRequest(BaseModel):
     session_id: str
     code: str
@@ -261,6 +271,20 @@ def plan_calculation(req: PlanCalculationRequest) -> dict[str, Any]:
         return m.plan_calculation(state, hypothesis_id=req.hypothesis_id,
                                   hypothesis_text=req.hypothesis_text)
     except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+# SQS 構造生成（icet）
+@app.post("/api/agent/structures/sqs")
+def generate_sqs(req: SQSRequest) -> dict[str, Any]:
+    m = get_manager()
+    state = _load(req.session_id)
+    try:
+        return m.generate_sqs(
+            state, req.elements, concentrations=req.concentrations,
+            prototype=req.prototype, a0=req.a0,
+            max_size=req.max_size, n_steps=req.n_steps)
+    except (ValueError, RuntimeError) as exc:
         raise HTTPException(400, str(exc)) from exc
 
 

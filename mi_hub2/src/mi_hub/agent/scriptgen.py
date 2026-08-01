@@ -13,7 +13,7 @@ from __future__ import annotations
 import os
 from typing import Any
 
-from . import dft
+from . import dft, sqs
 from .scheduler import make_sbatch_script
 
 _RUN_COMMANDS = {
@@ -130,7 +130,15 @@ def generate_inputs(code: str, workdir: str, *, elements: list[str],
     files: list[str]
     missing: list[str] = []
     if code == "vasp":
-        if len(elements) == 2 and p.get("structure", "b2") == "b2":
+        if p.get("structure") == "sqs":
+            atoms = sqs.generate_sqs_structure(
+                elements, p.get("concentrations"),
+                prototype=p.get("prototype", "fcc"),
+                a0=float(p.get("a0", 3.6)),
+                max_size=int(p.get("max_size", 16)),
+                n_steps=int(p.get("sqs_steps", 10000)))
+            poscar = sqs.atoms_to_poscar(atoms)
+        elif len(elements) == 2 and p.get("structure", "b2") == "b2":
             poscar = dft.format_poscar_b2(elements[0], elements[1],
                                           float(p.get("a0", 2.9)))
         else:
@@ -156,6 +164,14 @@ def generate_inputs(code: str, workdir: str, *, elements: list[str],
             n_steps=int(p.get("n_steps", 10000)))
         _write(workdir, "in.lammps", script)
         files = ["in.lammps"]
+        if p.get("structure") == "sqs":
+            atoms = sqs.generate_sqs_structure(
+                elements, p.get("concentrations"),
+                prototype=p.get("prototype", "fcc"),
+                a0=float(p.get("a0", 3.6)),
+                max_size=int(p.get("max_size", 32)),
+                n_steps=int(p.get("sqs_steps", 10000)))
+            files += sqs.write_sqs_files(atoms, workdir, formats=["lammps"])
         missing = [f for f in ("data.lammps", potential_file)
                    if not os.path.isfile(os.path.join(workdir, f))]
     elif code == "pycalphad":
