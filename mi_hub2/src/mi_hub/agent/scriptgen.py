@@ -171,7 +171,8 @@ def generate_inputs(code: str, workdir: str, *, elements: list[str],
                 a0=float(p.get("a0", 3.6)),
                 max_size=int(p.get("max_size", 32)),
                 n_steps=int(p.get("sqs_steps", 10000)))
-            files += sqs.write_sqs_files(atoms, workdir, formats=["lammps"])
+            files += sqs.write_sqs_files(atoms, workdir, formats=["lammps"],
+                                         specorder=list(elements))
         missing = [f for f in ("data.lammps", potential_file)
                    if not os.path.isfile(os.path.join(workdir, f))]
     elif code == "pycalphad":

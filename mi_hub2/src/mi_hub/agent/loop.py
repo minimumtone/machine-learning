@@ -429,7 +429,7 @@ class ResearchManager:
         name = f"sqs_{'-'.join(elements).lower()}_{len(atoms)}at"
         workdir = os.path.join(self.session_workspace(state),
                                "structures", name)
-        files = sqs.write_sqs_files(atoms, workdir)
+        files = sqs.write_sqs_files(atoms, workdir, specorder=list(elements))
         formula = atoms.get_chemical_formula()
         state.evidence.append(Evidence(
             source_type="structure_generation",

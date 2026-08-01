@@ -70,15 +70,19 @@ def atoms_to_poscar(atoms: Atoms) -> str:
     from ase.io import write as ase_write
 
     buf = io.StringIO()
-    ase_write(buf, atoms, format="vasp", direct=True)
+    # sort=True: 同一元素をまとめて種別行を POTCAR と整合させる
+    ase_write(buf, atoms, format="vasp", direct=True, sort=True)
     return buf.getvalue()
 
 
 def write_sqs_files(atoms: Atoms, workdir: str,
-                    formats: list[str] | None = None) -> list[str]:
+                    formats: list[str] | None = None,
+                    specorder: list[str] | None = None) -> list[str]:
     """SQS 構造を各計算コード向けファイルとして書き出す。
 
     formats: "poscar"（POSCAR）/ "lammps"（data.lammps）/ "xyz"（sqs.extxyz）
+    specorder: LAMMPS の原子タイプ番号に対応させる元素順
+    （pair_coeff の元素並びと一致させること）
     """
     from ase.io import write as ase_write
 
@@ -92,7 +96,8 @@ def write_sqs_files(atoms: Atoms, workdir: str,
             written.append("POSCAR")
         elif fmt == "lammps":
             ase_write(os.path.join(workdir, "data.lammps"), atoms,
-                      format="lammps-data", masses=True)
+                      format="lammps-data", masses=True,
+                      specorder=specorder)
             written.append("data.lammps")
         elif fmt == "xyz":
             ase_write(os.path.join(workdir, "sqs.extxyz"), atoms,

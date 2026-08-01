@@ -255,6 +255,26 @@ class TestSQS:
         for f in files:
             assert (tmp_path / f).is_file()
 
+    def test_poscar_species_grouped(self):
+        atoms = sqs.generate_sqs_structure(
+            ["Al", "Cu"], prototype="fcc", a0=3.9, max_size=8, n_steps=300)
+        lines = sqs.atoms_to_poscar(atoms).splitlines()
+        species = lines[5].split()
+        assert len(species) == len(set(species))  # 元素はまとめて1回ずつ
+
+    def test_lammps_data_respects_specorder(self, tmp_path):
+        atoms = sqs.generate_sqs_structure(
+            ["Ni", "Fe"], prototype="fcc", a0=3.6, max_size=8, n_steps=300)
+        sqs.write_sqs_files(atoms, str(tmp_path), formats=["lammps"],
+                            specorder=["Ni", "Fe"])
+        data = (tmp_path / "data.lammps").read_text()
+        # タイプ1=Ni, タイプ2=Fe の順で質量が割り当てられる
+        masses = [ln.split() for ln in
+                  data.split("Masses")[1].split("Atoms")[0].splitlines()
+                  if ln.strip()]
+        assert masses[0][0] == "1" and masses[0][1].startswith("58.69")
+        assert masses[1][0] == "2" and masses[1][1].startswith("55.84")
+
     def test_generate_inputs_vasp_sqs(self, tmp_path):
         out = scriptgen.generate_inputs(
             "vasp", str(tmp_path), elements=["Al", "Cu"],
