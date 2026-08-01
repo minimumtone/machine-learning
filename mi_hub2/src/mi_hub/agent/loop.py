@@ -464,15 +464,20 @@ class ResearchManager:
         name = p.get("job_name", f"{code}_{'-'.join(elements).lower()}")
         workdir = os.path.join(self.session_workspace(state), "jobs", name)
         gen = scriptgen.generate_inputs(code, workdir, elements=elements, params=p)
+        desc = (description
+                or f"{code} 計算ジョブ投入: {name}（入力: {', '.join(gen['files'])}、"
+                   f"推定 {estimated_node_hours:.1f} ノード時間）")
+        if gen["missing_files"]:
+            desc += (f"【要配置ファイル】{', '.join(gen['missing_files'])} を "
+                     f"{workdir} に用意してから投入してください")
         job = self.propose_job(
             state, name=name, script=gen["sbatch"], kind=code,
-            description=description
-            or f"{code} 計算ジョブ投入: {name}（入力: {', '.join(gen['files'])}、"
-               f"推定 {estimated_node_hours:.1f} ノード時間）",
+            description=desc,
             estimated_node_hours=estimated_node_hours,
         )
         job.detail["generated_files"] = gen["files"]
         job.detail["command"] = gen["command"]
+        job.detail["missing_files"] = gen["missing_files"]
         self.store.save(state)
         return job
 
@@ -529,6 +534,10 @@ class ResearchManager:
             raise ValueError(f"解析の承認要求ではありません: {approval_id}（{req.kind}）")
         if req.status != "approved":
             raise ValueError(f"未承認の解析は実行できません: {approval_id}")
+        if req.payload.get("executed"):
+            raise ValueError(f"この承認は実行済みです（再実行は新しい提案・承認が必要）: "
+                             f"{approval_id}")
+        req.payload["executed"] = True
         purpose = str(req.payload.get("purpose", ""))
         script = str(req.payload.get("script", ""))
         workdir = str(req.payload.get("workdir") or self.session_workspace(state))
@@ -551,6 +560,8 @@ class ResearchManager:
             if not fixed or fixed == script:
                 break
             script = fixed
+            # 自動修正版は承認時のスクリプトと異なるため、監査用に全文を保存する
+            req.payload.setdefault("auto_fixed_scripts", []).append(script)
             state.audit("ResearchManager", "analysis_script_fixed",
                         approval_id=approval_id, attempt=attempt + 1)
         ok = result.get("exit_code") == 0
@@ -605,6 +616,15 @@ class ResearchManager:
         approval = state.approval(job.approval_id) if job.approval_id else None
         if approval is None or approval.status != "approved":
             raise ValueError(f"未承認のジョブは投入できません: {job_id}")
+        still_missing = [
+            f for f in job.detail.get("missing_files", [])
+            if not os.path.isfile(os.path.join(job.workdir, f))
+            and not os.path.isfile(f)
+        ]
+        if still_missing:
+            raise ValueError(
+                f"必要ファイルが未配置のため投入できません: {', '.join(still_missing)}"
+                f"（{job.workdir} に配置してください）")
         remaining = state.budget.max_node_hours - state.budget.used_node_hours
         if job.estimated_node_hours > remaining:
             raise ValueError(

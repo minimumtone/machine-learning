@@ -22,8 +22,18 @@ from mi_hub.agent.states import HypothesisState
 APPROVAL_KIND_LABELS = {
     "task_execution": "タスク実行",
     "script_execution": "スクリプト実行",
+    "analysis_execution": "解析実行",
     "job_submission": "外部ジョブ投入",
 }
+
+
+def execute_analysis_approval(manager: ResearchManager, s: SessionState,
+                              approval: ApprovalRequest) -> str:
+    """承認済み解析を実行（失敗時は自動修正で再試行）し、応答文を返す。"""
+    out = manager.run_approved_analysis(s, approval.approval_id)
+    # 結果は run_approved_analysis が chat_history へ追記済み
+    return ("解析が完了しました。" if out["ok"]
+            else "解析は自動修正を含めて失敗しました。詳細は上記の結果を確認してください。")
 
 
 def execute_script_approval(manager: ResearchManager, s: SessionState,
@@ -324,6 +334,9 @@ with chat_col:
                 if approve and a.kind == "script_execution":
                     reply = f"[{kind}] {a.description} を承認しました。\n\n"
                     reply += execute_script_approval(m, state, a)
+                elif approve and a.kind == "analysis_execution":
+                    reply = f"[{kind}] {a.description} を承認しました。\n\n"
+                    reply += execute_analysis_approval(m, state, a)
                 elif approve:
                     reply = (
                         f"[{kind}] {a.description} を承認しました。"
@@ -537,7 +550,8 @@ with agent_col:
                     + (f" / task: {a.task_id}" if a.task_id else "")
                     + f" / 要求: {time.strftime('%H:%M:%S', time.localtime(a.requested_at))}"
                 )
-                if a.kind == "script_execution" and a.payload.get("script"):
+                if (a.kind in ("script_execution", "analysis_execution")
+                        and a.payload.get("script")):
                     if a.payload.get("summary"):
                         st.markdown(a.payload["summary"])
                     with st.expander("スクリプト本文（実行される内容）"):
@@ -548,6 +562,8 @@ with agent_col:
                     if a.kind == "script_execution":
                         reply = execute_script_approval(m, state, a)
                         state.chat_history.append({"role": "assistant", "content": reply})
+                    elif a.kind == "analysis_execution":
+                        execute_analysis_approval(m, state, a)
                     m.store.save(state)
                     st.rerun()
                 if cols[1].button("却下", key=f"ng-{a.approval_id}"):

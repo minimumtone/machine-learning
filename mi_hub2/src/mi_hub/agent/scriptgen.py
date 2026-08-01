@@ -122,11 +122,13 @@ def generate_inputs(code: str, workdir: str, *, elements: list[str],
     """コード別の入力一式を workdir に書き出す。
 
     返り値: {"files": 生成ファイル一覧, "command": 実行コマンド,
-             "sbatch": sbatch スクリプト本文}
+             "sbatch": sbatch スクリプト本文,
+             "missing_files": 利用者が別途用意すべき未配置ファイル一覧}
     """
     p = params or {}
     os.makedirs(workdir, exist_ok=True)
     files: list[str]
+    missing: list[str] = []
     if code == "vasp":
         if len(elements) == 2 and p.get("structure", "b2") == "b2":
             poscar = dft.format_poscar_b2(elements[0], elements[1],
@@ -146,13 +148,16 @@ def generate_inputs(code: str, workdir: str, *, elements: list[str],
         _write(workdir, "run_mlip.py", script)
         files = ["run_mlip.py"]
     elif code == "lammps":
+        potential_file = p.get("potential_file", "potential.eam.alloy")
         script = generate_lammps_input(
             elements, pair_style=p.get("pair_style", "eam/alloy"),
-            potential_file=p.get("potential_file", "potential.eam.alloy"),
+            potential_file=potential_file,
             temperature=float(p.get("temperature", 300.0)),
             n_steps=int(p.get("n_steps", 10000)))
         _write(workdir, "in.lammps", script)
         files = ["in.lammps"]
+        missing = [f for f in ("data.lammps", potential_file)
+                   if not os.path.isfile(os.path.join(workdir, f))]
     elif code == "pycalphad":
         if not p.get("tdb_file"):
             raise ValueError("pycalphad: params['tdb_file']（TDBパス）が必要です")
@@ -162,6 +167,10 @@ def generate_inputs(code: str, workdir: str, *, elements: list[str],
             t_max=float(p.get("t_max", 2000.0)))
         _write(workdir, "run_calphad.py", script)
         files = ["run_calphad.py"]
+        tdb = p["tdb_file"]
+        if not (os.path.isfile(tdb)
+                or os.path.isfile(os.path.join(workdir, tdb))):
+            missing = [tdb]
     else:
         raise ValueError(f"未対応の計算コード: {code}")
     command = p.get("command") or _RUN_COMMANDS[code]
@@ -171,7 +180,8 @@ def generate_inputs(code: str, workdir: str, *, elements: list[str],
         ntasks=int(p.get("ntasks", 1)),
         time_limit=p.get("time_limit", "01:00:00"),
         modules=p.get("modules"))
-    return {"files": files, "command": command, "sbatch": sbatch}
+    return {"files": files, "command": command, "sbatch": sbatch,
+            "missing_files": missing}
 
 
 def _write(workdir: str, name: str, content: str) -> None:

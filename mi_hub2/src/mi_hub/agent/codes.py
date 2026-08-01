@@ -175,6 +175,14 @@ def recommend_codes(req: CalcRequirements) -> list[CodeRecommendation]:
             reasons=reasons, cautions=cautions, resource=spec.resource,
         ))
     out.sort(key=lambda r: r.score, reverse=True)
+    if not out and props:
+        # 物性名が語彙と一致せず全コードが除外された場合のフォールバック:
+        # 物性条件を外して全候補を提示し、その旨を留意点に明記する
+        out = recommend_codes(req.model_copy(update={"properties": []}))
+        for r in out:
+            r.cautions.insert(
+                0, f"指定物性（{', '.join(props)}）はカタログ語彙と一致せず、"
+                   "物性条件を外して順位付けした")
     return out
 
 
