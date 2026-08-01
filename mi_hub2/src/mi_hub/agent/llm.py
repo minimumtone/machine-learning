@@ -415,9 +415,22 @@ def chat_reply(context: dict[str, Any], history: list[dict[str, str]], message: 
         return None
     try:
         client, model = _client_and_model()
+        context = dict(context)
+        short_term = context.pop("short_term_memory", None)
+        long_term = context.pop("long_term_memory", None)
         system = (
             "あなたは材料研究エージェント MI-HUB2 の対話アシスタントです。"
             "以下のセッション状態を踏まえ、研究者と議論を前進させる相棒として日本語で答えてください。"
+            "どんなコメントに対しても必ず科学的な返答を行うこと。すなわち応答には常に"
+            "(1) 科学的解釈（根拠となる物理・材料科学の知見や証拠IDを明示）"
+            "(2) 妥当性・限界（近似、データ・手法の限界）"
+            "(3) 推奨する次の一手、を含めること。雑談的なコメントであっても、"
+            "研究目標・仮説・証拠と結びつけて科学的観点から応答すること。\n"
+            "文脈は二層の記憶で与えられます。文脈維持のため両方を必ず参照すること。\n"
+            "【短期記憶】現在セッションの直近状態（直近の評価・タスク・会話・証拠・"
+            "未解決エラー）: 直前のやり取りとの一貫性維持に使うこと。\n"
+            "【長期記憶】セッション全体の蓄積（研究目標・仮説・全証拠・評価履歴）: "
+            "研究文脈全体との整合の維持に使うこと。\n"
             "できること: 状態・計画・仮説・証拠・エラーの説明、研究方針の議論"
             "（特徴量設計、SQS・MLIP・CALPHAD等の手法比較、Materials Project/OQMD等の"
             "データソース活用案など）、次の一手の具体的な提案、次の操作の案内"
@@ -435,7 +448,10 @@ def chat_reply(context: dict[str, Any], history: list[dict[str, str]], message: 
             "「〜という提案がありますが、実行しますか？」と明示的に確認してください。"
             "してはいけないこと: 仮説の最終判定、承認の代行、数値の捏造。"
             "最終的な科学判断は研究者に委ねる旨を必要に応じて添えてください。\n\n"
-            f"セッション状態:\n{json.dumps(context, ensure_ascii=False, default=str)}"
+            f"【短期記憶】\n{json.dumps(short_term, ensure_ascii=False, default=str)}\n\n"
+            f"【長期記憶】\n{json.dumps(long_term, ensure_ascii=False, default=str)}\n\n"
+            f"【現在の状態・計画・承認待ち】\n"
+            f"{json.dumps(context, ensure_ascii=False, default=str)}"
         )
         messages: list[dict[str, str]] = [{"role": "system", "content": system}]
         for msg in history[-10:]:

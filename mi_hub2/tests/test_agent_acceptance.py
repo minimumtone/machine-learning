@@ -468,6 +468,15 @@ def test_memory_context_short_and_long_term(manager, session):
     assert mem["short_term_memory"]["recent_tasks"]
     assert mem["long_term_memory"]["evaluation_history"]
     assert mem["long_term_memory"]["evidence"]
+    session.chat_history.append({"role": "user", "content": "x" * 500})
+    mem = manager.memory_context(session)
+    recent = mem["short_term_memory"]["recent_chat"]
+    assert recent and len(recent[-1]["content"]) == 400
+    assert len(mem["short_term_memory"]["recent_evidence"]) <= 3
+    assert all(
+        "limitations" in e
+        for e in mem["short_term_memory"]["recent_evidence"]
+    )
 
 
 class TestLLMProviders:

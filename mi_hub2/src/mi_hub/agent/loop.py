@@ -829,6 +829,15 @@ class ResearchManager:
             "last_evaluation": state.evaluations[-1].model_dump() if state.evaluations else None,
             "recent_tasks": recent_tasks,
             "unresolved_errors": [e.message for e in state.errors if not e.resolved],
+            "recent_chat": [
+                {"role": msg["role"], "content": msg["content"][:400]}
+                for msg in state.chat_history[-6:]
+            ],
+            "recent_evidence": [
+                {"id": e.evidence_id, "type": e.evidence_type, "claim": e.claim,
+                 "limitations": e.limitations}
+                for e in state.evidence[-3:]
+            ],
         }
         long_term = {
             "goal": state.goal.model_dump() if state.goal else None,
