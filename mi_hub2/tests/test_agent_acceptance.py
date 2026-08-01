@@ -479,6 +479,48 @@ def test_memory_context_short_and_long_term(manager, session):
     )
 
 
+def test_synthesize_cycle_records_summary_and_guard(manager, session):
+    """大サイクル: 総括が証拠・会話に記録され、新しい証拠が無い限り繰り返さない。"""
+    while session.agent_state not in (AgentState.COMPLETED, AgentState.BLOCKED):
+        for a in session.approvals:
+            if a.status == "pending":
+                manager.resolve_approval(session, a.approval_id, True)
+        res = manager.run_auto(session)
+        if not res["executed"] and not any(
+            a.status == "pending" for a in session.approvals
+        ):
+            break
+    syntheses = [e for e in session.evidence if e.evidence_type == "synthesis"]
+    if not syntheses:  # 自動発火しなかった場合は手動総括
+        out = manager.synthesize_cycle(session)
+        assert out["skipped"] is False
+        syntheses = [e for e in session.evidence if e.evidence_type == "synthesis"]
+    assert syntheses
+    assert any("総括（大サイクル）" in msg["content"]
+               for msg in session.chat_history if msg["role"] == "assistant")
+    assert syntheses[-1].limitations
+    # 新しい証拠が無いままの再総括はスキップ
+    out2 = manager.synthesize_cycle(session)
+    assert out2["skipped"] is True
+    # 新しい証拠が加われば再総括できる（小→大サイクルの反復）
+    from mi_hub.agent.models import Evidence
+
+    session.evidence.append(
+        Evidence(claim="追加の計算結果", evidence_type="computation"))
+    out3 = manager.synthesize_cycle(session)
+    assert out3["skipped"] is False
+
+
+def test_classify_intent_fallback_synthesize(monkeypatch):
+    """LLM 不可時でも「まとめて」「総括して」が総括意図に解決される。"""
+    from mi_hub.agent import llm
+
+    monkeypatch.setattr(llm, "llm_available", lambda: False)
+    monkeypatch.setattr(llm, "_chat_json", lambda *a, **k: None)
+    assert llm.classify_intent("これまでの結果をまとめて", False)["intent"] == "synthesize"
+    assert llm.classify_intent("総括して", False)["intent"] == "synthesize"
+
+
 class TestLLMProviders:
     """複数LLMプロバイダの解決（実LLMは呼ばない）。"""
 

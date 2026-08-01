@@ -288,6 +288,14 @@ def generate_sqs(req: SQSRequest) -> dict[str, Any]:
         raise HTTPException(400, str(exc)) from exc
 
 
+# 大サイクル総括（推論→仮説→検証→反証事例→まとめ）
+@app.post("/api/agent/sessions/{session_id}/synthesis")
+def synthesize_cycle(session_id: str) -> dict[str, Any]:
+    m = get_manager()
+    state = _load(session_id)
+    return m.synthesize_cycle(state)
+
+
 # 計算ジョブ提案（入力生成 → 承認付き提案）
 @app.post("/api/agent/calculations/jobs")
 def propose_calculation_job(req: CalculationJobRequest) -> dict[str, Any]:

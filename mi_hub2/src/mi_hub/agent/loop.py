@@ -20,6 +20,7 @@ from .graphrag import GraphRAGProvider
 from .models import (
     ApprovalRequest,
     Evidence,
+    Hypothesis,
     JobRecord,
     Observation,
     Plan,
@@ -293,6 +294,7 @@ class ResearchManager:
             status = "completed" if task.status != TaskState.FAILED else "failed"
             if task.status != TaskState.FAILED:
                 self._add_science_comment(state, task)
+                self._micro_falsification_cycle(state, task)
         except Exception as exc:  # ツール層以外の予期しない失敗
             from .errors import record_error
 
@@ -330,6 +332,135 @@ class ResearchManager:
             state.audit("ResearchManager", "science_comment",
                         task_id=task.task_id, kind=kind)
 
+    def _micro_falsification_cycle(self, state: SessionState, task: Task) -> None:
+        """小サイクル: 各タスクの結果を仮説の反証条件と照合し、反証事例候補を記録する。
+
+        反証の確定は行わない（候補の提示まで。最終判定は研究者）。LLM 不可時は何もしない。
+        """
+        if task.agent not in ("ExecutionAgent", "EvaluationAgent") or not task.result:
+            return
+        active = [
+            h for h in state.hypotheses
+            if h.status in (HypothesisState.APPROVED_FOR_TESTING,
+                            HypothesisState.UNDER_EVALUATION)
+        ]
+        if not active:
+            return
+        goal = state.goal.statement if state.goal else ""
+        checks = llm.falsification_check(
+            goal,
+            [{"hypothesis_id": h.hypothesis_id, "statement": h.statement,
+              "falsification_conditions": h.falsification_conditions}
+             for h in active],
+            {"task": task.description, "result": task.result},
+        )
+        if not checks:
+            return
+        contradicted = [c for c in checks if c["assessment"] == "contradicts"]
+        for c in contradicted:
+            state.evidence.append(Evidence(
+                source_type="falsification_check",
+                claim=f"反証事例候補（{c['hypothesis_id']}）: "
+                      f"{c.get('counterexample') or c['reason']}",
+                conditions={"task_id": task.task_id, "check": c},
+                evidence_type="counterexample_candidate",
+                limitations=["自動照合による候補であり、反証の確定は研究者が行う"],
+            ))
+        state.audit("ResearchManager", "falsification_check",
+                    task_id=task.task_id, checks=checks)
+        if contradicted:
+            lines = ["【反証チェック（小サイクル）】反証事例候補を検出しました："]
+            lines += [f"- {c['hypothesis_id']}: "
+                      f"{c.get('counterexample') or c['reason']}"
+                      for c in contradicted]
+            lines.append("反証の確定は仮説タブから研究者が判定してください。")
+            state.chat_history.append(
+                {"role": "assistant", "content": "\n".join(lines)})
+
+    # ---------- 大サイクル: 総括と次仮説生成 ----------
+    def synthesize_cycle(self, state: SessionState) -> dict[str, Any]:
+        """大サイクル: 蓄積した証拠を総括し、次サイクルの仮説案を生成する。
+
+        推論→仮説→検証→反証事例→まとめのマクロループの「まとめ」に相当する。
+        仮説の状態変更は提案まで（確定は研究者）。新仮説は DRAFT として登録し、
+        次サイクルで研究者がレビューする。新しい証拠が無い限り同じ総括は繰り返さない。
+        """
+        plan_id = state.plan.plan_id if state.plan else None
+        n_facts = sum(1 for e in state.evidence if e.evidence_type != "synthesis")
+        last_syn = next(
+            (e for e in reversed(state.evidence)
+             if e.evidence_type == "synthesis"), None)
+        if last_syn is not None and last_syn.conditions.get("evidence_count") == n_facts:
+            return {"skipped": True, "reason": "前回の総括以降に新しい証拠がない"}
+        goal = state.goal.statement if state.goal else ""
+        out = llm.research_synthesis(
+            goal,
+            [{"hypothesis_id": h.hypothesis_id, "statement": h.statement,
+              "status": h.status.value,
+              "falsification_conditions": h.falsification_conditions}
+             for h in state.hypotheses],
+            [{"id": e.evidence_id, "type": e.evidence_type, "claim": e.claim,
+              "limitations": e.limitations} for e in state.evidence],
+            [{"result": ev.step_result, "quality": ev.result_quality,
+              "data_gaps": ev.data_gaps} for ev in state.evaluations],
+        )
+        if out is None:
+            # LLM 不可時の決定論的なミニ総括
+            counterexamples = [
+                e.claim for e in state.evidence
+                if e.evidence_type == "counterexample_candidate"
+            ]
+            out = {
+                "summary": (
+                    f"証拠 {len(state.evidence)} 件、仮説 {len(state.hypotheses)} 件、"
+                    f"評価 {len(state.evaluations)} 件。"
+                    f"反証事例候補 {len(counterexamples)} 件。"
+                    "（LLM 未接続のため機械的集計のみ。判断は研究者が行う）"
+                ),
+                "hypothesis_assessments": [],
+                "new_hypotheses": [],
+                "next_steps": [],
+            }
+        new_ids: list[str] = []
+        for nh in out.get("new_hypotheses") or []:
+            if not isinstance(nh, dict) or not nh.get("statement"):
+                continue
+            h = Hypothesis(
+                statement=str(nh["statement"]),
+                falsification_conditions=[
+                    str(c) for c in nh.get("falsification_conditions") or []],
+                status=HypothesisState.DRAFT,
+            )
+            state.hypotheses.append(h)
+            new_ids.append(h.hypothesis_id)
+        state.evidence.append(Evidence(
+            source_type="research_synthesis",
+            claim=f"総括（大サイクル）: {str(out['summary'])[:200]}",
+            conditions={"plan_id": plan_id, "synthesis": out,
+                        "evidence_count": n_facts,
+                        "new_hypothesis_ids": new_ids},
+            evidence_type="synthesis",
+            limitations=["仮説の状態変更は提案であり、確定は研究者が行う"],
+        ))
+        lines = ["【総括（大サイクル）】", str(out["summary"])]
+        for a in out.get("hypothesis_assessments") or []:
+            if isinstance(a, dict):
+                lines.append(
+                    f"- {a.get('hypothesis_id')}: 提案 "
+                    f"{a.get('suggested_status')}（{a.get('rationale', '')}）")
+        if new_ids:
+            lines.append(f"次サイクルの新仮説（DRAFT）: {', '.join(new_ids)}")
+        for s in out.get("next_steps") or []:
+            lines.append(f"- 次の一手: {s}")
+        lines.append("仮説の採否・反証の確定は研究者が行ってください。")
+        state.chat_history.append(
+            {"role": "assistant", "content": "\n".join(lines)})
+        state.audit("ResearchManager", "synthesis_cycle", plan_id=plan_id,
+                    new_hypotheses=new_ids)
+        self.store.save(state)
+        return {"skipped": False, "synthesis": out,
+                "new_hypothesis_ids": new_ids}
+
     def _wire_inputs(self, state: SessionState, task: Task) -> None:
         plan = state.plan
         assert plan is not None
@@ -356,6 +487,8 @@ class ResearchManager:
                 state.agent_state = AgentState.COMPLETED
             else:
                 state.agent_state = AgentState.BLOCKED
+            if stop.startswith("正常終了"):
+                self.synthesize_cycle(state)
         else:
             state.agent_state = AgentState.REPLANNING
 
