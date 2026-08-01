@@ -344,6 +344,20 @@ with chat_col:
                     )
                 else:
                     reply = f"[{kind}] {a.description} を却下しました。"
+        elif intent == "synthesize":
+            out = m.synthesize_cycle(state)
+            if out.get("skipped"):
+                reply = (
+                    f"総括は実行済みです（{out.get('reason')}）。"
+                    "新しいタスクの実行・証拠の追加後に再度依頼してください。"
+                )
+            else:
+                # synthesize_cycle が総括本文を chat_history に追記済みのため、
+                # ここでは案内のみ返す
+                reply = (
+                    "総括（大サイクル）を実行しました。上の【総括（大サイクル）】を"
+                    "確認し、仮説の採否・反証の確定は仮説タブから判定してください。"
+                )
         elif intent == "script" and intent_info.get("script"):
             script = intent_info["script"]
             req = ApprovalRequest(

@@ -345,7 +345,8 @@ def summarize_analysis_result(purpose: str, stdout: str,
     return None
 
 
-_INTENTS = {"run", "pause", "resume", "complete", "approve", "reject", "script", "question"}
+_INTENTS = {"run", "pause", "resume", "complete", "approve", "reject", "script",
+            "synthesize", "question"}
 
 
 def classify_intent(message: str, has_pending_approval: bool) -> dict[str, Any]:
@@ -355,7 +356,7 @@ def classify_intent(message: str, has_pending_approval: bool) -> dict[str, Any]:
     intent: run（タスク実行の継続指示）/ pause / resume / complete /
             approve / reject（承認待ち操作への回答）/
             script（シェルスクリプト実行の依頼: ライブラリのインストールや計算実行）/
-            question（質問・相談・その他）
+            synthesize（これまでの結果の総括依頼）/ question（質問・相談・その他）
     """
     out = _chat_json(
         "あなたは研究エージェントUIの意図分類器です。ユーザの発話を次のいずれかに分類し、"
@@ -381,7 +382,9 @@ def classify_intent(message: str, has_pending_approval: bool) -> dict[str, Any]:
         "Lennard-Jones 等の玩具的ペアポテンシャルは、ユーザが明示的に"
         "簡易計算を要求した場合を除き使用しないこと。"
         "手法の限界（MLIPはDFTの代替近似である等）を出力に明記すること\n"
-        "- question: 上記以外（質問・相談・要約依頼など）\n"
+        "- synthesize: これまでの結果の総括・まとめの依頼"
+        "（例: まとめて、総括して、仮説を見直して）\n"
+        "- question: 上記以外（質問・相談など）\n"
         "迷った場合は question を選ぶこと。実行してよいかの最終判断は人間が行う。",
         message,
     )
@@ -403,6 +406,8 @@ def classify_intent(message: str, has_pending_approval: bool) -> dict[str, Any]:
         return {"intent": "reject", "script": None, "reason": None}
     if any(k in stripped for k in ("実行を続けて", "続けて", "進めて", "自動で実行")):
         return {"intent": "run", "script": None, "reason": None}
+    if any(k in stripped for k in ("まとめて", "総括して")):
+        return {"intent": "synthesize", "script": None, "reason": None}
     return {"intent": "question", "script": None, "reason": None}
 
 
@@ -415,9 +420,22 @@ def chat_reply(context: dict[str, Any], history: list[dict[str, str]], message: 
         return None
     try:
         client, model = _client_and_model()
+        context = dict(context)
+        short_term = context.pop("short_term_memory", None)
+        long_term = context.pop("long_term_memory", None)
         system = (
             "あなたは材料研究エージェント MI-HUB2 の対話アシスタントです。"
             "以下のセッション状態を踏まえ、研究者と議論を前進させる相棒として日本語で答えてください。"
+            "どんなコメントに対しても必ず科学的な返答を行うこと。すなわち応答には常に"
+            "(1) 科学的解釈（根拠となる物理・材料科学の知見や証拠IDを明示）"
+            "(2) 妥当性・限界（近似、データ・手法の限界）"
+            "(3) 推奨する次の一手、を含めること。雑談的なコメントであっても、"
+            "研究目標・仮説・証拠と結びつけて科学的観点から応答すること。\n"
+            "文脈は二層の記憶で与えられます。文脈維持のため両方を必ず参照すること。\n"
+            "【短期記憶】現在セッションの直近状態（直近の評価・タスク・会話・証拠・"
+            "未解決エラー）: 直前のやり取りとの一貫性維持に使うこと。\n"
+            "【長期記憶】セッション全体の蓄積（研究目標・仮説・全証拠・評価履歴）: "
+            "研究文脈全体との整合の維持に使うこと。\n"
             "できること: 状態・計画・仮説・証拠・エラーの説明、研究方針の議論"
             "（特徴量設計、SQS・MLIP・CALPHAD等の手法比較、Materials Project/OQMD等の"
             "データソース活用案など）、次の一手の具体的な提案、次の操作の案内"
@@ -435,7 +453,10 @@ def chat_reply(context: dict[str, Any], history: list[dict[str, str]], message: 
             "「〜という提案がありますが、実行しますか？」と明示的に確認してください。"
             "してはいけないこと: 仮説の最終判定、承認の代行、数値の捏造。"
             "最終的な科学判断は研究者に委ねる旨を必要に応じて添えてください。\n\n"
-            f"セッション状態:\n{json.dumps(context, ensure_ascii=False, default=str)}"
+            f"【短期記憶】\n{json.dumps(short_term, ensure_ascii=False, default=str)}\n\n"
+            f"【長期記憶】\n{json.dumps(long_term, ensure_ascii=False, default=str)}\n\n"
+            f"【現在の状態・計画・承認待ち】\n"
+            f"{json.dumps(context, ensure_ascii=False, default=str)}"
         )
         messages: list[dict[str, str]] = [{"role": "system", "content": system}]
         for msg in history[-10:]:
@@ -471,6 +492,70 @@ def science_comment(goal: str, kind: str, payload: dict[str, Any]) -> str | None
     )
     if out and out.get("comment"):
         return str(out["comment"])
+    return None
+
+
+def falsification_check(goal: str, hypotheses: list[dict[str, Any]],
+                        result_payload: dict[str, Any]) -> list[dict[str, Any]] | None:
+    """小サイクル: 新しい結果を各仮説の反証条件と照合し、反証事例候補を挙げる。
+
+    反証の確定は行わない（候補の提示まで。最終判定は研究者）。LLM 不可時は None。
+    """
+    if not hypotheses:
+        return None
+    out = _chat_json(
+        "あなたは材料科学の研究エージェントの反証チェッカーです。"
+        f"研究目標「{goal}」の下で、与えられた仮説群（反証条件付き）と"
+        "新しい計算・解析結果を照合し、"
+        'JSON {"checks": [{"hypothesis_id": str, "assessment": '
+        '"supports"|"contradicts"|"neutral", "counterexample": str|null, '
+        '"reason": str}]} を返してください。'
+        "contradicts の場合は counterexample に反証事例（どの結果のどの数値・挙動が"
+        "どの反証条件に該当するか）を具体的に記述すること。"
+        "与えられた数値のみを根拠とし、捏造しないこと。"
+        "反証・支持の確定はせず、候補の提示に徹すること（最終判定は研究者）。",
+        json.dumps({"hypotheses": hypotheses, "result": result_payload},
+                   ensure_ascii=False, default=str)[:6000],
+    )
+    checks = out.get("checks") if out else None
+    if not isinstance(checks, list):
+        return None
+    valid = ("supports", "contradicts", "neutral")
+    return [
+        {"hypothesis_id": str(c.get("hypothesis_id", "")),
+         "assessment": c["assessment"],
+         "counterexample": c.get("counterexample"),
+         "reason": str(c.get("reason", ""))}
+        for c in checks
+        if isinstance(c, dict) and c.get("assessment") in valid
+    ]
+
+
+def research_synthesis(goal: str, hypotheses: list[dict[str, Any]],
+                       evidence: list[dict[str, Any]],
+                       evaluations: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """大サイクル: 蓄積された証拠から仮説群を総括し、次サイクルの仮説・検証案を提示。
+
+    仮説の状態変更は提案まで（確定は研究者）。LLM 不可時は None。
+    """
+    out = _chat_json(
+        "あなたは材料科学の研究エージェントの総括役です。"
+        f"研究目標「{goal}」について、仮説群・全証拠・評価履歴を総合し、"
+        'JSON {"summary": str, "hypothesis_assessments": [{"hypothesis_id": str, '
+        '"suggested_status": "supported"|"falsified"|"conditionally_supported"|'
+        '"inconclusive", "rationale": str, "counterexamples": [str]}], '
+        '"new_hypotheses": [{"statement": str, "falsification_conditions": [str]}], '
+        '"next_steps": [str]} を返してください。'
+        "summary は日本語 Markdown で、科学的解釈・支持/反証事例・limitations を含めること。"
+        "new_hypotheses は証拠から導かれる次サイクルの検証可能な仮説"
+        "（反証条件付き）とすること。数値は与えられたものだけを使うこと。"
+        "状態変更は提案であり、確定は研究者が行うことを summary に明記すること。",
+        json.dumps({"hypotheses": hypotheses, "evidence": evidence,
+                    "evaluations": evaluations},
+                   ensure_ascii=False, default=str)[:12000],
+    )
+    if out and out.get("summary"):
+        return out
     return None
 
 
