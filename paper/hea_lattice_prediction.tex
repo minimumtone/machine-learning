@@ -141,7 +141,7 @@ King以来の体積サイズファクター研究は実験値（King体積、実
   arr/.style={-{Stealth[length=2.5mm]}, thick},
   darr/.style={-{Stealth[length=2.5mm]}, thick, dashed}
 ]
-\node[box, fill=blue!10] (dft) {DFTデータ\\{\scriptsize B2/L1$_2$: 5,152件\\SQS: 874件}};
+\node[box, fill=blue!10] (dft) {DFTデータ\\{\scriptsize B2/L1$_2$: 5,152件\\SQS 1:1収束: BCC 674 + FCC 141件}};
 \node[box, fill=green!10, right=of dft] (omega) {$\Omega_\text{sf}$導出\\{\scriptsize B2: 465\\L1$_2$: 441}};
 \node[box, fill=red!10, right=of omega] (pred) {格子定数予測\\{\scriptsize 式(\ref{eq:alonso})\\元素対モデル}};
 \node[box, fill=purple!10, right=of pred] (test) {独立検証\\{\scriptsize 31 HEA\\14文献}};
@@ -756,7 +756,7 @@ SQS $\Omega_\text{sf}$はDFT自己整合Vegard参照（SQS純元素体積を端�
 SQS＋DFT Vegard参照で校正BCC 29合金に対する$q$最適化を行うと$q_\text{opt} = 1.11$が得られる。$q = 1.0$--$1.6$の範囲でテストRMSEは安定しており（表~\ref{tab:q_sensitivity}）、$q_\text{opt}$もテストで良好な精度を示す（表~\ref{tab:sqs_rmse}）。$q = 1$は式~(\ref{eq:scaled_eq10})において$\Omega_\text{sf}^\text{SQS}$をスケーリングなしでHEAに適用することを意味し、追加パラメータが不要となる。SQS（$\alpha \approx 0$）の二元系体積偏差が多元系HEAの体積偏差を直接近似でき、B2参照で必要だった秩序--無秩序間のスケーリング校正$q_\text{BCC} = 0.49$が不要となる。
 
 \paragraph{純元素体積キュレーションへの依存性}
-上記の$q_\text{opt} = 1.11$はSQS純元素体積のキュレーション後の値である。33元素中16元素（Ag, Au, Be, Ca, Cr, Fe, Ir, Mn, Os, Pb, Pd, Pt, Re, Rh, Ru, Sn）でSQS体積がKing実験値から3\%超乖離し、MP DFTまたはKing値に置換している（表~\ref{tab:sqs_rmse}脚注）。これらはBCC非安定元素でありSQS緩和が局所安定でない可能性がある。キュレーションなし（生SQS体積）では$q_\text{opt} = 1.68$、$q = 1$でのテストRMSE = 0.0140~\AA{}（改善38.1\%）であり、キュレーション後の0.0124~\AA{}（44.9\%）より劣る。$q_\text{opt}$での精度は両条件でほぼ同等（生: 0.0110、キュレーション後: 0.0118~\AA{}）であり、キュレーションは$q$を1に近づける効果があるが、$q$を自由パラメータとする限り予測精度の上限は変わらない。
+上記の$q_\text{opt} = 1.11$はSQS純元素体積のキュレーション後の値である。33元素中16元素（Ag, Au, Be, Ca, Cr, Fe, Ir, Mn, Os, Pb, Pd, Pt, Re, Rh, Ru, Sn）でSQS体積がKing実験値から3\%超乖離し、MP DFTまたはKing値に置換している（表~\ref{tab:sqs_rmse}脚注）。これらはBCC非安定元素でありSQS緩和が局所安定でない可能性がある。キュレーションなし（生SQS体積）では$q_\text{opt} = 1.68$、$q = 1$でのテストRMSE = 0.0140~\AA{}（改善37.9\%）であり、キュレーション後の0.0124~\AA{}（44.9\%）より劣る。$q_\text{opt}$での精度は両条件でほぼ同等（生: 0.0110、キュレーション後: 0.0118~\AA{}）であり、キュレーションは$q$を1に近づける効果があるが、$q$を自由パラメータとする限り予測精度の上限は変わらない。
 
 「DFT系統誤差の相殺により$q \approx 1$」という解釈は、キュレーション対象16元素がまさに系統誤差が大きい元素であり置換基準がKingとの乖離であることから、実験アンカー付きの事後的キュレーションの効果と区別が困難である。$q \neq 1$の要因としてはDFT--実験間の不整合に加え、16原子SQSの有限サイズ効果（真のランダム配置との偏差）が考えられ、両者の分離は今後の大規模SQS計算で検証すべき課題である。ただし「実験値に合うように参照を選んだから$q \approx 1$になっただけではないか」という懸念に対しては、実験値を用いない置換基準でも$q \approx 1$が得られることを次項で示す。
 
@@ -1392,7 +1392,7 @@ DFTは0~K格子定数を与えるが実験値は室温測定である。King体�
 
 図~\ref{fig:vegard_parity_b2}・\ref{fig:vegard_parity_l12}にDFT原子体積$V_\text{DFT}$と構造整合Vegard予測体積$V_\text{Vegard}$のパリティプロットを示す。B2では$R^2 = 0.754$（RMSE = 2.641~\AA$^3$/atom、1854点）とVegard則が比較的良好に成立する。一方L1$_2$では$R^2 = 0.849$（RMSE = 2.407~\AA$^3$/atom、1827点）とB2を上回る。これはA$_3$B/B$_3$A両組成のデータが含まれるため体積のダイナミックレンジが広く、Vegard則が第一近似として有効なためである。
 
-同じ体積空間でSQS（Special Quasirandom Structure）データを同一の構造整合DFT端点で評価すると、BCC-SQSはRMSE = 1.957~\AA$^3$/atom（445点、$R^2 = 0.702$）、FCC-SQSはRMSE = 0.803~\AA$^3$/atom（112点、$R^2 = 0.908$）であり、いずれも秩序構造（B2: 2.641、L1$_2$: 2.407~\AA$^3$/atom）よりVegard線に近い。この差は、秩序構造（B2/L1$_2$）では化学的秩序化に伴う電荷移動・結合選択性が体積偏差を増大させるのに対し、SQS（ランダム配置）ではそれらが統計的に平均化・相殺されることに起因する。HEAがVegard則に比較的よく従う理由をDFTレベルで裏付ける結果である。
+同じ体積空間でSQS（Special Quasirandom Structure）データを評価すると（King実験原子体積をVegard参照に使用）、BCC-SQSはRMSE = 1.957~\AA$^3$/atom（445点、$R^2 = 0.702$）、FCC-SQSはRMSE = 0.803~\AA$^3$/atom（112点、$R^2 = 0.908$）である。構造整合DFT端点（SQS純元素体積）で評価してもBCC 1.900、FCC 0.921~\AA$^3$/atomと同水準であり、参照の選択によらずSQSは秩序構造（DFT端点基準でB2: 2.641、L1$_2$: 2.407~\AA$^3$/atom）よりVegard線に近い。この差は、秩序構造（B2/L1$_2$）では化学的秩序化に伴う電荷移動・結合選択性が体積偏差を増大させるのに対し、SQS（ランダム配置）ではそれらが統計的に平均化・相殺されることに起因する。HEAがVegard則に比較的よく従う理由をDFTレベルで裏付ける結果である。
 
 図~\ref{fig:vegard_pairs_b2_sqs}に代表6元素ペアの組成--体積プロットを示す。BCC-SQS（緑菱形）は$x = 0, 0.25, 0.5, 0.75, 1.0$の5組成を持ち、B2（青丸）は$x = 0.5$のみである。大半のペアにおいてB2の$\Omega_\text{sf}$はSQSより絶対値が大きい傾向にある：Nb--Tiでは$\Omega_\text{SQS} = -0.003$に対し$\Omega_\text{B2} = -0.021$（約7倍）である。Co--Crでは$\Omega_\text{SQS} = -0.019$に対し$\Omega_\text{B2} = +0.005$と符号が反転しており、Vegard参照の選択（Crに実験値を使用）が影響している可能性がある。SQSでは隣接原子種がランダムに分布するため特定ペア間の電荷移動が相殺されるのに対し、B2では全最近接が異種原子であり化学的秩序化エネルギーが体積変化として集中的に発現する。
 
@@ -1407,7 +1407,7 @@ DFTは0~K格子定数を与えるが実験値は室温測定である。King体�
   （青丸: B2 1854点、$R^2 = 0.754$、RMSE = 2.641~\AA$^3$/atom）。
   横軸: 構造整合DFT端点によるVegard予測体積、
   縦軸: DFT計算体積。破線はy = x（Vegard完全成立）。
-  同一基準でのBCC-SQSはRMSE = 1.957~\AA$^3$/atom（445点）とB2よりVegard線に近く、ランダム固溶体で秩序化エネルギーによる体積偏差が緩和されることを示す。}
+  BCC-SQSはRMSE = 1.900~\AA$^3$/atom（構造整合DFT端点基準、445点）とB2よりVegard線に近く、ランダム固溶体で秩序化エネルギーによる体積偏差が緩和されることを示す。}
 \label{fig:vegard_parity_b2}
 \end{figure*}
 
@@ -1416,7 +1416,7 @@ DFTは0~K格子定数を与えるが実験値は室温測定である。King体�
 \includegraphics[width=0.7\textwidth]{fig_vegard_parity_l12.png}
 \caption{全L1$_2$ペアのVegardパリティプロット
   （赤三角: L1$_2$ 1827点、$R^2 = 0.849$、RMSE = 2.407~\AA$^3$/atom）。
-  同一基準でのFCC-SQSはRMSE = 0.803~\AA$^3$/atom（112点）とy = x線に近く、ランダム配置でVegard則がより良好に成立する傾向を示す。}
+  FCC-SQSはRMSE = 0.921~\AA$^3$/atom（構造整合DFT端点基準、111点）とy = x線に近く、ランダム配置でVegard則がより良好に成立する傾向を示す。}
 \label{fig:vegard_parity_l12}
 \end{figure*}
 
@@ -1641,7 +1641,7 @@ DFT Vegard参照はDFT同種体積を端点とするためGGA系統誤差が部�
 
 $q_\text{BCC} = 0.49$（B2参照）はB2の$\Omega_\text{sf}$のうち約49\%がHEA（ランダム配位）に効くことを意味する。SQS Vegardの$q = 1$はSQS $\Omega_\text{sf}$がそのままHEAに適用可能であることを意味する。両者は整合的である：
 $q_\text{B2} \times |\Omega_\text{B2}| \approx q_\text{SQS} \times |\Omega_\text{SQS}|$、
-すなわち$0.49 \times 0.037 \approx 1.0 \times 0.014$。
+すなわち$0.49 \times 0.037 \approx 1.0 \times 0.018$。
 
 
 \section{Bootstrap信頼区間の詳細}
