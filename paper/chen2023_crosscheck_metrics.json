@@ -1,0 +1,88 @@
+{
+  "doi": "10.5281/zenodo.7633180",
+  "source_url": "https://zenodo.org/api/records/7633180/files/wch3n/mpea_stability-v0.1.zip/content",
+  "bcc_formal_pairs": 445,
+  "fcc_formal_pairs": 112,
+  "metrics": [
+    {
+      "lattice": "BCC",
+      "subset": "formal",
+      "comparison": "Chen_dH_vs_omega_sf",
+      "n": 387,
+      "pearson_r": 0.2492004770913398,
+      "spearman_rho": 0.2745045670637252,
+      "slope": 0.04813507974643458,
+      "intercept": -0.017714813731276195,
+      "mae": 0.21679779074625682,
+      "rmse": 0.29237271768852524
+    },
+    {
+      "lattice": "BCC",
+      "subset": "formal",
+      "comparison": "local_dH_vs_Chen_dH",
+      "n": 387,
+      "pearson_r": 0.9798329667827387,
+      "spearman_rho": 0.9839779065005555,
+      "slope": 1.002345645376467,
+      "intercept": 0.012387570193289413,
+      "mae": 0.03233504431040044,
+      "rmse": 0.05973885598532725
+    },
+    {
+      "lattice": "BCC",
+      "subset": "formal",
+      "comparison": "size_regression",
+      "n": 387,
+      "a_dh": 0.0626446146329287,
+      "b_radius": -0.17717609815225166,
+      "intercept": 0.012148673397926852,
+      "r2": 0.20635199596457765,
+      "partial_dh": 0.33632459860011304,
+      "partial_radius": -0.39217646672167383,
+      "r_radius": -0.3242366281767005,
+      "r_dh": 0.24920047709133983,
+      "r_en": -0.402462248916742,
+      "r_vec": -0.2554322239852419
+    },
+    {
+      "lattice": "FCC",
+      "subset": "formal",
+      "comparison": "Chen_dH_vs_omega_sf",
+      "n": 112,
+      "pearson_r": 0.21913270244548314,
+      "spearman_rho": 0.18393583216592066,
+      "slope": 0.04179459942490769,
+      "intercept": 0.0004874736368331821,
+      "mae": 0.18789152630067335,
+      "rmse": 0.2547519086489954
+    },
+    {
+      "lattice": "FCC",
+      "subset": "formal",
+      "comparison": "local_dH_vs_Chen_dH",
+      "n": 112,
+      "pearson_r": 0.9963201580263019,
+      "spearman_rho": 0.9929698978371545,
+      "slope": 0.9987597618722104,
+      "intercept": 0.0029121734894858586,
+      "mae": 0.013083457285156178,
+      "rmse": 0.018569320972447265
+    },
+    {
+      "lattice": "FCC",
+      "subset": "formal",
+      "comparison": "size_regression",
+      "n": 112,
+      "a_dh": 0.03319891545085338,
+      "b_radius": -0.23433791130964368,
+      "intercept": 0.02670882066839508,
+      "r2": 0.32358399171733054,
+      "partial_dh": 0.2063299942640235,
+      "partial_radius": -0.5380192344127608,
+      "r_radius": -0.5417629834731691,
+      "r_dh": 0.2191327024454831,
+      "r_en": -0.38975457029976857,
+      "r_vec": -0.21494575418463072
+    }
+  ]
+}
