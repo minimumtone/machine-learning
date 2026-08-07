@@ -663,6 +663,55 @@ OQMD~\cite{saal2013oqmd,kirklin2015oqmd}由来の
 無機材料データベースに共通する正規化スキーマの典型例である。
 主要な統計を表~\ref{tab:db_stats}に示す。
 
+\subsubsection{元のOQMD形式レイアウトとの対応関係}
+
+公開されているOQMDのデータモデルは、少数の幅広いエントリー中心テーブル
+（例: \path{entries}, \path{element_ratios}, \path{formation_energies},
+\path{reference_states}, \path{elements}）で表現できる。
+このレイアウトは高通量データ蓄積には効率的である一方、
+組成・結晶構造・熱力学的安定性・電子物性といった構造的に異なる情報を
+\path{delta_e}や\path{composition_formula}といった
+少数の汎用カラムに格納する。
+自然言語インターフェースにおいて、これは曖昧性を生む:
+``energy''は生成エネルギー、hull距離、バンドギャップのいずれを指すか;
+``Ti''は構成元素かプロパティフィルターの対象か。
+
+したがって、本研究ではOQMD由来データを材料科学的概念ごとに31の正規化テーブルへ再構成した（表~\ref{tab:schema_comparison}）。
+この正規化はタスクを単純化するものではない。
+評価用gold SQLは平均3.4テーブルを使用し、
+Very Hardクエリでは最大6テーブル（多段CTEも含む）を要する。
+むしろ、明示的なスキーマにより各テーブル・カラムの物理的意味が明確化され、
+結合の複雑さを利用者からText-to-SQLパイプラインへ移譲する。
+Steiner-tree JOIN生成、スキーマリンキング、Few-shot例は、
+この複雑さを扱うために設計されたものである。
+
+\begin{table*}[htbp]
+\centering
+\caption{OQMD形式のフラットなソースレイアウトと、本研究の正規化検証スキーマの比較。
+フラットレイアウトはテーブル数を最小化する一方、
+正規化レイアウトはカラム名の曖昧性を減らすために材料科学的概念を分離する。}
+\label{tab:schema_comparison}
+\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.2cm}>{\raggedright\arraybackslash}p{3.0cm}X>{\raggedright\arraybackslash}X@{}}
+\toprule
+概念 & OQMD形式フラットテーブル & 正規化テーブル（本研究） & 理由 \\
+\midrule
+エントリー・識別 & \path{oqmd_entries}（formula, prototype, lattice, volumeを1行に） & \path{material_entry}, \path{structure}, \path{space_group}, \path{prototype_definition} & 識別を構造・プロトタイプから分離し、曖昧な汎用カラムを除去する。 \\
+組成 & \path{oqmd_element_ratios}（entry, symbol, 原子比） & \path{composition}, \path{element} & 元素マスタを正規化し、元素物性フィルターをサポートする。 \\
+熱力学的安定性 & \path{oqmd_formation_energies}（\path{delta_e}, hull, gap） & \path{phase_stability}, \path{calculation}, \path{calculated_property} & 生成エネルギー、hull距離、バンドギャップ、計算手法を区別する。 \\
+純物質基準 & \path{oqmd_reference_states}（1原子あたりのエネルギー） & \path{pure_element_reference}, \path{element} & CTEによる生成エンタルピー計算に必須。 \\
+計算物性 & 種類ごとに分離されていない & \path{band_structure}, \path{density_of_states}, \path{elastic_tensor}, \path{magnetic_property}, \path{thermal_property}, \path{surface_energy}, \path{grain_boundary}, 等 & 物性クラスごとに1テーブルとし、カラム名と単位を明確化する。 \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+スキーマ転用試験（\ref{sec:transfer_eval}節）は、
+同じパイプラインがOQMD形式のフラット5テーブルレイアウトも扱え、
+精度低下がわずか4.2\,ppであったことを示す。
+これは提案手法が正規化スキーマに限定されないことを示す。
+逆に、正規化スキーマは現実的かつ意味的に豊かな材料RDBに対する
+パイプラインの応力試験（stress test）として用いられた。
+
 \begin{table}[t]
 \centering
 \caption{検証データベースの構成。}
@@ -673,6 +722,7 @@ OQMD~\cite{saal2013oqmd,kirklin2015oqmd}由来の
 項目 & 件数 \\
 \midrule
 テーブル数 & 31 \\
+ビュー数 & 1 \\
 \texttt{material\_entry} & 1{,}559 \\
 \texttt{composition} & 3{,}029 \\
 \texttt{calculated\_property} & 4{,}410 \\
