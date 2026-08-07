@@ -50,7 +50,7 @@ def main() -> None:
     args = parser.parse_args()
     volumes, energies = load_csv(args.csv)
     i_min = int(np.argmin(energies))
-    initial = [energies[i_min], volumes[i_min], 1.0 / 160.21766208, 4.0]
+    initial = [energies[i_min], volumes[i_min], 150.0 / EV_TO_GPA, 4.0]
     bounds = ([-np.inf, 0.0, 0.0, 1.0], [np.inf, np.inf, np.inf, 10.0])
     params, covariance = curve_fit(
         birch_murnaghan,
@@ -62,12 +62,22 @@ def main() -> None:
     )
     errors = np.sqrt(np.diag(covariance))
     e0, v0, b0, bp = params
+    residuals = energies - birch_murnaghan(volumes, *params)
+    rms = float(np.sqrt(np.mean(residuals**2)))
+    in_range = volumes.min() <= v0 <= volumes.max()
     print(f"n = {len(volumes)}")
     print(f"E0_eV = {e0:.12g} +/- {errors[0]:.3g}")
     print(f"V0_A3 = {v0:.12g} +/- {errors[1]:.3g}")
     print(f"B0_eV_A3 = {b0:.12g} +/- {errors[2]:.3g}")
     print(f"B0_GPa = {b0 * EV_TO_GPA:.12g} +/- {errors[2] * EV_TO_GPA:.3g}")
     print(f"Bprime = {bp:.12g} +/- {errors[3]:.3g}")
+    print(f"RMS_residual_eV = {rms:.12g}")
+    print(f"V0_in_input_range = {'yes' if in_range else 'no'}")
+    if not in_range:
+        print(
+            f"WARNING: fitted V0={v0:.12g} is outside input range "
+            f"[{volumes.min():.12g}, {volumes.max():.12g}]"
+        )
 
 
 if __name__ == "__main__":

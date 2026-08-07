@@ -250,7 +250,7 @@ def scan_structure_dir(base_dir, struct_type, expected_counts):
         a, converged, src = read_lattice_constant(calc_dir)
         e_per_atom = read_energy_per_atom(calc_dir)
         vol = read_cell_volume(calc_dir)
-        total_mag, local_mag = read_magnetization(calc_dir)
+        total_mag, local_mag, abs_local_mag, max_local_mag = read_magnetization(calc_dir)
 
         if a is None:
             no_result_dirs.append(dirname)
@@ -281,6 +281,10 @@ def scan_structure_dir(base_dir, struct_type, expected_counts):
             'total_magnetization': total_mag,
             'magmom_element_A': local_mag.get(elA, ''),
             'magmom_element_B': local_mag.get(elB, ''),
+            'magmom_abs_element_A': abs_local_mag.get(elA, ''),
+            'magmom_abs_element_B': abs_local_mag.get(elB, ''),
+            'magmom_max_element_A': max_local_mag.get(elA, ''),
+            'magmom_max_element_B': max_local_mag.get(elB, ''),
         })
 
     return results, errors, found_pairs, no_result_dirs
@@ -476,6 +480,8 @@ def write_csv(results, output_path):
         'count_A', 'count_B', 'lattice_constant', 'energy_per_atom',
         'energy_above_hull', 'source', 'structure_type', 'lattice_constant_calc',
         'total_magnetization', 'magmom_element_A', 'magmom_element_B',
+        'magmom_abs_element_A', 'magmom_abs_element_B',
+        'magmom_max_element_A', 'magmom_max_element_B',
     ]
     with open(output_path, 'w', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)

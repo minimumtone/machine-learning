@@ -27,6 +27,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 SOURCE_POSCAR = ROOT / "SQS_RECALC_2x2x2" / "BCC_HIGHDEV" / "Be8Co8" / "POSCAR"
 OUTPUT = ROOT / "BECO_MAGMOM_EV"
+# User-provided clean Be8Co8 rerun (CLEANED:5), not data/sqs_results.csv:399.
+# Its 150.27357974 A^3 is 0.33% above the repository's old 149.78262846 A^3
+# (CLEANED:0), while its total energy is lower by 0.0586 eV per 16-atom cell.
+# PR #474 replaced only >0.5% volume discrepancies, so the old row remains;
+# this deeper-relaxation rerun is the physically preferred E-V reference.
 REFERENCE_CELL_VOLUME = 150.27357974
 EV_FACTORS = (0.94, 0.96, 0.98, 1.00, 1.02, 1.04, 1.06)
 KPOINTS = "Automatic mesh\n0\nGamma\n  6 6 6\n  0 0 0\n"
@@ -215,14 +220,14 @@ def write_shell_scripts(cases: list[tuple[str, list[str]]]) -> None:
         'NPROCS="${1:-8}"',
         'VASPBIN="${VASPBIN:?Set VASPBIN to the VASP executable.}"',
         'BASE_DIR="$(cd "$(dirname "$0")" && pwd)"',
-        'cd "$BASE_DIR"',
-        "bash make_potcar.sh",
+        'cd "$BASE_DIR" || exit 1',
+        "bash make_potcar.sh || exit 1",
         "",
     ]
     for name, _ in cases:
         run.extend(
             [
-                f'cd "$BASE_DIR/{name}"',
+                f'cd "$BASE_DIR/{name}" || exit 1',
                 'if [ ! -f POTCAR ]; then echo "ERROR: missing POTCAR in '
                 f'{name}" >&2; exit 1; fi',
                 f'echo "START {name}"',

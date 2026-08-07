@@ -152,10 +152,10 @@ def read_poscar_species(calc_dir):
 
 
 def read_magnetization(calc_dir):
-    """Read final cell magnetization and average local moments from OUTCAR."""
+    """Read cell magnetization and signed/absolute local-moment statistics."""
     outcar = os.path.join(calc_dir, "OUTCAR")
     if not os.path.isfile(outcar):
-        return "", {}
+        return "", {}, {}, {}
     incar = os.path.join(calc_dir, "INCAR")
     if os.path.isfile(incar):
         try:
@@ -163,14 +163,14 @@ def read_magnetization(calc_dir):
                 incar_text = f.read()
             ispin = re.search(r"^\s*ISPIN\s*=\s*1\b", incar_text, re.MULTILINE)
             if ispin:
-                return "", {}
+                return "", {}, {}, {}
         except OSError:
             pass
     try:
         with open(outcar) as f:
             lines = f.readlines()
     except OSError:
-        return "", {}
+        return "", {}, {}, {}
 
     total = ""
     pattern = re.compile(
@@ -186,7 +186,7 @@ def read_magnetization(calc_dir):
     elements, counts = read_poscar_species(calc_dir)
     natoms = sum(counts)
     if not elements or natoms <= 0:
-        return total, {}
+        return total, {}, {}, {}
 
     # Select the final complete LORBIT magnetization table.
     final_rows = []
@@ -221,15 +221,19 @@ def read_magnetization(calc_dir):
             final_rows = rows
 
     if len(final_rows) != natoms:
-        return total, {}
+        return total, {}, {}, {}
     averages = {}
+    abs_averages = {}
+    max_abs = {}
     offset = 0
     for element, count in zip(elements, counts):
         values = [v for _, v in final_rows[offset:offset + count]]
         if values:
             averages[element] = sum(values) / len(values)
+            abs_averages[element] = sum(abs(v) for v in values) / len(values)
+            max_abs[element] = max(abs(v) for v in values)
         offset += count
-    return total, averages
+    return total, averages, abs_averages, max_abs
 
 
 def extract_structure_data(base_dir, struct_type):
@@ -258,7 +262,7 @@ def extract_structure_data(base_dir, struct_type):
         elA, cA, elB, cB = parsed
         a, converged, src = read_lattice_constant(calc_dir)
         e_per_atom = read_energy_per_atom(calc_dir)
-        total_mag, local_mag = read_magnetization(calc_dir)
+        total_mag, local_mag, abs_local_mag, max_local_mag = read_magnetization(calc_dir)
 
         if a is None:
             errors.append(f"  No lattice constant found: {dirname}")
@@ -289,6 +293,10 @@ def extract_structure_data(base_dir, struct_type):
             'total_magnetization': total_mag,
             'magmom_element_A': local_mag.get(elA, ''),
             'magmom_element_B': local_mag.get(elB, ''),
+            'magmom_abs_element_A': abs_local_mag.get(elA, ''),
+            'magmom_abs_element_B': abs_local_mag.get(elB, ''),
+            'magmom_max_element_A': max_local_mag.get(elA, ''),
+            'magmom_max_element_B': max_local_mag.get(elB, ''),
         })
 
     return results, errors
@@ -302,6 +310,8 @@ def write_csv(results, output_path, struct_type):
         'count_A', 'count_B', 'lattice_constant', 'energy_per_atom',
         'energy_above_hull', 'source', 'structure_type', 'lattice_constant_calc',
         'total_magnetization', 'magmom_element_A', 'magmom_element_B',
+        'magmom_abs_element_A', 'magmom_abs_element_B',
+        'magmom_max_element_A', 'magmom_max_element_B',
     ]
 
     with open(output_path, 'w', newline='') as f:
