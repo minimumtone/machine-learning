@@ -664,7 +664,7 @@ L1$_2$-type intermetallic compounds as a representative inorganic
 materials RDB.
 Based on computational data from
 OQMD~\cite{saal2013oqmd,kirklin2015oqmd}, the database consists of
-31 normalized tables (Figure~\ref{fig:er}), with
+31 normalized tables plus one view (Figure~\ref{fig:er}), with
 \texttt{material\_entry} as the central entity connected via FK
 relationships to tables for composition, structure, stability,
 calculated properties, electronic structure, mechanical properties,
@@ -673,6 +673,58 @@ This structure is representative of normalized schemas common to
 inorganic materials databases such as OQMD, Materials Project, and
 AFLOW.
 Key statistics are shown in Table~\ref{tab:db_stats}.
+
+\subsubsection{Relationship to the source OQMD-style data layout}
+
+The public OQMD data model can be represented by a small number of
+wide, entry-centric tables (e.g., \texttt{entries},
+\texttt{element\_ratios}, \texttt{formation\_energies},
+\texttt{reference\_states}, and \texttt{elements}).
+This layout is efficient for high-throughput data deposition, but it
+stores structurally different information---composition, crystal
+structure, thermodynamic stability, and electronic properties---in a
+few generic columns such as \texttt{delta\_e} and
+\texttt{composition\_formula}.
+For a natural-language interface, this causes ambiguity:
+``energy'' may refer to formation energy, hull distance, or band gap;
+``Ti'' may be a constituent element or a property filter target.
+
+Therefore, we restructured the OQMD-derived data into 31 normalized
+tables grouped by materials-science concept
+(Table~\ref{tab:schema_comparison}).
+This normalization does not simplify the task: the evaluation gold
+SQLs use an average of 3.4 tables, with Very Hard queries requiring
+up to 6 tables (and multi-stage CTEs).
+Instead, the explicit schema makes the physical meaning of each
+table and column unambiguous, shifting the join-complexity burden
+from the user to the Text-to-SQL pipeline.
+The Steiner-tree JOIN generator, schema linking, and few-shot examples
+are designed precisely to handle this complexity.
+
+\begin{table*}[htbp]
+\centering
+\caption{Comparison between the OQMD-style flat source layout and the normalized validation schema. The flat layout minimizes table count, while the normalized layout separates materials-science concepts to reduce column-name ambiguity.}
+\label{tab:schema_comparison}
+\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.2cm}>{\raggedright\arraybackslash}p{3.0cm}X>{\raggedright\arraybackslash}X@{}}
+\toprule
+Concept & OQMD-style flat tables & Normalized tables (this work) & Rationale \\
+\midrule
+Entry / identity & \path{oqmd_entries} (formula, prototype, lattice, volume in one row) & \path{material_entry}, \path{structure}, \path{space_group}, \path{prototype_definition} & Separate identity from structure and prototype; remove ambiguous generic columns. \\
+Composition & \path{oqmd_element_ratios} (entry, symbol, atomic ratio) & \path{composition}, \path{element} & Normalized element master; support element-property filters. \\
+Thermodynamic stability & \path{oqmd_formation_energies} (\path{delta_e}, hull, gap) & \path{phase_stability}, \path{calculation}, \path{calculated_property} & Distinguish formation energy, hull distance, band gap, and calculation method. \\
+Pure-element reference & \path{oqmd_reference_states} (energy per atom) & \path{pure_element_reference}, \path{element} & Required for CTE-based formation enthalpy calculations. \\
+Calculated properties & not separated by type & \path{band_structure}, \path{density_of_states}, \path{elastic_tensor}, \path{magnetic_property}, \path{thermal_property}, \path{surface_energy}, \path{grain_boundary}, etc. & One table per property class gives unambiguous column names and units. \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+The schema-transfer experiment (Section~\ref{sec:transfer_eval})
+demonstrates that the same pipeline also handles the OQMD-flavored
+flat 5-table layout, with only a 4.2\,pp accuracy drop.
+This shows the proposed method is not limited to the normalized
+schema; rather, the normalized schema is used here to stress-test
+the pipeline against a realistic, semantically rich materials RDB.
 
 \begin{table}[t]
 \centering
@@ -684,6 +736,7 @@ Key statistics are shown in Table~\ref{tab:db_stats}.
 Item & Count \\
 \midrule
 Tables & 31 \\
+Views & 1 \\
 \texttt{material\_entry} & 1{,}559 \\
 \texttt{composition} & 3{,}029 \\
 \texttt{calculated\_property} & 4{,}410 \\
