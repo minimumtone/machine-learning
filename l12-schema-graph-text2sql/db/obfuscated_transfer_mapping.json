@@ -1,0 +1,65 @@
+{
+  "seed": 42,
+  "tables": {
+    "oqmd_element_ratios": "tbl_juliet",
+    "oqmd_elements": "tbl_xray",
+    "oqmd_entries": "tbl_zulu",
+    "oqmd_formation_energies": "tbl_delta",
+    "oqmd_reference_states": "tbl_victor"
+  },
+  "columns": {
+    "oqmd_element_ratios": {
+      "new_table": "tbl_juliet",
+      "columns": {
+        "ratio_key": "col_november",
+        "entry_key": "col_rhea",
+        "symbol": "col_papa",
+        "atomic_ratio": "col_juliet",
+        "wyckoff_site": "col_zulu"
+      }
+    },
+    "oqmd_elements": {
+      "new_table": "tbl_xray",
+      "columns": {
+        "symbol": "col_papa",
+        "element_name": "col_umbra",
+        "atomic_number": "col_bravo",
+        "atomic_mass": "col_alpha"
+      }
+    },
+    "oqmd_entries": {
+      "new_table": "tbl_zulu",
+      "columns": {
+        "entry_key": "col_rhea",
+        "composition_formula": "col_quebec",
+        "prototype_label": "col_delta",
+        "spacegroup_number": "col_apollo",
+        "crystal_system": "col_halo",
+        "lattice_param_a": "col_falcon",
+        "cell_volume_pa": "col_quasar"
+      }
+    },
+    "oqmd_formation_energies": {
+      "new_table": "tbl_delta",
+      "columns": {
+        "fe_key": "col_calypso",
+        "entry_key": "col_rhea",
+        "delta_e": "col_luna",
+        "hull_distance": "col_xenon",
+        "on_hull": "col_hotel",
+        "gap_ev": "col_iris"
+      }
+    },
+    "oqmd_reference_states": {
+      "new_table": "tbl_victor",
+      "columns": {
+        "ref_key": "col_mars",
+        "symbol": "col_papa",
+        "gs_spacegroup": "col_gemini",
+        "energy_pa": "col_tango",
+        "volume_pa": "col_pegasus",
+        "polymorph_count": "col_uniform"
+      }
+    }
+  }
+}

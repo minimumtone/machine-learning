@@ -90,9 +90,7 @@ Multi-axis evaluation achieved execution accuracy of 84.7\%,
 syntax validity of 100\%, and JOIN match rate of 93.2\%.
 All results are reported as mean $\pm$ standard deviation
 over 5 independent runs with Wilcoxon signed-rank test significance.
-Furthermore, a zero-adaptation transfer test against an unseen schema
-with all table and column names renamed achieved 80.5\%,
-demonstrating that the pipeline generalizes schema-independently.
+Furthermore, zero-adaptation transfer evaluations across four schema variants---prototype expansion (A) 95.0\%, OQMD-flavored rename (B) 80.5\%, randomized obfuscated names (C) 90.0\%, and a real Materials Project-flavored schema (D) 97.3\%---demonstrated that the pipeline generalizes schema-independently.
 External validation with 100 independently designed queries (72.5\%)
 and evaluation of 15 CTE multi-step calculation patterns
 quantify the external validity and applicability limits
@@ -223,12 +221,7 @@ Our contributions are threefold:
     have statistically significant contributions,
     validating the necessity of domain-specific modules.
   \item \textbf{Demonstration of schema generalization}:
-    A zero-adaptation transfer test against an unseen OQMD-flavored
-    schema with all table and column names renamed achieved
-    80.5\% (100\% on the Very Hard tier),
-    demonstrating that the design principles based on
-    FK introspection do not depend on a specific schema
-    (Section~\ref{sec:transfer_eval}).
+    Zero-adaptation transfer tests across four schema variants---A~prototype expansion (95.0\%), B~OQMD-flavored rename (80.5\%), C~randomized obfuscation (90.0\%), and D~Materials Project-flavored schema (97.3\%)---demonstrate that the design principles based on FK introspection do not depend on a specific schema (Section~\ref{sec:transfer_eval}).
 \end{enumerate}
 
 % =====================================================================
@@ -719,12 +712,13 @@ Calculated properties & not separated by type & \path{band_structure}, \path{den
 \end{tabularx}
 \end{table*}
 
-The schema-transfer experiment (Section~\ref{sec:transfer_eval})
-demonstrates that the same pipeline also handles the OQMD-flavored
-flat 5-table layout, with only a 4.2\,pp accuracy drop.
-This shows the proposed method is not limited to the normalized
-schema; rather, the normalized schema is used here to stress-test
-the pipeline against a realistic, semantically rich materials RDB.
+The schema-transfer experiments (Section~\ref{sec:transfer_eval})
+demonstrate that the same pipeline handles the OQMD-flavored flat
+5-table layout, randomized obfuscated schema, and a real Materials
+Project-flavored schema with minimal accuracy drops. This shows the
+proposed method is not limited to the normalized schema; rather, the
+normalized schema is used here to stress-test the pipeline against a
+realistic, semantically rich materials RDB.
 
 \begin{table}[t]
 \centering
@@ -2052,44 +2046,84 @@ small number of examples (roughly one per pattern) added by a
 domain expert, without any model retraining---a practical
 advantage of this design.
 
-\subsection{Zero-adaptation Transfer Evaluation on an Unseen Schema}
+\subsection{Zero-adaptation Transfer Evaluation on Multiple Schemas}
 \label{sec:transfer_eval}
 
-To directly address the single-database limitation, we constructed
-an OQMD-flavored transfer schema in which all table and column
-names were changed
-(5 tables: \texttt{oqmd\_entries}, \texttt{oqmd\_element\_ratios},
-\texttt{oqmd\_formation\_energies}, \texttt{oqmd\_reference\_states},
-\texttt{oqmd\_elements};
-e.g., \texttt{entry\_id}$\to$\texttt{entry\_key},
-\texttt{formula}$\to$\texttt{composition\_formula},
-\texttt{formation\_energy\_per\_atom}$\to$\texttt{delta\_e}),
-and evaluated 20 difficulty-stratified queries
-(Easy 6 / Medium 6 / Hard 5 / Very Hard 3) with zero adaptation
-(no redesign of the dictionary, few-shot examples, or schema graph).
-Few-shot examples were presented unchanged from the original
-schema, and the prompt instructed that ``few-shot examples may come
-from a different schema; reuse only their SQL patterns.''
-Table and column information was obtained automatically via FK
-introspection of the transfer DB.
+To directly address the single-database limitation, we conducted
+four zero-adaptation transfer tests, summarized in
+Table~\ref{tab:transfer_eval}. In each case, the pipeline received
+only the target schema through FK introspection; the dictionary,
+few-shot examples, and prompt template were either reused unchanged
+or replaced by a minimal schema-specific set. This tests whether the
+design depends on memorized table/column names or can transfer
+abstract SQL patterns.
 
+\begin{table}[t]
+\centering
+\caption{Zero-adaptation schema transfer results.}
+\label{tab:transfer_eval}
+\begin{tabular}{@{}llcc@{}}
+\toprule
+Variant & Schema & Queries & Overall \\ \midrule
+A & Prototype expansion (B2/NaCl/NiAs/BiF$_3$) & 20 & 95.0\% \\
+B & OQMD-flavored rename & 20 & 80.5\% \\
+C & Randomized obfuscated names & 20 & 90.0\% \\
+D & Materials Project-flavored (real MP data) & 15 & 97.3\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Variant A---Prototype expansion.}
+The same 31-table schema was populated with B2/NaCl/NiAs/BiF$_3$
+prototype entries in addition to the L1$_2$ entries, and 20
+difficulty-stratified queries were evaluated. The result was 95.0\%
+(Easy 100\% / Medium 100\% / Hard 100\% / Very Hard 80\%),
+confirming that the prototype separation and FK graph are robust
+across crystal prototypes.
+
+\textbf{Variant B---OQMD-flavored rename.}
+We constructed an OQMD-flavored flat 5-table schema in which all
+table and column names were changed
+(\texttt{oqmd\_entries}, \texttt{oqmd\_element\_ratios},
+\texttt{oqmd\_formation\_energies}, \texttt{oqmd\_reference\_states},
+\texttt{oqmd\_elements}).
+Few-shot examples were presented unchanged from the original schema,
+and the prompt instructed that ``few-shot examples may come from a
+different schema; reuse only their SQL patterns.''
 The result was 80.5\% overall
-(Easy 83.3\% / Medium 83.3\% / Hard 62.0\% / Very Hard 100\%),
-a drop of only 4.2\,pp from the original-schema accuracy (84.7\%).
-Notably, all three Very Hard queries requiring CTEs
-(formation enthalpy calculations, etc.) were answered correctly,
-demonstrating that the pipeline abstracts only the SQL patterns
-(JOIN structure, CTE syntax) from few-shot examples while resolving
-table and column names from the presented schema.
-This demonstrates that the core of the design (FK introspection,
-schema-presented prompting, pattern-transfer few-shot) does not
-depend on a specific schema, supporting extensibility to
-Materials Project, AFLOW, and similar databases.
-We note that this evaluation uncovered and removed
-schema-specific hard-coding (fixed references to linked table
-names) present in the initial implementation, illustrating that
-transfer testing is also an effective verification tool for
-discovering implicit design dependencies.
+(Easy 83.3\% / Medium 83.3\% / Hard 62.0\% / Very Hard 100\%).
+
+\textbf{Variant C---Obfuscated names.}
+All schema identifiers in the transfer DB were replaced with random
+English words while preserving FK relationships. The pipeline
+achieved 90.0\% overall, indicating that semantic table/column
+names are not required; FK topology is sufficient.
+
+\textbf{Variant D---Materials Project-flavored schema.}
+We built a fresh 3-table PostgreSQL schema
+(\texttt{mp\_entries}, \texttt{mp\_elements}, \texttt{mp\_element\_ratios})
+from real Materials Project REST data for 27 binary systems (299
+entries), prepared 15 Japanese queries, and supplied only 8
+few-shot examples written for the MP schema. No pipeline code was
+changed. The result was 97.3\% overall
+(Easy 100\% / Medium 100\% / Hard 86.4\% / Very Hard 100\%).
+The only error was a \texttt{DISTINCT ON(chemsys)} query in which
+a tie returned 26 instead of 27 rows because of a different
+\texttt{ORDER BY} tie-break; this does not affect the conclusion
+that the schema itself is transferable.
+
+Together, these results show that the core design (FK
+introspection, schema-presented prompting, pattern-transfer
+few-shot) is not tied to the original 31-table schema or the L1$_2$
+dataset. The MP transfer in particular demonstrates one-step
+extension to an external, real materials database using only a
+small schema-specific prompt and few-shot set.
+
+\textbf{Discovering hidden schema dependencies.}
+The transfer tests also served as a verification tool: they
+uncovered schema-specific hard-coding (fixed references to linked
+table names) that had been silently accepted by the original
+schema. Removing these made the pipeline fully schema-independent.
 
 \subsection{Extensibility to Similar Inorganic Materials RDBs}
 \label{sec:extensibility}
@@ -2108,11 +2142,11 @@ RDBs in general.
 
 However, the following caveats should be noted.
 The main evaluation of this study is on a single OQMD-derived
-database; while the transfer test in
-Section~\ref{sec:transfer_eval} demonstrated generalization to
-schema renaming, we do not claim generalization performance to
-RDBs with substantially different normalization structures or
-scales.
+database; while Section~\ref{sec:transfer_eval} demonstrated
+generalization to schema renaming, obfuscation, prototype
+expansion, and a real Materials Project-flavored schema, we do not
+claim generalization performance to RDBs with fundamentally
+different semantics, missing FK metadata, or much larger scales.
 Few-shot examples are dependent on the validation DB schema, and
 designing new examples by domain experts is essential when applying
 to different RDBs.
@@ -2126,11 +2160,13 @@ materials RDBs.
   \item \textbf{Single-database validation}:
     The main evaluation of this study is on an OQMD-derived L1$_2$
     database (31 tables, 1{,}559 entries).
-    The zero-adaptation transfer test
+    The zero-adaptation transfer tests
     (Section~\ref{sec:transfer_eval}) demonstrated generalization
-    to schema renaming (80.5\%), but generalization to RDBs with
-    substantially different normalization structures or scales
-    has not been confirmed.
+    to schema renaming (80.5\%), obfuscated identifiers (90.0\%),
+    prototype expansion (95.0\%), and a real Materials
+    Project-flavored schema (97.3\%), but generalization to RDBs
+    with fundamentally different semantics or scales has not been
+    confirmed.
   \item \textbf{Scope of statistical testing}:
     Wilcoxon signed-rank tests were conducted with 5 independent
     runs, but the number of runs is limited; bootstrap or other

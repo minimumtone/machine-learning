@@ -1,0 +1,157 @@
+{
+  "model": "gpt-5.5",
+  "dataset": "prototype_evaluation_dataset.jsonl",
+  "n_queries": 20,
+  "summary": {
+    "overall": 0.95,
+    "by_difficulty": {
+      "easy": 1.0,
+      "medium": 1.0,
+      "hard": 1.0,
+      "very_hard": 0.8
+    },
+    "avg_latency": 31.229999999999997
+  },
+  "results": [
+    {
+      "qid": "q_proto_l12_easy_001",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 28.4,
+      "sql": "SELECT DISTINCT m.formula, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'\nORDER BY m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_proto_l12_medium_001",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 33.5,
+      "sql": "SELECT DISTINCT m.formula, c.element, c.atomic_fraction\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.element = 'Ni'\nORDER BY m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_proto_l12_hard_001",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 27.4,
+      "sql": "SELECT m.formula, ps.formation_energy_per_atom, ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_proto_l12_very_hard_001",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 41.6,
+      "sql": "SELECT ca.element AS a_site,\n       cb.element AS b_site,\n       COUNT(DISTINCT m.entry_id) AS total_compounds,\n       COUNT(DISTINCT m.entry_id) FILTER (WHERE ps.is_stable = TRUE) AS stable_compounds,\n       COUNT(DISTINCT m.entry_id) FILTER (WHERE ps.is_stable = TRUE) * 100.0 / COUNT(DISTINCT m.entry_id) AS stable_percentage,\n       AVG(ps.energy_above_hull) AS avg_energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition ca ON ca.entry_id = m.entry_id\nJOIN composition cb ON cb.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ca.site_label = 'A-site'\n  AND cb.site_label = 'B-site'\nGROUP BY ca.element, cb.element\nORDER BY stable_percentage DESC, total_compounds DESC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_proto_b2_easy_001",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 14.3,
+      "sql": "SELECT DISTINCT m.formula, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'B2' OR s.strukturbericht = 'B2'\nORDER BY m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_proto_b2_medium_001",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 31.4,
+      "sql": "SELECT DISTINCT m.formula, s.prototype, s.strukturbericht, c.element, c.atomic_fraction\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND c.element = 'Zr'\nORDER BY m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_proto_b2_hard_001",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 32.3,
+      "sql": "SELECT DISTINCT\n  m.formula,\n  ps.formation_energy_per_atom,\n  ps.is_stable\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND ps.is_stable = TRUE\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_proto_b2_very_hard_001",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 40.3,
+      "sql": "SELECT c_a.element AS a_site,\n       c_b.element AS b_site,\n       COUNT(*) AS b2_compound_count,\n       COUNT(*) FILTER (WHERE ps.is_stable = TRUE) AS count,\n       COUNT(*) FILTER (WHERE ps.is_stable = TRUE) * 100.0 / COUNT(*) AS stable_percentage,\n       AVG(ps.energy_above_hull) AS avg_energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition c_a ON c_a.entry_id = m.entry_id\nJOIN composition c_b ON c_b.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND c_a.site_label = 'A-site'\n  AND c_b.site_label = 'B-site'\nGROUP BY c_a.element, c_b.element\nORDER BY stable_percentage DESC, avg_energy_above_hull ASC, b2_compound_count DESC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_proto_nacl_easy_001",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 24.4,
+      "sql": "SELECT DISTINCT m.formula, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'NaCl'\n   OR s.strukturbericht = 'B1'\nORDER BY m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_proto_nacl_medium_001",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 28.2,
+      "sql": "SELECT DISTINCT m.formula, c.element, c.atomic_fraction, s.prototype\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'NaCl' OR s.strukturbericht = 'B1')\n  AND c.element = 'Sc'\nORDER BY m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_proto_nacl_hard_001",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 24.0,
+      "sql": "SELECT m.formula, ps.formation_energy_per_atom, ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE ps.is_stable = TRUE\n  AND (s.prototype = 'NaCl' OR s.strukturbericht = 'B1' OR s.prototype = 'B1')\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_proto_nacl_very_hard_001",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 47.5,
+      "sql": "SELECT c_a.element AS a_site,\n       c_b.element AS b_site,\n       COUNT(*) AS nacl_compound_count,\n       AVG(ps.energy_above_hull) AS avg_energy_above_hull,\n       SUM(CASE WHEN ps.is_stable = TRUE THEN 1 ELSE 0 END) AS count,\n       SUM(CASE WHEN ps.is_stable = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS stable_percentage\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition c_a ON c_a.entry_id = m.entry_id\nJOIN composition c_b ON c_b.entry_id = m.entry_id\nWHERE (s.prototype = 'NaCl' OR s.strukturbericht = 'B1')\n  AND c_a.site_label = 'A-site'\n  AND c_b.site_label = 'B-site'\nGROUP BY c_a.element, c_b.element\nORDER BY stable_percentage DESC, avg_energy_above_hull ASC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_proto_nias_easy_001",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 19.4,
+      "sql": "SELECT m.formula, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'NiAs'\n   OR s.strukturbericht = 'B81'\nORDER BY m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_proto_nias_medium_001",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 31.4,
+      "sql": "SELECT DISTINCT m.formula, c.element, c.atomic_fraction, s.prototype\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE c.element = 'Ti'\n  AND s.prototype = 'NiAs'\nORDER BY m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_proto_nias_hard_001",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 38.1,
+      "sql": "SELECT\n  m.formula,\n  ps.formation_energy_per_atom,\n  ps.energy_above_hull,\n  ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'NiAs' OR s.strukturbericht = 'NiAs')\n  AND ps.is_stable = TRUE\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_proto_nias_very_hard_001",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 39.4,
+      "sql": "SELECT\n  c_a.element AS a_site,\n  c_b.element AS b_site,\n  COUNT(*) AS nias_compound_count,\n  AVG(ps.energy_above_hull) AS avg_energy_above_hull,\n  SUM(CASE WHEN ps.is_stable = TRUE THEN 1 ELSE 0 END) AS count,\n  SUM(CASE WHEN ps.is_stable = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS stable_percentage\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition c_a ON c_a.entry_id = m.entry_id\nJOIN composition c_b ON c_b.entry_id = m.entry_id\nWHERE s.prototype = 'NiAs'\n  AND c_a.site_label = 'A-site'\n  AND c_b.site_label = 'B-site'\nGROUP BY c_a.element, c_b.element\nORDER BY stable_percentage DESC, avg_energy_above_hull ASC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_proto_bif3_easy_001",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 16.6,
+      "sql": "SELECT m.formula, s.prototype\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'BiF3'\nORDER BY m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_proto_bif3_medium_001",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 33.4,
+      "sql": "SELECT DISTINCT m.formula, c.element, c.atomic_fraction, s.prototype\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE c.element = 'Si'\n  AND s.prototype = 'BiF3'\nORDER BY m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_proto_bif3_hard_001",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 23.1,
+      "sql": "SELECT m.formula, ps.formation_energy_per_atom, ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'BiF3' OR s.strukturbericht = 'BiF3')\n  AND ps.is_stable = TRUE\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_proto_bif3_very_hard_001",
+      "difficulty": "very_hard",
+      "accuracy": 0.0,
+      "latency_s": 49.9,
+      "sql": "SELECT ca.element AS a_site,\n       cb.element AS b_site,\n       COUNT(*) AS bif3_combination_count,\n       COUNT(*) FILTER (WHERE ps.is_stable = TRUE) AS count,\n       COUNT(*) FILTER (WHERE ps.is_stable = FALSE) AS unstable_count,\n       AVG(ps.energy_above_hull) AS avg_energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition ca ON ca.entry_id = m.entry_id\nJOIN composition cb ON cb.entry_id = m.entry_id\nWHERE (s.prototype = 'BiF3' OR s.formula_type = 'BiF3' OR s.strukturbericht = 'BiF3')\n  AND ca.site_label = 'A-site'\n  AND cb.site_label = 'B-site'\nGROUP BY ca.element, cb.element\nORDER BY stable_count DESC, avg_energy_above_hull ASC\nLIMIT 10000;"
+    }
+  ]
+}

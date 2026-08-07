@@ -1,0 +1,16 @@
+{
+  "columns": [
+    "col_quebec",
+    "col_luna",
+    "weighted_ref",
+    "corrected_enthalpy"
+  ],
+  "rows": [
+    [
+      "Co3Ti",
+      -0.45,
+      -0.012014124583332286,
+      -0.4379858754166677
+    ]
+  ]
+}

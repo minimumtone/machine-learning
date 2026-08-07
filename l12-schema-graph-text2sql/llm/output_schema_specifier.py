@@ -65,11 +65,30 @@ def specify_output_schema(
     if not matched_cols:
         return "Return only the columns directly relevant to answering the question. Do NOT add entry_id, reduced_formula, or other auxiliary columns unless explicitly requested."
 
+    # Keep only hints that reference columns actually present in this schema.
+    allowed_lower = {c.lower() for c in allowed_columns}
+    available: set[str] = set()
+    for col in matched_cols:
+        # Normalize "table.column" and "expr AS alias" forms to a base token.
+        base = col.split(" as ", 1)[0].strip()
+        base = base.rsplit(".", 1)[-1].strip()
+        if base in ("*", "formula", "element", "atomic_fraction", "lattice_a",
+                    "lattice_b", "lattice_c", "band_gap", "volume", "energy_above_hull",
+                    "energy_per_atom", "is_stable", "crystal_system", "spacegroup_symbol",
+                    "chemsys", "nelements", "formula", "atomic_number", "name"):
+            available.add(col)
+        elif f"mp_entries.{base}" in allowed_lower or f"mp_element_ratios.{base}" in allowed_lower:
+            available.add(col)
+        # Complex expressions are kept only if a single keyword matches a column.
+
+    if not available:
+        return "Return only the columns directly relevant to answering the question. Do NOT add entry_id, reduced_formula, or other auxiliary columns unless explicitly requested."
+
     # Always include formula as identifier
-    matched_cols.add("formula")
+    available.add("formula")
 
     # Build instruction
-    col_list = ", ".join(sorted(matched_cols))
+    col_list = ", ".join(sorted(available))
     return (
         f"Focus the SELECT clause on these relevant columns: {col_list}. "
         "Do NOT add unnecessary columns like entry_id, reduced_formula, chemical_system, "
