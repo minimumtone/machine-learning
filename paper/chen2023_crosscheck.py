@@ -9,6 +9,7 @@ import json
 import hashlib
 import os
 import re
+import stat
 import sys
 import urllib.request
 import zipfile
@@ -52,33 +53,45 @@ LABELS = {
 
 
 def chen_omega():
+    files = list((CACHE / "chen2023_data").glob("*/model_params/omegas.json"))
+    if files:
+        x = json.load(open(files[0]))
+        return x, files[0]
+
     CACHE.mkdir(parents=True, exist_ok=True)
     archive = CACHE / "mpea_stability-v0.1.zip"
     if not archive.exists():
         urllib.request.urlretrieve(URL, archive)
-    digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+    digest_context = hashlib.sha256()
+    with open(archive, "rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest_context.update(chunk)
+    digest = digest_context.hexdigest()
     if digest != KNOWN_ARCHIVE_SHA256:
+        archive.unlink()
         raise RuntimeError(f"Zenodo archive SHA-256 mismatch: {digest}")
-    files = list((CACHE / "chen2023_data").glob("*/model_params/omegas.json"))
+    target = CACHE / "chen2023_data"
+    target.mkdir(exist_ok=True)
+    with zipfile.ZipFile(archive) as z:
+        target = target.resolve()
+        for info in z.infolist():
+            member = Path(info.filename)
+            if stat.S_ISLNK(info.external_attr >> 16):
+                raise RuntimeError(f"Unsafe symbolic-link archive member: {info.filename}")
+            if member.is_absolute() or ".." in member.parts:
+                raise RuntimeError(f"Unsafe archive member: {info.filename}")
+            destination = (target / member).resolve()
+            if destination != target and target not in destination.parents:
+                raise RuntimeError(f"Archive member escapes target: {info.filename}")
+            if info.is_dir():
+                destination.mkdir(parents=True, exist_ok=True)
+                continue
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            with z.open(info) as src, open(destination, "wb") as dst:
+                dst.write(src.read())
+    files = list(target.glob("*/model_params/omegas.json"))
     if not files:
-        target = CACHE / "chen2023_data"
-        target.mkdir(exist_ok=True)
-        with zipfile.ZipFile(archive) as z:
-            target = target.resolve()
-            for info in z.infolist():
-                member = Path(info.filename)
-                if member.is_absolute() or ".." in member.parts:
-                    raise RuntimeError(f"Unsafe archive member: {info.filename}")
-                destination = (target / member).resolve()
-                if destination != target and target not in destination.parents:
-                    raise RuntimeError(f"Archive member escapes target: {info.filename}")
-                if info.is_dir():
-                    destination.mkdir(parents=True, exist_ok=True)
-                    continue
-                destination.parent.mkdir(parents=True, exist_ok=True)
-                with z.open(info) as src, open(destination, "wb") as dst:
-                    dst.write(src.read())
-        files = list(target.glob("*/model_params/omegas.json"))
+        raise RuntimeError("Chen archive extraction produced no omegas.json")
     x = json.load(open(files[0]))
     return x, files[0]
 
