@@ -1,0 +1,28 @@
+#!/bin/bash
+# Generate POTCAR files without storing pseudopotentials in Git.
+set -eu
+if [ -z "${VASP_PP_PATH:-}" ]; then
+  echo "Error: set VASP_PP_PATH to a PAW-PBE directory." >&2
+  exit 1
+fi
+PP_DIR="$VASP_PP_PATH/potpaw_PBE"
+cat "$PP_DIR"/Be/POTCAR "$PP_DIR"/Co/POTCAR > "MAGMOM/NM/POTCAR"
+cat "$PP_DIR"/Be/POTCAR "$PP_DIR"/Co/POTCAR > "MAGMOM/FM_low/POTCAR"
+cat "$PP_DIR"/Be/POTCAR "$PP_DIR"/Co/POTCAR > "MAGMOM/FM_ref/POTCAR"
+cat "$PP_DIR"/Be/POTCAR "$PP_DIR"/Co/POTCAR > "MAGMOM/FM_high/POTCAR"
+cat "$PP_DIR"/Be/POTCAR "$PP_DIR"/Co/POTCAR > "MAGMOM/AFM/POTCAR"
+cat "$PP_DIR"/Be/POTCAR "$PP_DIR"/Co/POTCAR > "EV/FM_ref/V0p94/POTCAR"
+cat "$PP_DIR"/Be/POTCAR "$PP_DIR"/Co/POTCAR > "EV/FM_ref/V0p96/POTCAR"
+cat "$PP_DIR"/Be/POTCAR "$PP_DIR"/Co/POTCAR > "EV/FM_ref/V0p98/POTCAR"
+cat "$PP_DIR"/Be/POTCAR "$PP_DIR"/Co/POTCAR > "EV/FM_ref/V1p00/POTCAR"
+cat "$PP_DIR"/Be/POTCAR "$PP_DIR"/Co/POTCAR > "EV/FM_ref/V1p02/POTCAR"
+cat "$PP_DIR"/Be/POTCAR "$PP_DIR"/Co/POTCAR > "EV/FM_ref/V1p04/POTCAR"
+cat "$PP_DIR"/Be/POTCAR "$PP_DIR"/Co/POTCAR > "EV/FM_ref/V1p06/POTCAR"
+cat "$PP_DIR"/Be/POTCAR "$PP_DIR"/Co/POTCAR > "EV/NM/V0p94/POTCAR"
+cat "$PP_DIR"/Be/POTCAR "$PP_DIR"/Co/POTCAR > "EV/NM/V0p96/POTCAR"
+cat "$PP_DIR"/Be/POTCAR "$PP_DIR"/Co/POTCAR > "EV/NM/V0p98/POTCAR"
+cat "$PP_DIR"/Be/POTCAR "$PP_DIR"/Co/POTCAR > "EV/NM/V1p00/POTCAR"
+cat "$PP_DIR"/Be/POTCAR "$PP_DIR"/Co/POTCAR > "EV/NM/V1p02/POTCAR"
+cat "$PP_DIR"/Be/POTCAR "$PP_DIR"/Co/POTCAR > "EV/NM/V1p04/POTCAR"
+cat "$PP_DIR"/Be/POTCAR "$PP_DIR"/Co/POTCAR > "EV/NM/V1p06/POTCAR"
+echo "Generated 19 POTCAR files."

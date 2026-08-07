@@ -51,6 +51,7 @@ import argparse
 from pathlib import Path
 from collections import defaultdict
 from datetime import datetime
+from extract_vasp_results import read_magnetization
 
 # =====================================================================
 # Target 38 elements (Gd, Ce excluded for 4f instability)
@@ -249,6 +250,7 @@ def scan_structure_dir(base_dir, struct_type, expected_counts):
         a, converged, src = read_lattice_constant(calc_dir)
         e_per_atom = read_energy_per_atom(calc_dir)
         vol = read_cell_volume(calc_dir)
+        total_mag, local_mag = read_magnetization(calc_dir)
 
         if a is None:
             no_result_dirs.append(dirname)
@@ -276,6 +278,9 @@ def scan_structure_dir(base_dir, struct_type, expected_counts):
             'source_file': src,
             'dirname': dirname,
             'cell_volume': vol,
+            'total_magnetization': total_mag,
+            'magmom_element_A': local_mag.get(elA, ''),
+            'magmom_element_B': local_mag.get(elB, ''),
         })
 
     return results, errors, found_pairs, no_result_dirs
@@ -469,7 +474,8 @@ def write_csv(results, output_path):
     fieldnames = [
         'material_id', 'formula', 'element_A', 'element_B',
         'count_A', 'count_B', 'lattice_constant', 'energy_per_atom',
-        'energy_above_hull', 'source', 'structure_type', 'lattice_constant_calc'
+        'energy_above_hull', 'source', 'structure_type', 'lattice_constant_calc',
+        'total_magnetization', 'magmom_element_A', 'magmom_element_B',
     ]
     with open(output_path, 'w', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
