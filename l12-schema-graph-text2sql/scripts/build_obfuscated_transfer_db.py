@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any, Iterator
 
 import psycopg
+from psycopg import sql as pgsql
 
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
@@ -62,9 +63,14 @@ def main() -> None:
               AND pid <> pg_backend_pid()
         """, (SRC_DB, OBF_DB))
         print("Dropped existing obfuscated DB (if any)...")
-        cur.execute(f'DROP DATABASE IF EXISTS "{OBF_DB}"')  # type: ignore[arg-type]
+        cur.execute(
+            pgsql.SQL("DROP DATABASE IF EXISTS {}").format(pgsql.Identifier(OBF_DB))
+        )
         print(f"Creating obfuscated DB from template {SRC_DB}...")
-        cur.execute(f'CREATE DATABASE "{OBF_DB}" WITH TEMPLATE "{SRC_DB}"')  # type: ignore[arg-type]
+        cur.execute(
+            pgsql.SQL("CREATE DATABASE {} WITH TEMPLATE {}")
+            .format(pgsql.Identifier(OBF_DB), pgsql.Identifier(SRC_DB))
+        )
     admin.close()
 
     obf_conninfo = (
@@ -113,11 +119,19 @@ def main() -> None:
             col_map[old_c] = new_c
             with conn.cursor() as cur:
                 cur.execute(
-                    f'ALTER TABLE "{old_t}" RENAME COLUMN "{old_c}" TO "{new_c}"'  # type: ignore[arg-type]
+                    pgsql.SQL('ALTER TABLE {} RENAME COLUMN {} TO {}')
+                    .format(
+                        pgsql.Identifier(old_t),
+                        pgsql.Identifier(old_c),
+                        pgsql.Identifier(new_c),
+                    )
                 )
         mapping["columns"][old_t] = {"new_table": new_t, "columns": col_map}
         with conn.cursor() as cur:
-            cur.execute(f'ALTER TABLE "{old_t}" RENAME TO "{new_t}"')  # type: ignore[arg-type]
+            cur.execute(
+                pgsql.SQL('ALTER TABLE {} RENAME TO {}')
+                .format(pgsql.Identifier(old_t), pgsql.Identifier(new_t))
+            )
     print("Committing schema renames...")
     conn.commit()
     conn.close()

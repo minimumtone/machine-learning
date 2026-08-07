@@ -57,7 +57,7 @@ def adapt_sql(sql: str, proto: str, element: str) -> str:
     # after the replacement above both sides already point to the same proto.
     # For prototypes whose strukturbericht differs (NaCl->B1, BiF3->D0_3),
     # we additionally replace the second literal by the actual strukturbericht.
-    proto_strukturbericht = {"L12": "L12", "B2": "B2", "NaCl": "B1", "NiAs": "B8_1", "BiF3": "D0_3"}
+    proto_strukturbericht = {"L12": "L12", "B2": "B2", "NaCl": "B1", "NiAs": "B81", "BiF3": "D03"}
     # Find pattern: s.prototype = 'X' OR s.strukturbericht = 'X'
     # Replace only the strukturbericht literal if it differs.
     sb = proto_strukturbericht[proto]

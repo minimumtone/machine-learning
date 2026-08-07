@@ -31,6 +31,7 @@ from pathlib import Path
 from typing import Any
 
 import psycopg
+from psycopg import sql as pgsql
 import yaml
 
 PROJECT = Path(__file__).resolve().parent.parent
@@ -125,7 +126,9 @@ def main():
         "material_entry", "composition", "calculated_property",
         "pure_element_reference", "element",
     ]:
-        cur.execute(f"SELECT count(*) FROM {tbl}")  # type: ignore[arg-type]
+        cur.execute(
+            pgsql.SQL("SELECT count(*) FROM {}").format(pgsql.Identifier(tbl))
+        )
         table_counts[tbl] = _fetchone_scalar(cur)
 
     cur.execute(

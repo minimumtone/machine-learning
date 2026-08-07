@@ -90,8 +90,8 @@ Multi-axis evaluation achieved execution accuracy of 84.7\%,
 syntax validity of 100\%, and JOIN match rate of 93.2\%.
 All results are reported as mean $\pm$ standard deviation
 over 5 independent runs with Wilcoxon signed-rank test significance.
-Furthermore, zero-adaptation transfer evaluations across four schema variants---prototype expansion (A) 95.0\%, OQMD-flavored rename (B) 80.5\%, randomized obfuscated names (C) 90.0\%, and a real Materials Project-flavored schema (D) 97.3\%---demonstrated that the pipeline generalizes schema-independently.
-External validation with 100 independently designed queries (72.5\%)
+Furthermore, zero-adaptation transfer evaluations across four schema variants---prototype expansion (A) 90.0\%, OQMD-flavored rename (B) 90.5\%, randomized obfuscated names (C) 90.0\%, and a real Materials Project-flavored schema (D) 100.0\%---demonstrated that the pipeline generalizes schema-independently.
+External validation with 100 independently designed queries (76.9\%)
 and evaluation of 15 CTE multi-step calculation patterns
 quantify the external validity and applicability limits
 of the design principles.}
@@ -221,7 +221,7 @@ Our contributions are threefold:
     have statistically significant contributions,
     validating the necessity of domain-specific modules.
   \item \textbf{Demonstration of schema generalization}:
-    Zero-adaptation transfer tests across four schema variants---A~prototype expansion (95.0\%), B~OQMD-flavored rename (80.5\%), C~randomized obfuscation (90.0\%), and D~Materials Project-flavored schema (97.3\%)---demonstrate that the design principles based on FK introspection do not depend on a specific schema (Section~\ref{sec:transfer_eval}).
+    Zero-adaptation transfer tests across four schema variants---A~prototype expansion (90.0\%), B~OQMD-flavored rename (90.5\%), C~randomized obfuscation (90.0\%), and D~Materials Project-flavored schema (100.0\%)---demonstrate that the design principles based on FK introspection do not depend on a specific schema (Section~\ref{sec:transfer_eval}).
 \end{enumerate}
 
 % =====================================================================
@@ -1848,8 +1848,8 @@ To further extend the external-validity check to 100 queries,
 we re-evaluated 100 independently designed expert queries
 (Easy 18 / Medium 34 / Hard 34 / Very Hard 14)
 with the current pipeline and current DB (1{,}559 entries).
-Overall accuracy was 72.5\%
-(Easy 83.3\% / Medium 81.8\% / Hard 57.2\% / Very Hard 73.3\%),
+Overall accuracy was 76.9\%
+(Easy 94.4\% / Medium 81.7\% / Hard 61.5\% / Very Hard 80.4\%),
 keeping the gap to author-designed queries (84.7\%) at roughly 12\,pp.
 The dominant failure causes match (1)--(3) above---references to
 peripheral tables without few-shot coverage and non-canonical
@@ -2036,7 +2036,7 @@ aggregation, three-stage CTEs, etc.) and evaluated a total of
 15 queries.
 The 5 original patterns covered by few-shot examples maintained
 100\%, whereas the 10 novel zero-shot patterns reached only
-32.3\%, giving 54.9\% overall.
+42.3\%, giving 61.6\% overall.
 This result is consistent with the significant few-shot
 contribution observed in the ablation ($-$7.4\,pp, $p<0.001$),
 showing that the scope of multi-step calculation support is
@@ -2065,10 +2065,10 @@ abstract SQL patterns.
 \begin{tabular}{@{}llcc@{}}
 \toprule
 Variant & Schema & Queries & Overall \\ \midrule
-A & Prototype expansion (B2/NaCl/NiAs/BiF$_3$) & 20 & 95.0\% \\
-B & OQMD-flavored rename & 20 & 80.5\% \\
+A & Prototype expansion (B2/NaCl/NiAs/BiF$_3$) & 20 & 90.0\% \\
+B & OQMD-flavored rename & 20 & 90.5\% \\
 C & Randomized obfuscated names & 20 & 90.0\% \\
-D & Materials Project-flavored (real MP data) & 15 & 97.3\% \\
+D & Materials Project-flavored (real MP data) & 15 & 100.0\% \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -2076,8 +2076,8 @@ D & Materials Project-flavored (real MP data) & 15 & 97.3\% \\
 \textbf{Variant A---Prototype expansion.}
 The same 31-table schema was populated with B2/NaCl/NiAs/BiF$_3$
 prototype entries in addition to the L1$_2$ entries, and 20
-difficulty-stratified queries were evaluated. The result was 95.0\%
-(Easy 100\% / Medium 100\% / Hard 100\% / Very Hard 80\%),
+difficulty-stratified queries were evaluated. The result was 90.0\%
+(Easy 100\% / Medium 100\% / Hard 100\% / Very Hard 60\%),
 confirming that the prototype separation and FK graph are robust
 across crystal prototypes.
 
@@ -2090,8 +2090,8 @@ table and column names were changed
 Few-shot examples were presented unchanged from the original schema,
 and the prompt instructed that ``few-shot examples may come from a
 different schema; reuse only their SQL patterns.''
-The result was 80.5\% overall
-(Easy 83.3\% / Medium 83.3\% / Hard 62.0\% / Very Hard 100\%).
+The result was 90.5\% overall
+(Easy 100.0\% / Medium 100.0\% / Hard 62.0\% / Very Hard 100.0\%).
 
 \textbf{Variant C---Obfuscated names.}
 All schema identifiers in the transfer DB were replaced with random
@@ -2105,12 +2105,9 @@ We built a fresh 3-table PostgreSQL schema
 from real Materials Project REST data for 27 binary systems (299
 entries), prepared 15 Japanese queries, and supplied only 8
 few-shot examples written for the MP schema. No pipeline code was
-changed. The result was 97.3\% overall
-(Easy 100\% / Medium 100\% / Hard 86.4\% / Very Hard 100\%).
-The only error was a \texttt{DISTINCT ON(chemsys)} query in which
-a tie returned 26 instead of 27 rows because of a different
-\texttt{ORDER BY} tie-break; this does not affect the conclusion
-that the schema itself is transferable.
+changed. The result was 100.0\% overall
+(Easy 100.0\% / Medium 100.0\% / Hard 100.0\% / Very Hard 100.0\%).
+All 15 queries were answered correctly, confirming that the schema itself is transferable.
 
 Together, these results show that the core design (FK
 introspection, schema-presented prompting, pattern-transfer
@@ -2328,8 +2325,6 @@ All 134 unit tests pass.
 implementation, database construction, experiments, and writing.
 
 % =====================================================================
-\bibliographystyle{sn-mathphys}
-
 \begin{thebibliography}{30}
 
 \bibitem{saal2013oqmd}

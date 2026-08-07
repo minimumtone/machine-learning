@@ -25,7 +25,7 @@ from graph.schema_parser import get_columns, get_foreign_keys, get_tables  # noq
 from llm.sql_generator import pipeline as sql_pipeline  # noqa: E402
 from scripts.eval_independent import load_dataset, summarize  # noqa: E402
 
-os.environ.setdefault("TRANSFER_DB", os.getenv("TRANSFER_DB", "oqmd_transfer") + "_obfuscated")
+os.environ["TRANSFER_DB"] = os.getenv("TRANSFER_DB", "oqmd_transfer").removesuffix("_obfuscated") + "_obfuscated"
 
 # Use the obfuscated transfer DB connection.
 from scripts.build_transfer_db import transfer_conninfo  # noqa: E402

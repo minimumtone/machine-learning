@@ -7,7 +7,7 @@ JOIN composition ca ON ca.entry_id = m.entry_id AND ca.site_label = 'A-site'
 JOIN composition cb ON cb.entry_id = m.entry_id AND cb.site_label = 'B-site'
 JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
-WHERE s.prototype = 'NiAs' OR s.strukturbericht = 'B8_1'
+WHERE s.prototype = 'NiAs' OR s.strukturbericht = 'B81'
 GROUP BY ca.element, cb.element
 ORDER BY avg_eform ASC
 LIMIT 10000;

@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 import psycopg
+from psycopg import sql as pgsql
 import requests
 
 PROJECT = Path(__file__).resolve().parent.parent
@@ -166,7 +167,7 @@ def _create_db() -> None:
     with admin.cursor() as cur:
         cur.execute("SELECT 1 FROM pg_database WHERE datname = %s", (DB_NAME,))
         if not cur.fetchone():
-            cur.execute(f'CREATE DATABASE "{DB_NAME}"')
+            cur.execute(pgsql.SQL("CREATE DATABASE {}").format(pgsql.Identifier(DB_NAME)))
     admin.close()
 
 
