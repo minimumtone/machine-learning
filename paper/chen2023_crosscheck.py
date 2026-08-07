@@ -39,6 +39,12 @@ VEC = {"Ag": 11, "Al": 3, "Au": 11, "Be": 2, "Ca": 2, "Co": 9,
        "Si": 4, "Sn": 4, "Ta": 5, "Ti": 4, "V": 5, "W": 6,
        "Zn": 12, "Zr": 4}
 plt.rcParams.update({"font.family": "Noto Sans CJK JP", "font.size": 15})
+LABELS = {
+    "dh_chen": r"$\Delta H_{\mathrm{mix}}$ (eV/atom)",
+    "dh_local": r"$\Delta H_{\mathrm{mix}}$ (eV/atom)",
+    "omega_sf": r"$\Omega_{\mathrm{sf}}$",
+    "radius_diff_A": r"$|\Delta r|$ (\AA)",
+}
 
 
 def chen_omega():
@@ -153,7 +159,7 @@ def regression(d):
 
 def scatter(d, name, x, y, color=None):
     z = d.dropna(subset=[x, y] + ([] if color is None else [color]))
-    fig, ax = plt.subplots(figsize=(8.5, 6.5))
+    fig, ax = plt.subplots(figsize=(9, 7))
     if color:
         h = ax.scatter(z[x], z[y], c=z[color], cmap="coolwarm", s=32, alpha=.85)
         fig.colorbar(h, ax=ax, label="Chen ΔH_mix (eV/atom)")
@@ -162,9 +168,40 @@ def scatter(d, name, x, y, color=None):
     lr = linregress(z[x], z[y])
     xx = np.linspace(z[x].min(), z[x].max(), 100)
     ax.plot(xx, lr.intercept + lr.slope * xx, "k-", lw=1.7)
-    ax.set_xlabel(x, fontsize=16); ax.set_ylabel(y, fontsize=16)
+    ax.set_xlabel(LABELS[x], fontsize=16); ax.set_ylabel(LABELS[y], fontsize=16)
+    ax.text(0.04, 0.96, f"$n={len(z)}$, $r={pearsonr(z[x], z[y]).statistic:.3f}$\n"
+            f"$y={lr.slope:.3f}x{lr.intercept:+.3f}$",
+            transform=ax.transAxes, va="top", ha="left",
+            bbox={"facecolor": "white", "alpha": .82, "edgecolor": "0.5"})
     ax.grid(alpha=.2); fig.tight_layout()
     fig.savefig(PAPER / name, dpi=150); plt.close(fig)
+
+
+def parity(bcc, fcc):
+    fig, axes = plt.subplots(1, 2, figsize=(13.5, 7), sharex=True, sharey=True)
+    for ax, d, lattice in zip(axes, [bcc, fcc], ["BCC", "FCC"]):
+        z = d.dropna(subset=["dh_chen", "dh_local"]).copy()
+        ax.scatter(z.dh_chen, z.dh_local, s=28, alpha=.7, color="#4472c4")
+        special = {"Fe-Hf", "Au-Cr", "Ag-Cr"}
+        for _, row in z[z.pair.isin(special)].iterrows():
+            ax.scatter(row.dh_chen, row.dh_local, s=50, color="#c00000", zorder=3)
+            ax.annotate(row.pair, (row.dh_chen, row.dh_local),
+                        xytext=(4, 4), textcoords="offset points", fontsize=11)
+        lo = min(z.dh_chen.min(), z.dh_local.min())
+        hi = max(z.dh_chen.max(), z.dh_local.max())
+        ax.plot([lo, hi], [lo, hi], "k--", lw=1.4)
+        lr = linregress(z.dh_chen, z.dh_local)
+        ax.text(0.04, 0.96, f"$n={len(z)}$, $r={pearsonr(z.dh_chen, z.dh_local).statistic:.3f}$\n"
+                f"MAE={np.mean(np.abs(z.dh_local-z.dh_chen)):.3f} eV/atom",
+                transform=ax.transAxes, va="top", ha="left",
+                bbox={"facecolor": "white", "alpha": .82, "edgecolor": "0.5"})
+        ax.set_title(lattice, fontsize=17)
+        ax.set_xlabel(LABELS["dh_chen"], fontsize=16)
+        ax.grid(alpha=.2)
+    axes[0].set_ylabel(r"当方 $\Delta H_{\mathrm{mix}}$ (eV/atom)", fontsize=16)
+    fig.tight_layout()
+    fig.savefig(PAPER / "fig_chen2023_dh_parity.png", dpi=150)
+    plt.close(fig)
 
 
 def main():
@@ -195,6 +232,7 @@ def main():
     scatter(b, "fig_chen2023_dh_vs_omega_bcc.png", "dh_chen", "omega_sf")
     scatter(f, "fig_chen2023_dh_vs_omega_fcc.png", "dh_chen", "omega_sf")
     scatter(b, "fig_chen2023_radius_vs_omega_bcc.png", "radius_diff_A", "omega_sf", "dh_chen")
+    parity(b, f)
 
 
 if __name__ == "__main__":
