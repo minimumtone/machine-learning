@@ -6,8 +6,10 @@ The 197 MB archive is downloaded from Zenodo only when the cache is absent.
 """
 from pathlib import Path
 import json
+import hashlib
 import os
 import re
+import stat
 import sys
 import urllib.request
 import zipfile
@@ -23,6 +25,7 @@ DATA = ROOT / "data" / "sqs_results.csv"
 CACHE = Path(os.environ.get("CHEN2023_CACHE_DIR", "/home/ubuntu/chen2023_compare"))
 URL = "https://zenodo.org/api/records/7633180/files/wch3n/mpea_stability-v0.1.zip/content"
 DOI = "10.5281/zenodo.7633180"
+KNOWN_ARCHIVE_SHA256 = "c2bc82b6f983fb3b9bc4e8e703829ba9a59fc70498b549ff9ca9a2ce89f665ae"
 EXCLUDE = {"Gd", "Ce", "La", "Pr", "Nd", "Sm", "Eu", "Tb", "Dy", "Ho",
            "Er", "Tm", "Yb", "Lu", "Y"}
 EN = {"Ag": 1.93, "Al": 1.61, "Au": 2.54, "Be": 1.57, "Ca": 1.00,
@@ -43,22 +46,52 @@ LABELS = {
     "dh_chen": r"$\Delta H_{\mathrm{mix}}$ (eV/atom)",
     "dh_local": r"$\Delta H_{\mathrm{mix}}$ (eV/atom)",
     "omega_sf": r"$\Omega_{\mathrm{sf}}$",
+    "omega_sf_dft": r"$\Omega_{\mathrm{sf}}$ (DFT端点基準)",
+    "omega_sf_king": r"$\Omega_{\mathrm{sf}}$ (King基準)",
     "radius_diff_A": r"$|\Delta r|$ (\AA)",
 }
 
 
 def chen_omega():
     files = list((CACHE / "chen2023_data").glob("*/model_params/omegas.json"))
+    if files:
+        x = json.load(open(files[0]))
+        return x, files[0]
+
+    CACHE.mkdir(parents=True, exist_ok=True)
+    archive = CACHE / "mpea_stability-v0.1.zip"
+    if not archive.exists():
+        urllib.request.urlretrieve(URL, archive)
+    digest_context = hashlib.sha256()
+    with open(archive, "rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest_context.update(chunk)
+    digest = digest_context.hexdigest()
+    if digest != KNOWN_ARCHIVE_SHA256:
+        archive.unlink()
+        raise RuntimeError(f"Zenodo archive SHA-256 mismatch: {digest}")
+    target = CACHE / "chen2023_data"
+    target.mkdir(exist_ok=True)
+    with zipfile.ZipFile(archive) as z:
+        target = target.resolve()
+        for info in z.infolist():
+            member = Path(info.filename)
+            if stat.S_ISLNK(info.external_attr >> 16):
+                raise RuntimeError(f"Unsafe symbolic-link archive member: {info.filename}")
+            if member.is_absolute() or ".." in member.parts:
+                raise RuntimeError(f"Unsafe archive member: {info.filename}")
+            destination = (target / member).resolve()
+            if destination != target and target not in destination.parents:
+                raise RuntimeError(f"Archive member escapes target: {info.filename}")
+            if info.is_dir():
+                destination.mkdir(parents=True, exist_ok=True)
+                continue
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            with z.open(info) as src, open(destination, "wb") as dst:
+                dst.write(src.read())
+    files = list(target.glob("*/model_params/omegas.json"))
     if not files:
-        CACHE.mkdir(parents=True, exist_ok=True)
-        archive = CACHE / "mpea_stability-v0.1.zip"
-        if not archive.exists():
-            urllib.request.urlretrieve(URL, archive)
-        target = CACHE / "chen2023_data"
-        target.mkdir(exist_ok=True)
-        with zipfile.ZipFile(archive) as z:
-            z.extractall(target)
-        files = list(target.glob("*/model_params/omegas.json"))
+        raise RuntimeError("Chen archive extraction produced no omegas.json")
     x = json.load(open(files[0]))
     return x, files[0]
 
@@ -82,42 +115,35 @@ def local(root, natoms, statuses):
           d.relax_converged.astype(str).str.lower().eq("yes")].copy()
     parsed = d.dir.map(pair)
     pure = parsed.map(lambda x: x is not None and x[2])
-    vol, energy = {}, {}
+    energy = {}
     for _, r in d[pure].iterrows():
         x = pair(r.dir)[0]
-        try:
-            vol[x] = float(r.volume_A3) / natoms
-        except (TypeError, ValueError):
-            continue
         try:
             energy[x] = float(r.energy_eV) / natoms
         except (TypeError, ValueError):
             pass
     d["pair"] = parsed.map(lambda x: None if x is None or x[2] else f"{x[0]}-{x[1]}")
     d = d[d.pair.notna()].copy()
-    d["omega_sf"] = np.nan
     d["dh_local"] = np.nan
     for i, r in d.iterrows():
         a, b = r.pair.split("-")
-        if a in vol and b in vol:
-            v = (vol[a] + vol[b]) / 2
-            d.loc[i, "omega_sf"] = (float(r.volume_A3) / natoms - v) / v
-            if a in energy and b in energy:
-                d.loc[i, "dh_local"] = float(r.energy_eV) / natoms - (energy[a] + energy[b]) / 2
-    return d, vol
+        if a in energy and b in energy:
+            d.loc[i, "dh_local"] = float(r.energy_eV) / natoms - (energy[a] + energy[b]) / 2
+    return d
 
 
-def table(chen, lattice, local_df, formal_pairs, fcc_omega=None):
+def table(chen, lattice, local_df, formal_pairs, omega_dft, omega_king, pure_vol):
     c = pd.DataFrame([{"pair": k, "dh_chen": v / 4}
                       for k, v in chen["omegas"][lattice].items()])
     d = local_df.merge(c, on="pair", how="outer")
     d = d[d.pair.isin(formal_pairs)].copy()
-    if fcc_omega is not None:
-        d["omega_sf"] = d.pair.map(fcc_omega)
+    d["omega_sf_dft"] = d.pair.map(omega_dft)
+    d["omega_sf_king"] = d.pair.map(omega_king)
+    d["omega_sf"] = d["omega_sf_dft"]
     d["radius_diff_A"] = d.pair.map(lambda p: abs(
-        (3 * local_df.attrs["vol"][p.split("-")[0]] / (4 * np.pi)) ** (1 / 3) -
-        (3 * local_df.attrs["vol"][p.split("-")[1]] / (4 * np.pi)) ** (1 / 3))
-        if all(x in local_df.attrs["vol"] for x in p.split("-")) else np.nan)
+        (3 * pure_vol[p.split("-")[0]] / (4 * np.pi)) ** (1 / 3) -
+        (3 * pure_vol[p.split("-")[1]] / (4 * np.pi)) ** (1 / 3))
+        if all(x in pure_vol for x in p.split("-")) else np.nan)
     d["en_diff"] = d.pair.map(lambda p: abs(EN[p.split("-")[0]] - EN[p.split("-")[1]])
                                if all(x in EN for x in p.split("-")) else np.nan)
     d["vec_diff"] = d.pair.map(lambda p: abs(VEC[p.split("-")[0]] - VEC[p.split("-")[1]])
@@ -135,26 +161,26 @@ def metric(d, x, y):
             "rmse": np.sqrt(np.mean((z[y] - z[x]) ** 2))}
 
 
-def regression(d):
-    z = d.dropna(subset=["omega_sf", "dh_chen", "radius_diff_A"])
+def regression(d, omega_col="omega_sf"):
+    z = d.dropna(subset=[omega_col, "dh_chen", "radius_diff_A", "en_diff", "vec_diff"])
     X = np.column_stack([np.ones(len(z)), z[["dh_chen", "radius_diff_A"]]])
-    coef = np.linalg.lstsq(X, z.omega_sf, rcond=None)[0]
+    omega = z[omega_col]
+    coef = np.linalg.lstsq(X, omega, rcond=None)[0]
     pred = X @ coef
-    r2 = 1 - np.sum((z.omega_sf - pred) ** 2) / np.sum((z.omega_sf - z.omega_sf.mean()) ** 2)
+    r2 = 1 - np.sum((omega - pred) ** 2) / np.sum((omega - omega.mean()) ** 2)
     def pc(x, control):
         A = np.column_stack([np.ones(len(z)), z[[control]]])
         rx = z[x] - A @ np.linalg.lstsq(A, z[x], rcond=None)[0]
-        ry = z.omega_sf - A @ np.linalg.lstsq(A, z.omega_sf, rcond=None)[0]
+        ry = omega - A @ np.linalg.lstsq(A, omega, rcond=None)[0]
         return pearsonr(rx, ry).statistic
     return {"n": len(z), "a_dh": coef[1], "b_radius": coef[2], "intercept": coef[0],
             "r2": r2, "partial_dh": pc("dh_chen", "radius_diff_A"),
             "partial_radius": pc("radius_diff_A", "dh_chen"),
-            "r_radius": pearsonr(z.omega_sf, z.radius_diff_A).statistic,
-            "r_dh": pearsonr(z.omega_sf, z.dh_chen).statistic,
-            "r_en": pearsonr(d.dropna(subset=["omega_sf", "en_diff"]).omega_sf,
-                            d.dropna(subset=["omega_sf", "en_diff"]).en_diff).statistic,
-            "r_vec": pearsonr(d.dropna(subset=["omega_sf", "vec_diff"]).omega_sf,
-                              d.dropna(subset=["omega_sf", "vec_diff"]).vec_diff).statistic}
+            "r_radius": pearsonr(omega, z.radius_diff_A).statistic,
+            "n_radius": len(z), "r_dh": pearsonr(omega, z.dh_chen).statistic,
+            "n_dh": len(z), "r_en": pearsonr(omega, z.en_diff).statistic,
+            "n_en": len(z), "r_vec": pearsonr(omega, z.vec_diff).statistic,
+            "n_vec": len(z)}
 
 
 def scatter(d, name, x, y, color=None):
@@ -162,7 +188,7 @@ def scatter(d, name, x, y, color=None):
     fig, ax = plt.subplots(figsize=(9, 7))
     if color:
         h = ax.scatter(z[x], z[y], c=z[color], cmap="coolwarm", s=32, alpha=.85)
-        fig.colorbar(h, ax=ax, label="Chen ΔH_mix (eV/atom)")
+        fig.colorbar(h, ax=ax, label=LABELS[color])
     else:
         ax.scatter(z[x], z[y], s=32, alpha=.8)
     lr = linregress(z[x], z[y])
@@ -196,9 +222,9 @@ def parity(bcc, fcc):
                 transform=ax.transAxes, va="top", ha="left",
                 bbox={"facecolor": "white", "alpha": .82, "edgecolor": "0.5"})
         ax.set_title(lattice, fontsize=17)
-        ax.set_xlabel(LABELS["dh_chen"], fontsize=16)
+        ax.set_xlabel(r"Chen $\Delta H_{\mathrm{mix}}$ (eV/atom)", fontsize=16)
         ax.grid(alpha=.2)
-    axes[0].set_ylabel(r"当方 $\Delta H_{\mathrm{mix}}$ (eV/atom)", fontsize=16)
+    axes[0].set_ylabel(r"当方（本研究） $\Delta H_{\mathrm{mix}}$ (eV/atom)", fontsize=16)
     fig.tight_layout()
     fig.savefig(PAPER / "fig_chen2023_dh_parity.png", dpi=150)
     plt.close(fig)
@@ -209,30 +235,50 @@ def main():
     sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(PAPER))
     import generate_all_figures as gf
     src = gf.load_sqs_data()
-    bcc_pairs = {"-".join(p) for p in src["omega_dft"]}
-    fcc_omega = {"-".join(p): v for p, v in src["fcc_omega_king"].items()}
-    bcc, bvol = local("BCC_SQS", 16, {"OK"}); bcc.attrs["vol"] = bvol
-    fcc, fvol = local("FCC_SQS", 32, {"OK", "SKIP"}); fcc.attrs["vol"] = fvol
-    b = table(chen, "BCC", bcc, bcc_pairs)
-    f = table(chen, "FCC", fcc, set(fcc_omega), fcc_omega)
+    bcc_dft = {"-".join(p): v for p, v in src["omega_dft"].items()}
+    bcc_king = {"-".join(p): v for p, v in src["omega_king"].items()}
+    fcc_dft = {"-".join(p): v for p, v in src["fcc_omega_dft"].items()}
+    fcc_king = {"-".join(p): v for p, v in src["fcc_omega_king"].items()}
+    bcc = local("BCC_SQS", 16, {"OK"})
+    fcc = local("FCC_SQS", 32, {"OK", "SKIP"})
+    b = table(chen, "BCC", bcc, set(bcc_dft) | set(bcc_king),
+              bcc_dft, bcc_king, src["pure_vol"])
+    f = table(chen, "FCC", fcc, set(fcc_dft) | set(fcc_king),
+              fcc_dft, fcc_king, src["fcc_pure_vol"])
     b.to_csv(PAPER / "results_chen2023_bcc.csv", index=False)
     f.to_csv(PAPER / "results_chen2023_fcc.csv", index=False)
     rows = []
-    for lat, d in [("BCC", b), ("FCC", f)]:
-        for label, x, y in [("Chen_dH_vs_omega_sf", "dh_chen", "omega_sf"),
-                            ("local_dH_vs_Chen_dH", "dh_chen", "dh_local")]:
-            rows.append({"lattice": lat, "subset": "formal", "comparison": label,
-                         **metric(d, x, y)})
-        rows.append({"lattice": lat, "subset": "formal", "comparison": "size_regression",
-                     **regression(d)})
+    for lat, d, omega_dft, omega_king in [
+            ("BCC", b, bcc_dft, bcc_king), ("FCC", f, fcc_dft, fcc_king)]:
+        for basis, omega_col, pairs in [
+                ("formal_dft", "omega_sf_dft", set(omega_dft)),
+                ("formal_king", "omega_sf_king", set(omega_king))]:
+            z = d[d.pair.isin(pairs)].copy()
+            rows.append({"lattice": lat, "subset": basis,
+                         "comparison": "Chen_dH_vs_omega_sf",
+                         "omega_reference": "DFT endpoints" if basis.endswith("dft") else "King",
+                         **metric(z, "dh_chen", omega_col)})
+            rows.append({"lattice": lat, "subset": basis,
+                         "comparison": "size_regression",
+                         "omega_reference": "DFT endpoints" if basis.endswith("dft") else "King",
+                         **regression(z, omega_col)})
+            rows.append({"lattice": lat, "subset": basis,
+                         "comparison": "local_dH_vs_Chen_dH",
+                         "omega_reference": "DFT endpoints" if basis.endswith("dft") else "King",
+                         **metric(z, "dh_chen", "dh_local")})
     pd.DataFrame(rows).to_csv(PAPER / "results_chen2023_crosscheck.csv", index=False)
-    json.dump({"doi": DOI, "source_url": URL, "bcc_formal_pairs": len(bcc_pairs),
-               "fcc_formal_pairs": len(fcc_omega), "metrics": rows},
+    json.dump({"doi": DOI, "source_url": URL, "archive_sha256": KNOWN_ARCHIVE_SHA256,
+               "bcc_dft_pairs": len(bcc_dft), "bcc_king_pairs": len(bcc_king),
+               "fcc_dft_pairs": len(fcc_dft), "fcc_king_pairs": len(fcc_king),
+               "metrics": rows},
               open(PAPER / "chen2023_crosscheck_metrics.json", "w"), indent=2)
-    scatter(b, "fig_chen2023_dh_vs_omega_bcc.png", "dh_chen", "omega_sf")
-    scatter(f, "fig_chen2023_dh_vs_omega_fcc.png", "dh_chen", "omega_sf")
-    scatter(b, "fig_chen2023_radius_vs_omega_bcc.png", "radius_diff_A", "omega_sf", "dh_chen")
-    parity(b, f)
+    scatter(b[b.pair.isin(bcc_dft)], "fig_chen2023_dh_vs_omega_bcc.png",
+            "dh_chen", "omega_sf_dft")
+    scatter(f[f.pair.isin(fcc_dft)], "fig_chen2023_dh_vs_omega_fcc.png",
+            "dh_chen", "omega_sf_dft")
+    scatter(b[b.pair.isin(bcc_dft)], "fig_chen2023_radius_vs_omega_bcc.png",
+            "radius_diff_A", "omega_sf_dft", "dh_chen")
+    parity(b[b.pair.isin(bcc_king)], f[f.pair.isin(fcc_king)])
 
 
 if __name__ == "__main__":
