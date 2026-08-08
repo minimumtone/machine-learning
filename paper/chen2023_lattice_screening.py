@@ -3,12 +3,15 @@
 
 Chen et al., Nat. Commun. 14, 2856 (2023), DOI: 10.5281/zenodo.7633180 predict
 phase stability but publish no lattice constants.  This script attaches the
-present work's q=1 Omega_sf prediction to their stable equiatomic quinaries,
+present work's Omega_sf prediction to their stable equiatomic quinaries,
 producing a combined stability + lattice-constant screening table.
 
-The Omega_sf database and the prediction formula are imported from the paper's
-single-source modules; nothing is re-derived here.  Only BCC and FCC are in
-scope because the present work has no HCP SQS database.
+Each structure uses the reference/q combination the paper actually validated:
+BCC takes the SQS Omega_sf on the DFT Vegard reference with q=1, while FCC
+takes the L1_2 Omega_sf on the King reference with q_FCC calibrated by
+optimize_gamma() on ALONSO_TABLE2.  The databases, the calibration and the
+prediction formula are imported from the paper's single-source modules;
+nothing is re-derived here.  HCP is out of scope (no HCP database).
 """
 from pathlib import Path
 import itertools
@@ -27,8 +30,15 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(PAPER))
 
 from chen2023_crosscheck import DOI, chen_data_root  # noqa: E402
-from generate_all_figures import EXCLUDE_ELEMENTS, load_sqs_data  # noqa: E402
+from generate_all_figures import (  # noqa: E402
+    EXCLUDE_ELEMENTS,
+    compute_omega_sf_pairwise,
+    load_compounds,
+    load_sqs_data,
+    optimize_gamma,
+)
 from hea_lattice_xgboost import (  # noqa: E402
+    ALONSO_TABLE2,
     KING_ATOMIC_VOLUMES,
     compute_eq10_scaled,
     compute_vegard,
@@ -36,7 +46,6 @@ from hea_lattice_xgboost import (  # noqa: E402
 
 # Chen's 30,201 single-phase count corresponds to the 0.9*Tm annealing dataset.
 DATASET = "quinaries_0.9Tm.csv.gz"
-Q_ADOPTED = 1.0
 STRUCTS = ("BCC", "FCC")
 plt.rcParams.update({"font.family": "Noto Sans CJK JP", "font.size": 22})
 
@@ -49,8 +58,27 @@ def load_stable():
     return d, stable
 
 
-def screen(stable, omega_by_struct):
-    """Attach Vegard and q=1 lattice constants where the pair database allows."""
+def adopted_models():
+    """Return {structure: (Omega_sf database, q, label)} as validated in the paper.
+
+    BCC uses the SQS database on the DFT Vegard reference at q=1 (the adopted
+    model).  FCC has no calibrated q for the SQS database, so it uses the
+    paper's FCC model: L1_2 Omega_sf on the King reference with q_FCC from
+    optimize_gamma() on the Alonso training HEAs.
+    """
+    sqs = load_sqs_data()
+    if sqs is None:
+        raise RuntimeError("load_sqs_data() returned no SQS database")
+    ob2, ol12 = compute_omega_sf_pairwise(load_compounds())
+    _, q_fcc = optimize_gamma(ALONSO_TABLE2, ob2, ol12)
+    return {
+        "BCC": (sqs["omega_dft"], 1.0, "SQS, DFT Vegard reference"),
+        "FCC": (ol12, float(q_fcc), "L1_2, King reference"),
+    }
+
+
+def screen(stable, models):
+    """Attach Vegard and Omega_sf-corrected constants where the pairs allow."""
     rows, skipped = [], {"phase_out_of_scope": 0, "excluded_element": 0,
                          "no_king_volume": 0, "missing_pairs": 0}
     for _, r in stable.iterrows():
@@ -64,7 +92,7 @@ def screen(stable, omega_by_struct):
         if any(e not in KING_ATOMIC_VOLUMES for e in els):
             skipped["no_king_volume"] += 1
             continue
-        omega = omega_by_struct[r.phase]
+        omega, q_used, omega_source = models[r.phase]
         pairs = [tuple(sorted(p)) for p in itertools.combinations(els, 2)]
         n_covered = sum(1 for p in pairs if p in omega)
         if n_covered < len(pairs):
@@ -72,7 +100,7 @@ def screen(stable, omega_by_struct):
             continue
         comp = {e: 1.0 / len(els) for e in els}
         a_veg = compute_vegard(comp, r.phase)
-        a_pred = compute_eq10_scaled(comp, r.phase, omega, Q_ADOPTED)
+        a_pred = compute_eq10_scaled(comp, r.phase, omega, q_used)
         rows.append({
             "system": r.system,
             "phase": r.phase,
@@ -81,7 +109,9 @@ def screen(stable, omega_by_struct):
             "delta_r_percent": r.delta_r,
             "vec": r.vec,
             "a_vegard_A": a_veg,
-            "a_pred_q1_A": a_pred,
+            "a_pred_A": a_pred,
+            "q_used": q_used,
+            "omega_source": omega_source,
             "shift_A": a_pred - a_veg,
             "shift_percent": 100.0 * (a_pred - a_veg) / a_veg,
         })
@@ -109,8 +139,9 @@ def fig_distribution(d):
         if s.empty:
             a.set_axis_off()
             continue
-        a.hist(s.a_pred_q1_A, bins=40, color=color, alpha=0.85,
-               label=f"$q=1$ 補正後 ($n$={len(s)})")
+        q = float(s.q_used.iloc[0])
+        a.hist(s.a_pred_A, bins=40, color=color, alpha=0.85,
+               label=f"$q={q:.4g}$ 補正後 ($n$={len(s)})")
         a.hist(s.a_vegard_A, bins=40, histtype="step", linewidth=2.5,
                color="black", label="Vegard")
         a.set_xlabel("格子定数 $a$ (Å)")
@@ -130,17 +161,22 @@ def fig_shift(d):
         s = d[d.phase == struct]
         if s.empty:
             continue
-        ax[0].scatter(s.a_vegard_A, s.a_pred_q1_A, s=8, alpha=0.35,
-                      color=color, label=f"{struct} ($n$={len(s)})")
+        q = float(s.q_used.iloc[0])
+        ax[0].scatter(s.a_vegard_A, s.a_pred_A, s=8, alpha=0.35,
+                      color=color, label=f"{struct} ($q={q:.4g}$, $n$={len(s)})")
         ax[1].hist(s.shift_percent, bins=40, alpha=0.6, color=color,
-                   label=f"{struct}")
-    lo = min(d.a_vegard_A.min(), d.a_pred_q1_A.min()) - 0.05
-    hi = max(d.a_vegard_A.max(), d.a_pred_q1_A.max()) + 0.05
+                   label=f"{struct} ($q={q:.4g}$)")
+    lo = min(d.a_vegard_A.min(), d.a_pred_A.min()) - 0.05
+    hi = max(d.a_vegard_A.max(), d.a_pred_A.max()) + 0.05
     ax[0].plot([lo, hi], [lo, hi], "k--", linewidth=2)
     ax[0].set_xlim(lo, hi)
     ax[0].set_ylim(lo, hi)
     ax[0].set_xlabel("Vegard $a$ (Å)")
-    ax[0].set_ylabel("$q=1$ 補正後 $a$ (Å)")
+    q_text = "; ".join(
+        f"{struct} $q={float(d[d.phase == struct].q_used.iloc[0]):.4g}$"
+        for struct in STRUCTS if not d[d.phase == struct].empty
+    )
+    ax[0].set_ylabel(f"$q$補正後 $a$ (Å) [{q_text}]")
     ax[0].legend(fontsize=17)
     ax[1].axvline(0.0, color="black", linewidth=2)
     ax[1].set_xlabel(r"$\Omega_{\mathrm{sf}}$ 補正量 (%)")
@@ -154,14 +190,11 @@ def fig_shift(d):
 
 
 def main():
-    sqs = load_sqs_data()
-    if sqs is None:
-        raise RuntimeError("load_sqs_data() returned no SQS database")
-    omega_by_struct = {"BCC": sqs["omega_dft"], "FCC": sqs["fcc_omega_dft"]}
+    models = adopted_models()
 
     full, stable = load_stable()
-    d, skipped = screen(stable, omega_by_struct)
-    d = d.sort_values(["phase", "a_pred_q1_A"]).reset_index(drop=True)
+    d, skipped = screen(stable, models)
+    d = d.sort_values(["phase", "a_pred_A"]).reset_index(drop=True)
     csv_path = PAPER / "results_chen2023_screening.csv"
     d.to_csv(csv_path, index=False)
 
@@ -169,7 +202,14 @@ def main():
     metrics = {
         "_source": f"Chen et al. 2023 ({DOI}), dataset {DATASET}",
         "_generated_by": "paper/chen2023_lattice_screening.py",
-        "q_adopted": Q_ADOPTED,
+        "models": {
+            struct: {
+                "omega_source": models[struct][2],
+                "q": models[struct][1],
+                "n_pairs": len(models[struct][0]),
+            }
+            for struct in STRUCTS
+        },
         "n_quinaries_total": int(len(full)),
         "n_stable_total": int(len(stable)),
         "n_stable_by_phase": {k: int(v) for k, v in
@@ -179,9 +219,9 @@ def main():
         "coverage_fraction_of_stable_bcc_fcc":
             round(len(d) / n_stable_struct, 6) if n_stable_struct else None,
         "n_skipped": {k: int(v) for k, v in skipped.items()},
-        "pair_coverage_histogram": pair_coverage(stable, omega_by_struct),
-        "n_omega_pairs_bcc": len(omega_by_struct["BCC"]),
-        "n_omega_pairs_fcc": len(omega_by_struct["FCC"]),
+        "pair_coverage_histogram": pair_coverage(
+            stable, {k: v[0] for k, v in models.items()}
+        ),
     }
     for struct in STRUCTS:
         s = d[d.phase == struct]
@@ -189,9 +229,9 @@ def main():
             continue
         metrics[f"{struct.lower()}_stats"] = {
             "n": int(len(s)),
-            "a_pred_min_A": round(float(s.a_pred_q1_A.min()), 4),
-            "a_pred_max_A": round(float(s.a_pred_q1_A.max()), 4),
-            "a_pred_mean_A": round(float(s.a_pred_q1_A.mean()), 4),
+            "a_pred_min_A": round(float(s.a_pred_A.min()), 4),
+            "a_pred_max_A": round(float(s.a_pred_A.max()), 4),
+            "a_pred_mean_A": round(float(s.a_pred_A.mean()), 4),
             "shift_mean_percent": round(float(s.shift_percent.mean()), 4),
             "shift_min_percent": round(float(s.shift_percent.min()), 4),
             "shift_max_percent": round(float(s.shift_percent.max()), 4),
@@ -199,6 +239,16 @@ def main():
                 round(float(s.shift_percent.abs().median()), 4),
             "n_shift_abs_gt_1percent": int((s.shift_percent.abs() > 1.0).sum()),
         }
+    top = d.reindex(d.shift_percent.abs().sort_values(ascending=False).index)
+    metrics["largest_corrections"] = [
+        {
+            "system": row.system,
+            "phase": row.phase,
+            "shift_percent": round(float(row.shift_percent), 4),
+            "a_pred_A": round(float(row.a_pred_A), 4),
+        }
+        for row in top.head(10).itertuples()
+    ]
 
     figs = [fig_distribution(d), fig_shift(d)] if not d.empty else []
     json_path = PAPER / "chen2023_screening_metrics.json"
@@ -212,14 +262,16 @@ def main():
         s = d[d.phase == struct]
         if s.empty:
             continue
-        print(f"{struct}: n={len(s)}, a={s.a_pred_q1_A.min():.3f}"
-              f"-{s.a_pred_q1_A.max():.3f} A, "
+        q = float(s.q_used.iloc[0])
+        print(f"{struct}: n={len(s)}, q={q:.6g}, "
+              f"a={s.a_pred_A.min():.3f}"
+              f"-{s.a_pred_A.max():.3f} A, "
               f"median |shift|={s.shift_percent.abs().median():.3f}%")
     if not d.empty:
         top = d.reindex(d.shift_percent.abs().sort_values(ascending=False).index)
         print("largest corrections:")
         print(top.head(10)[["system", "phase", "a_vegard_A",
-                            "a_pred_q1_A", "shift_percent"]].to_string(index=False))
+                            "a_pred_A", "q_used", "shift_percent"]].to_string(index=False))
     for f in figs:
         print(f"wrote {f.name}")
     print(f"wrote {json_path.name}")
