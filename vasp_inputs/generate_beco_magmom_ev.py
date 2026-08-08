@@ -51,6 +51,13 @@ def read_poscar(path: Path) -> tuple[list[str], float, list[list[float]], list[s
         raise ValueError(f"POSCAR is unexpectedly short: {path}")
     scale = float(lines[1].split()[0])
     vectors = [[float(x) for x in lines[i].split()[:3]] for i in range(2, 5)]
+    if scale == 0:
+        raise ValueError(f"POSCAR scale factor must not be zero: {path}")
+    if scale < 0:
+        determinant = abs(lattice_determinant(vectors))
+        if determinant == 0:
+            raise ValueError(f"POSCAR lattice vectors have zero volume: {path}")
+        scale = (abs(scale) / determinant) ** (1.0 / 3.0)
     elements = lines[5].split()
     counts = [int(x) for x in lines[6].split()]
     if elements != ["Be", "Co"] or counts != [8, 8]:
@@ -62,14 +69,17 @@ def read_poscar(path: Path) -> tuple[list[str], float, list[list[float]], list[s
     return elements, scale, vectors, coords
 
 
-def cell_volume(scale: float, vectors: list[list[float]]) -> float:
+def lattice_determinant(vectors: list[list[float]]) -> float:
     a, b, c = vectors
-    det = (
+    return (
         a[0] * (b[1] * c[2] - b[2] * c[1])
         - a[1] * (b[0] * c[2] - b[2] * c[0])
         + a[2] * (b[0] * c[1] - b[1] * c[0])
     )
-    return abs(det) * abs(scale) ** 3
+
+
+def cell_volume(scale: float, vectors: list[list[float]]) -> float:
+    return abs(lattice_determinant(vectors)) * abs(scale) ** 3
 
 
 def scaled_vectors(
