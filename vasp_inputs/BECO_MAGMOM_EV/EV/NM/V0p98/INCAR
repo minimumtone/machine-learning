@@ -1,0 +1,27 @@
+SYSTEM = Be8Co8 E-V NM V/Vref=0.98 (ISIF=4)
+
+ENCUT  = 520
+PREC   = Accurate
+EDIFF  = 1E-6
+NELM   = 300
+LREAL  = .FALSE.
+
+IBRION = 2
+ISIF   = 4
+NSW    = 200
+EDIFFG = -0.005
+POTIM  = 0.02
+
+ISMEAR = 1
+SIGMA  = 0.1
+
+GGA    = PE
+ALGO   = Normal
+
+ISPIN  = 1
+
+LORBIT = 11
+LWAVE  = .FALSE.
+LCHARG = .FALSE.
+
+NCORE  = 4

@@ -133,6 +133,109 @@ def read_energy_per_atom(calc_dir):
     return None
 
 
+def read_poscar_species(calc_dir):
+    """Return POSCAR element symbols and per-element atom counts."""
+    for filename in ("CONTCAR", "POSCAR"):
+        path = os.path.join(calc_dir, filename)
+        if not os.path.isfile(path):
+            continue
+        try:
+            with open(path) as f:
+                lines = f.readlines()
+            elements = lines[5].split()
+            counts = [int(x) for x in lines[6].split()]
+            if elements and len(elements) == len(counts):
+                return elements, counts
+        except (IndexError, ValueError):
+            pass
+    return [], []
+
+
+def read_magnetization(calc_dir):
+    """Read cell magnetization and signed/absolute local-moment statistics."""
+    outcar = os.path.join(calc_dir, "OUTCAR")
+    if not os.path.isfile(outcar):
+        return "", {}, {}, {}
+    incar = os.path.join(calc_dir, "INCAR")
+    if os.path.isfile(incar):
+        try:
+            with open(incar) as f:
+                incar_text = f.read()
+            ispin = re.search(r"^\s*ISPIN\s*=\s*1\b", incar_text, re.MULTILINE)
+            if ispin:
+                return "", {}, {}, {}
+        except OSError:
+            pass
+    try:
+        with open(outcar) as f:
+            lines = f.readlines()
+    except OSError:
+        return "", {}, {}, {}
+
+    total = ""
+    pattern = re.compile(
+        r"number\s+of\s+electron.*?magnetization\s+"
+        r"([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][-+]?\d+)?)",
+        re.IGNORECASE,
+    )
+    for line in lines:
+        match = pattern.search(line)
+        if match:
+            total = match.group(1)
+
+    elements, counts = read_poscar_species(calc_dir)
+    natoms = sum(counts)
+    if not elements or natoms <= 0:
+        return total, {}, {}, {}
+
+    # Select the final complete LORBIT magnetization table.
+    final_rows = []
+    for marker, line in enumerate(lines):
+        if "magnetization (x)" not in line.lower():
+            continue
+        header = next(
+            (i for i in range(marker + 1, min(marker + 12, len(lines)))
+             if "# of ion" in lines[i].lower()),
+            None,
+        )
+        if header is None:
+            continue
+        rows = []
+        for data_line in lines[header + 1:]:
+            fields = data_line.split()
+            if not fields:
+                if rows:
+                    break
+                continue
+            if not fields[0].isdigit() or len(fields) < 2:
+                if rows:
+                    break
+                continue
+            try:
+                rows.append((int(fields[0]), float(fields[-1])))
+            except ValueError:
+                break
+            if len(rows) == natoms:
+                break
+        if len(rows) == natoms:
+            final_rows = rows
+
+    if len(final_rows) != natoms:
+        return total, {}, {}, {}
+    averages = {}
+    abs_averages = {}
+    max_abs = {}
+    offset = 0
+    for element, count in zip(elements, counts):
+        values = [v for _, v in final_rows[offset:offset + count]]
+        if values:
+            averages[element] = sum(values) / len(values)
+            abs_averages[element] = sum(abs(v) for v in values) / len(values)
+            max_abs[element] = max(abs(v) for v in values)
+        offset += count
+    return total, averages, abs_averages, max_abs
+
+
 def extract_structure_data(base_dir, struct_type):
     """
     Extract data from all subdirectories in base_dir.
@@ -159,6 +262,7 @@ def extract_structure_data(base_dir, struct_type):
         elA, cA, elB, cB = parsed
         a, converged, src = read_lattice_constant(calc_dir)
         e_per_atom = read_energy_per_atom(calc_dir)
+        total_mag, local_mag, abs_local_mag, max_local_mag = read_magnetization(calc_dir)
 
         if a is None:
             errors.append(f"  No lattice constant found: {dirname}")
@@ -186,6 +290,13 @@ def extract_structure_data(base_dir, struct_type):
             'converged': converged,
             'source_file': src,
             'dirname': dirname,
+            'total_magnetization': total_mag,
+            'magmom_element_A': local_mag.get(elA, ''),
+            'magmom_element_B': local_mag.get(elB, ''),
+            'magmom_abs_element_A': abs_local_mag.get(elA, ''),
+            'magmom_abs_element_B': abs_local_mag.get(elB, ''),
+            'magmom_max_element_A': max_local_mag.get(elA, ''),
+            'magmom_max_element_B': max_local_mag.get(elB, ''),
         })
 
     return results, errors
@@ -197,7 +308,10 @@ def write_csv(results, output_path, struct_type):
     fieldnames = [
         'material_id', 'formula', 'element_A', 'element_B',
         'count_A', 'count_B', 'lattice_constant', 'energy_per_atom',
-        'energy_above_hull', 'source', 'structure_type', 'lattice_constant_calc'
+        'energy_above_hull', 'source', 'structure_type', 'lattice_constant_calc',
+        'total_magnetization', 'magmom_element_A', 'magmom_element_B',
+        'magmom_abs_element_A', 'magmom_abs_element_B',
+        'magmom_max_element_A', 'magmom_max_element_B',
     ]
 
     with open(output_path, 'w', newline='') as f:
