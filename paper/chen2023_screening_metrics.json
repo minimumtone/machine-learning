@@ -1,0 +1,58 @@
+{
+  "_source": "Chen et al. 2023 (10.5281/zenodo.7633180), dataset quinaries_0.9Tm.csv.gz",
+  "_generated_by": "paper/chen2023_lattice_screening.py",
+  "q_adopted": 1.0,
+  "n_quinaries_total": 658008,
+  "n_stable_total": 30201,
+  "n_stable_by_phase": {
+    "BCC": 22631,
+    "HCP": 5906,
+    "FCC": 1664
+  },
+  "n_stable_bcc_fcc": 24295,
+  "n_predicted": 15011,
+  "coverage_fraction_of_stable_bcc_fcc": 0.617864,
+  "n_skipped": {
+    "phase_out_of_scope": 5906,
+    "excluded_element": 257,
+    "no_king_volume": 7586,
+    "missing_pairs": 1441
+  },
+  "pair_coverage_histogram": {
+    "0": 68,
+    "1": 248,
+    "2": 44,
+    "3": 1041,
+    "4": 11,
+    "5": 78,
+    "6": 7747,
+    "7": 4,
+    "8": 2,
+    "9": 41,
+    "10": 15011
+  },
+  "n_omega_pairs_bcc": 445,
+  "n_omega_pairs_fcc": 120,
+  "bcc_stats": {
+    "n": 14887,
+    "a_pred_min_A": 2.8648,
+    "a_pred_max_A": 3.5183,
+    "a_pred_mean_A": 3.13,
+    "shift_mean_percent": -0.1676,
+    "shift_min_percent": -2.3038,
+    "shift_max_percent": 1.6947,
+    "shift_abs_median_percent": 0.3955,
+    "n_shift_abs_gt_1percent": 1238
+  },
+  "fcc_stats": {
+    "n": 124,
+    "a_pred_min_A": 3.7755,
+    "a_pred_max_A": 3.9806,
+    "a_pred_mean_A": 3.8705,
+    "shift_mean_percent": 0.0534,
+    "shift_min_percent": -0.4302,
+    "shift_max_percent": 0.4802,
+    "shift_abs_median_percent": 0.1408,
+    "n_shift_abs_gt_1percent": 0
+  }
+}

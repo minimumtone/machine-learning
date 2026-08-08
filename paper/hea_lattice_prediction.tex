@@ -899,6 +899,31 @@ FCC & 112 & 0.996 & 0.993 & 0.999 & 0.003 & 0.013 / 0.019 \\
 \label{fig:chen2023_radius_omega}
 \end{figure*}
 
+\subsubsection{相安定性予測への格子定数の付与（統合スクリーニング）}
+\label{sec:chen2023_screening}
+
+Chenら~\cite{Chen2023}は66万通りの等原子比五元系について相安定性を予測しているが、格子定数などの構造量は与えていない。一方、本研究の$q=1$モデルは二元系$\Omega_\text{sf}$のみから格子定数を与えるため、両者は追加のDFT計算なしで結合できる。Chenらの$0.9T_\text{m}$焼鈍データセット（658,008件）で単相安定と判定された30,201件（BCC 22,631、HCP 5,906、FCC 1,664）に対し、式~\eqref{eq:scaled_eq10}の$q=1$予測を付与した。
+
+本研究はHCPのSQSデータベースを持たないためHCPの5,906件は対象外である。BCCとFCCの24,295件のうち、4$f$希土類とYを含む257件、King原子体積を持たない元素を含む7,586件、必要な10ペアの$\Omega_\text{sf}$が1つ以上欠損する1,441件を除いた15,011件（BCC 14,887、FCC 124）に格子定数を付与した。BCCの被覆率は14,887/22,631 = 65.8\%である一方、FCCは124/1,664 = 7.5\%に留まる。これはFCC SQSデータベースが120ペアであり、五元系の全10ペアを同時に満たす組合せが少ないためである。欠損ペアを$\Omega_\text{sf}=0$にフォールバックさせれば件数は増やせるが、補正の欠落を予測値に混入させるため、ここでは全ペアが揃う合金のみを対象とした。
+
+付与された格子定数はBCCで$a = 2.865$--$3.518$~\AA（平均3.130~\AA）、FCCで$a = 3.776$--$3.981$~\AA（平均3.871~\AA）である（図~\ref{fig:chen2023_screening}）。Vegard則からの補正量は、BCCで中央値$|\Delta a/a| = 0.396$\%、平均$-0.168$\%（範囲$-2.30$--$+1.69$\%）であり、1,238件（8.3\%）が$|\Delta a/a| > 1$\%である。FCCでは中央値0.141\%、範囲$-0.43$--$+0.48$\%と小さい。補正量の分布は収縮側に偏っており、$\Omega_\text{sf}$の母集団が負に偏っていること（\S\ref{sec:omega_distribution}）と整合する。最大の収縮補正はMg--Sc--白金族を含む組合せ（Mg-Ni-Os-Re-Sc、Mg-Ni-Os-Ru-Sc、Co-Mg-Os-Ru-Scなど、いずれも$-2.2$--$-2.3$\%）に現れた。これらはサイズ差の大きい元素対と強い混合を併せ持つ系であり、Vegard則が最も破綻しやすい領域である。
+
+この統合表（\texttt{paper/results\_chen2023\_screening.csv}）は、相安定性のみでは絞り込めない格子整合性（基板・析出相との整合、耐火合金の$\delta$値設計など）を含めた探索に利用できる。ただし、(1)~$q$はAlonsoの64合金で校正した値をそのまま用いており、Chenらの予測合金群に対して再校正していない、(2)~予測はChenらが与えた相（BCCまたはFCC）が実現することを前提とする、(3)~SQS参照・$q=1$のBCCテストRMSE（0.0124~\AA、\S\ref{sec:sqs_improvement}）と同程度の不確かさが各値に付随する、という3点に留意が必要である。
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.98\textwidth]{fig_chen2023_screening_lattice.png}
+\caption{Chenら~\cite{Chen2023}が単相安定と予測した等原子比五元系に本研究の$q=1$モデルで付与した格子定数の分布。左：BCC 14,887合金、右：FCC 124合金。塗りつぶしが$\Omega_\text{sf}$補正後、黒線がVegard則である。}
+\label{fig:chen2023_screening}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.98\textwidth]{fig_chen2023_screening_shift.png}
+\caption{$\Omega_\text{sf}$補正の大きさ。左：Vegard予測と$q=1$予測のパリティプロット（破線は$y=x$）。右：補正量$\Delta a/a$の分布。BCCの中央値は$|\Delta a/a| = 0.396$\%、8.3\%の合金が1\%を超える。分布は収縮側に偏る。}
+\label{fig:chen2023_screening_shift}
+\end{figure*}
+
 \subsubsection{秩序構造とSQSの$\Omega_\text{sf}$相関}
 \label{sec:sqs_correlation}
 
