@@ -140,6 +140,17 @@ def write_incar(path: Path, system: str, magmom: str | None, isif: int) -> None:
     path.write_text("\n".join(lines))
 
 
+def verify_poscar_volume(path: Path, target_volume: float) -> None:
+    """Fail loudly if a written POSCAR does not hold the requested volume."""
+    _, scale, vectors, _ = read_poscar(path)
+    actual = cell_volume(scale, vectors)
+    if abs(actual - target_volume) > 1e-6 * target_volume:
+        raise ValueError(
+            f"{path} has volume {actual:.8f} A^3, expected "
+            f"{target_volume:.8f} A^3"
+        )
+
+
 def write_case(
     name: str,
     title: str,
@@ -264,6 +275,7 @@ def main() -> None:
             3,
             (source_scale, source_vectors, coords),
         )
+        verify_poscar_volume(OUTPUT / name / "POSCAR", source_volume)
         cases.append((name, elements))
 
     # Fixed-volume E--V runs use the recalc reference cell at factor 1.00.
@@ -272,14 +284,15 @@ def main() -> None:
             label = f"{ratio:.2f}".replace(".", "p")
             name = f"EV/{config}/V{label}"
             target = REFERENCE_CELL_VOLUME * ratio
-            _, vectors = scaled_vectors(ref_scale, ref_vectors, target)
+            scale, vectors = scaled_vectors(ref_scale, ref_vectors, target)
             write_case(
                 name,
                 f"Be8Co8 E-V {config} V/Vref={ratio:.2f} (ISIF=4)",
                 magmom,
                 4,
-                (1.0, vectors, coords),
+                (scale, vectors, coords),
             )
+            verify_poscar_volume(OUTPUT / name / "POSCAR", target)
             cases.append((name, elements))
 
     write_shell_scripts(cases)
