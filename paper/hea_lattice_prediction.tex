@@ -201,13 +201,65 @@ VASP（本研究） & 1,483 & 2,808 & 4,291 \\
 \end{tabular}
 \par\smallskip
 {\scriptsize 収束後のユニークペア数: B2 465、L1$_2$ 441。
-31ターゲット元素間で完全カバレッジ。Si・Ge・Bは安定構造がBCC/FCCでなくKing体積との乖離が15--29\%に達するため除外。$4f$希土類14元素（La, Ce, Pr, Nd, Sm, Eu, Gd, Tb, Dy, Ho, Er, Tm, Yb, Lu）およびYは、GGA-PBEが$4f$局在電子を正しく扱えず格子定数が非物理的に膨張・未収束となるため除外（付録~\ref{sec:appendix_gdce}参照）。上記に加えBCC SQS計算（A$_8$B$_8$超格子）674件収束・445ペア、FCC SQS計算 141件収束・112ペア、SQS純元素（A$_8$A$_8$）33元素、DFT自己整合参照用純元素（B2: 35元素、L1$_2$: 39元素）を使用。DFT計算総数は約6,000件超。}
+31ターゲット元素間で完全カバレッジ。Si・Ge・Bは安定構造がBCC/FCCでなくKing体積との乖離が15--29\%に達するため除外。$4f$希土類14元素（La, Ce, Pr, Nd, Sm, Eu, Gd, Tb, Dy, Ho, Er, Tm, Yb, Lu）およびYは、GGA-PBEが$4f$局在電子を正しく扱えず格子定数が非物理的に膨張・未収束となるため除外（付録~\ref{sec:appendix_gdce}参照）。上記に加えBCC SQS計算（A$_8$B$_8$超格子）674件収束・445ペア、FCC SQS計算 141件収束・112ペア（King参照；DFT-Vegard参照では120ペア）、SQS純元素（A$_8$A$_8$）33元素、DFT自己整合参照用純元素（B2: 35元素、L1$_2$: 39元素）を使用。DFT計算総数は約6,000件超。}
 \end{table}
 
 収束判定と物理的格子定数範囲（2.0--8.0~\AA）でのフィルタリング後、B2で465・L1$_2$で441のユニーク元素ペアを得た。同一ペアに複数データソースがある場合は中央値を採用し外れ値の影響を緩和した。3ソース間の$\Omega_\text{sf}$は高い整合性を示し（B2 $r = 0.990$、L1$_2$ $r = 0.990$）、統合前後の平均変化量は$|\Delta\Omega| < 0.006$であった。
 
 \subsubsection{HEA検証データ}
 主検証セットはAlonso~\cite{Alonso2021} Table~2の64個の立方晶HEA（BCC 29、FCC 35、$a = 2.883$--$3.856$~\AA、22元素）である。独立テストセットとしてAlonsoデータ外の31 HEA（BCC 17、FCC 14）を14文献~\cite{Senkov2012,Senkov2013_ActaMat,Otto2013,Niu2017,Stepanov2015,Dirras2016,Yao2016,Freudenberger2017,Wang2019,Tseng2019,Reget2020,Chen2022,Kantelis2025,Chen2023}から収集した。19元素をカバーし、耐火金属系BCC（Tseng 2019、Reget 2020）、貴金属系FCC（Freudenberger 2017）、三元系BCC（Chen 2022: HfNbZr）、CALPHAD予測＋合成検証（Chen 2023: AlCoMnNiV, CoFeMnNiZn）を含む。ただしBCC 17合金はHf-Mo-Nb-Ta-Ti-Zrの系統的サブセットが主体であり、FCC 14合金もAu-Cu-Ni-Pd-Pt系とCoCrFeMnNi派生に偏る。実効的な化学多様性は合金数より限定的である点に留意が必要である。
+
+\subsection{検証対象元素スコープ}
+\label{sec:element_scope}
+
+本研究の基礎データベースは31元素を対象とする一方、HEA格子定数の校正・独立テストが実際に依拠する元素スコープは、Alonso~\cite{Alonso2021} Table~2の
+`ALONSO\_TABLE2`と独立テスト集合`INDEPENDENT\_TEST`に出現する元素の和集合として定義した。このデータ駆動の検証対象は次の23元素である：
+\[
+\{\mathrm{Al,Au,Co,Cr,Cu,Fe,Hf,Ir,Mn,Mo,Nb,Ni,Os,Pd,Pt,Rh,Ru,Ta,Ti,V,W,Zn,Zr}\}.
+\]
+SiはKing原子体積を持たず、安定構造もBCC/FCCではないため、全スコープの集計から一貫して除外した。したがってFCC-SQSの生のDFT-Vegard参照は120ペア（Siを含む9ペアを含む）であるが、検証スコープでは111ペアとなる。King参照のFCC-SQSは112ペアであり、両者は参照体積の違いによる別の集計である。
+
+実用HEA構成元素を意図した感度分析として、Siを除いた16元素
+\[
+\{\mathrm{Al,Ti,V,Cr,Mn,Fe,Co,Ni,Cu,Zn,Zr,Nb,Mo,Hf,Ta,W}\}
+\]
+も比較した。表~\ref{tab:element_scope}の$q$とRMSEは、既存のB2/L1$_2$ペアデータベースを`compute\_eq10\_scaled`に渡して再計算した値であり、SQS-BCCの採用モデル（DFT Vegard参照、$q=1$）とは区別する。$q_\text{BCC}$は両スコープで完全に不変、$q_\text{FCC}$も0.133399から0.131812への変化に留まる。一方、実用16元素スコープではFCC独立テストが14合金から5合金へ減少し、FCC検証の化学的多様性が失われるため、主範囲には採用しない。
+
+\begin{table}[H]
+\centering
+\caption{検証対象元素スコープの定量比較。FCC-SQSはDFT-Vegard参照ペア数を示し、括弧内にKing参照ペア数を示す。RMSEの単位は\AA{}。}
+\label{tab:element_scope}
+\scriptsize
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+指標 & 全31元素 & 実用16元素 & データ駆動23元素 \\
+\midrule
+元素数 & 31 & 16 & 23 \\
+BCC SQSペア & 445 & 120 & 253 \\
+FCC SQSペア（DFT / King） & 111 / 112 & 29 / 30 & 81 / 82 \\
+B2 / L1$_2$ペア & 465 / 441 & 120 / 120 & 253 / 253 \\
+校正 BCC / FCC & 29 / 35 & 29 / 31 & 29 / 35 \\
+独立テスト BCC / FCC & 17 / 14 & 17 / 5 & 17 / 14 \\
+$q_\text{BCC}$ / $q_\text{FCC}$ & 0.486069 / 0.133399 & 0.486069 / 0.131812 & 0.486069 / 0.133399 \\
+\midrule
+\multicolumn{4}{l}{\textit{独立テストRMSE（$q=1$: BCC / FCC / ALL）}}\\
+全31元素 & 0.01401 / 0.02351 / 0.01890 & & \\
+実用16元素 & & 0.01401 / 0.02974 / 0.01878 & \\
+データ駆動23元素 & & & 0.01401 / 0.02351 / 0.01890 \\
+\multicolumn{4}{l}{\textit{独立テストRMSE（q最適: BCC / FCC / ALL）}}\\
+全31元素 & 0.01573 / 0.01523 / 0.01551 & & \\
+実用16元素 & & 0.01573 / 0.01049 / 0.01470 & \\
+データ駆動23元素 & & & 0.01573 / 0.01523 / 0.01551 \\
+\midrule
+\multicolumn{4}{l}{\textit{Chen安定quinary（10ペア被覆済み: BCC / FCC）}}\\
+全31元素 & 14,887 / 1,555 & & \\
+実用16元素 & & 1,506 / 33 & \\
+データ駆動23元素 & & & 9,438 / 1,322 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Chen統合スクリーニングでの$\Omega_\text{sf}$補正中央値は、全31元素でBCC 0.3955\%、FCC 0.0450\%、データ駆動23元素でBCC 0.3436\%、FCC 0.0450\%であった。$|\Delta a/a|>1\%$はそれぞれBCC 1,238件および321件で、FCCはいずれのスコープでも0件である。Beは基礎データベースには30ペア（BCC SQSおよびB2）存在するが、校正集合、独立テスト集合、Chen統合表のいずれにも1件も含まれない。そのため、Be系で別途調査中の未解決事項は、本節以降のHEA予測の結論には影響しない。
 
 \subsection{体積サイズファクターのDFT導出}
 \label{sec:omega}
