@@ -923,14 +923,14 @@ B2（King Vegard参照）は負側（体積収縮）に偏り（465ペア、平�
 \label{fig:omega_hist}
 \end{figure*}
 
-\subsubsection{外部DFTデータベースによる本SQSデータベースの独立検証}
+\subsubsection{外部DFTデータベースによるエネルギーの外部再現性}
 \label{sec:chen2023_crosscheck}
 
-Chenら~\cite{Chen2023}のZenodoデータベース（DOI: \href{https://doi.org/10.5281/zenodo.7633180}{10.5281/zenodo.7633180}）に収録された二元相互作用$\Omega_{ij}=4\Delta H_\text{mix}$を用いて、本SQSエネルギーデータベースを独立に検証した。Chenらは格子定数のみを最適化しセル形状を固定しており、原子位置を力$0.02$~eV/\AA{}まで緩和した（ENCUT = 500~eV、2000~$k$点/atom）。これに対し、本研究はENCUT = 520~eV、ISIF = 3の全緩和、ISPIN = 2を用いている。このように緩和自由度、カットオフ、$k$点密度、磁気の扱いが異なるにもかかわらず、同一データセット内の純元素端点を差し引いて計算した当方$\Delta H_\text{mix}$はChenらの値とほぼ一対一に一致した（表~\ref{tab:chen2023_crosscheck}）。$\Omega_\text{sf}$の主系列はDFT端点基準（BCC 445ペア、FCC 120ペア）で統一し、論文のKing基準formal集合（FCC 112ペア）もロバストネス確認として併記した。乖離の大きい候補はFe--Hf、Au--Cr、Ag--Crなどの磁性3$d$元素を含む系、ならびにSn/Re/Si系に集中した。この傾向は、ISPIN = 2を明示した本計算と、Chenらの磁気状態を明示的に統一していない計算条件の差と整合する可能性がある。ただし、エネルギーの一致は体積の正しさを保証しない。体積偏差$\Omega_\text{sf}$はセル形状を含む緩和自由度に敏感であり、エネルギー検証と体積検証は分けて解釈する必要がある。
+Chenら~\cite{Chen2023}のZenodoデータベース（DOI: \href{https://doi.org/10.5281/zenodo.7633180}{10.5281/zenodo.7633180}）に収録された二元相互作用$\Omega_{ij}=4\Delta H_\text{mix}$を用いて、本SQSエネルギーデータベースを独立に検証した。Chenらは格子定数のみを最適化しセル形状を固定しており、原子位置を力$0.02$~eV/\AA{}まで緩和した（ENCUT = 500~eV、2000~$k$点/atom）。これに対し、本研究はENCUT = 520~eV、ISIF = 3の全緩和、ISPIN = 2を用いている。このように緩和自由度、カットオフ、$k$点密度、磁気の扱いが異なるにもかかわらず、同一データセット内の純元素端点を差し引いて計算した当方$\Delta H_\text{mix}$はChenらの値とほぼ一対一に一致した（表~\ref{tab:chen2023_crosscheck}）。特に、表~\ref{tab:chen2023_crosscheck}および図~\ref{fig:chen2023_dh_parity}に示すように、BCC 387共通ペアでは$r=0.980$、傾き1.002、MAE 0.032~eV/atom、FCC 112共通ペアでは$r=0.996$、傾き0.999、MAE 0.013~eV/atomである。これは異なる緩和自由度と磁気設定を持つDFT計算間でも二元エネルギーの順位とスケールが再現されることを示す。ただし、乖離の大きい候補はFe--Hf、Au--Cr、Ag--Crなど磁性3$d$元素を含む系、ならびにSn/Re/Si系に集中した。これらはISPIN = 2を明示した本計算と、Chenらの磁気状態を明示的に統一していない計算条件の差と整合する可能性がある。これは残差の候補要因であって、磁気設定差が原因であることを直接証明するものではない。
 
 \begin{table}[H]
 \centering
-\caption{ChenらのDFT混合エンタルピーとの独立検証。BCCは387共通ペア、FCCは論文formal（King基準）の112共通ペア。$\Delta H_\text{mix}$はeV/atom。}
+\caption{ChenらのDFT混合エンタルピーとの独立検証。BCCは387共通ペア、FCCは論文formal（King基準）の112共通ペア。$\Delta H_\text{mix}$はeV/atom。Chenらはセル形状固定・ENCUT = 500~eV・2000~$k$点/atom、本研究はISIF = 3全緩和・ENCUT = 520~eV・ISPIN = 2であり、緩和自由度、カットオフ、$k$点密度、磁気状態が一致しない。この条件差を踏まえた外部再現性の指標である。}
 \label{tab:chen2023_crosscheck}
 \begin{tabular}{lrrrrrr}
 \toprule
@@ -956,6 +956,9 @@ FCC & 112 & 0.996 & 0.993 & 0.999 & 0.003 & 0.013 / 0.019 \\
 \caption{当方とChenらの$\Delta H_\text{mix}$のパリティプロット（King基準のformal集合）。左：BCC 387共通ペア、右：FCC 112ペア。破線は$y=x$であり、赤色のラベル付き点はFe--Hf、Au--Cr、Ag--Crである。各パネルに$n$、Pearson $r$、MAEを示す。}
 \label{fig:chen2023_dh_parity}
 \end{figure*}
+
+\subsubsection{$\Omega_\text{sf}$と$\Delta H_\text{mix}$の非同一性}
+\label{sec:chen2023_nonidentity}
 
 \paragraph{混合エンタルピーと体積偏差の非同一性}
 「混合エンタルピーが負に深いペアほど収縮が深い」という素朴な予想は、formal集合では成立しなかった。主系列のDFT端点基準では、$\Omega_\text{sf}$とChenの$\Delta H_\text{mix}$のPearson相関はBCC 387ペアで$r=0.184$（Spearman $\rho=0.140$）、FCC 120ペアで$r=0.284$（$\rho=0.287$）に留まる。King実験体積基準を用いたロバストネス確認でも、BCC 387ペアは$r=0.199$（$\rho=0.145$）、FCCの論文formal集合112ペアは$r\simeq0.219$（$\rho=0.184$）であり、結論は変わらない。
