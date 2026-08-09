@@ -999,6 +999,28 @@ $\Delta H_\text{mix}+|\Delta r|$ 重回帰 & --- & 0.242 \\
 
 Chenら~\cite{Chen2023}は66万通りの等原子比五元系について相安定性を予測しているが、格子定数などの構造量は与えていない。一方、本研究の二元系$\Omega_\text{sf}$モデルは相安定性データに格子定数を付与できるため、両者は追加のDFT計算なしで結合できる。Chenらの$0.9T_\text{m}$焼鈍データセット（658,008件）で単相安定と判定された30,201件（BCC 22,631、HCP 5,906、FCC 1,664）を対象とした。
 
+\begin{table}[H]
+\centering
+\caption{Chenらの安定quinaryから格子定数を付与する統合スクリーニングの流れ。除外件数は重複しない順次フィルタの値であり、最終出力は必要な全10元素ペアを被覆する系に限定した。}
+\label{tab:chen_screening_flow}
+\scriptsize
+\begin{tabular}{@{}lrp{0.56\linewidth}@{}}
+\toprule
+段階 & 件数 & 処理 \\
+\midrule
+安定quinary & 30,201 & Chenの$0.9T_\text{m}$データセットにおける単相安定系 \\
+HCP除外 & 5,906 & 本研究にHCPの$\Omega_\text{sf}$データベースがないため対象外 \\
+4$f$/Y除外 & 257 & GGA-PBEでの4$f$局在電子およびYの取り扱いを本研究の対象外とする系 \\
+King体積なし & 7,586 & 純元素King原子体積を用いた格子定数予測ができない系 \\
+欠損ペア & 10 & 構造別の10ペアのうち少なくとも1ペアの$\Omega_\text{sf}$が欠損する系 \\
+\midrule
+最終出力 & 16,442 & BCC 14,887（BCC候補の65.8\%）、FCC 1,555（FCC候補の93.5\%） \\
+\bottomrule
+\end{tabular}
+\par\smallskip
+{\scriptsize BCC+FCC候補24,295件に対する総被覆率は67.7\%。BCCはSQS+DFT Vegard、FCCはL1$_2$+Kingの採用モデルを用いる。}
+\end{table}
+
 構造ごとに、論文で検証済みの参照と$q$を用いた。BCCはSQSのDFT Vegard参照$\Omega_\text{sf}$（445ペア）と$q=1$、FCCはL1$_2$のKing参照$\Omega_\text{sf}$（441ペア）と、Alonsoの64合金に対して本研究の$\texttt{optimize\_gamma}$で導出した$q_\text{FCC}=0.133399$を用いた。したがってFCCの補正はほぼVegard則となるように校正されており、BCCと同じ$q=1$を適用していない。
 
 本研究はHCPのSQSデータベースを持たないため、安定30,201件のうちHCPの5,906件は対象外である。残るBCCとFCCの24,295件について、4$f$希土類とYを含む257件、King原子体積を持たない元素を含む7,586件、必要な10ペアの$\Omega_\text{sf}$が欠損する10件を順に除外した。その結果、16,442件（BCC 14,887、FCC 1,555）に格子定数を付与した。BCCの被覆率は14,887/22,631 = 65.8\%、FCCは1,555/1,664 = 93.5\%、BCC+FCC全体では16,442/24,295 = 67.7\%である。ここでは、\texttt{chen2023\_lattice\_screening.py}の実装どおり、必要な全10ペアが揃う合金のみを対象とし、欠損ペアを$\Omega_\text{sf}=0$に置換するフォールバックは行わない。一方、校正・独立testの汎用評価経路では、\texttt{compute\_eq10\_scaled}が辞書にないペアを$\Omega_\text{sf}=0$として扱うため、その寄与はVegard項へ縮退する。この評価経路差をChen統合の被覆率と混同しない。
@@ -1128,6 +1150,9 @@ B2+DFT: RMSE$_\text{FCC}$ = 0.0160。}
 
   \item \textbf{混合エンタルピー・サイズ差による代替の限界}:
     Chenらの同一BCC 387共通ペアで比較すると、$\Omega_\text{sf}$とのPearson相関は$\Delta H_\text{mix}$で$r=0.184$、純元素半径差で$r=-0.434$、電気陰性度差で$r=-0.201$、VEC差で$r=-0.291$であった。$\Delta H_\text{mix}$と半径差を組み合わせた線形重回帰でも$R^2=0.242$に留まった（表~\ref{tab:chen_descriptor_comparison}）。したがって、この記述子集合・関数形・母集団の範囲では、$\Omega_\text{sf}$を十分な精度で代替することはできず、構造特異的$\Omega_\text{sf}$を独立情報として扱う必要がある。
+
+  \item \textbf{Chen安定quinaryへの統合}:
+    Chenらの安定quinary 30,201件からHCP、4$f$/Y、King体積欠損、$\Omega_\text{sf}$欠損を順次除外し、16,442件（BCC 14,887、FCC 1,555）へ格子定数を付与した（表~\ref{tab:chen_screening_flow}）。これはBCC候補の65.8\%、FCC候補の93.5\%、BCC+FCC候補全体の67.7\%に相当する。ただし$q$はChen予測合金群で再校正しておらず、Chenが予測した相が実現することを仮定し、各予測値には独立テストRMSE相当（BCC 0.0124~\AA{}、FCC 0.0152~\AA{}）の不確かさが付随する。
 
   \item \textbf{パラメータ圧縮}:
     906ペアを31元素$\delta^{(s)}$に圧縮（97\%削減）。
