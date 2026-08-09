@@ -108,8 +108,13 @@ def main():
         for element in pure_common
     }
     pure_abs = [item["abs_delta_percent"] for item in pure_delta.values()]
-    pure_max = max(
-        pure_delta.items(), key=lambda item: item[1]["abs_delta_percent"]
+    pure_max = (
+        max(
+            pure_delta.items(),
+            key=lambda item: item[1]["abs_delta_percent"],
+        )
+        if pure_delta
+        else (None, None)
     )
 
     common_pairs = sorted(
@@ -138,8 +143,13 @@ def main():
     sign_reversed = [
         pair for pair, item in pair_delta.items() if item["sign_reversed"]
     ]
-    pair_max = max(
-        pair_delta.items(), key=lambda item: item[1]["abs_delta_percent"]
+    pair_max = (
+        max(
+            pair_delta.items(),
+            key=lambda item: item[1]["abs_delta_percent"],
+        )
+        if pair_delta
+        else (None, None)
     )
 
     metrics = {
@@ -160,16 +170,24 @@ def main():
         "pure_element_volume_comparison": {
             "n_common_elements": len(pure_common),
             "elements": pure_common,
-            "median_abs_delta_percent": float(np.median(pure_abs)),
-            "max_abs_delta_percent": pure_max[1]["abs_delta_percent"],
+            "median_abs_delta_percent": (
+                float(np.median(pure_abs)) if pure_abs else None
+            ),
+            "max_abs_delta_percent": (
+                pure_max[1]["abs_delta_percent"] if pure_max[1] else None
+            ),
             "max_abs_delta_element": pure_max[0],
             "by_element": pure_delta,
         },
         "omega_sf_comparison": {
             "n_common_pairs": len(common_pairs),
             "pairs": list(pair_delta),
-            "median_abs_delta_percent": float(np.median(pair_abs)),
-            "max_abs_delta_percent": pair_max[1]["abs_delta_percent"],
+            "median_abs_delta_percent": (
+                float(np.median(pair_abs)) if pair_abs else None
+            ),
+            "max_abs_delta_percent": (
+                pair_max[1]["abs_delta_percent"] if pair_max[1] else None
+            ),
             "max_abs_delta_pair": pair_max[0],
             "n_abs_delta_le_0_2_percent": int(sum(v <= 0.2 for v in pair_abs)),
             "sign_reversed_pairs": sign_reversed,
@@ -177,12 +195,12 @@ def main():
         },
         "figure": str(FIGURE.relative_to(ROOT)),
     }
-    METRICS.write_text(json.dumps(metrics, indent=2, ensure_ascii=False) + "\n")
     make_figure(pure_delta, pair_delta)
+    METRICS.write_text(json.dumps(metrics, indent=2, ensure_ascii=False) + "\n")
     print(json.dumps(metrics, indent=2, ensure_ascii=False))
 
 
-def make_figure(pure_delta, pair_delta):
+def make_figure(pure_delta, pair_delta, label_threshold=0.2):
     plt.rcParams.update(
         {
             "font.family": "Noto Sans CJK JP",
@@ -198,19 +216,25 @@ def make_figure(pure_delta, pair_delta):
 
     x_pure = np.array([v["volume_16_A3_per_atom"] for v in pure_delta.values()])
     y_pure = np.array([v["volume_128_A3_per_atom"] for v in pure_delta.values()])
-    axes[0].scatter(x_pure, y_pure, s=80, color="#3366aa")
-    lo, hi = min(x_pure.min(), y_pure.min()), max(x_pure.max(), y_pure.max())
-    axes[0].plot([lo, hi], [lo, hi], "--", color="black", linewidth=1.5)
-    ca = pure_delta["Ca"]
-    axes[0].annotate(
-        "Ca",
-        (ca["volume_16_A3_per_atom"], ca["volume_128_A3_per_atom"]),
-        xytext=(8, 8),
-        textcoords="offset points",
-        fontsize=14,
-        arrowprops={"arrowstyle": "->", "color": "#333333", "lw": 1.0},
-        bbox={"boxstyle": "round,pad=0.2", "fc": "white", "alpha": 0.85},
-    )
+    if len(x_pure):
+        axes[0].scatter(x_pure, y_pure, s=80, color="#3366aa")
+        lo, hi = min(x_pure.min(), y_pure.min()), max(
+            x_pure.max(), y_pure.max()
+        )
+        axes[0].plot(
+            [lo, hi], [lo, hi], "--", color="black", linewidth=1.5
+        )
+    if "Ca" in pure_delta:
+        ca = pure_delta["Ca"]
+        axes[0].annotate(
+            "Ca",
+            (ca["volume_16_A3_per_atom"], ca["volume_128_A3_per_atom"]),
+            xytext=(8, 8),
+            textcoords="offset points",
+            fontsize=14,
+            arrowprops={"arrowstyle": "->", "color": "#333333", "lw": 1.0},
+            bbox={"boxstyle": "round,pad=0.2", "fc": "white", "alpha": 0.85},
+        )
     axes[0].set_title("(a) 純元素体積")
     axes[0].set_xlabel(r"16原子 $V$ ($\mathrm{\AA}^3$/atom)")
     axes[0].set_ylabel(r"128原子 $V$ ($\mathrm{\AA}^3$/atom)")
@@ -222,36 +246,46 @@ def make_figure(pure_delta, pair_delta):
     y_omega = 100.0 * np.array(
         [v["omega_sf_128"] for v in pair_delta.values()]
     )
-    axes[1].scatter(x_omega, y_omega, s=90, color="#cc5533")
-    lo = min(x_omega.min(), y_omega.min())
-    hi = max(x_omega.max(), y_omega.max())
-    margin = 0.08 * (hi - lo if hi > lo else 1.0)
-    axes[1].plot(
-        [lo - margin, hi + margin],
-        [lo - margin, hi + margin],
-        "--",
-        color="black",
-        linewidth=1.5,
-    )
+    if len(x_omega):
+        axes[1].scatter(x_omega, y_omega, s=90, color="#cc5533")
+        lo = min(x_omega.min(), y_omega.min())
+        hi = max(x_omega.max(), y_omega.max())
+        margin = 0.08 * (hi - lo if hi > lo else 1.0)
+        axes[1].plot(
+            [lo - margin, hi + margin],
+            [lo - margin, hi + margin],
+            "--",
+            color="black",
+            linewidth=1.5,
+        )
     label_offsets = {
         "Al-Mo": (36, -28),
         "Be-Co": (10, 10),
         "Be-Fe": (-58, -28),
     }
+    default_offsets = ((8, 8), (-48, 8), (8, -28), (-48, -28))
+    labeled_count = 0
     for pair, values in pair_delta.items():
-        if values["abs_delta_percent"] > 0.2 or values["sign_reversed"]:
+        if (
+            values["abs_delta_percent"] > label_threshold
+            or values["sign_reversed"]
+        ):
+            offset = label_offsets.get(
+                pair, default_offsets[labeled_count % len(default_offsets)]
+            )
             axes[1].annotate(
                 pair,
                 (
                     100.0 * values["omega_sf_16"],
                     100.0 * values["omega_sf_128"],
                 ),
-                xytext=label_offsets[pair],
+                xytext=offset,
                 textcoords="offset points",
                 fontsize=14,
                 arrowprops={"arrowstyle": "->", "color": "#333333", "lw": 1.0},
                 bbox={"boxstyle": "round,pad=0.2", "fc": "white", "alpha": 0.85},
             )
+            labeled_count += 1
     axes[1].set_title(r"(b) $\Omega_\mathrm{sf}$")
     axes[1].set_xlabel(r"16原子 $\Omega_\mathrm{sf}$ (%)")
     axes[1].set_ylabel(r"128原子 $\Omega_\mathrm{sf}$ (%)")
