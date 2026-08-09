@@ -8,6 +8,7 @@ Rules:
 - Return SQL only.
 - Always include a LIMIT clause (default LIMIT 10000).
 - For "最小/最大/最も" questions, use ORDER BY + LIMIT 1.
+- For queries that ask for `N` examples or a limited list (e.g. "3つ", "5つ"), add ORDER BY on a stable column (e.g. `formula`, `entry_id`) before LIMIT so the result is deterministic.
 - For "何件/数を教えて" questions, use COUNT(*) with appropriate WHERE and a descriptive alias.
 - For "割合" (ratio/percentage) questions, use COUNT(*) FILTER(WHERE condition) * 100.0 / COUNT(*).
 - IMPORTANT: Follow the "Output structure instruction" below. If it says to return individual rows, do NOT use GROUP BY or aggregate functions.

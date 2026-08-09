@@ -2,8 +2,8 @@
   "_meta": {
     "description": "Single source of truth for paper numerical values",
     "generated_by": "scripts/compute_all_figures.py",
-    "generated_at": "2026-08-07 19:26:25 UTC",
-    "git_commit": "debd5ca713deadeb064f61997a984d896aeb4141",
+    "generated_at": "2026-08-09 02:16:29 UTC",
+    "git_commit": "625eae6290531ded87d821a87e6bcc70fab5819b",
     "source_files": [
       "evaluation/ablation_multirun_stats.json",
       "evaluation/ablation_run_1.json",
@@ -390,7 +390,7 @@
         "hard": 100.0,
         "very_hard": 100.0
       },
-      "avg_latency_s": 15.7,
+      "avg_latency_s": 16.5,
       "source_file": "evaluation/mp_transfer_eval_results.json"
     }
   },

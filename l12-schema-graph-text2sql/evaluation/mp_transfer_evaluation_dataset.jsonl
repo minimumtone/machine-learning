@@ -1,15 +1,15 @@
 {"id": "q_mp_001", "difficulty": "easy", "question": "材料エントリー（mp_entries）は全体で何件ありますか？", "gold_sql": "SELECT COUNT(*) FROM mp_entries;"}
-{"id": "q_mp_002", "difficulty": "easy", "question": "格子定数aが5未満の材料の式を3つ教えてください。", "gold_sql": "SELECT formula FROM mp_entries WHERE lattice_a < 5 LIMIT 3;"}
-{"id": "q_mp_003", "difficulty": "easy", "question": "Niを含む材料の式を5つ列挙してください。", "gold_sql": "SELECT DISTINCT e.formula FROM mp_entries e JOIN mp_element_ratios r ON e.entry_id = r.entry_id WHERE r.element = 'Ni' LIMIT 5;"}
+{"id": "q_mp_002", "difficulty": "easy", "question": "格子定数aが5未満の材料の式を3つ教えてください。", "gold_sql": "SELECT formula FROM mp_entries WHERE lattice_a < 5 ORDER BY formula, entry_id LIMIT 3;"}
+{"id": "q_mp_003", "difficulty": "easy", "question": "Niを含む材料の式を5つ列挙してください。", "gold_sql": "SELECT DISTINCT e.formula FROM mp_entries e JOIN mp_element_ratios r ON e.entry_id = r.entry_id WHERE r.element = 'Ni' ORDER BY e.formula LIMIT 5;"}
 {"id": "q_mp_004", "difficulty": "easy", "question": "熱力学的に安定な（energy_above_hull=0）エントリーは何件ですか？", "gold_sql": "SELECT COUNT(*) FROM mp_entries WHERE is_stable = TRUE;"}
 {"id": "q_mp_005", "difficulty": "easy", "question": "mp_elementsに含まれる元素の種類数を教えてください。", "gold_sql": "SELECT COUNT(*) FROM mp_elements;"}
 {"id": "q_mp_006", "difficulty": "medium", "question": "結晶系ごとの材料数を教えてください。", "gold_sql": "SELECT crystal_system, COUNT(*) FROM mp_entries GROUP BY crystal_system ORDER BY COUNT(*) DESC;"}
 {"id": "q_mp_007", "difficulty": "medium", "question": "Al-Ni系の材料は何件ありますか？", "gold_sql": "SELECT COUNT(*) FROM mp_entries WHERE chemsys = 'Al-Ni';"}
 {"id": "q_mp_008", "difficulty": "medium", "question": "バンドギャップを持つ材料（band_gap > 0）の割合を教えてください。", "gold_sql": "SELECT COUNT(*) FILTER(WHERE band_gap > 0) * 100.0 / COUNT(*) FROM mp_entries;"}
-{"id": "q_mp_009", "difficulty": "medium", "question": "体積が最も大きい材料の式を教えてください。", "gold_sql": "SELECT formula FROM mp_entries ORDER BY volume DESC LIMIT 1;"}
-{"id": "q_mp_010", "difficulty": "hard", "question": "Coを含む材料の中で、energy_above_hullが最小の材料の式と値を教えてください。", "gold_sql": "SELECT e.formula, e.energy_above_hull FROM mp_entries e JOIN mp_element_ratios r ON e.entry_id = r.entry_id WHERE r.element = 'Co' ORDER BY e.energy_above_hull ASC LIMIT 1;"}
-{"id": "q_mp_011", "difficulty": "hard", "question": "各元素系（chemsys）ごとに最も安定な材料の式を教えてください。", "gold_sql": "SELECT DISTINCT ON (chemsys) chemsys, formula, energy_above_hull FROM mp_entries ORDER BY chemsys, energy_above_hull ASC;"}
+{"id": "q_mp_009", "difficulty": "medium", "question": "体積が最も大きい材料の式を教えてください。", "gold_sql": "SELECT formula FROM mp_entries ORDER BY volume DESC, formula LIMIT 1;"}
+{"id": "q_mp_010", "difficulty": "hard", "question": "Coを含む材料の中で、energy_above_hullが最小の材料の式と値を教えてください。", "gold_sql": "SELECT e.formula, e.energy_above_hull FROM mp_entries e JOIN mp_element_ratios r ON e.entry_id = r.entry_id WHERE r.element = 'Co' ORDER BY e.energy_above_hull ASC, e.formula LIMIT 1;"}
+{"id": "q_mp_011", "difficulty": "hard", "question": "各元素系（chemsys）ごとに最も安定な材料の式を教えてください。", "gold_sql": "SELECT DISTINCT ON (chemsys) chemsys, formula, energy_above_hull FROM mp_entries ORDER BY chemsys, energy_above_hull ASC, formula;"}
 {"id": "q_mp_012", "difficulty": "hard", "question": "立方晶（Cubic）でバンドギャップが1 eVを超える材料は何件ありますか？", "gold_sql": "SELECT COUNT(*) FROM mp_entries WHERE crystal_system = 'Cubic' AND band_gap > 1;"}
-{"id": "q_mp_013", "difficulty": "very_hard", "question": "Co-Ti系の材料の中で、バンドギャップが最大の材料の式を教えてください。", "gold_sql": "SELECT formula FROM mp_entries WHERE chemsys = 'Co-Ti' ORDER BY band_gap DESC NULLS LAST LIMIT 1;"}
+{"id": "q_mp_013", "difficulty": "very_hard", "question": "Co-Ti系の材料の中で、バンドギャップが最大の材料の式を教えてください。", "gold_sql": "SELECT formula FROM mp_entries WHERE chemsys = 'Co-Ti' ORDER BY band_gap DESC NULLS LAST, formula LIMIT 1;"}
 {"id": "q_mp_014", "difficulty": "very_hard", "question": "CoとTiの両方を含む材料の平均energy_above_hullを教えてください。", "gold_sql": "SELECT AVG(e.energy_above_hull) FROM mp_entries e JOIN mp_element_ratios r1 ON e.entry_id = r1.entry_id AND r1.element = 'Co' JOIN mp_element_ratios r2 ON e.entry_id = r2.entry_id AND r2.element = 'Ti';"}
 {"id": "q_mp_015", "difficulty": "very_hard", "question": "結晶系ごとの平均バンドギャップを大きい順に教えてください。", "gold_sql": "SELECT crystal_system, AVG(band_gap) FROM mp_entries GROUP BY crystal_system ORDER BY AVG(band_gap) DESC NULLS LAST;"}
