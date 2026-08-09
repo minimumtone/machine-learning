@@ -1,0 +1,28 @@
+{
+  "columns": [
+    "formula",
+    "formation_energy_per_atom",
+    "energy_above_hull",
+    "is_stable"
+  ],
+  "rows": [
+    [
+      "MnSn",
+      -0.4183,
+      0.0005,
+      true
+    ],
+    [
+      "MnBe",
+      -0.3538,
+      0.0006,
+      true
+    ],
+    [
+      "NiSi",
+      -0.02,
+      0.0006,
+      true
+    ]
+  ]
+}

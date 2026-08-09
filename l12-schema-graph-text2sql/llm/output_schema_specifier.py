@@ -27,8 +27,8 @@ _COLUMN_HINTS: list[tuple[re.Pattern[str], list[str]]] = [
      ["formula", "value AS bulk_modulus"]),
     # Band gap
     (re.compile(r"バンドギャップ|band.gap|bandgap", re.I),
-     ["formula", "band_gap_value"]),
-    # Elastic tensor
+     ["formula", "band_gap"]),
+    # Elastic tensor (C11/C12/C44 are output aliases over calculated_property.value)
     (re.compile(r"弾性|elastic|C11|C12|C44", re.I),
      ["formula", "C11", "C12", "C44"]),
     # Volume
@@ -65,11 +65,45 @@ def specify_output_schema(
     if not matched_cols:
         return "Return only the columns directly relevant to answering the question. Do NOT add entry_id, reduced_formula, or other auxiliary columns unless explicitly requested."
 
-    # Always include formula as identifier
-    matched_cols.add("formula")
+    # Keep only hints that reference columns actually present in this schema.
+    # allowed_columns arrive as "table.column"; the base token is the column name.
+    allowed_bases = {
+        c.rsplit(".", 1)[-1].strip().lower() for c in allowed_columns
+    }
+
+    # Pivoted property aliases whose SELECT item is an aggregate over "value"
+    # (e.g. MAX(CASE WHEN cp.property_name = 'C11' THEN cp.value END) AS C11).
+    _PIVOT_ALIASES = {"c11", "c12", "c44"}
+
+    def _hint_is_allowed(hint: str) -> bool:
+        """Return True if *hint* is supported by this schema."""
+        # Separate the expression from its output alias (case-insensitive AS).
+        expr = re.split(r"\s+as\s+", hint, flags=re.I, maxsplit=1)[0].strip()
+        if not expr or expr == "*":
+            return False
+        # Find all identifier tokens in the expression.
+        tokens = set(re.findall(r"[a-zA-Z_][a-zA-Z0-9_]*", expr.lower()))
+        if tokens & allowed_bases:
+            return True
+        # Bare aliases such as C11 are acceptable when a "value" column exists
+        # (calculated_property.value in the L1_2 schema), because few-shot examples
+        # show how to pivot them with CASE/MAX.
+        single = expr.lower()
+        if single in _PIVOT_ALIASES and "value" in allowed_bases:
+            return True
+        return False
+
+    available: set[str] = {col for col in matched_cols if _hint_is_allowed(col)}
+
+    if not available:
+        return "Return only the columns directly relevant to answering the question. Do NOT add entry_id, reduced_formula, or other auxiliary columns unless explicitly requested."
+
+    # Always include a formula identifier if the schema has one.
+    if "formula" in allowed_bases:
+        available.add("formula")
 
     # Build instruction
-    col_list = ", ".join(sorted(matched_cols))
+    col_list = ", ".join(sorted(available))
     return (
         f"Focus the SELECT clause on these relevant columns: {col_list}. "
         "Do NOT add unnecessary columns like entry_id, reduced_formula, chemical_system, "

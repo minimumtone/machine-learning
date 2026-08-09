@@ -1,0 +1,16 @@
+{
+  "columns": [
+    "formula",
+    "formation_energy_per_atom",
+    "energy_above_hull",
+    "is_stable"
+  ],
+  "rows": [
+    [
+      "TiZr3",
+      0.1254,
+      0.0006,
+      true
+    ]
+  ]
+}

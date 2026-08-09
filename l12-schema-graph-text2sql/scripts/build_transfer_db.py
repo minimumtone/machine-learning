@@ -18,6 +18,7 @@ PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
 import psycopg  # noqa: E402
+from psycopg import sql as pgsql  # noqa: E402
 
 from scripts.eval_ablation import CONNINFO  # noqa: E402
 
@@ -40,8 +41,12 @@ def recreate_database() -> None:
     """Drop and recreate the transfer database."""
     admin = psycopg.connect(CONNINFO, autocommit=True)
     with admin.cursor() as cur:
-        cur.execute(f'DROP DATABASE IF EXISTS "{TRANSFER_DB}"')  # type: ignore[arg-type]
-        cur.execute(f'CREATE DATABASE "{TRANSFER_DB}"')  # type: ignore[arg-type]
+        cur.execute(
+            pgsql.SQL("DROP DATABASE IF EXISTS {}").format(pgsql.Identifier(TRANSFER_DB))
+        )
+        cur.execute(
+            pgsql.SQL("CREATE DATABASE {}").format(pgsql.Identifier(TRANSFER_DB))
+        )
     admin.close()
 
 

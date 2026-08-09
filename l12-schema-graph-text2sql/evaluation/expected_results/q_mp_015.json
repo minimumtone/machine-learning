@@ -1,0 +1,36 @@
+{
+  "columns": [
+    "crystal_system",
+    "avg"
+  ],
+  "rows": [
+    [
+      "Hexagonal",
+      0.010439583333333335
+    ],
+    [
+      "Cubic",
+      0.0
+    ],
+    [
+      "Orthorhombic",
+      0.0
+    ],
+    [
+      "Triclinic",
+      0.0
+    ],
+    [
+      "Tetragonal",
+      0.0
+    ],
+    [
+      "Monoclinic",
+      0.0
+    ],
+    [
+      "Trigonal",
+      0.0
+    ]
+  ]
+}

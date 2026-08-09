@@ -1,0 +1,22 @@
+{
+  "columns": [
+    "formula",
+    "formation_energy_per_atom",
+    "energy_above_hull",
+    "is_stable"
+  ],
+  "rows": [
+    [
+      "AuAl",
+      0.0574,
+      0.0003,
+      true
+    ],
+    [
+      "RuSc",
+      0.0741,
+      0.0005,
+      true
+    ]
+  ]
+}

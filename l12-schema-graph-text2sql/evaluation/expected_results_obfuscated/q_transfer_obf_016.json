@@ -1,0 +1,34 @@
+{
+  "columns": [
+    "col_papa",
+    "col_gemini",
+    "col_uniform"
+  ],
+  "rows": [
+    [
+      "Cu",
+      "Fm-3m",
+      132
+    ],
+    [
+      "C",
+      "P63/mmc",
+      107
+    ],
+    [
+      "Co",
+      "P63/mmc",
+      87
+    ],
+    [
+      "Si",
+      "Fd-3m",
+      71
+    ],
+    [
+      "Ag",
+      "I4/mmm",
+      68
+    ]
+  ]
+}
