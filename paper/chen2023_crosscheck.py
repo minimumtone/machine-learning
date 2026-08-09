@@ -52,11 +52,11 @@ LABELS = {
 }
 
 
-def chen_omega():
+def chen_data_root():
+    """Return the extracted Chen archive root, downloading it only if absent."""
     files = list((CACHE / "chen2023_data").glob("*/model_params/omegas.json"))
     if files:
-        x = json.load(open(files[0]))
-        return x, files[0]
+        return files[0].parents[1]
 
     CACHE.mkdir(parents=True, exist_ok=True)
     archive = CACHE / "mpea_stability-v0.1.zip"
@@ -92,8 +92,12 @@ def chen_omega():
     files = list(target.glob("*/model_params/omegas.json"))
     if not files:
         raise RuntimeError("Chen archive extraction produced no omegas.json")
-    x = json.load(open(files[0]))
-    return x, files[0]
+    return files[0].parents[1]
+
+
+def chen_omega():
+    path = chen_data_root() / "model_params" / "omegas.json"
+    return json.load(open(path)), path
 
 
 def pair(s):

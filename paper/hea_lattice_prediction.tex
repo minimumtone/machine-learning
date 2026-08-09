@@ -899,6 +899,33 @@ FCC & 112 & 0.996 & 0.993 & 0.999 & 0.003 & 0.013 / 0.019 \\
 \label{fig:chen2023_radius_omega}
 \end{figure*}
 
+\subsubsection{相安定性予測への格子定数の付与（統合スクリーニング）}
+\label{sec:chen2023_screening}
+
+Chenら~\cite{Chen2023}は66万通りの等原子比五元系について相安定性を予測しているが、格子定数などの構造量は与えていない。一方、本研究の二元系$\Omega_\text{sf}$モデルは相安定性データに格子定数を付与できるため、両者は追加のDFT計算なしで結合できる。Chenらの$0.9T_\text{m}$焼鈍データセット（658,008件）で単相安定と判定された30,201件（BCC 22,631、HCP 5,906、FCC 1,664）を対象とした。
+
+構造ごとに、論文で検証済みの参照と$q$を用いた。BCCはSQSのDFT Vegard参照$\Omega_\text{sf}$（445ペア）と$q=1$、FCCはL1$_2$のKing参照$\Omega_\text{sf}$（441ペア）と、Alonsoの64合金に対して本研究の$\texttt{optimize\_gamma}$で導出した$q_\text{FCC}=0.133399$を用いた。したがってFCCの補正はほぼVegard則となるように校正されており、BCCと同じ$q=1$を適用していない。
+
+本研究はHCPのSQSデータベースを持たないため、安定30,201件のうちHCPの5,906件は対象外である。残るBCCとFCCの24,295件について、4$f$希土類とYを含む257件、King原子体積を持たない元素を含む7,586件、必要な10ペアの$\Omega_\text{sf}$が欠損する10件を順に除外した。その結果、16,442件（BCC 14,887、FCC 1,555）に格子定数を付与した。BCCの被覆率は14,887/22,631 = 65.8\%、FCCは1,555/1,664 = 93.5\%、BCC+FCC全体では16,442/24,295 = 67.7\%である。欠損ペアを$\Omega_\text{sf}=0$にフォールバックさせれば件数は増やせるが、補正の欠落を予測値に混入させるため、ここでは全10ペアが揃う合金のみを対象とした。
+
+付与された格子定数はBCCで$a = 2.8648$--$3.5183$~\AA{}（平均$3.1300$~\AA{}）、FCCで$a = 3.5828$--$4.1584$~\AA{}（平均$3.8234$~\AA{}）である（図~\ref{fig:chen2023_screening}）。Vegard則からの補正量は、BCCで中央値$|\Delta a/a| = 0.3955$\%、平均$-0.1676$\%、範囲$-2.3038$--$+1.6947$\%であり、1,238件（8.3\%）が$|\Delta a/a| > 1$\%である。FCCでは中央値$0.0450$\%、平均$+0.0173$\%、範囲$-0.2248$--$+0.1557$\%で、1\%超の系は0件である。FCCの補正が小さいのは、L1$_2$ + King参照に対して$q_\text{FCC}=0.133399$を用いているためであり、ほぼVegard則となることは設計上の帰結である。最大の収縮補正はMg-Ni-Os-Re-Sc（BCC、$-2.3038$\%）、Mg-Ni-Os-Ru-Sc（BCC、$-2.2800$\%）、Co-Mg-Os-Ru-Sc（BCC、$-2.2798$\%）などに現れた。これらはサイズ差の大きい元素対と強い混合を併せ持つ系であり、Vegard則が最も破綻しやすい領域である。
+
+この統合表（\texttt{paper/results\_chen2023\_screening.csv}）は、相安定性のみでは絞り込めない格子整合性（基板・析出相との整合、耐火合金の$\delta$値設計など）を含めた探索に利用できる。ただし、(1)~$q$はAlonsoの64合金で校正した値をそのまま用いており、Chenらの予測合金群に対して再校正していない、(2)~予測はChenらが与えた相（BCCまたはFCC）が実現することを前提とする、(3)~独立テストRMSE（BCC 0.0124~\AA{}、FCC 0.0152~\AA{}、いずれも\S\ref{sec:sqs_improvement}の採用モデル）と同程度の不確かさが各値に付随する、という3点に留意が必要である。
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.98\textwidth]{fig_chen2023_screening_lattice.png}
+\caption{Chenら~\cite{Chen2023}が単相安定と予測した等原子比五元系に本研究の構造別モデルで付与した格子定数の分布。左：BCC 14,887合金（SQS + DFT Vegard参照、$q=1$）、右：FCC 1,555合金（L1$_2$ + King参照、$q_\text{FCC}=0.133399$）。塗りつぶしが$\Omega_\text{sf}$補正後、黒線がVegard則である。}
+\label{fig:chen2023_screening}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.98\textwidth]{fig_chen2023_screening_shift.png}
+\caption{$\Omega_\text{sf}$補正の大きさ。左：Vegard予測と構造別$q$補正後予測のパリティプロット（破線は$y=x$、BCCは$q=1$、FCCは$q_\text{FCC}=0.133399$）。右：補正量$\Delta a/a$の分布。BCCの中央値は$|\Delta a/a| = 0.3955$\%、1,238件（8.3\%）が1\%を超える。FCCの中央値は$0.0450$\%、1\%超は0件である。}
+\label{fig:chen2023_screening_shift}
+\end{figure*}
+
 \subsubsection{秩序構造とSQSの$\Omega_\text{sf}$相関}
 \label{sec:sqs_correlation}
 
