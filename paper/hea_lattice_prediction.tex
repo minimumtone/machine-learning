@@ -939,6 +939,7 @@ $q_\text{BCC}$ & テスト RMSE (\AA) \\
 \caption{$q$の条件依存性をまとめた統合表。$q$は各行の校正母集団で得た値、RMSEは対応する独立テスト母集団の値である。}
 \label{tab:q_integrated}
 \scriptsize
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}llllrr@{}}
 \toprule
 参照体積 & 構造 & 校正母集団 & $q$ & RMSE$_\text{BCC}$ & RMSE$_\text{ALL}$ \\
@@ -951,6 +952,7 @@ King & BCC/FCC & HEA 64 & 0.486/0.133 & 0.0157 & 0.0155 \\
 King（加法分解） & FCC & HEA 64 & 0.076 & --- & --- \\
 \bottomrule
 \end{tabular}
+}
 \par\smallskip
 {\scriptsize FCCの採用モデルはL1$_2$+King、$q_\text{FCC}=0.133399$。BCC/FCCの順序を付した$q$は構造別の値である。RMSEは\AA{}。}
 \end{table}
@@ -960,6 +962,7 @@ King（加法分解） & FCC & HEA 64 & 0.076 & --- & --- \\
 \caption{統計的不確実性の本文抜粋。改善量はVegard $-$ $\Omega_\text{sf}$で、正値が改善を表す。}
 \label{tab:uncertainty_main}
 \scriptsize
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}lrrr@{}}
 \toprule
 評価 & 母集団 & 改善量 [\AA] & 95\% CI [\AA] \\
@@ -969,11 +972,12 @@ Bootstrap-DCV（$q$再最適化） & 全95 & +0.0019 & [-0.0024, +0.0048] \\
 LOO-DCV（$q$再最適化） & 全95 & RMSE改善9.1\% & --- \\
 \bottomrule
 \end{tabular}
+}
 \par\smallskip
 {\scriptsize Bootstrap-DCVの95\% CIはゼロを跨ぐため、$q$推定の不確実性を含めた改善の統計的有意性は確定していない。LOO-DCVの9.1\%改善は、独立テストの23.3\%改善と併せて解釈する。}
 \end{table}
 
-テストRMSEは$q = 1.0$--$1.6$で安定し（BCC: 0.0109--0.0124~\AA{}）、$q = 1.0$は追加パラメータなしで物理的に自然な選択である。$q_\text{opt} = 1.11$も同等以上のテスト精度を示すが、データセットや純元素参照の選択に敏感な経験的パラメータとなる（予備的な$4\times4\times4$ SQS直接比較では有限サイズ効果は$\Omega_\text{sf}$で0.4\%以下と小さい）。
+テストRMSEは$q = 1.0$--$1.6$で安定し（BCC: 0.0109--0.0124~\AA{}）、$q = 1.0$は追加パラメータなしで物理的に自然な選択である。$q_\text{opt} = 1.11$も同等以上のテスト精度を示すが、データセットや純元素参照の選択に敏感な経験的パラメータとなる。16原子SQSの有限サイズ効果の検証は別途進行中であり、本稿の結論には用いない。
 
 \subsubsection{$\Omega_\text{sf}$分布の比較}
 \label{sec:omega_distribution}
