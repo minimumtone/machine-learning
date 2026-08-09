@@ -365,7 +365,8 @@ v_weighted_b2 = (v_nb + 2 * v_b2_atom) / 3
 c14_mean = {x: float(np.mean(v)) for x, v in c14_results.items()}
 c14_std = {x: float(np.std(v, ddof=1)) if len(v) > 1 else 0.0 for x, v in c14_results.items()}
 v_c14 = c14_mean[0.5]
-size_dep = abs(np.mean(size_check) - v_c14) / v_c14 * 100
+v_c14_sqs12 = float(np.mean(sqs_x05_small))
+size_dep = abs(np.mean(size_check) - v_c14_sqs12) / v_c14_sqs12 * 100
 
 summary = dict(
     V_Nb=v_nb, V_Ni=v_ni, V_Al=v_al, V_Cr=pure_vol["Cr"], V_V=pure_vol["V"],
@@ -373,7 +374,11 @@ summary = dict(
     fcc_fit_a=a_fit, fcc_fit_b=b_fit, V_NiAl_extrap_x05=v_extrap,
     dV_NiAl_extrap_minus_B2=v_extrap - v_b2_atom,
     V_C14_x05=v_c14, V_C14_x05_std=c14_std[0.5],
-    V_C14_x05_48at=float(np.mean(size_check)), size_dependence_percent=size_dep,
+    V_C14_x05_sqs12=v_c14_sqs12,
+    V_C14_x05_sqs12_std=float(np.std(sqs_x05_small, ddof=1)) if len(sqs_x05_small) > 1 else 0.0,
+    V_C14_x05_48at=float(np.mean(size_check)),
+    V_C14_x05_48at_std=float(np.std(size_check, ddof=1)) if len(size_check) > 1 else 0.0,
+    size_dependence_percent=size_dep,
     V_pure=v_pure, V_weighted_extrap=v_weighted_extrap, V_weighted_B2=v_weighted_b2,
     dev_weighted_extrap=abs(v_c14 - v_weighted_extrap),
     dev_weighted_B2=abs(v_c14 - v_weighted_b2),
