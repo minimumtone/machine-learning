@@ -20,8 +20,6 @@ from psycopg import sql as pgsql
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
-from scripts.eval_ablation import CONNINFO  # noqa: E402
-
 SRC_DB = os.getenv("TRANSFER_DB", "oqmd_transfer")
 OBF_DB = f"{SRC_DB}_obfuscated"
 MAPPING_PATH = PROJECT / "db" / "obfuscated_transfer_mapping.json"
@@ -35,6 +33,20 @@ WORDS = [
     "nova", "orion", "pegasus", "quasar", "rhea", "solar", "terra", "umbra",
     "vega", "wolf", "xenon", "yeti", "zenith",
 ]
+
+
+def _db_conninfo(db: str) -> str:
+    """Build a connection string using environment variables; no password fallback."""
+    password = os.environ.get("POSTGRES_PASSWORD")
+    if not password:
+        raise RuntimeError("POSTGRES_PASSWORD environment variable is required")
+    return (
+        f"host={os.getenv('POSTGRES_HOST', 'localhost')} "
+        f"port={os.getenv('POSTGRES_PORT', '5432')} "
+        f"dbname={db} "
+        f"user={os.getenv('POSTGRES_USER', 'l12_user')} "
+        f"password={password}"
+    )
 
 
 def _name_stream(prefix: str, rng: random.Random) -> Iterator[str]:
@@ -54,12 +66,12 @@ def main() -> None:
     rng = random.Random(seed)
 
     print("Terminating existing transfer connections...")
-    admin = psycopg.connect(CONNINFO, autocommit=True)
+    admin = psycopg.connect(_db_conninfo("postgres"), autocommit=True)
     with admin.cursor() as cur:
         cur.execute("""
             SELECT pg_terminate_backend(pid)
             FROM pg_stat_activity
-            WHERE datname IN (%s, %s, 'l12_materials')
+            WHERE datname IN (%s, %s)
               AND pid <> pg_backend_pid()
         """, (SRC_DB, OBF_DB))
         print("Dropped existing obfuscated DB (if any)...")
@@ -73,13 +85,7 @@ def main() -> None:
         )
     admin.close()
 
-    obf_conninfo = (
-        f"host={os.getenv('POSTGRES_HOST', 'localhost')} "
-        f"port={os.getenv('POSTGRES_PORT', '5432')} "
-        f"dbname={OBF_DB} "
-        f"user={os.getenv('POSTGRES_USER', 'l12_user')} "
-        f"password={os.getenv('POSTGRES_PASSWORD', 'l12_password')}"
-    )
+    obf_conninfo = _db_conninfo(OBF_DB)
     print(f"Connecting to {OBF_DB}...")
     conn = psycopg.connect(obf_conninfo)
     with conn.cursor() as cur:

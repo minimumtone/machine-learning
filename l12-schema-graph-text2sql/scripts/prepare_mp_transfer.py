@@ -31,7 +31,7 @@ QUERIES: list[dict[str, Any]] = [
         "id": "q_mp_002",
         "difficulty": "easy",
         "question": "格子定数aが5未満の材料の式を3つ教えてください。",
-        "gold_sql": "SELECT formula FROM mp_entries WHERE lattice_a < 5 LIMIT 3;",
+        "gold_sql": "SELECT formula FROM mp_entries WHERE lattice_a < 5 ORDER BY formula, entry_id LIMIT 3;",
     },
     {
         "id": "q_mp_003",
@@ -40,7 +40,7 @@ QUERIES: list[dict[str, Any]] = [
         "gold_sql": (
             "SELECT DISTINCT e.formula FROM mp_entries e "
             "JOIN mp_element_ratios r ON e.entry_id = r.entry_id "
-            "WHERE r.element = 'Ni' LIMIT 5;"
+            "WHERE r.element = 'Ni' ORDER BY e.formula LIMIT 5;"
         ),
     },
     {
@@ -83,7 +83,7 @@ QUERIES: list[dict[str, Any]] = [
         "id": "q_mp_009",
         "difficulty": "medium",
         "question": "体積が最も大きい材料の式を教えてください。",
-        "gold_sql": "SELECT formula FROM mp_entries ORDER BY volume DESC LIMIT 1;",
+        "gold_sql": "SELECT formula FROM mp_entries ORDER BY volume DESC NULLS LAST, formula LIMIT 1;",
     },
     {
         "id": "q_mp_010",
@@ -92,7 +92,7 @@ QUERIES: list[dict[str, Any]] = [
         "gold_sql": (
             "SELECT e.formula, e.energy_above_hull FROM mp_entries e "
             "JOIN mp_element_ratios r ON e.entry_id = r.entry_id "
-            "WHERE r.element = 'Co' ORDER BY e.energy_above_hull ASC LIMIT 1;"
+            "WHERE r.element = 'Co' ORDER BY e.energy_above_hull ASC, e.formula LIMIT 1;"
         ),
     },
     {
@@ -101,7 +101,7 @@ QUERIES: list[dict[str, Any]] = [
         "question": "各元素系（chemsys）ごとに最も安定な材料の式を教えてください。",
         "gold_sql": (
             "SELECT DISTINCT ON (chemsys) chemsys, formula, energy_above_hull "
-            "FROM mp_entries ORDER BY chemsys, energy_above_hull ASC;"
+            "FROM mp_entries ORDER BY chemsys, energy_above_hull ASC, formula;"
         ),
     },
     {
@@ -119,7 +119,7 @@ QUERIES: list[dict[str, Any]] = [
         "question": "Co-Ti系の材料の中で、バンドギャップが最大の材料の式を教えてください。",
         "gold_sql": (
             "SELECT formula FROM mp_entries WHERE chemsys = 'Co-Ti' "
-            "ORDER BY band_gap DESC NULLS LAST LIMIT 1;"
+            "ORDER BY band_gap DESC NULLS LAST, formula LIMIT 1;"
         ),
     },
     {
@@ -153,7 +153,7 @@ FEW_SHOT: list[dict[str, str]] = [
         "sql": (
             "SELECT DISTINCT e.formula FROM mp_entries e "
             "JOIN mp_element_ratios r ON e.entry_id = r.entry_id "
-            "WHERE r.element = 'Ni' LIMIT 5;"
+            "WHERE r.element = 'Ni' ORDER BY e.formula LIMIT 5;"
         ),
     },
     {
@@ -209,6 +209,7 @@ Rules:
 - Return SQL only.
 - Always include a LIMIT clause (default LIMIT 10000).
 - For "最小/最大/最も" questions, use ORDER BY + LIMIT 1.
+- For queries that ask for `N` examples or a limited list (e.g. "3つ", "5つ"), add ORDER BY on a stable column (e.g. `formula`, `entry_id`) before LIMIT so the result is deterministic.
 - For "何件/数を教えて" questions, use COUNT(*) with appropriate WHERE and a descriptive alias.
 - For "割合" (ratio/percentage) questions, use COUNT(*) FILTER(WHERE condition) * 100.0 / COUNT(*).
 - IMPORTANT: Follow the "Output structure instruction" below. If it says to return individual rows, do NOT use GROUP BY or aggregate functions.

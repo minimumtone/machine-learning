@@ -56,12 +56,15 @@ COLUMN_DESCRIPTIONS: dict[str, str] = {
 
 
 def _obf_conninfo(db: str) -> str:
+    password = os.environ.get("POSTGRES_PASSWORD")
+    if not password:
+        raise RuntimeError("POSTGRES_PASSWORD environment variable is required")
     return (
         f"host={os.getenv('POSTGRES_HOST', 'localhost')} "
         f"port={os.getenv('POSTGRES_PORT', '5432')} "
         f"dbname={db} "
         f"user={os.getenv('POSTGRES_USER', 'l12_user')} "
-        f"password={os.getenv('POSTGRES_PASSWORD', 'l12_password')}"
+        f"password={password}"
     )
 
 
