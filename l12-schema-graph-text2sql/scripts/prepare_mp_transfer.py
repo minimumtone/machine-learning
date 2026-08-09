@@ -83,7 +83,7 @@ QUERIES: list[dict[str, Any]] = [
         "id": "q_mp_009",
         "difficulty": "medium",
         "question": "体積が最も大きい材料の式を教えてください。",
-        "gold_sql": "SELECT formula FROM mp_entries ORDER BY volume DESC, formula LIMIT 1;",
+        "gold_sql": "SELECT formula FROM mp_entries ORDER BY volume DESC NULLS LAST, formula LIMIT 1;",
     },
     {
         "id": "q_mp_010",
