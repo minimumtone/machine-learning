@@ -977,7 +977,9 @@ LOO-DCV（$q$再最適化） & 全95 & RMSE改善9.1\% & --- \\
 {\scriptsize Bootstrap-DCVの95\% CIはゼロを跨ぐため、$q$推定の不確実性を含めた改善の統計的有意性は確定していない。LOO-DCVの9.1\%改善は、独立テストの23.3\%改善と併せて解釈する。}
 \end{table}
 
-テストRMSEは$q = 1.0$--$1.6$で安定し（BCC: 0.0109--0.0124~\AA{}）、$q = 1.0$は追加パラメータなしで物理的に自然な選択である。$q_\text{opt} = 1.11$も同等以上のテスト精度を示すが、データセットや純元素参照の選択に敏感な経験的パラメータとなる。16原子SQSの有限サイズ効果の検証は別途進行中であり、本稿の結論には用いない。
+テストRMSEは$q = 1.0$--$1.6$で安定し（BCC: 0.0109--0.0124~\AA{}）、$q = 1.0$は追加パラメータなしで物理的に自然な選択である。$q_\text{opt} = 1.11$も同等以上のテスト精度を示すが、データセットや純元素参照の選択に敏感な経験的パラメータとなる。
+
+16原子SQSの有限サイズ効果の検証は別途進行中であり、本稿の結論には用いない。
 
 \subsubsection{$\Omega_\text{sf}$分布の比較}
 \label{sec:omega_distribution}
@@ -1004,6 +1006,7 @@ Chenら~\cite{Chen2023}のZenodoデータベース（DOI: \href{https://doi.org/
 \centering
 \caption{ChenらのDFT混合エンタルピーとの独立検証。BCCは387共通ペア、FCCは論文formal（King基準）の112共通ペア。$\Delta H_\text{mix}$はeV/atom。Chenらはセル形状固定・ENCUT = 500~eV・2000~$k$点/atom、本研究はISIF = 3全緩和・ENCUT = 520~eV・ISPIN = 2であり、緩和自由度、カットオフ、$k$点密度、磁気状態が一致しない。この条件差を踏まえた外部再現性の指標である。}
 \label{tab:chen2023_crosscheck}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lrrrrrr}
 \toprule
 構造 & 共通数 & $r$ & $\rho$ & 傾き & 切片 & MAE / RMSE \\
@@ -1012,6 +1015,7 @@ BCC & 387 & 0.980 & 0.984 & 1.002 & 0.012 & 0.032 / 0.060 \\
 FCC & 112 & 0.996 & 0.993 & 0.999 & 0.003 & 0.013 / 0.019 \\
 \bottomrule
 \end{tabular}
+}
 \end{table}
 
 \begin{figure*}[!t]
