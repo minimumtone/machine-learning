@@ -1,0 +1,16 @@
+{
+  "columns": [
+    "formula",
+    "formation_energy_per_atom",
+    "energy_above_hull",
+    "is_stable"
+  ],
+  "rows": [
+    [
+      "ZrSc",
+      -0.3609,
+      0.0004,
+      true
+    ]
+  ]
+}

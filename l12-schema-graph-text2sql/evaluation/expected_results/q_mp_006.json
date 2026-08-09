@@ -1,0 +1,36 @@
+{
+  "columns": [
+    "crystal_system",
+    "count"
+  ],
+  "rows": [
+    [
+      "Cubic",
+      93
+    ],
+    [
+      "Tetragonal",
+      53
+    ],
+    [
+      "Hexagonal",
+      48
+    ],
+    [
+      "Orthorhombic",
+      42
+    ],
+    [
+      "Trigonal",
+      32
+    ],
+    [
+      "Monoclinic",
+      26
+    ],
+    [
+      "Triclinic",
+      5
+    ]
+  ]
+}
