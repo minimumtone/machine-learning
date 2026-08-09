@@ -1,0 +1,34 @@
+[
+  {
+    "nl_query": "mp_entriesの総数を教えて。",
+    "sql": "SELECT COUNT(*) AS entry_count FROM mp_entries;"
+  },
+  {
+    "nl_query": "Niを含む材料の式を5つ。",
+    "sql": "SELECT DISTINCT e.formula FROM mp_entries e JOIN mp_element_ratios r ON e.entry_id = r.entry_id WHERE r.element = 'Ni' LIMIT 5;"
+  },
+  {
+    "nl_query": "立方晶で最も体積の大きい材料。",
+    "sql": "SELECT formula FROM mp_entries WHERE crystal_system = 'Cubic' ORDER BY volume DESC LIMIT 1;"
+  },
+  {
+    "nl_query": "Coを含み、energy_above_hullが最小の材料。",
+    "sql": "SELECT e.formula, e.energy_above_hull FROM mp_entries e JOIN mp_element_ratios r ON e.entry_id = r.entry_id WHERE r.element = 'Co' ORDER BY e.energy_above_hull ASC LIMIT 1;"
+  },
+  {
+    "nl_query": "Al-Ni系の材料数。",
+    "sql": "SELECT COUNT(*) FROM mp_entries WHERE chemsys = 'Al-Ni';"
+  },
+  {
+    "nl_query": "結晶系ごとに材料を数えよ。",
+    "sql": "SELECT crystal_system, COUNT(*) FROM mp_entries GROUP BY crystal_system ORDER BY COUNT(*) DESC;"
+  },
+  {
+    "nl_query": "バンドギャップがある材料の割合。",
+    "sql": "SELECT COUNT(*) FILTER(WHERE band_gap > 0) * 100.0 / COUNT(*) FROM mp_entries;"
+  },
+  {
+    "nl_query": "CoとTiの両方を含む材料の平均energy_above_hull。",
+    "sql": "SELECT AVG(e.energy_above_hull) FROM mp_entries e JOIN mp_element_ratios r1 ON e.entry_id = r1.entry_id AND r1.element = 'Co' JOIN mp_element_ratios r2 ON e.entry_id = r2.entry_id AND r2.element = 'Ti';"
+  }
+]

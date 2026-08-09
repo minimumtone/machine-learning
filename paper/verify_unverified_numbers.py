@@ -89,6 +89,9 @@ def main():
     print("=" * 78)
     sqs = pd.read_csv(DATA / "sqs_results.csv")
     for root, label in [("BCC_SQS", "BCC-SQS"), ("FCC_SQS", "FCC-SQS")]:
+        # Keep the cell size used by the paper's overlay statistics:
+        # BCC 16-atom SQS (8:8) and FCC 32-atom SQS (16:16).
+        expected_count = 8 if root == "BCC_SQS" else 16
         sub = sqs[(sqs["structure_root"] == root) & (sqs["status"] == "OK")
                   & (sqs["relax_converged"] == "yes")]
         pts = []
@@ -103,8 +106,8 @@ def main():
                 continue
             if ea not in KING_ATOMIC_VOLUMES or eb not in KING_ATOMIC_VOLUMES:
                 continue
-            if na != nb:
-                continue  # 50:50 pairs only (matches Omega_sf extraction)
+            if na != expected_count or nb != expected_count:
+                continue  # match the canonical SQS cell size used in the paper
             v_act = float(r["volume_A3"]) / float(r["natoms"])
             v_veg = (na * KING_ATOMIC_VOLUMES[ea] +
                      nb * KING_ATOMIC_VOLUMES[eb]) / (na + nb)

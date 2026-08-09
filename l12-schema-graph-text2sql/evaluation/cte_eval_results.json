@@ -3,117 +3,117 @@
   "dataset": "cte_full.jsonl",
   "n_queries": 15,
   "summary": {
-    "overall": 0.5489177489177489,
+    "overall": 0.6155844155844155,
     "by_difficulty": {
-      "very_hard": 0.5489177489177489
+      "very_hard": 0.6155844155844155
     },
-    "avg_latency": 42.5
+    "avg_latency": 40.193333333333335
   },
   "results": [
     {
       "qid": "q_vhard_009",
       "difficulty": "very_hard",
       "accuracy": 1.0,
-      "latency_s": 28.6,
+      "latency_s": 44.0,
       "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\nWHERE\n    (m.formula = 'Co3Ti' OR m.reduced_formula = 'Co3Ti')\n\nLIMIT 10000;"
     },
     {
       "qid": "q_vhard_016",
       "difficulty": "very_hard",
       "accuracy": 1.0,
-      "latency_s": 26.4,
-      "sql": "SELECT m.formula, ps.formation_energy_per_atom AS formation_enthalpy_ev_per_atom, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\n  AND ps.formation_energy_per_atom < -0.3\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
+      "latency_s": 21.8,
+      "sql": "SELECT m.formula, ps.formation_energy_per_atom, ps.is_stable, s.lattice_a\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\n  AND ps.formation_energy_per_atom < -0.3\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
     },
     {
       "qid": "q_vhard_018",
       "difficulty": "very_hard",
       "accuracy": 1.0,
-      "latency_s": 26.7,
-      "sql": "SELECT c.element AS a_site,\n       AVG(ps.formation_energy_per_atom) AS avg_formation_enthalpy_per_atom\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\n  AND c.site_label = 'A-site'\nGROUP BY c.element\nORDER BY avg_formation_enthalpy_per_atom ASC\nLIMIT 10000;"
+      "latency_s": 25.5,
+      "sql": "SELECT c.element AS a_site,\n       AVG(ps.formation_energy_per_atom) AS avg_formation_enthalpy_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\n  AND c.site_label = 'A-site'\nGROUP BY c.element\nORDER BY avg_formation_enthalpy_per_atom ASC\nLIMIT 10000;"
     },
     {
       "qid": "q_vhard_019",
       "difficulty": "very_hard",
       "accuracy": 1.0,
-      "latency_s": 36.7,
-      "sql": "SELECT DISTINCT\n    m.formula,\n    ps.formation_energy_per_atom,\n    ps.energy_above_hull,\n    ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\n  AND c.element = 'Ni'\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 5;"
+      "latency_s": 33.2,
+      "sql": "SELECT m.formula,\n       ps.formation_energy_per_atom AS formation_enthalpy_ev_per_atom,\n       ps.energy_above_hull,\n       ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\n  AND c.element = 'Ni'\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 5;"
     },
     {
       "qid": "q_vhard_020",
       "difficulty": "very_hard",
       "accuracy": 1.0,
-      "latency_s": 29.4,
-      "sql": "SELECT m.formula, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.formation_energy_per_atom <= -0.1\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
+      "latency_s": 23.5,
+      "sql": "SELECT\n  m.formula,\n  ps.formation_energy_per_atom\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.formation_energy_per_atom <= -0.1\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
     },
     {
       "qid": "q_cte_006",
       "difficulty": "very_hard",
       "accuracy": 0.09090909090909091,
-      "latency_s": 45.1,
-      "sql": "SELECT DISTINCT ON (c.element)\n       c.element,\n       m.formula\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE c.site_label = 'A-site'\n  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY c.element, m.formula\nLIMIT 10000;"
+      "latency_s": 43.7,
+      "sql": "SELECT DISTINCT ON (c.element)\n       c.element AS a_site,\n       m.formula\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.site_label = 'A-site'\nORDER BY c.element, m.formula\nLIMIT 10000;"
     },
     {
       "qid": "q_cte_007",
       "difficulty": "very_hard",
       "accuracy": 0.0,
-      "latency_s": 72.1,
+      "latency_s": 44.7,
       "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n\nLIMIT 10000;"
     },
     {
       "qid": "q_cte_008",
       "difficulty": "very_hard",
       "accuracy": 0.0,
-      "latency_s": 43.4,
-      "sql": "SELECT c.element, COUNT(*) AS b_site_count\nFROM material_entry m\nJOIN composition c ON m.entry_id = c.entry_id\nWHERE c.site_label = 'B-site'\nGROUP BY c.element\nLIMIT 10000;"
+      "latency_s": 42.1,
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\nWHERE\n    c.site_label = 'B-site'\n\nLIMIT 10000;"
     },
     {
       "qid": "q_cte_009",
       "difficulty": "very_hard",
-      "accuracy": 0.0,
-      "latency_s": 49.9,
-      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.is_stable = TRUE\n\nLIMIT 10000;"
+      "accuracy": 1.0,
+      "latency_s": 42.2,
+      "sql": "WITH l12_stable AS (\n    SELECT\n        m.entry_id,\n        m.chemical_system,\n        ps.formation_energy_per_atom\n    FROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n      AND ps.is_stable = TRUE\n),\nelements AS (\n    SELECT\n        regexp_split_to_table(chemical_system, '-') AS element,\n        formation_energy_per_atom\n    FROM l12_stable\n)\nSELECT\n    element,\n    COUNT(*) AS stable_l12_count,\n    AVG(formation_energy_per_atom) AS avg_formation_enthalpy_per_atom\nFROM elements\nGROUP BY element\nORDER BY stable_l12_count DESC\nLIMIT 5;"
     },
     {
       "qid": "q_cte_010",
       "difficulty": "very_hard",
       "accuracy": 0.0,
-      "latency_s": 62.3,
-      "sql": "SELECT\n  m.formula,\n  cp_bulk.value AS bulk_modulus,\n  cp_enthalpy.value AS formation_enthalpy\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_bulk ON cp_bulk.calculation_id = calc.calculation_id\nJOIN calculated_property cp_enthalpy ON cp_enthalpy.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND cp_bulk.property_name = 'bulk_modulus'\n  AND cp_bulk.unit = 'GPa'\n  AND cp_bulk.value >= 150\n  AND cp_enthalpy.property_name = 'formation_enthalpy'\nORDER BY cp_enthalpy.value ASC\nLIMIT 10000;"
+      "latency_s": 61.7,
+      "sql": "SELECT\n  m.formula,\n  cp_bulk.value AS bulk_modulus,\n  cp_form.value AS formation_enthalpy\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN calculation calc_bulk ON calc_bulk.entry_id = m.entry_id\nJOIN calculated_property cp_bulk ON cp_bulk.calculation_id = calc_bulk.calculation_id\nJOIN calculation calc_form ON calc_form.entry_id = m.entry_id\nJOIN calculated_property cp_form ON cp_form.calculation_id = calc_form.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND cp_bulk.property_name = 'bulk_modulus'\n  AND cp_bulk.unit = 'GPa'\n  AND cp_bulk.value >= 150\n  AND cp_form.property_name = 'formation_enthalpy'\nORDER BY cp_form.value ASC\nLIMIT 10000;"
     },
     {
       "qid": "q_cte_011",
       "difficulty": "very_hard",
       "accuracy": 1.0,
-      "latency_s": 35.4,
+      "latency_s": 34.6,
       "sql": "SELECT m.formula, tp.debye_temperature_k\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN thermal_property tp ON tp.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND tp.debye_temperature_k IS NOT NULL\nORDER BY tp.debye_temperature_k DESC\nLIMIT 10;"
     },
     {
       "qid": "q_cte_012",
       "difficulty": "very_hard",
       "accuracy": 1.0,
-      "latency_s": 36.5,
-      "sql": "SELECT m.formula, ps.formation_energy_per_atom, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN magnetic_property mp ON mp.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND mp.magnetic_ordering IN ('FM', 'ferromagnetic', 'Ferromagnetic')\nORDER BY ps.energy_above_hull ASC, ps.formation_energy_per_atom ASC\nLIMIT 10000;"
+      "latency_s": 38.0,
+      "sql": "SELECT\n  m.formula,\n  ps.formation_energy_per_atom AS formation_enthalpy_per_atom,\n  ps.energy_above_hull,\n  ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN magnetic_property mp ON mp.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND (mp.magnetic_ordering = 'FM' OR mp.magnetic_ordering ILIKE 'ferromagnetic')\nORDER BY ps.is_stable DESC, ps.energy_above_hull ASC, ps.formation_energy_per_atom ASC\nLIMIT 10000;"
     },
     {
       "qid": "q_cte_013",
       "difficulty": "very_hard",
       "accuracy": 0.14285714285714285,
-      "latency_s": 40.4,
-      "sql": "SELECT m.formula, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'\nORDER BY ABS(ps.formation_energy_per_atom) DESC\nLIMIT 10;"
+      "latency_s": 38.3,
+      "sql": "SELECT\n  m.formula,\n  ps.formation_energy_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY ABS(ps.formation_energy_per_atom) DESC\nLIMIT 10;"
     },
     {
       "qid": "q_cte_014",
       "difficulty": "very_hard",
       "accuracy": 0.0,
-      "latency_s": 49.5,
+      "latency_s": 57.6,
       "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n\nLIMIT 10000;"
     },
     {
       "qid": "q_cte_015",
       "difficulty": "very_hard",
       "accuracy": 1.0,
-      "latency_s": 55.1,
-      "sql": "SELECT c.element AS a_site,\n       AVG(ps.formation_energy_per_atom) AS avg_formation_enthalpy_per_atom\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE c.site_label = 'A-site'\n  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\n  AND EXISTS (\n      SELECT 1\n      FROM material_entry mp\n      JOIN composition cp ON cp.entry_id = mp.entry_id\n      JOIN structure sp ON sp.entry_id = mp.entry_id\n      WHERE mp.number_of_elements = 1\n        AND cp.atomic_fraction = 1\n        AND cp.element = c.element\n        AND sp.volume_per_atom >= 15\n  )\nGROUP BY c.element\nORDER BY c.element\nLIMIT 10000;"
+      "latency_s": 52.0,
+      "sql": "SELECT c.element AS a_site,\n       AVG(ps.formation_energy_per_atom) AS avg_eform\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\n  AND c.site_label = 'A-site'\n  AND c.element IN (\n      SELECT cp.element\n      FROM material_entry mp\n      JOIN composition cp ON cp.entry_id = mp.entry_id\n      JOIN structure sp ON sp.entry_id = mp.entry_id\n      WHERE mp.number_of_elements = 1\n        AND cp.atomic_fraction = 1\n        AND sp.volume_per_atom >= 15\n  )\nGROUP BY c.element\nORDER BY c.element ASC\nLIMIT 10000;"
     }
   ]
 }

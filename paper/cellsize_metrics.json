@@ -1,0 +1,365 @@
+{
+  "data_source": "data/sqs_results.csv",
+  "filters": {
+    "structure_root": "BCC_SQS",
+    "status": "OK",
+    "relax_converged": "yes",
+    "natoms": [
+      16,
+      128
+    ],
+    "compositions": "8:8 for 16 atoms; 64:64 for 128 atoms",
+    "omega_reference": "same-cell-size pure endpoints"
+  },
+  "excluded_elements": [
+    "B",
+    "Ce",
+    "Dy",
+    "Er",
+    "Eu",
+    "Gd",
+    "Ge",
+    "Ho",
+    "La",
+    "Lu",
+    "Nd",
+    "Pr",
+    "Si",
+    "Sm",
+    "Tb",
+    "Tm",
+    "Y",
+    "Yb"
+  ],
+  "raw_row_counts": {
+    "16": 712,
+    "128": 44
+  },
+  "pure_element_volume_comparison": {
+    "n_common_elements": 29,
+    "elements": [
+      "Ag",
+      "Al",
+      "Au",
+      "Be",
+      "Ca",
+      "Co",
+      "Cr",
+      "Cu",
+      "Fe",
+      "Hf",
+      "Ir",
+      "Mg",
+      "Mn",
+      "Mo",
+      "Nb",
+      "Ni",
+      "Os",
+      "Pd",
+      "Pt",
+      "Rh",
+      "Ru",
+      "Sc",
+      "Sn",
+      "Ta",
+      "Ti",
+      "V",
+      "W",
+      "Zn",
+      "Zr"
+    ],
+    "median_abs_delta_percent": 0.01666891566146791,
+    "max_abs_delta_percent": 0.30432047423769065,
+    "max_abs_delta_element": "Ca",
+    "by_element": {
+      "Ag": {
+        "volume_16_A3_per_atom": 17.909691799375,
+        "volume_128_A3_per_atom": 17.897811621484376,
+        "delta_volume_A3_per_atom": -0.011880177890624566,
+        "abs_delta_percent": 0.06633379303064921
+      },
+      "Al": {
+        "volume_16_A3_per_atom": 17.035120061875,
+        "volume_128_A3_per_atom": 17.0320212503125,
+        "delta_volume_A3_per_atom": -0.0030988115624985824,
+        "abs_delta_percent": 0.018190723348253918
+      },
+      "Au": {
+        "volume_16_A3_per_atom": 17.965302185625,
+        "volume_128_A3_per_atom": 17.967845314609374,
+        "delta_volume_A3_per_atom": 0.0025431289843744764,
+        "abs_delta_percent": 0.01415578184044892
+      },
+      "Be": {
+        "volume_16_A3_per_atom": 7.842633581875,
+        "volume_128_A3_per_atom": 7.837740995625,
+        "delta_volume_A3_per_atom": -0.004892586249999553,
+        "abs_delta_percent": 0.062384480913487285
+      },
+      "Ca": {
+        "volume_16_A3_per_atom": 42.153281065,
+        "volume_128_A3_per_atom": 42.02500000015625,
+        "delta_volume_A3_per_atom": -0.12828106484375468,
+        "abs_delta_percent": 0.30432047423769065
+      },
+      "Co": {
+        "volume_16_A3_per_atom": 11.08818842625,
+        "volume_128_A3_per_atom": 11.070789499609376,
+        "delta_volume_A3_per_atom": -0.017398926640623813,
+        "abs_delta_percent": 0.15691406000491365
+      },
+      "Cr": {
+        "volume_16_A3_per_atom": 11.521875585625,
+        "volume_128_A3_per_atom": 11.5200140034375,
+        "delta_volume_A3_per_atom": -0.0018615821874998773,
+        "abs_delta_percent": 0.016156937068669937
+      },
+      "Cu": {
+        "volume_16_A3_per_atom": 11.835332179375,
+        "volume_128_A3_per_atom": 11.834030432265624,
+        "delta_volume_A3_per_atom": -0.0013017471093750288,
+        "abs_delta_percent": 0.010998821914297732
+      },
+      "Fe": {
+        "volume_16_A3_per_atom": 11.312,
+        "volume_128_A3_per_atom": 11.31200000015625,
+        "delta_volume_A3_per_atom": 1.5625012395048543e-10,
+        "abs_delta_percent": 1.3812776162525233e-09
+      },
+      "Hf": {
+        "volume_16_A3_per_atom": 22.20778266375,
+        "volume_128_A3_per_atom": 22.2114844603125,
+        "delta_volume_A3_per_atom": 0.0037017965625025795,
+        "abs_delta_percent": 0.01666891566146791
+      },
+      "Ir": {
+        "volume_16_A3_per_atom": 15.081874830625,
+        "volume_128_A3_per_atom": 15.064540224765626,
+        "delta_volume_A3_per_atom": -0.017334605859375074,
+        "abs_delta_percent": 0.11493667766142518
+      },
+      "Mg": {
+        "volume_16_A3_per_atom": 22.909,
+        "volume_128_A3_per_atom": 22.90899999984375,
+        "delta_volume_A3_per_atom": -1.5624834759364603e-10,
+        "abs_delta_percent": 6.820391444133136e-10
+      },
+      "Mn": {
+        "volume_16_A3_per_atom": 10.92846052125,
+        "volume_128_A3_per_atom": 10.929530431171875,
+        "delta_volume_A3_per_atom": 0.001069909921874057,
+        "abs_delta_percent": 0.009790124782842519
+      },
+      "Mo": {
+        "volume_16_A3_per_atom": 15.791223836875,
+        "volume_128_A3_per_atom": 15.792170830546874,
+        "delta_volume_A3_per_atom": 0.000946993671874452,
+        "abs_delta_percent": 0.0059969618672814475
+      },
+      "Nb": {
+        "volume_16_A3_per_atom": 18.283238994375,
+        "volume_128_A3_per_atom": 18.28459571109375,
+        "delta_volume_A3_per_atom": 0.0013567167187495954,
+        "abs_delta_percent": 0.007420549056800063
+      },
+      "Ni": {
+        "volume_16_A3_per_atom": 10.840829911875,
+        "volume_128_A3_per_atom": 10.824563302265625,
+        "delta_volume_A3_per_atom": -0.016266609609374427,
+        "abs_delta_percent": 0.15004948644712202
+      },
+      "Os": {
+        "volume_16_A3_per_atom": 14.874320091875,
+        "volume_128_A3_per_atom": 14.864942890078124,
+        "delta_volume_A3_per_atom": -0.009377201796874957,
+        "abs_delta_percent": 0.0630428936513017
+      },
+      "Pd": {
+        "volume_16_A3_per_atom": 15.383935045625,
+        "volume_128_A3_per_atom": 15.400114363125,
+        "delta_volume_A3_per_atom": 0.01617931750000068,
+        "abs_delta_percent": 0.10517021459084928
+      },
+      "Pt": {
+        "volume_16_A3_per_atom": 15.7984940875,
+        "volume_128_A3_per_atom": 15.80762762375,
+        "delta_volume_A3_per_atom": 0.009133536249999352,
+        "abs_delta_percent": 0.05781270163734112
+      },
+      "Rh": {
+        "volume_16_A3_per_atom": 14.477844068125,
+        "volume_128_A3_per_atom": 14.48118111265625,
+        "delta_volume_A3_per_atom": 0.003337044531249944,
+        "abs_delta_percent": 0.02304931946737094
+      },
+      "Ru": {
+        "volume_16_A3_per_atom": 14.224896834375,
+        "volume_128_A3_per_atom": 14.224081023125,
+        "delta_volume_A3_per_atom": -0.0008158112499998538,
+        "abs_delta_percent": 0.005735094317369073
+      },
+      "Sc": {
+        "volume_16_A3_per_atom": 24.869000000625,
+        "volume_128_A3_per_atom": 24.86899999984375,
+        "delta_volume_A3_per_atom": -7.812488433955878e-10,
+        "abs_delta_percent": 3.1414566061198827e-09
+      },
+      "Sn": {
+        "volume_16_A3_per_atom": 27.97280387875,
+        "volume_128_A3_per_atom": 27.96647532171875,
+        "delta_volume_A3_per_atom": -0.00632855703124946,
+        "abs_delta_percent": 0.022623963828156148
+      },
+      "Ta": {
+        "volume_16_A3_per_atom": 18.298337375625,
+        "volume_128_A3_per_atom": 18.29886590609375,
+        "delta_volume_A3_per_atom": 0.0005285304687490111,
+        "abs_delta_percent": 0.002888407060704107
+      },
+      "Ti": {
+        "volume_16_A3_per_atom": 17.184002293125,
+        "volume_128_A3_per_atom": 17.18539846703125,
+        "delta_volume_A3_per_atom": 0.0013961739062473555,
+        "abs_delta_percent": 0.008124847066657682
+      },
+      "V": {
+        "volume_16_A3_per_atom": 13.47062219375,
+        "volume_128_A3_per_atom": 13.472401367890624,
+        "delta_volume_A3_per_atom": 0.001779174140624562,
+        "abs_delta_percent": 0.01320780966932656
+      },
+      "W": {
+        "volume_16_A3_per_atom": 16.17288908,
+        "volume_128_A3_per_atom": 16.171061403125,
+        "delta_volume_A3_per_atom": -0.0018276768749991845,
+        "abs_delta_percent": 0.011300868174872714
+      },
+      "Zn": {
+        "volume_16_A3_per_atom": 15.473466844375,
+        "volume_128_A3_per_atom": 15.459206134140626,
+        "delta_volume_A3_per_atom": -0.014260710234374585,
+        "abs_delta_percent": 0.0921623471830989
+      },
+      "Zr": {
+        "volume_16_A3_per_atom": 22.81842186375,
+        "volume_128_A3_per_atom": 22.81240849671875,
+        "delta_volume_A3_per_atom": -0.0060133670312509935,
+        "abs_delta_percent": 0.026353124099278754
+      }
+    }
+  },
+  "omega_sf_comparison": {
+    "n_common_pairs": 11,
+    "pairs": [
+      "Ag-Au",
+      "Ag-Mg",
+      "Ag-Pd",
+      "Al-Mg",
+      "Al-Mo",
+      "Al-Nb",
+      "Al-Ta",
+      "Al-W",
+      "Au-Pd",
+      "Be-Co",
+      "Be-Fe"
+    ],
+    "median_abs_delta_percent": 0.12634032379659071,
+    "max_abs_delta_percent": 2.106023194342019,
+    "max_abs_delta_pair": "Be-Co",
+    "n_abs_delta_le_0_2_percent": 8,
+    "sign_reversed_pairs": [
+      "Be-Co"
+    ],
+    "by_pair": {
+      "Ag-Au": {
+        "omega_sf_16": -0.0006494738022741845,
+        "omega_sf_128": -0.0009083528898704235,
+        "delta_omega_sf": -0.000258879087596239,
+        "abs_delta_percent": 0.025887908759623903,
+        "ratio_128_to_16": 1.3985981985566671,
+        "sign_reversed": false
+      },
+      "Ag-Mg": {
+        "omega_sf_16": -0.07400752786181304,
+        "omega_sf_128": -0.07235818091956998,
+        "delta_omega_sf": 0.0016493469422430573,
+        "abs_delta_percent": 0.16493469422430573,
+        "ratio_128_to_16": 0.9777137949355271,
+        "sign_reversed": false
+      },
+      "Ag-Pd": {
+        "omega_sf_16": -0.0048984406462910845,
+        "omega_sf_128": -0.00529911374971025,
+        "delta_omega_sf": -0.0004006731034191654,
+        "abs_delta_percent": 0.040067310341916546,
+        "ratio_128_to_16": 1.0817960515092777,
+        "sign_reversed": false
+      },
+      "Al-Mg": {
+        "omega_sf_16": -0.020034894137994256,
+        "omega_sf_128": -0.02093763188383001,
+        "delta_omega_sf": -0.0009027377458357549,
+        "abs_delta_percent": 0.0902737745835755,
+        "ratio_128_to_16": 1.0450582738105814,
+        "sign_reversed": false
+      },
+      "Al-Mo": {
+        "omega_sf_16": -0.0653816266934839,
+        "omega_sf_128": -0.06293722073441481,
+        "delta_omega_sf": 0.0024444059590690848,
+        "abs_delta_percent": 0.24444059590690848,
+        "ratio_128_to_16": 0.9626132587595484,
+        "sign_reversed": false
+      },
+      "Al-Nb": {
+        "omega_sf_16": -0.0271290098649259,
+        "omega_sf_128": -0.025865606626959994,
+        "delta_omega_sf": 0.0012634032379659071,
+        "abs_delta_percent": 0.12634032379659071,
+        "ratio_128_to_16": 0.9534298065334366,
+        "sign_reversed": false
+      },
+      "Al-Ta": {
+        "omega_sf_16": -0.03267060733560858,
+        "omega_sf_128": -0.031031655822926385,
+        "delta_omega_sf": 0.001638951512682195,
+        "abs_delta_percent": 0.1638951512682195,
+        "ratio_128_to_16": 0.9498340665710289,
+        "sign_reversed": false
+      },
+      "Al-W": {
+        "omega_sf_16": -0.061634855559408896,
+        "omega_sf_128": -0.06203987942081912,
+        "delta_omega_sf": -0.0004050238614102253,
+        "abs_delta_percent": 0.04050238614102253,
+        "ratio_128_to_16": 1.0065713443754214,
+        "sign_reversed": false
+      },
+      "Au-Pd": {
+        "omega_sf_16": 0.00229692581029166,
+        "omega_sf_128": 0.0021689272994467267,
+        "delta_omega_sf": -0.00012799851084493346,
+        "abs_delta_percent": 0.012799851084493346,
+        "ratio_128_to_16": 0.9442739899253949,
+        "sign_reversed": false
+      },
+      "Be-Co": {
+        "omega_sf_16": -0.010987026899081688,
+        "omega_sf_128": 0.010073205044338502,
+        "delta_omega_sf": 0.021060231943420188,
+        "abs_delta_percent": 2.106023194342019,
+        "ratio_128_to_16": -0.9168271941866671,
+        "sign_reversed": true
+      },
+      "Be-Fe": {
+        "omega_sf_16": 0.002658959275169478,
+        "omega_sf_128": 0.006151532514249152,
+        "delta_omega_sf": 0.003492573239079674,
+        "abs_delta_percent": 0.34925732390796743,
+        "ratio_128_to_16": 2.3135113695402736,
+        "sign_reversed": false
+      }
+    }
+  },
+  "figure": "paper/fig_cellsize_bcc_sqs.png"
+}

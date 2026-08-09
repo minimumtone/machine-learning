@@ -31,6 +31,7 @@ from pathlib import Path
 from typing import Any
 
 import psycopg
+from psycopg import sql as pgsql
 import yaml
 
 PROJECT = Path(__file__).resolve().parent.parent
@@ -125,7 +126,9 @@ def main():
         "material_entry", "composition", "calculated_property",
         "pure_element_reference", "element",
     ]:
-        cur.execute(f"SELECT count(*) FROM {tbl}")  # type: ignore[arg-type]
+        cur.execute(
+            pgsql.SQL("SELECT count(*) FROM {}").format(pgsql.Identifier(tbl))
+        )
         table_counts[tbl] = _fetchone_scalar(cur)
 
     cur.execute(
@@ -193,6 +196,12 @@ def main():
         "evaluation/independent_eval_results.json")
     transfer_eval = summarize_eval_results(
         "evaluation/transfer_eval_results.json")
+    prototype_eval = summarize_eval_results(
+        "evaluation/prototype_eval_results.json")
+    obfuscated_eval = summarize_eval_results(
+        "evaluation/transfer_obfuscated_eval_results.json")
+    mp_transfer_eval = summarize_eval_results(
+        "evaluation/mp_transfer_eval_results.json")
     cte15_data = load_json("evaluation/cte_eval_results.json")
     cte15_original = [r for r in cte15_data["results"]
                       if r["qid"].startswith("q_vhard")]
@@ -592,6 +601,29 @@ def main():
             "_note": "Zero-adaptation run against the OQMD-flavored "
                      "transfer schema (5 tables, renamed columns)",
             **transfer_eval,
+        },
+        "transfer_evaluation_variants": {
+            "_note": "Zero-adaptation transfer tests A--D",
+            "A_prototype_expansion": {
+                "_note": "B2/NaCl/NiAs/BiF$_3$ prototype expansion on the "
+                         "same 31-table normalized schema",
+                **prototype_eval,
+            },
+            "B_oqmd_transfer": {
+                "_note": "OQMD-flavored flat 5-table schema with renamed "
+                         "table and column names",
+                **transfer_eval,
+            },
+            "C_obfuscated": {
+                "_note": "Randomized English table/column names preserving "
+                         "FK relationships",
+                **obfuscated_eval,
+            },
+            "D_materials_project": {
+                "_note": "Real Materials Project data (27 binary systems, "
+                         "299 entries) in a fresh 3-table schema",
+                **mp_transfer_eval,
+            },
         },
         "cte_evaluation_15": {
             "_note": "5 original CTE patterns (few-shot covered) + "
