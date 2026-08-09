@@ -253,8 +253,8 @@ def make_figure(pure_delta, pair_delta):
                 bbox={"boxstyle": "round,pad=0.2", "fc": "white", "alpha": 0.85},
             )
     axes[1].set_title(r"(b) $\Omega_\mathrm{sf}$")
-    axes[1].set_xlabel(r"16原子 $\Omega_\mathrm{sf}$ (\%)")
-    axes[1].set_ylabel(r"128原子 $\Omega_\mathrm{sf}$ (\%)")
+    axes[1].set_xlabel(r"16原子 $\Omega_\mathrm{sf}$ (%)")
+    axes[1].set_ylabel(r"128原子 $\Omega_\mathrm{sf}$ (%)")
     axes[1].grid(alpha=0.25)
     figure.tight_layout()
     figure.savefig(FIGURE, dpi=220, bbox_inches="tight")
