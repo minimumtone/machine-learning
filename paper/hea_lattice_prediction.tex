@@ -924,6 +924,45 @@ $q_\text{BCC}$ & テスト RMSE (\AA) \\
 \end{tabular}
 \end{table}
 
+\begin{table}[H]
+\centering
+\caption{$q$の条件依存性をまとめた統合表。$q$は各行の校正母集団で得た値、RMSEは対応する独立テスト母集団の値である。}
+\label{tab:q_integrated}
+\scriptsize
+\begin{tabular}{@{}llllrr@{}}
+\toprule
+参照体積 & 構造 & 校正母集団 & $q$ & RMSE$_\text{BCC}$ & RMSE$_\text{ALL}$ \\
+\midrule
+SQS DFT Vegard（採用） & BCC & BCC 29 & 1.000 & 0.0124 & 0.0138 \\
+SQS DFT Vegard（最適） & BCC & BCC 29 & 1.110 & 0.0118 & 0.0134 \\
+SQS DFT Vegard（生） & BCC & BCC 29 & 1.680 & 0.0110 & 0.0140 \\
+SQS DFT/MP置換 & BCC & BCC 29 & 0.870 & 0.0157 & 0.0175 \\
+King & BCC/FCC & HEA 64 & 0.486/0.133 & 0.0157 & 0.0155 \\
+King（加法分解） & FCC & HEA 64 & 0.076 & --- & --- \\
+\bottomrule
+\end{tabular}
+\par\smallskip
+{\scriptsize FCCの採用モデルはL1$_2$+King、$q_\text{FCC}=0.133399$。BCC/FCCの順序を付した$q$は構造別の値である。RMSEは\AA{}。}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{統計的不確実性の本文抜粋。改善量はVegard $-$ $\Omega_\text{sf}$で、正値が改善を表す。}
+\label{tab:uncertainty_main}
+\scriptsize
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+評価 & 母集団 & 改善量 [\AA] & 95\% CI [\AA] \\
+\midrule
+Bootstrap（$q$固定） & 独立31 & +0.0047 & [+0.0016, +0.0083] \\
+Bootstrap-DCV（$q$再最適化） & 全95 & +0.0019 & [-0.0024, +0.0048] \\
+LOO-DCV（$q$再最適化） & 全95 & RMSE改善9.1\% & --- \\
+\bottomrule
+\end{tabular}
+\par\smallskip
+{\scriptsize Bootstrap-DCVの95\% CIはゼロを跨ぐため、$q$推定の不確実性を含めた改善の統計的有意性は確定していない。LOO-DCVの9.1\%改善は、独立テストの23.3\%改善と併せて解釈する。}
+\end{table}
+
 テストRMSEは$q = 1.0$--$1.6$で安定し（BCC: 0.0109--0.0124~\AA{}）、$q = 1.0$は追加パラメータなしで物理的に自然な選択である。$q_\text{opt} = 1.11$も同等以上のテスト精度を示すが、データセットや純元素参照の選択に敏感な経験的パラメータとなる（予備的な$4\times4\times4$ SQS直接比較では有限サイズ効果は$\Omega_\text{sf}$で0.4\%以下と小さい）。
 
 \subsubsection{$\Omega_\text{sf}$分布の比較}
@@ -1087,7 +1126,7 @@ BCCでは傾き0.93であり、SQSの$\Omega_\text{sf}$はB2の約93\%に収ま�
 
 \subsubsection{$q \approx 1$の物理的意味}
 
-DFT Vegard参照で$q = 1$固定がテスト最良となる理由は、GGA-PBE系統誤差の相殺にある。hcp安定元素（Ti, V, Zr等）はBCC格子定数を0.7--0.9\%過小評価するが、分子（合金SQS体積）と分母（純元素SQS体積）が同一バイアスを持つため$\Omega_\text{sf}$の定義式で系統誤差が相殺される。結果としてスケーリング補正$q \neq 1$が不要となる。
+観測事実は、DFT Vegard参照のSQSモデルで$q=1$固定が独立テストBCCに対して良好な精度を与え、校正最適値も$q_\text{opt}=1.11$に近いことである。候補機構としては、hcp安定元素（Ti, V, Zr等）のBCC参照体積に含まれるGGA-PBE系統誤差が、合金SQS体積と純元素SQS体積に共通に現れ、$\Omega_\text{sf}$の比で部分的に相殺される可能性がある。しかし、実験アンカー付きの純元素体積キュレーション、磁気状態、局所極小、16原子SQSの有限サイズ効果などを現行データから完全に分離することはできない。したがって、GGA系統誤差の相殺は$q\approx1$と整合する候補機構ではあるが、単独の原因として同定されたわけではなく、スケーリング補正$q\neq1$が不要となることの一意な説明ではない。
 
 FCC系では$q_\text{FCC} = 0.13$（ほぼVegard）であり、$\Omega_\text{sf}$補正自体が小さいため参照構造（L1$_2$ vs SQS）や参照体積（King vs DFT）の選択は予測精度に実質的影響を与えない（テストRMSE差 $<$ 0.002~\AA{}）。
 
@@ -1126,7 +1165,7 @@ Chen~\emph{et al.}~\cite{Chen2023}は、ATATで生成した16原子SQS（BCC/FCC
 \label{sec:conclusions}
 %% =====================================================================
 
-King (1966) 以来、実験値に基づいてきた体積サイズファクター$\Omega_\text{sf}$をDFT計算に置換し（純元素体積$V_i$はKing実験値を保持）、構造特異的（B2/L1$_2$）に再定義することで、校正定数$q$の物理的起源を解明した。定量的成果と主要知見を以下にまとめる。
+King (1966) 以来、実験値に基づいてきた体積サイズファクター$\Omega_\text{sf}$をDFT計算に置換し（純元素体積$V_i$はKing実験値を保持）、構造特異的（B2/L1$_2$）に再定義することで、校正定数$q$の条件依存性を整理した。DFT参照体積の系統誤差相殺は$q\approx1$と整合する候補機構であるが、単独の原因として同定されたわけではない。定量的成果と主要知見を以下にまとめる。
 
 \paragraph{定量的成果}
 
@@ -1162,7 +1201,7 @@ B2+DFT: RMSE$_\text{FCC}$ = 0.0160。}
     King以来実験値に依拠してきた$\Omega_\text{sf}$を5,152件の二元系DFT計算で置換し（純元素$V_i$は実験値保持）、B2$\to$BCC、L1$_2$$\to$FCCの構造分離によりHEA予測に必要な全ペアをカバー（BCC 59/59、FCC 42/42）。
 
   \item \textbf{SQS参照による$q_\text{BCC}$の低減}:
-    SQS＋DFT参照（純元素体積キュレーション後）で$q_\text{BCC} = 1$固定が良好な精度を達成する（テストRMSEは$q = 1.0$--$1.6$で安定、校正最適$q_\text{opt} = 1.11$）。ただしこの結果は33元素中16元素のKing/MP置換に依存する（生SQS体積では$q_\text{opt} = 1.68$）。一方、置換基準に実験値を用いない場合（$|V_\text{SQS}-V_\text{MP}|>3\%$の5元素のみMP-DFT置換）でも$q_\text{opt} = 0.87$となり、$q \approx 1$は実験値への合わせ込みによらず成立する（表~\ref{tab:pure_ref_sensitivity}）。$q \neq 1$の主因はBCC非安定元素の純元素参照体積の歪みであり、SQSサイズ効果との完全な分離は今後の課題である。独立テストBCC 17合金RMSE = 0.0124~\AA{}（Vegard比44.9\%改善）。
+    SQS＋DFT参照（純元素体積キュレーション後）で$q_\text{BCC} = 1$固定が良好な精度を達成する（テストRMSEは$q = 1.0$--$1.6$で安定、校正最適$q_\text{opt} = 1.11$）。ただしこの結果は33元素中16元素のKing/MP置換に依存する（生SQS体積では$q_\text{opt} = 1.68$）。一方、置換基準に実験値を用いない場合（$|V_\text{SQS}-V_\text{MP}|>3\%$の5元素のみMP-DFT置換）でも$q_\text{opt} = 0.87$となる（表~\ref{tab:pure_ref_sensitivity}）。この結果は実験値への合わせ込みだけでは説明しにくいが、GGA系統誤差の相殺を単独の原因として確定するものではない。独立テストBCC 17合金RMSE = 0.0124~\AA{}（Vegard比44.9\%改善）。
 
   \item \textbf{$q_\text{FCC} \approx 0$（Vegard則の十分性）}:
     $q_\text{FCC} = 0.13$はFCC HEAでVegard則自体が十分な近似であることを示す。最密充填構造では原子サイズの環境依存性が小さく、$\Omega_\text{sf}$補正がほぼ不要である。
