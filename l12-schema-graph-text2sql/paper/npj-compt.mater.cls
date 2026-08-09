@@ -119,8 +119,20 @@
 
 
 %%\ExecuteOptions{twosidecrop,crop,centre,info,croppage}
-\ExecuteOptions{sn-nature,pdflatex,Numbered}
+\ExecuteOptions{pdflatex,Numbered}
 \ProcessOptions
+% Fallback to sn-nature reference style when no other style is selected.
+\if@Spr@basic@refstyle\else%
+\if@Mathphys@numrefstyle\else%
+\if@Mathphys@ayrefstyle\else%
+\if@APS@refstyle\else%
+\if@Vancouver@numrefstyle\else%
+\if@Vancouver@ayrefstyle\else%
+\if@APA@refstyle\else%
+\if@Chicago@refstyle\else%
+\if@Standard@Nature@refstyle\else%
+\global\@Standard@Nature@refstyletrue%
+\fi\fi\fi\fi\fi\fi\fi\fi\fi%
 \LoadClass[twoside,fleqn]{article}
 
 \gdef\refereedefns{%
