@@ -169,6 +169,8 @@ King以来の体積サイズファクター研究は実験値（King体積、実
 \subsection{データソース}
 \label{sec:data}
 
+本稿で用いる主要記号（$V_i$、$n_\text{auc}$、$\Omega_\text{sf}$、$q$、$\delta_i^{(s)}$）の定義は表~\ref{tab:nomenclature}にまとめる。
+
 \subsubsection{二元系化合物データ}
 以下の3ソースから二元系金属間化合物を収集した：
 \begin{itemize}
@@ -259,6 +261,7 @@ SiはKing原子体積を持たず、安定構造もBCC/FCCではないため、�
 \caption{基礎データベース、HEA検証スコープ、実用元素スコープの関係。元素数は、基礎DBでは全対象、検証スコープでは校正64合金と独立31合金の和集合、実用スコープではSiを除いた定義上の16元素を示す。Beは基礎DBには含まれるが、HEA検証・Chen統合のいずれにも出現しない。}
 \label{tab:population_scope}
 \scriptsize
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}lrlp{0.55\linewidth}@{}}
 \toprule
 母集団 & 元素数 & 合金・系数 & 定義 \\
@@ -268,9 +271,10 @@ SiはKing原子体積を持たず、安定構造もBCC/FCCではないため、�
 独立テスト & 19 & 31 HEA & Alonso Table~2外の独立testに個別に出現する元素の集合 \\
 主検証スコープ & 23 & 95 HEA & 校正64と独立31に出現する元素の和集合（Si除外） \\
 実用スコープ & 16 & 感度分析 & 主に実用HEAを構成する元素の定義集合（Si除外） \\
-Be & 基礎DBのみ & 30ペア & 校正、独立test、Chen統合quinaryには出現しないため主結論の対象外 \\
+Be & 1 & 30ペア & 基礎DBのみ。校正、独立test、Chen統合quinaryには出現しないため主結論の対象外 \\
 \bottomrule
 \end{tabular}
+}
 \end{table}
 
 \begin{table}[H]
@@ -428,8 +432,6 @@ $V_\text{maj}$・$V_\text{min}$はそれぞれ多数派サイト（面心）・�
 \label{sec:results}
 %% =====================================================================
 
-結果の数値一覧は表~\ref{tab:bcc_fcc}に、結論の比較要約は表~\ref{tab:conclusion_summary}に示す。手法間の比較は表~\ref{tab:method_comparison}、記号の定義は表~\ref{tab:nomenclature}を参照されたい。King体積とVASP-BCC体積の比較は表~\ref{tab:king_vs_vasp_bcc}にまとめた。Bootstrapの固定$q$評価は表~\ref{tab:bootstrap_all}、再最適化を含むBootstrap-DCVは表~\ref{tab:bootstrap_dcv}、LOO-DCVは表~\ref{tab:loo_dcv}に示す。Alonsoデータとの被覆率比較は表~\ref{tab:alonso_coverage}、予測値との直接比較は表~\ref{tab:alonso_vs_ours}を参照されたい。
-
 \subsection{HEA格子定数予測精度}
 \label{sec:results_hea}
 
@@ -511,6 +513,10 @@ DFT-$\Omega_\text{sf}$モデルはRMSE = 0.0214~\AA{}を達成し、Vegard則（
 
 \subsection{BCC/FCC構造別分析}
 \label{sec:bcc_fcc}
+
+\begin{sloppypar}
+構造別のRMSE比較を表~\ref{tab:bcc_fcc}に示す。FCCではVegard則がすでに高精度であり、BCCではSQS参照の改善がより明瞭である。
+\end{sloppypar}
 
 \begin{table}[H]
 \centering
@@ -801,6 +807,7 @@ $q_\text{BCC} \to 1$に収束。}
 \end{table}
 
 $\Omega_\text{sf}$の参照体積をKing実験値からVASP DFT計算値に変更すると、B2参照でも$q_\text{BCC} = 1.19$と$q \approx 1$に近づく（表~\ref{tab:omega_ref}）。$q_\text{FCC} = 0.28$はKing参照の0.13から増加するが依然として小さく、FCC系では$\Omega_\text{sf}$補正自体が微小であることと整合する。
+純元素DFT体積とKing体積の対応、およびBCC参照体積の系統誤差は表~\ref{tab:king_vs_vasp_bcc}に示す。
 
 \begin{table}[H]
 \centering
@@ -946,15 +953,15 @@ $q_\text{BCC}$ & テスト RMSE (\AA) \\
 \midrule
 SQS DFT Vegard（採用） & BCC & BCC 29 & 1.000 & 0.0124 & 0.0138 \\
 SQS DFT Vegard（最適） & BCC & BCC 29 & 1.110 & 0.0118 & 0.0134 \\
-SQS DFT Vegard（生） & BCC & BCC 29 & 1.680 & 0.0110 & 0.0140 \\
-SQS DFT/MP置換 & BCC & BCC 29 & 0.870 & 0.0157 & 0.0175 \\
+SQS DFT Vegard（生） & BCC & BCC 29 & 1.680 & 0.0110 & --- \\
+SQS DFT/MP置換 & BCC & BCC 29 & 0.870 & 0.0165 & --- \\
 King & BCC/FCC & HEA 64 & 0.486/0.133 & 0.0157 & 0.0155 \\
-King（加法分解） & FCC & HEA 64 & 0.076 & --- & --- \\
+King（加法分解） & BCC/FCC & HEA 64 & 0.344/0.076 & --- & 0.0175 \\
 \bottomrule
 \end{tabular}
 }
 \par\smallskip
-{\scriptsize FCCの採用モデルはL1$_2$+King、$q_\text{FCC}=0.133399$。BCC/FCCの順序を付した$q$は構造別の値である。RMSEは\AA{}。}
+{\scriptsize FCCの採用モデルはL1$_2$+King、$q_\text{FCC}=0.133399$。BCC/FCCの順序を付した$q$は構造別の値である。RMSEは\AA{}。生SQSと$q=0.870$行のALL RMSE、および加法分解のBCC RMSEは既存の単一ソースに対応値がないため記載していない。加法分解のALL RMSE = 0.0175~\AA{}は既存の独立テスト値である。}
 \end{table}
 
 \begin{table}[H]
@@ -976,6 +983,8 @@ LOO-DCV（$q$再最適化） & 全95 & RMSE改善9.1\% & --- \\
 \par\smallskip
 {\scriptsize Bootstrap-DCVの95\% CIはゼロを跨ぐため、$q$推定の不確実性を含めた改善の統計的有意性は確定していない。LOO-DCVの9.1\%改善は、独立テストの23.3\%改善と併せて解釈する。}
 \end{table}
+
+固定$q$のBootstrap詳細は表~\ref{tab:bootstrap_all}、$q$再最適化を含むBootstrap-DCV詳細は表~\ref{tab:bootstrap_dcv}、LOO-DCV詳細は表~\ref{tab:loo_dcv}に示す。
 
 \begin{sloppypar}
 テストRMSEは$q = 1.0$--$1.6$で安定し（BCC: 0.0109--0.0124~\AA{}）、$q = 1.0$は追加パラメータなしで物理的に自然な選択である。$q_\text{opt} = 1.11$も同等以上のテスト精度を示すが、データセットや純元素参照の選択に敏感な経験的パラメータとなる。
@@ -1174,7 +1183,9 @@ Vegard則~\cite{Vegard1921}は64 HEAに対しRMSE = 0.0227~\AA{}を与える。
 Coreño-Alonso~\cite{CorenoAlonso2004}のMiedemaモデル~\cite{deBoer1988}は二元系金属間化合物（B2: 17種、L1$_2$: 22種）の格子定数を予測した。本研究のDFTデータでカバーされる39件について比較すると、DFT-$\Omega_\text{sf}$モデル（全体0.76\%）がMiedema（1.43\%）・Vegard（1.45\%）を上回る。B2ではDFT: 0.59\% vs Miedema: 1.77\%と67\%の改善を示す。
 
 \paragraph{Alonsoモデル (2022)}
-Alonso~\cite{Alonso2021}はRMSE = 0.0229~\AA{}を達成したが、$q = 1$・構造共通$\Omega_\text{sf}$であった。本研究は構造特異的$\Omega_\text{sf}$とDFTカバレッジの拡充により6.6\%の改善を実現した（0.0229$\to$0.0214~\AA{}）。
+\begin{sloppypar}
+Alonso~\cite{Alonso2021}はRMSE = 0.0229~\AA{}を達成したが、$q = 1$・構造共通$\Omega_\text{sf}$であった。本研究は構造特異的$\Omega_\text{sf}$とDFTカバレッジの拡充により6.6\%の改善を実現した（0.0229$\to$0.0214~\AA{}）。Alonsoデータとの元素・ペア被覆率は表~\ref{tab:alonso_coverage}、予測値の直接比較は表~\ref{tab:alonso_vs_ours}に示す。手法の位置づけ全体は表~\ref{tab:method_comparison}にまとめる。
+\end{sloppypar}
 
 \paragraph{Chen et al. (2023)}
 Chen~\emph{et al.}~\cite{Chen2023}は、ATATで生成した16原子SQS（BCC/FCC/HCP）を用いて40元素の二元系DFT計算を行い、体積ではなく混合エンタルピー$\Delta H_\text{mix}$を評価した。本研究もBCCでは16原子SQSを用いているため、二元系の計算基盤と組成が直接対応する（FCC側は本研究では32原子SQSである）。彼らは正則溶体の二元相互作用$\Omega_{ij}=4\Delta H_\text{mix}$をデータベース化し、二元項の和によって四--五元系ランダム固溶体の混合エンタルピーと相安定性を記述できることを示している。この設計思想は、二元系の情報を多元系へ外挿する本研究と共通する。ただし、Chenらがエネルギー相互作用を扱うのに対して、本研究はSQSの体積偏差$\Omega_\text{sf}$を扱うため、両者はエネルギーと体積の相補的な検証になり得る。本研究ではChenらの結果を独立テストとして利用し、二元相互作用の再現性と体積記述子の独立性を分離して検証した。
@@ -1215,6 +1226,8 @@ SQS+DFT ($q_\text{opt}$) & 1.110 & 0.0134 & 0.0118 & 33.7\% \\
 {\scriptsize SQS系のRMSE$_\text{FCC}$ = 0.0152~\AA{}（Vegard: 0.0170）。
 B2+DFT: RMSE$_\text{FCC}$ = 0.0160。}
 \end{table}
+
+独立テスト31 HEAに対する各モデルの定量比較を表~\ref{tab:conclusion_summary}にまとめる。
 
 \begin{enumerate}
   \item \textbf{実験値$\to$DFT置換と構造分離}:
