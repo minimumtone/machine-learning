@@ -15,6 +15,7 @@
 \usepackage{float}
 \usepackage{enumitem}
 \usepackage{caption}
+\usepackage{subcaption}
 \captionsetup{font=small,labelfont=bf}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,shapes.geometric}
@@ -427,6 +428,8 @@ $V_\text{maj}$・$V_\text{min}$はそれぞれ多数派サイト（面心）・�
 \label{sec:results}
 %% =====================================================================
 
+結果の数値一覧は表~\ref{tab:bcc_fcc}に、結論の比較要約は表~\ref{tab:conclusion_summary}に示す。手法間の比較は表~\ref{tab:method_comparison}、記号の定義は表~\ref{tab:nomenclature}を参照されたい。King体積とVASP-BCC体積の比較は表~\ref{tab:king_vs_vasp_bcc}にまとめた。Bootstrapの固定$q$評価は表~\ref{tab:bootstrap_all}、再最適化を含むBootstrap-DCVは表~\ref{tab:bootstrap_dcv}、LOO-DCVは表~\ref{tab:loo_dcv}に示す。Alonsoデータとの被覆率比較は表~\ref{tab:alonso_coverage}、予測値との直接比較は表~\ref{tab:alonso_vs_ours}を参照されたい。
+
 \subsection{HEA格子定数予測精度}
 \label{sec:results_hea}
 
@@ -674,13 +677,20 @@ L1$_2$のVegard偏差に対するVegard端点の影響を定量評価した。Ki
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=0.4\textwidth]{fig_l12_asymmetry.png}
-\hfill
-\includegraphics[width=0.4\textwidth]{fig_volume_radius.png}
-\caption{(左)~L1$_2$格子定数非対称性$|a(A_3B) - a(B_3A)|$（754ペア、平均 = 0.286~\AA、std = 0.24~\AA）。
-  (右)~構造依存有効半径。少数派サイトの偏差が多数派より179\%大きい。}
+\begin{subfigure}[t]{0.46\textwidth}
+\centering
+\includegraphics[width=\linewidth]{fig_l12_asymmetry.png}
+\caption{L1$_2$格子定数非対称性。}
 \label{fig:l12_asymmetry}
+\end{subfigure}
+\hfill
+\begin{subfigure}[t]{0.46\textwidth}
+\centering
+\includegraphics[width=\linewidth]{fig_volume_radius.png}
+\caption{構造依存有効半径。}
 \label{fig:volume_radius}
+\end{subfigure}
+\caption{L1$_2$格子定数非対称性$|a(A_3B) - a(B_3A)|$（754ペア、平均 = 0.286~\AA、std = 0.24~\AA）と構造依存有効半径。少数派サイトの偏差が多数派より179\%大きい。}
 \end{figure*}
 
 
@@ -1019,9 +1029,9 @@ FCC & 112 & 0.996 & 0.993 & 0.999 & 0.003 & 0.013 / 0.019 \\
 \label{sec:chen2023_nonidentity}
 
 \paragraph{混合エンタルピーと体積偏差の非同一性}
-「混合エンタルピーが負に深いペアほど収縮が深い」という素朴な予想は、formal集合では成立しなかった。主系列のDFT端点基準では、$\Omega_\text{sf}$とChenの$\Delta H_\text{mix}$のPearson相関はBCC 387ペアで$r=0.184$（Spearman $\rho=0.140$）、FCC 120ペアで$r=0.284$（$\rho=0.287$）に留まる。King実験体積基準を用いたロバストネス確認でも、BCC 387ペアは$r=0.199$（$\rho=0.145$）、FCCの論文formal集合112ペアは$r\simeq0.219$（$\rho=0.184$）であり、結論は変わらない。
+「混合エンタルピーが負に深いペアほど収縮が深い」という素朴な予想は、formal集合では成立しなかった。主系列のDFT端点基準では、$\Omega_\text{sf}$とChenの$\Delta H_\text{mix}$のPearson相関はBCC 387ペアで$r=0.184$（Spearman $\rho=0.140$）、FCC 120ペアで$r=0.284$（$\rho=0.287$）に留まる。対応する分布を図~\ref{fig:chen2023_dh_omega}に示す。King実験体積基準を用いたロバストネス確認でも、BCC 387ペアは$r=0.199$（$\rho=0.145$）、FCCの論文formal集合112ペアは$r\simeq0.219$（$\rho=0.184$）であり、結論は変わらない。
 
-純元素DFT体積から求めた半径差$|\Delta r|$との相関は、DFT端点基準でBCC 387ペアが$r=-0.434$、FCC 120ペアが$r=-0.445$であった。同じ母集団での電気陰性度差はそれぞれ$-0.201$（BCC）と$-0.311$（FCC）、VEC差は$-0.291$と$-0.148$であり、両構造で半径差の方が$\Delta H_\text{mix}$より一貫して強い説明変数である。King基準でもBCC 387ペアでは半径差$-0.437$、電気陰性度差$-0.207$、VEC差$-0.286$となる。FCC King formal集合では半径差$-0.602$、電気陰性度差$-0.392$、VEC差$-0.216$である（欠損のため各指標の母集団は111ペア）。
+純元素DFT体積から求めた半径差$|\Delta r|$との相関は、DFT端点基準でBCC 387ペアが$r=-0.434$、FCC 120ペアが$r=-0.445$であった。同じ母集団での電気陰性度差はそれぞれ$-0.201$（BCC）と$-0.311$（FCC）、VEC差は$-0.291$と$-0.148$であり、両構造で半径差の方が$\Delta H_\text{mix}$より一貫して強い説明変数である。半径差との関係は図~\ref{fig:chen2023_radius_omega}にも示す。King基準でもBCC 387ペアでは半径差$-0.437$、電気陰性度差$-0.207$、VEC差$-0.286$となる。FCC King formal集合では半径差$-0.602$、電気陰性度差$-0.392$、VEC差$-0.216$である（欠損のため各指標の母集団は111ペア）。
 
 しかし、サイズ差だけで十分ではない。DFT端点基準の重回帰$\Omega_\text{sf}=a\Delta H_\text{mix}+b|\Delta r|+c$では$R^2=0.242$（BCC、$n=387$）および$R^2=0.275$（FCC、$n=120$）であり、偏相関はそれぞれ$\Delta H_\text{mix}$について$+0.256$ / $+0.310$、$|\Delta r|$について$-0.464$ / $-0.460$（BCC / FCC）であった。King基準のロバストネス確認では$R^2=0.252$（BCC、$n=387$）および$R^2=0.390$（FCC、$n=111$）であり、サイズ差の偏相関は$-0.470$ / $-0.599$である。Pt/Rh/Ir--Sc/Ti/Zr/HfおよびAl--Pt/Ir/Rhでは、$\Delta H_\text{mix}\simeq-0.8$--$-0.9$~eV/atomと非常に強い混合を示すにもかかわらず、$\Omega_\text{sf}$はおよそ$-0.06$--$-0.09$に留まる。強い$d$--$d$混成や電荷移動がエネルギーを大きく安定化しても、体積偏差には同じ大きさで現れない可能性を示す例である。したがって、少なくとも本研究で比較した記述子集合（$\Delta H_\text{mix}$、$|\Delta r|$、電気陰性度差、VEC差）と線形・重回帰の関数形、ならびにこのChen BCC 387ペア母集団の範囲では、$\Omega_\text{sf}$を十分な精度で代替できる説明モデルは得られなかった。これは他の記述子や非線形モデルまで代替可能性を否定するものではなく、構造特異的$\Omega_\text{sf}$が独立情報として有用であることを示す限定的な負の結果である。
 
