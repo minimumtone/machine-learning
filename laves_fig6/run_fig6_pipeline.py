@@ -17,11 +17,9 @@ Outputs (all written in a single pass):
 import json
 import os
 import random
-import sys
 import time
 
 import numpy as np
-from ase import Atoms
 from ase.build import bulk
 from ase.filters import FrechetCellFilter
 from ase.io import write as ase_write
@@ -69,16 +67,20 @@ def relax(atoms, name, cell_relax=True, log=True):
 rows = []
 
 
-def record(atoms, e, v, conv, *, structure_id, parent, x_al, supercell, sqs_id, site_def):
+def record(atoms, e, v, conv, *, structure_id, parent, x_al, supercell, sqs_id, site_def,
+           rep=(1, 1, 1)):
     cell = atoms.cell.cellpar()
     n = len(atoms)
+    a_unit = cell[0] / rep[0]
+    c_unit = cell[2] / rep[2]
     rows.append(dict(
         structure_id=structure_id, parent_structure=parent,
         composition=atoms.get_chemical_formula(), x_Al=x_al, supercell=supercell,
         sqs_id=sqs_id, site_definition=site_def,
         energy_eV=e, energy_per_atom_eV=e / n,
         volume_A3=v, volume_per_atom_A3=v / n,
-        a_A=cell[0], c_A=cell[2], c_over_a=cell[2] / cell[0],
+        a_A=a_unit, c_A=c_unit, c_over_a=c_unit / a_unit,
+        cell_a_A=cell[0], cell_c_A=cell[2],
         mlip_model="MACE-MP-0 medium (float64)", dft_reference="MP PBE (training data)",
         temperature_K=0, converged=conv, n_atoms=n,
     ))
@@ -127,7 +129,9 @@ for n_al in (0, 2, 4, 6, 8):  # of 32 atoms
     for s in range(nseed):
         if n_al == 0:
             at = bulk("Ni", "fcc", a=3.52, cubic=True).repeat((2, 2, 2))
+            rep = (2, 2, 2)
         else:
+            rep = (2, 4, 4)
             random.seed(1000 * n_al + s)
             at = generate_sqs_from_supercells(
                 fcc_cs, [sc.copy() for sc in fcc_super], n_steps=SQS_STEPS,
@@ -136,7 +140,8 @@ for n_al in (0, 2, 4, 6, 8):  # of 32 atoms
         at, e, v, conv = relax(at, name)
         vols.append(v / len(at))
         record(at, e, v, conv, structure_id=name, parent="fcc-Ni(Al)",
-               x_al=x, supercell="32at", sqs_id=f"sqs_s{s}", site_def="fcc SQS (icet)")
+               x_al=x, supercell="32at", sqs_id=f"sqs_s{s}", site_def="fcc SQS (icet)",
+               rep=rep)
     fcc_results[x] = vols
 
 xs = np.array(sorted(fcc_results))
@@ -243,7 +248,6 @@ for s in range(NSEED):
     name = f"c14_x0.50_sqs12_s{s}"
     at, e, v, conv = relax(at, name)
     sqs_x05_small.append(v / len(at))
-    c14_results[0.5].append(v / len(at))
     c14_x05_structs.append((name, at.copy(), e))
     record(at, e, v, conv, structure_id=name, parent="C14-Nb(Ni,Al)2",
            x_al=0.5, supercell="1x1x1(12at)", sqs_id=f"sqs_s{s}", site_def="B SQS (icet)")
@@ -257,7 +261,8 @@ for s in range(NSEED):
     at, e, v, conv = relax(at, name)
     size_check.append(v / len(at))
     record(at, e, v, conv, structure_id=name, parent="C14-Nb(Ni,Al)2",
-           x_al=0.5, supercell="2x2x1(48at)", sqs_id=f"sqs_s{s}", site_def="B SQS (icet)")
+           x_al=0.5, supercell="2x2x1(48at)", sqs_id=f"sqs_s{s}", site_def="B SQS (icet)",
+           rep=(2, 2, 1))
 
 # ---------------------------------------------------------------- Voronoi local volumes
 print("=== Phase 5: Voronoi local volumes (C14 x=0.5) ===", flush=True)
@@ -364,8 +369,8 @@ v_weighted_extrap = (v_nb + 2 * v_extrap) / 3
 v_weighted_b2 = (v_nb + 2 * v_b2_atom) / 3
 c14_mean = {x: float(np.mean(v)) for x, v in c14_results.items()}
 c14_std = {x: float(np.std(v, ddof=1)) if len(v) > 1 else 0.0 for x, v in c14_results.items()}
-v_c14 = c14_mean[0.5]
 v_c14_sqs12 = float(np.mean(sqs_x05_small))
+v_c14 = v_c14_sqs12  # representative x=0.5 value: SQS mean (ordered configs kept separate)
 size_dep = abs(np.mean(size_check) - v_c14_sqs12) / v_c14_sqs12 * 100
 
 summary = dict(
@@ -373,7 +378,8 @@ summary = dict(
     V_B2_NiAl=v_b2_atom,
     fcc_fit_a=a_fit, fcc_fit_b=b_fit, V_NiAl_extrap_x05=v_extrap,
     dV_NiAl_extrap_minus_B2=v_extrap - v_b2_atom,
-    V_C14_x05=v_c14, V_C14_x05_std=c14_std[0.5],
+    V_C14_x05=v_c14,
+    V_C14_x05_ordered_mean=c14_mean[0.5], V_C14_x05_ordered_std=c14_std[0.5],
     V_C14_x05_sqs12=v_c14_sqs12,
     V_C14_x05_sqs12_std=float(np.std(sqs_x05_small, ddof=1)) if len(sqs_x05_small) > 1 else 0.0,
     V_C14_x05_48at=float(np.mean(size_check)),
@@ -421,7 +427,9 @@ cx = sorted(c14_mean)
 cm = [c14_mean[x] for x in cx]
 cs = [c14_std[x] for x in cx]
 ax.errorbar(cx, cm, yerr=cs, fmt="o-", ms=10, capsize=5, color="tab:green",
-            label=r"MLIP C14-Nb(Ni$_{1-x}$Al$_x$)$_2$ (direct)")
+            label=r"MLIP C14-Nb(Ni$_{1-x}$Al$_x$)$_2$ (ordered configs)")
+ax.plot([0.5], [v_c14_sqs12], "*", ms=18, color="tab:green", mec="k",
+        label="12-atom SQS (x=0.5)")
 ax.axhline(v_pure, color="gray", ls=":", lw=2,
            label=r"$V_{\mathrm{pure}}=(V_{\mathrm{Nb}}+V_{\mathrm{Ni}}+V_{\mathrm{Al}})/3$")
 ax.axhline(v_weighted_extrap, color="tab:blue", ls="--", lw=2,
