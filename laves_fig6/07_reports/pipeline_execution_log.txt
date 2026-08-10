@@ -6,7 +6,7 @@ cuequivariance or cuequivariance_torch is not available. Cuequivariance accelera
 Using Materials Project MACE for MACECalculator with /home/ubuntu/.cache/mace/20231203mace128L1_epoch199model
 Using float64 for MACECalculator, which is slower but more accurate. Recommended for geometry optimization.
 === Phase 1: pure elements ===
-[relax] pure_Ni_fcc: N=4 E=-22.9276 eV V/atom=10.8135 A^3 conv=True (0.7s)
+[relax] pure_Ni_fcc: N=4 E=-22.9276 eV V/atom=10.8135 A^3 conv=True (0.6s)
 [relax] pure_Al_fcc: N=4 E=-14.9137 eV V/atom=16.7357 A^3 conv=True (0.4s)
 [relax] pure_Nb_bcc: N=2 E=-20.1716 eV V/atom=18.1862 A^3 conv=True (0.4s)
 [relax] pure_Cr_bcc: N=2 E=-18.9014 eV V/atom=11.7720 A^3 conv=True (0.4s)
@@ -14,32 +14,32 @@ Using float64 for MACECalculator, which is slower but more accurate. Recommended
 === Phase 2: B2-NiAl ===
 [relax] B2_NiAl: N=2 E=-10.8444 eV V/atom=11.9737 A^3 conv=True (0.4s)
 === Phase 3: fcc Ni1-xAlx SQS (icet) ===
-[relax] fcc_NiAl_x0.0000_s0: N=32 E=-183.4207 eV V/atom=10.8133 A^3 conv=True (1.0s)
-[relax] fcc_NiAl_x0.0625_s0: N=32 E=-182.9778 eV V/atom=10.9106 A^3 conv=True (4.1s)
-[relax] fcc_NiAl_x0.0625_s1: N=32 E=-182.9778 eV V/atom=10.9106 A^3 conv=True (4.0s)
-[relax] fcc_NiAl_x0.1250_s0: N=32 E=-182.2015 eV V/atom=11.0375 A^3 conv=True (10.6s)
-[relax] fcc_NiAl_x0.1250_s1: N=32 E=-182.2812 eV V/atom=11.0302 A^3 conv=True (8.1s)
-[relax] fcc_NiAl_x0.1875_s0: N=32 E=-180.8711 eV V/atom=11.1805 A^3 conv=True (10.2s)
-[relax] fcc_NiAl_x0.1875_s1: N=32 E=-180.8711 eV V/atom=11.1805 A^3 conv=True (9.7s)
-[relax] fcc_NiAl_x0.2500_s0: N=32 E=-179.4467 eV V/atom=11.3588 A^3 conv=True (9.7s)
+[relax] fcc_NiAl_x0.0000_s0: N=32 E=-183.4207 eV V/atom=10.8133 A^3 conv=True (0.8s)
+[relax] fcc_NiAl_x0.0625_s0: N=32 E=-182.9778 eV V/atom=10.9106 A^3 conv=True (4.2s)
+[relax] fcc_NiAl_x0.0625_s1: N=32 E=-182.9778 eV V/atom=10.9106 A^3 conv=True (5.0s)
+[relax] fcc_NiAl_x0.1250_s0: N=32 E=-182.2812 eV V/atom=11.0302 A^3 conv=True (8.0s)
+[relax] fcc_NiAl_x0.1250_s1: N=32 E=-182.2706 eV V/atom=11.0297 A^3 conv=True (9.3s)
+[relax] fcc_NiAl_x0.1875_s0: N=32 E=-180.8711 eV V/atom=11.1805 A^3 conv=True (9.9s)
+[relax] fcc_NiAl_x0.1875_s1: N=32 E=-180.8711 eV V/atom=11.1805 A^3 conv=True (10.3s)
+[relax] fcc_NiAl_x0.2500_s0: N=32 E=-179.3670 eV V/atom=11.3546 A^3 conv=True (10.8s)
 [relax] fcc_NiAl_x0.2500_s1: N=32 E=-179.3134 eV V/atom=11.3592 A^3 conv=True (12.0s)
-linear fit: V = 10.7872 + 2.1781 x ; extrap x=0.5 -> 11.8762 A^3/atom
+linear fit: V = 10.7868 + 2.1714 x ; extrap x=0.5 -> 11.8725 A^3/atom
 === Phase 4: C14-Nb(Ni1-xAlx)2 ===
-[relax] c14_x0.00_ord: N=12 E=-88.9065 eV V/atom=13.0287 A^3 conv=True (2.8s)
+[relax] c14_x0.00_ord: N=12 E=-88.9065 eV V/atom=13.0287 A^3 conv=True (1.9s)
 [relax] c14_x0.25_al2a0: N=12 E=-87.0008 eV V/atom=13.5798 A^3 conv=True (3.6s)
-[relax] c14_x0.25_al2a1: N=12 E=-86.8392 eV V/atom=13.6049 A^3 conv=True (5.0s)
-[relax] c14_x0.25_al2a2: N=12 E=-87.1853 eV V/atom=13.5916 A^3 conv=True (2.9s)
-[relax] c14_x0.50_al2a0: N=12 E=-84.0033 eV V/atom=14.2728 A^3 conv=True (3.3s)
+[relax] c14_x0.25_al2a1: N=12 E=-86.8392 eV V/atom=13.6049 A^3 conv=True (5.2s)
+[relax] c14_x0.25_al2a2: N=12 E=-87.1853 eV V/atom=13.5916 A^3 conv=True (2.8s)
+[relax] c14_x0.50_al2a0: N=12 E=-84.0033 eV V/atom=14.2728 A^3 conv=True (3.2s)
 [relax] c14_x0.50_al2a1: N=12 E=-82.5971 eV V/atom=14.3553 A^3 conv=True (3.8s)
 [relax] c14_x0.50_al2a2: N=12 E=-83.7430 eV V/atom=14.2465 A^3 conv=True (4.4s)
 [relax] c14_x0.75_al2a0: N=12 E=-80.1045 eV V/atom=15.0754 A^3 conv=True (2.9s)
-[relax] c14_x0.75_al2a1: N=12 E=-79.7271 eV V/atom=15.0703 A^3 conv=True (4.5s)
+[relax] c14_x0.75_al2a1: N=12 E=-79.7271 eV V/atom=15.0703 A^3 conv=True (4.6s)
 [relax] c14_x0.75_al2a2: N=12 E=-80.2787 eV V/atom=15.0251 A^3 conv=True (4.2s)
-[relax] c14_x1.00_ord: N=12 E=-74.3266 eV V/atom=15.9748 A^3 conv=True (3.3s)
+[relax] c14_x1.00_ord: N=12 E=-74.3266 eV V/atom=15.9748 A^3 conv=True (3.2s)
 [relax] c14_x0.50_sqs12_s0: N=12 E=-83.8914 eV V/atom=14.2701 A^3 conv=True (5.0s)
-[relax] c14_x0.50_sqs12_s1: N=12 E=-83.8914 eV V/atom=14.2701 A^3 conv=True (4.9s)
-[relax] c14_x0.50_sqs48_s0: N=48 E=-334.8410 eV V/atom=14.2657 A^3 conv=True (15.6s)
-[relax] c14_x0.50_sqs48_s1: N=48 E=-334.6665 eV V/atom=14.2708 A^3 conv=True (11.6s)
+[relax] c14_x0.50_sqs12_s1: N=12 E=-83.8914 eV V/atom=14.2701 A^3 conv=True (5.2s)
+[relax] c14_x0.50_sqs48_s0: N=48 E=-334.5750 eV V/atom=14.2781 A^3 conv=True (15.2s)
+[relax] c14_x0.50_sqs48_s1: N=48 E=-334.8337 eV V/atom=14.2680 A^3 conv=True (14.1s)
 === Phase 5: Voronoi local volumes (C14 x=0.5) ===
 [voro] c14_x0.50_al2a0: sum(Vi)=171.27 vs Vcell=171.27
 [voro] c14_x0.50_al2a1: sum(Vi)=172.26 vs Vcell=172.26
@@ -48,12 +48,12 @@ linear fit: V = 10.7872 + 2.1781 x ; extrap x=0.5 -> 11.8762 A^3/atom
 [voro] c14_x0.50_sqs12_s1: sum(Vi)=171.24 vs Vcell=171.24
 === Phase 6: Cr/V site-selection energies ===
 reference C14-NbNiAl: c14_x0.50_al2a0 E=-84.0033 eV
-[relax] c14_NbNiAl_Cr_at_4f_Nb: N=12 E=-82.6580 eV V/atom=13.9292 A^3 conv=True (2.5s)
-[relax] c14_NbNiAl_Cr_at_2a_Ni: N=12 E=-86.8441 eV V/atom=14.4989 A^3 conv=True (3.2s)
-[relax] c14_NbNiAl_Cr_at_6h_Ni: N=12 E=-86.9491 eV V/atom=14.4920 A^3 conv=True (4.2s)
+[relax] c14_NbNiAl_Cr_at_4f_Nb: N=12 E=-82.6580 eV V/atom=13.9292 A^3 conv=True (2.4s)
+[relax] c14_NbNiAl_Cr_at_2a_Ni: N=12 E=-86.8441 eV V/atom=14.4989 A^3 conv=True (3.3s)
+[relax] c14_NbNiAl_Cr_at_6h_Ni: N=12 E=-86.9491 eV V/atom=14.4920 A^3 conv=True (3.9s)
 [site] Cr: E_A=0.710 E_2a=0.878 E_6h=0.773 dE_A-B=-0.063 eV
 [relax] c14_NbNiAl_V_at_4f_Nb: N=12 E=-82.4718 eV V/atom=13.9844 A^3 conv=True (2.5s)
-[relax] c14_NbNiAl_V_at_2a_Ni: N=12 E=-86.5644 eV V/atom=14.6294 A^3 conv=True (3.9s)
+[relax] c14_NbNiAl_V_at_2a_Ni: N=12 E=-86.5644 eV V/atom=14.6294 A^3 conv=True (3.8s)
 [relax] c14_NbNiAl_V_at_6h_Ni: N=12 E=-86.7685 eV V/atom=14.6192 A^3 conv=True (3.1s)
 [site] V: E_A=0.545 E_2a=0.806 E_6h=0.602 dE_A-B=-0.057 eV
 {
@@ -63,24 +63,24 @@ reference C14-NbNiAl: c14_x0.50_al2a0 E=-84.0033 eV
   "V_Cr": 11.771985130894459,
   "V_V": 13.477812934560546,
   "V_B2_NiAl": 11.973743305556042,
-  "fcc_fit_a": 10.787192389974775,
-  "fcc_fit_b": 2.178060168408054,
-  "V_NiAl_extrap_x05": 11.876222474178803,
-  "dV_NiAl_extrap_minus_B2": -0.09752083137723844,
-  "V_C14_x05": 14.270087539469113,
+  "fcc_fit_a": 10.78682991882614,
+  "fcc_fit_b": 2.1713869726851716,
+  "V_NiAl_extrap_x05": 11.872523405168725,
+  "dV_NiAl_extrap_minus_B2": -0.1012199003873171,
+  "V_C14_x05": 14.270087539469102,
   "V_C14_x05_ordered_mean": 14.291534935329866,
   "V_C14_x05_ordered_std": 0.05677534196712654,
-  "V_C14_x05_sqs12": 14.270087539469113,
-  "V_C14_x05_sqs12_std": 1.444539672868357e-13,
-  "V_C14_x05_48at": 14.268231437191847,
-  "V_C14_x05_48at_std": 0.0036399699503531055,
-  "size_dependence_percent": 0.013006943875656839,
+  "V_C14_x05_sqs12": 14.270087539469102,
+  "V_C14_x05_sqs12_std": 5.275510661177484e-14,
+  "V_C14_x05_48at": 14.273022057082187,
+  "V_C14_x05_48at_std": 0.007147290392422828,
+  "size_dependence_percent": 0.02056411780914543,
   "V_pure": 15.245113680927902,
-  "V_weighted_extrap": 13.979552534596609,
+  "V_weighted_extrap": 13.97708648858989,
   "V_weighted_B2": 14.044566422181434,
-  "dev_weighted_extrap": 0.2905350048725044,
-  "dev_weighted_B2": 0.22552111728767876,
-  "dev_pure": 0.9750261414587893,
+  "dev_weighted_extrap": 0.29300105087921224,
+  "dev_weighted_B2": 0.2255211172876681,
+  "dev_pure": 0.9750261414588,
   "hypothesis_supported": true,
   "c14_mean": {
     "0.0": 13.028688933788743,
@@ -105,17 +105,17 @@ reference C14-NbNiAl: c14_x0.50_al2a0 E=-84.0033 eV
   ],
   "fcc_means": [
     10.813325991202822,
-    10.9105631620226,
-    11.033858943815261,
-    11.180500166493172,
-    11.35900129159506
+    10.91056316202243,
+    11.029961214408939,
+    11.18050016649318,
+    11.356915917931573
   ],
   "fcc_stds": [
     0.0,
-    7.737415636393643e-13,
-    0.005139379111684157,
-    2.248407486426411e-13,
-    0.0003028498498739719
+    7.121950469070999e-13,
+    0.0003728426776958907,
+    9.797376942186756e-14,
+    0.0032520135676214657
   ],
   "site_energies": [
     {
@@ -140,7 +140,7 @@ reference C14-NbNiAl: c14_x0.50_al2a0 E=-84.0033 eV
     "c14_x0.50_al2a1": -82.59711600300564,
     "c14_x0.50_al2a2": -83.74303253337885,
     "c14_x0.50_sqs12_s0": -83.89137345547728,
-    "c14_x0.50_sqs12_s1": -83.8913734554773
+    "c14_x0.50_sqs12_s1": -83.89137345547728
   }
 }
 DONE
