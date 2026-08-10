@@ -143,9 +143,9 @@ $$|V_{\mathrm{C14}} - V_{\mathrm{weighted}}| \;&lt;\; |V_{\mathrm{C14}} - V_{\ma
 fcc-Ni母相、$x_{\mathrm{Al}} = 0,\ 0.0625,\ 0.125,\ 0.1875,\ 0.25$（各組成2 SQS構成）。
 </p>
 <ul>
-<li>線形フィット: $\bar V(x_{\mathrm{Al}}) = 10.787 + 2.178\,x_{\mathrm{Al}}$ (Å$^3$/atom)</li>
-<li>$x=0.5$ への外挿: $\bar V^{\mathrm{extrap}} = 11.876$ Å$^3$/atom</li>
-<li>B2-NiAl: 11.974 Å$^3$/atom → 差 $-0.098$ Å$^3$/atom（<b>−0.8%</b>）</li>
+<li>線形フィット: $\bar V(x_{\mathrm{Al}}) = 10.787 + 2.171\,x_{\mathrm{Al}}$ (Å$^3$/atom)</li>
+<li>$x=0.5$ への外挿: $\bar V^{\mathrm{extrap}} = 11.873$ Å$^3$/atom</li>
+<li>B2-NiAl: 11.974 Å$^3$/atom → 差 $-0.101$ Å$^3$/atom（<b>−0.8%</b>）</li>
 </ul>
 <p>固溶体外挿とB2規則相の平均体積はほぼ一致し、論文のNi–Al平均体積の扱い（固溶体と化合物を同一線上で扱う）を支持する。</p>
 <figure>
@@ -158,7 +158,7 @@ fcc-Ni母相、$x_{\mathrm{Al}} = 0,\ 0.0625,\ 0.125,\ 0.1875,\ 0.25$（各組�
 <tr><th>量</th><th>値 (Å$^3$/atom)</th></tr>
 <tr><td>$V_{\mathrm{C14}}$ (x=0.5, 12原子SQS)</td><td>14.270</td></tr>
 <tr><td>（参考）x=0.5 規則配置平均</td><td>14.292 ± 0.057</td></tr>
-<tr><td>$V_{\mathrm{weighted}}$（Ni(Al)外挿）</td><td>13.980</td></tr>
+<tr><td>$V_{\mathrm{weighted}}$（Ni(Al)外挿）</td><td>13.977</td></tr>
 <tr><td>$V_{\mathrm{weighted}}$（B2-NiAl）</td><td>14.045</td></tr>
 <tr><td>$V_{\mathrm{pure}}$</td><td>15.245</td></tr>
 </table>
@@ -170,7 +170,7 @@ $\;&lt;\;$ $|V_{\mathrm{C14}} - V_{\mathrm{pure}}| = 0.98$ Å$^3$/atom
 C14相中のNi・Alのサイズは、純元素平均よりNiAl化合物由来の平均体積で3倍以上正確に記述される。
 </div>
 <p>
-SQSサイズ依存性: 12原子SQS 14.270 → 48原子SQS 14.268 Å$^3$/atom（変化 <span class="ok">0.013%</span>、基準0.5%以下）。
+SQSサイズ依存性: 12原子SQS 14.270 → 48原子SQS 14.273 Å$^3$/atom（変化 <span class="ok">0.021%</span>、基準0.5%以下）。
 </p>
 <figure>
 <img src="../06_figures/fig6b_c14_nb_nial_average_atomic_volume.png" alt="Fig. 6(b)再現">
@@ -211,7 +211,7 @@ Cr・VともにわずかにAサイト（Nbサイト）を優先するが、$|\De
 <tr><th>#</th><th>基準</th><th>結果</th></tr>
 <tr><td>1</td><td>純元素格子定数誤差1%以下</td><td class="ok">✓ 実験比0.4–0.9%</td></tr>
 <tr><td>2</td><td>C14体積のDFT比1%以下</td><td class="warn">△ DFT直接比較は未実施（MLIP訓練データがMP-DFT）</td></tr>
-<tr><td>3</td><td>SQSサイズ依存0.5%以下</td><td class="ok">✓ 0.013%</td></tr>
+<tr><td>3</td><td>SQSサイズ依存0.5%以下</td><td class="ok">✓ 0.021%</td></tr>
 <tr><td>4</td><td>SQS構成間標準偏差の報告</td><td class="ok">✓ volumes.csv / summary.json</td></tr>
 <tr><td>5</td><td>置換エネルギーのDFT検証</td><td class="warn">△ 未実施（今後の課題）</td></tr>
 <tr><td>6</td><td>2a/6h情報の区別</td><td class="ok">✓ site配列で全構造追跡</td></tr>
@@ -226,7 +226,7 @@ Cr・VともにわずかにAサイト（Nbサイト）を優先するが、$|\De
 <li><b>自前MLIP訓練の省略</b>: VASP環境がないため、指示書Phase A/B（DFT教師データ生成＋訓練）はMP-DFT事前学習のMACE-MP-0で代替。C14-NbNiAl近傍組成のDFT代表点検証（基準2・5）が今後の課題。</li>
 <li><b>0 K静的計算</b>: 実験値との絶対比較には熱膨張補正（MLIP-MDまたは準調和近似）が必要。本評価は系列間の相対比較に限定。</li>
 <li><b>磁性</b>: MACE-MP-0は非スピン分極。Ni強磁性の体積への影響（〜0.1%程度）は未考慮。</li>
-<li><b>SQSサイズ</b>: 最大48原子。サイズ依存が0.013%と小さいため96原子への拡張は省略。</li>
+<li><b>SQSサイズ</b>: 最大48原子。サイズ依存が0.021%と小さいため96原子への拡張は省略。</li>
 </ol>
 
 <div class="caveat">
@@ -243,7 +243,7 @@ Laves相の相安定性議論では、純元素半径ではなく化合物・固
 <li><code>laves_fig6/06_figures/</code> — Fig. 6(a)(b)再現図・サイト体積図</li>
 <li><code>laves_fig6/07_reports/fig6_validation_report.md</code> — 詳細報告書（Markdown）</li>
 <li><code>laves_fig6/04_relax/*.extxyz</code> — 全36緩和構造</li>
-<li>関連PR: <a href="https://github.com/minimumtone/machine-learning/pull/488">#488（本実装）</a>・<a href="https://github.com/minimumtone/machine-learning/pull/490">#490（レビュー修正）</a></li>
+<li>関連PR: <a href="https://github.com/minimumtone/machine-learning/pull/488">#488（本実装）</a>・<a href="https://github.com/minimumtone/machine-learning/pull/490">#490（レビュー修正）</a>・<a href="https://github.com/minimumtone/machine-learning/pull/492">#492（SQS乱数種制御）</a></li>
 </ul>
 
 <h2>参考文献</h2>
