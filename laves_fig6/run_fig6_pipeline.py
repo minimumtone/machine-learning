@@ -68,11 +68,13 @@ rows = []
 
 
 def record(atoms, e, v, conv, *, structure_id, parent, x_al, supercell, sqs_id, site_def,
-           rep=(1, 1, 1)):
+           rep=(1, 1, 1), a_scale=1.0):
+    """a_scale converts primitive-cell vector lengths to the conventional
+    lattice constant (e.g. sqrt(2) for fcc primitive cells)."""
     cell = atoms.cell.cellpar()
     n = len(atoms)
-    a_unit = cell[0] / rep[0]
-    c_unit = cell[2] / rep[2]
+    a_unit = cell[0] / rep[0] * a_scale
+    c_unit = cell[2] / rep[2] * a_scale
     rows.append(dict(
         structure_id=structure_id, parent_structure=parent,
         composition=atoms.get_chemical_formula(), x_Al=x_al, supercell=supercell,
@@ -141,7 +143,7 @@ for n_al in (0, 2, 4, 6, 8):  # of 32 atoms
         vols.append(v / len(at))
         record(at, e, v, conv, structure_id=name, parent="fcc-Ni(Al)",
                x_al=x, supercell="32at", sqs_id=f"sqs_s{s}", site_def="fcc SQS (icet)",
-               rep=rep)
+               rep=rep, a_scale=1.0 if n_al == 0 else np.sqrt(2.0))
     fcc_results[x] = vols
 
 xs = np.array(sorted(fcc_results))
