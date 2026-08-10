@@ -1,6 +1,6 @@
 %%
-%% This is file `sn-jnl.cls',
-%% generated with the docstrip utility.
+%% This is file `npj-compt.mater.cls',
+%% based on the Springer Nature `sn-jnl.cls' template.
 %%
 %% The original source files were:
 %%
