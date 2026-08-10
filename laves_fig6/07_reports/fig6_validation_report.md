@@ -114,6 +114,7 @@ Cr・VともにわずかにAサイト（Nbサイト）を優先するが、$|\De
 
 - `run_fig6_pipeline.py` — 全計算パイプライン（1パスで全出力を生成）
 - `05_analysis/volumes.csv, local_environments.csv, site_energies.csv, summary.json`
+  - `a_A`/`c_A` は単位胞あたりに正規化した格子定数（fcc行は立方格子基準、プリミティブセル由来のSQSは√2換算済み。C14行は六方晶単位胞）。`cell_a_A`/`cell_c_A` は緩和後セルの生のベクトル長。
 - `06_figures/fig6a_*.png, fig6b_*.png, site_volume_comparison.png`
 - `04_relax/*.extxyz` — 全緩和構造
 - `pipeline.log` — 実行ログ
