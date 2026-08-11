@@ -24,9 +24,17 @@ plt.rcParams.update({"font.size": 16, "axes.grid": True, "grid.alpha": 0.3,
                      "axes.unicode_minus": False})
 
 df = pd.read_csv(os.path.join(AN, "b2_offstoich_volumes.csv"))
+for extra in ("b2_offstoich_volumes_extra_vac.csv", "b2_offstoich_volumes_wide_vac.csv"):
+    p = os.path.join(AN, extra)
+    if os.path.exists(p):
+        df = pd.concat([df, pd.read_csv(p)], ignore_index=True)
 exp = pd.read_csv(os.path.join(AN, "fig6a_digitized_circles.csv"))
 exp_b2 = exp[exp.region == "B2"]
-KT_EV = 8.617333262e-5 * 1273.0
+exp_ss = exp[exp.region != "B2"]
+vols_all = pd.read_csv(os.path.join(BASE, "..", "05_analysis", "volumes.csv"))
+niall_ss = vols_all[vols_all.parent_structure == "fcc-Ni(Al)"]
+T_ANNEAL_K = 1473.0  # Yamanouchi 2018: heat treatment 1473 K / 168 h, water quench
+KT_EV = 8.617333262e-5 * T_ANNEAL_K
 
 perfect = df[df.branch == "perfect"].iloc[0]
 
@@ -39,7 +47,7 @@ agg = (df[df.branch != "perfect"]
             n=("V_per_atom_A3", "size"))
        .reset_index())
 
-# Boltzmann-weighted branch mixture (128-atom cells, 1273 K)
+# Boltzmann-weighted branch mixture (128-atom cells, annealing temperature)
 mix_rows = []
 for x, g in agg.groupby("x_Al_target"):
     g = g.set_index("branch")
@@ -60,16 +68,16 @@ mix = pd.DataFrame(mix_rows).sort_values("x_Al_target")
 # --- Fig: V-bar vs x_Al ------------------------------------------------------
 fig, ax = plt.subplots(figsize=(10, 7.5))
 colors = {"antisite": "tab:blue", "vacancy": "tab:red"}
-labels = {"antisite": "逆位相（antisite）配置", "vacancy": "空孔（vacancy）配置"}
+labels = {"antisite": "反サイト（antisite）配置", "vacancy": "空孔（vacancy）配置"}
 for br, g in agg.groupby("branch"):
     g = g.sort_values("x_Al")
     ax.errorbar(g.x_Al, g.V, yerr=g.Vstd, fmt="o-", ms=9, capsize=4,
                 color=colors[br], label=labels[br] + " (MLIP, SQS的乱数配置×3)")
-ax.plot(mix.x_Al, mix.V_mix, "k--", lw=2, label="Boltzmann混合 (1273 K)")
+ax.plot(mix.x_Al, mix.V_mix, "k--", lw=2, label=f"Boltzmann混合 ({T_ANNEAL_K:.0f} K)")
 ax.plot([0.5], [perfect.V_per_atom_A3], "s", ms=13, color="tab:green",
         label="完全B2 (MLIP)")
 ax.plot(exp_b2.x_Al, exp_b2.V_bar_A3, "o", ms=11, mfc="none", mec="k", mew=2,
-        label="実験 (Fig. 6(a) デジタイズ)")
+        label="Yamanouchi実験 B2枝 (Fig. 6(a))")
 ax.set_xlabel(r"Al原子分率 $x_{\mathrm{Al}}$")
 ax.set_ylabel(r"平均原子体積 $\bar V$ (Å$^3$/atom)")
 ax.set_title(r"B2-Ni$_{1-x}$Al$_x$ 不定比組成の平均原子体積")
@@ -78,13 +86,39 @@ plt.tight_layout()
 plt.savefig(os.path.join(FIG, "fig_b2_offstoich_vbar.png"), dpi=150)
 plt.close()
 
+# --- Fig: full Fig.6(a) range with all original Yamanouchi data ---------------
+fig, ax = plt.subplots(figsize=(11, 8))
+g_ss = (niall_ss.groupby("x_Al")
+        .agg(V=("volume_per_atom_A3", "mean"), Vstd=("volume_per_atom_A3", "std"))
+        .reset_index())
+ax.errorbar(g_ss.x_Al, g_ss.V, yerr=g_ss.Vstd, fmt="D-", ms=9, capsize=4,
+            color="tab:purple", label="Ni(Al)固溶体 fcc-SQS (MLIP)")
+for br, g in agg.groupby("branch"):
+    g = g.sort_values("x_Al")
+    ax.errorbar(g.x_Al, g.V, yerr=g.Vstd, fmt="o-", ms=8, capsize=4,
+                color=colors[br], label=labels[br] + " (MLIP)")
+ax.plot(mix.x_Al, mix.V_mix, "k--", lw=2, label=f"Boltzmann混合 ({T_ANNEAL_K:.0f} K)")
+ax.plot([0.5], [perfect.V_per_atom_A3], "s", ms=12, color="tab:green",
+        label="完全B2 (MLIP)")
+ax.plot(exp_b2.x_Al, exp_b2.V_bar_A3, "o", ms=11, mfc="none", mec="k", mew=2,
+        label="Yamanouchi実験 B2枝 (Fig. 6(a))")
+ax.plot(exp_ss.x_Al, exp_ss.V_bar_A3, "^", ms=11, mfc="none", mec="gray", mew=2,
+        label="Yamanouchi実験 Ni(Al)固溶体領域")
+ax.set_xlabel(r"Al原子分率 $x_{\mathrm{Al}}$")
+ax.set_ylabel(r"平均原子体積 $\bar V$ (Å$^3$/atom)")
+ax.set_title(r"Fig. 6(a)全域: Ni(Al)固溶体とB2不定比枝のMLIP再現")
+ax.legend(fontsize=12, loc="upper left")
+plt.tight_layout()
+plt.savefig(os.path.join(FIG, "fig_b2_offstoich_vbar_full.png"), dpi=150)
+plt.close()
+
 # --- Fig: lattice constant ---------------------------------------------------
 fig, ax = plt.subplots(figsize=(10, 7))
 for br, g in agg.groupby("branch"):
     g = g.sort_values("x_Al")
     ax.errorbar(g.x_Al, g.a, yerr=g.astd, fmt="o-", ms=9, capsize=4,
                 color=colors[br], label=labels[br])
-ax.plot(mix.x_Al, mix.a_mix, "k--", lw=2, label="Boltzmann混合 (1273 K)")
+ax.plot(mix.x_Al, mix.a_mix, "k--", lw=2, label=f"Boltzmann混合 ({T_ANNEAL_K:.0f} K)")
 ax.plot([0.5], [perfect.a_eff_A], "s", ms=13, color="tab:green", label="完全B2")
 ax.set_xlabel(r"Al原子分率 $x_{\mathrm{Al}}$")
 ax.set_ylabel(r"実効格子定数 $a$ (Å)")
@@ -126,7 +160,7 @@ out = dict(
     MAPE_V_pct=round(mape, 3),
     V_B2_perfect=float(perfect.V_per_atom_A3),
     branch_preference={f"{r.x_Al_target:.2f}": dict(preferred=r.preferred,
-                                                    w_vacancy_1273K=round(float(r.w_vac), 4),
+                                                    w_vacancy_annealT=round(float(r.w_vac), 4),
                                                     dEf_eV_atom=round(float(r.dEf_eV_atom), 4))
                        for r in mix.itertuples()},
 )
