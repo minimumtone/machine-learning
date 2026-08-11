@@ -41,10 +41,10 @@ Boltzmann重み（1273 K）で混合。実験値は論文Fig. 6(a)のB2枝開丸
 <tr><th>指標</th><th>結果</th></tr>
 <tr><td>欠陥化学の予言</td><td class="ok">Ni過剰側=Ni逆位相、Al過剰側=Ni空孔（三重欠陥型）を正しく選択</td></tr>
 <tr><td>完全B2: a / V̄</td><td>2.882 Å / 11.975 Å³（実験 2.887 Å / ~12.0 Å³）</td></tr>
-<tr><td>実験12点との一致（Boltzmann混合）</td><td class="ok">RMSE 0.167 Å³/atom・MAPE 1.03%</td></tr>
+<tr><td>実験12点との一致（Boltzmann混合）</td><td class="ok">RMSE 0.157 Å³/atom・MAPE 0.98%</td></tr>
 <tr><td>配置揺らぎ（乱数種間σ）</td><td>≤0.08 Å³/atom（実験との差より十分小）</td></tr>
 </table>
-<p><b>判定: MLIP＋確率論的配置サンプリングでFig. 6(a)のB2不定比枝は約1%で再現可能</b>。
+<p><b>判定: MLIP＋確率論的配置サンプリングでFig. 6(a)のB2不定比枝は約1%（MAPE 0.98%）で再現可能</b>。
 Al過剰側のV̄急増は格子定数の増加ではなくNi空孔による原子数減少が支配し、
 実験の急峻な立ち上がり（勾配）まで一致する。</p>
 <img src="../b2_offstoich/figures/fig_b2_offstoich_vbar.png" alt="V-bar vs x_Al">
@@ -64,12 +64,15 @@ Al過剰側のV̄急増は格子定数の増加ではなくNi空孔による原�
 Ω<sub>sf</sub>の概念自体はDFTで構造別に再定義すれば有用</b>（BCCで44.5%改善、校正不要のq=1）。</p>
 
 <h2>検証3: q<sub>BCC</sub>→1・q<sub>FCC</sub>→0の物理根源</h2>
-<p>qは回帰勾配であり q̂ = r × σ(ΔV<sub>exp</sub>)/σ(C) に厳密分解できる（95 HEA解析）:</p>
+<p>qはモデル V = V<sub>Vegard</sub> + qC の原点通過回帰勾配 q̂ = ΣΔVC/ΣC² であり、
+σ・平均・相関に厳密分解できる（q̂ = [rσ(ΔV)σ(C)+ΔV̄·C̄]/[σ(C)²+C̄²]、
+切片あり勾配 r×σ(ΔV)/σ(C) とはC̄≠0のため一致しない点に注意。95 HEA解析）:</p>
 <table>
 <tr><th></th><th>BCC (B2-Ω)</th><th>BCC (SQS-Ω)</th><th>FCC (L1₂-Ω)</th></tr>
 <tr><td>信号/ノイズ比 σ(ΔV)/ノイズ床</td><td>1.68</td><td>1.68</td><td class="warn">0.80</td></tr>
 <tr><td>相関 r</td><td>0.14</td><td>0.41</td><td>0.60</td></tr>
-<tr><td>q̂</td><td>0.57</td><td class="ok">1.41（〜1を跨ぐ）</td><td class="warn">0.19</td></tr>
+<tr><td>切片あり勾配 r×σ(ΔV)/σ(C)</td><td>0.29</td><td>1.49</td><td>0.34</td></tr>
+<tr><td>q̂（原点通過回帰、主指標）</td><td>0.57</td><td class="ok">1.41（1を跨ぐ）</td><td class="warn">0.19</td></tr>
 </table>
 <ul>
 <li><b>FCC→0の根源</b>: 最密充填（CN12・充填率0.74）の幾何拘束で体積の加法性がほぼ厳密に成立し、

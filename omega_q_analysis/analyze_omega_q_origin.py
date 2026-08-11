@@ -108,17 +108,25 @@ for struct in ("BCC", "FCC", "BCC_SQS"):
         dv = np.array([deviation_and_correction(h)[0] for h in hs])
         c = np.array([deviation_and_correction(h)[1] for h in hs])
     delta = np.array([size_mismatch_delta(h) for h in hs])
+    # main estimator: through-origin regression slope of the model V = V_Vegard + q C
+    #   q_hat = sum(dv*c)/sum(c^2)
+    #         = (r*sigma_dv*sigma_c + mean_dv*mean_c) / (sigma_c^2 + mean_c^2)
+    # slope_ols = cov(dv,c)/var(c) = r*sigma_dv/sigma_c is the slope WITH intercept
+    # (they differ because mean(C) != 0).
     q_hat = float(np.sum(dv * c) / np.sum(c * c))
     r = float(np.corrcoef(dv, c)[0, 1])
     data[struct] = (dv, c, delta, q_hat, r)
     res[struct] = dict(
         n=len(hs), q_hat=round(q_hat, 3), r=round(r, 3),
         sigma_dV=round(float(dv.std()), 4), sigma_C=round(float(c.std()), 4),
+        mean_dV=round(float(dv.mean()), 4), mean_C=round(float(c.mean()), 4),
         mean_absC=round(float(np.abs(c).mean()), 4),
         mean_abs_dV=round(float(np.abs(dv).mean()), 4),
         delta_mean=round(float(delta.mean()), 3),
-        amplitude_ratio_sigma_dV_over_sigma_C=round(float(dv.std() / c.std()), 3),
-        q_as_r_times_ratio=round(float(r * dv.std() / c.std()), 3),
+        slope_ols_r_times_sigma_ratio=round(float(r * dv.std() / c.std()), 3),
+        q_hat_check_decomposed=round(
+            float((r * dv.std() * c.std() + dv.mean() * c.mean())
+                  / (c.var() + c.mean() ** 2)), 3),
     )
 
 # noise-floor comparison (sigma_a = 0.016 A from duplicate measurements)
@@ -183,8 +191,8 @@ axes[2].bar(x, [res[s]["q_hat"] for s in labels], 0.5,
             color=["tab:red", "tab:orange", "tab:blue"])
 axes[2].axhline(1, color="k", ls="--", lw=1.5)
 axes[2].set_xticks(x, labels)
-axes[2].set_ylabel(r"$\hat q = r\,\sigma(\Delta V)/\sigma(C)$")
-axes[2].set_title(r"$q$因子（回帰勾配）")
+axes[2].set_ylabel(r"$\hat q = \Sigma \Delta V C\, /\, \Sigma C^2$")
+axes[2].set_title(r"$q$因子（原点通過回帰の勾配）")
 plt.tight_layout()
 plt.savefig(HERE / "fig_q_decomposition.png", dpi=150)
 plt.close()

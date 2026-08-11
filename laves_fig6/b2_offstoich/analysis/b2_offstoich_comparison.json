@@ -1,7 +1,7 @@
 {
   "n_exp_points_compared": 12,
-  "RMSE_V_A3": 0.167,
-  "MAPE_V_pct": 1.034,
+  "RMSE_V_A3": 0.1573,
+  "MAPE_V_pct": 0.981,
   "V_B2_perfect": 11.974527545032217,
   "branch_preference": {
     "0.42": {

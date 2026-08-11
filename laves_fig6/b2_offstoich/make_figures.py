@@ -48,7 +48,7 @@ for x, g in agg.groupby("x_Al_target"):
         w_vac = 1.0 / (1.0 + np.exp(dEf * 128 / KT_EV))
         mix_rows.append(dict(
             x_Al_target=x,
-            x_Al=g.x_Al.mean(),
+            x_Al=w_vac * g.loc["vacancy", "x_Al"] + (1 - w_vac) * g.loc["antisite", "x_Al"],
             V_mix=w_vac * g.loc["vacancy", "V"] + (1 - w_vac) * g.loc["antisite", "V"],
             a_mix=w_vac * g.loc["vacancy", "a"] + (1 - w_vac) * g.loc["antisite", "a"],
             w_vac=w_vac,
