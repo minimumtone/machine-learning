@@ -26,6 +26,9 @@ plt.rcParams.update({"font.size": 16, "axes.grid": True, "grid.alpha": 0.3,
 df = pd.read_csv(os.path.join(AN, "b2_offstoich_volumes.csv"))
 exp = pd.read_csv(os.path.join(AN, "fig6a_digitized_circles.csv"))
 exp_b2 = exp[exp.region == "B2"]
+exp_ss = exp[exp.region != "B2"]
+vols_all = pd.read_csv(os.path.join(BASE, "..", "05_analysis", "volumes.csv"))
+niall_ss = vols_all[vols_all.parent_structure == "fcc-Ni(Al)"]
 KT_EV = 8.617333262e-5 * 1273.0
 
 perfect = df[df.branch == "perfect"].iloc[0]
@@ -69,13 +72,39 @@ ax.plot(mix.x_Al, mix.V_mix, "k--", lw=2, label="Boltzmann混合 (1273 K)")
 ax.plot([0.5], [perfect.V_per_atom_A3], "s", ms=13, color="tab:green",
         label="完全B2 (MLIP)")
 ax.plot(exp_b2.x_Al, exp_b2.V_bar_A3, "o", ms=11, mfc="none", mec="k", mew=2,
-        label="実験 (Fig. 6(a) デジタイズ)")
+        label="Yamanouchi実験 B2枝 (Fig. 6(a))")
 ax.set_xlabel(r"Al原子分率 $x_{\mathrm{Al}}$")
 ax.set_ylabel(r"平均原子体積 $\bar V$ (Å$^3$/atom)")
 ax.set_title(r"B2-Ni$_{1-x}$Al$_x$ 不定比組成の平均原子体積")
 ax.legend(fontsize=13)
 plt.tight_layout()
 plt.savefig(os.path.join(FIG, "fig_b2_offstoich_vbar.png"), dpi=150)
+plt.close()
+
+# --- Fig: full Fig.6(a) range with all original Yamanouchi data ---------------
+fig, ax = plt.subplots(figsize=(11, 8))
+g_ss = (niall_ss.groupby("x_Al")
+        .agg(V=("volume_per_atom_A3", "mean"), Vstd=("volume_per_atom_A3", "std"))
+        .reset_index())
+ax.errorbar(g_ss.x_Al, g_ss.V, yerr=g_ss.Vstd, fmt="D-", ms=9, capsize=4,
+            color="tab:purple", label="Ni(Al)固溶体 fcc-SQS (MLIP)")
+for br, g in agg.groupby("branch"):
+    g = g.sort_values("x_Al")
+    ax.errorbar(g.x_Al, g.V, yerr=g.Vstd, fmt="o-", ms=8, capsize=4,
+                color=colors[br], label=labels[br] + " (MLIP)")
+ax.plot(mix.x_Al, mix.V_mix, "k--", lw=2, label="Boltzmann混合 (1273 K)")
+ax.plot([0.5], [perfect.V_per_atom_A3], "s", ms=12, color="tab:green",
+        label="完全B2 (MLIP)")
+ax.plot(exp_b2.x_Al, exp_b2.V_bar_A3, "o", ms=11, mfc="none", mec="k", mew=2,
+        label="Yamanouchi実験 B2枝 (Fig. 6(a))")
+ax.plot(exp_ss.x_Al, exp_ss.V_bar_A3, "^", ms=11, mfc="none", mec="gray", mew=2,
+        label="Yamanouchi実験 Ni(Al)固溶体領域")
+ax.set_xlabel(r"Al原子分率 $x_{\mathrm{Al}}$")
+ax.set_ylabel(r"平均原子体積 $\bar V$ (Å$^3$/atom)")
+ax.set_title(r"Fig. 6(a)全域: Ni(Al)固溶体とB2不定比枝のMLIP再現")
+ax.legend(fontsize=12, loc="upper left")
+plt.tight_layout()
+plt.savefig(os.path.join(FIG, "fig_b2_offstoich_vbar_full.png"), dpi=150)
 plt.close()
 
 # --- Fig: lattice constant ---------------------------------------------------

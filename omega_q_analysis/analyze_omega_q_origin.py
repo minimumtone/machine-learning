@@ -129,6 +129,40 @@ for struct in ("BCC", "FCC", "BCC_SQS"):
                   / (c.var() + c.mean() ** 2)), 3),
     )
 
+# q profile: RMSE(q) plateau and 95% CI of q_hat -----------------------------
+for struct in ("BCC", "BCC_SQS", "FCC"):
+    dv, c, _, q_hat, _ = data[struct]
+    n = len(dv)
+    resid = dv - q_hat * c
+    se = float(np.sqrt(np.sum(resid ** 2) / (n - 1) / np.sum(c ** 2)))
+    qs = np.linspace(-0.5, 3.0, 351)
+    rmse_q = np.array([np.sqrt(np.mean((dv - q * c) ** 2)) for q in qs])
+    rmse_min = float(rmse_q.min())
+    # plateau: q range where RMSE(q) <= 1.05 * min (5% flatness)
+    inside = qs[rmse_q <= 1.05 * rmse_min]
+    res[struct]["q_se"] = round(se, 3)
+    res[struct]["q_CI95"] = [round(q_hat - 1.96 * se, 3), round(q_hat + 1.96 * se, 3)]
+    res[struct]["rmse_plateau_5pct"] = [round(float(inside.min()), 2),
+                                        round(float(inside.max()), 2)]
+    res[struct]["rmse_at_q1_over_min"] = round(
+        float(np.sqrt(np.mean((dv - 1.0 * c) ** 2)) / rmse_min), 4)
+    data[struct] = (dv, c, data[struct][2], q_hat, data[struct][4], qs, rmse_q)
+
+fig, ax = plt.subplots(figsize=(10, 7))
+for struct, color in (("BCC", "tab:red"), ("BCC_SQS", "tab:orange"), ("FCC", "tab:blue")):
+    dv, c, _, q_hat, _, qs, rmse_q = data[struct]
+    ax.plot(qs, rmse_q, "-", lw=2.5, color=color, label=struct)
+    ax.plot([q_hat], [rmse_q.min()], "o", ms=10, color=color)
+ax.axvline(1.0, color="k", ls="--", lw=1.5, label="$q$ = 1")
+ax.axvline(0.0, color="gray", ls=":", lw=1.5, label="$q$ = 0 (Vegard)")
+ax.set_xlabel("$q$")
+ax.set_ylabel(r"RMSE$(\Delta V_\mathrm{exp} - qC)$ (Å$^3$/atom)")
+ax.set_title("$q$依存のRMSEプロファイル（プラトーの可視化）")
+ax.legend(fontsize=13)
+plt.tight_layout()
+plt.savefig(HERE / "fig_q_profile.png", dpi=150)
+plt.close()
+
 # noise-floor comparison (sigma_a = 0.016 A from duplicate measurements)
 SIGMA_A_NOISE = 0.016
 for struct in ("BCC", "BCC_SQS", "FCC"):
@@ -149,7 +183,7 @@ print(json.dumps(res, indent=2))
 fig, axes = plt.subplots(1, 3, figsize=(20, 6.2))
 for ax, struct, color in zip(axes, ("BCC", "BCC_SQS", "FCC"),
                              ("tab:red", "tab:orange", "tab:blue")):
-    dv, c, delta, q_hat, r = data[struct]
+    dv, c, delta, q_hat, r = data[struct][:5]
     ax.scatter(c, dv, s=60, alpha=0.7, color=color, edgecolor="k")
     xs = np.linspace(min(c.min(), 0) * 1.1, max(c.max(), 0) * 1.1, 10)
     ax.plot(xs, q_hat * xs, "k-", lw=2, label=f"$q$ = {q_hat:.2f} (fit)")
