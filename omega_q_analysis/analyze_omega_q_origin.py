@@ -27,6 +27,7 @@ import sys
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -37,10 +38,13 @@ REPO = HERE.parent
 sys.path.insert(0, str(REPO))
 sys.path.insert(0, str(REPO / "paper"))
 
-from hea_lattice_xgboost import (  # noqa: E402
-    ALONSO_TABLE2, INDEPENDENT_TEST, KING_ATOMIC_VOLUMES,
+from generate_all_figures import load_sqs_data
+
+from hea_lattice_xgboost import (
+    ALONSO_TABLE2,
+    INDEPENDENT_TEST,
+    KING_ATOMIC_VOLUMES,
 )
-from generate_all_figures import load_sqs_data  # noqa: E402
 
 plt.rcParams.update({"font.size": 16, "axes.grid": True, "grid.alpha": 0.3,
                      "font.family": ["Noto Sans CJK JP", "IPAGothic", "sans-serif"],

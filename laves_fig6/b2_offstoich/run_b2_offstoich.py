@@ -33,8 +33,7 @@ from ase.build import bulk
 from ase.filters import FrechetCellFilter
 from ase.io import write as ase_write
 from ase.optimize import LBFGS
-
-from mace.calculators import mace_mp  # noqa: E402
+from mace.calculators import mace_mp
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 AN = os.path.join(BASE, "analysis")
@@ -154,7 +153,7 @@ for x in X_TARGETS:
             record(name, "antisite", x, seed, e, v, n_ni, NCELL + n_anti, conv)
 
 # --- persist -----------------------------------------------------------------
-import pandas as pd  # noqa: E402
+import pandas as pd
 
 df = pd.DataFrame(rows)
 df.to_csv(os.path.join(AN, "b2_offstoich_volumes.csv"), index=False)
@@ -169,7 +168,7 @@ for x, grp in df[df.branch != "perfect"].groupby("x_Al_target"):
             V_mean=float(g.V_per_atom_A3.mean()), V_std=float(g.V_per_atom_A3.std(ddof=0)),
             a_mean=float(g.a_eff_A.mean()), a_std=float(g.a_eff_A.std(ddof=0)),
             E_form_mean=float(g.E_form_eV_atom.mean()),
-            n_configs=int(len(g)),
+            n_configs=len(g),
         )
     if "antisite" in entry and "vacancy" in entry:
         dEf = entry["vacancy"]["E_form_mean"] - entry["antisite"]["E_form_mean"]
