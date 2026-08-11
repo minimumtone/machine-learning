@@ -165,8 +165,8 @@ for x, grp in df[df.branch != "perfect"].groupby("x_Al_target"):
     entry = {}
     for br, g in grp.groupby("branch"):
         entry[br] = dict(
-            V_mean=float(g.V_per_atom_A3.mean()), V_std=float(g.V_per_atom_A3.std(ddof=0)),
-            a_mean=float(g.a_eff_A.mean()), a_std=float(g.a_eff_A.std(ddof=0)),
+            V_mean=float(g.V_per_atom_A3.mean()), V_std=float(g.V_per_atom_A3.std(ddof=1)),
+            a_mean=float(g.a_eff_A.mean()), a_std=float(g.a_eff_A.std(ddof=1)),
             E_form_mean=float(g.E_form_eV_atom.mean()),
             n_configs=len(g),
         )
