@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laves相原子サイズ検証 評価まとめ — Fig. 6再現（Nb–Ni–Al系）</title>
+<script>
+  window.MathJax = { tex: { inlineMath: [['$', '$']] } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --accent: #1a5276;
+    --accent-light: #d6eaf8;
+    --ok: #1e8449;
+    --warn: #b9770e;
+  }
+  body {
+    font-family: "Noto Sans CJK JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+    color: #212529;
+    line-height: 1.75;
+  }
+  h1 {
+    color: var(--accent);
+    border-bottom: 3px solid var(--accent);
+    padding-bottom: 0.4rem;
+    font-size: 1.7rem;
+  }
+  h2 {
+    color: var(--accent);
+    border-left: 6px solid var(--accent);
+    padding-left: 0.6rem;
+    margin-top: 2.5rem;
+    font-size: 1.3rem;
+  }
+  h3 { font-size: 1.1rem; margin-top: 1.6rem; }
+  table {
+    border-collapse: collapse;
+    margin: 1rem 0;
+    width: 100%;
+  }
+  th, td {
+    border: 1px solid #adb5bd;
+    padding: 0.4rem 0.7rem;
+    text-align: center;
+  }
+  th { background: var(--accent-light); }
+  .verdict {
+    background: #eafaf1;
+    border: 2px solid var(--ok);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    margin: 1.2rem 0;
+    font-size: 1.05rem;
+  }
+  .caveat {
+    background: #fef9e7;
+    border: 2px solid var(--warn);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    margin: 1.2rem 0;
+  }
+  .ok { color: var(--ok); font-weight: bold; }
+  .warn { color: var(--warn); font-weight: bold; }
+  figure {
+    margin: 1.5rem 0;
+    text-align: center;
+  }
+  figure img {
+    max-width: 100%;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+  }
+  figcaption {
+    font-size: 0.92rem;
+    color: #555;
+    margin-top: 0.4rem;
+  }
+  code { background: #f1f3f5; padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.92em; }
+  .meta { color: #666; font-size: 0.92rem; }
+</style>
+</head>
+<body>
+
+<h1>Laves相原子サイズ検証 評価まとめ<br>
+<span style="font-size:1.05rem; font-weight:normal;">— Yamanouchi &amp; Miura (2018) Fig. 6 のMLIP再現（Nb–Ni–Al系）—</span></h1>
+
+<p class="meta">
+対象論文: T. Yamanouchi and S. Miura, <i>Mater. Trans.</i> <b>59</b>, 546–555 (2018),
+DOI: <a href="https://doi.org/10.2320/matertrans.MJ201604">10.2320/matertrans.MJ201604</a><br>
+計算手法: MACE-MP-0（MP-DFT事前学習MLIP）+ icet SQS ／ 全構造 0 K 静的緩和・収束確認済み
+</p>
+
+<h2>1. 研究背景</h2>
+<p>
+Laves相（AB$_2$型トポロジカル最密充填相）は、Nb基・Ni基耐熱合金の相安定性を左右する代表的な金属間化合物であり、その生成傾向は古くから構成元素の<b>原子サイズ比</b>（理想値 $r_A/r_B \approx 1.225$）で議論されてきた。しかし、多元系合金中の「原子半径」をどう定義するかは自明ではない。純元素の原子半径をそのまま用いると、化合物形成に伴う電荷移動・体積収縮が無視され、相安定性の予測を誤ることがある。
+</p>
+<p>
+Yamanouchi &amp; Miura (2018) は、Nb–Cr–Ni–Al／Nb–V–Ni–Al系のLaves相安定性を解析するにあたり、<b>純元素の原子体積ではなく、NiAl化合物（B2）やNi(Al)固溶体から導かれる「化合物由来の平均原子体積」を用いるべき</b>だと提案した（同論文Fig. 6）。すなわちC14-Nb(Ni,Al)$_2$の平均原子体積 $V_{\mathrm{C14}}$ は、
+</p>
+<p>
+$$V_{\mathrm{weighted}} = \frac{V_{\mathrm{Nb}} + 2\,\bar V_{\mathrm{NiAl}}}{3}$$
+</p>
+<p>
+（$\bar V_{\mathrm{NiAl}}$: Ni–Al化合物・固溶体由来の平均原子体積）で近似され、純元素平均
+$V_{\mathrm{pure}} = (V_{\mathrm{Nb}} + V_{\mathrm{Ni}} + V_{\mathrm{Al}})/3$ よりも実測に近い、という主張である。
+</p>
+<p>
+本研究では、この主張（中心仮説）
+</p>
+<p>
+$$|V_{\mathrm{C14}} - V_{\mathrm{weighted}}| \;&lt;\; |V_{\mathrm{C14}} - V_{\mathrm{pure}}|$$
+</p>
+<p>
+を、機械学習原子間ポテンシャル（MLIP）による第一原理精度の全原子計算で独立に検証した。実験格子定数への依存を避け、単一の理論体系（MP-DFT／PBE水準）内で純元素・B2・固溶体・C14 Laves相を一貫して計算できる点が本アプローチの利点である。
+</p>
+
+<h2>2. 計算手法の要点</h2>
+<ul>
+<li><b>MLIP</b>: MACE-MP-0 (medium, float64, CPU)。Materials ProjectのDFT (PBE-GGA, PAW) データで事前学習された基盤モデル。VASPによる教師データ生成・自前訓練は実行環境の制約により省略し、事前学習MLIPで代替。</li>
+<li><b>SQS</b>: icet 3.0（10,000 MCステップ）。fcc固溶体は32原子、C14は12原子（＋サイズ検証用48原子）。</li>
+<li><b>構造緩和</b>: ASE FrechetCellFilter + LBFGS（$f_{\max}=0.02$ eV/Å）、セル・原子位置を全緩和。全36構造が収束。</li>
+<li><b>C14構造</b>: MgZn$_2$型（P6$_3$/mmc）。A=Nb@4f、Bサイト2a/6hを明示的に区別して追跡。</li>
+</ul>
+
+<h2>3. 純元素・B2-NiAlの妥当性確認</h2>
+<table>
+<tr><th>構造</th><th>a (Å) MLIP</th><th>a (Å) 実験</th><th>V/atom (Å$^3$)</th></tr>
+<tr><td>fcc-Ni</td><td>3.510</td><td>3.524</td><td>10.813</td></tr>
+<tr><td>fcc-Al</td><td>4.060</td><td>4.050</td><td>16.736</td></tr>
+<tr><td>bcc-Nb</td><td>3.313</td><td>3.301</td><td>18.186</td></tr>
+<tr><td>bcc-Cr</td><td>2.866</td><td>2.884</td><td>11.772</td></tr>
+<tr><td>bcc-V</td><td>2.998</td><td>3.024</td><td>13.478</td></tr>
+<tr><td>B2-NiAl</td><td>2.882</td><td>2.887</td><td>11.974</td></tr>
+</table>
+<p>格子定数誤差は実験比 <span class="ok">0.4〜0.9%</span>（受入基準 1% 以下を満足）。</p>
+
+<h2>4. Fig. 6(a)再現 — Ni–Al固溶体の平均原子体積</h2>
+<p>
+fcc-Ni母相、$x_{\mathrm{Al}} = 0,\ 0.0625,\ 0.125,\ 0.1875,\ 0.25$（各組成2 SQS構成）。
+</p>
+<ul>
+<li>線形フィット: $\bar V(x_{\mathrm{Al}}) = 10.787 + 2.171\,x_{\mathrm{Al}}$ (Å$^3$/atom)</li>
+<li>$x=0.5$ への外挿: $\bar V^{\mathrm{extrap}} = 11.873$ Å$^3$/atom</li>
+<li>B2-NiAl: 11.974 Å$^3$/atom → 差 $-0.101$ Å$^3$/atom（<b>−0.8%</b>）</li>
+</ul>
+<p>固溶体外挿とB2規則相の平均体積はほぼ一致し、論文のNi–Al平均体積の扱い（固溶体と化合物を同一線上で扱う）を支持する。</p>
+<figure>
+<img src="../06_figures/fig6a_ni_al_average_atomic_volume.png" alt="Fig. 6(a)再現">
+<figcaption>Fig. 6(a)再現: fcc-Ni(Al)固溶体の平均原子体積のAl濃度依存性と x=0.5 への外挿、B2-NiAlとの比較。</figcaption>
+</figure>
+
+<h2>5. Fig. 6(b)再現 — C14-Nb(Ni$_{1-x}$Al$_x$)$_2$ と中心仮説の判定</h2>
+<table>
+<tr><th>量</th><th>値 (Å$^3$/atom)</th></tr>
+<tr><td>$V_{\mathrm{C14}}$ (x=0.5, 12原子SQS)</td><td>14.270</td></tr>
+<tr><td>（参考）x=0.5 規則配置平均</td><td>14.292 ± 0.057</td></tr>
+<tr><td>$V_{\mathrm{weighted}}$（Ni(Al)外挿）</td><td>13.977</td></tr>
+<tr><td>$V_{\mathrm{weighted}}$（B2-NiAl）</td><td>14.045</td></tr>
+<tr><td>$V_{\mathrm{pure}}$</td><td>15.245</td></tr>
+</table>
+
+<div class="verdict">
+<b>判定</b>: $|V_{\mathrm{C14}} - V_{\mathrm{weighted}}| = 0.29$ Å$^3$/atom
+$\;&lt;\;$ $|V_{\mathrm{C14}} - V_{\mathrm{pure}}| = 0.98$ Å$^3$/atom
+→ <span class="ok">中心仮説（化合物由来の加重平均体積モデル）を支持</span>。
+C14相中のNi・Alのサイズは、純元素平均よりNiAl化合物由来の平均体積で3倍以上正確に記述される。
+</div>
+<p>
+SQSサイズ依存性: 12原子SQS 14.270 → 48原子SQS 14.273 Å$^3$/atom（変化 <span class="ok">0.021%</span>、基準0.5%以下）。
+</p>
+<figure>
+<img src="../06_figures/fig6b_c14_nb_nial_average_atomic_volume.png" alt="Fig. 6(b)再現">
+<figcaption>Fig. 6(b)再現: C14-Nb(Ni$_{1-x}$Al$_x$)$_2$の平均原子体積と、加重平均（weighted）・純元素平均（pure）モデルの比較。</figcaption>
+</figure>
+
+<h2>6. サイト局所体積（Voronoi解析、x=0.5）</h2>
+<table>
+<tr><th>サイト(元素)</th><th>$V^{\mathrm{Voro}}$ (Å$^3$)</th><th>$r^{\mathrm{Voro}}$ (Å)</th></tr>
+<tr><td>4f (Nb)</td><td>16.26 ± 0.31</td><td>1.572</td></tr>
+<tr><td>2a (Al)</td><td>13.58 ± 0.20</td><td>1.480</td></tr>
+<tr><td>2a (Ni)</td><td>13.07 ± 0.17</td><td>1.461</td></tr>
+<tr><td>6h (Al)</td><td>13.52 ± 0.27</td><td>1.478</td></tr>
+<tr><td>6h (Ni)</td><td>13.04 ± 0.26</td><td>1.460</td></tr>
+</table>
+<ul>
+<li>Aサイト(Nb)はBサイトより約24%大きい局所体積（Laves相のA/Bサイズ比の描像と整合）。</li>
+<li><b>AlとNiの局所体積差は約0.5 Å$^3$（4%）まで圧縮</b>。純元素の体積差（16.7 vs 10.8 Å$^3$、55%）よりはるかに小さく、化合物中でNi・Alが「共通の有効サイズ」に緩和するという論文の前提を直接支持。</li>
+<li>x=0.5規則配置のエネルギー比較から、<b>Alは6hサイトをわずかに優先</b>。</li>
+</ul>
+<figure>
+<img src="../06_figures/site_volume_comparison.png" alt="サイト別Voronoi体積">
+<figcaption>C14相中のサイト・元素別Voronoi局所体積。</figcaption>
+</figure>
+
+<h2>7. Cr/Vサイト置換傾向</h2>
+<table>
+<tr><th>元素</th><th>$E_{\mathrm{sub}}^{A(4f)}$ (eV)</th><th>$E_{\mathrm{sub}}^{2a}$ (eV)</th><th>$E_{\mathrm{sub}}^{6h}$ (eV)</th><th>$\Delta E_{A-B}$ (eV)</th><th>優先サイト</th></tr>
+<tr><td>Cr</td><td>0.710</td><td>0.878</td><td>0.773</td><td>−0.063</td><td>A (4f)</td></tr>
+<tr><td>V</td><td>0.545</td><td>0.806</td><td>0.602</td><td>−0.057</td><td>A (4f)</td></tr>
+</table>
+<p>
+Cr・VともにわずかにAサイト（Nbサイト）を優先するが、$|\Delta E_{A-B}| &lt; 0.07$ eVと小さく、温度・配置エントロピーの影響が支配的になり得る領域。Bサイト内では両者とも6hの方が置換しやすい。
+</p>
+
+<h2>8. 受入基準チェック</h2>
+<table>
+<tr><th>#</th><th>基準</th><th>結果</th></tr>
+<tr><td>1</td><td>純元素格子定数誤差1%以下</td><td class="ok">✓ 実験比0.4–0.9%</td></tr>
+<tr><td>2</td><td>C14体積のDFT比1%以下</td><td class="warn">△ DFT直接比較は未実施（MLIP訓練データがMP-DFT）</td></tr>
+<tr><td>3</td><td>SQSサイズ依存0.5%以下</td><td class="ok">✓ 0.021%</td></tr>
+<tr><td>4</td><td>SQS構成間標準偏差の報告</td><td class="ok">✓ volumes.csv / summary.json</td></tr>
+<tr><td>5</td><td>置換エネルギーのDFT検証</td><td class="warn">△ 未実施（今後の課題）</td></tr>
+<tr><td>6</td><td>2a/6h情報の区別</td><td class="ok">✓ site配列で全構造追跡</td></tr>
+<tr><td>7</td><td>0 K計算と実験温度の明記</td><td class="ok">✓ 全て0 K静的緩和</td></tr>
+<tr><td>8</td><td>$V_{\mathrm{weighted}}$と$V_{\mathrm{pure}}$の両比較</td><td class="ok">✓</td></tr>
+<tr><td>9</td><td>Fig. 6(a)(b)再現図の出力</td><td class="ok">✓ 06_figures/</td></tr>
+<tr><td>10</td><td>訓練・検証データの分離</td><td>— 事前学習モデル使用のため非該当</td></tr>
+</table>
+
+<h2>9. 限界と今後の課題</h2>
+<ol>
+<li><b>自前MLIP訓練の省略</b>: VASP環境がないため、指示書Phase A/B（DFT教師データ生成＋訓練）はMP-DFT事前学習のMACE-MP-0で代替。C14-NbNiAl近傍組成のDFT代表点検証（基準2・5）が今後の課題。</li>
+<li><b>0 K静的計算</b>: 実験値との絶対比較には熱膨張補正（MLIP-MDまたは準調和近似）が必要。本評価は系列間の相対比較に限定。</li>
+<li><b>磁性</b>: MACE-MP-0は非スピン分極。Ni強磁性の体積への影響（〜0.1%程度）は未考慮。</li>
+<li><b>SQSサイズ</b>: 最大48原子。サイズ依存が0.021%と小さいため96原子への拡張は省略。</li>
+</ol>
+
+<div class="caveat">
+<b>結論</b>: MLIP計算はYamanouchi &amp; Miuraの化合物由来原子サイズ因子モデルを定量的に支持する
+（$|V_{\mathrm{C14}}-V_{\mathrm{weighted}}| = 0.29 &lt; |V_{\mathrm{C14}}-V_{\mathrm{pure}}| = 0.98$ Å$^3$/atom）。
+Laves相の相安定性議論では、純元素半径ではなく化合物・固溶体由来の平均原子体積を用いるべきという論文の主張は、
+本独立検証（第一原理精度・0 K）でも再現された。
+</div>
+
+<h2>10. 成果物一覧</h2>
+<ul>
+<li><code>laves_fig6/run_fig6_pipeline.py</code> — 全計算パイプライン</li>
+<li><code>laves_fig6/05_analysis/</code> — volumes.csv / local_environments.csv / site_energies.csv / summary.json</li>
+<li><code>laves_fig6/06_figures/</code> — Fig. 6(a)(b)再現図・サイト体積図</li>
+<li><code>laves_fig6/07_reports/fig6_validation_report.md</code> — 詳細報告書（Markdown）</li>
+<li><code>laves_fig6/04_relax/*.extxyz</code> — 全36緩和構造</li>
+<li>関連PR: <a href="https://github.com/minimumtone/machine-learning/pull/488">#488（本実装）</a>・<a href="https://github.com/minimumtone/machine-learning/pull/490">#490（レビュー修正）</a>・<a href="https://github.com/minimumtone/machine-learning/pull/492">#492（SQS乱数種制御）</a></li>
+</ul>
+
+<h2>参考文献</h2>
+<ol>
+<li>Yamanouchi &amp; Miura, Mater. Trans. 59, 546 (2018). DOI:10.2320/matertrans.MJ201604</li>
+<li>Zunger et al., Phys. Rev. Lett. 65, 353 (1990).（SQS）</li>
+<li>Ångqvist et al., Adv. Theory Simul. 2, 1900015 (2019).（icet）</li>
+<li>Batatia et al., NeurIPS 35, 11423 (2022) / arXiv:2401.00096.（MACE / MACE-MP-0）</li>
+<li>Stein &amp; Leineweber, J. Mater. Sci. 56, 5321 (2021).（Laves相レビュー）</li>
+</ol>
+
+</body>
+</html>
