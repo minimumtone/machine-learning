@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>検証まとめ: B2不定比のMLIP再現・Ω因子の有用性・q因子の物理的起源</title>
+<style>
+body{font-family:"Noto Sans CJK JP","Hiragino Sans",sans-serif;max-width:1000px;margin:2em auto;padding:0 1em;line-height:1.7;color:#222}
+h1{border-bottom:3px solid #2c5f8a;padding-bottom:.3em}
+h2{border-left:6px solid #2c5f8a;padding-left:.5em;margin-top:2em}
+table{border-collapse:collapse;margin:1em 0}
+td,th{border:1px solid #999;padding:.4em .8em}
+th{background:#eef3f8}
+.ok{color:#0a7a2f;font-weight:bold}
+.warn{color:#b06000;font-weight:bold}
+.box{background:#f5f8fb;border:1px solid #cdd9e5;border-radius:6px;padding:1em;margin:1em 0}
+img{max-width:100%;border:1px solid #ccc;margin:.5em 0}
+code{background:#eee;padding:.1em .3em;border-radius:3px}
+small{color:#666}
+</style>
+</head>
+<body>
+<h1>検証まとめ（2026-08-11セッション）</h1>
+<p>対象論文: T. Yamanouchi &amp; S. Miura, <i>Mater. Trans.</i> <b>59</b>, 546–555 (2018),
+DOI: <a href="https://doi.org/10.2320/matertrans.MJ201604">10.2320/matertrans.MJ201604</a></p>
+
+<div class="box">
+<b>研究目的（依頼内容）</b>
+<ol>
+<li>Yamanouchi仮説の証明: B2を基本構造とする不定比状態の格子定数（Fig. 6）をどの程度再現できるか
+— MLIPでSQS的に複数の構造・組成・原子配置を確率論的にサンプリングして評価。</li>
+<li>HEA格子定数予測に対するKing/Alonsoの構造因子（Ω<sub>sf</sub>）の有用性、および
+q因子がBCCで1、FCCで0に近づく物理根源。</li>
+</ol>
+</div>
+
+<h2>検証1: B2不定比Ni-Al組成のFig. 6(a)再現（MLIP・確率論的）</h2>
+<p>手法: MACE-MP-0、B2 4×4×4スーパーセル（128サイト）、x<sub>Al</sub>=0.42–0.58の8組成×
+2欠陥様式（逆位相 / 空孔）×乱数配置3種＝49構造を全緩和。欠陥様式は生成エネルギーの
+Boltzmann重み（1273 K）で混合。実験値は論文Fig. 6(a)のB2枝開丸を自動デジタイズ。</p>
+<table>
+<tr><th>指標</th><th>結果</th></tr>
+<tr><td>欠陥化学の予言</td><td class="ok">Ni過剰側=Ni逆位相、Al過剰側=Ni空孔（三重欠陥型）を正しく選択</td></tr>
+<tr><td>完全B2: a / V̄</td><td>2.882 Å / 11.975 Å³（実験 2.887 Å / ~12.0 Å³）</td></tr>
+<tr><td>実験12点との一致（Boltzmann混合）</td><td class="ok">RMSE 0.157 Å³/atom・MAPE 0.98%</td></tr>
+<tr><td>配置揺らぎ（乱数種間σ）</td><td>≤0.08 Å³/atom（実験との差より十分小）</td></tr>
+</table>
+<p><b>判定: MLIP＋確率論的配置サンプリングでFig. 6(a)のB2不定比枝は約1%（MAPE 0.98%）で再現可能</b>。
+Al過剰側のV̄急増は格子定数の増加ではなくNi空孔による原子数減少が支配し、
+実験の急峻な立ち上がり（勾配）まで一致する。</p>
+<img src="../b2_offstoich/figures/fig_b2_offstoich_vbar.png" alt="V-bar vs x_Al">
+<img src="../b2_offstoich/figures/fig_b2_offstoich_a.png" alt="a vs x_Al">
+<p><small>詳細: <code>laves_fig6/b2_offstoich/B2_OFFSTOICH_REPORT.md</code></small></p>
+
+<h2>検証2: King/Alonso Ω<sub>sf</sub>のHEA格子定数予測への有用性</h2>
+<table>
+<tr><th>モデル（独立テスト31 HEA）</th><th>RMSE全体</th><th>BCC(17)</th><th>FCC(14)</th></tr>
+<tr><td>Vegard則（King体積）</td><td>0.0202</td><td>0.0226</td><td>0.0170</td></tr>
+<tr><td>実験Ω<sub>sf</sub>（King+Alonso, q=1）</td><td class="warn">0.0564</td><td>0.0473</td><td>0.0658</td></tr>
+<tr><td>実験Ω<sub>sf</sub>（q校正→q≈0）</td><td>0.0198</td><td>0.0226</td><td>0.0157</td></tr>
+<tr><td>DFT-Ω<sub>sf</sub>（B2/L1₂, q校正）</td><td>0.0155</td><td>0.0157</td><td>0.0152</td></tr>
+<tr><td><b>DFT-Ω<sub>sf</sub>（BCC-SQS参照, q=1）</b></td><td class="ok">0.0138</td><td class="ok">0.0125</td><td>—</td></tr>
+</table>
+<p><b>判定: 実験（希薄極限）Ω<sub>sf</sub>はそのままでは有害、q校正するとVegardに退化し寄与なし。
+Ω<sub>sf</sub>の概念自体はDFTで構造別に再定義すれば有用</b>（BCCで44.5%改善、校正不要のq=1）。</p>
+
+<h2>検証3: q<sub>BCC</sub>→1・q<sub>FCC</sub>→0の物理根源</h2>
+<p>qはモデル V = V<sub>Vegard</sub> + qC の原点通過回帰勾配 q̂ = ΣΔVC/ΣC² であり、
+σ・平均・相関に厳密分解できる（q̂ = [rσ(ΔV)σ(C)+ΔV̄·C̄]/[σ(C)²+C̄²]、
+切片あり勾配 r×σ(ΔV)/σ(C) とはC̄≠0のため一致しない点に注意。95 HEA解析）:</p>
+<table>
+<tr><th></th><th>BCC (B2-Ω)</th><th>BCC (SQS-Ω)</th><th>FCC (L1₂-Ω)</th></tr>
+<tr><td>信号/ノイズ比 σ(ΔV)/ノイズ床</td><td>1.68</td><td>1.68</td><td class="warn">0.80</td></tr>
+<tr><td>相関 r</td><td>0.14</td><td>0.41</td><td>0.60</td></tr>
+<tr><td>切片あり勾配 r×σ(ΔV)/σ(C)</td><td>0.29</td><td>1.49</td><td>0.34</td></tr>
+<tr><td>q̂（原点通過回帰、主指標）</td><td>0.57</td><td class="ok">1.41（1を跨ぐ）</td><td class="warn">0.19</td></tr>
+</table>
+<ul>
+<li><b>FCC→0の根源</b>: 最密充填（CN12・充填率0.74）の幾何拘束で体積の加法性がほぼ厳密に成立し、
+非Vegard偏差（σ=0.127 Å³）が実験ノイズ床（0.159 Å³）を下回る。補正すべき信号が存在せず、
+回帰の縮小（attenuation）でq→0。Cantor系のサイズミスマッチδ≈2.4%と小さいことも寄与。</li>
+<li><b>BCC→1の根源</b>: 開いた構造（CN8＋6・充填率0.68）で異種対形成の体積収縮が実在
+（信号/ノイズ1.68倍、Ωの64–86%が負）。参照構造をB2（Warren-Cowley α=−1）から
+SQS（α≈0、HEAと同じランダム配位）に替えると相関が0.14→0.41へ改善しqが1に近づく。
+すなわち<b>q=1は「参照二元系がHEAと同じ短距離秩序・同じDFT参照系で記述されている」ことの表れ</b>で、
+q≠1は秩序度の不一致と参照体積のDFT–実験不整合の補正係数である。</li>
+</ul>
+<img src="../../omega_q_analysis/fig_q_decomposition.png" alt="q decomposition">
+<img src="../../omega_q_analysis/fig_q_scatter_bcc_fcc.png" alt="q scatter">
+<p><small>詳細: <code>omega_q_analysis/REPORT.md</code>・<code>results_q_decomposition.json</code></small></p>
+
+<h2>今後の課題</h2>
+<ol>
+<li>B2不定比枝の熱膨張補正（MLIP-MD）による絶対値比較（現状0 K、系統誤差~0.5–1%）。</li>
+<li>欠陥配置のMC平衡化（短距離秩序・欠陥会合）によるBoltzmann 2状態近似の精密化。</li>
+<li>C14-Nb(Ni,Al)₂不定比組成への同手法の拡張（Fig. 6(b)のNbCr₂/NbV₂系比較）。</li>
+<li>q分解のノイズ床推定の精緻化（合金系ごとの実験再現性データ拡充）。</li>
+</ol>
+</body>
+</html>
