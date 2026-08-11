@@ -211,7 +211,9 @@ def generate_hypotheses(goal_statement: str, evidence_claims: list[str]) -> list
         '{"hypotheses": [{"statement", "is_counter", "mechanism", "scope", '
         '"supporting_predictions", "falsification_conditions"}]} を返してください。'
         "mechanism は想定する物理・化学的機構、scope は適用範囲（温度・組成・相など）の"
-        "JSONオブジェクトとすること。falsification_conditions は必ず1件以上含めること。",
+        "JSONオブジェクトとすること。scope には必ず expected_direction キー"
+        '（仮説が予測する効果方向。目的量が増加なら "positive"、減少なら "negative"）'
+        "を含めること。falsification_conditions は必ず1件以上含めること。",
         f"研究目標: {goal_statement}\n証拠: {json.dumps(evidence_claims, ensure_ascii=False)}",
     )
     if out and isinstance(out.get("hypotheses"), list):
@@ -221,7 +223,7 @@ def generate_hypotheses(goal_statement: str, evidence_claims: list[str]) -> list
             "statement": f"主仮説: {goal_statement} に対する主要因が成立する",
             "is_counter": False,
             "mechanism": "対象因子が目的量を支配すると想定",
-            "scope": {},
+            "scope": {"expected_direction": "positive"},
             "supporting_predictions": ["独立モデル群の予測が同方向の傾向を示す"],
             "falsification_conditions": ["独立モデル群の過半が逆方向の傾向を示す"],
         },
@@ -229,7 +231,7 @@ def generate_hypotheses(goal_statement: str, evidence_claims: list[str]) -> list
             "statement": "対立仮説: 別の欠陥・機構が主要因である",
             "is_counter": True,
             "mechanism": "別の欠陥・機構が目的量を支配すると想定",
-            "scope": {},
+            "scope": {"expected_direction": "negative"},
             "supporting_predictions": ["対象因子を除外しても傾向が維持される"],
             "falsification_conditions": ["対象因子除外時に傾向が消失する"],
         },

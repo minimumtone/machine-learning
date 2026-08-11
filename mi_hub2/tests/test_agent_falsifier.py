@@ -125,6 +125,22 @@ class TestJudgementRules:
                              n_points=5, n_independent_groups=2)
         assert j.verdict == "supported"
 
+    def test_unknown_direction_never_refuted(self):
+        """期待方向が未設定の仮説は refuted/supported にしない。"""
+        h = Hypothesis(statement="方向未設定の仮説")
+        for slope in (1.0, -1.0):
+            j = judge_hypothesis(h, slope=slope, mean_uncertainty=0.01,
+                                 n_points=5, n_independent_groups=2)
+            assert j.verdict == "inconclusive"
+            assert "expected_direction" in j.rationale
+
+    def test_fallback_hypotheses_have_direction(self):
+        """LLM 不可時の既定仮説にも期待方向が入る。"""
+        from mi_hub.agent import llm
+
+        for c in llm.generate_hypotheses("goal", []):
+            assert c["scope"].get("expected_direction") in ("positive", "negative")
+
     def test_rationale_defers_to_human(self):
         j = judge_hypothesis(_h(), slope=1.0, mean_uncertainty=0.01,
                              n_points=5, n_independent_groups=2)

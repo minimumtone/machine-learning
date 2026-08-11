@@ -9,14 +9,17 @@ from __future__ import annotations
 
 from .models import Hypothesis, HypothesisJudgement, JudgementCriterion
 
-# 効果方向の既定値: 主仮説は「独立変数の増加で目的量が増加する」を正方向とする
 _DIRECTIONS = {"positive", "negative"}
 
 
-def expected_direction(h: Hypothesis) -> str:
-    """仮説の期待する効果方向（applicability.expected_direction、既定 positive）。"""
-    d = str(h.applicability.get("expected_direction", "positive")).lower()
-    return d if d in _DIRECTIONS else "positive"
+def expected_direction(h: Hypothesis) -> str | None:
+    """仮説の期待する効果方向（applicability.expected_direction）。
+
+    未設定・不正な値の場合は None（方向不明）を返す。
+    方向不明の仮説は supported / refuted にはしない。
+    """
+    d = str(h.applicability.get("expected_direction", "")).lower()
+    return d if d in _DIRECTIONS else None
 
 
 def judge_hypothesis(
@@ -37,7 +40,8 @@ def judge_hypothesis(
     threshold = 3.0 * (mean_uncertainty + 1e-9)
     significant = abs(slope) > threshold
     observed = "positive" if slope > 0 else "negative"
-    direction_match = significant and observed == direction
+    direction_known = direction is not None
+    direction_match = significant and direction_known and observed == direction
     reproduced = n_independent_groups >= 2
     enough_points = n_points >= 3
 
@@ -50,7 +54,10 @@ def judge_hypothesis(
         JudgementCriterion(
             name="効果方向の一致",
             passed=direction_match,
-            detail=f"予測方向={direction} / 観測方向={observed if significant else '有意でない'}",
+            detail=(
+                f"予測方向={direction if direction_known else '未設定（判定不能）'} / "
+                f"観測方向={observed if significant else '有意でない'}"
+            ),
         ),
         JudgementCriterion(
             name="独立系列での再現",
@@ -64,7 +71,13 @@ def judge_hypothesis(
         ),
     ]
 
-    if significant and not direction_match:
+    if not direction_known:
+        verdict = "inconclusive"
+        rationale = (
+            "仮説の期待効果方向（expected_direction）が未設定のため、"
+            "支持・反証の判定は行わない。適用範囲に期待方向を設定してください。"
+        )
+    elif significant and not direction_match:
         verdict = "refuted"
         rationale = (
             "効果は不確実性に対して有意だが、方向が仮説の予測と逆であり、"
