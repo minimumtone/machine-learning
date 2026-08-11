@@ -134,9 +134,9 @@ for n_al in (0, 2, 4, 6, 8):  # of 32 atoms
             rep = (2, 2, 2)
         else:
             rep = (2, 4, 4)
-            random.seed(1000 * n_al + s)
             at = generate_sqs_from_supercells(
                 fcc_cs, [sc.copy() for sc in fcc_super], n_steps=SQS_STEPS,
+                random_seed=1000 * n_al + s,
                 target_concentrations={"A": {"Ni": 1 - x, "Al": x}})
         name = f"fcc_NiAl_x{x:.4f}_s{s}"
         at, e, v, conv = relax(at, name)
@@ -242,9 +242,8 @@ for x in (0.0, 0.25, 0.5, 0.75, 1.0):
 size_check = []
 sqs_x05_small = []
 for s in range(NSEED):
-    random.seed(9000 + s)
     at = generate_sqs_from_supercells(
-        c14_cs, [make_c14()], n_steps=SQS_STEPS,
+        c14_cs, [make_c14()], n_steps=SQS_STEPS, random_seed=9000 + s,
         target_concentrations={"A": {"Ni": 0.5, "Al": 0.5}})
     at = assign_c14_sites(at, make_c14())
     name = f"c14_x0.50_sqs12_s{s}"
@@ -254,9 +253,8 @@ for s in range(NSEED):
     record(at, e, v, conv, structure_id=name, parent="C14-Nb(Ni,Al)2",
            x_al=0.5, supercell="1x1x1(12at)", sqs_id=f"sqs_s{s}", site_def="B SQS (icet)")
 for s in range(NSEED):
-    random.seed(9100 + s)
     at = generate_sqs_from_supercells(
-        c14_cs, [make_c14().repeat((2, 2, 1))], n_steps=SQS_STEPS,
+        c14_cs, [make_c14().repeat((2, 2, 1))], n_steps=SQS_STEPS, random_seed=9100 + s,
         target_concentrations={"A": {"Ni": 0.5, "Al": 0.5}})
     at = assign_c14_sites(at, make_c14())
     name = f"c14_x0.50_sqs48_s{s}"
