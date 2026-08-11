@@ -1,0 +1,186 @@
+{
+  "mu_Ni_eV": -5.731897208335411,
+  "mu_Al_eV": -3.728437375227559,
+  "T_boltzmann_K": 1273.0,
+  "supercell": "4x4x4",
+  "compositions": {
+    "0.420": {
+      "antisite": {
+        "V_mean": 11.779965592238321,
+        "V_std": 0.008869741374207131,
+        "a_mean": 2.866759839826422,
+        "a_std": 0.0007194036277574467,
+        "E_form_mean": -0.6285439282826588,
+        "n_configs": 3
+      },
+      "vacancy": {
+        "V_mean": 12.610008806591315,
+        "V_std": 0.06796297228015338,
+        "a_mean": 2.7880975656397617,
+        "a_std": 0.0050048142822275415,
+        "E_form_mean": -0.497467826385572,
+        "n_configs": 3
+      },
+      "dE_form_vac_minus_anti_eV_atom": 0.1310761018970868,
+      "boltzmann_weight_vacancy_128atoms_1273K": 3.778356900077856e-67,
+      "preferred_branch": "antisite",
+      "V_boltzmann_A3": 11.779965592238321
+    },
+    "0.440": {
+      "antisite": {
+        "V_mean": 11.820430220285012,
+        "V_std": 0.0055744210209377355,
+        "a_mean": 2.8700386745529607,
+        "a_std": 0.00045113894221951076,
+        "E_form_mean": -0.645033630520888,
+        "n_configs": 3
+      },
+      "vacancy": {
+        "V_mean": 12.561807719875352,
+        "V_std": 0.02198287871866931,
+        "a_mean": 2.8178996632959787,
+        "a_std": 0.001643808445725063,
+        "E_form_mean": -0.5407999401460591,
+        "n_configs": 3
+      },
+      "dE_form_vac_minus_anti_eV_atom": 0.10423369037482888,
+      "boltzmann_weight_vacancy_128atoms_1273K": 1.512414845756573e-53,
+      "preferred_branch": "antisite",
+      "V_boltzmann_A3": 11.820430220285012
+    },
+    "0.460": {
+      "antisite": {
+        "V_mean": 11.885725989542896,
+        "V_std": 0.0008737237394036417,
+        "a_mean": 2.8753137174493006,
+        "a_std": 7.045514066618871e-05,
+        "E_form_mean": -0.6653480530702508,
+        "n_configs": 3
+      },
+      "vacancy": {
+        "V_mean": 12.433260845562144,
+        "V_std": 0.003832456886986974,
+        "a_mean": 2.848725957784184,
+        "a_std": 0.0002927194103618095,
+        "E_form_mean": -0.603544464213451,
+        "n_configs": 3
+      },
+      "dE_form_vac_minus_anti_eV_atom": 0.06180358885679982,
+      "boltzmann_weight_vacancy_128atoms_1273K": 4.7982934353668796e-32,
+      "preferred_branch": "antisite",
+      "V_boltzmann_A3": 11.885725989542896
+    },
+    "0.480": {
+      "antisite": {
+        "V_mean": 11.931899824155975,
+        "V_std": 0.0014189447933728885,
+        "a_mean": 2.879032256507261,
+        "a_std": 0.00011412830088246684,
+        "E_form_mean": -0.6780291586959551,
+        "n_configs": 3
+      },
+      "vacancy": {
+        "V_mean": 12.240495526670985,
+        "V_std": 0.005181076135251017,
+        "a_mean": 2.8653303747997825,
+        "a_std": 0.0004043056873158341,
+        "E_form_mean": -0.6472267191800262,
+        "n_configs": 3
+      },
+      "dE_form_vac_minus_anti_eV_atom": 0.03080243951592898,
+      "boltzmann_weight_vacancy_128atoms_1273K": 2.4597525213426295e-16,
+      "preferred_branch": "antisite",
+      "V_boltzmann_A3": 11.931899824155977
+    },
+    "0.520": {
+      "antisite": {
+        "V_mean": 12.13186261892041,
+        "V_std": 0.0007335087555501544,
+        "a_mean": 2.895026163360263,
+        "a_std": 5.834624885356702e-05,
+        "E_form_mean": -0.6542206608799152,
+        "n_configs": 3
+      },
+      "vacancy": {
+        "V_mean": 12.350287687905706,
+        "V_std": 0.001387230070784519,
+        "a_mean": 2.8738718820498135,
+        "a_std": 0.0001075992910434866,
+        "E_form_mean": -0.675564608512946,
+        "n_configs": 3
+      },
+      "dE_form_vac_minus_anti_eV_atom": -0.021343947633030824,
+      "boltzmann_weight_vacancy_128atoms_1273K": 0.9999999999847253,
+      "preferred_branch": "vacancy",
+      "V_boltzmann_A3": 12.350287687902368
+    },
+    "0.540": {
+      "antisite": {
+        "V_mean": 12.247594790923543,
+        "V_std": 0.0017265553003450902,
+        "a_mean": 2.9042027616118333,
+        "a_std": 0.0001364687034418008,
+        "E_form_mean": -0.6275278365477908,
+        "n_configs": 3
+      },
+      "vacancy": {
+        "V_mean": 12.660533368770006,
+        "V_std": 0.003767702652969796,
+        "a_mean": 2.865978923585827,
+        "a_std": 0.00028430307858144194,
+        "E_form_mean": -0.656473828429661,
+        "n_configs": 3
+      },
+      "dE_form_vac_minus_anti_eV_atom": -0.028945991881870192,
+      "boltzmann_weight_vacancy_128atoms_1273K": 0.9999999999999978,
+      "preferred_branch": "vacancy",
+      "V_boltzmann_A3": 12.660533368770004
+    },
+    "0.560": {
+      "antisite": {
+        "V_mean": 12.433943236325513,
+        "V_std": 0.01087276106944107,
+        "a_mean": 2.91885769325418,
+        "a_std": 0.0008506166858675162,
+        "E_form_mean": -0.5893732051625117,
+        "n_configs": 3
+      },
+      "vacancy": {
+        "V_mean": 13.08921001438155,
+        "V_std": 0.010901943321873848,
+        "a_mean": 2.8567971524982845,
+        "a_std": 0.0007929842541097824,
+        "E_form_mean": -0.6384614594475377,
+        "n_configs": 3
+      },
+      "dE_form_vac_minus_anti_eV_atom": -0.049088254285026056,
+      "boltzmann_weight_vacancy_128atoms_1273K": 1.0,
+      "preferred_branch": "vacancy",
+      "V_boltzmann_A3": 13.08921001438155
+    },
+    "0.580": {
+      "antisite": {
+        "V_mean": 12.584243956365057,
+        "V_std": 0.01044795599629455,
+        "a_mean": 2.930571633741136,
+        "a_std": 0.0008111855331722106,
+        "E_form_mean": -0.5606018600527283,
+        "n_configs": 3
+      },
+      "vacancy": {
+        "V_mean": 13.449308722977833,
+        "V_std": 0.008203736759953508,
+        "a_mean": 2.8486398147068557,
+        "a_std": 0.0005791945139223922,
+        "E_form_mean": -0.6128371819416718,
+        "n_configs": 3
+      },
+      "dE_form_vac_minus_anti_eV_atom": -0.05223532188894353,
+      "boltzmann_weight_vacancy_128atoms_1273K": 1.0,
+      "preferred_branch": "vacancy",
+      "V_boltzmann_A3": 13.449308722977833
+    }
+  },
+  "V_B2_perfect_A3": 11.974527545032217,
+  "a_B2_perfect_A": 2.882456714930723
+}
