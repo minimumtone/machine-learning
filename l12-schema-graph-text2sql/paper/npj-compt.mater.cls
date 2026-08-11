@@ -115,7 +115,7 @@
 \DeclareOption{sn-nature}{\global\@Standard@Nature@refstyletrue}%
 
 \DeclareOption{Numbered}{\global\@Numbered@refstyletrue}%
-%\DeclareOption{NameDate}{\global\@Numbered@refstylefalse}%
+\DeclareOption{NameDate}{\global\@Numbered@refstylefalse}%
 
 
 %%\ExecuteOptions{twosidecrop,crop,centre,info,croppage}
@@ -144,12 +144,12 @@
 
 %% General Packages Used
 %
-%\AtBeginDocument{%
-%%\newcommand*\ExtraParaSkip{12pt}%
-%\SetFootnoteHook{\hspace*{-8pt}}%
-%\DeclareNewFootnote{A}[gobble]%
-%\setlength{\skip\footinsA}{0pt}
-%}%
+\AtBeginDocument{%
+%\newcommand*\ExtraParaSkip{12pt}%
+\SetFootnoteHook{\hspace*{-8pt}}%
+\DeclareNewFootnote{A}[gobble]%
+\setlength{\skip\footinsA}{0pt}
+}%
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% Fonts & Sizes %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %

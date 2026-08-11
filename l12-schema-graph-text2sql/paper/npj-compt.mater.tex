@@ -1338,7 +1338,7 @@ F01 is a case where a SELECT statement was input directly;
 it was sanitized by auto-appending LIMIT (not blocked).
 F02 is an UPDATE statement blocked by DML detection.
 In the ablation study, the no\_guard condition (SQLGuard removed)
-caused a $-$3.9\,pp accuracy drop (Table~\ref{tab:ablation}),
+caused a $-$0.2\,pp accuracy drop (Table~\ref{tab:ablation}),
 but the safety functionality has value independent of accuracy.
 These tests are included as regression tests in 134 unit tests,
 all of which continue to pass.
@@ -2153,9 +2153,9 @@ materials RDBs.
     database (31 tables, 1{,}559 entries).
     The zero-adaptation transfer tests
     (Section~\ref{sec:transfer_eval}) demonstrated generalization
-    to schema renaming (80.5\%), obfuscated identifiers (90.0\%),
-    prototype expansion (95.0\%), and a real Materials
-    Project-flavored schema (97.3\%), but generalization to RDBs
+    to schema renaming (90.5\%), obfuscated identifiers (90.0\%),
+    prototype expansion (90.0\%), and a real Materials
+    Project-flavored schema (100.0\%), but generalization to RDBs
     with fundamentally different semantics or scales has not been
     confirmed.
   \item \textbf{Scope of statistical testing}:
@@ -2237,8 +2237,8 @@ compounds, $\gamma'$-phase candidate ranking, and extraction of
 162 stable/metastable candidates
 (Section~\ref{sec:materials_evaluation}).
 External validation with 100 independently designed queries
-achieved 72.5\%; the accuracy gap from author-designed queries
-(roughly 12\,pp) is primarily attributable to table coverage bias
+achieved 76.9\%; the accuracy gap from author-designed queries
+(roughly 8\,pp) is primarily attributable to table coverage bias
 and few-shot optimization bias
 (Section~\ref{sec:independent_eval}).
 
@@ -2247,12 +2247,12 @@ For CTE (Common Table Expression) multi-step calculation queries
 few-shot examples achieved 100\% under the full condition
 (dropping to 76\% without few-shot examples and 86\% without the
 dictionary), while an extended 15-query evaluation adding 10 novel
-patterns showed zero-shot novel patterns remaining at 32.3\%,
+patterns showed zero-shot novel patterns remaining at 42.3\%,
 demonstrating that the scope of multi-step calculation support is
 governed by the few-shot pattern coverage
 (Section~\ref{sec:cte_evaluation}).
 Furthermore, a zero-adaptation transfer test on an unseen schema
-with all table and column names changed achieved 80.5\%
+with all table and column names changed achieved 90.5\%
 (Very Hard 100\%), demonstrating the schema non-dependence of the
 design (Section~\ref{sec:transfer_eval}).
 
