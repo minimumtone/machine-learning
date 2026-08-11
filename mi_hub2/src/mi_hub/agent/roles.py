@@ -326,6 +326,9 @@ class EvaluationAgent:
                     HypothesisState.ARCHIVED, HypothesisState.REJECTED_BY_HUMAN,
                 ):
                     continue
+                if h.judgement is not None and h.judgement.confirmed_by_human:
+                    # 研究者が確定した判定は再評価で上書きしない
+                    continue
                 j = judge_hypothesis(
                     h, slope=slope, mean_uncertainty=mean_std,
                     n_points=len(xs), n_independent_groups=len(groups),

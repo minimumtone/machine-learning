@@ -254,13 +254,20 @@ def falsification_review(goal: str, statement: str,
         json.dumps({"hypothesis": statement, "claims": claims[:20]},
                    ensure_ascii=False),
     )
+
+    def _as_list(v: Any) -> list[str]:
+        # LLM 出力の型ゆらぎ（文字列/リスト）を吸収する
+        if isinstance(v, str):
+            return [v.strip()] if v.strip() else []
+        if isinstance(v, list):
+            return [str(x) for x in v if x]
+        return []
+
     if out and isinstance(out.get("counter_queries"), list):
         return {
             "counter_queries": [str(q) for q in out["counter_queries"]][:2],
-            "falsification_conditions": [
-                str(c) for c in out.get("falsification_conditions", []) or []],
-            "alternative_mechanisms": [
-                str(m) for m in out.get("alternative_mechanisms", []) or []],
+            "falsification_conditions": _as_list(out.get("falsification_conditions")),
+            "alternative_mechanisms": _as_list(out.get("alternative_mechanisms")),
         }
     return {
         "counter_queries": [f"{statement} 反例 条件依存性",

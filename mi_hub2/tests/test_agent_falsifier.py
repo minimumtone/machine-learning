@@ -172,6 +172,37 @@ class TestJudgementFlow:
             manager.confirm_judgement(session, main.hypothesis_id,
                                       accept=True, by="agent")
 
+    def test_reevaluation_keeps_confirmed_judgement(self, manager, session):
+        """研究者が確定した判定は再評価で上書きされない。"""
+        _run_full_cycle(manager, session)
+        main = next(h for h in session.hypotheses if h.counter_to is None)
+        manager.confirm_judgement(session, main.hypothesis_id, accept=True)
+        confirmed = main.judgement
+        from mi_hub.agent.models import Task
+        from mi_hub.agent.roles import EvaluationAgent
+
+        exec_task = next(t for t in session.plan.tasks
+                         if t.action == "run_models_bulk")
+        task = Task(agent="EvaluationAgent", action="evaluate_hypothesis",
+                    inputs={"results": exec_task.result["results"]})
+        res = EvaluationAgent().run(session, manager.gateway, task)
+        assert main.judgement is confirmed
+        assert main.judgement.confirmed_by_human
+        assert main.hypothesis_id not in res["judgements"]
+
+    def test_falsification_review_string_fields(self, monkeypatch):
+        """LLM が文字列で返しても一文字に分解されない。"""
+        from mi_hub.agent import llm
+
+        monkeypatch.setattr(llm, "_chat_json", lambda *a, **k: {
+            "counter_queries": ["q1"],
+            "falsification_conditions": "独立系列が逆傾向を示す",
+            "alternative_mechanisms": "別機構",
+        })
+        out = llm.falsification_review("goal", "仮説", [])
+        assert out["falsification_conditions"] == ["独立系列が逆傾向を示す"]
+        assert out["alternative_mechanisms"] == ["別機構"]
+
     def test_confirm_without_judgement_raises(self, manager, session):
         manager.run_auto(session)
         h = session.hypotheses[0]
