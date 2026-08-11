@@ -485,8 +485,19 @@ with agent_col:
         for h in state.hypotheses:
             with st.expander(f"{h.hypothesis_id}: {h.statement[:40]}"):
                 st.write("状態:", h.status.value)
+                if h.mechanism:
+                    st.write("想定機構:", h.mechanism)
+                if h.applicability:
+                    st.write("適用範囲:", h.applicability)
+                if h.supporting_predictions:
+                    st.write("予測:", h.supporting_predictions)
                 st.write("反証条件:", h.falsification_conditions)
                 st.write("反証条件承認済:", h.falsification_approved)
+                if h.alternative_mechanisms:
+                    st.write("別機構の候補（Falsifier）:", h.alternative_mechanisms)
+                if h.counter_evidence:
+                    st.caption(f"反証検討で収集した証拠: {len(h.counter_evidence)} 件"
+                               "（証拠タブを参照）")
                 cols = st.columns(2)
                 if cols[0].button("検証承認", key=f"appr-{h.hypothesis_id}"):
                     m.set_hypothesis_status(
@@ -498,6 +509,28 @@ with agent_col:
                         state, h.hypothesis_id, HypothesisState.REJECTED_BY_HUMAN
                     )
                     st.rerun()
+                if h.judgement is not None:
+                    j = h.judgement
+                    labels = {"supported": "支持（Supported）",
+                              "refuted": "反証（Refuted）",
+                              "inconclusive": "保留（Inconclusive）"}
+                    st.markdown("---")
+                    st.markdown(
+                        f"**判定案（ルール評価）: {labels.get(j.verdict, j.verdict)}**"
+                        + ("（研究者確定済み）" if j.confirmed_by_human else "")
+                    )
+                    st.caption(j.rationale)
+                    st.table([{"基準": c.name,
+                               "判定": "○" if c.passed else "×",
+                               "詳細": c.detail} for c in j.criteria])
+                    if not j.confirmed_by_human:
+                        jc = st.columns(2)
+                        if jc[0].button("判定を確定", key=f"jconf-{h.hypothesis_id}"):
+                            m.confirm_judgement(state, h.hypothesis_id, accept=True)
+                            st.rerun()
+                        if jc[1].button("保留のまま続行", key=f"jdef-{h.hypothesis_id}"):
+                            m.confirm_judgement(state, h.hypothesis_id, accept=False)
+                            st.rerun()
 
         graphrag = next(
             (p for p in m.gateway.knowledge_providers

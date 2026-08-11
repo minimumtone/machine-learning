@@ -18,6 +18,7 @@ from .graphrag import GraphRAGProvider
 from .models import (
     ApprovalRequest,
     Evidence,
+    Hypothesis,
     JobRecord,
     Observation,
     Plan,
@@ -31,6 +32,7 @@ from .roles import (
     EvaluationAgent,
     EvidenceAgent,
     ExecutionAgent,
+    FalsifierAgent,
     HypothesisAgent,
     ModelSelectionAgent,
     SafetyApprovalAgent,
@@ -95,6 +97,7 @@ class ResearchManager:
         self._roles = {
             "EvidenceAgent": EvidenceAgent(),
             "HypothesisAgent": HypothesisAgent(),
+            "FalsifierAgent": FalsifierAgent(),
             "ModelSelectionAgent": ModelSelectionAgent(),
             "VerificationPlanningAgent": VerificationPlanningAgent(),
             "ExecutionAgent": ExecutionAgent(),
@@ -169,8 +172,11 @@ class ResearchManager:
                   inputs={"query": goal.statement if goal else ""})
         t2 = Task(agent="HypothesisAgent", action="generate_hypotheses",
                   description="主仮説と対立仮説を生成する", depends_on=[t1.task_id])
+        t2b = Task(agent="FalsifierAgent", action="search_counter_evidence",
+                   description="仮説を否定しうる証拠・条件依存性・別機構を探索する（反証優先）",
+                   depends_on=[t2.task_id])
         t3 = Task(agent="ModelSelectionAgent", action="search_models",
-                  description="適用可能なMIntモデルを検索する", depends_on=[t2.task_id])
+                  description="適用可能なMIntモデルを検索する", depends_on=[t2b.task_id])
         t4 = Task(agent="VerificationPlanningAgent", action="plan_verification",
                   description="検証ジョブ（入力条件）を生成する", depends_on=[t3.task_id])
         t5 = Task(agent="ExecutionAgent", action="run_models_bulk",
@@ -179,7 +185,7 @@ class ResearchManager:
         t6 = Task(agent="EvaluationAgent", action="evaluate_hypothesis",
                   description="傾きと不確実性から仮説の判定材料を整理する",
                   depends_on=[t5.task_id])
-        plan = Plan(goal_id=goal.goal_id if goal else "", tasks=[t1, t2, t3, t4, t5, t6])
+        plan = Plan(goal_id=goal.goal_id if goal else "", tasks=[t1, t2, t2b, t3, t4, t5, t6])
         state.plan = plan
         state.plan_history.append(PlanChange(
             plan_id=plan.plan_id, version=plan.version,
@@ -291,6 +297,7 @@ class ResearchManager:
             status = "completed" if task.status != TaskState.FAILED else "failed"
             if task.status != TaskState.FAILED:
                 self._add_science_comment(state, task)
+                self._ask_judgement_confirmation(state, task)
         except Exception as exc:  # ツール層以外の予期しない失敗
             from .errors import record_error
 
@@ -307,6 +314,7 @@ class ResearchManager:
 
     _COMMENT_TARGETS: ClassVar[dict[str, str]] = {
         "HypothesisAgent": "仮説",
+        "FalsifierAgent": "反証検討",
         "EvaluationAgent": "評価結果",
         "ExecutionAgent": "計算結果",
     }
@@ -327,6 +335,32 @@ class ResearchManager:
             })
             state.audit("ResearchManager", "science_comment",
                         task_id=task.task_id, kind=kind)
+
+    def _ask_judgement_confirmation(self, state: SessionState, task: Task) -> None:
+        """評価完了時、ルール評価による判定案の確定を研究者へ明示的に問いかける。"""
+        if task.action != "evaluate_hypothesis" or not task.result:
+            return
+        judgements = task.result.get("judgements") or {}
+        labels = {"supported": "支持（Supported）",
+                  "refuted": "反証（Refuted）",
+                  "inconclusive": "保留（Inconclusive）"}
+        for hid, j in judgements.items():
+            h = state.hypothesis(hid)
+            if h is None:
+                continue
+            verdict = labels.get(j.get("verdict", ""), j.get("verdict", ""))
+            state.chat_history.append({
+                "role": "assistant",
+                "content": (
+                    f"【判定案】仮説「{h.statement}」のルール評価による判定案は"
+                    f"「{verdict}」です。\n根拠: {j.get('rationale', '')}\n"
+                    "この判定を確定しますか？（確定する場合は仮説タブの"
+                    "「判定を確定」、保留のまま検証を続ける場合は「保留のまま続行」を"
+                    "選択してください。最終判定は研究者に委ねられます）"
+                ),
+            })
+            state.audit("ResearchManager", "judgement_proposed",
+                        hypothesis_id=hid, verdict=j.get("verdict"))
 
     def _wire_inputs(self, state: SessionState, task: Task) -> None:
         plan = state.plan
@@ -646,6 +680,33 @@ class ResearchManager:
         state.audit(by, "hypothesis_status_changed",
                     hypothesis_id=hypothesis_id, status=status.value)
         self.store.save(state)
+
+    def confirm_judgement(self, state: SessionState, hypothesis_id: str,
+                          accept: bool, by: str = "human") -> Hypothesis:
+        """ルール評価による判定案を研究者が確定（または保留のまま継続）する。
+
+        確定時は verdict に応じて仮説状態を SUPPORTED / FALSIFIED / INCONCLUSIVE へ遷移する。
+        """
+        if by != "human":
+            raise PermissionError("判定の確定には研究者の承認が必要です")
+        h = state.hypothesis(hypothesis_id)
+        if h is None:
+            raise ValueError(f"仮説が存在しません: {hypothesis_id}")
+        if h.judgement is None:
+            raise ValueError(f"判定案が存在しません: {hypothesis_id}")
+        if accept:
+            mapping = {
+                "supported": HypothesisState.SUPPORTED,
+                "refuted": HypothesisState.FALSIFIED,
+                "inconclusive": HypothesisState.INCONCLUSIVE,
+            }
+            h.status = mapping.get(h.judgement.verdict, HypothesisState.INCONCLUSIVE)
+            h.judgement.confirmed_by_human = True
+        state.audit(by, "judgement_confirmed" if accept else "judgement_deferred",
+                    hypothesis_id=hypothesis_id, verdict=h.judgement.verdict,
+                    status=h.status.value)
+        self.store.save(state)
+        return h
 
     def update_falsification_conditions(self, state: SessionState, hypothesis_id: str,
                                         conditions: list[str], by: str = "human") -> None:

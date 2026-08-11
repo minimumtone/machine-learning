@@ -11,6 +11,7 @@ from typing import Any
 
 from . import llm
 from .errors import record_error, requires_human_review, try_auto_fix
+from .judgement import judge_hypothesis
 from .models import (
     ApprovalRequest,
     Evidence,
@@ -54,6 +55,7 @@ AUTO_ALLOWED_ACTIONS = {
     "generate_next_actions",
     "reuse_results",
     "generate_hypotheses",
+    "search_counter_evidence",
     "evaluate_hypothesis",
 }
 
@@ -117,12 +119,17 @@ class HypothesisAgent:
         candidates = llm.generate_hypotheses(goal, claims)
         added = []
         main_id: str | None = None
+        source_ids = [e.evidence_id for e in state.evidence]
         for c in candidates:
+            scope = c.get("scope")
             h = Hypothesis(
                 statement=c.get("statement", ""),
                 counter_to=main_id if c.get("is_counter") else None,
+                mechanism=str(c.get("mechanism", "") or ""),
                 supporting_predictions=c.get("supporting_predictions", []),
                 falsification_conditions=c.get("falsification_conditions", []),
+                applicability=scope if isinstance(scope, dict) else {},
+                source_evidence=source_ids,
                 status=HypothesisState.PROPOSED,
             )
             state.hypotheses.append(h)
@@ -131,6 +138,60 @@ class HypothesisAgent:
             added.append(h.hypothesis_id)
         task.result_ids = added
         return {"hypothesis_ids": added}
+
+
+class FalsifierAgent:
+    """反証担当（Falsifier）: 確証バイアスを防ぐ。
+
+    仮説を否定しうる文献・条件依存性・別機構を能動的に探し、
+    反証条件の候補を補強する（反証条件の確定は研究者承認による）。
+    """
+
+    _TARGET_STATES = (
+        HypothesisState.PROPOSED,
+        HypothesisState.HUMAN_REVIEWED,
+        HypothesisState.APPROVED_FOR_TESTING,
+    )
+
+    def run(self, state: SessionState, gateway: ToolGateway, task: Task) -> dict[str, Any]:
+        goal = state.goal.statement if state.goal else ""
+        claims = [e.claim for e in state.evidence]
+        counter_ids: list[str] = []
+        added_conditions: dict[str, list[str]] = {}
+        reviewed: list[str] = []
+        for h in state.hypotheses:
+            if h.status not in self._TARGET_STATES:
+                continue
+            review = llm.falsification_review(goal, h.statement, claims)
+            reviewed.append(h.hypothesis_id)
+            for query in review["counter_queries"]:
+                for doc in gateway.search_knowledge(query, limit=3):
+                    ev = Evidence(
+                        source_type=doc.get("source_type", "journal_article"),
+                        claim=doc.get("claim", ""),
+                        conditions=doc.get("conditions", {}),
+                        evidence_type=doc.get("evidence_type", "experiment"),
+                        limitations=list(doc.get("limitations", []))
+                        + ["反証検討（Falsifier）の検索結果。仮説への支持/反対は研究者が判断"],
+                    )
+                    state.evidence.append(ev)
+                    h.counter_evidence.append(ev.evidence_id)
+                    counter_ids.append(ev.evidence_id)
+            new_conds = [c for c in review["falsification_conditions"]
+                         if c not in h.falsification_conditions]
+            if new_conds and not h.falsification_approved:
+                h.falsification_conditions.extend(new_conds)
+                added_conditions[h.hypothesis_id] = new_conds
+            for m in review["alternative_mechanisms"]:
+                if m not in h.alternative_mechanisms:
+                    h.alternative_mechanisms.append(m)
+        task.result_ids = counter_ids
+        return {
+            "hypotheses_reviewed": reviewed,
+            "counter_evidence_ids": counter_ids,
+            "added_falsification_conditions": added_conditions,
+            "note": "反証条件の確定・仮説の採否は研究者が行う",
+        }
 
 
 class ModelSelectionAgent:
@@ -253,6 +314,24 @@ class EvaluationAgent:
         for h in state.hypotheses:
             if h.status == HypothesisState.APPROVED_FOR_TESTING:
                 h.status = HypothesisState.UNDER_EVALUATION
+        groups = set()
+        for r in exec_results:
+            info = gateway.get_model(r["job"]["model_id"])
+            if info is not None:
+                groups.add(info.independence_group)
+        judgements: dict[str, dict[str, Any]] = {}
+        if exec_results:
+            for h in state.hypotheses:
+                if h.counter_to is not None or h.status in (
+                    HypothesisState.ARCHIVED, HypothesisState.REJECTED_BY_HUMAN,
+                ):
+                    continue
+                j = judge_hypothesis(
+                    h, slope=slope, mean_uncertainty=mean_std,
+                    n_points=len(xs), n_independent_groups=len(groups),
+                )
+                h.judgement = j
+                judgements[h.hypothesis_id] = j.model_dump()
         evaluation = StepEvaluation(
             step_result="completed",
             goal_progress_before=state.last_observation.goal_progress if state.last_observation else 0.0,
@@ -267,6 +346,7 @@ class EvaluationAgent:
             "slope": slope,
             "mean_uncertainty": mean_std,
             "verdict_candidate": verdict_candidate,
+            "judgements": judgements,
             "data_gaps": data_gaps,
             "note": "最終判定は研究者が行う（Human-in-the-loop）",
             "evaluation": evaluation.model_dump(),

@@ -208,8 +208,10 @@ def generate_hypotheses(goal_statement: str, evidence_claims: list[str]) -> list
     """主仮説・対立仮説の候補を生成する（最終採用は人間）。"""
     out = _chat_json(
         "材料科学の仮説候補を生成してください。JSON で "
-        '{"hypotheses": [{"statement", "is_counter", "supporting_predictions", '
-        '"falsification_conditions"}]} を返してください。',
+        '{"hypotheses": [{"statement", "is_counter", "mechanism", "scope", '
+        '"supporting_predictions", "falsification_conditions"}]} を返してください。'
+        "mechanism は想定する物理・化学的機構、scope は適用範囲（温度・組成・相など）の"
+        "JSONオブジェクトとすること。falsification_conditions は必ず1件以上含めること。",
         f"研究目標: {goal_statement}\n証拠: {json.dumps(evidence_claims, ensure_ascii=False)}",
     )
     if out and isinstance(out.get("hypotheses"), list):
@@ -218,16 +220,57 @@ def generate_hypotheses(goal_statement: str, evidence_claims: list[str]) -> list
         {
             "statement": f"主仮説: {goal_statement} に対する主要因が成立する",
             "is_counter": False,
+            "mechanism": "対象因子が目的量を支配すると想定",
+            "scope": {},
             "supporting_predictions": ["独立モデル群の予測が同方向の傾向を示す"],
             "falsification_conditions": ["独立モデル群の過半が逆方向の傾向を示す"],
         },
         {
             "statement": "対立仮説: 別の欠陥・機構が主要因である",
             "is_counter": True,
+            "mechanism": "別の欠陥・機構が目的量を支配すると想定",
+            "scope": {},
             "supporting_predictions": ["対象因子を除外しても傾向が維持される"],
             "falsification_conditions": ["対象因子除外時に傾向が消失する"],
         },
     ]
+
+
+def falsification_review(goal: str, statement: str,
+                         claims: list[str]) -> dict[str, Any]:
+    """仮説への反証検討（Falsifier）: 反対証拠の検索クエリ・反証条件・別機構。
+
+    LLM 不可時は決定論的な既定候補を返す。
+    """
+    out = _chat_json(
+        "あなたは確証バイアスを防ぐ反証担当（Falsifier）です。"
+        f"研究目標「{goal}」の文脈で、与えられた仮説を否定しうる観点を提示してください。"
+        'JSON {"counter_queries": [str], "falsification_conditions": [str], '
+        '"alternative_mechanisms": [str]} を返すこと。'
+        "counter_queries は反対結果・条件依存性・別機構を探す文献検索クエリ（日本語、2件まで）、"
+        "falsification_conditions は測定・計算で判定可能な反証条件、"
+        "alternative_mechanisms は同じ観測を説明しうる別機構の候補とする。"
+        "根拠のない断定はしないこと。",
+        json.dumps({"hypothesis": statement, "claims": claims[:20]},
+                   ensure_ascii=False),
+    )
+    if out and isinstance(out.get("counter_queries"), list):
+        return {
+            "counter_queries": [str(q) for q in out["counter_queries"]][:2],
+            "falsification_conditions": [
+                str(c) for c in out.get("falsification_conditions", []) or []],
+            "alternative_mechanisms": [
+                str(m) for m in out.get("alternative_mechanisms", []) or []],
+        }
+    return {
+        "counter_queries": [f"{statement} 反例 条件依存性",
+                            f"{statement} 別機構 代替要因"],
+        "falsification_conditions": [
+            "独立なモデル系列の過半が予測と逆方向の有意な傾向を示す",
+            "対象因子を除外しても同一の傾向が維持される（別機構の示唆）",
+        ],
+        "alternative_mechanisms": ["別の欠陥・機構が主要因である可能性"],
+    }
 
 
 _INTENTS = {"run", "pause", "resume", "complete", "approve", "reject", "script", "question"}

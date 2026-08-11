@@ -34,17 +34,46 @@ class Evidence(BaseModel):
     limitations: list[str] = Field(default_factory=list)
 
 
+class JudgementCriterion(BaseModel):
+    """3値判定を構成する個別のルール評価。"""
+
+    name: str
+    passed: bool
+    detail: str = ""
+
+
+class HypothesisJudgement(BaseModel):
+    """仮説の3値判定案（Supported / Refuted / Inconclusive）。
+
+    数値結果とルール評価を主根拠とし、LLM の文章だけでは確定しない。
+    最終確定は研究者の承認による。
+    """
+
+    verdict: str = "inconclusive"  # supported / refuted / inconclusive
+    criteria: list[JudgementCriterion] = Field(default_factory=list)
+    metrics: dict[str, Any] = Field(default_factory=dict)
+    rationale: str = ""
+    decided_by: str = "rule"
+    confirmed_by_human: bool = False
+    created_at: float = Field(default_factory=time.time)
+
+
 class Hypothesis(BaseModel):
     hypothesis_id: str = Field(default_factory=lambda: _uid("H"))
     statement: str
     counter_to: str | None = None  # 対立仮説の場合、主仮説ID
+    mechanism: str = ""  # 想定機構
     supporting_predictions: list[str] = Field(default_factory=list)
     falsification_conditions: list[str] = Field(default_factory=list)
     falsification_approved: bool = False  # 反証条件は研究者承認後に固定（§5.3）
     hold_conditions: list[str] = Field(default_factory=list)
     required_inputs: list[str] = Field(default_factory=list)
     required_outputs: list[str] = Field(default_factory=list)
-    applicability: dict[str, Any] = Field(default_factory=dict)
+    applicability: dict[str, Any] = Field(default_factory=dict)  # 適用範囲（scope）
+    source_evidence: list[str] = Field(default_factory=list)  # 根拠となる証拠ID
+    counter_evidence: list[str] = Field(default_factory=list)  # 反対・条件依存の証拠ID
+    alternative_mechanisms: list[str] = Field(default_factory=list)  # 別機構の候補
+    judgement: HypothesisJudgement | None = None  # ルール評価による判定案
     status: HypothesisState = HypothesisState.DRAFT
 
 

@@ -254,3 +254,23 @@ def patch_hypothesis(hypothesis_id: str, req: HypothesisPatch) -> dict[str, Any]
         raise HTTPException(403, str(exc)) from exc
     h = state.hypothesis(hypothesis_id)
     return h.model_dump() if h else {}
+
+
+class JudgementConfirmBody(BaseModel):
+    session_id: str
+    accept: bool = True
+    by: str = "human"
+
+
+# 判定案の確定（3値判定の Human-in-the-loop 確定）
+@app.post("/api/agent/hypotheses/{hypothesis_id}/judgement")
+def confirm_judgement(hypothesis_id: str, req: JudgementConfirmBody) -> dict[str, Any]:
+    m = get_manager()
+    state = _load(req.session_id)
+    try:
+        h = m.confirm_judgement(state, hypothesis_id, accept=req.accept, by=req.by)
+    except ValueError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except PermissionError as exc:
+        raise HTTPException(403, str(exc)) from exc
+    return h.model_dump()

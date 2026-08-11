@@ -157,7 +157,7 @@ class TestErrorRecovery:
 
     @staticmethod
     def _advance_to_execution(manager, session):
-        for _ in range(4):
+        for _ in range(len(session.plan.tasks)):
             actions = manager.next_actions(session)
             runnable = [a for a in actions if not a["requires_approval"]]
             if not runnable:
