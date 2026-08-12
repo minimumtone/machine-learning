@@ -64,11 +64,21 @@ g = (allfcc.groupby("x_Al")
 
 fig, ax = plt.subplots(figsize=(10.5, 7.5))
 xs = np.array([0, 1])
+sqs_path = os.path.join(AN, "niall_fcc_sqs.csv")
+plot_sqs = os.path.exists(sqs_path)
+if plot_sqs:
+    sqs = pd.read_csv(sqs_path)
+    gsqs = sqs.groupby("x_Al").agg(V=("V_per_atom_A3", "mean"),
+                                     Vstd=("V_per_atom_A3", "std")).reset_index()
+
 ax.plot(xs, V_NI + (V_AL_FCC - V_NI) * xs, "k--", lw=2,
         label="Vegard則 (fcc-Ni → fcc-Al)")
 ax.errorbar(g.x_Al, g.V, yerr=g.Vstd, fmt="o-", ms=8, capsize=4,
             color="tab:purple", label="fcc Ni(Al) 乱数固溶体 (MLIP, ×3配置)")
-ax.axhline(2 * (bcc_al["a_bcc_A"] / (2 ** (1 / 3))) ** 3 / 2, lw=0)  # noop keeps ylim natural
+if plot_sqs:
+    ax.errorbar(gsqs.x_Al, gsqs.V, yerr=gsqs.Vstd, fmt="^-", ms=9,
+                capsize=4, color="tab:green", alpha=0.9,
+                label="SQS 32原子（理想ランダム固溶体）")
 ax.set_xlabel(r"Al原子分率 $x_{\mathrm{Al}}$")
 ax.set_ylabel(r"平均原子体積 $\bar V$ (Å$^3$/atom)")
 ax.set_title(r"fcc Ni(Al)固溶体の全組成掃引とVegard則")
