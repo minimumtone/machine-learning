@@ -1481,17 +1481,19 @@ database once it is substituted for the validation set.
 Our results reaffirm that the primary barrier to data utilization
 in inorganic materials RDBs lies in understanding the schema
 structure.
-Against a normalized schema of 31 tables, the model with schema
-and reranker but without few-shot examples (no\_fewshot condition)
-still achieves only 77.3\% accuracy, and the model with schema and
-reranker but without the dictionary (no\_dict condition) gives a
-nearly equal 77.4\% (Table~\ref{tab:ablation}). The Very Hard
-tier falls to 48.3\% without few-shot examples and to 37.1\%
-without the dictionary, showing that either omission severely
-impairs handling of domain-specific terminology.
-This demonstrates that schema and reranker information alone are
-insufficient to accurately translate materials researchers' intent
-into SQL.
+Against a normalized schema of 31 tables, the model retaining the
+schema, dictionary, and reranker but without few-shot examples
+(no\_fewshot condition) still achieves only 77.3\% accuracy, and
+the model retaining the schema, few-shot examples, and reranker
+but without the dictionary (no\_dict condition) gives a nearly
+equal 77.4\% (Table~\ref{tab:ablation}). The Very Hard tier falls
+to 48.3\% without few-shot examples and to 37.1\% without the
+dictionary, showing that either omission severely impairs
+handling of domain-specific terminology.
+This demonstrates that a schema-aware system cannot accurately
+translate materials researchers' intent into SQL in the absence
+of either few-shot examples or the domain dictionary; both are
+necessary.
 
 A natural language interface can effectively reduce this schema
 barrier.
