@@ -10,7 +10,6 @@ energetically stable.
 import os
 import time
 
-import numpy as np
 import pandas as pd
 from ase.build import bulk
 from ase.filters import FrechetCellFilter
@@ -70,11 +69,11 @@ for n_al in N_AL_LIST:
             sqs_id = f"sqs_s{s}"
         name = f"fcc_NiAl_x{x:.4f}_SQS{sqs_id}"
         e, v, conv = relax(at, name)
-        rows.append(dict(structure_id=name, x_Al=x, n_al=n_al, seed=s,
-                         n_atoms=len(at), sqs_id=sqs_id, energy_eV=e,
-                         volume_A3=v, V_per_atom_A3=v / len(at),
-                         a_conv_A=(4 * v / len(at)) ** (1 / 3),
-                         converged=conv))
+        rows.append({"structure_id": name, "x_Al": x, "n_al": n_al, "seed": s,
+                         "n_atoms": len(at), "sqs_id": sqs_id, "energy_eV": e,
+                         "volume_A3": v, "V_per_atom_A3": v / len(at),
+                         "a_conv_A": (4 * v / len(at)) ** (1 / 3),
+                         "converged": conv})
 
 pd.DataFrame(rows).to_csv(os.path.join(AN, "niall_fcc_sqs.csv"), index=False)
 print("done:", len(rows))

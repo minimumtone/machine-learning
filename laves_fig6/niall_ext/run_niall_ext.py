@@ -53,20 +53,20 @@ def relax(atoms, name):
 rows = []
 X_FCC = [0.3125, 0.375, 0.4375, 0.5, 0.5625, 0.625, 0.75, 0.875, 1.0]
 for x in X_FCC:
-    n_al = int(round(32 * x))
+    n_al = round(32 * x)
     seeds = range(NSEEDS) if 0 < n_al < 32 else [0]
     for seed in seeds:
-        rng = np.random.default_rng(3000 * seed + int(round(x * 10000)))
+        rng = np.random.default_rng(3000 * seed + round(x * 10000))
         at = bulk("Ni", "fcc", a=3.6, cubic=True).repeat((2, 2, 2))  # 32 atoms
         syms = np.array(at.get_chemical_symbols())
         syms[rng.choice(len(at), size=n_al, replace=False)] = "Al"
         at.set_chemical_symbols(list(syms))
         name = f"fcc_NiAl_x{x:.4f}_ext_s{seed}"
         e, v, conv = relax(at, name)
-        rows.append(dict(structure_id=name, x_Al=n_al / 32, seed=seed,
-                         n_atoms=len(at), energy_eV=e, volume_A3=v,
-                         V_per_atom_A3=v / len(at),
-                         a_fcc_A=(4 * v / len(at)) ** (1 / 3), converged=conv))
+        rows.append({"structure_id": name, "x_Al": n_al / 32, "seed": seed,
+                         "n_atoms": len(at), "energy_eV": e, "volume_A3": v,
+                         "V_per_atom_A3": v / len(at),
+                         "a_fcc_A": (4 * v / len(at)) ** (1 / 3), "converged": conv})
 pd.DataFrame(rows).to_csv(os.path.join(AN, "niall_fcc_ext.csv"), index=False)
 print("fcc ext done:", len(rows))
 
@@ -98,9 +98,9 @@ for m in (0, 8, 16, 24, 32):  # of 64 per sublattice -> eta = 1, 0.75, 0.5, 0.25
         at.set_chemical_symbols(list(syms))
         name = f"b2_eta{eta:.2f}_s{seed}"
         e, v, conv = relax(at, name)
-        rows.append(dict(structure_id=name, eta=eta, n_swaps=m, seed=seed,
-                         n_atoms=len(at), energy_eV=e, volume_A3=v,
-                         V_per_atom_A3=v / len(at),
-                         a_eff_A=(v / NCELL) ** (1 / 3), converged=conv))
+        rows.append({"structure_id": name, "eta": eta, "n_swaps": m, "seed": seed,
+                         "n_atoms": len(at), "energy_eV": e, "volume_A3": v,
+                         "V_per_atom_A3": v / len(at),
+                         "a_eff_A": (v / NCELL) ** (1 / 3), "converged": conv})
 pd.DataFrame(rows).to_csv(os.path.join(AN, "b2_order_param.csv"), index=False)
 print("order-param done:", len(rows))

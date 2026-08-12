@@ -9,6 +9,7 @@ import json
 import os
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -94,14 +95,14 @@ plt.savefig(os.path.join(FIG, "fig_niall_sqs_stability.png"), dpi=150)
 plt.close()
 
 # text summary
-summary = dict(
-    pure_Ni_V=pure_Ni, pure_Al_V=pure_Al,
-    n_sqs=len(sqs),
-    n_rand2=len(rand2), n_rand3=len(rand3) if not rand3.empty else 0,
-    sqs_vegard_deviation={f"{r.x_Al:.4f}": round(float(r.V - (pure_Ni + (pure_Al - pure_Ni) * r.x_Al)), 4) for r in gsqs.itertuples()},
-    sqs_emix_min_eV=float(gsqs.E.min()),
-    sqs_emix_max_eV=float(gsqs.E.max()),
-)
+summary = {
+    "pure_Ni_V": pure_Ni, "pure_Al_V": pure_Al,
+    "n_sqs": len(sqs),
+    "n_rand2": len(rand2), "n_rand3": len(rand3) if not rand3.empty else 0,
+    "sqs_vegard_deviation": {f"{r.x_Al:.4f}": round(float(r.V - (pure_Ni + (pure_Al - pure_Ni) * r.x_Al)), 4) for r in gsqs.itertuples()},
+    "sqs_emix_min_eV": float(gsqs.E.min()),
+    "sqs_emix_max_eV": float(gsqs.E.max()),
+}
 with open(os.path.join(AN, "niall_sqs_summary.json"), "w") as f:
     json.dump(summary, f, indent=2)
 print(json.dumps(summary, indent=2))
