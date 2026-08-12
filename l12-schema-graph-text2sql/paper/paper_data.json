@@ -2,8 +2,8 @@
   "_meta": {
     "description": "Single source of truth for paper numerical values",
     "generated_by": "scripts/compute_all_figures.py",
-    "generated_at": "2026-08-12 05:20:10 UTC",
-    "git_commit": "b10abf74e5ff58e2e9328d2d444a8d7ceb5bd18b",
+    "generated_at": "2026-08-12 05:32:26 UTC",
+    "git_commit": "9a3d9fe0bad922ff3ba412405b5f076fb75d588a",
     "source_files": [
       "evaluation/ablation_multirun_stats.json",
       "evaluation/ablation_run_1.json",
@@ -259,7 +259,7 @@
       "custom_single_token_count": 402,
       "custom_single_token_pct": 100.0,
       "improved_count": 279,
-      "degraded_count": -279
+      "degraded_count": 0
     }
   },
   "materials_evaluation": {

@@ -452,17 +452,27 @@ def main():
         if not terms and n_vocab_terms:
             # Fallback: read from CSV if function import failed
             pass
-        n_default = sum(1 for t in terms if _is_single_token(default_tagger, t))
-        n_custom = sum(1 for t in terms if _is_single_token(custom_tagger, t))
+        default_single = [_is_single_token(default_tagger, t) for t in terms]
+        custom_single = [_is_single_token(custom_tagger, t) for t in terms]
+        n_default = sum(default_single)
+        n_custom = sum(custom_single)
         n = len(terms)
+        n_improved = sum(
+            d is False and c is True
+            for d, c in zip(default_single, custom_single)
+        )
+        n_degraded = sum(
+            d is True and c is False
+            for d, c in zip(default_single, custom_single)
+        )
         tokenization_stats = {
             "n_terms": n,
             "default_single_token_count": n_default,
             "default_single_token_pct": round(n_default / n * 100, 1) if n else 0.0,
             "custom_single_token_count": n_custom,
             "custom_single_token_pct": round(n_custom / n * 100, 1) if n else 0.0,
-            "improved_count": n_custom - n_default,
-            "degraded_count": n_default - n_custom,
+            "improved_count": n_improved,
+            "degraded_count": n_degraded,
         }
     except Exception:
         # MeCab/ipadic/dictionary may not be available in all CI environments
