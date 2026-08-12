@@ -53,11 +53,9 @@ else:
 V_NI, V_AL_FCC = 10.8133, 16.7356  # MACE fcc references
 
 # --- Fig 1: extended fcc Ni(Al) vs Vegard -------------------------------------
+# 2x2x2 random seeds for x >= 0.3125; SQS generated separately for the full range.
 ext = pd.read_csv(os.path.join(AN, "niall_fcc_ext.csv"))
-old = pd.read_csv(os.path.join(BASE, "..", "05_analysis", "volumes.csv"))
-old = old[old.parent_structure == "fcc-Ni(Al)"][["x_Al", "volume_per_atom_A3"]]
-old = old.rename(columns={"volume_per_atom_A3": "V_per_atom_A3"})
-allfcc = pd.concat([old, ext[["x_Al", "V_per_atom_A3"]]], ignore_index=True)
+allfcc = ext[["x_Al", "V_per_atom_A3"]].copy()
 g = (allfcc.groupby("x_Al")
      .agg(V=("V_per_atom_A3", "mean"), Vstd=("V_per_atom_A3", "std"))
      .reset_index())
