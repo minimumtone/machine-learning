@@ -31,6 +31,27 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,calc,backgrounds}
 
+% interact.cls redefines \toprule/\midrule/\bottomrule as \hline with extra \\
+% which creates empty rows and bad spacing. Restore the original booktabs
+% definitions (booktabs is already loaded by interact.cls).
+\makeatletter
+\def\toprule{\noalign{\ifnum0=`}\fi
+  \@aboverulesep=\abovetopsep
+  \global\@belowrulesep=\belowrulesep
+  \global\@thisruleclass=\@ne
+  \@ifnextchar[{\@BTrule}{\@BTrule[\heavyrulewidth]}}
+\def\midrule{\noalign{\ifnum0=`}\fi
+  \@aboverulesep=\aboverulesep
+  \global\@belowrulesep=\belowrulesep
+  \global\@thisruleclass=\@ne
+  \@ifnextchar[{\@BTrule}{\@BTrule[\lightrulewidth]}}
+\def\bottomrule{\noalign{\ifnum0=`}\fi
+  \@aboverulesep=\aboverulesep
+  \global\@belowrulesep=\belowbottomsep
+  \global\@thisruleclass=\@ne
+  \@ifnextchar[{\@BTrule}{\@BTrule[\heavyrulewidth]}}
+\makeatother
+
 \setlist{nosep,leftmargin=*}
 
 \lstset{
