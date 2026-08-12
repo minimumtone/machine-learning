@@ -81,8 +81,9 @@ we conducted a 7-condition ablation study with 100 evaluation queries
 Few-shot examples and the materials domain dictionary contributed
 $-$7.4\,pp ($p<0.001$) and $-$7.3\,pp ($p<0.001$), respectively,
 demonstrating statistically significant effects.
-Multi-axis evaluation achieved execution accuracy of 84.7\%,
-syntax validity of 100\%, and JOIN match rate of 93.2\%.
+Multi-axis evaluation achieved execution recall of 84.7\%,
+precision of 77.3\%, F1 of 74.8\%, syntax validity of 100\%,
+and JOIN match rate of 93.2\%.
 All results are reported as mean $\pm$ standard deviation
 over 5 independent runs with Wilcoxon signed-rank test significance.
 Furthermore, zero-adaptation transfer evaluations across four schema variants---prototype expansion (A) 90.0\%, OQMD-flavored rename (B) 90.5\%, randomized obfuscated names (C) 90.0\%, and a real Materials Project-flavored schema (D) 100.0\%---demonstrated that the pipeline generalizes schema-independently.
@@ -2228,11 +2229,12 @@ Error analysis revealed that the remaining primary failure mode
 is WHERE clause condition combination errors rather than JOIN path
 errors (Section~\ref{sec:error_analysis}).
 
-Materials engineering evaluation confirmed the utility as a
-materials exploration tool through rediscovery of 11 known L1$_2$
-compounds, $\gamma'$-phase candidate ranking, and extraction of
-162 stable/metastable candidates
-(Section~\ref{sec:materials_evaluation}).
+Using synthetic validation data, the interface correctly
+rediscovered 11 known L1$_2$ prototype compounds, ranked entries
+by a composite score, and extracted 162 stable/metastable
+compositions (Section~\ref{sec:materials_evaluation}); these
+results demonstrate retrieval functionality on a complex schema,
+not real materials design predictions.
 External validation with 100 independently designed queries
 achieved 76.9\%; the accuracy gap from author-designed queries
 (roughly 8\,pp) is primarily attributable to table coverage bias
