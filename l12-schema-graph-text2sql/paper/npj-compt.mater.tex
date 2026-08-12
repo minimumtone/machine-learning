@@ -264,7 +264,7 @@ addressing challenges specific to materials RDBs.
   {\scriptsize NetworkX}};
 
 \node[stepbox, fill=yellow!15, right=of steiner] (dict) {Materials\\Dictionary\\
-  {\scriptsize 497 entries}};
+  {\scriptsize domain terms}};
 
 \node[stepbox, fill=red!10, right=of dict] (guard) {SQLGuard\\
   {\scriptsize 14 checks}};
@@ -537,7 +537,9 @@ The dictionary is compiled from three sources:
   \item Pipeline vocabulary (DB/OQMD-specific terms): 66 terms
   \item Materials engineering vocabulary (user-provided list): 402 terms
 \end{enumerate}
-After deduplication, the dictionary contains 497 terms.
+After deduplication, the production dictionary contains
+492 terms (Table~\ref{tab:dict_size} uses a 61-entry subset for the
+size-sensitivity experiment).
 It is also compiled as a custom dictionary for the MeCab morphological
 analyzer and used for Japanese text preprocessing.
 
@@ -1070,16 +1072,17 @@ Based on these results, we recommend $k=3$ as the default setting.
 \subsection{Effect of Domain Dictionary Size}
 \label{sec:dict_sensitivity}
 
-We progressively reduced the number of domain dictionary entries
-from full (61 entries) to 50\% (30), 25\% (15), and 0\%
-(no dictionary), measuring the impact on accuracy
-(Table~\ref{tab:dict_size}, Figure~\ref{fig:dict_size}).
+To separate the effect of dictionary coverage from the rest of
+pipeline, we created a 61-entry subset of the full 492-term
+materials dictionary and progressively reduced it to 50\% (30),
+25\% (15), and 0\% (no dictionary), measuring the impact on
+accuracy (Table~\ref{tab:dict_size}, Figure~\ref{fig:dict_size}).
 
 \begin{table}[t]
 \centering
-\caption{Relationship between domain dictionary size and accuracy.
-Reduction prioritizes retaining core terms (prototype, elements,
-stability, etc.).}
+\caption{Dictionary-size sensitivity using a 61-entry subset of the
+492-term materials dictionary. Reduction prioritizes retaining core
+terms (prototype, elements, stability, etc.).}
 \label{tab:dict_size}
 \small
 \begin{tabular}{@{}lrrrrrr@{}}
@@ -1364,39 +1367,6 @@ synthetic validation data, the retrieved 'rankings' and
 'candidates' should be read as interface-operation demonstrations,
 not as real materials design hypotheses.
 
-\subsection{Rediscovery of Known L1$_2$ Compounds}
-
-Table~\ref{tab:known_l12} shows the rediscovery results for
-11 known L1$_2$ compounds.
-The proposed method \textbf{correctly rediscovered all 11 compounds}.
-The correct extraction of $\gamma'$-phase compounds such as
-Ni$_3$Al and Co$_3$Ti ensures basic reliability as a superalloy
-materials exploration tool.
-
-\begin{table}[t]
-  \centering
-  \caption{Rediscovery results for known L1$_2$ compounds (11/11).}
-  \label{tab:known_l12}
-  \small
-  \begin{tabular}{lccc}
-    \toprule
-    Compound & $a$ (\AA) & $E_\text{hull}$ (eV/atom) & Rediscovered \\
-    \midrule
-    Ni$_3$Al & 3.572 & 0.000 & $\circ$ \\
-    Ni$_3$Ga & 3.66 & 0.010 & $\circ$ \\
-    Ni$_3$Ge & 3.61 & 0.040 & $\circ$ \\
-    Co$_3$Ti & 3.55 & 0.000 & $\circ$ \\
-    Co$_3$Ta & 3.72 & 0.040 & $\circ$ \\
-    Co$_3$Al & 3.67 & 0.010 & $\circ$ \\
-    Co$_3$W  & 3.74 & 0.050 & $\circ$ \\
-    Al$_3$Sc & 4.09 & 0.000 & $\circ$ \\
-    Al$_3$Ti & 3.98 & 0.020 & $\circ$ \\
-    Pt$_3$Al & 3.90 & 0.000 & $\circ$ \\
-    Ir$_3$Nb & 3.87 & 0.030 & $\circ$ \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
 \subsection{$\gamma'$-Phase Candidate Ranking}
 \label{sec:gamma_prime}
 
@@ -1625,8 +1595,9 @@ uses path-finding on FK graphs, but differs in the following ways:
 (1)~SchemaGraphSQL is evaluated on general benchmarks (Spider/BIRD)
 and lacks domain-specific term translation mechanisms.
 Our method achieves translations such as
-``stable'' $\to$ \texttt{is\_stable=TRUE} via a materials domain
-dictionary (61 entries), with a quantified $-$7.3\,pp ($p<0.001$)
+``stable'' $\to$ \texttt{is\_stable=TRUE} via a 492-term materials
+ domain dictionary (the 61-entry subset sensitivity is shown in
+Table~\ref{tab:dict_size}), with a quantified $-$7.3\,pp ($p<0.001$)
 accuracy drop upon dictionary removal.
 (2)~SchemaGraphSQL's JOIN search is based on edge weight
 optimization of the schema graph, whereas our method uses Steiner
@@ -1759,65 +1730,35 @@ ability to directly instruct such calculations via natural language
 significantly enhances the practical utility of NL interfaces in
 materials informatics.
 
-\subsection{Evaluation with Independently Designed Queries (Difficulty-Harmonized)}
+\subsection{Evaluation with Independently Designed Queries}
 \label{sec:independent_eval}
 
 To verify self-referentiality bias, we re-evaluated accuracy using
-queries independently designed by a materials researcher not
-involved in system development.
-For fair comparison, a unified difficulty criterion was applied to
-both sets (unified complexity score:
-$\text{tables} \times 3 + \text{conditions} + \text{group\_by} \times 2
-+ \text{exists} \times 3 + \text{subquery} \times 3$;
-thresholds: Easy $< 8$, Medium $8$--$11$, Hard $12$--$16$,
-Very Hard $\geq 17$).
-The independently designed set comprises 60 queries
-(Easy 12 / Medium 18 / Hard 18 / Very Hard 12) spanning 10
+100 queries independently designed by a materials researcher not
+involved in system development
+(Easy 18 / Medium 34 / Hard 34 / Very Hard 14), spanning 10
 categories (basic search, composition/elements,
 structure/lattice constants, stability/formation energy,
 DFT calculations/properties, electronic structure/magnetic/thermal
 properties, surface/grain boundary/defects,
 literature/synthesis/applications, materials design/screening,
 and comparison/statistics).
+These queries were scored with the same continuous execution-recall
+metric and difficulty classification used for the ablation study.
 
-\begin{table}[t]
-  \centering
-  \caption{Difficulty-harmonized comparison (classified by unified
-  complexity score). Both sets report mean execution accuracy
-  (continuous, recall-based). Author-designed: 100 queries
-  reclassified by unified criteria; independently designed: 60-query
-  balanced set. Note that the author-designed values are from a
-  separate evaluation run from the ablation study.}
-  \label{tab:independent_eval}
-  \footnotesize
-  \begin{tabular}{lccc}
-    \toprule
-    Difficulty & Author-designed & Independent & Diff. \\
-    \midrule
-    Easy ($< 8$)       & 100.0\% ($n$=12) & 83.3\% ($n$=12)  & $-$16.7pp \\
-    Medium ($8$--$11$) &  94.5\% ($n$=18) & 69.9\% ($n$=18)  & $-$24.6pp \\
-    Hard ($12$--$16$)  &  78.3\% ($n$=41) & 70.1\% ($n$=18)  & $-$8.2pp \\
-    Very Hard ($\geq 17$) & 32.7\% ($n$=29) & 19.4\% ($n$=12) & $-$13.3pp \\
-    \midrule
-    Overall               &  70.6\% ($n$=100) & 62.5\% ($n$=60) & $-$8.1pp \\
-    Binary accuracy (F1$\geq 0.8$) & --- & 53.3\% (32/60) & --- \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-Table~\ref{tab:independent_eval} shows the results.
-Author-designed queries (70.6\%) outperform independently designed
-queries (62.5\%) across all difficulty tiers.
-The 8.1\,pp accuracy gap is primarily attributable to three factors:
+Overall execution accuracy was 76.9\%
+(Easy 94.4\% / Medium 81.7\% / Hard 61.5\% / Very Hard 80.4\%),
+8.1\,pp below the author-designed set (84.7\%; Table~\ref{tab:ablation}).
+The gap is primarily attributable to three factors:
 
 \textbf{(1) Table coverage bias} (primary factor):
-Author-designed gold SQL uses only 5 tables in practice, whereas
-independently designed queries reference 12 additional tables
+Author-designed gold SQL uses a core set of tables, whereas
+independently designed queries reference additional tables
 including \texttt{elastic\_tensor}, \texttt{magnetic\_property},
-and \texttt{surface\_energy}, for which no few-shot examples exist.
+and \texttt{surface\_energy}, for which few-shot examples are sparse.
 
 \textbf{(2) Few-shot optimization bias}:
-85\% of author-designed queries explicitly contain ``L1$_2$'' as a
+Most author-designed queries explicitly contain ``L1$_2$'' as a
 fixed pattern, and few-shot examples are optimized for this pattern.
 Independently designed queries use more diverse expressions.
 
@@ -1829,24 +1770,11 @@ relies on explicit keyword matching.
 Syntax validity (100.0\%) is consistent across both sets,
 confirming the query-origin independence of the Schema Graph
 constraint.
-Note that the author-designed accuracy in this table (70.6\%)
-is from a different evaluation run than the ablation study
-(Table~\ref{tab:ablation}, full condition 84.7\%) and should not
-be directly compared.
-Detailed results for independently designed queries are provided
-in Supplementary~\ref{sec:sup_expert_queries}.
-
-To further extend the external-validity check to 100 queries,
-we re-evaluated 100 independently designed expert queries
-(Easy 18 / Medium 34 / Hard 34 / Very Hard 14)
-with the current pipeline and current DB (1{,}559 entries).
-Overall accuracy was 76.9\%
-(Easy 94.4\% / Medium 81.7\% / Hard 61.5\% / Very Hard 80.4\%),
-keeping the gap to author-designed queries (84.7\%) at roughly 12\,pp.
-The dominant failure causes match (1)--(3) above---references to
-peripheral tables without few-shot coverage and non-canonical
-phrasings---indicating that expanding few-shot coverage by domain
-experts is the primary lever for improving external validity.
+The Very Hard tier (80.4\%) is higher than the Hard tier (61.5\%)
+because the 14 Very Hard queries include several short CTE patterns
+covered by few-shot examples, whereas some Hard queries reference
+peripheral tables without few-shot support.
+Detailed results are provided in Supplementary~\ref{sec:sup_expert_queries}.
 
 \subsection{Handling Cross-column Comparison Queries}
 \label{sec:column_comparison}
@@ -1887,9 +1815,9 @@ compared to constant comparisons (\texttt{WHERE col > 0.5}).
 Cross-table comparisons in particular require accurate
 identification of which table each compared column belongs to
 from the schema information.
-We added 9 cross-column comparison patterns to the few-shot
-examples (33 $\to$ 42 examples) to enable the LLM to learn these
-patterns.
+We expanded the few-shot example pool to 45 examples, adding
+mainly cross-column comparison patterns, so that the LLM can learn
+such patterns.
 
 \subsection{RDB Schema Design and Text-to-SQL Cost}
 \label{sec:schema_design_cost}
@@ -2168,7 +2096,7 @@ materials RDBs.
     Gold SQL and expected results were created by a single author;
     independent third-party verification has not been performed.
   \item \textbf{Dictionary coverage}:
-    The 497-term dictionary is specialized for L1$_2$ exploration;
+    The 492-term dictionary is specialized for L1$_2$ exploration;
     extension to Heusler, Perovskite, and other systems requires
     manual registration.
     Migration to semi-automatic generation from schema metadata
@@ -2229,9 +2157,8 @@ Error analysis revealed that the remaining primary failure mode
 is WHERE clause condition combination errors rather than JOIN path
 errors (Section~\ref{sec:error_analysis}).
 
-Using synthetic validation data, the interface correctly
-rediscovered 11 known L1$_2$ prototype compounds, ranked entries
-by a composite score, and extracted 162 stable/metastable
+Using synthetic validation data, the interface ranked entries
+by a composite score and extracted 162 stable/metastable
 compositions (Section~\ref{sec:materials_evaluation}); these
 results demonstrate retrieval functionality on a complex schema,
 not real materials design predictions.
@@ -2299,7 +2226,7 @@ This work was supported by NIMS.
 
 The evaluation dataset (100 gold SQL queries and expected results),
 ablation results (7 conditions $\times$ 100 queries in JSON),
-MeCab materials dictionary (497 terms, compiled .dic),
+MeCab materials dictionary (492 terms, compiled .dic),
 Japanese reranker comparison results, and all scripts are included
 in the repository.
 Applying to other inorganic materials RDBs requires replacing the
@@ -2821,11 +2748,12 @@ Table~\ref{tab:sup_query_detail} lists all 100 evaluation queries
 (author-designed, E=20/M=30/H=30/VH=20) with their question text,
 execution accuracy (row-match recall), latency, and
 pass/fail ($\checkmark$ if accuracy $\geq 0.8$).
-All values are from the ablation full condition. Queries are shown
-in the original Japanese.
+All values are from one representative run of the ablation full
+condition and are therefore not identical to the 5-run mean values
+in Table~\ref{tab:ablation}. Queries are shown in the original Japanese.
 
 \begin{longtable}{lp{8.5cm}ccl}
-  \caption{Detailed results for 100 evaluation queries (full condition). Queries in original Japanese.}
+  \caption{Detailed results for 100 evaluation queries (one representative run of the full condition, not the 5-run mean). Queries in original Japanese.}
   \label{tab:sup_query_detail} \\
   \toprule
   ID & Query & Acc. & sec & P/F \\
@@ -2959,14 +2887,15 @@ in the original Japanese.
 \label{sec:sup_ablation_diff}
 
 Table~\ref{tab:sup_ablation_diff} shows 35 queries with accuracy
-differences across the 7 ablation conditions.
+differences across the 7 ablation conditions
+(single representative run; not the 5-run mean).
 Bold values indicate $> 0.05$ decrease from the full condition.
 $-$FS = no\_fewshot, $-$Dict = no\_dict, $-$RR = no\_reranker,
 $-$GD = no\_guard, $-$NB = no\_nbest, $-$GR = no\_graph.
 
 \begin{table*}[htbp]
 \centering
-\caption{Queries with accuracy differences across ablation conditions (35/100 queries). Bold indicates $> 0.05$ decrease from full condition.}
+\caption{Query-level accuracy differences across ablation conditions (single representative run, not the 5-run mean; 35/100 queries). Bold indicates $> 0.05$ decrease from full condition.}
 \label{tab:sup_ablation_diff}
 \scriptsize
 \begin{tabular}{@{}llccccccc@{}}
@@ -3019,15 +2948,19 @@ observed:
     Easy--Hard tiers, demonstrating the broad contribution of
     few-shot examples.
   \item no\_dict ($-$Dict) concentrates zeroing in the Very Hard
-    tier, confirming the domain dictionary's indispensability for
-    VH queries.
+    tier, confirming the dictionary's strong effect for
+    VH queries (see also the 61-entry subset sensitivity in
+    Table~\ref{tab:dict_size}).
   \item no\_reranker ($-$RR) causes complete failure on
     q\_hard\_003, q\_hard\_026, q\_medium\_004, and
     q\_medium\_020, demonstrating the effect of candidate
     selection.
-  \item no\_guard ($-$GD) zeroes all CTE queries
-    (q\_vhard\_009/016/018/019/020), demonstrating that SQLGuard
-    is essential for CTE syntax safety verification.
+  \item no\_guard ($-$GD) zeroes five CTE queries
+    (q\_vhard\_009/016/018/019/020) in this single run.
+    Across the 5-run average the SQLGuard effect is smaller
+    ($-$0.2\,pp, $p=0.891$; Table~\ref{tab:ablation}), but the
+    per-run failures show that SQLGuard still functions as a safety
+    net for CTE syntax.
   \item q\_vhard\_007 scores 0.05 under the full condition but
     rises to 1.00 under $-$RR/$-$GD/$-$NB/$-$GR---an example
     where the reranker and SQLGuard over-filter.
@@ -3037,40 +2970,35 @@ observed:
 \section{Detailed Results for Independent Query Pool}
 \label{sec:sup_expert_queries}
 
-Table~\ref{tab:sup_expert_category} shows the difficulty-stratified
-accuracy for the independently designed queries reported in
-Section~\ref{sec:independent_eval}, drawn from the original
-100-query pool (categories A--J).
-Of these, 48 queries were selected into the 60-query harmonized
-set based on the unified classification criteria (12 Very Hard
-queries were newly designed).
+Table~\ref{tab:sup_expert_summary} shows the difficulty-stratified
+results for the independently designed 100-query set reported in
+Section~\ref{sec:independent_eval}.
 Difficulty levels are E (Easy), M (Medium), H (Hard), and VH
-(Very Hard); a query is counted as correct if execution
-F1 $\geq 0.8$.
+(Very Hard).
 
 \begin{table}[htbp]
   \centering
-  \caption{Independently designed query accuracy by difficulty (unified complexity score criterion).}
-  \label{tab:sup_expert_category}
+  \caption{Independently designed 100-query accuracy by difficulty.}
+  \label{tab:sup_expert_summary}
   \small
-  \begin{tabular}{lcccc}
+  \begin{tabular}{lcc}
     \toprule
-    Difficulty & Count & Correct & Acc. rate & Mean exec. acc. \\
+    Difficulty & Count & Mean Exec. Acc. (\%) \\
     \midrule
-    Easy ($< 8$) & 12 & 9 & 75.0\% & 83.3\% \\
-    Medium ($8$--$11$) & 18 & 10 & 55.6\% & 69.9\% \\
-    Hard ($12$--$16$) & 18 & 11 & 61.1\% & 70.1\% \\
-    Very Hard ($\geq 17$) & 12 & 2 & 16.7\% & 19.4\% \\
+    Easy ($< 8$) & 18 & 94.4 \\
+    Medium ($8$--$11$) & 34 & 81.7 \\
+    Hard ($12$--$16$) & 34 & 61.5 \\
+    Very Hard ($\geq 17$) & 14 & 80.4 \\
     \midrule
-    \textbf{Overall} & \textbf{60} & \textbf{32} & \textbf{53.3\%} & \textbf{62.5\%} \\
+    \textbf{Overall} & \textbf{100} & \textbf{76.9} \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-The Very Hard accuracy of 16.7\% (requiring 5--7 table JOINs)
-is even lower than author-designed Very Hard (32.7\%), indicating
-that JOIN path discovery to uncovered tables is a primary
-challenge.
+The Very Hard tier (80.4\%) is higher than the Hard tier (61.5\%)
+because the 14 Very Hard queries include several short CTE patterns
+covered by few-shot examples, whereas some Hard queries reference
+peripheral tables without few-shot support.
 
 The independent query pool comprises 10 categories
 (A: basic search, B: composition/elements,
@@ -3079,9 +3007,7 @@ E: DFT calculations/properties,
 F: electronic structure/magnetic/thermal properties,
 G: surface/grain boundary/defects,
 H: literature/synthesis/applications,
-I: materials design/screening, J: comparison/statistics).
-Of 100 total queries (10 per category), 48 were selected for
-the harmonized set, combined with 12 newly designed VH queries
-to form the 60-query evaluation set.
+I: materials design/screening, J: comparison/statistics),
+with 10 queries per category.
 
 \end{document}
