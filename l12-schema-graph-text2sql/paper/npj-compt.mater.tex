@@ -193,7 +193,7 @@ The three domain-specific challenges addressed in this study are:
     on inorganic materials RDBs.
 \end{enumerate}
 
-Our contributions are threefold:
+Our contributions are fourfold:
 \begin{enumerate}[label=(\roman*)]
   \item \textbf{Design principles for materials-RDB Text-to-SQL}:
     We propose a pipeline integrating Steiner-tree JOIN constraints
@@ -887,8 +887,12 @@ materials researchers.
 Queries were designed following these principles:
 (1)~simulate questions arising in actual materials research
 (e.g., stable phase search, composition--property correlations),
-(2)~difficulty is classified into four tiers by JOIN hop count
-and condition complexity,
+(2)~difficulty is classified into four tiers by a unified
+complexity score computed from the gold SQL
+($3$ per required table $+1$ per WHERE/HAVING condition
+$+2$ per GROUP BY $+3$ per EXISTS subquery $+3$ per derived
+subquery; Easy $<8$, Medium $8$--$11$, Hard $12$--$16$,
+Very Hard $\geq 17$),
 (3)~balanced coverage across all categories (A--H),
 (4)~five CTE multi-step calculation queries are included to
 evaluate advanced analytical patterns.
@@ -903,12 +907,12 @@ a future validation task.
   \small
   \begin{tabular}{@{}lccl@{}}
     \toprule
-    Difficulty & Count & Tables & Representative Content \\
+    Difficulty & Count & Score range & Representative Content \\
     \midrule
-    Easy & 20 & 1--2 & Single-condition search \\
-    Medium & 30 & 3 & Structure+composition+stability \\
-    Hard & 30 & 4 & Compound conditions, aggregation \\
-    Very Hard & 20 & 5--6 & Materials design queries \\
+    Easy & 20 & $< 8$ & Single-condition search \\
+    Medium & 30 & $8$--$11$ & Structure+composition+stability \\
+    Hard & 30 & $12$--$16$ & Compound conditions, aggregation \\
+    Very Hard & 20 & $\geq 17$ & Materials design queries \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -953,8 +957,12 @@ $\times$ 5 runs = 3{,}500 evaluations).
 $\Delta$: accuracy change from the full condition (pp).
 All values are means of 5 independent runs; standard deviations
 in parentheses.
-$^{***}$: $p<0.001$ by Wilcoxon signed-rank test.
-n.s.: statistically non-significant ($p\geq 0.05$).}
+$^{***}$: $p<0.001$ by two-sided Wilcoxon signed-rank test on
+per-query accuracy differences ($n=100$) against the full condition.
+n.s.: statistically non-significant ($p\geq 0.05$).
+p-values are not corrected for multiple comparisons among the six
+conditions; a Bonferroni-corrected threshold would be
+$p<0.0083$ for $\alpha=0.05$.}
 \label{tab:ablation}
 \small
 \begin{tabular}{@{}lrrrrrrr@{}}
@@ -993,7 +1001,9 @@ no\_reranker  & $-$1.0  & $-$6.7  & $-$5.6  & $+$3.1  \\
 
 \begin{table}[t]
 \centering
-\caption{Average latency per query (seconds) for each condition.
+\caption{Average latency per query (seconds) for each ablation
+condition, measured in the same 5-run experiment as
+Table~\ref{tab:ablation}.
 Setting $n$-best = 1 reduces latency by 65\% with no statistically
 significant accuracy loss.}
 \label{tab:latency}
@@ -1029,9 +1039,12 @@ We varied the number of retrieved few-shot examples $k$ across
 
 \begin{table}[t]
 \centering
-\caption{Relationship between few-shot count $k$ and accuracy.
+\caption{Relationship between few-shot count $k$ and accuracy
+measured in a separate sensitivity run.
 $k=3$ is optimal for accuracy/latency balance;
-$k=15$ exhibits overfitting-like accuracy degradation in the VH tier.}
+$k=15$ exhibits overfitting-like accuracy degradation in the VH tier.
+Latency values therefore differ from those in
+Table~\ref{tab:latency} (31.0\,s for the full 5-run ablation).}
 \label{tab:fewshot_k}
 \small
 \begin{tabular}{@{}lrrrrrrr@{}}
@@ -1122,8 +1135,11 @@ We evaluated the same 100 queries with GPT-5.5 and GPT-4o
 
 \begin{table}[t]
 \centering
-\caption{LLM model comparison. GPT-4o is 25$\times$ faster but
-shows a 14.6\,pp accuracy gap in the VH tier.}
+\caption{LLM model comparison, measured in a separate run from the
+5-run ablation and few-shot sensitivity experiments.
+GPT-4o is 25$\times$ faster but shows a 14.6\,pp accuracy gap in the
+VH tier; latencies are not directly comparable with
+Tables~\ref{tab:latency} and \ref{tab:fewshot_k}.}
 \label{tab:model_comp}
 \small
 \begin{tabular}{@{}lrrrrrr@{}}
@@ -1570,7 +1586,10 @@ a viable option when cost efficiency is prioritized.
 
 For the Steiner tree, at the current scale of 31 tables, most
 queries are completed using only 5 core tables, limiting its
-observable effect.
+observable accuracy effect; however, it halves the number of
+JOIN hallucinations (6 without Steiner tree vs.~3 with it;
+Table~\ref{tab:error_analysis}), indicating that its primary role
+is JOIN-path soundness rather than raw accuracy.
 Given the FK-introspection-based architecture, its benefits are
 expected to become apparent when the number of tables increases
 (e.g., after OQMD integration) or when applied to other
@@ -1639,53 +1658,20 @@ to address security risks such as SQL injection.
 
 \subsection{Quantitative Comparison with LLM-only and Schema-only Approaches}
 
-We restructure the ablation study results as a method-level
-comparison.
-Each ablation condition corresponds to a simplified method with
-a component removed (Table~\ref{tab:method_comparison}).
+Ablation conditions can be viewed as simplified methods with one
+component removed (Table~\ref{tab:ablation}).
+The no\_fewshot condition (schema + LLM, no few-shot examples,
+dictionary, or reranker) corresponds to a ``Full Schema'' baseline
+and achieves only 77.3\%, confirming that schema information alone
+is insufficient.
+The full proposed method reaches 84.7\%.
 
-\begin{table}[t]
-\centering
-\caption{Method-level quantitative comparison. Ablation conditions reinterpreted
-as method configurations. All values are from the ablation study (100 queries $\times$ 5 runs, mean).}
-\label{tab:method_comparison}
-\small
-\begin{tabular}{@{}p{4.2cm}cccc@{}}
-\toprule
-Method configuration & Overall & Easy & VH & $\Delta$ \\
-\midrule
-LLM-only (no schema) & \multicolumn{4}{l}{\textit{Not executable due to table hallucination (see S3)}} \\
-\midrule
-Full Schema & 77.3\% & 100.0 & 48.3 & $-$7.4  \\
-{\scriptsize (= no\_fewshot: schema + LLM,} & & & & \\
-{\scriptsize \phantom{(= }no few-shot examples)} & & & & \\
-\midrule
-+ Few-shot RAG & 77.4\% & 100 & 37.1 & $-$7.3 \\
-{\scriptsize (= no\_dict: + few-shot, no dictionary)} & & & & \\
-\midrule
-+ Materials dictionary & 81.4\% & 99.0 & 61.7 & $-$3.3 \\
-{\scriptsize (= no\_reranker: + dictionary,} & & & & \\
-{\scriptsize \phantom{(= }no reranker)} & & & & \\
-\midrule
-\textbf{Proposed (all components)} & \textbf{84.7\%} & \textbf{100} & \textbf{58.6} & --- \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-LLM-only provides no schema information and, as shown in Section
-S3 (Supplementary Materials), produces table and column name
-hallucinations that prevent executable SQL generation.
-Full Schema (corresponding to the no\_fewshot condition) includes
-schema definitions in the prompt but lacks few-shot examples,
-dictionary, and reranker, achieving only 77.3\%.
-Accuracy improves incrementally with each added component,
-reaching 84.7\% with the full proposed method.
-
-Note that the above reinterprets single-removal ablation
-conditions as incremental additions; interactions between
-conditions are not isolated.
+Because the ablation removes one component at a time, the apparent
+stepwise values are not a true incremental-addition experiment;
+component interactions mean the contributions are not strictly
+additive.
 Direct comparison with other methods (DIN-SQL, DAIL-SQL, etc.) on
-the same database has not been conducted (see Limitation 6).
+the same database has not been conducted (see Limitation~6).
 
 \subsection{Handling Multi-step Calculation Queries}
 \label{sec:multistep_query}
@@ -1734,8 +1720,9 @@ materials informatics.
 \label{sec:independent_eval}
 
 To verify self-referentiality bias, we re-evaluated accuracy using
-100 queries independently designed by a materials researcher not
-involved in system development
+100 queries independently designed by Chie Suematsu (co-author),
+who was not involved in pipeline implementation but contributed to
+query design and independent evaluation
 (Easy 18 / Medium 34 / Hard 34 / Very Hard 14), spanning 10
 categories (basic search, composition/elements,
 structure/lattice constants, stability/formation energy,
@@ -1748,7 +1735,7 @@ metric and difficulty classification used for the ablation study.
 
 Overall execution accuracy was 76.9\%
 (Easy 94.4\% / Medium 81.7\% / Hard 61.5\% / Very Hard 80.4\%),
-8.1\,pp below the author-designed set (84.7\%; Table~\ref{tab:ablation}).
+7.8\,pp below the author-designed set (84.7\%; Table~\ref{tab:ablation}).
 The gap is primarily attributable to three factors:
 
 \textbf{(1) Table coverage bias} (primary factor):
@@ -2085,16 +2072,20 @@ materials RDBs.
     with fundamentally different semantics or scales has not been
     confirmed.
   \item \textbf{Scope of statistical testing}:
-    Wilcoxon signed-rank tests were conducted with 5 independent
-    runs, but the number of runs is limited; bootstrap or other
-    methods would be useful for more precise confidence intervals.
+    Wilcoxon signed-rank tests were conducted on per-query accuracy
+    differences ($n=100$) against the full condition across 5 runs.
+    The number of runs is limited, and no multiple comparison
+    correction was applied; bootstrap or other methods would be useful
+    for more precise confidence intervals.
   \item \textbf{Query coverage}:
     The 100 author-designed queries were designed to cover major
     search patterns in materials research but do not exhaustively
     cover the diverse query patterns encountered in production use.
   \item \textbf{Gold SQL verification}:
-    Gold SQL and expected results were created by a single author;
-    independent third-party verification has not been performed.
+    Gold SQL and expected results were created by the authors;
+    the independently designed 100-query set was cross-checked by
+    Chie Suematsu (co-author), but full independent third-party
+    verification by an external researcher has not been performed.
   \item \textbf{Dictionary coverage}:
     The 492-term dictionary is specialized for L1$_2$ exploration;
     extension to Heusler, Perovskite, and other systems requires
@@ -2222,6 +2213,17 @@ development and maintenance of OQMD.
 This work was supported by NIMS.
 
 % =====================================================================
+\section*{Competing Interests}
+
+The authors declare no competing interests.
+
+% =====================================================================
+\section*{Ethics}
+
+This study does not involve human or animal subjects, and no ethical
+approval was required.
+
+% =====================================================================
 \section*{Data and Code Availability}
 
 The evaluation dataset (100 gold SQL queries and expected results),
@@ -2232,10 +2234,16 @@ in the repository.
 Applying to other inorganic materials RDBs requires replacing the
 domain dictionary and few-shot examples, but the pipeline
 architecture and FK traversal mechanism can be reused as-is.
-All numerical values in the paper are output to
+Ablation, transfer, and core validation metrics are generated to
 \texttt{paper/paper\_data.json} by
-\texttt{scripts/compute\_all\_figures.py}; no manually entered
-values are included.
+\texttt{scripts/compute\_all\_figures.py}; sensitivity analysis,
+model comparison, and multi-axis metrics are formatted from their
+respective source JSON/CSV evaluation outputs and then inserted
+into the manuscript tables.
+The full source code, datasets, and reproducibility package will be
+made available through a public repository upon acceptance and are
+provided for review at \url{https://github.com/minimumtone/machine-learning}.
+A DOI will be registered through the NIMS repository at acceptance.
 All 134 unit tests pass.
 
 % =====================================================================
@@ -2243,6 +2251,10 @@ All 134 unit tests pass.
 
 \textbf{Satoshi Minamoto}: Conceptualization, methodology, software
 implementation, database construction, experiments, and writing.
+
+\textbf{Chie Suematsu}: Independent query design for the 100-query
+external validation set, cross-checking of results, and manuscript
+review.
 
 % =====================================================================
 \begin{thebibliography}{30}
@@ -2303,9 +2315,10 @@ RESDSQL: Decoupling schema linking and skeleton parsing for text-to-SQL,
 in: Proc.\ AAAI, 2023.
 
 \bibitem{safdarian2026schemagraphsql}
-F.~Safdarian, S.~Kacupaj,
-SchemaGraphSQL: Schema-graph-based text-to-SQL with path finding,
-in: Proc.\ NAACL, 2026.
+A.H.~Safdarian, M.~Mohammadi, E.J.~Bashirloo, M.S.~Naderi, H.~Faili,
+SchemaGraphSQL: Efficient schema linking with pathfinding graph algorithms for text-to-SQL on large-scale databases,
+in: Findings of the Association for Computational Linguistics: EACL 2026, 2026, pp.~2585--2599.
+\url{https://aclanthology.org/2026.findings-eacl.134/}
 
 \bibitem{gupta2022matscibert}
 T.~Gupta, M.~Zaki, N.M.A.~Krishnan, M.~Mausam,
@@ -2318,14 +2331,14 @@ Extracting structured seed-mediated gold nanorod growth procedures from scientif
 Digital Discovery 1 (2022) 413--427.
 
 \bibitem{zhuang2026mkna}
-Y.~Zhuang et al.,
-MKNA: Materials knowledge navigation agent,
-Nat.\ Comput.\ Sci.\ (2026).
+G.~Zhuang, A.~Barati Farimani,
+From natural language to materials discovery: The Materials Knowledge Navigation Agent,
+arXiv preprint arXiv:2602.11123, 2026.
 
 \bibitem{hu2026optimat}
-Y.~Hu et al.,
-OptiMat: On-demand DFT-driven materials optimization,
-npj Comput.\ Mater.\ (2026).
+Y.~Hu, V.~Turlo,
+OptiMat Alloys: A FAIR, living database of multi-principal element alloys enabled by a conversational agent,
+arXiv preprint arXiv:2604.21850, 2026.
 
 \bibitem{ishii2023supercon}
 M.~Ishii et al.,
@@ -2363,9 +2376,9 @@ Materials integration system for process-structure-property-performance chains,
 Sci.\ Technol.\ Adv.\ Mater.\ (2020).
 
 \bibitem{minamoto2026pinax}
-S.~Minamoto,
-pinax: Provenance-tracking analysis workflow management system,
-(2026).
+S.~Minamoto, T.~Kadohira, J.~Fujima, Y.~Fujiwara, A.~Endo, C.~Suematsu, K.~Daimaru, H.~Izuno, J.~Sakurai, M.~Demura,
+pinax: A provenance management system for materials data science,
+Sci.\ Technol.\ Adv.\ Mater.: Methods 6 (2026) 2629051.
 
 \end{thebibliography}
 
@@ -2391,10 +2404,10 @@ pinax: Provenance-tracking analysis workflow management system,
   via Schema-Graph-Constrained Text-to-SQL}\\[0.5em]
   {\large (Japanese title: 無機材料リレーショナルデータベースの自然言語アクセス\\
   ---スキーマグラフ制約型Text-to-SQLによる設計原理と実証---)}\\[1.0em]
-  {\normalsize Satoshi Minamoto}\\[0.3em]
-  {\small National Institute for Materials Science (NIMS),\\
-  1-2-1 Sengen, Tsukuba, Ibaraki 305-0047, Japan}\\[0.3em]
-  {\small \texttt{minamoto.satoshi@nims.go.jp}}
+  {\normalsize Satoshi Minamoto$^{1,*}$ and Chie Suematsu$^{1}$}\\[0.3em]
+  {\small $^{1}$National Institute for Materials Science (NIMS),\\
+  1-1 Namiki, Tsukuba, Ibaraki 305-0044, Japan}\\[0.3em]
+  {\small $^{*}$Corresponding author: \texttt{minamoto.satoshi@nims.go.jp}}
 \end{center}
 \vspace{1.0em}
 \noindent\hrulefill
@@ -2534,7 +2547,7 @@ We compare generated SQL examples for representative queries
 across three method configurations (LLM-only, Full Schema, and
 our method).
 This complements the quantitative comparison in
-Table~\ref{tab:method_comparison} by concretely showing the
+Table~\ref{tab:ablation} by concretely showing the
 qualitative differences in output SQL for each configuration.
 
 \subsection{``List stable L1$_2$ compounds containing Ni''}
@@ -2888,14 +2901,15 @@ in Table~\ref{tab:ablation}. Queries are shown in the original Japanese.
 
 Table~\ref{tab:sup_ablation_diff} shows 35 queries with accuracy
 differences across the 7 ablation conditions
-(single representative run; not the 5-run mean).
+(single diagnostic run, not one of the five runs used for the 5-run
+mean in Table~\ref{tab:ablation}).
 Bold values indicate $> 0.05$ decrease from the full condition.
 $-$FS = no\_fewshot, $-$Dict = no\_dict, $-$RR = no\_reranker,
 $-$GD = no\_guard, $-$NB = no\_nbest, $-$GR = no\_graph.
 
 \begin{table*}[htbp]
 \centering
-\caption{Query-level accuracy differences across ablation conditions (single representative run, not the 5-run mean; 35/100 queries). Bold indicates $> 0.05$ decrease from full condition.}
+\caption{Query-level accuracy differences across ablation conditions (single diagnostic run, not one of the five runs used for the 5-run mean; 35/100 queries). Bold indicates $> 0.05$ decrease from full condition.}
 \label{tab:sup_ablation_diff}
 \scriptsize
 \begin{tabular}{@{}llccccccc@{}}
@@ -2956,7 +2970,7 @@ observed:
     q\_medium\_020, demonstrating the effect of candidate
     selection.
   \item no\_guard ($-$GD) zeroes five CTE queries
-    (q\_vhard\_009/016/018/019/020) in this single run.
+    (q\_vhard\_009/016/018/019/020) in this diagnostic run.
     Across the 5-run average the SQLGuard effect is smaller
     ($-$0.2\,pp, $p=0.891$; Table~\ref{tab:ablation}), but the
     per-run failures show that SQLGuard still functions as a safety
@@ -2973,12 +2987,14 @@ observed:
 Table~\ref{tab:sup_expert_summary} shows the difficulty-stratified
 results for the independently designed 100-query set reported in
 Section~\ref{sec:independent_eval}.
-Difficulty levels are E (Easy), M (Medium), H (Hard), and VH
-(Very Hard).
+The same unified complexity-score thresholds used for the ablation
+queries (defined in \S3.2) are applied here.
 
 \begin{table}[htbp]
   \centering
-  \caption{Independently designed 100-query accuracy by difficulty.}
+  \caption{Independently designed 100-query accuracy by difficulty.
+  Difficulty is determined by the unified complexity score defined in
+  \S3.2.}
   \label{tab:sup_expert_summary}
   \small
   \begin{tabular}{lcc}
