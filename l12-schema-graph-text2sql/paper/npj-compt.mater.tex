@@ -1660,10 +1660,11 @@ to address security risks such as SQL injection.
 
 Ablation conditions can be viewed as simplified methods with one
 component removed (Table~\ref{tab:ablation}).
-The no\_fewshot condition (schema + LLM, no few-shot examples,
-dictionary, or reranker) corresponds to a ``Full Schema'' baseline
-and achieves only 77.3\%, confirming that schema information alone
-is insufficient.
+The no\_fewshot condition removes only the few-shot examples while
+retaining the dictionary and reranker, yet it causes the largest
+single-component accuracy drop to 77.3\%
+(Table~\ref{tab:ablation}), demonstrating that few-shot examples
+provide the dominant contribution.
 The full proposed method reaches 84.7\%.
 
 Because the ablation removes one component at a time, the apparent
@@ -2436,7 +2437,10 @@ Section S9 compares queries with differing results across the 7
 ablation conditions.
 Section S10 reports detailed results for the independently designed
 query pool.
-All values are from \texttt{paper\_data.json}.
+Ablation, transfer, and core validation metrics are taken from
+\texttt{paper\_data.json}; sensitivity analysis, model comparison,
+and multi-axis metrics are formatted from their respective source
+JSON/CSV evaluation outputs.
 
 % =====================================================================
 \section{Unit Test Category Details}
