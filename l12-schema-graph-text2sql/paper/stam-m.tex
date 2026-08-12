@@ -10,9 +10,9 @@
 % Remove before final submission to STAM Methods and translate those examples.
 \usepackage{luatexja}
 \usepackage{url}
-\usepackage{hyperref}
 \usepackage{cite}
 \usepackage{chngcntr}
+\usepackage{hyperref}
 
 \usepackage{graphicx}
 \usepackage{multirow}
@@ -2283,6 +2283,9 @@ review.
 \setcounter{table}{0}
 \setcounter{figure}{0}
 \setcounter{equation}{0}
+\makeatletter
+\def\@seccntformat#1{\csname the#1\endcsname.\hskip 0.5em}
+\makeatother
 
 \begin{center}
   {\LARGE\bfseries Supplementary Materials}\\[0.8em]

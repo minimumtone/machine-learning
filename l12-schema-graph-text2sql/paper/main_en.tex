@@ -1503,19 +1503,24 @@ exploration results:
 Our results reaffirm that the primary barrier to data utilization
 in inorganic materials RDBs lies in understanding the schema
 structure.
-Against a normalized schema of 31 tables, the LLM alone
-(no few-shot examples, no dictionary) achieves only 77.3\%
-accuracy (Table~\ref{tab:ablation}, no\_fewshot condition),
-dropping to 48.3\% on Very Hard queries containing
-domain-specific terminology.
-This demonstrates that merely presenting schema information is
-insufficient to accurately translate materials researchers' intent
-into SQL.
+Against a normalized schema of 31 tables, the model retaining the
+schema, dictionary, and reranker but without few-shot examples
+(no\_fewshot condition) still achieves only 77.3\% accuracy, and
+the model retaining the schema, few-shot examples, and reranker
+but without the dictionary (no\_dict condition) gives a nearly
+equal 77.4\% (Table~\ref{tab:ablation}).
+The Very Hard tier falls to 48.3\% without few-shot examples and
+to 37.1\% without the dictionary, showing that either omission
+severely impairs handling of domain-specific terminology.
+This demonstrates that a schema-aware system cannot accurately
+translate materials researchers' intent into SQL in the absence
+of either few-shot examples or the domain dictionary; both are
+necessary.
 
 A natural language interface can effectively reduce this schema
 barrier.
-Adding the materials domain dictionary and few-shot examples
-improves accuracy from 77.3\% to 84.7\%, with particularly
+The combined use of few-shot examples and the materials domain
+dictionary restores accuracy to 84.7\%, with particularly
 notable gains on complex queries that heavily use
 domain-specific vocabulary.
 This improvement suggests that NL access to inorganic materials
