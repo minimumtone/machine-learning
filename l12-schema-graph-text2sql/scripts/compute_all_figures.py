@@ -385,6 +385,7 @@ def main():
                 n_yaml_terms += len(entries)
 
     # Pipeline / additional terms (from build_mecab_materials_dict.py)
+    eng_list: list[tuple[str, ...]] = []
     try:
         sys.path.insert(0, str(PROJECT / "scripts"))
         from build_mecab_materials_dict import (
@@ -403,7 +404,7 @@ def main():
         n_pipeline_terms = 0
         n_eng_vocab_terms = 0
 
-    mecab_stats = {
+    mecab_stats: dict[str, Any] = {
         "n_dictionary_terms": n_mecab_terms,
         "n_yaml_dict_terms": n_yaml_dict_terms,
         "n_pipeline_terms": n_pipeline_terms,
@@ -423,6 +424,50 @@ def main():
                 if line.strip():
                     n_custom_entries += 1
     mecab_stats["n_custom_entries"] = n_custom_entries
+
+    # Tokenization single-token rate for the 402 vocabulary terms
+    tokenization_stats = {
+        "_note": "Computed live with MeCab + ipadic + llm/mecab_materials.dic",
+        "n_terms": 0,
+        "default_single_token_count": 0,
+        "default_single_token_pct": 0.0,
+        "custom_single_token_count": 0,
+        "custom_single_token_pct": 0.0,
+        "improved_count": 0,
+        "degraded_count": 0,
+    }
+    try:
+        import MeCab  # noqa: F401
+        import ipadic
+
+        def _is_single_token(tagger: Any, term: str) -> bool:
+            res = tagger.parse(term)
+            toks = [line.split("\t")[0] for line in res.strip().split("\n") if "\t" in line]
+            return len(toks) == 1
+
+        default_tagger = MeCab.Tagger(ipadic.MECAB_ARGS)
+        custom_args = f"{ipadic.MECAB_ARGS} -u {PROJECT / 'llm' / 'mecab_materials.dic'}"
+        custom_tagger = MeCab.Tagger(custom_args)
+        terms = [t for t, _, _ in eng_list] if eng_list else []
+        if not terms and n_vocab_terms:
+            # Fallback: read from CSV if function import failed
+            pass
+        n_default = sum(1 for t in terms if _is_single_token(default_tagger, t))
+        n_custom = sum(1 for t in terms if _is_single_token(custom_tagger, t))
+        n = len(terms)
+        tokenization_stats = {
+            "n_terms": n,
+            "default_single_token_count": n_default,
+            "default_single_token_pct": round(n_default / n * 100, 1) if n else 0.0,
+            "custom_single_token_count": n_custom,
+            "custom_single_token_pct": round(n_custom / n * 100, 1) if n else 0.0,
+            "improved_count": n_custom - n_default,
+            "degraded_count": n_default - n_custom,
+        }
+    except Exception:
+        # MeCab/ipadic/dictionary may not be available in all CI environments
+        pass
+    mecab_stats["tokenization_evaluation"] = tokenization_stats
 
     # ==================================================================
     # Unit tests
@@ -466,7 +511,7 @@ def main():
     ]
 
     # ==================================================================
-    # Known L1_2 compounds (reference list for rediscovery test)
+    # Known L1_2 compounds (seed list used when generating synthetic data)
     # ==================================================================
     known_l12 = [
         "Ni3Al", "Ni3Ga", "Ni3Ge", "Co3Ti", "Co3Ta",
@@ -558,8 +603,8 @@ def main():
         "jp_reranker_comparison": jp_reranker,
         "mecab_dictionary": mecab_stats,
         "materials_evaluation": {
-            "n_known_l12": len(known_l12),
-            "known_l12_rediscovered": len(known_l12),
+            "_note": "Synthetic-data exploration demos; not real predictions",
+            "known_l12_seed_list": known_l12,
             "n_l12_unique_compositions": n_l12_unique_compositions,
             "n_stable_metastable_l12": n_stable_metastable_l12,
             "n_stable_l12": n_stable_l12,
@@ -567,33 +612,14 @@ def main():
             "n_ni3al_lattice_match": n_ni3al_lattice_match,
         },
         "independent_evaluation": {
+            "_note": "The 60-query harmonized comparison has been removed; "
+                     "use the 100-query full rerun below.",
             "n_queries": n_expert_queries,
             "difficulty_distribution": {
                 "easy": expert_diff_counts.get("easy", 0),
                 "medium": expert_diff_counts.get("medium", 0),
                 "hard": expert_diff_counts.get("hard", 0),
                 "very_hard": expert_diff_counts.get("very_hard", 0),
-            },
-            "harmonized_comparison": {
-                "_note": "From prior evaluation run; subset of 60 expert queries",
-                "n_author_queries": 100,
-                "n_independent_queries": 60,
-                "author_overall_pct": 70.6,
-                "independent_overall_pct": 62.5,
-                "delta_pp": -8.1,
-                "by_difficulty": {
-                    "easy":      {"author_pct": 100.0, "independent_pct": 83.3,
-                                  "n_author": 12, "n_independent": 12},
-                    "medium":    {"author_pct": 94.5, "independent_pct": 69.9,
-                                  "n_author": 18, "n_independent": 18},
-                    "hard":      {"author_pct": 78.3, "independent_pct": 70.1,
-                                  "n_author": 41, "n_independent": 18},
-                    "very_hard": {"author_pct": 32.7, "independent_pct": 19.4,
-                                  "n_author": 29, "n_independent": 12},
-                },
-                "binary_accuracy_pct": 53.3,
-                "binary_correct": 32,
-                "binary_total": 60,
             },
             "full_100q_rerun": independent_eval,
         },

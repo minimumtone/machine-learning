@@ -2,8 +2,8 @@
   "_meta": {
     "description": "Single source of truth for paper numerical values",
     "generated_by": "scripts/compute_all_figures.py",
-    "generated_at": "2026-08-09 02:24:51 UTC",
-    "git_commit": "1cee44a0bbf019a120a56b2c279ac5d89915984b",
+    "generated_at": "2026-08-12 05:20:10 UTC",
+    "git_commit": "b10abf74e5ff58e2e9328d2d444a8d7ceb5bd18b",
     "source_files": [
       "evaluation/ablation_multirun_stats.json",
       "evaluation/ablation_run_1.json",
@@ -245,17 +245,38 @@
     "jp_xsmall_latency_s": 65.9
   },
   "mecab_dictionary": {
-    "n_dictionary_terms": 497,
+    "n_dictionary_terms": 492,
     "n_yaml_dict_terms": 74,
     "n_pipeline_terms": 66,
     "n_eng_vocab_terms": 402,
     "n_vocab_source_terms": 525,
     "n_yaml_terms": 93,
-    "n_custom_entries": 497
+    "n_custom_entries": 492,
+    "tokenization_evaluation": {
+      "n_terms": 402,
+      "default_single_token_count": 123,
+      "default_single_token_pct": 30.6,
+      "custom_single_token_count": 402,
+      "custom_single_token_pct": 100.0,
+      "improved_count": 279,
+      "degraded_count": -279
+    }
   },
   "materials_evaluation": {
-    "n_known_l12": 11,
-    "known_l12_rediscovered": 11,
+    "_note": "Synthetic-data exploration demos; not real predictions",
+    "known_l12_seed_list": [
+      "Ni3Al",
+      "Ni3Ga",
+      "Ni3Ge",
+      "Co3Ti",
+      "Co3Ta",
+      "Co3Al",
+      "Co3W",
+      "Al3Sc",
+      "Al3Ti",
+      "Pt3Al",
+      "Ir3Nb"
+    ],
     "n_l12_unique_compositions": 259,
     "n_stable_metastable_l12": 162,
     "n_stable_l12": 8,
@@ -263,49 +284,13 @@
     "n_ni3al_lattice_match": 31
   },
   "independent_evaluation": {
+    "_note": "The 60-query harmonized comparison has been removed; use the 100-query full rerun below.",
     "n_queries": 100,
     "difficulty_distribution": {
       "easy": 18,
       "medium": 34,
       "hard": 34,
       "very_hard": 14
-    },
-    "harmonized_comparison": {
-      "_note": "From prior evaluation run; subset of 60 expert queries",
-      "n_author_queries": 100,
-      "n_independent_queries": 60,
-      "author_overall_pct": 70.6,
-      "independent_overall_pct": 62.5,
-      "delta_pp": -8.1,
-      "by_difficulty": {
-        "easy": {
-          "author_pct": 100.0,
-          "independent_pct": 83.3,
-          "n_author": 12,
-          "n_independent": 12
-        },
-        "medium": {
-          "author_pct": 94.5,
-          "independent_pct": 69.9,
-          "n_author": 18,
-          "n_independent": 18
-        },
-        "hard": {
-          "author_pct": 78.3,
-          "independent_pct": 70.1,
-          "n_author": 41,
-          "n_independent": 18
-        },
-        "very_hard": {
-          "author_pct": 32.7,
-          "independent_pct": 19.4,
-          "n_author": 29,
-          "n_independent": 12
-        }
-      },
-      "binary_accuracy_pct": 53.3,
-      "binary_correct": 32,
-      "binary_total": 60
     },
     "full_100q_rerun": {
       "model": "gpt-5.5",
@@ -439,7 +424,7 @@
     },
     {
       "name": "Domain dictionary",
-      "model": "material_terms.yaml + entity_extractor (497 terms)"
+      "model": "material_terms.yaml + entity_extractor (492 terms)"
     },
     {
       "name": "Repair loop",
