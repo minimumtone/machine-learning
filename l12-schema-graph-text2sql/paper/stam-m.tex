@@ -12,6 +12,7 @@
 \usepackage{url}
 \usepackage{hyperref}
 \usepackage{cite}
+\usepackage{chngcntr}
 
 \usepackage{graphicx}
 \usepackage{multirow}
@@ -2275,6 +2276,9 @@ review.
 \renewcommand{\thetable}{S\arabic{table}}
 \renewcommand{\thefigure}{S\arabic{figure}}
 \renewcommand{\theequation}{S\arabic{equation}}
+\counterwithout*{table}{section}
+\counterwithout*{figure}{section}
+\counterwithout*{equation}{section}
 \setcounter{section}{0}
 \setcounter{table}{0}
 \setcounter{figure}{0}
