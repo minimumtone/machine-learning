@@ -13,6 +13,7 @@ import os
 import numpy as np
 import pandas as pd
 from ase.io import read
+import spglib
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 AN = os.path.join(BASE, "analysis")
@@ -28,7 +29,9 @@ exp = {
     "Al": {"lattice": (4.050, 4.050, 4.050), "source": "exp fcc-Al"},
     "B2_NiAl": {"lattice": (2.887, 2.887, 2.887), "source": "Yamanouchi Fig. 6(a)"},
     "L12_Ni3Al": {"lattice": (3.572, 3.572, 3.572), "source": "exp L1$_2$-Ni$_3$Al"},
-    "Ni5Al3": {"lattice": (3.857, 4.956, 4.956), "source": "Bradley & Taylor 1937"},
+    # Khadkikar & Vedula (binary Ni65.3Al34.7), Pt5Ga3-type orthorhombic:
+    # conventional cell a=7.475 Å, b=3.732 Å, c=6.727 Å, sorted ascending below.
+    "Ni5Al3": {"lattice": (3.732, 6.727, 7.475), "source": "Khadkikar & Vedula; Pt5Ga3-type"},
     "Ni2Al3": {"lattice": (4.036, 4.036, 4.888), "source": "Bradley & Taylor 1937; hP5 P$\\bar{3}$m1"},
     "NiAl3": {"lattice": (4.811, 6.613, 7.367), "source": "Viklund, Hau\u00dfmann & Lidin 1996; Pnma"},
     "Ni3Al4": {"lattice": (11.408, 11.408, 11.408), "source": "Bradley & Taylor 1937; I$\\bar{4}$3d"},
@@ -38,13 +41,30 @@ exp = {
 def conventional_sorted_lengths(atoms):
     """Return the three conventional cell edges in ascending order.
 
-    Handles the standard primitive cells returned by ASE for fcc
-    (1-atom primitive) and the bcc-like rhombohedral primitive of Ni3Al4
-    (I-43d primitive).
+    For primitive/high-symmetry cells returned by ASE and Materials Project,
+    spglib is used to obtain the standard conventional cell.  Where spglib
+    fails, the original ASE primitive handling (fcc/bcc-rhombohedral) is used.
     """
     lengths = atoms.get_cell().lengths()
     angles = atoms.get_cell().angles()
     n = len(atoms)
+
+    # Try spglib conventional standardisation first.
+    try:
+        lattice = atoms.get_cell().array
+        positions = atoms.get_scaled_positions()
+        numbers = atoms.get_atomic_numbers()
+        std = spglib.standardize_cell((lattice, positions, numbers),
+                                       to_primitive=False, no_idealize=False)
+        if std is None:
+            std = spglib.standardize_cell((lattice, positions, numbers),
+                                           to_primitive=False, no_idealize=True)
+        if std is not None:
+            conv_lengths = np.sqrt(np.sum(std[0]**2, axis=1))
+            return tuple(sorted(conv_lengths))
+    except Exception:
+        pass
+
     # fcc 1-atom primitive (angles ~ 60 degrees)
     if n == 1 and all(abs(a - 60.0) < 5.0 for a in angles):
         a_conv = lengths[0] * np.sqrt(2.0)
@@ -71,7 +91,7 @@ def read_lengths(path):
 def fmt_tuple(t, ndigits=3):
     if t is None:
         return ("—", "—", "—")
-    return tuple(str(round(v, ndigits)) for v in t)
+    return tuple(str(round(float(v), ndigits)) for v in t)
 
 
 rows = []

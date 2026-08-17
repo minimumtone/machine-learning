@@ -2,17 +2,21 @@
 """Overlay MACE lattice constant a(x) on Taylor & Doyle (1972) primary data.
 
 Taylor & Doyle, J. Appl. Cryst. 5 (1972) 201, report linear lattice-parameter
-fits for the beta-NiAl phase field (from the article abstract):
+fits for the beta-NiAl phase field; the NASA review TM-105598 (Noebe et al.)
+explicitly gives the two regression ranges (Noebe et al., NASA Lewis, 1992):
 
-  * Ni-rich side (50 at.% Ni -> 66 at.% Ni)
+  * Ni-rich side (50 <= at.% Ni <= 66)
       a [Å] = 2.8870 + (2.8618-2.8870)/(0.66-0.50) * (x_Ni - 0.50)
-            = 2.8870 + 0.1575 * (x_Ni - 0.50)
       with 2.00 atoms per unit cell.
 
-  * Al-rich side (50 at.% Ni -> 34 at.% Ni)
-      a [Å] = 2.8870 + (2.8652-2.8870)/(0.34-0.50) * (x_Ni - 0.50)
-            = 2.8870 - 0.13625 * (x_Ni - 0.50)
-      with the number of atoms per unit cell falling from 2.00 to 1.817.
+  * Al-rich side (45 <= at.% Ni <= 50)
+      a [Å] = 2.8870 + (2.8652-2.8870)/(0.45-0.50) * (x_Ni - 0.50)
+      with the number of atoms per unit cell falling from 2.00 to 1.817
+      at x_Al = 0.55 (45 at.% Ni).
+
+The Al-rich fit is physically reliable only between x_Al = 0.50 and 0.55;
+continuing it to 0.66 is an extrapolation.  The atom-per-cell count follows
+the structural-vacancy model, n_cell = 1/x_Al, on the Al-rich side.
 
 Here x_Al = 1 - x_Ni.  We compare the MACE lower-Helmholtz branch to these
 reconstructed experimental lines and report slopes da/dx and dV/dx on the
@@ -36,13 +40,26 @@ plt.rcParams.update({'font.size': 16, 'axes.grid': True, 'grid.alpha': 0.3,
 
 # --- Taylor & Doyle linear reconstruction ------------------------------------
 def a_taylor_doyle(x_Al):
+    """Taylor & Doyle (1972) primary linear a(x) reconstruction.
+
+    Endpoint conventions:
+      * 50 <= at.% Ni <= 66 : a = 2.8870 -> 2.8618 (Ni-rich, x_Al 0.50 -> 0.34)
+      * 45 <= at.% Ni <= 50 : a = 2.8652 -> 2.8870 (Al-rich, x_Al 0.55 -> 0.50)
+
+    The Al-rich endpoint 2.8652 Å corresponds to 45 at.% Ni (x_Al = 0.55),
+    which is the Al-rich B2 single-phase limit seen by density measurements.
+    Using the 34 at.% Ni (x_Al = 0.66) endpoint that appears in some older
+    reproductions makes the Al-rich slope far too shallow.
+    """
     x_Ni = 1.0 - x_Al
     if x_Al <= 0.5:
         a = 2.8870 + (2.8618 - 2.8870) / (0.66 - 0.50) * (x_Ni - 0.50)
         n_cell = 2.00
     else:
-        a = 2.8870 + (2.8652 - 2.8870) / (0.34 - 0.50) * (x_Ni - 0.50)
-        n_cell = 2.00 + (1.817 - 2.00) / (0.34 - 0.50) * (x_Ni - 0.50)
+        a = 2.8870 + (2.8652 - 2.8870) / (0.45 - 0.50) * (x_Ni - 0.50)
+        # structural-vacancy model: one atom per x_Al * a^3 unit cell
+        # is equivalent to 1/x_Al atoms per B2 formula cell on the Al-rich side.
+        n_cell = 1.0 / x_Al
     return a, n_cell
 
 # --- MACE stable branch ------------------------------------------------------

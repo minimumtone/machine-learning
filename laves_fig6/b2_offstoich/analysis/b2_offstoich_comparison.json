@@ -11,7 +11,7 @@
   "V_B2_perfect": 11.974527545032217,
   "a_B2_perfect": 2.882456714930723,
   "T_boltzmann_K": 1473.0,
-  "weight_method": "Lower Helmholtz free energy per occupied atom G_i; total Omega_i = N_atom * G_i reported for reference (ordering not preserved when N_atom differs)",
+  "weight_method": "Lower Helmholtz free energy per occupied atom G_i at fixed composition; total Omega_i = N_atom * G_i reported for reference but not used for branch selection because total Omega ordering is not preserved across branches with different N_atom",
   "branch_preference": {
     "0.20": {
       "selected_branch": "antisite",
