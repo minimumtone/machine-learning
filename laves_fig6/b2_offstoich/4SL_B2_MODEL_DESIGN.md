@@ -32,8 +32,8 @@ MACE-MP-0 medium（0 K 静的緩和、FrechetCellFilter、128 サイト超胞）
 |---|---|---|
 | G(Ni:Al) | 完全 B2-NiAl | MACE E(NiAl-B2)/formula = -10.844 eV |
 | G(Al:Ni) | 反 B2-NiAl（Al/Ni サブラティス入れ替え） | = G(Ni:Al)（B2 は C.N.8 対称） |
-| G(Ni:Ni) | 反サイトに近い Ni 過剰极限 | A2-Ni（bcc）への外挿 or x→0.5 Ni-rich 極限 |
-| G(Al:Al) | Al 過剰极限 | A2-Al（bcc）への外挿 or x→0.5 Al-rich 極限 |
+| G(Ni:Ni) | 反サイトに近い Ni 過剰極限 | A2-Ni（bcc）への外挿 or x→0.5 Ni-rich 極限 |
+| G(Al:Al) | Al 過剰極限 | A2-Al（bcc）への外挿 or x→0.5 Al-rich 極限 |
 | G(Va:Al) | Ni 欠損 Al 過剰（Al-rich 空孔） | G(Ni:Al) + n_sites/2 · E_Ni_vac |
 | G(Ni:Va) | Al 欠損 Ni 過剰（Ni-rich 空孔） | G(Ni:Al) + n_sites/2 · E_Al_vac |
 
@@ -55,6 +55,8 @@ MACE-MP-0 medium（0 K 静的緩和、FrechetCellFilter、128 サイト超胞）
 2. B2/B32/DO3/A2 などのさまざまな秩序度を同一モデルで扱える。
 
 8 サブラティスはさらに最近接対を細かく区別し、**第一近接 Ni–Al / Ni–Ni / Al–Al 対エネルギー**を別々のパラメータに結びつける。MLIP からは `icet` 等のクラスター展開でこれらの対相互作用を直接抽出できる。
+
+**副格子置換対称性**: 4SL/8SL CEF では，等価なサブラティス（例：α1 と α2，β1 と β2）の置換に対してモデルの総 Gibbs エネルギーが不変でなければならない（Ansara / Dupin / Sundman）。この対称性を課さないと，エンドメンバー数が過剰決定となり，実在しない低対称性の偽秩序相が計算上出現しうる。TDB 化する際は，各等価サブラティス群に対して同じ Gibbs 関数を割り当てるか，対称性に基づくエンドメンバーの縮約が必要である。
 
 ## 4. MLIP → エンドメンバー・パラメータ変換の手順
 
@@ -109,23 +111,21 @@ MACE-MP-0 から $E_{\rm B2} \approx -10.844$ eV/formula、$E_{\rm A2}$ は $b2\
 
 $$ \Delta E_{\rm order} \approx +0.35\text{–}0.40 \text{ eV/formula} $$
 
-単一点欠陥形成エネルギーからさらに $J_{\rm NiNi}$, $J_{\rm AlAl}$ の制約が得られる。例えば、Ni 反サイト（Ni on Al サイト）を 1 つ作ると周囲 8 本の Ni–Al 結合の一部が Ni–Ni / Al–Al に置き換わる。正確なカウントは 8 サブラティス / クラスター展開が必要だが、**数量級として $J_{\rm NiAl}$ は $J_{\rm NiNi}$, $J_{\rm AlAl}$ より約 0.1 eV 強く負**（Ni–Al 結合が優先的）。
+重要なことは，個別の $J_{ij}$ の絶対値ではなく，Ni–Al 結合が他の結合よりどれだけ強い負かを表す **秩序化強度（effective ordering energy）**
 
-### 現状の推定値（`b2_pair_interactions.json`）
+$$ V = J_{\rm NiAl} - \frac{J_{\rm NiNi} + J_{\rm AlAl}}{2} $$
 
-平均点欠陥エネルギーと秩序化エネルギーから定数対近似で推定：
+のみが物理的に意味を持つ。現状の簡易 Ising 外挿では
 
-| 相互作用 | 値 (eV/結合) |
-|---|---|
-| $J_{\rm NiAl}$ | -1.356 |
-| $J_{\rm NiNi}$ | -1.257 |
-| $J_{\rm AlAl}$ | -1.157 |
+$$ V \approx -0.1 \text{ 〜 } -0.15 \ {\rm eV/bond} $$
 
-定数対モデルから予測される A2 エネルギーは -10.249 eV/formula、観測は -10.493 eV/formula となり、**定数対モデルでは秩序化エネルギーを 0.25 eV/formula 過大評価**する。これは濃度が高い点欠陥での相互作用（反サイト同士・空孔同士）を無視しているためで、4SL/8SL モデルでは組成依存な $L$ パラメータで補正する必要がある。
+（Ni–Al 結合が他より約 0.1 eV 強く負）という数量級が得られる。個別の $J_{\rm NiAl}, J_{\rm NiNi}, J_{\rm AlAl}$ については A2 端成分やクラスター展開なしには決定できないため，**3 つの $J$ 値を表にするのは避け，$V$ の値のみを報告する**。
+
+定数対モデルには明らかな制限がある：$E_{\rm A2}$ の予測は観測より 0.25 eV/formula 高くなり，高濃度反サイト/空孔同士の相互作用を見落としている。これは 4SL/8SL モデルでは組成依存な $L$ パラメータで補正するか，`icet` クラスター展開で対相互作用を直接抽出する必要がある。
 
 ## 8. 成果物
 
 - `b2_offstoich/analysis/b2_defect_energies.csv`（各配置の空孔/反サイト形成エネルギー）
 - 本設計書 `4SL_B2_MODEL_DESIGN.md`
-- `b2_offstoich/extract_4sl_b2_parameters.py`（対相互作用の簡易推定）
-- `b2_offstoich/analysis/b2_pair_interactions.json`
+- `b2_offstoich/extract_4sl_b2_parameters.py`（秩序化強度 $V$ の簡易推定）
+- `b2_offstoich/analysis/b2_pair_interactions.json`（$V$ の値のみを使用。個別 $J$ 表は非推奨）

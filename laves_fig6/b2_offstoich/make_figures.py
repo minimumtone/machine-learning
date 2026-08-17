@@ -103,15 +103,24 @@ def n_defect(row):
     return 0
 
 
-def omega_total(row):
-    """Semi-grand potential for the whole supercell, including kT ln g."""
+def omega_per_atom(row):
+    """
+    Helmholtz free energy per occupied atom in semi-grand form.
+
+    E_f = (E - mu_Ni N_Ni - mu_Al N_Al) / N_atoms  is the formation
+    energy per atom relative to fcc elements.  The configurational
+    entropy per atom is -k_B T ln(g) / N_atoms.  The branch with the
+    lower value is thermodynamically preferred for a given composition
+    at fixed temperature and pressure.
+    """
     e = row.energy_eV
     g = n_defect(row)
-    return e - MU_NI * row.n_Ni - MU_AL * row.n_Al - KT_EV * ln_comb(NCELL, g)
+    n = row.n_atoms
+    return (e - MU_NI * row.n_Ni - MU_AL * row.n_Al) / n - KT_EV * ln_comb(NCELL, g) / n
 
 
 df["n_defect"] = df.apply(n_defect, axis=1)
-df["Omega_eV"] = df.apply(omega_total, axis=1)
+df["Omega_per_atom_eV"] = df.apply(omega_per_atom, axis=1)
 
 # aggregate per composition/branch
 agg_rows = []
@@ -121,26 +130,35 @@ for (x, br), g in df[df.branch != "perfect"].groupby(["x_Al_target", "branch"]):
         "x_Al": g.x_Al.mean(), "V": g.V_per_atom_A3.mean(),
         "Vstd": g.V_per_atom_A3.std(ddof=1) if len(g) > 1 else 0.0,
         "a": g.a_eff_A.mean(), "astd": g.a_eff_A.std(ddof=1) if len(g) > 1 else 0.0,
-        "Ef": g.E_form_eV_atom.mean(), "Omega": g.Omega_eV.mean(),
-        "Omega_std": g.Omega_eV.std(ddof=1) if len(g) > 1 else 0.0,
+        "Ef": g.E_form_eV_atom.mean(),
+        "Omega": g.Omega_per_atom_eV.mean(),
+        "Omega_std": g.Omega_per_atom_eV.std(ddof=1) if len(g) > 1 else 0.0,
+        "n_atoms": int(round(g.n_atoms.mean())),
         "n": len(g),
     })
 agg = pd.DataFrame(agg_rows)
 
-# branch mixture from semi-grand free energies
+# branch mixture from per-atom semi-grand free energies
+# Only include target compositions where *both* branches were computed so that
+# the mixed curve reflects a real competition rather than a single-branch fallback.
 mix_rows = []
 for x, g in agg.groupby("x_Al_target"):
     g = g.set_index("branch")
-    if {"antisite", "vacancy"} <= set(g.index):
+    avail = set(g.index)
+    if {"antisite", "vacancy"} <= avail:
         dOmega = g.loc["vacancy", "Omega"] - g.loc["antisite", "Omega"]
-        w_vac = 1.0 / (1.0 + np.exp(dOmega / KT_EV))
+        N_bar = 0.5 * (g.loc["vacancy", "n_atoms"] + g.loc["antisite", "n_atoms"])
+        w_vac = 1.0 / (1.0 + np.exp(dOmega * N_bar / KT_EV))
+        x_Al_val = w_vac * g.loc["vacancy", "x_Al"] + (1 - w_vac) * g.loc["antisite", "x_Al"]
+        V_val = w_vac * g.loc["vacancy", "V"] + (1 - w_vac) * g.loc["antisite", "V"]
+        a_val = w_vac * g.loc["vacancy", "a"] + (1 - w_vac) * g.loc["antisite", "a"]
         mix_rows.append(dict(
             x_Al_target=x,
-            x_Al=w_vac * g.loc["vacancy", "x_Al"] + (1 - w_vac) * g.loc["antisite", "x_Al"],
-            V_mix=w_vac * g.loc["vacancy", "V"] + (1 - w_vac) * g.loc["antisite", "V"],
-            a_mix=w_vac * g.loc["vacancy", "a"] + (1 - w_vac) * g.loc["antisite", "a"],
+            x_Al=x_Al_val,
+            V_mix=V_val,
+            a_mix=a_val,
             w_vac=w_vac,
-            preferred="vacancy" if dOmega < 0 else "antisite",
+            preferred="vacancy" if w_vac > 0.5 else "antisite",
             dOmega_eV=dOmega,
         ))
 mix = pd.DataFrame(mix_rows).sort_values("x_Al_target")
@@ -239,28 +257,32 @@ plt.savefig(os.path.join(FIG, "fig_b2_offstoich_eform.png"), dpi=150)
 plt.close()
 
 # --- quantitative comparison -------------------------------------------------
+# Compare against the B2 homogeneous range only (0.45 <= x_Al <= 0.60).
+# Points beyond 0.60 correspond to intermetallic compounds (Ni2Al3/NiAl3)
+# rather than the B2 single-phase branch.
+X_B2_MIN = 0.45
+X_B2_MAX = 0.60
 xs = np.concatenate([mix.x_Al.values, [0.5]])
 vs = np.concatenate([mix.V_mix.values, [perfect.V_per_atom_A3]])
 order = np.argsort(xs)
 xs, vs = xs[order], vs[order]
-mask = (exp_b2.x_Al >= xs.min()) & (exp_b2.x_Al <= xs.max())
-ve = exp_b2[mask]
+ve = exp_b2[(exp_b2.x_Al >= X_B2_MIN) & (exp_b2.x_Al <= X_B2_MAX)].copy()
 pred = np.interp(ve.x_Al, xs, vs)
 resid = pred - ve.V_bar_A3.values
 rmse = float(np.sqrt(np.mean(resid ** 2)))
 mape = float(np.mean(np.abs(resid) / ve.V_bar_A3.values) * 100)
 
 out = dict(
-    n_exp_points_compared=int(mask.sum()),
+    n_exp_points_compared=int(len(ve)),
     RMSE_V_A3=round(rmse, 4),
     MAPE_V_pct=round(mape, 3),
     V_B2_perfect=float(perfect.V_per_atom_A3),
     a_B2_perfect=float(perfect.a_eff_A),
     T_boltzmann_K=T_ANNEAL_K,
-    weight_method="semi-grand canonical with fixed lattice sites and analytic configurational entropy",
+    weight_method="Helmholtz free energy per occupied atom (semi-grand canonical with analytic configurational entropy)",
     branch_preference={f"{r.x_Al_target:.2f}": dict(preferred=r.preferred,
                                                     w_vacancy_annealT=round(float(r.w_vac), 4),
-                                                    dOmega_eV=round(float(r.dOmega_eV), 4))
+                                                    dOmega_eV=round(float(r.dOmega_eV), 4) if not pd.isna(r.dOmega_eV) else None)
                        for r in mix.itertuples()},
 )
 agg.to_csv(os.path.join(AN, "b2_offstoich_branch_means.csv"), index=False)

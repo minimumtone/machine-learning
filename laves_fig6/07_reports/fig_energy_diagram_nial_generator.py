@@ -26,7 +26,7 @@ plt.rcParams.update({'font.size': 20, 'axes.grid': True, 'grid.alpha': 0.3,
 # --- pure-element and compound references (MACE-relaxed) ----------------------
 mace_ref = pd.read_csv(os.path.join(AN_B2, 'mace_mp_ref_results.csv'))
 mace_ref['x_Al'] = mace_ref.n_Al / mace_ref.n_atoms
-compounds = mace_ref[mace_ref.label.isin(['L12_Ni3Al', 'Ni5Al3', 'Ni2Al3', 'NiAl3', 'B2_NiAl'])]
+compounds = mace_ref[mace_ref.label.isin(['L12_Ni3Al', 'Ni3Al4', 'Ni5Al3', 'Ni2Al3', 'NiAl3', 'B2_NiAl'])]
 
 # --- fcc-SQS ------------------------------------------------------------------
 sqs = pd.read_csv(os.path.join(AN_NI, 'niall_fcc_sqs.csv'))
@@ -114,11 +114,12 @@ chain = sorted(chain, key=lambda i: pts[i, 0])
 # --- plot --------------------------------------------------------------------
 fig, ax = plt.subplots(figsize=(13, 9))
 ax.plot(pts[chain, 0], pts[chain, 1], 'k--', lw=2.5,
-        label='凸包（0 K 安定性、L1$_2$/Ni$_5$Al$_3$/Ni$_2$Al$_3$/NiAl$_3$ 含む）')
+        label='凸包（0 K 安定性、L1$_2$/Ni$_3$Al$_4$/Ni$_5$Al$_3$/Ni$_2$Al$_3$/NiAl$_3$ 含む）')
 
 # intermetallic compounds
-comp_label = {'L12_Ni3Al': r"L1$_2$-Ni$_3$Al", 'Ni5Al3': r"Ni$_5$Al$_3$",
-              'Ni2Al3': r"Ni$_2$Al$_3$", 'NiAl3': r"NiAl$_3$", 'B2_NiAl': r"B2-NiAl"}
+comp_label = {'L12_Ni3Al': r"L1$_2$-Ni$_3$Al", 'Ni3Al4': r"Ni$_3$Al$_4$",
+              'Ni5Al3': r"Ni$_5$Al$_3$", 'Ni2Al3': r"Ni$_2$Al$_3$",
+              'NiAl3': r"NiAl$_3$", 'B2_NiAl': r"B2-NiAl"}
 for _, r in compounds.iterrows():
     ax.plot([r.x_Al], [r.formation_energy_per_atom_eV], 'D', ms=11,
             color='tab:green', zorder=6)
