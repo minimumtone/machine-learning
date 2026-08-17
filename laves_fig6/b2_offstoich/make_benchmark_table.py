@@ -1,9 +1,18 @@
 #!/usr/bin/env python3
 """Benchmark MACE-MP-0 medium against MP PBE and experimental lattice constants.
 
-Outputs `BENCHMARK_MACE_vs_MP_vs_EXP.md`.
+Outputs `analysis/BENCHMARK_MACE_vs_MP_vs_EXP.md`.
+
+For cubic phases the table shows the conventional lattice constant a; for
+non-cubic phases the three independent cell edges (sorted ascending) are shown
+so that the cell shape is captured without assuming a particular axis
+labelling convention.
 """
-import json, os, pandas as pd, numpy as np
+import json
+import os
+import numpy as np
+import pandas as pd
+from ase.io import read
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 AN = os.path.join(BASE, "analysis")
@@ -12,70 +21,133 @@ mace = pd.read_csv(os.path.join(AN, "mace_mp_ref_results.csv"))
 with open(os.path.join(AN, "mp_reference_structures.json")) as f:
     mp = {r["label"]: r for r in json.load(f)}
 
-# experimental values (accepted literature / Yamanouchi Fig. 6 calibrations)
+# experimental conventional lattice constants (sorted ascending a <= b <= c).
+# Cubic phases have a == b == c.
 exp = {
-    "Ni": {"a_A": 3.524, "V_A3": 10.94, "source": "exp fcc-Ni"},
-    "Al": {"a_A": 4.050, "V_A3": 16.61, "source": "exp fcc-Al"},
-    "B2_NiAl": {"a_A": 2.887, "V_A3": 12.02, "source": "Yamanouchi Fig. 6(a)"},
-    "L12_Ni3Al": {"a_A": 3.572, "V_A3": 11.40, "source": "exp L1_2-Ni_3Al"},
+    "Ni": {"lattice": (3.524, 3.524, 3.524), "source": "exp fcc-Ni"},
+    "Al": {"lattice": (4.050, 4.050, 4.050), "source": "exp fcc-Al"},
+    "B2_NiAl": {"lattice": (2.887, 2.887, 2.887), "source": "Yamanouchi Fig. 6(a)"},
+    "L12_Ni3Al": {"lattice": (3.572, 3.572, 3.572), "source": "exp L1$_2$-Ni$_3$Al"},
+    "Ni5Al3": {"lattice": (3.857, 4.956, 4.956), "source": "Bradley & Taylor 1937"},
+    "Ni2Al3": {"lattice": (4.036, 4.036, 4.888), "source": "Bradley & Taylor 1937; hP5 P$\\bar{3}$m1"},
+    "NiAl3": {"lattice": (4.811, 6.613, 7.367), "source": "Viklund, Hau\u00dfmann & Lidin 1996; Pnma"},
+    "Ni3Al4": {"lattice": (11.408, 11.408, 11.408), "source": "Bradley & Taylor 1937; I$\\bar{4}$3d"},
 }
 
-# For cubic structures, convert the primitive/conventional cell volume to a.
-# MACE returns the *total* cell volume; fcc elements from MP are 1-atom primitive cells.
-conv_mult = {"Ni": 4, "Al": 4, "B2_NiAl": 1, "L12_Ni3Al": 1}
 
-def a_from_v(name, v, n):
-    m = conv_mult.get(name)
-    if m is None:
-        return np.nan
-    # if MP cell already has 4 conventional atoms, use total volume directly.
-    if n == 1 and m == 4:
-        return (v * m) ** (1.0/3.0)
-    return (v) ** (1.0/3.0)
+def conventional_sorted_lengths(atoms):
+    """Return the three conventional cell edges in ascending order.
+
+    Handles the standard primitive cells returned by ASE for fcc
+    (1-atom primitive) and the bcc-like rhombohedral primitive of Ni3Al4
+    (I-43d primitive).
+    """
+    lengths = atoms.get_cell().lengths()
+    angles = atoms.get_cell().angles()
+    n = len(atoms)
+    # fcc 1-atom primitive (angles ~ 60 degrees)
+    if n == 1 and all(abs(a - 60.0) < 5.0 for a in angles):
+        a_conv = lengths[0] * np.sqrt(2.0)
+        return (a_conv, a_conv, a_conv)
+    # bcc-like rhombohedral primitive (angles ~ 109.47 degrees)
+    if (all(abs(li - lengths[0]) < 1e-3 for li in lengths) and
+        all(abs(ai - 109.47) < 2.0 for ai in angles)):
+        a_conv = 2.0 * lengths[0] / np.sqrt(3.0)
+        return (a_conv, a_conv, a_conv)
+    # orthorhombic / tetragonal / trigonal conventional cells
+    return tuple(sorted(lengths))
+
+
+def read_lengths(path):
+    if not path or not os.path.exists(path):
+        return None
+    try:
+        atoms = read(path)
+        return conventional_sorted_lengths(atoms)
+    except Exception:
+        return None
+
+
+def fmt_tuple(t, ndigits=3):
+    if t is None:
+        return ("—", "—", "—")
+    return tuple(str(round(v, ndigits)) for v in t)
+
 
 rows = []
 for _, r in mace.iterrows():
     name = r.label
     m = mp.get(name, {})
-    a_mace = a_from_v(name, r.volume_A3, r.n_atoms)
-    if name in exp:
-        a_exp = exp[name]["a_A"]
-        err_mace_pct = (a_mace - a_exp) / a_exp * 100
+    mace_tuple = read_lengths(os.path.join(AN, f"mace_{name}.extxyz"))
+    mp_tuple = read_lengths(m.get("structure_file"))
+    exp_tuple = exp.get(name, {}).get("lattice")
+
+    if exp_tuple and mace_tuple:
+        # signed percent error for each axis, then mean absolute
+        err = [100.0 * (mm - ee) / ee for mm, ee in zip(mace_tuple, exp_tuple)]
+        err_str = " / ".join(f"{e:+.2f}" for e in err)
+        mean_err = round(np.mean(np.abs(err)), 2)
     else:
-        a_exp = np.nan
-        err_mace_pct = np.nan
-    if m and "volume_per_atom_A3" in m:
-        mp_total_v = m["volume_per_atom_A3"] * m["n_atoms"]
-        a_mp = a_from_v(name, mp_total_v, m["n_atoms"])
-    else:
-        a_mp = np.nan
+        err_str = "—"
+        mean_err = np.nan
+
+    structure_disp = name
+    for s, repl in [("B2_NiAl", "B2-NiAl"), ("L12_Ni3Al", "L1$_2$-Ni$_3$Al"),
+                    ("Ni3Al4", "Ni$_3$Al$_4$"), ("Ni5Al3", "Ni$_5$Al$_3$"),
+                    ("Ni2Al3", "Ni$_2$Al$_3$"), ("NiAl3", "NiAl$_3$")]:
+        structure_disp = structure_disp.replace(s, repl)
+
+    m_a, m_b, m_c = fmt_tuple(mace_tuple)
+    p_a, p_b, p_c = fmt_tuple(mp_tuple)
+    e_a, e_b, e_c = fmt_tuple(exp_tuple)
+
     rows.append({
-        "Structure": name.replace("B2_NiAl", "B2-NiAl").replace("L12_Ni3Al", "L1$_2$-Ni$_3$Al"),
+        "Structure": structure_disp,
         "x_Al": r.n_Al / r.n_atoms,
-        "MACE a (Å)": round(a_mace, 4),
-        "MP PBE a (Å)": round(a_mp, 4) if not np.isnan(a_mp) else "—",
-        "Exp a (Å)": round(a_exp, 3) if not np.isnan(a_exp) else "—",
-        "MACE error vs exp (%)": round(err_mace_pct, 2) if not np.isnan(err_mace_pct) else "—",
+        "MACE a (Å)": m_a,
+        "MACE b (Å)": m_b,
+        "MACE c (Å)": m_c,
+        "MP PBE a (Å)": p_a,
+        "MP PBE b (Å)": p_b,
+        "MP PBE c (Å)": p_c,
+        "Exp a (Å)": e_a,
+        "Exp b (Å)": e_b,
+        "Exp c (Å)": e_c,
+        "MACE err vs exp (%)": err_str,
+        "|err| mean (%)": round(mean_err, 2) if not np.isnan(mean_err) else "—",
         "MACE E_f (eV/atom)": round(r.formation_energy_per_atom_eV, 3),
         "MP E_f (eV/atom)": round(m.get("formation_energy_per_atom_eV", np.nan), 3) if m else "—",
     })
 
 df = pd.DataFrame(rows)
 
+cols = ["Structure", "x_Al",
+        "MACE a (Å)", "MACE b (Å)", "MACE c (Å)",
+        "MP PBE a (Å)", "MP PBE b (Å)", "MP PBE c (Å)",
+        "Exp a (Å)", "Exp b (Å)", "Exp c (Å)",
+        "MACE err vs exp (%)", "|err| mean (%)",
+        "MACE E_f (eV/atom)", "MP E_f (eV/atom)"]
+df = df[cols]
+
+
 def to_md(d):
     cols = list(d.columns)
     header = " | ".join(cols)
-    sep = " | ".join(["---"]*len(cols))
+    sep = " | ".join(["---"] * len(cols))
     lines = [header, sep]
     for _, r in d.iterrows():
         lines.append(" | ".join(str(v) for v in r))
     return "\n".join(lines)
 
+
 md = to_md(df)
 out_path = os.path.join(AN, "BENCHMARK_MACE_vs_MP_vs_EXP.md")
 with open(out_path, "w") as f:
-    f.write("# MACE-MP-0 medium benchmark: Ni/Al/B2-NiAl/L1$_2$-Ni$_3$Al\n\n")
-    f.write("References: MP PBE = Materials Project PBE-GGA entries; Exp = accepted experimental lattice constants at room temperature.\n\n")
+    f.write("# MACE-MP-0 medium benchmark: Ni/Al/binary Ni-Al compounds\n\n")
+    f.write("References: MP PBE = Materials Project PBE-GGA entries; "
+            "Exp = accepted experimental lattice constants at room temperature.\n\n")
+    f.write("Non-cubic phases show the three cell edges sorted ascending; "
+            "axis labels (a,b,c) may not match a particular crystallographic setting.\n\n")
     f.write(md)
     f.write("\n")
 print(f"Wrote {out_path}")

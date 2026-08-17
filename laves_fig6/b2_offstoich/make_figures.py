@@ -5,25 +5,28 @@ Reads analysis/b2_offstoich_volumes.csv (+ extra CSVs) and the digitized
 Fig. 6(a) experimental points, then:
 
   1. averages over seeds for each composition / defect branch,
-  2. computes the Helmholtz free energy per occupied atom with
-     analytic configurational entropy,
-  3. selects the defect branch with the lower per-atom free energy at the
-     annealing temperature,
+  2. computes the total semi-grand potential Ω_i and the Helmholtz free energy
+     per occupied atom G_i with analytic configurational entropy,
+  3. selects the defect branch with the lower Helmholtz free energy per
+     occupied atom G_i at each target composition (fixed lattice composition),
   4. generates volume-, lattice-constant-, and energy-composition figures.
 
-The Helmholtz free energy per occupied atom relative to fcc elements is
-
-    G_i = (E_i - μ_Ni N_Ni - μ_Al N_Al) / N_atom - k_B T ln g_i / N_atom
-
-where g_i is the number of ways to place the point defect on its sublattice.
-Because all energies are normalized per atom and the comparison is performed at
-fixed composition, the branch with the lower G_i is thermodynamically preferred.
-The total semi-grand potential
+The total semi-grand potential relative to the fcc elements is
 
     Ω_i = E_i - μ_Ni N_Ni - μ_Al N_Al - k_B T ln g_i
 
-is also reported for reference but is not used for branch weighting: Ω_i is
-simply N_atom * G_i, so the lower G_i branch also has the lower Ω_i.
+where g_i is the number of ways to place the point defect on its sublattice.
+The Helmholtz free energy per occupied atom is
+
+    G_i = Ω_i / N_atom
+        = (E_i - μ_Ni N_Ni - μ_Al N_Al) / N_atom - k_B T ln g_i / N_atom
+
+Because vacancy and antisite branches have different numbers of occupied atoms,
+Ω_i = N_atom G_i does **not** imply that the lower-G_i branch also has the lower
+Ω_i.  At a fixed target lattice composition (fixed x_Al) the physically
+meaningful intensive comparison uses the Helmholtz free energy per occupied atom
+G_i, and the code selects the branch with the lower G_i.  The extensive total
+semi-grand potential Ω_i is reported for reference.
 
 For a B2 4×4×4 supercell with 64 Ni-sites and 64 Al-sites:
 
@@ -142,16 +145,17 @@ for (x, br), g in df[df.branch != "perfect"].groupby(["x_Al_target", "branch"]):
         "Ef": g.E_form_eV_atom.mean(),
         "G": g.G_atom_eV.mean(),
         "Gstd": g.G_atom_eV.std(ddof=1) if len(g) > 1 else 0.0,
+        "Omega_total_eV": g.Omega_total_eV.mean(),
         "n_atoms": int(round(g.n_atoms.mean())),
         "n": len(g),
     })
 agg = pd.DataFrame(agg_rows)
 
-# Select the lower Helmholtz free-energy branch at each target composition.
-# For a physical B2 single phase the expected defect is:
+# Select the lower Helmholtz free-energy branch (per-atom G_i) at each target
+# composition (fixed x_Al).  For a physical B2 single phase the expected defect is:
 #   x_Al < 0.5 -> Ni antisites,   x_Al > 0.5 -> Ni vacancies.
 # A target is only admitted if the physically expected branch was sampled; if
-# both branches are present, the lower per-atom G branch is used.  The perfect
+# both branches are present, the lower G branch is used.  The perfect
 # B2 point at x = 0.5 is always appended.
 mix_rows = []
 for x, g in agg.groupby("x_Al_target"):
@@ -173,6 +177,8 @@ for x, g in agg.groupby("x_Al_target"):
             V_mix=r.V,
             a_mix=r.a,
             selected_branch=selected,
+            G_atom_eV=r.G,
+            Omega_total_eV=r.Omega_total_eV,
             dG_eV=dG,
         ))
     elif x > 0.5 + 1e-6:
@@ -191,6 +197,8 @@ for x, g in agg.groupby("x_Al_target"):
             V_mix=r.V,
             a_mix=r.a,
             selected_branch=selected,
+            G_atom_eV=r.G,
+            Omega_total_eV=r.Omega_total_eV,
             dG_eV=dG,
         ))
 # perfect B2 at x = 0.5
@@ -200,6 +208,8 @@ mix_rows.append(dict(
     V_mix=perfect.V_per_atom_A3,
     a_mix=perfect.a_eff_A,
     selected_branch="perfect",
+    G_atom_eV=(perfect.energy_eV - MU_NI * perfect.n_Ni - MU_AL * perfect.n_Al) / perfect.n_atoms,
+    Omega_total_eV=perfect.energy_eV - MU_NI * perfect.n_Ni - MU_AL * perfect.n_Al,
     dG_eV=0.0,
 ))
 mix = pd.DataFrame(mix_rows).sort_values("x_Al_target")
@@ -309,20 +319,37 @@ vs = mix.V_mix.values
 order = np.argsort(xs)
 xs, vs = xs[order], vs[order]
 ve = exp_b2[(exp_b2.x_Al >= X_B2_MIN) & (exp_b2.x_Al <= X_B2_MAX)].copy()
-pred = np.interp(ve.x_Al, xs, vs)
-resid = pred - ve.V_bar_A3.values
-rmse = float(np.sqrt(np.mean(resid ** 2)))
-mape = float(np.mean(np.abs(resid) / ve.V_bar_A3.values) * 100)
+
+def metrics(sub):
+    if sub.empty:
+        return dict(n=0, rmse=np.nan, mape=np.nan)
+    pred = np.interp(sub.x_Al.values, xs, vs)
+    resid = pred - sub.V_bar_A3.values
+    rmse = float(np.sqrt(np.mean(resid ** 2)))
+    mape = float(np.mean(np.abs(resid) / sub.V_bar_A3.values) * 100)
+    return dict(n=int(len(sub)), rmse=round(rmse, 4), mape=round(mape, 3))
+
+all_m = metrics(ve)
+ni_m = metrics(ve[ve.x_Al < 0.50])
+al_m = metrics(ve[ve.x_Al > 0.50])
 
 out = dict(
-    n_exp_points_compared=int(len(ve)),
-    RMSE_V_A3=round(rmse, 4),
-    MAPE_V_pct=round(mape, 3),
+    n_exp_points_compared=all_m["n"],
+    RMSE_V_A3=all_m["rmse"],
+    MAPE_V_pct=all_m["mape"],
+    RMSE_V_A3_Ni_rich=ni_m["rmse"],
+    MAPE_V_pct_Ni_rich=ni_m["mape"],
+    n_points_Ni_rich=ni_m["n"],
+    RMSE_V_A3_Al_rich=al_m["rmse"],
+    MAPE_V_pct_Al_rich=al_m["mape"],
+    n_points_Al_rich=al_m["n"],
     V_B2_perfect=float(perfect.V_per_atom_A3),
     a_B2_perfect=float(perfect.a_eff_A),
     T_boltzmann_K=T_ANNEAL_K,
-    weight_method="Lower Helmholtz free energy per occupied atom (semi-grand canonical with analytic configurational entropy)",
+    weight_method="Lower Helmholtz free energy per occupied atom G_i; total Omega_i = N_atom * G_i reported for reference (ordering not preserved when N_atom differs)",
     branch_preference={f"{r.x_Al_target:.2f}": dict(selected_branch=r.selected_branch,
+                                                    G_atom_eV=round(float(r.G_atom_eV), 6) if not pd.isna(r.G_atom_eV) else None,
+                                                    Omega_total_eV=round(float(r.Omega_total_eV), 6) if not pd.isna(r.Omega_total_eV) else None,
                                                     dG_eV=round(float(r.dG_eV), 6) if not pd.isna(r.dG_eV) else None)
                        for r in mix.itertuples()},
 )

@@ -7,7 +7,8 @@
   "J_NiAl_eV": -1.3555,
   "J_NiNi_eV": -1.2567,
   "J_AlAl_eV": -1.1646,
-  "V_ordering_eV": -0.1449,
-  "V_definition": "J_NiAl - (J_NiNi + J_AlAl)/2; the only physically meaningful single number from the constant-pair fit.",
-  "note": "Constant pair model overestimates ordering energy (concentrated limit). Use V as the ordering strength; individual J values require A2 endpoint/cluster expansion data. Composition-dependent interaction parameters are needed."
+  "V_pair_constant_eV": -0.1449,
+  "V_from_ordering_eV": -0.0877,
+  "V_definition": "V = -Delta E_order / 4 = -0.3509/4 = -0.088 eV/bond is the thermodynamic ordering strength obtained directly from the B2/A2 energy difference.  V_pair = J_NiAl - (J_NiNi+J_AlAl)/2 = -0.145 eV/bond is the value implied by a literal constant-pair fit to the *isolated* point-defect energies; the 65% disagreement shows the constant-pair approximation breaks down for concentrated NiAl.",
+  "note": "Constant pair model overestimates ordering energy (concentrated limit). Composition-dependent interaction parameters are needed."
 }

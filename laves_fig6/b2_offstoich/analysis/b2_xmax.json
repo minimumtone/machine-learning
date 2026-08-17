@@ -2,39 +2,72 @@
   "0K_all": {
     "tol_3meV": {
       "x_max": 0.512,
-      "saturated": false
+      "saturated": false,
+      "max_sampled_x": 0.6598
     },
     "tol_5meV": {
       "x_max": 0.5203,
-      "saturated": false
+      "saturated": false,
+      "max_sampled_x": 0.6598
     },
     "tol_10meV": {
       "x_max": 0.5289,
-      "saturated": false
+      "saturated": false,
+      "max_sampled_x": 0.6598
     },
     "tol_20meV": {
       "x_max": 0.5614,
-      "saturated": false
-    }
+      "saturated": false,
+      "max_sampled_x": 0.6598
+    },
+    "experimental_B2_single_phase_approx": 0.6
+  },
+  "1273K": {
+    "tol_3meV": {
+      "x_max": null,
+      "saturated": true,
+      "lower_bound_x": 0.6598
+    },
+    "tol_5meV": {
+      "x_max": null,
+      "saturated": true,
+      "lower_bound_x": 0.6598
+    },
+    "tol_10meV": {
+      "x_max": null,
+      "saturated": true,
+      "lower_bound_x": 0.6598
+    },
+    "tol_20meV": {
+      "x_max": null,
+      "saturated": true,
+      "lower_bound_x": 0.6598
+    },
+    "experimental_B2_single_phase_approx": 0.575
   },
   "1473K": {
     "tol_3meV": {
-      "x_max": 0.6598,
-      "saturated": false
+      "x_max": null,
+      "saturated": true,
+      "lower_bound_x": 0.6598
     },
     "tol_5meV": {
-      "x_max": 0.6598,
-      "saturated": false
+      "x_max": null,
+      "saturated": true,
+      "lower_bound_x": 0.6598
     },
     "tol_10meV": {
-      "x_max": 0.6598,
-      "saturated": false
+      "x_max": null,
+      "saturated": true,
+      "lower_bound_x": 0.6598
     },
     "tol_20meV": {
-      "x_max": 0.6598,
-      "saturated": false
-    }
+      "x_max": null,
+      "saturated": true,
+      "lower_bound_x": 0.6598
+    },
+    "experimental_B2_single_phase_approx": NaN
   },
-  "experimental_B2_uniform": 0.6,
-  "temperature_K": 1473.0
+  "temperature_K": 1273.0,
+  "note": "1273 K uses only solid competitors (Ni, Ni3Al, B2, Ni2Al3).\n1473 K is above Ni2Al3 and NiAl3 stability and the NiAl Al-rich boundary is\nliquid; the 1473 K results are therefore shown for reference only and are not\na valid solid-state x_max comparison."
 }
