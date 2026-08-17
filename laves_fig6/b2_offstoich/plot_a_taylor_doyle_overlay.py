@@ -70,26 +70,40 @@ def slope(df, col, x0, x1):
     return float(p[0])
 
 # Slope comparisons use the same composition intervals for MACE and Taylor & Doyle.
-# For Ni-rich we use 0.42-0.50 because MACE does not sample below 0.42; T&D is
-# linear in the reported 0.50-0.34 range so the slope is the same over 0.42-0.50.
+# For Ni-rich we use 0.42-0.50; for Al-rich we show both 0.50-0.60 (closer to
+# the reliable B2 single-phase data) and 0.50-0.66 (the full T&D reported range).
 slope_mace_ni = slope(mace, 'a_mix', 0.42, 0.50)
-slope_mace_al = slope(mace, 'a_mix', 0.50, 0.66)
+slope_mace_al_60 = slope(mace, 'a_mix', 0.50, 0.60)
+slope_mace_al_66 = slope(mace, 'a_mix', 0.50, 0.66)
 slope_mace_v_ni = slope(mace, 'V_mix', 0.42, 0.50)
-slope_mace_v_al = slope(mace, 'V_mix', 0.50, 0.66)
+slope_mace_v_al_60 = slope(mace, 'V_mix', 0.50, 0.60)
+slope_mace_v_al_66 = slope(mace, 'V_mix', 0.50, 0.66)
 
 V42 = a_taylor_doyle(0.42)[0]**3 / a_taylor_doyle(0.42)[1]
 V50 = a_taylor_doyle(0.50)[0]**3 / a_taylor_doyle(0.50)[1]
+V60 = a_taylor_doyle(0.60)[0]**3 / a_taylor_doyle(0.60)[1]
 V66 = a_taylor_doyle(0.66)[0]**3 / a_taylor_doyle(0.66)[1]
-slope_td_ni = (a_taylor_doyle(0.42)[0] - a_taylor_doyle(0.50)[0]) / (0.42 - 0.50)
-slope_td_al = (a_taylor_doyle(0.66)[0] - a_taylor_doyle(0.50)[0]) / (0.66 - 0.50)
-slope_td_v_ni = (V42 - V50) / (0.42 - 0.50)
-slope_td_v_al = (V66 - V50) / (0.66 - 0.50)
+
+def slope_td_a(x0, x1):
+    return (a_taylor_doyle(x1)[0] - a_taylor_doyle(x0)[0]) / (x1 - x0)
+def slope_td_v(x0, x1):
+    return (a_taylor_doyle(x1)[0]**3 / a_taylor_doyle(x1)[1]
+            - a_taylor_doyle(x0)[0]**3 / a_taylor_doyle(x0)[1]) / (x1 - x0)
+
+slope_td_ni = slope_td_a(0.42, 0.50)
+slope_td_al_60 = slope_td_a(0.50, 0.60)
+slope_td_al_66 = slope_td_a(0.50, 0.66)
+slope_td_v_ni = slope_td_v(0.42, 0.50)
+slope_td_v_al_60 = slope_td_v(0.50, 0.60)
+slope_td_v_al_66 = slope_td_v(0.50, 0.66)
 
 slope_table = pd.DataFrame([
-    {'side': 'Ni-rich (0.42-0.50 x_Al)', 'slope_a_A': 'da/dx', 'MACE': slope_mace_ni, 'Taylor_Doyle': slope_td_ni, 'unit': 'Å / x_Al'},
-    {'side': 'Al-rich (0.50-0.66 x_Al)', 'slope_a_A': 'da/dx', 'MACE': slope_mace_al, 'Taylor_Doyle': slope_td_al, 'unit': 'Å / x_Al'},
-    {'side': 'Ni-rich (0.42-0.50 x_Al)', 'slope_a_A': 'dV/dx', 'MACE': slope_mace_v_ni, 'Taylor_Doyle': slope_td_v_ni, 'unit': 'Å3/atom / x_Al'},
-    {'side': 'Al-rich (0.50-0.66 x_Al)', 'slope_a_A': 'dV/dx', 'MACE': slope_mace_v_al, 'Taylor_Doyle': slope_td_v_al, 'unit': 'Å3/atom / x_Al'},
+    {'side': 'Ni-rich (0.42-0.50)', 'quantity': 'da/dx', 'MACE': slope_mace_ni, 'Taylor_Doyle': slope_td_ni, 'unit': 'Å / x_Al', 'MACE/TD_ratio': slope_mace_ni/slope_td_ni},
+    {'side': 'Al-rich (0.50-0.60)', 'quantity': 'da/dx', 'MACE': slope_mace_al_60, 'Taylor_Doyle': slope_td_al_60, 'unit': 'Å / x_Al', 'MACE/TD_ratio': slope_mace_al_60/slope_td_al_60 if abs(slope_td_al_60)>1e-12 else np.nan},
+    {'side': 'Al-rich (0.50-0.66)', 'quantity': 'da/dx', 'MACE': slope_mace_al_66, 'Taylor_Doyle': slope_td_al_66, 'unit': 'Å / x_Al', 'MACE/TD_ratio': slope_mace_al_66/slope_td_al_66 if abs(slope_td_al_66)>1e-12 else np.nan},
+    {'side': 'Ni-rich (0.42-0.50)', 'quantity': 'dV/dx', 'MACE': slope_mace_v_ni, 'Taylor_Doyle': slope_td_v_ni, 'unit': 'Å3/atom / x_Al', 'MACE/TD_ratio': slope_mace_v_ni/slope_td_v_ni},
+    {'side': 'Al-rich (0.50-0.60)', 'quantity': 'dV/dx', 'MACE': slope_mace_v_al_60, 'Taylor_Doyle': slope_td_v_al_60, 'unit': 'Å3/atom / x_Al', 'MACE/TD_ratio': slope_mace_v_al_60/slope_td_v_al_60 if abs(slope_td_v_al_60)>1e-12 else np.nan},
+    {'side': 'Al-rich (0.50-0.66)', 'quantity': 'dV/dx', 'MACE': slope_mace_v_al_66, 'Taylor_Doyle': slope_td_v_al_66, 'unit': 'Å3/atom / x_Al', 'MACE/TD_ratio': slope_mace_v_al_66/slope_td_v_al_66 if abs(slope_td_v_al_66)>1e-12 else np.nan},
 ])
 slope_table.to_csv(os.path.join(AN, 'taylor_doyle_mace_slopes.csv'), index=False)
 print(slope_table.to_string(index=False))

@@ -36,6 +36,9 @@ E_a2_pred = 2.0 * (J_NiNi + J_AlAl) + 4.0 * J_NiAl
 delta_order_pred = E_a2_pred - E_b2
 delta_order_obs = E_a2 - E_b2
 
+V_pair = J_NiAl - (J_NiNi + J_AlAl) / 2.0
+V_from_ordering = -delta_order_obs / 4.0
+
 result = {
     "E_B2_per_formula_eV": round(E_b2, 4),
     "E_A2_per_formula_eV": round(E_a2, 4),
@@ -45,6 +48,9 @@ result = {
     "J_NiAl_eV": round(J_NiAl, 4),
     "J_NiNi_eV": round(J_NiNi, 4),
     "J_AlAl_eV": round(J_AlAl, 4),
+    "V_pair_constant_eV": round(V_pair, 4),
+    "V_from_ordering_eV": round(V_from_ordering, 4),
+    "V_definition": "V = -Delta E_order / 4 = -0.3509/4 = -0.088 eV/bond is the thermodynamic ordering strength obtained directly from the B2/A2 energy difference.  V_pair = J_NiAl - (J_NiNi+J_AlAl)/2 = -0.145 eV/bond is the value implied by a literal constant-pair fit to the *isolated* point-defect energies; the 65% disagreement shows the constant-pair approximation breaks down for concentrated NiAl.",
     "note": "Constant pair model overestimates ordering energy (concentrated limit). Composition-dependent interaction parameters are needed."
 }
 with open(os.path.join(AN, "b2_pair_interactions.json"), "w") as f:

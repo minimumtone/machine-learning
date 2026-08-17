@@ -319,15 +319,30 @@ vs = mix.V_mix.values
 order = np.argsort(xs)
 xs, vs = xs[order], vs[order]
 ve = exp_b2[(exp_b2.x_Al >= X_B2_MIN) & (exp_b2.x_Al <= X_B2_MAX)].copy()
-pred = np.interp(ve.x_Al, xs, vs)
-resid = pred - ve.V_bar_A3.values
-rmse = float(np.sqrt(np.mean(resid ** 2)))
-mape = float(np.mean(np.abs(resid) / ve.V_bar_A3.values) * 100)
+
+def metrics(sub):
+    if sub.empty:
+        return dict(n=0, rmse=np.nan, mape=np.nan)
+    pred = np.interp(sub.x_Al.values, xs, vs)
+    resid = pred - sub.V_bar_A3.values
+    rmse = float(np.sqrt(np.mean(resid ** 2)))
+    mape = float(np.mean(np.abs(resid) / sub.V_bar_A3.values) * 100)
+    return dict(n=int(len(sub)), rmse=round(rmse, 4), mape=round(mape, 3))
+
+all_m = metrics(ve)
+ni_m = metrics(ve[ve.x_Al < 0.50])
+al_m = metrics(ve[ve.x_Al > 0.50])
 
 out = dict(
-    n_exp_points_compared=int(len(ve)),
-    RMSE_V_A3=round(rmse, 4),
-    MAPE_V_pct=round(mape, 3),
+    n_exp_points_compared=all_m["n"],
+    RMSE_V_A3=all_m["rmse"],
+    MAPE_V_pct=all_m["mape"],
+    RMSE_V_A3_Ni_rich=ni_m["rmse"],
+    MAPE_V_pct_Ni_rich=ni_m["mape"],
+    n_points_Ni_rich=ni_m["n"],
+    RMSE_V_A3_Al_rich=al_m["rmse"],
+    MAPE_V_pct_Al_rich=al_m["mape"],
+    n_points_Al_rich=al_m["n"],
     V_B2_perfect=float(perfect.V_per_atom_A3),
     a_B2_perfect=float(perfect.a_eff_A),
     T_boltzmann_K=T_ANNEAL_K,

@@ -13,10 +13,11 @@ MACE-MP-0 medium（0 K 静的緩和、FrechetCellFilter、128 サイト超胞）
 | Ni 空孔（Al-rich、Ni 副格子）     | 1.17 | 0.08 | x≈0.50 で 1.06 eV、x≈0.54 で 1.28 eV |
 | Al 空孔（Ni-rich、Al 副格子）     | 1.78 | 0.15 | 常に Ni 反サイトより高エネルギー |
 
-重要な知見：
+重要な知見（$\mu_{\rm Ni}+\mu_{\rm Al}=-10.844$ eV/formula、$\Delta\mu\approx0$ 付近、fcc 元素基準）：
 - **Ni-rich 側**：Ni 反サイト （~0.7–0.9 eV） << Al 空孔 （~1.7–2.0 eV） → 反サイトが支配的。
 - **Al-rich 側**：Ni 空孔 （~1.1 eV） < Al 反サイト （~1.4–1.6 eV） → 空孔が支配的。
-- ΔE は欠陥濃度に依存するため、単一点欠陥近似ではなく **濃度依存な相互作用項**が必要。
+- 支配的分岐は $\Delta\mu$ の可動域（約 2.768 eV）に敏感であり、元素化学ポテンシャルが動くと空孔/反サイト優勢は入れ替わりうる。
+- $\Delta E$ は欠陥濃度に依存するため、単一点欠陥近似ではなく **濃度依存な相互作用項**が必要。
 
 ## 2. 2 サブラティス CEF モデル（出発点）
 
@@ -109,19 +110,23 @@ $$ \Delta E_{\rm order} = E_{\rm A2} - E_{\rm B2} = 2(J_{\rm NiNi} + J_{\rm AlAl
 
 MACE-MP-0 から $E_{\rm B2} \approx -10.844$ eV/formula、$E_{\rm A2}$ は $b2\_order\_param.csv$ の $\eta=0$ 平均から $E/N \approx -5.246$ eV/atom、すなわち $E_{\rm A2} \approx -10.492$ eV/formula、よって
 
-$$ \Delta E_{\rm order} \approx +0.35\text{–}0.40 \text{ eV/formula} $$
+$$ \Delta E_{\rm order} \approx 0.3509 \text{ eV/formula} $$
 
-重要なことは，個別の $J_{ij}$ の絶対値ではなく，Ni–Al 結合が他の結合よりどれだけ強い負かを表す **秩序化強度（effective ordering energy）**
+重要なことは，定数対モデルでは $\Delta E_{\rm order}=-4V$ となるため，**秩序化強度（effective ordering energy）** は B2/A2 エネルギー差から直接決まる：
 
-$$ V = J_{\rm NiAl} - \frac{J_{\rm NiNi} + J_{\rm AlAl}}{2} $$
+$$ V = -\frac{\Delta E_{\rm order}}{4} = -\frac{0.3509}{4} = -0.088 \ {\rm eV/bond} $$
 
-のみが物理的に意味を持つ。現状の簡易 Ising 外挿では
+この $V$ は Ni–Al 結合が他の結合よりどれだけ強く負かを表す，物理的に一本化された値である．
 
-$$ V \approx -0.1 \text{ 〜 } -0.15 \ {\rm eV/bond} $$
+一方で，孤立点欠陥エネルギーから個別の $J_{ij}$ を定数対近似で決めて
 
-（Ni–Al 結合が他より約 0.1 eV 強く負）という数量級が得られる。個別の $J_{\rm NiAl}, J_{\rm NiNi}, J_{\rm AlAl}$ については A2 端成分やクラスター展開なしには決定できないため，**3 つの $J$ 値を表にするのは避け，$V$ の値のみを報告する**。
+$$ V_{\rm pair} = J_{\rm NiAl} - \frac{J_{\rm NiNi} + J_{\rm AlAl}}{2} $$
 
-定数対モデルには明らかな制限がある：$E_{\rm A2}$ の予測は観測より 0.25 eV/formula 高くなり，高濃度反サイト/空孔同士の相互作用を見落としている。これは 4SL/8SL モデルでは組成依存な $L$ パラメータで補正するか，`icet` クラスター展開で対相互作用を直接抽出する必要がある。
+とすると $V_{\rm pair} \approx -0.145$ eV/bond となり，$V=-\Delta E_{\rm order}/4$ に対して約 65 % 過大になる．これは **定数対近似が高濃度 NiAl では破綻している証拠** である．個別の $J_{ij}$ については A2 端成分やクラスター展開なしには決定できないため，**3 つの $J$ 値を表にするのではなく，$V=-0.088$ eV/bond を秩序化強度として使用する**．
+
+`extract_4sl_b2_parameters.py` から出力される `V_from_ordering_eV` を使用し，`V_pair_constant_eV` はあくまで定数対近似の不整合を示す指標として扱う．
+
+（MACE の $E_{\rm A2}$ は $\eta=0$ 平均から $E/N\approx-5.246$ eV/atom，すなわち $E_{\rm A2}\approx-10.492$ eV/formula と推定．完全 A2-Ni/A2-Al 端成分は未計算．）
 
 ## 8. 成果物
 
