@@ -5,18 +5,26 @@ Reads analysis/b2_offstoich_volumes.csv (+ extra CSVs) and the digitized
 Fig. 6(a) experimental points, then:
 
   1. averages over seeds for each composition / defect branch,
-  2. computes semi-grand canonical (fixed lattice-site) free energies with
+  2. computes the Helmholtz free energy per occupied atom with
      analytic configurational entropy,
-  3. evaluates the branch weight at the annealing temperature,
+  3. selects the defect branch with the lower per-atom free energy at the
+     annealing temperature,
   4. generates volume-, lattice-constant-, and energy-composition figures.
 
-All energies are written per **occupied atom** as before, but the Boltzmann
-weight is evaluated using the total semi-grand potential for the 128-site B2
-supercell:
+The Helmholtz free energy per occupied atom relative to fcc elements is
+
+    G_i = (E_i - μ_Ni N_Ni - μ_Al N_Al) / N_atom - k_B T ln g_i / N_atom
+
+where g_i is the number of ways to place the point defect on its sublattice.
+Because all energies are normalized per atom and the comparison is performed at
+fixed composition, the branch with the lower G_i is thermodynamically preferred.
+The total semi-grand potential
 
     Ω_i = E_i - μ_Ni N_Ni - μ_Al N_Al - k_B T ln g_i
 
-where g_i is the number of ways to place the point defect on its sublattice.
+is also reported for reference but is not used for branch weighting: Ω_i is
+simply N_atom * G_i, so the lower G_i branch also has the lower Ω_i.
+
 For a B2 4×4×4 supercell with 64 Ni-sites and 64 Al-sites:
 
     antisite branch : g = C(64, n_antisite)
@@ -103,15 +111,15 @@ def n_defect(row):
     return 0
 
 
-def omega_per_atom(row):
+def G_atom(row):
     """
     Helmholtz free energy per occupied atom in semi-grand form.
 
-    E_f = (E - mu_Ni N_Ni - mu_Al N_Al) / N_atoms  is the formation
-    energy per atom relative to fcc elements.  The configurational
-    entropy per atom is -k_B T ln(g) / N_atoms.  The branch with the
-    lower value is thermodynamically preferred for a given composition
-    at fixed temperature and pressure.
+    This is the formation energy per atom relative to fcc elements,
+    E_f = (E - mu_Ni N_Ni - mu_Al N_Al) / N_atoms, plus the analytic
+    configurational entropy -k_B T ln(g) / N_atoms per atom.  The branch
+    with the lower value is thermodynamically preferred for a given
+    composition at fixed temperature and pressure.
     """
     e = row.energy_eV
     g = n_defect(row)
@@ -120,7 +128,8 @@ def omega_per_atom(row):
 
 
 df["n_defect"] = df.apply(n_defect, axis=1)
-df["Omega_per_atom_eV"] = df.apply(omega_per_atom, axis=1)
+df["G_atom_eV"] = df.apply(G_atom, axis=1)
+df["Omega_total_eV"] = df["G_atom_eV"] * df["n_atoms"]
 
 # aggregate per composition/branch
 agg_rows = []
@@ -131,36 +140,68 @@ for (x, br), g in df[df.branch != "perfect"].groupby(["x_Al_target", "branch"]):
         "Vstd": g.V_per_atom_A3.std(ddof=1) if len(g) > 1 else 0.0,
         "a": g.a_eff_A.mean(), "astd": g.a_eff_A.std(ddof=1) if len(g) > 1 else 0.0,
         "Ef": g.E_form_eV_atom.mean(),
-        "Omega": g.Omega_per_atom_eV.mean(),
-        "Omega_std": g.Omega_per_atom_eV.std(ddof=1) if len(g) > 1 else 0.0,
+        "G": g.G_atom_eV.mean(),
+        "Gstd": g.G_atom_eV.std(ddof=1) if len(g) > 1 else 0.0,
         "n_atoms": int(round(g.n_atoms.mean())),
         "n": len(g),
     })
 agg = pd.DataFrame(agg_rows)
 
-# branch mixture from per-atom semi-grand free energies
-# Only include target compositions where *both* branches were computed so that
-# the mixed curve reflects a real competition rather than a single-branch fallback.
+# Select the lower Helmholtz free-energy branch at each target composition.
+# For a physical B2 single phase the expected defect is:
+#   x_Al < 0.5 -> Ni antisites,   x_Al > 0.5 -> Ni vacancies.
+# A target is only admitted if the physically expected branch was sampled; if
+# both branches are present, the lower per-atom G branch is used.  The perfect
+# B2 point at x = 0.5 is always appended.
 mix_rows = []
 for x, g in agg.groupby("x_Al_target"):
     g = g.set_index("branch")
     avail = set(g.index)
-    if {"antisite", "vacancy"} <= avail:
-        dOmega = g.loc["vacancy", "Omega"] - g.loc["antisite", "Omega"]
-        N_bar = 0.5 * (g.loc["vacancy", "n_atoms"] + g.loc["antisite", "n_atoms"])
-        w_vac = 1.0 / (1.0 + np.exp(dOmega * N_bar / KT_EV))
-        x_Al_val = w_vac * g.loc["vacancy", "x_Al"] + (1 - w_vac) * g.loc["antisite", "x_Al"]
-        V_val = w_vac * g.loc["vacancy", "V"] + (1 - w_vac) * g.loc["antisite", "V"]
-        a_val = w_vac * g.loc["vacancy", "a"] + (1 - w_vac) * g.loc["antisite", "a"]
+    if x < 0.5 - 1e-6:
+        if "antisite" not in avail:
+            continue
+        if "vacancy" in avail:
+            dG = g.loc["vacancy", "G"] - g.loc["antisite", "G"]
+            selected = "antisite" if dG > 0.0 else "vacancy"
+        else:
+            dG = np.nan
+            selected = "antisite"
+        r = g.loc[selected]
         mix_rows.append(dict(
             x_Al_target=x,
-            x_Al=x_Al_val,
-            V_mix=V_val,
-            a_mix=a_val,
-            w_vac=w_vac,
-            preferred="vacancy" if w_vac > 0.5 else "antisite",
-            dOmega_eV=dOmega,
+            x_Al=r.x_Al,
+            V_mix=r.V,
+            a_mix=r.a,
+            selected_branch=selected,
+            dG_eV=dG,
         ))
+    elif x > 0.5 + 1e-6:
+        if "vacancy" not in avail:
+            continue
+        if "antisite" in avail:
+            dG = g.loc["vacancy", "G"] - g.loc["antisite", "G"]
+            selected = "vacancy" if dG < 0.0 else "antisite"
+        else:
+            dG = np.nan
+            selected = "vacancy"
+        r = g.loc[selected]
+        mix_rows.append(dict(
+            x_Al_target=x,
+            x_Al=r.x_Al,
+            V_mix=r.V,
+            a_mix=r.a,
+            selected_branch=selected,
+            dG_eV=dG,
+        ))
+# perfect B2 at x = 0.5
+mix_rows.append(dict(
+    x_Al_target=perfect.x_Al_target,
+    x_Al=perfect.x_Al,
+    V_mix=perfect.V_per_atom_A3,
+    a_mix=perfect.a_eff_A,
+    selected_branch="perfect",
+    dG_eV=0.0,
+))
 mix = pd.DataFrame(mix_rows).sort_values("x_Al_target")
 
 # experimental lattice constant (triple-defect conversion)
@@ -183,7 +224,7 @@ for br, g in agg.groupby("branch"):
     ax.errorbar(g.x_Al, g.V, yerr=g.Vstd, fmt="o-", ms=9, capsize=4,
                 color=colors[br], label=labels[br])
 ax.plot(mix.x_Al, mix.V_mix, "k--", lw=2.5,
-        label=f"半巨視正準 Boltzmann 混合 ({T_ANNEAL_K:.0f} K, 配置エントロピー込み)")
+        label=f"$G$ 最低枝選択 ({T_ANNEAL_K:.0f} K, 配置エントロピー込み)")
 ax.plot([0.5], [perfect.V_per_atom_A3], "s", ms=13, color="tab:green",
         label="完全B2 (MLIP)")
 ax.plot(exp_b2.x_Al, exp_b2.V_bar_A3, "o", ms=11, mfc="none", mec="k", mew=2,
@@ -208,7 +249,7 @@ for br, g in agg.groupby("branch"):
     ax.errorbar(g.x_Al, g.V, yerr=g.Vstd, fmt="o-", ms=8, capsize=4,
                 color=colors[br], label=labels[br])
 ax.plot(mix.x_Al, mix.V_mix, "k--", lw=2.5,
-        label=f"半巨視正準 Boltzmann 混合 ({T_ANNEAL_K:.0f} K)")
+        label=f"$G$ 最低枝選択 ({T_ANNEAL_K:.0f} K)")
 ax.plot([0.5], [perfect.V_per_atom_A3], "s", ms=12, color="tab:green",
         label="完全B2 (MLIP)")
 ax.plot(exp_b2.x_Al, exp_b2.V_bar_A3, "o", ms=11, mfc="none", mec="k", mew=2,
@@ -230,7 +271,7 @@ for br, g in agg.groupby("branch"):
     ax.errorbar(g.x_Al, g.a, yerr=g.astd, fmt="o-", ms=9, capsize=4,
                 color=colors[br], label=labels[br])
 ax.plot(mix.x_Al, mix.a_mix, "k--", lw=2.5,
-        label=f"半巨視正準 Boltzmann 混合 ({T_ANNEAL_K:.0f} K)")
+        label=f"$G$ 最低枝選択 ({T_ANNEAL_K:.0f} K)")
 ax.plot([0.5], [perfect.a_eff_A], "s", ms=13, color="tab:green", label="完全B2")
 ax.plot(exp_b2.x_Al, exp_b2.a_exp_A, "o", ms=11, mfc="none", mec="k", mew=2,
         label="Yamanouchi実験 B2枝 → 格子定数")
@@ -262,8 +303,9 @@ plt.close()
 # rather than the B2 single-phase branch.
 X_B2_MIN = 0.45
 X_B2_MAX = 0.60
-xs = np.concatenate([mix.x_Al.values, [0.5]])
-vs = np.concatenate([mix.V_mix.values, [perfect.V_per_atom_A3]])
+# perfect is already included in mix; avoid duplicate
+xs = mix.x_Al.values
+vs = mix.V_mix.values
 order = np.argsort(xs)
 xs, vs = xs[order], vs[order]
 ve = exp_b2[(exp_b2.x_Al >= X_B2_MIN) & (exp_b2.x_Al <= X_B2_MAX)].copy()
@@ -279,10 +321,9 @@ out = dict(
     V_B2_perfect=float(perfect.V_per_atom_A3),
     a_B2_perfect=float(perfect.a_eff_A),
     T_boltzmann_K=T_ANNEAL_K,
-    weight_method="Helmholtz free energy per occupied atom (semi-grand canonical with analytic configurational entropy)",
-    branch_preference={f"{r.x_Al_target:.2f}": dict(preferred=r.preferred,
-                                                    w_vacancy_annealT=round(float(r.w_vac), 4),
-                                                    dOmega_eV=round(float(r.dOmega_eV), 4) if not pd.isna(r.dOmega_eV) else None)
+    weight_method="Lower Helmholtz free energy per occupied atom (semi-grand canonical with analytic configurational entropy)",
+    branch_preference={f"{r.x_Al_target:.2f}": dict(selected_branch=r.selected_branch,
+                                                    dG_eV=round(float(r.dG_eV), 6) if not pd.isna(r.dG_eV) else None)
                        for r in mix.itertuples()},
 )
 agg.to_csv(os.path.join(AN, "b2_offstoich_branch_means.csv"), index=False)

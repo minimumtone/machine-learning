@@ -1,5 +1,40 @@
 {
-  "antisite": 0.492188,
-  "vacancy": 0.520325,
-  "experimental_B2_uniform": 0.6
+  "0K_all": {
+    "tol_3meV": {
+      "x_max": 0.512,
+      "saturated": false
+    },
+    "tol_5meV": {
+      "x_max": 0.5203,
+      "saturated": false
+    },
+    "tol_10meV": {
+      "x_max": 0.5289,
+      "saturated": false
+    },
+    "tol_20meV": {
+      "x_max": 0.5614,
+      "saturated": false
+    }
+  },
+  "1473K": {
+    "tol_3meV": {
+      "x_max": 0.6598,
+      "saturated": false
+    },
+    "tol_5meV": {
+      "x_max": 0.6598,
+      "saturated": false
+    },
+    "tol_10meV": {
+      "x_max": 0.6598,
+      "saturated": false
+    },
+    "tol_20meV": {
+      "x_max": 0.6598,
+      "saturated": false
+    }
+  },
+  "experimental_B2_uniform": 0.6,
+  "temperature_K": 1473.0
 }
