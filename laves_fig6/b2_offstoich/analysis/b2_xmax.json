@@ -1,5 +1,16 @@
 {
-  "antisite": 0.492188,
-  "vacancy": 0.520325,
-  "experimental_B2_uniform": 0.6
+  "0K_all": {
+    "tol_3meV": 0.512,
+    "tol_5meV": 0.5203,
+    "tol_10meV": 0.5289,
+    "tol_20meV": 0.5614
+  },
+  "1473K": {
+    "tol_3meV": 0.6598,
+    "tol_5meV": 0.6598,
+    "tol_10meV": 0.6598,
+    "tol_20meV": 0.6598
+  },
+  "experimental_B2_uniform": 0.6,
+  "temperature_K": 1473.0
 }
