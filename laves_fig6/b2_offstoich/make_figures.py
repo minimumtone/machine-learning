@@ -23,10 +23,14 @@ The Helmholtz free energy per occupied atom is
 
 Because vacancy and antisite branches have different numbers of occupied atoms,
 Ω_i = N_atom G_i does **not** imply that the lower-G_i branch also has the lower
-Ω_i.  At a fixed target lattice composition (fixed x_Al) the physically
-meaningful intensive comparison uses the Helmholtz free energy per occupied atom
-G_i, and the code selects the branch with the lower G_i.  The extensive total
-semi-grand potential Ω_i is reported for reference.
+Ω_i.  At a fixed target lattice composition (fixed x_Al) the relevant potential
+for the metastable B2 single phase is the Helmholtz free energy per occupied
+atom, G_i = Ω_i / N_atom: it tells which branch is more stable if the alloy is
+forced to remain at that composition.  The code therefore selects the branch
+with the lower G_i.  A blind total-Ω comparison at fixed x would predict the
+Al-rich antisite branch to be lower in Ω at x_Al≈0.60, contradicting the
+experimentally observed Ni-vacancy branch and the 1273 K Boltzmann weighting; it
+is reported for reference but not used for branch selection.
 
 For a B2 4×4×4 supercell with 64 Ni-sites and 64 Al-sites:
 
@@ -346,7 +350,7 @@ out = dict(
     V_B2_perfect=float(perfect.V_per_atom_A3),
     a_B2_perfect=float(perfect.a_eff_A),
     T_boltzmann_K=T_ANNEAL_K,
-    weight_method="Lower Helmholtz free energy per occupied atom G_i; total Omega_i = N_atom * G_i reported for reference (ordering not preserved when N_atom differs)",
+    weight_method="Lower Helmholtz free energy per occupied atom G_i at fixed composition; total Omega_i = N_atom * G_i reported for reference but not used for branch selection because total Omega ordering is not preserved across branches with different N_atom", 
     branch_preference={f"{r.x_Al_target:.2f}": dict(selected_branch=r.selected_branch,
                                                     G_atom_eV=round(float(r.G_atom_eV), 6) if not pd.isna(r.G_atom_eV) else None,
                                                     Omega_total_eV=round(float(r.Omega_total_eV), 6) if not pd.isna(r.Omega_total_eV) else None,
