@@ -13,7 +13,6 @@ import numpy as np
 import pandas as pd
 from ase.io import read
 from ase.optimize import LBFGS
-from ase.calculators.mixing import SumCalculator
 from mace.calculators import mace_mp
 
 BASE = os.path.dirname(os.path.abspath(__file__))
@@ -82,7 +81,9 @@ def run(x_Al, seed=0):
 
         # fix cell to experimental a and relax internals only
         at_fix = at.copy()
-        at_fix.set_cell([a_fix, a_fix, a_fix], scale_atoms=False)
+        # The stored configurations are 4x4x4 B2 supercells (64 conventional cells)
+        # so the supercell edge to match the experimental conventional a is 4*a_fix.
+        at_fix.set_cell([4.0 * a_fix, 4.0 * a_fix, 4.0 * a_fix], scale_atoms=False)
         at_fix.set_pbc(True)
         e_fix, v_fix, conv = relax_fixed_cell(at_fix, f"{branch}_x{x_Al:.2f}_seed{seed}")
 
@@ -94,7 +95,7 @@ def run(x_Al, seed=0):
                 'branch': branch,
                 'seed': seed,
                 'constr': tag,
-                'a_cell_A': a_fix if tag == 'fixed_cell' else (v_free * 4 / n if n == 128 else np.nan),
+                'a_cell_A': a_fix if tag == 'fixed_cell' else (v_free / 64.0) ** (1.0 / 3.0),
                 'E_eV': energy,
                 'V_atom_A3': volume / n,
                 'n_atoms': n,
