@@ -7,5 +7,7 @@
   "J_NiAl_eV": -1.3555,
   "J_NiNi_eV": -1.2567,
   "J_AlAl_eV": -1.1646,
-  "note": "Constant pair model overestimates ordering energy (concentrated limit). Composition-dependent interaction parameters are needed."
+  "V_ordering_eV": -0.1449,
+  "V_definition": "J_NiAl - (J_NiNi + J_AlAl)/2; the only physically meaningful single number from the constant-pair fit.",
+  "note": "Constant pair model overestimates ordering energy (concentrated limit). Use V as the ordering strength; individual J values require A2 endpoint/cluster expansion data. Composition-dependent interaction parameters are needed."
 }

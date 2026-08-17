@@ -82,5 +82,17 @@
     "volume_A3": 228.5507372689479,
     "volume_per_atom_A3": 14.284421079309244,
     "structure_file": "/home/ubuntu/repos/machine-learning/laves_fig6/b2_offstoich/analysis/mp_NiAl3.extxyz"
+  },
+  {
+    "label": "Ni3Al4",
+    "formula": "Ni3Al4",
+    "mp_id": "mp-aaaaaylf",
+    "energy_per_atom_eV": -9.639290069107144,
+    "formation_energy_per_atom_eV": -0.6573550976785713,
+    "energy_above_hull_eV": 0.0,
+    "n_atoms": 56,
+    "volume_A3": 740.8068790616051,
+    "volume_per_atom_A3": 13.228694268957232,
+    "structure_file": "/home/ubuntu/repos/machine-learning/laves_fig6/b2_offstoich/analysis/mace_Ni3Al4.extxyz"
   }
 ]
