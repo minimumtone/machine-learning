@@ -33,12 +33,12 @@ MACE-MP-0 medium（0 K 静的緩和、FrechetCellFilter、128 サイト超胞）
 |---|---|---|
 | G(Ni:Al) | 完全 B2-NiAl | MACE E(NiAl-B2)/formula = -10.844 eV |
 | G(Al:Ni) | 反 B2-NiAl（Al/Ni サブラティス入れ替え） | = G(Ni:Al)（B2 は C.N.8 対称） |
-| G(Ni:Ni) | 反サイトに近い Ni 過剰極限 | A2-Ni（bcc）への外挿 or x→0.5 Ni-rich 極限 |
-| G(Al:Al) | Al 過剰極限 | A2-Al（bcc）への外挿 or x→0.5 Al-rich 極限 |
+| G(Ni:Ni) | 反サイトに近い Ni 過剰極限 | A2-Ni on bcc; $E=-11.324$ eV/formula, $a=2.790$ Å |
+| G(Al:Al) | Al 過剰極限 | A2-Al on bcc; $E=-7.374$ eV/formula, $a=3.225$ Å |
 | G(Va:Al) | Ni 欠損 Al 過剰（Al-rich 空孔） | G(Ni:Al) + n_sites/2 · E_Ni_vac |
 | G(Ni:Va) | Al 欠損 Ni 過剰（Ni-rich 空孔） | G(Ni:Al) + n_sites/2 · E_Al_vac |
 
-注：現状では A2-Ni/Al の MLIP 計算がないため、x=0.5 付近の点欠陥データを用いてエンドメンバーを **x 依存として表現**し、相互作用パラメータに変換する方法を採用する。
+注：A2-Ni/Al の MACE-MP-0 計算は完了（`analysis/a2_endmember_energies.csv`）。x=0.5 のランダム A2（Ni$_0.5$Al$_0.5$ bcc）エネルギー $E_{\rm A2}=-10.493$ eV/formula（$\eta=0$外挿）と組み合わせることで、B2 秩序化エネルギー $\Delta E_{\rm order}=+0.3510$ eV/formula（$E_{\rm A2}-E_{\rm B2}$）を直接求める。
 
 ## 3. 4SL/8SL B2 モデルへの一般化
 
@@ -80,13 +80,13 @@ MACE-MP-0 medium（0 K 静的緩和、FrechetCellFilter、128 サイト超胞）
 
 - **振動エントロピーなし**：1473 K の熱処理には phonon/MD によるエントロピー補正が必要。
 - **磁性**：Ni のスピン分極効果は MACE-MP-0 にはない。
-- **A2 端成分未計算**：完全 A2-Ni/A2-Al の MLIP データがないため、B2-A2 秩序変態エネルギーは外挿依存。
+- **A2 端成分計算済み**：A2-Ni($a=2.790$ Å, $E=-5.662$ eV/atom) と A2-Al($a=3.225$ Å, $E=-3.687$ eV/atom) を `run_a2_endmembers.py` で緩和。B2-A2 秩序変態エネルギーは $\Delta E_{\rm order}=-0.3510$ eV/formula。
 - **サンプリングの希薄さ**：各組成 3 配置では 4SL/8SL の全エンドメンバーをカバーできない。最低 10–20 配置、さらにクラスター展開用データが必要。
 
 ## 6. 次の実行計画
 
 1. 現行の Al-rich 密サンプリング完了を待ち、`b2_defect_energies.csv` を更新。
-2. A2-Ni/A2-Al（bcc）の参考計算を追加し、完全秩序化エネルギーを推定。
+2. ~~A2-Ni/A2-Al（bcc）緩和~~ 完了。次は `icet` クラスター展開で対相互作用を直接抽出。
 3. `icet` クラスター展開で第一近接対相互作用 J_{ij} を抽出し、8SL 対応エンドメンバー表を作成。
 4. pycalphad/TDB 形式の原型を出力し、形成エネルギー図と整合するか検証。
 
@@ -126,7 +126,7 @@ $$ V_{\rm pair} = J_{\rm NiAl} - \frac{J_{\rm NiNi} + J_{\rm AlAl}}{2} $$
 
 `extract_4sl_b2_parameters.py` から出力される `V_from_ordering_eV` を使用し，`V_pair_constant_eV` はあくまで定数対近似の不整合を示す指標として扱う．
 
-（MACE の $E_{\rm A2}$ は $\eta=0$ 平均から $E/N\approx-5.246$ eV/atom，すなわち $E_{\rm A2}\approx-10.492$ eV/formula と推定．完全 A2-Ni/A2-Al 端成分は未計算．）
+（MACE の A2-Ni / A2-Al 端成分は `run_a2_endmembers.py` によりそれぞれ $E=-5.662$ eV/atom ($a=2.790$ Å)、$E=-3.687$ eV/atom ($a=3.225$ Å) と緩和された。$x=0.5$ のランダム A2 エネルギー $E_{\rm A2}=-10.493$ eV/formula から、B2 秩序化エネルギー $\Delta E_{\rm order}=-0.3510$ eV/formula を得る。）
 
 ## 8. 成果物
 

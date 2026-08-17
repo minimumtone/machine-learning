@@ -1,0 +1,3 @@
+element,a_A,E_total_eV,n_atoms,E_atom_eV,V_atom_A3,converged,file
+Ni,2.7904436869106726,-724.7487830921082,128,-5.662099867907095,10.864000878816766,True,/home/ubuntu/repos/machine-learning/laves_fig6/b2_offstoich/relax/a2_ni.extxyz
+Al,3.2246518560977124,-471.96358249119186,128,-3.6872154882124364,16.765577027543515,True,/home/ubuntu/repos/machine-learning/laves_fig6/b2_offstoich/relax/a2_al.extxyz
