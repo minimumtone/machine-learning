@@ -1,0 +1,11 @@
+{
+  "E_B2_per_formula_eV": -10.8444,
+  "E_A2_per_formula_eV": -10.4934,
+  "E_A2_predicted_eV": -10.2647,
+  "delta_order_obs_eV": 0.3509,
+  "delta_order_pred_eV": 0.5797,
+  "J_NiAl_eV": -1.3555,
+  "J_NiNi_eV": -1.2567,
+  "J_AlAl_eV": -1.1646,
+  "note": "Constant pair model overestimates ordering energy (concentrated limit). Composition-dependent interaction parameters are needed."
+}

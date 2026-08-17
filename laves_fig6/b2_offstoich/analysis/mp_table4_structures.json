@@ -1,0 +1,101 @@
+[
+  {
+    "label": "B2_CoAl",
+    "formula": "CoAl",
+    "mp_id": "mp-aaaaaaky",
+    "energy_per_atom_eV": -10.53962086,
+    "formation_energy_per_atom_eV": -0.556456129999999,
+    "energy_above_hull_eV": 0.0,
+    "n_atoms": 2,
+    "volume_per_atom_A3": 11.205766637249345,
+    "structure_file": "/home/ubuntu/repos/machine-learning/laves_fig6/b2_offstoich/analysis/mp_B2_CoAl.extxyz"
+  },
+  {
+    "label": "B2_PdAl",
+    "formula": "PdAl",
+    "mp_id": "mp-aaaaakqn",
+    "energy_per_atom_eV": -15.781877775,
+    "formation_energy_per_atom_eV": -0.935601805000001,
+    "energy_above_hull_eV": 0.0,
+    "n_atoms": 8,
+    "volume_per_atom_A3": 14.40027171107182,
+    "structure_file": "/home/ubuntu/repos/machine-learning/laves_fig6/b2_offstoich/analysis/mp_B2_PdAl.extxyz"
+  },
+  {
+    "label": "B2_RhAl",
+    "formula": "RhAl",
+    "mp_id": "mp-aaaaaaoa",
+    "energy_per_atom_eV": -16.61165009,
+    "formation_energy_per_atom_eV": -1.1774866100000008,
+    "energy_above_hull_eV": 0.0,
+    "n_atoms": 2,
+    "volume_per_atom_A3": 13.196161730460213,
+    "structure_file": "/home/ubuntu/repos/machine-learning/laves_fig6/b2_offstoich/analysis/mp_B2_RhAl.extxyz"
+  },
+  {
+    "label": "B2_IrAl",
+    "formula": "IrAl",
+    "mp_id": "mp-aaaaacun",
+    "energy_per_atom_eV": -30.61632865,
+    "formation_energy_per_atom_eV": -1.0706027599999999,
+    "energy_above_hull_eV": 0.0,
+    "n_atoms": 2,
+    "volume_per_atom_A3": 13.426623817739934,
+    "structure_file": "/home/ubuntu/repos/machine-learning/laves_fig6/b2_offstoich/analysis/mp_B2_IrAl.extxyz"
+  },
+  {
+    "label": "fcc_Co",
+    "formula": "Co",
+    "mp_id": "mp-aaaaaady",
+    "energy_per_atom_eV": -13.23423113,
+    "formation_energy_per_atom_eV": 0.0,
+    "energy_above_hull_eV": 0.0,
+    "n_atoms": 1,
+    "volume_per_atom_A3": 10.841542632772716,
+    "structure_file": "/home/ubuntu/repos/machine-learning/laves_fig6/b2_offstoich/analysis/mp_fcc_Co.extxyz"
+  },
+  {
+    "label": "fcc_Pd",
+    "formula": "Pd",
+    "mp_id": "mp-aaaaaaac",
+    "energy_per_atom_eV": -22.96045361,
+    "formation_energy_per_atom_eV": 0.0,
+    "energy_above_hull_eV": 0.0,
+    "n_atoms": 1,
+    "volume_per_atom_A3": 15.027994594069265,
+    "structure_file": "/home/ubuntu/repos/machine-learning/laves_fig6/b2_offstoich/analysis/mp_fcc_Pd.extxyz"
+  },
+  {
+    "label": "fcc_Rh",
+    "formula": "Rh",
+    "mp_id": "mp-aaaaaacw",
+    "energy_per_atom_eV": -24.13622863,
+    "formation_energy_per_atom_eV": 0.0,
+    "energy_above_hull_eV": 0.0,
+    "n_atoms": 1,
+    "volume_per_atom_A3": 13.782780337825384,
+    "structure_file": "/home/ubuntu/repos/machine-learning/laves_fig6/b2_offstoich/analysis/mp_fcc_Rh.extxyz"
+  },
+  {
+    "label": "fcc_Ir",
+    "formula": "Ir",
+    "mp_id": "mp-aaaaaadx",
+    "energy_per_atom_eV": -52.35935345,
+    "formation_energy_per_atom_eV": 0.0,
+    "energy_above_hull_eV": 0.0,
+    "n_atoms": 1,
+    "volume_per_atom_A3": 14.310382775109328,
+    "structure_file": "/home/ubuntu/repos/machine-learning/laves_fig6/b2_offstoich/analysis/mp_fcc_Ir.extxyz"
+  },
+  {
+    "label": "C14_NbNi2",
+    "formula": "NbNi2",
+    "mp_id": "mp-aaackuow",
+    "energy_per_atom_eV": -7.411904745833334,
+    "formation_energy_per_atom_eV": -0.19137861250000063,
+    "energy_above_hull_eV": 0.0762697166111117,
+    "n_atoms": 12,
+    "volume_per_atom_A3": 12.904010979912242,
+    "structure_file": "/home/ubuntu/repos/machine-learning/laves_fig6/b2_offstoich/analysis/mp_C14_NbNi2.extxyz"
+  }
+]
