@@ -11,6 +11,8 @@ from ase.filters import FrechetCellFilter
 from mace.calculators import mace_mp
 
 BASE = os.path.dirname(os.path.abspath(__file__))
+os.makedirs(os.path.join(BASE, "analysis"), exist_ok=True)
+os.makedirs(os.path.join(BASE, "relax"), exist_ok=True)
 CALC = mace_mp(model="medium", default_dtype="float64", device="cpu")
 FMAX = 0.02
 

@@ -80,7 +80,7 @@ MACE-MP-0 medium（0 K 静的緩和、FrechetCellFilter、128 サイト超胞）
 
 - **振動エントロピーなし**：1473 K の熱処理には phonon/MD によるエントロピー補正が必要。
 - **磁性**：Ni のスピン分極効果は MACE-MP-0 にはない。
-- **A2 端成分計算済み**：A2-Ni($a=2.790$ Å, $E=-5.662$ eV/atom) と A2-Al($a=3.225$ Å, $E=-3.687$ eV/atom) を `run_a2_endmembers.py` で緩和。B2-A2 秩序変態エネルギーは $\Delta E_{\rm order}=-0.3510$ eV/formula。
+- **A2 端成分計算済み**：A2-Ni($a=2.790$ Å, $E=-5.662$ eV/atom) と A2-Al($a=3.225$ Å, $E=-3.687$ eV/atom) を `run_a2_endmembers.py` で緩和。B2-A2 秩序変態エネルギーは $\Delta E_{\rm order}=+0.3510$ eV/formula。
 - **サンプリングの希薄さ**：各組成 3 配置では 4SL/8SL の全エンドメンバーをカバーできない。最低 10–20 配置、さらにクラスター展開用データが必要。
 
 ## 6. 次の実行計画
@@ -126,7 +126,7 @@ $$ V_{\rm pair} = J_{\rm NiAl} - \frac{J_{\rm NiNi} + J_{\rm AlAl}}{2} $$
 
 `extract_4sl_b2_parameters.py` から出力される `V_from_ordering_eV` を使用し，`V_pair_constant_eV` はあくまで定数対近似の不整合を示す指標として扱う．
 
-（MACE の A2-Ni / A2-Al 端成分は `run_a2_endmembers.py` によりそれぞれ $E=-5.662$ eV/atom ($a=2.790$ Å)、$E=-3.687$ eV/atom ($a=3.225$ Å) と緩和された。$x=0.5$ のランダム A2 エネルギー $E_{\rm A2}=-10.493$ eV/formula から、B2 秩序化エネルギー $\Delta E_{\rm order}=-0.3510$ eV/formula を得る。）
+（MACE の A2-Ni / A2-Al 端成分は `run_a2_endmembers.py` によりそれぞれ $E=-5.662$ eV/atom ($a=2.790$ Å)、$E=-3.687$ eV/atom ($a=3.225$ Å) と緩和された。$x=0.5$ のランダム A2 エネルギー $E_{\rm A2}=-10.493$ eV/formula から、B2 秩序化エネルギー $\Delta E_{\rm order}=+0.3510$ eV/formula を得る。）
 
 ## 8. 成果物
 
