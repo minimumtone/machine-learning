@@ -211,14 +211,19 @@ best = branch_agg.loc[branch_agg.groupby('x_Al_target')['G'].idxmin()].copy()
 best = best.sort_values('x_Al')
 
 # --- x_max extraction for several tolerances ---------------------------------
-def xmax_info(df, col, tol, hull_x, hull_y):
+def xmax_info(df, col, tol, hull_x, hull_y, branch_col=None):
     """Return x_max and saturation info.
 
-    If the largest on-hull composition equals the largest sampled composition,
-    the phase boundary was NOT crossed within the sampled range; x_max is
-    returned as NaN and saturated=True with a lower-bound value.
+    If the largest on-hull composition equals the largest sampled composition
+    *of the same branch*, the phase boundary was NOT crossed within the sampled
+    range for that branch; x_max is returned as NaN and saturated=True with a
+    lower-bound value.  This avoids the false positive where another branch has
+    sampled points beyond the branch that determines the boundary.
     """
-    g = df[['x_Al', col]].copy().sort_values('x_Al')
+    cols = ['x_Al', col]
+    if branch_col is not None:
+        cols.append(branch_col)
+    g = df[cols].copy().sort_values('x_Al')
     if g.empty:
         return {'x_max': np.nan, 'saturated': False, 'max_sampled_x': np.nan,
                 'n_on_hull': 0}
@@ -229,21 +234,32 @@ def xmax_info(df, col, tol, hull_x, hull_y):
         return {'x_max': np.nan, 'saturated': False, 'max_sampled_x': max_x_all,
                 'n_on_hull': 0}
     max_x_on = float(on.x_Al.max())
-    saturated = abs(max_x_on - max_x_all) < 1e-6
+    if branch_col is not None and branch_col in on.columns:
+        # Use the branch of the point at max_x_on instead of the global maximum.
+        rows_at_max = on[on.x_Al == max_x_on]
+        br_at_max = rows_at_max[branch_col].iloc[0]
+        branch_max_x = float(g[g[branch_col] == br_at_max].x_Al.max())
+        saturated = abs(max_x_on - branch_max_x) < 1e-6
+        max_sampled_x = branch_max_x
+    else:
+        saturated = abs(max_x_on - max_x_all) < 1e-6
+        max_sampled_x = max_x_all
     if saturated:
-        return {'x_max': np.nan, 'saturated': True, 'max_sampled_x': max_x_all,
+        return {'x_max': np.nan, 'saturated': True, 'max_sampled_x': max_sampled_x,
                 'n_on_hull': len(on)}
     else:
-        return {'x_max': max_x_on, 'saturated': False, 'max_sampled_x': max_x_all,
+        return {'x_max': max_x_on, 'saturated': False, 'max_sampled_x': max_sampled_x,
                 'n_on_hull': len(on)}
 
 
 def xmax_from_branch(br, col, tol, hull_x, hull_y):
-    return xmax_info(branch_agg[branch_agg.branch == br], col, tol, hull_x, hull_y)
+    return xmax_info(branch_agg[branch_agg.branch == br], col, tol, hull_x, hull_y,
+                     branch_col='branch')
 
 
 def xmax_overall(col, tol, hull_x, hull_y):
-    return xmax_info(best[['x_Al', col]], col, tol, hull_x, hull_y)
+    return xmax_info(best[['x_Al', col, 'branch']], col, tol, hull_x, hull_y,
+                     branch_col='branch')
 
 
 def record(temperature, branch, energy_col, tol, hull_x, hull_y):

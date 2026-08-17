@@ -19,20 +19,24 @@
   },
   "1473K": {
     "tol_3meV": {
-      "x_max": 0.6598,
-      "saturated": false
+      "x_max": null,
+      "saturated": true,
+      "lower_bound_x": 0.6598
     },
     "tol_5meV": {
-      "x_max": 0.6598,
-      "saturated": false
+      "x_max": null,
+      "saturated": true,
+      "lower_bound_x": 0.6598
     },
     "tol_10meV": {
-      "x_max": 0.6598,
-      "saturated": false
+      "x_max": null,
+      "saturated": true,
+      "lower_bound_x": 0.6598
     },
     "tol_20meV": {
-      "x_max": 0.6598,
-      "saturated": false
+      "x_max": null,
+      "saturated": true,
+      "lower_bound_x": 0.6598
     }
   },
   "experimental_B2_uniform": 0.6,
