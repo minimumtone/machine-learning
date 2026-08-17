@@ -4,6 +4,17 @@
 
 熱処理温度は **1473 K**（168 h → 水焼入れ）だが、測定された格子定数・平均原子体積は **室温** であることに注意。
 
+## 主要結果（要約）
+
+| 項目 | 結果 |
+|---|---|
+| 完全 B2 の体積 | $\bar V=11.975$ Å³/atom, $a=2.882$ Å |
+| Fig. 6(a) 再現（$0.45\le x_{\rm Al}\le0.60$） | RMSE = **0.158 Å³/atom**, MAPE = **0.99 %**（$n=12$） |
+| B2 単相域の上限 $x_{\max}$（0 K 凸包） | 反サイトのみ 0.492；空孔込み 0.520；実験 $\sim0.60$ |
+| 格子定数 $a(x)$ vs Bradley & Taylor | 0.3–0.7 % 程度で一致 |
+| 欠陥支配性 | Ni 過剰：Ni 反サイト；Al 過剰：Ni 構造空孔（構成欠陥 / 三重欠陥傾向） |
+| 4SL/8SL 秩序化強度 | $V\approx -0.10$ 〜 $-0.15$ eV/bond |
+
 ## 1. 計算条件
 
 - **MLIP**: MACE-MP-0 medium, float64, CPU
@@ -33,7 +44,7 @@ $$ \Omega_i = E_i - \mu_{\rm Ni}N_{\rm Ni} - \mu_{\rm Al}N_{\rm Al} - k_{\rm B}T
 | Ni 空孔（Al 過剰） | 1.17 | 0.08 | Al 過剰側で最低エネルギー |
 | Al 反サイト on Ni サイト（Al 過剰） | 1.59 | 0.10 | 常に Ni 空孔より高い |
 
-これは B2-NiAl の **構成欠陥（constitutional defect）**，すなわち **三重欠陥化学**（triple-defect: Ni 過剰 = Ni 反サイト、Al 過剰 = Ni 構造空孔）と整合する。
+これは B2-NiAl の **構成欠陥（constitutional defect）パターン**（Ni 過剰：Ni 反サイト；Al 過剰：Ni 構造空孔）で、熱平衡においては **三重欠陥錯体** $2V_{\rm Ni}+{\rm Ni}_{\rm Al}$ として記述されることもある。
 
 **重要**: 個々の点欠陥形成エネルギーは元素化学ポテンシャルの取り方に敏感である。B2 単相で
 $$\mu_{\rm Ni}+\mu_{\rm Al}=E_{\rm B2}/{\rm formula}=-10.844\ {\rm eV}$$
@@ -63,9 +74,9 @@ Al-rich 反サイト密サンプリング（$x_{\rm Al}=0.61$–0.79）を含む
 
 | 枝 | $x_{\max}$ | 備考 |
 |---|---|---|
-| 反サイトのみ | 0.49 | 0 K では B2 均一域の Ni-rich 側のみで凸包上 |
-| 空孔込み | 0.52 | Al 過剰側で約 0.03 だけ右に伸びる |
-| 実験（Ellner; Yamanouchi Fig.6） | ~0.60 | 0 K 凸包では Ni$_3$Al$_4$/Ni$_2$Al$_3$ が優位であり，残り $\sim0.08$ は配置エントロピーで埋まる |
+| 反サイトのみ | 0.492 | 0 K では B2 均一域の Ni-rich 側のみで凸包上 |
+| 空孔込み | 0.520 | Al 過剰側で約 0.03 だけ右に伸びる |
+| 実験（Ellner; Yamanouchi Fig.6） | ~0.60 | 0 K 凸包では Ni$_3$Al$_4$/Ni$_2$Al$_3$ が優位であり，残り $\sim0.08$ は有限温度の配置エントロピー等で埋まる |
 
 Al-rich 側の B2 反サイト単相は凸包から **0.08–0.11 eV/atom** 高エネルギーであるが，これは「二相分離」ではなく **B2 単相域の上限** を示す。空孔を導入すると上限が $x_{\rm Al}\approx0.52$ まで右に伸びるが，実験的 0.60 までを完全に再現するには，有限温度の配置エントロピー（およびおそらく MACE の中間化合物エネルギー精度）を含めた自由エネルギー計算が必要である。
 
@@ -117,7 +128,7 @@ MACE-MP-0 medium は格子定数を 0.5% 未満で再現しており、Fig.6 議
 
   $$V = J_{\rm NiAl} - \frac{J_{\rm NiNi}+J_{\rm AlAl}}{2}$$
 
-  の一つの値のみが物理的に意味を持つ。現状の簡易 Ising 外挿では $V \approx -0.1$ 〜 $-0.15$ eV/bond（Ni–Al 結合が他の結合より約 0.1 eV 強く負）。個別の $J_{\rm NiAl}, J_{\rm NiNi}, J_{\rm AlAl}$ の絶対値は A2 エンドメンバー・クラスター展開がないため信頼できない。
+  の一つの値のみが物理的に意味を持つ。現状の簡易 Ising 外挿では $V \approx -0.1$ 〜 $-0.15$ eV/bond（Ni–Al 結合が他の結合より約 0.1 eV 強く負）。個別の $J_{\rm NiAl}, J_{\rm NiNi}, J_{\rm AlAl}$ の絶対値は A2 エンドメンバー・クラスター展開がないため信頼できない（詳細：`analysis/b2_pair_interactions.json`）。
 - 元素化学ポテンシャルではなく **B2 単相の自由エネルギー曲面** を介して正しい欠陥優位を記述するための第一ステップである。
 
 ## 10. 限界と次ステップ
@@ -138,6 +149,7 @@ MACE-MP-0 medium は格子定数を 0.5% 未満で再現しており、Fig.6 議
 - `analysis/bradley_taylor_a_exp.csv`, `analysis/a_comparison_bradley_mace.csv`
 - `analysis/BENCHMARK_MACE_vs_MP_vs_EXP.md`（Ni$_3$Al$_4$ 含む）
 - `analysis/TABLE4_MACE_ANALOGUE.md`, `analysis/C14_YAMANOUCHI_WEIGHTED_CHECK.md`
+- `analysis/b2_pair_interactions.json`
 - `4SL_B2_MODEL_DESIGN.md`
+- `07_reports/fig_energy_diagram_nial.png`（真の Ni-Al 凸包図）
 - `figures/fig_b2_offstoich_vbar*.png`, `fig_b2_offstoich_a.png`, `fig_b2_offstoich_eform.png`, `fig_b2_alrich_dense_hull.png`, `fig_b2_hull_xmax.png`, `fig_b2_a_bradley_overlay.png`
-- `07_reports/fig_energy_diagram_nial.png`
