@@ -139,43 +139,28 @@ for (x, br), g in df[df.branch != "perfect"].groupby(["x_Al_target", "branch"]):
 agg = pd.DataFrame(agg_rows)
 
 # branch mixture from per-atom semi-grand free energies
+# Only include target compositions where *both* branches were computed so that
+# the mixed curve reflects a real competition rather than a single-branch fallback.
 mix_rows = []
 for x, g in agg.groupby("x_Al_target"):
     g = g.set_index("branch")
     avail = set(g.index)
-    # If both branches available, pick the lower free-energy per atom branch.
-    # A smooth crossover over ~k_B T / atom is retained by using the
-    # Boltzmann factor for a representative sample size (128 atoms).
-    dOmega = None
     if {"antisite", "vacancy"} <= avail:
         dOmega = g.loc["vacancy", "Omega"] - g.loc["antisite", "Omega"]
         N_bar = 0.5 * (g.loc["vacancy", "n_atoms"] + g.loc["antisite", "n_atoms"])
         w_vac = 1.0 / (1.0 + np.exp(dOmega * N_bar / KT_EV))
-    elif "vacancy" in avail:
-        w_vac = 1.0
-    else:
-        w_vac = 0.0
-    if "vacancy" in avail and "antisite" in avail:
         x_Al_val = w_vac * g.loc["vacancy", "x_Al"] + (1 - w_vac) * g.loc["antisite", "x_Al"]
         V_val = w_vac * g.loc["vacancy", "V"] + (1 - w_vac) * g.loc["antisite", "V"]
         a_val = w_vac * g.loc["vacancy", "a"] + (1 - w_vac) * g.loc["antisite", "a"]
-    elif "vacancy" in avail:
-        x_Al_val = g.loc["vacancy", "x_Al"]
-        V_val = g.loc["vacancy", "V"]
-        a_val = g.loc["vacancy", "a"]
-    else:
-        x_Al_val = g.loc["antisite", "x_Al"]
-        V_val = g.loc["antisite", "V"]
-        a_val = g.loc["antisite", "a"]
-    mix_rows.append(dict(
-        x_Al_target=x,
-        x_Al=x_Al_val,
-        V_mix=V_val,
-        a_mix=a_val,
-        w_vac=w_vac,
-        preferred="vacancy" if w_vac > 0.5 else "antisite",
-        dOmega_eV=dOmega,
-    ))
+        mix_rows.append(dict(
+            x_Al_target=x,
+            x_Al=x_Al_val,
+            V_mix=V_val,
+            a_mix=a_val,
+            w_vac=w_vac,
+            preferred="vacancy" if w_vac > 0.5 else "antisite",
+            dOmega_eV=dOmega,
+        ))
 mix = pd.DataFrame(mix_rows).sort_values("x_Al_target")
 
 # experimental lattice constant (triple-defect conversion)

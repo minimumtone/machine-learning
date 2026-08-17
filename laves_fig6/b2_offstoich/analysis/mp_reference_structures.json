@@ -91,8 +91,11 @@
     "formation_energy_per_atom_eV": -0.6573550976785713,
     "energy_above_hull_eV": 0.0,
     "n_atoms": 56,
-    "volume_A3": 740.8068790616051,
-    "volume_per_atom_A3": 13.228694268957232,
-    "structure_file": "/home/ubuntu/repos/machine-learning/laves_fig6/b2_offstoich/analysis/mace_Ni3Al4.extxyz"
+    "volume_A3": 723.6810390320675,
+    "volume_per_atom_A3": 12.922875697001205,
+    "structure_file": "/home/ubuntu/repos/machine-learning/laves_fig6/b2_offstoich/analysis/mp_Ni3Al4.extxyz",
+    "mace_volume_A3": 740.8068790616051,
+    "mace_volume_per_atom_A3": 13.228694268957232,
+    "mace_structure_file": "/home/ubuntu/repos/machine-learning/laves_fig6/b2_offstoich/analysis/mace_Ni3Al4.extxyz"
   }
 ]

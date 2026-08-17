@@ -31,8 +31,8 @@ bradley = pd.DataFrame({
 })
 # the x_Ni=0.60 (x_Al=0.40) point sits at the Al-rich edge of the B2 field and
 # may include incipient Ni2Al3 in the older measurements; flag it.
-bradley['x_Al'] = 1.0 - bradley['x_Ni']
-bradley['note'] = ['edge' if x < 0.45 else 'B2' for x in bradley['x_Al']]
+bradley['x_Al'] = np.round(1.0 - bradley['x_Ni'], 4)
+bradley['note'] = ['edge' if x < 0.45 - 1e-9 else 'B2' for x in bradley['x_Al']]
 
 # write experimental CSV
 bradley[['x_Al','a_A','note']].to_csv(os.path.join(AN,'bradley_taylor_a_exp.csv'), index=False)
@@ -41,7 +41,7 @@ bradley[['x_Al','a_A','note']].to_csv(os.path.join(AN,'bradley_taylor_a_exp.csv'
 mace_interp = mace.set_index('x_Al').a_mix
 rows = []
 for _, r in bradley.iterrows():
-    if abs(r.x_Al - 0.5) <= 0.11:  # within plotted range
+    if mace.x_Al.min() - 1e-9 <= r.x_Al <= mace.x_Al.max() + 1e-9:  # within computed MACE range
         a_mace = float(np.interp(r.x_Al, mace.x_Al.values, mace.a_mix.values))
         rows.append({
             'x_Al': r.x_Al,

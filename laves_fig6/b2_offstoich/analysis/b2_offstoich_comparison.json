@@ -7,65 +7,20 @@
   "T_boltzmann_K": 1473.0,
   "weight_method": "Helmholtz free energy per occupied atom (semi-grand canonical with analytic configurational entropy)",
   "branch_preference": {
-    "0.20": {
-      "preferred": "antisite",
-      "w_vacancy_annealT": 0.0,
-      "dOmega_eV": null
-    },
-    "0.30": {
-      "preferred": "antisite",
-      "w_vacancy_annealT": 0.0,
-      "dOmega_eV": null
-    },
-    "0.32": {
-      "preferred": "vacancy",
-      "w_vacancy_annealT": 1.0,
-      "dOmega_eV": null
-    },
-    "0.34": {
-      "preferred": "vacancy",
-      "w_vacancy_annealT": 1.0,
-      "dOmega_eV": null
-    },
-    "0.36": {
-      "preferred": "vacancy",
-      "w_vacancy_annealT": 1.0,
-      "dOmega_eV": null
-    },
-    "0.38": {
-      "preferred": "vacancy",
-      "w_vacancy_annealT": 1.0,
-      "dOmega_eV": null
-    },
     "0.40": {
       "preferred": "antisite",
       "w_vacancy_annealT": 0.0,
       "dOmega_eV": 0.1051
-    },
-    "0.41": {
-      "preferred": "vacancy",
-      "w_vacancy_annealT": 1.0,
-      "dOmega_eV": null
     },
     "0.42": {
       "preferred": "antisite",
       "w_vacancy_annealT": 0.0,
       "dOmega_eV": 0.1153
     },
-    "0.43": {
-      "preferred": "vacancy",
-      "w_vacancy_annealT": 1.0,
-      "dOmega_eV": null
-    },
     "0.44": {
       "preferred": "antisite",
       "w_vacancy_annealT": 0.0,
       "dOmega_eV": 0.0912
-    },
-    "0.45": {
-      "preferred": "vacancy",
-      "w_vacancy_annealT": 1.0,
-      "dOmega_eV": null
     },
     "0.46": {
       "preferred": "antisite",
@@ -121,81 +76,6 @@
       "preferred": "vacancy",
       "w_vacancy_annealT": 1.0,
       "dOmega_eV": -0.0753
-    },
-    "0.61": {
-      "preferred": "antisite",
-      "w_vacancy_annealT": 0.0,
-      "dOmega_eV": null
-    },
-    "0.62": {
-      "preferred": "vacancy",
-      "w_vacancy_annealT": 1.0,
-      "dOmega_eV": null
-    },
-    "0.63": {
-      "preferred": "antisite",
-      "w_vacancy_annealT": 0.0,
-      "dOmega_eV": null
-    },
-    "0.64": {
-      "preferred": "vacancy",
-      "w_vacancy_annealT": 1.0,
-      "dOmega_eV": null
-    },
-    "0.65": {
-      "preferred": "antisite",
-      "w_vacancy_annealT": 0.0,
-      "dOmega_eV": null
-    },
-    "0.66": {
-      "preferred": "vacancy",
-      "w_vacancy_annealT": 1.0,
-      "dOmega_eV": null
-    },
-    "0.67": {
-      "preferred": "antisite",
-      "w_vacancy_annealT": 0.0,
-      "dOmega_eV": null
-    },
-    "0.69": {
-      "preferred": "antisite",
-      "w_vacancy_annealT": 0.0,
-      "dOmega_eV": null
-    },
-    "0.70": {
-      "preferred": "antisite",
-      "w_vacancy_annealT": 0.0,
-      "dOmega_eV": null
-    },
-    "0.71": {
-      "preferred": "antisite",
-      "w_vacancy_annealT": 0.0,
-      "dOmega_eV": null
-    },
-    "0.73": {
-      "preferred": "antisite",
-      "w_vacancy_annealT": 0.0,
-      "dOmega_eV": null
-    },
-    "0.75": {
-      "preferred": "antisite",
-      "w_vacancy_annealT": 0.0,
-      "dOmega_eV": null
-    },
-    "0.77": {
-      "preferred": "antisite",
-      "w_vacancy_annealT": 0.0,
-      "dOmega_eV": null
-    },
-    "0.79": {
-      "preferred": "antisite",
-      "w_vacancy_annealT": 0.0,
-      "dOmega_eV": null
-    },
-    "0.80": {
-      "preferred": "antisite",
-      "w_vacancy_annealT": 0.0,
-      "dOmega_eV": null
     }
   }
 }
