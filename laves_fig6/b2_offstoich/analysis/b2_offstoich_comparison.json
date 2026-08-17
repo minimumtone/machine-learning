@@ -1,48 +1,81 @@
 {
-  "n_exp_points_compared": 12,
-  "RMSE_V_A3": 0.1573,
-  "MAPE_V_pct": 0.981,
+  "n_exp_points_compared": 13,
+  "RMSE_V_A3": 0.4596,
+  "MAPE_V_pct": 2.811,
   "V_B2_perfect": 11.974527545032217,
+  "a_B2_perfect": 2.882456714930723,
+  "T_boltzmann_K": 1473.0,
+  "weight_method": "semi-grand canonical with fixed lattice sites and analytic configurational entropy",
   "branch_preference": {
+    "0.40": {
+      "preferred": "antisite",
+      "w_vacancy_annealT": 0.0,
+      "dOmega_eV": 24.5845
+    },
     "0.42": {
       "preferred": "antisite",
       "w_vacancy_annealT": 0.0,
-      "dEf_eV_atom": 0.1311
+      "dOmega_eV": 24.4531
     },
     "0.44": {
       "preferred": "antisite",
       "w_vacancy_annealT": 0.0,
-      "dEf_eV_atom": 0.1042
+      "dOmega_eV": 19.7341
     },
     "0.46": {
       "preferred": "antisite",
       "w_vacancy_annealT": 0.0,
-      "dEf_eV_atom": 0.0618
+      "dOmega_eV": 12.3029
+    },
+    "0.47": {
+      "preferred": "antisite",
+      "w_vacancy_annealT": 0.0,
+      "dOmega_eV": 9.5431
     },
     "0.48": {
       "preferred": "antisite",
       "w_vacancy_annealT": 0.0,
-      "dEf_eV_atom": 0.0308
+      "dOmega_eV": 6.5176
+    },
+    "0.49": {
+      "preferred": "antisite",
+      "w_vacancy_annealT": 0.0,
+      "dOmega_eV": 3.7767
+    },
+    "0.51": {
+      "preferred": "antisite",
+      "w_vacancy_annealT": 0.0023,
+      "dOmega_eV": 0.7709
     },
     "0.52": {
       "preferred": "vacancy",
-      "w_vacancy_annealT": 1.0,
-      "dEf_eV_atom": -0.0213
+      "w_vacancy_annealT": 0.5304,
+      "dOmega_eV": -0.0155
+    },
+    "0.53": {
+      "preferred": "antisite",
+      "w_vacancy_annealT": 0.1621,
+      "dOmega_eV": 0.2086
     },
     "0.54": {
-      "preferred": "vacancy",
-      "w_vacancy_annealT": 1.0,
-      "dEf_eV_atom": -0.0289
+      "preferred": "antisite",
+      "w_vacancy_annealT": 0.0001,
+      "dOmega_eV": 1.1633
     },
     "0.56": {
-      "preferred": "vacancy",
-      "w_vacancy_annealT": 1.0,
-      "dEf_eV_atom": -0.0491
+      "preferred": "antisite",
+      "w_vacancy_annealT": 0.0,
+      "dOmega_eV": 1.4762
     },
     "0.58": {
-      "preferred": "vacancy",
-      "w_vacancy_annealT": 1.0,
-      "dEf_eV_atom": -0.0522
+      "preferred": "antisite",
+      "w_vacancy_annealT": 0.0,
+      "dOmega_eV": 3.0659
+    },
+    "0.60": {
+      "preferred": "antisite",
+      "w_vacancy_annealT": 0.0,
+      "dOmega_eV": 3.7128
     }
   }
 }

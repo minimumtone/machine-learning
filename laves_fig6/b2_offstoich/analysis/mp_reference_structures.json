@@ -1,0 +1,86 @@
+[
+  {
+    "label": "Ni",
+    "formula": "Ni",
+    "mp_id": "mp-aaaaaaax",
+    "energy_per_atom_eV": -11.98171716,
+    "formation_energy_per_atom_eV": 0.0,
+    "energy_above_hull_eV": 0.0,
+    "n_atoms": 1,
+    "volume_A3": 10.492020341068944,
+    "volume_per_atom_A3": 10.492020341068944,
+    "structure_file": "/home/ubuntu/repos/machine-learning/laves_fig6/b2_offstoich/analysis/mp_Ni.extxyz"
+  },
+  {
+    "label": "Al",
+    "formula": "Al",
+    "mp_id": "mp-aaaaaafe",
+    "energy_per_atom_eV": -6.73209833,
+    "formation_energy_per_atom_eV": 0.0,
+    "energy_above_hull_eV": 0.0,
+    "n_atoms": 1,
+    "volume_A3": 16.471717630914863,
+    "volume_per_atom_A3": 16.471717630914863,
+    "structure_file": "/home/ubuntu/repos/machine-learning/laves_fig6/b2_offstoich/analysis/mp_Al.extxyz"
+  },
+  {
+    "label": "B2_NiAl",
+    "formula": "NiAl",
+    "mp_id": "mp-aaaaacff",
+    "energy_per_atom_eV": -10.041808895,
+    "formation_energy_per_atom_eV": -0.68490115,
+    "energy_above_hull_eV": 0.0,
+    "n_atoms": 2,
+    "volume_A3": 23.386572118200654,
+    "volume_per_atom_A3": 11.693286059100327,
+    "structure_file": "/home/ubuntu/repos/machine-learning/laves_fig6/b2_offstoich/analysis/mp_B2_NiAl.extxyz"
+  },
+  {
+    "label": "L12_Ni3Al",
+    "formula": "Ni3Al",
+    "mp_id": "mp-aaaaadvt",
+    "energy_per_atom_eV": -11.09573223,
+    "formation_energy_per_atom_eV": -0.4264197774999996,
+    "energy_above_hull_eV": 0.0,
+    "n_atoms": 4,
+    "volume_A3": 43.727854385354966,
+    "volume_per_atom_A3": 10.931963596338742,
+    "structure_file": "/home/ubuntu/repos/machine-learning/laves_fig6/b2_offstoich/analysis/mp_L12_Ni3Al.extxyz"
+  },
+  {
+    "label": "Ni5Al3",
+    "formula": "Ni5Al3",
+    "mp_id": "mp-aaaaayle",
+    "energy_per_atom_eV": -10.57636064375,
+    "formation_energy_per_atom_eV": -0.5632505449999989,
+    "energy_above_hull_eV": 0.0,
+    "n_atoms": 8,
+    "volume_A3": 90.37206581100938,
+    "volume_per_atom_A3": 11.296508226376172,
+    "structure_file": "/home/ubuntu/repos/machine-learning/laves_fig6/b2_offstoich/analysis/mp_Ni5Al3.extxyz"
+  },
+  {
+    "label": "Ni2Al3",
+    "formula": "Ni2Al3",
+    "mp_id": "mp-aaaaabor",
+    "energy_per_atom_eV": -9.47616249,
+    "formation_energy_per_atom_eV": -0.6442166279999995,
+    "energy_above_hull_eV": 0.0,
+    "n_atoms": 5,
+    "volume_A3": 67.4350609096183,
+    "volume_per_atom_A3": 13.48701218192366,
+    "structure_file": "/home/ubuntu/repos/machine-learning/laves_fig6/b2_offstoich/analysis/mp_Ni2Al3.extxyz"
+  },
+  {
+    "label": "NiAl3",
+    "formula": "NiAl3",
+    "mp_id": "mp-aaabjkld",
+    "energy_per_atom_eV": -8.463278740625,
+    "formation_energy_per_atom_eV": -0.4187757031250001,
+    "energy_above_hull_eV": 0.0,
+    "n_atoms": 16,
+    "volume_A3": 228.5507372689479,
+    "volume_per_atom_A3": 14.284421079309244,
+    "structure_file": "/home/ubuntu/repos/machine-learning/laves_fig6/b2_offstoich/analysis/mp_NiAl3.extxyz"
+  }
+]
