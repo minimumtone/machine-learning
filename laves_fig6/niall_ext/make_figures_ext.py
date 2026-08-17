@@ -44,8 +44,8 @@ else:
     t0 = time.time()
     opt.run(fmax=0.02, steps=500)
     v = float(at.get_volume()) / len(at)
-    bcc_al = dict(V_per_atom_A3=v, a_bcc_A=(2 * v) ** (1 / 3),
-                  converged=bool(opt.converged()))
+    bcc_al = {"V_per_atom_A3": v, "a_bcc_A": (2 * v) ** (1 / 3),
+                  "converged": bool(opt.converged())}
     with open(bcc_al_json, "w") as f:
         json.dump(bcc_al, f, indent=2)
     print(f"bcc-Al: V={v:.4f} a={bcc_al['a_bcc_A']:.4f} ({time.time()-t0:.1f}s)")
@@ -53,22 +53,30 @@ else:
 V_NI, V_AL_FCC = 10.8133, 16.7356  # MACE fcc references
 
 # --- Fig 1: extended fcc Ni(Al) vs Vegard -------------------------------------
+# 2x2x2 random seeds for x >= 0.3125; SQS generated separately for the full range.
 ext = pd.read_csv(os.path.join(AN, "niall_fcc_ext.csv"))
-old = pd.read_csv(os.path.join(BASE, "..", "05_analysis", "volumes.csv"))
-old = old[old.parent_structure == "fcc-Ni(Al)"][["x_Al", "volume_per_atom_A3"]]
-old = old.rename(columns={"volume_per_atom_A3": "V_per_atom_A3"})
-allfcc = pd.concat([old, ext[["x_Al", "V_per_atom_A3"]]], ignore_index=True)
+allfcc = ext[["x_Al", "V_per_atom_A3"]].copy()
 g = (allfcc.groupby("x_Al")
      .agg(V=("V_per_atom_A3", "mean"), Vstd=("V_per_atom_A3", "std"))
      .reset_index())
 
 fig, ax = plt.subplots(figsize=(10.5, 7.5))
 xs = np.array([0, 1])
+sqs_path = os.path.join(AN, "niall_fcc_sqs.csv")
+plot_sqs = os.path.exists(sqs_path)
+if plot_sqs:
+    sqs = pd.read_csv(sqs_path)
+    gsqs = sqs.groupby("x_Al").agg(V=("V_per_atom_A3", "mean"),
+                                     Vstd=("V_per_atom_A3", "std")).reset_index()
+
 ax.plot(xs, V_NI + (V_AL_FCC - V_NI) * xs, "k--", lw=2,
         label="Vegard則 (fcc-Ni → fcc-Al)")
 ax.errorbar(g.x_Al, g.V, yerr=g.Vstd, fmt="o-", ms=8, capsize=4,
             color="tab:purple", label="fcc Ni(Al) 乱数固溶体 (MLIP, ×3配置)")
-ax.axhline(2 * (bcc_al["a_bcc_A"] / (2 ** (1 / 3))) ** 3 / 2, lw=0)  # noop keeps ylim natural
+if plot_sqs:
+    ax.errorbar(gsqs.x_Al, gsqs.V, yerr=gsqs.Vstd, fmt="^-", ms=9,
+                capsize=4, color="tab:green", alpha=0.9,
+                label="SQS 32原子（理想ランダム固溶体）")
 ax.set_xlabel(r"Al原子分率 $x_{\mathrm{Al}}$")
 ax.set_ylabel(r"平均原子体積 $\bar V$ (Å$^3$/atom)")
 ax.set_title(r"fcc Ni(Al)固溶体の全組成掃引とVegard則")
@@ -140,15 +148,15 @@ plt.tight_layout()
 plt.savefig(os.path.join(FIG, "fig_b2_order_param.png"), dpi=150)
 plt.close()
 
-out = dict(
-    bcc_al=bcc_al,
-    fcc_vegard_deviation={f"{r.x_Al:.4f}": round(float(r.dV), 4)
+out = {
+    "bcc_al": bcc_al,
+    "fcc_vegard_deviation": {f"{r.x_Al:.4f}": round(float(r.dV), 4)
                           for r in dev.itertuples()},
-    order_param={f"{r.eta:.2f}": dict(a=round(float(r.a), 4),
-                                      V=round(float(r.V), 4),
-                                      dE_eV_atom=round(float((r.E - go.E.iloc[-1]) / 128), 4))
+    "order_param": {f"{r.eta:.2f}": {"a": round(float(r.a), 4),
+                                      "V": round(float(r.V), 4),
+                                      "dE_eV_atom": round(float((r.E - go.E.iloc[-1]) / 128), 4)}
                  for r in go.itertuples()},
-)
+}
 with open(os.path.join(AN, "niall_ext_summary.json"), "w") as f:
     json.dump(out, f, indent=2)
 print(json.dumps(out, indent=2))
