@@ -30,6 +30,10 @@ AN = os.path.join(BASE, 'analysis')
 FIG = os.path.join(BASE, 'figures')
 os.makedirs(FIG, exist_ok=True)
 
+plt.rcParams.update({'font.size': 16, 'axes.grid': True, 'grid.alpha': 0.3,
+                     'font.family': ['Noto Sans CJK JP', 'IPAGothic', 'sans-serif'],
+                     'axes.unicode_minus': False})
+
 # --- Taylor & Doyle linear reconstruction ------------------------------------
 def a_taylor_doyle(x_Al):
     x_Ni = 1.0 - x_Al
@@ -65,25 +69,27 @@ def slope(df, col, x0, x1):
     p = np.polyfit(sub.x_Al.values, sub[col].values, 1)
     return float(p[0])
 
+# Slope comparisons use the same composition intervals for MACE and Taylor & Doyle.
+# For Ni-rich we use 0.42-0.50 because MACE does not sample below 0.42; T&D is
+# linear in the reported 0.50-0.34 range so the slope is the same over 0.42-0.50.
 slope_mace_ni = slope(mace, 'a_mix', 0.42, 0.50)
-slope_mace_al = slope(mace, 'a_mix', 0.50, 0.60)
+slope_mace_al = slope(mace, 'a_mix', 0.50, 0.66)
 slope_mace_v_ni = slope(mace, 'V_mix', 0.42, 0.50)
-slope_mace_v_al = slope(mace, 'V_mix', 0.50, 0.60)
+slope_mace_v_al = slope(mace, 'V_mix', 0.50, 0.66)
 
-slope_td_ni = (a_taylor_doyle(0.34)[0] - a_taylor_doyle(0.50)[0]) / (0.34 - 0.50)
-slope_td_al = (a_taylor_doyle(0.66)[0] - a_taylor_doyle(0.50)[0]) / (0.66 - 0.50)
-slope_td_v_ni = (a_taylor_doyle(0.34)[1]*0 - 0)  # placeholder, compute properly below
-V34 = a_taylor_doyle(0.34)[0]**3 / a_taylor_doyle(0.34)[1]
+V42 = a_taylor_doyle(0.42)[0]**3 / a_taylor_doyle(0.42)[1]
 V50 = a_taylor_doyle(0.50)[0]**3 / a_taylor_doyle(0.50)[1]
 V66 = a_taylor_doyle(0.66)[0]**3 / a_taylor_doyle(0.66)[1]
-slope_td_v_ni = (V34 - V50) / (0.34 - 0.50)
+slope_td_ni = (a_taylor_doyle(0.42)[0] - a_taylor_doyle(0.50)[0]) / (0.42 - 0.50)
+slope_td_al = (a_taylor_doyle(0.66)[0] - a_taylor_doyle(0.50)[0]) / (0.66 - 0.50)
+slope_td_v_ni = (V42 - V50) / (0.42 - 0.50)
 slope_td_v_al = (V66 - V50) / (0.66 - 0.50)
 
 slope_table = pd.DataFrame([
-    {'side': 'Ni-rich (0.5->0.34 x_Al)', 'slope_a_A': 'da/dx', 'MACE': slope_mace_ni, 'Taylor_Doyle': slope_td_ni, 'unit': 'Å / x_Al'},
-    {'side': 'Al-rich (0.5->0.66 x_Al)', 'slope_a_A': 'da/dx', 'MACE': slope_mace_al, 'Taylor_Doyle': slope_td_al, 'unit': 'Å / x_Al'},
-    {'side': 'Ni-rich (0.5->0.34 x_Al)', 'slope_a_A': 'dV/dx', 'MACE': slope_mace_v_ni, 'Taylor_Doyle': slope_td_v_ni, 'unit': 'Å3/atom / x_Al'},
-    {'side': 'Al-rich (0.5->0.66 x_Al)', 'slope_a_A': 'dV/dx', 'MACE': slope_mace_v_al, 'Taylor_Doyle': slope_td_v_al, 'unit': 'Å3/atom / x_Al'},
+    {'side': 'Ni-rich (0.42-0.50 x_Al)', 'slope_a_A': 'da/dx', 'MACE': slope_mace_ni, 'Taylor_Doyle': slope_td_ni, 'unit': 'Å / x_Al'},
+    {'side': 'Al-rich (0.50-0.66 x_Al)', 'slope_a_A': 'da/dx', 'MACE': slope_mace_al, 'Taylor_Doyle': slope_td_al, 'unit': 'Å / x_Al'},
+    {'side': 'Ni-rich (0.42-0.50 x_Al)', 'slope_a_A': 'dV/dx', 'MACE': slope_mace_v_ni, 'Taylor_Doyle': slope_td_v_ni, 'unit': 'Å3/atom / x_Al'},
+    {'side': 'Al-rich (0.50-0.66 x_Al)', 'slope_a_A': 'dV/dx', 'MACE': slope_mace_v_al, 'Taylor_Doyle': slope_td_v_al, 'unit': 'Å3/atom / x_Al'},
 ])
 slope_table.to_csv(os.path.join(AN, 'taylor_doyle_mace_slopes.csv'), index=False)
 print(slope_table.to_string(index=False))
@@ -115,7 +121,7 @@ ax.plot(x_fine, a_fine, '--', color='tab:orange', lw=2,
 
 ax.axvline(0.5, color='gray', ls=':', lw=1)
 ax.set_xlabel(r"Al 原子分率 $x_{\mathrm{Al}}$")
-ax.set_ylabel(r"格子定数 $a$ (\AA)")
+ax.set_ylabel(r"格子定数 $a$ (Å)")
 ax.set_title(r"B2-Ni$_{1-x}$Al$_x$ 格子定数：MACE vs Taylor & Doyle")
 ax.legend(fontsize=12)
 ax.set_xlim(0.32, 0.68)

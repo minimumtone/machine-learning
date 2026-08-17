@@ -211,61 +211,88 @@ best = branch_agg.loc[branch_agg.groupby('x_Al_target')['G'].idxmin()].copy()
 best = best.sort_values('x_Al')
 
 # --- x_max extraction for several tolerances ---------------------------------
-def xmax_from_branch(br, col, tol, hull_x, hull_y):
-    g = branch_agg[branch_agg.branch == br].sort_values('x_Al')
+def xmax_info(df, col, tol, hull_x, hull_y):
+    """Return x_max and saturation info.
+
+    If the largest on-hull composition equals the largest sampled composition,
+    the phase boundary was NOT crossed within the sampled range; x_max is
+    returned as NaN and saturated=True with a lower-bound value.
+    """
+    g = df[['x_Al', col]].copy().sort_values('x_Al')
     if g.empty:
-        return np.nan
+        return {'x_max': np.nan, 'saturated': False, 'max_sampled_x': np.nan,
+                'n_on_hull': 0}
     delta = g[col] - np.interp(g.x_Al.values, hull_x, hull_y)
     on = g[delta <= tol]
-    return float(on.x_Al.max()) if not on.empty else np.nan
+    max_x_all = float(g.x_Al.max())
+    if on.empty:
+        return {'x_max': np.nan, 'saturated': False, 'max_sampled_x': max_x_all,
+                'n_on_hull': 0}
+    max_x_on = float(on.x_Al.max())
+    saturated = abs(max_x_on - max_x_all) < 1e-6
+    if saturated:
+        return {'x_max': np.nan, 'saturated': True, 'max_sampled_x': max_x_all,
+                'n_on_hull': len(on)}
+    else:
+        return {'x_max': max_x_on, 'saturated': False, 'max_sampled_x': max_x_all,
+                'n_on_hull': len(on)}
+
+
+def xmax_from_branch(br, col, tol, hull_x, hull_y):
+    return xmax_info(branch_agg[branch_agg.branch == br], col, tol, hull_x, hull_y)
 
 
 def xmax_overall(col, tol, hull_x, hull_y):
-    g = best[['x_Al', col]].copy()
-    delta = g[col] - np.interp(g.x_Al.values, hull_x, hull_y)
-    on = g[delta <= tol]
-    return float(on.x_Al.max()) if not on.empty else np.nan
+    return xmax_info(best[['x_Al', col]], col, tol, hull_x, hull_y)
+
+
+def record(temperature, branch, energy_col, tol, hull_x, hull_y):
+    if branch == 'best_B2_branch':
+        info = xmax_overall(energy_col, tol, hull_x, hull_y)
+    else:
+        info = xmax_from_branch(branch, energy_col, tol, hull_x, hull_y)
+    return {
+        'temperature': temperature,
+        'tolerance_meV': round(tol * 1000),
+        'branch': branch,
+        'energy_col': energy_col,
+        **info,
+    }
 
 
 tols = [0.003, 0.005, 0.010, 0.020]
 xmax_records = []
 for tol in tols:
     for br in ['antisite', 'vacancy']:
-        xmax_records.append({
-            'temperature': '0K_all',
-            'tolerance_meV': round(tol * 1000),
-            'branch': br,
-            'x_max': xmax_from_branch(br, 'Ef', tol, xh_0K, yh_0K),
-            'G_x_max': xmax_from_branch(br, 'G', tol, xh_0K, yh_0K),
-        })
-        xmax_records.append({
-            'temperature': '1473K',
-            'tolerance_meV': round(tol * 1000),
-            'branch': br,
-            'x_max': xmax_from_branch(br, 'G', tol, xh_1473, yh_1473),
-        })
-    xmax_records.append({
-        'temperature': '0K_all',
-        'tolerance_meV': round(tol * 1000),
-        'branch': 'best_B2_branch',
-        'x_max': xmax_overall('Ef', tol, xh_0K, yh_0K),
-        'G_x_max': xmax_overall('G', tol, xh_0K, yh_0K),
-    })
-    xmax_records.append({
-        'temperature': '1473K',
-        'tolerance_meV': round(tol * 1000),
-        'branch': 'best_B2_branch',
-        'x_max': xmax_overall('G', tol, xh_1473, yh_1473),
-    })
+        # 0 K: formation energy (Ef) and Helmholtz free energy (G)
+        xmax_records.append(record('0K_all', br, 'Ef', tol, xh_0K, yh_0K))
+        xmax_records.append(record('0K_all', br, 'G', tol, xh_0K, yh_0K))
+        # 1473 K: only G is physical for the high-T comparison
+        xmax_records.append(record('1473K', br, 'G', tol, xh_1473, yh_1473))
+    xmax_records.append(record('0K_all', 'best_B2_branch', 'Ef', tol, xh_0K, yh_0K))
+    xmax_records.append(record('0K_all', 'best_B2_branch', 'G', tol, xh_0K, yh_0K))
+    xmax_records.append(record('1473K', 'best_B2_branch', 'G', tol, xh_1473, yh_1473))
 
 xmax_df = pd.DataFrame(xmax_records)
+
+# JSON summary: primary x_max metric vs physical energy column
 oxmax = {}
-for T in ['0K_all', '1473K']:
+for T, ecol in [('0K_all', 'Ef'), ('1473K', 'G')]:
     oxmax[T] = {}
     for tol in tols:
-        sub = xmax_df[(xmax_df.temperature == T) & (xmax_df.tolerance_meV == round(tol * 1000)) & (xmax_df.branch == 'best_B2_branch')]
-        if not sub.empty and not pd.isna(sub.x_max.values[0]):
-            oxmax[T][f"tol_{round(tol*1000)}meV"] = round(float(sub.x_max.values[0]), 4)
+        sub = xmax_df[(xmax_df.temperature == T) &
+                      (xmax_df.tolerance_meV == round(tol * 1000)) &
+                      (xmax_df.branch == 'best_B2_branch') &
+                      (xmax_df.energy_col == ecol)]
+        if not sub.empty:
+            row = sub.iloc[0]
+            entry = {
+                'x_max': None if pd.isna(row['x_max']) else round(float(row['x_max']), 4),
+                'saturated': bool(row['saturated']),
+            }
+            if bool(row['saturated']):
+                entry['lower_bound_x'] = round(float(row['max_sampled_x']), 4)
+            oxmax[T][f"tol_{round(tol*1000)}meV"] = entry
 
 oxmax['experimental_B2_uniform'] = 0.60
 oxmax['temperature_K'] = T_K
@@ -282,6 +309,9 @@ branch_agg.to_csv(os.path.join(AN, 'b2_branch_finiteT_hull.csv'), index=False)
 print('Wrote', os.path.join(AN, 'b2_branch_finiteT_hull.csv'))
 
 # --- plot -------------------------------------------------------------------
+plt.rcParams.update({'font.size': 16, 'axes.grid': True, 'grid.alpha': 0.3,
+                     'font.family': ['Noto Sans CJK JP', 'IPAGothic', 'sans-serif'],
+                     'axes.unicode_minus': False})
 fig, ax = plt.subplots(figsize=(12, 8))
 # reference hulls
 ax.plot(xh_0K, yh_0K, 'k--', lw=2.0, label='0 K 凸包（Ni$_3$Al$_4$/Ni$_5$Al$_3$ 含む）')

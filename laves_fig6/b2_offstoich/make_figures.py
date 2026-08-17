@@ -162,15 +162,17 @@ for x, g in agg.groupby("x_Al_target"):
             continue
         if "vacancy" in avail:
             dG = g.loc["vacancy", "G"] - g.loc["antisite", "G"]
+            selected = "antisite" if dG > 0.0 else "vacancy"
         else:
             dG = np.nan
-        r = g.loc["antisite"]
+            selected = "antisite"
+        r = g.loc[selected]
         mix_rows.append(dict(
             x_Al_target=x,
             x_Al=r.x_Al,
             V_mix=r.V,
             a_mix=r.a,
-            selected_branch="antisite",
+            selected_branch=selected,
             dG_eV=dG,
         ))
     elif x > 0.5 + 1e-6:
