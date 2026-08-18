@@ -14,7 +14,7 @@
 | B2 単相域の上限 $x_{\max}$ (1473 K 凸包) | **≥0.660 (saturated, lower bound)**；空孔モデルのサンプリング上限が 0.66 であり、$x=0.67$ 以降の空孔データがないため上限確定値ではない。実験 0.60 はこの下限以下に収まる |
 | 格子定数傾き $da/dx$ (Al-rich) | MACE $-0.39$ Å/$x_{\rm Al}$；Taylor & Doyle (1972) $-0.14$ Å/$x_{\rm Al}$ → **約 2.9 倍の過大評価** |
 | 欠陥支配性 | Ni 過剰：Ni 反サイト；Al 過剰：Ni 構造空孔（構成欠陥 / 三重欠陥傾向） |
-| 4SL/8SL 秩序化強度 | $V\approx -0.10$ 〜 $-0.15$ eV/bond |
+| 4SL/8SL 秩序化強度 | icet 1NN 対モデル $V=-0.137$ eV/bond；1NN+2NN+三点群 $V=-0.100$ eV/bond；熱力学的値 $V=-0.088$ eV/bond |
 
 ## 1. 計算条件
 
@@ -159,7 +159,7 @@ MACE-MP-0 medium は格子定数を 0.5 % 未満で再現しており、Fig. 6 �
 
   $$V = J_{\rm NiAl} - \frac{J_{\rm NiNi}+J_{\rm AlAl}}{2}$$
 
-  の一つの値のみが物理的に意味を持つ。現状の簡易 Ising 外挿では $V \approx -0.1$ 〜 $-0.15$ eV/bond（Ni–Al 結合が他の結合より約 0.1 eV 強く負）。個別の $J_{\rm NiAl}, J_{\rm NiNi}, J_{\rm AlAl}$ の絶対値は A2 エンドメンバー・クラスター展開がないため信頼できない（詳細：`analysis/b2_pair_interactions.json`）。
+  の一つの値のみが物理的に意味を持つ。`icet` クラスター展開（`run_icet_b2_cluster_expansion.py`）で確認すると、第一近接対モデルは $V_{\rm 1NN}=-0.137$ eV/bond（$J_{\rm NiAl}=-1.354$, $J_{\rm NiNi}=-1.500$, $J_{\rm AlAl}=-0.935$ eV）であり、孤立点欠陥からの定数対推定 $-0.145$ eV/bond とほぼ一致する。第二近接対・三点群を加えると $V$ は $-0.100$ eV/bond まで下がり、熱力学的 $V=-0.088$ eV/bond に漸近する。個別の $J_{ij}$ は固定体積近似に敏感なため、秩序化強度としては $V=-0.088$ eV/bond を使用する（詳細：`analysis/b2_pair_interactions.json`、`analysis/icet_b2_cluster_expansion_summary.json`）。
 - 元素化学ポテンシャルではなく **B2 単相の自由エネルギー曲面** を介して正しい欠陥優位を記述するための第一ステップである。
 
 ## 9. 限界と次ステップ
@@ -168,7 +168,7 @@ MACE-MP-0 medium は格子定数を 0.5 % 未満で再現しており、Fig. 6 �
 2. 欠陥形成エネルギーの $\Delta\mu$ 依存性を明示し，$E_f$ vs $\Delta\mu$ 図で Korzhavyi et al.（Phys. Rev. B **61**, 6003）と比較する。
 3. Bradley & Taylor の密度測定から導かれる構造空孔濃度と MACE 予測を $x=0.55,0.60$ で直接比較する。
 4. MACE-MP-0 に磁性・スピン自由度がない（Ni-rich 端）。
-5. 各組成 3 配置のサンプリングは統計的に希薄。最低 10–20 配置，または `icet` クラスター展開に移行。
+5. 各組成 3 配置のサンプリングは統計的に希薄。最低 10–20 配置；`icet` クラスター展開は `run_icet_b2_cluster_expansion.py` で実装済み。
 6. 1473 K の熱処理の振動エントロピー / MD 平衡化は未実装。
 7. 4SL/8SL 副格子モデルのエンドメンバー対称性拘束を実装し，pycalphad/TDB 形式の原型を出力する。
 
@@ -182,6 +182,10 @@ MACE-MP-0 medium は格子定数を 0.5 % 未満で再現しており、Fig. 6 �
 - `analysis/TABLE4_MACE_ANALOGUE.md`, `analysis/C14_YAMANOUCHI_WEIGHTED_CHECK.md`
 - `analysis/b2_pair_interactions.json`
 - `4SL_B2_MODEL_DESIGN.md`
+- `run_icet_b2_cluster_expansion.py`
+- `analysis/icet_b2_cluster_expansion_summary.json`
+- `analysis/icet_b2_predictions.csv`
+- `figures/fig_icet_ce_parity.png`
 - `07_reports/fig_energy_diagram_nial.png`（真の Ni-Al 凸包図）
 - `figures/fig_b2_offstoich_vbar*.png`, `fig_b2_offstoich_a.png`, `fig_b2_offstoich_eform.png`, `fig_b2_alrich_dense_hull.png`, `fig_b2_hull_xmax.png`, `fig_b2_hull_finiteT.png`, `fig_b2_a_taylor_doyle_overlay.png`
 

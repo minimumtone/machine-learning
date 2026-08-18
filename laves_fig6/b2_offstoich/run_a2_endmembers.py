@@ -40,7 +40,7 @@ def relax_a2(element, a_guess, rep=(2,2,2)):
         "E_atom_eV": e_atom,
         "V_atom_A3": v / len(relaxed),
         "converged": opt.converged(),
-        "file": fn,
+        "file": os.path.relpath(fn, BASE),
     }
 
 
