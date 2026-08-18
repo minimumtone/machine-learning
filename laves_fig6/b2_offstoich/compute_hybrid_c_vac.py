@@ -56,26 +56,53 @@ def p_Al_antisite_from_c(c, x):
     return np.clip(n_a / float(NCELL), 0.0, 1.0)
 
 
+def n_Ni_Al_from_row(row):
+    """Recover integer Ni/Al counts from the mean composition and atom count."""
+    n_at = int(round(row.n_atoms))
+    n_Al = int(round(row.x_Al * n_at))
+    n_Ni = n_at - n_Al
+    return n_Ni, n_Al
+
+
+def n_defect_from_row(row):
+    """Number of point defects on the minority sublattice.
+
+    Follows the same convention as make_figures.py / analyze_b2_hull_xmax.py.
+    """
+    n_Ni, n_Al = n_Ni_Al_from_row(row)
+    if row.branch == 'perfect':
+        return 0
+    if row.branch == 'antisite':
+        if row.x_Al < 0.5:
+            return max(n_Ni - NCELL, 0)   # Ni on Al sublattice
+        else:
+            return max(n_Al - NCELL, 0)   # Al on Ni sublattice
+    # vacancy branch
+    if row.x_Al < 0.5:
+        return max(NCELL - n_Al, 0)       # vacancies on Al sublattice
+    else:
+        return max(NCELL - n_Ni, 0)       # vacancies on Ni sublattice
+
+
+def perfect_G_eV():
+    """Return the per-atom formation energy (G at T=0) for perfect B2."""
+    vol_path = os.path.join(AN, 'b2_offstoich_volumes.csv')
+    if os.path.exists(vol_path):
+        vol = pd.read_csv(vol_path)
+        p = vol[vol.branch == 'perfect']
+        if not p.empty:
+            return float(p.iloc[0].E_form_eV_atom)
+    raise FileNotFoundError(
+        "Perfect B2 formation energy not found; provide analysis/b2_offstoich_volumes.csv"
+    )
+
+
 def main():
     bm = pd.read_csv(os.path.join(AN, 'b2_offstoich_branch_means.csv'))
     br = bm[bm.branch != 'perfect'].copy()
-
-    def n_defect_from_row(row):
-        n = int(round(row.n_atoms))
-        x = row.x_Al_target
-        if row.branch == 'perfect':
-            return 0
-        if row.branch == 'antisite':
-            if x < 0.5:
-                # Ni on Al sublattice: n = 128 + n_anti
-                return int(round(n - N_SITES))
-            else:
-                # Al on Ni sublattice: n = 128 (n_anti counted by excess Al)
-                return int(round(n - N_SITES))
-        else:  # vacancy
-            return int(round(N_SITES - n))
-
     br['n_defect'] = br.apply(n_defect_from_row, axis=1)
+
+    perfect_Ef = perfect_G_eV()
 
     rows = []
     for xt, g in br.groupby('x_Al_target'):
@@ -104,15 +131,16 @@ def main():
             else:
                 c_hybrid = c_mod
                 probs = {}
-            # For Ni-rich side the relevant defect is Ni antisite on the Al
-            # sublattice; the Al-antisite variable below is not meaningful.
-            if x_eff <= 0.5:
-                c_hybrid = 0.0
-                p_anti = 0.0
-            else:
+
+            # For Ni-rich side the Al-antisite fraction is not meaningful;
+            # c_hybrid itself is still reported because vacancy/(Ni-antisite)
+            # mixing is well-defined in terms of missing lattice atoms.
+            if x_eff > 0.5:
                 p_anti = p_Al_antisite_from_c(c_hybrid, x_eff)
                 if pd.isna(p_anti):
                     p_anti = 0.0
+            else:
+                p_anti = 0.0
             row[f'c_hybrid_{T:.0f}K'] = c_hybrid
             row[f'p_antisite_{T:.0f}K'] = p_anti
             for b in ('vacancy', 'antisite'):
@@ -122,15 +150,20 @@ def main():
         rows.append(row)
 
     # Insert a perfect-B2 row at x=0.5 so the hybrid curve is continuous and
-    # equals zero right at stoichiometry.
-    perfect_row = {'x_Al_target': 0.5, 'x_Al': 0.5, 'c_model': 0.0}
+    # equals zero right at stoichiometry.  G is taken from the perfect reference.
+    perfect_row = {
+        'x_Al_target': 0.5,
+        'x_Al': 0.5,
+        'c_model': 0.0,
+    }
     for T in T_LIST:
+        kT = KB_EV * T
         perfect_row[f'c_hybrid_{T:.0f}K'] = 0.0
         perfect_row[f'p_antisite_{T:.0f}K'] = 0.0
-        perfect_row[f'prob_vacancy_{T:.0f}K'] = 0.0
-        perfect_row[f'prob_antisite_{T:.0f}K'] = 0.0
-        perfect_row[f'G_vacancy_{T:.0f}K'] = -0.6920193068237968
-        perfect_row[f'G_antisite_{T:.0f}K'] = -0.6920193068237968
+        perfect_row[f'prob_vacancy_{T:.0f}K'] = np.nan
+        perfect_row[f'prob_antisite_{T:.0f}K'] = np.nan
+        perfect_row[f'G_vacancy_{T:.0f}K'] = perfect_Ef
+        perfect_row[f'G_antisite_{T:.0f}K'] = perfect_Ef
     rows.append(perfect_row)
 
     out = pd.DataFrame(rows).sort_values('x_Al_target')
