@@ -106,7 +106,7 @@ print(pd.DataFrame(comp).to_string(index=False))
 # --- plot ----------------------------------------------------------------------
 fig, ax = plt.subplots(figsize=(10, 7))
 ax.plot(mace.x_Al, mace.a_mix, '-', color='tab:blue', lw=2,
-        label='MACE 安定枝 ($G$ per atom)')
+        label='MACE 安定モデル ($G$ per atom)')
 
 al = td[td.x_Al_at > 50.0]
 ni = td[td.x_Al_at <= 50.0]

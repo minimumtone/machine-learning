@@ -483,7 +483,7 @@ if not sub1273.empty:
 ax.axhline(0.0, color='gray', lw=0.8)
 ax.set_xlabel('$x_{\\rm Al}$', fontsize=18)
 ax.set_ylabel('形成エネルギー / Helmholtz 自由エネルギー (eV/atom)', fontsize=18)
-ax.set_title('B2-NiAl 不定比枝 vs 0 K / 1273 K 凸包', fontsize=20)
+ax.set_title('B2-NiAl 不定比モデル vs 0 K / 1273 K 凸包', fontsize=20)
 ax.legend(fontsize=11, loc='upper right')
 ax.set_xlim(-0.05, 1.05)
 plt.tight_layout()

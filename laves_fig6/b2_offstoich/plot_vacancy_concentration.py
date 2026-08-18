@@ -115,7 +115,7 @@ ax.legend(fontsize=11, loc='upper left')
 
 # annotation: hybrid state note
 ax.text(0.51, 0.17,
-        '有限温度では空孔枝と反サイト枝が\n'
+        '有限温度では空孔モデルと反サイトモデルが\n'
         'Boltzmann 混合（Va + Al$_{\\rm Ni}$）。\n'
         '完全な 4SL/8SL モデルがない場合、\n'
         'この平均場近似は熱的反サイト割合の\n'

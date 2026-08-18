@@ -55,7 +55,7 @@ pd.DataFrame(rows).to_csv(os.path.join(AN, 'a_comparison_bradley_mace.csv'), ind
 # plot
 fig, ax = plt.subplots(figsize=(10, 7))
 ax.plot(mace.x_Al, mace.a_mix, 'o-', color='tab:blue', ms=7,
-        label=r'MACE 安定枝 ($\Omega$ per atom)')
+        label=r'MACE 安定モデル ($\Omega$ per atom)')
 mask = bradley.note == 'B2'
 ax.errorbar(bradley[mask].x_Al, bradley[mask].a_A, yerr=0.01, fmt='^', ms=10,
             color='tab:orange', capsize=4, zorder=5, label='Bradley & Taylor (1937) B2 領域')
