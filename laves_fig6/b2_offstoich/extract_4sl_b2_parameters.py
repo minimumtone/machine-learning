@@ -48,15 +48,19 @@ if os.path.exists(icet_summary_path):
     models = {m["label"]: m for m in icet_summary.get("models", [])}
     m1 = models.get("1NN_pairs", {})
     m3 = models.get("1NN+2NN+triplets", {})
+
+    v1 = m1.get("V_pair_eV_per_bond")
+    jvals = m1.get("J_values_eV")  # null for non-1NN models
     icet_1nn = {
-        "icet_1NN_V_pair_eV_per_bond": round(m1.get("V_pair_eV_per_bond"), 4) if m1.get("V_pair_eV_per_bond") is not None else None,
-        "icet_1NN_J_values_eV": {
-            "J_NiAl_eV": round(m1.get("J_values_eV", {}).get("J_NiAl_eV", J_NiAl), 4),
-            "J_NiNi_eV": round(m1.get("J_values_eV", {}).get("J_NiNi_eV", J_NiNi), 4),
-            "J_AlAl_eV": round(m1.get("J_values_eV", {}).get("J_AlAl_eV", J_AlAl), 4),
-            "V_pair_eV": round(m1.get("J_values_eV", {}).get("V_pair_eV", V_pair), 4),
-        },
-        "icet_2NN_triplets_V_eff_eV_per_bond": round(m3.get("V_eff_eV_per_bond"), 4) if m3.get("V_eff_eV_per_bond") is not None else None,
+        "icet_1NN_V_pair_eV_per_bond": round(v1, 4) if v1 is not None else None,
+        "icet_1NN_J_values_eV": (
+            {k: round(v, 4) for k, v in jvals.items()}
+            if isinstance(jvals, dict) else None
+        ),
+        "icet_2NN_triplets_V_eff_eV_per_bond": (
+            round(m3.get("V_eff_eV_per_bond"), 4)
+            if m3.get("V_eff_eV_per_bond") is not None else None
+        ),
     }
 
 result = {
