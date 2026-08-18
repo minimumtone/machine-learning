@@ -39,6 +39,30 @@ delta_order_obs = E_a2 - E_b2
 V_pair = J_NiAl - (J_NiNi + J_AlAl) / 2.0
 V_from_ordering = -delta_order_obs / 4.0
 
+# Load the independent icet cluster-expansion result if available.
+icet_summary_path = os.path.join(AN, "icet_b2_cluster_expansion_summary.json")
+icet_1nn = {}
+if os.path.exists(icet_summary_path):
+    with open(icet_summary_path) as f:
+        icet_summary = json.load(f)
+    models = {m["label"]: m for m in icet_summary.get("models", [])}
+    m1 = models.get("1NN_pairs", {})
+    m3 = models.get("1NN+2NN+triplets", {})
+
+    v1 = m1.get("V_pair_eV_per_bond")
+    jvals = m1.get("J_values_eV")  # null for non-1NN models
+    icet_1nn = {
+        "icet_1NN_V_pair_eV_per_bond": round(v1, 4) if v1 is not None else None,
+        "icet_1NN_J_values_eV": (
+            {k: round(v, 4) for k, v in jvals.items()}
+            if isinstance(jvals, dict) else None
+        ),
+        "icet_2NN_triplets_V_eff_eV_per_bond": (
+            round(m3.get("V_eff_eV_per_bond"), 4)
+            if m3.get("V_eff_eV_per_bond") is not None else None
+        ),
+    }
+
 result = {
     "E_B2_per_formula_eV": round(E_b2, 4),
     "E_A2_per_formula_eV": round(E_a2, 4),
@@ -50,8 +74,9 @@ result = {
     "J_AlAl_eV": round(J_AlAl, 4),
     "V_pair_constant_eV": round(V_pair, 4),
     "V_from_ordering_eV": round(V_from_ordering, 4),
-    "V_definition": "V = -Delta E_order / 4 = -0.3509/4 = -0.088 eV/bond is the thermodynamic ordering strength obtained directly from the B2/A2 energy difference.  V_pair = J_NiAl - (J_NiNi+J_AlAl)/2 = -0.145 eV/bond is the value implied by a literal constant-pair fit to the *isolated* point-defect energies; the 65% disagreement shows the constant-pair approximation breaks down for concentrated NiAl.",
-    "note": "Constant pair model overestimates ordering energy (concentrated limit). Composition-dependent interaction parameters are needed."
+    **icet_1nn,
+    "V_definition": "V = -Delta E_order / 4 = -0.3509/4 = -0.088 eV/bond is the thermodynamic ordering strength obtained directly from the B2/A2 energy difference (the value to use in a CALPHAD model).  V_pair = J_NiAl - (J_NiNi+J_AlAl)/2 = -0.145 eV/bond is the value implied by a literal constant-pair fit to isolated point-defect energies, and the 1NN icet cluster expansion gives a comparable -0.137 eV/bond. The two independent 1NN estimates converge to about -0.14 eV/bond, while adding 2NN pairs and triplets decreases the effective V toward the thermodynamic -0.088 eV/bond.",
+    "note": "Constant-pair / 1NN approximations overestimate ordering energy in the concentrated limit. Composition-dependent interaction parameters or longer-range cluster expansion terms are needed."
 }
 with open(os.path.join(AN, "b2_pair_interactions.json"), "w") as f:
     json.dump(result, f, indent=2)

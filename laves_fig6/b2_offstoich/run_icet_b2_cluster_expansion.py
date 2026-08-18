@@ -15,6 +15,7 @@ Outputs:
 import os
 import glob
 import json
+import hashlib
 import numpy as np
 import pandas as pd
 from ase import Atoms
@@ -47,9 +48,32 @@ SUBLATTICES = [["Ni", "Al"], ["Ni", "Al"]]
 EXPECTED_N = 128
 
 
+def file_md5(fn):
+    """Return MD5 hex digest of a file."""
+    with open(fn, "rb") as f:
+        return hashlib.md5(f.read()).hexdigest()
+
+
 def load_structure_inputs():
-    """Return list of (atoms, energy_per_atom, tag, source) for fully occupied bcc configs."""
+    """Return list of (atoms, energy_per_atom, tag, source) for fully occupied bcc configs.
+
+    Duplicate files (identical MD5) are kept once to avoid double-counting the same
+    relaxed structure under different tags.
+    """
     inputs = []
+    seen_md5 = set()
+
+    def maybe_add(fn, e_per_atom, tag, source):
+        if not os.path.exists(fn):
+            return
+        md5 = file_md5(fn)
+        if md5 in seen_md5:
+            print(f"[dedup] {tag}: {fn} is a duplicate of an already-loaded file")
+            return
+        seen_md5.add(md5)
+        at = read(fn)
+        at.wrap()
+        inputs.append((at, e_per_atom, tag, source))
 
     # B2 order-parameter sweep (eta=1.0 -> perfect B2, eta=0.0 -> A2-like at x=0.5)
     order_csv = os.path.join(NIALL_EXT, "analysis", "b2_order_param.csv")
@@ -57,11 +81,7 @@ def load_structure_inputs():
     order = order[order.converged == True]
     for _, r in order.iterrows():
         fn = os.path.join(NIALL_EXT, "relax", f"{r.structure_id}.extxyz")
-        if not os.path.exists(fn):
-            continue
-        at = read(fn)
-        at.wrap()
-        inputs.append((at, r.energy_eV / r.n_atoms, r.structure_id, "b2_order_param"))
+        maybe_add(fn, r.energy_eV / r.n_atoms, r.structure_id, "b2_order_param")
 
     # Antisite / perfect branches from the off-stoichiometry runs.
     for csv in glob.glob(os.path.join(BASE, "analysis", "b2_offstoich_volumes*.csv")):
@@ -71,13 +91,7 @@ def load_structure_inputs():
             if r.branch not in ("antisite", "perfect"):
                 continue
             fn = os.path.join(BASE, "relax", f"{r.structure_id}.extxyz")
-            if not os.path.exists(fn):
-                continue
-            at = read(fn)
-            at.wrap()
-            inputs.append(
-                (at, r.energy_eV / r.n_atoms, r.structure_id, os.path.basename(csv))
-            )
+            maybe_add(fn, r.energy_eV / r.n_atoms, r.structure_id, os.path.basename(csv))
 
     return inputs
 
