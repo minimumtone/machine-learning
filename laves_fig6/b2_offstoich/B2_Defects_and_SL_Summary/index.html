@@ -107,28 +107,28 @@ c_{\rm vac} = 1 - \frac{n}{2}
 
 <h3>2.2 Table 2 から直接求めた構造空孔濃度</h3>
 
-<p>\(c_{\rm vac}^{\rm model}=1-1/(2x_{\rm Al})\) は完全構造空孔模型、\(c_{\rm vac}^{\rm MLIP}\) は MACE-MP-0 自由緩和 + Boltzmann 欠陥モデル選択から求めた値。Table 2 の元データをそのまま用いる：</p>
+<p>\(c_{\rm vac}^{\rm model}=1-1/(2x_{\rm Al})\) は 0 K 的な完全構造空孔模型、\(c_{\rm vac}^{\rm MLIP}\) は MACE-MP-0 自由緩和 + Boltzmann 欠陥モデル選択、\(c_{\rm vac}^{\rm hybrid}\) は 1473 K での空孔・反サイト Boltzmann 混合値。Table 2 の元データをそのまま用いる：</p>
 
 <table>
-<thead><tr><th>\(x_{\rm Al}\)</th><th>\(x_{\rm Ni}\) (at.%)</th><th>\(a_{\rm T&amp;D}\) (Å)</th><th>\(\rho\) (g/cm³)</th><th>\(n\)/cell</th><th>\(c_{\rm vac}^{\rm exp}\)</th><th>\(c_{\rm vac}^{\rm model}\)</th><th>\(c_{\rm vac}^{\rm MLIP}\)</th><th>Al 反サイト</th></tr></thead>
+<thead><tr><th>\(x_{\rm Al}\)</th><th>\(x_{\rm Ni}\) (at.%)</th><th>\(a_{\rm T&amp;D}\) (Å)</th><th>\(\rho\) (g/cm³)</th><th>\(n\)/cell</th><th>\(c_{\rm vac}^{\rm exp}\)</th><th>\(c_{\rm vac}^{\rm model}\)</th><th>\(c_{\rm vac}^{\rm MLIP}\)</th><th>\(c_{\rm vac}^{\rm hybrid}\) (1473 K)</th><th>\(p_{\rm Al\,antisite}^{\rm hybrid}\) (1473 K)</th></tr></thead>
 <tbody>
-<tr><td>0.5015</td><td>49.85</td><td>2.8863</td><td>5.873</td><td>1.989</td><td>0.0055</td><td>0.0030</td><td>0.0030</td><td>0.0000</td></tr>
-<tr><td>0.5020</td><td>49.80</td><td>2.8869</td><td>5.869</td><td>1.988</td><td>0.0060</td><td>0.0040</td><td>0.0040</td><td>0.0000</td></tr>
-<tr><td>0.5040</td><td>49.60</td><td>2.8859</td><td>5.821</td><td>1.974</td><td>0.0130</td><td>0.0079</td><td>0.0079</td><td>0.0000</td></tr>
-<tr><td>0.5220</td><td>47.80</td><td>2.8771</td><td>5.639</td><td>1.920</td><td>0.0400</td><td>0.0421</td><td>0.0421</td><td>0.0022</td></tr>
-<tr><td>0.5270</td><td>47.30</td><td>2.8739</td><td>5.556</td><td>1.893</td><td>0.0535</td><td>0.0512</td><td>0.0512</td><td>0.0000</td></tr>
-<tr><td>0.5400</td><td>46.00</td><td>2.8672</td><td>5.392</td><td>1.845</td><td>0.0775</td><td>0.0741</td><td>0.0740</td><td>0.0000</td></tr>
-<tr><td>0.5471</td><td>45.29</td><td>2.8652</td><td>5.300</td><td>1.817</td><td>0.0915</td><td>0.0861</td><td>0.0860</td><td>0.0000</td></tr>
+<tr><td>0.5015</td><td>49.85</td><td>2.8863</td><td>5.873</td><td>1.989</td><td>0.0055</td><td>0.0030</td><td>0.0030</td><td>0.0019</td><td>0.0011</td></tr>
+<tr><td>0.5020</td><td>49.80</td><td>2.8869</td><td>5.869</td><td>1.988</td><td>0.0060</td><td>0.0040</td><td>0.0040</td><td>0.0025</td><td>0.0015</td></tr>
+<tr><td>0.5040</td><td>49.60</td><td>2.8859</td><td>5.821</td><td>1.974</td><td>0.0130</td><td>0.0079</td><td>0.0079</td><td>0.0050</td><td>0.0029</td></tr>
+<tr><td>0.5220</td><td>47.80</td><td>2.8771</td><td>5.639</td><td>1.920</td><td>0.0400</td><td>0.0421</td><td>0.0421</td><td>0.0226</td><td>0.0204</td></tr>
+<tr><td>0.5270</td><td>47.30</td><td>2.8739</td><td>5.556</td><td>1.893</td><td>0.0535</td><td>0.0512</td><td>0.0512</td><td>0.0288</td><td>0.0236</td></tr>
+<tr><td>0.5400</td><td>46.00</td><td>2.8672</td><td>5.392</td><td>1.845</td><td>0.0775</td><td>0.0741</td><td>0.0740</td><td>0.0446</td><td>0.0318</td></tr>
+<tr><td>0.5471</td><td>45.29</td><td>2.8652</td><td>5.300</td><td>1.817</td><td>0.0915</td><td>0.0861</td><td>0.0860</td><td>0.0535</td><td>0.0353</td></tr>
 </tbody>
 </table>
 
 <figure>
   <img src="figures/fig_b2_vacancy_concentration.png" alt="Structural vacancy concentration">
-  <figcaption>Figure 2.2 Taylor &amp; Doyle の密度と \(a(x)\) から直接求めた構造空孔濃度 \(c_{\rm vac}\)。黒線は完全構造空孔モデル、青点は MACE、赤丸は実験。反サイト模型は \(c_{\rm vac}=0\) の水平破線で棄却される。</figcaption>
+  <figcaption>Figure 2.2 Taylor &amp; Doyle の密度と \(a(x)\) から直接求めた構造空孔濃度 \(c_{\rm vac}\)。黒線は完全構造空孔モデル、青破線は MACE、橙一点鎖線と紫点線は 1473/1273 K の Boltzmann 混合ハイブリッド、赤丸は実験。有限温度では Va と Al\(_{\rm Ni}\) 反サイトの共存が生じる。</figcaption>
 </figure>
 
 <div class="note">
-<strong>有限温度のハイブリッド状態について</strong>：\(x_{\rm Al}=0.50\) で構造空孔モデルと MACE は完全 B2（\(c_{\rm vac}=0\)）に接続する。しかし有限温度では、同一組成で空孔モデルと反サイトモデルが Boltzmann 加重で混合し、純粋な構造空孔だけでなく空孔 + 反サイトの「ハイブリッド」欠陥状態が実現する。本図の 0 K 的な「完全空孔極限」はあくまで最安定欠陥モデルの平均場近似であり、高温では副格子モデルで同一サブラティスに Va と Al（または Ni 反サイト）を同時に配置することで、両者の混合を正しく記述できる。
+<strong>有限温度のハイブリッド状態について</strong>：\(x_{\rm Al}=0.50\) で構造空孔モデルと MACE は完全 B2（\(c_{\rm vac}=0\)）に接続する。有限温度では、空孔モデルと反サイトモデルが per-atom Helmholtz 自由エネルギー \(G_i=(E_i-\mu_{\rm Ni}N_{\rm Ni}-\mu_{\rm Al}N_{\rm Al})/N_{\rm atom}-k_{\rm B}T\ln(g_i)/N_{\rm atom}\)（縮退度 \(g_i=C(64,n_{\rm defect})\)）で Boltzmann 加重され、同一組成で空孔（Va）と Al 反サイト（Al\(_{\rm Ni}\)）が共存する「ハイブリッド」欠陥状態が実現する。1473 K で \(x_{\rm Al}=0.54\) では \(c_{\rm vac}^{\rm hybrid}=0.045\)、\(p_{\rm Al\,antisite}^{\rm hybrid}=0.032\)；\(x_{\rm Al}=0.60\) では \(c_{\rm vac}^{\rm hybrid}=0.114\)、\(p_{\rm Al\,antisite}^{\rm hybrid}=0.063\) となる。本図の 0 K 的な「完全空孔極限」はあくまで最安定欠陥モデルの平均場近似、\(c_{\rm vac}^{\rm hybrid}\) は分岐レベル平均場近似による有限温度推定値である。実験値に比べ \(c_{\rm vac}^{\rm hybrid}\) がやや小さく出るのは、この近似が熱的反サイト割合を過大評価するためであり、正確な混合を記述するには 4SL/8SL 副格子モデルで同一サブラティスに Va と Al（または Ni 反サイト）を同時に配置する必要がある。
 </div>
 
 <div class="key">
