@@ -1,0 +1,5 @@
+defect_kind,jiang_dft_eV_per_defect,mace_low_n_eV_per_defect,mace_n_defect,mace_x_Al,diff_eV
+Ni_vacancy_Al_rich,0.30,1.065,3,0.512,+0.765
+Al_antisite_on_Ni_Al_rich,1.90,1.601,1,0.508,-0.299
+Ni_antisite_on_Al_Ni_rich,0.99,0.562,1,0.492,-0.428
+Al_vacancy_Ni_rich,1.83,1.720,3,0.488,-0.110
