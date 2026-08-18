@@ -54,7 +54,11 @@ MathJax = {
   <li><a href="#sec2">2. 実験だけで欠陥種を決める：Taylor &amp; Doyle + Ellner/Yamanouchi</a></li>
   <li><a href="#sec3">3. MACE-MP-0 の再現度：体積・格子定数・傾き</a></li>
   <li><a href="#sec4">4. 凸包と B2 単相域上限 \(x_{\max}\)</a></li>
-  <li><a href="#sec5">5. 点欠陥形成エネルギー：どちらの欠陥が支配的か</a></li>
+  <li><a href="#sec5">5. 点欠陥形成エネルギー：どちらの欠陥が支配的か</a>
+    <ul>
+      <li><a href="#sec5-1">5.1 DFT 文献（Jiang et al.）との孤立点欠陥比較</a></li>
+    </ul>
+  </li>
   <li><a href="#sec6">6. 秩序化強度 \(V\) と対相互作用：icet クラスター展開</a></li>
   <li><a href="#sec7">7. 2SL → 4SL → 8SL モデルへの接続</a></li>
   <li><a href="#sec8">8. MACE vs MP-PBE vs 実験 ベンチマーク</a></li>
@@ -124,7 +128,7 @@ c_{\rm vac} = 1 - \frac{n}{2}
 
 <figure>
   <img src="figures/fig_b2_vacancy_concentration.png" alt="Structural vacancy concentration">
-  <figcaption>Figure 2.2 Taylor &amp; Doyle の密度と \(a(x)\) から直接求めた構造空孔濃度 \(c_{\rm vac}\)。黒線は完全構造空孔モデル、青破線は MACE、橙一点鎖線と紫点線は 1473/1273 K の Boltzmann 混合ハイブリッド、赤丸は実験。有限温度では Va と Al\(_{\rm Ni}\) 反サイトの共存が生じる。</figcaption>
+  <figcaption>Figure 2.2 Taylor &amp; Doyle の密度と \(a(x)\) から直接求めた構造空孔濃度 \(c_{\rm vac}\)。黒線は完全構造空孔モデル、青破線は MACE、橙一点鎖線と紫点線は 1473/1273 K の Boltzmann 混合ハイブリッド（\(x_{\rm Al}\ge0.50\) のみ描出、\(x&lt;0.50\) では構造空孔の定義が Ni 副格子から Al 副格子に変わるため）、赤丸は実験。有限温度では Va と Al\(_{\rm Ni}\) 反サイトの共存が生じる。</figcaption>
 </figure>
 
 <div class="note">
@@ -258,6 +262,29 @@ c_{\rm vac} = 1 - \frac{n}{2}
   <img src="figures/fig_b2_offstoich_eform.png" alt="defect formation energy">
   <figcaption>Figure 5.1 Ni/Al 欠陥形成エネルギーの組成依存性（fcc 元素を基準）。Ni-rich では Ni 反サイト、Al-rich では Ni 空孔が支配的。</figcaption>
 </figure>
+
+<h3 id="sec5-1">5.1 DFT 文献との孤立点欠陥比較</h3>
+
+<p>本プロジェクトで得た MACE-MP-0 の形成エネルギーを、Jiang らの第一原理 SQS 計算（C. Jiang, L.-Q. Chen, Z.-K. Liu, <em>Acta Mater.</em> <strong>53</strong> (2005) 2643–2652, Table 5）と比較する。両者とも fcc Al / fcc Ni を基準としている。</p>
+
+<table>
+<thead><tr><th>欠陥種</th><th>Jiang DFT (eV/欠陥)</th><th>MACE-MP-0 (eV/欠陥)</th><th>Δ (eV)</th></tr></thead>
+<tbody>
+<tr><td>Ni 空孔（Al-rich、Ni 副格子）</td><td>0.30</td><td>1.07</td><td><strong>+0.77</strong></td></tr>
+<tr><td>Al 反サイト on Ni 副格子（Al-rich）</td><td>1.90</td><td>1.60</td><td>−0.30</td></tr>
+<tr><td>Ni 反サイト on Al 副格子（Ni-rich）</td><td>0.99</td><td>0.56</td><td>−0.43</td></tr>
+<tr><td>Al 空孔（Ni-rich、Al 副格子）</td><td>1.83</td><td>1.72</td><td>−0.11</td></tr>
+</tbody>
+</table>
+
+<div class="key">
+<strong>Al-rich 欠陥競争の定量化</strong>
+<ul>
+  <li><strong>Jiang DFT:</strong> <em>E</em>(Al 反サイト) − <em>E</em>(Ni 空孔) = 1.90 − 0.30 = +1.60 eV → Ni 空孔が圧倒的。</li>
+  <li><strong>MACE-MP-0:</strong> <em>E</em>(Al 反サイト) − <em>E</em>(Ni 空孔) ≈ 1.60 − 1.07 = +0.54 eV → 空孔は依然優勢だが、差が約 1 eV 小さい。</li>
+</ul>
+MACE-MP-0 は Ni 空孔を DFT に比べ非常に不安定化させ、同時に Al 反サイトをやや安定化させる。その結果、有限温度ハイブリッドでは <strong>純構造空孔モデルよりも多くの熱的 Al 反サイトが混在</strong>し、<em>c</em><sub>vac</sub><sup>hybrid</sup> (= 1473 K, <em>x</em><sub>Al</sub>=0.60 で 0.106) は pure-vacancy (0.167) より下にずれる。Medasani <em>et al.</em> (<em>npj Comput. Mater.</em> <strong>2</strong> (2016) 1) は同じ 4×4×4 B2 超胞を用いて 100 種の B2 金属間化合物の欠陥優位種を機械学習で分類しており、NiAl に対しても「Al-rich = 空孔、Ni-rich = 反サイト」という結論は変わらない。
+</div>
 
 <div class="note">
 <strong>\(\Delta\mu\) 依存性</strong>：これらの形成エネルギーは元素化学ポテンシャルに敏感であり、\(\Delta\mu\) の可動域（約 2.768 eV）が大きいため、副格子優位は組成窓によって入れ替わりうる。したがって単一点欠陥近似でなく、濃度依存な相互作用項が必要である。

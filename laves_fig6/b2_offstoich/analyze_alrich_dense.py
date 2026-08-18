@@ -90,7 +90,7 @@ ax.errorbar(agg.x_Al, agg.Ef, yerr=agg.Efstd, fmt='ro', ms=9,
             capsize=4, label='Al-rich 反サイト密サンプリング')
 ax.set_xlabel(r'Al 原子分率 $x_{\rm Al}$')
 ax.set_ylabel(r'形成エネルギー $E_f$ (eV/atom)')
-ax.set_title('Al 過剰 B2 反サイト枝の凸包からの乖離')
+ax.set_title('Al 過剰 B2 反サイトモデルの凸包からの乖離')
 ax.legend(fontsize=13)
 plt.tight_layout()
 plt.savefig(os.path.join(BASE, 'figures', 'fig_b2_alrich_dense_hull.png'), dpi=150)

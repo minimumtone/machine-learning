@@ -50,8 +50,13 @@ mace = mix[mask].sort_values('x_Al')
 hyb = pd.read_csv(os.path.join(AN, 'b2_offstoich_hybrid_c_vac.csv'))
 hyb = hyb[(hyb.x_Al >= 0.45) & (hyb.x_Al <= 0.66)].sort_values('x_Al')
 
+# restrict the hybrid model to the Al-rich side where the structural-vacancy
+# interpretation (Ni-site vacancies) is meaningful
+hyb = hyb[hyb.c_hybrid_1473K.notna()].copy()
+hyb = hyb[(hyb.x_Al >= 0.5) & (hyb.x_Al <= 0.66)].sort_values('x_Al')
+
 x_grid = np.linspace(0.45, 0.60, 200)
-c_model = c_vac_model(x_grid)
+c_model = np.maximum(c_vac_model(x_grid), 0.0)
 
 a_mace = np.interp(x_grid, mace.x_Al.values, mace.a_mix.values)
 V_mace = np.interp(x_grid, mace.x_Al.values, mace.V_mix.values)
@@ -59,8 +64,12 @@ N_mace = a_mace**3 / V_mace
 c_mace = 1.0 - N_mace / 2.0
 c_mace = np.clip(c_mace, 0.0, 1.0)
 
-c_hyb_1273 = np.interp(x_grid, hyb.x_Al.values, hyb.c_hybrid_1273K.values, left=0.0, right=np.nan)
-c_hyb_1473 = np.interp(x_grid, hyb.x_Al.values, hyb.c_hybrid_1473K.values, left=0.0, right=np.nan)
+# hybrid curves only for x_Al >= 0.5; they connect continuously to c=0 at x=0.5
+c_hyb_1273 = np.full_like(x_grid, np.nan, dtype=float)
+c_hyb_1473 = np.full_like(x_grid, np.nan, dtype=float)
+mask = x_grid >= 0.5
+c_hyb_1273[mask] = np.interp(x_grid[mask], hyb.x_Al.values, hyb.c_hybrid_1273K.values, left=0.0)
+c_hyb_1473[mask] = np.interp(x_grid[mask], hyb.x_Al.values, hyb.c_hybrid_1473K.values, left=0.0)
 
 # --- output table --------------------------------------------------------------
 table = []
@@ -115,7 +124,7 @@ ax.legend(fontsize=11, loc='upper left')
 
 # annotation: hybrid state note
 ax.text(0.51, 0.17,
-        '有限温度では空孔枝と反サイト枝が\n'
+        '有限温度では空孔モデルと反サイトモデルが\n'
         'Boltzmann 混合（Va + Al$_{\\rm Ni}$）。\n'
         '完全な 4SL/8SL モデルがない場合、\n'
         'この平均場近似は熱的反サイト割合の\n'

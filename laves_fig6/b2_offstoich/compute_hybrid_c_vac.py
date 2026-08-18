@@ -124,23 +124,19 @@ def main():
                 z = sum(weights.values())
                 probs = {b: w / z for b, w in weights.items()}
                 c_hybrid = sum(probs[b] * cvals[b] for b in probs)
-            elif len(branches) == 1:
-                b0 = branches[0]
-                c_hybrid = cvals[b0]
-                probs = {b0: 1.0}
-            else:
-                c_hybrid = c_mod
-                probs = {}
-
-            # For Ni-rich side the Al-antisite fraction is not meaningful;
-            # c_hybrid itself is still reported because vacancy/(Ni-antisite)
-            # mixing is well-defined in terms of missing lattice atoms.
-            if x_eff > 0.5:
-                p_anti = p_Al_antisite_from_c(c_hybrid, x_eff)
-                if pd.isna(p_anti):
+                # Al-antisite fraction only meaningful on the Al-rich side
+                if x_eff > 0.5:
+                    p_anti = p_Al_antisite_from_c(c_hybrid, x_eff)
+                    if pd.isna(p_anti):
+                        p_anti = 0.0
+                else:
                     p_anti = 0.0
             else:
-                p_anti = 0.0
+                # A single branch at a target composition is not enough for a
+                # Boltzmann mix; report NaN rather than a misleading 100% weight.
+                c_hybrid = np.nan
+                p_anti = np.nan
+                probs = {}
             row[f'c_hybrid_{T:.0f}K'] = c_hybrid
             row[f'p_antisite_{T:.0f}K'] = p_anti
             for b in ('vacancy', 'antisite'):

@@ -238,11 +238,11 @@ for br, g in agg.groupby("branch"):
     ax.errorbar(g.x_Al, g.V, yerr=g.Vstd, fmt="o-", ms=9, capsize=4,
                 color=colors[br], label=labels[br])
 ax.plot(mix.x_Al, mix.V_mix, "k--", lw=2.5,
-        label=f"$G$ 最低枝選択 ({T_ANNEAL_K:.0f} K, 配置エントロピー込み)")
+        label=f"$G$ 最安定欠陥モデル選択 ({T_ANNEAL_K:.0f} K, 配置エントロピー込み)")
 ax.plot([0.5], [perfect.V_per_atom_A3], "s", ms=13, color="tab:green",
         label="完全B2 (MLIP)")
 ax.plot(exp_b2.x_Al, exp_b2.V_bar_A3, "o", ms=11, mfc="none", mec="k", mew=2,
-        label="Yamanouchi実験 B2枝 (Fig. 6(a)), 室温")
+        label="Yamanouchi実験 B2 (Fig. 6(a)), 室温")
 ax.set_xlabel(r"Al原子分率 $x_{\mathrm{Al}}$")
 ax.set_ylabel(r"平均原子体積 $\bar V$ (Å$^3$/atom)")
 ax.set_title(r"B2-Ni$_{1-x}$Al$_x$ 不定比組成の平均原子体積")
@@ -263,16 +263,16 @@ for br, g in agg.groupby("branch"):
     ax.errorbar(g.x_Al, g.V, yerr=g.Vstd, fmt="o-", ms=8, capsize=4,
                 color=colors[br], label=labels[br])
 ax.plot(mix.x_Al, mix.V_mix, "k--", lw=2.5,
-        label=f"$G$ 最低枝選択 ({T_ANNEAL_K:.0f} K)")
+        label=f"$G$ 最安定欠陥モデル選択 ({T_ANNEAL_K:.0f} K)")
 ax.plot([0.5], [perfect.V_per_atom_A3], "s", ms=12, color="tab:green",
         label="完全B2 (MLIP)")
 ax.plot(exp_b2.x_Al, exp_b2.V_bar_A3, "o", ms=11, mfc="none", mec="k", mew=2,
-        label="Yamanouchi実験 B2枝")
+        label="Yamanouchi実験 B2")
 ax.plot(exp_ss.x_Al, exp_ss.V_bar_A3, "^", ms=11, mfc="none", mec="gray", mew=2,
         label="Yamanouchi実験 Ni(Al)固溶体領域")
 ax.set_xlabel(r"Al原子分率 $x_{\mathrm{Al}}$")
 ax.set_ylabel(r"平均原子体積 $\bar V$ (Å$^3$/atom)")
-ax.set_title(r"Fig. 6(a) 全域: Ni(Al)固溶体とB2不定比枝のMLIP再現")
+ax.set_title(r"Fig. 6(a) 全域: Ni(Al)固溶体とB2不定比モデルのMLIP再現")
 ax.legend(fontsize=11, loc="upper left")
 plt.tight_layout()
 plt.savefig(os.path.join(FIG, "fig_b2_offstoich_vbar_full.png"), dpi=150)
@@ -285,10 +285,10 @@ for br, g in agg.groupby("branch"):
     ax.errorbar(g.x_Al, g.a, yerr=g.astd, fmt="o-", ms=9, capsize=4,
                 color=colors[br], label=labels[br])
 ax.plot(mix.x_Al, mix.a_mix, "k--", lw=2.5,
-        label=f"$G$ 最低枝選択 ({T_ANNEAL_K:.0f} K)")
+        label=f"$G$ 最安定欠陥モデル選択 ({T_ANNEAL_K:.0f} K)")
 ax.plot([0.5], [perfect.a_eff_A], "s", ms=13, color="tab:green", label="完全B2")
 ax.plot(exp_b2.x_Al, exp_b2.a_exp_A, "o", ms=11, mfc="none", mec="k", mew=2,
-        label="Yamanouchi実験 B2枝 → 格子定数")
+        label="Yamanouchi実験 B2 → 格子定数")
 ax.set_xlabel(r"Al原子分率 $x_{\mathrm{Al}}$")
 ax.set_ylabel(r"B2格子定数 $a$ (Å)")
 ax.set_title(r"B2-Ni$_{1-x}$Al$_x$ の格子定数（構造空孔による異常挙動）")
