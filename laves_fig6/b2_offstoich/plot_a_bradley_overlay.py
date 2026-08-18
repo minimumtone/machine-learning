@@ -11,6 +11,9 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+plt.rcParams.update({'font.size': 16, 'axes.grid': True, 'grid.alpha': 0.3,
+                     'font.family': ['Noto Sans CJK JP', 'IPAGothic', 'sans-serif'],
+                     'axes.unicode_minus': False})
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 AN = os.path.join(BASE, 'analysis')

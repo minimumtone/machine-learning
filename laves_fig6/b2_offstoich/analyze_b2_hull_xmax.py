@@ -490,3 +490,39 @@ plt.tight_layout()
 plt.savefig(os.path.join(FIG, 'fig_b2_hull_finiteT.png'), dpi=150)
 plt.close()
 print('Wrote', os.path.join(FIG, 'fig_b2_hull_finiteT.png'))
+
+
+# --- fig: 0 K hull with B2 defect models (x_max extraction helper) ----------
+fig2, ax2 = plt.subplots(figsize=(12, 8))
+ax2.plot(xh_0K, yh_0K, 'k--', lw=2.2,
+         label='0 K 凸包（L1$_2$/Ni$_3$Al$_4$/Ni$_5$Al$_3$/Ni$_2$Al$_3$/NiAl$_3$ 含む）')
+
+colors_x = {'antisite': 'tab:blue', 'vacancy': 'tab:red', 'perfect': 'tab:orange'}
+labels_x = {'antisite': 'B2 反サイト', 'vacancy': 'B2 空孔', 'perfect': '完全 B2-NiAl'}
+for br, g in branch_agg.groupby('branch'):
+    g = g.sort_values('x_Al')
+    ax2.errorbar(g.x_Al, g.Ef, yerr=g.Efstd, fmt='o-', ms=8, capsize=3,
+                 color=colors_x.get(br, 'gray'),
+                 label=labels_x.get(br, br), zorder=4)
+
+for _, r in comp_all.iterrows():
+    ax2.plot([r.x_Al], [r.formation_energy_per_atom_eV], 'D', ms=10,
+             color='tab:green', zorder=6)
+    label = r.label.replace('L12_', 'L1$_2$-')
+    for s, repl in [('Ni3Al4', 'Ni$_3$Al$_4$'), ('Ni5Al3', 'Ni$_5$Al$_3$'),
+                    ('Ni2Al3', 'Ni$_2$Al$_3$'), ('NiAl3', 'NiAl$_3$')]:
+        label = label.replace(s, repl)
+    ax2.annotate(label, xy=(r.x_Al, r.formation_energy_per_atom_eV),
+                 textcoords='offset points', xytext=(0, 10), fontsize=12,
+                 ha='center', color='darkgreen')
+
+ax2.set_xlabel(r"Al 原子分率 $x_{\mathrm{Al}}$")
+ax2.set_ylabel(r"形成エネルギー $E_f$ (eV/atom)")
+ax2.set_title(r"B2 欠陥モデルの 0 K 凸包からの乖離（$x_{\max}$ 抽出）", fontsize=18)
+ax2.set_xlim(-0.03, 1.03)
+ax2.set_ylim(-0.75, 0.05)
+ax2.legend(fontsize=12, loc='lower right')
+plt.tight_layout()
+plt.savefig(os.path.join(FIG, 'fig_b2_hull_xmax.png'), dpi=150)
+plt.close()
+print('Wrote', os.path.join(FIG, 'fig_b2_hull_xmax.png'))
