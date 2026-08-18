@@ -39,7 +39,7 @@ for d in (AN, FIG):
 A_REF = 2.882456714930723
 PRIM = Atoms(
     symbols="NiAl",
-    positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
+    scaled_positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
     cell=[A_REF, A_REF, A_REF],
     pbc=True,
 )
@@ -82,24 +82,43 @@ def load_structure_inputs():
     return inputs
 
 
-def add_to_structure_container(sc, inputs):
-    """Map structures to common reference and add to StructureContainer.
+def map_and_filter_inputs(inputs):
+    """Map all candidate structures to the common reference primitive.
 
-    Returns list of accepted (tag, source, energy_per_atom).
+    Returns (mapped_inputs, skipped_counts) where mapped_inputs is a list of
+    (atoms, energy_per_atom, tag, source) for accepted structures.
     """
-    accepted = []
+    mapped_inputs = []
+    skipped = {"vacancy_X": 0, "wrong_n_sites": 0, "mapping_error": 0}
     for at, e_per_atom, tag, source in inputs:
-        mapped, _ = map_structure_to_reference(
-            at,
-            PRIM,
-            tol_positions=0.4,
-            suppress_warnings=True,
-            assume_no_cell_relaxation=True,
-        )
+        try:
+            mapped, _ = map_structure_to_reference(
+                at,
+                PRIM,
+                tol_positions=0.5,
+                suppress_warnings=True,
+                assume_no_cell_relaxation=False,
+            )
+        except Exception as exc:
+            skipped["mapping_error"] += 1
+            print(f"[skip {tag}] map_structure_to_reference failed: {exc}")
+            continue
         if "X" in mapped.get_chemical_symbols():
+            skipped["vacancy_X"] += 1
+            print(f"[skip {tag}] mapped structure contains X vacancies")
             continue
         if len(mapped) != EXPECTED_N:
+            skipped["wrong_n_sites"] += 1
+            print(f"[skip {tag}] mapped n_sites={len(mapped)} != {EXPECTED_N}")
             continue
+        mapped_inputs.append((mapped, e_per_atom, tag, source))
+    return mapped_inputs, skipped
+
+
+def add_to_structure_container(sc, mapped_inputs):
+    """Add pre-mapped structures to StructureContainer and return metadata."""
+    accepted = []
+    for mapped, e_per_atom, tag, source in mapped_inputs:
         sc.add_structure(mapped, properties={"energy": e_per_atom}, user_tag=tag)
         accepted.append((tag, source, e_per_atom))
     return accepted
@@ -113,7 +132,7 @@ def loocv_rmse(A, y):
     ATA_inv = np.linalg.pinv(A.T @ A)
     H = A @ ATA_inv @ A.T
     # Leverage; guard against H_ii == 1
-    leverage = np.diag(H)
+    leverage = np.clip(np.diag(H), None, 1.0 - 1e-12)
     residuals = y - A @ (ATA_inv @ (A.T @ y))
     press = np.mean((residuals / (1.0 - leverage)) ** 2)
     return np.sqrt(press)
@@ -261,18 +280,20 @@ def plot_parity(results, out_png):
 def main():
     inputs = load_structure_inputs()
     print(f"[load] {len(inputs)} candidate structures loaded")
+    mapped_inputs, skipped = map_and_filter_inputs(inputs)
+    print(f"[map] accepted={len(mapped_inputs)} skipped={skipped}")
 
     d_1nn = A_REF * np.sqrt(3.0) / 2.0  # ~2.496 A
     d_2nn = A_REF  # ~2.882 A
     models = [
-        ("1NN_pairs", [d_1nn + 0.07]),     # only 1NN pair orbits (n_par=4)
-        ("1NN+2NN_pairs", [d_2nn + 0.07]), # add 2NN pairs (n_par=5)
-        ("1NN+2NN+triplets", [d_2nn + 0.07, d_2nn + 0.07]),  # add triplets (n_par=6)
+        ("1NN_pairs", [d_1nn + 0.07]),     # only 1NN pair orbit (n_par=3)
+        ("1NN+2NN_pairs", [d_2nn + 0.07]), # add 2NN pair orbit (n_par=4)
+        ("1NN+2NN+triplets", [d_2nn + 0.07, d_2nn + 0.07]),  # add triplet orbit (n_par=5)
     ]
 
     results = []
     for label, cutoffs in models:
-        res = fit_ce(label, cutoffs, inputs)
+        res = fit_ce(label, cutoffs, mapped_inputs)
         results.append(res)
         print(
             f"[{label}] N={res['n_structures']} npar={res['n_parameters']} "
@@ -286,6 +307,7 @@ def main():
     # Save summary JSON (predictions are stored separately to keep JSON small).
     summary = {
         "reference_a_A": A_REF,
+        "skipped_after_mapping": skipped,
         "models": [
             {
                 k: v
@@ -296,13 +318,15 @@ def main():
         ],
     }
     summary["comparison"] = {
-        "V_from_ordering_eV_per_bond": -0.3509 / 4.0,
+        "V_from_ordering_eV_per_bond": round(-0.3509 / 4.0, 6),
         "V_pair_constant_eV_per_bond": -0.1449,
+        "icet_1NN_V_pair_eV_per_bond": round(results[0]["V_pair_eV_per_bond"], 6),
+        "icet_2NN_triplets_V_eff_eV_per_bond": round(results[2]["V_eff_eV_per_bond"], 6),
         "interpretation": (
-            "1NN-only pair model gives V ~ -0.15 eV/bond, matching the "
+            "1NN-only pair model gives V ~ -0.14 eV/bond, close to the "
             "constant-pair estimate from isolated point defects. Adding 2NN "
             "same-sublattice pairs and triplets reduces the effective ordering "
-            "strength to ~ -0.11 eV/bond, approaching the thermodynamic "
+            "strength to ~ -0.10 eV/bond, approaching the thermodynamic "
             "V = -0.088 eV/bond from the B2/A2 energy difference."
         ),
     }

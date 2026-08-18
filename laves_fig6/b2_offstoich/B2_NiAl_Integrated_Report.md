@@ -164,9 +164,9 @@ Ni$_5$Al$_3$ の実験値は Khadkikar & Vedula (Pt$_5$Ga$_3$-type orthorhombic)
 - 副格子置換対称性の必要性
 - **秩序化強度は $V=-\Delta E_{\rm order}/4$ として直接決定**（$\Delta E_{\rm order}=0.3509$ eV/formula より $V=-0.088$ eV/bond）
 - 定数対近似で孤立点欠陥エネルギーから算定すると $V\approx-0.145$ eV/bond となり、前者に対して 65 % 過大 → 定数対近似の破綻の証拠。これを `icet` クラスター展開で独立に確認した（`run_icet_b2_cluster_expansion.py`）：
-  - 第一近接対のみ（cutoff 2.57 Å）：$V_{\rm 1NN}\approx-0.147$ eV/bond、$J_{\rm NiAl}=-1.356$, $J_{\rm NiNi}=-1.481$, $J_{\rm AlAl}=-0.932$ eV
-  - 第一＋第二近接対（2.95 Å）：$V\approx-0.109$ eV/bond、RMSE=0.018 eV/atom
-  - 第一＋第二近接対＋三点群：$V\approx-0.107$ eV/bond、RMSE=0.010 eV/atom
+  - 第一近接対のみ（cutoff 2.566 Å）：$V_{\rm 1NN}\approx-0.135$ eV/bond、$J_{\rm NiAl}=-1.354$, $J_{\rm NiNi}=-1.500$, $J_{\rm AlAl}=-0.935$ eV
+  - 第一＋第二近接対（2.952 Å）：$V\approx-0.102$ eV/bond、RMSE=0.020 eV/atom
+  - 第一＋第二近接対＋三点群：$V\approx-0.100$ eV/bond、RMSE=0.009 eV/atom
   - クラスターを充実させると熱力学的 $V=-0.088$ eV/bond に漸近
 - **A2-Ni / A2-Al（bcc）を MACE-MP-0 で緩和**: $a_{\rm Ni}=2.790$ Å, $E=-5.662$ eV/atom ($-11.324$ eV/formula); $a_{\rm Al}=3.225$ Å, $E=-3.687$ eV/atom ($-7.374$ eV/formula)
 
@@ -220,10 +220,10 @@ $$V = -\frac{\Delta E_{\rm order}}{4} = -\frac{0.3509}{4} = -0.088\ {\rm eV/bond
 
 `icet` クラスター展開（`run_icet_b2_cluster_expansion.py`）で同じことを独立に確認できる。B2 系のみから第一近接対モデルをフィットすると
 
-- $J_{\rm NiAl}=-1.356$ eV、$J_{\rm NiNi}=-1.481$ eV、$J_{\rm AlAl}=-0.932$ eV
-- $V_{\rm pair,1NN}=J_{\rm NiAl}-(J_{\rm NiNi}+J_{\rm AlAl})/2=-0.149$ eV/bond
+- $J_{\rm NiAl}=-1.354$ eV、$J_{\rm NiNi}=-1.500$ eV、$J_{\rm AlAl}=-0.935$ eV
+- $V_{\rm pair,1NN}=J_{\rm NiAl}-(J_{\rm NiNi}+J_{\rm AlAl})/2=-0.137$ eV/bond
 
-と、孤立点欠陥からの定数対推定 $V\approx-0.145$ eV/bond と一致する。しかし、第二近接対（同じサブラティス上の Ni–Ni / Al–Al 対）を加えると $V\approx-0.109$ eV/bond、三点群まで含めると $V\approx-0.107$ eV/bond と熱力学的値 $-0.088$ eV/bond に急速に近づく。したがって、**定数対近似の破綻は第一近接対だけでなく、第二近接対・多点項の寄与を無視したことに起因する**。個別の $J$ 値の絶対値には固定体積近似の大きな依存があるため、報告すべき秩序化強度は依然として $V=-0.088$ eV/bond である。
+と、孤立点欠陥からの定数対推定 $V\approx-0.145$ eV/bond とほぼ一致する。しかし、第二近接対（同じサブラティス上の Ni–Ni / Al–Al 対）を加えると $V\approx-0.102$ eV/bond、三点群まで含めると $V\approx-0.100$ eV/bond と熱力学的値 $-0.088$ eV/bond に急速に近づく。したがって、**定数対近似の破綻は第一近接対だけでなく、第二近接対・多点項の寄与を無視したことに起因する**。個別の $J$ 値の絶対値には固定体積近似の大きな依存があるため、報告すべき秩序化強度は依然として $V=-0.088$ eV/bond である。
 
 `analysis/b2_pair_interactions.json` と `analysis/icet_b2_cluster_expansion_summary.json`:
 - `delta_order_obs_eV`: 0.3509
@@ -232,10 +232,10 @@ $$V = -\frac{\Delta E_{\rm order}}{4} = -\frac{0.3509}{4} = -0.088\ {\rm eV/bond
 - `V_definition`: 上記の整理を含む注記
 
 `analysis/icet_b2_cluster_expansion_summary.json`:
-- `V_eff_eV_per_bond`（1NN+2NN+triplets）: -0.1073
-- `V_pair_eV_per_bond`（1NN only）: -0.1488
-- `J_NiAl_eV`: -1.3556、$J_{\rm NiNi}$: -1.4813、$J_{\rm AlAl}$: -0.9324
-- `rmse_eV_per_atom`（1NN+2NN+triplets）: 0.0102
+- `V_eff_eV_per_bond`（1NN+2NN+triplets）: -0.1002
+- `V_pair_eV_per_bond`（1NN only）: -0.1369
+- `J_NiAl_eV`: -1.3544、$J_{\rm NiNi}$: -1.5004、$J_{\rm AlAl}$: -0.9346
+- `rmse_eV_per_atom`（1NN+2NN+triplets）: 0.0092
 
 ### 5. 未解決点
 

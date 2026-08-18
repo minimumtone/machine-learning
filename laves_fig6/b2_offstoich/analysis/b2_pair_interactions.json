@@ -9,6 +9,13 @@
   "J_AlAl_eV": -1.1646,
   "V_pair_constant_eV": -0.1449,
   "V_from_ordering_eV": -0.0877,
-  "V_definition": "V = -Delta E_order / 4 = -0.3509/4 = -0.088 eV/bond is the thermodynamic ordering strength obtained directly from the B2/A2 energy difference.  V_pair = J_NiAl - (J_NiNi+J_AlAl)/2 = -0.145 eV/bond is the value implied by a literal constant-pair fit to the *isolated* point-defect energies; the 65% disagreement shows the constant-pair approximation breaks down for concentrated NiAl.",
-  "note": "Constant pair model overestimates ordering energy (concentrated limit). Composition-dependent interaction parameters are needed."
+  "icet_1NN_V_pair_eV_per_bond": -0.1369,
+  "icet_1NN_J_values_eV": {
+    "J_NiAl_eV": -1.3544,
+    "J_NiNi_eV": -1.5004,
+    "J_AlAl_eV": -0.9346
+  },
+  "icet_2NN_triplets_V_eff_eV_per_bond": -0.1002,
+  "V_definition": "V = -Delta E_order / 4 = -0.3509/4 = -0.088 eV/bond is the thermodynamic ordering strength obtained directly from the B2/A2 energy difference (the value to use in a CALPHAD model).  V_pair = J_NiAl - (J_NiNi+J_AlAl)/2 = -0.145 eV/bond is the value implied by a literal constant-pair fit to isolated point-defect energies, and -0.137 eV/bond is the value independently obtained by fitting a 1NN icet cluster expansion to fully occupied bcc supercells. The three values converge to ~-0.14 eV/bond in the 1NN/constant-pair limit and decrease toward the thermodynamic -0.088 eV/bond once 2NN pairs and triplets are included in the cluster expansion.",
+  "note": "Constant-pair / 1NN approximations overestimate ordering energy in the concentrated limit. Composition-dependent interaction parameters or longer-range cluster expansion terms are needed."
 }

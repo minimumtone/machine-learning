@@ -63,7 +63,7 @@ MACE-MP-0 medium（0 K 静的緩和、FrechetCellFilter、128 サイト超胞）
 
 1. **配置エネルギーの収集**：128 サイト B2 超胞で、全組成（x_Al=0.20–0.80）の反サイト・空孔配置を MACE で緩和。
 2. **点欠陥形成エネルギーの定義**：式 (1)–(4) に従い、完全 B2 からの差分および元素化学ポテンシャルで正規化。
-3. **クラスター展開**：`run_icet_b2_cluster_expansion.py` で icet を用いて第一近接対から三点群までの有効相互作用を推定。第一近接対のみでは $V_{\rm 1NN}=-0.149$ eV/bond、第二近接対・三点群を加えると $V\approx-0.107$ eV/bond と熱力学的 $V=-0.088$ eV/bond に漸近。
+3. **クラスター展開**：`run_icet_b2_cluster_expansion.py` で icet を用いて第一近接対から三点群までの有効相互作用を推定。第一近接対のみでは $V_{\rm 1NN}=-0.137$ eV/bond、第二近接対・三点群を加えると $V\approx-0.100$ eV/bond と熱力学的 $V=-0.088$ eV/bond に漸近。
 4. **CEF エネルギー関数の構築**：
    
    $$ G_m = \sum_i y_i^1 y_j^2 y_k^3 y_l^4 \, G_{ijkl}^{\rm end} + RT\sum_s \sum_i y_i^s \ln y_i^s + G_{\rm excess} $$
@@ -121,12 +121,12 @@ $$ V = -\frac{\Delta E_{\rm order}}{4} = -\frac{0.3509}{4} = -0.088 \ {\rm eV/bo
 
 一方で，`icet` クラスター展開（`run_icet_b2_cluster_expansion.py`）で第一近接対モデルを B2 系のみにフィットすると
 
-- $J_{\rm NiAl}=-1.356$ eV、$J_{\rm NiNi}=-1.481$ eV、$J_{\rm AlAl}=-0.932$ eV
-- $V_{\rm pair,1NN}=J_{\rm NiAl}-(J_{\rm NiNi}+J_{\rm AlAl})/2=-0.149$ eV/bond
+- $J_{\rm NiAl}=-1.354$ eV、$J_{\rm NiNi}=-1.500$ eV、$J_{\rm AlAl}=-0.935$ eV
+- $V_{\rm pair,1NN}=J_{\rm NiAl}-(J_{\rm NiNi}+J_{\rm AlAl})/2=-0.137$ eV/bond
 
-と、孤立点欠陥からの定数対推定 $V\approx-0.145$ eV/bond と一致する。しかし，第二近接対（同じサブラティス上の Ni–Ni / Al–Al 対）を加えると $V\approx-0.109$ eV/bond、三点群まで含めると $V\approx-0.107$ eV/bond と熱力学的値 $-0.088$ eV/bond に急速に近づく。したがって，**定数対近似の破綻は第二近接対・多点項の無視に起因する**。個別の $J_{ij}$ には固定体積近似の大きな依存があるため、報告すべき秩序化強度は引き続き $V=-0.088$ eV/bond である．
+と、孤立点欠陥からの定数対推定 $V\approx-0.145$ eV/bond とほぼ一致する。しかし，第二近接対（同じサブラティス上の Ni–Ni / Al–Al 対）を加えると $V\approx-0.102$ eV/bond、三点群まで含めると $V\approx-0.100$ eV/bond と熱力学的値 $-0.088$ eV/bond に急速に近づく。したがって，**定数対近似の破綻は第二近接対・多点項の無視に起因する**。個別の $J_{ij}$ には固定体積近似の大きな依存があるため、報告すべき秩序化強度は引き続き $V=-0.088$ eV/bond である．
 
-`extract_4sl_b2_parameters.py` から出力される `V_from_ordering_eV` を使用し，`V_pair_constant_eV` はあくまで定数対近似の不整合を示す指標として扱う．また `analysis/icet_b2_cluster_expansion_summary.json` から、`V_eff_eV_per_bond`（1NN+2NN+triplets）は -0.1073 eV/bond、`V_pair_eV_per_bond`（1NN only）は -0.1488 eV/bond、`rmse_eV_per_atom` は 0.0102 eV/atom と確認できる。
+`extract_4sl_b2_parameters.py` から出力される `V_from_ordering_eV` を使用し，`V_pair_constant_eV` はあくまで定数対近似の不整合を示す指標として扱う．また `analysis/icet_b2_cluster_expansion_summary.json` から、`V_eff_eV_per_bond`（1NN+2NN+triplets）は -0.1002 eV/bond、`V_pair_eV_per_bond`（1NN only）は -0.1369 eV/bond、`rmse_eV_per_atom` は 0.0092 eV/atom と確認できる。
 
 （MACE の A2-Ni / A2-Al 端成分は `run_a2_endmembers.py` によりそれぞれ $E=-5.662$ eV/atom ($a=2.790$ Å)、$E=-3.687$ eV/atom ($a=3.225$ Å) と緩和された。$x=0.5$ のランダム A2 エネルギー $E_{\rm A2}=-10.493$ eV/formula から、B2 秩序化エネルギー $\Delta E_{\rm order}=+0.3510$ eV/formula を得る。）
 

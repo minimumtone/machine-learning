@@ -1,5 +1,10 @@
 {
   "reference_a_A": 2.882456714930723,
+  "skipped_after_mapping": {
+    "vacancy_X": 2,
+    "wrong_n_sites": 0,
+    "mapping_error": 0
+  },
   "models": [
     {
       "label": "1NN_pairs",
@@ -7,45 +12,39 @@
         2.5662807404390455
       ],
       "n_structures": 85,
-      "n_parameters": 4,
-      "rmse_eV_per_atom": 0.02514444533925825,
-      "max_abs_residual_eV_per_atom": 0.11377331536670265,
-      "loocv_rmse_eV_per_atom": 0.028142079210738802,
-      "e_B2_per_atom_eV": -5.422418662492279,
-      "e_A2_random_per_atom_eV": -5.1289060577958105,
-      "e_A2_random_std_eV": 0.03672423580558617,
-      "V_eff_eV_per_bond": -0.14675630234823434,
-      "V_pair_eV_per_bond": -0.14877477618597634,
+      "n_parameters": 3,
+      "rmse_eV_per_atom": 0.02668334462773972,
+      "max_abs_residual_eV_per_atom": 0.10732193440882387,
+      "loocv_rmse_eV_per_atom": 0.029922963059103254,
+      "e_B2_per_atom_eV": -5.41754685762293,
+      "e_A2_random_per_atom_eV": -5.146805326718345,
+      "e_A2_random_std_eV": 0.012092362845288421,
+      "V_eff_eV_per_bond": -0.1353707654522922,
+      "V_pair_eV_per_bond": -0.13692183309279704,
       "J_values_eV": {
-        "J_NiAl_eV": -1.355605,
-        "J_NiNi_eV": -1.481281,
-        "J_AlAl_eV": -0.932379,
-        "V_pair_eV": -0.148775
+        "J_NiAl_eV": -1.354387,
+        "J_NiNi_eV": -1.50035,
+        "J_AlAl_eV": -0.93458,
+        "V_pair_eV": -0.136922
       },
       "orbits": [
         {
           "order": 0,
           "radius": 0.0,
           "multiplicity": 1,
-          "eci_eV": -5.1248691101203265
+          "eci_eV": -5.143703191437336
         },
         {
           "order": 1,
           "radius": 0.0,
-          "multiplicity": 2,
-          "eci_eV": -1.0978025598581536
-        },
-        {
-          "order": 2,
-          "radius": 0.43301270189114605,
           "multiplicity": 1,
-          "eci_eV": 0.2902239647434681
+          "eci_eV": -1.1315412986851887
         },
         {
           "order": 2,
-          "radius": 1.242588024902252,
-          "multiplicity": 3,
-          "eci_eV": 0.007325587628484399
+          "radius": 1.248140370219523,
+          "multiplicity": 4,
+          "eci_eV": 0.2738436661855943
         }
       ]
     },
@@ -55,14 +54,14 @@
         2.952456714930723
       ],
       "n_structures": 85,
-      "n_parameters": 5,
-      "rmse_eV_per_atom": 0.01817197067063964,
-      "max_abs_residual_eV_per_atom": 0.03734254389714131,
-      "loocv_rmse_eV_per_atom": 0.02007722630144969,
-      "e_B2_per_atom_eV": -5.409330018944697,
-      "e_A2_random_per_atom_eV": -5.190442534920937,
-      "e_A2_random_std_eV": 0.028780005390850197,
-      "V_eff_eV_per_bond": -0.10944374201188012,
+      "n_parameters": 4,
+      "rmse_eV_per_atom": 0.019583612058370666,
+      "max_abs_residual_eV_per_atom": 0.04989551656354774,
+      "loocv_rmse_eV_per_atom": 0.021966350562672928,
+      "e_B2_per_atom_eV": -5.405968431561581,
+      "e_A2_random_per_atom_eV": -5.201263720889591,
+      "e_A2_random_std_eV": 0.01689749235158336,
+      "V_eff_eV_per_bond": -0.10235235533599507,
       "V_pair_eV_per_bond": null,
       "J_values_eV": null,
       "orbits": [
@@ -70,31 +69,25 @@
           "order": 0,
           "radius": 0.0,
           "multiplicity": 1,
-          "eci_eV": -5.183583326264293
+          "eci_eV": -5.195547938773578
         },
         {
           "order": 1,
           "radius": 0.0,
-          "multiplicity": 2,
-          "eci_eV": -1.1013134817953225
-        },
-        {
-          "order": 2,
-          "radius": 0.43301270189114605,
           "multiplicity": 1,
-          "eci_eV": 0.20155079687232497
+          "eci_eV": -1.1077891390355465
         },
         {
           "order": 2,
-          "radius": 1.242588024902252,
-          "multiplicity": 3,
-          "eci_eV": 0.17740451875418944
+          "radius": 1.248140370219523,
+          "multiplicity": 4,
+          "eci_eV": 0.3661443697357713
         },
         {
           "order": 2,
           "radius": 1.4412283574653615,
-          "multiplicity": 6,
-          "eci_eV": 0.1532086229461096
+          "multiplicity": 3,
+          "eci_eV": 0.15572387694776843
         }
       ]
     },
@@ -105,14 +98,14 @@
         2.952456714930723
       ],
       "n_structures": 85,
-      "n_parameters": 6,
-      "rmse_eV_per_atom": 0.010249412670988878,
-      "max_abs_residual_eV_per_atom": 0.028205322492515172,
-      "loocv_rmse_eV_per_atom": 0.012045581207933137,
-      "e_B2_per_atom_eV": -5.41062879791336,
-      "e_A2_random_per_atom_eV": -5.1960002531783305,
-      "e_A2_random_std_eV": 0.03055364710721082,
-      "V_eff_eV_per_bond": -0.1073142723675149,
+      "n_parameters": 5,
+      "rmse_eV_per_atom": 0.00917755567985174,
+      "max_abs_residual_eV_per_atom": 0.02183806677152056,
+      "loocv_rmse_eV_per_atom": 0.011195916243026419,
+      "e_B2_per_atom_eV": -5.409057759398411,
+      "e_A2_random_per_atom_eV": -5.208558914869116,
+      "e_A2_random_std_eV": 0.020145669086172203,
+      "V_eff_eV_per_bond": -0.1002494222646475,
       "V_pair_eV_per_bond": null,
       "J_values_eV": null,
       "orbits": [
@@ -120,37 +113,31 @@
           "order": 0,
           "radius": 0.0,
           "multiplicity": 1,
-          "eci_eV": -5.189135145094565
+          "eci_eV": -5.202579312663021
         },
         {
           "order": 1,
           "radius": 0.0,
-          "multiplicity": 2,
-          "eci_eV": -1.0711304955180059
-        },
-        {
-          "order": 2,
-          "radius": 0.43301270189114605,
           "multiplicity": 1,
-          "eci_eV": 0.19866914611532732
+          "eci_eV": -1.0592491799281372
         },
         {
           "order": 2,
-          "radius": 1.242588024902252,
-          "multiplicity": 3,
-          "eci_eV": 0.17475027403364815
+          "radius": 1.248140370219523,
+          "multiplicity": 4,
+          "eci_eV": 0.4035695981263338
         },
         {
           "order": 2,
           "radius": 1.4412283574653615,
-          "multiplicity": 6,
-          "eci_eV": 0.15192576733018054
+          "multiplicity": 3,
+          "eci_eV": 0.19709115139094358
         },
         {
           "order": 3,
-          "radius": 1.2358063103954766,
-          "multiplicity": 6,
-          "eci_eV": 0.18537054717170165
+          "radius": 1.5151596418971167,
+          "multiplicity": 12,
+          "eci_eV": 0.23726388223646655
         }
       ]
     }
@@ -158,6 +145,8 @@
   "comparison": {
     "V_from_ordering_eV_per_bond": -0.087725,
     "V_pair_constant_eV_per_bond": -0.1449,
-    "interpretation": "1NN-only pair model gives V ~ -0.15 eV/bond, matching the constant-pair estimate from isolated point defects. Adding 2NN same-sublattice pairs and triplets reduces the effective ordering strength to ~ -0.11 eV/bond, approaching the thermodynamic V = -0.088 eV/bond from the B2/A2 energy difference."
+    "icet_1NN_V_pair_eV_per_bond": -0.136922,
+    "icet_2NN_triplets_V_eff_eV_per_bond": -0.100249,
+    "interpretation": "1NN-only pair model gives V ~ -0.14 eV/bond, close to the constant-pair estimate from isolated point defects. Adding 2NN same-sublattice pairs and triplets reduces the effective ordering strength to ~ -0.10 eV/bond, approaching the thermodynamic V = -0.088 eV/bond from the B2/A2 energy difference."
   }
 }
