@@ -163,7 +163,11 @@ Ni$_5$Al$_3$ の実験値は Khadkikar & Vedula (Pt$_5$Ga$_3$-type orthorhombic)
 - 2SL/4SL/8SL のエンドメンバー変換手順
 - 副格子置換対称性の必要性
 - **秩序化強度は $V=-\Delta E_{\rm order}/4$ として直接決定**（$\Delta E_{\rm order}=0.3509$ eV/formula より $V=-0.088$ eV/bond）
-- 定数対近似で孤立点欠陥エネルギーから算定すると $V\approx-0.145$ eV/bond となり、前者に対して 65 % 過大 → 定数対近似の破綻の証拠
+- 定数対近似で孤立点欠陥エネルギーから算定すると $V\approx-0.145$ eV/bond となり、前者に対して 65 % 過大 → 定数対近似の破綻の証拠。これを `icet` クラスター展開で独立に確認した（`run_icet_b2_cluster_expansion.py`）：
+  - 第一近接対のみ（cutoff 2.57 Å）：$V_{\rm 1NN}\approx-0.147$ eV/bond、$J_{\rm NiAl}=-1.356$, $J_{\rm NiNi}=-1.481$, $J_{\rm AlAl}=-0.932$ eV
+  - 第一＋第二近接対（2.95 Å）：$V\approx-0.109$ eV/bond、RMSE=0.018 eV/atom
+  - 第一＋第二近接対＋三点群：$V\approx-0.107$ eV/bond、RMSE=0.010 eV/atom
+  - クラスターを充実させると熱力学的 $V=-0.088$ eV/bond に漸近
 - **A2-Ni / A2-Al（bcc）を MACE-MP-0 で緩和**: $a_{\rm Ni}=2.790$ Å, $E=-5.662$ eV/atom ($-11.324$ eV/formula); $a_{\rm Al}=3.225$ Å, $E=-3.687$ eV/atom ($-7.374$ eV/formula)
 
 ### 10. 限界と次ステップ
@@ -172,7 +176,7 @@ Ni$_5$Al$_3$ の実験値は Khadkikar & Vedula (Pt$_5$Ga$_3$-type orthorhombic)
 2. **1473 K 境界**: 液相を含む CALPHAD 比較、または MD/phonon による固相エントロピー補正
 3. **A2-Ni / A2-Al**: 4SL/8SL 純 bcc 端成分を `run_a2_endmembers.py` で緩和済み
 4. **磁性**: MACE-MP-0 に Ni のスピン分極がない
-5. **icet クラスター展開**: 濃度依存 $J_{ij}$ を直接抽出し、定数対近似の代替とする
+5. **icet クラスター展開**: `run_icet_b2_cluster_expansion.py` で第一近接対相互作用を抽出済み
 6. **$E_f$ vs $\Delta\mu$**: Korzhavyi et al. (Phys. Rev. B 61, 6003) との比較
 
 ---
@@ -214,20 +218,31 @@ $$V = -\frac{\Delta E_{\rm order}}{4} = -\frac{0.3509}{4} = -0.088\ {\rm eV/bond
 
 が得られる。
 
-一方、孤立点欠陥エネルギーから $J_{\rm NiAl}, J_{\rm NiNi}, J_{\rm AlAl}$ を定数対で決めて $V=J_{\rm NiAl}-(J_{\rm NiNi}+J_{\rm AlAl})/2$ とすると、$V\approx-0.145$ eV/bond となり、上記の熱力学的値に対して 65 % 過大になる。これは **定数対近似が高濃度 NiAl では破綻している証拠**であり、個別の $J$ 値を用いるのではなく、$V=-0.088$ eV/bond を秩序化強度として報告する。
+`icet` クラスター展開（`run_icet_b2_cluster_expansion.py`）で同じことを独立に確認できる。B2 系のみから第一近接対モデルをフィットすると
 
-`analysis/b2_pair_interactions.json`:
+- $J_{\rm NiAl}=-1.356$ eV、$J_{\rm NiNi}=-1.481$ eV、$J_{\rm AlAl}=-0.932$ eV
+- $V_{\rm pair,1NN}=J_{\rm NiAl}-(J_{\rm NiNi}+J_{\rm AlAl})/2=-0.149$ eV/bond
+
+と、孤立点欠陥からの定数対推定 $V\approx-0.145$ eV/bond と一致する。しかし、第二近接対（同じサブラティス上の Ni–Ni / Al–Al 対）を加えると $V\approx-0.109$ eV/bond、三点群まで含めると $V\approx-0.107$ eV/bond と熱力学的値 $-0.088$ eV/bond に急速に近づく。したがって、**定数対近似の破綻は第一近接対だけでなく、第二近接対・多点項の寄与を無視したことに起因する**。個別の $J$ 値の絶対値には固定体積近似の大きな依存があるため、報告すべき秩序化強度は依然として $V=-0.088$ eV/bond である。
+
+`analysis/b2_pair_interactions.json` と `analysis/icet_b2_cluster_expansion_summary.json`:
 - `delta_order_obs_eV`: 0.3509
 - `V_from_ordering_eV`: -0.0877
 - `V_pair_constant_eV`: -0.1449
 - `V_definition`: 上記の整理を含む注記
+
+`analysis/icet_b2_cluster_expansion_summary.json`:
+- `V_eff_eV_per_bond`（1NN+2NN+triplets）: -0.1073
+- `V_pair_eV_per_bond`（1NN only）: -0.1488
+- `J_NiAl_eV`: -1.3556、$J_{\rm NiNi}$: -1.4813、$J_{\rm AlAl}$: -0.9324
+- `rmse_eV_per_atom`（1NN+2NN+triplets）: 0.0102
 
 ### 5. 未解決点
 
 - **A2-Ni / A2-Al 済み**: 4SL/8SL 用純 bcc 端成分を MACE-MP-0 で計算（`analysis/a2_endmember_energies.csv`）
 - **$n=3$**: 配置サンプリングが統計的に希薄
 - **振動エントロピー / 液相**: 有限温度凸包の信頼性向上
-- **icet クラスター展開**: 濃度依存 $J_{ij}$ を直接抽出し、8SL パラメータへの変換を実装
+- **icet クラスター展開**: `run_icet_b2_cluster_expansion.py` により第一近接対相互作用を抽出済み。8SL パラメータへの変換は次の段階
 
 ### 6. 成果物
 
@@ -242,3 +257,7 @@ $$V = -\frac{\Delta E_{\rm order}}{4} = -\frac{0.3509}{4} = -0.088\ {\rm eV/bond
 - `b2_offstoich/figures/fig_b2_hull_deviation.png`
 - `b2_offstoich/figures/fig_b2_a_taylor_doyle_overlay.png`
 - `b2_offstoich/figures/fig_b2_hull_finiteT.png`
+- `b2_offstoich/run_icet_b2_cluster_expansion.py`
+- `b2_offstoich/analysis/icet_b2_cluster_expansion_summary.json`
+- `b2_offstoich/analysis/icet_b2_predictions.csv`
+- `b2_offstoich/figures/fig_icet_ce_parity.png`

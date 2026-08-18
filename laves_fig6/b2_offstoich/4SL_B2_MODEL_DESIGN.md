@@ -63,7 +63,7 @@ MACE-MP-0 medium（0 K 静的緩和、FrechetCellFilter、128 サイト超胞）
 
 1. **配置エネルギーの収集**：128 サイト B2 超胞で、全組成（x_Al=0.20–0.80）の反サイト・空孔配置を MACE で緩和。
 2. **点欠陥形成エネルギーの定義**：式 (1)–(4) に従い、完全 B2 からの差分および元素化学ポテンシャルで正規化。
-3. **クラスター展開（任意）**：icet/BOMD 等で Ni–Al, Ni–Ni, Al–Al 第一近接対の有効相互作用エネルギー J_ij を推定すれば、8SL パラメータとして直接使用可能。
+3. **クラスター展開**：`run_icet_b2_cluster_expansion.py` で icet を用いて第一近接対から三点群までの有効相互作用を推定。第一近接対のみでは $V_{\rm 1NN}=-0.149$ eV/bond、第二近接対・三点群を加えると $V\approx-0.107$ eV/bond と熱力学的 $V=-0.088$ eV/bond に漸近。
 4. **CEF エネルギー関数の構築**：
    
    $$ G_m = \sum_i y_i^1 y_j^2 y_k^3 y_l^4 \, G_{ijkl}^{\rm end} + RT\sum_s \sum_i y_i^s \ln y_i^s + G_{\rm excess} $$
@@ -81,13 +81,14 @@ MACE-MP-0 medium（0 K 静的緩和、FrechetCellFilter、128 サイト超胞）
 - **振動エントロピーなし**：1473 K の熱処理には phonon/MD によるエントロピー補正が必要。
 - **磁性**：Ni のスピン分極効果は MACE-MP-0 にはない。
 - **A2 端成分計算済み**：A2-Ni($a=2.790$ Å, $E=-5.662$ eV/atom) と A2-Al($a=3.225$ Å, $E=-3.687$ eV/atom) を `run_a2_endmembers.py` で緩和。B2-A2 秩序変態エネルギーは $\Delta E_{\rm order}=+0.3510$ eV/formula。
+- **icet クラスター展開済み**：`run_icet_b2_cluster_expansion.py` で第一近接対相互作用を抽出。8SL パラメータへの変換は次の段階。
 - **サンプリングの希薄さ**：各組成 3 配置では 4SL/8SL の全エンドメンバーをカバーできない。最低 10–20 配置、さらにクラスター展開用データが必要。
 
 ## 6. 次の実行計画
 
 1. 現行の Al-rich 密サンプリング完了を待ち、`b2_defect_energies.csv` を更新。
-2. ~~A2-Ni/A2-Al（bcc）緩和~~ 完了。次は `icet` クラスター展開で対相互作用を直接抽出。
-3. `icet` クラスター展開で第一近接対相互作用 J_{ij} を抽出し、8SL 対応エンドメンバー表を作成。
+2. ~~A2-Ni/A2-Al（bcc）緩和~~ 完了。
+3. ~~`icet` クラスター展開で第一近接対相互作用 $J_{ij}$ を抽出~~ 完了（`run_icet_b2_cluster_expansion.py`）。次は 8SL 対応エンドメンバー表への変換。
 4. pycalphad/TDB 形式の原型を出力し、形成エネルギー図と整合するか検証。
 
 ## 7. 付録：第一近接対相互作用の見積もり（Ising 近似）
@@ -118,13 +119,14 @@ $$ V = -\frac{\Delta E_{\rm order}}{4} = -\frac{0.3509}{4} = -0.088 \ {\rm eV/bo
 
 この $V$ は Ni–Al 結合が他の結合よりどれだけ強く負かを表す，物理的に一本化された値である．
 
-一方で，孤立点欠陥エネルギーから個別の $J_{ij}$ を定数対近似で決めて
+一方で，`icet` クラスター展開（`run_icet_b2_cluster_expansion.py`）で第一近接対モデルを B2 系のみにフィットすると
 
-$$ V_{\rm pair} = J_{\rm NiAl} - \frac{J_{\rm NiNi} + J_{\rm AlAl}}{2} $$
+- $J_{\rm NiAl}=-1.356$ eV、$J_{\rm NiNi}=-1.481$ eV、$J_{\rm AlAl}=-0.932$ eV
+- $V_{\rm pair,1NN}=J_{\rm NiAl}-(J_{\rm NiNi}+J_{\rm AlAl})/2=-0.149$ eV/bond
 
-とすると $V_{\rm pair} \approx -0.145$ eV/bond となり，$V=-\Delta E_{\rm order}/4$ に対して約 65 % 過大になる．これは **定数対近似が高濃度 NiAl では破綻している証拠** である．個別の $J_{ij}$ については A2 端成分やクラスター展開なしには決定できないため，**3 つの $J$ 値を表にするのではなく，$V=-0.088$ eV/bond を秩序化強度として使用する**．
+と、孤立点欠陥からの定数対推定 $V\approx-0.145$ eV/bond と一致する。しかし，第二近接対（同じサブラティス上の Ni–Ni / Al–Al 対）を加えると $V\approx-0.109$ eV/bond、三点群まで含めると $V\approx-0.107$ eV/bond と熱力学的値 $-0.088$ eV/bond に急速に近づく。したがって，**定数対近似の破綻は第二近接対・多点項の無視に起因する**。個別の $J_{ij}$ には固定体積近似の大きな依存があるため、報告すべき秩序化強度は引き続き $V=-0.088$ eV/bond である．
 
-`extract_4sl_b2_parameters.py` から出力される `V_from_ordering_eV` を使用し，`V_pair_constant_eV` はあくまで定数対近似の不整合を示す指標として扱う．
+`extract_4sl_b2_parameters.py` から出力される `V_from_ordering_eV` を使用し，`V_pair_constant_eV` はあくまで定数対近似の不整合を示す指標として扱う．また `analysis/icet_b2_cluster_expansion_summary.json` から、`V_eff_eV_per_bond`（1NN+2NN+triplets）は -0.1073 eV/bond、`V_pair_eV_per_bond`（1NN only）は -0.1488 eV/bond、`rmse_eV_per_atom` は 0.0102 eV/atom と確認できる。
 
 （MACE の A2-Ni / A2-Al 端成分は `run_a2_endmembers.py` によりそれぞれ $E=-5.662$ eV/atom ($a=2.790$ Å)、$E=-3.687$ eV/atom ($a=3.225$ Å) と緩和された。$x=0.5$ のランダム A2 エネルギー $E_{\rm A2}=-10.493$ eV/formula から、B2 秩序化エネルギー $\Delta E_{\rm order}=+0.3510$ eV/formula を得る。）
 
@@ -134,3 +136,7 @@ $$ V_{\rm pair} = J_{\rm NiAl} - \frac{J_{\rm NiNi} + J_{\rm AlAl}}{2} $$
 - 本設計書 `4SL_B2_MODEL_DESIGN.md`
 - `b2_offstoich/extract_4sl_b2_parameters.py`（秩序化強度 $V$ の簡易推定）
 - `b2_offstoich/analysis/b2_pair_interactions.json`（$V$ の値のみを使用。個別 $J$ 表は非推奨）
+- `b2_offstoich/run_icet_b2_cluster_expansion.py`（icet クラスター展開スクリプト）
+- `b2_offstoich/analysis/icet_b2_cluster_expansion_summary.json`
+- `b2_offstoich/analysis/icet_b2_predictions.csv`
+- `b2_offstoich/figures/fig_icet_ce_parity.png`
