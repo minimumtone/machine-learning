@@ -21,6 +21,7 @@ from generate_all_figures import EXCLUDE_ELEMENTS  # noqa: E402
 DATA = ROOT / "data" / "sqs_results.csv"
 METRICS = PAPER / "cellsize_metrics.json"
 FIGURE = PAPER / "fig_cellsize_bcc_sqs.png"
+UNRELAXED_ROWS = PAPER / "unrelaxed_volume_rows.csv"
 
 # These elements are excluded from the paper's BCC/FCC validation scope
 # because their stable structures are incompatible with the enforced BCC/FCC
@@ -36,7 +37,17 @@ def parse_dir(value: str):
     return pairs[0][0], int(pairs[0][1]), pairs[1][0], int(pairs[1][1])
 
 
-def load_rows() -> pd.DataFrame:
+def unrelaxed_keys() -> set[tuple[str, str, int]]:
+    if not UNRELAXED_ROWS.exists():
+        return set()
+    data = pd.read_csv(UNRELAXED_ROWS, dtype={"natoms": str})
+    return {
+        (row["dir"], row["structure_root"], int(row["natoms"]))
+        for _, row in data.iterrows()
+    }
+
+
+def load_rows(exclude_unrelaxed=False) -> pd.DataFrame:
     data = pd.read_csv(DATA)
     data = data[
         (data["structure_root"] == "BCC_SQS")
@@ -44,6 +55,19 @@ def load_rows() -> pd.DataFrame:
         & data["relax_converged"].astype(str).str.lower().eq("yes")
         & data["natoms"].isin([16, 128])
     ].copy()
+    if exclude_unrelaxed:
+        flagged = unrelaxed_keys()
+        data = data[
+            ~data.apply(
+                lambda row: (
+                    row["dir"],
+                    row["structure_root"],
+                    int(row["natoms"]),
+                )
+                in flagged,
+                axis=1,
+            )
+        ].copy()
     parsed = data["dir"].map(parse_dir)
     data["parsed"] = parsed
     data = data[data["parsed"].notna()].copy()
@@ -86,8 +110,7 @@ def percent(value: float) -> float:
     return 100.0 * value
 
 
-def main():
-    rows = load_rows()
+def comparison_data(rows):
     pure16, omega16 = size_data(rows, 16)
     pure128, omega128 = size_data(rows, 128)
 
@@ -152,17 +175,9 @@ def main():
         else (None, None)
     )
 
-    metrics = {
-        "data_source": "data/sqs_results.csv",
-        "filters": {
-            "structure_root": "BCC_SQS",
-            "status": "OK",
-            "relax_converged": "yes",
-            "natoms": [16, 128],
-            "compositions": "8:8 for 16 atoms; 64:64 for 128 atoms",
-            "omega_reference": "same-cell-size pure endpoints",
-        },
-        "excluded_elements": sorted(CELL_SIZE_EXCLUSIONS),
+    return {
+        "pure_delta": pure_delta,
+        "pair_delta": pair_delta,
         "raw_row_counts": {
             "16": int((rows["natoms"] == 16).sum()),
             "128": int((rows["natoms"] == 128).sum()),
@@ -193,9 +208,41 @@ def main():
             "sign_reversed_pairs": sign_reversed,
             "by_pair": pair_delta,
         },
+    }
+
+
+def main():
+    rows_including = load_rows()
+    rows_excluding = load_rows(exclude_unrelaxed=True)
+    including = comparison_data(rows_including)
+    excluding = comparison_data(rows_excluding)
+    metrics = {
+        "data_source": "data/sqs_results.csv",
+        "filters": {
+            "structure_root": "BCC_SQS",
+            "status": "OK",
+            "relax_converged": "yes",
+            "natoms": [16, 128],
+            "compositions": "8:8 for 16 atoms; 64:64 for 128 atoms",
+            "omega_reference": "same-cell-size pure endpoints",
+            "excluded_unrelaxed_volume_rows": True,
+        },
+        "excluded_elements": sorted(CELL_SIZE_EXCLUSIONS),
+        "raw_row_counts": excluding["raw_row_counts"],
+        "pure_element_volume_comparison": excluding[
+            "pure_element_volume_comparison"
+        ],
+        "omega_sf_comparison": excluding["omega_sf_comparison"],
+        "including_unrelaxed_rows": {
+            "raw_row_counts": including["raw_row_counts"],
+            "pure_element_volume_comparison": including[
+                "pure_element_volume_comparison"
+            ],
+            "omega_sf_comparison": including["omega_sf_comparison"],
+        },
         "figure": str(FIGURE.relative_to(ROOT)),
     }
-    make_figure(pure_delta, pair_delta)
+    make_figure(excluding["pure_delta"], excluding["pair_delta"])
     METRICS.write_text(json.dumps(metrics, indent=2, ensure_ascii=False) + "\n")
     print(json.dumps(metrics, indent=2, ensure_ascii=False))
 
