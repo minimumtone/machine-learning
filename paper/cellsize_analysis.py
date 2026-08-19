@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import csv
 import json
 import re
 import sys
@@ -17,11 +18,11 @@ ROOT = PAPER.parent
 sys.path.insert(0, str(PAPER))
 
 from generate_all_figures import EXCLUDE_ELEMENTS  # noqa: E402
+from detect_unrelaxed_volumes import flagged_row  # noqa: E402
 
 DATA = ROOT / "data" / "sqs_results.csv"
 METRICS = PAPER / "cellsize_metrics.json"
 FIGURE = PAPER / "fig_cellsize_bcc_sqs.png"
-UNRELAXED_ROWS = PAPER / "unrelaxed_volume_rows.csv"
 
 # These elements are excluded from the paper's BCC/FCC validation scope
 # because their stable structures are incompatible with the enforced BCC/FCC
@@ -38,13 +39,13 @@ def parse_dir(value: str):
 
 
 def unrelaxed_keys() -> set[tuple[str, str, int]]:
-    if not UNRELAXED_ROWS.exists():
-        return set()
-    data = pd.read_csv(UNRELAXED_ROWS, dtype={"natoms": str})
-    return {
-        (row["dir"], row["structure_root"], int(row["natoms"]))
-        for _, row in data.iterrows()
-    }
+    with DATA.open(newline="") as handle:
+        rows = csv.DictReader(handle)
+        return {
+            (flagged["dir"], flagged["structure_root"], int(flagged["natoms"]))
+            for row in rows
+            if (flagged := flagged_row(row)) is not None
+        }
 
 
 def load_rows(exclude_unrelaxed=False) -> pd.DataFrame:
