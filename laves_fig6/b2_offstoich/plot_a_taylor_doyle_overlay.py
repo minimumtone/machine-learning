@@ -130,7 +130,7 @@ if len(ni_fit) >= 2:
             label=f'T&D Ni-rich fit: da/dx = {p[0]:.3f} A/x_Al')
 
 ax.axvline(0.5, color='gray', ls=':', lw=1)
-ax.set_xlabel(r"Al 原子分率 $x_{\mathrm{Al}}$")
+ax.set_xlabel(r"$x_{\mathrm{Al}}$")
 ax.set_ylabel(r"格子定数 $a$ (A)")
 ax.set_title(r"B2-Ni$_{1-x}$Al$_x$ 格子定数：MACE vs Taylor & Doyle (Table 2 raw)")
 ax.legend(fontsize=11, loc='best')

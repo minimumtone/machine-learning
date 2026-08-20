@@ -64,6 +64,20 @@ plt.rcParams.update({"font.size": 18, "axes.grid": True, "grid.alpha": 0.3,
                      "font.family": ["Noto Sans CJK JP", "IPAGothic", "sans-serif"],
                      "axes.unicode_minus": False})
 
+
+def mark_perfect_b2(ax, x, y, label="完全B2 (MLIP)"):
+    """Draw a red/blue/green composite marker at the perfect-B2 composition.
+
+    The green square (legend label) sits behind a red ring and a blue centre,
+    indicating that the vacancy (red) and antisite (blue) models coincide with
+    the perfect B2 state at stoichiometry.
+    """
+    ax.plot([x], [y], "s", ms=16, color="tab:green", zorder=8, label=label)
+    ax.plot([x], [y], "o", ms=12, mfc="none", mec="tab:red", mew=2.0,
+            zorder=9, label="_nolegend_")
+    ax.plot([x], [y], "o", ms=7, mfc="tab:blue", mec="k", mew=0.5,
+            zorder=10, label="_nolegend_")
+
 # --- load data ---------------------------------------------------------------
 df = pd.read_csv(os.path.join(AN, "b2_offstoich_volumes.csv"))
 for extra in ("b2_offstoich_volumes_extra_vac.csv", "b2_offstoich_volumes_wide_vac.csv",
@@ -239,11 +253,10 @@ for br, g in agg.groupby("branch"):
                 color=colors[br], label=labels[br])
 ax.plot(mix.x_Al, mix.V_mix, "k--", lw=2.5,
         label=f"$G$ 最安定欠陥モデル選択 ({T_ANNEAL_K:.0f} K, 配置エントロピー込み)")
-ax.plot([0.5], [perfect.V_per_atom_A3], "s", ms=13, color="tab:green",
-        label="完全B2 (MLIP)")
+mark_perfect_b2(ax, 0.5, perfect.V_per_atom_A3, label="完全B2 (MLIP)")
 ax.plot(exp_b2.x_Al, exp_b2.V_bar_A3, "o", ms=11, mfc="none", mec="k", mew=2,
         label="Yamanouchi実験 B2 (Fig. 6(a)), 室温")
-ax.set_xlabel(r"Al原子分率 $x_{\mathrm{Al}}$")
+ax.set_xlabel(r"$x_{\mathrm{Al}}$")
 ax.set_ylabel(r"平均原子体積 $\bar V$ (Å$^3$/atom)")
 ax.set_title(r"B2-Ni$_{1-x}$Al$_x$ 不定比組成の平均原子体積")
 ax.legend(fontsize=12)
@@ -264,13 +277,12 @@ for br, g in agg.groupby("branch"):
                 color=colors[br], label=labels[br])
 ax.plot(mix.x_Al, mix.V_mix, "k--", lw=2.5,
         label=f"$G$ 最安定欠陥モデル選択 ({T_ANNEAL_K:.0f} K)")
-ax.plot([0.5], [perfect.V_per_atom_A3], "s", ms=12, color="tab:green",
-        label="完全B2 (MLIP)")
+mark_perfect_b2(ax, 0.5, perfect.V_per_atom_A3, label="完全B2 (MLIP)")
 ax.plot(exp_b2.x_Al, exp_b2.V_bar_A3, "o", ms=11, mfc="none", mec="k", mew=2,
         label="Yamanouchi実験 B2")
 ax.plot(exp_ss.x_Al, exp_ss.V_bar_A3, "^", ms=11, mfc="none", mec="gray", mew=2,
         label="Yamanouchi実験 Ni(Al)固溶体領域")
-ax.set_xlabel(r"Al原子分率 $x_{\mathrm{Al}}$")
+ax.set_xlabel(r"$x_{\mathrm{Al}}$")
 ax.set_ylabel(r"平均原子体積 $\bar V$ (Å$^3$/atom)")
 ax.set_title(r"Fig. 6(a) 全域: Ni(Al)固溶体とB2不定比モデルのMLIP再現")
 ax.legend(fontsize=11, loc="upper left")
@@ -286,10 +298,10 @@ for br, g in agg.groupby("branch"):
                 color=colors[br], label=labels[br])
 ax.plot(mix.x_Al, mix.a_mix, "k--", lw=2.5,
         label=f"$G$ 最安定欠陥モデル選択 ({T_ANNEAL_K:.0f} K)")
-ax.plot([0.5], [perfect.a_eff_A], "s", ms=13, color="tab:green", label="完全B2")
+mark_perfect_b2(ax, 0.5, perfect.a_eff_A, label="完全B2 (MLIP)")
 ax.plot(exp_b2.x_Al, exp_b2.a_exp_A, "o", ms=11, mfc="none", mec="k", mew=2,
         label="Yamanouchi実験 B2 → 格子定数")
-ax.set_xlabel(r"Al原子分率 $x_{\mathrm{Al}}$")
+ax.set_xlabel(r"$x_{\mathrm{Al}}$")
 ax.set_ylabel(r"B2格子定数 $a$ (Å)")
 ax.set_title(r"B2-Ni$_{1-x}$Al$_x$ の格子定数（構造空孔による異常挙動）")
 ax.legend(fontsize=12)
@@ -303,7 +315,8 @@ for br, g in agg.groupby("branch"):
     g = g.sort_values("x_Al")
     ax.plot(g.x_Al, g.Ef, "o-", ms=9, color=colors[br], label=labels[br])
 ax.axhline(0, color="k", lw=1)
-ax.set_xlabel(r"Al原子分率 $x_{\mathrm{Al}}$")
+mark_perfect_b2(ax, 0.5, perfect.E_form_eV_atom, label="完全B2")
+ax.set_xlabel(r"$x_{\mathrm{Al}}$")
 ax.set_ylabel(r"生成エネルギー $E_f$ (eV/atom)")
 ax.set_title(r"欠陥様式ごとの生成エネルギー（純元素fcc基準、1原子あたり）")
 ax.legend(fontsize=13)

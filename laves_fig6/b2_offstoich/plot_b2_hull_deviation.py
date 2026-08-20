@@ -21,6 +21,16 @@ plt.rcParams.update({'font.size': 16, 'axes.grid': True, 'grid.alpha': 0.3,
                      'font.family': ['Noto Sans CJK JP', 'IPAGothic', 'sans-serif'],
                      'axes.unicode_minus': False})
 
+
+def mark_perfect_b2(ax, x=0.5, y=0.0, label='完全B2'):
+    """Composite red/blue/green marker showing vacancy and antisite branches
+    coincide with the perfect B2 state at the stoichiometric composition."""
+    ax.plot([x], [y], 's', ms=16, color='tab:green', zorder=8, label=label)
+    ax.plot([x], [y], 'o', ms=12, mfc='none', mec='tab:red', mew=2.0,
+            zorder=9, label='_nolegend_')
+    ax.plot([x], [y], 'o', ms=7, mfc='tab:blue', mec='k', mew=0.5,
+            zorder=10, label='_nolegend_')
+
 ba = pd.read_csv(os.path.join(AN, 'b2_branch_finiteT_hull.csv'))
 
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
@@ -37,6 +47,7 @@ for br, g in ba.groupby('branch'):
 
 ax1.axhline(0.0, color='black', lw=0.8)
 ax1.axvline(0.5, color='tab:green', ls=':')
+mark_perfect_b2(ax1)
 ax1.set_xlabel('$x_{\\rm Al}$')
 ax1.set_ylabel('凸包からの偏差 (eV / atom)')
 ax1.set_title('B2 欠陥モデル vs 1273 K 凸包（Ni, Ni$_3$Al, B2, Ni$_2$Al$_3$）')
@@ -50,6 +61,7 @@ ax2.plot(gv.x_Al, -gv['minus_T_S_1273K'], 's-', color='tab:green', label='-$T S_
 ax2.plot(gv.x_Al, gv['delta_G_1273K_1273K_eV'], 'o-', color='tab:blue', label='$\\Delta G = \\Delta E_f - T S_{\\rm conf}$')
 ax2.axhline(0.0, color='black', lw=0.8)
 ax2.axvline(0.5, color='tab:green', ls=':')
+mark_perfect_b2(ax2)
 ax2.set_xlabel('$x_{\\rm Al}$')
 ax2.set_ylabel('eV / atom')
 ax2.set_title('0 K 乖離と配置エントロピーの重ね合わせ（空孔モデル）')
