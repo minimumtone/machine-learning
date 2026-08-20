@@ -145,12 +145,12 @@ ax.legend(fontsize=9, loc='upper left')
 
 # annotation: all models converge to perfect B2 at x=0.5
 ax.text(0.51, 0.17,
-        '化学量論組成 $x_{\\rm Al}=0.50$ では、\\n'
-        '完全 B2 が唯一の状態。\\n'
-        'Ni 空孔モデルと Al 反サイトモデルは\\n'
-        'ともに $c=0$ から分岐する。\\n'
-        '有限温度では 2 モデルが Boltzmann 混合し、\\n'
-        '$c_{\\rm total}^{\\rm hybrid}$ は 2 つの\\n'
+        '化学量論組成 $x_{\\rm Al}=0.50$ では、\n'
+        '完全 B2 が唯一の状態。\n'
+        'Ni 空孔モデルと Al 反サイトモデルは\n'
+        'ともに $c=0$ から分岐する。\n'
+        '有限温度では 2 モデルが Boltzmann 混合し、\n'
+        '$c_{\\rm total}^{\\rm hybrid}$ は 2 つの\n'
         '0 K 極限の間に位置する。',
         fontsize=11, verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
 
