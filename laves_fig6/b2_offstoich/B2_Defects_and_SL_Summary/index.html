@@ -130,11 +130,16 @@ c_{\rm vac} = 1 - \frac{n}{2}
 
 <figure>
   <img src="figures/fig_b2_vacancy_concentration.png" alt="Structural vacancy concentration">
-  <figcaption>Figure 2.2 Taylor &amp; Doyle の密度と \(a(x)\) から直接求めた構造空孔濃度 \(c_{\rm vac}\)。黒線は完全構造空孔モデル、青破線は MACE、橙一点鎖線と紫点線は 1473/1273 K の Boltzmann 混合ハイブリッド（\(x_{\rm Al}\ge0.50\) のみ描出、\(x&lt;0.50\) では構造空孔の定義が Ni 副格子から Al 副格子に変わるため）、赤丸は実験。有限温度では Va と Al\(_{\rm Ni}\) 反サイトの共存が生じる。</figcaption>
+  <figcaption>Figure 2.2 Taylor &amp; Doyle の密度と \(a(x)\) から直接求めた Ni 副格子欠陥占有率。\(x_{\rm Al}=0.50\) では Ni 空孔モデル（黒線、\(c_{\rm vac}^{\rm model}=1-1/(2x)\)）も Al 反サイトモデル（緑破線、\(c_{\rm anti}^{\rm model}=x-0.5\)）も完全 B2（\(c=0\)）に一致。有限温度では 2 つの欠陥モデルを Boltzmann 加重して混合し、\(c_{\rm total}^{\rm hybrid}=c_{\rm vac}^{\rm hybrid}+p_{\rm Al\,antisite}/2\)（橙一点鎖線 1473 K、紫点線 1273 K）を与える。青破線は MACE（0 K）の最安定欠陥、赤丸は実験。細い橙線はハイブリッドの空孔分 \((c_{\rm vac}^{\rm hybrid})\)。</figcaption>
 </figure>
 
 <div class="note">
-<strong>有限温度のハイブリッド状態について</strong>：\(x_{\rm Al}=0.50\) で構造空孔モデルと MACE は完全 B2（\(c_{\rm vac}=0\)）に接続する。有限温度では、空孔モデルと反サイトモデルが per-atom Helmholtz 自由エネルギー \(G_i=(E_i-\mu_{\rm Ni}N_{\rm Ni}-\mu_{\rm Al}N_{\rm Al})/N_{\rm atom}-k_{\rm B}T\ln(g_i)/N_{\rm atom}\)（縮退度 \(g_i=C(64,n_{\rm defect})\)）で Boltzmann 加重され、同一組成で空孔（Va）と Al 反サイト（Al\(_{\rm Ni}\)）が共存する「ハイブリッド」欠陥状態が実現する。1473 K で \(x_{\rm Al}=0.54\) では \(c_{\rm vac}^{\rm hybrid}=0.042\)、\(p_{\rm Al\,antisite}^{\rm hybrid}=0.034\)；\(x_{\rm Al}=0.60\) では \(c_{\rm vac}^{\rm hybrid}=0.106\)、\(p_{\rm Al\,antisite}^{\rm hybrid}=0.073\) となる。本図の 0 K 的な「完全空孔極限」はあくまで最安定欠陥モデルの平均場近似、\(c_{\rm vac}^{\rm hybrid}\) は分岐レベル平均場近似による有限温度推定値である。実験値に比べ \(c_{\rm vac}^{\rm hybrid}\) がやや小さく出るのは、この近似が熱的反サイト割合を過大評価するためであり、正確な混合を記述するには 4SL/8SL 副格子モデルで同一サブラティスに Va と Al（または Ni 反サイト）を同時に配置する必要がある。
+<strong>\(x_{\rm Al}=0.50\) で 2 つの欠陥モデルは一致</strong>：化学量論 B2 では完全規則（\(c_{\rm vac}=0\)、\(c_{\rm anti}=0\)）が唯一の状態。Al 過剰側では、余剰 Al を Ni 空孔（黒線）として吸収するか、Ni 副格子を Al で置換する反サイト（緑破線）として吸収するかの 2 つの 0 K 極限が考えられる。どちらも \(x\to0.50^+\) で \(c\to0\) となり、完全 B2 と連続的に接続する。<br><br>
+有限温度では、空孔モデルと反サイトモデルの per-atom Helmholtz 自由エネルギー
+\[
+G_i = \frac{E_i - \mu_{\rm Ni}N_{\rm Ni} - \mu_{\rm Al}N_{\rm Al}}{N_{\rm atom}} - \frac{k_{\rm B}T\,\ln g_i}{N_{\rm atom}},\qquad g_i = C(64,n_{\rm defect})
+\]
+を同一組成で Boltzmann 加重し、両モデルの状態を混合する。これにより、空孔（Va）と Al 反サイト（Al\(_{\rm Ni}\)）が共存した温度依存のハイブリッド欠陥状態が得られる。\(c_{\rm total}^{\rm hybrid}=c_{\rm vac}^{\rm hybrid}+p_{\rm Al\,antisite}/2\) は両者の合計 Ni 副格子欠陥占有率を表し、2 つの 0 K 極限の間に位置する。たとえば 1473 K で \(x_{\rm Al}=0.54\) では \(c_{\rm vac}^{\rm hybrid}=0.040\)、\(p_{\rm Al\,antisite}^{\rm hybrid}=0.033\)（\(c_{\rm total}^{\rm hybrid}\approx0.057\)）；\(x_{\rm Al}=0.60\) では \(c_{\rm vac}^{\rm hybrid}=0.106\)、\(p_{\rm Al\,antisite}^{\rm hybrid}=0.073\)（\(c_{\rm total}^{\rm hybrid}\approx0.142\)）となる。この分岐レベル平均場近似には、同じサブラティス内で Va と Al（または Ni 反サイト）を同時に配置できない限界がある；厳密な混合は 4SL/8SL 副格子モデルで記述される。
 </div>
 
 <div class="key">

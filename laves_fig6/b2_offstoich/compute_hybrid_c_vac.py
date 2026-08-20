@@ -137,8 +137,11 @@ def main():
                 c_hybrid = np.nan
                 p_anti = np.nan
                 probs = {}
+            # total Ni-sublattice defect fraction per lattice site
+            c_total = c_hybrid + p_anti / 2.0 if not pd.isna(p_anti) else np.nan
             row[f'c_hybrid_{T:.0f}K'] = c_hybrid
             row[f'p_antisite_{T:.0f}K'] = p_anti
+            row[f'c_total_{T:.0f}K'] = c_total
             for b in ('vacancy', 'antisite'):
                 row[f'prob_{b}_{T:.0f}K'] = probs.get(b, np.nan)
                 if b in gvals:
@@ -156,6 +159,7 @@ def main():
         kT = KB_EV * T
         perfect_row[f'c_hybrid_{T:.0f}K'] = 0.0
         perfect_row[f'p_antisite_{T:.0f}K'] = 0.0
+        perfect_row[f'c_total_{T:.0f}K'] = 0.0
         perfect_row[f'prob_vacancy_{T:.0f}K'] = np.nan
         perfect_row[f'prob_antisite_{T:.0f}K'] = np.nan
         perfect_row[f'G_vacancy_{T:.0f}K'] = perfect_Ef
@@ -164,7 +168,7 @@ def main():
 
     out = pd.DataFrame(rows).sort_values('x_Al_target')
     out.to_csv(os.path.join(AN, 'b2_offstoich_hybrid_c_vac.csv'), index=False)
-    print(out[['x_Al_target','c_model','c_hybrid_1273K','p_antisite_1273K','c_hybrid_1473K','p_antisite_1473K']].to_string(index=False))
+    print(out[['x_Al_target','c_model','c_hybrid_1273K','p_antisite_1273K','c_total_1273K','c_hybrid_1473K','p_antisite_1473K','c_total_1473K']].to_string(index=False))
     print('Wrote', os.path.join(AN, 'b2_offstoich_hybrid_c_vac.csv'))
 
 
