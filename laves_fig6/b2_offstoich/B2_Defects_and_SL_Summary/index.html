@@ -425,6 +425,15 @@ G_{\rm excess} = \sum_s y_i^s y_j^s \, L_{ij}^s + \dots, \qquad L=L^0+L^1(y_i-y_
 
 <p>これらを 4SL/8SL のエンドメンバー自由エネルギー \(G_{ijkl}^{\rm end}\) にそのまま割り当てることで、秩序変態、空孔溶解、反サイト生成を同一モデル内に組み込める。ただし形成エネルギーが濃度に依存するため、Redlich–Kister 型の超過項 \(L\) が不可欠である。</p>
 
+<div class="note">
+<strong>8SL CEF（相互作用なし）と icet 4SL CE の変換可否</strong>：
+8SL CEF（相互作用なし）では 256 個のエンドメンバーが独立に指定され、これは<strong>8 サイト超胞内の全配置に対する完全なエネルギーテーブル</strong>とみなせる。icet クラスター展開は
+\[
+E(\boldsymbol{\sigma})=\sum_\alpha m_\alpha J_\alpha \prod_{i\in\alpha}\sigma_i
+\]
+で配置エネルギーを表す。両者は、icet の cluster basis が 8SL 超胞を完全にスパンする（0 体から 8 体まで全 cluster）ときに 1 対 1 の線形変換（Walsh/Fourier 変換）で等価になる。現行の icet 4SL（NiAl では 1NN 対 + 2NN 対 + 三点群、計 5 ECI）はこの意味では打ち切り近似であり、256 個の 8SL エンドメンバーすべてを再現する保証はない。ただし 8SL エンドメンバーエネルギーから最小二乗フィットで 4SL ECI を求める、あるいは cluster cutoff を大きくして高次体項を取り込むことで近似的に変換可能。また 0 K エネルギーだけでなく自由エネルギーを一致させるには、CEF の理想混合エントロピー \(RT\sum y\ln y\) ではなく Cluster Variation Method (CVM) のような多体相関エントロピー近似が必要となる。
+</div>
+
 <h2 id="sec8">8. MACE vs MP-PBE vs 実験 ベンチマーク</h2>
 
 <table>

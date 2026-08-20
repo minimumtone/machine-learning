@@ -125,6 +125,12 @@ ax.plot(x_grid, c_anti, '--', color='tab:green', lw=2.0,
         label='$c_{\\rm anti}^{\\rm model}$ (Al 反サイト, $x-0.5$)')
 ax.plot(x_grid, c_mace, '--', color='tab:blue', lw=2,
         label='$c_{\\rm vac}^{\\rm MLIP}$ (MACE 最安定)')
+# explicit markers at the perfect-B2 composition x_Al=0.50
+# blue MACE center with red experimental ring, showing both models coincide at c=0
+ax.scatter([0.5], [0.0], color='tab:blue', s=100, marker='o', zorder=7,
+           edgecolors='k', linewidths=0.5, label='_nolegend_')
+ax.scatter([0.5], [0.0], facecolors='none', edgecolors='tab:red', s=180, marker='o', zorder=6,
+           linewidths=2.0, label='_nolegend_')
 ax.plot(x_grid, c_total_1473, '-.', color='tab:orange', lw=2.5,
         label='$c_{\\rm total}^{\\rm hybrid}$ (1473 K, Boltzmann Va+Al$_{\\rm Ni}$)')
 ax.plot(x_grid, c_total_1273, ':', color='tab:purple', lw=2.5,

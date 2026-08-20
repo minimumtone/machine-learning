@@ -140,3 +140,37 @@ $$ V = -\frac{\Delta E_{\rm order}}{4} = -\frac{0.3509}{4} = -0.088 \ {\rm eV/bo
 - `b2_offstoich/analysis/icet_b2_cluster_expansion_summary.json`
 - `b2_offstoich/analysis/icet_b2_predictions.csv`
 - `b2_offstoich/figures/fig_icet_ce_parity.png`
+
+## 9. 8SL CEF（相互作用なし）と icet 4SL CE の変換可能性
+
+### 9.1 両者のGibbs式
+
+8サブラティス CEF（相互作用なし）では、全 $2^8=256$ のエンドメンバーが独立に指定され
+
+$$
+G_m = \sum_{\{i_1,\dots,i_8\}} \left( \prod_{s=1}^8 y_{i_s}^s \right) G_{i_1\cdots i_8}^{\rm end}
++ RT \sum_{s=1}^8 \sum_i y_i^s \ln y_i^s
+$$
+
+ここで $y_i^s$ はサブラティス $s$ 上の種 $i$ の占有位点分率である。$G_{\rm excess}=0$ でも、256 個のエンドメンバー energy を自由に選べるため、$2^8$ の独立な配置に対して任意の 0 K エネルギーを与えられる。
+
+一方、icet クラスター展開（4 サイト以上を含む cluster basis）では
+
+$$
+E(\boldsymbol{\sigma}) = \sum_{\alpha} m_\alpha J_\alpha \prod_{i\in\alpha} \sigma_i,
+\qquad G \approx \langle E \rangle - T S
+$$
+
+で、$\alpha$ は cluster orbit、$J_\alpha$ は effective cluster interaction (ECI)、$m_\alpha$ は重数である。ここでは同一超胞内の全配置のエネルギーを cluster basis で展開する形をとる。
+
+### 9.2 変換可能性の結論
+
+**結論**：8SL CEF（相互作用なし）と icet CE は、次のように一対一に変換可能である。
+
+1. **完全変換の条件**：icet の cluster basis が 8SL 超胞内でスパンする全 256 個の cluster（0 体から 8 体）を含むとき。各エンドメンバー $G_{i_1\cdots i_8}^{\rm end}$ を Walsh/Fourier 変換によって ECI $J_\alpha$ に直すことができる。
+2. **近似変換**：現状の icet 4SL （NiAl では 1NN 対 + 2NN 対 + 三点群、計 5 ECI）では、256 個の 8SL エンドメンバーすべてを正確に再現できる保証はない。これは、8SL モデルが含む高次体相互作用を 4SL CE が打ち切っているためである。
+3. **エントロピーの違い**：CEF の $RT\sum y\ln y$ 項は各サブラティス独立の理想混合エントロピーにすぎない。クラスター展開と厳密に一致させるには、Cluster Variation Method (CVM) のような多体相関を含むエントロピー近似が必要。
+
+### 9.3 数値的確認
+
+MACE B2-NiAl の場合、8SL 完全エンドメンバーモデルは 0 K 結晶エネルギーを正確に再現できるが、現行の icet 1NN+2NN+triplets（5 ECI、RMSE 0.009 eV/atom）はそれに対する低次近似に過ぎない。$\Delta E_{\rm order}\approx 0.351$ eV/formula の秩序化エネルギーは第二近接対・三点群まででようやく再現される。よって実用的な TDB 化には、8SL 完全エンドメンバーテーブルから icet 4SL ECI を最小二乗フィットするか、4SL CE の cluster cutoff を十分に大きくして高次体相互作用を取り込む必要がある。相互作用なしのままだと、対相互作用や高次相互作用を表現できない。
