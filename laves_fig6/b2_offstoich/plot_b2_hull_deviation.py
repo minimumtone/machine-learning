@@ -23,13 +23,10 @@ plt.rcParams.update({'font.size': 16, 'axes.grid': True, 'grid.alpha': 0.3,
 
 
 def mark_perfect_b2(ax, x=0.5, y=0.0, label='完全B2'):
-    """Composite red/blue/green marker showing vacancy and antisite branches
-    coincide with the perfect B2 state at the stoichiometric composition."""
-    ax.plot([x], [y], 's', ms=16, color='tab:green', zorder=8, label=label)
-    ax.plot([x], [y], 'o', ms=12, mfc='none', mec='tab:red', mew=2.0,
-            zorder=9, label='_nolegend_')
-    ax.plot([x], [y], 'o', ms=7, mfc='tab:blue', mec='k', mew=0.5,
-            zorder=10, label='_nolegend_')
+    """Normal marker showing vacancy (red) and antisite/MLIP (blue) meet the
+    perfect B2 state at the stoichiometric composition."""
+    ax.plot([x], [y], 'o', ms=12, mfc='tab:blue', mec='tab:red', mew=2.5,
+            zorder=8, label=label)
 
 ba = pd.read_csv(os.path.join(AN, 'b2_branch_finiteT_hull.csv'))
 
