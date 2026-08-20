@@ -88,7 +88,7 @@ ax.plot(xh, yh, 'k--', lw=2, label='凸包（MACE, 0 K）')
 ax.scatter(b2c.x_Al, b2c.Ef, c='gray', s=20, alpha=0.4, zorder=1)
 ax.errorbar(agg.x_Al, agg.Ef, yerr=agg.Efstd, fmt='ro', ms=9,
             capsize=4, label='Al-rich 反サイト密サンプリング')
-ax.set_xlabel(r'Al 原子分率 $x_{\rm Al}$')
+ax.set_xlabel(r'$x_{\rm Al}$')
 ax.set_ylabel(r'形成エネルギー $E_f$ (eV/atom)')
 ax.set_title('Al 過剰 B2 反サイトモデルの凸包からの乖離')
 ax.legend(fontsize=13)

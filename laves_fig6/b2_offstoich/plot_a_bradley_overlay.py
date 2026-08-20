@@ -68,7 +68,7 @@ if (~mask).any():
                 label='Bradley & Taylor (edge / two-phase)')
 
 ax.axvline(0.5, color='gray', ls=':', lw=1)
-ax.set_xlabel(r"Al 原子分率 $x_{\mathrm{Al}}$")
+ax.set_xlabel(r"$x_{\mathrm{Al}}$")
 ax.set_ylabel(r"格子定数 $a$ (\AA)")
 ax.set_title(r"B2-Ni$_{1-x}$Al$_x$ 格子定数：MACE vs Bradley \& Taylor")
 ax.legend(fontsize=12)

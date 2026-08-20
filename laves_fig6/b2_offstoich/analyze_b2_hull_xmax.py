@@ -516,7 +516,7 @@ for _, r in comp_all.iterrows():
                  textcoords='offset points', xytext=(0, 10), fontsize=12,
                  ha='center', color='darkgreen')
 
-ax2.set_xlabel(r"Al 原子分率 $x_{\mathrm{Al}}$")
+ax2.set_xlabel(r"$x_{\mathrm{Al}}$")
 ax2.set_ylabel(r"形成エネルギー $E_f$ (eV/atom)")
 ax2.set_title(r"B2 欠陥モデルの 0 K 凸包からの乖離（$x_{\max}$ 抽出）", fontsize=18)
 ax2.set_xlim(-0.03, 1.03)

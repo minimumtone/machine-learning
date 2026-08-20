@@ -61,11 +61,11 @@ $$c_{\rm vac} = 1 - \frac{n}{2}$$
 | 0.5400 | 0.4600 | 2.8672 | 5.392 | 1.845 | 0.0775 | 0.0741 | 0.0740 | 0.0423 | 0.0342 |
 | 0.5471 | 0.4529 | 2.8652 | 5.300 | 1.817 | 0.0915 | 0.0861 | 0.0860 | 0.0506 | 0.0386 |
 
-$c_{\rm vac}^{\rm model}=1-1/(2x_{\rm Al})$ は 0 K 的な完全構造空孔モデル、$c_{\rm vac}^{\rm MLIP}$ は MACE-MP-0 自由緩和 + Boltzmann 欠陥モデル選択から求めたものである。$c_{\rm vac}^{\rm exp}$ は $c_{\rm vac}^{\rm model}$ および $c_{\rm vac}^{\rm MLIP}$ とほぼ一致し、最大でも 0.005（相対 5 %）程度の差に留まる。有限温度では、同一組成で空孔モデルと反サイトモデルを per-atom Helmholtz 自由エネルギー $G_i=(E_i-\mu_{\rm Ni}N_{\rm Ni}-\mu_{\rm Al}N_{\rm Al})/N_{\rm atom}-k_{\rm B}T\ln(g_i)/N_{\rm atom}$（$g_i=C(64,n_{\rm defect})$）で Boltzmann 混合すると、Ni 副格子に数 % の熱的 Al 反サイトが混入する。1473 K で $x_{\rm Al}=0.54$ では $c_{\rm vac}^{\rm hybrid}=0.042$、$p_{\rm Al\,antisite}^{\rm hybrid}=0.034$；$x_{\rm Al}=0.60$ では $c_{\rm vac}^{\rm hybrid}=0.106$、$p_{\rm Al\,antisite}^{\rm hybrid}=0.073$ となる。
+$c_{\rm vac}^{\rm model}=1-1/(2x_{\rm Al})$ は 0 K 的な Ni 空孔モデル、$c_{\rm anti}^{\rm model}=x_{\rm Al}-0.5$ は 0 K 的な Al 反サイトモデル（全サイト基準）である。化学量論 $x_{\rm Al}=0.50$ では両モデルとも $c=0$ となり、完全 B2 規則と連続的に接続する。$c_{\rm vac}^{\rm MLIP}$ は MACE-MP-0 自由緩和 + Boltzmann 欠陥モデル選択から求めたものである。有限温度では、同一組成で空孔モデルと反サイトモデルを per-atom Helmholtz 自由エネルギー $G_i=(E_i-\mu_{\rm Ni}N_{\rm Ni}-\mu_{\rm Al}N_{\rm Al})/N_{\rm atom}-k_{\rm B}T\ln(g_i)/N_{\rm atom}$（$g_i=C(64,n_{\rm defect})$）で Boltzmann 混合し、$c_{\rm total}^{\rm hybrid}=c_{\rm vac}^{\rm hybrid}+p_{\rm Al\,antisite}/2$ の Ni 副格子欠陥占有率を得る。1473 K で $x_{\rm Al}=0.54$ では $c_{\rm vac}^{\rm hybrid}=0.040$、$p_{\rm Al\,antisite}^{\rm hybrid}=0.033$（$c_{\rm total}^{\rm hybrid}\approx0.057$）；$x_{\rm Al}=0.60$ では $c_{\rm vac}^{\rm hybrid}=0.106$、$p_{\rm Al\,antisite}^{\rm hybrid}=0.073$（$c_{\rm total}^{\rm hybrid}\approx0.142$）となる。
 
 `analysis/vacancy_concentration_exp_vs_mace.csv`（図：`figures/fig_b2_vacancy_concentration.png`）。
 
-> **注記（有限温度のハイブリッド欠陥状態）**：$x_{\rm Al}=0.50$ では構造空孔モデルと MACE は完全 B2（$c_{\rm vac}=0$）に接続する。有限温度では、空孔モデルと反サイトモデルが per-atom $G_i$ で Boltzmann 加重され、同一組成で空孔（Va）と Al 反サイト（Al$_{\rm Ni}$）が共存する「ハイブリッド」欠陥状態が生じる。縮退度は 4×4×4 B2 超胞（各サブラティス 64 サイト）で $g_i=C(64,n_{\rm defect})$ とし、Helmholtz 自由エネルギーは $G_i=(E_i-\mu_{\rm Ni}N_{\rm Ni}-\mu_{\rm Al}N_{\rm Al})/N_{\rm atom}-k_{\rm B}T\ln(g_i)/N_{\rm atom}$ で与えられる。本節の $c_{\rm vac}^{\rm model}=1-1/(2x_{\rm Al})$ は 0 K 的な完全空孔極限、$c_{\rm vac}^{\rm MLIP}$ は最安定欠陥モデルの平均場近似、$c_{\rm vac}^{\rm hybrid}$ は分岐レベル Boltzmann 平均場近似による有限温度推定値である。実験値（T&D）に比べ $c_{\rm vac}^{\rm hybrid}$ がやや小さく出るのは、この近似が熱的反サイト割合を過大評価するためであり、正確な混合を記述するには 4SL/8SL 副格子モデルで同一サブラティスに Va と Al（または Ni 反サイト）を同時に配置する必要がある。
+> **注記（\(x_{\rm Al}=0.50\) での一致と有限温度ハイブリッド）**：化学量論 B2 では完全規則（$c_{\rm vac}=c_{\rm anti}=0$）が唯一の状態である。Al 過剰側では 2 つの 0 K 極限（Ni 空孔と Al 反サイト）が考えられるが、いずれも $x\to0.50^+$ で $c\to0$ となる。有限温度ではそれらを Boltzmann 加重して混合し、空孔（Va）と Al 反サイト（Al$_{\rm Ni}$）が共存する温度依存のハイブリッド欠陥状態を与える。縮退度は 4×4×4 B2 超胞（各サブラティス 64 サイト）で $g_i=C(64,n_{\rm defect})$ とし、Helmholtz 自由エネルギーは $G_i=(E_i-\mu_{\rm Ni}N_{\rm Ni}-\mu_{\rm Al}N_{\rm Al})/N_{\rm atom}-k_{\rm B}T\ln(g_i)/N_{\rm atom}$ で与えられる。本節の $c_{\rm vac}^{\rm model}$ は 0 K 的な完全空孔極限、$c_{\rm vac}^{\rm MLIP}$ は最安定欠陥モデルの平均場近似、$c_{\rm total}^{\rm hybrid}$ は分岐レベル Boltzmann 平均場近似による有限温度推定値である。実験値（T&D）に比べ $c_{\rm vac}^{\rm hybrid}$ がやや小さく出るのは、この近似が熱的反サイト割合を過大評価するためであり、正確な混合を記述するには 4SL/8SL 副格子モデルで同一サブラティスに Va と Al（または Ni 反サイト）を同時に配置する必要がある。
 
 ### 4. Fig. 6(a) B2 欠陥モデルの再現（拘束 B2 単相）
 
@@ -250,6 +250,7 @@ $$V = -\frac{\Delta E_{\rm order}}{4} = -\frac{0.3509}{4} = -0.088\ {\rm eV/bond
 - **$n=3$**: 配置サンプリングが統計的に希薄
 - **振動エントロピー / 液相**: 有限温度凸包の信頼性向上
 - **icet クラスター展開**: `run_icet_b2_cluster_expansion.py` により第一近接対相互作用を抽出済み。8SL パラメータへの変換は次の段階
+- **8SL CEF（相互作用なし）と icet 4SL CE の変換可能性**: 8SL 完全エンドメンバーテーブル（256 個）は、icet の cluster basis が 8 サイト超胞を完全にスパンするときに Walsh/Fourier 変換で 1 対 1 に対応する。現行の icet 4SL（1NN+2NN+triplets、計 5 ECI）は打ち切り近似であり、0 K エネルギー以外では CEF 理想混合エントロピーではなく CVM 的な多体相関エントロピーが必要。実用的変換には 8SL エンドメンバーからの最小二乗フィットまたは cluster cutoff の拡張が必要。
 
 ### 6. 成果物
 
