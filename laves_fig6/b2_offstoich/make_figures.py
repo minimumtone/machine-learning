@@ -66,17 +66,13 @@ plt.rcParams.update({"font.size": 18, "axes.grid": True, "grid.alpha": 0.3,
 
 
 def mark_perfect_b2(ax, x, y, label="完全B2 (MLIP)"):
-    """Draw a red/blue/green composite marker at the perfect-B2 composition.
+    """Normal marker at the perfect-B2 composition.
 
-    The green square (legend label) sits behind a red ring and a blue centre,
-    indicating that the vacancy (red) and antisite (blue) models coincide with
-    the perfect B2 state at stoichiometry.
-    """
-    ax.plot([x], [y], "s", ms=16, color="tab:green", zorder=8, label=label)
-    ax.plot([x], [y], "o", ms=12, mfc="none", mec="tab:red", mew=2.0,
-            zorder=9, label="_nolegend_")
-    ax.plot([x], [y], "o", ms=7, mfc="tab:blue", mec="k", mew=0.5,
-            zorder=10, label="_nolegend_")
+    Uses a single matplotlib marker with a blue face and a red edge to show
+    that the vacancy (red) and antisite/MLIP (blue) curves meet the perfect
+    B2 state at x_Al=0.50."""
+    ax.plot([x], [y], "o", ms=12, mfc="tab:blue", mec="tab:red", mew=2.5,
+            zorder=8, label=label)
 
 # --- load data ---------------------------------------------------------------
 df = pd.read_csv(os.path.join(AN, "b2_offstoich_volumes.csv"))
