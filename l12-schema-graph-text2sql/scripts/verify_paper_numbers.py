@@ -27,6 +27,21 @@ LATEX_NUM_RE = re.compile(
 )
 
 
+def clean_tex_for_numbers(tex_text: str) -> str:
+    r"""Normalize LaTeX punctuation that splits numeric tokens.
+
+    Removes ``{,}`` thin-space commas, turns math-mode ``$-$`` into a plain
+    minus, and strips TeX thin spaces so numbers like ``1{,}559`` or
+    ``$-$7.4\,pp`` are treated as contiguous tokens.
+    """
+    text = re.sub(r"\\textminus\{\}", "-", tex_text)
+    text = re.sub(r"\$-\$", "-", text)
+    text = re.sub(r"\{,\}", "", text)
+    text = re.sub(r"\\,", "", text)
+    text = re.sub(r"\\%", "%", text)
+    return text
+
+
 def _normalize(value: Any) -> float | int:
     """Convert a scalar value to a comparable normalized number."""
     if isinstance(value, bool):
@@ -163,15 +178,16 @@ def main(argv: list[str] | None = None) -> int:
 
     # Remove comments to avoid matching magic numbers in comments
     combined_tex_no_comment = re.sub(r"(?<!\\)%.*", "", combined_tex)
+    combined_tex_clean = clean_tex_for_numbers(combined_tex_no_comment)
 
     # 1. JSON -> TeX
     missing_in_tex: list[tuple[float | int, list[str]]] = []
     for n, paths in json_numbers.items():
-        if not search_in_tex(combined_tex_no_comment, n):
+        if not search_in_tex(combined_tex_clean, n):
             missing_in_tex.append((n, paths))
 
     # 2. TeX -> JSON
-    tex_numbers = extract_tex_numbers(combined_tex_no_comment)
+    tex_numbers = extract_tex_numbers(combined_tex_clean)
     tex_not_in_json: list[tuple[str, float | int, str]] = []
     for raw, val, start, end in tex_numbers:
         if val not in json_numbers:
