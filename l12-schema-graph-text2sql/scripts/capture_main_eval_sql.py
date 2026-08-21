@@ -64,24 +64,29 @@ def load_expected(qid):
     return [], []
 
 
-def execute_sql(conn, sql):
+def get_conn():
+    return psycopg.connect(CONNINFO)
+
+
+def execute_sql(sql):
     try:
-        with conn.cursor() as cur:
-            cur.execute("SET statement_timeout = '10s'")
-            cur.execute(sql)
-            columns = [d[0] for d in cur.description] if cur.description else []
-            rows = cur.fetchall()
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SET statement_timeout = '10s'")
+                cur.execute(sql)
+                columns = [d[0] for d in cur.description] if cur.description else []
+                rows = cur.fetchall()
+            conn.commit()
         return {"success": True, "columns": columns, "rows": [list(r) for r in rows], "row_count": len(rows)}
     except Exception as e:
-        conn.rollback()
         return {"success": False, "error": str(e), "rows": [], "row_count": 0, "columns": []}
 
 
-def compute_accuracy(conn, sql, qid):
+def compute_accuracy(sql, qid):
     expected_rows, expected_columns = load_expected(qid)
     if not sql:
         return 0.0
-    exec_result = execute_sql(conn, sql)
+    exec_result = execute_sql(sql)
     if not exec_result.get("success"):
         return 0.0
     metrics = execution_accuracy_full(
@@ -101,10 +106,10 @@ def main():
     print(f"Model: {model}")
     print("Connecting to PostgreSQL...")
 
-    conn = psycopg.connect(CONNINFO)
-    tables = get_tables(conn)
-    columns = {t: get_columns(conn, t) for t in tables}
-    fks = get_foreign_keys(conn)
+    with get_conn() as conn:
+        tables = get_tables(conn)
+        columns = {t: get_columns(conn, t) for t in tables}
+        fks = get_foreign_keys(conn)
     table_graph = build_table_graph(fks)
     if not table_graph.has_edge("composition", "element"):
         table_graph.add_edge("composition", "element", source_column="element", target_column="symbol")
@@ -116,7 +121,7 @@ def main():
     print(f"Total queries: {len(all_queries)}")
 
     def exec_fn(sql):
-        return execute_sql(conn, sql)
+        return execute_sql(sql)
 
     results = []
     for i, q in enumerate(all_queries):
@@ -140,7 +145,7 @@ def main():
             sql = pipe_result.get("sql", "")
             if sql:
                 sql = normalize_limit(sql)
-            acc = compute_accuracy(conn, sql, qid)
+            acc = compute_accuracy(sql, qid)
             print(f"acc={acc:.1%}  {elapsed:.1f}s")
 
             sql_path = OUT_DIR / f"{qid}.sql"
