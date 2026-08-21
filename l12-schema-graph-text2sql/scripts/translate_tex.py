@@ -35,7 +35,7 @@ TRANSLATIONS = {
     r"\subsection{ablation条件別エラーパターン}": r"\subsection{Error Patterns by Ablation Condition}",
     r"\subsection{Very Hard失敗の内訳分析}": r"\subsection{Breakdown Analysis of Very Hard Failures}",
     r"\subsection{既知L1$_2$化合物の再発見}": r"\subsection{Rediscovery of Known L1$_2$ Compounds}",
-    r"\subsection{$\\gamma'$相候補ランキング}": r"\subsection{$\gamma'$ Phase Candidate Ranking}",
+    r"\subsection{$\gamma'$相候補ランキング}": r"\subsection{$\gamma'$ Phase Candidate Ranking}",
     r"\subsection{Ni$_3$Al近傍格子定数候補}": r"\subsection{Ni$_3$Al Neighborhood Lattice Constant Candidates}",
     r"\subsection{安定L1$_2$候補の抽出}": r"\subsection{Extraction of Stable L1$_2$ Candidates}",
     r"\subsection{材料設計仮説の生成}": r"\subsection{Generation of Materials Design Hypotheses}",
@@ -125,8 +125,8 @@ def main():
     for jp, en in TRANSLATIONS.items():
         content = content.replace(jp, en)
 
-    # Apply table header translations
-    for jp, en in TABLE_HEADER_TRANSLATIONS.items():
+    # Apply table header translations (longest-first to avoid partial matches)
+    for jp, en in sorted(TABLE_HEADER_TRANSLATIONS.items(), key=lambda kv: len(kv[0]), reverse=True):
         content = content.replace(jp, en)
 
     with open("paper/main_en.tex", "w") as f:
