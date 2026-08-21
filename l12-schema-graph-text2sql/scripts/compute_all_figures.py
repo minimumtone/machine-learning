@@ -159,10 +159,25 @@ def main():
     n_metastable_l12 = n_stable_metastable_l12 - n_stable_l12
 
     cur.execute(
+        "SELECT s.lattice_a FROM material_entry me "
+        "JOIN structure s ON s.entry_id = me.entry_id "
+        "WHERE me.formula = 'Ni3Al' "
+        "AND (s.prototype = 'L12' OR s.strukturbericht = 'L12') "
+        "ORDER BY s.entry_id LIMIT 1"
+    )
+    a_ref_ni3al = _fetchone_scalar(cur)
+
+    cur.execute(
         "SELECT count(DISTINCT me.formula) FROM material_entry me "
         "JOIN structure s ON s.entry_id = me.entry_id "
         "WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') "
-        "AND ABS(s.lattice_a - 3.57) <= 0.03"
+        "AND ABS(s.lattice_a - ("
+        "  SELECT s2.lattice_a FROM material_entry me2 "
+        "  JOIN structure s2 ON s2.entry_id = me2.entry_id "
+        "  WHERE me2.formula = 'Ni3Al' "
+        "  AND (s2.prototype = 'L12' OR s2.strukturbericht = 'L12') "
+        "  ORDER BY s2.entry_id LIMIT 1"
+        ")) <= 0.03"
     )
     n_ni3al_lattice_match = _fetchone_scalar(cur)
 
@@ -620,6 +635,7 @@ def main():
             "n_stable_l12": n_stable_l12,
             "n_metastable_l12": n_metastable_l12,
             "n_ni3al_lattice_match": n_ni3al_lattice_match,
+            "a_ref_ni3al": a_ref_ni3al,
         },
         "independent_evaluation": {
             "_note": "The 60-query harmonized comparison has been removed; "
