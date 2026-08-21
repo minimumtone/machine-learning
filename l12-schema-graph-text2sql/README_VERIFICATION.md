@@ -17,7 +17,7 @@
 | `docker/docker-compose.yml` | PostgreSQL 15（初期化SQL自動投入） |
 | `few_shot_examples.json` | few-shot例42件（ルート直下） |
 | `tests/` | 単体テスト134件 |
-| `paper/` | 論文ソース（main.tex 日 / main_en.tex 英）+ PDF + paper_data.json |
+| `paper/` | 論文ソース（stam-m_ja.tex 日 / stam-m.tex 英）+ PDF + paper_data.json |
 | `pyproject.toml` | 依存関係定義 |
 
 ### 評価データセット
@@ -137,8 +137,8 @@ python scripts/check_expected_results.py --update   # 期待値の更新（DB変
 ```bash
 python scripts/compute_all_figures.py   # paper/paper_data.json 再生成（SSoT）
 python scripts/generate_figures.py      # paper/figures/ の図再生成
-cd paper && lualatex main.tex && lualatex main.tex          # 日本語版 23pp
-cd paper && pdflatex main_en.tex && bibtex main_en && pdflatex main_en.tex && pdflatex main_en.tex  # 英語版 46pp
+cd paper && lualatex stam-m_ja.tex && bibtex stam-m_ja && lualatex stam-m_ja.tex && lualatex stam-m_ja.tex  # 日本語版
+cd paper && lualatex stam-m.tex && bibtex stam-m && lualatex stam-m.tex && lualatex stam-m.tex              # 英語版
 ```
 
 ## 5. 判定基準（期待値）
