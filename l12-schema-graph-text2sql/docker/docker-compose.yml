@@ -1,13 +1,13 @@
 services:
   postgres:
     image: postgres:15
-    container_name: l12_postgres
+    container_name: ${L12_CONTAINER_NAME:-l12_postgres}
     environment:
-      POSTGRES_USER: l12_user
-      POSTGRES_PASSWORD: l12_password
-      POSTGRES_DB: l12_materials
+      POSTGRES_USER: ${POSTGRES_USER:-l12_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-l12_password}
+      POSTGRES_DB: ${POSTGRES_DB:-l12_materials}
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:${L12_PGPORT:-5432}:5432"
     volumes:
       - ../db/extended_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
       - ../db/insert_data.sql:/docker-entrypoint-initdb.d/02_data.sql

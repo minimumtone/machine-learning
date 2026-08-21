@@ -142,6 +142,24 @@ def execution_accuracy_full(
     return {"recall": recall, "precision": precision, "f1": f1}
 
 
+def exact_result_set_match(
+    result_rows: list[list[Any]],
+    expected_rows: list[list[Any]],
+    result_columns: list[str] | None = None,
+    expected_columns: list[str] | None = None,
+) -> float:
+    """Return 1.0 only when precision and recall are both exactly 1.0.
+
+    This complements row-level recall.  A generated query that returns every
+    gold row plus extra rows therefore receives recall=1.0 but exact_match=0.0.
+    Column alignment and value normalization follow execution_accuracy_full().
+    """
+    m = execution_accuracy_full(
+        result_rows, expected_rows, result_columns, expected_columns,
+    )
+    return 1.0 if m["recall"] == 1.0 and m["precision"] == 1.0 else 0.0
+
+
 def execution_accuracy(
     result_rows: list[list[Any]],
     expected_rows: list[list[Any]],

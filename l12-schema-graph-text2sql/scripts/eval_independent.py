@@ -27,7 +27,7 @@ from graph.graph_builder import build_table_graph  # noqa: E402
 from graph.join_path_generator import get_allowed_join_list  # noqa: E402
 from graph.schema_parser import get_columns, get_foreign_keys, get_tables  # noqa: E402
 from llm.sql_generator import pipeline as sql_pipeline  # noqa: E402
-from scripts.eval_ablation import CONNINFO, compute_accuracy, execute_sql  # noqa: E402
+from scripts.eval_ablation import CONNINFO, compute_metrics, execute_sql  # noqa: E402
 
 DEFAULT_DATASET = PROJECT / "evaluation" / "expert_evaluation_dataset.jsonl"
 DEFAULT_OUTPUT = PROJECT / "evaluation" / "independent_eval_results.json"
@@ -45,16 +45,23 @@ def load_dataset(path: Path) -> list[dict]:
 
 
 def summarize(results: list[dict]) -> dict:
-    """Compute overall and per-difficulty mean accuracy for a result list."""
-    overall = sum(r["accuracy"] for r in results) / len(results)
+    """Summarize row recall plus stricter result-set metrics when present."""
+    if not results:
+        return {"overall": 0.0, "by_difficulty": {}, "avg_latency": 0.0}
+    overall = sum(r.get("recall", r.get("accuracy", 0.0)) for r in results) / len(results)
     by_diff: dict[str, list[float]] = {}
     for r in results:
-        by_diff.setdefault(r["difficulty"], []).append(r["accuracy"])
-    return {
-        "overall": overall,
+        by_diff.setdefault(r["difficulty"], []).append(r.get("recall", r.get("accuracy", 0.0)))
+    out = {
+        "overall": overall,  # historical name; row-level recall
+        "overall_recall": overall,
         "by_difficulty": {d: sum(a) / len(a) for d, a in by_diff.items()},
         "avg_latency": sum(r["latency_s"] for r in results) / len(results),
     }
+    for key in ("precision", "f1", "exact_match"):
+        if all(key in r for r in results):
+            out[f"overall_{key}"] = sum(r[key] for r in results) / len(results)
+    return out
 
 
 def main() -> None:
@@ -119,16 +126,17 @@ def main() -> None:
             sql = pipe_result.get("sql", "")
             if sql:
                 sql = normalize_limit(sql)
-            acc = compute_accuracy(conn, sql, qid)
+            metrics = compute_metrics(conn, sql, qid)
         except Exception as e:
             print(f"ERROR: {type(e).__name__}: {e!s:.80s}")
-            acc, sql = 0.0, ""
+            metrics, sql = {"recall": 0.0, "precision": 0.0, "f1": 0.0, "exact_match": 0.0}, ""
         elapsed = time.time() - t0
-        print(f"acc={acc:.1%}  {elapsed:.1f}s")
+        print(f"recall={metrics['recall']:.1%} exact={metrics['exact_match']:.0%}  {elapsed:.1f}s")
         results.append({
             "qid": qid,
             "difficulty": q["difficulty"],
-            "accuracy": acc,
+            "accuracy": metrics["recall"],  # historical field
+            **metrics,
             "latency_s": round(elapsed, 1),
             "sql": sql,
         })

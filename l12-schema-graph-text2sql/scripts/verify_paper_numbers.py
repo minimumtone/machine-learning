@@ -241,14 +241,17 @@ def main(argv: list[str] | None = None) -> int:
     for raw, val, start, end in tex_numbers:
         if val not in json_numbers:
             ctx_start = max(0, start - 25)
-            ctx_end = min(len(combined_tex_no_comment), end + 25)
-            ctx = combined_tex_no_comment[ctx_start:ctx_end].replace("\n", " ")
+            ctx_end = min(len(combined_tex_clean), end + 25)
+            ctx = combined_tex_clean[ctx_start:ctx_end].replace("\n", " ")
             tex_not_in_json.append((raw, val, ctx))
 
     print(f"JSON numeric values: {len(json_numbers)}")
     print(f"TeX numeric tokens:  {len(tex_numbers)}")
     print(f"JSON numbers not found in TeX: {len(missing_in_tex)} (gating: {len(gating_missing)})")
     print(f"TeX numbers not found in JSON: {len(tex_not_in_json)} (informational only)")
+    if tex_not_in_json:
+        print("  NOTE: most of these are table rule widths, years, citation "
+              "numbers and layout constants — they are not audited data values.")
 
     if missing_in_tex:
         print("\n--- JSON numbers missing from TeX (review) ---")

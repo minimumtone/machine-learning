@@ -23,6 +23,7 @@ Writes:
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from collections import Counter
@@ -35,6 +36,20 @@ from psycopg import sql as pgsql
 import yaml
 
 PROJECT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT))
+
+from safety.sql_validator import check_limit, validate_sql  # noqa: E402
+
+
+def db_conninfo() -> str:
+    """Build the main-DB connection string from POSTGRES_* env vars."""
+    return (
+        f"host={os.getenv('POSTGRES_HOST', 'localhost')} "
+        f"port={os.getenv('POSTGRES_PORT', '5432')} "
+        f"dbname={os.getenv('POSTGRES_DB', 'l12_materials')} "
+        f"user={os.getenv('POSTGRES_USER', 'l12_user')} "
+        f"password={os.getenv('POSTGRES_PASSWORD', 'l12_password')}"
+    )
 
 
 def load_json(relpath: str) -> Any:
@@ -103,10 +118,7 @@ def main():
     # ==================================================================
     # Database metadata (live query)
     # ==================================================================
-    conn = psycopg.connect(
-        "host=localhost port=5432 dbname=l12_materials "
-        "user=l12_user password=l12_password"
-    )
+    conn = psycopg.connect(db_conninfo())
     cur = conn.cursor()
 
     cur.execute(
@@ -497,23 +509,51 @@ def main():
     # ==================================================================
     # Unit tests
     # ==================================================================
-    try:
-        result = subprocess.run(
-            [sys.executable, "-m", "pytest", "tests/", "--co", "-q"],
-            capture_output=True, text=True, cwd=str(PROJECT),
-        )
-        n_unit_tests = len(
-            [line for line in result.stdout.strip().split("\n")
-             if line.strip() and "::" in line]
-        )
-    except Exception:
-        n_unit_tests = 0
+    result = subprocess.run(
+        [sys.executable, "-m", "pytest", "tests/", "-q"],
+        capture_output=True, text=True, cwd=str(PROJECT),
+    )
+    if result.returncode != 0:
+        print("ERROR: pytest tests/ failed; paper_data.json requires a "
+              "passing test suite", file=sys.stderr)
+        print(result.stdout[-2000:], file=sys.stderr)
+        sys.exit(1)
+    summary = result.stdout.strip().split("\n")[-1]
+    n_unit_tests = int(summary.split(" passed")[0].split()[-1])
 
     # ==================================================================
     # Safety tests (count from test file)
     # ==================================================================
-    safety_test_ids = ["E01", "E02", "E03", "E04", "E05", "F01", "F02"]
-    n_safety_tests = len(safety_test_ids)
+    # Each adversarial input is executed against the validator here;
+    # "blocked" inputs must be rejected, the "sanitized" input (F01)
+    # must stay valid with a LIMIT auto-appended.
+    safety_tests: dict[str, tuple[str, str]] = {
+        "E01": ("DROP TABLE material_entry;", "blocked"),
+        "E02": ("SELECT * FROM material_entry; DELETE FROM composition;",
+                "blocked"),
+        "E03": ("SELECT formula FROM material_entry; DROP TABLE structure;",
+                "blocked"),
+        "E04": ("SELECT * FROM secret_passwords LIMIT 10;", "blocked"),
+        "E05": ("INSERT INTO material_entry (formula) VALUES ('X');",
+                "blocked"),
+        "F01": ("SELECT entry_id FROM material_entry", "sanitized"),
+        "F02": ("UPDATE material_entry SET formula = 'X';", "blocked"),
+    }
+    n_safety_tests = len(safety_tests)
+    all_blocked = True
+    for test_id, (sql_text, expected) in safety_tests.items():
+        verdict = validate_sql(sql_text)
+        if expected == "blocked":
+            handled = not verdict["valid"]
+        else:
+            has_limit, sanitized_sql = check_limit(sql_text)
+            handled = verdict["valid"] and not has_limit and "LIMIT" in sanitized_sql
+        if not handled:
+            print(f"ERROR: safety test {test_id} not handled as expected",
+                  file=sys.stderr)
+            all_blocked = False
+    if not all_blocked:
+        sys.exit(1)
 
     # SQLGuard check items (from sqlguard implementation)
     n_sqlguard_checks = 14
@@ -685,7 +725,7 @@ def main():
         "safety": {
             "n_safety_tests": n_safety_tests,
             "n_sqlguard_checks": n_sqlguard_checks,
-            "all_blocked": True,
+            "all_blocked": all_blocked,
         },
         "testing": {
             "n_unit_tests": n_unit_tests,
