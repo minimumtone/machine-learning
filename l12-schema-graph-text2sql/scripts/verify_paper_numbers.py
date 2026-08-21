@@ -249,6 +249,9 @@ def main(argv: list[str] | None = None) -> int:
     print(f"TeX numeric tokens:  {len(tex_numbers)}")
     print(f"JSON numbers not found in TeX: {len(missing_in_tex)} (gating: {len(gating_missing)})")
     print(f"TeX numbers not found in JSON: {len(tex_not_in_json)} (informational only)")
+    if tex_not_in_json:
+        print("  NOTE: most of these are table rule widths, years, citation "
+              "numbers and layout constants — they are not audited data values.")
 
     if missing_in_tex:
         print("\n--- JSON numbers missing from TeX (review) ---")
