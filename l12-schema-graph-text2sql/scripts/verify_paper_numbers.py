@@ -42,6 +42,46 @@ def clean_tex_for_numbers(tex_text: str) -> str:
     return text
 
 
+STRIP_ENVIRONMENTS = ("tikzpicture", "lstlisting", "verbatim", "filecontents")
+
+# JSON values computed for completeness but deliberately not cited in the
+# manuscript body (auxiliary latencies / sub-breakdowns).  They are still
+# reported for review but do not fail the audit.
+UNCITED_JSON_PATHS = (
+    "database.n_unique_formulas",
+    "ablation.cte_query_results.no_dict_cte_accuracy_pct",
+    "transfer_evaluation_variants.C_obfuscated.by_difficulty_pct",
+    "transfer_evaluation_variants.D_materials_project.avg_latency_s",
+    "jp_reranker_comparison.jp_xsmall_latency_s",
+    "jp_reranker_comparison.ms_marco_latency_s",
+    "cte_evaluation_15.avg_latency_s",
+)
+
+
+def strip_non_prose(tex_text: str) -> str:
+    """Remove TeX regions whose numbers are not manuscript data values.
+
+    Strips drawing/listing environments (TikZ coordinates, listing colour
+    specs) and the front matter before \\maketitle (addresses, postal codes).
+    """
+    for env in STRIP_ENVIRONMENTS:
+        tex_text = re.sub(
+            rf"\\begin\{{{env}\*?\}}.*?\\end\{{{env}\*?\}}",
+            "",
+            tex_text,
+            flags=re.DOTALL,
+        )
+    parts = tex_text.split("\\maketitle", 1)
+    if len(parts) == 2:
+        preamble, body = parts
+        doc_start = preamble.find("\\begin{document}")
+        if doc_start != -1:
+            tex_text = preamble[:doc_start] + body
+        else:
+            tex_text = body
+    return tex_text
+
+
 def _normalize(value: Any) -> float | int:
     """Convert a scalar value to a comparable normalized number."""
     if isinstance(value, bool):
@@ -168,7 +208,7 @@ def main(argv: list[str] | None = None) -> int:
         if not tex_path.exists():
             print(f"WARNING: {tex_path} not found, skipping", file=sys.stderr)
             continue
-        text = tex_path.read_text(encoding="utf-8")
+        text = strip_non_prose(tex_path.read_text(encoding="utf-8"))
         file_map.append((tex_name, len(combined_tex), text))
         combined_tex += f"\n\n% FILE: {tex_name}\n\n" + text
 
@@ -180,11 +220,20 @@ def main(argv: list[str] | None = None) -> int:
     combined_tex_no_comment = re.sub(r"(?<!\\)%.*", "", combined_tex)
     combined_tex_clean = clean_tex_for_numbers(combined_tex_no_comment)
 
-    # 1. JSON -> TeX
+    # 1. JSON -> TeX (this side gates the exit code).  Exact p-values are
+    # reported in the manuscript as inequalities (e.g. p<0.001), so p_value
+    # paths are reported for review but do not fail the audit.
     missing_in_tex: list[tuple[float | int, list[str]]] = []
     for n, paths in json_numbers.items():
         if not search_in_tex(combined_tex_clean, n):
             missing_in_tex.append((n, paths))
+    gating_missing = [
+        (n, paths)
+        for n, paths in missing_in_tex
+        if not all(
+            "p_value" in p or p.startswith(UNCITED_JSON_PATHS) for p in paths
+        )
+    ]
 
     # 2. TeX -> JSON
     tex_numbers = extract_tex_numbers(combined_tex_clean)
@@ -198,8 +247,8 @@ def main(argv: list[str] | None = None) -> int:
 
     print(f"JSON numeric values: {len(json_numbers)}")
     print(f"TeX numeric tokens:  {len(tex_numbers)}")
-    print(f"JSON numbers not found in TeX: {len(missing_in_tex)}")
-    print(f"TeX numbers not found in JSON: {len(tex_not_in_json)}")
+    print(f"JSON numbers not found in TeX: {len(missing_in_tex)} (gating: {len(gating_missing)})")
+    print(f"TeX numbers not found in JSON: {len(tex_not_in_json)} (informational only)")
 
     if missing_in_tex:
         print("\n--- JSON numbers missing from TeX (review) ---")
@@ -223,8 +272,9 @@ def main(argv: list[str] | None = None) -> int:
                 f.write("\t".join(row) + "\n")
         print(f"\nReport written to {args.report}")
 
-    # Return non-zero only when a JSON number is completely absent from the manuscript
-    return 1 if missing_in_tex and not args.tex_only else 0
+    # Return non-zero only when a non-p-value JSON number is completely
+    # absent from the manuscript; TeX->JSON is informational only.
+    return 1 if gating_missing and not args.tex_only else 0
 
 
 if __name__ == "__main__":

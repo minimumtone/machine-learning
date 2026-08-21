@@ -20,6 +20,7 @@ sys.path.insert(0, str(PROJECT))
 
 import psycopg  # noqa: E402
 
+from scripts.build_transfer_db import transfer_conninfo  # noqa: E402
 from scripts.eval_ablation import CONNINFO  # noqa: E402
 
 GOLD_DIR = PROJECT / "evaluation" / "gold_sql"
@@ -49,19 +50,30 @@ def main() -> None:
     args = parser.parse_args()
 
     conn = psycopg.connect(CONNINFO)
-    stale, missing, ok = [], [], []
+    try:
+        transfer_conn = psycopg.connect(transfer_conninfo())
+    except psycopg.OperationalError:
+        transfer_conn = None
+    stale, missing, ok, skipped = [], [], [], []
     for sql_path in sorted(GOLD_DIR.glob("*.sql")):
         qid = sql_path.stem
+        if qid.startswith("q_transfer"):
+            if transfer_conn is None:
+                skipped.append(qid)
+                continue
+            active_conn = transfer_conn
+        else:
+            active_conn = conn
         expected_path = RESULTS_DIR / f"{qid}.json"
         sql = sql_path.read_text()
         try:
-            with conn.cursor() as cur:
+            with active_conn.cursor() as cur:
                 cur.execute("SET statement_timeout = '30s'")
                 cur.execute(sql)  # type: ignore[arg-type]
                 columns = [d[0] for d in cur.description] if cur.description else []
                 rows = [list(r) for r in cur.fetchall()]
         except Exception as e:
-            conn.rollback()
+            active_conn.rollback()
             print(f"{qid}: GOLD SQL ERROR: {e!s:.100s}")
             continue
         rows_json = json.loads(json.dumps(rows, default=str))
@@ -81,7 +93,13 @@ def main() -> None:
                     json.dump({"columns": columns, "rows": rows_json},
                               f, ensure_ascii=False, indent=2, default=str)
     conn.close()
-    print(f"\nok={len(ok)} stale={len(stale)} missing={len(missing)}")
+    if transfer_conn is not None:
+        transfer_conn.close()
+    if skipped:
+        print(f"skipped {len(skipped)} transfer queries: transfer DB not built "
+              "(run `python scripts/build_transfer_db.py` first)")
+    print(f"\nok={len(ok)} stale={len(stale)} missing={len(missing)} "
+          f"skipped={len(skipped)}")
     if missing:
         print("missing:", missing)
 

@@ -36,10 +36,8 @@ WORDS = [
 
 
 def _db_conninfo(db: str) -> str:
-    """Build a connection string using environment variables; no password fallback."""
-    password = os.environ.get("POSTGRES_PASSWORD")
-    if not password:
-        raise RuntimeError("POSTGRES_PASSWORD environment variable is required")
+    """Build a connection string using environment variables."""
+    password = os.getenv("POSTGRES_PASSWORD", "l12_password")
     return (
         f"host={os.getenv('POSTGRES_HOST', 'localhost')} "
         f"port={os.getenv('POSTGRES_PORT', '5432')} "
