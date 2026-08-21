@@ -88,20 +88,23 @@ relational databases (RDBs) and demonstrate its effectiveness.
 The proposed method comprises six components:
 few-shot example retrieval, LLM-based SQL generation,
 Steiner-tree JOIN constraints derived from the foreign-key graph,
-a materials domain dictionary, AST-based SQL safety verification,
+a materials domain dictionary, AST-based SQL safety verification (SQLGuard),
 and an LLM reranker.
-Using a 31-table RDB centered on L1$_2$-type intermetallic compounds,
-we conducted a 7-condition ablation study with 100 evaluation queries
+
+Using a 31-table RDB containing B2/L1$_2$/NaCl-type prototypes and
+approximately 20,000 rows, a multi-axis evaluation achieved execution
+recall of 84.7\%, precision of 77.3\%, F1 of 74.8\%, syntax validity of 100\%,
+and a JOIN match rate of 93.2\%.
+SQLGuard rejects arbitrary non-SELECT statements and guarantees
+100\% syntax validity, ensuring safety.
+Zero-adaptation transfer tests across four schema variants---prototype expansion (A) 90.0\%, OQMD-flavored rename (B) 90.5\%, randomized obfuscated names (C) 90.0\%, and a real Materials Project-flavored schema (D) 100.0\%---demonstrated maintainability and generalization.
+We then conducted a 7-condition ablation study with 100 evaluation queries
 (5 independent runs, 3{,}500 evaluations in total).
 Few-shot examples and the materials domain dictionary contributed
 $-$7.4\,pp ($p<0.001$) and $-$7.3\,pp ($p<0.001$), respectively,
-demonstrating statistically significant effects.
-Multi-axis evaluation achieved execution recall of 84.7\%,
-precision of 77.3\%, F1 of 74.8\%, syntax validity of 100\%,
-and JOIN match rate of 93.2\%.
+showing statistically significant effects.
 All results are reported as mean $\pm$ standard deviation
 over 5 independent runs with Wilcoxon signed-rank test significance.
-Furthermore, zero-adaptation transfer evaluations across four schema variants---prototype expansion (A) 90.0\%, OQMD-flavored rename (B) 90.5\%, randomized obfuscated names (C) 90.0\%, and a real Materials Project-flavored schema (D) 100.0\%---demonstrated that the pipeline generalizes schema-independently.
 External validation with 100 independently designed queries (76.9\%)
 and evaluation of 15 CTE multi-step calculation patterns
 quantify the external validity and applicability limits
@@ -124,8 +127,9 @@ driven by advances in high-throughput first-principles calculations.
 Databases such as
 OQMD~\cite{saal2013oqmd,kirklin2015oqmd},
 Materials Project~\cite{jain2013mp},
-AFLOW~\cite{curtarolo2012aflow}, and
-NOMAD~\cite{draxl2019nomad}
+AFLOW~\cite{curtarolo2012aflow},
+NOMAD~\cite{draxl2019nomad}, and
+AtomWork-Adv~\cite{nims2018atomworkadv}
 store tens to hundreds of thousands of computational records covering
 composition, crystal structure, electronic states, and thermodynamic stability.
 
@@ -194,45 +198,45 @@ to explore data without being aware of SQL or schema structure,
 using OQMD as a representative example to examine the extent to which
 natural language queries can be handled.
 
-The three domain-specific challenges addressed in this study are:
+This study addresses three domain-specific challenges:
 \begin{enumerate}
-  \item \textbf{Domain terminology ambiguity}:
+  \item Domain terminology ambiguity:
     Crystal structure names and property terms such as
     L1$_2$, $\gamma'$ phase, and B2 are insufficiently represented
     in general-purpose LLM training data,
     making accurate conversion to SQL conditions difficult.
-  \item \textbf{Multi-table JOIN complexity}:
+  \item Multi-table JOIN complexity:
     Normalized materials RDBs require JOINs across dozens of tables,
     creating a high risk of JOIN hallucination by LLMs.
-  \item \textbf{Absence of evaluation data}:
-    No standard evaluation benchmark exists for Text-to-SQL
-    on inorganic materials RDBs.
+  \item Absence of evaluation data:
+    No standard Text-to-SQL benchmark exists for
+    inorganic materials RDBs.
 \end{enumerate}
 
 Our contributions are fourfold:
 \begin{enumerate}[label=(\roman*)]
-  \item \textbf{Design principles for materials-RDB Text-to-SQL}:
+  \item Design principles for materials-RDB Text-to-SQL:
     We propose a pipeline integrating Steiner-tree JOIN constraints
     on FK graphs, a materials domain dictionary, and a hybrid reranker.
     This fills the gap between general-purpose Text-to-SQL methods
-    (DIN-SQL, DAIL-SQL, SchemaGraphSQL, etc.) that lack
+    (DIN-SQL, DAIL-SQL, SchemaGraphSQL, etc.) that do not provide
     materials-specific term translation,
     and materials NL access systems (MKNA, OptiMat, etc.)
     that do not target RDB/SQL.
-  \item \textbf{Multi-axis quantitative evaluation}:
+  \item Multi-axis quantitative evaluation:
     Beyond the 7-condition $\times$ 100-query $\times$ 5-run
     statistical ablation (Wilcoxon signed-rank test)
-    on a 31-table L1$_2$ RDB,
+    on a 31-table B2/L1$_2$/NaCl-type RDB,
     we provide few-shot $k$ sensitivity, dictionary size sensitivity,
     LLM model comparison, and multi-axis metrics
     (EM / SELECT column precision / JOIN match rate).
-  \item \textbf{Quantitative effect of domain knowledge}:
-    We demonstrate that the materials dictionary ($-$7.3\,pp, $p<0.001$)
+  \item Quantitative effect of domain knowledge:
+    The materials dictionary ($-$7.3\,pp, $p<0.001$)
     and few-shot examples ($-$7.4\,pp, $p<0.001$)
-    have statistically significant contributions,
+    show statistically significant contributions,
     validating the necessity of domain-specific modules.
-  \item \textbf{Demonstration of schema generalization}:
-    Zero-adaptation transfer tests across four schema variants---A~prototype expansion (90.0\%), B~OQMD-flavored rename (90.5\%), C~randomized obfuscation (90.0\%), and D~Materials Project-flavored schema (100.0\%)---demonstrate that the design principles based on FK introspection do not depend on a specific schema (Section~\ref{sec:transfer_eval}).
+  \item Demonstration of schema generalization:
+    Zero-adaptation transfer tests across four schema variants---A~prototype expansion (90.0\%), B~OQMD-flavored rename (90.5\%), C~randomized obfuscation (90.0\%), and D~Materials Project-flavored schema (100.0\%)---show that the design principles based on FK introspection do not depend on a specific schema (Section~\ref{sec:transfer_eval}).
 \end{enumerate}
 
 % =====================================================================
