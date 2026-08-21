@@ -97,7 +97,7 @@ recall of 84.7\%, precision of 77.3\%, F1 of 74.8\%, syntax validity of 100\%,
 and a JOIN match rate of 93.2\%.
 SQLGuard rejects arbitrary non-SELECT statements and guarantees
 100\% syntax validity, ensuring safety.
-Zero-adaptation transfer tests across four schema variants---prototype expansion (A) 90.0\%, OQMD-flavored rename (B) 90.5\%, randomized obfuscated names (C) 90.0\%, and a real Materials Project-flavored schema (D) 100.0\%---demonstrated maintainability and generalization.
+Transfer tests across four variants---prototype expansion (A, data/domain transfer) 90.0\%, OQMD-flavored rename (B, zero adaptation) 90.5\%, randomized obfuscated names (C, zero adaptation) 90.0\%, and a real Materials Project-flavored schema (D, few-shot-adapted) 100.0\%---demonstrated maintainability and generalization.
 We then conducted a 7-condition ablation study with 100 evaluation queries
 (5 independent runs, 3{,}500 evaluations in total).
 Few-shot examples and the materials domain dictionary contributed
@@ -236,7 +236,7 @@ Our contributions are fourfold:
     show statistically significant contributions,
     validating the necessity of domain-specific modules.
   \item Demonstration of schema generalization:
-    Zero-adaptation transfer tests across four schema variants---A~prototype expansion (90.0\%), B~OQMD-flavored rename (90.5\%), C~randomized obfuscation (90.0\%), and D~Materials Project-flavored schema (100.0\%)---show that the design principles based on FK introspection do not depend on a specific schema (Section~\ref{sec:transfer_eval}).
+    Transfer tests across four variants---A~prototype expansion (data/domain transfer, 90.0\%), B~OQMD-flavored rename (zero adaptation, 90.5\%), C~randomized obfuscation (zero adaptation, 90.0\%), and D~Materials Project-flavored schema (few-shot-adapted, 100.0\%)---show that the design principles based on FK introspection do not depend on a specific schema (Section~\ref{sec:transfer_eval}).
 \end{enumerate}
 
 % =====================================================================
@@ -316,7 +316,7 @@ addressing challenges specific to materials RDBs.
 \caption{Overview of the proposed pipeline.
   From a natural language query, few-shot retrieval (Step~1) is followed by
   GPT-5.5 schema linking (Step~2) and SQL generation (Step~3).
-  Steiner-tree approximation (Step~4) extracts the minimal subgraph from 31 tables.
+  A Steiner-tree-inspired heuristic (Step~4) extracts a covering JOIN subgraph from 31 tables.
   The materials dictionary (Step~5) maps domain terms to SQL conditions,
   SQLGuard (Step~6) verifies safety, and
   the reranker (Step~7) selects the best candidate.}
@@ -364,11 +364,16 @@ using NetworkX~\cite{networkx2008}.
 FK relationships are automatically obtained at runtime via introspection
 of PostgreSQL metadata.
 For the set of tables required by a query,
-the minimum JOIN subtree is determined via Steiner tree approximation
-as shown in Algorithm~\ref{alg:steiner}.
+a covering JOIN subtree is constructed by a greedy shortest-path
+union heuristic, as shown in Algorithm~\ref{alg:steiner}.
+This is a Steiner-tree-inspired approximation: it connects the
+required tables by repeatedly adding shortest paths and merging
+connected components with Union--Find, and does not guarantee a
+minimum Steiner tree.
 
 \begin{algorithm}[htbp]
-  \caption{Minimum covering JOIN subgraph (Steiner tree approximation).}
+  \caption{Covering JOIN subgraph via greedy shortest-path union
+    (Steiner-tree-inspired heuristic).}
   \label{alg:steiner}
   \begin{algorithmic}[1]
     \Require FK relationship graph $G = (V, E)$, required table set $R$
@@ -1875,8 +1880,8 @@ T2SQL-readiness can be considered:
     to increase the probability that the LLM selects appropriate
     columns from schema information alone.
   \item \textbf{Explicit FK constraint definition}:
-    The Steiner tree algorithm determines minimum JOIN paths based
-    on FK relationships; automatic JOIN resolution fails in schemas
+    The Steiner-tree-inspired algorithm derives JOIN paths from
+    FK relationships; automatic JOIN resolution fails in schemas
     with missing FK constraints.
     Comprehensive FK constraint definition is necessary when
     T2SQL readiness is a design goal.
@@ -1984,21 +1989,28 @@ small number of examples (roughly one per pattern) added by a
 domain expert, without any model retraining---a practical
 advantage of this design.
 
-\subsection{Zero-adaptation Transfer Evaluation on Multiple Schemas}
+\subsection{Transfer Evaluation on Multiple Schemas}
 \label{sec:transfer_eval}
 
 To directly address the single-database limitation, we conducted
-four zero-adaptation transfer tests, summarized in
-Table~\ref{tab:transfer_eval}. In each case, the pipeline received
-only the target schema through FK introspection; the dictionary,
-few-shot examples, and prompt template were either reused unchanged
-or replaced by a minimal schema-specific set. This tests whether the
+four transfer tests, summarized in
+Table~\ref{tab:transfer_eval}. Variant A is a data/domain transfer
+on the unchanged schema; Variants B and C are zero-adaptation
+schema transfers (no dictionary, few-shot, or prompt changes);
+Variant D is a cross-database transfer with a lightweight few-shot
+adaptation. In each case, the pipeline received
+the target schema (table/column names and FK relationships) through
+introspection, with no pipeline code changes. This tests whether the
 design depends on memorized table/column names or can transfer
-abstract SQL patterns.
+abstract SQL patterns. The reported figures are execution-result
+recall against the gold result set (a superset answer containing
+all gold rows counts as correct under this metric).
 
 \begin{table}[t]
 \centering
-\caption{Zero-adaptation schema transfer results.}
+\caption{Transfer evaluation results (execution-result recall).
+  A: data/domain transfer; B, C: zero-adaptation schema transfer;
+  D: few-shot-adapted cross-database transfer.}
 \label{tab:transfer_eval}
 \begin{tabular}{@{}llcc@{}}
 \toprule
@@ -2011,10 +2023,12 @@ D & Materials Project-flavored (real MP data) & 15 & 100.0\% \\
 \end{tabular}
 \end{table}
 
-\textbf{Variant A---Prototype expansion.}
+\textbf{Variant A---Prototype expansion (data/domain transfer).}
 The same 31-table schema was populated with B2/NaCl/NiAs/BiF$_3$
 prototype entries in addition to the L1$_2$ entries, and 20
-difficulty-stratified queries were evaluated. The result was 90.0\%
+difficulty-stratified queries were evaluated. Because the schema
+itself is unchanged, this variant tests robustness to a wider data
+distribution rather than schema transfer. The result was 90.0\%
 (Easy 100\% / Medium 100\% / Hard 100\% / Very Hard 60\%),
 confirming that the prototype separation and FK graph are robust
 across crystal prototypes.
@@ -2034,18 +2048,26 @@ The result was 90.5\% overall
 \textbf{Variant C---Obfuscated names.}
 All schema identifiers in the transfer DB were replaced with random
 English words while preserving FK relationships. The pipeline
-achieved 90.0\% overall, indicating that semantic table/column
-names are not required; FK topology is sufficient.
+achieved 90.0\% overall for these 20 queries, indicating that the
+pipeline does not critically depend on semantic identifier names.
+Note that the LLM still receives the full (obfuscated) schema text,
+prompt, and few-shot examples, so this result reflects the
+combination of FK topology with these inputs rather than FK
+topology alone.
 
-\textbf{Variant D---Materials Project-flavored schema.}
+\textbf{Variant D---Materials Project-flavored schema
+(few-shot-adapted transfer).}
 We built a fresh 3-table PostgreSQL schema
 (\texttt{mp\_entries}, \texttt{mp\_elements}, \texttt{mp\_element\_ratios})
 from real Materials Project REST data for 27 binary systems (299
-entries), prepared 15 Japanese queries, and supplied only 8
+entries), prepared 15 Japanese queries, and supplied 8
 few-shot examples written for the MP schema. No pipeline code was
-changed. The result was 100.0\% overall
-(Easy 100.0\% / Medium 100.0\% / Hard 100.0\% / Very Hard 100.0\%).
-All 15 queries were answered correctly, confirming that the schema itself is transferable.
+changed, but because schema-specific few-shot examples were
+provided, this variant is a lightweight adaptation rather than a
+zero-adaptation transfer. All 15 queries achieved an
+execution-result recall of 1.0
+(Easy 100.0\% / Medium 100.0\% / Hard 100.0\% / Very Hard 100.0\%);
+exact result-set match was not separately verified.
 
 Together, these results show that the core design (FK
 introspection, schema-presented prompting, pattern-transfer
@@ -2058,7 +2080,11 @@ small schema-specific prompt and few-shot set.
 The transfer tests also served as a verification tool: they
 uncovered schema-specific hard-coding (fixed references to linked
 table names) that had been silently accepted by the original
-schema. Removing these made the pipeline fully schema-independent.
+schema. Removing these eliminated the discovered hard-coded
+references; however, the schema linker retains heuristics keyed to
+the original schema (e.g.\ a keyword-to-table map and semantic JOIN
+hints used when linking against the original database), so we do
+not claim full schema independence.
 
 \subsection{Extensibility to Similar Inorganic Materials RDBs}
 \label{sec:extensibility}
@@ -2095,7 +2121,7 @@ materials RDBs.
   \item \textbf{Single-database validation}:
     The main evaluation of this study is on an OQMD-derived L1$_2$
     database (31 tables, 1{,}559 entries).
-    The zero-adaptation transfer tests
+    The transfer tests
     (Section~\ref{sec:transfer_eval}) demonstrated generalization
     to schema renaming (90.5\%), obfuscated identifiers (90.0\%),
     prototype expansion (90.0\%), and a real Materials

@@ -103,6 +103,38 @@ def compute_stats(runs: list[dict]) -> dict:
     return stats
 
 
+def compute_significance(stats: dict) -> dict:
+    """Wilcoxon signed-rank test of full vs each ablated condition.
+
+    Uses the per-query mean accuracy across runs as paired samples,
+    drops zero differences and applies the normal approximation
+    (scipy `method="approx"`).
+    """
+    from scipy.stats import wilcoxon
+
+    full_pq = stats["full"]["per_query_mean"]
+    significance: dict = {}
+    for cond, cond_stats in stats.items():
+        if cond == "full":
+            continue
+        cond_pq = cond_stats["per_query_mean"]
+        qids = sorted(set(full_pq) & set(cond_pq))
+        diffs = [full_pq[q] - cond_pq[q] for q in qids]
+        nonzero = [d for d in diffs if d != 0]
+        delta_pp = float(sum(diffs) / len(diffs) * 100)
+        if len(nonzero) == 0:
+            p_value = 1.0
+        else:
+            p_value = float(wilcoxon(nonzero, method="approx").pvalue)
+        significance[cond] = {
+            "delta_pp": delta_pp,
+            "p_value": p_value,
+            "significant": p_value < 0.05,
+            "n_nonzero": len(nonzero),
+        }
+    return significance
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--n-runs", type=int, default=5)
@@ -154,9 +186,11 @@ def main():
     # Compute and save statistics
     if len(runs) >= 2:
         stats = compute_stats(runs)
+        significance = compute_significance(stats)
         stats_file = EVAL_DIR / "ablation_multirun_stats.json"
         with open(stats_file, "w") as f:
-            json.dump({"n_runs": len(runs), "conditions": stats}, f,
+            json.dump({"n_runs": len(runs), "conditions": stats,
+                       "significance_tests": significance}, f,
                       ensure_ascii=False, indent=2)
         print(f"\nStatistics saved to {stats_file}")
 
@@ -171,7 +205,7 @@ def main():
                 continue
             s = stats[cond]
             delta = f"{s.get('delta_mean', 0):+.1%}" if cond != "full" else "---"
-            print(f"{cond:15s} {s['overall_mean']:7.1%} {s['overall_sd']:5.1%} "
+            print(f"{cond:15s} {s['overall_mean']:7.1%} {s['overall_std']:5.1%} "
                   f"{s['overall_min']:7.1%} {s['overall_max']:7.1%} {delta:>8s}")
 
 

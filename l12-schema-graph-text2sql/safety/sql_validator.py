@@ -12,16 +12,14 @@ import yaml
 if TYPE_CHECKING:
     import sqlglot
     from sqlglot import expressions as sqlglot_exp
-    HAS_SQLGLOT = True
 else:
-    try:
-        import sqlglot
-        from sqlglot import exp as sqlglot_exp
-        HAS_SQLGLOT = True
-    except ImportError:
-        sqlglot = None
-        sqlglot_exp = None
-        HAS_SQLGLOT = False
+    # sqlglot is a hard dependency: the regex fallback cannot provide the
+    # same safety guarantees (e.g. hallucinated-column detection), so we
+    # fail loudly instead of degrading silently.
+    import sqlglot
+    from sqlglot import exp as sqlglot_exp
+
+HAS_SQLGLOT = True
 
 logger = logging.getLogger(__name__)
 
