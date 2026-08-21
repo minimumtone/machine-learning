@@ -16,6 +16,8 @@ venv/
 *.pdf
 *.html
 few_shot_examples.lock
+evaluation/generated_sql/
+evaluation/main_eval_with_sql.json
 
 # LaTeX build artifacts
 *.aux

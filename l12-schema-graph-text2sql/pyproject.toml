@@ -2,7 +2,7 @@
 name = "l12-schema-graph-text2sql"
 version = "0.1.0"
 description = "Schema-graph-assisted Text-to-SQL for L1_2 intermetallic compound exploration"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 dependencies = [
     "psycopg[binary]>=3.1",
     "networkx>=3.0",
