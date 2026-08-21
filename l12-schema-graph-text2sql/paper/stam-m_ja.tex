@@ -1,0 +1,1938 @@
+% !TEX program = lualatex
+%% ===================================================================
+%% Taylor & Francis / STAM Methods manuscript template
+%% All numerical values originate from paper/paper_data.json.
+%% Compile with lualatex (temporary luatexja for Japanese query examples).
+%% ===================================================================
+\documentclass[]{interact}
+
+% Temporary: luatexja is required for Japanese NL query examples in tables.
+% Remove before final submission to STAM Methods and translate those examples.
+\usepackage{luatexja}
+\usepackage{url}
+\usepackage{cite}
+\usepackage{chngcntr}
+\usepackage{hyperref}
+
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{xcolor}
+\usepackage{siunitx}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{subcaption}
+\usepackage{listings}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{tabularx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,calc,backgrounds}
+
+% interact.cls redefines \toprule/\midrule/\bottomrule as \hline with extra \\
+% which creates empty rows and bad spacing. Restore the original booktabs
+% definitions (booktabs is already loaded by interact.cls).
+\makeatletter
+\def\toprule{\noalign{\ifnum0=`}\fi
+  \@aboverulesep=\abovetopsep
+  \global\@belowrulesep=\belowrulesep
+  \global\@thisruleclass=\@ne
+  \@ifnextchar[{\@BTrule}{\@BTrule[\heavyrulewidth]}}
+\def\midrule{\noalign{\ifnum0=`}\fi
+  \@aboverulesep=\aboverulesep
+  \global\@belowrulesep=\belowrulesep
+  \global\@thisruleclass=\@ne
+  \@ifnextchar[{\@BTrule}{\@BTrule[\lightrulewidth]}}
+\def\bottomrule{\noalign{\ifnum0=`}\fi
+  \@aboverulesep=\aboverulesep
+  \global\@belowrulesep=\belowbottomsep
+  \global\@thisruleclass=\@ne
+  \@ifnextchar[{\@BTrule}{\@BTrule[\heavyrulewidth]}}
+\makeatother
+
+\setlist{nosep,leftmargin=*}
+
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  frame=single,
+  language=SQL,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{green!50!black},
+  stringstyle=\color{red!70!black},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  tabsize=2,
+}
+
+% =====================================================================
+
+
+\begin{document}
+
+\title{無機材料リレーショナルデータベースの自然言語アクセス：\\
+スキーマグラフ制約型Text-to-SQLによる設計原理と実証}
+
+\author{
+\name{源 聡\textsuperscript{a}\thanks{CONTACT 源 聡. Email: minamoto.satoshi@nims.go.jp} and 末松 知恵\textsuperscript{a}}
+\affil{\textsuperscript{a}Materials Data Platform, National Institute for Materials Science (NIMS), 1-1 Namiki, Tsukuba 305-0044, Ibaraki, Japan}
+}
+
+\maketitle
+
+\begin{abstract}
+無機材料データベースはSQLの知識を前提としており、材料研究者にとってデータ活用の大きな障壁となっている。
+本研究では、この障壁を取り除き、材料工学におけるSQLデータ活用に自然言語からの活路を開くため、無機材料向けリレーショナルデータベース（RDB）の自然言語アクセスを実現するText-to-SQLパイプラインの設計原理を提示し、その有効性を実証する。
+提案手法は、(i) few-shot例検索、(ii) 大規模言語モデルによるSQL生成、(iii) 外部キーグラフに基づくSteiner木JOIN制約、(iv) 材料ドメイン辞書、(v) 抽象構文木解析ベースのSQL安全性検証（SQLGuard）、(vi) LLMリランカーの6要素から構成される。
+
+L1$_2$型金属間化合物を中心とする31テーブル・数万レコードのRDBに対し、100件の評価クエリを用いて7条件のablation studyを5独立ランで実施した。few-shot例と材料ドメイン辞書はそれぞれ$-$7.4\,pp（$p<0.001$）、$-$7.3\,pp（$p<0.001$）と統計的に有意な精度向上を示した。多軸評価では実行再現率84.7\%、適合率77.3\%、F1値74.8\%、構文妥当率100\%、JOIN一致率93.2\%を達成した。
+
+また、本稿では実行精度にとどまらず、材料RDBへの実用化に不可欠な3つの性質を確認した。SQLGuardは任意の非SELECT文を排除し、構文妥当率を100\%に保つことで安全性を担保する。プロトタイプ拡張（A）90.0\%、OQMD風命名変更（B）90.5\%、ランダム化名前転用（C）90.0\%、実在するMaterials Project風スキーマ（D）100.0\%の4種類のゼロ適応転用試験に成功し、スキーマ非依存の汎化性を示した。さらに、純物質基準からの生成エンタルピー計算を含む15パターンのCTE多段計算により、単なる情報検索を超えた導出計算の可能性を実証した。独立設計100件の外部検証（76.9\%）も合わせて、材料研究者がSQLを記述しなくてもクロステーブル探索・工学的問いかけができる研究インフラの実現を示した。
+\end{abstract}
+
+\begin{keywords}
+Text-to-SQL \; 無機材料データベース \; 自然言語インターフェース \; スキーマグラフ \; ドメイン特化辞書 \; 材料インフォマティクス
+\end{keywords}
+
+% =====================================================================
+\section{はじめに}
+\label{sec:introduction}
+
+\subsection{無機材料研究におけるデータ探索の障壁}
+
+無機材料研究は、高スループットの第一原理計算の進展により、データ駆動型の材料発見へと移行している。OQMD~\cite{saal2013oqmd,kirklin2015oqmd}、Materials Project~\cite{jain2013mp}、AFLOW~\cite{curtarolo2012aflow}、およびNOMAD~\cite{draxl2019nomad}のようなデータベースは、組成、結晶構造、電子状態、熱力学的安定性をカバーする数万から数十万の計算記録を保存している。
+
+これらのデータは通常、SQLを介した柔軟なクロステーブルクエリのために設計された正規化されたリレーショナルデータベース（RDB）に保存される。DFTデータベースには、個別エントリの取得や定型的な計算を行うAPIも備わっていることが多いが、APIは複数テーブルを跨ぐ複雑な条件検索や大規模な統計処理には向かない。一方、SQLやSQLを自然言語から生成するText-to-SQLは、データベースの構造（リレーション）を直接活用できるため、高度な抽出や集計といった研究における探索的な問いに対して、より柔軟かつ強力に応答する。しかし、RDBを利用するには、テーブル構造、外部キー（FK）関係、およびSQL構文を理解する必要があり、関連するデータが存在することを知っていてもアクセスできない材料研究者にとっては大きな障壁となる。その結果、研究者が自然言語でクエリを実行できないため、貴重なデータが十分に活用されていない。
+
+\subsection{自然言語データベースインターフェースの重要性}
+
+この障壁の本質は、SQL記述の技術的要件がドメイン知識とデータの間に介在していることである。自然言語インターフェースは、SQLの代替となる便利なツールではなく、データアクセスの障壁を根本的に減少させ、研究を加速することができる研究インフラの一部である。
+
+無機材料のRDBでは、正規化により数十のテーブルが生成され、複数のテーブルを含むJOINを構築することは、経験豊富なSQLユーザーにとっても困難である。自然言語から適切なSQLが自動的に生成できれば、材料研究者はスキーマ構造を意識することなくクロステーブルデータ探索を行うことができる。
+
+スキーマの変更やテーブルの追加を完全に自動で追跡するシステムを構築することは現在困難だが、FKメタデータに依存する設計を採用することで、スキーマの進化への適応が比較的容易になる。
+
+\subsection{Text-to-SQL技術と材料科学における現状}
+
+Text-to-SQL技術は、Spider~\cite{yu2018spider}やBIRD~\cite{li2024bird}のようなベンチマークを中心に発展してきた。最近の大規模言語モデル（LLM）の進展に伴い、DIN-SQL~\cite{pourreza2024dinsql}はスキーマリンク、分類、生成を分離したパイプラインアプローチを提案した。DAIL-SQL~\cite{gao2023dail}は、少数ショットの例選択戦略に焦点を当てた。RAT-SQL~\cite{wang2020ratsql}は関係認識エンコーディングを導入し、RESDSQL~\cite{li2023resdsql}はスキーマリンクのデカップリングを導入した。SchemaGraphSQL~\cite{safdarian2026schemagraphsql}は、FKグラフ上のパス探索を使用している点で、我々の研究に最も近い。
+
+しかし、これらの方法は一般的なベンチマークで評価されており、特に無機材料データベースのドメイン特化型RDBには適用されていない。このため、材料工学のデータベースにおいてこれらの手法がどの程度の効果をもたらすかはよくわからなかった。MatSciBERT~\cite{gupta2022matscibert}やMatBERT~\cite{walker2021matbert}は材料科学テキスト用の言語モデルだが、Text-to-SQLタスクに直接適用されていない。MKNA~\cite{zhuang2026mkna}やOptiMat~\cite{hu2026optimat}はAPIベースのアクセスを提供するが、正規化されたRDBに対してJOIN制御を伴うSQL生成を行わない。SuperCon~\cite{ishii2023supercon}やPoLyInfo~\cite{ishii2024polyinfo}は強力な意味論的推論を伴うRDF/SPARQLベースのオントロジーアプローチを採用しているが、既存のRDBインフラに適用するためにはデータ変換が必要だ。
+
+\subsection{目的と貢献}
+
+本研究の目的は、無機材料RDBへの自然言語アクセスを可能にする設計原則を提示し、その有効性を検証することである。我々は、材料研究者がSQLやスキーマ構造を意識することなくデータを探索できる方法論を示し、OQMDから抽出したデータを元に作成したRDBを例として、自然言語クエリがどの程度処理できるかを検討する。
+
+本研究で扱う3つのドメイン特有の課題は次のとおりだ：
+\begin{enumerate}
+  \item ドメイン用語の曖昧さ：
+    結晶構造名やL1$_2$、$\gamma'$相、B2のような特性用語は、一般的なLLMのトレーニングデータに十分に表現されておらず、SQL条件への正確な変換が困難である。
+  \item 複数テーブルJOINの複雑さ：
+    正規化された材料RDBは数十のテーブル間でJOINを必要とし、LLMによるJOINの幻覚のリスクが高まる。
+  \item 評価データの欠如：
+    無機材料RDBにおけるText-to-SQLのための標準評価ベンチマークは存在しない。
+\end{enumerate}
+
+我々の貢献は4つある：
+\begin{enumerate}[label=(\roman*)]
+  \item 材料RDB Text-to-SQLのための設計原則：
+    我々は、FKグラフ上のSteiner-tree JOIN制約、材料ドメイン辞書、およびハイブリッドリランカーを統合したパイプラインを提案する。
+    これは、材料特有の用語翻訳が欠如している一般的なText-to-SQL手法（DIN-SQL、DAIL-SQL、SchemaGraphSQLなど）と、RDB/SQLを対象としない材料NLアクセスシステム（MKNA、OptiMatなど）とのギャップを埋める。
+  \item 多軸定量評価：
+    31テーブルのL1$_2$ RDBに対する7条件$\times$100クエリ$\times$5回の統計的アブレーション（ウィルコクソン符号付き順位検定）を超えて、少数ショットの$k$感度、辞書サイズ感度、LLMモデル比較、および多軸メトリクス（EM / SELECT列精度 / JOIN一致率）を提供する。
+  \item ドメイン知識の定量的効果：
+    材料辞書（$-$7.3\,pp, $p<0.001$）と少数ショット例（$-$7.4\,pp, $p<0.001$）が統計的に有意な寄与を持つことを示し、ドメイン特化型モジュールの必要性を検証する。
+  \item スキーマ一般化のデモンストレーション：
+    四つのスキーマバリアントにわたるゼロ適応転送テスト---A~プロトタイプ拡張（90.0\%）、B~OQMD風の名前変更（90.5\%）、C~ランダム化された難読化（90.0\%）、およびD~Materials Project風のスキーマ（100.0\%）---は、FKイントロスペクションに基づく設計原則が特定のスキーマに依存しないことを示している（セクション~\ref{sec:transfer_eval}）。
+\end{enumerate}
+
+% =====================================================================
+
+\section{提案手法}
+\label{sec:method}
+
+\subsection{パイプラインの概要}
+
+無機材料のRDBに自然言語でアクセスできるようにするために、図~\ref{fig:pipeline}に示すパイプラインを設計した。このパイプラインは、自然言語のクエリ（日本語）を入力として受け取り、材料ドメイン用語の分析、自動スキーマトラバース、SQLの生成と検証を行い、実行結果を返す。セクション~\ref{sec:fewshot}～\ref{sec:repair}では全体の処理フローについて説明し、続いてセクション~\ref{sec:entity_extractor}～\ref{sec:domain_dict}では材料RDB特有の課題に対処する。
+
+\begin{figure*}[htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  node distance=0.3cm and 0.6cm,
+  >=Stealth,
+  every node/.style={font=\small},
+  stepbox/.style={rectangle, draw, rounded corners=4pt,
+    minimum height=1.2cm, minimum width=2.2cm, align=center,
+    text width=2.4cm},
+  arr/.style={->, thick, >=Stealth},
+]
+
+% Step boxes
+\node[stepbox, fill=green!10] (nl) {自然言語\\
+  {\scriptsize ``Niを含む安定したL1$_2$の\\ バルク弾性率''}};
+
+\node[stepbox, fill=blue!8, right=of nl] (fewshot) {少数ショット\\検索\\
+  {\scriptsize TF-IDF+\\ クロスエンコーダ}};
+
+\node[stepbox, fill=violet!15, right=of fewshot] (schema) {スキーマ\\リンク\\
+  {\scriptsize GPT-5.5\\ (ソートのみ)}};
+
+\node[stepbox, fill=cyan!12, right=of schema] (llmgen) {SQL\\生成\\
+  {\scriptsize GPT-5.5\\ $n$-best = 3}};
+
+\node[stepbox, fill=orange!10, right=of llmgen] (steiner) {シュタイナー木\\JOIN制約\\
+  {\scriptsize NetworkX}};
+
+\node[stepbox, fill=yellow!15, right=of steiner] (dict) {材料\\辞書\\
+  {\scriptsize ドメイン用語}};
+
+\node[stepbox, fill=red!10, right=of dict] (guard) {SQLGuard\\
+  {\scriptsize 14のチェック}};
+
+\node[stepbox, fill=green!10, right=of guard] (rerank) {リランキング\\
+  {\scriptsize GPT-5.5}};
+
+% Arrows
+\draw[arr] (nl) -- (fewshot);
+\draw[arr] (fewshot) -- (schema);
+\draw[arr] (schema) -- (llmgen);
+\draw[arr] (llmgen) -- (steiner);
+\draw[arr] (steiner) -- (dict);
+\draw[arr] (dict) -- (guard);
+\draw[arr] (guard) -- (rerank);
+
+% Step labels
+\node[above=0.15cm of nl, font=\scriptsize, color=gray] {入力};
+\node[above=0.15cm of fewshot, font=\scriptsize, color=gray] {ステップ 1};
+\node[above=0.15cm of schema, font=\scriptsize, color=gray] {ステップ 2};
+\node[above=0.15cm of llmgen, font=\scriptsize, color=gray] {ステップ 3};
+\node[above=0.15cm of steiner, font=\scriptsize, color=gray] {ステップ 4};
+\node[above=0.15cm of dict, font=\scriptsize, color=gray] {ステップ 5};
+\node[above=0.15cm of guard, font=\scriptsize, color=gray] {ステップ 6};
+\node[above=0.15cm of rerank, font=\scriptsize, color=gray] {ステップ 7};
+
+\end{tikzpicture}%
+}% end resizebox
+\caption{提案されたパイプラインの概要。
+  自然言語のクエリから、少数ショット例検索（ステップ~1）を経て、
+  GPT-5.5によるスキーマリンク（ステップ~2）とSQL生成（ステップ~3）が続く。
+  シュタイナー木近似（ステップ~4）は31のテーブルから最小部分グラフを抽出する。
+  材料辞書（ステップ~5）はドメイン用語をSQL条件にマッピングし、
+  SQLGuard（ステップ~6）は安全性を検証し、
+  リランキング（ステップ~7）は最良の候補を選ぶ。}
+\label{fig:pipeline}
+\end{figure*}
+
+\subsection{少数ショット例の検索}
+\label{sec:fewshot}
+
+入力クエリに類似した少数ショット例は、2段階で選択される。
+まず、TF-IDF~\cite{salton1988tfidf}が候補を$2k$アイテムに絞り込み、
+次にクロスエンコーダ（ms-marco-MiniLM-L-6-v2）が上位$k$を選択する。
+クロスエンコーダはローカルで実行され、処理時間は50\,ms未満である。
+
+選ばれた少数ショット例は、テーブル名、JOIN順序、列名の使用などのSQL生成パターンを示す。これにより LLM はインコンテキスト学習~\cite{brown2020fewshot}を通じて、スキーマ情報だけでは決まらない具体例に基づいた生成を安定させる。
+
+\subsection{スキーマリンク}
+
+GPT-5.5は入力クエリに関連するテーブルをスコアリングし、ソートする。テーブルは除外されず、SQL生成のためのコンテキスト優先順序のみが変更される。
+
+\subsection{SQL生成と$n$-best候補}
+
+ここでの ``$n$-best'' は、LLMが1回の生成呼び出しで上位 $n$ 個の SQL 候補を並列に出力し、後段のリランカーでその中から最適な 1 本を選択する仕組みを指す。多数の候補を生成すると回答レイテンシが増大するため、本実装では $n$-best = 3 をデフォルトとした。
+
+GPT-5.5は$n$-best = 3のSQL候補を生成する。候補数を増やすと解釈空間は広がるが、レイテンシも増大する。後段のリランカーが上位 1 本を選択し、残りは廃棄する。  
+\subsection{シュタイナー木JOIN制約}  
+\label{sec:schema_graph}
+
+31のテーブル間のFK関係は、NetworkX~\cite{networkx2008}を使用して無向グラフ $G=(V,E)$（$V$はテーブルの集合、$E$は外部キー（FK）関係の集合）として表現される。FK関係は、PostgreSQLメタデータのイントロスペクションを介してランタイムで自動的に取得される。クエリに必要なテーブルのセットに対して、最小JOIN部分木はシュタイナー木近似を介して決定される（アルゴリズム~\ref{alg:steiner}に示す通り）。
+
+\begin{algorithm}[htbp]
+  \caption{最小被覆JOIN部分グラフ（シュタイナー木近似）。}
+  \label{alg:steiner}
+  \begin{algorithmic}[1]
+    \Require FK関係グラフ $G = (V, E)$, 必要なテーブルセット $R$
+    \Ensure JOINパスリスト $P$
+    \State $P \gets \emptyset$; ユニオンファインド $U$ を初期化
+    \ForAll{$(s, t) \in \binom{R}{2}$}
+      \If{$\text{Find}(s) = \text{Find}(t)$}
+        \State continue
+      \EndIf
+      \State $p \gets \text{ShortestPath}(G, s, t)$ \Comment{FKグラフ上のBFS}
+      \If{$p \neq \emptyset$}
+        \State $P \gets P \cup \{p\}$
+        \ForAll{隣接ノードペア $(u, v) \in p$}
+          \State $\text{Union}(u, v)$
+        \EndFor
+      \EndIf
+    \EndFor
+    \State \Return $P$
+  \end{algorithmic}
+\end{algorithm}
+
+ノード数 $|V| = n$ および必要なテーブル数 $|R| = k$ に対して、アルゴリズムは $O(k^2)$ のBFSトラバーサルを実行する。31テーブル規模（$n = 31$, $k \leq 5$）では、これがミリ秒単位で完了する。
+
+シュタイナー木は、必要なテーブル集合を連結する最小被覆 JOIN パスを導くことで、余分なテーブルや自己結合の混入を防ぐ。FK 関係はランタイムで PostgreSQL メタデータから取得されるため、スキーマの追加や変更に対して自己反映的に対応する。
+
+\subsubsection{PostgreSQLメタデータからのグラフ構築}
+
+FK関係は、PostgreSQLの\texttt{information\_schema}からランタイムで動的に抽出される。
+
+\begin{lstlisting}[language=SQL,caption={FK関係の抽出},label=lst:fk_query,numbers=none]
+SELECT tc.table_name, kcu.column_name,
+       ccu.table_name, ccu.column_name
+  FROM information_schema.table_constraints tc
+  JOIN information_schema.key_column_usage kcu
+    ON tc.constraint_name = kcu.constraint_name
+  JOIN information_schema.constraint_column_usage ccu
+    ON ccu.constraint_name = tc.constraint_name
+ WHERE tc.constraint_type = 'FOREIGN KEY';
+\end{lstlisting}
+
+結果は、NetworkX~\cite{networkx2008}において無向グラフ $G = (V, E)$ として保存される。各エッジは、JOIN句生成時に使用される属性としてFKの方向を保持する。FKメタデータはランタイムで読み取られるため、システムはスキーマの変更を追跡できる。
+
+\subsubsection{複数要素ANDクエリ：EXISTSサブクエリ}
+\label{sec:multi_element}
+
+構成テーブルの正規化から生じる材料特有の課題は、「NiとAlの両方を含む化合物」のようなクエリである。単純なアプローチ\texttt{WHERE c.element = 'Ni' AND c.element = 'Al'}は、どの行も両方の条件を満たさないため、常に0行を返す。スキーマグラフエンジンは、複数の要素が指定されているときにそれを検出し、自動的にEXISTSサブクエリを生成する：
+
+\begin{lstlisting}[language=SQL,caption={複数要素AND},label=lst:exists,numbers=none]
+SELECT DISTINCT m.entry_id, m.formula
+FROM material_entry m
+WHERE EXISTS (SELECT 1 FROM composition
+  WHERE entry_id = m.entry_id AND element = 'Ni')
+AND EXISTS (SELECT 1 FROM composition
+  WHERE entry_id = m.entry_id AND element = 'Al')
+LIMIT 10000;
+\end{lstlisting}
+
+AND/ORの意図は、結合と助詞から条件抽出器によって分類される。OR指標には、\texttt{IN}句が使用される。
+
+\subsubsection{JOINパスからのSQL生成}
+
+$P$は、アルゴリズム~\ref{alg:steiner}によって求められた最小被覆 JOIN パス（Steiner 木）に含まれるエッジ集合である。$P$内の各パスはSQL JOIN句に変換される。テーブルエイリアスは、すべての31テーブルに対して固定辞書から割り当てられる（\texttt{material\_entry}$\to$\texttt{m}, \texttt{composition}$\to$\texttt{c}など）。同じテーブルが複数回出現する場合、数値サフィックスがユニークなエイリアスを生成する（\texttt{c2}, \texttt{c3}）。
+
+\subsection{条件抽出器}
+\label{sec:entity_extractor}
+
+条件抽出器は、自然言語クエリを構造化された条件辞書に変換する。これは、YAMLベースのバイリンガル（日本語-英語）用語辞書（\texttt{material\_terms.yaml}）を使用する。
+
+\subsubsection{辞書構造}
+
+条件抽出器は、対象とするRDBのテーブル・カラム構造を反映したバイリンガル（日本語-英語）用語辞書（\texttt{material\_terms.yaml}）を用いる。すなわち、\texttt{material\_entry}、\texttt{structure}、\texttt{composition}、\texttt{phase\_stability} などの実際のテーブルとそのカラムを踏まえて、自然言語表現とデータベーススキーマを対応付ける。
+
+辞書は4つのカテゴリをカバーしている：
+(1)~プロトタイプエイリアス（例：\texttt{L12} $\leftrightarrow$ [L1$_2$, Cu$_3$Au型, $\gamma'$]）、
+(2)~元素マッピング（\texttt{Fe} $\leftrightarrow$ [鉄]）、
+(3)~安定性用語（「安定」$\to$ \texttt{energy\_above\_hull} $\leq 0.001$~eV/atom; 「準安定」$\to$ $0.001 < E_\text{hull} \leq 0.05$）、
+(4)~特性用語（「格子定数」$\to$ \texttt{structure.lattice\_a}など）。
+
+Unicode下付き文字（U+2080--U+2089）は、マッチングの前にASCII数字に正規化される。元素記号の認識は、単語境界の正規表現を使用して「Fe」を「FeCoNi」の部分文字列から区別する。
+
+\subsubsection{数値条件パーサ}
+
+パーサは、5つのパターンを介して数値比較式を認識する（表~\ref{tab:numeric_patterns}）。プロパティからカラムへのマッピングは、内部辞書（\texttt{\_PROPERTY\_COLUMN\_MAP}）によって管理される。浮動小数点比較の場合、「近い」や「比較可能」といった表現は、プロパティ固有の許容範囲を呼び出す（格子定数：$\pm 0.03$~\AA{}{}; $E_\text{hull}$：$\pm 0.001$~eV/atom）。
+
+\begin{table}[t]
+  \centering
+  \caption{数値条件パーサパターン。}
+  \label{tab:numeric_patterns}
+  \scriptsize
+  \begin{tabular}{lll}
+    \toprule
+    パターンタイプ & 入力例 & 出力 \\
+    \midrule
+    シンボル比較 & \texttt{band\_gap > 1.0} & \texttt{WHERE band\_gap > 1.0} \\
+    日本語後置詞 & 形成エネルギー $\geq$ 0.5 & \texttt{WHERE ... >= 0.5} \\
+    日本語比較 & 格子定数 > 3.0 & \texttt{WHERE lattice\_a > 3.0} \\
+    符号判定 & 負の形成エネルギー & \texttt{WHERE ... < 0} \\
+    範囲指定 & バンドギャップ 0.5--2.0 eV & \texttt{WHERE ... BETWEEN} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsubsection{化学式パーサと曖昧さ処理}
+
+化学式トークンは3つのタイプに分類される：
+(1)~exact\_formula（\texttt{Ni3Al} $\to$ \texttt{formula = 'Ni3Al'}）、
+(2)~formula\_or\_reduced\_formula（「NiAlのB2エントリ」$\to$ \texttt{reduced\_formula = 'AlNi'}）、
+(3)~contains\_elements（「NiとAlを含む」$\to$ EXISTSサブクエリ）。
+分類は文脈依存である：「含む」といった表現との共起は、\texttt{contains\_elements}処理を引き起こす。
+
+\subsubsection{カバレッジスコア}
+\label{sec:coverage_score}
+
+カバレッジスコアは、辞書、元素辞書、または数値パターンによって認識されたクエリ内の意味トークンの割合を定量化し、$[0, 1]$の値を生成する。 このメトリックは、サイレント制約ドロップ（認識されない語彙の静的廃棄）を防ぐ。 スコアが$\geq 0.8$の場合、ルールベースモードの実行がトリガーされる； $\geq 0.5$の場合はLLMモードにエスカレートする； $< 0.5$の場合はユーザーからの確認を要求する。
+
+\subsubsection{意図分類器}
+\label{sec:intent_classifier}
+
+ルールベースの意図分類器はSQL生成の上流に配置され、クエリを5つのカテゴリに分類する。これは、20のVASP/DFTワークフローパターンの正規表現マッチカウントを9のDB特有パターンと比較し、範囲外の質問を事前にフィルタリングする。
+
+\subsection{材料ドメイン辞書}
+\label{sec:domain_dict}
+
+材料科学の用語をSQL条件に直接マッピングする辞書を導入した。例えば、「$\gamma'$相」$\to$ \texttt{structure.prototype = 'L12'}、および「体積弾性率」$\to$ \texttt{property\_name = 'bulk\_modulus'}が\texttt{calculated\_property}テーブルにおける例である。なお、$\gamma'$ 相は鉄鋼とNi系超合金などでは文脈が異なるが、本稿では L1$_2$ 原型と等価な相名として扱っている。
+
+辞書は以下の3つのソースから編纂されている：
+\begin{enumerate}
+  \item YAML定義ファイル（\texttt{material\_terms.yaml}）：74用語
+  \item パイプライン語彙（DB/OQMD特有の用語）：66用語
+  \item 材料工学語彙（ユーザー提供リスト）：402用語
+\end{enumerate}
+重複を排除した後、生成された辞書には492用語が含まれている（表~\ref{tab:dict_size}では
+サイズ感度実験のために61エントリのサブセットを使用している）。
+また、MeCab形態素解析器用のカスタム辞書としても編纂され、日本語テキストの前処理に使用されている。
+
+カスタム辞書を使用することで、402の材料用語の単一トークン率は30.6\%（デフォルト）から100.0\%に改善された（表~\ref{tab:mecab}）。ここでの「単一トークン率」とは、MeCab 形態素解析器によって 1 つの見出し語に分割される材料用語の割合である。改善された用語数は279、劣化した用語数は0である。代表的な改善例には「生成エンタルピー」（デフォルト2トークン $\to$ カスタム1トークン）や「ニッケル系超合金」（7トークン $\to$ 1トークン）が含まれる。
+
+辞書は、Hard 以上のクエリ、特にドメイン専門用語や多段階条件を含む VH クラスの解釈を改善する。Hard/VH 層の精度向上には、辞書と少数ショット例を組み合わせることが有益である。
+
+\begin{table}[t]
+\centering
+\caption{MeCab材料辞書がトークン化に与える影響。
+402の材料用語に対する単一トークン率。}
+\label{tab:mecab}
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+指標 & デフォルト & カスタム辞書 \\
+\midrule
+単一トークン率 & 30.6\% (123/402) & 100.0\% (402/402) \\
+改善された用語 & --- & 279 \\
+劣化した用語 & --- & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+MeCab カスタム辞書は 402 の材料用語を全て 1 トークンに揃え、形態素解析後の語彙認識に漏れが生じないようにする。
+
+\subsection{SQLGuard}
+\label{sec:sqlguard}
+
+SQLGuard は sqlglot~\cite{sqlglot2023} によって生成された SQL を抽象構文木（AST）にパースし、その AST ノード（\texttt{Statement}, \texttt{Select}, \texttt{Column}, \texttt{Table}, \texttt{Join} 等）をトラバースすることで、安全性と一貫性を静的に検証する。sqlglot による AST 解析により、テキストレベルでは判別しにくいマルチステートメントの混入、テーブル・カラムの参照解決、サブクエリのネスト深さ、UNION/INTERSECT 等の集合演算子を構造的に確認できる。いずれかのチェックを満たさない SQL は実行前に棄却される。検証は以下の14のチェックから成る：
+
+\begin{enumerate}[nosep]
+  \item カラム存在確認（ホワイトリスト照合）
+  \item テーブル存在確認（許可されたテーブル照合）
+  \item FK整合性のあるJOIN確認
+  \item マルチステートメント検出（セミコロン分割）
+  \item DMLキーワード検出（DROP/DELETE/INSERT/UPDATE）
+  \item SQLインジェクションパターン検出
+  \item LIMIT句の存在確認（欠如時は自動追加）
+  \item DISTINCT推奨（JOIN時）
+  \item SELECT * 禁止
+  \item サブクエリのネスト深さ制限
+  \item UNION/INTERSECT句の検証
+  \item 算術演算の型の有効性
+  \item ORDER BY/GROUP BYの参照整合性
+  \item エイリアス解決後のカラム参照確認
+\end{enumerate}
+
+SQLGuardの価値は、精度向上ではなく、実行前の安全性と整合性を保証することにある（セクション~\ref{sec:injection_safety}を参照）。
+
+\subsection{ハイブリッドリランカー}
+
+SQL候補のリランキングにはGPT-5.5を使用する。少数ショットの例選択にはクロスエンコーダー（ローカル、$<$50\,ms）を使用し、SQL候補とスキーマのスコアリングにはGPT-5.5（API）を使用し、ハイブリッドアーキテクチャを形成する。
+
+リランカーは複数の SQL 候補を比較して最適な 1 本を選択する。中程度から Hard クラスのクエリでは正解候補を選び出す効果が期待される一方、全候補が部分的に誤っている VH クラスでは選択の難易度が高まる。
+
+\subsubsection{日本語クロスエンコーダーの比較}
+
+少数ショットの例選択に使用されるクロスエンコーダーについて、英語モデル（ms-marco-MiniLM-L-6-v2）と日本語モデル（hotchpotch/japanese-reranker-cross-encoder-xsmall-v1）を20のVery Hardクエリで比較した。英語モデルは32.4\%を達成し、日本語モデルは28.1\%であった（$-$4.4\,ppの差がms-marcoに有利）。少数ショットの例にはSQLコード（英語）が含まれているため、ms-marcoの英語スコアリング能力がその優位性に寄与している可能性がある。
+
+\subsection{修復ループ}
+\label{sec:repair}
+
+SQL実行エラーや結果の有効性の問題が検出された場合、エラーメッセージがLLM（GPT-5.5）にフィードバックされ、最大3回の修復試行が行われる。  
+\section{データベースと評価設計}  
+\label{sec:evaluation}  
+\subsection{検証データベース}  
+
+提案された方法を検証するために、L1$_2$型金属間化合物を題材としつつ、無機材料データベース全体に共通する正規化スキーマを表す検証 RDB を構築した。L1$_2$ を代表例とするだけでなく、組成・構造・熱力学的安定性・電子構造・機械的特性・表面特性など、材料 RDB に普遍な概念を 31 の正規化テーブルと 1 つのビュー（図~\ref{fig:er}）に配置する。\texttt{material\_entry} を中心エンティティとし、FK 関係で周辺テーブルと接続する構成は、OQMD、Materials Project、AFLOW などの無機材料データベースと同じ設計パターンを持つ。主要な統計は表~\ref{tab:db_stats}に示されている。
+\subsubsection{ソースOQMDスタイルデータレイアウトとの関係}
+
+公開されているOQMDデータモデルは、少数の広いエントリ中心のテーブル（例：\texttt{entries}、\texttt{element\_ratios}、\texttt{formation\_energies}、\texttt{reference\_states}、および\texttt{elements}）で表現できる。このレイアウトは高スループットデータの蓄積に効率的だが、構造的に異なる情報（組成、結晶構造、熱的安定性、電子特性）を、\texttt{delta\_e}や\texttt{composition\_formula}のような一般的なカラムに格納している。自然言語インターフェースにおいて、これは曖昧さを引き起こす。「エネルギー」は生成エネルギー、ハル距離、またはバンドギャップを指す可能性がある。「Ti」は構成元素または特性フィルターのターゲットである可能性がある。
+
+生成エンタルピーは、純元素の参照エネルギーと化合物の全エネルギーとの差として、多段階の共通テーブル式（CTE）で計算される。
+本研究では、実在する無機材料データベースの構造を忠実に模倣した検証環境を構築した。データの信頼性を担保するため、純元素の参照エネルギーにはOQMDを用い、その他の特性についてはプログラムにより生成した合成データを使用している。これらを31の正規化テーブルに割り当てることで、実際のRDBに近い複雑なスキーマを実現した。この設計はタスクを簡略化するものではなく、むしろ難易度を高めるものである。評価用SQLは平均3.4、最大で6つのテーブル結合および多段階CTEを必要とする構成となっており、高度な操作が求められる。このようにデータベースの複雑さを明示的なスキーマとして定義することで、ユーザーの負担を軽減しつつ、結合処理などの複雑なタスクをText-to-SQLパイプラインへと集約させている。これらに対し、Steinerツリーを用いたJOIN生成器やスキーマリンク等の高度な手法を導入することで、正確な処理を実現した。
+
+\begin{table*}[htbp]
+\centering
+\caption{OQMDスタイルのフラットソースレイアウトと正規化された検証スキーマの比較。フラットレイアウトはテーブル数を最小限に抑え、正規化されたレイアウトは材料科学の概念を分離してカラム名の曖昧さを減少させる。}
+\label{tab:schema_comparison}
+\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.2cm}>{\raggedright\arraybackslash}p{3.0cm}X>{\raggedright\arraybackslash}X@{}}
+\toprule
+概念 & OQMDスタイルのフラットテーブル & 正規化テーブル（本研究） & 理由 \\
+\midrule
+エントリ / アイデンティティ & \path{oqmd_entries}（1行における式、プロトタイプ、格子、体積） & \path{material_entry}、\path{structure}、\path{space_group}、\path{prototype_definition} & アイデンティティを構造とプロトタイプから分離し、曖昧な一般カラムを削除する。 \\
+組成 & \path{oqmd_element_ratios}（エントリ、シンボル、原子比） & \path{composition}、\path{element} & 正規化された元素マスター；元素特性フィルターをサポートする。 \\
+熱的安定性 & \path{oqmd_formation_energies}（\path{delta_e}、ハル、ギャップ） & \path{phase_stability}、\path{calculation}、\path{calculated_property} & 生成エネルギー、ハル距離、バンドギャップ、および計算方法を区別する。 \\
+純元素参照 & \path{oqmd_reference_states}（原子あたりのエネルギー） & \path{pure_element_reference}、\path{element} & CTEベースの生成エンタルピー計算に必要である。 \\
+計算された特性 & タイプ別に分離されていない & \path{band_structure}、\path{density_of_states}、\path{elastic_tensor}、\path{magnetic_property}、\path{thermal_property}、\path{surface_energy}、\path{grain_boundary}など & 特性クラスごとに1つのテーブルが明確なカラム名と単位を提供する。 \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+スキーマ転送実験（セクション~\ref{sec:transfer_eval}）は、同じパイプラインがOQMD風のフラット5テーブルレイアウト、ランダム化された難読化スキーマ、および実際のMaterials Project風のスキーマを最小限の精度低下で処理できることを示している。これは、提案された方法が正規化スキーマに限定されないことを示しており、むしろ正規化スキーマは現実的で意味的に豊かな材料RDBに対してパイプラインをストレステストするために使用されている。
+
+\begin{table}[t]
+\centering
+\caption{検証データベースの構成。}
+\label{tab:db_stats}
+\small
+\begin{tabular}{@{}lr@{}}
+\toprule
+項目 & 数量 \\
+\midrule
+テーブル & 31 \\
+ビュー & 1 \\
+\texttt{material\_entry} & 1{,}559 \\
+\texttt{composition} & 3{,}029 \\
+\texttt{calculated\_property} & 4{,}410 \\
+プロトタイプタイプ & 5（L1$_2$、B2、NaCl、NiAs、BiF$_3$） \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure*}[htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  >=Stealth,
+  every node/.style={font=\scriptsize},
+  entity/.style={rectangle, draw, rounded corners=2pt,
+    minimum height=0.6cm, minimum width=1.8cm, align=center,
+    text width=1.8cm, font=\scriptsize},
+  core/.style={entity, fill=blue!15, line width=0.8pt},
+  prop/.style={entity, fill=green!12},
+  master/.style={entity, fill=orange!15},
+  junction/.style={entity, fill=yellow!15},
+  electronic/.style={entity, fill=cyan!12},
+  mechanical/.style={entity, fill=red!8},
+  surface/.style={entity, fill=purple!10},
+  phase/.style={entity, fill=teal!12},
+  experiment/.style={entity, fill=pink!15},
+  defect/.style={entity, fill=brown!12},
+  fk/.style={->, thick, color=gray!60, >=Stealth},
+  grouplabel/.style={font=\footnotesize\bfseries, text=gray!50},
+]
+
+% Row 0: Master Tables
+\node[master] at (-6, 5.5) (sg) {space\_group\\{\tiny H-M, crystal sys}};
+\node[master] at (-2, 5.5) (proto) {prototype\_\\definition\\{\tiny Strukturbericht}};
+\node[master] at (2, 5.5) (elem) {element\\{\tiny Z, mass, $\chi$}};
+\node[prop] at (5.5, 5.5) (eprop) {element\_property\\{\tiny property, value}};
+
+% Row 1: Core entities
+\node[core, minimum width=2.4cm, minimum height=0.8cm, line width=1.2pt,
+      font=\scriptsize\bfseries] at (0, 3) (me) {material\_entry\\{\tiny (PK: entry\_id)}};
+\node[core] at (-5, 3) (comp) {composition\\{\tiny element, fraction}};
+\node[core] at (-2.5, 4.2) (struct) {structure\\{\tiny prototype, lattice}};
+\node[core] at (2.5, 4.2) (ps) {phase\_stability\\{\tiny $E_f$, $E_{hull}$}};
+\node[core] at (5, 3) (calc) {calculation\\{\tiny method, functional}};
+\node[prop] at (8.5, 3) (cprop) {calculated\_property\\{\tiny name, value, unit}};
+
+% Row 2: Application/Literature + Electronic
+\node[master] at (-8, 1.5) (appdom) {application\_domain\\{\tiny domain, hierarchy}};
+\node[junction] at (-5.5, 1.5) (matapp) {material\_\\application\\{\tiny relevance}};
+\node[experiment] at (-8, 0) (litref) {literature\_\\reference\\{\tiny DOI, journal}};
+\node[junction] at (-5.5, 0) (matref) {material\_reference\\{\tiny context}};
+
+\node[electronic] at (5, 1.5) (bs) {band\_structure\\{\tiny gap, CBM, VBM}};
+\node[electronic] at (8.5, 1.5) (dos) {density\_of\_states\\{\tiny DOS@$E_F$, metallic}};
+
+% Row 3: Experimental + Mechanical
+\node[experiment] at (-8, -1.5) (expmt) {experimental\_\\measurement\\{\tiny method, T, P}};
+\node[experiment] at (-5.5, -1.5) (mprop) {measured\_property\\{\tiny name, value}};
+
+\node[mechanical] at (1.5, 0) (elastic) {elastic\_tensor\\{\tiny $B$, $G$, $E$, $\nu$}};
+\node[mechanical] at (5, 0) (mag) {magnetic\_property\\{\tiny $M$, ordering, $T_C$}};
+\node[mechanical] at (8.5, 0) (therm) {thermal\_property\\{\tiny $\Theta_D$, $\kappa$, $C_v$}};
+
+% Row 4: Synthesis/Defect + Surface
+\node[defect] at (-8, -3) (synm) {synthesis\_method\\{\tiny name, category}};
+\node[junction] at (-5.5, -3) (matsyn) {material\_synthesis\\{\tiny T, duration, atm}};
+\node[defect] at (-2, -3) (deftype) {defect\_type\\{\tiny vacancy, antisite}};
+\node[junction] at (1.5, -3) (matdef) {material\_defect\\{\tiny $E_f$, site}};
+
+\node[surface] at (5, -1.5) (surf) {surface\_energy\\{\tiny $(hkl)$, $\gamma$, $\phi$}};
+\node[surface] at (8.5, -1.5) (gb) {grain\_boundary\\{\tiny $\Sigma$, $E_{GB}$}};
+
+% Row 5: Phase/Alloy
+\node[phase] at (1.5, -4.5) (pde) {phase\_diagram\_entry\\{\tiny hull, decomp}};
+\node[phase] at (5, -4.5) (alloy) {alloy\_system\\{\tiny name, components}};
+\node[junction] at (8.5, -4.5) (ma_alloy) {material\_alloy\_\\system\\{\tiny phase, comp type}};
+% FK矢印: コア -> material_entry
+\draw[fk] (comp) -- (me);
+\draw[fk] (struct) -- (me);
+\draw[fk] (ps) -- (me);
+\draw[fk] (calc) -- (me);
+
+% FK: material_entryへの接続
+\draw[fk] (matapp) -- (me);
+\draw[fk] (matref) -- (me);
+\draw[fk] (expmt.east) -- ++(1.5,0) |- ([yshift=-0.1cm]me.west);
+\draw[fk] (bs) -- (me);
+\draw[fk] (dos.south west) -- (me);
+\draw[fk] (elastic) -- (me);
+\draw[fk] (mag.north) -- (me);
+\draw[fk] (therm.north west) -- (me);
+\draw[fk] (surf.north west) -- (me);
+\draw[fk] (gb.north) -- ([xshift=0.3cm]me.south east);
+\draw[fk] (matsyn.north) -- ([xshift=-0.5cm]me.south);
+\draw[fk] (matdef.north) -- ([xshift=0.2cm]me.south);
+\draw[fk] (pde.north) -- ([xshift=-0.3cm]me.south);
+\draw[fk] (ma_alloy.north west) -- (me);
+
+% FK: 計算子の子供
+\draw[fk] (cprop) -- (calc);
+\draw[fk] (bs) -- (calc);
+\draw[fk] (dos.west) -- (calc);
+\draw[fk] (elastic.north east) -- (calc);
+\draw[fk] (therm.north) -- (calc);
+
+% FK: マスターテーブルの参照
+\draw[fk] (eprop) -- (elem);
+\draw[fk] (matref) -- (litref);
+\draw[fk] (expmt) -- (litref);
+\draw[fk] (matsyn) -- (synm);
+\draw[fk] (matsyn) -- (litref);
+\draw[fk] (matdef) -- (deftype);
+\draw[fk] (matapp) -- (appdom);
+\draw[fk] (ma_alloy) -- (alloy);
+\draw[fk] (mprop) -- (expmt);
+\draw[fk] (matdef.north west) to[bend right=15] (elem.south east);
+
+% 自己参照FK
+\draw[->, thick, color=red!60] (appdom.north) to[out=130,in=50,looseness=4]
+  node[above, font=\tiny, text=red!60] {親} (appdom.north east);
+
+% グループラベル
+\node[grouplabel] at (-2, 6.3) {マスターテーブル};
+\node[grouplabel] at (0, 4.8) {コアエンティティ};
+\node[grouplabel] at (-7, -4.2) {合成/欠陥};
+\node[grouplabel] at (7, -2.5) {表面/界面};
+\node[grouplabel] at (5, -5.3) {相図/合金};
+\node[grouplabel] at (-7, 2.5) {文献/応用};
+\node[grouplabel] at (7, 2.5) {電子構造};
+\node[grouplabel] at (5, -0.8) {機械的特性};
+
+\end{tikzpicture}%
+}% end resizebox
+\caption{31テーブル検証データベースのER図。
+  コアテーブル（組成、構造、安定性など）はFK関係を介して中央の\texttt{material\_entry}に直接接続されている。
+  計算された特性と電子構造には2つの経路がある：
+  直接FKと\texttt{calculation}を介した経路である。
+  矢印はFK参照の方向を示している。}
+\label{fig:er}
+\end{figure*}
+\subsection{評価クエリ}
+
+私たちは100の著者設計のクエリを使用した（表~\ref{tab:query_design}）。各クエリには、ゴールドSQL、期待される実行結果（JSON）、必要なテーブル、およびJOINパスが注釈されている。無機材料RDB用の標準的なText-to-SQLベンチマークは現在存在しないため、データベーススキーマ構造と材料研究者の典型的な情報ニーズに基づいて評価クエリを構築した。クエリは以下の原則に従って設計された：
+(1) 実際の材料研究で生じる質問をシミュレートする（例：安定相の検索、組成と特性の相関）、
+(2) 難易度はゴールドSQLから計算された統一的な複雑性スコアによって4つの層に分類される（必要なテーブルごとに$3$ + WHERE/HAVING条件ごとに$1$ + GROUP BYごとに$2$ + EXISTSサブクエリごとに$3$ + 派生サブクエリごとに$3$；易しい $<8$、中程度 $8$--$11$、Hard $12$--$16$、非常に難しい $\geq 17$）、
+(3) すべてのカテゴリ（A--H）にわたってバランスの取れたカバレッジ、
+(4) 高度な分析パターンを評価するために5つのCTEマルチステップ計算クエリが含まれている。
+
+クエリには「安定な」「エネルギー差の大きい」など、自然言語で一義的に解釈できないあいまいな表現も意図的に含まれている。これらに対する解釈は、辞書と少数ショット例で定めた対応付けに依存しており、問いを具体化するインターフェースがあれば、より多くの VH クエリを Easy に近づける余地がある。著者設計のクエリの制限として、クエリの分布が実際のユーザー使用パターンと異なる可能性がある；ユーザー研究は今後の検証タスクとして残る。
+
+\begin{table}[t]
+  \centering
+  \caption{評価クエリ設計（合計100クエリ）。}
+  \label{tab:query_design}
+  \small
+  \begin{tabular}{@{}lccl@{}}
+    \toprule
+    難易度 & 数量 & スコア範囲 & 代表的な内容 \\
+    \midrule
+    易しい & 20 & $< 8$ & 単一条件検索 \\
+    中程度 & 30 & $8$--$11$ & 構造+組成+安定性 \\
+    難しい & 30 & $12$--$16$ & 複合条件、集約 \\
+    非常に難しい & 20 & $\geq 17$ & 材料設計クエリ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{評価指標}
+
+行レベルの再現率が主要な指標として使用される。生成されたSQLとゴールドSQLの実行結果は共通の列に投影され、行レベルの一致率が計算される：
+\begin{equation}
+  \text{accuracy}(q) = \frac{|R_\text{gen}^{C} \cap R_\text{gold}^{C}|}{|R_\text{gold}^{C}|}
+  \label{eq:column_aware}
+\end{equation}
+ここで、$C = \text{cols}(R_\text{gen}) \cap \text{cols}(R_\text{gold})$は共通の列セットであり、$R^C$は列セット$C$への投影を示す。この指標は再現率ベースである：生成されたSQLがゴールドよりも多くの行を返す場合、ペナルティは発生しない。評価中は、LIMIT 10{,}000がゴールドSQLと生成されたSQLの両方に均等に適用される。
+
+\section{アブレーション・スタディ}\label{sec:ablation}
+
+各コンポーネントがどのタイプのクエリに対して効果的であるかを特定するために、7つの条件下でアブレーションスタディを実施した（Table~\ref{tab:ablation}）。各条件は1つのコンポーネントを無効にし、全100クエリにわたって精度を測定する。合計で3{,}500回の評価（7条件 $\times$ 100クエリ $\times$ 5回の実行）が行われた。全体の精度だけに焦点を当てるのではなく、各コンポーネントが材料ドメイン特有のクエリパターン（多元素条件、化合物特性検索、導出量計算など）に与える影響を調査する。
+
+本節の表における ``n.s.'' は統計的に有意ではない（$p \geq 0.05$）ことを示す。
+
+\begin{table}[t]
+\centering
+\caption{アブレーションスタディの結果（100クエリ $\times$ 7条件 $\times$ 5回の実行 = 3{,}500評価）。$\Delta$: 完全条件からの精度変化（pp）。すべての値は5回の独立した実行の平均であり、標準偏差は括弧内に示す。$^{***}$: 完全条件に対するクエリごとの精度差に関する二項ウィルコクソン符号順位検定で$p<0.001$。n.s.: 統計的に有意ではない（$p\geq 0.05$）。p値は6条件間の多重比較に対して補正されていない。ボンフェローニ補正された閾値は$\alpha=0.05$の場合$p<0.0083$である。}
+\label{tab:ablation}
+\small
+\begin{tabular}{@{}lrrrrrrr@{}}
+\toprule
+条件 & 全体 & 簡単 & 中程度 & 難しい & VH & $\Delta$ & 有意性 \\
+\midrule
+full          & 84.7 (0.5) & 100.0 & 96.1 & 80.4 & 58.6 (2.4) & ---    & --- \\
+no\_fewshot   & 77.3 (1.6) & 100.0 & 87.0 & 71.9 & 48.3 (1.8) & $-$7.4  & $^{***}$ \\
+no\_dict      & 77.4 (1.2) & 100.0 & 95.5 & 71.1 & 37.1 (4.5) & $-$7.3  & $^{***}$ \\
+no\_reranker  & 81.4 (0.6) & 99.0 & 89.5 & 74.8 & 61.7 (2.2) & $-$3.3  & n.s. \\
+no\_guard     & 84.5 (0.8) & 100.0 & 96.1 & 80.4 & 57.7 (3.8) & $-$0.2  & n.s. \\
+no\_nbest     & 84.0 (1.0) & 100.0 & 96.1 & 80.5 & 55.2 (2.5) & $-$0.6  & n.s. \\
+no\_graph     & 84.7 (0.9) & 100.0 & 96.1 & 80.4 & 58.7 (4.3) & $+$0.0  & n.s. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{上位3つのコンポーネントに対する難易度レベルの$\Delta$（pp）。値は\texttt{paper\_data.json}からのものである。VH層におけるno\_rerankerの$+$3.1\,ppについては、Section~\ref{sec:reranker_discussion}で議論する。}
+\label{tab:ablation-detail}
+\small
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+条件 & 簡単 & 中程度 & 難しい & VH \\
+\midrule
+no\_fewshot   &    0.0  & $-$9.2  & $-$8.5  & $-$10.3 \\
+no\_dict      &    0.0  & $-$0.7  & $-$9.3  & $-$21.5 \\
+no\_reranker  & $-$1.0  & $-$6.7  & $-$5.6  & $+$3.1  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{各アブレーション条件におけるクエリごとの平均レイテンシ（秒）、Table~\ref{tab:ablation}と同じ5回の実験で測定。$n$-best = 1に設定すると、精度の有意な損失なしにレイテンシが65\%削減される。}
+\label{tab:latency}
+\small
+\begin{tabular}{@{}lr@{}}
+\toprule
+条件 & レイテンシ (s) \\
+\midrule
+full & 31.0 \\
+no\_fewshot & 50.7 \\
+no\_dict & 44.8 \\
+no\_reranker & 23.2 \\
+no\_guard & 36.1 \\
+no\_nbest & 10.9 \\
+no\_graph & 31.6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% =====================================================================
+
+\section{感度分析}
+\label{sec:sensitivity}
+
+アブレーションスタディで統計的有意性を示したコンポーネントに対するパラメータ変更の精度感度を分析する。
+
+\subsection{少数ショット例の数の影響}
+\label{sec:fewshot_sensitivity}
+
+取得した少数ショット例の数 $k$（\S~2.2で述べた検索例の数）を1, 3, 5, 10, 15に変化させ、100のクエリに対する精度を測定した（表~\ref{tab:fewshot_k}、図~\ref{fig:fewshot_k}）。
+
+\begin{table}[t]
+\centering
+\caption{少数ショット数 $k$ と精度の関係（別の感度実行で測定）。
+精度とレイテンシのバランスに最適なのは $k=3$ である；
+$k=15$ は VH ティアで過学習のような精度低下を示す。
+したがって、レイテンシ値は
+表~\ref{tab:latency} の値と異なる（完全な5回のアブレーションで31.0\,s）。}
+\label{tab:fewshot_k}
+\small
+\begin{tabular}{@{}lrrrrrrr@{}}
+\toprule
+$k$ & 全体 & 簡単 & 中程度 & 難しい & VH & レイテンシ (s) \\
+\midrule
+1  & 81.4 & 100.0 & 96.1 & 77.0 & 47.4 & 36.2 \\
+3  & 84.5 & 100.0 & 96.1 & 80.4 & 57.8 & 30.0 \\
+5  & 84.5 & 100.0 & 96.1 & 80.4 & 57.7 & 31.8 \\
+10 & 85.5 & 100.0 & 96.1 & 80.4 & 62.5 & 43.1 \\
+15 & 83.4 & 100.0 & 96.1 & 80.4 & 52.4 & 47.3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fewshot_sensitivity.png}
+\caption{少数ショット数 $k$ の関数としての難易度ティアごとの精度。
+簡単/中程度/Hard ティアは $k\geq 3$ で飽和し、
+VH ティアは $k=10$ でピーク（62.5\%）に達し、
+$k=15$ で10\,pp低下する。}
+\label{fig:fewshot_k}
+\end{figure}
+
+$k$ を1から3に増やすと、全体で $+$3.1\,pp の改善が得られ、特にVHティアでは $+$10.4\,pp の顕著な改善が見られる。$k=3$ を超えると、簡単/中程度/Hardティアはほぼ飽和し、差異は主にVHティアに集中する。$k=10$ はVHティアのピーク62.5\%を達成するが、レイテンシは43\%（30.0\,s $\to$ 43.1\,s）増加する。$k=15$ ではVHティアが10\,pp低下し、過学習のような現象が示唆される。これは、プロンプト内の過剰な少数ショット例がLLMの注意を分散させるためである。これらの結果に基づき、デフォルト設定として $k=3$ を推奨する。
+
+\subsection{ドメイン辞書サイズの影響}
+\label{sec:dict_sensitivity}
+
+辞書のカバレッジの影響をパイプラインの他の部分から分離するために、492項目の材料辞書の61項目のサブセットを作成し、徐々に50\%（30）、25\%（15）、0\%（辞書なし）に削減し、精度への影響を測定した（表~\ref{tab:dict_size}、図~\ref{fig:dict_size}）。
+
+\begin{table}[t]
+\centering
+\caption{492項目の材料辞書の61項目のサブセットを使用した辞書サイズの感度。
+削減はコア用語（プロトタイプ、元素、安定性など）の保持を優先する。}
+\label{tab:dict_size}
+\small
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+辞書サイズ & 全体 & 簡単 & 中程度 & 難しい & VH \\
+\midrule
+フル (61)  & 85.5 & 100.0 & 96.1 & 80.4 & 62.6 \\
+50\% (30)  & 80.6 & 100.0 & 92.5 & 73.7 & 48.0 \\
+25\% (15)  & 82.4 & 100.0 & 96.1 & 73.7 & 57.4 \\
+0\% (なし) & 80.2 & 100.0 & 96.1 & 73.7 & 42.3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/dict_sensitivity.png}
+\caption{ドメイン辞書サイズと難易度ティアごとの精度の関係。
+辞書サイズの影響はVHティアで最も顕著である。}
+\label{fig:dict_size}
+\end{figure}
+
+辞書サイズの影響はVHティアで最も顕著で、フルから0\%への低下は $-$20.3\,pp だ。簡単ティアは辞書の有無にかかわらず100\%を維持しており、辞書の利点はドメイン用語からSQL条件への翻訳を必要とするHard クエリ層に集中していることを示している。50\%から25\%へのわずかな精度の回復は、25\%のサブセットにコア用語が保持されているためと考えられる。
+
+\subsection{LLMモデルの影響}
+\label{sec:model_comparison}
+
+同じ100のクエリをGPT-5.5とGPT-4oで評価した。 （表~\ref{tab:model_comp}、図~\ref{fig:model_comp}）。
+
+\begin{table}[t]
+\centering
+\caption{LLMモデルの比較（5回のアブレーションおよび少数ショット感度実験とは別の実行で測定）。
+GPT-4oは25$\times$速いが、VHティアで14.6\,ppの精度ギャップを示す；レイテンシは
+表~\ref{tab:latency} および \ref{tab:fewshot_k} とは直接比較できない。}
+\label{tab:model_comp}
+\small
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+モデル & 全体 & 簡単 & 中程度 & 難しい & VH & レイテンシ (s) \\
+\midrule
+GPT-5.5 & 84.7 & 100.0 & 96.1 & 80.4 & 58.6 & 35.0 \\
+GPT-4o  & 80.8 & 100.0 & 93.3 & 79.8 & 44.0 &  1.7 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/model_comparison.png}
+\caption{難易度ティアごとのGPT-5.5とGPT-4oの精度比較。
+簡単/中程度ティアは比較可能だが、難しい/VHティアでは顕著なギャップが現れる。}
+\label{fig:model_comp}
+\end{figure}
+
+GPT-4oは1.7\,sのレイテンシを達成し（GPT-5.5の約1/20）、非常に高速であるが、全体の精度は80.8\%（$-$3.9\,pp）で、特にVHティアでは44.0\%（$-$14.6\,pp）の大きなギャップがある。両モデルは簡単/中程度ティアで比較可能な精度を示しているため、GPT-4oは迅速なプロトタイピングに適しており、GPT-5.5は高難易度の材料ドメインクエリに必要である。
+
+% =====================================================================
+
+\section{マルチ軸評価指標}
+
+\label{sec:multiaxis}
+
+実行精度（リコール）のみに基づく評価は不十分であるため、複数の補足指標を計算した。 （表~\ref{tab:multiaxis}、図~\ref{fig:radar}）。
+
+\begin{table}[t]
+\centering
+\caption{マルチ軸評価指標。EM = 正確な一致；
+SELECT col.\ = 生成されたSQL SELECT列が金のSQL列と一致する割合；JOINマッチ = 生成されたSQLに存在する金のSQL JOINテーブルの割合。
+リコール、精度、F1は100のクエリの平均；F1はクエリごとのF1スコアの平均であり、ティアごとの精度とリコールの平均の調和平均ではありません。}
+\label{tab:multiaxis}
+\small
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+& 簡単 & 中程度 & 難しい & VH \\
+\midrule
+リコール (EX)      & 100.0 & 96.7 & 80.4 & 57.8 \\
+精度        &  97.7 & 85.2 & 68.4 & 58.1 \\
+F1               &  98.8 & 87.7 & 68.7 & 40.8 \\
+正確な一致      &  10.0 & 36.7 & 23.3 &  0.0 \\
+SELECT col.\ 精度 &  62.9 & 72.5 & 65.1 & 47.7 \\
+JOINマッチ率  &  97.5 & 99.2 & 97.5 & 73.5 \\
+構文の有効性  & 100.0 & 100.0 & 100.0 & 100.0 \\
+実行成功率 & 100.0 & 100.0 & 100.0 & 100.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/multiaxis_radar.png}
+\caption{難易度ティアごとのマルチ軸評価レーダーチャート。
+構文と実行の有効性はすべてのティアで100\%である。
+VHティアは正確な一致が0\%だが、57.8\%のリコールは多くの部分的に正しい結果を示している。}
+\label{fig:radar}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/ablation_bar.png}
+\caption{アブレーションスタディの棒グラフ（5回の平均 $\pm$ SD）。
+赤い棒は統計的に有意な精度低下を示す条件を示す（$^{***}$: $p<0.001$）。}
+\label{fig:ablation_bar}
+\end{figure}
+
+構文の有効性と実行成功率はすべてのHardティアで100\%を達成し、SQLGuardと修復ループが安全なSQL生成を保証していることを確認している。正確な一致率はEM = 20\%と低いが、これは追加または順序が変更されたSELECT列によるものである；リコールは84.7\%で、正しいデータ内容が返されていることを示している。JOINマッチ率は全体で93.2\%であり、Steiner木制約がJOINパスの精度を保証していることを確認している。VHティアの73.5\%のJOINマッチ率は、Steiner木制約があっても、5つ以上のJOINされたテーブルを含む複雑なクエリでは正確にパスを特定できない場合があることを示している。
+
+% =====================================================================
+
+\section{誤差分析}
+\label{sec:error_analysis}
+
+アブレーションスタディの結果から主要な失敗モードを分析する。
+
+\subsection{アブレーション条件による誤差パターン}
+
+表~\ref{tab:error_analysis}は、各アブレーション条件における主要な誤差指標を示す。完全条件では、実行エラーとテーブルの幻覚がゼロである。no\_fewshot条件では、JOINの幻覚が増加し、スキーマ情報のみからのSQL推論の限界が明らかになっている。
+
+\begin{table}[t]
+  \centering
+  \caption{アブレーション条件による誤差分析（100クエリ）。
+  テーブルの幻覚 = 存在しないテーブルを参照すること;
+  JOINの幻覚 = FK関係に基づかないJOINを含むクエリ数。}
+  \label{tab:error_analysis}
+  \small
+  \begin{tabular}{lcccc}
+    \toprule
+    条件 & \shortstack{実行\\エラー} & \shortstack{構文\\エラー} & \shortstack{テーブル\\幻覚} & \shortstack{JOIN\\幻覚} \\
+    \midrule
+    完全          & 0 & 0 & 0 & 3 \\
+    no\_fewshot   & 2 & 2 & 0 & 16 \\
+    no\_dict      & 0 & 0 & 0 & 5 \\
+    no\_reranker  & 0 & 0 & 0 & 8 \\
+    no\_guard     & 0 & 0 & 0 & 4 \\
+    no\_nbest     & 0 & 0 & 0 & 3 \\
+    no\_graph     & 0 & 0 & 0 & 6 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{非常に難しい失敗の内訳分析}
+
+20の非常にHardクエリ層の中で、完全条件下で精度が0.8未満の9つのクエリの失敗モードを分類した（表~\ref{tab:vhard_failure}）。
+
+\begin{table}[t]
+  \centering
+  \caption{非常に難しいクエリの失敗モード分類。}
+  \label{tab:vhard_failure}
+  \small
+  \begin{tabular}{lcl}
+    \toprule
+    失敗モード & カウント & 代表的なケース \\
+    \midrule
+    WHERE条件の組み合わせエラー & 4 & 複合WHERE（3つ以上の条件） \\
+    集約/サブクエリの誤用 & 2 & GROUP BY/HAVING \\
+    複数要素ANDの失敗 & 2 & SELF-JOINの展開 \\
+    型不一致による意味的エラー & 1 & 修正による実行は成功、結果の不一致 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+WHERE条件の組み合わせエラーが最も頻繁に発生している。スキーマグラフのトラバースが正しいJOINパスを提供しているにもかかわらず、LLMが3つ以上の条件を持つ複合WHERE句を正確に構成できないケースが残っている。一方で、不正確なJOINパスからの失敗はゼロであり、スキーマグラフのトラバース制約が Hard/VH クエリ層でも効果的に機能することを確認している。これらの結果は、今後の改善がWHERE句生成の精度向上に焦点を当てるべきであることを示唆している（少数ショットプロンプトの拡張、思考の連鎖推論の導入）。
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/error_distribution.png}
+\caption{10の代表的な失敗における誤差タイプの分布。
+誤ったカラム選択とGROUP BYの欠如が主要な失敗モードである。}
+\label{fig:error_dist}
+\end{figure}
+
+図~\ref{fig:error_dist}は、10の代表的な失敗ケースにおける誤差タイプの分布を示す。誤ったカラム選択が最も頻繁で、LLMが必要な集約カラムやエイリアス名を正確に特定できないケースが多く見られる。GROUP BYの欠如はVH層の集約クエリに集中しており、LLMの複雑な集約構造を理解する能力の限界を示している。JOINの不一致は比較的まれ（2ケース）であり、スキーマグラフのトラバースJOIN制約の効果を確認している。
+
+% =====================================================================
+
+\section{SQLインジェクションと安全性}
+
+\label{sec:injection_safety}
+
+私たちは、7つの敵対的入力（E01--E05: DROP/DELETE/INSERTなど; F01--F02: 直接SQL入力）を用いてSQLGuardの安全機能を検証した（セクション~\ref{sec:sqlguard}）。すべての入力はSQLGuardによって安全に処理された（表~\ref{tab:injection_results}）。
+
+\begin{table}[t]
+  \centering
+  \caption{SQLインジェクションと安全性テスト結果（すべて安全に処理された）。}
+  \label{tab:injection_results}
+  \small
+  \begin{tabularx}{\linewidth}{lXl}
+    \toprule
+    ID & 入力 & アクション \\
+    \midrule
+    E01 & \texttt{DROP TABLE material\_entry;} & ブロック: DROPキーワード \\
+    E02 & \texttt{SELECT *; DELETE FROM composition;} & ブロック: マルチステートメント + DELETE \\
+    E03 & L1$_2$化合物; \texttt{DROP TABLE structure;} & ブロック: マルチステートメント + DROP \\
+    E04 & \texttt{SELECT * FROM secret\_passwords} & ブロック: 不正なテーブル \\
+    E05 & \texttt{INSERT INTO material\_entry ...} & ブロック: INSERTキーワード \\
+    F01 & \texttt{SELECT entry\_id FROM material\_entry} & LIMIT自動追加（サニタイズ済み） \\
+    F02 & \texttt{UPDATE material\_entry SET ...} & ブロック: UPDATEキーワード \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+E01--E05は、禁止キーワード検出、マルチステートメント検出、その他のチェックによってブロックされた。F01はSELECT文が直接入力されたケースであり、LIMITが自動的に追加されてサニタイズされた（ブロックされず）。F02はDML検出によってブロックされたUPDATE文である。アブレーションスタディでは、no\_guard条件（SQLGuardが削除された）によって$-$0.2\,ppの精度低下が発生した（表~\ref{tab:ablation}）、しかし安全機能は精度とは独立して価値がある。これらのテストは134のユニットテストに回帰テストとして含まれており、すべてが引き続き合格している。
+
+% =====================================================================
+
+\section{材料工学評価}
+\label{sec:materials_evaluation}
+
+自然言語アクセスの\emph{機能的}な有用性を示すために、セクション~\ref{sec:evaluation}で説明した検証データベースに対していくつかの探索クエリを実行した。化合物の格子定数、生成エネルギー、機械的、磁気、熱、合成、欠陥、および文献属性は合成検証データであるため、取得された「ランキング」や「候補」は、実際の材料設計仮説としてではなく、インターフェース操作のデモンストレーションとして読むべきである。
+
+\subsection{$\gamma'$-相候補のランキング}
+\label{sec:gamma_prime}
+
+259のユニークなL1$_2$組成の中から、安定性（$E_\text{hull}$）、格子マッチング（$|a - a_{\text{Ni}_3\text{Al}}|$）、および体積弾性率$B$の3つの指標に基づいて加重複合スコアを使用して$\gamma'$-相候補をランク付けした（表~\ref{tab:gamma_prime}）。この中で、162の安定/準安定候補（安定8、準安定154）がスクリーニングを通過した。
+
+\begin{equation}
+  S = w_1 \cdot S_\text{stability} + w_2 \cdot S_\text{lattice} + w_3 \cdot S_\text{bulk}
+  \label{eq:composite_score}
+\end{equation}
+
+ここで、$w_1 = 0.35$（安定性）、$w_2 = 0.35$（格子マッチング）、$w_3 = 0.30$（体積弾性率）である。各スコアは0～1に正規化される（$S_\text{stability} = 1 - E_\text{hull}/0.05$、$S_\text{lattice} = 1 - |\Delta a|/0.3$、$S_\text{bulk} = B/300$）。
+
+\begin{table}[t]
+  \centering
+  \caption{上位10の$\gamma'$-相候補（複合スコア$S$によるランキング）。}
+  \label{tab:gamma_prime}
+  \small
+  \begin{tabular}{rlccccc}
+    \toprule
+    ランク & 化合物 & $a$ (\AA{}{}) & $E_\text{hull}$ & $B$ (GPa) & $\Delta a$ & $S$ \\
+    \midrule
+    1 & Ni$_3$Al & 3.572 & 0.000 & 180 & 0.002 & 0.878 \\
+    2 & Co$_3$Ti & 3.55 & 0.000 & 190 & 0.02 & 0.867 \\
+    3 & Mo$_3$Nb & 3.586 & 0.007 & 235 & 0.016 & 0.865 \\
+    4 & Cr$_3$Ge & 3.644 & 0.005 & 236 & 0.074 & 0.818 \\
+    5 & Pd$_3$Sn & 3.540 & 0.008 & 200 & 0.030 & 0.811 \\
+    6 & Ir$_3$Cu & 3.511 & 0.001 & 183 & 0.059 & 0.804 \\
+    7 & Nb$_3$Mn & 3.607 & 0.006 & 178 & 0.037 & 0.794 \\
+    8 & Nb$_3$Ti & 3.523 & 0.020 & 223 & 0.047 & 0.728 \\
+    9 & Zr$_3$Fe & 3.655 & 0.013 & 199 & 0.085 & 0.709 \\
+    10 & Pt$_3$Ge & 3.550 & 0.021 & 177 & 0.020 & 0.708 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Ni$_3$Alは、この合成データランキングで1位にランク付けされている。これは、低い$E_\text{hull}$と小さい$\Delta a$の好ましいバランスを持っているためである。2位のCo$_3$Tiも既知の安定なL1$_2$相である。Mo$_3$NbやCr$_3$Geのようなエントリは、合成データセットがこれらの組成に大きな体積弾性率を割り当てているためにのみ現れる。
+
+\subsection{Ni$_3$Al近傍の格子定数候補}
+\label{sec:ni3al_lattice}
+
+$|a - a_{\text{Ni}_3\text{Al}}| \leq 0.03$~\AA{}{}を厳密に満たす31の候補を抽出した（参照$ a_{\text{ref}} = 3.57$~\AA{}{}; 14の代表的なエントリは補足資料~\ref{sec:sup_lattice_match}に記載されている）。Co$_3$Ti（$\Delta a = 0.02$~\AA{}{}、$E_\text{hull} = 0.0$）は安定相であり、析出強化の観点から最も有望な候補である。
+
+\subsection{安定なL1$_2$候補の抽出}
+\label{sec:stable_l12}
+
+$E_\text{hull} \leq 0.05$~eV/atomを満たす162の安定/準安定L1$_2$候補を抽出した（安定8、準安定154）。安定相の中で、最も負の生成エネルギーはPt$_3$Al（$E_f = -0.550$~eV/atom）に属し、次いでAl$_3$Sc（$-0.500$）、Co$_3$Ti（$-0.450$）、およびNi$_3$Al（$-0.420$）である（詳細は補足資料~\ref{sec:sup_stable_l12}に記載）。
+
+\subsection{探索結果の解釈に関する注意事項}
+
+このセクションの化合物属性は合成検証データであるため、ランク付けされたランキングやスクリーニングされたセットは、実際の材料の設計仮説として解釈されるべきではない。これらのクエリの目的は、提案された自然言語インターフェースが複雑な正規化スキーマに対して正しく多基準フィルタリング、ランキング、および抽出を実行できることを確認することである。明らかな傾向（例えば、高い体積弾性率や高い安定性）は合成生成手順の副産物であり、検証セットの代わりに実際のデータベースが置き換えられた場合にユーザーが実行できる探索の種類を示すためにのみ提示されている。
+
+% =====================================================================
+
+\section{議論}
+\label{sec:discussion}
+
+\subsection{無機材料RDBにおけるスキーマの障壁と自然言語アクセスの重要性}
+
+本研究の結果は、無機材料 RDB におけるデータ利用の主な障壁は SQL 文法そのものではなく、正規化されたスキーマ構造の理解にあることを再確認する。no\_fewshot（77.3\%）と no\_dict（77.4\%）のいずれも full（84.7\%）を大きく下回り（表~\ref{tab:ablation}）、特に VH 層ではそれぞれ48.3\%、37.1\%に低下する。少数ショット例と材料ドメイン辞書はどちらも不可欠である。
+
+自然言語インターフェースは、このスキーマの障壁を効果的に低減できる。少数ショット例と材料ドメイン辞書の併用により、精度は84.7\%に回復し、特にドメイン特有の語彙を多く使用する複雑なクエリで顕著な向上が見られる。この改善は、無機材料RDBへの自然言語アクセスが単なる利便性を超え、スキーマの障壁により以前はアクセスできなかったデータへの実質的なアクセスを可能にすることを示唆している。具体的には、100\%の構文の有効性と100\%の実行成功を達成すること（表~\ref{tab:multiaxis}）は、SQLに不慣れな材料研究者が自然言語を通じて安全にデータベースを使用できることを意味する。93.2\%のJOINマッチ率は、正規化されたマルチテーブルRDBにおいてテーブル結合パスが高精度で特定されていることを示し、スキーマ理解の負担を大幅に軽減する。
+
+スキーマの進化とデータの成長に関して、我々のパイプラインはFKメタデータベースの設計を採用しているため、テーブルの追加やFKの変更は自己反映される。辞書と少数ショット例の更新には手動の努力が必要だが、標準手順に減らすことができ（テーブル定義 $\to$ FK設定 $\to$ 辞書登録 $\to$ 少数ショット例追加）、運用維持コストを抑えることができる。
+
+\subsection{少数ショット例の貢献}
+
+少数ショット例を削除すると、すべてのコンポーネントの中で最大の精度低下が見られた（$-$7.4\,pp, $p<0.001$; 表~\ref{tab:ablation}）。この低下は、中程度の層以上で観察され、非常にHard層では$-$10.3\,ppの低下が見られた（表~\ref{tab:ablation-detail}）。次いで、Hard層で$-$8.5\,pp、中程度の層で$-$9.2\,ppの低下があり、より複雑なクエリが少数ショット例に対してより大きな依存を持つことを示している。少数ショット例なしでは、レイテンシも31.0\,sから50.7\,sに増加した（表~\ref{tab:latency}）。これは、LLMが試行錯誤を通じてSQLを生成するためと考えられる。
+
+\subsection{材料ドメイン辞書の貢献}
+
+辞書を削除すると、全体で$-$7.3\,ppの低下が見られた（$p<0.001$）。ただし、効果はHard層によって異なった（表~\ref{tab:ablation-detail}）。簡単な層では低下は見られなかったが、Hardクエリ層では$-$9.3\,pp、非常にHardでは$-$21.5\,ppの低下が見られた。
+
+簡単および中程度のクエリは一般的な表現で構成されており、LLMは自らSQL条件を推測できる。対照的に、VH クエリは同時に複数のドメイン特有の用語を含み、辞書がないとLLMは正しいSQL条件を生成できない可能性がある（例：``$\gamma'$相'' $\to$ \texttt{structure.prototype = 'L12'}）。
+
+\subsection{リランカーの貢献}
+\label{sec:reranker_discussion}
+
+リランカーを削除すると、$-$3.3\,ppの低下が見られた（$p=0.364$、統計的に有意ではない）。この効果は、中程度（$-$6.7\,pp）およびHard層（$-$5.6\,pp）で観察された（表~\ref{tab:ablation-detail}）。
+
+しかし、非常にHard層では、リランカーを削除した際に$+$3.1\,ppの精度向上が見られた。この差は標準偏差の範囲内（VH層SD = 2.2\,pp）だが、リランカーは非常にHard層では実際には逆効果を持つ可能性がある。この層では、すべての候補が部分的に不正確であることが多く、リランカーは「より正しく見えるが実際には間違っている」候補を選択する可能性がある。特にCTEクエリでは、構文的には有効だが意味的には不正確な候補が高いリランカーのスコアを得ることがある。対照的に、中程度およびHardでは、少なくとも1つの正確な候補が存在することが多く、リランカーはそれを正しく選択できる。これらの結果は、リランカーの効果がクエリの複雑さに依存しており、高複雑度クエリに対するリランク戦略の改善の余地があることを示唆している。
+
+\subsection{SQLGuard、$n$-best、およびシュタイナー木の貢献}
+
+SQLGuard（$-$0.2\,pp、n.s.）、$n$-best（$-$0.6\,pp、n.s.）、およびシュタイナー木（$+$0.0\,pp、n.s.）は、生の実行精度では統計的に有意な効果を示さなかった。ただし、n.s.\ は ``意味がない''ことを意味するわけではない。
+
+SQLGuardの主な役割は安全性の安全網であり、SQL インジェクションや非 SELECT 文を排除して構文妥当率を 100\%に保つ。アブレーションでは精度効果は小さいが、これはリランカーがすでに多くの危険な候補を低スコアにしているためで、セキュリティ層としての価値は独立して存在する。
+
+$n$-best = 1に設定すると、精度を維持しつつレイテンシを31.0\,sから10.9\,sに短縮できる（表~\ref{tab:latency}）。これはコスト効率が優先される場合に有効な選択肢となる。
+
+シュタイナー木は実行精度に大きな変化を与えなかったが、JOIN幻覚を半減させる（シュタイナー木なしで6、ありで3；表~\ref{tab:error_analysis}）。その主な役割は生の精度ではなく JOIN パスの健全性にある。FK イントロスペクションに基づく設計のため、テーブル数の増加や他の正規化 RDB（Materials Project~\cite{jain2013mp}、AFLOW~\cite{curtarolo2012aflow}）への適用で利点が明らかになることが期待される。
+\subsection{関連システムとの比較}
+
+表~\ref{tab:related_comparison}は、我々のシステムと関連アプローチを比較している。既存のテキストからSQLへの方法は、一般的なドメインを対象としており、材料科学における正規化されたRDBを考慮していない。一方、材料ドメインにおける自然言語アクセス手法はAPIやRDF/SPARQLを使用しており、既存のRDBインフラストラクチャに対するSQL生成には対応していない。我々の研究は、正規化されたRDB、材料ドメインの知識、およびFKグラフのトラバーサルを組み合わせることでこのギャップを埋める。
+
+我々のアプローチは、SchemaGraphSQL~\cite{safdarian2026schemagraphsql}に技術的に最も近いものであり、こちらもFKグラフ上でのパス探索を使用しているが、以下の点で異なる：
+(1)~SchemaGraphSQLは一般的なベンチマーク（Spider/BIRD）で評価されており、ドメイン特有の用語翻訳メカニズムが欠けている。我々の手法は、492語の材料ドメイン辞書を介して``stable'' $\to$ \texttt{is\_stable=TRUE}のような翻訳を実現しており（61エントリーのサブセット感度は表~\ref{tab:dict_size}に示されている）、辞書を除去した際には$-$7.3\,pp ($p<0.001$)の精度低下が定量化されている。
+(2)~SchemaGraphSQLのJOIN検索はスキーマグラフのエッジ重み最適化に基づいているが、我々の手法はスティーナーツリー近似を使用して最小コストのJOIN部分木を見つける。
+(3)~我々の手法には、SQLインジェクションなどのセキュリティリスクに対処するためのASTベースのSQL安全性検証（SQLGuard）が含まれている。
+
+\begin{table*}[htbp]
+  \centering
+  \caption{関連する材料NLP / T2SQL / オントロジーシステムとの比較。}
+  \label{tab:related_comparison}
+  \small
+  \begin{tabularx}{\textwidth}{llccccX}
+    \toprule
+    タイプ & 名前 & \shortstack{スキーマ\\対応} & \shortstack{正規化\\RDB} & \shortstack{材料\\特有} & \shortstack{NL$\to$\\クエリ} & 主な違い \\
+    \midrule
+    \multicolumn{7}{l}{\textit{T2SQLベンチマーク}} \\
+    データセット & Spider~\cite{yu2018spider} & はい & はい & いいえ & SQL & 一般的なベンチマーク \\
+    データセット & BIRD~\cite{li2024bird} & はい & はい & いいえ & SQL & 大規模な実データ \\
+    \midrule
+    \multicolumn{7}{l}{\textit{T2SQL手法}} \\
+    手法 & DAIL-SQL~\cite{gao2023dail} & はい & はい & いいえ & SQL & スケルトン選択 \\
+    手法 & RAT-SQL~\cite{wang2020ratsql} & はい & はい & いいえ & SQL & 関係認識エンコーディング \\
+    手法 & RESDSQL~\cite{li2023resdsql} & はい & はい & いいえ & SQL & スキーマリンク分離 \\
+    手法 & SchemaGraphSQL~\cite{safdarian2026schemagraphsql} & はい & はい & いいえ & SQL & パス探索 \\
+    \midrule
+    \multicolumn{7}{l}{\textit{材料情報学}} \\
+    手法 & MKNA~\cite{zhuang2026mkna} & いいえ & いいえ & はい & API & エージェント \\
+    手法 & OptiMat~\cite{hu2026optimat} & いいえ & いいえ & はい & API & オンデマンドDFT \\
+    \midrule
+    \multicolumn{7}{l}{\textit{オントロジー}} \\
+    手法 & SuperCon~\cite{ishii2023supercon} & はい & いいえ & はい & SPARQL & RDFオントロジー \\
+    手法 & PoLyInfo~\cite{ishii2024polyinfo} & はい & いいえ & はい & SPARQL & BFO準拠 \\
+    \midrule
+    手法 & 我々の手法 & はい & はい & はい & SQL & FKトラバーサル + 材料辞書 \\
+    \bottomrule
+  \end{tabularx}
+\end{table*}
+
+\subsection{アブレーション条件の定量的比較}
+
+アブレーション条件は、1つのコンポーネントを除いた簡略化された手法として見ることができる（表~\ref{tab:ablation}）。no\_fewshot条件は、辞書とリランカーを保持しながら少数ショットの例のみを除去し、77.3\% ($-$7.4\,pp)の精度を得る。また、no\_dict条件は辞書のみを除去し、77.4\% ($-$7.3\,pp)の精度を得る。これらは2つの最大の単一コンポーネントの低下であり、ほぼ同一であることから、少数ショットの例と辞書が全体の精度に対する2つの主要な寄与者であることを示している。提案された完全な手法は84.7\%に達する。
+
+アブレーションは1つのコンポーネントを一度に除去するため、明らかな段階的値は真の増分追加実験ではない。コンポーネント間の相互作用により、寄与は厳密に加算的ではない。同じデータベース上で他の手法（DIN-SQL、DAIL-SQLなど）との直接比較は行われていない（制限事項~6を参照）。LLMのみおよびスキーマのみ（少数ショットの例なし）構成の質的SQL例は、補足セクション~\ref{sec:sup_sql_examples}に提供されている。
+
+\subsection{多段階計算クエリの処理}
+\label{sec:multistep_query}
+
+無機材料RDBへの自然言語アクセスにおける要件は、派生量計算を伴う多段階データ抽出である。代表的なケースとして、クエリ``Ni$_3$Alの生成エンタルピーを純元素参照を用いて計算せよ''を考える。このクエリに正しく答えるためには、以下の多段階データ抽出と計算が必要である：
+\begin{enumerate}
+  \item \texttt{phase\_stability}テーブルから化合物Ni$_3$Alの生成エネルギー$E_\mathrm{f}$を取得する。
+  \item \texttt{composition}テーブルから構成元素NiとAlの組成比$x_i$を取得する。
+  \item \texttt{pure\_element\_reference}テーブルから各元素の基底状態エネルギー$E_\mathrm{ref}(i)$を取得する（OQMD由来、89元素）。
+  \item 加重参照エネルギー$\sum_i x_i E_\mathrm{ref}(i)$を計算する。
+  \item 修正された生成エンタルピー$\Delta H_\mathrm{f} = E_\mathrm{f} - \sum_i x_i E_\mathrm{ref}(i)$を出力する。
+\end{enumerate}
+
+この操作は単一テーブルのルックアップではなく、3テーブルのJOIN、サブクエリによる集計計算、および算術演算を含むCTE（共通テーブル式）としてSQLに変換する必要がある。我々のパイプラインは、LLMが\texttt{formation\_enthalpy}ビューを介して単純なクエリを生成し、対応する少数ショットの例を追加することで明示的なCTEベースの計算を行うことを可能にする。
+
+従来のテキストからSQLへのベンチマーク（Spider~\cite{yu2018spider}、BIRD~\cite{li2024bird}など）は、主にSELECT--WHERE--JOIN--GROUP BYの組み合わせをカバーしており、科学計算に不可欠な多段階データ統合および派生量計算を必要とするクエリは含まれていない。材料データベースにおいて、生成エンタルピー、体積サイズ因子、格子不整合などの派生量は研究上重要であり、そのような計算を自然言語で直接指示できる能力は、材料情報学における自然言語インターフェースの実用性を大幅に向上させる。  
+\subsection{独立に設計されたクエリによる評価}  
+\label{sec:independent_eval}
+
+自己参照バイアスを検証するために、パイプラインの実装には関与していない共同著者の末松知恵によって独立に設計された100のクエリを使用して精度を再評価した。これらのクエリは、クエリ設計と独立評価に貢献した（簡単18 / 中程度34 / Hard 34 / 非常に難しい14）、10のカテゴリ（基本検索、構成/要素、構造/格子定数、安定性/形成エネルギー、DFT計算/特性、電子構造/磁気/熱特性、表面/粒界/欠陥、文献/合成/応用、材料設計/スクリーニング、比較/統計）にわたっている。これらのクエリは、アブレーション研究で使用されたのと同じ連続実行リコールメトリックと難易度分類でスコアリングされた。
+
+全体の実行精度は76.9\%（簡単94.4\% / 中程度81.7\% / Hard 61.5\% / 非常に難しい80.4\%）で、著者設計のセット（84.7\%; 表~\ref{tab:ablation}）よりも7.8\,pp低い。このギャップは主に3つの要因に起因している。
+
+(1) テーブルカバレッジバイアス（主な要因）：
+著者設計のゴールドSQLはコアテーブルのセットを使用しているが、独立に設計されたクエリは、\texttt{elastic\_tensor}、\texttt{magnetic\_property}、および\texttt{surface\_energy}などの追加テーブルを参照しており、少数ショットの例がまばらである。
+
+(2) 少数ショット最適化バイアス：
+ほとんどの著者設計のクエリは、固定パターンとして「L1$_2$」を明示的に含んでおり、少数ショットの例はこのパターンに最適化されている。独立に設計されたクエリは、より多様な表現を使用している。
+
+(3) 語彙の多様性：
+独立に設計されたクエリは、現在のパイプラインが明示的なキーワードマッチングに依存しているため、Hard 暗黙の条件指定を頻繁に使用する。
+
+構文の有効性（100.0\%）は両方のセットで一貫しており、スキーマグラフ制約のクエリ起源の独立性を確認している。非常にHard層（80.4\%）はHard層（61.5\%）よりも高いのは、14の非常に難しいクエリが少数ショットの例でカバーされているいくつかの短いCTEパターンを含んでいるのに対し、いくつかの難しいクエリは少数ショットのサポートなしに周辺テーブルを参照しているためである。詳細な結果は補足資料~\ref{sec:sup_expert_queries}に提供されている。
+
+\subsection{列間比較クエリの取り扱い}
+\label{sec:column_comparison}
+
+多段階計算に加えて、列間比較は材料研究で頻繁に遭遇する代表的なクエリパターンである。「値Aが値Bより小さいエントリを見つける」という形式のクエリは、同じ行内の異なる列の値を比較する条件式を用いたSQL生成を必要とするため、単一の閾値フィルタリング（\texttt{WHERE col > 0.5}）とは異なる（\texttt{WHERE col\_a > col\_b}）。
+
+私たちのパイプラインは、3種類の列間比較パターンをカバーする少数ショットの例を提供する。  
+\begin{enumerate}  
+  \item テーブル内比較：  
+    同じテーブル内の2つの列の直接比較。  
+    例：\texttt{formation\_energy\_per\_atom < energy\_above\_hull}（\texttt{phase\_stability}テーブル内）；  
+    \texttt{bulk\_modulus\_vrh > 2.0 * shear\_modulus\_vrh}（\texttt{elastic\_tensor}テーブル内、Pugh延性メトリック）。  
+  \item テーブル間比較：  
+    JOINを介して異なるテーブルの列を比較。  
+    例：\texttt{thermal\_property.debye\_temperature\_k > magnetic\_property.curie\_temperature\_k}；  
+    総磁化対絶対形成エネルギー。  
+  \item 集約関数を用いた比較：  
+    GROUP BY--HAVINGと組み合わせて、構成要素間の電気陰性度差などの導出量に対する閾値評価を行う。  
+    例：\texttt{HAVING MAX(electronegativity) - MIN(electronegativity) > 0.5}。  
+\end{enumerate}
+
+これらのパターンは、定数比較（\texttt{WHERE col > 0.5}）に比べてLLMが正しく生成するのが難しい。特にテーブル間比較は、スキーマ情報から各比較列がどのテーブルに属するかを正確に特定する必要がある。私たちは、主に列間比較パターンを追加して少数ショットの例プールを45例に拡張し、LLMがそのようなパターンを学習できるようにした。
+
+\subsection{RDBスキーマ設計とText-to-SQLコスト}
+\label{sec:schema_design_cost}
+
+この研究を通じて得られた洞察は、RDB自体のテーブル構造がText-to-SQL精度を決定する上流要因であるということである。
+
+高度に正規化されたスキーマでは、単一のクエリに対して複数のテーブルJOINが必要であり、LLMが生成しなければならないSQLの複雑さが増す。私たちのデータベースにおける形成エンタルピー計算（セクション~\ref{sec:multistep_query}）では、\texttt{phase\_stability}、\texttt{composition}、および\texttt{pure\_element\_reference}の3テーブルJOINが必要であり、さらにCTEベースの集約計算が必要であった。少数ショットの例なしでの精度の$-$7.4\,ppの低下は、より複雑なテーブル間結合パターンがLLMによる正確なSQL生成をより困難にすることを確認している。
+
+この洞察に基づいて、T2SQL準備のための以下のスキーマ設計戦略を考慮できる：
+\begin{enumerate}
+  \item ビューによる複雑さの隠蔽：
+    よく使用される多段階JOINパターンをビューまたはマテリアライズドビューとして定義し、LLMに対して単一のSELECTでクエリ可能なインターフェースを提供する。この研究における\texttt{formation\_enthalpy}ビューがその例である。
+  \item クエリ頻度に基づく非正規化：
+    よく参照されるテーブルグループ（例：\texttt{composition}と\texttt{element}）を事前に結合されたテーブルとして提供し、JOINの数を減らす。
+  \item 自己記述的な列名付け：
+    列名にテーブルのコンテキストを埋め込み（例：\texttt{energy} $\to$ \texttt{formation\_energy\_per\_atom}）、LLMがスキーマ情報から適切な列を選択する確率を高める。
+  \item 明示的なFK制約定義：
+    スタインナー木アルゴリズムはFK関係に基づいて最小JOINパスを決定する。自動JOIN解決はFK制約が欠如しているスキーマでは失敗する。T2SQL準備が設計目標である場合、包括的なFK制約の定義が必要である。
+\end{enumerate}
+
+要約すると、Text-to-SQLシステムの精度を向上させるには、パイプライン側の改善だけでなく、データベーススキーマ設計段階でのNLインターフェースの互換性を考慮する必要がある。この視点は、この研究で使用された検証DBだけでなく、類似の正規化スキーマを持つ無機材料RDB（OQMD、Materials Project、AFLOWなど）や、Text-to-SQLが適用されるドメイン特化型RDBに一般的に適用可能な設計ガイドラインとして機能する。
+\subsection{CTEマルチステップ計算クエリの評価}
+\label{sec:cte_evaluation}
+
+CTE（共通テーブル式）を用いたマルチステップ計算クエリの能力を定量的に評価するために、形成エンタルピー計算を例として、5つの非常にHardクエリ層をCTEクエリに置き換え、評価を実施した。これらの5つのクエリは以下のカテゴリをカバーしている。
+
+\begin{enumerate}[nosep]
+  \item シンプルCTE（導出量計算）:
+    特定の化合物の$\Delta H_f$を純元素参照を用いて計算する
+  \item CTE + フィルター:
+    安定したL1$_2$化合物の$\Delta H_f$を計算し、閾値でフィルタリングする
+  \item CTE + 集約:
+    Aサイト元素ごとの平均$\Delta H_f$を集約する
+  \item マルチステージCTE（2段階以上）:
+    3段階CTE: 安定性フィルター $\to$ $\Delta H_f$計算 $\to$ 元素フィルター
+  \item CTE + クロスカラム比較:
+    形成エネルギーと加重純元素参照の差を通じた安定性評価
+\end{enumerate}
+
+表~\ref{tab:cte_results}は、アブレーション条件によるCTEの精度を示している。
+
+\begin{table}[t]
+\centering
+\caption{アブレーション条件によるCTEマルチステップ計算クエリの精度（5クエリ）。完全条件では5回の実行すべてで100\%を達成。少数ショット例を除去すると精度は76\%に低下し、辞書を除去すると86\%に低下し、文脈内学習と辞書がCTE構文生成に寄与していることを示している。}
+\label{tab:cte_results}
+\small
+\begin{tabular}{@{}lr@{}}
+\toprule
+条件 & CTE精度（5クエリ、5回の平均） \\
+\midrule
+完全          & 100\% \\
+no\_fewshot   & 76\% \\
+no\_dict      & 86\% \\
+no\_reranker  & 100\% \\
+no\_guard     & 92\% \\
+no\_nbest     & 100\% \\
+no\_graph     & 100\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+CTEマルチステップ計算において、少数ショット例を除去すると精度は76\%に低下し、辞書を除去すると86\%に低下する（完全条件：100\%）。これは、文脈内学習と辞書が完全なCTEパターンの習得に寄与していることを示している。リランカー、$n$-ベスト、またはシュタイナー木を除去しても100\%を維持する。SQLGuardを除去すると92\%にわずかに低下し、ほとんどのCTEクエリは少数ショット例からの語彙マッピングを学習できることを示している。しかし、1つのクエリ（q\_vhard\_019、マルチステージCTE）は辞書なしで0.60の精度に低下し、辞書の補完が複雑なマルチステージ計算に対して効果的であることを示している。リランカー、$n$-ベスト、シュタイナー木は100\%のCTE精度を維持し、少数ショット例と辞書がCTE構文生成の主要な寄与者であることを確認している。
+
+これらの結果は、材料研究に必要な導出量計算（$\Delta H_f = E_f - \sum_i x_i E_{\mathrm{ref}}(i)$）のようなマルチステップ計算パターンを評価セットに含める重要性を強調しており、主にSELECT-WHERE-JOIN-GROUP BYパターンを対象とする従来のText-to-SQLベンチマーク（Spider、BIRDなど）とは対照的である。
+
+CTEサポートの適用限界を定量化するために、10の新しいパターン（ウィンドウ関数、HAVINGフィルター、2段階集約、弾性/熱/磁気テーブルへのJOIN、条件付き集約、3段階CTEなど）を追加し、合計15のクエリを評価した。少数ショット例でカバーされた5つの元のパターンは100\%を維持したが、10の新しいゼロショットパターンはわずか42.3\%に達し、全体で61.6\%となった。この結果は、アブレーションで観察された少数ショットの大きな寄与（$-$7.4\,pp, $p<0.001$）と一致しており、マルチステップ計算サポートの範囲は少数ショット例のパターンカバレッジによって制御されていることを示している。したがって、新しいマルチステップパターンへの拡張は、ドメイン専門家によって追加された少数の例（パターンごとに約1つ）を通じて達成可能であり、モデルの再トレーニングなしに実現できるというこの設計の実用的な利点である。
+
+\subsection{複数スキーマにおけるゼロ適応転送評価}
+\label{sec:transfer_eval}
+
+単一データベースの制限に直接対処するために、4つのゼロ適応転送テストを実施し、表~\ref{tab:transfer_eval}に要約した。各ケースで、パイプラインはFKイントロスペクションを通じてターゲットスキーマのみを受け取った。辞書、少数ショット例、およびプロンプトテンプレートは、変更されずに再利用されるか、最小限のスキーマ特有のセットに置き換えられた。これは、設計が記憶されたテーブル/カラム名に依存するのか、抽象的なSQLパターンを転送できるのかをテストする。
+
+\begin{table}[t]
+\centering
+\caption{ゼロ適応スキーマ転送結果。}
+\label{tab:transfer_eval}
+\begin{tabular}{@{}llcc@{}}
+\toprule
+バリアント & スキーマ & クエリ数 & 全体 \\ \midrule
+A & プロトタイプ拡張（B2/NaCl/NiAs/BiF$_3$） & 20 & 90.0\% \\
+B & OQMD風のリネーム & 20 & 90.5\% \\
+C & ランダム化された難読名 & 20 & 90.0\% \\
+D & マテリアルズプロジェクト風（実際のMPデータ） & 15 & 100.0\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+バリアントA---プロトタイプ拡張。  
+同じ31テーブルスキーマに、L1$_2$エントリに加えてB2/NaCl/NiAs/BiF$_3$プロトタイプエントリが追加され、20のHardクエリ層に応じたクエリが評価された。結果は90.0\%（簡単100\% / 中程度100\% / Hard100\% / 非常に難しい60\%）であり、プロトタイプの分離とFKグラフが結晶プロトタイプ全体で堅牢であることを確認した。
+
+バリアントB---OQMD風のリネーム。すべてのテーブルとカラム名が変更されたOQMD風のフラット5テーブルスキーマを構築した（\texttt{oqmd\_entries}, \texttt{oqmd\_element\_ratios}, \texttt{oqmd\_formation\_energies}, \texttt{oqmd\_reference\_states}, \texttt{oqmd\_elements}）。少数ショット例は元のスキーマから変更されずに提示され、プロンプトは「少数ショット例は異なるスキーマから来る可能性がある; それらのSQLパターンのみを再利用する」と指示した。結果は全体で90.5\%（簡単100.0\% / 中程度100.0\% / Hard 62.0\% / 非常に難しい100.0\%）であった。
+
+バリアントC---Hardクエリ層。
+転送DB内のすべてのスキーマ識別子は、FK関係を保持しながらランダムな英単語に置き換えられた。パイプラインは全体で90.0\%を達成し、意味的なテーブル/カラム名は必要ないことを示している; FKトポロジーが十分である。
+
+バリアントD---マテリアルズプロジェクト風スキーマ。  
+実際のマテリアルズプロジェクトRESTデータから27の二元系（299エントリ）用に新しい3テーブルPostgreSQLスキーマ（\texttt{mp\_entries}, \texttt{mp\_elements}, \texttt{mp\_element\_ratios}）を構築し、15の日本語クエリを準備し、MPスキーマ用に書かれた8つの少数ショット例のみを提供した。パイプラインコードは変更されなかった。結果は全体で100.0\%（簡単100.0\% / 中程度100.0\% / Hard 100.0\% / 非常に難しい100.0\%）だった。すべての15のクエリが正しく回答され、スキーマ自体が転送可能であることを確認した。
+
+これらの結果は、コア設計（FKイントロスペクション、スキーマ提示プロンプト、パターン転送少数ショット）が元の31テーブルスキーマやL1$_2$データセットに依存していないことを示している。特にMP転送は、スキーマ特有の小さなプロンプトと少数ショットセットのみを使用して、外部の実際の材料データベースへの1ステップの拡張を示している。
+
+隠れたスキーマ依存関係の発見。  
+転送テストは検証ツールとしても機能し、元のスキーマによって静かに受け入れられていたスキーマ特有のハードコーディング（リンクされたテーブル名への固定参照）を明らかにした。これらを除去することで、パイプラインは完全にスキーマに依存しないものとなった。  
+\subsection{類似無機材料RDBへの拡張性}  
+\label{sec:extensibility}
+
+本研究で得られた設計原則は、検証に使用された特定のデータベースに限定されない。FKイントロスペクションに基づくシュタイナー木アルゴリズムは、テーブルの追加やスキーマの変更を必要とせず、定義されたFK制約を持つ任意の正規化されたRDBで動作する。ドメイン辞書については、新しい材料システム（ヘウスラー、ペロブスカイトなど）や異なるデータベースに適用する際に語彙の追加が必要だが、辞書の構造自体（4つのカテゴリ：プロトタイプエイリアス、元素マッピング、安定性用語、特性用語）は一般的に無機材料RDBに適用可能である。
+
+しかし、以下の注意点に留意する必要がある。本研究の主な評価は単一のOQMD由来のデータベースに基づいている；セクション~\ref{sec:transfer_eval}ではスキーマの名前変更、難読化、プロトタイプの拡張、実際のMaterials Project風スキーマへの一般化が示されたが、根本的に異なる意味論を持つRDBや、はるかに大規模なRDBへの一般化性能を主張するものではない。少数ショットの例は検証DBスキーマに依存しており、異なるRDBに適用する際にはドメイン専門家による新しい例の設計が不可欠である。これらの制限を考慮に入れた上で、本研究は無機材料RDBへのNLアクセスのための設計原則の一つのデモンストレーションを提供する。
+
+\subsection{制限事項と今後の研究}
+
+\begin{enumerate}
+  \item 単一データベースの検証:
+    本研究の主な評価はOQMD由来のL1$_2$データベース（31テーブル、1ビュー、1{,}559エントリ）に基づく。ゼロ適応転送テスト（セクション~\ref{sec:transfer_eval}）では、スキーマの名前変更（90.5\%）、難読化された識別子（90.0\%）、プロトタイプの拡張（90.0\%）、および実際のMaterials Project風スキーマ（100.0\%）への一般化が示されたが、根本的に異なる意味論やスケールを持つRDBへの一般化は確認されていない。
+  \item 31テーブル・1ビュー構成の限界:
+    あくまで検証環境であり、スキーマサイズは現実の材料RDBより小さい。1つの代表スキーマに基づくため、属性名の多様さ（同義語、略語、複数言語）や異なる正規化方針を網羅しているわけではない。スキーマメタデータだけでは解決できない暗黙知（例：特定の材料体系における「安定」の意味）が残る。
+  \item 統計テストの範囲:
+    ウィルコクソン符号付き順位検定が、5回の実行にわたって完全条件に対するクエリごとの精度差（$n=100$）に対して実施された。実行回数は限られており、複数比較の補正は適用されていない；ブートストラップや他の方法は、より正確な信頼区間のために有用である。
+  \item クエリのカバレッジ:
+    100の著者設計のクエリは、材料研究における主要な検索パターンをカバーするように設計されているが、実際の使用で遭遇する多様なクエリパターンを網羅的にカバーしているわけではない。
+  \item ゴールドSQLの検証:
+    ゴールドSQLと期待される結果は著者によって作成された；独立に設計された100クエリセットは、共同著者の末松知恵によってクロスチェックされたが、外部研究者による完全な独立第三者検証は行われていない。
+  \item 辞書のカバレッジ:
+    492用語の辞書はL1$_2$探索に特化している；ヘウスラー、ペロブスカイト、その他のシステムへの拡張には手動登録が必要である。スキーマメタデータからの半自動生成への移行が望まれる。
+  \item あいまいな自然言語表現への対処:
+    「安定な」「エネルギー差の大きい」など、自然言語のあいまいな表現に対する正当な解釈は一義的ではない。単語の一致や辞書の対応だけでは、文脈に依存する比較対象や閾値を決定できない場合がある。問いを具体化するインターフェース（対象の元素、閾値、比較軸を対話的に確定させる機構）を併用すれば、Very Hard クエリを Easy に近づける余地がある。
+  \item ベースラインの公平性:
+    同じデータベースに対する他の手法（DIN-SQL、DAIL-SQLなど）との直接比較は行われていない。
+\end{enumerate}
+
+\subsection{今後の展望}
+
+\begin{enumerate}
+  \item 他の無機材料RDBでの検証:
+    Materials ProjectやAFLOWなど、異なるスキーマを持つ無機材料RDBへの適用を通じて設計原則の一般性を検証する。
+  \item 大規模データの検証:
+    OQMDの単一元素データを統合することで、10{,}000エントリ規模でのシュタイナー木探索とSQL生成の精度を検証する。
+  \item 拡張CTE評価:
+    本研究では5つのCTEクエリで100\%の精度が確認された（セクション~\ref{sec:cte_evaluation}）；より多様な導出量パターン（相安定性図、弾性異方性メトリクスなど）への評価を拡張する。
+  \item AI4Sエージェントの統合:
+    MCPプロトコルまたは関数呼び出しを介して、自律材料探索エージェントのツールとしてT2SQLメソッドを組み込む。
+  \item CALPHADの統合:
+    スキーマグラフのトラバーサルによってRDBから候補を絞り込み、その後温度依存の相安定性評価のためにCALPHAD自由エネルギー計算を行う二段階のフローである。
+  \item 多軸評価指標:
+    SELECT列の精度、JOINパスの一致率、Top-$k$精度などを別々に評価し、エラーの原因特定を促進する。
+  \item 問いの具体化インターフェース:
+    自然言語のあいまい表現を対話で確定させる仕組みを組み合わせ、VH層の扱いを容易にする。
+\end{enumerate}
+\section{結論}\label{sec:conclusion}
+
+本研究は、無機材料 RDB への自然言語アクセスを実現する Text-to-SQL パイプラインの設計原理を提示し、その有効性を 31 テーブルの L1$_2$ 原型 RDB を用いて実証した。
+
+7 条件 $\times$ 100 クエリ $\times$ 5 回実行の ablation study（計 3{,}500 件評価）から、材料ドメイン辞書（$-$7.3\,pp, $p<0.001$）と少数ショット例（$-$7.4\,pp, $p<0.001$）が材料特有のクエリパターンに不可欠であることが示された。多元素条件、化合物特性検索、ドメイン用語を含む問いにおいて改善が顕著であった。一方、JOIN パスの誤りは少なく、残る主要な失敗モードは WHERE 句条件の組み合わせ誤りである（セクション~\ref{sec:error_analysis}）。
+
+実行再現率 84.7\%, 適合率 77.3\%, F1 74.8\%, 構文妥当率 100\%, JOIN 一致率 93.2\% という多軸評価は、提案パイプラインが精度だけでなく安全性と結合経路の正確性を両立することを示す。なかでも SQLGuard は非 SELECT 文を排除し、構文妥当率を 100\% に保つことで、実用上の安全要件を満たす。4 種類のゼロ適応転用試験（A~90.0\%, B~90.5\%, C~90.0\%, D~100.0\%）により、FK イントロスペクションに基づく設計が特定のスキーマに依存しないことも示した。純元素基準からの生成エンタルピー計算を含む 15 パターンの CTE 多段計算は、単なる情報検索を超えた導出計算の実現可能性を示した。独立設計 100 件の外部検証（76.9\%）も含め、SQL を記述しない材料研究者がクロステーブル探索・工学的問いかけを行うための実用的な土台ができた。
+
+これらの結果は、無機材料 RDB におけるデータ利用の主な障壁が SQL 文法そのものではなく、正規化されたスキーマ構造の理解にあることを再確認する。示された精度は ablation 条件や難易度ティアによって大きく変動するため、どの組み合わせの機能がどの難易度の問いに寄与するかを開示し、ユーザが適切なクエリを投入できるように誘導することで、材料研究者にとって高く安全な NL-to-SQL 環境が実現できる。
+
+\section{AI for Science への貢献}\label{sec:ai4s}
+
+本研究は、自然言語を介した材料データベースアクセスという AI for Science（AI4S）における実用的な基盤を示す。大規模言語モデル（LLM）を科学データの前線に配置する際、単に生成AIを活用するのではなく、スキーマグラフ、ドメイン辞書、SQLGuard、リランカーなどの制約機構を組み合わせることで、科学データの関係性を正しく扱いながら安全に利用できることを示した。材料研究者が SQL やスキーマ構造を意識せずにクロステーブル探索・多段階導出計算を行えるようになることは、実験・シミュレーションを橋渡しするデータ駆動型材料科学の一翼を担う。また、本パイプラインは既存の材料 RDB インフラ（MInt~\cite{minamoto2020mint}、pinax~\cite{minamoto2026pinax} 等）に対し、新たなデータ変換や移行を強いることなく自然言語インターフェースを付加可能であり、AI4S エージェントの信頼性の高いツールとして展開できる。未来的には、問いの具体化インターフェースや CALPHAD 計算等との連携により、自律的な材料探索ループの構成要素となることが期待される。
+
+% =====================================================================
+\section*{謝辞}
+
+L1$_2$相間化合物のDFT計算データは、Open Quantum Materials Database (OQMD)の値を参考にして構築された合成検証データである。キュリー温度、$\Sigma 5$ grain boundaryエネルギー、合成方法、文献参照などの属性はOQMDには存在せず、検証目的で生成された。OQMDの開発と維持に関してノースウェスタン大学のウルバートングループに感謝する。本研究はNIMSの支援を受けた。
+
+% =====================================================================
+\section*{競合利益}
+
+著者は競合する利益がないことを宣言する。
+
+% =====================================================================
+\section*{倫理}
+
+本研究は人間または動物の被験者を含まず、倫理的承認は必要なかった。
+
+% =====================================================================
+\section*{データとコードの利用可能性}
+
+評価データセット（100のゴールドSQLクエリと期待される結果）、アブレーション結果（7つの条件 $\times$ 100クエリのJSON）、MeCab材料辞書（492用語、コンパイルされた.dic）、日本語リランカー比較結果、およびすべてのスクリプトはリポジトリに含まれている。他の無機材料RDBに適用するには、ドメイン辞書と少数ショット例を置き換える必要があるが、パイプラインアーキテクチャとFKトラバーサルメカニズムはそのまま再利用できる。アブレーション、転送、およびコア検証メトリックは、\texttt{paper/paper\_data.json}に生成され、\texttt{scripts/compute\_all\_figures.py}によって処理される。感度分析、モデル比較、および多軸メトリックは、それぞれのソースJSON/CSV評価出力からフォーマットされ、原稿のテーブルに挿入される。完全なソースコード、データセット、および再現性パッケージは、受理後に公開リポジトリを通じて提供され、レビューのために\url{https://github.com/minimumtone/machine-learning}で提供される。受理時にNIMSリポジトリを通じてDOIが登録される。すべての134のユニットテストが合格している。
+
+% =====================================================================
+\section*{著者の貢献}
+
+源 聡: 概念化、方法論、ソフトウェア実装、データベース構築、実験、および執筆だ。
+
+末松 知恵: 100クエリの外部検証セットの独立したクエリ設計、結果のクロスチェック、および原稿レビューだ。
+
+% =====================================================================
+
+\bibliographystyle{tfnlm}
+
+\bibliography{references}
+
+% =====================================================================
+% 補足資料（本文と統合して単一のPDFに）
+% =====================================================================
+\clearpage
+\onecolumn
+
+\appendix
+\renewcommand{\thesection}{S\arabic{section}}
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\theequation}{S\arabic{equation}}
+\counterwithout*{table}{section}
+\counterwithout*{figure}{section}
+\counterwithout*{equation}{section}
+\setcounter{section}{0}
+\setcounter{table}{0}
+\setcounter{figure}{0}
+\setcounter{equation}{0}
+\makeatletter
+\def\@seccntformat#1{\csname the#1\endcsname.\hskip 0.5em}
+\makeatother
+
+\begin{center}
+  {\LARGE\bfseries 補足資料}\\[0.8em]
+  {\large 無機材料への自然言語アクセス\\
+  関係データベース：設計原則とデモンストレーション\\
+  スキーマグラフ制約付きテキストからSQLへの変換を通じて}\\[1.0em]
+  {\normalsize 源 聡$^{1,*}$および末松千恵$^{1}$}\\[0.3em]
+  {\small $^{1}$材料データプラットフォーム、物質・材料研究機構（NIMS）、\\
+  1-1 Namiki, Tsukuba, Ibaraki 305-0044, Japan}\\[0.3em]
+  {\small $^{*}$対応著者：\texttt{minamoto.satoshi@nims.go.jp}}
+\end{center}
+\vspace{1.0em}
+\noindent\hrulefill
+\vspace{1.0em}
+
+\noindent
+この補足資料は、主論文で提案されたスキーマグラフ制約付きテキストからSQLへの変換システムの検証と評価に関する詳細情報を提供する。セクションS1では、すべてのユニットテストカテゴリとその検証の焦点を示す。セクションS2では、39の回帰テストケースをリストする。セクションS3では、3つの方法構成にわたる代表的なクエリの生成されたSQL例を比較する。セクションS4では、Ni$_3$Al近傍格子定数候補（31のうち14の代表的なエントリ）を示す。セクションS5では、安定したL1$_2$候補の形成エネルギーランキングを提示する。セクションS6では、SQLインジェクションおよび安全性テスト結果に関する補足情報を提供する。セクションS7では、LLMモード（GPT-5.5）の構成パラメータとプロンプト構造を説明する。セクションS8では、すべての100の評価クエリに対する詳細な結果（クエリテキスト、精度、レイテンシ）をリストする。セクションS9では、7つのアブレーション条件にわたる異なる結果を持つクエリを比較する。セクションS10では、独自に設計されたクエリプールに対する詳細な結果を報告する。アブレーション、転送、およびコア検証メトリクスは\texttt{paper\_data.json}から取得され、感度分析、モデル比較、および多軸メトリクスはそれぞれのソースJSON/CSV評価出力からフォーマットされる。
+
+% =====================================================================
+
+\section{ユニットテストカテゴリの詳細}
+
+\label{sec:sup_test_categories}
+
+開発安全テストとして、6つのカテゴリにわたって39の回帰テスト、6つのSQL検証テスト、15のカバレッジスコア/パーサーテスト、20の意図分類器テストを構築した（合計80；表~\ref{tab:sup_test_categories}）。エイリアス解決テスト、スーパーセット検出テストなどを含め、すべての134のユニットテストが合格した。
+
+\begin{table*}[htbp]
+\centering
+\caption{ユニットテストカテゴリ（すべての134テスト、すべて合格）。}
+\label{tab:sup_test_categories}
+\small
+\begin{tabularx}{\textwidth}{llcX}
+  \toprule
+  カテゴリ & ID & $n$ & 検証の焦点 \\
+  \midrule
+  通常 & A01--A15 & 15 & L1$_2$元素、プロトタイプ、安定性、ソート、化合物条件 \\
+  一致なし & B01--B05 & 5 & 希ガス元素、存在しない組み合わせ $\to$ 0行が期待される \\
+  曖昧な入力 & C01--C10 & 10 & 空の入力、無関係なテキスト、単語 \\
+  矛盾 & D01--D02 & 2 & ``安定かつ準安定''など \\
+  SQLインジェクション & E01--E05 & 5 & DROP、DELETE、INSERT、ピギーバック攻撃 \\
+  安全チェック & F01--F02 & 2 & 直接SQL入力（SELECT、UPDATE） \\
+  SQL検証 & --- & 6 & カラム/テーブルホワイトリスト、JOIN検証 \\
+  カバレッジ/パーサー & --- & 15 & 数値条件、化学式、カバレッジスコア \\
+  意図分類器 & --- & 20 & VASP/DFTワークフロー検出、分類 \\
+  エイリアス解決 & --- & 15 & ORDER BY/HAVING参照、カラムエイリアス \\
+  スーパーセット検出 & --- & 10 & 過剰取得検出、行比率閾値 \\
+  その他 & --- & 29 & スキーマグラフのトラバース、辞書マッピング、エンティティ抽出 \\
+  \bottomrule
+\end{tabularx}
+\end{table*}
+
+% =====================================================================
+
+\section{回帰テストケース}
+
+\label{sec:sup_all_tests}
+
+表~\ref{tab:sup_all_tests}には、すべての39の回帰テストケース（通常、一致なし、曖昧、矛盾、SQLインジェクション、安全）とそのクエリおよび結果がリストされている。
+
+\begin{table*}[htbp]
+\centering
+\caption{回帰テストケース（すべての39テスト、すべて合格）。クエリは元の日本語で示されている。}
+\label{tab:sup_all_tests}
+\footnotesize
+\begin{tabular}{llp{8cm}l}
+  \toprule
+  ID & カテゴリ & 自然言語クエリ（日本語） & 結果 \\
+  \midrule
+  A01 & 通常 & Feを含むL1$_2$化合物を出して & PASS \\
+  A02 & 通常 & 安定なL1$_2$化合物を形成エネルギー順に出して & PASS \\
+  A03 & 通常 & NiとAlの両方を含む化合物を出して & PASS \\
+  A04 & 通常 & L1$_2$化合物の全リストを出して & PASS \\
+  A05 & 通常 & 準安定なL1$_2$化合物を出して & PASS \\
+  A06 & 通常 & Coを含む安定なL1$_2$化合物を出して & PASS \\
+  A07 & 通常 & FeとAlを含むL1$_2$化合物を出して & PASS \\
+  A08 & 通常 & $\gamma'$化合物を出して & PASS \\
+  A09 & 通常 & ニッケルを含むL1$_2$型化合物を出して & PASS \\
+  A10 & 通常 & L1$_2$化合物の全データを出して & PASS \\
+  A11 & 通常 & Tiを含むL1$_2$化合物を格子定数順（降順）に出して & PASS \\
+  A12 & 通常 & 安定なL1$_2$で格子定数3.5\AA{}{} 以上のものを出して & PASS \\
+  A13 & 通常 & Cu$_3$Au型化合物を出して & PASS \\
+  A14 & 通常 & 鉄を含むL1$_2$化合物を出して & PASS \\
+  A15 & 通常 & 安定なL1$_2$化合物でNiを含むものを出して & PASS \\
+  \midrule
+  B01 & 一致なし & Xeを含むL1$_2$化合物を出して & PASS \\
+  B02 & 一致なし & UとPuを含むL1$_2$化合物を出して & PASS \\
+  B03 & 一致なし & RnとOgを含むL1$_2$化合物を出して & PASS \\
+  B04 & 一致なし & ScとIrを含む安定なL1$_2$化合物を出して & PASS \\
+  B05 & 一致なし & PtとGaを含む安定なL1$_2$化合物を出して & PASS \\
+  \midrule
+  C01 & 曖昧 & 安定な化合物を出して & PASS \\
+  C02 & 曖昧 & L12 & PASS \\
+  C03 & 曖昧 & 安定なものを出して & PASS \\
+  C04 & 曖昧 & (empty input) & PASS \\
+  C05 & 曖昧 & 今日の天気を教えて & PASS \\
+  C06 & 曖昧 & Fe & PASS \\
+  C07 & 曖昧 & 格子定数 & PASS \\
+  C08 & 曖昧 & 形成エネルギーが低い安定なL1$_2$化合物 & PASS \\
+  C09 & 曖昧 & NiAl L12 & PASS \\
+  C10 & 曖昧 & NiのL12 & PASS \\
+  \midrule
+  D01 & 矛盾 & 安定かつ準安定なL1$_2$化合物 & PASS \\
+  D02 & 矛盾 & NiなしのNi L1$_2$化合物 & PASS \\
+  \midrule
+  E01 & 拒否 & DROP TABLE material\_entry; & PASS \\
+  E02 & 拒否 & SELECT *; DELETE FROM composition; & PASS \\
+  E03 & 拒否 & L1$_2$化合物; DROP TABLE structure; & PASS \\
+  E04 & 拒否 & SELECT * FROM secret\_passwords & PASS \\
+  E05 & 拒否 & INSERT INTO material\_entry VALUES (...) & PASS \\
+  \midrule
+  F01 & 安全 & SELECT entry\_id FROM material\_entry & PASS \\
+  F02 & 安全 & UPDATE material\_entry SET formula='X' & PASS \\
+  \bottomrule
+\end{tabular}
+\end{table*}
+
+% =====================================================================
+
+\section{生成されたSQLの例}
+\label{sec:sup_sql_examples}
+
+代表的なクエリに対する生成されたSQLの例を、3つのメソッド構成（LLMのみ、フルスキーマ、我々の方法）で比較する。これは、各構成における出力SQLの質的な違いを具体的に示すことで、表~\ref{tab:ablation}における定量的比較を補完する。
+
+\subsection{``Niを含む安定なL1$_2$化合物のリスト''}
+
+\paragraph{LLMのみ（スキーマなし）:}
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
+SELECT formula, stability
+FROM materials
+WHERE element = 'Ni'
+  AND structure_type = 'L12'
+  AND stability = 'stable';
+-- テーブルの幻影: materials, stability などは存在しない
+-- 実行不可（ERROR: relation "materials" does not exist）
+\end{lstlisting}
+
+\paragraph{フルスキーマ（プロンプト内にスキーマ、少数ショット例なし）:}
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
+SELECT m.formula, ps.is_stable
+FROM material_entry m
+  JOIN composition c ON c.entry_id = m.entry_id
+  JOIN structure s ON s.entry_id = m.entry_id
+  JOIN phase_stability ps ON ps.entry_id = m.entry_id
+WHERE c.element = 'Ni'
+  AND s.strukturbericht = 'L12'
+  AND ps.is_stable = true;
+-- 実行可能だが不完全:
+-- (1) プロトタイプ条件なし（L12がstrukturberichtにない場合を見逃す）
+-- (2) DISTINCT/LIMITなし
+-- (3) lattice_aのような実質的に有用な列を選択しない
+\end{lstlisting}
+
+\paragraph{我々の方法（スキーマグラフ + 少数ショット + 辞書）:}
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
+SELECT DISTINCT m.entry_id, m.formula,
+  s.prototype, s.lattice_a, s.space_group
+FROM material_entry m
+  JOIN composition c ON c.entry_id = m.entry_id
+  JOIN structure s ON s.entry_id = m.entry_id
+  JOIN phase_stability ps ON ps.entry_id = m.entry_id
+WHERE (s.prototype = 'L12'
+    OR s.strukturbericht = 'L12')
+  AND c.element = 'Ni'
+  AND ps.energy_above_hull <= 0.001
+LIMIT 10000;
+-- スキーマグラフのトラバースにより3つのJOINのみ必要
+-- テーブルの幻影なし、DISTINCTとLIMITを含む
+\end{lstlisting}
+
+\subsection{``NiとAlの両方を含むL1$_2$化合物のリスト''}
+
+\paragraph{LLMのみ（スキーマなし）:}
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
+SELECT * FROM compounds
+WHERE elements LIKE '%Ni%' AND elements LIKE '%Al%'
+  AND crystal_structure = 'L12';
+-- テーブルの幻影: compounds, elements列は存在しない
+\end{lstlisting}
+
+\paragraph{フルスキーマ（少数ショット例なし）:}
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
+SELECT m.entry_id, m.formula
+FROM material_entry m
+  JOIN composition c ON c.entry_id = m.entry_id
+  JOIN structure s ON s.entry_id = m.entry_id
+WHERE c.element = 'Ni' AND c.element = 'Al'
+  AND s.prototype = 'L12';
+-- 致命的: 単一の行が両方の条件を同時に満たすことはできない -> 常に0行
+\end{lstlisting}
+
+\paragraph{我々の方法（EXISTSサブクエリ）:}
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
+SELECT DISTINCT m.entry_id, m.formula
+FROM material_entry m
+  JOIN structure s ON s.entry_id = m.entry_id
+WHERE (s.prototype = 'L12'
+    OR s.strukturbericht = 'L12')
+AND EXISTS (
+  SELECT 1 FROM composition
+  WHERE entry_id = m.entry_id AND element = 'Ni')
+AND EXISTS (
+  SELECT 1 FROM composition
+  WHERE entry_id = m.entry_id AND element = 'Al')
+LIMIT 10000;
+-- EXISTSサブクエリによる正確な多元素AND
+\end{lstlisting}
+
+% =====================================================================
+
+\section{Ni$_3$Al近傍の格子定数候補}
+
+\label{sec:sup_lattice_match}
+
+表~\ref{tab:sup_lattice_match}は、$|a - a_{\text{Ni}_3\text{Al}}| \leq 0.03$~\AA{}{}を厳密に満たす候補を示す（$a_{\text{ref}} = 3.57$~\AA{}{}; 合計31の中から14の代表的なエントリ）。
+
+\begin{table}[htbp]
+  \centering
+  \caption{Ni$_3$Al近傍の格子定数候補（$|a - a_{\text{ref}}| \leq 0.03$~\AA{}{}、14の代表的なエントリ）。}
+  \label{tab:sup_lattice_match}
+  \small
+  \begin{tabular}{lcccc}
+    \toprule
+    化合物 & $a$ (\AA{}{}) & $|\Delta a|$ & $E_\text{hull}$ & $E_f$ \\
+    \midrule
+    Hf$_3$Y & 3.569 & 0.001 & 0.039 & $-0.443$ \\
+    Ni$_3$Al & 3.572 & 0.002 & 0.000 & $-0.420$ \\
+    Pd$_3$Mn & 3.570 & 0.000 & 0.033 & $-0.180$ \\
+    Cr$_3$Al & 3.567 & 0.003 & 0.082 & $-0.120$ \\
+    Cr$_3$Fe & 3.574 & 0.004 & 0.037 & $-0.453$ \\
+    Rh$_3$Zr & 3.574 & 0.004 & 0.026 & $-0.525$ \\
+    Cu$_3$Zr & 3.575 & 0.005 & 0.038 & $-0.037$ \\
+    Ag$_3$Ti & 3.564 & 0.006 & 0.039 & $+0.088$ \\
+    Au$_3$V & 3.564 & 0.006 & 0.088 & $-0.471$ \\
+    Mo$_3$Nb & 3.586 & 0.016 & 0.007 & $-0.154$ \\
+    Co$_3$Ti & 3.550 & 0.020 & 0.000 & $-0.450$ \\
+    Pt$_3$Ge & 3.550 & 0.020 & 0.021 & $-0.478$ \\
+    Ni$_3$Ge & 3.583 & 0.013 & 0.075 & $-0.128$ \\
+    Ni$_3$Ga & 3.598 & 0.028 & 0.030 & $-0.229$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Co$_3$Ti ($\Delta a = 0.02$~\AA{}{}, $E_\text{hull} = 0.0$)は安定相であり、最も現実的な析出強化候補である。
+
+% =====================================================================
+
+\section{安定なL1$_2$候補の形成エネルギーランキング}
+
+\label{sec:sup_stable_l12}
+
+我々は、$E_\text{hull} \leq 0.05$~eV/atomを満たす安定/準安定なL1$_2$候補を抽出した。合計162の候補が特定された: 8つの安定なもの（$E_\text{hull} \leq 0.001$）と154の準安定なもの（$0.001 < E_\text{hull} \leq 0.05$）。安定相の中で、最も負の形成エネルギーはPt$_3$Al（$E_f = -0.550$~eV/atom）に属し、次いでAl$_3$Sc（$-0.500$）、Co$_3$Ti（$-0.450$）、Ni$_3$Al（$-0.420$）が続く。
+
+% =====================================================================
+
+\section{SQLインジェクションと安全性テストの詳細}
+
+\label{sec:sup_injection}
+
+このセクションでは、セクション~\ref{sec:injection_safety}で報告された安全性テスト結果に関する補足情報を提供する。SQLGuardの14の検証項目（セクション~\ref{sec:sqlguard}）は独立して動作し、複数の脅威ベクトルに対する深層防御を提供する。禁止キーワードの検出は正規表現ベースであり、テーブルのホワイトリストはスキーマメタデータから自動生成される。
+
+% =====================================================================
+
+\section{LLMモードの設定}
+\label{sec:sup_llm_config}
+
+LLMモードはOpenAI APIを介してGPT-5.5を使用する。表~\ref{tab:sup_llm_params}はモデルのパラメータを示している。
+
+\begin{table}[htbp]
+  \centering
+  \caption{LLMモードの設定パラメータ。}
+  \label{tab:sup_llm_params}
+  \small
+  \begin{tabular}{ll}
+    \toprule
+    パラメータ & 値 \\
+    \midrule
+    モデル & GPT-5.5 (OpenAI) \\
+    APIアクセス日 & 2026年5月～6月 \\
+    温度 & 指定なし (GPT-5シリーズは温度パラメータをサポートしていません) \\
+    最大トークン数 & 4{,}096 (すべての方法で同じ) \\
+    Top-$p$ & 1.0 \\
+    リクエストタイムアウト & 30秒 \\
+    リトライ & 最大3回 (指数バックオフ) \\
+    $n$-best候補 & 3 \\
+    クロスエンコーダ & ms-marco-MiniLM-L-6-v2 \\
+    修復ループ制限 & 3 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+構造化されたプロンプトは4つのコンポーネントから構成されている：
+
+\begin{enumerate}
+  \item システムメッセージ: タスクの説明 + スキーマYAML
+    （テーブル名、カラム名、タイプ、FK関係）
+  \item 少数ショット例: TF-IDF + クロスエンコーダによって選択された
+    トップ-$k$の類似NL--SQLペア
+  \item ユーザーメッセージ: 自然言語のクエリ
+  \item 制約: 「SELECT文のみ生成すること」,
+    「LIMIT 10000を含めること」,
+    「スキーマにリストされたテーブルのみを使用すること」
+\end{enumerate}
+
+GPT-5シリーズAPIは温度パラメータをサポートしておらず、私たちの実装でも送信していない。その結果、出力はLLMの内部状態により同一の入力に対して異なる場合がある。本論文のすべてのアブレーション結果は、5回の独立した実行からの平均$\pm$標準偏差として報告され、統計的有意性はウィルコクソン符号付き順位検定によって確認されている。
+
+% =====================================================================
+
+\section{100の評価クエリに関する詳細結果}
+\label{sec:sup_query_detail}
+
+表~\ref{tab:sup_query_detail}には、すべての100の評価クエリ（著者設計、E=20/M=30/H=30/VH=20）が、その質問テキスト、実行精度（行一致リコール）、レイテンシ、および合格/不合格（精度が$\geq 0.8$の場合は$\checkmark$）とともに示されている。すべての値は、アブレーションフル条件の代表的な1回の実行から得られたものであり、したがって表~\ref{tab:ablation}の5回の実行の平均値とは一致しない。クエリは元の日本語で示されている。
+\begin{longtable}{lp{8.5cm}ccl}
+  \caption{100の評価クエリに関する詳細な結果（完全条件の代表的な実行結果、5回の平均ではありません）。クエリは元の日本語である。}
+  \label{tab:sup_query_detail} \\
+  \toprule
+  ID & クエリ & 精度 & 秒 & P/F \\
+  \midrule
+  \endfirsthead
+  \toprule
+  ID & クエリ & 精度 & 秒 & P/F \\
+  \midrule
+  \endhead
+  \midrule
+  \multicolumn{5}{r}{\textit{次のページに続く}} \\
+  \endfoot
+  \bottomrule
+  \endlastfoot
+    \midrule
+    \multicolumn{5}{l}{簡単 ($n$=20)} \\
+    \midrule
+    q\_easy\_001 & L1$_2$構造を持つ化合物を一覧にして。 & 1.00 & 29.7 & $\checkmark$ \\
+    q\_easy\_002 & Niを含むL1$_2$型金属間化合物を抽出して。 & 1.00 & 44.3 & $\checkmark$ \\
+    q\_easy\_003 & A$_3$B型組成を持つ化合物を表示して。 & 1.00 & 31.5 & $\checkmark$ \\
+    q\_easy\_004 & L12型化合物の格子定数を一覧にして。 & 1.00 & 13.1 & $\checkmark$ \\
+    q\_easy\_005 & Coを含む化合物を表示して。 & 1.00 & 17.2 & $\checkmark$ \\
+    q\_easy\_006 & cubic構造の化合物を一覧にして。 & 1.00 & 12.6 & $\checkmark$ \\
+    q\_easy\_007 & L1$_2$型化合物のリストを出して。 & 1.00 & 20.9 & $\checkmark$ \\
+    q\_easy\_008 & Alを含む化合物を抽出して。 & 1.00 & 16.3 & $\checkmark$ \\
+    q\_easy\_009 & 空間群番号221の化合物を表示して。 & 1.00 & 13.1 & $\checkmark$ \\
+    q\_easy\_010 & Tiを含むL1$_2$型化合物を一覧にして。 & 1.00 & 23.7 & $\checkmark$ \\
+    q\_easy\_011 & 全化合物のformula一覧を出して。 & 1.00 & 12.3 & $\checkmark$ \\
+    q\_easy\_012 & L12型化合物の数を教えて。 & 1.00 & 19.9 & $\checkmark$ \\
+    q\_easy\_013 & Ptを含む化合物を表示して。 & 1.00 & 14.7 & $\checkmark$ \\
+    q\_easy\_014 & NiとAlの両方を含む化合物を抽出して。 & 1.00 & 17.9 & $\checkmark$ \\
+    q\_easy\_015 & Gaを含むL1$_2$型化合物を表示して。 & 1.00 & 37.5 & $\checkmark$ \\
+    q\_easy\_016 & Feを含む化合物を一覧にして。 & 1.00 & 20.1 & $\checkmark$ \\
+    q\_easy\_017 & Aサイトの元素を一覧にして。 & 1.00 & 10.7 & $\checkmark$ \\
+    q\_easy\_018 & 化合物の元素系を表示して。 & 1.00 & 13.7 & $\checkmark$ \\
+    q\_easy\_019 & L1$_2$型でcubic構造の化合物を出して。 & 1.00 & 18.4 & $\checkmark$ \\
+    q\_easy\_020 & Wを含むL1$_2$型化合物を表示して。 & 1.00 & 34.4 & $\checkmark$ \\
+    \midrule
+    \multicolumn{5}{l}{中程度 ($n$=30)} \\
+    \midrule
+    q\_medium\_001 & Niを含む安定なL1$_2$型化合物を抽出して。 & 1.00 & 26.4 & $\checkmark$ \\
+    q\_medium\_002 & negative formation energyのL1$_2$型化合物を元素組み合わせごとに整理して。 & 1.00 & 29.0 & $\checkmark$ \\
+    q\_medium\_003 & Alを含む安定なL1$_2$型金属間化合物を抽出して。 & 1.00 & 43.3 & $\checkmark$ \\
+    q\_medium\_004 & Ni$_3$Alに近い格子定数を持つL1$_2$化合物を探して。 & 1.00 & 34.9 & $\checkmark$ \\
+    q\_medium\_005 & 安定なL1$_2$型化合物を形成エネルギーが低い順に出して。 & 1.00 & 33.9 & $\checkmark$ \\
+    q\_medium\_006 & 準安定なL1$_2$型化合物を抽出して。 & 0.84 & 34.3 & $\checkmark$ \\
+    q\_medium\_007 & L1$_2$型化合物の形成エネルギー分布を教えて。 & 1.00 & 24.8 & $\checkmark$ \\
+    q\_medium\_008 & Co含有L1$_2$型化合物を安定性の高い順に表示して。 & 1.00 & 25.6 & $\checkmark$ \\
+    q\_medium\_009 & 格子定数が3.5\AA{}{} 以上のL1$_2$化合物を出して。 & 1.00 & 14.3 & $\checkmark$ \\
+    q\_medium\_010 & NiまたはCoを含むL1$_2$型化合物を一覧にして。 & 1.00 & 34.7 & $\checkmark$ \\
+    q\_medium\_011 & 形成エネルギーが$-$0.4以下のL1$_2$型化合物を出して。 & 1.00 & 20.5 & $\checkmark$ \\
+    q\_medium\_012 & energy above hullが0.01以下のL1$_2$型化合物を表示して。 & 1.00 & 31.0 & $\checkmark$ \\
+    q\_medium\_013 & Ti含有L1$_2$型化合物の格子定数と形成エネルギーを表示して。 & 1.00 & 18.0 & $\checkmark$ \\
+    q\_medium\_014 & L1$_2$化合物の格子定数を小さい順にソートして。 & 1.00 & 16.5 & $\checkmark$ \\
+    q\_medium\_015 & 化学系Al-Niに属するL1$_2$化合物を抽出して。 & 1.00 & 20.9 & $\checkmark$ \\
+    q\_medium\_016 & 安定で格子定数が3.6\AA{}{} 未満のL1$_2$化合物を出して。 & 1.00 & 24.2 & $\checkmark$ \\
+    q\_medium\_017 & Nbを含むL1$_2$型化合物の安定性情報を出して。 & 1.00 & 30.8 & $\checkmark$ \\
+    q\_medium\_018 & Scを含むL1$_2$型化合物を格子定数と共に表示して。 & 1.00 & 26.6 & $\checkmark$ \\
+    q\_medium\_019 & L1$_2$型化合物のうちis\_stableがtrueのものを出して。 & 1.00 & 30.1 & $\checkmark$ \\
+    q\_medium\_020 & Ni-Al系以外のL1$_2$型化合物を一覧にして。 & 1.00 & 19.6 & $\checkmark$ \\
+    q\_medium\_021 & Aサイト元素ごとのL1$_2$型化合物数を集計して。 & 1.00 & 24.4 & $\checkmark$ \\
+    q\_medium\_022 & 形成エネルギーが最も低いL1$_2$型化合物TOP5を出して。 & 1.00 & 25.9 & $\checkmark$ \\
+    q\_medium\_023 & 格子定数が4.0\AA{}{} 以上のL1$_2$化合物を出して。 & 1.00 & 16.3 & $\checkmark$ \\
+    q\_medium\_024 & Pdを含むL1$_2$型化合物を形成エネルギー順に出して。 & 1.00 & 43.6 & $\checkmark$ \\
+    q\_medium\_025 & Cu含有のL1$_2$型化合物を安定性で分類して。 & 1.00 & 33.7 & $\checkmark$ \\
+    q\_medium\_026 & Bサイト元素ごとの平均形成エネルギーを出して。 & 0.00 & 29.2 & --- \\
+    q\_medium\_027 & 格子体積が12\AA{}{}$^3$/atom以下のL1$_2$化合物を出して。 & 1.00 & 19.8 & $\checkmark$ \\
+    q\_medium\_028 & Ir含有L1$_2$型化合物の一覧を出して。 & 1.00 & 23.7 & $\checkmark$ \\
+    q\_medium\_029 & 2元素系のL1$_2$型化合物をchemical\_systemで分類して。 & 1.00 & 21.9 & $\checkmark$ \\
+    q\_medium\_030 & 安定なL1$_2$型化合物のうち格子定数が大きい順に並べて。 & 1.00 & 28.8 & $\checkmark$ \\
+    \midrule
+    \multicolumn{5}{l}{Hard ($n$=30)} \\
+    \midrule
+    q\_hard\_001 & Ni基超合金の$\gamma'$相候補として有望な安定/準安定L1$_2$化合物。 & 0.06 & 70.6 & --- \\
+    q\_hard\_002 & Aサイト$\times$Bサイト組み合わせと形成エネルギーの関係。 & 1.00 & 36.0 & $\checkmark$ \\
+    q\_hard\_003 & 格子定数がNi$_3$Alに近く形成エネルギーが低い候補。 & 1.00 & 40.7 & $\checkmark$ \\
+    q\_hard\_004 & 安定L1$_2$のバルクモジュラスを高い順に表示。 & 1.00 & 29.5 & $\checkmark$ \\
+    q\_hard\_005 & Ni/Coを含む安定L1$_2$を形成エネルギー順に。 & 1.00 & 45.9 & $\checkmark$ \\
+    q\_hard\_006 & Aサイト元素別の平均格子定数を集計。 & 1.00 & 23.5 & $\checkmark$ \\
+    q\_hard\_007 & $E_f \leq -0.3$かつ$a = 3.5$--$3.7$\AA{}{} のL1$_2$化合物。 & 1.00 & 25.7 & $\checkmark$ \\
+    q\_hard\_008 & バルクモジュラス180GPa以上のL1$_2$化合物。 & 1.00 & 26.8 & $\checkmark$ \\
+    q\_hard\_009 & Co基L1$_2$でNi$_3$Alに近い格子定数、安定性順。 & 1.00 & 50.6 & $\checkmark$ \\
+    q\_hard\_010 & BサイトAl/TiのL1$_2$を形成エネルギー順に。 & 1.00 & 25.4 & $\checkmark$ \\
+    q\_hard\_011 & L1$_2$化合物のせん断弾性率を表示。 & 1.00 & 23.0 & $\checkmark$ \\
+    q\_hard\_012 & 安定で$E_f$最低のL1$_2$トップ10。 & 0.50 & 29.4 & --- \\
+    q\_hard\_013 & Ni含有L1$_2$のバルクモジュラスと$E_f$の関係。 & 1.00 & 38.5 & $\checkmark$ \\
+    q\_hard\_014 & Aサイト元素グループ別平均$E_f$。 & 0.00 & 34.8 & --- \\
+    q\_hard\_015 & $a \approx 3.55$\AA{}{} でバルクモジュラスの高いL1$_2$。 & 0.51 & 36.3 & --- \\
+    q\_hard\_016 & 格子定数と$E_f$の相関データ。 & 1.00 & 18.9 & $\checkmark$ \\
+    q\_hard\_017 & Co$_3$TiとNi$_3$Alの格子定数差を計算。 & 1.00 & 31.0 & $\checkmark$ \\
+    q\_hard\_018 & Al系L1$_2$の安定/不安定のCount。 & 0.00 & 35.6 & --- \\
+    q\_hard\_019 & 準安定L1$_2$をenergy above hull順にランキング。 & 0.84 & 31.0 & $\checkmark$ \\
+    q\_hard\_020 & Bサイト元素ごとの安定L1$_2$数を集計。 & 0.20 & 21.8 & --- \\
+    q\_hard\_021 & DFT計算で得られた物性一覧。 & 1.00 & 36.6 & $\checkmark$ \\
+    q\_hard\_022 & PBE汎関数計算のバルクモジュラス。 & 1.00 & 25.3 & $\checkmark$ \\
+    q\_hard\_023 & Ni$_3$Alとの格子ミスマッチを小さい順に。 & 1.00 & 19.0 & $\checkmark$ \\
+    q\_hard\_024 & Fe含有L1$_2$の安定性と弾性特性を同時表示。 & 0.00 & 31.2 & --- \\
+    q\_hard\_025 & 安定L1$_2$でバルクモジュラス160GPa以上。 & 1.00 & 36.9 & $\checkmark$ \\
+    q\_hard\_026 & 安定性$\times$格子定数でNi$_3$Alに近い候補。 & 1.00 & 30.0 & $\checkmark$ \\
+    q\_hard\_027 & Aサイト=Ni/Co、Bサイト=Al/TiのL1$_2$。 & 1.00 & 34.8 & $\checkmark$ \\
+    q\_hard\_028 & 体積あたり原子数と格子定数の関係。 & 1.00 & 23.2 & $\checkmark$ \\
+    q\_hard\_029 & $E_{hull} = 0$かつ$E_f \leq -0.4$のL1$_2$。 & 1.00 & 30.7 & $\checkmark$ \\
+    q\_hard\_030 & 遷移金属含有の安定L1$_2$。 & 1.00 & 58.2 & $\checkmark$ \\
+    \midrule
+    \multicolumn{5}{l}{非常に難しい ($n$=20)} \\
+    \midrule
+    q\_vhard\_001 & 相安定性$\times$格子ミスマッチ$\times$弾性の多基準評価。 & 0.00 & 49.9 & --- \\
+    q\_vhard\_002 & Ni$_3$Al代替/$\gamma'$候補の多基準探索。 & 0.04 & 48.9 & --- \\
+    q\_vhard\_003 & $\gamma'$候補の重み付きスコアでランキング。 & 0.00 & 48.3 & --- \\
+    q\_vhard\_004 & Ni/Co含有$\times$安定$\times$高$B$のトップ10。 & 1.00 & 33.5 & $\checkmark$ \\
+    q\_vhard\_005 & 元素組み合わせ$\times$安定性をA/Bサイト別に集計。 & 1.00 & 47.7 & $\checkmark$ \\
+    q\_vhard\_006 & Ni$_3$Alに近い格子$\times$高$B$$\times$安定の総合評価。 & 0.19 & 42.4 & --- \\
+    q\_vhard\_007 & 析出強化L1$_2$の多基準（ミスマッチ$\times$$G$$\times$安定性）。 & 0.05 & 45.8 & --- \\
+    q\_vhard\_008 & Co基$\gamma'$候補のNi$_3$Al比較付き探索。 & 0.11 & 27.9 & --- \\
+    q\_vhard\_009 & Co$_3$Tiの生成エンタルピーを純物質基準から計算（CTE）。 & 1.00 & 23.0 & $\checkmark$ \\
+    q\_vhard\_010 & $E_f$ vs $E_{hull}$の安定性マップデータ。 & 1.00 & 48.8 & $\checkmark$ \\
+    q\_vhard\_011 & 高温安定性の観点で$E_f$上位候補。 & 0.09 & 39.2 & --- \\
+    q\_vhard\_012 & Ni-Al系以外の$\gamma'$代替候補。 & 0.02 & 37.3 & --- \\
+    q\_vhard\_013 & $B$ vs $a$の散布図データOutput。 & 1.00 & 18.6 & $\checkmark$ \\
+    q\_vhard\_014 & 3d対4d/5d遷移金属Aサイトの比較。 & 0.88 & 53.1 & $\checkmark$ \\
+    q\_vhard\_015 & Ni$_3$Alより安定で$B$が高い候補。 & 0.00 & 49.6 & --- \\
+    q\_vhard\_016 & 安定L1$_2$の$\Delta H_f$をCTEで算出、$<$$-$0.3でフィルタ。 & 1.00 & 30.3 & $\checkmark$ \\
+    q\_vhard\_017 & 安定性$\times$格子整合$\times$弾性の複合スコア。 & 1.00 & 68.3 & $\checkmark$ \\
+    q\_vhard\_018 & Aサイト元素ごとの平均$\Delta H_f$をCTEで集約。 & 1.00 & 28.2 & $\checkmark$ \\
+    q\_vhard\_019 & Ni含有安定L1$_2$の$\Delta H_f$を多段CTEで算出、Top5。 & 1.00 & 32.7 & $\checkmark$ \\
+    q\_vhard\_020 & 形成Eが加重純物質基準より0.1以上低い化合物（CTE）。 & 1.00 & 23.9 & $\checkmark$ \\
+\end{longtable}
+% =====================================================================
+\section{アブレーション条件間の精度差クエリ}
+
+\label{sec:sup_ablation_diff}
+
+表~\ref{tab:sup_ablation_diff}は、7つのアブレーション条件における精度差を持つ35のクエリを示している（単一の診断実行であり、表~\ref{tab:ablation}の5回の実行の平均に使用された5回の実行のいずれでもない）。値は、完全条件から$> 0.05$の減少を示している。$-$FS = no\_fewshot, $-$Dict = no\_dict, $-$RR = no\_reranker, $-$GD = no\_guard, $-$NB = no\_nbest, $-$GR = no\_graph。
+
+\begin{table*}[htbp]
+\centering
+\caption{アブレーション条件間のクエリレベルの精度差（単一の診断実行であり、5回の実行の平均に使用された5回の実行のいずれでもない; 35/100クエリ）。太字は完全条件から$> 0.05$の減少を示す。}
+\label{tab:sup_ablation_diff}
+\scriptsize
+\begin{tabular}{@{}llccccccc@{}}
+  \toprule
+  ID & D & Full & $-$FS & $-$Dict & $-$RR & $-$GD & $-$NB & $-$GR \\
+  \midrule
+    q\_easy\_007 & E & 1.00 & 0.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_medium\_001 & M & 1.00 & 0.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_medium\_004 & M & 1.00 & 1.00 & 1.00 & 0.00 & 1.00 & 1.00 & 1.00 \\
+    q\_medium\_012 & M & 1.00 & 0.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_medium\_013 & M & 1.00 & 0.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_medium\_014 & M & 1.00 & 0.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_medium\_020 & M & 1.00 & 1.00 & 1.00 & 0.00 & 1.00 & 1.00 & 1.00 \\
+    q\_medium\_021 & M & 1.00 & 0.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_medium\_026 & M & 0.00 & 0.05 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\
+    q\_hard\_001 & H & 0.06 & 0.00 & 0.00 & 0.06 & 0.06 & 0.06 & 0.06 \\
+    q\_hard\_002 & H & 1.00 & 1.00 & 0.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_hard\_003 & H & 1.00 & 0.00 & 1.00 & 0.01 & 1.00 & 1.00 & 1.00 \\
+    q\_hard\_004 & H & 1.00 & 0.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_hard\_006 & H & 1.00 & 1.00 & 0.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_hard\_010 & H & 1.00 & 0.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_hard\_011 & H & 1.00 & 0.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_hard\_012 & H & 0.50 & 0.50 & 0.38 & 0.50 & 0.50 & 0.50 & 0.50 \\
+    q\_hard\_024 & H & 0.00 & 0.00 & 0.00 & 0.11 & 0.00 & 0.00 & 0.00 \\
+    q\_hard\_026 & H & 1.00 & 1.00 & 1.00 & 0.01 & 1.00 & 1.00 & 1.00 \\
+    q\_vhard\_001 & V & 0.00 & 0.00 & 0.00 & 0.19 & 0.00 & 0.00 & 0.00 \\
+    q\_vhard\_002 & V & 0.04 & 0.17 & 0.19 & 0.03 & 0.02 & 0.00 & 0.03 \\
+    q\_vhard\_004 & V & 1.00 & 1.00 & 0.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_vhard\_005 & V & 1.00 & 1.00 & 0.00 & 1.00 & 1.00 & 0.00 & 1.00 \\
+    q\_vhard\_006 & V & 0.19 & 0.19 & 0.00 & 0.19 & 0.19 & 0.19 & 0.19 \\
+    q\_vhard\_007 & V & 0.05 & 0.00 & 0.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_vhard\_008 & V & 0.11 & 0.11 & 0.00 & 0.11 & 0.11 & 0.11 & 0.11 \\
+    q\_vhard\_009 & V & 1.00 & 0.00 & 1.00 & 1.00 & 0.00 & 1.00 & 1.00 \\
+    q\_vhard\_012 & V & 0.02 & 0.18 & 0.00 & 0.18 & 0.18 & 0.18 & 0.18 \\
+    q\_vhard\_013 & V & 1.00 & 0.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_vhard\_015 & V & 0.00 & 0.02 & 0.00 & 0.02 & 0.02 & 0.00 & 0.02 \\
+    q\_vhard\_016 & V & 1.00 & 0.00 & 1.00 & 1.00 & 0.00 & 1.00 & 1.00 \\
+    q\_vhard\_017 & V & 1.00 & 0.60 & 0.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+    q\_vhard\_018 & V & 1.00 & 0.00 & 1.00 & 1.00 & 0.00 & 1.00 & 1.00 \\
+    q\_vhard\_019 & V & 1.00 & 0.00 & 0.60 & 1.00 & 0.00 & 1.00 & 1.00 \\
+    q\_vhard\_020 & V & 1.00 & 0.00 & 1.00 & 1.00 & 0.00 & 1.00 & 1.00 \\
+  \bottomrule
+\end{tabular}
+\end{table*}
+
+表~\ref{tab:sup_ablation_diff}から、以下の傾向が観察される：
+\begin{itemize}
+  \item no\_fewshot ($-$FS) は、EasyからHardの層全体にわたって広範なゼロ化を引き起こし、少数ショットの例の広範な寄与を示している。
+  \item no\_dict ($-$Dict) は、Very Hard層にゼロ化を集中させ、VHクエリに対する辞書の強い効果を確認している（表~\ref{tab:dict_size}の61エントリーのサブセット感度も参照）。
+  \item no\_reranker ($-$RR) は、q\_hard\_003、q\_hard\_026、q\_medium\_004、およびq\_medium\_020で完全な失敗を引き起こし、候補選択の効果を示している。
+  \item no\_guard ($-$GD) は、この診断実行で5つのCTEクエリ（q\_vhard\_009/016/018/019/020）をゼロ化する。5回の実行の平均ではSQLGuardの効果は小さいが（$-$0.2\,pp, $p=0.891$; 表~\ref{tab:ablation}）、各実行の失敗はSQLGuardがCTE構文の安全ネットとして機能していることを示している。
+  \item q\_vhard\_007は完全条件下で0.05のスコアを持つが、$-$RR/$-$GD/$-$NB/$-$GRの下では1.00に上昇する---これは、リランカーとSQLGuardが過剰にフィルタリングしている例である。
+\end{itemize}
+
+% =====================================================================
+
+\section{独立したクエリプールの詳細結果}
+
+\label{sec:sup_expert_queries}
+
+表~\ref{tab:sup_expert_summary}は、セクション~\ref{sec:independent_eval}で報告された独立に設計された100クエリセットのHardに基づく結果を示している。アブレーションクエリに使用されたのと同じ統一された複雑さスコアの閾値（\S3.2で定義）をここでも適用している。
+
+\begin{table}[htbp]
+  \centering
+  \caption{難易度別の独立に設計された100クエリの精度。難易度は\S3.2で定義された統一複雑さスコアによって決定される。}
+  \label{tab:sup_expert_summary}
+  \small
+  \begin{tabular}{lcc}
+    \toprule
+    難易度 & 数量 & 平均実行精度 (\%) \\
+    \midrule
+    簡単 ($< 8$) & 18 & 94.4 \\
+    中程度 ($8$--$11$) & 34 & 81.7 \\
+    難しい ($12$--$16$) & 34 & 61.5 \\
+    非常に難しい ($\geq 17$) & 14 & 80.4 \\
+    \midrule
+    全体 & 100 & 76.9 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+非常にHard層（80.4\%）は、Hard層（61.5\%）よりも高いのは、14の非常にHardクエリがいくつかの短いCTEパターンを含んでおり、少数ショットの例によってカバーされているためである。一方、いくつかのHardクエリは、少数ショットのサポートなしに周辺テーブルを参照している。
+
+独立したクエリプールは10のカテゴリ（A: 基本検索、B: 構成/要素、C: 構造/格子定数、D: 安定性/形成エネルギー、E: DFT計算/特性、F: 電子構造/磁気/熱特性、G: 表面/粒界/欠陥、H: 文献/合成/応用、I: 材料設計/スクリーニング、J: 比較/統計）で構成されており、各カテゴリに10のクエリがある。
+
+\end{document}
+

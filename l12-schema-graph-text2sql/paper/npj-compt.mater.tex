@@ -1481,21 +1481,26 @@ database once it is substituted for the validation set.
 Our results reaffirm that the primary barrier to data utilization
 in inorganic materials RDBs lies in understanding the schema
 structure.
-Against a normalized schema of 31 tables, the LLM alone
-(no few-shot examples, no dictionary) achieves only 77.3\%
-accuracy (Table~\ref{tab:ablation}, no\_fewshot condition),
-dropping to 48.3\% on Very Hard queries containing
-domain-specific terminology.
-This demonstrates that merely presenting schema information is
-insufficient to accurately translate materials researchers' intent
-into SQL.
+Against a normalized schema of 31 tables, the model retaining the
+schema, dictionary, and reranker but without few-shot examples
+(no\_fewshot condition) still achieves only 77.3\% accuracy, and
+the model retaining the schema, few-shot examples, and reranker
+but without the dictionary (no\_dict condition) gives a nearly
+equal 77.4\% (Table~\ref{tab:ablation}). The Very Hard tier falls
+to 48.3\% without few-shot examples and to 37.1\% without the
+dictionary, showing that either omission severely impairs
+handling of domain-specific terminology.
+This demonstrates that a schema-aware system cannot accurately
+translate materials researchers' intent into SQL in the absence
+of either few-shot examples or the domain dictionary; both are
+necessary.
 
 A natural language interface can effectively reduce this schema
 barrier.
-Adding the materials domain dictionary and few-shot examples
-improves accuracy from 77.3\% to 84.7\%, with particularly
-notable gains on complex queries that heavily use
-domain-specific vocabulary.
+The combined use of few-shot examples and the materials domain
+dictionary restores accuracy to 84.7\%, with particularly notable
+gains on complex queries that heavily use domain-specific
+vocabulary.
 This improvement suggests that NL access to inorganic materials
 RDBs goes beyond mere convenience, substantively enabling access
 to data that was previously inaccessible due to schema barriers.
@@ -1662,8 +1667,9 @@ Ablation conditions can be viewed as simplified methods with one
 component removed (Table~\ref{tab:ablation}).
 The no\_fewshot condition removes only the few-shot examples while
 retaining the dictionary and reranker, yielding an accuracy of
-77.3\% ($-$7.4\,pp), which is comparable to the largest observed
-single-component drop (no\_dict, $-$7.3\,pp). This indicates that
+77.3\% ($-$7.4\,pp), and the no\_dict condition removes only the
+dictionary, yielding 77.4\% ($-$7.3\,pp). These are the two largest
+single-component drops and are almost identical, indicating that
 few-shot examples and the dictionary are the two dominant
 contributors to overall accuracy.
 The full proposed method reaches 84.7\%.
