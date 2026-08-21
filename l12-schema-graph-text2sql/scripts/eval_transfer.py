@@ -23,7 +23,7 @@ sys.path.insert(0, str(PROJECT))
 
 import psycopg  # noqa: E402
 
-from evaluation.metrics import execution_accuracy_full, normalize_limit  # noqa: E402
+from evaluation.metrics import exact_result_set_match, execution_accuracy_full, normalize_limit  # noqa: E402
 from graph.graph_builder import build_table_graph  # noqa: E402
 from graph.join_path_generator import get_allowed_join_list  # noqa: E402
 from graph.schema_parser import get_columns, get_foreign_keys, get_tables  # noqa: E402
@@ -53,22 +53,31 @@ def execute_sql(conn, sql: str) -> dict:
                 "row_count": 0, "columns": []}
 
 
-def compute_accuracy(conn, sql: str, qid: str) -> float:
-    """Compute recall of SQL execution against stored expected results."""
+def compute_metrics(conn, sql: str, qid: str) -> dict[str, float]:
+    """Compute row recall, precision, F1, and exact result-set match."""
     path = RESULTS_DIR / f"{qid}.json"
     with open(path) as f:
         data = json.load(f)
     expected_rows, expected_columns = data.get("rows", []), data.get("columns", [])
     if not sql:
-        return 0.0
+        return {"recall": 0.0, "precision": 0.0, "f1": 0.0, "exact_match": 0.0}
     exec_result = execute_sql(conn, sql)
     if not exec_result.get("success"):
-        return 0.0
+        return {"recall": 0.0, "precision": 0.0, "f1": 0.0, "exact_match": 0.0}
     metrics = execution_accuracy_full(
         exec_result["rows"], expected_rows,
         exec_result["columns"], expected_columns,
     )
-    return metrics.get("recall", 0.0)
+    metrics["exact_match"] = exact_result_set_match(
+        exec_result["rows"], expected_rows,
+        exec_result["columns"], expected_columns,
+    )
+    return metrics
+
+
+def compute_accuracy(conn, sql: str, qid: str) -> float:
+    """Backward-compatible alias: historical accuracy equals row recall."""
+    return compute_metrics(conn, sql, qid)["recall"]
 
 
 def main() -> None:
@@ -122,16 +131,17 @@ def main() -> None:
             sql = pipe_result.get("sql", "")
             if sql:
                 sql = normalize_limit(sql)
-            acc = compute_accuracy(conn, sql, qid)
+            metrics = compute_metrics(conn, sql, qid)
         except Exception as e:
             print(f"ERROR: {type(e).__name__}: {e!s:.80s}")
-            acc, sql = 0.0, ""
+            metrics, sql = {"recall": 0.0, "precision": 0.0, "f1": 0.0, "exact_match": 0.0}, ""
         elapsed = time.time() - t0
-        print(f"acc={acc:.1%}  {elapsed:.1f}s")
+        print(f"recall={metrics['recall']:.1%} exact={metrics['exact_match']:.0%}  {elapsed:.1f}s")
         results.append({
             "qid": qid,
             "difficulty": q["difficulty"],
-            "accuracy": acc,
+            "accuracy": metrics["recall"],  # historical field
+            **metrics,
             "latency_s": round(elapsed, 1),
             "sql": sql,
         })
