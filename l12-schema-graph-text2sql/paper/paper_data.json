@@ -2,8 +2,8 @@
   "_meta": {
     "description": "Single source of truth for paper numerical values",
     "generated_by": "scripts/compute_all_figures.py",
-    "generated_at": "2026-08-12 05:32:26 UTC",
-    "git_commit": "9a3d9fe0bad922ff3ba412405b5f076fb75d588a",
+    "generated_at": "2026-08-21 06:19:26 UTC",
+    "git_commit": "f1f037a8e7b13f08a29e04d9f14376edc2143be1",
     "source_files": [
       "evaluation/ablation_multirun_stats.json",
       "evaluation/ablation_run_1.json",
@@ -281,7 +281,8 @@
     "n_stable_metastable_l12": 162,
     "n_stable_l12": 8,
     "n_metastable_l12": 154,
-    "n_ni3al_lattice_match": 31
+    "n_ni3al_lattice_match": 29,
+    "a_ref_ni3al": 3.572
   },
   "independent_evaluation": {
     "_note": "The 60-query harmonized comparison has been removed; use the 100-query full rerun below.",
