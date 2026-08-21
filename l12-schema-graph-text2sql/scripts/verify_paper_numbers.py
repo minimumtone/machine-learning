@@ -241,8 +241,8 @@ def main(argv: list[str] | None = None) -> int:
     for raw, val, start, end in tex_numbers:
         if val not in json_numbers:
             ctx_start = max(0, start - 25)
-            ctx_end = min(len(combined_tex_no_comment), end + 25)
-            ctx = combined_tex_no_comment[ctx_start:ctx_end].replace("\n", " ")
+            ctx_end = min(len(combined_tex_clean), end + 25)
+            ctx = combined_tex_clean[ctx_start:ctx_end].replace("\n", " ")
             tex_not_in_json.append((raw, val, ctx))
 
     print(f"JSON numeric values: {len(json_numbers)}")
