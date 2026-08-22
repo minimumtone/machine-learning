@@ -308,7 +308,7 @@
     }
   },
   "transfer_evaluation": {
-    "_note": "Zero-adaptation run against the OQMD-flavored transfer schema (5 tables, renamed columns)",
+    "_note": "Transfer run against the OQMD-flavored transfer schema (5 tables, renamed columns); no code changes",
     "model": "gpt-5.5",
     "n_queries": 20,
     "overall_pct": 90.5,
@@ -322,7 +322,7 @@
     "source_file": "evaluation/transfer_eval_results.json"
   },
   "transfer_evaluation_variants": {
-    "_note": "Zero-adaptation transfer tests A--D",
+    "_note": "Transfer/generalization tests A--D; A is same-schema data expansion, B/C are code-unchanged schema transfer, D is lightweight MP adaptation (dedicated prompt + 8 few-shot examples)",
     "A_prototype_expansion": {
       "_note": "B2/NaCl/NiAs/BiF$_3$ prototype expansion on the same 31-table normalized schema",
       "model": "gpt-5.5",

@@ -690,12 +690,12 @@ def main():
             "full_100q_rerun": independent_eval,
         },
         "transfer_evaluation": {
-            "_note": "Zero-adaptation run against the OQMD-flavored "
-                     "transfer schema (5 tables, renamed columns)",
+            "_note": "Transfer run against the OQMD-flavored transfer "
+                     "schema (5 tables, renamed columns); no code changes",
             **transfer_eval,
         },
         "transfer_evaluation_variants": {
-            "_note": "Zero-adaptation transfer tests A--D",
+            "_note": "Transfer/generalization tests A--D; A is same-schema data expansion, B/C are code-unchanged schema transfer, D is lightweight MP adaptation (dedicated prompt + 8 few-shot examples)",
             "A_prototype_expansion": {
                 "_note": "B2/NaCl/NiAs/BiF$_3$ prototype expansion on the "
                          "same 31-table normalized schema",
