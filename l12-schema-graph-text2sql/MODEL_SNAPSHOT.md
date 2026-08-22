@@ -17,7 +17,7 @@ outputs.
 
 ## Software versions used for the reported numbers
 
-- Python 3.10.12
+- Python 3.10.12 (original run); package default/validated: Python 3.12.13
 - PostgreSQL 15 (official Docker image)
 - psycopg 3.x
 - MeCab 0.996 / ipadic 1.0
@@ -47,3 +47,14 @@ outputs.
   (`db/*.sql`), the evaluation queries/gold SQL/expected results
   (`evaluation/*.jsonl`, `evaluation/gold_sql/`, `evaluation/expected_results/`),
   and the aggregated numbers in `paper/paper_data.json`.
+
+## Verified reproduction environments
+
+- Default / validated environment: Python 3.12.13, PostgreSQL 15.18,
+  numpy 2.2.1, sqlglot 30.12.0 (pinned in `requirements-repro.txt`;
+  full freeze in `requirements-lock.txt`). `reproduce.sh` prefers
+  `python3.12` when available (override with `L12_PYTHON`).
+- Also verified: Python 3.10.12 (original reported-value generation) and an
+  independent third-party reproduction on Python 3.12.3 / PostgreSQL 16.15 /
+  numpy 2.5.2 / sqlglot 30.17.0 — `paper/paper_data.json` identical apart
+  from the `_meta` block. PostgreSQL 15 or newer suffices.
