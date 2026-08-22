@@ -145,8 +145,8 @@ def fig_dict_sensitivity():
     with open(path) as f:
         data = json.load(f)
 
-    configs = ["dict_full", "dict_50%", "dict_25%", "dict_0%"]
-    labels = ["Full (61)", "50% (30)", "25% (15)", "0% (none)"]
+    configs = ["dict_full", "dict_50%", "dict_25%", "dict_10%", "dict_0%"]
+    labels = ["Full (61)", "50% (30)", "25% (15)", "10% (6)", "0% (none)"]
     diffs = ["easy", "medium", "hard", "very_hard"]
     diff_labels = ["Easy", "Medium", "Hard", "Very Hard"]
     colors = ["#4CAF50", "#2196F3", "#FF9800", "#F44336"]
