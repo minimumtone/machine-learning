@@ -9,6 +9,17 @@
 % Temporary: luatexja is required for Japanese NL query examples in tables.
 % Remove before final submission to STAM Methods and translate those examples.
 \usepackage{luatexja}
+% Body text at 10.5pt (interact.cls default is 11pt).
+\makeatletter
+\renewcommand\normalsize{%
+   \@setfontsize\normalsize{10.5}{13}%
+   \abovedisplayskip 13\p@ \@plus2\p@ minus.5pt
+   \abovedisplayshortskip \abovedisplayskip
+   \belowdisplayskip 13\p@ \@plus2\p@ minus.5pt
+   \belowdisplayshortskip\belowdisplayskip
+   \let\@listi\@listI}
+\makeatother
+\normalsize
 \usepackage{url}
 \usepackage{cite}
 \usepackage{chngcntr}
