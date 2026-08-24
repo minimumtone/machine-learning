@@ -2112,7 +2112,7 @@ no\_graph     & 100\% \\
 \texttt{docker/docker-compose.yml}がPostgreSQL 15コンテナを起動し、初期化スクリプトとして\texttt{db/extended\_schema.sql}（スキーマ）、\texttt{db/insert\_data.sql}、\texttt{db/insert\_pure\_elements.sql}をこの順に自動投入する（\texttt{docker-entrypoint-initdb.d}経由）。一般化評価用DBは\texttt{scripts/build\_transfer\_db.py}（バリアントB：OQMD風リネーム、\texttt{db/transfer\_schema.sql}）、\texttt{scripts/build\_obfuscated\_transfer\_db.py}（バリアントC：識別子難読化）、\texttt{scripts/prepare\_mp\_transfer.py}＋\texttt{scripts/build\_mp\_transfer\_db.py}（バリアントD：Materials Project実データ3テーブル）で構築する。
 
 \paragraph{ステップ3：評価データセット。}
-主評価100クエリは\texttt{evaluation/evaluation\_dataset.jsonl}に、ゴールドSQLは\texttt{evaluation/gold\_sql/}、期待実行結果は\texttt{evaluation/expected\_results/}に格納される。独立設計100クエリは\texttt{expert\_evaluation\_dataset.jsonl}、CTE 15クエリは\texttt{cte\_evaluation\_dataset.jsonl}、バリアントA用20クエリは\texttt{scripts/gen\_prototype\_evaluation.py}が\texttt{prototype\_evaluation\_dataset.jsonl}として生成する。
+主評価100クエリは\texttt{evaluation/evaluation\_dataset.jsonl}に、ゴールドSQLは\texttt{evaluation/gold\_sql/}、期待実行結果は\texttt{evaluation/expected\_results/}に格納される。独立設計100クエリは\texttt{expert\_evaluation\_dataset.jsonl}、新規CTE 10クエリ（zero-shot）は\texttt{cte\_evaluation\_dataset.jsonl}（主評価の5クエリと合わせCTE評価は計15クエリ）、バリアントA用20クエリは\texttt{scripts/gen\_prototype\_evaluation.py}が\texttt{prototype\_evaluation\_dataset.jsonl}として生成する。
 
 \paragraph{ステップ4：評価実行（要LLM API・非決定的）。}
 (a)~アブレーション：\texttt{scripts/eval\_ablation\_multirun.py --n-runs 5}が7条件$\times$100クエリを5回実行し、各ランを\texttt{evaluation/ablation\_run\_\{1..5\}.json}、平均$\pm$SDを\texttt{ablation\_multirun\_stats.json}に保存する（単一ラン版は\texttt{eval\_ablation.py}、出力\texttt{ablation\_results.json}）。
