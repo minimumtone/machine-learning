@@ -88,7 +88,7 @@
         <mxCell id="e-c2s4" value="全評価パイプライン共通入力" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;dashed=1;fontSize=11" edge="1" parent="1" source="c2" target="s4"><mxGeometry relative="1" as="geometry"/></mxCell>
 
         <!-- Step 5 -->
-        <mxCell id="s5" value="ステップ5: 統計解析" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;fontStyle=1" vertex="1" parent="1">
+        <mxCell id="s5" value="ステップ5: アブレーション統計解析" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;fontStyle=1" vertex="1" parent="1">
           <mxGeometry x="40" y="1030" width="700" height="150" as="geometry"/>
         </mxCell>
         <mxCell id="g1" value="compute_ablation_stats_v2.py&#10;(クエリ単位 n=100, n_eff, 正確符号反転検定, rank-biserial, bootstrap 95%CI, シード20260602)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6" vertex="1" parent="1">
@@ -101,7 +101,7 @@
         <mxCell id="e-g1g2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="g1" target="g2"><mxGeometry relative="1" as="geometry"/></mxCell>
 
         <!-- TEST GATE -->
-        <mxCell id="gate" value="TEST GATE&#10;pytest tests/ 134件 合格?&#10;(compute_all_figures.py が冒頭で実行、&#10;失敗時は paper_data.json を生成せず停止)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1" vertex="1" parent="1">
+        <mxCell id="gate" value="PRECONDITION / TEST GATE&#10;compute_all_figures.py 起動時に&#10;pytest tests/ → 134 PASS 必須&#10;(失敗時は paper_data.json を生成せず停止)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1" vertex="1" parent="1">
           <mxGeometry x="260" y="1220" width="360" height="140" as="geometry"/>
         </mxCell>
         <mxCell id="e-g2gate" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="g2" target="gate"><mxGeometry relative="1" as="geometry"/></mxCell>

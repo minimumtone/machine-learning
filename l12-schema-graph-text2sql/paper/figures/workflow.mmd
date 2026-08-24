@@ -34,12 +34,12 @@ flowchart TB
   E4 --> F4
   C2 -. 全評価パイプライン共通入力 .-> S4
 
-  subgraph S5["ステップ5: 統計解析"]
+  subgraph S5["ステップ5: アブレーション統計解析"]
     G1["compute_ablation_stats_v2.py<br/>(n_eff, 正確符号反転p, rank-biserial,<br/>bootstrap 95%CI, シード20260602)"] --> G2["ablation_significance_v2.json"]
   end
   F1 --> G1
 
-  GATE{{"TEST GATE: pytest tests/ 134件 合格?<br/>(compute_all_figures.py が実行、失敗時は生成停止)"}}
+  GATE{{"PRECONDITION / TEST GATE<br/>compute_all_figures.py 起動時に<br/>pytest tests/ → 134 PASS 必須（失敗時は生成停止）"}}
   G2 --> GATE
 
   subgraph S6["ステップ6: 集計・図表生成 (決定的)"]
