@@ -231,7 +231,10 @@ def main(argv: list[str] | None = None) -> int:
         (n, paths)
         for n, paths in missing_in_tex
         if not all(
-            "p_value" in p or p.startswith(UNCITED_JSON_PATHS) for p in paths
+            "p_value" in p
+            or ".stats_v2." in p  # full precision; cited rounded in the table
+            or p.startswith(UNCITED_JSON_PATHS)
+            for p in paths
         )
     ]
 

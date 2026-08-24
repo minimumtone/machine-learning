@@ -258,7 +258,8 @@ def main():
     multirun = load_json("evaluation/ablation_multirun_stats.json")
     n_runs = multirun["n_runs"]
     mrc = multirun["conditions"]  # per-condition stats
-    sig = multirun["significance_tests"]  # Wilcoxon p-values
+    sig = multirun["significance_tests"]  # Wilcoxon p-values (legacy)
+    sig_v2 = load_json("evaluation/ablation_significance_v2.json")
 
     # Also load latest single-run for per-query CTE/error analysis
     abl = load_json("evaluation/ablation_results.json")
@@ -293,6 +294,11 @@ def main():
             ablation_table[cond_name]["significant"] = (
                 s["p_value"] is not None and s["p_value"] < 0.05
             )
+        # Sign-flip permutation test + bootstrap CI (v2 statistics, used
+        # in the manuscript's ablation table)
+        if cond_name in sig_v2.get("comparisons", sig_v2):
+            v2 = sig_v2.get("comparisons", sig_v2)[cond_name]
+            ablation_table[cond_name]["stats_v2"] = v2
 
     # Per-difficulty deltas for top-3 components
     ablation_deltas = {}

@@ -1,0 +1,92 @@
+{
+  "no_fewshot": {
+    "delta_pp": 7.352938924557677,
+    "n_eff": 34,
+    "p_exact_sign_flip": 4.9999750001249995e-06,
+    "p_method": "monte_carlo_200k",
+    "min_attainable_p": 1.1641532182693481e-10,
+    "test_powered_at_0.05": true,
+    "rank_biserial": 0.8319327731092437,
+    "bootstrap_ci95_pp": [
+      4.042984142276712,
+      11.197151671231591
+    ],
+    "n_bootstrap": 20000,
+    "seed": 20260602
+  },
+  "no_dict": {
+    "delta_pp": 7.277058029689609,
+    "n_eff": 20,
+    "p_exact_sign_flip": 2.47955322265625e-05,
+    "p_method": "exact",
+    "min_attainable_p": 1.9073486328125e-06,
+    "test_powered_at_0.05": true,
+    "rank_biserial": 0.9428571428571428,
+    "bootstrap_ci95_pp": [
+      3.306920209176788,
+      11.905311234817809
+    ],
+    "n_bootstrap": 20000,
+    "seed": 20260602
+  },
+  "no_reranker": {
+    "delta_pp": 3.254179646349458,
+    "n_eff": 13,
+    "p_exact_sign_flip": 0.115234375,
+    "p_method": "exact",
+    "min_attainable_p": 0.000244140625,
+    "test_powered_at_0.05": true,
+    "rank_biserial": 0.2857142857142857,
+    "bootstrap_ci95_pp": [
+      -0.3430742174492172,
+      7.663296495956874
+    ],
+    "n_bootstrap": 20000,
+    "seed": 20260602
+  },
+  "no_guard": {
+    "delta_pp": 0.17641025641025634,
+    "n_eff": 5,
+    "p_exact_sign_flip": 1.0,
+    "p_method": "exact",
+    "min_attainable_p": 0.0625,
+    "test_powered_at_0.05": false,
+    "rank_biserial": 0.06666666666666667,
+    "bootstrap_ci95_pp": [
+      -0.441025641025641,
+      0.7999999999999998
+    ],
+    "n_bootstrap": 20000,
+    "seed": 20260602
+  },
+  "no_nbest": {
+    "delta_pp": 0.6440714840714841,
+    "n_eff": 8,
+    "p_exact_sign_flip": 0.09375,
+    "p_method": "exact",
+    "min_attainable_p": 0.0078125,
+    "test_powered_at_0.05": true,
+    "rank_biserial": 0.7222222222222222,
+    "bootstrap_ci95_pp": [
+      -0.15390831390831394,
+      1.5394871794871796
+    ],
+    "n_bootstrap": 20000,
+    "seed": 20260602
+  },
+  "no_graph": {
+    "delta_pp": -0.0200026164311878,
+    "n_eff": 3,
+    "p_exact_sign_flip": 1.0,
+    "p_method": "exact",
+    "min_attainable_p": 0.25,
+    "test_powered_at_0.05": false,
+    "rank_biserial": 0.0,
+    "bootstrap_ci95_pp": [
+      -0.10153846153846152,
+      0.03999999999999999
+    ],
+    "n_bootstrap": 20000,
+    "seed": 20260602
+  }
+}
