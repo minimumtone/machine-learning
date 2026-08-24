@@ -337,6 +337,8 @@ SQL候補のリランキングにはGPT-5.5を使用する。少数ショット�
 \end{equation}
 ここで、$C = \text{cols}(R_\text{gen}) \cap \text{cols}(R_\text{gold})$は共通列集合、$R^C$はその列集合への投影である。従来の評価JSONにある\texttt{accuracy}はこのRecallを意味する。Recallだけでは過剰取得を罰しないため、本研究では適合率 $\mathrm{Precision}=|R_\text{gen}^{C}\cap R_\text{gold}^{C}|/|R_\text{gen}^{C}|$ とF1も併記する。行の照合は重複を保持する多重集合（multiset）ベースで行い、行の順序は無視する。なお、Recallは共通列への射影で定義されるため、生成SQLが正解列の一部しか返さなくても1.0になり得る（Precision・F1併記の理由）。本稿では2つの完全一致指標を区別する：(1)~全列タプル完全一致（EM；共通列への射影を行わず、生成結果と期待結果の全列・全行が順序無視で一致）と、(2)~共通列射影上でPrecision=Recall=1の場合のみ1とする完全結果集合一致（Exact Result-Set Match）である。したがって、「Recall=100\%」を「全クエリが完全正解」と同一視しない。評価中はLIMIT 10{,}000をゴールドSQLと生成SQLの双方に適用する。
 
+データ準備からDB構築、評価実行、統計解析、図表生成、数値整合検証に至る全ワークフローと、各ステップに対応するスクリプト・入出力ファイルの対応は補足資料~\ref{sec:sup_workflow}に示す。
+
 \section{結果}\label{sec:results}
 \subsection{アブレーション・スタディ}\label{sec:ablation}
 
@@ -617,7 +619,7 @@ L1$_2$型金属間化合物のDFT計算データは、Open Quantum Materials Dat
 \vspace{1.0em}
 
 \noindent
-この補足資料は、主論文で提案したText-to-SQLパイプラインの検証と評価に関する詳細情報を提供する。セクションS1では、すべてのユニットテストカテゴリとその検証の焦点を示す。セクションS2では、39の回帰テストケースをリストする。セクションS3では、3つの方法構成にわたる代表的なクエリの生成されたSQL例を比較する。セクションS4では、Ni$_3$Al近傍格子定数候補（29のうち14の代表的なエントリ）を示す。セクションS5では、安定したL1$_2$候補の生成エネルギーランキングを提示する。セクションS6では、SQLインジェクションおよび安全性テスト結果に関する補足情報を提供する。セクションS7では、LLMモード（GPT-5.5）の構成パラメータとプロンプト構造を説明する。セクションS8では、すべての100の評価クエリに対する詳細な結果（クエリテキスト、精度、レイテンシ）をリストする。セクションS9では、7つのアブレーション条件にわたる異なる結果を持つクエリを比較する。セクションS10では、独自に設計されたクエリプールに対する詳細な結果を報告する。アブレーション、転送、およびコア検証メトリクスは\texttt{paper\_data.json}から取得され、感度分析、モデル比較、および多軸メトリクスはそれぞれのソースJSON/CSV評価出力からフォーマットされる。
+この補足資料は、主論文で提案したText-to-SQLパイプラインの検証と評価に関する詳細情報を提供する。セクションS1では、すべてのユニットテストカテゴリとその検証の焦点を示す。セクションS2では、39の回帰テストケースをリストする。セクションS3では、3つの方法構成にわたる代表的なクエリの生成されたSQL例を比較する。セクションS4では、Ni$_3$Al近傍格子定数候補（29のうち14の代表的なエントリ）を示す。セクションS5では、安定したL1$_2$候補の生成エネルギーランキングを提示する。セクションS6では、SQLインジェクションおよび安全性テスト結果に関する補足情報を提供する。セクションS7では、LLMモード（GPT-5.5）の構成パラメータとプロンプト構造を説明する。セクションS8では、すべての100の評価クエリに対する詳細な結果（クエリテキスト、精度、レイテンシ）をリストする。セクションS9では、7つのアブレーション条件にわたる異なる結果を持つクエリを比較する。セクションS10では、独自に設計されたクエリプールに対する詳細な結果を報告する。アブレーション、転送、およびコア検証メトリクスは\texttt{paper\_data.json}から取得され、感度分析、モデル比較、および多軸メトリクスはそれぞれのソースJSON/CSV評価出力からフォーマットされる。最終セクション（\ref{sec:sup_workflow}）では、データ準備から結果の解釈までの全ワークフローを、同梱スクリプトと一対一に対応する形で記述する。
 
 % =====================================================================
 
@@ -2096,5 +2098,41 @@ no\_graph     & 100\% \\
 
 実際のユーザーが投入し得るあいまい・矛盾クエリの例として次のようなものが挙げられる：(i)~「NiAl の組成比で L1$_2$ 構造のものを出してほしい」（NiAl は 1:1 組成の B2 型であり、1:3 組成の L1$_2$ とは前提が矛盾する）、(ii)~「安定な化合物を出して」（凸包距離か生成エンタルピーの符号か、基準が未指定）、(iii)~「生成エンタルピーが 0.5\,eV より大きい安定化合物」（安定性は負の生成エンタルピーを意味するため閾値と矛盾する）、(iv)~「融点が 2{,}000\,K 以上の L1$_2$ 化合物」（スキーマに存在しない属性への問い）、(v)~「$\gamma$ 相の合金を出して」（鉄鋼の $\gamma$（fcc）か Ni 基超合金の $\gamma'$ かが不明な多義語）、(vi)~「一番多い元素は？」（材料数ベースか組成比ベースかの集計単位が不明）、(vii)~「D0$_{19}$ 構造の化合物」（検証データベースに存在しないプロトタイプ）。これらは条件の欠落・矛盾・スキーマ外参照という異なる失敗様式を代表する。
 
+\section{再現ワークフロー：データ準備から結果の解釈まで}
+\label{sec:sup_workflow}
+
+本節では、データ準備から解析結果の解釈までの全ワークフローを、配布パッケージに同梱されたスクリプトと一対一に対応する形で記述する。各ステップの入出力ファイル名・スクリプト名は実装と完全に一致する。ステップ4の評価実行はLLM API（\texttt{OPENAI\_API\_KEY}）を必要とし非決定的であるため、論文の全数値はリポジトリに保存された評価出力（ステップ5--6の入力）から決定的に再生成される。
+
+\paragraph{ステップ1：データ準備。}
+(a)~合成検証データ：\texttt{ingestion/generate\_extended\_data.py}（乱数シード\texttt{random.seed(42)}で決定的）が5プロトタイプ（L1$_2$/B2/NaCl/NiAs/BiF$_3$）1{,}470化合物エントリと全31テーブル分のデータを生成し、\texttt{db/insert\_data.sql}として出力する。
+(b)~OQMD由来実データ：\texttt{scripts/fetch\_oqmd\_pure\_elements.py}がOQMD REST API（\texttt{formationenergy}エンドポイント、\texttt{ntypes=1}）から純元素の基底状態データを取得して\texttt{db/pure\_element\_data.json}に保存し、\texttt{scripts/generate\_pure\_element\_sql.py}がこれを\texttt{db/insert\_pure\_elements.sql}（89純元素エントリ）へ変換する。中心テーブル\texttt{material\_entry}の1{,}559行は1{,}470（合成）$+$89（OQMD由来）である。
+(c)~言語資源：\texttt{scripts/build\_mecab\_materials\_dict.py}が用語辞書等からMeCab用カスタム辞書\texttt{llm/mecab\_materials.csv}／\texttt{.dic}を編纂する。
+
+\paragraph{ステップ2：データベース構築。}
+\texttt{docker/docker-compose.yml}がPostgreSQL 15コンテナを起動し、初期化スクリプトとして\texttt{db/extended\_schema.sql}（スキーマ）、\texttt{db/insert\_data.sql}、\texttt{db/insert\_pure\_elements.sql}をこの順に自動投入する（\texttt{docker-entrypoint-initdb.d}経由）。一般化評価用DBは\texttt{scripts/build\_transfer\_db.py}（バリアントB：OQMD風リネーム、\texttt{db/transfer\_schema.sql}）、\texttt{scripts/build\_obfuscated\_transfer\_db.py}（バリアントC：識別子難読化）、\texttt{scripts/prepare\_mp\_transfer.py}＋\texttt{scripts/build\_mp\_transfer\_db.py}（バリアントD：Materials Project実データ3テーブル）で構築する。
+
+\paragraph{ステップ3：評価データセット。}
+主評価100クエリは\texttt{evaluation/evaluation\_dataset.jsonl}に、ゴールドSQLは\texttt{evaluation/gold\_sql/}、期待実行結果は\texttt{evaluation/expected\_results/}に格納される。独立設計100クエリは\texttt{expert\_evaluation\_dataset.jsonl}、新規CTE 10クエリ（zero-shot）は\texttt{cte\_evaluation\_dataset.jsonl}（主評価の5クエリと合わせCTE評価は計15クエリ）、バリアントA用20クエリは\texttt{scripts/gen\_prototype\_evaluation.py}が\texttt{prototype\_evaluation\_dataset.jsonl}として生成する。一般化評価用データセットは\texttt{transfer\_evaluation\_dataset.jsonl}（B）、\texttt{transfer\_obfuscated\_evaluation\_dataset.jsonl}（C）、\texttt{mp\_transfer\_evaluation\_dataset.jsonl}（D）であり、ステップ2の対応するDBと合わせて二入力で使用する。
+
+\paragraph{ステップ4：LLM評価実行（外部API使用・非決定的）。}
+再現性の条件として、モデル・プロンプト・生成パラメータ・実行条件は固定して記録する（補足表~\ref{tab:sup_llm_params}）。APIキー（\texttt{OPENAI\_API\_KEY}）は実行要件である。
+(a)~アブレーション：\texttt{scripts/eval\_ablation\_multirun.py --n-runs 5}が7条件$\times$100クエリを5回実行し、各ランを\texttt{evaluation/ablation\_run\_\{1..5\}.json}、平均$\pm$SDを\texttt{ablation\_multirun\_stats.json}に保存する（単一ラン版は\texttt{eval\_ablation.py}、出力\texttt{ablation\_results.json}）。
+(b)~多軸指標（Precision/F1/JOIN一致率/EM）：\texttt{eval\_multiaxis\_metrics.py} $\to$ \texttt{multiaxis\_results.json}。
+(c)~独立設計・CTE・バリアントA：いずれも\texttt{eval\_independent.py}を\texttt{--dataset}／\texttt{--output}引数で使い分けて実行する（それぞれ\texttt{independent\_eval\_results.json}、\texttt{cte\_eval\_results.json}、\texttt{prototype\_eval\_results.json}）。
+(d)~一般化B/C/D：\texttt{eval\_transfer.py}、\texttt{eval\_transfer\_obfuscated.py}、\texttt{eval\_mp\_transfer.py}。
+(e)~感度分析：\texttt{eval\_fewshot\_sensitivity.py}（$\to$ \texttt{fewshot\_sensitivity\_results.json}）、\texttt{eval\_dict\_sensitivity.py}（$\to$ \texttt{dict\_sensitivity\_results.json}）、\texttt{eval\_model\_comparison.py}（$\to$ \texttt{model\_comparison\_results.json}）、\texttt{eval\_jp\_reranker\_vh.py}（$\to$ \texttt{jp\_reranker\_vh\_results.json}）。リランカーA/B評価（\texttt{reranker\_eval\_results.json}）と失敗分析（\texttt{failure\_analysis.json}）は保存済み評価出力として同梱される。
+(f)~安全性：\texttt{scripts/verify\_safety\_cases.py}およびpytestテストスイート（\texttt{tests/}、134件）。
+
+\paragraph{ステップ5：統計解析。}
+\texttt{scripts/compute\_ablation\_stats\_v2.py}が\texttt{ablation\_run\_\{1..5\}.json}から各クエリの5ラン平均を計算し（$n=100$の対応ありデータ）、非同点ペア数$n_\mathrm{eff}$、平均差を統計量とする両側の正確符号反転検定p値（$n_\mathrm{eff}\leq20$は全列挙、それ以外は$2\times10^5$回Monte Carlo、シード20260602）、対応ありrank-biserial相関、クエリ単位ブートストラップ95\%CI（20{,}000再標本）を算出して\texttt{evaluation/ablation\_significance\_v2.json}に保存する。
+
+\paragraph{ステップ6：集計と図表生成（決定的）。}
+\texttt{scripts/compute\_all\_figures.py}がステップ4--5の評価JSON（アブレーション5ラン・統計・独立設計・CTE・バリアントA・一般化B/C/D・リランカー評価）を読み込み、論文の全掲載数値の単一情報源（SSOT）である\texttt{paper/paper\_data.json}を生成する。続いて\texttt{scripts/generate\_figures.py}がアブレーション統計・多軸指標・感度分析・モデル比較・失敗分析の各評価JSONを直接読み込み、図6点（\texttt{ablation\_bar}、\texttt{fewshot\_sensitivity}、\texttt{dict\_sensitivity}、\texttt{multiaxis\_radar}、\texttt{model\_comparison}、\texttt{error\_distribution}）を\texttt{paper/figures/}にPDF/PNGで出力する。\texttt{compute\_all\_figures.py}は冒頭でpytestテストスイート（\texttt{tests/}、134件）を実行し、1件でも失敗すれば\texttt{paper\_data.json}を生成せずに停止する。この2ステップは配布パッケージの\texttt{reproduce.sh}（依存関係インストール$\to$必須モジュール検査$\to$DB起動$\to$両スクリプト実行）で一括再現できる。
+
+\paragraph{ステップ7：数値整合検証と原稿生成。}
+\texttt{scripts/verify\_paper\_numbers.py --paper-dir paper}が\texttt{paper\_data.json}の数値と原稿TeX中の掲載値を突き合わせ、不一致があれば失敗する。原稿はLuaLaTeX＋BibTeXでコンパイルする。
+
+\paragraph{評価・解釈方針（ステップ3--7を規定）。}
+以下は時系列の工程ではなく、評価設計と結果解釈を規定する方針である。表1（アブレーション）は$\Delta$・$n_\mathrm{eff}$・正確p値・効果量・95\%CIを併記し、$n_\mathrm{eff}$が小さい比較（no\_guard、no\_graph）は有意性判定を行わずCIで区間評価する。層別$\Delta$（特にVH、$n=20$）は探索的分析として扱う。実行再現率のみでは過剰取得を罰しないため、Precision・F1・Exact Result-Set Match（セクション~\ref{sec:evaluation}）を併せて解釈する。合成検証データ（化合物属性）とOQMD由来実データ（純元素参照エネルギー）の区別（ステップ1）を踏まえ、材料工学的な数値そのものではなく抽出パイプラインの正確性を評価対象とする。
 
 \end{document}

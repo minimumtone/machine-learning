@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-06-02T01:00:00.000Z" agent="devin" version="24.0.0" type="device">
+  <diagram id="repro-workflow" name="再現ワークフロー">
+    <mxGraphModel dx="1400" dy="2400" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="2350" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Step 1 -->
+        <mxCell id="s1" value="ステップ1: データ準備" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="1180" height="230" as="geometry"/>
+        </mxCell>
+        <mxCell id="a1" value="ingestion/generate_extended_data.py&#10;(random.seed(42), 合成1,470エントリ, 5プロトタイプ)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="60" y="80" width="340" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="a2" value="db/insert_data.sql" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656" vertex="1" parent="1">
+          <mxGeometry x="60" y="180" width="340" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="b1" value="scripts/fetch_oqmd_pure_elements.py&#10;(OQMD REST API, ntypes=1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="440" y="80" width="320" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="b2" value="db/pure_element_data.json → scripts/generate_pure_element_sql.py → db/insert_pure_elements.sql (89純元素)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656" vertex="1" parent="1">
+          <mxGeometry x="440" y="170" width="320" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="c1" value="scripts/build_mecab_materials_dict.py" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="800" y="80" width="380" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2" value="llm/mecab_materials.csv / .dic&#10;(材料辞書 = システム構成要素: 全評価パイプライン共通入力)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656" vertex="1" parent="1">
+          <mxGeometry x="800" y="160" width="380" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-a1a2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="a1" target="a2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-b1b2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="b1" target="b2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-c1c2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="c1" target="c2"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- Step 2 -->
+        <mxCell id="s2" value="ステップ2: DB構築" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="40" y="310" width="1180" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="d2" value="主評価DB: docker/docker-compose.yml (PostgreSQL 15)&#10;docker-entrypoint-initdb.d 順次投入:&#10;db/extended_schema.sql → db/insert_data.sql → db/insert_pure_elements.sql" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366" vertex="1" parent="1">
+          <mxGeometry x="60" y="350" width="520" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="d3" value="一般化評価用DB:&#10;scripts/build_transfer_db.py (B) / scripts/build_obfuscated_transfer_db.py (C) /&#10;scripts/prepare_mp_transfer.py + scripts/build_mp_transfer_db.py (D)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366" vertex="1" parent="1">
+          <mxGeometry x="620" y="350" width="560" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-a2d2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="a2" target="d2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-b2d2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="b2" target="d2"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- Step 3 -->
+        <mxCell id="s3" value="ステップ3: 評価データセット" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="40" y="500" width="1180" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" value="主評価: evaluation/evaluation_dataset.jsonl&#10;+ gold_sql/ + expected_results/&#10;(100クエリ)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656" vertex="1" parent="1">
+          <mxGeometry x="60" y="540" width="340" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="expert_evaluation_dataset.jsonl (独立100) /&#10;cte_evaluation_dataset.jsonl (新規CTE 10, 主評価5と合わせ計15) /&#10;prototype_evaluation_dataset.jsonl (A, 20; gen_prototype_evaluation.py 生成)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656" vertex="1" parent="1">
+          <mxGeometry x="440" y="540" width="380" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="一般化評価用データセット:&#10;transfer_evaluation_dataset.jsonl (B) /&#10;transfer_obfuscated_evaluation_dataset.jsonl (C) /&#10;mp_transfer_evaluation_dataset.jsonl (D)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656" vertex="1" parent="1">
+          <mxGeometry x="860" y="540" width="320" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 4 -->
+        <mxCell id="s4" value="ステップ4: LLM評価実行 — 外部API使用・非決定的（model / prompt / 生成パラメータ / run条件を固定・記録: 表S4）" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#f8cecc;strokeColor=#b85450;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="40" y="700" width="1180" height="290" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1" value="eval_ablation_multirun.py --n-runs 5&#10;→ ablation_run_{1..5}.json,&#10;ablation_multirun_stats.json (7条件×100×5)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450" vertex="1" parent="1">
+          <mxGeometry x="60" y="750" width="360" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2" value="eval_multiaxis_metrics.py&#10;→ multiaxis_results.json" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450" vertex="1" parent="1">
+          <mxGeometry x="460" y="750" width="300" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="f3" value="eval_independent.py --dataset/--output&#10;→ independent / cte / prototype _eval_results.json" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450" vertex="1" parent="1">
+          <mxGeometry x="800" y="750" width="380" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="f4" value="eval_transfer.py (B) / eval_transfer_obfuscated.py (C) / eval_mp_transfer.py (D)&#10;→ transfer / transfer_obfuscated / mp_transfer _eval_results.json" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450" vertex="1" parent="1">
+          <mxGeometry x="60" y="880" width="560" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="f5" value="感度分析: eval_fewshot_sensitivity.py / eval_dict_sensitivity.py / eval_model_comparison.py / eval_jp_reranker_vh.py&#10;→ fewshot / dict _sensitivity_results.json, model_comparison_results.json, jp_reranker_vh_results.json" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450" vertex="1" parent="1">
+          <mxGeometry x="660" y="880" width="520" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-d2s4" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="d2" target="s4"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-d3f4" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="d3" target="f4"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-e1f1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="e1" target="f1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-e1f2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="e1" target="f2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-e1f5" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="e1" target="f5"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-e2f3" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="e2" target="f3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-e4f4" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="e4" target="f4"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-c2s4" value="全評価パイプライン共通入力" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;dashed=1;fontSize=11" edge="1" parent="1" source="c2" target="s4"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- Step 5 -->
+        <mxCell id="s5" value="ステップ5: 統計解析" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="40" y="1030" width="700" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="g1" value="compute_ablation_stats_v2.py&#10;(クエリ単位 n=100, n_eff, 正確符号反転検定, rank-biserial, bootstrap 95%CI, シード20260602)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6" vertex="1" parent="1">
+          <mxGeometry x="60" y="1070" width="380" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="g2" value="ablation_significance_v2.json" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656" vertex="1" parent="1">
+          <mxGeometry x="480" y="1090" width="240" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-f1g1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="f1" target="g1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-g1g2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="g1" target="g2"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- TEST GATE -->
+        <mxCell id="gate" value="TEST GATE&#10;pytest tests/ 134件 合格?&#10;(compute_all_figures.py が冒頭で実行、&#10;失敗時は paper_data.json を生成せず停止)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="260" y="1220" width="360" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-g2gate" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="g2" target="gate"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- Step 6 -->
+        <mxCell id="s6" value="ステップ6: 集計・図表生成（決定的）" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="40" y="1400" width="1180" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="h1" value="compute_all_figures.py&#10;(アブレーション5ラン・統計・独立設計・CTE・バリアントA・&#10;一般化B/C/D・リランカー評価の各JSONを読込)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="60" y="1440" width="420" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="h2" value="paper/paper_data.json (SSOT)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656" vertex="1" parent="1">
+          <mxGeometry x="540" y="1460" width="260" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="h3" value="generate_figures.py&#10;(ablation_multirun_stats・multiaxis・fewshot/dict感度・&#10;model_comparison・failure_analysis の各JSONを直接読込)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="60" y="1540" width="420" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="h4" value="paper/figures/*.pdf|png（ablation_bar / fewshot_sensitivity / dict_sensitivity / multiaxis_radar / model_comparison / error_distribution）" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656" vertex="1" parent="1">
+          <mxGeometry x="540" y="1540" width="640" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-gateh1" value="YES" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;fontStyle=1" edge="1" parent="1" source="gate" target="h1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-f3h1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="f3" target="h1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-f4h1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="f4" target="h1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-f5h1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="f5" target="h1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-f1h3" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="f1" target="h3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-f2h3" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="f2" target="h3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-f5h3" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="f5" target="h3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-h1h2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="h1" target="h2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-h3h4" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="h3" target="h4"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- Step 7 -->
+        <mxCell id="s7" value="ステップ7: 数値整合検証・原稿生成" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="40" y="1660" width="1180" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="tex" value="TeX原稿 paper/stam-m_ja.tex" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656" vertex="1" parent="1">
+          <mxGeometry x="60" y="1700" width="280" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="i1" value="verify_paper_numbers.py --paper-dir paper&#10;(paper_data.json と TeX掲載値の突き合わせ, 不一致で失敗)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366" vertex="1" parent="1">
+          <mxGeometry x="380" y="1690" width="440" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="i2" value="LuaLaTeX + BibTeX → paper/stam-m_ja.pdf" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366" vertex="1" parent="1">
+          <mxGeometry x="380" y="1790" width="440" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-h2i1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="h2" target="i1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-texi1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="tex" target="i1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-texi2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="tex" target="i2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-h4i2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block" edge="1" parent="1" source="h4" target="i2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-i1i2" value="PASS" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;fontStyle=1" edge="1" parent="1" source="i1" target="i2"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- Policy (side box, not a sequential step) -->
+        <mxCell id="policy" value="評価・解釈方針（ステップ3–7を規定, 時系列工程ではない）" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1280" y="500" width="380" height="490" as="geometry"/>
+        </mxCell>
+        <mxCell id="j1" value="評価指標:&#10;Recall + Precision / F1 / Exact Result-Set Match 併用&#10;(Recall単独は過剰取得を罰しない)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666" vertex="1" parent="1">
+          <mxGeometry x="1300" y="540" width="340" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="j2" value="統計的解釈:&#10;Δ / n_eff / 正確符号反転p / rank-biserial / 95%CI&#10;n_eff が小さい比較 → CI区間評価・有意性判定なし&#10;層別 n=20 → 探索的分析" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666" vertex="1" parent="1">
+          <mxGeometry x="1300" y="690" width="340" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="j3" value="データの位置づけ:&#10;合成化合物データ ≠ OQMD由来実データ（純元素参照）&#10;評価対象は抽出パイプラインの正確性" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666" vertex="1" parent="1">
+          <mxGeometry x="1300" y="850" width="340" height="120" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
