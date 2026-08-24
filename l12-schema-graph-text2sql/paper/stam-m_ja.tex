@@ -2112,9 +2112,10 @@ no\_graph     & 100\% \\
 \texttt{docker/docker-compose.yml}がPostgreSQL 15コンテナを起動し、初期化スクリプトとして\texttt{db/extended\_schema.sql}（スキーマ）、\texttt{db/insert\_data.sql}、\texttt{db/insert\_pure\_elements.sql}をこの順に自動投入する（\texttt{docker-entrypoint-initdb.d}経由）。一般化評価用DBは\texttt{scripts/build\_transfer\_db.py}（バリアントB：OQMD風リネーム、\texttt{db/transfer\_schema.sql}）、\texttt{scripts/build\_obfuscated\_transfer\_db.py}（バリアントC：識別子難読化）、\texttt{scripts/prepare\_mp\_transfer.py}＋\texttt{scripts/build\_mp\_transfer\_db.py}（バリアントD：Materials Project実データ3テーブル）で構築する。
 
 \paragraph{ステップ3：評価データセット。}
-主評価100クエリは\texttt{evaluation/evaluation\_dataset.jsonl}に、ゴールドSQLは\texttt{evaluation/gold\_sql/}、期待実行結果は\texttt{evaluation/expected\_results/}に格納される。独立設計100クエリは\texttt{expert\_evaluation\_dataset.jsonl}、新規CTE 10クエリ（zero-shot）は\texttt{cte\_evaluation\_dataset.jsonl}（主評価の5クエリと合わせCTE評価は計15クエリ）、バリアントA用20クエリは\texttt{scripts/gen\_prototype\_evaluation.py}が\texttt{prototype\_evaluation\_dataset.jsonl}として生成する。
+主評価100クエリは\texttt{evaluation/evaluation\_dataset.jsonl}に、ゴールドSQLは\texttt{evaluation/gold\_sql/}、期待実行結果は\texttt{evaluation/expected\_results/}に格納される。独立設計100クエリは\texttt{expert\_evaluation\_dataset.jsonl}、新規CTE 10クエリ（zero-shot）は\texttt{cte\_evaluation\_dataset.jsonl}（主評価の5クエリと合わせCTE評価は計15クエリ）、バリアントA用20クエリは\texttt{scripts/gen\_prototype\_evaluation.py}が\texttt{prototype\_evaluation\_dataset.jsonl}として生成する。一般化評価用データセットは\texttt{transfer\_evaluation\_dataset.jsonl}（B）、\texttt{transfer\_obfuscated\_evaluation\_dataset.jsonl}（C）、\texttt{mp\_transfer\_evaluation\_dataset.jsonl}（D）であり、ステップ2の対応するDBと合わせて二入力で使用する。
 
-\paragraph{ステップ4：評価実行（要LLM API・非決定的）。}
+\paragraph{ステップ4：LLM評価実行（外部API使用・非決定的）。}
+再現性の条件として、モデル・プロンプト・生成パラメータ・実行条件は固定して記録する（補足表~\ref{tab:sup_llm_params}）。APIキー（\texttt{OPENAI\_API\_KEY}）は実行要件である。
 (a)~アブレーション：\texttt{scripts/eval\_ablation\_multirun.py --n-runs 5}が7条件$\times$100クエリを5回実行し、各ランを\texttt{evaluation/ablation\_run\_\{1..5\}.json}、平均$\pm$SDを\texttt{ablation\_multirun\_stats.json}に保存する（単一ラン版は\texttt{eval\_ablation.py}、出力\texttt{ablation\_results.json}）。
 (b)~多軸指標（Precision/F1/JOIN一致率/EM）：\texttt{eval\_multiaxis\_metrics.py} $\to$ \texttt{multiaxis\_results.json}。
 (c)~独立設計・CTE・バリアントA：いずれも\texttt{eval\_independent.py}を\texttt{--dataset}／\texttt{--output}引数で使い分けて実行する（それぞれ\texttt{independent\_eval\_results.json}、\texttt{cte\_eval\_results.json}、\texttt{prototype\_eval\_results.json}）。
@@ -2126,12 +2127,12 @@ no\_graph     & 100\% \\
 \texttt{scripts/compute\_ablation\_stats\_v2.py}が\texttt{ablation\_run\_\{1..5\}.json}から各クエリの5ラン平均を計算し（$n=100$の対応ありデータ）、非同点ペア数$n_\mathrm{eff}$、平均差を統計量とする両側の正確符号反転検定p値（$n_\mathrm{eff}\leq20$は全列挙、それ以外は$2\times10^5$回Monte Carlo、シード20260602）、対応ありrank-biserial相関、クエリ単位ブートストラップ95\%CI（20{,}000再標本）を算出して\texttt{evaluation/ablation\_significance\_v2.json}に保存する。
 
 \paragraph{ステップ6：集計と図表生成（決定的）。}
-\texttt{scripts/compute\_all\_figures.py}がステップ4--5の全評価JSONを読み込み、論文の全掲載数値の単一情報源（SSOT）である\texttt{paper/paper\_data.json}を生成する。続いて\texttt{scripts/generate\_figures.py}が図6点（\texttt{ablation\_bar}、\texttt{fewshot\_sensitivity}、\texttt{dict\_sensitivity}、\texttt{multiaxis\_radar}、\texttt{model\_comparison}、\texttt{error\_distribution}）を\texttt{paper/figures/}にPDF/PNGで出力する。\texttt{compute\_all\_figures.py}は冒頭でpytestテストスイート（\texttt{tests/}、134件）を実行し、1件でも失敗すれば\texttt{paper\_data.json}を生成せずに停止する。この2ステップは配布パッケージの\texttt{reproduce.sh}（依存関係インストール$\to$必須モジュール検査$\to$DB起動$\to$両スクリプト実行）で一括再現できる。
+\texttt{scripts/compute\_all\_figures.py}がステップ4--5の評価JSON（アブレーション5ラン・統計・独立設計・CTE・バリアントA・一般化B/C/D・リランカー評価）を読み込み、論文の全掲載数値の単一情報源（SSOT）である\texttt{paper/paper\_data.json}を生成する。続いて\texttt{scripts/generate\_figures.py}がアブレーション統計・多軸指標・感度分析・モデル比較・失敗分析の各評価JSONを直接読み込み、図6点（\texttt{ablation\_bar}、\texttt{fewshot\_sensitivity}、\texttt{dict\_sensitivity}、\texttt{multiaxis\_radar}、\texttt{model\_comparison}、\texttt{error\_distribution}）を\texttt{paper/figures/}にPDF/PNGで出力する。\texttt{compute\_all\_figures.py}は冒頭でpytestテストスイート（\texttt{tests/}、134件）を実行し、1件でも失敗すれば\texttt{paper\_data.json}を生成せずに停止する。この2ステップは配布パッケージの\texttt{reproduce.sh}（依存関係インストール$\to$必須モジュール検査$\to$DB起動$\to$両スクリプト実行）で一括再現できる。
 
 \paragraph{ステップ7：数値整合検証と原稿生成。}
 \texttt{scripts/verify\_paper\_numbers.py --paper-dir paper}が\texttt{paper\_data.json}の数値と原稿TeX中の掲載値を突き合わせ、不一致があれば失敗する。原稿はLuaLaTeX＋BibTeXでコンパイルする。
 
-\paragraph{ステップ8：結果の解釈。}
-表1（アブレーション）は$\Delta$・$n_\mathrm{eff}$・正確p値・効果量・95\%CIを併記し、$n_\mathrm{eff}$が小さい比較（no\_guard、no\_graph）は有意性判定を行わずCIで区間評価する。層別$\Delta$（特にVH、$n=20$）は探索的分析として扱う。実行再現率のみでは過剰取得を罰しないため、Precision・F1・Exact Result-Set Match（セクション~\ref{sec:evaluation}）を併せて解釈する。合成検証データ（化合物属性）とOQMD由来実データ（純元素参照エネルギー）の区別（ステップ1）を踏まえ、材料工学的な数値そのものではなく抽出パイプラインの正確性を評価対象とする。
+\paragraph{評価・解釈方針（ステップ3--7を規定）。}
+以下は時系列の工程ではなく、評価設計と結果解釈を規定する方針である。表1（アブレーション）は$\Delta$・$n_\mathrm{eff}$・正確p値・効果量・95\%CIを併記し、$n_\mathrm{eff}$が小さい比較（no\_guard、no\_graph）は有意性判定を行わずCIで区間評価する。層別$\Delta$（特にVH、$n=20$）は探索的分析として扱う。実行再現率のみでは過剰取得を罰しないため、Precision・F1・Exact Result-Set Match（セクション~\ref{sec:evaluation}）を併せて解釈する。合成検証データ（化合物属性）とOQMD由来実データ（純元素参照エネルギー）の区別（ステップ1）を踏まえ、材料工学的な数値そのものではなく抽出パイプラインの正確性を評価対象とする。
 
 \end{document}

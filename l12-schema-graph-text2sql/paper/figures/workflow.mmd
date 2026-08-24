@@ -1,65 +1,70 @@
 flowchart TB
   subgraph S1["ステップ1: データ準備"]
     A1["ingestion/generate_extended_data.py<br/>(random.seed(42), 合成1,470エントリ)"] --> A2["db/insert_data.sql"]
-    B1["scripts/fetch_oqmd_pure_elements.py<br/>(OQMD REST API, ntypes=1)"] --> B2["db/pure_element_data.json"]
-    B2 --> B3["scripts/generate_pure_element_sql.py"] --> B4["db/insert_pure_elements.sql<br/>(89純元素)"]
-    C1["scripts/build_mecab_materials_dict.py"] --> C2["llm/mecab_materials.csv / .dic"]
+    B1["scripts/fetch_oqmd_pure_elements.py<br/>(OQMD REST API, ntypes=1)"] --> B2["db/pure_element_data.json →<br/>scripts/generate_pure_element_sql.py →<br/>db/insert_pure_elements.sql (89純元素)"]
+    C1["scripts/build_mecab_materials_dict.py"] --> C2["llm/mecab_materials.csv / .dic<br/>(材料辞書: システム構成要素)"]
   end
 
   subgraph S2["ステップ2: DB構築"]
-    D1["docker/docker-compose.yml<br/>(PostgreSQL 15)"]
-    D2["db/extended_schema.sql → insert_data.sql → insert_pure_elements.sql<br/>(docker-entrypoint-initdb.d 順次投入)"]
-    D1 --> D2
-    D3["build_transfer_db.py (B) /<br/>build_obfuscated_transfer_db.py (C) /<br/>prepare_mp_transfer.py + build_mp_transfer_db.py (D)"]
+    D2["主評価DB: docker/docker-compose.yml (PostgreSQL 15)<br/>extended_schema.sql → insert_data.sql → insert_pure_elements.sql"]
+    D3["一般化評価用DB B/C/D:<br/>build_transfer_db.py / build_obfuscated_transfer_db.py /<br/>prepare_mp_transfer.py + build_mp_transfer_db.py"]
   end
   A2 --> D2
-  B4 --> D2
+  B2 --> D2
 
   subgraph S3["ステップ3: 評価データセット"]
-    E1["evaluation_dataset.jsonl + gold_sql/ + expected_results/<br/>(主評価100クエリ)"]
-    E2["expert_evaluation_dataset.jsonl (独立100) /<br/>cte_evaluation_dataset.jsonl (新規CTE 10, 主評価5と合わせ計15)"]
-    E3["gen_prototype_evaluation.py →<br/>prototype_evaluation_dataset.jsonl (A, 20)"]
+    E1["主評価: evaluation_dataset.jsonl<br/>+ gold_sql/ + expected_results/ (100)"]
+    E2["expert_evaluation_dataset.jsonl (独立100) /<br/>cte_evaluation_dataset.jsonl (新規CTE 10, 計15) /<br/>prototype_evaluation_dataset.jsonl (A, 20)"]
+    E4["一般化評価用: transfer_evaluation_dataset.jsonl (B) /<br/>transfer_obfuscated_… (C) / mp_transfer_… (D)"]
   end
 
-  subgraph S4["ステップ4: 評価実行 (要OPENAI_API_KEY, 非決定的)"]
+  subgraph S4["ステップ4: LLM評価実行 — 外部API使用・非決定的<br/>model / prompt / 生成パラメータ / run条件を固定・記録 (表S4)"]
     F1["eval_ablation_multirun.py --n-runs 5 →<br/>ablation_run_{1..5}.json, ablation_multirun_stats.json"]
     F2["eval_multiaxis_metrics.py → multiaxis_results.json"]
-    F3["eval_independent.py --dataset/--output →<br/>independent / cte / prototype _eval_results.json"]
-    F4["eval_transfer.py / eval_transfer_obfuscated.py /<br/>eval_mp_transfer.py (B/C/D)"]
-    F5["eval_fewshot_sensitivity.py / eval_dict_sensitivity.py /<br/>eval_model_comparison.py / eval_jp_reranker_vh.py"]
+    F3["eval_independent.py →<br/>independent / cte / prototype _eval_results.json"]
+    F4["eval_transfer.py / eval_transfer_obfuscated.py /<br/>eval_mp_transfer.py → transfer / …obfuscated / mp_transfer _eval_results.json"]
+    F5["感度分析: eval_fewshot_sensitivity.py / eval_dict_sensitivity.py /<br/>eval_model_comparison.py / eval_jp_reranker_vh.py → 各 *_results.json"]
   end
   D2 --> S4
   D3 --> F4
   E1 --> F1
   E1 --> F2
+  E1 --> F5
   E2 --> F3
-  E3 --> F3
-  C2 --> S4
+  E4 --> F4
+  C2 -. 全評価パイプライン共通入力 .-> S4
 
   subgraph S5["ステップ5: 統計解析"]
     G1["compute_ablation_stats_v2.py<br/>(n_eff, 正確符号反転p, rank-biserial,<br/>bootstrap 95%CI, シード20260602)"] --> G2["ablation_significance_v2.json"]
   end
   F1 --> G1
 
+  GATE{{"TEST GATE: pytest tests/ 134件 合格?<br/>(compute_all_figures.py が実行、失敗時は生成停止)"}}
+  G2 --> GATE
+
   subgraph S6["ステップ6: 集計・図表生成 (決定的)"]
-    H1["compute_all_figures.py<br/>(前提: pytest tests/ 134件合格)"] --> H2["paper/paper_data.json (SSOT)"]
-    H3["generate_figures.py"] --> H4["paper/figures/*.pdf/png (図6点)"]
+    H1["compute_all_figures.py<br/>(アブレーション・独立・CTE・バリアントA・一般化B/C/D・<br/>リランカー評価の各JSONを読込)"] --> H2["paper/paper_data.json (SSOT)"]
+    H3["generate_figures.py<br/>(ablation統計・multiaxis・感度分析・model_comparison・<br/>failure_analysis の各JSONを直接読込)"] --> H4["paper/figures/*.pdf|png (図6点)"]
   end
-  S4 --> H1
-  G2 --> H1
-  H2 --> H3
+  GATE -- YES --> H1
+  F1 --> H3
+  F2 --> H3
+  F3 --> H1
+  F4 --> H1
+  F5 --> H1
+  F5 --> H3
 
   subgraph S7["ステップ7: 数値整合検証・原稿生成"]
-    I1["verify_paper_numbers.py --paper-dir paper"]
-    I2["LuaLaTeX + BibTeX"]
+    TEX["TeX原稿 paper/stam-m_ja.tex"]
+    I1["verify_paper_numbers.py --paper-dir paper"] -- PASS --> I2["LuaLaTeX + BibTeX → stam-m_ja.pdf"]
   end
   H2 --> I1
+  TEX --> I1
+  TEX --> I2
   H4 --> I2
-  I1 --> I2
 
-  subgraph S8["ステップ8: 結果の解釈"]
-    J1["表1: Δ / n_eff / 正確p / 効果量 / 95%CI<br/>(n_eff小はCI区間評価, 層別Δは探索的)"]
-    J2["Recall + Precision / F1 /<br/>Exact Result-Set Match 併用"]
-    J3["合成検証データとOQMD由来実データの区別<br/>(抽出パイプラインの正確性を評価)"]
+  subgraph POLICY["評価・解釈方針 (ステップ3–7を規定, 時系列工程ではない)"]
+    J1["評価指標: Recall + Precision / F1 /<br/>Exact Result-Set Match 併用<br/>(Recall単独は過剰取得を罰しない)"]
+    J2["統計的解釈: Δ / n_eff / 正確p / rank-biserial / 95%CI<br/>n_eff小 → CI区間評価・有意性判定なし<br/>層別 n=20 → 探索的"]
+    J3["データの位置づけ:<br/>合成化合物データ ≠ OQMD由来実データ(純元素)<br/>評価対象は抽出パイプラインの正確性"]
   end
-  I2 --> S8
