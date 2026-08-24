@@ -513,6 +513,25 @@ def main():
     mecab_stats["tokenization_evaluation"] = tokenization_stats
 
     # ==================================================================
+    # Figure source data (embedded so that generate_figures.py reads
+    # only paper_data.json, keeping it the single source of truth for
+    # both manuscript numbers and figures)
+    # ==================================================================
+    figure_source_data = {
+        "_note": "Verbatim evaluation JSON payloads consumed by "
+                 "scripts/generate_figures.py",
+        "ablation_multirun_stats": multirun,
+        "fewshot_sensitivity": load_json(
+            "evaluation/fewshot_sensitivity_results.json"),
+        "dict_sensitivity": load_json(
+            "evaluation/dict_sensitivity_results.json"),
+        "multiaxis": load_json("evaluation/multiaxis_results.json"),
+        "model_comparison": load_json(
+            "evaluation/model_comparison_results.json"),
+        "failure_analysis": load_json("evaluation/failure_analysis.json"),
+    }
+
+    # ==================================================================
     # Unit tests
     # ==================================================================
     result = subprocess.run(
@@ -624,6 +643,11 @@ def main():
                 "evaluation/reranker_eval_results.json",
                 "evaluation/evaluation_dataset.jsonl",
                 "evaluation/expert_evaluation_dataset.jsonl",
+                "evaluation/fewshot_sensitivity_results.json",
+                "evaluation/dict_sensitivity_results.json",
+                "evaluation/multiaxis_results.json",
+                "evaluation/model_comparison_results.json",
+                "evaluation/failure_analysis.json",
                 "llm/mecab_materials.csv",
                 "llm/materials_engineering_vocab.csv",
                 "llm/material_terms.yaml",
@@ -737,6 +761,7 @@ def main():
             "n_unit_tests": n_unit_tests,
         },
         "pipeline_components": pipeline_components,
+        "figure_source_data": figure_source_data,
     }
 
     # ==================================================================

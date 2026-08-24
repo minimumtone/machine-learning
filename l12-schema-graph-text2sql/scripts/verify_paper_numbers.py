@@ -107,6 +107,10 @@ def collect_numbers(obj: Any, path: str = "", seen: dict[float | int, list[str]]
         seen = {}
     if isinstance(obj, dict):
         for k, v in obj.items():
+            # figure_source_data holds raw evaluation payloads consumed by
+            # generate_figures.py, not manuscript-published values
+            if not path and k == "figure_source_data":
+                continue
             new_path = f"{path}.{k}" if path else k
             collect_numbers(v, new_path, seen)
     elif isinstance(obj, list):
