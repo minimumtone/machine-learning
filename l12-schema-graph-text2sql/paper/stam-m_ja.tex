@@ -201,7 +201,7 @@ Text-to-SQL技術は、Spider~\cite{yu2018spider}やBIRD~\cite{li2024bird}のよ
   {\scriptsize GPT-5.5\\ $n$-best = 3}};
 
 \node[stepbox, fill=red!10, right=of llmgen] (guard) {SQLGuard\\
-  {\scriptsize 14のチェック}};
+  {\scriptsize 13のチェック}};
 
 \node[stepbox, fill=green!10, right=of guard] (rerank) {リランキング\\
   {\scriptsize GPT-5.5}};
@@ -290,7 +290,7 @@ GPT-5.5は1回の生成呼び出しで上位$n$個（デフォルト $n$-best = 
 \subsection{SQLGuard}
 \label{sec:sqlguard}
 
-SQLGuard は、SQLのパース・AST解析・方言変換のためのPython製SQLツールキットである sqlglot~\cite{sqlglot2023} によって生成された SQL を抽象構文木（AST）にパースし、その AST ノード（\texttt{Statement}, \texttt{Select}, \texttt{Column}, \texttt{Table}, \texttt{Join} 等）をトラバースすることで、安全性と一貫性を静的に検証する。sqlglot による AST 解析により、テキストレベルでは判別しにくいマルチステートメントの混入、テーブル・カラムの参照解決、サブクエリのネスト深さ、UNION/INTERSECT 等の集合演算子を構造的に確認できる。いずれかのチェックを満たさない SQL は実行前に棄却される。検証は、カラム・テーブル存在確認、FK整合性JOIN確認、マルチステートメント・DMLキーワード・SQLインジェクションパターン検出、LIMIT自動追加、SELECT *禁止、サブクエリ深さ制限、集合演算子検証、型・参照整合性確認など14のチェックから成る（全リストは補足資料~\ref{sec:sup_method_details}）。
+SQLGuard は、SQLのパース・AST解析・方言変換のためのPython製SQLツールキットである sqlglot~\cite{sqlglot2023} によって生成された SQL を抽象構文木（AST）にパースし、その AST ノード（\texttt{Statement}, \texttt{Select}, \texttt{Column}, \texttt{Table}, \texttt{Join} 等）をトラバースすることで、安全性と一貫性を静的に検証する。sqlglot による AST 解析により、テキストレベルでは判別しにくいマルチステートメントの混入、テーブル・カラムの参照解決、サブクエリのネスト深さを構造的に確認できる。いずれかのチェックを満たさない SQL は実行前に棄却される。検証は、マルチステートメント検出、禁止キーワード（DML/DDL）検出、SELECT文限定確認、危険関数禁止、システムテーブル参照禁止、CTE本体のSELECT限定確認、恒真条件（インジェクションパターン）検出、LIMIT自動追加、テーブル・カラム存在確認、FK整合性JOIN確認、サブクエリ深さ制限、算術演算の型検査の13のチェックから成る（全リストは補足資料~\ref{sec:sup_method_details}）。チェック数は実装（\texttt{validate\_sql()}が呼ぶ\texttt{check\_*}関数群）から自動集計され、\texttt{paper\_data.json}の\texttt{safety.n\_sqlguard\_checks}と常に一致する。なお、SELECT * の禁止や UNION/INTERSECT の独立検証は現行実装には含まれない（カラム参照は許可カラム照合の範囲で検証される）。
 
 SQLGuardの価値は、精度向上ではなく、実行前の安全性と整合性を保証することにある（セクション~\ref{sec:injection_safety}を参照）。
 
@@ -862,7 +862,7 @@ Co$_3$Ti ($\Delta a = 0.022$~\AA{}{}, $E_\text{hull} = 0.0$)は安定相であ�
 
 \label{sec:sup_injection}
 
-このセクションでは、セクション~\ref{sec:injection_safety}で報告された安全性テスト結果に関する補足情報を提供する。SQLGuardの14の検証項目（セクション~\ref{sec:sqlguard}）は独立して動作し、複数の脅威ベクトルに対する深層防御を提供する。禁止キーワードの検出は正規表現ベースであり、テーブルのホワイトリストはスキーマメタデータから自動生成される。
+このセクションでは、セクション~\ref{sec:injection_safety}で報告された安全性テスト結果に関する補足情報を提供する。SQLGuardの13の検証項目（セクション~\ref{sec:sqlguard}）は複数の脅威ベクトルに対する深層防御を提供する。禁止キーワードの検出は正規表現ベースであり、テーブルのホワイトリストはスキーマメタデータから自動生成される。
 
 % =====================================================================
 
@@ -1414,26 +1414,27 @@ Unicode下付き文字（U+2080--U+2089）は、マッチングの前にASCII数
 MeCab カスタム辞書は 402 の材料用語を全て 1 トークンに揃える。これは形態素解析を前提とする日本語NLPツールと本語彙を組み合わせる際の資源として有用であるが、前述のとおり本論文の評価パイプラインでは使用していない。
 
 
-\subsection{SQLGuardの14チェック}
+\subsection{SQLGuardの13チェック}
 
-SQLGuardの静的検証は以下の14のチェックから成る：
+SQLGuardの静的検証は、\texttt{validate\_sql()}が呼び出す以下の13のチェック関数から成る（\texttt{safety/sql\_validator.py}の実装と一対一対応）：
 
 \begin{enumerate}[nosep]
-  \item カラム存在確認（ホワイトリスト照合）
-  \item テーブル存在確認（許可されたテーブル照合）
-  \item FK整合性のあるJOIN確認
-  \item マルチステートメント検出（セミコロン分割）
-  \item DMLキーワード検出（DROP/DELETE/INSERT/UPDATE）
-  \item SQLインジェクションパターン検出
-  \item LIMIT句の存在確認（欠如時は自動追加）
-  \item DISTINCT推奨（JOIN時）
-  \item SELECT * 禁止
-  \item サブクエリのネスト深さ制限
-  \item UNION/INTERSECT句の検証
-  \item 算術演算の型の有効性
-  \item ORDER BY/GROUP BYの参照整合性
-  \item エイリアス解決後のカラム参照確認
+  \item マルチステートメント検出（\texttt{check\_multiple\_statements}）
+  \item 禁止キーワード検出：DROP/DELETE/INSERT/UPDATE等のDML/DDL（\texttt{check\_forbidden\_keywords}）
+  \item SELECT文限定確認（\texttt{check\_select\_only}）
+  \item 危険関数の禁止（\texttt{check\_disallowed\_functions}）
+  \item システムテーブル参照禁止（\texttt{check\_system\_tables}）
+  \item CTE本体のSELECT限定確認（\texttt{check\_cte\_bodies\_select\_only}）
+  \item 恒真条件（SQLインジェクションパターン）検出（\texttt{check\_tautology}）
+  \item LIMIT句の存在確認・欠如時は自動追加（\texttt{check\_limit}）
+  \item テーブル存在確認：許可テーブル照合（\texttt{check\_allowed\_tables}）
+  \item カラム存在確認：ホワイトリスト照合・エイリアス解決後。ORDER BY/GROUP BYのカラム参照もこの照合で検証される（\texttt{check\_allowed\_columns}）
+  \item FK整合性のあるJOIN確認（\texttt{check\_join\_validity}）
+  \item サブクエリのネスト深さ制限（\texttt{check\_subquery\_depth}）
+  \item 算術演算の型の有効性（\texttt{check\_column\_type\_safety}）
 \end{enumerate}
+
+SELECT * の禁止、JOIN時のDISTINCT推奨、UNION/INTERSECT句の独立検証は現行実装には存在しない。SELECT * を含むクエリは（許可テーブル・カラムの範囲内であれば）棄却されない。
 
 \subsubsection{日本語クロスエンコーダーの比較}
 

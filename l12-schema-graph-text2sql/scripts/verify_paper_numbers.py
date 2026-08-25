@@ -168,6 +168,34 @@ def extract_tex_numbers(tex_text: str) -> list[tuple[str, float | int, int, int]
     return found
 
 
+P_VALUE_RE = re.compile(r"p\s*[=]\s*(0?\.\d+|1(?:\.0+)?)\b")
+
+
+def check_tex_p_values(
+    tex_text: str, json_numbers: dict[float | int, list[str]]
+) -> list[tuple[str, float, str]]:
+    """Gate TeX->JSON in the reverse direction for exact p-values.
+
+    Every ``p=<number>`` stated in the manuscript must be backed by a JSON
+    value that rounds to it at the cited precision.  Returns the unbacked
+    occurrences.
+    """
+    unbacked: list[tuple[str, float, str]] = []
+    for m in P_VALUE_RE.finditer(tex_text):
+        raw = m.group(1)
+        val = float(raw)
+        decimals = len(raw.split(".")[1]) if "." in raw else 0
+        backed = any(
+            isinstance(n, (int, float)) and round(float(n), decimals) == val
+            for n in json_numbers
+        )
+        if not backed:
+            ctx_start = max(0, m.start() - 40)
+            ctx = tex_text[ctx_start:m.end() + 20].replace("\n", " ")
+            unbacked.append((m.group(0), val, ctx))
+    return unbacked
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -242,7 +270,11 @@ def main(argv: list[str] | None = None) -> int:
         )
     ]
 
-    # 2. TeX -> JSON
+    # 2. TeX -> JSON: exact p-values stated in the manuscript must be
+    # backed by a JSON value (gates the exit code)
+    unbacked_p = check_tex_p_values(combined_tex_clean, json_numbers)
+
+    # 3. TeX -> JSON (informational)
     tex_numbers = extract_tex_numbers(combined_tex_clean)
     tex_not_in_json: list[tuple[str, float | int, str]] = []
     for raw, val, start, end in tex_numbers:
@@ -255,6 +287,9 @@ def main(argv: list[str] | None = None) -> int:
     print(f"JSON numeric values: {len(json_numbers)}")
     print(f"TeX numeric tokens:  {len(tex_numbers)}")
     print(f"JSON numbers not found in TeX: {len(missing_in_tex)} (gating: {len(gating_missing)})")
+    print(f"TeX p-values not backed by JSON: {len(unbacked_p)} (gating)")
+    for raw, val, ctx in unbacked_p[:20]:
+        print(f"  {raw}  ...{ctx}...")
     print(f"TeX numbers not found in JSON: {len(tex_not_in_json)} (informational only)")
     if tex_not_in_json:
         print("  NOTE: most of these are table rule widths, years, citation "
@@ -282,9 +317,12 @@ def main(argv: list[str] | None = None) -> int:
                 f.write("\t".join(row) + "\n")
         print(f"\nReport written to {args.report}")
 
-    # Return non-zero only when a non-p-value JSON number is completely
-    # absent from the manuscript; TeX->JSON is informational only.
-    return 1 if gating_missing and not args.tex_only else 0
+    # Gate on (a) non-p-value JSON numbers absent from the manuscript and
+    # (b) exact p-values in the manuscript with no JSON backing; the broad
+    # TeX->JSON token comparison stays informational.
+    if args.tex_only:
+        return 1 if unbacked_p else 0
+    return 1 if (gating_missing or unbacked_p) else 0
 
 
 if __name__ == "__main__":
