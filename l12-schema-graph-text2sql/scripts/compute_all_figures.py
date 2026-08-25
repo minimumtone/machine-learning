@@ -521,6 +521,7 @@ def main():
         "_note": "Verbatim evaluation JSON payloads consumed by "
                  "scripts/generate_figures.py",
         "ablation_multirun_stats": multirun,
+        "ablation_significance_v2": sig_v2,
         "fewshot_sensitivity": load_json(
             "evaluation/fewshot_sensitivity_results.json"),
         "dict_sensitivity": load_json(

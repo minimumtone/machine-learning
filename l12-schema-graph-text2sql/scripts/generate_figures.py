@@ -62,15 +62,19 @@ def fig_ablation_bar():
     sds = []
     colors_list = []
 
-    sig_tests = stats.get("significance_tests", {})
+    # Sign-flip permutation statistics: the same test reported in the
+    # manuscript's ablation table (Table 1)
+    sig_tests = FIGURE_DATA["ablation_significance_v2"]
     for cond in conditions_order:
         c = stats["conditions"][cond]
         means.append(c["overall_mean"] * 100)
         sds.append(c["overall_std"] * 100)
-        p_val = sig_tests.get(cond, {}).get("p_value", 1.0)
+        s = sig_tests.get(cond, {})
+        p_val = s.get("p_exact_sign_flip", 1.0)
+        powered = s.get("test_powered_at_0.05", True)
         if cond == "full":
             colors_list.append("#2196F3")
-        elif p_val < 0.05:
+        elif powered and p_val < 0.05:
             colors_list.append("#F44336")
         else:
             colors_list.append("#9E9E9E")
@@ -86,11 +90,14 @@ def fig_ablation_bar():
     ax.set_ylim(70, 90)
     ax.axhline(y=means[0], color="#2196F3", linestyle="--", alpha=0.3)
 
-    # Add significance markers
+    # Add significance markers (dagger = underpowered, no significance call)
     for i, cond in enumerate(conditions_order):
-        p = sig_tests.get(cond, {}).get("p_value", 1.0)
+        s = sig_tests.get(cond, {})
+        p = s.get("p_exact_sign_flip", 1.0)
         if cond != "full":
-            if p < 0.001:
+            if not s.get("test_powered_at_0.05", True):
+                ax.text(i, means[i] + sds[i] + 0.5, "\u2020", ha="center", fontsize=TICK_SIZE - 2)
+            elif p < 0.001:
                 ax.text(i, means[i] + sds[i] + 0.5, "***", ha="center", fontsize=LEGEND_SIZE)
             elif p < 0.01:
                 ax.text(i, means[i] + sds[i] + 0.5, "**", ha="center", fontsize=LEGEND_SIZE)
