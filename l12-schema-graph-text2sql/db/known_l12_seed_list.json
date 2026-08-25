@@ -1,0 +1,10 @@
+{
+  "_meta": {
+    "description": "Known L1_2 seed compounds used when generating the synthetic dataset (db/insert_data.sql entries entry_00001..entry_00011). Hand-maintained input data, not a derived value.",
+    "source": "db/insert_data.sql"
+  },
+  "known_l12_seed_list": [
+    "Ni3Al", "Ni3Ga", "Ni3Ge", "Co3Ti", "Co3Ta",
+    "Co3Al", "Co3W", "Al3Sc", "Al3Ti", "Pt3Al", "Ir3Nb"
+  ]
+}

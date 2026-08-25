@@ -287,7 +287,7 @@ addressing challenges specific to materials RDBs.
   {\scriptsize domain terms}};
 
 \node[stepbox, fill=red!10, right=of dict] (guard) {SQLGuard\\
-  {\scriptsize 14 checks}};
+  {\scriptsize 13 checks}};
 
 \node[stepbox, fill=green!10, right=of guard] (rerank) {Reranking\\
   {\scriptsize GPT-5.5}};
@@ -352,7 +352,7 @@ for SQL generation is modified.
 
 GPT-5.5 generates $n$-best = 3 SQL candidates.
 In the ablation study, switching to $n$-best = 1 showed
-no statistically significant accuracy difference ($-$0.6\,pp, $p=0.069$),
+no statistically significant accuracy difference ($-$0.6\,pp, $p=0.094$),
 but reduced average latency from 31.0\,s to 10.9\,s
 (Table~\ref{tab:ablation}).
 
@@ -605,28 +605,42 @@ complex domain terminology.
 
 Based on AST analysis via sqlglot~\cite{sqlglot2023},
 SQLGuard verifies the safety and consistency of generated SQL.
-The validation comprises 14 checks:
+The validation comprises 13 checks, one per \texttt{check\_*} function
+invoked by \texttt{validate\_sql()} in \texttt{safety/sql\_validator.py}:
 
 \begin{enumerate}[nosep]
-  \item Column existence verification (whitelist matching)
-  \item Table existence verification (allowed table matching)
-  \item FK-consistent JOIN verification
-  \item Multi-statement detection (semicolon splitting)
-  \item DML keyword detection (DROP/DELETE/INSERT/UPDATE)
-  \item SQL injection pattern detection
-  \item LIMIT clause presence check (auto-appended if absent)
-  \item DISTINCT recommendation (on JOINs)
-  \item SELECT * prohibition
+  \item Multi-statement detection (\texttt{check\_multiple\_statements})
+  \item Forbidden keyword detection: DML/DDL such as
+    DROP/DELETE/INSERT/UPDATE (\texttt{check\_forbidden\_keywords})
+  \item SELECT-only statement verification (\texttt{check\_select\_only})
+  \item Disallowed function rejection (\texttt{check\_disallowed\_functions})
+  \item System table reference rejection (\texttt{check\_system\_tables})
+  \item CTE bodies restricted to SELECT
+    (\texttt{check\_cte\_bodies\_select\_only})
+  \item Tautology (SQL injection pattern) detection
+    (\texttt{check\_tautology})
+  \item LIMIT clause presence check, auto-appended if absent
+    (\texttt{check\_limit})
+  \item Table existence verification against the allowed list
+    (\texttt{check\_allowed\_tables})
+  \item Column existence verification: whitelist matching after alias
+    resolution; ORDER BY/GROUP BY references are validated here
+    (\texttt{check\_allowed\_columns})
+  \item FK-consistent JOIN verification (\texttt{check\_join\_validity})
   \item Subquery nesting depth restriction
-  \item UNION/INTERSECT clause validation
+    (\texttt{check\_subquery\_depth})
   \item Arithmetic operation type validity
-  \item ORDER BY/GROUP BY reference consistency
-  \item Post-alias-resolution column reference verification
+    (\texttt{check\_column\_type\_safety})
 \end{enumerate}
 
+SELECT * prohibition, DISTINCT recommendation on JOINs, and independent
+UNION/INTERSECT clause validation are not present in the current
+implementation; queries containing SELECT * are not rejected as long as
+the referenced tables and columns are allowed.
+
 In the ablation study, removing SQLGuard caused only a $-$0.2\,pp
-drop ($p=0.891$, statistically non-significant;
-Table~\ref{tab:ablation}).
+drop (statistically non-significant; the number of non-tied runs is too
+small for a powered test, Table~\ref{tab:ablation}).
 Because the reranker already assigns low scores to invalid SQL
 candidates, SQL that SQLGuard would reject is rarely selected.
 However, SQLGuard serves as a security safety net with value
@@ -641,7 +655,7 @@ while SQL candidate and schema scoring use GPT-5.5 (API),
 forming a hybrid architecture.
 
 In the ablation study, removing the reranker caused a $-$3.3\,pp
-drop ($p=0.364$, statistically non-significant).
+drop ($p=0.115$, statistically non-significant).
 Drops of $-$6.7\,pp in the Medium tier and $-$5.6\,pp in the Hard
 tier were observed (Table~\ref{tab:ablation}).
 
@@ -1579,7 +1593,7 @@ fail to generate correct SQL conditions (e.g.,
 \subsection{Contribution of the Reranker}
 \label{sec:reranker_discussion}
 
-Removing the reranker caused a $-$3.3\,pp drop ($p=0.364$,
+Removing the reranker caused a $-$3.3\,pp drop ($p=0.115$,
 statistically non-significant).
 The effect was observed in the Medium ($-$6.7\,pp) and Hard
 ($-$5.6\,pp) tiers (Table~\ref{tab:ablation-detail}).
@@ -2638,8 +2652,8 @@ Ni$_3$Al ($-0.420$).
 
 This section provides supplementary information on the safety test
 results reported in Section~\ref{sec:injection_safety}.
-Each of SQLGuard's 14 validation items
-(Section~\ref{sec:sqlguard}) operates independently, providing
+Each of SQLGuard's 13 validation items
+(Section~\ref{sec:sqlguard}) provides
 defense-in-depth against multiple threat vectors.
 Prohibited keyword detection is regex-based, and the table
 whitelist is auto-generated from schema metadata.
@@ -2914,7 +2928,7 @@ observed:
   \item no\_guard ($-$GD) zeroes five CTE queries
     (q\_vhard\_009/016/018/019/020) in this diagnostic run.
     Across the 5-run average the SQLGuard effect is smaller
-    ($-$0.2\,pp, $p=0.891$; Table~\ref{tab:ablation}), but the
+    ($-$0.2\,pp, statistically non-significant; Table~\ref{tab:ablation}), but the
     per-run failures show that SQLGuard still functions as a safety
     net for CTE syntax.
   \item q\_vhard\_007 scores 0.05 under the full condition but

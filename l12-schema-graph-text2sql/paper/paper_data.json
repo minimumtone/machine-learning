@@ -2,8 +2,8 @@
   "_meta": {
     "description": "Single source of truth for paper numerical values",
     "generated_by": "scripts/compute_all_figures.py",
-    "generated_at": "2026-08-25 00:27:52 UTC",
-    "git_commit": "848d8113846387e2f52c05f80bfd24baeca69c2a",
+    "generated_at": "2026-08-25 01:24:22 UTC",
+    "git_commit": "96241e358ebc2b06494add1775b53f2568cd3e0b",
     "source_files": [
       "evaluation/ablation_multirun_stats.json",
       "evaluation/ablation_run_1.json",
@@ -380,7 +380,7 @@
     "a_ref_ni3al": 3.572
   },
   "independent_evaluation": {
-    "_note": "The 60-query harmonized comparison has been removed; use the 100-query full rerun below.",
+    "_note": "The earlier harmonized comparison has been removed; use the full independent rerun below (see n_queries).",
     "n_queries": 100,
     "difficulty_distribution": {
       "easy": 18,
@@ -403,7 +403,7 @@
     }
   },
   "transfer_evaluation": {
-    "_note": "Transfer run against the OQMD-flavored transfer schema (5 tables, renamed columns); no code changes",
+    "_note": "Transfer run against the OQMD-flavored transfer schema (flat layout, renamed columns; see db/transfer_schema.sql); no code changes",
     "model": "gpt-5.5",
     "n_queries": 20,
     "overall_pct": 90.5,
@@ -417,9 +417,9 @@
     "source_file": "evaluation/transfer_eval_results.json"
   },
   "transfer_evaluation_variants": {
-    "_note": "Transfer/generalization tests A--D; A is same-schema data expansion, B/C are code-unchanged schema transfer, D is lightweight MP adaptation (dedicated prompt + 8 few-shot examples)",
+    "_note": "Transfer/generalization tests A--D; A is same-schema data expansion, B/C are code-unchanged schema transfer, D is lightweight MP adaptation (dedicated prompt plus a small few-shot set)",
     "A_prototype_expansion": {
-      "_note": "B2/NaCl/NiAs/BiF$_3$ prototype expansion on the same 31-table normalized schema",
+      "_note": "B2/NaCl/NiAs/BiF$_3$ prototype expansion on the same normalized main schema",
       "model": "gpt-5.5",
       "n_queries": 20,
       "overall_pct": 90.0,
@@ -433,7 +433,7 @@
       "source_file": "evaluation/prototype_eval_results.json"
     },
     "B_oqmd_transfer": {
-      "_note": "OQMD-flavored flat 5-table schema with renamed table and column names",
+      "_note": "OQMD-flavored flat schema with renamed table and column names (db/transfer_schema.sql)",
       "model": "gpt-5.5",
       "n_queries": 20,
       "overall_pct": 90.5,
@@ -461,7 +461,7 @@
       "source_file": "evaluation/transfer_obfuscated_eval_results.json"
     },
     "D_materials_project": {
-      "_note": "Real Materials Project data (27 binary systems, 299 entries) in a fresh 3-table schema",
+      "_note": "Real Materials Project data in a fresh compact schema (see scripts/build_mp_transfer_db.py)",
       "model": "gpt-5.5",
       "n_queries": 15,
       "overall_pct": 100.0,
@@ -476,18 +476,20 @@
     }
   },
   "cte_evaluation_15": {
-    "_note": "5 original CTE patterns (few-shot covered) + 10 novel patterns (zero-shot)",
+    "_note": "Original CTE patterns (few-shot covered) plus novel zero-shot patterns; counts in n_original / n_novel",
     "model": "gpt-5.5",
     "n_queries": 15,
     "overall_pct": 61.6,
     "original_5_pct": 100.0,
     "new_10_pct": 42.3,
+    "n_original": 5,
+    "n_novel": 10,
     "avg_latency_s": 40.2,
     "source_file": "evaluation/cte_eval_results.json"
   },
   "safety": {
     "n_safety_tests": 7,
-    "n_sqlguard_checks": 14,
+    "n_sqlguard_checks": 13,
     "all_blocked": true
   },
   "testing": {
@@ -516,7 +518,7 @@
     },
     {
       "name": "SQLGuard validation",
-      "model": "AST-based (sqlglot), 14 checks"
+      "model": "AST-based (sqlglot), 13 checks"
     },
     {
       "name": "Domain dictionary",

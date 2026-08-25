@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 from collections import Counter
@@ -70,6 +71,22 @@ def load_jsonl(relpath: str) -> list[dict]:
         sys.exit(1)
     with open(p) as f:
         return [json.loads(line) for line in f if line.strip()]
+
+
+def count_sqlguard_checks() -> int:
+    """Count distinct check_* functions invoked by validate_sql().
+
+    Derived from the implementation so paper_data.json cannot drift from
+    safety/sql_validator.py.
+    """
+    src = (PROJECT / "safety" / "sql_validator.py").read_text()
+    body = re.search(r"^def validate_sql\b.*?(?=\n^def |\Z)", src,
+                     re.M | re.S)
+    if not body:
+        print("ERROR: validate_sql() not found in safety/sql_validator.py",
+              file=sys.stderr)
+        sys.exit(1)
+    return len(set(re.findall(r"\b(check_[a-z_]+)\(", body.group(0))))
 
 
 def pct(v: float) -> float:
@@ -242,6 +259,8 @@ def main():
             sum(r["accuracy"] for r in cte15_original) / len(cte15_original)),
         "new_10_pct": pct(
             sum(r["accuracy"] for r in cte15_new) / len(cte15_new)),
+        "n_original": len(cte15_original),
+        "n_novel": len(cte15_new),
         "avg_latency_s": round(cte15_data["summary"]["avg_latency"], 1),
         "source_file": "evaluation/cte_eval_results.json",
     }
@@ -581,8 +600,10 @@ def main():
     if not all_blocked:
         sys.exit(1)
 
-    # SQLGuard check items (from sqlguard implementation)
-    n_sqlguard_checks = 14
+    # SQLGuard check count, derived from the implementation: the number of
+    # distinct check_* functions invoked by validate_sql() in
+    # safety/sql_validator.py
+    n_sqlguard_checks = count_sqlguard_checks()
 
     # ==================================================================
     # Pipeline component list
@@ -603,11 +624,16 @@ def main():
 
     # ==================================================================
     # Known L1_2 compounds (seed list used when generating synthetic data)
+    # Loaded from db/known_l12_seed_list.json and cross-checked against
+    # db/insert_data.sql so the packaged list cannot drift silently.
     # ==================================================================
-    known_l12 = [
-        "Ni3Al", "Ni3Ga", "Ni3Ge", "Co3Ti", "Co3Ta",
-        "Co3Al", "Co3W", "Al3Sc", "Al3Ti", "Pt3Al", "Ir3Nb",
-    ]
+    known_l12 = load_json("db/known_l12_seed_list.json")["known_l12_seed_list"]
+    insert_sql_text = (PROJECT / "db" / "insert_data.sql").read_text()
+    missing_seeds = [c for c in known_l12 if f"'{c}'" not in insert_sql_text]
+    if missing_seeds:
+        print(f"ERROR: seed compounds not found in db/insert_data.sql: "
+              f"{missing_seeds}", file=sys.stderr)
+        sys.exit(1)
 
     # ==================================================================
     # Assemble output
@@ -623,6 +649,13 @@ def main():
     except Exception:
         # git not available; non-critical for data generation
         pass  # git hash is optional metadata
+    if git_hash == "unknown":
+        # Distribution packages carry the source commit in a GIT_COMMIT file
+        commit_file = PROJECT / "GIT_COMMIT"
+        if commit_file.exists():
+            recorded = commit_file.read_text().strip()
+            if recorded:
+                git_hash = recorded
 
     output = {
         "_meta": {
@@ -679,10 +712,11 @@ def main():
         },
         "model": abl["model"],
         "ablation": {
-            "n_conditions": 7,
+            "n_conditions": len(multirun["conditions"]),
             "n_runs": n_runs,
             "n_queries_per_condition": abl["n_queries"],
-            "total_evaluations": 7 * abl["n_queries"] * n_runs,
+            "total_evaluations":
+                len(multirun["conditions"]) * abl["n_queries"] * n_runs,
             "table": ablation_table,
             "top3_per_difficulty_deltas": ablation_deltas,
             "cte_query_results": {
@@ -709,8 +743,8 @@ def main():
             "a_ref_ni3al": a_ref_ni3al,
         },
         "independent_evaluation": {
-            "_note": "The 60-query harmonized comparison has been removed; "
-                     "use the 100-query full rerun below.",
+            "_note": "The earlier harmonized comparison has been removed; "
+                     "use the full independent rerun below (see n_queries).",
             "n_queries": n_expert_queries,
             "difficulty_distribution": {
                 "easy": expert_diff_counts.get("easy", 0),
@@ -722,19 +756,20 @@ def main():
         },
         "transfer_evaluation": {
             "_note": "Transfer run against the OQMD-flavored transfer "
-                     "schema (5 tables, renamed columns); no code changes",
+                     "schema (flat layout, renamed columns; see "
+                     "db/transfer_schema.sql); no code changes",
             **transfer_eval,
         },
         "transfer_evaluation_variants": {
-            "_note": "Transfer/generalization tests A--D; A is same-schema data expansion, B/C are code-unchanged schema transfer, D is lightweight MP adaptation (dedicated prompt + 8 few-shot examples)",
+            "_note": "Transfer/generalization tests A--D; A is same-schema data expansion, B/C are code-unchanged schema transfer, D is lightweight MP adaptation (dedicated prompt plus a small few-shot set)",
             "A_prototype_expansion": {
                 "_note": "B2/NaCl/NiAs/BiF$_3$ prototype expansion on the "
-                         "same 31-table normalized schema",
+                         "same normalized main schema",
                 **prototype_eval,
             },
             "B_oqmd_transfer": {
-                "_note": "OQMD-flavored flat 5-table schema with renamed "
-                         "table and column names",
+                "_note": "OQMD-flavored flat schema with renamed table "
+                         "and column names (db/transfer_schema.sql)",
                 **transfer_eval,
             },
             "C_obfuscated": {
@@ -743,14 +778,14 @@ def main():
                 **obfuscated_eval,
             },
             "D_materials_project": {
-                "_note": "Real Materials Project data (27 binary systems, "
-                         "299 entries) in a fresh 3-table schema",
+                "_note": "Real Materials Project data in a fresh compact "
+                         "schema (see scripts/build_mp_transfer_db.py)",
                 **mp_transfer_eval,
             },
         },
         "cte_evaluation_15": {
-            "_note": "5 original CTE patterns (few-shot covered) + "
-                     "10 novel patterns (zero-shot)",
+            "_note": "Original CTE patterns (few-shot covered) plus novel "
+                     "zero-shot patterns; counts in n_original / n_novel",
             **cte15_eval,
         },
         "safety": {
@@ -772,6 +807,18 @@ def main():
     with open(out_path, "w") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
     print(f"Written: {out_path}")
+
+    # Post-condition: the freshly written SSOT must satisfy the SSOT audit
+    # (figure provenance, no hand-written numbers, SQLGuard count, derivable
+    # invariants, provenance fields)
+    ssot_audit = subprocess.run(
+        [sys.executable, str(PROJECT / "scripts" / "verify_ssot.py")],
+        cwd=str(PROJECT),
+    )
+    if ssot_audit.returncode != 0:
+        print("ERROR: SSOT audit (scripts/verify_ssot.py) failed",
+              file=sys.stderr)
+        sys.exit(1)
 
     # Print summary
     t = ablation_table
