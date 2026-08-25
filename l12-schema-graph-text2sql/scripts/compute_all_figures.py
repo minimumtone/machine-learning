@@ -649,6 +649,13 @@ def main():
     except Exception:
         # git not available; non-critical for data generation
         pass  # git hash is optional metadata
+    if git_hash == "unknown":
+        # Distribution packages carry the source commit in a GIT_COMMIT file
+        commit_file = PROJECT / "GIT_COMMIT"
+        if commit_file.exists():
+            recorded = commit_file.read_text().strip()
+            if recorded:
+                git_hash = recorded
 
     output = {
         "_meta": {
@@ -708,7 +715,8 @@ def main():
             "n_conditions": len(multirun["conditions"]),
             "n_runs": n_runs,
             "n_queries_per_condition": abl["n_queries"],
-            "total_evaluations": 7 * abl["n_queries"] * n_runs,
+            "total_evaluations":
+                len(multirun["conditions"]) * abl["n_queries"] * n_runs,
             "table": ablation_table,
             "top3_per_difficulty_deltas": ablation_deltas,
             "cte_query_results": {
