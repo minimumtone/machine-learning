@@ -80,7 +80,7 @@ def compute_stats(runs: list[dict]) -> dict:
         # Latency
         lats = [r["conditions"][cond]["avg_latency"] for r in runs]
         cond_stats["avg_latency_mean"] = float(np.mean(lats))
-        cond_stats["avg_latency_sd"] = float(np.std(lats, ddof=1))
+        cond_stats["avg_latency_std"] = float(np.std(lats, ddof=1))
 
         # Per-query accuracy across runs (for McNemar test later)
         per_query = {}
@@ -103,16 +103,37 @@ def compute_stats(runs: list[dict]) -> dict:
     return stats
 
 
+def _holm(pvalues: dict) -> dict:
+    """Holm-Bonferroni step-down adjusted p-values."""
+    ordered = sorted(pvalues.items(), key=lambda kv: kv[1])
+    m = len(ordered)
+    adjusted: dict = {}
+    running = 0.0
+    for i, (name, p) in enumerate(ordered):
+        running = min(1.0, max(running, (m - i) * p))
+        adjusted[name] = running
+    return adjusted
+
+
 def compute_significance(stats: dict) -> dict:
     """Wilcoxon signed-rank test of full vs each ablated condition.
 
-    Uses the per-query mean accuracy across runs as paired samples,
-    drops zero differences and applies the normal approximation
-    (scipy `method="approx"`).
+    Paired samples are the per-query mean accuracies across runs.  Zero
+    differences are dropped and the *exact* signed-rank distribution is used
+    (SciPy ``method="auto"``), because several conditions leave fewer than ten
+    non-zero differences, for which the normal approximation is invalid --
+    SciPy emits "Sample size too small for normal approximation" when it is
+    forced.  Because every ablated condition is compared against the same
+    ``full`` baseline, a Holm-Bonferroni correction is applied across
+    conditions and ``significant`` refers to the corrected p-value.
+
+    ``p_value`` is the uncorrected exact p-value and ``p_value_holm`` the
+    corrected one; report the corrected value when claiming significance.
     """
     from scipy.stats import wilcoxon
 
     full_pq = stats["full"]["per_query_mean"]
+    raw: dict = {}
     significance: dict = {}
     for cond, cond_stats in stats.items():
         if cond == "full":
@@ -125,13 +146,21 @@ def compute_significance(stats: dict) -> dict:
         if len(nonzero) == 0:
             p_value = 1.0
         else:
-            p_value = float(wilcoxon(nonzero, method="approx").pvalue)
+            p_value = float(wilcoxon(nonzero, method="auto").pvalue)
+        raw[cond] = p_value
         significance[cond] = {
             "delta_pp": delta_pp,
             "p_value": p_value,
-            "significant": p_value < 0.05,
             "n_nonzero": len(nonzero),
+            "n_queries": len(qids),
+            "test": "wilcoxon-signed-rank-exact",
         }
+
+    adjusted = _holm(raw)
+    for cond, entry in significance.items():
+        entry["p_value_holm"] = adjusted[cond]
+        entry["significant"] = adjusted[cond] < 0.05
+        entry["correction"] = "holm-bonferroni"
     return significance
 
 

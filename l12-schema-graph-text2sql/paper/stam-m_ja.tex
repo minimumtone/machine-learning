@@ -335,7 +335,7 @@ SQL候補のリランキングにはGPT-5.5を使用する。少数ショット�
   \mathrm{Recall}(q) = \frac{|R_\text{gen}^{C} \cap R_\text{gold}^{C}|}{|R_\text{gold}^{C}|}
   \label{eq:column_aware}
 \end{equation}
-ここで、$C = \text{cols}(R_\text{gen}) \cap \text{cols}(R_\text{gold})$は共通列集合、$R^C$はその列集合への投影である。従来の評価JSONにある\texttt{accuracy}はこのRecallを意味する。Recallだけでは過剰取得を罰しないため、本研究では適合率 $\mathrm{Precision}=|R_\text{gen}^{C}\cap R_\text{gold}^{C}|/|R_\text{gen}^{C}|$ とF1も併記する。行の照合は重複を保持する多重集合（multiset）ベースで行い、行の順序は無視する。なお、Recallは共通列への射影で定義されるため、生成SQLが正解列の一部しか返さなくても1.0になり得る（Precision・F1併記の理由）。本稿では2つの完全一致指標を区別する：(1)~全列タプル完全一致（EM；共通列への射影を行わず、生成結果と期待結果の全列・全行が順序無視で一致）と、(2)~共通列射影上でPrecision=Recall=1の場合のみ1とする完全結果集合一致（Exact Result-Set Match）である。したがって、「Recall=100\%」を「全クエリが完全正解」と同一視しない。評価中はLIMIT 10{,}000をゴールドSQLと生成SQLの双方に適用する。
+ここで、$C = \text{cols}(R_\text{gen}) \cap \text{cols}(R_\text{gold})$は共通列集合、$R^C$はその列集合への投影である。従来の評価JSONにある\texttt{accuracy}はこのRecallを意味する。Recallだけでは過剰取得を罰しないため、本研究では適合率 $\mathrm{Precision}=|R_\text{gen}^{C}\cap R_\text{gold}^{C}|/|R_\text{gen}^{C}|$ とF1も併記する。行の照合は値を文字列正規化した集合（set）ベースで行い、行の順序と重複度（多重度）は無視する。なお、Recallは共通列への射影で定義されるため、生成SQLが正解列の一部しか返さなくても1.0になり得る（Precision・F1併記の理由）。この採点プロトコルにはさらに2つの寛容性がある：(a)~列名の重なりが皆無の場合は列位置に基づく照合にフォールバックする、(b)~ゴールドSQLが0行を返すクエリでは生成SQLも0行を返せば1.0とする（0行の一致は正しさの積極的証拠ではない）。これらの寛容性の影響は、同梱の監査スクリプト\texttt{scripts/audit\_scoring.py}（\texttt{evaluation/metrics\_strict.py}）で採点方針別に定量化し、補足資料~\ref{sec:sup_scoring_audit}に報告する。本稿では2つの完全一致指標を区別する：(1)~全列タプル完全一致（EM；共通列への射影を行わず、生成結果と期待結果の全列・全行が順序無視で一致）と、(2)~共通列射影上でPrecision=Recall=1の場合のみ1とする完全結果集合一致（Exact Result-Set Match）である。したがって、「Recall=100\%」を「全クエリが完全正解」と同一視しない。評価中はLIMIT 10{,}000をゴールドSQLと生成SQLの双方に適用する。
 
 データ準備からDB構築、評価実行、統計解析、図表生成、数値整合検証に至る全ワークフローと、各ステップに対応するスクリプト・入出力ファイルの対応は補足資料~\ref{sec:sup_workflow}に示す。
 
@@ -348,7 +348,7 @@ SQL候補のリランキングにはGPT-5.5を使用する。少数ショット�
 
 \begin{table*}[t]
 \centering
-\caption{アブレーションスタディの結果（100クエリ $\times$ 7条件 $\times$ 5回の実行 = 3{,}500評価）。表の値は実行再現率（\%）で、5回の独立実行の平均、括弧内は標準偏差を示す。$\Delta$はfull条件からの平均差（pp、未丸め値から算出）。統計検定は、各クエリの5ラン平均再現率をクエリ値とし（$n=100$）、平均差を検定統計量とする両側の対応あり符号反転（並べ替え）検定で行った。差が0のペアは符号反転で不変のため実質的に除外され、非同点ペア数を$n_\mathrm{eff}$として示す（$n_\mathrm{eff}\leq20$は全符号割当の全列挙による正確p値、no\_fewshotのみ$2\times10^5$回のMonte Carlo）。$r_\mathrm{rb}$は対応ありrank-biserial相関（効果量）、95\%CIはクエリ単位ブートストラップ（$n=100$、20{,}000再標本、パーセンタイル法）による$\Delta$の信頼区間である。6比較に対する未補正p値を示し、Bonferroni閾値は$0.05/6=0.0083$である。no\_guard（$n_\mathrm{eff}=5$、最小到達可能p値$=0.0625$）とno\_graph（$n_\mathrm{eff}=3$、同$0.25$）は検出力不足のため有意性判定を行わず（†）、CIによる区間評価を主とする。なお、有意でないことは効果がないことや同等性を意味しない。}
+\caption{アブレーションスタディの結果（100クエリ $\times$ 7条件 $\times$ 5回の実行 = 3{,}500評価）。表の値は実行再現率（\%）で、5回の独立実行の平均、括弧内は標準偏差を示す。$\Delta$はfull条件からの平均差（pp、未丸め値から算出）。統計検定は、各クエリの5ラン平均再現率をクエリ値とし（$n=100$）、平均差を検定統計量とする両側の対応あり符号反転（並べ替え）検定で行った。差が0のペアは符号反転で不変のため実質的に除外され、非同点ペア数を$n_\mathrm{eff}$として示す（$n_\mathrm{eff}\leq20$は全符号割当の全列挙による正確p値、no\_fewshotのみ$2\times10^5$回のMonte Carlo）。$r_\mathrm{rb}$は対応ありrank-biserial相関（効果量）、95\%CIはクエリ単位ブートストラップ（$n=100$、20{,}000再標本、パーセンタイル法）による$\Delta$の信頼区間である。6比較に対する未補正p値を示し、Bonferroni閾値は$0.05/6=0.0083$である（Holm法によるステップダウン補正後もno\_fewshot・no\_dictは$p<0.001$を維持し、有意な条件の集合は変わらない）。no\_guard（$n_\mathrm{eff}=5$、最小到達可能p値$=0.0625$）とno\_graph（$n_\mathrm{eff}=3$、同$0.25$）は検出力不足のため有意性判定を行わず（†）、CIによる区間評価を主とする。なお、有意でないことは効果がないことや同等性を意味しない。}
 \label{tab:ablation}
 \footnotesize
 \setlength{\tabcolsep}{3.5pt}
@@ -399,7 +399,7 @@ no\_guard・no\_nbest・no\_graphでEasy～Hard層の値がfullと小数点1桁�
 
 実行精度（リコール）のみに基づく評価は不十分であるため、複数の補足指標を計算した（ティア別の全指標は補足資料~\ref{sec:sup_results_details}の表~\ref{tab:multiaxis}・図~\ref{fig:radar}）。
 
-構文の有効性と実行成功率は全ティアで100\%であった。これはfull条件における観測結果であり、SQLGuardが任意の入力に対する安全性を保証することを意味しない。なお、この100\%は修復ループ（セクション~\ref{sec:repair}）を使用せずに達成された値であり、SQLGuard検証と$n$-best実行スコアリング（実行に失敗する候補を選択段階で排除する）の複合効果である。全列タプル完全一致（EM）は20\%と低いが、これは主に追加または順序が変更されたSELECT列によるものである。共通列射影上でPrecision=Recall=1となる完全結果集合一致（Exact Result-Set Match；セクション~\ref{sec:evaluation}の定義）は56\%（56/100クエリ、同一単一ラン）であった。リコールは84.7\%で、正しいデータ内容が返されていることを示している。JOINマッチ率は全体で93.2\%であり、FKグラフ制約がJOINパスの誤りを抑える方向に機能していることを示す。VHティアの73.5\%のJOINマッチ率は、貪欲最短経路連結制約があっても、5つ以上のJOINされたテーブルを含む複雑なクエリでは正確にパスを特定できない場合があることを示している。
+構文の有効性と実行成功率は全ティアで100\%であった。これはfull条件における観測結果であり、SQLGuardが任意の入力に対する安全性を保証することを意味しない。なお、この100\%は修復ループ（セクション~\ref{sec:repair}）を使用せずに達成された値であり、SQLGuard検証と$n$-best実行スコアリング（実行に失敗する候補を選択段階で排除する）の複合効果である。全列タプル完全一致（EM）は20\%と低いが、これは主に追加または順序が変更されたSELECT列によるものである。共通列射影上でPrecision=Recall=1となる完全結果集合一致（Exact Result-Set Match；セクション~\ref{sec:evaluation}の定義）は56\%（56/100クエリ、多軸評価と同一の単一ラン）であった。別の保存ラン（生成SQL付き保存ラン、Recall 85.4\%）では62/100であり（補足資料~\ref{sec:sup_scoring_audit}）、単一ラン間の変動幅は56--62件である。リコールは84.7\%で、正しいデータ内容が返されていることを示している。JOINマッチ率は全体で93.2\%であり、FKグラフ制約がJOINパスの誤りを抑える方向に機能していることを示す。VHティアの73.5\%のJOINマッチ率は、貪欲最短経路連結制約があっても、5つ以上のJOINされたテーブルを含む複雑なクエリでは正確にパスを特定できない場合があることを示している。
 \subsection{誤差分析}
 \label{sec:error_analysis}
 
@@ -470,7 +470,7 @@ SQLGuard（$-$0.2\,pp、95\%CI $[-0.8, +0.4]$\,pp）、$n$-best（$-$0.6\,pp、$
 
 自己参照バイアスを検証するために、パイプラインの実装に関与していない共同著者の末松 知恵が独立に設計した100クエリで精度を再評価した。難易度分布はEasy 18 / Medium 34 / Hard 34 / Very Hard 14で、基本検索から材料設計・統計まで10カテゴリにわたる（カテゴリ内訳は補足資料~\ref{sec:sup_expert_queries}）。スコアリングはアブレーションと同じ実行再現率メトリックと難易度分類で行った。
 
-全体の実行精度は76.9\%（Easy 94.4\% / Medium 81.7\% / Hard 61.5\% / Very Hard 80.4\%）で、著者設計のセット（84.7\%; 表~\ref{tab:ablation}）よりも7.8\,pp低い。このギャップは主に、(1)~独立クエリが\texttt{elastic\_tensor}や\texttt{magnetic\_property}等の少数ショット例がまばらな周辺テーブルを参照するテーブルカバレッジバイアス（主要因）、(2)~著者設計クエリの固定パターン（「L1$_2$」明示）に最適化された少数ショット例、(3)~より暗黙的な条件指定を含む語彙の多様性、に起因する。
+全体の実行精度は76.9\%（Easy 94.4\% / Medium 81.7\% / Hard 61.5\% / Very Hard 80.4\%）で、著者設計のセット（84.7\%; 表~\ref{tab:ablation}）よりも7.8\,pp低い。このギャップは主に、(1)~独立クエリが\texttt{elastic\_tensor}や\texttt{magnetic\_property}等の少数ショット例がまばらな周辺テーブルを参照するテーブルカバレッジバイアス（主要因）、(2)~著者設計クエリの固定パターン（「L1$_2$」明示）に最適化された少数ショット例、(3)~より暗黙的な条件指定を含む語彙の多様性、に起因する。なお、このセットでは100件中16件のゴールドSQLが0行を返し、うち10件は生成SQLも0行を返したことにより1.0を得ている（セクション~\ref{sec:evaluation}の寛容性(b)）。ゴールドが0行のクエリを分母から除外した感度値は79.7\%（$n=84$）である（補足資料~\ref{sec:sup_scoring_audit}）。
 
 構文の有効性（100.0\%）は両セットで一貫する。VH層（80.4\%）がHard層（61.5\%）より高いのは、VHクエリの多くが少数ショット例でカバーされた短いCTEパターンを含むのに対し、一部のHardクエリは例のない周辺テーブルを参照するためである（詳細は補足資料~\ref{sec:sup_expert_queries}）。
 
@@ -521,7 +521,7 @@ D & MP実データ（MP専用prompt + 8 few-shot） & 15 & 100.0\% \\
 
 \subsection{制限事項と今後の研究}
 
-主な制限は以下の10点である（各項目の詳細は補足資料~\ref{sec:sup_limitations}）。
+主な制限は以下の11点である（各項目の詳細は補足資料~\ref{sec:sup_limitations}）。
 \begin{enumerate}[nosep]
   \item 単一データベースの検証：主評価はL1$_2$を中心に5プロトタイプを含む検証DB（31テーブル、1ビュー、1{,}559エントリ、全テーブル総行数約19{,}973行；純元素参照エネルギーのみOQMD由来）に基づき、根本的に異なる意味論やスケールを持つRDBへの無修正一般化は確認していない。
   \item 31テーブル・1ビュー構成の限界：スキーマサイズは現実の材料RDBより小さく、属性名の多様さや異なる正規化方針を網羅しない。
@@ -533,6 +533,7 @@ D & MP実データ（MP専用prompt + 8 few-shot） & 15 & 100.0\% \\
   \item あいまいな自然言語表現：「安定な」等の解釈は一義的でなく、問いを具体化する対話インターフェースの併用余地がある（具体例は補足資料~\ref{sec:sup_ambiguous}）。
   \item 使用言語への依存性：評価クエリは日本語であり、英語等への適用には辞書・few-shot例の整備を要する。
   \item ベースライン：同一DB上での他手法（DIN-SQL、DAIL-SQL等）との直接比較は行っていない。
+  \item 採点プロトコルの寛容性：主要指標の実行再現率は共通列射影・列位置フォールバック・0行一致への満点付与を含む寛容な定義であり（セクション~\ref{sec:evaluation}）、監査の結果、導出計算を要する一部クエリでは識別列のみの一致による過大評価事例がある（補足資料~\ref{sec:sup_scoring_audit}）。厳格化した採点方針別の値も同節に併記する。
 \end{enumerate}
 
 
@@ -568,7 +569,7 @@ L1$_2$型金属間化合物のDFT計算データは、Open Quantum Materials Dat
 % =====================================================================
 \section*{データとコードの利用可能性}
 
-評価データセット（100のゴールドSQLクエリと期待結果）、アブレーションの5回分の保存結果、MeCab材料辞書、日本語リランカー比較結果、および再現スクリプトをパッケージに含める。\texttt{scripts/compute\_all\_figures.py}は保存済み評価結果を再集計し、DB統計、統計検定（符号反転検定・ブートストラップCI）、7件の安全性ケース、およびpytest実行結果を再計算して\texttt{paper/paper\_data.json}を生成する。LLM依存の評価値そのものを完全に再生成するにはAPIキーと外部データアクセスが必要であり、保存済みJSONの再集計とLLM評価の再実行は区別する。\texttt{reproduce.sh}はユニットテストを実際に実行し、失敗時には処理を停止する。報告時のスナップショットでは134件のユニットテストを対象とした。完全なソースコード、データセット、および再現性パッケージは、受理後に公開リポジトリを通じて提供する。
+評価データセット（100のゴールドSQLクエリと期待結果）、アブレーションの5回分の保存結果、MeCab材料辞書、日本語リランカー比較結果、および再現スクリプトをパッケージに含める。\texttt{scripts/compute\_all\_figures.py}は保存済み評価結果を再集計し、DB統計、統計検定（符号反転検定・ブートストラップCI）、7件の安全性ケース、およびpytest実行結果を再計算して\texttt{paper/paper\_data.json}を生成する。LLM依存の評価値そのものを完全に再生成するにはAPIキーと外部データアクセスが必要であり、保存済みJSONの再集計とLLM評価の再実行は区別する。\texttt{reproduce.sh}はユニットテストを実際に実行し、失敗時には処理を停止する。採点方式の監査（\texttt{scripts/audit\_scoring.py}・\texttt{evaluation/metrics\_strict.py}）と統計検定の再計算（\texttt{scripts/recompute\_significance.py}）もLLM・APIキーなしで再実行できる。報告時のスナップショットでは134件のユニットテストを対象とした。完全なソースコード、データセット、および再現性パッケージは、受理後に公開リポジトリを通じて提供する。
 
 % =====================================================================
 \section*{著者の貢献}
@@ -1606,7 +1607,7 @@ SQLGuardの静的検証は以下の14のチェックから成る：
 \centering
 \includegraphics[width=\columnwidth]{figures/ablation_bar.png}
 \caption{アブレーションスタディの棒グラフ（5回の平均 $\pm$ SD）。
-赤い棒は統計的に有意な精度低下を示す条件を示す（$^{***}$: $p<0.001$）。}
+赤い棒は統計的に有意な精度低下を示す条件を示す（$^{***}$: $p<0.001$）。星印の検定は表~\ref{tab:ablation}と同一の正確符号反転（並べ替え）検定に基づく。†は$n_\mathrm{eff}$が小さく検出力不足のため有意性判定を行わない条件（no\_guard・no\_graph）を示す。}
 \label{fig:ablation_bar}
 \end{figure}
 
@@ -1870,6 +1871,30 @@ WHERE条件の組み合わせエラーが最も頻繁に発生している。ス
   \end{tabularx}
 \end{table}
 
+\subsection{採点方式の監査}
+\label{sec:sup_scoring_audit}
+
+本文セクション~\ref{sec:evaluation}に述べた採点プロトコルの寛容性（共通列射影・列位置フォールバック・0行一致への満点付与・順序と多重度の無視）の影響を、保存済み評価結果（生成SQL付き保存ラン）に対して\texttt{scripts/audit\_scoring.py}で定量化した。監査スクリプトは起動時に、現行方針（historical）で同梱のper-queryスコアを完全再現できることを4データセットすべてで自己検査する（LLM・APIキー不要）。表~\ref{tab:scoring_audit}に採点方針別の値を示す。
+
+\begin{table}[t]
+  \centering
+  \caption{採点方針別の実行再現率（\%）。historical＝本文の採点方式。require all＝全ゴールド列の存在を要求。no positional＝列位置フォールバック無効。drop empty＝ゴールド0行クエリを分母から除外。multiset＝行の重複度を照合。exact＝共通列射影上でPrecision=Recall=1の割合（Exact Result-Set Match）。ordered＝順序も照合した場合のRecall。いずれも生成SQL付き保存ラン（main: Recall 85.4\%の単一ラン）に基づく。}
+  \label{tab:scoring_audit}
+  \small
+  \begin{tabular}{@{}lrrrrrrr@{}}
+    \toprule
+    データセット & hist. & req.\ all & no pos. & drop empty & multiset & exact & ordered \\
+    \midrule
+    主評価 (100) & 85.4 & 34.8 & 83.2 & 85.4 & 78.6 & 62.0 & 35.6 \\
+    独立設計 (100) & 76.9 & 12.5 & 71.9 & 79.7 & 73.9 & 69.0 & 50.9 \\
+    一般化B (20) & 90.5 & 30.0 & 75.5 & 90.5 & 84.2 & 80.0 & 63.3 \\
+    一般化C (20) & 90.0 & 35.0 & 70.0 & 90.0 & 83.7 & 90.0 & 71.5 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+解釈上の注意を4点述べる。第一に、「require all」の大幅な低下（主評価34.8\%）は影響の上限であり、ゴールドSQLが補助列（\texttt{entry\_id}等）を含む設計に起因する部分が大きく、報告値としては採用しない。実質的に効くのは「recall=1.0だがゴールド1列のみで比較された」クエリ（主評価17件・独立設計16件・一般化B 7件・C 6件）である。このうち主評価17件・独立設計16件の計33件を質問・ゴールドSQL・生成SQLの対で全件目視監査した結果、26件は設問が単一の意味フィールド（化合物リスト等）のみを要求し絞り込み条件も意味的に等価であるため妥当な満点、3件は境界事例（集計列の欠落、別テーブル経由の等価取得等）、4件（\texttt{q\_hard\_021}・\texttt{q\_vhard\_009}・\texttt{q\_vhard\_018}・\texttt{q\_vhard\_020}、いずれも主評価の導出計算系）は要求された導出計算（例：純物質基準による補正生成エンタルピー）を生成SQLが実行せず、識別列のみの一致で満点となった明確な過大評価である。第二に、ゴールド0行クエリは独立設計に16件あり、うち10件は生成SQLも0行を返したことで1.0を得ている。これらを除外した79.7\%（$n=84$）を感度値として本文に併記した。第三に、順序照合（ordered）の低値の多くはゴールドSQLが決定性確保のために付す\texttt{ORDER BY}に由来し、設問自体が順序を要求するTop-$k$型は主評価では7件である。この7件に限定した順序照合Recallは52.5\%（順序無視では92.9\%）であり、ランキングを要する問いでは行集合が正しくても順位が誤り得ることを示す。第四に、これらはいずれも同一の保存ランに対する採点方式の感度分析であり、本文の主要値（5ラン平均84.7\%等）の再測定ではない。
+
 % =====================================================================
 \section{材料工学評価の詳細}
 \label{sec:sup_materials_eval}
@@ -2091,6 +2116,8 @@ no\_graph     & 100\% \\
     本研究の評価クエリは日本語であるが、パイプラインの中核設計（LLM による SQL 生成、スキーマリンク、few-shot 検索、FKグラフ上の最短経路JOIN生成）は言語に依存しない。ただし、ドメイン辞書（バイリンガル用語辞書・スキーマ写像辞書）のように言語に依存する構成要素もあるため、英語等のクエリに適用するにはトークナイザ・辞書・few-shot 例を対象言語向けに整備する必要がある（本研究では英語クエリでの系統的検証は行っていない）。
   \item ベースラインの公平性:
     同じデータベースに対する他の手法（DIN-SQL、DAIL-SQLなど）との直接比較は行われていない。
+  \item 採点プロトコルの寛容性:
+    主要指標の実行再現率は、共通列への射影、列名の重なりが皆無の場合の列位置フォールバック、ゴールド0行と生成0行の一致への満点付与を含む寛容な定義である（セクション~\ref{sec:evaluation}）。採点方針を厳格化した場合の値と、ゴールド1列のみの一致で満点となったクエリの目視監査結果（導出計算未検証の過大評価事例を含む）は補足資料~\ref{sec:sup_scoring_audit}の表~\ref{tab:scoring_audit}に示す。独立設計セットではゴールド0行クエリ16件（うち10件が0行一致で満点）を除外した感度値79.7\%（$n=84$）を併記した。
 \end{enumerate}
 
 \subsection{あいまい・矛盾クエリの例}
@@ -2123,11 +2150,11 @@ no\_graph     & 100\% \\
 (e)~感度分析：\texttt{eval\_fewshot\_sensitivity.py}（$\to$ \texttt{fewshot\_sensitivity\_results.json}）、\texttt{eval\_dict\_sensitivity.py}（$\to$ \texttt{dict\_sensitivity\_results.json}）、\texttt{eval\_model\_comparison.py}（$\to$ \texttt{model\_comparison\_results.json}）、\texttt{eval\_jp\_reranker\_vh.py}（$\to$ \texttt{jp\_reranker\_vh\_results.json}）。リランカーA/B評価（\texttt{reranker\_eval\_results.json}）と失敗分析（\texttt{failure\_analysis.json}）は保存済み評価出力として同梱される。
 (f)~安全性：\texttt{scripts/verify\_safety\_cases.py}およびpytestテストスイート（\texttt{tests/}、134件）。
 
-\paragraph{ステップ5：統計解析。}
+\paragraph{ステップ5：アブレーション統計解析。}
 \texttt{scripts/compute\_ablation\_stats\_v2.py}が\texttt{ablation\_run\_\{1..5\}.json}から各クエリの5ラン平均を計算し（$n=100$の対応ありデータ）、非同点ペア数$n_\mathrm{eff}$、平均差を統計量とする両側の正確符号反転検定p値（$n_\mathrm{eff}\leq20$は全列挙、それ以外は$2\times10^5$回Monte Carlo、シード20260602）、対応ありrank-biserial相関、クエリ単位ブートストラップ95\%CI（20{,}000再標本）を算出して\texttt{evaluation/ablation\_significance\_v2.json}に保存する。
 
 \paragraph{ステップ6：集計と図表生成（決定的）。}
-\texttt{scripts/compute\_all\_figures.py}がステップ4--5の評価JSON（アブレーション5ラン・統計・独立設計・CTE・バリアントA・一般化B/C/D・リランカー評価）を読み込み、論文の全掲載数値の単一情報源（SSOT）である\texttt{paper/paper\_data.json}を生成する。続いて\texttt{scripts/generate\_figures.py}がアブレーション統計・多軸指標・感度分析・モデル比較・失敗分析の各評価JSONを直接読み込み、図6点（\texttt{ablation\_bar}、\texttt{fewshot\_sensitivity}、\texttt{dict\_sensitivity}、\texttt{multiaxis\_radar}、\texttt{model\_comparison}、\texttt{error\_distribution}）を\texttt{paper/figures/}にPDF/PNGで出力する。\texttt{compute\_all\_figures.py}は冒頭でpytestテストスイート（\texttt{tests/}、134件）を実行し、1件でも失敗すれば\texttt{paper\_data.json}を生成せずに停止する。この2ステップは配布パッケージの\texttt{reproduce.sh}（依存関係インストール$\to$必須モジュール検査$\to$DB起動$\to$両スクリプト実行）で一括再現できる。
+\texttt{scripts/compute\_all\_figures.py}（結果集約・SSOT生成）がステップ4--5の評価JSON（アブレーション5ラン・統計・独立設計・CTE・バリアントA・一般化B/C/D・リランカー・多軸指標・感度分析・モデル比較・失敗分析）を読み込み、論文の全掲載数値と図の元データ（\texttt{figure\_source\_data}）を含む単一情報源（SSOT）である\texttt{paper/paper\_data.json}を生成する。同スクリプトは冒頭でpytestテストスイート（\texttt{tests/}、134件）を実行し、1件でも失敗すれば\texttt{paper\_data.json}を生成せずに停止する（テストゲート）。続いて\texttt{scripts/generate\_figures.py}が\texttt{paper\_data.json}のみを読み込み、図6点（\texttt{ablation\_bar}、\texttt{fewshot\_sensitivity}、\texttt{dict\_sensitivity}、\texttt{multiaxis\_radar}、\texttt{model\_comparison}、\texttt{error\_distribution}）を\texttt{paper/figures/}にPDF/PNGで出力する。したがって本文掲載数値と図はいずれもテストゲートを通過した同一の確定データから生成される。この2ステップは配布パッケージの\texttt{reproduce.sh}（依存関係インストール$\to$必須モジュール検査$\to$DB起動$\to$両スクリプト実行）で一括再現できる。
 
 \paragraph{ステップ7：数値整合検証と原稿生成。}
 \texttt{scripts/verify\_paper\_numbers.py --paper-dir paper}が\texttt{paper\_data.json}の数値と原稿TeX中の掲載値を突き合わせ、不一致があれば失敗する。原稿はLuaLaTeX＋BibTeXでコンパイルする。

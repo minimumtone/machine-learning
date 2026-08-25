@@ -34,25 +34,24 @@ flowchart TB
   E4 --> F4
   C2 -. 全評価パイプライン共通入力 .-> S4
 
-  subgraph S5["ステップ5: 統計解析"]
+  subgraph S5["ステップ5: アブレーション統計解析"]
     G1["compute_ablation_stats_v2.py<br/>(n_eff, 正確符号反転p, rank-biserial,<br/>bootstrap 95%CI, シード20260602)"] --> G2["ablation_significance_v2.json"]
   end
   F1 --> G1
 
-  GATE{{"TEST GATE: pytest tests/ 134件 合格?<br/>(compute_all_figures.py が実行、失敗時は生成停止)"}}
+  GATE{{"PRECONDITION / TEST GATE<br/>compute_all_figures.py 起動時に<br/>pytest tests/ → 134 PASS 必須（失敗時は生成停止）"}}
   G2 --> GATE
 
   subgraph S6["ステップ6: 集計・図表生成 (決定的)"]
-    H1["compute_all_figures.py<br/>(アブレーション・独立・CTE・バリアントA・一般化B/C/D・<br/>リランカー評価の各JSONを読込)"] --> H2["paper/paper_data.json (SSOT)"]
-    H3["generate_figures.py<br/>(ablation統計・multiaxis・感度分析・model_comparison・<br/>failure_analysis の各JSONを直接読込)"] --> H4["paper/figures/*.pdf|png (図6点)"]
+    H1["compute_all_figures.py — 結果集約・SSOT生成<br/>(アブレーション・独立・CTE・バリアントA・一般化B/C/D・<br/>リランカー・多軸・感度分析・モデル比較・失敗分析の各JSONを読込)"] --> H2["paper/paper_data.json (SSOT)<br/>本文掲載数値 + figure_source_data"]
+    H3["generate_figures.py<br/>(paper_data.json のみを読込)"] --> H4["paper/figures/*.pdf|png (図6点)"]
   end
   GATE -- YES --> H1
-  F1 --> H3
-  F2 --> H3
+  F2 --> H1
   F3 --> H1
   F4 --> H1
   F5 --> H1
-  F5 --> H3
+  H2 --> H3
 
   subgraph S7["ステップ7: 数値整合検証・原稿生成"]
     TEX["TeX原稿 paper/stam-m_ja.tex"]

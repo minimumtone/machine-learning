@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """Generate all visualization figures for the paper.
 
+Reads ONLY paper/paper_data.json (the single source of truth produced
+by scripts/compute_all_figures.py after the pytest gate), via its
+``figure_source_data`` section, so manuscript numbers and figures are
+guaranteed to come from the same validated data.
+
 Produces:
   - Fig: Ablation bar chart (5-run mean +/- SD)
   - Fig: Few-shot sensitivity (k vs accuracy by difficulty)
@@ -25,6 +30,11 @@ PROJECT = Path(__file__).resolve().parent.parent
 FIG_DIR = PROJECT / "paper" / "figures"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
+PAPER_DATA_PATH = PROJECT / "paper" / "paper_data.json"
+with open(PAPER_DATA_PATH) as _f:
+    _PAPER_DATA = json.load(_f)
+FIGURE_DATA = _PAPER_DATA["figure_source_data"]
+
 # Font sizes (doubled per user preference for presentations)
 TITLE_SIZE = 24
 LABEL_SIZE = 20
@@ -44,9 +54,7 @@ plt.rcParams.update({
 
 def fig_ablation_bar():
     """5-run ablation bar chart with error bars."""
-    path = PROJECT / "evaluation" / "ablation_multirun_stats.json"
-    with open(path) as f:
-        stats = json.load(f)
+    stats = FIGURE_DATA["ablation_multirun_stats"]
 
     conditions_order = ["full", "no_fewshot", "no_dict", "no_reranker", "no_guard", "no_nbest", "no_graph"]
     labels = ["Full", "No Few-shot", "No Dict", "No Reranker", "No Guard", "No N-best", "No Graph"]
@@ -54,15 +62,19 @@ def fig_ablation_bar():
     sds = []
     colors_list = []
 
-    sig_tests = stats.get("significance_tests", {})
+    # Sign-flip permutation statistics: the same test reported in the
+    # manuscript's ablation table (Table 1)
+    sig_tests = FIGURE_DATA["ablation_significance_v2"]
     for cond in conditions_order:
         c = stats["conditions"][cond]
         means.append(c["overall_mean"] * 100)
         sds.append(c["overall_std"] * 100)
-        p_val = sig_tests.get(cond, {}).get("p_value", 1.0)
+        s = sig_tests.get(cond, {})
+        p_val = s.get("p_exact_sign_flip", 1.0)
+        powered = s.get("test_powered_at_0.05", True)
         if cond == "full":
             colors_list.append("#2196F3")
-        elif p_val < 0.05:
+        elif powered and p_val < 0.05:
             colors_list.append("#F44336")
         else:
             colors_list.append("#9E9E9E")
@@ -78,11 +90,14 @@ def fig_ablation_bar():
     ax.set_ylim(70, 90)
     ax.axhline(y=means[0], color="#2196F3", linestyle="--", alpha=0.3)
 
-    # Add significance markers
+    # Add significance markers (dagger = underpowered, no significance call)
     for i, cond in enumerate(conditions_order):
-        p = sig_tests.get(cond, {}).get("p_value", 1.0)
+        s = sig_tests.get(cond, {})
+        p = s.get("p_exact_sign_flip", 1.0)
         if cond != "full":
-            if p < 0.001:
+            if not s.get("test_powered_at_0.05", True):
+                ax.text(i, means[i] + sds[i] + 0.5, "\u2020", ha="center", fontsize=TICK_SIZE - 2)
+            elif p < 0.001:
                 ax.text(i, means[i] + sds[i] + 0.5, "***", ha="center", fontsize=LEGEND_SIZE)
             elif p < 0.01:
                 ax.text(i, means[i] + sds[i] + 0.5, "**", ha="center", fontsize=LEGEND_SIZE)
@@ -101,9 +116,7 @@ def fig_ablation_bar():
 
 def fig_fewshot_sensitivity():
     """Few-shot k sensitivity: k vs accuracy by difficulty."""
-    path = PROJECT / "evaluation" / "fewshot_sensitivity_results.json"
-    with open(path) as f:
-        data = json.load(f)
+    data = FIGURE_DATA["fewshot_sensitivity"]
 
     k_values = data["k_values"]
     diffs = ["easy", "medium", "hard", "very_hard"]
@@ -141,9 +154,7 @@ def fig_fewshot_sensitivity():
 
 def fig_dict_sensitivity():
     """Dictionary size sensitivity bar chart."""
-    path = PROJECT / "evaluation" / "dict_sensitivity_results.json"
-    with open(path) as f:
-        data = json.load(f)
+    data = FIGURE_DATA["dict_sensitivity"]
 
     configs = ["dict_full", "dict_50%", "dict_25%", "dict_10%", "dict_0%"]
     labels = ["Full (61)", "50% (30)", "25% (15)", "10% (6)", "0% (none)"]
@@ -184,9 +195,7 @@ def fig_dict_sensitivity():
 
 def fig_multiaxis_radar():
     """Multi-axis radar chart by difficulty."""
-    path = PROJECT / "evaluation" / "multiaxis_results.json"
-    with open(path) as f:
-        data = json.load(f)
+    data = FIGURE_DATA["multiaxis"]
 
     categories = ["Recall", "Precision", "F1", "EM", "SELECT Col", "JOIN Match"]
     diffs = ["easy", "medium", "hard", "very_hard"]
@@ -229,16 +238,10 @@ def fig_multiaxis_radar():
 
 def fig_model_comparison():
     """Model comparison bar chart."""
-    # GPT-5.5 baseline from ablation stats
-    stat_path = PROJECT / "evaluation" / "ablation_multirun_stats.json"
-    with open(stat_path) as f:
-        stats = json.load(f)
+    stats = FIGURE_DATA["ablation_multirun_stats"]
     full_cond = stats["conditions"]["full"]
 
-    # GPT-4o from model comparison
-    mc_path = PROJECT / "evaluation" / "model_comparison_results.json"
-    with open(mc_path) as f:
-        mc = json.load(f)
+    mc = FIGURE_DATA["model_comparison"]
     gpt4o = mc["models"]["gpt-4o"]
 
     diffs = ["easy", "medium", "hard", "very_hard"]
@@ -282,9 +285,7 @@ def fig_model_comparison():
 
 def fig_error_distribution():
     """Error type distribution pie/bar chart from failure analysis."""
-    path = PROJECT / "evaluation" / "failure_analysis.json"
-    with open(path) as f:
-        data = json.load(f)
+    data = FIGURE_DATA["failure_analysis"]
 
     # Classify error types
     error_types = {
@@ -341,7 +342,7 @@ def fig_error_distribution():
 
 
 def main():
-    print("Generating figures...")
+    print(f"Generating figures from {PAPER_DATA_PATH} (SSOT)...")
     fig_ablation_bar()
     fig_fewshot_sensitivity()
     fig_dict_sensitivity()
