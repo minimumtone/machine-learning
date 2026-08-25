@@ -109,19 +109,34 @@ def check_sqlguard_count(r: Result) -> None:
     src = VALIDATOR.read_text()
     body = re.search(r"^def validate_sql\b.*?(?=\n^def |\Z)", src, re.M | re.S)
     invoked = sorted(set(re.findall(r"\b(check_[a-z_]+)\(", body.group(0)))) if body else []
-    tex_counts: dict[str, int] = {}
+    tex_enum_patterns = [
+        r"comprises\s+(\d+)\s+checks\b.*?\\begin\{enumerate\}(.*?)\\end\{enumerate\}",
+        r"(\d+)のチェック関数から成る.*?\\begin\{enumerate\}(.*?)\\end\{enumerate\}",
+    ]
+    tex_counts: dict[str, tuple[int, int]] = {}
+    unmatched: list[str] = []
     for rel in TEX_FILES:
         p = PROJECT / rel
         if not p.exists():
             continue
-        m = re.search(r"comprises\s+(\d+)\s+checks?:(.*?)\\end\{enumerate\}",
-                      p.read_text(), re.S)
-        if m:
-            tex_counts[rel] = len(re.findall(r"\\item", m.group(2)))
-    ok = claimed == len(invoked) and all(v == claimed for v in tex_counts.values())
+        text = p.read_text()
+        for pat in tex_enum_patterns:
+            m = re.search(pat, text, re.S)
+            if m:
+                tex_counts[rel] = (int(m.group(1)),
+                                   len(re.findall(r"\\item", m.group(2))))
+                break
+        else:
+            unmatched.append(rel)
+    ok = (claimed == len(invoked)
+          and not unmatched
+          and all(stated == claimed and items == claimed
+                  for stated, items in tex_counts.values()))
     lines = [f"paper_data.json safety.n_sqlguard_checks = {claimed}",
              f"check_* functions invoked by validate_sql() = {len(invoked)}"]
-    lines += [f"{rel}: {v} enumerated items" for rel, v in tex_counts.items()]
+    lines += [f"{rel}: states {stated}, enumerates {items} items"
+              for rel, (stated, items) in tex_counts.items()]
+    lines += [f"{rel}: SQLGuard check enumeration not found" for rel in unmatched]
     if not ok:
         lines.append("The manuscript enumerates items that are not separate checks in "
                      "the implementation; verify each listed item actually fires.")
