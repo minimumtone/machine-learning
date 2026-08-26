@@ -41,11 +41,11 @@ class BoundarySampleInfo:
     ood_indices: np.ndarray           # 元データフレームのインデックス
     ood_scores: np.ndarray            # composite_score
 
-    # 境界サンプル: score が threshold × margin 以内（内挿側の境界）
+    # 境界サンプル: score が threshold × (1-margin) 以上 threshold 未満（内挿側の境界）
     boundary_indices: np.ndarray      # 元データフレームのインデックス
     boundary_scores: np.ndarray       # composite_score
     ood_threshold: float
-    margin: float                     # threshold × (1 + margin) を境界の上限とする
+    margin: float                     # threshold × (1 - margin) を境界の下限とする
 
     @property
     def n_ood(self) -> int:
@@ -72,11 +72,15 @@ class DiscoveryRoundResult:
     ood_rmse: float = float("nan")
     ood_r2:   float = float("nan")
 
-    # 拡張データ全体での CV 性能
+    # 拡張訓練データでの当てはめ RMSE（参考値）
     augmented_rmse: float = float("nan")
     augmented_r2:   float = float("nan")
 
-    improvement: float = float("nan")  # (baseline_rmse - ood_rmse) / baseline_rmse
+    # 同一の train/OOD 評価分割で候補列なしに学習したときの OOD RMSE。
+    # improvement はこの値との比較（同一評価データ・同一指標）で算出する。
+    baseline_ood_rmse: float = float("nan")
+
+    improvement: float = float("nan")  # (baseline_ood_rmse - ood_rmse) / baseline_ood_rmse
     success: bool = False
     error_message: str = ""
     elapsed_sec: float = 0.0
@@ -101,7 +105,7 @@ class FeatureDiscoveryResult:
 def identify_boundary_samples(
     ood_result,           # OODResult (composite_scores, is_ood, ood_threshold)
     n_ood_samples: int,
-    margin: float = 0.5,  # threshold × (1 + margin) を境界上限とする
+    margin: float = 0.5,  # threshold × (1 - margin) を境界下限とする
 ) -> BoundarySampleInfo:
     """OOD スコアに基づき OOD サンプルと境界サンプルを特定する。
 
@@ -110,27 +114,26 @@ def identify_boundary_samples(
     ood_result : OODResult
         Stage 3 の出力。composite_scores が全テストサンプルのスコア。
     n_ood_samples : int
-        OOD と判定するサンプル数（上位 N 件）。0 → threshold 以上を全選択。
+        OOD と判定するサンプル数の上限。threshold 以上のサンプルのうち
+        スコア上位 N 件に限定する。0 → threshold 以上を全選択。
     margin : float
-        境界サンプルの範囲係数。threshold 以下かつ threshold × (1+margin) 以内。
+        境界サンプルの範囲係数。threshold × (1-margin) 以上かつ threshold 未満。
     """
     scores    = np.asarray(ood_result.composite_scores)
     threshold = float(ood_result.ood_threshold)
     n         = len(scores)
     all_idx   = np.arange(n)
 
-    # OOD サンプル（スコア ≥ threshold）
+    # OOD サンプル（スコア ≥ threshold）。n_ood_samples > 0 のときは
+    # threshold 以上のサンプルの中からスコア上位 N 件に限定する。
     ood_mask = scores >= threshold
-    if n_ood_samples > 0:
-        # 上位 N 件に限定
-        sorted_desc = np.argsort(-scores)
-        ood_idx   = sorted_desc[:min(n_ood_samples, n_ood_samples)]
-    else:
-        ood_idx   = all_idx[ood_mask]
+    ood_idx  = all_idx[ood_mask]
+    if n_ood_samples > 0 and len(ood_idx) > n_ood_samples:
+        order   = np.argsort(-scores[ood_idx])
+        ood_idx = ood_idx[order[:n_ood_samples]]
     ood_scores = scores[ood_idx]
 
-    # 境界サンプル（threshold × margin 以内の内挿側）
-    upper = threshold * (1.0 + margin)
+    # 境界サンプル（threshold 未満かつ threshold × (1-margin) 以上の内挿側）
     boundary_mask = (~ood_mask) & (scores >= threshold * (1.0 - margin))
     boundary_idx  = all_idx[boundary_mask]
     boundary_scr  = scores[boundary_idx]
@@ -171,14 +174,20 @@ def augment_dataset(
     y_aug : pd.Series
         拡張後のターゲット
     train_idx_aug : np.ndarray
-        拡張データ内の訓練インデックス（元の訓練データ + 境界サンプル）
+        拡張データ内の訓練インデックス。OOD 評価行は含まない
+        （元データから OOD 評価行を除いた行 + 境界サンプルの複製行）。
     ood_eval_idx : np.ndarray
-        OOD 評価用インデックス（拡張データ内での位置）
+        OOD 評価用インデックス（拡張データ内での位置）。train_idx_aug と素。
     """
     n_orig = len(features_df)
 
     # 追加特徴量を結合
     if extra_features_df is not None and candidate_col is not None:
+        if len(extra_features_df) != n_orig:
+            raise ValueError(
+                f"extra_features_df の行数 ({len(extra_features_df)}) が "
+                f"features_df の行数 ({n_orig}) と一致しません"
+            )
         if candidate_col in extra_features_df.columns:
             col_data = extra_features_df[[candidate_col]].reset_index(drop=True)
             X_base = pd.concat(
@@ -201,20 +210,21 @@ def augment_dataset(
     # 有効なインデックスのみ
     boundary_orig_idx = boundary_orig_idx[boundary_orig_idx < n_orig]
 
-    if len(boundary_orig_idx) == 0:
-        # 境界サンプルなし → 元データをそのまま返す
-        train_idx = np.arange(n_orig)
-        ood_idx   = (
-            ood_test_idx[boundary_info.ood_indices]
-            if ood_test_idx is not None
-            else boundary_info.ood_indices
-        )
-        ood_idx = ood_idx[ood_idx < n_orig]
-        return X_base, y_base, train_idx, ood_idx
+    # OOD 評価行（元インデックス内の OOD サンプル）— 訓練から完全に除外する
+    ood_orig_idx = (
+        ood_test_idx[boundary_info.ood_indices]
+        if ood_test_idx is not None
+        else boundary_info.ood_indices
+    )
+    ood_orig_idx = np.unique(ood_orig_idx[ood_orig_idx < n_orig])
 
-    # 境界サンプルを訓練に追加（重複を除いたすべての元データが訓練、
-    # 境界サンプルも訓練に追加する構造）
-    # → 元データ全体 (0..n_orig-1) + 境界サンプルの複製（拡張行）
+    if len(boundary_orig_idx) == 0:
+        # 境界サンプルなし → 元データから OOD 評価行を除いた行を訓練にする
+        train_idx = np.setdiff1d(np.arange(n_orig), ood_orig_idx)
+        return X_base, y_base, train_idx, ood_orig_idx
+
+    # 境界サンプル（OOD 評価行に含まれないもの）を複製して訓練の重みを増やす
+    boundary_orig_idx = np.setdiff1d(boundary_orig_idx, ood_orig_idx)
     boundary_X = X_base.iloc[boundary_orig_idx].reset_index(drop=True)
     boundary_y = y_base.iloc[boundary_orig_idx].reset_index(drop=True)
 
@@ -222,17 +232,12 @@ def augment_dataset(
     y_aug = pd.concat([y_base, boundary_y], ignore_index=True)
 
     n_aug = len(X_aug)
-    # 訓練: 元データ全体 + 境界追加行
+    # 訓練: 元データから OOD 評価行を除いた行 + 境界複製行
     boundary_aug_idx = np.arange(n_orig, n_aug)
-    train_idx = np.concatenate([np.arange(n_orig), boundary_aug_idx])
-
-    # OOD 評価: 元インデックス内の OOD サンプル
-    ood_orig_idx = (
-        ood_test_idx[boundary_info.ood_indices]
-        if ood_test_idx is not None
-        else boundary_info.ood_indices
+    train_idx = np.concatenate(
+        [np.setdiff1d(np.arange(n_orig), ood_orig_idx), boundary_aug_idx]
     )
-    ood_eval_idx = ood_orig_idx[ood_orig_idx < n_orig]
+    ood_eval_idx = ood_orig_idx
 
     logger.info(
         "augment: n_orig=%d  n_boundary_added=%d  n_aug=%d  n_ood_eval=%d",
@@ -262,8 +267,17 @@ def run_feature_discovery_round(
     quick: bool = True,
     n_ood_samples: int = 0,
     boundary_margin: float = 0.5,
+    generic_csv_mode: Optional[bool] = None,
+    baseline_cache: Optional[Dict[str, Tuple[float, float]]] = None,
 ) -> DiscoveryRoundResult:
-    """1 候補特徴量での再学習と OOD 予測性能評価を実行する。"""
+    """1 候補特徴量での再学習と OOD 予測性能評価を実行する。
+
+    generic_csv_mode : bool, optional
+        None のときは feature_set_name が FeatureSetName に存在するかで自動判定。
+    baseline_cache : dict, optional
+        {workflow_name: (baseline_rmse, baseline_r2)}。候補間で不変のベースライン
+        を再計算しないためのキャッシュ。
+    """
     t0 = time.time()
     result = DiscoveryRoundResult(
         candidate_feature=candidate_feature,
@@ -278,30 +292,48 @@ def run_feature_discovery_round(
         )
         from extrapolation_discovery_platform.individual_runner import _WORKFLOW_FACTORIES
 
-        # ── ベースライン（元データのみ、追加特徴量なし） ─────────────────
-        prep_base = stage1_preprocess(
-            features_df=features_df,
-            target=target,
-            compositions_df=compositions_df,
-            feature_set_names=[feature_set_name],
-            workflow_names=[workflow_name],
-            seeds=[seed],
-            active_policies=[split_policy],
-            n_folds=n_folds,
-        )
-        if not prep_base.success:
-            raise RuntimeError(f"Stage1 失敗: {prep_base.error_message}")
+        # generic CSV モードの自動判定（FeatureSetName にない FS 名は generic 扱い）
+        if generic_csv_mode is None:
+            from extrapolation_discovery_platform.features import FeatureSetName
+            try:
+                FeatureSetName(feature_set_name)
+                generic_csv_mode = False
+            except ValueError:
+                generic_csv_mode = True
 
-        tr_base = stage2_train(
-            prep_base, features_df, target,
-            workflow_name, split_policy, feature_set_name,
-            quick=quick, seed=seed,
-        )
-        if not tr_base.success:
-            raise RuntimeError(f"Stage2 失敗: {tr_base.error_message}")
+        # ── ベースライン（元データのみ、追加特徴量なし、候補間で不変） ─────
+        cached = baseline_cache.get(workflow_name) if baseline_cache is not None else None
+        if cached is not None:
+            result.baseline_rmse, result.baseline_r2 = cached
+        else:
+            prep_base = stage1_preprocess(
+                features_df=features_df,
+                target=target,
+                compositions_df=compositions_df,
+                feature_set_names=[feature_set_name],
+                workflow_names=[workflow_name],
+                seeds=[seed],
+                active_policies=[split_policy],
+                n_folds=n_folds,
+                generic_csv_mode=generic_csv_mode,
+            )
+            if not prep_base.success:
+                raise RuntimeError(f"Stage1 失敗: {prep_base.error_message}")
 
-        result.baseline_rmse = tr_base.rmse_test_mean
-        result.baseline_r2   = tr_base.r2_test_mean
+            tr_base = stage2_train(
+                prep_base, features_df, target,
+                workflow_name, split_policy, feature_set_name,
+                quick=quick, seed=seed, generic_csv_mode=generic_csv_mode,
+            )
+            if not tr_base.success:
+                raise RuntimeError(f"Stage2 失敗: {tr_base.error_message}")
+
+            result.baseline_rmse = tr_base.rmse_test_mean
+            result.baseline_r2   = tr_base.r2_test_mean
+            if baseline_cache is not None:
+                baseline_cache[workflow_name] = (
+                    result.baseline_rmse, result.baseline_r2,
+                )
 
         # ── OOD 境界サンプルを特定 ──────────────────────────────────────
         boundary = identify_boundary_samples(
@@ -326,27 +358,36 @@ def run_feature_discovery_round(
 
         # ── 拡張データで再学習 ───────────────────────────────────────────
         # 有効列を取得（追加特徴量を含む）
-        aug_fs_name = feature_set_name
+        aug_fs_name = "generic" if generic_csv_mode else feature_set_name
         prep_aug = stage1_preprocess(
             features_df=X_aug,
             target=y_aug,
             compositions_df=compositions_df,
-            feature_set_names=[aug_fs_name],
+            feature_set_names=[feature_set_name],
             workflow_names=[workflow_name],
             seeds=[seed],
             active_policies=[split_policy],
             n_folds=n_folds,
+            generic_csv_mode=generic_csv_mode,
         )
         if not prep_aug.success:
             raise RuntimeError(f"拡張 Stage1 失敗: {prep_aug.error_message}")
 
-        # 拡張データの全行を訓練に使う（fold は元の fold を踏まえ再計算）
         factory = _WORKFLOW_FACTORIES.get(workflow_name)
         if factory is None:
             raise ValueError(f"未知のWF: {workflow_name}")
 
         effective_cols = prep_aug.effective_cols.get(aug_fs_name, list(X_aug.columns))
         effective_cols = [c for c in effective_cols if c in X_aug.columns]
+        # 候補列はリーク容疑でない限り必ず学習に含める
+        # （HEA モードでは FeatureCatalog 外の列が除外されるため）
+        if candidate_feature and candidate_feature in X_aug.columns:
+            rpt = (prep_aug.mc_reports.get(aug_fs_name)
+                   or prep_aug.mc_reports.get(feature_set_name))
+            leak_suspects = set(rpt.leak_suspects) if rpt is not None else set()
+            if (candidate_feature not in effective_cols
+                    and candidate_feature not in leak_suspects):
+                effective_cols = effective_cols + [candidate_feature]
 
         X_tr = X_aug.iloc[train_aug_idx][effective_cols]
         y_tr = y_aug.iloc[train_aug_idx]
@@ -354,6 +395,7 @@ def run_feature_discovery_round(
         y_ood = y_aug.iloc[ood_eval_idx]
 
         from extrapolation_discovery_platform._utils import safe_array
+        from extrapolation_discovery_platform.pipeline import apply_extrapolation_guard
         wf = factory(quick, True)
         run_aug = wf.run(
             pd.DataFrame(safe_array(X_tr), columns=effective_cols),
@@ -365,14 +407,56 @@ def run_feature_discovery_round(
             split_policy=split_policy,
             fold=0,
         )
+        apply_extrapolation_guard(run_aug, safe_array(y_tr))
 
         result.ood_rmse      = run_aug.rmse_test
         result.ood_r2        = run_aug.r2_test
-        result.augmented_rmse = run_aug.rmse_train  # 拡張訓練データでの train RMSE
+        result.augmented_rmse = run_aug.rmse_train  # 拡張訓練データでの当てはめ RMSE（参考値）
 
-        if math.isfinite(result.baseline_rmse) and result.baseline_rmse > 0:
+        # 同一の train/OOD 分割で候補列なしに学習したベースライン OOD RMSE。
+        # baseline_rmse（CV 平均）とは評価データが異なるため直接比較しない。
+        _ood_cache_key = f"{workflow_name}__ood_baseline"
+        if not candidate_feature:
+            result.baseline_ood_rmse = run_aug.rmse_test
+            if baseline_cache is not None:
+                baseline_cache[_ood_cache_key] = (run_aug.rmse_test, run_aug.r2_test)
+        else:
+            cached_ood = (
+                baseline_cache.get(_ood_cache_key)
+                if baseline_cache is not None else None
+            )
+            if cached_ood is not None:
+                result.baseline_ood_rmse = cached_ood[0]
+            else:
+                base_cols = [c for c in effective_cols if c != candidate_feature]
+                wf_base = factory(quick, True)
+                run_base = wf_base.run(
+                    pd.DataFrame(
+                        safe_array(X_aug.iloc[train_aug_idx][base_cols]),
+                        columns=base_cols,
+                    ),
+                    y_tr.reset_index(drop=True),
+                    pd.DataFrame(
+                        safe_array(X_aug.iloc[ood_eval_idx][base_cols]),
+                        columns=base_cols,
+                    ),
+                    y_ood.reset_index(drop=True),
+                    seed=seed,
+                    feature_set=aug_fs_name,
+                    split_policy=split_policy,
+                    fold=0,
+                )
+                apply_extrapolation_guard(run_base, safe_array(y_tr))
+                result.baseline_ood_rmse = run_base.rmse_test
+                if baseline_cache is not None:
+                    baseline_cache[_ood_cache_key] = (
+                        run_base.rmse_test, run_base.r2_test,
+                    )
+
+        if math.isfinite(result.baseline_ood_rmse) and result.baseline_ood_rmse > 0:
             result.improvement = (
-                (result.baseline_rmse - result.ood_rmse) / result.baseline_rmse
+                (result.baseline_ood_rmse - result.ood_rmse)
+                / result.baseline_ood_rmse
             )
 
         result.elapsed_sec = time.time() - t0
@@ -417,6 +501,8 @@ def run_feature_discovery(
     n_ood_samples: int = 0,
     boundary_margin: float = 0.5,
     progress_callback: Optional[Any] = None,
+    generic_csv_mode: Optional[bool] = None,
+    include_negative_control: bool = True,
 ) -> FeatureDiscoveryResult:
     """複数候補特徴量 × 複数 WF の探索を一括実行する。
 
@@ -428,6 +514,12 @@ def run_feature_discovery(
     extra_features_df : pd.DataFrame or None
         追加候補特徴量を格納した DataFrame。
         行数は features_df と一致している必要がある。
+    generic_csv_mode : bool, optional
+        None のときは feature_set_name から自動判定。
+    include_negative_control : bool
+        True のとき、先頭候補を行方向にシャッフルしたネガティブ
+        コントロール列（情報ゼロ）を自動追加する。有用な候補はこの
+        列を上回る improvement を示すべきである。
     """
     t0 = time.time()
     result = FeatureDiscoveryResult()
@@ -436,8 +528,24 @@ def run_feature_discovery(
         boundary = identify_boundary_samples(ood_result, n_ood_samples, boundary_margin)
         result.n_boundary_samples = boundary.n_boundary
 
+        # ネガティブコントロール: 先頭候補をシャッフルした列を追加
+        candidate_features = list(candidate_features)
+        if (include_negative_control and candidate_features
+                and extra_features_df is not None
+                and candidate_features[0] in extra_features_df.columns):
+            ctrl_name = "__shuffled_control__"
+            if ctrl_name not in extra_features_df.columns:
+                rng = np.random.default_rng(seed)
+                extra_features_df = extra_features_df.copy()
+                extra_features_df[ctrl_name] = rng.permutation(
+                    extra_features_df[candidate_features[0]].to_numpy()
+                )
+            if ctrl_name not in candidate_features:
+                candidate_features.append(ctrl_name)
+
         # 候補リスト: ベースライン（""）+ 各候補特徴量
         all_candidates = [""] + list(candidate_features)
+        baseline_cache: Dict[str, Tuple[float, float]] = {}
         total = len(all_candidates) * len(workflow_names)
         done = 0
 
@@ -469,14 +577,18 @@ def run_feature_discovery(
                     quick=quick,
                     n_ood_samples=n_ood_samples,
                     boundary_margin=boundary_margin,
+                    generic_csv_mode=generic_csv_mode,
+                    baseline_cache=baseline_cache,
                 )
                 result.rounds.append(round_res)
                 done += 1
 
-        # 最良候補を選択（ベースライン除く、改善率が最大のもの）
+        # 最良候補を選択（ベースライン・ネガティブコントロール除く、改善率最大）
         non_baseline = [
             r for r in result.rounds
-            if r.candidate_feature and r.success and math.isfinite(r.improvement)
+            if r.candidate_feature
+            and r.candidate_feature != "__shuffled_control__"
+            and r.success and math.isfinite(r.improvement)
         ]
         if non_baseline:
             best = max(non_baseline, key=lambda r: r.improvement)

@@ -85,6 +85,9 @@ class PreprocessResult:
         fold_plan に実際に含まれる分割ポリシー名。
     """
     effective_cols: Dict[str, List[str]] = field(default_factory=dict)
+    # fold ごとの特徴量選択結果: {fs_key: {policy_key: [fold0の列, fold1の列, ...]}}
+    # 各 fold の訓練データのみで選択することで fold 間のリークを防ぐ。
+    fold_selected_cols: Dict[str, Dict[str, List[List[str]]]] = field(default_factory=dict)
     fold_plan: Dict[str, List[Tuple[np.ndarray, np.ndarray]]] = field(default_factory=dict)
     mc_reports: Dict[str, MulticollinearityReport] = field(default_factory=dict)
     fs_summaries: Dict[str, Any] = field(default_factory=dict)
@@ -116,6 +119,11 @@ class TrainResult:
     r2_test_mean:    float = float("nan")
     r2_test_std:     float = float("nan")
     mae_test_mean:   float = float("nan")
+    # 全 fold の予測をプールした大域指標（外挿 fold での fold 内 R² の
+    # 不安定さを避け、定数予測器との比較を直読できるようにする）
+    rmse_global:  float = float("nan")   # プール RMSE
+    nrmse_global: float = float("nan")   # プール RMSE / 全データの y 標準偏差
+    skill_vs_constant_mean: float = float("nan")  # 1 - RMSE/定数予測器RMSE の fold 平均
     n_folds_executed: int = 0
     n_features_used:  int = 0
     elapsed_sec: float = 0.0
@@ -162,6 +170,7 @@ def stage1_preprocess(
     generic_csv_mode: bool = False,
     n_folds: int = 5,
     test_size: float = 0.2,
+    exclusion_elements: Optional[List[str]] = None,
 ) -> PreprocessResult:
     """Stage 1: 前処理。
 
@@ -189,6 +198,9 @@ def stage1_preprocess(
     test_size : float
         Holdout 分割時のテストデータ比率（デフォルト 0.2 = 20%）。
         CompositionBlock / ElementExclusion / RandomCV では無視される。
+    exclusion_elements : list of str, optional
+        ElementExclusion で除外対象とする元素のリスト。
+        None の場合は ElementExclusionSplitter の既定値を使用。
     """
     t0 = time.time()
     result = PreprocessResult(active_policies=list(active_policies))
@@ -275,7 +287,7 @@ def stage1_preprocess(
         if "ElementExclusion" in active_policies:
             if compositions_df is not None:
                 try:
-                    ee = ElementExclusionSplitter()
+                    ee = ElementExclusionSplitter(target_elements=exclusion_elements)
                     folds = list(ee.split(features_df, target, compositions=compositions_df))
                     if folds:
                         fold_plan["ElementExclusion"] = folds
@@ -328,60 +340,66 @@ def stage1_preprocess(
 
         result.fold_plan = fold_plan
 
-        # ── Step 4: 特徴量選択（訓練データのみ・リーク防止） ─────────
-        # CompositionBlock の最初の fold の train_idx をスライスに使用。
-        # generic CSV モードでは特徴量選択をスキップ（汎用データに FS 基準なし）。
-        primary_train_idx: Optional[np.ndarray] = None
-        if "CompositionBlock" in fold_plan and fold_plan["CompositionBlock"]:
-            primary_train_idx = fold_plan["CompositionBlock"][0][0]
-        elif fold_plan:
-            # CompositionBlock がない場合は先頭 fold の train_idx を使用
-            primary_train_idx = next(iter(fold_plan.values()))[0][0]
-
-        if primary_train_idx is not None and not generic_csv_mode:
+        # ── Step 4: 特徴量選択（fold ごとに訓練データのみ・リーク防止） ─
+        # 各 fold の train_idx のみを使って fold ごとに独立に選択する。
+        # 単一 fold の train_idx で選んだ列を全 fold に適用すると、
+        # 他 fold のテストサンプルが選択時に可視となりリークするため。
+        # generic CSV モードでも同じ選択ロジックを適用する。
+        if fold_plan:
             from extrapolation_discovery_platform.feature_selection import run_feature_selection
+
+            def _select_cols(fs_key: str, cols: List[str],
+                             train_idx: np.ndarray) -> Tuple[List[str], Any]:
+                """train_idx のみを使った特徴量選択。(選択列, summary) を返す。"""
+                X_tr = features_df.iloc[train_idx][cols]
+                y_tr = target.iloc[train_idx]
+                summary = run_feature_selection(
+                    X_tr, y_tr,
+                    methods=None,           # 全手法: Lasso, AIC, BIC, ARD
+                    consensus_threshold=2,  # 2手法以上で選択された列を採用
+                    feature_set=fs_key,
+                )
+                # コンセンサス特徴量（2手法以上で選択）が十分あれば採用
+                # ただし元の列数の 20% 未満になる場合はスキップ
+                min_cols = max(3, len(cols) // 5)
+                consensus = summary.consensus_features or []
+                if len(consensus) >= min_cols:
+                    return consensus, summary
+                # Lasso フォールバック：最低 min_cols 列を保証
+                lasso = summary.results.get("Lasso")
+                lasso_feats = (lasso.selected_features if lasso else []) or []
+                if len(lasso_feats) >= min_cols:
+                    return lasso_feats, summary
+                # 選択結果が不十分 → 全列を維持（特徴量選択をスキップ）
+                return list(cols), summary
+
             fs_summaries: Dict[str, Any] = {}
+            fold_selected: Dict[str, Dict[str, List[List[str]]]] = {}
             for fs_key, cols in list(effective_cols.items()):
                 if len(cols) <= 3:
                     # 列数が少なすぎる場合は選択不要
                     continue
-                try:
-                    X_tr = features_df.iloc[primary_train_idx][cols]
-                    y_tr = target.iloc[primary_train_idx]
-                    summary = run_feature_selection(
-                        X_tr, y_tr,
-                        methods=None,           # 全手法: Lasso, AIC, BIC, ARD
-                        consensus_threshold=2,  # 2手法以上で選択された列を採用
-                        feature_set=fs_key,
-                    )
-                    fs_summaries[fs_key] = summary
-
-                    # コンセンサス特徴量（2手法以上で選択）が十分あれば採用
-                    # ただし元の列数の 20% 未満になる場合はスキップ
-                    min_cols = max(3, len(cols) // 5)
-                    consensus = summary.consensus_features or []
-                    if len(consensus) >= min_cols:
-                        effective_cols[fs_key] = consensus
-                        logger.info("Stage1 特徴量選択 [%s]: %d→%d (consensus)",
-                                    fs_key, len(cols), len(effective_cols[fs_key]))
-                    else:
-                        # Lasso フォールバック：最低 min_cols 列を保証
-                        lasso = summary.results.get("Lasso")
-                        lasso_feats = (lasso.selected_features if lasso else []) or []
-                        if len(lasso_feats) >= min_cols:
-                            effective_cols[fs_key] = lasso_feats
-                            logger.info("Stage1 特徴量選択 [%s]: %d→%d (lasso fallback)",
-                                        fs_key, len(cols), len(effective_cols[fs_key]))
-                        else:
-                            # 選択結果が不十分 → 全列を維持（特徴量選択をスキップ）
+                fold_selected[fs_key] = {}
+                for policy_key, folds in fold_plan.items():
+                    per_fold: List[List[str]] = []
+                    for fold_i, (tr_idx, _te_idx) in enumerate(folds):
+                        try:
+                            sel, summary = _select_cols(fs_key, cols, tr_idx)
+                            per_fold.append(sel)
+                            if fs_key not in fs_summaries:
+                                fs_summaries[fs_key] = summary
                             logger.info(
-                                "Stage1 特徴量選択 [%s]: 選択結果が不十分 "
-                                "(consensus=%d, lasso=%d, min_required=%d) — 全 %d 列を維持",
-                                fs_key, len(consensus), len(lasso_feats), min_cols, len(cols),
+                                "Stage1 特徴量選択 [%s/%s fold%d]: %d→%d",
+                                fs_key, policy_key, fold_i, len(cols), len(sel),
                             )
-                except Exception:
-                    logger.warning("Stage1 特徴量選択失敗 [%s] — 全列を維持:\n%s",
-                                   fs_key, traceback.format_exc())
+                        except Exception:
+                            per_fold.append(list(cols))
+                            logger.warning(
+                                "Stage1 特徴量選択失敗 [%s/%s fold%d] — 全列を維持:\n%s",
+                                fs_key, policy_key, fold_i, traceback.format_exc(),
+                            )
+                    fold_selected[fs_key][policy_key] = per_fold
+            result.fold_selected_cols = fold_selected
             result.fs_summaries = fs_summaries
 
         result.effective_cols = effective_cols
@@ -404,6 +422,50 @@ def stage1_preprocess(
 # ---------------------------------------------------------------------------
 # Stage 2: ML 学習（OOD なし）
 # ---------------------------------------------------------------------------
+
+def apply_extrapolation_guard(
+    run: "RunResult",
+    y_train: np.ndarray,
+    margin: float = 0.5,
+) -> "RunResult":
+    """予測値を訓練ターゲット範囲 ± margin×レンジにクリップする。
+
+    線形系 WF は強い共変量シフト下で訓練範囲を数倍超える予測を出しうる。
+    物理的にあり得ない外挿を防ぎつつ、穏健な外挿（範囲外 margin 以内）は
+    許容する。クリップ後にテストメトリクスを再計算し、クリップ件数を
+    artifacts["n_pred_clipped"] に記録する。
+    """
+    if run.y_test_pred is None or run.y_test_true is None or len(y_train) == 0:
+        return run
+    lo = float(np.min(y_train))
+    hi = float(np.max(y_train))
+    span = hi - lo
+    lo_b = lo - margin * span
+    hi_b = hi + margin * span
+    pred = np.asarray(run.y_test_pred, dtype=float)
+    n_clipped = int(np.sum((pred < lo_b) | (pred > hi_b)))
+    if n_clipped == 0:
+        run.artifacts["n_pred_clipped"] = 0
+        return run
+    clipped = np.clip(pred, lo_b, hi_b)
+    y_true = np.asarray(run.y_test_true, dtype=float)
+    err = y_true - clipped
+    run.y_test_pred = clipped
+    run.rmse_test = float(np.sqrt(np.mean(err ** 2)))
+    run.mae_test = float(np.mean(np.abs(err)))
+    ss_res = float(np.sum(err ** 2))
+    ss_tot = float(np.sum((y_true - y_true.mean()) ** 2))
+    run.r2_test = 1.0 - ss_res / ss_tot if ss_tot > 0 else float("nan")
+    if "residuals_test" in run.artifacts:
+        run.artifacts["residuals_test"] = err.tolist()
+    run.artifacts["n_pred_clipped"] = n_clipped
+    run.artifacts["pred_clip_bounds"] = (lo_b, hi_b)
+    logger.warning(
+        "外挿ガード: %d 件の予測を [%.4g, %.4g] にクリップ (WF=%s fold=%d)",
+        n_clipped, lo_b, hi_b, run.workflow, run.fold,
+    )
+    return run
+
 
 def stage2_train(
     preprocess_result: PreprocessResult,
@@ -479,6 +541,21 @@ def stage2_train(
                 f"利用可能 keys: {list(fold_plan.keys())}"
             )
 
+        # fold ごとの特徴量選択結果（あれば使用）
+        plan_key = split_policy_name
+        if split_policy_name == "RandomCV":
+            plan_key = f"RandomCV_seed{seed}"
+            if plan_key not in fold_plan:
+                plan_key = next(
+                    (k for k in fold_plan if k.startswith("RandomCV_")),
+                    split_policy_name,
+                )
+        per_fold_cols = (
+            preprocess_result.fold_selected_cols
+            .get(fs_key, {})
+            .get(plan_key)
+        )
+
         # ── ワークフロー取得 ──────────────────────────────────────────
         factory = _WORKFLOW_FACTORIES.get(workflow_name)
         if factory is None:
@@ -493,8 +570,13 @@ def stage2_train(
         runs: List[RunResult] = []
 
         for fold_idx, (train_idx, test_idx) in enumerate(splits):
-            X_tr = pd.DataFrame(safe_array(X.iloc[train_idx]), columns=effective_cols)
-            X_te = pd.DataFrame(safe_array(X.iloc[test_idx]),  columns=effective_cols)
+            fold_cols = effective_cols
+            if per_fold_cols is not None and fold_idx < len(per_fold_cols):
+                cand = [c for c in per_fold_cols[fold_idx] if c in X.columns]
+                if cand:
+                    fold_cols = cand
+            X_tr = pd.DataFrame(safe_array(X.iloc[train_idx][fold_cols]), columns=fold_cols)
+            X_te = pd.DataFrame(safe_array(X.iloc[test_idx][fold_cols]),  columns=fold_cols)
             y_tr = y.iloc[train_idx].reset_index(drop=True)
             y_te = y.iloc[test_idx].reset_index(drop=True)
 
@@ -508,6 +590,13 @@ def stage2_train(
                 fold=fold_idx,
                 test_indices=np.asarray(test_idx),
             )
+            apply_extrapolation_guard(run, safe_array(y_tr))
+            # 定数予測器（訓練平均）に対するスキルスコア
+            const_rmse = float(np.sqrt(np.mean(
+                (safe_array(y_te) - float(np.mean(safe_array(y_tr)))) ** 2
+            )))
+            if const_rmse > 0 and math.isfinite(run.rmse_test):
+                run.artifacts["skill_vs_constant"] = 1.0 - run.rmse_test / const_rmse
             runs.append(run)
             logger.info(
                 "Stage2 [%s/%s/%s] fold=%d: RMSE=%.4f R²=%.4f",
@@ -536,6 +625,25 @@ def stage2_train(
         result.mae_test_mean   = _mean(valid_mae)
         result.r2_test_mean    = _mean(valid_r2)
         result.r2_test_std     = _std(valid_r2)
+
+        # 大域指標: 全 fold の予測をプールして計算
+        pooled_true = np.concatenate([
+            r.y_test_true for r in runs if r.y_test_true is not None
+        ]) if any(r.y_test_true is not None for r in runs) else np.array([])
+        pooled_pred = np.concatenate([
+            r.y_test_pred for r in runs if r.y_test_pred is not None
+        ]) if any(r.y_test_pred is not None for r in runs) else np.array([])
+        if len(pooled_true) > 0 and len(pooled_true) == len(pooled_pred):
+            result.rmse_global = float(np.sqrt(np.mean((pooled_true - pooled_pred) ** 2)))
+            y_std = float(np.std(safe_array(y)))
+            if y_std > 0:
+                result.nrmse_global = result.rmse_global / y_std
+        skills = [
+            r.artifacts["skill_vs_constant"] for r in runs
+            if "skill_vs_constant" in r.artifacts
+            and math.isfinite(r.artifacts["skill_vs_constant"])
+        ]
+        result.skill_vs_constant_mean = _mean(skills)
         result.elapsed_sec = time.time() - t0
         result.success = True
 

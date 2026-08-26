@@ -3912,6 +3912,7 @@ def create_app() -> gr.Blocks:
                                 seed=42, n_folds=5, quick=True,
                                 n_ood_samples=int(n_ood),
                                 boundary_margin=float(margin),
+                                generic_csv_mode=(session.get("csv_mode") == "generic"),
                             )
                         except Exception as exc:
                             return f"<p>Error: {exc}</p>", f"*失敗: {exc}*", None, None

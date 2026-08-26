@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import ARDRegression, LassoCV, Ridge
+from sklearn.linear_model import ARDRegression, LassoCV, Ridge, RidgeCV
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
@@ -245,11 +245,16 @@ def _make_pca_step(
 
 
 class WorkflowLIN(BaseWorkflow):
-    """Linear regression workflow (Ridge, alpha=1.0)."""
+    """Linear regression workflow (Ridge).
+
+    ``alpha=None``（既定）の場合は RidgeCV で正則化強度をデータから選択する。
+    固定 alpha=1.0 は外挿条件では正則化が弱すぎ、予測が訓練範囲を大きく
+    超える原因になるため。
+    """
 
     name = "WF-LIN"
 
-    def __init__(self, alpha: float = 1.0, dim_reduction: bool = True) -> None:
+    def __init__(self, alpha: Optional[float] = None, dim_reduction: bool = True) -> None:
         self._alpha = alpha
         self._dim_reduction = dim_reduction
 
@@ -266,10 +271,14 @@ class WorkflowLIN(BaseWorkflow):
         logger.debug("WF-LIN: train=%d, test=%d, features=%d",
                       len(X_train), len(X_test), X_train.shape[1])
 
+        if self._alpha is None:
+            model_step: Any = RidgeCV(alphas=np.logspace(-2, 4, 25))
+        else:
+            model_step = Ridge(alpha=self._alpha)
         steps: List[Tuple[str, Any]] = [
             ("scaler", StandardScaler()),
             *_make_pca_step(X_train.shape[1], self._dim_reduction),
-            ("model", Ridge(alpha=self._alpha)),
+            ("model", model_step),
         ]
         pipe = Pipeline(steps)
         pipe.fit(_safe_np(X_train), _safe_np(y_train))
@@ -280,15 +289,18 @@ class WorkflowLIN(BaseWorkflow):
         train_s = _score(_safe_np(y_train), y_train_pred)
         test_s = _score(_safe_np(y_test), y_test_pred)
 
-        model: Ridge = pipe.named_steps["model"]
+        model = pipe.named_steps["model"]
         coef_raw = model.coef_
+        effective_alpha = (
+            float(model.alpha_) if self._alpha is None else float(self._alpha)
+        )
         std_y = _safe_std_y(_safe_np(y_train))
         coef_std = coef_raw / std_y
 
         return _make_result(
             self.name, train_s, test_s,
             y_test, y_test_pred, t0, seed,
-            params={"alpha": self._alpha, "dim_reduction": self._dim_reduction},
+            params={"alpha": effective_alpha, "dim_reduction": self._dim_reduction},
             artifacts={
                 "coef_raw": _coef_to_dict(X_train.columns, coef_raw, pipe),
                 "coef_std": _coef_to_dict(X_train.columns, coef_std, pipe),

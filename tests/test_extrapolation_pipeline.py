@@ -330,9 +330,10 @@ class TestT72_NFoldsConfig:
         assert max_fold == 2, f"n_folds=3 だが最大 fold={max_fold} (期待: 2)"
 
     def test_gui_slider_defined(self):
-        import re
-        BASE = '/home/claude/pr148_fix/extrapolation_discovery_platform_PR148/extrapolation_discovery_platform'
-        with open(f'{BASE}/gui/app.py') as f:
+        from pathlib import Path
+        import extrapolation_discovery_platform
+        base = Path(extrapolation_discovery_platform.__file__).parent
+        with open(base / 'gui' / 'app.py') as f:
             app_src = f.read()
         assert 'n_folds_slider' in app_src, "GUI に n_folds_slider が定義されていない"
         assert 'n_folds_slider,' in app_src, "n_folds_slider が run_btn.click inputs に配線されていない"
