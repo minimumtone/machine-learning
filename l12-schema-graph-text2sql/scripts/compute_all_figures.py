@@ -738,13 +738,13 @@ def main():
     # ==================================================================
     # Known L1_2 compounds (seed list used when generating synthetic data)
     # Loaded from db/known_l12_seed_list.json and cross-checked against
-    # db/insert_data.sql so the packaged list cannot drift silently.
+    # db/003_material_data.sql so the packaged list cannot drift silently.
     # ==================================================================
     known_l12 = load_json("db/known_l12_seed_list.json")["known_l12_seed_list"]
-    insert_sql_text = (PROJECT / "db" / "insert_data.sql").read_text()
+    insert_sql_text = (PROJECT / "db" / "003_material_data.sql").read_text()
     missing_seeds = [c for c in known_l12 if f"'{c}'" not in insert_sql_text]
     if missing_seeds:
-        print(f"ERROR: seed compounds not found in db/insert_data.sql: "
+        print(f"ERROR: seed compounds not found in db/003_material_data.sql: "
               f"{missing_seeds}", file=sys.stderr)
         sys.exit(1)
 

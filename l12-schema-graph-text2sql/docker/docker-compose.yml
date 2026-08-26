@@ -9,6 +9,8 @@ services:
     ports:
       - "127.0.0.1:${L12_PGPORT:-5432}:5432"
     volumes:
-      - ../db/extended_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
-      - ../db/insert_data.sql:/docker-entrypoint-initdb.d/02_data.sql
-      - ../db/insert_pure_elements.sql:/docker-entrypoint-initdb.d/03_pure_elements.sql
+      - ../db/001_schema.sql:/docker-entrypoint-initdb.d/001_schema.sql
+      - ../db/002_reference_data.sql:/docker-entrypoint-initdb.d/002_reference_data.sql
+      - ../db/003_material_data.sql:/docker-entrypoint-initdb.d/003_material_data.sql
+      - ../db/004_views.sql:/docker-entrypoint-initdb.d/004_views.sql
+      - ../db/005_roles.sql:/docker-entrypoint-initdb.d/005_roles.sql

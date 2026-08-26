@@ -29,13 +29,69 @@ FORBIDDEN_KEYWORDS = [
 ]
 
 DEFAULT_LIMIT = 10000
+# Hard cap: an explicit LIMIT larger than this is rewritten down to MAX_ROWS,
+# so DEFAULT_LIMIT is the fallback and MAX_ROWS is the enforced maximum.
+MAX_ROWS = 10000
 MAX_SUBQUERY_DEPTH = 3
+# Query complexity budget
+MAX_TABLES_PER_QUERY = 10
+MAX_CROSS_JOINS = 0
 DISALLOWED_FUNCTIONS = [
     "pg_sleep", "dblink", "lo_import", "lo_export",
     "pg_read_file", "pg_ls_dir", "pg_stat_file",
     "pg_read_binary_file", "pg_stat_statements",
     "query_to_xml", "query_to_json",
 ]
+
+# Function allowlist: anything not listed here is rejected. This replaces
+# an ever-growing denylist with a closed set sufficient for analytical
+# queries over the materials schema (DoS-prone generators such as
+# generate_series are excluded by construction).
+ALLOWED_FUNCTIONS = {
+    # aggregates
+    "count", "sum", "avg", "min", "max", "stddev", "stddev_samp",
+    "stddev_pop", "variance", "var_samp", "var_pop", "corr",
+    "bool_and", "bool_or", "string_agg", "array_agg",
+    "percentile_cont", "percentile_disc",
+    # window
+    "row_number", "rank", "dense_rank", "ntile", "lag", "lead",
+    "first_value", "last_value",
+    # math
+    "abs", "round", "ceil", "ceiling", "floor", "power", "pow", "sqrt",
+    "exp", "ln", "log", "mod", "sign", "trunc", "least", "greatest",
+    "width_bucket", "random",
+    # null handling / conditionals
+    "coalesce", "nullif",
+    # string
+    "lower", "upper", "initcap", "length", "char_length", "trim",
+    "ltrim", "rtrim", "replace", "translate", "substring", "substr",
+    "position", "strpos", "left", "right", "concat", "concat_ws",
+    "split_part", "string_to_array", "regexp_replace", "regexp_match",
+    "regexp_matches", "regexp_split_to_array", "regexp_split_to_table",
+    "like", "ilike", "similar_to", "format",
+    # type conversion
+    "cast", "to_char", "to_number",
+    # array
+    "unnest", "array_length", "cardinality", "array_position",
+    # date/time (read-only introspection)
+    "now", "date_trunc", "date_part", "extract", "age",
+    # sqlglot canonical names for operators/aliases of allowed constructs:
+    # bool_or/bool_and -> logical_or/logical_and, string_agg -> group_concat,
+    # ~* -> regexp_i_like, ARRAY[...] -> array, && / <@ / @> array operators
+    "logical_or", "logical_and", "group_concat", "regexp_i_like",
+    "regexp_like", "array", "array_overlaps", "array_contained_by",
+    "array_contains",
+}
+
+# sqlglot AST node class names that represent operators/constructs rather
+# than callable SQL functions; these are not subject to the allowlist.
+_NON_FUNCTION_NODE_TYPES = {
+    "anonymous",  # handled separately by name
+    "in", "between", "exists", "case", "if", "distinct", "filter",
+    "tryCast".lower(), "currentdate", "currenttimestamp",
+    "paren", "tuple", "interval", "collate", "arrayfilter",
+    "jsonextract", "is", "not", "and", "or", "star",
+}
 
 # System/catalog tables that should never be queried by generated SQL
 SYSTEM_TABLE_PREFIXES = [
@@ -344,7 +400,13 @@ def check_select_only(sql: str) -> bool:
 
 
 def check_limit(sql: str) -> tuple[bool, str]:
-    """Check if outermost SQL has a LIMIT clause; if not, append one."""
+    """Ensure the outermost statement has LIMIT <= MAX_ROWS.
+
+    Appends ``LIMIT DEFAULT_LIMIT`` when absent, and rewrites an explicit
+    LIMIT larger than MAX_ROWS down to MAX_ROWS, so MAX_ROWS is an enforced
+    upper bound rather than only a fallback.
+    Returns (was_already_compliant, sql).
+    """
     if HAS_SQLGLOT:
         has = _ast_check_limit(sql)
     else:
@@ -354,10 +416,19 @@ def check_limit(sql: str) -> tuple[bool, str]:
         no_parens = re.sub(r"\([^)]*\)", "", clean)
         has = bool(re.search(r"\bLIMIT\b", no_parens, re.IGNORECASE))
 
-    if has:
-        return True, sql
-    sql_with_limit = sql.rstrip().rstrip(";") + f"\nLIMIT {DEFAULT_LIMIT};"
-    return False, sql_with_limit
+    if not has:
+        sql_with_limit = sql.rstrip().rstrip(";") + f"\nLIMIT {DEFAULT_LIMIT};"
+        return False, sql_with_limit
+
+    # Cap oversized explicit LIMITs
+    def _cap(m: "re.Match[str]") -> str:
+        n = int(m.group(1))
+        return f"LIMIT {min(n, MAX_ROWS)}"
+
+    capped = re.sub(r"\bLIMIT\s+(\d+)", _cap, sql, flags=re.IGNORECASE)
+    if capped != sql:
+        return False, capped
+    return True, sql
 
 
 def extract_tables_from_sql(sql: str) -> list[str]:
@@ -741,13 +812,18 @@ def check_allowed_columns(
     # Dynamic aliases override static ones since they reflect actual SQL declarations.
     dynamic_aliases = _extract_aliases_from_sql(sql)
     alias_to_table.update(dynamic_aliases)
+    derived_aliases = _extract_derived_relation_aliases(sql)
     disallowed: list[str] = []
     for col_ref in used:
         parts = col_ref.split(".")
         if len(parts) != 2:
             continue
         alias, col = parts
+        # Columns of CTEs / derived tables (subquery aliases) are not base
+        # schema columns; their base references are validated where defined.
         table = alias_to_table.get(alias.lower(), alias.lower())
+        if alias.lower() in derived_aliases or table in derived_aliases:
+            continue
         canonical = f"{table}.{col}".lower()
         if canonical not in allowed_lower:
             suggestion = suggest_column_correction(canonical, allowed_columns)
@@ -770,6 +846,37 @@ def check_allowed_columns(
                 if not found:
                     disallowed.append(col)
     return disallowed
+
+
+def _extract_derived_relation_aliases(sql: str) -> set[str]:
+    """Return lowercase aliases of CTEs and derived tables (subqueries).
+
+    Their columns are projections defined inside the query itself, so they
+    must not be validated against the base-schema column allowlist.
+    """
+    aliases: set[str] = set()
+    if not HAS_SQLGLOT:
+        return aliases
+    try:
+        parsed = sqlglot.parse(sql, dialect="postgres")
+    except Exception:
+        return aliases
+    for stmt in parsed:
+        if stmt is None:
+            continue
+        for cte in stmt.find_all(sqlglot_exp.CTE):
+            alias_node = cte.args.get("alias")
+            if alias_node:
+                aliases.add(alias_node.name.lower())
+        for sub in stmt.find_all(sqlglot_exp.Subquery):
+            alias = sub.alias
+            if alias:
+                aliases.add(alias.lower())
+        for lateral in stmt.find_all(sqlglot_exp.Lateral):
+            alias_node = lateral.args.get("alias")
+            if alias_node and alias_node.this:
+                aliases.add(str(alias_node.this).lower())
+    return aliases
 
 
 def _extract_aliases_from_sql(sql: str) -> dict[str, str]:
@@ -857,6 +964,63 @@ def check_disallowed_functions(sql: str) -> list[str]:
     return _regex_check_disallowed_functions(sql)
 
 
+def check_function_allowlist(sql: str) -> list[str]:
+    """Return names of called functions that are not on ALLOWED_FUNCTIONS.
+
+    Uses the sqlglot AST: explicitly-typed function nodes are mapped via
+    their sql_name(); Anonymous nodes (unknown to sqlglot) are checked by
+    their literal name. Operator-like nodes are exempt.
+    """
+    try:
+        parsed = sqlglot.parse(sql, dialect="postgres")
+    except Exception:
+        return []
+
+    violations: list[str] = []
+    for stmt in parsed:
+        if stmt is None:
+            continue
+        for func in stmt.find_all(sqlglot_exp.Func):
+            if isinstance(func, sqlglot_exp.Anonymous):
+                name = func.name.lower()
+            else:
+                try:
+                    name = func.sql_name().lower()
+                except Exception:
+                    name = type(func).__name__.lower()
+            if name in _NON_FUNCTION_NODE_TYPES:
+                continue
+            if name not in ALLOWED_FUNCTIONS and name not in violations:
+                violations.append(name)
+    return violations
+
+
+def check_complexity_budget(sql: str) -> list[str]:
+    """Enforce a query complexity budget.
+
+    Rejects: CROSS JOINs beyond MAX_CROSS_JOINS, recursive CTEs, and more
+    than MAX_TABLES_PER_QUERY distinct base relations.
+    """
+    violations: list[str] = []
+    clean = _strip_literals(sql)
+
+    n_cross = len(re.findall(r"\bCROSS\s+JOIN\b", clean, re.IGNORECASE))
+    if n_cross > MAX_CROSS_JOINS:
+        violations.append(
+            f"CROSS JOIN count {n_cross} exceeds budget {MAX_CROSS_JOINS}"
+        )
+
+    if re.search(r"\bWITH\s+RECURSIVE\b", clean, re.IGNORECASE):
+        violations.append("Recursive CTE not allowed")
+
+    n_tables = len(extract_tables_from_sql(sql))
+    if n_tables > MAX_TABLES_PER_QUERY:
+        violations.append(
+            f"Query references {n_tables} tables, budget is {MAX_TABLES_PER_QUERY}"
+        )
+    return violations
+
+
 def check_tautology(sql: str) -> list[str]:
     """Detect tautological conditions (e.g., OR 1=1, OR true, WHERE 1=1)."""
     warnings: list[str] = []
@@ -929,6 +1093,14 @@ def validate_sql(
         errors.append(f"Disallowed functions: {', '.join(bad_funcs)}")
         _escalate("rejected_security")
 
+    # Layer: function allowlist (closed set; replaces denylist-only policy)
+    non_allowlisted = check_function_allowlist(sql)
+    if non_allowlisted:
+        errors.append(
+            f"Functions not on allowlist: {', '.join(non_allowlisted)}"
+        )
+        _escalate("rejected_security")
+
     # Layer: System/catalog table access prevention
     sys_tables = check_system_tables(sql)
     if sys_tables:
@@ -970,6 +1142,12 @@ def validate_sql(
     depth = check_subquery_depth(sql)
     if depth > MAX_SUBQUERY_DEPTH:
         errors.append(f"Subquery depth {depth} exceeds max {MAX_SUBQUERY_DEPTH}")
+        _escalate("rejected_complexity")
+
+    # Layer: complexity budget (cross joins, recursive CTEs, table count)
+    complexity_violations = check_complexity_budget(sql)
+    if complexity_violations:
+        errors.append(f"Complexity budget: {'; '.join(complexity_violations)}")
         _escalate("rejected_complexity")
 
     if HAS_SQLGLOT:

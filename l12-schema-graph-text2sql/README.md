@@ -44,8 +44,9 @@ docker compose up -d
 cd ..
 ```
 
-これにより `db/extended_schema.sql`（30テーブル）と `db/insert_data.sql`（データ投入）が
-自動適用され、material_entry等にデータが投入されます。
+これにより `db/001_schema.sql`（32テーブル）→ `db/002_reference_data.sql`（マスタ）→
+`db/003_material_data.sql`（材料データ）→ `db/004_views.sql`（ビュー）→
+`db/005_roles.sql`（読み取り専用ロール）が順に自動適用されます。
 
 ### 3. 環境変数の設定
 
@@ -91,9 +92,12 @@ python scripts/run_full_evaluation.py
 l12-schema-graph-text2sql/
 ├── docker/              # Docker Compose設定（docker-compose.yml）
 │   └── docker-compose.yml
-├── db/                  # スキーマ定義・データ投入
-│   ├── extended_schema.sql  # 30テーブルスキーマ（Docker起動時に自動適用）
-│   ├── insert_data.sql      # データ投入SQL（Docker起動時に自動適用）
+├── db/                  # スキーマ定義・データ投入（001→005の順に自動適用）
+│   ├── 001_schema.sql          # 32テーブルスキーマ（FK/UNIQUE/CHECK制約付き）
+│   ├── 002_reference_data.sql  # マスタ・参照データ（元素・プロトタイプ・辞書等）
+│   ├── 003_material_data.sql   # 材料エントリデータ（1,470化合物+89純元素）
+│   ├── 004_views.sql           # 派生ビュー（formation_enthalpy）
+│   ├── 005_roles.sql           # 読み取り専用ロール（l12_reader）
 │   └── sample_queries.sql
 ├── ingestion/           # データ生成・正規化
 │   ├── generate_extended_data.py  # 拡張データ生成
