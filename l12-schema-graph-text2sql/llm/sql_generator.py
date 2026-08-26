@@ -300,11 +300,31 @@ def _rule_based_fallback(
             "JOIN material_application ma ON ma.entry_id = m.entry_id\n"
             "    JOIN application_domain ad ON ad.domain_id = ma.domain_id"
         ),
+        "band_structure": (
+            "JOIN calculation cal_bs ON cal_bs.entry_id = m.entry_id\n"
+            "    JOIN band_structure bs ON bs.calculation_id = cal_bs.calculation_id"
+        ),
+        "density_of_states": (
+            "JOIN calculation cal_dos ON cal_dos.entry_id = m.entry_id\n"
+            "    JOIN density_of_states dos ON dos.calculation_id = cal_dos.calculation_id"
+        ),
+        "elastic_tensor": (
+            "JOIN calculation cal_et ON cal_et.entry_id = m.entry_id\n"
+            "    JOIN elastic_tensor et ON et.calculation_id = cal_et.calculation_id"
+        ),
+        "thermal_property": (
+            "JOIN calculation cal_tp ON cal_tp.entry_id = m.entry_id\n"
+            "    JOIN thermal_property tp ON tp.calculation_id = cal_tp.calculation_id"
+        ),
     }
 
     # Map each indirect join to the prerequisite tables it includes
     _indirect_discards: dict[str, list[str]] = {
         "calculated_property": ["calculation"],
+        "band_structure": ["calculation"],
+        "density_of_states": ["calculation"],
+        "elastic_tensor": ["calculation"],
+        "thermal_property": ["calculation"],
         "literature_reference": ["material_reference"],
         "application_domain": ["material_application"],
     }

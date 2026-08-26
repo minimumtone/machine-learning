@@ -1,4 +1,4 @@
-SELECT DISTINCT m.formula, cp_bm.value AS bulk_modulus, ps.energy_above_hull
+SELECT m.formula, cp_bm.value AS bulk_modulus, ps.energy_above_hull
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id

@@ -1,4 +1,4 @@
-SELECT DISTINCT m.entry_id, m.formula, ad.domain_name
+SELECT m.entry_id, m.formula, ad.domain_name
 FROM material_entry m
 JOIN material_application ma ON ma.entry_id = m.entry_id
 JOIN application_domain ad ON ad.domain_id = ma.domain_id

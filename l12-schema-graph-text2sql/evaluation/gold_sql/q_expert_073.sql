@@ -1,4 +1,4 @@
-SELECT DISTINCT m.entry_id, m.formula, ms.temperature_k
+SELECT m.entry_id, m.formula, ms.temperature_k
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 JOIN material_synthesis ms ON ms.entry_id = m.entry_id

@@ -1,4 +1,4 @@
-SELECT DISTINCT m.entry_id, m.formula
+SELECT m.entry_id, m.formula
 FROM material_entry m
 JOIN material_synthesis ms ON ms.entry_id = m.entry_id
 JOIN synthesis_method sm ON sm.synthesis_id = ms.synthesis_id

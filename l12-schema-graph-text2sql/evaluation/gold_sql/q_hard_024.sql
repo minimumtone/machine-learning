@@ -1,4 +1,4 @@
-SELECT DISTINCT m.formula, ps.energy_above_hull, ps.is_stable,
+SELECT m.formula, ps.energy_above_hull, ps.is_stable,
        cp.property_name, cp.value
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id

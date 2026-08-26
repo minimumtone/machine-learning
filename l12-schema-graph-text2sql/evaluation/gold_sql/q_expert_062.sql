@@ -1,4 +1,4 @@
-SELECT DISTINCT m.entry_id, m.formula, se.work_function, se.miller_index
+SELECT m.entry_id, m.formula, se.work_function, se.miller_index
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 JOIN surface_energy se ON se.entry_id = m.entry_id

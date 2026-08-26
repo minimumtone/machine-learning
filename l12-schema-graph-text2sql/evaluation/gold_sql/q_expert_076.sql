@@ -1,4 +1,4 @@
-SELECT DISTINCT m.entry_id, m.formula, lr.year, lr.title
+SELECT m.entry_id, m.formula, lr.year, lr.title
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 JOIN material_reference mr ON mr.entry_id = m.entry_id

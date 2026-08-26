@@ -1,30 +1,30 @@
 [
   {
     "nl_query": "Feを含むB2化合物を出して",
-    "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Fe' LIMIT 100;",
+    "sql": "SELECT m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id JOIN composition c ON c.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND c.element = 'Fe' LIMIT 100;",
     "conditions": {
       "prototype": "B2",
       "contains_elements": [
         "Fe"
       ]
     },
-    "row_count": 7,
+    "row_count": 56,
     "source": "seed:curated"
   },
   {
     "nl_query": "安定なL1₂型化合物を形成エネルギーが低い順に出して",
-    "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.energy_above_hull <= 0.001 ORDER BY ps.formation_energy_per_atom ASC LIMIT 100;",
+    "sql": "SELECT m.entry_id, m.formula, s.prototype, s.lattice_a, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.energy_above_hull <= 0.001 ORDER BY ps.formation_energy_per_atom ASC LIMIT 100;",
     "conditions": {
       "prototype": "L12",
       "stability": "stable",
       "sort_by": "phase_stability.formation_energy_per_atom"
     },
-    "row_count": 88,
+    "row_count": 8,
     "source": "seed:curated"
   },
   {
     "nl_query": "NiとAlを両方含むB2とL1₂化合物を出して",
-    "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12' OR s.prototype = 'B2' OR s.strukturbericht = 'B2') AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al') LIMIT 100;",
+    "sql": "SELECT m.entry_id, m.formula, s.prototype, s.lattice_a FROM material_entry m JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12' OR s.prototype = 'B2' OR s.strukturbericht = 'B2') AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni') AND EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al') LIMIT 100;",
     "conditions": {
       "prototype": [
         "L12",
@@ -35,12 +35,12 @@
         "Al"
       ]
     },
-    "row_count": 4,
+    "row_count": 3,
     "source": "seed:curated"
   },
   {
     "nl_query": "B2化合物をバンドギャップが大きい順に出して",
-    "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.band_gap FROM material_entry m JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') ORDER BY ps.band_gap DESC LIMIT 100;",
+    "sql": "SELECT m.entry_id, m.formula, s.prototype, ps.band_gap FROM material_entry m JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') ORDER BY ps.band_gap DESC LIMIT 100;",
     "conditions": {
       "prototype": "B2",
       "sort_by": "phase_stability.band_gap",
@@ -51,7 +51,7 @@
   },
   {
     "nl_query": "Coを含む安定なL1₂化合物を出して",
-    "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Co' AND ps.energy_above_hull <= 0.001 LIMIT 100;",
+    "sql": "SELECT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Co' AND ps.energy_above_hull <= 0.001 LIMIT 100;",
     "conditions": {
       "prototype": "L12",
       "contains_elements": [
@@ -59,12 +59,12 @@
       ],
       "stability": "stable"
     },
-    "row_count": 5,
+    "row_count": 1,
     "source": "seed:curated"
   },
   {
     "nl_query": "準安定なB2化合物を出して",
-    "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.energy_above_hull <= 0.05 LIMIT 100;",
+    "sql": "SELECT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom, ps.energy_above_hull FROM material_entry m JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.energy_above_hull <= 0.05 LIMIT 100;",
     "conditions": {
       "prototype": "B2",
       "stability": "metastable"
@@ -74,7 +74,7 @@
   },
   {
     "nl_query": "Tiを含むL1₂化合物の形成エネルギーを出して",
-    "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Ti' LIMIT 100;",
+    "sql": "SELECT m.entry_id, m.formula, s.prototype, ps.formation_energy_per_atom FROM material_entry m JOIN composition c ON c.entry_id = m.entry_id JOIN phase_stability ps ON ps.entry_id = m.entry_id JOIN structure s ON s.entry_id = m.entry_id WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND c.element = 'Ti' LIMIT 100;",
     "conditions": {
       "prototype": "L12",
       "contains_elements": [
@@ -84,52 +84,52 @@
         "phase_stability.formation_energy_per_atom"
       ]
     },
-    "row_count": 10,
+    "row_count": 39,
     "source": "seed:curated"
   },
   {
     "nl_query": "OQMDのB2化合物の形成エネルギーを出して",
-    "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+    "sql": "SELECT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
     "conditions": {
       "prototype": "B2",
       "sort_by": "phase_stability.formation_energy_per_atom",
       "sort_order": "asc"
     },
-    "row_count": -1,
+    "row_count": 100,
     "source": "paper:hea_lattice_prediction.tex"
   },
   {
     "nl_query": "Materials ProjectのL1₂化合物の格子定数を出して",
-    "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLIMIT 100;",
+    "sql": "SELECT\n    m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLIMIT 100;",
     "conditions": {
       "prototype": "L12",
       "properties": [
         "structure.lattice_a"
       ]
     },
-    "row_count": -1,
+    "row_count": 100,
     "source": "paper:hea_lattice_prediction.tex"
   },
   {
     "nl_query": "安定なB2化合物をリストして",
-    "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
+    "sql": "SELECT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND ps.energy_above_hull <= 0.001\nLIMIT 100;",
     "conditions": {
       "prototype": "B2",
       "stability": "stable"
     },
-    "row_count": -1,
+    "row_count": 3,
     "source": "paper:hea_lattice_prediction.tex"
   },
   {
     "nl_query": "安定なL1₂化合物を形成エネルギーが低い順に出して",
-    "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
+    "sql": "SELECT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.energy_above_hull <= 0.001\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 100;",
     "conditions": {
       "prototype": "L12",
       "stability": "stable",
       "sort_by": "phase_stability.formation_energy_per_atom",
       "sort_order": "asc"
     },
-    "row_count": -1,
+    "row_count": 8,
     "source": "paper:hea_lattice_prediction.tex"
   },
   {
@@ -147,7 +147,7 @@
     "conditions": {
       "site_label": "B"
     },
-    "row_count": 30,
+    "row_count": 22,
     "source": "seed:easy_pattern"
   },
   {
@@ -209,12 +209,12 @@
       "prototype": "L12",
       "site_label": "A-site"
     },
-    "row_count": 30,
+    "row_count": 22,
     "source": "seed:vhard_pattern"
   },
   {
     "nl_query": "NiまたはCoを含む安定なL1₂化合物でバルクモジュラスが高いトップ10を出して。",
-    "sql": "SELECT DISTINCT m.formula, cp_bm.value AS bulk_modulus, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\n     AND cp_bm.property_name = 'bulk_modulus'\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.001\n  AND (EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni')\n       OR EXISTS (SELECT 1 FROM composition c_co WHERE c_co.entry_id = m.entry_id AND c_co.element = 'Co'))\nORDER BY cp_bm.value DESC\nLIMIT 10;",
+    "sql": "SELECT m.formula, cp_bm.value AS bulk_modulus, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\n     AND cp_bm.property_name = 'bulk_modulus'\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.001\n  AND (EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni')\n       OR EXISTS (SELECT 1 FROM composition c_co WHERE c_co.entry_id = m.entry_id AND c_co.element = 'Co'))\nORDER BY cp_bm.value DESC\nLIMIT 10;",
     "conditions": {
       "prototype": "L12",
       "stability": "stable",
@@ -234,7 +234,7 @@
       "prototype": "L12",
       "site_label": "A-site"
     },
-    "row_count": 30,
+    "row_count": 22,
     "source": "seed:group_by_pattern"
   },
   {
@@ -244,7 +244,7 @@
       "prototype": "L12",
       "site_label": "B-site"
     },
-    "row_count": 40,
+    "row_count": 22,
     "source": "seed:group_by_pattern"
   },
   {
@@ -253,12 +253,12 @@
     "conditions": {
       "prototype": "L12"
     },
-    "row_count": 25,
+    "row_count": 244,
     "source": "seed:group_by_pattern"
   },
   {
     "nl_query": "NiまたはCoを含むL1₂型化合物を一覧して。",
-    "sql": "SELECT DISTINCT m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND EXISTS (SELECT 1 FROM composition c_or\n              WHERE c_or.entry_id = m.entry_id\n              AND c_or.element IN ('Ni', 'Co'))\nORDER BY m.formula\nLIMIT 10000;",
+    "sql": "SELECT m.entry_id, m.formula, s.prototype, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND EXISTS (SELECT 1 FROM composition c_or\n              WHERE c_or.entry_id = m.entry_id\n              AND c_or.element IN ('Ni', 'Co'))\nORDER BY m.formula\nLIMIT 10000;",
     "conditions": {
       "prototype": "L12",
       "contains_elements": [
@@ -272,7 +272,7 @@
   },
   {
     "nl_query": "Fe含有L1₂化合物の安定性と弾性特性を同時に示して。",
-    "sql": "SELECT DISTINCT m.formula, ps.energy_above_hull, ps.is_stable,\n       cp.property_name, cp.value\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE c.element = 'Fe'\n  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY m.formula, cp.property_name\nLIMIT 10000;",
+    "sql": "SELECT m.formula, ps.energy_above_hull, ps.is_stable,\n       cp.property_name, cp.value\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE c.element = 'Fe'\n  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY m.formula, cp.property_name\nLIMIT 10000;",
     "conditions": {
       "prototype": "L12",
       "contains_elements": [
@@ -280,7 +280,7 @@
       ],
       "bulk_modulus": true
     },
-    "row_count": 56,
+    "row_count": 84,
     "source": "seed:calc_prop_pattern"
   },
   {
@@ -289,7 +289,7 @@
     "conditions": {
       "prototype": "L12"
     },
-    "row_count": 380,
+    "row_count": 391,
     "source": "seed:exclusion_pattern"
   },
   {
@@ -311,7 +311,7 @@
       "sort_by": "formation_enthalpy.formation_enthalpy_ev_per_atom",
       "sort_order": "asc"
     },
-    "row_count": 15,
+    "row_count": 8,
     "source": "seed:formation_enthalpy_view"
   },
   {
@@ -362,7 +362,7 @@
       "sort_by": "formation_enthalpy.formation_enthalpy_ev_per_atom",
       "sort_order": "asc"
     },
-    "row_count": 15,
+    "row_count": 4,
     "source": "seed:formation_enthalpy_view"
   },
   {
@@ -373,7 +373,7 @@
       "reference_energy": true,
       "element_property": true
     },
-    "row_count": 30,
+    "row_count": 29,
     "source": "seed:pure_element_pattern"
   },
   {
@@ -388,17 +388,17 @@
   },
   {
     "nl_query": "体積弾性率が剪断弾性率の2倍以上大きい化合物を出して。延性指標として。",
-    "sql": "SELECT m.formula, et.bulk_modulus_vrh, et.shear_modulus_vrh,\n       et.bulk_modulus_vrh / NULLIF(et.shear_modulus_vrh, 0) AS bulk_shear_ratio\nFROM material_entry m\nJOIN elastic_tensor et ON et.entry_id = m.entry_id\nWHERE et.bulk_modulus_vrh > 2.0 * et.shear_modulus_vrh\n  AND et.shear_modulus_vrh > 0\nORDER BY et.bulk_modulus_vrh / et.shear_modulus_vrh DESC\nLIMIT 10000;",
+    "sql": "SELECT m.formula, et.bulk_modulus_vrh, et.shear_modulus_vrh,\n       et.bulk_modulus_vrh / NULLIF(et.shear_modulus_vrh, 0) AS bulk_shear_ratio\nFROM material_entry m\nJOIN calculation cal_et ON cal_et.entry_id = m.entry_id\nJOIN elastic_tensor et ON et.calculation_id = cal_et.calculation_id\nWHERE et.bulk_modulus_vrh > 2.0 * et.shear_modulus_vrh\n  AND et.shear_modulus_vrh > 0\nORDER BY et.bulk_modulus_vrh / et.shear_modulus_vrh DESC\nLIMIT 10000;",
     "conditions": {
       "column_comparison": "elastic_tensor.bulk_modulus_vrh > 2.0 * elastic_tensor.shear_modulus_vrh",
       "elastic": true
     },
-    "row_count": 29,
+    "row_count": 460,
     "source": "seed:column_comparison"
   },
   {
     "nl_query": "デバイ温度がキュリー温度より高い化合物を出して。",
-    "sql": "SELECT m.formula, tp.debye_temperature_k, mp.curie_temperature_k\nFROM material_entry m\nJOIN thermal_property tp ON tp.entry_id = m.entry_id\nJOIN magnetic_property mp ON mp.entry_id = m.entry_id\nWHERE tp.debye_temperature_k > mp.curie_temperature_k\n  AND mp.curie_temperature_k > 0\nORDER BY tp.debye_temperature_k - mp.curie_temperature_k DESC\nLIMIT 10000;",
+    "sql": "SELECT m.formula, tp.debye_temperature_k, mp.curie_temperature_k\nFROM material_entry m\nJOIN calculation cal_tp ON cal_tp.entry_id = m.entry_id\nJOIN thermal_property tp ON tp.calculation_id = cal_tp.calculation_id\nJOIN magnetic_property mp ON mp.entry_id = m.entry_id\nWHERE tp.debye_temperature_k > mp.curie_temperature_k\n  AND mp.curie_temperature_k > 0\nORDER BY tp.debye_temperature_k - mp.curie_temperature_k DESC\nLIMIT 10000;",
     "conditions": {
       "column_comparison": "thermal_property.debye_temperature_k > magnetic_property.curie_temperature_k",
       "thermal": true,
@@ -409,12 +409,12 @@
   },
   {
     "nl_query": "CBMエネルギーがVBMエネルギーより高く、バンドギャップが2eV未満の化合物を出して。",
-    "sql": "SELECT m.formula, bs.cbm_energy, bs.vbm_energy,\n       bs.cbm_energy - bs.vbm_energy AS calculated_gap,\n       bs.is_direct_gap\nFROM material_entry m\nJOIN band_structure bs ON bs.entry_id = m.entry_id\nWHERE bs.cbm_energy > bs.vbm_energy\n  AND bs.cbm_energy - bs.vbm_energy < 2.0\nORDER BY bs.cbm_energy - bs.vbm_energy ASC\nLIMIT 10000;",
+    "sql": "SELECT m.formula, bs.cbm_energy, bs.vbm_energy,\n       bs.cbm_energy - bs.vbm_energy AS calculated_gap,\n       bs.is_direct_gap\nFROM material_entry m\nJOIN calculation cal_bs ON cal_bs.entry_id = m.entry_id\nJOIN band_structure bs ON bs.calculation_id = cal_bs.calculation_id\nWHERE bs.cbm_energy > bs.vbm_energy\n  AND bs.cbm_energy - bs.vbm_energy < 2.0\nORDER BY bs.cbm_energy - bs.vbm_energy ASC\nLIMIT 10000;",
     "conditions": {
       "column_comparison": "band_structure.cbm_energy > band_structure.vbm_energy",
       "band_structure": true
     },
-    "row_count": 475,
+    "row_count": 14,
     "source": "seed:column_comparison"
   },
   {
@@ -460,7 +460,7 @@
       "column_comparison": "MAX(element.electronegativity) - MIN(element.electronegativity) > 0.5",
       "element_property": true
     },
-    "row_count": 29,
+    "row_count": 86,
     "source": "seed:column_comparison"
   },
   {

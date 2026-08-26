@@ -1,6 +1,6 @@
 -- VH: 点欠陥の情報があるL1₂化合物で安定かつバルクモジュラスが150GPa以上のものを欠陥タイプとともに出して
 -- Tables: material_entry, structure, phase_stability, material_defect, defect_type, calculation, calculated_property (7)
-SELECT DISTINCT m.formula, dt.defect_name, cp_bm.value AS bulk_modulus,
+SELECT m.formula, dt.defect_name, cp_bm.value AS bulk_modulus,
        ps.energy_above_hull
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id

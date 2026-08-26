@@ -108,6 +108,33 @@ ELEMENT_DATA = {
     "Pt": (78, 195.1, 2.28, 139), "Au": (79, 197.0, 2.54, 144),
 }
 
+_PERIOD_STARTS = [1, 3, 11, 19, 37, 55, 87]
+
+
+def _element_period_group_block(anum: int) -> tuple[int, int | None, str]:
+    """Derive (period, group, block) from the atomic number."""
+    period = max(p for p, start in enumerate(_PERIOD_STARTS, 1) if anum >= start)
+    if anum in (1, 2):
+        return 1, {1: 1, 2: 18}[anum], "s"
+    offset = anum - _PERIOD_STARTS[period - 1]
+    if period in (2, 3):
+        group = offset + 1 if offset <= 1 else offset + 11
+        return period, group, "s" if offset <= 1 else "p"
+    if period in (4, 5):
+        group = offset + 1
+        block = "s" if offset <= 1 else ("d" if offset <= 11 else "p")
+        return period, group, block
+    # periods 6, 7 include the f-block (14 elements after group 3)
+    if offset <= 1:
+        return period, offset + 1, "s"
+    if offset == 2:
+        return period, 3, "f"  # La/Ac treated as f-block heads
+    if offset <= 16:
+        return period, None, "f"
+    group = offset - 13
+    return period, group, "d" if group <= 12 else "p"
+
+
 # Elements present only in the OQMD pure-element reference set:
 # symbol -> (name, Z, mass, electronegativity, radius, group, period, block, category)
 EXTRA_ELEMENT_DATA = {
@@ -244,10 +271,12 @@ def write_reference_data(out: TextIO, pure: dict[str, dict]) -> dict[str, int]:
     elem_ids: dict[str, int] = {}
     for i, (sym, (anum, mass, eneg, radius)) in enumerate(ELEMENT_DATA.items(), 1):
         elem_ids[sym] = i
+        period, group, block = _element_period_group_block(anum)
         out.write(
             f"INSERT INTO element (element_id, symbol, name, atomic_number, atomic_mass, "
-            f"electronegativity, atomic_radius) VALUES "
-            f"({i}, '{sym}', '{sym}', {anum}, {mass}, {eneg}, {radius});\n"
+            f"electronegativity, atomic_radius, group_number, period_number, block) VALUES "
+            f"({i}, '{sym}', '{sym}', {anum}, {mass}, {eneg}, {radius}, "
+            f"{_sql_num(group)}, {period}, '{block}');\n"
         )
     next_id = len(ELEMENT_DATA)
     for sym, (name, anum, mass, eneg, radius, group, period, block, cat) in sorted(

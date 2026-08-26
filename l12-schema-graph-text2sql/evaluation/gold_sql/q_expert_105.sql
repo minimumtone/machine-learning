@@ -1,6 +1,6 @@
 -- VH: 安定なL1₂化合物で表面エネルギーが2.0 J/m²以下かつバルクモジュラスが180GPa以上のものを全て出して
 -- Tables: material_entry, structure, phase_stability, surface_energy, calculation, calculated_property (6)
-SELECT DISTINCT m.formula, se.surface_energy_j_m2, cp_bm.value AS bulk_modulus,
+SELECT m.formula, se.surface_energy_j_m2, cp_bm.value AS bulk_modulus,
        ps.energy_above_hull
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
