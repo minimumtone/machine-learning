@@ -180,7 +180,7 @@ v4でgraph層のJOIN方向バグ（`_edge_source`による逆方向走査時の�
 - **材料用語辞書**: L1₂, B2, γ', Cu₃Au型, CsCl型などの日英バイリンガル同義語辞書
 - **制約付きSQL生成**: 許可テーブル・カラム・JOINのみ使用可能
 - **SQLGuard 14種検証**: ブラックリスト、SELECT-only、複文検出、危険関数、テーブル/カラムホワイトリスト、JOIN整合性、LIMIT自動注入、CTE検査、型安全、トートロジー検出、サブクエリ深度制限、システムテーブル検出
-- **ハイブリッドReranker**: 性能重視の3箇所再ランキング — SQL候補選択（GPT-5.5 LLM）、Few-shot例取得（Cross-Encoder ms-marco-MiniLM, ローカル<50ms）、Schema linkingテーブル並び替え（GPT-5.5 LLM）。20クエリA/Bテストで+18.9pp改善（61.6%→80.5%）
+- **ハイブリッドReranker**: 性能重視の3箇所再ランキング — SQL候補選択（GPT-5.5 LLM）、Few-shot例取得（Cross-Encoder ms-marco-MiniLM, ローカル<50ms）、Schema linkingテーブル並び替え（GPT-5.5 LLM）。84クエリA/Bテストで+4.9pp改善（81.5%→86.4%）
 - **Rule-based fallback**: API keyなしでも動作する決定的SQL生成
 - **B2対応**: CsCl型（B2）、NaCl型、NiAs型、BiF3型にも対応可能な設計
 

@@ -29,10 +29,10 @@
 | `evaluation/cte_evaluation_dataset.jsonl` | 10 | 新規CTEパターン（既存5件と合わせて15件評価） |
 
 ### 既存結果（照合用リファレンス）
-- `evaluation/ablation_run_{1..5}.json` + `ablation_multirun_stats.json` — 5-run ablation（full 84.7±0.5%）
-- `evaluation/independent_eval_results.json` — 独立評価100件（72.5%）
-- `evaluation/transfer_eval_results.json` — 転用試験20件（80.5%）
-- `evaluation/cte_eval_results.json` — CTE 15件（54.9%）
+- `evaluation/ablation_run_{1..5}.json` + `ablation_multirun_stats.json` — 5-run ablation（full 85.2±0.9%）
+- `evaluation/independent_eval_results.json` — 独立評価100件（72.7%）
+- `evaluation/transfer_eval_results.json` — 転用試験20件（B: 95.0%）
+- `evaluation/cte_eval_results.json` — CTE 15件（60.2%）
 - `paper/paper_data.json` — 全論文数値のSSoT（compute_all_figures.py が生成）
 
 ## 2. 環境要件
@@ -78,7 +78,7 @@ POSTGRES_PASSWORD / POSTGRES_DB` を設定してください。
 
 ## 4. 検証スクリプトと実行手順
 
-### 4.1 メイン評価 / ablation（論文 表: full 84.7±0.5%）
+### 4.1 メイン評価 / ablation（論文 表: full 85.2±0.9%）
 ```bash
 # 1ラン（7条件×100件、約7時間、API約700回）
 python scripts/eval_ablation.py
@@ -87,13 +87,13 @@ python scripts/eval_ablation_multirun.py --n-runs 5 --start-run 1
 ```
 出力: `evaluation/ablation_run_N.json`, `ablation_multirun_stats.json`
 
-### 4.2 独立評価100件（論文: 72.5%）
+### 4.2 独立評価100件（論文: 72.7%）
 ```bash
 python scripts/eval_independent.py          # 約70分、API 100回
 ```
 出力: `evaluation/independent_eval_results.json`
 
-### 4.3 未知スキーマ転用試験（論文: 80.5%）
+### 4.3 未知スキーマ転用試験（論文 B: 95.0%）
 ```bash
 # 転用DB構築（テーブル名・カラム名を全変更した5テーブル、データはメインDBから複製）
 python scripts/build_transfer_db.py
@@ -104,7 +104,7 @@ python scripts/eval_transfer.py
 ※ `eval_transfer.py` が `SQL_PROMPT_TEMPLATE` 環境変数で転用用プロンプト
 （`llm/prompt_templates/sql_generation_prompt_transfer.md`）に自動切替します。
 
-### 4.4 CTE 15件評価（論文: 54.9% = 既存5パターン100% + 新規10パターン32.3%）
+### 4.4 CTE 15件評価（論文: 60.2% = 既存5パターン100% + 新規10パターン40.3%）
 ```bash
 # 既存CTE 5件（メイン評価セット内）+ 新規10件を結合して15件データセットを作成
 python - <<'EOF'
@@ -147,11 +147,11 @@ cd paper && lualatex stam-m.tex && bibtex stam-m && lualatex stam-m.tex && luala
 |---|---|---|
 | pytest | 134 passed | 完全一致 |
 | DB行数 | material_entry 1,559行 / 31テーブル+1ビュー | 完全一致 |
-| ablation full（1ラン） | 84.7% | ±1.5pp（LLM非決定性） |
+| ablation full（1ラン） | 85.6% | ±1.5pp（LLM非決定性） |
 | ablation 5-run: no_dict / no_fewshot | −7.3pp / −7.4pp（p<0.001） | 有意性の再現 |
-| 独立評価100件 | 72.5% | ±3pp |
-| 転用試験20件 | 80.5% | ±5pp（20件のため1件=5pp） |
-| CTE 15件 | 54.9%（既存5件は100%） | 既存5件100%は再現されること |
+| 独立評価100件 | 72.7% | ±3pp |
+| 転用試験20件 | 95.0% | ±5pp（20件のため1件=5pp） |
+| CTE 15件 | 60.2%（既存5件は100%） | 既存5件100%は再現されること |
 | compute_all_figures | エラーなしで paper_data.json 生成 | — |
 
 ## 6. 注意事項
