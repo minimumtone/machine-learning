@@ -99,7 +99,7 @@
 \begin{abstract}
 本研究では、無機材料向けリレーショナルデータベース（RDB）の自然言語アクセスを実現するText-to-SQLパイプラインの設計原理を提示し、検証する。提案手法は、材料ドメイン辞書、LLMスキーマリンク、few-shot例検索、外部キー（FK）グラフによるJOIN制約、$n$-best生成、SQL安全性検証（SQLGuard）、リランカーの7要素から構成される。
 5プロトタイプ（L1$_2$/B2/NaCl/NiAs/BiF$_3$）・31テーブルのRDBを用いた100クエリの多軸評価で、実行再現率85.6\%、適合率84.7\%、F1値79.3\%を達成した。7条件のablation study（5独立ラン）では、few-shot例の除去による低下が最大であり（$-$5.4\,pp、$p=0.001$、Holm補正後も有意）、FKグラフ制約は本規模では全体精度を変えなかった（$\pm$0.0\,pp）。全コンポーネントを除去したLLM-onlyベースラインは実行再現率66.8\%で、FK関係に基づかないJOINが100クエリ中54件、存在しないカラム参照が38件発生した。
-一般化試験4種（プロトタイプ横断、OQMD風命名、識別子難読化、Materials Project実データ）で実行再現率90.0--100.0\%、別設計100件の独立検証で72.7\%、CTE多段計算15パターンで60.2\%（few-shot例のある既知5パターンは100\%）を得た。これらの結果は、材料研究者がSQLを書かずにクロステーブル探索を行える研究インフラの実現可能性と適用条件を示す。
+一般化試験4種（プロトタイプ横断、OQMD風命名、識別子難読化、Materials Project実データ）で実行再現率90.0--100.0\%、別設計100件の独立検証で72.7\%、CTE多段計算15パターンで60.2\%（few-shot例のある既知5パターンは100\%）を得た。これらの結果は、材料研究者がSQLを書かずにクロステーブル探索を行える研究インフラの実現可能性と適用条件を示す。本手法の各構成要素はFKメタデータと辞書・few-shot例の差し替えで他の正規化材料RDBにも適用可能であり、材料データベース利用の障壁低下と探索的データ解析の効率化への寄与が期待される。
 \end{abstract}
 
 \begin{keywords}
@@ -118,19 +118,21 @@ Text-to-SQL \; 無機材料データベース \; 自然言語インターフェ�
 
 これらのデータは通常、SQLによる柔軟なクロステーブルクエリを前提に設計された正規化リレーショナルデータベース（RDB）に保存される。DFTデータベースの多くはAPIも備えるが、APIは複数テーブルを跨ぐ複雑な条件検索や大規模な統計処理には向かない。SQLや、自然言語からSQLを生成するText-to-SQLは、データベースのリレーションを直接活用できるため、探索的な抽出・集計に柔軟に応答する。しかしRDBの利用にはテーブル構造、外部キー（FK）関係、SQL構文の理解が必要であり、これらを持たない材料研究者はデータにアクセスできない。
 
+データベース横断検索の標準化に向けては、共通APIであるOPTIMADE~\cite{andersen2021optimade}が提案され、対応データベースの拡大と応用をめぐる活発な議論が続いている~\cite{evans2024optimade}。OPTIMADEはフィルタ構文による横断検索を提供するが、対象は各データベースが公開する共通スキーマの属性に限られ、個々のRDB内部の正規化テーブルを跨ぐJOINや集計を代替するものではない。
+
 \paragraph*{自然言語データベースインターフェースの重要性}
 
 正規化された材料RDBでは複数テーブルのJOIN構築が必要であり、自然言語から適切なSQLを自動生成できれば、材料研究者はスキーマ構造を意識せずクロステーブルデータ探索を行える。FKメタデータに依存する設計を採用すれば、スキーマ変更への追随も容易になる。
 
 \paragraph*{Text-to-SQL技術と材料科学における現状}
 
-Text-to-SQL技術は、Spider~\cite{yu2018spider}やBIRD~\cite{li2024bird}のようなベンチマークを中心に発展してきた。最近の大規模言語モデル（LLM）の進展に伴い、DIN-SQL~\cite{pourreza2024dinsql}はスキーマリンク、分類、生成を分離したパイプラインアプローチを提案した。DAIL-SQL~\cite{gao2023dail}は、少数ショットの例選択戦略に焦点を当てた。RAT-SQL~\cite{wang2020ratsql}は関係認識エンコーディングを導入し、RESDSQL~\cite{li2023resdsql}はスキーマリンクのデカップリングを導入した。SchemaGraphSQL~\cite{safdarian2026schemagraphsql}は、FKグラフ上のパス探索を使用している点で、我々の研究に最も近い。
+Text-to-SQL技術は、Spider~\cite{yu2018spider}やBIRD~\cite{li2024bird}のようなベンチマークを中心に発展してきた。最近の大規模言語モデル（LLM）の進展に伴い、DIN-SQL~\cite{pourreza2024dinsql}はスキーマリンク、分類、生成を分離したパイプラインアプローチを提案した。DAIL-SQL~\cite{gao2023dail}は、少数ショットの例選択戦略に焦点を当てた。RAT-SQL~\cite{wang2020ratsql}は関係認識エンコーディングを導入し、RESDSQL~\cite{li2023resdsql}はスキーマリンクのデカップリングを導入した。SchemaGraphSQL~\cite{safdarian2026schemagraphsql}は、FKグラフ上のパス探索を使用している点で、本研究に最も近い。
 
 しかし、これらの手法は一般的なベンチマークで評価されており、無機材料データベースのようなドメイン特化型RDBでの効果は未検証であった。MatSciBERT~\cite{gupta2022matscibert}やMatBERT~\cite{walker2021matbert}は材料科学テキスト用の言語モデルだが、Text-to-SQLタスクに直接適用されていない。MKNA~\cite{zhuang2026mkna}やOptiMat~\cite{hu2026optimat}はAPIベースのアクセスを提供するが、正規化されたRDBに対してJOIN制御を伴うSQL生成を行わない。SuperCon~\cite{ishii2023supercon}やPoLyInfo~\cite{ishii2024polyinfo}はRDF/SPARQLベースのオントロジーアプローチを採用しているが、既存のRDBインフラに適用するためにはデータ変換が必要である。また、素のLLMにスキーマ情報だけを与えて直接SQLを生成させる構成では、存在しないテーブル・カラムを参照するハルシネーションや不完全な条件指定が発生する（定量値はセクション~\ref{sec:llm_only}、生成SQLの実例は補足資料~\ref{sec:sup_sql_examples}）。この課題への対処が本研究の出発点である。
 
 \paragraph*{目的と貢献}
 
-本研究の目的は、無機材料RDBへの自然言語アクセスを可能にする設計原則を提示し、その有効性を検証することである。我々は、材料研究者がSQLやスキーマ構造を意識することなくデータを探索できる方法論を示し、OQMDから抽出したデータを元に作成したRDBを例として、自然言語クエリがどの程度処理できるかを検討する。
+本研究の目的は、無機材料RDBへの自然言語アクセスを可能にする設計原則を提示し、その有効性を検証することである。本研究では、材料研究者がSQLやスキーマ構造を意識することなくデータを探索できる方法論を示し、OQMDから抽出したデータを元に作成したRDBを例として、自然言語クエリがどの程度処理できるかを検討する。
 
 本研究で扱う3つのドメイン特有の課題は次のとおりである：
 \begin{enumerate}
@@ -142,10 +144,10 @@ Text-to-SQL技術は、Spider~\cite{yu2018spider}やBIRD~\cite{li2024bird}のよ
     無機材料RDBにおけるText-to-SQLのための標準評価ベンチマークは存在しない。妥当な評価には難易度の調整が重要であり、ベンチマーク設計にはドメイン専門家との対話を要する。
 \end{enumerate}
 
-我々の貢献は4つある：
+本研究の貢献は4つある：
 \begin{enumerate}[label=(\roman*)]
   \item 材料RDB Text-to-SQLのための設計原則：
-    我々は、材料ドメイン辞書とfew-shot例によるドメイン適応を中核とし、FKグラフ上の貪欲最短経路連結によるJOIN制約（JOIN幻覚抑制と保守性）およびハイブリッドリランカーを統合したパイプラインを提案する。
+    本研究では、材料ドメイン辞書とfew-shot例によるドメイン適応を中核とし、FKグラフ上の貪欲最短経路連結によるJOIN制約（JOIN幻覚抑制と保守性）およびハイブリッドリランカーを統合したパイプラインを提案する。
     一般的なText-to-SQL手法（DIN-SQL、DAIL-SQL、SchemaGraphSQLなど）は材料特有の用語翻訳を持たず、材料NLアクセスシステム（MKNA、OptiMatなど）はRDB/SQLを対象としない。本提案はこの両者が扱わない領域（正規化材料RDBへの用語翻訳付きSQL生成）を対象とする。
   \item 多軸定量評価：
     L1$_2$を中心に5プロトタイプを含む31テーブル・総行数約2万行のRDBに対する7条件$\times$100クエリ$\times$5回の統計的アブレーション（クエリ単位の符号反転検定とブートストラップ95\%信頼区間）を超えて、少数ショットの$k$感度、辞書サイズ感度、LLMモデル比較、および多軸メトリクス（EM / SELECT列精度 / JOIN一致率）を提供する。
@@ -306,7 +308,140 @@ SQL候補のリランキングにはGPT-5.5を使用する。少数ショット�
 \label{sec:evaluation}  
 \subsubsection{検証データベース}
 
-提案された方法を検証するために、L1$_2$型金属間化合物を題材としつつ、無機材料データベース全体に共通する正規化スキーマを表す検証 RDB を構築した。L1$_2$ を代表例とするだけでなく、組成・構造・熱力学的安定性・電子構造・機械的特性・表面特性など、材料 RDB に普遍な概念を 31 の正規化テーブルと 1 つのビュー（ER図は補足資料~\ref{sec:sup_method_details}の図~\ref{fig:er}）に配置する。\texttt{material\_entry} を中心エンティティとし、FK 関係で周辺テーブルと接続する構成は、OQMD、Materials Project、AFLOW などの無機材料データベースと同じ設計パターンを持つ。主要な統計（テーブル31、ビュー1、\texttt{material\_entry} 1{,}559、\texttt{composition} 3{,}029、\texttt{calculated\_property} 4{,}410、プロトタイプ5種）は補足資料~\ref{sec:sup_method_details}の表~\ref{tab:db_stats}に示す。
+提案された方法を検証するために、L1$_2$型金属間化合物を題材としつつ、無機材料データベース全体に共通する正規化スキーマを表す検証 RDB を構築した。L1$_2$ を代表例とするだけでなく、組成・構造・熱力学的安定性・電子構造・機械的特性・表面特性など、材料 RDB に普遍な概念を 31 の正規化テーブルと 1 つのビュー（ER図は図~\ref{fig:er}）に配置する。\texttt{material\_entry} を中心エンティティとし、FK 関係で周辺テーブルと接続する構成は、OQMD、Materials Project、AFLOW などの無機材料データベースと同じ設計パターンを持つ。主要な統計（テーブル31、ビュー1、\texttt{material\_entry} 1{,}559、\texttt{composition} 3{,}029、\texttt{calculated\_property} 4{,}410、プロトタイプ5種）は補足資料~\ref{sec:sup_method_details}の表~\ref{tab:db_stats}に示す。
+
+\begin{figure*}[htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  >=Stealth,
+  every node/.style={font=\scriptsize},
+  entity/.style={rectangle, draw, rounded corners=2pt,
+    minimum height=0.6cm, minimum width=1.8cm, align=center,
+    text width=1.8cm, font=\scriptsize},
+  core/.style={entity, fill=blue!15, line width=0.8pt},
+  prop/.style={entity, fill=green!12},
+  master/.style={entity, fill=orange!15},
+  junction/.style={entity, fill=yellow!15},
+  electronic/.style={entity, fill=cyan!12},
+  mechanical/.style={entity, fill=red!8},
+  surface/.style={entity, fill=purple!10},
+  phase/.style={entity, fill=teal!12},
+  experiment/.style={entity, fill=pink!15},
+  defect/.style={entity, fill=brown!12},
+  fk/.style={->, thick, color=gray!60, >=Stealth},
+  grouplabel/.style={font=\footnotesize\bfseries, text=gray!50},
+]
+
+% Row 0: Master Tables
+\node[master] at (-6, 5.5) (sg) {space\_group\\{\tiny H-M, crystal sys}};
+\node[master] at (-2, 5.5) (proto) {prototype\_\\definition\\{\tiny Strukturbericht}};
+\node[master] at (2, 5.5) (elem) {element\\{\tiny Z, mass, $\chi$}};
+\node[prop] at (5.5, 5.5) (eprop) {element\_property\\{\tiny property, value}};
+
+% Row 1: Core entities
+\node[core, minimum width=2.4cm, minimum height=0.8cm, line width=1.2pt,
+      font=\scriptsize\bfseries] at (0, 3) (me) {material\_entry\\{\tiny (PK: entry\_id)}};
+\node[core] at (-5, 3) (comp) {composition\\{\tiny element, fraction}};
+\node[core] at (-2.5, 4.2) (struct) {structure\\{\tiny prototype, lattice}};
+\node[core] at (2.5, 4.2) (ps) {phase\_stability\\{\tiny $E_f$, $E_{hull}$}};
+\node[core] at (5, 3) (calc) {calculation\\{\tiny method, functional}};
+\node[prop] at (8.5, 3) (cprop) {calculated\_property\\{\tiny name, value, unit}};
+
+% Row 2: Application/Literature + Electronic
+\node[master] at (-8, 1.5) (appdom) {application\_domain\\{\tiny domain, hierarchy}};
+\node[junction] at (-5.5, 1.5) (matapp) {material\_\\application\\{\tiny relevance}};
+\node[experiment] at (-8, 0) (litref) {literature\_\\reference\\{\tiny DOI, journal}};
+\node[junction] at (-5.5, 0) (matref) {material\_reference\\{\tiny context}};
+
+\node[electronic] at (5, 1.5) (bs) {band\_structure\\{\tiny gap, CBM, VBM}};
+\node[electronic] at (8.5, 1.5) (dos) {density\_of\_states\\{\tiny DOS@$E_F$, metallic}};
+
+% Row 3: Experimental + Mechanical
+\node[experiment] at (-8, -1.5) (expmt) {experimental\_\\measurement\\{\tiny method, T, P}};
+\node[experiment] at (-5.5, -1.5) (mprop) {measured\_property\\{\tiny name, value}};
+
+\node[mechanical] at (1.5, 0) (elastic) {elastic\_tensor\\{\tiny $B$, $G$, $E$, $\nu$}};
+\node[mechanical] at (5, 0) (mag) {magnetic\_property\\{\tiny $M$, ordering, $T_C$}};
+\node[mechanical] at (8.5, 0) (therm) {thermal\_property\\{\tiny $\Theta_D$, $\kappa$, $C_v$}};
+
+% Row 4: Synthesis/Defect + Surface
+\node[defect] at (-8, -3) (synm) {synthesis\_method\\{\tiny name, category}};
+\node[junction] at (-5.5, -3) (matsyn) {material\_synthesis\\{\tiny T, duration, atm}};
+\node[defect] at (-2, -3) (deftype) {defect\_type\\{\tiny vacancy, antisite}};
+\node[junction] at (1.5, -3) (matdef) {material\_defect\\{\tiny $E_f$, site}};
+
+\node[surface] at (5, -1.5) (surf) {surface\_energy\\{\tiny $(hkl)$, $\gamma$, $\phi$}};
+\node[surface] at (8.5, -1.5) (gb) {grain\_boundary\\{\tiny $\Sigma$, $E_{GB}$}};
+
+% Row 5: Phase/Alloy
+\node[phase] at (1.5, -4.5) (pde) {phase\_diagram\_entry\\{\tiny hull, decomp}};
+\node[phase] at (5, -4.5) (alloy) {alloy\_system\\{\tiny name, components}};
+\node[junction] at (8.5, -4.5) (ma_alloy) {material\_alloy\_\\system\\{\tiny phase, comp type}};
+% FK矢印: コア -> material_entry
+\draw[fk] (comp) -- (me);
+\draw[fk] (struct) -- (me);
+\draw[fk] (ps) -- (me);
+\draw[fk] (calc) -- (me);
+
+% FK: material_entryへの接続
+\draw[fk] (matapp) -- (me);
+\draw[fk] (matref) -- (me);
+\draw[fk] (expmt.east) -- ++(1.5,0) |- ([yshift=-0.1cm]me.west);
+\draw[fk] (bs) -- (me);
+\draw[fk] (dos.south west) -- (me);
+\draw[fk] (elastic) -- (me);
+\draw[fk] (mag.north) -- (me);
+\draw[fk] (therm.north west) -- (me);
+\draw[fk] (surf.north west) -- (me);
+\draw[fk] (gb.north) -- ([xshift=0.3cm]me.south east);
+\draw[fk] (matsyn.north) -- ([xshift=-0.5cm]me.south);
+\draw[fk] (matdef.north) -- ([xshift=0.2cm]me.south);
+\draw[fk] (pde.north) -- ([xshift=-0.3cm]me.south);
+\draw[fk] (ma_alloy.north west) -- (me);
+
+% FK: 計算子の子供
+\draw[fk] (cprop) -- (calc);
+\draw[fk] (bs) -- (calc);
+\draw[fk] (dos.west) -- (calc);
+\draw[fk] (elastic.north east) -- (calc);
+\draw[fk] (therm.north) -- (calc);
+
+% FK: マスターテーブルの参照
+\draw[fk] (eprop) -- (elem);
+\draw[fk] (matref) -- (litref);
+\draw[fk] (expmt) -- (litref);
+\draw[fk] (matsyn) -- (synm);
+\draw[fk] (matsyn) -- (litref);
+\draw[fk] (matdef) -- (deftype);
+\draw[fk] (matapp) -- (appdom);
+\draw[fk] (ma_alloy) -- (alloy);
+\draw[fk] (mprop) -- (expmt);
+\draw[fk] (matdef.north west) to[bend right=15] (elem.south east);
+
+% 自己参照FK
+\draw[->, thick, color=red!60] (appdom.north) to[out=130,in=50,looseness=4]
+  node[above, font=\tiny, text=red!60] {親} (appdom.north east);
+
+% グループラベル
+\node[grouplabel] at (-2, 6.3) {マスターテーブル};
+\node[grouplabel] at (0, 4.8) {コアエンティティ};
+\node[grouplabel] at (-7, -4.2) {合成/欠陥};
+\node[grouplabel] at (7, -2.5) {表面/界面};
+\node[grouplabel] at (5, -5.3) {相図/合金};
+\node[grouplabel] at (-7, 2.5) {文献/応用};
+\node[grouplabel] at (7, 2.5) {電子構造};
+\node[grouplabel] at (5, -0.8) {機械的特性};
+
+\end{tikzpicture}%
+}% end resizebox
+\caption{31テーブル検証データベースのER図。
+  コアテーブル（組成、構造、安定性など）はFK関係を介して中央の\texttt{material\_entry}に直接接続されている。
+  計算された特性と電子構造には2つの経路がある：
+  直接FKと\texttt{calculation}を介した経路である。
+  矢印はFK参照の方向を示している。}
+\label{fig:er}
+\end{figure*}
 
 公開OQMDデータモデルは少数の広いエントリ中心テーブルで表現されるフラットレイアウトであり、\texttt{delta\_e}のような一般的カラム名が自然言語インターフェースに曖昧さをもたらす。フラットレイアウトと本正規化スキーマの対応は補足資料~\ref{sec:sup_method_details}（表~\ref{tab:schema_comparison}）に示す。
 
@@ -315,7 +450,7 @@ SQL候補のリランキングにはGPT-5.5を使用する。少数ショット�
 \subsubsection{評価クエリ}
 \label{sec:query_design}
 
-私たちは100の著者設計のクエリ（Easy 20 / Medium 30 / Hard 30 / Very Hard 20；表~\ref{tab:query_design}は補足資料~\ref{sec:sup_method_details}）を使用した。各クエリには、ゴールドSQL、期待される実行結果（JSON）、必要なテーブル、およびJOINパスが注釈されている。無機材料RDB用の標準的なText-to-SQLベンチマークは現在存在しないため、データベーススキーマ構造と材料研究者の典型的な情報ニーズに基づいて評価クエリを構築した。クエリは以下の原則に従って設計された：
+本研究では100の著者設計のクエリ（Easy 20 / Medium 30 / Hard 30 / Very Hard 20；表~\ref{tab:query_design}は補足資料~\ref{sec:sup_method_details}）を使用した。各クエリには、ゴールドSQL、期待される実行結果（JSON）、必要なテーブル、およびJOINパスが注釈されている。無機材料RDB用の標準的なText-to-SQLベンチマークは現在存在しないため、データベーススキーマ構造と材料研究者の典型的な情報ニーズに基づいて評価クエリを構築した。クエリは以下の原則に従って設計された：
 (1) 実際の材料研究で生じる質問をシミュレートする（例：安定相の検索、組成と特性の相関）、
 (2) 難易度はゴールドSQLから計算された統一的な複雑性スコアによって4つの層に分類される（必要なテーブルごとに$3$ + WHERE/HAVING条件ごとに$1$ + GROUP BYごとに$2$ + EXISTSサブクエリごとに$3$ + 派生サブクエリごとに$3$；Easy $<8$、Medium $8$--$11$、Hard $12$--$16$、Very Hard（以下 VH と略記） $\geq 17$。閾値 8/12/17 は分布から機械的に導いたものではなく、層の件数バランス（20/30/30/20）を考慮して著者が事前に設定した値である）、
 (3) すべてのカテゴリ（A--H）にわたってバランスの取れたカバレッジ、
@@ -364,6 +499,14 @@ no\_graph     & 85.3 (0.5) & 100.0 & 96.7 & 83.9 & 55.4 (0.3) & $+$0.0  & 6 & 0.
 \end{table*}
 
 no\_guard・no\_nbest・no\_graphでEasy～Medium層の値がfullとほぼ一致するのは、これらの条件でクエリ単位の出力が変化したのが少数（$n_\mathrm{eff}$でそれぞれ9・12・6件）で、ほぼHard/VH層に集中するためである（保存済みper-queryデータで確認）。また、層別値（特にVHは$n=20$）の0.1\,pp刻みの表示は行レベル部分点と5ラン平均による見かけの解像度であり、層別分析は探索的なものと位置付ける。難易度別の$\Delta$（例：no\_dictはVH層で$-$14.3\,pp）と条件別平均レイテンシ（full 29.4\,s、no\_nbest 7.4\,s等）は補足資料~\ref{sec:sup_results_details}の表~\ref{tab:ablation-detail}・表~\ref{tab:latency}に、棒グラフ（5回平均 $\pm$ SD）は図~\ref{fig:ablation_bar}に示す。
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/ablation_bar.png}
+\caption{アブレーションスタディの棒グラフ（5回の平均 $\pm$ SD）。
+赤い棒は統計的に有意な精度低下を示す条件を示す（$^{***}$: $p<0.001$）。星印の検定は表~\ref{tab:ablation}と同一の正確符号反転（並べ替え）検定に基づく。†は$n_\mathrm{eff}$が小さく検出力不足のため有意性判定を行わない条件（no\_guard・no\_graph）を示す。}
+\label{fig:ablation_bar}
+\end{figure}
 
 % =====================================================================
 
@@ -443,7 +586,7 @@ JOIN幻覚54件はFKグラフによる結合経路制約（セクション~\ref{
 
 \label{sec:injection_safety}
 
-私たちは、7つの敵対的入力（E01--E05: DROP/DELETE/INSERTなど; F01--F02: 直接SQL入力）を用いてSQLGuardの安全機能を検証した（セクション~\ref{sec:sqlguard}）。すべての入力はSQLGuardによって安全に処理された（表~\ref{tab:injection_results}）。
+本研究では、7つの敵対的入力（E01--E05: DROP/DELETE/INSERTなど; F01--F02: 直接SQL入力）を用いてSQLGuardの安全機能を検証した（セクション~\ref{sec:sqlguard}）。すべての入力はSQLGuardによって安全に処理された（表~\ref{tab:injection_results}）。
 E01--E05は、禁止キーワード検出、マルチステートメント検出、テーブル許可リスト等によってブロックされた。F01はSELECT文が直接入力されたケースであり、LIMITが自動追加される（ブロックされない）。F02はDML検出によってブロックされる。これら7ケースは\texttt{scripts/verify\_safety\_cases.py}で決定論的に再検証でき、再現スクリプトはその結果を\texttt{paper\_data.json}へ記録する。アブレーションのno\_guard条件では実行再現率が$+$0.8\,pp変化したが（検出力不足のため有意性判定なし）、安全層の目的は平均再現率の向上ではなく危険なSQLの実行前排除である。
 
 % =====================================================================
@@ -580,7 +723,7 @@ D & MP実データ（MP専用prompt + 8 few-shot） & 15 & 100.0\% \\
 % =====================================================================
 \section*{謝辞}
 
-L1$_2$型金属間化合物のDFT計算データは、Open Quantum Materials Database (OQMD)の値を参考にして構築された合成検証データである。キュリー温度、$\Sigma 5$ grain boundaryエネルギー、合成方法、文献参照などの属性はOQMDには存在せず、検証目的で生成された。OQMDの開発と維持に関してノースウェスタン大学のWolvertonグループに感謝する。本研究はNIMSの支援を受けた。
+L1$_2$型金属間化合物のDFT計算データは、Open Quantum Materials Database (OQMD)の値を参考にして構築された合成検証データである。キュリー温度、$\Sigma$粒界エネルギー、合成方法、文献参照などの属性はOQMDには存在せず、検証目的で生成された。OQMDの開発と維持に関してノースウェスタン大学のWolvertonグループに感謝する。本研究はNIMSの支援を受けた。
 
 % =====================================================================
 \section*{競合利益}
@@ -751,7 +894,7 @@ L1$_2$型金属間化合物のDFT計算データは、Open Quantum Materials Dat
 \section{生成されたSQLの例}
 \label{sec:sup_sql_examples}
 
-代表的なクエリに対する生成されたSQLの例を、3つのメソッド構成（LLMのみ、フルスキーマ、我々の方法）で比較する。これは、各構成における出力SQLの質的な違いを具体的に示すことで、表~\ref{tab:ablation}における定量的比較を補完する。
+代表的なクエリに対する生成されたSQLの例を、3つのメソッド構成（LLMのみ、フルスキーマ、提案手法）で比較する。これは、各構成における出力SQLの質的な違いを具体的に示すことで、表~\ref{tab:ablation}における定量的比較を補完する。
 
 \subsection{``Niを含む安定なL1$_2$化合物のリスト''}
 
@@ -783,7 +926,7 @@ WHERE c.element = 'Ni'
 -- (3) lattice_aのような実質的に有用な列を選択しない
 \end{lstlisting}
 
-\paragraph{我々の方法（スキーマグラフ + 少数ショット + 辞書）:}
+\paragraph{提案手法（スキーマグラフ + 少数ショット + 辞書）:}
 \begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
 SELECT DISTINCT m.entry_id, m.formula,
   s.prototype, s.lattice_a, s.space_group
@@ -821,7 +964,7 @@ WHERE c.element = 'Ni' AND c.element = 'Al'
 -- 致命的: 単一の行が両方の条件を同時に満たすことはできない -> 常に0行
 \end{lstlisting}
 
-\paragraph{我々の方法（EXISTSサブクエリ）:}
+\paragraph{提案手法（EXISTSサブクエリ）:}
 \begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
 SELECT DISTINCT m.entry_id, m.formula
 FROM material_entry m
@@ -881,7 +1024,7 @@ Co$_3$Ti ($\Delta a = 0.022$~\AA{}{}, $E_\text{hull} = 0.0$)は安定相であ�
 
 \label{sec:sup_stable_l12}
 
-我々は、$E_\text{hull} \leq 0.05$~eV/atomを満たす安定/準安定なL1$_2$候補を抽出した（化合物属性は合成検証データ）。合計162の候補が特定された: 8つの安定なもの（$E_\text{hull} \leq 0.001$）と154の準安定なもの（$0.001 < E_\text{hull} \leq 0.05$）。安定相の中で、最も負の生成エネルギーはPt$_3$Al（$E_f = -0.550$~eV/atom）に属し、次いでAl$_3$Sc（$-0.500$）、Co$_3$Ti（$-0.450$）、Ni$_3$Al（$-0.420$）が続く。
+本研究では、$E_\text{hull} \leq 0.05$~eV/atomを満たす安定/準安定なL1$_2$候補を抽出した（化合物属性は合成検証データ）。合計162の候補が特定された: 8つの安定なもの（$E_\text{hull} \leq 0.001$）と154の準安定なもの（$0.001 < E_\text{hull} \leq 0.05$）。安定相の中で、最も負の生成エネルギーはPt$_3$Al（$E_f = -0.550$~eV/atom）に属し、次いでAl$_3$Sc（$-0.500$）、Co$_3$Ti（$-0.450$）、Ni$_3$Al（$-0.420$）が続く。
 
 % =====================================================================
 
@@ -934,7 +1077,7 @@ LLMモードはOpenAI APIを介してGPT-5.5を使用する。表~\ref{tab:sup_l
     「スキーマにリストされたテーブルのみを使用すること」
 \end{enumerate}
 
-GPT-5シリーズAPIは温度パラメータをサポートしておらず、私たちの実装でも送信していない。その結果、出力はLLMの内部状態により同一の入力に対して異なる場合がある。本論文のすべてのアブレーション結果は、5回の独立した実行からの平均$\pm$標準偏差として報告され、統計的有意性はクエリ単位の対応あり符号反転検定とブートストラップ信頼区間によって確認されている（表~\ref{tab:ablation}）。
+GPT-5シリーズAPIは温度パラメータをサポートしておらず、本実装でも送信していない。その結果、出力はLLMの内部状態により同一の入力に対して異なる場合がある。本論文のすべてのアブレーション結果は、5回の独立した実行からの平均$\pm$標準偏差として報告され、統計的有意性はクエリ単位の対応あり符号反転検定とブートストラップ信頼区間によって確認されている（表~\ref{tab:ablation}）。
 
 % =====================================================================
 
@@ -1484,138 +1627,6 @@ SELECT * の禁止、JOIN時のDISTINCT推奨、UNION/INTERSECT句の独立検�
 \end{tabularx}
 \end{table*}
 
-\begin{figure*}[htbp]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[
-  >=Stealth,
-  every node/.style={font=\scriptsize},
-  entity/.style={rectangle, draw, rounded corners=2pt,
-    minimum height=0.6cm, minimum width=1.8cm, align=center,
-    text width=1.8cm, font=\scriptsize},
-  core/.style={entity, fill=blue!15, line width=0.8pt},
-  prop/.style={entity, fill=green!12},
-  master/.style={entity, fill=orange!15},
-  junction/.style={entity, fill=yellow!15},
-  electronic/.style={entity, fill=cyan!12},
-  mechanical/.style={entity, fill=red!8},
-  surface/.style={entity, fill=purple!10},
-  phase/.style={entity, fill=teal!12},
-  experiment/.style={entity, fill=pink!15},
-  defect/.style={entity, fill=brown!12},
-  fk/.style={->, thick, color=gray!60, >=Stealth},
-  grouplabel/.style={font=\footnotesize\bfseries, text=gray!50},
-]
-
-% Row 0: Master Tables
-\node[master] at (-6, 5.5) (sg) {space\_group\\{\tiny H-M, crystal sys}};
-\node[master] at (-2, 5.5) (proto) {prototype\_\\definition\\{\tiny Strukturbericht}};
-\node[master] at (2, 5.5) (elem) {element\\{\tiny Z, mass, $\chi$}};
-\node[prop] at (5.5, 5.5) (eprop) {element\_property\\{\tiny property, value}};
-
-% Row 1: Core entities
-\node[core, minimum width=2.4cm, minimum height=0.8cm, line width=1.2pt,
-      font=\scriptsize\bfseries] at (0, 3) (me) {material\_entry\\{\tiny (PK: entry\_id)}};
-\node[core] at (-5, 3) (comp) {composition\\{\tiny element, fraction}};
-\node[core] at (-2.5, 4.2) (struct) {structure\\{\tiny prototype, lattice}};
-\node[core] at (2.5, 4.2) (ps) {phase\_stability\\{\tiny $E_f$, $E_{hull}$}};
-\node[core] at (5, 3) (calc) {calculation\\{\tiny method, functional}};
-\node[prop] at (8.5, 3) (cprop) {calculated\_property\\{\tiny name, value, unit}};
-
-% Row 2: Application/Literature + Electronic
-\node[master] at (-8, 1.5) (appdom) {application\_domain\\{\tiny domain, hierarchy}};
-\node[junction] at (-5.5, 1.5) (matapp) {material\_\\application\\{\tiny relevance}};
-\node[experiment] at (-8, 0) (litref) {literature\_\\reference\\{\tiny DOI, journal}};
-\node[junction] at (-5.5, 0) (matref) {material\_reference\\{\tiny context}};
-
-\node[electronic] at (5, 1.5) (bs) {band\_structure\\{\tiny gap, CBM, VBM}};
-\node[electronic] at (8.5, 1.5) (dos) {density\_of\_states\\{\tiny DOS@$E_F$, metallic}};
-
-% Row 3: Experimental + Mechanical
-\node[experiment] at (-8, -1.5) (expmt) {experimental\_\\measurement\\{\tiny method, T, P}};
-\node[experiment] at (-5.5, -1.5) (mprop) {measured\_property\\{\tiny name, value}};
-
-\node[mechanical] at (1.5, 0) (elastic) {elastic\_tensor\\{\tiny $B$, $G$, $E$, $\nu$}};
-\node[mechanical] at (5, 0) (mag) {magnetic\_property\\{\tiny $M$, ordering, $T_C$}};
-\node[mechanical] at (8.5, 0) (therm) {thermal\_property\\{\tiny $\Theta_D$, $\kappa$, $C_v$}};
-
-% Row 4: Synthesis/Defect + Surface
-\node[defect] at (-8, -3) (synm) {synthesis\_method\\{\tiny name, category}};
-\node[junction] at (-5.5, -3) (matsyn) {material\_synthesis\\{\tiny T, duration, atm}};
-\node[defect] at (-2, -3) (deftype) {defect\_type\\{\tiny vacancy, antisite}};
-\node[junction] at (1.5, -3) (matdef) {material\_defect\\{\tiny $E_f$, site}};
-
-\node[surface] at (5, -1.5) (surf) {surface\_energy\\{\tiny $(hkl)$, $\gamma$, $\phi$}};
-\node[surface] at (8.5, -1.5) (gb) {grain\_boundary\\{\tiny $\Sigma$, $E_{GB}$}};
-
-% Row 5: Phase/Alloy
-\node[phase] at (1.5, -4.5) (pde) {phase\_diagram\_entry\\{\tiny hull, decomp}};
-\node[phase] at (5, -4.5) (alloy) {alloy\_system\\{\tiny name, components}};
-\node[junction] at (8.5, -4.5) (ma_alloy) {material\_alloy\_\\system\\{\tiny phase, comp type}};
-% FK矢印: コア -> material_entry
-\draw[fk] (comp) -- (me);
-\draw[fk] (struct) -- (me);
-\draw[fk] (ps) -- (me);
-\draw[fk] (calc) -- (me);
-
-% FK: material_entryへの接続
-\draw[fk] (matapp) -- (me);
-\draw[fk] (matref) -- (me);
-\draw[fk] (expmt.east) -- ++(1.5,0) |- ([yshift=-0.1cm]me.west);
-\draw[fk] (bs) -- (me);
-\draw[fk] (dos.south west) -- (me);
-\draw[fk] (elastic) -- (me);
-\draw[fk] (mag.north) -- (me);
-\draw[fk] (therm.north west) -- (me);
-\draw[fk] (surf.north west) -- (me);
-\draw[fk] (gb.north) -- ([xshift=0.3cm]me.south east);
-\draw[fk] (matsyn.north) -- ([xshift=-0.5cm]me.south);
-\draw[fk] (matdef.north) -- ([xshift=0.2cm]me.south);
-\draw[fk] (pde.north) -- ([xshift=-0.3cm]me.south);
-\draw[fk] (ma_alloy.north west) -- (me);
-
-% FK: 計算子の子供
-\draw[fk] (cprop) -- (calc);
-\draw[fk] (bs) -- (calc);
-\draw[fk] (dos.west) -- (calc);
-\draw[fk] (elastic.north east) -- (calc);
-\draw[fk] (therm.north) -- (calc);
-
-% FK: マスターテーブルの参照
-\draw[fk] (eprop) -- (elem);
-\draw[fk] (matref) -- (litref);
-\draw[fk] (expmt) -- (litref);
-\draw[fk] (matsyn) -- (synm);
-\draw[fk] (matsyn) -- (litref);
-\draw[fk] (matdef) -- (deftype);
-\draw[fk] (matapp) -- (appdom);
-\draw[fk] (ma_alloy) -- (alloy);
-\draw[fk] (mprop) -- (expmt);
-\draw[fk] (matdef.north west) to[bend right=15] (elem.south east);
-
-% 自己参照FK
-\draw[->, thick, color=red!60] (appdom.north) to[out=130,in=50,looseness=4]
-  node[above, font=\tiny, text=red!60] {親} (appdom.north east);
-
-% グループラベル
-\node[grouplabel] at (-2, 6.3) {マスターテーブル};
-\node[grouplabel] at (0, 4.8) {コアエンティティ};
-\node[grouplabel] at (-7, -4.2) {合成/欠陥};
-\node[grouplabel] at (7, -2.5) {表面/界面};
-\node[grouplabel] at (5, -5.3) {相図/合金};
-\node[grouplabel] at (-7, 2.5) {文献/応用};
-\node[grouplabel] at (7, 2.5) {電子構造};
-\node[grouplabel] at (5, -0.8) {機械的特性};
-
-\end{tikzpicture}%
-}% end resizebox
-\caption{31テーブル検証データベースのER図。
-  コアテーブル（組成、構造、安定性など）はFK関係を介して中央の\texttt{material\_entry}に直接接続されている。
-  計算された特性と電子構造には2つの経路がある：
-  直接FKと\texttt{calculation}を介した経路である。
-  矢印はFK参照の方向を示している。}
-\label{fig:er}
-\end{figure*}
 
 % =====================================================================
 \section{結果の詳細}
@@ -1623,13 +1634,6 @@ SELECT * の禁止、JOIN時のDISTINCT推奨、UNION/INTERSECT句の独立検�
 
 本節は、主論文セクション~\ref{sec:results}の詳細な表・図を提供する。
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{figures/ablation_bar.png}
-\caption{アブレーションスタディの棒グラフ（5回の平均 $\pm$ SD）。
-赤い棒は統計的に有意な精度低下を示す条件を示す（$^{***}$: $p<0.001$）。星印の検定は表~\ref{tab:ablation}と同一の正確符号反転（並べ替え）検定に基づく。†は$n_\mathrm{eff}$が小さく検出力不足のため有意性判定を行わない条件（no\_guard・no\_graph）を示す。}
-\label{fig:ablation_bar}
-\end{figure}
 
 \begin{table}[t]
 \centering
@@ -2003,7 +2007,7 @@ $E_\text{hull} \leq 0.05$~eV/atomを満たす162の安定/準安定L1$_2$候補�
     手法 & SuperCon~\cite{ishii2023supercon} & はい & いいえ & はい & SPARQL & RDFオントロジー \\
     手法 & PoLyInfo~\cite{ishii2024polyinfo} & はい & いいえ & はい & SPARQL & BFO準拠 \\
     \midrule
-    手法 & 我々の手法 & はい & はい & はい & SQL & FKトラバーサル + 材料辞書 \\
+    手法 & 提案手法 & はい & はい & はい & SQL & FKトラバーサル + 材料辞書 \\
     \bottomrule
   \end{tabularx}
 \end{table*}
@@ -2013,7 +2017,7 @@ $E_\text{hull} \leq 0.05$~eV/atomを満たす162の安定/準安定L1$_2$候補�
 
 多段階計算に加えて、列間比較は材料研究で頻繁に遭遇する代表的なクエリパターンである。「値Aが値Bより小さいエントリを見つける」という形式のクエリは、同じ行内の異なる列の値を比較する条件式を用いたSQL生成を必要とするため、単一の閾値フィルタリング（\texttt{WHERE col > 0.5}）とは異なる（\texttt{WHERE col\_a > col\_b}）。
 
-私たちのパイプラインは、3種類の列間比較パターンをカバーする少数ショットの例を提供する。  
+本パイプラインは、3種類の列間比較パターンをカバーする少数ショットの例を提供する。  
 \begin{enumerate}  
   \item テーブル内比較：  
     同じテーブル内の2つの列の直接比較。  
@@ -2028,14 +2032,14 @@ $E_\text{hull} \leq 0.05$~eV/atomを満たす162の安定/準安定L1$_2$候補�
     例：\texttt{HAVING MAX(electronegativity) - MIN(electronegativity) > 0.5}。  
 \end{enumerate}
 
-これらのパターンは、定数比較（\texttt{WHERE col > 0.5}）に比べてLLMが正しく生成するのが難しい。特にテーブル間比較は、スキーマ情報から各比較列がどのテーブルに属するかを正確に特定する必要がある。私たちは、主に列間比較パターンを追加して少数ショットの例プールを45例に拡張し、LLMがそのようなパターンを学習できるようにした。
+これらのパターンは、定数比較（\texttt{WHERE col > 0.5}）に比べてLLMが正しく生成するのが難しい。特にテーブル間比較は、スキーマ情報から各比較列がどのテーブルに属するかを正確に特定する必要がある。本研究では、主に列間比較パターンを追加して少数ショットの例プールを45例に拡張し、LLMがそのようなパターンを学習できるようにした。
 
 
 \subsection{RDBスキーマ設計とText-to-SQLコスト（詳細）}
 
 RDB自体のテーブル構造はText-to-SQL精度を決める上流要因である。
 
-高度に正規化されたスキーマでは、単一のクエリに対して複数のテーブルJOINが必要であり、LLMが生成しなければならないSQLの複雑さが増す。私たちのデータベースにおける生成エンタルピー計算（セクション~\ref{sec:multistep_query}）では、\texttt{phase\_stability}、\texttt{composition}、および\texttt{pure\_element\_reference}の3テーブルJOINが必要であり、さらにCTEベースの集約計算が必要であった。少数ショットの例なしでの精度の$-$5.4\,ppの低下は、より複雑なテーブル間結合パターンがLLMによる正確なSQL生成をより困難にすることを確認している。
+高度に正規化されたスキーマでは、単一のクエリに対して複数のテーブルJOINが必要であり、LLMが生成しなければならないSQLの複雑さが増す。本データベースにおける生成エンタルピー計算（セクション~\ref{sec:multistep_query}）では、\texttt{phase\_stability}、\texttt{composition}、および\texttt{pure\_element\_reference}の3テーブルJOINが必要であり、さらにCTEベースの集約計算が必要であった。少数ショットの例なしでの精度の$-$5.4\,ppの低下は、より複雑なテーブル間結合パターンがLLMによる正確なSQL生成をより困難にすることを確認している。
 
 T2SQLを前提とする場合、以下のスキーマ設計戦略が適用できる：
 \begin{enumerate}
