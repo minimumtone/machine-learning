@@ -596,16 +596,21 @@ class WorkflowXGB(BaseWorkflow):
 
 
 class WorkflowENS(BaseWorkflow):
-    """Seed-varied ensemble workflow for uncertainty quantification.
+    """Seed-varied GradientBoosting ensemble for uncertainty quantification.
 
-    Uses Ridge regression as the base model (not XGB) so that WF-ENS
-    produces predictions that are genuinely different from WF-XGB.
-    With quick=True, WF-XGB uses the same fixed parameters as the XGB
-    members would, making the two workflows produce identical results —
-    which defeats the purpose of having both.  Ridge-based ensemble:
-      - is fast (no HPO grid),
-      - gives distinct predictions from any tree-based workflow,
-      - still provides meaningful prediction uncertainty via seed variance.
+    Each member uses a GradientBoostingRegressor with a different random_state.
+    GBR uses stochastic subsampling (subsample < 1.0), so different seeds
+    produce genuinely different predictions — unlike Ridge which is fully
+    deterministic and would make all members identical.
+
+    Why GradientBoosting instead of Ridge or XGB:
+      - Ridge is deterministic → all members predict identically → ENS == LIN
+      - XGB (same params as WF-XGB) → ENS == XGB
+      - GradientBoostingRegressor with subsample=0.8:
+          * non-deterministic across seeds (stochastic gradient boosting)
+          * distinct from both linear (LIN/LASSO/ARD) and XGB results
+          * fast with quick=True (n_estimators=50, max_depth=3)
+          * still provides meaningful pred uncertainty via inter-member std
     """
 
     name = "WF-ENS"
@@ -613,7 +618,7 @@ class WorkflowENS(BaseWorkflow):
     def __init__(
         self,
         n_members: int = 5,
-        base_workflow: Optional[str] = "ridge",  # was "xgb" — changed to avoid duplicate results
+        base_workflow: Optional[str] = "gbr",   # GradientBoosting — truly stochastic
         quick: bool = False,
         dim_reduction: bool = True,
     ) -> None:
@@ -623,6 +628,7 @@ class WorkflowENS(BaseWorkflow):
         self._dim_reduction = dim_reduction
 
     def _make_member(self, seed: int, n_features: int = 132) -> Pipeline:
+        from sklearn.ensemble import GradientBoostingRegressor
         if self._base_workflow == "xgb":
             model = _make_xgb_or_fallback(
                 seed,
@@ -631,9 +637,17 @@ class WorkflowENS(BaseWorkflow):
                 max_depth=4,
                 learning_rate=0.1,
             )
-            return Pipeline([("model", model)])
+            return Pipeline([("scaler", StandardScaler()), ("model", model)])
         else:
-            model = Ridge(alpha=1.0)
+            # GradientBoostingRegressor: subsample=0.8 → stochastic → seed matters
+            n_est = 50 if self._quick else 200
+            model = GradientBoostingRegressor(
+                n_estimators=n_est,
+                max_depth=3,
+                learning_rate=0.1,
+                subsample=0.8,          # stochastic subsampling: seed changes predictions
+                random_state=seed,
+            )
             steps: List[Tuple[str, Any]] = [
                 ("scaler", StandardScaler()),
                 *_make_pca_step(n_features, self._dim_reduction),

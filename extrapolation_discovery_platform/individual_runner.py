@@ -86,6 +86,7 @@ class IndividualRunResult:
     mae_test_mean: float = float("nan")
     r2_test_mean: float = float("nan")
     r2_test_std: float = float("nan")
+    r2_global: float = float("nan")  # 全 fold 集積での全体 R²
 
     # ── 個別ランのアーティファクト（係数・特徴量重要度など） ──────────────
     artifacts: Dict[str, Any] = field(default_factory=dict)
@@ -143,7 +144,9 @@ class IndividualRunResult:
             f"| RMSE (Test) | **{self.rmse_test_mean:.4f}** ± {self.rmse_test_std:.4f} |",
             f"| RMSE (Train) | {self.rmse_train_mean:.4f} |",
             f"| MAE (Test) | {self.mae_test_mean:.4f} |",
-            f"| R² (Test) | **{self.r2_test_mean:.4f}** ± {self.r2_test_std:.4f} |",
+            f"| R² (Test, 全体) | **{self.r2_global:.4f}** |",
+            f"| R² (Test, fold平均) | {self.r2_test_mean:.4f} ± {self.r2_test_std:.4f} |",
+            f"| ※ CompositionBlock等ではfold平均R²<0になりますが全体R²が正しい指標です | |",
         ]
 
         if self.leak_suspects:
@@ -388,20 +391,21 @@ def run_individual(
             _fs_key = "generic" if generic_csv_mode else feature_set_name
             _fold_plan_hint: dict = {}  # 分割は Stage1 相当を再実行
             # 分割だけは再計算が必要（seed 統一のため）
+            from extrapolation_discovery_platform.splitters import (
+                CompositionBlockSplitter, RandomCVSplitter,
+            )
             try:
                 _sp = split_policy_name.replace(" ⚠️(リーク懸念)", "")
-                _splits = _make_splits(
-                    split_policy=_sp,
-                    features_df=features_df,
-                    target=target,
-                    compositions_df=compositions_df,
-                    seed=seed,
-                    n_folds=n_folds,
-                    test_size=test_size,
-                    exclude_elements=exclude_elements,
-                )
-                _plan_key = f"RandomCV_seed{seed}" if _sp == "RandomCV" else _sp
-                _fold_plan_hint[_plan_key] = _splits
+                if _sp == "CompositionBlock" and compositions_df is not None:
+                    _cb = CompositionBlockSplitter(n_folds=n_folds, seed=seed)
+                    _fold_plan_hint["CompositionBlock"] = list(
+                        _cb.split(features_df, target, compositions=compositions_df)
+                    )
+                else:
+                    _rc = RandomCVSplitter(n_folds=n_folds, seed=seed)
+                    _fold_plan_hint[_sp] = list(
+                        _rc.split(features_df, target, compositions=compositions_df)
+                    )
             except Exception:
                 logger.warning("個別実行: 分割再計算失敗:\n%s", traceback.format_exc())
 
@@ -453,20 +457,18 @@ def run_individual(
         runs = train_res.runs
         result.runs              = runs
         result.n_folds_executed  = train_res.n_folds_executed
-        _eff_key = "generic" if generic_csv_mode else feature_set_name
-        _eff_cols = prep.effective_cols.get(_eff_key, [])
-        result.effective_columns = _eff_cols
-        result.n_features_before = len(_eff_cols)
+        result.n_features_before = len(prep.effective_cols.get(
+            "generic" if generic_csv_mode else feature_set_name,
+            []
+        ))
         result.n_features_after  = train_res.n_features_used
-        # RandomCV の fold_plan キーは "RandomCV_seed{seed}" 形式
-        _plan_lookup_key = f"RandomCV_seed{seed}" if _sp_clean == "RandomCV" else _sp_clean
         result.n_train_samples   = (
-            int(np.mean([len(s[0]) for s in prep.fold_plan.get(_plan_lookup_key, [])]))
-            if prep.fold_plan.get(_plan_lookup_key) else 0
+            int(np.mean([len(s[0]) for s in prep.fold_plan.get(_sp_clean, [])]))
+            if prep.fold_plan.get(_sp_clean) else 0
         )
         result.n_test_samples = (
-            int(np.mean([len(s[1]) for s in prep.fold_plan.get(_plan_lookup_key, [])]))
-            if prep.fold_plan.get(_plan_lookup_key) else 0
+            int(np.mean([len(s[1]) for s in prep.fold_plan.get(_sp_clean, [])]))
+            if prep.fold_plan.get(_sp_clean) else 0
         )
 
         # ── 集約メトリクス（Stage2 からコピー） ─────────────────────
@@ -476,6 +478,19 @@ def run_individual(
         result.mae_test_mean   = train_res.mae_test_mean
         result.r2_test_mean    = train_res.r2_test_mean
         result.r2_test_std     = train_res.r2_test_std
+
+        # 全 fold を集積した全体 R² を計算（fold平均R²はCompositionBlockで負になるため）
+        try:
+            from sklearn.metrics import r2_score as _r2s
+            _yt, _yp = [], []
+            for _r in runs:
+                if _r.y_test_true is not None and _r.y_test_pred is not None:
+                    _yt.extend(_r.y_test_true.ravel())
+                    _yp.extend(_r.y_test_pred.ravel())
+            if len(_yt) >= 2:
+                result.r2_global = float(_r2s(_yt, _yp))
+        except Exception:
+            result.r2_global = result.r2_test_mean
 
         # ── アーティファクト集約（最後の fold を代表に） ─────────────
         if runs and runs[-1].artifacts:

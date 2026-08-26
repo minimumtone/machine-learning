@@ -160,6 +160,8 @@ def stage1_preprocess(
     leak_auto_exclude: bool = True,
     leak_corr_threshold: float = 0.85,
     generic_csv_mode: bool = False,
+    n_folds: int = 5,
+    test_size: float = 0.2,
 ) -> PreprocessResult:
     """Stage 1: 前処理。
 
@@ -181,6 +183,12 @@ def stage1_preprocess(
     active_policies : list of str
         有効にする分割ポリシー。["CompositionBlock", "ElementExclusion"] が推奨。
         "RandomCV" を含めるとデータリーク懸念あり（デフォルト無効）。
+    n_folds : int
+        分割数（デフォルト 5）。2〜10 の範囲で指定する。
+        小さいほど1 fold あたりの訓練データが増え、大きいほど評価が安定する。
+    test_size : float
+        Holdout 分割時のテストデータ比率（デフォルト 0.2 = 20%）。
+        CompositionBlock / ElementExclusion / RandomCV では無視される。
     """
     t0 = time.time()
     result = PreprocessResult(active_policies=list(active_policies))
@@ -251,7 +259,7 @@ def stage1_preprocess(
         if "CompositionBlock" in active_policies:
             if compositions_df is not None:
                 try:
-                    cb = CompositionBlockSplitter(n_folds=5, seed=_seed0)
+                    cb = CompositionBlockSplitter(n_folds=n_folds, seed=_seed0)
                     folds = list(cb.split(features_df, target, compositions=compositions_df))
                     if folds:
                         fold_plan["CompositionBlock"] = folds
@@ -280,24 +288,11 @@ def stage1_preprocess(
             else:
                 logger.warning("Stage1: ElementExclusion — compositions_df が None")
 
-        if "Holdout" in active_policies:
-            try:
-                n = len(features_df)
-                rng = np.random.default_rng(_seed0)
-                shuffled = rng.permutation(n)
-                n_test = max(1, int(n * 0.2))
-                test_idx = shuffled[:n_test]
-                train_idx = shuffled[n_test:]
-                fold_plan["Holdout"] = [(train_idx, test_idx)]
-                logger.info("Stage1: Holdout 1 fold (test=%d, train=%d)", n_test, n - n_test)
-            except Exception:
-                logger.warning("Stage1: Holdout 分割失敗:\n%s", traceback.format_exc())
-
         if "RandomCV" in active_policies:
             # RandomCV は seed ごとに別キーで保持（evaluation.py の base_rmse 計算で参照）
             for seed in seeds:
                 try:
-                    rc = RandomCVSplitter(n_folds=5, seed=seed)
+                    rc = RandomCVSplitter(n_folds=n_folds, seed=seed)
                     folds = list(rc.split(features_df, target, compositions=compositions_df))
                     if folds:
                         fold_plan[f"RandomCV_seed{seed}"] = folds
@@ -306,13 +301,27 @@ def stage1_preprocess(
                     logger.warning("Stage1: RandomCV seed=%d 失敗:\n%s",
                                    seed, traceback.format_exc())
 
+        if "Holdout" in active_policies:
+            # Holdout: train/test を 1 回のみ分割（test_size で比率を制御）
+            try:
+                from sklearn.model_selection import train_test_split as _tts
+                _seed0 = seeds[0] if seeds else 42
+                _idx = list(range(len(features_df)))
+                _tr, _te = _tts(_idx, test_size=test_size,
+                                 random_state=_seed0, shuffle=True)
+                fold_plan["Holdout"] = [(np.array(_tr), np.array(_te))]
+                logger.info("Stage1: Holdout train=%d test=%d (test_size=%.2f)",
+                            len(_tr), len(_te), test_size)
+            except Exception:
+                logger.warning("Stage1: Holdout 分割失敗:\n%s", traceback.format_exc())
+
         # 全ポリシーで fold が空の場合のフォールバック
         if not fold_plan:
             logger.warning(
                 "Stage1: 全分割ポリシーで fold 0。"
                 "RandomCV seed=%d でフォールバック", _seed0
             )
-            rc_fb = RandomCVSplitter(n_folds=5, seed=_seed0)
+            rc_fb = RandomCVSplitter(n_folds=n_folds, seed=_seed0)
             folds = list(rc_fb.split(features_df, target, compositions=compositions_df))
             if folds:
                 fold_plan[f"RandomCV_seed{_seed0}"] = folds
@@ -347,18 +356,29 @@ def stage1_preprocess(
                     )
                     fs_summaries[fs_key] = summary
 
-                    if summary.consensus_features and len(summary.consensus_features) >= 2:
-                        # コンセンサス特徴量（2手法以上で選択）を優先採用
-                        effective_cols[fs_key] = summary.consensus_features
+                    # コンセンサス特徴量（2手法以上で選択）が十分あれば採用
+                    # ただし元の列数の 20% 未満になる場合はスキップ
+                    min_cols = max(3, len(cols) // 5)
+                    consensus = summary.consensus_features or []
+                    if len(consensus) >= min_cols:
+                        effective_cols[fs_key] = consensus
                         logger.info("Stage1 特徴量選択 [%s]: %d→%d (consensus)",
                                     fs_key, len(cols), len(effective_cols[fs_key]))
                     else:
-                        # コンセンサスが少ない場合は Lasso 単独にフォールバック
+                        # Lasso フォールバック：最低 min_cols 列を保証
                         lasso = summary.results.get("Lasso")
-                        if lasso and lasso.selected_features and len(lasso.selected_features) >= 2:
-                            effective_cols[fs_key] = lasso.selected_features
+                        lasso_feats = (lasso.selected_features if lasso else []) or []
+                        if len(lasso_feats) >= min_cols:
+                            effective_cols[fs_key] = lasso_feats
                             logger.info("Stage1 特徴量選択 [%s]: %d→%d (lasso fallback)",
                                         fs_key, len(cols), len(effective_cols[fs_key]))
+                        else:
+                            # 選択結果が不十分 → 全列を維持（特徴量選択をスキップ）
+                            logger.info(
+                                "Stage1 特徴量選択 [%s]: 選択結果が不十分 "
+                                "(consensus=%d, lasso=%d, min_required=%d) — 全 %d 列を維持",
+                                fs_key, len(consensus), len(lasso_feats), min_cols, len(cols),
+                            )
                 except Exception:
                     logger.warning("Stage1 特徴量選択失敗 [%s] — 全列を維持:\n%s",
                                    fs_key, traceback.format_exc())
