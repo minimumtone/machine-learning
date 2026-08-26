@@ -288,7 +288,7 @@ GPT-5.5は1回の生成呼び出しで上位$n$個（デフォルト $n$-best = 
 \subsection{SQLGuard}
 \label{sec:sqlguard}
 
-SQLGuard は、SQLのパース・AST解析・方言変換のためのPython製SQLツールキットである sqlglot~\cite{sqlglot2023} によって生成された SQL を抽象構文木（AST）にパースし、その AST ノード（\texttt{Statement}, \texttt{Select}, \texttt{Column}, \texttt{Table}, \texttt{Join} 等）をトラバースすることで、安全性と一貫性を静的に検証する。sqlglot による AST 解析により、テキストレベルでは判別しにくいマルチステートメントの混入、テーブル・カラムの参照解決、サブクエリのネスト深さを構造的に確認できる。いずれかのチェックを満たさない SQL は実行前に棄却される。検証は、マルチステートメント検出、禁止キーワード（DML/DDL）検出、SELECT文限定確認、危険関数禁止、システムテーブル参照禁止、CTE本体のSELECT限定確認、恒真条件（インジェクションパターン）検出、LIMIT自動追加、テーブル・カラム存在確認、FK整合性JOIN確認、サブクエリ深さ制限、算術演算の型検査の13のチェックから成る（全リストは補足資料~\ref{sec:sup_method_details}）。チェック数は実装（\texttt{validate\_sql()}が呼ぶ\texttt{check\_*}関数群）から自動集計され、\texttt{paper\_data.json}の\texttt{safety.n\_sqlguard\_checks}と常に一致する。なお、SELECT * の禁止や UNION/INTERSECT の独立検証は現行実装には含まれない（カラム参照は許可カラム照合の範囲で検証される）。
+SQLGuard は、SQLのパース・AST解析・方言変換のためのPython製SQLツールキットである sqlglot~\cite{sqlglot2023} によって生成された SQL を抽象構文木（AST）にパースし、その AST ノード（\texttt{Statement}, \texttt{Select}, \texttt{Column}, \texttt{Table}, \texttt{Join} 等）をトラバースすることで、安全性と一貫性を静的に検証する。sqlglot による AST 解析により、テキストレベルでは判別しにくいマルチステートメントの混入、テーブル・カラムの参照解決、サブクエリのネスト深さを構造的に確認できる。いずれかのチェックを満たさない SQL は実行前に棄却される。検証は、マルチステートメント検出、禁止キーワード（DML/DDL）検出、SELECT文限定確認、危険関数禁止、システムテーブル参照禁止、CTE本体のSELECT限定確認、恒真条件（インジェクションパターン）検出、LIMIT自動追加、テーブル・カラム存在確認、FK整合性JOIN確認、サブクエリ深さ制限、算術演算の型検査の13のチェックから成る（全リストは補足資料~\ref{sec:sup_method_details}）。チェック数は実装（\texttt{validate\_sql()}が呼ぶ\texttt{check\_*}関数群）から自動集計され、数値集約データと常に一致する。なお、SELECT * の禁止や UNION/INTERSECT の独立検証は現行実装には含まれない（カラム参照は許可カラム照合の範囲で検証される）。
 
 SQLGuardの目的は、精度向上ではなく、実行前の安全性と整合性の検証である（セクション~\ref{sec:injection_safety}を参照）。
 
@@ -789,7 +789,7 @@ L1$_2$型金属間化合物のDFT計算データは、Open Quantum Materials Dat
 \vspace{1.0em}
 
 \noindent
-この補足資料は、主論文で提案したText-to-SQLパイプラインの検証と評価に関する詳細情報を提供する。セクションS1では、すべてのユニットテストカテゴリとその検証の焦点を示す。セクションS2では、39の回帰テストケースをリストする。セクションS3では、3つの方法構成にわたる代表的なクエリの生成されたSQL例を比較する。セクションS4では、Ni$_3$Al近傍格子定数候補（29のうち14の代表的なエントリ）を示す。セクションS5では、安定したL1$_2$候補の生成エネルギーランキングを提示する。セクションS6では、SQLインジェクションおよび安全性テスト結果に関する補足情報を提供する。セクションS7では、LLMモード（GPT-5.5）の構成パラメータとプロンプト構造を説明する。セクションS8では、すべての100の評価クエリに対する詳細な結果（クエリテキスト、精度、レイテンシ）をリストする。セクションS9では、7つのアブレーション条件にわたる異なる結果を持つクエリを比較する。セクションS10では、独自に設計されたクエリプールに対する詳細な結果を報告する。アブレーション、転送、およびコア検証メトリクスは\texttt{paper\_data.json}から取得され、感度分析、モデル比較、および多軸メトリクスはそれぞれのソースJSON/CSV評価出力からフォーマットされる。最終セクション（\ref{sec:sup_workflow}）では、データ準備から結果の解釈までの全ワークフローを、同梱スクリプトと一対一に対応する形で記述する。
+この補足資料は、主論文で提案したText-to-SQLパイプラインの検証と評価に関する詳細情報を提供する。セクションS1では、すべてのユニットテストカテゴリとその検証の焦点を示す。セクションS2では、39の回帰テストケースをリストする。セクションS3では、3つの方法構成にわたる代表的なクエリの生成されたSQL例を比較する。セクションS4では、Ni$_3$Al近傍格子定数候補（29のうち14の代表的なエントリ）を示す。セクションS5では、安定したL1$_2$候補の生成エネルギーランキングを提示する。セクションS6では、SQLインジェクションおよび安全性テスト結果に関する補足情報を提供する。セクションS7では、LLMモード（GPT-5.5）の構成パラメータとプロンプト構造を説明する。セクションS8では、すべての100の評価クエリに対する詳細な結果（クエリテキスト、精度、レイテンシ）をリストする。セクションS9では、7つのアブレーション条件にわたる異なる結果を持つクエリを比較する。セクションS10では、独自に設計されたクエリプールに対する詳細な結果を報告する。アブレーション、転送、およびコア検証メトリクスは数値集約データから取得され、感度分析、モデル比較、および多軸メトリクスはそれぞれの保存済み評価出力からフォーマットされる。最終セクション（\ref{sec:sup_workflow}）では、データ準備から結果の解釈までの全ワークフローを、同梱スクリプトと一対一に対応する形で記述する。
 
 % =====================================================================
 
@@ -1747,7 +1747,7 @@ $k$ & 全体 & Easy & Medium & Hard & VH & レイテンシ (s) \\
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{figures/fewshot_sensitivity.png}
+\includegraphics[width=0.6\columnwidth]{figures/fewshot_sensitivity.png}
 \caption{少数ショット数 $k$ の関数としての難易度ティアごとの精度。
 Easy/Medium ティアは $k$ によらず飽和し、
 VH ティアは $k=3$ でピーク（55.3\%）に達し、
@@ -1785,7 +1785,7 @@ $k$ を1から3に増やすと、全体で $+$2.0\,pp の改善が得られ、�
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{figures/dict_sensitivity.png}
+\includegraphics[width=0.6\columnwidth]{figures/dict_sensitivity.png}
 \caption{ドメイン辞書サイズと難易度ティアごとの精度の関係。
 辞書サイズの影響はVHティアで最も顕著である。}
 \label{fig:dict_size}
@@ -1819,7 +1819,7 @@ GPT-4o  & 85.5 & 100.0 & 93.3 & 88.8 & 54.6 &  4.0 \\
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{figures/model_comparison.png}
+\includegraphics[width=0.6\columnwidth]{figures/model_comparison.png}
 \caption{難易度ティアごとのGPT-5.5とGPT-4oの精度比較。
 全体・各ティアとも差は小さく、GPT-4oはGPT-5.5のfull（5ラン平均）と同等である。}
 \label{fig:model_comp}
@@ -1829,7 +1829,7 @@ GPT-4oは4.0\,sのレイテンシを達成し（GPT-5.5の約1/7）、全体85.5
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{figures/multiaxis_radar.png}
+\includegraphics[width=0.6\columnwidth]{figures/multiaxis_radar.png}
 \caption{難易度ティアごとのマルチ軸評価レーダーチャート。
 構文と実行の有効性はすべてのティアで100\%である。
 VHティアは正確な一致が0\%だが、60.2\%のリコールは多くの部分的に正しい結果を示している。}
@@ -1863,7 +1863,7 @@ VHティアは正確な一致が0\%だが、60.2\%のリコールは多くの部
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{figures/error_distribution.png}
+\includegraphics[width=0.6\columnwidth]{figures/error_distribution.png}
 \caption{保存されたfull条件ラン（多軸評価ラン）でリコール0.8未満だった15件における誤差タイプの分布。1ケースに複数の誤差タイプを付与し得るため、ラベルの合計（20）はケース数（15）を上回る。}
 \label{fig:error_dist}
 \end{figure}
