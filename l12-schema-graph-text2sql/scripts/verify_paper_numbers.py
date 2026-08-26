@@ -51,10 +51,13 @@ UNCITED_JSON_PATHS = (
     "database.n_unique_formulas",
     "ablation.cte_query_results.no_dict_cte_accuracy_pct",
     "transfer_evaluation_variants.C_obfuscated.by_difficulty_pct",
+    "transfer_evaluation_variants.A_prototype_expansion.avg_latency_s",
     "transfer_evaluation_variants.D_materials_project.avg_latency_s",
     "jp_reranker_comparison.jp_xsmall_latency_s",
     "jp_reranker_comparison.ms_marco_latency_s",
     "cte_evaluation_15.avg_latency_s",
+    # aggregate mean; the manuscript tables cite the per-difficulty values
+    "multiaxis.aggregate_pct.select_column_precision_mean",
 )
 
 
@@ -266,6 +269,8 @@ def main(argv: list[str] | None = None) -> int:
             "p_value" in p
             or ".stats_v2." in p  # full precision; cited rounded in the table
             or p.startswith(UNCITED_JSON_PATHS)
+            # the ablation table cites SDs only for overall and VH
+            or p.endswith(("easy_std", "medium_std", "hard_std"))
             for p in paths
         )
     ]

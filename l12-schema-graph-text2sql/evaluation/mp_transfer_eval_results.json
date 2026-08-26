@@ -3,118 +3,182 @@
   "n_queries": 15,
   "summary": {
     "overall": 1.0,
+    "overall_recall": 1.0,
     "by_difficulty": {
       "easy": 1.0,
       "medium": 1.0,
       "hard": 1.0,
       "very_hard": 1.0
     },
-    "avg_latency": 15.826666666666664
+    "avg_latency": 26.39333333333333,
+    "overall_precision": 1.0,
+    "overall_f1": 1.0,
+    "overall_exact_match": 1.0
   },
   "results": [
     {
       "qid": "q_mp_001",
       "difficulty": "easy",
       "accuracy": 1.0,
-      "latency_s": 14.2,
-      "sql": "SELECT COUNT(*) AS entry_count\nFROM mp_entries\nLIMIT 10000;"
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 1.0,
+      "latency_s": 17.0,
+      "sql": "SELECT COUNT(*) AS entry_count FROM mp_entries LIMIT 10000;"
     },
     {
       "qid": "q_mp_002",
       "difficulty": "easy",
       "accuracy": 1.0,
-      "latency_s": 25.6,
-      "sql": "SELECT formula\nFROM mp_entries\nWHERE lattice_a < 5\nORDER BY formula\nLIMIT 3;"
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 1.0,
+      "latency_s": 40.2,
+      "sql": "SELECT DISTINCT formula\nFROM mp_entries\nWHERE lattice_a < 5\nORDER BY formula\nLIMIT 3;"
     },
     {
       "qid": "q_mp_003",
       "difficulty": "easy",
       "accuracy": 1.0,
-      "latency_s": 10.4,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 1.0,
+      "latency_s": 18.6,
       "sql": "SELECT DISTINCT e.formula\nFROM mp_entries e\nJOIN mp_element_ratios r ON e.entry_id = r.entry_id\nWHERE r.element = 'Ni'\nORDER BY e.formula\nLIMIT 5;"
     },
     {
       "qid": "q_mp_004",
       "difficulty": "easy",
       "accuracy": 1.0,
-      "latency_s": 14.0,
-      "sql": "SELECT COUNT(*) AS stable_entry_count\nFROM mp_entries\nWHERE energy_above_hull = 0\nLIMIT 10000;"
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 1.0,
+      "latency_s": 15.2,
+      "sql": "SELECT COUNT(*) AS thermodynamically_stable_entry_count\nFROM mp_entries\nWHERE energy_above_hull = 0\nLIMIT 10000;"
     },
     {
       "qid": "q_mp_005",
       "difficulty": "easy",
       "accuracy": 1.0,
-      "latency_s": 12.5,
-      "sql": "SELECT COUNT(DISTINCT symbol) AS element_type_count\nFROM mp_elements\nLIMIT 10000;"
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 1.0,
+      "latency_s": 21.1,
+      "sql": "SELECT COUNT(DISTINCT symbol) AS element_count FROM mp_elements LIMIT 10000;"
     },
     {
       "qid": "q_mp_006",
       "difficulty": "medium",
       "accuracy": 1.0,
-      "latency_s": 13.1,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 1.0,
+      "latency_s": 23.1,
       "sql": "SELECT crystal_system, COUNT(*) AS material_count\nFROM mp_entries\nGROUP BY crystal_system\nORDER BY material_count DESC\nLIMIT 10000;"
     },
     {
       "qid": "q_mp_007",
       "difficulty": "medium",
       "accuracy": 1.0,
-      "latency_s": 15.3,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 1.0,
+      "latency_s": 27.6,
       "sql": "SELECT COUNT(*) AS material_count\nFROM mp_entries\nWHERE chemsys = 'Al-Ni'\nLIMIT 10000;"
     },
     {
       "qid": "q_mp_008",
       "difficulty": "medium",
       "accuracy": 1.0,
-      "latency_s": 11.4,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 1.0,
+      "latency_s": 21.9,
       "sql": "SELECT COUNT(*) FILTER (WHERE band_gap > 0) * 100.0 / COUNT(*) AS band_gap_percentage\nFROM mp_entries\nLIMIT 10000;"
     },
     {
       "qid": "q_mp_009",
       "difficulty": "medium",
       "accuracy": 1.0,
-      "latency_s": 10.1,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 1.0,
+      "latency_s": 21.5,
       "sql": "SELECT formula FROM mp_entries ORDER BY volume DESC LIMIT 1;"
     },
     {
       "qid": "q_mp_010",
       "difficulty": "hard",
       "accuracy": 1.0,
-      "latency_s": 15.2,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 1.0,
+      "latency_s": 27.4,
       "sql": "SELECT e.formula, e.energy_above_hull\nFROM mp_entries e\nJOIN mp_element_ratios r ON e.entry_id = r.entry_id\nWHERE r.element = 'Co'\nORDER BY e.energy_above_hull ASC\nLIMIT 1;"
     },
     {
       "qid": "q_mp_011",
       "difficulty": "hard",
       "accuracy": 1.0,
-      "latency_s": 20.0,
-      "sql": "SELECT DISTINCT ON (chemsys) chemsys, formula, energy_above_hull\nFROM mp_entries\nWHERE chemsys IS NOT NULL\nORDER BY chemsys, energy_above_hull ASC, formula\nLIMIT 10000;"
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 1.0,
+      "latency_s": 34.2,
+      "sql": "SELECT chemsys, formula, energy_above_hull\nFROM (\n  SELECT\n    chemsys,\n    formula,\n    energy_above_hull,\n    ROW_NUMBER() OVER (\n      PARTITION BY chemsys\n      ORDER BY energy_above_hull ASC, formula ASC\n    ) AS rn\n  FROM mp_entries\n) AS ranked\nWHERE rn = 1\nORDER BY chemsys\nLIMIT 10000;"
     },
     {
       "qid": "q_mp_012",
       "difficulty": "hard",
       "accuracy": 1.0,
-      "latency_s": 12.3,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 1.0,
+      "latency_s": 31.8,
       "sql": "SELECT COUNT(*) AS cubic_band_gap_gt_1ev_count\nFROM mp_entries\nWHERE crystal_system = 'Cubic'\n  AND band_gap > 1\nLIMIT 10000;"
     },
     {
       "qid": "q_mp_013",
       "difficulty": "very_hard",
       "accuracy": 1.0,
-      "latency_s": 32.5,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 1.0,
+      "latency_s": 37.7,
       "sql": "SELECT formula, band_gap\nFROM mp_entries\nWHERE chemsys = 'Co-Ti'\nORDER BY band_gap DESC NULLS LAST\nLIMIT 1;"
     },
     {
       "qid": "q_mp_014",
       "difficulty": "very_hard",
       "accuracy": 1.0,
-      "latency_s": 16.6,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 1.0,
+      "latency_s": 28.9,
       "sql": "SELECT AVG(e.energy_above_hull) AS avg_energy_above_hull\nFROM mp_entries e\nJOIN mp_element_ratios r1 ON e.entry_id = r1.entry_id\nJOIN mp_element_ratios r2 ON e.entry_id = r2.entry_id\nWHERE r1.element = 'Co'\n  AND r2.element = 'Ti'\nLIMIT 10000;"
     },
     {
       "qid": "q_mp_015",
       "difficulty": "very_hard",
       "accuracy": 1.0,
-      "latency_s": 14.2,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 1.0,
+      "latency_s": 29.7,
       "sql": "SELECT crystal_system, AVG(band_gap) AS average_band_gap\nFROM mp_entries\nGROUP BY crystal_system\nORDER BY average_band_gap DESC\nLIMIT 10000;"
     }
   ]

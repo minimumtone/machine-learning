@@ -144,6 +144,7 @@ def run_k_condition(
                     "difficulty": difficulty,
                     "accuracy": acc,
                     "latency_s": round(elapsed, 1),
+                    "sql": sql,
                 })
             except Exception as e:
                 elapsed = time.time() - t0
@@ -153,6 +154,7 @@ def run_k_condition(
                     "difficulty": difficulty,
                     "accuracy": 0.0,
                     "latency_s": round(elapsed, 1),
+                    "sql": "",
                 })
     finally:
         fs_mod.retrieve_similar = orig_retrieve_fs

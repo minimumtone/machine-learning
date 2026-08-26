@@ -283,21 +283,21 @@
     [
       "Fe3Si",
       0.007,
-      true,
+      false,
       "bulk_modulus",
       151.92
     ],
     [
       "Fe3Si",
       0.007,
-      true,
+      false,
       "shear_modulus",
       71.68
     ],
     [
       "Fe3Si",
       0.007,
-      true,
+      false,
       "youngs_modulus",
       231.05
     ],
@@ -325,7 +325,7 @@
     [
       "Fe3Ti",
       0.0064,
-      true,
+      false,
       "bulk_modulus",
       119.9
     ],
@@ -339,7 +339,7 @@
     [
       "Fe3Ti",
       0.0064,
-      true,
+      false,
       "shear_modulus",
       58.1
     ],
@@ -353,7 +353,7 @@
     [
       "Fe3Ti",
       0.0064,
-      true,
+      false,
       "youngs_modulus",
       170.04
     ],
@@ -535,7 +535,7 @@
     [
       "W3Fe",
       0.0059,
-      true,
+      false,
       "bulk_modulus",
       148.17
     ],
@@ -549,7 +549,7 @@
     [
       "W3Fe",
       0.0059,
-      true,
+      false,
       "shear_modulus",
       95.9
     ],
@@ -563,7 +563,7 @@
     [
       "W3Fe",
       0.0059,
-      true,
+      false,
       "youngs_modulus",
       232.04
     ],

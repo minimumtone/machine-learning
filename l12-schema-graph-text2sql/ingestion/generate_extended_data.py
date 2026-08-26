@@ -44,19 +44,26 @@ B_ELEMENTS = [
     "Zn", "V", "Zr", "Mn", "In", "Sb", "Be", "Mg", "Cu", "Fe",
 ]
 
-# Known stable L12 compounds
+# Operational stability definition used throughout the paper, the gold SQL
+# and the phase_stability.is_stable label:
+#   stable  <=>  energy_above_hull <= STABLE_EAH_THRESHOLD
+STABLE_EAH_THRESHOLD = 0.001  # eV/atom
+
+# Known L12 compounds (a_elem, b_elem, lattice_a, formation_energy,
+# energy_above_hull, bulk_modulus, shear_modulus); is_stable is derived
+# from energy_above_hull, never hand-assigned
 KNOWN_L12 = [
-    ("Ni", "Al", 3.572, -0.420, 0.000, True, 180.0, 85.0),
-    ("Ni", "Ga", 3.660, -0.380, 0.010, True, 165.0, 74.0),
-    ("Ni", "Ge", 3.610, -0.350, 0.040, False, 175.0, 78.0),
-    ("Co", "Ti", 3.550, -0.450, 0.000, True, 190.0, 90.0),
-    ("Al", "Sc", 4.090, -0.500, 0.000, True, 155.0, 65.0),
-    ("Al", "Ti", 3.980, -0.410, 0.020, True, 160.0, 70.0),
-    ("Pt", "Al", 3.900, -0.550, 0.000, True, 210.0, 95.0),
-    ("Ir", "Nb", 3.870, -0.480, 0.030, False, 220.0, 100.0),
-    ("Co", "Al", 3.670, -0.360, 0.010, True, 180.0, 82.0),
-    ("Co", "W",  3.740, -0.330, 0.050, False, 200.0, 88.0),
-    ("Co", "Ta", 3.720, -0.340, 0.040, False, 198.0, 86.0),
+    ("Ni", "Al", 3.572, -0.420, 0.000, 180.0, 85.0),
+    ("Ni", "Ga", 3.660, -0.380, 0.010, 165.0, 74.0),
+    ("Ni", "Ge", 3.610, -0.350, 0.040, 175.0, 78.0),
+    ("Co", "Ti", 3.550, -0.450, 0.000, 190.0, 90.0),
+    ("Al", "Sc", 4.090, -0.500, 0.000, 155.0, 65.0),
+    ("Al", "Ti", 3.980, -0.410, 0.020, 160.0, 70.0),
+    ("Pt", "Al", 3.900, -0.550, 0.000, 210.0, 95.0),
+    ("Ir", "Nb", 3.870, -0.480, 0.030, 220.0, 100.0),
+    ("Co", "Al", 3.670, -0.360, 0.010, 180.0, 82.0),
+    ("Co", "W",  3.740, -0.330, 0.050, 200.0, 88.0),
+    ("Co", "Ta", 3.720, -0.340, 0.040, 198.0, 86.0),
 ]
 
 ELEMENT_DATA = {
@@ -463,7 +470,7 @@ def generate(out: TextIO = sys.stdout) -> None:
             out.write(
                 f"INSERT INTO phase_diagram_entry (entry_id, chemical_system, "
                 f"is_on_hull, decomposition_products, hull_distance) VALUES "
-                f"('{eid}', '{chem_sys}', {'TRUE' if eah < 0.01 else 'FALSE'}, "
+                f"('{eid}', '{chem_sys}', {'TRUE' if eah <= STABLE_EAH_THRESHOLD else 'FALSE'}, "
                 f"'{formula} -> {a_elem} + {b_elem}', {eah:.4f});\n"
             )
 
@@ -482,8 +489,9 @@ def generate(out: TextIO = sys.stdout) -> None:
     # Generate entries per prototype
     # L12: 392 entries (known + generated) — paper Table 3
     out.write("\n-- L12 entries (known + generated)\n")
-    for a, b, lat, fe, eah, stab, bulk, shear in KNOWN_L12:
-        _gen_entry("L12", a, b, lat, fe, eah, stab, bulk, shear)
+    for a, b, lat, fe, eah, bulk, shear in KNOWN_L12:
+        _gen_entry("L12", a, b, lat, fe, eah, eah <= STABLE_EAH_THRESHOLD,
+                   bulk, shear)
 
     for _ in range(381):
         a = random.choice(A_ELEMENTS)
@@ -493,7 +501,7 @@ def generate(out: TextIO = sys.stdout) -> None:
         lat = random.uniform(3.4, 4.2)
         fe = random.uniform(-0.6, 0.1)
         eah = abs(random.gauss(0.05, 0.04))
-        stab = eah < 0.01
+        stab = eah <= STABLE_EAH_THRESHOLD
         bulk = random.uniform(100, 250)
         shear = random.uniform(40, 120)
         _gen_entry("L12", a, b, lat, fe, eah, stab, bulk, shear)
@@ -508,7 +516,7 @@ def generate(out: TextIO = sys.stdout) -> None:
         lat = random.uniform(2.8, 3.5)
         fe = random.uniform(-0.5, 0.2)
         eah = abs(random.gauss(0.06, 0.05))
-        stab = eah < 0.01
+        stab = eah <= STABLE_EAH_THRESHOLD
         bulk = random.uniform(80, 220)
         shear = random.uniform(30, 100)
         _gen_entry("B2", a, b, lat, fe, eah, stab, bulk, shear, "Materials Project")
@@ -523,7 +531,7 @@ def generate(out: TextIO = sys.stdout) -> None:
         lat = random.uniform(4.5, 5.5)
         fe = random.uniform(-0.4, 0.1)
         eah = abs(random.gauss(0.07, 0.05))
-        stab = eah < 0.01
+        stab = eah <= STABLE_EAH_THRESHOLD
         bulk = random.uniform(120, 280)
         shear = random.uniform(50, 130)
         _gen_entry("NaCl", a, b, lat, fe, eah, stab, bulk, shear, "AFLOW")
@@ -538,7 +546,7 @@ def generate(out: TextIO = sys.stdout) -> None:
         lat = random.uniform(5.0, 5.8)
         fe = random.uniform(-0.45, 0.15)
         eah = abs(random.gauss(0.06, 0.04))
-        stab = eah < 0.01
+        stab = eah <= STABLE_EAH_THRESHOLD
         bulk = random.uniform(90, 200)
         shear = random.uniform(35, 95)
         _gen_entry("NiAs", a, b, lat, fe, eah, stab, bulk, shear, "OQMD")
@@ -553,7 +561,7 @@ def generate(out: TextIO = sys.stdout) -> None:
         lat = random.uniform(6.5, 7.8)
         fe = random.uniform(-0.35, 0.2)
         eah = abs(random.gauss(0.08, 0.06))
-        stab = eah < 0.01
+        stab = eah <= STABLE_EAH_THRESHOLD
         bulk = random.uniform(70, 180)
         shear = random.uniform(25, 85)
         _gen_entry("BiF3", a, b, lat, fe, eah, stab, bulk, shear, "Materials Project")
