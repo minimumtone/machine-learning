@@ -587,7 +587,7 @@ JOIN幻覚54件はFKグラフによる結合経路制約（セクション~\ref{
 \label{sec:injection_safety}
 
 本研究では、7つの敵対的入力（E01--E05: DROP/DELETE/INSERTなど; F01--F02: 直接SQL入力）を用いてSQLGuardの安全機能を検証した（セクション~\ref{sec:sqlguard}）。すべての入力はSQLGuardによって安全に処理された（表~\ref{tab:injection_results}）。
-E01--E05は、禁止キーワード検出、マルチステートメント検出、テーブル許可リスト等によってブロックされた。F01はSELECT文が直接入力されたケースであり、LIMITが自動追加される（ブロックされない）。F02はDML検出によってブロックされる。これら7ケースは\texttt{scripts/verify\_safety\_cases.py}で決定論的に再検証でき、再現スクリプトはその結果を\texttt{paper\_data.json}へ記録する。アブレーションのno\_guard条件では実行再現率が$+$0.8\,pp変化したが（検出力不足のため有意性判定なし）、安全層の目的は平均再現率の向上ではなく危険なSQLの実行前排除である。
+E01--E05は、禁止キーワード検出、マルチステートメント検出、テーブル許可リスト等によってブロックされた。F01はSELECT文が直接入力されたケースであり、LIMITが自動追加される（ブロックされない）。F02はDML検出によってブロックされる。これら7ケースは同梱の検証スクリプトで決定論的に再検証でき、再現スクリプトはその結果を数値集約データへ記録する。アブレーションのno\_guard条件では実行再現率が$+$0.8\,pp変化したが（検出力不足のため有意性判定なし）、安全層の目的は平均再現率の向上ではなく危険なSQLの実行前排除である。
 
 % =====================================================================
 
@@ -738,7 +738,7 @@ L1$_2$型金属間化合物のDFT計算データは、Open Quantum Materials Dat
 % =====================================================================
 \section*{データとコードの利用可能性}
 
-評価データセット（100のゴールドSQLクエリと期待結果）、アブレーションの5回分の保存結果、MeCab材料辞書、日本語リランカー比較結果、および再現スクリプトをパッケージに含める。\texttt{scripts/compute\_all\_figures.py}は保存済み評価結果を再集計し、DB統計、統計検定（符号反転検定・ブートストラップCI）、7件の安全性ケース、およびpytest実行結果を再計算して\texttt{paper/paper\_data.json}を生成する。LLM依存の評価値そのものを完全に再生成するにはAPIキーと外部データアクセスが必要であり、保存済みJSONの再集計とLLM評価の再実行は区別する。\texttt{reproduce.sh}はユニットテストを実際に実行し、失敗時には処理を停止する。採点方式の監査（\texttt{scripts/audit\_scoring.py}・\texttt{evaluation/metrics\_strict.py}）と統計検定の再計算（\texttt{scripts/recompute\_significance.py}）もLLM・APIキーなしで再実行できる。報告時のスナップショットでは134件のユニットテストを対象とした。完全なソースコード、データセット、および再現性パッケージは、受理後に公開リポジトリを通じて提供する。
+評価データセット（100のゴールドSQLクエリと期待結果）、アブレーションの5回分の保存結果、MeCab材料辞書、日本語リランカー比較結果、および再現スクリプトをパッケージに含める。同梱の集約プログラムは保存済み評価結果を再集計し、DB統計、統計検定（符号反転検定・ブートストラップCI）、7件の安全性ケース、およびユニットテスト実行結果を再計算して、論文掲載数値の単一情報源となる集約データを生成する。LLM依存の評価値そのものを完全に再生成するにはAPIキーと外部データアクセスが必要であり、保存済み評価出力の再集計とLLM評価の再実行は区別する。再現スクリプトはユニットテストを実際に実行し、失敗時には処理を停止する。採点方式の監査と統計検定の再計算もLLM・APIキーなしで再実行できる。報告時のスナップショットでは134件のユニットテストを対象とした。完全なソースコード、データセット、および再現性パッケージは、受理後に公開リポジトリを通じて提供する。
 
 % =====================================================================
 \section*{著者の貢献}
@@ -797,7 +797,7 @@ L1$_2$型金属間化合物のDFT計算データは、Open Quantum Materials Dat
 
 \label{sec:sup_test_categories}
 
-開発時には、6つのカテゴリにわたる回帰テストに加え、SQL検証、カバレッジ／パーサー、意図分類、エイリアス解決、スーパーセット検出等のテストを構築した（表~\ref{tab:sup_test_categories}）。報告時スナップショットではpytestが134件を収集した。改訂した\texttt{reproduce.sh}はcollect-onlyではなくテスト本体を実行し、1件でも失敗した場合は再現処理を停止する。
+開発時には、6つのカテゴリにわたる回帰テストに加え、SQL検証、カバレッジ／パーサー、意図分類、エイリアス解決、スーパーセット検出等のテストを構築した（表~\ref{tab:sup_test_categories}）。報告時スナップショットではpytestが134件を収集した。再現スクリプトはcollect-onlyではなくテスト本体を実行し、1件でも失敗した場合は再現処理を停止する。
 
 \begin{table*}[htbp]
 \centering
@@ -1578,7 +1578,7 @@ MeCab カスタム辞書は 402 の材料用語を全て 1 トークンに揃え
 
 \subsection{SQLGuardの13チェック}
 
-SQLGuardの静的検証は、\texttt{validate\_sql()}が呼び出す以下の13のチェック関数から成る（\texttt{safety/sql\_validator.py}の実装と一対一対応）：
+SQLGuardの静的検証は、以下の13のチェック関数から成る（実装と一対一対応）：
 
 \begin{enumerate}[nosep]
   \item マルチステートメント検出（\texttt{check\_multiple\_statements}）
@@ -1682,7 +1682,7 @@ JOINマッチ率  &  97.5 & 99.2 & 97.5 & 73.5 \\
 
 \begin{table}[t]
 \centering
-\caption{上位3つのコンポーネントに対する難易度レベルの$\Delta$（pp）。値は\texttt{paper\_data.json}の未丸め値から算出しており、表~\ref{tab:ablation}の表示値同士の差とは末尾桁が一致しない場合がある。層別値（特にVHは$n=20$）は探索的分析である。}
+\caption{上位3つのコンポーネントに対する難易度レベルの$\Delta$（pp）。値は集約データの未丸め値から算出しており、表~\ref{tab:ablation}の表示値同士の差とは末尾桁が一致しない場合がある。層別値（特にVHは$n=20$）は探索的分析である。}
 \label{tab:ablation-detail}
 \small
 \begin{tabular}{@{}lrrrr@{}}
@@ -1896,7 +1896,7 @@ VHティアは正確な一致が0\%だが、60.2\%のリコールは多くの部
 \subsection{採点方式の監査}
 \label{sec:sup_scoring_audit}
 
-本文セクション~\ref{sec:evaluation}に述べた採点プロトコルの寛容性（共通列射影・列位置フォールバック・0行一致への満点付与・順序と多重度の無視）の影響を、保存済み評価結果（生成SQL付き保存ラン）に対して\texttt{scripts/audit\_scoring.py}で定量化した。監査スクリプトは起動時に、現行方針（historical）で同梱のper-queryスコアを完全再現できることを4データセットすべてで自己検査する（LLM・APIキー不要）。表~\ref{tab:scoring_audit}に採点方針別の値を示す。
+本文セクション~\ref{sec:evaluation}に述べた採点プロトコルの寛容性（共通列射影・列位置フォールバック・0行一致への満点付与・順序と多重度の無視）の影響を、保存済み評価結果（生成SQL付き保存ラン）に対して同梱の監査スクリプトで定量化した。監査スクリプトは起動時に、現行方針（historical）で同梱のper-queryスコアを完全再現できることを4データセットすべてで自己検査する（LLM・APIキー不要）。表~\ref{tab:scoring_audit}に採点方針別の値を示す。
 
 \begin{table}[t]
   \centering
@@ -1915,7 +1915,7 @@ VHティアは正確な一致が0\%だが、60.2\%のリコールは多くの部
   \end{tabular}
 \end{table}
 
-解釈上の注意を4点述べる。第一に、「require all」の大幅な低下（主評価36.0\%）は影響の上限であり、ゴールドSQLが補助列（\texttt{entry\_id}等）を含む設計に起因する部分が大きく、報告値としては採用しない。実質的に効くのは「recall=1.0だがゴールド1列のみで比較された」クエリ（主評価18件・独立設計11件・一般化B 7件・C 6件）である。ゴールドSQL修正前の保存ランに対する同種の目視監査で明確な過大評価と判定された4件（\texttt{q\_hard\_021}・\texttt{q\_vhard\_009}・\texttt{q\_vhard\_018}・\texttt{q\_vhard\_020}、いずれも導出計算系）については、ゴールド修正後の再評価でも別途、全ゴールド列を必須とする厳格採点を適用した監査（アブレーション5ラン$\times$7条件の35生成/クエリ）を実施し、記録された寛容採点の平均リコール（0.77--1.00）に対し厳格採点では4件とも0.0であること、すなわち生成SQLが要求された導出計算を依然実行していないことを確認した（\texttt{evaluation/audited\_queries\_strict\_from\_ablation.json}）。この厳格値は本文の主要指標には算入せず、監査結果として分離して報告する。第二に、ゴールド0行クエリは独立設計に17件あり、うち10件は生成SQLも0行を返したことで1.0を得ている。これらを除外した75.6\%（$n=83$）を感度値として本文に併記した。第三に、順序照合（ordered）の低値の多くはゴールドSQLが決定性確保のために付す\texttt{ORDER BY}に由来する（主評価では\texttt{ORDER BY}付きゴールド98件に対する順序照合Recallが46.4\%）。ランキングを要する問いでは行集合が正しくても順位が誤り得ることに注意が必要である。第四に、これらはいずれも同一の保存ランに対する採点方式の感度分析であり、本文の主要値（5ラン平均85.2\%等）の再測定ではない。
+解釈上の注意を4点述べる。第一に、「require all」の大幅な低下（主評価36.0\%）は影響の上限であり、ゴールドSQLが補助列（\texttt{entry\_id}等）を含む設計に起因する部分が大きく、報告値としては採用しない。実質的に効くのは「recall=1.0だがゴールド1列のみで比較された」クエリ（主評価18件・独立設計11件・一般化B 7件・C 6件）である。ゴールドSQL修正前の保存ランに対する同種の目視監査で明確な過大評価と判定された4件（\texttt{q\_hard\_021}・\texttt{q\_vhard\_009}・\texttt{q\_vhard\_018}・\texttt{q\_vhard\_020}、いずれも導出計算系）については、ゴールド修正後の再評価でも別途、全ゴールド列を必須とする厳格採点を適用した監査（アブレーション5ラン$\times$7条件の35生成/クエリ）を実施し、記録された寛容採点の平均リコール（0.77--1.00）に対し厳格採点では4件とも0.0であること、すなわち生成SQLが要求された導出計算を依然実行していないことを確認した（監査結果として同梱）。この厳格値は本文の主要指標には算入せず、監査結果として分離して報告する。第二に、ゴールド0行クエリは独立設計に17件あり、うち10件は生成SQLも0行を返したことで1.0を得ている。これらを除外した75.6\%（$n=83$）を感度値として本文に併記した。第三に、順序照合（ordered）の低値の多くはゴールドSQLが決定性確保のために付す\texttt{ORDER BY}に由来する（主評価では\texttt{ORDER BY}付きゴールド98件に対する順序照合Recallが46.4\%）。ランキングを要する問いでは行集合が正しくても順位が誤り得ることに注意が必要である。第四に、これらはいずれも同一の保存ランに対する採点方式の感度分析であり、本文の主要値（5ラン平均85.2\%等）の再測定ではない。
 
 % =====================================================================
 \section{材料工学評価の詳細}
@@ -2150,36 +2150,36 @@ no\_graph     & 100.0\% \\
 \section{再現ワークフロー：データ準備から結果の解釈まで}
 \label{sec:sup_workflow}
 
-本節では、データ準備から解析結果の解釈までの全ワークフローを、配布パッケージに同梱されたスクリプトと一対一に対応する形で記述する。各ステップの入出力ファイル名・スクリプト名は実装と完全に一致する。ステップ4の評価実行はLLM API（\texttt{OPENAI\_API\_KEY}）を必要とし非決定的であるため、論文の全数値はリポジトリに保存された評価出力（ステップ5--6の入力）から決定的に再生成される。
+本節では、データ準備から解析結果の解釈までの全ワークフローを、配布パッケージに同梱されたスクリプトと一対一に対応する形で記述する。各ステップは配布パッケージの再現スクリプトおよび同梱ドキュメントに対応する。ステップ4の評価実行はLLM APIキーを必要とし非決定的であるため、論文の全数値はパッケージに保存された評価出力（ステップ5--6の入力）から決定的に再生成される。
 
 \paragraph{ステップ1：データ準備。}
-(a)~合成検証データ：\texttt{ingestion/generate\_extended\_data.py}（乱数シード\texttt{random.seed(42)}で決定的）が5プロトタイプ（L1$_2$/B2/NaCl/NiAs/BiF$_3$）1{,}470化合物エントリと、純元素参照テーブルを除く30テーブル分の合成データを生成し、\texttt{db/insert\_data.sql}として出力する（安定性ラベル\texttt{is\_stable}は$E_\text{hull} \leq 0.001$~eV/atomから機械的に導出）。
-(b)~OQMD由来実データ：\texttt{scripts/fetch\_oqmd\_pure\_elements.py}がOQMD REST API（\texttt{formationenergy}エンドポイント、\texttt{ntypes=1}）から純元素の基底状態データを取得して\texttt{db/pure\_element\_data.json}に保存し、\texttt{scripts/generate\_pure\_element\_sql.py}がこれを\texttt{db/insert\_pure\_elements.sql}（89純元素エントリ）へ変換する。中心テーブル\texttt{material\_entry}の1{,}559行は1{,}470（合成）$+$89（OQMD由来）である。
-(c)~言語資源：\texttt{scripts/build\_mecab\_materials\_dict.py}が用語辞書等からMeCab用カスタム辞書\texttt{llm/mecab\_materials.csv}／\texttt{.dic}を編纂する。
+(a)~合成検証データ：データ生成プログラム（乱数シード固定で決定的）が5プロトタイプ（L1$_2$/B2/NaCl/NiAs/BiF$_3$）1{,}470化合物エントリと、純元素参照テーブルを除く30テーブル分の合成データをSQL投入ファイルとして生成する（安定性ラベル\texttt{is\_stable}は$E_\text{hull} \leq 0.001$~eV/atomから機械的に導出）。
+(b)~OQMD由来実データ：取得プログラムがOQMD REST APIから純元素の基底状態データを取得し、SQL投入ファイル（89純元素エントリ）へ変換する。中心テーブル\texttt{material\_entry}の1{,}559行は1{,}470（合成）$+$89（OQMD由来）である。
+(c)~言語資源：辞書編纂プログラムが用語辞書等からMeCab用カスタム辞書を編纂する。
 
 \paragraph{ステップ2：データベース構築。}
-\texttt{docker/docker-compose.yml}がPostgreSQL 15コンテナを起動し、初期化スクリプトとして\texttt{db/extended\_schema.sql}（スキーマ）、\texttt{db/insert\_data.sql}、\texttt{db/insert\_pure\_elements.sql}をこの順に自動投入する（\texttt{docker-entrypoint-initdb.d}経由）。一般化評価用DBは\texttt{scripts/build\_transfer\_db.py}（バリアントB：OQMD風リネーム、\texttt{db/transfer\_schema.sql}）、\texttt{scripts/build\_obfuscated\_transfer\_db.py}（バリアントC：識別子難読化）、\texttt{scripts/prepare\_mp\_transfer.py}＋\texttt{scripts/build\_mp\_transfer\_db.py}（バリアントD：Materials Project実データ3テーブル）で構築する。
+コンテナ定義がPostgreSQL 15コンテナを起動し、初期化スクリプトとしてスキーマ定義とステップ1のSQL投入ファイルをこの順に自動投入する。一般化評価用DB（バリアントB：OQMD風リネーム、バリアントC：識別子難読化、バリアントD：Materials Project実データ3テーブル）はそれぞれ専用の構築プログラムで構築する。
 
 \paragraph{ステップ3：評価データセット。}
-主評価100クエリは\texttt{evaluation/evaluation\_dataset.jsonl}に、ゴールドSQLは\texttt{evaluation/gold\_sql/}、期待実行結果は\texttt{evaluation/expected\_results/}に格納される。独立設計100クエリは\texttt{expert\_evaluation\_dataset.jsonl}、新規CTE 10クエリ（zero-shot）は\texttt{cte\_evaluation\_dataset.jsonl}（主評価の5クエリと合わせCTE評価は計15クエリ）、バリアントA用20クエリは\texttt{scripts/gen\_prototype\_evaluation.py}が\texttt{prototype\_evaluation\_dataset.jsonl}として生成する。一般化評価用データセットは\texttt{transfer\_evaluation\_dataset.jsonl}（B）、\texttt{transfer\_obfuscated\_evaluation\_dataset.jsonl}（C）、\texttt{mp\_transfer\_evaluation\_dataset.jsonl}（D）であり、ステップ2の対応するDBと合わせて二入力で使用する。
+主評価100クエリ・独立設計100クエリ・新規CTE 10クエリ（zero-shot；主評価の5クエリと合わせCTE評価は計15クエリ）・バリアントA用20クエリ・一般化評価用データセット（B/C/D）を、それぞれゴールドSQL・期待実行結果とともにパッケージに格納する。一般化評価はステップ2の対応するDBと合わせて二入力で使用する。
 
 \paragraph{ステップ4：LLM評価実行（外部API使用・非決定的）。}
-再現性の条件として、モデル・プロンプト・生成パラメータ・実行条件は固定して記録する（補足表~\ref{tab:sup_llm_params}）。APIキー（\texttt{OPENAI\_API\_KEY}）は実行要件である。
-(a)~アブレーション：\texttt{scripts/eval\_ablation\_multirun.py --n-runs 5}が7条件$\times$100クエリを5回実行し、各ランを\texttt{evaluation/ablation\_run\_\{1..5\}.json}、平均$\pm$SDを\texttt{ablation\_multirun\_stats.json}に保存する（単一ラン版は\texttt{eval\_ablation.py}、出力\texttt{ablation\_results.json}）。
-(b)~多軸指標（Precision/F1/JOIN一致率/EM）：\texttt{eval\_multiaxis\_metrics.py} $\to$ \texttt{multiaxis\_results.json}。
-(c)~独立設計・CTE・バリアントA：いずれも\texttt{eval\_independent.py}を\texttt{--dataset}／\texttt{--output}引数で使い分けて実行する（それぞれ\texttt{independent\_eval\_results.json}、\texttt{cte\_eval\_results.json}、\texttt{prototype\_eval\_results.json}）。
-(d)~一般化B/C/D：\texttt{eval\_transfer.py}、\texttt{eval\_transfer\_obfuscated.py}、\texttt{eval\_mp\_transfer.py}。
-(e)~感度分析：\texttt{eval\_fewshot\_sensitivity.py}（$\to$ \texttt{fewshot\_sensitivity\_results.json}）、\texttt{eval\_dict\_sensitivity.py}（$\to$ \texttt{dict\_sensitivity\_results.json}）、\texttt{eval\_model\_comparison.py}（$\to$ \texttt{model\_comparison\_results.json}）、\texttt{eval\_jp\_reranker\_vh.py}（$\to$ \texttt{jp\_reranker\_vh\_results.json}）。リランカーA/B評価（\texttt{reranker\_eval\_results.json}）と失敗分析（\texttt{failure\_analysis.json}）は保存済み評価出力として同梱される。
-(f)~安全性：\texttt{scripts/verify\_safety\_cases.py}およびpytestテストスイート（\texttt{tests/}、134件）。
+再現性の条件として、モデル・プロンプト・生成パラメータ・実行条件は固定して記録する（補足表~\ref{tab:sup_llm_params}）。LLM APIキーは実行要件である。
+(a)~アブレーション：評価プログラムが7条件$\times$100クエリを5回実行し、各ランと平均$\pm$SDを保存する。
+(b)~多軸指標（Precision/F1/JOIN一致率/EM）の評価。
+(c)~独立設計・CTE・バリアントAの評価（同一プログラムをデータセット・出力先の指定で使い分ける）。
+(d)~一般化B/C/Dの評価。
+(e)~感度分析：few-shot例数・辞書サイズ・モデル比較・日本語リランカー。リランカーA/B評価と失敗分析は保存済み評価出力として同梱される。
+(f)~安全性：安全性ケース検証プログラムおよびユニットテストスイート（134件）。
 
 \paragraph{ステップ5：アブレーション統計解析。}
-\texttt{scripts/compute\_ablation\_stats\_v2.py}が\texttt{ablation\_run\_\{1..5\}.json}から各クエリの5ラン平均を計算し（$n=100$の対応ありデータ）、非同点ペア数$n_\mathrm{eff}$、平均差を統計量とする両側の正確符号反転検定p値（$n_\mathrm{eff}\leq20$は全列挙、それ以外は$2\times10^5$回Monte Carlo、シード20260602）、対応ありrank-biserial相関、クエリ単位ブートストラップ95\%CI（20{,}000再標本）を算出して\texttt{evaluation/ablation\_significance\_v2.json}に保存する。
+統計解析プログラムが5ラン分の保存結果から各クエリの5ラン平均を計算し（$n=100$の対応ありデータ）、非同点ペア数$n_\mathrm{eff}$、平均差を統計量とする両側の正確符号反転検定p値（$n_\mathrm{eff}\leq20$は全列挙、それ以外は$2\times10^5$回Monte Carlo、シード固定）、対応ありrank-biserial相関、クエリ単位ブートストラップ95\%CI（20{,}000再標本）を算出して保存する。
 
 \paragraph{ステップ6：集計と図表生成（決定的）。}
-\texttt{scripts/compute\_all\_figures.py}（結果集約・SSOT生成）がステップ4--5の評価JSON（アブレーション5ラン・統計・独立設計・CTE・バリアントA・一般化B/C/D・リランカー・多軸指標・感度分析・モデル比較・失敗分析）を読み込み、論文の全掲載数値と図の元データ（\texttt{figure\_source\_data}）を含む単一情報源（SSOT）である\texttt{paper/paper\_data.json}を生成する。同スクリプトは冒頭でpytestテストスイート（\texttt{tests/}、134件）を実行し、1件でも失敗すれば\texttt{paper\_data.json}を生成せずに停止する（テストゲート）。続いて\texttt{scripts/generate\_figures.py}が\texttt{paper\_data.json}のみを読み込み、図6点（\texttt{ablation\_bar}、\texttt{fewshot\_sensitivity}、\texttt{dict\_sensitivity}、\texttt{multiaxis\_radar}、\texttt{model\_comparison}、\texttt{error\_distribution}）を\texttt{paper/figures/}にPDF/PNGで出力する。したがって本文掲載数値と図はいずれもテストゲートを通過した同一の確定データから生成される。この2ステップは配布パッケージの\texttt{reproduce.sh}（依存関係インストール$\to$必須モジュール検査$\to$DB起動$\to$両スクリプト実行）で一括再現できる。
+結果集約プログラムがステップ4--5の評価出力（アブレーション5ラン・統計・独立設計・CTE・バリアントA・一般化B/C/D・リランカー・多軸指標・感度分析・モデル比較・失敗分析）を読み込み、論文の全掲載数値と図の元データを含む単一情報源（SSOT）となる集約データを生成する。同プログラムは冒頭でユニットテストスイート（134件）を実行し、1件でも失敗すれば集約データを生成せずに停止する（テストゲート）。続いて図生成プログラムが集約データのみを読み込み、図6点（アブレーション棒グラフ、few-shot感度、辞書サイズ感度、多軸レーダー、モデル比較、誤差分布）を出力する。したがって本文掲載数値と図はいずれもテストゲートを通過した同一の確定データから生成される。この2ステップは配布パッケージの再現スクリプト（依存関係インストール$\to$必須モジュール検査$\to$DB起動$\to$両プログラム実行）で一括再現できる。
 
 \paragraph{ステップ7：数値整合検証と原稿生成。}
-\texttt{scripts/verify\_paper\_numbers.py --paper-dir paper}が\texttt{paper\_data.json}の数値と原稿TeX中の掲載値を突き合わせ、不一致があれば失敗する。原稿はLuaLaTeX＋BibTeXでコンパイルする。
+数値整合検証プログラムが集約データの数値と原稿TeX中の掲載値を突き合わせ、不一致があれば失敗する。原稿はLuaLaTeX＋BibTeXでコンパイルする。
 
 \paragraph{評価・解釈方針（ステップ3--7を規定）。}
 以下は時系列の工程ではなく、評価設計と結果解釈を規定する方針である。表1（アブレーション）は$\Delta$・$n_\mathrm{eff}$・正確p値・効果量・95\%CIを併記し、$n_\mathrm{eff}$が小さい比較（no\_guard、no\_graph）は有意性判定を行わずCIで区間評価する。層別$\Delta$（特にVH、$n=20$）は探索的分析として扱う。実行再現率のみでは過剰取得を罰しないため、Precision・F1・Exact Result-Set Match（セクション~\ref{sec:evaluation}）を併せて解釈する。合成検証データ（化合物属性）とOQMD由来実データ（純元素参照エネルギー）の区別（ステップ1）を踏まえ、材料工学的な数値そのものではなく抽出パイプラインの正確性を評価対象とする。
