@@ -390,7 +390,7 @@ def main():
             }
 
     # ==================================================================
-    # Reranker A/B eval (90 queries)
+    # Reranker A/B eval (difficulty-balanced sample)
     # ==================================================================
     rr = load_json("evaluation/reranker_eval_results.json")
     reranker_eval = {
@@ -549,6 +549,119 @@ def main():
         "model_comparison": load_json(
             "evaluation/model_comparison_results.json"),
         "failure_analysis": load_json("evaluation/failure_analysis.json"),
+    }
+
+    # Manuscript-published summaries of the sensitivity / multiaxis /
+    # model-comparison evaluations (first-class keys so that
+    # verify_paper_numbers.py gates the corresponding tables; the
+    # per-query "results" arrays stay only in figure_source_data)
+    def _pct(x: float) -> float:
+        return round(x * 100, 1)
+
+    def _cond_table_row(cond: dict, with_latency: bool = True) -> dict:
+        row = {
+            "overall_pct": _pct(cond["overall"]),
+            "by_difficulty_pct": {
+                d: _pct(v) for d, v in cond["by_difficulty"].items()
+            },
+        }
+        if with_latency and "avg_latency" in cond:
+            row["avg_latency_s"] = round(cond["avg_latency"], 1)
+        return row
+
+    fewshot_payload = figure_source_data["fewshot_sensitivity"]
+    dict_payload = figure_source_data["dict_sensitivity"]
+    multiaxis_payload = figure_source_data["multiaxis"]
+    model_comp_payload = figure_source_data["model_comparison"]
+    fewshot_sensitivity_summary = {
+        "model": fewshot_payload["model"],
+        "n_queries": fewshot_payload["n_queries"],
+        "k_values": fewshot_payload["k_values"],
+        "table": {
+            name: _cond_table_row(cond)
+            for name, cond in fewshot_payload["conditions"].items()
+        },
+    }
+    dict_sensitivity_summary = {
+        "model": dict_payload["model"],
+        "n_queries": dict_payload["n_queries"],
+        "configs": dict_payload["configs"],
+        # the dictionary-size table does not print latency
+        "table": {
+            name: _cond_table_row(cond, with_latency=False)
+            for name, cond in dict_payload["conditions"].items()
+        },
+    }
+    _multiaxis_metrics = [
+        "recall", "precision", "f1", "exact_match",
+        "select_col_prec", "join_match",
+    ]
+    multiaxis_summary = {
+        "model": multiaxis_payload["model"],
+        "n_queries": multiaxis_payload["aggregate"]["n_queries"],
+        "aggregate_pct": {
+            k: _pct(v)
+            for k, v in multiaxis_payload["aggregate"].items()
+            if isinstance(v, float)
+        },
+        "table": {
+            diff: {
+                "n": row["n"],
+                **{m: _pct(row[m]) for m in _multiaxis_metrics},
+                "syntax_validity_pct": _pct(row.get("syntax_validity", 1.0)),
+                "execution_validity_pct": _pct(
+                    row.get("execution_validity", 1.0)),
+            }
+            for diff, row in multiaxis_payload["by_difficulty"].items()
+        },
+    }
+    model_comparison_summary = {
+        "n_queries": model_comp_payload["n_queries"],
+        "table": {
+            name: _cond_table_row(cond)
+            for name, cond in model_comp_payload["models"].items()
+        },
+    }
+
+    # LLM-only baseline (raw schema, single shot, no pipeline aids)
+    llm_only_payload = load_json("evaluation/llm_only_results.json")
+    _lo_agg = llm_only_payload["aggregate"]
+    llm_only_summary = {
+        "model": llm_only_payload["model"],
+        "condition": llm_only_payload["condition"],
+        "n_queries": _lo_agg["n_queries"],
+        "recall_pct": _pct(_lo_agg["recall_mean"]),
+        "precision_pct": _pct(_lo_agg["precision_mean"]),
+        "f1_pct": _pct(_lo_agg["f1_mean"]),
+        "syntax_validity_pct": _pct(_lo_agg["syntax_validity_rate"]),
+        "execution_validity_pct": _pct(_lo_agg["execution_validity_rate"]),
+        "hallucinated_table_rate_pct": _pct(
+            _lo_agg["hallucinated_table_rate_mean"]),
+        "hallucinated_column_rate_pct": _pct(
+            _lo_agg["hallucinated_column_rate_mean"]),
+        "hallucinated_join_rate_pct": _pct(
+            _lo_agg["hallucinated_join_rate_mean"]),
+        "queries_with_table_hallucination":
+            _lo_agg["queries_with_table_hallucination"],
+        "queries_with_column_hallucination":
+            _lo_agg["queries_with_column_hallucination"],
+        "queries_with_join_hallucination":
+            _lo_agg["queries_with_join_hallucination"],
+        "latency_mean_s": round(_lo_agg["latency_mean_s"], 1),
+        "by_difficulty": {
+            diff: {
+                "n": row["n"],
+                "recall_pct": _pct(row["recall"]),
+                "precision_pct": _pct(row["precision"]),
+                "f1_pct": _pct(row["f1"]),
+                "execution_validity_pct": _pct(row["execution_validity"]),
+                "queries_with_column_hallucination":
+                    row["queries_with_column_hallucination"],
+                "queries_with_join_hallucination":
+                    row["queries_with_join_hallucination"],
+            }
+            for diff, row in llm_only_payload["by_difficulty"].items()
+        },
     }
 
     # ==================================================================
@@ -728,7 +841,14 @@ def main():
                 **cte_results,
             },
             "error_analysis": error_analysis,
+            "error_counts": load_json(
+                "evaluation/error_analysis_counts.json")["counts"],
         },
+        "llm_only_baseline": llm_only_summary,
+        "fewshot_sensitivity": fewshot_sensitivity_summary,
+        "dict_sensitivity": dict_sensitivity_summary,
+        "multiaxis": multiaxis_summary,
+        "model_comparison": model_comparison_summary,
         "reranker_eval": reranker_eval,
         "jp_reranker_comparison": jp_reranker,
         "mecab_dictionary": mecab_stats,
@@ -842,8 +962,11 @@ def main():
           f"(Δ={t['no_nbest']['delta_pp']:+.1f}pp)")
     print(f"  no_graph:     {t['no_graph']['overall_pct']}% "
           f"(Δ={t['no_graph']['delta_pp']:+.1f}pp)")
-    print(f"CTE: full={cte_results.get('full_cte_accuracy_pct', '?')}%")
-    print(f"Reranker 90q: {reranker_eval['reranker_overall_pct']}% vs "
+    print(f"CTE subset in main ablation (5q): "
+          f"full={cte_results.get('full_cte_accuracy_pct', '?')}%")
+    print(f"CTE15 standalone eval: {cte15_eval['overall_pct']}%")
+    print(f"Reranker {reranker_eval['n_queries']}q: "
+          f"{reranker_eval['reranker_overall_pct']}% vs "
           f"{reranker_eval['baseline_overall_pct']}%")
     print(f"JP reranker VH: ms-marco={jp_reranker['ms_marco_vh_pct']}% vs "
           f"jp={jp_reranker['jp_xsmall_vh_pct']}%")

@@ -3,33 +3,33 @@
     "n_queries": 100,
     "policies": {
       "historical": {
-        "mean_recall_pct": 85.4,
+        "mean_recall_pct": 85.6,
         "n_scored": 100
       },
       "require_all_cols": {
-        "mean_recall_pct": 34.8,
+        "mean_recall_pct": 36.0,
         "n_scored": 100
       },
       "no_positional": {
-        "mean_recall_pct": 83.2,
+        "mean_recall_pct": 82.6,
         "n_scored": 100
       },
       "drop_empty_gold": {
-        "mean_recall_pct": 85.4,
+        "mean_recall_pct": 85.6,
         "n_scored": 100
       },
       "multiset": {
-        "mean_recall_pct": 78.6,
+        "mean_recall_pct": 79.0,
         "n_scored": 100
       },
       "strict": {
-        "mean_recall_pct": 34.8,
+        "mean_recall_pct": 36.0,
         "n_scored": 100
       }
     },
-    "exact_match_pct": 62.0,
+    "exact_match_pct": 71.0,
     "ordered": {
-      "mean_recall_pct": 35.6,
+      "mean_recall_pct": 46.4,
       "n_gold_with_order_by": 98
     },
     "diagnostics": {
@@ -69,7 +69,6 @@
         "q_medium_030",
         "q_hard_001",
         "q_hard_002",
-        "q_hard_004",
         "q_hard_005",
         "q_hard_006",
         "q_hard_008",
@@ -92,6 +91,7 @@
         "q_vhard_012",
         "q_vhard_013",
         "q_vhard_014",
+        "q_vhard_015",
         "q_vhard_016",
         "q_vhard_017",
         "q_vhard_018",
@@ -140,6 +140,14 @@
           ]
         },
         {
+          "qid": "q_easy_010",
+          "n_common": 1,
+          "n_gold_cols": 3,
+          "common": [
+            "formula"
+          ]
+        },
+        {
           "qid": "q_easy_011",
           "n_common": 1,
           "n_gold_cols": 2,
@@ -159,6 +167,14 @@
           "qid": "q_easy_014",
           "n_common": 1,
           "n_gold_cols": 2,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_easy_015",
+          "n_common": 1,
+          "n_gold_cols": 3,
           "common": [
             "formula"
           ]
@@ -220,14 +236,6 @@
           ]
         },
         {
-          "qid": "q_vhard_009",
-          "n_common": 1,
-          "n_gold_cols": 4,
-          "common": [
-            "formula"
-          ]
-        },
-        {
           "qid": "q_vhard_018",
           "n_common": 1,
           "n_gold_cols": 4,
@@ -253,25 +261,6 @@
             "a_site",
             "b_site"
           ]
-        },
-        {
-          "qid": "q_vhard_016",
-          "n_common": 2,
-          "n_gold_cols": 5,
-          "common": [
-            "formula",
-            "lattice_a"
-          ]
-        },
-        {
-          "qid": "q_vhard_017",
-          "n_common": 3,
-          "n_gold_cols": 7,
-          "common": [
-            "formula",
-            "lattice_a",
-            "energy_above_hull"
-          ]
         }
       ]
     },
@@ -286,9 +275,9 @@
         "require_all_cols": 0.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
-        "multiset": 0.6607142857142857,
+        "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.01020408163265306
+        "ordered": 1.0
       },
       "q_easy_002": {
         "historical": 1.0,
@@ -304,9 +293,9 @@
         "require_all_cols": 0.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
-        "multiset": 1.0,
+        "multiset": 0.6607142857142857,
         "strict": 0.0,
-        "ordered": 0.05102040816326531
+        "ordered": 0.01020408163265306
       },
       "q_easy_004": {
         "historical": 1.0,
@@ -376,9 +365,9 @@
         "require_all_cols": 0.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
-        "multiset": 0.47017318794098784,
+        "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.003848620910840282
+        "ordered": 1.0
       },
       "q_easy_012": {
         "historical": 1.0,
@@ -447,9 +436,9 @@
         "require_all_cols": 0.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
-        "multiset": 1.0,
+        "multiset": 0.6607142857142857,
         "strict": 0.0,
-        "ordered": 1.0
+        "ordered": 0.01020408163265306
       },
       "q_easy_020": {
         "historical": 1.0,
@@ -488,13 +477,13 @@
         "ordered": 0.0
       },
       "q_medium_004": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 0.9540816326530612
+        "historical": 0.9974489795918368,
+        "require_all_cols": 0.9974489795918368,
+        "no_positional": 0.9974489795918368,
+        "drop_empty_gold": 0.9974489795918368,
+        "multiset": 0.9974489795918368,
+        "strict": 0.9974489795918368,
+        "ordered": 0.015306122448979591
       },
       "q_medium_005": {
         "historical": 1.0,
@@ -503,16 +492,16 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.125
+        "ordered": 1.0
       },
       "q_medium_006": {
-        "historical": 0.8449197860962567,
+        "historical": 1.0,
         "require_all_cols": 0.0,
-        "no_positional": 0.8449197860962567,
-        "drop_empty_gold": 0.8449197860962567,
-        "multiset": 0.8449197860962567,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.0
+        "ordered": 0.8556149732620321
       },
       "q_medium_007": {
         "historical": 1.0,
@@ -521,7 +510,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 1.0,
-        "ordered": 0.951530612244898
+        "ordered": 1.0
       },
       "q_medium_008": {
         "historical": 1.0,
@@ -575,7 +564,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 1.0,
-        "ordered": 0.02564102564102564
+        "ordered": 1.0
       },
       "q_medium_014": {
         "historical": 1.0,
@@ -602,7 +591,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 1.0,
-        "ordered": 0.0
+        "ordered": 1.0
       },
       "q_medium_017": {
         "historical": 1.0,
@@ -611,7 +600,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 1.0,
-        "ordered": 0.0
+        "ordered": 1.0
       },
       "q_medium_018": {
         "historical": 1.0,
@@ -620,7 +609,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 1.0,
-        "ordered": 0.07692307692307693
+        "ordered": 1.0
       },
       "q_medium_019": {
         "historical": 1.0,
@@ -629,7 +618,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 1.0,
-        "ordered": 1.0
+        "ordered": 0.0
       },
       "q_medium_020": {
         "historical": 1.0,
@@ -665,7 +654,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 1.0,
-        "ordered": 1.0
+        "ordered": 0.0
       },
       "q_medium_024": {
         "historical": 1.0,
@@ -728,7 +717,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.0
+        "ordered": 1.0
       },
       "q_hard_001": {
         "historical": 0.06153846153846154,
@@ -759,12 +748,12 @@
       },
       "q_hard_004": {
         "historical": 1.0,
-        "require_all_cols": 0.0,
+        "require_all_cols": 1.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 0.0
+        "strict": 1.0,
+        "ordered": 1.0
       },
       "q_hard_005": {
         "historical": 1.0,
@@ -773,7 +762,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.6666666666666666
+        "ordered": 1.0
       },
       "q_hard_006": {
         "historical": 1.0,
@@ -830,13 +819,13 @@
         "ordered": 0.002551020408163265
       },
       "q_hard_012": {
-        "historical": 0.5,
+        "historical": 1.0,
         "require_all_cols": 0.0,
-        "no_positional": 0.5,
-        "drop_empty_gold": 0.5,
-        "multiset": 0.5,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.125
+        "ordered": 1.0
       },
       "q_hard_013": {
         "historical": 1.0,
@@ -893,22 +882,22 @@
         "ordered": 0.0
       },
       "q_hard_019": {
-        "historical": 0.8449197860962567,
-        "require_all_cols": 0.8449197860962567,
-        "no_positional": 0.8449197860962567,
-        "drop_empty_gold": 0.8449197860962567,
-        "multiset": 0.8449197860962567,
-        "strict": 0.8449197860962567,
-        "ordered": 0.0
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.8609625668449198
       },
       "q_hard_020": {
-        "historical": 0.2,
+        "historical": 1.0,
         "require_all_cols": 0.0,
         "no_positional": 0.0,
-        "drop_empty_gold": 0.2,
-        "multiset": 0.2,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.0
+        "ordered": 1.0
       },
       "q_hard_021": {
         "historical": 1.0,
@@ -953,7 +942,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 1.0,
-        "ordered": 0.0
+        "ordered": 1.0
       },
       "q_hard_026": {
         "historical": 1.0,
@@ -1034,7 +1023,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 1.0,
-        "ordered": 0.3333333333333333
+        "ordered": 1.0
       },
       "q_vhard_005": {
         "historical": 1.0,
@@ -1046,13 +1035,13 @@
         "ordered": 0.007722007722007722
       },
       "q_vhard_006": {
-        "historical": 0.18974358974358974,
+        "historical": 0.041025641025641026,
         "require_all_cols": 0.0,
-        "no_positional": 0.18974358974358974,
-        "drop_empty_gold": 0.18974358974358974,
-        "multiset": 0.18974358974358974,
+        "no_positional": 0.041025641025641026,
+        "drop_empty_gold": 0.041025641025641026,
+        "multiset": 0.041025641025641026,
         "strict": 0.0,
-        "ordered": 0.015384615384615385
+        "ordered": 0.0
       },
       "q_vhard_007": {
         "historical": 1.0,
@@ -1064,20 +1053,20 @@
         "ordered": 0.015384615384615385
       },
       "q_vhard_008": {
-        "historical": 0.10526315789473684,
+        "historical": 0.05263157894736842,
         "require_all_cols": 0.0,
-        "no_positional": 0.10526315789473684,
-        "drop_empty_gold": 0.10526315789473684,
-        "multiset": 0.10526315789473684,
+        "no_positional": 0.05263157894736842,
+        "drop_empty_gold": 0.05263157894736842,
+        "multiset": 0.05263157894736842,
         "strict": 0.0,
-        "ordered": 0.10526315789473684
+        "ordered": 0.05263157894736842
       },
       "q_vhard_009": {
-        "historical": 1.0,
+        "historical": 0.0,
         "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
         "strict": 0.0
       },
       "q_vhard_010": {
@@ -1087,25 +1076,25 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.005128205128205128
+        "ordered": 0.05128205128205128
       },
       "q_vhard_011": {
-        "historical": 0.09438775510204081,
+        "historical": 0.02040816326530612,
         "require_all_cols": 0.0,
-        "no_positional": 0.09438775510204081,
-        "drop_empty_gold": 0.09438775510204081,
-        "multiset": 0.09438775510204081,
+        "no_positional": 0.02040816326530612,
+        "drop_empty_gold": 0.02040816326530612,
+        "multiset": 0.02040816326530612,
         "strict": 0.0,
-        "ordered": 0.002551020408163265
+        "ordered": 0.007653061224489796
       },
       "q_vhard_012": {
-        "historical": 0.18461538461538463,
+        "historical": 0.035897435897435895,
         "require_all_cols": 0.0,
-        "no_positional": 0.18461538461538463,
-        "drop_empty_gold": 0.18461538461538463,
-        "multiset": 0.18461538461538463,
+        "no_positional": 0.035897435897435895,
+        "drop_empty_gold": 0.035897435897435895,
+        "multiset": 0.035897435897435895,
         "strict": 0.0,
-        "ordered": 0.010256410256410256
+        "ordered": 0.0
       },
       "q_vhard_013": {
         "historical": 1.0,
@@ -1126,13 +1115,13 @@
         "ordered": 0.0
       },
       "q_vhard_015": {
-        "historical": 0.0,
+        "historical": 0.010256410256410256,
         "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "drop_empty_gold": 0.0,
-        "multiset": 0.0,
+        "no_positional": 0.010256410256410256,
+        "drop_empty_gold": 0.010256410256410256,
+        "multiset": 0.010256410256410256,
         "strict": 0.0,
-        "ordered": 0.0
+        "ordered": 0.010256410256410256
       },
       "q_vhard_016": {
         "historical": 1.0,
@@ -1141,7 +1130,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.8666666666666667
+        "ordered": 1.0
       },
       "q_vhard_017": {
         "historical": 1.0,
@@ -1150,7 +1139,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.0
+        "ordered": 0.05
       },
       "q_vhard_018": {
         "historical": 1.0,
@@ -1185,38 +1174,39 @@
     "n_queries": 100,
     "policies": {
       "historical": {
-        "mean_recall_pct": 76.9,
+        "mean_recall_pct": 72.7,
         "n_scored": 100
       },
       "require_all_cols": {
-        "mean_recall_pct": 12.5,
+        "mean_recall_pct": 12.0,
         "n_scored": 100
       },
       "no_positional": {
-        "mean_recall_pct": 71.9,
+        "mean_recall_pct": 67.7,
         "n_scored": 100
       },
       "drop_empty_gold": {
-        "mean_recall_pct": 79.7,
-        "n_scored": 84
+        "mean_recall_pct": 75.6,
+        "n_scored": 83
       },
       "multiset": {
-        "mean_recall_pct": 73.9,
+        "mean_recall_pct": 69.6,
         "n_scored": 100
       },
       "strict": {
-        "mean_recall_pct": 3.0,
-        "n_scored": 84
+        "mean_recall_pct": 2.4,
+        "n_scored": 83
       }
     },
-    "exact_match_pct": 69.0,
+    "exact_match_pct": 66.0,
     "ordered": {
-      "mean_recall_pct": 50.9,
+      "mean_recall_pct": 47.4,
       "n_gold_with_order_by": 90
     },
     "diagnostics": {
       "empty_gold_credited": [
         "q_expert_003",
+        "q_expert_020",
         "q_expert_022",
         "q_expert_028",
         "q_expert_045",
@@ -1224,10 +1214,9 @@
         "q_expert_060",
         "q_expert_074",
         "q_expert_075",
-        "q_expert_079",
         "q_expert_089"
       ],
-      "n_excluded_empty_gold": 16,
+      "n_excluded_empty_gold": 17,
       "queries_missing_gold_columns": [
         "q_expert_001",
         "q_expert_002",
@@ -1241,11 +1230,11 @@
         "q_expert_011",
         "q_expert_012",
         "q_expert_013",
+        "q_expert_014",
         "q_expert_015",
         "q_expert_016",
         "q_expert_018",
         "q_expert_019",
-        "q_expert_020",
         "q_expert_021",
         "q_expert_023",
         "q_expert_024",
@@ -1275,7 +1264,6 @@
         "q_expert_053",
         "q_expert_054",
         "q_expert_055",
-        "q_expert_056",
         "q_expert_057",
         "q_expert_058",
         "q_expert_061",
@@ -1293,6 +1281,7 @@
         "q_expert_078",
         "q_expert_080",
         "q_expert_081",
+        "q_expert_082",
         "q_expert_083",
         "q_expert_084",
         "q_expert_085",
@@ -1305,7 +1294,6 @@
         "q_expert_094",
         "q_expert_095",
         "q_expert_096",
-        "q_expert_097",
         "q_expert_098",
         "q_expert_099",
         "q_expert_100"
@@ -1317,6 +1305,7 @@
         "q_expert_018",
         "q_expert_026",
         "q_expert_029",
+        "q_expert_030",
         "q_expert_035",
         "q_expert_040",
         "q_expert_088",
@@ -1341,30 +1330,6 @@
           "qid": "q_expert_013",
           "n_common": 1,
           "n_gold_cols": 3,
-          "common": [
-            "formula"
-          ]
-        },
-        {
-          "qid": "q_expert_016",
-          "n_common": 1,
-          "n_gold_cols": 4,
-          "common": [
-            "formula"
-          ]
-        },
-        {
-          "qid": "q_expert_030",
-          "n_common": 1,
-          "n_gold_cols": 2,
-          "common": [
-            "prototype"
-          ]
-        },
-        {
-          "qid": "q_expert_046",
-          "n_common": 1,
-          "n_gold_cols": 5,
           "common": [
             "formula"
           ]
@@ -1434,27 +1399,11 @@
           ]
         },
         {
-          "qid": "q_expert_079",
-          "n_common": 1,
-          "n_gold_cols": 3,
-          "common": [
-            "formula"
-          ]
-        },
-        {
           "qid": "q_expert_096",
           "n_common": 1,
           "n_gold_cols": 2,
           "common": [
             "chemical_system"
-          ]
-        },
-        {
-          "qid": "q_expert_097",
-          "n_common": 1,
-          "n_gold_cols": 2,
-          "common": [
-            "method"
           ]
         }
       ],
@@ -1466,6 +1415,15 @@
           "common": [
             "entry_id",
             "formula"
+          ]
+        },
+        {
+          "qid": "q_expert_081",
+          "n_common": 2,
+          "n_gold_cols": 5,
+          "common": [
+            "formula",
+            "lattice_a"
           ]
         },
         {
@@ -1606,12 +1564,12 @@
         "ordered": 0.2
       },
       "q_expert_014": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
+        "historical": 0.5444015444015444,
+        "require_all_cols": 0.0,
+        "no_positional": 0.5444015444015444,
+        "drop_empty_gold": 0.5444015444015444,
+        "multiset": 0.5459183673469388,
+        "strict": 0.0,
         "ordered": 0.0
       },
       "q_expert_015": {
@@ -1657,15 +1615,13 @@
         "drop_empty_gold": 1.0,
         "multiset": 0.6541554959785523,
         "strict": 0.0,
-        "ordered": 0.010723860589812333
+        "ordered": 0.013404825737265416
       },
       "q_expert_020": {
         "historical": 1.0,
-        "require_all_cols": 0.0,
+        "require_all_cols": 1.0,
         "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
         "multiset": 1.0,
-        "strict": 0.0,
         "ordered": 1.0
       },
       "q_expert_021": {
@@ -1700,7 +1656,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 1.0
+        "ordered": 0.972972972972973
       },
       "q_expert_025": {
         "historical": 1.0,
@@ -1744,20 +1700,20 @@
         "strict": 0.0
       },
       "q_expert_030": {
-        "historical": 1.0,
+        "historical": 0.0,
         "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
         "strict": 0.0,
-        "ordered": 0.09574468085106383
+        "ordered": 0.0
       },
       "q_expert_031": {
-        "historical": 0.21621621621621623,
+        "historical": 0.125,
         "require_all_cols": 0.0,
-        "no_positional": 0.21621621621621623,
-        "drop_empty_gold": 0.21621621621621623,
-        "multiset": 0.21621621621621623,
+        "no_positional": 0.125,
+        "drop_empty_gold": 0.125,
+        "multiset": 0.125,
         "strict": 0.0,
         "ordered": 0.0
       },
@@ -1824,11 +1780,11 @@
         "ordered": 0.0
       },
       "q_expert_039": {
-        "historical": 0.09259259259259259,
+        "historical": 0.037037037037037035,
         "require_all_cols": 0.0,
-        "no_positional": 0.09259259259259259,
-        "drop_empty_gold": 0.09259259259259259,
-        "multiset": 0.09259259259259259,
+        "no_positional": 0.037037037037037035,
+        "drop_empty_gold": 0.037037037037037035,
+        "multiset": 0.037037037037037035,
         "strict": 0.0,
         "ordered": 0.0
       },
@@ -1881,13 +1837,13 @@
         "ordered": 1.0
       },
       "q_expert_046": {
-        "historical": 1.0,
+        "historical": 0.008695652173913044,
         "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
+        "no_positional": 0.008695652173913044,
+        "drop_empty_gold": 0.008695652173913044,
+        "multiset": 0.008695652173913044,
         "strict": 0.0,
-        "ordered": 0.008695652173913044
+        "ordered": 0.0
       },
       "q_expert_047": {
         "historical": 1.0,
@@ -1920,7 +1876,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 1.0
+        "ordered": 0.9851851851851852
       },
       "q_expert_051": {
         "historical": 1.0,
@@ -1969,12 +1925,12 @@
       },
       "q_expert_056": {
         "historical": 1.0,
-        "require_all_cols": 0.0,
+        "require_all_cols": 1.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 1.0
+        "strict": 1.0,
+        "ordered": 0.0
       },
       "q_expert_057": {
         "historical": 1.0,
@@ -2081,7 +2037,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 1.0
+        "ordered": 0.007692307692307693
       },
       "q_expert_070": {
         "historical": 1.0,
@@ -2156,16 +2112,16 @@
         "require_all_cols": 0.0,
         "no_positional": 0.8444444444444444,
         "drop_empty_gold": 0.8444444444444444,
-        "multiset": 0.8125,
+        "multiset": 0.7916666666666666,
         "strict": 0.0,
-        "ordered": 0.08333333333333333
+        "ordered": 0.0625
       },
       "q_expert_079": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "multiset": 1.0,
-        "ordered": 1.0
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "multiset": 0.0,
+        "ordered": 0.0
       },
       "q_expert_080": {
         "historical": 1.0,
@@ -2186,13 +2142,13 @@
         "ordered": 1.0
       },
       "q_expert_082": {
-        "historical": 0.5492957746478874,
-        "require_all_cols": 0.5492957746478874,
-        "no_positional": 0.5492957746478874,
-        "drop_empty_gold": 0.5492957746478874,
-        "multiset": 0.5492957746478874,
-        "strict": 0.5492957746478874,
-        "ordered": 0.0
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.9887323943661972
       },
       "q_expert_083": {
         "historical": 1.0,
@@ -2213,13 +2169,13 @@
         "ordered": 1.0
       },
       "q_expert_085": {
-        "historical": 0.25,
+        "historical": 0.1875,
         "require_all_cols": 0.0,
-        "no_positional": 0.25,
-        "drop_empty_gold": 0.25,
-        "multiset": 0.25,
+        "no_positional": 0.1875,
+        "drop_empty_gold": 0.1875,
+        "multiset": 0.1875,
         "strict": 0.0,
-        "ordered": 0.0625
+        "ordered": 0.0
       },
       "q_expert_086": {
         "historical": 1.0,
@@ -2318,13 +2274,13 @@
         "ordered": 1.0
       },
       "q_expert_097": {
-        "historical": 1.0,
+        "historical": 0.0,
         "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
         "strict": 0.0,
-        "ordered": 1.0
+        "ordered": 0.0
       },
       "q_expert_098": {
         "historical": 0.0,
@@ -2358,33 +2314,33 @@
     "n_queries": 20,
     "policies": {
       "historical": {
-        "mean_recall_pct": 90.5,
+        "mean_recall_pct": 95.0,
         "n_scored": 20
       },
       "require_all_cols": {
-        "mean_recall_pct": 30.0,
+        "mean_recall_pct": 40.0,
         "n_scored": 20
       },
       "no_positional": {
-        "mean_recall_pct": 75.5,
+        "mean_recall_pct": 80.0,
         "n_scored": 20
       },
       "drop_empty_gold": {
-        "mean_recall_pct": 90.5,
+        "mean_recall_pct": 95.0,
         "n_scored": 20
       },
       "multiset": {
-        "mean_recall_pct": 84.2,
+        "mean_recall_pct": 88.7,
         "n_scored": 20
       },
       "strict": {
-        "mean_recall_pct": 30.0,
+        "mean_recall_pct": 40.0,
         "n_scored": 20
       }
     },
-    "exact_match_pct": 80.0,
+    "exact_match_pct": 90.0,
     "ordered": {
-      "mean_recall_pct": 63.3,
+      "mean_recall_pct": 72.7,
       "n_gold_with_order_by": 11
     },
     "diagnostics": {
@@ -2393,11 +2349,9 @@
       "queries_missing_gold_columns": [
         "q_transfer_002",
         "q_transfer_003",
-        "q_transfer_004",
         "q_transfer_005",
         "q_transfer_007",
         "q_transfer_009",
-        "q_transfer_011",
         "q_transfer_012",
         "q_transfer_013",
         "q_transfer_017",
@@ -2436,19 +2390,19 @@
           ]
         },
         {
-          "qid": "q_transfer_011",
-          "n_common": 1,
-          "n_gold_cols": 3,
-          "common": [
-            "crystal_system"
-          ]
-        },
-        {
           "qid": "q_transfer_013",
           "n_common": 1,
           "n_gold_cols": 2,
           "common": [
             "composition_formula"
+          ]
+        },
+        {
+          "qid": "q_transfer_017",
+          "n_common": 1,
+          "n_gold_cols": 3,
+          "common": [
+            "symbol"
           ]
         },
         {
@@ -2502,11 +2456,11 @@
       },
       "q_transfer_004": {
         "historical": 1.0,
-        "require_all_cols": 0.0,
+        "require_all_cols": 1.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
-        "strict": 0.0
+        "strict": 1.0
       },
       "q_transfer_005": {
         "historical": 1.0,
@@ -2561,13 +2515,13 @@
         "ordered": 1.0
       },
       "q_transfer_011": {
-        "historical": 1.0,
+        "historical": 0.0,
         "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
         "strict": 0.0,
-        "ordered": 1.0
+        "ordered": 0.0
       },
       "q_transfer_012": {
         "historical": 1.0,
@@ -2586,13 +2540,13 @@
         "strict": 0.0
       },
       "q_transfer_014": {
-        "historical": 0.0,
-        "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "drop_empty_gold": 0.0,
-        "multiset": 0.0,
-        "strict": 0.0,
-        "ordered": 0.0
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
       },
       "q_transfer_015": {
         "historical": 1.0,
@@ -2613,13 +2567,13 @@
         "ordered": 1.0
       },
       "q_transfer_017": {
-        "historical": 0.1,
+        "historical": 1.0,
         "require_all_cols": 0.0,
-        "no_positional": 0.1,
-        "drop_empty_gold": 0.1,
-        "multiset": 0.1,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.1
+        "ordered": 1.0
       },
       "q_transfer_018": {
         "historical": 1.0,
@@ -2636,7 +2590,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.8666666666666667
+        "ordered": 1.0
       },
       "q_transfer_020": {
         "historical": 1.0,
@@ -2679,7 +2633,7 @@
     },
     "exact_match_pct": 90.0,
     "ordered": {
-      "mean_recall_pct": 71.5,
+      "mean_recall_pct": 72.7,
       "n_gold_with_order_by": 11
     },
     "diagnostics": {
@@ -2922,7 +2876,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.8666666666666667
+        "ordered": 1.0
       },
       "q_transfer_obf_020": {
         "historical": 0.0,

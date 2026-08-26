@@ -249,6 +249,7 @@ def run_condition(conn, queries, condition, allowed_joins, allowed_columns, tabl
                 "f1": metrics["f1"],
                 "exact_match": metrics["exact_match"],
                 "latency_s": round(elapsed, 1),
+                "sql": sql,
             })
         except Exception as e:
             elapsed = time.time() - t0
@@ -262,6 +263,7 @@ def run_condition(conn, queries, condition, allowed_joins, allowed_columns, tabl
                 "f1": 0.0,
                 "exact_match": 0.0,
                 "latency_s": round(elapsed, 1),
+                "sql": "",
             })
     
     return results
@@ -304,7 +306,8 @@ def main():
         return execute_sql(conn, sql)
     
     # Load existing results if resuming
-    out_path = PROJECT / "evaluation" / "ablation_results.json"
+    out_path = Path(os.getenv("ABLATION_RESULTS",
+                              str(PROJECT / "evaluation" / "ablation_results.json")))
     all_results = {}
     if out_path.exists():
         with open(out_path) as f:

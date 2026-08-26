@@ -13,17 +13,17 @@
     [
       "Ir3Cu",
       0.0014,
-      true
+      false
     ],
     [
       "Cu3Ta",
       0.0054,
-      true
+      false
     ],
     [
       "Cu3Ta",
       0.0058,
-      true
+      false
     ],
     [
       "Cu3Be",

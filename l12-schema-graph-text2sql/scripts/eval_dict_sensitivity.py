@@ -258,6 +258,7 @@ def run_dict_condition(
                     "difficulty": difficulty,
                     "accuracy": acc,
                     "latency_s": round(elapsed, 1),
+                    "sql": sql,
                 })
             except Exception as e:
                 elapsed = time.time() - t0
@@ -267,6 +268,7 @@ def run_dict_condition(
                     "difficulty": difficulty,
                     "accuracy": 0.0,
                     "latency_s": round(elapsed, 1),
+                    "sql": "",
                 })
     finally:
         sl_mod.CONDITION_TABLE_MAP = orig_ctm

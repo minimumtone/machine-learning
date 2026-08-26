@@ -9,7 +9,7 @@ WITH l12_enthalpy AS (
     JOIN composition comp ON comp.entry_id = m.entry_id
     JOIN pure_element_reference per ON per.element_symbol = comp.element
     WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-      AND ps.is_stable = true
+      AND ps.energy_above_hull <= 0.001
     GROUP BY m.entry_id, m.formula, ps.formation_energy_per_atom
 ),
 with_a_site AS (

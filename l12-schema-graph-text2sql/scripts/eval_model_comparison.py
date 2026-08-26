@@ -4,7 +4,9 @@
 Models tested:
   - gpt-5.5 (baseline, from 5-run ablation)
   - gpt-4o
-  - claude-sonnet-4-20250514 (via Anthropic API, wrapped for pipeline compatibility)
+
+Additional models can be appended to MODELS (e.g. Anthropic models require
+ANTHROPIC_API_KEY); the manuscript comparison table covers gpt-5.5 vs gpt-4o.
 
 Output: evaluation/model_comparison_results.json
 """
@@ -41,7 +43,6 @@ CONNINFO = (
 # Models to evaluate
 MODELS = [
     {"name": "gpt-4o", "provider": "openai", "model_id": "gpt-4o"},
-    {"name": "claude-sonnet-4", "provider": "anthropic", "model_id": "claude-sonnet-4-20250514"},
 ]
 
 
@@ -203,6 +204,7 @@ def run_model_condition(
                 "difficulty": difficulty,
                 "accuracy": acc,
                 "latency_s": round(elapsed, 1),
+                "sql": sql,
             })
         except Exception as e:
             elapsed = time.time() - t0
@@ -212,6 +214,7 @@ def run_model_condition(
                 "difficulty": difficulty,
                 "accuracy": 0.0,
                 "latency_s": round(elapsed, 1),
+                "sql": "",
             })
 
     return results

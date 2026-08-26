@@ -6,6 +6,6 @@ JOIN elastic_tensor et ON et.entry_id = m.entry_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND s.lattice_a BETWEEN 3.53 AND 3.59
   AND et.shear_modulus_vrh >= 70
-  AND ps.is_stable = TRUE
+  AND ps.energy_above_hull <= 0.001
 ORDER BY et.shear_modulus_vrh DESC
 LIMIT 10000;
