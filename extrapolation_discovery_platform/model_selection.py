@@ -22,6 +22,7 @@ Design:
 from __future__ import annotations
 
 import datetime
+import inspect
 import json
 import logging
 import time
@@ -82,12 +83,14 @@ def make_stratify_labels(y: np.ndarray, n_bins: int = 5) -> np.ndarray:
     n_unique = len(np.unique(y_arr))
     bins = min(n_bins, max(2, n_unique))
 
-    kb = KBinsDiscretizer(
+    kb_kwargs: Dict[str, Any] = dict(
         n_bins=bins, encode="ordinal", strategy="quantile",
         subsample=None,
-        # sklearn 1.9 互換: quantile_method のデフォルト変更に対応
-        quantile_method="averaged_inverted_cdf",
     )
+    # sklearn >= 1.7 のみ quantile_method を受け付ける（1.9 でデフォルト変更）
+    if "quantile_method" in inspect.signature(KBinsDiscretizer.__init__).parameters:
+        kb_kwargs["quantile_method"] = "averaged_inverted_cdf"
+    kb = KBinsDiscretizer(**kb_kwargs)
     labels = kb.fit_transform(y_arr).astype(int).ravel()
     return labels
 

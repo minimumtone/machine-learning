@@ -2474,9 +2474,9 @@ def plotly_combo_parity_by_sp(
     sps = sorted({r.split_policy for r in runs
                   if getattr(r, "y_test_true", None) is not None})
     if not sps:
-        return [("all", plotly_combo_parity_grid(runs, target_name))]
+        return [("all", plotly_combo_parity_grid(runs, target_name=target_name))]
     return [
-        (sp, plotly_combo_parity_grid(runs, target_name, split_policy_filter=sp))
+        (sp, plotly_combo_parity_grid(runs, split_filter=sp, target_name=target_name))
         for sp in sps
     ]
 

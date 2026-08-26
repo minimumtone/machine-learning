@@ -391,21 +391,20 @@ def run_individual(
             _fs_key = "generic" if generic_csv_mode else feature_set_name
             _fold_plan_hint: dict = {}  # 分割は Stage1 相当を再実行
             # 分割だけは再計算が必要（seed 統一のため）
-            from extrapolation_discovery_platform.splitters import (
-                CompositionBlockSplitter, RandomCVSplitter,
-            )
             try:
                 _sp = split_policy_name.replace(" ⚠️(リーク懸念)", "")
-                if _sp == "CompositionBlock" and compositions_df is not None:
-                    _cb = CompositionBlockSplitter(n_folds=n_folds, seed=seed)
-                    _fold_plan_hint["CompositionBlock"] = list(
-                        _cb.split(features_df, target, compositions=compositions_df)
-                    )
-                else:
-                    _rc = RandomCVSplitter(n_folds=n_folds, seed=seed)
-                    _fold_plan_hint[_sp] = list(
-                        _rc.split(features_df, target, compositions=compositions_df)
-                    )
+                _splits = _make_splits(
+                    split_policy=_sp,
+                    features_df=features_df,
+                    target=target,
+                    compositions_df=compositions_df,
+                    seed=seed,
+                    n_folds=n_folds,
+                    test_size=test_size,
+                    exclude_elements=exclude_elements,
+                )
+                _plan_key = f"RandomCV_seed{seed}" if _sp == "RandomCV" else _sp
+                _fold_plan_hint[_plan_key] = _splits
             except Exception:
                 logger.warning("個別実行: 分割再計算失敗:\n%s", traceback.format_exc())
 
@@ -462,13 +461,15 @@ def run_individual(
             []
         ))
         result.n_features_after  = train_res.n_features_used
+        # RandomCV の fold_plan キーは "RandomCV_seed{seed}" 形式
+        _plan_lookup_key = f"RandomCV_seed{seed}" if _sp_clean == "RandomCV" else _sp_clean
         result.n_train_samples   = (
-            int(np.mean([len(s[0]) for s in prep.fold_plan.get(_sp_clean, [])]))
-            if prep.fold_plan.get(_sp_clean) else 0
+            int(np.mean([len(s[0]) for s in prep.fold_plan.get(_plan_lookup_key, [])]))
+            if prep.fold_plan.get(_plan_lookup_key) else 0
         )
         result.n_test_samples = (
-            int(np.mean([len(s[1]) for s in prep.fold_plan.get(_sp_clean, [])]))
-            if prep.fold_plan.get(_sp_clean) else 0
+            int(np.mean([len(s[1]) for s in prep.fold_plan.get(_plan_lookup_key, [])]))
+            if prep.fold_plan.get(_plan_lookup_key) else 0
         )
 
         # ── 集約メトリクス（Stage2 からコピー） ─────────────────────
