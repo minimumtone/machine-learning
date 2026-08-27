@@ -6,6 +6,7 @@
     "lattice_a",
     "bulk_modulus"
   ],
+  "ordered": true,
   "rows": [
     [
       "Pt3Al",

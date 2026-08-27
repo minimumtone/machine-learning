@@ -3,17 +3,18 @@
     "entry_id",
     "formula"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00042",
       "Ag3Fe"
     ],
     [
-      "entry_00497",
+      "entry_00417",
       "AgFe"
     ],
     [
-      "entry_00417",
+      "entry_00497",
       "AgFe"
     ],
     [
@@ -69,11 +70,11 @@
       "Fe3Ge"
     ],
     [
-      "entry_00283",
+      "entry_00219",
       "Fe3Hf"
     ],
     [
-      "entry_00219",
+      "entry_00283",
       "Fe3Hf"
     ],
     [
@@ -105,15 +106,15 @@
       "Fe3Sc"
     ],
     [
+      "entry_00030",
+      "Fe3Si"
+    ],
+    [
       "entry_00085",
       "Fe3Si"
     ],
     [
       "entry_00164",
-      "Fe3Si"
-    ],
-    [
-      "entry_00030",
       "Fe3Si"
     ],
     [
@@ -141,14 +142,6 @@
       "Fe3Zn"
     ],
     [
-      "entry_01209",
-      "FeAl"
-    ],
-    [
-      "entry_01432",
-      "FeAl"
-    ],
-    [
       "entry_00801",
       "FeAl"
     ],
@@ -157,11 +150,19 @@
       "FeAl"
     ],
     [
-      "entry_00759",
-      "FeBe"
+      "entry_01209",
+      "FeAl"
+    ],
+    [
+      "entry_01432",
+      "FeAl"
     ],
     [
       "entry_00537",
+      "FeBe"
+    ],
+    [
+      "entry_00759",
       "FeBe"
     ],
     [
@@ -169,11 +170,11 @@
       "FeBe"
     ],
     [
-      "entry_01279",
+      "entry_00584",
       "FeGa"
     ],
     [
-      "entry_01140",
+      "entry_00741",
       "FeGa"
     ],
     [
@@ -185,7 +186,7 @@
       "FeGa"
     ],
     [
-      "entry_00584",
+      "entry_01140",
       "FeGa"
     ],
     [
@@ -193,11 +194,19 @@
       "FeGa"
     ],
     [
-      "entry_00741",
+      "entry_01279",
       "FeGa"
     ],
     [
       "entry_01072",
+      "FeGe"
+    ],
+    [
+      "entry_01160",
+      "FeGe"
+    ],
+    [
+      "entry_01199",
       "FeGe"
     ],
     [
@@ -209,19 +218,11 @@
       "FeGe"
     ],
     [
-      "entry_01199",
-      "FeGe"
-    ],
-    [
-      "entry_01160",
-      "FeGe"
-    ],
-    [
       "entry_01428",
       "FeGe"
     ],
     [
-      "entry_01373",
+      "entry_00798",
       "FeHf"
     ],
     [
@@ -229,11 +230,11 @@
       "FeHf"
     ],
     [
-      "entry_00798",
+      "entry_01288",
       "FeHf"
     ],
     [
-      "entry_01288",
+      "entry_01373",
       "FeHf"
     ],
     [
@@ -245,6 +246,10 @@
       "FeMg"
     ],
     [
+      "entry_00515",
+      "FeNb"
+    ],
+    [
       "entry_01063",
       "FeNb"
     ],
@@ -253,19 +258,15 @@
       "FeNb"
     ],
     [
-      "entry_00515",
-      "FeNb"
-    ],
-    [
-      "entry_00832",
-      "FeSb"
-    ],
-    [
       "entry_00598",
       "FeSb"
     ],
     [
       "entry_00827",
+      "FeSb"
+    ],
+    [
+      "entry_00832",
       "FeSb"
     ],
     [
@@ -277,10 +278,6 @@
       "FeSc"
     ],
     [
-      "entry_01421",
-      "FeSc"
-    ],
-    [
       "entry_01161",
       "FeSc"
     ],
@@ -289,11 +286,15 @@
       "FeSc"
     ],
     [
-      "entry_01259",
-      "FeSi"
+      "entry_01421",
+      "FeSc"
     ],
     [
       "entry_00674",
+      "FeSi"
+    ],
+    [
+      "entry_01259",
       "FeSi"
     ],
     [
@@ -305,10 +306,6 @@
       "FeSn"
     ],
     [
-      "entry_01320",
-      "FeSn"
-    ],
-    [
       "entry_00491",
       "FeSn"
     ],
@@ -317,19 +314,15 @@
       "FeSn"
     ],
     [
-      "entry_00774",
-      "FeTa"
-    ],
-    [
-      "entry_01331",
-      "FeTa"
-    ],
-    [
-      "entry_01249",
-      "FeTa"
+      "entry_01320",
+      "FeSn"
     ],
     [
       "entry_00422",
+      "FeTa"
+    ],
+    [
+      "entry_00774",
       "FeTa"
     ],
     [
@@ -337,15 +330,35 @@
       "FeTa"
     ],
     [
-      "entry_01245",
-      "FeTi"
+      "entry_01249",
+      "FeTa"
+    ],
+    [
+      "entry_01331",
+      "FeTa"
     ],
     [
       "entry_01018",
       "FeTi"
     ],
     [
+      "entry_01245",
+      "FeTi"
+    ],
+    [
+      "entry_00684",
+      "FeZn"
+    ],
+    [
+      "entry_00743",
+      "FeZn"
+    ],
+    [
       "entry_01115",
+      "FeZn"
+    ],
+    [
+      "entry_01178",
       "FeZn"
     ],
     [
@@ -357,23 +370,11 @@
       "FeZn"
     ],
     [
-      "entry_01178",
-      "FeZn"
-    ],
-    [
-      "entry_00684",
-      "FeZn"
-    ],
-    [
-      "entry_00743",
-      "FeZn"
-    ],
-    [
-      "entry_00508",
+      "entry_00451",
       "FeZr"
     ],
     [
-      "entry_00451",
+      "entry_00508",
       "FeZr"
     ],
     [
@@ -441,19 +442,19 @@
       "Ru3Fe"
     ],
     [
-      "entry_00649",
-      "RuFe"
-    ],
-    [
-      "entry_00871",
-      "RuFe"
-    ],
-    [
       "entry_00454",
       "RuFe"
     ],
     [
+      "entry_00649",
+      "RuFe"
+    ],
+    [
       "entry_00816",
+      "RuFe"
+    ],
+    [
+      "entry_00871",
       "RuFe"
     ],
     [
@@ -469,11 +470,7 @@
       "TiFe"
     ],
     [
-      "entry_00978",
-      "TiFe"
-    ],
-    [
-      "entry_00910",
+      "entry_00784",
       "TiFe"
     ],
     [
@@ -481,7 +478,11 @@
       "TiFe"
     ],
     [
-      "entry_00784",
+      "entry_00910",
+      "TiFe"
+    ],
+    [
+      "entry_00978",
       "TiFe"
     ],
     [
@@ -505,11 +506,11 @@
       "WFe"
     ],
     [
-      "entry_00563",
+      "entry_00426",
       "ZrFe"
     ],
     [
-      "entry_00426",
+      "entry_00563",
       "ZrFe"
     ]
   ]

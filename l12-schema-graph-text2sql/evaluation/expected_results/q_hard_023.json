@@ -4,6 +4,7 @@
     "lattice_a",
     "mismatch"
   ],
+  "ordered": true,
   "rows": [
     [
       "Ni3Al",

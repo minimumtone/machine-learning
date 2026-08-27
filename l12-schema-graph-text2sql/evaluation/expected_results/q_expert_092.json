@@ -4,6 +4,7 @@
     "avg_bulk",
     "cnt"
   ],
+  "ordered": true,
   "rows": [
     [
       "NaCl",

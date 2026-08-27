@@ -5,6 +5,7 @@
     "bulk_modulus_vrh",
     "energy_above_hull"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_01305",
@@ -133,16 +134,16 @@
       0.0051
     ],
     [
-      "entry_01413",
-      "RhAl",
-      192.51,
-      0.0064
-    ],
-    [
       "entry_01032",
       "AgSn",
       192.51,
       0.0081
+    ],
+    [
+      "entry_01413",
+      "RhAl",
+      192.51,
+      0.0064
     ],
     [
       "entry_00004",

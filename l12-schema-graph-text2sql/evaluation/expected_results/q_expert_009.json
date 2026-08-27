@@ -4,6 +4,7 @@
     "formula",
     "chemical_system"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00061",
@@ -21,7 +22,7 @@
       "Al-Ti"
     ],
     [
-      "entry_00193",
+      "entry_00045",
       "Au3Ti",
       "Au-Ti"
     ],
@@ -31,22 +32,17 @@
       "Au-Ti"
     ],
     [
-      "entry_00045",
+      "entry_00193",
       "Au3Ti",
       "Au-Ti"
     ],
     [
-      "entry_00900",
-      "AuTi",
-      "Au-Ti"
-    ],
-    [
-      "entry_01086",
-      "AuTi",
-      "Au-Ti"
-    ],
-    [
       "entry_00431",
+      "AuTi",
+      "Au-Ti"
+    ],
+    [
+      "entry_00900",
       "AuTi",
       "Au-Ti"
     ],
@@ -56,13 +52,13 @@
       "Au-Ti"
     ],
     [
-      "entry_00004",
-      "Co3Ti",
-      "Co-Ti"
+      "entry_01086",
+      "AuTi",
+      "Au-Ti"
     ],
     [
-      "entry_01424",
-      "CoTi",
+      "entry_00004",
+      "Co3Ti",
       "Co-Ti"
     ],
     [
@@ -86,7 +82,12 @@
       "Co-Ti"
     ],
     [
-      "entry_00825",
+      "entry_01424",
+      "CoTi",
+      "Co-Ti"
+    ],
+    [
+      "entry_00729",
       "CrTi",
       "Cr-Ti"
     ],
@@ -96,7 +97,7 @@
       "Cr-Ti"
     ],
     [
-      "entry_00729",
+      "entry_00825",
       "CrTi",
       "Cr-Ti"
     ],
@@ -121,12 +122,12 @@
       "Cu-Ti"
     ],
     [
-      "entry_00254",
+      "entry_00236",
       "Fe3Ti",
       "Fe-Ti"
     ],
     [
-      "entry_00236",
+      "entry_00254",
       "Fe3Ti",
       "Fe-Ti"
     ],
@@ -146,12 +147,12 @@
       "Hf-Ti"
     ],
     [
-      "entry_01354",
+      "entry_01175",
       "HfTi",
       "Hf-Ti"
     ],
     [
-      "entry_01175",
+      "entry_01354",
       "HfTi",
       "Hf-Ti"
     ],
@@ -166,7 +167,7 @@
       "Ir-Ti"
     ],
     [
-      "entry_01435",
+      "entry_01192",
       "IrTi",
       "Ir-Ti"
     ],
@@ -176,7 +177,7 @@
       "Ir-Ti"
     ],
     [
-      "entry_01192",
+      "entry_01435",
       "IrTi",
       "Ir-Ti"
     ],
@@ -201,11 +202,6 @@
       "Mo-Ti"
     ],
     [
-      "entry_00229",
-      "Ni3Ti",
-      "Ni-Ti"
-    ],
-    [
       "entry_00013",
       "Ni3Ti",
       "Ni-Ti"
@@ -216,12 +212,17 @@
       "Ni-Ti"
     ],
     [
-      "entry_01036",
-      "NiTi",
+      "entry_00229",
+      "Ni3Ti",
       "Ni-Ti"
     ],
     [
       "entry_00616",
+      "NiTi",
+      "Ni-Ti"
+    ],
+    [
+      "entry_01036",
       "NiTi",
       "Ni-Ti"
     ],
@@ -231,12 +232,17 @@
       "Pd-Ti"
     ],
     [
-      "entry_01091",
+      "entry_00727",
       "PdTi",
       "Pd-Ti"
     ],
     [
       "entry_00750",
+      "PdTi",
+      "Pd-Ti"
+    ],
+    [
+      "entry_01091",
       "PdTi",
       "Pd-Ti"
     ],
@@ -251,38 +257,13 @@
       "Pd-Ti"
     ],
     [
-      "entry_00727",
-      "PdTi",
-      "Pd-Ti"
-    ],
-    [
-      "entry_00379",
-      "Pt3Ti",
-      "Pt-Ti"
-    ],
-    [
       "entry_00110",
       "Pt3Ti",
       "Pt-Ti"
     ],
     [
-      "entry_01285",
-      "PtTi",
-      "Pt-Ti"
-    ],
-    [
-      "entry_01243",
-      "PtTi",
-      "Pt-Ti"
-    ],
-    [
-      "entry_01133",
-      "PtTi",
-      "Pt-Ti"
-    ],
-    [
-      "entry_01103",
-      "PtTi",
+      "entry_00379",
+      "Pt3Ti",
       "Pt-Ti"
     ],
     [
@@ -296,17 +277,37 @@
       "Pt-Ti"
     ],
     [
+      "entry_01103",
+      "PtTi",
+      "Pt-Ti"
+    ],
+    [
+      "entry_01133",
+      "PtTi",
+      "Pt-Ti"
+    ],
+    [
+      "entry_01243",
+      "PtTi",
+      "Pt-Ti"
+    ],
+    [
+      "entry_01285",
+      "PtTi",
+      "Pt-Ti"
+    ],
+    [
       "entry_00122",
       "Rh3Ti",
       "Rh-Ti"
     ],
     [
-      "entry_00923",
+      "entry_00878",
       "RhTi",
       "Rh-Ti"
     ],
     [
-      "entry_00878",
+      "entry_00923",
       "RhTi",
       "Rh-Ti"
     ],
@@ -316,12 +317,12 @@
       "Rh-Ti"
     ],
     [
-      "entry_01272",
+      "entry_00945",
       "RuTi",
       "Ru-Ti"
     ],
     [
-      "entry_00945",
+      "entry_01272",
       "RuTi",
       "Ru-Ti"
     ],
@@ -376,11 +377,6 @@
       "Mg-Ti"
     ],
     [
-      "entry_00322",
-      "Ti3Mn",
-      "Mn-Ti"
-    ],
-    [
       "entry_00113",
       "Ti3Mn",
       "Mn-Ti"
@@ -392,6 +388,11 @@
     ],
     [
       "entry_00305",
+      "Ti3Mn",
+      "Mn-Ti"
+    ],
+    [
+      "entry_00322",
       "Ti3Mn",
       "Mn-Ti"
     ],
@@ -431,11 +432,6 @@
       "Ti-Zr"
     ],
     [
-      "entry_01224",
-      "TiAl",
-      "Al-Ti"
-    ],
-    [
       "entry_00706",
       "TiAl",
       "Al-Ti"
@@ -446,27 +442,17 @@
       "Al-Ti"
     ],
     [
+      "entry_01224",
+      "TiAl",
+      "Al-Ti"
+    ],
+    [
       "entry_00487",
       "TiBe",
       "Be-Ti"
     ],
     [
-      "entry_00795",
-      "TiFe",
-      "Fe-Ti"
-    ],
-    [
       "entry_00522",
-      "TiFe",
-      "Fe-Ti"
-    ],
-    [
-      "entry_00978",
-      "TiFe",
-      "Fe-Ti"
-    ],
-    [
-      "entry_00910",
       "TiFe",
       "Fe-Ti"
     ],
@@ -476,9 +462,19 @@
       "Fe-Ti"
     ],
     [
-      "entry_01342",
-      "TiGa",
-      "Ga-Ti"
+      "entry_00795",
+      "TiFe",
+      "Fe-Ti"
+    ],
+    [
+      "entry_00910",
+      "TiFe",
+      "Fe-Ti"
+    ],
+    [
+      "entry_00978",
+      "TiFe",
+      "Fe-Ti"
     ],
     [
       "entry_01171",
@@ -491,14 +487,9 @@
       "Ga-Ti"
     ],
     [
-      "entry_01084",
-      "TiGe",
-      "Ge-Ti"
-    ],
-    [
-      "entry_01135",
-      "TiGe",
-      "Ge-Ti"
+      "entry_01342",
+      "TiGa",
+      "Ga-Ti"
     ],
     [
       "entry_00922",
@@ -511,7 +502,17 @@
       "Ge-Ti"
     ],
     [
-      "entry_01457",
+      "entry_01084",
+      "TiGe",
+      "Ge-Ti"
+    ],
+    [
+      "entry_01135",
+      "TiGe",
+      "Ge-Ti"
+    ],
+    [
+      "entry_00611",
       "TiHf",
       "Hf-Ti"
     ],
@@ -526,7 +527,7 @@
       "Hf-Ti"
     ],
     [
-      "entry_00611",
+      "entry_01457",
       "TiHf",
       "Hf-Ti"
     ],
@@ -541,12 +542,12 @@
       "Mn-Ti"
     ],
     [
-      "entry_01251",
+      "entry_01021",
       "TiNb",
       "Nb-Ti"
     ],
     [
-      "entry_01021",
+      "entry_01251",
       "TiNb",
       "Nb-Ti"
     ],
@@ -554,6 +555,11 @@
       "entry_01401",
       "TiNb",
       "Nb-Ti"
+    ],
+    [
+      "entry_00439",
+      "TiSc",
+      "Sc-Ti"
     ],
     [
       "entry_01053",
@@ -566,14 +572,14 @@
       "Sc-Ti"
     ],
     [
-      "entry_00439",
+      "entry_01450",
       "TiSc",
       "Sc-Ti"
     ],
     [
-      "entry_01450",
-      "TiSc",
-      "Sc-Ti"
+      "entry_00987",
+      "TiSi",
+      "Si-Ti"
     ],
     [
       "entry_01406",
@@ -591,27 +597,12 @@
       "Si-Ti"
     ],
     [
-      "entry_00987",
-      "TiSi",
-      "Si-Ti"
-    ],
-    [
       "entry_00958",
       "TiSn",
       "Sn-Ti"
     ],
     [
-      "entry_01277",
-      "TiTa",
-      "Ta-Ti"
-    ],
-    [
-      "entry_01341",
-      "TiTa",
-      "Ta-Ti"
-    ],
-    [
-      "entry_01307",
+      "entry_00664",
       "TiTa",
       "Ta-Ti"
     ],
@@ -621,7 +612,17 @@
       "Ta-Ti"
     ],
     [
-      "entry_00664",
+      "entry_01277",
+      "TiTa",
+      "Ta-Ti"
+    ],
+    [
+      "entry_01307",
+      "TiTa",
+      "Ta-Ti"
+    ],
+    [
+      "entry_01341",
       "TiTa",
       "Ta-Ti"
     ],
@@ -634,11 +635,6 @@
       "entry_00542",
       "TiV",
       "Ti-V"
-    ],
-    [
-      "entry_01422",
-      "TiY",
-      "Ti-Y"
     ],
     [
       "entry_01079",
@@ -661,12 +657,17 @@
       "Ti-Y"
     ],
     [
-      "entry_01056",
+      "entry_01422",
+      "TiY",
+      "Ti-Y"
+    ],
+    [
+      "entry_00751",
       "TiZn",
       "Ti-Zn"
     ],
     [
-      "entry_00751",
+      "entry_01056",
       "TiZn",
       "Ti-Zn"
     ],

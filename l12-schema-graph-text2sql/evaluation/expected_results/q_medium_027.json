@@ -3,6 +3,7 @@
     "formula",
     "volume_per_atom"
   ],
+  "ordered": true,
   "rows": [
     [
       "Rh3Sb",

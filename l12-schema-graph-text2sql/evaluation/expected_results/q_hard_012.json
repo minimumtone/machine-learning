@@ -4,6 +4,7 @@
     "formation_energy_per_atom",
     "energy_above_hull"
   ],
+  "ordered": true,
   "rows": [
     [
       "Pt3Al",

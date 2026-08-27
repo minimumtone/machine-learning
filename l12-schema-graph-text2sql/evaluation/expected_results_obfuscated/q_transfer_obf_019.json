@@ -3,6 +3,7 @@
     "col_quebec",
     "enthalpy_vs_element_ground_states"
   ],
+  "ordered": true,
   "rows": [
     [
       "Pt3Al",

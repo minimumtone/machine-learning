@@ -5,6 +5,7 @@
     "energy_above_hull",
     "lattice_diff"
   ],
+  "ordered": true,
   "rows": [
     [
       "Co3Ti",

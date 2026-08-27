@@ -62,3 +62,22 @@ BEGIN
     END IF;
 END
 $$;
+
+-- Composition coverage: every transfer entry must have at least one
+-- composition (ratio) row — an entry without composition would silently
+-- drop out of every composition-joining transfer gold query.
+DO $$
+DECLARE
+    n_bad BIGINT;
+BEGIN
+    SELECT COUNT(*) INTO n_bad
+    FROM oqmd_entries e
+    LEFT JOIN oqmd_element_ratios r ON r.entry_key = e.entry_key
+    WHERE r.entry_key IS NULL;
+    IF n_bad > 0 THEN
+        RAISE EXCEPTION
+            'oqmd_entries: % entries have no element ratio rows',
+            n_bad;
+    END IF;
+END
+$$;

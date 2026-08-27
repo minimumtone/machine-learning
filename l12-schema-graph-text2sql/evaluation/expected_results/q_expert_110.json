@@ -6,6 +6,7 @@
     "shear_modulus",
     "bg_ratio"
   ],
+  "ordered": true,
   "rows": [
     [
       "Al3V",

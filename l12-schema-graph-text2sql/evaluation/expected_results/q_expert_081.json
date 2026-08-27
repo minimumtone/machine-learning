@@ -6,6 +6,7 @@
     "energy_above_hull",
     "bulk_modulus_vrh"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00001",

@@ -27,4 +27,4 @@ SELECT a_site, formula,
        ROUND(e_vs_gs::numeric, 4) AS enthalpy_vs_element_ground_states
 FROM ranked
 WHERE rn = 1
-ORDER BY enthalpy_vs_element_ground_states ASC;
+ORDER BY enthalpy_vs_element_ground_states ASC, a_site ASC;

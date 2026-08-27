@@ -6,6 +6,7 @@
     "property_name",
     "value"
   ],
+  "ordered": true,
   "rows": [
     [
       "Ag3Fe",
@@ -65,17 +66,17 @@
     ],
     [
       "Cr3Fe",
-      0.0697,
-      false,
-      "shear_modulus",
-      44.23
-    ],
-    [
-      "Cr3Fe",
       0.0,
       true,
       "shear_modulus",
       76.99
+    ],
+    [
+      "Cr3Fe",
+      0.0697,
+      false,
+      "shear_modulus",
+      44.23
     ],
     [
       "Cr3Fe",
@@ -149,13 +150,6 @@
     ],
     [
       "Fe3Ga",
-      0.0524,
-      false,
-      "shear_modulus",
-      114.91
-    ],
-    [
-      "Fe3Ga",
       0.054,
       false,
       "shear_modulus",
@@ -165,8 +159,8 @@
       "Fe3Ga",
       0.0524,
       false,
-      "youngs_modulus",
-      265.04
+      "shear_modulus",
+      114.91
     ],
     [
       "Fe3Ga",
@@ -174,6 +168,13 @@
       false,
       "youngs_modulus",
       226.86
+    ],
+    [
+      "Fe3Ga",
+      0.0524,
+      false,
+      "youngs_modulus",
+      265.04
     ],
     [
       "Fe3Ge",
@@ -198,13 +199,6 @@
     ],
     [
       "Fe3Hf",
-      0.1068,
-      false,
-      "bulk_modulus",
-      169.11
-    ],
-    [
-      "Fe3Hf",
       0.0121,
       false,
       "bulk_modulus",
@@ -214,8 +208,8 @@
       "Fe3Hf",
       0.1068,
       false,
-      "shear_modulus",
-      118.89
+      "bulk_modulus",
+      169.11
     ],
     [
       "Fe3Hf",
@@ -223,6 +217,13 @@
       false,
       "shear_modulus",
       100.28
+    ],
+    [
+      "Fe3Hf",
+      0.1068,
+      false,
+      "shear_modulus",
+      118.89
     ],
     [
       "Fe3Hf",
@@ -261,17 +262,17 @@
     ],
     [
       "Fe3Mg",
-      0.0679,
-      false,
-      "bulk_modulus",
-      177.03
-    ],
-    [
-      "Fe3Mg",
       0.0565,
       false,
       "bulk_modulus",
       238.22
+    ],
+    [
+      "Fe3Mg",
+      0.0679,
+      false,
+      "bulk_modulus",
+      177.03
     ],
     [
       "Fe3Mg",
@@ -289,17 +290,17 @@
     ],
     [
       "Fe3Mg",
-      0.0679,
-      false,
-      "youngs_modulus",
-      269.5
-    ],
-    [
-      "Fe3Mg",
       0.0565,
       false,
       "youngs_modulus",
       199.76
+    ],
+    [
+      "Fe3Mg",
+      0.0679,
+      false,
+      "youngs_modulus",
+      269.5
     ],
     [
       "Fe3Mn",
@@ -387,13 +388,6 @@
     ],
     [
       "Fe3Si",
-      0.0579,
-      false,
-      "bulk_modulus",
-      112.93
-    ],
-    [
-      "Fe3Si",
       0.0561,
       false,
       "bulk_modulus",
@@ -401,17 +395,17 @@
     ],
     [
       "Fe3Si",
-      0.0312,
+      0.0579,
       false,
       "bulk_modulus",
-      162.02
+      112.93
     ],
     [
       "Fe3Si",
       0.0312,
       false,
-      "shear_modulus",
-      89.67
+      "bulk_modulus",
+      162.02
     ],
     [
       "Fe3Si",
@@ -431,8 +425,15 @@
       "Fe3Si",
       0.0312,
       false,
+      "shear_modulus",
+      89.67
+    ],
+    [
+      "Fe3Si",
+      0.0561,
+      false,
       "youngs_modulus",
-      227.11
+      244.34
     ],
     [
       "Fe3Si",
@@ -443,10 +444,10 @@
     ],
     [
       "Fe3Si",
-      0.0561,
+      0.0312,
       false,
       "youngs_modulus",
-      244.34
+      227.11
     ],
     [
       "Fe3Sn",
@@ -485,13 +486,6 @@
     ],
     [
       "Fe3Ti",
-      0.0336,
-      false,
-      "shear_modulus",
-      114.32
-    ],
-    [
-      "Fe3Ti",
       0.0502,
       false,
       "shear_modulus",
@@ -501,8 +495,8 @@
       "Fe3Ti",
       0.0336,
       false,
-      "youngs_modulus",
-      262.36
+      "shear_modulus",
+      114.32
     ],
     [
       "Fe3Ti",
@@ -510,6 +504,13 @@
       false,
       "youngs_modulus",
       153.11
+    ],
+    [
+      "Fe3Ti",
+      0.0336,
+      false,
+      "youngs_modulus",
+      262.36
     ],
     [
       "Fe3V",
@@ -653,17 +654,17 @@
     ],
     [
       "Nb3Fe",
-      0.0545,
-      false,
-      "shear_modulus",
-      90.73
-    ],
-    [
-      "Nb3Fe",
       0.1148,
       false,
       "shear_modulus",
       106.25
+    ],
+    [
+      "Nb3Fe",
+      0.0545,
+      false,
+      "shear_modulus",
+      90.73
     ],
     [
       "Nb3Fe",
@@ -779,13 +780,6 @@
     ],
     [
       "W3Fe",
-      0.0385,
-      false,
-      "shear_modulus",
-      113.06
-    ],
-    [
-      "W3Fe",
       0.0653,
       false,
       "shear_modulus",
@@ -795,8 +789,8 @@
       "W3Fe",
       0.0385,
       false,
-      "youngs_modulus",
-      262.47
+      "shear_modulus",
+      113.06
     ],
     [
       "W3Fe",
@@ -804,6 +798,13 @@
       false,
       "youngs_modulus",
       238.09
+    ],
+    [
+      "W3Fe",
+      0.0385,
+      false,
+      "youngs_modulus",
+      262.47
     ]
   ]
 }

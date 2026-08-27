@@ -241,7 +241,8 @@ ALLOY_SYSTEMS = [
 # carry a composite FK (property_name, unit) to this dictionary, so free-text
 # property names or mismatched units are rejected by the DB.
 PROPERTY_DEFINITIONS = [
-    # (canonical_name, canonical_unit, applies_to, description)
+    # (canonical_name, canonical_unit, applies_to, description);
+    # applies_to becomes a property_scope row (one per declared scope)
     ("bulk_modulus", "GPa", "calculated", "Voigt-Reuss-Hill bulk modulus"),
     ("shear_modulus", "GPa", "calculated", "Voigt-Reuss-Hill shear modulus"),
     ("youngs_modulus", "GPa", "calculated", "Young's modulus"),
@@ -346,11 +347,17 @@ def write_reference_data(out: TextIO, pure: dict[str, dict]) -> dict[str, int]:
 
     # --- Property dictionary ---
     out.write("\n-- Property definitions (canonical names & units)\n")
-    for name, unit, applies_to, desc in PROPERTY_DEFINITIONS:
+    for name, unit, _applies_to, desc in PROPERTY_DEFINITIONS:
         out.write(
             f"INSERT INTO property_definition (canonical_name, canonical_unit, "
-            f"value_type, applies_to, description) VALUES "
-            f"('{name}', '{unit}', 'float', '{applies_to}', '{_esc(desc)}');\n"
+            f"value_type, description) VALUES "
+            f"('{name}', '{unit}', 'float', '{_esc(desc)}');\n"
+        )
+    out.write("\n-- Property scopes (many-to-many storage classification)\n")
+    for name, _unit, applies_to, _desc in PROPERTY_DEFINITIONS:
+        out.write(
+            f"INSERT INTO property_scope (property_name, applies_to) VALUES "
+            f"('{name}', '{applies_to}');\n"
         )
 
     # --- Element properties ---

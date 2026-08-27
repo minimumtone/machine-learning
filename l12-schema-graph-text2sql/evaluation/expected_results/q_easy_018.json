@@ -2,6 +2,7 @@
   "columns": [
     "chemical_system"
   ],
+  "ordered": true,
   "rows": [
     [
       "Ac"

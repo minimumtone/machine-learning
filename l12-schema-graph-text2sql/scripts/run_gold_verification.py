@@ -11,8 +11,9 @@ loaded databases).
 Main-database queries run against L12_DSN; q_transfer_* queries run against
 TRANSFER_DSN; the obfuscated transfer suite (evaluation/gold_sql_obfuscated)
 runs against OBF_TRANSFER_DSN. Suites whose DSN is not set are skipped and
-reported. All connections are forced READ ONLY with a 30 s
-statement_timeout.
+reported — and skipping is a FAILURE unless --allow-skip is passed, so a
+partial run can never be mistaken for full verification by its exit code.
+All connections are forced READ ONLY with a 30 s statement_timeout.
 
 Usage:
     L12_DSN="postgresql://l12_user:...@127.0.0.1:5432/l12_materials" \
@@ -20,12 +21,14 @@ Usage:
     OBF_TRANSFER_DSN="postgresql://l12_user:...@127.0.0.1:5432/oqmd_transfer_obfuscated" \
     python scripts/run_gold_verification.py
 
-Exit status: 0 when every executed query matches its expected results and
-there are no missing expectations, orphan expected files, malformed expected
-JSON, column mismatches, or order mismatches; 1 otherwise.
+Exit status: 0 when every query (none skipped, unless --allow-skip) matches
+its expected results and there are no missing expectations, orphan expected
+files, malformed expected JSON, column mismatches, or order mismatches;
+1 otherwise.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import sys
@@ -39,7 +42,6 @@ sys.path.insert(0, str(PROJECT))
 from scripts.gold_compare import (  # noqa: E402
     normalize_rows,
     rows_match,
-    sql_is_ordered,
     validate_expected_schema,
 )
 
@@ -65,6 +67,12 @@ def _connect_readonly(dsn: str) -> psycopg.Connection:
 
 def main() -> int:
     """Run all gold SQL suites and compare to expected results."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--allow-skip", action="store_true",
+        help="Treat suites skipped for a missing DSN as non-fatal "
+             "(default: any skipped query fails the run)")
+    args = parser.parse_args()
     if not os.environ.get("L12_DSN"):
         print("ERROR: set L12_DSN to the main fixture database DSN",
               file=sys.stderr)
@@ -134,7 +142,7 @@ def main() -> int:
             if actual_columns != expected["columns"]:
                 column_mismatch.append(qid)
                 continue
-            ordered = expected.get("ordered", sql_is_ordered(sql))
+            ordered = expected["ordered"]
             actual_norm = normalize_rows(rows)
             expected_norm = normalize_rows(expected["rows"])
             if rows_match(actual_norm, expected_norm, ordered=ordered):
@@ -145,10 +153,13 @@ def main() -> int:
             else:
                 stale.append(qid)
 
+    ordered_metadata_missing = sum(
+        1 for _qid, msg in malformed if "'ordered'" in msg)
     print(f"ok={len(ok)} stale={len(stale)} "
           f"order_mismatch={len(order_mismatch)} "
           f"column_mismatch={len(column_mismatch)} "
           f"missing={len(missing)} malformed={len(malformed)} "
+          f"ordered_metadata_missing={ordered_metadata_missing} "
           f"orphan={len(orphans)} errors={len(errors)} "
           f"skipped={len(skipped)}")
     for qid in stale:
@@ -169,6 +180,10 @@ def main() -> int:
         print(f"skipped (DSN not set): {', '.join(skipped)}")
     failed = (stale or order_mismatch or column_mismatch or missing
               or malformed or orphans or errors)
+    if skipped and not args.allow_skip:
+        print("FAIL: suites were skipped and --allow-skip was not given",
+              file=sys.stderr)
+        failed = True
     return 1 if failed else 0
 
 

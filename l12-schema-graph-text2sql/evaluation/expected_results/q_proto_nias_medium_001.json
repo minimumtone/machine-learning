@@ -4,6 +4,7 @@
     "formula",
     "prototype"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_01424",
@@ -41,7 +42,7 @@
       "NiAs"
     ],
     [
-      "entry_01426",
+      "entry_01406",
       "TiSi",
       "NiAs"
     ],
@@ -51,7 +52,7 @@
       "NiAs"
     ],
     [
-      "entry_01406",
+      "entry_01426",
       "TiSi",
       "NiAs"
     ],

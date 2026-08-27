@@ -14,12 +14,18 @@ semantics:
   strict equality.
 - Column names from cursor.description must equal the stored "columns"
   list exactly (aliases are part of the gold contract).
+- Every expected JSON must carry an explicit "ordered" boolean (it is a
+  required key, never inferred at verification time, so deleting an
+  ORDER BY from a gold SQL cannot silently downgrade the contract to an
+  unordered comparison).
 - Queries whose outermost statement has an ORDER BY clause carry
   "ordered": true in the expected JSON and compare as sequences (row
   order is significant).
 - All other queries compare as multisets (bag equality): duplicate rows
   are preserved, order is not.  Never set equality — duplicate semantics
-  matter for Text-to-SQL evaluation.
+  matter for Text-to-SQL evaluation.  Pairing uses a sorted fast path
+  and falls back to O(n^2) tolerance-aware matching so near-tolerance
+  numeric rows cannot be mispaired by the sort key.
 """
 from __future__ import annotations
 
@@ -94,14 +100,30 @@ def _sort_key(row: list) -> str:
     return repr([round(c, 6) if isinstance(c, float) else c for c in row])
 
 
+def _multiset_match(actual: list, expected: list) -> bool:
+    """Tolerance-aware multiset matching (O(n^2) greedy pairing)."""
+    matched = [False] * len(expected)
+    for a in actual:
+        for i, e in enumerate(expected):
+            if not matched[i] and _rows_equal(a, e):
+                matched[i] = True
+                break
+        else:
+            return False
+    return True
+
+
 def rows_match(actual: list, expected: list, ordered: bool) -> bool:
     """Compare normalized row lists under the sequence/multiset policy."""
     if len(actual) != len(expected):
         return False
-    if not ordered:
-        actual = sorted(actual, key=_sort_key)
-        expected = sorted(expected, key=_sort_key)
-    return all(_rows_equal(a, e) for a, e in zip(actual, expected))
+    if ordered:
+        return all(_rows_equal(a, e) for a, e in zip(actual, expected))
+    a_sorted = sorted(actual, key=_sort_key)
+    e_sorted = sorted(expected, key=_sort_key)
+    if all(_rows_equal(a, e) for a, e in zip(a_sorted, e_sorted)):
+        return True
+    return _multiset_match(actual, expected)
 
 
 def validate_expected_schema(expected: object) -> str | None:
@@ -114,6 +136,11 @@ def validate_expected_schema(expected: object) -> str | None:
     rows = expected.get("rows")
     if not isinstance(rows, list) or not all(isinstance(r, list) for r in rows):
         return "'rows' missing or not a list of lists"
-    if not isinstance(expected.get("ordered", False), bool):
+    ncols = len(cols)
+    if any(len(row) != ncols for row in rows):
+        return "'rows' contains a row whose length does not match 'columns'"
+    if "ordered" not in expected:
+        return "'ordered' key is missing"
+    if not isinstance(expected["ordered"], bool):
         return "'ordered' is not a boolean"
     return None

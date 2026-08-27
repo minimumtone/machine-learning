@@ -5,9 +5,10 @@
     "element",
     "atomic_fraction"
   ],
+  "ordered": true,
   "rows": [
     [
-      "entry_00257",
+      "entry_00008",
       "Pt3Al",
       "Pt",
       0.75
@@ -19,7 +20,7 @@
       0.75
     ],
     [
-      "entry_00008",
+      "entry_00257",
       "Pt3Al",
       "Pt",
       0.75
@@ -31,13 +32,13 @@
       0.75
     ],
     [
-      "entry_00109",
+      "entry_00020",
       "Pt3Ga",
       "Pt",
       0.75
     ],
     [
-      "entry_00020",
+      "entry_00109",
       "Pt3Ga",
       "Pt",
       0.75
@@ -55,13 +56,13 @@
       0.75
     ],
     [
-      "entry_00373",
+      "entry_00251",
       "Pt3Sc",
       "Pt",
       0.75
     ],
     [
-      "entry_00251",
+      "entry_00373",
       "Pt3Sc",
       "Pt",
       0.75

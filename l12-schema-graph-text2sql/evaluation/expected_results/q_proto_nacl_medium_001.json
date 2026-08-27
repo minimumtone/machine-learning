@@ -4,6 +4,7 @@
     "formula",
     "prototype"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_01052",
@@ -16,12 +17,12 @@
       "NaCl"
     ],
     [
-      "entry_01356",
+      "entry_01067",
       "CoSc",
       "NaCl"
     ],
     [
-      "entry_01067",
+      "entry_01356",
       "CoSc",
       "NaCl"
     ],
@@ -41,18 +42,13 @@
       "NaCl"
     ],
     [
-      "entry_01298",
-      "HfSc",
-      "NaCl"
-    ],
-    [
       "entry_01096",
       "HfSc",
       "NaCl"
     ],
     [
-      "entry_01189",
-      "IrSc",
+      "entry_01298",
+      "HfSc",
       "NaCl"
     ],
     [
@@ -61,12 +57,17 @@
       "NaCl"
     ],
     [
-      "entry_01303",
-      "NiSc",
+      "entry_01189",
+      "IrSc",
       "NaCl"
     ],
     [
       "entry_01205",
+      "NiSc",
+      "NaCl"
+    ],
+    [
+      "entry_01303",
       "NiSc",
       "NaCl"
     ],
@@ -76,17 +77,17 @@
       "NaCl"
     ],
     [
-      "entry_01129",
-      "PtSc",
-      "NaCl"
-    ],
-    [
       "entry_01097",
       "PtSc",
       "NaCl"
     ],
     [
-      "entry_01201",
+      "entry_01129",
+      "PtSc",
+      "NaCl"
+    ],
+    [
+      "entry_01031",
       "RhSc",
       "NaCl"
     ],
@@ -101,7 +102,7 @@
       "NaCl"
     ],
     [
-      "entry_01031",
+      "entry_01201",
       "RhSc",
       "NaCl"
     ],
@@ -126,22 +127,22 @@
       "NaCl"
     ],
     [
-      "entry_01340",
-      "RuSc",
-      "NaCl"
-    ],
-    [
       "entry_01281",
       "RuSc",
       "NaCl"
     ],
     [
-      "entry_01260",
-      "TiSc",
+      "entry_01340",
+      "RuSc",
       "NaCl"
     ],
     [
       "entry_01053",
+      "TiSc",
+      "NaCl"
+    ],
+    [
+      "entry_01260",
       "TiSc",
       "NaCl"
     ],
@@ -156,12 +157,12 @@
       "NaCl"
     ],
     [
-      "entry_01151",
+      "entry_01085",
       "ZrSc",
       "NaCl"
     ],
     [
-      "entry_01085",
+      "entry_01151",
       "ZrSc",
       "NaCl"
     ],

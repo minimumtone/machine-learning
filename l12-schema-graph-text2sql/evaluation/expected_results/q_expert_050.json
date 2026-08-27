@@ -5,6 +5,7 @@
     "total_magnetization",
     "magnetic_ordering"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00256",

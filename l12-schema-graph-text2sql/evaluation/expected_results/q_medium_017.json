@@ -5,6 +5,7 @@
     "formation_energy_per_atom",
     "is_stable"
   ],
+  "ordered": true,
   "rows": [
     [
       "Cr3Nb",

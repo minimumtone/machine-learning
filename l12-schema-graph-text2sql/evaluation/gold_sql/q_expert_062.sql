@@ -4,5 +4,5 @@ JOIN structure s ON s.entry_id = m.entry_id
 JOIN surface_energy se ON se.entry_id = m.entry_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND se.work_function >= 5.0
-ORDER BY se.work_function DESC
+ORDER BY se.work_function DESC, m.entry_id ASC
 LIMIT 10000;

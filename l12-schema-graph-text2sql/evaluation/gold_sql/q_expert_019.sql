@@ -8,5 +8,5 @@ JOIN prototype_definition pd ON pd.prototype_id = s.prototype
 JOIN element e ON e.symbol = c.element
 WHERE e.atomic_number >= 40
   AND (pd.prototype_id = 'L12' OR pd.strukturbericht = 'L12')
-ORDER BY m.formula
+ORDER BY m.formula, m.entry_id, c.element
 LIMIT 10000;

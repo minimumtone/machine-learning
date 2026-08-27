@@ -15,5 +15,5 @@ AND EXISTS (
     JOIN calculated_property cp ON cp.calculation_id = ca.calculation_id
     WHERE ca.entry_id = m.entry_id
 )
-ORDER BY m.formula
+ORDER BY m.formula, m.entry_id ASC
 LIMIT 10000;

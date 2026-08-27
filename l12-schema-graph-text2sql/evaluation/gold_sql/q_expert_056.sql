@@ -4,5 +4,5 @@ JOIN calculation cal_tp ON cal_tp.entry_id = m.entry_id AND cal_tp.calculation_t
 JOIN thermal_property tp ON tp.calculation_id = cal_tp.calculation_id
     AND tp.temperature_k = 300  -- benchmark convention: representative temperature
 WHERE tp.debye_temperature_k >= 500
-ORDER BY tp.debye_temperature_k DESC
+ORDER BY tp.debye_temperature_k DESC, m.entry_id ASC
 LIMIT 10000;

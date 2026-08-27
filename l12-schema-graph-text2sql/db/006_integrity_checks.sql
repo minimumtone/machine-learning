@@ -161,6 +161,27 @@ BEGIN
             n_bad;
     END IF;
 
+    -- Elastic-mirror coverage: every elastic_tensor row must have all
+    -- three scalar moduli mirrored into calculated_property. An inner
+    -- join alone would silently pass a tensor row whose mirrors were
+    -- never written.
+    SELECT COUNT(*) INTO n_bad
+    FROM (
+        SELECT et.elastic_id
+        FROM elastic_tensor et
+        LEFT JOIN calculated_property cp
+            ON cp.calculation_id = et.calculation_id
+           AND cp.property_name IN
+               ('bulk_modulus', 'shear_modulus', 'youngs_modulus')
+        GROUP BY et.elastic_id
+        HAVING COUNT(DISTINCT cp.property_name) <> 3
+    ) uncovered;
+    IF n_bad > 0 THEN
+        RAISE EXCEPTION
+            'elastic_tensor: % rows missing one or more of the three scalar modulus mirrors in calculated_property',
+            n_bad;
+    END IF;
+
     -- Elastic-modulus single truth: the scalar moduli mirrored into
     -- calculated_property must equal the elastic_tensor values of the
     -- same calculation (both are written from one generated value).
@@ -183,14 +204,32 @@ BEGIN
 
     -- Hull-distance single truth: phase_diagram_entry.hull_distance must
     -- equal phase_stability.energy_above_hull for the same entry (both
-    -- generated stability flags then agree by construction).
+    -- generated stability flags then agree by construction). LEFT JOIN so
+    -- a phase_diagram_entry row without its phase_stability parent also
+    -- fails instead of vanishing from an inner join.
     SELECT COUNT(*) INTO n_bad
     FROM phase_diagram_entry pde
-    JOIN phase_stability ps ON ps.entry_id = pde.entry_id
-    WHERE pde.hull_distance IS DISTINCT FROM ps.energy_above_hull;
+    LEFT JOIN phase_stability ps ON ps.entry_id = pde.entry_id
+    WHERE ps.entry_id IS NULL
+       OR pde.hull_distance IS DISTINCT FROM ps.energy_above_hull;
     IF n_bad > 0 THEN
         RAISE EXCEPTION
-            'phase_diagram_entry: % rows whose hull_distance disagrees with phase_stability.energy_above_hull',
+            'phase_diagram_entry: % rows missing a phase_stability parent or whose hull_distance disagrees with phase_stability.energy_above_hull',
+            n_bad;
+    END IF;
+
+    -- Stability coverage: every material entry has exactly one
+    -- phase_stability row. phase_stability.entry_id is UNIQUE, so a
+    -- missing-parent check is sufficient for exactly-one; it also keeps
+    -- the band-structure / DOS assertions above honest (their inner joins
+    -- through phase_stability cannot hide rows once coverage holds).
+    SELECT COUNT(*) INTO n_bad
+    FROM material_entry m
+    LEFT JOIN phase_stability ps ON ps.entry_id = m.entry_id
+    WHERE ps.entry_id IS NULL;
+    IF n_bad > 0 THEN
+        RAISE EXCEPTION
+            'phase_stability: % material entries without a phase_stability row',
             n_bad;
     END IF;
 
@@ -209,14 +248,19 @@ BEGIN
     -- exactly one calculation per material entry, so gold queries that join
     -- calculation without restricting calculation_type/method/functional
     -- cannot multiply rows. Loading a second calculation for an entry must
-    -- fail here until the gold SQL is updated to select calculations.
+    -- fail here until the gold SQL is updated to select calculations,
+    -- and a material without any calculation is equally a violation.
     SELECT COUNT(*) INTO n_bad
     FROM (
-        SELECT entry_id FROM calculation GROUP BY entry_id HAVING COUNT(*) > 1
-    ) multi;
+        SELECT m.entry_id
+        FROM material_entry m
+        LEFT JOIN calculation c ON c.entry_id = m.entry_id
+        GROUP BY m.entry_id
+        HAVING COUNT(c.calculation_id) <> 1
+    ) bad;
     IF n_bad > 0 THEN
         RAISE EXCEPTION
-            'calculation: % entries with more than one calculation (single-calculation fixture convention violated)',
+            'calculation: % entries without exactly one calculation (single-calculation fixture convention violated)',
             n_bad;
     END IF;
 

@@ -95,15 +95,26 @@ INSERT INTO element (element_id, symbol, name, atomic_number, atomic_mass, elect
 SELECT setval('element_element_id_seq', 89);
 
 -- Property definitions (canonical names & units)
-INSERT INTO property_definition (canonical_name, canonical_unit, value_type, applies_to, description) VALUES ('bulk_modulus', 'GPa', 'float', 'calculated', 'Voigt-Reuss-Hill bulk modulus');
-INSERT INTO property_definition (canonical_name, canonical_unit, value_type, applies_to, description) VALUES ('shear_modulus', 'GPa', 'float', 'calculated', 'Voigt-Reuss-Hill shear modulus');
-INSERT INTO property_definition (canonical_name, canonical_unit, value_type, applies_to, description) VALUES ('youngs_modulus', 'GPa', 'float', 'calculated', 'Young''s modulus');
-INSERT INTO property_definition (canonical_name, canonical_unit, value_type, applies_to, description) VALUES ('hardness', 'GPa', 'float', 'measured', 'Indentation hardness');
-INSERT INTO property_definition (canonical_name, canonical_unit, value_type, applies_to, description) VALUES ('lattice_a', 'A', 'float', 'measured', 'Measured lattice parameter a');
-INSERT INTO property_definition (canonical_name, canonical_unit, value_type, applies_to, description) VALUES ('density', 'g/cm3', 'float', 'measured', 'Mass density');
-INSERT INTO property_definition (canonical_name, canonical_unit, value_type, applies_to, description) VALUES ('resistivity', 'uOhm.cm', 'float', 'measured', 'Electrical resistivity');
-INSERT INTO property_definition (canonical_name, canonical_unit, value_type, applies_to, description) VALUES ('melting_point', 'K', 'float', 'element', 'Elemental melting point');
-INSERT INTO property_definition (canonical_name, canonical_unit, value_type, applies_to, description) VALUES ('boiling_point', 'K', 'float', 'element', 'Elemental boiling point');
+INSERT INTO property_definition (canonical_name, canonical_unit, value_type, description) VALUES ('bulk_modulus', 'GPa', 'float', 'Voigt-Reuss-Hill bulk modulus');
+INSERT INTO property_definition (canonical_name, canonical_unit, value_type, description) VALUES ('shear_modulus', 'GPa', 'float', 'Voigt-Reuss-Hill shear modulus');
+INSERT INTO property_definition (canonical_name, canonical_unit, value_type, description) VALUES ('youngs_modulus', 'GPa', 'float', 'Young''s modulus');
+INSERT INTO property_definition (canonical_name, canonical_unit, value_type, description) VALUES ('hardness', 'GPa', 'float', 'Indentation hardness');
+INSERT INTO property_definition (canonical_name, canonical_unit, value_type, description) VALUES ('lattice_a', 'A', 'float', 'Measured lattice parameter a');
+INSERT INTO property_definition (canonical_name, canonical_unit, value_type, description) VALUES ('density', 'g/cm3', 'float', 'Mass density');
+INSERT INTO property_definition (canonical_name, canonical_unit, value_type, description) VALUES ('resistivity', 'uOhm.cm', 'float', 'Electrical resistivity');
+INSERT INTO property_definition (canonical_name, canonical_unit, value_type, description) VALUES ('melting_point', 'K', 'float', 'Elemental melting point');
+INSERT INTO property_definition (canonical_name, canonical_unit, value_type, description) VALUES ('boiling_point', 'K', 'float', 'Elemental boiling point');
+
+-- Property scopes (many-to-many storage classification)
+INSERT INTO property_scope (property_name, applies_to) VALUES ('bulk_modulus', 'calculated');
+INSERT INTO property_scope (property_name, applies_to) VALUES ('shear_modulus', 'calculated');
+INSERT INTO property_scope (property_name, applies_to) VALUES ('youngs_modulus', 'calculated');
+INSERT INTO property_scope (property_name, applies_to) VALUES ('hardness', 'measured');
+INSERT INTO property_scope (property_name, applies_to) VALUES ('lattice_a', 'measured');
+INSERT INTO property_scope (property_name, applies_to) VALUES ('density', 'measured');
+INSERT INTO property_scope (property_name, applies_to) VALUES ('resistivity', 'measured');
+INSERT INTO property_scope (property_name, applies_to) VALUES ('melting_point', 'element');
+INSERT INTO property_scope (property_name, applies_to) VALUES ('boiling_point', 'element');
 
 -- Element properties
 INSERT INTO element_property (element_property_id, element_id, property_name, value, unit) VALUES (1, 1, 'melting_point', 833.9, 'K');

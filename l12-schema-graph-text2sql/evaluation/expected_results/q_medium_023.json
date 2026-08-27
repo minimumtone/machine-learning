@@ -3,6 +3,7 @@
     "formula",
     "lattice_a"
   ],
+  "ordered": true,
   "rows": [
     [
       "V3Hf",
@@ -217,11 +218,11 @@
       4.0951
     ],
     [
-      "Nb3Sn",
+      "Cr3Zn",
       4.1023
     ],
     [
-      "Cr3Zn",
+      "Nb3Sn",
       4.1023
     ],
     [

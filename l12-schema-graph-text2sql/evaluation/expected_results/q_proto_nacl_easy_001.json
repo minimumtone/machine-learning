@@ -5,15 +5,16 @@
     "prototype",
     "strukturbericht"
   ],
+  "ordered": true,
   "rows": [
     [
-      "entry_01234",
+      "entry_01169",
       "AgAl",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01169",
+      "entry_01234",
       "AgAl",
       "NaCl",
       "B1"
@@ -49,6 +50,12 @@
       "B1"
     ],
     [
+      "entry_01032",
+      "AgSn",
+      "NaCl",
+      "B1"
+    ],
+    [
       "entry_01136",
       "AgSn",
       "NaCl",
@@ -56,12 +63,6 @@
     ],
     [
       "entry_01360",
-      "AgSn",
-      "NaCl",
-      "B1"
-    ],
-    [
-      "entry_01032",
       "AgSn",
       "NaCl",
       "B1"
@@ -127,7 +128,7 @@
       "B1"
     ],
     [
-      "entry_01382",
+      "entry_01156",
       "AuGe",
       "NaCl",
       "B1"
@@ -139,31 +140,13 @@
       "B1"
     ],
     [
-      "entry_01156",
+      "entry_01382",
       "AuGe",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01274",
-      "AuHf",
-      "NaCl",
-      "B1"
-    ],
-    [
       "entry_01048",
-      "AuHf",
-      "NaCl",
-      "B1"
-    ],
-    [
-      "entry_01317",
-      "AuHf",
-      "NaCl",
-      "B1"
-    ],
-    [
-      "entry_01142",
       "AuHf",
       "NaCl",
       "B1"
@@ -175,7 +158,25 @@
       "B1"
     ],
     [
-      "entry_01231",
+      "entry_01142",
+      "AuHf",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01274",
+      "AuHf",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01317",
+      "AuHf",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01042",
       "AuNb",
       "NaCl",
       "B1"
@@ -187,7 +188,7 @@
       "B1"
     ],
     [
-      "entry_01042",
+      "entry_01231",
       "AuNb",
       "NaCl",
       "B1"
@@ -199,25 +200,25 @@
       "B1"
     ],
     [
-      "entry_01203",
-      "AuSi",
-      "NaCl",
-      "B1"
-    ],
-    [
       "entry_01145",
       "AuSi",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01120",
-      "AuSn",
+      "entry_01203",
+      "AuSi",
       "NaCl",
       "B1"
     ],
     [
       "entry_01118",
+      "AuSn",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01120",
       "AuSn",
       "NaCl",
       "B1"
@@ -253,13 +254,13 @@
       "B1"
     ],
     [
-      "entry_01276",
+      "entry_01101",
       "CoAl",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01101",
+      "entry_01276",
       "CoAl",
       "NaCl",
       "B1"
@@ -289,7 +290,7 @@
       "B1"
     ],
     [
-      "entry_01380",
+      "entry_01213",
       "CoHf",
       "NaCl",
       "B1"
@@ -307,7 +308,7 @@
       "B1"
     ],
     [
-      "entry_01213",
+      "entry_01380",
       "CoHf",
       "NaCl",
       "B1"
@@ -319,20 +320,14 @@
       "B1"
     ],
     [
-      "entry_01356",
-      "CoSc",
-      "NaCl",
-      "B1"
-    ],
-    [
       "entry_01067",
       "CoSc",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01236",
-      "CoSi",
+      "entry_01356",
+      "CoSc",
       "NaCl",
       "B1"
     ],
@@ -343,8 +338,8 @@
       "B1"
     ],
     [
-      "entry_01232",
-      "CoSn",
+      "entry_01236",
+      "CoSi",
       "NaCl",
       "B1"
     ],
@@ -355,7 +350,13 @@
       "B1"
     ],
     [
-      "entry_01310",
+      "entry_01232",
+      "CoSn",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01039",
       "CoTa",
       "NaCl",
       "B1"
@@ -367,20 +368,14 @@
       "B1"
     ],
     [
-      "entry_01039",
-      "CoTa",
-      "NaCl",
-      "B1"
-    ],
-    [
       "entry_01163",
       "CoTa",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01112",
-      "CoTi",
+      "entry_01310",
+      "CoTa",
       "NaCl",
       "B1"
     ],
@@ -391,13 +386,19 @@
       "B1"
     ],
     [
-      "entry_01246",
+      "entry_01112",
       "CoTi",
       "NaCl",
       "B1"
     ],
     [
       "entry_01149",
+      "CoTi",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01246",
       "CoTi",
       "NaCl",
       "B1"
@@ -439,13 +440,13 @@
       "B1"
     ],
     [
-      "entry_01157",
+      "entry_01089",
       "CuGe",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01089",
+      "entry_01157",
       "CuGe",
       "NaCl",
       "B1"
@@ -457,25 +458,25 @@
       "B1"
     ],
     [
-      "entry_01326",
-      "CuGe",
-      "NaCl",
-      "B1"
-    ],
-    [
       "entry_01304",
       "CuGe",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01368",
-      "CuHf",
+      "entry_01326",
+      "CuGe",
       "NaCl",
       "B1"
     ],
     [
       "entry_01269",
+      "CuHf",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01368",
       "CuHf",
       "NaCl",
       "B1"
@@ -511,25 +512,25 @@
       "B1"
     ],
     [
-      "entry_01319",
-      "CuSn",
-      "NaCl",
-      "B1"
-    ],
-    [
       "entry_01211",
       "CuSn",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01376",
-      "CuTa",
+      "entry_01319",
+      "CuSn",
       "NaCl",
       "B1"
     ],
     [
       "entry_01254",
+      "CuTa",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01376",
       "CuTa",
       "NaCl",
       "B1"
@@ -541,13 +542,13 @@
       "B1"
     ],
     [
-      "entry_01250",
+      "entry_01131",
       "CuY",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01131",
+      "entry_01250",
       "CuY",
       "NaCl",
       "B1"
@@ -571,6 +572,18 @@
       "B1"
     ],
     [
+      "entry_01040",
+      "FeGa",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01132",
+      "FeGa",
+      "NaCl",
+      "B1"
+    ],
+    [
       "entry_01140",
       "FeGa",
       "NaCl",
@@ -583,26 +596,8 @@
       "B1"
     ],
     [
-      "entry_01040",
-      "FeGa",
-      "NaCl",
-      "B1"
-    ],
-    [
       "entry_01279",
       "FeGa",
-      "NaCl",
-      "B1"
-    ],
-    [
-      "entry_01132",
-      "FeGa",
-      "NaCl",
-      "B1"
-    ],
-    [
-      "entry_01219",
-      "FeGe",
       "NaCl",
       "B1"
     ],
@@ -619,20 +614,20 @@
       "B1"
     ],
     [
-      "entry_01327",
-      "FeGe",
-      "NaCl",
-      "B1"
-    ],
-    [
       "entry_01199",
       "FeGe",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01373",
-      "FeHf",
+      "entry_01219",
+      "FeGe",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01327",
+      "FeGe",
       "NaCl",
       "B1"
     ],
@@ -644,6 +639,12 @@
     ],
     [
       "entry_01288",
+      "FeHf",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01373",
       "FeHf",
       "NaCl",
       "B1"
@@ -661,13 +662,13 @@
       "B1"
     ],
     [
-      "entry_01161",
+      "entry_01148",
       "FeSc",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01148",
+      "entry_01161",
       "FeSc",
       "NaCl",
       "B1"
@@ -691,13 +692,13 @@
       "B1"
     ],
     [
-      "entry_01249",
+      "entry_01045",
       "FeTa",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01045",
+      "entry_01249",
       "FeTa",
       "NaCl",
       "B1"
@@ -715,13 +716,7 @@
       "B1"
     ],
     [
-      "entry_01351",
-      "FeZn",
-      "NaCl",
-      "B1"
-    ],
-    [
-      "entry_01230",
+      "entry_01115",
       "FeZn",
       "NaCl",
       "B1"
@@ -733,7 +728,13 @@
       "B1"
     ],
     [
-      "entry_01115",
+      "entry_01230",
+      "FeZn",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01351",
       "FeZn",
       "NaCl",
       "B1"
@@ -745,25 +746,25 @@
       "B1"
     ],
     [
-      "entry_01252",
-      "HfGe",
-      "NaCl",
-      "B1"
-    ],
-    [
-      "entry_01362",
-      "HfGe",
-      "NaCl",
-      "B1"
-    ],
-    [
       "entry_01116",
       "HfGe",
       "NaCl",
       "B1"
     ],
     [
+      "entry_01252",
+      "HfGe",
+      "NaCl",
+      "B1"
+    ],
+    [
       "entry_01305",
+      "HfGe",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01362",
       "HfGe",
       "NaCl",
       "B1"
@@ -781,19 +782,19 @@
       "B1"
     ],
     [
-      "entry_01298",
-      "HfSc",
-      "NaCl",
-      "B1"
-    ],
-    [
       "entry_01096",
       "HfSc",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01308",
+      "entry_01298",
+      "HfSc",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01253",
       "HfSi",
       "NaCl",
       "B1"
@@ -805,13 +806,13 @@
       "B1"
     ],
     [
-      "entry_01383",
+      "entry_01308",
       "HfSi",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01253",
+      "entry_01383",
       "HfSi",
       "NaCl",
       "B1"
@@ -829,6 +830,12 @@
       "B1"
     ],
     [
+      "entry_01070",
+      "HfTa",
+      "NaCl",
+      "B1"
+    ],
+    [
       "entry_01102",
       "HfTa",
       "NaCl",
@@ -837,18 +844,6 @@
     [
       "entry_01242",
       "HfTa",
-      "NaCl",
-      "B1"
-    ],
-    [
-      "entry_01070",
-      "HfTa",
-      "NaCl",
-      "B1"
-    ],
-    [
-      "entry_01354",
-      "HfTi",
       "NaCl",
       "B1"
     ],
@@ -865,13 +860,13 @@
       "B1"
     ],
     [
-      "entry_01265",
-      "IrAl",
+      "entry_01354",
+      "HfTi",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01248",
+      "entry_01083",
       "IrAl",
       "NaCl",
       "B1"
@@ -883,19 +878,25 @@
       "B1"
     ],
     [
-      "entry_01296",
-      "IrAl",
-      "NaCl",
-      "B1"
-    ],
-    [
       "entry_01198",
       "IrAl",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01083",
+      "entry_01248",
+      "IrAl",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01265",
+      "IrAl",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01296",
       "IrAl",
       "NaCl",
       "B1"
@@ -925,7 +926,7 @@
       "B1"
     ],
     [
-      "entry_01222",
+      "entry_01125",
       "IrNb",
       "NaCl",
       "B1"
@@ -937,7 +938,7 @@
       "B1"
     ],
     [
-      "entry_01125",
+      "entry_01222",
       "IrNb",
       "NaCl",
       "B1"
@@ -997,6 +998,12 @@
       "B1"
     ],
     [
+      "entry_01278",
+      "IrZn",
+      "NaCl",
+      "B1"
+    ],
+    [
       "entry_01302",
       "IrZn",
       "NaCl",
@@ -1009,12 +1016,6 @@
       "B1"
     ],
     [
-      "entry_01278",
-      "IrZn",
-      "NaCl",
-      "B1"
-    ],
-    [
       "entry_01143",
       "NiAl",
       "NaCl",
@@ -1022,6 +1023,12 @@
     ],
     [
       "entry_01057",
+      "NiGe",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01090",
       "NiGe",
       "NaCl",
       "B1"
@@ -1040,12 +1047,6 @@
     ],
     [
       "entry_01355",
-      "NiGe",
-      "NaCl",
-      "B1"
-    ],
-    [
-      "entry_01090",
       "NiGe",
       "NaCl",
       "B1"
@@ -1105,13 +1106,13 @@
       "B1"
     ],
     [
-      "entry_01177",
+      "entry_01107",
       "NiY",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01107",
+      "entry_01177",
       "NiY",
       "NaCl",
       "B1"
@@ -1123,13 +1124,13 @@
       "B1"
     ],
     [
-      "entry_01337",
+      "entry_01106",
       "NiZn",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01106",
+      "entry_01337",
       "NiZn",
       "NaCl",
       "B1"
@@ -1141,19 +1142,19 @@
       "B1"
     ],
     [
-      "entry_01165",
-      "PdAl",
-      "NaCl",
-      "B1"
-    ],
-    [
       "entry_01139",
       "PdAl",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01270",
+      "entry_01165",
+      "PdAl",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01055",
       "PdGa",
       "NaCl",
       "B1"
@@ -1165,7 +1166,7 @@
       "B1"
     ],
     [
-      "entry_01055",
+      "entry_01270",
       "PdGa",
       "NaCl",
       "B1"
@@ -1243,13 +1244,13 @@
       "B1"
     ],
     [
-      "entry_01130",
+      "entry_01105",
       "PdY",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01105",
+      "entry_01130",
       "PdY",
       "NaCl",
       "B1"
@@ -1261,13 +1262,13 @@
       "B1"
     ],
     [
-      "entry_01323",
+      "entry_01155",
       "PtAl",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01155",
+      "entry_01323",
       "PtAl",
       "NaCl",
       "B1"
@@ -1309,13 +1310,13 @@
       "B1"
     ],
     [
-      "entry_01129",
+      "entry_01097",
       "PtSc",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01097",
+      "entry_01129",
       "PtSc",
       "NaCl",
       "B1"
@@ -1339,13 +1340,13 @@
       "B1"
     ],
     [
-      "entry_01218",
+      "entry_01060",
       "PtTa",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01060",
+      "entry_01218",
       "PtTa",
       "NaCl",
       "B1"
@@ -1353,6 +1354,18 @@
     [
       "entry_01314",
       "PtTa",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01103",
+      "PtTi",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01133",
+      "PtTi",
       "NaCl",
       "B1"
     ],
@@ -1369,24 +1382,6 @@
       "B1"
     ],
     [
-      "entry_01133",
-      "PtTi",
-      "NaCl",
-      "B1"
-    ],
-    [
-      "entry_01103",
-      "PtTi",
-      "NaCl",
-      "B1"
-    ],
-    [
-      "entry_01316",
-      "PtZn",
-      "NaCl",
-      "B1"
-    ],
-    [
       "entry_01046",
       "PtZn",
       "NaCl",
@@ -1399,8 +1394,8 @@
       "B1"
     ],
     [
-      "entry_01359",
-      "RhAl",
+      "entry_01316",
+      "PtZn",
       "NaCl",
       "B1"
     ],
@@ -1411,13 +1406,19 @@
       "B1"
     ],
     [
-      "entry_01216",
-      "RhGa",
+      "entry_01359",
+      "RhAl",
       "NaCl",
       "B1"
     ],
     [
       "entry_01121",
+      "RhGa",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01216",
       "RhGa",
       "NaCl",
       "B1"
@@ -1441,7 +1442,7 @@
       "B1"
     ],
     [
-      "entry_01201",
+      "entry_01031",
       "RhSc",
       "NaCl",
       "B1"
@@ -1453,7 +1454,13 @@
       "B1"
     ],
     [
-      "entry_01352",
+      "entry_01137",
+      "RhSc",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01201",
       "RhSc",
       "NaCl",
       "B1"
@@ -1465,13 +1472,7 @@
       "B1"
     ],
     [
-      "entry_01137",
-      "RhSc",
-      "NaCl",
-      "B1"
-    ],
-    [
-      "entry_01031",
+      "entry_01352",
       "RhSc",
       "NaCl",
       "B1"
@@ -1489,13 +1490,13 @@
       "B1"
     ],
     [
-      "entry_01152",
+      "entry_01038",
       "RhSn",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01038",
+      "entry_01152",
       "RhSn",
       "NaCl",
       "B1"
@@ -1525,12 +1526,6 @@
       "B1"
     ],
     [
-      "entry_01295",
-      "RhZn",
-      "NaCl",
-      "B1"
-    ],
-    [
       "entry_01044",
       "RhZn",
       "NaCl",
@@ -1550,6 +1545,12 @@
     ],
     [
       "entry_01241",
+      "RhZn",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01295",
       "RhZn",
       "NaCl",
       "B1"
@@ -1579,13 +1580,13 @@
       "B1"
     ],
     [
-      "entry_01239",
+      "entry_01065",
       "RuGa",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01065",
+      "entry_01239",
       "RuGa",
       "NaCl",
       "B1"
@@ -1603,13 +1604,7 @@
       "B1"
     ],
     [
-      "entry_01374",
-      "RuNb",
-      "NaCl",
-      "B1"
-    ],
-    [
-      "entry_01261",
+      "entry_01068",
       "RuNb",
       "NaCl",
       "B1"
@@ -1621,7 +1616,13 @@
       "B1"
     ],
     [
-      "entry_01068",
+      "entry_01261",
+      "RuNb",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01374",
       "RuNb",
       "NaCl",
       "B1"
@@ -1633,13 +1634,13 @@
       "B1"
     ],
     [
-      "entry_01340",
+      "entry_01281",
       "RuSc",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01281",
+      "entry_01340",
       "RuSc",
       "NaCl",
       "B1"
@@ -1651,7 +1652,7 @@
       "B1"
     ],
     [
-      "entry_01170",
+      "entry_01030",
       "RuSn",
       "NaCl",
       "B1"
@@ -1663,13 +1664,13 @@
       "B1"
     ],
     [
-      "entry_01306",
+      "entry_01078",
       "RuSn",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01078",
+      "entry_01170",
       "RuSn",
       "NaCl",
       "B1"
@@ -1681,7 +1682,7 @@
       "B1"
     ],
     [
-      "entry_01030",
+      "entry_01306",
       "RuSn",
       "NaCl",
       "B1"
@@ -1693,13 +1694,13 @@
       "B1"
     ],
     [
-      "entry_01347",
+      "entry_01208",
       "RuTa",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01208",
+      "entry_01347",
       "RuTa",
       "NaCl",
       "B1"
@@ -1711,25 +1712,25 @@
       "B1"
     ],
     [
-      "entry_01309",
-      "RuY",
-      "NaCl",
-      "B1"
-    ],
-    [
       "entry_01076",
       "RuY",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01312",
+      "entry_01147",
       "RuY",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01147",
+      "entry_01309",
+      "RuY",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01312",
       "RuY",
       "NaCl",
       "B1"
@@ -1753,6 +1754,12 @@
       "B1"
     ],
     [
+      "entry_01171",
+      "TiGa",
+      "NaCl",
+      "B1"
+    ],
+    [
       "entry_01176",
       "TiGa",
       "NaCl",
@@ -1765,19 +1772,13 @@
       "B1"
     ],
     [
-      "entry_01171",
-      "TiGa",
-      "NaCl",
-      "B1"
-    ],
-    [
-      "entry_01084",
+      "entry_01041",
       "TiGe",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01041",
+      "entry_01084",
       "TiGe",
       "NaCl",
       "B1"
@@ -1801,14 +1802,20 @@
       "B1"
     ],
     [
+      "entry_01053",
+      "TiSc",
+      "NaCl",
+      "B1"
+    ],
+    [
       "entry_01260",
       "TiSc",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01053",
-      "TiSc",
+      "entry_01168",
+      "TiTa",
       "NaCl",
       "B1"
     ],
@@ -1820,12 +1827,6 @@
     ],
     [
       "entry_01307",
-      "TiTa",
-      "NaCl",
-      "B1"
-    ],
-    [
-      "entry_01168",
       "TiTa",
       "NaCl",
       "B1"
@@ -1843,7 +1844,7 @@
       "B1"
     ],
     [
-      "entry_01329",
+      "entry_01104",
       "TiY",
       "NaCl",
       "B1"
@@ -1855,7 +1856,7 @@
       "B1"
     ],
     [
-      "entry_01104",
+      "entry_01329",
       "TiY",
       "NaCl",
       "B1"
@@ -1863,12 +1864,6 @@
     [
       "entry_01056",
       "TiZn",
-      "NaCl",
-      "B1"
-    ],
-    [
-      "entry_01315",
-      "VAl",
       "NaCl",
       "B1"
     ],
@@ -1885,19 +1880,25 @@
       "B1"
     ],
     [
+      "entry_01315",
+      "VAl",
+      "NaCl",
+      "B1"
+    ],
+    [
       "entry_01128",
       "VGa",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01293",
+      "entry_01098",
       "VGe",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01098",
+      "entry_01293",
       "VGe",
       "NaCl",
       "B1"
@@ -1915,12 +1916,6 @@
       "B1"
     ],
     [
-      "entry_01339",
-      "VNb",
-      "NaCl",
-      "B1"
-    ],
-    [
       "entry_01117",
       "VNb",
       "NaCl",
@@ -1933,13 +1928,19 @@
       "B1"
     ],
     [
-      "entry_01344",
-      "VSc",
+      "entry_01339",
+      "VNb",
       "NaCl",
       "B1"
     ],
     [
       "entry_01300",
+      "VSc",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01344",
       "VSc",
       "NaCl",
       "B1"
@@ -1963,25 +1964,25 @@
       "B1"
     ],
     [
-      "entry_01377",
-      "ZrAl",
-      "NaCl",
-      "B1"
-    ],
-    [
       "entry_01188",
       "ZrAl",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01228",
-      "ZrGe",
+      "entry_01377",
+      "ZrAl",
       "NaCl",
       "B1"
     ],
     [
       "entry_01190",
+      "ZrGe",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01228",
       "ZrGe",
       "NaCl",
       "B1"
@@ -1999,13 +2000,13 @@
       "B1"
     ],
     [
-      "entry_01075",
+      "entry_01051",
       "ZrNb",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01051",
+      "entry_01075",
       "ZrNb",
       "NaCl",
       "B1"
@@ -2053,18 +2054,6 @@
       "B1"
     ],
     [
-      "entry_01187",
-      "ZrSi",
-      "NaCl",
-      "B1"
-    ],
-    [
-      "entry_01206",
-      "ZrSi",
-      "NaCl",
-      "B1"
-    ],
-    [
       "entry_01074",
       "ZrSi",
       "NaCl",
@@ -2077,14 +2066,20 @@
       "B1"
     ],
     [
-      "entry_01297",
+      "entry_01187",
       "ZrSi",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01333",
-      "ZrSn",
+      "entry_01206",
+      "ZrSi",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01297",
+      "ZrSi",
       "NaCl",
       "B1"
     ],
@@ -2096,6 +2091,12 @@
     ],
     [
       "entry_01247",
+      "ZrSn",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01333",
       "ZrSn",
       "NaCl",
       "B1"
@@ -2113,25 +2114,25 @@
       "B1"
     ],
     [
-      "entry_01212",
-      "ZrY",
-      "NaCl",
-      "B1"
-    ],
-    [
       "entry_01099",
       "ZrY",
       "NaCl",
       "B1"
     ],
     [
-      "entry_01378",
-      "ZrZn",
+      "entry_01212",
+      "ZrY",
       "NaCl",
       "B1"
     ],
     [
       "entry_01346",
+      "ZrZn",
+      "NaCl",
+      "B1"
+    ],
+    [
+      "entry_01378",
       "ZrZn",
       "NaCl",
       "B1"
