@@ -15,6 +15,6 @@ ref AS (
     GROUP BY t.col_rhea
 )
 SELECT t.col_quebec, t.col_luna, ref.weighted_ref,
-       t.col_luna - ref.weighted_ref AS corrected_enthalpy
+       t.col_luna - ref.weighted_ref AS enthalpy_vs_element_ground_states
 FROM target t
 JOIN ref ON ref.col_rhea = t.col_rhea;

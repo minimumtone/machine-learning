@@ -1,10 +1,14 @@
 -- CTE A: 単純CTE（導出量計算）
 -- 「Co3Tiの生成エンタルピーを純物質基準エネルギーから計算して」
 WITH compound AS (
+    -- reference_energy_set is joined so the query resolves the material's
+    -- energy convention through the master table (coverage of the
+    -- reference-set dictionary), not just the FK string.
     SELECT m.entry_id, m.formula, ps.formation_energy_per_atom,
-           ps.reference_set
+           res.reference_set
     FROM material_entry m
     JOIN phase_stability ps ON ps.entry_id = m.entry_id
+    JOIN reference_energy_set res ON res.reference_set = ps.reference_set
     WHERE m.formula = 'Co3Ti'
     LIMIT 1
 ),

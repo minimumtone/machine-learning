@@ -7,10 +7,10 @@ JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
 JOIN material_synthesis msyn ON msyn.entry_id = m.entry_id
 JOIN synthesis_method sm ON sm.synthesis_id = msyn.synthesis_id
-JOIN calculation calc ON calc.entry_id = m.entry_id
+JOIN calculation calc ON calc.entry_id = m.entry_id AND calc.calculation_type = 'relaxation'
 JOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-  AND ps.energy_above_hull <= 0.05
+  AND ps.is_stable = TRUE
   AND cp_bm.property_name = 'bulk_modulus'
   AND cp_bm.value >= 150
 ORDER BY cp_bm.value DESC

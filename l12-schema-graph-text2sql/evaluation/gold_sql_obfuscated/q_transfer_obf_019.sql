@@ -10,8 +10,8 @@ WITH enthalpy AS (
     GROUP BY e.col_rhea, e.col_quebec, f.col_luna
 )
 SELECT col_quebec,
-       ROUND((col_luna - weighted_ref)::numeric, 4) AS corrected_enthalpy
+       ROUND((col_luna - weighted_ref)::numeric, 4) AS enthalpy_vs_element_ground_states
 FROM enthalpy
 WHERE col_luna - weighted_ref < -0.3
-ORDER BY corrected_enthalpy ASC
+ORDER BY enthalpy_vs_element_ground_states ASC
 LIMIT 20;

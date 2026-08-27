@@ -49,7 +49,7 @@ COLUMN_DESCRIPTIONS: dict[str, str] = {
     "gap_ev": "electronic band gap (eV)",
     "ref_key": "reference-state identifier",
     "gs_spacegroup": "ground-state space group number",
-    "energy_pa": "ground-state energy per atom",
+    "reference_delta_e": "elemental reference formation energy per atom (same convention as delta_e; subtract the ratio-weighted sum from delta_e to re-reference to elemental ground states)",
     "volume_pa": "ground-state atomic volume",
     "polymorph_count": "number of thermodynamically stable polymorphs",
 }

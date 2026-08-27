@@ -9,135 +9,131 @@
       "Pt"
     ],
     [
-      "entry_00007",
+      "entry_00257",
       "Pt3Al"
     ],
     [
-      "entry_00388",
+      "entry_00151",
       "Pt3Al"
     ],
     [
-      "entry_00012",
-      "Pt3Ge"
+      "entry_00008",
+      "Pt3Al"
     ],
     [
-      "entry_00119",
-      "Pt3Ge"
+      "entry_00076",
+      "Pt3Fe"
     ],
     [
-      "entry_00265",
-      "Pt3Ge"
+      "entry_00020",
+      "Pt3Ga"
     ],
     [
-      "entry_00175",
+      "entry_00109",
+      "Pt3Ga"
+    ],
+    [
+      "entry_00241",
+      "Pt3Ga"
+    ],
+    [
+      "entry_00346",
       "Pt3Hf"
     ],
     [
-      "entry_00365",
-      "Pt3Hf"
-    ],
-    [
-      "entry_00206",
-      "Pt3Mg"
-    ],
-    [
-      "entry_00333",
-      "Pt3Mn"
-    ],
-    [
-      "entry_00203",
-      "Pt3Sb"
-    ],
-    [
-      "entry_00246",
-      "Pt3Sb"
-    ],
-    [
-      "entry_00306",
-      "Pt3Sb"
-    ],
-    [
-      "entry_00144",
+      "entry_00251",
       "Pt3Sc"
     ],
     [
-      "entry_00262",
+      "entry_00373",
       "Pt3Sc"
     ],
     [
-      "entry_00343",
-      "Pt3Si"
-    ],
-    [
-      "entry_00160",
+      "entry_00237",
       "Pt3Sn"
     ],
     [
-      "entry_00182",
+      "entry_00374",
       "Pt3Sn"
     ],
     [
-      "entry_00140",
-      "Pt3Ta"
+      "entry_00110",
+      "Pt3Ti"
     ],
     [
-      "entry_00185",
-      "Pt3V"
+      "entry_00379",
+      "Pt3Ti"
     ],
     [
-      "entry_00278",
-      "Pt3V"
+      "entry_00129",
+      "Pt3Zn"
     ],
     [
-      "entry_00705",
+      "entry_00540",
       "PtAl"
     ],
     [
-      "entry_00878",
+      "entry_01403",
       "PtAl"
     ],
     [
-      "entry_01340",
+      "entry_00448",
       "PtAl"
     ],
     [
-      "entry_00662",
-      "PtBe"
+      "entry_01323",
+      "PtAl"
     ],
     [
-      "entry_00601",
+      "entry_01155",
+      "PtAl"
+    ],
+    [
+      "entry_01110",
+      "PtAl"
+    ],
+    [
+      "entry_00599",
       "PtCu"
     ],
     [
-      "entry_00663",
+      "entry_00568",
       "PtCu"
     ],
     [
-      "entry_00724",
+      "entry_00907",
       "PtCu"
     ],
     [
-      "entry_00925",
-      "PtCu"
-    ],
-    [
-      "entry_00936",
-      "PtCu"
-    ],
-    [
-      "entry_01105",
+      "entry_01204",
       "PtGa"
     ],
     [
-      "entry_01409",
+      "entry_00407",
       "PtGa"
     ],
     [
-      "entry_00501",
-      "PtGe"
+      "entry_00939",
+      "PtGa"
     ],
     [
-      "entry_01114",
+      "entry_01028",
+      "PtGa"
+    ],
+    [
+      "entry_01049",
+      "PtGa"
+    ],
+    [
+      "entry_01405",
+      "PtGa"
+    ],
+    [
+      "entry_01433",
+      "PtGa"
+    ],
+    [
+      "entry_01334",
       "PtGe"
     ],
     [
@@ -145,183 +141,203 @@
       "PtGe"
     ],
     [
-      "entry_01455",
+      "entry_00562",
       "PtGe"
     ],
     [
-      "entry_01381",
+      "entry_01436",
+      "PtGe"
+    ],
+    [
+      "entry_00409",
+      "PtGe"
+    ],
+    [
+      "entry_01390",
       "PtHf"
     ],
     [
-      "entry_01401",
+      "entry_00711",
       "PtHf"
     ],
     [
-      "entry_00680",
+      "entry_01225",
+      "PtHf"
+    ],
+    [
+      "entry_00557",
+      "PtHf"
+    ],
+    [
+      "entry_01414",
+      "PtHf"
+    ],
+    [
+      "entry_00475",
       "PtMg"
     ],
     [
-      "entry_00510",
+      "entry_00453",
+      "PtMg"
+    ],
+    [
+      "entry_00861",
       "PtNb"
     ],
     [
-      "entry_00579",
+      "entry_01363",
       "PtNb"
     ],
     [
-      "entry_00642",
+      "entry_01138",
       "PtNb"
     ],
     [
-      "entry_01029",
-      "PtNb"
-    ],
-    [
-      "entry_01223",
-      "PtNb"
-    ],
-    [
-      "entry_01239",
-      "PtNb"
-    ],
-    [
-      "entry_01257",
-      "PtNb"
-    ],
-    [
-      "entry_01342",
-      "PtNb"
-    ],
-    [
-      "entry_00604",
+      "entry_00909",
       "PtSb"
     ],
     [
-      "entry_01173",
+      "entry_00464",
       "PtSc"
     ],
     [
-      "entry_01283",
+      "entry_01389",
       "PtSc"
     ],
     [
-      "entry_01372",
+      "entry_01097",
       "PtSc"
     ],
     [
-      "entry_01416",
+      "entry_01129",
       "PtSc"
     ],
     [
-      "entry_01320",
+      "entry_00468",
+      "PtSc"
+    ],
+    [
+      "entry_00904",
       "PtSi"
     ],
     [
-      "entry_00429",
+      "entry_00718",
+      "PtSi"
+    ],
+    [
+      "entry_01119",
+      "PtSi"
+    ],
+    [
+      "entry_00609",
+      "PtSi"
+    ],
+    [
+      "entry_01223",
+      "PtSi"
+    ],
+    [
+      "entry_00589",
+      "PtSi"
+    ],
+    [
+      "entry_00844",
       "PtSn"
     ],
     [
-      "entry_00573",
+      "entry_00905",
       "PtSn"
     ],
     [
-      "entry_00669",
+      "entry_01381",
       "PtSn"
     ],
     [
-      "entry_00769",
-      "PtSn"
-    ],
-    [
-      "entry_00840",
-      "PtSn"
-    ],
-    [
-      "entry_01180",
-      "PtSn"
-    ],
-    [
-      "entry_01290",
-      "PtSn"
-    ],
-    [
-      "entry_00444",
+      "entry_01218",
       "PtTa"
     ],
     [
-      "entry_00487",
+      "entry_00678",
       "PtTa"
     ],
     [
-      "entry_00582",
+      "entry_01060",
       "PtTa"
     ],
     [
-      "entry_00614",
+      "entry_00641",
       "PtTa"
     ],
     [
-      "entry_01123",
+      "entry_01314",
       "PtTa"
     ],
     [
-      "entry_00611",
+      "entry_00521",
+      "PtTa"
+    ],
+    [
+      "entry_01285",
       "PtTi"
     ],
     [
-      "entry_01111",
+      "entry_01103",
       "PtTi"
     ],
     [
-      "entry_01377",
+      "entry_00854",
       "PtTi"
     ],
     [
-      "entry_01427",
+      "entry_00752",
       "PtTi"
     ],
     [
-      "entry_01447",
+      "entry_01133",
       "PtTi"
     ],
     [
-      "entry_00643",
+      "entry_01243",
+      "PtTi"
+    ],
+    [
+      "entry_00799",
       "PtV"
     ],
     [
-      "entry_00735",
-      "PtV"
-    ],
-    [
-      "entry_00815",
-      "PtV"
-    ],
-    [
-      "entry_00867",
-      "PtV"
-    ],
-    [
-      "entry_00503",
+      "entry_00820",
       "PtY"
     ],
     [
-      "entry_00625",
+      "entry_00408",
+      "PtY"
+    ],
+    [
+      "entry_01046",
       "PtZn"
     ],
     [
-      "entry_01155",
+      "entry_00479",
       "PtZn"
     ],
     [
-      "entry_01265",
+      "entry_01316",
       "PtZn"
     ],
     [
-      "entry_01294",
+      "entry_01092",
       "PtZn"
     ],
     [
-      "entry_00414",
+      "entry_00767",
+      "PtZr"
+    ],
+    [
+      "entry_00669",
+      "PtZr"
+    ],
+    [
+      "entry_00977",
       "PtZr"
     ]
   ]

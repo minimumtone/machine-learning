@@ -10,6 +10,12 @@
 -- entity INSERT/UPDATE/DELETE is unsupported, and queries should run as
 -- the read-only role l12_reader.
 -- Idempotent: re-running only refreshes the timestamp.
+
+-- The marker is gated on the 006 assertions: validate_fixture_integrity()
+-- RAISEs on any violated invariant, so this whole file aborts and the
+-- marker row is never created for a database that fails validation.
+SELECT validate_fixture_integrity();
+
 CREATE TABLE IF NOT EXISTS schema_initialization_status (
     version TEXT PRIMARY KEY,
     initialized_at TIMESTAMPTZ NOT NULL DEFAULT now()

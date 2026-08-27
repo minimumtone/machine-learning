@@ -2,7 +2,7 @@
 -- 001_schema.sql — Schema definition (DDL only)
 -- 34 tables: 31 entity tables + property_definition dictionary
 --            + reference_energy_set (energy-convention master)
---            + source_energy_convention (source_db -> reference_set map)
+--            + fixture_source_reference_set (source_db -> reference_set map)
 -- Load order: 001_schema -> 002_reference_data -> 003_material_data
 --             -> 004_views -> 005_roles -> 006_integrity_checks
 --             -> 007_initialization_marker
@@ -31,8 +31,12 @@
 
 CREATE TABLE material_entry (
     entry_id TEXT PRIMARY KEY,
-    source_db TEXT,
-    source_material_id TEXT,
+    -- Provenance identity: source_material_id is the entry's ID inside the
+    -- source database (a synthetic label in this fixture), so the same
+    -- external record may not be ingested twice under different entry_ids.
+    source_db TEXT NOT NULL,
+    source_material_id TEXT NOT NULL,
+    UNIQUE (source_db, source_material_id),
     formula TEXT NOT NULL,
     reduced_formula TEXT,
     chemical_system TEXT,
@@ -45,7 +49,10 @@ CREATE TABLE element (
     element_id SERIAL PRIMARY KEY,
     symbol VARCHAR(5) NOT NULL UNIQUE,
     name VARCHAR(50),
-    atomic_number INTEGER NOT NULL CHECK (atomic_number > 0),
+    -- Periodic-table master: atomic numbers are unique and bounded by the
+    -- currently known elements (1..118).
+    atomic_number INTEGER NOT NULL UNIQUE
+        CHECK (atomic_number BETWEEN 1 AND 118),
     -- NUMERIC admits NaN (which compares greater than any number), so
     -- one-sided lower bounds alone would not reject it; hence <> 'NaN'.
     atomic_mass NUMERIC(10,4) CHECK (atomic_mass > 0 AND atomic_mass <> 'NaN'),
@@ -76,6 +83,12 @@ CREATE TABLE property_definition (
         CHECK (value_type = 'float'),
     applies_to VARCHAR(30) NOT NULL
         CHECK (applies_to IN ('calculated', 'measured', 'element')),
+    -- Shape contract for calculated_property.tensor_component:
+    --   'scalar'    -> child rows must have tensor_component IS NULL
+    --   'component' -> child rows must carry a tensor_component
+    -- (enforced by trg_calculated_property_shape below).
+    value_shape VARCHAR(20) NOT NULL DEFAULT 'scalar'
+        CHECK (value_shape IN ('scalar', 'component')),
     description TEXT,
     UNIQUE (canonical_name, canonical_unit)
 );
@@ -99,6 +112,10 @@ CREATE TABLE prototype_definition (
     prototype_name TEXT,
     strukturbericht TEXT,
     formula_type TEXT,
+    -- Atoms in the conventional unit cell (L12=4, B2=2, NaCl=8, D03=16);
+    -- NULL for per-element ground-state prototypes whose cells vary.
+    conventional_cell_atoms INTEGER
+        CHECK (conventional_cell_atoms > 0),
     description TEXT
 );
 
@@ -160,7 +177,7 @@ CREATE TABLE reference_energy_set (
 -- provenance label in this fixture, not the origin of the energy values).
 -- It only declares which (label, reference_set) combinations this
 -- fixture is allowed to load.
-CREATE TABLE source_energy_convention (
+CREATE TABLE fixture_source_reference_set (
     source_db TEXT,
     reference_set TEXT REFERENCES reference_energy_set(reference_set),
     PRIMARY KEY (source_db, reference_set)
@@ -183,7 +200,7 @@ CREATE TABLE phase_stability (
     -- comparable within one reference_set; views must join elemental
     -- references on the SAME reference_set, and 006 asserts that every
     -- loaded (source_db, reference_set) pair is declared in
-    -- source_energy_convention.
+    -- fixture_source_reference_set.
     reference_set TEXT NOT NULL
         REFERENCES reference_energy_set(reference_set),
     -- NOT NULL keeps the generated is_stable strictly two-valued
@@ -268,7 +285,8 @@ CREATE TABLE material_application (
     material_application_id SERIAL PRIMARY KEY,
     entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
     domain_id INTEGER NOT NULL REFERENCES application_domain(domain_id),
-    relevance_score NUMERIC(5,3) CHECK (relevance_score BETWEEN 0 AND 1),
+    relevance_score NUMERIC(5,3)
+        CHECK (relevance_score BETWEEN 0 AND 1 AND relevance_score <> 'NaN'),
     notes TEXT,
     UNIQUE (entry_id, domain_id)
 );
@@ -313,8 +331,13 @@ CREATE TABLE experimental_measurement (
     -- unknown-condition measurement per (entry, reference, method) is
     -- representable. Distinct real-world measurements must carry their
     -- actual conditions to coexist.
+    -- measurement_run distinguishes independent measurements made under
+    -- the same (reference, method, T, P); the current fixture only loads
+    -- run 1, but the natural key does not forbid real replicates.
+    measurement_run INTEGER NOT NULL DEFAULT 1 CHECK (measurement_run > 0),
     UNIQUE NULLS NOT DISTINCT
-        (entry_id, reference_id, method, temperature_k, pressure_gpa)
+        (entry_id, reference_id, method, temperature_k, pressure_gpa,
+         measurement_run)
 );
 
 CREATE TABLE measured_property (
@@ -367,7 +390,7 @@ CREATE TABLE material_synthesis (
 CREATE TABLE defect_type (
     defect_type_id SERIAL PRIMARY KEY,
     defect_name VARCHAR(100) NOT NULL UNIQUE,
-    category VARCHAR(50),  -- 'vacancy', 'interstitial', 'antisite', 'substitutional'
+    category VARCHAR(50),  -- 'point', 'line', 'planar'
     description TEXT
 );
 
@@ -391,13 +414,17 @@ CREATE TABLE material_defect (
 CREATE TABLE band_structure (
     band_structure_id SERIAL PRIMARY KEY,
     calculation_id TEXT NOT NULL UNIQUE REFERENCES calculation(calculation_id),
-    is_direct_gap BOOLEAN NOT NULL,
+    -- Single truth for gap directness: band_gap_type is the stored value
+    -- and is_direct_gap is derived from it, so the two can never disagree.
+    band_gap_type VARCHAR(20) NOT NULL
+        CHECK (band_gap_type IN ('direct', 'indirect')),
+    is_direct_gap BOOLEAN GENERATED ALWAYS AS
+        (band_gap_type = 'direct') STORED,
     -- Sign-free energies: finite-only (NaN / +-Infinity rejected).
     cbm_energy DOUBLE PRECISION
         CHECK (cbm_energy > '-Infinity' AND cbm_energy < 'Infinity'),
     vbm_energy DOUBLE PRECISION
         CHECK (vbm_energy > '-Infinity' AND vbm_energy < 'Infinity'),
-    band_gap_type VARCHAR(20),
     num_bands INTEGER CHECK (num_bands > 0),
     num_kpoints INTEGER CHECK (num_kpoints > 0)
 );
@@ -496,7 +523,12 @@ CREATE TABLE grain_boundary (
 
 CREATE TABLE phase_diagram_entry (
     phase_entry_id SERIAL PRIMARY KEY,
-    entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
+    -- One phase-diagram entry per material (its composition is fixed, so
+    -- it belongs to exactly one chemical system). chemical_system must
+    -- match material_entry.chemical_system and hull_distance must equal
+    -- phase_stability.energy_above_hull; both cross-table copies are
+    -- asserted by validate_fixture_integrity() (006).
+    entry_id TEXT NOT NULL UNIQUE REFERENCES material_entry(entry_id),
     chemical_system TEXT NOT NULL,
     -- Single stability truth: is_on_hull is DERIVED from hull_distance
     -- with the same operational threshold as phase_stability.is_stable
@@ -505,8 +537,7 @@ CREATE TABLE phase_diagram_entry (
     hull_distance DOUBLE PRECISION NOT NULL
         CHECK (hull_distance >= 0 AND hull_distance < 'Infinity'),
     is_on_hull BOOLEAN GENERATED ALWAYS AS (hull_distance <= 0.001) STORED,
-    decomposition_products TEXT,
-    UNIQUE (entry_id, chemical_system)
+    decomposition_products TEXT
 );
 
 CREATE TABLE alloy_system (
@@ -571,6 +602,10 @@ CREATE INDEX idx_phase_stability_hull ON phase_stability(energy_above_hull);
 CREATE INDEX idx_material_app_domain ON material_application(domain_id);
 CREATE INDEX idx_exp_measurement_entry ON experimental_measurement(entry_id);
 CREATE INDEX idx_material_synthesis_method ON material_synthesis(synthesis_id);
+CREATE INDEX idx_material_synthesis_entry ON material_synthesis(entry_id);
+CREATE INDEX idx_material_synthesis_ref ON material_synthesis(reference_id);
+CREATE INDEX idx_exp_measurement_ref ON experimental_measurement(reference_id);
+CREATE INDEX idx_material_reference_ref ON material_reference(reference_id);
 CREATE INDEX idx_material_defect_type ON material_defect(defect_type_id);
 CREATE INDEX idx_mat_alloy_system ON material_alloy_system(alloy_system_id);
 
@@ -689,6 +724,67 @@ CREATE TRIGGER trg_measured_property_applies_to
 CREATE TRIGGER trg_element_property_applies_to
     BEFORE INSERT OR UPDATE OF property_name ON element_property
     FOR EACH ROW EXECUTE FUNCTION check_property_applies_to('element');
+
+-- === Dictionary shape enforcement: property_definition.value_shape ===
+-- scalar properties must not carry a tensor_component; component-valued
+-- properties must carry one. Without this, the tensor_component column is
+-- an unchecked free-text axis.
+CREATE FUNCTION check_property_value_shape() RETURNS trigger AS $$
+DECLARE
+    shape TEXT;
+BEGIN
+    SELECT value_shape INTO shape
+    FROM property_definition WHERE canonical_name = NEW.property_name;
+    IF shape = 'scalar' AND NEW.tensor_component IS NOT NULL THEN
+        RAISE EXCEPTION
+            'calculated_property: scalar property % may not carry tensor_component %',
+            NEW.property_name, NEW.tensor_component;
+    ELSIF shape = 'component' AND NEW.tensor_component IS NULL THEN
+        RAISE EXCEPTION
+            'calculated_property: component property % requires a tensor_component',
+            NEW.property_name;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_calculated_property_shape
+    BEFORE INSERT OR UPDATE OF property_name, tensor_component
+    ON calculated_property
+    FOR EACH ROW EXECUTE FUNCTION check_property_value_shape();
+
+-- Master-side companion: value_shape may not change while child rows exist
+-- in the opposite shape.
+CREATE FUNCTION prevent_invalid_value_shape_change() RETURNS trigger AS $$
+BEGIN
+    IF NEW.value_shape IS NOT DISTINCT FROM OLD.value_shape THEN
+        RETURN NEW;
+    END IF;
+    IF NEW.value_shape = 'scalar' AND EXISTS (
+        SELECT 1 FROM calculated_property
+        WHERE property_name = OLD.canonical_name
+          AND tensor_component IS NOT NULL
+    ) THEN
+        RAISE EXCEPTION
+            'property %: cannot become scalar while component rows exist',
+            OLD.canonical_name;
+    END IF;
+    IF NEW.value_shape = 'component' AND EXISTS (
+        SELECT 1 FROM calculated_property
+        WHERE property_name = OLD.canonical_name
+          AND tensor_component IS NULL
+    ) THEN
+        RAISE EXCEPTION
+            'property %: cannot become component-valued while scalar rows exist',
+            OLD.canonical_name;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_property_definition_shape_change
+    BEFORE UPDATE OF value_shape ON property_definition
+    FOR EACH ROW EXECUTE FUNCTION prevent_invalid_value_shape_change();
 
 -- Master-side guard: applies_to may not be changed while child rows still
 -- reference the property, so the scope guarantee cannot be broken from the

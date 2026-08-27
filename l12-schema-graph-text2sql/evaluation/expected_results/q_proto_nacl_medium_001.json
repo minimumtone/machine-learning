@@ -6,242 +6,177 @@
   ],
   "rows": [
     [
-      "entry_01124",
+      "entry_01052",
       "AgSc",
       "NaCl"
     ],
     [
-      "entry_01284",
-      "AgSc",
-      "NaCl"
-    ],
-    [
-      "entry_01309",
-      "AgSc",
-      "NaCl"
-    ],
-    [
-      "entry_01314",
-      "AgSc",
-      "NaCl"
-    ],
-    [
-      "entry_01359",
-      "AgSc",
-      "NaCl"
-    ],
-    [
-      "entry_01113",
+      "entry_01186",
       "AuSc",
       "NaCl"
     ],
     [
-      "entry_01065",
+      "entry_01356",
       "CoSc",
       "NaCl"
     ],
     [
-      "entry_01258",
-      "CoSc",
-      "NaCl"
-    ],
-    [
-      "entry_01280",
+      "entry_01067",
       "CoSc",
       "NaCl"
     ],
     [
       "entry_01361",
-      "CoSc",
-      "NaCl"
-    ],
-    [
-      "entry_01040",
       "CuSc",
       "NaCl"
     ],
     [
-      "entry_01227",
-      "CuSc",
-      "NaCl"
-    ],
-    [
-      "entry_01332",
-      "CuSc",
-      "NaCl"
-    ],
-    [
-      "entry_01358",
-      "CuSc",
-      "NaCl"
-    ],
-    [
-      "entry_01038",
+      "entry_01148",
       "FeSc",
       "NaCl"
     ],
     [
-      "entry_01046",
+      "entry_01161",
       "FeSc",
       "NaCl"
     ],
     [
-      "entry_01101",
-      "FeSc",
-      "NaCl"
-    ],
-    [
-      "entry_01263",
-      "FeSc",
-      "NaCl"
-    ],
-    [
-      "entry_01289",
-      "FeSc",
-      "NaCl"
-    ],
-    [
-      "entry_01337",
-      "FeSc",
-      "NaCl"
-    ],
-    [
-      "entry_01062",
+      "entry_01298",
       "HfSc",
       "NaCl"
     ],
     [
-      "entry_01157",
+      "entry_01096",
       "HfSc",
       "NaCl"
     ],
     [
-      "entry_01162",
+      "entry_01189",
       "IrSc",
       "NaCl"
     ],
     [
-      "entry_01207",
+      "entry_01095",
       "IrSc",
       "NaCl"
     ],
     [
-      "entry_01338",
-      "IrSc",
-      "NaCl"
-    ],
-    [
-      "entry_01188",
+      "entry_01303",
       "NiSc",
       "NaCl"
     ],
     [
-      "entry_01235",
+      "entry_01205",
       "NiSc",
       "NaCl"
     ],
     [
-      "entry_01347",
-      "NiSc",
-      "NaCl"
-    ],
-    [
-      "entry_01043",
+      "entry_01256",
       "PdSc",
       "NaCl"
     ],
     [
-      "entry_01221",
-      "PdSc",
-      "NaCl"
-    ],
-    [
-      "entry_01355",
-      "PdSc",
-      "NaCl"
-    ],
-    [
-      "entry_01374",
-      "PdSc",
-      "NaCl"
-    ],
-    [
-      "entry_01173",
+      "entry_01129",
       "PtSc",
       "NaCl"
     ],
     [
-      "entry_01283",
+      "entry_01097",
       "PtSc",
       "NaCl"
     ],
     [
-      "entry_01372",
-      "PtSc",
+      "entry_01201",
+      "RhSc",
       "NaCl"
     ],
     [
-      "entry_01036",
-      "RuSc",
+      "entry_01113",
+      "RhSc",
       "NaCl"
     ],
     [
-      "entry_01052",
-      "RuSc",
+      "entry_01137",
+      "RhSc",
       "NaCl"
     ],
     [
-      "entry_01055",
-      "RuSc",
+      "entry_01031",
+      "RhSc",
       "NaCl"
     ],
     [
-      "entry_01121",
-      "RuSc",
-      "NaCl"
-    ],
-    [
-      "entry_01179",
-      "RuSc",
-      "NaCl"
-    ],
-    [
-      "entry_01253",
-      "TiSc",
-      "NaCl"
-    ],
-    [
-      "entry_01318",
-      "TiSc",
-      "NaCl"
-    ],
-    [
-      "entry_01363",
-      "TiSc",
-      "NaCl"
-    ],
-    [
-      "entry_01293",
-      "VSc",
-      "NaCl"
-    ],
-    [
-      "entry_01082",
-      "ZrSc",
-      "NaCl"
-    ],
-    [
-      "entry_01102",
-      "ZrSc",
-      "NaCl"
-    ],
-    [
-      "entry_01202",
-      "ZrSc",
+      "entry_01266",
+      "RhSc",
       "NaCl"
     ],
     [
       "entry_01352",
+      "RhSc",
+      "NaCl"
+    ],
+    [
+      "entry_01357",
+      "RhSc",
+      "NaCl"
+    ],
+    [
+      "entry_01080",
+      "RuSc",
+      "NaCl"
+    ],
+    [
+      "entry_01340",
+      "RuSc",
+      "NaCl"
+    ],
+    [
+      "entry_01281",
+      "RuSc",
+      "NaCl"
+    ],
+    [
+      "entry_01260",
+      "TiSc",
+      "NaCl"
+    ],
+    [
+      "entry_01053",
+      "TiSc",
+      "NaCl"
+    ],
+    [
+      "entry_01300",
+      "VSc",
+      "NaCl"
+    ],
+    [
+      "entry_01344",
+      "VSc",
+      "NaCl"
+    ],
+    [
+      "entry_01151",
+      "ZrSc",
+      "NaCl"
+    ],
+    [
+      "entry_01085",
+      "ZrSc",
+      "NaCl"
+    ],
+    [
+      "entry_01255",
+      "ZrSc",
+      "NaCl"
+    ],
+    [
+      "entry_01283",
+      "ZrSc",
+      "NaCl"
+    ],
+    [
+      "entry_01328",
       "ZrSc",
       "NaCl"
     ]

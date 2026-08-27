@@ -33,7 +33,7 @@ allowed_tables:
   - pure_element_reference
   - reference_energy_set
   - schema_initialization_status
-  - source_energy_convention
+  - fixture_source_reference_set
   - space_group
   - structure
   - surface_energy
@@ -234,8 +234,8 @@ allowed_columns:
   - reference_energy_set.description
   - schema_initialization_status.version
   - schema_initialization_status.initialized_at
-  - source_energy_convention.source_db
-  - source_energy_convention.reference_set
+  - fixture_source_reference_set.source_db
+  - fixture_source_reference_set.reference_set
   - space_group.space_group_id
   - space_group.space_group_number
   - space_group.hermann_mauguin
@@ -459,7 +459,7 @@ allowed_joins:
     target_table: reference_energy_set
     target_column: reference_set
 
-  - source_table: source_energy_convention
+  - source_table: fixture_source_reference_set
     source_column: reference_set
     target_table: reference_energy_set
     target_column: reference_set

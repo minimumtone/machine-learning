@@ -6,362 +6,312 @@
   ],
   "rows": [
     [
-      "entry_00318",
+      "entry_00281",
       "Ag3Al",
       "cubic"
     ],
     [
-      "entry_00219",
+      "entry_00360",
+      "Ag3Al",
+      "cubic"
+    ],
+    [
+      "entry_00319",
       "Ag3Cu",
       "cubic"
     ],
     [
-      "entry_00207",
+      "entry_00248",
+      "Ag3Cu",
+      "cubic"
+    ],
+    [
+      "entry_00145",
+      "Ag3Cu",
+      "cubic"
+    ],
+    [
+      "entry_00169",
+      "Ag3Cu",
+      "cubic"
+    ],
+    [
+      "entry_00042",
       "Ag3Fe",
       "cubic"
     ],
     [
-      "entry_00079",
-      "Ag3Ga",
+      "entry_00341",
+      "Ag3Ge",
       "cubic"
     ],
     [
-      "entry_00118",
-      "Ag3Ga",
+      "entry_00329",
+      "Ag3Hf",
       "cubic"
     ],
     [
-      "entry_00339",
-      "Ag3In",
-      "cubic"
-    ],
-    [
-      "entry_00194",
+      "entry_00188",
       "Ag3Mg",
       "cubic"
     ],
     [
-      "entry_00372",
-      "Ag3Nb",
-      "cubic"
-    ],
-    [
-      "entry_00103",
+      "entry_00159",
       "Ag3Sb",
       "cubic"
     ],
     [
-      "entry_00120",
+      "entry_00116",
       "Ag3Sc",
       "cubic"
     ],
     [
-      "entry_00089",
-      "Ag3Si",
+      "entry_00150",
+      "Ag3Sc",
       "cubic"
     ],
     [
-      "entry_00082",
-      "Ag3Sn",
-      "cubic"
-    ],
-    [
-      "entry_00296",
-      "Ag3Ta",
-      "cubic"
-    ],
-    [
-      "entry_00356",
-      "Ag3Ta",
-      "cubic"
-    ],
-    [
-      "entry_00058",
+      "entry_00061",
       "Ag3Ti",
       "cubic"
     ],
     [
-      "entry_00017",
+      "entry_00326",
       "Ag3Ti",
       "cubic"
     ],
     [
-      "entry_00090",
-      "Ag3Ti",
+      "entry_00044",
+      "Ag3V",
       "cubic"
     ],
     [
-      "entry_00315",
+      "entry_00310",
       "Ag3Y",
       "cubic"
     ],
     [
-      "entry_01064",
+      "entry_00364",
+      "Ag3Zn",
+      "cubic"
+    ],
+    [
+      "entry_01169",
       "AgAl",
       "cubic"
     ],
     [
-      "entry_00726",
+      "entry_01234",
       "AgAl",
       "cubic"
     ],
     [
-      "entry_01237",
-      "AgAl",
-      "cubic"
-    ],
-    [
-      "entry_01153",
-      "AgAl",
-      "cubic"
-    ],
-    [
-      "entry_00493",
-      "AgAl",
-      "cubic"
-    ],
-    [
-      "entry_00668",
+      "entry_00890",
       "AgBe",
       "cubic"
     ],
     [
-      "entry_00533",
-      "AgCu",
-      "cubic"
-    ],
-    [
-      "entry_00397",
-      "AgCu",
-      "cubic"
-    ],
-    [
-      "entry_00838",
-      "AgCu",
-      "cubic"
-    ],
-    [
-      "entry_00894",
+      "entry_00497",
       "AgFe",
       "cubic"
     ],
     [
-      "entry_00723",
+      "entry_00417",
       "AgFe",
       "cubic"
     ],
     [
-      "entry_00457",
+      "entry_00954",
       "AgGa",
       "cubic"
     ],
     [
-      "entry_01261",
+      "entry_00558",
       "AgGa",
       "cubic"
     ],
     [
-      "entry_00523",
-      "AgGa",
+      "entry_01464",
+      "AgGa3",
       "cubic"
     ],
     [
-      "entry_01242",
+      "entry_01365",
       "AgGe",
       "cubic"
     ],
     [
-      "entry_00745",
-      "AgGe",
-      "cubic"
-    ],
-    [
-      "entry_01206",
-      "AgGe",
-      "cubic"
-    ],
-    [
-      "entry_01465",
-      "AgGe3",
-      "cubic"
-    ],
-    [
-      "entry_01106",
+      "entry_00961",
       "AgHf",
       "cubic"
     ],
     [
-      "entry_00906",
+      "entry_00628",
+      "AgHf",
+      "cubic"
+    ],
+    [
+      "entry_00876",
+      "AgHf",
+      "cubic"
+    ],
+    [
+      "entry_00547",
       "AgIn",
       "cubic"
     ],
     [
-      "entry_01026",
+      "entry_00486",
       "AgMg",
       "cubic"
     ],
     [
-      "entry_00801",
-      "AgMg",
-      "cubic"
-    ],
-    [
-      "entry_00739",
+      "entry_00955",
       "AgMn",
       "cubic"
     ],
     [
-      "entry_01133",
+      "entry_00688",
+      "AgMn",
+      "cubic"
+    ],
+    [
+      "entry_01217",
       "AgNb",
       "cubic"
     ],
     [
-      "entry_01379",
-      "AgNb",
+      "entry_00887",
+      "AgSb",
       "cubic"
     ],
     [
-      "entry_01296",
-      "AgNb",
+      "entry_00551",
+      "AgSb",
       "cubic"
     ],
     [
-      "entry_01331",
-      "AgNb",
-      "cubic"
-    ],
-    [
-      "entry_00651",
-      "AgNb",
-      "cubic"
-    ],
-    [
-      "entry_01467",
-      "AgNb3",
-      "cubic"
-    ],
-    [
-      "entry_01314",
+      "entry_00552",
       "AgSc",
       "cubic"
     ],
     [
-      "entry_00868",
+      "entry_00814",
       "AgSc",
       "cubic"
     ],
     [
-      "entry_00586",
+      "entry_01052",
       "AgSc",
       "cubic"
     ],
     [
-      "entry_01359",
+      "entry_00862",
       "AgSc",
       "cubic"
     ],
     [
-      "entry_01018",
-      "AgSc",
-      "cubic"
-    ],
-    [
-      "entry_01124",
-      "AgSc",
-      "cubic"
-    ],
-    [
-      "entry_01284",
-      "AgSc",
-      "cubic"
-    ],
-    [
-      "entry_01309",
-      "AgSc",
-      "cubic"
-    ],
-    [
-      "entry_01146",
+      "entry_01162",
       "AgSi",
-      "cubic"
-    ],
-    [
-      "entry_01328",
-      "AgSi",
-      "cubic"
-    ],
-    [
-      "entry_01231",
-      "AgSi",
-      "cubic"
-    ],
-    [
-      "entry_01305",
-      "AgSi",
-      "cubic"
-    ],
-    [
-      "entry_00701",
-      "AgSn",
-      "cubic"
-    ],
-    [
-      "entry_00400",
-      "AgSn",
-      "cubic"
-    ],
-    [
-      "entry_01200",
-      "AgTa",
-      "cubic"
-    ],
-    [
-      "entry_00673",
-      "AgTi",
-      "cubic"
-    ],
-    [
-      "entry_01201",
-      "AgTi",
-      "cubic"
-    ],
-    [
-      "entry_01021",
-      "AgV",
-      "cubic"
-    ],
-    [
-      "entry_01196",
-      "AgY",
-      "cubic"
-    ],
-    [
-      "entry_01262",
-      "AgY",
-      "cubic"
-    ],
-    [
-      "entry_00706",
-      "AgY",
-      "cubic"
-    ],
-    [
-      "entry_00908",
-      "AgZn",
       "cubic"
     ],
     [
       "entry_00993",
+      "AgSi",
+      "cubic"
+    ],
+    [
+      "entry_00452",
+      "AgSi",
+      "cubic"
+    ],
+    [
+      "entry_01282",
+      "AgSi",
+      "cubic"
+    ],
+    [
+      "entry_01136",
+      "AgSn",
+      "cubic"
+    ],
+    [
+      "entry_00828",
+      "AgSn",
+      "cubic"
+    ],
+    [
+      "entry_01360",
+      "AgSn",
+      "cubic"
+    ],
+    [
+      "entry_01032",
+      "AgSn",
+      "cubic"
+    ],
+    [
+      "entry_00809",
+      "AgSn",
+      "cubic"
+    ],
+    [
+      "entry_00901",
+      "AgSn",
+      "cubic"
+    ],
+    [
+      "entry_01345",
+      "AgTa",
+      "cubic"
+    ],
+    [
+      "entry_00875",
+      "AgV",
+      "cubic"
+    ],
+    [
+      "entry_01066",
+      "AgY",
+      "cubic"
+    ],
+    [
+      "entry_01469",
+      "AgY3",
+      "cubic"
+    ],
+    [
+      "entry_01325",
       "AgZn",
       "cubic"
     ],
     [
-      "entry_00525",
+      "entry_00853",
       "AgZn",
       "cubic"
     ],
     [
-      "entry_00654",
+      "entry_01183",
+      "AgZn",
+      "cubic"
+    ],
+    [
+      "entry_01227",
+      "AgZn",
+      "cubic"
+    ],
+    [
+      "entry_01330",
+      "AgZn",
+      "cubic"
+    ],
+    [
+      "entry_00623",
+      "AgZr",
+      "cubic"
+    ],
+    [
+      "entry_00715",
       "AgZr",
       "cubic"
     ],
@@ -381,293 +331,388 @@
       "cubic"
     ],
     [
+      "entry_00007",
+      "Al3V",
+      "cubic"
+    ],
+    [
+      "entry_01459",
+      "AlFe3",
+      "cubic"
+    ],
+    [
       "elem_au_1214506",
       "Au",
       "cubic"
     ],
     [
-      "entry_00237",
-      "Au3Al",
+      "entry_00027",
+      "Au3Be",
       "cubic"
     ],
     [
-      "entry_00208",
+      "entry_00347",
+      "Au3Be",
+      "cubic"
+    ],
+    [
+      "entry_00306",
       "Au3Cu",
       "cubic"
     ],
     [
-      "entry_00279",
-      "Au3Ga",
-      "cubic"
-    ],
-    [
-      "entry_00344",
-      "Au3Hf",
-      "cubic"
-    ],
-    [
-      "entry_00124",
+      "entry_00367",
       "Au3In",
       "cubic"
     ],
     [
-      "entry_00037",
+      "entry_00240",
       "Au3Mg",
       "cubic"
     ],
     [
-      "entry_00264",
-      "Au3Mn",
+      "entry_00118",
+      "Au3Sb",
       "cubic"
     ],
     [
-      "entry_00074",
-      "Au3Mn",
+      "entry_00356",
+      "Au3Sb",
       "cubic"
     ],
     [
-      "entry_00197",
-      "Au3Ta",
+      "entry_00270",
+      "Au3Sc",
       "cubic"
     ],
     [
-      "entry_00300",
+      "entry_00190",
+      "Au3Si",
+      "cubic"
+    ],
+    [
+      "entry_00228",
+      "Au3Sn",
+      "cubic"
+    ],
+    [
+      "entry_00045",
       "Au3Ti",
       "cubic"
     ],
     [
-      "entry_00244",
+      "entry_00193",
+      "Au3Ti",
+      "cubic"
+    ],
+    [
+      "entry_00186",
+      "Au3Ti",
+      "cubic"
+    ],
+    [
+      "entry_00119",
       "Au3V",
       "cubic"
     ],
     [
-      "entry_00091",
-      "Au3V",
-      "cubic"
-    ],
-    [
-      "entry_00032",
+      "entry_00252",
       "Au3Y",
       "cubic"
     ],
     [
-      "entry_00226",
+      "entry_00080",
+      "Au3Y",
+      "cubic"
+    ],
+    [
+      "entry_00136",
+      "Au3Y",
+      "cubic"
+    ],
+    [
+      "entry_00065",
+      "Au3Y",
+      "cubic"
+    ],
+    [
+      "entry_00037",
       "Au3Zn",
       "cubic"
     ],
     [
-      "entry_00366",
-      "Au3Zn",
+      "entry_00056",
+      "Au3Zr",
       "cubic"
     ],
     [
-      "entry_00914",
+      "entry_00951",
       "AuAl",
       "cubic"
     ],
     [
-      "entry_00507",
+      "entry_01034",
       "AuAl",
       "cubic"
     ],
     [
-      "entry_00708",
-      "AuCu",
-      "cubic"
-    ],
-    [
-      "entry_00432",
-      "AuFe",
-      "cubic"
-    ],
-    [
-      "entry_00592",
-      "AuFe",
-      "cubic"
-    ],
-    [
-      "entry_01199",
-      "AuGa",
-      "cubic"
-    ],
-    [
-      "entry_01158",
-      "AuGe",
-      "cubic"
-    ],
-    [
-      "entry_00589",
-      "AuHf",
-      "cubic"
-    ],
-    [
-      "entry_01067",
-      "AuHf",
-      "cubic"
-    ],
-    [
-      "entry_00661",
-      "AuHf",
-      "cubic"
-    ],
-    [
-      "entry_00486",
-      "AuIn",
-      "cubic"
-    ],
-    [
-      "entry_00459",
-      "AuMg",
-      "cubic"
-    ],
-    [
-      "entry_00458",
-      "AuMg",
+      "entry_00957",
+      "AuBe",
       "cubic"
     ],
     [
       "entry_00477",
-      "AuMn",
+      "AuBe",
       "cubic"
     ],
     [
-      "entry_00583",
-      "AuNb",
+      "entry_00434",
+      "AuCu",
       "cubic"
     ],
     [
-      "entry_01267",
-      "AuNb",
+      "entry_00769",
+      "AuFe",
       "cubic"
     ],
     [
-      "entry_00944",
-      "AuNb",
+      "entry_01238",
+      "AuGa",
       "cubic"
     ],
     [
-      "entry_00714",
-      "AuNb",
+      "entry_01294",
+      "AuGa",
       "cubic"
     ],
     [
-      "entry_00666",
-      "AuNb",
+      "entry_00779",
+      "AuGa",
       "cubic"
     ],
     [
-      "entry_01113",
-      "AuSc",
+      "entry_01263",
+      "AuGa",
       "cubic"
     ],
     [
-      "entry_00787",
-      "AuSc",
+      "entry_01382",
+      "AuGe",
       "cubic"
     ],
     [
-      "entry_01348",
-      "AuSi",
+      "entry_01172",
+      "AuGe",
       "cubic"
     ],
     [
-      "entry_01322",
-      "AuSi",
+      "entry_00719",
+      "AuGe",
       "cubic"
     ],
     [
-      "entry_01198",
-      "AuSi",
+      "entry_00969",
+      "AuGe",
       "cubic"
     ],
     [
-      "entry_01208",
-      "AuSi",
+      "entry_00877",
+      "AuGe",
       "cubic"
     ],
     [
-      "entry_01045",
-      "AuSi",
+      "entry_01156",
+      "AuGe",
       "cubic"
     ],
     [
-      "entry_01217",
-      "AuSi",
+      "entry_01100",
+      "AuHf",
       "cubic"
     ],
     [
-      "entry_01464",
-      "AuSi3",
+      "entry_01142",
+      "AuHf",
       "cubic"
     ],
     [
-      "entry_01178",
-      "AuSn",
+      "entry_00791",
+      "AuHf",
       "cubic"
     ],
     [
-      "entry_00508",
-      "AuSn",
+      "entry_01048",
+      "AuHf",
       "cubic"
     ],
     [
-      "entry_01097",
-      "AuTa",
-      "cubic"
-    ],
-    [
-      "entry_01276",
-      "AuTa",
-      "cubic"
-    ],
-    [
-      "entry_00535",
-      "AuTa",
-      "cubic"
-    ],
-    [
-      "entry_00600",
-      "AuTa",
-      "cubic"
-    ],
-    [
-      "entry_01177",
-      "AuTi",
-      "cubic"
-    ],
-    [
-      "entry_00837",
-      "AuY",
-      "cubic"
-    ],
-    [
-      "entry_01145",
-      "AuY",
-      "cubic"
-    ],
-    [
-      "entry_00675",
-      "AuY",
+      "entry_01317",
+      "AuHf",
       "cubic"
     ],
     [
       "entry_01274",
+      "AuHf",
+      "cubic"
+    ],
+    [
+      "entry_00836",
+      "AuMg",
+      "cubic"
+    ],
+    [
+      "entry_00898",
+      "AuMg",
+      "cubic"
+    ],
+    [
+      "entry_00527",
+      "AuMg",
+      "cubic"
+    ],
+    [
+      "entry_00972",
+      "AuMg",
+      "cubic"
+    ],
+    [
+      "entry_00889",
+      "AuMg",
+      "cubic"
+    ],
+    [
+      "entry_00946",
+      "AuMn",
+      "cubic"
+    ],
+    [
+      "entry_00658",
+      "AuNb",
+      "cubic"
+    ],
+    [
+      "entry_01193",
+      "AuNb",
+      "cubic"
+    ],
+    [
+      "entry_01042",
+      "AuNb",
+      "cubic"
+    ],
+    [
+      "entry_01231",
+      "AuNb",
+      "cubic"
+    ],
+    [
+      "entry_00927",
+      "AuSb",
+      "cubic"
+    ],
+    [
+      "entry_00846",
+      "AuSb",
+      "cubic"
+    ],
+    [
+      "entry_01186",
+      "AuSc",
+      "cubic"
+    ],
+    [
+      "entry_01145",
+      "AuSi",
+      "cubic"
+    ],
+    [
+      "entry_00694",
+      "AuSi",
+      "cubic"
+    ],
+    [
+      "entry_01203",
+      "AuSi",
+      "cubic"
+    ],
+    [
+      "entry_01118",
+      "AuSn",
+      "cubic"
+    ],
+    [
+      "entry_01120",
+      "AuSn",
+      "cubic"
+    ],
+    [
+      "entry_01267",
+      "AuTa",
+      "cubic"
+    ],
+    [
+      "entry_00900",
+      "AuTi",
+      "cubic"
+    ],
+    [
+      "entry_01086",
+      "AuTi",
+      "cubic"
+    ],
+    [
+      "entry_01037",
+      "AuTi",
+      "cubic"
+    ],
+    [
+      "entry_00431",
+      "AuTi",
+      "cubic"
+    ],
+    [
+      "entry_01022",
+      "AuV",
+      "cubic"
+    ],
+    [
+      "entry_00626",
+      "AuY",
+      "cubic"
+    ],
+    [
+      "entry_01214",
+      "AuY",
+      "cubic"
+    ],
+    [
+      "entry_00520",
       "AuZn",
       "cubic"
     ],
     [
-      "entry_01378",
+      "entry_00837",
       "AuZn",
       "cubic"
     ],
     [
-      "entry_01339",
+      "entry_00582",
       "AuZn",
       "cubic"
     ],
     [
-      "entry_01210",
+      "entry_01280",
       "AuZn",
+      "cubic"
+    ],
+    [
+      "entry_00965",
+      "AuZr",
+      "cubic"
+    ],
+    [
+      "entry_00573",
+      "AuZr",
       "cubic"
     ],
     [
@@ -681,33 +726,18 @@
       "cubic"
     ],
     [
-      "entry_00215",
+      "entry_00290",
       "Co3Al",
       "cubic"
     ],
     [
-      "entry_00303",
+      "entry_00010",
       "Co3Al",
       "cubic"
     ],
     [
-      "entry_00009",
+      "entry_00309",
       "Co3Al",
-      "cubic"
-    ],
-    [
-      "entry_00125",
-      "Co3Be",
-      "cubic"
-    ],
-    [
-      "entry_00363",
-      "Co3Cu",
-      "cubic"
-    ],
-    [
-      "entry_00336",
-      "Co3Cu",
       "cubic"
     ],
     [
@@ -716,82 +746,37 @@
       "cubic"
     ],
     [
-      "entry_00342",
-      "Co3Fe",
-      "cubic"
-    ],
-    [
-      "entry_00055",
-      "Co3Ga",
-      "cubic"
-    ],
-    [
-      "entry_00184",
-      "Co3Ga",
-      "cubic"
-    ],
-    [
-      "entry_00071",
+      "entry_00337",
       "Co3Ge",
       "cubic"
     ],
     [
-      "entry_00099",
+      "entry_00231",
       "Co3Hf",
       "cubic"
     ],
     [
-      "entry_00283",
+      "entry_00300",
       "Co3Mg",
       "cubic"
     ],
     [
-      "entry_00068",
-      "Co3Mg",
+      "entry_00101",
+      "Co3Mn",
       "cubic"
     ],
     [
-      "entry_00106",
-      "Co3Mg",
-      "cubic"
-    ],
-    [
-      "entry_00351",
-      "Co3Nb",
-      "cubic"
-    ],
-    [
-      "entry_00100",
+      "entry_00382",
       "Co3Sb",
       "cubic"
     ],
     [
-      "entry_00321",
-      "Co3Sc",
-      "cubic"
-    ],
-    [
-      "entry_00205",
-      "Co3Si",
-      "cubic"
-    ],
-    [
-      "entry_00191",
-      "Co3Sn",
-      "cubic"
-    ],
-    [
-      "entry_00310",
-      "Co3Sn",
-      "cubic"
-    ],
-    [
-      "entry_00011",
+      "entry_00094",
       "Co3Ta",
       "cubic"
     ],
     [
-      "entry_00282",
+      "entry_00012",
       "Co3Ta",
       "cubic"
     ],
@@ -801,342 +786,347 @@
       "cubic"
     ],
     [
-      "entry_00010",
+      "entry_00197",
+      "Co3V",
+      "cubic"
+    ],
+    [
+      "entry_00232",
+      "Co3V",
+      "cubic"
+    ],
+    [
+      "entry_00011",
       "Co3W",
       "cubic"
     ],
     [
-      "entry_00260",
+      "entry_00375",
+      "Co3Y",
+      "cubic"
+    ],
+    [
+      "entry_00143",
       "Co3Zn",
       "cubic"
     ],
     [
-      "entry_00263",
-      "Co3Zn",
-      "cubic"
-    ],
-    [
-      "entry_00243",
-      "Co3Zr",
-      "cubic"
-    ],
-    [
-      "entry_00157",
-      "Co3Zr",
-      "cubic"
-    ],
-    [
-      "entry_00957",
+      "entry_01371",
       "CoAl",
       "cubic"
     ],
     [
-      "entry_01204",
+      "entry_01276",
       "CoAl",
       "cubic"
     ],
     [
-      "entry_00882",
+      "entry_01101",
       "CoAl",
       "cubic"
     ],
     [
-      "entry_01161",
-      "CoAl",
-      "cubic"
-    ],
-    [
-      "entry_00992",
+      "entry_00931",
       "CoBe",
       "cubic"
     ],
     [
-      "entry_00719",
+      "entry_00949",
       "CoBe",
       "cubic"
     ],
     [
-      "entry_00405",
+      "entry_00671",
       "CoBe",
       "cubic"
     ],
     [
-      "entry_00504",
+      "entry_00755",
+      "CoBe",
+      "cubic"
+    ],
+    [
+      "entry_00638",
       "CoFe",
       "cubic"
     ],
     [
-      "entry_00858",
-      "CoFe",
-      "cubic"
-    ],
-    [
-      "entry_01241",
+      "entry_00730",
       "CoGa",
       "cubic"
     ],
     [
-      "entry_01051",
+      "entry_01088",
       "CoGa",
       "cubic"
     ],
     [
-      "entry_01061",
-      "CoGa",
-      "cubic"
-    ],
-    [
-      "entry_00465",
-      "CoGa",
-      "cubic"
-    ],
-    [
-      "entry_01251",
-      "CoGa",
-      "cubic"
-    ],
-    [
-      "entry_01367",
+      "entry_00976",
       "CoGe",
-      "cubic"
-    ],
-    [
-      "entry_00766",
-      "CoGe",
-      "cubic"
-    ],
-    [
-      "entry_00959",
-      "CoHf",
-      "cubic"
-    ],
-    [
-      "entry_00557",
-      "CoHf",
-      "cubic"
-    ],
-    [
-      "entry_01023",
-      "CoHf",
-      "cubic"
-    ],
-    [
-      "entry_00462",
-      "CoIn",
-      "cubic"
-    ],
-    [
-      "entry_00424",
-      "CoIn",
-      "cubic"
-    ],
-    [
-      "entry_00408",
-      "CoIn",
-      "cubic"
-    ],
-    [
-      "entry_00956",
-      "CoMg",
-      "cubic"
-    ],
-    [
-      "entry_00590",
-      "CoMg",
-      "cubic"
-    ],
-    [
-      "entry_00741",
-      "CoMg",
-      "cubic"
-    ],
-    [
-      "entry_00496",
-      "CoMn",
-      "cubic"
-    ],
-    [
-      "entry_00520",
-      "CoMn",
-      "cubic"
-    ],
-    [
-      "entry_00881",
-      "CoNb",
-      "cubic"
-    ],
-    [
-      "entry_00791",
-      "CoNb",
-      "cubic"
-    ],
-    [
-      "entry_00960",
-      "CoNb",
-      "cubic"
-    ],
-    [
-      "entry_00903",
-      "CoNb",
-      "cubic"
-    ],
-    [
-      "entry_00887",
-      "CoSb",
-      "cubic"
-    ],
-    [
-      "entry_00648",
-      "CoSb",
-      "cubic"
-    ],
-    [
-      "entry_01015",
-      "CoSb",
-      "cubic"
-    ],
-    [
-      "entry_00763",
-      "CoSb",
-      "cubic"
-    ],
-    [
-      "entry_01258",
-      "CoSc",
-      "cubic"
-    ],
-    [
-      "entry_00919",
-      "CoSc",
-      "cubic"
-    ],
-    [
-      "entry_01280",
-      "CoSc",
-      "cubic"
-    ],
-    [
-      "entry_01361",
-      "CoSc",
-      "cubic"
-    ],
-    [
-      "entry_01065",
-      "CoSc",
-      "cubic"
-    ],
-    [
-      "entry_01297",
-      "CoSi",
-      "cubic"
-    ],
-    [
-      "entry_00466",
-      "CoSi",
-      "cubic"
-    ],
-    [
-      "entry_01365",
-      "CoSn",
-      "cubic"
-    ],
-    [
-      "entry_00616",
-      "CoSn",
-      "cubic"
-    ],
-    [
-      "entry_01356",
-      "CoSn",
-      "cubic"
-    ],
-    [
-      "entry_00484",
-      "CoSn",
-      "cubic"
-    ],
-    [
-      "entry_00798",
-      "CoTa",
-      "cubic"
-    ],
-    [
-      "entry_00863",
-      "CoTa",
       "cubic"
     ],
     [
       "entry_00870",
+      "CoGe",
+      "cubic"
+    ],
+    [
+      "entry_00835",
+      "CoGe",
+      "cubic"
+    ],
+    [
+      "entry_01023",
+      "CoGe",
+      "cubic"
+    ],
+    [
+      "entry_01349",
+      "CoGe",
+      "cubic"
+    ],
+    [
+      "entry_00944",
+      "CoHf",
+      "cubic"
+    ],
+    [
+      "entry_01380",
+      "CoHf",
+      "cubic"
+    ],
+    [
+      "entry_00830",
+      "CoHf",
+      "cubic"
+    ],
+    [
+      "entry_01313",
+      "CoHf",
+      "cubic"
+    ],
+    [
+      "entry_01181",
+      "CoHf",
+      "cubic"
+    ],
+    [
+      "entry_01213",
+      "CoHf",
+      "cubic"
+    ],
+    [
+      "entry_01287",
+      "CoHf",
+      "cubic"
+    ],
+    [
+      "entry_01003",
+      "CoIn",
+      "cubic"
+    ],
+    [
+      "entry_00785",
+      "CoMg",
+      "cubic"
+    ],
+    [
+      "entry_00505",
+      "CoMn",
+      "cubic"
+    ],
+    [
+      "entry_00792",
+      "CoNb",
+      "cubic"
+    ],
+    [
+      "entry_01336",
+      "CoNb",
+      "cubic"
+    ],
+    [
+      "entry_00462",
+      "CoSb",
+      "cubic"
+    ],
+    [
+      "entry_00605",
+      "CoSc",
+      "cubic"
+    ],
+    [
+      "entry_01067",
+      "CoSc",
+      "cubic"
+    ],
+    [
+      "entry_00484",
+      "CoSc",
+      "cubic"
+    ],
+    [
+      "entry_00999",
+      "CoSc",
+      "cubic"
+    ],
+    [
+      "entry_01356",
+      "CoSc",
+      "cubic"
+    ],
+    [
+      "entry_00539",
+      "CoSc",
+      "cubic"
+    ],
+    [
+      "entry_01236",
+      "CoSi",
+      "cubic"
+    ],
+    [
+      "entry_01229",
+      "CoSi",
+      "cubic"
+    ],
+    [
+      "entry_00480",
+      "CoSn",
+      "cubic"
+    ],
+    [
+      "entry_00575",
+      "CoSn",
+      "cubic"
+    ],
+    [
+      "entry_01232",
+      "CoSn",
+      "cubic"
+    ],
+    [
+      "entry_01226",
+      "CoSn",
+      "cubic"
+    ],
+    [
+      "entry_00554",
+      "CoTa",
+      "cubic"
+    ],
+    [
+      "entry_01310",
+      "CoTa",
+      "cubic"
+    ],
+    [
+      "entry_01039",
+      "CoTa",
+      "cubic"
+    ],
+    [
+      "entry_01047",
+      "CoTa",
+      "cubic"
+    ],
+    [
+      "entry_01163",
+      "CoTa",
+      "cubic"
+    ],
+    [
+      "entry_01246",
       "CoTi",
       "cubic"
     ],
     [
-      "entry_00805",
+      "entry_01149",
       "CoTi",
       "cubic"
     ],
     [
-      "entry_01301",
+      "entry_01112",
       "CoTi",
       "cubic"
     ],
     [
-      "entry_00795",
+      "entry_01064",
       "CoTi",
       "cubic"
     ],
     [
-      "entry_00580",
-      "CoTi",
+      "entry_00659",
+      "CoV",
       "cubic"
     ],
     [
-      "entry_01078",
+      "entry_00531",
+      "CoV",
+      "cubic"
+    ],
+    [
+      "entry_00917",
+      "CoV",
+      "cubic"
+    ],
+    [
+      "entry_00912",
+      "CoV",
+      "cubic"
+    ],
+    [
+      "entry_00596",
+      "CoV",
+      "cubic"
+    ],
+    [
+      "entry_01146",
       "CoY",
       "cubic"
     ],
     [
-      "entry_01370",
+      "entry_00668",
       "CoY",
       "cubic"
     ],
     [
-      "entry_01057",
+      "entry_00855",
+      "CoY",
+      "cubic"
+    ],
+    [
+      "entry_00631",
+      "CoY",
+      "cubic"
+    ],
+    [
+      "entry_01364",
       "CoZn",
       "cubic"
     ],
     [
-      "entry_01127",
+      "entry_00654",
       "CoZn",
       "cubic"
     ],
     [
-      "entry_01131",
+      "entry_01194",
       "CoZn",
       "cubic"
     ],
     [
-      "entry_00430",
+      "entry_01043",
       "CoZn",
       "cubic"
     ],
     [
-      "entry_01091",
+      "entry_01233",
       "CoZn",
       "cubic"
     ],
     [
-      "entry_01228",
-      "CoZn",
-      "cubic"
-    ],
-    [
-      "entry_00569",
-      "CoZn",
-      "cubic"
-    ],
-    [
-      "entry_00696",
+      "entry_00860",
       "CoZr",
       "cubic"
     ],
@@ -1146,232 +1136,262 @@
       "cubic"
     ],
     [
-      "entry_00165",
-      "Cr3Al",
-      "cubic"
-    ],
-    [
-      "entry_00202",
+      "entry_00121",
       "Cr3Be",
       "cubic"
     ],
     [
-      "entry_00116",
+      "entry_00015",
+      "Cr3Cu",
+      "cubic"
+    ],
+    [
+      "entry_00313",
+      "Cr3Cu",
+      "cubic"
+    ],
+    [
+      "entry_00225",
       "Cr3Fe",
       "cubic"
     ],
     [
-      "entry_00233",
+      "entry_00206",
       "Cr3Fe",
       "cubic"
     ],
     [
-      "entry_00123",
+      "entry_00342",
       "Cr3Ge",
       "cubic"
     ],
     [
-      "entry_00360",
-      "Cr3Ge",
-      "cubic"
-    ],
-    [
-      "entry_00141",
+      "entry_00273",
       "Cr3Hf",
       "cubic"
     ],
     [
-      "entry_00288",
-      "Cr3Hf",
+      "entry_00209",
+      "Cr3In",
       "cubic"
     ],
     [
-      "entry_00161",
-      "Cr3Hf",
+      "entry_00047",
+      "Cr3In",
       "cubic"
     ],
     [
-      "entry_00064",
+      "entry_00068",
+      "Cr3In",
+      "cubic"
+    ],
+    [
+      "entry_00365",
+      "Cr3Mn",
+      "cubic"
+    ],
+    [
+      "entry_00311",
       "Cr3Nb",
       "cubic"
     ],
     [
-      "entry_00034",
+      "entry_00304",
+      "Cr3Nb",
+      "cubic"
+    ],
+    [
+      "entry_00178",
+      "Cr3Sb",
+      "cubic"
+    ],
+    [
+      "entry_00262",
+      "Cr3Sc",
+      "cubic"
+    ],
+    [
+      "entry_00019",
       "Cr3Sn",
       "cubic"
     ],
     [
-      "entry_00302",
+      "entry_00185",
+      "Cr3Ta",
+      "cubic"
+    ],
+    [
+      "entry_00144",
       "Cr3V",
       "cubic"
     ],
     [
-      "entry_00170",
+      "entry_00064",
+      "Cr3V",
+      "cubic"
+    ],
+    [
+      "entry_00289",
+      "Cr3V",
+      "cubic"
+    ],
+    [
+      "entry_00072",
       "Cr3Y",
       "cubic"
     ],
     [
-      "entry_00036",
+      "entry_00099",
       "Cr3Zn",
       "cubic"
     ],
     [
-      "entry_00251",
-      "Cr3Zr",
-      "cubic"
-    ],
-    [
-      "entry_00031",
-      "Cr3Zr",
-      "cubic"
-    ],
-    [
-      "entry_00593",
+      "entry_00604",
       "CrAl",
       "cubic"
     ],
     [
-      "entry_00695",
-      "CrBe",
-      "cubic"
-    ],
-    [
-      "entry_00441",
+      "entry_01027",
       "CrCu",
       "cubic"
     ],
     [
-      "entry_00619",
-      "CrCu",
-      "cubic"
-    ],
-    [
-      "entry_00489",
-      "CrFe",
-      "cubic"
-    ],
-    [
-      "entry_00412",
-      "CrFe",
-      "cubic"
-    ],
-    [
-      "entry_00531",
-      "CrGa",
-      "cubic"
-    ],
-    [
-      "entry_00527",
+      "entry_00696",
       "CrGe",
       "cubic"
     ],
     [
-      "entry_00577",
+      "entry_00973",
       "CrGe",
       "cubic"
     ],
     [
-      "entry_00911",
+      "entry_00857",
+      "CrGe",
+      "cubic"
+    ],
+    [
+      "entry_00693",
       "CrHf",
       "cubic"
     ],
     [
-      "entry_01004",
-      "CrHf",
-      "cubic"
-    ],
-    [
-      "entry_00951",
+      "entry_00986",
       "CrIn",
       "cubic"
     ],
     [
-      "entry_00962",
+      "entry_00642",
       "CrIn",
       "cubic"
     ],
     [
-      "entry_00904",
-      "CrIn",
-      "cubic"
-    ],
-    [
-      "entry_00602",
-      "CrIn",
-      "cubic"
-    ],
-    [
-      "entry_00467",
-      "CrMg",
-      "cubic"
-    ],
-    [
-      "entry_00758",
-      "CrMg",
-      "cubic"
-    ],
-    [
-      "entry_00924",
-      "CrMg",
-      "cubic"
-    ],
-    [
-      "entry_00587",
+      "entry_00447",
       "CrMn",
       "cubic"
     ],
     [
-      "entry_00989",
+      "entry_00744",
       "CrNb",
       "cubic"
     ],
     [
-      "entry_00839",
+      "entry_00888",
       "CrNb",
       "cubic"
     ],
     [
-      "entry_00649",
+      "entry_00713",
+      "CrNb",
+      "cubic"
+    ],
+    [
+      "entry_00657",
+      "CrNb",
+      "cubic"
+    ],
+    [
+      "entry_00494",
       "CrSb",
       "cubic"
     ],
     [
-      "entry_00621",
-      "CrSc",
+      "entry_00894",
+      "CrSb",
       "cubic"
     ],
     [
-      "entry_00558",
+      "entry_00880",
+      "CrSb",
+      "cubic"
+    ],
+    [
+      "entry_00740",
+      "CrSb",
+      "cubic"
+    ],
+    [
+      "entry_00435",
       "CrSi",
       "cubic"
     ],
     [
-      "entry_01008",
+      "entry_00702",
+      "CrSn",
+      "cubic"
+    ],
+    [
+      "entry_00760",
+      "CrSn",
+      "cubic"
+    ],
+    [
+      "entry_00578",
+      "CrSn",
+      "cubic"
+    ],
+    [
+      "entry_00881",
+      "CrSn",
+      "cubic"
+    ],
+    [
+      "entry_00952",
+      "CrTa",
+      "cubic"
+    ],
+    [
+      "entry_00550",
+      "CrTa",
+      "cubic"
+    ],
+    [
+      "entry_00753",
       "CrTi",
       "cubic"
     ],
     [
-      "entry_00807",
+      "entry_00825",
       "CrTi",
       "cubic"
     ],
     [
-      "entry_00606",
-      "CrV",
+      "entry_00729",
+      "CrTi",
       "cubic"
     ],
     [
-      "entry_00834",
-      "CrY",
+      "entry_00921",
+      "CrZn",
       "cubic"
     ],
     [
-      "entry_00502",
-      "CrZr",
+      "entry_00708",
+      "CrZn",
       "cubic"
     ],
     [
-      "entry_00971",
+      "entry_00436",
       "CrZr",
       "cubic"
     ],
@@ -1381,437 +1401,362 @@
       "cubic"
     ],
     [
-      "entry_00332",
-      "Cu3Be",
+      "entry_00214",
+      "Cu3Al",
       "cubic"
     ],
     [
-      "entry_00392",
-      "Cu3Be",
+      "entry_00267",
+      "Cu3Al",
       "cubic"
     ],
     [
-      "entry_00352",
-      "Cu3Be",
+      "entry_00038",
+      "Cu3Al",
       "cubic"
     ],
     [
-      "entry_00361",
-      "Cu3Fe",
-      "cubic"
-    ],
-    [
-      "entry_00338",
+      "entry_00062",
       "Cu3Ga",
       "cubic"
     ],
     [
-      "entry_00341",
-      "Cu3Mn",
+      "entry_00285",
+      "Cu3Ge",
       "cubic"
     ],
     [
-      "entry_00025",
-      "Cu3Mn",
+      "entry_00363",
+      "Cu3Ge",
       "cubic"
     ],
     [
-      "entry_00292",
-      "Cu3Nb",
+      "entry_00314",
+      "Cu3Ge",
       "cubic"
     ],
     [
-      "entry_00153",
-      "Cu3Si",
+      "entry_00255",
+      "Cu3Ge",
       "cubic"
     ],
     [
       "entry_00371",
+      "Cu3In",
+      "cubic"
+    ],
+    [
+      "entry_00067",
+      "Cu3In",
+      "cubic"
+    ],
+    [
+      "entry_00180",
+      "Cu3Mn",
+      "cubic"
+    ],
+    [
+      "entry_00172",
+      "Cu3Mn",
+      "cubic"
+    ],
+    [
+      "entry_00093",
+      "Cu3Sb",
+      "cubic"
+    ],
+    [
+      "entry_00021",
+      "Cu3Sc",
+      "cubic"
+    ],
+    [
+      "entry_00357",
+      "Cu3Si",
+      "cubic"
+    ],
+    [
+      "entry_00041",
       "Cu3Sn",
       "cubic"
     ],
     [
-      "entry_00138",
+      "entry_00295",
       "Cu3Ta",
       "cubic"
     ],
     [
-      "entry_00212",
-      "Cu3Ta",
-      "cubic"
-    ],
-    [
-      "entry_00362",
-      "Cu3Ta",
-      "cubic"
-    ],
-    [
-      "entry_00121",
-      "Cu3Ta",
-      "cubic"
-    ],
-    [
-      "entry_00156",
-      "Cu3Ta",
-      "cubic"
-    ],
-    [
-      "entry_00248",
+      "entry_00348",
       "Cu3Ti",
       "cubic"
     ],
     [
-      "entry_00200",
-      "Cu3V",
+      "entry_00324",
+      "Cu3Ti",
       "cubic"
     ],
     [
-      "entry_00088",
+      "entry_00031",
       "Cu3Y",
       "cubic"
     ],
     [
-      "entry_00145",
-      "Cu3Y",
+      "entry_00297",
+      "Cu3Zn",
       "cubic"
     ],
     [
-      "entry_00151",
-      "Cu3Y",
-      "cubic"
-    ],
-    [
-      "entry_00013",
-      "Cu3Zr",
-      "cubic"
-    ],
-    [
-      "entry_00988",
+      "entry_00530",
       "CuAl",
       "cubic"
     ],
     [
-      "entry_01142",
-      "CuAl",
-      "cubic"
-    ],
-    [
-      "entry_01058",
-      "CuAl",
-      "cubic"
-    ],
-    [
-      "entry_00561",
-      "CuAl",
-      "cubic"
-    ],
-    [
-      "entry_00463",
-      "CuAl",
-      "cubic"
-    ],
-    [
-      "entry_00553",
-      "CuBe",
-      "cubic"
-    ],
-    [
-      "entry_00885",
-      "CuBe",
-      "cubic"
-    ],
-    [
-      "entry_01017",
+      "entry_00983",
       "CuFe",
       "cubic"
     ],
     [
-      "entry_01310",
+      "entry_01215",
       "CuGa",
       "cubic"
     ],
     [
-      "entry_01159",
+      "entry_00869",
       "CuGa",
       "cubic"
     ],
     [
-      "entry_00550",
+      "entry_00841",
       "CuGa",
       "cubic"
     ],
     [
-      "entry_01137",
+      "entry_00512",
       "CuGa",
       "cubic"
     ],
     [
-      "entry_01240",
-      "CuGa",
-      "cubic"
-    ],
-    [
-      "entry_01327",
+      "entry_00397",
       "CuGe",
       "cubic"
     ],
     [
-      "entry_00567",
+      "entry_01304",
       "CuGe",
       "cubic"
     ],
     [
-      "entry_00800",
+      "entry_01157",
       "CuGe",
       "cubic"
     ],
     [
-      "entry_01209",
+      "entry_01089",
       "CuGe",
       "cubic"
     ],
     [
-      "entry_01048",
+      "entry_01182",
       "CuGe",
       "cubic"
     ],
     [
-      "entry_00756",
+      "entry_00457",
       "CuGe",
       "cubic"
     ],
     [
-      "entry_00559",
+      "entry_01326",
       "CuGe",
       "cubic"
     ],
     [
-      "entry_00393",
+      "entry_00928",
       "CuHf",
       "cubic"
     ],
     [
-      "entry_00984",
+      "entry_01368",
       "CuHf",
       "cubic"
     ],
     [
-      "entry_01185",
+      "entry_01269",
       "CuHf",
       "cubic"
     ],
     [
-      "entry_01229",
+      "entry_00400",
       "CuHf",
       "cubic"
     ],
     [
-      "entry_00403",
+      "entry_01002",
+      "CuHf",
+      "cubic"
+    ],
+    [
+      "entry_00699",
       "CuIn",
       "cubic"
     ],
     [
-      "entry_00893",
+      "entry_00842",
       "CuIn",
       "cubic"
     ],
     [
-      "entry_00596",
-      "CuIn",
-      "cubic"
-    ],
-    [
-      "entry_00980",
+      "entry_00618",
       "CuMg",
       "cubic"
     ],
     [
-      "entry_00768",
-      "CuMn",
+      "entry_00895",
+      "CuMg",
       "cubic"
     ],
     [
-      "entry_00851",
-      "CuMn",
+      "entry_00606",
+      "CuMg",
       "cubic"
     ],
     [
-      "entry_00500",
-      "CuMn",
+      "entry_00695",
+      "CuMg",
       "cubic"
     ],
     [
-      "entry_01343",
+      "entry_01353",
       "CuNb",
-      "cubic"
-    ],
-    [
-      "entry_01302",
-      "CuNb",
-      "cubic"
-    ],
-    [
-      "entry_01117",
-      "CuNb",
-      "cubic"
-    ],
-    [
-      "entry_00722",
-      "CuNb",
-      "cubic"
-    ],
-    [
-      "entry_00810",
-      "CuSb",
-      "cubic"
-    ],
-    [
-      "entry_01332",
-      "CuSc",
-      "cubic"
-    ],
-    [
-      "entry_01040",
-      "CuSc",
-      "cubic"
-    ],
-    [
-      "entry_01227",
-      "CuSc",
-      "cubic"
-    ],
-    [
-      "entry_01358",
-      "CuSc",
-      "cubic"
-    ],
-    [
-      "entry_00476",
-      "CuSc",
-      "cubic"
-    ],
-    [
-      "entry_01298",
-      "CuSi",
-      "cubic"
-    ],
-    [
-      "entry_00659",
-      "CuSi",
-      "cubic"
-    ],
-    [
-      "entry_01190",
-      "CuSi",
-      "cubic"
-    ],
-    [
-      "entry_01126",
-      "CuSi",
-      "cubic"
-    ],
-    [
-      "entry_01085",
-      "CuSi",
-      "cubic"
-    ],
-    [
-      "entry_01462",
-      "CuSi3",
-      "cubic"
-    ],
-    [
-      "entry_01047",
-      "CuSn",
-      "cubic"
-    ],
-    [
-      "entry_01014",
-      "CuSn",
-      "cubic"
-    ],
-    [
-      "entry_01070",
-      "CuSn",
-      "cubic"
-    ],
-    [
-      "entry_01073",
-      "CuSn",
-      "cubic"
-    ],
-    [
-      "entry_01160",
-      "CuSn",
-      "cubic"
-    ],
-    [
-      "entry_01175",
-      "CuSn",
       "cubic"
     ],
     [
       "entry_00797",
+      "CuSb",
+      "cubic"
+    ],
+    [
+      "entry_00528",
+      "CuSb",
+      "cubic"
+    ],
+    [
+      "entry_00756",
+      "CuSb",
+      "cubic"
+    ],
+    [
+      "entry_00686",
+      "CuSc",
+      "cubic"
+    ],
+    [
+      "entry_00800",
+      "CuSc",
+      "cubic"
+    ],
+    [
+      "entry_00947",
+      "CuSc",
+      "cubic"
+    ],
+    [
+      "entry_01361",
+      "CuSc",
+      "cubic"
+    ],
+    [
+      "entry_01271",
+      "CuSi",
+      "cubic"
+    ],
+    [
+      "entry_01211",
+      "CuSn",
+      "cubic"
+    ],
+    [
+      "entry_00704",
+      "CuSn",
+      "cubic"
+    ],
+    [
+      "entry_01081",
+      "CuSn",
+      "cubic"
+    ],
+    [
+      "entry_00812",
+      "CuSn",
+      "cubic"
+    ],
+    [
+      "entry_01319",
+      "CuSn",
+      "cubic"
+    ],
+    [
+      "entry_01167",
+      "CuSn",
+      "cubic"
+    ],
+    [
+      "entry_01254",
       "CuTa",
       "cubic"
     ],
     [
-      "entry_00748",
+      "entry_00775",
+      "CuTa",
+      "cubic"
+    ],
+    [
+      "entry_01376",
+      "CuTa",
+      "cubic"
+    ],
+    [
+      "entry_00804",
       "CuTi",
       "cubic"
     ],
     [
-      "entry_01116",
+      "entry_01087",
       "CuTi",
       "cubic"
     ],
     [
-      "entry_00394",
+      "entry_00466",
+      "CuV",
+      "cubic"
+    ],
+    [
+      "entry_00469",
+      "CuV",
+      "cubic"
+    ],
+    [
+      "entry_00617",
       "CuY",
       "cubic"
     ],
     [
-      "entry_01245",
+      "entry_01131",
+      "CuY",
+      "cubic"
+    ],
+    [
+      "entry_01250",
+      "CuY",
+      "cubic"
+    ],
+    [
+      "entry_01124",
       "CuZn",
       "cubic"
     ],
     [
-      "entry_00470",
-      "CuZn",
-      "cubic"
-    ],
-    [
-      "entry_01307",
-      "CuZn",
-      "cubic"
-    ],
-    [
-      "entry_01122",
-      "CuZn",
-      "cubic"
-    ],
-    [
-      "entry_01174",
-      "CuZn",
-      "cubic"
-    ],
-    [
-      "entry_01032",
-      "CuZn",
-      "cubic"
-    ],
-    [
-      "entry_00969",
-      "CuZn",
-      "cubic"
-    ],
-    [
-      "entry_01096",
-      "CuZn",
-      "cubic"
-    ],
-    [
-      "entry_00958",
+      "entry_00410",
       "CuZr",
       "cubic"
     ],
@@ -1826,368 +1771,403 @@
       "cubic"
     ],
     [
-      "entry_00148",
+      "entry_00084",
       "Fe3Al",
       "cubic"
     ],
     [
-      "entry_00073",
-      "Fe3Be",
+      "entry_00157",
+      "Fe3Cu",
       "cubic"
     ],
     [
-      "entry_00169",
+      "entry_00355",
+      "Fe3Ga",
+      "cubic"
+    ],
+    [
+      "entry_00276",
+      "Fe3Ga",
+      "cubic"
+    ],
+    [
+      "entry_00292",
+      "Fe3Ge",
+      "cubic"
+    ],
+    [
+      "entry_00219",
+      "Fe3Hf",
+      "cubic"
+    ],
+    [
+      "entry_00283",
+      "Fe3Hf",
+      "cubic"
+    ],
+    [
+      "entry_00023",
       "Fe3In",
       "cubic"
     ],
     [
-      "entry_00211",
-      "Fe3In",
-      "cubic"
-    ],
-    [
-      "entry_00382",
+      "entry_00361",
       "Fe3Mg",
       "cubic"
     ],
     [
+      "entry_00059",
+      "Fe3Mg",
+      "cubic"
+    ],
+    [
+      "entry_00079",
+      "Fe3Mn",
+      "cubic"
+    ],
+    [
+      "entry_00226",
+      "Fe3Nb",
+      "cubic"
+    ],
+    [
+      "entry_00227",
+      "Fe3Sb",
+      "cubic"
+    ],
+    [
+      "entry_00383",
+      "Fe3Sc",
+      "cubic"
+    ],
+    [
       "entry_00030",
-      "Fe3Nb",
-      "cubic"
-    ],
-    [
-      "entry_00078",
-      "Fe3Nb",
-      "cubic"
-    ],
-    [
-      "entry_00359",
       "Fe3Si",
       "cubic"
     ],
     [
-      "entry_00380",
+      "entry_00085",
+      "Fe3Si",
+      "cubic"
+    ],
+    [
+      "entry_00164",
+      "Fe3Si",
+      "cubic"
+    ],
+    [
+      "entry_00354",
       "Fe3Sn",
       "cubic"
     ],
     [
-      "entry_00083",
+      "entry_00254",
       "Fe3Ti",
       "cubic"
     ],
     [
-      "entry_00348",
+      "entry_00236",
       "Fe3Ti",
       "cubic"
     ],
     [
-      "entry_00139",
+      "entry_00331",
       "Fe3V",
       "cubic"
     ],
     [
-      "entry_00299",
-      "Fe3Zr",
+      "entry_00385",
+      "Fe3Y",
       "cubic"
     ],
     [
-      "entry_01335",
+      "entry_00058",
+      "Fe3Zn",
+      "cubic"
+    ],
+    [
+      "entry_00801",
       "FeAl",
       "cubic"
     ],
     [
-      "entry_00418",
+      "entry_01069",
       "FeAl",
       "cubic"
     ],
     [
-      "entry_00638",
+      "entry_01209",
+      "FeAl",
+      "cubic"
+    ],
+    [
+      "entry_00763",
       "FeBe",
       "cubic"
     ],
     [
-      "entry_00571",
-      "FeCu",
+      "entry_00537",
+      "FeBe",
       "cubic"
     ],
     [
-      "entry_00773",
-      "FeCu",
+      "entry_00759",
+      "FeBe",
       "cubic"
     ],
     [
-      "entry_00447",
-      "FeCu",
-      "cubic"
-    ],
-    [
-      "entry_01215",
+      "entry_01140",
       "FeGa",
       "cubic"
     ],
     [
-      "entry_00744",
+      "entry_00741",
       "FeGa",
       "cubic"
     ],
     [
-      "entry_01282",
+      "entry_01040",
+      "FeGa",
+      "cubic"
+    ],
+    [
+      "entry_01279",
+      "FeGa",
+      "cubic"
+    ],
+    [
+      "entry_01197",
+      "FeGa",
+      "cubic"
+    ],
+    [
+      "entry_00584",
+      "FeGa",
+      "cubic"
+    ],
+    [
+      "entry_01132",
+      "FeGa",
+      "cubic"
+    ],
+    [
+      "entry_01072",
       "FeGe",
       "cubic"
     ],
     [
-      "entry_00822",
+      "entry_01160",
+      "FeGe",
+      "cubic"
+    ],
+    [
+      "entry_01199",
+      "FeGe",
+      "cubic"
+    ],
+    [
+      "entry_01219",
+      "FeGe",
+      "cubic"
+    ],
+    [
+      "entry_01327",
+      "FeGe",
+      "cubic"
+    ],
+    [
+      "entry_01235",
       "FeHf",
       "cubic"
     ],
     [
-      "entry_01316",
+      "entry_01373",
       "FeHf",
       "cubic"
     ],
     [
-      "entry_00730",
+      "entry_01288",
       "FeHf",
       "cubic"
     ],
     [
-      "entry_00999",
+      "entry_00798",
+      "FeHf",
+      "cubic"
+    ],
+    [
+      "entry_00574",
       "FeIn",
       "cubic"
     ],
     [
-      "entry_00998",
-      "FeIn",
-      "cubic"
-    ],
-    [
-      "entry_00615",
-      "FeIn",
-      "cubic"
-    ],
-    [
-      "entry_00436",
-      "FeIn",
-      "cubic"
-    ],
-    [
-      "entry_00809",
+      "entry_00471",
       "FeMg",
       "cubic"
     ],
     [
-      "entry_00622",
-      "FeMg",
-      "cubic"
-    ],
-    [
-      "entry_01119",
+      "entry_00515",
       "FeNb",
       "cubic"
     ],
     [
-      "entry_01308",
+      "entry_01191",
       "FeNb",
       "cubic"
     ],
     [
-      "entry_01260",
+      "entry_01063",
       "FeNb",
       "cubic"
     ],
     [
-      "entry_01325",
-      "FeNb",
-      "cubic"
-    ],
-    [
-      "entry_01382",
-      "FeNb",
-      "cubic"
-    ],
-    [
-      "entry_00685",
-      "FeNb",
-      "cubic"
-    ],
-    [
-      "entry_00935",
+      "entry_00832",
       "FeSb",
       "cubic"
     ],
     [
-      "entry_00710",
+      "entry_00903",
       "FeSb",
       "cubic"
     ],
     [
-      "entry_01263",
+      "entry_00827",
+      "FeSb",
+      "cubic"
+    ],
+    [
+      "entry_00598",
+      "FeSb",
+      "cubic"
+    ],
+    [
+      "entry_01161",
       "FeSc",
       "cubic"
     ],
     [
-      "entry_01101",
+      "entry_01148",
       "FeSc",
       "cubic"
     ],
     [
-      "entry_00808",
-      "FeSc",
-      "cubic"
-    ],
-    [
-      "entry_01046",
-      "FeSc",
-      "cubic"
-    ],
-    [
-      "entry_01038",
-      "FeSc",
-      "cubic"
-    ],
-    [
-      "entry_00419",
-      "FeSc",
-      "cubic"
-    ],
-    [
-      "entry_00656",
-      "FeSc",
-      "cubic"
-    ],
-    [
-      "entry_00617",
-      "FeSc",
-      "cubic"
-    ],
-    [
-      "entry_01337",
-      "FeSc",
-      "cubic"
-    ],
-    [
-      "entry_01289",
-      "FeSc",
-      "cubic"
-    ],
-    [
-      "entry_00946",
-      "FeSc",
-      "cubic"
-    ],
-    [
-      "entry_00570",
+      "entry_01259",
       "FeSi",
       "cubic"
     ],
     [
-      "entry_00961",
+      "entry_00674",
       "FeSi",
       "cubic"
     ],
     [
-      "entry_00793",
+      "entry_01318",
+      "FeSi",
+      "cubic"
+    ],
+    [
+      "entry_00491",
       "FeSn",
       "cubic"
     ],
     [
-      "entry_00624",
+      "entry_01320",
       "FeSn",
       "cubic"
     ],
     [
-      "entry_00420",
+      "entry_00393",
       "FeSn",
       "cubic"
     ],
     [
-      "entry_01329",
+      "entry_00577",
       "FeSn",
       "cubic"
     ],
     [
-      "entry_00644",
+      "entry_01045",
       "FeTa",
       "cubic"
     ],
     [
-      "entry_01037",
+      "entry_00774",
       "FeTa",
       "cubic"
     ],
     [
-      "entry_01470",
-      "FeTa3",
-      "cubic"
-    ],
-    [
-      "entry_01109",
-      "FeTi",
-      "cubic"
-    ],
-    [
-      "entry_00781",
-      "FeTi",
-      "cubic"
-    ],
-    [
-      "entry_01216",
-      "FeTi",
-      "cubic"
-    ],
-    [
-      "entry_00495",
-      "FeV",
-      "cubic"
-    ],
-    [
-      "entry_00660",
-      "FeV",
-      "cubic"
-    ],
-    [
-      "entry_00874",
-      "FeV",
-      "cubic"
-    ],
-    [
-      "entry_01095",
-      "FeY",
-      "cubic"
-    ],
-    [
-      "entry_00929",
-      "FeY",
-      "cubic"
-    ],
-    [
-      "entry_01271",
-      "FeY",
-      "cubic"
-    ],
-    [
-      "entry_01226",
-      "FeY",
-      "cubic"
-    ],
-    [
-      "entry_01143",
-      "FeZn",
+      "entry_00422",
+      "FeTa",
       "cubic"
     ],
     [
       "entry_01249",
+      "FeTa",
+      "cubic"
+    ],
+    [
+      "entry_01331",
+      "FeTa",
+      "cubic"
+    ],
+    [
+      "entry_01018",
+      "FeTi",
+      "cubic"
+    ],
+    [
+      "entry_01245",
+      "FeTi",
+      "cubic"
+    ],
+    [
+      "entry_00684",
       "FeZn",
       "cubic"
     ],
     [
-      "entry_01211",
+      "entry_00743",
       "FeZn",
       "cubic"
     ],
     [
-      "entry_00732",
+      "entry_01178",
       "FeZn",
+      "cubic"
+    ],
+    [
+      "entry_01230",
+      "FeZn",
+      "cubic"
+    ],
+    [
+      "entry_01115",
+      "FeZn",
+      "cubic"
+    ],
+    [
+      "entry_01351",
+      "FeZn",
+      "cubic"
+    ],
+    [
+      "entry_00508",
+      "FeZr",
+      "cubic"
+    ],
+    [
+      "entry_00535",
+      "FeZr",
+      "cubic"
+    ],
+    [
+      "entry_00517",
+      "FeZr",
+      "cubic"
+    ],
+    [
+      "entry_00451",
+      "FeZr",
       "cubic"
     ],
     [
@@ -2201,347 +2181,332 @@
       "cubic"
     ],
     [
-      "entry_00048",
-      "Hf3Cu",
+      "entry_00198",
+      "Hf3Al",
       "cubic"
     ],
     [
-      "entry_00376",
-      "Hf3Cu",
-      "cubic"
-    ],
-    [
-      "entry_00225",
+      "entry_00298",
       "Hf3Fe",
       "cubic"
     ],
     [
-      "entry_00059",
-      "Hf3Fe",
+      "entry_00016",
+      "Hf3Ge",
       "cubic"
     ],
     [
-      "entry_00329",
-      "Hf3Ga",
-      "cubic"
-    ],
-    [
-      "entry_00224",
+      "entry_00200",
       "Hf3Mg",
       "cubic"
     ],
     [
-      "entry_00112",
+      "entry_00111",
       "Hf3Mn",
       "cubic"
     ],
     [
-      "entry_00320",
-      "Hf3Mn",
+      "entry_00167",
+      "Hf3Nb",
       "cubic"
     ],
     [
-      "entry_00104",
+      "entry_00284",
       "Hf3Sb",
       "cubic"
     ],
     [
-      "entry_00033",
+      "entry_00265",
       "Hf3Sb",
       "cubic"
     ],
     [
-      "entry_00097",
+      "entry_00312",
+      "Hf3Sc",
+      "cubic"
+    ],
+    [
+      "entry_00199",
+      "Hf3Sc",
+      "cubic"
+    ],
+    [
+      "entry_00328",
+      "Hf3Sc",
+      "cubic"
+    ],
+    [
+      "entry_00303",
+      "Hf3Si",
+      "cubic"
+    ],
+    [
+      "entry_00245",
+      "Hf3Si",
+      "cubic"
+    ],
+    [
+      "entry_00330",
+      "Hf3Si",
+      "cubic"
+    ],
+    [
+      "entry_00296",
+      "Hf3Sn",
+      "cubic"
+    ],
+    [
+      "entry_00120",
+      "Hf3Sn",
+      "cubic"
+    ],
+    [
+      "entry_00035",
+      "Hf3Sn",
+      "cubic"
+    ],
+    [
+      "entry_00207",
       "Hf3Ta",
       "cubic"
     ],
     [
-      "entry_00110",
-      "Hf3Ti",
+      "entry_00074",
+      "Hf3V",
       "cubic"
     ],
     [
-      "entry_00314",
-      "Hf3Ti",
+      "entry_00170",
+      "Hf3V",
       "cubic"
     ],
     [
-      "entry_00291",
-      "Hf3Y",
+      "entry_00154",
+      "Hf3V",
       "cubic"
     ],
     [
-      "entry_00337",
-      "Hf3Y",
-      "cubic"
-    ],
-    [
-      "entry_00183",
-      "Hf3Y",
-      "cubic"
-    ],
-    [
-      "entry_00155",
-      "Hf3Y",
-      "cubic"
-    ],
-    [
-      "entry_01112",
+      "entry_01221",
       "HfAl",
       "cubic"
     ],
     [
-      "entry_00785",
+      "entry_00402",
+      "HfBe",
+      "cubic"
+    ],
+    [
+      "entry_00968",
+      "HfBe",
+      "cubic"
+    ],
+    [
+      "entry_00735",
       "HfCu",
       "cubic"
     ],
     [
-      "entry_00955",
-      "HfFe",
-      "cubic"
-    ],
-    [
-      "entry_00560",
+      "entry_00460",
       "HfGa",
       "cubic"
     ],
     [
-      "entry_01084",
-      "HfGa",
-      "cubic"
-    ],
-    [
-      "entry_01080",
-      "HfGa",
-      "cubic"
-    ],
-    [
-      "entry_00884",
-      "HfGa",
-      "cubic"
-    ],
-    [
-      "entry_01264",
-      "HfGa",
-      "cubic"
-    ],
-    [
-      "entry_00658",
+      "entry_01116",
       "HfGe",
       "cubic"
     ],
     [
-      "entry_00820",
+      "entry_00967",
       "HfGe",
       "cubic"
     ],
     [
-      "entry_00778",
+      "entry_00415",
+      "HfGe",
+      "cubic"
+    ],
+    [
+      "entry_01252",
+      "HfGe",
+      "cubic"
+    ],
+    [
+      "entry_01305",
+      "HfGe",
+      "cubic"
+    ],
+    [
+      "entry_01362",
+      "HfGe",
+      "cubic"
+    ],
+    [
+      "entry_00998",
       "HfIn",
       "cubic"
     ],
     [
-      "entry_00707",
+      "entry_00673",
       "HfIn",
       "cubic"
     ],
     [
-      "entry_00803",
-      "HfIn",
-      "cubic"
-    ],
-    [
-      "entry_00964",
+      "entry_01012",
       "HfMg",
       "cubic"
     ],
     [
-      "entry_01016",
+      "entry_00701",
       "HfMn",
       "cubic"
     ],
     [
-      "entry_00855",
+      "entry_00630",
       "HfMn",
       "cubic"
     ],
     [
-      "entry_01278",
+      "entry_01220",
       "HfNb",
       "cubic"
     ],
     [
-      "entry_01089",
+      "entry_01375",
       "HfNb",
-      "cubic"
-    ],
-    [
-      "entry_01336",
-      "HfNb",
-      "cubic"
-    ],
-    [
-      "entry_01062",
-      "HfSc",
-      "cubic"
-    ],
-    [
-      "entry_01025",
-      "HfSc",
-      "cubic"
-    ],
-    [
-      "entry_01157",
-      "HfSc",
-      "cubic"
-    ],
-    [
-      "entry_00823",
-      "HfSi",
-      "cubic"
-    ],
-    [
-      "entry_01001",
-      "HfSi",
       "cubic"
     ],
     [
       "entry_01461",
-      "HfSi3",
+      "HfNb3",
       "cubic"
     ],
     [
-      "entry_01042",
+      "entry_00427",
+      "HfSb",
+      "cubic"
+    ],
+    [
+      "entry_00561",
+      "HfSc",
+      "cubic"
+    ],
+    [
+      "entry_01096",
+      "HfSc",
+      "cubic"
+    ],
+    [
+      "entry_01298",
+      "HfSc",
+      "cubic"
+    ],
+    [
+      "entry_01286",
+      "HfSi",
+      "cubic"
+    ],
+    [
+      "entry_01253",
+      "HfSi",
+      "cubic"
+    ],
+    [
+      "entry_01383",
+      "HfSi",
+      "cubic"
+    ],
+    [
+      "entry_00761",
+      "HfSi",
+      "cubic"
+    ],
+    [
+      "entry_01308",
+      "HfSi",
+      "cubic"
+    ],
+    [
+      "entry_01244",
       "HfSn",
       "cubic"
     ],
     [
-      "entry_01268",
+      "entry_01050",
       "HfSn",
       "cubic"
     ],
     [
-      "entry_00833",
-      "HfSn",
-      "cubic"
-    ],
-    [
-      "entry_01140",
-      "HfSn",
-      "cubic"
-    ],
-    [
-      "entry_00891",
-      "HfSn",
-      "cubic"
-    ],
-    [
-      "entry_01326",
-      "HfSn",
-      "cubic"
-    ],
-    [
-      "entry_00902",
+      "entry_01070",
       "HfTa",
       "cubic"
     ],
     [
-      "entry_01170",
+      "entry_01242",
       "HfTa",
       "cubic"
     ],
     [
-      "entry_00605",
+      "entry_01102",
       "HfTa",
       "cubic"
     ],
     [
-      "entry_00747",
-      "HfTa",
-      "cubic"
-    ],
-    [
-      "entry_00742",
+      "entry_01054",
       "HfTi",
       "cubic"
     ],
     [
-      "entry_01081",
+      "entry_01354",
       "HfTi",
       "cubic"
     ],
     [
-      "entry_01285",
+      "entry_01175",
       "HfTi",
       "cubic"
     ],
     [
-      "entry_00897",
-      "HfTi",
-      "cubic"
-    ],
-    [
-      "entry_01323",
-      "HfTi",
-      "cubic"
-    ],
-    [
-      "entry_00401",
+      "entry_00677",
       "HfV",
       "cubic"
     ],
     [
-      "entry_01071",
-      "HfY",
-      "cubic"
-    ],
-    [
-      "entry_01039",
-      "HfY",
-      "cubic"
-    ],
-    [
-      "entry_00804",
-      "HfY",
-      "cubic"
-    ],
-    [
-      "entry_00876",
-      "HfY",
-      "cubic"
-    ],
-    [
-      "entry_01203",
-      "HfY",
-      "cubic"
-    ],
-    [
-      "entry_01364",
-      "HfZn",
-      "cubic"
-    ],
-    [
-      "entry_01092",
-      "HfZn",
-      "cubic"
-    ],
-    [
-      "entry_00591",
-      "HfZn",
-      "cubic"
-    ],
-    [
-      "entry_01248",
-      "HfZn",
-      "cubic"
-    ],
-    [
       "entry_00990",
-      "HfZn",
+      "HfY",
       "cubic"
     ],
     [
-      "entry_00641",
+      "entry_00776",
+      "HfY",
+      "cubic"
+    ],
+    [
+      "entry_00571",
+      "HfY",
+      "cubic"
+    ],
+    [
+      "entry_00449",
+      "HfY",
+      "cubic"
+    ],
+    [
+      "entry_00432",
+      "HfY",
+      "cubic"
+    ],
+    [
+      "entry_00549",
+      "HfZr",
+      "cubic"
+    ],
+    [
+      "entry_00724",
+      "HfZr",
+      "cubic"
+    ],
+    [
+      "entry_00661",
       "HfZr",
       "cubic"
     ],
@@ -2556,338 +2521,358 @@
       "cubic"
     ],
     [
-      "entry_00044",
+      "entry_00175",
+      "Ir3Al",
+      "cubic"
+    ],
+    [
+      "entry_00173",
       "Ir3Cu",
       "cubic"
     ],
     [
-      "entry_00214",
-      "Ir3Cu",
+      "entry_00334",
+      "Ir3Ge",
       "cubic"
     ],
     [
-      "entry_00213",
-      "Ir3Hf",
+      "entry_00146",
+      "Ir3Ge",
       "cubic"
     ],
     [
-      "entry_00067",
+      "entry_00063",
       "Ir3Mg",
       "cubic"
     ],
     [
-      "entry_00383",
-      "Ir3Mg",
+      "entry_00244",
+      "Ir3Mn",
       "cubic"
     ],
     [
-      "entry_00135",
-      "Ir3Mg",
-      "cubic"
-    ],
-    [
-      "entry_00008",
+      "entry_00009",
       "Ir3Nb",
       "cubic"
     ],
     [
-      "entry_00177",
+      "entry_00390",
+      "Ir3Nb",
+      "cubic"
+    ],
+    [
+      "entry_00161",
       "Ir3Sb",
       "cubic"
     ],
     [
-      "entry_00326",
-      "Ir3Sc",
+      "entry_00024",
+      "Ir3Sb",
       "cubic"
     ],
     [
-      "entry_00054",
-      "Ir3Ta",
+      "entry_00105",
+      "Ir3Sb",
       "cubic"
     ],
     [
-      "entry_00050",
+      "entry_00153",
       "Ir3Ti",
       "cubic"
     ],
     [
-      "entry_00298",
-      "Ir3V",
-      "cubic"
-    ],
-    [
-      "entry_00255",
+      "entry_00043",
       "Ir3Y",
       "cubic"
     ],
     [
-      "entry_00374",
+      "entry_00054",
       "Ir3Zn",
       "cubic"
     ],
     [
-      "entry_00131",
+      "entry_00317",
       "Ir3Zr",
       "cubic"
     ],
     [
-      "entry_00022",
+      "entry_00081",
       "Ir3Zr",
       "cubic"
     ],
     [
-      "entry_00522",
-      "IrAl",
-      "cubic"
-    ],
-    [
-      "entry_01172",
-      "IrAl",
-      "cubic"
-    ],
-    [
-      "entry_01167",
-      "IrAl",
-      "cubic"
-    ],
-    [
-      "entry_00678",
-      "IrAl",
-      "cubic"
-    ],
-    [
-      "entry_00825",
-      "IrBe",
-      "cubic"
-    ],
-    [
-      "entry_00968",
-      "IrBe",
-      "cubic"
-    ],
-    [
-      "entry_00841",
-      "IrFe",
-      "cubic"
-    ],
-    [
-      "entry_01181",
-      "IrGa",
-      "cubic"
-    ],
-    [
-      "entry_01186",
-      "IrGa",
-      "cubic"
-    ],
-    [
-      "entry_01088",
-      "IrGa",
+      "entry_00096",
+      "Ir3Zr",
       "cubic"
     ],
     [
       "entry_01083",
-      "IrGa",
-      "cubic"
-    ],
-    [
-      "entry_01164",
-      "IrHf",
-      "cubic"
-    ],
-    [
-      "entry_01168",
-      "IrHf",
-      "cubic"
-    ],
-    [
-      "entry_01292",
-      "IrHf",
-      "cubic"
-    ],
-    [
-      "entry_01469",
-      "IrHf3",
-      "cubic"
-    ],
-    [
-      "entry_00857",
-      "IrMg",
+      "IrAl",
       "cubic"
     ],
     [
       "entry_00679",
-      "IrMg",
+      "IrAl",
       "cubic"
     ],
     [
-      "entry_00628",
-      "IrMg",
+      "entry_01154",
+      "IrAl",
       "cubic"
     ],
     [
-      "entry_00442",
-      "IrMn",
+      "entry_01198",
+      "IrAl",
       "cubic"
     ],
     [
-      "entry_00704",
-      "IrNb",
+      "entry_01248",
+      "IrAl",
       "cubic"
     ],
     [
-      "entry_00425",
-      "IrNb",
+      "entry_01265",
+      "IrAl",
       "cubic"
     ],
     [
-      "entry_01383",
-      "IrNb",
+      "entry_00749",
+      "IrAl",
       "cubic"
     ],
     [
-      "entry_01118",
-      "IrNb",
-      "cubic"
-    ],
-    [
-      "entry_01152",
-      "IrNb",
-      "cubic"
-    ],
-    [
-      "entry_01063",
-      "IrNb",
-      "cubic"
-    ],
-    [
-      "entry_01007",
-      "IrSb",
-      "cubic"
-    ],
-    [
-      "entry_00765",
-      "IrSb",
-      "cubic"
-    ],
-    [
-      "entry_00692",
-      "IrSc",
-      "cubic"
-    ],
-    [
-      "entry_00594",
-      "IrSc",
-      "cubic"
-    ],
-    [
-      "entry_01338",
-      "IrSc",
-      "cubic"
-    ],
-    [
-      "entry_01162",
-      "IrSc",
-      "cubic"
-    ],
-    [
-      "entry_01207",
-      "IrSc",
-      "cubic"
-    ],
-    [
-      "entry_01373",
-      "IrSi",
-      "cubic"
-    ],
-    [
-      "entry_00973",
-      "IrSi",
-      "cubic"
-    ],
-    [
-      "entry_01277",
-      "IrSi",
-      "cubic"
-    ],
-    [
-      "entry_00715",
-      "IrSi",
-      "cubic"
-    ],
-    [
-      "entry_01243",
-      "IrSi",
-      "cubic"
-    ],
-    [
-      "entry_01270",
-      "IrSn",
-      "cubic"
-    ],
-    [
-      "entry_01218",
-      "IrSn",
-      "cubic"
-    ],
-    [
-      "entry_01034",
-      "IrSn",
-      "cubic"
-    ],
-    [
-      "entry_00581",
-      "IrSn",
-      "cubic"
-    ],
-    [
-      "entry_01072",
-      "IrTi",
-      "cubic"
-    ],
-    [
-      "entry_00647",
-      "IrTi",
-      "cubic"
-    ],
-    [
-      "entry_00406",
-      "IrTi",
-      "cubic"
-    ],
-    [
-      "entry_00578",
-      "IrV",
-      "cubic"
-    ],
-    [
-      "entry_01110",
-      "IrY",
-      "cubic"
-    ],
-    [
-      "entry_00746",
-      "IrZn",
-      "cubic"
-    ],
-    [
-      "entry_00515",
-      "IrZr",
-      "cubic"
-    ],
-    [
-      "entry_00932",
-      "IrZr",
-      "cubic"
-    ],
-    [
-      "entry_00471",
-      "IrZr",
+      "entry_01296",
+      "IrAl",
       "cubic"
     ],
     [
       "entry_00879",
+      "IrBe",
+      "cubic"
+    ],
+    [
+      "entry_00935",
+      "IrCu",
+      "cubic"
+    ],
+    [
+      "entry_00423",
+      "IrCu",
+      "cubic"
+    ],
+    [
+      "entry_01008",
+      "IrCu",
+      "cubic"
+    ],
+    [
+      "entry_01073",
+      "IrGa",
+      "cubic"
+    ],
+    [
+      "entry_01237",
+      "IrGe",
+      "cubic"
+    ],
+    [
+      "entry_01166",
+      "IrGe",
+      "cubic"
+    ],
+    [
+      "entry_01324",
+      "IrHf",
+      "cubic"
+    ],
+    [
+      "entry_00766",
+      "IrHf",
+      "cubic"
+    ],
+    [
+      "entry_00442",
+      "IrIn",
+      "cubic"
+    ],
+    [
+      "entry_00394",
+      "IrIn",
+      "cubic"
+    ],
+    [
+      "entry_00485",
+      "IrMg",
+      "cubic"
+    ],
+    [
+      "entry_00808",
+      "IrMg",
+      "cubic"
+    ],
+    [
+      "entry_00587",
+      "IrMg",
+      "cubic"
+    ],
+    [
+      "entry_00627",
+      "IrMn",
+      "cubic"
+    ],
+    [
+      "entry_00680",
+      "IrMn",
+      "cubic"
+    ],
+    [
+      "entry_01180",
+      "IrNb",
+      "cubic"
+    ],
+    [
+      "entry_00911",
+      "IrNb",
+      "cubic"
+    ],
+    [
+      "entry_00506",
+      "IrNb",
+      "cubic"
+    ],
+    [
+      "entry_01125",
+      "IrNb",
+      "cubic"
+    ],
+    [
+      "entry_01222",
+      "IrNb",
+      "cubic"
+    ],
+    [
+      "entry_00566",
+      "IrNb",
+      "cubic"
+    ],
+    [
+      "entry_00595",
+      "IrSc",
+      "cubic"
+    ],
+    [
+      "entry_01189",
+      "IrSc",
+      "cubic"
+    ],
+    [
+      "entry_00665",
+      "IrSc",
+      "cubic"
+    ],
+    [
+      "entry_00524",
+      "IrSc",
+      "cubic"
+    ],
+    [
+      "entry_01095",
+      "IrSc",
+      "cubic"
+    ],
+    [
+      "entry_01468",
+      "IrSc3",
+      "cubic"
+    ],
+    [
+      "entry_01470",
+      "IrSc3",
+      "cubic"
+    ],
+    [
+      "entry_01210",
+      "IrSi",
+      "cubic"
+    ],
+    [
+      "entry_01262",
+      "IrTa",
+      "cubic"
+    ],
+    [
+      "entry_00560",
+      "IrTa",
+      "cubic"
+    ],
+    [
+      "entry_00959",
+      "IrTa",
+      "cubic"
+    ],
+    [
+      "entry_01141",
+      "IrTa",
+      "cubic"
+    ],
+    [
+      "entry_01192",
+      "IrTi",
+      "cubic"
+    ],
+    [
+      "entry_01126",
+      "IrTi",
+      "cubic"
+    ],
+    [
+      "entry_01264",
+      "IrTi",
+      "cubic"
+    ],
+    [
+      "entry_00897",
+      "IrV",
+      "cubic"
+    ],
+    [
+      "entry_01185",
+      "IrY",
+      "cubic"
+    ],
+    [
+      "entry_01278",
+      "IrZn",
+      "cubic"
+    ],
+    [
+      "entry_00773",
+      "IrZn",
+      "cubic"
+    ],
+    [
+      "entry_01379",
+      "IrZn",
+      "cubic"
+    ],
+    [
+      "entry_01302",
+      "IrZn",
+      "cubic"
+    ],
+    [
+      "entry_00572",
       "IrZr",
+      "cubic"
+    ],
+    [
+      "entry_00831",
+      "IrZr",
+      "cubic"
+    ],
+    [
+      "entry_01467",
+      "IrZr3",
       "cubic"
     ],
     [
@@ -2911,162 +2896,77 @@
       "cubic"
     ],
     [
-      "entry_00269",
-      "Mn3Al",
-      "cubic"
-    ],
-    [
-      "entry_00317",
+      "entry_00091",
       "Mn3Be",
       "cubic"
     ],
     [
-      "entry_00108",
+      "entry_00184",
+      "Mn3Fe",
+      "cubic"
+    ],
+    [
+      "entry_00386",
       "Mn3Ga",
       "cubic"
     ],
     [
-      "entry_00081",
+      "entry_00176",
+      "Mn3Ga",
+      "cubic"
+    ],
+    [
+      "entry_00155",
+      "Mn3Ge",
+      "cubic"
+    ],
+    [
+      "entry_00060",
       "Mn3Hf",
       "cubic"
     ],
     [
-      "entry_00304",
+      "entry_00291",
       "Mn3Hf",
       "cubic"
     ],
     [
-      "entry_00324",
+      "entry_00073",
       "Mn3In",
       "cubic"
     ],
     [
-      "entry_00241",
-      "Mn3Mg",
-      "cubic"
-    ],
-    [
-      "entry_00236",
-      "Mn3Sc",
-      "cubic"
-    ],
-    [
-      "entry_00190",
-      "Mn3Sn",
-      "cubic"
-    ],
-    [
-      "entry_00266",
-      "Mn3Sn",
-      "cubic"
-    ],
-    [
-      "entry_00098",
-      "Mn3Ta",
-      "cubic"
-    ],
-    [
-      "entry_00271",
-      "Mn3Ti",
-      "cubic"
-    ],
-    [
-      "entry_00229",
-      "Mn3V",
-      "cubic"
-    ],
-    [
-      "entry_00293",
-      "Mn3V",
-      "cubic"
-    ],
-    [
-      "entry_00290",
-      "Mn3Y",
-      "cubic"
-    ],
-    [
-      "entry_00210",
+      "entry_00171",
       "Mn3Zn",
       "cubic"
     ],
     [
-      "entry_00301",
-      "Mn3Zr",
-      "cubic"
-    ],
-    [
-      "entry_00066",
-      "Mn3Zr",
-      "cubic"
-    ],
-    [
-      "entry_00869",
-      "MnAl",
-      "cubic"
-    ],
-    [
-      "entry_00548",
+      "entry_00510",
       "MnBe",
       "cubic"
     ],
     [
-      "entry_00784",
-      "MnBe",
-      "cubic"
-    ],
-    [
-      "entry_00854",
-      "MnBe",
-      "cubic"
-    ],
-    [
-      "entry_00941",
-      "MnBe",
-      "cubic"
-    ],
-    [
-      "entry_00402",
+      "entry_00731",
       "MnCu",
       "cubic"
     ],
     [
-      "entry_00880",
+      "entry_00840",
       "MnFe",
       "cubic"
     ],
     [
-      "entry_00934",
-      "MnFe",
-      "cubic"
-    ],
-    [
-      "entry_00461",
-      "MnGa",
-      "cubic"
-    ],
-    [
-      "entry_00872",
-      "MnGa",
-      "cubic"
-    ],
-    [
-      "entry_00532",
-      "MnGa",
-      "cubic"
-    ],
-    [
-      "entry_00645",
+      "entry_00864",
       "MnGe",
       "cubic"
     ],
     [
-      "entry_00452",
+      "entry_00866",
       "MnHf",
       "cubic"
     ],
     [
-      "entry_00749",
+      "entry_00856",
       "MnHf",
       "cubic"
     ],
@@ -3076,122 +2976,147 @@
       "cubic"
     ],
     [
-      "entry_00912",
-      "MnHf",
-      "cubic"
-    ],
-    [
-      "entry_00842",
-      "MnHf",
-      "cubic"
-    ],
-    [
-      "entry_00576",
+      "entry_00446",
       "MnIn",
       "cubic"
     ],
     [
-      "entry_00796",
+      "entry_00473",
       "MnIn",
       "cubic"
     ],
     [
-      "entry_00519",
+      "entry_00545",
+      "MnIn",
+      "cubic"
+    ],
+    [
+      "entry_00971",
       "MnMg",
       "cubic"
     ],
     [
-      "entry_00949",
+      "entry_00758",
       "MnNb",
       "cubic"
     ],
     [
-      "entry_00433",
+      "entry_00444",
       "MnNb",
       "cubic"
     ],
     [
-      "entry_00636",
+      "entry_01019",
       "MnNb",
       "cubic"
     ],
     [
-      "entry_00716",
+      "entry_00467",
+      "MnNb",
+      "cubic"
+    ],
+    [
+      "entry_00594",
+      "MnNb",
+      "cubic"
+    ],
+    [
+      "entry_01020",
       "MnSb",
       "cubic"
     ],
     [
-      "entry_00626",
+      "entry_00601",
+      "MnSc",
+      "cubic"
+    ],
+    [
+      "entry_00783",
+      "MnSc",
+      "cubic"
+    ],
+    [
+      "entry_00746",
       "MnSi",
       "cubic"
     ],
     [
-      "entry_01013",
+      "entry_00930",
       "MnSn",
       "cubic"
     ],
     [
-      "entry_00991",
+      "entry_00614",
       "MnSn",
       "cubic"
     ],
     [
-      "entry_00889",
-      "MnSn",
-      "cubic"
-    ],
-    [
-      "entry_00814",
-      "MnSn",
-      "cubic"
-    ],
-    [
-      "entry_00977",
+      "entry_00988",
       "MnTa",
       "cubic"
     ],
     [
-      "entry_00792",
+      "entry_00691",
       "MnTa",
       "cubic"
     ],
     [
-      "entry_00440",
+      "entry_00940",
       "MnTa",
       "cubic"
     ],
     [
-      "entry_00435",
-      "MnTi",
+      "entry_00796",
+      "MnTa",
       "cubic"
     ],
     [
-      "entry_00835",
-      "MnTi",
+      "entry_00728",
+      "MnTa",
       "cubic"
     ],
     [
-      "entry_00828",
+      "entry_00891",
       "MnV",
       "cubic"
     ],
     [
-      "entry_00871",
+      "entry_01016",
+      "MnV",
+      "cubic"
+    ],
+    [
+      "entry_00942",
       "MnY",
       "cubic"
     ],
     [
-      "entry_00972",
+      "entry_00687",
+      "MnY",
+      "cubic"
+    ],
+    [
+      "entry_01001",
+      "MnY",
+      "cubic"
+    ],
+    [
+      "entry_00920",
       "MnZn",
       "cubic"
     ],
     [
-      "entry_00788",
-      "MnZr",
+      "entry_00592",
+      "MnZn",
       "cubic"
     ],
     [
-      "entry_00757",
+      "entry_00538",
+      "MnZn",
+      "cubic"
+    ],
+    [
+      "entry_00541",
       "MnZr",
       "cubic"
     ],
@@ -3201,252 +3126,257 @@
       "cubic"
     ],
     [
-      "entry_00061",
-      "Mo3Al",
+      "entry_00152",
+      "Mo3Be",
       "cubic"
     ],
     [
-      "entry_00198",
-      "Mo3Al",
-      "cubic"
-    ],
-    [
-      "entry_00309",
+      "entry_00239",
       "Mo3Fe",
       "cubic"
     ],
     [
-      "entry_00096",
-      "Mo3Ga",
-      "cubic"
-    ],
-    [
-      "entry_00040",
-      "Mo3Ga",
-      "cubic"
-    ],
-    [
-      "entry_00152",
+      "entry_00213",
       "Mo3Ge",
       "cubic"
     ],
     [
-      "entry_00018",
-      "Mo3Hf",
-      "cubic"
-    ],
-    [
-      "entry_00274",
+      "entry_00114",
       "Mo3In",
       "cubic"
     ],
     [
-      "entry_00230",
-      "Mo3Mg",
+      "entry_00275",
+      "Mo3Mn",
       "cubic"
     ],
     [
-      "entry_00187",
-      "Mo3Mg",
-      "cubic"
-    ],
-    [
-      "entry_00375",
-      "Mo3Mg",
-      "cubic"
-    ],
-    [
-      "entry_00095",
+      "entry_00362",
       "Mo3Nb",
       "cubic"
     ],
     [
-      "entry_00028",
+      "entry_00321",
       "Mo3Nb",
       "cubic"
     ],
     [
-      "entry_00387",
-      "Mo3Sc",
+      "entry_00181",
+      "Mo3Nb",
       "cubic"
     ],
     [
-      "entry_00261",
+      "entry_00250",
       "Mo3Si",
       "cubic"
     ],
     [
-      "entry_00286",
+      "entry_00263",
+      "Mo3Si",
+      "cubic"
+    ],
+    [
+      "entry_00160",
+      "Mo3Sn",
+      "cubic"
+    ],
+    [
+      "entry_00053",
+      "Mo3Sn",
+      "cubic"
+    ],
+    [
+      "entry_00126",
+      "Mo3Ta",
+      "cubic"
+    ],
+    [
+      "entry_00230",
+      "Mo3Ta",
+      "cubic"
+    ],
+    [
+      "entry_00128",
       "Mo3Ti",
       "cubic"
     ],
     [
-      "entry_00130",
+      "entry_00210",
       "Mo3Ti",
       "cubic"
     ],
     [
-      "entry_00115",
-      "Mo3Ti",
+      "entry_00192",
+      "Mo3Zn",
       "cubic"
     ],
     [
-      "entry_00223",
-      "Mo3V",
+      "entry_00519",
+      "MoBe",
       "cubic"
     ],
     [
-      "entry_00347",
-      "Mo3Y",
+      "entry_00697",
+      "MoBe",
       "cubic"
     ],
     [
-      "entry_00186",
-      "Mo3Y",
-      "cubic"
-    ],
-    [
-      "entry_00755",
+      "entry_00481",
       "MoCu",
       "cubic"
     ],
     [
-      "entry_00943",
+      "entry_00513",
+      "MoCu",
+      "cubic"
+    ],
+    [
+      "entry_00559",
       "MoFe",
       "cubic"
     ],
     [
-      "entry_00511",
-      "MoFe",
-      "cubic"
-    ],
-    [
-      "entry_00963",
-      "MoFe",
-      "cubic"
-    ],
-    [
-      "entry_00974",
-      "MoFe",
-      "cubic"
-    ],
-    [
-      "entry_00860",
-      "MoFe",
-      "cubic"
-    ],
-    [
-      "entry_00667",
-      "MoFe",
-      "cubic"
-    ],
-    [
-      "entry_00718",
+      "entry_00824",
       "MoGa",
       "cubic"
     ],
     [
-      "entry_00877",
-      "MoGa",
-      "cubic"
-    ],
-    [
-      "entry_00637",
+      "entry_00655",
       "MoGe",
+      "cubic"
+    ],
+    [
+      "entry_00843",
+      "MoGe",
+      "cubic"
+    ],
+    [
+      "entry_00643",
+      "MoGe",
+      "cubic"
+    ],
+    [
+      "entry_00651",
+      "MoHf",
+      "cubic"
+    ],
+    [
+      "entry_00992",
+      "MoHf",
+      "cubic"
+    ],
+    [
+      "entry_00788",
+      "MoMg",
+      "cubic"
+    ],
+    [
+      "entry_00829",
+      "MoMg",
       "cubic"
     ],
     [
       "entry_00689",
-      "MoGe",
-      "cubic"
-    ],
-    [
-      "entry_00853",
-      "MoIn",
-      "cubic"
-    ],
-    [
-      "entry_00861",
       "MoNb",
       "cubic"
     ],
     [
-      "entry_00664",
+      "entry_01017",
       "MoSb",
       "cubic"
     ],
     [
-      "entry_00734",
+      "entry_00546",
       "MoSb",
       "cubic"
     ],
     [
-      "entry_00703",
-      "MoSc",
+      "entry_00619",
+      "MoSb",
       "cubic"
     ],
     [
-      "entry_00473",
+      "entry_00745",
+      "MoSi",
+      "cubic"
+    ],
+    [
+      "entry_00902",
+      "MoSi",
+      "cubic"
+    ],
+    [
+      "entry_00781",
       "MoSn",
       "cubic"
     ],
     [
-      "entry_00898",
+      "entry_00802",
       "MoSn",
       "cubic"
     ],
     [
-      "entry_00521",
+      "entry_00793",
       "MoSn",
       "cubic"
     ],
     [
-      "entry_00698",
-      "MoSn",
-      "cubic"
-    ],
-    [
-      "entry_00562",
-      "MoSn",
-      "cubic"
-    ],
-    [
-      "entry_00632",
+      "entry_00858",
       "MoTa",
       "cubic"
     ],
     [
-      "entry_00588",
-      "MoV",
+      "entry_00918",
+      "MoTi",
       "cubic"
     ],
     [
-      "entry_00983",
-      "MoV",
+      "entry_00450",
+      "MoTi",
       "cubic"
     ],
     [
-      "entry_00947",
-      "MoV",
-      "cubic"
-    ],
-    [
-      "entry_00850",
+      "entry_00956",
       "MoY",
       "cubic"
     ],
     [
-      "entry_00563",
+      "entry_00583",
+      "MoY",
+      "cubic"
+    ],
+    [
+      "entry_00421",
+      "MoY",
+      "cubic"
+    ],
+    [
+      "entry_01009",
       "MoZn",
       "cubic"
     ],
     [
-      "entry_00913",
+      "entry_00579",
+      "MoZn",
+      "cubic"
+    ],
+    [
+      "entry_00874",
       "MoZr",
       "cubic"
     ],
     [
-      "entry_00846",
+      "entry_01006",
+      "MoZr",
+      "cubic"
+    ],
+    [
+      "entry_00813",
+      "MoZr",
+      "cubic"
+    ],
+    [
+      "entry_00413",
       "MoZr",
       "cubic"
     ],
@@ -3456,268 +3386,248 @@
       "cubic"
     ],
     [
-      "entry_00276",
-      "Nb3Al",
-      "cubic"
-    ],
-    [
-      "entry_00027",
+      "entry_00123",
       "Nb3Be",
       "cubic"
     ],
     [
-      "entry_00270",
+      "entry_00158",
+      "Nb3Cu",
+      "cubic"
+    ],
+    [
+      "entry_00133",
+      "Nb3Cu",
+      "cubic"
+    ],
+    [
+      "entry_00307",
+      "Nb3Cu",
+      "cubic"
+    ],
+    [
+      "entry_00343",
       "Nb3Fe",
       "cubic"
     ],
     [
-      "entry_00192",
+      "entry_00288",
+      "Nb3Fe",
+      "cubic"
+    ],
+    [
+      "entry_00359",
       "Nb3Ga",
       "cubic"
     ],
     [
-      "entry_00107",
-      "Nb3Ga",
-      "cubic"
-    ],
-    [
-      "entry_00035",
+      "entry_00269",
       "Nb3Ge",
       "cubic"
     ],
     [
-      "entry_00105",
-      "Nb3Ge",
-      "cubic"
-    ],
-    [
-      "entry_00047",
-      "Nb3Hf",
-      "cubic"
-    ],
-    [
-      "entry_00179",
+      "entry_00196",
       "Nb3In",
       "cubic"
     ],
     [
-      "entry_00232",
+      "entry_00308",
+      "Nb3In",
+      "cubic"
+    ],
+    [
+      "entry_00189",
       "Nb3Mg",
       "cubic"
     ],
     [
-      "entry_00014",
-      "Nb3Mn",
+      "entry_00381",
+      "Nb3Mg",
       "cubic"
     ],
     [
-      "entry_00222",
-      "Nb3Si",
+      "entry_00095",
+      "Nb3Mg",
       "cubic"
     ],
     [
-      "entry_00024",
-      "Nb3Si",
+      "entry_00224",
+      "Nb3Mg",
       "cubic"
     ],
     [
-      "entry_00142",
-      "Nb3Si",
+      "entry_00057",
+      "Nb3Sc",
       "cubic"
     ],
     [
-      "entry_00227",
-      "Nb3Ti",
+      "entry_00112",
+      "Nb3Sn",
       "cubic"
     ],
     [
-      "entry_00353",
+      "entry_00208",
+      "Nb3Sn",
+      "cubic"
+    ],
+    [
+      "entry_00026",
       "Nb3V",
       "cubic"
     ],
     [
-      "entry_00268",
+      "entry_00148",
       "Nb3V",
       "cubic"
     ],
     [
-      "entry_00312",
+      "entry_00106",
+      "Nb3V",
+      "cubic"
+    ],
+    [
+      "entry_00163",
       "Nb3Y",
       "cubic"
     ],
     [
-      "entry_00053",
+      "entry_00216",
       "Nb3Y",
       "cubic"
     ],
     [
-      "entry_00166",
+      "entry_00025",
       "Nb3Y",
       "cubic"
     ],
     [
-      "entry_00137",
-      "Nb3Zr",
+      "entry_00104",
+      "Nb3Zn",
       "cubic"
     ],
     [
-      "entry_00694",
+      "entry_00789",
       "NbAl",
       "cubic"
     ],
     [
-      "entry_00930",
-      "NbBe",
-      "cubic"
-    ],
-    [
-      "entry_00499",
+      "entry_00418",
       "NbCu",
       "cubic"
     ],
     [
-      "entry_00422",
+      "entry_00811",
       "NbCu",
       "cubic"
     ],
     [
-      "entry_00544",
-      "NbCu",
+      "entry_00496",
+      "NbFe",
       "cubic"
     ],
     [
-      "entry_00443",
-      "NbCu",
+      "entry_00838",
+      "NbFe",
       "cubic"
     ],
     [
-      "entry_01028",
-      "NbGa",
-      "cubic"
-    ],
-    [
-      "entry_00816",
-      "NbGa",
-      "cubic"
-    ],
-    [
-      "entry_00767",
-      "NbGa",
-      "cubic"
-    ],
-    [
-      "entry_00790",
-      "NbGa",
-      "cubic"
-    ],
-    [
-      "entry_00618",
-      "NbGe",
-      "cubic"
-    ],
-    [
-      "entry_00948",
-      "NbGe",
-      "cubic"
-    ],
-    [
-      "entry_00423",
+      "entry_00398",
       "NbHf",
       "cubic"
     ],
     [
-      "entry_00482",
-      "NbIn",
-      "cubic"
-    ],
-    [
-      "entry_00536",
-      "NbIn",
-      "cubic"
-    ],
-    [
-      "entry_00415",
-      "NbMg",
-      "cubic"
-    ],
-    [
-      "entry_00410",
-      "NbMg",
-      "cubic"
-    ],
-    [
       "entry_00786",
-      "NbMg",
+      "NbHf",
       "cubic"
     ],
     [
-      "entry_00780",
-      "NbMn",
+      "entry_01025",
+      "NbHf",
       "cubic"
     ],
     [
-      "entry_00875",
+      "entry_00648",
+      "NbIn",
+      "cubic"
+    ],
+    [
+      "entry_00656",
+      "NbIn",
+      "cubic"
+    ],
+    [
+      "entry_00933",
       "NbSb",
       "cubic"
     ],
     [
-      "entry_00653",
-      "NbSb",
-      "cubic"
-    ],
-    [
-      "entry_01002",
+      "entry_00734",
       "NbSc",
       "cubic"
     ],
     [
-      "entry_00475",
-      "NbSc",
+      "entry_00662",
+      "NbSi",
       "cubic"
     ],
     [
-      "entry_00952",
-      "NbSc",
+      "entry_00667",
+      "NbSi",
       "cubic"
     ],
     [
-      "entry_00633",
+      "entry_00416",
+      "NbSn",
+      "cubic"
+    ],
+    [
+      "entry_00738",
       "NbTa",
       "cubic"
     ],
     [
-      "entry_00549",
+      "entry_00476",
+      "NbTa",
+      "cubic"
+    ],
+    [
+      "entry_00430",
       "NbV",
       "cubic"
     ],
     [
-      "entry_00849",
+      "entry_00790",
       "NbV",
       "cubic"
     ],
     [
-      "entry_01003",
-      "NbV",
-      "cubic"
-    ],
-    [
-      "entry_00478",
-      "NbV",
-      "cubic"
-    ],
-    [
-      "entry_00975",
+      "entry_00803",
       "NbY",
       "cubic"
     ],
     [
-      "entry_00585",
-      "NbY",
+      "entry_00676",
+      "NbZn",
       "cubic"
     ],
     [
-      "entry_01005",
-      "NbY",
+      "entry_00501",
+      "NbZn",
+      "cubic"
+    ],
+    [
+      "entry_00615",
+      "NbZr",
+      "cubic"
+    ],
+    [
+      "entry_00420",
+      "NbZr",
+      "cubic"
+    ],
+    [
+      "entry_00754",
+      "NbZr",
       "cubic"
     ],
     [
@@ -3731,33 +3641,8 @@
       "cubic"
     ],
     [
-      "entry_00369",
-      "Ni3Cu",
-      "cubic"
-    ],
-    [
-      "entry_00101",
-      "Ni3Cu",
-      "cubic"
-    ],
-    [
       "entry_00002",
       "Ni3Ga",
-      "cubic"
-    ],
-    [
-      "entry_00092",
-      "Ni3Ga",
-      "cubic"
-    ],
-    [
-      "entry_00154",
-      "Ni3Ga",
-      "cubic"
-    ],
-    [
-      "entry_00023",
-      "Ni3Ge",
       "cubic"
     ],
     [
@@ -3766,303 +3651,358 @@
       "cubic"
     ],
     [
-      "entry_00150",
-      "Ni3Hf",
+      "entry_00336",
+      "Ni3In",
       "cubic"
     ],
     [
-      "entry_00384",
+      "entry_00132",
+      "Ni3In",
+      "cubic"
+    ],
+    [
+      "entry_00233",
       "Ni3Mn",
       "cubic"
     ],
     [
-      "entry_00171",
-      "Ni3Nb",
-      "cubic"
-    ],
-    [
-      "entry_00111",
-      "Ni3Nb",
-      "cubic"
-    ],
-    [
-      "entry_00117",
+      "entry_00069",
       "Ni3Sb",
       "cubic"
     ],
     [
-      "entry_00060",
-      "Ni3Si",
+      "entry_00353",
+      "Ni3Sc",
       "cubic"
     ],
     [
-      "entry_00367",
-      "Ni3Si",
+      "entry_00389",
+      "Ni3Sc",
       "cubic"
     ],
     [
-      "entry_00238",
+      "entry_00301",
+      "Ni3Ta",
+      "cubic"
+    ],
+    [
+      "entry_00191",
       "Ni3Ti",
       "cubic"
     ],
     [
-      "entry_00575",
+      "entry_00229",
+      "Ni3Ti",
+      "cubic"
+    ],
+    [
+      "entry_00013",
+      "Ni3Ti",
+      "cubic"
+    ],
+    [
+      "entry_00174",
+      "Ni3V",
+      "cubic"
+    ],
+    [
+      "entry_01143",
       "NiAl",
       "cubic"
     ],
     [
-      "entry_00996",
+      "entry_00621",
       "NiAl",
       "cubic"
     ],
     [
-      "entry_00852",
+      "entry_00404",
+      "NiAl",
+      "cubic"
+    ],
+    [
+      "entry_00504",
       "NiBe",
       "cubic"
     ],
     [
-      "entry_00464",
-      "NiCu",
+      "entry_00511",
+      "NiBe",
       "cubic"
     ],
     [
-      "entry_00481",
-      "NiCu",
-      "cubic"
-    ],
-    [
-      "entry_00720",
+      "entry_00567",
       "NiFe",
       "cubic"
     ],
     [
-      "entry_01093",
+      "entry_00778",
       "NiGa",
       "cubic"
     ],
     [
-      "entry_01273",
+      "entry_01348",
       "NiGe",
       "cubic"
     ],
     [
-      "entry_01075",
+      "entry_01322",
       "NiGe",
       "cubic"
     ],
     [
-      "entry_01138",
-      "NiHf",
-      "cubic"
-    ],
-    [
-      "entry_01066",
-      "NiHf",
-      "cubic"
-    ],
-    [
-      "entry_00671",
-      "NiHf",
-      "cubic"
-    ],
-    [
-      "entry_01103",
-      "NiHf",
+      "entry_01057",
+      "NiGe",
       "cubic"
     ],
     [
       "entry_00556",
+      "NiGe",
+      "cubic"
+    ],
+    [
+      "entry_01090",
+      "NiGe",
+      "cubic"
+    ],
+    [
+      "entry_01355",
+      "NiGe",
+      "cubic"
+    ],
+    [
+      "entry_00495",
+      "NiHf",
+      "cubic"
+    ],
+    [
+      "entry_01332",
+      "NiHf",
+      "cubic"
+    ],
+    [
+      "entry_00850",
+      "NiHf",
+      "cubic"
+    ],
+    [
+      "entry_00470",
       "NiIn",
       "cubic"
     ],
     [
-      "entry_00468",
+      "entry_00787",
       "NiIn",
       "cubic"
     ],
     [
-      "entry_00945",
+      "entry_00906",
       "NiMg",
       "cubic"
     ],
     [
-      "entry_00928",
+      "entry_00873",
       "NiMg",
       "cubic"
     ],
     [
-      "entry_00627",
+      "entry_00639",
       "NiMg",
       "cubic"
     ],
     [
-      "entry_00770",
+      "entry_00526",
       "NiMn",
       "cubic"
     ],
     [
-      "entry_00584",
+      "entry_00555",
+      "NiMn",
+      "cubic"
+    ],
+    [
+      "entry_00720",
+      "NiMn",
+      "cubic"
+    ],
+    [
+      "entry_01207",
       "NiNb",
       "cubic"
     ],
     [
-      "entry_01220",
+      "entry_01257",
       "NiNb",
       "cubic"
     ],
     [
-      "entry_01068",
-      "NiNb",
+      "entry_00872",
+      "NiSb",
       "cubic"
     ],
     [
-      "entry_01030",
-      "NiNb",
+      "entry_00411",
+      "NiSb",
       "cubic"
     ],
     [
-      "entry_01360",
-      "NiNb",
-      "cubic"
-    ],
-    [
-      "entry_01188",
+      "entry_00636",
       "NiSc",
       "cubic"
     ],
     [
-      "entry_01235",
+      "entry_01303",
       "NiSc",
       "cubic"
     ],
     [
-      "entry_01347",
+      "entry_01205",
       "NiSc",
-      "cubic"
-    ],
-    [
-      "entry_00699",
-      "NiSc",
-      "cubic"
-    ],
-    [
-      "entry_00995",
-      "NiSi",
-      "cubic"
-    ],
-    [
-      "entry_01053",
-      "NiSi",
-      "cubic"
-    ],
-    [
-      "entry_01136",
-      "NiSi",
       "cubic"
     ],
     [
       "entry_00652",
+      "NiSc",
+      "cubic"
+    ],
+    [
+      "entry_01460",
+      "NiSc3",
+      "cubic"
+    ],
+    [
+      "entry_00645",
       "NiSi",
       "cubic"
     ],
     [
-      "entry_01154",
-      "NiSi",
-      "cubic"
-    ],
-    [
-      "entry_01468",
-      "NiSi3",
-      "cubic"
-    ],
-    [
-      "entry_01098",
+      "entry_00845",
       "NiSn",
       "cubic"
     ],
     [
-      "entry_00922",
+      "entry_00867",
       "NiSn",
       "cubic"
     ],
     [
-      "entry_00905",
+      "entry_01289",
       "NiSn",
       "cubic"
     ],
     [
-      "entry_00899",
+      "entry_00732",
       "NiSn",
       "cubic"
     ],
     [
-      "entry_01183",
+      "entry_00807",
       "NiSn",
       "cubic"
     ],
     [
-      "entry_00900",
+      "entry_00399",
+      "NiSn",
+      "cubic"
+    ],
+    [
+      "entry_00712",
       "NiTa",
       "cubic"
     ],
     [
-      "entry_00650",
+      "entry_00981",
       "NiTa",
       "cubic"
     ],
     [
-      "entry_01236",
+      "entry_00499",
       "NiTa",
       "cubic"
     ],
     [
-      "entry_00743",
+      "entry_01350",
       "NiTa",
       "cubic"
     ],
     [
-      "entry_00655",
-      "NiTa",
-      "cubic"
-    ],
-    [
-      "entry_01315",
-      "NiTa",
-      "cubic"
-    ],
-    [
-      "entry_01141",
+      "entry_01036",
       "NiTi",
       "cubic"
     ],
     [
-      "entry_01130",
+      "entry_00616",
       "NiTi",
       "cubic"
     ],
     [
-      "entry_00782",
+      "entry_00863",
       "NiV",
       "cubic"
     ],
     [
-      "entry_01254",
+      "entry_00806",
+      "NiV",
+      "cubic"
+    ],
+    [
+      "entry_01093",
       "NiY",
       "cubic"
     ],
     [
-      "entry_00888",
+      "entry_01177",
       "NiY",
       "cubic"
     ],
     [
-      "entry_01144",
+      "entry_00736",
+      "NiY",
+      "cubic"
+    ],
+    [
+      "entry_01107",
+      "NiY",
+      "cubic"
+    ],
+    [
+      "entry_00456",
+      "NiY",
+      "cubic"
+    ],
+    [
+      "entry_00768",
+      "NiY",
+      "cubic"
+    ],
+    [
+      "entry_01106",
       "NiZn",
       "cubic"
     ],
     [
-      "entry_01299",
+      "entry_01071",
       "NiZn",
+      "cubic"
+    ],
+    [
+      "entry_01337",
+      "NiZn",
+      "cubic"
+    ],
+    [
+      "entry_01370",
+      "NiZn",
+      "cubic"
+    ],
+    [
+      "entry_00670",
+      "NiZr",
+      "cubic"
+    ],
+    [
+      "entry_00700",
+      "NiZr",
       "cubic"
     ],
     [
@@ -4076,308 +4016,333 @@
       "cubic"
     ],
     [
-      "entry_00087",
-      "Pd3Al",
-      "cubic"
-    ],
-    [
-      "entry_00390",
-      "Pd3Be",
-      "cubic"
-    ],
-    [
-      "entry_00216",
-      "Pd3Be",
-      "cubic"
-    ],
-    [
-      "entry_00364",
+      "entry_00345",
       "Pd3Cu",
       "cubic"
     ],
     [
-      "entry_00052",
+      "entry_00115",
       "Pd3Fe",
       "cubic"
     ],
     [
-      "entry_00305",
-      "Pd3Fe",
+      "entry_00098",
+      "Pd3Ga",
       "cubic"
     ],
     [
-      "entry_00354",
+      "entry_00323",
+      "Pd3Ga",
+      "cubic"
+    ],
+    [
+      "entry_00234",
+      "Pd3Ga",
+      "cubic"
+    ],
+    [
+      "entry_00071",
       "Pd3Ge",
       "cubic"
     ],
     [
-      "entry_00146",
+      "entry_00088",
       "Pd3Hf",
       "cubic"
     ],
     [
-      "entry_00038",
-      "Pd3Hf",
-      "cubic"
-    ],
-    [
-      "entry_00045",
-      "Pd3In",
-      "cubic"
-    ],
-    [
-      "entry_00335",
+      "entry_00089",
       "Pd3Mg",
       "cubic"
     ],
     [
-      "entry_00272",
+      "entry_00338",
       "Pd3Mg",
       "cubic"
     ],
     [
-      "entry_00228",
+      "entry_00220",
       "Pd3Mg",
       "cubic"
     ],
     [
-      "entry_00256",
+      "entry_00287",
+      "Pd3Mn",
+      "cubic"
+    ],
+    [
+      "entry_00066",
+      "Pd3Mn",
+      "cubic"
+    ],
+    [
+      "entry_00033",
+      "Pd3Nb",
+      "cubic"
+    ],
+    [
+      "entry_00293",
+      "Pd3Sc",
+      "cubic"
+    ],
+    [
+      "entry_00077",
       "Pd3Sn",
       "cubic"
     ],
     [
-      "entry_00349",
+      "entry_00156",
       "Pd3Ta",
       "cubic"
     ],
     [
-      "entry_00386",
-      "Pd3Ta",
-      "cubic"
-    ],
-    [
-      "entry_00389",
-      "Pd3Ti",
-      "cubic"
-    ],
-    [
-      "entry_00249",
+      "entry_00268",
       "Pd3V",
       "cubic"
     ],
     [
-      "entry_00093",
-      "Pd3Zr",
+      "entry_00445",
+      "PdAl",
       "cubic"
     ],
     [
-      "entry_00923",
+      "entry_01165",
+      "PdAl",
+      "cubic"
+    ],
+    [
+      "entry_00685",
+      "PdAl",
+      "cubic"
+    ],
+    [
+      "entry_01139",
+      "PdAl",
+      "cubic"
+    ],
+    [
+      "entry_00868",
       "PdBe",
       "cubic"
     ],
     [
-      "entry_00920",
-      "PdGa",
+      "entry_00581",
+      "PdBe",
       "cubic"
     ],
     [
-      "entry_00916",
-      "PdGa",
-      "cubic"
-    ],
-    [
-      "entry_01321",
-      "PdGa",
-      "cubic"
-    ],
-    [
-      "entry_01375",
-      "PdGe",
-      "cubic"
-    ],
-    [
-      "entry_01291",
-      "PdGe",
-      "cubic"
-    ],
-    [
-      "entry_00892",
-      "PdHf",
-      "cubic"
-    ],
-    [
-      "entry_00509",
-      "PdIn",
-      "cubic"
-    ],
-    [
-      "entry_00775",
-      "PdIn",
+      "entry_00525",
+      "PdCu",
       "cubic"
     ],
     [
       "entry_00818",
-      "PdMg",
+      "PdCu",
       "cubic"
     ],
     [
-      "entry_00883",
-      "PdMn",
+      "entry_01240",
+      "PdGa",
       "cubic"
     ],
     [
-      "entry_01060",
-      "PdNb",
+      "entry_01270",
+      "PdGa",
       "cubic"
     ],
     [
-      "entry_01150",
-      "PdNb",
+      "entry_00996",
+      "PdGa",
       "cubic"
     ],
     [
-      "entry_01205",
-      "PdNb",
+      "entry_01055",
+      "PdGa",
+      "cubic"
+    ],
+    [
+      "entry_00490",
+      "PdGe",
       "cubic"
     ],
     [
       "entry_00603",
-      "PdSc",
+      "PdGe",
       "cubic"
     ],
     [
-      "entry_00847",
-      "PdSc",
+      "entry_01122",
+      "PdHf",
       "cubic"
     ],
     [
-      "entry_01221",
-      "PdSc",
+      "entry_00440",
+      "PdHf",
       "cubic"
     ],
     [
-      "entry_00431",
-      "PdSc",
+      "entry_01007",
+      "PdIn",
       "cubic"
     ],
     [
-      "entry_00702",
-      "PdSc",
+      "entry_00443",
+      "PdMg",
       "cubic"
     ],
     [
-      "entry_01043",
-      "PdSc",
+      "entry_00780",
+      "PdMg",
       "cubic"
     ],
     [
-      "entry_01355",
-      "PdSc",
+      "entry_00600",
+      "PdMg",
       "cubic"
     ],
     [
-      "entry_01374",
-      "PdSc",
-      "cubic"
-    ],
-    [
-      "entry_01275",
-      "PdSi",
-      "cubic"
-    ],
-    [
-      "entry_01317",
-      "PdSi",
-      "cubic"
-    ],
-    [
-      "entry_01376",
-      "PdSi",
-      "cubic"
-    ],
-    [
-      "entry_01104",
-      "PdSn",
-      "cubic"
-    ],
-    [
-      "entry_01094",
-      "PdTa",
-      "cubic"
-    ],
-    [
-      "entry_00733",
-      "PdTa",
-      "cubic"
-    ],
-    [
-      "entry_00630",
-      "PdTa",
-      "cubic"
-    ],
-    [
-      "entry_00543",
-      "PdTi",
-      "cubic"
-    ],
-    [
-      "entry_00472",
-      "PdTi",
-      "cubic"
-    ],
-    [
-      "entry_01027",
-      "PdTi",
-      "cubic"
-    ],
-    [
-      "entry_01306",
-      "PdTi",
-      "cubic"
-    ],
-    [
-      "entry_01056",
-      "PdTi",
-      "cubic"
-    ],
-    [
-      "entry_01312",
-      "PdTi",
+      "entry_01015",
+      "PdMg",
       "cubic"
     ],
     [
       "entry_00672",
-      "PdV",
+      "PdMg",
       "cubic"
     ],
     [
-      "entry_01087",
-      "PdY",
+      "entry_00483",
+      "PdNb",
       "cubic"
     ],
     [
-      "entry_00865",
-      "PdY",
+      "entry_00821",
+      "PdNb",
       "cubic"
     ],
     [
-      "entry_00665",
-      "PdY",
+      "entry_00401",
+      "PdNb",
       "cubic"
     ],
     [
-      "entry_01349",
-      "PdZn",
+      "entry_01061",
+      "PdNb",
       "cubic"
     ],
     [
-      "entry_00762",
-      "PdZn",
+      "entry_00726",
+      "PdNb",
+      "cubic"
+    ],
+    [
+      "entry_01256",
+      "PdSc",
+      "cubic"
+    ],
+    [
+      "entry_00985",
+      "PdSc",
+      "cubic"
+    ],
+    [
+      "entry_00502",
+      "PdSi",
+      "cubic"
+    ],
+    [
+      "entry_00929",
+      "PdSi",
+      "cubic"
+    ],
+    [
+      "entry_01366",
+      "PdSi",
+      "cubic"
+    ],
+    [
+      "entry_01335",
+      "PdSi",
+      "cubic"
+    ],
+    [
+      "entry_01111",
+      "PdSi",
+      "cubic"
+    ],
+    [
+      "entry_01273",
+      "PdSn",
+      "cubic"
+    ],
+    [
+      "entry_01082",
+      "PdSn",
       "cubic"
     ],
     [
       "entry_01108",
+      "PdTa",
+      "cubic"
+    ],
+    [
+      "entry_01158",
+      "PdTa",
+      "cubic"
+    ],
+    [
+      "entry_01091",
+      "PdTi",
+      "cubic"
+    ],
+    [
+      "entry_00750",
+      "PdTi",
+      "cubic"
+    ],
+    [
+      "entry_00727",
+      "PdTi",
+      "cubic"
+    ],
+    [
+      "entry_00529",
+      "PdTi",
+      "cubic"
+    ],
+    [
+      "entry_01109",
+      "PdTi",
+      "cubic"
+    ],
+    [
+      "entry_00465",
+      "PdV",
+      "cubic"
+    ],
+    [
+      "entry_00707",
+      "PdY",
+      "cubic"
+    ],
+    [
+      "entry_01105",
+      "PdY",
+      "cubic"
+    ],
+    [
+      "entry_01130",
+      "PdY",
+      "cubic"
+    ],
+    [
+      "entry_00455",
       "PdZn",
+      "cubic"
+    ],
+    [
+      "entry_01465",
+      "PdZn3",
       "cubic"
     ],
     [
@@ -4386,362 +4351,377 @@
       "cubic"
     ],
     [
-      "entry_00007",
+      "entry_00008",
       "Pt3Al",
       "cubic"
     ],
     [
-      "entry_00388",
+      "entry_00151",
       "Pt3Al",
       "cubic"
     ],
     [
-      "entry_00012",
-      "Pt3Ge",
+      "entry_00257",
+      "Pt3Al",
       "cubic"
     ],
     [
-      "entry_00119",
-      "Pt3Ge",
+      "entry_00076",
+      "Pt3Fe",
       "cubic"
     ],
     [
-      "entry_00265",
-      "Pt3Ge",
+      "entry_00109",
+      "Pt3Ga",
       "cubic"
     ],
     [
-      "entry_00175",
+      "entry_00020",
+      "Pt3Ga",
+      "cubic"
+    ],
+    [
+      "entry_00241",
+      "Pt3Ga",
+      "cubic"
+    ],
+    [
+      "entry_00346",
       "Pt3Hf",
       "cubic"
     ],
     [
-      "entry_00365",
-      "Pt3Hf",
-      "cubic"
-    ],
-    [
-      "entry_00206",
-      "Pt3Mg",
-      "cubic"
-    ],
-    [
-      "entry_00333",
-      "Pt3Mn",
-      "cubic"
-    ],
-    [
-      "entry_00306",
-      "Pt3Sb",
-      "cubic"
-    ],
-    [
-      "entry_00246",
-      "Pt3Sb",
-      "cubic"
-    ],
-    [
-      "entry_00203",
-      "Pt3Sb",
-      "cubic"
-    ],
-    [
-      "entry_00262",
+      "entry_00373",
       "Pt3Sc",
       "cubic"
     ],
     [
-      "entry_00144",
+      "entry_00251",
       "Pt3Sc",
       "cubic"
     ],
     [
-      "entry_00343",
-      "Pt3Si",
-      "cubic"
-    ],
-    [
-      "entry_00182",
+      "entry_00374",
       "Pt3Sn",
       "cubic"
     ],
     [
-      "entry_00160",
+      "entry_00237",
       "Pt3Sn",
       "cubic"
     ],
     [
-      "entry_00140",
-      "Pt3Ta",
+      "entry_00379",
+      "Pt3Ti",
       "cubic"
     ],
     [
-      "entry_00185",
-      "Pt3V",
+      "entry_00110",
+      "Pt3Ti",
       "cubic"
     ],
     [
-      "entry_00278",
-      "Pt3V",
-      "cubic"
-    ],
-    [
-      "entry_00878",
-      "PtAl",
-      "cubic"
-    ],
-    [
-      "entry_00705",
-      "PtAl",
-      "cubic"
-    ],
-    [
-      "entry_01340",
-      "PtAl",
-      "cubic"
-    ],
-    [
-      "entry_00662",
-      "PtBe",
-      "cubic"
-    ],
-    [
-      "entry_00936",
-      "PtCu",
-      "cubic"
-    ],
-    [
-      "entry_00663",
-      "PtCu",
-      "cubic"
-    ],
-    [
-      "entry_00601",
-      "PtCu",
-      "cubic"
-    ],
-    [
-      "entry_00724",
-      "PtCu",
-      "cubic"
-    ],
-    [
-      "entry_00925",
-      "PtCu",
-      "cubic"
-    ],
-    [
-      "entry_01105",
-      "PtGa",
-      "cubic"
-    ],
-    [
-      "entry_01114",
-      "PtGe",
-      "cubic"
-    ],
-    [
-      "entry_00501",
-      "PtGe",
-      "cubic"
-    ],
-    [
-      "entry_01381",
-      "PtHf",
-      "cubic"
-    ],
-    [
-      "entry_00680",
-      "PtMg",
-      "cubic"
-    ],
-    [
-      "entry_01342",
-      "PtNb",
-      "cubic"
-    ],
-    [
-      "entry_01239",
-      "PtNb",
-      "cubic"
-    ],
-    [
-      "entry_00642",
-      "PtNb",
-      "cubic"
-    ],
-    [
-      "entry_01257",
-      "PtNb",
-      "cubic"
-    ],
-    [
-      "entry_00510",
-      "PtNb",
-      "cubic"
-    ],
-    [
-      "entry_01029",
-      "PtNb",
-      "cubic"
-    ],
-    [
-      "entry_00579",
-      "PtNb",
-      "cubic"
-    ],
-    [
-      "entry_01223",
-      "PtNb",
-      "cubic"
-    ],
-    [
-      "entry_00604",
-      "PtSb",
-      "cubic"
-    ],
-    [
-      "entry_01372",
-      "PtSc",
-      "cubic"
-    ],
-    [
-      "entry_01173",
-      "PtSc",
-      "cubic"
-    ],
-    [
-      "entry_01283",
-      "PtSc",
-      "cubic"
-    ],
-    [
-      "entry_01320",
-      "PtSi",
-      "cubic"
-    ],
-    [
-      "entry_01290",
-      "PtSn",
-      "cubic"
-    ],
-    [
-      "entry_00573",
-      "PtSn",
-      "cubic"
-    ],
-    [
-      "entry_00769",
-      "PtSn",
-      "cubic"
-    ],
-    [
-      "entry_00669",
-      "PtSn",
-      "cubic"
-    ],
-    [
-      "entry_00429",
-      "PtSn",
-      "cubic"
-    ],
-    [
-      "entry_01180",
-      "PtSn",
-      "cubic"
-    ],
-    [
-      "entry_00840",
-      "PtSn",
-      "cubic"
-    ],
-    [
-      "entry_01123",
-      "PtTa",
-      "cubic"
-    ],
-    [
-      "entry_00614",
-      "PtTa",
-      "cubic"
-    ],
-    [
-      "entry_00487",
-      "PtTa",
-      "cubic"
-    ],
-    [
-      "entry_00582",
-      "PtTa",
-      "cubic"
-    ],
-    [
-      "entry_00444",
-      "PtTa",
-      "cubic"
-    ],
-    [
-      "entry_01111",
-      "PtTi",
-      "cubic"
-    ],
-    [
-      "entry_01377",
-      "PtTi",
-      "cubic"
-    ],
-    [
-      "entry_00611",
-      "PtTi",
-      "cubic"
-    ],
-    [
-      "entry_00643",
-      "PtV",
-      "cubic"
-    ],
-    [
-      "entry_00735",
-      "PtV",
-      "cubic"
-    ],
-    [
-      "entry_00867",
-      "PtV",
-      "cubic"
-    ],
-    [
-      "entry_00815",
-      "PtV",
-      "cubic"
-    ],
-    [
-      "entry_00503",
-      "PtY",
+      "entry_00129",
+      "Pt3Zn",
       "cubic"
     ],
     [
       "entry_01155",
+      "PtAl",
+      "cubic"
+    ],
+    [
+      "entry_00448",
+      "PtAl",
+      "cubic"
+    ],
+    [
+      "entry_01323",
+      "PtAl",
+      "cubic"
+    ],
+    [
+      "entry_00540",
+      "PtAl",
+      "cubic"
+    ],
+    [
+      "entry_01110",
+      "PtAl",
+      "cubic"
+    ],
+    [
+      "entry_00599",
+      "PtCu",
+      "cubic"
+    ],
+    [
+      "entry_00568",
+      "PtCu",
+      "cubic"
+    ],
+    [
+      "entry_00907",
+      "PtCu",
+      "cubic"
+    ],
+    [
+      "entry_01028",
+      "PtGa",
+      "cubic"
+    ],
+    [
+      "entry_01049",
+      "PtGa",
+      "cubic"
+    ],
+    [
+      "entry_01204",
+      "PtGa",
+      "cubic"
+    ],
+    [
+      "entry_00939",
+      "PtGa",
+      "cubic"
+    ],
+    [
+      "entry_00407",
+      "PtGa",
+      "cubic"
+    ],
+    [
+      "entry_01334",
+      "PtGe",
+      "cubic"
+    ],
+    [
+      "entry_00562",
+      "PtGe",
+      "cubic"
+    ],
+    [
+      "entry_00409",
+      "PtGe",
+      "cubic"
+    ],
+    [
+      "entry_01225",
+      "PtHf",
+      "cubic"
+    ],
+    [
+      "entry_00557",
+      "PtHf",
+      "cubic"
+    ],
+    [
+      "entry_00711",
+      "PtHf",
+      "cubic"
+    ],
+    [
+      "entry_00453",
+      "PtMg",
+      "cubic"
+    ],
+    [
+      "entry_00475",
+      "PtMg",
+      "cubic"
+    ],
+    [
+      "entry_00861",
+      "PtNb",
+      "cubic"
+    ],
+    [
+      "entry_01138",
+      "PtNb",
+      "cubic"
+    ],
+    [
+      "entry_01363",
+      "PtNb",
+      "cubic"
+    ],
+    [
+      "entry_00909",
+      "PtSb",
+      "cubic"
+    ],
+    [
+      "entry_01097",
+      "PtSc",
+      "cubic"
+    ],
+    [
+      "entry_00464",
+      "PtSc",
+      "cubic"
+    ],
+    [
+      "entry_00468",
+      "PtSc",
+      "cubic"
+    ],
+    [
+      "entry_01129",
+      "PtSc",
+      "cubic"
+    ],
+    [
+      "entry_00904",
+      "PtSi",
+      "cubic"
+    ],
+    [
+      "entry_01223",
+      "PtSi",
+      "cubic"
+    ],
+    [
+      "entry_00718",
+      "PtSi",
+      "cubic"
+    ],
+    [
+      "entry_01119",
+      "PtSi",
+      "cubic"
+    ],
+    [
+      "entry_00609",
+      "PtSi",
+      "cubic"
+    ],
+    [
+      "entry_00589",
+      "PtSi",
+      "cubic"
+    ],
+    [
+      "entry_00844",
+      "PtSn",
+      "cubic"
+    ],
+    [
+      "entry_00905",
+      "PtSn",
+      "cubic"
+    ],
+    [
+      "entry_01381",
+      "PtSn",
+      "cubic"
+    ],
+    [
+      "entry_01218",
+      "PtTa",
+      "cubic"
+    ],
+    [
+      "entry_01060",
+      "PtTa",
+      "cubic"
+    ],
+    [
+      "entry_00678",
+      "PtTa",
+      "cubic"
+    ],
+    [
+      "entry_00641",
+      "PtTa",
+      "cubic"
+    ],
+    [
+      "entry_00521",
+      "PtTa",
+      "cubic"
+    ],
+    [
+      "entry_01314",
+      "PtTa",
+      "cubic"
+    ],
+    [
+      "entry_01285",
+      "PtTi",
+      "cubic"
+    ],
+    [
+      "entry_01103",
+      "PtTi",
+      "cubic"
+    ],
+    [
+      "entry_00752",
+      "PtTi",
+      "cubic"
+    ],
+    [
+      "entry_00854",
+      "PtTi",
+      "cubic"
+    ],
+    [
+      "entry_01243",
+      "PtTi",
+      "cubic"
+    ],
+    [
+      "entry_01133",
+      "PtTi",
+      "cubic"
+    ],
+    [
+      "entry_00799",
+      "PtV",
+      "cubic"
+    ],
+    [
+      "entry_00820",
+      "PtY",
+      "cubic"
+    ],
+    [
+      "entry_00408",
+      "PtY",
+      "cubic"
+    ],
+    [
+      "entry_00479",
       "PtZn",
       "cubic"
     ],
     [
-      "entry_00625",
+      "entry_01046",
       "PtZn",
       "cubic"
     ],
     [
-      "entry_01294",
+      "entry_01092",
       "PtZn",
       "cubic"
     ],
     [
-      "entry_01265",
+      "entry_01316",
       "PtZn",
       "cubic"
     ],
     [
-      "entry_00414",
+      "entry_00977",
+      "PtZr",
+      "cubic"
+    ],
+    [
+      "entry_00669",
+      "PtZr",
+      "cubic"
+    ],
+    [
+      "entry_00767",
       "PtZr",
       "cubic"
     ],
@@ -4751,78 +4731,108 @@
       "cubic"
     ],
     [
-      "entry_00275",
+      "entry_00264",
       "Rh3Cu",
       "cubic"
     ],
     [
-      "entry_00029",
-      "Rh3Cu",
+      "entry_00203",
+      "Rh3Hf",
       "cubic"
     ],
     [
-      "entry_00102",
-      "Rh3Ga",
-      "cubic"
-    ],
-    [
-      "entry_00019",
+      "entry_00028",
       "Rh3In",
       "cubic"
     ],
     [
-      "entry_00126",
-      "Rh3In",
-      "cubic"
-    ],
-    [
-      "entry_00094",
+      "entry_00092",
       "Rh3Mg",
       "cubic"
     ],
     [
-      "entry_00239",
-      "Rh3Sb",
+      "entry_00320",
+      "Rh3Mg",
       "cubic"
     ],
     [
-      "entry_00076",
-      "Rh3Sb",
-      "cubic"
-    ],
-    [
-      "entry_00077",
-      "Rh3Sb",
+      "entry_00179",
+      "Rh3Mn",
       "cubic"
     ],
     [
       "entry_00377",
-      "Rh3Sc",
+      "Rh3Mn",
       "cubic"
     ],
     [
-      "entry_00080",
-      "Rh3Sc",
+      "entry_00086",
+      "Rh3Sb",
       "cubic"
     ],
     [
-      "entry_00345",
+      "entry_00242",
+      "Rh3Sb",
+      "cubic"
+    ],
+    [
+      "entry_00168",
+      "Rh3Sb",
+      "cubic"
+    ],
+    [
+      "entry_00075",
+      "Rh3Sb",
+      "cubic"
+    ],
+    [
+      "entry_00201",
       "Rh3Si",
       "cubic"
     ],
     [
-      "entry_00257",
-      "Rh3Sn",
-      "cubic"
-    ],
-    [
-      "entry_00311",
+      "entry_00141",
       "Rh3Ta",
       "cubic"
     ],
     [
-      "entry_00391",
+      "entry_00122",
+      "Rh3Ti",
+      "cubic"
+    ],
+    [
+      "entry_00369",
       "Rh3V",
+      "cubic"
+    ],
+    [
+      "entry_00366",
+      "Rh3Y",
+      "cubic"
+    ],
+    [
+      "entry_00299",
+      "Rh3Zn",
+      "cubic"
+    ],
+    [
+      "entry_00222",
+      "Rh3Zn",
+      "cubic"
+    ],
+    [
+      "entry_00278",
+      "Rh3Zn",
+      "cubic"
+    ],
+    [
+      "entry_00274",
+      "Rh3Zr",
+      "cubic"
+    ],
+    [
+      "entry_00246",
+      "Rh3Zr",
       "cubic"
     ],
     [
@@ -4831,643 +4841,813 @@
       "cubic"
     ],
     [
-      "entry_00209",
+      "entry_00127",
       "Rh3Zr",
       "cubic"
     ],
     [
-      "entry_00907",
+      "entry_01359",
       "RhAl",
       "cubic"
     ],
     [
-      "entry_00794",
+      "entry_01014",
+      "RhAl",
+      "cubic"
+    ],
+    [
+      "entry_00765",
+      "RhAl",
+      "cubic"
+    ],
+    [
+      "entry_01284",
+      "RhAl",
+      "cubic"
+    ],
+    [
+      "entry_00635",
       "RhBe",
       "cubic"
     ],
     [
-      "entry_00474",
+      "entry_00543",
       "RhBe",
       "cubic"
     ],
     [
-      "entry_00608",
+      "entry_00916",
       "RhBe",
       "cubic"
     ],
     [
-      "entry_00534",
+      "entry_00742",
       "RhCu",
       "cubic"
     ],
     [
-      "entry_01031",
-      "RhGa",
+      "entry_00722",
+      "RhCu",
       "cubic"
     ],
     [
-      "entry_01195",
-      "RhGa",
-      "cubic"
-    ],
-    [
-      "entry_01194",
-      "RhGa",
-      "cubic"
-    ],
-    [
-      "entry_00682",
-      "RhGa",
-      "cubic"
-    ],
-    [
-      "entry_00595",
-      "RhGa",
-      "cubic"
-    ],
-    [
-      "entry_01341",
-      "RhGa",
-      "cubic"
-    ],
-    [
-      "entry_01054",
-      "RhGa",
-      "cubic"
-    ],
-    [
-      "entry_01197",
-      "RhGe",
-      "cubic"
-    ],
-    [
-      "entry_00681",
-      "RhGe",
-      "cubic"
-    ],
-    [
-      "entry_00831",
-      "RhGe",
-      "cubic"
-    ],
-    [
-      "entry_01219",
-      "RhGe",
-      "cubic"
-    ],
-    [
-      "entry_01033",
-      "RhHf",
-      "cubic"
-    ],
-    [
-      "entry_00657",
-      "RhHf",
-      "cubic"
-    ],
-    [
-      "entry_00446",
-      "RhHf",
-      "cubic"
-    ],
-    [
-      "entry_01366",
-      "RhHf",
-      "cubic"
-    ],
-    [
-      "entry_00427",
-      "RhIn",
-      "cubic"
-    ],
-    [
-      "entry_00939",
-      "RhMg",
-      "cubic"
-    ],
-    [
-      "entry_00537",
-      "RhMg",
-      "cubic"
-    ],
-    [
-      "entry_00937",
-      "RhNb",
-      "cubic"
-    ],
-    [
-      "entry_01049",
-      "RhNb",
-      "cubic"
-    ],
-    [
-      "entry_00564",
-      "RhNb",
-      "cubic"
-    ],
-    [
-      "entry_00979",
-      "RhSb",
-      "cubic"
-    ],
-    [
-      "entry_00721",
-      "RhSc",
-      "cubic"
-    ],
-    [
-      "entry_00740",
-      "RhSc",
-      "cubic"
-    ],
-    [
-      "entry_00691",
-      "RhSi",
-      "cubic"
-    ],
-    [
-      "entry_01044",
-      "RhSi",
-      "cubic"
-    ],
-    [
-      "entry_00492",
-      "RhSi",
-      "cubic"
-    ],
-    [
-      "entry_01134",
-      "RhSi",
-      "cubic"
-    ],
-    [
-      "entry_00819",
-      "RhSi",
-      "cubic"
-    ],
-    [
-      "entry_01099",
-      "RhSn",
-      "cubic"
-    ],
-    [
-      "entry_00873",
-      "RhSn",
-      "cubic"
-    ],
-    [
-      "entry_00761",
-      "RhSn",
-      "cubic"
-    ],
-    [
-      "entry_01247",
-      "RhSn",
-      "cubic"
-    ],
-    [
-      "entry_01107",
-      "RhSn",
-      "cubic"
-    ],
-    [
-      "entry_00697",
-      "RhTa",
-      "cubic"
-    ],
-    [
-      "entry_01281",
-      "RhTa",
-      "cubic"
-    ],
-    [
-      "entry_00693",
-      "RhTa",
-      "cubic"
-    ],
-    [
-      "entry_01139",
-      "RhTi",
-      "cubic"
-    ],
-    [
-      "entry_00802",
-      "RhTi",
-      "cubic"
-    ],
-    [
-      "entry_00864",
-      "RhV",
-      "cubic"
-    ],
-    [
-      "entry_01151",
-      "RhY",
-      "cubic"
-    ],
-    [
-      "entry_01191",
-      "RhY",
-      "cubic"
-    ],
-    [
-      "entry_01279",
-      "RhZn",
-      "cubic"
-    ],
-    [
-      "entry_00483",
-      "RhZn",
-      "cubic"
-    ],
-    [
-      "entry_00623",
-      "RhZn",
-      "cubic"
-    ],
-    [
-      "entry_01148",
-      "RhZn",
-      "cubic"
-    ],
-    [
-      "entry_01125",
-      "RhZn",
-      "cubic"
-    ],
-    [
-      "entry_00513",
-      "RhZr",
-      "cubic"
-    ],
-    [
-      "entry_00512",
-      "RhZr",
-      "cubic"
-    ],
-    [
-      "entry_00235",
-      "Ru3Be",
-      "cubic"
-    ],
-    [
-      "entry_00218",
-      "Ru3Cu",
-      "cubic"
-    ],
-    [
-      "entry_00340",
-      "Ru3Cu",
-      "cubic"
-    ],
-    [
-      "entry_00357",
-      "Ru3Ge",
-      "cubic"
-    ],
-    [
-      "entry_00331",
-      "Ru3Hf",
-      "cubic"
-    ],
-    [
-      "entry_00381",
-      "Ru3Hf",
-      "cubic"
-    ],
-    [
-      "entry_00334",
-      "Ru3Hf",
-      "cubic"
-    ],
-    [
-      "entry_00217",
-      "Ru3Mg",
-      "cubic"
-    ],
-    [
-      "entry_00020",
-      "Ru3Mg",
-      "cubic"
-    ],
-    [
-      "entry_00162",
-      "Ru3Sn",
-      "cubic"
-    ],
-    [
-      "entry_00070",
-      "Ru3V",
-      "cubic"
-    ],
-    [
-      "entry_00307",
-      "Ru3V",
-      "cubic"
-    ],
-    [
-      "entry_00178",
-      "Ru3Zr",
-      "cubic"
-    ],
-    [
-      "entry_00759",
-      "RuAl",
-      "cubic"
-    ],
-    [
-      "entry_01269",
-      "RuAl",
-      "cubic"
-    ],
-    [
-      "entry_00551",
-      "RuCu",
-      "cubic"
-    ],
-    [
-      "entry_01319",
-      "RuGa",
-      "cubic"
-    ],
-    [
-      "entry_01346",
-      "RuGa",
-      "cubic"
-    ],
-    [
-      "entry_01466",
-      "RuGa3",
-      "cubic"
-    ],
-    [
-      "entry_01166",
-      "RuGe",
-      "cubic"
-    ],
-    [
-      "entry_00729",
-      "RuGe",
-      "cubic"
-    ],
-    [
-      "entry_00506",
-      "RuGe",
-      "cubic"
-    ],
-    [
-      "entry_01129",
-      "RuHf",
-      "cubic"
-    ],
-    [
-      "entry_00896",
-      "RuHf",
-      "cubic"
-    ],
-    [
-      "entry_01288",
-      "RuHf",
-      "cubic"
-    ],
-    [
-      "entry_00674",
-      "RuHf",
-      "cubic"
-    ],
-    [
-      "entry_01233",
-      "RuHf",
-      "cubic"
-    ],
-    [
-      "entry_00396",
-      "RuIn",
-      "cubic"
-    ],
-    [
-      "entry_01000",
-      "RuMg",
-      "cubic"
-    ],
-    [
-      "entry_00453",
-      "RuMg",
-      "cubic"
-    ],
-    [
-      "entry_00516",
-      "RuMg",
-      "cubic"
-    ],
-    [
-      "entry_00555",
-      "RuMn",
-      "cubic"
-    ],
-    [
-      "entry_00777",
-      "RuMn",
-      "cubic"
-    ],
-    [
-      "entry_00448",
-      "RuMn",
-      "cubic"
-    ],
-    [
-      "entry_00967",
-      "RuNb",
-      "cubic"
-    ],
-    [
-      "entry_00713",
-      "RuNb",
-      "cubic"
-    ],
-    [
-      "entry_00574",
-      "RuNb",
-      "cubic"
-    ],
-    [
-      "entry_01020",
-      "RuNb",
-      "cubic"
-    ],
-    [
-      "entry_00449",
-      "RuSb",
-      "cubic"
-    ],
-    [
-      "entry_00686",
-      "RuSb",
-      "cubic"
-    ],
-    [
-      "entry_01179",
-      "RuSc",
+      "entry_00523",
+      "RhFe",
       "cubic"
     ],
     [
       "entry_01121",
+      "RhGa",
+      "cubic"
+    ],
+    [
+      "entry_01216",
+      "RhGa",
+      "cubic"
+    ],
+    [
+      "entry_00995",
+      "RhGa",
+      "cubic"
+    ],
+    [
+      "entry_00852",
+      "RhGe",
+      "cubic"
+    ],
+    [
+      "entry_00716",
+      "RhGe",
+      "cubic"
+    ],
+    [
+      "entry_00682",
+      "RhGe",
+      "cubic"
+    ],
+    [
+      "entry_01292",
+      "RhGe",
+      "cubic"
+    ],
+    [
+      "entry_00414",
+      "RhHf",
+      "cubic"
+    ],
+    [
+      "entry_00839",
+      "RhHf",
+      "cubic"
+    ],
+    [
+      "entry_00815",
+      "RhHf",
+      "cubic"
+    ],
+    [
+      "entry_01358",
+      "RhHf",
+      "cubic"
+    ],
+    [
+      "entry_01026",
+      "RhIn",
+      "cubic"
+    ],
+    [
+      "entry_00748",
+      "RhIn",
+      "cubic"
+    ],
+    [
+      "entry_00437",
+      "RhIn",
+      "cubic"
+    ],
+    [
+      "entry_00819",
+      "RhMg",
+      "cubic"
+    ],
+    [
+      "entry_01343",
+      "RhNb",
+      "cubic"
+    ],
+    [
+      "entry_00653",
+      "RhSb",
+      "cubic"
+    ],
+    [
+      "entry_01201",
+      "RhSc",
+      "cubic"
+    ],
+    [
+      "entry_01031",
+      "RhSc",
+      "cubic"
+    ],
+    [
+      "entry_01266",
+      "RhSc",
+      "cubic"
+    ],
+    [
+      "entry_00834",
+      "RhSc",
+      "cubic"
+    ],
+    [
+      "entry_01137",
+      "RhSc",
+      "cubic"
+    ],
+    [
+      "entry_01352",
+      "RhSc",
+      "cubic"
+    ],
+    [
+      "entry_01357",
+      "RhSc",
+      "cubic"
+    ],
+    [
+      "entry_01113",
+      "RhSc",
+      "cubic"
+    ],
+    [
+      "entry_01123",
+      "RhSi",
+      "cubic"
+    ],
+    [
+      "entry_01038",
+      "RhSn",
+      "cubic"
+    ],
+    [
+      "entry_00823",
+      "RhSn",
+      "cubic"
+    ],
+    [
+      "entry_00725",
+      "RhSn",
+      "cubic"
+    ],
+    [
+      "entry_00849",
+      "RhSn",
+      "cubic"
+    ],
+    [
+      "entry_01152",
+      "RhSn",
+      "cubic"
+    ],
+    [
+      "entry_00848",
+      "RhTa",
+      "cubic"
+    ],
+    [
+      "entry_01196",
+      "RhTa",
+      "cubic"
+    ],
+    [
+      "entry_01114",
+      "RhTa",
+      "cubic"
+    ],
+    [
+      "entry_01268",
+      "RhTi",
+      "cubic"
+    ],
+    [
+      "entry_00878",
+      "RhTi",
+      "cubic"
+    ],
+    [
+      "entry_00923",
+      "RhTi",
+      "cubic"
+    ],
+    [
+      "entry_00936",
+      "RhV",
+      "cubic"
+    ],
+    [
+      "entry_01011",
+      "RhV",
+      "cubic"
+    ],
+    [
+      "entry_01134",
+      "RhY",
+      "cubic"
+    ],
+    [
+      "entry_00610",
+      "RhY",
+      "cubic"
+    ],
+    [
+      "entry_00970",
+      "RhY",
+      "cubic"
+    ],
+    [
+      "entry_01127",
+      "RhZn",
+      "cubic"
+    ],
+    [
+      "entry_01241",
+      "RhZn",
+      "cubic"
+    ],
+    [
+      "entry_01164",
+      "RhZn",
+      "cubic"
+    ],
+    [
+      "entry_01295",
+      "RhZn",
+      "cubic"
+    ],
+    [
+      "entry_01301",
+      "RhZn",
+      "cubic"
+    ],
+    [
+      "entry_01044",
+      "RhZn",
+      "cubic"
+    ],
+    [
+      "entry_00548",
+      "RhZn",
+      "cubic"
+    ],
+    [
+      "entry_01338",
+      "RhZn",
+      "cubic"
+    ],
+    [
+      "entry_00351",
+      "Ru3Be",
+      "cubic"
+    ],
+    [
+      "entry_00333",
+      "Ru3Be",
+      "cubic"
+    ],
+    [
+      "entry_00384",
+      "Ru3Cu",
+      "cubic"
+    ],
+    [
+      "entry_00182",
+      "Ru3Cu",
+      "cubic"
+    ],
+    [
+      "entry_00102",
+      "Ru3Fe",
+      "cubic"
+    ],
+    [
+      "entry_00339",
+      "Ru3Ge",
+      "cubic"
+    ],
+    [
+      "entry_00090",
+      "Ru3Ge",
+      "cubic"
+    ],
+    [
+      "entry_00325",
+      "Ru3In",
+      "cubic"
+    ],
+    [
+      "entry_00040",
+      "Ru3Mg",
+      "cubic"
+    ],
+    [
+      "entry_00352",
+      "Ru3Mg",
+      "cubic"
+    ],
+    [
+      "entry_00018",
+      "Ru3Mn",
+      "cubic"
+    ],
+    [
+      "entry_00138",
+      "Ru3Nb",
+      "cubic"
+    ],
+    [
+      "entry_00335",
+      "Ru3Nb",
+      "cubic"
+    ],
+    [
+      "entry_00277",
+      "Ru3Nb",
+      "cubic"
+    ],
+    [
+      "entry_00302",
+      "Ru3Sb",
+      "cubic"
+    ],
+    [
+      "entry_00205",
+      "Ru3Sb",
+      "cubic"
+    ],
+    [
+      "entry_00117",
+      "Ru3Sc",
+      "cubic"
+    ],
+    [
+      "entry_00286",
+      "Ru3Ta",
+      "cubic"
+    ],
+    [
+      "entry_00134",
+      "Ru3Y",
+      "cubic"
+    ],
+    [
+      "entry_00135",
+      "Ru3Zn",
+      "cubic"
+    ],
+    [
+      "entry_00376",
+      "Ru3Zr",
+      "cubic"
+    ],
+    [
+      "entry_01299",
+      "RuAl",
+      "cubic"
+    ],
+    [
+      "entry_00516",
+      "RuAl",
+      "cubic"
+    ],
+    [
+      "entry_01094",
+      "RuAl",
+      "cubic"
+    ],
+    [
+      "entry_00899",
+      "RuAl",
+      "cubic"
+    ],
+    [
+      "entry_00644",
+      "RuBe",
+      "cubic"
+    ],
+    [
+      "entry_00570",
+      "RuBe",
+      "cubic"
+    ],
+    [
+      "entry_00602",
+      "RuCu",
+      "cubic"
+    ],
+    [
+      "entry_00816",
+      "RuFe",
+      "cubic"
+    ],
+    [
+      "entry_00454",
+      "RuFe",
+      "cubic"
+    ],
+    [
+      "entry_00871",
+      "RuFe",
+      "cubic"
+    ],
+    [
+      "entry_00649",
+      "RuFe",
+      "cubic"
+    ],
+    [
+      "entry_01239",
+      "RuGa",
+      "cubic"
+    ],
+    [
+      "entry_01372",
+      "RuGa",
+      "cubic"
+    ],
+    [
+      "entry_01065",
+      "RuGa",
+      "cubic"
+    ],
+    [
+      "entry_00681",
+      "RuGe",
+      "cubic"
+    ],
+    [
+      "entry_01062",
+      "RuGe",
+      "cubic"
+    ],
+    [
+      "entry_00544",
+      "RuGe",
+      "cubic"
+    ],
+    [
+      "entry_00847",
+      "RuGe",
+      "cubic"
+    ],
+    [
+      "entry_00822",
+      "RuGe",
+      "cubic"
+    ],
+    [
+      "entry_00629",
+      "RuGe",
+      "cubic"
+    ],
+    [
+      "entry_00482",
+      "RuHf",
+      "cubic"
+    ],
+    [
+      "entry_00489",
+      "RuIn",
+      "cubic"
+    ],
+    [
+      "entry_00607",
+      "RuIn",
+      "cubic"
+    ],
+    [
+      "entry_00534",
+      "RuIn",
+      "cubic"
+    ],
+    [
+      "entry_00941",
+      "RuIn",
+      "cubic"
+    ],
+    [
+      "entry_00428",
+      "RuMg",
+      "cubic"
+    ],
+    [
+      "entry_00962",
+      "RuMg",
+      "cubic"
+    ],
+    [
+      "entry_00666",
+      "RuMg",
+      "cubic"
+    ],
+    [
+      "entry_00585",
+      "RuMn",
+      "cubic"
+    ],
+    [
+      "entry_00762",
+      "RuMn",
+      "cubic"
+    ],
+    [
+      "entry_00646",
+      "RuMn",
+      "cubic"
+    ],
+    [
+      "entry_01374",
+      "RuNb",
+      "cubic"
+    ],
+    [
+      "entry_01261",
+      "RuNb",
+      "cubic"
+    ],
+    [
+      "entry_01174",
+      "RuNb",
+      "cubic"
+    ],
+    [
+      "entry_00714",
+      "RuNb",
+      "cubic"
+    ],
+    [
+      "entry_01068",
+      "RuNb",
+      "cubic"
+    ],
+    [
+      "entry_00896",
+      "RuSb",
+      "cubic"
+    ],
+    [
+      "entry_00640",
+      "RuSb",
+      "cubic"
+    ],
+    [
+      "entry_00472",
+      "RuSb",
+      "cubic"
+    ],
+    [
+      "entry_00892",
+      "RuSb",
+      "cubic"
+    ],
+    [
+      "entry_01080",
       "RuSc",
       "cubic"
     ],
     [
-      "entry_01052",
+      "entry_01000",
       "RuSc",
       "cubic"
     ],
     [
-      "entry_01036",
+      "entry_01281",
       "RuSc",
       "cubic"
     ],
     [
-      "entry_01055",
+      "entry_01340",
       "RuSc",
       "cubic"
     ],
     [
-      "entry_00416",
-      "RuSc",
-      "cubic"
-    ],
-    [
-      "entry_00494",
-      "RuSc",
-      "cubic"
-    ],
-    [
-      "entry_00737",
-      "RuSc",
-      "cubic"
-    ],
-    [
-      "entry_01380",
+      "entry_01311",
       "RuSi",
       "cubic"
     ],
     [
-      "entry_01132",
+      "entry_00395",
       "RuSi",
       "cubic"
     ],
     [
-      "entry_01192",
+      "entry_01462",
+      "RuSi3",
+      "cubic"
+    ],
+    [
+      "entry_01306",
       "RuSn",
       "cubic"
     ],
     [
-      "entry_00752",
+      "entry_01059",
+      "RuSn",
+      "cubic"
+    ],
+    [
+      "entry_01078",
+      "RuSn",
+      "cubic"
+    ],
+    [
+      "entry_01202",
+      "RuSn",
+      "cubic"
+    ],
+    [
+      "entry_00733",
+      "RuSn",
+      "cubic"
+    ],
+    [
+      "entry_00625",
+      "RuSn",
+      "cubic"
+    ],
+    [
+      "entry_01170",
+      "RuSn",
+      "cubic"
+    ],
+    [
+      "entry_00963",
+      "RuSn",
+      "cubic"
+    ],
+    [
+      "entry_00597",
+      "RuSn",
+      "cubic"
+    ],
+    [
+      "entry_00586",
+      "RuSn",
+      "cubic"
+    ],
+    [
+      "entry_00580",
+      "RuSn",
+      "cubic"
+    ],
+    [
+      "entry_01030",
+      "RuSn",
+      "cubic"
+    ],
+    [
+      "entry_00536",
       "RuTa",
       "cubic"
     ],
     [
-      "entry_00954",
+      "entry_01058",
       "RuTa",
       "cubic"
     ],
     [
-      "entry_00687",
+      "entry_01347",
       "RuTa",
       "cubic"
     ],
     [
-      "entry_01100",
+      "entry_00764",
       "RuTa",
       "cubic"
     ],
     [
-      "entry_01006",
+      "entry_01208",
+      "RuTa",
+      "cubic"
+    ],
+    [
+      "entry_01272",
+      "RuTi",
+      "cubic"
+    ],
+    [
+      "entry_00945",
+      "RuTi",
+      "cubic"
+    ],
+    [
+      "entry_00433",
       "RuV",
       "cubic"
     ],
     [
-      "entry_01090",
+      "entry_00663",
+      "RuV",
+      "cubic"
+    ],
+    [
+      "entry_00770",
+      "RuV",
+      "cubic"
+    ],
+    [
+      "entry_01013",
       "RuY",
       "cubic"
     ],
     [
-      "entry_01115",
+      "entry_01312",
       "RuY",
       "cubic"
     ],
     [
-      "entry_01250",
+      "entry_00757",
       "RuY",
       "cubic"
     ],
     [
-      "entry_01169",
+      "entry_01147",
       "RuY",
       "cubic"
     ],
     [
-      "entry_01234",
+      "entry_01309",
       "RuY",
       "cubic"
     ],
     [
-      "entry_01368",
+      "entry_01076",
       "RuY",
       "cubic"
     ],
     [
-      "entry_01459",
+      "entry_01466",
       "RuY3",
       "cubic"
     ],
     [
-      "entry_01330",
+      "entry_01291",
       "RuZn",
       "cubic"
     ],
     [
-      "entry_01351",
-      "RuZn",
-      "cubic"
-    ],
-    [
-      "entry_01303",
-      "RuZn",
-      "cubic"
-    ],
-    [
-      "entry_00398",
-      "RuZn",
-      "cubic"
-    ],
-    [
-      "entry_00953",
-      "RuZn",
-      "cubic"
-    ],
-    [
-      "entry_01212",
-      "RuZn",
-      "cubic"
-    ],
-    [
-      "entry_01463",
-      "RuZn3",
-      "cubic"
-    ],
-    [
-      "entry_00639",
-      "RuZr",
-      "cubic"
-    ],
-    [
-      "entry_00940",
+      "entry_00660",
       "RuZr",
       "cubic"
     ],
     [
       "elem_si_1215550",
       "Si",
+      "cubic"
+    ],
+    [
+      "entry_01458",
+      "SiFe3",
       "cubic"
     ],
     [
@@ -5481,237 +5661,192 @@
       "cubic"
     ],
     [
-      "entry_00284",
+      "entry_00131",
       "Ta3Al",
       "cubic"
     ],
     [
-      "entry_00133",
+      "entry_00392",
       "Ta3Al",
       "cubic"
     ],
     [
-      "entry_00277",
+      "entry_00108",
       "Ta3Cu",
       "cubic"
     ],
     [
-      "entry_00069",
+      "entry_00070",
       "Ta3Ga",
       "cubic"
     ],
     [
-      "entry_00042",
-      "Ta3Ge",
+      "entry_00372",
+      "Ta3Ga",
       "cubic"
     ],
     [
-      "entry_00285",
+      "entry_00202",
       "Ta3Hf",
       "cubic"
     ],
     [
-      "entry_00136",
-      "Ta3Hf",
-      "cubic"
-    ],
-    [
-      "entry_00373",
-      "Ta3In",
-      "cubic"
-    ],
-    [
-      "entry_00370",
-      "Ta3In",
-      "cubic"
-    ],
-    [
-      "entry_00297",
+      "entry_00272",
       "Ta3Mn",
       "cubic"
     ],
     [
-      "entry_00199",
-      "Ta3Nb",
-      "cubic"
-    ],
-    [
-      "entry_00295",
+      "entry_00282",
       "Ta3Sb",
       "cubic"
     ],
     [
-      "entry_00327",
+      "entry_00332",
+      "Ta3Sc",
+      "cubic"
+    ],
+    [
+      "entry_00261",
       "Ta3Si",
       "cubic"
     ],
     [
-      "entry_00234",
+      "entry_00247",
       "Ta3Sn",
       "cubic"
     ],
     [
-      "entry_00128",
-      "Ta3V",
-      "cubic"
-    ],
-    [
-      "entry_00113",
-      "Ta3Y",
-      "cubic"
-    ],
-    [
-      "entry_00308",
-      "Ta3Zn",
-      "cubic"
-    ],
-    [
-      "entry_00051",
+      "entry_00378",
       "Ta3Zr",
       "cubic"
     ],
     [
-      "entry_00063",
-      "Ta3Zr",
-      "cubic"
-    ],
-    [
-      "entry_00779",
+      "entry_00885",
       "TaAl",
       "cubic"
     ],
     [
-      "entry_00451",
-      "TaAl",
+      "entry_00997",
+      "TaBe",
       "cubic"
     ],
     [
-      "entry_00498",
-      "TaGa",
+      "entry_00622",
+      "TaBe",
       "cubic"
     ],
     [
-      "entry_00731",
-      "TaGa",
+      "entry_00576",
+      "TaBe",
       "cubic"
     ],
     [
-      "entry_00404",
+      "entry_00991",
+      "TaCu",
+      "cubic"
+    ],
+    [
+      "entry_00994",
+      "TaCu",
+      "cubic"
+    ],
+    [
+      "entry_00980",
+      "TaFe",
+      "cubic"
+    ],
+    [
+      "entry_00690",
       "TaGe",
       "cubic"
     ],
     [
-      "entry_00717",
-      "TaGe",
-      "cubic"
-    ],
-    [
-      "entry_01022",
-      "TaGe",
-      "cubic"
-    ],
-    [
-      "entry_00895",
-      "TaGe",
-      "cubic"
-    ],
-    [
-      "entry_00738",
-      "TaGe",
-      "cubic"
-    ],
-    [
-      "entry_00640",
-      "TaGe",
-      "cubic"
-    ],
-    [
-      "entry_00676",
+      "entry_00948",
       "TaHf",
       "cubic"
     ],
     [
-      "entry_00613",
+      "entry_00739",
+      "TaHf",
+      "cubic"
+    ],
+    [
+      "entry_00461",
+      "TaHf",
+      "cubic"
+    ],
+    [
+      "entry_00884",
+      "TaHf",
+      "cubic"
+    ],
+    [
+      "entry_00937",
       "TaIn",
       "cubic"
     ],
     [
-      "entry_00862",
-      "TaIn",
-      "cubic"
-    ],
-    [
-      "entry_00866",
-      "TaMg",
-      "cubic"
-    ],
-    [
-      "entry_00460",
-      "TaMg",
-      "cubic"
-    ],
-    [
-      "entry_00909",
-      "TaMg",
-      "cubic"
-    ],
-    [
-      "entry_00832",
-      "TaMg",
-      "cubic"
-    ],
-    [
-      "entry_00514",
+      "entry_00498",
       "TaMn",
       "cubic"
     ],
     [
-      "entry_00479",
+      "entry_00493",
+      "TaMn",
+      "cubic"
+    ],
+    [
+      "entry_00777",
       "TaNb",
       "cubic"
     ],
     [
-      "entry_00774",
+      "entry_00478",
       "TaNb",
       "cubic"
     ],
     [
-      "entry_00545",
-      "TaNb",
-      "cubic"
-    ],
-    [
-      "entry_00554",
-      "TaNb",
-      "cubic"
-    ],
-    [
-      "entry_00970",
+      "entry_00934",
       "TaSc",
       "cubic"
     ],
     [
-      "entry_00824",
-      "TaSi",
-      "cubic"
-    ],
-    [
-      "entry_00987",
-      "TaSn",
-      "cubic"
-    ],
-    [
-      "entry_00524",
+      "entry_00953",
       "TaTi",
       "cubic"
     ],
     [
-      "entry_00776",
-      "TaTi",
+      "entry_00938",
+      "TaV",
       "cubic"
     ],
     [
-      "entry_00417",
+      "entry_00782",
+      "TaV",
+      "cubic"
+    ],
+    [
+      "entry_00737",
+      "TaZn",
+      "cubic"
+    ],
+    [
+      "entry_00683",
+      "TaZn",
+      "cubic"
+    ],
+    [
+      "entry_00458",
+      "TaZr",
+      "cubic"
+    ],
+    [
+      "entry_00613",
+      "TaZr",
+      "cubic"
+    ],
+    [
+      "entry_00975",
       "TaZr",
       "cubic"
     ],
@@ -5721,338 +5856,298 @@
       "cubic"
     ],
     [
-      "entry_00316",
+      "entry_00050",
       "Ti3Be",
       "cubic"
     ],
     [
-      "entry_00188",
+      "entry_00318",
+      "Ti3Be",
+      "cubic"
+    ],
+    [
+      "entry_00249",
       "Ti3Ga",
       "cubic"
     ],
     [
-      "entry_00173",
-      "Ti3Ga",
-      "cubic"
-    ],
-    [
-      "entry_00253",
+      "entry_00166",
       "Ti3Ge",
       "cubic"
     ],
     [
-      "entry_00247",
+      "entry_00243",
+      "Ti3Ge",
+      "cubic"
+    ],
+    [
+      "entry_00082",
       "Ti3Hf",
       "cubic"
     ],
     [
-      "entry_00127",
-      "Ti3In",
-      "cubic"
-    ],
-    [
-      "entry_00196",
-      "Ti3In",
-      "cubic"
-    ],
-    [
-      "entry_00273",
+      "entry_00258",
       "Ti3Mg",
       "cubic"
     ],
     [
-      "entry_00323",
+      "entry_00305",
+      "Ti3Mn",
+      "cubic"
+    ],
+    [
+      "entry_00113",
+      "Ti3Mn",
+      "cubic"
+    ],
+    [
+      "entry_00322",
+      "Ti3Mn",
+      "cubic"
+    ],
+    [
+      "entry_00271",
+      "Ti3Mn",
+      "cubic"
+    ],
+    [
+      "entry_00391",
+      "Ti3Mn",
+      "cubic"
+    ],
+    [
+      "entry_00149",
       "Ti3Nb",
       "cubic"
     ],
     [
-      "entry_00378",
-      "Ti3Nb",
-      "cubic"
-    ],
-    [
-      "entry_00195",
+      "entry_00051",
       "Ti3Sb",
       "cubic"
     ],
     [
-      "entry_00280",
-      "Ti3Sb",
-      "cubic"
-    ],
-    [
-      "entry_00294",
-      "Ti3Si",
-      "cubic"
-    ],
-    [
-      "entry_00358",
-      "Ti3Si",
-      "cubic"
-    ],
-    [
-      "entry_00245",
+      "entry_00194",
       "Ti3Ta",
       "cubic"
     ],
     [
-      "entry_00258",
+      "entry_00187",
       "Ti3V",
       "cubic"
     ],
     [
-      "entry_00330",
-      "Ti3Y",
+      "entry_00183",
+      "Ti3Zn",
       "cubic"
     ],
     [
-      "entry_00062",
+      "entry_00344",
       "Ti3Zr",
       "cubic"
     ],
     [
-      "entry_00670",
+      "entry_00706",
       "TiAl",
       "cubic"
     ],
     [
-      "entry_00552",
+      "entry_01150",
       "TiAl",
       "cubic"
     ],
     [
-      "entry_01354",
+      "entry_01224",
       "TiAl",
       "cubic"
     ],
     [
-      "entry_00981",
-      "TiAl",
-      "cubic"
-    ],
-    [
-      "entry_00994",
+      "entry_00487",
       "TiBe",
       "cubic"
     ],
     [
-      "entry_00811",
-      "TiCu",
-      "cubic"
-    ],
-    [
-      "entry_00997",
+      "entry_00784",
       "TiFe",
       "cubic"
     ],
     [
-      "entry_00754",
+      "entry_00910",
+      "TiFe",
+      "cubic"
+    ],
+    [
+      "entry_00978",
+      "TiFe",
+      "cubic"
+    ],
+    [
+      "entry_00522",
+      "TiFe",
+      "cubic"
+    ],
+    [
+      "entry_00795",
+      "TiFe",
+      "cubic"
+    ],
+    [
+      "entry_01171",
       "TiGa",
       "cubic"
     ],
     [
-      "entry_01334",
+      "entry_01342",
       "TiGa",
-      "cubic"
-    ],
-    [
-      "entry_01156",
-      "TiGe",
-      "cubic"
-    ],
-    [
-      "entry_00982",
-      "TiGe",
-      "cubic"
-    ],
-    [
-      "entry_00546",
-      "TiGe",
-      "cubic"
-    ],
-    [
-      "entry_01059",
-      "TiGe",
-      "cubic"
-    ],
-    [
-      "entry_01238",
-      "TiHf",
-      "cubic"
-    ],
-    [
-      "entry_01128",
-      "TiHf",
-      "cubic"
-    ],
-    [
-      "entry_01252",
-      "TiHf",
-      "cubic"
-    ],
-    [
-      "entry_00700",
-      "TiIn",
-      "cubic"
-    ],
-    [
-      "entry_00438",
-      "TiIn",
-      "cubic"
-    ],
-    [
-      "entry_00598",
-      "TiMg",
-      "cubic"
-    ],
-    [
-      "entry_00456",
-      "TiMg",
-      "cubic"
-    ],
-    [
-      "entry_00817",
-      "TiMn",
-      "cubic"
-    ],
-    [
-      "entry_00629",
-      "TiMn",
-      "cubic"
-    ],
-    [
-      "entry_01189",
-      "TiNb",
-      "cubic"
-    ],
-    [
-      "entry_00931",
-      "TiNb",
-      "cubic"
-    ],
-    [
-      "entry_01458",
-      "TiNb3",
-      "cubic"
-    ],
-    [
-      "entry_01318",
-      "TiSc",
-      "cubic"
-    ],
-    [
-      "entry_00631",
-      "TiSc",
-      "cubic"
-    ],
-    [
-      "entry_01253",
-      "TiSc",
-      "cubic"
-    ],
-    [
-      "entry_01363",
-      "TiSc",
-      "cubic"
-    ],
-    [
-      "entry_01214",
-      "TiSi",
-      "cubic"
-    ],
-    [
-      "entry_00772",
-      "TiSi",
-      "cubic"
-    ],
-    [
-      "entry_01069",
-      "TiSi",
-      "cubic"
-    ],
-    [
-      "entry_01035",
-      "TiSi",
-      "cubic"
-    ],
-    [
-      "entry_00455",
-      "TiSi",
-      "cubic"
-    ],
-    [
-      "entry_01286",
-      "TiSn",
-      "cubic"
-    ],
-    [
-      "entry_01147",
-      "TiTa",
-      "cubic"
-    ],
-    [
-      "entry_01324",
-      "TiTa",
-      "cubic"
-    ],
-    [
-      "entry_00712",
-      "TiTa",
-      "cubic"
-    ],
-    [
-      "entry_01011",
-      "TiTa",
-      "cubic"
-    ],
-    [
-      "entry_00901",
-      "TiV",
       "cubic"
     ],
     [
       "entry_01176",
+      "TiGa",
+      "cubic"
+    ],
+    [
+      "entry_00922",
+      "TiGe",
+      "cubic"
+    ],
+    [
+      "entry_01135",
+      "TiGe",
+      "cubic"
+    ],
+    [
+      "entry_01041",
+      "TiGe",
+      "cubic"
+    ],
+    [
+      "entry_01084",
+      "TiGe",
+      "cubic"
+    ],
+    [
+      "entry_00943",
+      "TiHf",
+      "cubic"
+    ],
+    [
+      "entry_01321",
+      "TiHf",
+      "cubic"
+    ],
+    [
+      "entry_00611",
+      "TiHf",
+      "cubic"
+    ],
+    [
+      "entry_00925",
+      "TiMg",
+      "cubic"
+    ],
+    [
+      "entry_00989",
+      "TiMn",
+      "cubic"
+    ],
+    [
+      "entry_01021",
+      "TiNb",
+      "cubic"
+    ],
+    [
+      "entry_01251",
+      "TiNb",
+      "cubic"
+    ],
+    [
+      "entry_01053",
+      "TiSc",
+      "cubic"
+    ],
+    [
+      "entry_01260",
+      "TiSc",
+      "cubic"
+    ],
+    [
+      "entry_00439",
+      "TiSc",
+      "cubic"
+    ],
+    [
+      "entry_00987",
+      "TiSi",
+      "cubic"
+    ],
+    [
+      "entry_00958",
+      "TiSn",
+      "cubic"
+    ],
+    [
+      "entry_01341",
+      "TiTa",
+      "cubic"
+    ],
+    [
+      "entry_01307",
+      "TiTa",
+      "cubic"
+    ],
+    [
+      "entry_01168",
+      "TiTa",
+      "cubic"
+    ],
+    [
+      "entry_00664",
+      "TiTa",
+      "cubic"
+    ],
+    [
+      "entry_01277",
+      "TiTa",
+      "cubic"
+    ],
+    [
+      "entry_00542",
+      "TiV",
+      "cubic"
+    ],
+    [
+      "entry_01104",
       "TiY",
       "cubic"
     ],
     [
-      "entry_00917",
+      "entry_01079",
       "TiY",
       "cubic"
     ],
     [
-      "entry_01086",
+      "entry_01159",
       "TiY",
       "cubic"
     ],
     [
-      "entry_01256",
+      "entry_01329",
+      "TiY",
+      "cubic"
+    ],
+    [
+      "entry_01056",
       "TiZn",
       "cubic"
     ],
     [
-      "entry_00395",
+      "entry_00751",
       "TiZn",
       "cubic"
     ],
     [
-      "entry_00933",
+      "entry_00406",
       "TiZr",
-      "cubic"
-    ],
-    [
-      "entry_00789",
-      "TiZr",
-      "cubic"
-    ],
-    [
-      "entry_00783",
-      "TiZr",
-      "cubic"
-    ],
-    [
-      "entry_01460",
-      "TiZr3",
       "cubic"
     ],
     [
@@ -6066,392 +6161,337 @@
       "cubic"
     ],
     [
-      "entry_00385",
+      "entry_00204",
       "V3Al",
       "cubic"
     ],
     [
-      "entry_00026",
+      "entry_00087",
+      "V3Al",
+      "cubic"
+    ],
+    [
+      "entry_00142",
+      "V3Al",
+      "cubic"
+    ],
+    [
+      "entry_00280",
       "V3Be",
       "cubic"
     ],
     [
-      "entry_00168",
-      "V3Cu",
+      "entry_00388",
+      "V3Be",
       "cubic"
     ],
     [
-      "entry_00049",
-      "V3Ga",
+      "entry_00259",
+      "V3Fe",
       "cubic"
     ],
     [
-      "entry_00043",
-      "V3Ga",
+      "entry_00034",
+      "V3Ge",
       "cubic"
     ],
     [
-      "entry_00176",
+      "entry_00022",
+      "V3Ge",
+      "cubic"
+    ],
+    [
+      "entry_00014",
+      "V3Hf",
+      "cubic"
+    ],
+    [
+      "entry_00223",
       "V3In",
       "cubic"
     ],
     [
-      "entry_00189",
+      "entry_00078",
       "V3In",
       "cubic"
     ],
     [
-      "entry_00355",
-      "V3Mg",
-      "cubic"
-    ],
-    [
-      "entry_00252",
-      "V3Mg",
-      "cubic"
-    ],
-    [
-      "entry_00041",
-      "V3Mn",
-      "cubic"
-    ],
-    [
-      "entry_00158",
-      "V3Mn",
-      "cubic"
-    ],
-    [
-      "entry_00254",
+      "entry_00217",
       "V3Nb",
       "cubic"
     ],
     [
-      "entry_00231",
+      "entry_00215",
       "V3Nb",
       "cubic"
     ],
     [
-      "entry_00346",
-      "V3Sc",
+      "entry_00256",
+      "V3Nb",
       "cubic"
     ],
     [
-      "entry_00075",
-      "V3Sc",
-      "cubic"
-    ],
-    [
-      "entry_00180",
+      "entry_00349",
       "V3Si",
       "cubic"
     ],
     [
-      "entry_00368",
-      "V3Si",
-      "cubic"
-    ],
-    [
-      "entry_00114",
+      "entry_00100",
       "V3Sn",
       "cubic"
     ],
     [
-      "entry_00016",
-      "V3Ta",
+      "entry_00162",
+      "V3Ti",
       "cubic"
     ],
     [
-      "entry_00221",
-      "V3Ta",
+      "entry_00177",
+      "V3Y",
       "cubic"
     ],
     [
-      "entry_00193",
+      "entry_00032",
+      "V3Y",
+      "cubic"
+    ],
+    [
+      "entry_00212",
+      "V3Y",
+      "cubic"
+    ],
+    [
+      "entry_00049",
+      "V3Zn",
+      "cubic"
+    ],
+    [
+      "entry_00294",
       "V3Zr",
       "cubic"
     ],
     [
-      "entry_00204",
+      "entry_00327",
       "V3Zr",
       "cubic"
     ],
     [
-      "entry_00220",
-      "V3Zr",
-      "cubic"
-    ],
-    [
-      "entry_01369",
+      "entry_01258",
       "VAl",
       "cubic"
     ],
     [
-      "entry_01077",
+      "entry_01315",
       "VAl",
       "cubic"
     ],
     [
-      "entry_00890",
+      "entry_00979",
       "VAl",
       "cubic"
     ],
     [
-      "entry_00599",
+      "entry_01290",
       "VAl",
       "cubic"
     ],
     [
-      "entry_01345",
+      "entry_00633",
       "VAl",
       "cubic"
     ],
     [
-      "entry_00497",
-      "VBe",
+      "entry_00692",
+      "VAl",
       "cubic"
     ],
     [
-      "entry_00927",
-      "VBe",
+      "entry_00851",
+      "VFe",
       "cubic"
     ],
     [
-      "entry_00976",
-      "VBe",
-      "cubic"
-    ],
-    [
-      "entry_00830",
-      "VCu",
-      "cubic"
-    ],
-    [
-      "entry_00711",
-      "VCu",
-      "cubic"
-    ],
-    [
-      "entry_01344",
+      "entry_01128",
       "VGa",
       "cubic"
     ],
     [
-      "entry_01120",
+      "entry_00634",
       "VGe",
       "cubic"
     ],
     [
-      "entry_01300",
-      "VHf",
-      "cubic"
-    ],
-    [
-      "entry_00829",
-      "VHf",
-      "cubic"
-    ],
-    [
-      "entry_01246",
-      "VHf",
-      "cubic"
-    ],
-    [
-      "entry_00526",
-      "VHf",
-      "cubic"
-    ],
-    [
-      "entry_00966",
-      "VHf",
-      "cubic"
-    ],
-    [
-      "entry_00750",
-      "VHf",
-      "cubic"
-    ],
-    [
-      "entry_00751",
-      "VHf",
-      "cubic"
-    ],
-    [
-      "entry_00399",
-      "VHf",
-      "cubic"
-    ],
-    [
-      "entry_01333",
-      "VHf",
-      "cubic"
-    ],
-    [
-      "entry_00938",
-      "VIn",
-      "cubic"
-    ],
-    [
-      "entry_00505",
-      "VMg",
-      "cubic"
-    ],
-    [
-      "entry_00965",
-      "VMg",
-      "cubic"
-    ],
-    [
-      "entry_00528",
-      "VMg",
-      "cubic"
-    ],
-    [
-      "entry_00421",
-      "VMn",
-      "cubic"
-    ],
-    [
-      "entry_00826",
-      "VMn",
-      "cubic"
-    ],
-    [
-      "entry_00530",
-      "VNb",
-      "cubic"
-    ],
-    [
-      "entry_00542",
-      "VNb",
-      "cubic"
-    ],
-    [
-      "entry_00921",
-      "VNb",
-      "cubic"
-    ],
-    [
-      "entry_01009",
-      "VSb",
+      "entry_01098",
+      "VGe",
       "cubic"
     ],
     [
       "entry_01293",
+      "VGe",
+      "cubic"
+    ],
+    [
+      "entry_00463",
+      "VGe",
+      "cubic"
+    ],
+    [
+      "entry_00591",
+      "VHf",
+      "cubic"
+    ],
+    [
+      "entry_00608",
+      "VHf",
+      "cubic"
+    ],
+    [
+      "entry_01035",
+      "VHf",
+      "cubic"
+    ],
+    [
+      "entry_00703",
+      "VHf",
+      "cubic"
+    ],
+    [
+      "entry_00882",
+      "VIn",
+      "cubic"
+    ],
+    [
+      "entry_00833",
+      "VMg",
+      "cubic"
+    ],
+    [
+      "entry_00474",
+      "VMg",
+      "cubic"
+    ],
+    [
+      "entry_00553",
+      "VMg",
+      "cubic"
+    ],
+    [
+      "entry_00405",
+      "VMg",
+      "cubic"
+    ],
+    [
+      "entry_00883",
+      "VMn",
+      "cubic"
+    ],
+    [
+      "entry_00588",
+      "VMn",
+      "cubic"
+    ],
+    [
+      "entry_00805",
+      "VMn",
+      "cubic"
+    ],
+    [
+      "entry_01339",
+      "VNb",
+      "cubic"
+    ],
+    [
+      "entry_00637",
+      "VNb",
+      "cubic"
+    ],
+    [
+      "entry_01200",
+      "VNb",
+      "cubic"
+    ],
+    [
+      "entry_01117",
+      "VNb",
+      "cubic"
+    ],
+    [
+      "entry_01033",
+      "VNb",
+      "cubic"
+    ],
+    [
+      "entry_00590",
       "VSc",
       "cubic"
     ],
     [
-      "entry_00812",
+      "entry_01300",
       "VSc",
       "cubic"
     ],
     [
-      "entry_01171",
+      "entry_01344",
+      "VSc",
+      "cubic"
+    ],
+    [
+      "entry_00817",
       "VSi",
       "cubic"
     ],
     [
-      "entry_00609",
+      "entry_00503",
       "VSi",
       "cubic"
     ],
     [
-      "entry_01149",
-      "VSi",
-      "cubic"
-    ],
-    [
-      "entry_01295",
-      "VSn",
-      "cubic"
-    ],
-    [
-      "entry_01311",
-      "VSn",
-      "cubic"
-    ],
-    [
-      "entry_01272",
-      "VSn",
-      "cubic"
-    ],
-    [
-      "entry_01182",
-      "VSn",
-      "cubic"
-    ],
-    [
-      "entry_01135",
-      "VSn",
-      "cubic"
-    ],
-    [
-      "entry_01165",
-      "VSn",
-      "cubic"
-    ],
-    [
-      "entry_01230",
+      "entry_00865",
       "VTa",
       "cubic"
     ],
     [
-      "entry_00565",
+      "entry_00612",
+      "VTa",
+      "cubic"
+    ],
+    [
+      "entry_01179",
+      "VTa",
+      "cubic"
+    ],
+    [
+      "entry_00412",
       "VTi",
       "cubic"
     ],
     [
-      "entry_00813",
-      "VTi",
-      "cubic"
-    ],
-    [
-      "entry_01259",
-      "VTi",
-      "cubic"
-    ],
-    [
-      "entry_01287",
+      "entry_01029",
       "VY",
       "cubic"
     ],
     [
-      "entry_01163",
+      "entry_00710",
+      "VY",
+      "cubic"
+    ],
+    [
+      "entry_00908",
+      "VY",
+      "cubic"
+    ],
+    [
+      "entry_01004",
       "VZn",
       "cubic"
     ],
     [
-      "entry_01304",
+      "entry_01153",
       "VZn",
       "cubic"
     ],
     [
-      "entry_01255",
-      "VZn",
-      "cubic"
-    ],
-    [
-      "entry_01079",
-      "VZn",
-      "cubic"
-    ],
-    [
-      "entry_01353",
-      "VZn",
-      "cubic"
-    ],
-    [
-      "entry_01313",
-      "VZn",
-      "cubic"
-    ],
-    [
-      "entry_00978",
-      "VZr",
-      "cubic"
-    ],
-    [
-      "entry_00985",
+      "entry_00960",
       "VZr",
       "cubic"
     ],
@@ -6461,252 +6501,227 @@
       "cubic"
     ],
     [
-      "entry_00129",
+      "entry_00370",
       "W3Cu",
       "cubic"
     ],
     [
-      "entry_00250",
-      "W3Cu",
-      "cubic"
-    ],
-    [
-      "entry_00325",
+      "entry_00083",
       "W3Fe",
-      "cubic"
-    ],
-    [
-      "entry_00084",
-      "W3Fe",
-      "cubic"
-    ],
-    [
-      "entry_00065",
-      "W3Ga",
-      "cubic"
-    ],
-    [
-      "entry_00181",
-      "W3Ga",
-      "cubic"
-    ],
-    [
-      "entry_00328",
-      "W3Ge",
-      "cubic"
-    ],
-    [
-      "entry_00242",
-      "W3Ge",
-      "cubic"
-    ],
-    [
-      "entry_00167",
-      "W3Ge",
-      "cubic"
-    ],
-    [
-      "entry_00143",
-      "W3In",
-      "cubic"
-    ],
-    [
-      "entry_00056",
-      "W3In",
-      "cubic"
-    ],
-    [
-      "entry_00149",
-      "W3Mn",
-      "cubic"
-    ],
-    [
-      "entry_00289",
-      "W3Nb",
-      "cubic"
-    ],
-    [
-      "entry_00313",
-      "W3Sb",
-      "cubic"
-    ],
-    [
-      "entry_00109",
-      "W3Sb",
-      "cubic"
-    ],
-    [
-      "entry_00379",
-      "W3Sb",
-      "cubic"
-    ],
-    [
-      "entry_00174",
-      "W3Si",
-      "cubic"
-    ],
-    [
-      "entry_00281",
-      "W3Ta",
-      "cubic"
-    ],
-    [
-      "entry_00322",
-      "W3Ti",
       "cubic"
     ],
     [
       "entry_00350",
+      "W3Fe",
+      "cubic"
+    ],
+    [
+      "entry_00253",
+      "W3Ge",
+      "cubic"
+    ],
+    [
+      "entry_00139",
+      "W3Hf",
+      "cubic"
+    ],
+    [
+      "entry_00036",
+      "W3Si",
+      "cubic"
+    ],
+    [
+      "entry_00055",
+      "W3Si",
+      "cubic"
+    ],
+    [
+      "entry_00340",
+      "W3Sn",
+      "cubic"
+    ],
+    [
+      "entry_00279",
+      "W3Ta",
+      "cubic"
+    ],
+    [
+      "entry_00048",
+      "W3Ta",
+      "cubic"
+    ],
+    [
+      "entry_00218",
+      "W3Ti",
+      "cubic"
+    ],
+    [
+      "entry_00017",
+      "W3Ti",
+      "cubic"
+    ],
+    [
+      "entry_00315",
       "W3V",
       "cubic"
     ],
     [
-      "entry_00021",
-      "W3Y",
+      "entry_00103",
+      "W3V",
       "cubic"
     ],
     [
-      "entry_00147",
-      "W3Y",
+      "entry_00165",
+      "W3V",
       "cubic"
     ],
     [
-      "entry_00163",
-      "W3Y",
+      "entry_00380",
+      "W3Zn",
       "cubic"
     ],
     [
-      "entry_00538",
+      "entry_00368",
+      "W3Zr",
+      "cubic"
+    ],
+    [
+      "entry_01010",
+      "WAl",
+      "cubic"
+    ],
+    [
+      "entry_00826",
       "WBe",
       "cubic"
     ],
     [
-      "entry_00612",
+      "entry_00564",
       "WCu",
       "cubic"
     ],
     [
-      "entry_00491",
+      "entry_00705",
       "WCu",
       "cubic"
     ],
     [
-      "entry_00547",
+      "entry_00950",
+      "WCu",
+      "cubic"
+    ],
+    [
+      "entry_00403",
+      "WFe",
+      "cubic"
+    ],
+    [
+      "entry_00565",
       "WGa",
       "cubic"
     ],
     [
-      "entry_01019",
+      "entry_00717",
+      "WGa",
+      "cubic"
+    ],
+    [
+      "entry_00509",
+      "WGa",
+      "cubic"
+    ],
+    [
+      "entry_00914",
       "WGe",
       "cubic"
     ],
     [
-      "entry_00827",
+      "entry_00966",
+      "WGe",
+      "cubic"
+    ],
+    [
+      "entry_00964",
       "WHf",
       "cubic"
     ],
     [
-      "entry_00926",
+      "entry_00772",
       "WHf",
       "cubic"
     ],
     [
-      "entry_00428",
+      "entry_00419",
       "WHf",
       "cubic"
     ],
     [
-      "entry_00480",
+      "entry_00924",
+      "WIn",
+      "cubic"
+    ],
+    [
+      "entry_00771",
       "WMg",
       "cubic"
     ],
     [
-      "entry_00856",
-      "WMg",
-      "cubic"
-    ],
-    [
-      "entry_00677",
-      "WMg",
-      "cubic"
-    ],
-    [
-      "entry_00529",
+      "entry_00723",
       "WMn",
       "cubic"
     ],
     [
-      "entry_00620",
+      "entry_00675",
       "WMn",
       "cubic"
     ],
     [
-      "entry_00910",
-      "WNb",
-      "cubic"
-    ],
-    [
-      "entry_00764",
-      "WNb",
-      "cubic"
-    ],
-    [
-      "entry_00485",
+      "entry_00518",
       "WSb",
       "cubic"
     ],
     [
-      "entry_00413",
-      "WSb",
-      "cubic"
-    ],
-    [
-      "entry_00566",
+      "entry_00459",
       "WSc",
       "cubic"
     ],
     [
-      "entry_00806",
-      "WTa",
+      "entry_00913",
+      "WSn",
       "cubic"
     ],
     [
-      "entry_00490",
+      "entry_00533",
       "WTi",
       "cubic"
     ],
     [
-      "entry_00844",
+      "entry_00932",
       "WV",
       "cubic"
     ],
     [
-      "entry_00445",
-      "WV",
-      "cubic"
-    ],
-    [
-      "entry_00568",
+      "entry_00514",
       "WY",
       "cubic"
     ],
     [
-      "entry_00753",
+      "entry_01005",
+      "WY",
+      "cubic"
+    ],
+    [
+      "entry_00915",
+      "WZn",
+      "cubic"
+    ],
+    [
+      "entry_00425",
       "WZr",
       "cubic"
     ],
     [
-      "entry_00539",
-      "WZr",
-      "cubic"
-    ],
-    [
-      "entry_00683",
-      "WZr",
-      "cubic"
-    ],
-    [
-      "entry_00845",
+      "entry_00794",
       "WZr",
       "cubic"
     ],
@@ -6721,428 +6736,413 @@
       "cubic"
     ],
     [
-      "entry_00267",
+      "entry_00238",
       "Zr3Al",
       "cubic"
     ],
     [
-      "entry_00132",
+      "entry_00107",
+      "Zr3Al",
+      "cubic"
+    ],
+    [
+      "entry_00260",
+      "Zr3Be",
+      "cubic"
+    ],
+    [
+      "entry_00130",
       "Zr3Cu",
       "cubic"
     ],
     [
-      "entry_00287",
-      "Zr3Cu",
+      "entry_00147",
+      "Zr3Ga",
       "cubic"
     ],
     [
-      "entry_00172",
-      "Zr3Fe",
+      "entry_00358",
+      "Zr3Ga",
       "cubic"
     ],
     [
-      "entry_00086",
+      "entry_00211",
       "Zr3Ge",
       "cubic"
     ],
     [
-      "entry_00015",
+      "entry_00140",
+      "Zr3Ge",
+      "cubic"
+    ],
+    [
+      "entry_00387",
+      "Zr3Hf",
+      "cubic"
+    ],
+    [
+      "entry_00029",
+      "Zr3Hf",
+      "cubic"
+    ],
+    [
+      "entry_00195",
       "Zr3In",
       "cubic"
     ],
     [
-      "entry_00201",
-      "Zr3In",
+      "entry_00137",
+      "Zr3Sb",
       "cubic"
     ],
     [
-      "entry_00134",
-      "Zr3Mg",
-      "cubic"
-    ],
-    [
-      "entry_00164",
-      "Zr3Mg",
-      "cubic"
-    ],
-    [
-      "entry_00240",
+      "entry_00221",
       "Zr3Sc",
       "cubic"
     ],
     [
-      "entry_00085",
+      "entry_00235",
+      "Zr3Sc",
+      "cubic"
+    ],
+    [
+      "entry_00052",
       "Zr3Si",
       "cubic"
     ],
     [
-      "entry_00159",
-      "Zr3Sn",
+      "entry_00316",
+      "Zr3Si",
       "cubic"
     ],
     [
-      "entry_00057",
-      "Zr3Sn",
+      "entry_00097",
+      "Zr3Ta",
       "cubic"
     ],
     [
-      "entry_00072",
-      "Zr3Sn",
+      "entry_00266",
+      "Zr3Ta",
       "cubic"
     ],
     [
-      "entry_00122",
-      "Zr3Ti",
+      "entry_00124",
+      "Zr3Y",
       "cubic"
     ],
     [
-      "entry_00319",
-      "Zr3V",
+      "entry_00125",
+      "Zr3Zn",
       "cubic"
     ],
     [
-      "entry_00259",
-      "Zr3V",
-      "cubic"
-    ],
-    [
-      "entry_01076",
+      "entry_00919",
       "ZrAl",
       "cubic"
     ],
     [
-      "entry_00541",
+      "entry_01188",
       "ZrAl",
       "cubic"
     ],
     [
-      "entry_01232",
+      "entry_01377",
       "ZrAl",
       "cubic"
     ],
     [
-      "entry_00688",
+      "entry_00424",
       "ZrBe",
       "cubic"
     ],
     [
-      "entry_00439",
-      "ZrBe",
-      "cubic"
-    ],
-    [
-      "entry_00886",
+      "entry_00893",
       "ZrCu",
       "cubic"
     ],
     [
-      "entry_00821",
+      "entry_00426",
       "ZrFe",
       "cubic"
     ],
     [
-      "entry_00407",
+      "entry_00563",
+      "ZrFe",
+      "cubic"
+    ],
+    [
+      "entry_00429",
       "ZrGa",
       "cubic"
     ],
     [
-      "entry_00518",
+      "entry_00810",
       "ZrGa",
       "cubic"
     ],
     [
-      "entry_00634",
+      "entry_00441",
       "ZrGa",
       "cubic"
     ],
     [
-      "entry_01041",
-      "ZrGa",
+      "entry_01190",
+      "ZrGe",
       "cubic"
     ],
     [
-      "entry_00517",
-      "ZrGa",
+      "entry_01228",
+      "ZrGe",
       "cubic"
     ],
     [
-      "entry_00437",
-      "ZrGa",
+      "entry_01275",
+      "ZrGe",
       "cubic"
     ],
     [
-      "entry_00635",
-      "ZrGa",
+      "entry_00982",
+      "ZrGe",
       "cubic"
     ],
     [
-      "entry_00454",
-      "ZrGa",
+      "entry_01369",
+      "ZrHf",
+      "cubic"
+    ],
+    [
+      "entry_00500",
+      "ZrHf",
+      "cubic"
+    ],
+    [
+      "entry_00569",
+      "ZrIn",
       "cubic"
     ],
     [
       "entry_00488",
-      "ZrGa",
-      "cubic"
-    ],
-    [
-      "entry_00843",
-      "ZrGa",
-      "cubic"
-    ],
-    [
-      "entry_01266",
-      "ZrGe",
-      "cubic"
-    ],
-    [
-      "entry_01193",
-      "ZrGe",
-      "cubic"
-    ],
-    [
-      "entry_01357",
-      "ZrGe",
-      "cubic"
-    ],
-    [
-      "entry_01225",
-      "ZrGe",
-      "cubic"
-    ],
-    [
-      "entry_01187",
-      "ZrGe",
-      "cubic"
-    ],
-    [
-      "entry_01010",
-      "ZrHf",
-      "cubic"
-    ],
-    [
-      "entry_00610",
-      "ZrHf",
-      "cubic"
-    ],
-    [
-      "entry_00646",
-      "ZrHf",
-      "cubic"
-    ],
-    [
-      "entry_00725",
       "ZrIn",
       "cubic"
     ],
     [
-      "entry_00607",
+      "entry_00632",
       "ZrIn",
       "cubic"
     ],
     [
-      "entry_00572",
-      "ZrMg",
-      "cubic"
-    ],
-    [
-      "entry_00859",
-      "ZrMg",
-      "cubic"
-    ],
-    [
-      "entry_00469",
-      "ZrMg",
-      "cubic"
-    ],
-    [
-      "entry_00918",
-      "ZrMg",
-      "cubic"
-    ],
-    [
-      "entry_00848",
+      "entry_00396",
       "ZrMn",
       "cubic"
     ],
     [
-      "entry_00942",
-      "ZrMn",
-      "cubic"
-    ],
-    [
-      "entry_00411",
-      "ZrMn",
-      "cubic"
-    ],
-    [
-      "entry_01184",
+      "entry_01075",
       "ZrNb",
       "cubic"
     ],
     [
-      "entry_00540",
+      "entry_01051",
       "ZrNb",
       "cubic"
     ],
     [
-      "entry_01362",
+      "entry_00926",
       "ZrNb",
       "cubic"
     ],
     [
-      "entry_00690",
+      "entry_00532",
       "ZrNb",
       "cubic"
     ],
     [
-      "entry_01012",
-      "ZrSb",
+      "entry_01077",
+      "ZrNb",
       "cubic"
     ],
     [
-      "entry_00434",
-      "ZrSb",
+      "entry_01367",
+      "ZrNb",
       "cubic"
     ],
     [
-      "entry_01352",
+      "entry_01085",
       "ZrSc",
       "cubic"
     ],
     [
-      "entry_00836",
+      "entry_01283",
       "ZrSc",
       "cubic"
     ],
     [
-      "entry_01082",
+      "entry_01151",
       "ZrSc",
       "cubic"
     ],
     [
-      "entry_01102",
+      "entry_00438",
       "ZrSc",
       "cubic"
     ],
     [
-      "entry_00950",
+      "entry_01255",
       "ZrSc",
       "cubic"
     ],
     [
-      "entry_01202",
+      "entry_01328",
       "ZrSc",
       "cubic"
     ],
     [
-      "entry_01244",
-      "ZrSi",
-      "cubic"
-    ],
-    [
-      "entry_00760",
-      "ZrSn",
-      "cubic"
-    ],
-    [
-      "entry_01050",
-      "ZrSn",
-      "cubic"
-    ],
-    [
-      "entry_00799",
-      "ZrSn",
-      "cubic"
-    ],
-    [
-      "entry_00736",
-      "ZrSn",
-      "cubic"
-    ],
-    [
-      "entry_00915",
-      "ZrSn",
+      "entry_00647",
+      "ZrSc",
       "cubic"
     ],
     [
       "entry_01074",
+      "ZrSi",
+      "cubic"
+    ],
+    [
+      "entry_01297",
+      "ZrSi",
+      "cubic"
+    ],
+    [
+      "entry_00593",
+      "ZrSi",
+      "cubic"
+    ],
+    [
+      "entry_01184",
+      "ZrSi",
+      "cubic"
+    ],
+    [
+      "entry_01187",
+      "ZrSi",
+      "cubic"
+    ],
+    [
+      "entry_00974",
+      "ZrSi",
+      "cubic"
+    ],
+    [
+      "entry_01206",
+      "ZrSi",
+      "cubic"
+    ],
+    [
+      "entry_00859",
+      "ZrSn",
+      "cubic"
+    ],
+    [
+      "entry_01247",
+      "ZrSn",
+      "cubic"
+    ],
+    [
+      "entry_00620",
+      "ZrSn",
+      "cubic"
+    ],
+    [
+      "entry_01333",
+      "ZrSn",
+      "cubic"
+    ],
+    [
+      "entry_01144",
+      "ZrSn",
+      "cubic"
+    ],
+    [
+      "entry_00624",
       "ZrTa",
       "cubic"
     ],
     [
-      "entry_01371",
+      "entry_01173",
       "ZrTa",
       "cubic"
     ],
     [
-      "entry_01222",
+      "entry_00507",
       "ZrTa",
       "cubic"
     ],
     [
-      "entry_00426",
+      "entry_01195",
       "ZrTa",
+      "cubic"
+    ],
+    [
+      "entry_00747",
+      "ZrTa",
+      "cubic"
+    ],
+    [
+      "entry_00492",
+      "ZrTi",
+      "cubic"
+    ],
+    [
+      "entry_00650",
+      "ZrV",
+      "cubic"
+    ],
+    [
+      "entry_00984",
+      "ZrV",
       "cubic"
     ],
     [
       "entry_00709",
-      "ZrTi",
-      "cubic"
-    ],
-    [
-      "entry_00728",
-      "ZrTi",
-      "cubic"
-    ],
-    [
-      "entry_01350",
-      "ZrTi",
-      "cubic"
-    ],
-    [
-      "entry_00684",
       "ZrV",
       "cubic"
     ],
     [
-      "entry_00986",
+      "entry_00698",
       "ZrV",
       "cubic"
     ],
     [
-      "entry_00409",
-      "ZrV",
-      "cubic"
-    ],
-    [
-      "entry_00597",
-      "ZrV",
-      "cubic"
-    ],
-    [
-      "entry_00727",
+      "entry_01212",
       "ZrY",
       "cubic"
     ],
     [
-      "entry_01224",
+      "entry_01099",
       "ZrY",
       "cubic"
     ],
     [
-      "entry_00450",
-      "ZrY",
-      "cubic"
-    ],
-    [
-      "entry_00771",
+      "entry_01378",
       "ZrZn",
       "cubic"
     ],
     [
-      "entry_01213",
+      "entry_00721",
       "ZrZn",
+      "cubic"
+    ],
+    [
+      "entry_01346",
+      "ZrZn",
+      "cubic"
+    ],
+    [
+      "entry_00886",
+      "ZrZn",
+      "cubic"
+    ],
+    [
+      "entry_01463",
+      "ZrZn3",
       "cubic"
     ]
   ]

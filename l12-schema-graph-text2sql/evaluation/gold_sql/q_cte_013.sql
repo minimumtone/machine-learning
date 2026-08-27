@@ -17,5 +17,5 @@ SELECT formula,
        ROUND(weighted_ref::numeric, 4) AS correction,
        ROUND(ABS(weighted_ref)::numeric, 4) AS abs_correction
 FROM enthalpy
-ORDER BY ABS(weighted_ref) DESC
+ORDER BY ABS(weighted_ref) DESC, entry_id
 LIMIT 10;

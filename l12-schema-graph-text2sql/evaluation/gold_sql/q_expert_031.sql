@@ -1,8 +1,9 @@
-SELECT m.entry_id, m.formula, ps.energy_above_hull, ps.formation_energy_per_atom
-FROM material_entry m
-JOIN structure s ON s.entry_id = m.entry_id
-JOIN phase_stability ps ON ps.entry_id = m.entry_id
-WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-  AND ps.energy_above_hull <= 0.001
-ORDER BY ps.formation_energy_per_atom
+-- Uses the formation_enthalpy view so the benchmark exercises the view's
+-- reference-set-safe derivation instead of re-implementing it by hand.
+SELECT fe.entry_id, fe.formula, fe.energy_above_hull,
+       fe.formation_enthalpy_ev_per_atom
+FROM formation_enthalpy fe
+WHERE (fe.prototype = 'L12' OR fe.strukturbericht = 'L12')
+  AND fe.energy_above_hull <= 0.001
+ORDER BY fe.formation_enthalpy_ev_per_atom
 LIMIT 10000;

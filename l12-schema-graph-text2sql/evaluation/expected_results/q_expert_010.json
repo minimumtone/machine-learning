@@ -7,80 +7,80 @@
   ],
   "rows": [
     [
-      "entry_01465",
-      "AgGe3",
-      "BiF3",
-      "D03"
-    ],
-    [
-      "entry_01467",
-      "AgNb3",
-      "BiF3",
-      "D03"
-    ],
-    [
       "entry_01464",
-      "AuSi3",
-      "BiF3",
-      "D03"
-    ],
-    [
-      "entry_01462",
-      "CuSi3",
-      "BiF3",
-      "D03"
-    ],
-    [
-      "entry_01470",
-      "FeTa3",
-      "BiF3",
-      "D03"
-    ],
-    [
-      "entry_01461",
-      "HfSi3",
+      "AgGa3",
       "BiF3",
       "D03"
     ],
     [
       "entry_01469",
-      "IrHf3",
-      "BiF3",
-      "D03"
-    ],
-    [
-      "entry_01468",
-      "NiSi3",
-      "BiF3",
-      "D03"
-    ],
-    [
-      "entry_01466",
-      "RuGa3",
+      "AgY3",
       "BiF3",
       "D03"
     ],
     [
       "entry_01459",
-      "RuY3",
+      "AlFe3",
       "BiF3",
       "D03"
     ],
     [
-      "entry_01463",
-      "RuZn3",
+      "entry_01461",
+      "HfNb3",
       "BiF3",
       "D03"
     ],
     [
-      "entry_01458",
-      "TiNb3",
+      "entry_01470",
+      "IrSc3",
+      "BiF3",
+      "D03"
+    ],
+    [
+      "entry_01468",
+      "IrSc3",
+      "BiF3",
+      "D03"
+    ],
+    [
+      "entry_01467",
+      "IrZr3",
       "BiF3",
       "D03"
     ],
     [
       "entry_01460",
-      "TiZr3",
+      "NiSc3",
+      "BiF3",
+      "D03"
+    ],
+    [
+      "entry_01465",
+      "PdZn3",
+      "BiF3",
+      "D03"
+    ],
+    [
+      "entry_01462",
+      "RuSi3",
+      "BiF3",
+      "D03"
+    ],
+    [
+      "entry_01466",
+      "RuY3",
+      "BiF3",
+      "D03"
+    ],
+    [
+      "entry_01458",
+      "SiFe3",
+      "BiF3",
+      "D03"
+    ],
+    [
+      "entry_01463",
+      "ZrZn3",
       "BiF3",
       "D03"
     ]

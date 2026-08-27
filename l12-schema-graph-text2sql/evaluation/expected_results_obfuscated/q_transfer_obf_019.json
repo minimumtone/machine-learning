@@ -1,7 +1,7 @@
 {
   "columns": [
     "col_quebec",
-    "corrected_enthalpy"
+    "enthalpy_vs_element_ground_states"
   ],
   "rows": [
     [

@@ -62,7 +62,7 @@ class TestReferenceSetDivergence:
     def test_divergence_set_not_loadable_for_materials(self, conn):
         row = _one(
             conn,
-            "SELECT COUNT(*) FROM source_energy_convention "
+            "SELECT COUNT(*) FROM fixture_source_reference_set "
             "WHERE reference_set = %s",
             (DIVERGENCE_SET,),
         )

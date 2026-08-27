@@ -233,11 +233,11 @@ INSERT INTO element_property (element_property_id, element_id, property_name, va
 SELECT setval('element_property_element_property_id_seq', 124);
 
 -- Prototype definitions
-INSERT INTO prototype_definition (prototype_id, prototype_name, strukturbericht, formula_type, description) VALUES ('L12', 'L12', 'L12', 'A3B', 'L12 ordered intermetallic');
-INSERT INTO prototype_definition (prototype_id, prototype_name, strukturbericht, formula_type, description) VALUES ('B2', 'B2', 'B2', 'AB', 'B2 ordered intermetallic');
-INSERT INTO prototype_definition (prototype_id, prototype_name, strukturbericht, formula_type, description) VALUES ('NaCl', 'NaCl', 'B1', 'AB', 'NaCl ordered intermetallic');
-INSERT INTO prototype_definition (prototype_id, prototype_name, strukturbericht, formula_type, description) VALUES ('NiAs', 'NiAs', 'B81', 'AB', 'NiAs ordered intermetallic');
-INSERT INTO prototype_definition (prototype_id, prototype_name, strukturbericht, formula_type, description) VALUES ('BiF3', 'BiF3', 'D03', 'AB3', 'BiF3 ordered intermetallic');
+INSERT INTO prototype_definition (prototype_id, prototype_name, strukturbericht, formula_type, conventional_cell_atoms, description) VALUES ('L12', 'L12', 'L12', 'A3B', 4, 'L12 ordered intermetallic');
+INSERT INTO prototype_definition (prototype_id, prototype_name, strukturbericht, formula_type, conventional_cell_atoms, description) VALUES ('B2', 'B2', 'B2', 'AB', 2, 'B2 ordered intermetallic');
+INSERT INTO prototype_definition (prototype_id, prototype_name, strukturbericht, formula_type, conventional_cell_atoms, description) VALUES ('NaCl', 'NaCl', 'B1', 'AB', 8, 'NaCl ordered intermetallic');
+INSERT INTO prototype_definition (prototype_id, prototype_name, strukturbericht, formula_type, conventional_cell_atoms, description) VALUES ('NiAs', 'NiAs', 'B81', 'AB', 4, 'NiAs ordered intermetallic');
+INSERT INTO prototype_definition (prototype_id, prototype_name, strukturbericht, formula_type, conventional_cell_atoms, description) VALUES ('BiF3', 'BiF3', 'D03', 'AB3', 16, 'BiF3 ordered intermetallic');
 INSERT INTO prototype_definition (prototype_id, prototype_name, strukturbericht, formula_type, description) VALUES ('Ac_gs', 'Ac_gs', NULL, 'A', 'OQMD ground-state structure of Ac');
 INSERT INTO prototype_definition (prototype_id, prototype_name, strukturbericht, formula_type, description) VALUES ('Ag_gs', 'Ag_gs', NULL, 'A', 'OQMD ground-state structure of Ag');
 INSERT INTO prototype_definition (prototype_id, prototype_name, strukturbericht, formula_type, description) VALUES ('Al_gs', 'Al_gs', NULL, 'A', 'OQMD ground-state structure of Al');
@@ -400,7 +400,7 @@ SELECT setval('alloy_system_alloy_system_id_seq', 6);
 -- the pure-element delta_e values are real data, adopted from OQMD
 -- DFT-PBE. No formation energies were imported from Materials Project
 -- or AFLOW; material_entry.source_db is a synthetic provenance label
--- (see source_energy_convention and README).
+-- (see fixture_source_reference_set and README).
 INSERT INTO reference_energy_set (reference_set, method, functional, source, fit_name, description)
 VALUES ('L12-FIXTURE-PBE-v1', 'DFT', 'PBE',
         'synthetic fixture (elemental references adopted from OQMD)',
@@ -408,14 +408,14 @@ VALUES ('L12-FIXTURE-PBE-v1', 'DFT', 'PBE',
         'Package-specific convention of this synthetic verification fixture: compound formation energies are generated values declared relative to the OQMD DFT-PBE elemental ground states stored in pure_element_reference; only the elemental delta_e values are real OQMD data');
 
 -- source_db -> reference_set map (asserted by 006)
-INSERT INTO source_energy_convention (source_db, reference_set) VALUES ('OQMD', 'L12-FIXTURE-PBE-v1');
-INSERT INTO source_energy_convention (source_db, reference_set) VALUES ('Materials Project', 'L12-FIXTURE-PBE-v1');
-INSERT INTO source_energy_convention (source_db, reference_set) VALUES ('AFLOW', 'L12-FIXTURE-PBE-v1');
+INSERT INTO fixture_source_reference_set (source_db, reference_set) VALUES ('OQMD', 'L12-FIXTURE-PBE-v1');
+INSERT INTO fixture_source_reference_set (source_db, reference_set) VALUES ('Materials Project', 'L12-FIXTURE-PBE-v1');
+INSERT INTO fixture_source_reference_set (source_db, reference_set) VALUES ('AFLOW', 'L12-FIXTURE-PBE-v1');
 
 -- Divergence-test convention: same elements, shifted delta_e.
 -- Present so that queries which ignore reference_set on
 -- pure_element_reference produce visibly different results
--- (see tests). Intentionally NOT mapped in source_energy_convention:
+-- (see tests). Intentionally NOT mapped in fixture_source_reference_set:
 -- no material row may declare it.
 INSERT INTO reference_energy_set (reference_set, method, functional, source, fit_name, description)
 VALUES ('L12-FIXTURE-DIVERGENCE-TEST-v1', 'DFT', 'PBE',

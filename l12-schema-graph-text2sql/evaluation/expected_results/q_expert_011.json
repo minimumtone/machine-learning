@@ -7,122 +7,92 @@
   ],
   "rows": [
     [
-      "entry_00007",
+      "entry_00257",
       "Pt3Al",
       "Pt",
       0.75
     ],
     [
-      "entry_00388",
+      "entry_00151",
       "Pt3Al",
       "Pt",
       0.75
     ],
     [
-      "entry_00012",
-      "Pt3Ge",
+      "entry_00008",
+      "Pt3Al",
       "Pt",
       0.75
     ],
     [
-      "entry_00119",
-      "Pt3Ge",
+      "entry_00076",
+      "Pt3Fe",
       "Pt",
       0.75
     ],
     [
-      "entry_00265",
-      "Pt3Ge",
+      "entry_00109",
+      "Pt3Ga",
       "Pt",
       0.75
     ],
     [
-      "entry_00175",
+      "entry_00020",
+      "Pt3Ga",
+      "Pt",
+      0.75
+    ],
+    [
+      "entry_00241",
+      "Pt3Ga",
+      "Pt",
+      0.75
+    ],
+    [
+      "entry_00346",
       "Pt3Hf",
       "Pt",
       0.75
     ],
     [
-      "entry_00365",
-      "Pt3Hf",
-      "Pt",
-      0.75
-    ],
-    [
-      "entry_00206",
-      "Pt3Mg",
-      "Pt",
-      0.75
-    ],
-    [
-      "entry_00333",
-      "Pt3Mn",
-      "Pt",
-      0.75
-    ],
-    [
-      "entry_00203",
-      "Pt3Sb",
-      "Pt",
-      0.75
-    ],
-    [
-      "entry_00246",
-      "Pt3Sb",
-      "Pt",
-      0.75
-    ],
-    [
-      "entry_00306",
-      "Pt3Sb",
-      "Pt",
-      0.75
-    ],
-    [
-      "entry_00144",
+      "entry_00373",
       "Pt3Sc",
       "Pt",
       0.75
     ],
     [
-      "entry_00262",
+      "entry_00251",
       "Pt3Sc",
       "Pt",
       0.75
     ],
     [
-      "entry_00343",
-      "Pt3Si",
-      "Pt",
-      0.75
-    ],
-    [
-      "entry_00160",
+      "entry_00237",
       "Pt3Sn",
       "Pt",
       0.75
     ],
     [
-      "entry_00182",
+      "entry_00374",
       "Pt3Sn",
       "Pt",
       0.75
     ],
     [
-      "entry_00140",
-      "Pt3Ta",
+      "entry_00110",
+      "Pt3Ti",
       "Pt",
       0.75
     ],
     [
-      "entry_00185",
-      "Pt3V",
+      "entry_00379",
+      "Pt3Ti",
       "Pt",
       0.75
     ],
     [
-      "entry_00278",
-      "Pt3V",
+      "entry_00129",
+      "Pt3Zn",
       "Pt",
       0.75
     ]

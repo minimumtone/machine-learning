@@ -7,10 +7,40 @@
   ],
   "rows": [
     [
-      "entry_00907",
+      "entry_00765",
       "RhAl",
       "B2",
       "cubic"
+    ],
+    [
+      "entry_01014",
+      "RhAl",
+      "B2",
+      "cubic"
+    ],
+    [
+      "entry_01284",
+      "RhAl",
+      "NaCl",
+      "cubic"
+    ],
+    [
+      "entry_01359",
+      "RhAl",
+      "NaCl",
+      "cubic"
+    ],
+    [
+      "entry_01413",
+      "RhAl",
+      "NiAs",
+      "hexagonal"
+    ],
+    [
+      "entry_01440",
+      "RhAl",
+      "NiAs",
+      "hexagonal"
     ]
   ]
 }

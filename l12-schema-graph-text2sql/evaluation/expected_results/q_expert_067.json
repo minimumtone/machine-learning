@@ -6,43 +6,28 @@
   ],
   "rows": [
     [
-      "entry_01397",
-      "AgGa",
+      "entry_01361",
+      "CuSc",
       "B"
     ],
     [
-      "entry_01231",
-      "AgSi",
+      "entry_01221",
+      "HfAl",
       "B"
     ],
     [
-      "entry_01464",
-      "AuSi3",
+      "entry_00278",
+      "Rh3Zn",
       "B"
     ],
     [
-      "entry_01023",
-      "CoHf",
+      "entry_01031",
+      "RhSc",
       "B"
     ],
     [
-      "entry_00436",
-      "FeIn",
-      "B"
-    ],
-    [
-      "entry_00556",
-      "NiIn",
-      "B"
-    ],
-    [
-      "entry_00738",
-      "TaGe",
-      "B"
-    ],
-    [
-      "entry_00760",
-      "ZrSn",
+      "entry_01466",
+      "RuY3",
       "B"
     ]
   ]

@@ -15,6 +15,7 @@ Usage:
 from __future__ import annotations
 
 import json
+import math
 import random
 import sys
 from pathlib import Path
@@ -30,15 +31,15 @@ PROJECT = Path(__file__).resolve().parents[1]
 
 PROTOTYPES = {
     "L12": {"strukturbericht": "L12", "formula_type": "A3B", "crystal_system": "cubic",
-             "sg_number": 221, "sg_symbol": "Pm-3m"},
+             "sg_number": 221, "sg_symbol": "Pm-3m", "cell_atoms": 4},
     "B2":  {"strukturbericht": "B2", "formula_type": "AB", "crystal_system": "cubic",
-             "sg_number": 221, "sg_symbol": "Pm-3m"},
+             "sg_number": 221, "sg_symbol": "Pm-3m", "cell_atoms": 2},
     "NaCl": {"strukturbericht": "B1", "formula_type": "AB", "crystal_system": "cubic",
-              "sg_number": 225, "sg_symbol": "Fm-3m"},
+              "sg_number": 225, "sg_symbol": "Fm-3m", "cell_atoms": 8},
     "NiAs": {"strukturbericht": "B81", "formula_type": "AB", "crystal_system": "hexagonal",
-              "sg_number": 194, "sg_symbol": "P6_3/mmc"},
+              "sg_number": 194, "sg_symbol": "P6_3/mmc", "cell_atoms": 4},
     "BiF3": {"strukturbericht": "D03", "formula_type": "AB3", "crystal_system": "cubic",
-              "sg_number": 225, "sg_symbol": "Fm-3m"},
+              "sg_number": 225, "sg_symbol": "Fm-3m", "cell_atoms": 16},
 }
 
 A_ELEMENTS = [
@@ -66,21 +67,37 @@ REFERENCE_SET = "L12-FIXTURE-PBE-v1"
 DIVERGENCE_TEST_REFERENCE_SET = "L12-FIXTURE-DIVERGENCE-TEST-v1"
 DIVERGENCE_TEST_DELTA_E_SHIFT = 0.05  # eV/atom added to every delta_e
 
-# Known L12 compounds (a_elem, b_elem, lattice_a, formation_energy,
-# energy_above_hull, bulk_modulus, shear_modulus); is_stable is derived
-# from energy_above_hull, never hand-assigned
+# Known L12 compounds; is_stable is derived from energy_above_hull,
+# never hand-assigned.
+# (A, B, a [Å], ΔHf [eV/atom], E_hull [eV/atom], B [GPa], G [GPa], Θ_D [K])
 KNOWN_L12 = [
-    ("Ni", "Al", 3.572, -0.420, 0.000, 180.0, 85.0),
-    ("Ni", "Ga", 3.660, -0.380, 0.010, 165.0, 74.0),
-    ("Ni", "Ge", 3.610, -0.350, 0.040, 175.0, 78.0),
-    ("Co", "Ti", 3.550, -0.450, 0.000, 190.0, 90.0),
-    ("Al", "Sc", 4.090, -0.500, 0.000, 155.0, 65.0),
-    ("Al", "Ti", 3.980, -0.410, 0.020, 160.0, 70.0),
-    ("Pt", "Al", 3.900, -0.550, 0.000, 210.0, 95.0),
-    ("Ir", "Nb", 3.870, -0.480, 0.030, 220.0, 100.0),
-    ("Co", "Al", 3.670, -0.360, 0.010, 180.0, 82.0),
-    ("Co", "W",  3.740, -0.330, 0.050, 200.0, 88.0),
-    ("Co", "Ta", 3.720, -0.340, 0.040, 198.0, 86.0),
+    ("Ni", "Al", 3.572, -0.420, 0.000, 180.0, 85.0, 450.0),
+    ("Ni", "Ga", 3.660, -0.380, 0.010, 165.0, 74.0, 420.0),
+    ("Ni", "Ge", 3.610, -0.350, 0.040, 175.0, 78.0, 410.0),
+    ("Co", "Ti", 3.550, -0.450, 0.000, 190.0, 90.0, 520.0),
+    ("Al", "Sc", 4.090, -0.500, 0.000, 155.0, 65.0, 500.0),
+    ("Al", "Ti", 3.980, -0.410, 0.020, 160.0, 70.0, 540.0),
+    ("Al", "V",  3.930, -0.270, 0.000, 155.0, 68.0, 560.0),
+    ("Pt", "Al", 3.900, -0.550, 0.000, 210.0, 95.0, 340.0),
+    ("Ir", "Nb", 3.870, -0.480, 0.030, 220.0, 100.0, 350.0),
+    ("Co", "Al", 3.670, -0.360, 0.010, 180.0, 82.0, 480.0),
+    ("Co", "W",  3.740, -0.330, 0.050, 200.0, 88.0, 400.0),
+    ("Co", "Ta", 3.720, -0.340, 0.040, 198.0, 86.0, 380.0),
+]
+
+# Curated D0₃ (BiF3-type) entries so the D0₃ subset contains at least one
+# hull-stable compound and one Si-containing compound (Fe3Si, Fe3Al analogues;
+# AB3 formula convention of this fixture: A = minority 25% site).
+KNOWN_D03 = [
+    ("Si", "Fe", 5.640, -0.280, 0.000, 175.0, 80.0, 460.0),
+    ("Al", "Fe", 5.790, -0.200, 0.000, 144.0, 70.0, 470.0),
+]
+
+# Curated NiAs-type (B8₁) entries so the hexagonal subset contains
+# hull-stable compounds regardless of the random draw.
+KNOWN_NIAS = [
+    ("Ni", "As", 5.400, -0.320, 0.000, 130.0, 55.0, 320.0),
+    ("Ni", "Sb", 5.600, -0.280, 0.000, 140.0, 60.0, 310.0),
 ]
 
 # Base 62-element attribute set: symbol -> (Z, mass, electronegativity, radius)
@@ -359,9 +376,9 @@ def write_reference_data(out: TextIO, pure: dict[str, dict]) -> dict[str, int]:
     for pname, pinfo in PROTOTYPES.items():
         out.write(
             f"INSERT INTO prototype_definition (prototype_id, prototype_name, strukturbericht, "
-            f"formula_type, description) VALUES "
+            f"formula_type, conventional_cell_atoms, description) VALUES "
             f"('{pname}', '{pname}', '{pinfo['strukturbericht']}', "
-            f"'{pinfo['formula_type']}', '{pname} ordered intermetallic');\n"
+            f"'{pinfo['formula_type']}', {pinfo['cell_atoms']}, '{pname} ordered intermetallic');\n"
         )
     for sym in sorted(pure):
         out.write(
@@ -427,7 +444,7 @@ def write_reference_data(out: TextIO, pure: dict[str, dict]) -> dict[str, int]:
         "-- the pure-element delta_e values are real data, adopted from OQMD\n"
         "-- DFT-PBE. No formation energies were imported from Materials Project\n"
         "-- or AFLOW; material_entry.source_db is a synthetic provenance label\n"
-        "-- (see source_energy_convention and README).\n"
+        "-- (see fixture_source_reference_set and README).\n"
         "INSERT INTO reference_energy_set (reference_set, method, functional, source, fit_name, description)\n"
         f"VALUES ('{REFERENCE_SET}', 'DFT', 'PBE',\n"
         "        'synthetic fixture (elemental references adopted from OQMD)',\n"
@@ -441,14 +458,14 @@ def write_reference_data(out: TextIO, pure: dict[str, dict]) -> dict[str, int]:
     out.write("\n-- source_db -> reference_set map (asserted by 006)\n")
     for src in ("OQMD", "Materials Project", "AFLOW"):
         out.write(
-            "INSERT INTO source_energy_convention (source_db, reference_set) "
+            "INSERT INTO fixture_source_reference_set (source_db, reference_set) "
             f"VALUES ('{src}', '{REFERENCE_SET}');\n"
         )
     out.write(
         "\n-- Divergence-test convention: same elements, shifted delta_e.\n"
         "-- Present so that queries which ignore reference_set on\n"
         "-- pure_element_reference produce visibly different results\n"
-        "-- (see tests). Intentionally NOT mapped in source_energy_convention:\n"
+        "-- (see tests). Intentionally NOT mapped in fixture_source_reference_set:\n"
         "-- no material row may declare it.\n"
         "INSERT INTO reference_energy_set (reference_set, method, functional, source, fit_name, description)\n"
         f"VALUES ('{DIVERGENCE_TEST_REFERENCE_SET}', 'DFT', 'PBE',\n"
@@ -516,6 +533,7 @@ def write_material_data(out: TextIO, pure: dict[str, dict], elem_ids: dict[str, 
         lattice_a: float, fe: float, eah: float,
         bulk_mod: float, shear_mod: float,
         source: str = "OQMD",
+        curated_debye: float | None = None,
     ) -> None:
         nonlocal entry_count, calc_count, prop_count, ref_count
         entry_count += 1
@@ -536,7 +554,6 @@ def write_material_data(out: TextIO, pure: dict[str, dict], elem_ids: dict[str, 
             a_frac, b_frac = 0.333, 0.667
 
         chem_sys = "-".join(sorted([a_elem, b_elem]))
-        volume = lattice_a**3 / (4 if "cubic" in pinfo["crystal_system"] else 2)
 
         # material_entry
         out.write(
@@ -556,24 +573,39 @@ def write_material_data(out: TextIO, pure: dict[str, dict], elem_ids: dict[str, 
             f"('comp_{entry_count:05d}_b', '{eid}', '{b_elem}', {b_frac}, 'B-site');\n"
         )
 
-        # structure
-        lat_b = lattice_a if pinfo["crystal_system"] == "cubic" else lattice_a * 0.95
-        lat_c = lattice_a if pinfo["crystal_system"] == "cubic" else lattice_a * 1.63
+        # structure — lattice parameters and volume follow the prototype's
+        # crystal system: cubic a=b=c with V=a^3; hexagonal a=b, gamma=120
+        # with V=(sqrt(3)/2)a^2c. volume_per_atom divides the conventional
+        # cell volume by the prototype's conventional_cell_atoms.
+        lat_a = round(lattice_a, 4)
+        if pinfo["crystal_system"] == "cubic":
+            lat_b = lat_a
+            lat_c = lat_a
+            cell_volume = lat_a**3
+        else:  # hexagonal
+            lat_b = lat_a
+            lat_c = round(lat_a * 1.63, 4)
+            cell_volume = (math.sqrt(3.0) / 2.0) * lat_a**2 * lat_c
+        vpa = cell_volume / pinfo["cell_atoms"]
         out.write(
             f"INSERT INTO structure (structure_id, entry_id, prototype, strukturbericht, "
             f"formula_type, space_group_number, crystal_system, lattice_a, lattice_b, lattice_c, "
             f"volume_per_atom, space_group) VALUES "
             f"('struct_{entry_count:05d}', '{eid}', '{proto_key}', '{pinfo['strukturbericht']}', "
             f"'{pinfo['formula_type']}', {pinfo['sg_number']}, '{pinfo['crystal_system']}', "
-            f"{lattice_a:.4f}, {lat_b:.4f}, {lat_c:.4f}, {volume/4:.4f}, '{pinfo['sg_symbol']}');\n"
+            f"{lattice_a:.4f}, {lat_b:.4f}, {lat_c:.4f}, {vpa:.4f}, '{pinfo['sg_symbol']}');\n"
         )
 
-        # phase_stability (is_stable is a generated column, never inserted)
+        # phase_stability (is_stable is a generated column, never inserted).
+        # band_gap is the single source of truth for the electronic gap:
+        # band_structure CBM/VBM and density_of_states.is_metallic are
+        # derived from it below so the three can never contradict.
+        band_gap = 0.0 if random.random() < 0.4 else round(random.uniform(0.01, 0.5), 3)
         out.write(
             f"INSERT INTO phase_stability (stability_id, entry_id, formation_energy_per_atom, "
             f"reference_set, energy_above_hull, band_gap) VALUES "
             f"('stab_{entry_count:05d}', '{eid}', {fe:.4f}, '{REFERENCE_SET}', {eah:.4f}, "
-            f"{random.uniform(0, 0.5):.3f});\n"
+            f"{band_gap:.3f});\n"
         )
 
         # calculation
@@ -585,11 +617,21 @@ def write_material_data(out: TextIO, pure: dict[str, dict], elem_ids: dict[str, 
             f"('{cid}', '{eid}', 'DFT', 'GGA-PBE', 'relaxation');\n"
         )
 
+        # Elastic moduli — single source of truth: one rounded value per
+        # modulus, written identically to calculated_property (EAV mirror)
+        # and elastic_tensor (VRH table); 006 asserts they never diverge.
+        # Young's modulus and Poisson ratio follow the isotropic VRH
+        # relations from (B, G), so all four values are mutually consistent.
+        bulk_v = round(bulk_mod, 2)
+        shear_v = round(shear_mod, 2)
+        youngs_v = round(9 * bulk_v * shear_v / (3 * bulk_v + shear_v), 2)
+        poisson_v = round((3 * bulk_v - 2 * shear_v) / (2 * (3 * bulk_v + shear_v)), 3)
+
         # calculated_property (bulk_modulus, shear_modulus, youngs_modulus)
         for pname, pval, punit in [
-            ("bulk_modulus", bulk_mod, "GPa"),
-            ("shear_modulus", shear_mod, "GPa"),
-            ("youngs_modulus", bulk_mod * 1.5 + random.uniform(-10, 10), "GPa"),
+            ("bulk_modulus", bulk_v, "GPa"),
+            ("shear_modulus", shear_v, "GPa"),
+            ("youngs_modulus", youngs_v, "GPa"),
         ]:
             prop_count += 1
             out.write(
@@ -598,59 +640,104 @@ def write_material_data(out: TextIO, pure: dict[str, dict], elem_ids: dict[str, 
                 f"('prop_{prop_count:05d}', '{cid}', '{pname}', {pval:.2f}, '{punit}');\n"
             )
 
-        # elastic_tensor (50% of entries) — child of calculation
-        if random.random() < 0.5:
-            c44 = shear_mod * 0.9 + random.uniform(-5, 5)
+        # elastic_tensor (50% of entries) — child of calculation.
+        # is_stable models the Born mechanical-stability flag; the fixture
+        # deliberately contains both TRUE and FALSE rows so boolean
+        # predicates on it are non-degenerate.
+        if curated_debye is not None or random.random() < 0.5:
+            et_stable = curated_debye is not None or random.random() < 0.85
             out.write(
                 f"INSERT INTO elastic_tensor (calculation_id, "
-                f"bulk_modulus_vrh, shear_modulus_vrh, is_stable) VALUES "
-                f"('{cid}', "
-                f"{bulk_mod:.1f}, {shear_mod:.1f}, {'TRUE' if c44 > 0 else 'FALSE'});\n"
+                f"bulk_modulus_vrh, shear_modulus_vrh, youngs_modulus, "
+                f"poisson_ratio, is_stable) VALUES "
+                f"('{cid}', {bulk_v:.2f}, {shear_v:.2f}, {youngs_v:.2f}, "
+                f"{poisson_v:.3f}, {'TRUE' if et_stable else 'FALSE'});\n"
             )
 
-        # magnetic_property (30% of entries)
+        # magnetic_property (30% of entries); anisotropy energy is known
+        # for half of them (meV/f.u., sign-free), NULL otherwise.
         if random.random() < 0.3:
             mag = random.uniform(0, 5.0)
             ordering = random.choice(["ferromagnetic", "antiferromagnetic", "paramagnetic"])
+            mae = (
+                f"{random.uniform(-2.0, 2.0):.4f}"
+                if random.random() < 0.5 else "NULL"
+            )
             out.write(
                 f"INSERT INTO magnetic_property (entry_id, total_magnetization, "
-                f"magnetic_ordering, curie_temperature_k) VALUES "
+                f"magnetic_ordering, curie_temperature_k, magnetic_anisotropy_energy) VALUES "
                 f"('{eid}', {mag:.3f}, '{ordering}', "
-                f"{random.uniform(200, 1400):.1f});\n"
+                f"{random.uniform(200, 1400):.1f}, {mae});\n"
             )
 
-        # thermal_property (40% of entries) — child of calculation
-        if random.random() < 0.4:
-            out.write(
-                f"INSERT INTO thermal_property (calculation_id, "
-                f"debye_temperature_k, thermal_conductivity, specific_heat_cv, "
-                f"gruneisen_parameter, temperature_k) VALUES "
-                f"('{cid}', {random.uniform(200, 800):.1f}, "
-                f"{random.uniform(5, 400):.1f}, {random.uniform(20, 50):.2f}, "
-                f"{random.uniform(1.0, 3.0):.3f}, 300.0);\n"
-            )
+        # thermal_property (40% of entries) — child of calculation.
+        # Every calculation with thermal data has a 300 K row (the benchmark
+        # convention queried by the gold SQL, tp.temperature_k = 300); about
+        # a third additionally carry 500 K / 800 K rows so that queries
+        # which omit the temperature filter visibly multiply rows.
+        # Curated entries always carry thermal data with a literature-like
+        # Debye temperature so joint stability+elastic+thermal gold queries
+        # have guaranteed non-empty answers.
+        if curated_debye is not None or random.random() < 0.4:
+            debye = curated_debye if curated_debye is not None else random.uniform(200, 800)
+            temps = [300.0]
+            if random.random() < 0.35:
+                temps += [500.0, 800.0]
+            for temp in temps:
+                out.write(
+                    f"INSERT INTO thermal_property (calculation_id, "
+                    f"debye_temperature_k, thermal_conductivity, specific_heat_cv, "
+                    f"gruneisen_parameter, temperature_k) VALUES "
+                    f"('{cid}', {debye:.1f}, "
+                    f"{random.uniform(5, 400):.1f}, {random.uniform(20, 50):.2f}, "
+                    f"{random.uniform(1.0, 3.0):.3f}, {temp});\n"
+                )
 
-        # band_structure (25% of entries) — child of calculation
+        # band_structure (25% of entries) — child of calculation.
+        # CBM is derived from VBM + phase_stability.band_gap so the two
+        # tables agree on the gap (asserted in 006); is_direct_gap is a
+        # generated column derived from band_gap_type in the DDL.
         if random.random() < 0.25:
+            vbm = round(random.uniform(-5, -1), 3)
+            cbm = round(vbm + band_gap, 3)
+            gap_type = "direct" if random.random() < 0.5 else "indirect"
             out.write(
                 f"INSERT INTO band_structure (calculation_id, "
-                f"is_direct_gap, cbm_energy, vbm_energy) VALUES "
-                f"('{cid}', "
-                f"{'TRUE' if random.random() > 0.5 else 'FALSE'}, "
-                f"{random.uniform(0, 3):.3f}, {random.uniform(-5, -1):.3f});\n"
+                f"band_gap_type, cbm_energy, vbm_energy) VALUES "
+                f"('{cid}', '{gap_type}', {cbm:.3f}, {vbm:.3f});\n"
             )
 
-        # density_of_states (25% of entries) — child of calculation
+        # density_of_states (25% of entries) — child of calculation.
+        # is_metallic is derived from phase_stability.band_gap (zero gap
+        # <=> metallic) for 80% of rows and left NULL (not analyzed) for
+        # the rest, so the column carries all three logical states.
         if random.random() < 0.25:
+            if random.random() < 0.8:
+                metallic = "TRUE" if band_gap == 0.0 else "FALSE"
+            else:
+                metallic = "NULL"
+            dos_fermi = (
+                round(random.uniform(0.5, 50), 3) if band_gap == 0.0
+                else round(random.uniform(0, 0.05), 3)
+            )
             out.write(
                 f"INSERT INTO density_of_states (calculation_id, "
-                f"total_dos_at_fermi, spin_polarized) VALUES "
-                f"('{cid}', {random.uniform(0, 50):.3f}, "
-                f"{'TRUE' if random.random() > 0.5 else 'FALSE'});\n"
+                f"total_dos_at_fermi, efermi, spin_polarized, is_metallic) VALUES "
+                f"('{cid}', {dos_fermi:.3f}, {random.uniform(-5, 5):.3f}, "
+                f"{'TRUE' if random.random() > 0.5 else 'FALSE'}, {metallic});\n"
             )
 
-        # surface_energy (20% of entries, multiple surfaces)
-        if random.random() < 0.2:
+        # surface_energy (20% of entries, multiple surfaces). Curated
+        # entries always carry a low-energy close-packed (111) facet so
+        # stability+surface-energy gold queries have non-empty answers.
+        if curated_debye is not None:
+            out.write(
+                f"INSERT INTO surface_energy (entry_id, miller_index, "
+                f"surface_energy_j_m2, work_function, is_reconstructed) VALUES "
+                f"('{eid}', '111', {1.0 + 0.001 * (bulk_v % 100):.3f}, "
+                f"{4.5 + 0.001 * (shear_v % 100):.3f}, FALSE);\n"
+            )
+        elif random.random() < 0.2:
             for miller in ["100", "110", "111"]:
                 if random.random() < 0.7:
                     out.write(
@@ -707,21 +794,23 @@ def write_material_data(out: TextIO, pure: dict[str, dict], elem_ids: dict[str, 
                 f"'Candidate for {_esc(domain[0])}');\n"
             )
 
-        # literature_reference + material_reference (25% of entries)
+        # literature_reference + material_reference (25% of entries,
+        # 1-4 references each so citation-count aggregations are non-trivial)
         if random.random() < 0.25:
-            ref_count += 1
-            year = random.randint(2000, 2025)
-            doi = f"10.1000/test.{entry_count:05d}"
-            out.write(
-                f"INSERT INTO literature_reference (reference_id, doi, title, "
-                f"authors, journal, year) VALUES "
-                f"({ref_count}, '{doi}', 'Study of {formula} properties', "
-                f"'Author et al.', 'J. Mater. Sci.', {year});\n"
-            )
-            out.write(
-                f"INSERT INTO material_reference (entry_id, reference_id) VALUES "
-                f"('{eid}', {ref_count});\n"
-            )
+            for ref_idx in range(random.randint(1, 4)):
+                ref_count += 1
+                year = random.randint(2000, 2025)
+                doi = f"10.1000/test.{entry_count:05d}.{ref_idx}"
+                out.write(
+                    f"INSERT INTO literature_reference (reference_id, doi, title, "
+                    f"authors, journal, year) VALUES "
+                    f"({ref_count}, '{doi}', 'Study of {formula} properties', "
+                    f"'Author et al.', 'J. Mater. Sci.', {year});\n"
+                )
+                out.write(
+                    f"INSERT INTO material_reference (entry_id, reference_id) VALUES "
+                    f"('{eid}', {ref_count});\n"
+                )
 
         # phase_diagram_entry (40% of entries)
         if random.random() < 0.4:
@@ -746,10 +835,10 @@ def write_material_data(out: TextIO, pure: dict[str, dict], elem_ids: dict[str, 
     # Generate entries per prototype
     # L12: 392 entries (known + generated) — paper Table 3
     out.write("\n-- L12 entries (known + generated)\n")
-    for a, b, lat, fe, eah, bulk, shear in KNOWN_L12:
-        _gen_entry("L12", a, b, lat, fe, eah, bulk, shear)
+    for a, b, lat, fe, eah, bulk, shear, debye in KNOWN_L12:
+        _gen_entry("L12", a, b, lat, fe, eah, bulk, shear, curated_debye=debye)
 
-    for _ in range(381):
+    for _ in range(380):
         a = random.choice(A_ELEMENTS)
         b = random.choice(B_ELEMENTS)
         while b == a:
@@ -768,7 +857,7 @@ def write_material_data(out: TextIO, pure: dict[str, dict], elem_ids: dict[str, 
         b = random.choice(B_ELEMENTS)
         while b == a:
             b = random.choice(B_ELEMENTS)
-        lat = random.uniform(2.8, 3.5)
+        lat = random.uniform(2.8, 4.2)
         fe = random.uniform(-0.5, 0.2)
         eah = abs(random.gauss(0.06, 0.05))
         bulk = random.uniform(80, 220)
@@ -789,9 +878,12 @@ def write_material_data(out: TextIO, pure: dict[str, dict], elem_ids: dict[str, 
         shear = random.uniform(50, 130)
         _gen_entry("NaCl", a, b, lat, fe, eah, bulk, shear, "AFLOW")
 
-    # NiAs: ~74 entries — paper Table 3
-    out.write("\n-- NiAs entries\n")
-    for _ in range(74):
+    # NiAs: ~74 entries — paper Table 3 (curated + generated)
+    out.write("\n-- NiAs entries (known + generated)\n")
+    for a, b, lat, fe, eah, bulk, shear, debye in KNOWN_NIAS:
+        _gen_entry("NiAs", a, b, lat, fe, eah, bulk, shear, "OQMD",
+                   curated_debye=debye)
+    for _ in range(72):
         a = random.choice(A_ELEMENTS[:12])
         b = random.choice(B_ELEMENTS[:10])
         while b == a:
@@ -803,9 +895,12 @@ def write_material_data(out: TextIO, pure: dict[str, dict], elem_ids: dict[str, 
         shear = random.uniform(35, 95)
         _gen_entry("NiAs", a, b, lat, fe, eah, bulk, shear, "OQMD")
 
-    # BiF3: ~13 entries — paper Table 3
-    out.write("\n-- BiF3 entries\n")
-    for _ in range(13):
+    # BiF3: ~13 entries — paper Table 3 (curated + generated)
+    out.write("\n-- BiF3 entries (known + generated)\n")
+    for a, b, lat, fe, eah, bulk, shear, debye in KNOWN_D03:
+        _gen_entry("BiF3", a, b, lat, fe, eah, bulk, shear,
+                   "Materials Project", curated_debye=debye)
+    for _ in range(11):
         a = random.choice(A_ELEMENTS[:14])
         b = random.choice(B_ELEMENTS[:14])
         while b == a:

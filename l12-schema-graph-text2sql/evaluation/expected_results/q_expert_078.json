@@ -5,195 +5,175 @@
   ],
   "rows": [
     [
-      "entry_00194",
-      "Ag3Mg"
+      "entry_00955",
+      "AgMn"
     ],
     [
-      "entry_01106",
-      "AgHf"
-    ],
-    [
-      "entry_01331",
-      "AgNb"
-    ],
-    [
-      "entry_01386",
-      "AgSi"
-    ],
-    [
-      "entry_00592",
-      "AuFe"
-    ],
-    [
-      "entry_00583",
-      "AuNb"
-    ],
-    [
-      "entry_01045",
-      "AuSi"
-    ],
-    [
-      "entry_01178",
-      "AuSn"
-    ],
-    [
-      "entry_01241",
-      "CoGa"
-    ],
-    [
-      "entry_00791",
-      "CoNb"
-    ],
-    [
-      "entry_00123",
-      "Cr3Ge"
-    ],
-    [
-      "entry_00141",
-      "Cr3Hf"
-    ],
-    [
-      "entry_00064",
-      "Cr3Nb"
-    ],
-    [
-      "entry_00834",
-      "CrY"
-    ],
-    [
-      "entry_01058",
-      "CuAl"
-    ],
-    [
-      "entry_01142",
-      "CuAl"
-    ],
-    [
-      "entry_00958",
-      "CuZr"
-    ],
-    [
-      "entry_00419",
-      "FeSc"
+      "entry_00228",
+      "Au3Sn"
     ],
     [
       "entry_01037",
-      "FeTa"
+      "AuTi"
     ],
     [
-      "entry_00742",
-      "HfTi"
+      "entry_00101",
+      "Co3Mn"
     ],
     [
-      "entry_00522",
-      "IrAl"
+      "entry_00976",
+      "CoGe"
     ],
     [
-      "entry_01088",
-      "IrGa"
+      "entry_00835",
+      "CoGe"
     ],
     [
-      "entry_01162",
-      "IrSc"
+      "entry_00172",
+      "Cu3Mn"
     ],
     [
-      "entry_00290",
-      "Mn3Y"
+      "entry_00699",
+      "CuIn"
     ],
     [
-      "entry_01024",
-      "MnHf"
+      "entry_01271",
+      "CuSi"
     ],
     [
-      "entry_00152",
-      "Mo3Ge"
+      "entry_00084",
+      "Fe3Al"
     ],
     [
-      "entry_00943",
-      "MoFe"
+      "entry_00164",
+      "Fe3Si"
     ],
     [
-      "entry_00544",
-      "NbCu"
+      "entry_00798",
+      "FeHf"
     ],
     [
-      "entry_00849",
+      "entry_00832",
+      "FeSb"
+    ],
+    [
+      "entry_01230",
+      "FeZn"
+    ],
+    [
+      "entry_00451",
+      "FeZr"
+    ],
+    [
+      "entry_00661",
+      "HfZr"
+    ],
+    [
+      "entry_00024",
+      "Ir3Sb"
+    ],
+    [
+      "entry_01222",
+      "IrNb"
+    ],
+    [
+      "entry_01020",
+      "MnSb"
+    ],
+    [
+      "entry_00546",
+      "MoSb"
+    ],
+    [
+      "entry_00790",
       "NbV"
     ],
     [
-      "entry_00060",
-      "Ni3Si"
+      "entry_00404",
+      "NiAl"
     ],
     [
-      "entry_01360",
-      "NiNb"
-    ],
-    [
-      "entry_01183",
+      "entry_00807",
       "NiSn"
     ],
     [
-      "entry_01027",
-      "PdTi"
+      "entry_00115",
+      "Pd3Fe"
     ],
     [
-      "entry_01134",
-      "RhSi"
+      "entry_00726",
+      "PdNb"
     ],
     [
-      "entry_00396",
-      "RuIn"
+      "entry_00909",
+      "PtSb"
     ],
     [
-      "entry_01055",
-      "RuSc"
+      "entry_00086",
+      "Rh3Sb"
     ],
     [
-      "entry_01115",
-      "RuY"
+      "entry_00995",
+      "RhGa"
     ],
     [
-      "entry_01234",
-      "RuY"
+      "entry_01137",
+      "RhSc"
     ],
     [
-      "entry_01408",
-      "RuY"
+      "entry_00848",
+      "RhTa"
     ],
     [
-      "entry_00327",
-      "Ta3Si"
+      "entry_00923",
+      "RhTi"
     ],
     [
-      "entry_00824",
-      "TaSi"
+      "entry_00384",
+      "Ru3Cu"
     ],
     [
-      "entry_00811",
-      "TiCu"
+      "entry_00516",
+      "RuAl"
     ],
     [
-      "entry_00114",
-      "V3Sn"
+      "entry_01400",
+      "RuSi"
     ],
     [
-      "entry_00221",
-      "V3Ta"
+      "entry_00625",
+      "RuSn"
     ],
     [
-      "entry_01333",
-      "VHf"
+      "entry_00378",
+      "Ta3Zr"
     ],
     [
-      "entry_01295",
-      "VSn"
+      "entry_01422",
+      "TiY"
     ],
     [
-      "entry_00827",
-      "WHf"
+      "entry_01329",
+      "TiY"
     ],
     [
-      "entry_00986",
+      "entry_00503",
+      "VSi"
+    ],
+    [
+      "entry_00350",
+      "W3Fe"
+    ],
+    [
+      "entry_00966",
+      "WGe"
+    ],
+    [
+      "entry_00632",
+      "ZrIn"
+    ],
+    [
+      "entry_00709",
       "ZrV"
     ]
   ]

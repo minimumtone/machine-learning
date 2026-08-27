@@ -7,8 +7,9 @@ WITH thermal_l12 AS (
     FROM material_entry m
     JOIN structure s ON s.entry_id = m.entry_id
     JOIN phase_stability ps ON ps.entry_id = m.entry_id
-    JOIN calculation cal_tp ON cal_tp.entry_id = m.entry_id
+    JOIN calculation cal_tp ON cal_tp.entry_id = m.entry_id AND cal_tp.calculation_type = 'relaxation'
 JOIN thermal_property tp ON tp.calculation_id = cal_tp.calculation_id
+    AND tp.temperature_k = 300  -- benchmark convention: representative temperature
     WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
       AND tp.debye_temperature_k IS NOT NULL
 ),

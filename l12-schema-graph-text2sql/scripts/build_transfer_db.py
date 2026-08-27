@@ -24,6 +24,7 @@ from scripts.eval_ablation import CONNINFO  # noqa: E402
 
 TRANSFER_DB = os.getenv("TRANSFER_DB", "oqmd_transfer")
 SCHEMA_SQL = PROJECT / "db" / "transfer_schema.sql"
+INTEGRITY_SQL = PROJECT / "db" / "transfer_integrity_checks.sql"
 
 
 def transfer_conninfo() -> str:
@@ -111,12 +112,22 @@ def main() -> None:
         SELECT 'ref_' || pure_ref_id, element_symbol, ground_state_spacegroup,
                delta_e, volume_per_atom, n_polymorphs
         FROM pure_element_reference
+        -- The transfer DB carries a single energy convention; copying the
+        -- divergence-test set as well would violate the UNIQUE(symbol) key
+        -- and mix conventions in the weighted reference sums.
+        WHERE reference_set = 'L12-FIXTURE-PBE-v1'
         """,
         "INSERT INTO oqmd_reference_states VALUES (%s, %s, %s, %s, %s, %s)",
     )
     print(f"oqmd_reference_states: {n}")
 
     dst.commit()
+
+    # Post-load cross-row assertions (ratio sums, reference coverage).
+    with dst.cursor() as cur:
+        cur.execute(INTEGRITY_SQL.read_text())  # type: ignore[arg-type]
+    dst.commit()
+    print("Transfer integrity checks passed.")
     src.close()
     dst.close()
     print("Transfer DB built.")

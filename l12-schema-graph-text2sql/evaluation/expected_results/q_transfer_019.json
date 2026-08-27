@@ -1,7 +1,7 @@
 {
   "columns": [
     "composition_formula",
-    "corrected_enthalpy"
+    "enthalpy_vs_element_ground_states"
   ],
   "rows": [
     [
@@ -11,6 +11,10 @@
     [
       "Al3Sc",
       "-0.5010"
+    ],
+    [
+      "Cr3Fe",
+      "-0.4400"
     ],
     [
       "Co3Ti",

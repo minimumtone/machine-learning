@@ -45,16 +45,33 @@ CREATE TABLE oqmd_element_ratios (
     symbol       VARCHAR(5) NOT NULL REFERENCES oqmd_elements(symbol),
     atomic_ratio DOUBLE PRECISION NOT NULL
         CHECK (atomic_ratio > 0 AND atomic_ratio <= 1),
-    wyckoff_site TEXT
+    wyckoff_site TEXT,
+    -- Same natural key as the main schema's composition table: one row per
+    -- (entry, element, site); per-entry ratio sums are asserted after load
+    -- by db/transfer_integrity_checks.sql (a per-row CHECK cannot express
+    -- the sum invariant).
+    UNIQUE NULLS NOT DISTINCT (entry_key, symbol, wyckoff_site)
 );
 
+-- One elemental ground-state reference row per element. This transfer DB
+-- carries a single energy convention (the main schema's L12-FIXTURE-PBE-v1
+-- set), so symbol alone is the natural key; reference_delta_e is the
+-- elemental delta_e of that convention copied from the main schema's
+-- pure_element_reference.delta_e — it is NOT a total/raw DFT energy.
+-- Subtracting SUM(atomic_ratio * reference_delta_e) from delta_e therefore
+-- re-references a formation energy to the elemental ground states, exactly
+-- like the main schema's enthalpy_vs_element_ground_states.
 CREATE TABLE oqmd_reference_states (
     ref_key            TEXT PRIMARY KEY,
-    symbol             VARCHAR(5) NOT NULL REFERENCES oqmd_elements(symbol),
+    symbol             VARCHAR(5) NOT NULL UNIQUE
+        REFERENCES oqmd_elements(symbol),
     gs_spacegroup      TEXT,
-    energy_pa          DOUBLE PRECISION,
-    volume_pa          DOUBLE PRECISION,
-    polymorph_count    INTEGER
+    reference_delta_e  DOUBLE PRECISION NOT NULL
+        CHECK (reference_delta_e > '-Infinity'
+           AND reference_delta_e < 'Infinity'),
+    volume_pa          DOUBLE PRECISION
+        CHECK (volume_pa > 0 AND volume_pa < 'Infinity'),
+    polymorph_count    INTEGER CHECK (polymorph_count >= 1)
 );
 
 CREATE INDEX idx_tr_fe_entry ON oqmd_formation_energies(entry_key);

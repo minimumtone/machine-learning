@@ -9,325 +9,325 @@
     [
       "Ag3Al",
       "bulk_modulus",
-      173.25,
+      147.17,
+      "GPa"
+    ],
+    [
+      "Ag3Al",
+      "bulk_modulus",
+      230.61,
       "GPa"
     ],
     [
       "Ag3Al",
       "shear_modulus",
-      40.41,
+      71.25,
+      "GPa"
+    ],
+    [
+      "Ag3Al",
+      "shear_modulus",
+      95.94,
       "GPa"
     ],
     [
       "Ag3Al",
       "youngs_modulus",
-      266.56,
+      252.77,
+      "GPa"
+    ],
+    [
+      "Ag3Al",
+      "youngs_modulus",
+      184.05,
       "GPa"
     ],
     [
       "Ag3Cu",
       "bulk_modulus",
-      224.81,
+      126.35,
+      "GPa"
+    ],
+    [
+      "Ag3Cu",
+      "bulk_modulus",
+      176.9,
+      "GPa"
+    ],
+    [
+      "Ag3Cu",
+      "bulk_modulus",
+      247.66,
+      "GPa"
+    ],
+    [
+      "Ag3Cu",
+      "bulk_modulus",
+      188.68,
       "GPa"
     ],
     [
       "Ag3Cu",
       "shear_modulus",
-      81.01,
+      70.44,
+      "GPa"
+    ],
+    [
+      "Ag3Cu",
+      "shear_modulus",
+      57.19,
+      "GPa"
+    ],
+    [
+      "Ag3Cu",
+      "shear_modulus",
+      48.5,
+      "GPa"
+    ],
+    [
+      "Ag3Cu",
+      "shear_modulus",
+      77.54,
       "GPa"
     ],
     [
       "Ag3Cu",
       "youngs_modulus",
-      344.92,
+      159.31,
+      "GPa"
+    ],
+    [
+      "Ag3Cu",
+      "youngs_modulus",
+      202.97,
+      "GPa"
+    ],
+    [
+      "Ag3Cu",
+      "youngs_modulus",
+      134.02,
+      "GPa"
+    ],
+    [
+      "Ag3Cu",
+      "youngs_modulus",
+      178.2,
       "GPa"
     ],
     [
       "Ag3Fe",
       "bulk_modulus",
-      135.42,
+      189.26,
       "GPa"
     ],
     [
       "Ag3Fe",
       "shear_modulus",
-      59.08,
+      115.04,
       "GPa"
     ],
     [
       "Ag3Fe",
       "youngs_modulus",
-      193.68,
+      286.97,
       "GPa"
     ],
     [
-      "Ag3Ga",
+      "Ag3Ge",
       "bulk_modulus",
-      146.9,
+      123.12,
       "GPa"
     ],
     [
-      "Ag3Ga",
+      "Ag3Ge",
+      "shear_modulus",
+      84.43,
+      "GPa"
+    ],
+    [
+      "Ag3Ge",
+      "youngs_modulus",
+      206.16,
+      "GPa"
+    ],
+    [
+      "Ag3Hf",
       "bulk_modulus",
-      125.23,
+      156.49,
       "GPa"
     ],
     [
-      "Ag3Ga",
+      "Ag3Hf",
       "shear_modulus",
-      84.17,
+      74.36,
       "GPa"
     ],
     [
-      "Ag3Ga",
-      "shear_modulus",
-      76.59,
-      "GPa"
-    ],
-    [
-      "Ag3Ga",
+      "Ag3Hf",
       "youngs_modulus",
-      193.17,
-      "GPa"
-    ],
-    [
-      "Ag3Ga",
-      "youngs_modulus",
-      215.37,
-      "GPa"
-    ],
-    [
-      "Ag3In",
-      "bulk_modulus",
-      234.6,
-      "GPa"
-    ],
-    [
-      "Ag3In",
-      "shear_modulus",
-      86.39,
-      "GPa"
-    ],
-    [
-      "Ag3In",
-      "youngs_modulus",
-      350.43,
+      192.58,
       "GPa"
     ],
     [
       "Ag3Mg",
       "bulk_modulus",
-      100.37,
+      169.52,
       "GPa"
     ],
     [
       "Ag3Mg",
       "shear_modulus",
-      61.01,
+      42.15,
       "GPa"
     ],
     [
       "Ag3Mg",
       "youngs_modulus",
-      157.24,
-      "GPa"
-    ],
-    [
-      "Ag3Nb",
-      "bulk_modulus",
-      157.63,
-      "GPa"
-    ],
-    [
-      "Ag3Nb",
-      "shear_modulus",
-      90.94,
-      "GPa"
-    ],
-    [
-      "Ag3Nb",
-      "youngs_modulus",
-      230.68,
+      116.77,
       "GPa"
     ],
     [
       "Ag3Sb",
       "bulk_modulus",
-      178.64,
+      159.41,
       "GPa"
     ],
     [
       "Ag3Sb",
       "shear_modulus",
-      85.49,
+      85.51,
       "GPa"
     ],
     [
       "Ag3Sb",
       "youngs_modulus",
-      275.47,
+      217.62,
       "GPa"
     ],
     [
       "Ag3Sc",
       "bulk_modulus",
-      212.82,
+      222.1,
+      "GPa"
+    ],
+    [
+      "Ag3Sc",
+      "bulk_modulus",
+      107.96,
       "GPa"
     ],
     [
       "Ag3Sc",
       "shear_modulus",
-      91.94,
+      48.2,
+      "GPa"
+    ],
+    [
+      "Ag3Sc",
+      "shear_modulus",
+      92.38,
       "GPa"
     ],
     [
       "Ag3Sc",
       "youngs_modulus",
-      316.15,
+      215.63,
       "GPa"
     ],
     [
-      "Ag3Si",
-      "bulk_modulus",
-      101.2,
-      "GPa"
-    ],
-    [
-      "Ag3Si",
-      "shear_modulus",
-      56.05,
-      "GPa"
-    ],
-    [
-      "Ag3Si",
+      "Ag3Sc",
       "youngs_modulus",
-      147.87,
-      "GPa"
-    ],
-    [
-      "Ag3Sn",
-      "bulk_modulus",
-      234.12,
-      "GPa"
-    ],
-    [
-      "Ag3Sn",
-      "shear_modulus",
-      100.98,
-      "GPa"
-    ],
-    [
-      "Ag3Sn",
-      "youngs_modulus",
-      353.71,
-      "GPa"
-    ],
-    [
-      "Ag3Ta",
-      "bulk_modulus",
-      206.6,
-      "GPa"
-    ],
-    [
-      "Ag3Ta",
-      "bulk_modulus",
-      140.92,
-      "GPa"
-    ],
-    [
-      "Ag3Ta",
-      "shear_modulus",
-      55.94,
-      "GPa"
-    ],
-    [
-      "Ag3Ta",
-      "shear_modulus",
-      76.86,
-      "GPa"
-    ],
-    [
-      "Ag3Ta",
-      "youngs_modulus",
-      319.47,
-      "GPa"
-    ],
-    [
-      "Ag3Ta",
-      "youngs_modulus",
-      206.57,
+      134.85,
       "GPa"
     ],
     [
       "Ag3Ti",
       "bulk_modulus",
-      151.77,
+      234.52,
       "GPa"
     ],
     [
       "Ag3Ti",
       "bulk_modulus",
-      186.37,
+      243.6,
       "GPa"
     ],
     [
       "Ag3Ti",
+      "shear_modulus",
+      101.11,
+      "GPa"
+    ],
+    [
+      "Ag3Ti",
+      "shear_modulus",
+      78.25,
+      "GPa"
+    ],
+    [
+      "Ag3Ti",
+      "youngs_modulus",
+      265.22,
+      "GPa"
+    ],
+    [
+      "Ag3Ti",
+      "youngs_modulus",
+      212.05,
+      "GPa"
+    ],
+    [
+      "Ag3V",
       "bulk_modulus",
-      245.88,
+      124.31,
       "GPa"
     ],
     [
-      "Ag3Ti",
+      "Ag3V",
       "shear_modulus",
-      101.85,
+      55.98,
       "GPa"
     ],
     [
-      "Ag3Ti",
-      "shear_modulus",
-      112.64,
-      "GPa"
-    ],
-    [
-      "Ag3Ti",
-      "shear_modulus",
-      51.39,
-      "GPa"
-    ],
-    [
-      "Ag3Ti",
+      "Ag3V",
       "youngs_modulus",
-      288.38,
-      "GPa"
-    ],
-    [
-      "Ag3Ti",
-      "youngs_modulus",
-      359.7,
-      "GPa"
-    ],
-    [
-      "Ag3Ti",
-      "youngs_modulus",
-      218.5,
+      146.02,
       "GPa"
     ],
     [
       "Ag3Y",
       "bulk_modulus",
-      125.0,
+      222.08,
       "GPa"
     ],
     [
       "Ag3Y",
       "shear_modulus",
-      66.57,
+      104.69,
       "GPa"
     ],
     [
       "Ag3Y",
       "youngs_modulus",
-      196.74,
+      271.42,
+      "GPa"
+    ],
+    [
+      "Ag3Zn",
+      "bulk_modulus",
+      162.89,
+      "GPa"
+    ],
+    [
+      "Ag3Zn",
+      "shear_modulus",
+      53.97,
+      "GPa"
+    ],
+    [
+      "Ag3Zn",
+      "youngs_modulus",
+      145.81,
       "GPa"
     ],
     [
@@ -345,7 +345,7 @@
     [
       "Al3Sc",
       "youngs_modulus",
-      234.18,
+      171.08,
       "GPa"
     ],
     [
@@ -363,283 +363,385 @@
     [
       "Al3Ti",
       "youngs_modulus",
-      237.92,
+      183.27,
       "GPa"
     ],
     [
-      "Au3Al",
+      "Al3V",
       "bulk_modulus",
-      238.34,
+      155.0,
       "GPa"
     ],
     [
-      "Au3Al",
+      "Al3V",
       "shear_modulus",
-      88.7,
+      68.0,
       "GPa"
     ],
     [
-      "Au3Al",
+      "Al3V",
       "youngs_modulus",
-      347.7,
+      177.97,
+      "GPa"
+    ],
+    [
+      "Au3Be",
+      "bulk_modulus",
+      151.95,
+      "GPa"
+    ],
+    [
+      "Au3Be",
+      "bulk_modulus",
+      230.86,
+      "GPa"
+    ],
+    [
+      "Au3Be",
+      "shear_modulus",
+      42.87,
+      "GPa"
+    ],
+    [
+      "Au3Be",
+      "shear_modulus",
+      75.55,
+      "GPa"
+    ],
+    [
+      "Au3Be",
+      "youngs_modulus",
+      194.43,
+      "GPa"
+    ],
+    [
+      "Au3Be",
+      "youngs_modulus",
+      121.11,
       "GPa"
     ],
     [
       "Au3Cu",
       "bulk_modulus",
-      200.75,
+      172.22,
       "GPa"
     ],
     [
       "Au3Cu",
       "shear_modulus",
-      110.86,
+      66.5,
       "GPa"
     ],
     [
       "Au3Cu",
       "youngs_modulus",
-      307.92,
-      "GPa"
-    ],
-    [
-      "Au3Ga",
-      "bulk_modulus",
-      171.89,
-      "GPa"
-    ],
-    [
-      "Au3Ga",
-      "shear_modulus",
-      93.22,
-      "GPa"
-    ],
-    [
-      "Au3Ga",
-      "youngs_modulus",
-      256.26,
-      "GPa"
-    ],
-    [
-      "Au3Hf",
-      "bulk_modulus",
-      139.1,
-      "GPa"
-    ],
-    [
-      "Au3Hf",
-      "shear_modulus",
-      44.37,
-      "GPa"
-    ],
-    [
-      "Au3Hf",
-      "youngs_modulus",
-      203.04,
+      176.75,
       "GPa"
     ],
     [
       "Au3In",
       "bulk_modulus",
-      184.83,
+      214.49,
       "GPa"
     ],
     [
       "Au3In",
       "shear_modulus",
-      69.16,
+      61.03,
       "GPa"
     ],
     [
       "Au3In",
       "youngs_modulus",
-      275.82,
+      167.23,
       "GPa"
     ],
     [
       "Au3Mg",
       "bulk_modulus",
-      123.34,
+      238.32,
       "GPa"
     ],
     [
       "Au3Mg",
       "shear_modulus",
-      100.35,
+      52.3,
       "GPa"
     ],
     [
       "Au3Mg",
       "youngs_modulus",
-      176.64,
+      146.2,
       "GPa"
     ],
     [
-      "Au3Mn",
+      "Au3Sb",
       "bulk_modulus",
-      120.42,
+      110.23,
       "GPa"
     ],
     [
-      "Au3Mn",
+      "Au3Sb",
       "bulk_modulus",
-      152.25,
+      196.79,
       "GPa"
     ],
     [
-      "Au3Mn",
+      "Au3Sb",
       "shear_modulus",
-      115.13,
+      80.41,
       "GPa"
     ],
     [
-      "Au3Mn",
+      "Au3Sb",
       "shear_modulus",
-      65.65,
+      61.14,
       "GPa"
     ],
     [
-      "Au3Mn",
+      "Au3Sb",
       "youngs_modulus",
-      227.9,
+      194.05,
       "GPa"
     ],
     [
-      "Au3Mn",
+      "Au3Sb",
       "youngs_modulus",
-      174.65,
+      166.21,
       "GPa"
     ],
     [
-      "Au3Ta",
+      "Au3Sc",
       "bulk_modulus",
-      222.19,
+      190.98,
       "GPa"
     ],
     [
-      "Au3Ta",
+      "Au3Sc",
       "shear_modulus",
-      57.79,
+      74.47,
       "GPa"
     ],
     [
-      "Au3Ta",
+      "Au3Sc",
       "youngs_modulus",
-      326.13,
+      197.71,
+      "GPa"
+    ],
+    [
+      "Au3Si",
+      "bulk_modulus",
+      154.38,
+      "GPa"
+    ],
+    [
+      "Au3Si",
+      "shear_modulus",
+      82.75,
+      "GPa"
+    ],
+    [
+      "Au3Si",
+      "youngs_modulus",
+      210.62,
+      "GPa"
+    ],
+    [
+      "Au3Sn",
+      "bulk_modulus",
+      206.16,
+      "GPa"
+    ],
+    [
+      "Au3Sn",
+      "shear_modulus",
+      61.84,
+      "GPa"
+    ],
+    [
+      "Au3Sn",
+      "youngs_modulus",
+      168.66,
       "GPa"
     ],
     [
       "Au3Ti",
       "bulk_modulus",
-      248.24,
+      143.03,
+      "GPa"
+    ],
+    [
+      "Au3Ti",
+      "bulk_modulus",
+      143.24,
+      "GPa"
+    ],
+    [
+      "Au3Ti",
+      "bulk_modulus",
+      120.91,
       "GPa"
     ],
     [
       "Au3Ti",
       "shear_modulus",
-      115.47,
+      84.08,
+      "GPa"
+    ],
+    [
+      "Au3Ti",
+      "shear_modulus",
+      97.77,
+      "GPa"
+    ],
+    [
+      "Au3Ti",
+      "shear_modulus",
+      106.38,
       "GPa"
     ],
     [
       "Au3Ti",
       "youngs_modulus",
-      375.04,
+      204.77,
+      "GPa"
+    ],
+    [
+      "Au3Ti",
+      "youngs_modulus",
+      255.74,
+      "GPa"
+    ],
+    [
+      "Au3Ti",
+      "youngs_modulus",
+      238.95,
       "GPa"
     ],
     [
       "Au3V",
       "bulk_modulus",
-      147.71,
-      "GPa"
-    ],
-    [
-      "Au3V",
-      "bulk_modulus",
-      111.06,
+      142.42,
       "GPa"
     ],
     [
       "Au3V",
       "shear_modulus",
-      61.76,
-      "GPa"
-    ],
-    [
-      "Au3V",
-      "shear_modulus",
-      42.4,
+      112.91,
       "GPa"
     ],
     [
       "Au3V",
       "youngs_modulus",
-      162.4,
-      "GPa"
-    ],
-    [
-      "Au3V",
-      "youngs_modulus",
-      215.62,
+      267.93,
       "GPa"
     ],
     [
       "Au3Y",
       "bulk_modulus",
-      183.13,
+      156.77,
+      "GPa"
+    ],
+    [
+      "Au3Y",
+      "bulk_modulus",
+      173.42,
+      "GPa"
+    ],
+    [
+      "Au3Y",
+      "bulk_modulus",
+      145.08,
+      "GPa"
+    ],
+    [
+      "Au3Y",
+      "bulk_modulus",
+      206.57,
       "GPa"
     ],
     [
       "Au3Y",
       "shear_modulus",
-      86.91,
+      44.58,
+      "GPa"
+    ],
+    [
+      "Au3Y",
+      "shear_modulus",
+      86.19,
+      "GPa"
+    ],
+    [
+      "Au3Y",
+      "shear_modulus",
+      44.88,
+      "GPa"
+    ],
+    [
+      "Au3Y",
+      "shear_modulus",
+      88.43,
       "GPa"
     ],
     [
       "Au3Y",
       "youngs_modulus",
-      269.36,
+      232.16,
+      "GPa"
+    ],
+    [
+      "Au3Y",
+      "youngs_modulus",
+      122.16,
+      "GPa"
+    ],
+    [
+      "Au3Y",
+      "youngs_modulus",
+      122.05,
+      "GPa"
+    ],
+    [
+      "Au3Y",
+      "youngs_modulus",
+      221.82,
       "GPa"
     ],
     [
       "Au3Zn",
       "bulk_modulus",
-      228.01,
-      "GPa"
-    ],
-    [
-      "Au3Zn",
-      "bulk_modulus",
-      179.84,
+      121.28,
       "GPa"
     ],
     [
       "Au3Zn",
       "shear_modulus",
-      109.9,
-      "GPa"
-    ],
-    [
-      "Au3Zn",
-      "shear_modulus",
-      53.6,
+      90.65,
       "GPa"
     ],
     [
       "Au3Zn",
       "youngs_modulus",
-      267.81,
+      217.71,
       "GPa"
     ],
     [
-      "Au3Zn",
-      "youngs_modulus",
-      334.1,
-      "GPa"
-    ],
-    [
-      "Co3Al",
+      "Au3Zr",
       "bulk_modulus",
-      180.0,
+      161.56,
+      "GPa"
+    ],
+    [
+      "Au3Zr",
+      "shear_modulus",
+      102.0,
+      "GPa"
+    ],
+    [
+      "Au3Zr",
+      "youngs_modulus",
+      252.8,
       "GPa"
     ],
     [
@@ -651,13 +753,13 @@
     [
       "Co3Al",
       "bulk_modulus",
-      145.38,
+      180.0,
       "GPa"
     ],
     [
       "Co3Al",
-      "shear_modulus",
-      82.0,
+      "bulk_modulus",
+      240.14,
       "GPa"
     ],
     [
@@ -669,349 +771,139 @@
     [
       "Co3Al",
       "shear_modulus",
-      71.58,
+      78.11,
+      "GPa"
+    ],
+    [
+      "Co3Al",
+      "shear_modulus",
+      82.0,
       "GPa"
     ],
     [
       "Co3Al",
       "youngs_modulus",
-      276.0,
+      218.32,
       "GPa"
     ],
     [
       "Co3Al",
       "youngs_modulus",
-      335.52,
+      211.41,
       "GPa"
     ],
     [
       "Co3Al",
       "youngs_modulus",
-      227.43,
-      "GPa"
-    ],
-    [
-      "Co3Be",
-      "bulk_modulus",
-      180.95,
-      "GPa"
-    ],
-    [
-      "Co3Be",
-      "shear_modulus",
-      92.31,
-      "GPa"
-    ],
-    [
-      "Co3Be",
-      "youngs_modulus",
-      269.28,
-      "GPa"
-    ],
-    [
-      "Co3Cu",
-      "bulk_modulus",
-      225.4,
-      "GPa"
-    ],
-    [
-      "Co3Cu",
-      "bulk_modulus",
-      179.69,
-      "GPa"
-    ],
-    [
-      "Co3Cu",
-      "shear_modulus",
-      71.7,
-      "GPa"
-    ],
-    [
-      "Co3Cu",
-      "shear_modulus",
-      63.45,
-      "GPa"
-    ],
-    [
-      "Co3Cu",
-      "youngs_modulus",
-      332.96,
-      "GPa"
-    ],
-    [
-      "Co3Cu",
-      "youngs_modulus",
-      270.24,
+      213.57,
       "GPa"
     ],
     [
       "Co3Fe",
       "bulk_modulus",
-      133.03,
-      "GPa"
-    ],
-    [
-      "Co3Fe",
-      "bulk_modulus",
-      110.13,
+      212.1,
       "GPa"
     ],
     [
       "Co3Fe",
       "shear_modulus",
-      59.29,
-      "GPa"
-    ],
-    [
-      "Co3Fe",
-      "shear_modulus",
-      55.65,
+      68.57,
       "GPa"
     ],
     [
       "Co3Fe",
       "youngs_modulus",
-      199.24,
-      "GPa"
-    ],
-    [
-      "Co3Fe",
-      "youngs_modulus",
-      157.27,
-      "GPa"
-    ],
-    [
-      "Co3Ga",
-      "bulk_modulus",
-      220.77,
-      "GPa"
-    ],
-    [
-      "Co3Ga",
-      "bulk_modulus",
-      171.06,
-      "GPa"
-    ],
-    [
-      "Co3Ga",
-      "shear_modulus",
-      100.67,
-      "GPa"
-    ],
-    [
-      "Co3Ga",
-      "shear_modulus",
-      76.56,
-      "GPa"
-    ],
-    [
-      "Co3Ga",
-      "youngs_modulus",
-      335.97,
-      "GPa"
-    ],
-    [
-      "Co3Ga",
-      "youngs_modulus",
-      256.9,
+      185.7,
       "GPa"
     ],
     [
       "Co3Ge",
       "bulk_modulus",
-      181.45,
+      125.89,
       "GPa"
     ],
     [
       "Co3Ge",
       "shear_modulus",
-      92.65,
+      43.56,
       "GPa"
     ],
     [
       "Co3Ge",
       "youngs_modulus",
-      279.19,
+      117.17,
       "GPa"
     ],
     [
       "Co3Hf",
       "bulk_modulus",
-      225.56,
+      150.21,
       "GPa"
     ],
     [
       "Co3Hf",
       "shear_modulus",
-      85.14,
+      110.41,
       "GPa"
     ],
     [
       "Co3Hf",
       "youngs_modulus",
-      342.27,
+      266.05,
       "GPa"
     ],
     [
       "Co3Mg",
       "bulk_modulus",
-      133.35,
+      115.15,
       "GPa"
     ],
     [
       "Co3Mg",
+      "shear_modulus",
+      58.12,
+      "GPa"
+    ],
+    [
+      "Co3Mg",
+      "youngs_modulus",
+      149.25,
+      "GPa"
+    ],
+    [
+      "Co3Mn",
       "bulk_modulus",
-      222.61,
+      169.63,
       "GPa"
     ],
     [
-      "Co3Mg",
-      "bulk_modulus",
-      187.6,
-      "GPa"
-    ],
-    [
-      "Co3Mg",
+      "Co3Mn",
       "shear_modulus",
-      97.6,
+      71.76,
       "GPa"
     ],
     [
-      "Co3Mg",
-      "shear_modulus",
-      82.77,
-      "GPa"
-    ],
-    [
-      "Co3Mg",
-      "shear_modulus",
-      55.43,
-      "GPa"
-    ],
-    [
-      "Co3Mg",
+      "Co3Mn",
       "youngs_modulus",
-      275.33,
-      "GPa"
-    ],
-    [
-      "Co3Mg",
-      "youngs_modulus",
-      325.89,
-      "GPa"
-    ],
-    [
-      "Co3Mg",
-      "youngs_modulus",
-      208.16,
-      "GPa"
-    ],
-    [
-      "Co3Nb",
-      "bulk_modulus",
-      199.73,
-      "GPa"
-    ],
-    [
-      "Co3Nb",
-      "shear_modulus",
-      66.17,
-      "GPa"
-    ],
-    [
-      "Co3Nb",
-      "youngs_modulus",
-      291.94,
+      188.67,
       "GPa"
     ],
     [
       "Co3Sb",
       "bulk_modulus",
-      122.12,
+      113.38,
       "GPa"
     ],
     [
       "Co3Sb",
       "shear_modulus",
-      115.94,
+      111.37,
       "GPa"
     ],
     [
       "Co3Sb",
       "youngs_modulus",
-      192.16,
-      "GPa"
-    ],
-    [
-      "Co3Sc",
-      "bulk_modulus",
-      245.09,
-      "GPa"
-    ],
-    [
-      "Co3Sc",
-      "shear_modulus",
-      50.91,
-      "GPa"
-    ],
-    [
-      "Co3Sc",
-      "youngs_modulus",
-      370.43,
-      "GPa"
-    ],
-    [
-      "Co3Si",
-      "bulk_modulus",
-      133.88,
-      "GPa"
-    ],
-    [
-      "Co3Si",
-      "shear_modulus",
-      99.43,
-      "GPa"
-    ],
-    [
-      "Co3Si",
-      "youngs_modulus",
-      207.71,
-      "GPa"
-    ],
-    [
-      "Co3Sn",
-      "bulk_modulus",
-      208.49,
-      "GPa"
-    ],
-    [
-      "Co3Sn",
-      "bulk_modulus",
-      155.45,
-      "GPa"
-    ],
-    [
-      "Co3Sn",
-      "shear_modulus",
-      61.97,
-      "GPa"
-    ],
-    [
-      "Co3Sn",
-      "shear_modulus",
-      56.41,
-      "GPa"
-    ],
-    [
-      "Co3Sn",
-      "youngs_modulus",
-      310.74,
-      "GPa"
-    ],
-    [
-      "Co3Sn",
-      "youngs_modulus",
-      236.49,
+      251.7,
       "GPa"
     ],
     [
@@ -1023,7 +915,13 @@
     [
       "Co3Ta",
       "bulk_modulus",
-      170.81,
+      245.13,
+      "GPa"
+    ],
+    [
+      "Co3Ta",
+      "shear_modulus",
+      57.67,
       "GPa"
     ],
     [
@@ -1034,20 +932,14 @@
     ],
     [
       "Co3Ta",
-      "shear_modulus",
-      112.68,
+      "youngs_modulus",
+      225.37,
       "GPa"
     ],
     [
       "Co3Ta",
       "youngs_modulus",
-      300.94,
-      "GPa"
-    ],
-    [
-      "Co3Ta",
-      "youngs_modulus",
-      249.91,
+      160.43,
       "GPa"
     ],
     [
@@ -1065,7 +957,43 @@
     [
       "Co3Ti",
       "youngs_modulus",
-      291.97,
+      233.18,
+      "GPa"
+    ],
+    [
+      "Co3V",
+      "bulk_modulus",
+      109.75,
+      "GPa"
+    ],
+    [
+      "Co3V",
+      "bulk_modulus",
+      214.97,
+      "GPa"
+    ],
+    [
+      "Co3V",
+      "shear_modulus",
+      62.76,
+      "GPa"
+    ],
+    [
+      "Co3V",
+      "shear_modulus",
+      50.2,
+      "GPa"
+    ],
+    [
+      "Co3V",
+      "youngs_modulus",
+      130.68,
+      "GPa"
+    ],
+    [
+      "Co3V",
+      "youngs_modulus",
+      171.58,
       "GPa"
     ],
     [
@@ -1083,283 +1011,379 @@
     [
       "Co3W",
       "youngs_modulus",
-      303.2,
+      230.23,
+      "GPa"
+    ],
+    [
+      "Co3Y",
+      "bulk_modulus",
+      224.99,
+      "GPa"
+    ],
+    [
+      "Co3Y",
+      "shear_modulus",
+      118.66,
+      "GPa"
+    ],
+    [
+      "Co3Y",
+      "youngs_modulus",
+      302.76,
       "GPa"
     ],
     [
       "Co3Zn",
       "bulk_modulus",
-      139.2,
-      "GPa"
-    ],
-    [
-      "Co3Zn",
-      "bulk_modulus",
-      100.46,
+      206.27,
       "GPa"
     ],
     [
       "Co3Zn",
       "shear_modulus",
-      109.64,
-      "GPa"
-    ],
-    [
-      "Co3Zn",
-      "shear_modulus",
-      76.44,
+      105.89,
       "GPa"
     ],
     [
       "Co3Zn",
       "youngs_modulus",
-      203.89,
-      "GPa"
-    ],
-    [
-      "Co3Zn",
-      "youngs_modulus",
-      157.4,
-      "GPa"
-    ],
-    [
-      "Co3Zr",
-      "bulk_modulus",
-      140.48,
-      "GPa"
-    ],
-    [
-      "Co3Zr",
-      "bulk_modulus",
-      196.08,
-      "GPa"
-    ],
-    [
-      "Co3Zr",
-      "shear_modulus",
-      56.1,
-      "GPa"
-    ],
-    [
-      "Co3Zr",
-      "shear_modulus",
-      73.04,
-      "GPa"
-    ],
-    [
-      "Co3Zr",
-      "youngs_modulus",
-      220.48,
-      "GPa"
-    ],
-    [
-      "Co3Zr",
-      "youngs_modulus",
-      287.91,
-      "GPa"
-    ],
-    [
-      "Cr3Al",
-      "bulk_modulus",
-      219.93,
-      "GPa"
-    ],
-    [
-      "Cr3Al",
-      "shear_modulus",
-      111.04,
-      "GPa"
-    ],
-    [
-      "Cr3Al",
-      "youngs_modulus",
-      339.29,
+      271.25,
       "GPa"
     ],
     [
       "Cr3Be",
       "bulk_modulus",
-      117.87,
+      182.13,
       "GPa"
     ],
     [
       "Cr3Be",
       "shear_modulus",
-      76.01,
+      46.81,
       "GPa"
     ],
     [
       "Cr3Be",
       "youngs_modulus",
-      175.66,
+      129.35,
+      "GPa"
+    ],
+    [
+      "Cr3Cu",
+      "bulk_modulus",
+      158.33,
+      "GPa"
+    ],
+    [
+      "Cr3Cu",
+      "bulk_modulus",
+      107.82,
+      "GPa"
+    ],
+    [
+      "Cr3Cu",
+      "shear_modulus",
+      93.51,
+      "GPa"
+    ],
+    [
+      "Cr3Cu",
+      "shear_modulus",
+      101.25,
+      "GPa"
+    ],
+    [
+      "Cr3Cu",
+      "youngs_modulus",
+      234.39,
+      "GPa"
+    ],
+    [
+      "Cr3Cu",
+      "youngs_modulus",
+      231.34,
       "GPa"
     ],
     [
       "Cr3Fe",
       "bulk_modulus",
-      238.18,
+      186.53,
       "GPa"
     ],
     [
       "Cr3Fe",
       "bulk_modulus",
-      128.86,
+      113.35,
       "GPa"
     ],
     [
       "Cr3Fe",
       "shear_modulus",
-      50.61,
+      76.99,
       "GPa"
     ],
     [
       "Cr3Fe",
       "shear_modulus",
-      89.5,
+      44.23,
       "GPa"
     ],
     [
       "Cr3Fe",
       "youngs_modulus",
-      184.35,
+      188.33,
       "GPa"
     ],
     [
       "Cr3Fe",
       "youngs_modulus",
-      366.77,
+      122.97,
       "GPa"
     ],
     [
       "Cr3Ge",
       "bulk_modulus",
-      235.53,
-      "GPa"
-    ],
-    [
-      "Cr3Ge",
-      "bulk_modulus",
-      232.84,
+      245.53,
       "GPa"
     ],
     [
       "Cr3Ge",
       "shear_modulus",
-      67.51,
-      "GPa"
-    ],
-    [
-      "Cr3Ge",
-      "shear_modulus",
-      54.25,
+      42.15,
       "GPa"
     ],
     [
       "Cr3Ge",
       "youngs_modulus",
-      356.22,
-      "GPa"
-    ],
-    [
-      "Cr3Ge",
-      "youngs_modulus",
-      346.5,
+      119.61,
       "GPa"
     ],
     [
       "Cr3Hf",
       "bulk_modulus",
-      242.27,
+      108.59,
       "GPa"
     ],
     [
       "Cr3Hf",
+      "shear_modulus",
+      105.27,
+      "GPa"
+    ],
+    [
+      "Cr3Hf",
+      "youngs_modulus",
+      238.68,
+      "GPa"
+    ],
+    [
+      "Cr3In",
       "bulk_modulus",
-      144.51,
+      152.44,
       "GPa"
     ],
     [
-      "Cr3Hf",
+      "Cr3In",
       "bulk_modulus",
-      223.79,
+      217.13,
       "GPa"
     ],
     [
-      "Cr3Hf",
+      "Cr3In",
+      "bulk_modulus",
+      248.55,
+      "GPa"
+    ],
+    [
+      "Cr3In",
       "shear_modulus",
-      43.91,
+      56.3,
       "GPa"
     ],
     [
-      "Cr3Hf",
+      "Cr3In",
       "shear_modulus",
-      83.14,
+      109.26,
       "GPa"
     ],
     [
-      "Cr3Hf",
+      "Cr3In",
       "shear_modulus",
-      80.92,
+      116.58,
       "GPa"
     ],
     [
-      "Cr3Hf",
+      "Cr3In",
       "youngs_modulus",
-      209.6,
+      280.7,
       "GPa"
     ],
     [
-      "Cr3Hf",
+      "Cr3In",
       "youngs_modulus",
-      362.54,
+      150.39,
       "GPa"
     ],
     [
-      "Cr3Hf",
+      "Cr3In",
       "youngs_modulus",
-      338.75,
+      302.45,
+      "GPa"
+    ],
+    [
+      "Cr3Mn",
+      "bulk_modulus",
+      170.42,
+      "GPa"
+    ],
+    [
+      "Cr3Mn",
+      "shear_modulus",
+      112.23,
+      "GPa"
+    ],
+    [
+      "Cr3Mn",
+      "youngs_modulus",
+      276.08,
       "GPa"
     ],
     [
       "Cr3Nb",
       "bulk_modulus",
-      179.33,
+      185.37,
+      "GPa"
+    ],
+    [
+      "Cr3Nb",
+      "bulk_modulus",
+      121.4,
       "GPa"
     ],
     [
       "Cr3Nb",
       "shear_modulus",
-      98.23,
+      98.64,
+      "GPa"
+    ],
+    [
+      "Cr3Nb",
+      "shear_modulus",
+      50.18,
       "GPa"
     ],
     [
       "Cr3Nb",
       "youngs_modulus",
-      259.06,
+      138.08,
+      "GPa"
+    ],
+    [
+      "Cr3Nb",
+      "youngs_modulus",
+      232.85,
+      "GPa"
+    ],
+    [
+      "Cr3Sb",
+      "bulk_modulus",
+      198.9,
+      "GPa"
+    ],
+    [
+      "Cr3Sb",
+      "shear_modulus",
+      62.11,
+      "GPa"
+    ],
+    [
+      "Cr3Sb",
+      "youngs_modulus",
+      168.76,
+      "GPa"
+    ],
+    [
+      "Cr3Sc",
+      "bulk_modulus",
+      249.3,
+      "GPa"
+    ],
+    [
+      "Cr3Sc",
+      "shear_modulus",
+      95.74,
+      "GPa"
+    ],
+    [
+      "Cr3Sc",
+      "youngs_modulus",
+      254.63,
       "GPa"
     ],
     [
       "Cr3Sn",
       "bulk_modulus",
-      164.53,
+      208.19,
       "GPa"
     ],
     [
       "Cr3Sn",
       "shear_modulus",
-      103.45,
+      65.24,
       "GPa"
     ],
     [
       "Cr3Sn",
       "youngs_modulus",
-      249.89,
+      177.21,
+      "GPa"
+    ],
+    [
+      "Cr3Ta",
+      "bulk_modulus",
+      215.28,
+      "GPa"
+    ],
+    [
+      "Cr3Ta",
+      "shear_modulus",
+      115.82,
+      "GPa"
+    ],
+    [
+      "Cr3Ta",
+      "youngs_modulus",
+      294.62,
       "GPa"
     ],
     [
       "Cr3V",
       "bulk_modulus",
       219.06,
+      "GPa"
+    ],
+    [
+      "Cr3V",
+      "bulk_modulus",
+      133.4,
+      "GPa"
+    ],
+    [
+      "Cr3V",
+      "bulk_modulus",
+      180.09,
+      "GPa"
+    ],
+    [
+      "Cr3V",
+      "shear_modulus",
+      87.99,
+      "GPa"
+    ],
+    [
+      "Cr3V",
+      "shear_modulus",
+      40.28,
       "GPa"
     ],
     [
@@ -1371,817 +1395,925 @@
     [
       "Cr3V",
       "youngs_modulus",
-      331.49,
+      207.06,
+      "GPa"
+    ],
+    [
+      "Cr3V",
+      "youngs_modulus",
+      109.79,
+      "GPa"
+    ],
+    [
+      "Cr3V",
+      "youngs_modulus",
+      227.0,
       "GPa"
     ],
     [
       "Cr3Y",
       "bulk_modulus",
-      225.51,
+      157.11,
       "GPa"
     ],
     [
       "Cr3Y",
       "shear_modulus",
-      49.15,
+      51.11,
       "GPa"
     ],
     [
       "Cr3Y",
       "youngs_modulus",
-      334.78,
+      138.33,
       "GPa"
     ],
     [
       "Cr3Zn",
       "bulk_modulus",
-      184.14,
+      170.96,
       "GPa"
     ],
     [
       "Cr3Zn",
       "shear_modulus",
-      101.39,
+      53.78,
       "GPa"
     ],
     [
       "Cr3Zn",
       "youngs_modulus",
-      279.72,
+      146.03,
       "GPa"
     ],
     [
-      "Cr3Zr",
+      "Cu3Al",
       "bulk_modulus",
-      232.81,
+      164.62,
       "GPa"
     ],
     [
-      "Cr3Zr",
+      "Cu3Al",
       "bulk_modulus",
-      243.26,
+      203.77,
       "GPa"
     ],
     [
-      "Cr3Zr",
-      "shear_modulus",
-      109.26,
-      "GPa"
-    ],
-    [
-      "Cr3Zr",
-      "shear_modulus",
-      92.39,
-      "GPa"
-    ],
-    [
-      "Cr3Zr",
-      "youngs_modulus",
-      359.01,
-      "GPa"
-    ],
-    [
-      "Cr3Zr",
-      "youngs_modulus",
-      351.53,
-      "GPa"
-    ],
-    [
-      "Cu3Be",
+      "Cu3Al",
       "bulk_modulus",
-      236.58,
+      119.38,
       "GPa"
     ],
     [
-      "Cu3Be",
-      "bulk_modulus",
-      240.7,
-      "GPa"
-    ],
-    [
-      "Cu3Be",
-      "bulk_modulus",
-      228.31,
-      "GPa"
-    ],
-    [
-      "Cu3Be",
+      "Cu3Al",
       "shear_modulus",
-      77.08,
+      109.5,
       "GPa"
     ],
     [
-      "Cu3Be",
+      "Cu3Al",
       "shear_modulus",
-      101.66,
+      55.8,
       "GPa"
     ],
     [
-      "Cu3Be",
+      "Cu3Al",
       "shear_modulus",
-      67.31,
+      82.61,
       "GPa"
     ],
     [
-      "Cu3Be",
+      "Cu3Al",
       "youngs_modulus",
-      340.94,
+      278.6,
       "GPa"
     ],
     [
-      "Cu3Be",
+      "Cu3Al",
       "youngs_modulus",
-      364.62,
+      201.38,
       "GPa"
     ],
     [
-      "Cu3Be",
+      "Cu3Al",
       "youngs_modulus",
-      362.41,
-      "GPa"
-    ],
-    [
-      "Cu3Fe",
-      "bulk_modulus",
-      101.83,
-      "GPa"
-    ],
-    [
-      "Cu3Fe",
-      "shear_modulus",
-      65.52,
-      "GPa"
-    ],
-    [
-      "Cu3Fe",
-      "youngs_modulus",
-      150.43,
+      150.41,
       "GPa"
     ],
     [
       "Cu3Ga",
       "bulk_modulus",
-      194.62,
+      130.32,
       "GPa"
     ],
     [
       "Cu3Ga",
       "shear_modulus",
-      99.26,
+      82.93,
       "GPa"
     ],
     [
       "Cu3Ga",
       "youngs_modulus",
-      297.09,
+      205.25,
+      "GPa"
+    ],
+    [
+      "Cu3Ge",
+      "bulk_modulus",
+      124.43,
+      "GPa"
+    ],
+    [
+      "Cu3Ge",
+      "bulk_modulus",
+      185.93,
+      "GPa"
+    ],
+    [
+      "Cu3Ge",
+      "bulk_modulus",
+      130.88,
+      "GPa"
+    ],
+    [
+      "Cu3Ge",
+      "bulk_modulus",
+      164.97,
+      "GPa"
+    ],
+    [
+      "Cu3Ge",
+      "shear_modulus",
+      50.19,
+      "GPa"
+    ],
+    [
+      "Cu3Ge",
+      "shear_modulus",
+      56.77,
+      "GPa"
+    ],
+    [
+      "Cu3Ge",
+      "shear_modulus",
+      72.12,
+      "GPa"
+    ],
+    [
+      "Cu3Ge",
+      "shear_modulus",
+      96.42,
+      "GPa"
+    ],
+    [
+      "Cu3Ge",
+      "youngs_modulus",
+      138.14,
+      "GPa"
+    ],
+    [
+      "Cu3Ge",
+      "youngs_modulus",
+      188.84,
+      "GPa"
+    ],
+    [
+      "Cu3Ge",
+      "youngs_modulus",
+      147.83,
+      "GPa"
+    ],
+    [
+      "Cu3Ge",
+      "youngs_modulus",
+      232.23,
+      "GPa"
+    ],
+    [
+      "Cu3In",
+      "bulk_modulus",
+      238.79,
+      "GPa"
+    ],
+    [
+      "Cu3In",
+      "bulk_modulus",
+      135.9,
+      "GPa"
+    ],
+    [
+      "Cu3In",
+      "shear_modulus",
+      70.61,
+      "GPa"
+    ],
+    [
+      "Cu3In",
+      "shear_modulus",
+      65.73,
+      "GPa"
+    ],
+    [
+      "Cu3In",
+      "youngs_modulus",
+      192.82,
+      "GPa"
+    ],
+    [
+      "Cu3In",
+      "youngs_modulus",
+      169.81,
       "GPa"
     ],
     [
       "Cu3Mn",
       "bulk_modulus",
-      123.1,
+      151.54,
       "GPa"
     ],
     [
       "Cu3Mn",
       "bulk_modulus",
-      113.03,
+      137.78,
       "GPa"
     ],
     [
       "Cu3Mn",
       "shear_modulus",
-      50.95,
+      42.72,
       "GPa"
     ],
     [
       "Cu3Mn",
       "shear_modulus",
-      114.61,
+      110.91,
       "GPa"
     ],
     [
       "Cu3Mn",
       "youngs_modulus",
-      188.75,
+      267.48,
       "GPa"
     ],
     [
       "Cu3Mn",
       "youngs_modulus",
-      172.92,
+      116.16,
       "GPa"
     ],
     [
-      "Cu3Nb",
+      "Cu3Sb",
       "bulk_modulus",
-      124.05,
+      159.34,
       "GPa"
     ],
     [
-      "Cu3Nb",
+      "Cu3Sb",
       "shear_modulus",
-      71.71,
+      48.08,
       "GPa"
     ],
     [
-      "Cu3Nb",
+      "Cu3Sb",
       "youngs_modulus",
-      195.04,
+      131.06,
+      "GPa"
+    ],
+    [
+      "Cu3Sc",
+      "bulk_modulus",
+      182.8,
+      "GPa"
+    ],
+    [
+      "Cu3Sc",
+      "shear_modulus",
+      52.52,
+      "GPa"
+    ],
+    [
+      "Cu3Sc",
+      "youngs_modulus",
+      143.79,
       "GPa"
     ],
     [
       "Cu3Si",
       "bulk_modulus",
-      131.35,
+      128.79,
       "GPa"
     ],
     [
       "Cu3Si",
       "shear_modulus",
-      83.04,
+      71.7,
       "GPa"
     ],
     [
       "Cu3Si",
       "youngs_modulus",
-      197.49,
+      181.43,
       "GPa"
     ],
     [
       "Cu3Sn",
       "bulk_modulus",
-      234.88,
+      206.14,
       "GPa"
     ],
     [
       "Cu3Sn",
       "shear_modulus",
-      79.33,
+      119.28,
       "GPa"
     ],
     [
       "Cu3Sn",
       "youngs_modulus",
-      347.52,
+      299.98,
       "GPa"
     ],
     [
       "Cu3Ta",
       "bulk_modulus",
-      167.48,
-      "GPa"
-    ],
-    [
-      "Cu3Ta",
-      "bulk_modulus",
-      232.02,
-      "GPa"
-    ],
-    [
-      "Cu3Ta",
-      "bulk_modulus",
-      179.98,
-      "GPa"
-    ],
-    [
-      "Cu3Ta",
-      "bulk_modulus",
-      119.51,
-      "GPa"
-    ],
-    [
-      "Cu3Ta",
-      "bulk_modulus",
-      122.56,
+      132.28,
       "GPa"
     ],
     [
       "Cu3Ta",
       "shear_modulus",
-      90.15,
-      "GPa"
-    ],
-    [
-      "Cu3Ta",
-      "shear_modulus",
-      87.52,
-      "GPa"
-    ],
-    [
-      "Cu3Ta",
-      "shear_modulus",
-      73.12,
-      "GPa"
-    ],
-    [
-      "Cu3Ta",
-      "shear_modulus",
-      66.77,
-      "GPa"
-    ],
-    [
-      "Cu3Ta",
-      "shear_modulus",
-      66.97,
+      69.73,
       "GPa"
     ],
     [
       "Cu3Ta",
       "youngs_modulus",
-      252.42,
-      "GPa"
-    ],
-    [
-      "Cu3Ta",
-      "youngs_modulus",
-      188.06,
-      "GPa"
-    ],
-    [
-      "Cu3Ta",
-      "youngs_modulus",
-      272.56,
-      "GPa"
-    ],
-    [
-      "Cu3Ta",
-      "youngs_modulus",
-      185.64,
-      "GPa"
-    ],
-    [
-      "Cu3Ta",
-      "youngs_modulus",
-      346.89,
+      177.93,
       "GPa"
     ],
     [
       "Cu3Ti",
       "bulk_modulus",
-      149.39,
+      116.59,
+      "GPa"
+    ],
+    [
+      "Cu3Ti",
+      "bulk_modulus",
+      139.46,
       "GPa"
     ],
     [
       "Cu3Ti",
       "shear_modulus",
-      64.22,
+      63.15,
+      "GPa"
+    ],
+    [
+      "Cu3Ti",
+      "shear_modulus",
+      109.16,
       "GPa"
     ],
     [
       "Cu3Ti",
       "youngs_modulus",
-      227.75,
+      160.48,
       "GPa"
     ],
     [
-      "Cu3V",
-      "bulk_modulus",
-      160.09,
-      "GPa"
-    ],
-    [
-      "Cu3V",
-      "shear_modulus",
-      87.24,
-      "GPa"
-    ],
-    [
-      "Cu3V",
+      "Cu3Ti",
       "youngs_modulus",
-      248.65,
+      259.72,
       "GPa"
     ],
     [
       "Cu3Y",
       "bulk_modulus",
-      106.9,
+      191.51,
       "GPa"
     ],
     [
       "Cu3Y",
+      "shear_modulus",
+      91.81,
+      "GPa"
+    ],
+    [
+      "Cu3Y",
+      "youngs_modulus",
+      237.48,
+      "GPa"
+    ],
+    [
+      "Cu3Zn",
       "bulk_modulus",
-      239.3,
+      120.81,
       "GPa"
     ],
     [
-      "Cu3Y",
-      "bulk_modulus",
-      125.1,
-      "GPa"
-    ],
-    [
-      "Cu3Y",
+      "Cu3Zn",
       "shear_modulus",
-      90.71,
+      119.48,
       "GPa"
     ],
     [
-      "Cu3Y",
-      "shear_modulus",
-      69.12,
-      "GPa"
-    ],
-    [
-      "Cu3Y",
-      "shear_modulus",
-      62.09,
-      "GPa"
-    ],
-    [
-      "Cu3Y",
+      "Cu3Zn",
       "youngs_modulus",
-      153.93,
-      "GPa"
-    ],
-    [
-      "Cu3Y",
-      "youngs_modulus",
-      193.44,
-      "GPa"
-    ],
-    [
-      "Cu3Y",
-      "youngs_modulus",
-      350.03,
-      "GPa"
-    ],
-    [
-      "Cu3Zr",
-      "bulk_modulus",
-      204.39,
-      "GPa"
-    ],
-    [
-      "Cu3Zr",
-      "shear_modulus",
-      77.16,
-      "GPa"
-    ],
-    [
-      "Cu3Zr",
-      "youngs_modulus",
-      314.93,
+      269.57,
       "GPa"
     ],
     [
       "Fe3Al",
       "bulk_modulus",
-      111.99,
+      132.36,
       "GPa"
     ],
     [
       "Fe3Al",
       "shear_modulus",
-      104.08,
+      113.81,
       "GPa"
     ],
     [
       "Fe3Al",
       "youngs_modulus",
-      169.15,
+      265.37,
       "GPa"
     ],
     [
-      "Fe3Be",
+      "Fe3Cu",
       "bulk_modulus",
-      185.79,
+      183.63,
       "GPa"
     ],
     [
-      "Fe3Be",
+      "Fe3Cu",
       "shear_modulus",
-      53.57,
+      106.02,
       "GPa"
     ],
     [
-      "Fe3Be",
+      "Fe3Cu",
       "youngs_modulus",
-      271.47,
+      266.73,
       "GPa"
     ],
     [
-      "Fe3In",
+      "Fe3Ga",
       "bulk_modulus",
-      226.17,
+      127.4,
       "GPa"
     ],
     [
-      "Fe3In",
+      "Fe3Ga",
       "bulk_modulus",
+      179.57,
+      "GPa"
+    ],
+    [
+      "Fe3Ga",
+      "shear_modulus",
+      87.97,
+      "GPa"
+    ],
+    [
+      "Fe3Ga",
+      "shear_modulus",
+      114.91,
+      "GPa"
+    ],
+    [
+      "Fe3Ga",
+      "youngs_modulus",
       226.86,
       "GPa"
     ],
     [
-      "Fe3In",
+      "Fe3Ga",
+      "youngs_modulus",
+      265.04,
+      "GPa"
+    ],
+    [
+      "Fe3Ge",
+      "bulk_modulus",
+      225.75,
+      "GPa"
+    ],
+    [
+      "Fe3Ge",
       "shear_modulus",
-      97.39,
+      71.26,
+      "GPa"
+    ],
+    [
+      "Fe3Ge",
+      "youngs_modulus",
+      193.43,
+      "GPa"
+    ],
+    [
+      "Fe3Hf",
+      "bulk_modulus",
+      169.11,
+      "GPa"
+    ],
+    [
+      "Fe3Hf",
+      "bulk_modulus",
+      122.74,
+      "GPa"
+    ],
+    [
+      "Fe3Hf",
+      "shear_modulus",
+      118.89,
+      "GPa"
+    ],
+    [
+      "Fe3Hf",
+      "shear_modulus",
+      100.28,
+      "GPa"
+    ],
+    [
+      "Fe3Hf",
+      "youngs_modulus",
+      236.45,
+      "GPa"
+    ],
+    [
+      "Fe3Hf",
+      "youngs_modulus",
+      288.95,
+      "GPa"
+    ],
+    [
+      "Fe3In",
+      "bulk_modulus",
+      149.47,
       "GPa"
     ],
     [
       "Fe3In",
       "shear_modulus",
-      62.58,
+      95.49,
       "GPa"
     ],
     [
       "Fe3In",
       "youngs_modulus",
-      345.67,
-      "GPa"
-    ],
-    [
-      "Fe3In",
-      "youngs_modulus",
-      341.79,
+      236.18,
       "GPa"
     ],
     [
       "Fe3Mg",
       "bulk_modulus",
-      215.07,
+      177.03,
+      "GPa"
+    ],
+    [
+      "Fe3Mg",
+      "bulk_modulus",
+      238.22,
       "GPa"
     ],
     [
       "Fe3Mg",
       "shear_modulus",
-      74.48,
+      108.12,
+      "GPa"
+    ],
+    [
+      "Fe3Mg",
+      "shear_modulus",
+      73.43,
       "GPa"
     ],
     [
       "Fe3Mg",
       "youngs_modulus",
-      321.63,
+      269.5,
+      "GPa"
+    ],
+    [
+      "Fe3Mg",
+      "youngs_modulus",
+      199.76,
+      "GPa"
+    ],
+    [
+      "Fe3Mn",
+      "bulk_modulus",
+      210.64,
+      "GPa"
+    ],
+    [
+      "Fe3Mn",
+      "shear_modulus",
+      95.13,
+      "GPa"
+    ],
+    [
+      "Fe3Mn",
+      "youngs_modulus",
+      248.05,
       "GPa"
     ],
     [
       "Fe3Nb",
       "bulk_modulus",
-      121.2,
+      125.38,
       "GPa"
     ],
     [
       "Fe3Nb",
+      "shear_modulus",
+      89.16,
+      "GPa"
+    ],
+    [
+      "Fe3Nb",
+      "youngs_modulus",
+      216.23,
+      "GPa"
+    ],
+    [
+      "Fe3Sb",
       "bulk_modulus",
-      159.61,
+      217.3,
       "GPa"
     ],
     [
-      "Fe3Nb",
+      "Fe3Sb",
       "shear_modulus",
-      107.66,
+      83.0,
       "GPa"
     ],
     [
-      "Fe3Nb",
+      "Fe3Sb",
+      "youngs_modulus",
+      220.88,
+      "GPa"
+    ],
+    [
+      "Fe3Sc",
+      "bulk_modulus",
+      157.22,
+      "GPa"
+    ],
+    [
+      "Fe3Sc",
       "shear_modulus",
-      71.08,
+      112.03,
       "GPa"
     ],
     [
-      "Fe3Nb",
+      "Fe3Sc",
       "youngs_modulus",
-      183.3,
-      "GPa"
-    ],
-    [
-      "Fe3Nb",
-      "youngs_modulus",
-      231.22,
+      271.58,
       "GPa"
     ],
     [
       "Fe3Si",
       "bulk_modulus",
-      151.92,
+      162.02,
+      "GPa"
+    ],
+    [
+      "Fe3Si",
+      "bulk_modulus",
+      130.12,
+      "GPa"
+    ],
+    [
+      "Fe3Si",
+      "bulk_modulus",
+      112.93,
       "GPa"
     ],
     [
       "Fe3Si",
       "shear_modulus",
-      71.68,
+      89.67,
+      "GPa"
+    ],
+    [
+      "Fe3Si",
+      "shear_modulus",
+      102.92,
+      "GPa"
+    ],
+    [
+      "Fe3Si",
+      "shear_modulus",
+      74.76,
       "GPa"
     ],
     [
       "Fe3Si",
       "youngs_modulus",
-      231.05,
+      244.34,
+      "GPa"
+    ],
+    [
+      "Fe3Si",
+      "youngs_modulus",
+      183.74,
+      "GPa"
+    ],
+    [
+      "Fe3Si",
+      "youngs_modulus",
+      227.11,
       "GPa"
     ],
     [
       "Fe3Sn",
       "bulk_modulus",
-      188.47,
+      122.51,
       "GPa"
     ],
     [
       "Fe3Sn",
       "shear_modulus",
-      85.93,
+      88.69,
       "GPa"
     ],
     [
       "Fe3Sn",
       "youngs_modulus",
-      281.47,
+      214.35,
       "GPa"
     ],
     [
       "Fe3Ti",
       "bulk_modulus",
-      177.99,
+      219.23,
       "GPa"
     ],
     [
       "Fe3Ti",
       "bulk_modulus",
-      119.9,
+      124.04,
       "GPa"
     ],
     [
       "Fe3Ti",
       "shear_modulus",
-      58.1,
+      55.33,
       "GPa"
     ],
     [
       "Fe3Ti",
       "shear_modulus",
-      49.72,
+      114.32,
       "GPa"
     ],
     [
       "Fe3Ti",
       "youngs_modulus",
-      170.04,
+      262.36,
       "GPa"
     ],
     [
       "Fe3Ti",
       "youngs_modulus",
-      274.38,
+      153.11,
       "GPa"
     ],
     [
       "Fe3V",
       "bulk_modulus",
-      243.49,
+      129.61,
       "GPa"
     ],
     [
       "Fe3V",
       "shear_modulus",
-      109.46,
+      109.58,
       "GPa"
     ],
     [
       "Fe3V",
       "youngs_modulus",
-      373.81,
+      256.46,
       "GPa"
     ],
     [
-      "Fe3Zr",
+      "Fe3Y",
       "bulk_modulus",
-      124.68,
+      215.37,
       "GPa"
     ],
     [
-      "Fe3Zr",
+      "Fe3Y",
       "shear_modulus",
-      67.94,
+      93.03,
       "GPa"
     ],
     [
-      "Fe3Zr",
+      "Fe3Y",
       "youngs_modulus",
-      186.53,
+      243.96,
       "GPa"
     ],
     [
-      "Hf3Cu",
+      "Fe3Zn",
       "bulk_modulus",
-      149.19,
+      212.1,
       "GPa"
     ],
     [
-      "Hf3Cu",
+      "Fe3Zn",
+      "shear_modulus",
+      57.12,
+      "GPa"
+    ],
+    [
+      "Fe3Zn",
+      "youngs_modulus",
+      157.24,
+      "GPa"
+    ],
+    [
+      "Hf3Al",
       "bulk_modulus",
-      142.56,
+      247.86,
       "GPa"
     ],
     [
-      "Hf3Cu",
+      "Hf3Al",
       "shear_modulus",
-      63.65,
+      70.22,
       "GPa"
     ],
     [
-      "Hf3Cu",
-      "shear_modulus",
-      91.62,
-      "GPa"
-    ],
-    [
-      "Hf3Cu",
+      "Hf3Al",
       "youngs_modulus",
-      214.49,
-      "GPa"
-    ],
-    [
-      "Hf3Cu",
-      "youngs_modulus",
-      228.14,
+      192.48,
       "GPa"
     ],
     [
       "Hf3Fe",
       "bulk_modulus",
-      219.96,
+      179.14,
       "GPa"
     ],
     [
       "Hf3Fe",
+      "shear_modulus",
+      86.23,
+      "GPa"
+    ],
+    [
+      "Hf3Fe",
+      "youngs_modulus",
+      222.92,
+      "GPa"
+    ],
+    [
+      "Hf3Ge",
       "bulk_modulus",
-      171.62,
+      107.81,
       "GPa"
     ],
     [
-      "Hf3Fe",
+      "Hf3Ge",
       "shear_modulus",
-      107.56,
+      116.15,
       "GPa"
     ],
     [
-      "Hf3Fe",
-      "shear_modulus",
-      55.96,
-      "GPa"
-    ],
-    [
-      "Hf3Fe",
+      "Hf3Ge",
       "youngs_modulus",
-      253.85,
-      "GPa"
-    ],
-    [
-      "Hf3Fe",
-      "youngs_modulus",
-      325.59,
-      "GPa"
-    ],
-    [
-      "Hf3Ga",
-      "bulk_modulus",
-      101.51,
-      "GPa"
-    ],
-    [
-      "Hf3Ga",
-      "shear_modulus",
-      73.05,
-      "GPa"
-    ],
-    [
-      "Hf3Ga",
-      "youngs_modulus",
-      158.42,
+      256.38,
       "GPa"
     ],
     [
       "Hf3Mg",
       "bulk_modulus",
-      171.0,
+      130.1,
       "GPa"
     ],
     [
       "Hf3Mg",
       "shear_modulus",
-      79.58,
+      77.0,
       "GPa"
     ],
     [
       "Hf3Mg",
       "youngs_modulus",
-      253.44,
+      192.94,
       "GPa"
     ],
     [
       "Hf3Mn",
       "bulk_modulus",
       201.69,
-      "GPa"
-    ],
-    [
-      "Hf3Mn",
-      "bulk_modulus",
-      213.38,
-      "GPa"
-    ],
-    [
-      "Hf3Mn",
-      "shear_modulus",
-      89.22,
       "GPa"
     ],
     [
@@ -2193,283 +2325,409 @@
     [
       "Hf3Mn",
       "youngs_modulus",
-      303.83,
+      260.54,
       "GPa"
     ],
     [
-      "Hf3Mn",
+      "Hf3Nb",
+      "bulk_modulus",
+      197.26,
+      "GPa"
+    ],
+    [
+      "Hf3Nb",
+      "shear_modulus",
+      51.52,
+      "GPa"
+    ],
+    [
+      "Hf3Nb",
       "youngs_modulus",
-      314.92,
+      142.18,
       "GPa"
     ],
     [
       "Hf3Sb",
       "bulk_modulus",
-      236.73,
+      201.52,
       "GPa"
     ],
     [
       "Hf3Sb",
       "bulk_modulus",
-      167.24,
+      248.69,
       "GPa"
     ],
     [
       "Hf3Sb",
       "shear_modulus",
-      91.79,
+      43.41,
       "GPa"
     ],
     [
       "Hf3Sb",
       "shear_modulus",
-      68.96,
+      82.59,
       "GPa"
     ],
     [
       "Hf3Sb",
       "youngs_modulus",
-      249.9,
+      123.07,
       "GPa"
     ],
     [
       "Hf3Sb",
       "youngs_modulus",
-      345.26,
+      217.99,
+      "GPa"
+    ],
+    [
+      "Hf3Sc",
+      "bulk_modulus",
+      144.99,
+      "GPa"
+    ],
+    [
+      "Hf3Sc",
+      "bulk_modulus",
+      120.89,
+      "GPa"
+    ],
+    [
+      "Hf3Sc",
+      "bulk_modulus",
+      102.05,
+      "GPa"
+    ],
+    [
+      "Hf3Sc",
+      "shear_modulus",
+      107.64,
+      "GPa"
+    ],
+    [
+      "Hf3Sc",
+      "shear_modulus",
+      83.77,
+      "GPa"
+    ],
+    [
+      "Hf3Sc",
+      "shear_modulus",
+      93.08,
+      "GPa"
+    ],
+    [
+      "Hf3Sc",
+      "youngs_modulus",
+      204.15,
+      "GPa"
+    ],
+    [
+      "Hf3Sc",
+      "youngs_modulus",
+      230.02,
+      "GPa"
+    ],
+    [
+      "Hf3Sc",
+      "youngs_modulus",
+      238.92,
+      "GPa"
+    ],
+    [
+      "Hf3Si",
+      "bulk_modulus",
+      218.69,
+      "GPa"
+    ],
+    [
+      "Hf3Si",
+      "bulk_modulus",
+      118.44,
+      "GPa"
+    ],
+    [
+      "Hf3Si",
+      "bulk_modulus",
+      105.48,
+      "GPa"
+    ],
+    [
+      "Hf3Si",
+      "shear_modulus",
+      103.63,
+      "GPa"
+    ],
+    [
+      "Hf3Si",
+      "shear_modulus",
+      95.12,
+      "GPa"
+    ],
+    [
+      "Hf3Si",
+      "shear_modulus",
+      113.78,
+      "GPa"
+    ],
+    [
+      "Hf3Si",
+      "youngs_modulus",
+      240.69,
+      "GPa"
+    ],
+    [
+      "Hf3Si",
+      "youngs_modulus",
+      219.41,
+      "GPa"
+    ],
+    [
+      "Hf3Si",
+      "youngs_modulus",
+      290.89,
+      "GPa"
+    ],
+    [
+      "Hf3Sn",
+      "bulk_modulus",
+      110.07,
+      "GPa"
+    ],
+    [
+      "Hf3Sn",
+      "bulk_modulus",
+      180.23,
+      "GPa"
+    ],
+    [
+      "Hf3Sn",
+      "bulk_modulus",
+      107.45,
+      "GPa"
+    ],
+    [
+      "Hf3Sn",
+      "shear_modulus",
+      91.31,
+      "GPa"
+    ],
+    [
+      "Hf3Sn",
+      "shear_modulus",
+      79.51,
+      "GPa"
+    ],
+    [
+      "Hf3Sn",
+      "shear_modulus",
+      106.54,
+      "GPa"
+    ],
+    [
+      "Hf3Sn",
+      "youngs_modulus",
+      241.65,
+      "GPa"
+    ],
+    [
+      "Hf3Sn",
+      "youngs_modulus",
+      191.34,
+      "GPa"
+    ],
+    [
+      "Hf3Sn",
+      "youngs_modulus",
+      234.35,
       "GPa"
     ],
     [
       "Hf3Ta",
       "bulk_modulus",
-      156.81,
+      192.65,
       "GPa"
     ],
     [
       "Hf3Ta",
       "shear_modulus",
-      83.68,
+      112.59,
       "GPa"
     ],
     [
       "Hf3Ta",
       "youngs_modulus",
-      234.8,
+      282.7,
       "GPa"
     ],
     [
-      "Hf3Ti",
+      "Hf3V",
       "bulk_modulus",
-      224.6,
+      171.89,
       "GPa"
     ],
     [
-      "Hf3Ti",
+      "Hf3V",
       "bulk_modulus",
-      107.97,
+      195.64,
       "GPa"
     ],
     [
-      "Hf3Ti",
-      "shear_modulus",
-      42.86,
-      "GPa"
-    ],
-    [
-      "Hf3Ti",
-      "shear_modulus",
-      48.39,
-      "GPa"
-    ],
-    [
-      "Hf3Ti",
-      "youngs_modulus",
-      329.25,
-      "GPa"
-    ],
-    [
-      "Hf3Ti",
-      "youngs_modulus",
-      153.27,
-      "GPa"
-    ],
-    [
-      "Hf3Y",
+      "Hf3V",
       "bulk_modulus",
-      146.86,
+      223.65,
       "GPa"
     ],
     [
-      "Hf3Y",
+      "Hf3V",
+      "shear_modulus",
+      97.62,
+      "GPa"
+    ],
+    [
+      "Hf3V",
+      "shear_modulus",
+      56.87,
+      "GPa"
+    ],
+    [
+      "Hf3V",
+      "shear_modulus",
+      72.06,
+      "GPa"
+    ],
+    [
+      "Hf3V",
+      "youngs_modulus",
+      189.67,
+      "GPa"
+    ],
+    [
+      "Hf3V",
+      "youngs_modulus",
+      255.66,
+      "GPa"
+    ],
+    [
+      "Hf3V",
+      "youngs_modulus",
+      155.54,
+      "GPa"
+    ],
+    [
+      "Ir3Al",
       "bulk_modulus",
-      118.79,
+      181.08,
       "GPa"
     ],
     [
-      "Hf3Y",
-      "bulk_modulus",
-      212.05,
-      "GPa"
-    ],
-    [
-      "Hf3Y",
-      "bulk_modulus",
-      105.64,
-      "GPa"
-    ],
-    [
-      "Hf3Y",
+      "Ir3Al",
       "shear_modulus",
-      54.4,
+      64.62,
       "GPa"
     ],
     [
-      "Hf3Y",
-      "shear_modulus",
-      88.43,
-      "GPa"
-    ],
-    [
-      "Hf3Y",
-      "shear_modulus",
-      49.38,
-      "GPa"
-    ],
-    [
-      "Hf3Y",
-      "shear_modulus",
-      83.01,
-      "GPa"
-    ],
-    [
-      "Hf3Y",
+      "Ir3Al",
       "youngs_modulus",
-      212.92,
-      "GPa"
-    ],
-    [
-      "Hf3Y",
-      "youngs_modulus",
-      167.47,
-      "GPa"
-    ],
-    [
-      "Hf3Y",
-      "youngs_modulus",
-      310.94,
-      "GPa"
-    ],
-    [
-      "Hf3Y",
-      "youngs_modulus",
-      176.34,
+      173.25,
       "GPa"
     ],
     [
       "Ir3Cu",
       "bulk_modulus",
-      127.06,
-      "GPa"
-    ],
-    [
-      "Ir3Cu",
-      "bulk_modulus",
-      183.18,
+      164.69,
       "GPa"
     ],
     [
       "Ir3Cu",
       "shear_modulus",
-      48.21,
-      "GPa"
-    ],
-    [
-      "Ir3Cu",
-      "shear_modulus",
-      103.4,
+      89.12,
       "GPa"
     ],
     [
       "Ir3Cu",
       "youngs_modulus",
-      281.79,
+      226.5,
       "GPa"
     ],
     [
-      "Ir3Cu",
-      "youngs_modulus",
-      200.11,
-      "GPa"
-    ],
-    [
-      "Ir3Hf",
+      "Ir3Ge",
       "bulk_modulus",
-      160.16,
+      121.5,
       "GPa"
     ],
     [
-      "Ir3Hf",
+      "Ir3Ge",
+      "bulk_modulus",
+      125.94,
+      "GPa"
+    ],
+    [
+      "Ir3Ge",
       "shear_modulus",
-      74.31,
+      78.04,
       "GPa"
     ],
     [
-      "Ir3Hf",
-      "youngs_modulus",
-      232.01,
-      "GPa"
-    ],
-    [
-      "Ir3Mg",
-      "bulk_modulus",
-      171.91,
-      "GPa"
-    ],
-    [
-      "Ir3Mg",
-      "bulk_modulus",
-      202.47,
-      "GPa"
-    ],
-    [
-      "Ir3Mg",
-      "bulk_modulus",
-      207.24,
-      "GPa"
-    ],
-    [
-      "Ir3Mg",
+      "Ir3Ge",
       "shear_modulus",
-      109.56,
+      106.06,
+      "GPa"
+    ],
+    [
+      "Ir3Ge",
+      "youngs_modulus",
+      192.83,
+      "GPa"
+    ],
+    [
+      "Ir3Ge",
+      "youngs_modulus",
+      248.44,
+      "GPa"
+    ],
+    [
+      "Ir3Mg",
+      "bulk_modulus",
+      109.04,
       "GPa"
     ],
     [
       "Ir3Mg",
       "shear_modulus",
-      112.79,
+      111.54,
       "GPa"
     ],
     [
       "Ir3Mg",
+      "youngs_modulus",
+      249.53,
+      "GPa"
+    ],
+    [
+      "Ir3Mn",
+      "bulk_modulus",
+      221.73,
+      "GPa"
+    ],
+    [
+      "Ir3Mn",
       "shear_modulus",
-      86.15,
+      91.28,
       "GPa"
     ],
     [
-      "Ir3Mg",
+      "Ir3Mn",
       "youngs_modulus",
-      297.69,
+      240.8,
       "GPa"
     ],
     [
-      "Ir3Mg",
-      "youngs_modulus",
-      303.82,
-      "GPa"
-    ],
-    [
-      "Ir3Mg",
-      "youngs_modulus",
-      267.0,
+      "Ir3Nb",
+      "bulk_modulus",
+      109.9,
       "GPa"
     ],
     [
@@ -2481,229 +2739,283 @@
     [
       "Ir3Nb",
       "shear_modulus",
+      89.86,
+      "GPa"
+    ],
+    [
+      "Ir3Nb",
+      "shear_modulus",
       100.0,
       "GPa"
     ],
     [
       "Ir3Nb",
       "youngs_modulus",
-      320.72,
+      211.84,
+      "GPa"
+    ],
+    [
+      "Ir3Nb",
+      "youngs_modulus",
+      260.53,
       "GPa"
     ],
     [
       "Ir3Sb",
       "bulk_modulus",
-      126.99,
+      237.0,
+      "GPa"
+    ],
+    [
+      "Ir3Sb",
+      "bulk_modulus",
+      230.63,
+      "GPa"
+    ],
+    [
+      "Ir3Sb",
+      "bulk_modulus",
+      193.81,
       "GPa"
     ],
     [
       "Ir3Sb",
       "shear_modulus",
-      83.81,
+      52.06,
+      "GPa"
+    ],
+    [
+      "Ir3Sb",
+      "shear_modulus",
+      75.5,
+      "GPa"
+    ],
+    [
+      "Ir3Sb",
+      "shear_modulus",
+      100.8,
       "GPa"
     ],
     [
       "Ir3Sb",
       "youngs_modulus",
-      197.12,
+      145.25,
       "GPa"
     ],
     [
-      "Ir3Sc",
-      "bulk_modulus",
-      183.8,
-      "GPa"
-    ],
-    [
-      "Ir3Sc",
-      "shear_modulus",
-      51.03,
-      "GPa"
-    ],
-    [
-      "Ir3Sc",
+      "Ir3Sb",
       "youngs_modulus",
-      274.26,
+      204.76,
       "GPa"
     ],
     [
-      "Ir3Ta",
-      "bulk_modulus",
-      103.48,
-      "GPa"
-    ],
-    [
-      "Ir3Ta",
-      "shear_modulus",
-      115.62,
-      "GPa"
-    ],
-    [
-      "Ir3Ta",
+      "Ir3Sb",
       "youngs_modulus",
-      164.55,
+      257.72,
       "GPa"
     ],
     [
       "Ir3Ti",
       "bulk_modulus",
-      249.59,
+      190.84,
       "GPa"
     ],
     [
       "Ir3Ti",
       "shear_modulus",
-      104.84,
+      88.99,
       "GPa"
     ],
     [
       "Ir3Ti",
       "youngs_modulus",
-      384.12,
-      "GPa"
-    ],
-    [
-      "Ir3V",
-      "bulk_modulus",
-      205.34,
-      "GPa"
-    ],
-    [
-      "Ir3V",
-      "shear_modulus",
-      78.1,
-      "GPa"
-    ],
-    [
-      "Ir3V",
-      "youngs_modulus",
-      298.78,
+      231.06,
       "GPa"
     ],
     [
       "Ir3Y",
       "bulk_modulus",
-      113.71,
+      176.15,
       "GPa"
     ],
     [
       "Ir3Y",
       "shear_modulus",
-      73.73,
+      83.18,
       "GPa"
     ],
     [
       "Ir3Y",
       "youngs_modulus",
-      167.3,
+      215.6,
       "GPa"
     ],
     [
       "Ir3Zn",
       "bulk_modulus",
-      110.08,
+      175.64,
       "GPa"
     ],
     [
       "Ir3Zn",
       "shear_modulus",
-      84.26,
+      101.15,
       "GPa"
     ],
     [
       "Ir3Zn",
       "youngs_modulus",
-      169.94,
+      254.58,
       "GPa"
     ],
     [
       "Ir3Zr",
       "bulk_modulus",
-      121.34,
+      147.1,
       "GPa"
     ],
     [
       "Ir3Zr",
       "bulk_modulus",
-      126.81,
+      209.5,
       "GPa"
     ],
     [
       "Ir3Zr",
-      "shear_modulus",
-      44.77,
-      "GPa"
-    ],
-    [
-      "Ir3Zr",
-      "shear_modulus",
-      84.73,
-      "GPa"
-    ],
-    [
-      "Ir3Zr",
-      "youngs_modulus",
-      183.9,
-      "GPa"
-    ],
-    [
-      "Ir3Zr",
-      "youngs_modulus",
-      199.98,
-      "GPa"
-    ],
-    [
-      "Mn3Al",
       "bulk_modulus",
-      115.29,
+      182.1,
       "GPa"
     ],
     [
-      "Mn3Al",
+      "Ir3Zr",
       "shear_modulus",
-      102.84,
+      61.22,
       "GPa"
     ],
     [
-      "Mn3Al",
+      "Ir3Zr",
+      "shear_modulus",
+      50.45,
+      "GPa"
+    ],
+    [
+      "Ir3Zr",
+      "shear_modulus",
+      45.12,
+      "GPa"
+    ],
+    [
+      "Ir3Zr",
       "youngs_modulus",
-      170.47,
+      167.36,
+      "GPa"
+    ],
+    [
+      "Ir3Zr",
+      "youngs_modulus",
+      122.8,
+      "GPa"
+    ],
+    [
+      "Ir3Zr",
+      "youngs_modulus",
+      138.55,
       "GPa"
     ],
     [
       "Mn3Be",
       "bulk_modulus",
-      243.75,
+      181.68,
       "GPa"
     ],
     [
       "Mn3Be",
       "shear_modulus",
-      82.15,
+      78.77,
       "GPa"
     ],
     [
       "Mn3Be",
       "youngs_modulus",
-      369.2,
+      206.47,
+      "GPa"
+    ],
+    [
+      "Mn3Fe",
+      "bulk_modulus",
+      199.88,
+      "GPa"
+    ],
+    [
+      "Mn3Fe",
+      "shear_modulus",
+      82.41,
+      "GPa"
+    ],
+    [
+      "Mn3Fe",
+      "youngs_modulus",
+      217.36,
       "GPa"
     ],
     [
       "Mn3Ga",
       "bulk_modulus",
-      214.67,
+      114.59,
+      "GPa"
+    ],
+    [
+      "Mn3Ga",
+      "bulk_modulus",
+      197.33,
       "GPa"
     ],
     [
       "Mn3Ga",
       "shear_modulus",
-      79.17,
+      88.9,
+      "GPa"
+    ],
+    [
+      "Mn3Ga",
+      "shear_modulus",
+      112.86,
       "GPa"
     ],
     [
       "Mn3Ga",
       "youngs_modulus",
-      313.77,
+      211.9,
+      "GPa"
+    ],
+    [
+      "Mn3Ga",
+      "youngs_modulus",
+      284.37,
+      "GPa"
+    ],
+    [
+      "Mn3Ge",
+      "bulk_modulus",
+      204.42,
+      "GPa"
+    ],
+    [
+      "Mn3Ge",
+      "shear_modulus",
+      50.82,
+      "GPa"
+    ],
+    [
+      "Mn3Ge",
+      "youngs_modulus",
+      140.79,
+      "GPa"
+    ],
+    [
+      "Mn3Hf",
+      "bulk_modulus",
+      150.57,
       "GPa"
     ],
     [
@@ -2714,518 +3026,206 @@
     ],
     [
       "Mn3Hf",
-      "bulk_modulus",
-      111.33,
-      "GPa"
-    ],
-    [
-      "Mn3Hf",
-      "shear_modulus",
-      103.57,
-      "GPa"
-    ],
-    [
-      "Mn3Hf",
       "shear_modulus",
       40.92,
       "GPa"
     ],
     [
       "Mn3Hf",
-      "youngs_modulus",
-      148.83,
+      "shear_modulus",
+      63.6,
       "GPa"
     ],
     [
       "Mn3Hf",
       "youngs_modulus",
-      165.05,
+      167.25,
+      "GPa"
+    ],
+    [
+      "Mn3Hf",
+      "youngs_modulus",
+      108.51,
       "GPa"
     ],
     [
       "Mn3In",
       "bulk_modulus",
-      239.11,
+      217.88,
       "GPa"
     ],
     [
       "Mn3In",
       "shear_modulus",
-      102.03,
+      69.2,
       "GPa"
     ],
     [
       "Mn3In",
       "youngs_modulus",
-      351.26,
-      "GPa"
-    ],
-    [
-      "Mn3Mg",
-      "bulk_modulus",
-      237.51,
-      "GPa"
-    ],
-    [
-      "Mn3Mg",
-      "shear_modulus",
-      70.19,
-      "GPa"
-    ],
-    [
-      "Mn3Mg",
-      "youngs_modulus",
-      360.13,
-      "GPa"
-    ],
-    [
-      "Mn3Sc",
-      "bulk_modulus",
-      184.46,
-      "GPa"
-    ],
-    [
-      "Mn3Sc",
-      "shear_modulus",
-      64.05,
-      "GPa"
-    ],
-    [
-      "Mn3Sc",
-      "youngs_modulus",
-      269.15,
-      "GPa"
-    ],
-    [
-      "Mn3Sn",
-      "bulk_modulus",
-      189.0,
-      "GPa"
-    ],
-    [
-      "Mn3Sn",
-      "bulk_modulus",
-      196.32,
-      "GPa"
-    ],
-    [
-      "Mn3Sn",
-      "shear_modulus",
-      95.75,
-      "GPa"
-    ],
-    [
-      "Mn3Sn",
-      "shear_modulus",
-      84.95,
-      "GPa"
-    ],
-    [
-      "Mn3Sn",
-      "youngs_modulus",
-      282.41,
-      "GPa"
-    ],
-    [
-      "Mn3Sn",
-      "youngs_modulus",
-      300.64,
-      "GPa"
-    ],
-    [
-      "Mn3Ta",
-      "bulk_modulus",
-      246.16,
-      "GPa"
-    ],
-    [
-      "Mn3Ta",
-      "shear_modulus",
-      72.74,
-      "GPa"
-    ],
-    [
-      "Mn3Ta",
-      "youngs_modulus",
-      377.75,
-      "GPa"
-    ],
-    [
-      "Mn3Ti",
-      "bulk_modulus",
-      198.79,
-      "GPa"
-    ],
-    [
-      "Mn3Ti",
-      "shear_modulus",
-      49.39,
-      "GPa"
-    ],
-    [
-      "Mn3Ti",
-      "youngs_modulus",
-      302.09,
-      "GPa"
-    ],
-    [
-      "Mn3V",
-      "bulk_modulus",
-      112.64,
-      "GPa"
-    ],
-    [
-      "Mn3V",
-      "bulk_modulus",
-      220.5,
-      "GPa"
-    ],
-    [
-      "Mn3V",
-      "shear_modulus",
-      91.73,
-      "GPa"
-    ],
-    [
-      "Mn3V",
-      "shear_modulus",
-      82.99,
-      "GPa"
-    ],
-    [
-      "Mn3V",
-      "youngs_modulus",
-      322.92,
-      "GPa"
-    ],
-    [
-      "Mn3V",
-      "youngs_modulus",
-      173.34,
-      "GPa"
-    ],
-    [
-      "Mn3Y",
-      "bulk_modulus",
-      180.43,
-      "GPa"
-    ],
-    [
-      "Mn3Y",
-      "shear_modulus",
-      58.41,
-      "GPa"
-    ],
-    [
-      "Mn3Y",
-      "youngs_modulus",
-      274.95,
+      187.73,
       "GPa"
     ],
     [
       "Mn3Zn",
       "bulk_modulus",
-      166.36,
+      150.25,
       "GPa"
     ],
     [
       "Mn3Zn",
       "shear_modulus",
-      40.63,
+      61.37,
       "GPa"
     ],
     [
       "Mn3Zn",
       "youngs_modulus",
-      258.09,
+      162.05,
       "GPa"
     ],
     [
-      "Mn3Zr",
+      "Mo3Be",
       "bulk_modulus",
-      181.37,
+      120.72,
       "GPa"
     ],
     [
-      "Mn3Zr",
-      "bulk_modulus",
-      157.17,
-      "GPa"
-    ],
-    [
-      "Mn3Zr",
+      "Mo3Be",
       "shear_modulus",
-      81.85,
+      95.08,
       "GPa"
     ],
     [
-      "Mn3Zr",
-      "shear_modulus",
-      81.96,
-      "GPa"
-    ],
-    [
-      "Mn3Zr",
+      "Mo3Be",
       "youngs_modulus",
-      264.32,
-      "GPa"
-    ],
-    [
-      "Mn3Zr",
-      "youngs_modulus",
-      233.92,
-      "GPa"
-    ],
-    [
-      "Mo3Al",
-      "bulk_modulus",
-      135.45,
-      "GPa"
-    ],
-    [
-      "Mo3Al",
-      "bulk_modulus",
-      213.1,
-      "GPa"
-    ],
-    [
-      "Mo3Al",
-      "shear_modulus",
-      93.42,
-      "GPa"
-    ],
-    [
-      "Mo3Al",
-      "shear_modulus",
-      40.35,
-      "GPa"
-    ],
-    [
-      "Mo3Al",
-      "youngs_modulus",
-      196.36,
-      "GPa"
-    ],
-    [
-      "Mo3Al",
-      "youngs_modulus",
-      328.14,
+      225.93,
       "GPa"
     ],
     [
       "Mo3Fe",
       "bulk_modulus",
-      147.67,
+      229.82,
       "GPa"
     ],
     [
       "Mo3Fe",
       "shear_modulus",
-      65.61,
+      58.21,
       "GPa"
     ],
     [
       "Mo3Fe",
       "youngs_modulus",
-      227.56,
-      "GPa"
-    ],
-    [
-      "Mo3Ga",
-      "bulk_modulus",
-      155.31,
-      "GPa"
-    ],
-    [
-      "Mo3Ga",
-      "bulk_modulus",
-      195.95,
-      "GPa"
-    ],
-    [
-      "Mo3Ga",
-      "shear_modulus",
-      62.97,
-      "GPa"
-    ],
-    [
-      "Mo3Ga",
-      "shear_modulus",
-      48.33,
-      "GPa"
-    ],
-    [
-      "Mo3Ga",
-      "youngs_modulus",
-      290.54,
-      "GPa"
-    ],
-    [
-      "Mo3Ga",
-      "youngs_modulus",
-      242.51,
+      161.03,
       "GPa"
     ],
     [
       "Mo3Ge",
       "bulk_modulus",
-      151.68,
+      217.93,
       "GPa"
     ],
     [
       "Mo3Ge",
       "shear_modulus",
-      92.43,
+      107.43,
       "GPa"
     ],
     [
       "Mo3Ge",
       "youngs_modulus",
-      220.9,
-      "GPa"
-    ],
-    [
-      "Mo3Hf",
-      "bulk_modulus",
-      167.62,
-      "GPa"
-    ],
-    [
-      "Mo3Hf",
-      "shear_modulus",
-      100.04,
-      "GPa"
-    ],
-    [
-      "Mo3Hf",
-      "youngs_modulus",
-      254.79,
+      276.81,
       "GPa"
     ],
     [
       "Mo3In",
       "bulk_modulus",
-      140.66,
+      236.53,
       "GPa"
     ],
     [
       "Mo3In",
       "shear_modulus",
-      47.93,
+      95.35,
       "GPa"
     ],
     [
       "Mo3In",
       "youngs_modulus",
-      207.35,
+      252.17,
       "GPa"
     ],
     [
-      "Mo3Mg",
+      "Mo3Mn",
       "bulk_modulus",
-      215.78,
+      181.53,
       "GPa"
     ],
     [
-      "Mo3Mg",
-      "bulk_modulus",
-      135.08,
-      "GPa"
-    ],
-    [
-      "Mo3Mg",
-      "bulk_modulus",
-      232.25,
-      "GPa"
-    ],
-    [
-      "Mo3Mg",
+      "Mo3Mn",
       "shear_modulus",
-      63.94,
+      61.4,
       "GPa"
     ],
     [
-      "Mo3Mg",
-      "shear_modulus",
-      109.94,
-      "GPa"
-    ],
-    [
-      "Mo3Mg",
-      "shear_modulus",
-      44.09,
-      "GPa"
-    ],
-    [
-      "Mo3Mg",
+      "Mo3Mn",
       "youngs_modulus",
-      208.92,
-      "GPa"
-    ],
-    [
-      "Mo3Mg",
-      "youngs_modulus",
-      339.83,
-      "GPa"
-    ],
-    [
-      "Mo3Mg",
-      "youngs_modulus",
-      329.46,
+      165.54,
       "GPa"
     ],
     [
       "Mo3Nb",
       "bulk_modulus",
-      234.84,
+      146.27,
       "GPa"
     ],
     [
       "Mo3Nb",
       "bulk_modulus",
-      229.1,
+      161.28,
       "GPa"
     ],
     [
       "Mo3Nb",
-      "shear_modulus",
-      77.22,
-      "GPa"
-    ],
-    [
-      "Mo3Nb",
-      "shear_modulus",
-      116.84,
-      "GPa"
-    ],
-    [
-      "Mo3Nb",
-      "youngs_modulus",
-      352.49,
-      "GPa"
-    ],
-    [
-      "Mo3Nb",
-      "youngs_modulus",
-      353.19,
-      "GPa"
-    ],
-    [
-      "Mo3Sc",
       "bulk_modulus",
-      220.82,
+      248.69,
       "GPa"
     ],
     [
-      "Mo3Sc",
+      "Mo3Nb",
       "shear_modulus",
-      51.41,
+      80.4,
       "GPa"
     ],
     [
-      "Mo3Sc",
+      "Mo3Nb",
+      "shear_modulus",
+      48.07,
+      "GPa"
+    ],
+    [
+      "Mo3Nb",
+      "shear_modulus",
+      98.68,
+      "GPa"
+    ],
+    [
+      "Mo3Nb",
       "youngs_modulus",
-      336.09,
+      261.46,
+      "GPa"
+    ],
+    [
+      "Mo3Nb",
+      "youngs_modulus",
+      206.83,
+      "GPa"
+    ],
+    [
+      "Mo3Nb",
+      "youngs_modulus",
+      129.97,
       "GPa"
     ],
     [
@@ -3236,500 +3236,590 @@
     ],
     [
       "Mo3Si",
+      "bulk_modulus",
+      241.98,
+      "GPa"
+    ],
+    [
+      "Mo3Si",
       "shear_modulus",
       109.55,
       "GPa"
     ],
     [
       "Mo3Si",
+      "shear_modulus",
+      71.17,
+      "GPa"
+    ],
+    [
+      "Mo3Si",
       "youngs_modulus",
-      359.42,
+      194.45,
+      "GPa"
+    ],
+    [
+      "Mo3Si",
+      "youngs_modulus",
+      285.04,
+      "GPa"
+    ],
+    [
+      "Mo3Sn",
+      "bulk_modulus",
+      153.04,
+      "GPa"
+    ],
+    [
+      "Mo3Sn",
+      "bulk_modulus",
+      231.86,
+      "GPa"
+    ],
+    [
+      "Mo3Sn",
+      "shear_modulus",
+      117.57,
+      "GPa"
+    ],
+    [
+      "Mo3Sn",
+      "shear_modulus",
+      79.79,
+      "GPa"
+    ],
+    [
+      "Mo3Sn",
+      "youngs_modulus",
+      214.74,
+      "GPa"
+    ],
+    [
+      "Mo3Sn",
+      "youngs_modulus",
+      280.8,
+      "GPa"
+    ],
+    [
+      "Mo3Ta",
+      "bulk_modulus",
+      233.62,
+      "GPa"
+    ],
+    [
+      "Mo3Ta",
+      "bulk_modulus",
+      109.76,
+      "GPa"
+    ],
+    [
+      "Mo3Ta",
+      "shear_modulus",
+      60.77,
+      "GPa"
+    ],
+    [
+      "Mo3Ta",
+      "shear_modulus",
+      51.75,
+      "GPa"
+    ],
+    [
+      "Mo3Ta",
+      "youngs_modulus",
+      144.57,
+      "GPa"
+    ],
+    [
+      "Mo3Ta",
+      "youngs_modulus",
+      153.91,
       "GPa"
     ],
     [
       "Mo3Ti",
       "bulk_modulus",
-      112.57,
+      112.16,
       "GPa"
     ],
     [
       "Mo3Ti",
       "bulk_modulus",
-      198.77,
+      214.88,
       "GPa"
     ],
     [
       "Mo3Ti",
+      "shear_modulus",
+      112.81,
+      "GPa"
+    ],
+    [
+      "Mo3Ti",
+      "shear_modulus",
+      106.46,
+      "GPa"
+    ],
+    [
+      "Mo3Ti",
+      "youngs_modulus",
+      288.03,
+      "GPa"
+    ],
+    [
+      "Mo3Ti",
+      "youngs_modulus",
+      242.62,
+      "GPa"
+    ],
+    [
+      "Mo3Zn",
       "bulk_modulus",
-      193.93,
+      217.12,
       "GPa"
     ],
     [
-      "Mo3Ti",
+      "Mo3Zn",
       "shear_modulus",
-      88.35,
+      89.04,
       "GPa"
     ],
     [
-      "Mo3Ti",
-      "shear_modulus",
-      87.86,
-      "GPa"
-    ],
-    [
-      "Mo3Ti",
-      "shear_modulus",
-      116.5,
-      "GPa"
-    ],
-    [
-      "Mo3Ti",
+      "Mo3Zn",
       "youngs_modulus",
-      289.75,
-      "GPa"
-    ],
-    [
-      "Mo3Ti",
-      "youngs_modulus",
-      164.02,
-      "GPa"
-    ],
-    [
-      "Mo3Ti",
-      "youngs_modulus",
-      298.13,
-      "GPa"
-    ],
-    [
-      "Mo3V",
-      "bulk_modulus",
-      194.56,
-      "GPa"
-    ],
-    [
-      "Mo3V",
-      "shear_modulus",
-      97.05,
-      "GPa"
-    ],
-    [
-      "Mo3V",
-      "youngs_modulus",
-      298.81,
-      "GPa"
-    ],
-    [
-      "Mo3Y",
-      "bulk_modulus",
-      100.76,
-      "GPa"
-    ],
-    [
-      "Mo3Y",
-      "bulk_modulus",
-      225.71,
-      "GPa"
-    ],
-    [
-      "Mo3Y",
-      "shear_modulus",
-      118.41,
-      "GPa"
-    ],
-    [
-      "Mo3Y",
-      "shear_modulus",
-      81.87,
-      "GPa"
-    ],
-    [
-      "Mo3Y",
-      "youngs_modulus",
-      150.56,
-      "GPa"
-    ],
-    [
-      "Mo3Y",
-      "youngs_modulus",
-      343.78,
-      "GPa"
-    ],
-    [
-      "Nb3Al",
-      "bulk_modulus",
-      171.95,
-      "GPa"
-    ],
-    [
-      "Nb3Al",
-      "shear_modulus",
-      81.2,
-      "GPa"
-    ],
-    [
-      "Nb3Al",
-      "youngs_modulus",
-      265.68,
+      235.0,
       "GPa"
     ],
     [
       "Nb3Be",
       "bulk_modulus",
-      194.67,
+      223.97,
       "GPa"
     ],
     [
       "Nb3Be",
       "shear_modulus",
-      113.67,
+      111.3,
       "GPa"
     ],
     [
       "Nb3Be",
       "youngs_modulus",
-      296.95,
+      286.45,
+      "GPa"
+    ],
+    [
+      "Nb3Cu",
+      "bulk_modulus",
+      143.08,
+      "GPa"
+    ],
+    [
+      "Nb3Cu",
+      "bulk_modulus",
+      155.68,
+      "GPa"
+    ],
+    [
+      "Nb3Cu",
+      "bulk_modulus",
+      118.16,
+      "GPa"
+    ],
+    [
+      "Nb3Cu",
+      "shear_modulus",
+      47.75,
+      "GPa"
+    ],
+    [
+      "Nb3Cu",
+      "shear_modulus",
+      88.71,
+      "GPa"
+    ],
+    [
+      "Nb3Cu",
+      "shear_modulus",
+      65.23,
+      "GPa"
+    ],
+    [
+      "Nb3Cu",
+      "youngs_modulus",
+      126.24,
+      "GPa"
+    ],
+    [
+      "Nb3Cu",
+      "youngs_modulus",
+      171.71,
+      "GPa"
+    ],
+    [
+      "Nb3Cu",
+      "youngs_modulus",
+      220.55,
       "GPa"
     ],
     [
       "Nb3Fe",
       "bulk_modulus",
-      185.89,
+      138.8,
+      "GPa"
+    ],
+    [
+      "Nb3Fe",
+      "bulk_modulus",
+      152.76,
       "GPa"
     ],
     [
       "Nb3Fe",
       "shear_modulus",
-      61.9,
+      90.73,
+      "GPa"
+    ],
+    [
+      "Nb3Fe",
+      "shear_modulus",
+      106.25,
       "GPa"
     ],
     [
       "Nb3Fe",
       "youngs_modulus",
-      284.73,
+      258.76,
+      "GPa"
+    ],
+    [
+      "Nb3Fe",
+      "youngs_modulus",
+      223.49,
       "GPa"
     ],
     [
       "Nb3Ga",
       "bulk_modulus",
-      226.13,
-      "GPa"
-    ],
-    [
-      "Nb3Ga",
-      "bulk_modulus",
-      241.65,
+      137.48,
       "GPa"
     ],
     [
       "Nb3Ga",
       "shear_modulus",
-      45.7,
-      "GPa"
-    ],
-    [
-      "Nb3Ga",
-      "shear_modulus",
-      75.68,
+      118.95,
       "GPa"
     ],
     [
       "Nb3Ga",
       "youngs_modulus",
-      362.48,
-      "GPa"
-    ],
-    [
-      "Nb3Ga",
-      "youngs_modulus",
-      330.3,
+      276.97,
       "GPa"
     ],
     [
       "Nb3Ge",
       "bulk_modulus",
-      148.77,
-      "GPa"
-    ],
-    [
-      "Nb3Ge",
-      "bulk_modulus",
-      164.78,
+      137.42,
       "GPa"
     ],
     [
       "Nb3Ge",
       "shear_modulus",
-      99.57,
-      "GPa"
-    ],
-    [
-      "Nb3Ge",
-      "shear_modulus",
-      62.15,
+      101.34,
       "GPa"
     ],
     [
       "Nb3Ge",
       "youngs_modulus",
-      232.2,
-      "GPa"
-    ],
-    [
-      "Nb3Ge",
-      "youngs_modulus",
-      239.77,
-      "GPa"
-    ],
-    [
-      "Nb3Hf",
-      "bulk_modulus",
-      142.92,
-      "GPa"
-    ],
-    [
-      "Nb3Hf",
-      "shear_modulus",
-      108.97,
-      "GPa"
-    ],
-    [
-      "Nb3Hf",
-      "youngs_modulus",
-      217.49,
+      244.03,
       "GPa"
     ],
     [
       "Nb3In",
       "bulk_modulus",
-      217.14,
+      221.42,
+      "GPa"
+    ],
+    [
+      "Nb3In",
+      "bulk_modulus",
+      243.86,
       "GPa"
     ],
     [
       "Nb3In",
       "shear_modulus",
-      102.83,
+      79.44,
+      "GPa"
+    ],
+    [
+      "Nb3In",
+      "shear_modulus",
+      83.24,
       "GPa"
     ],
     [
       "Nb3In",
       "youngs_modulus",
-      315.78,
+      221.91,
+      "GPa"
+    ],
+    [
+      "Nb3In",
+      "youngs_modulus",
+      214.98,
       "GPa"
     ],
     [
       "Nb3Mg",
       "bulk_modulus",
-      225.17,
+      179.1,
+      "GPa"
+    ],
+    [
+      "Nb3Mg",
+      "bulk_modulus",
+      226.86,
+      "GPa"
+    ],
+    [
+      "Nb3Mg",
+      "bulk_modulus",
+      222.74,
+      "GPa"
+    ],
+    [
+      "Nb3Mg",
+      "bulk_modulus",
+      150.67,
       "GPa"
     ],
     [
       "Nb3Mg",
       "shear_modulus",
-      106.69,
+      86.01,
+      "GPa"
+    ],
+    [
+      "Nb3Mg",
+      "shear_modulus",
+      70.18,
+      "GPa"
+    ],
+    [
+      "Nb3Mg",
+      "shear_modulus",
+      63.59,
+      "GPa"
+    ],
+    [
+      "Nb3Mg",
+      "shear_modulus",
+      69.86,
       "GPa"
     ],
     [
       "Nb3Mg",
       "youngs_modulus",
-      330.52,
+      182.24,
       "GPa"
     ],
     [
-      "Nb3Mn",
-      "bulk_modulus",
-      178.19,
-      "GPa"
-    ],
-    [
-      "Nb3Mn",
-      "shear_modulus",
-      90.14,
-      "GPa"
-    ],
-    [
-      "Nb3Mn",
+      "Nb3Mg",
       "youngs_modulus",
-      258.84,
+      189.74,
       "GPa"
     ],
     [
-      "Nb3Si",
-      "bulk_modulus",
-      113.21,
-      "GPa"
-    ],
-    [
-      "Nb3Si",
-      "bulk_modulus",
-      101.08,
-      "GPa"
-    ],
-    [
-      "Nb3Si",
-      "bulk_modulus",
-      203.54,
-      "GPa"
-    ],
-    [
-      "Nb3Si",
-      "shear_modulus",
-      60.19,
-      "GPa"
-    ],
-    [
-      "Nb3Si",
-      "shear_modulus",
-      71.6,
-      "GPa"
-    ],
-    [
-      "Nb3Si",
-      "shear_modulus",
-      69.89,
-      "GPa"
-    ],
-    [
-      "Nb3Si",
+      "Nb3Mg",
       "youngs_modulus",
-      152.84,
+      174.47,
       "GPa"
     ],
     [
-      "Nb3Si",
+      "Nb3Mg",
       "youngs_modulus",
-      297.82,
+      222.42,
       "GPa"
     ],
     [
-      "Nb3Si",
-      "youngs_modulus",
-      175.26,
-      "GPa"
-    ],
-    [
-      "Nb3Ti",
+      "Nb3Sc",
       "bulk_modulus",
-      222.87,
+      247.34,
       "GPa"
     ],
     [
-      "Nb3Ti",
+      "Nb3Sc",
       "shear_modulus",
-      49.84,
+      101.69,
       "GPa"
     ],
     [
-      "Nb3Ti",
+      "Nb3Sc",
       "youngs_modulus",
-      343.7,
+      268.3,
+      "GPa"
+    ],
+    [
+      "Nb3Sn",
+      "bulk_modulus",
+      107.55,
+      "GPa"
+    ],
+    [
+      "Nb3Sn",
+      "bulk_modulus",
+      147.6,
+      "GPa"
+    ],
+    [
+      "Nb3Sn",
+      "shear_modulus",
+      82.43,
+      "GPa"
+    ],
+    [
+      "Nb3Sn",
+      "shear_modulus",
+      57.82,
+      "GPa"
+    ],
+    [
+      "Nb3Sn",
+      "youngs_modulus",
+      208.48,
+      "GPa"
+    ],
+    [
+      "Nb3Sn",
+      "youngs_modulus",
+      147.1,
       "GPa"
     ],
     [
       "Nb3V",
       "bulk_modulus",
-      103.23,
+      192.4,
       "GPa"
     ],
     [
       "Nb3V",
       "bulk_modulus",
-      137.96,
+      209.6,
+      "GPa"
+    ],
+    [
+      "Nb3V",
+      "bulk_modulus",
+      223.11,
       "GPa"
     ],
     [
       "Nb3V",
       "shear_modulus",
-      71.38,
+      118.47,
       "GPa"
     ],
     [
       "Nb3V",
       "shear_modulus",
-      90.02,
+      98.85,
+      "GPa"
+    ],
+    [
+      "Nb3V",
+      "shear_modulus",
+      116.01,
       "GPa"
     ],
     [
       "Nb3V",
       "youngs_modulus",
-      213.4,
+      301.96,
       "GPa"
     ],
     [
       "Nb3V",
       "youngs_modulus",
-      154.32,
+      293.82,
+      "GPa"
+    ],
+    [
+      "Nb3V",
+      "youngs_modulus",
+      253.19,
       "GPa"
     ],
     [
       "Nb3Y",
       "bulk_modulus",
-      225.33,
+      163.3,
       "GPa"
     ],
     [
       "Nb3Y",
       "bulk_modulus",
-      144.62,
+      154.52,
       "GPa"
     ],
     [
       "Nb3Y",
       "bulk_modulus",
-      126.25,
+      211.94,
       "GPa"
     ],
     [
       "Nb3Y",
       "shear_modulus",
-      69.94,
+      50.92,
       "GPa"
     ],
     [
       "Nb3Y",
       "shear_modulus",
-      59.39,
+      65.27,
       "GPa"
     ],
     [
       "Nb3Y",
       "shear_modulus",
-      45.84,
+      54.67,
       "GPa"
     ],
     [
       "Nb3Y",
       "youngs_modulus",
-      215.71,
+      141.43,
       "GPa"
     ],
     [
       "Nb3Y",
       "youngs_modulus",
-      345.11,
+      172.79,
       "GPa"
     ],
     [
       "Nb3Y",
       "youngs_modulus",
-      183.42,
+      146.71,
       "GPa"
     ],
     [
-      "Nb3Zr",
+      "Nb3Zn",
       "bulk_modulus",
-      155.85,
+      226.1,
       "GPa"
     ],
     [
-      "Nb3Zr",
+      "Nb3Zn",
       "shear_modulus",
-      108.35,
+      110.12,
       "GPa"
     ],
     [
-      "Nb3Zr",
+      "Nb3Zn",
       "youngs_modulus",
-      227.37,
+      284.22,
       "GPa"
     ],
     [
@@ -3747,55 +3837,7 @@
     [
       "Ni3Al",
       "youngs_modulus",
-      266.48,
-      "GPa"
-    ],
-    [
-      "Ni3Cu",
-      "bulk_modulus",
-      182.81,
-      "GPa"
-    ],
-    [
-      "Ni3Cu",
-      "bulk_modulus",
-      116.88,
-      "GPa"
-    ],
-    [
-      "Ni3Cu",
-      "shear_modulus",
-      109.08,
-      "GPa"
-    ],
-    [
-      "Ni3Cu",
-      "shear_modulus",
-      51.97,
-      "GPa"
-    ],
-    [
-      "Ni3Cu",
-      "youngs_modulus",
-      267.44,
-      "GPa"
-    ],
-    [
-      "Ni3Cu",
-      "youngs_modulus",
-      176.97,
-      "GPa"
-    ],
-    [
-      "Ni3Ga",
-      "bulk_modulus",
-      155.84,
-      "GPa"
-    ],
-    [
-      "Ni3Ga",
-      "bulk_modulus",
-      123.55,
+      220.32,
       "GPa"
     ],
     [
@@ -3807,37 +3849,13 @@
     [
       "Ni3Ga",
       "shear_modulus",
-      67.74,
-      "GPa"
-    ],
-    [
-      "Ni3Ga",
-      "shear_modulus",
       74.0,
       "GPa"
     ],
     [
       "Ni3Ga",
-      "shear_modulus",
-      90.42,
-      "GPa"
-    ],
-    [
-      "Ni3Ga",
       "youngs_modulus",
-      238.78,
-      "GPa"
-    ],
-    [
-      "Ni3Ga",
-      "youngs_modulus",
-      235.4,
-      "GPa"
-    ],
-    [
-      "Ni3Ga",
-      "youngs_modulus",
-      187.83,
+      193.13,
       "GPa"
     ],
     [
@@ -3848,158 +3866,140 @@
     ],
     [
       "Ni3Ge",
-      "bulk_modulus",
-      229.08,
-      "GPa"
-    ],
-    [
-      "Ni3Ge",
       "shear_modulus",
       78.0,
       "GPa"
     ],
     [
       "Ni3Ge",
-      "shear_modulus",
-      86.97,
-      "GPa"
-    ],
-    [
-      "Ni3Ge",
       "youngs_modulus",
-      348.91,
+      203.73,
       "GPa"
     ],
     [
-      "Ni3Ge",
-      "youngs_modulus",
-      254.39,
-      "GPa"
-    ],
-    [
-      "Ni3Hf",
+      "Ni3In",
       "bulk_modulus",
-      114.14,
+      173.55,
       "GPa"
     ],
     [
-      "Ni3Hf",
+      "Ni3In",
+      "bulk_modulus",
+      195.05,
+      "GPa"
+    ],
+    [
+      "Ni3In",
       "shear_modulus",
-      76.83,
+      77.88,
       "GPa"
     ],
     [
-      "Ni3Hf",
+      "Ni3In",
+      "shear_modulus",
+      119.54,
+      "GPa"
+    ],
+    [
+      "Ni3In",
       "youngs_modulus",
-      166.51,
+      203.24,
+      "GPa"
+    ],
+    [
+      "Ni3In",
+      "youngs_modulus",
+      297.79,
       "GPa"
     ],
     [
       "Ni3Mn",
       "bulk_modulus",
-      165.78,
+      206.99,
       "GPa"
     ],
     [
       "Ni3Mn",
       "shear_modulus",
-      55.89,
+      87.43,
       "GPa"
     ],
     [
       "Ni3Mn",
       "youngs_modulus",
-      250.48,
-      "GPa"
-    ],
-    [
-      "Ni3Nb",
-      "bulk_modulus",
-      153.63,
-      "GPa"
-    ],
-    [
-      "Ni3Nb",
-      "bulk_modulus",
-      143.73,
-      "GPa"
-    ],
-    [
-      "Ni3Nb",
-      "shear_modulus",
-      75.02,
-      "GPa"
-    ],
-    [
-      "Ni3Nb",
-      "shear_modulus",
-      89.25,
-      "GPa"
-    ],
-    [
-      "Ni3Nb",
-      "youngs_modulus",
-      209.7,
-      "GPa"
-    ],
-    [
-      "Ni3Nb",
-      "youngs_modulus",
-      238.01,
+      229.92,
       "GPa"
     ],
     [
       "Ni3Sb",
       "bulk_modulus",
-      107.96,
+      116.05,
       "GPa"
     ],
     [
       "Ni3Sb",
       "shear_modulus",
-      44.53,
+      47.71,
       "GPa"
     ],
     [
       "Ni3Sb",
       "youngs_modulus",
-      167.65,
+      125.88,
       "GPa"
     ],
     [
-      "Ni3Si",
+      "Ni3Sc",
       "bulk_modulus",
-      135.21,
+      176.29,
       "GPa"
     ],
     [
-      "Ni3Si",
+      "Ni3Sc",
       "bulk_modulus",
-      248.36,
+      184.5,
       "GPa"
     ],
     [
-      "Ni3Si",
+      "Ni3Sc",
       "shear_modulus",
-      83.46,
+      109.62,
       "GPa"
     ],
     [
-      "Ni3Si",
+      "Ni3Sc",
       "shear_modulus",
-      113.69,
+      52.47,
       "GPa"
     ],
     [
-      "Ni3Si",
+      "Ni3Sc",
       "youngs_modulus",
-      204.95,
+      143.78,
       "GPa"
     ],
     [
-      "Ni3Si",
+      "Ni3Sc",
       "youngs_modulus",
-      381.32,
+      272.4,
+      "GPa"
+    ],
+    [
+      "Ni3Ta",
+      "bulk_modulus",
+      101.46,
+      "GPa"
+    ],
+    [
+      "Ni3Ta",
+      "shear_modulus",
+      68.17,
+      "GPa"
+    ],
+    [
+      "Ni3Ta",
+      "youngs_modulus",
+      167.09,
       "GPa"
     ],
     [
@@ -4010,68 +4010,68 @@
     ],
     [
       "Ni3Ti",
+      "bulk_modulus",
+      169.68,
+      "GPa"
+    ],
+    [
+      "Ni3Ti",
+      "bulk_modulus",
+      118.8,
+      "GPa"
+    ],
+    [
+      "Ni3Ti",
+      "shear_modulus",
+      50.42,
+      "GPa"
+    ],
+    [
+      "Ni3Ti",
       "shear_modulus",
       62.49,
       "GPa"
     ],
     [
       "Ni3Ti",
-      "youngs_modulus",
-      151.61,
-      "GPa"
-    ],
-    [
-      "Pd3Al",
-      "bulk_modulus",
-      178.45,
-      "GPa"
-    ],
-    [
-      "Pd3Al",
       "shear_modulus",
-      102.64,
+      84.59,
       "GPa"
     ],
     [
-      "Pd3Al",
+      "Ni3Ti",
       "youngs_modulus",
-      261.02,
+      217.61,
       "GPa"
     ],
     [
-      "Pd3Be",
+      "Ni3Ti",
+      "youngs_modulus",
+      155.93,
+      "GPa"
+    ],
+    [
+      "Ni3Ti",
+      "youngs_modulus",
+      132.51,
+      "GPa"
+    ],
+    [
+      "Ni3V",
       "bulk_modulus",
-      122.29,
+      172.31,
       "GPa"
     ],
     [
-      "Pd3Be",
-      "bulk_modulus",
-      243.86,
-      "GPa"
-    ],
-    [
-      "Pd3Be",
+      "Ni3V",
       "shear_modulus",
-      58.39,
+      85.38,
       "GPa"
     ],
     [
-      "Pd3Be",
-      "shear_modulus",
-      115.91,
-      "GPa"
-    ],
-    [
-      "Pd3Be",
+      "Ni3V",
       "youngs_modulus",
-      373.81,
-      "GPa"
-    ],
-    [
-      "Pd3Be",
-      "youngs_modulus",
-      178.64,
+      219.83,
       "GPa"
     ],
     [
@@ -4089,289 +4089,319 @@
     [
       "Pd3Cu",
       "youngs_modulus",
-      375.55,
+      130.73,
       "GPa"
     ],
     [
       "Pd3Fe",
       "bulk_modulus",
-      230.04,
+      206.55,
       "GPa"
     ],
     [
       "Pd3Fe",
+      "shear_modulus",
+      100.86,
+      "GPa"
+    ],
+    [
+      "Pd3Fe",
+      "youngs_modulus",
+      260.22,
+      "GPa"
+    ],
+    [
+      "Pd3Ga",
       "bulk_modulus",
-      241.24,
+      183.92,
       "GPa"
     ],
     [
-      "Pd3Fe",
+      "Pd3Ga",
+      "bulk_modulus",
+      165.31,
+      "GPa"
+    ],
+    [
+      "Pd3Ga",
+      "bulk_modulus",
+      177.87,
+      "GPa"
+    ],
+    [
+      "Pd3Ga",
       "shear_modulus",
-      52.34,
+      44.37,
       "GPa"
     ],
     [
-      "Pd3Fe",
+      "Pd3Ga",
       "shear_modulus",
-      48.87,
+      86.01,
       "GPa"
     ],
     [
-      "Pd3Fe",
-      "youngs_modulus",
-      337.51,
+      "Pd3Ga",
+      "shear_modulus",
+      119.78,
       "GPa"
     ],
     [
-      "Pd3Fe",
+      "Pd3Ga",
       "youngs_modulus",
-      366.27,
+      289.43,
+      "GPa"
+    ],
+    [
+      "Pd3Ga",
+      "youngs_modulus",
+      222.21,
+      "GPa"
+    ],
+    [
+      "Pd3Ga",
+      "youngs_modulus",
+      123.2,
       "GPa"
     ],
     [
       "Pd3Ge",
       "bulk_modulus",
-      109.35,
+      225.8,
       "GPa"
     ],
     [
       "Pd3Ge",
       "shear_modulus",
-      47.8,
+      67.25,
       "GPa"
     ],
     [
       "Pd3Ge",
       "youngs_modulus",
-      173.69,
+      183.53,
       "GPa"
     ],
     [
       "Pd3Hf",
       "bulk_modulus",
-      119.38,
-      "GPa"
-    ],
-    [
-      "Pd3Hf",
-      "bulk_modulus",
-      204.56,
+      234.59,
       "GPa"
     ],
     [
       "Pd3Hf",
       "shear_modulus",
-      55.18,
-      "GPa"
-    ],
-    [
-      "Pd3Hf",
-      "shear_modulus",
-      82.61,
+      81.58,
       "GPa"
     ],
     [
       "Pd3Hf",
       "youngs_modulus",
-      303.79,
-      "GPa"
-    ],
-    [
-      "Pd3Hf",
-      "youngs_modulus",
-      180.24,
-      "GPa"
-    ],
-    [
-      "Pd3In",
-      "bulk_modulus",
-      111.88,
-      "GPa"
-    ],
-    [
-      "Pd3In",
-      "shear_modulus",
-      60.47,
-      "GPa"
-    ],
-    [
-      "Pd3In",
-      "youngs_modulus",
-      168.8,
+      219.32,
       "GPa"
     ],
     [
       "Pd3Mg",
       "bulk_modulus",
-      177.97,
+      128.24,
       "GPa"
     ],
     [
       "Pd3Mg",
       "bulk_modulus",
-      221.21,
+      118.11,
       "GPa"
     ],
     [
       "Pd3Mg",
       "bulk_modulus",
-      190.93,
+      207.01,
       "GPa"
     ],
     [
       "Pd3Mg",
       "shear_modulus",
-      80.86,
+      92.83,
       "GPa"
     ],
     [
       "Pd3Mg",
       "shear_modulus",
-      63.66,
+      68.66,
       "GPa"
     ],
     [
       "Pd3Mg",
       "shear_modulus",
-      80.85,
+      110.69,
       "GPa"
     ],
     [
       "Pd3Mg",
       "youngs_modulus",
-      331.97,
+      172.55,
       "GPa"
     ],
     [
       "Pd3Mg",
       "youngs_modulus",
-      289.64,
+      257.88,
       "GPa"
     ],
     [
       "Pd3Mg",
       "youngs_modulus",
-      270.57,
+      242.28,
+      "GPa"
+    ],
+    [
+      "Pd3Mn",
+      "bulk_modulus",
+      245.17,
+      "GPa"
+    ],
+    [
+      "Pd3Mn",
+      "bulk_modulus",
+      201.09,
+      "GPa"
+    ],
+    [
+      "Pd3Mn",
+      "shear_modulus",
+      61.02,
+      "GPa"
+    ],
+    [
+      "Pd3Mn",
+      "shear_modulus",
+      84.58,
+      "GPa"
+    ],
+    [
+      "Pd3Mn",
+      "youngs_modulus",
+      227.57,
+      "GPa"
+    ],
+    [
+      "Pd3Mn",
+      "youngs_modulus",
+      166.24,
+      "GPa"
+    ],
+    [
+      "Pd3Nb",
+      "bulk_modulus",
+      119.77,
+      "GPa"
+    ],
+    [
+      "Pd3Nb",
+      "shear_modulus",
+      68.66,
+      "GPa"
+    ],
+    [
+      "Pd3Nb",
+      "youngs_modulus",
+      172.93,
+      "GPa"
+    ],
+    [
+      "Pd3Sc",
+      "bulk_modulus",
+      132.96,
+      "GPa"
+    ],
+    [
+      "Pd3Sc",
+      "shear_modulus",
+      98.22,
+      "GPa"
+    ],
+    [
+      "Pd3Sc",
+      "youngs_modulus",
+      236.44,
       "GPa"
     ],
     [
       "Pd3Sn",
       "bulk_modulus",
-      199.96,
+      176.62,
       "GPa"
     ],
     [
       "Pd3Sn",
       "shear_modulus",
-      45.4,
+      73.46,
       "GPa"
     ],
     [
       "Pd3Sn",
       "youngs_modulus",
-      308.18,
+      193.55,
       "GPa"
     ],
     [
       "Pd3Ta",
       "bulk_modulus",
-      130.61,
-      "GPa"
-    ],
-    [
-      "Pd3Ta",
-      "bulk_modulus",
-      101.47,
+      206.81,
       "GPa"
     ],
     [
       "Pd3Ta",
       "shear_modulus",
-      72.29,
-      "GPa"
-    ],
-    [
-      "Pd3Ta",
-      "shear_modulus",
-      73.3,
+      73.57,
       "GPa"
     ],
     [
       "Pd3Ta",
       "youngs_modulus",
-      202.75,
-      "GPa"
-    ],
-    [
-      "Pd3Ta",
-      "youngs_modulus",
-      143.55,
-      "GPa"
-    ],
-    [
-      "Pd3Ti",
-      "bulk_modulus",
-      116.67,
-      "GPa"
-    ],
-    [
-      "Pd3Ti",
-      "shear_modulus",
-      84.04,
-      "GPa"
-    ],
-    [
-      "Pd3Ti",
-      "youngs_modulus",
-      182.47,
+      197.31,
       "GPa"
     ],
     [
       "Pd3V",
       "bulk_modulus",
-      131.48,
+      104.74,
       "GPa"
     ],
     [
       "Pd3V",
       "shear_modulus",
-      58.7,
+      93.3,
       "GPa"
     ],
     [
       "Pd3V",
       "youngs_modulus",
-      198.27,
-      "GPa"
-    ],
-    [
-      "Pd3Zr",
-      "bulk_modulus",
-      178.87,
-      "GPa"
-    ],
-    [
-      "Pd3Zr",
-      "shear_modulus",
-      90.46,
-      "GPa"
-    ],
-    [
-      "Pd3Zr",
-      "youngs_modulus",
-      274.21,
-      "GPa"
-    ],
-    [
-      "Pt3Al",
-      "bulk_modulus",
-      148.38,
+      215.82,
       "GPa"
     ],
     [
       "Pt3Al",
       "bulk_modulus",
       210.0,
+      "GPa"
+    ],
+    [
+      "Pt3Al",
+      "bulk_modulus",
+      213.66,
+      "GPa"
+    ],
+    [
+      "Pt3Al",
+      "bulk_modulus",
+      246.74,
+      "GPa"
+    ],
+    [
+      "Pt3Al",
+      "shear_modulus",
+      80.1,
       "GPa"
     ],
     [
@@ -4383,79 +4413,97 @@
     [
       "Pt3Al",
       "shear_modulus",
-      85.77,
+      71.29,
       "GPa"
     ],
     [
       "Pt3Al",
       "youngs_modulus",
-      308.11,
+      247.66,
       "GPa"
     ],
     [
       "Pt3Al",
       "youngs_modulus",
-      219.45,
+      216.84,
       "GPa"
     ],
     [
-      "Pt3Ge",
-      "bulk_modulus",
-      104.38,
-      "GPa"
-    ],
-    [
-      "Pt3Ge",
-      "bulk_modulus",
-      177.08,
-      "GPa"
-    ],
-    [
-      "Pt3Ge",
-      "bulk_modulus",
-      242.8,
-      "GPa"
-    ],
-    [
-      "Pt3Ge",
-      "shear_modulus",
-      114.32,
-      "GPa"
-    ],
-    [
-      "Pt3Ge",
-      "shear_modulus",
-      58.79,
-      "GPa"
-    ],
-    [
-      "Pt3Ge",
-      "shear_modulus",
-      70.18,
-      "GPa"
-    ],
-    [
-      "Pt3Ge",
+      "Pt3Al",
       "youngs_modulus",
-      266.75,
+      192.46,
       "GPa"
     ],
     [
-      "Pt3Ge",
-      "youngs_modulus",
-      370.33,
-      "GPa"
-    ],
-    [
-      "Pt3Ge",
-      "youngs_modulus",
-      154.24,
-      "GPa"
-    ],
-    [
-      "Pt3Hf",
+      "Pt3Fe",
       "bulk_modulus",
-      127.12,
+      210.61,
+      "GPa"
+    ],
+    [
+      "Pt3Fe",
+      "shear_modulus",
+      110.65,
+      "GPa"
+    ],
+    [
+      "Pt3Fe",
+      "youngs_modulus",
+      282.48,
+      "GPa"
+    ],
+    [
+      "Pt3Ga",
+      "bulk_modulus",
+      117.11,
+      "GPa"
+    ],
+    [
+      "Pt3Ga",
+      "bulk_modulus",
+      117.39,
+      "GPa"
+    ],
+    [
+      "Pt3Ga",
+      "bulk_modulus",
+      236.7,
+      "GPa"
+    ],
+    [
+      "Pt3Ga",
+      "shear_modulus",
+      108.1,
+      "GPa"
+    ],
+    [
+      "Pt3Ga",
+      "shear_modulus",
+      45.23,
+      "GPa"
+    ],
+    [
+      "Pt3Ga",
+      "shear_modulus",
+      70.87,
+      "GPa"
+    ],
+    [
+      "Pt3Ga",
+      "youngs_modulus",
+      193.32,
+      "GPa"
+    ],
+    [
+      "Pt3Ga",
+      "youngs_modulus",
+      248.13,
+      "GPa"
+    ],
+    [
+      "Pt3Ga",
+      "youngs_modulus",
+      120.21,
       "GPa"
     ],
     [
@@ -4472,260 +4520,134 @@
     ],
     [
       "Pt3Hf",
-      "shear_modulus",
-      82.19,
-      "GPa"
-    ],
-    [
-      "Pt3Hf",
       "youngs_modulus",
-      200.36,
-      "GPa"
-    ],
-    [
-      "Pt3Hf",
-      "youngs_modulus",
-      229.8,
-      "GPa"
-    ],
-    [
-      "Pt3Mg",
-      "bulk_modulus",
-      140.19,
-      "GPa"
-    ],
-    [
-      "Pt3Mg",
-      "shear_modulus",
-      91.03,
-      "GPa"
-    ],
-    [
-      "Pt3Mg",
-      "youngs_modulus",
-      217.34,
-      "GPa"
-    ],
-    [
-      "Pt3Mn",
-      "bulk_modulus",
-      169.97,
-      "GPa"
-    ],
-    [
-      "Pt3Mn",
-      "shear_modulus",
-      117.27,
-      "GPa"
-    ],
-    [
-      "Pt3Mn",
-      "youngs_modulus",
-      261.84,
-      "GPa"
-    ],
-    [
-      "Pt3Sb",
-      "bulk_modulus",
-      103.46,
-      "GPa"
-    ],
-    [
-      "Pt3Sb",
-      "bulk_modulus",
-      188.66,
-      "GPa"
-    ],
-    [
-      "Pt3Sb",
-      "bulk_modulus",
-      177.83,
-      "GPa"
-    ],
-    [
-      "Pt3Sb",
-      "shear_modulus",
-      54.32,
-      "GPa"
-    ],
-    [
-      "Pt3Sb",
-      "shear_modulus",
-      80.94,
-      "GPa"
-    ],
-    [
-      "Pt3Sb",
-      "shear_modulus",
-      70.22,
-      "GPa"
-    ],
-    [
-      "Pt3Sb",
-      "youngs_modulus",
-      267.26,
-      "GPa"
-    ],
-    [
-      "Pt3Sb",
-      "youngs_modulus",
-      162.52,
-      "GPa"
-    ],
-    [
-      "Pt3Sb",
-      "youngs_modulus",
-      288.31,
+      146.81,
       "GPa"
     ],
     [
       "Pt3Sc",
       "bulk_modulus",
-      246.19,
+      193.66,
       "GPa"
     ],
     [
       "Pt3Sc",
       "bulk_modulus",
-      235.34,
+      213.0,
       "GPa"
     ],
     [
       "Pt3Sc",
       "shear_modulus",
-      72.7,
+      109.47,
       "GPa"
     ],
     [
       "Pt3Sc",
       "shear_modulus",
-      97.17,
+      102.48,
       "GPa"
     ],
     [
       "Pt3Sc",
       "youngs_modulus",
-      355.5,
+      264.95,
       "GPa"
     ],
     [
       "Pt3Sc",
       "youngs_modulus",
-      378.78,
-      "GPa"
-    ],
-    [
-      "Pt3Si",
-      "bulk_modulus",
-      200.2,
-      "GPa"
-    ],
-    [
-      "Pt3Si",
-      "shear_modulus",
-      79.22,
-      "GPa"
-    ],
-    [
-      "Pt3Si",
-      "youngs_modulus",
-      302.25,
+      276.34,
       "GPa"
     ],
     [
       "Pt3Sn",
       "bulk_modulus",
-      155.49,
+      171.06,
       "GPa"
     ],
     [
       "Pt3Sn",
       "bulk_modulus",
-      126.83,
+      146.58,
       "GPa"
     ],
     [
       "Pt3Sn",
       "shear_modulus",
-      53.2,
+      86.49,
       "GPa"
     ],
     [
       "Pt3Sn",
       "shear_modulus",
-      96.96,
+      80.49,
       "GPa"
     ],
     [
       "Pt3Sn",
       "youngs_modulus",
-      234.87,
+      204.11,
       "GPa"
     ],
     [
       "Pt3Sn",
       "youngs_modulus",
-      186.44,
+      222.05,
       "GPa"
     ],
     [
-      "Pt3Ta",
+      "Pt3Ti",
       "bulk_modulus",
-      211.58,
+      113.61,
       "GPa"
     ],
     [
-      "Pt3Ta",
+      "Pt3Ti",
+      "bulk_modulus",
+      247.24,
+      "GPa"
+    ],
+    [
+      "Pt3Ti",
       "shear_modulus",
-      99.98,
+      107.55,
       "GPa"
     ],
     [
-      "Pt3Ta",
-      "youngs_modulus",
-      315.31,
-      "GPa"
-    ],
-    [
-      "Pt3V",
-      "bulk_modulus",
-      177.15,
-      "GPa"
-    ],
-    [
-      "Pt3V",
-      "bulk_modulus",
-      129.12,
-      "GPa"
-    ],
-    [
-      "Pt3V",
+      "Pt3Ti",
       "shear_modulus",
-      68.69,
+      60.84,
       "GPa"
     ],
     [
-      "Pt3V",
-      "shear_modulus",
-      52.3,
-      "GPa"
-    ],
-    [
-      "Pt3V",
+      "Pt3Ti",
       "youngs_modulus",
-      265.47,
+      281.79,
       "GPa"
     ],
     [
-      "Pt3V",
+      "Pt3Ti",
       "youngs_modulus",
-      190.4,
+      154.87,
       "GPa"
     ],
     [
-      "Rh3Cu",
+      "Pt3Zn",
       "bulk_modulus",
-      128.52,
+      216.13,
+      "GPa"
+    ],
+    [
+      "Pt3Zn",
+      "shear_modulus",
+      71.85,
+      "GPa"
+    ],
+    [
+      "Pt3Zn",
+      "youngs_modulus",
+      194.05,
       "GPa"
     ],
     [
@@ -4742,92 +4664,116 @@
     ],
     [
       "Rh3Cu",
-      "shear_modulus",
-      60.05,
-      "GPa"
-    ],
-    [
-      "Rh3Cu",
       "youngs_modulus",
-      244.5,
+      180.21,
       "GPa"
     ],
     [
-      "Rh3Cu",
-      "youngs_modulus",
-      198.13,
-      "GPa"
-    ],
-    [
-      "Rh3Ga",
+      "Rh3Hf",
       "bulk_modulus",
-      222.61,
+      223.2,
       "GPa"
     ],
     [
-      "Rh3Ga",
+      "Rh3Hf",
       "shear_modulus",
-      64.24,
+      41.69,
       "GPa"
     ],
     [
-      "Rh3Ga",
+      "Rh3Hf",
       "youngs_modulus",
-      333.74,
+      117.74,
       "GPa"
     ],
     [
       "Rh3In",
       "bulk_modulus",
-      177.68,
-      "GPa"
-    ],
-    [
-      "Rh3In",
-      "bulk_modulus",
-      218.94,
+      169.17,
       "GPa"
     ],
     [
       "Rh3In",
       "shear_modulus",
-      103.32,
-      "GPa"
-    ],
-    [
-      "Rh3In",
-      "shear_modulus",
-      47.44,
+      60.32,
       "GPa"
     ],
     [
       "Rh3In",
       "youngs_modulus",
-      332.25,
-      "GPa"
-    ],
-    [
-      "Rh3In",
-      "youngs_modulus",
-      274.88,
+      161.74,
       "GPa"
     ],
     [
       "Rh3Mg",
       "bulk_modulus",
-      226.78,
+      153.22,
+      "GPa"
+    ],
+    [
+      "Rh3Mg",
+      "bulk_modulus",
+      182.23,
       "GPa"
     ],
     [
       "Rh3Mg",
       "shear_modulus",
-      54.09,
+      107.14,
+      "GPa"
+    ],
+    [
+      "Rh3Mg",
+      "shear_modulus",
+      73.45,
       "GPa"
     ],
     [
       "Rh3Mg",
       "youngs_modulus",
-      346.3,
+      194.25,
+      "GPa"
+    ],
+    [
+      "Rh3Mg",
+      "youngs_modulus",
+      260.66,
+      "GPa"
+    ],
+    [
+      "Rh3Mn",
+      "bulk_modulus",
+      148.85,
+      "GPa"
+    ],
+    [
+      "Rh3Mn",
+      "bulk_modulus",
+      188.66,
+      "GPa"
+    ],
+    [
+      "Rh3Mn",
+      "shear_modulus",
+      102.32,
+      "GPa"
+    ],
+    [
+      "Rh3Mn",
+      "shear_modulus",
+      45.17,
+      "GPa"
+    ],
+    [
+      "Rh3Mn",
+      "youngs_modulus",
+      249.74,
+      "GPa"
+    ],
+    [
+      "Rh3Mn",
+      "youngs_modulus",
+      125.49,
       "GPa"
     ],
     [
@@ -4839,19 +4785,37 @@
     [
       "Rh3Sb",
       "bulk_modulus",
-      227.15,
+      186.45,
       "GPa"
     ],
     [
       "Rh3Sb",
       "bulk_modulus",
-      183.98,
+      101.84,
+      "GPa"
+    ],
+    [
+      "Rh3Sb",
+      "bulk_modulus",
+      173.64,
       "GPa"
     ],
     [
       "Rh3Sb",
       "shear_modulus",
-      41.85,
+      77.02,
+      "GPa"
+    ],
+    [
+      "Rh3Sb",
+      "shear_modulus",
+      43.68,
+      "GPa"
+    ],
+    [
+      "Rh3Sb",
+      "shear_modulus",
+      42.68,
       "GPa"
     ],
     [
@@ -4862,602 +4826,746 @@
     ],
     [
       "Rh3Sb",
-      "shear_modulus",
-      116.68,
+      "youngs_modulus",
+      118.96,
       "GPa"
     ],
     [
       "Rh3Sb",
       "youngs_modulus",
-      274.07,
+      198.5,
       "GPa"
     ],
     [
       "Rh3Sb",
       "youngs_modulus",
-      237.99,
+      114.65,
       "GPa"
     ],
     [
       "Rh3Sb",
       "youngs_modulus",
-      344.28,
-      "GPa"
-    ],
-    [
-      "Rh3Sc",
-      "bulk_modulus",
-      194.92,
-      "GPa"
-    ],
-    [
-      "Rh3Sc",
-      "bulk_modulus",
-      214.96,
-      "GPa"
-    ],
-    [
-      "Rh3Sc",
-      "shear_modulus",
-      53.28,
-      "GPa"
-    ],
-    [
-      "Rh3Sc",
-      "shear_modulus",
-      77.75,
-      "GPa"
-    ],
-    [
-      "Rh3Sc",
-      "youngs_modulus",
-      286.51,
-      "GPa"
-    ],
-    [
-      "Rh3Sc",
-      "youngs_modulus",
-      331.0,
+      201.3,
       "GPa"
     ],
     [
       "Rh3Si",
       "bulk_modulus",
-      149.73,
+      105.55,
       "GPa"
     ],
     [
       "Rh3Si",
       "shear_modulus",
-      57.25,
+      52.75,
       "GPa"
     ],
     [
       "Rh3Si",
       "youngs_modulus",
-      233.39,
-      "GPa"
-    ],
-    [
-      "Rh3Sn",
-      "bulk_modulus",
-      108.11,
-      "GPa"
-    ],
-    [
-      "Rh3Sn",
-      "shear_modulus",
-      113.41,
-      "GPa"
-    ],
-    [
-      "Rh3Sn",
-      "youngs_modulus",
-      168.2,
+      135.65,
       "GPa"
     ],
     [
       "Rh3Ta",
       "bulk_modulus",
-      221.84,
+      213.93,
       "GPa"
     ],
     [
       "Rh3Ta",
       "shear_modulus",
-      105.29,
+      44.8,
       "GPa"
     ],
     [
       "Rh3Ta",
       "youngs_modulus",
-      322.86,
+      125.63,
+      "GPa"
+    ],
+    [
+      "Rh3Ti",
+      "bulk_modulus",
+      129.02,
+      "GPa"
+    ],
+    [
+      "Rh3Ti",
+      "shear_modulus",
+      78.87,
+      "GPa"
+    ],
+    [
+      "Rh3Ti",
+      "youngs_modulus",
+      196.56,
       "GPa"
     ],
     [
       "Rh3V",
       "bulk_modulus",
-      158.65,
+      225.15,
       "GPa"
     ],
     [
       "Rh3V",
       "shear_modulus",
-      55.47,
+      45.64,
       "GPa"
     ],
     [
       "Rh3V",
       "youngs_modulus",
-      229.39,
+      128.25,
+      "GPa"
+    ],
+    [
+      "Rh3Y",
+      "bulk_modulus",
+      145.17,
+      "GPa"
+    ],
+    [
+      "Rh3Y",
+      "shear_modulus",
+      96.84,
+      "GPa"
+    ],
+    [
+      "Rh3Y",
+      "youngs_modulus",
+      237.67,
+      "GPa"
+    ],
+    [
+      "Rh3Zn",
+      "bulk_modulus",
+      160.03,
+      "GPa"
+    ],
+    [
+      "Rh3Zn",
+      "bulk_modulus",
+      222.26,
+      "GPa"
+    ],
+    [
+      "Rh3Zn",
+      "bulk_modulus",
+      102.57,
+      "GPa"
+    ],
+    [
+      "Rh3Zn",
+      "shear_modulus",
+      45.49,
+      "GPa"
+    ],
+    [
+      "Rh3Zn",
+      "shear_modulus",
+      84.67,
+      "GPa"
+    ],
+    [
+      "Rh3Zn",
+      "shear_modulus",
+      85.82,
+      "GPa"
+    ],
+    [
+      "Rh3Zn",
+      "youngs_modulus",
+      199.2,
+      "GPa"
+    ],
+    [
+      "Rh3Zn",
+      "youngs_modulus",
+      228.1,
+      "GPa"
+    ],
+    [
+      "Rh3Zn",
+      "youngs_modulus",
+      124.66,
       "GPa"
     ],
     [
       "Rh3Zr",
       "bulk_modulus",
-      159.37,
+      108.99,
       "GPa"
     ],
     [
       "Rh3Zr",
       "bulk_modulus",
-      132.12,
+      150.93,
+      "GPa"
+    ],
+    [
+      "Rh3Zr",
+      "bulk_modulus",
+      114.05,
+      "GPa"
+    ],
+    [
+      "Rh3Zr",
+      "bulk_modulus",
+      198.95,
       "GPa"
     ],
     [
       "Rh3Zr",
       "shear_modulus",
-      64.82,
+      66.65,
       "GPa"
     ],
     [
       "Rh3Zr",
       "shear_modulus",
-      61.96,
+      54.52,
+      "GPa"
+    ],
+    [
+      "Rh3Zr",
+      "shear_modulus",
+      69.96,
+      "GPa"
+    ],
+    [
+      "Rh3Zr",
+      "shear_modulus",
+      61.16,
       "GPa"
     ],
     [
       "Rh3Zr",
       "youngs_modulus",
-      235.71,
+      166.43,
       "GPa"
     ],
     [
       "Rh3Zr",
       "youngs_modulus",
-      205.43,
+      141.08,
+      "GPa"
+    ],
+    [
+      "Rh3Zr",
+      "youngs_modulus",
+      174.29,
+      "GPa"
+    ],
+    [
+      "Rh3Zr",
+      "youngs_modulus",
+      172.89,
       "GPa"
     ],
     [
       "Ru3Be",
       "bulk_modulus",
-      136.95,
+      209.6,
+      "GPa"
+    ],
+    [
+      "Ru3Be",
+      "bulk_modulus",
+      103.56,
       "GPa"
     ],
     [
       "Ru3Be",
       "shear_modulus",
-      84.38,
+      62.4,
+      "GPa"
+    ],
+    [
+      "Ru3Be",
+      "shear_modulus",
+      78.46,
       "GPa"
     ],
     [
       "Ru3Be",
       "youngs_modulus",
-      201.51,
+      170.3,
+      "GPa"
+    ],
+    [
+      "Ru3Be",
+      "youngs_modulus",
+      187.92,
       "GPa"
     ],
     [
       "Ru3Cu",
       "bulk_modulus",
-      131.03,
+      106.27,
       "GPa"
     ],
     [
       "Ru3Cu",
       "bulk_modulus",
-      167.97,
+      218.15,
       "GPa"
     ],
     [
       "Ru3Cu",
       "shear_modulus",
-      115.79,
+      101.37,
       "GPa"
     ],
     [
       "Ru3Cu",
       "shear_modulus",
-      107.1,
+      46.48,
       "GPa"
     ],
     [
       "Ru3Cu",
       "youngs_modulus",
-      187.09,
+      130.19,
       "GPa"
     ],
     [
       "Ru3Cu",
       "youngs_modulus",
-      260.09,
+      230.74,
+      "GPa"
+    ],
+    [
+      "Ru3Fe",
+      "bulk_modulus",
+      217.05,
+      "GPa"
+    ],
+    [
+      "Ru3Fe",
+      "shear_modulus",
+      101.41,
+      "GPa"
+    ],
+    [
+      "Ru3Fe",
+      "youngs_modulus",
+      263.23,
       "GPa"
     ],
     [
       "Ru3Ge",
       "bulk_modulus",
-      132.74,
+      235.37,
+      "GPa"
+    ],
+    [
+      "Ru3Ge",
+      "bulk_modulus",
+      238.29,
       "GPa"
     ],
     [
       "Ru3Ge",
       "shear_modulus",
-      60.87,
+      81.36,
+      "GPa"
+    ],
+    [
+      "Ru3Ge",
+      "shear_modulus",
+      75.47,
       "GPa"
     ],
     [
       "Ru3Ge",
       "youngs_modulus",
-      199.45,
+      219.14,
       "GPa"
     ],
     [
-      "Ru3Hf",
-      "bulk_modulus",
-      121.04,
-      "GPa"
-    ],
-    [
-      "Ru3Hf",
-      "bulk_modulus",
-      244.76,
-      "GPa"
-    ],
-    [
-      "Ru3Hf",
-      "bulk_modulus",
-      106.71,
-      "GPa"
-    ],
-    [
-      "Ru3Hf",
-      "shear_modulus",
-      44.78,
-      "GPa"
-    ],
-    [
-      "Ru3Hf",
-      "shear_modulus",
-      91.38,
-      "GPa"
-    ],
-    [
-      "Ru3Hf",
-      "shear_modulus",
-      58.78,
-      "GPa"
-    ],
-    [
-      "Ru3Hf",
+      "Ru3Ge",
       "youngs_modulus",
-      160.2,
+      204.55,
       "GPa"
     ],
     [
-      "Ru3Hf",
-      "youngs_modulus",
-      187.68,
+      "Ru3In",
+      "bulk_modulus",
+      129.79,
       "GPa"
     ],
     [
-      "Ru3Hf",
+      "Ru3In",
+      "shear_modulus",
+      110.07,
+      "GPa"
+    ],
+    [
+      "Ru3In",
       "youngs_modulus",
-      364.83,
+      257.44,
       "GPa"
     ],
     [
       "Ru3Mg",
       "bulk_modulus",
-      187.53,
+      146.56,
       "GPa"
     ],
     [
       "Ru3Mg",
       "bulk_modulus",
-      129.12,
+      121.0,
       "GPa"
     ],
     [
       "Ru3Mg",
       "shear_modulus",
-      117.73,
+      81.74,
       "GPa"
     ],
     [
       "Ru3Mg",
       "shear_modulus",
-      58.2,
+      76.15,
       "GPa"
     ],
     [
       "Ru3Mg",
       "youngs_modulus",
-      183.96,
+      194.72,
       "GPa"
     ],
     [
       "Ru3Mg",
       "youngs_modulus",
-      282.71,
+      200.15,
       "GPa"
     ],
     [
-      "Ru3Sn",
+      "Ru3Mn",
       "bulk_modulus",
-      116.4,
+      191.55,
       "GPa"
     ],
     [
-      "Ru3Sn",
+      "Ru3Mn",
       "shear_modulus",
-      98.38,
+      70.32,
       "GPa"
     ],
     [
-      "Ru3Sn",
+      "Ru3Mn",
       "youngs_modulus",
-      184.34,
+      187.96,
       "GPa"
     ],
     [
-      "Ru3V",
+      "Ru3Nb",
       "bulk_modulus",
-      188.14,
+      202.81,
       "GPa"
     ],
     [
-      "Ru3V",
+      "Ru3Nb",
       "bulk_modulus",
-      204.59,
+      222.31,
       "GPa"
     ],
     [
-      "Ru3V",
+      "Ru3Nb",
+      "bulk_modulus",
+      147.9,
+      "GPa"
+    ],
+    [
+      "Ru3Nb",
       "shear_modulus",
-      53.25,
+      107.84,
       "GPa"
     ],
     [
-      "Ru3V",
+      "Ru3Nb",
       "shear_modulus",
-      64.0,
+      73.91,
       "GPa"
     ],
     [
-      "Ru3V",
-      "youngs_modulus",
-      298.49,
+      "Ru3Nb",
+      "shear_modulus",
+      84.63,
       "GPa"
     ],
     [
-      "Ru3V",
+      "Ru3Nb",
       "youngs_modulus",
-      286.65,
+      190.07,
+      "GPa"
+    ],
+    [
+      "Ru3Nb",
+      "youngs_modulus",
+      222.89,
+      "GPa"
+    ],
+    [
+      "Ru3Nb",
+      "youngs_modulus",
+      278.49,
+      "GPa"
+    ],
+    [
+      "Ru3Sb",
+      "bulk_modulus",
+      246.8,
+      "GPa"
+    ],
+    [
+      "Ru3Sb",
+      "bulk_modulus",
+      149.02,
+      "GPa"
+    ],
+    [
+      "Ru3Sb",
+      "shear_modulus",
+      108.5,
+      "GPa"
+    ],
+    [
+      "Ru3Sb",
+      "shear_modulus",
+      95.62,
+      "GPa"
+    ],
+    [
+      "Ru3Sb",
+      "youngs_modulus",
+      283.9,
+      "GPa"
+    ],
+    [
+      "Ru3Sb",
+      "youngs_modulus",
+      236.32,
+      "GPa"
+    ],
+    [
+      "Ru3Sc",
+      "bulk_modulus",
+      236.72,
+      "GPa"
+    ],
+    [
+      "Ru3Sc",
+      "shear_modulus",
+      96.37,
+      "GPa"
+    ],
+    [
+      "Ru3Sc",
+      "youngs_modulus",
+      254.57,
+      "GPa"
+    ],
+    [
+      "Ru3Ta",
+      "bulk_modulus",
+      235.25,
+      "GPa"
+    ],
+    [
+      "Ru3Ta",
+      "shear_modulus",
+      67.36,
+      "GPa"
+    ],
+    [
+      "Ru3Ta",
+      "youngs_modulus",
+      184.47,
+      "GPa"
+    ],
+    [
+      "Ru3Y",
+      "bulk_modulus",
+      129.41,
+      "GPa"
+    ],
+    [
+      "Ru3Y",
+      "shear_modulus",
+      104.0,
+      "GPa"
+    ],
+    [
+      "Ru3Y",
+      "youngs_modulus",
+      246.08,
+      "GPa"
+    ],
+    [
+      "Ru3Zn",
+      "bulk_modulus",
+      129.84,
+      "GPa"
+    ],
+    [
+      "Ru3Zn",
+      "shear_modulus",
+      86.07,
+      "GPa"
+    ],
+    [
+      "Ru3Zn",
+      "youngs_modulus",
+      211.48,
       "GPa"
     ],
     [
       "Ru3Zr",
       "bulk_modulus",
-      217.11,
+      240.54,
       "GPa"
     ],
     [
       "Ru3Zr",
       "shear_modulus",
-      62.18,
+      65.61,
       "GPa"
     ],
     [
       "Ru3Zr",
       "youngs_modulus",
-      323.44,
+      180.43,
       "GPa"
     ],
     [
       "Ta3Al",
       "bulk_modulus",
-      243.37,
+      107.8,
       "GPa"
     ],
     [
       "Ta3Al",
       "bulk_modulus",
-      113.52,
+      224.46,
       "GPa"
     ],
     [
       "Ta3Al",
       "shear_modulus",
-      62.76,
+      113.2,
       "GPa"
     ],
     [
       "Ta3Al",
       "shear_modulus",
-      44.86,
+      59.1,
       "GPa"
     ],
     [
       "Ta3Al",
       "youngs_modulus",
-      358.86,
+      149.91,
       "GPa"
     ],
     [
       "Ta3Al",
       "youngs_modulus",
-      178.59,
+      290.73,
       "GPa"
     ],
     [
       "Ta3Cu",
       "bulk_modulus",
-      125.28,
+      115.94,
       "GPa"
     ],
     [
       "Ta3Cu",
       "shear_modulus",
-      114.41,
+      55.89,
       "GPa"
     ],
     [
       "Ta3Cu",
       "youngs_modulus",
-      196.0,
+      144.46,
       "GPa"
     ],
     [
       "Ta3Ga",
       "bulk_modulus",
-      222.7,
+      194.22,
+      "GPa"
+    ],
+    [
+      "Ta3Ga",
+      "bulk_modulus",
+      203.84,
       "GPa"
     ],
     [
       "Ta3Ga",
       "shear_modulus",
-      43.88,
+      85.34,
+      "GPa"
+    ],
+    [
+      "Ta3Ga",
+      "shear_modulus",
+      102.21,
       "GPa"
     ],
     [
       "Ta3Ga",
       "youngs_modulus",
-      326.8,
+      260.87,
       "GPa"
     ],
     [
-      "Ta3Ge",
-      "bulk_modulus",
-      127.04,
-      "GPa"
-    ],
-    [
-      "Ta3Ge",
-      "shear_modulus",
-      57.14,
-      "GPa"
-    ],
-    [
-      "Ta3Ge",
+      "Ta3Ga",
       "youngs_modulus",
-      190.28,
+      224.67,
       "GPa"
     ],
     [
       "Ta3Hf",
       "bulk_modulus",
-      163.48,
-      "GPa"
-    ],
-    [
-      "Ta3Hf",
-      "bulk_modulus",
-      206.24,
+      189.97,
       "GPa"
     ],
     [
       "Ta3Hf",
       "shear_modulus",
-      84.17,
-      "GPa"
-    ],
-    [
-      "Ta3Hf",
-      "shear_modulus",
-      115.17,
+      101.86,
       "GPa"
     ],
     [
       "Ta3Hf",
       "youngs_modulus",
-      300.27,
-      "GPa"
-    ],
-    [
-      "Ta3Hf",
-      "youngs_modulus",
-      242.16,
-      "GPa"
-    ],
-    [
-      "Ta3In",
-      "bulk_modulus",
-      102.13,
-      "GPa"
-    ],
-    [
-      "Ta3In",
-      "bulk_modulus",
-      207.4,
-      "GPa"
-    ],
-    [
-      "Ta3In",
-      "shear_modulus",
-      49.68,
-      "GPa"
-    ],
-    [
-      "Ta3In",
-      "shear_modulus",
-      115.76,
-      "GPa"
-    ],
-    [
-      "Ta3In",
-      "youngs_modulus",
-      314.04,
-      "GPa"
-    ],
-    [
-      "Ta3In",
-      "youngs_modulus",
-      149.39,
+      259.25,
       "GPa"
     ],
     [
       "Ta3Mn",
       "bulk_modulus",
-      202.38,
+      138.83,
       "GPa"
     ],
     [
       "Ta3Mn",
       "shear_modulus",
-      89.65,
+      108.2,
       "GPa"
     ],
     [
       "Ta3Mn",
       "youngs_modulus",
-      308.4,
-      "GPa"
-    ],
-    [
-      "Ta3Nb",
-      "bulk_modulus",
-      143.24,
-      "GPa"
-    ],
-    [
-      "Ta3Nb",
-      "shear_modulus",
-      97.77,
-      "GPa"
-    ],
-    [
-      "Ta3Nb",
-      "youngs_modulus",
-      214.74,
+      257.66,
       "GPa"
     ],
     [
@@ -5475,733 +5583,655 @@
     [
       "Ta3Sb",
       "youngs_modulus",
-      260.36,
+      255.96,
+      "GPa"
+    ],
+    [
+      "Ta3Sc",
+      "bulk_modulus",
+      155.69,
+      "GPa"
+    ],
+    [
+      "Ta3Sc",
+      "shear_modulus",
+      88.36,
+      "GPa"
+    ],
+    [
+      "Ta3Sc",
+      "youngs_modulus",
+      222.91,
       "GPa"
     ],
     [
       "Ta3Si",
       "bulk_modulus",
-      204.63,
+      178.4,
       "GPa"
     ],
     [
       "Ta3Si",
       "shear_modulus",
-      48.87,
+      118.88,
       "GPa"
     ],
     [
       "Ta3Si",
       "youngs_modulus",
-      315.29,
+      291.82,
       "GPa"
     ],
     [
       "Ta3Sn",
       "bulk_modulus",
-      142.8,
+      243.05,
       "GPa"
     ],
     [
       "Ta3Sn",
       "shear_modulus",
-      54.61,
+      44.17,
       "GPa"
     ],
     [
       "Ta3Sn",
       "youngs_modulus",
-      207.29,
-      "GPa"
-    ],
-    [
-      "Ta3V",
-      "bulk_modulus",
-      199.26,
-      "GPa"
-    ],
-    [
-      "Ta3V",
-      "shear_modulus",
-      62.68,
-      "GPa"
-    ],
-    [
-      "Ta3V",
-      "youngs_modulus",
-      297.88,
-      "GPa"
-    ],
-    [
-      "Ta3Y",
-      "bulk_modulus",
-      222.57,
-      "GPa"
-    ],
-    [
-      "Ta3Y",
-      "shear_modulus",
-      46.31,
-      "GPa"
-    ],
-    [
-      "Ta3Y",
-      "youngs_modulus",
-      335.31,
-      "GPa"
-    ],
-    [
-      "Ta3Zn",
-      "bulk_modulus",
-      127.89,
-      "GPa"
-    ],
-    [
-      "Ta3Zn",
-      "shear_modulus",
-      59.63,
-      "GPa"
-    ],
-    [
-      "Ta3Zn",
-      "youngs_modulus",
-      189.26,
+      124.94,
       "GPa"
     ],
     [
       "Ta3Zr",
       "bulk_modulus",
-      111.06,
-      "GPa"
-    ],
-    [
-      "Ta3Zr",
-      "bulk_modulus",
-      169.36,
+      202.2,
       "GPa"
     ],
     [
       "Ta3Zr",
       "shear_modulus",
-      117.79,
-      "GPa"
-    ],
-    [
-      "Ta3Zr",
-      "shear_modulus",
-      104.55,
+      65.16,
       "GPa"
     ],
     [
       "Ta3Zr",
       "youngs_modulus",
-      165.59,
-      "GPa"
-    ],
-    [
-      "Ta3Zr",
-      "youngs_modulus",
-      251.95,
+      176.52,
       "GPa"
     ],
     [
       "Ti3Be",
       "bulk_modulus",
-      152.89,
+      247.45,
+      "GPa"
+    ],
+    [
+      "Ti3Be",
+      "bulk_modulus",
+      152.46,
       "GPa"
     ],
     [
       "Ti3Be",
       "shear_modulus",
-      96.81,
+      50.38,
+      "GPa"
+    ],
+    [
+      "Ti3Be",
+      "shear_modulus",
+      46.2,
       "GPa"
     ],
     [
       "Ti3Be",
       "youngs_modulus",
-      234.83,
+      141.53,
+      "GPa"
+    ],
+    [
+      "Ti3Be",
+      "youngs_modulus",
+      125.88,
       "GPa"
     ],
     [
       "Ti3Ga",
       "bulk_modulus",
-      126.29,
-      "GPa"
-    ],
-    [
-      "Ti3Ga",
-      "bulk_modulus",
-      205.73,
+      105.18,
       "GPa"
     ],
     [
       "Ti3Ga",
       "shear_modulus",
-      49.05,
-      "GPa"
-    ],
-    [
-      "Ti3Ga",
-      "shear_modulus",
-      84.7,
+      105.05,
       "GPa"
     ],
     [
       "Ti3Ga",
       "youngs_modulus",
-      193.62,
-      "GPa"
-    ],
-    [
-      "Ti3Ga",
-      "youngs_modulus",
-      312.41,
+      236.44,
       "GPa"
     ],
     [
       "Ti3Ge",
       "bulk_modulus",
-      216.93,
+      176.56,
+      "GPa"
+    ],
+    [
+      "Ti3Ge",
+      "bulk_modulus",
+      124.73,
       "GPa"
     ],
     [
       "Ti3Ge",
       "shear_modulus",
-      72.81,
+      56.59,
+      "GPa"
+    ],
+    [
+      "Ti3Ge",
+      "shear_modulus",
+      107.81,
       "GPa"
     ],
     [
       "Ti3Ge",
       "youngs_modulus",
-      319.54,
+      268.73,
+      "GPa"
+    ],
+    [
+      "Ti3Ge",
+      "youngs_modulus",
+      147.47,
       "GPa"
     ],
     [
       "Ti3Hf",
       "bulk_modulus",
-      112.6,
+      197.34,
       "GPa"
     ],
     [
       "Ti3Hf",
       "shear_modulus",
-      75.56,
+      44.14,
       "GPa"
     ],
     [
       "Ti3Hf",
       "youngs_modulus",
-      170.59,
+      123.23,
       "GPa"
     ],
     [
-      "Ti3In",
+      "Ti3Mg",
       "bulk_modulus",
-      175.51,
+      228.76,
       "GPa"
     ],
     [
-      "Ti3In",
-      "bulk_modulus",
-      100.99,
-      "GPa"
-    ],
-    [
-      "Ti3In",
+      "Ti3Mg",
       "shear_modulus",
-      106.53,
+      70.12,
       "GPa"
     ],
     [
-      "Ti3In",
-      "shear_modulus",
-      110.56,
-      "GPa"
-    ],
-    [
-      "Ti3In",
+      "Ti3Mg",
       "youngs_modulus",
-      264.43,
+      190.86,
       "GPa"
     ],
     [
-      "Ti3In",
-      "youngs_modulus",
-      146.08,
-      "GPa"
-    ],
-    [
-      "Ti3Mg",
+      "Ti3Mn",
       "bulk_modulus",
-      190.74,
+      211.1,
       "GPa"
     ],
     [
-      "Ti3Mg",
+      "Ti3Mn",
+      "bulk_modulus",
+      241.99,
+      "GPa"
+    ],
+    [
+      "Ti3Mn",
+      "bulk_modulus",
+      178.56,
+      "GPa"
+    ],
+    [
+      "Ti3Mn",
+      "bulk_modulus",
+      224.48,
+      "GPa"
+    ],
+    [
+      "Ti3Mn",
+      "bulk_modulus",
+      236.88,
+      "GPa"
+    ],
+    [
+      "Ti3Mn",
       "shear_modulus",
-      73.57,
+      42.11,
       "GPa"
     ],
     [
-      "Ti3Mg",
+      "Ti3Mn",
+      "shear_modulus",
+      116.2,
+      "GPa"
+    ],
+    [
+      "Ti3Mn",
+      "shear_modulus",
+      74.86,
+      "GPa"
+    ],
+    [
+      "Ti3Mn",
+      "shear_modulus",
+      117.15,
+      "GPa"
+    ],
+    [
+      "Ti3Mn",
+      "shear_modulus",
+      85.34,
+      "GPa"
+    ],
+    [
+      "Ti3Mn",
+      "youngs_modulus",
+      229.09,
+      "GPa"
+    ],
+    [
+      "Ti3Mn",
+      "youngs_modulus",
+      299.37,
+      "GPa"
+    ],
+    [
+      "Ti3Mn",
+      "youngs_modulus",
+      119.26,
+      "GPa"
+    ],
+    [
+      "Ti3Mn",
+      "youngs_modulus",
+      200.84,
+      "GPa"
+    ],
+    [
+      "Ti3Mn",
+      "youngs_modulus",
+      286.46,
+      "GPa"
+    ],
+    [
+      "Ti3Nb",
+      "bulk_modulus",
+      242.34,
+      "GPa"
+    ],
+    [
+      "Ti3Nb",
+      "shear_modulus",
+      114.14,
+      "GPa"
+    ],
+    [
+      "Ti3Nb",
       "youngs_modulus",
       295.96,
       "GPa"
     ],
     [
-      "Ti3Nb",
-      "bulk_modulus",
-      146.2,
-      "GPa"
-    ],
-    [
-      "Ti3Nb",
-      "bulk_modulus",
-      141.54,
-      "GPa"
-    ],
-    [
-      "Ti3Nb",
-      "shear_modulus",
-      118.54,
-      "GPa"
-    ],
-    [
-      "Ti3Nb",
-      "shear_modulus",
-      85.06,
-      "GPa"
-    ],
-    [
-      "Ti3Nb",
-      "youngs_modulus",
-      209.42,
-      "GPa"
-    ],
-    [
-      "Ti3Nb",
-      "youngs_modulus",
-      219.42,
-      "GPa"
-    ],
-    [
       "Ti3Sb",
       "bulk_modulus",
-      164.45,
-      "GPa"
-    ],
-    [
-      "Ti3Sb",
-      "bulk_modulus",
-      138.93,
+      182.63,
       "GPa"
     ],
     [
       "Ti3Sb",
       "shear_modulus",
-      87.77,
-      "GPa"
-    ],
-    [
-      "Ti3Sb",
-      "shear_modulus",
-      86.53,
+      50.01,
       "GPa"
     ],
     [
       "Ti3Sb",
       "youngs_modulus",
-      207.62,
-      "GPa"
-    ],
-    [
-      "Ti3Sb",
-      "youngs_modulus",
-      246.28,
-      "GPa"
-    ],
-    [
-      "Ti3Si",
-      "bulk_modulus",
-      153.38,
-      "GPa"
-    ],
-    [
-      "Ti3Si",
-      "bulk_modulus",
-      192.49,
-      "GPa"
-    ],
-    [
-      "Ti3Si",
-      "shear_modulus",
-      87.49,
-      "GPa"
-    ],
-    [
-      "Ti3Si",
-      "shear_modulus",
-      50.36,
-      "GPa"
-    ],
-    [
-      "Ti3Si",
-      "youngs_modulus",
-      226.69,
-      "GPa"
-    ],
-    [
-      "Ti3Si",
-      "youngs_modulus",
-      293.36,
+      137.48,
       "GPa"
     ],
     [
       "Ti3Ta",
       "bulk_modulus",
-      249.65,
+      200.81,
       "GPa"
     ],
     [
       "Ti3Ta",
       "shear_modulus",
-      110.53,
+      71.71,
       "GPa"
     ],
     [
       "Ti3Ta",
       "youngs_modulus",
-      365.79,
+      192.25,
       "GPa"
     ],
     [
       "Ti3V",
       "bulk_modulus",
-      165.01,
+      231.15,
       "GPa"
     ],
     [
       "Ti3V",
       "shear_modulus",
-      52.47,
+      47.01,
       "GPa"
     ],
     [
       "Ti3V",
+      "youngs_modulus",
+      132.08,
+      "GPa"
+    ],
+    [
+      "Ti3Zn",
+      "bulk_modulus",
+      179.79,
+      "GPa"
+    ],
+    [
+      "Ti3Zn",
+      "shear_modulus",
+      106.03,
+      "GPa"
+    ],
+    [
+      "Ti3Zn",
+      "youngs_modulus",
+      265.83,
+      "GPa"
+    ],
+    [
+      "Ti3Zr",
+      "bulk_modulus",
+      195.4,
+      "GPa"
+    ],
+    [
+      "Ti3Zr",
+      "shear_modulus",
+      87.66,
+      "GPa"
+    ],
+    [
+      "Ti3Zr",
+      "youngs_modulus",
+      228.77,
+      "GPa"
+    ],
+    [
+      "V3Al",
+      "bulk_modulus",
+      246.7,
+      "GPa"
+    ],
+    [
+      "V3Al",
+      "bulk_modulus",
+      210.05,
+      "GPa"
+    ],
+    [
+      "V3Al",
+      "bulk_modulus",
+      136.39,
+      "GPa"
+    ],
+    [
+      "V3Al",
+      "shear_modulus",
+      69.46,
+      "GPa"
+    ],
+    [
+      "V3Al",
+      "shear_modulus",
+      60.44,
+      "GPa"
+    ],
+    [
+      "V3Al",
+      "shear_modulus",
+      110.63,
+      "GPa"
+    ],
+    [
+      "V3Al",
+      "youngs_modulus",
+      282.32,
+      "GPa"
+    ],
+    [
+      "V3Al",
+      "youngs_modulus",
+      167.63,
+      "GPa"
+    ],
+    [
+      "V3Al",
+      "youngs_modulus",
+      178.14,
+      "GPa"
+    ],
+    [
+      "V3Be",
+      "bulk_modulus",
+      156.22,
+      "GPa"
+    ],
+    [
+      "V3Be",
+      "bulk_modulus",
+      185.81,
+      "GPa"
+    ],
+    [
+      "V3Be",
+      "shear_modulus",
+      64.48,
+      "GPa"
+    ],
+    [
+      "V3Be",
+      "shear_modulus",
+      64.55,
+      "GPa"
+    ],
+    [
+      "V3Be",
+      "youngs_modulus",
+      173.38,
+      "GPa"
+    ],
+    [
+      "V3Be",
+      "youngs_modulus",
+      170.21,
+      "GPa"
+    ],
+    [
+      "V3Fe",
+      "bulk_modulus",
+      117.49,
+      "GPa"
+    ],
+    [
+      "V3Fe",
+      "shear_modulus",
+      49.76,
+      "GPa"
+    ],
+    [
+      "V3Fe",
+      "youngs_modulus",
+      130.81,
+      "GPa"
+    ],
+    [
+      "V3Ge",
+      "bulk_modulus",
+      122.25,
+      "GPa"
+    ],
+    [
+      "V3Ge",
+      "bulk_modulus",
+      210.18,
+      "GPa"
+    ],
+    [
+      "V3Ge",
+      "shear_modulus",
+      50.1,
+      "GPa"
+    ],
+    [
+      "V3Ge",
+      "shear_modulus",
+      88.3,
+      "GPa"
+    ],
+    [
+      "V3Ge",
+      "youngs_modulus",
+      132.24,
+      "GPa"
+    ],
+    [
+      "V3Ge",
+      "youngs_modulus",
+      232.36,
+      "GPa"
+    ],
+    [
+      "V3Hf",
+      "bulk_modulus",
+      141.6,
+      "GPa"
+    ],
+    [
+      "V3Hf",
+      "shear_modulus",
+      102.21,
+      "GPa"
+    ],
+    [
+      "V3Hf",
       "youngs_modulus",
       247.16,
       "GPa"
     ],
     [
-      "Ti3Y",
+      "V3In",
       "bulk_modulus",
-      230.35,
-      "GPa"
-    ],
-    [
-      "Ti3Y",
-      "shear_modulus",
-      59.54,
-      "GPa"
-    ],
-    [
-      "Ti3Y",
-      "youngs_modulus",
-      341.9,
-      "GPa"
-    ],
-    [
-      "Ti3Zr",
-      "bulk_modulus",
-      223.84,
-      "GPa"
-    ],
-    [
-      "Ti3Zr",
-      "shear_modulus",
-      100.95,
-      "GPa"
-    ],
-    [
-      "Ti3Zr",
-      "youngs_modulus",
-      337.68,
-      "GPa"
-    ],
-    [
-      "V3Al",
-      "bulk_modulus",
-      160.05,
-      "GPa"
-    ],
-    [
-      "V3Al",
-      "shear_modulus",
-      108.6,
-      "GPa"
-    ],
-    [
-      "V3Al",
-      "youngs_modulus",
-      248.98,
-      "GPa"
-    ],
-    [
-      "V3Be",
-      "bulk_modulus",
-      239.93,
-      "GPa"
-    ],
-    [
-      "V3Be",
-      "shear_modulus",
-      109.57,
-      "GPa"
-    ],
-    [
-      "V3Be",
-      "youngs_modulus",
-      354.67,
-      "GPa"
-    ],
-    [
-      "V3Cu",
-      "bulk_modulus",
-      221.39,
-      "GPa"
-    ],
-    [
-      "V3Cu",
-      "shear_modulus",
-      46.28,
-      "GPa"
-    ],
-    [
-      "V3Cu",
-      "youngs_modulus",
-      337.38,
-      "GPa"
-    ],
-    [
-      "V3Ga",
-      "bulk_modulus",
-      196.77,
-      "GPa"
-    ],
-    [
-      "V3Ga",
-      "bulk_modulus",
-      135.63,
-      "GPa"
-    ],
-    [
-      "V3Ga",
-      "shear_modulus",
-      75.54,
-      "GPa"
-    ],
-    [
-      "V3Ga",
-      "shear_modulus",
-      68.97,
-      "GPa"
-    ],
-    [
-      "V3Ga",
-      "youngs_modulus",
-      208.42,
-      "GPa"
-    ],
-    [
-      "V3Ga",
-      "youngs_modulus",
-      285.81,
+      172.71,
       "GPa"
     ],
     [
       "V3In",
       "bulk_modulus",
-      156.97,
-      "GPa"
-    ],
-    [
-      "V3In",
-      "bulk_modulus",
-      170.52,
+      219.38,
       "GPa"
     ],
     [
       "V3In",
       "shear_modulus",
-      96.45,
+      57.64,
       "GPa"
     ],
     [
       "V3In",
       "shear_modulus",
-      82.55,
+      76.62,
       "GPa"
     ],
     [
       "V3In",
       "youngs_modulus",
-      263.78,
+      200.25,
       "GPa"
     ],
     [
       "V3In",
       "youngs_modulus",
-      228.36,
-      "GPa"
-    ],
-    [
-      "V3Mg",
-      "bulk_modulus",
-      152.02,
-      "GPa"
-    ],
-    [
-      "V3Mg",
-      "bulk_modulus",
-      239.54,
-      "GPa"
-    ],
-    [
-      "V3Mg",
-      "shear_modulus",
-      107.41,
-      "GPa"
-    ],
-    [
-      "V3Mg",
-      "shear_modulus",
-      47.05,
-      "GPa"
-    ],
-    [
-      "V3Mg",
-      "youngs_modulus",
-      225.85,
-      "GPa"
-    ],
-    [
-      "V3Mg",
-      "youngs_modulus",
-      352.96,
-      "GPa"
-    ],
-    [
-      "V3Mn",
-      "bulk_modulus",
-      159.34,
-      "GPa"
-    ],
-    [
-      "V3Mn",
-      "bulk_modulus",
-      154.58,
-      "GPa"
-    ],
-    [
-      "V3Mn",
-      "shear_modulus",
-      113.43,
-      "GPa"
-    ],
-    [
-      "V3Mn",
-      "shear_modulus",
-      98.81,
-      "GPa"
-    ],
-    [
-      "V3Mn",
-      "youngs_modulus",
-      237.37,
-      "GPa"
-    ],
-    [
-      "V3Mn",
-      "youngs_modulus",
-      239.34,
+      159.0,
       "GPa"
     ],
     [
       "V3Nb",
       "bulk_modulus",
-      191.05,
+      199.8,
       "GPa"
     ],
     [
       "V3Nb",
       "bulk_modulus",
-      179.37,
+      205.39,
       "GPa"
     ],
     [
       "V3Nb",
-      "shear_modulus",
-      54.18,
-      "GPa"
-    ],
-    [
-      "V3Nb",
-      "shear_modulus",
-      95.56,
-      "GPa"
-    ],
-    [
-      "V3Nb",
-      "youngs_modulus",
-      291.4,
-      "GPa"
-    ],
-    [
-      "V3Nb",
-      "youngs_modulus",
-      259.71,
-      "GPa"
-    ],
-    [
-      "V3Sc",
       "bulk_modulus",
-      164.43,
+      241.18,
       "GPa"
     ],
     [
-      "V3Sc",
-      "bulk_modulus",
-      203.93,
-      "GPa"
-    ],
-    [
-      "V3Sc",
+      "V3Nb",
       "shear_modulus",
-      57.78,
+      104.1,
       "GPa"
     ],
     [
-      "V3Sc",
+      "V3Nb",
       "shear_modulus",
-      105.52,
+      92.2,
       "GPa"
     ],
     [
-      "V3Sc",
+      "V3Nb",
+      "shear_modulus",
+      117.11,
+      "GPa"
+    ],
+    [
+      "V3Nb",
       "youngs_modulus",
-      304.07,
+      266.09,
       "GPa"
     ],
     [
-      "V3Sc",
+      "V3Nb",
       "youngs_modulus",
-      242.22,
+      245.34,
       "GPa"
     ],
     [
-      "V3Si",
-      "bulk_modulus",
-      128.65,
+      "V3Nb",
+      "youngs_modulus",
+      295.22,
       "GPa"
     ],
     [
@@ -6213,175 +6243,175 @@
     [
       "V3Si",
       "shear_modulus",
-      95.67,
-      "GPa"
-    ],
-    [
-      "V3Si",
-      "shear_modulus",
       82.61,
       "GPa"
     ],
     [
       "V3Si",
       "youngs_modulus",
-      214.17,
-      "GPa"
-    ],
-    [
-      "V3Si",
-      "youngs_modulus",
-      195.59,
+      207.87,
       "GPa"
     ],
     [
       "V3Sn",
       "bulk_modulus",
-      184.02,
+      196.83,
       "GPa"
     ],
     [
       "V3Sn",
       "shear_modulus",
-      89.58,
+      55.03,
       "GPa"
     ],
     [
       "V3Sn",
       "youngs_modulus",
-      279.18,
+      151.02,
       "GPa"
     ],
     [
-      "V3Ta",
+      "V3Ti",
       "bulk_modulus",
-      106.79,
+      117.17,
       "GPa"
     ],
     [
-      "V3Ta",
+      "V3Ti",
+      "shear_modulus",
+      116.66,
+      "GPa"
+    ],
+    [
+      "V3Ti",
+      "youngs_modulus",
+      262.77,
+      "GPa"
+    ],
+    [
+      "V3Y",
       "bulk_modulus",
-      214.18,
+      202.85,
       "GPa"
     ],
     [
-      "V3Ta",
+      "V3Y",
+      "bulk_modulus",
+      239.6,
+      "GPa"
+    ],
+    [
+      "V3Y",
+      "bulk_modulus",
+      191.87,
+      "GPa"
+    ],
+    [
+      "V3Y",
       "shear_modulus",
-      73.3,
+      82.18,
       "GPa"
     ],
     [
-      "V3Ta",
+      "V3Y",
       "shear_modulus",
-      70.33,
+      102.21,
       "GPa"
     ],
     [
-      "V3Ta",
-      "youngs_modulus",
-      156.46,
+      "V3Y",
+      "shear_modulus",
+      83.56,
       "GPa"
     ],
     [
-      "V3Ta",
+      "V3Y",
       "youngs_modulus",
-      327.92,
+      221.25,
+      "GPa"
+    ],
+    [
+      "V3Y",
+      "youngs_modulus",
+      220.41,
+      "GPa"
+    ],
+    [
+      "V3Y",
+      "youngs_modulus",
+      260.39,
+      "GPa"
+    ],
+    [
+      "V3Zn",
+      "bulk_modulus",
+      159.71,
+      "GPa"
+    ],
+    [
+      "V3Zn",
+      "shear_modulus",
+      91.96,
+      "GPa"
+    ],
+    [
+      "V3Zn",
+      "youngs_modulus",
+      231.46,
       "GPa"
     ],
     [
       "V3Zr",
       "bulk_modulus",
-      220.85,
+      147.81,
       "GPa"
     ],
     [
       "V3Zr",
       "bulk_modulus",
-      202.65,
-      "GPa"
-    ],
-    [
-      "V3Zr",
-      "bulk_modulus",
-      188.2,
+      150.98,
       "GPa"
     ],
     [
       "V3Zr",
       "shear_modulus",
-      117.63,
+      48.6,
       "GPa"
     ],
     [
       "V3Zr",
       "shear_modulus",
-      118.86,
-      "GPa"
-    ],
-    [
-      "V3Zr",
-      "shear_modulus",
-      64.03,
+      105.48,
       "GPa"
     ],
     [
       "V3Zr",
       "youngs_modulus",
-      339.2,
+      256.67,
       "GPa"
     ],
     [
       "V3Zr",
       "youngs_modulus",
-      280.1,
-      "GPa"
-    ],
-    [
-      "V3Zr",
-      "youngs_modulus",
-      302.53,
+      131.4,
       "GPa"
     ],
     [
       "W3Cu",
       "bulk_modulus",
-      109.56,
-      "GPa"
-    ],
-    [
-      "W3Cu",
-      "bulk_modulus",
-      175.5,
+      227.49,
       "GPa"
     ],
     [
       "W3Cu",
       "shear_modulus",
-      49.4,
-      "GPa"
-    ],
-    [
-      "W3Cu",
-      "shear_modulus",
-      70.91,
+      79.56,
       "GPa"
     ],
     [
       "W3Cu",
       "youngs_modulus",
-      160.91,
-      "GPa"
-    ],
-    [
-      "W3Cu",
-      "youngs_modulus",
-      255.86,
-      "GPa"
-    ],
-    [
-      "W3Fe",
-      "bulk_modulus",
-      148.17,
+      213.76,
       "GPa"
     ],
     [
@@ -6392,8 +6422,8 @@
     ],
     [
       "W3Fe",
-      "shear_modulus",
-      95.9,
+      "bulk_modulus",
+      128.95,
       "GPa"
     ],
     [
@@ -6404,662 +6434,632 @@
     ],
     [
       "W3Fe",
-      "youngs_modulus",
-      232.04,
+      "shear_modulus",
+      113.06,
       "GPa"
     ],
     [
       "W3Fe",
       "youngs_modulus",
-      351.32,
+      262.47,
       "GPa"
     ],
     [
-      "W3Ga",
-      "bulk_modulus",
-      102.15,
-      "GPa"
-    ],
-    [
-      "W3Ga",
-      "bulk_modulus",
-      165.84,
-      "GPa"
-    ],
-    [
-      "W3Ga",
-      "shear_modulus",
-      83.18,
-      "GPa"
-    ],
-    [
-      "W3Ga",
-      "shear_modulus",
-      90.61,
-      "GPa"
-    ],
-    [
-      "W3Ga",
+      "W3Fe",
       "youngs_modulus",
-      254.29,
-      "GPa"
-    ],
-    [
-      "W3Ga",
-      "youngs_modulus",
-      159.65,
+      238.09,
       "GPa"
     ],
     [
       "W3Ge",
       "bulk_modulus",
-      115.47,
-      "GPa"
-    ],
-    [
-      "W3Ge",
-      "bulk_modulus",
-      176.33,
-      "GPa"
-    ],
-    [
-      "W3Ge",
-      "bulk_modulus",
-      115.61,
+      198.75,
       "GPa"
     ],
     [
       "W3Ge",
       "shear_modulus",
-      101.29,
-      "GPa"
-    ],
-    [
-      "W3Ge",
-      "shear_modulus",
-      79.73,
-      "GPa"
-    ],
-    [
-      "W3Ge",
-      "shear_modulus",
-      68.43,
+      95.96,
       "GPa"
     ],
     [
       "W3Ge",
       "youngs_modulus",
-      266.92,
+      247.97,
       "GPa"
     ],
     [
-      "W3Ge",
-      "youngs_modulus",
-      163.65,
-      "GPa"
-    ],
-    [
-      "W3Ge",
-      "youngs_modulus",
-      170.42,
-      "GPa"
-    ],
-    [
-      "W3In",
+      "W3Hf",
       "bulk_modulus",
-      107.44,
+      228.02,
       "GPa"
     ],
     [
-      "W3In",
-      "bulk_modulus",
-      134.13,
-      "GPa"
-    ],
-    [
-      "W3In",
+      "W3Hf",
       "shear_modulus",
-      44.11,
+      54.59,
       "GPa"
     ],
     [
-      "W3In",
-      "shear_modulus",
-      82.8,
-      "GPa"
-    ],
-    [
-      "W3In",
+      "W3Hf",
       "youngs_modulus",
-      201.68,
-      "GPa"
-    ],
-    [
-      "W3In",
-      "youngs_modulus",
-      153.21,
-      "GPa"
-    ],
-    [
-      "W3Mn",
-      "bulk_modulus",
-      182.51,
-      "GPa"
-    ],
-    [
-      "W3Mn",
-      "shear_modulus",
-      119.75,
-      "GPa"
-    ],
-    [
-      "W3Mn",
-      "youngs_modulus",
-      272.02,
-      "GPa"
-    ],
-    [
-      "W3Nb",
-      "bulk_modulus",
-      189.94,
-      "GPa"
-    ],
-    [
-      "W3Nb",
-      "shear_modulus",
-      94.35,
-      "GPa"
-    ],
-    [
-      "W3Nb",
-      "youngs_modulus",
-      288.26,
-      "GPa"
-    ],
-    [
-      "W3Sb",
-      "bulk_modulus",
-      111.16,
-      "GPa"
-    ],
-    [
-      "W3Sb",
-      "bulk_modulus",
-      249.32,
-      "GPa"
-    ],
-    [
-      "W3Sb",
-      "bulk_modulus",
-      110.3,
-      "GPa"
-    ],
-    [
-      "W3Sb",
-      "shear_modulus",
-      67.42,
-      "GPa"
-    ],
-    [
-      "W3Sb",
-      "shear_modulus",
-      52.83,
-      "GPa"
-    ],
-    [
-      "W3Sb",
-      "shear_modulus",
-      73.85,
-      "GPa"
-    ],
-    [
-      "W3Sb",
-      "youngs_modulus",
-      174.47,
-      "GPa"
-    ],
-    [
-      "W3Sb",
-      "youngs_modulus",
-      175.58,
-      "GPa"
-    ],
-    [
-      "W3Sb",
-      "youngs_modulus",
-      371.17,
+      151.67,
       "GPa"
     ],
     [
       "W3Si",
       "bulk_modulus",
-      125.36,
+      184.44,
       "GPa"
     ],
     [
       "W3Si",
-      "shear_modulus",
-      44.13,
+      "bulk_modulus",
+      131.91,
       "GPa"
     ],
     [
       "W3Si",
-      "youngs_modulus",
-      194.22,
-      "GPa"
-    ],
-    [
-      "W3Ta",
-      "bulk_modulus",
-      194.34,
-      "GPa"
-    ],
-    [
-      "W3Ta",
-      "shear_modulus",
-      51.9,
-      "GPa"
-    ],
-    [
-      "W3Ta",
-      "youngs_modulus",
-      289.53,
-      "GPa"
-    ],
-    [
-      "W3Ti",
-      "bulk_modulus",
-      198.62,
-      "GPa"
-    ],
-    [
-      "W3Ti",
-      "shear_modulus",
-      53.66,
-      "GPa"
-    ],
-    [
-      "W3Ti",
-      "youngs_modulus",
-      298.86,
-      "GPa"
-    ],
-    [
-      "W3V",
-      "bulk_modulus",
-      188.9,
-      "GPa"
-    ],
-    [
-      "W3V",
-      "shear_modulus",
-      48.24,
-      "GPa"
-    ],
-    [
-      "W3V",
-      "youngs_modulus",
-      276.91,
-      "GPa"
-    ],
-    [
-      "W3Y",
-      "bulk_modulus",
-      236.28,
-      "GPa"
-    ],
-    [
-      "W3Y",
-      "bulk_modulus",
-      100.24,
-      "GPa"
-    ],
-    [
-      "W3Y",
-      "bulk_modulus",
-      245.07,
-      "GPa"
-    ],
-    [
-      "W3Y",
-      "shear_modulus",
-      41.92,
-      "GPa"
-    ],
-    [
-      "W3Y",
-      "shear_modulus",
-      63.79,
-      "GPa"
-    ],
-    [
-      "W3Y",
-      "shear_modulus",
-      105.52,
-      "GPa"
-    ],
-    [
-      "W3Y",
-      "youngs_modulus",
-      371.28,
-      "GPa"
-    ],
-    [
-      "W3Y",
-      "youngs_modulus",
-      142.71,
-      "GPa"
-    ],
-    [
-      "W3Y",
-      "youngs_modulus",
-      352.99,
-      "GPa"
-    ],
-    [
-      "Zr3Al",
-      "bulk_modulus",
-      121.71,
-      "GPa"
-    ],
-    [
-      "Zr3Al",
-      "shear_modulus",
-      115.43,
-      "GPa"
-    ],
-    [
-      "Zr3Al",
-      "youngs_modulus",
-      182.55,
-      "GPa"
-    ],
-    [
-      "Zr3Cu",
-      "bulk_modulus",
-      163.96,
-      "GPa"
-    ],
-    [
-      "Zr3Cu",
-      "bulk_modulus",
-      216.04,
-      "GPa"
-    ],
-    [
-      "Zr3Cu",
-      "shear_modulus",
-      54.02,
-      "GPa"
-    ],
-    [
-      "Zr3Cu",
-      "shear_modulus",
-      76.4,
-      "GPa"
-    ],
-    [
-      "Zr3Cu",
-      "youngs_modulus",
-      243.99,
-      "GPa"
-    ],
-    [
-      "Zr3Cu",
-      "youngs_modulus",
-      314.28,
-      "GPa"
-    ],
-    [
-      "Zr3Fe",
-      "bulk_modulus",
-      199.37,
-      "GPa"
-    ],
-    [
-      "Zr3Fe",
       "shear_modulus",
       77.99,
       "GPa"
     ],
     [
-      "Zr3Fe",
+      "W3Si",
+      "shear_modulus",
+      92.54,
+      "GPa"
+    ],
+    [
+      "W3Si",
       "youngs_modulus",
-      296.75,
+      225.0,
+      "GPa"
+    ],
+    [
+      "W3Si",
+      "youngs_modulus",
+      205.07,
+      "GPa"
+    ],
+    [
+      "W3Sn",
+      "bulk_modulus",
+      106.02,
+      "GPa"
+    ],
+    [
+      "W3Sn",
+      "shear_modulus",
+      114.32,
+      "GPa"
+    ],
+    [
+      "W3Sn",
+      "youngs_modulus",
+      252.28,
+      "GPa"
+    ],
+    [
+      "W3Ta",
+      "bulk_modulus",
+      112.01,
+      "GPa"
+    ],
+    [
+      "W3Ta",
+      "bulk_modulus",
+      185.38,
+      "GPa"
+    ],
+    [
+      "W3Ta",
+      "shear_modulus",
+      105.1,
+      "GPa"
+    ],
+    [
+      "W3Ta",
+      "shear_modulus",
+      92.87,
+      "GPa"
+    ],
+    [
+      "W3Ta",
+      "youngs_modulus",
+      265.19,
+      "GPa"
+    ],
+    [
+      "W3Ta",
+      "youngs_modulus",
+      218.28,
+      "GPa"
+    ],
+    [
+      "W3Ti",
+      "bulk_modulus",
+      165.67,
+      "GPa"
+    ],
+    [
+      "W3Ti",
+      "bulk_modulus",
+      199.23,
+      "GPa"
+    ],
+    [
+      "W3Ti",
+      "shear_modulus",
+      45.52,
+      "GPa"
+    ],
+    [
+      "W3Ti",
+      "shear_modulus",
+      76.57,
+      "GPa"
+    ],
+    [
+      "W3Ti",
+      "youngs_modulus",
+      126.9,
+      "GPa"
+    ],
+    [
+      "W3Ti",
+      "youngs_modulus",
+      199.04,
+      "GPa"
+    ],
+    [
+      "W3V",
+      "bulk_modulus",
+      120.84,
+      "GPa"
+    ],
+    [
+      "W3V",
+      "bulk_modulus",
+      130.86,
+      "GPa"
+    ],
+    [
+      "W3V",
+      "bulk_modulus",
+      225.91,
+      "GPa"
+    ],
+    [
+      "W3V",
+      "shear_modulus",
+      84.92,
+      "GPa"
+    ],
+    [
+      "W3V",
+      "shear_modulus",
+      86.46,
+      "GPa"
+    ],
+    [
+      "W3V",
+      "shear_modulus",
+      54.75,
+      "GPa"
+    ],
+    [
+      "W3V",
+      "youngs_modulus",
+      226.39,
+      "GPa"
+    ],
+    [
+      "W3V",
+      "youngs_modulus",
+      144.15,
+      "GPa"
+    ],
+    [
+      "W3V",
+      "youngs_modulus",
+      209.43,
+      "GPa"
+    ],
+    [
+      "W3Zn",
+      "bulk_modulus",
+      205.96,
+      "GPa"
+    ],
+    [
+      "W3Zn",
+      "shear_modulus",
+      110.37,
+      "GPa"
+    ],
+    [
+      "W3Zn",
+      "youngs_modulus",
+      280.93,
+      "GPa"
+    ],
+    [
+      "W3Zr",
+      "bulk_modulus",
+      243.86,
+      "GPa"
+    ],
+    [
+      "W3Zr",
+      "shear_modulus",
+      115.91,
+      "GPa"
+    ],
+    [
+      "W3Zr",
+      "youngs_modulus",
+      300.17,
+      "GPa"
+    ],
+    [
+      "Zr3Al",
+      "bulk_modulus",
+      196.8,
+      "GPa"
+    ],
+    [
+      "Zr3Al",
+      "bulk_modulus",
+      188.45,
+      "GPa"
+    ],
+    [
+      "Zr3Al",
+      "shear_modulus",
+      53.52,
+      "GPa"
+    ],
+    [
+      "Zr3Al",
+      "shear_modulus",
+      68.73,
+      "GPa"
+    ],
+    [
+      "Zr3Al",
+      "youngs_modulus",
+      184.69,
+      "GPa"
+    ],
+    [
+      "Zr3Al",
+      "youngs_modulus",
+      146.67,
+      "GPa"
+    ],
+    [
+      "Zr3Be",
+      "bulk_modulus",
+      179.51,
+      "GPa"
+    ],
+    [
+      "Zr3Be",
+      "shear_modulus",
+      45.11,
+      "GPa"
+    ],
+    [
+      "Zr3Be",
+      "youngs_modulus",
+      124.87,
+      "GPa"
+    ],
+    [
+      "Zr3Cu",
+      "bulk_modulus",
+      244.53,
+      "GPa"
+    ],
+    [
+      "Zr3Cu",
+      "shear_modulus",
+      44.6,
+      "GPa"
+    ],
+    [
+      "Zr3Cu",
+      "youngs_modulus",
+      126.13,
+      "GPa"
+    ],
+    [
+      "Zr3Ga",
+      "bulk_modulus",
+      220.81,
+      "GPa"
+    ],
+    [
+      "Zr3Ga",
+      "bulk_modulus",
+      175.36,
+      "GPa"
+    ],
+    [
+      "Zr3Ga",
+      "shear_modulus",
+      57.66,
+      "GPa"
+    ],
+    [
+      "Zr3Ga",
+      "shear_modulus",
+      118.0,
+      "GPa"
+    ],
+    [
+      "Zr3Ga",
+      "youngs_modulus",
+      155.89,
+      "GPa"
+    ],
+    [
+      "Zr3Ga",
+      "youngs_modulus",
+      300.48,
       "GPa"
     ],
     [
       "Zr3Ge",
       "bulk_modulus",
-      111.85,
+      234.35,
+      "GPa"
+    ],
+    [
+      "Zr3Ge",
+      "bulk_modulus",
+      197.08,
       "GPa"
     ],
     [
       "Zr3Ge",
       "shear_modulus",
-      113.67,
+      116.35,
+      "GPa"
+    ],
+    [
+      "Zr3Ge",
+      "shear_modulus",
+      60.01,
       "GPa"
     ],
     [
       "Zr3Ge",
       "youngs_modulus",
-      160.89,
+      165.87,
+      "GPa"
+    ],
+    [
+      "Zr3Ge",
+      "youngs_modulus",
+      291.66,
+      "GPa"
+    ],
+    [
+      "Zr3Hf",
+      "bulk_modulus",
+      236.59,
+      "GPa"
+    ],
+    [
+      "Zr3Hf",
+      "bulk_modulus",
+      121.6,
+      "GPa"
+    ],
+    [
+      "Zr3Hf",
+      "shear_modulus",
+      99.61,
+      "GPa"
+    ],
+    [
+      "Zr3Hf",
+      "shear_modulus",
+      76.79,
+      "GPa"
+    ],
+    [
+      "Zr3Hf",
+      "youngs_modulus",
+      262.05,
+      "GPa"
+    ],
+    [
+      "Zr3Hf",
+      "youngs_modulus",
+      190.31,
       "GPa"
     ],
     [
       "Zr3In",
       "bulk_modulus",
-      168.2,
+      173.4,
       "GPa"
     ],
     [
       "Zr3In",
+      "shear_modulus",
+      58.47,
+      "GPa"
+    ],
+    [
+      "Zr3In",
+      "youngs_modulus",
+      157.69,
+      "GPa"
+    ],
+    [
+      "Zr3Sb",
       "bulk_modulus",
-      213.02,
+      198.22,
       "GPa"
     ],
     [
-      "Zr3In",
+      "Zr3Sb",
       "shear_modulus",
-      49.78,
+      110.84,
       "GPa"
     ],
     [
-      "Zr3In",
-      "shear_modulus",
-      108.28,
-      "GPa"
-    ],
-    [
-      "Zr3In",
+      "Zr3Sb",
       "youngs_modulus",
-      246.91,
-      "GPa"
-    ],
-    [
-      "Zr3In",
-      "youngs_modulus",
-      317.91,
-      "GPa"
-    ],
-    [
-      "Zr3Mg",
-      "bulk_modulus",
-      150.69,
-      "GPa"
-    ],
-    [
-      "Zr3Mg",
-      "bulk_modulus",
-      202.24,
-      "GPa"
-    ],
-    [
-      "Zr3Mg",
-      "shear_modulus",
-      93.8,
-      "GPa"
-    ],
-    [
-      "Zr3Mg",
-      "shear_modulus",
-      111.72,
-      "GPa"
-    ],
-    [
-      "Zr3Mg",
-      "youngs_modulus",
-      303.0,
-      "GPa"
-    ],
-    [
-      "Zr3Mg",
-      "youngs_modulus",
-      231.98,
+      280.28,
       "GPa"
     ],
     [
       "Zr3Sc",
       "bulk_modulus",
-      133.84,
+      207.83,
+      "GPa"
+    ],
+    [
+      "Zr3Sc",
+      "bulk_modulus",
+      153.68,
       "GPa"
     ],
     [
       "Zr3Sc",
       "shear_modulus",
-      95.16,
+      110.39,
+      "GPa"
+    ],
+    [
+      "Zr3Sc",
+      "shear_modulus",
+      84.38,
       "GPa"
     ],
     [
       "Zr3Sc",
       "youngs_modulus",
-      209.11,
+      213.98,
+      "GPa"
+    ],
+    [
+      "Zr3Sc",
+      "youngs_modulus",
+      281.36,
       "GPa"
     ],
     [
       "Zr3Si",
       "bulk_modulus",
-      219.07,
+      123.71,
+      "GPa"
+    ],
+    [
+      "Zr3Si",
+      "bulk_modulus",
+      169.53,
       "GPa"
     ],
     [
       "Zr3Si",
       "shear_modulus",
-      59.15,
+      73.25,
+      "GPa"
+    ],
+    [
+      "Zr3Si",
+      "shear_modulus",
+      85.81,
       "GPa"
     ],
     [
       "Zr3Si",
       "youngs_modulus",
-      323.42,
+      220.27,
       "GPa"
     ],
     [
-      "Zr3Sn",
-      "bulk_modulus",
-      179.97,
-      "GPa"
-    ],
-    [
-      "Zr3Sn",
-      "bulk_modulus",
-      188.55,
-      "GPa"
-    ],
-    [
-      "Zr3Sn",
-      "bulk_modulus",
-      153.37,
-      "GPa"
-    ],
-    [
-      "Zr3Sn",
-      "shear_modulus",
-      97.01,
-      "GPa"
-    ],
-    [
-      "Zr3Sn",
-      "shear_modulus",
-      83.7,
-      "GPa"
-    ],
-    [
-      "Zr3Sn",
-      "shear_modulus",
-      115.29,
-      "GPa"
-    ],
-    [
-      "Zr3Sn",
+      "Zr3Si",
       "youngs_modulus",
-      277.31,
+      183.53,
       "GPa"
     ],
     [
-      "Zr3Sn",
-      "youngs_modulus",
-      281.91,
-      "GPa"
-    ],
-    [
-      "Zr3Sn",
-      "youngs_modulus",
-      233.65,
-      "GPa"
-    ],
-    [
-      "Zr3Ti",
+      "Zr3Ta",
       "bulk_modulus",
-      187.84,
+      237.11,
       "GPa"
     ],
     [
-      "Zr3Ti",
-      "shear_modulus",
-      96.07,
-      "GPa"
-    ],
-    [
-      "Zr3Ti",
-      "youngs_modulus",
-      290.32,
-      "GPa"
-    ],
-    [
-      "Zr3V",
+      "Zr3Ta",
       "bulk_modulus",
-      173.43,
+      165.96,
       "GPa"
     ],
     [
-      "Zr3V",
+      "Zr3Ta",
+      "shear_modulus",
+      59.98,
+      "GPa"
+    ],
+    [
+      "Zr3Ta",
+      "shear_modulus",
+      61.07,
+      "GPa"
+    ],
+    [
+      "Zr3Ta",
+      "youngs_modulus",
+      165.95,
+      "GPa"
+    ],
+    [
+      "Zr3Ta",
+      "youngs_modulus",
+      163.19,
+      "GPa"
+    ],
+    [
+      "Zr3Y",
       "bulk_modulus",
-      139.19,
+      228.57,
       "GPa"
     ],
     [
-      "Zr3V",
+      "Zr3Y",
       "shear_modulus",
-      91.28,
+      50.71,
       "GPa"
     ],
     [
-      "Zr3V",
+      "Zr3Y",
+      "youngs_modulus",
+      141.65,
+      "GPa"
+    ],
+    [
+      "Zr3Zn",
+      "bulk_modulus",
+      245.9,
+      "GPa"
+    ],
+    [
+      "Zr3Zn",
       "shear_modulus",
-      64.16,
+      57.83,
       "GPa"
     ],
     [
-      "Zr3V",
+      "Zr3Zn",
       "youngs_modulus",
-      210.06,
-      "GPa"
-    ],
-    [
-      "Zr3V",
-      "youngs_modulus",
-      258.32,
+      160.88,
       "GPa"
     ]
   ]

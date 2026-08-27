@@ -6,377 +6,347 @@
   ],
   "rows": [
     [
-      "entry_00654",
+      "entry_00623",
       "AgZr",
       "B2"
     ],
     [
-      "entry_00696",
+      "entry_00715",
+      "AgZr",
+      "B2"
+    ],
+    [
+      "entry_00965",
+      "AuZr",
+      "B2"
+    ],
+    [
+      "entry_00573",
+      "AuZr",
+      "B2"
+    ],
+    [
+      "entry_00860",
       "CoZr",
       "B2"
     ],
     [
-      "entry_00502",
+      "entry_00436",
       "CrZr",
       "B2"
     ],
     [
-      "entry_00971",
-      "CrZr",
-      "B2"
-    ],
-    [
-      "entry_00958",
+      "entry_00410",
       "CuZr",
       "B2"
     ],
     [
-      "entry_00641",
-      "HfZr",
+      "entry_00451",
+      "FeZr",
       "B2"
     ],
     [
-      "entry_00471",
-      "IrZr",
-      "B2"
-    ],
-    [
-      "entry_00515",
-      "IrZr",
-      "B2"
-    ],
-    [
-      "entry_00879",
-      "IrZr",
-      "B2"
-    ],
-    [
-      "entry_00932",
-      "IrZr",
-      "B2"
-    ],
-    [
-      "entry_00757",
-      "MnZr",
-      "B2"
-    ],
-    [
-      "entry_00788",
-      "MnZr",
-      "B2"
-    ],
-    [
-      "entry_00846",
-      "MoZr",
-      "B2"
-    ],
-    [
-      "entry_00913",
-      "MoZr",
-      "B2"
-    ],
-    [
-      "entry_00414",
-      "PtZr",
-      "B2"
-    ],
-    [
-      "entry_00512",
-      "RhZr",
-      "B2"
-    ],
-    [
-      "entry_00513",
-      "RhZr",
-      "B2"
-    ],
-    [
-      "entry_00639",
-      "RuZr",
-      "B2"
-    ],
-    [
-      "entry_00940",
-      "RuZr",
-      "B2"
-    ],
-    [
-      "entry_00417",
-      "TaZr",
-      "B2"
-    ],
-    [
-      "entry_00783",
-      "TiZr",
-      "B2"
-    ],
-    [
-      "entry_00789",
-      "TiZr",
-      "B2"
-    ],
-    [
-      "entry_00933",
-      "TiZr",
-      "B2"
-    ],
-    [
-      "entry_00978",
-      "VZr",
-      "B2"
-    ],
-    [
-      "entry_00985",
-      "VZr",
-      "B2"
-    ],
-    [
-      "entry_00539",
-      "WZr",
-      "B2"
-    ],
-    [
-      "entry_00683",
-      "WZr",
-      "B2"
-    ],
-    [
-      "entry_00753",
-      "WZr",
-      "B2"
-    ],
-    [
-      "entry_00845",
-      "WZr",
-      "B2"
-    ],
-    [
-      "entry_00541",
-      "ZrAl",
-      "B2"
-    ],
-    [
-      "entry_00439",
-      "ZrBe",
-      "B2"
-    ],
-    [
-      "entry_00688",
-      "ZrBe",
-      "B2"
-    ],
-    [
-      "entry_00886",
-      "ZrCu",
-      "B2"
-    ],
-    [
-      "entry_00821",
-      "ZrFe",
-      "B2"
-    ],
-    [
-      "entry_00407",
-      "ZrGa",
-      "B2"
-    ],
-    [
-      "entry_00437",
-      "ZrGa",
-      "B2"
-    ],
-    [
-      "entry_00454",
-      "ZrGa",
-      "B2"
-    ],
-    [
-      "entry_00488",
-      "ZrGa",
+      "entry_00508",
+      "FeZr",
       "B2"
     ],
     [
       "entry_00517",
-      "ZrGa",
+      "FeZr",
       "B2"
     ],
     [
-      "entry_00518",
-      "ZrGa",
+      "entry_00535",
+      "FeZr",
       "B2"
     ],
     [
-      "entry_00634",
-      "ZrGa",
+      "entry_00549",
+      "HfZr",
       "B2"
     ],
     [
-      "entry_00635",
-      "ZrGa",
+      "entry_00724",
+      "HfZr",
       "B2"
     ],
     [
-      "entry_00843",
-      "ZrGa",
-      "B2"
-    ],
-    [
-      "entry_00610",
-      "ZrHf",
-      "B2"
-    ],
-    [
-      "entry_00646",
-      "ZrHf",
-      "B2"
-    ],
-    [
-      "entry_01010",
-      "ZrHf",
-      "B2"
-    ],
-    [
-      "entry_00607",
-      "ZrIn",
-      "B2"
-    ],
-    [
-      "entry_00725",
-      "ZrIn",
-      "B2"
-    ],
-    [
-      "entry_00469",
-      "ZrMg",
+      "entry_00661",
+      "HfZr",
       "B2"
     ],
     [
       "entry_00572",
-      "ZrMg",
+      "IrZr",
       "B2"
     ],
     [
-      "entry_00859",
-      "ZrMg",
+      "entry_00831",
+      "IrZr",
       "B2"
     ],
     [
-      "entry_00918",
-      "ZrMg",
+      "entry_00541",
+      "MnZr",
       "B2"
     ],
     [
-      "entry_00411",
-      "ZrMn",
+      "entry_00813",
+      "MoZr",
       "B2"
     ],
     [
-      "entry_00848",
-      "ZrMn",
+      "entry_00874",
+      "MoZr",
       "B2"
     ],
     [
-      "entry_00942",
-      "ZrMn",
+      "entry_00413",
+      "MoZr",
       "B2"
     ],
     [
-      "entry_00540",
-      "ZrNb",
+      "entry_01006",
+      "MoZr",
       "B2"
     ],
     [
-      "entry_00690",
-      "ZrNb",
+      "entry_00615",
+      "NbZr",
       "B2"
     ],
     [
-      "entry_00434",
-      "ZrSb",
+      "entry_00420",
+      "NbZr",
       "B2"
     ],
     [
-      "entry_01012",
-      "ZrSb",
+      "entry_00754",
+      "NbZr",
       "B2"
     ],
     [
-      "entry_00836",
-      "ZrSc",
+      "entry_00700",
+      "NiZr",
       "B2"
     ],
     [
-      "entry_00950",
-      "ZrSc",
+      "entry_00670",
+      "NiZr",
       "B2"
     ],
     [
-      "entry_00736",
-      "ZrSn",
+      "entry_00767",
+      "PtZr",
       "B2"
     ],
     [
-      "entry_00760",
-      "ZrSn",
+      "entry_00977",
+      "PtZr",
       "B2"
     ],
     [
-      "entry_00799",
-      "ZrSn",
+      "entry_00669",
+      "PtZr",
       "B2"
     ],
     [
-      "entry_00915",
-      "ZrSn",
+      "entry_00660",
+      "RuZr",
+      "B2"
+    ],
+    [
+      "entry_00975",
+      "TaZr",
+      "B2"
+    ],
+    [
+      "entry_00613",
+      "TaZr",
+      "B2"
+    ],
+    [
+      "entry_00458",
+      "TaZr",
+      "B2"
+    ],
+    [
+      "entry_00406",
+      "TiZr",
+      "B2"
+    ],
+    [
+      "entry_00960",
+      "VZr",
+      "B2"
+    ],
+    [
+      "entry_00425",
+      "WZr",
+      "B2"
+    ],
+    [
+      "entry_00794",
+      "WZr",
+      "B2"
+    ],
+    [
+      "entry_00919",
+      "ZrAl",
+      "B2"
+    ],
+    [
+      "entry_00424",
+      "ZrBe",
+      "B2"
+    ],
+    [
+      "entry_00893",
+      "ZrCu",
+      "B2"
+    ],
+    [
+      "entry_00563",
+      "ZrFe",
       "B2"
     ],
     [
       "entry_00426",
+      "ZrFe",
+      "B2"
+    ],
+    [
+      "entry_00441",
+      "ZrGa",
+      "B2"
+    ],
+    [
+      "entry_00429",
+      "ZrGa",
+      "B2"
+    ],
+    [
+      "entry_00810",
+      "ZrGa",
+      "B2"
+    ],
+    [
+      "entry_00982",
+      "ZrGe",
+      "B2"
+    ],
+    [
+      "entry_00500",
+      "ZrHf",
+      "B2"
+    ],
+    [
+      "entry_00632",
+      "ZrIn",
+      "B2"
+    ],
+    [
+      "entry_00569",
+      "ZrIn",
+      "B2"
+    ],
+    [
+      "entry_00488",
+      "ZrIn",
+      "B2"
+    ],
+    [
+      "entry_00396",
+      "ZrMn",
+      "B2"
+    ],
+    [
+      "entry_00532",
+      "ZrNb",
+      "B2"
+    ],
+    [
+      "entry_00926",
+      "ZrNb",
+      "B2"
+    ],
+    [
+      "entry_00438",
+      "ZrSc",
+      "B2"
+    ],
+    [
+      "entry_00647",
+      "ZrSc",
+      "B2"
+    ],
+    [
+      "entry_00974",
+      "ZrSi",
+      "B2"
+    ],
+    [
+      "entry_00593",
+      "ZrSi",
+      "B2"
+    ],
+    [
+      "entry_00859",
+      "ZrSn",
+      "B2"
+    ],
+    [
+      "entry_00620",
+      "ZrSn",
+      "B2"
+    ],
+    [
+      "entry_00507",
       "ZrTa",
       "B2"
     ],
     [
+      "entry_00624",
+      "ZrTa",
+      "B2"
+    ],
+    [
+      "entry_00747",
+      "ZrTa",
+      "B2"
+    ],
+    [
+      "entry_00492",
+      "ZrTi",
+      "B2"
+    ],
+    [
       "entry_00709",
-      "ZrTi",
-      "B2"
-    ],
-    [
-      "entry_00728",
-      "ZrTi",
-      "B2"
-    ],
-    [
-      "entry_00409",
       "ZrV",
       "B2"
     ],
     [
-      "entry_00597",
+      "entry_00698",
       "ZrV",
       "B2"
     ],
     [
-      "entry_00684",
+      "entry_00650",
       "ZrV",
       "B2"
     ],
     [
-      "entry_00986",
+      "entry_00984",
       "ZrV",
       "B2"
     ],
     [
-      "entry_00450",
-      "ZrY",
+      "entry_00721",
+      "ZrZn",
       "B2"
     ],
     [
-      "entry_00727",
-      "ZrY",
-      "B2"
-    ],
-    [
-      "entry_00771",
+      "entry_00886",
       "ZrZn",
       "B2"
     ]

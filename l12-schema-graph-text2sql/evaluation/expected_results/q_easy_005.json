@@ -9,95 +9,47 @@
       "Co"
     ],
     [
-      "entry_00009",
+      "entry_00010",
       "Co3Al"
     ],
     [
-      "entry_00215",
+      "entry_00290",
       "Co3Al"
     ],
     [
-      "entry_00303",
+      "entry_00309",
       "Co3Al"
-    ],
-    [
-      "entry_00125",
-      "Co3Be"
-    ],
-    [
-      "entry_00336",
-      "Co3Cu"
-    ],
-    [
-      "entry_00363",
-      "Co3Cu"
     ],
     [
       "entry_00046",
       "Co3Fe"
     ],
     [
-      "entry_00342",
-      "Co3Fe"
-    ],
-    [
-      "entry_00055",
-      "Co3Ga"
-    ],
-    [
-      "entry_00184",
-      "Co3Ga"
-    ],
-    [
-      "entry_00071",
+      "entry_00337",
       "Co3Ge"
     ],
     [
-      "entry_00099",
+      "entry_00231",
       "Co3Hf"
     ],
     [
-      "entry_00068",
+      "entry_00300",
       "Co3Mg"
     ],
     [
-      "entry_00106",
-      "Co3Mg"
+      "entry_00101",
+      "Co3Mn"
     ],
     [
-      "entry_00283",
-      "Co3Mg"
-    ],
-    [
-      "entry_00351",
-      "Co3Nb"
-    ],
-    [
-      "entry_00100",
+      "entry_00382",
       "Co3Sb"
     ],
     [
-      "entry_00321",
-      "Co3Sc"
-    ],
-    [
-      "entry_00205",
-      "Co3Si"
-    ],
-    [
-      "entry_00191",
-      "Co3Sn"
-    ],
-    [
-      "entry_00310",
-      "Co3Sn"
-    ],
-    [
-      "entry_00011",
+      "entry_00094",
       "Co3Ta"
     ],
     [
-      "entry_00282",
+      "entry_00012",
       "Co3Ta"
     ],
     [
@@ -105,191 +57,159 @@
       "Co3Ti"
     ],
     [
-      "entry_00010",
+      "entry_00197",
+      "Co3V"
+    ],
+    [
+      "entry_00232",
+      "Co3V"
+    ],
+    [
+      "entry_00011",
       "Co3W"
     ],
     [
-      "entry_00260",
+      "entry_00375",
+      "Co3Y"
+    ],
+    [
+      "entry_00143",
       "Co3Zn"
     ],
     [
-      "entry_00263",
-      "Co3Zn"
-    ],
-    [
-      "entry_00157",
-      "Co3Zr"
-    ],
-    [
-      "entry_00243",
-      "Co3Zr"
-    ],
-    [
-      "entry_00882",
+      "entry_01101",
       "CoAl"
     ],
     [
-      "entry_00957",
+      "entry_01429",
       "CoAl"
     ],
     [
-      "entry_01161",
+      "entry_01410",
       "CoAl"
     ],
     [
-      "entry_01204",
+      "entry_01371",
       "CoAl"
     ],
     [
-      "entry_01440",
+      "entry_01276",
       "CoAl"
     ],
     [
-      "entry_00405",
+      "entry_00949",
       "CoBe"
     ],
     [
-      "entry_00719",
+      "entry_00671",
       "CoBe"
     ],
     [
-      "entry_00992",
+      "entry_00755",
       "CoBe"
     ],
     [
-      "entry_00504",
+      "entry_00931",
+      "CoBe"
+    ],
+    [
+      "entry_00638",
       "CoFe"
     ],
     [
-      "entry_00858",
-      "CoFe"
-    ],
-    [
-      "entry_00465",
+      "entry_01443",
       "CoGa"
     ],
     [
-      "entry_01051",
+      "entry_01444",
       "CoGa"
     ],
     [
-      "entry_01061",
+      "entry_01088",
       "CoGa"
     ],
     [
-      "entry_01241",
+      "entry_00730",
       "CoGa"
     ],
     [
-      "entry_01251",
-      "CoGa"
-    ],
-    [
-      "entry_00766",
+      "entry_00835",
       "CoGe"
     ],
     [
-      "entry_01367",
+      "entry_00870",
       "CoGe"
-    ],
-    [
-      "entry_01396",
-      "CoGe"
-    ],
-    [
-      "entry_00557",
-      "CoHf"
-    ],
-    [
-      "entry_00959",
-      "CoHf"
     ],
     [
       "entry_01023",
+      "CoGe"
+    ],
+    [
+      "entry_01349",
+      "CoGe"
+    ],
+    [
+      "entry_00976",
+      "CoGe"
+    ],
+    [
+      "entry_01213",
       "CoHf"
     ],
     [
-      "entry_00408",
+      "entry_01380",
+      "CoHf"
+    ],
+    [
+      "entry_00830",
+      "CoHf"
+    ],
+    [
+      "entry_00944",
+      "CoHf"
+    ],
+    [
+      "entry_01181",
+      "CoHf"
+    ],
+    [
+      "entry_01287",
+      "CoHf"
+    ],
+    [
+      "entry_01313",
+      "CoHf"
+    ],
+    [
+      "entry_01003",
       "CoIn"
     ],
     [
-      "entry_00424",
-      "CoIn"
+      "entry_00785",
+      "CoMg"
+    ],
+    [
+      "entry_00505",
+      "CoMn"
+    ],
+    [
+      "entry_01452",
+      "CoNb"
+    ],
+    [
+      "entry_01336",
+      "CoNb"
+    ],
+    [
+      "entry_00792",
+      "CoNb"
     ],
     [
       "entry_00462",
-      "CoIn"
-    ],
-    [
-      "entry_00590",
-      "CoMg"
-    ],
-    [
-      "entry_00741",
-      "CoMg"
-    ],
-    [
-      "entry_00956",
-      "CoMg"
-    ],
-    [
-      "entry_00496",
-      "CoMn"
-    ],
-    [
-      "entry_00520",
-      "CoMn"
-    ],
-    [
-      "entry_00791",
-      "CoNb"
-    ],
-    [
-      "entry_00881",
-      "CoNb"
-    ],
-    [
-      "entry_00903",
-      "CoNb"
-    ],
-    [
-      "entry_00960",
-      "CoNb"
-    ],
-    [
-      "entry_00648",
       "CoSb"
     ],
     [
-      "entry_00763",
-      "CoSb"
-    ],
-    [
-      "entry_00887",
-      "CoSb"
-    ],
-    [
-      "entry_01015",
-      "CoSb"
-    ],
-    [
-      "entry_00919",
-      "CoSc"
-    ],
-    [
-      "entry_01065",
-      "CoSc"
-    ],
-    [
-      "entry_01258",
-      "CoSc"
-    ],
-    [
-      "entry_01280",
-      "CoSc"
-    ],
-    [
-      "entry_01361",
+      "entry_01356",
       "CoSc"
     ],
     [
@@ -297,95 +217,163 @@
       "CoSc"
     ],
     [
-      "entry_00466",
-      "CoSi"
+      "entry_00605",
+      "CoSc"
     ],
     [
-      "entry_01297",
-      "CoSi"
+      "entry_00999",
+      "CoSc"
+    ],
+    [
+      "entry_01067",
+      "CoSc"
+    ],
+    [
+      "entry_00539",
+      "CoSc"
     ],
     [
       "entry_00484",
+      "CoSc"
+    ],
+    [
+      "entry_01399",
+      "CoSi"
+    ],
+    [
+      "entry_01236",
+      "CoSi"
+    ],
+    [
+      "entry_01229",
+      "CoSi"
+    ],
+    [
+      "entry_00480",
       "CoSn"
     ],
     [
-      "entry_00616",
+      "entry_00575",
       "CoSn"
     ],
     [
-      "entry_01356",
+      "entry_01226",
       "CoSn"
     ],
     [
-      "entry_01365",
+      "entry_01232",
       "CoSn"
     ],
     [
-      "entry_00798",
+      "entry_00554",
       "CoTa"
     ],
     [
-      "entry_00863",
+      "entry_01411",
       "CoTa"
     ],
     [
-      "entry_00580",
+      "entry_01310",
+      "CoTa"
+    ],
+    [
+      "entry_01047",
+      "CoTa"
+    ],
+    [
+      "entry_01439",
+      "CoTa"
+    ],
+    [
+      "entry_01039",
+      "CoTa"
+    ],
+    [
+      "entry_01163",
+      "CoTa"
+    ],
+    [
+      "entry_01424",
       "CoTi"
     ],
     [
-      "entry_00795",
+      "entry_01112",
       "CoTi"
     ],
     [
-      "entry_00805",
+      "entry_01064",
       "CoTi"
     ],
     [
-      "entry_00870",
+      "entry_01246",
       "CoTi"
     ],
     [
-      "entry_01301",
+      "entry_01149",
       "CoTi"
     ],
     [
-      "entry_01078",
+      "entry_00917",
+      "CoV"
+    ],
+    [
+      "entry_00659",
+      "CoV"
+    ],
+    [
+      "entry_00912",
+      "CoV"
+    ],
+    [
+      "entry_00531",
+      "CoV"
+    ],
+    [
+      "entry_00596",
+      "CoV"
+    ],
+    [
+      "entry_01386",
       "CoY"
     ],
     [
-      "entry_01370",
+      "entry_01146",
       "CoY"
     ],
     [
-      "entry_00430",
+      "entry_00631",
+      "CoY"
+    ],
+    [
+      "entry_00855",
+      "CoY"
+    ],
+    [
+      "entry_00668",
+      "CoY"
+    ],
+    [
+      "entry_01364",
       "CoZn"
     ],
     [
-      "entry_00569",
+      "entry_01233",
       "CoZn"
     ],
     [
-      "entry_01057",
+      "entry_01194",
       "CoZn"
     ],
     [
-      "entry_01091",
+      "entry_00654",
       "CoZn"
     ],
     [
-      "entry_01127",
+      "entry_01043",
       "CoZn"
     ],
     [
-      "entry_01131",
-      "CoZn"
-    ],
-    [
-      "entry_01228",
-      "CoZn"
-    ],
-    [
-      "entry_00696",
+      "entry_00860",
       "CoZr"
     ]
   ]

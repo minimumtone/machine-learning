@@ -79,6 +79,10 @@ def main() -> None:
         rows_json = json.loads(json.dumps(rows, default=str))
         if not expected_path.exists():
             missing.append(qid)
+            if args.update:
+                with open(expected_path, "w") as f:
+                    json.dump({"columns": columns, "rows": rows_json},
+                              f, ensure_ascii=False, indent=2, default=str)
             continue
         with open(expected_path) as f:
             expected = json.load(f)

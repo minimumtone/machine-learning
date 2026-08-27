@@ -8,13 +8,13 @@ WITH target AS (
 ),
 ref AS (
     SELECT t.entry_key,
-           SUM(r.atomic_ratio * rs.energy_pa) AS weighted_ref
+           SUM(r.atomic_ratio * rs.reference_delta_e) AS weighted_ref
     FROM target t
     JOIN oqmd_element_ratios r ON r.entry_key = t.entry_key
     JOIN oqmd_reference_states rs ON rs.symbol = r.symbol
     GROUP BY t.entry_key
 )
 SELECT t.composition_formula, t.delta_e, ref.weighted_ref,
-       t.delta_e - ref.weighted_ref AS corrected_enthalpy
+       t.delta_e - ref.weighted_ref AS enthalpy_vs_element_ground_states
 FROM target t
 JOIN ref ON ref.entry_key = t.entry_key;

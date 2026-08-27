@@ -2,7 +2,7 @@
   "columns": [
     "a_site",
     "n_compounds",
-    "avg_delta_h_f"
+    "avg_enthalpy_vs_element_gs"
   ],
   "rows": [
     [
@@ -12,18 +12,8 @@
     ],
     [
       "Al",
-      1,
-      "-0.5010"
-    ],
-    [
-      "Ag",
-      1,
-      "-0.1677"
-    ],
-    [
-      "Zr",
-      1,
-      "-0.1515"
+      2,
+      "-0.3859"
     ]
   ]
 }

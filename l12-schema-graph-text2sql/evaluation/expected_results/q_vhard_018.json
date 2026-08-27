@@ -2,15 +2,15 @@
   "columns": [
     "a_site",
     "n_compounds",
-    "avg_delta_h_f",
-    "min_delta_h_f"
+    "avg_enthalpy_vs_element_gs",
+    "min_enthalpy_vs_element_gs"
   ],
   "rows": [
     [
-      "Ni",
+      "Al",
       2,
-      "-0.2357",
-      "-0.4193"
+      "-0.3859",
+      "-0.5010"
     ]
   ]
 }

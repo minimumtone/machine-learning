@@ -6,23 +6,18 @@
   ],
   "rows": [
     [
-      "entry_01394",
-      "CuTi",
+      "entry_01424",
+      "CoTi",
       "NiAs"
     ],
     [
-      "entry_01399",
-      "FeTi",
+      "entry_01435",
+      "IrTi",
       "NiAs"
     ],
     [
-      "entry_01427",
-      "PtTi",
-      "NiAs"
-    ],
-    [
-      "entry_01447",
-      "PtTi",
+      "entry_01396",
+      "PdTi",
       "NiAs"
     ],
     [
@@ -31,42 +26,42 @@
       "NiAs"
     ],
     [
-      "entry_01431",
-      "TiAl",
+      "entry_01457",
+      "TiHf",
       "NiAs"
     ],
     [
-      "entry_01454",
-      "TiGa",
-      "NiAs"
-    ],
-    [
-      "entry_01418",
-      "TiGe",
-      "NiAs"
-    ],
-    [
-      "entry_01451",
-      "TiGe",
-      "NiAs"
-    ],
-    [
-      "entry_01437",
+      "entry_01401",
       "TiNb",
       "NiAs"
     ],
     [
-      "entry_01385",
+      "entry_01450",
+      "TiSc",
+      "NiAs"
+    ],
+    [
+      "entry_01426",
+      "TiSi",
+      "NiAs"
+    ],
+    [
+      "entry_01412",
+      "TiSi",
+      "NiAs"
+    ],
+    [
+      "entry_01406",
+      "TiSi",
+      "NiAs"
+    ],
+    [
+      "entry_01437",
       "TiTa",
       "NiAs"
     ],
     [
-      "entry_01420",
-      "TiTa",
-      "NiAs"
-    ],
-    [
-      "entry_01457",
+      "entry_01422",
       "TiY",
       "NiAs"
     ]

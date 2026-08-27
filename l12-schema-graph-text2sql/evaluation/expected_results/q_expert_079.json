@@ -4,5 +4,176 @@
     "formula",
     "domain_name"
   ],
-  "rows": []
+  "rows": [
+    [
+      "entry_00364",
+      "Ag3Zn",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_00628",
+      "AgHf",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_01418",
+      "AgTa",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_01382",
+      "AuGe",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_01349",
+      "CoGe",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_00178",
+      "Cr3Sb",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_00363",
+      "Cu3Ge",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_00400",
+      "CuHf",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_01115",
+      "FeZn",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_01096",
+      "HfSc",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_01383",
+      "HfSi",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_01244",
+      "HfSn",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_01102",
+      "HfTa",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_00911",
+      "IrNb",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_00171",
+      "Mn3Zn",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_00840",
+      "MnFe",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_00728",
+      "MnTa",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_00104",
+      "Nb3Zn",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_00648",
+      "NbIn",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_01257",
+      "NiNb",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_00712",
+      "NiTa",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_01109",
+      "PdTi",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_01204",
+      "PtGa",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_01390",
+      "PtHf",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_01196",
+      "RhTa",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_00544",
+      "RuGe",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_00770",
+      "RuV",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_00243",
+      "Ti3Ge",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_00100",
+      "V3Sn",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_00637",
+      "VNb",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_01179",
+      "VTa",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_00279",
+      "W3Ta",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_00316",
+      "Zr3Si",
+      "High-temperature superalloy"
+    ],
+    [
+      "entry_00620",
+      "ZrSn",
+      "High-temperature superalloy"
+    ]
+  ]
 }
