@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import ARDRegression, LassoCV, Ridge
+from sklearn.linear_model import ARDRegression, LassoCV, Ridge, RidgeCV
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
@@ -245,11 +245,16 @@ def _make_pca_step(
 
 
 class WorkflowLIN(BaseWorkflow):
-    """Linear regression workflow (Ridge, alpha=1.0)."""
+    """Linear regression workflow (Ridge).
+
+    ``alpha=None``（既定）の場合は RidgeCV で正則化強度をデータから選択する。
+    固定 alpha=1.0 は外挿条件では正則化が弱すぎ、予測が訓練範囲を大きく
+    超える原因になるため。
+    """
 
     name = "WF-LIN"
 
-    def __init__(self, alpha: float = 1.0, dim_reduction: bool = True) -> None:
+    def __init__(self, alpha: Optional[float] = None, dim_reduction: bool = True) -> None:
         self._alpha = alpha
         self._dim_reduction = dim_reduction
 
@@ -266,10 +271,14 @@ class WorkflowLIN(BaseWorkflow):
         logger.debug("WF-LIN: train=%d, test=%d, features=%d",
                       len(X_train), len(X_test), X_train.shape[1])
 
+        if self._alpha is None:
+            model_step: Any = RidgeCV(alphas=np.logspace(-2, 4, 25))
+        else:
+            model_step = Ridge(alpha=self._alpha)
         steps: List[Tuple[str, Any]] = [
             ("scaler", StandardScaler()),
             *_make_pca_step(X_train.shape[1], self._dim_reduction),
-            ("model", Ridge(alpha=self._alpha)),
+            ("model", model_step),
         ]
         pipe = Pipeline(steps)
         pipe.fit(_safe_np(X_train), _safe_np(y_train))
@@ -280,15 +289,18 @@ class WorkflowLIN(BaseWorkflow):
         train_s = _score(_safe_np(y_train), y_train_pred)
         test_s = _score(_safe_np(y_test), y_test_pred)
 
-        model: Ridge = pipe.named_steps["model"]
+        model = pipe.named_steps["model"]
         coef_raw = model.coef_
+        effective_alpha = (
+            float(model.alpha_) if self._alpha is None else float(self._alpha)
+        )
         std_y = _safe_std_y(_safe_np(y_train))
         coef_std = coef_raw / std_y
 
         return _make_result(
             self.name, train_s, test_s,
             y_test, y_test_pred, t0, seed,
-            params={"alpha": self._alpha, "dim_reduction": self._dim_reduction},
+            params={"alpha": effective_alpha, "dim_reduction": self._dim_reduction},
             artifacts={
                 "coef_raw": _coef_to_dict(X_train.columns, coef_raw, pipe),
                 "coef_std": _coef_to_dict(X_train.columns, coef_std, pipe),
@@ -596,16 +608,21 @@ class WorkflowXGB(BaseWorkflow):
 
 
 class WorkflowENS(BaseWorkflow):
-    """Seed-varied ensemble workflow for uncertainty quantification.
+    """Seed-varied GradientBoosting ensemble for uncertainty quantification.
 
-    Uses Ridge regression as the base model (not XGB) so that WF-ENS
-    produces predictions that are genuinely different from WF-XGB.
-    With quick=True, WF-XGB uses the same fixed parameters as the XGB
-    members would, making the two workflows produce identical results —
-    which defeats the purpose of having both.  Ridge-based ensemble:
-      - is fast (no HPO grid),
-      - gives distinct predictions from any tree-based workflow,
-      - still provides meaningful prediction uncertainty via seed variance.
+    Each member uses a GradientBoostingRegressor with a different random_state.
+    GBR uses stochastic subsampling (subsample < 1.0), so different seeds
+    produce genuinely different predictions — unlike Ridge which is fully
+    deterministic and would make all members identical.
+
+    Why GradientBoosting instead of Ridge or XGB:
+      - Ridge is deterministic → all members predict identically → ENS == LIN
+      - XGB (same params as WF-XGB) → ENS == XGB
+      - GradientBoostingRegressor with subsample=0.8:
+          * non-deterministic across seeds (stochastic gradient boosting)
+          * distinct from both linear (LIN/LASSO/ARD) and XGB results
+          * fast with quick=True (n_estimators=50, max_depth=3)
+          * still provides meaningful pred uncertainty via inter-member std
     """
 
     name = "WF-ENS"
@@ -613,7 +630,7 @@ class WorkflowENS(BaseWorkflow):
     def __init__(
         self,
         n_members: int = 5,
-        base_workflow: Optional[str] = "ridge",  # was "xgb" — changed to avoid duplicate results
+        base_workflow: Optional[str] = "gbr",   # GradientBoosting — truly stochastic
         quick: bool = False,
         dim_reduction: bool = True,
     ) -> None:
@@ -623,6 +640,7 @@ class WorkflowENS(BaseWorkflow):
         self._dim_reduction = dim_reduction
 
     def _make_member(self, seed: int, n_features: int = 132) -> Pipeline:
+        from sklearn.ensemble import GradientBoostingRegressor
         if self._base_workflow == "xgb":
             model = _make_xgb_or_fallback(
                 seed,
@@ -631,9 +649,17 @@ class WorkflowENS(BaseWorkflow):
                 max_depth=4,
                 learning_rate=0.1,
             )
-            return Pipeline([("model", model)])
+            return Pipeline([("scaler", StandardScaler()), ("model", model)])
         else:
-            model = Ridge(alpha=1.0)
+            # GradientBoostingRegressor: subsample=0.8 → stochastic → seed matters
+            n_est = 50 if self._quick else 200
+            model = GradientBoostingRegressor(
+                n_estimators=n_est,
+                max_depth=3,
+                learning_rate=0.1,
+                subsample=0.8,          # stochastic subsampling: seed changes predictions
+                random_state=seed,
+            )
             steps: List[Tuple[str, Any]] = [
                 ("scaler", StandardScaler()),
                 *_make_pca_step(n_features, self._dim_reduction),

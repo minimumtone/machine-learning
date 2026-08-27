@@ -344,8 +344,25 @@ class FeatureValidityEvaluator:
         yields 0.75 rather than being capped at ~0.35 (the raw geometric mean
         of typical RMSE improvements).  The old formula caused *all* feature
         sets to cluster around 0.1–0.4, making the ranking uninformative.
+
+        RandomCV が無効の場合でも常に 0.5（中立）にならないよう、Block のみの
+        場合は Block の改善率だけからスコアを計算する。
         """
-        if not random_runs or not block_runs or base_rmse <= 0:
+        if base_rmse <= 0:
+            return 0.5
+        if not random_runs and block_runs:
+            _block_only = [
+                float(r.rmse_test) for r in block_runs
+                if r.rmse_test > 0 and math.isfinite(r.rmse_test)
+            ]
+            if not _block_only:
+                return 0.5
+            block_rmse = sum(_block_only) / len(_block_only)
+            block_improve = (base_rmse - block_rmse) / base_rmse
+            if block_improve > 0:
+                return min(1.0, 0.5 + 0.5 * block_improve)
+            return max(0.1, 0.5 + 0.5 * block_improve)
+        if not random_runs or not block_runs:
             return 0.5
         _rand_vals = [
             float(r.rmse_test) for r in random_runs
@@ -384,8 +401,30 @@ class FeatureValidityEvaluator:
         block_runs: List[RunResult],
         base_rmse: float,
     ) -> float:
-        """Detect leak: Random improves a lot but Block degrades."""
-        if not random_runs or not block_runs or base_rmse <= 0:
+        """Detect leak: Random improves a lot but Block degrades.
+
+        RandomCV が無効の場合は、Block の train/test 乖離（train は大幅改善
+        するが test は悪化）を代替の振る舞いシグナルとして用いる。
+        """
+        if base_rmse <= 0:
+            return 0.0
+        if not random_runs and block_runs:
+            _tr_vals = [
+                float(r.rmse_train) for r in block_runs
+                if r.rmse_train > 0 and math.isfinite(r.rmse_train)
+            ]
+            _te_vals = [
+                float(r.rmse_test) for r in block_runs
+                if r.rmse_test > 0 and math.isfinite(r.rmse_test)
+            ]
+            if not _tr_vals or not _te_vals:
+                return 0.0
+            train_improve = (base_rmse - sum(_tr_vals) / len(_tr_vals)) / base_rmse
+            test_change = (base_rmse - sum(_te_vals) / len(_te_vals)) / base_rmse
+            if train_improve > 0.05 and test_change < -0.02:
+                return min(1.0, train_improve - test_change)
+            return 0.0
+        if not random_runs or not block_runs:
             return 0.0
         # Bug#1b fix: filter failed runs before averaging
         _rand_vals = [

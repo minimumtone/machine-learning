@@ -484,20 +484,23 @@ def plotly_parity_per_algorithm(
             wf_data[wf]["true"].append(float(r.y_test_true[i]))
             wf_data[wf]["pred"].append(float(r.y_test_pred[i]))
 
-    # Compute per-workflow average metrics from RunResult objects
+    # Compute per-workflow metrics from accumulated scatter points (correct R²).
+    # Using fold-averaged r2_test is wrong for CompositionBlock splits because
+    # each fold covers a narrow composition cluster → small within-fold variance
+    # → fold R² can be negative even when the global parity looks excellent.
+    from sklearn.metrics import r2_score as _r2_score, mean_squared_error as _mse
     wf_metrics: Dict[str, Dict[str, float]] = {}
-    wf_runs_grouped: Dict[str, List[Any]] = {}
-    for r in runs:
-        wf_runs_grouped.setdefault(r.workflow, []).append(r)
-    for wf, wf_run_list in wf_runs_grouped.items():
-        rmses = [float(r.rmse_test) for r in wf_run_list
-                 if r.rmse_test > 0 and math.isfinite(r.rmse_test)]
-        r2s = [float(r.r2_test) for r in wf_run_list
-               if math.isfinite(r.r2_test)]
-        wf_metrics[wf] = {
-            "rmse_test": sum(rmses) / len(rmses) if rmses else 0.0,
-            "r2_test": sum(r2s) / len(r2s) if r2s else 0.0,
-        }
+    for wf, d in wf_data.items():
+        if len(d["true"]) < 2:
+            wf_metrics[wf] = {"rmse_test": float("nan"), "r2_test": float("nan")}
+            continue
+        try:
+            rmse = float(math.sqrt(_mse(d["true"], d["pred"])))
+            r2   = float(_r2_score(d["true"], d["pred"]))
+        except Exception:
+            rmse = float("nan")
+            r2   = float("nan")
+        wf_metrics[wf] = {"rmse_test": rmse, "r2_test": r2}
 
     fig = go.Figure()
 
@@ -511,8 +514,10 @@ def plotly_parity_per_algorithm(
         color = _WF_COLORS.get(wf, "#999999")
         m = wf_metrics.get(wf, {})
         rmse_str = f"{m.get('rmse_test', 0):.2f}"
-        r2_str = f"{m.get('r2_test', 0):.4f}"
-        legend_label = f"{wf} (RMSE={rmse_str}, R²={r2_str})"
+        r2_val = m.get('r2_test', float('nan'))
+        r2_str = f"{r2_val:.4f}" if math.isfinite(r2_val) else "N/A"
+        r2_note = ""  # 散布点集積の全体R²なので負になることはほぼない
+        legend_label = f"{wf}  RMSE={rmse_str}  R²={r2_str}"
 
         fig.add_trace(go.Scatter(
             x=d["true"],
@@ -648,21 +653,39 @@ def plotly_parity_train_test(
                     wf_test[wf]["true"].append(float(r.y_test_true[i]))
                     wf_test[wf]["pred"].append(float(r.y_test_pred[i]))
 
-    # Compute per-workflow average metrics
+    # Compute per-workflow metrics from accumulated scatter points (correct R²).
+    # Fold-averaged r2_test is biased negative for CompositionBlock splits.
+    from sklearn.metrics import r2_score as _r2_score, mean_squared_error as _mse
     wf_metrics: Dict[str, Dict[str, float]] = {}
-    wf_groups: Dict[str, List[Any]] = {}
+    wf_groups_rmse: Dict[str, List[Any]] = {}
     for r in runs:
-        wf_groups.setdefault(r.workflow, []).append(r)
-    for wf, wf_run_list in wf_groups.items():
-        rmses_te = [float(r.rmse_test)  for r in wf_run_list if r.rmse_test  > 0 and math.isfinite(r.rmse_test)]
-        rmses_tr = [float(r.rmse_train) for r in wf_run_list if r.rmse_train > 0 and math.isfinite(r.rmse_train)]
-        r2s_te   = [float(r.r2_test)    for r in wf_run_list if math.isfinite(r.r2_test)]
-        r2s_tr   = [float(r.r2_train)   for r in wf_run_list if math.isfinite(r.r2_train)]
+        wf_groups_rmse.setdefault(r.workflow, []).append(r)
+    for wf, wf_run_list in wf_groups_rmse.items():
+        # RMSE は RunResult から（train set の全点は集積していないため）
+        rmses_tr = [float(r.rmse_train) for r in wf_run_list
+                    if r.rmse_train > 0 and math.isfinite(r.rmse_train)]
+        r2s_tr   = [float(r.r2_train)   for r in wf_run_list
+                    if math.isfinite(r.r2_train)]
+        # Test set R² / RMSE は集積した全点から計算
+        d_te = wf_test.get(wf, {"true": [], "pred": []})
+        if len(d_te["true"]) >= 2:
+            try:
+                rmse_te = float(math.sqrt(_mse(d_te["true"], d_te["pred"])))
+                r2_te   = float(_r2_score(d_te["true"], d_te["pred"]))
+            except Exception:
+                rmse_te = float("nan"); r2_te = float("nan")
+        else:
+            rmses_te = [float(r.rmse_test) for r in wf_run_list
+                        if r.rmse_test > 0 and math.isfinite(r.rmse_test)]
+            r2s_te   = [float(r.r2_test) for r in wf_run_list
+                        if math.isfinite(r.r2_test)]
+            rmse_te = sum(rmses_te)/len(rmses_te) if rmses_te else float("nan")
+            r2_te   = sum(r2s_te)/len(r2s_te)     if r2s_te   else float("nan")
         wf_metrics[wf] = {
-            "rmse_test":  sum(rmses_te) / len(rmses_te) if rmses_te else 0.0,
-            "rmse_train": sum(rmses_tr) / len(rmses_tr) if rmses_tr else 0.0,
-            "r2_test":    sum(r2s_te)   / len(r2s_te)   if r2s_te   else 0.0,
-            "r2_train":   sum(r2s_tr)   / len(r2s_tr)   if r2s_tr   else 0.0,
+            "rmse_test":  rmse_te,
+            "rmse_train": sum(rmses_tr)/len(rmses_tr) if rmses_tr else float("nan"),
+            "r2_test":    r2_te,
+            "r2_train":   sum(r2s_tr)/len(r2s_tr)    if r2s_tr  else float("nan"),
         }
 
     fig = make_subplots(
@@ -681,7 +704,8 @@ def plotly_parity_train_test(
         # --- Test parity (right panel) ---
         d_te = wf_test[wf]
         if d_te["true"]:
-            r2_str   = f"{m.get('r2_test', 0):.4f}"
+            _r2_val  = m.get('r2_test', float('nan'))
+            r2_str   = f"{_r2_val:.4f}" if math.isfinite(_r2_val) else "N/A"
             rmse_str = f"{m.get('rmse_test', 0):.2f}"
             fig.add_trace(go.Scatter(
                 x=d_te["true"], y=d_te["pred"],
@@ -702,7 +726,7 @@ def plotly_parity_train_test(
         # Collect train predictions if stored in artifacts, otherwise skip
         tr_true: List[float] = []
         tr_pred: List[float] = []
-        for r in wf_groups.get(wf, []):
+        for r in wf_groups_rmse.get(wf, []):
             artifacts = getattr(r, "artifacts", {})
             residuals = artifacts.get("residuals_test", [])
             if r.y_test_true is not None and r.y_test_pred is not None:
@@ -2144,18 +2168,25 @@ def plotly_parity_grid_by_algorithm(
             wf_data[wf]["sp"].append(r.split_policy)
 
     # Per-workflow aggregate metrics
+    # R² は fold ごとの平均ではなく、全 fold の予測/実測を集積した点群から計算する。
+    # CompositionBlock 分割では各 fold が狭い組成クラスター内に閉じるため
+    # fold 内 y の分散が小さくなり fold ごとの R² が負になりうる。
+    # 全点まとめた r2_score がパリティプロットで視覚的に確認できる値と一致する。
+    from sklearn.metrics import r2_score as _r2_score, mean_squared_error as _mse
     wf_metrics: Dict[str, Dict[str, float]] = {}
-    wf_groups: Dict[str, list] = {}
-    for r in runs:
-        wf_groups.setdefault(r.workflow, []).append(r)
-    for wf, wlist in wf_groups.items():
-        rmses = [float(r.rmse_test) for r in wlist
-                 if r.rmse_test > 0 and math.isfinite(r.rmse_test)]
-        r2s   = [float(r.r2_test)  for r in wlist if math.isfinite(r.r2_test)]
-        wf_metrics[wf] = {
-            "rmse": sum(rmses) / len(rmses) if rmses else float("nan"),
-            "r2":   sum(r2s)   / len(r2s)   if r2s   else float("nan"),
-        }
+    for wf, d in wf_data.items():
+        if len(d["true"]) < 2:
+            wf_metrics[wf] = {"rmse": float("nan"), "r2": float("nan")}
+            continue
+        y_true_all = d["true"]
+        y_pred_all = d["pred"]
+        try:
+            rmse = float(math.sqrt(_mse(y_true_all, y_pred_all)))
+            r2   = float(_r2_score(y_true_all, y_pred_all))
+        except Exception:
+            rmse = float("nan")
+            r2   = float("nan")
+        wf_metrics[wf] = {"rmse": rmse, "r2": r2}
 
     wf_names = sorted(wf_data.keys())
     n_wf = len(wf_names)
@@ -2175,8 +2206,14 @@ def plotly_parity_grid_by_algorithm(
     for wf in wf_names:
         m = wf_metrics.get(wf, {})
         rmse_s = f"{m['rmse']:.3f}" if math.isfinite(m.get('rmse', float('nan'))) else "N/A"
-        r2_s   = f"{m['r2']:.4f}"  if math.isfinite(m.get('r2',   float('nan'))) else "N/A"
-        subplot_titles.append(f"<b>{wf}</b><br>RMSE={rmse_s}  R²={r2_s}")
+        r2_val = m.get('r2', float('nan'))
+        r2_s   = f"{r2_val:.4f}"    if math.isfinite(r2_val)                       else "N/A"
+        # R² < 0 は CompositionBlock 分割では起こりうる（fold内分散 < 全体分散）
+        # → 注釈を追加してユーザーに説明
+        r2_note = " ⚠️" if math.isfinite(r2_val) and r2_val < 0 else ""
+        subplot_titles.append(
+            f"<b>{wf}</b><br>RMSE={rmse_s}  R²={r2_s}{r2_note}"
+        )
 
     fig = make_subplots(
         rows=n_rows, cols=n_cols,
@@ -2318,3 +2355,669 @@ def plotly_metrics_comparison(
         margin=dict(t=80, b=40),
     )
     return fig
+
+
+# ---------------------------------------------------------------------------
+# Results タブ用：組み合わせ比較プロット群
+# ---------------------------------------------------------------------------
+
+
+def plotly_combo_rmse_heatmap(
+    runs: List[Any],
+    metric: str = "rmse_test",
+    split_policy: Optional[str] = None,
+) -> "go.Figure":
+    """FS × WF の RMSE ヒートマップ（SP ごとにサブプロット）。
+
+    全組み合わせ (FS, WF, SP) を 1 枚で俯瞰できる。
+    各セルの値は fold 平均 RMSE。
+    """
+    import pandas as _pd
+    from plotly.subplots import make_subplots
+
+    # runs を DataFrame 化
+    rows = []
+    for r in runs:
+        val = getattr(r, metric, None)
+        if val is None or not math.isfinite(float(val)):
+            continue
+        rows.append({
+            "workflow":     r.workflow,
+            "feature_set":  r.feature_set,
+            "split_policy": r.split_policy,
+            "value":        float(val),
+        })
+    if not rows:
+        fig = go.Figure()
+        fig.update_layout(title="データなし")
+        return fig
+
+    df = _pd.DataFrame(rows)
+    # fold 平均
+    agg = df.groupby(["workflow", "feature_set", "split_policy"])["value"].mean().reset_index()
+
+    sps = sorted(agg["split_policy"].unique())
+    wfs = sorted(agg["workflow"].unique())
+    fss = sorted(agg["feature_set"].unique())
+
+    n_sp = len(sps)
+    fig = make_subplots(
+        rows=1, cols=n_sp,
+        subplot_titles=[f"Split: {sp}" for sp in sps],
+        horizontal_spacing=0.05,
+    )
+
+    metric_label = metric.replace("_", " ").upper()
+    color_label  = "RMSE" if "rmse" in metric else "R²"
+
+    # 全 SP の値域を揃えてスケールを共通化
+    all_vals = agg["value"].tolist()
+    zmin = min(all_vals)
+    zmax = max(all_vals)
+
+    for col_i, sp in enumerate(sps, 1):
+        sub = agg[agg["split_policy"] == sp]
+        # FS × WF のピボット
+        pivot = sub.pivot(index="feature_set", columns="workflow", values="value")
+        pivot = pivot.reindex(index=fss, columns=wfs)
+
+        text_vals = [
+            [f"{v:.3f}" if not math.isnan(v) else "N/A"
+             for v in row]
+            for row in pivot.values.tolist()
+        ]
+
+        fig.add_trace(
+            go.Heatmap(
+                z=pivot.values.tolist(),
+                x=list(pivot.columns),
+                y=list(pivot.index),
+                text=text_vals,
+                texttemplate="%{text}",
+                textfont={"size": 11},
+                colorscale="RdYlGn_r",  # 低いほど緑（良い）
+                zmin=zmin, zmax=zmax,
+                showscale=(col_i == n_sp),
+                colorbar=dict(title=color_label, x=1.02),
+                hovertemplate=(
+                    f"WF: %{{x}}<br>FS: %{{y}}<br>{metric_label}: %{{z:.4f}}"
+                    "<extra></extra>"
+                ),
+            ),
+            row=1, col=col_i,
+        )
+
+    fig.update_layout(
+        title=dict(
+            text=f"<b>FS × WF {metric_label} ヒートマップ</b>"
+                 f"<br><span style='font-size:11px;color:#666'>"
+                 f"セル値 = fold 平均 {metric_label}（低いほど良い）</span>",
+        ),
+        height=max(300, 60 * len(fss) + 120),
+        margin=dict(t=90, b=40, l=120, r=80),
+    )
+    return fig
+
+
+def plotly_combo_parity_by_sp(
+    runs: List[Any],
+    target_name: str = "",
+) -> List[Tuple[str, "go.Figure"]]:
+    """SP ごとにパリティグリッドを生成してリストで返す。
+
+    GUI 側で SP 単位にタブ切替またはアコーディオン表示する用途に使用。
+
+    Returns
+    -------
+    list of (split_policy_name, go.Figure)
+    """
+    sps = sorted({r.split_policy for r in runs
+                  if getattr(r, "y_test_true", None) is not None})
+    if not sps:
+        return [("all", plotly_combo_parity_grid(runs, target_name=target_name))]
+    return [
+        (sp, plotly_combo_parity_grid(runs, split_filter=sp, target_name=target_name))
+        for sp in sps
+    ]
+
+
+
+def plotly_combo_rmse_boxplot(
+    runs: List[Any],
+    metric: str = "rmse_test",
+) -> "go.Figure":
+    """WF × FS の fold-level RMSE 箱ひげ図（SP でパネル分割）。
+
+    各箱 = (WF, FS) の全 fold の RMSE 分布。
+    SP ごとに横並びのサブプロットで表示。
+    """
+    from plotly.subplots import make_subplots
+
+    rows = []
+    for r in runs:
+        val = getattr(r, metric, None)
+        if val is None or not math.isfinite(float(val)):
+            continue
+        rows.append({
+            "workflow":     r.workflow,
+            "feature_set":  r.feature_set,
+            "split_policy": r.split_policy,
+            "value":        float(val),
+            "fold":         r.fold,
+        })
+    if not rows:
+        fig = go.Figure()
+        fig.update_layout(title="データなし")
+        return fig
+
+    import pandas as _pd
+    df = _pd.DataFrame(rows)
+    sps  = sorted(df["split_policy"].unique())
+    fss  = sorted(df["feature_set"].unique())
+
+    FS_PALETTE = [
+        "#1f77b4", "#ff7f0e", "#2ca02c",
+        "#d62728", "#9467bd", "#8c564b",
+    ]
+    fs_color = {fs: FS_PALETTE[i % len(FS_PALETTE)] for i, fs in enumerate(fss)}
+
+    n_sp = len(sps)
+    fig = make_subplots(
+        rows=1, cols=n_sp,
+        subplot_titles=[f"Split: {sp}" for sp in sps],
+        horizontal_spacing=0.06,
+        shared_yaxes=True,
+    )
+
+    seen_legend: set = set()
+    metric_label = "RMSE" if "rmse" in metric else "R²"
+
+    for col_i, sp in enumerate(sps, 1):
+        sub = df[df["split_policy"] == sp]
+        for fs in fss:
+            fs_sub = sub[sub["feature_set"] == fs]
+            if fs_sub.empty:
+                continue
+            show_legend = fs not in seen_legend
+            if show_legend:
+                seen_legend.add(fs)
+            fig.add_trace(
+                go.Box(
+                    x=fs_sub["workflow"],
+                    y=fs_sub["value"],
+                    name=fs,
+                    legendgroup=fs,
+                    showlegend=show_legend,
+                    marker_color=fs_color[fs],
+                    boxmean="sd",
+                    hovertemplate=(
+                        f"<b>%{{x}} / {fs}</b><br>"
+                        f"{metric_label}: %{{y:.4f}}<extra></extra>"
+                    ),
+                ),
+                row=1, col=col_i,
+            )
+        fig.update_xaxes(title_text="アルゴリズム", row=1, col=col_i,
+                         tickangle=-30, tickfont_size=9)
+        fig.update_yaxes(title_text=metric_label, row=1, col=1)
+
+    fig.update_layout(
+        title=dict(
+            text=f"<b>{metric_label} 分布: アルゴリズム × 特徴量セット × 分割ポリシー</b>"
+                 f"<br><span style='font-size:11px;color:#666'>"
+                 f"箱 = fold ごとの {metric_label} 分布（+は平均）</span>",
+        ),
+        height=420,
+        boxmode="group",
+        legend=dict(
+            title="特徴量セット",
+            orientation="h",
+            yanchor="bottom", y=1.05,
+            xanchor="left", x=0,
+        ),
+        margin=dict(t=110, b=80, l=60, r=20),
+    )
+    return fig
+
+
+def plotly_combo_train_test_scatter(
+    runs: List[Any],
+    metric_train: str = "rmse_train",
+    metric_test:  str = "rmse_test",
+) -> "go.Figure":
+    """Train vs Test 散布図：全 (WF, FS, SP) 組み合わせを 1 点でプロット。
+
+    対角線より左上 → 過学習の懸念。
+    色 = SP、マーカー形状 = WF、サイズ = データ点数（固定）。
+    """
+    import pandas as _pd
+
+    rows = []
+    for r in runs:
+        tr  = getattr(r, metric_train, None)
+        te  = getattr(r, metric_test,  None)
+        if tr is None or te is None:
+            continue
+        if not (math.isfinite(float(tr)) and math.isfinite(float(te))):
+            continue
+        rows.append({
+            "workflow":     r.workflow,
+            "feature_set":  r.feature_set,
+            "split_policy": r.split_policy,
+            "fold":         r.fold,
+            "train":        float(tr),
+            "test":         float(te),
+        })
+    if not rows:
+        fig = go.Figure()
+        fig.update_layout(title="データなし")
+        return fig
+
+    df = _pd.DataFrame(rows)
+    # fold 平均
+    agg = df.groupby(["workflow","feature_set","split_policy"])[["train","test"]].mean().reset_index()
+
+    SP_PALETTE = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
+    SYMBOLS    = ["circle","square","diamond","cross","star",
+                  "triangle-up","triangle-down"]
+    sps = sorted(agg["split_policy"].unique())
+    wfs = sorted(agg["workflow"].unique())
+    sp_color  = {sp: SP_PALETTE[i % len(SP_PALETTE)] for i, sp in enumerate(sps)}
+    wf_symbol = {wf: SYMBOLS[i  % len(SYMBOLS)]      for i, wf in enumerate(wfs)}
+
+    fig = go.Figure()
+    seen: set = set()
+
+    for _, row in agg.iterrows():
+        wf, fs, sp = row["workflow"], row["feature_set"], row["split_policy"]
+        show_sp = sp not in seen
+        if show_sp:
+            seen.add(sp)
+        fig.add_trace(go.Scatter(
+            x=[row["train"]],
+            y=[row["test"]],
+            mode="markers",
+            marker=dict(
+                color=sp_color[sp],
+                symbol=wf_symbol[wf],
+                size=10,
+                line=dict(width=1, color="black"),
+                opacity=0.8,
+            ),
+            name=sp,
+            legendgroup=sp,
+            showlegend=show_sp,
+            hovertemplate=(
+                f"<b>{wf} / {fs} / {sp}</b><br>"
+                "Train: %{x:.4f}<br>Test: %{y:.4f}"
+                "<extra></extra>"
+            ),
+            text=f"{wf}<br>{fs}",
+        ))
+
+    # y=x 参照線
+    all_vals = agg["train"].tolist() + agg["test"].tolist()
+    if all_vals:
+        lo = min(all_vals); hi = max(all_vals)
+        mg = (hi - lo) * 0.05
+        fig.add_trace(go.Scatter(
+            x=[lo-mg, hi+mg], y=[lo-mg, hi+mg],
+            mode="lines",
+            line=dict(color="gray", dash="dash", width=1),
+            name="Train = Test", showlegend=True,
+        ))
+
+    ml = metric_train.replace("_"," ").upper().replace("RMSE TRAIN","RMSE")
+    fig.update_layout(
+        title=dict(
+            text="<b>Train vs Test 過学習マップ</b>"
+                 "<br><span style='font-size:11px;color:#666'>"
+                 "点の上 → 過学習（Test > Train）| 色 = 分割ポリシー | 形状 = アルゴリズム</span>",
+        ),
+        xaxis_title=f"Train {ml}",
+        yaxis_title=f"Test {ml}",
+        height=480,
+        legend=dict(
+            title="分割ポリシー",
+            orientation="v",
+            yanchor="top", y=1,
+            xanchor="left", x=1.02,
+        ),
+        margin=dict(t=90, b=60, l=70, r=150),
+    )
+
+    # WF シンボル凡例（annotation で代替）
+    symbol_lines = [f"{wf_symbol[wf]} = {wf}" for wf in sorted(wfs)]
+    fig.add_annotation(
+        text="<b>形状</b><br>" + "<br>".join(symbol_lines),
+        xref="paper", yref="paper",
+        x=1.02, y=0.5,
+        xanchor="left", yanchor="middle",
+        showarrow=False,
+        font=dict(size=10),
+        bgcolor="rgba(255,255,255,0.85)",
+        bordercolor="#ccc",
+        borderwidth=1,
+        borderpad=6,
+        align="left",
+    )
+    return fig
+
+
+def plotly_combo_parity_grid(
+    runs: List[Any],
+    split_filter: str = "All",
+    target_name: str = "",
+    n_cols: int = 3,
+    max_fs: int = 12,
+) -> go.Figure:
+    """FS × WF のパリティ散布図グリッド（3列固定）。
+
+    全 (FS, WF) の組み合わせを 1 次元に並べ、n_cols 列で折り返す。
+    縦長になっても各セルを大きく保ち、読みやすさを優先する。
+
+    - 各セルの R² / RMSE は全 fold 集積データ点から直接計算
+    - 色 = Split Policy（重複サンプルは seen セットで除去）
+    - EE (ElementExclusion) は複数 fold で同一サンプルが重複するため
+      seen による dedup 後の点数 < CB の点数になることがある（仕様）
+    """
+    from plotly.subplots import make_subplots
+    from sklearn.metrics import r2_score as _r2, mean_squared_error as _mse
+
+    filtered = runs
+    if split_filter != "All":
+        filtered = [r for r in runs if r.split_policy == split_filter]
+
+    if not filtered:
+        fig = go.Figure()
+        fig.update_layout(title="データなし（フィルタ条件に合致する run がありません）")
+        return fig
+
+    wf_order = sorted({r.workflow    for r in filtered})
+    fs_order = sorted({r.feature_set for r in filtered})[:max_fs]
+    sp_order = sorted({r.split_policy for r in filtered})
+
+    SP_STYLES = {
+        "CompositionBlock":  {"color": "#2196F3", "symbol": "circle"},
+        "ElementExclusion":  {"color": "#FF5722", "symbol": "diamond"},
+        "RandomCV":          {"color": "#4CAF50", "symbol": "cross"},
+        "Holdout":           {"color": "#9C27B0", "symbol": "square"},
+    }
+    def sp_style(sp):
+        return SP_STYLES.get(sp, {"color": "#888888", "symbol": "circle"})
+
+    # 全 (FS, WF) の組み合わせを順番に並べる
+    # 並び順: FS が外ループ、WF が内ループ → FS ごとに WF をまとめて表示
+    cells = [(fs, wf) for fs in fs_order for wf in wf_order]
+    n_cells = len(cells)
+    if n_cells == 0:
+        fig = go.Figure()
+        fig.update_layout(title="データなし")
+        return fig
+
+    n_cols = min(n_cols, n_cells)
+    n_rows = math.ceil(n_cells / n_cols)
+
+    # データ収集: {(wf, fs, sp)} → {true, pred}
+    from collections import defaultdict
+    cell_data: dict = defaultdict(lambda: defaultdict(lambda: {"true": [], "pred": []}))
+    seen: set = set()
+
+    for r in filtered:
+        if r.y_test_true is None or r.y_test_pred is None:
+            continue
+        if r.workflow not in wf_order or r.feature_set not in fs_order:
+            continue
+        ti = getattr(r, "test_indices", None)
+        for i in range(len(r.y_test_true)):
+            key = (r.workflow, r.feature_set, r.split_policy,
+                   int(ti[i]) if ti is not None else float(r.y_test_true[i]))
+            if key in seen:
+                continue
+            seen.add(key)
+            cell_data[(r.feature_set, r.workflow)][r.split_policy]["true"].append(float(r.y_test_true[i]))
+            cell_data[(r.feature_set, r.workflow)][r.split_policy]["pred"].append(float(r.y_test_pred[i]))
+
+    # サブプロットタイトル（FS + WF の組み合わせ）
+    subplot_titles = [
+        f"<b>{fs.replace('FS_','')}</b> / {wf}"
+        for fs, wf in cells
+    ]
+    # 空白パディング（最後の行が埋まらない場合）
+    n_pad = n_cols * n_rows - n_cells
+    subplot_titles += [""] * n_pad
+
+    fig = make_subplots(
+        rows=n_rows, cols=n_cols,
+        subplot_titles=subplot_titles,
+        horizontal_spacing=min(0.15, max(0.03, 0.4 / n_cols)),
+        vertical_spacing=min(
+            (0.95 / (n_rows - 1)) if n_rows > 1 else 0.1,  # plotly 上限
+            max(0.04, 0.8 / n_rows),
+        ),
+        shared_xaxes=False, shared_yaxes=False,
+    )
+
+    shown_sp: set = set()
+
+    for ci, (fs, wf) in enumerate(cells):
+        row = ci // n_cols + 1
+        col = ci % n_cols + 1
+
+        sp_dict = cell_data[(fs, wf)]
+
+        # 全 split をまとめた R² / RMSE
+        all_true, all_pred = [], []
+        for sp_d in sp_dict.values():
+            all_true.extend(sp_d["true"])
+            all_pred.extend(sp_d["pred"])
+
+        if len(all_true) >= 2:
+            try:
+                r2_val   = float(_r2(all_true, all_pred))
+                rmse_val = float(math.sqrt(_mse(all_true, all_pred)))
+            except Exception:
+                r2_val = rmse_val = float("nan")
+        else:
+            r2_val = rmse_val = float("nan")
+
+        r2_str   = f"{r2_val:.3f}"   if math.isfinite(r2_val)   else "N/A"
+        rmse_str = f"{rmse_val:.3f}" if math.isfinite(rmse_val) else "N/A"
+        r2_warn  = "⚠" if math.isfinite(r2_val) and r2_val < 0 else ""
+
+        # y=x 参照線
+        if all_true:
+            lo = min(min(all_true), min(all_pred))
+            hi = max(max(all_true), max(all_pred))
+            mg = (hi - lo) * 0.05 if hi > lo else 0.1
+            fig.add_trace(go.Scatter(
+                x=[lo - mg, hi + mg], y=[lo - mg, hi + mg],
+                mode="lines",
+                line=dict(color="black", dash="dash", width=0.8),
+                showlegend=False,
+            ), row=row, col=col)
+
+        # split ごとに色分けして散布図を追加
+        for sp in sp_order:
+            if sp not in sp_dict or not sp_dict[sp]["true"]:
+                continue
+            sty = sp_style(sp)
+            show_legend = sp not in shown_sp
+            shown_sp.add(sp)
+            d = sp_dict[sp]
+            n_pts = len(d["true"])
+            fig.add_trace(go.Scatter(
+                x=d["true"], y=d["pred"],
+                mode="markers",
+                marker=dict(
+                    color=sty["color"],
+                    symbol=sty["symbol"],
+                    size=6, opacity=0.6,
+                    line=dict(width=0.4, color="rgba(0,0,0,0.4)"),
+                ),
+                name=sp,
+                legendgroup=sp,
+                showlegend=show_legend,
+                customdata=[[n_pts]] * n_pts,
+                hovertemplate=(
+                    f"<b>{fs.replace('FS_','')} / {wf}</b><br>"
+                    f"Split: {sp} (n=%{{customdata[0]}}<br>"
+                    "True: %{x:.3f}<br>Pred: %{y:.3f}"
+                    "<extra></extra>"
+                ),
+            ), row=row, col=col)
+
+        # 軸ラベル（左端列のみ y ラベル）
+        if col == 1:
+            fig.update_yaxes(
+                title_text="予測値",
+                title_font=dict(size=10), tickfont=dict(size=9),
+                row=row, col=col,
+            )
+        else:
+            fig.update_yaxes(tickfont=dict(size=9), row=row, col=col)
+        fig.update_xaxes(
+            title_text="実測値" if row == n_rows else "",
+            title_font=dict(size=10), tickfont=dict(size=9),
+            row=row, col=col,
+        )
+
+    # 各セルの R²/RMSE を subplot タイトル注釈で補足
+    # make_subplots が生成したタイトル注釈を更新
+    annots = list(fig.layout.annotations)
+    for ci, (fs, wf) in enumerate(cells):
+        sp_dict = cell_data[(fs, wf)]
+        all_true, all_pred = [], []
+        for sp_d in sp_dict.values():
+            all_true.extend(sp_d["true"])
+            all_pred.extend(sp_d["pred"])
+        if len(all_true) < 2:
+            continue
+        try:
+            r2_val   = float(_r2(all_true, all_pred))
+            rmse_val = float(math.sqrt(_mse(all_true, all_pred)))
+        except Exception:
+            continue
+        r2_warn = "⚠" if math.isfinite(r2_val) and r2_val < 0 else ""
+        # subplot タイトルの index = ci（make_subplots が同順で生成）
+        if ci < len(annots):
+            existing = annots[ci].text or ""
+            annots[ci].update(
+                text=(existing + f"<br><span style='font-size:9px;color:#555;'>"
+                      f"R²={r2_val:.3f}{r2_warn}  RMSE={rmse_val:.3f}</span>"),
+                font=dict(size=11),
+            )
+    fig.update_layout(annotations=annots)
+
+    cell_px = 280
+    fig.update_layout(
+        title=dict(
+            text=(
+                "パリティグリッド (3列)  FS / WF × Split Policy<br>"
+                "<span style='font-size:11px;color:#666;'>"
+                "R² / RMSE は各セルの全fold集積データから直接計算。"
+                "EE は複数fold重複サンプルを1点として表示</span>"
+            ),
+            font=dict(size=14),
+        ),
+        height=max(400, n_rows * cell_px + 100),
+        showlegend=True,
+        legend=dict(
+            title="Split Policy",
+            orientation="h",
+            yanchor="bottom", y=-0.04,
+            xanchor="center", x=0.5,
+            font=dict(size=12),
+        ),
+        margin=dict(t=100, b=100, l=80, r=20),
+    )
+    return fig
+
+
+def plotly_combo_metric_heatmap(
+    runs: List[Any],
+    metric: str = "rmse_test",
+    split_filter: str = "All",
+) -> go.Figure:
+    """FS × WF のメトリクスヒートマップ。
+
+    各セルの値は全 fold 集積データ点から直接計算した R²/RMSE。
+    metric: "r2_test" | "rmse_test"
+    """
+    from sklearn.metrics import r2_score as _r2, mean_squared_error as _mse
+    from collections import defaultdict
+
+    filtered = [r for r in runs if split_filter == "All" or r.split_policy == split_filter]
+    if not filtered:
+        fig = go.Figure()
+        fig.update_layout(title="データなし")
+        return fig
+
+    wf_order = sorted({r.workflow    for r in filtered})
+    fs_order = sorted({r.feature_set for r in filtered})
+
+    # 全fold集積でセル値を計算
+    cell_data: dict = defaultdict(lambda: {"true": [], "pred": []})
+    seen: set = set()
+    for r in filtered:
+        if r.y_test_true is None or r.y_test_pred is None:
+            continue
+        ti = getattr(r, "test_indices", None)
+        for i in range(len(r.y_test_true)):
+            key = (r.workflow, r.feature_set,
+                   int(ti[i]) if ti is not None else float(r.y_test_true[i]))
+            if key in seen:
+                continue
+            seen.add(key)
+            d = cell_data[(r.workflow, r.feature_set)]
+            d["true"].append(float(r.y_test_true[i]))
+            d["pred"].append(float(r.y_test_pred[i]))
+
+    z = []
+    text = []
+    for fs in fs_order:
+        row_z, row_t = [], []
+        for wf in wf_order:
+            d = cell_data[(wf, fs)]
+            if len(d["true"]) < 2:
+                row_z.append(None)
+                row_t.append("N/A")
+                continue
+            try:
+                if metric == "r2_test":
+                    val = float(_r2(d["true"], d["pred"]))
+                else:
+                    val = float(math.sqrt(_mse(d["true"], d["pred"])))
+            except Exception:
+                val = None
+            row_z.append(val)
+            row_t.append(f"{val:.4f}" if val is not None else "N/A")
+        z.append(row_z)
+        text.append(row_t)
+
+    # カラースケール: R² は RdYlGn（高いほど緑）、RMSE は RdYlGn_r（低いほど緑）
+    colorscale = "RdYlGn" if metric == "r2_test" else "RdYlGn_r"
+    label = "R² (全fold集積)" if metric == "r2_test" else "RMSE (全fold集積)"
+
+    fig = go.Figure(go.Heatmap(
+        z=z,
+        x=wf_order,
+        y=[fs.replace("FS_", "") for fs in fs_order],
+        text=text,
+        texttemplate="%{text}",
+        textfont=dict(size=10),
+        colorscale=colorscale,
+        colorbar=dict(title=label, thickness=12, len=0.8),
+        hovertemplate="WF: %{x}<br>FS: %{y}<br>" + label + ": %{text}<extra></extra>",
+    ))
+    fig.update_layout(
+        title=f"メトリクスヒートマップ: {label}<br>"
+              f"<span style='font-size:11px;color:#666;'>"
+              f"Split={split_filter} / 各セルは全fold集積データから計算</span>",
+        xaxis=dict(title="Workflow", tickangle=-30, tickfont=dict(size=10)),
+        yaxis=dict(title="Feature Set", tickfont=dict(size=10)),
+        height=max(300, len(fs_order) * 60 + 120),
+        margin=dict(t=80, b=60, l=80, r=20),
+    )
+    return fig
+

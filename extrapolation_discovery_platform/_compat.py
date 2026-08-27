@@ -233,20 +233,13 @@ def install() -> None:
     except Exception as exc:  # noqa: BLE001
         logger.warning("plotly Template patch skipped: %s", exc)
 
-    # --- Disable cyclic GC globally ---
-    # GC triggers C-extension finalizers on F-contiguous numpy arrays
-    # left over from pandas 3.0 operations. These finalizers crash with
-    # SIGSEGV during plotly chart creation, literature search, and other
-    # operations.  Disabling GC is safe because:
-    # 1. Reference counting still frees non-cyclic objects immediately
-    # 2. GUI sessions are short-lived (~100s)
-    # 3. Memory usage is bounded (~310 MB peak)
-    # 4. Process exit reclaims all memory
-    gc.disable()
-    logger.info("Cyclic garbage collector disabled to prevent SIGSEGV")
+    # NOTE: cyclic GC はグローバルには無効化しない。プロセス全体で GC を
+    # 止めるとサイクルを含むオブジェクトのメモリが解放されず、他モジュール
+    # にも影響する。SIGSEGV 回避が必要なクリティカル区間では、スコープ付き
+    # の gc_disabled() コンテキストマネージャを使用すること。
 
     _INSTALLED = True
     logger.info(
         "pandas C-contiguous compatibility patches installed "
-        "(DataFrame.to_numpy, Series.to_numpy, .values, plotly Template, GC disabled)"
+        "(DataFrame.to_numpy, Series.to_numpy, .values, plotly Template)"
     )

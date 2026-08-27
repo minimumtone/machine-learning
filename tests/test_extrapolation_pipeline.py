@@ -282,6 +282,62 @@ class TestT8_WorkflowDiversity:
         )
 
 
+
+class TestT72_NFoldsConfig:
+    """T7-2: n_folds の設定が pipeline / runner / GUI に正しく伝達される。"""
+
+    def test_stage1_nfolds_3(self, sample_data):
+        from extrapolation_discovery_platform.pipeline import stage1_preprocess
+        from extrapolation_discovery_platform.features import FeatureSetName
+        X, y, comp = sample_data
+        prep = stage1_preprocess(
+            X, y, comp, [FeatureSetName.FS_BASE.value], ["WF-LIN"],
+            seeds=[42], active_policies=["CompositionBlock"], n_folds=3,
+        )
+        assert prep.success
+        folds = prep.fold_plan.get("CompositionBlock", [])
+        assert len(folds) == 3, f"n_folds=3 を指定したが fold 数={len(folds)}"
+
+    def test_stage1_nfolds_default_5(self, sample_data):
+        from extrapolation_discovery_platform.pipeline import stage1_preprocess
+        from extrapolation_discovery_platform.features import FeatureSetName
+        X, y, comp = sample_data
+        prep = stage1_preprocess(
+            X, y, comp, [FeatureSetName.FS_BASE.value], ["WF-LIN"],
+            seeds=[42], active_policies=["CompositionBlock"],
+        )
+        folds = prep.fold_plan.get("CompositionBlock", [])
+        assert len(folds) == 5, f"デフォルト fold 数={len(folds)} (期待: 5)"
+
+    def test_runner_nfolds_stored(self, sample_data):
+        from extrapolation_discovery_platform.runner import ExperimentRunner
+        runner = ExperimentRunner(seeds=[42], quick=True, n_folds=3)
+        assert runner._n_folds == 3, f"_n_folds={runner._n_folds} (期待: 3)"
+
+    def test_runner_nfolds_propagated(self, sample_data):
+        from extrapolation_discovery_platform.runner import ExperimentRunner
+        X, y, comp = sample_data
+        runner = ExperimentRunner(seeds=[42], quick=True, n_folds=3)
+        runs, _, _ = runner.run(
+            comp, X, y,
+            selected_workflows=["WF-LIN"],
+            selected_feature_sets=["FS_BASE"],
+            selected_split_policies=["CompositionBlock"],
+        )
+        cb_runs = [r for r in runs if r.split_policy == "CompositionBlock"]
+        assert len(cb_runs) > 0
+        max_fold = max(r.fold for r in cb_runs)
+        assert max_fold == 2, f"n_folds=3 だが最大 fold={max_fold} (期待: 2)"
+
+    def test_gui_slider_defined(self):
+        from pathlib import Path
+        import extrapolation_discovery_platform
+        base = Path(extrapolation_discovery_platform.__file__).parent
+        with open(base / 'gui' / 'app.py') as f:
+            app_src = f.read()
+        assert 'n_folds_slider' in app_src, "GUI に n_folds_slider が定義されていない"
+        assert 'n_folds_slider,' in app_src, "n_folds_slider が run_btn.click inputs に配線されていない"
+
 class TestT9_JobFactory:
     """T9: _run_job が _IR_FACTORIES に委譲している（二重実装なし）。"""
 

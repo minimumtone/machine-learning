@@ -160,13 +160,43 @@ def remove_perfect_collinear(
 def remove_constant_columns(
     X: pd.DataFrame,
     variance_threshold: float = 1e-10,
+    freq_ratio_threshold: float = 19.0,
+    unique_frac_threshold: float = 0.10,
 ) -> Tuple[pd.DataFrame, List[str]]:
-    """Remove columns with near-zero variance (constants)."""
+    """Remove constant and near-zero-variance columns.
+
+    Two criteria (either one drops the column):
+
+    1. ``std < variance_threshold`` — effectively constant.
+    2. caret 流の near-zero-variance 判定: 最頻値と第 2 頻値の頻度比が
+       ``freq_ratio_threshold`` を超え、かつユニーク値の割合が
+       ``unique_frac_threshold`` 未満の列。スケールに依存しないため、
+       「ほぼ全行が同じ値だが std は 0 でない」列（例: 温度がほぼ一定）
+       も除去できる。
+    """
     stds = X.std()
-    const_cols = stds[stds < variance_threshold].index.tolist()
-    if const_cols:
-        logger.warning('Removing %d constant columns: %s', len(const_cols), const_cols)
-    return X.drop(columns=const_cols), const_cols
+    const_cols = set(stds[stds < variance_threshold].index)
+
+    n = len(X)
+    for col in X.columns:
+        if col in const_cols or n == 0:
+            continue
+        counts = X[col].value_counts(dropna=False)
+        if len(counts) < 2:
+            const_cols.add(col)
+            continue
+        freq_ratio = counts.iloc[0] / max(counts.iloc[1], 1)
+        unique_frac = len(counts) / n
+        if freq_ratio > freq_ratio_threshold and unique_frac < unique_frac_threshold:
+            const_cols.add(col)
+
+    const_list = [c for c in X.columns if c in const_cols]
+    if const_list:
+        logger.warning(
+            'Removing %d constant/near-zero-variance columns: %s',
+            len(const_list), const_list,
+        )
+    return X.drop(columns=const_list), const_list
 
 
 # ---------------------------------------------------------------------------

@@ -87,10 +87,12 @@ class CompositionBlockSplitter(BaseSplitter):
     """Cluster-based splitting on composition vectors.
 
     1. Standardise composition vectors.
-    2. k-means clustering (k = n_folds).
-    3. Each cluster forms one test fold.
+    2. k-means clustering (k = 3 × n_folds).
+    3. Greedily group clusters into n_folds size-balanced folds;
+       each group of whole clusters forms one test fold.
 
-    This prevents same-family alloys leaking between train/test.
+    This prevents same-family alloys leaking between train/test while
+    keeping fold sizes reasonably balanced.
 
     Parameters
     ----------
@@ -149,7 +151,13 @@ class CompositionBlockSplitter(BaseSplitter):
             )
         )
 
-        actual_k = min(self._n_folds, len(compositions))
+        n = len(compositions)
+        n_folds = min(self._n_folds, n)
+        # クラスタをそのまま fold にするとサイズが極端に不均衡になり得る
+        # （例: 5 fold で 114:38:5:34:96）。細かめにクラスタリングした上で
+        # クラスタ単位のまま貪欲ビンパッキングで n_folds 群に束ねることで、
+        # 組成ファミリの分離を保ちながら fold サイズを平準化する。
+        actual_k = min(n_folds * 3, n)
         km = KMeans(
             n_clusters=actual_k,
             random_state=self._seed,
@@ -157,19 +165,32 @@ class CompositionBlockSplitter(BaseSplitter):
             max_iter=300,
         )
         labels = km.fit_predict(comp_scaled)
-        all_idx = np.arange(len(compositions))
+        all_idx = np.arange(n)
 
+        cluster_sizes = [(k, int((labels == k).sum())) for k in range(actual_k)]
+        cluster_sizes = [(k, s) for k, s in cluster_sizes if s > 0]
         logger.debug(
             "CompositionBlock split: k=%d, cluster sizes=%s",
-            actual_k,
-            [int((labels == k).sum()) for k in range(actual_k)],
+            actual_k, [s for _, s in cluster_sizes],
         )
 
+        # 大きいクラスタから順に、現在最小の fold に割り当てる（貪欲法）
+        fold_members: List[List[int]] = [[] for _ in range(n_folds)]
+        fold_totals = np.zeros(n_folds, dtype=int)
+        for k, size in sorted(cluster_sizes, key=lambda t: -t[1]):
+            dest = int(np.argmin(fold_totals))
+            fold_members[dest].append(k)
+            fold_totals[dest] += size
+
+        logger.debug("CompositionBlock fold sizes (balanced)=%s", fold_totals.tolist())
+
         actual_folds = 0
-        for fold_label in range(actual_k):
-            test_mask = labels == fold_label
+        for members in fold_members:
+            if not members:
+                logger.warning("Empty fold – skipping")
+                continue
+            test_mask = np.isin(labels, members)
             if test_mask.sum() == 0:
-                logger.warning("Empty cluster %d – skipping fold", fold_label)
                 continue
             actual_folds += 1
             yield all_idx[~test_mask], all_idx[test_mask]
