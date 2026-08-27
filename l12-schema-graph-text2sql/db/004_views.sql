@@ -22,8 +22,10 @@ SELECT
     ref.weighted_ref_energy,
     CASE
         WHEN ref.n_elements = ref.n_referenced
-         -- The view re-checks composition normalization itself instead of
+         -- The declared element count must match the actual composition;
+         -- the view re-checks this and the normalization itself instead of
          -- trusting that the one-time 006 assertion covered later inserts.
+         AND m.number_of_elements = ref.n_elements
          AND ABS(ref.fraction_sum - 1.0) <= 1e-8
         THEN ps.formation_energy_per_atom - ref.weighted_ref_energy
         ELSE NULL
@@ -33,11 +35,14 @@ JOIN phase_stability ps ON ps.entry_id = m.entry_id
 LEFT JOIN structure s ON s.entry_id = m.entry_id
 LEFT JOIN LATERAL (
     SELECT
-        COUNT(*) AS n_elements,
-        -- A reference row only counts when it actually carries an energy;
-        -- a row with NULL energy_per_atom must not pass the completeness
+        -- Composition is site-resolved (the same element may appear on
+        -- several sites), so element counts must be DISTINCT over elements,
+        -- not raw row counts.
+        COUNT(DISTINCT c.element) AS n_elements,
+        -- A reference element only counts when it actually carries an
+        -- energy; a NULL energy_per_atom must not pass the completeness
         -- gate (its contribution would silently drop out of the SUM).
-        COUNT(*) FILTER (
+        COUNT(DISTINCT c.element) FILTER (
             WHERE per.element_symbol IS NOT NULL
               AND per.energy_per_atom IS NOT NULL
         ) AS n_referenced,

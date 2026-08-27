@@ -30,7 +30,7 @@ CREATE TABLE material_entry (
     formula TEXT NOT NULL,
     reduced_formula TEXT,
     chemical_system TEXT,
-    number_of_elements INTEGER CHECK (number_of_elements > 0)
+    number_of_elements INTEGER NOT NULL CHECK (number_of_elements > 0)
 );
 
 -- === Element & Periodic Table ===
@@ -117,7 +117,9 @@ CREATE TABLE phase_stability (
     stability_id TEXT PRIMARY KEY,
     entry_id TEXT NOT NULL UNIQUE REFERENCES material_entry(entry_id),
     formation_energy_per_atom DOUBLE PRECISION,
-    energy_above_hull DOUBLE PRECISION CHECK (energy_above_hull >= 0),
+    -- NOT NULL keeps the generated is_stable strictly two-valued
+    -- (a NULL hull energy would make is_stable NULL, i.e. three-valued).
+    energy_above_hull DOUBLE PRECISION NOT NULL CHECK (energy_above_hull >= 0),
     is_stable BOOLEAN GENERATED ALWAYS AS (energy_above_hull <= 0.001) STORED,
     band_gap DOUBLE PRECISION CHECK (band_gap >= 0)
 );
@@ -224,7 +226,12 @@ CREATE TABLE experimental_measurement (
     reference_id INTEGER REFERENCES literature_reference(reference_id),
     method VARCHAR(100),  -- 'XRD', 'neutron_diffraction', 'calorimetry'
     temperature_k NUMERIC(8,2) CHECK (temperature_k >= 0),
-    pressure_gpa NUMERIC(8,3) CHECK (pressure_gpa >= 0)
+    pressure_gpa NUMERIC(8,3) CHECK (pressure_gpa >= 0),
+    -- One measurement per (entry, reference, method, T, P); replicate
+    -- measurements are outside this verification schema, so accidental
+    -- double-loading of the same measurement is rejected.
+    UNIQUE NULLS NOT DISTINCT
+        (entry_id, reference_id, method, temperature_k, pressure_gpa)
 );
 
 CREATE TABLE measured_property (
@@ -234,6 +241,9 @@ CREATE TABLE measured_property (
     value NUMERIC(15,6),
     uncertainty NUMERIC(15,6) CHECK (uncertainty >= 0),
     unit VARCHAR(30),
+    -- Intentional simplification: one scalar value per (measurement,
+    -- property); component-resolved experimental properties are outside
+    -- this verification schema.
     UNIQUE (measurement_id, property_name),
     FOREIGN KEY (property_name)
         REFERENCES property_definition(canonical_name),
@@ -339,7 +349,7 @@ CREATE TABLE thermal_property (
     thermal_conductivity DOUBLE PRECISION CHECK (thermal_conductivity >= 0),
     specific_heat_cv DOUBLE PRECISION CHECK (specific_heat_cv >= 0),
     gruneisen_parameter DOUBLE PRECISION,
-    temperature_k DOUBLE PRECISION DEFAULT 300.0 CHECK (temperature_k >= 0),
+    temperature_k DOUBLE PRECISION NOT NULL DEFAULT 300.0 CHECK (temperature_k >= 0),
     UNIQUE (calculation_id, temperature_k)
 );
 
@@ -421,7 +431,10 @@ CREATE TABLE pure_element_reference (
     -- reference_set points at the reference_energy_set master, which fixes
     -- method / functional / source once per set (join the master to read
     -- them). formation_enthalpy pins one set.
-    reference_set TEXT NOT NULL DEFAULT 'OQMD-PBE'
+    -- No DEFAULT on purpose: the energy convention is required scientific
+    -- metadata, so omitting it must fail instead of silently becoming
+    -- some default set.
+    reference_set TEXT NOT NULL
         REFERENCES reference_energy_set(reference_set),
     oqmd_entry_id INTEGER,
     ground_state_spacegroup VARCHAR(30),
