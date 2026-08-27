@@ -150,7 +150,7 @@ def get_additional_materials_terms():
         ("エネルギー凸包", "OQMD", "energy_convex_hull"),
         ("生成エンタルピー", "OQMD", "formation_enthalpy"),
         ("全エネルギー", "OQMD", "total_energy"),
-        ("原子あたりエネルギー", "OQMD", "energy_per_atom"),
+        ("原子あたりエネルギー", "OQMD", "delta_e"),
         ("磁性状態", "OQMD", "magnetic_state"),
         ("非磁性", "OQMD", "non_magnetic"),
         ("反強磁性", "OQMD", "antiferromagnetic"),

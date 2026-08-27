@@ -3,6 +3,9 @@
 -- Cross-row invariants that a per-row CHECK cannot express.
 -- Each block RAISEs (aborting the load) if the invariant is violated,
 -- so a database that finishes loading is guaranteed to satisfy them.
+-- This file is assertion-only and idempotent: it may be re-run at any
+-- time to re-validate the loaded data. The one-time initialization
+-- marker lives in 007_initialization_marker.sql.
 -- ============================================================
 
 -- Composition must be normalized: atomic fractions sum to 1 per entry.
@@ -54,34 +57,32 @@ BEGIN
 END
 $$;
 
--- NULL reference energies are now rejected row-by-row by the DDL
--- (pure_element_reference.energy_per_atom NOT NULL); this file keeps only
+-- NULL elemental delta_e values are rejected row-by-row by the DDL
+-- (pure_element_reference.delta_e NOT NULL); this file keeps only
 -- cross-row invariants that a single-row constraint cannot express.
 
--- The formation_enthalpy view pins reference_set = 'OQMD-PBE'; if the set
--- were renamed the view would not error but silently return NULLs, so its
--- existence and per-element coverage are asserted here.
+-- Set-wise reference coverage: for every energy convention actually used
+-- by phase_stability, every element of every material in that convention
+-- must have an elemental delta_e in the SAME reference_set. This is a
+-- true set difference (per reviewer guidance), not a count comparison,
+-- so it also catches per-set gaps when multiple conventions coexist.
 DO $$
 DECLARE
-    n_ref BIGINT;
+    n_missing BIGINT;
 BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM reference_energy_set WHERE reference_set = 'OQMD-PBE'
-    ) THEN
-        RAISE EXCEPTION
-            'Required reference energy set OQMD-PBE does not exist';
-    END IF;
-    SELECT COUNT(*) INTO n_ref
+    SELECT COUNT(*) INTO n_missing
     FROM (
-        SELECT DISTINCT element FROM composition
+        SELECT DISTINCT ps.reference_set, c.element
+        FROM phase_stability ps
+        JOIN composition c ON c.entry_id = ps.entry_id
         EXCEPT
-        SELECT element_symbol FROM pure_element_reference
-        WHERE reference_set = 'OQMD-PBE'
+        SELECT per.reference_set, per.element_symbol
+        FROM pure_element_reference per
     ) missing;
-    IF n_ref > 0 THEN
+    IF n_missing > 0 THEN
         RAISE EXCEPTION
-            'pure_element_reference(OQMD-PBE) is missing % element(s) used in composition',
-            n_ref;
+            'pure_element_reference: % (reference_set, element) pairs used by phase_stability materials have no elemental delta_e in the same set',
+            n_missing;
     END IF;
 END
 $$;
@@ -111,18 +112,5 @@ BEGIN
 END
 $$;
 
--- Initialization completion marker: created only after every assertion
--- above has passed. A database missing this row (e.g. 001–005 loaded but
--- 006 failed) is a partial initialization and must not be used as a
--- verification DB.
--- NOTE: this is an initialization completion marker only, NOT a current
--- integrity status — it records that the assertions held at load time and
--- is not invalidated by later writes. This package treats the loaded DB
--- as an immutable verification fixture (see README): post-006 entity
--- INSERT/UPDATE/DELETE is unsupported, and queries should run as the
--- read-only role l12_reader.
-CREATE TABLE schema_initialization_status (
-    version TEXT PRIMARY KEY,
-    initialized_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-INSERT INTO schema_initialization_status (version) VALUES ('006');
+-- (Initialization completion marker moved to 007_initialization_marker.sql
+-- so this assertion file stays re-runnable.)

@@ -14,7 +14,7 @@ JOIN elastic_tensor et ON et.calculation_id = cal_et.calculation_id
 enthalpy AS (
     SELECT sl.entry_id, sl.formula, sl.formation_energy_per_atom,
            sl.bulk_modulus_vrh,
-           SUM(comp.atomic_fraction * per.energy_per_atom) AS weighted_ref
+           SUM(comp.atomic_fraction * per.delta_e) AS weighted_ref
     FROM stiff_l12 sl
     JOIN composition comp ON comp.entry_id = sl.entry_id
     JOIN pure_element_reference per ON per.element_symbol = comp.element

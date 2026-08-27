@@ -118,14 +118,16 @@ allowed_columns:
   - formation_enthalpy.formula
   - formation_enthalpy.reduced_formula
   - formation_enthalpy.formation_enthalpy_ev_per_atom
+  - formation_enthalpy.reference_set
   - formation_enthalpy.energy_above_hull
   - formation_enthalpy.is_stable
   - formation_enthalpy.prototype
   - formation_enthalpy.strukturbericht
   - formation_enthalpy.space_group
   - formation_enthalpy.lattice_a
-  - formation_enthalpy.weighted_ref_energy
-  - formation_enthalpy.corrected_formation_enthalpy
+  - formation_enthalpy.weighted_element_delta_e
+  - formation_enthalpy.enthalpy_vs_element_ground_states
+  - formation_enthalpy.reference_status
   - grain_boundary.grain_boundary_id
   - grain_boundary.entry_id
   - grain_boundary.sigma_value
@@ -198,6 +200,7 @@ allowed_columns:
   - phase_stability.stability_id
   - phase_stability.entry_id
   - phase_stability.formation_energy_per_atom
+  - phase_stability.reference_set
   - phase_stability.energy_above_hull
   - phase_stability.is_stable
   - phase_stability.band_gap
@@ -217,7 +220,7 @@ allowed_columns:
   - pure_element_reference.reference_set
   - pure_element_reference.oqmd_entry_id
   - pure_element_reference.ground_state_spacegroup
-  - pure_element_reference.energy_per_atom
+  - pure_element_reference.delta_e
   - pure_element_reference.volume_per_atom
   - pure_element_reference.stability
   - pure_element_reference.band_gap
@@ -226,6 +229,7 @@ allowed_columns:
   - reference_energy_set.method
   - reference_energy_set.functional
   - reference_energy_set.source
+  - reference_energy_set.fit_name
   - reference_energy_set.description
   - schema_initialization_status.version
   - schema_initialization_status.initialized_at
@@ -436,6 +440,11 @@ allowed_joins:
     source_column: entry_id
     target_table: material_entry
     target_column: entry_id
+
+  - source_table: phase_stability
+    source_column: reference_set
+    target_table: reference_energy_set
+    target_column: reference_set
 
   - source_table: pure_element_reference
     source_column: element_symbol

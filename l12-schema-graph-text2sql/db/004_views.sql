@@ -2,24 +2,41 @@
 -- 004_views.sql — Derived views
 -- ============================================================
 
--- Formation enthalpy view: corrected ΔH_f using pure-element reference
--- energies. The weighted reference energy is computed once (LATERAL) and the
--- corrected value is NULL unless a reference energy exists for every
--- constituent element (missing reference data is never silently treated as
--- zero).
+-- Formation enthalpy view. Defined quantity (single, explicit choice):
+--
+--   formation_enthalpy_ev_per_atom
+--       = phase_stability.formation_energy_per_atom
+--       = the source formation energy (OQMD delta_e convention), relative
+--         to the fitted elemental reference states of ps.reference_set.
+--       This IS the formation enthalpy; no further subtraction is applied
+--       to it (subtracting elemental delta_e again would double-correct).
+--
+--   enthalpy_vs_element_ground_states
+--       = ps.formation_energy_per_atom - SUM(x_i * per.delta_e_i)
+--       = the formation energy re-referenced to the stored pure-element
+--         GROUND STATES instead of the fitted reference states. This is a
+--         well-defined re-referencing (the fitted reference energies cancel
+--         exactly) and is only computed when every constituent element has
+--         a delta_e in the SAME reference_set as the material
+--         (per.reference_set = ps.reference_set — never a fixed set, so
+--         conventions are never mixed across source databases).
+--
+-- reference_status makes a NULL re-referenced value diagnosable instead of
+-- silent (missing reference / composition problems / count mismatch).
 CREATE OR REPLACE VIEW formation_enthalpy AS
 SELECT
     m.entry_id,
     m.formula,
     m.reduced_formula,
     ps.formation_energy_per_atom AS formation_enthalpy_ev_per_atom,
+    ps.reference_set,
     ps.energy_above_hull,
     ps.is_stable,
     s.prototype,
     s.strukturbericht,
     s.space_group,
     s.lattice_a,
-    ref.weighted_ref_energy,
+    ref.weighted_element_delta_e,
     CASE
         WHEN ref.n_elements = ref.n_referenced
          -- The declared element count must match the actual composition;
@@ -27,9 +44,18 @@ SELECT
          -- trusting that the one-time 006 assertion covered later inserts.
          AND m.number_of_elements = ref.n_elements
          AND ABS(ref.fraction_sum - 1.0) <= 1e-8
-        THEN ps.formation_energy_per_atom - ref.weighted_ref_energy
+        THEN ps.formation_energy_per_atom - ref.weighted_element_delta_e
         ELSE NULL
-    END AS corrected_formation_enthalpy
+    END AS enthalpy_vs_element_ground_states,
+    CASE
+        WHEN m.number_of_elements <> ref.n_elements
+            THEN 'element_count_mismatch'
+        WHEN ABS(ref.fraction_sum - 1.0) > 1e-8
+            THEN 'invalid_composition'
+        WHEN ref.n_elements <> ref.n_referenced
+            THEN 'missing_reference_for_set'
+        ELSE 'ok'
+    END AS reference_status
 FROM material_entry m
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
 LEFT JOIN structure s ON s.entry_id = m.entry_id
@@ -39,21 +65,21 @@ LEFT JOIN LATERAL (
         -- several sites), so element counts must be DISTINCT over elements,
         -- not raw row counts.
         COUNT(DISTINCT c.element) AS n_elements,
-        -- A reference element only counts when it actually carries an
-        -- energy; a NULL energy_per_atom must not pass the completeness
-        -- gate (its contribution would silently drop out of the SUM).
+        -- A reference element only counts when it actually carries a
+        -- delta_e (NOT NULL by DDL, but the guard stays defensive so a
+        -- schema relaxation could not silently drop terms from the SUM).
         COUNT(DISTINCT c.element) FILTER (
             WHERE per.element_symbol IS NOT NULL
-              AND per.energy_per_atom IS NOT NULL
+              AND per.delta_e IS NOT NULL
         ) AS n_referenced,
         SUM(c.atomic_fraction) AS fraction_sum,
-        SUM(c.atomic_fraction * per.energy_per_atom) AS weighted_ref_energy
+        SUM(c.atomic_fraction * per.delta_e) AS weighted_element_delta_e
     FROM composition c
     LEFT JOIN pure_element_reference per
         ON per.element_symbol = c.element
-       -- Pin one energy convention: mixing reference sets would subtract
-       -- energies computed under different DFT settings.
-       AND per.reference_set = 'OQMD-PBE'
+       -- Join on the material's OWN energy convention: elemental delta_e
+       -- values are only subtractable within the same reference_set.
+       AND per.reference_set = ps.reference_set
     WHERE c.entry_id = m.entry_id
 ) ref ON TRUE
 WHERE m.number_of_elements >= 2;

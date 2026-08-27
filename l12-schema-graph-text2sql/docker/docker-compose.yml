@@ -15,3 +15,4 @@ services:
       - ../db/004_views.sql:/docker-entrypoint-initdb.d/004_views.sql
       - ../db/005_roles.sql:/docker-entrypoint-initdb.d/005_roles.sql
       - ../db/006_integrity_checks.sql:/docker-entrypoint-initdb.d/006_integrity_checks.sql
+      - ../db/007_initialization_marker.sql:/docker-entrypoint-initdb.d/007_initialization_marker.sql

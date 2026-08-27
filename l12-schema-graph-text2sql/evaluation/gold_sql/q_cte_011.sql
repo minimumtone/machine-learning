@@ -14,7 +14,7 @@ JOIN thermal_property tp ON tp.calculation_id = cal_tp.calculation_id
 enthalpy AS (
     SELECT tl.entry_id, tl.formula, tl.formation_energy_per_atom,
            tl.debye_temperature_k,
-           SUM(comp.atomic_fraction * per.energy_per_atom) AS weighted_ref
+           SUM(comp.atomic_fraction * per.delta_e) AS weighted_ref
     FROM thermal_l12 tl
     JOIN composition comp ON comp.entry_id = tl.entry_id
     JOIN pure_element_reference per ON per.element_symbol = comp.element

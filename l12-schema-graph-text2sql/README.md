@@ -46,15 +46,22 @@ cd ..
 
 これにより `db/001_schema.sql`（33テーブル）→ `db/002_reference_data.sql`（マスタ）→
 `db/003_material_data.sql`（材料データ）→ `db/004_views.sql`（ビュー）→
-`db/005_roles.sql`（読み取り専用ロール）→ `db/006_integrity_checks.sql`（整合性検査）が順に自動適用されます。
+`db/005_roles.sql`（読み取り専用ロール）→ `db/006_integrity_checks.sql`（整合性検査、再実行可能）→
+`db/007_initialization_marker.sql`（初期化完了マーカー）が順に自動適用されます。
 
 注意：`db/005_roles.sql` は所有者ロール `l12_user` を名指しで参照するため、`POSTGRES_USER` はデフォルトの `l12_user` から変更しないでください（変更するとロード時に明示的なエラーで停止します）。
 
-注意：`db/006_integrity_checks.sql` が失敗したDB（001〜005のみ適用された途中状態）を検証用DBとして使用しないでください。006 の全アサーション通過後にのみ `schema_initialization_status` テーブルに `version='006'` の行が作成されるため、使用前に `SELECT 1 FROM schema_initialization_status WHERE version='006';` で初期化完了を確認できます。このマーカーは「初期化完了マーカー」であり、現在の整合性状態の保証ではありません（006後に書き換えれば壊せます）。本DBは006完了後は不変（immutable）な検証用フィクスチャとして扱い、006完了後のエンティティデータのINSERT/UPDATE/DELETEはサポートしません。利用は読み取り専用ロール `l12_reader` で行い、migration owner（`l12_user`）以外にwrite権限を与えないでください。また、propertyディクショナリ（`property_definition`）の変更と各propertyテーブルへの書き込みを並行して行うことは想定していません。
+注意：`db/006_integrity_checks.sql` が失敗したDB（001〜005のみ適用された途中状態）を検証用DBとして使用しないでください。006 はアサーションのみの再実行可能ファイルで、任意の時点で再検証に使えます。006 の全アサーション通過後に適用される `db/007_initialization_marker.sql` が `schema_initialization_status` テーブルに `version='007'` の行を作成するため、使用前に `SELECT 1 FROM schema_initialization_status WHERE version='007';` で初期化完了を確認できます。このマーカーは「初期化完了マーカー」であり、現在の整合性状態の保証ではありません（初期化後に書き換えれば壊せます）。本DBは初期化完了後は不変（immutable）な検証用フィクスチャとして扱い、初期化完了後のエンティティデータのINSERT/UPDATE/DELETEはサポートしません。利用は読み取り専用ロール `l12_reader` で行い、migration owner（`l12_user`）以外にwrite権限を与えないでください。また、propertyディクショナリ（`property_definition`）の変更と各propertyテーブルへの書き込みを並行して行うことは想定していません。
 
 3値BOOLEANの扱い：`density_of_states.is_metallic` のみ意図的にNULL可（NULL=金属性未判定）です。gold SQL では「金属」を `is_metallic = TRUE`（判定済みのTRUEのみ）として扱い、NULL（未判定）は「金属」にも「非金属」にも含めない規約に統一しています。他のBOOLEAN列はすべて NOT NULL です（`phase_stability.is_stable` は `energy_above_hull NOT NULL` により生成列も常に2値）。
 
 設計上の意図的な簡略化：`calculation` は (entry, calculation_type, method, functional) ごとに1件のみ保持します。カットオフ・k点メッシュ・擬ポテンシャル・U値などの数値パラメータ軸は本検証用DBでは持たず、汎用の計算アーカイブとしては UNIQUE が強すぎる点を明示しておきます。
+
+エネルギー規約（reference_set）：`phase_stability.formation_energy_per_atom` は「その材料の `reference_set`（`reference_energy_set` マスタへのFK）が定める元素参照状態に対する生成エネルギー」です。純元素側の `pure_element_reference.delta_e` は OQMD の delta_e（生成エネルギー、eV/atom）であり、全DFTエネルギーでも参照エネルギー値そのものでもありません。`formation_enthalpy` ビューの `enthalpy_vs_element_ground_states` は同一 `reference_set` 内で `formation_energy - Σ xᵢ·delta_eᵢ` を計算し、「フィットされた参照状態基準」を「収録純元素基底状態基準」へ付け替えた値です（同一規約内では参照エネルギーが厳密に相殺するため二重補正にはなりません）。異なる `reference_set` 間の混用はビューのJOIN条件（`per.reference_set = ps.reference_set`）と006のset単位被覆検査で構造的に防がれます。なお本フィクスチャの数値は単一の生成プロセスによる合成データで、`material_entry.source_db`（OQMD / Materials Project / AFLOW）は出所ラベルにすぎず、全行が単一規約 `OQMD-PBE` に属します（マルチ規約データを載せる場合は `reference_energy_set` に行を追加し、同じ機構がset別に機能します）。
+
+実験測定の未知条件の制限：`experimental_measurement` の `UNIQUE NULLS NOT DISTINCT` により、NULL の測定条件（reference/method/温度/圧力）は独立した測定を表しません。同一材料につき「条件未知の測定」は1件しか表現できず、独立した実測値を共存させるには実際の測定条件を記録する必要があります。
+
+転用スキーマ（`db/transfer_schema.sql`）の安定性truth：転用評価DBでは `oqmd_formation_energies.on_hull` は `hull_distance <= 0.001` から導出される生成列であり、両者が矛盾する行は存在できません。転用gold SQLの安定判定は `on_hull = true`（すなわち `hull_distance <= 0.001`、本体スキーマと同一の運用定義）をtruthとします。
 
 ### 3. 環境変数の設定
 
@@ -106,7 +113,8 @@ l12-schema-graph-text2sql/
 │   ├── 003_material_data.sql   # 材料エントリデータ（1,470化合物+89純元素）
 │   ├── 004_views.sql           # 派生ビュー（formation_enthalpy）
 │   ├── 005_roles.sql           # 読み取り専用ロール（l12_reader）
-│   ├── 006_integrity_checks.sql # ロード後整合性検査（組成合計=1等）
+│   ├── 006_integrity_checks.sql # ロード後整合性検査（組成合計=1等、再実行可能）
+│   ├── 007_initialization_marker.sql # 初期化完了マーカー
 │   └── sample_queries.sql
 ├── ingestion/           # データ生成・正規化
 │   ├── generate_extended_data.py  # 拡張データ生成

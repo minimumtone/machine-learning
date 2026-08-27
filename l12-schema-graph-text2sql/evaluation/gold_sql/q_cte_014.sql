@@ -2,7 +2,7 @@
 -- 「元素ごとに、その元素を含むL1₂化合物のうち生成エンタルピーが負である割合を出して」
 WITH enthalpy AS (
     SELECT m.entry_id, m.formula, ps.formation_energy_per_atom,
-           SUM(comp.atomic_fraction * per.energy_per_atom) AS weighted_ref
+           SUM(comp.atomic_fraction * per.delta_e) AS weighted_ref
     FROM material_entry m
     JOIN structure s ON s.entry_id = m.entry_id
     JOIN phase_stability ps ON ps.entry_id = m.entry_id

@@ -23,16 +23,22 @@ CREATE TABLE oqmd_formation_energies (
     fe_key        TEXT PRIMARY KEY,
     entry_key     TEXT NOT NULL REFERENCES oqmd_entries(entry_key),
     delta_e       DOUBLE PRECISION,
-    hull_distance DOUBLE PRECISION,
-    on_hull       BOOLEAN,
-    gap_ev        DOUBLE PRECISION
+    hull_distance DOUBLE PRECISION NOT NULL CHECK (hull_distance >= 0),
+    -- Stability truth (single source): on_hull is DERIVED from
+    -- hull_distance with the same operational definition as the main
+    -- schema (stable <=> hull_distance <= 0.001 eV/atom), so the two
+    -- columns can never contradict each other. Transfer gold SQL may use
+    -- either; both are the same truth.
+    on_hull       BOOLEAN GENERATED ALWAYS AS (hull_distance <= 0.001) STORED,
+    gap_ev        DOUBLE PRECISION CHECK (gap_ev >= 0)
 );
 
 CREATE TABLE oqmd_element_ratios (
     ratio_key    TEXT PRIMARY KEY,
     entry_key    TEXT NOT NULL REFERENCES oqmd_entries(entry_key),
     symbol       VARCHAR(5) NOT NULL REFERENCES oqmd_elements(symbol),
-    atomic_ratio DOUBLE PRECISION,
+    atomic_ratio DOUBLE PRECISION NOT NULL
+        CHECK (atomic_ratio > 0 AND atomic_ratio <= 1),
     wyckoff_site TEXT
 );
 
