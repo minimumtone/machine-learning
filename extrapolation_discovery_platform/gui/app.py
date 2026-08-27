@@ -1921,6 +1921,25 @@ def _handle_csv_upload(
 
         # Compute features
         features_df = compute_features(compositions, feature_set=None)
+        source_extra = raw.loc[valid_indices].reset_index(drop=True)
+        extra_numeric_cols = [
+            c for c in source_extra.columns
+            if pd.api.types.is_numeric_dtype(source_extra[c])
+            and c not in elem_cols
+            and c != target_col_clean
+            and c not in features_df.columns
+        ]
+        carried_extra_cols: List[str] = []
+        for col in extra_numeric_cols:
+            values = pd.to_numeric(source_extra[col], errors="coerce")
+            if values.notna().any():
+                features_df[col] = values
+                carried_extra_cols.append(col)
+        logger.info(
+            "HEA CSV: carried over %d extra numeric columns: %s",
+            len(carried_extra_cols),
+            carried_extra_cols,
+        )
         # Consolidate to C-contiguous to avoid fragmented BlockManager
         features_df = _consolidate_df(features_df)
 

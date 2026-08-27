@@ -379,8 +379,11 @@ def run_phase0_multicollinearity(
     for fs in feature_sets:
         fs_key = fs.value
         cols = FeatureCatalog.columns(fs)
+        catalog_cols = set(FeatureCatalog.all_columns())
+        extra_cols = [c for c in features_all.columns if c not in catalog_cols]
         # Ensure only columns present in features_all are used
         available_cols = [c for c in cols if c in features_all.columns]
+        available_cols.extend(c for c in extra_cols if c not in available_cols)
         if not available_cols:
             logger.warning('Phase 1: no columns available for %s, skipping', fs_key)
             continue
