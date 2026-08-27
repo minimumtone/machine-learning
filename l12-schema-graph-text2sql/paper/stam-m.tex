@@ -108,7 +108,7 @@ To enable natural language access to inorganic materials RDBs, we designed the p
   {\scriptsize GPT-5.5\\ $n$-best = 3}};
 
 \node[stepbox, fill=red!10, right=of llmgen] (guard) {SQLGuard\\
-  {\scriptsize 15 checks}};
+  {\scriptsize 13 checks}};
 
 \node[stepbox, fill=green!10, right=of guard] (rerank) {Reranking\\
   {\scriptsize GPT-5.5}};
@@ -197,7 +197,7 @@ The dictionary improves interpretation of Hard and above queries, especially the
 \subsection{SQLGuard}
 \label{sec:sqlguard}
 
-SQLGuard parses generated SQL into an abstract syntax tree (AST) using sqlglot~\cite{sqlglot2023}, a Python SQL toolkit for parsing, AST analysis, and dialect conversion, and statically verifies safety and consistency by traversing the AST nodes (\texttt{Statement}, \texttt{Select}, \texttt{Column}, \texttt{Table}, \texttt{Join}, etc.). AST analysis via sqlglot enables structural confirmation of multi-statement injection, table/column reference resolution, and subquery nesting depth, which are hard to determine at the text level. SQL failing any check is rejected before execution. The verification consists of 15 checks: multi-statement detection, forbidden keyword (DML/DDL) detection, SELECT-only confirmation, dangerous function prohibition, system table reference prohibition, SELECT-only confirmation of CTE bodies, tautology (injection pattern) detection, automatic LIMIT addition, table and column existence checks, FK-consistent JOIN confirmation, subquery depth limits, type checking of arithmetic operations, a function allowlist, and a complexity budget (limits on CROSS JOINs, recursive CTEs, and the number of referenced relations) (the full list is in Supplementary Section~\ref{sec:sup_method_details}). The number of checks is automatically tallied from the implementation (the \texttt{check\_*} functions called by \texttt{validate\_sql()}) and always matches \texttt{safety.n\_sqlguard\_checks} in \texttt{paper\_data.json}. Note that prohibition of SELECT * and independent verification of UNION/INTERSECT are not included in the current implementation (column references are verified within the scope of the allowed-column check).
+SQLGuard parses generated SQL into an abstract syntax tree (AST) using sqlglot~\cite{sqlglot2023}, a Python SQL toolkit for parsing, AST analysis, and dialect conversion, and statically verifies safety and consistency by traversing the AST nodes (\texttt{Statement}, \texttt{Select}, \texttt{Column}, \texttt{Table}, \texttt{Join}, etc.). AST analysis via sqlglot enables structural confirmation of multi-statement injection, table/column reference resolution, and subquery nesting depth, which are hard to determine at the text level. SQL failing any check is rejected before execution. The verification consists of 13 checks: multi-statement detection, forbidden keyword (DML/DDL) detection, SELECT-only confirmation, dangerous function prohibition, system table reference prohibition, SELECT-only confirmation of CTE bodies, tautology (injection pattern) detection, automatic LIMIT addition, table and column existence checks, FK-consistent JOIN confirmation, subquery depth limits, and type checking of arithmetic operations (the full list is in Supplementary Section~\ref{sec:sup_method_details}). The number of checks is automatically tallied from the implementation (the \texttt{check\_*} functions called by \texttt{validate\_sql()}) and always matches \texttt{safety.n\_sqlguard\_checks} in \texttt{paper\_data.json}. Note that prohibition of SELECT * and independent verification of UNION/INTERSECT are not included in the current implementation (column references are verified within the scope of the allowed-column check).
 
 The value of SQLGuard lies not in accuracy improvement but in guaranteeing pre-execution safety and consistency (see Section~\ref{sec:injection_safety}).
 
@@ -772,7 +772,7 @@ We extracted stable/metastable L1$_2$ candidates satisfying $E_\text{hull} \leq 
 
 \label{sec:sup_injection}
 
-This section provides supplementary information on the safety test results reported in Section~\ref{sec:injection_safety}. SQLGuard's 15 verification items (Section~\ref{sec:sqlguard}) provide defense in depth against multiple threat vectors. Forbidden-keyword detection is regex-based, and the table whitelist is generated automatically from schema metadata.
+This section provides supplementary information on the safety test results reported in Section~\ref{sec:injection_safety}. SQLGuard's 13 verification items (Section~\ref{sec:sqlguard}) provide defense in depth against multiple threat vectors. Forbidden-keyword detection is regex-based, and the table whitelist is generated automatically from schema metadata.
 
 % =====================================================================
 
@@ -1319,9 +1319,9 @@ Degraded terms & --- & 0 \\
 The MeCab custom dictionary aligns all 402 materials terms to a single token each. This is a useful resource when combining this vocabulary with Japanese NLP tools that assume morphological analysis, but as noted above it is not used in the evaluation pipeline of this paper.
 
 
-\subsection{The 15 SQLGuard Checks}
+\subsection{The 13 SQLGuard Checks}
 
-SQLGuard's static verification comprises 15 checks, namely the following check functions called by \texttt{validate\_sql()} (in one-to-one correspondence with the implementation in \texttt{safety/sql\_validator.py}):
+SQLGuard's static verification comprises 13 checks, namely the following check functions called by \texttt{validate\_sql()} (in one-to-one correspondence with the implementation in \texttt{safety/sql\_validator.py}):
 
 \begin{enumerate}[nosep]
   \item Multi-statement detection (\texttt{check\_multiple\_statements})
@@ -1337,8 +1337,6 @@ SQLGuard's static verification comprises 15 checks, namely the following check f
   \item FK-consistent JOIN verification (\texttt{check\_join\_validity})
   \item Subquery nesting depth limit (\texttt{check\_subquery\_depth})
   \item Type validity of arithmetic operations (\texttt{check\_column\_type\_safety})
-  \item Function allowlist: rejects calls to functions outside the allowed list (\texttt{check\_function\_allowlist})
-  \item Complexity budget: limits on CROSS JOINs, recursive CTEs, and the number of referenced relations (\texttt{check\_complexity\_budget})
 \end{enumerate}
 
 Prohibition of SELECT *, DISTINCT recommendation on JOINs, and independent verification of UNION/INTERSECT clauses do not exist in the current implementation. Queries containing SELECT * are not rejected (as long as they stay within allowed tables and columns).
