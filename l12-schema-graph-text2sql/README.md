@@ -50,6 +50,8 @@ cd ..
 
 注意：`db/005_roles.sql` は所有者ロール `l12_user` を名指しで参照するため、`POSTGRES_USER` はデフォルトの `l12_user` から変更しないでください（変更するとロード時に明示的なエラーで停止します）。
 
+注意：`db/006_integrity_checks.sql` が失敗したDB（001〜005のみ適用された途中状態）を検証用DBとして使用しないでください。006 の全アサーション通過後にのみ `schema_verification_status` テーブルに `version='006'` の行が作成されるため、使用前に `SELECT 1 FROM schema_verification_status WHERE version='006';` で初期化完了を確認できます。また、propertyディクショナリ（`property_definition`）の変更と各propertyテーブルへの書き込みを並行して行うことは想定していません。
+
 設計上の意図的な簡略化：`calculation` は (entry, calculation_type, method, functional) ごとに1件のみ保持します。カットオフ・k点メッシュ・擬ポテンシャル・U値などの数値パラメータ軸は本検証用DBでは持たず、汎用の計算アーカイブとしては UNIQUE が強すぎる点を明示しておきます。
 
 ### 3. 環境変数の設定

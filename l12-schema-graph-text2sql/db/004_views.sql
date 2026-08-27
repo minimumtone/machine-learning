@@ -22,6 +22,9 @@ SELECT
     ref.weighted_ref_energy,
     CASE
         WHEN ref.n_elements = ref.n_referenced
+         -- The view re-checks composition normalization itself instead of
+         -- trusting that the one-time 006 assertion covered later inserts.
+         AND ABS(ref.fraction_sum - 1.0) <= 1e-8
         THEN ps.formation_energy_per_atom - ref.weighted_ref_energy
         ELSE NULL
     END AS corrected_formation_enthalpy
@@ -38,6 +41,7 @@ LEFT JOIN LATERAL (
             WHERE per.element_symbol IS NOT NULL
               AND per.energy_per_atom IS NOT NULL
         ) AS n_referenced,
+        SUM(c.atomic_fraction) AS fraction_sum,
         SUM(c.atomic_fraction * per.energy_per_atom) AS weighted_ref_energy
     FROM composition c
     LEFT JOIN pure_element_reference per

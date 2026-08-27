@@ -67,7 +67,7 @@ CREATE TABLE composition (
     composition_id TEXT PRIMARY KEY,
     entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
     element TEXT NOT NULL REFERENCES element(symbol),
-    atomic_fraction DOUBLE PRECISION
+    atomic_fraction DOUBLE PRECISION NOT NULL
         CHECK (atomic_fraction > 0 AND atomic_fraction <= 1),
     site_label TEXT,
     -- Site-resolved composition: the same element may occupy several
@@ -93,7 +93,7 @@ CREATE TABLE space_group (
     crystal_system VARCHAR(30),
     point_group VARCHAR(20),
     laue_class VARCHAR(20),
-    is_centrosymmetric BOOLEAN
+    is_centrosymmetric BOOLEAN NOT NULL
 );
 
 CREATE TABLE structure (
@@ -258,7 +258,7 @@ CREATE TABLE material_synthesis (
     temperature_k NUMERIC(8,2) CHECK (temperature_k >= 0),
     duration_hours NUMERIC(10,2) CHECK (duration_hours >= 0),
     atmosphere VARCHAR(50),
-    success BOOLEAN DEFAULT TRUE
+    success BOOLEAN NOT NULL DEFAULT TRUE
     -- No UNIQUE(entry_id, synthesis_id): the same material may be synthesized
     -- by the same method under different conditions (temperature, duration,
     -- atmosphere, reference); rows are identified by the surrogate PK.
@@ -292,7 +292,7 @@ CREATE TABLE material_defect (
 CREATE TABLE band_structure (
     band_structure_id SERIAL PRIMARY KEY,
     calculation_id TEXT NOT NULL UNIQUE REFERENCES calculation(calculation_id),
-    is_direct_gap BOOLEAN,
+    is_direct_gap BOOLEAN NOT NULL,
     cbm_energy DOUBLE PRECISION,
     vbm_energy DOUBLE PRECISION,
     band_gap_type VARCHAR(20),
@@ -305,8 +305,10 @@ CREATE TABLE density_of_states (
     calculation_id TEXT NOT NULL UNIQUE REFERENCES calculation(calculation_id),
     total_dos_at_fermi DOUBLE PRECISION CHECK (total_dos_at_fermi >= 0),
     efermi DOUBLE PRECISION,
+    -- NULL means metallicity was not determined for this DOS record;
+    -- three-valued on purpose, unlike the other two-state flags.
     is_metallic BOOLEAN,
-    spin_polarized BOOLEAN
+    spin_polarized BOOLEAN NOT NULL
 );
 
 -- === Mechanical/Physical Property Tables ===
@@ -318,7 +320,7 @@ CREATE TABLE elastic_tensor (
     shear_modulus_vrh DOUBLE PRECISION CHECK (shear_modulus_vrh > 0),
     youngs_modulus DOUBLE PRECISION CHECK (youngs_modulus > 0),
     poisson_ratio DOUBLE PRECISION CHECK (poisson_ratio > -1 AND poisson_ratio < 0.5),
-    is_stable BOOLEAN  -- mechanical (Born) stability, distinct from phase stability
+    is_stable BOOLEAN NOT NULL  -- mechanical (Born) stability, distinct from phase stability
 );
 
 CREATE TABLE magnetic_property (
@@ -349,9 +351,9 @@ CREATE TABLE surface_energy (
     miller_index VARCHAR(10) NOT NULL,
     surface_energy_j_m2 DOUBLE PRECISION CHECK (surface_energy_j_m2 > 0),
     work_function DOUBLE PRECISION CHECK (work_function > 0),
-    is_reconstructed BOOLEAN DEFAULT FALSE,
+    is_reconstructed BOOLEAN NOT NULL DEFAULT FALSE,
     -- Reconstructed and unreconstructed variants of the same facet coexist.
-    UNIQUE NULLS NOT DISTINCT (entry_id, miller_index, is_reconstructed)
+    UNIQUE (entry_id, miller_index, is_reconstructed)
 );
 
 CREATE TABLE grain_boundary (
@@ -375,7 +377,7 @@ CREATE TABLE phase_diagram_entry (
     phase_entry_id SERIAL PRIMARY KEY,
     entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
     chemical_system TEXT NOT NULL,
-    is_on_hull BOOLEAN,
+    is_on_hull BOOLEAN NOT NULL,
     decomposition_products TEXT,
     hull_distance DOUBLE PRECISION CHECK (hull_distance >= 0),
     UNIQUE (entry_id, chemical_system)
@@ -402,15 +404,14 @@ CREATE TABLE material_alloy_system (
 
 -- Energy-convention master: each reference_set pins one (method, functional,
 -- source) combination, so the convention is defined in exactly one place.
+-- Child rows carry only reference_set; method/functional/source are
+-- obtained by joining this master, so no second truth can exist.
 CREATE TABLE reference_energy_set (
     reference_set TEXT PRIMARY KEY,
     method TEXT NOT NULL,
     functional TEXT NOT NULL,
     source TEXT NOT NULL,
-    description TEXT,
-    -- Target for the composite FK from pure_element_reference, which keeps
-    -- the denormalized method/functional copies in sync with this master.
-    UNIQUE (reference_set, method, functional)
+    description TEXT
 );
 
 CREATE TABLE pure_element_reference (
@@ -418,11 +419,8 @@ CREATE TABLE pure_element_reference (
     element_symbol VARCHAR(5) NOT NULL REFERENCES element(symbol),
     -- Reference energies are only comparable within one energy convention;
     -- reference_set points at the reference_energy_set master, which fixes
-    -- method / functional / source once per set. formation_enthalpy pins
-    -- one set. The composite FK below keeps the denormalized method /
-    -- functional copies consistent with the master.
-    method TEXT NOT NULL DEFAULT 'DFT',
-    functional TEXT NOT NULL DEFAULT 'PBE',
+    -- method / functional / source once per set (join the master to read
+    -- them). formation_enthalpy pins one set.
     reference_set TEXT NOT NULL DEFAULT 'OQMD-PBE'
         REFERENCES reference_energy_set(reference_set),
     oqmd_entry_id INTEGER,
@@ -432,10 +430,7 @@ CREATE TABLE pure_element_reference (
     stability DOUBLE PRECISION CHECK (stability >= 0),  -- eV/atom above hull
     band_gap DOUBLE PRECISION CHECK (band_gap >= 0),  -- eV
     n_polymorphs INTEGER CHECK (n_polymorphs > 0),
-    source TEXT DEFAULT 'OQMD',
-    UNIQUE (element_symbol, reference_set),
-    FOREIGN KEY (reference_set, method, functional)
-        REFERENCES reference_energy_set(reference_set, method, functional)
+    UNIQUE (element_symbol, reference_set)
 );
 
 -- === Indexes ===
@@ -565,3 +560,46 @@ CREATE TRIGGER trg_measured_property_applies_to
 CREATE TRIGGER trg_element_property_applies_to
     BEFORE INSERT OR UPDATE OF property_name ON element_property
     FOR EACH ROW EXECUTE FUNCTION check_property_applies_to('element');
+
+-- Master-side guard: applies_to may not be changed while child rows still
+-- reference the property, so the scope guarantee cannot be broken from the
+-- dictionary side either. (Dictionary mutation and child-property writes
+-- are not intended to occur concurrently in this verification DB.)
+-- canonical_name renames are rejected by the child FKs themselves
+-- (NO ACTION, no ON UPDATE CASCADE) once a property is referenced.
+CREATE FUNCTION prevent_invalid_property_scope_change() RETURNS trigger AS $$
+BEGIN
+    IF NEW.applies_to IS NOT DISTINCT FROM OLD.applies_to THEN
+        RETURN NEW;
+    END IF;
+    IF NEW.applies_to <> 'calculated' AND EXISTS (
+        SELECT 1 FROM calculated_property
+        WHERE property_name = OLD.canonical_name
+    ) THEN
+        RAISE EXCEPTION
+            'property % is referenced by calculated_property and cannot change applies_to to %',
+            OLD.canonical_name, NEW.applies_to;
+    END IF;
+    IF NEW.applies_to <> 'measured' AND EXISTS (
+        SELECT 1 FROM measured_property
+        WHERE property_name = OLD.canonical_name
+    ) THEN
+        RAISE EXCEPTION
+            'property % is referenced by measured_property and cannot change applies_to to %',
+            OLD.canonical_name, NEW.applies_to;
+    END IF;
+    IF NEW.applies_to <> 'element' AND EXISTS (
+        SELECT 1 FROM element_property
+        WHERE property_name = OLD.canonical_name
+    ) THEN
+        RAISE EXCEPTION
+            'property % is referenced by element_property and cannot change applies_to to %',
+            OLD.canonical_name, NEW.applies_to;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_property_definition_scope_change
+    BEFORE UPDATE OF applies_to ON property_definition
+    FOR EACH ROW EXECUTE FUNCTION prevent_invalid_property_scope_change();
