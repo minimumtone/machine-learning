@@ -86,6 +86,19 @@ def main() -> None:
             dc.executemany(insert_sql, rows)  # type: ignore[arg-type]
         return len(rows)
 
+    # The transfer DB carries a single energy convention. If the main DB
+    # ever mixed reference sets in phase_stability, the copied formation
+    # energies would silently combine conventions with the single-set
+    # oqmd_reference_states below, so require exactly one set up front.
+    with src.cursor() as sc:
+        sc.execute("SELECT DISTINCT reference_set FROM phase_stability")
+        ref_sets = {row[0] for row in sc.fetchall()}
+    if ref_sets != {"L12-FIXTURE-PBE-v1"}:
+        raise RuntimeError(
+            "transfer build requires phase_stability to use exactly "
+            f"'L12-FIXTURE-PBE-v1', got {sorted(ref_sets)}"
+        )
+
     n = copy(
         "SELECT symbol, name, atomic_number, atomic_mass FROM element",
         "INSERT INTO oqmd_elements VALUES (%s, %s, %s, %s)",

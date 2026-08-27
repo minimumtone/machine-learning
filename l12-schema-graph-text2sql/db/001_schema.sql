@@ -13,8 +13,9 @@
 --     FK-constrained (composition.element, structure.prototype,
 --     structure.space_group_number, EAV property names/units via
 --     property_definition, pure_element_reference.reference_set via
---     reference_energy_set); free-text descriptors (e.g. source_db,
---     category, atmosphere) intentionally remain unconstrained.
+--     reference_energy_set, element.category via a CHECK-constrained
+--     snake_case vocabulary); free-text descriptors (e.g. source_db,
+--     atmosphere) intentionally remain unconstrained.
 --   * Cardinality is explicit: 1:1 relations carry UNIQUE(entry_id) /
 --     UNIQUE(calculation_id); 1:N relations carry a composite natural key.
 --   * phase_stability.is_stable is a generated column derived from
@@ -63,8 +64,25 @@ CREATE TABLE element (
         CHECK (atomic_radius > 0 AND atomic_radius <> 'NaN'),
     group_number INTEGER CHECK (group_number BETWEEN 1 AND 18),
     period_number INTEGER CHECK (period_number BETWEEN 1 AND 7),
-    block VARCHAR(5),
-    category VARCHAR(50)
+    -- block/group_number/period_number: block is required for every
+    -- fixture element; group_number is NULL for f-block interior elements
+    -- (no IUPAC group). category is a required controlled vocabulary
+    -- because gold SQL filters on it.
+    block VARCHAR(5) NOT NULL,
+    category VARCHAR(50) NOT NULL CHECK (
+        category IN (
+            'alkali_metal',
+            'alkaline_earth_metal',
+            'transition_metal',
+            'post_transition_metal',
+            'metalloid',
+            'nonmetal',
+            'halogen',
+            'noble_gas',
+            'lanthanide',
+            'actinide'
+        )
+    )
 );
 
 -- === Property dictionary (canonical names & units for EAV tables) ===
@@ -127,7 +145,8 @@ CREATE TABLE prototype_definition (
     prototype_id TEXT PRIMARY KEY,
     prototype_name TEXT,
     strukturbericht TEXT,
-    formula_type TEXT,
+    -- Required: the semantic audit derives prototype stoichiometry from it.
+    formula_type TEXT NOT NULL,
     -- Atoms in the conventional unit cell (L12=4, B2=2, NaCl=8, D03=16);
     -- NULL for per-element ground-state prototypes whose cells vary.
     conventional_cell_atoms INTEGER
@@ -149,11 +168,15 @@ CREATE TABLE space_group (
 CREATE TABLE structure (
     structure_id TEXT PRIMARY KEY,
     entry_id TEXT NOT NULL UNIQUE REFERENCES material_entry(entry_id),
-    prototype TEXT REFERENCES prototype_definition(prototype_id),
+    -- Fixture contract: every structure row carries its prototype,
+    -- formula type, space group and crystal system (only strukturbericht
+    -- may be NULL — pure-element ground states have none).
+    prototype TEXT NOT NULL REFERENCES prototype_definition(prototype_id),
     strukturbericht TEXT,
-    formula_type TEXT,
-    space_group_number INTEGER REFERENCES space_group(space_group_number),
-    crystal_system TEXT,
+    formula_type TEXT NOT NULL,
+    space_group_number INTEGER NOT NULL
+        REFERENCES space_group(space_group_number),
+    crystal_system TEXT NOT NULL,
     -- Finite-only physical values: NaN sorts above every number in
     -- PostgreSQL, so 'x > 0' alone would accept NaN and +Infinity;
     -- the upper bound rejects both.
@@ -168,7 +191,7 @@ CREATE TABLE structure (
     -- volume_per_atom is present for every fixture structure row.
     volume_per_atom DOUBLE PRECISION NOT NULL
         CHECK (volume_per_atom > 0 AND volume_per_atom < 'Infinity'),
-    space_group TEXT,
+    space_group TEXT NOT NULL,
     CHECK (
         (lattice_a IS NULL AND lattice_b IS NULL AND lattice_c IS NULL)
         OR (lattice_a IS NOT NULL AND lattice_b IS NOT NULL

@@ -135,8 +135,11 @@ python scripts/check_expected_results.py --update   # 期待値の更新（DB変
 # ORDER BY全順序監査（LIMIT除去後の候補集合全体でtieを検出、3 suite対象）
 L12_DSN=... TRANSFER_DSN=... OBF_TRANSFER_DSN=... python scripts/audit_order_totality.py
 
-# 意味論監査（formula↔composition↔prototype化学量論）
+# 意味論監査（formula↔composition↔prototype化学量論、coverage契約付き）
 python scripts/audit_semantics.py
+
+# 語彙監査（gold SQLの文字列リテラル × 実DBのDISTINCT値、3 suite対象）
+L12_DSN=... TRANSFER_DSN=... OBF_TRANSFER_DSN=... python scripts/audit_vocabulary.py
 ```
 
 ### 4.7 集計・図表・論文

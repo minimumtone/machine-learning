@@ -137,6 +137,41 @@ ELEMENT_DATA = {
 
 _PERIOD_STARTS = [1, 3, 11, 19, 37, 55, 87]
 
+# Controlled vocabulary for element.category (snake_case; mirrored by the
+# CHECK constraint on element.category in db/001_schema.sql).
+_ALKALI_METALS = {"Li", "Na", "K", "Rb", "Cs", "Fr"}
+_ALKALINE_EARTH_METALS = {"Be", "Mg", "Ca", "Sr", "Ba", "Ra"}
+_HALOGENS = {"F", "Cl", "Br", "I", "At"}
+_NOBLE_GASES = {"He", "Ne", "Ar", "Kr", "Xe", "Rn"}
+_METALLOIDS = {"B", "Si", "Ge", "As", "Sb", "Te", "Po"}
+_NONMETALS = {"H", "C", "N", "O", "P", "S", "Se"}
+_POST_TRANSITION_METALS = {"Al", "Ga", "In", "Sn", "Tl", "Pb", "Bi"}
+
+
+def _element_category(symbol: str, anum: int) -> str:
+    """Category of an element (Zn-group counted as transition_metal)."""
+    if symbol in _ALKALI_METALS:
+        return "alkali_metal"
+    if symbol in _ALKALINE_EARTH_METALS:
+        return "alkaline_earth_metal"
+    if symbol in _HALOGENS:
+        return "halogen"
+    if symbol in _NOBLE_GASES:
+        return "noble_gas"
+    if symbol in _METALLOIDS:
+        return "metalloid"
+    if symbol in _NONMETALS:
+        return "nonmetal"
+    if symbol in _POST_TRANSITION_METALS:
+        return "post_transition_metal"
+    if 57 <= anum <= 71:
+        return "lanthanide"
+    if 89 <= anum <= 103:
+        return "actinide"
+    if 21 <= anum <= 30 or 39 <= anum <= 48 or 72 <= anum <= 80:
+        return "transition_metal"
+    raise ValueError(f"no category rule for element {symbol} (Z={anum})")
+
 
 def _element_period_group_block(anum: int) -> tuple[int, int | None, str]:
     """Derive (period, group, block) from the atomic number."""
@@ -166,29 +201,29 @@ def _element_period_group_block(anum: int) -> tuple[int, int | None, str]:
 # symbol -> (name, Z, mass, electronegativity, radius, group, period, block, category)
 EXTRA_ELEMENT_DATA = {
     "Ac": ("Actinium", 89, 227.0, 1.10, 195, 3, 7, "f", "actinide"),
-    "Bi": ("Bismuth", 83, 208.98, 2.02, 156, 15, 6, "p", "post-transition metal"),
-    "Cd": ("Cadmium", 48, 112.41, 1.69, 151, 12, 5, "d", "transition metal"),
+    "Bi": ("Bismuth", 83, 208.98, 2.02, 156, 15, 6, "p", "post_transition_metal"),
+    "Cd": ("Cadmium", 48, 112.41, 1.69, 151, 12, 5, "d", "transition_metal"),
     "Ce": ("Cerium", 58, 140.12, 1.12, 182, None, 6, "f", "lanthanide"),
     "Dy": ("Dysprosium", 66, 162.50, 1.22, 178, None, 6, "f", "lanthanide"),
     "Er": ("Erbium", 68, 167.26, 1.24, 176, None, 6, "f", "lanthanide"),
     "Eu": ("Europium", 63, 151.96, 1.20, 180, None, 6, "f", "lanthanide"),
     "Gd": ("Gadolinium", 64, 157.25, 1.20, 180, None, 6, "f", "lanthanide"),
-    "Hg": ("Mercury", 80, 200.59, 2.00, 151, 12, 6, "d", "transition metal"),
+    "Hg": ("Mercury", 80, 200.59, 2.00, 151, 12, 6, "d", "transition_metal"),
     "Ho": ("Holmium", 67, 164.93, 1.23, 177, None, 6, "f", "lanthanide"),
     "La": ("Lanthanum", 57, 138.91, 1.10, 187, 3, 6, "f", "lanthanide"),
     "Lu": ("Lutetium", 71, 174.97, 1.27, 174, 3, 6, "f", "lanthanide"),
     "Nd": ("Neodymium", 60, 144.24, 1.14, 181, None, 6, "f", "lanthanide"),
     "Np": ("Neptunium", 93, 237.0, 1.36, 155, None, 7, "f", "actinide"),
     "Pa": ("Protactinium", 91, 231.04, 1.50, 163, None, 7, "f", "actinide"),
-    "Pb": ("Lead", 82, 207.2, 2.33, 175, 14, 6, "p", "post-transition metal"),
+    "Pb": ("Lead", 82, 207.2, 2.33, 175, 14, 6, "p", "post_transition_metal"),
     "Pm": ("Promethium", 61, 145.0, 1.13, 183, None, 6, "f", "lanthanide"),
     "Pr": ("Praseodymium", 59, 140.91, 1.13, 182, None, 6, "f", "lanthanide"),
     "Pu": ("Plutonium", 94, 244.0, 1.28, 159, None, 7, "f", "actinide"),
     "Sm": ("Samarium", 62, 150.36, 1.17, 180, None, 6, "f", "lanthanide"),
     "Tb": ("Terbium", 65, 158.93, 1.20, 177, None, 6, "f", "lanthanide"),
-    "Tc": ("Technetium", 43, 98.0, 1.90, 136, 7, 5, "d", "transition metal"),
+    "Tc": ("Technetium", 43, 98.0, 1.90, 136, 7, 5, "d", "transition_metal"),
     "Th": ("Thorium", 90, 232.04, 1.30, 180, None, 7, "f", "actinide"),
-    "Tl": ("Thallium", 81, 204.38, 1.62, 170, 13, 6, "p", "post-transition metal"),
+    "Tl": ("Thallium", 81, 204.38, 1.62, 170, 13, 6, "p", "post_transition_metal"),
     "Tm": ("Thulium", 69, 168.93, 1.25, 176, None, 6, "f", "lanthanide"),
     "U": ("Uranium", 92, 238.03, 1.38, 156, None, 7, "f", "actinide"),
     "Yb": ("Ytterbium", 70, 173.05, 1.10, 176, None, 6, "f", "lanthanide"),
@@ -322,11 +357,12 @@ def write_reference_data(out: TextIO, pure: dict[str, dict]) -> dict[str, int]:
     for i, (sym, (anum, mass, eneg, radius)) in enumerate(ELEMENT_DATA.items(), 1):
         elem_ids[sym] = i
         period, group, block = _element_period_group_block(anum)
+        category = _element_category(sym, anum)
         out.write(
             f"INSERT INTO element (element_id, symbol, name, atomic_number, atomic_mass, "
-            f"electronegativity, atomic_radius, group_number, period_number, block) VALUES "
-            f"({i}, '{sym}', '{sym}', {anum}, {mass}, {eneg}, {radius}, "
-            f"{_sql_num(group)}, {period}, '{block}');\n"
+            f"electronegativity, atomic_radius, group_number, period_number, block, category) "
+            f"VALUES ({i}, '{sym}', '{sym}', {anum}, {mass}, {eneg}, {radius}, "
+            f"{_sql_num(group)}, {period}, '{block}', '{category}');\n"
         )
     next_id = len(ELEMENT_DATA)
     for sym, (name, anum, mass, eneg, radius, group, period, block, cat) in sorted(
@@ -334,6 +370,7 @@ def write_reference_data(out: TextIO, pure: dict[str, dict]) -> dict[str, int]:
     ):
         next_id += 1
         elem_ids[sym] = next_id
+        assert cat == _element_category(sym, anum), sym
         out.write(
             f"INSERT INTO element (element_id, symbol, name, atomic_number, atomic_mass, "
             f"electronegativity, atomic_radius, group_number, period_number, block, category) "
