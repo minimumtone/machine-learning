@@ -392,6 +392,11 @@ INSERT INTO alloy_system (alloy_system_id, system_name, num_components, category
 INSERT INTO alloy_system (alloy_system_id, system_name, num_components, category, description) VALUES (6, 'Fe-Ni-Co-Al-Ti', 5, 'high-entropy', 'Fe-Ni-Co-Al-Ti system');
 SELECT setval('alloy_system_alloy_system_id_seq', 6);
 
+-- Energy-convention master (one row per reference set)
+INSERT INTO reference_energy_set (reference_set, method, functional, source, description)
+VALUES ('OQMD-PBE', 'DFT', 'PBE', 'OQMD',
+        'OQMD ground-state reference energies, DFT-PBE convention');
+
 -- Pure element reference energies (OQMD ground states)
 INSERT INTO pure_element_reference (element_symbol, oqmd_entry_id, ground_state_spacegroup, energy_per_atom, volume_per_atom, stability, band_gap, n_polymorphs) VALUES ('Ac', 1216015, 'R-3m', 0.00328580916666965, 44.87966666666667, 0.00328580916666965, 0.0, 19);
 INSERT INTO pure_element_reference (element_symbol, oqmd_entry_id, ground_state_spacegroup, energy_per_atom, volume_per_atom, stability, band_gap, n_polymorphs) VALUES ('Ag', 2072207, 'I4/mmm', 0.00015305500000017958, 17.5677, 0.00015305500000017958, 0.0, 68);
