@@ -51,8 +51,10 @@ CREATE TABLE property_definition (
     property_def_id SERIAL PRIMARY KEY,
     canonical_name VARCHAR(100) NOT NULL UNIQUE,
     canonical_unit VARCHAR(30),
-    value_type VARCHAR(20) NOT NULL DEFAULT 'float',
-    applies_to VARCHAR(30) NOT NULL,  -- 'calculated', 'measured', 'element'
+    value_type VARCHAR(20) NOT NULL DEFAULT 'float'
+        CHECK (value_type IN ('float', 'integer', 'text', 'boolean')),
+    applies_to VARCHAR(30) NOT NULL
+        CHECK (applies_to IN ('calculated', 'measured', 'element')),
     description TEXT,
     UNIQUE (canonical_name, canonical_unit)
 );
@@ -122,7 +124,9 @@ CREATE TABLE calculation (
     method TEXT,
     functional TEXT,
     calculation_type TEXT,
-    UNIQUE (entry_id, calculation_type)
+    -- One calculation per (type, method, functional) combination; the same
+    -- entry may hold e.g. PBE and HSE06 band-structure calculations.
+    UNIQUE NULLS NOT DISTINCT (entry_id, calculation_type, method, functional)
 );
 
 CREATE TABLE calculated_property (
@@ -133,6 +137,11 @@ CREATE TABLE calculated_property (
     unit TEXT,
     tensor_component TEXT,
     UNIQUE (calculation_id, property_name),
+    -- Single-column FK closes the composite-FK NULL loophole (a NULL unit
+    -- would otherwise skip the FK check entirely); the composite FK then
+    -- additionally pins the unit to the canonical one when unit is present.
+    FOREIGN KEY (property_name)
+        REFERENCES property_definition(canonical_name),
     FOREIGN KEY (property_name, unit)
         REFERENCES property_definition(canonical_name, canonical_unit)
 );
@@ -146,6 +155,8 @@ CREATE TABLE element_property (
     temperature_k NUMERIC(8,2) CHECK (temperature_k >= 0),
     source VARCHAR(100),
     UNIQUE (element_id, property_name),
+    FOREIGN KEY (property_name)
+        REFERENCES property_definition(canonical_name),
     FOREIGN KEY (property_name, unit)
         REFERENCES property_definition(canonical_name, canonical_unit)
 );
@@ -208,6 +219,8 @@ CREATE TABLE measured_property (
     uncertainty NUMERIC(15,6) CHECK (uncertainty >= 0),
     unit VARCHAR(30),
     UNIQUE (measurement_id, property_name),
+    FOREIGN KEY (property_name)
+        REFERENCES property_definition(canonical_name),
     FOREIGN KEY (property_name, unit)
         REFERENCES property_definition(canonical_name, canonical_unit)
 );
@@ -229,8 +242,10 @@ CREATE TABLE material_synthesis (
     temperature_k NUMERIC(8,2) CHECK (temperature_k >= 0),
     duration_hours NUMERIC(10,2) CHECK (duration_hours >= 0),
     atmosphere VARCHAR(50),
-    success BOOLEAN DEFAULT TRUE,
-    UNIQUE (entry_id, synthesis_id)
+    success BOOLEAN DEFAULT TRUE
+    -- No UNIQUE(entry_id, synthesis_id): the same material may be synthesized
+    -- by the same method under different conditions (temperature, duration,
+    -- atmosphere, reference); rows are identified by the surrogate PK.
 );
 
 -- === Defect & Dopant Information ===
@@ -250,7 +265,9 @@ CREATE TABLE material_defect (
     concentration NUMERIC(15,8) CHECK (concentration >= 0),
     site VARCHAR(50),
     dopant_element_id INTEGER REFERENCES element(element_id),
-    UNIQUE (entry_id, defect_type_id)
+    -- A defect record is identified by type + site + dopant: the same entry
+    -- may host e.g. an Al-site and a Ni-site vacancy, or several dopants.
+    UNIQUE NULLS NOT DISTINCT (entry_id, defect_type_id, site, dopant_element_id)
 );
 
 -- === Electronic Structure Tables ===
@@ -317,7 +334,8 @@ CREATE TABLE surface_energy (
     surface_energy_j_m2 DOUBLE PRECISION CHECK (surface_energy_j_m2 > 0),
     work_function DOUBLE PRECISION CHECK (work_function > 0),
     is_reconstructed BOOLEAN DEFAULT FALSE,
-    UNIQUE (entry_id, miller_index)
+    -- Reconstructed and unreconstructed variants of the same facet coexist.
+    UNIQUE NULLS NOT DISTINCT (entry_id, miller_index, is_reconstructed)
 );
 
 CREATE TABLE grain_boundary (
@@ -364,7 +382,13 @@ CREATE TABLE material_alloy_system (
 
 CREATE TABLE pure_element_reference (
     pure_ref_id SERIAL PRIMARY KEY,
-    element_symbol VARCHAR(5) NOT NULL UNIQUE REFERENCES element(symbol),
+    element_symbol VARCHAR(5) NOT NULL REFERENCES element(symbol),
+    -- Reference energies are only comparable within one energy convention;
+    -- the calculation-condition axis (method / functional / reference_set)
+    -- makes that convention explicit. formation_enthalpy pins one set.
+    method TEXT NOT NULL DEFAULT 'DFT',
+    functional TEXT NOT NULL DEFAULT 'PBE',
+    reference_set TEXT NOT NULL DEFAULT 'OQMD-PBE',
     oqmd_entry_id INTEGER,
     ground_state_spacegroup VARCHAR(30),
     energy_per_atom DOUBLE PRECISION,  -- eV/atom (delta_e from OQMD)
@@ -372,7 +396,8 @@ CREATE TABLE pure_element_reference (
     stability DOUBLE PRECISION CHECK (stability >= 0),  -- eV/atom above hull
     band_gap DOUBLE PRECISION CHECK (band_gap >= 0),  -- eV
     n_polymorphs INTEGER CHECK (n_polymorphs > 0),
-    source TEXT DEFAULT 'OQMD'
+    source TEXT DEFAULT 'OQMD',
+    UNIQUE (element_symbol, reference_set)
 );
 
 -- === Indexes ===
@@ -386,3 +411,56 @@ CREATE INDEX idx_exp_measurement_entry ON experimental_measurement(entry_id);
 CREATE INDEX idx_material_synthesis_method ON material_synthesis(synthesis_id);
 CREATE INDEX idx_material_defect_type ON material_defect(defect_type_id);
 CREATE INDEX idx_mat_alloy_system ON material_alloy_system(alloy_system_id);
+
+-- === Consistency trigger: structure vs. master tables ===
+-- structure keeps human-readable copies (strukturbericht, formula_type,
+-- crystal_system, space_group) of master-table attributes for query
+-- convenience; this trigger rejects any row whose copies contradict
+-- prototype_definition / space_group, so the DB never holds two truths.
+
+CREATE FUNCTION check_structure_master_consistency() RETURNS trigger AS $$
+DECLARE
+    p_sb TEXT;
+    p_ft TEXT;
+    g_cs VARCHAR(30);
+    g_hm VARCHAR(30);
+BEGIN
+    IF NEW.prototype IS NOT NULL THEN
+        SELECT strukturbericht, formula_type INTO p_sb, p_ft
+        FROM prototype_definition WHERE prototype_id = NEW.prototype;
+        IF NEW.strukturbericht IS DISTINCT FROM p_sb
+           OR NEW.formula_type IS DISTINCT FROM p_ft THEN
+            RAISE EXCEPTION
+                'structure %: strukturbericht/formula_type (%, %) contradict prototype_definition % (%, %)',
+                NEW.structure_id, NEW.strukturbericht, NEW.formula_type,
+                NEW.prototype, p_sb, p_ft;
+        END IF;
+    ELSIF NEW.strukturbericht IS NOT NULL OR NEW.formula_type IS NOT NULL THEN
+        RAISE EXCEPTION
+            'structure %: strukturbericht/formula_type set without prototype reference',
+            NEW.structure_id;
+    END IF;
+
+    IF NEW.space_group_number IS NOT NULL THEN
+        SELECT crystal_system, hermann_mauguin INTO g_cs, g_hm
+        FROM space_group WHERE space_group_number = NEW.space_group_number;
+        IF NEW.crystal_system IS DISTINCT FROM g_cs
+           OR NEW.space_group IS DISTINCT FROM g_hm THEN
+            RAISE EXCEPTION
+                'structure %: crystal_system/space_group (%, %) contradict space_group % (%, %)',
+                NEW.structure_id, NEW.crystal_system, NEW.space_group,
+                NEW.space_group_number, g_cs, g_hm;
+        END IF;
+    ELSIF NEW.crystal_system IS NOT NULL OR NEW.space_group IS NOT NULL THEN
+        RAISE EXCEPTION
+            'structure %: crystal_system/space_group set without space_group_number reference',
+            NEW.structure_id;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_structure_master_consistency
+    BEFORE INSERT OR UPDATE ON structure
+    FOR EACH ROW EXECUTE FUNCTION check_structure_master_consistency();

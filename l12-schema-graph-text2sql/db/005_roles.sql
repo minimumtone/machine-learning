@@ -5,6 +5,11 @@
 -- which can only SELECT and whose transactions default to read-only.
 -- ============================================================
 
+-- NOTE: 'l12_reader_password' is a LOCAL VERIFICATION-ONLY credential for
+-- the throwaway Docker database. For any non-local deployment, create the
+-- role with a real secret and point the pipeline at it via the
+-- POSTGRES_EVAL_USER / POSTGRES_EVAL_PASSWORD environment variables
+-- (see .env.example); nothing in the code requires this literal value.
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'l12_reader') THEN
@@ -16,7 +21,11 @@ $$;
 REVOKE ALL ON SCHEMA public FROM l12_reader;
 GRANT USAGE ON SCHEMA public TO l12_reader;
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO l12_reader;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO l12_reader;
+-- Scope default privileges to the migration owner explicitly: a bare
+-- ALTER DEFAULT PRIVILEGES only covers objects later created by the role
+-- that ran it, so name the owner to keep the grant deterministic.
+ALTER DEFAULT PRIVILEGES FOR ROLE l12_user IN SCHEMA public
+    GRANT SELECT ON TABLES TO l12_reader;
 
 ALTER ROLE l12_reader SET default_transaction_read_only = on;
 ALTER ROLE l12_reader SET statement_timeout = '30s';

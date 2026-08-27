@@ -212,6 +212,9 @@ allowed_columns:
   - prototype_definition.description
   - pure_element_reference.pure_ref_id
   - pure_element_reference.element_symbol
+  - pure_element_reference.method
+  - pure_element_reference.functional
+  - pure_element_reference.reference_set
   - pure_element_reference.oqmd_entry_id
   - pure_element_reference.ground_state_spacegroup
   - pure_element_reference.energy_per_atom

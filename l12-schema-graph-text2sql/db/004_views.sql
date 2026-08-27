@@ -31,10 +31,20 @@ LEFT JOIN structure s ON s.entry_id = m.entry_id
 LEFT JOIN LATERAL (
     SELECT
         COUNT(*) AS n_elements,
-        COUNT(per.element_symbol) AS n_referenced,
+        -- A reference row only counts when it actually carries an energy;
+        -- a row with NULL energy_per_atom must not pass the completeness
+        -- gate (its contribution would silently drop out of the SUM).
+        COUNT(*) FILTER (
+            WHERE per.element_symbol IS NOT NULL
+              AND per.energy_per_atom IS NOT NULL
+        ) AS n_referenced,
         SUM(c.atomic_fraction * per.energy_per_atom) AS weighted_ref_energy
     FROM composition c
-    LEFT JOIN pure_element_reference per ON per.element_symbol = c.element
+    LEFT JOIN pure_element_reference per
+        ON per.element_symbol = c.element
+       -- Pin one energy convention: mixing reference sets would subtract
+       -- energies computed under different DFT settings.
+       AND per.reference_set = 'OQMD-PBE'
     WHERE c.entry_id = m.entry_id
 ) ref ON TRUE
 WHERE m.number_of_elements >= 2;

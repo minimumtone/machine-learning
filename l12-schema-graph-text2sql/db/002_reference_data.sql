@@ -332,6 +332,23 @@ INSERT INTO prototype_definition (prototype_id, prototype_name, strukturbericht,
 INSERT INTO space_group (space_group_number, hermann_mauguin, crystal_system, point_group, is_centrosymmetric) VALUES (194, 'P6_3/mmc', 'hexagonal', '6/mmm', TRUE);
 INSERT INTO space_group (space_group_number, hermann_mauguin, crystal_system, point_group, is_centrosymmetric) VALUES (221, 'Pm-3m', 'cubic', 'm-3m', TRUE);
 INSERT INTO space_group (space_group_number, hermann_mauguin, crystal_system, point_group, is_centrosymmetric) VALUES (225, 'Fm-3m', 'cubic', 'm-3m', TRUE);
+INSERT INTO space_group (space_group_number, hermann_mauguin, crystal_system, point_group, is_centrosymmetric) VALUES (4, 'P21', 'monoclinic', '2', FALSE);
+INSERT INTO space_group (space_group_number, hermann_mauguin, crystal_system, point_group, is_centrosymmetric) VALUES (12, 'C2/m', 'monoclinic', '2/m', TRUE);
+INSERT INTO space_group (space_group_number, hermann_mauguin, crystal_system, point_group, is_centrosymmetric) VALUES (13, 'P2/c', 'monoclinic', '2/m', TRUE);
+INSERT INTO space_group (space_group_number, hermann_mauguin, crystal_system, point_group, is_centrosymmetric) VALUES (36, 'Cmc21', 'orthorhombic', 'mm2', FALSE);
+INSERT INTO space_group (space_group_number, hermann_mauguin, crystal_system, point_group, is_centrosymmetric) VALUES (41, 'Aba2', 'orthorhombic', 'mm2', FALSE);
+INSERT INTO space_group (space_group_number, hermann_mauguin, crystal_system, point_group, is_centrosymmetric) VALUES (63, 'Cmcm', 'orthorhombic', 'mmm', TRUE);
+INSERT INTO space_group (space_group_number, hermann_mauguin, crystal_system, point_group, is_centrosymmetric) VALUES (64, 'Cmca', 'orthorhombic', 'mmm', TRUE);
+INSERT INTO space_group (space_group_number, hermann_mauguin, crystal_system, point_group, is_centrosymmetric) VALUES (72, 'Ibam', 'orthorhombic', 'mmm', TRUE);
+INSERT INTO space_group (space_group_number, hermann_mauguin, crystal_system, point_group, is_centrosymmetric) VALUES (129, 'P4/nmm', 'tetragonal', '4/mmm', TRUE);
+INSERT INTO space_group (space_group_number, hermann_mauguin, crystal_system, point_group, is_centrosymmetric) VALUES (136, 'P42/mnm', 'tetragonal', '4/mmm', TRUE);
+INSERT INTO space_group (space_group_number, hermann_mauguin, crystal_system, point_group, is_centrosymmetric) VALUES (139, 'I4/mmm', 'tetragonal', '4/mmm', TRUE);
+INSERT INTO space_group (space_group_number, hermann_mauguin, crystal_system, point_group, is_centrosymmetric) VALUES (152, 'P3121', 'trigonal', '32', FALSE);
+INSERT INTO space_group (space_group_number, hermann_mauguin, crystal_system, point_group, is_centrosymmetric) VALUES (166, 'R-3m', 'trigonal', '-3m', TRUE);
+INSERT INTO space_group (space_group_number, hermann_mauguin, crystal_system, point_group, is_centrosymmetric) VALUES (213, 'P4132', 'cubic', '432', FALSE);
+INSERT INTO space_group (space_group_number, hermann_mauguin, crystal_system, point_group, is_centrosymmetric) VALUES (217, 'I-43m', 'cubic', '-43m', FALSE);
+INSERT INTO space_group (space_group_number, hermann_mauguin, crystal_system, point_group, is_centrosymmetric) VALUES (227, 'Fd-3m', 'cubic', 'm-3m', TRUE);
+INSERT INTO space_group (space_group_number, hermann_mauguin, crystal_system, point_group, is_centrosymmetric) VALUES (229, 'Im-3m', 'cubic', 'm-3m', TRUE);
 
 -- Synthesis methods
 INSERT INTO synthesis_method (synthesis_id, method_name, category, description) VALUES (1, 'Arc Melting', 'melt', 'Arc Melting synthesis');
