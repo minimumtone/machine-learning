@@ -231,6 +231,7 @@ def main() -> int:
             n_failed += 1
             expected_path.unlink(missing_ok=True)
             conn.rollback()
+            continue
 
         out_lines.append({
             "id": new_id,
