@@ -50,7 +50,9 @@ cd ..
 
 注意：`db/005_roles.sql` は所有者ロール `l12_user` を名指しで参照するため、`POSTGRES_USER` はデフォルトの `l12_user` から変更しないでください（変更するとロード時に明示的なエラーで停止します）。
 
-注意：`db/006_integrity_checks.sql` が失敗したDB（001〜005のみ適用された途中状態）を検証用DBとして使用しないでください。006 の全アサーション通過後にのみ `schema_verification_status` テーブルに `version='006'` の行が作成されるため、使用前に `SELECT 1 FROM schema_verification_status WHERE version='006';` で初期化完了を確認できます。また、propertyディクショナリ（`property_definition`）の変更と各propertyテーブルへの書き込みを並行して行うことは想定していません。
+注意：`db/006_integrity_checks.sql` が失敗したDB（001〜005のみ適用された途中状態）を検証用DBとして使用しないでください。006 の全アサーション通過後にのみ `schema_initialization_status` テーブルに `version='006'` の行が作成されるため、使用前に `SELECT 1 FROM schema_initialization_status WHERE version='006';` で初期化完了を確認できます。このマーカーは「初期化完了マーカー」であり、現在の整合性状態の保証ではありません（006後に書き換えれば壊せます）。本DBは006完了後は不変（immutable）な検証用フィクスチャとして扱い、006完了後のエンティティデータのINSERT/UPDATE/DELETEはサポートしません。利用は読み取り専用ロール `l12_reader` で行い、migration owner（`l12_user`）以外にwrite権限を与えないでください。また、propertyディクショナリ（`property_definition`）の変更と各propertyテーブルへの書き込みを並行して行うことは想定していません。
+
+3値BOOLEANの扱い：`density_of_states.is_metallic` のみ意図的にNULL可（NULL=金属性未判定）です。gold SQL では「金属」を `is_metallic = TRUE`（判定済みのTRUEのみ）として扱い、NULL（未判定）は「金属」にも「非金属」にも含めない規約に統一しています。他のBOOLEAN列はすべて NOT NULL です（`phase_stability.is_stable` は `energy_above_hull NOT NULL` により生成列も常に2値）。
 
 設計上の意図的な簡略化：`calculation` は (entry, calculation_type, method, functional) ごとに1件のみ保持します。カットオフ・k点メッシュ・擬ポテンシャル・U値などの数値パラメータ軸は本検証用DBでは持たず、汎用の計算アーカイブとしては UNIQUE が強すぎる点を明示しておきます。
 

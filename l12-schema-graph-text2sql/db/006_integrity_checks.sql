@@ -30,22 +30,22 @@ BEGIN
 END
 $$;
 
--- Every material_entry with composition rows must be fully covered
--- (no entry whose declared element count differs from its distinct
--- composition elements; site-resolved rows may repeat an element).
+-- Every material_entry must have composition rows and its declared
+-- element count must equal the distinct composition elements
+-- (site-resolved rows may repeat an element). LEFT JOIN + COALESCE
+-- makes entries with zero composition rows fail (n = 0 <> declared).
 DO $$
 DECLARE
     n_bad BIGINT;
 BEGIN
     SELECT COUNT(*) INTO n_bad
     FROM material_entry m
-    JOIN (
+    LEFT JOIN (
         SELECT entry_id, COUNT(DISTINCT element) AS n
         FROM composition
         GROUP BY entry_id
     ) c ON c.entry_id = m.entry_id
-    WHERE m.number_of_elements IS NOT NULL
-      AND m.number_of_elements <> c.n;
+    WHERE m.number_of_elements <> COALESCE(c.n, 0);
     IF n_bad > 0 THEN
         RAISE EXCEPTION
             'material_entry: % entries whose number_of_elements disagrees with distinct composition elements',
@@ -111,11 +111,18 @@ BEGIN
 END
 $$;
 
--- Ready marker: created only after every assertion above has passed.
--- A database missing this row (e.g. 001–005 loaded but 006 failed) is a
--- partial initialization and must not be used as a verification DB.
-CREATE TABLE schema_verification_status (
+-- Initialization completion marker: created only after every assertion
+-- above has passed. A database missing this row (e.g. 001–005 loaded but
+-- 006 failed) is a partial initialization and must not be used as a
+-- verification DB.
+-- NOTE: this is an initialization completion marker only, NOT a current
+-- integrity status — it records that the assertions held at load time and
+-- is not invalidated by later writes. This package treats the loaded DB
+-- as an immutable verification fixture (see README): post-006 entity
+-- INSERT/UPDATE/DELETE is unsupported, and queries should run as the
+-- read-only role l12_reader.
+CREATE TABLE schema_initialization_status (
     version TEXT PRIMARY KEY,
-    verified_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    initialized_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-INSERT INTO schema_verification_status (version) VALUES ('006');
+INSERT INTO schema_initialization_status (version) VALUES ('006');

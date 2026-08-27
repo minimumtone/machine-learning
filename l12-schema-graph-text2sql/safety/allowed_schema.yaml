@@ -32,7 +32,7 @@ allowed_tables:
   - prototype_definition
   - pure_element_reference
   - reference_energy_set
-  - schema_verification_status
+  - schema_initialization_status
   - space_group
   - structure
   - surface_energy
@@ -227,8 +227,8 @@ allowed_columns:
   - reference_energy_set.functional
   - reference_energy_set.source
   - reference_energy_set.description
-  - schema_verification_status.version
-  - schema_verification_status.verified_at
+  - schema_initialization_status.version
+  - schema_initialization_status.initialized_at
   - space_group.space_group_id
   - space_group.space_group_number
   - space_group.hermann_mauguin
