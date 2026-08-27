@@ -57,6 +57,33 @@ def preprocess_result(sample_data):
 class TestT1_Stage1Reproducibility:
     """T1: Stage1 再現性 — 同一入力で同一 effective_cols。"""
 
+    def test_non_catalog_features_are_retained_and_leaks_excluded(self, sample_data):
+        from extrapolation_discovery_platform.features import FeatureSetName
+        from extrapolation_discovery_platform.pipeline import stage1_preprocess
+
+        X, y, comp = sample_data
+        features = X[["r_avg", "VEC"]].copy()
+        rng = np.random.default_rng(123)
+        features["experimental_descriptor"] = rng.normal(size=len(features))
+        features["target_leak"] = y.to_numpy()
+
+        prep = stage1_preprocess(
+            features_df=features,
+            target=y,
+            compositions_df=comp,
+            feature_set_names=[FeatureSetName.FS_BASE.value],
+            workflow_names=["WF-LIN"],
+            seeds=[42],
+            active_policies=["RandomCV"],
+            leak_auto_exclude=True,
+        )
+
+        assert prep.success, prep.error_message
+        effective = prep.effective_cols[FeatureSetName.FS_BASE.value]
+        assert "experimental_descriptor" in effective
+        assert "delta_r" not in effective
+        assert "target_leak" not in effective
+
     def test_effective_cols_identical(self, sample_data):
         from extrapolation_discovery_platform.pipeline import stage1_preprocess
         from extrapolation_discovery_platform.features import FeatureSetName

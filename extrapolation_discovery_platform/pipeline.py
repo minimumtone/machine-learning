@@ -238,8 +238,22 @@ def stage1_preprocess(
                 orig = list(features_df.columns)
             else:
                 try:
-                    orig = [c for c in FeatureCatalog.columns(FeatureSetName(fs_key))
-                            if c in features_df.columns]
+                    catalog_cols = FeatureCatalog.all_columns()
+                    orig = [
+                        c for c in FeatureCatalog.columns(FeatureSetName(fs_key))
+                        if c in features_df.columns
+                    ]
+                    # Experimental/microstructural descriptors carry physics not
+                    # represented by composition-derived catalog features.
+                    extra_cols = [
+                        c for c in features_df.columns
+                        if c not in catalog_cols and c not in orig
+                    ]
+                    orig.extend(extra_cols)
+                    logger.info(
+                        "Stage1 [%s]: added %d extra non-catalog columns",
+                        fs_key, len(extra_cols),
+                    )
                 except (ValueError, KeyError):
                     logger.warning("Stage1 [%s]: FS列取得失敗 — 全列を使用", fs_key)
                     orig = list(features_df.columns)
