@@ -239,7 +239,29 @@ SPACE_GROUPS = [
     (194, "P6_3/mmc", "hexagonal", "6/mmm", True),
     (221, "Pm-3m", "cubic", "m-3m", True),
     (225, "Fm-3m", "cubic", "m-3m", True),
+    # Space groups of the OQMD pure-element ground states (structure rows
+    # reference space_group_number, which is FK-constrained to this master).
+    (4, "P21", "monoclinic", "2", False),
+    (12, "C2/m", "monoclinic", "2/m", True),
+    (13, "P2/c", "monoclinic", "2/m", True),
+    (36, "Cmc21", "orthorhombic", "mm2", False),
+    (41, "Aba2", "orthorhombic", "mm2", False),
+    (63, "Cmcm", "orthorhombic", "mmm", True),
+    (64, "Cmca", "orthorhombic", "mmm", True),
+    (72, "Ibam", "orthorhombic", "mmm", True),
+    (129, "P4/nmm", "tetragonal", "4/mmm", True),
+    (136, "P42/mnm", "tetragonal", "4/mmm", True),
+    (139, "I4/mmm", "tetragonal", "4/mmm", True),
+    (152, "P3121", "trigonal", "32", False),
+    (166, "R-3m", "trigonal", "-3m", True),
+    (213, "P4132", "cubic", "432", False),
+    (217, "I-43m", "cubic", "-43m", False),
+    (227, "Fd-3m", "cubic", "m-3m", True),
+    (229, "Im-3m", "cubic", "m-3m", True),
 ]
+
+# hermann_mauguin -> (space_group_number, crystal_system) for structure rows
+SPACE_GROUP_BY_HM = {hm: (sgn, cs) for sgn, hm, cs, _pg, _c in SPACE_GROUPS}
 
 
 def _esc(s: str) -> str:
@@ -386,14 +408,20 @@ def write_reference_data(out: TextIO, pure: dict[str, dict]) -> dict[str, int]:
     out.write(f"SELECT setval('alloy_system_alloy_system_id_seq', {len(ALLOY_SYSTEMS)});\n")
 
     # --- Pure element reference energies (OQMD) ---
+    out.write("\n-- Energy-convention master (one row per reference set)\n")
+    out.write(
+        "INSERT INTO reference_energy_set (reference_set, method, functional, source, description)\n"
+        "VALUES ('OQMD-PBE', 'DFT', 'PBE', 'OQMD',\n"
+        "        'OQMD ground-state reference energies, DFT-PBE convention');\n"
+    )
     out.write("\n-- Pure element reference energies (OQMD ground states)\n")
     for sym in sorted(pure):
         info = pure[sym]
         out.write(
             f"INSERT INTO pure_element_reference "
-            f"(element_symbol, oqmd_entry_id, ground_state_spacegroup, "
+            f"(element_symbol, reference_set, oqmd_entry_id, ground_state_spacegroup, "
             f"energy_per_atom, volume_per_atom, stability, band_gap, n_polymorphs) "
-            f"VALUES ('{sym}', {info['oqmd_entry_id']}, {_sql_str(info['spacegroup'])}, "
+            f"VALUES ('{sym}', 'OQMD-PBE', {info['oqmd_entry_id']}, {_sql_str(info['spacegroup'])}, "
             f"{_sql_num(info['delta_e_per_atom'])}, {_sql_num(info['volume_per_atom'])}, "
             f"{_sql_num(max(0.0, info['stability']) if info['stability'] is not None else None)}, "
             f"{_sql_num(info['band_gap'])}, {info['n_polymorphs']});\n"
@@ -743,11 +771,17 @@ def write_material_data(out: TextIO, pure: dict[str, dict], elem_ids: dict[str, 
             f"INSERT INTO composition (composition_id, entry_id, element, atomic_fraction) VALUES "
             f"('comp_{peid}', '{peid}', '{sym}', 1.0);\n"
         )
+        # Normalize the OQMD spelling to the space_group master's
+        # Hermann-Mauguin form (screw axis written with an underscore).
+        hm = "P6_3/mmc" if info["spacegroup"] == "P63/mmc" else info["spacegroup"]
+        sgn, cs = SPACE_GROUP_BY_HM[hm]
         out.write(
             f"INSERT INTO structure (structure_id, entry_id, prototype, strukturbericht, "
-            f"space_group, volume_per_atom) VALUES "
+            f"formula_type, space_group_number, crystal_system, space_group, "
+            f"volume_per_atom) VALUES "
             f"('struct_elem_{sym.lower()}', '{peid}', '{sym}_gs', NULL, "
-            f"{_sql_str(info['spacegroup'])}, {_sql_num(info['volume_per_atom'])});\n"
+            f"'A', {sgn}, '{cs}', {_sql_str(hm)}, "
+            f"{_sql_num(info['volume_per_atom'])});\n"
         )
         out.write(
             f"INSERT INTO phase_stability (stability_id, entry_id, formation_energy_per_atom, "
