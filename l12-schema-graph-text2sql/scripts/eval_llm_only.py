@@ -213,6 +213,13 @@ def main() -> None:
               f"{sorted(only_qids)}")
 
     results = []
+    if not only_qids and out_path.exists():
+        with open(out_path) as f:
+            saved = json.load(f).get("results", [])
+        done = {r["qid"] for r in saved}
+        results = [r for r in saved if r["qid"] in done]
+        all_queries = [q for q in all_queries if q["id"] not in done]
+        print(f"Resuming: {len(done)} done, {len(all_queries)} remaining")
     for i, q in enumerate(all_queries):
         qid = q["id"]
         question = q["question"]
