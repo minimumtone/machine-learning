@@ -3,26 +3,27 @@
     "formula",
     "formation_energy_per_atom"
   ],
+  "ordered": true,
   "rows": [
     [
-      "Cu3Y",
-      -0.5982
+      "Ru3Nb",
+      -0.5999
     ],
     [
-      "Pd3In",
-      -0.5963
+      "W3V",
+      -0.5949
     ],
     [
-      "Mo3V",
-      -0.5945
+      "Fe3V",
+      -0.5905
     ],
     [
-      "Co3Zr",
-      -0.5895
+      "Fe3Al",
+      -0.5903
     ],
     [
-      "Ti3Sb",
-      -0.5877
+      "Mn3Hf",
+      -0.5901
     ]
   ]
 }

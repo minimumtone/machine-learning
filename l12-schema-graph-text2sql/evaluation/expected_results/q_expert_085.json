@@ -5,100 +5,107 @@
     "magnetic_ordering",
     "is_stable"
   ],
+  "ordered": true,
   "rows": [
     [
-      "entry_00342",
-      "Co3Fe",
+      "entry_00367",
+      "Au3In",
       "ferromagnetic",
       true
     ],
     [
-      "entry_00100",
-      "Co3Sb",
+      "entry_00094",
+      "Co3Ta",
       "ferromagnetic",
       true
     ],
     [
-      "entry_00004",
-      "Co3Ti",
+      "entry_00375",
+      "Co3Y",
       "ferromagnetic",
       true
     ],
     [
-      "entry_00044",
-      "Ir3Cu",
-      "ferromagnetic",
-      true
-    ],
-    [
-      "entry_00177",
-      "Ir3Sb",
-      "ferromagnetic",
-      true
-    ],
-    [
-      "entry_00222",
-      "Nb3Si",
-      "ferromagnetic",
-      true
-    ],
-    [
-      "entry_00369",
-      "Ni3Cu",
-      "ferromagnetic",
-      true
-    ],
-    [
-      "entry_00087",
-      "Pd3Al",
-      "ferromagnetic",
-      true
-    ],
-    [
-      "entry_00272",
-      "Pd3Mg",
-      "ferromagnetic",
-      true
-    ],
-    [
-      "entry_00144",
-      "Pt3Sc",
-      "ferromagnetic",
-      true
-    ],
-    [
-      "entry_00133",
-      "Ta3Al",
-      "ferromagnetic",
-      true
-    ],
-    [
-      "entry_00277",
-      "Ta3Cu",
-      "ferromagnetic",
-      true
-    ],
-    [
-      "entry_00042",
-      "Ta3Ge",
+      "entry_00068",
+      "Cr3In",
       "ferromagnetic",
       true
     ],
     [
       "entry_00285",
-      "Ta3Hf",
+      "Cu3Ge",
       "ferromagnetic",
       true
     ],
     [
-      "entry_00281",
-      "W3Ta",
+      "entry_00303",
+      "Hf3Si",
       "ferromagnetic",
       true
     ],
     [
-      "entry_00240",
-      "Zr3Sc",
+      "entry_00053",
+      "Mo3Sn",
+      "ferromagnetic",
+      true
+    ],
+    [
+      "entry_00269",
+      "Nb3Ge",
+      "ferromagnetic",
+      true
+    ],
+    [
+      "entry_00104",
+      "Nb3Zn",
+      "ferromagnetic",
+      true
+    ],
+    [
+      "entry_00323",
+      "Pd3Ga",
+      "ferromagnetic",
+      true
+    ],
+    [
+      "entry_00033",
+      "Pd3Nb",
+      "ferromagnetic",
+      true
+    ],
+    [
+      "entry_00076",
+      "Pt3Fe",
+      "ferromagnetic",
+      true
+    ],
+    [
+      "entry_00379",
+      "Pt3Ti",
+      "ferromagnetic",
+      true
+    ],
+    [
+      "entry_00222",
+      "Rh3Zn",
+      "ferromagnetic",
+      true
+    ],
+    [
+      "entry_00127",
+      "Rh3Zr",
+      "ferromagnetic",
+      true
+    ],
+    [
+      "entry_00149",
+      "Ti3Nb",
+      "ferromagnetic",
+      true
+    ],
+    [
+      "entry_00344",
+      "Ti3Zr",
       "ferromagnetic",
       true
     ]

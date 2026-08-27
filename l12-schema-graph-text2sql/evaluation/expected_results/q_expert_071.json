@@ -3,205 +3,230 @@
     "entry_id",
     "formula"
   ],
+  "ordered": true,
   "rows": [
     [
-      "entry_00219",
+      "entry_00281",
+      "Ag3Al"
+    ],
+    [
+      "entry_00145",
       "Ag3Cu"
     ],
     [
-      "entry_00207",
-      "Ag3Fe"
+      "entry_00169",
+      "Ag3Cu"
     ],
     [
-      "entry_00194",
-      "Ag3Mg"
+      "entry_00329",
+      "Ag3Hf"
     ],
     [
-      "entry_00103",
-      "Ag3Sb"
+      "entry_00326",
+      "Ag3Ti"
     ],
     [
-      "entry_00244",
-      "Au3V"
+      "entry_00310",
+      "Ag3Y"
     ],
     [
-      "entry_00215",
-      "Co3Al"
+      "entry_00364",
+      "Ag3Zn"
+    ],
+    [
+      "entry_00006",
+      "Al3Ti"
+    ],
+    [
+      "entry_00367",
+      "Au3In"
+    ],
+    [
+      "entry_00356",
+      "Au3Sb"
+    ],
+    [
+      "entry_00270",
+      "Au3Sc"
+    ],
+    [
+      "entry_00228",
+      "Au3Sn"
     ],
     [
       "entry_00046",
       "Co3Fe"
     ],
     [
-      "entry_00184",
-      "Co3Ga"
+      "entry_00012",
+      "Co3Ta"
     ],
     [
-      "entry_00191",
-      "Co3Sn"
+      "entry_00004",
+      "Co3Ti"
     ],
     [
-      "entry_00157",
-      "Co3Zr"
+      "entry_00197",
+      "Co3V"
     ],
     [
-      "entry_00123",
-      "Cr3Ge"
+      "entry_00375",
+      "Co3Y"
     ],
     [
-      "entry_00360",
-      "Cr3Ge"
+      "entry_00143",
+      "Co3Zn"
     ],
     [
-      "entry_00141",
+      "entry_00313",
+      "Cr3Cu"
+    ],
+    [
+      "entry_00206",
+      "Cr3Fe"
+    ],
+    [
+      "entry_00273",
       "Cr3Hf"
     ],
     [
+      "entry_00209",
+      "Cr3In"
+    ],
+    [
+      "entry_00262",
+      "Cr3Sc"
+    ],
+    [
       "entry_00064",
-      "Cr3Nb"
+      "Cr3V"
     ],
     [
-      "entry_00251",
-      "Cr3Zr"
+      "entry_00144",
+      "Cr3V"
     ],
     [
-      "entry_00332",
-      "Cu3Be"
+      "entry_00038",
+      "Cu3Al"
     ],
     [
-      "entry_00392",
-      "Cu3Be"
+      "entry_00285",
+      "Cu3Ge"
     ],
     [
-      "entry_00338",
-      "Cu3Ga"
+      "entry_00314",
+      "Cu3Ge"
     ],
     [
-      "entry_00153",
+      "entry_00172",
+      "Cu3Mn"
+    ],
+    [
+      "entry_00357",
       "Cu3Si"
     ],
     [
-      "entry_00371",
-      "Cu3Sn"
+      "entry_00084",
+      "Fe3Al"
     ],
     [
-      "entry_00145",
-      "Cu3Y"
+      "entry_00157",
+      "Fe3Cu"
     ],
     [
-      "entry_00169",
-      "Fe3In"
+      "entry_00292",
+      "Fe3Ge"
     ],
     [
-      "entry_00382",
+      "entry_00219",
+      "Fe3Hf"
+    ],
+    [
+      "entry_00361",
       "Fe3Mg"
     ],
     [
-      "entry_00376",
-      "Hf3Cu"
+      "entry_00079",
+      "Fe3Mn"
     ],
     [
-      "entry_00112",
-      "Hf3Mn"
+      "entry_00226",
+      "Fe3Nb"
     ],
     [
-      "entry_00104",
+      "entry_00030",
+      "Fe3Si"
+    ],
+    [
+      "entry_00164",
+      "Fe3Si"
+    ],
+    [
+      "entry_00265",
       "Hf3Sb"
     ],
     [
-      "entry_00044",
-      "Ir3Cu"
+      "entry_00199",
+      "Hf3Sc"
     ],
     [
-      "entry_00214",
-      "Ir3Cu"
+      "entry_00312",
+      "Hf3Sc"
     ],
     [
-      "entry_00067",
-      "Ir3Mg"
+      "entry_00074",
+      "Hf3V"
     ],
     [
-      "entry_00135",
-      "Ir3Mg"
+      "entry_00170",
+      "Hf3V"
     ],
     [
-      "entry_00383",
-      "Ir3Mg"
+      "entry_00024",
+      "Ir3Sb"
     ],
     [
-      "entry_00050",
-      "Ir3Ti"
+      "entry_00096",
+      "Ir3Zr"
     ],
     [
-      "entry_00298",
-      "Ir3V"
+      "entry_00184",
+      "Mn3Fe"
     ],
     [
-      "entry_00255",
-      "Ir3Y"
-    ],
-    [
-      "entry_00304",
+      "entry_00060",
       "Mn3Hf"
     ],
     [
-      "entry_00324",
-      "Mn3In"
-    ],
-    [
-      "entry_00266",
-      "Mn3Sn"
-    ],
-    [
-      "entry_00098",
-      "Mn3Ta"
-    ],
-    [
-      "entry_00290",
-      "Mn3Y"
-    ],
-    [
-      "entry_00066",
-      "Mn3Zr"
+      "entry_00291",
+      "Mn3Hf"
     ],
     [
       "entry_00152",
-      "Mo3Ge"
+      "Mo3Be"
     ],
     [
-      "entry_00095",
+      "entry_00181",
       "Mo3Nb"
     ],
     [
-      "entry_00387",
-      "Mo3Sc"
+      "entry_00343",
+      "Nb3Fe"
     ],
     [
-      "entry_00347",
-      "Mo3Y"
+      "entry_00269",
+      "Nb3Ge"
     ],
     [
-      "entry_00192",
-      "Nb3Ga"
+      "entry_00208",
+      "Nb3Sn"
     ],
     [
-      "entry_00142",
-      "Nb3Si"
+      "entry_00148",
+      "Nb3V"
     ],
     [
-      "entry_00222",
-      "Nb3Si"
-    ],
-    [
-      "entry_00227",
-      "Nb3Ti"
-    ],
-    [
-      "entry_00053",
-      "Nb3Y"
-    ],
-    [
-      "entry_00166",
+      "entry_00216",
       "Nb3Y"
     ],
     [
@@ -209,216 +234,164 @@
       "Ni3Al"
     ],
     [
-      "entry_00154",
-      "Ni3Ga"
+      "entry_00132",
+      "Ni3In"
     ],
     [
-      "entry_00111",
-      "Ni3Nb"
+      "entry_00069",
+      "Ni3Sb"
     ],
     [
-      "entry_00060",
-      "Ni3Si"
+      "entry_00174",
+      "Ni3V"
     ],
     [
-      "entry_00238",
-      "Ni3Ti"
-    ],
-    [
-      "entry_00305",
+      "entry_00115",
       "Pd3Fe"
     ],
     [
-      "entry_00038",
-      "Pd3Hf"
+      "entry_00071",
+      "Pd3Ge"
     ],
     [
-      "entry_00093",
-      "Pd3Zr"
+      "entry_00066",
+      "Pd3Mn"
     ],
     [
-      "entry_00007",
-      "Pt3Al"
+      "entry_00077",
+      "Pd3Sn"
     ],
     [
-      "entry_00119",
-      "Pt3Ge"
+      "entry_00241",
+      "Pt3Ga"
     ],
     [
-      "entry_00343",
-      "Pt3Si"
-    ],
-    [
-      "entry_00102",
-      "Rh3Ga"
-    ],
-    [
-      "entry_00019",
+      "entry_00028",
       "Rh3In"
     ],
     [
-      "entry_00126",
-      "Rh3In"
-    ],
-    [
-      "entry_00080",
-      "Rh3Sc"
-    ],
-    [
-      "entry_00345",
-      "Rh3Si"
-    ],
-    [
-      "entry_00257",
-      "Rh3Sn"
-    ],
-    [
-      "entry_00235",
-      "Ru3Be"
-    ],
-    [
-      "entry_00218",
-      "Ru3Cu"
-    ],
-    [
-      "entry_00331",
-      "Ru3Hf"
-    ],
-    [
-      "entry_00381",
-      "Ru3Hf"
-    ],
-    [
-      "entry_00178",
-      "Ru3Zr"
-    ],
-    [
-      "entry_00285",
-      "Ta3Hf"
-    ],
-    [
-      "entry_00295",
-      "Ta3Sb"
-    ],
-    [
-      "entry_00327",
-      "Ta3Si"
-    ],
-    [
-      "entry_00128",
-      "Ta3V"
-    ],
-    [
-      "entry_00316",
-      "Ti3Be"
-    ],
-    [
-      "entry_00253",
-      "Ti3Ge"
-    ],
-    [
-      "entry_00247",
-      "Ti3Hf"
-    ],
-    [
-      "entry_00127",
-      "Ti3In"
-    ],
-    [
-      "entry_00358",
-      "Ti3Si"
-    ],
-    [
-      "entry_00245",
-      "Ti3Ta"
-    ],
-    [
-      "entry_00026",
-      "V3Be"
-    ],
-    [
-      "entry_00176",
-      "V3In"
-    ],
-    [
-      "entry_00189",
-      "V3In"
-    ],
-    [
-      "entry_00041",
-      "V3Mn"
-    ],
-    [
-      "entry_00075",
-      "V3Sc"
-    ],
-    [
-      "entry_00368",
-      "V3Si"
-    ],
-    [
-      "entry_00114",
-      "V3Sn"
-    ],
-    [
-      "entry_00016",
-      "V3Ta"
-    ],
-    [
-      "entry_00221",
-      "V3Ta"
-    ],
-    [
-      "entry_00193",
-      "V3Zr"
-    ],
-    [
-      "entry_00129",
-      "W3Cu"
-    ],
-    [
-      "entry_00250",
-      "W3Cu"
-    ],
-    [
-      "entry_00167",
-      "W3Ge"
-    ],
-    [
-      "entry_00242",
-      "W3Ge"
-    ],
-    [
-      "entry_00149",
-      "W3Mn"
-    ],
-    [
-      "entry_00289",
-      "W3Nb"
-    ],
-    [
-      "entry_00313",
-      "W3Sb"
-    ],
-    [
-      "entry_00322",
-      "W3Ti"
+      "entry_00092",
+      "Rh3Mg"
     ],
     [
       "entry_00086",
+      "Rh3Sb"
+    ],
+    [
+      "entry_00369",
+      "Rh3V"
+    ],
+    [
+      "entry_00299",
+      "Rh3Zn"
+    ],
+    [
+      "entry_00384",
+      "Ru3Cu"
+    ],
+    [
+      "entry_00090",
+      "Ru3Ge"
+    ],
+    [
+      "entry_00117",
+      "Ru3Sc"
+    ],
+    [
+      "entry_00135",
+      "Ru3Zn"
+    ],
+    [
+      "entry_00131",
+      "Ta3Al"
+    ],
+    [
+      "entry_00202",
+      "Ta3Hf"
+    ],
+    [
+      "entry_00261",
+      "Ta3Si"
+    ],
+    [
+      "entry_00378",
+      "Ta3Zr"
+    ],
+    [
+      "entry_00258",
+      "Ti3Mg"
+    ],
+    [
+      "entry_00271",
+      "Ti3Mn"
+    ],
+    [
+      "entry_00305",
+      "Ti3Mn"
+    ],
+    [
+      "entry_00183",
+      "Ti3Zn"
+    ],
+    [
+      "entry_00142",
+      "V3Al"
+    ],
+    [
+      "entry_00034",
+      "V3Ge"
+    ],
+    [
+      "entry_00014",
+      "V3Hf"
+    ],
+    [
+      "entry_00078",
+      "V3In"
+    ],
+    [
+      "entry_00217",
+      "V3Nb"
+    ],
+    [
+      "entry_00162",
+      "V3Ti"
+    ],
+    [
+      "entry_00350",
+      "W3Fe"
+    ],
+    [
+      "entry_00055",
+      "W3Si"
+    ],
+    [
+      "entry_00048",
+      "W3Ta"
+    ],
+    [
+      "entry_00103",
+      "W3V"
+    ],
+    [
+      "entry_00211",
       "Zr3Ge"
     ],
     [
-      "entry_00015",
-      "Zr3In"
-    ],
-    [
-      "entry_00240",
+      "entry_00235",
       "Zr3Sc"
     ],
     [
-      "entry_00072",
-      "Zr3Sn"
+      "entry_00052",
+      "Zr3Si"
+    ],
+    [
+      "entry_00316",
+      "Zr3Si"
+    ],
+    [
+      "entry_00124",
+      "Zr3Y"
     ]
   ]
 }

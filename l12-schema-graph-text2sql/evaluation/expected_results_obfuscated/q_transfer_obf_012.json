@@ -2,9 +2,10 @@
   "columns": [
     "n_near_hull"
   ],
+  "ordered": false,
   "rows": [
     [
-      623
+      610
     ]
   ]
 }

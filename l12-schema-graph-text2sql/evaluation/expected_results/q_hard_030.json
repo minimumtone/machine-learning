@@ -4,6 +4,7 @@
     "formula",
     "energy_above_hull"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00001",
@@ -17,28 +18,23 @@
     ],
     [
       "entry_00007",
+      "Al3V",
+      0.0
+    ],
+    [
+      "entry_00008",
       "Pt3Al",
       0.0
     ],
     [
-      "entry_00101",
-      "Ni3Cu",
-      0.0005
+      "entry_00206",
+      "Cr3Fe",
+      0.0
     ],
     [
-      "entry_00122",
-      "Zr3Ti",
+      "entry_00314",
+      "Cu3Ge",
       0.0006
-    ],
-    [
-      "entry_00120",
-      "Ag3Sc",
-      0.0007
-    ],
-    [
-      "entry_00177",
-      "Ir3Sb",
-      0.0007
     ]
   ]
 }

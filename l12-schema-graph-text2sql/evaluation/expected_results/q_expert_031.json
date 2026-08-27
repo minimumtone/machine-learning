@@ -3,11 +3,12 @@
     "entry_id",
     "formula",
     "energy_above_hull",
-    "formation_energy_per_atom"
+    "formation_enthalpy_ev_per_atom"
   ],
+  "ordered": true,
   "rows": [
     [
-      "entry_00007",
+      "entry_00008",
       "Pt3Al",
       0.0,
       -0.55
@@ -25,34 +26,28 @@
       -0.45
     ],
     [
+      "entry_00206",
+      "Cr3Fe",
+      0.0,
+      -0.4399
+    ],
+    [
       "entry_00001",
       "Ni3Al",
       0.0,
       -0.42
     ],
     [
-      "entry_00120",
-      "Ag3Sc",
-      0.0007,
-      -0.1672
+      "entry_00007",
+      "Al3V",
+      0.0,
+      -0.27
     ],
     [
-      "entry_00122",
-      "Zr3Ti",
+      "entry_00314",
+      "Cu3Ge",
       0.0006,
-      -0.151
-    ],
-    [
-      "entry_00177",
-      "Ir3Sb",
-      0.0007,
-      -0.1168
-    ],
-    [
-      "entry_00101",
-      "Ni3Cu",
-      0.0005,
-      -0.0528
+      0.0569
     ]
   ]
 }

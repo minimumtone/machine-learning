@@ -4,180 +4,161 @@
     "energy_above_hull",
     "is_stable"
   ],
+  "ordered": true,
   "rows": [
     [
-      "Ni3Cu",
-      0.0005,
+      "Cu3Ge",
+      0.0006,
       true
     ],
     [
-      "Ir3Cu",
-      0.0014,
+      "Fe3Cu",
+      0.0032,
       false
     ],
     [
-      "Cu3Ta",
-      0.0054,
+      "Cu3Al",
+      0.0055,
       false
     ],
     [
-      "Cu3Ta",
-      0.0058,
-      false
-    ],
-    [
-      "Cu3Be",
-      0.0154,
-      false
-    ],
-    [
-      "Co3Cu",
-      0.0205,
-      false
-    ],
-    [
-      "W3Cu",
-      0.0216,
-      false
-    ],
-    [
-      "Cu3Y",
-      0.0276,
-      false
-    ],
-    [
-      "Hf3Cu",
-      0.0282,
-      false
-    ],
-    [
-      "Cu3Nb",
-      0.0304,
+      "Cu3Ge",
+      0.0075,
       false
     ],
     [
       "Cu3Mn",
-      0.0309,
+      0.0111,
       false
     ],
     [
-      "Rh3Cu",
-      0.0357,
+      "Cu3In",
+      0.0156,
       false
     ],
     [
-      "Cu3Zr",
-      0.0379,
-      false
-    ],
-    [
-      "Ni3Cu",
-      0.0385,
-      false
-    ],
-    [
-      "Ru3Cu",
-      0.0389,
-      false
-    ],
-    [
-      "Cu3Mn",
-      0.0391,
-      false
-    ],
-    [
-      "Zr3Cu",
-      0.0397,
-      false
-    ],
-    [
-      "Cu3Ta",
-      0.0402,
-      false
-    ],
-    [
-      "Hf3Cu",
-      0.0449,
-      false
-    ],
-    [
-      "Ir3Cu",
-      0.0462,
-      false
-    ],
-    [
-      "Ta3Cu",
-      0.0465,
-      false
-    ],
-    [
-      "Cu3Fe",
-      0.0483,
-      false
-    ],
-    [
-      "Cu3Y",
-      0.054,
-      false
-    ],
-    [
-      "Cu3Y",
-      0.0543,
-      false
-    ],
-    [
-      "Cu3Ta",
-      0.0564,
-      false
-    ],
-    [
-      "W3Cu",
-      0.0574,
-      false
-    ],
-    [
-      "Cu3Ta",
-      0.0581,
-      false
-    ],
-    [
-      "Cu3Ti",
-      0.0581,
-      false
-    ],
-    [
-      "Zr3Cu",
-      0.0634,
-      false
-    ],
-    [
-      "Rh3Cu",
-      0.0649,
-      false
-    ],
-    [
-      "Ag3Cu",
-      0.0652,
-      false
-    ],
-    [
-      "Cu3Sn",
-      0.0654,
-      false
-    ],
-    [
-      "Cu3V",
-      0.0692,
+      "Cu3Sb",
+      0.0169,
       false
     ],
     [
       "Cu3Si",
-      0.0695,
+      0.0333,
       false
     ],
     [
-      "V3Cu",
-      0.0716,
+      "Cu3Al",
+      0.0336,
+      false
+    ],
+    [
+      "Nb3Cu",
+      0.0337,
+      false
+    ],
+    [
+      "Rh3Cu",
+      0.0352,
+      false
+    ],
+    [
+      "Cu3In",
+      0.0385,
+      false
+    ],
+    [
+      "Au3Cu",
+      0.0393,
+      false
+    ],
+    [
+      "Ru3Cu",
+      0.0421,
+      false
+    ],
+    [
+      "Cu3Sn",
+      0.0431,
+      false
+    ],
+    [
+      "Cr3Cu",
+      0.0434,
+      false
+    ],
+    [
+      "Ag3Cu",
+      0.0442,
+      false
+    ],
+    [
+      "Cu3Al",
+      0.0456,
+      false
+    ],
+    [
+      "Zr3Cu",
+      0.0462,
+      false
+    ],
+    [
+      "Cr3Cu",
+      0.0462,
+      false
+    ],
+    [
+      "Cu3Ti",
+      0.0481,
+      false
+    ],
+    [
+      "Cu3Ti",
+      0.0529,
+      false
+    ],
+    [
+      "Ag3Cu",
+      0.0535,
+      false
+    ],
+    [
+      "Ru3Cu",
+      0.0559,
+      false
+    ],
+    [
+      "Ag3Cu",
+      0.058,
+      false
+    ],
+    [
+      "Cu3Ta",
+      0.0618,
+      false
+    ],
+    [
+      "Cu3Zn",
+      0.0621,
+      false
+    ],
+    [
+      "W3Cu",
+      0.0666,
+      false
+    ],
+    [
+      "Ag3Cu",
+      0.0684,
+      false
+    ],
+    [
+      "Cu3Ga",
+      0.0709,
+      false
+    ],
+    [
+      "Cu3Sc",
+      0.0759,
       false
     ],
     [
@@ -186,33 +167,43 @@
       false
     ],
     [
-      "Cu3Be",
-      0.0851,
+      "Cu3Y",
+      0.0834,
       false
     ],
     [
-      "Co3Cu",
-      0.0901,
+      "Cu3Ge",
+      0.0862,
       false
     ],
     [
-      "Ru3Cu",
-      0.1037,
+      "Ir3Cu",
+      0.0888,
       false
     ],
     [
-      "Au3Cu",
-      0.1319,
+      "Cu3Ge",
+      0.0889,
       false
     ],
     [
-      "Cu3Ga",
-      0.1336,
+      "Ta3Cu",
+      0.0978,
       false
     ],
     [
-      "Cu3Be",
-      0.1505,
+      "Nb3Cu",
+      0.1044,
+      false
+    ],
+    [
+      "Cu3Mn",
+      0.107,
+      false
+    ],
+    [
+      "Nb3Cu",
+      0.125,
       false
     ]
   ]

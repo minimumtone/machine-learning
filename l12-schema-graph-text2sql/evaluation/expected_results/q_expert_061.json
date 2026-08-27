@@ -4,11 +4,12 @@
     "formula",
     "surface_energy_j_m2"
   ],
+  "ordered": true,
   "rows": [
     [
-      "entry_00089",
-      "Ag3Si",
-      0.522
+      "entry_00361",
+      "Fe3Mg",
+      0.575
     ]
   ]
 }

@@ -3,14 +3,15 @@
     "stability",
     "count"
   ],
+  "ordered": true,
   "rows": [
     [
       "not_stable",
-      18
+      21
     ],
     [
       "stable",
-      3
+      4
     ]
   ]
 }

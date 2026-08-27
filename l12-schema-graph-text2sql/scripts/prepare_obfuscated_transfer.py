@@ -19,6 +19,7 @@ PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
 from graph.schema_parser import get_foreign_keys  # noqa: E402
+from scripts.gold_compare import sql_is_ordered  # noqa: E402
 
 SRC_DATASET = PROJECT / "evaluation" / "transfer_evaluation_dataset.jsonl"
 MAP_PATH = PROJECT / "db" / "obfuscated_transfer_mapping.json"
@@ -49,7 +50,7 @@ COLUMN_DESCRIPTIONS: dict[str, str] = {
     "gap_ev": "electronic band gap (eV)",
     "ref_key": "reference-state identifier",
     "gs_spacegroup": "ground-state space group number",
-    "energy_pa": "ground-state energy per atom",
+    "reference_delta_e": "elemental reference formation energy per atom (same convention as delta_e; subtract the ratio-weighted sum from delta_e to re-reference to elemental ground states)",
     "volume_pa": "ground-state atomic volume",
     "polymorph_count": "number of thermodynamically stable polymorphs",
 }
@@ -90,7 +91,8 @@ def translate_sql(sql: str, translation: dict[str, str]) -> str:
     return sql
 
 
-def execute_and_save(sql: str, conn: psycopg.Connection, out_path: Path) -> dict[str, Any]:
+def execute_and_save(sql: str, conn: psycopg.Connection, out_path: Path,
+                     ordered: bool) -> dict[str, Any]:
     with conn.cursor() as cur:
         cur.execute(sql)  # type: ignore[arg-type]
         rows = cur.fetchall()
@@ -106,7 +108,7 @@ def execute_and_save(sql: str, conn: psycopg.Connection, out_path: Path) -> dict
             else:
                 record.append(val)
         data.append(record)
-    payload = {"columns": cols, "rows": data}
+    payload = {"columns": cols, "ordered": ordered, "rows": data}
     out_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2))
     return payload
 
@@ -218,10 +220,11 @@ def main() -> None:
 
         expected_path = EXPECTED_DIR / f"{new_id}.json"
         try:
-            execute_and_save(gold_obf, conn, expected_path)
+            execute_and_save(gold_obf, conn, expected_path,
+                             ordered=sql_is_ordered(gold_obf))
         except Exception as exc:
             print(f"FAILED {new_id}: {exc}")
-            expected_path.write_text(json.dumps({"columns": [], "rows": [], "error": str(exc)}, ensure_ascii=False, indent=2))
+            expected_path.write_text(json.dumps({"columns": [], "ordered": False, "rows": [], "error": str(exc)}, ensure_ascii=False, indent=2))
 
         out_lines.append({
             "id": new_id,

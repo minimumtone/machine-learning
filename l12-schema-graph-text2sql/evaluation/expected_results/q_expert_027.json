@@ -4,11 +4,12 @@
     "formula",
     "lattice_c"
   ],
+  "ordered": true,
   "rows": [
     [
-      "entry_01398",
-      "IrHf",
-      9.4483
+      "entry_01442",
+      "NiAl",
+      9.4142
     ]
   ]
 }

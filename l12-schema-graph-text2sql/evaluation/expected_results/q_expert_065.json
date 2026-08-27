@@ -4,5 +4,12 @@
     "formula",
     "formation_energy"
   ],
-  "rows": []
+  "ordered": true,
+  "rows": [
+    [
+      "entry_00089",
+      "Pd3Mg",
+      0.778
+    ]
+  ]
 }

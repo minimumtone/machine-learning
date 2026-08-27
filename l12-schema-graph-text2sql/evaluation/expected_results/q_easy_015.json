@@ -4,64 +4,35 @@
     "formula",
     "prototype"
   ],
+  "ordered": true,
   "rows": [
     [
-      "entry_00079",
-      "Ag3Ga",
-      "L12"
-    ],
-    [
-      "entry_00118",
-      "Ag3Ga",
-      "L12"
-    ],
-    [
-      "entry_00279",
-      "Au3Ga",
-      "L12"
-    ],
-    [
-      "entry_00055",
-      "Co3Ga",
-      "L12"
-    ],
-    [
-      "entry_00184",
-      "Co3Ga",
-      "L12"
-    ],
-    [
-      "entry_00338",
+      "entry_00062",
       "Cu3Ga",
       "L12"
     ],
     [
-      "entry_00329",
-      "Hf3Ga",
+      "entry_00276",
+      "Fe3Ga",
       "L12"
     ],
     [
-      "entry_00108",
+      "entry_00355",
+      "Fe3Ga",
+      "L12"
+    ],
+    [
+      "entry_00176",
       "Mn3Ga",
       "L12"
     ],
     [
-      "entry_00040",
-      "Mo3Ga",
+      "entry_00386",
+      "Mn3Ga",
       "L12"
     ],
     [
-      "entry_00096",
-      "Mo3Ga",
-      "L12"
-    ],
-    [
-      "entry_00107",
-      "Nb3Ga",
-      "L12"
-    ],
-    [
-      "entry_00192",
+      "entry_00359",
       "Nb3Ga",
       "L12"
     ],
@@ -71,53 +42,58 @@
       "L12"
     ],
     [
-      "entry_00092",
-      "Ni3Ga",
+      "entry_00098",
+      "Pd3Ga",
       "L12"
     ],
     [
-      "entry_00154",
-      "Ni3Ga",
+      "entry_00234",
+      "Pd3Ga",
       "L12"
     ],
     [
-      "entry_00102",
-      "Rh3Ga",
+      "entry_00323",
+      "Pd3Ga",
       "L12"
     ],
     [
-      "entry_00069",
+      "entry_00020",
+      "Pt3Ga",
+      "L12"
+    ],
+    [
+      "entry_00109",
+      "Pt3Ga",
+      "L12"
+    ],
+    [
+      "entry_00241",
+      "Pt3Ga",
+      "L12"
+    ],
+    [
+      "entry_00070",
       "Ta3Ga",
       "L12"
     ],
     [
-      "entry_00173",
+      "entry_00372",
+      "Ta3Ga",
+      "L12"
+    ],
+    [
+      "entry_00249",
       "Ti3Ga",
       "L12"
     ],
     [
-      "entry_00188",
-      "Ti3Ga",
+      "entry_00147",
+      "Zr3Ga",
       "L12"
     ],
     [
-      "entry_00043",
-      "V3Ga",
-      "L12"
-    ],
-    [
-      "entry_00049",
-      "V3Ga",
-      "L12"
-    ],
-    [
-      "entry_00065",
-      "W3Ga",
-      "L12"
-    ],
-    [
-      "entry_00181",
-      "W3Ga",
+      "entry_00358",
+      "Zr3Ga",
       "L12"
     ]
   ]

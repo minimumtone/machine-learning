@@ -5,5 +5,13 @@
     "total_dos_at_fermi",
     "magnetic_ordering"
   ],
-  "rows": []
+  "ordered": true,
+  "rows": [
+    [
+      "entry_00379",
+      "Pt3Ti",
+      8.841,
+      "ferromagnetic"
+    ]
+  ]
 }

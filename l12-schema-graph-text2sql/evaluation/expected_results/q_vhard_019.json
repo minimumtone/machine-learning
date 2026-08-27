@@ -2,18 +2,14 @@
   "columns": [
     "formula",
     "formation_energy_per_atom",
-    "corrected_enthalpy"
+    "enthalpy_vs_element_ground_states"
   ],
+  "ordered": true,
   "rows": [
     [
       "Ni3Al",
       -0.42,
-      "-0.4193"
-    ],
-    [
-      "Ni3Cu",
-      -0.0528,
-      "-0.0520"
+      -0.4193
     ]
   ]
 }

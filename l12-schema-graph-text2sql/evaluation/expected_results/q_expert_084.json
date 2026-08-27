@@ -6,6 +6,7 @@
     "shear_modulus_vrh",
     "energy_above_hull"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00004",

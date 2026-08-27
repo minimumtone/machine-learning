@@ -4,6 +4,7 @@
     "chemical_system",
     "lattice_a"
   ],
+  "ordered": true,
   "rows": [
     [
       "Ni3Al",

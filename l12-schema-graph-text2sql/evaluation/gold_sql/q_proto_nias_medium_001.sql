@@ -4,5 +4,5 @@ JOIN composition c ON c.entry_id = m.entry_id
 JOIN structure s ON s.entry_id = m.entry_id
 WHERE c.element = 'Ti'
   AND (s.prototype = 'NiAs' OR s.strukturbericht = 'B81')
-ORDER BY m.formula
+ORDER BY m.formula, m.entry_id ASC
 LIMIT 10000;

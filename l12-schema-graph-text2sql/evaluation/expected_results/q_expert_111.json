@@ -7,14 +7,15 @@
     "youngs_modulus",
     "energy_above_hull"
   ],
+  "ordered": true,
   "rows": [
     [
       "Pt3Al",
       3.9,
-      210,
-      95,
-      null,
-      0
+      210.0,
+      95.0,
+      247.66,
+      0.0
     ]
   ]
 }

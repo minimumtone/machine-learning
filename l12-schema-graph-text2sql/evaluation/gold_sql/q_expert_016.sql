@@ -5,5 +5,5 @@ JOIN structure s ON s.entry_id = m.entry_id
 WHERE c.element IN ('Y','Zr','Nb','Mo','Tc','Ru','Rh','Pd','Ag','Cd')
   AND c.atomic_fraction <= 0.25
   AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')
-ORDER BY m.formula
+ORDER BY m.formula, m.entry_id ASC
 LIMIT 10000;

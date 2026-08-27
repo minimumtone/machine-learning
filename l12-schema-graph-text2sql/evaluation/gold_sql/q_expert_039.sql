@@ -2,5 +2,5 @@ SELECT m.entry_id, m.formula, ps.formation_energy_per_atom
 FROM material_entry m
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
 WHERE ps.formation_energy_per_atom <= -0.5
-ORDER BY ps.formation_energy_per_atom
+ORDER BY ps.formation_energy_per_atom, m.entry_id ASC
 LIMIT 10000;

@@ -8,6 +8,7 @@
     "chemical_system",
     "number_of_elements"
   ],
+  "ordered": false,
   "rows": [
     [
       "entry_00001",

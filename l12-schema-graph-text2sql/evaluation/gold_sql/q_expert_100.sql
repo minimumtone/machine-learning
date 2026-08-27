@@ -6,5 +6,5 @@ SELECT s.prototype,
 FROM structure s
 JOIN phase_stability ps ON ps.entry_id = s.entry_id
 GROUP BY s.prototype
-ORDER BY total DESC
+ORDER BY total DESC, s.prototype
 LIMIT 10000;

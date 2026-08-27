@@ -4,6 +4,7 @@
     "energy_above_hull",
     "formation_energy_per_atom"
   ],
+  "ordered": true,
   "rows": [
     [
       "Pt3Al",
@@ -19,6 +20,11 @@
       "Co3Ti",
       0.0,
       -0.45
+    ],
+    [
+      "Cr3Fe",
+      0.0,
+      -0.4399
     ],
     [
       "Ni3Al",

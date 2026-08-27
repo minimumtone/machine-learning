@@ -1,8 +1,11 @@
 {
+  "expected_empty": true,
+  "purpose": "negative control: every calculation in the fixture uses GGA-PBE, so non-PBE functionals must return zero rows",
   "columns": [
     "entry_id",
     "formula",
     "functional"
   ],
+  "ordered": true,
   "rows": []
 }

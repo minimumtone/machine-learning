@@ -1,0 +1,45 @@
+{
+  "columns": [
+    "chemical_system",
+    "formula",
+    "hull_distance"
+  ],
+  "ordered": true,
+  "rows": [
+    [
+      "Al-Sc",
+      "Al3Sc",
+      0.0
+    ],
+    [
+      "As-Ni",
+      "NiAs",
+      0.0
+    ],
+    [
+      "Cr-In",
+      "CrIn",
+      0.0007
+    ],
+    [
+      "Cu-Ge",
+      "Cu3Ge",
+      0.0006
+    ],
+    [
+      "Fe-Si",
+      "SiFe3",
+      0.0
+    ],
+    [
+      "Hf-Pt",
+      "PtHf",
+      0.0001
+    ],
+    [
+      "Ru-Si",
+      "RuSi",
+      0.0004
+    ]
+  ]
+}

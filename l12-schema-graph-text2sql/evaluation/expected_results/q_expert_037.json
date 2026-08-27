@@ -4,10 +4,31 @@
     "formula",
     "band_gap"
   ],
+  "ordered": true,
   "rows": [
+    [
+      "entry_00007",
+      "Al3V",
+      0.0
+    ],
+    [
+      "entry_00004",
+      "Co3Ti",
+      0.0
+    ],
+    [
+      "entry_00206",
+      "Cr3Fe",
+      0.0
+    ],
     [
       "entry_00001",
       "Ni3Al",
+      0.0
+    ],
+    [
+      "entry_00008",
+      "Pt3Al",
       0.0
     ]
   ]

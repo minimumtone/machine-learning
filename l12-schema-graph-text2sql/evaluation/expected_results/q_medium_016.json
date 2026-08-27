@@ -4,7 +4,13 @@
     "lattice_a",
     "energy_above_hull"
   ],
+  "ordered": true,
   "rows": [
+    [
+      "Cu3Ge",
+      3.4611,
+      0.0006
+    ],
     [
       "Co3Ti",
       3.55,

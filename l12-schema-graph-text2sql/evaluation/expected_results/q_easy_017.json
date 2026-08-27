@@ -3,6 +3,7 @@
     "element",
     "site_label"
   ],
+  "ordered": true,
   "rows": [
     [
       "Ag",
@@ -70,6 +71,10 @@
     ],
     [
       "Ru",
+      "A-site"
+    ],
+    [
+      "Si",
       "A-site"
     ],
     [

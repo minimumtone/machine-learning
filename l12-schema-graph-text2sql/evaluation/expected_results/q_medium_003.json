@@ -5,9 +5,10 @@
     "formation_energy_per_atom",
     "energy_above_hull"
   ],
+  "ordered": true,
   "rows": [
     [
-      "entry_00007",
+      "entry_00008",
       "Pt3Al",
       -0.55,
       0.0
@@ -22,6 +23,12 @@
       "entry_00001",
       "Ni3Al",
       -0.42,
+      0.0
+    ],
+    [
+      "entry_00007",
+      "Al3V",
+      -0.27,
       0.0
     ]
   ]

@@ -1,13 +1,18 @@
 -- VH: 安定なL1₂化合物のうち、バルクモジュラスが180GPa以上で格子定数が3.9Å以下のものを
 -- 化学式・格子定数・バルクモジュラス・形成エネルギーとともに一覧して
--- Tables: material_entry, structure, phase_stability, calculation, calculated_property (5)
+-- Tables: material_entry, structure, phase_stability, calculation,
+--         calculated_property, property_definition (6)
+-- Joins the property dictionary so the unit comes from the canonical
+-- definition instead of the denormalized child copy.
 SELECT m.formula, s.lattice_a, cp_bm.value AS bulk_modulus,
+       pdef.canonical_unit AS bulk_modulus_unit,
        ps.formation_energy_per_atom
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
-JOIN calculation calc ON calc.entry_id = m.entry_id
+JOIN calculation calc ON calc.entry_id = m.entry_id AND calc.calculation_type = 'relaxation'
 JOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id
+JOIN property_definition pdef ON pdef.canonical_name = cp_bm.property_name
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND ps.energy_above_hull <= 0.001
   AND cp_bm.property_name = 'bulk_modulus'

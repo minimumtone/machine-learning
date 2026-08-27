@@ -4,8 +4,9 @@
     "lattice_a",
     "formation_energy_per_atom",
     "weighted_ref",
-    "delta_h_f"
+    "enthalpy_vs_element_ground_states"
   ],
+  "ordered": true,
   "rows": [
     [
       "Pt3Al",
@@ -20,6 +21,13 @@
       -0.5,
       0.0009568637499999258,
       -0.5009568637499999
+    ],
+    [
+      "Cr3Fe",
+      3.8896,
+      -0.4399,
+      0.00011779749999929473,
+      -0.4400177974999993
     ],
     [
       "Co3Ti",

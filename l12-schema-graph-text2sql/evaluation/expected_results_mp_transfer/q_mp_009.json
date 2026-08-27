@@ -1,10 +1,11 @@
 {
   "columns": [
-    "count"
+    "formula"
   ],
+  "ordered": true,
   "rows": [
     [
-      0
+      "Mg149Al"
     ]
   ]
 }

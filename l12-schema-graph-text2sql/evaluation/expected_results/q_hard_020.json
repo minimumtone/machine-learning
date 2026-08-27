@@ -3,25 +3,30 @@
     "b_site_element",
     "stable_count"
   ],
+  "ordered": true,
   "rows": [
     [
       "Al",
       2
     ],
     [
-      "Sc",
-      2
-    ],
-    [
-      "Ti",
-      2
-    ],
-    [
-      "Cu",
+      "Fe",
       1
     ],
     [
-      "Sb",
+      "Ge",
+      1
+    ],
+    [
+      "Sc",
+      1
+    ],
+    [
+      "Ti",
+      1
+    ],
+    [
+      "V",
       1
     ]
   ]

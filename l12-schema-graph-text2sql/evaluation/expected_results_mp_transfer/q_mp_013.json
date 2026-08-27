@@ -1,10 +1,11 @@
 {
   "columns": [
-    "count"
+    "formula"
   ],
+  "ordered": true,
   "rows": [
     [
-      80
+      "Ti2Co"
     ]
   ]
 }

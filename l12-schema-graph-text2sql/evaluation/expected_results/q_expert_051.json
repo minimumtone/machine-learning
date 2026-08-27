@@ -4,11 +4,12 @@
     "formula",
     "total_dos_at_fermi"
   ],
+  "ordered": true,
   "rows": [
     [
-      "entry_00191",
-      "Co3Sn",
-      48.508
+      "entry_00016",
+      "Hf3Ge",
+      48.254
     ]
   ]
 }

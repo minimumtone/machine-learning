@@ -4,11 +4,12 @@
     "formula",
     "volume_per_atom"
   ],
+  "ordered": true,
   "rows": [
     [
-      "entry_00083",
-      "Fe3Ti",
-      2.4584
+      "entry_00086",
+      "Rh3Sb",
+      9.8442
     ]
   ]
 }

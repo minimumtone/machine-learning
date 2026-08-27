@@ -4,14 +4,20 @@
     "formula",
     "element"
   ],
+  "ordered": true,
   "rows": [
     [
-      "entry_00120",
+      "entry_00116",
       "Ag3Sc",
       "Sc"
     ],
     [
-      "entry_00315",
+      "entry_00150",
+      "Ag3Sc",
+      "Sc"
+    ],
+    [
+      "entry_00310",
       "Ag3Y",
       "Y"
     ],
@@ -21,164 +27,179 @@
       "Sc"
     ],
     [
-      "entry_00032",
+      "entry_00270",
+      "Au3Sc",
+      "Sc"
+    ],
+    [
+      "entry_00065",
       "Au3Y",
       "Y"
     ],
     [
-      "entry_00321",
-      "Co3Sc",
+      "entry_00080",
+      "Au3Y",
+      "Y"
+    ],
+    [
+      "entry_00136",
+      "Au3Y",
+      "Y"
+    ],
+    [
+      "entry_00252",
+      "Au3Y",
+      "Y"
+    ],
+    [
+      "entry_00375",
+      "Co3Y",
+      "Y"
+    ],
+    [
+      "entry_00262",
+      "Cr3Sc",
       "Sc"
     ],
     [
-      "entry_00170",
+      "entry_00072",
       "Cr3Y",
       "Y"
     ],
     [
-      "entry_00088",
-      "Cu3Y",
-      "Y"
-    ],
-    [
-      "entry_00145",
-      "Cu3Y",
-      "Y"
-    ],
-    [
-      "entry_00151",
-      "Cu3Y",
-      "Y"
-    ],
-    [
-      "entry_00155",
-      "Hf3Y",
-      "Y"
-    ],
-    [
-      "entry_00183",
-      "Hf3Y",
-      "Y"
-    ],
-    [
-      "entry_00291",
-      "Hf3Y",
-      "Y"
-    ],
-    [
-      "entry_00337",
-      "Hf3Y",
-      "Y"
-    ],
-    [
-      "entry_00326",
-      "Ir3Sc",
+      "entry_00021",
+      "Cu3Sc",
       "Sc"
     ],
     [
-      "entry_00255",
+      "entry_00031",
+      "Cu3Y",
+      "Y"
+    ],
+    [
+      "entry_00383",
+      "Fe3Sc",
+      "Sc"
+    ],
+    [
+      "entry_00385",
+      "Fe3Y",
+      "Y"
+    ],
+    [
+      "entry_00199",
+      "Hf3Sc",
+      "Sc"
+    ],
+    [
+      "entry_00312",
+      "Hf3Sc",
+      "Sc"
+    ],
+    [
+      "entry_00328",
+      "Hf3Sc",
+      "Sc"
+    ],
+    [
+      "entry_00043",
       "Ir3Y",
       "Y"
     ],
     [
-      "entry_00236",
-      "Mn3Sc",
+      "entry_00057",
+      "Nb3Sc",
       "Sc"
     ],
     [
-      "entry_00290",
-      "Mn3Y",
-      "Y"
-    ],
-    [
-      "entry_00387",
-      "Mo3Sc",
-      "Sc"
-    ],
-    [
-      "entry_00186",
-      "Mo3Y",
-      "Y"
-    ],
-    [
-      "entry_00347",
-      "Mo3Y",
-      "Y"
-    ],
-    [
-      "entry_00053",
+      "entry_00025",
       "Nb3Y",
-      "Y"
-    ],
-    [
-      "entry_00166",
-      "Nb3Y",
-      "Y"
-    ],
-    [
-      "entry_00312",
-      "Nb3Y",
-      "Y"
-    ],
-    [
-      "entry_00144",
-      "Pt3Sc",
-      "Sc"
-    ],
-    [
-      "entry_00262",
-      "Pt3Sc",
-      "Sc"
-    ],
-    [
-      "entry_00080",
-      "Rh3Sc",
-      "Sc"
-    ],
-    [
-      "entry_00377",
-      "Rh3Sc",
-      "Sc"
-    ],
-    [
-      "entry_00113",
-      "Ta3Y",
-      "Y"
-    ],
-    [
-      "entry_00330",
-      "Ti3Y",
-      "Y"
-    ],
-    [
-      "entry_00075",
-      "V3Sc",
-      "Sc"
-    ],
-    [
-      "entry_00346",
-      "V3Sc",
-      "Sc"
-    ],
-    [
-      "entry_00021",
-      "W3Y",
-      "Y"
-    ],
-    [
-      "entry_00147",
-      "W3Y",
       "Y"
     ],
     [
       "entry_00163",
-      "W3Y",
+      "Nb3Y",
       "Y"
     ],
     [
-      "entry_00240",
+      "entry_00216",
+      "Nb3Y",
+      "Y"
+    ],
+    [
+      "entry_00353",
+      "Ni3Sc",
+      "Sc"
+    ],
+    [
+      "entry_00389",
+      "Ni3Sc",
+      "Sc"
+    ],
+    [
+      "entry_00293",
+      "Pd3Sc",
+      "Sc"
+    ],
+    [
+      "entry_00251",
+      "Pt3Sc",
+      "Sc"
+    ],
+    [
+      "entry_00373",
+      "Pt3Sc",
+      "Sc"
+    ],
+    [
+      "entry_00366",
+      "Rh3Y",
+      "Y"
+    ],
+    [
+      "entry_00117",
+      "Ru3Sc",
+      "Sc"
+    ],
+    [
+      "entry_00134",
+      "Ru3Y",
+      "Y"
+    ],
+    [
+      "entry_00332",
+      "Ta3Sc",
+      "Sc"
+    ],
+    [
+      "entry_00032",
+      "V3Y",
+      "Y"
+    ],
+    [
+      "entry_00177",
+      "V3Y",
+      "Y"
+    ],
+    [
+      "entry_00212",
+      "V3Y",
+      "Y"
+    ],
+    [
+      "entry_00221",
       "Zr3Sc",
       "Sc"
+    ],
+    [
+      "entry_00235",
+      "Zr3Sc",
+      "Sc"
+    ],
+    [
+      "entry_00124",
+      "Zr3Y",
+      "Y"
     ]
   ]
 }

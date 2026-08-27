@@ -3,37 +3,22 @@
     "entry_id",
     "formula"
   ],
+  "ordered": true,
   "rows": [
     [
-      "entry_00318",
+      "entry_00281",
       "Ag3Al"
     ],
     [
-      "entry_00493",
+      "entry_00360",
+      "Ag3Al"
+    ],
+    [
+      "entry_01169",
       "AgAl"
     ],
     [
-      "entry_00726",
-      "AgAl"
-    ],
-    [
-      "entry_01064",
-      "AgAl"
-    ],
-    [
-      "entry_01153",
-      "AgAl"
-    ],
-    [
-      "entry_01237",
-      "AgAl"
-    ],
-    [
-      "entry_01424",
-      "AgAl"
-    ],
-    [
-      "entry_01439",
+      "entry_01234",
       "AgAl"
     ],
     [
@@ -49,147 +34,147 @@
       "Al3Ti"
     ],
     [
-      "entry_00237",
-      "Au3Al"
+      "entry_00007",
+      "Al3V"
     ],
     [
-      "entry_00507",
+      "entry_01459",
+      "AlFe3"
+    ],
+    [
+      "entry_00951",
       "AuAl"
     ],
     [
-      "entry_00914",
+      "entry_01034",
       "AuAl"
     ],
     [
-      "entry_01426",
-      "AuAl"
-    ],
-    [
-      "entry_01443",
-      "AuAl"
-    ],
-    [
-      "entry_00009",
+      "entry_00010",
       "Co3Al"
     ],
     [
-      "entry_00215",
+      "entry_00290",
       "Co3Al"
     ],
     [
-      "entry_00303",
+      "entry_00309",
       "Co3Al"
     ],
     [
-      "entry_00882",
+      "entry_01101",
       "CoAl"
     ],
     [
-      "entry_00957",
+      "entry_01276",
       "CoAl"
     ],
     [
-      "entry_01161",
+      "entry_01371",
       "CoAl"
-    ],
-    [
-      "entry_01204",
-      "CoAl"
-    ],
-    [
-      "entry_01440",
-      "CoAl"
-    ],
-    [
-      "entry_00165",
-      "Cr3Al"
-    ],
-    [
-      "entry_00593",
-      "CrAl"
-    ],
-    [
-      "entry_00463",
-      "CuAl"
-    ],
-    [
-      "entry_00561",
-      "CuAl"
-    ],
-    [
-      "entry_00988",
-      "CuAl"
-    ],
-    [
-      "entry_01058",
-      "CuAl"
-    ],
-    [
-      "entry_01142",
-      "CuAl"
-    ],
-    [
-      "entry_01393",
-      "CuAl"
-    ],
-    [
-      "entry_00148",
-      "Fe3Al"
-    ],
-    [
-      "entry_00418",
-      "FeAl"
-    ],
-    [
-      "entry_01335",
-      "FeAl"
-    ],
-    [
-      "entry_01112",
-      "HfAl"
-    ],
-    [
-      "entry_00522",
-      "IrAl"
-    ],
-    [
-      "entry_00678",
-      "IrAl"
-    ],
-    [
-      "entry_01167",
-      "IrAl"
-    ],
-    [
-      "entry_01172",
-      "IrAl"
     ],
     [
       "entry_01410",
-      "IrAl"
+      "CoAl"
     ],
     [
-      "entry_00269",
-      "Mn3Al"
+      "entry_01429",
+      "CoAl"
     ],
     [
-      "entry_00869",
-      "MnAl"
+      "entry_00604",
+      "CrAl"
     ],
     [
-      "entry_00061",
-      "Mo3Al"
+      "entry_00038",
+      "Cu3Al"
+    ],
+    [
+      "entry_00214",
+      "Cu3Al"
+    ],
+    [
+      "entry_00267",
+      "Cu3Al"
+    ],
+    [
+      "entry_00530",
+      "CuAl"
+    ],
+    [
+      "entry_01431",
+      "CuAl"
+    ],
+    [
+      "entry_00084",
+      "Fe3Al"
+    ],
+    [
+      "entry_00801",
+      "FeAl"
+    ],
+    [
+      "entry_01069",
+      "FeAl"
+    ],
+    [
+      "entry_01209",
+      "FeAl"
+    ],
+    [
+      "entry_01432",
+      "FeAl"
     ],
     [
       "entry_00198",
-      "Mo3Al"
+      "Hf3Al"
     ],
     [
-      "entry_00276",
-      "Nb3Al"
+      "entry_01221",
+      "HfAl"
     ],
     [
-      "entry_00694",
+      "entry_00175",
+      "Ir3Al"
+    ],
+    [
+      "entry_00679",
+      "IrAl"
+    ],
+    [
+      "entry_00749",
+      "IrAl"
+    ],
+    [
+      "entry_01083",
+      "IrAl"
+    ],
+    [
+      "entry_01154",
+      "IrAl"
+    ],
+    [
+      "entry_01198",
+      "IrAl"
+    ],
+    [
+      "entry_01248",
+      "IrAl"
+    ],
+    [
+      "entry_01265",
+      "IrAl"
+    ],
+    [
+      "entry_01296",
+      "IrAl"
+    ],
+    [
+      "entry_01407",
+      "IrAl"
+    ],
+    [
+      "entry_00789",
       "NbAl"
     ],
     [
@@ -197,123 +182,195 @@
       "Ni3Al"
     ],
     [
-      "entry_00575",
+      "entry_00404",
       "NiAl"
     ],
     [
-      "entry_00996",
+      "entry_00621",
       "NiAl"
     ],
     [
-      "entry_00087",
-      "Pd3Al"
+      "entry_01143",
+      "NiAl"
     ],
     [
-      "entry_00007",
+      "entry_01442",
+      "NiAl"
+    ],
+    [
+      "entry_00445",
+      "PdAl"
+    ],
+    [
+      "entry_00685",
+      "PdAl"
+    ],
+    [
+      "entry_01139",
+      "PdAl"
+    ],
+    [
+      "entry_01165",
+      "PdAl"
+    ],
+    [
+      "entry_00008",
       "Pt3Al"
     ],
     [
-      "entry_00388",
+      "entry_00151",
       "Pt3Al"
     ],
     [
-      "entry_00705",
+      "entry_00257",
+      "Pt3Al"
+    ],
+    [
+      "entry_00448",
       "PtAl"
     ],
     [
-      "entry_00878",
+      "entry_00540",
       "PtAl"
     ],
     [
-      "entry_01340",
+      "entry_01110",
       "PtAl"
     ],
     [
-      "entry_00907",
+      "entry_01155",
+      "PtAl"
+    ],
+    [
+      "entry_01323",
+      "PtAl"
+    ],
+    [
+      "entry_01403",
+      "PtAl"
+    ],
+    [
+      "entry_00765",
       "RhAl"
     ],
     [
-      "entry_00759",
+      "entry_01014",
+      "RhAl"
+    ],
+    [
+      "entry_01284",
+      "RhAl"
+    ],
+    [
+      "entry_01359",
+      "RhAl"
+    ],
+    [
+      "entry_01413",
+      "RhAl"
+    ],
+    [
+      "entry_01440",
+      "RhAl"
+    ],
+    [
+      "entry_00516",
       "RuAl"
     ],
     [
-      "entry_01269",
+      "entry_00899",
       "RuAl"
     ],
     [
-      "entry_00133",
+      "entry_01094",
+      "RuAl"
+    ],
+    [
+      "entry_01299",
+      "RuAl"
+    ],
+    [
+      "entry_00131",
       "Ta3Al"
     ],
     [
-      "entry_00284",
+      "entry_00392",
       "Ta3Al"
     ],
     [
-      "entry_00451",
+      "entry_00885",
       "TaAl"
     ],
     [
-      "entry_00779",
-      "TaAl"
-    ],
-    [
-      "entry_00552",
+      "entry_00706",
       "TiAl"
     ],
     [
-      "entry_00670",
+      "entry_01150",
       "TiAl"
     ],
     [
-      "entry_00981",
+      "entry_01224",
       "TiAl"
     ],
     [
-      "entry_01354",
-      "TiAl"
-    ],
-    [
-      "entry_01431",
-      "TiAl"
-    ],
-    [
-      "entry_00385",
+      "entry_00087",
       "V3Al"
     ],
     [
-      "entry_00599",
+      "entry_00142",
+      "V3Al"
+    ],
+    [
+      "entry_00204",
+      "V3Al"
+    ],
+    [
+      "entry_00633",
       "VAl"
     ],
     [
-      "entry_00890",
+      "entry_00692",
       "VAl"
     ],
     [
-      "entry_01077",
+      "entry_00979",
       "VAl"
     ],
     [
-      "entry_01345",
+      "entry_01258",
       "VAl"
     ],
     [
-      "entry_01369",
+      "entry_01290",
       "VAl"
     ],
     [
-      "entry_00267",
+      "entry_01315",
+      "VAl"
+    ],
+    [
+      "entry_01010",
+      "WAl"
+    ],
+    [
+      "entry_00107",
       "Zr3Al"
     ],
     [
-      "entry_00541",
+      "entry_00238",
+      "Zr3Al"
+    ],
+    [
+      "entry_00919",
       "ZrAl"
     ],
     [
-      "entry_01076",
+      "entry_01188",
       "ZrAl"
     ],
     [
-      "entry_01232",
+      "entry_01377",
       "ZrAl"
     ]
   ]

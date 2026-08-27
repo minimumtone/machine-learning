@@ -5,106 +5,113 @@
     "prototype",
     "strukturbericht"
   ],
+  "ordered": true,
   "rows": [
     [
-      "entry_01439",
-      "AgAl",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01424",
-      "AgAl",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01397",
-      "AgGa",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01422",
-      "AgGe",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01392",
-      "AgHf",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01433",
+      "entry_01393",
       "AgNb",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01386",
-      "AgSi",
+      "entry_01420",
+      "AgNb",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01435",
-      "AgTa",
+      "entry_01441",
+      "AgNb",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01390",
-      "AgTa",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01443",
-      "AuAl",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01426",
-      "AuAl",
+      "entry_01394",
+      "AgSc",
       "NiAs",
       "B81"
     ],
     [
       "entry_01404",
+      "AgSc",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01423",
+      "AgSc",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01418",
+      "AgTa",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01417",
+      "AgY",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01454",
       "AuGe",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01407",
-      "AuGe",
+      "entry_01398",
+      "AuHf",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01432",
-      "AuSi",
+      "entry_01447",
+      "AuHf",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01391",
-      "AuSi",
+      "entry_01451",
+      "AuHf",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01440",
+      "entry_01419",
+      "AuY",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01410",
       "CoAl",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01396",
-      "CoGe",
+      "entry_01429",
+      "CoAl",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01443",
+      "CoGa",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01444",
+      "CoGa",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01452",
+      "CoNb",
       "NiAs",
       "B81"
     ],
@@ -115,170 +122,188 @@
       "B81"
     ],
     [
-      "entry_01393",
+      "entry_01399",
+      "CoSi",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01411",
+      "CoTa",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01439",
+      "CoTa",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01424",
+      "CoTi",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01386",
+      "CoY",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01431",
       "CuAl",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01446",
-      "CuNb",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01394",
-      "CuTi",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01423",
-      "FeNb",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01428",
-      "FeSc",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01434",
-      "FeSi",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01399",
-      "FeTi",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01410",
-      "IrAl",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01441",
-      "IrGa",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01413",
-      "IrGe",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01405",
-      "IrGe",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01398",
-      "IrHf",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01389",
-      "IrNb",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01414",
-      "IrNb",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01384",
-      "IrSc",
-      "NiAs",
-      "B81"
-    ],
-    [
       "entry_01445",
-      "IrSi",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01449",
-      "IrTa",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01444",
-      "IrTa",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01430",
-      "IrY",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01400",
-      "NiHf",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01429",
-      "NiNb",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01448",
-      "NiSc",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01421",
-      "NiSi",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01415",
-      "NiTa",
+      "CuGa",
       "NiAs",
       "B81"
     ],
     [
       "entry_01456",
-      "PdGe",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01417",
-      "PdNb",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01409",
-      "PtGa",
+      "CuGa",
       "NiAs",
       "B81"
     ],
     [
       "entry_01455",
-      "PtGe",
+      "CuHf",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01430",
+      "CuNb",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01432",
+      "FeAl",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01428",
+      "FeGe",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01416",
+      "FeSc",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01421",
+      "FeSc",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01407",
+      "IrAl",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01427",
+      "IrTa",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01435",
+      "IrTi",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01442",
+      "NiAl",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01384",
+      "NiAs",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01391",
+      "NiGe",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01388",
+      "NiNb",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01385",
+      "NiSb",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01408",
+      "NiY",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01387",
+      "PdNb",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01448",
+      "PdSc",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01446",
+      "PdSi",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01396",
+      "PdTi",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01415",
+      "PdY",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01403",
+      "PtAl",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01405",
+      "PtGa",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01433",
+      "PtGa",
       "NiAs",
       "B81"
     ],
@@ -289,92 +314,86 @@
       "B81"
     ],
     [
-      "entry_01401",
+      "entry_01436",
+      "PtGe",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01390",
       "PtHf",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01416",
+      "entry_01414",
+      "PtHf",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01389",
       "PtSc",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01447",
-      "PtTi",
+      "entry_01413",
+      "RhAl",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01427",
-      "PtTi",
+      "entry_01440",
+      "RhAl",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01387",
+      "entry_01397",
+      "RhGa",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01434",
       "RhGe",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01406",
-      "RhNb",
+      "entry_01453",
+      "RhGe",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01412",
-      "RhSc",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01450",
-      "RhTa",
+      "entry_01409",
+      "RhSi",
       "NiAs",
       "B81"
     ],
     [
       "entry_01438",
-      "RhY",
+      "RhSi",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01388",
-      "RhY",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01403",
+      "entry_01392",
       "RuGa",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01442",
-      "RuSc",
+      "entry_01400",
+      "RuSi",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01419",
-      "RuSc",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01436",
-      "RuSc",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01452",
-      "RuSc",
+      "entry_01449",
+      "RuSi",
       "NiAs",
       "B81"
     ],
@@ -385,67 +404,49 @@
       "B81"
     ],
     [
-      "entry_01453",
-      "RuY",
+      "entry_01457",
+      "TiHf",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01408",
-      "RuY",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01411",
-      "RuY",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01431",
-      "TiAl",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01454",
-      "TiGa",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01418",
-      "TiGe",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01451",
-      "TiGe",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01437",
+      "entry_01401",
       "TiNb",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01385",
+      "entry_01450",
+      "TiSc",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01406",
+      "TiSi",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01412",
+      "TiSi",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01426",
+      "TiSi",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01437",
       "TiTa",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01420",
-      "TiTa",
-      "NiAs",
-      "B81"
-    ],
-    [
-      "entry_01457",
+      "entry_01422",
       "TiY",
       "NiAs",
       "B81"

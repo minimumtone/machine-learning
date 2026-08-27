@@ -4,5 +4,12 @@
     "formula",
     "magnetic_anisotropy_energy"
   ],
-  "rows": []
+  "ordered": true,
+  "rows": [
+    [
+      "entry_00006",
+      "Al3Ti",
+      1.9354
+    ]
+  ]
 }

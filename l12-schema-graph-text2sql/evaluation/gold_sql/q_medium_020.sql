@@ -3,5 +3,5 @@ FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND m.chemical_system != 'Al-Ni'
-ORDER BY m.formula
+ORDER BY m.formula, m.entry_id ASC
 LIMIT 10000;

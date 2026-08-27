@@ -3,46 +3,51 @@
     "entry_id",
     "formula"
   ],
+  "ordered": true,
   "rows": [
     [
-      "entry_00207",
-      "Ag3Fe"
+      "entry_00012",
+      "Co3Ta"
     ],
     [
-      "entry_00321",
-      "Co3Sc"
+      "entry_00004",
+      "Co3Ti"
     ],
     [
-      "entry_00251",
-      "Cr3Zr"
+      "entry_00064",
+      "Cr3V"
     ],
     [
-      "entry_00110",
-      "Hf3Ti"
+      "entry_00226",
+      "Fe3Nb"
     ],
     [
-      "entry_00214",
-      "Ir3Cu"
+      "entry_00303",
+      "Hf3Si"
     ],
     [
-      "entry_00178",
-      "Ru3Zr"
+      "entry_00096",
+      "Ir3Zr"
     ],
     [
-      "entry_00285",
-      "Ta3Hf"
+      "entry_00291",
+      "Mn3Hf"
     ],
     [
-      "entry_00295",
-      "Ta3Sb"
+      "entry_00174",
+      "Ni3V"
     ],
     [
-      "entry_00189",
-      "V3In"
+      "entry_00243",
+      "Ti3Ge"
     ],
     [
-      "entry_00149",
-      "W3Mn"
+      "entry_00183",
+      "Ti3Zn"
+    ],
+    [
+      "entry_00083",
+      "W3Fe"
     ]
   ]
 }

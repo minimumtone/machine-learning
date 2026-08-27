@@ -4,5 +4,5 @@ JOIN structure s ON s.entry_id = m.entry_id
 JOIN material_synthesis ms ON ms.entry_id = m.entry_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND ms.success = TRUE
-ORDER BY m.formula
+ORDER BY m.formula, m.entry_id ASC
 LIMIT 10000;

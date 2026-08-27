@@ -3,17 +3,26 @@
     "entry_key",
     "composition_formula"
   ],
+  "ordered": false,
   "rows": [
     [
       "entry_00001",
       "Ni3Al"
     ],
     [
-      "entry_00575",
+      "entry_00404",
       "NiAl"
     ],
     [
-      "entry_00996",
+      "entry_00621",
+      "NiAl"
+    ],
+    [
+      "entry_01143",
+      "NiAl"
+    ],
+    [
+      "entry_01442",
       "NiAl"
     ]
   ]

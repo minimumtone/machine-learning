@@ -44,7 +44,7 @@ Allowed columns (ONLY use these exact column names — use the descriptions in p
     - col_mars: reference-state identifier
     - col_papa: chemical element symbol (e.g. Ni)
     - col_pegasus: ground-state atomic volume
-    - col_tango: ground-state energy per atom
+    - col_tango: elemental reference formation energy per atom (same convention as delta_e; subtract the ratio-weighted sum from delta_e to re-reference to elemental ground states)
     - col_uniform: number of thermodynamically stable polymorphs
   tbl_xray:
     - col_alpha: atomic mass (amu)

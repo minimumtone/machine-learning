@@ -3,46 +3,47 @@
     "chemical_system",
     "cnt"
   ],
+  "ordered": true,
   "rows": [
     [
-      "Fe-Sc",
-      12
-    ],
-    [
-      "Ru-Sc",
-      12
-    ],
-    [
-      "V-Zr",
-      11
-    ],
-    [
       "Nb-V",
+      13
+    ],
+    [
+      "Ru-Sn",
+      12
+    ],
+    [
+      "Cu-Ge",
       11
     ],
     [
-      "Hf-Ti",
+      "Rh-Zn",
       11
     ],
     [
-      "Hf-Mn",
+      "Ta-Zr",
       11
     ],
     [
-      "Ga-Zr",
+      "Al-Ir",
       10
     ],
     [
-      "Fe-Nb",
+      "Al-V",
       10
     ],
     [
-      "Ru-Y",
+      "Ga-Pt",
       10
     ],
     [
-      "Cu-Nb",
-      10
+      "Ag-Sc",
+      9
+    ],
+    [
+      "Al-Pt",
+      9
     ]
   ]
 }

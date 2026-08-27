@@ -3,31 +3,30 @@
     "formula",
     "lattice_a",
     "bulk_modulus",
+    "bulk_modulus_unit",
     "formation_energy_per_atom"
   ],
+  "ordered": true,
   "rows": [
     [
       "Pt3Al",
       3.9,
-      210,
+      210.0,
+      "GPa",
       -0.55
     ],
     [
       "Co3Ti",
       3.55,
-      190,
+      190.0,
+      "GPa",
       -0.45
-    ],
-    [
-      "Zr3Ti",
-      3.8279,
-      187.84,
-      -0.151
     ],
     [
       "Ni3Al",
       3.572,
-      180,
+      180.0,
+      "GPa",
       -0.42
     ]
   ]

@@ -5,12 +5,13 @@
     "bulk_modulus_vrh",
     "debye_temperature_k"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00004",
       "Co3Ti",
       190.0,
-      434.3
+      520.0
     ]
   ]
 }

@@ -4,6 +4,7 @@
     "a_site",
     "b_site"
   ],
+  "ordered": true,
   "rows": [
     [
       "Co3Al",

@@ -4,21 +4,22 @@
     "formula",
     "shear_modulus_vrh"
   ],
+  "ordered": true,
   "rows": [
     [
-      "entry_00217",
-      "Ru3Mg",
-      117.7
+      "entry_00098",
+      "Pd3Ga",
+      119.78
     ],
     [
-      "entry_00193",
-      "V3Zr",
-      117.6
+      "entry_00132",
+      "Ni3In",
+      119.54
     ],
     [
-      "entry_00333",
-      "Pt3Mn",
-      117.3
+      "entry_00297",
+      "Cu3Zn",
+      119.48
     ]
   ]
 }

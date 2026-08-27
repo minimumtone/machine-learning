@@ -5,6 +5,7 @@
     "energy_above_hull",
     "is_stable"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00001",
@@ -13,15 +14,27 @@
       true
     ],
     [
-      "entry_00575",
+      "entry_00621",
       "NiAl",
-      0.0467,
+      0.0568,
       false
     ],
     [
-      "entry_00996",
+      "entry_01143",
       "NiAl",
-      0.0866,
+      0.0576,
+      false
+    ],
+    [
+      "entry_01442",
+      "NiAl",
+      0.0806,
+      false
+    ],
+    [
+      "entry_00404",
+      "NiAl",
+      0.0835,
       false
     ]
   ]

@@ -2,13 +2,29 @@
   "columns": [
     "b_site",
     "n_compounds",
-    "avg_delta_h_f"
+    "avg_enthalpy_vs_element_gs"
   ],
+  "ordered": true,
   "rows": [
+    [
+      "Sc",
+      1,
+      -0.501
+    ],
     [
       "Al",
       2,
-      "-0.4849"
+      -0.4849
+    ],
+    [
+      "Fe",
+      1,
+      -0.44
+    ],
+    [
+      "Ti",
+      1,
+      -0.438
     ]
   ]
 }

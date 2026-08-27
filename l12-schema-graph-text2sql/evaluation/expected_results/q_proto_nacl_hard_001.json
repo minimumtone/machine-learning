@@ -5,10 +5,17 @@
     "energy_above_hull",
     "is_stable"
   ],
+  "ordered": true,
   "rows": [
     [
-      "ZrSc",
-      -0.3609,
+      "HfGe",
+      -0.2687,
+      0.0,
+      true
+    ],
+    [
+      "RuSi",
+      -0.0816,
       0.0004,
       true
     ]

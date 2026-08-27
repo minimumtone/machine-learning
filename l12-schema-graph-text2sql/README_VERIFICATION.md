@@ -129,8 +129,14 @@ python scripts/eval_model_comparison.py      # GPT-5.5 vs GPT-4o（ANTHROPIC_API
 
 ### 4.6 gold SQL / expected results の整合確認
 ```bash
-python scripts/check_expected_results.py            # 全gold SQLをDB実行し期待値と照合
+python scripts/check_expected_results.py            # 全gold SQL（main/transfer/難読化）をDB実行し期待値と照合
 python scripts/check_expected_results.py --update   # 期待値の更新（DB変更時のみ）
+
+# ORDER BY全順序監査（LIMIT除去後の候補集合全体でtieを検出、3 suite対象）
+L12_DSN=... TRANSFER_DSN=... OBF_TRANSFER_DSN=... python scripts/audit_order_totality.py
+
+# 意味論監査（formula↔composition↔prototype化学量論）
+python scripts/audit_semantics.py
 ```
 
 ### 4.7 集計・図表・論文

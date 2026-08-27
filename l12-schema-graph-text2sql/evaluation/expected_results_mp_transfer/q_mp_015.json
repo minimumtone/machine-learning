@@ -3,6 +3,7 @@
     "crystal_system",
     "avg"
   ],
+  "ordered": true,
   "rows": [
     [
       "Hexagonal",

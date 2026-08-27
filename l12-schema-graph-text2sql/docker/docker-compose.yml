@@ -6,6 +6,10 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-l12_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-l12_password}
       POSTGRES_DB: ${POSTGRES_DB:-l12_materials}
+      # Build provenance recorded by db/007_initialization_marker.sql:
+      # set GIT_COMMIT (e.g. `GIT_COMMIT=$(cat GIT_COMMIT) docker compose up`)
+      # so the init psql sessions carry l12.git_commit into the marker row.
+      PGOPTIONS: "-c l12.git_commit=${GIT_COMMIT:-unknown}"
     ports:
       - "127.0.0.1:${L12_PGPORT:-5432}:5432"
     volumes:

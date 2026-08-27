@@ -4,6 +4,7 @@
     "formula",
     "prototype"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00001",
@@ -11,27 +12,7 @@
       "L12"
     ],
     [
-      "entry_00101",
-      "Ni3Cu",
-      "L12"
-    ],
-    [
-      "entry_00369",
-      "Ni3Cu",
-      "L12"
-    ],
-    [
       "entry_00002",
-      "Ni3Ga",
-      "L12"
-    ],
-    [
-      "entry_00092",
-      "Ni3Ga",
-      "L12"
-    ],
-    [
-      "entry_00154",
       "Ni3Ga",
       "L12"
     ],
@@ -41,48 +22,58 @@
       "L12"
     ],
     [
-      "entry_00023",
-      "Ni3Ge",
+      "entry_00132",
+      "Ni3In",
       "L12"
     ],
     [
-      "entry_00150",
-      "Ni3Hf",
+      "entry_00336",
+      "Ni3In",
       "L12"
     ],
     [
-      "entry_00384",
+      "entry_00233",
       "Ni3Mn",
       "L12"
     ],
     [
-      "entry_00111",
-      "Ni3Nb",
-      "L12"
-    ],
-    [
-      "entry_00171",
-      "Ni3Nb",
-      "L12"
-    ],
-    [
-      "entry_00117",
+      "entry_00069",
       "Ni3Sb",
       "L12"
     ],
     [
-      "entry_00060",
-      "Ni3Si",
+      "entry_00353",
+      "Ni3Sc",
       "L12"
     ],
     [
-      "entry_00367",
-      "Ni3Si",
+      "entry_00389",
+      "Ni3Sc",
       "L12"
     ],
     [
-      "entry_00238",
+      "entry_00301",
+      "Ni3Ta",
+      "L12"
+    ],
+    [
+      "entry_00013",
       "Ni3Ti",
+      "L12"
+    ],
+    [
+      "entry_00191",
+      "Ni3Ti",
+      "L12"
+    ],
+    [
+      "entry_00229",
+      "Ni3Ti",
+      "L12"
+    ],
+    [
+      "entry_00174",
+      "Ni3V",
       "L12"
     ]
   ]

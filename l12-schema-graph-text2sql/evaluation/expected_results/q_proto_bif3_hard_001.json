@@ -5,11 +5,18 @@
     "energy_above_hull",
     "is_stable"
   ],
+  "ordered": true,
   "rows": [
     [
-      "TiZr3",
-      0.1254,
-      0.0006,
+      "SiFe3",
+      -0.28,
+      0.0,
+      true
+    ],
+    [
+      "AlFe3",
+      -0.2,
+      0.0,
       true
     ]
   ]

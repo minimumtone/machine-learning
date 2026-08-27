@@ -37,13 +37,7 @@ from llm.sql_generator import pipeline as sql_pipeline  # noqa: E402
 EVAL_DIR = PROJECT / "evaluation"
 RESULTS_DIR = EVAL_DIR / "expected_results"
 
-CONNINFO = (
-    f"host={os.getenv('POSTGRES_HOST', 'localhost')} "
-    f"port={os.getenv('POSTGRES_PORT', '5432')} "
-    f"dbname={os.getenv('POSTGRES_DB', 'l12_materials')} "
-    f"user={os.getenv('POSTGRES_USER', 'l12_user')} "
-    f"password={os.getenv('POSTGRES_PASSWORD', 'l12_password')}"
-)
+from scripts.db_conninfo import CONNINFO  # noqa: E402
 
 
 def load_queries():

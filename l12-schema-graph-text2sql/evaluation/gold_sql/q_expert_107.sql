@@ -6,7 +6,7 @@ FROM material_entry m
 JOIN composition c_ni ON c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni'
 JOIN composition c_al ON c_al.entry_id = m.entry_id AND c_al.element = 'Al'
 JOIN structure s ON s.entry_id = m.entry_id
-JOIN calculation calc ON calc.entry_id = m.entry_id
+JOIN calculation calc ON calc.entry_id = m.entry_id AND calc.calculation_type = 'relaxation'
 JOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND ABS(s.lattice_a - 3.57) <= 0.1

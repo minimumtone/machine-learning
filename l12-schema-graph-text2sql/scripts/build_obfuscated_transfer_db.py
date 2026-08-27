@@ -20,6 +20,8 @@ from psycopg import sql as pgsql
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
+from scripts.build_transfer_db import assert_safe_transfer_db  # noqa: E402
+
 SRC_DB = os.getenv("TRANSFER_DB", "oqmd_transfer")
 OBF_DB = f"{SRC_DB}_obfuscated"
 MAPPING_PATH = PROJECT / "db" / "obfuscated_transfer_mapping.json"
@@ -47,6 +49,11 @@ def _db_conninfo(db: str) -> str:
     )
 
 
+def obfuscated_conninfo() -> str:
+    """Connection string for the obfuscated transfer database."""
+    return _db_conninfo(OBF_DB)
+
+
 def _name_stream(prefix: str, rng: random.Random) -> Iterator[str]:
     """Yield unique prefixed words in random order, repeating with suffixes."""
     words = WORDS.copy()
@@ -60,6 +67,8 @@ def _name_stream(prefix: str, rng: random.Random) -> Iterator[str]:
 
 
 def main() -> None:
+    assert_safe_transfer_db(SRC_DB)
+    assert_safe_transfer_db(OBF_DB)
     seed = int(os.getenv("OBFUSCATE_SEED", "42"))
     rng = random.Random(seed)
 

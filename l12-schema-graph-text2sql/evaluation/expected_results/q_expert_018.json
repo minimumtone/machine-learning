@@ -3,14 +3,15 @@
     "prototype",
     "cnt"
   ],
+  "ordered": true,
   "rows": [
     [
       "B2",
-      66
+      60
     ],
     [
       "L12",
-      31
+      29
     ],
     [
       "Mn_gs",

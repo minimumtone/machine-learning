@@ -4,12 +4,8 @@
     "bulk_modulus",
     "energy_above_hull"
   ],
+  "ordered": true,
   "rows": [
-    [
-      "Ag3Sc",
-      212.82,
-      0.0007
-    ],
     [
       "Pt3Al",
       210.0,
@@ -19,11 +15,6 @@
       "Co3Ti",
       190.0,
       0.0
-    ],
-    [
-      "Zr3Ti",
-      187.84,
-      0.0006
     ],
     [
       "Ni3Al",

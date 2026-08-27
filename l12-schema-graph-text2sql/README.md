@@ -57,9 +57,21 @@ cd ..
 
 設計上の意図的な簡略化：`calculation` は (entry, calculation_type, method, functional) ごとに1件のみ保持します。カットオフ・k点メッシュ・擬ポテンシャル・U値などの数値パラメータ軸は本検証用DBでは持たず、汎用の計算アーカイブとしては UNIQUE が強すぎる点を明示しておきます。
 
-エネルギー規約（reference_set）：`phase_stability.formation_energy_per_atom` は「その材料の `reference_set`（`reference_energy_set` マスタへのFK）が定める元素参照状態に対する生成エネルギー」です。純元素側の `pure_element_reference.delta_e` は OQMD の delta_e（生成エネルギー、eV/atom）であり、全DFTエネルギーでも参照エネルギー値そのものでもありません。`formation_enthalpy` ビューの `enthalpy_vs_element_ground_states` は同一 `reference_set` 内で `formation_energy - Σ xᵢ·delta_eᵢ` を計算し、「フィットされた参照状態基準」を「収録純元素基底状態基準」へ付け替えた値です（同一規約内では参照エネルギーが厳密に相殺するため二重補正にはなりません）。異なる `reference_set` 間の混用はビューのJOIN条件（`per.reference_set = ps.reference_set`）と006のset単位被覆検査で構造的に防がれます。なお本フィクスチャの数値は単一の生成プロセスによる合成データで、`material_entry.source_db`（OQMD / Materials Project / AFLOW）は出所ラベルにすぎず、全行が単一規約 `OQMD-PBE` に属します（マルチ規約データを載せる場合は `reference_energy_set` に行を追加し、同じ機構がset別に機能します）。
+エネルギー規約（reference_set）：`phase_stability.formation_energy_per_atom` は「その材料の `reference_set`（`reference_energy_set` マスタへのFK）が定める元素参照状態に対する生成エネルギー」です。純元素側の `pure_element_reference.delta_e` は OQMD の delta_e（生成エネルギー、eV/atom）であり、全DFTエネルギーでも参照エネルギー値そのものでもありません。`formation_enthalpy` ビューの `enthalpy_vs_element_ground_states` は同一 `reference_set` 内で `formation_energy - Σ xᵢ·delta_eᵢ` を計算し、「フィットされた参照状態基準」を「収録純元素基底状態基準」へ付け替えた値です（同一規約内では参照エネルギーが厳密に相殺するため二重補正にはなりません）。異なる `reference_set` 間の混用はビューのJOIN条件（`per.reference_set = ps.reference_set`）と006のset単位被覆検査で構造的に防がれます。なお本フィクスチャで材料（`phase_stability`）が使うエネルギー規約はパッケージ固有の共通規約 `L12-FIXTURE-PBE-v1` の1件のみです。これとは別に、`pure_element_reference` にはテスト専用規約 `L12-FIXTURE-DIVERGENCE-TEST-v1`（全元素の delta_e を +0.05 eV/atom シフトした複製。`fixture_source_reference_set` に未登録のため材料側からは使用不可）を収録しています。これは `reference_set` 条件を欠いたJOINが偶然正しい結果を返さないようにするための発散検出フィクスチャで、`tests/test_db_integrity.py` が実際に差が生じることを検証します。命名の根拠：化合物の生成エネルギーは実データベースからの取り込み値ではなく、本パッケージの生成器（`ingestion/generate_extended_data.py`。既知L1₂化合物はキュレーション値、その他は範囲内乱数）が合成した値であり、`pure_element_reference` に収録した OQMD DFT-PBE の純元素 delta_e（実データ）を元素参照状態として「宣言」したものです。変換式は存在せず（値の出所が合成であるため）、外部DB間のエネルギー補正も行っていません。したがって `OQMD-PBE` / `MP-PBE` などの実DB規約名を名乗ることは誤解を招くため、フィクスチャ固有名を採用しています。`material_entry.source_db`（OQMD / Materials Project / AFLOW）は合成上の出所ラベルにすぎず、エネルギー値の出所を意味しません。許容される (source_db, reference_set) の組は `fixture_source_reference_set` マップに宣言され、006が全ロード行の組がマップに存在することを検査します（マルチ規約データを載せる場合は `reference_energy_set` とマップに行を追加し、同じ機構がset別に機能します）。
+
+数値・単一truth・不変条件（第6次レビュー対応）：(1) 物理量カラムには有限値CHECK（NaN / ±Infinity 拒否）を付与しています（生成エネルギー・E_hull・delta_e・組成分率・転用スキーマの delta_e / hull_distance など）。(2) `phase_diagram_entry.is_on_hull` は `hull_distance <= 0.001` から導出される生成列で、`phase_stability.is_stable` と同一の運用定義の単一truthです。(3) EAV 3表（calculated/measured/element property）の `value` は NOT NULL で、「値が未知」は行の不存在で表現します。(4) `property_definition.value_type` は本フィクスチャで実際に使用する `'float'` のみに限定しています（整数propertyは未使用のため。整数対応を追加する場合は小数値を拒否するtrigger検証が必要です）。(5) `property_definition.canonical_unit` のマスタ側UPDATEは、不整合な子行が存在する場合trigger（`prevent_invalid_canonical_unit_change`）で拒否されます。(6) `reference_energy_set` の規約フィールド（method/functional/source/fit_name）は、そのsetがロード済みエネルギーから参照された後はtrigger（`prevent_referenced_convention_change`）で変更不可です。
 
 実験測定の未知条件の制限：`experimental_measurement` の `UNIQUE NULLS NOT DISTINCT` により、NULL の測定条件（reference/method/温度/圧力）は独立した測定を表しません。同一材料につき「条件未知の測定」は1件しか表現できず、独立した実測値を共存させるには実際の測定条件を記録する必要があります。
+
+検証器と期待結果の比較方針（第9次レビュー対応）：`scripts/run_gold_verification.py` / `scripts/check_expected_results.py` は `scripts/gold_compare.py` の共通ポリシーで比較します。(1) 列名（alias含む）を `cur.description` と期待JSONの `columns` で完全一致比較、(2) 最外層に ORDER BY を持つクエリは行順を保持したsequence比較・持たないクエリは重複を保持したmultiset比較（set化しない）、(3) 数値同士のみ `math.isclose(rel_tol=1e-9, abs_tol=1e-8)` の許容誤差を適用し、文字列・boolean・NULLは型ごと厳密比較（数値風TEXTをfloat化しない・6桁丸めなし）、(4) 期待JSONのスキーマ（columns=文字列list / rows=listのlist / ordered=bool）を検査、(5) gold SQLを持たない孤児期待ファイルを失敗として検出。接続は READ ONLY + `statement_timeout=30s` を強制します。難読化転用suite（`gold_sql_obfuscated` × `expected_results_obfuscated`）は `OBF_TRANSFER_DSN` で同一検証器により独立検証できます。MP転用実験（q_mp_*）の期待結果は評価専用の `evaluation/expected_results_mp_transfer/` に分離しています。
+
+第11次レビュー対応の追加検証：(1) 両検証器は期待JSONの `ordered` フラグをSQL実体の最外層 ORDER BY と照合し、不一致を `order_contract_mismatch` として失敗させます（メタデータの改変・SQL編集の片側だけの変更を検出）。`check_expected_results.py` は main / transfer / 難読化転用の3 suiteすべてを対象にします。(2) `scripts/audit_order_totality.py` は最外層の LIMIT/OFFSET/FETCH を除去した候補集合全体で ORDER BY キーの重複を監査し（LIMIT境界の外側のtieも検出）、3 suiteすべてを対象、SELECT注入が安全でない構文（DISTINCT・window関数・集合返却関数・volatile関数）は自動監査せず MANUAL REVIEW として失敗させます。(3) `scripts/audit_semantics.py` は formula ↔ composition.atomic_fraction（許容誤差1e-8）、reduced_formula ↔ gcd既約化、prototype の formula_type ↔ 組成比の3点を意味論監査します。(4) `db/007_initialization_marker.sql` のschema fingerprintは pg_catalog から列の正確な型（format_type）・NOT NULL・default・生成式・全制約（pg_get_constraintdef）・view（pg_get_viewdef）・trigger（pg_get_triggerdef）・関数本体（pg_get_functiondef）をSHA-256でハッシュ化し、markerに `git_commit`（ロード時に `PGOPTIONS="-c l12.git_commit=$(cat GIT_COMMIT)"` または docker-compose の `GIT_COMMIT` 環境変数で伝播、未指定時は 'unknown'）を記録します。
+
+意図的なnegative control：`q_expert_003`（3元系以上）・`q_expert_022`（非立方晶B2）・`q_expert_041`（GGA-PBE以外のfunctional）は本フィクスチャでは0行が正解の意図的な空結果クエリで、期待JSONに `expected_empty: true` と目的を明記しています。
+
+弾性スカラーの意図的な非正規化重複：`elastic_tensor` のVRHスカラー（K/G/E）は `calculated_property`（EAV）にも複製されています。これはワイド表経由とEAV経由の両方のschema navigation問題を同一物理量に対して出題するためのベンチマーク上の意図的設計で、両者は生成器の単一値から書き込まれ、`validate_fixture_integrity()` が一致を検査します（フィクスチャはimmutable運用のため片側のみの事後更新は非サポート）。
+
+NULL抜け穴の封鎖（第9次）：`phase_stability.band_gap`・`band_structure.cbm_energy / vbm_energy` を NOT NULL 化し、band gap整合検査がNULLで素通りしないようにしました。metallicity検査は `IS DISTINCT FROM` によるNULL-safe比較です。volume整合検査は、体積公式を持たない結晶系（cubic/hexagonal以外）が `conventional_cell_atoms` 付きprototypeに現れた時点で明示的に失敗します（公式追加までロード不可）。転用スキーマにも物理CHECK（原子番号1〜118・正の原子量・正の格子定数・正の原子あたり体積、いずれも有限値）を追加しています。
 
 転用スキーマ（`db/transfer_schema.sql`）の安定性truth：転用評価DBでは `oqmd_formation_energies.on_hull` は `hull_distance <= 0.001` から導出される生成列であり、両者が矛盾する行は存在できません。転用gold SQLの安定判定は `on_hull = true`（すなわち `hull_distance <= 0.001`、本体スキーマと同一の運用定義）をtruthとします。
 
@@ -137,8 +149,8 @@ l12-schema-graph-text2sql/
 │   └── allowed_schema.yaml   # 許可テーブル・カラム定義
 ├── evaluation/          # 評価パイプライン
 │   ├── evaluation_dataset.jsonl # 100クエリ（Easy/Medium/Hard/VeryHard）
-│   ├── gold_sql/        # 正解SQL 212件（著者100件 + 独立100件 + VH追加12件）
-│   ├── expected_results/ # 正解実行結果JSON（212件）
+│   ├── gold_sql/        # 正解SQL 264件（本評価244件 + 転用20件）
+│   ├── expected_results/ # 正解実行結果JSON（264件）
 │   ├── metrics.py       # 評価指標（構文妥当率、実行精度等）
 │   ├── run_proposed.py  # Proposed手法実行
 │   ├── proposed_result.csv      # 代表ラン (= Run 2, 70.6%)
