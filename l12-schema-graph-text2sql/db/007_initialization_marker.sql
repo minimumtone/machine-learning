@@ -31,6 +31,14 @@ SELECT validate_fixture_integrity();
 -- changing NUMERIC precision all change the fingerprint. SHA-256 (core
 -- since PostgreSQL 11, no extension dependency) is used as a
 -- corruption/mismatch detector.
+--
+-- Scope: this is a SEMANTIC schema fingerprint — it covers everything
+-- that changes query semantics or the integrity contract. It does NOT
+-- cover indexes, roles, GRANT/REVOKE, default privileges, or role/GUC
+-- settings (default_transaction_read_only, statement_timeout, ...):
+-- those affect performance and access control but not what the gold
+-- queries compute, and are enforced separately by db/005_roles.sql and
+-- the verifiers' own READ ONLY + timeout session settings.
 CREATE OR REPLACE FUNCTION compute_schema_fingerprint() RETURNS TEXT AS $$
     WITH parts AS (
         SELECT 'col:' || c.relname || '.' || a.attname

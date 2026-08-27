@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any, Iterator
 
 import psycopg
+from psycopg.conninfo import make_conninfo
 from psycopg import sql as pgsql
 
 PROJECT = Path(__file__).resolve().parent.parent
@@ -39,13 +40,12 @@ WORDS = [
 
 def _db_conninfo(db: str) -> str:
     """Build a connection string using environment variables."""
-    password = os.getenv("POSTGRES_PASSWORD", "l12_password")
-    return (
-        f"host={os.getenv('POSTGRES_HOST', 'localhost')} "
-        f"port={os.getenv('POSTGRES_PORT', '5432')} "
-        f"dbname={db} "
-        f"user={os.getenv('POSTGRES_USER', 'l12_user')} "
-        f"password={password}"
+    return make_conninfo(
+        host=os.getenv("POSTGRES_HOST", "localhost"),
+        port=os.getenv("POSTGRES_PORT", "5432"),
+        dbname=db,
+        user=os.getenv("POSTGRES_USER", "l12_user"),
+        password=os.getenv("POSTGRES_PASSWORD", "l12_password"),
     )
 
 

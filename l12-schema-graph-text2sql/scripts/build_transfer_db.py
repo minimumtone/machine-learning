@@ -19,8 +19,10 @@ sys.path.insert(0, str(PROJECT))
 
 import psycopg  # noqa: E402
 from psycopg import sql as pgsql  # noqa: E402
+from psycopg.conninfo import make_conninfo  # noqa: E402
 
 from scripts.db_conninfo import CONNINFO  # noqa: E402
+from scripts.fixture_guard import assert_initialized_fixture  # noqa: E402
 
 TRANSFER_DB = os.getenv("TRANSFER_DB", "oqmd_transfer")
 
@@ -48,12 +50,12 @@ INTEGRITY_SQL = PROJECT / "db" / "transfer_integrity_checks.sql"
 
 def transfer_conninfo() -> str:
     """Connection string for the transfer database."""
-    return (
-        f"host={os.getenv('POSTGRES_HOST', 'localhost')} "
-        f"port={os.getenv('POSTGRES_PORT', '5432')} "
-        f"dbname={TRANSFER_DB} "
-        f"user={os.getenv('POSTGRES_USER', 'l12_user')} "
-        f"password={os.getenv('POSTGRES_PASSWORD', 'l12_password')}"
+    return make_conninfo(
+        host=os.getenv("POSTGRES_HOST", "localhost"),
+        port=os.getenv("POSTGRES_PORT", "5432"),
+        dbname=TRANSFER_DB,
+        user=os.getenv("POSTGRES_USER", "l12_user"),
+        password=os.getenv("POSTGRES_PASSWORD", "l12_password"),
     )
 
 
@@ -98,6 +100,28 @@ def main() -> None:
             "transfer build requires phase_stability to use exactly "
             f"'L12-FIXTURE-PBE-v1', got {sorted(ref_sets)}"
         )
+    # The set NAME alone does not guarantee the reference master still
+    # carries the fixture semantics, so pin the full master tuple too.
+    expected_master = (
+        "L12-FIXTURE-PBE-v1", "DFT", "PBE",
+        "synthetic fixture (elemental references adopted from OQMD)",
+        "OQMD standard reference-energy fit "
+        "(adopted for elemental references)",
+    )
+    with src.cursor() as sc:
+        sc.execute(
+            "SELECT reference_set, method, functional, source, fit_name "
+            "FROM reference_energy_set "
+            "WHERE reference_set = 'L12-FIXTURE-PBE-v1'")
+        master = sc.fetchone()
+    if master is None or tuple(master) != expected_master:
+        raise RuntimeError(
+            "reference_energy_set master row for 'L12-FIXTURE-PBE-v1' "
+            f"does not match the fixture contract: got {master!r}, "
+            f"expected {expected_master!r}"
+        )
+    # Only build from a fully initialized, drift-free main fixture.
+    assert_initialized_fixture(src)
 
     n = copy(
         "SELECT symbol, name, atomic_number, atomic_mass FROM element",

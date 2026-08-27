@@ -40,7 +40,7 @@ CREATE TABLE material_entry (
     source_material_id TEXT NOT NULL,
     UNIQUE (source_db, source_material_id),
     formula TEXT NOT NULL,
-    reduced_formula TEXT,
+    reduced_formula TEXT NOT NULL,
     chemical_system TEXT,
     number_of_elements INTEGER NOT NULL CHECK (number_of_elements > 0)
 );
@@ -68,6 +68,12 @@ CREATE TABLE element (
     -- fixture element; group_number is NULL for f-block interior elements
     -- (no IUPAC group). category is a required controlled vocabulary
     -- because gold SQL filters on it.
+    -- Taxonomy convention (fixed for this fixture): transition_metal
+    -- covers Sc–Zn, Y–Cd and Hf–Hg, i.e. the group-12 elements
+    -- Zn/Cd/Hg are classified as transition_metal (some taxonomies
+    -- place them in post_transition_metal instead; this fixture
+    -- deliberately uses the d-block definition, and the natural-language
+    -- questions reference this database category explicitly).
     block VARCHAR(5) NOT NULL,
     category VARCHAR(50) NOT NULL CHECK (
         category IN (

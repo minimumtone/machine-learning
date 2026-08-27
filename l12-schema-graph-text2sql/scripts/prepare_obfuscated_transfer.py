@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 import psycopg
+from psycopg.conninfo import make_conninfo
 
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
@@ -60,12 +61,12 @@ def _obf_conninfo(db: str) -> str:
     password = os.environ.get("POSTGRES_PASSWORD")
     if not password:
         raise RuntimeError("POSTGRES_PASSWORD environment variable is required")
-    return (
-        f"host={os.getenv('POSTGRES_HOST', 'localhost')} "
-        f"port={os.getenv('POSTGRES_PORT', '5432')} "
-        f"dbname={db} "
-        f"user={os.getenv('POSTGRES_USER', 'l12_user')} "
-        f"password={password}"
+    return make_conninfo(
+        host=os.getenv("POSTGRES_HOST", "localhost"),
+        port=os.getenv("POSTGRES_PORT", "5432"),
+        dbname=db,
+        user=os.getenv("POSTGRES_USER", "l12_user"),
+        password=password,
     )
 
 

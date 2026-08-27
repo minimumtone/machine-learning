@@ -27,6 +27,9 @@
 --
 -- reference_status makes a NULL re-referenced value diagnosable instead of
 -- silent (missing reference / composition problems / count mismatch).
+-- Controlled vocabulary (exhaustive): 'ok', 'missing_composition',
+-- 'element_count_mismatch', 'missing_composition_fraction',
+-- 'invalid_composition', 'missing_reference_for_set'.
 CREATE OR REPLACE VIEW formation_enthalpy AS
 SELECT
     m.entry_id,
@@ -94,3 +97,9 @@ LEFT JOIN LATERAL (
     WHERE c.entry_id = m.entry_id
 ) ref ON TRUE
 WHERE m.number_of_elements >= 2;
+
+COMMENT ON VIEW formation_enthalpy IS
+    'Formation enthalpy per compound. reference_status is a closed '
+    'vocabulary: ok, missing_composition, element_count_mismatch, '
+    'missing_composition_fraction, invalid_composition, '
+    'missing_reference_for_set.';
