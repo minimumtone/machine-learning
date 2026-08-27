@@ -17,7 +17,10 @@ BEGIN
         SELECT entry_id
         FROM composition
         GROUP BY entry_id
-        HAVING ABS(SUM(atomic_fraction) - 1.0) > 1e-8
+        -- NULL fractions are already rejected by the DDL (NOT NULL);
+        -- the FILTER term is a second line of defense against regressions.
+        HAVING COUNT(*) FILTER (WHERE atomic_fraction IS NULL) > 0
+            OR ABS(SUM(atomic_fraction) - 1.0) > 1e-8
     ) t;
     IF n_bad > 0 THEN
         RAISE EXCEPTION
@@ -55,6 +58,34 @@ $$;
 -- (pure_element_reference.energy_per_atom NOT NULL); this file keeps only
 -- cross-row invariants that a single-row constraint cannot express.
 
+-- The formation_enthalpy view pins reference_set = 'OQMD-PBE'; if the set
+-- were renamed the view would not error but silently return NULLs, so its
+-- existence and per-element coverage are asserted here.
+DO $$
+DECLARE
+    n_ref BIGINT;
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM reference_energy_set WHERE reference_set = 'OQMD-PBE'
+    ) THEN
+        RAISE EXCEPTION
+            'Required reference energy set OQMD-PBE does not exist';
+    END IF;
+    SELECT COUNT(*) INTO n_ref
+    FROM (
+        SELECT DISTINCT element FROM composition
+        EXCEPT
+        SELECT element_symbol FROM pure_element_reference
+        WHERE reference_set = 'OQMD-PBE'
+    ) missing;
+    IF n_ref > 0 THEN
+        RAISE EXCEPTION
+            'pure_element_reference(OQMD-PBE) is missing % element(s) used in composition',
+            n_ref;
+    END IF;
+END
+$$;
+
 -- structure copies of master attributes must match the master tables
 -- (also enforced per-row by trg_structure_master_consistency; this is
 -- the set-level assertion for databases loaded before the trigger).
@@ -79,3 +110,12 @@ BEGIN
     END IF;
 END
 $$;
+
+-- Ready marker: created only after every assertion above has passed.
+-- A database missing this row (e.g. 001–005 loaded but 006 failed) is a
+-- partial initialization and must not be used as a verification DB.
+CREATE TABLE schema_verification_status (
+    version TEXT PRIMARY KEY,
+    verified_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+INSERT INTO schema_verification_status (version) VALUES ('006');
