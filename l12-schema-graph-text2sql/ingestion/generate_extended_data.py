@@ -410,9 +410,10 @@ def write_reference_data(out: TextIO, pure: dict[str, dict]) -> dict[str, int]:
     # --- Pure element reference energies (OQMD) ---
     out.write("\n-- Energy-convention master (one row per reference set)\n")
     out.write(
-        "INSERT INTO reference_energy_set (reference_set, method, functional, source, description)\n"
-        "VALUES ('OQMD-PBE', 'DFT', 'PBE', 'OQMD',\n"
-        "        'OQMD ground-state reference energies, DFT-PBE convention');\n"
+        "INSERT INTO reference_energy_set (reference_set, method, functional, source, fit_name, description)\n"
+        "VALUES ('OQMD-PBE', 'DFT', 'PBE', 'OQMD', 'OQMD standard reference-energy fit',\n"
+        "        'OQMD DFT-PBE convention: formation energies (delta_e) relative to "
+        "the OQMD standard elemental reference fit');\n"
     )
     out.write("\n-- Pure element reference energies (OQMD ground states)\n")
     for sym in sorted(pure):
@@ -420,7 +421,7 @@ def write_reference_data(out: TextIO, pure: dict[str, dict]) -> dict[str, int]:
         out.write(
             f"INSERT INTO pure_element_reference "
             f"(element_symbol, reference_set, oqmd_entry_id, ground_state_spacegroup, "
-            f"energy_per_atom, volume_per_atom, stability, band_gap, n_polymorphs) "
+            f"delta_e, volume_per_atom, stability, band_gap, n_polymorphs) "
             f"VALUES ('{sym}', 'OQMD-PBE', {info['oqmd_entry_id']}, {_sql_str(info['spacegroup'])}, "
             f"{_sql_num(info['delta_e_per_atom'])}, {_sql_num(info['volume_per_atom'])}, "
             f"{_sql_num(max(0.0, info['stability']) if info['stability'] is not None else None)}, "
@@ -507,8 +508,8 @@ def write_material_data(out: TextIO, pure: dict[str, dict], elem_ids: dict[str, 
         # phase_stability (is_stable is a generated column, never inserted)
         out.write(
             f"INSERT INTO phase_stability (stability_id, entry_id, formation_energy_per_atom, "
-            f"energy_above_hull, band_gap) VALUES "
-            f"('stab_{entry_count:05d}', '{eid}', {fe:.4f}, {eah:.4f}, "
+            f"reference_set, energy_above_hull, band_gap) VALUES "
+            f"('stab_{entry_count:05d}', '{eid}', {fe:.4f}, 'OQMD-PBE', {eah:.4f}, "
             f"{random.uniform(0, 0.5):.3f});\n"
         )
 
@@ -785,9 +786,9 @@ def write_material_data(out: TextIO, pure: dict[str, dict], elem_ids: dict[str, 
         )
         out.write(
             f"INSERT INTO phase_stability (stability_id, entry_id, formation_energy_per_atom, "
-            f"energy_above_hull, band_gap) VALUES "
+            f"reference_set, energy_above_hull, band_gap) VALUES "
             f"('stab_elem_{sym.lower()}', '{peid}', {_sql_num(info['delta_e_per_atom'])}, "
-            f"{_sql_num(eah)}, {_sql_num(info['band_gap'])});\n"
+            f"'OQMD-PBE', {_sql_num(eah)}, {_sql_num(info['band_gap'])});\n"
         )
         out.write(
             f"INSERT INTO calculation (calculation_id, entry_id, method, functional, "

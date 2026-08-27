@@ -13,7 +13,7 @@ WITH fm_l12 AS (
 enthalpy AS (
     SELECT fl.entry_id, fl.formula, fl.formation_energy_per_atom,
            fl.total_magnetization,
-           SUM(comp.atomic_fraction * per.energy_per_atom) AS weighted_ref
+           SUM(comp.atomic_fraction * per.delta_e) AS weighted_ref
     FROM fm_l12 fl
     JOIN composition comp ON comp.entry_id = fl.entry_id
     JOIN pure_element_reference per ON per.element_symbol = comp.element

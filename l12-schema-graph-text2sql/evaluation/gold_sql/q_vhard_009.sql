@@ -9,7 +9,7 @@ WITH compound AS (
 ),
 ref_energies AS (
     SELECT c.entry_id,
-           SUM(comp.atomic_fraction * per.energy_per_atom) AS weighted_ref
+           SUM(comp.atomic_fraction * per.delta_e) AS weighted_ref
     FROM compound c
     JOIN composition comp ON comp.entry_id = c.entry_id
     JOIN pure_element_reference per ON per.element_symbol = comp.element

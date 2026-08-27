@@ -88,10 +88,12 @@ def main() -> None:
     n = copy(
         """
         SELECT stability_id, entry_id, formation_energy_per_atom,
-               energy_above_hull, is_stable, band_gap
+               energy_above_hull, band_gap
         FROM phase_stability
         """,
-        "INSERT INTO oqmd_formation_energies VALUES (%s, %s, %s, %s, %s, %s)",
+        "INSERT INTO oqmd_formation_energies "
+        "(fe_key, entry_key, delta_e, hull_distance, gap_ev) "
+        "VALUES (%s, %s, %s, %s, %s)",
     )
     print(f"oqmd_formation_energies: {n}")
 
@@ -107,7 +109,7 @@ def main() -> None:
     n = copy(
         """
         SELECT 'ref_' || pure_ref_id, element_symbol, ground_state_spacegroup,
-               energy_per_atom, volume_per_atom, n_polymorphs
+               delta_e, volume_per_atom, n_polymorphs
         FROM pure_element_reference
         """,
         "INSERT INTO oqmd_reference_states VALUES (%s, %s, %s, %s, %s, %s)",

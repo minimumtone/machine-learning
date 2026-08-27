@@ -3,7 +3,8 @@
 -- 33 tables: 31 entity tables + property_definition dictionary
 --            + reference_energy_set (energy-convention master)
 -- Load order: 001_schema -> 002_reference_data -> 003_material_data
---             -> 004_views -> 005_roles
+--             -> 004_views -> 005_roles -> 006_integrity_checks
+--             -> 007_initialization_marker
 --
 -- Design rules enforced at the DDL level:
 --   * Core controlled vocabularies used for joins and evaluation are
@@ -55,8 +56,12 @@ CREATE TABLE property_definition (
     property_def_id SERIAL PRIMARY KEY,
     canonical_name VARCHAR(100) NOT NULL UNIQUE,
     canonical_unit VARCHAR(30),
+    -- Storage contract: all EAV value columns are numeric
+    -- (DOUBLE PRECISION / NUMERIC), so the dictionary only declares types
+    -- the storage can actually hold. text/boolean properties are outside
+    -- this verification schema.
     value_type VARCHAR(20) NOT NULL DEFAULT 'float'
-        CHECK (value_type IN ('float', 'integer', 'text', 'boolean')),
+        CHECK (value_type IN ('float', 'integer')),
     applies_to VARCHAR(30) NOT NULL
         CHECK (applies_to IN ('calculated', 'measured', 'element')),
     description TEXT,
@@ -111,12 +116,38 @@ CREATE TABLE structure (
     space_group TEXT
 );
 
+-- Energy-convention master: each reference_set pins one (method, functional,
+-- source, fit) combination, so the convention is defined in exactly one
+-- place. Child rows (phase_stability, pure_element_reference) carry only
+-- reference_set; the convention details are obtained by joining this master.
+CREATE TABLE reference_energy_set (
+    reference_set TEXT PRIMARY KEY,
+    method TEXT NOT NULL,
+    functional TEXT NOT NULL,
+    source TEXT NOT NULL,
+    -- Name of the elemental-reference fit the formation energies are
+    -- relative to (e.g. the OQMD standard fit); 'OQMD-PBE' alone would not
+    -- identify which reference fit was used.
+    fit_name TEXT NOT NULL,
+    description TEXT
+);
+
 -- Operational stability definition (paper / gold SQL / DB single source):
 --   stable <=> energy_above_hull <= 0.001 eV/atom
 CREATE TABLE phase_stability (
     stability_id TEXT PRIMARY KEY,
     entry_id TEXT NOT NULL UNIQUE REFERENCES material_entry(entry_id),
-    formation_energy_per_atom DOUBLE PRECISION,
+    -- Formation energy per atom relative to the elemental reference states
+    -- of reference_set below. NOT NULL: every stability row must carry it
+    -- (a NULL here could not be distinguished from a computation gap).
+    formation_energy_per_atom DOUBLE PRECISION NOT NULL,
+    -- Energy convention of formation_energy_per_atom. Formation energies
+    -- from different source databases (OQMD / Materials Project / AFLOW)
+    -- use different pseudopotentials, corrections and elemental reference
+    -- fits, so they are only comparable within one reference_set; views
+    -- must join elemental references on the SAME reference_set.
+    reference_set TEXT NOT NULL
+        REFERENCES reference_energy_set(reference_set),
     -- NOT NULL keeps the generated is_stable strictly two-valued
     -- (a NULL hull energy would make is_stable NULL, i.e. three-valued).
     energy_above_hull DOUBLE PRECISION NOT NULL CHECK (energy_above_hull >= 0),
@@ -230,6 +261,11 @@ CREATE TABLE experimental_measurement (
     -- One measurement per (entry, reference, method, T, P); replicate
     -- measurements are outside this verification schema, so accidental
     -- double-loading of the same measurement is rejected.
+    -- NULLS NOT DISTINCT consequence (documented limitation): NULL condition
+    -- values do NOT represent independent measurements — only one
+    -- unknown-condition measurement per (entry, reference, method) is
+    -- representable. Distinct real-world measurements must carry their
+    -- actual conditions to coexist.
     UNIQUE NULLS NOT DISTINCT
         (entry_id, reference_id, method, temperature_k, pressure_gpa)
 );
@@ -410,19 +446,7 @@ CREATE TABLE material_alloy_system (
     UNIQUE (entry_id, alloy_system_id)
 );
 
--- === Pure Element Reference (ground-state DFT energies, OQMD) ===
-
--- Energy-convention master: each reference_set pins one (method, functional,
--- source) combination, so the convention is defined in exactly one place.
--- Child rows carry only reference_set; method/functional/source are
--- obtained by joining this master, so no second truth can exist.
-CREATE TABLE reference_energy_set (
-    reference_set TEXT PRIMARY KEY,
-    method TEXT NOT NULL,
-    functional TEXT NOT NULL,
-    source TEXT NOT NULL,
-    description TEXT
-);
+-- === Pure Element Reference (ground-state OQMD delta_e values) ===
 
 CREATE TABLE pure_element_reference (
     pure_ref_id SERIAL PRIMARY KEY,
@@ -438,7 +462,15 @@ CREATE TABLE pure_element_reference (
         REFERENCES reference_energy_set(reference_set),
     oqmd_entry_id INTEGER,
     ground_state_spacegroup VARCHAR(30),
-    energy_per_atom DOUBLE PRECISION NOT NULL,  -- eV/atom (delta_e from OQMD)
+    -- OQMD delta_e (formation energy, eV/atom) of the element's ground-state
+    -- entry, relative to the fitted elemental reference states of
+    -- reference_set. This is NOT a total DFT energy and NOT the reference
+    -- energy itself (OQMD's ReferenceEnergy.value). Subtracting
+    -- SUM(x_i * delta_e_i) from a compound's formation_energy_per_atom of
+    -- the SAME reference_set re-references it to the stored pure-element
+    -- ground states (the fitted reference energies cancel); it must never
+    -- be combined with formation energies of a different reference_set.
+    delta_e DOUBLE PRECISION NOT NULL,
     volume_per_atom DOUBLE PRECISION CHECK (volume_per_atom > 0),  -- Angstrom^3/atom
     stability DOUBLE PRECISION CHECK (stability >= 0),  -- eV/atom above hull
     band_gap DOUBLE PRECISION CHECK (band_gap >= 0),  -- eV
@@ -616,3 +648,36 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trg_property_definition_scope_change
     BEFORE UPDATE OF applies_to ON property_definition
     FOR EACH ROW EXECUTE FUNCTION prevent_invalid_property_scope_change();
+
+-- === Canonical-unit enforcement ===
+-- The composite FK (property_name, unit) pins unit to the canonical one
+-- only when unit IS NOT NULL (MATCH SIMPLE skips NULLs). This trigger
+-- closes the NULL loophole: when the dictionary declares a canonical unit,
+-- child rows must carry exactly that unit (a unit-less value for a
+-- unit-bearing property is rejected).
+CREATE FUNCTION check_property_unit() RETURNS trigger AS $$
+DECLARE
+    cu TEXT;
+BEGIN
+    SELECT canonical_unit INTO cu
+    FROM property_definition WHERE canonical_name = NEW.property_name;
+    IF cu IS NOT NULL AND NEW.unit IS DISTINCT FROM cu THEN
+        RAISE EXCEPTION
+            '%: property % requires unit % (got %)',
+            TG_TABLE_NAME, NEW.property_name, cu, COALESCE(NEW.unit, 'NULL');
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_calculated_property_unit
+    BEFORE INSERT OR UPDATE OF property_name, unit ON calculated_property
+    FOR EACH ROW EXECUTE FUNCTION check_property_unit();
+
+CREATE TRIGGER trg_measured_property_unit
+    BEFORE INSERT OR UPDATE OF property_name, unit ON measured_property
+    FOR EACH ROW EXECUTE FUNCTION check_property_unit();
+
+CREATE TRIGGER trg_element_property_unit
+    BEFORE INSERT OR UPDATE OF property_name, unit ON element_property
+    FOR EACH ROW EXECUTE FUNCTION check_property_unit();

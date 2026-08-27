@@ -134,22 +134,22 @@ CONDITION_COLUMN_MAP: dict[str, list[str]] = {
     "alloy_system": ["alloy_system.system_name", "alloy_system.num_components"],
     "pure_element": [
         "pure_element_reference.element_symbol",
-        "pure_element_reference.energy_per_atom",
+        "pure_element_reference.delta_e",
         "pure_element_reference.ground_state_spacegroup",
         "pure_element_reference.n_polymorphs",
     ],
     "reference_energy": [
-        "pure_element_reference.energy_per_atom",
+        "pure_element_reference.delta_e",
         "pure_element_reference.element_symbol",
     ],
     "ground_state": [
         "pure_element_reference.ground_state_spacegroup",
-        "pure_element_reference.energy_per_atom",
+        "pure_element_reference.delta_e",
     ],
     "polymorph": ["pure_element_reference.n_polymorphs"],
     "formation_enthalpy": [
         "phase_stability.formation_energy_per_atom",
-        "pure_element_reference.energy_per_atom",
+        "pure_element_reference.delta_e",
     ],
 }
 
