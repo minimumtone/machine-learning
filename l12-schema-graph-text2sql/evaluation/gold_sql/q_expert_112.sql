@@ -1,6 +1,6 @@
 -- VH: 実験的に合成されたL1₂化合物のうち安定でバルクモジュラスが150GPa以上のものを合成方法・温度とともに出して
 -- Tables: material_entry, structure, phase_stability, material_synthesis, synthesis_method, calculation, calculated_property (7)
-SELECT DISTINCT m.formula, sm.method_name, msyn.temperature_k,
+SELECT m.formula, sm.method_name, msyn.temperature_k,
        cp_bm.value AS bulk_modulus, ps.energy_above_hull
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id

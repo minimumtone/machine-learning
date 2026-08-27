@@ -1,4 +1,4 @@
-SELECT DISTINCT m.entry_id, m.formula, ps.energy_above_hull
+SELECT m.entry_id, m.formula, ps.energy_above_hull
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id

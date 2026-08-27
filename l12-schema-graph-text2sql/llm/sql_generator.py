@@ -10,6 +10,7 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from graph.schema_parser import get_foreign_keys
 from llm.entity_extractor import extract_conditions
 from llm.few_shot_store import format_few_shot_block, retrieve_similar
 from llm.intent_classifier import classify_intent, classify_query_type
@@ -299,11 +300,31 @@ def _rule_based_fallback(
             "JOIN material_application ma ON ma.entry_id = m.entry_id\n"
             "    JOIN application_domain ad ON ad.domain_id = ma.domain_id"
         ),
+        "band_structure": (
+            "JOIN calculation cal_bs ON cal_bs.entry_id = m.entry_id\n"
+            "    JOIN band_structure bs ON bs.calculation_id = cal_bs.calculation_id"
+        ),
+        "density_of_states": (
+            "JOIN calculation cal_dos ON cal_dos.entry_id = m.entry_id\n"
+            "    JOIN density_of_states dos ON dos.calculation_id = cal_dos.calculation_id"
+        ),
+        "elastic_tensor": (
+            "JOIN calculation cal_et ON cal_et.entry_id = m.entry_id\n"
+            "    JOIN elastic_tensor et ON et.calculation_id = cal_et.calculation_id"
+        ),
+        "thermal_property": (
+            "JOIN calculation cal_tp ON cal_tp.entry_id = m.entry_id\n"
+            "    JOIN thermal_property tp ON tp.calculation_id = cal_tp.calculation_id"
+        ),
     }
 
     # Map each indirect join to the prerequisite tables it includes
     _indirect_discards: dict[str, list[str]] = {
         "calculated_property": ["calculation"],
+        "band_structure": ["calculation"],
+        "density_of_states": ["calculation"],
+        "elastic_tensor": ["calculation"],
+        "thermal_property": ["calculation"],
         "literature_reference": ["material_reference"],
         "application_domain": ["material_application"],
     }
@@ -453,22 +474,13 @@ def build_schema_context_from_db(
     all_columns = [f"{t}.{c}" for t, c in col_rows]
     all_tables = sorted({t for t, _ in col_rows})
 
-    with conn.cursor() as cur:
-        cur.execute(
-            "SELECT tc.table_name, kcu.column_name, "
-            "       ccu.table_name, ccu.column_name "
-            "FROM information_schema.table_constraints tc "
-            "JOIN information_schema.key_column_usage kcu "
-            "  ON tc.constraint_name = kcu.constraint_name "
-            " AND tc.table_schema = kcu.table_schema "
-            "JOIN information_schema.constraint_column_usage ccu "
-            "  ON tc.constraint_name = ccu.constraint_name "
-            " AND ccu.table_schema = tc.table_schema "
-            "WHERE tc.constraint_type = 'FOREIGN KEY' "
-            " AND tc.table_schema = 'public'"
-        )
-        fk_rows = cur.fetchall()
-    join_list = [f"{r[0]}.{r[1]}={r[2]}.{r[3]}" for r in fk_rows]
+    # pg_constraint keeps composite-FK column pairs positionally aligned
+    # (information_schema's constraint_column_usage cross-products them).
+    fks = get_foreign_keys(conn)
+    join_list = [
+        f"{fk.source_table}.{fk.source_column}={fk.target_table}.{fk.target_column}"
+        for fk in fks
+    ]
 
     return {
         "join_list": join_list,

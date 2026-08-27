@@ -1,4 +1,4 @@
-SELECT DISTINCT m.formula, s.lattice_a, ps.energy_above_hull,
+SELECT m.formula, s.lattice_a, ps.energy_above_hull,
        ABS(s.lattice_a - 3.57) AS lattice_diff
 FROM material_entry m
 JOIN composition c ON c.entry_id = m.entry_id

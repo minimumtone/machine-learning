@@ -43,7 +43,9 @@ PAPER_DATA = PROJECT / "paper" / "paper_data.json"
 GEN_FIGURES = PROJECT / "scripts" / "generate_figures.py"
 COMPUTE = PROJECT / "scripts" / "compute_all_figures.py"
 VALIDATOR = PROJECT / "safety" / "sql_validator.py"
-TEX_FILES = ["paper/stam-m.tex", "paper/stam-m_ja.tex"]
+# Only the maintained Japanese manuscript is synchronized with the SSOT;
+# the English manuscript is intentionally frozen at an earlier revision.
+TEX_FILES = ["paper/stam-m_ja.tex"]
 
 
 class Result:

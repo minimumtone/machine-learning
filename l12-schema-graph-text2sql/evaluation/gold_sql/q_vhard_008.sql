@@ -1,4 +1,4 @@
-SELECT DISTINCT m.formula, s.lattice_a, ps.energy_above_hull,
+SELECT m.formula, s.lattice_a, ps.energy_above_hull,
        cp_bm.value AS bulk_modulus,
        ABS(s.lattice_a - 3.57) AS lattice_diff_ni3al
 FROM material_entry m

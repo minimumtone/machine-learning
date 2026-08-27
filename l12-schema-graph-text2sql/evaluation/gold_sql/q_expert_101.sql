@@ -1,7 +1,7 @@
 -- VH: 安定なL1₂化合物のうち、バルクモジュラスが180GPa以上で格子定数が3.9Å以下のものを
 -- 化学式・格子定数・バルクモジュラス・形成エネルギーとともに一覧して
 -- Tables: material_entry, structure, phase_stability, calculation, calculated_property (5)
-SELECT DISTINCT m.formula, s.lattice_a, cp_bm.value AS bulk_modulus,
+SELECT m.formula, s.lattice_a, cp_bm.value AS bulk_modulus,
        ps.formation_energy_per_atom
 FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id

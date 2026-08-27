@@ -10,7 +10,7 @@
       "hard": 1.0,
       "very_hard": 0.6666666666666666
     },
-    "avg_latency": 30.345,
+    "avg_latency": 24.939999999999998,
     "overall_precision": 0.9,
     "overall_f1": 0.9,
     "overall_exact_match": 0.9
@@ -24,7 +24,7 @@
       "precision": 1.0,
       "f1": 1.0,
       "exact_match": 1.0,
-      "latency_s": 44.6,
+      "latency_s": 27.3,
       "sql": "SELECT COUNT(*) AS total_entries\nFROM tbl_zulu\nLIMIT 10000;"
     },
     {
@@ -35,8 +35,8 @@
       "precision": 1.0,
       "f1": 1.0,
       "exact_match": 1.0,
-      "latency_s": 17.9,
-      "sql": "SELECT DISTINCT\n  col_quebec,\n  col_delta\nFROM tbl_zulu\nWHERE col_delta = 'L12'\nORDER BY col_quebec\nLIMIT 10000;"
+      "latency_s": 12.7,
+      "sql": "SELECT col_quebec, col_delta\nFROM tbl_zulu\nWHERE col_delta = 'L12'\nORDER BY col_quebec\nLIMIT 10000;"
     },
     {
       "qid": "q_transfer_obf_003",
@@ -46,7 +46,7 @@
       "precision": 1.0,
       "f1": 1.0,
       "exact_match": 1.0,
-      "latency_s": 28.2,
+      "latency_s": 27.0,
       "sql": "SELECT DISTINCT tbl_zulu.col_quebec\nFROM tbl_zulu\nJOIN tbl_juliet ON tbl_juliet.col_rhea = tbl_zulu.col_rhea\nWHERE tbl_juliet.col_papa = 'Ni'\nORDER BY tbl_zulu.col_quebec\nLIMIT 10000;"
     },
     {
@@ -57,7 +57,7 @@
       "precision": 1.0,
       "f1": 1.0,
       "exact_match": 1.0,
-      "latency_s": 25.0,
+      "latency_s": 15.6,
       "sql": "SELECT col_quebec, col_falcon\nFROM tbl_zulu\nWHERE col_falcon < 4\nORDER BY col_falcon ASC\nLIMIT 10000;"
     },
     {
@@ -68,8 +68,8 @@
       "precision": 1.0,
       "f1": 1.0,
       "exact_match": 1.0,
-      "latency_s": 13.5,
-      "sql": "SELECT COUNT(DISTINCT col_papa) AS registered_element_count\nFROM tbl_xray\nLIMIT 10000;"
+      "latency_s": 14.2,
+      "sql": "SELECT COUNT(DISTINCT col_papa) AS element_count\nFROM tbl_xray\nLIMIT 10000;"
     },
     {
       "qid": "q_transfer_obf_006",
@@ -79,7 +79,7 @@
       "precision": 1.0,
       "f1": 1.0,
       "exact_match": 1.0,
-      "latency_s": 13.9,
+      "latency_s": 16.8,
       "sql": "SELECT tbl_zulu.col_quebec, tbl_delta.col_iris\nFROM tbl_delta\nJOIN tbl_zulu ON tbl_delta.col_rhea = tbl_zulu.col_rhea\nWHERE tbl_delta.col_iris IS NOT NULL\nORDER BY tbl_delta.col_iris DESC\nLIMIT 5;"
     },
     {
@@ -90,8 +90,8 @@
       "precision": 1.0,
       "f1": 1.0,
       "exact_match": 1.0,
-      "latency_s": 15.5,
-      "sql": "SELECT COUNT(*) AS convex_hull_compound_count\nFROM tbl_delta\nWHERE col_hotel = TRUE\nLIMIT 10000;"
+      "latency_s": 17.1,
+      "sql": "SELECT COUNT(DISTINCT tbl_delta.col_rhea) AS convex_hull_compound_count\nFROM tbl_delta\nWHERE tbl_delta.col_hotel = TRUE\nLIMIT 10000;"
     },
     {
       "qid": "q_transfer_obf_008",
@@ -101,8 +101,8 @@
       "precision": 1.0,
       "f1": 1.0,
       "exact_match": 1.0,
-      "latency_s": 24.5,
-      "sql": "SELECT\n  tbl_zulu.col_quebec,\n  tbl_delta.col_luna,\n  tbl_delta.col_hotel,\n  tbl_delta.col_xenon\nFROM tbl_delta\nJOIN tbl_zulu ON tbl_delta.col_rhea = tbl_zulu.col_rhea\nWHERE tbl_delta.col_luna < -0.5\nORDER BY tbl_delta.col_xenon ASC, tbl_delta.col_luna ASC\nLIMIT 10000;"
+      "latency_s": 22.0,
+      "sql": "SELECT\n  tbl_zulu.col_quebec,\n  tbl_delta.col_luna,\n  tbl_delta.col_hotel,\n  tbl_delta.col_xenon\nFROM tbl_delta\nJOIN tbl_zulu ON tbl_delta.col_rhea = tbl_zulu.col_rhea\nWHERE tbl_delta.col_luna < -0.5\nORDER BY tbl_delta.col_hotel DESC, tbl_delta.col_xenon ASC, tbl_delta.col_luna ASC\nLIMIT 10000;"
     },
     {
       "qid": "q_transfer_obf_009",
@@ -112,7 +112,7 @@
       "precision": 1.0,
       "f1": 1.0,
       "exact_match": 1.0,
-      "latency_s": 18.4,
+      "latency_s": 14.7,
       "sql": "SELECT\n  col_papa AS element,\n  COUNT(DISTINCT col_rhea) AS entry_count\nFROM tbl_juliet\nGROUP BY col_papa\nORDER BY entry_count DESC\nLIMIT 10;"
     },
     {
@@ -123,8 +123,8 @@
       "precision": 1.0,
       "f1": 1.0,
       "exact_match": 1.0,
-      "latency_s": 38.6,
-      "sql": "SELECT DISTINCT\n    tbl_zulu.col_quebec,\n    tbl_delta.col_luna,\n    tbl_delta.col_xenon\nFROM tbl_zulu\nJOIN tbl_delta ON tbl_delta.col_rhea = tbl_zulu.col_rhea\nJOIN tbl_juliet ON tbl_juliet.col_rhea = tbl_zulu.col_rhea\nWHERE tbl_juliet.col_papa = 'Al'\n  AND tbl_delta.col_hotel = TRUE\nORDER BY tbl_delta.col_luna ASC\nLIMIT 10000;"
+      "latency_s": 32.2,
+      "sql": "SELECT\n  tbl_zulu.col_quebec,\n  tbl_delta.col_luna\nFROM tbl_zulu\nJOIN tbl_delta ON tbl_delta.col_rhea = tbl_zulu.col_rhea\nWHERE\n  tbl_delta.col_hotel = TRUE\n  AND EXISTS (\n    SELECT 1\n    FROM tbl_juliet\n    WHERE tbl_juliet.col_rhea = tbl_zulu.col_rhea\n      AND tbl_juliet.col_papa = 'Al'\n  )\nORDER BY tbl_delta.col_luna ASC\nLIMIT 10000;"
     },
     {
       "qid": "q_transfer_obf_011",
@@ -134,7 +134,7 @@
       "precision": 0.0,
       "f1": 0.0,
       "exact_match": 0.0,
-      "latency_s": 19.8,
+      "latency_s": 16.2,
       "sql": "SELECT\n  tbl_zulu.col_halo AS crystal_system,\n  AVG(tbl_delta.col_luna) AS avg_eform\nFROM tbl_zulu\nJOIN tbl_delta ON tbl_delta.col_rhea = tbl_zulu.col_rhea\nGROUP BY tbl_zulu.col_halo\nORDER BY avg_formation_energy ASC\nLIMIT 10000;"
     },
     {
@@ -145,8 +145,8 @@
       "precision": 1.0,
       "f1": 1.0,
       "exact_match": 1.0,
-      "latency_s": 26.6,
-      "sql": "SELECT COUNT(*) AS metastable_compounds_count\nFROM tbl_delta\nWHERE col_hotel = false\n  AND col_xenon < 0.05\nLIMIT 10000;"
+      "latency_s": 17.1,
+      "sql": "SELECT COUNT(*) AS metastable_compound_count\nFROM tbl_delta\nWHERE col_hotel = false\n  AND col_xenon < 0.05\nLIMIT 10000;"
     },
     {
       "qid": "q_transfer_obf_013",
@@ -156,8 +156,8 @@
       "precision": 1.0,
       "f1": 1.0,
       "exact_match": 1.0,
-      "latency_s": 19.2,
-      "sql": "SELECT DISTINCT z.col_quebec\nFROM tbl_zulu z\nWHERE EXISTS (\n  SELECT 1\n  FROM tbl_juliet j_ni\n  WHERE j_ni.col_rhea = z.col_rhea\n    AND j_ni.col_papa = 'Ni'\n)\nAND EXISTS (\n  SELECT 1\n  FROM tbl_juliet j_al\n  WHERE j_al.col_rhea = z.col_rhea\n    AND j_al.col_papa = 'Al'\n)\nORDER BY z.col_quebec\nLIMIT 10000;"
+      "latency_s": 25.5,
+      "sql": "SELECT DISTINCT z.col_quebec\nFROM tbl_zulu z\nWHERE EXISTS (\n    SELECT 1\n    FROM tbl_juliet j_ni\n    WHERE j_ni.col_rhea = z.col_rhea\n      AND j_ni.col_papa = 'Ni'\n)\nAND EXISTS (\n    SELECT 1\n    FROM tbl_juliet j_al\n    WHERE j_al.col_rhea = z.col_rhea\n      AND j_al.col_papa = 'Al'\n)\nORDER BY z.col_quebec\nLIMIT 10000;"
     },
     {
       "qid": "q_transfer_obf_014",
@@ -167,8 +167,8 @@
       "precision": 1.0,
       "f1": 1.0,
       "exact_match": 1.0,
-      "latency_s": 36.5,
-      "sql": "SELECT z.col_quebec, d.col_luna\nFROM tbl_zulu AS z\nJOIN tbl_delta AS d ON d.col_rhea = z.col_rhea\nJOIN tbl_juliet AS j ON j.col_rhea = z.col_rhea\nWHERE j.col_papa = 'Co'\n  AND j.col_zulu = 'A-site'\nORDER BY d.col_luna ASC\nLIMIT 5;"
+      "latency_s": 33.3,
+      "sql": "SELECT\n  tbl_zulu.col_quebec,\n  tbl_juliet.col_papa,\n  tbl_delta.col_luna\nFROM tbl_zulu\nJOIN tbl_delta ON tbl_delta.col_rhea = tbl_zulu.col_rhea\nJOIN tbl_juliet ON tbl_juliet.col_rhea = tbl_zulu.col_rhea\nWHERE tbl_juliet.col_papa = 'Co'\n  AND tbl_juliet.col_zulu = 'A-site'\nORDER BY tbl_delta.col_luna ASC\nLIMIT 5;"
     },
     {
       "qid": "q_transfer_obf_015",
@@ -178,8 +178,8 @@
       "precision": 1.0,
       "f1": 1.0,
       "exact_match": 1.0,
-      "latency_s": 17.0,
-      "sql": "SELECT tbl_zulu.col_quebec, tbl_zulu.col_apollo, tbl_delta.col_iris\nFROM tbl_delta\nJOIN tbl_zulu ON tbl_delta.col_rhea = tbl_zulu.col_rhea\nWHERE tbl_zulu.col_apollo = 221\n  AND tbl_delta.col_iris > 0\nORDER BY tbl_delta.col_iris DESC\nLIMIT 10000;"
+      "latency_s": 14.8,
+      "sql": "SELECT tbl_zulu.col_quebec, tbl_zulu.col_apollo, tbl_delta.col_iris\nFROM tbl_zulu\nJOIN tbl_delta ON tbl_delta.col_rhea = tbl_zulu.col_rhea\nWHERE tbl_zulu.col_apollo = 221\n  AND tbl_delta.col_iris > 0\nORDER BY tbl_delta.col_iris DESC\nLIMIT 10000;"
     },
     {
       "qid": "q_transfer_obf_016",
@@ -189,7 +189,7 @@
       "precision": 1.0,
       "f1": 1.0,
       "exact_match": 1.0,
-      "latency_s": 13.0,
+      "latency_s": 14.5,
       "sql": "SELECT col_papa, col_uniform, col_gemini\nFROM tbl_victor\nORDER BY col_uniform DESC\nLIMIT 5;"
     },
     {
@@ -200,8 +200,8 @@
       "precision": 1.0,
       "f1": 1.0,
       "exact_match": 1.0,
-      "latency_s": 23.6,
-      "sql": "SELECT\n  tbl_juliet.col_papa,\n  AVG(tbl_delta.col_xenon) AS avg_convex_hull_distance\nFROM tbl_juliet\nJOIN tbl_zulu ON tbl_juliet.col_rhea = tbl_zulu.col_rhea\nJOIN tbl_delta ON tbl_delta.col_rhea = tbl_zulu.col_rhea\nWHERE tbl_juliet.col_juliet = 0.75\nGROUP BY tbl_juliet.col_papa\nORDER BY AVG(tbl_delta.col_xenon) ASC\nLIMIT 10;"
+      "latency_s": 18.2,
+      "sql": "SELECT\n  tbl_juliet.col_papa,\n  AVG(tbl_delta.col_xenon) AS avg_convex_hull_distance\nFROM tbl_juliet\nJOIN tbl_zulu ON tbl_juliet.col_rhea = tbl_zulu.col_rhea\nJOIN tbl_delta ON tbl_delta.col_rhea = tbl_zulu.col_rhea\nWHERE tbl_juliet.col_juliet = 0.75\nGROUP BY tbl_juliet.col_papa\nORDER BY avg_convex_hull_distance ASC\nLIMIT 10;"
     },
     {
       "qid": "q_transfer_obf_018",
@@ -211,8 +211,8 @@
       "precision": 1.0,
       "f1": 1.0,
       "exact_match": 1.0,
-      "latency_s": 80.7,
-      "sql": "SELECT\n    z.col_quebec,\n    d.col_luna AS formation_energy_per_atom,\n    (j_co.col_juliet * v_co.col_tango + j_ti.col_juliet * v_ti.col_tango) AS pure_element_reference_energy,\n    (d.col_luna - (j_co.col_juliet * v_co.col_tango + j_ti.col_juliet * v_ti.col_tango)) AS calculated_formation_enthalpy\nFROM tbl_zulu z\nJOIN tbl_delta d ON d.col_rhea = z.col_rhea\nJOIN tbl_juliet j_co ON j_co.col_rhea = z.col_rhea\nJOIN tbl_xray x_co ON j_co.col_papa = x_co.col_papa\nJOIN tbl_victor v_co ON v_co.col_papa = x_co.col_papa\nJOIN tbl_juliet j_ti ON j_ti.col_rhea = z.col_rhea\nJOIN tbl_xray x_ti ON j_ti.col_papa = x_ti.col_papa\nJOIN tbl_victor v_ti ON v_ti.col_papa = x_ti.col_papa\nWHERE z.col_quebec = 'Co3Ti'\n  AND j_co.col_papa = 'Co'\n  AND j_ti.col_papa = 'Ti'\nORDER BY calculated_formation_enthalpy ASC\nLIMIT 10000;"
+      "latency_s": 102.6,
+      "sql": "SELECT\n  z.col_quebec,\n  ((3.0 / 4.0) * (SELECT v_co.col_tango FROM tbl_victor v_co WHERE v_co.col_papa = 'Co' LIMIT 1)\n   + (1.0 / 4.0) * (SELECT v_ti.col_tango FROM tbl_victor v_ti WHERE v_ti.col_papa = 'Ti' LIMIT 1)\n  ) AS pure_element_reference_energy_ev_per_atom,\n  d.col_luna AS formation_enthalpy_ev_per_atom\nFROM tbl_zulu z\nJOIN tbl_delta d ON d.col_rhea = z.col_rhea\nWHERE z.col_quebec = 'Co3Ti'\nORDER BY d.col_luna ASC\nLIMIT 10000;"
     },
     {
       "qid": "q_transfer_obf_019",
@@ -222,8 +222,8 @@
       "precision": 1.0,
       "f1": 1.0,
       "exact_match": 1.0,
-      "latency_s": 36.1,
-      "sql": "SELECT\n  tbl_zulu.col_quebec,\n  tbl_delta.col_luna AS formation_enthalpy_ev_per_atom\nFROM tbl_delta\nJOIN tbl_zulu ON tbl_delta.col_rhea = tbl_zulu.col_rhea\nWHERE tbl_delta.col_hotel = true\n  AND tbl_zulu.col_delta = 'L12'\n  AND tbl_delta.col_luna < -0.3\nORDER BY tbl_delta.col_luna ASC\nLIMIT 10000;"
+      "latency_s": 18.8,
+      "sql": "SELECT tbl_zulu.col_quebec, tbl_zulu.col_delta, tbl_delta.col_luna\nFROM tbl_delta\nJOIN tbl_zulu ON tbl_delta.col_rhea = tbl_zulu.col_rhea\nWHERE tbl_delta.col_hotel = true\n  AND tbl_zulu.col_delta = 'L12'\n  AND tbl_delta.col_luna < -0.3\nORDER BY tbl_delta.col_luna ASC\nLIMIT 10000;"
     },
     {
       "qid": "q_transfer_obf_020",
@@ -233,8 +233,8 @@
       "precision": 0.0,
       "f1": 0.0,
       "exact_match": 0.0,
-      "latency_s": 94.3,
-      "sql": "SELECT\n  j.col_papa AS a_site,\n  AVG(d.col_luna) AS avg_formation_enthalpy\nFROM tbl_zulu z\nJOIN tbl_delta d ON d.col_rhea = z.col_rhea\nJOIN tbl_juliet j ON j.col_rhea = z.col_rhea\nWHERE z.col_delta = 'L12'\n  AND d.col_hotel = TRUE\n  AND j.col_zulu = 'a'\nGROUP BY j.col_papa\nORDER BY avg_formation_enthalpy ASC\nLIMIT 10000;"
+      "latency_s": 38.2,
+      "sql": "SELECT j.col_papa AS a_site,\n       AVG(d.col_luna) AS avg_formation_enthalpy_ev_per_atom\nFROM tbl_zulu z\nJOIN tbl_delta d ON d.col_rhea = z.col_rhea\nJOIN tbl_juliet j ON j.col_rhea = z.col_rhea\nWHERE z.col_delta = 'L12'\n  AND d.col_hotel = TRUE\n  AND j.col_zulu = 'a'\nGROUP BY j.col_papa\nORDER BY avg_formation_enthalpy_ev_per_atom ASC\nLIMIT 10000;"
     }
   ]
 }

@@ -316,6 +316,9 @@ def main():
         print(f"Loaded existing results: {list(all_results.keys())}")
     
     for cond in conditions:
+        if cond in all_results:
+            print(f"CONDITION: {cond} already completed, skipping")
+            continue
         print(f"\n{'='*70}")
         print(f"CONDITION: {cond}")
         print(f"{'='*70}")

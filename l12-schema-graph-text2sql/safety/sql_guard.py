@@ -12,16 +12,21 @@ import time
 import typing
 from typing import Any
 
-from safety.sql_validator import validate_sql
+from safety.sql_validator import MAX_ROWS, validate_sql
 
 if typing.TYPE_CHECKING:
     import psycopg
 
 
 def get_readonly_connection_string() -> str:
-    """Build a PostgreSQL connection string from environment variables."""
-    user = os.getenv("POSTGRES_USER", "l12_user")
-    password = os.getenv("POSTGRES_PASSWORD", "l12_password")
+    """Build a PostgreSQL connection string for the read-only evaluation role.
+
+    Uses the SELECT-only ``l12_reader`` role (created in db/005_roles.sql)
+    so PostgreSQL privileges — not the Python validator — are the final
+    write barrier. Override with POSTGRES_EVAL_USER / POSTGRES_EVAL_PASSWORD.
+    """
+    user = os.getenv("POSTGRES_EVAL_USER", "l12_reader")
+    password = os.getenv("POSTGRES_EVAL_PASSWORD", "l12_reader_password")
     host = os.getenv("POSTGRES_HOST", "localhost")
     port = os.getenv("POSTGRES_PORT", "5432")
     db = os.getenv("POSTGRES_DB", "l12_materials")
@@ -185,7 +190,8 @@ def execute_sql(
                 cur.execute(f"SET statement_timeout = '{timeout_seconds * 1000}'")  # type: ignore[arg-type]
                 cur.execute(sql)  # type: ignore[arg-type]
                 columns = [desc[0] for desc in cur.description] if cur.description else []
-                rows = cur.fetchall()
+                # Bounded fetch: never load more than MAX_ROWS into memory
+                rows = cur.fetchmany(MAX_ROWS)
             latency_ms = int((time.time() - t0) * 1000)
 
             result: dict[str, Any] = {

@@ -1,6 +1,6 @@
 -- VH: NiとAlを両方含むL1₂化合物で、Ni3Alの格子定数(3.57Å)との差が0.1Å以内かつバルクモジュラスが100GPa以上のものを出して
 -- Tables: material_entry, composition(×2 self-join), structure, calculation, calculated_property (5 distinct)
-SELECT DISTINCT m.formula, s.lattice_a, cp_bm.value AS bulk_modulus,
+SELECT m.formula, s.lattice_a, cp_bm.value AS bulk_modulus,
        ABS(s.lattice_a - 3.57) AS lattice_diff
 FROM material_entry m
 JOIN composition c_ni ON c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni'

@@ -20,35 +20,35 @@
       "syntax_errors": 0,
       "execution_errors": 0,
       "table_hallucinations": 0,
-      "join_hallucinations": 6,
+      "join_hallucinations": 4,
       "n_queries": 100
     },
     "no_reranker": {
       "syntax_errors": 0,
       "execution_errors": 0,
       "table_hallucinations": 0,
-      "join_hallucinations": 2,
+      "join_hallucinations": 0,
       "n_queries": 100
     },
     "no_guard": {
       "syntax_errors": 0,
       "execution_errors": 0,
       "table_hallucinations": 0,
-      "join_hallucinations": 5,
+      "join_hallucinations": 3,
       "n_queries": 100
     },
     "no_nbest": {
       "syntax_errors": 0,
-      "execution_errors": 4,
+      "execution_errors": 3,
       "table_hallucinations": 0,
-      "join_hallucinations": 4,
+      "join_hallucinations": 6,
       "n_queries": 100
     },
     "no_graph": {
       "syntax_errors": 0,
       "execution_errors": 0,
       "table_hallucinations": 0,
-      "join_hallucinations": 1,
+      "join_hallucinations": 6,
       "n_queries": 100
     }
   }
